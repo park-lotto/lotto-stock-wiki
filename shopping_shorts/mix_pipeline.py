@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from shopping_shorts.store import Store
-from shopping_shorts.media_download import download_any
+from shopping_shorts.media_download import download_any, _is_direct_video
 from shopping_shorts import script_extract
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, conform_narration
@@ -42,6 +42,7 @@ from shopping_shorts import sub_region
 from shopping_shorts.narration_naturalize import naturalize, merge_profile
 from shopping_shorts import asr_check
 from shopping_shorts import caption_sync
+from shopping_shorts import video_assemble   # 짧은 자막 줄 합치기(_apply_cap_timing)
 from shopping_shorts import tts_timestamps
 from shopping_shorts import pron_corrections
 from shopping_shorts import backbone
@@ -393,12 +394,7 @@ def finalize_beat_audio(beat, out, *, trim_tail=True):
     words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
     _timing = None
     if words:
-        _timing = caption_sync.phrase_durs_from_words(
-            beat["narration"], words, _ad or 0.0,
-            preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
-        if _timing:
-            beat["cap_durs"] = _timing.durs
-            beat["cap_lead"] = _timing.lead_in
+        _timing = _apply_cap_timing(beat, beat["narration"], words, _ad)
     # 산출 단계 기록(⑦a) — 정렬까지 성공해야 그 단이다. 실패하면 글자수 추정.
     beat["cap_src"] = _wsrc if (words and _timing) else "estimate"
 
@@ -563,6 +559,41 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
           f"(workers={workers})", file=sys.stderr)
 
 
+def _apply_cap_timing(beat, narration, words, dur):
+    """실측 워드 시각 → 자막 구절 초(cap_durs·cap_lead). 합성 경로 3곳이 **이 함수 하나**를 쓴다.
+
+    ★짧은 줄 합치기(2026-09-14 사장님 "0.몇 초 단위로도 끊긴다"): 실제로 1초 미만 말한 줄은
+      이웃과 합쳐 caption_lines로 **저장**한다(video_assemble.tidy_caption_lines — 초는 더해서
+      보존, 문장 끝은 안 넘음). 저장해야 렌더·미리보기·구절 맞춤 컷이 같은 줄을 쓴다(0순위-B).
+      사람이 직접 고친 줄(caption_lines_human)은 건드리지 않는다."""
+    t = caption_sync.phrase_durs_from_words(narration, words, dur or 0.0,
+                                            preset=beat.get("caption_lines"))
+    if not t:
+        return None
+    durs = t.durs
+    # ★기본 꺼짐(2026-09-14) — 아스트라·페이블 검토: 장면 배치와 함께 고치지 않으면 담은 장면이 빠진다.
+    #   검증(블라인드 채점) 끝나면 CAPTION_TIDY=1로 켠다.
+    if not beat.get("caption_lines_human") and os.environ.get("CAPTION_TIDY", "0") == "1":
+        try:
+            segs = video_assemble._caption_segments(narration, preset=beat.get("caption_lines"))
+            if len(segs) == len(durs):
+                # 담은 장면 수 밑으로는 안 합친다 — 구절 맞춤 컷에서 장면이 빠지지 않게
+                try:
+                    _n_mat = len([m for m in (_beat_material(beat) or []) if m])
+                except Exception:      # noqa: BLE001
+                    _n_mat = 1
+                lines, nd = video_assemble.tidy_caption_lines(segs, durs, narration=narration,
+                                                              min_lines=_n_mat)
+                if len(lines) < len(segs) and                         video_assemble.cap_preset_key("".join(lines)) == video_assemble.cap_preset_key(narration):
+                    beat["caption_lines"] = lines
+                    durs = nd
+        except Exception:      # noqa: BLE001 — 합치기 실패로 합성을 죽이지 않는다(종전 줄 그대로)
+            traceback.print_exc(file=sys.stderr)
+    beat["cap_durs"] = durs
+    beat["cap_lead"] = t.lead_in
+    return t
+
+
 def _ensure_breath_lines(beat):
     """폴백 칸이면 Gemini 호흡 끊기로 caption_lines를 채운다(2026-08-29 사장님 "해봐").
 
@@ -593,6 +624,7 @@ def invalidate_caption_meta(beat):
 
     ⚠️ 같은 판단을 두 군데 적지 마라(CLAUDE.md 0순위-B) — 새 편집 경로가 생기면 이 함수를 불러라."""
     beat["caption_lines"] = None
+    beat["caption_lines_human"] = False
     beat["cap_durs"] = None
     beat["cap_lead"] = 0.0
 
@@ -733,9 +765,9 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None, customer_id=0):
         words, _wsrc = _beat_words_src(str(out), new_dur, removed=tts_timestamps.load_removed(str(out)))
         _t = None
         if words:
-            _t = caption_sync.phrase_durs_from_words(new_n, words, new_dur)
-            beat["cap_durs"] = _t.durs if _t else None
-            beat["cap_lead"] = _t.lead_in if _t else 0.0
+            _t = _apply_cap_timing(beat, new_n, words, new_dur)
+            if not _t:
+                beat["cap_durs"], beat["cap_lead"] = None, 0.0
         beat["cap_src"] = _wsrc if (words and _t) else "estimate"
         beat["sync_gap"] = round(max(0.0, new_dur - budget), 2)
 
@@ -777,6 +809,28 @@ def _extract_coverage(r, path):
     covered = sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
                   for s in (r.get("segments") or []))
     return min(1.0, covered / dur)
+
+
+def _basket_download_urls(urls, store, customer_id):
+    """제작 URL과 같은 장바구니 항목의 직접 영상 주소를 우선 사용한다.
+
+    담기 예열은 ``mix_basket.video_url``을 쓰지만 mix job은 페이지 URL만 저장한다.
+    샤오홍슈처럼 서버 yt-dlp가 페이지를 풀지 못하는 플랫폼은 여기서 직접 CDN 주소를
+    되살리지 않으면 예열 성공 뒤 제작 단계에서 다시 탈락한다.
+    """
+    if not store or customer_id in (None, ""):
+        return list(urls)
+    try:
+        basket = {item.get("url"): item for item in
+                  store.mix_basket_list(customer_id=customer_id)}
+    except Exception:  # noqa: BLE001 — DB 조회 실패가 기존 URL 다운로드까지 막으면 안 된다.
+        return list(urls)
+
+    resolved = []
+    for url in urls:
+        direct = ((basket.get(url) or {}).get("video_url") or "").strip()
+        resolved.append(direct if direct and _is_direct_video(direct) else url)
+    return resolved
 
 
 def _prepare_sources(urls, work, store=None):
@@ -1097,7 +1151,9 @@ def run_mix_job(job_id, db_path, work_root):
             # video_id -> mp4 path, video_id -> caption(인스타만 채워짐, 유튜브/틱톡은 "").
             # extract_script가 caption을 힌트로 쓰고 없어도 영상 재전사로 동작 — .get(vid, "")로 안전 기본값.
             # 소스별 예외격리: 불량 URL은 스킵되고 최소 1개만 살면 계속(2026-07-19).
-            video_paths, captions, skipped = _prepare_sources(job["urls"], work, store=store)
+            download_urls = _basket_download_urls(
+                job["urls"], store, job.get("customer_id"))
+            video_paths, captions, skipped = _prepare_sources(download_urls, work, store=store)
             if skipped:
                 print(f"run_mix_job[{job_id}]: {len(skipped)}개 소스 스킵 "
                       f"(불량 URL) — {[u for u, _ in skipped]}", file=sys.stderr)
@@ -3598,11 +3654,9 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
         words, _wsrc = _beat_words_src(str(out), _rdur, removed=tts_timestamps.load_removed(str(out)))
         _t = None
         if words:
-            _t = caption_sync.phrase_durs_from_words(
-                beat["narration"], words, _rdur or 0.0,
-                preset=beat.get("caption_lines"))
-            beat["cap_durs"] = _t.durs if _t else None
-            beat["cap_lead"] = _t.lead_in if _t else 0.0
+            _t = _apply_cap_timing(beat, beat["narration"], words, _rdur)
+            if not _t:
+                beat["cap_durs"], beat["cap_lead"] = None, 0.0
         beat["cap_src"] = _wsrc if (words and _t) else "estimate"
         # ★싱크 마무리 — 렌더가 하던 것을 여기서도 한다(2026-08-20 실사고 job 087e03b69dc2).
         #   대본수정으로 hook 대사가 105자가 돼 mp3가 16.8초가 됐는데 target_seconds는

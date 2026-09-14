@@ -410,6 +410,11 @@ def _product_tokens(product):
     return [t for t in out if t]
 
 
+def _product_core_tokens(product):
+    from shopping_shorts import topic_contract
+    return topic_contract.topic_mentions(product, product)
+
+
 # ── 훅 3초 게이트(2026-08-19) ─────────────────────────────────────────────
 # 왜 필요한가: 유튜브 썰쇼핑은 **완시청 장사**다(실측 댓글률 0.005% vs 인스타 2.35%,
 # 구독 1.46만 채널이 1,047만 조회). 그런데 게이트는 구간순서·문장틀·밀도만 봤다 —
@@ -483,10 +488,21 @@ def prior_verdict(checks):
 
     앞에 판정이 없으면(키 소진 등) None을 돌려주는 판정기 → 검사 항목이 안 생긴다.
     """
-    hit = [c for c in (checks or []) if c.get("name") == "화자 일관성"]
+    hit = {c.get("name"): c for c in (checks or [])
+           if c.get("name") in ("화자 일관성", "주제 단일성")}
     if not hit:
-        return lambda _text: {}
-    return lambda _text: {"ok": hit[0]["ok"], "why": hit[0].get("detail") or ""}
+        return lambda _text, _product="": {}
+    def _cached(_text, _product=""):
+        speaker = hit.get("화자 일관성")
+        topic = hit.get("주제 단일성")
+        out = {}
+        if speaker:
+            out.update(ok=bool(speaker.get("ok")), why=speaker.get("detail") or "")
+        if topic:
+            out.update(topic_ok=bool(topic.get("ok")),
+                       topic_why=topic.get("detail") or "", foreign_products=[])
+        return out
+    return _cached
 
 
 # ── 사람이 나오는가 / 쓰임이 번지는가 ─────────────────────────────────────
@@ -579,7 +595,8 @@ def _uses_wow(full, hooks, min_hits=2):
 
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
           speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False,
-          source_count=None, targets=None, person_required=False, materials_text=""):
+          source_count=None, targets=None, person_required=False, materials_text="",
+          topic_required=False, claim_evidence=None, claims_required=False):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -775,44 +792,9 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
                                       % " / ".join('"%s"' % x for x in _ebad[:2]))
                                      if _ebad else "OK"})
 
-    # ★소재 일치(2026-08-18) — **출구 검사**. 이번 사고("재료는 네일펜인데 대본은 주방
-    #   기름 가림막")를 막으려고 지금까지 한 것은 전부 프롬프트에 경고를 더 넣는 일이었다.
-    #   그건 통로를 하나씩 막는 두더지잡기라, 새 통로가 생기면 또 샌다.
-    #   여기서 잡으면 **어디서 새든 결과에서 걸린다** — 출구는 하나뿐이다.
-    #   판정은 느슨하게: 제품명 토큰이 **하나라도** 나오면 통과. 대본이 제품을 '이거'로만
-    #   부르는 건 정상이므로 전체 일치를 요구하면 멀쩡한 대본을 반려한다(오탐이 더 나쁘다).
-    #   product를 안 주면 검사 자체를 건너뛴다 = 회귀 0.
-    if _product_tokens(product):
-        toks = _product_tokens(product)
-        nf = norm(full)
-        # 토큰 그대로 못 찾으면 **앞 2글자**로도 본다 — '네일펜'을 대본이 '네일'로만
-        # 부르는 건 정상이다. 오탐(멀쩡한 대본 반려)이 미탐보다 나쁘므로 느슨하게 잡는다.
-        hit = [t for t in toks if t in nf or (len(t) >= 3 and t[:2] in nf)]
-        checks.append({"name": "소재 일치", "ok": bool(hit),
-                       "detail": ("OK(%s)" % ", ".join(hit[:3])) if hit else
-                                 ("대본에 「%s」 얘기가 한 번도 안 나온다 — 다른 소재로 "
-                                  "샜을 가능성이 높다(재료 밖 소재 금지)" % product)})
-
-    # ★재료 밖 판매처(2026-09-11 사장님 "고질적으로 다른 내용이 두 개씩") — 위 '소재 일치'의
-    #   사각지대다. 그 검사는 **우리 제품 단어가 하나라도 있으면 통과**라, 소재는 맞는데
-    #   판매처·소속이 남의 것인 대본을 못 잡았다.
-    #   실측(work 79e2c2b40481): 재료 6편 전부 '반려동물 털 제거 젤 패드'인데 초안이
-    #   "여러분 다이소 가면 이거 무조건 데려오세요… 제 지인이 다이소 매니저로 있거든요".
-    #   뿌리는 스파인 57('다이소 내부인형')의 문장틀에 '다이소 점장'이 문자 그대로 박혀 있고,
-    #   프롬프트가 "틀 자체를 새로 짓지 마라"고 강제한 것 — 모델은 지시를 따랐다.
-    #   30일간 그 스타일을 고른 109건 중 50건이 같은 모양이었다(재료엔 다이소가 없는데).
-    #   판정은 좁게: RETAILERS의 이름이 대본에 나왔는데 **재료 원문 어디에도 없으면** 실패.
-    #   materials_text를 안 주면 검사 자체를 건너뛴다(회귀 0). '지인이 점장'·'품절'처럼
-    #   고유명사가 아닌 허위는 여기서 안 잡는다 — 그건 사실검증의 몫이라 넓히면 오탐이 난다.
-    if materials_text:
-        _mt = norm(materials_text).lower()
-        _nf = norm(full).lower()
-        leaked = [r for r in RETAILERS if r.lower() in _nf and r.lower() not in _mt]
-        checks.append({"name": "재료 밖 판매처", "ok": not leaked,
-                       "detail": ("OK" if not leaked else
-                                  ("대본에 「%s」가 나오는데 재료 어디에도 없다 — 문장틀에 박힌 "
-                                   "판매처를 그대로 쓴 것이다. 재료에 없는 판매처·소속·인맥은 "
-                                   "쓰지 말고 그 자리를 재료의 사실로 바꿔라" % ", ".join(leaked[:3])))})
+    # 소재·판매처 출구 검사는 모든 생성 경로가 이 함수 한 벌을 쓴다. 픽업 생성기도
+    # fatal_content_fail()로 같은 판정을 호출한다(2026-09-14 우회 경로 제거).
+    checks += fatal_content_checks(full, product=product, materials_text=materials_text)
 
     # ★훅 3초(2026-08-19) — 스타일이 선언할 때만. 위 함수 하나가 판단을 전담한다.
     checks += hook_checks(style, full, product)
@@ -828,9 +810,169 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #     잡았다(오탐). 이 파일의 기존 원칙대로 오탐이 미탐보다 나쁘다 → LLM 판정.
     #   ★fail-open: 판정을 못 하면(_call_json이 키 소진 시 {} 반환·예외) **통과**시킨다.
     #     여기서 막으면 키가 마른 날 대본이 통째로 안 나온다.
+    checks += semantic_content_checks(
+        full, product, speaker_judge, evidence=claim_evidence,
+        topic_required=topic_required, claims_required=claims_required)
+
+    # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
+    ok_g, bad = (grounded_quantity_check(full, claim_evidence) if claims_required
+                 else grounding_check(full, facts_text))
+    if (facts_text or "").strip() or claims_required:
+        checks.append({"name": "수치 근거", "ok": ok_g,
+                       "fatal": bool(claims_required),
+                       "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
+                                  + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
+
+    if grounded and scene_ids is not None:
+        ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe,
+                                          source_count=source_count)
+        checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
+    return checks, full
+
+
+def claim_units(text):
+    """판정 입력과 출력 검증이 공유하는 문장 단위. 숫자의 소수점은 자르지 않는다."""
+    return [s.strip() for s in re.findall(
+        r"[\s\S]+?(?:[.!?。！？][\"'”’)]*(?=\s|$)|\n+|$)", str(text or "")) if s.strip()]
+
+
+def _quote_norm(text):
+    # 장면 설명과 변화가 줄바꿈으로 연결된 원문을 모델이 마침표+공백으로
+    # 인용하는 경우는 같은 문장이다. 글자·수치·소수점은 그대로 대조한다.
+    value = re.sub(r"(?<=[^\W\d_])\.(?=\s|$)", "", str(text or ""))
+    return re.sub(r"\s+", "", value)
+
+
+_CLAIM_QUANTITY = re.compile(
+    r"(?<![\dA-Za-z])(?P<num>\d[\d,.]*|수십|수백|수천|몇|일|이|삼|사|오|육|칠|팔|구|십)"
+    r"\s*(?P<scale>천|만|억)?\s*(?P<unit>mm|cm|kg|ml|초|분|시간|개월|퍼센트|년|개|장|자루|명|인|배|%|원)")
+_POPULARITY_CLAIM = re.compile(r"입소문|품절|매진|판매량|베스트셀러|인기|유행|화제|대란|난리(?:가)?\s*났|난리\s*난|없어서\s*못\s*(?:구|사)")
+_ODOR_CLAIM = re.compile(r"탈취|(?:냄새|악취).{0,30}(?:차단|제거|잡아|잡아주|없|안\s*나|걱정할\s*필요)")
+_ODOR_EVIDENCE = re.compile(r"탈취|냄새|악취")
+_ODOR_RELIEF = re.compile(
+    r"탈취|(?:냄새|악취).{0,15}(?:차단|제거|없애|잡아|줄어|덜\s*나|나지\s*않|안\s*나|없|걱정.{0,10}없)")
+_ODOR_NEGATED = re.compile(r"없지\s*않|(?:차단|제거|탈취).{0,6}(?:안\s*(?:되|돼)|않|못|아니)")
+
+
+def _quantities(text):
+    out = []
+    korean = {"일": 1, "이": 2, "삼": 3, "사": 4, "오": 5, "육": 6,
+              "칠": 7, "팔": 8, "구": 9, "십": 10}
+    for match in _CLAIM_QUANTITY.finditer(str(text or "")):
+        num, unit = match["num"], match["unit"]
+        # '이 장면', '이 분' 같은 지시어를 수량/시간으로 오인하지 않는다.
+        if num in korean and (unit not in ("초", "분", "시간", "원")
+                              or re.search(r"\s", match.group(0))):
+            continue
+        scale = {"천": 1000, "만": 10000, "억": 100000000}.get(match["scale"], 1)
+        vague = num in ("몇", "수십", "수백", "수천")
+        if vague:
+            value = {"몇": 1, "수십": 10, "수백": 100, "수천": 1000}[num] * scale
+        else:
+            try:
+                value = korean[num] if num in korean else float(num.replace(",", "").rstrip("."))
+            except ValueError:
+                continue
+            value *= scale
+        factor, base = {"분": (60, "초"), "시간": (3600, "초"),
+                        "퍼센트": (1, "%")}.get(unit, (1, unit))
+        out.append((match.group(0), base, value * factor, vague))
+    return out
+
+
+def _quantity_supported(quantity, text):
+    _, unit, value, vague = quantity
+    for _, other_unit, other_value, other_vague in _quantities(text):
+        if unit != other_unit:
+            continue
+        if vague and value <= other_value < value * 10:
+            return True
+        if not vague and not other_vague and value == other_value:
+            return True
+    return False
+
+
+def grounded_quantity_check(full, evidence):
+    """확정 근거의 본문만 수치와 대조한다. seg_id/편집 길이/활용 추측은 근거가 아니다."""
+    text = "\n".join(str(row.get("text") or "") for row in (evidence or {}).get("items", [])
+                     if isinstance(row, dict))
+    bad = [q[0] for q in _quantities(full) if not _quantity_supported(q, text)]
+    return not bad, bad
+
+
+def _claim_audit_errors(full, evidence, verdict):
+    """모델의 초록 판정만 믿지 않고 문장 누락·허위 인용·고위험 주장 근거를 검증한다."""
+    units = claim_units(full)
+    audit = verdict.get("claim_checks") if isinstance(verdict, dict) else None
+    if not isinstance(audit, list):
+        return ["문장별 사실 근거 판정이 없다"]
+    items = {str(x.get("evidence_id")): x for x in (evidence or {}).get("items", [])
+             if isinstance(x, dict) and x.get("evidence_id") and x.get("text")}
+    errors, seen = [], set()
+    for row in audit:
+        if not isinstance(row, dict):
+            errors.append("문장별 판정 형식이 잘못됐다")
+            continue
+        index = row.get("unit_index")
+        if type(index) is not int or not 0 <= index < len(units) or index in seen:
+            errors.append("판정 문장 번호가 없거나 중복됐다")
+            continue
+        seen.add(index)
+        unit = units[index]
+        if _quote_norm(row.get("claim")) != _quote_norm(unit):
+            errors.append("%d번 문장 원문과 판정 대상이 다르다" % index)
+            continue
+        kind, supports = row.get("kind"), row.get("supports")
+        if kind not in ("objective", "subjective") or not isinstance(supports, list):
+            errors.append("%d번 문장의 주장 종류/근거 목록이 없다" % index)
+            continue
+        quantities = _quantities(unit)
+        popularity, odor = bool(_POPULARITY_CLAIM.search(unit)), bool(_ODOR_CLAIM.search(unit))
+        if row.get("supported") is not True:
+            errors.append("%d번 문장에 확인되지 않은 주장이 있다: %s" % (index, unit))
+        if kind == "subjective" and (quantities or popularity or odor):
+            errors.append("%d번 문장의 수치·인기도·냄새 주장을 주관적 감탄으로 면제했다" % index)
+        quotes, nonvisual_quotes = [], []
+        for support in supports:
+            item = items.get(str(support.get("evidence_id"))) if isinstance(support, dict) else None
+            quote = str(support.get("quote") or "").strip() if isinstance(support, dict) else ""
+            if not item or len(_quote_norm(quote)) < 3 or _quote_norm(quote) not in _quote_norm(item["text"]):
+                errors.append("%d번 문장의 근거 ID 또는 인용문이 실제 자료에 없다" % index)
+                continue
+            quotes.append(quote)
+            if item.get("kind") != "visual":
+                nonvisual_quotes.append(quote)
+        if kind == "objective" and not quotes:
+            errors.append("%d번 객관적 문장의 원문 근거가 없다: %s" % (index, unit))
+        quoted = "\n".join(quotes)
+        for quantity in quantities:
+            if not _quantity_supported(quantity, quoted):
+                errors.append("%d번 문장 수치 %s의 실제 근거가 없다" % (index, quantity[0]))
+        # 화면에 물건이 보인다는 사실은 유행·탈취 성능을 증명하지 않는다.
+        nonvisual = "\n".join(nonvisual_quotes)
+        if popularity and not _POPULARITY_CLAIM.search(nonvisual):
+            errors.append("%d번 문장 인기도·입소문·품절의 발화/검증 근거가 없다" % index)
+        if odor and (not _ODOR_RELIEF.search(nonvisual) or _ODOR_NEGATED.search(nonvisual)):
+            errors.append("%d번 문장 냄새·탈취 효과의 발화/검증 근거가 없다" % index)
+    if seen != set(range(len(units))):
+        errors.append("판정에서 빠진 문장 번호: " + ", ".join(str(i) for i in range(len(units)) if i not in seen))
+    return errors
+
+
+def semantic_content_checks(full, product="", speaker_judge=None, evidence=None,
+                            topic_required=False, claims_required=False):
+    """전체·부분·픽업·조립이 공유하는 화자/주제/사실 의미 판정 출구."""
+    checks, _v = [], {}
     if speaker_judge is not None:
         try:
-            _v = speaker_judge(full) or {}
+            try:
+                _v = (speaker_judge(full, product, evidence=evidence)
+                      if evidence is not None else speaker_judge(full, product)) or {}
+            except TypeError:  # 옛 판정기/테스트는 인자 하나 계약
+                try:
+                    _v = speaker_judge(full, product) or {}
+                except TypeError:
+                    _v = speaker_judge(full) or {}
         except Exception:      # noqa: BLE001 — 판정 실패가 대본 생성을 죽이면 안 된다
             _v = {}
         if isinstance(_v, dict) and isinstance(_v.get("ok"), bool):
@@ -839,22 +981,42 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
                                      ("말하는 사람이 도중에 바뀐다 — 훅에서 등장시킨 그 인물로 "
                                       "끝까지 꿰어라(3인칭은 '친구 남편'처럼 누구 것인지 밝혀라)")
                                      if not _v["ok"] else "OK"})
+        if product and isinstance(_v, dict) and isinstance(_v.get("topic_ok"), bool):
+            _foreign = ", ".join(str(x) for x in (_v.get("foreign_products") or [])[:4])
+            checks.append({"name": "주제 단일성", "ok": _v["topic_ok"],
+                           "detail": ((_v.get("topic_why") or "").strip()[:200]
+                                      or (("다른 제품이 섞였다: " + _foreign) if _foreign else
+                                          "대본의 중심 제품이 고정 주제와 다르다"))
+                                     if not _v["topic_ok"] else "OK"})
+        elif product and topic_required:
+            checks.append({"name": "주제 단일성", "ok": False,
+                           "detail": "고정 제품 주제를 확인하지 못해 결과를 내보내지 않는다"})
+    elif product and topic_required:
+        # 고정 주제 출구는 판정기 누락도 실패다. 호출부 하나가 judge를 빼먹었다고
+        # 조립/신규 경로만 검사를 우회하면 같은 사고가 다시 생긴다.
+        checks.append({"name": "주제 단일성", "ok": False,
+                       "detail": "고정 제품 주제 판정기가 없어 결과를 내보내지 않는다"})
 
-    # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
-    ok_g, bad = grounding_check(full, facts_text)
-    if (facts_text or "").strip():
-        checks.append({"name": "수치 근거", "ok": ok_g,
-                       "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
-                                  + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
-
-    # ★장면 근거(2026-09-04, 2단계 '본 것만 쓰기'): grounded 모드에서만 항목을 만든다(종전 호출 = 회귀 0).
-    #   규칙은 프롬프트(_GROUNDED_RULE)에 적혀 있고 **여기가 그 판정**이다 — 지시와 판정은 짝
-    #   (메모리 '규칙은 있는데 판정이 없다': 지시만 있으면 어겨도 미검출 → 재작성이 안 걸린다).
-    if grounded and scene_ids is not None:
-        ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe,
-                                          source_count=source_count)
-        checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
-    return checks, full
+    if evidence is not None or claims_required:
+        decided = isinstance(_v, dict) and isinstance(_v.get("claims_ok"), bool)
+        unsupported = _v.get("unsupported_claims") if isinstance(_v, dict) else None
+        # 판정 결과가 서로 모순되거나 목록 타입이 깨진 경우도 성공으로 보지 않는다.
+        valid = decided and isinstance(unsupported, list)
+        audit_errors = _claim_audit_errors(full, evidence, _v) if claims_required else []
+        ok = valid and _v["claims_ok"] is True and not unsupported and not audit_errors
+        if valid or claims_required:
+            details = list(audit_errors)
+            for row in (unsupported or []) if isinstance(unsupported, list) else []:
+                if isinstance(row, dict):
+                    details.append("%s: %s" % (row.get("claim") or "문장",
+                                                row.get("reason") or "근거 없음"))
+                else:
+                    details.append(str(row))
+            checks.append({"name": "사실 근거", "ok": bool(ok),
+                           "detail": "OK" if ok else (" / ".join(details)[:500]
+                               or (_v.get("claims_why") if isinstance(_v, dict) else "")
+                               or "사실 근거를 확인하지 못해 결과를 내보내지 않는다")})
+    return checks
 
 
 def parse_src_segs(raw):
@@ -955,7 +1117,40 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
 #: (2026-09-09 사장님 재발 제보. 09-07엔 프롬프트 가드만 넣었고 출구는 그대로 열려 있었다.)
 #: '재료 밖 판매처'도 치명이다(2026-09-11) — 소재는 맞아도 "다이소 매니저 지인"이 지어낸
 #: 말이면 그 대본은 거짓말이다. 고쳐서 내보낼 것이 아니라 그 스타일을 빼야 한다.
-FATAL_CHECKS = ("소재 일치", "재료 밖 판매처")
+FATAL_CHECKS = ("소재 일치", "주제 단일성", "재료 밖 판매처", "사실 근거")
+
+
+def fatal_content_checks(full, product="", materials_text=""):
+    """생성 방식과 무관하게 적용하는 소재·판매처 출구 검사 한 벌."""
+    checks = []
+    # 제품 중심어를 확정할 수 있을 때만 어휘 검사를 한다. 자유 주제("물때 청소")를
+    # 억지로 제품명처럼 잘라 검사하면 정상 이식 대본을 막는다. 의미 고정 작업은 아래
+    # 주제 단일성 판정이 별도로 맡는다.
+    toks = _product_core_tokens(product)
+    if toks:
+        from shopping_shorts import topic_contract
+        hit = topic_contract.topic_mentions(full, product)
+        checks.append({"name": "소재 일치", "ok": bool(hit),
+                       "detail": ("OK(%s)" % ", ".join(hit[:3])) if hit else
+                                 ("대본에 「%s」 얘기가 한 번도 안 나온다 — 다른 소재로 "
+                                  "샜을 가능성이 높다(재료 밖 소재 금지)" % product)})
+
+    if materials_text:
+        mt = norm(materials_text).lower()
+        nf = norm(full).lower()
+        leaked = [r for r in RETAILERS if r.lower() in nf and r.lower() not in mt]
+        checks.append({"name": "재료 밖 판매처", "ok": not leaked,
+                       "detail": ("OK" if not leaked else
+                                  ("대본에 「%s」가 나오는데 재료 어디에도 없다 — 문장틀에 박힌 "
+                                   "판매처를 그대로 쓴 것이다. 재료에 없는 판매처·소속·인맥은 "
+                                   "쓰지 말고 그 자리를 재료의 사실로 바꿔라" % ", ".join(leaked[:3])))})
+    return checks
+
+
+def fatal_content_fail(full, product="", materials_text=""):
+    """대본 문자열 하나의 치명 소재 검사를 실행하고 실패 이름을 반환한다."""
+    return fatal_fail(fatal_content_checks(full, product=product,
+                                           materials_text=materials_text))
 
 
 def passed(checks):
@@ -973,7 +1168,7 @@ def fatal_fail(checks):
       그대로 화면에 실렸다.
     """
     for c in checks or []:
-        if not c.get("ok") and c.get("name") in FATAL_CHECKS:
+        if not c.get("ok") and (c.get("name") in FATAL_CHECKS or c.get("fatal") is True):
             return c.get("name") or ""
     return ""
 
@@ -998,4 +1193,5 @@ def gate_feedback(checks):
                #   모자란 분량은 칸을 늘려서가 아니라 **한 칸 안을 두껍게** 채워야 한다.
                chr(10) + "분량이 모자라다 — **칸을 더 쪼개지 마라**. 칸 개수·순서는 그대로 두고 "
                "각 칸 안을 두껍게 채워라: 누가 겪었는지, 왜 그렇게 되는지, "
-               "그래서 뭐가 달라졌는지를 한 문장 안에 이어 붙여라."))
+               "그래서 뭐가 달라졌는지를 한 문장 안에 이어 붙여라."
+               if any(c.get("name", "").startswith("말 밀도") for c in bad) else ""))

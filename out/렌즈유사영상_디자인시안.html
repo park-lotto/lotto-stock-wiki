@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>렌즈 유사영상 — 디자인 시안</title>
+<style>
+:root{--bg:#0d1117;--card:#151b24;--line:#232c38;--fg:#e6edf3;--sub:#8b97a6;--accent:#2dd4bf;--warn:#e0a33d}
+*{box-sizing:border-box}body{margin:0;background:#06090d;color:var(--fg);font:14px/1.5 -apple-system,"Pretendard","Malgun Gothic",sans-serif;padding:24px}
+.cmp{display:flex;gap:10px;margin:0 auto 14px;max-width:980px;color:var(--sub);font-size:13px}
+.modal{max-width:980px;margin:0 auto;background:var(--bg);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.hd{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.hd h1{font-size:17px;margin:0}.x{margin-left:auto;color:var(--sub);font-size:20px;cursor:pointer}
+.prod{display:flex;align-items:center;gap:10px;padding:14px 20px;background:#11161e;border-bottom:1px solid var(--line)}
+.prod .tag{font-size:11px;color:var(--warn);border:1px solid #5a4318;border-radius:6px;padding:1px 7px}
+.prod b{font-size:16px}
+.btn{border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:9px;padding:7px 13px;font-size:13px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:#3a4656}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#04201c;font-weight:700}
+.btn.ghost{color:var(--accent);border-color:#1f5c55}
+.sec{padding:16px 20px;border-bottom:1px solid var(--line)}
+.lbl{font-size:12px;color:var(--sub);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.lbl .n{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#1c2530;color:var(--fg);font-size:11px;font-weight:700}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input{flex:1;min-width:220px;background:#0a0e13;border:1px solid var(--line);color:var(--fg);border-radius:9px;padding:8px 12px;font-size:13px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{background:transparent;border:0;color:var(--sub);padding:6px 12px;font-size:13px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}.seg button.on{background:#12302c;color:var(--accent);font-weight:700}
+.hint{font-size:12px;color:var(--sub);margin-top:6px}
+.kw{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:11px 0;border-top:1px solid #1a212b}
+.kw:first-of-type{border-top:0}
+.kw .t{font-weight:700;font-size:14px}.kw .tr{font-size:11.5px;color:var(--sub);margin-top:2px}
+.kw .p{font-size:10.5px;color:#34d399;border:1px solid #1d4f3c;border-radius:5px;padding:0 5px;margin-right:6px;font-weight:600}
+.acts{display:flex;gap:6px;align-items:center}
+.ico{width:40px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:1px solid var(--line);border-radius:9px;font-size:15px;cursor:pointer;background:transparent;color:var(--fg)}
+.ico small{font-size:10.5px;color:var(--sub);line-height:1}.ico:hover{border-color:#3a4656}.div{width:1px;height:22px;background:var(--line);margin:0 2px}
+.res-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12.5px;cursor:pointer;color:var(--sub);background:transparent}
+.chip.on{border-color:var(--accent);color:var(--accent);background:#0f2724}
+.tog{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sub);cursor:pointer}
+.sw{width:28px;height:16px;border-radius:9px;background:#2a3441;position:relative}.sw.on{background:var(--accent)}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:.15s}.sw.on::after{left:14px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
+.thumb{aspect-ratio:9/16;border-radius:10px;background:linear-gradient(160deg,#1c2733,#10161e);border:1px solid var(--line);position:relative}
+.thumb i{position:absolute;left:6px;top:6px;font-style:normal;font-size:10.5px;background:#0009;border-radius:5px;padding:1px 6px}
+.sel{margin-left:auto;display:flex;gap:6px}
+.notes{max-width:980px;margin:18px auto 0;background:#0c1016;border:1px dashed #2a3441;border-radius:12px;padding:14px 18px;font-size:13px;color:var(--sub)}
+.notes b{color:var(--fg)}.notes td{padding:3px 12px 3px 0;vertical-align:top}.notes s{opacity:.7}
+</style></head><body>
+
+<div class="cmp">시안 1-3 (사장님 의견 반영) · 순서대로 <b style="color:var(--fg)">① 검색어 → ② 찾기 → ③ 결과</b> 3단으로 정리 (실제 동작 없음 — 모양만)</div>
+
+<div class="modal">
+  <div class="hd"><span>🔍</span><h1>비슷한 영상 찾기</h1><span class="x">✕</span></div>
+
+  <div class="prod" style="flex-direction:column;align-items:center;gap:8px;text-align:center">
+    <div style="font-size:11px;color:var(--sub)">[분석 전] 화면만 보고 짐작한 제품이라 틀릴 수 있어요</div>
+    <div style="display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
+      <span class="tag" style="color:var(--sub);border-color:#2a3441">짐작한 제품</span><b style="color:var(--sub)">마리오 케이스?</b>
+      <button class="btn" style="border-color:#5a4318;color:var(--warn);font-weight:700">📝 대본 분석해서 정확히 찾기</button>
+    </div>
+  </div>
+  <div class="prod" style="flex-direction:column;align-items:center;gap:6px;text-align:center;background:#0f1a17">
+    <div style="font-size:11px;color:var(--sub)">[분석 후] 버튼이 사라지고 이렇게 바뀜 · 검색어도 이 제품으로 다시 뽑힘</div>
+    <div style="display:flex;align-items:center;gap:10px;justify-content:center">
+      <span class="tag" style="color:#34d399;border-color:#1d4f3c">✅ 대본에서 찾은 제품</span><b>슈퍼 마리오 아이폰 케이스</b>
+      <button class="btn" style="font-size:12px;padding:4px 9px;color:var(--sub)">다시 분석</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="lbl"><span class="n">1</span>검색어</div>
+    <div class="row">
+      <input placeholder="찾을 제품을 직접 입력 (예: 마리오 폰케이스)">
+      <button class="btn ghost">✨ 검색어 만들기</button>
+      <button class="btn">🔄 더 뽑기</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="lbl" style="justify-content:space-between"><span style="display:flex;gap:8px;align-items:center"><span class="n">2</span>찾기</span>
+      <span class="seg"><button class="on">나라별 자동</button><button>한국어</button><button>영어</button><button>중국어</button><button>일본어</button></span>
+    </div>
+    <div class="hint" style="margin:-2px 0 8px">나라별 자동 = 샤오홍슈·도우인은 중국어, 틱톡·인스타·핀터레스트는 영어로 검색</div>
+
+    <div class="kw"><div><div class="t"><span class="p">제품</span>마리오 케이스</div><div class="tr">Mario phone case · 马里奥手机壳 · マリオスマホケース</div></div>
+      <div class="acts"><button class="btn ghost">⬇ 아래로 모아서 보기</button><span class="div"></span><span style="font-size:11px;color:var(--sub);white-space:nowrap">새 탭</span>
+        <button class="ico" title="샤오홍슈">📕<small>샤</small></button><button class="ico" title="도우인">🎶<small>도</small></button><button class="ico" title="틱톡">🎵<small>틱</small></button><button class="ico" title="인스타">📷<small>인</small></button><button class="ico" title="핀터레스트">📌<small>핀</small></button>
+        <button class="btn" title="다섯 곳을 새 탭으로">↗ 5곳 새 탭 열기</button></div></div>
+
+    <div class="kw"><div><div class="t"><span class="p">제품</span>아이폰 케이스</div><div class="tr">iPhone case · iPhone手机壳 · iPhoneケース</div></div>
+      <div class="acts"><button class="btn ghost">⬇ 아래로 모아서 보기</button><span class="div"></span><span style="font-size:11px;color:var(--sub);white-space:nowrap">새 탭</span>
+        <button class="ico" title="샤오홍슈">📕<small>샤</small></button><button class="ico" title="도우인">🎶<small>도</small></button><button class="ico" title="틱톡">🎵<small>틱</small></button><button class="ico" title="인스타">📷<small>인</small></button><button class="ico" title="핀터레스트">📌<small>핀</small></button><button class="btn">↗ 5곳 새 탭 열기</button></div></div>
+
+    <div class="kw"><div><div class="t">슈퍼 마리오 입체 케이스 거치대</div><div class="tr">Super Mario 3D stand phone case · 超级马里奥立体手机壳支架</div></div>
+      <div class="acts"><button class="btn ghost">⬇ 아래로 모아서 보기</button><span class="div"></span><span style="font-size:11px;color:var(--sub);white-space:nowrap">새 탭</span>
+        <button class="ico" title="샤오홍슈">📕<small>샤</small></button><button class="ico" title="도우인">🎶<small>도</small></button><button class="ico" title="틱톡">🎵<small>틱</small></button><button class="ico" title="인스타">📷<small>인</small></button><button class="ico" title="핀터레스트">📌<small>핀</small></button><button class="btn">↗ 5곳 새 탭 열기</button></div></div>
+
+    <div class="hint">⬇ 아래로 모아서 보기 = 유튜브·핀터레스트·네이버클립에서 찾아 이 창 아래 ③에 쌓음(무료) · 샤/도/틱/인/핀 = 그 사이트를 새 탭으로 열기</div>
+  </div>
+
+  <div class="sec" style="border-bottom:0">
+    <div class="lbl"><span class="n">3</span>모인 영상 <b style="color:var(--fg)">6개</b></div>
+    <div class="res-bar">
+      <button class="chip on">전체 6</button><button class="chip">인스타 3</button><button class="chip">유튜브 2</button><button class="chip">틱톡 1</button>
+      <span class="div"></span>
+      <span class="tog"><span class="sw on"></span>영상만</span>
+      <span class="tog"><span class="sw"></span>숏폼만</span>
+      <span class="tog"><span class="sw"></span>다른 제품 숨기기</span>
+      <div class="sel"><button class="btn">전체 선택</button><button class="btn pri">선택 담기 (0)</button></div>
+    </div>
+    <div class="grid">
+      <div class="thumb"><i>📷 인스타</i></div><div class="thumb"><i>📷 인스타</i></div><div class="thumb"><i>▶ 유튜브</i></div><div class="thumb"><i>▶ 유튜브</i></div><div class="thumb"><i>🎵 틱톡</i></div>
+    </div>
+  </div>
+</div>
+
+<div class="notes">
+  <b>바꾼 점</b>
+  <table>
+    <tr><td>구조</td><td>흩어진 버튼 7줄 → <b>① 검색어 ② 찾기 ③ 결과</b> 3칸. 위에서 아래로 한 번만 읽으면 됨</td></tr>
+    <tr><td>이름</td><td><s>여기서</s> → 아래로 모아서 보기 · <s>5곳 전부</s> → 5곳 새 탭 열기 · 아이콘 아래 샤/도/틱/인/핀 글자 · <s>해외 원본</s> → 나라별 자동 · <s>검색어 조합 만들기</s> → 검색어 만들기 · <s>다른 검색어 더</s> → 더 뽑기 · <s>렌즈 유사영상</s> → 비슷한 영상 찾기</td></tr>
+    <tr><td>줄인 것</td><td>검색어 줄 설명(이 화면에 담기/새 탭으로 열기) 반복 제거 → 맨 아래 한 줄로 · 플랫폼 버튼 글자 → 아이콘(마우스 올리면 이름) · <b>러시아어</b> 버튼 제거(인스타 실측 0건) · 해외만/한국만 체크박스 제거(언어 선택과 겹침) · 선택 삭제는 선택했을 때만 표시</td></tr>
+    <tr><td>제품</td><td>'대본에서 찾은 제품'과 '대본 분석 후 키워드 뽑기'를 <b>한 칸으로 합침</b>(가운데 정렬). 분석 전엔 '짐작한 제품?'+분석 버튼, 분석 후엔 '✅ 대본에서 찾은 제품'. 자동으로 계속 모으기 삭제</td></tr>
+    <tr><td>확인 필요</td><td>해외만·한국만·러시아어·선택 삭제를 실제로 안 쓰시는지 — 쓰시면 남깁니다</td></tr>
+  </table>
+</div>
+</body></html>

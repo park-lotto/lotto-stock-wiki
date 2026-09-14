@@ -586,7 +586,7 @@ body.is-admin .admin-only{display:block}
          아래는 '무엇으로 줄세울까'. 데이터는 이미 받아둔 것이라 추가 크롤 0. -->
     <div class="tabs" id="spanTabs" style="margin-bottom:8px">
       <span class="tab-grp">기간</span>
-      <div class="tab" data-span="0" data-hours="12" title="마지막 수집 회차 중 올라온 지 12시간 이내인 것만 — 갓 올라와 터지는 중인 것을 봅니다(발행시각을 모르는 플랫폼은 수집 기준)">⚡ 12시간 히트작</div>
+      <!-- ⚡12시간 탭 제거(2026-09-14 사장님 "12시간을 빼는게 좋겠다") — 썰 470채널 중 12h 게시 22채널뿐이라 늘 빈약 -->
       <div class="tab active" data-span="0" data-hours="24" title="마지막 수집 회차 중 올라온 지 24시간 이내인 것만 — 하루치 신선한 것을 봅니다(발행시각을 모르는 플랫폼은 수집 기준)">🔆 24시간 히트작</div>
       <div class="tab" data-span="0" data-hours="48" title="마지막 수집 회차 중 올라온 지 48시간 이내인 것만 — 빠르게 터지는 것을 봅니다(발행시각을 모르는 플랫폼은 수집 기준)">🆕 48시간 히트작</div>
       <div class="tab" data-span="7" title="최근 7일 수집분 중 댓글 500개 넘은 것 — 이미 받아둔 데이터라 새로 긁지 않습니다">🔥 이번 주 터진 것</div>
@@ -3350,8 +3350,8 @@ async function lensSearch(btn, shortcode){
   // 재생 중이면 현재 프레임(사장님이 고른 장면), 아니면 썸네일.
   // 둘 다 없으면(유튜브 iframe 폴백 등) 기억해둔 썸네일 주소로 다시 받아 시도한다.
   const cv=await _captureFrameAsync(shortcode);
-  if(!cv){ openScript('<div style="padding:10px;color:var(--sub)">이미지를 준비하지 못했습니다. 썸네일이 로드된 뒤 다시 눌러주세요.</div>','🔍 렌즈 유사영상',true); return; }
-  openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 렌즈 유사영상',true);
+  if(!cv){ openScript('<div style="padding:10px;color:var(--sub)">이미지를 준비하지 못했습니다. 썸네일이 로드된 뒤 다시 눌러주세요.</div>','🔍 비슷한 영상 찾기',true); return; }
+  openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 비슷한 영상 찾기',true);
   const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
   const srcItem=findItem(shortcode);
   const caption=(srcItem && srcItem.caption) || '';
@@ -3737,7 +3737,7 @@ async function lensExtractThenSearch(shortcode){
   // 추출 성공 → 검색어를 **처음부터 다시** 뽑는다(append=false).
   // 옛 후보는 썸네일만 보고 지은 것이라 이어붙이면 틀린 것이 남는다.
   const st2=LENS_STATE[shortcode];
-  if(st2){ st2.reExtracting=false; st2.cnErr=''; st2.cnCands=[]; st2.cnNoNew=false; st2.cnLoading=true; _lensRerender(shortcode); }
+  if(st2){ st2.extractedNow=true; st2.reExtracting=false; st2.cnErr=''; st2.cnCands=[]; st2.cnNoNew=false; st2.cnLoading=true; _lensRerender(shortcode); }
   await fetchLensCnKeywords(shortcode, (st2&&st2.caption)||'', st2&&st2.frameBlob, false);
 }
 // ✅ 대본이 말한 제품을 검색어에 표시한다 (2026-09-08 사장님 "대본분석을 한 경우
@@ -4053,6 +4053,9 @@ function _lensKwFor(c, platform, lang){
   // 고른 언어의 검색어. 없으면 ''을 돌려 **버튼을 아예 안 그린다** —
   // 빈 검색어로 사이트를 열면 엉뚱한 홈으로 떨어진다(기존 규약과 같다).
   const L = (lang && lang !== 'auto') ? lang : (_LENS_AUTO_LANG[platform] || 'ko');
+  // ★인스타는 러시아어 검색어에 결과를 안 준다(2026-09-14 실측: 'чехол Марио' 2단어도 0건).
+  //   러시아어를 골랐어도 인스타 버튼만은 영어 검색어로 연다.
+  if (platform === 'instagram' && L === 'ru' && c && (c.en || '').trim()) return c.en.trim();
   return ((c && c[L]) || '').trim();
 }
 function setLensLang(shortcode, lang){
@@ -4114,7 +4117,9 @@ function lensOpenAll(shortcode, idx){
     const u = (t.k === 'xiaohongshu') ? _openUrl(t.url) : t.url;
     // ★window.open이 null이면 브라우저가 팝업을 막은 것이다. 조용히 넘기면
     //   "눌렀는데 하나만 열린다"가 되고 원인을 알 수 없다 — 세어서 알린다.
-    try { if(window.open(u, '_blank', 'noopener')) opened++; } catch(e){}
+    // ★'noopener'를 주면 window.open은 **열려도 늘 null**을 돌려준다(명세). 그래서 5개가 다 열려도
+    //   "0/5개만 열렸다"고 떴다(2026-09-14 실클릭 실측). 창을 받아 opener만 끊는다.
+    try { const w=window.open(u, '_blank'); if(w){ try{ w.opener=null; }catch(_){} opened++; } } catch(e){}
   });
   st.openNote = (opened >= targets.length)
     ? ''
@@ -4156,6 +4161,18 @@ function _igKw(kw){
   //     고독스 아동용 카메라 0 → 고독스 카메라 18 / 고독스 토이 카메라 0 → 고독스 카메라 18
   //     아이 장난감 카메라 0 → 아이 카메라 15 / 어린이 사진 촬영은 원래 18
   //   (가운데 수식어가 '지어낸' 부분이라 그걸 떨어뜨리는 게 가장 잘 맞았다: 4/5)
+  // ★한글이 없는 검색어(영어·일본어 띄어쓰기 등)는 규칙이 다르다(2026-09-14 라이브 인스타 실측).
+  //   'Mario phone case'(3)·'Super Mario phone case'(4) 결과 있음 / 5단어부터 전부 0건
+  //   ('Mario phone case with stand'·'cute character phone case aesthetic'·
+  //    'Super Mario 3D stand phone case'). 영어는 핵심 명사가 **뒤**에 오므로
+  //   위 한국어식 '첫+끝'을 쓰면 잘 나오던 'Mario phone case'가 'Mario case'로 망가졌다.
+  //   → 연결어(with/for…)만 빼고, 그래도 5단어 이상이면 **뒤 4단어**만 남긴다.
+  if(!/[가-힣]/.test(s)){
+    let w=s.split(/\s+/).filter(Boolean);
+    if(w.length>=5) w=w.filter(x=>!/^(with|for|and|the|a|an|of|to|in|on|at|by|from)$/i.test(x));
+    if(w.length>=5) w=w.slice(-4);
+    return w.join(' ')||String(kw||'').trim();
+  }
   const t=s.split(/\s+/).filter(Boolean);
   if(t.length>=3) s=t[0]+' '+t[t.length-1];
   return s||String(kw||'').trim();
@@ -4265,122 +4282,122 @@ function renderLens(shortcode, mountId){
   //   분리 후 sticky 153px → 카드 공간 276px (11배). 스크롤을 끝까지 내려도 마찬가지였다
   //   — 덮이는 게 아니라 '눌리는' 것이라 스크롤로도 해결이 안 됐다 (2026-08-02 실사고).
   //   max-height 40vh + 자체 스크롤은 칩·필터가 더 늘어나도 같은 사고가 안 나게 하는 안전핀.
-  const bar=`<div style="position:sticky;top:0;background:var(--panel);padding:6px 0;margin-bottom:8px;z-index:1;max-height:40vh;overflow:auto">
+  // ★2026-09-14 사장님 "디자인 깔끔하게 정리 — 단어가 직관적이지 않고 어수선하다".
+  //   시안(out/렌즈유사영상_디자인시안.html)대로 [제품] → ① 검색어 → ② 찾기 → ③ 모인 영상 순서.
+  //   함수·상태는 그대로 두고 **배치·이름만** 바꿨다. 뺀 것: 자동 모으기 버튼, 러시아어,
+  //   해외만/한국만 체크박스(언어 선택과 겹침), 검색어마다 반복되던 안내 글자.
+  const _secCss='padding:12px 2px;border-top:1px solid var(--line)';
+  const _lblCss='font-size:12px;color:var(--sub);display:flex;align-items:center;gap:8px;margin-bottom:8px';
+  const _num=n=>`<span style="display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#1c2530;color:var(--fg,inherit);font-size:11px;font-weight:700">${n}</span>`;
+  const _b='font-size:13px;padding:6px 12px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--fg,inherit);cursor:pointer;white-space:nowrap';
+  const _bAcc=_b+';border-color:var(--accent);color:var(--accent)';
+  // ── 제품 칸(가운데) — '대본에서 찾은 제품'과 '대본 분석' 버튼을 한 곳에 ──
+  //   분석 전(hasSource===false)엔 서버가 product를 줘도 썸네일만 보고 짐작한 것이라 틀릴 수 있다
+  //   (사장님 "대본분석 전에도 저게 나올 때가 있는데 정확하지 않아서 분석 후 뽑기를 눌러야 잘된다").
+  const _canExtract = shortcode!=='__single__';
+  const _analyzed = st.hasSource!==false;
+  // ★2026-09-14 사장님 "눈에 띄게 꼭 눌러보고 할 수 있게". 캡션만 있어도 hasSource가 참이라
+  //   '✅ 대본에서 찾은 제품'이 대본 분석 없이 떴다 — ✅는 **이번에 대본 분석을 실제로 돌린 뒤**
+  //   (st.extractedNow)만 붙인다. 그 전엔 짐작 제품 + 크고 눈에 띄는 분석 버튼.
+  const _done = !!st.extractedNow;
+  const _bigOrange='font-size:15px;padding:11px 22px;border-radius:12px;border:0;cursor:pointer;font-weight:800;background:#e0a33d;color:#111;box-shadow:0 0 0 3px rgba(224,163,61,.25)';
+  const prodBox = !_canExtract
+    ? (st.product?`<div style="text-align:center;padding:10px 0 12px"><b style="font-size:16px">${esc(st.product)}</b></div>`:'')
+    : (!_done
+      ? `<div style="text-align:center;margin:6px 0 12px;padding:14px 12px;border:2px solid #e0a33d;border-radius:14px;background:rgba(224,163,61,.08)">
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+            <span style="font-size:11px;color:var(--sub);border:1px solid var(--line);border-radius:6px;padding:1px 7px">짐작한 제품</span>
+            <b style="font-size:15px;color:var(--sub)">${st.product?esc(st.product)+'?':'아직 모름'}</b>
+          </div>
+          <button onclick="lensExtractThenSearch('${shortcode}')" ${st.reExtracting?'disabled':''} title="이 영상의 대본·자막을 먼저 분석해 제품을 알아낸 뒤, 그 제품명으로 검색어를 다시 뽑습니다 (10~30초, 대본추출 1회 과금)" style="${_bigOrange}">${st.reExtracting?'⏳ 대본 분석 중… (10~30초)':'📝 대본 분석해서 정확히 찾기'}</button>
+          <div style="font-size:12px;color:#e0a33d;margin-top:8px">👉 먼저 눌러주세요 — 검색어가 훨씬 정확해져요</div>
+        </div>`
+      : `<div style="text-align:center;margin:6px 0 12px;padding:12px;border:2px solid #1d4f3c;border-radius:14px;background:rgba(52,211,153,.07);display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:12px;color:#34d399;border:1px solid #1d4f3c;border-radius:6px;padding:1px 8px;font-weight:700">✅ 대본에서 찾은 제품</span>
+          <b style="font-size:17px">${esc(st.product||'')}</b>
+          <button onclick="lensExtractThenSearch('${shortcode}')" ${st.reExtracting?'disabled':''} title="대본을 다시 분석해 검색어를 새로 뽑습니다 (대본추출 1회 과금)" style="${_b};font-size:12px;padding:3px 9px;color:var(--sub)">${st.reExtracting?'⏳ 분석 중…':'다시 분석'}</button>
+        </div>`);
+  // ── ① 검색어 ──
+  const kwBox=`<div style="${_secCss}">
+      <div style="${_lblCss}">${_num(1)}검색어</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="lensKwInput" placeholder="찾을 제품을 직접 입력 (예: 마리오 폰케이스)" value="${esc(st.kwSeed||'')}"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();lensExpandKeyword('${shortcode}')}"
+          style="flex:1;min-width:200px;font-size:13px;padding:7px 11px;border-radius:9px;border:1px solid var(--line);background:#0d131c;color:var(--fg,inherit)">
+        <button onclick="lensExpandKeyword('${shortcode}')" ${st.cnLoading?'disabled':''} title="넣은 제품으로 검색어를 여러 개 만들어 아래에 쌓습니다. 한국어만 넣어도 중국어·영어·일본어까지 같이 나옵니다 — 무료" style="${_bAcc};font-weight:700">${st.cnLoading?'⏳ 만드는 중…':'✨ 검색어 만들기'}</button>
+        ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료" style="${_b}">${st.cnLoading?'⏳ 뽑는 중…':'🔄 더 뽑기'}</button>`:''}
+      </div>
+      ${st.cnNoNew?'<div style="font-size:11px;color:var(--sub);margin-top:6px">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</div>':''}
+      ${st.cnErr?`<div style="font-size:11px;color:#e0623d;margin-top:6px">${esc(st.cnErr)}</div>`:''}
+    </div>`;
+  // ── ② 찾기 ── (언어 = LENS_LANGS에서 러시아어만 뺀다. 러시아어 검색어 자체는 그대로 둔다)
+  const _langs=LENS_LANGS.filter(L=>L.k!=='ru');
+  const _langName={auto:'나라별 자동',ko:'한국어',zh:'중국어',en:'영어',ja:'일본어'};
+  const langSeg=`<span style="display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden">${_langs.map(L=>{
+      const on=(st.lang||'auto')===L.k || (L.k==='auto' && st.lang==='ru');
+      return `<button onclick="setLensLang('${shortcode}','${L.k}')" title="${L.title}" style="font-size:13px;padding:5px 12px;border:0;border-right:1px solid var(--line);cursor:pointer;background:${on?'#12302c':'transparent'};color:${on?'var(--accent)':'var(--sub)'};font-weight:${on?'700':'400'}">${_langName[L.k]||L.label}</button>`;
+    }).join('')}</span>`;
+  const _plats0=[
+    {k:'xiaohongshu', ico:'📕', s:'샤', name:'샤오홍슈'},
+    {k:'douyin',      ico:'🎶', s:'도', name:'도우인'},
+    {k:'tiktok',      ico:'🎵', s:'틱', name:'틱톡'},
+    {k:'instagram',   ico:'📷', s:'인', name:'인스타'},
+    {k:'pinterest',   ico:'📌', s:'핀', name:'핀터레스트'},
+  ];
+  const _icoCss='text-decoration:none;width:40px;height:44px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:1px solid var(--line);border-radius:9px;font-size:15px;line-height:1.1;color:var(--fg,inherit);background:transparent;cursor:pointer';
+  const rows=(st.cnCands||[]).map((c,idx)=>{
+    const kw=c.ko||c.zh;
+    const _L=(st.lang==='ru')?'auto':(st.lang||'auto');
+    const plats=_plats0.map(p=>{ const q=_lensKwFor(c, p.k, _L); return Object.assign({}, p, {q, url:q?_lensSearchUrl(p.k, q):''}); });
+    return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid #1a212b">
+      <div style="flex:1 1 220px;min-width:180px">
+        <div style="font-size:14px;font-weight:700;line-height:1.35">${c._scriptHit?'<span title="대본에서 찾은 제품과 맞는 검색어입니다" style="font-size:10.5px;color:#34d399;border:1px solid #1d4f3c;border-radius:5px;padding:0 5px;margin-right:6px;font-weight:600;vertical-align:middle">제품</span>':''}${esc(kw||'')}</div>
+        <div style="font-size:11.5px;color:var(--sub);margin-top:2px">${[c.en,c.zh,c.ja].filter(Boolean).map(esc).join(' · ')}</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="'${esc(kw)}'로 검색해 이 창 아래 ③에 영상을 모아 보여줍니다(이동 없음, 무료). 가져오는 곳: 유튜브·핀터레스트·네이버클립" style="${_b};background:var(--accent);border-color:var(--accent);color:#04201c;font-weight:800;font-size:14px;padding:8px 14px">🔎 아래로 모아서 보기</button>`:''}
+        <span style="width:1px;height:22px;background:var(--line);margin:0 2px"></span>
+        <span style="font-size:11px;color:var(--sub);white-space:nowrap">새 탭</span>
+        ${plats.map(p=>p.url
+          ?`<a href="${p.k==='xiaohongshu'?_openUrl(p.url):p.url}" target="_blank" rel="noopener" title="${p.name}에서 '${esc(p.q)}' 검색 — 새 탭으로 엽니다" style="${_icoCss}">${p.ico}<small style="font-size:10.5px;color:var(--sub)">${p.s}</small></a>`
+          :`<span title="${p.name}: 이 언어의 검색어가 없습니다" style="${_icoCss};opacity:.25;cursor:default">${p.ico}<small style="font-size:10.5px;color:var(--sub)">${p.s}</small></span>`).join('')}
+        ${plats.some(p=>p.url)?`<button onclick="lensOpenAll('${shortcode}',${idx})" title="샤오홍슈·도우인·틱톡·인스타·핀터레스트를 '${esc(kw||'')}'로 한꺼번에 새 탭으로 엽니다. 처음엔 브라우저가 팝업을 막을 수 있어요 — 주소창 오른쪽 아이콘에서 «항상 허용»" style="${_b}">↗ 5곳 새 탭 열기</button>`:''}
+      </div></div>`;
+  }).join('');
+  const findBox=`<div style="${_secCss}">
+      <div style="${_lblCss};justify-content:space-between;flex-wrap:wrap"><span style="display:flex;align-items:center;gap:8px">${_num(2)}찾기</span>${langSeg}</div>
+      <div style="font-size:12px;color:var(--sub);margin:-2px 0 4px">${(st.lang||'auto')==='auto'||st.lang==='ru'
+        ?'나라별 자동 = 샤오홍슈·도우인은 중국어, 틱톡·인스타·핀터레스트는 영어로 검색'
+        :`지금은 다섯 곳 모두 <b>${_langName[st.lang]||''}</b>로 검색`}</div>
+      ${st.openNote?`<div style="font-size:11.5px;color:#e0a33d;padding:4px 0">⚠️ ${esc(st.openNote)}</div>`:''}
+      ${st.kwSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.kwSearchKw||'')} 검색 중… (10~30초)</div>`:''}
+      ${st.cnSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.cnSearchKw||'')} 검색 중… (10~30초)</div>`:''}
+      ${(!st.kwSearching&&st.kwCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.kwCost>0?('이번 검색 $'+st.kwCost.toFixed(3)):'무료 검색'}</div>`:''}
+      ${(!st.cnSearching&&st.cnCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.cnCost>0?('이번 검색 $'+st.cnCost.toFixed(3)):'무료 검색'}</div>`:''}
+      ${rows||`<div style="font-size:12px;color:var(--sub);padding:6px 0">아직 검색어가 없습니다 — 위 ①에 제품을 넣고 <b>✨ 검색어 만들기</b>를 누르세요.</div>`}
+      ${rows?`<div style="font-size:11.5px;color:var(--sub);margin-top:8px">🔎 아래로 모아서 보기 = 유튜브·핀터레스트·네이버클립에서 찾아 이 창 아래 ③에 쌓음(무료) · 샤/도/틱/인/핀 = 그 사이트를 새 탭으로 열기</div>`:''}
+    </div>`;
+  // ── ③ 모인 영상 — sticky(칩+필터줄만. 2026-08-02 모바일 사고 주석 참고: 검색칸까지 넣으면 카드가 눌린다) ──
+  const bar=`${prodBox}${kwBox}${findBox}
+  <div style="${_secCss};padding-bottom:0"><div style="${_lblCss};margin-bottom:0">${_num(3)}모인 영상 <b style="color:var(--fg,inherit)">${shown.length}개</b></div></div>
+  <div style="position:sticky;top:0;background:var(--panel);padding:6px 0;margin-bottom:8px;z-index:1;max-height:40vh;overflow:auto">
     <div>${chips}</div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:11px">
-      <label style="cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" ${allSel?'checked':''} onclick="lensSelectAll('${shortcode}')"> 전체선택</label>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:12.5px">
+      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀)와 영상인지 확인 못 한 핀터레스트 핀을 가립니다"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 영상만${nPhoto?` <span style="color:var(--sub)">(사진 ${nPhoto})</span>`:''}</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
-      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 없는 결과만 표시 — 원본(해외) 영상 찾을 때. 채널명이 아닌 제목 기준 근사치라 완벽하진 않음"><input type="checkbox" ${st.foreignOnly?'checked':''} onclick="toggleLensForeign('${shortcode}')"> 🌍 해외만</label>
-      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 있는 결과만 표시 — 국내 레퍼런스를 볼 때. '해외만'과 반대라 둘은 함께 켜지지 않습니다(제목 기준 근사치)"><input type="checkbox" ${st.koreanOnly?'checked':''} onclick="toggleLensKorean('${shortcode}')"> 🇰🇷 한국만</label>
-      ${nLang?`<span style="font-size:11px;color:#e0a33d;display:inline-flex;align-items:center;gap:6px" title="언어 필터(한국만/해외만)가 가린 결과입니다. 핀터레스트는 한국어 인덱스가 없어 영어로 검색하므로 제목이 영어입니다 — '한국만'과 함께 켜면 전부 가려집니다">⚠️ 언어 필터로 ${nLang}건 숨김${langPlats?` (${langPlats})`:''} <button onclick="lensClearLangFilter('${shortcode}')" style="font-size:11px;padding:2px 8px;border-radius:7px;border:1px solid #e0a33d;background:transparent;color:#e0a33d;cursor:pointer">해제</button></span>`:''}
-      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀 게시물)와 영상인지 확인 못 한 핀터레스트 핀을 가립니다. 인스타는 URL이 /p/면 사진으로 보는 근사치라 드물게 옛 동영상도 같이 가려집니다(끄면 다시 보임). 핀터레스트 이미지 핀은 서버가 확인해 아예 빼고, 확인 실패분만 여기서 가립니다"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 🎬 영상만${nPhoto?` <span style="color:var(--sub)">(카드뉴스 ${nPhoto})</span>`:''}</label>
-      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="소재 키워드가 제목에 하나도 없는 결과(⚠️다른주제?)를 가립니다. 렌즈는 시각 유사도만 보기 때문에 엉뚱한 게시물이 섞입니다. ⚠️중국어·영어 제목은 키워드가 안 맞아 원본(해외) 후보까지 사라질 수 있어 기본 꺼짐"><input type="checkbox" ${st.hideOfftopic?'checked':''} onclick="toggleLensOfftopic('${shortcode}')"> ⚠️ 다른주제 숨기기${nOff?` <span style="color:var(--sub)">(${nOff})</span>`:''}</label>
-      <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
-      <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
-      ${''/* ➕ 유튜브 채널 전부 벤치등록 — 2026-08-18 사장님 "이거 숨기고".
-             기능(lensBenchAllYoutube)은 남겨둔다. 되살릴 땐 이 자리에 버튼만 다시 넣으면 된다.
-             한 번에 15개 채널이 수집목록에 들어가 되돌리기 번거로운 버튼이라 앞줄에서 뺀다. */}
+      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 제품 키워드가 하나도 없는 결과를 가립니다. 중국어·영어 제목은 원본 후보까지 사라질 수 있어 기본 꺼짐"><input type="checkbox" ${st.hideOfftopic?'checked':''} onclick="toggleLensOfftopic('${shortcode}')"> 다른 제품 숨기기${nOff?` <span style="color:var(--sub)">(${nOff})</span>`:''}</label>
+      ${nLang?`<span style="font-size:11px;color:#e0a33d;display:inline-flex;align-items:center;gap:6px">⚠️ 언어 필터로 ${nLang}건 숨김${langPlats?` (${langPlats})`:''} <button onclick="lensClearLangFilter('${shortcode}')" style="font-size:11px;padding:2px 8px;border-radius:7px;border:1px solid #e0a33d;background:transparent;color:#e0a33d;cursor:pointer">해제</button></span>`:''}
+      <span style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <label style="cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" ${allSel?'checked':''} onclick="lensSelectAll('${shortcode}')"> 전체 선택</label>
+        <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${_b};${selCount?'background:var(--accent);border-color:var(--accent);color:#04201c;font-weight:700':''}">📥 선택 담기 (${selCount})</button>
+        ${selCount?`<button onclick="lensBulkDelete('${shortcode}')" style="${_b}">🗑 선택 삭제 (${selCount})</button>`:''}
+      </span>
       ${st.lensLoading?'<span style="color:var(--sub)">🔍 렌즈 결과 불러오는 중…</span>':''}
       ${st.lensErr?`<span style="color:#e0623d">${st.lensErr}</span>`:''}
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
       ${_lensIgDiag(st)}
-      ${''/* 📥 담기 버튼 켜기 링크 - 2026-09-06 사장님 "담기버튼켜기빼고". 기능은 /grab 페이지에 그대로 있다(사이드바로 갈 수 있음). 되살릴 땐 이 자리에 <a href="/grab">만 다시 넣으면 된다. */}
     </div>
   </div>
-  <div style="margin-bottom:8px;padding-top:8px;border-top:1px solid var(--line)">
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-        <span style="font-size:12px;color:var(--sub)">⌨️ 찾는 소재를 직접 넣기:</span>
-        <input id="lensKwInput" placeholder="예: 시금치 치아바타" value="${esc(st.kwSeed||'')}"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();lensExpandKeyword('${shortcode}')}"
-          style="flex:1;min-width:150px;max-width:280px;font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:#0d131c;color:var(--fg,inherit)">
-        <button onclick="lensExpandKeyword('${shortcode}')" ${st.cnLoading?'disabled':''}
-          title="넣은 소재로 검색어 조합을 여러 개 만들어 아래에 쌓습니다. 한국어만 넣어도 중국어까지 같이 나옵니다 — 무료" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">${st.cnLoading?'⏳ 만드는 중…':'✨ 검색어 조합 만들기'}</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 유튜브·핀터레스트·네이버클립을 이 페이지 안에서 찾습니다(무료). 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타 📌핀터레스트)은 그 사이트를 새 탭으로 엽니다 — 우리 비용 0원입니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서(무료), 아이콘은 새 탭</span></span>
-        ${/* ★언어 고르기(2026-09-08 사장님 "언어별로 누를 수 있게"). 고르면 아래 행의
-             아이콘 5개가 통째로 그 언어 검색어로 바뀐다 — 버튼 25개를 깔지 않는 이유다. */''}
-        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px">
-          <span style="font-size:11px;color:var(--sub)" title="여기서 고른 언어로 아래 버튼들이 검색합니다">🌐 <b>아래 버튼들이 검색할 언어</b></span>
-          ${LENS_LANGS.map(L=>{
-            const _lOn=(st.lang||'auto')===L.k;
-            return `<button onclick="setLensLang('${shortcode}','${L.k}')" title="${L.title}" style="font-size:12px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${_lOn?'var(--accent)':'var(--line)'};background:${_lOn?'var(--accent)':'transparent'};color:${_lOn?'#fff':'var(--fg,inherit)'};font-weight:${_lOn?'700':'400'}">${L.label}</button>`;
-          }).join('')}
-          ${/* ★자동 모으기 — 검색어 × 언어를 순서대로 한 번씩 돌려 계속 쌓는다.
-               「여기서」는 무료 플랫폼만 도니 눌러도 돈이 안 나간다. */''}
-          ${st.product?`<div style="font-size:12px;margin:2px 0 4px"><span title="대본·자막을 읽고 확정한 제품입니다. 검색어가 이 제품을 가리키는지 보세요" style="background:#e0a33d;color:#111;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;margin-right:6px">📝 대본이 말하는 제품</span><b>${esc(st.product)}</b></div>`:''}
-        ${(st.cnCands||[]).length?`<button onclick="toggleLensAuto('${shortcode}')" title="검색어 ${(st.cnCands||[]).length}개를 각각 4가지 언어(해외·영어·일본어·중국어)로 순서대로 검색해 결과를 계속 쌓습니다. 도는 곳은 유튜브·핀터레스트·네이버클립(전부 무료)이고, 지금 무엇을 검색 중인지 옆에 표시됩니다. 다시 누르면 멈춥니다" style="font-size:12px;padding:3px 10px;border-radius:8px;cursor:pointer;margin-left:6px;border:1px solid ${st.autoRun?'#e0623d':'var(--accent)'};background:transparent;color:${st.autoRun?'#e0623d':'var(--accent)'};font-weight:600">${st.autoRun?'■ 멈추기':'▶ 자동 모으기'}</button>`:''}
-          ${st.autoRun&&st.autoNote?`<span style="font-size:11px;color:var(--sub)">${esc(st.autoNote)} 진행 중…</span>`:''}
-        </div>
-        ${/* ★셋(언어·여기서·새 탭)의 관계가 화면에 안 보여 헷갈린다는 지적(2026-09-08).
-             한 줄로 설명한다 — 고른 언어가 무엇을 바꾸는지가 핵심이다. */''}
-        <div style="font-size:11px;color:var(--sub);margin:2px 0 6px;line-height:1.5">
-          ${(st.lang||'auto')==='auto'
-            ? '지금은 <b>해외 원본</b> — 샤오홍슈·도우인은 중국어, 틱톡·인스타·핀터레스트는 영어로 엽니다. 한국 영상을 보려면 <b>KR 한국어</b>를 누르세요.'
-            : `지금은 <b>${(LENS_LANGS.find(L=>L.k===st.lang)||{}).label||''}</b> — 아래 다섯 곳을 모두 이 언어로 검색합니다.`}
-        </div>
-        ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
-        ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
-        ${st.cnErr?`<span style="font-size:11px;color:#e0623d">${esc(st.cnErr)}</span>`:''}
-        ${st.openNote?`<div style="font-size:11.5px;color:#e0a33d;padding:4px 0">⚠️ ${esc(st.openNote)}</div>`:''}
-        ${(st.hasSource===false && shortcode!=='__single__')?`<button onclick="lensExtractThenSearch('${shortcode}')" ${st.reExtracting?'disabled':''} title="이 영상의 대본·자막을 먼저 분석해 제품이 무엇인지 알아낸 뒤, 그 제품명으로 검색어를 다시 뽑습니다. 지금 검색어는 썸네일 그림만 보고 지은 것이라 엉뚱할 수 있습니다 (10~30초, 대본추출 1회 과금)" style="${btnCss};border-color:#e0a33d;color:#e0a33d;font-weight:700">${st.reExtracting?'⏳ 대본 분석 중… (10~30초)':'📝 대본 분석 후 찾기'}</button>
-        <span style="font-size:11px;color:#e0a33d">← 지금 검색어는 <b>썸네일 그림만</b> 보고 지은 것입니다</span>`:''}
-      </div>
-      ${st.cnSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.cnSearchKw||'')} 검색 중… (10~30초)</div>`:''}
-      ${(!st.cnSearching&&st.cnCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.cnCost>0?('이번 검색 $'+st.cnCost.toFixed(3)):'무료 검색'}</div>`:''}
-      ${st.kwSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.kwSearchKw||'')} 검색 중… (10~30초)</div>`:''}
-      ${/* ★kwCost는 2026-09-08까지 값만 담고 화면에 안 그렸다 — 틱톡 Apify가 눈에 안 띈 채
-            나갔다(사장님 지적). cnCost와 같은 자리·같은 문구로 맞춘다. */''}
-      ${(!st.kwSearching&&st.kwCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.kwCost>0?('이번 검색 $'+st.kwCost.toFixed(3)):'무료 검색'}</div>`:''}
-      <div style="display:flex;flex-direction:column;gap:6px">
-        ${(st.cnCands||[]).map((c,idx)=>{
-          // 샤오훙슈 검색은 로그아웃 방문자를 로그인으로 막는다(登录后查看搜索结果). 해외판
-          // rednote.com 검색은 같은 결과를 로그인 벽 없이 보여준다(2026-07-19 실측). 빌더·백엔드는
-          // 그대로 두고 '여는 링크'만 _openUrl로 rednote 치환. 도우인은 해외판 없어 그대로.
-          // 샤오홍슈/도우인=중국어(c.zh), 틱톡/인스타=한국어(c.ko)로 연다(플랫폼별 언어).
-          const kw=c.ko||c.zh;
-          // ★플랫폼 아이콘 5개 = 지금 고른 언어의 검색어로 연다(2026-09-08).
-          //   언어 칩(위)에서 고르면 이 5개가 통째로 그 언어로 바뀐다.
-          const _L=st.lang||'auto';
-          const _plats=[
-            {k:'xiaohongshu', ico:'📕 샤오홍슈', name:'샤오홍슈'},
-            {k:'douyin',      ico:'🎶 도우인',  name:'도우인'},
-            {k:'tiktok',      ico:'🎵 틱톡',    name:'틱톡'},
-            {k:'instagram',   ico:'📷 인스타',  name:'인스타'},
-            {k:'pinterest',   ico:'📌 핀터레스트', name:'핀터레스트'},
-          ].map(p=>{
-            const q=_lensKwFor(c, p.k, _L);
-            return Object.assign({}, p, {q, url: q?_lensSearchUrl(p.k, q):''});
-          });
-          // 아이콘 버튼(2026-08-22 사장님 "텍스트 위주 말고 보기 편하게").
-          // 글자('여기서 찾기'·'틱톡'…)를 빼고 같은 크기 아이콘만 늘어놓는다 → 줄이 짧아지고
-          // 눈이 검색어에 먼저 간다. 뭘 하는 버튼인지는 title(마우스 올리면)로 남긴다.
-          const _btn='text-decoration:none;display:inline-flex;align-items:center;justify-content:center;'
-                   +'height:32px;border-radius:9px;border:1px solid var(--line);'
-                   +'color:var(--accent);line-height:1;background:transparent;cursor:pointer';
-          const ico=_btn+';width:32px;font-size:15px';                      // 아이콘 전용(정사각)
-          const wide=_btn+';padding:0 12px;font-size:12px;font-weight:600;gap:4px';   // 글자 있는 것
-          // 키워드 조합은 ko만/zh만 나올 수 있다 → 없는 언어의 버튼은 그리지 않는다
-          // (빈 검색어로 사이트를 열면 엉뚱한 홈으로 떨어진다).
-          // ★샤오홍슈·도우인은 **새 탭 이동**으로 되돌렸다(2026-08-22 사장님 "예전처럼
-          //   페이지 이동해서 검색되게"). 인앱 검색(lensCnSearch)은 함수만 남겨둔다.
-          return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0">
-            <div style="min-width:132px;flex:1 1 132px">
-              <div style="font-size:14px;font-weight:600;line-height:1.3">${c._scriptHit?'<span title="대본·자막을 읽고 확정한 제품과 맞는 검색어입니다 — 썸네일 그림만 보고 지은 다른 검색어보다 정확합니다" style="background:#2ea043;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-right:5px;vertical-align:middle">✅ 대본의 제품</span>':''}${kw}</div>
-              ${/* ko 아래에 나머지 언어를 한 줄로. 옛 후보는 zh만 있어 그대로 호환된다. */''}
-              <div style="font-size:11px;color:var(--sub)">${[c.zh,c.en,c.ja].filter(Boolean).map(esc).join(' · ')}</div></div>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            ${kw?`<span style="font-size:10px;color:var(--sub);margin-right:2px">이 화면에 담기</span><button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="'${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음, 전부 무료). 이 버튼이 가져오는 곳은 유튜브·핀터레스트·네이버클립입니다(틱톡은 로그인 세션이 결과를 못 받아 현재 0건). 샤오홍슈·도우인·인스타는 아래 버튼으로 새 탭에서 보세요. ※카드에 붙은 '틱톡'은 🔍 숏템파워검색(구글 렌즈)이 따로 물어온 것이라 이 버튼과 무관합니다" style="${wide}">🔎 여기서</button>`:''}
-            <span style="font-size:10px;color:var(--sub);margin-left:8px;padding-left:8px;border-left:1px solid var(--line)">새 탭으로 열기</span>
-            ${_plats.some(p=>p.url)?`<button onclick="lensOpenAll('${shortcode}',${idx})" title="아래 다섯 곳을 '${esc(kw)}'로 한꺼번에 엽니다 — 하나씩 누르지 않아도 됩니다. 처음엔 브라우저가 팝업을 막을 수 있는데, 주소창 오른쪽 아이콘에서 «항상 허용»으로 바꾸면 됩니다" style="${wide};border-color:var(--accent);font-weight:700">⚡ 5곳 전부</button>`:''}
-            ${_plats.map(p=>p.url?`<a href="${p.k==='xiaohongshu'?_openUrl(p.url):p.url}" target="_blank" rel="noopener" title="${p.name}를 '${esc(p.q)}'(으)로 검색 — 새 탭으로 엽니다" style="${wide}">${p.ico}</a>`:`<span title="${p.name}: 이 언어의 검색어가 없습니다" style="${wide};opacity:.25;cursor:default">${p.ico}</span>`).join('')}
-            ${/* 인스타는 해시태그라 길면 0건 — 한 단어로 넓히는 보조 버튼을 남겨둔다 */''}
-            ${(_L==='auto'||_L==='ko')&&_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게" style="${ico};opacity:.6">📷⁺</a>`:''}
-            </div></div>`;
-        }).join('')}
-        ${(st.cnCands||[]).length?'':`<div style="font-size:11px;color:var(--sub)">아직 검색어가 없습니다 — 위에 소재를 넣고 <b>✨ 검색어 조합 만들기</b>를 누르거나, 화면에서 자동으로 뽑히길 기다려 보세요.</div>`}
-      </div>
-    </div>
   ${st.keyword?`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:11px">
       <span style="color:var(--sub)">🔗 다른 플랫폼에서 찾아 담기:</span>
       ${[['tiktok','🎵 틱톡'],['instagram','📷 인스타']].map(([k,lbl])=>

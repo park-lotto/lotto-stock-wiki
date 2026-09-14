@@ -56,7 +56,19 @@
   //   그런데 브라우저에는 CDN 주소가 그대로 있다. 담는 순간 그걸 함께 보내면 서버가
   //   그 주소로 바로 받는다(download_any가 video_url을 우선 쓴다).
   //   blob:은 이 탭 안에서만 유효하므로 보내지 않는다 — 서버가 받을 수 없다.
-  var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com"];
+  var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com", "rednotecdn.com"];
+  function _mediaFromPageHtml() {
+    // RedNote의 새 플레이어는 실제 mp4를 MediaSource에 넣고 <video src>에는 blob:만
+    // 남긴다(2026-09-14 라이브 실측). 그래도 현재 노트의 직접 mp4는 렌더된 DOM 안에
+    // sns-v*.rednotecdn.com/...mp4로 남아 있으므로, 사람이 담기를 누르는 그 순간 찾는다.
+    // 매 tick마다 큰 DOM을 훑지 않고 currentVideoSrc() 호출 때만 실행한다.
+    try {
+      var html = document.documentElement.innerHTML || "";
+      var ms = html.match(/https:\/\/[^\"'<>\\\s]*(?:xhscdn|rednotecdn)\.com\/[^\"'<>\\\s]*\.mp4(?:\?[^\"'<>\\\s]*)?/gi) || [];
+      return ms.length ? ms[0].replace(/&amp;/g, "&") : "";
+    } catch (e) {}
+    return "";
+  }
   function currentVideoSrc() {
     try {
       var vs = document.querySelectorAll("video");
@@ -73,7 +85,7 @@
         }
       }
     } catch (e) {}
-    return "";
+    return _mediaFromPageHtml();
   }
   // ★지금 보는 영상의 **커버 이미지**(2026-08-17 사장님 "도우인은 썸네일이 없음").
   //   도우인 영상 페이지는 SPA라 og:image가 없다(og:title도 "观看更多精彩视频 - 抖音"
@@ -792,7 +804,8 @@
 
   // 지금 보고 있는 게 '단일 영상/게시물' 페이지인가 (인스타 /p/·/reel/, 틱톡 /video/ 등)
   function isSinglePost() {
-    return /\/(p|reel|reels|video)\/[^/]+/.test(location.pathname);
+    return /\/(p|reel|reels|video)\/[^/]+/.test(location.pathname) ||
+           /\/(?:discovery\/item|search_result)\/[^/]+/.test(location.pathname);
   }
 
   // 검색·탐색 '그리드' 페이지에서만 카드 버튼을 붙인다. 단일 영상 페이지에선 관련영상 카드가
