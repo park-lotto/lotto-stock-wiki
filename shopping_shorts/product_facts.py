@@ -39,6 +39,10 @@
 import json
 import os
 
+# 대본 사실 판정도 이 경계를 사용한다. AI 지식 확장은 이 블록에 넣지 않는다.
+CONFIRMED_FACTS_MARK = "★[이 제품에 대해 확인된 사실 — 쿠팡 상세페이지·베스트리뷰에서 뽑았다]"
+CONFIRMED_FACTS_END = "[/검증된 제품 사실]"
+
 # 상세 이미지 최대 장수 — 쿠팡 상세는 보통 1~3장의 긴 이미지다. 많으면 제미니 비용만 늘고
 # 정보는 안 는다(실측: 필통은 2장으로 스펙 9개가 전부 나왔다).
 MAX_DETAIL_IMAGES = 4
@@ -503,7 +507,7 @@ def prompt_block(facts, max_items=6):
                 "\n  - 브랜드·특허·수상은 **빼라**. 틀리면 영상 하나가 통째로 죽는다."
                 "\n  - 반대로 **쓰임새·응용·불편·계기**는 마음껏 써라 — 여기가 이 재료의 값이다.")
     else:
-        head = ("\n★[이 제품에 대해 확인된 사실 — 쿠팡 상세페이지·베스트리뷰에서 뽑았다]"
-                "\n  아래는 **실제로 확인된 것**이다. 수치·사연을 적극 쓰되, 여기 없는 사실은 "
+        head = ("\n" + CONFIRMED_FACTS_MARK
+                + "\n  아래는 **실제로 확인된 것**이다. 수치·사연을 적극 쓰되, 여기 없는 사실은 "
                 "절대 지어내지 마라.")
-    return head + body + warn
+    return head + body + warn + ("\n" + CONFIRMED_FACTS_END if not _llm else "")

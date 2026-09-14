@@ -322,9 +322,10 @@ def test_beat_regen_retries_topic_leak_then_accepts(monkeypatch):
                     {"text": "아이 급할 때 차 안에서 펼쳐 쓰면 돼요"}])
     monkeypatch.setattr(sg, "_call_json", lambda *_a, **_k: next(replies))
     judged = []
-    def judge(text, product):
+    def judge(text, product, **_kw):
         judged.append((text, product))
-        return {"topic_ok": "컵홀더" not in text}
+        return {"topic_ok": "컵홀더" not in text, "claims_ok": True,
+                "claims_why": "", "unsupported_claims": []}
     beats = [{"role": "hook", "text": "차에서 아이가 급하면 당황하죠"},
              {"role": "body", "text": "휴대용 변기를 펼쳐 쓰는 방식이에요"}]
     out = sg.regen_one_beat(
@@ -339,9 +340,9 @@ def test_beat_regen_retries_topic_leak_then_accepts(monkeypatch):
 def test_beat_regen_topic_check_replaces_only_requested_duplicate_role(monkeypatch):
     monkeypatch.setattr(sg, "_call_json", lambda *_a, **_k: {"text": "새 변기 문장"})
     seen = []
-    def judge(text, _product):
+    def judge(text, _product, **_kw):
         seen.append(text)
-        return {"topic_ok": True}
+        return {"topic_ok": True, "claims_ok": True, "claims_why": "", "unsupported_claims": []}
     beats = [{"role": "item", "text": "첫 변기"},
              {"role": "item", "text": "둘째 변기"}]
     out = sg.regen_one_beat(

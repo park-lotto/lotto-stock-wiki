@@ -3437,6 +3437,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         _assembled, _asm_left, _asm_why = _assembled_drafts(
             _picked, _src, store, body.get("target_seconds") or 25, job_id=_jid,
             topic_product=script_generate._sources_product(_src),
+            facts_block=_facts_block,
             topic_semantic_required=any(
                 s.get("topic_product") and s.get("topic_semantic_required", True)
                 for s in (_src or [])))
@@ -3527,12 +3528,12 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     _material_rejected = []
     drafts = script_generate.generate_guarded_variations(
         it.get("structure") or {}, _pick_src, elem_modes, category_lookup,
-        rejection_reasons=_material_rejected, **_gen_kw)
+        rejection_reasons=_material_rejected, facts_block=_pick_facts, **_gen_kw)
     if not drafts:
         if _material_rejected:
             return JSONResponse(status_code=502, content={
                 "ok": False,
-                "error": "재료와 다른 소재가 반복 생성되어 차단했습니다 — 다시 생성해주세요.",
+                "error": "자료로 확인되지 않는 내용이 반복 생성되어 차단했습니다 — 다시 생성해주세요.",
                 "reasons": _material_rejected})
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
     _pickup_rejected = []
@@ -20769,7 +20770,7 @@ def _insta_slot_sets(sources, store, cache_only=False):
 
 
 def _assembled_drafts(spines, sources, store, seconds=30, job_id="", topic_product="",
-                      topic_semantic_required=True):
+                      topic_semantic_required=True, facts_block=""):
     """조립으로 만들 수 있는 대본들 → (조립본 목록, 조립 못 한 스파인 목록).
 
     ★조립은 **슬롯이 전부 차는 스파인**에만 쓴다. 한 칸이라도 비면 그 스파인은
@@ -20911,7 +20912,13 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id="", topic_produ
             from shopping_shorts import script_gate
             _checks, _ = script_gate.check(
                 sp, d.get("beats") or [], product=topic_product, topic_required=True,
-                speaker_judge=script_generate._speaker_judge, assembled=True)
+                speaker_judge=script_generate._speaker_judge, assembled=True,
+                claim_evidence=script_generate.claim_evidence(sources, facts_block),
+                claims_required=topic_semantic_required)
+            # 통과한 실제 판정도 응답에 남겨 화면·QA가 동일한 결과를 확인한다.
+            _checked_names = {c.get("name") for c in _checks}
+            d["checks"] = [c for c in (d.get("checks") or [])
+                           if c.get("name") not in _checked_names] + _checks
             _fatal = script_gate.fatal_fail(_checks)
             if _fatal:
                 _why.append("%s: 조립본 %s 실패" % (sp.get("name") or "", _fatal))
@@ -21170,15 +21177,17 @@ def _wow_block_for(sources, store):
     subject = _wow_subject(sources)
     if not subject:
         return ""
-    ckey = "wow_facts_%s" % hashlib.md5(subject.encode("utf-8")).hexdigest()[:16]
+    ckey = "wow_facts_v%s_%s" % (
+        wow_facts.CACHE_VERSION, hashlib.md5(subject.encode("utf-8")).hexdigest()[:16])
     wows = None
     if store is not None:
         try:
-            wows = json.loads(store.get_setting(ckey, "") or "null")
+            wows = wow_facts.verified_items(
+                json.loads(store.get_setting(ckey, "") or "null")) or None
         except ValueError:
             wows = None
     if wows is None:
-        wows = wow_facts.find(subject)
+        wows = wow_facts.verified_items(wow_facts.find(subject))
         # 빈 결과는 캐시하지 않는다 — 일시 429를 굳히면 그 제품군은 영영 빈손이 된다
         # (insta_facts 캐시와 같은 원칙).
         if wows and store is not None:

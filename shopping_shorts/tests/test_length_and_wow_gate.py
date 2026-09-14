@@ -55,8 +55,21 @@ def test_느린_스타일도_바닥_아래로는_안_내려간다():
 
 
 # ── ② 영상 밖 정보 사용 ──────────────────────────────────────────────────
-_HOOKS = [{"hook": "귀마개 꼈을 때 내 목소리가 크게 들리는 건 폐쇄 효과라고 해요", "why": "x"},
-          {"hook": "공연장에서 귀 멍한 건 특정 음역대가 때리기 때문이에요", "why": "y"}]
+_SOURCE = {"title": "검증 문서", "url": "https://example.com/evidence"}
+
+
+def _verified(hook):
+    size = len(hook.encode("utf-8"))
+    return {"hook": hook, "why": "", "sources": [_SOURCE], "grounding": {
+        "grounded_text": hook,
+        "supports": [{"start": 0, "end": size, "text": hook,
+                      "segment_text": hook, "sources": [_SOURCE]}],
+        "sources": [_SOURCE],
+    }}
+
+
+_HOOKS = [_verified("귀마개 꼈을 때 내 목소리가 크게 들리는 건 폐쇄 효과라고 해요"),
+          _verified("공연장에서 귀 멍한 건 특정 음역대가 때리기 때문이에요")]
 
 
 def test_재료가_없으면_검사_자체가_없다():
