@@ -762,6 +762,14 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             if best is None or abs(_n - _tgt) < best[0]:
                 best = (abs(_n - _tgt), res, checks, full)
         extra = script_gate.gate_feedback(checks)
+        if _claim_required:
+            # 호출은 독립적이다. 판정만 전달하면 모델은 어떤 대본을 고치는지 모른다.
+            # 실패한 초안을 사실 자료와 구분해 전달하고, 관측 밖 효능을 새로 채우지 않는다.
+            extra = ("\n\n[수정 대상 초안 — 사실 근거가 아님]\n"
+                     + json.dumps(res, ensure_ascii=False) + extra
+                     + "\n위 초안의 실패한 주장만 삭제하거나 관측된 동작으로 바꿔라. "
+                       "통과한 문장과 칸 순서는 유지하고, 대체 효능·소요시간·인기도를 새로 만들지 마라. "
+                       "분량 실패가 없으면 분량을 늘리지 마라. 출력은 동일한 beats JSON이다.")
 
     if not script_gate.passed(checks) and best and best[3] != full:
         _, res, checks, full = best
