@@ -192,3 +192,7 @@ tiktok_session.json
 
 # 영상별 임시 컷 파일(산출물) — 커밋하지 않는다
 shopping_shorts/motion/cuts.json
+
+# 템플릿 렌더 검증 격자(1MB씩, 재생성 가능)
+tools/lilysub/even_header/sheet_*.jpg
+tools/lilysub/even_header/chk_*

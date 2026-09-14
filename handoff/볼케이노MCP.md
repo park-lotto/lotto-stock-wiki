@@ -287,3 +287,15 @@ video_raw.mp4 (볼케이노 사진·밈·움직임·검수 그대로, 글자 0)
 - 검증: overlay.mov 를 검정 위에 떠서 kind 7종 y 범위 실측 → 6종 띠 안·react 사진 위. 합성본 프레임 6장 눈으로 확인.
 - 계획 파일 예시 `tools/lilysub/plan_예시_최민식출연료.json`(lower 2·hl 4·bubble 1·react 2·punch 1).
 - 남은 것: 헤더 문구(HOOK1/HOOK2/BODYTITLE/CHANNEL)가 `even_pil.py` 상수 — 볼케이노 `title.h1/h2/card` 자동 연결 미착수. 컷별 kind 도 아직 손 계획. 글꼴 TmonMonsori 없음(잘난체 대체). `장면꾸미기UI코덱스` 트랙의 `out/even_export.cjs`(브라우저 캡처판)는 **폐기 대상** — memory `템플릿영상_브라우저캡처말고_좌표렌더`.
+
+
+## 2026-09-15 CH PC — ★썰쇼핑 템플릿 20종 범용 렌더러 `tools/lilysub/even_header/template_render.py`
+
+- `precision20-data.js`(장면꾸미기UI코덱스 트랙에서 복사·고정) 20종 좌표를 **파일에서 직접 읽어** PIL 로 그린다. 이븐쇼핑만 손으로 베꼈던 `even_pil.py` 의 일반화.
+- 검증: `--sheet` → 20종 × 훅/본문 참조이미지 vs 렌더 격자(`sheet_hook.jpg`·`sheet_body.jpg`, gitignore). 사진 영역은 참조에서 잘라 넣어 **차이는 파서 탓만** 남게 했다.
+- 격자에서 잡아 고친 것(전부 실측): ① 채널명 박스 빈칸(sample 에 channel 없음 → 템플릿 이름) ② 긴 줄 오른쪽 잘림(폭 계산 대신 **그려서 getbbox** 로 배치, 넘치면 가로만 압축) ③ Binggrae 등 공백 글리프 없는 글꼴의 □(어절 단위로 그리고 공백은 건너뜀) ④ 흰 상자 위 흰 글자(정답 UI `contrastOutline` 이식: 대비비<3 → 1.2px 외곽선, 밝은 배경 #151515/어두우면 흰색) ⑤ 'Pretendard' 가족 미매핑.
+- 좌표 어휘 실측: surfaces{background(linear-gradient 각도·다층), border/borderTop/borderBottom, shadow, radius} · lines{bind 없으면 순서로 hook1/hook2/bodyTitle | bodyTitle/caption, lpct<4&rpct>10=왼쪽정렬, accent_words N=앞 N어절 강조색, max_lines 줄바꿈, scale_x 압축 상한, stroke·shadow_y, patch_*} · channel_box · white_box · boxes · ornaments(menu/search).
+- 글꼴: 트랙 `shopping_shorts/static/fonts` 에 **TmonMonsori 있음**(앞 세션 "없다"는 시스템 폰트만 본 것) + Pretendard·Gmarket·Binggrae·BlackHanSans·Cafe24Ohsquare. 볼케이노 번들 SBAggroB·yg-jalnan·S-CoreDream 은 `even_header/fonts/` 에 고정. **없어서 대체 중**: JalnanGothic·Jalnan2(→yg-jalnan) · GothicA1Black(→BlackHanSans) — 격자 라벨에 노랗게 표시.
+- 아직 못 그리는 것: `radial-gradient` 층(건너뜀, 헤더 광택만 빠짐) · 참조에만 있는 채널 로고 이미지(살림장착) · 데이터에 없는 아이콘(공가미 ornaments None).
+- ⚠ 볼케이노 작업폴더(scratchpad)에서 `fonts/`·`pepe/`·`sfx_norm/` 이 몇 시간 뒤 사라졌다 — 실행기가 팩을 정리하는 듯. 재료는 전부 트랙 `even_header/` 로 옮겨 고정했다.
+- 다음: `even_chrome.py` 를 `template_render.render()` 로 갈아끼워 `--template <이름>` 한 인자로 20종 헤더 층 생성 → B안 한 명령화 → 문구 자동 연결(볼케이노 title).
