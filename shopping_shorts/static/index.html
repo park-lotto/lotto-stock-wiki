@@ -4053,6 +4053,9 @@ function _lensKwFor(c, platform, lang){
   // 고른 언어의 검색어. 없으면 ''을 돌려 **버튼을 아예 안 그린다** —
   // 빈 검색어로 사이트를 열면 엉뚱한 홈으로 떨어진다(기존 규약과 같다).
   const L = (lang && lang !== 'auto') ? lang : (_LENS_AUTO_LANG[platform] || 'ko');
+  // ★인스타는 러시아어 검색어에 결과를 안 준다(2026-09-14 실측: 'чехол Марио' 2단어도 0건).
+  //   러시아어를 골랐어도 인스타 버튼만은 영어 검색어로 연다.
+  if (platform === 'instagram' && L === 'ru' && c && (c.en || '').trim()) return c.en.trim();
   return ((c && c[L]) || '').trim();
 }
 function setLensLang(shortcode, lang){
@@ -4156,6 +4159,18 @@ function _igKw(kw){
   //     고독스 아동용 카메라 0 → 고독스 카메라 18 / 고독스 토이 카메라 0 → 고독스 카메라 18
   //     아이 장난감 카메라 0 → 아이 카메라 15 / 어린이 사진 촬영은 원래 18
   //   (가운데 수식어가 '지어낸' 부분이라 그걸 떨어뜨리는 게 가장 잘 맞았다: 4/5)
+  // ★한글이 없는 검색어(영어·일본어 띄어쓰기 등)는 규칙이 다르다(2026-09-14 라이브 인스타 실측).
+  //   'Mario phone case'(3)·'Super Mario phone case'(4) 결과 있음 / 5단어부터 전부 0건
+  //   ('Mario phone case with stand'·'cute character phone case aesthetic'·
+  //    'Super Mario 3D stand phone case'). 영어는 핵심 명사가 **뒤**에 오므로
+  //   위 한국어식 '첫+끝'을 쓰면 잘 나오던 'Mario phone case'가 'Mario case'로 망가졌다.
+  //   → 연결어(with/for…)만 빼고, 그래도 5단어 이상이면 **뒤 4단어**만 남긴다.
+  if(!/[가-힣]/.test(s)){
+    let w=s.split(/\s+/).filter(Boolean);
+    if(w.length>=5) w=w.filter(x=>!/^(with|for|and|the|a|an|of|to|in|on|at|by|from)$/i.test(x));
+    if(w.length>=5) w=w.slice(-4);
+    return w.join(' ')||String(kw||'').trim();
+  }
   const t=s.split(/\s+/).filter(Boolean);
   if(t.length>=3) s=t[0]+' '+t[t.length-1];
   return s||String(kw||'').trim();
