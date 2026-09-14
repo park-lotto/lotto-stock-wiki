@@ -205,7 +205,13 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbrow{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;align-items:flex-start}
 .tbeat{flex:0 0 auto;border:1px solid var(--line);border-radius:8px;padding:6px 7px 7px;
   background:var(--bg);cursor:pointer;
-  min-width:640px}   /* ★기본 칸 너비(2026-09-14 사장님 "기본 이정도는 돼야지") — 카드가 적어도 이만큼 */
+  min-width:680px;position:relative}   /* ★기본 칸 너비(2026-09-14 사장님 "기본 이정도는 돼야지") */
+/* ★머리글·빈시간 안내는 칸 폭을 못 늘린다 — 구절 맞춤 켜고 끌 때 칸 크기가 안 바뀐다(기본 680이라 좁아지지 않음) */
+.tbeat > .h{width:0;min-width:100%;flex-wrap:wrap;row-gap:3px}
+.tbeat > .cutgap{width:0;min-width:100%;box-sizing:border-box}
+/* ③ 칸 오른쪽 가장자리를 끌어 너비 조절(기억됨) */
+.tbresize{position:absolute;top:0;right:-4px;width:9px;height:100%;cursor:ew-resize;z-index:6}
+.tbresize:hover,.tbresize.on{background:linear-gradient(90deg,transparent 3px,var(--accent) 3px,var(--accent) 6px,transparent 6px)}
 /* 이 칸에서 나올 말(2026-08-16 사장님 "아래쪽에 대본 들어갈 수 있게 해줘").
    화면만 보고는 "이 그림이 이 말에 맞나"를 판단할 수 없다 — 컷 바로 밑에 붙여
    눈이 위아래로만 오가면 되게 한다. 칸 폭은 컷들이 정하므로 말은 그 안에서 접힌다.
@@ -831,6 +837,19 @@ body.tight .pidleTxt{font-size:11px}
 #topband #rollbay{flex:1 1 auto;min-height:170px;display:flex}
 #topband #rollbay .frslot{flex:1;min-width:0;display:flex}
 #topband #rollbay .frslot > .fr{flex:1}
+/* ★(2026-09-14 사장님 "미리보기 높이를 줄여 영상1이 올라오게 / 맨 위 필름 더 잘 보이게")
+   실측: 밴드 고정 616px에 필름 241px 중 170px만 보이고 71px 잘렸다. 밴드 높이를 고정하지 않고
+   **칸 + 필름 전체**에 맞춘다. 미리보기는 contain:size로 밴드 높이를 늘리지 못하고 그 안에 맞춰 줄어든다. */
+body.tight #topband{height:auto}
+body.tight #topband > #topright{overflow:visible}
+body.tight #topband > #playerhost{height:auto;align-self:stretch;contain:size}
+#topband #rollbay{min-height:0}
+#rollbay .frwin{height:calc(var(--cutw,112px) * 16 / 9)}   /* B안(사장님 선택): 필름 창은 그대로, 도구줄만 한 줄 */
+/* 필름 도구줄을 한 줄로(두 줄 63px → 한 줄) — 그 세로를 필름 창에 준다 */
+#topband #rollbay .fr .frtop{flex-wrap:nowrap;overflow:hidden;min-height:0}
+#topband #rollbay .fr .frtop .frhint{display:none}
+#topband #rollbay .fr .frbar{flex-wrap:nowrap;white-space:nowrap;min-width:max-content}
+#topband #rollbay .fr .frzoom input[type=range]{width:90px}
 
 /* ══ 소스 영역도 타이트하게(2026-08-26 사장님 "여기도 필요없는 글자 삭제하고
      최대한 타이트하게 위로 올려") ══
@@ -1721,6 +1740,26 @@ function fitPalette(){
 }
 window.addEventListener('resize', () => { try { fitPalette(); } catch (e) {} });
 try { window.parent && window.parent !== window && window.parent.addEventListener('resize', () => { try { fitPalette(); } catch (e) {} }); } catch (e) {}
+// ── 칸 너비 끌기(2026-09-14 사장님 "여기 잡고 옆으로 늘리게") — 칸마다 기억 ──
+const CELLW = (() => { try { return JSON.parse(localStorage.getItem('sceneLab:cellW') || '{}') || {}; } catch (e) { return {}; } })();
+function _cellWSave(){ try { localStorage.setItem('sceneLab:cellW', JSON.stringify(CELLW)); } catch (e) {} }
+function cellResizeStart(i, ev){
+  ev.preventDefault(); ev.stopPropagation();
+  const handle = ev.currentTarget, cell = handle.closest('.tbeat');
+  const x0 = ev.clientX, w0 = cell.offsetWidth;
+  handle.classList.add('on');
+  try { handle.setPointerCapture(ev.pointerId); } catch (e) {}
+  const move = me => { const w = Math.max(680, Math.min(2400, w0 + me.clientX - x0));
+                       cell.style.width = w + 'px'; cell.style.minWidth = w + 'px'; };
+  const up = () => {
+    handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', up);
+    handle.removeEventListener('pointercancel', up); handle.classList.remove('on');
+    CELLW[i] = cell.offsetWidth; _cellWSave(); render();
+  };
+  handle.addEventListener('pointermove', move); handle.addEventListener('pointerup', up);
+  handle.addEventListener('pointercancel', up);
+}
+function cellResizeReset(i){ delete CELLW[i]; _cellWSave(); render(); }
 function togglePalFold(key){ if (PAL_FOLD.has(key)) PAL_FOLD.delete(key); else PAL_FOLD.add(key); _palFoldSave(); render(); }
 function palFoldAll(fold){
   document.querySelectorAll('#palette .srcgroup[data-fold]').forEach(g => {
@@ -2862,11 +2901,14 @@ function renderBand(){
              onclick="event.stopPropagation();dropCutFromBand(${i}, '${id}')">✕</button></div>`;
     }).join('');
     // 담기·빼기는 기존 기능(add/delSeg)을 그대로 쓴다 — 아래 소스에서 끌어다 놓거나 두 번 클릭.
-    return `<div class="tbeat ${clips.length ? '' : 'empty'} ${playKey === 'beat:' + i ? 'on' : ''} ${sel === i ? 'sel' : ''}"
+    return `<div class="tbeat ${clips.length ? '' : 'empty'} ${playKey === 'beat:' + i ? 'on' : ''} ${sel === i ? 'sel' : ''}" data-i="${i}"
+                 style="${(typeof CELLW !== 'undefined' && CELLW[i]) ? `width:${CELLW[i]}px;min-width:${CELLW[i]}px` : ''}"
                  onclick="selBeat(${i});playBeatHere(${i}, event)"
                  ondragover="if(palDrag||(dragFrom&&dragFrom.i!==${i})){event.preventDefault();event.dataTransfer.dropEffect=palDrag?'copy':'move';}"
                  ondrop="beatDrop(${i}, event)"
                  title="누르면 재생 · 아래 소스를 끌어다 놓거나 두 번 클릭하면 이 칸에 담깁니다">
+        <span class="tbresize" title="끌어서 이 칸 너비 조절 (두 번 클릭 = 기본 크기)" onclick="event.stopPropagation()"
+              onpointerdown="cellResizeStart(${i}, event)" ondblclick="event.stopPropagation();cellResizeReset(${i})"></span>
         <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d ${
              (frozen && f.gap > 0) ? 'dbad'
              : lack > 0.1 ? (stretching ? 'dwarn' : 'dbad')
