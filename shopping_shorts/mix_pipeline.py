@@ -571,7 +571,9 @@ def _apply_cap_timing(beat, narration, words, dur):
     if not t:
         return None
     durs = t.durs
-    if not beat.get("caption_lines_human") and os.environ.get("CAPTION_TIDY", "1") != "0":
+    # ★기본 꺼짐(2026-09-14) — 아스트라·페이블 검토: 장면 배치와 함께 고치지 않으면 담은 장면이 빠진다.
+    #   검증(블라인드 채점) 끝나면 CAPTION_TIDY=1로 켠다.
+    if not beat.get("caption_lines_human") and os.environ.get("CAPTION_TIDY", "0") == "1":
         try:
             segs = video_assemble._caption_segments(narration, preset=beat.get("caption_lines"))
             if len(segs) == len(durs):

@@ -51,6 +51,7 @@ def _fake_timing(monkeypatch, durs):
 
 def test_합성경로는_AI줄을_합쳐_저장한다(monkeypatch):
     from shopping_shorts import mix_pipeline as mp
+    monkeypatch.setenv("CAPTION_TIDY", "1")
     n = "여러분 오이 절대 냉장고에 그냥 두지 마세요. 며칠 안 됐는데 물러서 버렸거든요."
     _fake_timing(monkeypatch, [0.34, 0.9, 0.8, 0.69, 0.91])
     b = {"narration": n, "caption_lines": ["여러분", "오이 절대 냉장고에", "그냥 두지 마세요.", "며칠 안 됐는데", "물러서 버렸거든요."]}
@@ -61,6 +62,7 @@ def test_합성경로는_AI줄을_합쳐_저장한다(monkeypatch):
 
 def test_사람이_고친_줄은_안_건드린다(monkeypatch):
     from shopping_shorts import mix_pipeline as mp
+    monkeypatch.setenv("CAPTION_TIDY", "1")
     n = "여러분 오이 절대 냉장고에"
     _fake_timing(monkeypatch, [0.34, 0.9])
     b = {"narration": n, "caption_lines": ["여러분", "오이 절대 냉장고에"], "caption_lines_human": True}
@@ -69,9 +71,9 @@ def test_사람이_고친_줄은_안_건드린다(monkeypatch):
     assert b["cap_durs"] == [0.34, 0.9]
 
 
-def test_끄기_스위치(monkeypatch):
+def test_기본은_꺼져_있다(monkeypatch):
     from shopping_shorts import mix_pipeline as mp
-    monkeypatch.setenv("CAPTION_TIDY", "0")
+    monkeypatch.delenv("CAPTION_TIDY", raising=False)
     n = "여러분 오이 절대 냉장고에"
     _fake_timing(monkeypatch, [0.34, 0.9])
     b = {"narration": n, "caption_lines": ["여러분", "오이 절대 냉장고에"]}
