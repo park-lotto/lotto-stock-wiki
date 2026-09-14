@@ -796,7 +796,7 @@ function pvxBtns(state){
     }
     b.hidden = !state;
     b.disabled = state === 'building';
-    b.textContent = state === 'building' ? '⏳ 반영 중…' : '🎞 바뀐 장면 반영';
+    b.textContent = state === 'building' ? '⏳ 렌더 중…' : '🎞 바뀐 장면 렌더';
   });
 }
 function pvxRequest(){
