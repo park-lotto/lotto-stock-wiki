@@ -226,3 +226,40 @@ def test_pick_model_swaps_on_vertex():
         class _api_client:
             vertexai = True
     assert providers._pick_model(FakeVertex(), "gemini-3.1-flash-lite") == "gemini-2.5-flash"
+
+
+def test_review_request_carries_what_we_wanted():
+    """★그 자리에 **무엇을 넣으려 했는지**가 질문에 실려야 한다.
+
+    실측 2026-09-14(최민식 v2 슬롯2): 검색어가 「1980년대 어음 용지」였는데
+    **한복 입은 할머니 인터뷰 캡처**가 왔다. 그런데 검수가 matches_subtitle=true 로
+    통과시켰다 — 판정문이 "인물이 말하고 있는 듯한 모습과 일치하므로 어긋나지 않습니다"였다.
+    사진만 보면 "누가 말하고 있다"는 자막과 모순이 없어 보이기 때문이다.
+    → 찾으려던 것을 함께 줘서 **대조**하게 한다.
+    """
+    q = photocheck.build_review_request("x.png", "영화가 아니라 종이 얘기였다",
+                                        "검색: 1980년대 어음 용지")
+    assert "1980년대 어음 용지" in q, "넣으려던 것이 질문에 안 실렸다"
+    assert "영화가 아니라 종이 얘기였다" in q
+    # want 가 없으면 그 줄 자체가 빠진다(생성 이미지 자리 — 대조할 검색어가 없다)
+    assert "[이 자리에 넣으려던 것]" not in photocheck.build_review_request("x.png", "자막만")
+
+
+def test_review_request_forbids_lenient_match():
+    """★«어긋나지 않으면 통과»로 물으면 아무 사진이나 다 통과한다.
+
+    판정 기준이 «모순이 없나»가 아니라 «이 자막과 함께 틀어도 되나»여야 한다.
+    동시에 너무 세도 안 된다 — 인물 사진은 사건 현장 사진이 아니므로
+    «그 장면이 찍혔나»로 물으면 **진짜 최민식 사진까지 반려된다**(실측 2026-09-14 1차 시도).
+    """
+    q = photocheck.build_review_request("x.png", "자막", "검색: 무엇")
+    assert "딴 이야기로 보이는" in q, "느슨한 통과를 막는 지시가 없다"
+    assert "현장 사진이 아니다" in q, "인물 사진을 과하게 반려하는 것을 막는 지시가 없다"
+
+
+def test_parse_review_keeps_who_what():
+    """그림에 실제로 무엇이 찍혔는지를 보존한다 — «왜 통과했나»를 볼 때 이유보다 빠르다."""
+    raw = json.dumps({"verdict": "accepted", "visual_kind": "photo", "fabricated_text": [],
+                      "who_what": "한복 입은 나이 든 여성이 소파에 앉아 있다",
+                      "matches_subtitle": True, "reason": "x"})
+    assert "한복" in photocheck.parse_review(raw)["who_what"]

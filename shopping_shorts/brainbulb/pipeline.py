@@ -159,7 +159,15 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
                 #   볼케이노도 같은 구조다 — review_policy={"provider":"client"}.
                 if reviewer is not None:
                     subs = _subtitles_by_slot(d["script"]["script"])
-                    chk = _photocheck.check(files, subs, reviewer=reviewer, log=log)
+                    # ★그 자리에 **무엇을 넣으려 했는지**도 함께 보낸다 — 이게 없으면 검수가
+                    #   사진만 보고 "사람이 말하고 있으니 말이 되네" 하고 넘긴다
+                    #   (실측 2026-09-14: 검색어 「1980년대 어음 용지」 자리에 한복 할머니
+                    #    인터뷰 캡처가 왔는데 matches_subtitle=true 로 통과했다).
+                    wants = {}
+                    for k, s in (d["prompts"].get("sources") or {}).items():
+                        q = (s or {}).get("query") or ""
+                        wants[str(k)] = f"검색: {q}" if q else "생성 이미지"
+                    chk = _photocheck.check(files, subs, reviewer=reviewer, log=log, wants=wants)
                     d["photo_check"] = chk
                     if chk["retry"]:
                         files = _images.regenerate(chk["retry"], d["prompts"]["prompts"], wd,

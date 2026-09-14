@@ -57,18 +57,23 @@ def metrics(path):
             "why": why}
 
 
-def build_review_request(path, subtitle):
-    """모델에게 보낼 질문. 사진 한 장 + 그 컷 자막.
+def build_review_request(path, subtitle, want=""):
+    """모델에게 보낼 질문. 사진 한 장 + 그 컷 자막 (+ 그 자리에 무엇을 찾으려 했는지).
 
-    ★두 가지를 한 번에 묻는다:
+    ★세 가지를 한 번에 묻는다:
       ① 이게 **사진인가 그림인가**(볼케이노가 묻는 것)
-      ② 이 사진이 **이 자막에 맞나**(볼케이노는 안 묻는다 — 우리가 더한다)
+      ② **지어낸 기록**이 있나
+      ③ 이 사진이 **이 자막에 맞나**(볼케이노는 안 묻는다 — 우리가 더한다)
+
+    ★`want` 는 그 슬롯의 검색어·프롬프트다. 이게 있어야 «무엇을 찾으려 했는데 무엇이 왔나»를
+      대조할 수 있다 — 없으면 모델이 사진만 보고 "말이 되네" 하고 넘긴다(아래 실사고).
     """
     return (
         "첨부한 그림 한 장을 보고 판정하라. 추측하지 말고 **보이는 것만** 근거로 삼아라.\n"
         "\n"
         f"[이 그림이 쓰일 자막] «{subtitle}»\n"
-        "\n"
+        + (f"[이 자리에 넣으려던 것] {want}\n" if want else "")
+        + "\n"
         "[판정 1 — 사진인가 그림인가]\n"
         "  photo        실제 카메라로 찍은 것처럼 보인다(피부 모공·직물 주름·머리카락 질감·자연광 명암)\n"
         "  illustration 윤곽선·평면 색면·셀 셰이딩·과장된 비율이 보인다\n"
@@ -84,13 +89,38 @@ def build_review_request(path, subtitle):
         "  판단 기준: 그 글자가 **틀린 정보를 사실처럼 전달하나**. 아니면 적지 마라.\n"
         "  ★fabricated_text를 하나라도 적었으면 verdict는 반드시 retry다. 둘을 어긋나게 내지 마라.\n"
         "\n"
-        "[판정 3 — 자막과 맞나]\n"
-        "  자막이 말하는 장소·사람·행동이 그림에 있나. 나라가 어긋나지 않았나.\n"
-        "  예: 자막이 «케냐 슬럼가»인데 한국 지하철이면 어긋난 것이다.\n"
+        "[판정 3 — 자막과 맞나]  ★여기서 느슨하면 검수가 무의미해진다\n"
+        "  ★기준은 «어긋나지 않는다»가 아니라 «**이 자막을 보여주는 그림인가**»다.\n"
+        "    모순이 없다는 이유로 통과시키지 마라 — 그러면 아무 사진이나 다 통과한다.\n"
+        "\n"
+        "  먼저 한 문장으로 적어라: 이 그림에 **실제로 무엇이 찍혀 있나**(who_what).\n"
+        "\n"
+        "  ★이 그림은 **자막이 말하는 사건의 현장 사진이 아니다.** 숏폼의 배경 그림이다.\n"
+        "    그러니 «그 장면이 찍혔나»를 묻지 마라 — 그건 어떤 사진도 통과하지 못한다.\n"
+        "    물어야 할 것은 딱 하나다: **이 그림을 이 자막과 함께 틀어도 어색하지 않은가.**\n"
+        "\n"
+        "  통과(true)로 두어라:\n"
+        "    · 자막이 말하는 **사람**이 그 사람이거나, 성별·나이대가 맞는 경우\n"
+        "      (예: 자막 «최민식은 …» + 나이 든 한국 남자 사진 → 맞다.\n"
+        "           자막이 그 사람의 말·행동을 설명해도 사진은 인물 사진이면 된다)\n"
+        "    · 자막이 말하는 **사물·장소**가 화면에 보이는 경우\n"
+        "    · 자막이 앞뒤 맥락을 잇는 말이고, 그림이 그 이야기의 인물·장소인 경우\n"
+        "\n"
+        "  ★반려(false)로 내야 할 것 — 함께 틀면 **딴 이야기로 보이는** 경우:\n"
+        "    · 자막은 «어음 용지»·«통장» 같은 **사물**인데 그림엔 그 사물이 없고 딴 게 찍혔다\n"
+        "    · 자막이 말하는 사람과 그림 속 사람의 **성별이 다르다**\n"
+        "    · 자막은 «1980년대» 인데 그림은 요즘 사무실·요즘 옷차림이다\n"
+        "    · 자막은 한 나라인데 그림은 다른 나라다(«케냐 슬럼가» + 한국 지하철)\n"
+        "\n"
+        "  ★'이 자리에 넣으려던 것'이 함께 주어졌으면 **그것이 실제로 왔는지** 대조하라.\n"
+        "    «검색: 1980년대 어음 용지» 라고 했는데 사람 인터뷰 사진이 왔으면 false 다 —\n"
+        "    검색이 엉뚱한 것을 물어온 것이므로, 그림이 아무리 좋아도 그 자리엔 못 쓴다.\n"
+        "    «생성 이미지» 라고 적혀 있으면 검색 대조는 건너뛰고 위 기준만 본다.\n"
         "\n"
         "JSON 하나만 출력하라:\n"
         '{"verdict": "accepted 또는 retry", "visual_kind": "photo 또는 illustration",'
-        ' "fabricated_text": ["지어낸 기록만"], "matches_subtitle": true 또는 false,'
+        ' "fabricated_text": ["지어낸 기록만"], "who_what": "그림에 실제로 찍힌 것 한 문장",'
+        ' "matches_subtitle": true 또는 false,'
         ' "reason": "보이는 것을 근거로 한 판정 이유"}\n'
     )
 
@@ -111,13 +141,17 @@ def parse_review(raw):
     bad = (v == "retry" or kind == "illustration" or bool(text) or match is False)
     return {"verdict": "retry" if bad else "accepted", "visual_kind": kind,
             "fabricated_text": text, "matches_subtitle": match,
+            # ★그림에 실제로 무엇이 찍혔는지를 받아 둔다 — 나중에 "왜 통과했나"를 볼 때
+            #   판정 이유보다 이게 더 빠르다(실측: 「어음 용지」 자리에 한복 할머니가 왔다).
+            "who_what": str(d.get("who_what") or "")[:200],
             "reason": str(d.get("reason") or "")[:300]}
 
 
-def check(files, subtitles, *, reviewer=None, log=print, force_all=True):
+def check(files, subtitles, *, reviewer=None, log=print, force_all=True, wants=None):
     """→ {"checked", "reviewed", "retry": [슬롯…]}
 
     files      {슬롯: 경로} · subtitles {슬롯: 그 슬롯 자막}
+    wants      {슬롯: 그 자리에 넣으려던 것} — 검색어나 프롬프트. 있으면 대조에 쓴다.
     reviewer   call(prompt, image_path) -> str. 없으면 기계 지표만 본다.
     force_all  기본 True — **전부 모델에게 보낸다**.
 
@@ -140,7 +174,8 @@ def check(files, subtitles, *, reviewer=None, log=print, force_all=True):
         suspect = force_all or (m and m.get("why"))
         if suspect and reviewer:
             try:
-                raw = reviewer(build_review_request(p, subtitles.get(slot, "")), p)
+                raw = reviewer(build_review_request(p, subtitles.get(slot, ""),
+                                                    (wants or {}).get(slot, "")), p)
                 rv = parse_review(raw)
             except Exception as e:  # noqa: BLE001 — 검수 실패가 편을 멈추면 안 된다
                 log(f"[brainbulb.photocheck] 슬롯 {slot} 검수 실패(통과 처리): {e!r:.70}")
