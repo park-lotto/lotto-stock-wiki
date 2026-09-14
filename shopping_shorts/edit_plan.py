@@ -5811,8 +5811,41 @@ def apply_scene_lab(plan, seg_map, edits):
         # 표식이 없으면 렌더는 종전 배분 그대로다(옛 job 회귀 0).
         if eb.get("phrase"):
             beat["phrase_sync"] = True
+        elif eb.get("phrase") is False:
+            # ★끈 칸은 표식을 **남긴다**(2026-09-14 사장님). 표식 없는 옛 job은 종전 배분 그대로.
+            beat["phrase_sync"] = False
         else:
             beat.pop("phrase_sync", None)
+        # ★끈 칸 = 화면에 보이던 컷 **그대로** 렌더(2026-09-14 사장님 "그 화면 그대로, 경계만 조절").
+        #   화면(scene_play.js CUTS)이 정한 컷을 받아 원본 위치로 풀어 둔다 — 서버가 다시 나누지 않는다.
+        _mc = []
+        if eb.get("phrase") is False and isinstance(eb.get("cuts"), list):
+            _seen = {}
+            for _c in eb["cuts"]:
+                try:
+                    _sid = str(_c.get("seg_id")); _d = float(_c.get("dur"))
+                except (AttributeError, TypeError, ValueError):
+                    continue
+                if _sid not in seg_map or not (_d > 0):
+                    continue
+                _g = seg_map[_sid]
+                _st = _seen.get(_sid, float(_g["start"]))   # 같은 장면 여러 컷 = 이어서 튼다(화면과 같음)
+                _seen[_sid] = _st + _d
+                _mc.append({"seg_id": _sid, "video_id": _g["video_id"],
+                            "start": round(_st, 3), "dur": round(_d, 3)})
+        if _mc:
+            beat["manual_cuts"] = _mc
+            try:
+                _slow = float(eb.get("slow") or 1)
+            except (TypeError, ValueError):
+                _slow = 1.0
+            if _slow > 1:
+                beat["slow"] = round(_slow, 4)
+            else:
+                beat.pop("slow", None)
+        else:
+            beat.pop("manual_cuts", None)
+            beat.pop("slow", None)
         applied += 1
     # ★오려낸 조각도 함께 남긴다(2026-09-05, 고객 다수 제보 "자막제거 후 다시 오면
     #   다 지워지고 까만색"). 종전엔 위에서 seg_map **사본**에만 병합하고 버려서,
