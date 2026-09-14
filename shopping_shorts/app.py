@@ -20334,13 +20334,20 @@ def _facts_for_job(job_id, store=None, topic_product=""):
             linked = (((job or {}).get("product") or {}).get("name") or "").strip()
             # 연결 상품의 제품명이 없으면 캐시/첫 URL facts가 어느 제품 것인지 증명할 수
             # 없다. 다른 제품 정보를 넣는 것보다 facts를 빼는 쪽으로 닫는다.
-            if not linked or not _same_topic_product(topic_product, linked):
+            if not linked:
+                return {}
+            resolution = _topic_resolution_for_job(job)
+            topic_group = _topic_group_for_name(topic_product, resolution, job)
+            linked_group = _topic_group_for_name(linked, resolution, job) if linked else ""
+            if not (_same_topic_product(topic_product, linked) or
+                    (topic_group and linked_group == topic_group)):
                 return {}
             ex = {}
             for k, v in ((job or {}).get("extract") or {}).items():
                 b = v.get("source_brief") if isinstance(v, dict) else None
                 p = (b.get("product") or "").strip() if isinstance(b, dict) else ""
-                if p and _same_topic_product(topic_product, p):
+                if (resolution["membership"].get(str(k)) == topic_group if topic_group else
+                        p and _same_topic_product(topic_product, p)):
                     ex[k] = v
             job = dict(job or {}, extract=ex)
         facts = ((job or {}).get("product") or {}).get("facts") or {}
@@ -20985,6 +20992,33 @@ def _same_topic_product(anchor, candidate):
     return topic_contract.same_product(anchor, candidate)
 
 
+def _topic_resolution_for_job(job):
+    """전체 생성·한 칸 재생성이 함께 쓰는 서버 자료의 제품군 소속."""
+    from shopping_shorts import topic_contract
+    rows = [dict(value, source_id=str(sid))
+            for sid, value in ((job or {}).get("extract") or {}).items()
+            if isinstance(value, dict)]
+    resolution = topic_contract.resolve_membership(rows)
+    if isinstance(job, dict):
+        job["_topic_resolution"] = resolution
+    return resolution
+
+
+def _topic_group_for_name(topic, resolution, job):
+    """확정 주제는 canonical 이름 또는 그 군집의 실제 제품명으로만 복원한다."""
+    groups = []
+    extract = (job or {}).get("extract") or {}
+    for group in resolution.get("groups") or []:
+        names = [group["product"]]
+        for sid in group["source_ids"]:
+            brief = (extract.get(sid) or {}).get("source_brief") or {}
+            if isinstance(brief, dict):
+                names.append(brief.get("product") or "")
+        if any(_same_topic_product(topic, name) for name in names):
+            groups.append(group["group_id"])
+    return groups[0] if len(groups) == 1 else ""
+
+
 def _topic_product_for_generate(item, body, job, store):
     """선택 카드의 제품을 생성 주제 정본으로 복원한다. 자료 순서는 근거가 아니다."""
     # 사용자가 직접 쓴 이식 주제/고정 소재만 명시값이다. 씨앗 카드는 구조·훅 선택일 뿐
@@ -20995,32 +21029,25 @@ def _topic_product_for_generate(item, body, job, store):
     frozen = str((body or {}).get("topic_product") or "").strip()
     selected = str((body or {}).get("selected_shortcode") or
                    (body or {}).get("shortcode") or "").strip()
-    # 작업 주제는 단일제품으로 판독된 자료들의 제품군 합의로 정한다. 다제품 모음과 정렬은
-    # 투표권이 없다. 씨앗은 동률일 때 같은 수의 후보 중 이름을 고르는 데만 쓴다.
-    products = []
-    selected_product = ""
-    for x in ((job or {}).get("extract") or {}).values():
-        b = x.get("source_brief") if isinstance(x, dict) else None
-        p = (b.get("product") or "").strip() if isinstance(b, dict) else ""
-        if p and not _is_multi_product(p):
-            products.append(p)
+    # 이름의 마지막 토큰 대신, 관측으로 확인한 제품군 소속을 합의/필터가 함께 쓴다.
+    resolution = _topic_resolution_for_job(job)
+    groups = resolution["groups"]
     sx = ((job or {}).get("extract") or {}).get(selected)
+    selected_product = ""
     if isinstance(sx, dict) and isinstance(sx.get("source_brief"), dict):
         selected_product = (sx["source_brief"].get("product") or "").strip()
-    if products:
-        from shopping_shorts import topic_contract
-        agreed, ambiguous = topic_contract.consensus(products)
-        if ambiguous and frozen:
-            # [바꾸기]는 전체 생성 때 서버가 확정해 돌려준 주제를 다시 보낸다.
-            # 현재 자료에도 그 제품군이 있을 때만 받아 임의 클라이언트 값을 막는다.
-            return frozen if any(_same_topic_product(frozen, p) for p in products) else None
-        if ambiguous:
-            return None
+    if groups:
+        group_id = groups[0]["group_id"]
         if frozen:
-            return frozen if agreed and _same_topic_product(agreed, frozen) else None
-        if selected_product and agreed and _same_topic_product(agreed, selected_product):
+            frozen_group = _topic_group_for_name(frozen, resolution, job)
+            if not frozen_group or (not resolution["ambiguous"] and frozen_group != group_id):
+                return None
+            return frozen
+        if resolution["ambiguous"]:
+            return None
+        if selected_product and resolution["membership"].get(selected) == group_id:
             return selected_product
-        return agreed
+        return resolution["product"]
     brief = (item or {}).get("source_brief")
     if isinstance(brief, dict) and (brief.get("product") or "").strip():
         return brief["product"].strip()
@@ -21066,10 +21093,14 @@ def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES,
                     "url": url or "", "source_id": source_id or "",
                     "segments": segments or []})
 
-    _add(item.get("category") or "", item.get("full_text"), item.get("structure"),
-         ((item.get("source_brief") or {}).get("product") if isinstance(item.get("source_brief"), dict) else ""),
-         item.get("segments"), url=(item.get("url") or item.get("video_url") or ""),
-         source_id=(item.get("shortcode") or preferred_shortcode or ""))
+    _item_sid = item.get("shortcode") or preferred_shortcode or ""
+    # 작업 추출에 같은 ID가 있으면 서버의 관측 정본을 사용한다. body base_script나
+    # 낡은 위키 요약이 그 ID를 선점하여 제품군 검증을 우회하면 안 된다.
+    if _item_sid not in ((job or {}).get("extract") or {}):
+        _add(item.get("category") or "", item.get("full_text"), item.get("structure"),
+             ((item.get("source_brief") or {}).get("product") if isinstance(item.get("source_brief"), dict) else ""),
+             item.get("segments"), url=(item.get("url") or item.get("video_url") or ""),
+             source_id=_item_sid)
     _urls = list((job or {}).get("urls") or [])
     _pairs = list(((job or {}).get("extract") or {}).items())
     if preferred_shortcode:
@@ -21096,14 +21127,21 @@ def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES,
              ex.get("segments"), url=(ex.get("_source_url") or _u), source_id=str(_vid))
     if topic_product and not explicit_topic:
         from shopping_shorts import topic_contract
-        kept = [s for s in out if (
-            _same_topic_product(topic_product, s.get("product")) or
-            (not (s.get("product") or "").strip() and
-             bool(topic_contract.topic_mentions(s.get("full_text") or "", topic_product))))]
+        # 내용이 바뀌면 서명도 바뀐다. 이전 요청의 임시 job 표식을 그대로 믿지 않는다.
+        resolution = _topic_resolution_for_job(job)
+        group_id = _topic_group_for_name(topic_product, resolution, job)
+        member_ids = {sid for sid, gid in resolution["membership"].items() if gid == group_id}
+        known_ids = {str(sid) for sid in ((job or {}).get("extract") or {})}
+        kept = [s for s in out if (s.get("source_id") in member_ids or
+            (s.get("source_id") not in known_ids and (
+                _same_topic_product(topic_product, s.get("product")) or
+                (not (s.get("product") or "").strip() and
+                 bool(topic_contract.topic_mentions(s.get("full_text") or "", topic_product))))))]
         # 주제 정본은 모든 생성·검사 경로가 같은 값으로 읽는다.
         for s in kept:
             s["topic_product"] = topic_product
             s["topic_semantic_required"] = True
+            topic_contract.mark_topic_member(s, topic_product, resolution, group_id)
         out = kept
     elif topic_product:
         # 이식/직접 주제는 원본 제품과 달라야 정상이다. 자료는 구조 참고로 남기되
@@ -21262,6 +21300,8 @@ def _materials_for_generate(item, body, store, cid, spines=None):
             # 강제하지 않고 편별 슬롯/장면 계약으로 넘긴다.
             _topic_product = ""
         else:
+            if ((_job or {}).get("_topic_resolution") or {}).get("method") == "unresolved":
+                raise ValueError("담긴 영상의 제품명이 달라 같은 제품인지 확인하지 못했습니다. 잠시 후 다시 생성해 주세요")
             raise ValueError("담긴 영상에 서로 다른 제품이 같은 수로 섞여 주제를 확정할 수 없습니다")
     _explicit_topic = bool(str(
         _topic_body.get("my_topic") or _topic_body.get("subject") or "").strip())

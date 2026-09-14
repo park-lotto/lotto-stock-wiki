@@ -599,7 +599,7 @@ def claim_evidence(sources, facts_block=""):
             continue
         target, original = source.get("topic_product"), source.get("product")
         # 명시 이식의 타제품 원본은 구조 참고일 뿐 목표 제품의 근거가 될 수 없다.
-        if target and original and not topic_contract.same_product(target, original):
+        if target and original and not topic_contract.source_matches_topic(source, target):
             continue
         scenes = []
         for seg in (source.get("segments") or [])[:GROUNDED_SCENE_MAX]:
@@ -1188,6 +1188,13 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         base += _claim_prompt(_evidence)
 
     extra, tries, out = "", [], ""
+    # 긴 근거 목록 뒤에도 한 칸의 분량 계약이 마지막 지시로 남아야 한다.
+    # 실제 바꾸기에서 앞쪽의 상한을 놓쳐 세 번 모두 길게 쓴 뒤 502로 끝났다.
+    if per:
+        base += ("\n\n[이번 출력의 최종 분량 계약]\n원래 칸은 %d자다. 설명을 늘이지 말고 "
+                 "같은 뜻을 다른 말로 짧게 바꾼 한 문장만 내라. 공백 제외 %d자를 넘기면 "
+                 "결과를 사용할 수 없다. JSON text 하나만 출력한다."
+                 % (per, int(_beat_len_cap(per))))
     for _ in range(BEAT_REGEN_TRIES + 1):
         data = _call_json(base + extra, _BEAT_SCHEMA)
         out = ((data or {}).get("text") or "").strip()
