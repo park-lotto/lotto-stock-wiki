@@ -358,7 +358,7 @@ body.grow #playerhost{overflow:visible;position:sticky;top:8px;align-self:flex-s
    안 보인다"). 높이는 fitPalette()가 **보이는 화면 높이 − 위 작업칸** 으로 잡는다 — 그래서 페이지
    전체가 안 내려가고 위 미리보기·칸은 늘 보인다. vh를 안 쓰는 이유: grow 모드에선 100vh=iframe
    높이=내용 높이라 자기참조로 부푼다(935행 주석과 같은 함정). */
-#palette{max-height:var(--pal-h,560px);overflow-y:auto;overflow-x:hidden;padding-right:6px;scrollbar-width:auto}
+#palette{max-height:var(--pal-h,600px);overflow-y:auto;overflow-x:hidden;padding-right:6px;scrollbar-width:auto}
 #palette::-webkit-scrollbar{width:12px}
 #palette::-webkit-scrollbar-track{background:#191c21;border-radius:6px}
 #palette::-webkit-scrollbar-thumb{background:#5a6270;border-radius:6px}
@@ -1714,7 +1714,8 @@ function fitPalette(){
   try {
     if (window.parent && window.parent !== window && window.frameElement) viewH = window.parent.innerHeight;
   } catch (e) {}
-  const h = Math.max(260, Math.round(viewH - topInLab - 16));
+  // 최소 두 줄(영상 묶음 2개)은 늘 보이게 — 사장님 "이것도 두 칸은 돼야" (2026-09-14 저녁)
+  const h = Math.max(600, Math.round(viewH - topInLab - 16));
   document.documentElement.style.setProperty('--pal-h', h + 'px');
 }
 window.addEventListener('resize', () => { try { fitPalette(); } catch (e) {} });
