@@ -32,17 +32,41 @@ def _ssul_channels(store, prev_items):
     """
     out = {i.get("username") for i in prev_items
            if i.get("category") in SSUL_CATEGORIES and i.get("username")}
+    try:
+        with store._conn() as c:
+            out |= {r[0] for r in c.execute(
+                "SELECT channel_id FROM channel_styles WHERE style='썰쇼핑'") if r[0]}
+    except Exception as e:          # noqa: BLE001 — 한 출처가 없어도 나머지로 돈다
+        print(f"[ssul_refresh] channel_styles 조회 실패: {e!r}", file=sys.stderr)
+
+    # ★reel_history.username은 **소문자로 저장**돼 있다(실측 338/338 'uc…').
+    #   채널 ID는 대소문자를 가르므로 그대로 쓰면 조회가 통째로 헛돈다(첫 실행 755→417).
+    #   대소문자가 살아있는 url로 되찾는다: 이미 아는 ID면 그걸 쓰고, 모르면 영상 1편씩
+    #   videos.list로 channelId를 받는다(50편당 1 unit).
     ph = ",".join("?" * len(SSUL_CATEGORIES))
-    for sql, args in (
-        (f"SELECT DISTINCT username FROM reel_history WHERE platform='youtube' "
-         f"AND category IN ({ph})", SSUL_CATEGORIES),
-        ("SELECT channel_id FROM channel_styles WHERE style='썰쇼핑'", ()),
-    ):
-        try:
-            with store._conn() as c:
-                out |= {r[0] for r in c.execute(sql, args) if r[0]}
-        except Exception as e:      # noqa: BLE001 — 한 출처가 없어도 나머지로 돈다
-            print(f"[ssul_refresh] 채널 출처 조회 실패: {e!r}", file=sys.stderr)
+    try:
+        with store._conn() as c:
+            rows = c.execute(
+                f"SELECT username, MAX(url) FROM reel_history WHERE platform='youtube' "
+                f"AND category IN ({ph}) GROUP BY username", SSUL_CATEGORIES).fetchall()
+    except Exception as e:          # noqa: BLE001
+        print(f"[ssul_refresh] reel_history 조회 실패: {e!r}", file=sys.stderr)
+        rows = []
+    known = {str(x).lower(): x for x in out}
+    for i in prev_items:
+        if i.get("username"):
+            known.setdefault(str(i["username"]).lower(), i["username"])
+    urls = []
+    for low, url in rows:
+        if not low:
+            continue
+        if str(low).lower() in known:
+            out.add(known[str(low).lower()])
+        elif url:
+            urls.append(url)
+    if urls:
+        from shopping_shorts.youtube_client import channels_from_video_urls
+        out |= {ch["channel_id"] for ch in channels_from_video_urls(urls)}
     return {c for c in out if str(c).startswith("UC")}
 
 
