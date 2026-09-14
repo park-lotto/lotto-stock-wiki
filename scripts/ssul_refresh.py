@@ -20,9 +20,12 @@ from shopping_shorts.config import DB_PATH, YOUTUBE_WINDOW_HOURS
 from shopping_shorts.store import Store
 
 SSUL_CATEGORIES = ("제품정체형", "오용형")   # index.html 카테고리 라벨 '썰쇼핑'과 짝
+# ★갱신 대상 축(2026-09-14 사장님 "홈템 좀 더 늘리자. 제품들어간거").
+#   (카테고리들, channel_styles 스타일) — 축을 늘릴 땐 여기 한 줄만 더한다.
+TARGETS = ((SSUL_CATEGORIES, "썰쇼핑"), (("홈템",), "홈템"))
 
 
-def _ssul_channels(store, prev_items):
+def _ssul_channels(store, prev_items, cats=SSUL_CATEGORIES, style="썰쇼핑"):
     """갱신 대상 = 세 출처의 합집합 (2026-09-14 실측: 236 → 755채널).
 
     ① 지금 랭킹에 썰 영상이 있는 채널 — 이것만 쓰면 14일 창 밖으로 밀린 채널이 빠진다(236)
@@ -31,11 +34,11 @@ def _ssul_channels(store, prev_items):
     채널당 2 units라 넓혀도 회당 ~1,500 units. 썰 아닌 영상은 카테고리가 걸러 탭에 안 섞인다.
     """
     out = {i.get("username") for i in prev_items
-           if i.get("category") in SSUL_CATEGORIES and i.get("username")}
+           if i.get("category") in cats and i.get("username")}
     try:
         with store._conn() as c:
             out |= {r[0] for r in c.execute(
-                "SELECT channel_id FROM channel_styles WHERE style='썰쇼핑'") if r[0]}
+                "SELECT channel_id FROM channel_styles WHERE style=?", (style,)) if r[0]}
     except Exception as e:          # noqa: BLE001 — 한 출처가 없어도 나머지로 돈다
         print(f"[ssul_refresh] channel_styles 조회 실패: {e!r}", file=sys.stderr)
 
@@ -43,12 +46,12 @@ def _ssul_channels(store, prev_items):
     #   채널 ID는 대소문자를 가르므로 그대로 쓰면 조회가 통째로 헛돈다(첫 실행 755→417).
     #   대소문자가 살아있는 url로 되찾는다: 이미 아는 ID면 그걸 쓰고, 모르면 영상 1편씩
     #   videos.list로 channelId를 받는다(50편당 1 unit).
-    ph = ",".join("?" * len(SSUL_CATEGORIES))
+    ph = ",".join("?" * len(cats))
     try:
         with store._conn() as c:
             rows = c.execute(
                 f"SELECT username, MAX(url) FROM reel_history WHERE platform='youtube' "
-                f"AND category IN ({ph}) GROUP BY username", SSUL_CATEGORIES).fetchall()
+                f"AND category IN ({ph}) GROUP BY username", tuple(cats)).fetchall()
     except Exception as e:          # noqa: BLE001
         print(f"[ssul_refresh] reel_history 조회 실패: {e!r}", file=sys.stderr)
         rows = []
@@ -108,7 +111,12 @@ def main():
     from shopping_shorts.youtube_client import fetch_channel_shorts, fetch_subscribers
 
     prev, _ = store.load_last_run_platform("youtube")
-    channels = sorted(_ssul_channels(store, prev))
+    channels = set()
+    for cats, style in TARGETS:
+        got = _ssul_channels(store, prev, cats, style)
+        print(f"[ssul_refresh] 대상 {style}: {len(got)}채널")
+        channels |= got
+    channels = sorted(channels)
     if not channels:
         print("[ssul_refresh] 썰쇼핑 채널 0개 — 할 일 없음")
         return 0
@@ -146,8 +154,9 @@ def main():
                                              update_existing=True)
     n12 = sum(1 for i in items if i.get("category") in SSUL_CATEGORIES
               and (i.get("age_hours") or 1e9) <= 12)
+    h12 = sum(1 for i in items if i.get("category") == "홈템" and (i.get("age_hours") or 1e9) <= 12)
     print(f"[ssul_refresh] 채널 {len(channels)} · 영상 {len(items)}건(신규 {added}) · "
-          f"썰쇼핑 12h {n12}건 · 전체 {total} · {time.time() - t0:.1f}s")
+          f"썰쇼핑 12h {n12}건 · 홈템 12h {h12}건 · 전체 {total} · {time.time() - t0:.1f}s")
     return 0
 
 
