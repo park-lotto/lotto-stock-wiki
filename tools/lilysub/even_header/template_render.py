@@ -378,7 +378,18 @@ def bind_lines(frame, kind):
         out.append((b, ln))
     return out
 
-def render(tpl, kind, texts, photo=None, W=1080, H_out=None):
+POP_MS = 520 * 0.72          # 훅 '팝업' 모션(장면꾸미기 UI hookMotion=pop, 속도 빠름) 총 길이
+POP_STAGGER = 90 * 0.72      # 글자 줄마다 시차
+
+def pop_state(pop_ms, index):
+    """팝업 키프레임: 0.25배·투명 → 68%에서 1.14배·불투명 → 1배. 줄마다 index*시차."""
+    t = pop_ms - index*POP_STAGGER
+    if t < 0: return (0.25, 0.0)
+    p = min(1.0, t/POP_MS)
+    if p < .68: return (.25 + (1.14-.25)*(p/.68), p/.68)
+    return (1.14 - .14*((p-.68)/.32), 1.0)
+
+def render(tpl, kind, texts, photo=None, W=1080, H_out=None, pop_ms=None):
     frame = tpl[kind]
     S = W / frame['width']
     H = int(round(frame['height']*S))
@@ -406,13 +417,55 @@ def render(tpl, kind, texts, photo=None, W=1080, H_out=None):
     # ★sample 에 channel 이 없는 템플릿이 대부분 → 빈 박스가 뜬다(격자 실측). 없으면 템플릿 이름
     if cb: draw_channel_box(img, cb, texts.get('channel') or tpl['name'], tpl, S)
     accent_default = tpl.get('accent') or tpl.get('accent_color') or '#FFE500'
-    for b, ln in bind_lines(frame, kind):
+    for i, (b, ln) in enumerate(bind_lines(frame, kind)):
         role_col = {'hook1': '#FFFFFF', 'hook2': accent_default, 'bodyTitle': '#FFFFFF', 'caption': '#111111'}.get(b, '#FFFFFF')
-        draw_line(img, ln, texts.get(b, ''), frame, tpl, S, role_col, bind=b)
+        if pop_ms is None:
+            draw_line(img, ln, texts.get(b, ''), frame, tpl, S, role_col, bind=b)
+        else:
+            # 팝업: 줄을 따로 그려 상자 중심 기준 확대·투명 적용
+            sc, al = pop_state(pop_ms, i)
+            if al <= 0: continue
+            layer = Image.new('RGBA', img.size, (0,0,0,0))
+            draw_line(layer, ln, texts.get(b, ''), frame, tpl, S, role_col, bind=b)
+            cx = (ln['x0']+ln['x1'])/2*S; cy = (ln['y0'] + (ln.get('h') or (ln['y1']-ln['y0']))/2)*S
+            if abs(sc-1) > 1e-3:
+                big = layer.resize((max(1,int(layer.width*sc)), max(1,int(layer.height*sc))), Image.LANCZOS)
+                canvas = Image.new('RGBA', layer.size, (0,0,0,0))
+                canvas.paste(big, (int(cx-cx*sc), int(cy-cy*sc)), big); layer = canvas
+            if al < 1: layer.putalpha(layer.split()[3].point(lambda v: int(v*al)))
+            img.alpha_composite(layer)
     draw_ornaments(img, frame, S)
     if H_out and H_out != H:
         canvas = Image.new('RGBA', (W, H_out), (0,0,0,255)); canvas.paste(img, (0, 0)); img = canvas
     return img
+
+# ───────────────────────── B안 헤더 층 ─────────────────────────
+def body_cut_y(tpl, S):
+    """본문 헤더를 어디까지 쓸지 — 자막띠(릴리가 맡는다)는 뺀다: white_box 위 / caption 줄 위 / 없으면 video_from."""
+    frame = tpl['body']
+    wb = frame.get('white_box')
+    if wb: return int(wb['y0']*S)
+    for b, ln in bind_lines(frame, 'body'):
+        if b == 'caption':
+            return int((ln['y0'] - (ln.get('patch_top', 2) or 0) - 2)*S)
+    return int(frame['video_from']['y']*S)
+
+def header_layer(tpl, kind, texts, photo_top, W=1080, H=1920, pop_ms=None):
+    """video_raw(사진 y=photo_top 부터) 위에 얹을 헤더만 투명 레이어로. 훅은 세로 축소, 본문은 아래를 헤더 끝색으로 채운다."""
+    frame = tpl[kind]; S = W/frame['width']
+    full = render(tpl, kind, texts, photo=None, W=W, pop_ms=pop_ms)
+    cut = int(round(frame['video_from']['y']*S)) if kind == 'hook' else body_cut_y(tpl, S)
+    hdr = full.crop((0, 0, W, max(2, cut)))
+    layer = Image.new('RGBA', (W, H), (0,0,0,0))
+    if hdr.height > photo_top:
+        layer.paste(hdr.resize((W, photo_top), Image.LANCZOS), (0, 0))
+    else:
+        layer.paste(hdr, (0, 0))
+        if hdr.height < photo_top:
+            row = np.array(hdr.convert('RGB'))[-2:].reshape(-1, 3).mean(axis=0).astype(int)
+            fill = Image.new('RGBA', (W, photo_top-hdr.height), (int(row[0]), int(row[1]), int(row[2]), 255))
+            layer.paste(fill, (0, hdr.height))
+    return layer
 
 # ───────────────────────── 격자(검증) ─────────────────────────
 def sheet(tpls, kind, out_path, tile_h=420):

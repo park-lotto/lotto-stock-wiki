@@ -299,3 +299,15 @@ video_raw.mp4 (볼케이노 사진·밈·움직임·검수 그대로, 글자 0)
 - 아직 못 그리는 것: `radial-gradient` 층(건너뜀, 헤더 광택만 빠짐) · 참조에만 있는 채널 로고 이미지(살림장착) · 데이터에 없는 아이콘(공가미 ornaments None).
 - ⚠ 볼케이노 작업폴더(scratchpad)에서 `fonts/`·`pepe/`·`sfx_norm/` 이 몇 시간 뒤 사라졌다 — 실행기가 팩을 정리하는 듯. 재료는 전부 트랙 `even_header/` 로 옮겨 고정했다.
 - 다음: `even_chrome.py` 를 `template_render.render()` 로 갈아끼워 `--template <이름>` 한 인자로 20종 헤더 층 생성 → B안 한 명령화 → 문구 자동 연결(볼케이노 title).
+
+
+## 2026-09-15 CH PC — ★B안 한 명령 `tools/lilysub/run_b.py` (20종 헤더 택1 + 릴리 자막)
+
+```
+python tools/lilysub/run_b.py <볼케이노 작업폴더> --template 살림킹왕짱 [--plan 계획.json] [--channel 디씨썰극장]
+```
+- 문구는 `next_payload.json` 의 `title`(h1→hook1, h2→hook2, card→bodyTitle) 자동, `--hook1/--hook2/--title` 로 덮어씀. 비면 **멈춘다**.
+- ① `video_raw` 3프레임에서 사진 띠 실측(y469~1254) → 헤더 높이·`shiftY`(띠중심-834) 계산 ② `template_render.header_layer` 로 chrome.mov(훅 팝업 포함, 본문은 자막띠 뺀 헤더) ③ build_cuts→Remotion overlay ④ **게이트**: 컷마다 overlay 알파 y범위 실측, 띠 밖/픽셀0 이면 컷 번호 찍고 exit 2 ⑤ 합성·길이 대조(±0.15s).
+- 실측: 최민식 편 + 살림킹왕짱 → 21컷 게이트 통과, 36.77s, 프레임 4장 눈 확인(흰 헤더·분홍 채널 필·분홍 hook2 / 본문 분홍 헤더 / 릴리 narr·hl·react). 산출 바탕화면 `최민식_살림킹왕짱헤더+릴리자막_한명령.mp4`.
+- 함정: npx 출력을 cp949 로 읽으면 스레드에서 UnicodeDecodeError → `subprocess.run(encoding='utf-8', errors='replace')`.
+- 남은 것: 컷별 자막 kind 는 아직 `--plan` 손 작성(없으면 전부 narr). 대체 글꼴 3종. radial 층. 다른 소재 2편으로 재검증.
