@@ -86,7 +86,8 @@ def _fake_styles(*a, **kw):
 
 def _fake_variations(*a, **kw):
     """generate_variations(다른 분기) 응답 — 이쪽도 리스트다."""
-    return [{"hook": "훅", "script": "본문", "elements": {}}]
+    # 픽업 경로도 소재 출구 검사를 거치므로 라이브 fixture 제품이 든 정상 응답을 돌려준다.
+    return [{"hook": "훅", "script": "분리형 미니 세탁기 본문", "elements": {}}]
 
 
 def test_대본생성_성공경로가_200으로_끝난다(client, tmp_path, monkeypatch):

@@ -1222,6 +1222,7 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
     wanted = max(1, min(int(n or 3), 5))
     accepted = []
     for _attempt in range(PICKUP_MATERIAL_REWRITES + 1):
+        rejected_this_batch = False
         batch = generate_variations(
             structure, full_text, elem_modes, category_lookup, mode=mode,
             my_topic=my_topic, subject=subject, n=max(1, wanted - len(accepted)), **kwargs)
@@ -1232,6 +1233,7 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
                 draft.get("script") or "", product=guard_product,
                 materials_text=material_text)
             if fatal:
+                rejected_this_batch = True
                 if rejection_reasons is not None:
                     rejection_reasons.append({"reason": "소재이탈" if fatal == "소재 일치" else "판매처이탈",
                                               "detail": fatal})
@@ -1239,6 +1241,10 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
             accepted.append(draft)
             if len(accepted) >= wanted:
                 return accepted
+        # 생성기가 요청 수보다 적게 줬을 뿐 소재 이탈은 없었다면 종전 반환 수를 존중한다.
+        # 재시도는 소재 이탈을 다시 쓰기 위한 것이지 개수를 억지로 복제하기 위한 것이 아니다.
+        if not rejected_this_batch:
+            return accepted
     return accepted
 
 
