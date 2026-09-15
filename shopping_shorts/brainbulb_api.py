@@ -212,8 +212,18 @@ def register(app, require_admin):
             return JSONResponse({"error": "기사 링크나 본문이 필요합니다"}, status_code=422)
 
         name = body.get("name") or ""
-        job_id = _slug(name or url.rsplit("/", 1)[-1] or "")
+        # ★이름을 안 주면 URL 끝을 쓰지 않는다(2026-09-16 실사고). URL 끝은 기사마다
+        #   비슷하거나 빈 값이라 남의 폴더와 부딪힌다 → 시각으로 반드시 새 폴더를 판다.
+        job_id = _slug(name) if name.strip() else time.strftime("편_%m%d_%H%M%S")
         wd = _workdir(job_id)
+
+        # ★이미 만든 편에 **말없이 덮어쓰지 않는다**(2026-09-16 실사고 — 박위 편 폴더에
+        #   제로카레 대본이 얹혀 옛 사진이 그대로 남은 영상이 나왔고 요금도 다시 나갔다).
+        #   덮어쓸 생각이면 화면이 overwrite=true를 명시해 보낸다.
+        if wd.exists() and (wd / "job.json").exists() and not body.get("overwrite"):
+            return JSONResponse({"error": f"「{job_id}」은(는) 이미 있는 작업입니다. "
+                                          f"다른 이름을 쓰거나, 그 편을 이어서 하려면 목록에서 여세요.",
+                                 "exists": job_id}, status_code=409)
         wd.mkdir(parents=True, exist_ok=True)
 
         # ★예약을 **응답 전에** 선점한다. 안 하면 더블클릭 두 건이 둘 다 통과해

@@ -320,6 +320,15 @@ async function start(){
         script_llm: $('scriptLlm').value || null })
     });
     const d = await r.json();
+    if(r.status === 409 && d.exists){
+      /* 같은 이름이 이미 있다 — 덮어쓰면 그 편의 사진·음성이 섞인다. 반드시 물어본다. */
+      drawStatus('같은 이름의 편이 이미 있습니다', 'bad', '');
+      $('failBox').innerHTML = '<div class="fail"><h4>⚠ 「'+esc(d.exists)+'」은(는) 이미 있는 작업입니다</h4>'
+        + '<div class="mini" style="margin:0 0 10px">덮어쓰면 그 편의 옛 사진·음성이 남은 채로 새 대본이 얹힙니다.'
+        + ' 새로 만들려면 <b>작업 이름을 비우거나</b> 다른 이름을 쓰세요.</div>'
+        + '<button class="btn" onclick="$(\'name\').value=\'\';$(\'failBox\').innerHTML=\'\';start()">새 폴더로 만들기</button></div>';
+      $('btnGo').disabled = false; return;
+    }
     if(!r.ok || d.error){ drawStatus(d.error || ('시작하지 못했습니다 (HTTP '+r.status+')'), 'bad', ''); $('btnGo').disabled = false; return; }
     JOB = d.job_id; T0 = Date.now();
     $('retryStep').innerHTML = '';
@@ -356,7 +365,9 @@ async function retry(){
 async function open_(id){
   JOB = id; T0 = 0;
   $('retryStep').innerHTML = '';
-  $('name').value = id;
+  /* ★이름칸을 건드리지 않는다(2026-09-16 실사고). 목록에서 편을 눌러 보기만 해도
+     이름칸이 그 편 이름으로 채워졌고, 그 상태로 새 링크를 넣으니 **옛 편 폴더에
+     덮어써져** 박위 편의 옛 사진 위에 제로카레 대본이 얹혔다(돈도 두 번 나갔다). */
   await tick();
   const st = await (await fetch('/api/brainbulb/status?job_id='+encodeURIComponent(id))).json();
   if(st.running){ T0 = Date.now(); setPoll(tick, 2500); }
