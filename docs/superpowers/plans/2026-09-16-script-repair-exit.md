@@ -87,6 +87,7 @@ git commit -m "feat: add scene-grounded script fallback"
 
 **Files:**
 - Modify: `shopping_shorts/script_generate.py:generate_by_styles`
+- Modify: `shopping_shorts/script_generate.py:generate_guarded_variations`
 - Modify: `shopping_shorts/tests/test_script_claim_grounding.py`
 
 - [ ] **Step 1: 실패 테스트 작성**
@@ -103,6 +104,12 @@ def test_passed_draft_wins_without_fallback(monkeypatch):
     passed = {"beats": [{"role": "hook", "text": "정상"}], "passed": True}
     monkeypatch.setattr(sg, "generate_one_style", lambda *a, **k: passed)
     assert sg.generate_by_styles(sources(), [{"id": 1}], reasons=[]) == [passed]
+
+def test_pickup_empty_response_also_returns_grounded_fallback(monkeypatch):
+    monkeypatch.setattr(sg, "generate_variations", lambda *a, **k: [])
+    result = sg.generate_guarded_variations({}, sources(), {}, {}, n=1)
+    assert len(result) == 1
+    assert result[0]["made_by"] == "장면근거"
 ```
 
 기존 테스트의 “사실 실패 검토 후보를 그대로 반환” 기대는 “실패 초안 대신 장면 근거 폴백 반환”으로 바꾼다. 소재 이탈 초안의 문장이 폴백에 섞이지 않는 주장도 추가한다.
@@ -130,7 +137,7 @@ Expected: 빈 리스트 또는 기존 검토 후보가 반환되어 실패
     return []
 ```
 
-기존 `review_candidate`는 실패한 AI 주장을 그대로 노출하므로 제거한다. 정상 결과가 있으면 즉시 반환해 폴백이 섞이지 않게 한다.
+기존 `review_candidate`는 실패한 AI 주장을 그대로 노출하므로 제거한다. `generate_guarded_variations()`의 마지막 빈 배열도 같은 `build_grounded_fallback()` 호출로 바꾼다. 정상 결과가 있으면 즉시 반환해 폴백이 섞이지 않게 한다.
 
 - [ ] **Step 4: 관련 테스트 통과 확인**
 
