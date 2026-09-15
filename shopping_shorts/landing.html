@@ -243,6 +243,14 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 .brand .sym{width:52px!important;height:52px!important}.brand .nm{font-size:30px!important}.brand .en{font-size:11px!important}
 .nav .login{font-size:17px!important}
 .nobrain.big small{font-size:clamp(18px,2.2vw,26px)!important;color:#e8f3ef!important;font-weight:700!important;margin-top:10px!important}
+.price.final{padding-top:22px}
+.cta.go1{position:relative;overflow:hidden;display:flex;width:100%;font-size:clamp(22px,2.6vw,28px);font-weight:900;padding:22px 20px;border-radius:16px;margin-top:16px;box-shadow:0 14px 44px rgba(255,190,80,.45);animation:breathe 2s ease-in-out infinite}
+.cta.go1 i{font-style:normal;margin-left:10px;animation:nudge 1s ease-in-out infinite}
+.cta.go1::after{content:'';position:absolute;top:0;bottom:0;width:35%;left:-50%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);animation:whyShine 2.2s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(8px)}}
+.urg h2{font-family:'Noto Sans KR',sans-serif!important;font-weight:900!important;letter-spacing:-.02em;text-shadow:none!important;-webkit-text-stroke:0!important}
+.urg h2 b{font-weight:900!important}.urg mark{padding:2px 12px}
+.urg p{font-weight:700}.urg p em.up{font-style:normal;color:#ff8a8a;font-weight:900}
 </style></head><body>
 
 <div class=dl><div class=in>
@@ -305,16 +313,12 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 
 <div class="sec reveal">
   <div class=urg><span class=uk>⏰ 지금 신청해야 하는 이유</span>
-    <h2 class=display>1기 동안 프로그램 <mark>대규모 업데이트</mark><br>→ 2기부터 <b>가격 인상</b></h2>
-    <p><b>__DEADLINE_LABEL__</b>까지만 <b class=g>__PRO_PRICE__</b> · __NEXT_START_LABEL__부터 <s>__NEXT_PRICE__</s></p></div>
+    <h2>1기 동안 프로그램 <mark>대규모 업데이트</mark><br>→ 2기부터 <b>가격 인상</b></h2>
+    <p><b>__DEADLINE_LABEL__</b>까지만 <b class=g>__PRO_PRICE__</b> · __NEXT_START_LABEL__부터 <em class=up>__NEXT_PRICE__</em></p></div>
   <div class=pcmp data-video=price_compare data-label="1기 770,000원 · 2기 880,000원"></div>
-  <div class=price>
-    <span class=tag>1기 모집 · __DEADLINE_LABEL__ 마감</span>
-    <div class=nm>__PRO_NAME__</div>
-    <div class=was><s>정가 __LIST_PRICE__</s> <b style="color:#ff4d4d">__DISCOUNT__% 할인</b></div>
-    <div class="now gl">__PRO_PRICE__</div>
+  <div class="price final">
     <div class=why>⚠️ <b>__NEXT_START_LABEL__부터 2기 __NEXT_PRICE__</b>으로 오릅니다.<br>1기 동안 프로그램 업데이트가 많아 2기부터 가격을 올립니다.</div>
-    <a class=cta href="__CARD_HREF__">💳 카드로 1기 신청하기</a>
+    <a class="cta go1" href="__CARD_HREF__"><span>💳 지금 1기 신청하기</span><i>→</i></a>
     <a class=alt href="__PAY_HREF__">계좌이체 · 결제 안내</a>
   </div>
 </div>
