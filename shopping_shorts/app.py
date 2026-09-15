@@ -507,8 +507,11 @@ def _run_collect_job(job_id, platform, category, limit, cid):
                 store.save_last_run(items, collected_at)
             _translate_new_subjects(items)
             _bank_ingest_collected_bg(DB_PATH, items, collected_at)
-        except Exception:
-            pass
+        except Exception as state_exc:
+            logging.getLogger("scene_style_lab").warning(
+                "render error state could not be recorded for %s/%s: %r",
+                lab_id, generation, state_exc,
+            )
 
 
 # playwright 경로는 채널마다 진행률을 써서 updated_at이 갱신된다 — 진짜로 멈춘 경우만
@@ -18488,7 +18491,8 @@ def api_produce_mix_settings(body: dict):
     """3단계 자막제거 등 렌더 전 설정 갱신. body: {job_id, subtitle_removal}."""
     job_id = (body.get("job_id") or "").strip()
     store = Store(DB_PATH)
-    if not job_id or not store.get_mix_job(job_id):
+    job = store.get_mix_job(job_id) if job_id else None
+    if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     fields = {}
     if "subtitle_removal" in body:
@@ -18499,11 +18503,384 @@ def api_produce_mix_settings(body: dict):
         fields["caption_style"] = body.get("caption_style")  # dict or None
     if "deco" in body:
         fields["deco"] = body.get("deco")  # 워터마크·추가텍스트·오버레이·BGM dict or None
+        if isinstance(fields["deco"], dict) and fields["deco"].get("scene_style") is not None:
+            from .scene_style import validate_snapshot
+            try:
+                fields["deco"]["scene_style"] = validate_snapshot(fields["deco"]["scene_style"])
+            except (ValueError, TypeError) as exc:
+                return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
+    if "scene_style" in body:
+        from .scene_style import validate_snapshot
+        try:
+            snapshot = validate_snapshot(body["scene_style"])
+        except (ValueError, TypeError) as exc:
+            return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
+        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), "scene_style": snapshot}
     if "seo" in body:
         fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
         _save_render_inputs(store, job_id, **fields)
     return {"ok": True}
+
+
+@app.get("/api/produce/scene-style/assets/{asset_path:path}")
+def api_scene_style_asset(asset_path: str):
+    from .scene_style import ROOT
+    candidate = (ROOT / asset_path).resolve()
+    names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js"}
+    allowed = (asset_path.startswith("out/") and asset_path[4:] in names)
+    allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "out/scene-style-labels.js"}
+    allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
+    allowed |= asset_path.startswith("shopping_shorts/static/fonts/") and candidate.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}
+    if ".." in Path(asset_path).parts or "\\" in asset_path or not allowed or not candidate.is_relative_to(ROOT) or not candidate.is_file():
+        return JSONResponse(status_code=404, content={"error": "파일 없음"})
+    return FileResponse(candidate, headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/api/produce/scene-style/context/{job_id}")
+def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = ""):
+    from .scene_style import context_for
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
+        return JSONResponse(status_code=404, content={"error": "영상 없음"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    tts = {b["beat_idx"]: b["tts_path"] for b in beats if b.get("tts_path")}
+    if not beats or len(tts) != len(beats):
+        return JSONResponse(status_code=409, content={"error": "음성·장면 준비를 먼저 완료해 주세요"})
+    try:
+        timeline = video_assemble._beat_timeline(plan, tts)
+    except Exception:
+        return JSONResponse(status_code=409, content={"error": "음성 파일을 확인할 수 없습니다. 미리보기를 다시 만들어 주세요"})
+    snapshot = (job.get("deco") or {}).get("scene_style")
+    context = context_for(timeline, {"text": headcopy_text[:2000]} if headcopy_text else job.get("headcopy"), snapshot, job_id)
+    for scene in context["scenes"]:
+        scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{scene['beat_idx']}"
+    return {"context": context, "snapshot": snapshot}
+
+
+# 관리자 전용 장면꾸미기 실데이터 시험판. 기존 제작소 job은 읽기만 하고
+# 스냅샷과 산출물은 _scene_style_lab 폴더에만 쓴다.
+def _scene_style_lab_denied(request: Request):
+    if not _is_admin(_cid(request)):
+        return JSONResponse(status_code=404, content={"error": "Not Found"})
+    return None
+
+
+def _scene_style_lab_owned_job(store, request, job_id):
+    job = store.get_mix_job(job_id)
+    if not job or int(job.get("customer_id") or 0) != _cid(request):
+        return None
+    return job
+
+
+@app.get("/api/admin/scene-style-lab/jobs")
+def api_scene_style_lab_jobs(request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    rows = []
+    for job in Store(DB_PATH).list_recent_mix_jobs(customer_id=_cid(request), limit=50):
+        plan = job.get("edit_plan") or {}
+        beats = plan.get("beats") or []
+        title = ((job.get("headcopy") or {}).get("text") or
+                 (beats[0].get("narration") if beats else "") or job["job_id"])
+        clean = scene_style_lab.resolve_clean_contract(job, _MIX_WORK_DIR / job["job_id"])
+        rows.append({
+            "job_id": job["job_id"],
+            "title": str(title)[:100],
+            "updated_at": job.get("updated_at"),
+            "status": job.get("status"),
+            "beat_count": len(beats),
+            "tts_ready": bool(beats) and all(b.get("tts_path") and Path(b["tts_path"]).is_file() for b in beats),
+            "clean_ready": clean is not None,
+            "clean_signature": clean.get("signature") if clean else None,
+        })
+    return {"ok": True, "jobs": rows}
+
+
+@app.post("/api/admin/scene-style-lab")
+def api_scene_style_lab_create(request: Request, body: dict):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    job_id = str(body.get("job_id") or "").strip()
+    store = Store(DB_PATH)
+    job = _scene_style_lab_owned_job(store, request, job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "작업 없음"})
+    try:
+        manifest = scene_style_lab.create_copy(job_id, job, _MIX_WORK_DIR)
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    return {"ok": True, "manifest": manifest}
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}")
+def api_scene_style_lab_get(lab_id: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+    from .scene_style import context_for
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    store = Store(DB_PATH)
+    job = _scene_style_lab_owned_job(store, request, manifest.get("source_job_id"))
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, job)
+        beats = (manifest.get("edit_plan") or {}).get("beats") or []
+        tts_paths = {b["beat_idx"]: b["tts_path"] for b in beats
+                     if b.get("tts_path") and Path(b["tts_path"]).is_file()}
+        if not beats or len(tts_paths) != len(beats):
+            raise scene_style_lab.LabPreconditionError("음성 파일이 완전하지 않습니다")
+        timeline = video_assemble._beat_timeline(manifest["edit_plan"], tts_paths)
+    except (scene_style_lab.LabPreconditionError, OSError, RuntimeError, ValueError) as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    snapshot = manifest["scene_style"]
+    context = context_for(timeline, manifest.get("headcopy"), snapshot, lab_id)
+    for index, scene in enumerate(context["scenes"]):
+        scene["media"] = f"/api/admin/scene-style-lab/{lab_id}/frame/{index}"
+    return {"ok": True, "manifest": manifest, "context": context, "snapshot": snapshot}
+
+
+@app.put("/api/admin/scene-style-lab/{lab_id}/snapshot")
+def api_scene_style_lab_snapshot(lab_id: str, request: Request, body: dict):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    store = Store(DB_PATH)
+    job = _scene_style_lab_owned_job(store, request, manifest.get("source_job_id"))
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, job)
+        snapshot = scene_style_lab.save_snapshot(_MIX_WORK_DIR, lab_id, body.get("snapshot"))
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    except (TypeError, ValueError) as exc:
+        return JSONResponse(status_code=422, content={"error": str(exc)})
+    return {"ok": True, "snapshot": snapshot}
+
+
+def _run_scene_style_lab_render(lab_id: str, generation: str):
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.manifest_for_generation(
+            _MIX_WORK_DIR, lab_id, generation
+        )
+        if manifest is None:
+            return
+        source_job = Store(DB_PATH).get_mix_job(manifest["source_job_id"])
+        if not source_job:
+            raise scene_style_lab.LabPreconditionError("원본 작업이 없습니다")
+        scene_style_lab.render_copy(manifest, source_job, _MIX_WORK_DIR)
+        scene_style_lab.set_render_state(
+            _MIX_WORK_DIR, lab_id, generation, "ready", None
+        )
+    except Exception as exc:
+        try:
+            scene_style_lab.set_render_state(
+                _MIX_WORK_DIR, lab_id, generation, "error", str(exc)
+            )
+        except Exception:
+            pass
+
+
+@app.post("/api/admin/scene-style-lab/{lab_id}/render")
+def api_scene_style_lab_render(lab_id: str, request: Request, background_tasks: BackgroundTasks):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    if not _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id")):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    generation, _ = scene_style_lab.queue_render(_MIX_WORK_DIR, lab_id)
+    background_tasks.add_task(_run_scene_style_lab_render, lab_id, generation)
+    return {"ok": True, "status": "queued"}
+
+
+@app.get("/scene-style-lab/{lab_id}")
+def scene_style_lab_landing(lab_id: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id"))
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, source_job)
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    return FileResponse(
+        Path(__file__).parent / "static" / "scene_style_lab_landing.html",
+        headers={"X-Robots-Tag": "noindex, nofollow, noarchive", "Cache-Control": "no-store"},
+    )
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}/video")
+def api_scene_style_lab_video(lab_id: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id"))
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, source_job)
+        video = scene_style_lab.output_path(_MIX_WORK_DIR, lab_id, "mp4")
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    return FileResponse(
+        video,
+        media_type="video/mp4",
+        headers={
+            "X-Scene-Style-Lab": lab_id,
+            "X-Scene-Artifact-SHA256": str(
+                (((manifest.get("receipts") or {}).get("mp4") or {}).get("sha256") or "")
+            ),
+            "Cache-Control": "no-store",
+            "X-Robots-Tag": "noindex, nofollow, noarchive",
+        },
+    )
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}/capcut")
+def api_scene_style_lab_capcut(lab_id: str, request: Request, base: str = ""):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(
+        Store(DB_PATH), request, manifest.get("source_job_id")
+    )
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        project = scene_style_lab.build_capcut_copy(
+            manifest, source_job, _MIX_WORK_DIR, base
+        )
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    except (OSError, RuntimeError, ValueError) as exc:
+        return JSONResponse(status_code=500, content={"error": str(exc)})
+
+    texts, assets = {}, []
+    for path in sorted(Path(project).iterdir()):
+        if not path.is_file():
+            continue
+        if path.suffix.lower() == ".json":
+            texts[path.name] = path.read_text(encoding="utf-8")
+        else:
+            assets.append({
+                "name": path.name,
+                "url": f"/api/admin/scene-style-lab/{lab_id}/capcut-asset/{path.name}",
+            })
+    return {
+        "ok": True,
+        "project": Path(project).name,
+        "texts": texts,
+        "assets": assets,
+        "contract": (manifest.get("contracts") or {}).get("capcut"),
+    }
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}/capcut-asset/{name}")
+def api_scene_style_lab_capcut_asset(lab_id: str, name: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    if os.path.basename(name) != name or name in ("", ".", ".."):
+        return JSONResponse(status_code=400, content={"error": "잘못된 파일명"})
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id"))
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, source_job)
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    project = Path(str((manifest.get("outputs") or {}).get("capcut_project") or "")).resolve()
+    allowed = (scene_style_lab.lab_dir(_MIX_WORK_DIR, lab_id) / "capcut").resolve()
+    asset = (project / name).resolve()
+    if allowed not in project.parents or project not in asset.parents or not asset.is_file():
+        return JSONResponse(status_code=404, content={"error": "파일 없음"})
+    return FileResponse(asset, headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}/frame/{scene_index}")
+def api_scene_style_lab_frame(lab_id: str, scene_index: int, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(
+        Store(DB_PATH), request, manifest.get("source_job_id")
+    )
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        frame = scene_style_lab.frame_for_scene(
+            manifest, source_job, _MIX_WORK_DIR, scene_index
+        )
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    return FileResponse(
+        frame,
+        media_type="image/jpeg",
+        headers={
+            "Cache-Control": "no-store",
+            "X-Clean-Signature": str((manifest.get("clean") or {}).get("signature") or ""),
+        },
+    )
 
 
 # 고정카피(헤드카피 후보) — 확정 대본에서 AI가 4개 뽑는다.
@@ -22321,6 +22698,17 @@ def _voice_tune_page(request: Request):
 
 app.add_api_route("/voice_tune", _voice_tune_page, include_in_schema=False)
 app.add_api_route("/voice_tune.html", _voice_tune_page, include_in_schema=False)
+
+
+def _scene_style_lab_page(request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "scene_style_lab.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/scene-style-lab", _scene_style_lab_page, include_in_schema=False)
+app.add_api_route("/scene_style_lab.html", _scene_style_lab_page, include_in_schema=False)
 
 
 # 레퍼런스 채널 통합 관리페이지(2026-07-24) — 관리자(customer_id==0) 전용.

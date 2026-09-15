@@ -1,0 +1,50 @@
+const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppeteer=require('puppeteer');
+(async()=>{
+  const request=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+  const browser=await puppeteer.launch({headless:true,args:process.env.SCENE_STYLE_NO_SANDBOX==='1'?['--no-sandbox']:[]});
+  try{
+    const page=await browser.newPage();await page.setViewport({width:1920,height:2200,deviceScaleFactor:1});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(pathToFileURL(path.resolve(__dirname,'../out/scene-style-ui-showcase.html')).href+'?qa=1',{waitUntil:'networkidle0'});
+    await page.addStyleTag({content:`body *{visibility:hidden!important}#a-live-preview,#a-live-preview *{visibility:visible!important}#a-live-preview{position:fixed!important;left:0!important;top:0!important;width:1080px!important;height:1920px!important;max-width:none!important;max-height:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;z-index:99999!important}.precision-base,.precision-media,.scene-media-clip,.precision-badge{display:none!important}html,body{background:transparent!important}`});
+    await page.evaluate(r=>window.sceneStyle.load(r.context,r.snapshot),request);
+    await page.addStyleTag({content:'.scene-decoration{outline:none!important}.scene-decoration-toolbar,.precision-source-cleanup{display:none!important}'});
+    await page.evaluate(async()=>{await document.fonts.ready;window.sceneStyle.refresh();window.sceneStyleExporting=true});
+    const layers=[];
+    for(let index=0;index<request.context.scenes.length;index++){
+      const g=await page.evaluate(i=>window.sceneStyle.show(i),index);
+      await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+      const file=`scene-style-layer-${index}.png`;
+      const duration=request.snapshot.hookMotion&&request.snapshot.hookMotion!=='zoom-punch'?await page.evaluate(()=>window.sceneStyle.motionAt(100000)):0;
+      const moving=await page.evaluate(()=>{const shape=window.sceneDecorations?.motionAt(0),brand=window.sceneBranding?.motionAt(0);return shape||brand||false});
+      await page.screenshot({path:path.join(request.output,file),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
+      const scene=request.context.scenes[index],first=Math.round(scene.start*30),end=Math.round(scene.end*30);
+      let animation=null;
+      if(moving||(duration>first/30*1000&&g.kind==='hook')){
+        const count=moving?end-first:Math.min(end-first,Math.ceil(duration/1000*30)-first+1);
+        const pattern=`scene-style-motion-${index}-%04d.png`;
+        for(let f=0;f<count;f++){
+          await page.evaluate(i=>window.sceneStyle.show(i),index);
+          await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+          await page.evaluate(({title,shape,brand})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape);window.sceneBranding?.motionAt(brand)},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000,brand:(first+f)/30*1000});
+          await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+          // Materialize the sampled animation state for Chromium's screenshot compositor.
+          await page.evaluate(()=>{
+            document.querySelectorAll('.scene-decoration,.precision-text,.scene-brand-ink').forEach(el=>{
+              const animations=el.getAnimations();if(!animations.length)return;
+              const style=getComputedStyle(el),values={};
+              for(const key of ['transform','translate','rotate','scale','opacity','filter','clipPath'])values[key]=style[key];
+              animations.forEach(a=>a.cancel());Object.assign(el.style,values);
+            });
+          });
+          await page.screenshot({path:path.join(request.output,pattern.replace('%04d',String(f).padStart(4,'0'))),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
+        }
+        animation={pattern,count};
+      }
+      const camera=request.snapshot.hookMotion==='zoom-punch'?await page.evaluate(({first,end})=>Array.from({length:end-first},(_,f)=>window.sceneStyle.cameraAt((first+f)/30*1000)),{first,end}):null;
+      layers.push({...g,file,animation,camera});
+    }
+    if(errors.length)throw new Error(errors.join('\n'));
+    fs.writeFileSync(path.join(request.output,'scene-style-layers.json'),JSON.stringify(layers));
+  }finally{await browser.close()}
+})().catch(e=>{console.error(e);process.exit(1)});

@@ -13,6 +13,7 @@ import tempfile
 import pytest
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
+DECOR_CATALOG = pathlib.Path(__file__).resolve().parents[1] / "static" / "scene-decoration-catalog.js"
 NODE = shutil.which("node")
 
 _START = "// ── 6단계 썸네일"
@@ -22,7 +23,8 @@ _END = "// ── 썸네일 끝"
 def _slice_source():
     src = PRODUCE_HTML.read_text(encoding="utf-8")
     i, j = src.index(_START), src.index(_END)
-    return src[i:j]
+    catalog = "globalThis.window=globalThis;\n" + DECOR_CATALOG.read_text(encoding="utf-8")
+    return catalog + "\n" + src[i:j]
 
 
 def _run_node(script):

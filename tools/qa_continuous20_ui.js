@@ -1,0 +1,80 @@
+const puppeteer = require('puppeteer');
+const path = require('path');
+
+const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcase.html?mode=continuous&qa=1';
+(async () => {
+  const browser = await puppeteer.launch({headless:true});
+  const page = await browser.newPage();
+  await page.setViewport({width:1920,height:1000});
+  const runtimeErrors=[];page.on('pageerror',error=>runtimeErrors.push(String(error)));
+  await page.goto(url,{waitUntil:'networkidle0'});
+  await page.screenshot({path:path.join(process.env.TEMP,'continuous20-preview.png')});
+  await (await page.$('#a-live-preview')).screenshot({path:path.join(process.env.TEMP,'continuous20-phone.png')});
+  const report=await page.evaluate(async()=>{
+    const failures=[],rows=window.CONTINUOUS20,preview=document.querySelector('#a-live-preview');
+    const wait=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    if(rows.length!==20)failures.push(`고정형 개수 ${rows.length}`);
+    const reservedCount=rows.filter(row=>row.frame.caption_slot?.mode==='reserved').length;
+    if(reservedCount!==15)failures.push(`전용 자막칸 판정 ${reservedCount}/15`);
+    if(document.querySelectorAll('.fixed-card .caption-kind.reserved').length!==15||document.querySelectorAll('.fixed-card .caption-kind.overlay').length!==5)failures.push('프리셋 자막 유형 배지 불일치');
+    await document.fonts.load('900 24px "TmonMonsori"','한글제목');
+    if(!document.fonts.check('900 24px "TmonMonsori"','한글제목'))failures.push('TmonMonsori 웹폰트 로드 실패');
+    if(document.querySelectorAll('.fixed-card').length!==20)failures.push('고정형 카드 20개 미표시');
+    if(![...document.querySelectorAll('.fixed-card .fixed-thumb')].every((thumb,index)=>thumb.style.backgroundImage.includes(`fixed-${rows[index].source_id}.png`)))failures.push('고정형 정리 썸네일 20개 미표시');
+    if(preview.querySelector('.precision-media')?.getAttribute('src')!=='assets/scene-style/uniform-household-demo.png')failures.push('중앙 공통 영상 프레임 미적용');
+    const presetPane=document.querySelector('.layout-a>aside.pane:first-child'),presetGrid=presetPane?.querySelector('.preset-grid');
+    if(Math.abs(presetPane?.getBoundingClientRect().width-390)>2)failures.push('왼쪽 템플릿 패널 390px 고정 실패');
+    if(!presetGrid||presetGrid.scrollHeight<=presetGrid.clientHeight||getComputedStyle(presetGrid).overflowY!=='auto')failures.push('왼쪽 템플릿 내부 세로 스크롤 실패');
+    if(!document.querySelector('.layout-a .seg')?.hidden)failures.push('고정형에서 훅/본문 토글 노출');
+    const fixedPanel=document.querySelector('.fixed-quick-panel');
+    if(!fixedPanel||fixedPanel.hidden)failures.push('고정형 빠른 조절 패널 미노출');
+    const firstPreviewBox=preview.getBoundingClientRect(),firstMedia=preview.querySelector('.precision-media');
+    const initialTop=Math.round(firstMedia.getBoundingClientRect().top-firstPreviewBox.top);
+    const initialBottom=Math.round(firstPreviewBox.bottom-firstMedia.getBoundingClientRect().bottom);
+    const initialTopValue=Number(fixedPanel?.querySelector('[data-fixed-size="top"] output')?.textContent.replace('%',''));
+    fixedPanel?.querySelector('[data-fixed-size="top"] [data-fixed-step="1"]')?.click();await wait();
+    if(Number(fixedPanel?.querySelector('[data-fixed-size="top"] output')?.textContent.replace('%',''))!==initialTopValue+1||Math.round(firstMedia.getBoundingClientRect().top-firstPreviewBox.top)<=initialTop)failures.push('상단 제목칸 1% 높이 조절 실패');
+    fixedPanel?.querySelector('[data-fixed-size="bottom"] [data-fixed-step="1"]')?.click();await wait();
+    if(Math.round(firstPreviewBox.bottom-firstMedia.getBoundingClientRect().bottom)<=initialBottom)failures.push('하단 자막칸 1% 높이 조절 실패');
+    fixedPanel?.querySelector('[data-fixed-palette="mint"]')?.click();await wait();
+    if(fixedPanel?.querySelector('[data-fixed-color="top"]')?.value.toLowerCase()!=='#082923'||fixedPanel?.querySelector('[data-fixed-color="title2"]')?.value.toLowerCase()!=='#43e2b4')failures.push('고정형 원터치 팔레트 실패');
+    fixedPanel?.querySelector('[data-fixed-reset]')?.click();await wait();
+    for(let i=0;i<rows.length;i++){
+      document.querySelector(`[data-p20="${i}"]`).click();await wait();
+      const src=preview.querySelector('.precision-base').getAttribute('src');
+      if(src!==rows[i].frame_image)failures.push(`${rows[i].name}: 고정 프레임 불일치`);
+      const reserved=rows[i].frame.caption_slot?.mode==='reserved';
+      const media=preview.querySelector('.precision-media'),mediaBox=media?.getBoundingClientRect(),previewBox=preview.getBoundingClientRect();
+      if(!mediaBox||mediaBox.top<previewBox.top-1||mediaBox.bottom>previewBox.bottom+1||mediaBox.height<previewBox.height*.45)failures.push(`${rows[i].name}: 공통 영상 영역 불일치`);
+      const cleanups=rows[i].frame.cleanup_regions||[];
+      if(!cleanups.some(region=>region.role==='original-title'&&region.y===0&&region.height===rows[i].frame.video_from.y))failures.push(`${rows[i].name}: 원본 제목 전체 마스크 누락`);
+      if(reserved&&!cleanups.some(region=>region.role==='source-footer'))failures.push(`${rows[i].name}: 하단 출처 마스크 누락`);
+      const positionButtons=[...document.querySelectorAll('[data-caption-position]')];
+      if(positionButtons.some(button=>button.hidden!==reserved))failures.push(`${rows[i].name}: 자막 위치 버튼 노출 규칙 불일치`);
+      if(document.querySelector('.caption-position span')?.textContent!==(reserved?'✓ 전용 자막칸':'영상 위 자막'))failures.push(`${rows[i].name}: 자막 유형 안내 불일치`);
+      for(const line of rows[i].frame.lines.filter(line=>line.bind!=='caption')){
+        const el=preview.querySelector(`.precision-text[data-edit-bind="${line.bind}"]`);
+        if(!el||!getComputedStyle(el).fontFamily.includes(line.font_family)||getComputedStyle(el).fontWeight!=='400')failures.push(`${rows[i].name}/${line.bind}: 지정 서체 또는 합성 볼드 금지 규칙 불일치`);
+      }
+      const fixed=()=>[...preview.querySelectorAll('[data-edit-bind]:not([data-edit-bind="caption"])')].map(el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el);return [el.dataset.editBind,r.x,r.y,r.width,r.height,s.fontSize,s.color,s.backgroundColor].join('|')}).sort().join('\n');
+      const before=fixed();
+      for(const target of [2,5,11]){while(Number(document.querySelector('[data-scene-current]').textContent)<target)document.querySelector('[data-scene-step="1"]').click();await wait();if(fixed()!==before)failures.push(`${rows[i].name}: 장면 이동 시 고정 디자인 변경`);}
+      const caption=preview.querySelector('.precision-text[data-edit-bind="caption"]');
+      if(!caption||!getComputedStyle(caption).fontFamily.includes('PretendardXBold'))failures.push(`${rows[i].name}: 본문 자막 서체 미적용`);
+      const field=document.querySelector('[data-field-key="hook1"]'),text=field?.querySelector('.precision-text');
+      const input=field?.querySelector('[data-bind="hook1"]');if(input){input.value='교체 제목 테스트';input.dispatchEvent(new Event('input',{bubbles:true}));await wait();}
+      const y0=preview.querySelector('[data-edit-bind="hook1"].precision-text')?.getBoundingClientRect().y;
+      field?.querySelector('[data-position-step="-1"]')?.click();await wait();
+      const y1=preview.querySelector('[data-edit-bind="hook1"].precision-text')?.getBoundingClientRect().y;
+      if(!(y1<y0))failures.push(`${rows[i].name}: 제목 위 이동 실패`);
+      if(Math.abs(y1-y0)>preview.getBoundingClientRect().height*.007)failures.push(`${rows[i].name}: 제목 이동 간격이 미세 조정 범위를 초과`);
+      if(i===0){for(let n=0;n<30;n++)field?.querySelector('[data-font-step="0.1"]')?.click();await wait();if(field?.querySelector('.font-stepper output')?.textContent!=='300%')failures.push('글자 크기 300% 상한 실패');}
+      for(const el of preview.querySelectorAll('.precision-text')){const a=el.getBoundingClientRect(),b=preview.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);const r=range.getBoundingClientRect();if(a.left<b.left-3||a.right>b.right+3||r.left<b.left-3||r.right>b.right+3)failures.push(`${rows[i].name}/${el.dataset.editBind}: 실제 글자 넘침 ${r.width.toFixed(1)}px`);}
+    }
+    document.querySelector('.layout-a .secondary').click();
+    if(!localStorage.getItem('scene_style_preset'))failures.push('현재 설정 저장 실패');
+    return {count:rows.length,failures};
+  });
+  report.runtimeErrors=runtimeErrors;console.log(JSON.stringify(report,null,2));await browser.close();
+  process.exit(report.failures.length||runtimeErrors.length?1:0);
+})().catch(error=>{console.error(error);process.exit(1)});
