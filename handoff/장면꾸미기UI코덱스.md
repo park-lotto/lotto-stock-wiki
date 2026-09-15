@@ -1,5 +1,16 @@
 # 장면꾸미기 UI·정밀 템플릿 디자인 시스템
 
+## 2026-09-16 · 관리자 실데이터 LAB 네 출구 연결
+
+- 관리자 본인 작업만 복사하는 `/scene_style_lab.html`을 추가했다. 원본 job은 읽기만 하며 스냅샷·MP4·CapCut 산출물은 `mix_jobs/_scene_style_lab/<lab_id>`에만 쓴다. 일반 고객은 페이지·API·프레임·영상·CapCut 재료 모두 404다.
+- 현재 편성 서명과 일치하는 `clean_sources` 또는 `clean_final_path_for_plan()`만 허용한다. preview/video 원본 폴백은 없으며 원본 편성이 바뀌면 렌더와 내보내기를 409로 막는다.
+- `hookCaptionMode=hidden`은 첫 비트의 음성·자막 시간과 문구를 보존한 채 말자막 레이어만 숨긴다. 본문 첫 자막은 실제 `caption_schedule()` 경계에서 바로 시작한다.
+- 동일 scene-style 스냅샷/컨텍스트를 브라우저, MP4, CapCut 투명 PNG 오버레이, 관리자 전용 랜딩이 사용한다. CapCut 시험 초안은 네이티브 말자막을 만들지 않아 이중 자막이 없고 생성 JSON의 시작·길이를 μs 단위로 역검증한다.
+- 로컬 실제 실측: 4.000초 청소 영상, 훅 1.800초/본문 2.200초. 훅 말자막 0개, 본문 첫 자막 1.800초(오차 0프레임), 편성 서명 `738df405dbc0ee00`. CapCut 텍스트 트랙 0개, 오버레이 범위 0–0.9/0.9–1.8/1.8–2.8/2.8–4.0초.
+- 관리자 화면과 랜딩을 실제 Chromium으로 열어 네 출구 비교표 전 항목 PASS, MP4 재생, 청소본 프레임 연결을 눈으로 확인했다. 증거와 재현 명령은 `docs/superpowers/evidence/2026-09-16-scene-style-lab-local-proof.md`.
+- 새 스냅샷 저장 시 이전 MP4/CapCut 비교 결과를 즉시 무효화한다. 일반 제작소 CapCut 호출은 `scene_overlay_layers=None`이라 기존 네이티브 자막 동작을 보존한다.
+- 다음: main 배포 후 서버 관리자 본인 청소 완료 작업 한 건으로 복사→MP4→CapCut→랜딩을 실제 실행하고 CapCut 앱에서 초안을 열어 최종 확인한다.
+
 ## 2026-09-13 · 작업 간 설정 격리 검사
 
 - `qa_scene_style_seed_work_switch.py`와 `qa_scene_style_work_switch.js` 추가. 격리 QA DB의 작업 A/B를 같은 브라우저에서 차례로 열어 A 편집·저장 → B 확인 → A 재접속을 실제 수행했다.
