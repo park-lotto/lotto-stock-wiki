@@ -13086,7 +13086,8 @@ async def _auth_guard(request: Request, call_next):
     # /api/coupang/relay/*도 같은 이유다(2026-07-29) — 쿠팡은 한국 IP가 아니면 막아서
     #   사장님 PC의 도우미가 로그인 쿠키 없이 폴링한다. 엔드포인트가 자체 토큰
     #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
-    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
+    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
+            or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
             or path.startswith("/s/") or path.startswith("/api/share/v/")
             or path.startswith("/api/share/t/")

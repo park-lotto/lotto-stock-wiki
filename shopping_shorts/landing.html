@@ -11,7 +11,7 @@
     → 설치 없음 → 구매 전 확인 → 마지막 가격). 문구·이미지는 전부 우리 것.
   ★가격·마감·다음 가격은 서버(_with_pay)가 채운다 — 이 파일에 숫자를 적지 마라(0순위-B).
     결제 금액과 화면 금액이 어긋나면 토스 심사 불가 사유다.
-  ★영상은 /static/landing/<이름>.mp4. 파일이 없으면 자리표시 카드가 뜬다(깨진 영상 대신).
+  ★영상은 /landing/<이름>.mp4. 파일이 없으면 자리표시 카드가 뜬다(깨진 영상 대신).
 -->
 <style>*{box-sizing:border-box;margin:0;padding:0}
 :root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--gold:#ffcf6f;--gold-grad:linear-gradient(135deg,#ffe1a1,#f0a93a);
@@ -313,7 +313,7 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 
 <div class=hook>
   <h1 class="nobrain big">오늘 <em>뭘 만들지</em> 고민 끝.<small>매일 랭킹에 <b>100만뷰 쇼핑쇼츠</b>가 줄 서 있습니다 — 골라서 내 제품으로 만들기만 하세요</small></h1>
-  <div class=hv id=hv><video src="/static/landing/hook_wall.mp4" poster="/static/landing/hook_wall.jpg" data-fb="/static/landing/hero_wall.mp4" autoplay muted loop playsinline preload=auto></video></div>
+  <div class=hv id=hv><video src="/landing/hook_wall.mp4" poster="/landing/hook_wall.jpg" data-fb="/landing/hero_wall.mp4" autoplay muted loop playsinline preload=auto></video></div>
   <div class=wall id=wall hidden>
     <div class=hd><div class=kin id=kin></div><span>숏템메이커 랭킹에 잡힌 100만뷰+ 쇼핑쇼츠 <b id=hitN></b></span></div>
     <div class=cols><div class=col></div><div class=col></div><div class=col></div></div>
@@ -398,13 +398,13 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
     img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top';
     var vidOk = false;
     img.onload = function(){ if(vidOk) return; el.insertBefore(img, ph); ph.style.display='none'; };
-    img.src = '/static/landing/'+name+'.jpg';
+    img.src = '/landing/'+name+'.jpg';
     var v = document.createElement('video');
     v.muted=true; v.loop=true; v.playsInline=true; v.autoplay=true; v.preload='metadata';
     v.setAttribute('muted',''); v.setAttribute('playsinline','');
     v.style.cssText="position:absolute;inset:0;z-index:1"; v.addEventListener("loadeddata", function(){ vidOk = true; ph.style.display="none"; if(img.parentNode) img.remove(); var p=v.play(); if(p&&p.catch) p.catch(function(){}); });
     v.addEventListener('error', function(){ v.remove(); }, true);
-    var src=document.createElement('source'); src.src='/static/landing/'+name+'.mp4'; src.type='video/mp4';
+    var src=document.createElement('source'); src.src='/landing/'+name+'.mp4'; src.type='video/mp4';
     src.addEventListener('error', function(){ v.remove(); });
     v.appendChild(src); el.insertBefore(v, ph);
   });
@@ -412,7 +412,7 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
   /* 히어로 영상이 안 되면 실데이터 벽을 켠다 */
   (function(){ var v=document.querySelector('#hv video'); if(!v) return;
     function fallback(){ document.getElementById('hv').hidden=true; document.getElementById('wall').hidden=false; }
-    v.addEventListener('error', function(){ if(v.dataset.fb){ var f=v.dataset.fb; v.removeAttribute('data-fb'); v.poster='/static/landing/hero_wall.jpg'; v.src=f; v.play&&v.play().catch(function(){}); } else fallback(); }); var s=v.querySelector('source'); if(s) s.addEventListener('error', fallback);
+    v.addEventListener('error', function(){ if(v.dataset.fb){ var f=v.dataset.fb; v.removeAttribute('data-fb'); v.poster='/landing/hero_wall.jpg'; v.src=f; v.play&&v.play().catch(function(){}); } else fallback(); }); var s=v.querySelector('source'); if(s) s.addEventListener('error', fallback);
   })();
   /* 100만뷰 벽 — 실제 수집 데이터(/api/landing/hits) */
   function man(v){ return v>=1e8 ? (Math.round(v/1e7)/10)+'억' : Math.round(v/1e4).toLocaleString()+'만'; }
