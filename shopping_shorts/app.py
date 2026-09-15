@@ -12177,6 +12177,9 @@ def _deposit_contact(kakao, phone):
 _TOSS_CONFIRM_URL = "https://api.tosspayments.com/v1/payments/confirm"
 
 
+_APPLY_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScd2daWqtFnea1e_5y5ZKq6OkDPOeuw3qLg3tBinv6G2P4eCQ/viewform"
+
+
 def _toss_keys():
     return (os.environ.get("TOSS_CLIENT_KEY", "").strip(),
             os.environ.get("TOSS_SECRET_KEY", "").strip())
@@ -12283,8 +12286,19 @@ def _toss_checkout(request: Request):
              if ck.startswith("test_") else "")
     inp = ("width:100%;box-sizing:border-box;margin-top:8px;padding:13px;border-radius:10px;"
            "border:1px solid #1f3a33;background:#0a1113;color:#e8f3ef;font-size:15px;font-family:inherit")
+    # ★신청서(구글폼) 먼저 — 사장님 2026-09-15 "신청할 때 신청폼 반드시 쓸 수 있게".
+    #   폼 제출 여부는 구글 쪽이라 서버가 확인할 수 없다 → 폼 링크를 눌러야 체크칸이 열리고, 체크해야 결제된다.
+    form_url = (Store(DB_PATH).get_setting("apply_form_url", "") or _APPLY_FORM_URL).strip()
     body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
 <div class=amt>{amount:,}원</div>
+<div style="border:1px solid #6ff0d6;border-radius:12px;padding:14px;margin:6px 0 16px;background:#0c1a17">
+  <div style="font-weight:800;font-size:16px">① 신청서 작성 <span style="color:#ff8a8a">(필수)</span></div>
+  <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 1기 신청서를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
+  <a id=fl href="{_toss_esc(form_url)}" target=_blank rel=noopener style="display:block;text-align:center;padding:12px;border-radius:10px;background:#e0a33d;color:#111;font-weight:800;text-decoration:none">📝 신청서 작성하기</a>
+  <label class=p style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px">
+    <input id=fd type=checkbox disabled> <span id=fdl style="opacity:.5">신청서를 작성해 제출했습니다</span></label>
+</div>
+<div style="font-weight:800;font-size:16px">② 결제자 정보</div>
 <div class=p>결제하시는 분의 정보를 입력해 주세요. 결제 확인과 이용 안내에 쓰입니다.</div>
 <input id=pn placeholder="성함" maxlength=40 style="{inp}">
 <input id=pp placeholder="연락처 (010-0000-0000)" maxlength=40 inputmode=tel style="{inp}">
@@ -12297,6 +12311,9 @@ def _toss_checkout(request: Request):
 <div class="p err" id=msg></div>
 <script src="https://js.tosspayments.com/v2/standard"></script>
 <script>
+function _fdOpen() {{ fd.disabled = false; fdl.style.opacity = 1; }}
+try {{ if (localStorage.getItem('apply_form_opened')) _fdOpen(); }} catch (e) {{}}
+fl.addEventListener('click', () => {{ _fdOpen(); try {{ localStorage.setItem('apply_form_opened', '1'); }} catch (e) {{}} }});
 (function () {{
   try {{
     const s = JSON.parse(sessionStorage.getItem('prereg_payer') || 'null');
@@ -12308,6 +12325,7 @@ document.getElementById('go').onclick = async () => {{
   const msg = document.getElementById('msg'); msg.textContent = '';
   if (busy) return;
   const payer = {{ name: pn.value.trim(), phone: pp.value.trim(), email: pe.value.trim() }};
+  if (!fd.checked) {{ msg.textContent = '① 신청서를 먼저 작성·제출하고 체크해 주세요.'; return; }}
   if (!payer.name || !payer.phone || !payer.email) {{ msg.textContent = '성함·연락처·이메일을 모두 입력해 주세요.'; return; }}
   if (!pa.checked) {{ msg.textContent = '환불정책·이용약관 동의에 체크해 주세요.'; return; }}
   busy = true; go.disabled = true; go.textContent = '결제창 여는 중…';
