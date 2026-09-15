@@ -151,6 +151,19 @@ def test_capcut_overlay_verifier_rejects_timing_mismatch():
         scene_style_lab.verify_capcut_overlay_draft(draft, expected)
 
 
+def test_capcut_overlay_verifier_accepts_30fps_microsecond_rounding():
+    """1/30초 경계는 round(end)-round(start)라 프레임별 1μs 차이가 번갈아 난다."""
+    kwargs = _draft_kwargs()
+    expected = [
+        {"_capcut_path": "C:/x/0.png", "start": 0.0, "end": 1 / 30},
+        {"_capcut_path": "C:/x/1.png", "start": 1 / 30, "end": 2 / 30},
+    ]
+    kwargs["scene_overlay_layers"] = expected
+    draft, _ = capcut_draft.build_draft(**kwargs)
+
+    scene_style_lab.verify_capcut_overlay_draft(draft, expected)
+
+
 def test_motion_layer_expands_to_30fps_frames_then_static_remainder(tmp_path):
     for name in (
         "scene-style-layer-0.png",
