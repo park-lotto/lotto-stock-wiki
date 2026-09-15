@@ -10754,7 +10754,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
                "/help", "/api/help/items",
                "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
-               "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order",   # 토스 카드결제(2026-09-15)
+               "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order", "/api/landing/hits",   # 토스 카드결제(2026-09-15)
                "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
                # 가입 전 안내(2026-08-23) — ★반드시 비로그인 공개다. 이 두 장은 아직 회원이
                # 아닌 사람에게 뿌리는 링크(공지·카톡)라, 로그인에 막히면 링크가 통째로 죽는다.
@@ -10805,7 +10805,7 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 #   없어서(실측) prefix로 열면 상한 없이 샌다.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
-                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order",   # 토스 카드결제(2026-09-15)
+                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order", "/api/landing/hits",   # 토스 카드결제(2026-09-15)
                    # ★가입 마무리 화면(2026-08-24). 등급과 무관하게 열려야 한다 —
                    #   막으면 **빠져나갈 수 없는 막다른 길**이 된다: 어느 화면을 열든
                    #   미들웨어가 /welcome으로 보내는데(_needs_welcome), 정작 /welcome이
@@ -11166,12 +11166,19 @@ def _with_pay(html: str) -> str:
         next_price = int(_st.get_setting("next_price", "") or 880000)
     except ValueError:
         next_price = 880000
+    # 정가(할인 전) — 사장님 "150만원 → 77만원 할인중 표시"(2026-09-15). 설정 list_price로 바꾼다.
+    try:
+        list_price = int(_st.get_setting("list_price", "") or 1500000)
+    except ValueError:
+        list_price = 1500000
+    discount = max(0, round((1 - amount / list_price) * 100)) if list_price > amount else 0
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
                 .replace("__PRO_NAME__", _toss_esc(name))
                 .replace("__PRO_PRICE__", f"{amount:,}원")
                 .replace("__CARD_HREF__", card_href).replace("__CARD_LABEL__", card_label)
                 .replace("__DEADLINE_ISO__", dl_iso).replace("__DEADLINE_LABEL__", dl_label)
                 .replace("__NEXT_START_LABEL__", nx_label).replace("__NEXT_PRICE__", f"{next_price:,}원")
+                .replace("__LIST_PRICE__", f"{list_price:,}원").replace("__DISCOUNT__", str(discount))
                 .replace("__BIZFOOT__", _biz_foot()))
 
 
@@ -12219,6 +12226,37 @@ def _toss_page(title, body):
             "font-weight:700;padding:3px 8px;border-radius:8px;margin-bottom:10px}.err{color:#ff8a8a}"
             "code{color:#6ff0d6}</style>"
             f"</head><body><div class=box>{body}</div></body></html>")
+
+
+_LANDING_HITS_CACHE = {"at": 0.0, "data": None}
+
+
+@app.get("/api/landing/hits")
+def _landing_hits():
+    """랜딩 히어로의 '100만뷰+ 쇼핑쇼츠' 벽(2026-09-15 사장님 "지금 터지는 쇼츠 중 유튜브 100만
+    이상을 보여주면서 매일 이런 게 뜬다는 걸 강조").
+
+    ★실제로 우리가 수집한 영상만 쓴다(reel_history) — 지어낸 숫자·영상 금지.
+    ★차단 채널은 뺀다. 쇼핑 결 카테고리만(기타는 먹방·연예가 섞인다).
+    공개 경로라 10분 캐시 — 방문자마다 DB를 치지 않는다.
+    """
+    now = time.time()
+    if _LANDING_HITS_CACHE["data"] and now - _LANDING_HITS_CACHE["at"] < 600:
+        return _LANDING_HITS_CACHE["data"]
+    cats = ("제품정체형", "오용형", "홈템", "장비템", "차량템", "레시피", "뷰티")
+    st = Store(DB_PATH)
+    blocked = st.removed_usernames()
+    ph = ",".join("?" * len(cats))
+    with st._conn() as c:
+        rows = c.execute(
+            f"SELECT shortcode, username, name, caption, views FROM reel_history "
+            f"WHERE platform='youtube' AND views>=1000000 AND category IN ({ph}) "
+            f"ORDER BY views DESC LIMIT 200", cats).fetchall()
+    items = [{"id": r[0], "name": r[2] or "", "title": (r[3] or "")[:60], "views": int(r[4] or 0)}
+             for r in rows if (r[1] or "").strip().lstrip("@").lower() not in blocked and r[0]]
+    data = {"ok": True, "count": len(items), "items": items[:36]}
+    _LANDING_HITS_CACHE.update(at=now, data=data)
+    return data
 
 
 @app.get("/pay/toss", response_class=HTMLResponse)
