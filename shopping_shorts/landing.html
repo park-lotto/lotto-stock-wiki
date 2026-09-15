@@ -222,6 +222,17 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 .sq.pp4{aspect-ratio:1/1}.pp4 .pop,.sq.pp4::before{display:none!important}
 .hook .hv{aspect-ratio:2/1!important;height:auto!important;max-height:none!important}.hook .hv video{height:100%!important;object-fit:contain!important}
 .vband{position:relative;width:100%;max-width:1100px;margin:0 auto;border-radius:20px;overflow:hidden;background:#05080b}.vband video{width:100%;height:100%;object-fit:contain}
+.urg{text-align:center;margin:0 auto 26px;max-width:1000px}
+.urg .uk{display:inline-block;background:#ff4d4d;color:#fff;font-weight:900;font-size:16px;padding:6px 16px;border-radius:999px;margin-bottom:14px;animation:breathe 1.6s ease-in-out infinite}
+.urg h2{font-size:clamp(30px,4.6vw,54px);line-height:1.25;color:#fff}
+.urg mark{background:#ffd84d;color:#111;padding:0 10px;border-radius:8px}.urg h2 b{color:#ff4d4d;font-weight:400}
+.urg p{margin-top:12px;font-size:clamp(16px,2vw,22px);color:#cfe}.urg p .g{color:var(--gold)}.urg p s{color:#ff8a8a}
+.price .why{position:relative;overflow:hidden;border:2px solid #ff4d4d!important;background:linear-gradient(135deg,#3a1418,#231013)!important;font-size:15px;animation:whyGlow 1.8s ease-in-out infinite}
+.price .why b{color:#ffd84d!important;font-size:17px}
+.price .why::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.18),transparent);animation:whyShine 2.6s ease-in-out infinite}
+@keyframes whyGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,77,77,.0)}50%{box-shadow:0 0 0 6px rgba(255,77,77,.18),0 0 28px rgba(255,77,77,.45)}}
+@keyframes whyShine{0%{left:-60%}60%,100%{left:130%}}
+@media(prefers-reduced-motion:reduce){.price .why,.price .why::after{animation:none}}
 </style></head><body>
 
 <div class=dl><div class=in>
@@ -283,6 +294,9 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 </div>
 
 <div class="sec reveal">
+  <div class=urg><span class=uk>⏰ 지금 신청해야 하는 이유</span>
+    <h2 class=display>1기 동안 프로그램 <mark>대규모 업데이트</mark><br>→ 2기부터 <b>가격 인상</b></h2>
+    <p><b>__DEADLINE_LABEL__</b>까지만 <b class=g>__PRO_PRICE__</b> · __NEXT_START_LABEL__부터 <s>__NEXT_PRICE__</s></p></div>
   <div class=pcmp data-video=price_compare data-label="1기 770,000원 · 2기 880,000원"></div>
   <div class=price>
     <span class=tag>1기 모집 · __DEADLINE_LABEL__ 마감</span>
