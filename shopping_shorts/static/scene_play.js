@@ -507,6 +507,12 @@ function slowFill(i){
   (typeof render === 'function' && render());
   if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
 }
+// 느리게를 푼다 — 빈 시간이 다시 보이고 [전체 살짝 느리게]를 다시 누를 수 있다.
+function slowUndo(i){
+  delete SLOW[i];
+  (typeof render === 'function' && render());
+  if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
+}
 function togglePhraseSync(i, on){
   if (on){ delete CUTS[i]; delete SLOW[i]; } else freezeCuts(i);
   if (on) delete PHRASE_SYNC[i]; else PHRASE_SYNC[i] = false;

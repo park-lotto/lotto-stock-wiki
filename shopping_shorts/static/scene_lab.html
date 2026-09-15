@@ -2851,7 +2851,7 @@ function renderBand(){
            (cutsSum(i) > 0 && beatDur(i) / cutsSum(i) > MAX_SLOWMO)
              ? `<span class="slowwarn">너무 많이 느려져요(${(cutsSum(i) / beatDur(i)).toFixed(2)}배속) — 앞 조각들에서 조금씩 장면을 길게 해주세요</span>` : ''}</div>`
       : (frozen && SLOW[i] > 1)
-        ? `<div class="cutgap slow" onclick="event.stopPropagation()">🐢 ${(1 / SLOW[i]).toFixed(2)}배속으로 틀어 맞추는 중${
+        ? `<div class="cutgap slow" onclick="event.stopPropagation()">✅ 전체를 살짝 느리게(${(1 / SLOW[i]).toFixed(2)}배속) 해서 빈 곳을 채웠어요 <button class="act" onclick="slowUndo(${i})">되돌리기</button>${
             SLOW[i] > MAX_SLOWMO ? ` <span class="slowwarn">너무 느려요 — 앞 조각들에서 조금씩 장면을 길게 해주세요</span>` : ''}</div>` : '';
     const cuts = clips.length
       ? clips.map((c, ci) => `<div class="tbcut ${phraseSyncOn(i) ? 'inuse' : ''} ${c.dur > LONG_CUT ? 'long' : ''} ${isPicked(i, c.seg_id) ? 'picked' : ''}"
