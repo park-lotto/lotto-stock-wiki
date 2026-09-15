@@ -32,7 +32,7 @@ def test_server_stores_the_tone_on_the_beat():
     assert m, "regen 핸들러를 못 찾았다"
     body = m.group(0)
     assert '"tts_tone"' in body, "비트에 톤을 남기지 않으면 화면이 되짚을 수 없다"
-    assert "store.update_mix_job" in body, "저장까지 해야 다음에 읽힌다"
+    assert "_save_render_inputs" in body, "저장까지 해야 다음에 읽히고 옛 완성본도 무효화된다"
 
 
 def test_tone_is_not_mixed_into_the_synthesis_args():
