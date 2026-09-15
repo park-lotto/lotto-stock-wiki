@@ -5150,6 +5150,24 @@ class Store:
             "cta_cut_sec": row[37],
         }
 
+    def list_recent_mix_jobs(self, customer_id=LEGACY_CUSTOMER_ID, limit=50):
+        """해당 계정의 최근 믹스 job을 신규순으로 반환한다.
+
+        관리자 시험판이 다른 고객의 작업을 조용히 복사하지 않도록
+        ``customer_id`` 필터는 SQL에서 강제한다.
+        """
+        try:
+            capped = max(1, min(200, int(limit)))
+        except (TypeError, ValueError):
+            capped = 50
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT job_id FROM mix_jobs WHERE customer_id=? "
+                "ORDER BY updated_at DESC LIMIT ?",
+                (customer_id, capped),
+            ).fetchall()
+        return [job for row in rows if (job := self.get_mix_job(row[0])) is not None]
+
     def set_mix_product(self, job_id, product):
         """이 영상이 연결할 쿠팡 상품 1건 저장(None이면 해제, 2026-07-28).
 

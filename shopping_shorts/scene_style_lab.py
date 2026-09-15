@@ -88,6 +88,19 @@ def create_copy(job_id: str, job: dict, work_root: Path | str) -> dict:
     if clean is None:
         raise LabPreconditionError("현재 편성과 일치하는 자막제거 청소본이 없습니다")
 
+    from .scene_style import validate_snapshot
+
+    snapshot = copy.deepcopy((source_job.get("deco") or {}).get("scene_style") or {
+        "version": 1,
+        "mode": "story",
+        "presetId": "t11",
+    })
+    snapshot["hookCaptionMode"] = "hidden"
+    try:
+        snapshot = validate_snapshot(snapshot)
+    except (TypeError, ValueError) as exc:
+        raise LabPreconditionError(f"저장된 장면꾸미기 설정을 읽을 수 없습니다: {exc}") from exc
+
     lab_id = "lab_" + secrets.token_hex(6)
     manifest = {
         "version": 1,
@@ -100,6 +113,7 @@ def create_copy(job_id: str, job: dict, work_root: Path | str) -> dict:
         "deco": copy.deepcopy(source_job.get("deco") or {}),
         "clean": copy.deepcopy(clean),
         "hook_caption_mode": "hidden",
+        "scene_style": snapshot,
         "outputs": {},
     }
     target = lab_dir(work_root, lab_id)
@@ -114,3 +128,17 @@ def assert_fresh(manifest: dict, source_job: dict) -> None:
     actual = clean_plan_signature((source_job or {}).get("edit_plan") or {})
     if not expected or expected != actual:
         raise LabPreconditionError("복사 후 원본 편성이 바뀌었습니다")
+
+
+def save_snapshot(work_root: Path | str, lab_id: str, snapshot: dict) -> dict:
+    """시험 스냅샷만 갱신하고 원본 job은 건드리지 않는다."""
+    from .scene_style import validate_snapshot
+
+    candidate = copy.deepcopy(snapshot or {})
+    candidate["hookCaptionMode"] = "hidden"
+    saved = validate_snapshot(candidate)
+    manifest = read_manifest(work_root, lab_id)
+    manifest["scene_style"] = saved
+    manifest["hook_caption_mode"] = "hidden"
+    write_manifest(lab_dir(work_root, lab_id), manifest)
+    return saved

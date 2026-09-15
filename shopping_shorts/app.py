@@ -18556,6 +18556,125 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     return {"context": context, "snapshot": snapshot}
 
 
+# 관리자 전용 장면꾸미기 실데이터 시험판. 기존 제작소 job은 읽기만 하고
+# 스냅샷과 산출물은 _scene_style_lab 폴더에만 쓴다.
+def _scene_style_lab_denied(request: Request):
+    if not _is_admin(_cid(request)):
+        return JSONResponse(status_code=404, content={"error": "Not Found"})
+    return None
+
+
+def _scene_style_lab_owned_job(store, request, job_id):
+    job = store.get_mix_job(job_id)
+    if not job or int(job.get("customer_id") or 0) != _cid(request):
+        return None
+    return job
+
+
+@app.get("/api/admin/scene-style-lab/jobs")
+def api_scene_style_lab_jobs(request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    rows = []
+    for job in Store(DB_PATH).list_recent_mix_jobs(customer_id=_cid(request), limit=50):
+        plan = job.get("edit_plan") or {}
+        beats = plan.get("beats") or []
+        title = ((job.get("headcopy") or {}).get("text") or
+                 (beats[0].get("narration") if beats else "") or job["job_id"])
+        clean = scene_style_lab.resolve_clean_contract(job, _MIX_WORK_DIR / job["job_id"])
+        rows.append({
+            "job_id": job["job_id"],
+            "title": str(title)[:100],
+            "updated_at": job.get("updated_at"),
+            "status": job.get("status"),
+            "beat_count": len(beats),
+            "tts_ready": bool(beats) and all(b.get("tts_path") and Path(b["tts_path"]).is_file() for b in beats),
+            "clean_ready": clean is not None,
+            "clean_signature": clean.get("signature") if clean else None,
+        })
+    return {"ok": True, "jobs": rows}
+
+
+@app.post("/api/admin/scene-style-lab")
+def api_scene_style_lab_create(request: Request, body: dict):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    job_id = str(body.get("job_id") or "").strip()
+    store = Store(DB_PATH)
+    job = _scene_style_lab_owned_job(store, request, job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "작업 없음"})
+    try:
+        manifest = scene_style_lab.create_copy(job_id, job, _MIX_WORK_DIR)
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    return {"ok": True, "manifest": manifest}
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}")
+def api_scene_style_lab_get(lab_id: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+    from .scene_style import context_for
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    store = Store(DB_PATH)
+    job = _scene_style_lab_owned_job(store, request, manifest.get("source_job_id"))
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, job)
+        beats = (manifest.get("edit_plan") or {}).get("beats") or []
+        tts_paths = {b["beat_idx"]: b["tts_path"] for b in beats
+                     if b.get("tts_path") and Path(b["tts_path"]).is_file()}
+        if not beats or len(tts_paths) != len(beats):
+            raise scene_style_lab.LabPreconditionError("음성 파일이 완전하지 않습니다")
+        timeline = video_assemble._beat_timeline(manifest["edit_plan"], tts_paths)
+    except (scene_style_lab.LabPreconditionError, OSError, RuntimeError, ValueError) as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    snapshot = manifest["scene_style"]
+    context = context_for(timeline, manifest.get("headcopy"), snapshot, lab_id)
+    for index, scene in enumerate(context["scenes"]):
+        scene["media"] = f"/api/admin/scene-style-lab/{lab_id}/frame/{index}"
+    return {"ok": True, "manifest": manifest, "context": context, "snapshot": snapshot}
+
+
+@app.put("/api/admin/scene-style-lab/{lab_id}/snapshot")
+def api_scene_style_lab_snapshot(lab_id: str, request: Request, body: dict):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    store = Store(DB_PATH)
+    job = _scene_style_lab_owned_job(store, request, manifest.get("source_job_id"))
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, job)
+        snapshot = scene_style_lab.save_snapshot(_MIX_WORK_DIR, lab_id, body.get("snapshot"))
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    except (TypeError, ValueError) as exc:
+        return JSONResponse(status_code=422, content={"error": str(exc)})
+    return {"ok": True, "snapshot": snapshot}
+
+
 # 고정카피(헤드카피 후보) — 확정 대본에서 AI가 4개 뽑는다.
 # ★캐시가 핵심이다: 꾸미기에 들어올 때마다 자동 생성이라, 캐시가 없으면 사장님이
 #   6단계를 오갈 때마다 과금된다. 키는 **기존 _script_hash**를 쓴다(새 규칙을 만들지
@@ -22308,6 +22427,17 @@ def _voice_tune_page(request: Request):
 
 app.add_api_route("/voice_tune", _voice_tune_page, include_in_schema=False)
 app.add_api_route("/voice_tune.html", _voice_tune_page, include_in_schema=False)
+
+
+def _scene_style_lab_page(request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "scene_style_lab.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/scene-style-lab", _scene_style_lab_page, include_in_schema=False)
+app.add_api_route("/scene_style_lab.html", _scene_style_lab_page, include_in_schema=False)
 
 
 # 레퍼런스 채널 통합 관리페이지(2026-07-24) — 관리자(customer_id==0) 전용.

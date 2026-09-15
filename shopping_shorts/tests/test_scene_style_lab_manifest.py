@@ -50,6 +50,8 @@ def test_create_lab_copy_writes_isolated_manifest(tmp_path, monkeypatch):
     assert manifest["source_job_id"] == "job1"
     assert manifest["clean"]["path"] == str(clean_path)
     assert manifest["hook_caption_mode"] == "hidden"
+    assert manifest["scene_style"]["hookCaptionMode"] == "hidden"
+    assert manifest["scene_style"]["mode"] == "story"
     assert manifest["edit_plan"] is not job["edit_plan"]
     assert lab.read_manifest(tmp_path, manifest["lab_id"]) == manifest
 
