@@ -287,6 +287,15 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 .urg .now7{display:inline-block;margin-bottom:10px;background:linear-gradient(135deg,#ff4d4d,#ff8a3d);color:#fff;font-size:clamp(24px,3.2vw,40px);font-weight:900;padding:8px 26px;border-radius:16px;box-shadow:0 10px 40px rgba(255,77,77,.5);animation:breathe 1.4s ease-in-out infinite}
 .urg .now7 b{color:#ffe46b!important;font-size:1.15em}
 .reveal:not(.in) .urg .pw{animation-play-state:paused!important}
+.sodiv{display:flex;align-items:center;gap:18px;max-width:1480px;margin:70px auto 0;padding:0 20px}
+.sodiv i{flex:1;height:3px;background:linear-gradient(90deg,transparent,#ff4d4d 40%,#ffd84d);border-radius:3px}
+.sodiv i:last-child{background:linear-gradient(90deg,#ffd84d,#ff4d4d 60%,transparent)}
+.sodiv span{flex:none;font-family:'Black Han Sans',sans-serif;font-size:clamp(34px,4.5vw,58px);color:#ffd84d;letter-spacing:.02em;animation:breathe 1.8s ease-in-out infinite}
+.climax{position:relative;margin-top:18px!important;padding:44px 20px 50px!important;border-radius:32px;background:radial-gradient(900px 420px at 50% 0%,rgba(255,77,77,.16),transparent 70%),linear-gradient(180deg,#140a0c,#0b0f14);border:1px solid rgba(255,120,90,.28);box-shadow:0 0 80px rgba(255,77,77,.12) inset}
+.concl{max-width:900px;margin:26px auto 18px;text-align:center;font-size:clamp(20px,2.6vw,32px);font-weight:900;color:#fff;padding:18px 22px;border-top:2px dashed rgba(255,216,77,.45);border-bottom:2px dashed rgba(255,216,77,.45)}
+.concl .ck{display:inline-block;background:#ffd84d;color:#111;border-radius:10px;padding:2px 14px;margin-right:8px;font-size:.8em;vertical-align:middle}
+.concl em{font-style:normal;color:#6ff0d6}.concl s{color:#ff8a8a}
+.concl .late{font-style:normal;color:#ff6b6b}.concl{max-width:1100px!important;white-space:nowrap}@media(max-width:900px){.concl{white-space:normal}}
 </style></head><body>
 
 <div class="dl v2"><div class=in>
@@ -347,11 +356,13 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 <div class="sec reveal">
 </div>
 
-<div class="sec reveal">
+<div class=sodiv><i></i><span>그래서!</span><i></i></div>
+<div class="sec reveal climax">
   <div class=urg><span class=uk>⏰ 지금 신청해야 하는 이유</span>
     <h2><span class=pw style="--d:0s">1기 동안 프로그램</span> <mark class=pw style="--d:.25s">대규모 업데이트</mark><br><span class=pw style="--d:.5s">→ 2기부터</span> <b class="pw hot" style="--d:.75s">가격 인상</b></h2>
     <p class=chance><span class=now7>🔥 지금이 기회 · <b>__PRO_PRICE__</b></span><br><b>__DEADLINE_LABEL__</b>까지만 <b class=g>__PRO_PRICE__</b> · __NEXT_START_LABEL__부터 <em class=up>__NEXT_PRICE__</em></p></div>
   <div class=pcmp data-video=price_compare data-label="1기 770,000원 · 2기 880,000원"></div>
+  <div class=concl><span class=ck>결론</span> <b>__DEADLINE_LABEL__</b> 전에 신청하면 <em>__PRO_PRICE__</em> · 하루 늦으면 <i class=late>__NEXT_PRICE__</i></div>
   <div class="price final">
     <div class=why>⚠️ <b>__NEXT_START_LABEL__부터 2기 __NEXT_PRICE__</b>으로 오릅니다.<br>1기 동안 프로그램 업데이트가 많아 2기부터 가격을 올립니다.</div>
     <a class="cta go1" href="__CARD_HREF__"><span>💳 지금 1기 신청하기</span><i>→</i></a>
