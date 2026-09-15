@@ -6994,7 +6994,10 @@ class Store:
     def put_share_link(self, sid, job_id, expires_at):
         """QR 단축링크 저장 + 만료분 청소(누수 방지)."""
         with self._conn() as c:
-            c.execute("DELETE FROM share_links WHERE expires_at < ?", (int(expires_at) - 86400 * 0,))
+            # 새 링크의 만료시각을 청소 기준으로 쓰면, 새 Buffer 예약(14일)이 들어올
+            # 때마다 그보다 먼저 만든 아직 유효한 예약 링크가 전부 지워진다. Buffer는
+            # 발행 시각에 이 주소로 영상을 받으므로 이전 고객의 예약이 연쇄 실패한다.
+            c.execute("DELETE FROM share_links WHERE expires_at < ?", (int(time.time()),))
             c.execute("INSERT OR REPLACE INTO share_links(sid, job_id, expires_at) VALUES(?,?,?)",
                       (sid, job_id, int(expires_at)))
 
