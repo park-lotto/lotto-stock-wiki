@@ -194,3 +194,29 @@ def test_QR_링크는_서버가_재시작해도_산다(env):
     fresh = Store(tmp / "t.db")                      # 재시작 흉내 — 새 연결로 조회
     assert fresh.get_share_link(sid, int(time.time())) == "j1"
     assert c.get(f"/s/{sid}").status_code == 200      # 폰이 여는 공유 페이지가 살아 있다
+
+
+def test_새_Buffer_예약이_기존_예약_링크를_지우지_않는다(env):
+    """예약 영상은 14일 공개된다. 새 예약의 만료시각으로 청소하면 이전 예약이
+    아직 살아 있어도 삭제되어, 발행 시 Buffer가 영상을 받지 못한다."""
+    import time
+
+    _c, store, _tmp = env
+    now = int(time.time())
+    store.put_share_link("first", "j1", now + 14 * 86400)
+    store.put_share_link("second", "j2", now + 14 * 86400 + 60)
+
+    assert store.get_share_link("first", now) == "j1"
+    assert store.get_share_link("second", now) == "j2"
+
+
+def test_공유링크_저장할때_실제_만료분은_청소한다(env):
+    import time
+
+    _c, store, _tmp = env
+    now = int(time.time())
+    store.put_share_link("expired", "old", now - 1)
+    store.put_share_link("fresh", "new", now + 86400)
+
+    assert store.get_share_link("expired", now) is None
+    assert store.get_share_link("fresh", now) == "new"

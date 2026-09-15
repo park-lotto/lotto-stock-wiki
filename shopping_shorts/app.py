@@ -919,6 +919,10 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
     # 🚫 영구차단(2026-07-30) — 카드의 차단 버튼이 넣은 removed_channels를 여기서 걸러낸다.
     # 수집(merge_tracked)도 같은 목록을 보지만, 이미 저장된 last_run에는 남아 있어
     # 차단 후 새로고침·업데이트 때 다시 뜨는 걸 막으려면 이 조회 경로에서도 잘라야 한다.
+    # 🗂 관리자가 카드에서 옮긴 카테고리(2026-09-15) — 저장된 목록에도 바로 보이게 조회에서도 덮는다.
+    #   덮는 규칙은 store._apply_overrides 한 곳(수집 저장 때 쓰는 것과 같은 함수).
+    if hasattr(store, "_apply_overrides"):
+        items = store._apply_overrides(items)
     blocked = store.removed_usernames()
     if blocked:
         items = [i for i in items
@@ -2551,6 +2555,37 @@ def api_refs_set_category(request: Request, username: str, category: str = ""):
     return {"ok": True, "username": username, "category": cat}
 
 
+_MOVABLE_CATEGORIES = ("홈템", "레시피", "뷰티", "제품정체형", "장비템", "차량템", "연예인", "기타")
+
+
+@app.post("/api/refs/video_category")
+def api_refs_video_category(request: Request, shortcode: str, category: str = ""):
+    """영상 한 편의 카테고리를 옮긴다(관리자 전용, 2026-09-15 사장님 "썸네일에 카테이동 버튼").
+    category 빈값 = 지정 해제(자동판정으로 복귀). 다음 수집에도 유지된다(_apply_overrides)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    cat = (category or "").strip()
+    if not shortcode or (cat and cat not in _MOVABLE_CATEGORIES):
+        return JSONResponse(status_code=422, content={"ok": False, "error": f"알 수 없는 카테고리: {cat}"})
+    Store(DB_PATH).set_category_overrides({shortcode: cat})
+    return {"ok": True, "shortcode": shortcode, "category": cat}
+
+
+@app.post("/api/refs/channel_force")
+def api_refs_channel_force(request: Request, username: str, category: str = ""):
+    """채널 고정 — 이 채널의 지금·앞으로 영상을 전부 이 카테고리로(관리자 전용, 2026-09-15).
+    category 빈값 = 해제. 영상별 지정(video_category)은 이것보다 우선한다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    cat = (category or "").strip()
+    if not (username or "").strip() or (cat and cat not in _MOVABLE_CATEGORIES):
+        return JSONResponse(status_code=422, content={"ok": False, "error": f"알 수 없는 카테고리: {cat}"})
+    Store(DB_PATH).set_channel_force(username, cat)
+    return {"ok": True, "username": username, "category": cat}
+
+
 @app.post("/api/reference/register")
 def api_reference_register(request: Request, url: str):
     """레퍼런스 채널을 URL 붙여넣기로 직접 등록(2026-07-18). 인스타 채널/릴스
@@ -3991,7 +4026,7 @@ def api_mix_candidate(request: Request, body: dict):
     #   골랐나"를 알 길이 없어 카드를 다시 그릴 수 없었다. 컬럼 추가 없이 edit_plan(JSON)에
     #   실어 마이그레이션 없이 복원한다 — 렌더는 이 키를 안 읽으므로 무해.
     plan["candidate_index"] = idx
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "edited": edited}
 
 
@@ -4601,6 +4636,55 @@ def api_set_smart_mix(body: dict):
 # 매칭 파이프라인의 '진행 중' 단계들(run_mix_job: downloading→extracting→planning→tts).
 # 각 단계가 update_mix_job으로 updated_at을 갱신하므로, 여기 오래 멈춰 있으면 죽은 잔해다.
 _MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")
+
+
+def _save_render_inputs(store, job_id, **fields):
+    """렌더 입력을 저장하고, 실제 내용이 바뀌었으면 파생 완성본을 한 번에 무효화한다.
+
+    완성본을 만든 뒤 3단계로 돌아가 장면을 바꿔도 ``status='done'``과 ``video_path``가
+    그대로 남아 있으면 9단계는 옛 final.mp4를 최신 결과로 오인한다(2026-09-15 박세현님
+    job 1c8130dc5cfc 실측). 장면 교체·확대·자막·꾸미기마다 이 판단을 따로 두면 새 편집
+    기능이 생길 때 다시 빠지므로 모든 렌더 입력 저장은 이 출구를 쓴다.
+
+    edit_plan은 화면에 영향 없는 이력·선택 후보 메타가 함께 바뀔 수 있어 실제 렌더 재료인
+    ``beats``로 비교한다. 썸네일은 인트로가 켜졌을 때 실제로 붙을 PNG가 바뀌었는지만 본다.
+    SEO만 바뀐 경우에는 영상이 같으므로 무효화하지 않는다.
+    옛 파일은 디스크에서 지우지 않고 DB 연결만 끊는다. 진행 중 상태는 보존하고, 이미
+    완료였던 작업만 다시 렌더할 수 있는 ``ready_for_review``로 되돌린다.
+    """
+    before = store.get_mix_job(job_id)
+    if not before:
+        return False
+
+    render_changed = False
+    for key, value in fields.items():
+        if key == "seo":
+            continue
+        if key == "edit_plan":
+            old_beats = ((before.get("edit_plan") or {}).get("beats") or [])
+            new_beats = ((value or {}).get("beats") or [])
+            if old_beats != new_beats:
+                render_changed = True
+        elif key == "thumbnail":
+            def _intro_choice(thumb):
+                thumb = thumb or {}
+                if not thumb.get("intro"):
+                    return False, None
+                results = list(thumb.get("results") or [])
+                return True, (thumb.get("selected") or (results[-1] if results else None))
+            if _intro_choice(before.get("thumbnail")) != _intro_choice(value):
+                render_changed = True
+        elif before.get(key) != value:
+            render_changed = True
+
+    updates = dict(fields)
+    if render_changed:
+        updates.update(video_path=None, clean_video_path=None,
+                       fx_path=None, fx_status=None, cta_cut_sec=None)
+        if before.get("status") == "done":
+            updates["status"] = "ready_for_review"
+    store.update_mix_job(job_id, **updates)
+    return render_changed
 
 
 def _preview_is_stale(job) -> bool:
@@ -5542,7 +5626,7 @@ def api_mix_adjust(body: dict):
             break
     if not matched:
         return JSONResponse(status_code=404, content={"ok": False, "error": "beat_idx 없음"})
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True}
 
 
@@ -6151,7 +6235,7 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
     plan = job["edit_plan"]
     if body.get("revert"):
         _edit_plan.revert_scene_lab(plan)
-        store.update_mix_job(job_id, edit_plan=plan)
+        _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True, "reverted": True}
     payload = body.get("payload") or {}
     if not payload.get("beats"):
@@ -6171,7 +6255,7 @@ def _scene_lab_apply_locked(store, job_id, job, plan, payload):
     # ★교체 기록(2026-09-04): 적용 전후 '첫 조각'이 바뀐 비트를 DB에 남긴다 — 매칭의 시험지. 픽 로직엔 안 쓴다.
     _before = {"beats": [dict(b) for b in plan.get("beats") or []], "generator": plan.get("generator")}
     _edit_plan.apply_scene_lab(plan, seg_map, payload)
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     _swapped = 0
     try:
         _rows = _edit_plan.scene_swap_rows(_before, plan)
@@ -6224,7 +6308,7 @@ def api_mix_scene_lab_restore_version(job_id: str, body: dict):
     if not _edit_plan.restore_scene_lab_version(plan, idx):
         return JSONResponse(status_code=404,
                             content={"ok": False, "error": "그 판본이 없어요"})
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0)}
 
 
@@ -6824,7 +6908,7 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
         _b = next((x for x in plan["beats"] if x["beat_idx"] == beat_idx), None)
         if _b is not None:
             _b["tts_tone"] = tone
-            store.update_mix_job(job_id, edit_plan=plan)
+            _save_render_inputs(store, job_id, edit_plan=plan)
     background_tasks.add_task(resynth_one_beat, job_id, beat_idx, override, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
 
@@ -6894,7 +6978,7 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
     # preset을 대조(공백 무시 일치)에서 떨어뜨려 조용히 규칙 폴백으로 내려간다.
     beat["caption_lines"] = None
     beat["caption_lines_human"] = False
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     if body.get("regen") is False:
         return {"ok": True, "saved": True, "regen": False}
     # 음성·자막 다시 뽑기 = 이미 있는 경로. voice는 job 스냅샷을 그대로 물려준다
@@ -6936,10 +7020,7 @@ def api_mix_scene_lab_renumber(job_id: str):
             b.pop("tts_ver", None)
             changed += 1
     plan["beats"] = beats
-    store.update_mix_job(job_id, edit_plan=plan)
-    # 이미 만든 완성본은 옛 번호 기준이라 무효(삭제 API와 같은 판단).
-    store.update_mix_job(job_id, video_path=None, clean_video_path=None,
-                         fx_path=None, fx_status=None)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "changed": changed, "beats": len(beats),
             "note": "번호를 정리했어요 — 음성 만들기를 다시 눌러주세요"}
 
@@ -6996,7 +7077,7 @@ def api_mix_scene_lab_beat_delete(job_id: str, beat_idx: int):
     for b in left:
         b["narration_manual"] = True
     plan["beats"] = left
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     # ★응답의 left는 **실제 저장된 결과**에서 센다. 위 저장 출구가 계획을 손볼 수 있으므로
     #   메모리의 리스트 길이를 그대로 믿으면 이번 사고처럼 "ok:True, left:7"인데 안 지워진
     #   조용한 실패를 화면이 알 수 없다.
@@ -7015,8 +7096,6 @@ def api_mix_scene_lab_beat_delete(job_id: str, beat_idx: int):
     #   (assemble_clean_video)은 clean_fn 없이 불려 유료 청소를 다시 타지 않는다.
     #   ★clean_sources(소스별 청소본)는 **건드리지 않는다** — 소스 영상 기준이라 칸과 무관하고,
     #     지우면 VMake를 다시 태워 돈이 나간다.
-    store.update_mix_job(job_id, video_path=None, clean_video_path=None,
-                         fx_path=None, fx_status=None)
     return {"ok": True, "deleted": beat_idx, "left": len(saved),
             "text": (beat.get("narration") or "")[:120],
             "invalidated": ["video_path", "clean_video_path", "fx_path"]}
@@ -7062,7 +7141,7 @@ def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
     if beat is None:
         return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
     beat["cap_offset"] = offset
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "offset": offset}
 
 
@@ -7731,7 +7810,7 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
     if _blocked:
         return _blocked
     voice = _voice_snapshot(store, body)
-    store.update_mix_job(job_id, voice=voice)
+    _save_render_inputs(store, job_id, voice=voice)
     # 🎙 이 선택을 고객의 '다음 작업 기본 성우'로 기억한다(2026-09-02 사장님 지시).
     #   → 다음 작업은 create_mix_job이 이 값을 job.voice로 심어 3단계 1차 TTS부터 본인
     #     성우로 나간다. 그러면 4단계에서 이 버튼을 누를 이유가 없어져 **편당 TTS 1회**가 된다
@@ -7795,6 +7874,10 @@ def _video_gone_reason(job):
     """
     if not job:
         return "작업을 찾을 수 없어요."
+    # 최종 렌더 뒤 입력을 고치면 status가 ready_for_review로 돌아간다. 혹시 옛 경로가
+    # 남은 작업이어도 그 파일을 최신 완성본으로 주지 않는다(재생·공유·예약 공통 방어).
+    if job.get("status") != "done":
+        return "수정한 내용으로 최종 렌더를 다시 해주세요."
     if not job.get("video_path"):
         return "아직 완성된 영상이 없어요."
     if Path(job["video_path"]).exists():
@@ -8788,7 +8871,7 @@ def api_thumb_pin(body: dict):
     pins.insert(0, {"name": name, "beat_idx": i, "label": label,
                     "ts": round(float((beats[i] or {}).get("start") or 0), 2)})
     thumb["pins"] = pins
-    store.update_mix_job(job_id, thumbnail=thumb)
+    _save_render_inputs(store, job_id, thumbnail=thumb)
     return {"ok": True, "name": name, "label": label, "pins": pins,
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
@@ -8865,7 +8948,7 @@ async def api_thumb_save(job_id: str = Form(...), meta: str = Form(...),
     # 배경이 바뀌면(api_thumb_frames가 대조) 옛 결과에 표시할 수 있게 한다.
     if thumb.get("video_sig"):
         thumb.setdefault("result_sigs", {})[name] = thumb["video_sig"]
-    store.update_mix_job(job_id, thumbnail=thumb)
+    _save_render_inputs(store, job_id, thumbnail=thumb)
     return {"ok": True, "name": name,
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
@@ -8883,7 +8966,7 @@ def api_thumb_select(body: dict):
     if name not in (thumb.get("results") or []):
         return JSONResponse(status_code=400, content={"ok": False, "error": "없는 썸네일"})
     thumb["selected"] = name
-    store.update_mix_job(job_id, thumbnail=thumb)
+    _save_render_inputs(store, job_id, thumbnail=thumb)
     return {"ok": True}
 
 
@@ -10733,7 +10816,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
                "/help", "/api/help/items",
                "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
-               "/pay/toss", "/pay/toss/success", "/pay/toss/fail",   # 토스 카드결제(2026-09-15)
+               "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order", "/api/landing/hits",   # 토스 카드결제(2026-09-15)
                "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
                # 가입 전 안내(2026-08-23) — ★반드시 비로그인 공개다. 이 두 장은 아직 회원이
                # 아닌 사람에게 뿌리는 링크(공지·카톡)라, 로그인에 막히면 링크가 통째로 죽는다.
@@ -10784,7 +10867,7 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 #   없어서(실측) prefix로 열면 상한 없이 샌다.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
-                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail",   # 토스 카드결제(2026-09-15)
+                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order", "/api/landing/hits",   # 토스 카드결제(2026-09-15)
                    # ★가입 마무리 화면(2026-08-24). 등급과 무관하게 열려야 한다 —
                    #   막으면 **빠져나갈 수 없는 막다른 길**이 된다: 어느 화면을 열든
                    #   미들웨어가 /welcome으로 보내는데(_needs_welcome), 정작 /welcome이
@@ -11124,7 +11207,40 @@ def _pay_cta():
 def _with_pay(html: str) -> str:
     """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다."""
     href, label = _pay_cta()
+    # ★상품명·가격·카드결제 버튼(2026-09-15 토스 심사 "상품 금액 = 결제 금액").
+    #   가격은 결제가 실제로 받는 금액(_toss_order_name_amount) **한 곳**에서 읽는다 —
+    #   화면 숫자를 따로 적으면 결제 금액과 어긋나 심사 불가 사유가 된다.
+    name, amount = _toss_order_name_amount()
+    ck, sk = _toss_keys()
+    card_href, card_label = ("/pay/toss", "💳 카드로 결제하기") if (ck and sk) else (href, label)
+    # 모집 마감·다음 기수 가격(2026-09-15 사장님 "1기 9월말 마감, 10월 1일부터 2기 88만원").
+    #   관리자 설정으로 바꿀 수 있게 settings에서 읽고, 없으면 사장님이 말한 값을 쓴다.
+    _st = Store(DB_PATH)
+    dl_iso = (_st.get_setting("recruit_deadline", "") or "2026-09-30T23:59:59+09:00").strip()
+    try:
+        _dl = datetime.fromisoformat(dl_iso)
+        dl_label = f"{_dl.month}월 {_dl.day}일"
+        _nx = _dl + timedelta(seconds=1)
+        nx_label = f"{_nx.month}월 {_nx.day}일"
+    except ValueError:
+        dl_label, nx_label = "마감일", "다음 기수"
+    try:
+        next_price = int(_st.get_setting("next_price", "") or 880000)
+    except ValueError:
+        next_price = 880000
+    # 정가(할인 전) — 사장님 "150만원 → 77만원 할인중 표시"(2026-09-15). 설정 list_price로 바꾼다.
+    try:
+        list_price = int(_st.get_setting("list_price", "") or 1500000)
+    except ValueError:
+        list_price = 1500000
+    discount = max(0, round((1 - amount / list_price) * 100)) if list_price > amount else 0
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
+                .replace("__PRO_NAME__", _toss_esc(name))
+                .replace("__PRO_PRICE__", f"{amount:,}원")
+                .replace("__CARD_HREF__", card_href).replace("__CARD_LABEL__", card_label)
+                .replace("__DEADLINE_ISO__", dl_iso).replace("__DEADLINE_LABEL__", dl_label)
+                .replace("__NEXT_START_LABEL__", nx_label).replace("__NEXT_PRICE__", f"{next_price:,}원")
+                .replace("__LIST_PRICE__", f"{list_price:,}원").replace("__DISCOUNT__", str(discount))
                 .replace("__BIZFOOT__", _biz_foot()))
 
 
@@ -11302,10 +11418,11 @@ a{text-decoration:none;color:inherit}
 <a class=cta href="/login" style="width:100%;justify-content:center;font-size:14px;padding:12px">무료로 시작</a></div>
 <div style="background:var(--panel);border:1px solid rgba(255,207,111,.4);box-shadow:0 0 0 1px rgba(255,207,111,.14) inset;border-radius:18px;padding:24px;text-align:center;position:relative">
 <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--gold-grad);color:#3a2600;font-family:'Black Han Sans',sans-serif;font-size:12px;padding:4px 12px;border-radius:999px">추천</div>
-<div style="color:var(--gold);font-weight:700;font-size:14px">Pro 이용권</div>
-<div class=display style="font-size:34px;margin:6px 0;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent">가격 문의</div>
+<div style="color:var(--gold);font-weight:700;font-size:14px">__PRO_NAME__</div>
+<div class=display style="font-size:34px;margin:6px 0;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent">__PRO_PRICE__</div>
 <div style="color:var(--faint);font-size:13px;margin-bottom:16px">전 기능 무제한 · 무제한 제작</div>
-<a href="__PAY_HREF__" target=_blank rel=noopener style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">__PAY_LABEL__</a></div></div>
+<a href="__CARD_HREF__" style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">__CARD_LABEL__</a>
+<a href="__PAY_HREF__" target=_blank rel=noopener style="display:block;margin-top:8px;color:var(--faint);font-size:12px;text-decoration:underline">계좌이체 · 결제 안내</a></div></div>
 <div class=reveal style="text-align:center;margin-top:20px"><a href="/pricing" style="color:var(--mint);font-weight:700;font-size:14px">요금 자세히 보기 →</a></div></div>
 <div class="band reveal">
 <h2>손자한테 안 물어봐도 됩니다</h2>
@@ -11544,16 +11661,15 @@ a{text-decoration:none;color:inherit}
 <a class="btn pri" href="/login">무료로 시작</a></div>
 <div class="plan pro">
 <div class=rec>추천</div>
-<div class="pt pro-t">Pro 이용권</div>
-<div class=price>가격 문의<small></small></div>
-<div class=pd>기간·구성은 카톡으로 안내 (준비 중)</div>
+<div class="pt pro-t">__PRO_NAME__</div>
+<div class=price>__PRO_PRICE__<small></small></div>
+<div class=pd>카드결제 또는 계좌이체</div>
 <ul>
 <li><span class=c>✓</span> 전 기능 무제한</li>
 <li><span class=c>✓</span> 쇼츠 무제한 제작</li>
 <li><span class=c>✓</span> 렌즈·대본·보이스 전부</li>
 <li><span class=c>✓</span> 우선 문의·운영 노하우</li></ul>
-<a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
-<div class=tbd style="text-align:center">※ 가격·이용권 기간은 확정 후 표기됩니다(현재 플레이스홀더).</div>
+<a class="btn kko" href="__CARD_HREF__">__CARD_LABEL__</a></div></div>
 <div class=sec>
 <h2>이용권에 들어있는 것</h2>
 <div class=lead>파는 사람이 처음부터 끝까지 쓰는 도구</div>
@@ -11666,7 +11782,9 @@ else{btn.href="/pricing";btn.textContent="카톡으로 문의";}
 })();</script>
 </body></html>"""
 
-_LANDING_HTML = _fill_brand(_LANDING_TMPL)
+# ★랜딩 v2(2026-09-15 사장님 "지금 랜딩 교체") — 본문은 파일 한 곳(landing.html)에서 관리한다.
+#   가격·마감 숫자는 파일에 없고 _with_pay가 채운다. 옛 _LANDING_TMPL은 되돌리기용으로 남긴다.
+_LANDING_HTML = _fill_brand((Path(__file__).parent / "landing.html").read_text(encoding="utf-8"))
 
 _PC_BLOCKED_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>등록된 PC에서만 쓸 수 있어요</title>
@@ -12017,8 +12135,9 @@ def _deposit_body():
     kakao = (st.get_setting("contact_kakao", "") or "").strip()
     phone = (st.get_setting("contact_phone", "") or "").strip()
     import html as _h
+    card = _deposit_card_html()
     if not acc:
-        return ('<div class=empty>결제 안내가 아직 준비 중이에요.<br>아래로 문의해 주세요.</div>'
+        return (card + '<div class=empty>결제 안내가 아직 준비 중이에요.<br>아래로 문의해 주세요.</div>'
                 + _deposit_contact(kakao, phone))
     rows = ""
     if bank:
@@ -12031,7 +12150,23 @@ def _deposit_body():
     note_html = (f'<div class=note>{_h.escape(note)}</div>' if note else
                  '<div class=note>입금 금액·이용권은 아래로 <b>문의</b>해 주세요.<br>'
                  '입금 후 <b>입금자명</b>을 알려주시면 <b>바로 이용권을 열어드려요.</b></div>')
-    return rows + note_html + _DEPOSIT_CLAIM_HTML + _deposit_contact(kakao, phone)
+    return card + rows + note_html + _DEPOSIT_CLAIM_HTML + _deposit_contact(kakao, phone)
+
+
+def _deposit_card_html():
+    """결제 안내 맨 위 '카드로 결제' 버튼(2026-09-15 사장님 "결제안내 안에 카드결제로 연동").
+
+    토스 키(_toss_keys)가 있을 때만 보인다 — 키 판단은 _toss_keys 한 곳에서만.
+    테스트 키면 버튼에 '테스트'를 붙여 고객이 진짜 결제로 착각하지 않게 한다.
+    """
+    ck, sk = _toss_keys()
+    if not (ck and sk):
+        return ""
+    tag = " (테스트)" if ck.startswith("test_") else ""
+    return ('<a href="/pay/toss" style="display:block;text-align:center;text-decoration:none;'
+            'background:linear-gradient(135deg,#ffd27a,#f0a53a);color:#1a1206;border-radius:12px;'
+            'padding:15px;font-size:16px;font-weight:800;margin-bottom:10px">💳 카드로 결제하기' + tag + '</a>'
+            '<div style="text-align:center;color:#6f8583;font-size:13px;margin:6px 0 14px">또는 계좌이체</div>')
 
 
 # '입금 완료했습니다' — 고객이 직접 알리는 창구(2026-08-23).
@@ -12104,6 +12239,9 @@ def _deposit_contact(kakao, phone):
 _TOSS_CONFIRM_URL = "https://api.tosspayments.com/v1/payments/confirm"
 
 
+_APPLY_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScd2daWqtFnea1e_5y5ZKq6OkDPOeuw3qLg3tBinv6G2P4eCQ/viewform"
+
+
 def _toss_keys():
     return (os.environ.get("TOSS_CLIENT_KEY", "").strip(),
             os.environ.get("TOSS_SECRET_KEY", "").strip())
@@ -12126,6 +12264,11 @@ def _toss_db():
                         order_id TEXT PRIMARY KEY, amount INTEGER, order_name TEXT,
                         status TEXT, payment_key TEXT, method TEXT, approved_at TEXT,
                         raw TEXT, created_at TEXT, updated_at TEXT)""")
+        # 결제자 정보(2026-09-15) — 회원가입 전 결제라 누가 냈는지 여기만 안다. 옛 표에 컬럼을 더한다.
+        cols = {r[1] for r in c.execute("PRAGMA table_info(toss_payments)")}
+        for col in ("payer_name", "payer_phone", "payer_email"):
+            if col not in cols:
+                c.execute(f"ALTER TABLE toss_payments ADD COLUMN {col} TEXT")
     return st
 
 
@@ -12150,48 +12293,159 @@ def _toss_page(title, body):
             f"</head><body><div class=box>{body}</div></body></html>")
 
 
+_LANDING_HITS_CACHE = {"at": 0.0, "data": None}
+
+
+@app.get("/api/landing/hits")
+def _landing_hits():
+    """랜딩 히어로의 '100만뷰+ 쇼핑쇼츠' 벽(2026-09-15 사장님 "지금 터지는 쇼츠 중 유튜브 100만
+    이상을 보여주면서 매일 이런 게 뜬다는 걸 강조").
+
+    ★실제로 우리가 수집한 영상만 쓴다(reel_history) — 지어낸 숫자·영상 금지.
+    ★차단 채널은 뺀다. 쇼핑 결 카테고리만(기타는 먹방·연예가 섞인다).
+    공개 경로라 10분 캐시 — 방문자마다 DB를 치지 않는다.
+    """
+    now = time.time()
+    if _LANDING_HITS_CACHE["data"] and now - _LANDING_HITS_CACHE["at"] < 600:
+        return _LANDING_HITS_CACHE["data"]
+    cats = ("제품정체형", "오용형", "홈템", "장비템", "차량템", "레시피", "뷰티")
+    st = Store(DB_PATH)
+    blocked = st.removed_usernames()
+    ph = ",".join("?" * len(cats))
+    with st._conn() as c:
+        rows = c.execute(
+            f"SELECT shortcode, username, name, caption, views, first_seen FROM reel_history "
+            f"WHERE platform='youtube' AND views>=1000000 AND category IN ({ph}) "
+            f"ORDER BY first_seen DESC, views DESC LIMIT 200", cats).fetchall()
+    # ★최근에 랭킹에 잡힌 순서(사장님 "매일 랭킹에 수집되는 대박 쇼츠") — 날짜를 같이 준다.
+    items = [{"id": r[0], "name": r[2] or "", "title": (r[3] or "")[:60], "views": int(r[4] or 0),
+              "seen": (r[5] or "")[:10]}
+             for r in rows if (r[1] or "").strip().lstrip("@").lower() not in blocked and r[0]]
+    data = {"ok": True, "count": len(items), "items": items[:36]}
+    _LANDING_HITS_CACHE.update(at=now, data=data)
+    return data
+
+
 @app.get("/pay/toss", response_class=HTMLResponse)
 def _toss_checkout(request: Request):
+    """결제자 정보 → 주문 생성(POST) → 토스 결제창 (2026-09-15 사장님 "결제자 정보를 입력하게 하고
+    결제해야 된다. 회원가입 전이면 알 수가 없다 / 신청폼 작성 후 결제").
+
+    ★주문은 GET에서 만들지 않는다 — 페이지만 열어도 READY 주문이 쌓였다(실측 5건).
+      정보를 제출한 순간(POST /api/pay/toss/order)에 결제자와 함께 한 줄로 만든다.
+    ★사전신청 폼(notice_1gi)을 거쳐 왔으면 sessionStorage의 값으로 칸을 미리 채운다.
+    """
     ck, sk = _toss_keys()
     if not ck or not sk:
         return HTMLResponse(_toss_page("결제 준비 중", "<h1>카드결제 준비 중</h1>"
                                        "<div class=p>결제 설정이 아직 끝나지 않았습니다.</div>"),
                             status_code=503)
     name, amount = _toss_order_name_amount()
-    order_id = "ST" + datetime.now().strftime("%Y%m%d%H%M%S") + secrets.token_hex(4)
-    now = datetime.now(timezone.utc).isoformat()
-    with _toss_db()._conn() as c:
-        c.execute("INSERT INTO toss_payments(order_id,amount,order_name,status,created_at,updated_at) "
-                  "VALUES(?,?,?,?,?,?)", (order_id, amount, name, "READY", now, now))
     base = str(request.base_url).rstrip("/")
     if request.headers.get("x-forwarded-proto") == "https" and base.startswith("http://"):
         base = "https://" + base[len("http://"):]
     badge = ("<span class=test>테스트 결제 — 실제 돈이 나가지 않습니다</span>"
              if ck.startswith("test_") else "")
+    inp = ("width:100%;box-sizing:border-box;margin-top:8px;padding:13px;border-radius:10px;"
+           "border:1px solid #1f3a33;background:#0a1113;color:#e8f3ef;font-size:15px;font-family:inherit")
+    # ★신청서(구글폼) 먼저 — 사장님 2026-09-15 "신청할 때 신청폼 반드시 쓸 수 있게".
+    #   폼 제출 여부는 구글 쪽이라 서버가 확인할 수 없다 → 폼 링크를 눌러야 체크칸이 열리고, 체크해야 결제된다.
+    form_url = (Store(DB_PATH).get_setting("apply_form_url", "") or _APPLY_FORM_URL).strip()
     body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
 <div class=amt>{amount:,}원</div>
-<div class=p>아래 버튼을 누르면 토스페이먼츠 카드 결제창이 열립니다.</div>
+<div style="border:1px solid #6ff0d6;border-radius:12px;padding:14px;margin:6px 0 16px;background:#0c1a17">
+  <div style="font-weight:800;font-size:16px">① 신청서 작성 <span style="color:#ff8a8a">(필수)</span></div>
+  <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 1기 신청서를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
+  <a id=fl href="{_toss_esc(form_url)}" target=_blank rel=noopener style="display:block;text-align:center;padding:12px;border-radius:10px;background:#e0a33d;color:#111;font-weight:800;text-decoration:none">📝 신청서 작성하기</a>
+  <label class=p style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px">
+    <input id=fd type=checkbox disabled> <span id=fdl style="opacity:.5">신청서를 작성해 제출했습니다</span></label>
+</div>
+<div style="font-weight:800;font-size:16px">② 결제자 정보</div>
+<div class=p>결제하시는 분의 정보를 입력해 주세요. 결제 확인과 이용 안내에 쓰입니다.</div>
+<input id=pn placeholder="성함" maxlength=40 style="{inp}">
+<input id=pp placeholder="연락처 (010-0000-0000)" maxlength=40 inputmode=tel style="{inp}">
+<input id=pe placeholder="이메일 (가입·안내를 받으실 주소)" maxlength=120 inputmode=email style="{inp}">
+<label class=p style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px">
+  <input id=pa type=checkbox style="margin-top:3px">
+  <span><a href="/refund" target="_blank" style="color:#6ff0d6">환불정책</a>과
+  <a href="/terms" target="_blank" style="color:#6ff0d6">이용약관</a>을 확인했고 동의합니다.</span></label>
 <button id=go>카드로 결제하기</button>
 <div class="p err" id=msg></div>
 <script src="https://js.tosspayments.com/v2/standard"></script>
 <script>
+function _fdOpen() {{ fd.disabled = false; fdl.style.opacity = 1; }}
+try {{ if (localStorage.getItem('apply_form_opened')) _fdOpen(); }} catch (e) {{}}
+fl.addEventListener('click', () => {{ _fdOpen(); try {{ localStorage.setItem('apply_form_opened', '1'); }} catch (e) {{}} }});
+(function () {{
+  try {{
+    const s = JSON.parse(sessionStorage.getItem('prereg_payer') || 'null');
+    if (s) {{ pn.value = s.name || ''; pp.value = s.phone || ''; pe.value = s.email || ''; }}
+  }} catch (e) {{}}
+}})();
+let busy = false;
 document.getElementById('go').onclick = async () => {{
   const msg = document.getElementById('msg'); msg.textContent = '';
+  if (busy) return;
+  const payer = {{ name: pn.value.trim(), phone: pp.value.trim(), email: pe.value.trim() }};
+  if (!fd.checked) {{ msg.textContent = '① 신청서를 먼저 작성·제출하고 체크해 주세요.'; return; }}
+  if (!payer.name || !payer.phone || !payer.email) {{ msg.textContent = '성함·연락처·이메일을 모두 입력해 주세요.'; return; }}
+  if (!pa.checked) {{ msg.textContent = '환불정책·이용약관 동의에 체크해 주세요.'; return; }}
+  busy = true; go.disabled = true; go.textContent = '결제창 여는 중…';
   try {{
+    const r = await fetch('/api/pay/toss/order', {{ method: 'POST',
+      headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify(payer) }});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || '주문을 만들지 못했습니다');
     const tp = TossPayments({json.dumps(ck)});
     const payment = tp.payment({{ customerKey: TossPayments.ANONYMOUS }});
     await payment.requestPayment({{
       method: "CARD",
-      amount: {{ currency: "KRW", value: {amount} }},
-      orderId: {json.dumps(order_id)},
-      orderName: {json.dumps(name)},
+      amount: {{ currency: "KRW", value: d.amount }},
+      orderId: d.orderId,
+      orderName: d.orderName,
+      customerName: payer.name,
+      customerEmail: payer.email,
+      customerMobilePhone: payer.phone.replace(/[^0-9]/g, ''),
       successUrl: {json.dumps(base + "/pay/toss/success")},
       failUrl: {json.dumps(base + "/pay/toss/fail")}
     }});
-  }} catch (e) {{ msg.textContent = '결제창을 열지 못했습니다: ' + ((e && e.message) || e); }}
+  }} catch (e) {{
+    msg.textContent = (e && e.message) || String(e);
+  }} finally {{
+    busy = false; go.disabled = false; go.textContent = '카드로 결제하기';
+  }}
 }};
 </script>"""
     return _toss_page("카드 결제", body)
+
+
+@app.post("/api/pay/toss/order")
+async def _toss_create_order(request: Request):
+    """결제자 정보를 받아 주문을 만든다. 금액·상품명은 서버가 정한다(브라우저 값을 받지 않는다)."""
+    ck, sk = _toss_keys()
+    if not ck or not sk:
+        return JSONResponse({"error": "카드결제 준비 중입니다"}, status_code=503)
+    try:
+        body = await request.json()
+    except Exception:           # noqa: BLE001
+        body = {}
+    pname = (body.get("name") or "").strip()
+    phone = (body.get("phone") or "").strip()
+    email = (body.get("email") or "").strip()
+    if not pname or not phone or not email:
+        return JSONResponse({"error": "성함·연락처·이메일을 모두 입력해 주세요"}, status_code=422)
+    if "@" not in email or "." not in email.split("@")[-1]:
+        return JSONResponse({"error": "이메일 주소를 확인해 주세요"}, status_code=422)
+    if len(pname) > 40 or len(phone) > 40 or len(email) > 120:
+        return JSONResponse({"error": "입력이 너무 깁니다"}, status_code=422)
+    name, amount = _toss_order_name_amount()
+    order_id = "ST" + datetime.now().strftime("%Y%m%d%H%M%S") + secrets.token_hex(4)
+    now = datetime.now(timezone.utc).isoformat()
+    with _toss_db()._conn() as c:
+        c.execute("INSERT INTO toss_payments(order_id,amount,order_name,status,payer_name,payer_phone,"
+                  "payer_email,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+                  (order_id, amount, name, "READY", pname, phone, email, now, now))
+    return {"ok": True, "orderId": order_id, "amount": amount, "orderName": name}
 
 
 @app.get("/pay/toss/success", response_class=HTMLResponse)
@@ -12236,6 +12490,17 @@ def _toss_success(paymentKey: str = "", orderId: str = "", amount: str = ""):
                                        f"{_toss_esc(d.get('message'))}<br>"
                                        f"<code>{_toss_esc(d.get('code'))}</code></div>"),
                             status_code=400)
+    try:
+        from shopping_shorts import ops_alert
+        with st._conn() as c:
+            pr = c.execute("SELECT payer_name, payer_phone, payer_email FROM toss_payments WHERE order_id=?",
+                           (orderId,)).fetchone() or ("", "", "")
+        # cooldown 0 — 결제 한 건 한 건이 돈이다(입금 신고와 같은 이유).
+        ops_alert.raise_alert("toss_paid", f"💳 카드결제 완료 — {pr[0] or '-'} {amt:,}원",
+                              f"연락처 {pr[1] or '-'} / 이메일 {pr[2] or '-'} / 주문 {orderId}",
+                              cooldown_sec=0, store=st)
+    except Exception as e:      # noqa: BLE001 — 알림 실패가 결제 완료 화면을 막으면 안 된다
+        print(f"[토스결제] 관리자 알림 실패(결제는 정상): {e!r}", file=sys.stderr)
     return _toss_page("결제 완료", f"""<h1>✅ 결제가 완료되었습니다</h1>
 <div class=amt>{amt:,}원</div>
 <div class=p>{_toss_esc(d.get('orderName'))}<br>결제수단 {_toss_esc(d.get('method'))}<br>
@@ -12883,7 +13148,8 @@ async def _auth_guard(request: Request, call_next):
     # /api/coupang/relay/*도 같은 이유다(2026-07-29) — 쿠팡은 한국 IP가 아니면 막아서
     #   사장님 PC의 도우미가 로그인 쿠키 없이 폴링한다. 엔드포인트가 자체 토큰
     #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
-    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
+    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
+            or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
             or path.startswith("/s/") or path.startswith("/api/share/v/")
             or path.startswith("/api/share/t/")
@@ -18217,7 +18483,7 @@ def api_produce_mix_settings(body: dict):
     if "seo" in body:
         fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
-        store.update_mix_job(job_id, **fields)
+        _save_render_inputs(store, job_id, **fields)
     return {"ok": True}
 
 
@@ -18717,7 +18983,7 @@ def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
         if not asset:
             return JSONResponse(status_code=422, content={"ok": False, "error": "자산 없음"})
         hit["cutaway"] = {"asset_id": int(aid), "match_type": "manual"}
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True}
 
 
@@ -18760,7 +19026,7 @@ def api_produce_mix_trim(job_id: str, body: dict):
         head, tail = hit.get("head_trim", 0.0), hit.get("tail_trim", 0.0)
         if _effective_dur(probe, head, tail) <= _TRIM_FLOOR and (head + tail) > (probe - _TRIM_FLOOR):
             hit[key] = max(0.0, round(probe - _TRIM_FLOOR - (head + tail - hit.get(key, 0.0)), 3))
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "head_trim": hit.get("head_trim", 0.0),
             "tail_trim": hit.get("tail_trim", 0.0), "trimmed": hit.get(key, 0.0)}
 
@@ -18839,7 +19105,7 @@ def _cappos_locked(store, job_id, body):
             b["cap_pos"] = None
             b["cap_xy"] = None
             b["cap_xy_segs"] = None
-        store.update_mix_job(job_id, edit_plan=plan)
+        _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True, "apply_all": True, "cleared": cleared}
 
     plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
@@ -18865,14 +19131,14 @@ def _cappos_locked(store, job_id, body):
             xy_segs = dict(hit.get("cap_xy_segs") or {})
             xy_segs[str(seg_idx)] = xy
             hit["cap_xy_segs"] = xy_segs
-            store.update_mix_job(job_id, edit_plan=plan)
+            _save_render_inputs(store, job_id, edit_plan=plan)
             return {"ok": True, "pos": "free", "seg_idx": seg_idx, "xy": xy,
                     "cap_xy_segs": xy_segs, "x_pct": xy["x_pct"], "y_pct": xy["y_pct"]}
 
         # seg_idx가 없는 옛 화면/요청은 종전 의미를 유지한다.
         hit["cap_xy"] = xy
         hit["cap_pos"] = None          # 버튼 자리와 두 벌로 남기지 않는다
-        store.update_mix_job(job_id, edit_plan=plan)
+        _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True, "pos": "free", "xy": xy,
                 "x_pct": xy["x_pct"], "y_pct": xy["y_pct"]}
 
@@ -18882,7 +19148,7 @@ def _cappos_locked(store, job_id, body):
     hit["cap_pos"] = pos if pos in ("top", "mid") else None   # bottom = 기본값 = 저장 안 함
     hit["cap_xy"] = None                                      # 버튼을 누르면 드래그 좌표는 버린다
     hit["cap_xy_segs"] = None                                 # 구절별 드래그 좌표도 함께 버린다
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     # y_pct도 함께 준다 — 화면이 %를 스스로 계산하면 렌더와 두 벌이 된다(0순위-B).
     return {"ok": True, "pos": hit["cap_pos"] or "bottom",
             "y_pct": video_assemble._CAP_POS_PCT.get(hit["cap_pos"])}
@@ -18928,7 +19194,7 @@ def _scenezoom_locked(store, job_id, body):
         hit["scene_zoom"] = round(zoom, 4)
         hit["scene_pan_x"] = round(_pan("pan_x"), 5)
         hit["scene_pan_y"] = round(_pan("pan_y"), 5)
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     z, px, py = video_assemble.scene_zoom_of(hit)
     return {"ok": True, "zoom": z, "pan_x": px, "pan_y": py}
 
@@ -18971,7 +19237,7 @@ def _scenehl_locked(store, job_id, body):
             "cx": round(_f("cx", 0.5), 5), "cy": round(_f("cy", 0.5), 5),
             "r": round(_f("r", 0.28), 5), "zoom": round(_f("zoom", 2.0), 4),
         }
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "hl": video_assemble.scene_hl_of(hit)}
 
 
@@ -19055,7 +19321,7 @@ def _caplines_locked(store, job_id, body):
         hit["caption_lines"] = None
         hit["caption_lines_human"] = False
         hit["cap_durs"] = None
-        store.update_mix_job(job_id, edit_plan=plan)
+        _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True, "lines": video_assemble._caption_segments(narr), "timed": False}
     lines = [str(x).strip() for x in (body.get("lines") or []) if str(x).strip()]
     if not lines:
@@ -19080,7 +19346,7 @@ def _caplines_locked(store, job_id, body):
             hit["cap_src"] = _wsrc if (words and timing) else "estimate"
         except Exception as e:  # noqa: BLE001 — 재계산 실패해도 줄 나누기는 살린다(글자수 폴백)
             print(f"[caplines] 타이밍 재계산 실패(폴백 사용): {e!r}", file=sys.stderr)
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     # ★칸 타임라인(2026-08-29)이 이 응답으로 화면을 바로 갱신한다 — 새 시간표는
     #   GET과 같은 함수(_lab_captions)로 만든다. 여기서 따로 계산하면 두 벌이 된다(0순위-B).
     _caps, _td = _lab_captions(plan)
@@ -19143,7 +19409,7 @@ def api_produce_mix_shorten(job_id: str, body: dict):
     if dur and dur > 0:
         hit["target_seconds"] = round(dur, 1)
         hit["sync_gap"] = round(max(0.0, dur - budget), 2)
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "changed": True, "narration": new_n, "sync_gap": hit.get("sync_gap", 0.0)}
 
 
@@ -19179,7 +19445,7 @@ def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     pos = body.get("position")
     if aid is None and pos is None:
         hit.pop("sfx", None)                       # 종전 동작 — 빼기
-        store.update_mix_job(job_id, edit_plan=plan)
+        _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True}
     from shopping_shorts import scene_match as _sm
     if pos is not None and pos not in _sm.SFX_POSITIONS:
@@ -19198,7 +19464,7 @@ def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     if pos is not None:
         cur["position"] = pos
     hit["sfx"] = cur
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "sfx": cur}
 
 
@@ -19303,10 +19569,10 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
         return clean_map, None, None, "_clean", True
     if job.get("clean_status") != "ready":
         return {}, None, None, "", False
-    cvp = job.get("clean_video_path")
-    if not cvp or not Path(cvp).exists():
-        return {}, None, None, "", False
-    # ★지금 편성으로 청소한 파일이 있으면 **그 파일**을 쓴다(2026-09-02).
+    # ★지금 편성으로 청소한 파일이 있으면 **그 파일**을 먼저 쓴다(2026-09-15).
+    #   완성본 1편 청소의 정본은 final_clean_{편성서명}.mp4이고 clean_video_path는
+    #   구형 호환 칸이라 비어 있을 수 있다. 종전 코드는 그 구형 칸을 먼저 검사해
+    #   정본이 멀쩡히 있어도 여기서 원본으로 돌아갔다(박진우님 c9ae4dc6b8a6).
     #   clean_video_path(clean_preview.mp4)는 편성을 바꿔 재청소해도 갱신되지 않아
     #   옛 편성 그림이다 — 판정만 고치고 출처를 그대로 두면 옛 장면이 뜬다(짝이다).
     _fresh_path = mix_pipeline.clean_final_path_for_plan(job, work)
@@ -19323,6 +19589,12 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
         if _alt is not None:
             cvp = str(_alt)
             fresh = True      # 청소본에서 뜬다 — 좌표는 근사, 자막은 확실히 없다
+        else:
+            # 아주 오래된 작업은 서명 파일 없이 clean_video_path만 남아 있다.
+            # 그 호환 경로까지 없을 때에만 원본으로 물러선다.
+            cvp = job.get("clean_video_path")
+            if not cvp or not Path(cvp).exists():
+                return {}, None, None, "", False
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}

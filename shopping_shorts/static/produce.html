@@ -14863,7 +14863,6 @@ async function refreshFinal(){
   //   비었었다. 여기서 상태를 조회해 done이면 <video>·완성MP4 버튼을 다시 그린다.
   if(!MIX_JOB){ _finalIdleSlot(); return; }
   const fv=document.getElementById('finalVideo');
-  if(fv && fv.querySelector('video')){ renderExport({rendered:true}); return; }   // 이미 떠 있으면 버튼만 승격
   try{
     const d=await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
     if(d && d.status==='done'){
@@ -15259,7 +15258,9 @@ function _rfTick(){
 // 렌더 전/후 좌측 빈 슬롯 — 좌측이 미리보기 자리임을 항상 보여준다
 function _finalIdleSlot(){
   const fv=document.getElementById('finalVideo');
-  if(fv && !fv.querySelector('video') && !document.getElementById('rfBar'))
+  // 편집 뒤 서버가 옛 완성본을 무효화했으면, SPA에 남은 <video>도 반드시 걷는다.
+  // 기존 조건은 video가 있을 때 아무것도 하지 않아 이전 final.mp4를 계속 보여줬다.
+  if(fv && !document.getElementById('rfBar'))
     fv.innerHTML=`<div style="aspect-ratio:9/16;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:20px">
       <div style="font-size:30px;opacity:.5">🎬</div>
       <div style="font-size:12px;line-height:1.6">최종 렌더를 누르면<br>완성 영상이 여기서 재생돼요</div>

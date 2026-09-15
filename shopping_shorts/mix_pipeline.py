@@ -2868,11 +2868,10 @@ def clean_final_matches_plan(job, work):
       서명이 이미 파일명에 있으므로 새로 계산할 것 없이 대조만 하면 된다(0순위-B).
     실패하면 False — 원본에서 뜬다(틀린 장면보다 자막 있는 정확한 장면이 낫다)."""
     try:
-        cvp = (job or {}).get("clean_video_path")
-        if not cvp or not Path(cvp).exists():
-            return False
         if job.get("clean_sources"):
             return True     # 소스별 청소본 — 좌표계가 원본과 같아 애초에 안 썩는다
+        # 완성본 1편 청소의 정본은 서명 파일이다. 구형 clean_video_path의 존재를
+        # 선행조건으로 두면 정본만 저장한 새 작업을 거짓으로 판정한다.
         return clean_final_path_for_plan(job, work) is not None
     except Exception:      # noqa: BLE001
         return False

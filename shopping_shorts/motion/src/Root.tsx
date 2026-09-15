@@ -29,6 +29,11 @@ import {ListReveal} from './ListReveal';
 import {CalloutCard} from './CalloutCard';
 import {SceneRemotion} from './SceneRemotion';
 import {FullReel} from './FullReel';
+import {LandingHeroWall, HERO_WALL} from './LandingHeroWall';
+import {LandingSquare, SQUARE, SQUARES} from './LandingSquare';
+import {TOURS, TOUR_BASE} from './LandingTour';
+import {FlowCell, FLOWS, FLOW_BASE} from './LandingFlow';
+import {PriceCompare, PRICE, FreeBanner, BANNER, SqRender, SQ4, HookWall, HOOK, TrendBanner, TREND, Easy60, EASY} from './LandingPromo';
 
 // 릴리리아 자막용 폰트를 @font-face로 등록(Remotion public/). 없으면 다른 폰트로 그려져 느낌이 깨진다.
 const lilyFontHandle = delayRender('lily-font');
@@ -47,6 +52,7 @@ if (typeof document !== 'undefined') {
 
 export const RemotionRoot: React.FC = () => (
   <>
+<<<<<<< HEAD
     {/* 썰쇼츠 자막 오버레이 — 컷은 --props 로 넘긴다.
         길이는 마지막 컷의 끝(+여유 0.5초)에서 자동으로 정한다. */}
     <Composition
@@ -140,6 +146,24 @@ export const RemotionRoot: React.FC = () => (
       height={1920}
       defaultProps={{text: '이게 정말 진정한 행복 같아요!', highlight: '행복', preset: 'hee_pink', position: 'mid'}}
     />
+=======
+    <Composition id="LandingHeroWall" component={LandingHeroWall} {...HERO_WALL} />
+    <Composition id="PriceCompare" component={PriceCompare} {...PRICE} />
+    <Composition id="FreeBanner" component={FreeBanner} {...BANNER} />
+    <Composition id="SqRender" component={SqRender} {...SQ4} />
+    {Object.entries(FLOWS).map(([id, props]) => (
+      <Composition key={id} id={`Flow-${id.replace(/_/g, "-")}`} component={FlowCell} {...FLOW_BASE} durationInFrames={props.dur} defaultProps={props} />
+    ))}
+    <Composition id="HookWall" component={HookWall} {...HOOK} />
+    <Composition id="TrendBanner" component={TrendBanner} {...TREND} />
+    <Composition id="Easy60" component={Easy60} {...EASY} />
+    {Object.entries(TOURS).map(([id, t]) => (
+      <Composition key={id} id={`LandingTour-${id.replace(/_/g, '-')}`} component={t.component} {...TOUR_BASE} durationInFrames={t.durationInFrames} />
+    ))}
+    {Object.entries(SQUARES).map(([id, props]) => (
+      <Composition key={id} id={`LandingSquare-${id.replace(/_/g, "-")}`} component={LandingSquare} {...SQUARE} defaultProps={props} />
+    ))}
+>>>>>>> 3e390e52ac9d553f127d75b2579f5437ac526efc
     <Composition id="SwipeLeft" component={SwipeLeft} durationInFrames={18} fps={30} width={720} height={1280} />
     <Composition id="Sparkle" component={Sparkle} durationInFrames={30} fps={30} width={300} height={300} />
     <Composition
