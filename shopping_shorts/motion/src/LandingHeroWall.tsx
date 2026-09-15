@@ -46,7 +46,7 @@ const COL_DIR = [1, -1, 1]; // 1 = 위로, -1 = 아래로 (offset을 빼므로 �
 const FONT = 'HeroKR';
 
 // ── 폰트 로드(로컬 파일, 모든 한글/숫자 글리프 포함) ──
-const useFont = () => {
+export const useFont = () => {
   const [handle] = useState(() => delayRender('load font'));
   useEffect(() => {
     const f = new FontFace(FONT, `url(${staticFile('fonts/NotoSansKR-VF.otf')})`, {weight: '100 900'});

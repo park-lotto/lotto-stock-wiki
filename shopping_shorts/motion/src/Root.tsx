@@ -9,10 +9,14 @@ import {SceneRemotion} from './SceneRemotion';
 import {FullReel} from './FullReel';
 import {LandingHeroWall, HERO_WALL} from './LandingHeroWall';
 import {LandingSquare, SQUARE, SQUARES} from './LandingSquare';
+import {TOURS, TOUR_BASE} from './LandingTour';
 
 export const RemotionRoot: React.FC = () => (
   <>
     <Composition id="LandingHeroWall" component={LandingHeroWall} {...HERO_WALL} />
+    {Object.entries(TOURS).map(([id, t]) => (
+      <Composition key={id} id={`LandingTour-${id.replace(/_/g, '-')}`} component={t.component} {...TOUR_BASE} durationInFrames={t.durationInFrames} />
+    ))}
     {Object.entries(SQUARES).map(([id, props]) => (
       <Composition key={id} id={`LandingSquare-${id.replace(/_/g, "-")}`} component={LandingSquare} {...SQUARE} defaultProps={props} />
     ))}
