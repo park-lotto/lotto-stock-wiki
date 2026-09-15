@@ -143,6 +143,17 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 .sq{position:relative;aspect-ratio:1/1;border-radius:22px;overflow:hidden;background:#05080b;border:2px solid var(--line);transition:border-color .5s,box-shadow .5s}
 .fs.on .sq{border-color:var(--mint);box-shadow:0 0 0 4px rgba(111,240,214,.12),0 24px 60px rgba(111,240,214,.18)}
 .sq video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* 칸 팝업 — 원본 해상도 조각을 1배 이하로만 띄운다(확대하면 글자가 깨진다) */
+.sq .pop{position:absolute;left:50%;top:48%;z-index:2;max-width:86%;max-height:62%;width:auto;height:auto;border-radius:14px;border:3px solid var(--mint);
+  box-shadow:0 20px 60px rgba(0,0,0,.7),0 0 0 6px rgba(111,240,214,.12);transform:translate(-50%,-50%) scale(.5);opacity:0;animation:sqPop 6s cubic-bezier(.2,1.3,.4,1) infinite;
+  image-rendering:auto;object-fit:contain;background:#0b1118;padding:0}
+.sq::before{content:'';position:absolute;inset:0;z-index:1;background:rgba(4,7,10,.6);opacity:0;animation:sqDim 6s ease infinite;pointer-events:none}
+.pp2 .pop,.pp2::before{animation-delay:.4s}.pp3 .pop,.pp3::before{animation-delay:.8s}.pp4 .pop,.pp4::before{animation-delay:1.2s}
+.pp4 .pop{max-height:66%}
+@keyframes sqPop{0%,14%{opacity:0;transform:translate(-50%,-44%) scale(.5)}24%{opacity:1;transform:translate(-50%,-50%) scale(1.03)}30%,78%{opacity:1;transform:translate(-50%,-50%) scale(1)}90%,100%{opacity:0;transform:translate(-50%,-46%) scale(.6)}}
+@keyframes sqDim{0%,14%{opacity:0}24%,80%{opacity:1}92%,100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.sq .pop{animation:none;opacity:1;transform:translate(-50%,-50%)}.sq::before{animation:none;opacity:1}}
+.tour .wide video{object-fit:contain!important;background:#0b1118}
 .sq img{object-fit:contain!important;object-position:center 42%!important;padding:50px 4px 60px;background:#0b1118;image-rendering:auto}
 /* 칸 안에서 "이게 뭘 보여주는지" 바로 읽히게 — 위에 큰 단계명, 아래에 입력→결과 */
 .sq .cap{position:absolute;left:14px;top:14px;z-index:3;display:flex;align-items:center;gap:8px;background:rgba(6,10,14,.82);backdrop-filter:blur(4px);border:1px solid rgba(111,240,214,.35);border-radius:12px;padding:8px 14px;font-size:22px;font-weight:900}
@@ -236,10 +247,10 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
   <h2 class=reveal>담기만 하면, <span class=hl>네 단계</span>로 영상이 됩니다</h2>
   <p class="lead reveal">원본 영상을 담으면 장면을 읽고, 대본을 쓰고, 장면을 맞춰 완성본까지 뽑아냅니다.</p>
   <div class="flow reveal" id=flow>
-    <div class=fs><div class=sq data-video=sq_1 data-label="장면분석"><div class=cap><i>1</i>장면분석</div><div class=io><span>영상을 담으면</span><b>→</b><strong>장면마다 무엇이 나오는지 AI가 적어줌</strong></div></div></div>
-    <div class=fs><div class=sq data-video=sq_2b data-label="대본생성"><div class=cap><i>2</i>대본생성</div><div class=io><span>잘 된 영상의 구성으로</span><b>→</b><strong>내 제품 대본이 자동으로 써짐</strong></div></div></div>
-    <div class=fs><div class=sq data-video=sq_3b data-label="장면매칭"><div class=cap><i>3</i>장면매칭</div><div class=io><span>대본 한 줄마다</span><b>→</b><strong>딱 맞는 장면이 자동으로 붙음</strong></div></div></div>
-    <div class=fs><div class=sq data-video=sq_4 data-label="렌더화면"><div class=cap><i>4</i>렌더화면</div><div class=io><span>버튼 한 번에</span><b>→</b><strong>자막·음성 입힌 완성 쇼츠가 나옴</strong></div></div></div>
+    <div class=fs><div class="sq pp1" data-video=sq_1 data-label="장면분석"><img class=pop alt="" src="/static/landing/pop_1.png"><div class=cap><i>1</i>장면분석</div><div class=io><span>영상을 담으면</span><b>→</b><strong>장면마다 무엇이 나오는지 AI가 적어줌</strong></div></div></div>
+    <div class=fs><div class="sq pp2" data-video=sq_2 data-label="대본생성"><img class=pop alt="" src="/static/landing/pop_2.png"><div class=cap><i>2</i>대본생성</div><div class=io><span>잘 된 영상의 구성으로</span><b>→</b><strong>내 제품 대본이 자동으로 써짐</strong></div></div></div>
+    <div class=fs><div class="sq pp3" data-video=sq_3 data-label="장면매칭"><img class=pop alt="" src="/static/landing/pop_3.png"><div class=cap><i>3</i>장면매칭</div><div class=io><span>대본 한 줄마다</span><b>→</b><strong>딱 맞는 장면이 자동으로 붙음</strong></div></div></div>
+    <div class=fs><div class="sq pp4" data-video=sq_4 data-label="렌더화면"><img class=pop alt="" src="/static/landing/pop_4.png"><div class=cap><i>4</i>렌더화면</div><div class=io><span>버튼 한 번에</span><b>→</b><strong>자막·음성 입힌 완성 쇼츠가 나옴</strong></div></div></div>
   </div>
 </div>
 </div>
