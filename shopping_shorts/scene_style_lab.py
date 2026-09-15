@@ -492,6 +492,8 @@ def frame_for_scene(
 
 def verify_capcut_overlay_draft(draft: dict, expected_layers: list[dict]) -> None:
     """CapCut JSON을 다시 읽어 장면 레이어의 개수와 μs 타이밍을 역검증한다."""
+    from .capcut_draft import _us
+
     track = next(
         (item for item in (draft or {}).get("tracks", [])
          if item.get("name") == "scene-style-overlay"),
@@ -500,11 +502,10 @@ def verify_capcut_overlay_draft(draft: dict, expected_layers: list[dict]) -> Non
     if track is None:
         raise LabPreconditionError("CapCut 장면꾸미기 트랙이 없습니다")
     actual = [segment.get("target_timerange") for segment in track.get("segments", [])]
-    expected = [
-        {"start": round(float(layer["start"]) * 1_000_000),
-         "duration": round((float(layer["end"]) - float(layer["start"])) * 1_000_000)}
-        for layer in expected_layers
-    ]
+    expected = []
+    for layer in expected_layers:
+        start = _us(layer["start"])
+        expected.append({"start": start, "duration": _us(layer["end"]) - start})
     if actual != expected:
         raise LabPreconditionError("CapCut 장면꾸미기 타이밍이 실제 자막 타임라인과 다릅니다")
 
