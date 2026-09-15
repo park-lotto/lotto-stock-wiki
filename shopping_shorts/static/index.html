@@ -587,7 +587,10 @@ body.is-admin .admin-only{display:block}
     <div class="tabs" id="spanTabs" style="margin-bottom:8px">
       <span class="tab-grp">기간</span>
       <!-- ⚡12시간 탭 제거(2026-09-14 사장님 "12시간을 빼는게 좋겠다") — 썰 470채널 중 12h 게시 22채널뿐이라 늘 빈약 -->
-      <div class="tab active" data-span="0" data-hours="24" title="마지막 수집 회차 중 올라온 지 24시간 이내인 것만 — 하루치 신선한 것을 봅니다(발행시각을 모르는 플랫폼은 수집 기준)">🔆 24시간 히트작</div>
+      <!-- ★베스트(2026-09-15 사장님 "탭 맨앞에 하나 만들고 24·48시간·이번주·이번달에서 제일 괜찮은거 중복없이").
+           네 기간을 따로 불러 기간마다 상위만 뽑아 합친다 — 같은 영상은 한 번만(shortcode). -->
+      <div class="tab active" data-span="-2" title="24시간·48시간·이번 주·이번 달에서 기간마다 조회수 상위만 뽑아 겹치지 않게 모았습니다">🏅 베스트</div>
+      <div class="tab" data-span="0" data-hours="24" title="마지막 수집 회차 중 올라온 지 24시간 이내인 것만 — 하루치 신선한 것을 봅니다(발행시각을 모르는 플랫폼은 수집 기준)">🔆 24시간 히트작</div>
       <div class="tab" data-span="0" data-hours="48" title="마지막 수집 회차 중 올라온 지 48시간 이내인 것만 — 빠르게 터지는 것을 봅니다(발행시각을 모르는 플랫폼은 수집 기준)">🆕 48시간 히트작</div>
       <div class="tab" data-span="7" title="최근 7일 수집분 중 댓글 500개 넘은 것 — 이미 받아둔 데이터라 새로 긁지 않습니다">🔥 이번 주 터진 것</div>
       <div class="tab" data-span="30" title="최근 30일 중 댓글 1000개 넘은 것">👑 이번 달 명예의전당</div>
@@ -641,6 +644,15 @@ body.is-admin .admin-only{display:block}
       <button class="ftog" data-g="rising" onclick="setGrade('rising')">📈 급상승</button>
       <button class="ftog" data-g="small" onclick="setGrade('small')">🚀 구독자 대비 터짐</button>
       <span class="fcount" id="gradeCount"></span>
+    </div>
+    <!-- ★이번 주 추세(2026-09-15 사장님 "24·48시간엔 10만·100만이 없고 이번 주 터진 것에만 있다 —
+         이번주 10만뷰 추세 / 이번주 100만뷰 대박추세를 넘는 걸로"). 판정은 trendOf 한 곳. -->
+    <div class="filters" id="trendFilters">
+      <span class="flabel">이번 주 추세</span>
+      <button class="ftog on" data-t="" onclick="setTrend('')" title="추세와 상관없이 전부">전체</button>
+      <button class="ftog" data-t="wk100k" onclick="setTrend('wk100k')">📈 이번주 10만뷰 추세</button>
+      <button class="ftog" data-t="wk1m" onclick="setTrend('wk1m')">🚀 이번주 100만뷰 대박추세</button>
+      <span class="fcount" id="trendCount"></span>
     </div>
     <!-- ★건수 안내는 걸러내기 줄 **밖에** 둔다(2026-09-07).
          여태 이 문구는 위 div(#filters) 안에 있었고 그 div가 display:none이라
@@ -805,6 +817,7 @@ const CTYPE_HIDDEN = {instagram:["썰쇼핑", "장비템", "차량템"],
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:"", style:"",
              // 뱃지 필터(2026-09-10) — 지난번 고른 것을 기억한다. 읽기 실패는 '전체'로.
              grade:(function(){ try{ return localStorage.getItem('refGrade') || ''; }catch(e){ return ''; } })(),
+             trend:'',
              filters:_loadFilters()};
 // 걸러내기 상태는 브라우저에 기억시킨다 — 새로고침마다 다시 켜게 하면 아무도 안 쓴다.
 function _loadFilters(){
@@ -842,6 +855,13 @@ function setGrade(g){
   document.querySelectorAll('#gradeFilters .ftog').forEach(b =>
     b.classList.toggle('on', (b.dataset.g || '') === STATE.grade));
   try{ localStorage.setItem('refGrade', STATE.grade); }catch(e){}
+  render();
+}
+// 이번 주 추세 필터(2026-09-15). ''=전체 / 'wk100k'(10만 이상 추세, 100만 포함) / 'wk1m'.
+function setTrend(t){
+  STATE.trend = t || '';
+  document.querySelectorAll('#trendFilters .ftog').forEach(b =>
+    b.classList.toggle('on', (b.dataset.t || '') === STATE.trend));
   render();
 }
 // 한 번에 그릴 카드 수 상한(2026-08-18). 유튜브는 5,681장이라 전부 그리면 탭 전환이 멈춘다.
@@ -1792,6 +1812,33 @@ function recencyMs(i){
   return null;
 }
 
+// ★지금 기준 경과(시) — 발행시각이 있으면 그것, 없으면 수집 스냅샷(age_hours+흐른 시간).
+//   fmtAgo와 추세 판정이 **같은 셈**을 쓴다(0순위-B). 기간 탭 항목은 age_hours가 없고
+//   upload_ts/first_seen만 있어 ageHoursNow만 쓰면 전부 '모름'이 된다.
+function ageHoursAny(i){
+  const t = recencyMs(i);
+  if(t != null) return Math.max(0, (Date.now()-t)/3.6e6);
+  return ageHoursNow(i);
+}
+// ── 이번 주 추세 — 여기 한 곳에서만 정한다(2026-09-15) ─────────────────────────
+//   "지금까지의 하루 평균 속도가 7일째까지 이어지면 몇 뷰가 되나"(7일이 지난 건 실제 조회수).
+//   6시간 미만은 6시간으로 본다 — 막 올라온 영상의 속도가 과하게 부풀지 않게.
+//   조회수 축 플랫폼만(인스타는 댓글 축이라 제외).
+const TREND_RULE = {wk100k: 100000, wk1m: 1000000};
+function trendProj(i){
+  if(gradeRule().axis !== 'views') return null;
+  const v = i.views || 0, h = ageHoursAny(i);
+  if(!v || h == null) return null;
+  const d = Math.max(h, 6) / 24;
+  return d >= 7 ? v : Math.max(v, v / d * 7);
+}
+function trendOf(i){
+  const p = trendProj(i);
+  if(p == null) return null;
+  if(p >= TREND_RULE.wk1m) return 'wk1m';
+  if(p >= TREND_RULE.wk100k) return 'wk100k';
+  return null;
+}
 function recencyKey(i){
   const t = recencyMs(i);
   if (t != null) return t;                         // epoch ms — 클수록 최신
@@ -2071,6 +2118,13 @@ function badgeHTML(i, ctx){
   if(g){
     const b = GRADE_LABEL[g];
     h+=`<span class="ibadge ${b.c}"><span class="emo">${b.e}</span><span class="lbl">${b.t}</span></span>`;
+  }
+  const tr = trendOf(i);
+  if(tr){
+    const p = Math.round(trendProj(i) / 10000);
+    h += tr === 'wk1m'
+      ? `<span class="ibadge red" title="이 속도면 이번 주 약 ${p.toLocaleString()}만 뷰"><span class="emo">🚀</span><span class="lbl">주100만 추세</span></span>`
+      : `<span class="ibadge green" title="이 속도면 이번 주 약 ${p.toLocaleString()}만 뷰"><span class="emo">📈</span><span class="lbl">주10만 추세</span></span>`;
   }
   // 조회수 배지 제거(2026-08-14) — 지표줄에 이미 있고, 재생 컨트롤과 겹치는 자리였다.
   return h;
@@ -2368,6 +2422,16 @@ function render(opts){
     const want = STATE.grade;
     items = items.filter(i => gradeOf(i) === want);
   }
+  {
+    const tc = {wk100k:0, wk1m:0};
+    for(const i of items){ const t = trendOf(i); if(t==='wk1m'){ tc.wk1m++; tc.wk100k++; } else if(t==='wk100k') tc.wk100k++; }
+    const tEl = document.getElementById('trendCount');
+    if(tEl) tEl.textContent = `📈 ${tc.wk100k} · 🚀 ${tc.wk1m}`;
+    const tf = document.getElementById('trendFilters');
+    if(tf) tf.style.display = (gradeRule().axis === 'views') ? '' : 'none';
+    if(STATE.trend === 'wk1m') items = items.filter(i => trendOf(i) === 'wk1m');
+    else if(STATE.trend === 'wk100k') items = items.filter(i => { const t = trendOf(i); return t === 'wk100k' || t === 'wk1m'; });
+  }
   const _beforeFilter = items.length;
   if(STATE.filters.fresh || STATE.filters.rising){
     const cut = STATE.filters.rising ? _risingCut(items) : 0;
@@ -2662,11 +2726,7 @@ function fmtAgo(i){
   // 고정돼 보였음 — 실제 시각이 있으면 지금 기준으로 계산한다.
   // ★정렬과 **같은 필드 우선순위**를 쓴다(recencyMs). 표시와 정렬이 다른 값을 보면
   //   "최신순인데 위쪽이 더 오래돼 보이는" 어긋남이 난다(0순위-B).
-  let h = ageHoursNow(i) || 0;
-  const t = recencyMs(i);
-  if(t != null){
-    h = Math.max(0, (Date.now()-t)/3.6e6);
-  }
+  const h = ageHoursAny(i) || 0;
   if(h < 1) return Math.max(1, Math.round(h*60)) + '분 전';
   if(h < 48) return Math.round(h) + '시간 전';
   return Math.round(h/24) + '일 전';
@@ -2998,8 +3058,9 @@ async function doCensus(){
 }
 // 기간 탭 상태(2026-08-17). 0=마지막 수집분(종전 동작), 7·30=이미 받아둔 이력에서 터진 것.
 // 30일은 문턱을 1000으로 올린다 — 500으로 두면 692건이라 '명예의전당'이 안 된다(실측).
-// SPAN_DAYS: 0=마지막 수집분, 7·30=기간별 히트, -1=역대 히트작(누적 아카이브)
-let SPAN_DAYS = 0;
+// SPAN_DAYS: -2=베스트(기간별 상위 합본), 0=마지막 수집분, 7·30=기간별 히트, -1=역대 히트작(누적 아카이브)
+// ★기본 탭은 마크업의 class="active" 한 곳이 정한다(SPAN_HOURS와 같은 원칙) — 베스트(-2)가 기본.
+let SPAN_DAYS = parseInt((document.querySelector('#spanTabs .tab.active') || {}).dataset?.span || "0", 10);
 // SPAN_DAYS===0(마지막 수집분) 안에서 몇 시간까지 볼지. 12=갓 올라온 것만,
 // 24=기본(하루치), 48=넓게.
 // 서버 요청은 세 탭이 완전히 같다(days=0 → load_last_run) — 자르는 건 화면 한 곳뿐이다.
@@ -3025,9 +3086,46 @@ const _SPAN_MIN_COMMENTS = {7: 200, 30: 300};
 //   인스타 기간탭 규모(이번주 594 · 이번달 281)와 비슷하게 맞춘 값이다.
 const _SPAN_MIN_VIEWS = {youtube: {7: 100000, 30: 500000}};
 
+// 🏅 베스트 — 기간마다 조회수(인스타는 댓글) 상위만 뽑아 합친다(중복 제거).
+const BEST_TAKE = {h24: 30, h48: 30, d7: 40, d30: 40};
+function _spanUrl(days){
+  const mv = (_SPAN_MIN_VIEWS[PLATFORM]||{})[days] || 0;
+  return "/api/reference?platform="+PLATFORM+"&days="+days
+       + "&min_comments="+(mv ? 0 : (_SPAN_MIN_COMMENTS[days]||500)) + (mv ? "&min_views="+mv : "");
+}
+async function loadBest(){
+  const j = u => fetch(u).then(r => r.json()).catch(() => ({items:[]}));
+  const [last, w, m] = await Promise.all([j("/api/reference?platform="+PLATFORM), j(_spanUrl(7)), j(_spanUrl(30))]);
+  COLLECTED_AT_MS = last.collected_at ? (Date.parse(last.collected_at) || 0) : 0;
+  const key = i => (gradeRule().axis === 'views') ? (i.views||0) : (i.comments||0);
+  const top = (arr, n) => arr.slice().sort((a,b) => key(b)-key(a)).slice(0, n);
+  const li = last.items || [];
+  const buckets = [
+    ['24시간', top(li.filter(i => { const h = ageHoursAny(i); return h != null && h <= 24; }), BEST_TAKE.h24)],
+    ['48시간', top(li.filter(i => { const h = ageHoursAny(i); return h != null && h <= 48; }), BEST_TAKE.h48)],
+    ['이번 주', top(w.items || [], BEST_TAKE.d7)],
+    ['이번 달', top(m.items || [], BEST_TAKE.d30)],
+  ];
+  const seen = new Set(), out = [], cnt = {};
+  for(const [name, arr] of buckets){
+    cnt[name] = 0;
+    for(const i of arr){
+      const k = i.shortcode || i.url; if(!k || seen.has(k)) continue;
+      seen.add(k); i._best = name; out.push(i); cnt[name]++;
+    }
+  }
+  STATE.items = out;
+  try{ renderStyles(); }catch(e){}
+  render();
+  const st = document.getElementById("status");
+  st.textContent = out.length
+    ? `🏅 베스트 ${out.length}건 — 24시간 ${cnt['24시간']} · 48시간 ${cnt['48시간']} · 이번 주 ${cnt['이번 주']} · 이번 달 ${cnt['이번 달']} (겹치는 건 한 번만)`
+    : "베스트로 모을 영상이 아직 없습니다.";
+}
 async function loadLast(){
+  if(SPAN_DAYS === -2) return loadBest();
   let url = "/api/reference?platform="+PLATFORM;
-  if(SPAN_DAYS < 0){
+  if(SPAN_DAYS === -1){
     url += "&archive=1&min_comments="+ARC_MIN+"&max_comments="+ARC_MAX;
   } else if(SPAN_DAYS > 0){
     const mv = (_SPAN_MIN_VIEWS[PLATFORM]||{})[SPAN_DAYS] || 0;
@@ -3053,12 +3151,16 @@ async function loadLast(){
     st.textContent = SPAN_DAYS !== 0
       ? "이 조건에 맞는 영상이 없습니다."
       : "아직 수집 결과가 없습니다. (관리자 수집 대기)";
-  } else if(SPAN_DAYS < 0){
+  } else if(SPAN_DAYS === -1){
     st.textContent = ARC_MAX
       ? `역대 · 댓글 ${ARC_MIN.toLocaleString()}~${ARC_MAX.toLocaleString()}개 ${STATE.items.length}건 (새로 긁지 않음)`
       : `역대 · 댓글 ${ARC_MIN.toLocaleString()}개 이상 ${STATE.items.length}건 (새로 긁지 않음)`;
   } else if(SPAN_DAYS > 0){
-    st.textContent = `최근 ${SPAN_DAYS}일 · 댓글 ${(_SPAN_MIN_COMMENTS[SPAN_DAYS]||500).toLocaleString()}개 이상 ${STATE.items.length}건`;
+    // ★유튜브는 조회수 문턱으로 부른다 — 안내도 같은 값에서 만든다(종전엔 '댓글 200개 이상'이라 적혀 틀렸다).
+    const _mv = (_SPAN_MIN_VIEWS[PLATFORM]||{})[SPAN_DAYS] || 0;
+    st.textContent = _mv
+      ? `최근 ${SPAN_DAYS}일 · 조회수 ${_fmtViews(_mv)} 이상 ${STATE.items.length}건`
+      : `최근 ${SPAN_DAYS}일 · 댓글 ${(_SPAN_MIN_COMMENTS[SPAN_DAYS]||500).toLocaleString()}개 이상 ${STATE.items.length}건`;
   } else {
     // ★'마지막 수집: …' 한 줄은 뗐다(2026-08-17 사장님). 다른 기간 탭의 안내
     //   ("역대 · 댓글 1만개 이상 361건" 등)은 정보가 있으니 그대로 둔다.
@@ -3082,7 +3184,7 @@ document.addEventListener("click", (e)=>{
   SPAN_HOURS = parseInt(t.dataset.hours || "48", 10);
   // 문턱 버튼은 역대 탭에서만 — 기간 탭은 문턱이 고정이라 보여줄 게 없다
   const th = document.getElementById("arcThresh");
-  if(th) th.style.display = (SPAN_DAYS < 0) ? "inline-block" : "none";
+  if(th) th.style.display = (SPAN_DAYS === -1) ? "inline-block" : "none";
   loadLast();
 });
 
