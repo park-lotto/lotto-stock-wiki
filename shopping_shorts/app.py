@@ -12249,10 +12249,12 @@ def _landing_hits():
     ph = ",".join("?" * len(cats))
     with st._conn() as c:
         rows = c.execute(
-            f"SELECT shortcode, username, name, caption, views FROM reel_history "
+            f"SELECT shortcode, username, name, caption, views, first_seen FROM reel_history "
             f"WHERE platform='youtube' AND views>=1000000 AND category IN ({ph}) "
-            f"ORDER BY views DESC LIMIT 200", cats).fetchall()
-    items = [{"id": r[0], "name": r[2] or "", "title": (r[3] or "")[:60], "views": int(r[4] or 0)}
+            f"ORDER BY first_seen DESC, views DESC LIMIT 200", cats).fetchall()
+    # ★최근에 랭킹에 잡힌 순서(사장님 "매일 랭킹에 수집되는 대박 쇼츠") — 날짜를 같이 준다.
+    items = [{"id": r[0], "name": r[2] or "", "title": (r[3] or "")[:60], "views": int(r[4] or 0),
+              "seen": (r[5] or "")[:10]}
              for r in rows if (r[1] or "").strip().lstrip("@").lower() not in blocked and r[0]]
     data = {"ok": True, "count": len(items), "items": items[:36]}
     _LANDING_HITS_CACHE.update(at=now, data=data)
