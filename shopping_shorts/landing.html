@@ -204,6 +204,12 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
 @media(max-width:820px){.hero,.step{grid-template-columns:1fr}.step:nth-child(even) .media{order:0}.made{grid-template-columns:repeat(2,1fr)}.all,.checks{grid-template-columns:1fr}
 .dl .p{text-align:left}.hero{text-align:center}.hero .sub{margin-left:auto;margin-right:auto}.hero .row{justify-content:center}}
+.nobrain{font-size:clamp(22px,2.6vw,32px);font-weight:900;color:#fff;margin-bottom:14px;line-height:1.25;letter-spacing:-.5px}
+.nobrain em{font-style:normal;color:#111;background:#ffd84d;padding:0 8px;border-radius:6px}
+.nobrain small{display:block;font-size:15px;font-weight:600;color:#9fb8b0;margin-top:6px}
+.fban{display:block;max-width:1100px;margin:0 auto;border-radius:18px;overflow:hidden;border:1px solid #1f3a33}
+.fban .wide{aspect-ratio:1600/360}.pcmp{max-width:900px;margin:0 auto 22px;aspect-ratio:1280/640;border-radius:18px;overflow:hidden}
+.fban video,.pcmp video,.fban img,.pcmp img{width:100%;height:100%;object-fit:contain;display:block}
 </style></head><body>
 
 <div class=dl><div class=in>
@@ -219,7 +225,7 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 
 <div class=hero>
   <div>
-    <span class=badge>쇼핑쇼츠 제작 도구 · __NAME__</span>
+    <div class=nobrain>오늘 <em>뭘 만들지</em> 고민 끝.<small>매일 터진 100만뷰 쇼츠가 이미 줄 서 있습니다</small></div>
     <h1 class=display>오른쪽 <span class=hl>100만뷰 쇼츠</span>,<br>당신 제품으로<br><span class=gl>10분이면 똑같이.</span></h1>
     <ul class=pts>
       <li><b>①</b><span><em>매일</em> 조회수 터진 쇼핑쇼츠를 찾아 줄 세웁니다</span></li>
@@ -243,9 +249,9 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 </div>
 
 <div class=sec>
-  <span class="kicker reveal">한 편이 만들어지는 과정</span>
-  <h2 class=reveal>담기만 하면, <span class=hl>네 단계</span>로 영상이 됩니다</h2>
-  <p class="lead reveal">원본 영상을 담으면 장면을 읽고, 대본을 쓰고, 장면을 맞춰 완성본까지 뽑아냅니다.</p>
+  <span class="kicker reveal">어렵지 않습니다</span>
+  <h2 class=reveal>단계만 따라가면 <span class=hl>60대도 만듭니다</span></h2>
+  <p class="lead reveal">편집 몰라도 됩니다. <b>버튼 네 번</b>이면 영상을 담아 대본·장면·자막까지 완성본이 나옵니다.</p>
   <div class="flow reveal" id=flow>
     <div class=fs><div class="sq pp1" data-video=sq_1 data-label="장면분석"><img class=pop alt="" src="/static/landing/pop_1.png"><div class=cap><i>1</i>장면분석</div><div class=io><span>영상을 담으면</span><b>→</b><strong>장면마다 무엇이 나오는지 AI가 적어줌</strong></div></div></div>
     <div class=fs><div class="sq pp2" data-video=sq_2 data-label="대본생성"><img class=pop alt="" src="/static/landing/pop_2.png"><div class=cap><i>2</i>대본생성</div><div class=io><span>잘 된 영상의 구성으로</span><b>→</b><strong>내 제품 대본이 자동으로 써짐</strong></div></div></div>
@@ -267,16 +273,10 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
   </div>
 </div>
 
-<div class="stats reveal">
-  <div class=st><b id=stHit>—</b><span>찾아낸 100만뷰+ 쇼핑쇼츠</span></div>
-  <div class=st><b><span class=cnt data-to=6>0</span>곳</b><span>한 번에 찾는 영상 사이트</span></div>
-  <div class=st><b><span class=cnt data-to=4>0</span>단계</b><span>담기부터 완성본까지</span></div>
-  <div class=st><b>0개</b><span>설치할 프로그램</span></div>
-</div>
-
 <div class=sec>
   <span class="kicker reveal">이렇게 씁니다</span>
-  <h2 class=reveal>눌러보면 <span class=hl>바로 이해됩니다</span></h2>
+  <h2 class=reveal>찾기·대본·장면, <span class=hl>전부 버튼 하나</span></h2>
+  <p class="lead reveal">레퍼런스 찾는 데 하루, 편집에 이틀 쓰던 일을 <b>10분</b>으로 줄였습니다.</p>
   <div class="tour reveal" id=tour>
     <div class=tabs>
       <button data-i=0 class=on>🔥 레퍼런스 랭킹</button>
@@ -295,21 +295,18 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 </div>
 
 <div class="sec reveal">
-  <div class=easy>
-    <div><span>💻</span><b>설치 없음</b><small>브라우저로 바로</small></div>
-    <div><span>🔑</span><b>API 키 한 번</b><small><a href="/api_manual.html">발급 방법 →</a></small></div>
-    <div><span>🎁</span><b>무료로 먼저</b><small>써보고 결정</small></div>
-  </div>
+  <a class=fban href="/login"><div class=wide data-video=free_banner data-label="무료로 레퍼런스 랭킹 체험하기"></div></a>
   <p class=fine>AI·검색 API 요금은 각 제공업체 정책을 따릅니다 · 결제 전 <a href="/refund">환불정책</a>을 꼭 확인해 주세요.</p>
 </div>
 
 <div class="sec reveal">
+  <div class=pcmp data-video=price_compare data-label="1기 770,000원 · 2기 880,000원"></div>
   <div class=price>
     <span class=tag>1기 모집 · __DEADLINE_LABEL__ 마감</span>
     <div class=nm>__PRO_NAME__</div>
     <div class=was><s>정가 __LIST_PRICE__</s> <b style="color:#ff4d4d">__DISCOUNT__% 할인</b></div>
     <div class="now gl">__PRO_PRICE__</div>
-    <div class=why>⚠️ <b>__NEXT_START_LABEL__부터 __NEXT_PRICE__</b></div>
+    <div class=why>⚠️ <b>__NEXT_START_LABEL__부터 2기 __NEXT_PRICE__</b>으로 오릅니다.<br>1기 동안 프로그램 업데이트가 많아 2기부터 가격을 올립니다.</div>
     <a class=cta href="__CARD_HREF__">💳 카드로 1기 신청하기</a>
     <a class=alt href="__PAY_HREF__">계좌이체 · 결제 안내</a>
   </div>
@@ -378,7 +375,7 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
       setTimeout(function(){ kin.classList.add('out'); }, 2600);
       li = (li+1) % lines.length;
     }
-    say(); setInterval(say, 3000); document.getElementById('stHit').textContent = d.count+'편';
+    say(); setInterval(say, 3000); const _sh=document.getElementById('stHit'); if(_sh) _sh.textContent = d.count+'편';
     var cols=document.querySelectorAll('#wall .col');
     items.slice(0,18).forEach(function(it,i){
       var base='https://i.ytimg.com/vi/'+encodeURIComponent(it.id)+'/';
