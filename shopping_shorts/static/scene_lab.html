@@ -1893,6 +1893,11 @@ function restoreServer(msg){
   if (!hasServerEdit()) return false;
   lists = DATA.beats.map(b => serverList(b) || baseList(b));
   hydrateFixlen(fixlenFromBeats());    // ✋ 서버가 기억하는 손 길이도 같이
+  // 서버 편성의 구절 맞춤 끔 표식도 같이 — 안 가져오면 끈 칸이 켠 칸으로 열려 얼린 컷과 어긋난다
+  if (typeof PHRASE_SYNC !== "undefined"){
+    Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
+    (DATA.beats || []).forEach((b, i) => { if (b.phrase_sync === false) PHRASE_SYNC[i] = false; });
+  }
   if (typeof hydrateCuts === "function") hydrateCuts(...cutsFromBeats());   // 끈 칸의 얼린 컷도(2026-09-14)
   mode = 'hand';                       // 서버 편성 = 사람이 정한 배치다
   ['live','one','hand','pick'].forEach(x => {
