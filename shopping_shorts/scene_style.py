@@ -156,19 +156,35 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     return {"jobId":job_id,"text":text,"scenes":scenes}
 
 
+def render_layers(timeline, snapshot, output, headcopy=None, job_id=None):
+    """브라우저 미리보기와 외부 편집기가 함께 쓰는 투명 장면 레이어를 만든다."""
+    snapshot = validate_snapshot(snapshot)
+    context = context_for(timeline, headcopy, snapshot, job_id)
+    if not context["scenes"]:
+        raise ValueError("장면꾸미기에 연결할 실제 자막 타이밍이 없습니다")
+    output = Path(output).resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    request = output / "scene-style-request.json"
+    request.write_text(
+        json.dumps({"snapshot": snapshot, "context": context, "output": str(output)},
+                   ensure_ascii=False),
+        encoding="utf-8",
+    )
+    run = subprocess.run(
+        ["node", str(ROOT / "tools/render_scene_style.js"), str(request)],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=240,
+    )
+    if run.returncode:
+        raise RuntimeError("장면꾸미기 레이어 생성 실패: " + run.stderr[-1500:])
+    return json.loads((output / "scene-style-layers.json").read_text(encoding="utf-8"))
+
+
 def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
     from . import video_assemble as va
     snapshot=validate_snapshot(snapshot)
     context=context_for(timeline,headcopy,snapshot)
-    if not context["scenes"]:
-        raise ValueError("장면꾸미기에 연결할 실제 자막 타이밍이 없습니다")
     work=Path(work).resolve()
-    request=work/"scene-style-request.json"
-    request.write_text(json.dumps({"snapshot":snapshot,"context":context,"output":str(work)},ensure_ascii=False),encoding="utf-8")
-    run=subprocess.run(["node",str(ROOT/"tools/render_scene_style.js"),str(request)],capture_output=True,text=True,encoding="utf-8",errors="replace",timeout=240)
-    if run.returncode:
-        raise RuntimeError("장면꾸미기 레이어 생성 실패: "+run.stderr[-1500:])
-    layers=json.loads((work/"scene-style-layers.json").read_text(encoding="utf-8"))
+    layers=render_layers(timeline,snapshot,work,headcopy)
     parts=[]
     for index,(scene,layer) in enumerate(zip(context["scenes"],layers,strict=True)):
         first_frame, last_frame = round(scene["start"]*30), round(scene["end"]*30)

@@ -280,3 +280,22 @@ def frame_for_scene(
     if not frame:
         raise RuntimeError("시험용 청소 프레임을 추출하지 못했습니다")
     return Path(frame)
+
+
+def verify_capcut_overlay_draft(draft: dict, expected_layers: list[dict]) -> None:
+    """CapCut JSON을 다시 읽어 장면 레이어의 개수와 μs 타이밍을 역검증한다."""
+    track = next(
+        (item for item in (draft or {}).get("tracks", [])
+         if item.get("name") == "scene-style-overlay"),
+        None,
+    )
+    if track is None:
+        raise LabPreconditionError("CapCut 장면꾸미기 트랙이 없습니다")
+    actual = [segment.get("target_timerange") for segment in track.get("segments", [])]
+    expected = [
+        {"start": round(float(layer["start"]) * 1_000_000),
+         "duration": round((float(layer["end"]) - float(layer["start"])) * 1_000_000)}
+        for layer in expected_layers
+    ]
+    if actual != expected:
+        raise LabPreconditionError("CapCut 장면꾸미기 타이밍이 실제 자막 타임라인과 다릅니다")
