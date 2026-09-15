@@ -218,11 +218,13 @@ export const FreeBanner: React.FC = () => {
   );
 };
 
-// ── 3) ④ 렌더화면 칸 (1080x1080, 10s) — 완성 쇼츠 3편을 세로 크게 이어 재생(폰프레임·문구 없음) ─
-// 재료 public/render/full1~3.mp4 (608x1080, 서버 mix_jobs final.mp4에서 3.4s씩 축소 컷, gitignore)
-//   full1=291623f777ce(행주·RedCow) full2=a490cb5998fa(세탁기 청소) full3=434e0589793c(행주 2)
-export const SQ4 = {width: 1080, height: 1080, fps: 30, durationInFrames: 300};
-const FULL_F = 100; // 3.33s
+// ── 3) ④ 렌더화면 칸 (1080x1080, 10.4s) — 사장님이 고른 완성 쇼츠 4편을 세로 크게 이어 재생 ─
+// 재료 public/render/full1~4.mp4 (608x1080, 원본 1080x1920 축소, 2.7s씩, gitignore) — 원본은 바탕화면 KakaoTalk_*.mp4
+//   full1=KakaoTalk_20260828_023955618(가스렌지 전동청소기 16.0s~) full2=KakaoTalk_20260824_015356161(헤어 롤빗 0.3s~)
+//   full3=KakaoTalk_20260823_011355178(면도기 2.0s~) full4=KakaoTalk_20260823_015039780(이어폰 6.0s~)
+export const SQ4 = {width: 1080, height: 1080, fps: 30, durationInFrames: 312};
+const FULL_N = 4;
+const FULL_F = 78; // 2.6s
 const XF = 8; // 크로스페이드
 const FULL_W = 608;
 
@@ -236,7 +238,7 @@ export const SqRender: React.FC = () => {
   return (
     <AbsoluteFill style={{background: BG, overflow: 'hidden', opacity: fade}}>
       <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(60% 70% at 50% 50%, rgba(111,240,214,.07), transparent 70%)'}} />
-      {[0, 1, 2].map((i) => {
+      {Array.from({length: FULL_N}, (_, i) => i).map((i) => {
         const from = i * FULL_F;
         const inT = i === 0 ? 1 : interpolate(frame, [from, from + XF], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
         return (
@@ -374,9 +376,15 @@ export const TrendBanner: React.FC = () => {
   );
 };
 
-// ── 6) easy60.mp4 (1600x500, 8s) — "60대도 만듭니다" + 단계 버튼 1→4 차례로 눌림 ─
+// ── 6) easy60.mp4 (1600x500, 8s) — "60대도 만듭니다" + 제작소 단계바가 체크되며 흘러가 "완성본" ─
+// 단계 이름은 제작소 produce.html STEP_LABELS 그대로(개수·숫자 언급 없음)
 export const EASY = {width: 1600, height: 500, fps: 30, durationInFrames: 240};
-const STEPS = ['영상 담기', '대본 생성', '장면 매칭', '완성본'];
+const STEP_LABELS = ['영상추출/분석', '대본생성', '영상대본MIX', 'TTS음성', '고품질 자막제거', '장면꾸미기', '썸네일', '제목·태그', '완성본', 'SNS 예약'];
+const FINAL_IDX = 8;
+const PILL_GAP = 26;
+const PILL_W = 236;
+const ST0 = 24; // 첫 체크 프레임
+const ST_GAP = 19; // 체크 간격
 export const Easy60: React.FC = () => {
   useFont();
   const frame = useCurrentFrame();
@@ -386,60 +394,80 @@ export const Easy60: React.FC = () => {
     interpolate(frame, [0, 6], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
     interpolate(frame, [D - 8, D - 1], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
   );
-  const stepAt = (i: number) => 60 + i * 40; // 버튼 i 눌리는 프레임
-  const done = STEPS.filter((_, i) => frame >= stepAt(i)).length;
+  const at = (i: number) => ST0 + i * ST_GAP;
+  // 현재 체크된 단계가 화면 x=1000 근처에 오도록 띠가 왼쪽으로 흐른다(부드럽게)
+  const cur = Math.max(0, Math.min(FINAL_IDX, Math.floor((frame - ST0) / ST_GAP)));
+  const target = 980 - cur * (PILL_W + PILL_GAP);
+  const prevTarget = 980 - Math.max(0, cur - 1) * (PILL_W + PILL_GAP);
+  const t = frame >= ST0 ? interpolate(frame - at(cur), [0, 12], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 0;
+  const ease = t * t * (3 - 2 * t);
+  const offset = frame < ST0 ? 980 + 60 : prevTarget + (target - prevTarget) * ease;
+  const finalDone = frame >= at(FINAL_IDX);
+  const finalPop = spring({frame: frame - at(FINAL_IDX), fps, config: {damping: 10, stiffness: 200}});
+  const nextPress = spring({frame: (frame - ST0) % ST_GAP, fps, config: {damping: 8, stiffness: 300}});
   return (
     <AbsoluteFill style={{background: BG, overflow: 'hidden', opacity: fade}}>
-      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(50% 90% at 78% 50%, rgba(111,240,214,.12), transparent 70%)'}} />
-      {/* 왼쪽 문구 */}
-      <div style={{position: 'absolute', left: 64, top: 0, bottom: 0, width: 600, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16, fontFamily: FONT}}>
-        <div style={{display: 'flex', flexWrap: 'wrap', alignItems: 'center', fontWeight: 900, fontSize: 62, lineHeight: 1.2, letterSpacing: -2}}>
+      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(60% 80% at 30% 40%, rgba(111,240,214,.10), transparent 70%)'}} />
+      {/* 문구 */}
+      <div style={{position: 'absolute', left: 64, top: 54, display: 'flex', flexDirection: 'column', gap: 12, fontFamily: FONT}}>
+        <div style={{display: 'flex', alignItems: 'center', fontWeight: 900, fontSize: 66, lineHeight: 1.2, letterSpacing: -2}}>
           {parse('단계만 따라가면 {60대도} 만듭니다').map((tok, i) => (
-            <Word key={i} tok={tok} idx={i} local={frame - 4} size={62} />
+            <Word key={i} tok={tok} idx={i} local={frame - 4} size={66} />
           ))}
         </div>
-        <div style={{display: 'flex', flexWrap: 'wrap', alignItems: 'center', fontWeight: 900, fontSize: 36, lineHeight: 1.25, letterSpacing: -1, marginLeft: 6}}>
-          {parse('편집 몰라도 · [버튼 네 번]이면 완성본').map((tok, i) => (
-            <Word key={i} tok={tok} idx={i + 4} local={frame - 4} size={36} />
+        <div style={{display: 'flex', alignItems: 'center', fontWeight: 900, fontSize: 38, lineHeight: 1.25, letterSpacing: -1, marginLeft: 6}}>
+          {parse('편집 몰라도 · [다음]만 누르면 완성본').map((tok, i) => (
+            <Word key={i} tok={tok} idx={i + 4} local={frame - 4} size={38} />
           ))}
         </div>
       </div>
-      {/* 오른쪽 단계 버튼 */}
-      <div style={{position: 'absolute', right: 70, top: 0, bottom: 0, display: 'flex', alignItems: 'center', gap: 22, fontFamily: FONT}}>
-        {STEPS.map((label, i) => {
-          const t = frame - stepAt(i);
-          const press = spring({frame: t, fps, config: {damping: 9, stiffness: 240}});
-          const on = t >= 0;
-          const scale = on ? 1 - 0.12 * Math.sin(Math.min(1, Math.max(0, t / 10)) * Math.PI) : 1;
-          const ring = interpolate(t, [0, 24], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+      {/* 다음 버튼 */}
+      <div style={{position: 'absolute', right: 70, top: 92, padding: '16px 34px', borderRadius: 999, background: MINT, color: '#062018', fontFamily: FONT, fontWeight: 900, fontSize: 34, letterSpacing: -1, boxShadow: '0 12px 30px rgba(111,240,214,.3)', transform: `scale(${frame >= ST0 && !finalDone ? 1 - 0.1 * Math.sin(Math.min(1, ((frame - ST0) % ST_GAP) / 8) * Math.PI) : 1})`, opacity: nextPress > -1 ? 1 : 1}}>
+        다음 →
+      </div>
+      {/* 단계 띠 */}
+      <div style={{position: 'absolute', left: 0, right: 0, top: 300, height: 130}}>
+        <div style={{position: 'absolute', left: 0, top: 44, width: 1600, height: 6, background: 'rgba(255,255,255,.08)', borderRadius: 3}} />
+        {STEP_LABELS.map((label, i) => {
+          const x = offset + i * (PILL_W + PILL_GAP);
+          if (x + PILL_W < -50 || x > 1700) return null;
+          const done = frame >= at(i);
+          const pop = spring({frame: frame - at(i), fps, config: {damping: 11, stiffness: 220}});
+          const isFinal = i === FINAL_IDX;
+          const sc = done ? 1 + 0.08 * Math.sin(Math.min(1, pop) * Math.PI) + (isFinal ? 0.18 * finalPop : 0) : 1;
           return (
-            <React.Fragment key={label}>
-              {i > 0 && <div style={{width: 34, height: 6, borderRadius: 3, background: frame >= stepAt(i) - 12 ? MINT : 'rgba(255,255,255,.18)'}} />}
-              <div
-                style={{
-                  width: 150,
-                  height: 150,
-                  borderRadius: 30,
-                  background: on ? MINT : '#151c24',
-                  boxShadow: on ? `0 0 0 ${ring * 16}px rgba(111,240,214,${0.35 * (1 - ring)}), 0 16px 40px rgba(111,240,214,.3)` : '0 0 0 2px rgba(255,255,255,.12)',
-                  transform: `scale(${scale})`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  color: on ? '#062018' : 'rgba(255,255,255,.55)',
-                }}
-              >
-                <div style={{fontWeight: 900, fontSize: 54, lineHeight: 1}}>{on && press > 0.5 ? '✓' : i + 1}</div>
-                <div style={{fontWeight: 900, fontSize: 24, letterSpacing: -0.5}}>{label}</div>
-              </div>
-            </React.Fragment>
+            <div
+              key={label}
+              style={{
+                position: 'absolute',
+                left: x,
+                top: 10,
+                width: PILL_W,
+                height: 74,
+                borderRadius: 999,
+                background: done ? (isFinal ? YEL : MINT) : '#151c24',
+                boxShadow: done ? (isFinal ? '0 0 0 6px rgba(255,216,77,.25), 0 16px 40px rgba(255,216,77,.35)' : '0 10px 26px rgba(111,240,214,.25)') : '0 0 0 2px rgba(255,255,255,.12)',
+                color: done ? '#062018' : 'rgba(255,255,255,.55)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                fontFamily: FONT,
+                fontWeight: 900,
+                fontSize: isFinal && done ? 32 : 26,
+                letterSpacing: -0.5,
+                whiteSpace: 'nowrap',
+                transform: `scale(${sc})`,
+              }}
+            >
+              {done && <span style={{fontSize: 26}}>✓</span>}
+              <span>{label}</span>
+            </div>
           );
         })}
       </div>
-      <div style={{position: 'absolute', right: 70, bottom: 30, fontFamily: FONT, fontWeight: 700, fontSize: 24, color: 'rgba(255,255,255,.6)', opacity: done > 0 ? 1 : 0}}>
-        {done < 4 ? `${done} / 4 단계` : '완성본 나옴!'}
+      <div style={{position: 'absolute', left: 64, bottom: 28, fontFamily: FONT, fontWeight: 700, fontSize: 24, color: 'rgba(255,255,255,.6)', opacity: finalDone ? 1 : 0}}>
+        완성본 나옴 — 바로 올리면 끝
       </div>
     </AbsoluteFill>
   );
