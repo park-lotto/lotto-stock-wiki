@@ -15587,8 +15587,8 @@ function drawSticker(ctx, L, W, H){
 //
 // 좌표계 약속: 각 그리기 함수는 **-0.5~0.5 정규 공간**에 그린다(호출부가 px로 스케일).
 // 그래야 도형을 추가할 때 크기 계산을 매번 다시 하지 않는다.
-const THUMB_SHAPES = SCENE_DECORATION_CATALOG.shapeDraw;
-const THUMB_SHAPE_LIST = SCENE_DECORATION_CATALOG.shapes;
+const THUMB_SHAPES = globalThis.window?.SCENE_DECORATION_CATALOG?.shapeDraw||{};
+const THUMB_SHAPE_LIST = globalThis.window?.SCENE_DECORATION_CATALOG?.shapes||[];
 
 function drawShape(ctx, L, W, H){
   const fn = THUMB_SHAPES[L.shape]; if (!fn) return;
@@ -15610,7 +15610,7 @@ function drawShape(ctx, L, W, H){
 //   (스티커·도형이 같은 이유로 별도 레이어인 것과 같은 판단 — 0순위-B)
 // L = {kind:'badge', text, size:(캔버스 폭 대비 % — 글자 높이), x, y, rot,
 //      color:(알약 바탕), text_color:(글자), dot:(왼쪽 동그라미 표시 여부)}
-const THUMB_BADGE_LIST = SCENE_DECORATION_CATALOG.thumbnailBadges;
+const THUMB_BADGE_LIST = globalThis.window?.SCENE_DECORATION_CATALOG?.thumbnailBadges||[];
 
 // ★알약 크기 계산은 **여기 한 곳**에서만 한다(0순위-B). 그리기(drawBadge)와 손잡이
 //   (renderThumbHandles)가 각자 계산하면 점선 박스와 실제 알약이 어긋난다.

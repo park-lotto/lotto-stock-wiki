@@ -507,8 +507,11 @@ def _run_collect_job(job_id, platform, category, limit, cid):
                 store.save_last_run(items, collected_at)
             _translate_new_subjects(items)
             _bank_ingest_collected_bg(DB_PATH, items, collected_at)
-        except Exception:
-            pass
+        except Exception as state_exc:
+            logging.getLogger("scene_style_lab").warning(
+                "render error state could not be recorded for %s/%s: %r",
+                lab_id, generation, state_exc,
+            )
 
 
 # playwright 경로는 채널마다 진행률을 써서 updated_at이 갱신된다 — 진짜로 멈춘 경우만
