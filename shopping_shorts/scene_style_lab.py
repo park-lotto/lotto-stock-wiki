@@ -56,6 +56,19 @@ def read_manifest(work_root: Path | str, lab_id: str) -> dict:
     return json.loads(_manifest_path(work_root, lab_id).read_text(encoding="utf-8"))
 
 
+def output_path(work_root: Path | str, lab_id: str, output_name: str) -> Path:
+    """manifest가 가리키는 산출물이 해당 LAB 폴더 안의 실제 파일인지 확인한다."""
+    manifest = read_manifest(work_root, lab_id)
+    raw = (manifest.get("outputs") or {}).get(output_name)
+    if not raw:
+        raise LabPreconditionError("시험 산출물이 아직 없습니다")
+    target = Path(str(raw)).resolve()
+    allowed = lab_dir(work_root, lab_id).resolve()
+    if target == allowed or allowed not in target.parents or not target.is_file():
+        raise LabPreconditionError("시험 산출물 경로가 올바르지 않습니다")
+    return target
+
+
 def resolve_clean_contract(job: dict, job_work: Path | str) -> dict | None:
     """현재 편성에 쓸 수 있는 청소본만 반환한다.
 

@@ -18702,6 +18702,53 @@ def api_scene_style_lab_render(lab_id: str, request: Request, background_tasks: 
     return {"ok": True, "status": "queued"}
 
 
+@app.get("/scene-style-lab/{lab_id}")
+def scene_style_lab_landing(lab_id: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    if not _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id")):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    return FileResponse(
+        Path(__file__).parent / "static" / "scene_style_lab_landing.html",
+        headers={"X-Robots-Tag": "noindex, nofollow, noarchive", "Cache-Control": "no-store"},
+    )
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}/video")
+def api_scene_style_lab_video(lab_id: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    if not _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id")):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        video = scene_style_lab.output_path(_MIX_WORK_DIR, lab_id, "mp4")
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    return FileResponse(
+        video,
+        media_type="video/mp4",
+        headers={
+            "X-Scene-Style-Lab": lab_id,
+            "Cache-Control": "no-store",
+            "X-Robots-Tag": "noindex, nofollow, noarchive",
+        },
+    )
+
+
 @app.get("/api/admin/scene-style-lab/{lab_id}/frame/{scene_index}")
 def api_scene_style_lab_frame(lab_id: str, scene_index: int, request: Request):
     denied = _scene_style_lab_denied(request)
