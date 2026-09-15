@@ -257,10 +257,15 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
   document.querySelectorAll('[data-video]').forEach(function(el){
     var name = el.getAttribute('data-video'), label = el.getAttribute('data-label')||'';
     var ph = document.createElement('div'); ph.className='ph'; ph.innerHTML='<b>🎬 '+label+'</b><span>영상 준비 중</span>'; el.appendChild(ph);
+    /* 영상이 오기 전엔 같은 이름의 캡처(.jpg)를 먼저 보여준다 */
+    var img = new Image(); img.alt = label;
+    img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top';
+    img.onload = function(){ el.insertBefore(img, ph); ph.style.display='none'; };
+    img.src = '/static/landing/'+name+'.jpg';
     var v = document.createElement('video');
     v.muted=true; v.loop=true; v.playsInline=true; v.autoplay=true; v.preload='metadata';
     v.setAttribute('muted',''); v.setAttribute('playsinline','');
-    v.addEventListener('loadeddata', function(){ if(ph.parentNode) ph.remove(); });
+    v.style.cssText="position:absolute;inset:0"; v.addEventListener("loadeddata", function(){ ph.style.display="none"; if(img.parentNode) img.remove(); });
     v.addEventListener('error', function(){ v.remove(); }, true);
     var src=document.createElement('source'); src.src='/static/landing/'+name+'.mp4'; src.type='video/mp4';
     src.addEventListener('error', function(){ v.remove(); });
