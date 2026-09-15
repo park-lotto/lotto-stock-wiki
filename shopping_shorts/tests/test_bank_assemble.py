@@ -273,6 +273,19 @@ def test_gate_feedback_tells_direction_when_over():
     assert "채워라" in g.gate_feedback(short)
 
 
+def test_claim_failure_does_not_request_more_content():
+    """용기 실측: 분량 통과·신선도 허위 주장 실패에 분량 추가를 지시하지 않는다."""
+    from shopping_shorts import script_gate as g
+    feedback = g.gate_feedback([
+        {"name": "말 밀도(129~185자)", "ok": True, "detail": "137자"},
+        {"name": "사실 근거", "ok": False, "detail": "아삭함 유지의 관측 근거 없음"},
+    ])
+    assert "아삭함 유지" in feedback
+    assert "분량이 모자라다" not in feedback
+    assert "채워라" not in feedback
+    assert "줄여라" not in feedback
+
+
 def test_density_check_marks_over_flag():
     from shopping_shorts import script_gate as g
     style = {"beat_roles": ["hook"], "chars_per_30s": 377}

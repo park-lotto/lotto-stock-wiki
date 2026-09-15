@@ -919,6 +919,10 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
     # 🚫 영구차단(2026-07-30) — 카드의 차단 버튼이 넣은 removed_channels를 여기서 걸러낸다.
     # 수집(merge_tracked)도 같은 목록을 보지만, 이미 저장된 last_run에는 남아 있어
     # 차단 후 새로고침·업데이트 때 다시 뜨는 걸 막으려면 이 조회 경로에서도 잘라야 한다.
+    # 🗂 관리자가 카드에서 옮긴 카테고리(2026-09-15) — 저장된 목록에도 바로 보이게 조회에서도 덮는다.
+    #   덮는 규칙은 store._apply_overrides 한 곳(수집 저장 때 쓰는 것과 같은 함수).
+    if hasattr(store, "_apply_overrides"):
+        items = store._apply_overrides(items)
     blocked = store.removed_usernames()
     if blocked:
         items = [i for i in items
@@ -2549,6 +2553,23 @@ def api_refs_set_category(request: Request, username: str, category: str = ""):
             "ok": False, "error": f"알 수 없는 카테고리: {cat}"})
     Store(DB_PATH).set_channel_category(username, cat)
     return {"ok": True, "username": username, "category": cat}
+
+
+_MOVABLE_CATEGORIES = ("홈템", "레시피", "뷰티", "제품정체형", "장비템", "차량템", "연예인", "기타")
+
+
+@app.post("/api/refs/video_category")
+def api_refs_video_category(request: Request, shortcode: str, category: str = ""):
+    """영상 한 편의 카테고리를 옮긴다(관리자 전용, 2026-09-15 사장님 "썸네일에 카테이동 버튼").
+    category 빈값 = 지정 해제(자동판정으로 복귀). 다음 수집에도 유지된다(_apply_overrides)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    cat = (category or "").strip()
+    if not shortcode or (cat and cat not in _MOVABLE_CATEGORIES):
+        return JSONResponse(status_code=422, content={"ok": False, "error": f"알 수 없는 카테고리: {cat}"})
+    Store(DB_PATH).set_category_overrides({shortcode: cat})
+    return {"ok": True, "shortcode": shortcode, "category": cat}
 
 
 @app.post("/api/reference/register")
@@ -10733,6 +10754,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
                "/help", "/api/help/items",
                "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
+               "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order",   # 토스 카드결제(2026-09-15)
                "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
                # 가입 전 안내(2026-08-23) — ★반드시 비로그인 공개다. 이 두 장은 아직 회원이
                # 아닌 사람에게 뿌리는 링크(공지·카톡)라, 로그인에 막히면 링크가 통째로 죽는다.
@@ -10783,6 +10805,7 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 #   없어서(실측) prefix로 열면 상한 없이 샌다.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
+                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order",   # 토스 카드결제(2026-09-15)
                    # ★가입 마무리 화면(2026-08-24). 등급과 무관하게 열려야 한다 —
                    #   막으면 **빠져나갈 수 없는 막다른 길**이 된다: 어느 화면을 열든
                    #   미들웨어가 /welcome으로 보내는데(_needs_welcome), 정작 /welcome이
@@ -11122,7 +11145,16 @@ def _pay_cta():
 def _with_pay(html: str) -> str:
     """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다."""
     href, label = _pay_cta()
+    # ★상품명·가격·카드결제 버튼(2026-09-15 토스 심사 "상품 금액 = 결제 금액").
+    #   가격은 결제가 실제로 받는 금액(_toss_order_name_amount) **한 곳**에서 읽는다 —
+    #   화면 숫자를 따로 적으면 결제 금액과 어긋나 심사 불가 사유가 된다.
+    name, amount = _toss_order_name_amount()
+    ck, sk = _toss_keys()
+    card_href, card_label = ("/pay/toss", "💳 카드로 결제하기") if (ck and sk) else (href, label)
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
+                .replace("__PRO_NAME__", _toss_esc(name))
+                .replace("__PRO_PRICE__", f"{amount:,}원")
+                .replace("__CARD_HREF__", card_href).replace("__CARD_LABEL__", card_label)
                 .replace("__BIZFOOT__", _biz_foot()))
 
 
@@ -11300,10 +11332,11 @@ a{text-decoration:none;color:inherit}
 <a class=cta href="/login" style="width:100%;justify-content:center;font-size:14px;padding:12px">무료로 시작</a></div>
 <div style="background:var(--panel);border:1px solid rgba(255,207,111,.4);box-shadow:0 0 0 1px rgba(255,207,111,.14) inset;border-radius:18px;padding:24px;text-align:center;position:relative">
 <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--gold-grad);color:#3a2600;font-family:'Black Han Sans',sans-serif;font-size:12px;padding:4px 12px;border-radius:999px">추천</div>
-<div style="color:var(--gold);font-weight:700;font-size:14px">Pro 이용권</div>
-<div class=display style="font-size:34px;margin:6px 0;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent">가격 문의</div>
+<div style="color:var(--gold);font-weight:700;font-size:14px">__PRO_NAME__</div>
+<div class=display style="font-size:34px;margin:6px 0;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent">__PRO_PRICE__</div>
 <div style="color:var(--faint);font-size:13px;margin-bottom:16px">전 기능 무제한 · 무제한 제작</div>
-<a href="__PAY_HREF__" target=_blank rel=noopener style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">__PAY_LABEL__</a></div></div>
+<a href="__CARD_HREF__" style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">__CARD_LABEL__</a>
+<a href="__PAY_HREF__" target=_blank rel=noopener style="display:block;margin-top:8px;color:var(--faint);font-size:12px;text-decoration:underline">계좌이체 · 결제 안내</a></div></div>
 <div class=reveal style="text-align:center;margin-top:20px"><a href="/pricing" style="color:var(--mint);font-weight:700;font-size:14px">요금 자세히 보기 →</a></div></div>
 <div class="band reveal">
 <h2>손자한테 안 물어봐도 됩니다</h2>
@@ -11542,16 +11575,15 @@ a{text-decoration:none;color:inherit}
 <a class="btn pri" href="/login">무료로 시작</a></div>
 <div class="plan pro">
 <div class=rec>추천</div>
-<div class="pt pro-t">Pro 이용권</div>
-<div class=price>가격 문의<small></small></div>
-<div class=pd>기간·구성은 카톡으로 안내 (준비 중)</div>
+<div class="pt pro-t">__PRO_NAME__</div>
+<div class=price>__PRO_PRICE__<small></small></div>
+<div class=pd>카드결제 또는 계좌이체</div>
 <ul>
 <li><span class=c>✓</span> 전 기능 무제한</li>
 <li><span class=c>✓</span> 쇼츠 무제한 제작</li>
 <li><span class=c>✓</span> 렌즈·대본·보이스 전부</li>
 <li><span class=c>✓</span> 우선 문의·운영 노하우</li></ul>
-<a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
-<div class=tbd style="text-align:center">※ 가격·이용권 기간은 확정 후 표기됩니다(현재 플레이스홀더).</div>
+<a class="btn kko" href="__CARD_HREF__">__CARD_LABEL__</a></div></div>
 <div class=sec>
 <h2>이용권에 들어있는 것</h2>
 <div class=lead>파는 사람이 처음부터 끝까지 쓰는 도구</div>
@@ -12015,8 +12047,9 @@ def _deposit_body():
     kakao = (st.get_setting("contact_kakao", "") or "").strip()
     phone = (st.get_setting("contact_phone", "") or "").strip()
     import html as _h
+    card = _deposit_card_html()
     if not acc:
-        return ('<div class=empty>결제 안내가 아직 준비 중이에요.<br>아래로 문의해 주세요.</div>'
+        return (card + '<div class=empty>결제 안내가 아직 준비 중이에요.<br>아래로 문의해 주세요.</div>'
                 + _deposit_contact(kakao, phone))
     rows = ""
     if bank:
@@ -12029,7 +12062,23 @@ def _deposit_body():
     note_html = (f'<div class=note>{_h.escape(note)}</div>' if note else
                  '<div class=note>입금 금액·이용권은 아래로 <b>문의</b>해 주세요.<br>'
                  '입금 후 <b>입금자명</b>을 알려주시면 <b>바로 이용권을 열어드려요.</b></div>')
-    return rows + note_html + _DEPOSIT_CLAIM_HTML + _deposit_contact(kakao, phone)
+    return card + rows + note_html + _DEPOSIT_CLAIM_HTML + _deposit_contact(kakao, phone)
+
+
+def _deposit_card_html():
+    """결제 안내 맨 위 '카드로 결제' 버튼(2026-09-15 사장님 "결제안내 안에 카드결제로 연동").
+
+    토스 키(_toss_keys)가 있을 때만 보인다 — 키 판단은 _toss_keys 한 곳에서만.
+    테스트 키면 버튼에 '테스트'를 붙여 고객이 진짜 결제로 착각하지 않게 한다.
+    """
+    ck, sk = _toss_keys()
+    if not (ck and sk):
+        return ""
+    tag = " (테스트)" if ck.startswith("test_") else ""
+    return ('<a href="/pay/toss" style="display:block;text-align:center;text-decoration:none;'
+            'background:linear-gradient(135deg,#ffd27a,#f0a53a);color:#1a1206;border-radius:12px;'
+            'padding:15px;font-size:16px;font-weight:800;margin-bottom:10px">💳 카드로 결제하기' + tag + '</a>'
+            '<div style="text-align:center;color:#6f8583;font-size:13px;margin:6px 0 14px">또는 계좌이체</div>')
 
 
 # '입금 완료했습니다' — 고객이 직접 알리는 창구(2026-08-23).
@@ -12091,6 +12140,246 @@ def _deposit_contact(kakao, phone):
     if phone:
         out += f'<a class=tel href="tel:{_h.escape(phone)}">📞 {_h.escape(phone)}</a>'
     return out + '</div>'
+
+
+# ── 💳 토스페이먼츠 카드결제 (2026-09-15 사장님 "토스 PG 등록, 카드결제 테스트페이지") ──
+# 흐름: /pay/toss(결제창 SDK) → 토스 결제창 → /pay/toss/success?paymentKey&orderId&amount
+#       → 서버가 **금액을 대조한 뒤** 시크릿 키로 승인(confirm) → 결과 화면.
+# ★금액은 서버가 정한다(주문 만들 때 DB에 적어두고 승인 때 대조). 브라우저가 amount를
+#   바꿔 보내도 승인하지 않는다 — 토스 문서가 요구하는 검증이다.
+# ★키는 환경변수(/etc/shopping-shorts.env)에서만 읽는다. 테스트 키(test_)면 실제 돈이 안 나간다.
+_TOSS_CONFIRM_URL = "https://api.tosspayments.com/v1/payments/confirm"
+
+
+def _toss_keys():
+    return (os.environ.get("TOSS_CLIENT_KEY", "").strip(),
+            os.environ.get("TOSS_SECRET_KEY", "").strip())
+
+
+def _toss_order_name_amount():
+    st = Store(DB_PATH)
+    name = (st.get_setting("toss_order_name", "") or "숏템메이커 1기 참가비").strip()
+    try:
+        amount = int(st.get_setting("toss_amount", "") or 770000)
+    except ValueError:
+        amount = 770000
+    return name, amount
+
+
+def _toss_db():
+    st = Store(DB_PATH)
+    with st._conn() as c:
+        c.execute("""CREATE TABLE IF NOT EXISTS toss_payments (
+                        order_id TEXT PRIMARY KEY, amount INTEGER, order_name TEXT,
+                        status TEXT, payment_key TEXT, method TEXT, approved_at TEXT,
+                        raw TEXT, created_at TEXT, updated_at TEXT)""")
+        # 결제자 정보(2026-09-15) — 회원가입 전 결제라 누가 냈는지 여기만 안다. 옛 표에 컬럼을 더한다.
+        cols = {r[1] for r in c.execute("PRAGMA table_info(toss_payments)")}
+        for col in ("payer_name", "payer_phone", "payer_email"):
+            if col not in cols:
+                c.execute(f"ALTER TABLE toss_payments ADD COLUMN {col} TEXT")
+    return st
+
+
+def _toss_esc(s):
+    return (str(s or "").replace("&", "&amp;").replace("<", "&lt;")
+            .replace(">", "&gt;").replace('"', "&quot;"))
+
+
+def _toss_page(title, body):
+    return ("<!doctype html><html lang=ko><head><meta charset=utf-8>"
+            "<meta name=viewport content='width=device-width,initial-scale=1'>"
+            f"<title>{title}</title><style>body{{margin:0;background:#090d10;color:#e8f3ef;"
+            "font-family:'Pretendard','Malgun Gothic',sans-serif;display:flex;justify-content:center;"
+            "padding:40px 16px}.box{max-width:440px;width:100%;background:#111a17;border:1px solid #1f3a33;"
+            "border-radius:16px;padding:28px}h1{font-size:22px;margin:0 0 12px}.p{font-size:15px;color:#9fb8b0;"
+            "line-height:1.6}.amt{font-size:30px;font-weight:800;color:#6ff0d6;margin:14px 0}"
+            "button,a.btn{display:block;width:100%;text-align:center;padding:14px;border-radius:12px;border:0;"
+            "background:#6ff0d6;color:#06110e;font-size:17px;font-weight:800;cursor:pointer;text-decoration:none;"
+            "margin-top:18px}.test{display:inline-block;background:#e0a33d;color:#111;font-size:12px;"
+            "font-weight:700;padding:3px 8px;border-radius:8px;margin-bottom:10px}.err{color:#ff8a8a}"
+            "code{color:#6ff0d6}</style>"
+            f"</head><body><div class=box>{body}</div></body></html>")
+
+
+@app.get("/pay/toss", response_class=HTMLResponse)
+def _toss_checkout(request: Request):
+    """결제자 정보 → 주문 생성(POST) → 토스 결제창 (2026-09-15 사장님 "결제자 정보를 입력하게 하고
+    결제해야 된다. 회원가입 전이면 알 수가 없다 / 신청폼 작성 후 결제").
+
+    ★주문은 GET에서 만들지 않는다 — 페이지만 열어도 READY 주문이 쌓였다(실측 5건).
+      정보를 제출한 순간(POST /api/pay/toss/order)에 결제자와 함께 한 줄로 만든다.
+    ★사전신청 폼(notice_1gi)을 거쳐 왔으면 sessionStorage의 값으로 칸을 미리 채운다.
+    """
+    ck, sk = _toss_keys()
+    if not ck or not sk:
+        return HTMLResponse(_toss_page("결제 준비 중", "<h1>카드결제 준비 중</h1>"
+                                       "<div class=p>결제 설정이 아직 끝나지 않았습니다.</div>"),
+                            status_code=503)
+    name, amount = _toss_order_name_amount()
+    base = str(request.base_url).rstrip("/")
+    if request.headers.get("x-forwarded-proto") == "https" and base.startswith("http://"):
+        base = "https://" + base[len("http://"):]
+    badge = ("<span class=test>테스트 결제 — 실제 돈이 나가지 않습니다</span>"
+             if ck.startswith("test_") else "")
+    inp = ("width:100%;box-sizing:border-box;margin-top:8px;padding:13px;border-radius:10px;"
+           "border:1px solid #1f3a33;background:#0a1113;color:#e8f3ef;font-size:15px;font-family:inherit")
+    body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
+<div class=amt>{amount:,}원</div>
+<div class=p>결제하시는 분의 정보를 입력해 주세요. 결제 확인과 이용 안내에 쓰입니다.</div>
+<input id=pn placeholder="성함" maxlength=40 style="{inp}">
+<input id=pp placeholder="연락처 (010-0000-0000)" maxlength=40 inputmode=tel style="{inp}">
+<input id=pe placeholder="이메일 (가입·안내를 받으실 주소)" maxlength=120 inputmode=email style="{inp}">
+<label class=p style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px">
+  <input id=pa type=checkbox style="margin-top:3px">
+  <span><a href="/refund" target="_blank" style="color:#6ff0d6">환불정책</a>과
+  <a href="/terms" target="_blank" style="color:#6ff0d6">이용약관</a>을 확인했고 동의합니다.</span></label>
+<button id=go>카드로 결제하기</button>
+<div class="p err" id=msg></div>
+<script src="https://js.tosspayments.com/v2/standard"></script>
+<script>
+(function () {{
+  try {{
+    const s = JSON.parse(sessionStorage.getItem('prereg_payer') || 'null');
+    if (s) {{ pn.value = s.name || ''; pp.value = s.phone || ''; pe.value = s.email || ''; }}
+  }} catch (e) {{}}
+}})();
+let busy = false;
+document.getElementById('go').onclick = async () => {{
+  const msg = document.getElementById('msg'); msg.textContent = '';
+  if (busy) return;
+  const payer = {{ name: pn.value.trim(), phone: pp.value.trim(), email: pe.value.trim() }};
+  if (!payer.name || !payer.phone || !payer.email) {{ msg.textContent = '성함·연락처·이메일을 모두 입력해 주세요.'; return; }}
+  if (!pa.checked) {{ msg.textContent = '환불정책·이용약관 동의에 체크해 주세요.'; return; }}
+  busy = true; go.disabled = true; go.textContent = '결제창 여는 중…';
+  try {{
+    const r = await fetch('/api/pay/toss/order', {{ method: 'POST',
+      headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify(payer) }});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || '주문을 만들지 못했습니다');
+    const tp = TossPayments({json.dumps(ck)});
+    const payment = tp.payment({{ customerKey: TossPayments.ANONYMOUS }});
+    await payment.requestPayment({{
+      method: "CARD",
+      amount: {{ currency: "KRW", value: d.amount }},
+      orderId: d.orderId,
+      orderName: d.orderName,
+      customerName: payer.name,
+      customerEmail: payer.email,
+      customerMobilePhone: payer.phone.replace(/[^0-9]/g, ''),
+      successUrl: {json.dumps(base + "/pay/toss/success")},
+      failUrl: {json.dumps(base + "/pay/toss/fail")}
+    }});
+  }} catch (e) {{
+    msg.textContent = (e && e.message) || String(e);
+  }} finally {{
+    busy = false; go.disabled = false; go.textContent = '카드로 결제하기';
+  }}
+}};
+</script>"""
+    return _toss_page("카드 결제", body)
+
+
+@app.post("/api/pay/toss/order")
+async def _toss_create_order(request: Request):
+    """결제자 정보를 받아 주문을 만든다. 금액·상품명은 서버가 정한다(브라우저 값을 받지 않는다)."""
+    ck, sk = _toss_keys()
+    if not ck or not sk:
+        return JSONResponse({"error": "카드결제 준비 중입니다"}, status_code=503)
+    try:
+        body = await request.json()
+    except Exception:           # noqa: BLE001
+        body = {}
+    pname = (body.get("name") or "").strip()
+    phone = (body.get("phone") or "").strip()
+    email = (body.get("email") or "").strip()
+    if not pname or not phone or not email:
+        return JSONResponse({"error": "성함·연락처·이메일을 모두 입력해 주세요"}, status_code=422)
+    if "@" not in email or "." not in email.split("@")[-1]:
+        return JSONResponse({"error": "이메일 주소를 확인해 주세요"}, status_code=422)
+    if len(pname) > 40 or len(phone) > 40 or len(email) > 120:
+        return JSONResponse({"error": "입력이 너무 깁니다"}, status_code=422)
+    name, amount = _toss_order_name_amount()
+    order_id = "ST" + datetime.now().strftime("%Y%m%d%H%M%S") + secrets.token_hex(4)
+    now = datetime.now(timezone.utc).isoformat()
+    with _toss_db()._conn() as c:
+        c.execute("INSERT INTO toss_payments(order_id,amount,order_name,status,payer_name,payer_phone,"
+                  "payer_email,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+                  (order_id, amount, name, "READY", pname, phone, email, now, now))
+    return {"ok": True, "orderId": order_id, "amount": amount, "orderName": name}
+
+
+@app.get("/pay/toss/success", response_class=HTMLResponse)
+def _toss_success(paymentKey: str = "", orderId: str = "", amount: str = ""):
+    ck, sk = _toss_keys()
+    st = _toss_db()
+    with st._conn() as c:
+        row = c.execute("SELECT amount, status FROM toss_payments WHERE order_id=?",
+                        (orderId,)).fetchone()
+    if not row:
+        return HTMLResponse(_toss_page("결제 실패", "<h1 class=err>주문을 찾을 수 없습니다</h1>"),
+                            status_code=400)
+    try:
+        amt = int(amount)
+    except ValueError:
+        amt = -1
+    if amt != row[0]:        # ★금액 위변조 차단 — 서버가 정한 금액과 다르면 승인하지 않는다
+        return HTMLResponse(_toss_page("결제 실패", "<h1 class=err>결제 금액이 주문과 다릅니다</h1>"
+                                       "<div class=p>승인하지 않았습니다.</div>"), status_code=400)
+    if row[1] == "DONE":
+        return _toss_page("결제 완료", "<h1>✅ 이미 완료된 결제입니다</h1>"
+                          f"<div class=p>주문번호 <code>{_toss_esc(orderId)}</code></div>")
+    auth = base64.b64encode((sk + ":").encode()).decode()
+    try:
+        r = requests.post(_TOSS_CONFIRM_URL, timeout=30,
+                          headers={"Authorization": "Basic " + auth,
+                                   "Content-Type": "application/json"},
+                          json={"paymentKey": paymentKey, "orderId": orderId, "amount": amt})
+        d = r.json()
+        code = r.status_code
+    except Exception as e:   # noqa: BLE001 — 네트워크 실패도 화면에 사유를 보인다
+        d, code = {"code": "NETWORK", "message": repr(e)}, 0
+    ok = code == 200 and d.get("status") == "DONE"
+    now = datetime.now(timezone.utc).isoformat()
+    with st._conn() as c:
+        c.execute("UPDATE toss_payments SET status=?, payment_key=?, method=?, approved_at=?, raw=?, "
+                  "updated_at=? WHERE order_id=?",
+                  ("DONE" if ok else "FAILED", paymentKey, d.get("method"), d.get("approvedAt"),
+                   json.dumps(d, ensure_ascii=False)[:8000], now, orderId))
+    if not ok:
+        return HTMLResponse(_toss_page("결제 실패", "<h1 class=err>결제 승인 실패</h1><div class=p>"
+                                       f"{_toss_esc(d.get('message'))}<br>"
+                                       f"<code>{_toss_esc(d.get('code'))}</code></div>"),
+                            status_code=400)
+    try:
+        from shopping_shorts import ops_alert
+        with st._conn() as c:
+            pr = c.execute("SELECT payer_name, payer_phone, payer_email FROM toss_payments WHERE order_id=?",
+                           (orderId,)).fetchone() or ("", "", "")
+        # cooldown 0 — 결제 한 건 한 건이 돈이다(입금 신고와 같은 이유).
+        ops_alert.raise_alert("toss_paid", f"💳 카드결제 완료 — {pr[0] or '-'} {amt:,}원",
+                              f"연락처 {pr[1] or '-'} / 이메일 {pr[2] or '-'} / 주문 {orderId}",
+                              cooldown_sec=0, store=st)
+    except Exception as e:      # noqa: BLE001 — 알림 실패가 결제 완료 화면을 막으면 안 된다
+        print(f"[토스결제] 관리자 알림 실패(결제는 정상): {e!r}", file=sys.stderr)
+    return _toss_page("결제 완료", f"""<h1>✅ 결제가 완료되었습니다</h1>
+<div class=amt>{amt:,}원</div>
+<div class=p>{_toss_esc(d.get('orderName'))}<br>결제수단 {_toss_esc(d.get('method'))}<br>
+주문번호 <code>{_toss_esc(orderId)}</code></div>
+<a class=btn href="/">숏템메이커로 돌아가기</a>""")
+
+
+@app.get("/pay/toss/fail", response_class=HTMLResponse)
+def _toss_fail(code: str = "", message: str = "", orderId: str = ""):
+    if orderId:
+        with _toss_db()._conn() as c:
+            c.execute("UPDATE toss_payments SET status=?, raw=?, updated_at=? "
+                      "WHERE order_id=? AND status='READY'",
+                      ("FAILED", json.dumps({"code": code, "message": message}, ensure_ascii=False),
+                       datetime.now(timezone.utc).isoformat(), orderId))
+    return _toss_page("결제 실패", f"""<h1 class=err>결제가 완료되지 않았습니다</h1>
+<div class=p>{_toss_esc(message)}<br><code>{_toss_esc(code)}</code></div>
+<a class=btn href="/pay/toss">다시 시도</a>""")
 
 
 @app.get("/pay", response_class=HTMLResponse)
@@ -13996,9 +14285,30 @@ async def _admin_customer_device_reset(request: Request):
         cid = int(body.get("customer_id"))
     except (TypeError, ValueError):
         return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    # ★slot은 화면이 실제로 보낸다(2026-09-15 '골라 해제'). 그래서 여기서 검증한다 —
+    #   전엔 slot을 아무도 안 보내서 int('abc')=500 · slot=99=아무것도 안 지우고 ok:True가
+    #   드러나지 않았다. 없는 칸을 "해제했습니다"라고 하면 안 된다.
+    st = Store(DB_PATH)
     slot = body.get("slot")
-    Store(DB_PATH).device_reset(cid, int(slot) if slot else None)
-    return {"ok": True}
+    if slot is None or slot == "":
+        slot = None                                  # 전부 해제
+    else:
+        try:
+            slot = int(slot)
+        except (TypeError, ValueError):
+            return JSONResponse({"error": "slot이 숫자가 아니에요"}, status_code=400)
+        if not (1 <= slot <= st.PC_SLOTS):
+            return JSONResponse(
+                {"error": f"slot은 1~{st.PC_SLOTS} 사이여야 해요"}, status_code=400)
+        if slot not in {d["slot"] for d in st.device_list(cid)}:
+            return JSONResponse({"error": f"{slot}번 PC는 등록돼 있지 않아요"},
+                                status_code=404)
+    before = len(st.device_list(cid))
+    st.device_reset(cid, slot)
+    left = st.device_list(cid)
+    # ★실제로 줄었는지 세서 돌려준다 — 화면이 응답을 보고 말할 수 있어야 한다
+    #   (memory: 삭제가_저장출구에서_부활 — ok:True인데 DB는 그대로인 조용한 실패)
+    return {"ok": True, "removed": before - len(left), "left": len(left)}
 
 
 @app.post("/api/admin/customer/term")
@@ -21292,6 +21602,9 @@ def _materials_for_generate(item, body, store, cid, spines=None):
         _topic_body["subject"] = _requested_frozen
     _topic_product = _topic_product_for_generate(item, _topic_body, _job, store)
     if _topic_product is None:
+        if (((_job or {}).get("_topic_resolution") or {}).get("error")
+                == "judge_unavailable"):
+            raise ValueError("AI 제품 판정 서비스가 일시적으로 응답하지 않습니다. 자동 재시도 후에도 연결되지 않았습니다. 잠시 후 다시 생성해 주세요")
         _frozen = str(body.get("topic_product") or "").strip()
         if _frozen:
             raise ValueError("전체 생성 때 확정한 제품 주제와 현재 자료가 다릅니다")
@@ -21301,7 +21614,7 @@ def _materials_for_generate(item, body, store, cid, spines=None):
             _topic_product = ""
         else:
             if ((_job or {}).get("_topic_resolution") or {}).get("method") == "unresolved":
-                raise ValueError("담긴 영상의 제품명이 달라 같은 제품인지 확인하지 못했습니다. 잠시 후 다시 생성해 주세요")
+                raise ValueError("영상 자료 판정 응답을 검증하지 못했습니다. 잠시 후 다시 생성해 주세요")
             raise ValueError("담긴 영상에 서로 다른 제품이 같은 수로 섞여 주제를 확정할 수 없습니다")
     _explicit_topic = bool(str(
         _topic_body.get("my_topic") or _topic_body.get("subject") or "").strip())

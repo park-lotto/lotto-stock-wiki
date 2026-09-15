@@ -496,7 +496,7 @@ function dragCut(i, k, sec){
 }
 // 모자란 시간 = 음성 − 컷 합계(느리게 반영). 0.05초 미만은 없는 것으로 본다.
 function cutsGap(i){
-  if (!CUTS[i]) return 0;
+  if (!CUTS[i] || phraseSyncOn(i)) return 0;   // 구절 맞춤 켠 칸엔 공백이 없다(얼린 컷을 안 쓴다)
   const slow = SLOW[i] > 1 ? SLOW[i] : 1;
   const g = beatDur(i) - cutsSum(i) * slow;
   return g > 0.05 ? g : 0;
@@ -504,6 +504,12 @@ function cutsGap(i){
 function slowFill(i){
   const sum = cutsSum(i); if (!(sum > 0)) return;
   SLOW[i] = Math.round(beatDur(i) / sum * 1000) / 1000;
+  (typeof render === 'function' && render());
+  if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
+}
+// 느리게를 푼다 — 빈 시간이 다시 보이고 [전체 살짝 느리게]를 다시 누를 수 있다.
+function slowUndo(i){
+  delete SLOW[i];
   (typeof render === 'function' && render());
   if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
 }
@@ -520,6 +526,11 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   const segments = segIds.flatMap(id => trimPieces(id).map(p => ({...p, seg_id: id})))
                          .filter(s => s.start != null);
   const clips = []; let filled = 0;
+  // ★구절 맞춤이 켜진 칸에 남은 얼린 컷은 버린다(2026-09-14 사장님 캡쳐 1567·1568: 켠 칸에
+  //   공백 안내·공백 칸이 떴다 — 저장본/서버에서 얼린 컷만 살아 돌아와 규칙 두 벌이 한 칸에 겹쳤다).
+  if (beatIdx != null && phraseSyncOn(beatIdx) && CUTS[beatIdx] && typeof lists !== 'undefined' && lists[beatIdx] === segIds){
+    delete CUTS[beatIdx]; delete SLOW[beatIdx];
+  }
   if (!segments.length) return clips;
   // ★구절 맞춤을 끈 칸은 얼린 컷 그대로(위 CUTS 규칙). 얼린 게 없으면(옛 저장본) 지금 떠서 얼린다.
   if (beatIdx != null && !phraseSyncOn(beatIdx) && typeof lists !== 'undefined' && lists[beatIdx] === segIds){

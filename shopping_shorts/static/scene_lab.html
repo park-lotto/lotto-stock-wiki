@@ -1893,6 +1893,11 @@ function restoreServer(msg){
   if (!hasServerEdit()) return false;
   lists = DATA.beats.map(b => serverList(b) || baseList(b));
   hydrateFixlen(fixlenFromBeats());    // ✋ 서버가 기억하는 손 길이도 같이
+  // 서버 편성의 구절 맞춤 끔 표식도 같이 — 안 가져오면 끈 칸이 켠 칸으로 열려 얼린 컷과 어긋난다
+  if (typeof PHRASE_SYNC !== "undefined"){
+    Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
+    (DATA.beats || []).forEach((b, i) => { if (b.phrase_sync === false) PHRASE_SYNC[i] = false; });
+  }
   if (typeof hydrateCuts === "function") hydrateCuts(...cutsFromBeats());   // 끈 칸의 얼린 컷도(2026-09-14)
   mode = 'hand';                       // 서버 편성 = 사람이 정한 배치다
   ['live','one','hand','pick'].forEach(x => {
@@ -2846,7 +2851,7 @@ function renderBand(){
            (cutsSum(i) > 0 && beatDur(i) / cutsSum(i) > MAX_SLOWMO)
              ? `<span class="slowwarn">너무 많이 느려져요(${(cutsSum(i) / beatDur(i)).toFixed(2)}배속) — 앞 조각들에서 조금씩 장면을 길게 해주세요</span>` : ''}</div>`
       : (frozen && SLOW[i] > 1)
-        ? `<div class="cutgap slow" onclick="event.stopPropagation()">🐢 ${(1 / SLOW[i]).toFixed(2)}배속으로 틀어 맞추는 중${
+        ? `<div class="cutgap slow" onclick="event.stopPropagation()">✅ 전체를 살짝 느리게(${(1 / SLOW[i]).toFixed(2)}배속) 해서 빈 곳을 채웠어요 <button class="act" onclick="slowUndo(${i})">되돌리기</button>${
             SLOW[i] > MAX_SLOWMO ? ` <span class="slowwarn">너무 느려요 — 앞 조각들에서 조금씩 장면을 길게 해주세요</span>` : ''}</div>` : '';
     const cuts = clips.length
       ? clips.map((c, ci) => `<div class="tbcut ${phraseSyncOn(i) ? 'inuse' : ''} ${c.dur > LONG_CUT ? 'long' : ''} ${isPicked(i, c.seg_id) ? 'picked' : ''}"

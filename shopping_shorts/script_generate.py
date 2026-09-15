@@ -724,6 +724,12 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg}."))
     if _claim_required:
         base += _claim_prompt(_evidence)
+        lo, hi = script_gate.density_range(style, seconds)
+        count = max(1, len(style.get("beat_roles") or []))
+        base += ("\n\n[이번 대본의 최종 분량 계약]\n총 %d칸, 전체 공백·문장부호 제외 %d~%d자다. "
+                 "한 칸 평균 %d자 정도의 짧은 문장 하나로 써라. 칸마다 설명과 감탄을 길게 덧붙이면 "
+                 "전체 길이를 초과한다. 위 근거에서 필요한 동작만 골라 쓰고 새로운 효능을 추가하지 마라."
+                 % (count, lo, hi, hi // count))
 
     extra, tries, res, checks, full = "", [], None, [], ""
     # ★재작성이 끝내 통과 못 하면 **마지막 시도**가 아니라 규격에 가장 가까운 시도를 쓴다
@@ -762,6 +768,14 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             if best is None or abs(_n - _tgt) < best[0]:
                 best = (abs(_n - _tgt), res, checks, full)
         extra = script_gate.gate_feedback(checks)
+        if _claim_required:
+            # 호출은 독립적이다. 판정만 전달하면 모델은 어떤 대본을 고치는지 모른다.
+            # 실패한 초안을 사실 자료와 구분해 전달하고, 관측 밖 효능을 새로 채우지 않는다.
+            extra = ("\n\n[수정 대상 초안 — 사실 근거가 아님]\n"
+                     + json.dumps(res, ensure_ascii=False) + extra
+                     + "\n위 초안의 실패한 주장만 삭제하거나 관측된 동작으로 바꿔라. "
+                       "통과한 문장과 칸 순서는 유지하고, 대체 효능·소요시간·인기도를 새로 만들지 마라. "
+                       "분량 실패가 없으면 분량을 늘리지 마라. 출력은 동일한 beats JSON이다.")
 
     if not script_gate.passed(checks) and best and best[3] != full:
         _, res, checks, full = best
@@ -905,13 +919,13 @@ _CLAIM_SPEAKER_SCHEMA = {
         claims_ok={"type": "boolean"}, claims_why={"type": "string"},
         claim_checks={"type": "array", "items": {
             "type": "object", "properties": {
-                "unit_index": {"type": "integer"}, "claim": {"type": "string"},
+                "unit_index": {"type": "integer"},
                 "kind": {"type": "string", "enum": ["objective", "subjective"]},
                 "supported": {"type": "boolean"},
                 "supports": {"type": "array", "items": {"type": "object", "properties": {
-                    "evidence_id": {"type": "string"}, "quote": {"type": "string"}},
-                    "required": ["evidence_id", "quote"]}}},
-            "required": ["unit_index", "claim", "kind", "supported", "supports"]}},
+                    "evidence_index": {"type": "integer"}},
+                    "required": ["evidence_index"]}}},
+            "required": ["unit_index", "kind", "supported", "supports"]}},
         unsupported_claims={"type": "array", "items": {
             "type": "object", "properties": {
                 "beat_index": {"type": "integer"}, "claim": {"type": "string"},
@@ -933,10 +947,12 @@ claims_ok는 대본의 객관적 주장이 아래 근거로 뒷받침되는지�
 4) 명시 이식에서 타제품 원본은 말투·구조 참고일 뿐 목표 제품의 사실 근거가 아니다. 같은 제품군의 서로 다른 제품 변형도 기능을 전부 공유한다고 보장할 수 없다. 다른 제품/모델의 근거를 고정 제품의 보장 성능으로 합치거나, 일반 카테고리 정보를 특정 제품의 효과로 바꾸지 마라. verified_wow의 provenance나 설명을 새로운 제품 스펙으로 해석하지 마라.
 5) '편하겠다/신기하다/미쳤다' 같은 주관적 감탄은 확인된 사용 동작·효과에 붙는다면 OK. 감탄이라는 이유만으로 반려하지 마라. '내구성이 미쳐서 배 아픈 상황이 종료된다'처럼 관련 없는 속성을 원인으로 삼거나 효능을 넓히면 FAIL.
 6) 근거 있는 설치·펼침·봉투 장착·접기·보관은 허용한다. 객관적 주장 없는 연결·감정 문장에 출처를 강요하지 마라.
-7) 제공한 [검사 문장 단위]마다 claim_checks를 정확히 한 개씩 작성한다. unit_index와 claim은 제공 원문 그대로 복사한다. 문장을 빼거나 일부 주장만 잘라 검사하면 실패다. 한 문장에 객관적 주장과 감탄이 섞였으면 objective이고 그 안의 모든 객관적 주장에 근거가 있어야 한다.
-8) supports는 evidence.items의 evidence_id와 그 text에 실제 존재하는 quote다. 객관적 문장은 실제 인용 근거가 필수다. 문장이 제품에 관한 말이라는 이유만으로 관련 없는 제품 장면을 인용하면 안 된다. 화면에 변기가 있다는 사실은 소요시간·입소문·품절·냄새 효과의 근거가 아니다. 편집된 장면의 길이로 실제 설치 시간을 추정하지 마라.
+6-a) '써보세요/그냥 쓰지 마세요/구경해보세요' 같은 권유·질문은 그 자체로 제품 성능 주장이 아니다. 권유의 근거로 수치·효능을 붙인 경우에만 그 사실을 검사한다.
+6-b) 실제 관측 또는 원본 발화에 '반복 세척 후 보풀이 없다/형태가 유지된다'가 있으면 '여러 번 빨아도 보풀이 없더라고요/탄탄해서 놀랐어요'처럼 그 사용 경험을 말하는 것은 허용한다. 대본에 없는 '모든 상황에서 영구 보장'을 검사자가 임의로 덧붙여 반려하지 마라. 반대로 '아무리/항상/무조건/모든/영구적으로'처럼 실제로 범위를 무제한 확장하거나 측정하지 않은 기간·수치를 붙이면 그 확장 근거를 요구한다.
+7) 제공한 [검사 문장 단위]마다 claim_checks를 정확히 한 개씩 작성한다. unit_index로 제공 문장을 선택한다. 문장을 빼거나 일부 주장만 잘라 검사하면 실패다. 한 문장에 객관적 주장과 감탄이 섞였으면 objective이고 그 안의 모든 객관적 주장에 근거가 있어야 한다.
+8) supports는 evidence.items의 evidence_index 참조다. 객관적 문장은 그 사실을 지지하는 실제 근거 선택이 필수다. 문장이 제품에 관한 말이라는 이유만으로 관련 없는 제품 장면을 인용하면 안 된다. 화면에 변기가 있다는 사실은 소요시간·입소문·품절·냄새 효과의 근거가 아니다. 편집된 장면의 길이로 실제 설치 시간을 추정하지 마라.
 9) 인기도/입소문/난리가 났다는 말은 말투가 아니라 객관적 주장이다. 냄새 걱정이 없다는 말도 성능 주장이다. 이 둘을 subjective로 면제하지 마라. 냄새가 난다는 근거는 냄새가 안 난다는 주장을 지지하지 않는다. 완곡한 말투나 '~대요/~더라'로 바꿔도 사실 근거는 필요하다.
-10) 각 행은 supported를 판정한다. 주관적 감탄/질문/연결만 있는 문장은 subjective, supported=true, supports=[]로 둘 수 있다. 객관적 문장은 해당 사실을 모두 지지하는 정확한 인용을 supports에 넣는다. 일부라도 근거가 없으면 supported=false다.
+10) 각 행은 supported를 판정한다. 주관적 감탄/질문/연결만 있는 문장은 subjective, supported=true, supports=[]로 둘 수 있다. 객관적 문장은 해당 사실을 모두 지지하는 근거의 evidence_index를 supports에 넣는다. 일부라도 근거가 없으면 supported=false다.
 근거 부족/모순인 문장은 unsupported_claims에 정확한 claim과 부족한 근거·고칠 방향을 reason으로 적어라. beat_index를 알 수 없으면 -1, evidence_ids는 실제로 대조한 source/seg 번호만. 근거가 충분하면 claims_ok=true, unsupported_claims=[]다. 목록이 하나라도 있으면 claims_ok=false다.
 """
 
@@ -952,10 +968,34 @@ def _speaker_judge(text, product="", evidence=None):
     if evidence is not None:
         from shopping_shorts import script_gate
         units = [{"unit_index": i, "text": unit} for i, unit in enumerate(script_gate.claim_units(text))]
+        items = (evidence or {}).get("items") or []
+        indexed_evidence = dict(evidence, items=[dict(item, evidence_index=i)
+                                               for i, item in enumerate(items)])
         prompt = (_CLAIM_JUDGE_RULE + "\n[고정 제품 주제]\n" + (product or "(미확정)")
                   + "\n[검사 문장 단위]\n" + json.dumps(units, ensure_ascii=False)
-                  + "\n[검증 근거 데이터]\n" + json.dumps(evidence, ensure_ascii=False))
-        return _call_json(prompt, _CLAIM_SPEAKER_SCHEMA)
+                  + "\n[검증 근거 데이터]\n" + json.dumps(indexed_evidence, ensure_ascii=False)
+                  + "\n[출력 참조 형식]\nclaim_checks는 unit_index로 검사 문장을 선택한다. "
+                    "supports에는 그 문장 전체의 사실을 지지하는 items의 evidence_index만 적어라. "
+                    "claim/quote/evidence_id를 다시 쓰지 마라. 서버가 번호로 원문을 직접 연결한다. "
+                    "근거가 없거나 해당 사실을 지지하지 않으면 supported=false다. "
+                    "전체 claims_ok는 문장별 supported를 모두 합산한 값이어야 한다.")
+        result = _call_json(prompt, _CLAIM_SPEAKER_SCHEMA)
+        if not isinstance(result, dict):
+            return {}
+        for row in result.get("claim_checks") or []:
+            if not isinstance(row, dict):
+                continue
+            index = row.get("unit_index")
+            if "claim" not in row and type(index) is int and 0 <= index < len(units):
+                row["claim"] = units[index]["text"]
+            for support in row.get("supports") or []:
+                if not isinstance(support, dict) or "evidence_index" not in support:
+                    continue
+                ref = support["evidence_index"]
+                if type(ref) is int and 0 <= ref < len(items):
+                    support["evidence_id"] = items[ref].get("evidence_id")
+                    support["quote"] = items[ref].get("text")
+        return result
     return _call_json(_SPEAKER_PROMPT.format(script=text, product=product or "(미확정)"), _SPEAKER_SCHEMA)
 
 
@@ -1072,7 +1112,7 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
             merged_parts.append(replacement)
         if not topic_product:
             return []
-        merged = " ".join(merged_parts)
+        merged = script_gate.claim_text(merged_parts)
         # 같은 요청의 동일한 완성 본문만 재사용한다. 다음 후보/본문 변경은 새로 판정한다.
         if merged not in _merged_verdicts:
             _merged_verdicts[merged] = script_gate.semantic_content_checks(

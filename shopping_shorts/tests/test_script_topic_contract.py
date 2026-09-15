@@ -356,7 +356,7 @@ def test_beat_regen_topic_check_replaces_only_requested_duplicate_role(monkeypat
         {"beat_roles": ["item"], "templates": {}}, "item", beats,
         topic_product=TOILET, topic_judge=judge, beat_index=1)
     assert out
-    assert "첫 변기 새 변기 문장" in seen[0]
+    assert "첫 변기\n새 변기 문장" in seen[0]
 
 
 def test_beat_regen_rejects_out_of_range_or_wrong_role_index(monkeypatch):
