@@ -8,6 +8,50 @@ from shopping_shorts import app as app_mod
 ACTUAL_WORK_ID = "20f6aeb39b1a"
 
 
+def test_joined_observations_preserve_all_source_evidence():
+    observations = ["수도 아래에서 포도를 씻는 모습", "뚜껑이 과일 위로 늘어나며 밀착된다"]
+    assert topic_contract._observed_quote("수도 아래에서 포도를 씻는 모습. 뚜껑이 과일 위로 늘어나며 밀착된다.", observations)
+    assert not topic_contract._observed_quote("수도 아래에서 포도를 씻는 모습. 신선도가 일주일 유지된다.", observations)
+    assert not topic_contract._observed_quote("수도 아래에서 포도를 씻는 모습. 안경을 보관한다.", observations)
+    assert not topic_contract._observed_quote("용량은 15리터", ["용량은 1.5리터"])
+
+
+def test_observation_references_are_scoped_and_checked():
+    rows = [{"source_id": "a", "product": "롤 행주", "observations": ["롤에서 행주를 한 장 뜯는다"]},
+            {"source_id": "b", "product": "주방 행주", "observations": ["행주로 주방 물기를 닦는다"]}]
+    answer = {"groups": [{"product": "롤 행주", "source_ids": ["a", "b"],
+                          "supports": [{"source_id": "a", "observation_ids": [0]},
+                                       {"source_id": "b", "observation_ids": [0]}]}]}
+    assert topic_contract._validated_groups(rows, answer) == [["a", "b"]]
+    for invalid in ([1], [-1], [True], [], ["0"]):
+        answer["groups"][0]["supports"][1]["observation_ids"] = invalid
+        assert topic_contract._validated_groups(rows, answer) is None
+
+
+def test_membership_service_retries_transient_failures(monkeypatch):
+    from shopping_shorts import script_generate
+    calls = []
+    answer = {"groups": []}
+    def call(prompt, schema, note):
+        calls.append(prompt)
+        if len(calls) < 3:
+            note.update(reason="api_error", detail="503 UNAVAILABLE")
+            return {}
+        return answer
+    monkeypatch.setattr(script_generate, "_call_json", call)
+    monkeypatch.setattr(topic_contract.time, "sleep", lambda _: None)
+    assert topic_contract._judge_membership([]) == answer
+    assert len(calls) == 3
+
+
+def test_provider_failure_is_not_product_disagreement():
+    def unavailable(rows):
+        raise RuntimeError("503")
+    result = topic_contract.resolve_membership(_actual_container_sources(), judge=unavailable)
+    assert result["error"] == "judge_unavailable"
+    assert result["method"] == "unresolved"
+
+
 def _source(source_id, product, observation, *, full_text=""):
     return {
         "source_id": source_id,
@@ -61,7 +105,7 @@ def test_actual_three_container_sources_resolve_to_one_material_family():
     result = topic_contract.resolve_membership(
         _actual_container_sources(), judge=_one_container_group)
 
-    assert result["version"] == 1
+    assert result["version"] == topic_contract.RESOLUTION_VERSION
     assert result["method"] == "semantic"
     assert result["product"] in {
         "과일 세척 및 보관용기",
