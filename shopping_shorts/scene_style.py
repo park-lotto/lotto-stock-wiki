@@ -112,6 +112,8 @@ def validate_snapshot(value):
         raise ValueError("제목 효과가 올바르지 않습니다")
     if "hookMotionSpeed" in value:
         number(value["hookMotionSpeed"],.5,2)
+    if value.get("hookCaptionMode") not in (None,"visible","hidden"):
+        raise ValueError("훅 말자막 설정이 올바르지 않습니다")
     if "branding" in value:
         if not isinstance(value["branding"],dict):
             raise ValueError("워터마크 설정이 올바르지 않습니다")
@@ -122,26 +124,29 @@ def validate_snapshot(value):
                 number(item.get(key,default),lo,hi)
             if not re.fullmatch(r"#[0-9a-fA-F]{6}",item.get("color","#ffffff")):
                 raise ValueError("표시 색상이 올바르지 않습니다")
-    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookMotionSpeed", "branding", "text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     from .video_assemble import caption_schedule
     scenes = []
+    hide_hook_captions = (snapshot or {}).get("hookCaptionMode") == "hidden"
     for index, beat in enumerate(timeline):
         start, end = float(beat["t0"]), float(beat["t0"] + beat["dur"])
         cursor = start
+        kind = "hook" if index == 0 else "body"
+        caption_visible = not (kind == "hook" and hide_hook_captions)
         for caption, t0, t1 in caption_schedule(beat):
             a, b = max(cursor, start, float(t0)), min(end, float(t1))
             if b <= a:
                 continue
             if a > cursor + .001:
-                scenes.append({"start":cursor,"end":a,"caption":"","beat_idx":beat["beat_idx"],"kind":"hook" if index == 0 else "body"})
-            scenes.append({"start":a,"end":b,"caption":caption,"beat_idx":beat["beat_idx"],"kind":"hook" if index == 0 else "body"})
+                scenes.append({"start":cursor,"end":a,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
+            scenes.append({"start":a,"end":b,"caption":caption,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
             cursor = b
         if cursor < end - .001:
-            scenes.append({"start":cursor,"end":end,"caption":"","beat_idx":beat["beat_idx"],"kind":"hook" if index == 0 else "body"})
+            scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
     title = str((headcopy or {}).get("text") or (timeline[0].get("narration") if timeline else "") or "").strip()
     parts = title.splitlines()
     if len(parts) < 2 and title:
