@@ -139,7 +139,9 @@ def test_admin_can_queue_isolated_render(tmp_path, monkeypatch):
     assert response.json()["status"] == "queued"
     assert calls == [(lab_id, "j1", work_root)]
     saved = scene_style_lab.read_manifest(work_root, lab_id)
-    assert saved["render_state"] == {"status": "ready", "error": None}
+    assert saved["render_state"]["status"] == "ready"
+    assert saved["render_state"]["error"] is None
+    assert saved["render_state"]["generation"]
 
 
 def test_background_render_failure_is_recorded_for_admin_ui(tmp_path, monkeypatch):
@@ -159,7 +161,9 @@ def test_background_render_failure_is_recorded_for_admin_ui(tmp_path, monkeypatc
 
     assert response.status_code == 200
     saved = scene_style_lab.read_manifest(work_root, manifest["lab_id"])
-    assert saved["render_state"] == {"status": "error", "error": "ffmpeg stopped"}
+    assert saved["render_state"]["status"] == "error"
+    assert saved["render_state"]["error"] == "ffmpeg stopped"
+    assert saved["render_state"]["generation"]
 
 
 def test_lab_frame_is_admin_only_and_marks_clean_signature(tmp_path, monkeypatch):

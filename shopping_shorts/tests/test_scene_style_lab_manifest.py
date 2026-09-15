@@ -161,3 +161,30 @@ def test_freshness_rejects_changed_caption_timing_or_replaced_tts(tmp_path):
     tts.write_bytes(b"replaced-audio")
     with pytest.raises(lab.LabPreconditionError, match="음성.*자막"):
         lab.assert_fresh(manifest, source)
+
+
+def test_output_merge_rejects_snapshot_changed_during_render(tmp_path):
+    from shopping_shorts import scene_style_lab as lab
+
+    target = lab.lab_dir(tmp_path, "lab_000000000009")
+    target.mkdir(parents=True)
+    started = {
+        "lab_id": "lab_000000000009",
+        "scene_style": {"version": 1, "mode": "story", "presetId": "t11"},
+        "outputs": {},
+    }
+    lab.write_manifest(target, started)
+    current = lab.read_manifest(tmp_path, started["lab_id"])
+    current["scene_style"]["hookMotion"] = "popup"
+    lab.write_manifest(target, current)
+
+    with pytest.raises(lab.LabPreconditionError, match="렌더 중 장면꾸미기 설정이 바뀌었습니다"):
+        lab.merge_generated_fields(
+            tmp_path,
+            started,
+            outputs={"mp4": str(target / "old.mp4")},
+        )
+
+    saved = lab.read_manifest(tmp_path, started["lab_id"])
+    assert saved["scene_style"]["hookMotion"] == "popup"
+    assert "mp4" not in saved["outputs"]

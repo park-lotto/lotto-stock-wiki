@@ -21,9 +21,9 @@
     if(!packet)return;
     const expected=contractFromContext(),contracts=packet.manifest.contracts||{};
     const cols=[['미리보기',expected],['MP4',contracts.mp4],['CapCut',contracts.capcut],['랜딩',contracts.landing]];
-    const value=(actual,key)=>{if(!actual)return [null,'아직 생성 안 됨'];if(key==='hook')return [actual.hook_caption_count===0,`${actual.hook_caption_count}개`];if(key==='body'){const ok=expected.body_first_start===null?actual.body_first_start===null:Math.abs(Number(actual.body_first_start)-expected.body_first_start)<=.034;return [ok,actual.body_first_start===null?'-':Number(actual.body_first_start).toFixed(3)+'초']}return [actual.clean_signature===expected.clean_signature,String(actual.clean_signature||'-').slice(0,12)]};
+    const value=(name,actual,key)=>{if(!actual)return [null,'아직 생성 안 됨'];if((name==='MP4'||name==='랜딩')&&(key==='hook'||key==='body'))return [null,'실물 육안 확인'];if(key==='hook')return [actual.hook_caption_count===0,`${actual.hook_caption_count}개`];if(key==='body'){const ok=expected.body_first_start===null?actual.body_first_start===null:Math.abs(Number(actual.body_first_start)-expected.body_first_start)<=.034;return [ok,actual.body_first_start===null?'-':Number(actual.body_first_start).toFixed(3)+'초']}return [actual.clean_signature===expected.clean_signature,String(actual.clean_signature||'-').slice(0,12)]};
     const rows=[['훅 자막','hook'],['본문 첫 시작','body'],['청소본','clean']];
-    compare.innerHTML=rows.map(([label,key])=>`<tr><th>${label}</th>${cols.map(([,actual])=>cell(...value(actual,key))).join('')}</tr>`).join('')+
+    compare.innerHTML=rows.map(([label,key])=>`<tr><th>${label}</th>${cols.map(([name,actual])=>cell(...value(name,actual,key))).join('')}</tr>`).join('')+
       `<tr><th>위치</th>${cell(true,'화면 컨텍스트')}${cell(!!packet.manifest.receipts?.mp4,packet.manifest.receipts?.mp4?'실파일 해시':'-')}${cell(!!packet.manifest.outputs?.capcut_project,packet.manifest.outputs?.capcut_project?'JSON 역검증':'-')}${cell(!!packet.manifest.contracts?.landing?.artifact_sha256,packet.manifest.contracts?.landing?.artifact_sha256?'동일 MP4 해시':'-')}</tr>`;
     const ready=!!packet.manifest.outputs?.mp4;resultVideo.hidden=!ready;if(ready)resultVideo.src=labUrl('/video')+'?v='+Date.now();
     landing.href=`/scene-style-lab/${encodeURIComponent(packet.manifest.lab_id)}`;

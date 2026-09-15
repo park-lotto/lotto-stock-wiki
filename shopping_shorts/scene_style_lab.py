@@ -108,6 +108,29 @@ def read_manifest(work_root: Path | str, lab_id: str) -> dict:
     return json.loads(_manifest_path(work_root, lab_id).read_text(encoding="utf-8"))
 
 
+def _snapshot_signature(snapshot: dict | None) -> str:
+    raw = json.dumps(snapshot or {}, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+
+def merge_generated_fields(work_root: Path | str, started: dict, **fields: dict) -> dict:
+    """생성 시작 뒤 설정이 그대로일 때 산출 필드만 최신 manifest에 합친다."""
+    current = read_manifest(work_root, started["lab_id"])
+    if _snapshot_signature(current.get("scene_style")) != _snapshot_signature(started.get("scene_style")):
+        raise LabPreconditionError("렌더 중 장면꾸미기 설정이 바뀌었습니다")
+    started_generation = ((started.get("render_state") or {}).get("generation"))
+    current_generation = ((current.get("render_state") or {}).get("generation"))
+    if started_generation is not None and started_generation != current_generation:
+        raise LabPreconditionError("새 렌더 요청이 시작되어 이전 결과를 버렸습니다")
+    for name, value in fields.items():
+        if name in {"outputs", "receipts", "contracts"}:
+            current.setdefault(name, {}).update(copy.deepcopy(value))
+        else:
+            current[name] = copy.deepcopy(value)
+    write_manifest(lab_dir(work_root, started["lab_id"]), current)
+    return current
+
+
 def _file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with Path(path).open("rb") as handle:
@@ -298,7 +321,8 @@ def render_copy(manifest: dict, source_job: dict, work_root: Path | str) -> Path
     snapshot["hookCaptionMode"] = "hidden"
     deco = copy.deepcopy(manifest.get("deco") or {})
     deco["scene_style"] = snapshot
-    output = target / "lab-final.mp4"
+    generation = ((manifest.get("render_state") or {}).get("generation"))
+    output = target / (f"lab-final-{generation}.mp4" if generation else "lab-final.mp4")
     video_assemble.assemble(
         render_plan,
         tts_paths,
@@ -330,7 +354,16 @@ def render_copy(manifest: dict, source_job: dict, work_root: Path | str) -> Path
         "artifact_sha256": receipt["sha256"],
         "verified_by": "same-file",
     })
-    write_manifest(target, updated)
+    updated = merge_generated_fields(
+        work_root,
+        manifest,
+        outputs={"mp4": updated["outputs"]["mp4"]},
+        receipts={"mp4": updated["receipts"]["mp4"]},
+        contracts={
+            "mp4": updated["contracts"]["mp4"],
+            "landing": updated["contracts"]["landing"],
+        },
+    )
     manifest.clear()
     manifest.update(updated)
     return output
@@ -537,7 +570,12 @@ def build_capcut_copy(
     updated.setdefault("contracts", {})["capcut"] = contract_from_context(
         context, (manifest.get("clean") or {}).get("signature")
     )
-    write_manifest(target, updated)
+    updated = merge_generated_fields(
+        work_root,
+        manifest,
+        outputs={"capcut_project": updated["outputs"]["capcut_project"]},
+        contracts={"capcut": updated["contracts"]["capcut"]},
+    )
     manifest.clear()
     manifest.update(updated)
     return Path(project)

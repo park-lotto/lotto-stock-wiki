@@ -18680,18 +18680,26 @@ def _run_scene_style_lab_render(lab_id: str):
 
     try:
         manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+        generation = ((manifest.get("render_state") or {}).get("generation"))
         source_job = Store(DB_PATH).get_mix_job(manifest["source_job_id"])
         if not source_job:
             raise scene_style_lab.LabPreconditionError("원본 작업이 없습니다")
         scene_style_lab.render_copy(manifest, source_job, _MIX_WORK_DIR)
         current = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
-        current["render_state"] = {"status": "ready", "error": None}
-        scene_style_lab.write_manifest(scene_style_lab.lab_dir(_MIX_WORK_DIR, lab_id), current)
+        if ((current.get("render_state") or {}).get("generation")) == generation:
+            current["render_state"] = {
+                "status": "ready", "error": None, "generation": generation,
+            }
+            scene_style_lab.write_manifest(scene_style_lab.lab_dir(_MIX_WORK_DIR, lab_id), current)
     except Exception as exc:
         try:
             current = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
-            current["render_state"] = {"status": "error", "error": str(exc)}
-            scene_style_lab.write_manifest(scene_style_lab.lab_dir(_MIX_WORK_DIR, lab_id), current)
+            generation = locals().get("generation")
+            if ((current.get("render_state") or {}).get("generation")) == generation:
+                current["render_state"] = {
+                    "status": "error", "error": str(exc), "generation": generation,
+                }
+                scene_style_lab.write_manifest(scene_style_lab.lab_dir(_MIX_WORK_DIR, lab_id), current)
         except Exception:
             pass
 
@@ -18709,7 +18717,10 @@ def api_scene_style_lab_render(lab_id: str, request: Request, background_tasks: 
         return JSONResponse(status_code=404, content={"error": "시험 없음"})
     if not _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id")):
         return JSONResponse(status_code=404, content={"error": "시험 없음"})
-    manifest["render_state"] = {"status": "queued", "error": None}
+    generation = secrets.token_hex(8)
+    manifest["render_state"] = {
+        "status": "queued", "error": None, "generation": generation,
+    }
     manifest.setdefault("outputs", {}).pop("mp4", None)
     manifest.setdefault("receipts", {}).pop("mp4", None)
     manifest.setdefault("contracts", {}).pop("mp4", None)

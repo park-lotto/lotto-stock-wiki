@@ -71,6 +71,7 @@ def test_admin_lab_ui_exposes_four_output_comparison_and_actions():
     assert "render_state" in script
     assert "실파일 해시" in script
     assert "JSON 역검증" in script
+    assert "실물 육안 확인" in script
 
 
 def test_embedded_lab_does_not_restore_browser_local_branding():
