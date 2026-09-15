@@ -1,0 +1,9 @@
+[Unit]
+Description=유튜브 대박채널 발굴 — 매일 07:30(08:10 유튜브 수집 전에 시드를 넣는다)
+
+[Timer]
+OnCalendar=*-*-* 07:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
