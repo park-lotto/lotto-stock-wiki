@@ -142,6 +142,7 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 .sq{position:relative;aspect-ratio:1/1;border-radius:22px;overflow:hidden;background:#05080b;border:2px solid var(--line);transition:border-color .5s,box-shadow .5s}
 .fs.on .sq{border-color:var(--mint);box-shadow:0 0 0 4px rgba(111,240,214,.12),0 24px 60px rgba(111,240,214,.18)}
 .sq video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sq img{object-fit:contain!important;object-position:center 42%!important;padding:54px 6px 66px;background:#0b1118;image-rendering:auto}
 /* 칸 안에서 "이게 뭘 보여주는지" 바로 읽히게 — 위에 큰 단계명, 아래에 입력→결과 */
 .sq .cap{position:absolute;left:14px;top:14px;z-index:3;display:flex;align-items:center;gap:8px;background:rgba(6,10,14,.82);backdrop-filter:blur(4px);border:1px solid rgba(111,240,214,.35);border-radius:12px;padding:8px 14px;font-size:22px;font-weight:900}
 .sq .cap i{font-style:normal;width:30px;height:30px;border-radius:9px;background:var(--grad);color:#062018;display:inline-flex;align-items:center;justify-content:center;font-size:17px}
@@ -234,10 +235,10 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
   <h2 class=reveal>담기만 하면, <span class=hl>네 단계</span>로 영상이 됩니다</h2>
   <p class="lead reveal">원본 영상을 담으면 장면을 읽고, 대본을 쓰고, 장면을 맞춰 완성본까지 뽑아냅니다.</p>
   <div class="flow reveal" id=flow>
-    <div class=fs><div class=sq data-video=flow1 data-label="장면분석"><div class=cap><i>1</i>장면분석</div><div class=io><span>영상을 담으면</span><b>→</b><strong>장면마다 무엇이 나오는지 AI가 적어줌</strong></div></div></div>
-    <div class=fs><div class=sq data-video=flow2 data-label="대본생성"><div class=cap><i>2</i>대본생성</div><div class=io><span>잘 된 영상의 구성으로</span><b>→</b><strong>내 제품 대본이 자동으로 써짐</strong></div></div></div>
-    <div class=fs><div class=sq data-video=flow3 data-label="장면매칭"><div class=cap><i>3</i>장면매칭</div><div class=io><span>대본 한 줄마다</span><b>→</b><strong>딱 맞는 장면이 자동으로 붙음</strong></div></div></div>
-    <div class=fs><div class=sq data-video=flow4 data-label="렌더화면"><div class=cap><i>4</i>렌더화면</div><div class=io><span>버튼 한 번에</span><b>→</b><strong>자막·음성 입힌 완성 쇼츠가 나옴</strong></div></div></div>
+    <div class=fs><div class=sq data-video=step_s1 data-label="장면분석"><div class=cap><i>1</i>장면분석</div><div class=io><span>영상을 담으면</span><b>→</b><strong>장면마다 무엇이 나오는지 AI가 적어줌</strong></div></div></div>
+    <div class=fs><div class=sq data-video=step_s2 data-label="대본생성"><div class=cap><i>2</i>대본생성</div><div class=io><span>잘 된 영상의 구성으로</span><b>→</b><strong>내 제품 대본이 자동으로 써짐</strong></div></div></div>
+    <div class=fs><div class=sq data-video=step_s3 data-label="장면매칭"><div class=cap><i>3</i>장면매칭</div><div class=io><span>대본 한 줄마다</span><b>→</b><strong>딱 맞는 장면이 자동으로 붙음</strong></div></div></div>
+    <div class=fs><div class=sq data-video=step_s4 data-label="렌더화면"><div class=cap><i>4</i>렌더화면</div><div class=io><span>버튼 한 번에</span><b>→</b><strong>자막·음성 입힌 완성 쇼츠가 나옴</strong></div></div></div>
   </div>
 </div>
 </div>
