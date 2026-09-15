@@ -2923,8 +2923,11 @@ class Store:
         if r[5]:
             try:
                 item["meta"] = json.loads(r[5])
-            except (ValueError, TypeError):
-                pass
+            except (ValueError, TypeError) as e:
+                # meta는 부가정보라 깨져도 항목 자체는 준다(mix_basket_list와 같은 판단).
+                # ★다만 사유는 남긴다 — 조용히 삼키면 "meta가 원래 없다"와 구분이 안 된다.
+                print(f"[store] 담긴항목 meta 파싱 실패({shortcode}): {e!r}",
+                      file=sys.stderr)
         return item
 
     def history_item(self, shortcode):
@@ -2948,7 +2951,11 @@ class Store:
                     "FROM reel_history WHERE shortcode=? ORDER BY last_seen DESC LIMIT 1",
                     (shortcode,),
                 ).fetchone()
-            except sqlite3.Error:       # 옛 스키마(platform/caption 없음)여도 안 죽는다
+            except sqlite3.Error as e:  # 옛 스키마(platform/caption 없음)여도 안 죽는다
+                # ★사유를 남긴다 — 조용히 None을 주면 "항목이 없다"와 구분이 안 돼
+                #   404 원인 추적이 막힌다(이 파일을 만든 사고가 바로 그것이었다).
+                print(f"[store] history_item 조회 실패({shortcode}): {e!r}",
+                      file=sys.stderr)
                 return None
         if not r:
             return None
@@ -2973,7 +2980,9 @@ class Store:
                     "FROM channel_archive WHERE shortcode=? ORDER BY last_seen DESC LIMIT 1",
                     (shortcode,),
                 ).fetchone()
-            except sqlite3.Error:       # 옛 스키마여도 조회가 통째로 죽지 않는다
+            except sqlite3.Error as e:  # 옛 스키마여도 조회가 통째로 죽지 않는다
+                print(f"[store] archive_item 조회 실패({shortcode}): {e!r}",
+                      file=sys.stderr)
                 return None
         if not r:
             return None
