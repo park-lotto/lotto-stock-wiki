@@ -71,6 +71,7 @@ DEPLOY_WINDOW_END=6
 DEPLOY_NOW_FLAG=/home/ubuntu/DEPLOY_NOW
 DEPLOY_WINDOW_CONF=/home/ubuntu/deploy_window.conf
 HELD_MARK=/tmp/ss_deploy_held        # 시간창 밖에서 붙잡아둔 커밋(로그 중복 방지용)
+NODE_PENDING=/tmp/ss_pending_npm     # package 잠금파일 반영 뒤 npm ci 실패 시 다음 크론에서 재시도
 [ -f "$DEPLOY_WINDOW_CONF" ] && . "$DEPLOY_WINDOW_CONF"
 exec 9>/tmp/auto_deploy.lock
 flock -n 9 || exit 0
@@ -177,7 +178,7 @@ git fetch origin main --quiet 2>>"$LOG" || { echo "$(date '+%F %T') fetch실패"
 LOCAL=$(git rev-parse HEAD); REMOTE=$(git rev-parse origin/main)
 
 # ★새 커밋이 없어도 대기 목록이 있으면 아래로 내려간다(①의 핵심 — 예전엔 여기서 끝났다).
-if [ "$LOCAL" = "$REMOTE" ] && [ ! -f "$PENDING" ]; then
+if [ "$LOCAL" = "$REMOTE" ] && [ ! -f "$PENDING" ] && [ ! -f "$NODE_PENDING" ]; then
   exit 0
 fi
 
@@ -223,6 +224,9 @@ if [ "$LOCAL" != "$REMOTE" ] && [ -z "$LOCAL_HELD" ]; then
     exit 0
   fi
   CHANGED=$(git diff --name-only "$LOCAL" "$REMOTE")
+  if echo "$CHANGED" | grep -qE '^(package.json|package-lock.json)$'; then
+    touch "$NODE_PENDING"
+  fi
   if echo "$CHANGED" | grep -qE '^dashboard/|^scripts/'; then
     _pending_add stockbrain
   fi
@@ -232,6 +236,18 @@ if [ "$LOCAL" != "$REMOTE" ] && [ -z "$LOCAL_HELD" ]; then
   fi
   if [ ! -f "$PENDING" ]; then
     echo "$(date '+%F %T') 코드변경없음(데이터/문서만) 재시작생략 $(git rev-parse --short HEAD)" >>"$LOG"
+    exit 0
+  fi
+fi
+
+# Node 렌더 의존성도 잠금파일과 함께 배포한다. 실패 표식을 남겨 새 커밋이 없어도
+# 다음 크론에서 재시도한다 — git만 새 버전이고 node_modules는 옛 상태인 반쪽 배포 금지.
+if [ -f "$NODE_PENDING" ]; then
+  if npm ci --no-audit --no-fund >>"$LOG" 2>&1; then
+    rm -f "$NODE_PENDING"
+    echo "$(date '+%F %T') Node 의존성 설치완료 $(git rev-parse --short HEAD)" >>"$LOG"
+  else
+    echo "$(date '+%F %T') ⚠️ npm ci 실패 — 다음 크론 재시도" >>"$LOG"
     exit 0
   fi
 fi

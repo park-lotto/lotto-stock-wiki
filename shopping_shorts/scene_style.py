@@ -1,8 +1,10 @@
 """장면꾸미기: 실제 자막 타이밍과 브라우저 템플릿을 최종 합성에서도 공유한다."""
 import json
 import math
+import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -170,9 +172,16 @@ def render_layers(timeline, snapshot, output, headcopy=None, job_id=None):
                    ensure_ascii=False),
         encoding="utf-8",
     )
+    node_env = os.environ.copy()
+    if sys.platform.startswith("linux"):
+        # 운영 Ubuntu는 AppArmor가 unprivileged user namespace를 막아 Chrome의
+        # 기본 sandbox가 기동하지 않는다. 이 자식 프로세스는 우리가 만든 로컬 HTML만
+        # 렌더하므로 Linux에서만 Puppeteer의 기존 opt-in 플래그를 켠다.
+        node_env.setdefault("SCENE_STYLE_NO_SANDBOX", "1")
     run = subprocess.run(
         ["node", str(ROOT / "tools/render_scene_style.js"), str(request)],
         capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=240,
+        env=node_env,
     )
     if run.returncode:
         raise RuntimeError("장면꾸미기 레이어 생성 실패: " + run.stderr[-1500:])
