@@ -10733,6 +10733,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
                "/help", "/api/help/items",
                "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
+               "/pay/toss", "/pay/toss/success", "/pay/toss/fail",   # 토스 카드결제(2026-09-15)
                "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
                # 가입 전 안내(2026-08-23) — ★반드시 비로그인 공개다. 이 두 장은 아직 회원이
                # 아닌 사람에게 뿌리는 링크(공지·카톡)라, 로그인에 막히면 링크가 통째로 죽는다.
@@ -10783,6 +10784,7 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 #   없어서(실측) prefix로 열면 상한 없이 샌다.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
+                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail",   # 토스 카드결제(2026-09-15)
                    # ★가입 마무리 화면(2026-08-24). 등급과 무관하게 열려야 한다 —
                    #   막으면 **빠져나갈 수 없는 막다른 길**이 된다: 어느 화면을 열든
                    #   미들웨어가 /welcome으로 보내는데(_needs_welcome), 정작 /welcome이
@@ -12091,6 +12093,167 @@ def _deposit_contact(kakao, phone):
     if phone:
         out += f'<a class=tel href="tel:{_h.escape(phone)}">📞 {_h.escape(phone)}</a>'
     return out + '</div>'
+
+
+# ── 💳 토스페이먼츠 카드결제 (2026-09-15 사장님 "토스 PG 등록, 카드결제 테스트페이지") ──
+# 흐름: /pay/toss(결제창 SDK) → 토스 결제창 → /pay/toss/success?paymentKey&orderId&amount
+#       → 서버가 **금액을 대조한 뒤** 시크릿 키로 승인(confirm) → 결과 화면.
+# ★금액은 서버가 정한다(주문 만들 때 DB에 적어두고 승인 때 대조). 브라우저가 amount를
+#   바꿔 보내도 승인하지 않는다 — 토스 문서가 요구하는 검증이다.
+# ★키는 환경변수(/etc/shopping-shorts.env)에서만 읽는다. 테스트 키(test_)면 실제 돈이 안 나간다.
+_TOSS_CONFIRM_URL = "https://api.tosspayments.com/v1/payments/confirm"
+
+
+def _toss_keys():
+    return (os.environ.get("TOSS_CLIENT_KEY", "").strip(),
+            os.environ.get("TOSS_SECRET_KEY", "").strip())
+
+
+def _toss_order_name_amount():
+    st = Store(DB_PATH)
+    name = (st.get_setting("toss_order_name", "") or "숏템메이커 1기 참가비").strip()
+    try:
+        amount = int(st.get_setting("toss_amount", "") or 770000)
+    except ValueError:
+        amount = 770000
+    return name, amount
+
+
+def _toss_db():
+    st = Store(DB_PATH)
+    with st._conn() as c:
+        c.execute("""CREATE TABLE IF NOT EXISTS toss_payments (
+                        order_id TEXT PRIMARY KEY, amount INTEGER, order_name TEXT,
+                        status TEXT, payment_key TEXT, method TEXT, approved_at TEXT,
+                        raw TEXT, created_at TEXT, updated_at TEXT)""")
+    return st
+
+
+def _toss_esc(s):
+    return (str(s or "").replace("&", "&amp;").replace("<", "&lt;")
+            .replace(">", "&gt;").replace('"', "&quot;"))
+
+
+def _toss_page(title, body):
+    return ("<!doctype html><html lang=ko><head><meta charset=utf-8>"
+            "<meta name=viewport content='width=device-width,initial-scale=1'>"
+            f"<title>{title}</title><style>body{{margin:0;background:#090d10;color:#e8f3ef;"
+            "font-family:'Pretendard','Malgun Gothic',sans-serif;display:flex;justify-content:center;"
+            "padding:40px 16px}.box{max-width:440px;width:100%;background:#111a17;border:1px solid #1f3a33;"
+            "border-radius:16px;padding:28px}h1{font-size:22px;margin:0 0 12px}.p{font-size:15px;color:#9fb8b0;"
+            "line-height:1.6}.amt{font-size:30px;font-weight:800;color:#6ff0d6;margin:14px 0}"
+            "button,a.btn{display:block;width:100%;text-align:center;padding:14px;border-radius:12px;border:0;"
+            "background:#6ff0d6;color:#06110e;font-size:17px;font-weight:800;cursor:pointer;text-decoration:none;"
+            "margin-top:18px}.test{display:inline-block;background:#e0a33d;color:#111;font-size:12px;"
+            "font-weight:700;padding:3px 8px;border-radius:8px;margin-bottom:10px}.err{color:#ff8a8a}"
+            "code{color:#6ff0d6}</style>"
+            f"</head><body><div class=box>{body}</div></body></html>")
+
+
+@app.get("/pay/toss", response_class=HTMLResponse)
+def _toss_checkout(request: Request):
+    ck, sk = _toss_keys()
+    if not ck or not sk:
+        return HTMLResponse(_toss_page("결제 준비 중", "<h1>카드결제 준비 중</h1>"
+                                       "<div class=p>결제 설정이 아직 끝나지 않았습니다.</div>"),
+                            status_code=503)
+    name, amount = _toss_order_name_amount()
+    order_id = "ST" + datetime.now().strftime("%Y%m%d%H%M%S") + secrets.token_hex(4)
+    now = datetime.now(timezone.utc).isoformat()
+    with _toss_db()._conn() as c:
+        c.execute("INSERT INTO toss_payments(order_id,amount,order_name,status,created_at,updated_at) "
+                  "VALUES(?,?,?,?,?,?)", (order_id, amount, name, "READY", now, now))
+    base = str(request.base_url).rstrip("/")
+    if request.headers.get("x-forwarded-proto") == "https" and base.startswith("http://"):
+        base = "https://" + base[len("http://"):]
+    badge = ("<span class=test>테스트 결제 — 실제 돈이 나가지 않습니다</span>"
+             if ck.startswith("test_") else "")
+    body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
+<div class=amt>{amount:,}원</div>
+<div class=p>아래 버튼을 누르면 토스페이먼츠 카드 결제창이 열립니다.</div>
+<button id=go>카드로 결제하기</button>
+<div class="p err" id=msg></div>
+<script src="https://js.tosspayments.com/v2/standard"></script>
+<script>
+document.getElementById('go').onclick = async () => {{
+  const msg = document.getElementById('msg'); msg.textContent = '';
+  try {{
+    const tp = TossPayments({json.dumps(ck)});
+    const payment = tp.payment({{ customerKey: TossPayments.ANONYMOUS }});
+    await payment.requestPayment({{
+      method: "CARD",
+      amount: {{ currency: "KRW", value: {amount} }},
+      orderId: {json.dumps(order_id)},
+      orderName: {json.dumps(name)},
+      successUrl: {json.dumps(base + "/pay/toss/success")},
+      failUrl: {json.dumps(base + "/pay/toss/fail")}
+    }});
+  }} catch (e) {{ msg.textContent = '결제창을 열지 못했습니다: ' + ((e && e.message) || e); }}
+}};
+</script>"""
+    return _toss_page("카드 결제", body)
+
+
+@app.get("/pay/toss/success", response_class=HTMLResponse)
+def _toss_success(paymentKey: str = "", orderId: str = "", amount: str = ""):
+    ck, sk = _toss_keys()
+    st = _toss_db()
+    with st._conn() as c:
+        row = c.execute("SELECT amount, status FROM toss_payments WHERE order_id=?",
+                        (orderId,)).fetchone()
+    if not row:
+        return HTMLResponse(_toss_page("결제 실패", "<h1 class=err>주문을 찾을 수 없습니다</h1>"),
+                            status_code=400)
+    try:
+        amt = int(amount)
+    except ValueError:
+        amt = -1
+    if amt != row[0]:        # ★금액 위변조 차단 — 서버가 정한 금액과 다르면 승인하지 않는다
+        return HTMLResponse(_toss_page("결제 실패", "<h1 class=err>결제 금액이 주문과 다릅니다</h1>"
+                                       "<div class=p>승인하지 않았습니다.</div>"), status_code=400)
+    if row[1] == "DONE":
+        return _toss_page("결제 완료", "<h1>✅ 이미 완료된 결제입니다</h1>"
+                          f"<div class=p>주문번호 <code>{_toss_esc(orderId)}</code></div>")
+    auth = base64.b64encode((sk + ":").encode()).decode()
+    try:
+        r = requests.post(_TOSS_CONFIRM_URL, timeout=30,
+                          headers={"Authorization": "Basic " + auth,
+                                   "Content-Type": "application/json"},
+                          json={"paymentKey": paymentKey, "orderId": orderId, "amount": amt})
+        d = r.json()
+        code = r.status_code
+    except Exception as e:   # noqa: BLE001 — 네트워크 실패도 화면에 사유를 보인다
+        d, code = {"code": "NETWORK", "message": repr(e)}, 0
+    ok = code == 200 and d.get("status") == "DONE"
+    now = datetime.now(timezone.utc).isoformat()
+    with st._conn() as c:
+        c.execute("UPDATE toss_payments SET status=?, payment_key=?, method=?, approved_at=?, raw=?, "
+                  "updated_at=? WHERE order_id=?",
+                  ("DONE" if ok else "FAILED", paymentKey, d.get("method"), d.get("approvedAt"),
+                   json.dumps(d, ensure_ascii=False)[:8000], now, orderId))
+    if not ok:
+        return HTMLResponse(_toss_page("결제 실패", "<h1 class=err>결제 승인 실패</h1><div class=p>"
+                                       f"{_toss_esc(d.get('message'))}<br>"
+                                       f"<code>{_toss_esc(d.get('code'))}</code></div>"),
+                            status_code=400)
+    return _toss_page("결제 완료", f"""<h1>✅ 결제가 완료되었습니다</h1>
+<div class=amt>{amt:,}원</div>
+<div class=p>{_toss_esc(d.get('orderName'))}<br>결제수단 {_toss_esc(d.get('method'))}<br>
+주문번호 <code>{_toss_esc(orderId)}</code></div>
+<a class=btn href="/">숏템메이커로 돌아가기</a>""")
+
+
+@app.get("/pay/toss/fail", response_class=HTMLResponse)
+def _toss_fail(code: str = "", message: str = "", orderId: str = ""):
+    if orderId:
+        with _toss_db()._conn() as c:
+            c.execute("UPDATE toss_payments SET status=?, raw=?, updated_at=? "
+                      "WHERE order_id=? AND status='READY'",
+                      ("FAILED", json.dumps({"code": code, "message": message}, ensure_ascii=False),
+                       datetime.now(timezone.utc).isoformat(), orderId))
+    return _toss_page("결제 실패", f"""<h1 class=err>결제가 완료되지 않았습니다</h1>
+<div class=p>{_toss_esc(message)}<br><code>{_toss_esc(code)}</code></div>
+<a class=btn href="/pay/toss">다시 시도</a>""")
 
 
 @app.get("/pay", response_class=HTMLResponse)
