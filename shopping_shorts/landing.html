@@ -331,12 +331,13 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
     /* 영상이 오기 전엔 같은 이름의 캡처(.jpg)를 먼저 보여준다 */
     var img = new Image(); img.alt = label;
     img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top';
-    img.onload = function(){ el.insertBefore(img, ph); ph.style.display='none'; };
+    var vidOk = false;
+    img.onload = function(){ if(vidOk) return; el.insertBefore(img, ph); ph.style.display='none'; };
     img.src = '/static/landing/'+name+'.jpg';
     var v = document.createElement('video');
     v.muted=true; v.loop=true; v.playsInline=true; v.autoplay=true; v.preload='metadata';
     v.setAttribute('muted',''); v.setAttribute('playsinline','');
-    v.style.cssText="position:absolute;inset:0"; v.addEventListener("loadeddata", function(){ ph.style.display="none"; if(img.parentNode) img.remove(); });
+    v.style.cssText="position:absolute;inset:0;z-index:1"; v.addEventListener("loadeddata", function(){ vidOk = true; ph.style.display="none"; if(img.parentNode) img.remove(); var p=v.play(); if(p&&p.catch) p.catch(function(){}); });
     v.addEventListener('error', function(){ v.remove(); }, true);
     var src=document.createElement('source'); src.src='/static/landing/'+name+'.mp4'; src.type='video/mp4';
     src.addEventListener('error', function(){ v.remove(); });
@@ -393,6 +394,14 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
     function on(){ fs.forEach(function(f,k){ f.classList.toggle('on', k===i); }); i=(i+1)%fs.length; }
     on(); setInterval(on, 2200);
   })();
+  /* 화면에 보이는 영상만 재생(크롬이 화면 밖에서 시작한 자동재생을 멈춰두는 경우가 있다) */
+  if ('IntersectionObserver' in window) {
+    var vio = new IntersectionObserver(function(es){ es.forEach(function(e){
+      var v = e.target.querySelector('video'); if(!v) return;
+      if (e.isIntersecting) { var p=v.play(); if(p&&p.catch) p.catch(function(){}); } else { v.pause(); }
+    }); }, {threshold:.25});
+    document.querySelectorAll('[data-video], #hv').forEach(function(el){ vio.observe(el); });
+  }
   var io = 'IntersectionObserver' in window ? new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12}) : null;
   document.querySelectorAll('.reveal').forEach(function(e){ io ? io.observe(e) : e.classList.add('in'); });
 })();
