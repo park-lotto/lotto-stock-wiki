@@ -647,14 +647,9 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 .captag{display:block;height:14px;line-height:14px;font-size:10.5px;font-weight:700;
   letter-spacing:.3px;margin-bottom:2px}
 .captag.sub{color:var(--good)}
-/* ★오른쪽(담긴) 썸네일을 왼쪽 팔레트로 끌어오면 빠진다(2026-08-15 사장님 "좌측으로
-   끌어다 버리면 빠지게"). 끄는 동안 왼쪽 패널이 휴지통임을 눈에 보이게 알린다. */
-.pane.left.bin{box-shadow:inset 0 0 0 3px var(--bad)}
-.pane.left.bin #palette{opacity:.4}
-#binmsg{display:none;position:sticky;top:0;z-index:5;background:var(--bad);color:#fff;
-  font-weight:800;text-align:center;padding:11px;border-radius:8px;font-size:15px;
-  margin-bottom:10px}
-.pane.left.bin #binmsg{display:block}
+/* ★휴지통(왼쪽 패널에 끌어다 놓아 빼기)은 2026-09-16 사장님 지시로 제거했다.
+   빼기는 썸네일 두 번 클릭 하나로만 한다 — 경로가 둘이면 상태(bin·dragFrom)가
+   어긋나 빨간 띠가 남고 화면이 먹통이 됐다(0순위-B: 같은 일을 두 군데서 정하지 마라). */
 /* ══ 촘촘히 보기(2026-08-26 사장님 "쓸데없는 텍스트 다 죽이고 영상이 한눈에") ══
    기능은 하나도 안 없앤다 — 글자를 썸네일 위로 올리거나 한 번 더 눌러야 나오게 접을 뿐이다.
    ★모든 규칙을 body.tight 아래 한 곳에 모은다. 여기저기 흩으면 켜고 끄는 판단이
@@ -865,7 +860,6 @@ body.tight .srcgroup{margin-bottom:8px}
 body.tight .pane{padding:4px 10px}
 body.tight .pane.left{padding-top:2px}
 body.tight .wrap{gap:6px}
-body.tight #binmsg:not(.on){display:none}
 
 /* 화면 한가운데 큰 재생 버튼 — 위 [▶️ 전체 재생] 줄을 대신한다 */
 #pvbigplay{width:74px;height:74px;border-radius:50%;border:2px solid var(--accent);
@@ -1199,10 +1193,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 </div>
 
 <div class="wrap">
-  <div class="pane left"
-       ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
-       ondrop="paneDrop(event)">
-    <div id="binmsg">🗑 여기에 놓으면 이 장면이 빠집니다</div>
+  <div class="pane left">
     <div class="lbl" id="dropmsg"></div>
     <div id="palette"></div>
   </div>
@@ -3346,31 +3337,20 @@ let dragFrom = null;
 function dragStart(i, k, ev){
   dragFrom = {i, k};
   if (ev && ev.dataTransfer) ev.dataTransfer.effectAllowed = 'move';
-  // 담긴 썸네일을 끄는 동안 왼쪽 팔레트 = 휴지통(2026-08-15 사장님 "좌측으로 끌어다 버리면").
-  const p = document.querySelector('.pane.left');
-  if (p) p.classList.add('bin');
 }
 function itemDragEnd(){                    // dragend는 drop 뒤에 온다 — 여기서 뒷정리만
   dragFrom = null;
-  const p = document.querySelector('.pane.left');
-  if (p) p.classList.remove('bin');
-}
-// 왼쪽 팔레트에 떨어뜨리면 그 장면을 칸에서 뺀다(빼기 로직은 기존 delSeg 그대로).
-function paneDrop(ev){
-  if (!dragFrom) return;
-  if (ev){ ev.preventDefault(); ev.stopPropagation(); }
-  const {i, k} = dragFrom;
-  itemDragEnd();
-  delSeg(i, k);
 }
 function dragDrop(i, k, ev){
   if (ev) ev.preventDefault();
-  if (!dragFrom || dragFrom.i !== i || dragFrom.k === k){ dragFrom = null; return; }
+  // ★끝내는 길은 itemDragEnd() 하나뿐이다. 종전엔 여기서 dragFrom만 비우고
+  //   휴지통 표시(bin)는 안 걷어서, 제자리에 놓으면 빨간 띠가 남아 먹통이 됐다.
+  if (!dragFrom || dragFrom.i !== i || dragFrom.k === k){ itemDragEnd(); return; }
   if (ev) ev.stopPropagation();      // 순서 변경이 칸 드롭(beatDrop)까지 번지지 않게
   const l = lists[i];
   const [moved] = l.splice(dragFrom.k, 1);
   l.splice(k, 0, moved);
-  itemDragEnd();   // render()가 끌던 요소를 지우면 dragend가 안 와서 휴지통 표시가 남는다
+  itemDragEnd();   // render()가 끌던 요소를 지우면 dragend가 안 와서 dragFrom이 남는다
   render();
 }
 // ★버튼 없이 마우스만으로(2026-08-14 사장님 "버튼 다 없애. 끌어당기고 움직이는 걸로 충분").
