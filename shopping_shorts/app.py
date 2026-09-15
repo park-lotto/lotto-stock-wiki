@@ -10733,7 +10733,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
                "/help", "/api/help/items",
                "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
-               "/pay/toss", "/pay/toss/success", "/pay/toss/fail",   # 토스 카드결제(2026-09-15)
+               "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order",   # 토스 카드결제(2026-09-15)
                "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
                # 가입 전 안내(2026-08-23) — ★반드시 비로그인 공개다. 이 두 장은 아직 회원이
                # 아닌 사람에게 뿌리는 링크(공지·카톡)라, 로그인에 막히면 링크가 통째로 죽는다.
@@ -10784,7 +10784,7 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 #   없어서(실측) prefix로 열면 상한 없이 샌다.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
-                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail",   # 토스 카드결제(2026-09-15)
+                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order",   # 토스 카드결제(2026-09-15)
                    # ★가입 마무리 화면(2026-08-24). 등급과 무관하게 열려야 한다 —
                    #   막으면 **빠져나갈 수 없는 막다른 길**이 된다: 어느 화면을 열든
                    #   미들웨어가 /welcome으로 보내는데(_needs_welcome), 정작 /welcome이
@@ -12143,6 +12143,11 @@ def _toss_db():
                         order_id TEXT PRIMARY KEY, amount INTEGER, order_name TEXT,
                         status TEXT, payment_key TEXT, method TEXT, approved_at TEXT,
                         raw TEXT, created_at TEXT, updated_at TEXT)""")
+        # 결제자 정보(2026-09-15) — 회원가입 전 결제라 누가 냈는지 여기만 안다. 옛 표에 컬럼을 더한다.
+        cols = {r[1] for r in c.execute("PRAGMA table_info(toss_payments)")}
+        for col in ("payer_name", "payer_phone", "payer_email"):
+            if col not in cols:
+                c.execute(f"ALTER TABLE toss_payments ADD COLUMN {col} TEXT")
     return st
 
 
@@ -12169,46 +12174,109 @@ def _toss_page(title, body):
 
 @app.get("/pay/toss", response_class=HTMLResponse)
 def _toss_checkout(request: Request):
+    """결제자 정보 → 주문 생성(POST) → 토스 결제창 (2026-09-15 사장님 "결제자 정보를 입력하게 하고
+    결제해야 된다. 회원가입 전이면 알 수가 없다 / 신청폼 작성 후 결제").
+
+    ★주문은 GET에서 만들지 않는다 — 페이지만 열어도 READY 주문이 쌓였다(실측 5건).
+      정보를 제출한 순간(POST /api/pay/toss/order)에 결제자와 함께 한 줄로 만든다.
+    ★사전신청 폼(notice_1gi)을 거쳐 왔으면 sessionStorage의 값으로 칸을 미리 채운다.
+    """
     ck, sk = _toss_keys()
     if not ck or not sk:
         return HTMLResponse(_toss_page("결제 준비 중", "<h1>카드결제 준비 중</h1>"
                                        "<div class=p>결제 설정이 아직 끝나지 않았습니다.</div>"),
                             status_code=503)
     name, amount = _toss_order_name_amount()
-    order_id = "ST" + datetime.now().strftime("%Y%m%d%H%M%S") + secrets.token_hex(4)
-    now = datetime.now(timezone.utc).isoformat()
-    with _toss_db()._conn() as c:
-        c.execute("INSERT INTO toss_payments(order_id,amount,order_name,status,created_at,updated_at) "
-                  "VALUES(?,?,?,?,?,?)", (order_id, amount, name, "READY", now, now))
     base = str(request.base_url).rstrip("/")
     if request.headers.get("x-forwarded-proto") == "https" and base.startswith("http://"):
         base = "https://" + base[len("http://"):]
     badge = ("<span class=test>테스트 결제 — 실제 돈이 나가지 않습니다</span>"
              if ck.startswith("test_") else "")
+    inp = ("width:100%;box-sizing:border-box;margin-top:8px;padding:13px;border-radius:10px;"
+           "border:1px solid #1f3a33;background:#0a1113;color:#e8f3ef;font-size:15px;font-family:inherit")
     body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
 <div class=amt>{amount:,}원</div>
-<div class=p>아래 버튼을 누르면 토스페이먼츠 카드 결제창이 열립니다.</div>
+<div class=p>결제하시는 분의 정보를 입력해 주세요. 결제 확인과 이용 안내에 쓰입니다.</div>
+<input id=pn placeholder="성함" maxlength=40 style="{inp}">
+<input id=pp placeholder="연락처 (010-0000-0000)" maxlength=40 inputmode=tel style="{inp}">
+<input id=pe placeholder="이메일 (가입·안내를 받으실 주소)" maxlength=120 inputmode=email style="{inp}">
+<label class=p style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px">
+  <input id=pa type=checkbox style="margin-top:3px">
+  <span><a href="/refund" target="_blank" style="color:#6ff0d6">환불정책</a>과
+  <a href="/terms" target="_blank" style="color:#6ff0d6">이용약관</a>을 확인했고 동의합니다.</span></label>
 <button id=go>카드로 결제하기</button>
 <div class="p err" id=msg></div>
 <script src="https://js.tosspayments.com/v2/standard"></script>
 <script>
+(function () {{
+  try {{
+    const s = JSON.parse(sessionStorage.getItem('prereg_payer') || 'null');
+    if (s) {{ pn.value = s.name || ''; pp.value = s.phone || ''; pe.value = s.email || ''; }}
+  }} catch (e) {{}}
+}})();
+let busy = false;
 document.getElementById('go').onclick = async () => {{
   const msg = document.getElementById('msg'); msg.textContent = '';
+  if (busy) return;
+  const payer = {{ name: pn.value.trim(), phone: pp.value.trim(), email: pe.value.trim() }};
+  if (!payer.name || !payer.phone || !payer.email) {{ msg.textContent = '성함·연락처·이메일을 모두 입력해 주세요.'; return; }}
+  if (!pa.checked) {{ msg.textContent = '환불정책·이용약관 동의에 체크해 주세요.'; return; }}
+  busy = true; go.disabled = true; go.textContent = '결제창 여는 중…';
   try {{
+    const r = await fetch('/api/pay/toss/order', {{ method: 'POST',
+      headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify(payer) }});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || '주문을 만들지 못했습니다');
     const tp = TossPayments({json.dumps(ck)});
     const payment = tp.payment({{ customerKey: TossPayments.ANONYMOUS }});
     await payment.requestPayment({{
       method: "CARD",
-      amount: {{ currency: "KRW", value: {amount} }},
-      orderId: {json.dumps(order_id)},
-      orderName: {json.dumps(name)},
+      amount: {{ currency: "KRW", value: d.amount }},
+      orderId: d.orderId,
+      orderName: d.orderName,
+      customerName: payer.name,
+      customerEmail: payer.email,
+      customerMobilePhone: payer.phone.replace(/[^0-9]/g, ''),
       successUrl: {json.dumps(base + "/pay/toss/success")},
       failUrl: {json.dumps(base + "/pay/toss/fail")}
     }});
-  }} catch (e) {{ msg.textContent = '결제창을 열지 못했습니다: ' + ((e && e.message) || e); }}
+  }} catch (e) {{
+    msg.textContent = (e && e.message) || String(e);
+  }} finally {{
+    busy = false; go.disabled = false; go.textContent = '카드로 결제하기';
+  }}
 }};
 </script>"""
     return _toss_page("카드 결제", body)
+
+
+@app.post("/api/pay/toss/order")
+async def _toss_create_order(request: Request):
+    """결제자 정보를 받아 주문을 만든다. 금액·상품명은 서버가 정한다(브라우저 값을 받지 않는다)."""
+    ck, sk = _toss_keys()
+    if not ck or not sk:
+        return JSONResponse({"error": "카드결제 준비 중입니다"}, status_code=503)
+    try:
+        body = await request.json()
+    except Exception:           # noqa: BLE001
+        body = {}
+    pname = (body.get("name") or "").strip()
+    phone = (body.get("phone") or "").strip()
+    email = (body.get("email") or "").strip()
+    if not pname or not phone or not email:
+        return JSONResponse({"error": "성함·연락처·이메일을 모두 입력해 주세요"}, status_code=422)
+    if "@" not in email or "." not in email.split("@")[-1]:
+        return JSONResponse({"error": "이메일 주소를 확인해 주세요"}, status_code=422)
+    if len(pname) > 40 or len(phone) > 40 or len(email) > 120:
+        return JSONResponse({"error": "입력이 너무 깁니다"}, status_code=422)
+    name, amount = _toss_order_name_amount()
+    order_id = "ST" + datetime.now().strftime("%Y%m%d%H%M%S") + secrets.token_hex(4)
+    now = datetime.now(timezone.utc).isoformat()
+    with _toss_db()._conn() as c:
+        c.execute("INSERT INTO toss_payments(order_id,amount,order_name,status,payer_name,payer_phone,"
+                  "payer_email,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+                  (order_id, amount, name, "READY", pname, phone, email, now, now))
+    return {"ok": True, "orderId": order_id, "amount": amount, "orderName": name}
 
 
 @app.get("/pay/toss/success", response_class=HTMLResponse)
@@ -12253,6 +12321,17 @@ def _toss_success(paymentKey: str = "", orderId: str = "", amount: str = ""):
                                        f"{_toss_esc(d.get('message'))}<br>"
                                        f"<code>{_toss_esc(d.get('code'))}</code></div>"),
                             status_code=400)
+    try:
+        from shopping_shorts import ops_alert
+        with st._conn() as c:
+            pr = c.execute("SELECT payer_name, payer_phone, payer_email FROM toss_payments WHERE order_id=?",
+                           (orderId,)).fetchone() or ("", "", "")
+        # cooldown 0 — 결제 한 건 한 건이 돈이다(입금 신고와 같은 이유).
+        ops_alert.raise_alert("toss_paid", f"💳 카드결제 완료 — {pr[0] or '-'} {amt:,}원",
+                              f"연락처 {pr[1] or '-'} / 이메일 {pr[2] or '-'} / 주문 {orderId}",
+                              cooldown_sec=0, store=st)
+    except Exception as e:      # noqa: BLE001 — 알림 실패가 결제 완료 화면을 막으면 안 된다
+        print(f"[토스결제] 관리자 알림 실패(결제는 정상): {e!r}", file=sys.stderr)
     return _toss_page("결제 완료", f"""<h1>✅ 결제가 완료되었습니다</h1>
 <div class=amt>{amt:,}원</div>
 <div class=p>{_toss_esc(d.get('orderName'))}<br>결제수단 {_toss_esc(d.get('method'))}<br>
