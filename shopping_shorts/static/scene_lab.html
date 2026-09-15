@@ -1215,7 +1215,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
   <button class="act" onclick="revertServer()"
           title="내가 고친 편성을 걷어내고 AI가 처음 배치한 편집안으로 되돌립니다(원본은 안 건드렸으므로 100% 복구)">↩ AI 배치로 되돌리기</button>
   <span id="savedmsg" class="hint" style="color:var(--good)"></span>
-  <div class="hint">왼쪽 장면: 끌어다 놓기·두 번 클릭 = 담기 · 오른쪽 장면: 왼쪽으로 끌기·두 번 클릭 = 빼기 · 클릭 = 재생</div>
+  <div class="hint">왼쪽 장면: 끌어다 놓기·두 번 클릭 = 담기 · 오른쪽 장면: ✕ 버튼·두 번 클릭 = 빼기 · 클릭 = 재생 · 끌기 = 순서 바꾸기</div>
 </footer>
 
 <script id="scene-lab-data" type="application/json">null</script>
@@ -2854,7 +2854,7 @@ function renderBand(){
              ondrop="bandDrop(${i}, '${c.seg_id}', event)"
              onclick="bandCutClick(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')"
-             title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
+             title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · ✕ 버튼이나 두 번 클릭 = 빼기">
              <img src="${SL.thumb(c.seg_id)}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '✋' : ''}${c.dur.toFixed(1)}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
@@ -3262,7 +3262,7 @@ function render(){
                  ondragover="event.preventDefault()" ondrop="dragDrop(${i},${k},event)"
                  onclick="clickPlay('${id}',event)"
                  ondblclick="event.stopPropagation();clearTimeout(clickTimer);delSeg(${i},${k})"
-                 title="끌어서 순서 바꾸기 · 왼쪽 팔레트로 끌면 빠짐 · 클릭 = 재생 · 두 번 클릭 = 빼기${used.has(id)?'':' (지금은 시간이 모자라 화면에 안 나옵니다)'}">
+                 title="끌어서 순서 바꾸기 · 클릭 = 재생 · 두 번 클릭 = 빼기${used.has(id)?'':' (지금은 시간이 모자라 화면에 안 나옵니다)'}">
               ${(() => {
                 // ★쓰인 초/가진 초(2026-08-15 사장님 "1번 1.6/1.6초 2번2.2/3.8초 이런식으로").
                 //   앞 > 뒤 = 억지로 늘어난 것 · 앞 < 뒤 = 아직 여유 있음. 뒤는 트림 반영(effLen).
