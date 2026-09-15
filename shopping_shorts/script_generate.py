@@ -812,6 +812,31 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                 note["detail"] = (f"재료의 제품({_sources_product(sources) or product or '?'})과 "
                                   f"다른 소재가 나와 반려했습니다 — 재료 대본이 부족합니다")
             note["tries"] = tries
+            # 사실 검사는 지우지 않는다. 다만 고른 스타일이 모두 사실 검사에서만
+            # 탈락하면 generate_by_styles가 화면에 검사표가 붙은 '검토 필요 초안'으로
+            # 복구할 수 있게 마지막 후보를 보관한다. 다른 제품/판매처가 섞인 후보는
+            # 여기 실리지 않으므로 어떤 폴백으로도 화면에 나갈 수 없다.
+            _fatal_names = {
+                c.get("name") for c in (checks or [])
+                if not c.get("ok") and (c.get("name") in script_gate.FATAL_CHECKS
+                                        or c.get("fatal") is True)
+            }
+            if (res and full and _fatal_names
+                    and _fatal_names <= {"사실 근거", "수치 근거"}):
+                _review_beats = [dict(b) for b in res if isinstance(b, dict)]
+                for _b in _review_beats:
+                    _b["sec"] = script_gate.est_seconds(_b.get("text", ""))
+                    _ids = script_gate.parse_src_segs(_b.get("src_seg"))
+                    _b["src_segs"] = _ids
+                    _b["src_seg"] = _ids[0] if _ids else ""
+                note["review_candidate"] = {
+                    "style_id": style.get("id"), "style_name": style.get("name"),
+                    "beats": _review_beats, "script": full,
+                    "hook": (_review_beats or [{}])[0].get("text", ""),
+                    "checks": checks, "passed": False, "tries": tries,
+                    "chars": len(script_gate.norm(full)),
+                    "sec": script_gate.est_seconds(full),
+                }
         print(f"[script_gate] {_fatal} 반려: style={style.get('name')!r} "
               f"product={_sources_product(sources) or product!r}", file=sys.stderr)
         return None
@@ -1337,6 +1362,7 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
       **주지 않으면 종전과 완전히 동일하게 동작한다**(기본값 None = 회귀 0).
     """
     out = []
+    review_candidates = []
     for st in styles or []:
         note = {} if reasons is not None else None
         try:
@@ -1357,6 +1383,16 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
                             "kind": (note or {}).get("reason") or "empty",
                             "keys": (note or {}).get("keys"),
                             "detail": (note or {}).get("detail") or ""})
+            candidate = (note or {}).get("review_candidate")
+            if isinstance(candidate, dict) and candidate.get("beats"):
+                review_candidates.append(candidate)
+    # 정상 통과본이 하나라도 있으면 검토 필요 후보는 숨긴다. 전부 사실 검사에서
+    # 탈락했을 때만 0안 대신 검사표와 함께 돌려 사용자가 문제 문장을 직접 고칠 수 있게 한다.
+    if not out and review_candidates:
+        for candidate in review_candidates:
+            candidate["needs_review"] = True
+            candidate["review_reason"] = "사실 근거를 확인하지 못한 초안"
+        return review_candidates
     return out
 
 
