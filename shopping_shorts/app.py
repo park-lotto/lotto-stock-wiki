@@ -921,7 +921,8 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
     # 차단 후 새로고침·업데이트 때 다시 뜨는 걸 막으려면 이 조회 경로에서도 잘라야 한다.
     # 🗂 관리자가 카드에서 옮긴 카테고리(2026-09-15) — 저장된 목록에도 바로 보이게 조회에서도 덮는다.
     #   덮는 규칙은 store._apply_overrides 한 곳(수집 저장 때 쓰는 것과 같은 함수).
-    items = store._apply_overrides(items)
+    if hasattr(store, "_apply_overrides"):
+        items = store._apply_overrides(items)
     blocked = store.removed_usernames()
     if blocked:
         items = [i for i in items
