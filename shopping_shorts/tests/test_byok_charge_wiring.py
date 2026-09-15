@@ -16,9 +16,34 @@ _KEY = "NZAowCs7o9LHVnJdZbxrVmYI7MHqyPFkydIUd1mc8To="   # 유효한 Fernet 키(4
 
 
 @pytest.fixture
-def store(tmp_path, monkeypatch):
+def _master_key(monkeypatch):
+    """keycrypt 마스터키를 이 테스트에 확실히 쥐여준다.
+
+    ★왜 fixture로 뽑았나(2026-09-16, 병렬 실행 플레이크 수리):
+      keycrypt는 마스터키를 **임포트 시점에** 읽어 모듈 전역 `_fernet`에 담는다.
+      그래서 키를 쓰려면 setenv + reload가 **짝으로** 필요하다.
+
+      종전엔 그 짝이 `store` fixture에만 있었고, `charge`·`refund`를 쓰는
+      테스트들(add_customer_key를 부른다)은 키 설정이 **없었다**. 직렬로 돌 때는
+      앞서 돈 테스트의 reload 부작용이 모듈에 남아 **우연히** 통과했다.
+
+      실측: `-n auto`(xdist)로 돌리면 워커가 갈려 그 부작용이 없다 →
+        test_charge_free_with_user_key · test_charge_cid_string_normalized ·
+        test_refund_noop_for_user_key 3건이
+        `RuntimeError: BYOK_MASTER_KEY가 없어 키를 저장할 수 없습니다`로 죽는다.
+        (파일 하나만 `-n auto`로 돌려도 재현된다 = 다른 파일 탓이 아니다)
+      → 이 3건이 **모든 트랙의 finish 게이트를 막고 있었다**(무관한 변경에도 빨간불).
+
+    ★남의 부작용에 기대지 않고 **필요한 fixture가 직접 갖춘다**(0순위-B —
+      같은 준비를 세 군데에 따로 적으면 또 어긋난다. 여기 한 곳에서만 정한다).
+    """
     monkeypatch.setenv("BYOK_MASTER_KEY", _KEY)
     importlib.reload(keycrypt)
+    return _KEY
+
+
+@pytest.fixture
+def store(tmp_path, _master_key):
     return Store(str(tmp_path / "t.db"))
 
 
@@ -76,8 +101,12 @@ def test_daily_limit_applies_even_with_user_key(store, monkeypatch, tmp_path):
 # ── _charge_or_402 — 세 갈래 ────────────────────────────────────────
 
 @pytest.fixture
-def charge(tmp_path, monkeypatch):
-    """_charge_or_402를 격리 DB로 부를 수 있게 묶어 준다."""
+def charge(tmp_path, monkeypatch, _master_key):
+    """_charge_or_402를 격리 DB로 부를 수 있게 묶어 준다.
+
+    _master_key: add_customer_key를 부르는 테스트가 있어 마스터키가 필요하다
+    (종전엔 없어서 병렬 실행 때 깨졌다 — _master_key 주석 참고).
+    """
     from shopping_shorts import app as app_mod
     db = str(tmp_path / "charge.db")
     monkeypatch.setattr(app_mod, "DB_PATH", db)
@@ -174,7 +203,7 @@ def test_charge_uses_admin_price_setting(charge):
 # ── 환불 — 실패한 작업은 포인트를 돌려준다 ──────────────────────────
 
 @pytest.fixture
-def refund(tmp_path, monkeypatch):
+def refund(tmp_path, monkeypatch, _master_key):
     from shopping_shorts import app as app_mod
     db = str(tmp_path / "refund.db")
     monkeypatch.setattr(app_mod, "DB_PATH", db)

@@ -2892,6 +2892,104 @@ class Store:
                             return out
         return out
 
+    def basket_item_any_customer(self, shortcode):
+        """담긴 항목 1건을 **고객 상관없이** shortcode로 찾는다. 없으면 None.
+
+        ★왜 고객을 안 보나(2026-09-16 실사고): 렌즈·담기로 들어온 카드의 코드는
+          `lens_youtube_74oxbh`·`grab_instagram_d7b2e4c9bbad`처럼 **우리가 지어낸
+          것**이라 다른 데선 절대 안 겹친다(shortcodes_for_url 주석의 그 사정).
+          그래서 코드 하나가 곧 항목 하나다 — 고객 경계로 한 번 더 좁힐 이유가 없고,
+          좁히면 `_find_collected_item`이 cid를 들고 다녀야 해서 호출부마다 다시
+          갈라진다(0순위-B). 나머지 mix_basket_* 는 전부 고객별 그대로 둔다.
+        ⚠️ 읽기 전용이다. 담기·빼기는 고객별 함수(mix_basket_toggle 등)로만 한다.
+
+        mix_basket_list와 **같은 모양**으로 돌려준다 — 그쪽이 카드 형태의 정본이다.
+        """
+        shortcode = (shortcode or "").strip()
+        if not shortcode:
+            return None
+        with self._conn() as c:
+            r = c.execute(
+                "SELECT shortcode, url, thumbnail, name, caption, meta_json, video_url "
+                "FROM mix_basket WHERE shortcode=? ORDER BY rowid DESC LIMIT 1",
+                (shortcode,),
+            ).fetchone()
+        if not r:
+            return None
+        item = {"shortcode": r[0], "url": r[1], "thumbnail": r[2],
+                "name": r[3], "caption": r[4]}
+        if r[6]:
+            item["video_url"] = r[6]
+        if r[5]:
+            try:
+                item["meta"] = json.loads(r[5])
+            except (ValueError, TypeError) as e:
+                # meta는 부가정보라 깨져도 항목 자체는 준다(mix_basket_list와 같은 판단).
+                # ★다만 사유는 남긴다 — 조용히 삼키면 "meta가 원래 없다"와 구분이 안 된다.
+                print(f"[store] 담긴항목 meta 파싱 실패({shortcode}): {e!r}",
+                      file=sys.stderr)
+        return item
+
+    def history_item(self, shortcode):
+        """reel_history의 이 영상 1건 — **platform 포함**. 없으면 None.
+
+        get_reel_meta와 소스는 같지만 platform·caption을 함께 준다(2026-09-16).
+        ★왜 get_reel_meta를 안 늘렸나: 그쪽은 AI PICK 후보 카드가 쓰는 모양이라
+          필드를 늘리면 그 화면까지 흔든다. 여기서 쓰는 값은 '이 영상이 무엇이고
+          어디서 받나'뿐이라 목적이 다르다 — 목적이 다르면 함수를 가른다.
+        ★platform을 꼭 실어야 한다 — _download_item_video가 그걸 보고 인스타 릴스
+          주소를 조립할지 정한다. 유튜브 행에 인스타를 붙이면 없는 주소로 간다.
+        """
+        shortcode = (shortcode or "").strip()
+        if not shortcode:
+            return None
+        with self._conn() as c:
+            try:
+                r = c.execute(
+                    "SELECT name, category, url, thumb, caption, comments, views, "
+                    "       COALESCE(NULLIF(TRIM(platform), ''), 'instagram') "
+                    "FROM reel_history WHERE shortcode=? ORDER BY last_seen DESC LIMIT 1",
+                    (shortcode,),
+                ).fetchone()
+            except sqlite3.Error as e:  # 옛 스키마(platform/caption 없음)여도 안 죽는다
+                # ★사유를 남긴다 — 조용히 None을 주면 "항목이 없다"와 구분이 안 돼
+                #   404 원인 추적이 막힌다(이 파일을 만든 사고가 바로 그것이었다).
+                print(f"[store] history_item 조회 실패({shortcode}): {e!r}",
+                      file=sys.stderr)
+                return None
+        if not r:
+            return None
+        return {"shortcode": shortcode, "name": r[0], "category": r[1], "url": r[2],
+                "thumb": r[3], "thumbnail": r[3], "caption": r[4],
+                "comments": r[5], "views": r[6], "platform": r[7]}
+
+    def archive_item(self, shortcode):
+        """channel_archive의 이 영상 1건(url·thumbnail·조회수 등). 없으면 None.
+
+        역대 히트작 탭(archive_hits)이 보여주는 그 테이블이다. 카드로 떠 있는데
+        대본추출이 항목을 못 찾던 구멍을 메우려고 단건 조회를 연다(2026-09-16).
+        ⚠️ 인스타 전용 테이블이라 platform·caption 컬럼이 없다(CREATE TABLE 참고).
+        """
+        shortcode = (shortcode or "").strip()
+        if not shortcode:
+            return None
+        with self._conn() as c:
+            try:
+                r = c.execute(
+                    "SELECT username, url, thumbnail, views, likes, comments, posted_at "
+                    "FROM channel_archive WHERE shortcode=? ORDER BY last_seen DESC LIMIT 1",
+                    (shortcode,),
+                ).fetchone()
+            except sqlite3.Error as e:  # 옛 스키마여도 조회가 통째로 죽지 않는다
+                print(f"[store] archive_item 조회 실패({shortcode}): {e!r}",
+                      file=sys.stderr)
+                return None
+        if not r:
+            return None
+        return {"shortcode": shortcode, "username": r[0], "url": r[1],
+                "thumb": r[2], "thumbnail": r[2], "views": r[3],
+                "likes": r[4], "comments": r[5], "posted_at": r[6]}
+
     def wiki_category_for_url(self, url):
         """이 URL 소재의 카테고리(홈템·레시피·뷰티·기타). 모르면 None.
 

@@ -344,6 +344,61 @@ def _media_code(url):
 _SNAPSHOT_PLATFORMS = ("youtube", "tiktok", "threads", "naverclip",
                        "pinterest", "xiaohongshu", "douyin")
 
+# 담기·렌즈 항목의 플랫폼을 정하는 데 쓰는 이름들.
+# mix_basket엔 platform 컬럼이 **없는데**(store.py mix_basket_list) _download_item_video는
+# platform을 보고 인스타 릴스 주소를 조립할지 정한다 — 비워두면 기본값 'instagram'으로
+# 떨어져 유튜브 항목에 **없는 주소**를 받으러 간다(2026-09-06 가드가 막으려던 그 사고).
+_BASKET_CODE_PLATFORMS = ("instagram", "youtube", "tiktok", "threads", "naverclip",
+                          "pinterest", "xiaohongshu", "douyin")
+# lens_discover._platform_of가 모르는 도메인만 여기서 보탠다(그쪽이 정본 — 0순위-B).
+# 실측 2026-09-16: 담긴 8,710건 중 naver 4건이 여기 해당한다.
+_EXTRA_DOMAIN_PLATFORMS = (("naver.com", "naverclip"), ("naver.me", "naverclip"),
+                           ("threads.net", "threads"), ("threads.com", "threads"))
+
+
+def _basket_item_platform(shortcode, url=""):
+    """담긴 항목의 플랫폼. 모르면 "" (지어내지 않는다).
+
+    ★판정 근거는 **url이 먼저**, 코드 접두사는 폴백이다(2026-09-16 실측으로 정한 순서):
+
+        담긴 8,710건 중 `lens_`/`grab_` 접두사가 있는 것  7,374건
+          └ 접두사가 말하는 플랫폼 vs 실제 도메인 **불일치 0건** (접두사는 믿을 만하다)
+        접두사가 **없는** 것                              1,336건
+          └ 그중 인스타가 아닌 것 213건 (youtube 209 · naver 4)
+
+      즉 접두사만 보면 저 213건이 플랫폼 없이 나가 인스타로 오인된다. 실제로 그렇게
+      새는 카드를 라이브에서 잡았다(`ylKFpMNzDbU`, 바구니에 있는 유튜브 영상).
+      url은 접두사가 있든 없든 **항상** 진실을 말하므로 url을 1순위로 둔다.
+
+    ★도메인 표를 새로 만들지 않는다(0순위-B) — lens_discover._platform_of가 정본이고,
+      거기 없는 것(네이버·쓰레드)만 _EXTRA_DOMAIN_PLATFORMS로 보탠다.
+    ★모르는 걸 'instagram'으로 메우면 안 된다 — 없는 릴스 주소를 받으러 가서
+      실패 사유가 "인스타 다운로드 실패"로 뭉개진다.
+    """
+    u = (url or "").strip()
+    if u:
+        try:
+            plat = lens_discover._platform_of(u)
+            if plat:
+                return plat
+        except Exception as e:  # noqa: BLE001 — 판정 실패는 '모른다'(아래 접두사로)
+            import sys as _sys
+            print(f"[find_item] 도메인 판정 실패(접두사로 계속): {e!r}", file=_sys.stderr)
+        host = (urllib.parse.urlparse(u).netloc or "").lower()
+        for dom, plat in _EXTRA_DOMAIN_PLATFORMS:
+            if host == dom or host.endswith("." + dom):
+                return plat
+
+    sc = (shortcode or "").strip().lower()
+    for prefix in ("lens_", "grab_"):
+        if sc.startswith(prefix):
+            rest = sc[len(prefix):]
+            for plat in _BASKET_CODE_PLATFORMS:
+                if rest.startswith(plat + "_"):
+                    return plat
+            break
+    return ""
+
 
 def _find_collected_item(store, shortcode):
     """shortcode → 수집항목(item). 없으면 None.
@@ -362,12 +417,35 @@ def _find_collected_item(store, shortcode):
       last_run::youtube 8,524건, **겹치는 것 0건**. 대본캐시 보유율도 인스타
       19%(25/134) vs 유튜브 0.5%(40/8,524)로 갈렸다.
 
+    ★2026-09-16 실사고(사장님 제보): 같은 문구가 **또** 떴다 — 레퍼런스 카드의
+      「📝 대본 분석해서 정확히 찾기」. 09-06에 스냅샷은 뚫었는데 **서랍이 두 개 더
+      빠져 있었다.** 화면이 카드를 꺼내는 곳은 /api/reference의 네 갈래인데:
+
+        archive=1  → channel_archive  (역대 히트작)   ← 안 봤다
+        days>0     → reel_history     (이번 주/달)    ← 안 봤다
+        인스타 기본 → last_run                         ← 봤다
+        그 외      → last_run::<platform>              ← 봤다
+
+      게다가 렌즈·담기 카드(`lens_youtube_…`·`grab_instagram_…`)는 **어느 스냅샷에도
+      원리적으로 없다** — mix_basket에만 있고 그 코드는 우리가 지어낸 것이라 수집이
+      담을 수가 없다(store.shortcodes_for_url 주석의 그 사정과 같은 뿌리).
+
+      라이브 실측(2026-09-16, 서버 reference.db):
+        lens_/grab_ 카드 4종 전부 이 함수에서 None → 100% 404
+        mix_basket 8,710건 중 lens_/grab_ = 7,374건(전부 url 보유)
+        platform_snapshots 유튜브 55,346건 중 last_run::youtube에 없는 것 45,143건
+
     0순위-B: 이 "항목 찾기"가 네 군데에 따로 적혀 있었다(대본추출·위키저장·영상분석 등).
       같은 판단을 여러 번 적으면 반드시 어긋난다 → 여기 하나로 모으고 전부 이걸 부른다.
       새 플랫폼이 늘어도 _SNAPSHOT_PLATFORMS만 고치면 전 경로가 같이 따라온다.
+      **서랍을 늘릴 때도 여기만 고친다** — 호출부 3곳(/api/extract_script ·
+      /api/wiki/save · /api/find/analyze)이 같이 따라온다.
 
-    인스타를 먼저 본다(종전 동작 유지 — 같은 코드가 양쪽에 있으면 결과가 안 바뀐다).
-    스냅샷 하나가 깨져도 나머지는 계속 본다 — 한 곳의 고장이 전체를 죽이면 안 된다.
+    찾는 순서 = 정보가 풍부한 순서. 앞이 이기므로 **종전에 찾히던 것은 그대로 찾힌다**(회귀 0):
+      ① last_run(인스타) → ② 플랫폼 스냅샷 : 카드 필드 일습(카테고리·비전태그 등)
+      ③ 담기 바구니                         : 담을 때 확보한 video_url·caption이 있다
+      ④ reel_history → ⑤ channel_archive    : url·썸네일 정도지만 대본추출엔 충분하다
+    서랍 하나가 깨져도 나머지는 계속 본다 — 한 곳의 고장이 전체를 죽이면 안 된다.
     """
     if not shortcode:
         return None
@@ -378,23 +456,53 @@ def _find_collected_item(store, shortcode):
                      if i.get("shortcode") == shortcode
                      or _media_code(i.get("shortcode") or "") == target_code), None)
 
-    try:
-        item = _pick(store.load_last_run()[0])
-        if item:
-            return item
-    except Exception as e:  # noqa: BLE001 — 한 스냅샷의 고장이 나머지를 막지 않는다
-        import sys as _sys
-        print(f"[find_item] last_run 조회 실패(계속 진행): {e!r}", file=_sys.stderr)
+    def _try(label, fn):
+        """서랍 하나를 연다. 깨져 있으면 사유를 남기고 None(조용한 전멸 금지)."""
+        try:
+            return fn()
+        except Exception as e:  # noqa: BLE001 — 한 서랍의 고장이 나머지를 막지 않는다
+            import sys as _sys
+            print(f"[find_item] {label} 조회 실패(계속 진행): {e!r}", file=_sys.stderr)
+            return None
+
+    item = _try("last_run", lambda: _pick(store.load_last_run()[0]))
+    if item:
+        return item
 
     for platform in _SNAPSHOT_PLATFORMS:
-        try:
-            item = _pick(store.load_last_run_platform(platform)[0])
-        except Exception as e:  # noqa: BLE001
-            import sys as _sys
-            print(f"[find_item] {platform} 스냅샷 조회 실패(계속 진행): {e!r}", file=_sys.stderr)
-            continue
+        item = _try(f"{platform} 스냅샷",
+                    lambda p=platform: _pick(store.load_last_run_platform(p)[0]))
         if item:
             return item
+
+    # ③ 담기 바구니 — 렌즈·담기 카드는 여기에만 있다.
+    #    platform 컬럼이 없어 url·코드에서 알아낸다(_basket_item_platform 주석 참고).
+    item = _try("담기 바구니",
+                lambda: getattr(store, "basket_item_any_customer", lambda _s: None)(shortcode))
+    if item:
+        if not (item.get("platform") or "").strip():
+            plat = _basket_item_platform(item.get("shortcode") or shortcode,
+                                         item.get("url") or "")
+            if plat:
+                item["platform"] = plat
+        return item
+
+    # ④ reel_history — '이번 주/달' 카드(hits_since). platform을 들고 온다.
+    item = _try("reel_history",
+                lambda: getattr(store, "history_item", lambda _s: None)(shortcode))
+    if item:
+        item.setdefault("shortcode", shortcode)
+        return item
+
+    # ⑤ channel_archive — '역대 히트작' 카드(archive_hits).
+    #    ⚠️ platform 컬럼이 **없는** 인스타 전용 테이블이라 여기서 인스타로 친다
+    #    (store.py CREATE TABLE channel_archive 참고).
+    item = _try("channel_archive",
+                lambda: getattr(store, "archive_item", lambda _s: None)(shortcode))
+    if item:
+        item.setdefault("shortcode", shortcode)
+        item.setdefault("platform", "instagram")
+        return item
     return None
 
 
