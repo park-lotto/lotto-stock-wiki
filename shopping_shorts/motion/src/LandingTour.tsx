@@ -1,7 +1,7 @@
 // 랜딩 "눌러보면 바로 이해됩니다" 탭 4개용 1280x800 영상 + Remotion 효과자막.
 // ★원본 픽셀은 1배 이하(축소·크롭만) — 확대 금지.
 // 재료: public/tour/ (gitignore) — rank_top.png(1646x863) · rank_grid.png(1685x896) · mix.png(1608x832)
-//       search.mp4(1798x800, 15.07s) · script.mp4(1546x800, 11.93s) — render-tour.mjs prep 로 생성.
+//       search.mp4(1798x800, 12.47s — 인스타 0.9s(21s부터 틱톡 에러화면 제외)·도우인 0.8s·샤오홍슈 30.5s~(빈 로딩화면 제외)) · script.mp4(1546x800, 11.93s) — render-tour.mjs prep 로 생성.
 import React from 'react';
 import {AbsoluteFill, Img, OffthreadVideo, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {useFont} from './LandingHeroWall';
@@ -212,8 +212,8 @@ export const TourStep1: React.FC = () => {
   );
 };
 
-// ── 2) 숏템파워검색 — 녹화본 + 사이트 칩 (15.07s) ──
-const S2 = 452;
+// ── 2) 숏템파워검색 — 녹화본 + 사이트 칩 (12.47s) ──
+const S2 = 374;
 export const TourStep2: React.FC = () => {
   useFont();
   const frame = useCurrentFrame();
@@ -222,10 +222,10 @@ export const TourStep2: React.FC = () => {
   const x = interpolate(frame, [0, 165, 166, S2], [-(vw - W) / 2 - 60, -(vw - W) / 2 + 60, 0, -(vw - W)], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const segs = [
     {label: '핀터레스트', color: '#E60023', from: 165, to: 225},
-    {label: '인스타그램', color: '#D6249F', from: 225, to: 285},
-    {label: '틱톡', color: '#161823', from: 285, to: 333},
-    {label: '도우인', color: '#1C0B1A', from: 333, to: 387},
-    {label: '샤오홍슈', color: '#FF2442', from: 387, to: S2 - 8},
+    {label: '인스타그램', color: '#D6249F', from: 225, to: 252},
+    {label: '틱톡', color: '#161823', from: 252, to: 300},
+    {label: '도우인', color: '#1C0B1A', from: 300, to: 324},
+    {label: '샤오홍슈', color: '#FF2442', from: 324, to: S2 - 8},
   ];
   return (
     <AbsoluteFill style={{background: BG, overflow: 'hidden'}}>
