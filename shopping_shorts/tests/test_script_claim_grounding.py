@@ -162,6 +162,36 @@ def test_style_rejects_unsupported_claim_and_sends_observation_fallback(monkeypa
     assert "그 칸을 확인된 동작이나 사용 상황으로 다시 써라" in prompts[0]
 
 
+def test_all_fact_rejected_styles_return_review_candidates_but_topic_rejected_never_does(monkeypatch):
+    """사실 검사는 살리되 전부 폐기돼 제작소가 0안이 되는 회귀를 막는다."""
+    def fake_generate(_sources, style, *_args, note=None, **_kwargs):
+        note["reason"] = style["reason"]
+        note["detail"] = style["reason"] + " 상세"
+        if style["reason"] == "근거부족":
+            note["review_candidate"] = {
+                "style_id": style["id"], "style_name": style["name"],
+                "beats": [{"role": "hook", "text": "얼음정수기 초안"}],
+                "script": "얼음정수기 초안", "hook": "얼음정수기 초안",
+                "checks": [{"name": "사실 근거", "ok": False, "detail": "근거 없음"}],
+                "passed": False,
+            }
+        return None
+
+    monkeypatch.setattr(sg, "generate_one_style", fake_generate)
+    reasons = []
+    result = sg.generate_by_styles([], [
+        {"id": 1, "name": "사실만 실패", "reason": "근거부족"},
+        {"id": 2, "name": "다른 제품", "reason": "소재이탈"},
+    ], reasons=reasons)
+
+    assert len(result) == 1
+    assert result[0]["style_id"] == 1
+    assert result[0]["needs_review"] is True
+    assert result[0]["review_reason"] == "사실 근거를 확인하지 못한 초안"
+    assert all(row["style_id"] != 2 for row in result)
+    assert {row["kind"] for row in reasons} == {"근거부족", "소재이탈"}
+
+
 def test_trim_rejudges_actual_final_text_instead_of_reusing_claim_success(monkeypatch):
     from shopping_shorts import edit_plan
     monkeypatch.setattr(sg, "STYLE_REWRITES", 0)

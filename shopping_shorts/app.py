@@ -3296,10 +3296,29 @@ def _gen_fail_message(reasons, asm_why=""):
                     if r.get("kind") == "api_error" and r.get("detail")), "")
         # ★키 문제가 아니다. '잠시 후 재시도'라고 말하지 않는다 — 기다려도 안 풀린다.
         return "AI 응답 오류입니다(키 문제가 아닙니다)%s" % ((" — %s" % det) if det else "")
+    if "근거부족" in kinds:
+        det = next((r.get("detail") for r in (reasons or [])
+                    if r.get("kind") == "근거부족" and r.get("detail")), "")
+        return ("대본은 만들었지만 사실 근거 검사에서 모두 반려됐습니다"
+                + ((" — %s" % det) if det else ""))
+    if "판매처이탈" in kinds:
+        det = next((r.get("detail") for r in (reasons or [])
+                    if r.get("kind") == "판매처이탈" and r.get("detail")), "")
+        return ("재료에 없는 판매처가 대본에 섞여 반려됐습니다"
+                + ((" — %s" % det) if det else ""))
+    if "소재이탈" in kinds:
+        det = next((r.get("detail") for r in (reasons or [])
+                    if r.get("kind") == "소재이탈" and r.get("detail")), "")
+        return ("고른 제품과 다른 소재의 대본이 나와 반려됐습니다"
+                + ((" — %s" % det) if det else ""))
     if "empty" in kinds:
         return ("AI가 조건에 맞는 문장을 만들지 못했습니다 — 스타일을 바꾸거나 "
                 "담긴 영상(재료)을 늘려서 다시 시도해 주세요."
                 + ((" (틀 조립: %s)" % asm_why) if asm_why else ""))
+    if reasons:
+        det = next((r.get("detail") for r in reasons if r.get("detail")), "")
+        return ("대본 생성 조건을 통과하지 못했습니다"
+                + ((" — %s" % det) if det else ""))
     # 여기까지 왔으면 애초에 시도조차 안 됐다(고른 스타일이 카테고리에 다 걸러진 경우 등).
     return ("만들 수 있는 대본이 없습니다 — 고른 스타일이 이 카테고리에 맞지 않을 수 있어요."
             + ((" (%s)" % asm_why) if asm_why else ""))
