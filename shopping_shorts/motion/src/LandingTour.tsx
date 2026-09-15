@@ -15,29 +15,30 @@ const MINT = '#6FF0D6';
 const BG = '#070b0f';
 
 // ── 효과자막 ─────────────────────────────────────────
-type Tok = {t: string; k?: 'y' | 'r'; suffix?: string};
+type Tok = {t: string; k?: 'y' | 'r' | 'm'; suffix?: string}; // y=노랑마커 r=빨강글자 m=빨강마커(흰글자)
 // 표기: [노랑마커] {빨강강조} — 공백으로 단어를 가르고, "[검색]만" 처럼 붙은 조사는 suffix 로 같이 팝
 export const parse = (s: string): Tok[] => {
-  const protectedS = s.replace(/(\[[^\]]+\]|\{[^}]+\})/g, (m) => m.replace(/ /g, ' '));
+  const protectedS = s.replace(/(\[[^\]]+\]|\{[^}]+\}|<[^>]+>)/g, (m) => m.replace(/ /g, ' '));
   return protectedS
     .trim()
     .split(/ +/) // \s 는 NBSP도 갈라버리므로 ASCII 공백만
     .filter(Boolean)
     .map((w): Tok => {
-      const m = w.match(/^(\[([^\]]+)\]|\{([^}]+)\})(.*)$/);
+      const m = w.match(/^(\[([^\]]+)\]|\{([^}]+)\}|<([^>]+)>)(.*)$/);
       if (!m) return {t: w.replace(/ /g, ' ')};
-      const k = m[2] !== undefined ? 'y' : 'r';
-      return {t: (m[2] ?? m[3]).replace(/ /g, ' '), k, suffix: m[4] || undefined};
+      const k = m[2] !== undefined ? 'y' : m[3] !== undefined ? 'r' : 'm';
+      return {t: (m[2] ?? m[3] ?? m[4]).replace(/ /g, ' '), k, suffix: m[5] || undefined};
     });
 };
 
-const Word: React.FC<{tok: Tok; idx: number; local: number; size: number}> = ({tok, idx, local, size}) => {
+export const Word: React.FC<{tok: Tok; idx: number; local: number; size: number}> = ({tok, idx, local, size}) => {
   const {fps} = useVideoConfig();
   const delay = idx * 5;
   const s = spring({frame: local - delay, fps, config: {damping: 11, stiffness: 190, mass: 0.7}});
   const op = interpolate(local - delay, [0, 4], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const sweep = interpolate(local - delay, [5, 16], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const isY = tok.k === 'y';
+  const isM = tok.k === 'm';
+  const isY = tok.k === 'y' || isM;
   const isR = tok.k === 'r';
   const onMarker = isY && sweep > 0.5;
   const shadow = `0 ${Math.max(2, size * 0.05)}px 0 rgba(0,0,0,.6)`;
@@ -58,7 +59,7 @@ const Word: React.FC<{tok: Tok; idx: number; local: number; size: number}> = ({t
           position: 'relative',
           display: 'inline-block',
           padding: isY ? `0 ${size * 0.18}px` : '0 2px',
-          color: onMarker ? '#111' : isR ? RED : '#fff',
+          color: onMarker ? (isM ? '#fff' : '#111') : isR ? RED : '#fff',
           textShadow: onMarker ? 'none' : shadow,
         }}
       >
@@ -70,7 +71,7 @@ const Word: React.FC<{tok: Tok; idx: number; local: number; size: number}> = ({t
               top: size * 0.06,
               bottom: size * 0.06,
               width: `${sweep * 100}%`,
-              background: YEL,
+              background: isM ? RED : YEL,
               borderRadius: size * 0.14,
               transform: 'rotate(-1.2deg)',
               zIndex: 0,
