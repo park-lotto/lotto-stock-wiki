@@ -112,14 +112,22 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 .kicker{display:block;text-align:center;color:var(--mint);font-weight:700;font-size:14px;margin-bottom:8px}
 .sec h2{text-align:center;font-size:clamp(26px,3.6vw,36px);font-weight:900;line-height:1.3;margin-bottom:10px}
 .sec .lead{text-align:center;color:var(--muted);margin:0 auto 34px;max-width:48ch}
-.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;gap:10px;align-items:center}
-.flow .phone{max-width:none;border-radius:18px}
-.fa{color:var(--mint);font-size:26px;font-weight:900;animation:nudge 1.6s ease-in-out infinite}
-@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
-.fl{text-align:center;margin-top:10px;font-weight:800;font-size:16px}
-.fl span{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--grad);color:#062018;font-size:13px;align-items:center;justify-content:center;margin-right:6px}
-.fl small{display:block;color:var(--muted);font-weight:500;font-size:12.5px;margin-top:3px}
-@media(max-width:820px){.flow{grid-template-columns:1fr 1fr}.fa{display:none}}
+/* 4단계 — 큰 정사각 2x2, Z자로 흐른다(1→2, 2↙3, 3→4). 켜진 단계가 차례로 옮겨 다닌다 */
+.flow{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:56px 90px;max-width:900px;margin:0 auto}
+.fs{position:relative;transition:transform .5s,filter .5s;filter:saturate(.65) brightness(.8)}
+.fs.on{transform:scale(1.03);filter:none}
+.sq{position:relative;aspect-ratio:1/1;border-radius:22px;overflow:hidden;background:#05080b;border:2px solid var(--line);transition:border-color .5s,box-shadow .5s}
+.fs.on .sq{border-color:var(--mint);box-shadow:0 0 0 4px rgba(111,240,214,.12),0 24px 60px rgba(111,240,214,.18)}
+.sq video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.fl{display:flex;gap:12px;align-items:flex-start;margin-top:14px}
+.fl span{flex:none;display:inline-flex;width:40px;height:40px;border-radius:12px;background:#16202c;color:var(--mint);font-family:'Black Han Sans';font-size:22px;align-items:center;justify-content:center;transition:all .5s}
+.fs.on .fl span{background:var(--grad);color:#062018}
+.fl b{display:block;font-size:21px;font-weight:900}
+.fl small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.arrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.arrows path{fill:none;stroke:var(--mint);stroke-width:.9;stroke-linecap:round;stroke-dasharray:2 2;animation:dash 1.2s linear infinite;vector-effect:non-scaling-stroke;stroke-width:4px}
+@keyframes dash{to{stroke-dashoffset:-4}}
+@media(max-width:820px){.flow{grid-template-columns:1fr;gap:28px}.arrows{display:none}}
 /* 가격 박스 */
 .price{max-width:520px;margin:0 auto;text-align:center;background:var(--panel);border:1px solid rgba(255,207,111,.35);border-radius:22px;padding:30px 24px;box-shadow:0 0 0 1px rgba(255,207,111,.1) inset}
 .price .tag{display:inline-block;background:var(--gold-grad);color:#2a1a00;font-weight:800;font-size:13px;padding:4px 14px;border-radius:999px}
@@ -191,15 +199,16 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
   <span class="kicker reveal">한 편이 만들어지는 과정</span>
   <h2 class=reveal>담기만 하면, <span class=hl>네 단계</span>로 영상이 됩니다</h2>
   <p class="lead reveal">원본 영상을 담으면 장면을 읽고, 대본을 쓰고, 장면을 맞춰 완성본까지 뽑아냅니다.</p>
-  <div class="flow reveal">
-    <div class=fs><div class=phone data-video=flow1 data-label="장면분석"></div><div class=fl><span>1</span>장면분석<small>담은 영상이 무엇을 보여주는지 AI가 읽습니다</small></div></div>
-    <div class=fa>→</div>
-    <div class=fs><div class=phone data-video=flow2 data-label="대본생성"></div><div class=fl><span>2</span>대본생성<small>잘 된 구성을 살려 내 대본을 씁니다</small></div></div>
-    <div class=fa>→</div>
-    <div class=fs><div class=phone data-video=flow3 data-label="장면매칭"></div><div class=fl><span>3</span>장면매칭<small>대본 한 줄마다 맞는 장면을 배치합니다</small></div></div>
-    <div class=fa>→</div>
-    <div class=fs><div class=phone data-video=flow4 data-label="렌더화면"></div><div class=fl><span>4</span>렌더화면<small>음성·자막을 입혀 완성본을 뽑습니다</small></div></div>
+  <div class="flow reveal" id=flow>
+    <div class=fs><div class=sq data-video=flow1 data-label="장면분석"></div><div class=fl><span>1</span><div><b>장면분석</b><small>담은 영상이 무엇을 보여주는지 AI가 읽습니다</small></div></div></div>
+    <div class=fs><div class=sq data-video=flow2 data-label="대본생성"></div><div class=fl><span>2</span><div><b>대본생성</b><small>잘 된 구성을 살려 내 대본을 씁니다</small></div></div></div>
+    <div class=fs><div class=sq data-video=flow3 data-label="장면매칭"></div><div class=fl><span>3</span><div><b>장면매칭</b><small>대본 한 줄마다 맞는 장면을 배치합니다</small></div></div></div>
+    <div class=fs><div class=sq data-video=flow4 data-label="렌더화면"></div><div class=fl><span>4</span><div><b>렌더화면</b><small>음성·자막을 입혀 완성본을 뽑습니다</small></div></div></div>
+    <svg class=arrows viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden=true>
+      <path d="M45 24 L55 24"/><path d="M55 44 L45 56"/><path d="M45 76 L55 76"/>
+    </svg>
   </div>
+</div>
 </div>
 
 <div class="sec reveal">
@@ -346,6 +355,11 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
   /* 숫자 올라가는 효과 */
   document.querySelectorAll('.cnt').forEach(function(el){ var to=+el.dataset.to, n=0; var h=setInterval(function(){ n++; el.textContent=n; if(n>=to) clearInterval(h); }, 120); });
 
+  /* 4단계 — 켜진 단계가 2.2초마다 다음으로 */
+  (function(){ var fs=document.querySelectorAll('#flow .fs'), i=0; if(!fs.length) return;
+    function on(){ fs.forEach(function(f,k){ f.classList.toggle('on', k===i); }); i=(i+1)%fs.length; }
+    on(); setInterval(on, 2200);
+  })();
   var io = 'IntersectionObserver' in window ? new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12}) : null;
   document.querySelectorAll('.reveal').forEach(function(e){ io ? io.observe(e) : e.classList.add('in'); });
 })();
