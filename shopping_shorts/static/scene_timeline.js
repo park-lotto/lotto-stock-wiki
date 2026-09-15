@@ -17,6 +17,25 @@
 
   let RAF = 0;                    // 재생선 루프 — 마운트된 타임라인 하나만 돈다
 
+  // ── 타임라인이 사람에게 말하는 곳은 **여기 한 곳**이다(0순위-B) ──────────────
+  // ★왜: nsay는 #tbhint에 쓰는데 제작소 iframe 안에서 그 자리가 0x0이라 글자가 안 보인다
+  //   (2026-09-07 실측, saylo/toastlo가 그래서 생겼다). 그런데 타임라인은 계속 nsay만 써서
+  //   **실패가 통째로 조용했다** — 경계 저장이 422로 거절돼도 화면은 아무 말이 없었다.
+  //   증상이 늘 "눌러도 아무 일이 없다"라 원인이 달라도 같은 제보로 오고(09-13까지 4회),
+  //   매번 잡 로그를 뒤져야 했다. 실패만은 반드시 눈에 보이게 한다.
+  function _tlSay(t) {
+    // 있으면 보이는 자리(푸터+토스트)로, 없으면 기존 힌트줄로 — 어느 화면에서도 안 삼킨다.
+    if (typeof saylo === 'function') { saylo(t); return; }
+    if (typeof nsay === 'function') nsay(t);
+  }
+  /* 실패 알림 — 서버가 준 이유(있으면)를 그대로 보여준다. 이유가 곧 해결법인 경우가 많다
+     (예: "글자가 달라졌습니다 — 줄만 나누고 붙이세요"). */
+  function _tlFail(serverMsg, fallback) {
+    const why = String(serverMsg || '').trim();
+    _tlSay('⚠ ' + (why || fallback));
+    try { console.warn('[timeline]', fallback, '|', why || '(서버 사유 없음)'); } catch (_) {}
+  }
+
   function _dur(i) {
     return Math.max(0.2, beatDur(i) || 0.2);
   }
@@ -37,8 +56,9 @@
       // 마지막 컷이 모자람을 흡수해 늘어난 경우 — 그 늘어난 꼬리를 빗금으로 표시
       //   (★보정 후 합계만 보여주면 정보가 0이 된다는 교훈: 보정분을 눈에 보이게)
       const isLast = k === clips.length - 1;
-      const stretchPx = (isLast && f.lack > 0.1 && !f.stretching)
-        ? Math.min(f.lack, c.dur) * pps : 0;
+      // ★빗금 표시는 뺐다(2026-09-14 사장님 "무슨 말인지 모르겠어, 저게 필요해?") — 뜻이 안 읽히고,
+      //   딱 맞는 칸(3.6/3.6)에도 떠서 틀린 경고였다. 모자람은 머리글 문구 한 곳에서만 알린다.
+      const stretchPx = 0;
       const inRep = REPLACE && REPLACE.i === i && REPLACE.k === k;
       return `<div class="tl-cut" data-k="${k}" data-seg="${c.seg_id}"
         style="left:${left.toFixed(1)}px;width:${wd.toFixed(1)}px"
@@ -48,8 +68,9 @@
         <span class="tl-len${getFix(i, c.seg_id) ? ' fixed' : ''}"
           ${getFix(i, c.seg_id) ? `title="내가 정한 길이 — 누르면 자동 배분으로 되돌립니다"
             onclick="event.stopPropagation();tlFixReset(${i},${k})"` : ''}
-          >${getFix(i, c.seg_id) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
-        <span class="tl-edge" data-k="${k}" title="끌어서 이 컷의 길이 조절 — 늘리면 나머지 컷이 비례로 줄어듭니다"></span>
+          >${(getFix(i, c.seg_id) && !CUTS[i]) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
+        ${CUTS[i] ? `<span class="tl-edge l" data-k="${k}" title="끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다"></span>` : ''}
+        <span class="tl-edge" data-k="${k}" title="${CUTS[i] ? '끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다' : '끌어서 이 컷의 길이 조절 — 늘리면 나머지 컷이 비례로 줄어듭니다'}"></span>
         <button type="button" class="tl-repbtn${inRep ? ' on' : ''}"
           title="${inRep ? '교체 모드 끄기' : `이 컷을 바꿉니다 — ${c.dur.toFixed(2)}초 고정 박스가 아래 소스 필름에 뜹니다`}"
           onclick="event.stopPropagation();tlReplaceToggle(${i},${k})">🔁</button>
@@ -57,7 +78,13 @@
            title="재료가 ${f.lack.toFixed(1)}초 모자라 이 컷이 그만큼 늘어납니다"></span>` : ''}
       </div>`;
     }).join('');
-    const emptyHtml = clips.length ? '' :
+    // ★공백 표시(2026-09-14 사장님 "공백이라고 표기를 해주자") — 얼린 컷 칸에서 컷 뒤에 남은 빈 시간을
+    //   그 자리에 그대로 그린다. 계산은 cutsGap 한 곳(머리글 안내·완성본 막기와 같은 값).
+    const gapSec = (typeof cutsGap === 'function' && CUTS[i]) ? cutsGap(i) : 0;
+    const blankHtml = (clips.length && gapSec > 0)
+      ? `<div class="tl-gap tl-blank" style="left:${(acc * pps).toFixed(1)}px;width:${Math.max(18, gapSec * pps - 2).toFixed(1)}px"
+           title="${gapSec.toFixed(1)}초가 비어 있어요 — 앞 조각을 길게 하거나 [전체 살짝 느리게]를 눌러주세요">공백 ${gapSec.toFixed(1)}s</div>` : '';
+    const emptyHtml = clips.length ? blankHtml :
       `<div class="tl-gap" style="left:0;width:${(dur * pps).toFixed(1)}px">장면 없음 — 아래 소스에서 담아주세요</div>`;
     const stretchBadge = (f.stretching && f.lack > 0.1)
       ? `<span class="tl-badge warn">늘려 채움 중 (+${f.lack.toFixed(1)}초)</span>` : '';
@@ -223,7 +250,7 @@
     // 컷 교체는 **기존 replaceRoll 경로 하나**로 — 새 조각 만들기·칸 갈아끼우기 규칙을
     // 여기서 다시 적지 않는다(0순위-B).
     try { replaceRoll(rep.oldSeg, vid, { s: r.s, e: r.e }); }
-    catch (e) { nsay('⚠ 교체 실패 — ' + e.message); return; }
+    catch (e) { _tlFail(e && e.message, '장면을 교체하지 못했어요'); return; }
     REPLACE = null;
     // 교체 로그(⑩ 축소판 — 기록만, 픽 로직 무변경). 실패해도 조용히 넘어간다(부가 기능).
     try {
@@ -290,14 +317,25 @@
         e.stopPropagation(); e.preventDefault();
         const cut = ed.closest('.tl-cut');
         const k = +cut.dataset.k;
-        const w0 = cut.offsetWidth, x0 = e.clientX;
+        const w0 = cut.offsetWidth, x0 = e.clientX, left0 = cut.offsetLeft;
+        const fromLeft = ed.classList.contains('l');   // 앞 손잡이: 왼쪽으로 끌면 길어진다
         const badge = cut.querySelector('.tl-len');
         cut.classList.add('sizing');
         try { ed.setPointerCapture(e.pointerId); } catch (_) {}
+        // ★끄는 도중에도 한계에서 딱 멈춘다(2026-09-14 사장님 "마지막 컷 잡고 뒤로 최대한 해도 끝에
+        //   딱 맞게 멈추게"). 한계 = 놓았을 때 dragCut이 허락하는 길이와 같다(두 벌 규칙 금지 — 같은 식).
+        let maxSec = Infinity, minSec = 0.2;
+        if (typeof CUTS !== 'undefined' && CUTS[i] && CUTS[i][k]) {
+          const slow = SLOW[i] > 1 ? SLOW[i] : 1;
+          minSec = CUT_MIN * slow;
+          maxSec = cutMaxSec(i, k) * slow;
+        }
         const move = me => {
-          const w = Math.max(0.2 * pps, w0 + (me.clientX - x0));
+          const dx = (me.clientX - x0) * (fromLeft ? -1 : 1);
+          const w = Math.min(maxSec * pps - 2, Math.max(minSec * pps - 2, w0 + dx));   // 폭은 dur*pps-2로 그린다
           cut.style.width = w + 'px';                       // 미리보기 — 확정은 놓을 때
-          if (badge) badge.textContent = '✋' + (w / pps).toFixed(2) + 's';
+          if (fromLeft) cut.style.left = (left0 - (w - w0)) + 'px';
+          if (badge) badge.textContent = (CUTS[i] ? '' : '✋') + ((w + 2) / pps).toFixed(2) + 's';
           me.stopPropagation();
         };
         const up = ue => {
@@ -305,10 +343,22 @@
           ed.removeEventListener('pointerup', up);
           ed.removeEventListener('pointercancel', up);
           cut.classList.remove('sizing');
-          const sec = Math.round((cut.offsetWidth / pps) * 100) / 100;
+          const sec = Math.round(((cut.offsetWidth + 2) / pps) * 100) / 100;   // 폭은 dur*pps-2로 그렸다
           const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
           const c = clips[k];
-          if (c && Math.abs(sec - c.dur) >= 0.05) setFix(i, c.seg_id, sec);
+          // ★구절 맞춤을 끈 칸 = 양옆 두 컷만(scene_play.js CUTS 규칙). ✋는 안 쓴다.
+          if (c && CUTS[i]) { if (Math.abs(sec - c.dur) >= 0.02) dragCut(i, k, sec); else g.tlMount(); }
+          else if (c && Math.abs(sec - c.dur) >= 0.05) {
+            // ★전 컷이 ✋면 합계 보정이 마지막 컷에 몰려 방금 끈 길이가 되돌아갔다
+            //   (2026-09-14 사장님 "줄여지는게 있고 안될때도 있고"). 끈 컷 말고 전부 ✋면
+            //   **옆 컷**의 ✋를 풀어 그 컷이 차이를 받게 한다(칸 총초는 음성 그대로).
+            const others = clips.filter((x, j) => j !== k);
+            if (others.length && others.every(x => getFix(i, x.seg_id) > 0)) {
+              const nb = clips[k + 1] || clips[k - 1];
+              if (nb && nb.seg_id !== c.seg_id) FIXLEN[fixKey(i, nb.seg_id)] && delete FIXLEN[fixKey(i, nb.seg_id)];
+            }
+            setFix(i, c.seg_id, sec);
+          }
           else g.tlMount();                                 // 거의 안 움직임 — 원상 복구
           ue.stopPropagation();
         };
@@ -338,15 +388,19 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ beat_idx: i, lines }) });
       const d = await r.json();
-      if (!r.ok || !d.ok) { nsay('⚠ ' + (d.error || '경계 저장 실패')); return; }
+      // ★실패는 **보이는 자리**에 알린다(2026-09-13 고객 "클릭해도 지워지지도 변경도 안 된다").
+      //   nsay가 쓰는 #tbhint는 제작소 iframe 안에서 0x0이라 글자가 아예 안 보인다(09-07 실측).
+      //   서버는 422로 이유를 정확히 말하고 있었는데 화면이 삼켜서, 원인이 무엇이든 증상이
+      //   늘 "그냥 안 눌림"으로만 왔다 — 경계 실패는 이 뿌리로 이미 네 번 재발했다.
+      if (!r.ok || !d.ok) { _tlFail(d && d.error, '경계를 저장하지 못했어요'); return; }
       // ⑨ 연쇄 갱신 — 진실(구절 시간표)만 바꾸고 나머지는 render()가 파생으로 다시 그린다.
       if (d.captions) DATA.captions[String(i)] = d.captions;
       const b = (DATA.beats || [])[i];
       if (b) { b.caption_lines = lines; b.cap_durs = d.cap_durs;
                b.cap_lead = d.cap_lead; b.cap_src = d.cap_src; }
-      if (!d.timed) nsay('⚠ 이 칸은 정밀 타임스탬프가 없어 초가 추정입니다 — 🔊 음성·자막 다시 뽑기를 권장');
+      if (!d.timed) _tlSay('⚠ 이 칸은 정밀 타임스탬프가 없어 초가 추정입니다 — 🔊 음성·자막 다시 뽑기를 권장');
       render();
-    } catch (e) { nsay('⚠ 경계 저장 실패 — 네트워크'); }
+    } catch (e) { _tlFail(null, '경계를 저장하지 못했어요 — 네트워크'); }
   };
 
   /* 자막 블록 클릭 → 기존 F21(pickSeg) 경로. 하이라이트만 타임라인에도 얹는다. */

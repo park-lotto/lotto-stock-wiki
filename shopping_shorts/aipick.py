@@ -75,7 +75,7 @@ def _pending_card(s):
     """추출 대기 중인 소스의 카드 — 점수·구조는 아직 없다는 걸 그대로 말한다."""
     return {"video_id": s.get("video_id"), "score": None,
             "name": s.get("name") or "", "thumbnail": s.get("thumbnail") or "",
-            "structure": None, "text": "", "pending": True}
+            "structure": None, "text": "", "product": s.get("product") or "", "pending": True}
 
 
 def build_aipick(sources, meta, forced=None):
@@ -102,7 +102,7 @@ def build_aipick(sources, meta, forced=None):
         cards = [{"video_id": s.get("video_id"), "score": None, "name": s.get("name") or "",
                   "thumbnail": s.get("thumbnail") or "",
                   "structure": _structure_view(s.get("structure")) if s.get("structure") else None,
-                  "text": s.get("text") or ""} for s in ready]
+                  "text": s.get("text") or "", "product": s.get("product") or ""} for s in ready]
         cards += [_pending_card(s) for s in waiting]
         return {"pick_id": None, "pick_index": -1, "tiles": {}, "structure": {},
                 "candidates": cards, "pick_meta": {},
@@ -151,6 +151,7 @@ def build_aipick(sources, meta, forced=None):
             "structure": _structure_view(src.get("structure")) if src.get("structure") else None,
             # ★원문 보기(2026-07-29): 카드 클릭 전에 백본 후보 3개 대본을 미리 읽어보게.
             "text": src.get("text") or "",
+            "product": src.get("product") or "",
         })
     cand_out += [_pending_card(s) for s in waiting]      # 분석 중인 것도 카드로는 보인다
     return {"pick_id": pick_id, "pick_index": idx, "tiles": tiles,
@@ -167,4 +168,5 @@ def build_aipick(sources, meta, forced=None):
                 "category": pick.get("category"),
                 "followers": pick.get("followers"),
                 "thumbnail": pick.get("thumbnail") or pick.get("thumb"),
+                "product": pick.get("product") or "",
             }}

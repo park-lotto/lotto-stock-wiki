@@ -65,6 +65,10 @@ def test_같은_한글판정자를_쓴다():
     assert "if(st.foreignOnly) shown=shown.filter(i=>!_HANGUL_RE.test(i.title||''));" in src
 
 
-def test_화면에_체크박스가_있다():
+def test_한국만_체크박스는_화면에서_뺐고_함수는_남는다():
+    # 2026-09-14 사장님 렌즈 디자인 정리 승인 — '해외만/한국만'은 검색 언어 선택과 겹쳐 화면에서 뺐다.
+    # 필터 함수와 '언어 필터로 N건 숨김·해제' 안내는 남긴다(옛 상태가 켜진 채 남은 사용자용).
     src = INDEX.read_text(encoding="utf-8")
-    assert "🇰🇷 한국만" in src and "toggleLensKorean('${shortcode}')" in src
+    assert "function toggleLensKorean" in src
+    assert "toggleLensKorean('${shortcode}')" not in src
+    assert "lensClearLangFilter('${shortcode}')" in src

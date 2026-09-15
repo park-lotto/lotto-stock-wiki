@@ -1137,6 +1137,25 @@ class Store:
                 pass  # 이미 존재
             # "영상 안 올라오는" 죽은 채널 — 엑셀 원본은 안 건드리고 여기에 넣어
             # collect()가 추적에서 제외한다(소프트 삭제, 복구 가능, 2026-07-12).
+            # 사람이 지정한 영상 카테고리(2026-09-14 사장님 "지정되면 그쪽 카테고리로
+            # 들어가게"). 판정기보다 우선한다 — 다음 수집이 다시 분류해도 이 값이 이긴다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS category_overrides (
+                    shortcode TEXT PRIMARY KEY,
+                    category TEXT NOT NULL,
+                    set_at TEXT
+                )
+            """)
+            # 채널 고정 카테고리(2026-09-15 사장님 "카테이동한 채널은 앞으로 영상도 그 안으로").
+            # channel_categories(비전태그에 지는 폴백)와 다르다 — 이건 판정기·비전태그를 이긴다.
+            # 영상별 지정(category_overrides)만 이것보다 우선한다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS channel_category_force (
+                    username TEXT PRIMARY KEY,
+                    category TEXT NOT NULL,
+                    set_at TEXT
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS removed_channels (
                     username TEXT PRIMARY KEY,
@@ -2615,6 +2634,71 @@ class Store:
                       key=lambda i: (i.get("age_hours") is None,
                                      i.get("age_hours") if i.get("age_hours") is not None else 0))
 
+    def set_category_overrides(self, mapping):
+        """{shortcode: category} 저장. category가 빈 값이면 지정 해제. 저장한 개수를 준다."""
+        now = datetime.now(timezone.utc).isoformat()
+        n = 0
+        with self._conn() as c:
+            for sc, cat in (mapping or {}).items():
+                if not sc:
+                    continue
+                if cat:
+                    c.execute("INSERT OR REPLACE INTO category_overrides(shortcode, category, set_at) "
+                              "VALUES(?,?,?)", (sc, cat, now))
+                else:
+                    c.execute("DELETE FROM category_overrides WHERE shortcode=?", (sc,))
+                n += 1
+        return n
+
+    def set_channel_force(self, username, category):
+        """채널 고정 카테고리 저장. category 빈값 = 해제."""
+        u = (username or "").strip().lstrip("@").lower()
+        if not u:
+            return
+        with self._conn() as c:
+            if category:
+                c.execute("INSERT OR REPLACE INTO channel_category_force(username, category, set_at) "
+                          "VALUES(?,?,?)", (u, category, datetime.now(timezone.utc).isoformat()))
+            else:
+                c.execute("DELETE FROM channel_category_force WHERE username=?", (u,))
+
+    def _apply_overrides(self, items, conn=None):
+        """사람 지정 카테고리를 덮는다 — **저장하는 자리(save/merge)에서만** 부른다(0순위-B).
+
+        판정기(categorize)는 수집 때마다 다시 돌므로, 지정값을 판정기 쪽에 적으면
+        다음 수집에 덮인다. 저장 직전 한 곳에서 덮어야 모든 수집 경로가 따른다.
+        """
+        try:
+            if conn is not None:
+                rows = conn.execute("SELECT shortcode, category FROM category_overrides").fetchall()
+            else:
+                with self._conn() as c:
+                    rows = c.execute("SELECT shortcode, category FROM category_overrides").fetchall()
+        except sqlite3.Error:
+            return items
+        ov = dict(rows)
+        try:
+            q = "SELECT username, category FROM channel_category_force"
+            if conn is not None:
+                force = dict(conn.execute(q).fetchall())
+            else:
+                with self._conn() as c:
+                    force = dict(c.execute(q).fetchall())
+        except sqlite3.Error:
+            force = {}
+        if ov or force:
+            # 우선순위: 영상별 지정 > 채널 고정 > 자동판정
+            for x in items or []:
+                if not isinstance(x, dict):
+                    continue
+                if x.get("shortcode") in ov:
+                    x["category"] = ov[x["shortcode"]]
+                else:
+                    u = (x.get("username") or "").strip().lstrip("@").lower()
+                    if u in force:
+                        x["category"] = force[u]
+        return items
+
     def _fill_delta(self, platform, items):
         """delta·is_new가 없는 항목을 채운다 — **모든 플랫폼이 지나는 자리**(0순위-B).
 
@@ -2642,7 +2726,7 @@ class Store:
         return items
 
     def save_last_run_platform(self, platform, items, collected_at):
-        items = self._trim_for_store(self._fill_delta(platform, items))
+        items = self._trim_for_store(self._apply_overrides(self._fill_delta(platform, items)))
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
@@ -2654,7 +2738,8 @@ class Store:
                 # ★조용히 넘기면 "이번 주 탭이 왜 비지?"를 영영 못 찾는다(인스타 쪽 교훈).
                 print(f"[경고] {platform} 히스토리 적재 실패: {e!r}", file=sys.stderr)
 
-    def merge_last_run_platform(self, platform, new_items, collected_at, key="shortcode"):
+    def merge_last_run_platform(self, platform, new_items, collected_at, key="shortcode",
+                                update_existing=False):
         """기존 수집분에 새 항목을 **한 트랜잭션 안에서** 합친다. 새로 담긴 개수를 준다.
 
         ★왜 필요한가(2026-08-29 재현): 호출부에서 load → 파이썬 병합 → save 로 하면
@@ -2666,21 +2751,46 @@ class Store:
 
         BEGIN IMMEDIATE로 쓰기 락을 먼저 잡아, 읽는 순간부터 다른 수집이 끼어들지
         못하게 한다(sqlite는 이 시점부터 다른 쓰기를 막는다).
+
+        update_existing=True (2026-09-14 썰쇼핑 3시간 갱신):
+          ① 이미 있는 항목도 새 값(조회수 등)으로 **교체**한다.
+          ② 남는 옛 항목의 age_hours를 collected_at이 밀린 만큼 **더한다**.
+             화면은 age_hours + (지금 − collected_at)으로 경과를 셈하므로
+             collected_at만 새로 박으면 옛 영상이 그만큼 '젊게' 보인다.
         """
         with self._conn() as c:
             c.execute("BEGIN IMMEDIATE")
             row = c.execute("SELECT value FROM settings WHERE key=?",
                             (f"last_run::{platform}",)).fetchone()
-            prev = []
+            prev, prev_at = [], None
             if row and row[0]:
                 try:
-                    prev = json.loads(row[0]).get("items", []) or []
+                    _d = json.loads(row[0])
+                    prev = _d.get("items", []) or []
+                    prev_at = _d.get("collected_at")
                 except ValueError:      # 값이 깨져 있어도 수집을 죽이지 않는다
                     prev = []
-            have = {x.get(key) or x.get("video_url") for x in prev}
-            fresh = [x for x in (new_items or [])
-                     if (x.get(key) or x.get("video_url")) not in have]
-            items = self._trim_for_store(self._fill_delta(platform, fresh) + prev)
+
+            def _k(x):
+                return x.get(key) or x.get("video_url")
+
+            new_keys = {_k(x) for x in (new_items or [])}
+            if update_existing:
+                prev = [x for x in prev if _k(x) not in new_keys]
+                shift = 0.0
+                try:
+                    shift = (datetime.fromisoformat(str(collected_at))
+                             - datetime.fromisoformat(str(prev_at))).total_seconds() / 3600
+                except (TypeError, ValueError):
+                    shift = 0.0
+                if shift > 0:
+                    for x in prev:
+                        if isinstance(x.get("age_hours"), (int, float)):
+                            x["age_hours"] = round(x["age_hours"] + shift, 1)
+            have = {_k(x) for x in prev}
+            fresh = [x for x in (new_items or []) if _k(x) not in have]
+            items = self._trim_for_store(
+                self._apply_overrides(self._fill_delta(platform, fresh) + prev, conn=c))
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}",
                        json.dumps({"items": items, "collected_at": collected_at},
@@ -5506,7 +5616,8 @@ class Store:
     def list_voice_presets(self, lang=None, customer_id=None):
         """성우 프리셋 목록.
 
-        customer_id: 주면 **공용(owner 0) + 그 고객이 담은 것**만 준다(2026-08-24).
+        customer_id: 주면 **공용 내장(owner 0·curated) + 그 고객이 담은 것**만 준다(2026-08-24).
+          ★owner 0이라도 origin='library'(사장님 계정 보이스)는 뺀다 — 2026-09-09 참조.
           안 주면 전부 — 관리자 화면·배치처럼 소유자를 안 가리는 곳의 기존 동작이다.
           ★남이 담은 성우를 보여주면 안 된다: 담기는 각자 일레븐랩스 계정에 되므로
             내 키로는 그 voice_id가 없어 합성이 실패한다."""
@@ -5518,8 +5629,21 @@ class Store:
         if lang:
             where.append("lang=?"); args.append(lang)
         if customer_id is not None:
-            where.append("(owner_customer_id=0 OR owner_customer_id=?)")
-            args.append(int(customer_id))
+            # ★owner 0(사장님)이라도 origin='library'는 **사장님 일레븐랩스 계정 보이스**다
+            #   → 남에게 보여주면 안 된다(2026-09-09 실사고 cid 163: 3일간 6잡 전부 404).
+            #   일레븐랩스 계정 전용 보이스는 만든 계정 키로만 불리는데, 개인 키를 낸 회원은
+            #   keyroute 규칙상 폴백 없이 자기 키만 쓴다 → 그 voice_id가 없어 404.
+            #   ⚠️origin으로 갈라야 한다 — owner=0 안에 성격이 다른 둘이 섞여 있다(실측):
+            #     curated 65행 = 공용 내장(모든 키로 됨, 계속 보여야 한다)
+            #     library   4행 = 사장님 계정 보이스(1그룹 '로또아나운서', 남은 못 쓴다)
+            #   본인(cid 0)에겐 그대로 보인다 — 사장님은 그 키의 주인이다.
+            if int(customer_id) == 0:
+                where.append("(owner_customer_id=0 OR owner_customer_id=?)")
+                args.append(int(customer_id))
+            else:
+                where.append("((owner_customer_id=0 AND origin<>'library') "
+                             "OR owner_customer_id=?)")
+                args.append(int(customer_id))
         if where:
             q += " WHERE " + " AND ".join(where)
         args = tuple(args)
@@ -5987,7 +6111,40 @@ class Store:
             v = json.loads(row[0])
         except (ValueError, TypeError):
             return None      # 깨진 값이 영상제작을 막지 않는다
-        return v if isinstance(v, dict) and v.get("voice_id") else None
+        if not (isinstance(v, dict) and v.get("voice_id")):
+            return None
+        # ★못 쓰는 목소리에 **고착**되는 걸 막는다(2026-09-09 실사고 cid 163).
+        #   목록에서 숨기는 것만으론 부족하다 — 한 번 고른 목소리가 여기 저장돼
+        #   다음 작업에 자동으로 다시 실린다. cid 163은 이 값이 사장님 계정 보이스라
+        #   3일간 새 작업마다 같은 404를 맞았다(6잡 전부).
+        #   목록에서 안 보이는 목소리면 기억을 버리고 기본값으로 돌아간다(=동작 불변).
+        #   ★"목록에 없으면 버린다"로 하면 안 된다 — 프리셋 행이 아직 없는 정상 경로
+        #     (튜닝 스냅샷·시드 전·테스트)까지 기억을 잃는다. 그래서 **못 쓰는 게
+        #     확실할 때만** 버린다: 그 preset이 DB에 실재하고, 그게 남의 계정 보이스일 때.
+        try:
+            pid = v.get("preset_id")
+            if pid and self._is_foreign_account_voice(pid, customer_id):
+                return None
+        except Exception as e:    # noqa: BLE001 — 조회 실패로 영상제작을 막지 않는다
+            # ★조용히 삼키지 마라(BUDGET) — 왜 못 걸렀는지 남긴다.
+            logging.warning("get_last_voice: 보이스 소유 확인 실패(기억 유지) — %r", e)
+        return v
+
+    def _is_foreign_account_voice(self, preset_id, customer_id):
+        """그 프리셋이 **남의 일레븐랩스 계정 보이스**인가(=내 키로는 404).
+
+        origin='library'는 누군가의 계정에서 담아온 보이스다. 그 주인이 내가 아니면
+        내 키로는 그 voice_id가 없다. curated(공용 내장)·tuned은 해당 없음.
+        행이 없으면 판단하지 않는다(False) — 모르는 것을 못 쓴다고 단정하지 않는다.
+        """
+        if not customer_id:
+            return False       # 사장님(cid 0)은 자기 계정 보이스의 주인이다
+        with self._conn() as c:
+            row = c.execute("SELECT origin, owner_customer_id FROM voice_presets "
+                            "WHERE preset_id=?", (preset_id,)).fetchone()
+        if not row:
+            return False       # 모르는 프리셋 — 기억을 함부로 버리지 않는다
+        return row[0] == "library" and int(row[1] or 0) != int(customer_id)
 
     def set_last_voice(self, customer_id, voice):
         """이 고객의 다음 작업 기본 성우를 저장(upsert). voice=None이면 지운다.
@@ -6875,7 +7032,10 @@ class Store:
     def put_share_link(self, sid, job_id, expires_at):
         """QR 단축링크 저장 + 만료분 청소(누수 방지)."""
         with self._conn() as c:
-            c.execute("DELETE FROM share_links WHERE expires_at < ?", (int(expires_at) - 86400 * 0,))
+            # 새 링크의 만료시각을 청소 기준으로 쓰면, 새 Buffer 예약(14일)이 들어올
+            # 때마다 그보다 먼저 만든 아직 유효한 예약 링크가 전부 지워진다. Buffer는
+            # 발행 시각에 이 주소로 영상을 받으므로 이전 고객의 예약이 연쇄 실패한다.
+            c.execute("DELETE FROM share_links WHERE expires_at < ?", (int(time.time()),))
             c.execute("INSERT OR REPLACE INTO share_links(sid, job_id, expires_at) VALUES(?,?,?)",
                       (sid, job_id, int(expires_at)))
 

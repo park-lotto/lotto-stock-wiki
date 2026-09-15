@@ -593,11 +593,90 @@ def _norm_masks(raw):
             continue                       # 그릴 글자가 없으면 버린다(빈 자리를 남기지 않는다)
         if kind == "badge" and not text:
             continue
-        out.append({"l": round(l, 3), "t": round(t, 3), "w": round(w, 3), "h": round(h, 3),
-                    "kind": kind, "ch": ch, "text": text,
-                    "shape": shape, "fx": fx, "color": col,
-                    "op": _i("op", 100, 0, 100), "soft": _i("soft", 0, 0, 100),
-                    "rot": _i("rot", 0, -45, 45)})
+        item = {"l": round(l, 3), "t": round(t, 3), "w": round(w, 3), "h": round(h, 3),
+                "kind": kind, "ch": ch, "text": text,
+                "shape": shape, "fx": fx, "color": col,
+                "op": _i("op", 100, 0, 100), "soft": _i("soft", 0, 0, 100),
+                "rot": _i("rot", 0, -45, 45)}
+        # 🎬 이 장면에만(2026-09-10 사장님 "장면에만 하는걸 만들고").
+        #   beat = 자막 칸 번호(beat_idx) · cut = 그 칸의 몇 번째 컷(None이면 칸 전체).
+        #   ★장면 지정이 **없으면 키를 아예 안 붙인다** — 붙이면 cache_key가 바뀌어
+        #     지금까지 만든 모든 틀 그림이 다시 그려진다(옛 작업 무변경).
+        sc = _scene_of_raw(m)
+        if sc is not None:
+            item["beat"], item["cut"] = sc
+        out.append(item)
+    return out
+
+
+def _scene_of_raw(m):
+    """가림막 dict에서 (beat, cut)을 읽는다. 장면 지정이 없거나 이상하면 None(=전체 장면)."""
+    b = m.get("beat")
+    if b is None or isinstance(b, bool):
+        return None
+    try:
+        b = int(b)
+    except (TypeError, ValueError):
+        return None
+    if b < 0:
+        return None
+    c = m.get("cut")
+    if c is None or isinstance(c, bool):
+        return (b, None)
+    try:
+        c = int(c)
+    except (TypeError, ValueError):
+        return (b, None)
+    return (b, c if c >= 0 else None)
+
+
+def split_scene_masks(spec):
+    """틀 spec → (전체 장면용 spec, {(beat, cut): [장면 전용 가림막...]}).
+
+    ★렌더가 쓰는 **유일한 갈림길**이다(0순위-B). 전체 장면 가림막은 지금까지처럼
+      틀 그림(한 장) 안에 그대로 들어가고, 장면 전용은 따로 떼어 그 장면 시간에만 얹는다.
+    ★장면 지정이 하나도 없으면 원본 spec을 **그대로** 돌려준다 — cache_key가 같아야
+      옛 틀 그림이 다시 그려지지 않는다.
+    """
+    spec = spec or {}
+    raw = spec.get("masks") or []
+    if not isinstance(raw, list) or not any(
+            isinstance(m, dict) and _scene_of_raw(m) is not None for m in raw):
+        return spec, {}
+    keep, scenes = [], {}
+    for m in raw:
+        if not isinstance(m, dict):
+            continue
+        sc = _scene_of_raw(m)
+        if sc is None:
+            keep.append(m)
+        else:
+            scenes.setdefault(sc, []).append(m)
+    return dict(spec, masks=keep), scenes
+
+
+def render_scene_masks_to(masks):
+    """장면 전용 가림막만 담은 **투명 그림** 한 장(1080x1920). 그릴 게 없으면 None.
+
+    ★그리는 함수는 틀 그림과 같은 _draw_masks다 — 전체용과 장면용이 모양이 갈리지 않는다.
+    흐림 계열은 여기서도 안 그린다(render_blur_mask_to가 따로 마스크를 만든다).
+    """
+    ms = _norm_masks(masks)
+    if not ms:
+        return None
+    key = hashlib.sha1(json.dumps(
+        {"m": ms, "_v": RENDER_VER}, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()[:16]
+    out = (pathlib.Path(__file__).resolve().parent / "data" / "frame_cache"
+           / f"{key}_scenemask.png")
+    if out.exists():
+        return out
+    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    _draw_masks(im, ms)
+    if im.getbbox() is None:          # 흐림만 있어 색 막이 하나도 없다
+        return None
+    out.parent.mkdir(parents=True, exist_ok=True)
+    im.save(out, "PNG")
     return out
 
 

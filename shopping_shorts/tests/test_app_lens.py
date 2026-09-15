@@ -293,8 +293,15 @@ def test_lens_cn_keywords_returns_candidates(tmp_path, monkeypatch):
                files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
                data={"source_caption": "풍선감자"})
     d = r.json()
-    assert d["ok"] and d["product"] == "감자칩"
+    # 대본이 없으면 제품명은 썸네일 짐작이라 내려주지 않는다(2026-09-14 사장님 제보).
+    assert d["ok"] and d["product"] == "" and d["has_source"] is False
     assert d["candidates"][0]["zh"] == "空气炸锅土豆片"
+    # 대본이 있으면 제품명을 그대로 준다.
+    monkeypatch.setattr(appmod, "_lens_has_script", lambda *a, **k: True)
+    d = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "풍선감자"}).json()
+    assert d["product"] == "감자칩" and d["has_source"] is True
 
 
 def test_lens_cn_keywords_forwards_exclude(tmp_path, monkeypatch):

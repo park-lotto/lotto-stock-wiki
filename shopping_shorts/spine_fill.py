@@ -460,9 +460,9 @@ def target_range(spine, seconds):
       쓰면 "시킨 대로 만들었는데 반려"가 난다(0순위-B). density_target 주석이 같은 말을 한다.
     """
     from shopping_shorts import script_gate as _sg
-    tgt = _sg.density_target(spine, seconds)
-    cap = int(_sg._speech_cps() * max(5, min(int(seconds or 30), 90)))
-    return int(tgt * _sg.DENSITY_LO), min(int(tgt * _sg.DENSITY_HI), cap)
+    # ★계산을 여기 또 적지 않는다 — 판정(check)과 **같은 함수**를 부른다(0순위-B).
+    #   2026-09-09에 길이 바닥이 생겼는데, 두 벌이었으면 조립만 옛 범위로 남았을 것이다.
+    return _sg.density_range(spine, seconds)
 
 
 def _measured(beats):

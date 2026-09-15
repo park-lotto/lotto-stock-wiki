@@ -2206,7 +2206,7 @@
                         title="끌어 옮긴 자리를 영상 전체 자막에 적용합니다">🌐 모든 장면</button>
                 <button type="button" class="tab" data-capscope="one" onclick="setCapDragScope('one')"
                         style="flex:1;min-width:auto;padding:7px 10px;font-size:13px"
-                        title="지금 보고 있는 이 장면의 자막만 옮깁니다">🎯 이 장면만</button>
+                        title="지금 화면에 보이는 자막 한 줄만 옮깁니다">🎯 이 자막만</button>
               </div>
               <div class="hint" id="capScopeMsg" style="margin-top:6px">미리보기 자막을 마우스로 끌어 옮기세요.</div>
             </div>
@@ -2452,7 +2452,7 @@
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
                   <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="capYV">84</b>%
-                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;capTouched()" style="width:100%"></div>
+                    <input id="capY" type="range" min="0" max="100" value="84" oninput="capPositionTouched()" onchange="saveCapAllPosition()" style="width:100%"></div>
                   <!-- ★가로 정렬 버튼(2026-08-25 고객 요청 "자막이 한쪽으로 치우쳐져 있어서
                        정렬하는 부분이 추가되면 좋겠어요"). 자막은 드래그로 가로 이동이 되는데
                        (CAP_X_PCT) **되돌리는 길이 없었다** — 한 번 끌면 중앙으로 못 돌아온다.
@@ -2902,6 +2902,11 @@
               <button type="button" onclick="mkAdd('wmr')" class="mkbtn">⊡ 구석 워터마크</button>
               <button type="button" onclick="mkAdd('sub')" class="mkbtn">◎ 가운데</button>
             </div>
+            <!-- 🎬 이 장면에만(2026-09-10) — 켜고 얹으면 지금 보는 장면에서만 덮는다. 기본 꺼짐(지금까지와 같음). -->
+            <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;margin-bottom:8px;cursor:pointer;min-height:32px">
+              <input type="checkbox" id="mkOnlyScene" onchange="MK_ONLY_SCENE=this.checked">
+              <span>🎬 새로 얹는 건 <b>지금 장면에만</b></span>
+            </label>
             <div id="mkPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
             <div id="mkEditor"></div>
             <div class="hint" style="font-size:11px;margin-top:10px;line-height:1.7">
@@ -3050,7 +3055,54 @@
                   style="width:270px;height:480px;border-radius:8px;cursor:move;background:#111"></canvas>
           <div id="thumbHandles" style="position:absolute;inset:0;pointer-events:none"></div>
           </div>
-          <button class="btn-next" style="width:270px;margin-top:8px" onclick="generateThumb()">썸네일 생성</button>
+          <!-- 🔍확대 · 🔎돋보기 (2026-09-13 사장님: "장면꾸미기 있는것 심플하게 조작되게").
+               6단계 장면꾸미기와 **같은 뜻·같은 범위**의 값이다(thumbView 한 곳에서 해석).
+               ★배경 사진에만 걸린다 — 글자·스티커는 같이 커지지 않는다(장면꾸미기도 같다). -->
+          <div style="width:270px;margin-top:10px;border-top:1px solid var(--line);padding-top:9px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+              <span style="font-size:12px;color:var(--sub);flex:1">🔍 사진 확대</span>
+              <span id="thumbZoomVal" style="font-size:11px;color:var(--sub)">100%</span>
+              <button class="tab" style="min-width:auto;padding:2px 7px;font-size:11px"
+                      onclick="thumbZoomReset()" title="확대·이동을 처음으로">↺</button>
+            </div>
+            <input id="thumbZoom" type="range" min="100" max="300" step="5" value="100"
+                   style="width:100%" oninput="thumbZoomSet(this.value/100)">
+            <div id="thumbPanHint" class="hint" style="font-size:11px;margin-top:3px;display:none">
+              확대한 사진을 <b>끌어서</b> 보여줄 곳을 맞추세요</div>
+
+            <div style="display:flex;align-items:center;gap:6px;margin-top:11px;margin-bottom:5px">
+              <span style="font-size:12px;color:var(--sub);flex:1">🔎 돋보기</span>
+              <label style="font-size:11px;color:var(--sub);display:flex;align-items:center;gap:4px;cursor:pointer">
+                <input id="thumbHlOn" type="checkbox" onchange="thumbHlToggle(this.checked)"> 켜기</label>
+            </div>
+            <div id="thumbHlBox" style="display:none">
+              <div style="display:flex;gap:5px;margin-bottom:6px">
+                <button id="thumbHlModeZoom" class="tab" style="flex:1;min-width:auto;padding:5px;font-size:11px"
+                        onclick="thumbHlSet({mode:'zoom'})">🔍 원 안 확대</button>
+                <button id="thumbHlModeSpot" class="tab" style="flex:1;min-width:auto;padding:5px;font-size:11px"
+                        onclick="thumbHlSet({mode:'spot'})">💡 원 밖 어둡게</button>
+              </div>
+              <div style="display:flex;gap:5px;margin-bottom:7px">
+                <button id="thumbHlShapeCircle" class="tab" style="flex:1;min-width:auto;padding:5px;font-size:11px"
+                        onclick="thumbHlSet({shape:'circle'})">⭕ 원</button>
+                <button id="thumbHlShapeRound" class="tab" style="flex:1;min-width:auto;padding:5px;font-size:11px"
+                        onclick="thumbHlSet({shape:'round'})">▢ 둥근네모</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;color:var(--sub);width:30px">크기</span>
+                <input id="thumbHlR" type="range" min="8" max="55" step="1" value="28"
+                       style="flex:1" oninput="thumbHlSet({r:this.value/100})">
+              </div>
+              <div id="thumbHlZRow" style="display:flex;align-items:center;gap:6px;margin-top:4px">
+                <span style="font-size:11px;color:var(--sub);width:30px">배율</span>
+                <input id="thumbHlZ" type="range" min="110" max="400" step="10" value="200"
+                       style="flex:1" oninput="thumbHlSet({zoom:this.value/100})">
+              </div>
+              <div class="hint" style="font-size:11px;margin-top:4px">원을 <b>끌어서</b> 강조할 곳으로 옮기세요</div>
+            </div>
+          </div>
+
+          <button class="btn-next" style="width:270px;margin-top:10px" onclick="generateThumb()">썸네일 생성</button>
           <div id="thumbSaveStatus" class="hint" style="margin-top:6px"></div>
 
           <!-- 🖼 내 프리셋(2026-09-02 사장님 "만들어진것 프리셋으로 저장하는것 만들어줘.
@@ -4735,7 +4787,12 @@ function frameUrl(f){
     bg_image:f.bg_image||'', ch_y:f.ch_y??0, title_y:f.title_y??0,
     head_block:(f.head_block===false)?'0':'1'});
   // 가림막(2026-08-28) — 배열이라 JSON으로 싣는다. 없으면 아예 안 보낸다(옛 그림 캐시를 그대로 쓰게).
-  if(Array.isArray(f.masks) && f.masks.length) q.set('masks', JSON.stringify(f.masks));
+  // 🎬 '이 장면에만' 가림막은 **지금 보고 있는 장면**일 때만 미리보기에 싣는다(2026-09-10).
+  //   판단은 mkVisible 한 곳(렌더는 서버 split_scene_masks가 같은 규칙으로 가른다).
+  if(Array.isArray(f.masks) && f.masks.length){
+    const vis=f.masks.filter(function(m){ return mkVisible(m); });
+    if(vis.length) q.set('masks', JSON.stringify(vis));
+  }
   return '/api/produce/frame.png?'+q.toString();
 }
 async function loadFramePresets(){
@@ -5042,6 +5099,54 @@ const MK_QUICK={
   wml:    {l:4,  t:84, w:24, h:8,  shape:'round', fx:'fade', soft:45},
   top:    {l:6,  t:8,  w:88, h:11, shape:'round', fx:'fade', soft:35}
 };
+// 🎬 이 장면에만(2026-09-10 사장님 "장면에만 하는걸 만들고").
+//   가림막에 beat(자막 칸 번호)·cut(그 칸의 몇 번째 컷)을 붙이면 그 장면에서만 덮는다.
+//   없으면 지금까지처럼 영상 전체. ★장면 번호는 장면 목록(BEATS_PREVIEW)이 준 값 그대로 —
+//   화면이 따로 세면 렌더(final_clip_pairs)와 두 벌이 된다.
+function mkCurScene(){
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  if(!b) return null;
+  return {beat:(b.beat_idx!=null?b.beat_idx:BEAT_IDX), cut:(b.cut!=null?b.cut:null)};
+}
+function mkIsScene(m){ return !!m && m.beat!=null; }
+function mkVisible(m){
+  if(!mkIsScene(m)) return true;
+  const c=mkCurScene(); if(!c) return false;
+  return m.beat===c.beat && (m.cut==null || m.cut===c.cut);
+}
+// 그 가림막이 걸린 장면이 목록에서 몇 번째인지(화면의 "N / M 장면"과 같은 번호)
+function mkSceneNo(m){
+  if(!mkIsScene(m) || typeof BEATS_PREVIEW==='undefined') return null;
+  for(let i=0;i<BEATS_PREVIEW.length;i++){
+    const b=BEATS_PREVIEW[i], bi=(b.beat_idx!=null?b.beat_idx:i);
+    if(bi===m.beat && (m.cut==null || (b.cut!=null?b.cut:null)===m.cut)) return i+1;
+  }
+  return null;
+}
+let MK_ONLY_SCENE=false;          // 새로 얹을 때 '이 장면에만' 붙일지(기본 꺼짐 = 지금까지와 같음)
+function mkTagNew(o){
+  if(!MK_ONLY_SCENE) return o;
+  const c=mkCurScene(); if(!c) return o;
+  o.beat=c.beat; if(c.cut!=null) o.cut=c.cut;
+  return o;
+}
+function mkScope(v){
+  const a=mkEnsure(); if(!a||!a[MK_SEL]) return;
+  const m=a[MK_SEL];
+  if(v==='scene'){
+    const c=mkCurScene(); if(!c){ alert('장면 목록이 아직 없어요 — 영상 매칭 뒤에 쓸 수 있어요.'); return; }
+    m.beat=c.beat; if(c.cut!=null) m.cut=c.cut; else delete m.cut;
+  }else{ delete m.beat; delete m.cut; }
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+// 장면을 넘기면 그 장면의 가림막만 보이게 다시 그린다(장면 전용이 하나라도 있을 때만).
+function mkOnBeatChange(light){
+  const a=mkArr()||[];
+  if(!a.some(mkIsScene)) return;
+  try{ renderTemplatePreview(); }catch(e){}
+  if(light){ try{ syncMaskBoxes(); }catch(e){} return; }
+  try{ mkRender(); }catch(e){}
+}
 function mkArr(){
   const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame; if(!f) return null;
   if(!Array.isArray(f.masks)) f.masks=[];
@@ -5051,7 +5156,7 @@ function mkAdd(kind){
   const a=mkArr(); if(!a) return;
   if(a.length>=MK_MAX){ alert('가림효과는 최대 '+MK_MAX+'개까지예요.'); return; }
   const q=MK_QUICK[kind]||{l:30,t:44,w:40,h:10};
-  a.push(Object.assign({shape:'round',fx:'fade',color:'#000000',op:100,soft:30,rot:0}, q));
+  a.push(mkTagNew(Object.assign({shape:'round',fx:'fade',color:'#000000',op:100,soft:30,rot:0}, q)));
   MK_SEL=a.length-1;
   renderTemplatePreview(); saveHeadcopy(); mkRender();
 }
@@ -5083,8 +5188,8 @@ function mkAddEmoji(ch){
   if(a.length>=MK_MAX){ alert('가림효과·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
   // 9:16 화면이라 같은 %라도 세로가 훨씬 길다 — 정사각으로 보이려면 h = w*(1080/1920).
   const w=14;
-  a.push({kind:'emoji', ch:ch, l:43, t:26, w:w, h:+(w*1080/1920).toFixed(2),
-          shape:'round', fx:'solid', color:'#000000', op:100, soft:0, rot:0});
+  a.push(mkTagNew({kind:'emoji', ch:ch, l:43, t:26, w:w, h:+(w*1080/1920).toFixed(2),
+          shape:'round', fx:'solid', color:'#000000', op:100, soft:0, rot:0}));
   MK_SEL=a.length-1;
   renderTemplatePreview(); saveHeadcopy(); mkRender();
 }
@@ -5093,8 +5198,8 @@ function mkAddBadge(text){
   const a=mkArr(); if(!a) return;
   if(a.length>=MK_MAX){ alert('가림효과·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
   const w=Math.min(46, 12 + text.length*7);
-  a.push({kind:'badge', text:text, l:6, t:14, w:w, h:6.5,
-          shape:'round', fx:'solid', color:'#FF2D5E', op:100, soft:0, rot:0});
+  a.push(mkTagNew({kind:'badge', text:text, l:6, t:14, w:w, h:6.5,
+          shape:'round', fx:'solid', color:'#FF2D5E', op:100, soft:0, rot:0}));
   MK_SEL=a.length-1;
   renderTemplatePreview(); saveHeadcopy(); mkRender();
 }
@@ -5238,7 +5343,8 @@ function mkRender(){
       +'style="padding:5px 14px;border-radius:999px;font-size:12px;cursor:pointer;'
       +'background:'+(on?'#0d2a1c':'transparent')+';'
       +'color:'+(on?'#7CE8B0':'var(--sub)')+';'
-      +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+(i+1)+'번</button>';
+      +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+(i+1)+'번'
+      +(mkIsScene(_m)?' · 🎬'+(mkSceneNo(_m)||'?')+'장면':'')+'</button>';
   }).join('');
   if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=Math.max(0,a.length-1);
   const m=empty ? Object.assign({},MK_DRAFT) : a[MK_SEL];
@@ -5269,8 +5375,16 @@ function mkRender(){
     +'<span style="font-size:12px;color:var(--sub)">'+(m.color||'#000000')+'</span></div>'
     // 12색 한 줄 — 위 팔레트와 같은 규칙(0순위-B: 한쪽만 고치면 어긋난다).
     +'<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:4px">'+pal+'</div>';
+  // 🎬 적용 범위 — 전체 장면 / 이 장면만(2026-09-10). 맨 위에 둔다: 가장 먼저 정할 일이다.
+  const _sn=mkSceneNo(m);
+  const scopeBlock='<div style="'+lab+'">어느 장면에</div>'
+    +mkChoice([['all','🌐 전체 장면'],['scene','🎬 이 장면만']], mkIsScene(m)?'scene':'all', 'mkScope')
+    +(mkIsScene(m)?'<div style="font-size:11px;color:var(--sub);margin-top:4px">'
+      +(_sn?_sn+'번 장면에서만 덮습니다':'걸린 장면을 목록에서 못 찾았어요(편성이 바뀌었을 수 있어요) — 다시 [이 장면만]을 눌러 주세요')
+      +(mkVisible(m)?'':' · <b>지금 장면엔 안 보여요</b>')+'</div>':'');
   ed.innerHTML=
-     (isEmoji
+     (empty?'':scopeBlock)
+    +(isEmoji
         ? '<div style="'+lab+'">스티커</div><div style="font-size:30px;line-height:1.1;margin-bottom:4px">'
           + (m.ch||'') + '</div>'
         : '')
@@ -5314,6 +5428,7 @@ function syncMaskBoxes(){
   if(!(t&&t.frame)) return;               // 틀이 없으면 가림막도 없다
   const a=mkArr()||[];
   a.forEach(function(m,i){
+    if(!mkVisible(m)) return;       // 🎬 다른 장면 전용은 이 장면에서 안 보인다(끌 수도 없다)
     const b=document.createElement('div');
     // ★표식을 실제로 붙인다(2026-08-30 사장님 "가림막 만들고 이동할때마다 장면 확대 계속되는데").
     //   _zoomOnText의 예외 목록에 [data-maskbox]가 **적혀만 있고** 정작 요소엔 안 붙어 있어
@@ -5865,16 +5980,20 @@ let CAP_EFFECT='none';
 let CAP_SHADOW=false;   // 은은한 드롭 그림자(레퍼런스 자막룩). 프리셋이 켬. 두꺼운 테두리 대안.
 // 자막 가로위치(%) — 슬라이더가 아니라 드래그/자동정렬/되돌리기로만 바뀐다. 기본 중앙(50).
 let CAP_X_PCT=50;
-// ✋ 자막 드래그 적용 범위(2026-08-31): 'all'=전체 설정(종전 동작) / 'one'=이 장면만(cap_xy).
+// ✋ 자막 드래그 적용 범위: 'all'=전체 설정 / 'one'=지금 보이는 구절만(cap_xy_segs).
 //   ★기본은 'all' — 여태 동작이 그것이라 아무것도 안 고른 사장님에겐 달라지는 게 없다.
 let CAP_DRAG_SCOPE='all';
+// 전체 자막 위치를 만진 뒤 아직 장면별 덮어쓰기까지 정리하지 못했는지.
+// 세로 슬라이더·정렬 버튼도 '전체 위치' 조작인데 종전엔 cap_xy가 남아 일부 장면만 안 움직였다.
+let CAP_ALL_POS_DIRTY=false;
+let _CAP_ALL_POS_SAVE=null;
 function setCapDragScope(v){
   CAP_DRAG_SCOPE = (v==='one') ? 'one' : 'all';
   document.querySelectorAll('#capScopeBtns [data-capscope]').forEach(el=>{
     el.classList.toggle('on', el.dataset.capscope===CAP_DRAG_SCOPE); });
   const m=document.getElementById('capScopeMsg');
   if(m){ m.textContent = (CAP_DRAG_SCOPE==='one')
-    ? '이 장면(' + ((typeof BEAT_IDX!=='undefined'?BEAT_IDX:0)+1) + '번)의 자막만 옮깁니다.'
+    ? '지금 화면에 보이는 자막 한 줄만 옮깁니다.'
     : '끌어 옮기면 모든 장면의 자막이 같이 갑니다.'; m.style.color=''; }
 }
 // 지워진 자막영역(자막제거 시 서버가 diff로 구함): {sources:{vid:box}, primary:box}. box=중심x/y·w/h·score(%).
@@ -5886,6 +6005,7 @@ let CAP_POS_TOUCHED=false;
 let HC_Y_TOUCHED=false;
 let _CAP_FX_TEXT=null;   // 효과를 마지막으로 재생한 자막 문구(바뀔 때만 다시 튼다)
 let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트별 자막으로 교체
+let PREVIEW_CAP_SEG=0;                         // 지금 화면에 보이는 구절 번호(드래그 저장 단위)
 // ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
 let BEATS_PREVIEW=[];   // [{i,total,caption}]
 let BEATS_FKEY='';      // 청소 상태 키 — 프레임 주소에 붙여 옛 그림(자막 있는)을 무효화한다
@@ -5999,6 +6119,7 @@ function showBeat(i, first){
   // 🔎 강조는 **장면마다 따로**다(확대의 '모든 장면에 같은 배율' 같은 전파가 없다) —
   //   강조는 "이 장면의 이 자리"를 가리키는 것이라 다음 장면에 그대로 옮기면 엉뚱한 곳을 가리킨다.
   if(typeof hlLoadFromBeat==='function') hlLoadFromBeat();
+  if(typeof mkOnBeatChange==='function') mkOnBeatChange();   // 🎬 장면 전용 가림막 갈아 보이기
   // ★지금 장면을 다 그린 **뒤에** 이웃을 받는다 — 먼저 받으면 지금 볼 그림과 대역폭을 다툰다
   try{ _prefetchNeighborFrames(BEAT_IDX); }catch(e){}
 }
@@ -6085,7 +6206,10 @@ function _playBeatCaptions(b){
     const k=_cutForSeg(si);
     const idx=cuts[k], x=BEATS_PREVIEW[idx];
     if(!x) return;
+    const _mkPrev=BEAT_IDX;
     BEAT_IDX=idx;                       // '이 장면을 썸네일로'가 지금 보이는 컷을 집게
+    // 🎬 자동재생으로 컷이 넘어가도 그 컷의 가림막만 보이게(편집칸은 안 건드린다 — 끄는 중 방해 금지)
+    if(_mkPrev!==idx && typeof mkOnBeatChange==='function') mkOnBeatChange(true);
     if(bg && sb && sb.checked){
       const u=_beatFrameUrl(x);
       if(u && bg.getAttribute('src')!==u){ bg.src=u; bg.style.display='block'; }
@@ -6095,6 +6219,7 @@ function _playBeatCaptions(b){
   };
   let si=0;
   const play=()=>{
+    PREVIEW_CAP_SEG=si;
     PREVIEW_CAP_TEXT=segs[si]||'';
     if(typeof updateCaption==='function') updateCaption();
     paintScene(si);
@@ -6137,7 +6262,8 @@ function showCutOnly(idx){
   const cuts=_cutsOfBeat(idx);
   const k=Math.max(0, cuts.indexOf(idx));
   const segs=(x.segs && x.segs.length) ? x.segs : [ x.caption||'' ];
-  PREVIEW_CAP_TEXT = segs[_segForCutOf(x, cuts, k)] || '';
+  PREVIEW_CAP_SEG = _segForCutOf(x, cuts, k);
+  PREVIEW_CAP_TEXT = segs[PREVIEW_CAP_SEG] || '';
   if(typeof updateCaption==='function') updateCaption();
   const bg=document.getElementById('hcPreviewBg');
   const sb=document.getElementById('sceneBg');
@@ -6152,6 +6278,7 @@ function showCutOnly(idx){
   if(typeof renderBeatTools==='function') renderBeatTools();
   if(typeof zoomOnBeatChange==='function') zoomOnBeatChange(false);
   if(typeof hlLoadFromBeat==='function') hlLoadFromBeat();
+  if(typeof mkOnBeatChange==='function') mkOnBeatChange();
   try{ _prefetchNeighborFrames(idx); }catch(e){}
 }
 function stepBeat(d){
@@ -6206,16 +6333,17 @@ function _capApplyToBeat(b, patch){
 function renderBeatTools(){
   const b=_curBeat(); if(!b) return;
   // 자리 버튼 — 지금 값에 불이 들어온다
-  const pos = (b.cap_xy ? 'free' : (b.pos||'bottom'));
+  const _segxy = b.cap_xy_segs && b.cap_xy_segs[String(PREVIEW_CAP_SEG)];
+  const pos = ((b.cap_xy || _segxy) ? 'free' : (b.pos||'bottom'));
   document.querySelectorAll('#capPosBtns [data-cappos]').forEach(el=>{
     el.classList.toggle('on', el.dataset.cappos===pos); });
   // 드래그로 이 장면만 옮겨둔 상태면 버튼엔 불이 안 들어온다 → 왜 그런지 한 줄로 알려준다
   const fh=document.getElementById('capFreeHint');
-  if(fh) fh.style.display = b.cap_xy ? '' : 'none';
+  if(fh) fh.style.display = (b.cap_xy || _segxy) ? '' : 'none';
   // 한 자막(비트)이 여러 컷에 걸쳐 있으면 자막 손질은 그 컷들 전부에 같이 걸린다 — 미리 알린다
   const cs2=document.getElementById('capCutHint');
   if(cs2){ cs2.style.display=(b.cut_of>1)?'':'none';
-           cs2.innerHTML='이 자막은 <b>'+b.cut_of+'개 컷</b>에 걸쳐 나옵니다 — 자막 손질은 그 컷 전부에 같이 적용돼요.'; }
+           cs2.innerHTML='이 자막은 <b>'+b.cut_of+'개 컷</b>에 걸쳐 나옵니다. 끌기는 <b>지금 보이는 한 줄만</b>, 줄 나누기·위/중간/아래는 묶음 전체에 적용돼요.'; }
   // 범위 안내는 **장면을 넘길 때마다** 다시 쓴다 — 안 그러면 "이 장면(4번)"이라 적힌 채로
   //   2번 장면을 보고 있게 된다(2026-08-31 사장님 화면에서 발각).
   if(typeof setCapDragScope==='function') setCapDragScope(CAP_DRAG_SCOPE);
@@ -6239,13 +6367,24 @@ async function setBeatCapPos(pos){
     if(!r.ok || !d.ok){ _capMsg(d.error||'저장 실패','var(--fire)'); return; }
     // ★저장 성공 → 화면도 그 자리로 즉시 옮긴다. %는 서버가 준 값을 쓴다(렌더와 같은 표).
     // 자리도 같은 함정 — 이 자막의 컷 칸 전부에 반영한다(안 하면 다른 컷에서 옛 자리로 되돌아간다)
-    _capApplyToBeat(b, {pos:d.pos, pos_y_pct:(d.y_pct!=null?d.y_pct:null), cap_xy:null});
+    _capApplyToBeat(b, {pos:d.pos, pos_y_pct:(d.y_pct!=null?d.y_pct:null), cap_xy:null, cap_xy_segs:null});
     renderBeatTools();
     if(typeof updateCaption==='function') updateCaption();
     _capMsg('이 장면 자막을 '+({top:'위',mid:'중간',bottom:'아래'}[d.pos]||d.pos)+'로 옮겼어요','var(--ok)');
   }catch(e){ _capMsg(ErrorHelp.text('network'),'var(--fire)'); }
 }
 
+// ★자막 줄을 바꾸면 장면 편집(실험실) 화면도 그 자리에서 갱신한다(2026-09-11 고객 제보).
+//   실험실은 열 때 한 번만 자막을 받아와서, 여기서 줄을 4개로 쪼개도 실험실은 옛 2개로
+//   컷을 그렸다 → 화면은 컷 2개, 완성본은 4개(조각 2개가 1,2,1,2로 돌아 "같은 장면이 두 번").
+//   같은 도메인 iframe이라 contentWindow로 직접 부른다(postMessage는 08-15에 조용히 죽었다).
+//   실험실이 안 떠 있으면 아무 일도 안 한다 — 다음에 열 때 서버에서 새 자막을 받는다.
+function _labRefreshCaptions(beatIdx){
+  try{
+    const w = document.getElementById('sceneLabFrame')?.contentWindow;
+    if (w && typeof w.refreshCaptions === 'function') w.refreshCaptions(beatIdx);
+  }catch(e){}
+}
 async function saveBeatCapLines(){
   const b=_curBeat(); if(!b || typeof MIX_JOB==='undefined' || !MIX_JOB) return;
   const lines=[...document.querySelectorAll('#capLinesBox [data-capline]')]
@@ -6260,6 +6399,7 @@ async function saveBeatCapLines(){
     _capApplyToBeat(b, {segs:d.lines, durs:null});   // 이 자막의 컷 칸 전부에(표시시간은 서버가 다시 잰다)
     _capMsg('저장했어요'+(d.timed?'':' (표시시간은 글자수 기준)'),'var(--ok)');
     _playBeatCaptions(b);                        // 바뀐 줄로 미리보기 다시 재생
+    _labRefreshCaptions(_beatNo(b));             // 장면 편집(실험실)도 새 줄로 컷을 다시 그린다
   }catch(e){ _capMsg(ErrorHelp.text('network'),'var(--fire)'); }
 }
 
@@ -6276,6 +6416,7 @@ async function resetBeatCapLines(){
     _capApplyToBeat(b, {segs:d.lines, durs:null}); renderBeatTools();
     _capMsg('자동 분할로 되돌렸어요','var(--ok)');
     _playBeatCaptions(b);
+    _labRefreshCaptions(_beatNo(b));             // 실험실 컷도 되돌린 줄 기준으로
   }catch(e){ _capMsg(ErrorHelp.text('network'),'var(--fire)'); }
 }
 function renderCapFontSelect(){
@@ -6341,12 +6482,15 @@ function updateCaption(){
   //   종전엔 전체 설정(cs.y_pct)만 봐서, 장면마다 다르게 저장해도 미리보기는 늘 같은 자리였다.
   //   저장·최종렌더는 정상이었고 **보이는 것만** 안 따라왔다 → "안 먹혔나"로 읽혔다.
   //   %는 서버가 준 값(pos_y_pct)을 쓴다 — 렌더와 같은 표(_CAP_POS_PCT)에서 나온다.
-  //   ★자유 좌표(cap_xy, 드래그 '이 장면만')가 있으면 그게 먼저다 — 렌더(_beat_cap_style)와 같은 우선순위.
+  //   ★지금 보이는 구절 좌표(cap_xy_segs)가 비트 전체 좌표(cap_xy)보다 먼저다.
   const _b = (typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  const _segxy = (_b && _b.cap_xy_segs && _b.cap_xy_segs[String(PREVIEW_CAP_SEG)]) || null;
   const _xy = (_b && _b.cap_xy) || null;
-  const _yp = (_xy && _xy.y_pct!=null) ? _xy.y_pct
-            : ((_b && _b.pos_y_pct != null) ? _b.pos_y_pct : cs.y_pct);
-  if(_xy && _xy.x_pct!=null) el.style.left=_xy.x_pct+'%';
+  const _yp = (_segxy && _segxy.y_pct!=null) ? _segxy.y_pct
+            : ((_xy && _xy.y_pct!=null) ? _xy.y_pct
+            : ((_b && _b.pos_y_pct != null) ? _b.pos_y_pct : cs.y_pct));
+  if(_segxy && _segxy.x_pct!=null) el.style.left=_segxy.x_pct+'%';
+  else if(_xy && _xy.x_pct!=null) el.style.left=_xy.x_pct+'%';
   el.style.top=_yp+'%'; el.style.transform='translate(-50%,-50%)';
   el.style.color=cs.color; el.style.fontWeight=900;
   // 자막은 무조건 한 줄 — 줄바꿈 금지(nowrap). 폭(0.86=안전 여백) 넘으면 폰트 자동축소로 한 줄에 맞춘다.
@@ -6391,6 +6535,11 @@ let _CAP_SAVE_T = null;
 //   자리(CAP_POS_TOUCHED)만 지키고 색·외곽선·박스는 안 지켜서 매번 두 번 일했다.
 let CAP_STYLE_TOUCHED=false;
 function capTouched(){ CAP_STYLE_TOUCHED=true; updateCaption(); _capSaveSoon(); }
+function capPositionTouched(){
+  CAP_POS_TOUCHED=true;
+  CAP_ALL_POS_DIRTY=true;
+  capTouched();
+}
 function _capSaveSoon(){
   if(typeof saveHeadcopy !== 'function') return;   // 하네스엔 없다(슬라이스 테스트 보호)
   clearTimeout(_CAP_SAVE_T);                       // 슬라이더 드래그는 매 픽셀 뜬다 → 디바운스
@@ -7556,7 +7705,8 @@ function alignCap(where){
   if(where==='center') CAP_X_PCT=50;
   else if(where==='left') CAP_X_PCT=22;
   else if(where==='right') CAP_X_PCT=78;
-  updateCaption();
+  capPositionTouched();
+  saveCapAllPosition();
 }
 // ══════════════════════════════════════════════════════════════════════════
 // 🔍 장면 확대 (2026-08-30 사장님 "장면 확대기능 / 부분확대 / 어떤지점을 클릭해서 /
@@ -7710,9 +7860,10 @@ function _zoomSaveCur(){
                   pan_y: ZOOM>1.0001 ? (ZOOM*ZTY)/r.height : 0 };
   // 화면에도 같은 값을 담아둔다 — 장면을 오갈 때 서버를 다시 안 물어도 되게
   b.zoom=payload.zoom; b.pan_x=payload.pan_x; b.pan_y=payload.pan_y;
-  fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
+  _queueSceneStyleSave(()=>fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
     headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-    .then(()=>{ if(typeof _zoomMark==='function') _zoomMark(); }).catch(()=>{});
+    .then(r=>{ if(!r.ok) throw new Error('save failed'); _capApplyToBeat(b,{zoom:payload.zoom,pan_x:payload.pan_x,pan_y:payload.pan_y});
+              if(typeof _zoomMark==='function') _zoomMark(); })).catch(()=>{});
 }
 // 💾 저장 버튼 — 지금 즉시 저장하고 **결과를 화면에 말한다**.
 // 자동 저장은 조용히 실패할 수 있는데(fetch catch), 그러면 사장님은 저장된 줄 안다.
@@ -7883,26 +8034,35 @@ function hlLoadFromBeat(){
   hlApply();
 }
 
-let _HL_SAVE_T=null;
+let _HL_SAVE_T=null, _HL_PENDING=null;
+// 장면꾸미기 저장은 조작 순서대로 직렬 실행한다. 느린 옛 요청이 새 값을 나중에 덮지 못하게 한다.
+let _SCENE_STYLE_SAVE_Q=Promise.resolve();
+function _queueSceneStyleSave(run){
+  const p=_SCENE_STYLE_SAVE_Q.catch(()=>{}).then(run);
+  _SCENE_STYLE_SAVE_Q=p;
+  return p;
+}
 function _hlSaveSoon(){
   if(_HL_SAVE_T) clearTimeout(_HL_SAVE_T);
-  _HL_SAVE_T=setTimeout(()=>{ _HL_SAVE_T=null; _hlSave(); }, 400);
-}
-async function _hlSave(wait){
-  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;
   const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  _HL_PENDING=b ? {b, payload:{beat_idx:_beatNo(b),on:HL.on,mode:HL.mode,shape:HL.shape,
+                               cx:HL.cx,cy:HL.cy,r:HL.r,zoom:HL.zoom}} : null;
+  _HL_SAVE_T=setTimeout(()=>{ _HL_SAVE_T=null; const s=_HL_PENDING; _HL_PENDING=null; if(s) _hlSave(false,s); }, 400);
+}
+async function _hlSave(wait, snap){
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  const b=(snap&&snap.b) || ((typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null);
   if(!b) return;
-  const idx=(b.beat_idx!=null?b.beat_idx:BEAT_IDX);
-  const payload={beat_idx:idx, on:HL.on, mode:HL.mode, shape:HL.shape,
-                 cx:HL.cx, cy:HL.cy, r:HL.r, zoom:HL.zoom};
-  const p=fetch('/api/produce/mix/'+MIX_JOB+'/scenehl',{method:'POST',
+  const payload=(snap&&snap.payload) || {beat_idx:_beatNo(b),on:HL.on,mode:HL.mode,shape:HL.shape,
+                                       cx:HL.cx,cy:HL.cy,r:HL.r,zoom:HL.zoom};
+  const p=_queueSceneStyleSave(()=>fetch('/api/produce/mix/'+MIX_JOB+'/scenehl',{method:'POST',
     headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(r=>r.json()).then(d=>{
       // 서버가 가둔 값을 그대로 받아 화면에 담는다 — 화면이 따로 가두면 두 벌이 된다
-      b.hl = d && d.hl ? d.hl : null;
       if(!d || !d.ok) throw new Error('저장 실패');
+      _capApplyToBeat(b,{hl:d.hl||null});
       return d;
-    });
+    }));
   if(wait) return p;
   p.catch(()=>{});
 }
@@ -7914,7 +8074,8 @@ async function hlSaveNow(){
   if(btn) btn.disabled=true;
   say('저장 중…','var(--sub)');
   try{
-    await _hlSave(true);
+    const s=_HL_PENDING; _HL_PENDING=null;
+    await _hlSave(true,s);
     say('✅ 저장됨 — 완성본에 그대로 나갑니다','var(--ok)');
   }catch(e){ say('❌ 저장 실패 — 다시 눌러 주세요','var(--fire)'); }
   finally{ if(btn) btn.disabled=false; }
@@ -7953,35 +8114,44 @@ async function pinBeatToThumb(){
 // 끌기·클릭이 끝난 뒤 한 번만 보낸다(끄는 도중 매 프레임 보내면 서버가 죽는다)
 function _zoomSaveSoon(){
   if(_ZOOM_SAVE_T) clearTimeout(_ZOOM_SAVE_T);
-  _ZOOM_SAVE_T=setTimeout(()=>{ _ZOOM_SAVE_T=null; _zoomSaveAll(); }, 400);
+  _ZOOM_PENDING=_zoomSaveSnapshot();
+  _ZOOM_SAVE_T=setTimeout(()=>{ _ZOOM_SAVE_T=null; const s=_ZOOM_PENDING; _ZOOM_PENDING=null; if(s) _zoomSaveAll(false,s); }, 400);
+}
+let _ZOOM_PENDING=null;
+function _zoomSaveSnapshot(){
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return null;
+  const st=document.getElementById('zoomStage'), r=st?st.getBoundingClientRect():null;
+  if(!r||!r.width||!r.height) return null;
+  const list=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW) || [];
+  const raw=(zoomAllOn()&&list.length)?list:(list[BEAT_IDX]?[list[BEAT_IDX]]:[]), seen=new Set(), targets=[];
+  raw.forEach((b,i)=>{ const bi=(b.beat_idx!=null)?b.beat_idx:i; if(!seen.has(bi)){seen.add(bi);targets.push({b,bi});} });
+  return {targets,zoom:ZOOM,pan_x:ZOOM>1.0001?(ZOOM*ZTX)/r.width:0,
+          pan_y:ZOOM>1.0001?(ZOOM*ZTY)/r.height:0};
 }
 // '모든 장면에 같은 배율'이 켜져 있으면 전 장면에 같은 구도를 저장한다.
 // wait=true면 서버 응답까지 기다리고 저장한 장면 수를 돌려준다(저장 버튼이 쓴다).
 // 하나라도 실패하면 throw — 버튼이 "저장 실패"를 보여줄 수 있어야 하기 때문이다.
-async function _zoomSaveAll(wait){
-  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ if(wait) throw new Error('no job'); return 0; }
-  const st=document.getElementById('zoomStage');
-  const r=st?st.getBoundingClientRect():null;
-  if(!r||!r.width||!r.height){ if(wait) throw new Error('no stage'); return 0; }
-  const px = ZOOM>1.0001 ? (ZOOM*ZTX)/r.width  : 0;
-  const py = ZOOM>1.0001 ? (ZOOM*ZTY)/r.height : 0;
-  const list=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW) || [];
-  // 대상: 모든 장면 모드면 전부, 아니면 지금 장면 하나
-  const targets = (zoomAllOn() && list.length) ? list
-                : (list[BEAT_IDX] ? [list[BEAT_IDX]] : []);
-  if(!targets.length){ if(wait) throw new Error('no beats'); return 0; }
-  const send = (b,i)=>{
-    b.zoom=ZOOM; b.pan_x=px; b.pan_y=py;     // 화면 사본도 같이 — 장면을 오갈 때 즉시 맞는다
-    const bi = (b.beat_idx!=null) ? b.beat_idx : (zoomAllOn()? i : BEAT_IDX);
+async function _zoomSaveAll(wait, snap){
+  const s=snap||_zoomSaveSnapshot();
+  if(!s||!s.targets.length){ if(wait) throw new Error('no beats'); return 0; }
+  const send = ({b,bi})=>{
+    _capApplyToBeat(b,{zoom:s.zoom,pan_x:s.pan_x,pan_y:s.pan_y});
     return fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({beat_idx:bi, zoom:ZOOM, pan_x:px, pan_y:py})});
+      body:JSON.stringify({beat_idx:bi,zoom:s.zoom,pan_x:s.pan_x,pan_y:s.pan_y})});
   };
-  if(!wait){ targets.forEach((b,i)=>send(b,i).catch(()=>{})); _zoomMark(); return targets.length; }
-  const rs = await Promise.all(targets.map((b,i)=>send(b,i)));
+  const p=_queueSceneStyleSave(()=>Promise.all(s.targets.map(send)));
+  if(!wait){ p.then(_zoomMark).catch(()=>{}); return s.targets.length; }
+  const rs = await p;
   if(rs.some(x=>!x || !x.ok)) throw new Error('save failed');
   _zoomMark();
-  return targets.length;
+  return s.targets.length;
+}
+
+async function flushSceneStyleSaves(){
+  if(_HL_SAVE_T){ clearTimeout(_HL_SAVE_T); _HL_SAVE_T=null; const s=_HL_PENDING; _HL_PENDING=null; if(s) _hlSave(false,s); }
+  if(_ZOOM_SAVE_T){ clearTimeout(_ZOOM_SAVE_T); _ZOOM_SAVE_T=null; const s=_ZOOM_PENDING; _ZOOM_PENDING=null; if(s) _zoomSaveAll(false,s); }
+  await _SCENE_STYLE_SAVE_Q;
 }
 // 자동 저장이 돌았음을 조용히 알린다(버튼을 안 눌러도 저장된다는 걸 보이게)
 function _zoomMark(){
@@ -8098,59 +8268,90 @@ function bindHCDrag(){
 function bindCapDrag(){
   const pv=document.getElementById('hcPreview'), tx=document.getElementById('capPreviewText');
   if(!pv||!tx||tx._dragBound) return; tx._dragBound=true;
-  tx.style.cursor='move'; let drag=false, moved=false;
+  tx.style.cursor='move'; let drag=false, moved=false, dragBeat=null, dragScope='all', dragSceneNo=0, dragSeg=0;
   const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();
     const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
     const x=Math.round(Math.max(0,Math.min(100,(cx-r.left)/r.width*100)));
     const y=Math.round(Math.max(0,Math.min(100,(cy-r.top)/r.height*100)));
     moved=true;
-    if(CAP_DRAG_SCOPE==='one'){
-      // 🎯 이 장면만 — 전체 설정(CAP_X_PCT/capY)은 **건드리지 않는다**. 장면에만 좌표를 얹는다.
-      const b=(typeof _curBeat==='function') ? _curBeat() : null;
-      if(b){ b.cap_xy={x_pct:x, y_pct:y}; b.pos='free'; b.pos_y_pct=null; }
+    if(dragScope==='one'){
+      // 🎯 이 자막만 — 전체 설정은 건드리지 않고, 손댄 순간 보이던 구절에만 좌표를 얹는다.
+      // ★드래그 도중 자동재생이 다음 컷으로 넘어가도, 손을 댄 순간의 자막 비트를 끝까지 쓴다.
+      //   매 move마다 _curBeat()를 다시 읽으면 화면 전환 타이머와 경합해 옆 장면에 저장된다.
+      const b=dragBeat;
+      if(b){ const m=Object.assign({}, b.cap_xy_segs||{}); m[String(dragSeg)]={x_pct:x,y_pct:y};
+        b.cap_xy_segs=m; b.pos='free'; b.pos_y_pct=null; }
     }else{
-      CAP_X_PCT=x; document.getElementById('capY').value=y; CAP_POS_TOUCHED=true;
+      CAP_X_PCT=x; document.getElementById('capY').value=y; capPositionTouched();
     }
     updateCaption(); };
-  const end=()=>{ if(!drag) return; drag=false; if(!moved) return; moved=false; saveCapDrag(); };
-  tx.addEventListener('mousedown', e=>{drag=true; moved=false; e.preventDefault();});
-  tx.addEventListener('touchstart', e=>{drag=true; moved=false;}, {passive:true});
+  const end=()=>{ if(!drag) return; drag=false; if(!moved) return; moved=false; saveCapDrag(dragBeat, dragScope, dragSceneNo, dragSeg); };
+  const start=()=>{
+    drag=true; moved=false; dragScope=CAP_DRAG_SCOPE; dragBeat=(typeof _curBeat==='function')?_curBeat():null;
+    dragSceneNo=BEAT_IDX+1;
+    dragSeg=PREVIEW_CAP_SEG;
+    // 위치를 잡는 동안 장면이 자동으로 넘어가면 보이는 장면과 저장 장면이 갈라진다. 즉시 멈춘다.
+    if(CAP_SEQ_TIMER){ clearTimeout(CAP_SEQ_TIMER); CAP_SEQ_TIMER=null; }
+    CAP_SEQ_GEN++; CAP_PAUSED=true; if(typeof _capPlayIcon==='function') _capPlayIcon();
+  };
+  tx.addEventListener('mousedown', e=>{start(); e.preventDefault();});
+  tx.addEventListener('touchstart', ()=>{start();}, {passive:true});
   document.addEventListener('mousemove', move);
   document.addEventListener('touchmove', move, {passive:true});
   document.addEventListener('mouseup', end);
   document.addEventListener('touchend', end);
 }
 // 손을 뗐을 때 실제로 저장한다(끄는 동안 매 픽셀 저장하면 서버를 두들긴다).
-//   'one' → 이 장면에만 자유 좌표(cap_xy)
+//   'one' → 손을 댄 순간 화면에 보이던 자막 한 줄에만 자유 좌표(cap_xy_segs)
 //   'all' → 전체 설정을 저장 + 장면별 덮어쓰기를 **싹 지운다**(안 지우면 손댔던 장면만 안 따라온다)
-async function saveCapDrag(){
+async function saveCapDrag(targetBeat, targetScope, targetSceneNo, targetSeg){
   const msg=document.getElementById('capScopeMsg');
   const say=(t,c)=>{ if(msg){ msg.textContent=t; msg.style.color=c||''; } };
   if(typeof MIX_JOB==='undefined' || !MIX_JOB){ say('작업을 아직 못 찾았어요','var(--fire)'); return; }
   try{
-    if(CAP_DRAG_SCOPE==='one'){
-      const b=(typeof _curBeat==='function') ? _curBeat() : null;
-      if(!b || !b.cap_xy) return;
+    if((targetScope||CAP_DRAG_SCOPE)==='one'){
+      const b=targetBeat || ((typeof _curBeat==='function') ? _curBeat() : null);
+      const segNo=(targetSeg==null?PREVIEW_CAP_SEG:targetSeg);
+      const segXY=b && b.cap_xy_segs && b.cap_xy_segs[String(segNo)];
+      if(!b || !segXY) return;
       const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cappos',
         {method:'POST',headers:{'Content-Type':'application/json'},
-         body:JSON.stringify({beat_idx:_beatNo(b), x_pct:b.cap_xy.x_pct, y_pct:b.cap_xy.y_pct})});
+         body:JSON.stringify({beat_idx:_beatNo(b), seg_idx:segNo, x_pct:segXY.x_pct, y_pct:segXY.y_pct})});
       const d=await r.json();
       if(!r.ok || !d.ok){ say(d.error||'저장 실패','var(--fire)'); return; }
-      b.cap_xy={x_pct:d.x_pct, y_pct:d.y_pct}; b.pos='free'; b.pos_y_pct=null;
+      _capApplyToBeat(b,{cap_xy_segs:d.cap_xy_segs,pos:'free',pos_y_pct:null});
       if(typeof renderBeatTools==='function') renderBeatTools();
-      say('이 장면('+(BEAT_IDX+1)+'번) 자막만 옮겼어요','var(--ok)');
+      say('지금 보이는 자막 한 줄만 저장했어요','var(--ok)');
     }else{
-      if(typeof saveHeadcopy==='function') await saveHeadcopy();     // 전체 자막 설정 저장
-      const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cappos',
-        {method:'POST',headers:{'Content-Type':'application/json'},
-         body:JSON.stringify({apply_all:true})});
-      const d=await r.json();
-      if(!r.ok || !d.ok){ say(d.error||'저장 실패','var(--fire)'); return; }
-      (BEATS_PREVIEW||[]).forEach(b=>{ b.cap_xy=null; b.pos='bottom'; b.pos_y_pct=null; });
-      if(typeof renderBeatTools==='function') renderBeatTools();
+      CAP_ALL_POS_DIRTY=true;
+      const d=await saveCapAllPosition();
+      if(!d || !d.ok){ say((d&&d.error)||'저장 실패','var(--fire)'); return; }
       say('모든 장면 자막을 이 자리로 옮겼어요'+(d.cleared?' (장면별로 따로 두셨던 '+d.cleared+'개도 맞췄어요)':''),'var(--ok)');
     }
   }catch(e){ say(ErrorHelp.text('network'),'var(--fire)'); }
+}
+// 세로 슬라이더·가로 정렬·'모든 장면' 드래그가 공유하는 저장 입구.
+// 전체 좌표를 먼저 저장한 뒤 cap_xy/cap_pos를 지워야 최종 렌더도 모든 장면이 같은 자리를 쓴다.
+async function saveCapAllPosition(){
+  if(!CAP_ALL_POS_DIRTY) return {ok:true, cleared:0};
+  if(_CAP_ALL_POS_SAVE) return _CAP_ALL_POS_SAVE;
+  _CAP_ALL_POS_SAVE=(async()=>{
+    clearTimeout(_CAP_SAVE_T);
+    if(typeof saveHeadcopy==='function' && !(await saveHeadcopy()))
+      return {ok:false, error:'자막 위치 저장 실패 — 렌더하지 않았어요'};
+    try{
+      const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cappos',
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apply_all:true})});
+      const d=await r.json().catch(()=>({ok:false}));
+      if(!r.ok || !d.ok) return {ok:false, error:d.error||'장면별 자막 위치 정리 실패'};
+      (BEATS_PREVIEW||[]).forEach(b=>{ b.cap_xy=null; b.cap_xy_segs=null; b.pos='bottom'; b.pos_y_pct=null; });
+      CAP_ALL_POS_DIRTY=false;
+      if(typeof renderBeatTools==='function') renderBeatTools();
+      return d;
+    }catch(e){ return {ok:false, error:'자막 위치 저장 중 연결이 끊겼어요'}; }
+  })();
+  try{ return await _CAP_ALL_POS_SAVE; }
+  finally{ _CAP_ALL_POS_SAVE=null; }
 }
 // 지워진 자막영역(primary=넓고 자주 쓰인 1번 자리)이 있으면 '다시 그 자리로' 버튼만 연다.
 // ★2026-07-27 사장님 요청으로 점선 박스 표시(capRegionMarker)는 제거했다 — 미리보기를
@@ -8173,7 +8374,7 @@ function resetCapToRegion(){
   const p=(CLEAN_REGIONS||{}).primary; if(!p) return;
   CAP_X_PCT=Math.round(p.x_pct);
   document.getElementById('capY').value=Math.round(p.y_pct);
-  CAP_POS_TOUCHED=false; updateCaption();
+  CAP_POS_TOUCHED=false; CAP_ALL_POS_DIRTY=true; capTouched(); saveCapAllPosition();
 }
 // clean_regions를 아직 못 받았으면 상태 API에서 1회 당겨온다(자막제거 폴러를 안 거치고 5단계로 온 경우).
 async function ensureCleanRegions(){
@@ -8182,10 +8383,16 @@ async function ensureCleanRegions(){
     if(d && d.clean_regions) CLEAN_REGIONS=d.clean_regions; }catch(e){}
   applyErasedRegion();
 }
+let _HEADCOPY_SAVE_Q=Promise.resolve();
 async function saveHeadcopy(){
-  if(!MIX_JOB) return;
-  try{ await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})}); }catch(e){}
+  if(!MIX_JOB) return false;
+  // 호출 순간의 값을 문자열로 얼리고 순서대로 보낸다. 느린 옛 요청이 최신 설정을 덮지 못한다.
+  const body=JSON.stringify({job_id:MIX_JOB,headcopy:STATE.headcopy,caption_style:STATE.captionStyle,deco:STATE.deco});
+  try{
+    const p=_HEADCOPY_SAVE_Q.catch(()=>{}).then(()=>fetch('/api/produce/mix/settings',{method:'POST',
+      headers:{'Content-Type':'application/json'},body}).then(r=>{if(!r.ok) throw new Error('save failed');return r.ok;}));
+    _HEADCOPY_SAVE_Q=p; return await p;
+  }catch(e){ return false; }
 }
 function jump(o){
   // o = 오브(표시) 인덱스. ORB_TO_PANEL로 실제 패널 인덱스(cur)를 구한다 — 매칭(신규 패널7)이
@@ -11382,6 +11589,11 @@ function _pmChecksHtml(dr){
   const again=tries>1?(' · 다시 쓴 횟수 '+(tries-1)):'';
   if(dr.passed){
     return '<div class="da" style="color:#0a7d3f">✅ '+esc(dr.style_name||'스타일')+' 구조 지킴'+again+'</div>';
+  }
+  if(dr.needs_review){
+    return '<div class="da" style="color:var(--fire)">⚠️ 사실 근거 확인이 필요한 초안'+again+': '
+         + bad.map(c=>esc(c.name)).join(' · ')
+         + '<div style="color:var(--mut);font-size:12px;margin-top:2px">확정 전 표시된 문장을 고치거나 다시 생성해 주세요.</div></div>';
   }
   return '<div class="da" style="color:var(--fire)">⚠️ 못 지킨 항목'+again+': '
        + bad.map(c=>esc(c.name)).join(' · ')
@@ -14628,7 +14840,6 @@ async function refreshFinal(){
   //   비었었다. 여기서 상태를 조회해 done이면 <video>·완성MP4 버튼을 다시 그린다.
   if(!MIX_JOB){ _finalIdleSlot(); return; }
   const fv=document.getElementById('finalVideo');
-  if(fv && fv.querySelector('video')){ renderExport({rendered:true}); return; }   // 이미 떠 있으면 버튼만 승격
   try{
     const d=await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
     if(d && d.status==='done'){
@@ -15024,7 +15235,9 @@ function _rfTick(){
 // 렌더 전/후 좌측 빈 슬롯 — 좌측이 미리보기 자리임을 항상 보여준다
 function _finalIdleSlot(){
   const fv=document.getElementById('finalVideo');
-  if(fv && !fv.querySelector('video') && !document.getElementById('rfBar'))
+  // 편집 뒤 서버가 옛 완성본을 무효화했으면, SPA에 남은 <video>도 반드시 걷는다.
+  // 기존 조건은 video가 있을 때 아무것도 하지 않아 이전 final.mp4를 계속 보여줬다.
+  if(fv && !document.getElementById('rfBar'))
     fv.innerHTML=`<div style="aspect-ratio:9/16;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:20px">
       <div style="font-size:30px;opacity:.5">🎬</div>
       <div style="font-size:12px;line-height:1.6">최종 렌더를 누르면<br>완성 영상이 여기서 재생돼요</div>
@@ -15046,7 +15259,19 @@ async function renderFinal(){
     <div style="font-size:11px;opacity:.45">끝나면 여기서 바로 재생돼요</div>
   </div>`;
   _rfStart=Date.now(); clearInterval(_rfTimer); _rfTimer=setInterval(_rfTick,1000); _rfTick();
-  await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
+  const _settingsSaved=await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
+  if(!_settingsSaved){
+    clearInterval(_rfTimer); _finalRenderRestore('❌ 꾸미기 저장 실패 — 이전 설정으로 렌더하지 않았어요');
+    return;
+  }
+  // 전체 자막 위치를 만졌다면 장면별 옛 좌표도 렌더 전에 반드시 정리한다.
+  const _capPosSaved=await saveCapAllPosition();
+  if(!_capPosSaved || !_capPosSaved.ok){
+    clearInterval(_rfTimer); _finalRenderRestore('❌ '+((_capPosSaved&&_capPosSaved.error)||'자막 위치 저장 실패'));
+    return;
+  }
+  try{ await flushSceneStyleSaves(); }
+  catch(e){ clearInterval(_rfTimer); _finalRenderRestore('❌ 장면꾸미기 저장 실패 — 렌더하지 않았어요'); return; }
   // ★3단계 편집(컷 길이·편성)도 밀린 게 있으면 먼저 얹는다(2026-09-02).
   //   미리보기 경로(_askRender)에서 실제로 난 사고와 **같은 뿌리**다: 편집 저장은
   //   1.2초 디바운스라 렌더가 먼저 출발하면 옛 편성으로 만들어진다(실측 0ms 렌더 / 901ms 저장).
@@ -15056,7 +15281,7 @@ async function renderFinal(){
     const _sl = document.getElementById('sceneLabFrame');
     const _w = _sl && _sl.contentWindow;
     if (_w && typeof _w.flushApply === 'function') await _w.flushApply();
-  }catch(e){ console.warn('편집 반영 실패(렌더는 계속)', e); }
+  }catch(e){ clearInterval(_rfTimer); _finalRenderRestore('❌ 장면 편집 저장 실패 — 렌더하지 않았어요'); return; }
   // 썸네일 인트로 체크는 렌더 요청과 **같이** 보낸다 — 따로 저장하는 경로를 만들면
   // '체크했는데 안 붙었다'가 난다(저장 실패를 아무도 모른다).
   const _intro = !!(document.getElementById('thumbIntro')||{}).checked;
@@ -15461,11 +15686,151 @@ function addThumbBadge(label){
   renderThumbLayers(); renderThumbCanvas();
 }
 
-function drawThumb(ctx, img, layers, W, H){
+// ── 🔍 썸네일 배경 확대 + 🔎 돋보기 (2026-09-13 사장님: "썸네일 꾸미기에서 확대랑 돋보기") ──
+// 6단계 장면꾸미기에 이미 있는 것을 썸네일에도 넣은 것이다. **뜻(저장 형식)을 장면꾸미기와
+// 똑같이 맞춘다**(0순위-B) — 화면 크기와 무관한 **비율**이라 미리보기(270px)와 저장 PNG(1080px)가
+// 같은 그림이 된다:
+//     zoom        배경 확대 배율 1~3            (video_assemble.scene_zoom_of와 같은 범위)
+//     pan_x/pan_y 확대된 그림을 민 정도, 화면 폭·높이 대비 (오른쪽·아래가 +), |pan| <= (zoom-1)/2
+//     hl {on,mode,shape,cx,cy,r,zoom}           (video_assemble.scene_hl_of와 같은 필드·같은 범위)
+//       cx,cy 중심(0~1) · r 반지름은 **폭 대비**(0.06~0.9) — 폭 기준이라 세로 썸네일에서도 원이 원이다
+// ★이 값은 **배경 사진에만** 건다. 글자·스티커는 같이 확대하지 않는다 — 장면꾸미기도 같다
+//   (.zoomStage > #hcPreviewBg, produce.html:794). 제목이 같이 커지면 화면 밖으로 나가 못 쓴다.
+const THUMB_VIEW_DEF = {zoom: 1, pan_x: 0, pan_y: 0,
+                        hl: {on: false, mode: 'zoom', shape: 'circle',
+                             cx: 0.5, cy: 0.47, r: 0.28, zoom: 2.0}};
+// 모양 → 거리식의 지수. 서버 video_assemble._HL_SHAPE_N과 **같은 표**다(n=2 원, n=4 둥근네모).
+const THUMB_HL_SHAPE_N = {circle: 2, round: 4};
+
+// 숫자 하나를 범위 안으로. ★`+v || dflt`를 쓰지 마라 — **0도 falsy라 기본값으로 튄다**.
+// (실측 2026-09-13: 돋보기 배율 0을 넣으니 하한 1.1이 아니라 기본 2가 나왔다. cx=0도 같은 함정.)
+// 숫자가 아닐 때만 기본값으로 떨어뜨리고, 그 다음 범위로 가둔다.
+function _thumbNum(v, dflt, lo, hi){
+  const n = (v === null || v === '' || v === undefined) ? NaN : Number(v);
+  return Math.max(lo, Math.min(hi, Number.isFinite(n) ? n : dflt));
+}
+
+function thumbView(v){
+  // ★해석은 여기 한 곳에서만 한다(0순위-B) — 그리기·손잡이·저장이 각자 파싱하면 반드시 어긋난다.
+  const o = Object.assign({}, THUMB_VIEW_DEF, v || {});
+  o.zoom = _thumbNum(o.zoom, 1, 1, 3);
+  const lim = (o.zoom - 1) / 2;                       // 확대한 만큼만 밀 수 있다(빈 구석 방지)
+  o.pan_x = _thumbNum(o.pan_x, 0, -lim, lim);
+  o.pan_y = _thumbNum(o.pan_y, 0, -lim, lim);
+  const h = Object.assign({}, THUMB_VIEW_DEF.hl, (v || {}).hl || {});
+  o.hl = {on: !!h.on,
+          mode: h.mode === 'spot' ? 'spot' : 'zoom',
+          shape: h.shape === 'round' ? 'round' : 'circle',
+          cx: _thumbNum(h.cx, 0.5, 0, 1), cy: _thumbNum(h.cy, 0.47, 0, 1),
+          r: _thumbNum(h.r, 0.28, 0.06, 0.9),
+          zoom: _thumbNum(h.zoom, 2.0, 1.1, 4)};
+  return o;
+}
+
+// ── 조작 ──────────────────────────────────────────────
+// 값을 바꾸는 곳은 **여기뿐**이다(0순위-B). 슬라이더·드래그·초기화가 각자 THUMB_STATE.view를
+// 직접 주무르면 한 곳을 고쳐도 나머지가 안 따라온다.
+function thumbViewSet(patch){
+  const cur = THUMB_STATE.view || {};
+  const next = Object.assign({}, cur, patch || {});
+  if (patch && patch.hl) next.hl = Object.assign({}, cur.hl || {}, patch.hl);
+  THUMB_STATE.view = thumbView(next);        // 범위 보정도 한 함수에서
+  renderThumbCanvas();
+}
+function thumbZoomSet(z){ thumbViewSet({zoom: z}); }
+function thumbZoomReset(){ thumbViewSet({zoom: 1, pan_x: 0, pan_y: 0}); }
+function thumbHlToggle(on){ thumbViewSet({hl: {on: !!on}}); }
+function thumbHlSet(patch){ thumbViewSet({hl: patch}); }
+
+// 화면(슬라이더·버튼)을 현재 값에 맞춘다 — 드래그로 바뀐 값도 여기로 되돌아온다.
+function syncThumbViewUI(){
+  const V = thumbView(THUMB_STATE.view);
+  const $ = id => document.getElementById(id);
+  const z = $('thumbZoom'); if (z && +z.value !== Math.round(V.zoom * 100)) z.value = Math.round(V.zoom * 100);
+  const zv = $('thumbZoomVal'); if (zv) zv.textContent = Math.round(V.zoom * 100) + '%';
+  const ph = $('thumbPanHint'); if (ph) ph.style.display = V.zoom > 1.0001 ? '' : 'none';
+  const on = $('thumbHlOn'); if (on) on.checked = V.hl.on;
+  const box = $('thumbHlBox'); if (box) box.style.display = V.hl.on ? '' : 'none';
+  // 고른 것은 눌린 듯 보이게 — 어느 모드인지 눈으로 알아야 한다.
+  const mark = (id, yes) => { const e = $(id); if (e) e.style.outline = yes ? '2px solid var(--accent)' : 'none'; };
+  mark('thumbHlModeZoom', V.hl.mode === 'zoom');   mark('thumbHlModeSpot', V.hl.mode === 'spot');
+  mark('thumbHlShapeCircle', V.hl.shape === 'circle'); mark('thumbHlShapeRound', V.hl.shape === 'round');
+  const zr = $('thumbHlZRow'); if (zr) zr.style.display = V.hl.mode === 'spot' ? 'none' : '';  // 어둡게는 배율이 없다
+  const r = $('thumbHlR'); if (r && +r.value !== Math.round(V.hl.r * 100)) r.value = Math.round(V.hl.r * 100);
+  const hz = $('thumbHlZ'); if (hz && +hz.value !== Math.round(V.hl.zoom * 100)) hz.value = Math.round(V.hl.zoom * 100);
+}
+
+// 배경 한 장을 확대·이동해서 그린다. 확대가 없으면 종전과 완전히 같은 한 줄이다(회귀 0).
+function _drawThumbBg(ctx, img, V, W, H){
+  if (!img) return;
+  if (V.zoom <= 1.0001){ ctx.drawImage(img, 0, 0, W, H); return; }
+  // 화면을 zoom배로 키우고, 중앙에서 pan만큼 민 자리에 놓는다.
+  // (서버 _crop_xy와 같은 뜻 — 거기선 크롭 창을 -pan 옮기고, 여기선 그림을 +pan 옮긴다)
+  const zw = W * V.zoom, zh = H * V.zoom;
+  ctx.drawImage(img, -(zw - W) / 2 + W * V.pan_x, -(zh - H) / 2 + H * V.pan_y, zw, zh);
+}
+
+// 돋보기 원의 경로. 테두리·마스크·미리보기가 **같은 식**을 쓴다 → 모양이 어긋날 수 없다.
+// n=2는 정확히 원이라 arc로 그리고, n=4(둥근네모)는 초타원을 점으로 잇는다.
+function _thumbHlPath(ctx, cx, cy, r, shape){
+  const n = THUMB_HL_SHAPE_N[shape] || 2;
+  ctx.beginPath();
+  if (n === 2){ ctx.arc(cx, cy, r, 0, Math.PI * 2); return; }
+  const STEP = 96;
+  for (let i = 0; i <= STEP; i++){
+    const t = (i / STEP) * Math.PI * 2, c = Math.cos(t), s2 = Math.sin(t);
+    // |x/r|^n + |y/r|^n = 1 의 매개변수 표현
+    const x = cx + r * Math.sign(c) * Math.pow(Math.abs(c), 2 / n);
+    const y = cy + r * Math.sign(s2) * Math.pow(Math.abs(s2), 2 / n);
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  }
+  ctx.closePath();
+}
+
+// 돋보기를 배경 위에 얹는다(글자보다 **아래** — 제목이 원에 가리면 안 된다).
+function _drawThumbHL(ctx, img, V, W, H){
+  const hl = V.hl;
+  if (!hl.on || !img) return;
+  const cx = hl.cx * W, cy = hl.cy * H, r = hl.r * W;    // r은 폭 기준(서버 _hl_px와 동일)
+  if (hl.mode === 'spot'){
+    // 💡 원 밖을 어둡게 — 전체를 덮고 원만 도려낸다(서버 _HL_DARK=0.60과 같은 농도).
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.60)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'destination-out';
+    _thumbHlPath(ctx, cx, cy, r, hl.shape);
+    ctx.fill();
+    ctx.restore();
+  } else {
+    // 🔍 원 안만 확대 — 원으로 잘라내고 그 안에 배경을 hl.zoom배로 다시 그린다.
+    // 확대의 중심을 원 중심에 맞춰야 "그 점이 커진" 것으로 보인다.
+    ctx.save();
+    _thumbHlPath(ctx, cx, cy, r, hl.shape);
+    ctx.clip();
+    ctx.translate(cx, cy);
+    ctx.scale(hl.zoom, hl.zoom);
+    ctx.translate(-cx, -cy);
+    _drawThumbBg(ctx, img, V, W, H);       // ★배경 확대(V.zoom)를 먼저 먹인 그림을 키운다
+    ctx.restore();
+  }
+  // 흰 테두리 — 두 모드 공통(서버 _HL_RING과 같은 역할). 폭에 비례해 어느 크기에서도 같아 보인다.
+  ctx.save();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = Math.max(2, W * 0.006);
+  ctx.shadowColor = 'rgba(0,0,0,0.45)';
+  ctx.shadowBlur = W * 0.008;
+  _thumbHlPath(ctx, cx, cy, r, hl.shape);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawThumb(ctx, img, layers, W, H, view){
   const s = W / THUMB_W;                    // 캔버스 배율 — 외곽선·박스 여백용
+  const V = thumbView(view);
   // ★매 렌더마다 먼저 지운다(2026-07-18 라이브 실측) — job 없을 때 드래그 잔상이 쌓이던 것 봉인.
   ctx.clearRect(0, 0, W, H);
-  if (img) ctx.drawImage(img, 0, 0, W, H);
+  _drawThumbBg(ctx, img, V, W, H);
+  _drawThumbHL(ctx, img, V, W, H);          // 돋보기는 배경 위 · 글자 아래
   (layers || []).forEach(L => {
     if (L.kind === 'sticker'){ if (L.emoji) drawSticker(ctx, L, W, H); return; }
     if (L.kind === 'shape'){ drawShape(ctx, L, W, H); return; }
@@ -15536,6 +15901,9 @@ function drawThumb(ctx, img, layers, W, H){
 
 const THUMB_STATE = {frames: [], frame_ts: null, frame_url: null, img: null,
                      layers: [], sel: 0, results: [], selected: null, title_cands: [],
+                     // 🔍확대·🔎돋보기(2026-09-13). 배경에만 거는 값이라 layers와 따로 둔다
+                     // — 레이어에 섞으면 프리셋·손잡이·삭제가 전부 이걸 레이어로 오해한다.
+                     view: JSON.parse(JSON.stringify(THUMB_VIEW_DEF)),
                      job: null};   // job=이 상태가 속한 MIX_JOB. 바뀌면 리셋(2026-07-22)
 
 // 추출은 수 초 걸린다. THUMB_STATE.frames는 '응답이 와야' 채워지므로 그것만 보고 가드하면
@@ -15723,8 +16091,9 @@ async function renderThumbCanvas(){
   await ensureThumbFontsLoaded(THUMB_STATE.layers);
   if (gen !== THUMB_RENDER_GEN) return;   // 기다리는 사이 새 렌더가 예약됐다 — 이번 건 버린다
   const ctx = cv.getContext('2d');
-  drawThumb(ctx, THUMB_STATE.img, THUMB_STATE.layers, THUMB_W, THUMB_H);
+  drawThumb(ctx, THUMB_STATE.img, THUMB_STATE.layers, THUMB_W, THUMB_H, THUMB_STATE.view);
   renderThumbHandles();
+  syncThumbViewUI();
 }
 
 // ── 🖐 스티커·도형 손잡이(2026-08-18 사장님: "삭제 간단히 / 끝부분 잡고 크기·방향") ──
@@ -16413,6 +16782,9 @@ const THUMB_GRAB_R2 = 0.28 * 0.28;   // 잡히는 반경(정규화 거리²) —
 function initThumbDrag(){
   const cv = document.getElementById('thumbCanvas'); if (!cv || !cv.addEventListener) return;
   let grabbed = -1, offX = 0, offY = 0;
+  // 🔎돋보기 원 옮기기 / 🔍확대한 사진 밀기 (2026-09-13). 글자 드래그(grabbed)와 **배타적**이다
+  // — 한 번에 하나만 잡아야 "글자를 옮겼는데 배경도 같이 밀린다"가 안 난다.
+  let dragMode = null, panFrom = null;
   const to = e => {
     const r = cv.getBoundingClientRect();
     return {x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height};
@@ -16432,6 +16804,18 @@ function initThumbDrag(){
     //   그대로 산다. -1로 두면 그것들이 통째로 무동작이 된다(실제로 8곳이 sel을 참조).
     if (best < 0 || bestD > THUMB_GRAB_R2){
       deselectThumbLayer();
+      // 글자를 안 잡았으면 🔎돋보기 원 → 🔍확대한 사진 순으로 잡아본다(2026-09-13).
+      // ★순서가 중요하다: 원이 위에 보이므로 원을 먼저 준다. 둘 다 아니면 종전처럼 아무것도 안 한다.
+      const V = thumbView(THUMB_STATE.view);
+      if (V.hl.on){
+        // 원 안을 눌렀나 — 반지름은 **폭 기준**이라 세로 비율을 곱해 비교한다(그리기와 같은 기준).
+        const dx = p.x - V.hl.cx, dy = (p.y - V.hl.cy) * (THUMB_H / THUMB_W);
+        if (Math.sqrt(dx * dx + dy * dy) <= V.hl.r){
+          dragMode = 'hl'; offX = V.hl.cx - p.x; offY = V.hl.cy - p.y;
+          return;
+        }
+      }
+      if (V.zoom > 1.0001){ dragMode = 'pan'; panFrom = {p, x: V.pan_x, y: V.pan_y}; }
       return;
     }
     grabbed = best;
@@ -16440,12 +16824,25 @@ function initThumbDrag(){
     offX = L.x - p.x; offY = L.y - p.y;                // 잡은 지점과의 간격 유지 = 상대이동
     renderThumbLayers(); renderThumbHandles();
   });
-  window.addEventListener('mouseup', () => { grabbed = -1; });
+  window.addEventListener('mouseup', () => { grabbed = -1; dragMode = null; panFrom = null; });
   // Esc로도 푼다 — 손잡이가 그림을 가려서 확인이 안 될 때 마우스를 옮기지 않고 치울 수 있다.
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape' && document.getElementById('thumbHandles')?.innerHTML) deselectThumbLayer();
   });
   cv.addEventListener('mousemove', e => {
+    // 🔎돋보기 원 옮기기 / 🔍확대한 사진 밀기 — 글자 드래그보다 먼저 가른다(배타적).
+    if (dragMode === 'hl'){
+      const p = to(e);
+      thumbHlSet({cx: p.x + offX, cy: p.y + offY});     // 범위 보정은 thumbView 한 곳에서
+      return;
+    }
+    if (dragMode === 'pan' && panFrom){
+      const p = to(e);
+      // 끈 만큼 그림이 따라오게 — 화면 폭·높이 대비 비율로 더한다(저장 단위와 같다).
+      thumbViewSet({pan_x: panFrom.x + (p.x - panFrom.p.x),
+                    pan_y: panFrom.y + (p.y - panFrom.p.y)});
+      return;
+    }
     if (grabbed < 0) return;
     const L = THUMB_STATE.layers[grabbed]; if (!L) return;
     const p = to(e);
@@ -16471,7 +16868,8 @@ async function generateThumb(){
     fd.append('job_id', MIX_JOB);
     fd.append('meta', JSON.stringify({frame_ts: THUMB_STATE.frame_ts,
                                       frame_url: THUMB_STATE.frame_url,
-                                      layers: THUMB_STATE.layers}));
+                                      layers: THUMB_STATE.layers,
+                                      view: THUMB_STATE.view}));   // 🔍확대·🔎돋보기도 함께 보존
     fd.append('file', blob, 'thumb.png');   // 이 이름은 서버가 무시한다(경로순회 방지)
     const r = await fetch('/api/produce/thumb/save', {method: 'POST', body: fd});
     const d = await r.json().catch(() => ({ok: false}));
@@ -16560,6 +16958,8 @@ function initThumb(){
     THUMB_STATE.frames = []; THUMB_STATE.layers = []; THUMB_STATE.title_cands = [];
     THUMB_STATE.results = []; THUMB_STATE.selected = null; THUMB_STATE.sel = 0;
     THUMB_STATE.frame_ts = null; THUMB_STATE.frame_url = null; THUMB_STATE.img = null;
+    // 🔍확대·🔎돋보기도 버린다 — 남기면 새 영상의 다른 장면에 엉뚱한 구도가 걸린다.
+    THUMB_STATE.view = JSON.parse(JSON.stringify(THUMB_VIEW_DEF));
     const sug = document.getElementById('thumbTitleSuggest'); if (sug) sug.innerHTML = '';
     const gal = document.getElementById('thumbGallery'); if (gal) gal.innerHTML = '';
   }
@@ -16958,7 +17358,17 @@ const S2_ROLE = {
   mechanism:'⚙️ 원리', ease:'👌 간편', reason:'📖 이유',
   // 닫는 말
   benefit:'💎 효과', result:'✅ 결과', escalation:'🔥 고조', escalate:'🔥 고조',
-  regret:'😔 후회', price:'💰 가격', cta:'📢 약속'
+  regret:'😔 후회', price:'💰 가격', cta:'📢 약속',
+  // ★제목 패턴 밖 유튜브 3종(2026-09-09 등록 id 67·68·69).
+  //   표에 없으면 s2RoleName이 'react' 같은 **영문 코드를 그대로 화면에 내보낸다**.
+  react:'😲 놀란 반응', what:'🔎 이게 뭔지', good:'👍 장점',
+  more:'🔥 심지어', land:'🏁 마무리',
+  power:'💪 이게 됨', easy:'👌 쓰기 쉬움', extra:'➕ 하나 더',
+  deal:'🏷 값+물건', howto:'🔧 쓰는 법', vs:'⚔️ 기존 것',
+  // ★DB의 beat_roles 전체와 대조해 채운 것들(2026-09-09). 표에 없으면 영문이 화면에 뜬다.
+  fame:'📣 화제', limit:'🚧 기존 한계', solve:'🔑 해결', pain:'😖 불편',
+  context:'🗺 배경', source:'📌 출처', spec:'📐 사양', fit:'🎯 딱 맞음',
+  how:'🔧 방법', bonus:'🎁 덤'
 };
 // 첫 역할 = 그 스타일이 **어떻게 여는가**(훅). 사람 말로 한 줄 풀어준다.
 const S2_HOOKWAY = {
@@ -17049,7 +17459,7 @@ function s2RenderSeeds(){
     //   (2026-08-20 사장님 제보 "여긴 왜 썸네일도 작아지고 설명도 이상하다").
     S2.seeds.push({shortcode:d.pick_id, title:pm.name||pm.title||'선택 영상', thumb:pm.thumbnail||'',
       category:pm.category||'', followers:pm.followers, text:d.pick_text||'',
-      structure:d.structure||{}, tiles:d.tiles||{}, pick:true});
+      product:pm.product||'', structure:d.structure||{}, tiles:d.tiles||{}, pick:true});
   }
   // 담긴 나머지 영상 — **AI PICK 응답의 candidates**를 쓴다.
   // ★HANDOFF를 쓰면 안 된다(실측으로 배운 것): HANDOFF의 `pickScript`는 대본 텍스트가
@@ -17069,7 +17479,7 @@ function s2RenderSeeds(){
       _seen.add(sc);
       S2.seeds.push({shortcode:sc, title:c.name||c.title||'담은 영상', thumb:c.thumbnail||c.thumb||'',
         category:c.category||'', followers:c.followers,
-        text:c.text||'', structure:c.structure||{}, tiles:c.tiles||{}, pick:false});
+        text:c.text||'', product:c.product||'', structure:c.structure||{}, tiles:c.tiles||{}, pick:false});
     });
   }catch(e){}
   // ★사장님이 직접 쓴 대본은 **AI PICK 목록에 없다** — 이 함수가 매번 S2.seeds를 새로
@@ -17437,7 +17847,8 @@ async function s2Generate(){
   if(hint) hint.textContent='';
   try{
     const body={mode:'A', my_topic:'', subject:'', n:2, elem_modes:{},
-      structure:null, base_script:s.text||'', category:s.category||PM_CATEGORY||''};
+      structure:null, base_script:s.text||'', category:s.category||PM_CATEGORY||'',
+      shortcode:s.shortcode||''};
     // ★job_id를 반드시 실어라(2026-08-17). 서버는 이걸로 ①담긴 영상 전부의 대본
     //   ②쿠팡 상세·리뷰 재료 ③1단계 장면 태깅(label·use_point)을 붙인다.
     //   안 보내면 코드가 다 있어도 **재료가 빈 채로** 대본이 나온다(내가 처음에 빠뜨린 것).
@@ -17541,6 +17952,10 @@ async function s2Generate(){
     // ★만들자마자 남긴다(2026-08-17). 여기서 저장 안 하면 확정(s2Confirm) 전에 새로고침한
     //   순간 **돈 들여 뽑은 대본이 통째로 날아간다** — 사장님 제보의 핵심 경로다.
     saveWork();
+    // [바꾸기]는 서버 work에 저장된 주제 계약을 검증한다. 1초 디바운스를 기다리면
+    // 생성 직후 클릭에서 계약이 아직 없어 422가 나므로, 결과 직후에는 즉시 저장한다.
+    S2._contractSave=Promise.resolve(_pushWorkNow()).catch(()=>null);
+    await S2._contractSave;
   }catch(e){
     if(hint) hint.innerHTML='<span style="color:var(--fire)">네트워크 오류</span>';
     toast('⚠️ 네트워크 오류 — 다시 시도해주세요');
@@ -17618,6 +18033,7 @@ function s2RenderDrafts(){
       //   화면에 `<span style="color:var(--gold)">틀 조립 못 함…</span>`이 **글자 그대로** 떴다.
       //   (사장님 화면에서 실제로 목격) 섞어 담으면 어느 쪽을 이스케이프해도 한쪽이 깨진다.
       const bits=[];
+      if(m.topic_product) bits.push('<b style="color:var(--accent)">고정 주제 '+esc(m.topic_product)+'</b>');
       if(srcs.length) bits.push(esc('대본 '+srcs.length+'편('+srcs.map(s=>s.chars+'자').join('·')+')'));
       if(m.scene_points) bits.push(esc('장면 '+m.scene_points+'개'));
       if(m.product_facts) bits.push(esc('쿠팡 재료'));
@@ -17664,6 +18080,7 @@ function s2RenderDrafts(){
 function s2DraftHtml(dr,i){
   const beats=s2Beats(dr);
   const bad=(dr.checks||[]).filter(c=>!c.ok);
+  const needsReview=!!dr.needs_review;
   const tries=(dr.tries||[]).length;
   const again=tries>1?(' <small>· 다시 쓴 횟수 '+(tries-1)+'</small>'):'';
   // 통과는 조용히 뱃지 하나. 실패는 못 지킨 항목을 그대로 — 조용히 통과시키지 않는 게 핵심.
@@ -17672,7 +18089,7 @@ function s2DraftHtml(dr,i){
   const gate=dr.mine?'':(dr.checks&&dr.checks.length)
     ? (dr.passed
         ? `<span class="s2-gate pass" title="게이트 통과 — 스타일 구조를 지켰습니다">✅ 구조 지킴${again}</span>`
-        : `<span class="s2-gate fail">⚠️ ${esc(bad.map(c=>c.name).join(' · '))}</span>`)
+        : `<span class="s2-gate fail">⚠️ ${needsReview?'사실 근거 확인 필요':esc(bad.map(c=>c.name).join(' · '))}</span>`)
     : '';
   const rows=beats.map((b,j)=>{
     const isBad=!dr.passed && bad.some(c=>(c.name||'').indexOf(b.role)>=0);
@@ -17693,8 +18110,8 @@ function s2DraftHtml(dr,i){
   }).join('');
   const fix=(!dr.mine && !dr.passed && bad.length)
     ? `<div class="s2-fix">
-         <div class="fx-t">⚠️ ${esc(bad.map(c=>c.name).join(' · '))} — 이 스타일에서 벗어났어요</div>
-         <div class="fx-d">그대로 써도 되지만, 위 칸의 <b>바꾸기</b>로 틀에서 고르거나 전체를 다시 만들면 더 맞습니다.</div>
+         <div class="fx-t">⚠️ ${needsReview?'사실 근거 확인이 필요한 초안':esc(bad.map(c=>c.name).join(' · ')+' — 이 스타일에서 벗어났어요')}</div>
+         <div class="fx-d">${needsReview?'확정 전 빨간 검사 항목의 문장을 <b>바꾸기</b>로 고치거나 전체를 다시 만들어 주세요. 다른 제품이 섞인 초안은 이 화면에도 내보내지 않습니다.':'그대로 써도 되지만, 위 칸의 <b>바꾸기</b>로 틀에서 고르거나 전체를 다시 만들면 더 맞습니다.'}</div>
          <button class="fx-re" onclick="s2Generate()">🔄 전체 다시 만들기</button>
        </div>` : '';
   return `<div class="s2-draft ${i===0?'da':'db'}${i===S2.curDraft?' on':''}" id="s2d-${i}">
@@ -17881,9 +18298,11 @@ async function s2RegenBeat(i,j,tmpl){
   const tx=row?row.querySelector('.s2-sent'):null;
   if(tx){ tx.setAttribute('contenteditable','false'); tx.textContent='⏳ 이 칸을 다시 쓰는 중…'; }
   try{
+    if(S2._contractSave) await S2._contractSave;
     const s=S2.seed||{};
-    const body={style_id:dr.style_id, role:role, beats:beats, template:tmpl||'',
+    const body={style_id:dr.style_id, role:role, beat_index:j, beats:beats, template:tmpl||'',
       base_script:s.text||'', category:s.category||PM_CATEGORY||'', target_seconds:25};
+    if(S2.materials && S2.materials.topic_product) body.topic_product=S2.materials.topic_product;
     // ★픽업영상 대본은 style_id가 없다(스타일을 안 고르는 경로) — 종전엔 서버가 422로
     //   튕겨 **[바꾸기]가 통째로 막혀 있었다**(2026-08-26 사장님 제보).
     //   스타일 대신 **씨앗 구조·훅 문형**을 실어 보낸다. 전체 생성과 같은 재료다(0순위-B).

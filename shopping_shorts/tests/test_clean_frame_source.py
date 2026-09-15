@@ -38,6 +38,22 @@ class Test청소화면_출처판단:
         assert 0.3 < ratio < 0.7, ratio          # 3칸 중 가운데
         assert tag == "_clean", "캐시 이름을 안 가르면 원본 프레임이 재사용된다"
 
+    def test_구형경로가_비어도_현재편성_정본을_쓴다(self, tmp_path):
+        """박진우님 실사고: 성공한 final_clean 정본은 있는데 DB 호환 칸만 None이었다."""
+        from shopping_shorts import mix_pipeline as MP
+
+        plan = _plan()
+        sig = MP._plan_signature(plan)
+        canonical = tmp_path / f"final_clean_{sig}.mp4"
+        canonical.write_bytes(b"clean" * 500)
+        job = {"clean_sources": None, "clean_status": "ready",
+               "clean_video_path": None, "edit_plan": plan}
+
+        srcs, final, _ratio, tag, fresh = A._clean_frame_src(job, tmp_path, 1)
+        assert srcs == {}
+        assert final == str(canonical)
+        assert tag == "_clean" and fresh is True
+
     def test_청소_전이면_아무것도_안_준다(self, tmp_path):
         job = {"clean_status": None, "edit_plan": _plan()}
         assert A._clean_frame_src(job, tmp_path, 0) [:4] == ({}, None, None, "")

@@ -1,0 +1,9 @@
+@echo off
+REM cmd 창을 열면 저장소 폴더에서 바로 Codex 가 뜬다 (2026-09-09 사무실 PC 설정).
+REM  - "cmd /c ..." 로 다른 프로그램이 내부적으로 띄운 셸에서는 뜨지 않는다 (앞 두 줄이 막는다 — 빼면 git·설치기가 깨진다).
+REM  - 끄기: reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
+echo %CMDCMDLINE% | find /i "/c" >nul && goto :eof
+if defined CODEX_AUTORUN_DONE goto :eof
+set CODEX_AUTORUN_DONE=1
+cd /d "__PROJECT_DIR__"
+codex

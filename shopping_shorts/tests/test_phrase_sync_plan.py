@@ -38,27 +38,49 @@ def test_cut_bounds_equal_phrase_bounds():
     assert sum(durs) == pytest.approx(3.86, abs=1e-6)
 
 
-def test_재료가_적으면_담은_순서대로_돌아간다():
-    """2026-09-02 사장님: "장면을 빼면 두 개가 없어지고 넣으면 갑자기 배치가 바뀐다."
+def test_재료가_적으면_이어붙인다():
+    """2026-09-11 사장님: "줄을 4칸으로 바꾸면 장면은 2개인데 줄만 4개면 편하잖아."
 
-    종전 규칙(마지막 컷이 남은 구절을 통째로 덮음 → 뒤에 화면 전환 없음, 그 뒤엔
-    '뒤가 남은 조각을 골라 쓰기')은 자리↔조각 관계가 재료 개수·잔량에 따라 달라져
-    조각 하나를 빼면 뒤 배치가 통째로 밀렸다. 이제는 k % 재료수로 **정해진다**.
+    09-02엔 k % 재료수로 **순환**(1,2,1,2)시켰다 — 조각 하나를 빼도 앞자리가 안 밀리게.
+    그런데 고객 실측(job 6534d20ee935): 자막을 4줄로 쪼개자 조각 2개가 1,2,1,2로 돌아
+    같은 장면이 두 번(앞 것 0.57초) 나왔고 고객은 오류로 봤다.
+    이제는 **이어붙임**(1,1,2,2): 조각 k가 자기 몫의 구절을 연달아 덮는다 → 화면상 컷은
+    조각 수 그대로, 자막만 늘어난다. 자리는 여전히 k·개수만으로 정해진다(예측 가능).
+    ★화면(scene_play.js planClips)과 같은 식 — 한쪽만 고치면 미리보기와 결과물이 어긋난다.
     """
     plan = _plan_phrase_clips(_beat(), SEGS[:2], 3.86)
-    assert len(plan) == 3, "구절 수만큼 컷이 만들어져야 한다(마지막이 덮지 않는다)"
+    assert len(plan) == 3, "구절 수만큼 항목은 만들어진다(경계 = 자막 구절)"
     vids = [c["video_id"] for c in plan]
-    assert vids == [SEGS[0]["video_id"], SEGS[1]["video_id"], SEGS[0]["video_id"]], vids
+    assert vids == [SEGS[0]["video_id"], SEGS[0]["video_id"], SEGS[1]["video_id"]], vids
+    # 같은 조각이 이어질 땐 **이어서** 재생한다(처음부터 다시가 아니라) — 화면상 한 컷
+    assert plan[1]["start"] == pytest.approx(plan[0]["start"] + plan[0]["out_dur"], abs=1e-6)
     assert sum(c["out_dur"] for c in plan) == pytest.approx(3.86, abs=1e-6)
+
+
+def test_조각2_구절4는_1122():
+    """고객 사고 그 모양 그대로 — 조각 2개에 자막 4줄이면 1,1,2,2 (같은 장면이 흩어져 두 번 안 나온다)."""
+    b = _beat(narration="옷장은 좁고 옷이랑 이불 정리 해야되서 고민이었는데",
+              caption_lines=["옷장은 좁고", "옷이랑 이불", "정리 해야되서", "고민이었는데"],
+              cap_durs=[0.72, 0.57, 0.52, 0.77], cap_lead=0.087)
+    plan = _plan_phrase_clips(b, SEGS[:2], 2.9)
+    vids = [c["video_id"] for c in plan]
+    assert vids == ["s0", "s0", "s1", "s1"], vids
 
 
 def test_조각을_빼도_앞자리는_그대로다():
     """이게 제보의 핵심이다 — 하나 뺐는데 둘이 사라진 것처럼 보이던 것."""
     full = _plan_phrase_clips(_beat(), SEGS, 3.86)
     less = _plan_phrase_clips(_beat(), SEGS[:2], 3.86)
-    assert full[0]["video_id"] == less[0]["video_id"]
-    assert full[1]["video_id"] == less[1]["video_id"]
+    assert full[0]["video_id"] == less[0]["video_id"], "첫 자리는 조각을 빼도 그대로"
     assert len(full) == len(less), "칸 수(=구절 수)는 재료 개수와 무관하게 유지된다"
+    # 이어붙임(09-11): 빠진 조각의 자리는 앞 조각이 **이어서** 덮는다 — 흩어져 두 번 나오지 않는다.
+    order = [c["video_id"] for c in less]
+    seen, prev = [], None
+    for v in order:
+        if v != prev:
+            assert v not in seen, f"같은 조각이 흩어져 다시 나왔다: {order}"
+            seen.append(v)
+        prev = v
 
 
 def test_no_timetable_falls_back_none():

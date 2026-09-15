@@ -41,6 +41,26 @@ def test_admin_set_plan_promotes(tmp_path, monkeypatch):
     assert appmod.access_level(cid) == "ranking_only"
 
 
+def test_admin_set_trial_unlocks_expired_unapproved_customer(tmp_path, monkeypatch):
+    """가입 체험이 끝났어도 관리자가 체험판을 지정하면 승인대기에 남지 않는다."""
+    s = _setup(tmp_path, monkeypatch)
+    cid = s.create_customer("expired", "pw12", approved=False)
+    with s._conn() as conn:
+        conn.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
+    assert appmod.access_level(cid) == "pending"
+
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    r = owner.post("/api/admin/set_plan", json={
+        "customer_id": cid, "plan": "trial", "days": 7,
+    })
+
+    assert r.status_code == 200 and r.json()["ok"] is True
+    cust = s.get_customer(cid)
+    assert cust["plan"] == "trial"
+    assert cust["approved_at"] is None       # 결제 승인을 위조해서 풀면 안 된다
+    assert appmod.access_level(cid) == "ranking_only"
+
+
 def test_admin_customers_lists_with_usage(tmp_path, monkeypatch):
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("u3", "pw12")

@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from shopping_shorts.store import Store
-from shopping_shorts.media_download import download_any
+from shopping_shorts.media_download import download_any, _is_direct_video
 from shopping_shorts import script_extract
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, conform_narration
@@ -42,6 +42,7 @@ from shopping_shorts import sub_region
 from shopping_shorts.narration_naturalize import naturalize, merge_profile
 from shopping_shorts import asr_check
 from shopping_shorts import caption_sync
+from shopping_shorts import video_assemble   # 짧은 자막 줄 합치기(_apply_cap_timing)
 from shopping_shorts import tts_timestamps
 from shopping_shorts import pron_corrections
 from shopping_shorts import backbone
@@ -393,12 +394,7 @@ def finalize_beat_audio(beat, out, *, trim_tail=True):
     words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
     _timing = None
     if words:
-        _timing = caption_sync.phrase_durs_from_words(
-            beat["narration"], words, _ad or 0.0,
-            preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
-        if _timing:
-            beat["cap_durs"] = _timing.durs
-            beat["cap_lead"] = _timing.lead_in
+        _timing = _apply_cap_timing(beat, beat["narration"], words, _ad)
     # 산출 단계 기록(⑦a) — 정렬까지 성공해야 그 단이다. 실패하면 글자수 추정.
     beat["cap_src"] = _wsrc if (words and _timing) else "estimate"
 
@@ -563,6 +559,41 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
           f"(workers={workers})", file=sys.stderr)
 
 
+def _apply_cap_timing(beat, narration, words, dur):
+    """실측 워드 시각 → 자막 구절 초(cap_durs·cap_lead). 합성 경로 3곳이 **이 함수 하나**를 쓴다.
+
+    ★짧은 줄 합치기(2026-09-14 사장님 "0.몇 초 단위로도 끊긴다"): 실제로 1초 미만 말한 줄은
+      이웃과 합쳐 caption_lines로 **저장**한다(video_assemble.tidy_caption_lines — 초는 더해서
+      보존, 문장 끝은 안 넘음). 저장해야 렌더·미리보기·구절 맞춤 컷이 같은 줄을 쓴다(0순위-B).
+      사람이 직접 고친 줄(caption_lines_human)은 건드리지 않는다."""
+    t = caption_sync.phrase_durs_from_words(narration, words, dur or 0.0,
+                                            preset=beat.get("caption_lines"))
+    if not t:
+        return None
+    durs = t.durs
+    # ★기본 꺼짐(2026-09-14) — 아스트라·페이블 검토: 장면 배치와 함께 고치지 않으면 담은 장면이 빠진다.
+    #   검증(블라인드 채점) 끝나면 CAPTION_TIDY=1로 켠다.
+    if not beat.get("caption_lines_human") and os.environ.get("CAPTION_TIDY", "0") == "1":
+        try:
+            segs = video_assemble._caption_segments(narration, preset=beat.get("caption_lines"))
+            if len(segs) == len(durs):
+                # 담은 장면 수 밑으로는 안 합친다 — 구절 맞춤 컷에서 장면이 빠지지 않게
+                try:
+                    _n_mat = len([m for m in (_beat_material(beat) or []) if m])
+                except Exception:      # noqa: BLE001
+                    _n_mat = 1
+                lines, nd = video_assemble.tidy_caption_lines(segs, durs, narration=narration,
+                                                              min_lines=_n_mat)
+                if len(lines) < len(segs) and                         video_assemble.cap_preset_key("".join(lines)) == video_assemble.cap_preset_key(narration):
+                    beat["caption_lines"] = lines
+                    durs = nd
+        except Exception:      # noqa: BLE001 — 합치기 실패로 합성을 죽이지 않는다(종전 줄 그대로)
+            traceback.print_exc(file=sys.stderr)
+    beat["cap_durs"] = durs
+    beat["cap_lead"] = t.lead_in
+    return t
+
+
 def _ensure_breath_lines(beat):
     """폴백 칸이면 Gemini 호흡 끊기로 caption_lines를 채운다(2026-08-29 사장님 "해봐").
 
@@ -593,6 +624,7 @@ def invalidate_caption_meta(beat):
 
     ⚠️ 같은 판단을 두 군데 적지 마라(CLAUDE.md 0순위-B) — 새 편집 경로가 생기면 이 함수를 불러라."""
     beat["caption_lines"] = None
+    beat["caption_lines_human"] = False
     beat["cap_durs"] = None
     beat["cap_lead"] = 0.0
 
@@ -733,9 +765,9 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None, customer_id=0):
         words, _wsrc = _beat_words_src(str(out), new_dur, removed=tts_timestamps.load_removed(str(out)))
         _t = None
         if words:
-            _t = caption_sync.phrase_durs_from_words(new_n, words, new_dur)
-            beat["cap_durs"] = _t.durs if _t else None
-            beat["cap_lead"] = _t.lead_in if _t else 0.0
+            _t = _apply_cap_timing(beat, new_n, words, new_dur)
+            if not _t:
+                beat["cap_durs"], beat["cap_lead"] = None, 0.0
         beat["cap_src"] = _wsrc if (words and _t) else "estimate"
         beat["sync_gap"] = round(max(0.0, new_dur - budget), 2)
 
@@ -777,6 +809,28 @@ def _extract_coverage(r, path):
     covered = sum(max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
                   for s in (r.get("segments") or []))
     return min(1.0, covered / dur)
+
+
+def _basket_download_urls(urls, store, customer_id):
+    """제작 URL과 같은 장바구니 항목의 직접 영상 주소를 우선 사용한다.
+
+    담기 예열은 ``mix_basket.video_url``을 쓰지만 mix job은 페이지 URL만 저장한다.
+    샤오홍슈처럼 서버 yt-dlp가 페이지를 풀지 못하는 플랫폼은 여기서 직접 CDN 주소를
+    되살리지 않으면 예열 성공 뒤 제작 단계에서 다시 탈락한다.
+    """
+    if not store or customer_id in (None, ""):
+        return list(urls)
+    try:
+        basket = {item.get("url"): item for item in
+                  store.mix_basket_list(customer_id=customer_id)}
+    except Exception:  # noqa: BLE001 — DB 조회 실패가 기존 URL 다운로드까지 막으면 안 된다.
+        return list(urls)
+
+    resolved = []
+    for url in urls:
+        direct = ((basket.get(url) or {}).get("video_url") or "").strip()
+        resolved.append(direct if direct and _is_direct_video(direct) else url)
+    return resolved
 
 
 def _prepare_sources(urls, work, store=None):
@@ -1097,7 +1151,9 @@ def run_mix_job(job_id, db_path, work_root):
             # video_id -> mp4 path, video_id -> caption(인스타만 채워짐, 유튜브/틱톡은 "").
             # extract_script가 caption을 힌트로 쓰고 없어도 영상 재전사로 동작 — .get(vid, "")로 안전 기본값.
             # 소스별 예외격리: 불량 URL은 스킵되고 최소 1개만 살면 계속(2026-07-19).
-            video_paths, captions, skipped = _prepare_sources(job["urls"], work, store=store)
+            download_urls = _basket_download_urls(
+                job["urls"], store, job.get("customer_id"))
+            video_paths, captions, skipped = _prepare_sources(download_urls, work, store=store)
             if skipped:
                 print(f"run_mix_job[{job_id}]: {len(skipped)}개 소스 스킵 "
                       f"(불량 URL) — {[u for u, _ in skipped]}", file=sys.stderr)
@@ -1215,6 +1271,7 @@ def run_mix_job(job_id, db_path, work_root):
             source_scripts = list(extracts.values())
             _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                           job["structure"], None, work, given_script=job.get("given_script"),
+                          source_video_paths=video_paths,
                           voice=job.get("voice"), customer_id=job.get("customer_id", 0),
                           scene_first=job.get("scene_first", False),
                           script_structure=job.get("script_structure"),
@@ -1478,7 +1535,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                   given_script=None, voice=None, customer_id=0,
                   scene_first=False, reference_text="", ping_pong=False,
                   backbone_meta=None, backbone_forced=None, backbone_base=False,
-                  global_pron=None, script_structure=None):
+                  global_pron=None, script_structure=None, source_video_paths=None):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -1637,13 +1694,15 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
             print("scene_first 후보 0 → 옛 생성기로 폴백(개선 미적용)", file=sys.stderr)
             plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
                                    video_type=video_type, given_script=given_script,
-                                   is_recipe=is_recipe)
+                                   is_recipe=is_recipe, source_video_paths=source_video_paths,
+                                   seg_thumb_dir=Path(work) / "seg_thumbs")
             plan["generator"] = "legacy_fallback"
             plan["generator_note"] = "장면우선 생성이 실패해 예전 방식으로 만들었습니다(개선 미적용) — 다시 매칭을 권장합니다."
     else:
         plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
                                video_type=video_type, given_script=given_script,
-                               is_recipe=is_recipe)
+                               is_recipe=is_recipe, source_video_paths=source_video_paths,
+                               seg_thumb_dir=Path(work) / "seg_thumbs")
         plan["generator"] = "legacy"
     # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
@@ -1757,8 +1816,17 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
     work = Path(work_root) / job_id
     try:
         source_scripts = list(job["extract"].values())
+        try:
+            source_video_paths = _resolve_sources(job, work)
+        except RuntimeError as e:
+            # 재타이핑은 저장된 extract만으로도 종전처럼 계속할 수 있다. 원본이 정리된 옛 job은
+            # 이미지 검증만 건너뛰고 EDL+TTS 재생성을 죽이지 않는다(fail-open).
+            print(f"[verify_screens] 재타이핑 원본 없음(이미지 검증만 건너뜀): {e}",
+                  file=sys.stderr)
+            source_video_paths = None
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], video_type, work, given_script=job.get("given_script"),
+                      source_video_paths=source_video_paths,
                       voice=job.get("voice"), customer_id=job.get("customer_id", 0),
                       global_pron=_gpron, script_structure=job.get("script_structure"))
     except Exception as e:
@@ -1946,6 +2014,9 @@ def _template_layer(tpl, first_beat_dur=0):
     frame = tpl.get("frame")
     if frame:
         from shopping_shorts import deco_frame
+        # 🎬 '이 장면에만' 가림막은 틀 그림(영상 전체)에서 뺀다 — 장면 시간에만 따로 얹는다
+        #   (_scene_mask_layers). 장면 지정이 없으면 frame이 **그대로** 돌아와 옛 그림과 같다.
+        frame, _scene_ms = deco_frame.split_scene_masks(frame)
         p = deco_frame.render_to(frame, deco_frame.cache_path(frame))
         tid = "frame:" + deco_frame.cache_key(frame)
         # 🩹 가림막의 **흐림**은 그림으로 못 한다(뒤 영상을 흐리게 하는 일이라).
@@ -1973,6 +2044,51 @@ def _template_layer(tpl, first_beat_dur=0):
     # 'first'인데 비트 길이를 모르면 전체로 둔다 — dur=0을 주면 화면에서 아예 안 보인다.
     if tpl.get("span") == "first" and first_beat_dur and first_beat_dur > 0:
         out["dur"] = float(first_beat_dur)
+    return out
+
+
+def _scene_mask_layers(tpl, plan, tts_paths, src_durs):
+    """'이 장면에만' 가림막 → 렌더가 얹을 [{_abspath, blur_mask, blur_sigma, start, dur}, ...].
+
+    ★장면의 시간 창은 final_clip_pairs에서 온다 — 미리보기 장면 목록(beats_preview)이
+      쓰는 **그 함수**다(0순위-B). 그래서 화면의 "3/12 장면"과 렌더의 그 3초가 같다.
+    cut이 None이면 그 칸(beat)의 컷 전체를 덮는다. 시간을 못 찾으면 **안 얹는다**
+    (엉뚱한 시간에 덮는 것보다 안 덮는 게 낫다) — 대신 로그를 남긴다.
+    """
+    frame = (tpl or {}).get("frame")
+    if not frame:
+        return []
+    from shopping_shorts import deco_frame
+    _g, scenes = deco_frame.split_scene_masks(frame)
+    if not scenes:
+        return []
+    try:
+        cuts = final_clip_pairs(plan, tts_paths, src_durs) or []
+    except Exception as e:      # noqa: BLE001
+        print(f"[scene_mask] 컷 계획 실패 — 장면 가림막 생략: {e!r}", file=sys.stderr)
+        cuts = []
+    out = []
+    for (bi, ci), ms in sorted(scenes.items(), key=lambda kv: (kv[0][0], kv[0][1] if kv[0][1] is not None else -1)):
+        mine = [c for c in cuts if c.get("beat_idx") == bi]
+        if ci is not None:
+            mine = mine[ci:ci + 1] if ci < len(mine) else []
+        if not mine:
+            print(f"[scene_mask] beat={bi} cut={ci} 시간 못 찾음 — 생략", file=sys.stderr)
+            continue
+        start = float(mine[0]["fin"])
+        end = float(mine[-1]["fin"]) + float(mine[-1]["dur"])
+        if end <= start:
+            continue
+        lay = {"start": start, "dur": end - start}
+        png = deco_frame.render_scene_masks_to(ms)
+        if png:
+            lay["_abspath"] = str(png)
+        bm = deco_frame.render_blur_mask_to({"masks": ms})
+        bs = deco_frame.blur_sigma(deco_frame._norm_masks(ms))
+        if bm and bs > 0:
+            lay["blur_mask"], lay["blur_sigma"] = str(bm), bs
+        if lay.get("_abspath") or lay.get("blur_mask"):
+            out.append(lay)
     return out
 
 
@@ -2704,7 +2820,7 @@ def _plan_signature(plan):
     """편집안 → 완성본 **그림**을 결정하는 것만 뽑은 서명(sha1 앞 16자).
 
     들어가는 것: 비트 순서 · 각 비트의 재료(video_id·start·end) · 컷 길이(target_seconds)
-                 · **장면 확대 구도(scene_zoom/pan)** — 잘라내는 자리가 곧 그림이다.
+                 · **장면 확대·강조(scene_zoom/pan/scene_hl)** — 합성되는 그림 자체다.
     빠지는 것:  대사·음성·자막 — 화면 그림을 안 바꾸므로 다시 청소할 이유가 없다.
 
     ★재료 판정은 video_assemble._beat_material과 같은 규칙이다(scene_override 우선).
@@ -2721,9 +2837,20 @@ def _plan_signature(plan):
         for m in _beat_materials(b):
             parts.append("%s:%s:%s" % (m.get("video_id"), m.get("start"), m.get("end")))
         parts.append("t=%s" % b.get("target_seconds"))
+        # ★자막 줄 나누기(caption_lines)는 "자막"이지만 **컷 경계**를 정한다(_plan_phrase_clips:
+        #   구절 수 = 컷 수, 조각 배정 1,1,2,2). 빼면 줄만 바꿔도 서명이 그대로라 옛 컷으로 만든
+        #   청소본이 재사용된다(2026-09-11 실사고: 고객이 4줄로 바꾼 뒤 완성본을 다시 만들어도
+        #   16:08 청소본(옛 배정)이 그대로 나감). 지정 없으면 안 붙인다 → 옛 작업 서명 불변.
+        _cl = b.get("caption_lines")
+        if _cl:
+            parts.append("c=%s" % "/".join(str(x) for x in _cl))
         _z, _px, _py = _va.scene_zoom_of(b)
         if _z > 1.0001:                        # 지정 없으면 아무것도 안 붙인다
             parts.append("z=%.4f,%.5f,%.5f" % (_z, _px, _py))   # → 옛 작업 서명 불변
+        _hl = _va.scene_hl_of(b)
+        if _hl:                                 # 강조가 구워진 청소본을 옛 캐시로 덮지 않는다
+            parts.append("hl=%s,%s,%.5f,%.5f,%.5f,%.4f" % (
+                _hl["mode"], _hl["shape"], _hl["cx"], _hl["cy"], _hl["r"], _hl["zoom"]))
         parts.append("|")
     return hashlib.sha1("".join(parts).encode("utf-8")).hexdigest()[:16]
 
@@ -2741,11 +2868,10 @@ def clean_final_matches_plan(job, work):
       서명이 이미 파일명에 있으므로 새로 계산할 것 없이 대조만 하면 된다(0순위-B).
     실패하면 False — 원본에서 뜬다(틀린 장면보다 자막 있는 정확한 장면이 낫다)."""
     try:
-        cvp = (job or {}).get("clean_video_path")
-        if not cvp or not Path(cvp).exists():
-            return False
         if job.get("clean_sources"):
             return True     # 소스별 청소본 — 좌표계가 원본과 같아 애초에 안 썩는다
+        # 완성본 1편 청소의 정본은 서명 파일이다. 구형 clean_video_path의 존재를
+        # 선행조건으로 두면 정본만 저장한 새 작업을 거짓으로 판정한다.
         return clean_final_path_for_plan(job, work) is not None
     except Exception:      # noqa: BLE001
         return False
@@ -3397,6 +3523,18 @@ def run_render(job_id, db_path, work_root):
         _tl = _template_layer(deco.get("template"), first_beat_dur=_first)
         if _tl:
             deco = {**deco, "template": {**(deco.get("template") or {}), **_tl}}
+        # 🎬 '이 장면에만' 가림막 — 장면 시간 창과 함께 따로 넘긴다(없으면 키 자체를 안 만든다).
+        #   ★장면 시각은 미리보기 장면 목록(app._final_cuts)과 **같은 입력**으로 잰다:
+        #     청소 전 원본 소스 길이 + 칸별 TTS. 청소본 길이로 재면 컷이 미세하게 갈릴 수 있다.
+        try:
+            _sm_durs = {v: (_probe_duration(str(p_)) or 0.0)
+                        for v, p_ in _resolve_sources(job, work).items()}
+            _sm = _scene_mask_layers(job.get("deco", {}).get("template"), plan, tts_paths, _sm_durs)
+        except Exception as e:      # noqa: BLE001 — 장면 가림막 때문에 렌더 전체를 잃지 않는다
+            print(f"[scene_mask] 준비 실패 — 생략: {e!r}", file=sys.stderr)
+            _sm = []
+        if _sm:
+            deco = {**deco, "scene_masks": _sm}
         # 모션 팩: pack_id → 비트 타임라인으로 레이어 생성(렌더 시점에만 알 수 있음)
         # pack_id 없으면 _apply_motion_pack이 무변경으로 통과하므로, 그 경우 불필요한
         # ffprobe 호출(_beat_timeline)을 피한다 — 수동 layers만 쓰는 기존 deco를 위해 필수.
@@ -3515,11 +3653,9 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
         words, _wsrc = _beat_words_src(str(out), _rdur, removed=tts_timestamps.load_removed(str(out)))
         _t = None
         if words:
-            _t = caption_sync.phrase_durs_from_words(
-                beat["narration"], words, _rdur or 0.0,
-                preset=beat.get("caption_lines"))
-            beat["cap_durs"] = _t.durs if _t else None
-            beat["cap_lead"] = _t.lead_in if _t else 0.0
+            _t = _apply_cap_timing(beat, beat["narration"], words, _rdur)
+            if not _t:
+                beat["cap_durs"], beat["cap_lead"] = None, 0.0
         beat["cap_src"] = _wsrc if (words and _t) else "estimate"
         # ★싱크 마무리 — 렌더가 하던 것을 여기서도 한다(2026-08-20 실사고 job 087e03b69dc2).
         #   대본수정으로 hook 대사가 105자가 돼 mp3가 16.8초가 됐는데 target_seconds는

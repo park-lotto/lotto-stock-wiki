@@ -33,12 +33,16 @@ def _beat(fit=5, narr="옆으로 누워도 안 아픔", sid="s1", **kw):
 SEGS = {"s1": {"seg_id": "s1", "scene_desc": "물그릇에서 건져낸 이어플러그를 천으로 닦는다"}}
 
 
+def _frame(_sid, _seg):
+    return "frame.jpg"
+
+
 def test_스위치가_꺼져있으면_호출조차_안한다():
     """검증 안 된 걸 라이브에 켜두면 조용히 비용이 나간다(B1 실사고 계보)."""
     called = []
     out = edit_plan.verify_beat_screens(
         [_beat()], SEGS, call=lambda *a, **k: called.append(1) or {"ok": False},
-        store=_Store(False))
+        store=_Store(False), frame_resolver=_frame)
     assert called == [], "스위치가 꺼졌는데 모델을 불렀다"
     assert out[0]["fit"] == 5
 
@@ -47,7 +51,7 @@ def test_탈락하면_fit을_깎고_근거를_남긴다():
     out = edit_plan.verify_beat_screens(
         [_beat()], SEGS,
         call=lambda *a, **k: {"ok": False, "why": "세척 장면이라 무관"},
-        store=_Store(True))
+        store=_Store(True), frame_resolver=_frame)
     b = out[0]
     assert b["fit"] == 2, "탈락인데 fit이 안 깎였다"
     assert b["fit_evidence"] == "verify_failed"
@@ -56,7 +60,8 @@ def test_탈락하면_fit을_깎고_근거를_남긴다():
 
 def test_통과하면_아무것도_안_바꾼다():
     out = edit_plan.verify_beat_screens(
-        [_beat()], SEGS, call=lambda *a, **k: {"ok": True}, store=_Store(True))
+        [_beat()], SEGS, call=lambda *a, **k: {"ok": True}, store=_Store(True),
+        frame_resolver=_frame)
     assert out[0]["fit"] == 5
     assert "fit_evidence" not in out[0] or out[0]["fit_evidence"] != "verify_failed"
 
@@ -64,7 +69,8 @@ def test_통과하면_아무것도_안_바꾼다():
 def test_화면을_교체하지_않는다():
     """★표시만 한다 — primary를 바꾸면 84%가 바뀌어 회귀 위험이 크다(2026-09-09 실측)."""
     out = edit_plan.verify_beat_screens(
-        [_beat()], SEGS, call=lambda *a, **k: {"ok": False, "why": "무관"}, store=_Store(True))
+        [_beat()], SEGS, call=lambda *a, **k: {"ok": False, "why": "무관"},
+        store=_Store(True), frame_resolver=_frame)
     assert out[0]["primary"]["seg_id"] == "s1", "검증이 화면을 갈아치웠다"
 
 
@@ -73,14 +79,16 @@ def test_이야기_문장은_대상이_아니다():
     called = []
     out = edit_plan.verify_beat_screens(
         [_beat(visual_verb=False)], SEGS,
-        call=lambda *a, **k: called.append(1) or {"ok": False}, store=_Store(True))
+        call=lambda *a, **k: called.append(1) or {"ok": False}, store=_Store(True),
+        frame_resolver=_frame)
     assert called == [], "이야기 문장에 모델을 불렀다"
     assert out[0]["fit"] == 5
 
 
 def test_모델이_죽어도_원본_그대로():
     out = edit_plan.verify_beat_screens(
-        [_beat()], SEGS, call=lambda *a, **k: None, store=_Store(True))
+        [_beat()], SEGS, call=lambda *a, **k: None, store=_Store(True),
+        frame_resolver=_frame)
     assert out[0]["fit"] == 5 and "fit_evidence" not in out[0]
 
 
@@ -88,7 +96,8 @@ def test_화면묘사가_없으면_건너뛴다():
     called = []
     out = edit_plan.verify_beat_screens(
         [_beat(sid="없는칸")], SEGS,
-        call=lambda *a, **k: called.append(1) or {"ok": False}, store=_Store(True))
+        call=lambda *a, **k: called.append(1) or {"ok": False}, store=_Store(True),
+        frame_resolver=_frame)
     assert called == []
 
 
@@ -96,3 +105,44 @@ def test_프롬프트가_맥락_허용을_담고_있다():
     """이 문구가 빠지면 문자 그대로 따져 멀쩡한 것까지 떨군다(요구먼저 방식의 67% 과잉기각)."""
     assert "맥락으로" in edit_plan._SCREEN_VERIFY_PROMPT
     assert "실제로 보이거나" in edit_plan._SCREEN_VERIFY_PROMPT
+
+
+def test_장면설명_대신_대표프레임을_넘긴다():
+    seen = {}
+
+    def call(prompt, schema, frame_path):
+        seen.update(prompt=prompt, schema=schema, frame_path=frame_path)
+        return {"ok": True}
+
+    edit_plan.verify_beat_screens(
+        [_beat()], SEGS, call=call, store=_Store(True), frame_resolver=_frame)
+    assert seen["frame_path"] == "frame.jpg"
+    assert "첨부 이미지" in seen["prompt"]
+    assert SEGS["s1"]["scene_desc"] not in seen["prompt"], "텍스트 화면묘사가 아직 모델에 전달됐다"
+
+
+def test_장면설명이_비어도_프레임이_있으면_검증한다():
+    called = []
+    segs = {"s1": {"seg_id": "s1", "scene_desc": ""}}
+    edit_plan.verify_beat_screens(
+        [_beat()], segs,
+        call=lambda *a: called.append(a) or {"ok": True},
+        store=_Store(True), frame_resolver=_frame)
+    assert len(called) == 1
+
+
+def test_이미지호출이_jpeg_bytes를_기존_키회전에_싣는다(tmp_path, monkeypatch):
+    frame = tmp_path / "s1.jpg"
+    frame.write_bytes(b"\xff\xd8\xfffake-jpeg")
+    seen = {}
+
+    def fake_vault(contents, schema):
+        seen.update(contents=contents, schema=schema)
+        return {"ok": True}
+
+    monkeypatch.setattr(edit_plan, "_vault_call", fake_vault)
+    assert edit_plan._vault_call_image("prompt", edit_plan._SCREEN_VERIFY_SCHEMA, frame) == {"ok": True}
+    assert seen["contents"][0] == "prompt"
+    image = seen["contents"][1]
+    assert image.inline_data.mime_type == "image/jpeg"
+    assert image.inline_data.data == b"\xff\xd8\xfffake-jpeg"

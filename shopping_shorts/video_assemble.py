@@ -738,14 +738,39 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     #   컷1이 리드인(첫말 전 무음)을 얹고 마지막 컷이 꼬리를 얹는다. 재료가 구절보다
     #   적으면 마지막 재료가 남은 구절을 이어 커버한다. ✋수동 길이가 있으면 수동이
     #   이기고(아래 fixed_lens), 그땐 이 분기를 타지 않는다.
+    # ★구절 맞춤을 끈 칸 = 화면이 정한 컷 그대로(2026-09-14 사장님). 나누기·✋·늘려채우기 없음.
+    #   빈 시간은 화면이 렌더를 막는다. 그래도 들어오면(다른 입구) 마지막 컷을 늘려 멈추게 둔다.
+    _mc = [c for c in (beat.get("manual_cuts") or []) if c.get("video_id") in beat_src_durs]
+    if beat.get("phrase_sync") is False and _mc:
+        try:
+            _slow = max(1.0, float(beat.get("slow") or 1))
+        except (TypeError, ValueError):
+            _slow = 1.0
+        plan = []
+        for c in _mc:
+            d = float(c["dur"])
+            plan.append({"video_id": c["video_id"], "start": float(c["start"]),
+                         "src_dur": d, "out_dur": d * _slow, "seg_id": c.get("seg_id")})
+        gap = tts_dur - sum(c["out_dur"] for c in plan)
+        if gap > 1e-3 and plan:
+            plan[-1]["out_dur"] += gap
+        if runout > 0:
+            _extend_last_clip_for_runout(plan, segs, runout)
+        return plan
     _phrase_plan = None
     if beat.get("phrase_sync"):          # 구절맞춤 켬 = 구절이 ✋보다 우선(화면과 같은 규칙)
         _phrase_plan = _plan_phrase_clips(beat, segs, tts_dur)
     if _phrase_plan:
         plan = _phrase_plan
     else:
-        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
-                                one_per_seg=_one)
+        # ★구절 맞춤을 **끈** 칸(표식 False) = 담은 장면이 전부 한 번씩(2026-09-14 사장님).
+        #   2.2초 쪼개기·0.8초 하한으로 뒤 장면을 버리던 규칙을 이 칸엔 안 쓴다 — 칸 총초는
+        #   음성 그대로, 장면 길이 비율로 나눈다. 화면 scene_play.js planClips와 같은 규칙.
+        _all_in = beat.get("phrase_sync") is False
+        plan = _plan_beat_clips(segs, tts_dur, min_clip=(0.0 if _all_in else _MIN_CLIP),
+                                src_durs=beat_src_durs,
+                                max_shot=(None if _all_in else _max_shot),
+                                one_per_seg=(_all_in or _one))
     # ✋ 손으로 정한 컷 길이가 있으면 먼저 반영한다(칸 총합은 안 바뀐다).
     #   단 구절맞춤 계획엔 덧입히지 않는다 — 구절 경계가 곧 정답이다.
     _fixed = {} if _phrase_plan else (beat.get("fixed_lens") or {})
@@ -814,7 +839,15 @@ def _plan_phrase_clips(beat, segs, tts_dur):
             #   순환 반복은 k만 알면 어느 자리에 무엇이 오는지 정해진다(예측 가능).
             #   ★화면(scene_play.js planClips 구절맞춤 분기)과 **같은 규칙**이어야 한다 —
             #     한쪽만 고치면 미리보기와 결과물이 어긋난다(0순위-B).
-            idx = k % len(segs)
+            # ★순환(1,2,1,2) → 이어붙임(1,1,2,2)으로(2026-09-11 사장님 "줄을 4칸으로 바꾸면
+            #   장면은 2개인데 줄만 4개면 편하잖아"). 고객 실측(job 6534d20ee935): 자막을 4줄로
+            #   쪼개자 조각 2개가 1,2,1,2로 돌아 같은 장면이 두 번(앞 것 0.57초) 나왔다 —
+            #   고객 눈엔 오류다. 이어붙이면 조각 k가 자기 몫의 구절을 연달아 덮어 화면상
+            #   컷은 조각 수 그대로고, 자막만 늘어난다. 자리는 여전히 k·개수만으로 정해져
+            #   09-02의 "조각 하나 빼면 뒤가 밀린다"도 그대로 막힌다.
+            #   구절 ≤ 조각이면 종전과 같이 1:1(k번째 구절 = k번째 조각).
+            n_seg = len(segs)
+            idx = k if len(durs) <= n_seg else (k * n_seg) // len(durs)
             _end = segs[idx].get("end")
             st = pos[idx]
             # 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시(같은 내용 반복).
@@ -1078,9 +1111,17 @@ def cap_preset_key(txt):
       화면에 보이는 줄은 _strip_cap_tail로 마침표가 떼여 있으므로, 사장님이 그 줄을 그대로
       나눠 저장하면 저장은 통과하지만 렌더에서는 narration의 마침표 때문에 대조가 깨져
       **조용히 규칙 폴백**으로 내려갔다 = "저장은 되는데 최종렌더에 반영 안 됨"(2026-08-26 제보).
+
+    ★공백은 **유니코드 공백 전부**를 뗀다(2026-09-13 고객 제보 "1챕터 훅만 경계 클릭이 안 먹음").
+      종전엔 ASCII 4종(space/tab/CR/LF)만 떼서, 대사에 **NBSP(\\xa0)**가 섞인 칸은
+      대조가 영영 깨졌다 — 화면(JS)은 어절을 `\\s+`로 쪼개는데 그 정규식은 NBSP도 공백으로
+      보고 지워 버리므로, 다시 이어붙인 글자에는 NBSP가 없다. 그래서 키가 서로 달라
+      caplines가 422로 거절 → 버튼을 눌러도 **아무 일이 안 일어난다**.
+      실측(job e020944ae71f, beat 0 '냉동실에\\xa0 그냥'): 2챕터는 NBSP가 없어 정상 동작,
+      1챕터만 실패 = "챕터마다 다르다"의 진짜 이유. 붙여넣기 대사에 NBSP는 흔하다.
     """
-    drop = set(_CAP_TRIM_TAIL) | set(chr(32)+chr(9)+chr(10)+chr(13))
-    return "".join(ch for ch in (txt or "") if ch not in drop)
+    drop = set(_CAP_TRIM_TAIL)
+    return "".join(ch for ch in (txt or "") if ch not in drop and not ch.isspace())
 
 
 def _wrap_long(segs, manual=False):
@@ -1266,6 +1307,118 @@ def _caption_segments(narration, preset=None):
     return _wrap_long(out) or [narr]
 
 
+# ══ 짧은 자막 줄 합치기(2026-09-14 사장님 "0.몇 초 단위로도 끊긴다 — 규칙을 정교하게") ══
+# 실측(라이브 2,766칸): AI가 끊은 줄(caption_lines) 8,504개 중 **42%가 실제 발화 1초 미만**,
+#   규칙 분할은 11%. 원인은 AI 프롬프트의 "4~14자"·"3~4어절" — 글자로만 끊고 시간을 안 본다.
+# 규칙(아스트라·페이블 공동 설계 1단계):
+#   ① 1초(시간이 있으면) 또는 6자(공백·부호 제외) 미만 줄은 이웃과 합친다
+#   ② 문장 끝(. ? ! …)은 절대 넘지 않는다 — 짧아도 문장 경계는 지킨다
+#   ③ 합친 줄은 18자를 넘지 않는다(한 줄 폭). 넘으면 안 합친다
+#   ④ 이웃 둘 다 되면 **더 짧은 쪽**과 합친다
+#   사람이 직접 고친 줄은 이 함수를 부르지 않는다(호출부가 가른다).
+_CAP_TIDY_MIN_SEC = float(os.environ.get("CAPTION_TIDY_MIN_SEC", "1.0") or 1.0)
+_CAP_TIDY_MIN_CHARS = int(os.environ.get("CAPTION_TIDY_MIN_CHARS", "6") or 6)
+_CAP_TIDY_MAX_CHARS = int(os.environ.get("CAPTION_TIDY_MAX_CHARS", "18") or 18)
+
+
+def _cap_flat_len(s):
+    return len(re.sub(r"[\s.,?!…~'\"“”‘’、·]", "", s or ""))
+
+
+def _cap_ends_sentence(s):
+    return (s or "").rstrip().endswith((".", "?", "!", "…"))
+
+
+def _cap_sentence_ends(lines, narration):
+    """각 줄이 **원문에서** 문장 끝(. ? ! …)으로 끝나는지. 분할 결과는 줄 끝 부호를 떼므로
+    (_wrap_long·_strip_cap_tail) 줄만 보면 문장 경계를 모른다 — 원문 글자를 따라가 되찾는다."""
+    narr = narration or ""
+    pos, ends = 0, []
+    for ln in lines:
+        need = _cap_flat_len(ln)
+        seen = 0
+        while pos < len(narr) and seen < need:
+            if _cap_flat_len(narr[pos]):
+                seen += 1
+            pos += 1
+        j = pos
+        while j < len(narr) and not _cap_flat_len(narr[j]) and not narr[j].isspace():
+            j += 1                       # 줄 뒤에 붙은 부호들
+        ends.append(any(ch in ".?!…" for ch in narr[pos:j]) or _cap_ends_sentence(ln))
+        pos = j
+    return ends
+
+
+def _cap_ends_modifier(s):
+    """줄 끝 어절이 뒤 명사를 꾸미는 관형형인가(표면 판정 — '굽는'·'입힌'·'다칠'). 명사가 우연히
+    걸려도(비밀·채칼) '붙는 쪽' 오류라 합치기 방향만 바뀔 뿐 안전하다."""
+    w = re.sub(r"[.,?!…~'\"“”‘’、·]+$", "", (s or "").rstrip()).split()
+    if not w:
+        return False
+    t = w[-1]
+    if t.endswith(("는", "은", "던", "한", "된", "운", "인", "난", "진", "친", "린")):
+        return True
+    c = t[-1]
+    return 0xAC00 <= ord(c) <= 0xD7A3 and (ord(c) - 0xAC00) % 28 == 8 and not t.endswith("들")
+
+
+def tidy_caption_lines(lines, durs=None, narration=None, min_lines=1):
+    """짧은 줄을 이웃과 합친다. 반환 (lines, durs) — durs는 합친 만큼 **더해서** 돌려준다
+    (합치기는 이웃끼리만이라 실측 초가 정확히 보존된다). durs가 None이면 글자수로만 판정.
+    narration을 주면 문장 끝을 원문에서 찾는다(★안 주면 줄 끝 부호만 봐서 놓칠 수 있다)."""
+    L = [str(x) for x in (lines or [])]
+    D = list(durs) if (durs is not None and len(durs) == len(L)) else None
+    if len(L) < 2:
+        return L, D
+    E = _cap_sentence_ends(L, narration) if narration else [_cap_ends_sentence(x) for x in L]
+
+    def short(k):
+        if _cap_flat_len(L[k]) < _CAP_TIDY_MIN_CHARS:
+            return True
+        return D is not None and D[k] < _CAP_TIDY_MIN_SEC
+
+    def can_join(a, b):      # a 바로 뒤에 b를 붙일 수 있나
+        return (not E[a]
+                and _cap_flat_len(L[a] + L[b]) <= _CAP_TIDY_MAX_CHARS)
+
+    # ★min_lines = 그 칸에 담긴 장면 수(2026-09-14 실측). 구절 맞춤은 줄 수 = 컷 수라, 줄을 장면 수
+    #   밑으로 합치면 **담은 장면이 화면에서 빠진다**(라이브 1,700칸 시뮬: 빠진 장면 884 → 1,853).
+    changed = True
+    while changed and len(L) >= 2 and len(L) > max(1, min_lines):
+        changed = False
+        # 가장 짧은 줄부터 처리해야 결과가 순서에 덜 휘둘린다
+        order = sorted(range(len(L)), key=lambda k: (D[k] if D else _cap_flat_len(L[k])))
+        for k in order:
+            if not short(k):
+                continue
+            cand = []
+            if k > 0 and can_join(k - 1, k):
+                cand.append(k - 1)
+            if k + 1 < len(L) and can_join(k, k + 1):
+                cand.append(k + 1)
+            if not cand:
+                continue
+            # 꾸미는 말과 꾸밈 받는 말을 먼저 붙인다("…굽는 | 사과 와플인데"),
+            #   그다음은 더 짧은 이웃과 합친다.
+            if (k - 1) in cand and _cap_ends_modifier(L[k - 1]):
+                nb = k - 1
+            elif (k + 1) in cand and _cap_ends_modifier(L[k]):
+                nb = k + 1
+            else:
+                # 뒤 이웃이 아직 자기 뒤 명사를 꾸미는 중이면(끝이 관형형) 그 이웃은 양보한다 —
+                #   먼저 차지하면 "굽는"이 "사과 와플인데"로 갈 자리가 상한에 막힌다.
+                nb = min(cand, key=lambda j: (j == k + 1 and _cap_ends_modifier(L[j]),
+                                              D[j] if D else _cap_flat_len(L[j])))
+            a, b = min(k, nb), max(k, nb)
+            L[a:b + 1] = [L[a].rstrip() + " " + L[b].lstrip()]
+            E[a:b + 1] = [E[b]]
+            if D is not None:
+                D[a:b + 1] = [D[a] + D[b]]
+            changed = True
+            break
+    return L, D
+
+
 def _caption_durations(segs, dur, real_durs=None):
     """각 구절의 표시 시간(초) 리스트를 반환. 기본은 글자수 비례(균등분할 X)지만,
     아주 짧은 구절(2~3자)이 순식간에 지나가지 않도록 _CAP_MIN_DUR 하한을 준다.
@@ -1342,7 +1495,8 @@ def _adjust_caps_for_trim(beat):
     return 0.0, durs
 
 
-def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5, cap_lines=None, lead_in=0.0):
+def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0,
+                       tail=0.5, cap_lines=None, lead_in=0.0, cap_xy_segs=None):
     """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 리스트로 반환한다.
     _segmented_drawtext 기반: highlight_rules가 있으면 단어별 강조, 없으면 세그먼트 1개
     (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다.
@@ -1394,8 +1548,19 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         start = max(0.0, t + t0 + cap_offset)
         t += d
         end = (dur + tail if i == len(segs) - 1 else t) + t0 + cap_offset
+        # 화면에 지금 보이는 자막 한 줄만 옮길 때의 좌표. JSON 객체 키는 문자열이므로
+        # 문자열/정수 키를 모두 받는다. 없으면 비트 전체 좌표(xpct/ypct)를 그대로 쓴다.
+        seg_xy = (cap_xy_segs or {}).get(str(i)) if isinstance(cap_xy_segs, dict) else None
+        if seg_xy is None and isinstance(cap_xy_segs, dict):
+            seg_xy = cap_xy_segs.get(i)
+        seg_xpct, seg_ypct = xpct, ypct
+        if isinstance(seg_xy, dict):
+            if seg_xy.get("x_pct") is not None:
+                seg_xpct = max(0.0, min(100.0, float(seg_xy["x_pct"])))
+            if seg_xy.get("y_pct") is not None:
+                seg_ypct = max(0.0, min(100.0, float(seg_xy["y_pct"])))
         seg_parts = _segmented_drawtext(
-            seg, style, work, f"cap_{idx}_{i}", xpct, ypct,
+            seg, style, work, f"cap_{idx}_{i}", seg_xpct, seg_ypct,
             highlight_rules=style.get("highlight_rules"), default_color="0xFFFFFF",
             single_line=True,   # 자막은 무조건 한 줄(폭 넘으면 폰트 자동축소)
         )
@@ -2306,6 +2471,7 @@ def _beat_timeline(edit_plan, tts_paths):
             # 사장님이 고친 자리가 렌더에 반영되지 않는다(위 cap_durs와 같은 함정).
             "cap_pos": beat.get("cap_pos"),
             "cap_xy": beat.get("cap_xy"),                  # 드래그로 옮긴 장면별 자유 좌표(2026-08-31)
+            "cap_xy_segs": beat.get("cap_xy_segs"),        # 화면에 보이는 자막 한 줄별 자유 좌표
             "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
             "head_trim": beat.get("head_trim", 0.0),
         })
@@ -2532,7 +2698,8 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
                                           real_durs=b.get("cap_durs"),
                                           cap_offset=b.get("cap_offset", 0.0), tail=_tail,
                                           cap_lines=b.get("caption_lines"),
-                                          lead_in=b.get("cap_lead", 0.0)))
+                                          lead_in=b.get("cap_lead", 0.0),
+                                          cap_xy_segs=b.get("cap_xy_segs")))
     if not skip_text and headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
@@ -2588,7 +2755,13 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     # (세그먼트 1개면 0.0). 절대시각 = 비트 t0 + 오프셋. sfx_events=[(경로, 절대초), ...].
     sfx_events = sfx_events_for(timeline, sfx_paths)
     has_sfx = bool(sfx_events)
-    if not has_bgm and not has_overlay and not has_motion and not has_sfx:
+    # 🎬 '이 장면에만' 가림막(2026-09-10) — [{_abspath?, blur_mask?, blur_sigma?, start, dur}].
+    #   없으면 빈 목록이라 아래 경로가 한 글자도 안 바뀐다.
+    scene_masks = [s for s in (deco.get("scene_masks") or [])
+                   if float(s.get("dur") or 0) > 0 and (
+                       (s.get("_abspath") and os.path.exists(s["_abspath"]))
+                       or (s.get("blur_mask") and os.path.exists(s["blur_mask"])))]
+    if not has_bgm and not has_overlay and not has_motion and not has_sfx and not scene_masks:
         base_vf = vf
         _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
                      "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
@@ -2612,7 +2785,20 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         fc.append("[bbl][bmk]alphamerge[bblm]")
         fc.append("[bb0][bblm]overlay=0:0[vblur]")
         vcur, idx = "vblur", idx + 1
-    if has_overlay:                                   # 이미지 오버레이(로고·뱃지 등)
+    # 🎬 장면 전용 **흐림** — 전체 흐림과 같은 레시피에 enable(그 장면 시간)만 붙인다.
+    for k, s in enumerate(scene_masks):
+        _sbm, _sbs = s.get("blur_mask"), float(s.get("blur_sigma") or 0)
+        if not (_sbm and _sbs > 0 and os.path.exists(_sbm)):
+            continue
+        a0, a1 = float(s["start"]), float(s["start"]) + float(s["dur"])
+        inputs += ["-i", _sbm]
+        fc.append(f"[{vcur}]split[sb{k}a][sb{k}b]")
+        fc.append(f"[sb{k}b]gblur=sigma={_sbs}[sb{k}l]")
+        fc.append(f"[{idx}:v]scale={_OUT_W}:{_OUT_H},format=rgba,alphaextract[sb{k}m]")
+        fc.append(f"[sb{k}l][sb{k}m]alphamerge[sb{k}lm]")
+        fc.append(f"[sb{k}a][sb{k}lm]overlay=0:0:enable='between(t,{a0:.3f},{a1:.3f})'[sb{k}v]")
+        vcur, idx = f"sb{k}v", idx + 1
+    if has_overlay:                                  # 이미지 오버레이(로고·뱃지 등)
         inputs += ["-i", ov_path]
         w = overlay.get("width")                      # 1080px 기준 폭(없으면 원본)
         scale = f"scale={int(w)}:-1," if w else ""
@@ -2627,6 +2813,18 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         m_inputs, m_fc, vcur, idx = _motion_layer_filters(motion_layers, idx, vcur)
         inputs += m_inputs
         fc += m_fc
+    # 🎬 장면 전용 **색 막·스티커** — 틀 그림 위에(전체 가림막과 같은 층) 그 장면 시간에만.
+    #   ★setpts로 밀지 않는다: 그림 한 장(정지)이라 시간을 밀 이유가 없고, enable만으로
+    #     켜고 끈다(틀 레이어 start=0과 같은 방식 — 한 장짜리는 끝까지 마지막 프레임이 유지된다).
+    for k, s in enumerate(scene_masks):
+        _sp = s.get("_abspath")
+        if not (_sp and os.path.exists(_sp)):
+            continue
+        a0, a1 = float(s["start"]), float(s["start"]) + float(s["dur"])
+        inputs += ["-i", _sp]
+        fc.append(f"[{idx}:v]scale={_OUT_W}:{_OUT_H},format=rgba[sm{k}]")
+        fc.append(f"[{vcur}][sm{k}]overlay=0:0:enable='between(t,{a0:.3f},{a1:.3f})'[sm{k}v]")
+        vcur, idx = f"sm{k}v", idx + 1
     # 오디오 믹스: 나레이션(항상) + BGM(있으면) + 효과음(있으면)을 한 번에 amix.
     # duration=first → 첫 입력(나레이션) 길이로 잘린다. 효과음이 비트보다 길면 다음
     # 비트 위로 흘러넘치되 영상 끝에서만 잘린다(v1 알려진 한계, 스펙 §4.3).

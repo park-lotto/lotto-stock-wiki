@@ -2,6 +2,8 @@
 ★중괄호 소독 필수 — script_generate 프롬프트가 .format()을 돌린다(_STORY_RULES_CORE 옆에 낀다)."""
 import hashlib
 import random
+import copy
+import re
 
 from shopping_shorts.pattern_bank import STYLE_BUCKETS, CONTENT_BUCKETS
 
@@ -101,8 +103,8 @@ def parts_block(store, k=5, rng=random):
             "훅을 아래 3가지로 '서로 다르게' 만들어라(같은 틀 복제 금지):\n"
             "  ① 벤치마킹형 — 위 승인훅이 '왜 통했는지'(호기심·경고·반전 등 심리 트리거)만 "
             "가져와 우리 소재로 새로 써라. 문장을 그대로 베끼지 마라.\n"
-            "  ② 트렌드·반전형 — 이 카테고리의 지금 유행 어조를 반영해라(예: '다이소 가면 이건 "
-            "꼭 사와' 뿐 아니라 '이건 진짜 사지마' 같은 반전형도). 뻔한 정공법 대신 반전·금기로 열어라.\n"
+            "  ② 트렌드·반전형 — 이 카테고리의 지금 유행 어조를 반영해라(예: '이건 꼭 사와' 뿐 "
+            "아니라 '이건 진짜 사지마' 같은 반전형도). 뻔한 정공법 대신 반전·금기로 열어라.\n"
             "  ③ 신선·임팩트형 — 은행에 얽매이지 말고 3초 안에 스크롤을 멈출 가장 강한 훅을 "
             "자유롭게 창작해라.\n"
             "나머지 부품은 구조·리듬만 가져오고 단어·인물·소재는 우리 것으로. "
@@ -300,6 +302,164 @@ def beat_descs(style):
     return out
 
 
+_FACT_STYLE_NEUTRAL = (
+    "이 role은 출력 순서를 식별하는 이름일 뿐이다. 아래 검증 근거에서 직접 확인되는 "
+    "제품 동작이나 사용 상황 하나를 앞 칸과 겹치지 않게 이어 말한다. 가격·인기·품절·"
+    "판매량·출처·지역·주변 반응을 새로 만들지 않는다."
+)
+
+
+def _trusted_style_facts(evidence):
+    """스타일의 객관 단정을 열 수 있는 텍스트만 모은다.
+
+    visual은 물체·동작 관측이다. 화면만 보고 가격, 판매량, 지역, 입소문을 알 수 없으므로
+    이 범주의 근거로 승격하지 않는다.
+    """
+    if not isinstance(evidence, dict):
+        return ""
+    rows = []
+    for item in (evidence.get("items") or []):
+        if not isinstance(item, dict) or item.get("kind") == "visual":
+            continue
+        if item.get("kind") not in ("transcript", "product_fact", "general_fact"):
+            continue
+        text = str(item.get("text") or "").strip()
+        if text:
+            rows.append(text)
+    return "\n".join(rows)
+
+
+def _price_facets(text):
+    facets = set()
+    compact = re.sub(r"\s+", "", text or "")
+    amounts = []
+    for number, unit in re.findall(r"(?<!\d)(\d[\d,.]*)(만원|천원|원)", compact):
+        try:
+            value = float(number.replace(",", ""))
+        except ValueError:
+            continue
+        if unit == "만원":
+            value *= 10000
+        elif unit == "천원":
+            value *= 1000
+        amounts.append(value)
+    if amounts or re.search(r"(?:가격|판매가|정가)\s*[:은이가]", text or ""):
+        facets.add("price")
+    # 정확한 3,900원을 "몇천 원" 틀로 둥글릴지, 12,900원을 "몇만 원"이라 부를지는
+    # 작가 판단이 아니다. 그 표현 자체가 근거에 있을 때만 literal 틀을 연다.
+    if "몇천원" in compact:
+        facets.add("price_thousands")
+    if "몇만원" in compact:
+        facets.add("price_ten_thousands")
+    if re.search(r"저렴|싸(?:다|게|고|서)|부담\s*없|가성비", text or ""):
+        facets.add("affordable")
+    return facets
+
+
+def _style_fact_facets(text):
+    """근거가 실제로 말한 외부 사실의 종류. 넓은 인기와 품절은 따로 둔다."""
+    facets = _price_facets(text)
+    rules = {
+        "word_of_mouth": r"입소문|소문(?:이|을)?.{0,8}(?:퍼|났|나)|주변에.{0,8}알려",
+        "scarcity": r"품절|매진|물량.{0,8}(?:없|부족)|구할\s*수\s*없|못\s*구|품귀",
+        "popularity": r"인기|화제|난리|필수템|베스트셀러|줄\s*서|입소문|품절|매진",
+        "buzz": r"화제",
+        "hype": r"난리",
+        "must_have": r"필수템",
+        "queue": r"줄\s*서",
+        "local_only": r"현지.{0,6}에서만|현지에서만",
+        "created_for_problem": r"(?:문제|불편).{0,12}(?:때문|해결|위해).{0,12}(?:만들|개발|발명)|"
+                               r"(?:만들|개발|발명).{0,12}(?:문제|불편).{0,12}(?:해결|위해)",
+        "origin": r"현지|해외|국내|한국|미국|일본|중국|아마존|다이소|에서만|발명|개발|"
+                  r"만들어(?:진|낸|졌)",
+        "authority": r"전문가|기관|공식|연구|브랜드|제조사|의사|교수",
+        "reaction": r"후기|리뷰|사용자|구매자|써\s*본\s*사람|사람들.{0,8}(?:말|반응)|"
+                    r"다들.{0,8}(?:물어|찾)",
+        "rating": r"후기.{0,8}만점|리뷰.{0,8}만점|별점.{0,5}(?:5|오)점",
+    }
+    for facet, pattern in rules.items():
+        if re.search(pattern, text or "", re.S):
+            facets.add(facet)
+    if "word_of_mouth" in facets or "scarcity" in facets:
+        facets.add("popularity")
+    return facets
+
+
+def _style_claim_requirements(text, role=""):
+    """설명·문장틀이 사실로 전제하는 facet. 역할 이름 자체도 일부는 단정이다."""
+    text = str(text or "")
+    req = set()
+    if role == "price":
+        req.add("price")
+    elif role == "spread":
+        req.add("word_of_mouth")
+    elif role == "scale":
+        req.add("popularity")
+    elif role in ("source", "authority"):
+        req.add("authority")
+    elif role == "witness":
+        req.add("reaction")
+
+    patterns = {
+        "word_of_mouth": r"입소문|소문.{0,8}(?:퍼|났|나)|주변에.{0,8}알려",
+        "scarcity": r"품절|매진|물량.{0,8}(?:없|부족)|구할\s*수\s*없|못\s*구|"
+                    r"어렵게\s*구|검색해도.{0,8}(?:없|안\s*나)|대란",
+        "popularity": r"인기|베스트셀러",
+        "buzz": r"화제",
+        "hype": r"난리",
+        "must_have": r"필수템",
+        "queue": r"줄\s*서",
+        "local_only": r"현지.{0,6}에서만|현지에서만",
+        "created_for_problem": r"(?:문제|불편).{0,12}(?:때문|해결|위해).{0,12}(?:만들|개발|발명)|"
+                               r"(?:만들|개발|발명).{0,12}(?:문제|불편).{0,12}(?:해결|위해)",
+        "origin": r"현지|해외|아마존|다이소|에서만|발명|개발|만들어(?:진|낸|졌)",
+        "authority": r"\{권위[^}]*\}|전문가|기관|공식|연구|브랜드|제조사",
+        "reaction": r"후기|리뷰|사용자|구매자|써\s*본\s*사람|사람들.{0,8}(?:말|반응)|"
+                    r"다들.{0,8}(?:물어|찾)",
+        "rating": r"후기.{0,8}만점|리뷰.{0,8}만점|별점.{0,5}(?:5|오)점",
+    }
+    for facet, pattern in patterns.items():
+        if re.search(pattern, text, re.S):
+            req.add(facet)
+    if re.search(r"몇천\s*원", text):
+        req.add("price_thousands")
+    elif re.search(r"몇만\s*원", text):
+        req.add("price_ten_thousands")
+    elif "{가격}" in text or re.search(r"(?:이|그)\s*값|가격", text):
+        req.add("price")
+    if re.search(r"가격.{0,8}(?:싼|저렴)|부담\s*없|가성비", text):
+        req.add("affordable")
+    return req
+
+
+def fact_aware_style(style, evidence=None):
+    """잠긴 생성에서만 미입증 객관 단정을 뺀 prompt용 스타일 view를 만든다.
+
+    role·순서·이름·말투는 그대로다. evidence=None은 기존 unlocked 경로이며 원본을 그대로
+    반환한다. 근거가 있더라도 더 강한 틀(인기→품절, 가격→몇천 원)은 통과시키지 않는다.
+    """
+    if evidence is None or not isinstance(style, dict):
+        return style
+    adapted = copy.deepcopy(style)
+    facts = _trusted_style_facts(evidence)
+    facets = _style_fact_facets(facts)
+    descs = beat_descs(style)
+    templates = style.get("templates") or {}
+    adapted_descs, adapted_templates = {}, {}
+    for role in list(style.get("beat_roles") or []):
+        desc = str(descs.get(role) or "")
+        desc_req = _style_claim_requirements(desc, role)
+        adapted_descs[role] = desc if desc_req <= facets else _FACT_STYLE_NEUTRAL
+        kept = []
+        for template in (templates.get(role) or []):
+            if _style_claim_requirements(template, role) <= facets:
+                kept.append(template)
+        adapted_templates[role] = kept
+    adapted["beat_descs"] = adapted_descs
+    adapted["templates"] = adapted_templates
+    return adapted
+
+
 def _rotate(items, seed, role):
     """이 job·이 칸에서 몇 번째 틀부터 보여줄까 — 목록을 회전해 돌려준다(2026-08-23).
 
@@ -355,7 +515,14 @@ def style_block(style, seconds=30, seed="", facts_block=""):
                 tmpl = _safe
         if role == "hook" and style.get("hook_pick_one") and len(tmpl) > 1:
             tmpl = tmpl[:1]
-        tail = ("\n     쓸 수 있는 문장틀(빈칸만 우리 소재에 맞게 채워라. 틀 자체를 새로 짓지 마라): "
+        # ★사실성이 틀 보존보다 우선한다(2026-09-11). "틀 자체를 새로 짓지 마라"만 있으면 모델은
+        #   틀에 박힌 판매처·소속("저희 언니가 다이소 점장인데")까지 그대로 옮긴다 — 지시를
+        #   정확히 따른 결과가 거짓말이 된다(실측: 반려동물 패드 재료에 '다이소 매니저 지인').
+        #   두 지시가 부딪히면 어느 쪽이 이기는지 **여기서** 정해 준다. 출구는 script_gate
+        #   '재료 밖 판매처'가 다시 본다 — 부탁만으로는 안 지켜진다.
+        tail = ("\n     쓸 수 있는 문장틀(빈칸만 우리 소재에 맞게 채워라. 틀 자체를 새로 짓지 마라. "
+                "★단, 틀에 박힌 판매처·소속·인맥·가격·판매실적은 **사실 주장**이다 — [재료 대본]에 "
+                "근거가 없으면 그 틀을 고르지 말고 그 자리를 재료의 사실로 바꿔라. 사실성이 틀 보존보다 우선한다): "
                 + " / ".join('"%s"' % _sanitize(x) for x in tmpl)) if tmpl else ""
         lines.append('  %d) role="%s" — %s%s' % (i, role, _sanitize(descs.get(role, "")), tail))
     chars = style.get("chars_per_30s") or 0
@@ -529,8 +696,10 @@ def genre_block(style):
         out.append(
             "\n★[정체 숨기기] **앞 두 칸**(훅과 그다음 칸)에 제품 이름을 쓰지 마라. "
             "'이거 / 이것 / 이 제품'처럼 가려서 말해라.\n"
-            "  · O: \"여러분 다이소 가면 이거 꼭 사오세요\"\n"
-            "  · X: \"여러분 다이소 가면 이 앞머리 고데기 꼭 사오세요\" "
+            # ★예시에서 판매처 이름을 뺐다(2026-09-11 아스트라 검토). 정답 예시가 "다이소 가면"이면
+            #   은폐 스타일 전부가 재료에 없는 다이소를 배운다 — 스파인 57만 고쳐도 여기서 또 샌다.
+            "  · O: \"여러분 이거 하나는 진짜 꼭 챙기세요\"\n"
+            "  · X: \"여러분 이 앞머리 고데기 꼭 챙기세요\" "
             "(정체가 나오면 궁금할 이유가 없어져 훅이 죽는다)\n"
             "  · 무엇인지는 뒤쪽 칸에서 밝혀라 — 그때까지 끌고 가는 게 이 구조의 힘이다.\n"
             "  ★두 번째 칸도 마찬가지다. 판정은 **앞 3초 전체**를 보므로 "
