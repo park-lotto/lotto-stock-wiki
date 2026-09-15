@@ -52,6 +52,123 @@ def test_provider_failure_is_not_product_disagreement():
     assert result["method"] == "unresolved"
 
 
+def test_materials_keep_selected_exact_group_when_product_judge_is_unavailable(monkeypatch):
+    """제품 판정 API 장애가 생성을 막지 않고 선택 영상의 안전한 한 그룹만 남긴다."""
+    sources = [
+        _source("s0", "마늘 오일 보관법", "다진 마늘을 오일에 담아 보관하는 장면",
+                full_text="다진 마늘을 오일에 담아 보관합니다."),
+        _source("s1", "마늘 냉동 큐브", "다진 마늘을 얼음틀에 넣는 장면",
+                full_text="다진 마늘을 얼음틀에 넣어 얼립니다."),
+    ]
+    job = {"customer_id": 205, "extract": {s["source_id"]: s for s in sources}}
+
+    class Store:
+        def get_mix_job(self, _jid):
+            return job
+
+        def get_produce_work(self, _wid, customer_id=0):
+            return {"job_id": "job", "state": {}}
+
+    def unavailable(_rows):
+        raise RuntimeError("503")
+
+    topic_contract._RESOLUTION_CACHE.clear()
+    monkeypatch.setattr(topic_contract, "_judge_membership", unavailable)
+    monkeypatch.setattr(app_mod, "_facts_block_for_job", lambda *_a, **_k: "")
+    monkeypatch.setattr(app_mod, "_sul_block_for_sources", lambda *_a, **_k: "")
+    monkeypatch.setattr(app_mod, "_wow_block_for", lambda *_a, **_k: "")
+
+    kept, *_ = app_mod._materials_for_generate(
+        {"full_text": "다진 마늘을 오일에 담아 보관합니다."},
+        {"work_id": "work", "job_id": "job", "selected_shortcode": "outside-seed-id"},
+        Store(), 205)
+
+    assert len(kept) == 1
+    assert kept[0]["full_text"] == "다진 마늘을 오일에 담아 보관합니다."
+    assert kept[0]["topic_product"] == "마늘 오일 보관법"
+
+
+def test_materials_use_selected_video_instead_of_blocking_ambiguous_products(monkeypatch):
+    """서로 다른 제품이 동률이어도 선택한 영상 한 편으로 대본 재료를 만든다."""
+    sources = [
+        _source("s0", "셀카 모니터", "휴대폰 뒤에 화면을 붙이는 장면",
+                full_text="후면 카메라 화면을 보며 촬영합니다."),
+        _source("s1", "카드형 보조 배터리", "휴대폰을 충전하는 장면",
+                full_text="카드형 배터리로 휴대폰을 충전합니다."),
+    ]
+    job = {"customer_id": 341, "extract": {s["source_id"]: s for s in sources}}
+
+    class Store:
+        def get_mix_job(self, _jid):
+            return job
+
+        def get_produce_work(self, _wid, customer_id=0):
+            return {"job_id": "job", "state": {}}
+
+    def separate_groups(rows):
+        return {"groups": [{
+            "product": row["product"], "source_ids": [row["source_id"]],
+            "supports": [{"source_id": row["source_id"], "observation_ids": [0]}],
+        } for row in rows]}
+
+    topic_contract._RESOLUTION_CACHE.clear()
+    monkeypatch.setattr(topic_contract, "_judge_membership", separate_groups)
+    monkeypatch.setattr(app_mod, "_facts_block_for_job", lambda *_a, **_k: "")
+    monkeypatch.setattr(app_mod, "_sul_block_for_sources", lambda *_a, **_k: "")
+    monkeypatch.setattr(app_mod, "_wow_block_for", lambda *_a, **_k: "")
+
+    kept, *_ = app_mod._materials_for_generate(
+        {"full_text": "후면 카메라 화면을 보며 촬영합니다."},
+        {"work_id": "work", "job_id": "job", "selected_shortcode": "outside-seed-id"},
+        Store(), 341)
+
+    assert len(kept) == 1
+    assert kept[0]["full_text"] == "후면 카메라 화면을 보며 촬영합니다."
+    assert kept[0]["topic_product"] == "셀카 모니터"
+
+
+def test_selected_seed_product_wins_and_only_matching_added_videos_are_used(monkeypatch):
+    """추가 영상 수가 더 많아도 씨앗 제품을 바꾸지 않고 같은 제품 영상만 보탠다."""
+    sources = [
+        _source("s0", "셀카 모니터", "후면 화면을 보며 촬영", full_text="씨앗 셀카 촬영"),
+        _source("s1", "후면 셀카 모니터", "후면 화면을 부착", full_text="같은 제품 추가 영상"),
+        _source("s2", "카드형 보조 배터리", "휴대폰 충전", full_text="다른 제품 영상 하나"),
+        _source("s3", "카드형 보조 배터리", "배터리 잔량 표시", full_text="다른 제품 영상 둘"),
+        _source("s4", "카드형 보조 배터리", "충전 단자 연결", full_text="다른 제품 영상 셋"),
+    ]
+    job = {"customer_id": 341, "extract": {s["source_id"]: s for s in sources}}
+
+    class Store:
+        def get_mix_job(self, _jid):
+            return job
+
+        def get_produce_work(self, _wid, customer_id=0):
+            return {"job_id": "job", "state": {}}
+
+    def grouped(_rows):
+        return {"groups": [
+            {"product": "셀카 모니터", "source_ids": ["s0", "s1"],
+             "supports": [{"source_id": sid, "observation_ids": [0]} for sid in ["s0", "s1"]]},
+            {"product": "카드형 보조 배터리", "source_ids": ["s2", "s3", "s4"],
+             "supports": [{"source_id": sid, "observation_ids": [0]}
+                          for sid in ["s2", "s3", "s4"]]},
+        ]}
+
+    topic_contract._RESOLUTION_CACHE.clear()
+    monkeypatch.setattr(topic_contract, "_judge_membership", grouped)
+    monkeypatch.setattr(app_mod, "_facts_block_for_job", lambda *_a, **_k: "")
+    monkeypatch.setattr(app_mod, "_sul_block_for_sources", lambda *_a, **_k: "")
+    monkeypatch.setattr(app_mod, "_wow_block_for", lambda *_a, **_k: "")
+
+    kept, *_ = app_mod._materials_for_generate(
+        {"full_text": "씨앗 셀카 촬영"},
+        {"work_id": "work", "job_id": "job", "selected_shortcode": "outside-seed-id"},
+        Store(), 341)
+
+    assert {source["source_id"] for source in kept} == {"s0", "s1"}
+    assert {source["topic_product"] for source in kept} == {"셀카 모니터"}
+
+
 def _source(source_id, product, observation, *, full_text=""):
     return {
         "source_id": source_id,

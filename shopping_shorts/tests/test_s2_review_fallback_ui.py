@@ -21,3 +21,11 @@ def test_legacy_modal_also_labels_review_candidate_as_fact_warning():
     block = HTML[start:end]
     assert "if(dr.needs_review)" in block
     assert "사실 근거 확인이 필요한 초안" in block
+
+
+def test_scene_fallback_explains_that_a_draft_was_recovered():
+    start = HTML.index("function s2DraftHtml(dr,i)")
+    end = HTML.index("// ── ✍ 내가 직접 쓰기", start)
+    block = HTML[start:end]
+    assert "dr.made_by==='장면근거'" in block
+    assert "장면에서 확인된 내용만 사용해 자동 복구" in block
