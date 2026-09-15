@@ -210,6 +210,15 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 .fban{display:block;max-width:1100px;margin:0 auto;border-radius:18px;overflow:hidden;border:1px solid #1f3a33}
 .fban .wide{position:relative;aspect-ratio:1600/360}.pcmp{position:relative;max-width:900px;margin:0 auto 22px;aspect-ratio:1280/640;border-radius:18px;overflow:hidden}
 .fban video,.pcmp video,.fban img,.pcmp img{width:100%;height:100%;object-fit:contain;display:block}
+.hook{text-align:center;padding:26px 0 34px}
+.nobrain.big{font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:clamp(34px,6vw,68px);margin:0 0 18px}
+.nobrain.big small{font-family:inherit;font-size:clamp(15px,1.8vw,20px);font-weight:600}.nobrain.big small b{color:#ffd166}
+.hook .hv,.hook .wall{max-width:1100px;margin:0 auto}.hook .hv video{width:100%;display:block;border-radius:22px}
+.hookgo{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:22px}
+.hero{grid-template-columns:1fr;text-align:center;max-width:760px;margin:0 auto}.hero .pts{display:inline-block;text-align:left}.hero .row{justify-content:center}
+.flow{grid-template-columns:1fr;max-width:780px;gap:40px}
+.sq{aspect-ratio:16/11}.sq .pop{max-width:94%;max-height:74%}.pp4 .pop{max-height:74%}
+.sq .io{font-size:17px}.sq .io strong{font-size:24px}.sq .cap{font-size:26px}
 </style></head><body>
 
 <div class=dl><div class=in>
@@ -223,10 +232,18 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 <a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
 <span style="display:flex;gap:6px;align-items:center"><a class=login href="/pricing">요금</a><a class="login go" href="/login">로그인</a></span></div>
 
+<div class=hook>
+  <h1 class="nobrain big">오늘 <em>뭘 만들지</em> 고민 끝.<small>매일 랭킹에 <b>100만뷰 쇼핑쇼츠</b>가 줄 서 있습니다 — 골라서 내 제품으로 만들기만 하세요</small></h1>
+  <div class=hv id=hv><video src="/static/landing/hook_wall.mp4" poster="/static/landing/hook_wall.jpg" data-fb="/static/landing/hero_wall.mp4" autoplay muted loop playsinline preload=auto></video></div>
+  <div class=wall id=wall hidden>
+    <div class=hd><div class=kin id=kin></div><span>숏템메이커 랭킹에 잡힌 100만뷰+ 쇼핑쇼츠 <b id=hitN></b></span></div>
+    <div class=cols><div class=col></div><div class=col></div><div class=col></div></div>
+    <div class=hookgo><a class="cta big" href="__CARD_HREF__"><span class=bt>💳 1기 신청하기 <i>→</i></span><span class=pr><s>__LIST_PRICE__</s><b>__PRO_PRICE__</b><span class=off>__DISCOUNT__% 할인</span></span></a><a class="cta ghost" href="/login">무료로 레퍼런스 랭킹 둘러보기</a></div>
+</div>
+
 <div class=hero>
   <div>
-    <div class=nobrain>오늘 <em>뭘 만들지</em> 고민 끝.<small>매일 터진 100만뷰 쇼츠가 이미 줄 서 있습니다</small></div>
-    <h1 class=display>오른쪽 <span class=hl>100만뷰 쇼츠</span>,<br>당신 제품으로<br><span class=gl>10분이면 똑같이.</span></h1>
+    <h2 class=display>저 <span class=hl>100만뷰 쇼츠</span>,<br>당신 제품으로<br><span class=gl>10분이면 똑같이.</span></h2>
     <ul class=pts>
       <li><b>①</b><span><em>매일</em> 조회수 터진 쇼핑쇼츠를 찾아 줄 세웁니다</span></li>
       <li><b>②</b><span>그 영상의 <em>대본·장면</em>을 뽑아 내 것으로 바꿉니다</span></li>
@@ -241,11 +258,7 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
     </div>
     <div class=trust>설치 없이 브라우저에서 · 구글 계정으로 3초 가입</div>
   </div>
-  <div class=hv id=hv><video src="/static/landing/hero_wall.mp4" poster="/static/landing/hero_wall.jpg" autoplay muted loop playsinline preload=auto></video></div>
-  <div class=wall id=wall hidden>
-    <div class=hd><div class=kin id=kin></div><span>숏템메이커 랭킹에 잡힌 100만뷰+ 쇼핑쇼츠 <b id=hitN></b></span></div>
-    <div class=cols><div class=col></div><div class=col></div><div class=col></div></div>
-  </div>
+</div>
 </div>
 
 <div class=sec>
@@ -353,7 +366,7 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
   /* 히어로 영상이 안 되면 실데이터 벽을 켠다 */
   (function(){ var v=document.querySelector('#hv video'); if(!v) return;
     function fallback(){ document.getElementById('hv').hidden=true; document.getElementById('wall').hidden=false; }
-    v.addEventListener('error', fallback); var s=v.querySelector('source'); if(s) s.addEventListener('error', fallback);
+    v.addEventListener('error', function(){ if(v.dataset.fb){ var f=v.dataset.fb; v.removeAttribute('data-fb'); v.poster='/static/landing/hero_wall.jpg'; v.src=f; v.play&&v.play().catch(function(){}); } else fallback(); }); var s=v.querySelector('source'); if(s) s.addEventListener('error', fallback);
   })();
   /* 100만뷰 벽 — 실제 수집 데이터(/api/landing/hits) */
   function man(v){ return v>=1e8 ? (Math.round(v/1e7)/10)+'억' : Math.round(v/1e4).toLocaleString()+'만'; }
