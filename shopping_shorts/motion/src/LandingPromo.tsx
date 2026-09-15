@@ -44,9 +44,11 @@ export const PriceCompare: React.FC = () => {
   // 왼쪽 카드: 오버슈트 스프링(0.6→1.08→1) + 2.5초마다 펄스(1→1.05→1) + 민트 링 확산
   const lIn = spring({frame: frame - 2, fps, config: {damping: 9, stiffness: 150, mass: 0.8}});
   const lScaleIn = interpolate(lIn, [0, 1], [0.6, 1]);
-  const PULSE_T = 75;
+  const PULSE_T = 60;
   const pLocal = frame >= 60 ? (frame - 60) % PULSE_T : -1;
-  const pulseL = pLocal >= 0 && pLocal < 14 ? 1 + 0.05 * Math.sin((pLocal / 14) * Math.PI) : 1;
+  const pulseL = pLocal >= 0 && pLocal < 16 ? 1 + 0.07 * Math.sin((pLocal / 16) * Math.PI) : 1;
+  const bounceY = pLocal >= 0 && pLocal < 16 ? -14 * Math.sin((pLocal / 16) * Math.PI) : 0;
+  const burst = pLocal >= 0 ? interpolate(pLocal, [0, 26], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 0;
   const ringT = pLocal >= 0 ? interpolate(pLocal, [0, 30], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 1;
   const l = Math.min(1, lIn);
   const r = cardIn(8);
@@ -55,6 +57,10 @@ export const PriceCompare: React.FC = () => {
   const priceStr = priceN.toLocaleString('ko-KR');
   const shake = pLocal >= 0 && pLocal < 12 ? Math.sin((pLocal / 12) * Math.PI * 3) * 2.5 : 0;
   const stamp = spring({frame: frame - 34, fps, config: {damping: 9, stiffness: 220, mass: 0.8}});
+  // 🔥 지금이 기회 도장: 쾅 찍힘(2.4→1) + 흔들림
+  const stamp2 = spring({frame: frame - 48, fps, config: {damping: 7, stiffness: 260, mass: 0.9}});
+  const stampShake = frame >= 48 && frame < 62 ? Math.sin((frame - 48) * 1.6) * (1 - (frame - 48) / 14) * 6 : 0;
+  const landed = frame >= 34 && frame < 60; // 숫자 착지 파티클
   const strike = interpolate(frame, [22, 34], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const glow = 0.5 + 0.5 * Math.sin((frame / 30) * Math.PI); // 왼쪽 카드 숨쉬는 테두리
   const pulse = 1 + 0.035 * Math.sin((frame / 9) * Math.PI);
@@ -64,11 +70,11 @@ export const PriceCompare: React.FC = () => {
   );
   const card: React.CSSProperties = {
     position: 'absolute',
-    top: 44,
+    top: 40,
     width: 560,
-    height: 360,
+    height: 400,
     borderRadius: 28,
-    padding: '34px 40px',
+    padding: '30px 30px',
     boxSizing: 'border-box',
     fontFamily: FONT,
   };
@@ -79,23 +85,30 @@ export const PriceCompare: React.FC = () => {
       <div
         style={{
           ...card,
-          left: 60,
+          left: 36,
+          width: 616,
           background: 'linear-gradient(160deg, #10201c, #0b1512)',
-          boxShadow: `0 0 0 3px rgba(111,240,214,${0.55 + 0.45 * glow}), 0 0 0 ${ringT * 26}px rgba(111,240,214,${0.4 * (1 - ringT)}), 0 0 ${30 + 30 * glow}px rgba(111,240,214,.35), 0 30px 60px rgba(0,0,0,.6)`,
-          transform: `translateY(${(1 - l) * 40}px) scale(${lScaleIn * pulseL})`,
+          boxShadow: `0 0 0 3px rgba(111,240,214,${0.55 + 0.45 * glow}), 0 0 0 ${ringT * 34}px rgba(111,240,214,${0.45 * (1 - ringT)}), 0 0 ${30 + 90 * burst}px ${10 * burst}px rgba(111,240,214,${0.35 + 0.4 * burst}), 0 30px 60px rgba(0,0,0,.6)`,
+          transform: `translateY(${(1 - l) * 40 + bounceY}px) scale(${lScaleIn * pulseL})`,
           transformOrigin: '50% 50%',
           opacity: l,
         }}
       >
         <div style={{display: 'inline-block', padding: '8px 18px', borderRadius: 999, background: MINT, color: '#062018', fontWeight: 900, fontSize: 26, letterSpacing: -0.5}}>1기 · 9월 30일 마감</div>
-        <div style={{marginTop: 28, fontSize: 30, fontWeight: 700, color: 'rgba(255,255,255,.55)', position: 'relative', display: 'inline-block'}}>
+        <div style={{marginTop: 14, fontSize: 30, fontWeight: 700, color: 'rgba(255,255,255,.55)', position: 'relative', display: 'table'}}>
           정가 1,500,000원
-          <div style={{position: 'absolute', left: -4, top: '52%', height: 5, width: `calc(${strike * 100}% + 8px)`, background: RED, borderRadius: 3, transform: 'rotate(-4deg)'}} />
+          <div style={{position: 'absolute', left: -6, top: '46%', height: 9, width: `calc(${strike * 100}% + 12px)`, background: RED, borderRadius: 5, transform: 'rotate(-5deg)', boxShadow: '0 0 12px rgba(255,77,77,.7)'}} />
         </div>
-        <div style={{marginTop: 6, fontSize: 92, fontWeight: 900, color: '#fff', letterSpacing: -3, lineHeight: 1.1, textShadow: SHADOW, fontVariantNumeric: 'tabular-nums', transform: `rotate(${shake}deg) scale(${1 + Math.abs(shake) * 0.02})`, transformOrigin: '20% 60%', display: 'inline-block'}}>
-          {priceStr}<span style={{fontSize: 44, marginLeft: 6}}>원</span>
+        <div style={{position: 'relative', marginTop: 0, fontSize: 129, fontWeight: 900, color: YEL, letterSpacing: -7, lineHeight: 1.05, whiteSpace: 'nowrap', textShadow: '0 5px 0 rgba(0,0,0,.6)', fontVariantNumeric: 'tabular-nums', transform: `rotate(${shake}deg) scale(${1 + Math.abs(shake) * 0.02})`, transformOrigin: '20% 60%', display: 'inline-block'}}>
+          {priceStr}<span style={{fontSize: 54, marginLeft: 6, color: '#fff'}}>원</span>
+          {landed && [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((k) => {
+            const a = (k / 12) * Math.PI * 2;
+            const r = interpolate(frame, [34, 60], [10, 150], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+            const op = interpolate(frame, [34, 60], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+            return <div key={k} style={{position: 'absolute', left: 200 + Math.cos(a) * r, top: 60 + Math.sin(a) * r, width: k % 3 ? 10 : 16, height: k % 3 ? 10 : 16, borderRadius: '50%', background: k % 2 ? YEL : MINT, opacity: op, boxShadow: `0 0 14px ${k % 2 ? YEL : MINT}`}} />;
+          })}
         </div>
-        <div style={{marginTop: 10, fontSize: 26, fontWeight: 700, color: MINT}}>지금 신청하면 이 가격 그대로</div>
+        <div style={{marginTop: 4, fontSize: 26, fontWeight: 700, color: MINT}}>지금 신청하면 이 가격 그대로</div>
         {/* 49% 할인 도장 */}
         <div
           style={{
@@ -121,12 +134,34 @@ export const PriceCompare: React.FC = () => {
           <div style={{fontSize: 50, lineHeight: 1, letterSpacing: -2}}>49%</div>
           <div style={{fontSize: 28, lineHeight: 1.1}}>할인</div>
         </div>
+        {/* 🔥 지금이 기회 스탬프 */}
+        <div
+          style={{
+            position: 'absolute',
+            right: 22,
+            bottom: 18,
+            padding: '8px 18px',
+            border: `5px solid ${RED}`,
+            borderRadius: 14,
+            color: RED,
+            fontWeight: 900,
+            fontSize: 38,
+            letterSpacing: -1,
+            whiteSpace: 'nowrap',
+            background: 'rgba(255,77,77,.10)',
+            boxShadow: 'inset 0 0 0 3px #0b1512, inset 0 0 0 5px rgba(255,77,77,.6)',
+            transform: `rotate(${-8 + stampShake}deg) scale(${interpolate(stamp2, [0, 1], [2.4, 1])})`,
+            opacity: Math.min(1, stamp2 * 2.5),
+          }}
+        >
+          🔥 지금이 기회
+        </div>
       </div>
       {/* 오른쪽: 2기 */}
       <div
         style={{
           ...card,
-          left: 660,
+          left: 680,
           background: 'linear-gradient(160deg, #161a20, #0f1216)',
           boxShadow: '0 0 0 2px rgba(255,255,255,.08), 0 30px 60px rgba(0,0,0,.5)',
           transform: `translateY(${(1 - r) * 40}px)`,
