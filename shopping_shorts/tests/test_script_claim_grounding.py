@@ -34,6 +34,20 @@ def verdict(ok=True, claim="", reason="근거가 없다", text=""):
                                                  "reason": reason, "evidence_ids": ["toilet-0"]}]}
 
 
+def test_complete_supported_audit_is_authoritative_over_duplicate_summary():
+    text = "변기를 펼칩니다"
+    evidence = {"items": [{"evidence_id": "scene:1", "text": text, "kind": "visual"}]}
+    answer = verdict(text=text)
+    answer.update(claims_ok=False, claims_why="전체 요약만 모순")
+    answer["claim_checks"][0].update(kind="objective", supports=[{"evidence_id": "scene:1", "quote": text}])
+    def checks():
+        return gate.semantic_content_checks(text, PRODUCT, lambda *a, **k: answer,
+                                            evidence=evidence, claims_required=True)
+    assert next(c for c in checks() if c["name"] == "사실 근거")["ok"]
+    answer["claim_checks"][0]["supports"][0]["quote"] = "변기가 냄새를 제거한다"
+    assert not next(c for c in checks() if c["name"] == "사실 근거")["ok"]
+
+
 def test_evidence_keeps_observation_and_excludes_template_and_interpretation():
     evidence = sg.claim_evidence(sources(), "[은행] 현지에서 품절대란\n[AI 지식] 몇만 원")
     rendered = json.dumps(evidence, ensure_ascii=False)
@@ -164,7 +178,7 @@ def test_partial_checks_exact_merged_script_and_blocks_claim_left_in_other_slot(
         return verdict(False, "현지선 없어서 못 구해요")
     assert sg.regen_one_beat(sources(), None, "use", beats=copy.deepcopy(beats),
                             beat_index=0, topic_product=PRODUCT, topic_judge=judge) is None
-    assert seen[0] == "변기를 접어 넣으면 편해요 현지선 없어서 못 구해요"
+    assert seen[0] == "변기를 접어 넣으면 편해요\n현지선 없어서 못 구해요"
 
 
 def test_partial_can_replace_unsupported_template_with_supported_action(monkeypatch):

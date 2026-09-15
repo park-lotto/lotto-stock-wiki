@@ -1080,7 +1080,7 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
             merged_parts.append(replacement)
         if not topic_product:
             return []
-        merged = " ".join(merged_parts)
+        merged = script_gate.claim_text(merged_parts)
         # 같은 요청의 동일한 완성 본문만 재사용한다. 다음 후보/본문 변경은 새로 판정한다.
         if merged not in _merged_verdicts:
             _merged_verdicts[merged] = script_gate.semantic_content_checks(

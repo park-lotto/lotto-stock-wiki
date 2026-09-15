@@ -13,6 +13,17 @@ from shopping_shorts import script_gate
 _STYLE = {"beat_roles": ["hook"], "templates": {}, "chars_per_30s": 300}
 
 
+def test_semantic_judge_keeps_beat_boundaries_without_punctuation():
+    seen = []
+    beats = [{"role": "hook", "text": "롤에서 행주를 뜯어 쓰면 됨"},
+             {"role": "proof", "text": "이걸 다들 쓴다는 소문이 있음"}]
+    def judge(text, product, **kwargs):
+        seen.append(text)
+        return {"ok": True, "topic_ok": True}
+    script_gate.check(_STYLE, beats, product="행주", speaker_judge=judge)
+    assert script_gate.claim_units(seen[0]) == [b["text"] for b in beats]
+
+
 def _topic_check(text, product):
     checks, _ = script_gate.check(_STYLE, [{"role": "hook", "text": text}], product=product)
     for c in checks:

@@ -811,7 +811,7 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #   ★fail-open: 판정을 못 하면(_call_json이 키 소진 시 {} 반환·예외) **통과**시킨다.
     #     여기서 막으면 키가 마른 날 대본이 통째로 안 나온다.
     checks += semantic_content_checks(
-        full, product, speaker_judge, evidence=claim_evidence,
+        claim_text(b.get("text", "") for b in beats), product, speaker_judge, evidence=claim_evidence,
         topic_required=topic_required, claims_required=claims_required)
 
     # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
@@ -828,6 +828,11 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
                                           source_count=source_count)
         checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
     return checks, full
+
+
+def claim_text(parts):
+    """반말체처럼 마침표가 없어도 대본 칸의 사실 검사 경계를 보존한다."""
+    return "\n".join(str(part or "").strip() for part in parts)
 
 
 def claim_units(text):
@@ -1003,7 +1008,11 @@ def semantic_content_checks(full, product="", speaker_judge=None, evidence=None,
         # 판정 결과가 서로 모순되거나 목록 타입이 깨진 경우도 성공으로 보지 않는다.
         valid = decided and isinstance(unsupported, list)
         audit_errors = _claim_audit_errors(full, evidence, _v) if claims_required else []
-        ok = valid and _v["claims_ok"] is True and not unsupported and not audit_errors
+        # 고정 주제는 모든 문장의 실제 근거 검증으로 합산한다. 동일 판단을 모델의
+        # 전체 bool에도 맡기면 전 문장 supported=true/누락 0인데 전체만 false인
+        # 모순 때문에 정상 수정본이 영원히 반려된다. 지적된 미지원 주장은 계속 실패다.
+        ok = ((isinstance(unsupported, list) and not unsupported and not audit_errors)
+              if claims_required else (valid and _v["claims_ok"] is True and not unsupported))
         if valid or claims_required:
             details = list(audit_errors)
             for row in (unsupported or []) if isinstance(unsupported, list) else []:
