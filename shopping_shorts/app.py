@@ -12017,8 +12017,9 @@ def _deposit_body():
     kakao = (st.get_setting("contact_kakao", "") or "").strip()
     phone = (st.get_setting("contact_phone", "") or "").strip()
     import html as _h
+    card = _deposit_card_html()
     if not acc:
-        return ('<div class=empty>결제 안내가 아직 준비 중이에요.<br>아래로 문의해 주세요.</div>'
+        return (card + '<div class=empty>결제 안내가 아직 준비 중이에요.<br>아래로 문의해 주세요.</div>'
                 + _deposit_contact(kakao, phone))
     rows = ""
     if bank:
@@ -12031,7 +12032,23 @@ def _deposit_body():
     note_html = (f'<div class=note>{_h.escape(note)}</div>' if note else
                  '<div class=note>입금 금액·이용권은 아래로 <b>문의</b>해 주세요.<br>'
                  '입금 후 <b>입금자명</b>을 알려주시면 <b>바로 이용권을 열어드려요.</b></div>')
-    return rows + note_html + _DEPOSIT_CLAIM_HTML + _deposit_contact(kakao, phone)
+    return card + rows + note_html + _DEPOSIT_CLAIM_HTML + _deposit_contact(kakao, phone)
+
+
+def _deposit_card_html():
+    """결제 안내 맨 위 '카드로 결제' 버튼(2026-09-15 사장님 "결제안내 안에 카드결제로 연동").
+
+    토스 키(_toss_keys)가 있을 때만 보인다 — 키 판단은 _toss_keys 한 곳에서만.
+    테스트 키면 버튼에 '테스트'를 붙여 고객이 진짜 결제로 착각하지 않게 한다.
+    """
+    ck, sk = _toss_keys()
+    if not (ck and sk):
+        return ""
+    tag = " (테스트)" if ck.startswith("test_") else ""
+    return ('<a href="/pay/toss" style="display:block;text-align:center;text-decoration:none;'
+            'background:linear-gradient(135deg,#ffd27a,#f0a53a);color:#1a1206;border-radius:12px;'
+            'padding:15px;font-size:16px;font-weight:800;margin-bottom:10px">💳 카드로 결제하기' + tag + '</a>'
+            '<div style="text-align:center;color:#6f8583;font-size:13px;margin:6px 0 14px">또는 계좌이체</div>')
 
 
 # '입금 완료했습니다' — 고객이 직접 알리는 창구(2026-08-23).
