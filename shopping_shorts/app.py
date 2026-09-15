@@ -2572,6 +2572,20 @@ def api_refs_video_category(request: Request, shortcode: str, category: str = ""
     return {"ok": True, "shortcode": shortcode, "category": cat}
 
 
+@app.post("/api/refs/channel_force")
+def api_refs_channel_force(request: Request, username: str, category: str = ""):
+    """채널 고정 — 이 채널의 지금·앞으로 영상을 전부 이 카테고리로(관리자 전용, 2026-09-15).
+    category 빈값 = 해제. 영상별 지정(video_category)은 이것보다 우선한다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    cat = (category or "").strip()
+    if not (username or "").strip() or (cat and cat not in _MOVABLE_CATEGORIES):
+        return JSONResponse(status_code=422, content={"ok": False, "error": f"알 수 없는 카테고리: {cat}"})
+    Store(DB_PATH).set_channel_force(username, cat)
+    return {"ok": True, "username": username, "category": cat}
+
+
 @app.post("/api/reference/register")
 def api_reference_register(request: Request, url: str):
     """레퍼런스 채널을 URL 붙여넣기로 직접 등록(2026-07-18). 인스타 채널/릴스
@@ -4012,7 +4026,7 @@ def api_mix_candidate(request: Request, body: dict):
     #   골랐나"를 알 길이 없어 카드를 다시 그릴 수 없었다. 컬럼 추가 없이 edit_plan(JSON)에
     #   실어 마이그레이션 없이 복원한다 — 렌더는 이 키를 안 읽으므로 무해.
     plan["candidate_index"] = idx
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "edited": edited}
 
 
@@ -4622,6 +4636,55 @@ def api_set_smart_mix(body: dict):
 # 매칭 파이프라인의 '진행 중' 단계들(run_mix_job: downloading→extracting→planning→tts).
 # 각 단계가 update_mix_job으로 updated_at을 갱신하므로, 여기 오래 멈춰 있으면 죽은 잔해다.
 _MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")
+
+
+def _save_render_inputs(store, job_id, **fields):
+    """렌더 입력을 저장하고, 실제 내용이 바뀌었으면 파생 완성본을 한 번에 무효화한다.
+
+    완성본을 만든 뒤 3단계로 돌아가 장면을 바꿔도 ``status='done'``과 ``video_path``가
+    그대로 남아 있으면 9단계는 옛 final.mp4를 최신 결과로 오인한다(2026-09-15 박세현님
+    job 1c8130dc5cfc 실측). 장면 교체·확대·자막·꾸미기마다 이 판단을 따로 두면 새 편집
+    기능이 생길 때 다시 빠지므로 모든 렌더 입력 저장은 이 출구를 쓴다.
+
+    edit_plan은 화면에 영향 없는 이력·선택 후보 메타가 함께 바뀔 수 있어 실제 렌더 재료인
+    ``beats``로 비교한다. 썸네일은 인트로가 켜졌을 때 실제로 붙을 PNG가 바뀌었는지만 본다.
+    SEO만 바뀐 경우에는 영상이 같으므로 무효화하지 않는다.
+    옛 파일은 디스크에서 지우지 않고 DB 연결만 끊는다. 진행 중 상태는 보존하고, 이미
+    완료였던 작업만 다시 렌더할 수 있는 ``ready_for_review``로 되돌린다.
+    """
+    before = store.get_mix_job(job_id)
+    if not before:
+        return False
+
+    render_changed = False
+    for key, value in fields.items():
+        if key == "seo":
+            continue
+        if key == "edit_plan":
+            old_beats = ((before.get("edit_plan") or {}).get("beats") or [])
+            new_beats = ((value or {}).get("beats") or [])
+            if old_beats != new_beats:
+                render_changed = True
+        elif key == "thumbnail":
+            def _intro_choice(thumb):
+                thumb = thumb or {}
+                if not thumb.get("intro"):
+                    return False, None
+                results = list(thumb.get("results") or [])
+                return True, (thumb.get("selected") or (results[-1] if results else None))
+            if _intro_choice(before.get("thumbnail")) != _intro_choice(value):
+                render_changed = True
+        elif before.get(key) != value:
+            render_changed = True
+
+    updates = dict(fields)
+    if render_changed:
+        updates.update(video_path=None, clean_video_path=None,
+                       fx_path=None, fx_status=None, cta_cut_sec=None)
+        if before.get("status") == "done":
+            updates["status"] = "ready_for_review"
+    store.update_mix_job(job_id, **updates)
+    return render_changed
 
 
 def _preview_is_stale(job) -> bool:
@@ -5563,7 +5626,7 @@ def api_mix_adjust(body: dict):
             break
     if not matched:
         return JSONResponse(status_code=404, content={"ok": False, "error": "beat_idx 없음"})
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True}
 
 
@@ -6172,7 +6235,7 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
     plan = job["edit_plan"]
     if body.get("revert"):
         _edit_plan.revert_scene_lab(plan)
-        store.update_mix_job(job_id, edit_plan=plan)
+        _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True, "reverted": True}
     payload = body.get("payload") or {}
     if not payload.get("beats"):
@@ -6192,7 +6255,7 @@ def _scene_lab_apply_locked(store, job_id, job, plan, payload):
     # ★교체 기록(2026-09-04): 적용 전후 '첫 조각'이 바뀐 비트를 DB에 남긴다 — 매칭의 시험지. 픽 로직엔 안 쓴다.
     _before = {"beats": [dict(b) for b in plan.get("beats") or []], "generator": plan.get("generator")}
     _edit_plan.apply_scene_lab(plan, seg_map, payload)
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     _swapped = 0
     try:
         _rows = _edit_plan.scene_swap_rows(_before, plan)
@@ -6245,7 +6308,7 @@ def api_mix_scene_lab_restore_version(job_id: str, body: dict):
     if not _edit_plan.restore_scene_lab_version(plan, idx):
         return JSONResponse(status_code=404,
                             content={"ok": False, "error": "그 판본이 없어요"})
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0)}
 
 
@@ -6845,7 +6908,7 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
         _b = next((x for x in plan["beats"] if x["beat_idx"] == beat_idx), None)
         if _b is not None:
             _b["tts_tone"] = tone
-            store.update_mix_job(job_id, edit_plan=plan)
+            _save_render_inputs(store, job_id, edit_plan=plan)
     background_tasks.add_task(resynth_one_beat, job_id, beat_idx, override, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
 
@@ -6915,7 +6978,7 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
     # preset을 대조(공백 무시 일치)에서 떨어뜨려 조용히 규칙 폴백으로 내려간다.
     beat["caption_lines"] = None
     beat["caption_lines_human"] = False
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     if body.get("regen") is False:
         return {"ok": True, "saved": True, "regen": False}
     # 음성·자막 다시 뽑기 = 이미 있는 경로. voice는 job 스냅샷을 그대로 물려준다
@@ -6957,10 +7020,7 @@ def api_mix_scene_lab_renumber(job_id: str):
             b.pop("tts_ver", None)
             changed += 1
     plan["beats"] = beats
-    store.update_mix_job(job_id, edit_plan=plan)
-    # 이미 만든 완성본은 옛 번호 기준이라 무효(삭제 API와 같은 판단).
-    store.update_mix_job(job_id, video_path=None, clean_video_path=None,
-                         fx_path=None, fx_status=None)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "changed": changed, "beats": len(beats),
             "note": "번호를 정리했어요 — 음성 만들기를 다시 눌러주세요"}
 
@@ -7017,7 +7077,7 @@ def api_mix_scene_lab_beat_delete(job_id: str, beat_idx: int):
     for b in left:
         b["narration_manual"] = True
     plan["beats"] = left
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     # ★응답의 left는 **실제 저장된 결과**에서 센다. 위 저장 출구가 계획을 손볼 수 있으므로
     #   메모리의 리스트 길이를 그대로 믿으면 이번 사고처럼 "ok:True, left:7"인데 안 지워진
     #   조용한 실패를 화면이 알 수 없다.
@@ -7036,8 +7096,6 @@ def api_mix_scene_lab_beat_delete(job_id: str, beat_idx: int):
     #   (assemble_clean_video)은 clean_fn 없이 불려 유료 청소를 다시 타지 않는다.
     #   ★clean_sources(소스별 청소본)는 **건드리지 않는다** — 소스 영상 기준이라 칸과 무관하고,
     #     지우면 VMake를 다시 태워 돈이 나간다.
-    store.update_mix_job(job_id, video_path=None, clean_video_path=None,
-                         fx_path=None, fx_status=None)
     return {"ok": True, "deleted": beat_idx, "left": len(saved),
             "text": (beat.get("narration") or "")[:120],
             "invalidated": ["video_path", "clean_video_path", "fx_path"]}
@@ -7083,7 +7141,7 @@ def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
     if beat is None:
         return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
     beat["cap_offset"] = offset
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "offset": offset}
 
 
@@ -7752,7 +7810,7 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
     if _blocked:
         return _blocked
     voice = _voice_snapshot(store, body)
-    store.update_mix_job(job_id, voice=voice)
+    _save_render_inputs(store, job_id, voice=voice)
     # 🎙 이 선택을 고객의 '다음 작업 기본 성우'로 기억한다(2026-09-02 사장님 지시).
     #   → 다음 작업은 create_mix_job이 이 값을 job.voice로 심어 3단계 1차 TTS부터 본인
     #     성우로 나간다. 그러면 4단계에서 이 버튼을 누를 이유가 없어져 **편당 TTS 1회**가 된다
@@ -7816,6 +7874,10 @@ def _video_gone_reason(job):
     """
     if not job:
         return "작업을 찾을 수 없어요."
+    # 최종 렌더 뒤 입력을 고치면 status가 ready_for_review로 돌아간다. 혹시 옛 경로가
+    # 남은 작업이어도 그 파일을 최신 완성본으로 주지 않는다(재생·공유·예약 공통 방어).
+    if job.get("status") != "done":
+        return "수정한 내용으로 최종 렌더를 다시 해주세요."
     if not job.get("video_path"):
         return "아직 완성된 영상이 없어요."
     if Path(job["video_path"]).exists():
@@ -8809,7 +8871,7 @@ def api_thumb_pin(body: dict):
     pins.insert(0, {"name": name, "beat_idx": i, "label": label,
                     "ts": round(float((beats[i] or {}).get("start") or 0), 2)})
     thumb["pins"] = pins
-    store.update_mix_job(job_id, thumbnail=thumb)
+    _save_render_inputs(store, job_id, thumbnail=thumb)
     return {"ok": True, "name": name, "label": label, "pins": pins,
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
@@ -8886,7 +8948,7 @@ async def api_thumb_save(job_id: str = Form(...), meta: str = Form(...),
     # 배경이 바뀌면(api_thumb_frames가 대조) 옛 결과에 표시할 수 있게 한다.
     if thumb.get("video_sig"):
         thumb.setdefault("result_sigs", {})[name] = thumb["video_sig"]
-    store.update_mix_job(job_id, thumbnail=thumb)
+    _save_render_inputs(store, job_id, thumbnail=thumb)
     return {"ok": True, "name": name,
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
@@ -8904,7 +8966,7 @@ def api_thumb_select(body: dict):
     if name not in (thumb.get("results") or []):
         return JSONResponse(status_code=400, content={"ok": False, "error": "없는 썸네일"})
     thumb["selected"] = name
-    store.update_mix_job(job_id, thumbnail=thumb)
+    _save_render_inputs(store, job_id, thumbnail=thumb)
     return {"ok": True}
 
 
@@ -18343,7 +18405,7 @@ def api_produce_mix_settings(body: dict):
     if "seo" in body:
         fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
-        store.update_mix_job(job_id, **fields)
+        _save_render_inputs(store, job_id, **fields)
     return {"ok": True}
 
 
@@ -18843,7 +18905,7 @@ def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
         if not asset:
             return JSONResponse(status_code=422, content={"ok": False, "error": "자산 없음"})
         hit["cutaway"] = {"asset_id": int(aid), "match_type": "manual"}
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True}
 
 
@@ -18886,7 +18948,7 @@ def api_produce_mix_trim(job_id: str, body: dict):
         head, tail = hit.get("head_trim", 0.0), hit.get("tail_trim", 0.0)
         if _effective_dur(probe, head, tail) <= _TRIM_FLOOR and (head + tail) > (probe - _TRIM_FLOOR):
             hit[key] = max(0.0, round(probe - _TRIM_FLOOR - (head + tail - hit.get(key, 0.0)), 3))
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "head_trim": hit.get("head_trim", 0.0),
             "tail_trim": hit.get("tail_trim", 0.0), "trimmed": hit.get(key, 0.0)}
 
@@ -18965,7 +19027,7 @@ def _cappos_locked(store, job_id, body):
             b["cap_pos"] = None
             b["cap_xy"] = None
             b["cap_xy_segs"] = None
-        store.update_mix_job(job_id, edit_plan=plan)
+        _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True, "apply_all": True, "cleared": cleared}
 
     plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
@@ -18991,14 +19053,14 @@ def _cappos_locked(store, job_id, body):
             xy_segs = dict(hit.get("cap_xy_segs") or {})
             xy_segs[str(seg_idx)] = xy
             hit["cap_xy_segs"] = xy_segs
-            store.update_mix_job(job_id, edit_plan=plan)
+            _save_render_inputs(store, job_id, edit_plan=plan)
             return {"ok": True, "pos": "free", "seg_idx": seg_idx, "xy": xy,
                     "cap_xy_segs": xy_segs, "x_pct": xy["x_pct"], "y_pct": xy["y_pct"]}
 
         # seg_idx가 없는 옛 화면/요청은 종전 의미를 유지한다.
         hit["cap_xy"] = xy
         hit["cap_pos"] = None          # 버튼 자리와 두 벌로 남기지 않는다
-        store.update_mix_job(job_id, edit_plan=plan)
+        _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True, "pos": "free", "xy": xy,
                 "x_pct": xy["x_pct"], "y_pct": xy["y_pct"]}
 
@@ -19008,7 +19070,7 @@ def _cappos_locked(store, job_id, body):
     hit["cap_pos"] = pos if pos in ("top", "mid") else None   # bottom = 기본값 = 저장 안 함
     hit["cap_xy"] = None                                      # 버튼을 누르면 드래그 좌표는 버린다
     hit["cap_xy_segs"] = None                                 # 구절별 드래그 좌표도 함께 버린다
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     # y_pct도 함께 준다 — 화면이 %를 스스로 계산하면 렌더와 두 벌이 된다(0순위-B).
     return {"ok": True, "pos": hit["cap_pos"] or "bottom",
             "y_pct": video_assemble._CAP_POS_PCT.get(hit["cap_pos"])}
@@ -19054,7 +19116,7 @@ def _scenezoom_locked(store, job_id, body):
         hit["scene_zoom"] = round(zoom, 4)
         hit["scene_pan_x"] = round(_pan("pan_x"), 5)
         hit["scene_pan_y"] = round(_pan("pan_y"), 5)
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     z, px, py = video_assemble.scene_zoom_of(hit)
     return {"ok": True, "zoom": z, "pan_x": px, "pan_y": py}
 
@@ -19097,7 +19159,7 @@ def _scenehl_locked(store, job_id, body):
             "cx": round(_f("cx", 0.5), 5), "cy": round(_f("cy", 0.5), 5),
             "r": round(_f("r", 0.28), 5), "zoom": round(_f("zoom", 2.0), 4),
         }
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "hl": video_assemble.scene_hl_of(hit)}
 
 
@@ -19181,7 +19243,7 @@ def _caplines_locked(store, job_id, body):
         hit["caption_lines"] = None
         hit["caption_lines_human"] = False
         hit["cap_durs"] = None
-        store.update_mix_job(job_id, edit_plan=plan)
+        _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True, "lines": video_assemble._caption_segments(narr), "timed": False}
     lines = [str(x).strip() for x in (body.get("lines") or []) if str(x).strip()]
     if not lines:
@@ -19206,7 +19268,7 @@ def _caplines_locked(store, job_id, body):
             hit["cap_src"] = _wsrc if (words and timing) else "estimate"
         except Exception as e:  # noqa: BLE001 — 재계산 실패해도 줄 나누기는 살린다(글자수 폴백)
             print(f"[caplines] 타이밍 재계산 실패(폴백 사용): {e!r}", file=sys.stderr)
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     # ★칸 타임라인(2026-08-29)이 이 응답으로 화면을 바로 갱신한다 — 새 시간표는
     #   GET과 같은 함수(_lab_captions)로 만든다. 여기서 따로 계산하면 두 벌이 된다(0순위-B).
     _caps, _td = _lab_captions(plan)
@@ -19269,7 +19331,7 @@ def api_produce_mix_shorten(job_id: str, body: dict):
     if dur and dur > 0:
         hit["target_seconds"] = round(dur, 1)
         hit["sync_gap"] = round(max(0.0, dur - budget), 2)
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "changed": True, "narration": new_n, "sync_gap": hit.get("sync_gap", 0.0)}
 
 
@@ -19305,7 +19367,7 @@ def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     pos = body.get("position")
     if aid is None and pos is None:
         hit.pop("sfx", None)                       # 종전 동작 — 빼기
-        store.update_mix_job(job_id, edit_plan=plan)
+        _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True}
     from shopping_shorts import scene_match as _sm
     if pos is not None and pos not in _sm.SFX_POSITIONS:
@@ -19324,7 +19386,7 @@ def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     if pos is not None:
         cur["position"] = pos
     hit["sfx"] = cur
-    store.update_mix_job(job_id, edit_plan=plan)
+    _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "sfx": cur}
 
 
