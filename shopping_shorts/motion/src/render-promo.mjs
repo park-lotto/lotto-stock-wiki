@@ -13,7 +13,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const tmpDir = path.join(here, '..', '.render_tmp');
 fs.mkdirSync(tmpDir, {recursive: true});
 const [, , mode, ...rest] = process.argv;
-const compId = (id) => ({price_compare: 'PriceCompare', free_banner: 'FreeBanner', sq_4: 'SqRender', hook_wall: 'HookWall', trend: 'TrendBanner', easy60: 'Easy60'})[id];
+const compId = (id) => ({price_compare: 'PriceCompare', free_banner: 'FreeBanner', sq_4: 'SqRender', hook_wall: 'HookWall', trend: 'TrendBanner', easy60: 'Easy60', sq_1: 'Flow-sq-1', sq_2: 'Flow-sq-2', sq_3: 'Flow-sq-3'})[id];
 const serveUrl = await bundle({entryPoint: path.join(here, 'index.ts'), publicDir: path.join(here, '..', 'public')});
 
 if (mode === 'stills') {

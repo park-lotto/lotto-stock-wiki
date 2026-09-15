@@ -3,6 +3,7 @@ import React from 'react';
 import {AbsoluteFill, Img, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {useFont, fmtViews} from './LandingHeroWall';
 import {Word, parse} from './LandingTour';
+import {BigCaption, CutView, SUBCLEAN_CUT, Sparkles} from './LandingFlow';
 import hero from './hero_data.json';
 
 const FONT = 'HeroKR';
@@ -234,33 +235,90 @@ export const FreeBanner: React.FC = () => {
 // 재료 public/render/full1~4.mp4 (608x1080, 원본 1080x1920 축소, 2.7s씩, gitignore) — 원본은 바탕화면 KakaoTalk_*.mp4
 //   full1=KakaoTalk_20260828_023955618(가스렌지 전동청소기 16.0s~) full2=KakaoTalk_20260824_015356161(헤어 롤빗 0.3s~)
 //   full3=KakaoTalk_20260823_011355178(면도기 2.0s~) full4=KakaoTalk_20260823_015039780(이어폰 6.0s~)
-export const SQ4 = {width: 1080, height: 1080, fps: 30, durationInFrames: 312};
-const FULL_N = 4;
-const FULL_F = 78; // 2.6s
-const XF = 8; // 크로스페이드
-const FULL_W = 608;
+export const SQ4 = {width: 1080, height: 1080, fps: 30, durationInFrames: 340};
+const PRE_F = 60; // 앞 자막제거 컷(95.png BEFORE→AFTER 와이프)
+const SEG_F = 93; // 완성본 3구간
+const CARD_W = 608;
+const CARD_H = 1080;
+// 구간별 가운데(제품컷 위주: 가스렌지·면도기·이어폰) / 좌·우 카드. 빗(뷰티) 영상은 옆 카드로만.
+const SEGS = [
+  {center: 1, left: 2, right: 3, box: {x: 40, y: 280, w: 528, h: 96}},
+  {center: 3, left: 4, right: 2, box: {x: 40, y: 360, w: 528, h: 96}},
+  {center: 4, left: 1, right: 2, box: {x: 40, y: 230, w: 528, h: 96}},
+];
+
+const PhoneCard: React.FC<{clip: number; x: number; y: number; scale: number; rot: number; dim?: number; children?: React.ReactNode; style?: React.CSSProperties}> = ({clip, x, y, scale, rot, dim = 0, children, style}) => (
+  <div style={{position: 'absolute', left: x, top: y, width: CARD_W, height: CARD_H, borderRadius: 34, overflow: 'hidden', transform: `perspective(1600px) rotateY(${rot}deg) scale(${scale})`, transformOrigin: '50% 50%', boxShadow: '0 40px 90px rgba(0,0,0,.7), 0 0 0 3px rgba(255,255,255,.08)', background: '#000', ...style}}>
+    <OffthreadVideo src={staticFile(`render/full${clip}.mp4`)} muted style={{width: '100%', height: '100%', display: 'block'}} />
+    {dim > 0 && <div style={{position: 'absolute', inset: 0, background: `rgba(4,7,10,${dim})`}} />}
+    {children}
+  </div>
+);
 
 export const SqRender: React.FC = () => {
+  useFont();
   const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
   const D = SQ4.durationInFrames;
   const fade = Math.min(
     interpolate(frame, [0, 6], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
     interpolate(frame, [D - 8, D - 1], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
   );
+  const preOut = interpolate(frame, [PRE_F - 8, PRE_F], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const segIdx = Math.max(0, Math.min(SEGS.length - 1, Math.floor((frame - PRE_F) / SEG_F)));
+  const segLocal = frame - PRE_F - segIdx * SEG_F;
+  const seg = SEGS[segIdx];
+  // 등장: 가운데 카드 스프링, 옆 카드 패럴랙스 슬라이드
+  const enter = spring({frame: segLocal, fps, config: {damping: 13, stiffness: 140}});
+  // 흑백 → 자막 영역부터 컬러가 원형으로 살아남
+  const colorR = interpolate(segLocal, [8, 40], [0, 130], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const cx = seg.box.x + seg.box.w / 2;
+  const cy = seg.box.y + seg.box.h / 2;
+  // 전환: 0→1 와이프, 1→2 글리치
+  const wipeT = segIdx === 1 ? interpolate(segLocal, [0, 12], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 1;
+  const glitch = segIdx === 2 && segLocal < 8 ? 1 - segLocal / 8 : 0;
+  const centerX = (1080 - CARD_W) / 2;
+  const sideScale = 0.6;
+  const sideY = (1080 - CARD_H) / 2;
+  const par = (1 - enter) * 90;
   return (
     <AbsoluteFill style={{background: BG, overflow: 'hidden', opacity: fade}}>
-      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(60% 70% at 50% 50%, rgba(111,240,214,.07), transparent 70%)'}} />
-      {Array.from({length: FULL_N}, (_, i) => i).map((i) => {
-        const from = i * FULL_F;
-        const inT = i === 0 ? 1 : interpolate(frame, [from, from + XF], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-        return (
-          <Sequence key={i} from={from} durationInFrames={FULL_F + XF} layout="none">
-            <div style={{position: 'absolute', left: (1080 - FULL_W) / 2, top: 0, width: FULL_W, height: 1080, opacity: inT, boxShadow: '0 0 80px rgba(0,0,0,.7)'}}>
-              <OffthreadVideo src={staticFile(`render/full${i + 1}.mp4`)} muted style={{width: '100%', height: '100%', display: 'block'}} />
+      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(60% 70% at 50% 50%, rgba(111,240,214,.10), transparent 70%)'}} />
+      <Sparkles frame={frame} n={22} seed={5} />
+      {frame < PRE_F && (
+        <div style={{position: 'absolute', inset: 0, opacity: preOut, transform: `translateX(${(1 - preOut) * -120}px)`}}>
+          <CutView cut={SUBCLEAN_CUT} local={frame} len={PRE_F} first />
+        </div>
+      )}
+      {frame >= PRE_F && (
+        <Sequence from={PRE_F + segIdx * SEG_F} durationInFrames={SEG_F} layout="none">
+          {/* 옆 카드(어둡게·기울여·패럴랙스) */}
+          <PhoneCard clip={seg.left} x={-120 - par} y={sideY} scale={sideScale} rot={22} dim={0.55} style={{filter: 'grayscale(.5)'}} />
+          <PhoneCard clip={seg.right} x={1080 - CARD_W + 120 + par} y={sideY} scale={sideScale} rot={-22} dim={0.55} style={{filter: 'grayscale(.5)'}} />
+          {/* 가운데 카드: 흑백 + 컬러 원형 리빌 */}
+          <div style={{position: 'absolute', inset: 0, clipPath: `inset(0 ${(1 - wipeT) * 100}% 0 0)`, transform: `translateX(${glitch * 18}px)`}}>
+            <PhoneCard clip={seg.center} x={centerX} y={0} scale={interpolate(enter, [0, 1], [0.92, 1])} rot={(1 - enter) * -10} style={{filter: 'grayscale(1) brightness(.85)'}} />
+            <div style={{position: 'absolute', left: centerX, top: 0, width: CARD_W, height: CARD_H, borderRadius: 34, overflow: 'hidden', clipPath: `circle(${colorR}% at ${(cx / CARD_W) * 100}% ${(cy / CARD_H) * 100}%)`, transform: `scale(${interpolate(enter, [0, 1], [0.92, 1])})`, transformOrigin: '50% 50%'}}>
+              <OffthreadVideo src={staticFile(`render/full${seg.center}.mp4`)} muted style={{width: '100%', height: '100%', display: 'block'}} />
+              {/* 자막 영역 강조 박스 */}
+              {segLocal > 14 && (
+                <div style={{position: 'absolute', left: seg.box.x, top: seg.box.y, width: seg.box.w, height: seg.box.h, border: `4px solid ${YEL}`, borderRadius: 14, boxShadow: '0 0 26px rgba(255,216,77,.8), inset 0 0 0 999px rgba(255,216,77,.08)', opacity: interpolate(segLocal, [14, 22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) * (0.7 + 0.3 * Math.sin(segLocal / 5))}} />
+              )}
             </div>
-          </Sequence>
-        );
-      })}
+            {/* 글리치 슬라이스 */}
+            {glitch > 0 && [0, 1, 2, 3].map((k) => (
+              <div key={k} style={{position: 'absolute', left: centerX + (k % 2 ? 1 : -1) * glitch * 26, top: 200 + k * 220, width: CARD_W, height: 60, overflow: 'hidden', opacity: 0.8}}>
+                <div style={{position: 'absolute', left: 0, top: -(200 + k * 220), width: CARD_W, height: CARD_H, background: k % 2 ? 'rgba(255,77,77,.25)' : 'rgba(111,240,214,.25)'}} />
+              </div>
+            ))}
+          </div>
+          {segIdx === 1 && wipeT < 1 && <div style={{position: 'absolute', top: 0, bottom: 0, left: `calc(${wipeT * 100}% - 4px)`, width: 8, background: MINT, boxShadow: '0 0 30px 8px rgba(111,240,214,.8)'}} />}
+        </Sequence>
+      )}
+      <div style={{position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(7,11,15,.55) 0%, rgba(7,11,15,.12) 40%, rgba(7,11,15,0) 60%)', pointerEvents: 'none'}} />
+      <BigCaption text="자막도 AI가 [싹] 지움" from={4} to={PRE_F - 2} size={76} />
+      <BigCaption text="버튼 한 번에" from={PRE_F + 2} to={PRE_F + 96} />
+      <BigCaption text={'자막·음성 입힌' + String.fromCharCode(10) + '<완성 쇼츠>'} from={PRE_F + 100} to={D - 2} />
     </AbsoluteFill>
   );
 };
