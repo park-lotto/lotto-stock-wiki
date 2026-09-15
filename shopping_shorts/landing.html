@@ -1,0 +1,274 @@
+<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
+<title>__NAME__ — 뜨는 쇼핑쇼츠, 10분이면 한 편</title>
+<link rel=preconnect href="https://fonts.googleapis.com">
+<link rel=preconnect href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel=stylesheet>
+<!--
+  랜딩 v2 (2026-09-15 사장님 "쇼핑렌즈 랜딩 참고해 우리에 맞게 각색, 지금 랜딩 교체").
+  ★구조만 참고했다(카운트다운 바 → 히어로+결과물 → 가격 → 단계별 실제 화면 → 한 번에 요약
+    → 설치 없음 → 구매 전 확인 → 마지막 가격). 문구·이미지는 전부 우리 것.
+  ★가격·마감·다음 가격은 서버(_with_pay)가 채운다 — 이 파일에 숫자를 적지 마라(0순위-B).
+    결제 금액과 화면 금액이 어긋나면 토스 심사 불가 사유다.
+  ★영상은 /static/landing/<이름>.mp4. 파일이 없으면 자리표시 카드가 뜬다(깨진 영상 대신).
+-->
+<style>*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#6ff0d6;--grad:linear-gradient(135deg,#6ff0d6,#1f9e7a);--gold:#ffcf6f;--gold-grad:linear-gradient(135deg,#ffe1a1,#f0a93a);
+--ink:#0b0f14;--panel:#111722;--line:#1e2735;--txt:#e8f0ee;--muted:#8aa0a0;--faint:#5f7373;--red:#ff7a6b}
+body{background:radial-gradient(1100px 600px at 82% -12%,rgba(111,240,214,.10),transparent 60%),radial-gradient(900px 500px at 0% 112%,rgba(255,207,111,.06),transparent 55%),var(--ink);
+color:var(--txt);font-family:'Noto Sans KR',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all}
+a{text-decoration:none;color:inherit}
+.display{font-family:'Black Han Sans',sans-serif;font-weight:400;letter-spacing:.01em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+/* 상단 고정 마감 바 */
+.dl{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,#0f3b33,#135447);border-bottom:1px solid rgba(111,240,214,.25)}
+.dl .in{max-width:1080px;margin:0 auto;padding:9px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.dl .t{font-weight:700;font-size:14px}
+.cd{display:flex;gap:6px}
+.cd b{display:inline-flex;flex-direction:column;align-items:center;min-width:46px;background:#06110e;border:1px solid rgba(111,240,214,.3);border-radius:8px;padding:3px 6px;font-family:'Black Han Sans',sans-serif;font-size:19px;line-height:1.1;color:var(--mint)}
+.cd b small{font-family:'Noto Sans KR';font-size:10px;color:var(--muted);font-weight:500}
+.dl .p{font-size:13px;color:#cfe;text-align:right}.dl .p b{font-family:'Black Han Sans';font-size:20px;color:var(--gold);margin-left:4px}
+.dl .p s{color:var(--faint)}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .sym{width:40px;height:40px;flex:none}
+.brand .wm{display:flex;flex-direction:column;line-height:1}
+.brand .nm{font-family:'Black Han Sans',sans-serif;font-size:22px;background:linear-gradient(135deg,#3ee0bf 0%,#7fe9d8 42%,#8c6ef0 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.brand .en{font-family:ui-monospace,monospace;font-size:9px;letter-spacing:2.8px;color:#4c8f85;margin-top:3px}
+.nav .login{font-size:15px;font-weight:700;padding:7px 12px;border-radius:9px}
+.nav .login.go{color:#062018;background:var(--grad)}
+/* HERO */
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:36px;align-items:center;padding:34px 0 30px}
+.badge{display:inline-block;font-size:13px;color:var(--mint);border:1px solid rgba(111,240,214,.3);border-radius:999px;padding:5px 14px;margin-bottom:18px;background:rgba(111,240,214,.06)}
+.hero h1{font-size:clamp(32px,4.6vw,50px);line-height:1.17}
+.hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gl{background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .sub{color:var(--muted);font-size:17px;margin:18px 0 26px;max-width:40ch}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--gold-grad);color:#2a1a00;font-weight:800;font-size:17px;padding:15px 28px;border-radius:12px;box-shadow:0 8px 30px rgba(255,207,111,.2)}
+.cta.mint{background:var(--grad);color:#062018;box-shadow:0 8px 30px rgba(111,240,214,.18)}
+.cta.ghost{background:transparent;color:var(--txt);border:1px solid var(--line);box-shadow:none;font-weight:600}
+.trust{color:var(--faint);font-size:13px;margin-top:12px}
+/* 세로 영상 틀 */
+.phone{position:relative;width:100%;max-width:330px;margin:0 auto;aspect-ratio:9/16;border-radius:26px;overflow:hidden;background:#05080b;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.wide{position:relative;width:100%;aspect-ratio:16/10;border-radius:16px;overflow:hidden;background:#05080b;border:1px solid var(--line)}
+.phone video,.wide video{width:100%;height:100%;object-fit:cover;display:block}
+.ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--faint);font-size:13px;text-align:center;padding:16px;
+background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
+.ph b{color:var(--muted);font-size:15px}
+.sec{padding:56px 0}
+.kicker{display:block;text-align:center;color:var(--mint);font-weight:700;font-size:14px;margin-bottom:8px}
+.sec h2{text-align:center;font-size:clamp(26px,3.6vw,36px);font-weight:900;line-height:1.3;margin-bottom:10px}
+.sec .lead{text-align:center;color:var(--muted);margin:0 auto 34px;max-width:48ch}
+.made{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.made .phone{max-width:none;border-radius:18px}
+/* 가격 박스 */
+.price{max-width:520px;margin:0 auto;text-align:center;background:var(--panel);border:1px solid rgba(255,207,111,.35);border-radius:22px;padding:30px 24px;box-shadow:0 0 0 1px rgba(255,207,111,.1) inset}
+.price .tag{display:inline-block;background:var(--gold-grad);color:#2a1a00;font-weight:800;font-size:13px;padding:4px 14px;border-radius:999px}
+.price .nm{color:var(--muted);font-size:14px;margin-top:10px}
+.price .was{color:var(--faint);font-size:15px;margin-top:10px}
+.price .now{font-family:'Black Han Sans';font-size:clamp(44px,8vw,60px);line-height:1.1}
+.price .why{font-size:13.5px;color:#cfd9d6;background:rgba(255,122,107,.08);border:1px solid rgba(255,122,107,.25);border-radius:10px;padding:10px 12px;margin:14px 0 18px}
+.price .why b{color:var(--red)}
+.price .cta{width:100%}
+.price .alt{display:block;margin-top:10px;color:var(--faint);font-size:13px;text-decoration:underline}
+/* 단계 */
+.step{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;padding:40px 0;border-top:1px solid var(--line)}
+.step:nth-child(even) .media{order:-1}
+.step .n{display:inline-block;background:rgba(111,240,214,.1);color:var(--mint);font-weight:800;font-size:13px;padding:4px 12px;border-radius:999px;margin-bottom:12px}
+.step h3{font-size:clamp(24px,3vw,31px);font-weight:900;line-height:1.3;margin-bottom:12px}
+.step p{color:var(--muted);font-size:16px}
+.step p b{color:var(--txt)}
+.step ul{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.step li{font-size:14.5px;color:#cfd9d6}.step li:before{content:'✓ ';color:var(--mint);font-weight:700}
+/* 한 번에 */
+.all{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:860px;margin:0 auto}
+.grp{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.grp h4{color:var(--mint);font-size:14px;margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chips span{background:#16202c;border:1px solid #243244;border-radius:8px;padding:5px 10px;font-size:13.5px}
+.box{max-width:860px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px}
+.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:860px;margin:0 auto}
+.checks .c{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px}
+.checks .c h4{font-size:15px;margin-bottom:6px}.checks .c p{color:var(--muted);font-size:14px}
+.warn{max-width:860px;margin:16px auto 0;text-align:center;color:var(--red);border:1px solid rgba(255,122,107,.35);background:rgba(255,122,107,.06);border-radius:12px;padding:14px;font-weight:700;font-size:14.5px}
+.foot{text-align:center;color:var(--faint);font-size:12.5px;padding:20px 0 42px}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+@media(max-width:820px){.hero,.step{grid-template-columns:1fr}.step:nth-child(even) .media{order:0}.made{grid-template-columns:repeat(2,1fr)}.all,.checks{grid-template-columns:1fr}
+.dl .p{text-align:left}.hero{text-align:center}.hero .sub{margin-left:auto;margin-right:auto}.hero .row{justify-content:center}}
+</style></head><body>
+
+<div class=dl><div class=in>
+  <div class=t>⏰ 1기 모집 마감까지</div>
+  <div class=cd id=cd><b id=cdD>0<small>일</small></b><b id=cdH>00<small>시간</small></b><b id=cdM>00<small>분</small></b><b id=cdS>00<small>초</small></b></div>
+  <div class=p>__DEADLINE_LABEL__까지 <b>__PRO_PRICE__</b><br><s>__NEXT_START_LABEL__부터 __NEXT_PRICE__</s></div>
+</div></div>
+
+<div class=wrap>
+<div class=nav>
+<a class=brand href="/">__LOGO_SVG__<span class=wm><span class=nm>__NAME__</span><span class=en>__NAME_EN__</span></span></a>
+<span style="display:flex;gap:6px;align-items:center"><a class=login href="/pricing">요금</a><a class="login go" href="/login">로그인</a></span></div>
+
+<div class=hero>
+  <div>
+    <span class=badge>유튜브·틱톡·인스타 쇼핑쇼츠 제작 도구</span>
+    <h1 class=display>지금 <span class=hl>터지는 쇼핑쇼츠</span>를 찾고,<br>장면까지 맞춰서<br><span class=gl>10분이면 한 편.</span></h1>
+    <p class=sub>뜨는 영상 찾기부터 소스 모으기, 대본, 장면 맞추기, 캡컷 마무리까지 — 따로따로 하던 일을 __NAME__ 하나로 끝냅니다.</p>
+    <div class=row>
+      <a class=cta href="__CARD_HREF__">💳 1기 신청하기 · __PRO_PRICE__</a>
+      <a class="cta ghost" href="/login">무료로 먼저 써보기</a>
+    </div>
+    <div class=trust>설치 없이 브라우저에서 · 구글 계정으로 3초 가입</div>
+  </div>
+  <div class=phone data-video=hero data-label="대표 결과물 영상"></div>
+</div>
+
+<div class=sec>
+  <span class="kicker reveal">실제로 만든 영상</span>
+  <h2 class=reveal>이런 쇼츠가 <span class=hl>__NAME__</span>으로 나옵니다</h2>
+  <p class="lead reveal">전부 __NAME__에서 찾고, 맞추고, 캡컷으로 마무리한 영상입니다.</p>
+  <div class="made reveal">
+    <div class=phone data-video=made1 data-label="만든 영상 1"></div>
+    <div class=phone data-video=made2 data-label="만든 영상 2"></div>
+    <div class=phone data-video=made3 data-label="만든 영상 3"></div>
+    <div class=phone data-video=made4 data-label="만든 영상 4"></div>
+  </div>
+</div>
+
+<div class="sec reveal">
+  <div class=price>
+    <span class=tag>1기 모집 · __DEADLINE_LABEL__ 마감</span>
+    <div class=nm>__PRO_NAME__</div>
+    <div class="now gl">__PRO_PRICE__</div>
+    <div class=why>⚠️ <b>__NEXT_START_LABEL__부터 2기 __NEXT_PRICE__</b>으로 오릅니다.<br>업데이트로 기능이 크게 늘어 가격을 올립니다. 1기는 지금 가격 그대로.</div>
+    <a class=cta href="__CARD_HREF__">💳 카드로 1기 신청하기</a>
+    <a class=alt href="__PAY_HREF__">계좌이체 · 결제 안내</a>
+  </div>
+</div>
+
+<div class=sec>
+  <span class="kicker reveal">어떻게 만들어지나</span>
+  <h2 class=reveal>다섯 단계, <span class=hl>누르면서 따라가면</span> 끝납니다</h2>
+  <div>
+    <div class="step reveal">
+      <div><span class=n>1단계 · 레퍼런스 랭킹</span>
+        <h3>오늘 뭘 만들지,<br><span class=hl>터지는 영상</span>이 알려줍니다</h3>
+        <p>유튜브·틱톡·인스타의 쇼핑쇼츠를 매일 모아 <b>조회수와 구독자 대비 반응</b>으로 줄 세웁니다.</p>
+        <ul><li>24시간·48시간·이번 주 히트작</li><li>썰쇼핑·홈템·장비템 카테고리별로</li><li>채널 크기에 비해 터진 영상만 따로</li></ul></div>
+      <div class=media><div class=wide data-video=step1 data-label="레퍼런스 랭킹 화면"></div></div>
+    </div>
+    <div class="step reveal">
+      <div><span class=n>2단계 · 숏템파워검색</span>
+        <h3>같은 제품 영상,<br><span class=hl>여섯 곳을 한 번에</span></h3>
+        <p>마음에 드는 영상에서 한 번 누르면 <b>유튜브·틱톡·인스타·도우인·샤오홍슈·핀터레스트</b>에서 같은 제품 영상을 찾아옵니다.</p>
+        <ul><li>대본이 말하는 제품으로 검색어 자동</li><li>한국어·중국어·영어로 바꿔 검색</li><li>마음에 드는 것만 담으면 소스 준비 끝</li></ul></div>
+      <div class=media><div class=wide data-video=step2 data-label="숏템파워검색 화면"></div></div>
+    </div>
+    <div class="step reveal">
+      <div><span class=n>3단계 · 대본</span>
+        <h3>잘 된 영상의 말을 뽑아<br><span class=hl>내 대본</span>으로 다시 씁니다</h3>
+        <p>원본 영상의 대본을 뽑고, 터진 영상의 구성은 살린 채 <b>내 이야기로 새로 씁니다.</b></p>
+        <ul><li>대본 추출·리메이크</li><li>후킹·본문 틀 고르기</li><li>AI 보이스로 바로 녹음</li></ul></div>
+      <div class=media><div class=wide data-video=step3 data-label="대본 화면"></div></div>
+    </div>
+    <div class="step reveal">
+      <div><span class=n>4단계 · 장면 매칭</span>
+        <h3>대본 한 줄마다<br><span class=hl>맞는 장면이 자동으로</span></h3>
+        <p>모아둔 영상들에서 장면을 골라 <b>대본 문장에 맞춰 배치</b>합니다. 마음에 안 드는 장면만 바꾸면 됩니다.</p>
+        <ul><li>문장별 장면 자동 배치</li><li>자막·꾸미기까지 한 화면에서</li><li>눌러서 바꾸는 간단 편집</li></ul></div>
+      <div class=media><div class=wide data-video=step4 data-label="장면 매칭 화면"></div></div>
+    </div>
+    <div class="step reveal">
+      <div><span class=n>5단계 · 캡컷 이지버전</span>
+        <h3>캡컷으로 넘겨<br><span class=gl>간단하게 마무리</span></h3>
+        <p>완성된 구성을 <b>캡컷 프로젝트로 그대로</b> 보냅니다. 복잡한 편집 없이, 필요한 곳만 손보면 업로드할 영상이 됩니다.</p>
+        <ul><li>장면·자막·음성이 들어간 채로 열림</li><li>익숙한 캡컷에서 마지막 손질</li><li>처음 쓰는 분도 따라 할 수 있는 안내</li></ul></div>
+      <div class=media><div class=wide data-video=step5 data-label="캡컷 이지버전 화면"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class=sec>
+  <span class="kicker reveal">전부 모으면</span>
+  <h2 class=reveal>따로 하던 일이 <span class=hl>한 곳에서</span> 끝납니다</h2>
+  <div class="all reveal">
+    <div class=grp><h4>① 찾기</h4><div class=chips><span>뜨는 영상 찾기</span><span>카테고리별 히트작</span><span>채널 대비 터진 영상</span></div></div>
+    <div class=grp><h4>② 모으기</h4><div class=chips><span>6곳 유사영상 검색</span><span>원본 소스 담기</span><span>제품명 자동 검색어</span></div></div>
+    <div class=grp><h4>③ 만들기</h4><div class=chips><span>대본 추출·리메이크</span><span>AI 보이스</span><span>장면 자동 매칭</span><span>자막·꾸미기</span></div></div>
+    <div class=grp><h4>④ 마무리</h4><div class=chips><span>캡컷 이지버전</span><span>간단 편집</span></div></div>
+  </div>
+</div>
+
+<div class=sec>
+  <span class="kicker reveal">준비물</span>
+  <h2 class=reveal>설치할 것 없습니다</h2>
+  <p class="lead reveal">브라우저로 접속해서 바로 씁니다. AI 기능에 쓰는 API 키만 처음 한 번 등록하면 됩니다.</p>
+  <div class="checks reveal">
+    <div class=c><h4>💻 브라우저</h4><p>PC 크롬에서 가장 편합니다. 프로그램 설치가 필요 없습니다.</p></div>
+    <div class=c><h4>🔑 API 키</h4><p>처음 한 번만 등록합니다. <a href="/api_manual.html" style="color:var(--mint)">발급 방법 보기 →</a></p></div>
+    <div class=c><h4>🎬 캡컷</h4><p>마무리는 캡컷에서 합니다. <a href="/capcut_easy.html" style="color:var(--mint)">준비 안내 보기 →</a></p></div>
+  </div>
+</div>
+
+<div class=sec>
+  <span class="kicker reveal">구매 전 확인</span>
+  <h2 class=reveal>결제 전에 꼭 확인해 주세요</h2>
+  <div class="checks reveal">
+    <div class=c><h4>외부 서비스 요금</h4><p>AI·검색 API의 요금과 무료 사용량은 각 제공업체 정책에 따라 달라질 수 있습니다.</p></div>
+    <div class=c><h4>무료로 먼저</h4><p>가입하면 무료로 먼저 써볼 수 있습니다. 써보고 결정하세요.</p></div>
+    <div class=c><h4>환불 기준</h4><p>환불은 <a href="/refund" style="color:var(--mint)">환불정책</a>에 따릅니다. 결제 전에 꼭 읽어주세요.</p></div>
+  </div>
+  <div class="warn reveal">무료로 먼저 써보신 뒤 결제해 주세요. 환불은 환불정책 기준으로만 진행됩니다.</div>
+</div>
+
+<div class="sec reveal">
+  <div class=price>
+    <span class=tag>1기 모집 · __DEADLINE_LABEL__ 마감</span>
+    <div class=nm>__PRO_NAME__</div>
+    <div class="now gl">__PRO_PRICE__</div>
+    <div class=why>⚠️ <b>__NEXT_START_LABEL__부터 __NEXT_PRICE__</b></div>
+    <a class=cta href="__CARD_HREF__">💳 카드로 1기 신청하기</a>
+    <a class=alt href="__PAY_HREF__">계좌이체 · 결제 안내</a>
+  </div>
+</div>
+
+<div class=foot>© __NAME__ · 쇼핑쇼츠, 이제 10분만에__LEGAL____BIZFOOT__</div>
+</div>
+
+<script>
+(function(){
+  /* 마감 카운트다운 — 마감 시각은 서버가 넣는다(__DEADLINE_ISO__) */
+  var end = Date.parse("__DEADLINE_ISO__");
+  function pad(n){return (n<10?'0':'')+n}
+  function tick(){
+    var ms = Math.max(0, end - Date.now()), s = Math.floor(ms/1000);
+    var d=Math.floor(s/86400), h=Math.floor(s%86400/3600), m=Math.floor(s%3600/60), x=s%60;
+    document.getElementById('cdD').firstChild.nodeValue=d;
+    document.getElementById('cdH').firstChild.nodeValue=pad(h);
+    document.getElementById('cdM').firstChild.nodeValue=pad(m);
+    document.getElementById('cdS').firstChild.nodeValue=pad(x);
+  }
+  if (!isNaN(end)) { tick(); setInterval(tick, 1000); } else { document.getElementById('cd').style.display='none'; }
+
+  /* 영상 칸 — 파일이 있으면 자동재생(음소거·반복), 없으면 자리표시 */
+  document.querySelectorAll('[data-video]').forEach(function(el){
+    var name = el.getAttribute('data-video'), label = el.getAttribute('data-label')||'';
+    var ph = document.createElement('div'); ph.className='ph'; ph.innerHTML='<b>🎬 '+label+'</b><span>영상 준비 중</span>'; el.appendChild(ph);
+    var v = document.createElement('video');
+    v.muted=true; v.loop=true; v.playsInline=true; v.autoplay=true; v.preload='metadata';
+    v.setAttribute('muted',''); v.setAttribute('playsinline','');
+    v.addEventListener('loadeddata', function(){ if(ph.parentNode) ph.remove(); });
+    v.addEventListener('error', function(){ v.remove(); }, true);
+    var src=document.createElement('source'); src.src='/static/landing/'+name+'.mp4'; src.type='video/mp4';
+    src.addEventListener('error', function(){ v.remove(); });
+    v.appendChild(src); el.insertBefore(v, ph);
+  });
+
+  var io = 'IntersectionObserver' in window ? new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12}) : null;
+  document.querySelectorAll('.reveal').forEach(function(e){ io ? io.observe(e) : e.classList.add('in'); });
+})();
+</script>
+</body></html>

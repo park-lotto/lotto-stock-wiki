@@ -11130,10 +11130,27 @@ def _with_pay(html: str) -> str:
     name, amount = _toss_order_name_amount()
     ck, sk = _toss_keys()
     card_href, card_label = ("/pay/toss", "💳 카드로 결제하기") if (ck and sk) else (href, label)
+    # 모집 마감·다음 기수 가격(2026-09-15 사장님 "1기 9월말 마감, 10월 1일부터 2기 88만원").
+    #   관리자 설정으로 바꿀 수 있게 settings에서 읽고, 없으면 사장님이 말한 값을 쓴다.
+    _st = Store(DB_PATH)
+    dl_iso = (_st.get_setting("recruit_deadline", "") or "2026-09-30T23:59:59+09:00").strip()
+    try:
+        _dl = datetime.fromisoformat(dl_iso)
+        dl_label = f"{_dl.month}월 {_dl.day}일"
+        _nx = _dl + timedelta(seconds=1)
+        nx_label = f"{_nx.month}월 {_nx.day}일"
+    except ValueError:
+        dl_label, nx_label = "마감일", "다음 기수"
+    try:
+        next_price = int(_st.get_setting("next_price", "") or 880000)
+    except ValueError:
+        next_price = 880000
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
                 .replace("__PRO_NAME__", _toss_esc(name))
                 .replace("__PRO_PRICE__", f"{amount:,}원")
                 .replace("__CARD_HREF__", card_href).replace("__CARD_LABEL__", card_label)
+                .replace("__DEADLINE_ISO__", dl_iso).replace("__DEADLINE_LABEL__", dl_label)
+                .replace("__NEXT_START_LABEL__", nx_label).replace("__NEXT_PRICE__", f"{next_price:,}원")
                 .replace("__BIZFOOT__", _biz_foot()))
 
 
@@ -11675,7 +11692,9 @@ else{btn.href="/pricing";btn.textContent="카톡으로 문의";}
 })();</script>
 </body></html>"""
 
-_LANDING_HTML = _fill_brand(_LANDING_TMPL)
+# ★랜딩 v2(2026-09-15 사장님 "지금 랜딩 교체") — 본문은 파일 한 곳(landing.html)에서 관리한다.
+#   가격·마감 숫자는 파일에 없고 _with_pay가 채운다. 옛 _LANDING_TMPL은 되돌리기용으로 남긴다.
+_LANDING_HTML = _fill_brand((Path(__file__).parent / "landing.html").read_text(encoding="utf-8"))
 
 _PC_BLOCKED_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>등록된 PC에서만 쓸 수 있어요</title>
