@@ -218,110 +218,35 @@ export const FreeBanner: React.FC = () => {
   );
 };
 
-// ── 3) ④ 렌더화면 칸 (1080x1080, 10s) — 완성 쇼츠 4편이 폰 프레임 안에서 이어 재생 ─
-// 재료 public/render/clip1~4.mp4 (400x712, 서버 mix_jobs final.mp4에서 2.5s씩 축소 컷, gitignore)
-//   clip1=e0fb23f90286(CHUZHAO 카메라) clip2=4d9f89b50ba1(쿼티폰) clip3=1c8130dc5cfc(옷감 얼룩) clip4=f0bf15850de4(벽패널)
-// 컴포지션 프레임 startFrom 부터 클립 0초가 재생되게
-const OffthreadVideoAt: React.FC<{src: string; startFrom: number}> = ({src, startFrom}) => (
-  <Sequence from={startFrom} layout="none">
-    <OffthreadVideo src={src} muted style={{width: '100%', height: '100%', display: 'block'}} />
-  </Sequence>
-);
-
+// ── 3) ④ 렌더화면 칸 (1080x1080, 10s) — 완성 쇼츠 3편을 세로 크게 이어 재생(폰프레임·문구 없음) ─
+// 재료 public/render/full1~3.mp4 (608x1080, 서버 mix_jobs final.mp4에서 3.4s씩 축소 컷, gitignore)
+//   full1=291623f777ce(행주·RedCow) full2=a490cb5998fa(세탁기 청소) full3=434e0589793c(행주 2)
 export const SQ4 = {width: 1080, height: 1080, fps: 30, durationInFrames: 300};
-const CLIP_F = 75; // 2.5s
-const PH_W = 400;
-const PH_H = 712;
-const PH_X = 310;
-const PH_Y = 96;
+const FULL_F = 100; // 3.33s
+const XF = 8; // 크로스페이드
+const FULL_W = 608;
 
 export const SqRender: React.FC = () => {
-  useFont();
   const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
   const D = SQ4.durationInFrames;
-  const idx = Math.min(3, Math.floor(frame / CLIP_F));
-  const local = frame - idx * CLIP_F;
-  const slide = spring({frame: local, fps, config: {damping: 16, stiffness: 140}});
-  // 버튼: 매 클립 시작에 "눌림" 펄스
-  const press = spring({frame: local, fps, config: {damping: 8, stiffness: 260}});
-  const btnScale = 1 - 0.08 * Math.sin(Math.min(1, local / 10) * Math.PI);
   const fade = Math.min(
     interpolate(frame, [0, 6], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
     interpolate(frame, [D - 8, D - 1], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
   );
-  const ring = interpolate(local, [0, 22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   return (
     <AbsoluteFill style={{background: BG, overflow: 'hidden', opacity: fade}}>
-      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(50% 60% at 50% 45%, rgba(111,240,214,.12), transparent 70%)'}} />
-      {/* 왼쪽 버튼 */}
-      <div style={{position: 'absolute', left: 20, top: 430, width: 280, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, fontFamily: FONT}}>
-        <div
-          style={{
-            position: 'relative',
-            padding: '18px 30px',
-            borderRadius: 999,
-            background: MINT,
-            color: '#062018',
-            fontWeight: 900,
-            fontSize: 32,
-            letterSpacing: -1,
-            whiteSpace: 'nowrap',
-            boxShadow: `0 0 0 ${ring * 14}px rgba(111,240,214,${0.35 * (1 - ring)}), 0 16px 40px rgba(111,240,214,.35)`,
-            transform: `scale(${btnScale})`,
-          }}
-        >
-          ▶ 완성본 만들기
-        </div>
-        <div style={{color: 'rgba(255,255,255,.7)', fontWeight: 700, fontSize: 24, opacity: press}}>버튼 한 번</div>
-        <svg width="120" height="44" viewBox="0 0 120 44" style={{opacity: 0.9, transform: `translateX(${(1 - press) * -20}px)`}}>
-          <path d="M4 22h96" stroke={MINT} strokeWidth="6" strokeLinecap="round" strokeDasharray="110" strokeDashoffset={110 * (1 - press)} />
-          <path d="M84 8l18 14-18 14" fill="none" stroke={MINT} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" opacity={press} />
-        </svg>
-      </div>
-      {/* 폰 프레임 */}
-      <div
-        style={{
-          position: 'absolute',
-          left: PH_X - 12,
-          top: PH_Y - 12,
-          width: PH_W + 24,
-          height: PH_H + 24,
-          borderRadius: 44,
-          background: '#0d1218',
-          boxShadow: '0 0 0 3px #232a33, 0 30px 80px rgba(0,0,0,.65), 0 0 60px rgba(111,240,214,.18)',
-        }}
-      >
-        <div style={{position: 'absolute', left: 12, top: 12, width: PH_W, height: PH_H, borderRadius: 34, overflow: 'hidden', background: '#000'}}>
-          {[0, 1, 2, 3].map((i) => {
-            if (i !== idx && i !== idx - 1) return null;
-            const isCur = i === idx;
-            const x = isCur ? (1 - slide) * PH_W : -slide * PH_W;
-            const start = i * CLIP_F;
-            return (
-              <div key={i} style={{position: 'absolute', left: x, top: 0, width: PH_W, height: PH_H}}>
-                <OffthreadVideoAt src={staticFile(`render/clip${i + 1}.mp4`)} startFrom={start} />
-              </div>
-            );
-          })}
-          {/* 노치 */}
-          <div style={{position: 'absolute', left: PH_W / 2 - 60, top: 10, width: 120, height: 26, borderRadius: 13, background: '#000'}} />
-        </div>
-      </div>
-      {/* 오른쪽 자막 */}
-      <div style={{position: 'absolute', left: PH_X + PH_W + 30, top: 400, width: 330, fontFamily: FONT}}>
-        <div style={{display: 'flex', flexWrap: 'wrap', fontWeight: 900, fontSize: 46, lineHeight: 1.25, letterSpacing: -1.5}}>
-          {parse('자막·음성 입힌 [완성본] 바로 나옴').map((tok, i) => (
-            <Word key={i} tok={tok} idx={i} local={frame - 8} size={46} />
-          ))}
-        </div>
-        <div style={{marginTop: 16, display: 'flex', gap: 8, alignItems: 'center', opacity: interpolate(frame, [40, 52], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}}>
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} style={{width: i === idx ? 34 : 12, height: 12, borderRadius: 6, background: i === idx ? MINT : 'rgba(255,255,255,.25)'}} />
-          ))}
-          <span style={{marginLeft: 8, color: 'rgba(255,255,255,.7)', fontWeight: 700, fontSize: 22}}>{idx + 1} / 4편</span>
-        </div>
-      </div>
+      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(60% 70% at 50% 50%, rgba(111,240,214,.07), transparent 70%)'}} />
+      {[0, 1, 2].map((i) => {
+        const from = i * FULL_F;
+        const inT = i === 0 ? 1 : interpolate(frame, [from, from + XF], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+        return (
+          <Sequence key={i} from={from} durationInFrames={FULL_F + XF} layout="none">
+            <div style={{position: 'absolute', left: (1080 - FULL_W) / 2, top: 0, width: FULL_W, height: 1080, opacity: inT, boxShadow: '0 0 80px rgba(0,0,0,.7)'}}>
+              <OffthreadVideo src={staticFile(`render/full${i + 1}.mp4`)} muted style={{width: '100%', height: '100%', display: 'block'}} />
+            </div>
+          </Sequence>
+        );
+      })}
     </AbsoluteFill>
   );
 };
@@ -336,7 +261,8 @@ const HK_ROWS = [
 const HK_H = 262; // 3줄 + 간격
 const HK_W = Math.round((HK_H * 9) / 16); // 147 → 원본 1080 축소
 const HK_GAP = 14;
-const HK_LINES = ['오늘 [뭘 만들지] 고민 끝.', '매일 랭킹에\n{100만뷰 쇼츠}가 줄 서 있습니다', '그대로 <내 제품>으로\n10분이면 똑같이'];
+// HTML 제목('오늘 뭘 만들지 고민 끝.')·부제와 겹치지 않는 문구로
+const HK_LINES = ['어제도 [100만뷰] 터졌습니다', '터진 쇼츠는\n{매일 아침} 랭킹에 올라오고', '그 구조 그대로\n<내 제품>만 끼우면 끝'];
 const HK_LINE_F = 120;
 
 export const HookWall: React.FC = () => {
@@ -386,6 +312,134 @@ export const HookWall: React.FC = () => {
             </div>
           );
         })}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+// ── 5) trend.mp4 (1600x700, 9s) — "쇼핑쇼츠가 대세" 키네틱 + 상승선 + 카운트업 ─
+export const TREND = {width: 1600, height: 700, fps: 30, durationInFrames: 270};
+const TR_LINES = ['지금 [쇼핑쇼츠]가 대세', '{100만뷰} 쇼츠가 매일 랭킹에', '지금 시작한 사람이 <가져갑니다>'];
+const TR_ROW = [0, 1, 2, 6, 8, 11, 12, 14, 16];
+export const TrendBanner: React.FC = () => {
+  useFont();
+  const frame = useCurrentFrame();
+  const D = TREND.durationInFrames;
+  const items = hero.items as {file: string; views: number}[];
+  const seg = 90;
+  const line = Math.min(2, Math.floor(frame / seg));
+  const local = frame - line * seg;
+  const out = interpolate(local, [seg - 10, seg - 2], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  // 배경 썸네일 띠(높이 230, 하단) — 1주기/루프
+  const tw = 129;
+  const th = 230;
+  const gap = 12;
+  const cycle = TR_ROW.length * (tw + gap);
+  const off = (frame / D) * cycle;
+  // 상승선
+  const pts = [0, 0.12, 0.1, 0.25, 0.22, 0.4, 0.38, 0.6, 0.55, 0.8, 0.78, 1].map((v, i, arr) => [80 + (i / (arr.length - 1)) * 1440, 560 - v * 420]);
+  const drawn = interpolate(frame, [0, 120], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const pathLen = 2200;
+  const count = Math.round(interpolate(local, [6, 40], [0, 1000000], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}));
+  return (
+    <AbsoluteFill style={{background: BG, overflow: 'hidden'}}>
+      {TR_ROW.map((idx, i) =>
+        [0, 1].map((k) => {
+          const x = ((i * (tw + gap) - off) % cycle + cycle) % cycle + (k - 1) * cycle + 400;
+          if (x + tw < 0 || x > 1600) return null;
+          return <Img key={`${i}-${k}`} src={staticFile(items[idx].file)} style={{position: 'absolute', left: x, top: 700 - th + 20, width: tw, height: th, objectFit: 'cover', borderRadius: 14, opacity: 0.35}} />;
+        }),
+      )}
+      <div style={{position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(7,11,15,.2) 0%, rgba(7,11,15,.75) 55%, rgba(7,11,15,.95) 100%)'}} />
+      <svg width={1600} height={700} style={{position: 'absolute', left: 0, top: 0}}>
+        <defs>
+          <linearGradient id="tg" x1="0" x2="1"><stop offset="0" stopColor={MINT} stopOpacity="0.15" /><stop offset="1" stopColor={MINT} stopOpacity="0.9" /></linearGradient>
+        </defs>
+        <polyline points={pts.map((p) => p.join(',')).join(' ')} fill="none" stroke="url(#tg)" strokeWidth={10} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={pathLen} strokeDashoffset={pathLen * (1 - drawn)} />
+        {drawn >= 1 && <circle cx={pts[11][0]} cy={pts[11][1]} r={14 + 6 * Math.abs(Math.sin(frame / 8))} fill={MINT} opacity={0.9} />}
+      </svg>
+      <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 22, opacity: out, fontFamily: FONT, fontWeight: 900}}>
+        {line === 1 && (
+          <div style={{padding: '10px 34px', borderRadius: 999, background: MINT, color: '#062018', fontSize: 54, letterSpacing: -1, fontVariantNumeric: 'tabular-nums', opacity: interpolate(local, [4, 10], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}}>
+            조회수 {count.toLocaleString('ko-KR')}+
+          </div>
+        )}
+        <div style={{display: 'flex', alignItems: 'center', fontSize: 96, lineHeight: 1.2, letterSpacing: -2.5}}>
+          {parse(TR_LINES[line]).map((tok, i) => (
+            <Word key={`${line}-${i}`} tok={tok} idx={i} local={local} size={96} />
+          ))}
+        </div>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+// ── 6) easy60.mp4 (1600x500, 8s) — "60대도 만듭니다" + 단계 버튼 1→4 차례로 눌림 ─
+export const EASY = {width: 1600, height: 500, fps: 30, durationInFrames: 240};
+const STEPS = ['영상 담기', '대본 생성', '장면 매칭', '완성본'];
+export const Easy60: React.FC = () => {
+  useFont();
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const D = EASY.durationInFrames;
+  const fade = Math.min(
+    interpolate(frame, [0, 6], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
+    interpolate(frame, [D - 8, D - 1], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
+  );
+  const stepAt = (i: number) => 60 + i * 40; // 버튼 i 눌리는 프레임
+  const done = STEPS.filter((_, i) => frame >= stepAt(i)).length;
+  return (
+    <AbsoluteFill style={{background: BG, overflow: 'hidden', opacity: fade}}>
+      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(50% 90% at 78% 50%, rgba(111,240,214,.12), transparent 70%)'}} />
+      {/* 왼쪽 문구 */}
+      <div style={{position: 'absolute', left: 64, top: 0, bottom: 0, width: 600, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16, fontFamily: FONT}}>
+        <div style={{display: 'flex', flexWrap: 'wrap', alignItems: 'center', fontWeight: 900, fontSize: 62, lineHeight: 1.2, letterSpacing: -2}}>
+          {parse('단계만 따라가면 {60대도} 만듭니다').map((tok, i) => (
+            <Word key={i} tok={tok} idx={i} local={frame - 4} size={62} />
+          ))}
+        </div>
+        <div style={{display: 'flex', flexWrap: 'wrap', alignItems: 'center', fontWeight: 900, fontSize: 36, lineHeight: 1.25, letterSpacing: -1, marginLeft: 6}}>
+          {parse('편집 몰라도 · [버튼 네 번]이면 완성본').map((tok, i) => (
+            <Word key={i} tok={tok} idx={i + 4} local={frame - 4} size={36} />
+          ))}
+        </div>
+      </div>
+      {/* 오른쪽 단계 버튼 */}
+      <div style={{position: 'absolute', right: 70, top: 0, bottom: 0, display: 'flex', alignItems: 'center', gap: 22, fontFamily: FONT}}>
+        {STEPS.map((label, i) => {
+          const t = frame - stepAt(i);
+          const press = spring({frame: t, fps, config: {damping: 9, stiffness: 240}});
+          const on = t >= 0;
+          const scale = on ? 1 - 0.12 * Math.sin(Math.min(1, Math.max(0, t / 10)) * Math.PI) : 1;
+          const ring = interpolate(t, [0, 24], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+          return (
+            <React.Fragment key={label}>
+              {i > 0 && <div style={{width: 34, height: 6, borderRadius: 3, background: frame >= stepAt(i) - 12 ? MINT : 'rgba(255,255,255,.18)'}} />}
+              <div
+                style={{
+                  width: 150,
+                  height: 150,
+                  borderRadius: 30,
+                  background: on ? MINT : '#151c24',
+                  boxShadow: on ? `0 0 0 ${ring * 16}px rgba(111,240,214,${0.35 * (1 - ring)}), 0 16px 40px rgba(111,240,214,.3)` : '0 0 0 2px rgba(255,255,255,.12)',
+                  transform: `scale(${scale})`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  color: on ? '#062018' : 'rgba(255,255,255,.55)',
+                }}
+              >
+                <div style={{fontWeight: 900, fontSize: 54, lineHeight: 1}}>{on && press > 0.5 ? '✓' : i + 1}</div>
+                <div style={{fontWeight: 900, fontSize: 24, letterSpacing: -0.5}}>{label}</div>
+              </div>
+            </React.Fragment>
+          );
+        })}
+      </div>
+      <div style={{position: 'absolute', right: 70, bottom: 30, fontFamily: FONT, fontWeight: 700, fontSize: 24, color: 'rgba(255,255,255,.6)', opacity: done > 0 ? 1 : 0}}>
+        {done < 4 ? `${done} / 4 단계` : '완성본 나옴!'}
       </div>
     </AbsoluteFill>
   );
