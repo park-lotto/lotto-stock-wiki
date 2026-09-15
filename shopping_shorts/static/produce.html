@@ -13546,7 +13546,7 @@ async function loadTtsBeats(){
   // 프리셋 카드는 job(영상매칭) 없이도 항상 표시 — 둘러보기·샘플 미리듣기 가능
   if(!await loadPresets()) return;
   // 관리자에게만 '＋ 일레븐랩스에서 성우 추가'를 연다(등록은 실TTS 4회 = 크레딧).
-  { const a=document.getElementById('elvAdmin'); if(a && window.IS_ADMIN) a.style.display='block'; }
+  // ★관리자에게도 안 연다(2026-09-15 사장님 "내가 추가할껀없고 지워줘") — 기능 코드는 남기고 버튼만 숨긴 채 둔다.
   renderTtsBeats();
 }
 
