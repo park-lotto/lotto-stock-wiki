@@ -919,6 +919,9 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
     # 🚫 영구차단(2026-07-30) — 카드의 차단 버튼이 넣은 removed_channels를 여기서 걸러낸다.
     # 수집(merge_tracked)도 같은 목록을 보지만, 이미 저장된 last_run에는 남아 있어
     # 차단 후 새로고침·업데이트 때 다시 뜨는 걸 막으려면 이 조회 경로에서도 잘라야 한다.
+    # 🗂 관리자가 카드에서 옮긴 카테고리(2026-09-15) — 저장된 목록에도 바로 보이게 조회에서도 덮는다.
+    #   덮는 규칙은 store._apply_overrides 한 곳(수집 저장 때 쓰는 것과 같은 함수).
+    items = store._apply_overrides(items)
     blocked = store.removed_usernames()
     if blocked:
         items = [i for i in items
@@ -2549,6 +2552,23 @@ def api_refs_set_category(request: Request, username: str, category: str = ""):
             "ok": False, "error": f"알 수 없는 카테고리: {cat}"})
     Store(DB_PATH).set_channel_category(username, cat)
     return {"ok": True, "username": username, "category": cat}
+
+
+_MOVABLE_CATEGORIES = ("홈템", "레시피", "뷰티", "제품정체형", "장비템", "차량템", "연예인", "기타")
+
+
+@app.post("/api/refs/video_category")
+def api_refs_video_category(request: Request, shortcode: str, category: str = ""):
+    """영상 한 편의 카테고리를 옮긴다(관리자 전용, 2026-09-15 사장님 "썸네일에 카테이동 버튼").
+    category 빈값 = 지정 해제(자동판정으로 복귀). 다음 수집에도 유지된다(_apply_overrides)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    cat = (category or "").strip()
+    if not shortcode or (cat and cat not in _MOVABLE_CATEGORIES):
+        return JSONResponse(status_code=422, content={"ok": False, "error": f"알 수 없는 카테고리: {cat}"})
+    Store(DB_PATH).set_category_overrides({shortcode: cat})
+    return {"ok": True, "shortcode": shortcode, "category": cat}
 
 
 @app.post("/api/reference/register")
