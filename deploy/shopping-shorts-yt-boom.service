@@ -1,0 +1,10 @@
+[Unit]
+Description=Shopping Shorts 유튜브 대박채널 발굴(최근 7일 쇼츠 10만+ → 유튜브 시드 등록)
+After=network.target shopping-shorts.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+ExecStart=/usr/bin/python3 -m scripts.yt_boom_discover --apply
