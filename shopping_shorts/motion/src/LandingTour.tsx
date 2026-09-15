@@ -42,13 +42,15 @@ export const Word: React.FC<{tok: Tok; idx: number; local: number; size: number}
   const isR = tok.k === 'r';
   const onMarker = isY && sweep > 0.5;
   const shadow = `0 ${Math.max(2, size * 0.05)}px 0 rgba(0,0,0,.6)`;
+  // 강조어(마커·빨강)는 등장 뒤 살짝 펄스
+  const emph = tok.k && local - delay > 18 ? 1 + 0.04 * Math.sin(((local - delay - 18) / 10) * Math.PI) : 1;
   return (
     <span
       style={{
         position: 'relative',
         display: 'inline-block',
         margin: `0 ${size * 0.08}px`,
-        transform: `scale(${interpolate(s, [0, 1], [0.6, 1])}) translateY(${(1 - s) * size * 0.25}px)`,
+        transform: `scale(${interpolate(s, [0, 1], [0.6, 1]) * emph}) translateY(${(1 - s) * size * 0.25}px)`,
         opacity: op,
         whiteSpace: 'nowrap',
       }}
@@ -86,35 +88,34 @@ export const Word: React.FC<{tok: Tok; idx: number; local: number; size: number}
 };
 
 type CapProps = {main: string; sub?: string; from: number; to: number; size?: number; pos?: 'bottom' | 'top'};
-export const Caption: React.FC<CapProps> = ({main, sub, from, to, size = 58, pos = 'bottom'}) => {
+// 상단(기본) 불투명 판 — 내용 가림 최소화를 위해 글자 폭만큼만 판을 깐다
+export const Caption: React.FC<CapProps> = ({main, sub, from, to, size = 72, pos = 'top'}) => {
   const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
   if (frame < from || frame > to) return null;
   const local = frame - from;
   const out = interpolate(frame, [to - 8, to], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const inn = interpolate(local, [0, 6], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const inn = spring({frame: local, fps, config: {damping: 13, stiffness: 160}});
   const toks = parse(main);
+  const subIn = interpolate(local, [toks.length * 5 + 8, toks.length * 5 + 16], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   return (
     <div
       style={{
         position: 'absolute',
-        left: 0,
-        right: 0,
-        [pos]: 0,
-        padding: pos === 'bottom' ? '54px 48px 30px' : '30px 48px 54px',
-        background:
-          pos === 'bottom'
-            ? 'linear-gradient(0deg, rgba(4,7,10,.9) 0%, rgba(4,7,10,.8) 60%, rgba(4,7,10,0) 100%)'
-            : 'linear-gradient(180deg, rgba(4,7,10,.9) 0%, rgba(4,7,10,.8) 60%, rgba(4,7,10,0) 100%)',
+        left: 36,
+        [pos]: 32,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-start',
         gap: 10,
-        opacity: inn * out,
+        opacity: Math.min(1, inn * 1.4) * out,
+        transform: `scale(${interpolate(inn, [0, 1], [0.85, 1])})`,
+        transformOrigin: pos === 'top' ? '0 0' : '0 100%',
         fontFamily: FONT,
         fontWeight: 900,
       }}
     >
-      <div style={{display: 'flex', flexWrap: 'wrap', alignItems: 'center', fontSize: size, lineHeight: 1.25, letterSpacing: -1.5}}>
+      <div style={{display: 'flex', flexWrap: 'wrap', alignItems: 'center', padding: '10px 22px 10px 16px', borderRadius: 20, background: 'rgba(4,7,10,.86)', boxShadow: '0 10px 30px rgba(0,0,0,.45)', fontSize: size, lineHeight: 1.22, letterSpacing: -1.5}}>
         {toks.map((tok, i) => (
           <Word key={i} tok={tok} idx={i} local={local} size={size} />
         ))}
@@ -122,20 +123,24 @@ export const Caption: React.FC<CapProps> = ({main, sub, from, to, size = 58, pos
       {sub && (
         <div
           style={{
-            fontSize: 30,
-            fontWeight: 700,
-            lineHeight: 1.3,
-            color: 'rgba(255,255,255,.88)',
-            letterSpacing: -0.5,
-            textShadow: '0 2px 0 rgba(0,0,0,.6)',
-            opacity: interpolate(local, [toks.length * 5 + 8, toks.length * 5 + 16], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
             display: 'flex',
             flexWrap: 'wrap',
+            padding: '8px 18px',
+            borderRadius: 14,
+            background: 'rgba(4,7,10,.86)',
+            fontSize: 36,
+            fontWeight: 900,
+            lineHeight: 1.3,
+            color: '#fff',
+            letterSpacing: -0.5,
+            textShadow: '0 2px 0 rgba(0,0,0,.6)',
+            opacity: subIn,
+            transform: `translateY(${(1 - subIn) * 10}px)`,
           }}
         >
           {parse(sub).map((tok, i) => (
-            <span key={i} style={{marginRight: 8, whiteSpace: 'nowrap'}}>
-              <span style={{color: tok.k === 'r' ? RED : tok.k === 'y' ? YEL : undefined}}>{tok.t}</span>
+            <span key={i} style={{marginRight: 10, whiteSpace: 'nowrap'}}>
+              <span style={{color: tok.k === 'r' ? RED : tok.k === 'y' ? YEL : '#fff'}}>{tok.t}</span>
               {tok.suffix}
             </span>
           ))}
@@ -250,7 +255,7 @@ export const TourStep3: React.FC = () => {
   return (
     <AbsoluteFill style={{background: BG, overflow: 'hidden'}}>
       <OffthreadVideo src={staticFile('tour/script.mp4')} muted style={{position: 'absolute', left: x, top: 0, width: vw, height: 800}} />
-      <Caption main="[최상급] 대본 스타일 템플릿을 선택" from={10} to={206} size={54} />
+      <Caption main="[최상급] 대본 스타일 템플릿을 선택" from={10} to={206} size={66} />
       <Caption main="{내 제품 대본} 완성" sub="A안·B안 두 가지로 바로 나옵니다" from={210} to={S3 - 4} />
       <EdgeFade dur={S3} />
     </AbsoluteFill>
