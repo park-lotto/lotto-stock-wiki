@@ -191,14 +191,16 @@ const Column: React.FC<{col: number; items: Item[]; frame: number}> = ({col, ite
 
 // ── 자막 ──────────────────────────────────────────────
 type Tok = {t: string; k?: 'y' | 'r'; play?: boolean};
-const LINES: Tok[][] = [
-  [{t: '오늘도'}, {t: '랭킹에', k: 'y'}, {t: '올라온'}, {t: '대박', k: 'r'}, {t: '쇼츠'}],
-  [{t: '최고'}, {t: fmtViews(MAX_VIEWS), k: 'y', play: true}, {t: '찍은'}, {t: '쇼핑쇼츠'}],
-  [{t: '이런'}, {t: '영상이'}, {t: '매일', k: 'r'}, {t: '잡힙니다', k: 'y'}],
-  [{t: '뭘'}, {t: '만들지'}, {t: '고민', k: 'r'}, {t: '끝', k: 'y'}],
+// 두 줄 고정: rows[0]=윗줄(작게), rows[1]=아랫줄(핵심, 1.35배)
+const LINES: Tok[][][] = [
+  [[{t: '오늘도'}, {t: '랭킹에', k: 'y'}, {t: '올라온'}], [{t: '대박', k: 'r'}, {t: '쇼츠', k: 'r'}]],
+  [[{t: '최고'}, {t: fmtViews(MAX_VIEWS), k: 'y', play: true}], [{t: '찍은', k: 'r'}, {t: '쇼핑쇼츠', k: 'r'}]],
+  [[{t: '이런'}, {t: '영상이'}], [{t: '매일', k: 'r'}, {t: '잡힙니다', k: 'y'}]],
+  [[{t: '뭘'}, {t: '만들지'}], [{t: '고민', k: 'r'}, {t: '끝', k: 'y'}]],
 ];
+const ROW_SIZE = [76, 103]; // 아랫줄 = 윗줄 × 1.35
 
-const Word: React.FC<{tok: Tok; idx: number; local: number; exitT: number}> = ({tok, idx, local, exitT}) => {
+const Word: React.FC<{tok: Tok; idx: number; local: number; exitT: number; size: number}> = ({tok, idx, local, exitT, size}) => {
   const {fps} = useVideoConfig();
   const delay = 4 + idx * 6;
   const s = spring({frame: local - delay, fps, config: {damping: 11, stiffness: 190, mass: 0.7}});
@@ -241,7 +243,7 @@ const Word: React.FC<{tok: Tok; idx: number; local: number; exitT: number}> = ({
       )}
       {tok.play && (
         <span style={{position: 'relative', zIndex: 1, display: 'inline-flex'}}>
-          <Play size={64} color={color} />
+          <Play size={Math.round(size * 0.72)} color={color} />
         </span>
       )}
       <span style={{position: 'relative', zIndex: 1}}>{tok.t}</span>
@@ -266,28 +268,31 @@ const Subtitle: React.FC<{frame: number}> = ({frame}) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingTop: 92,
+        paddingTop: 70,
       }}
     >
-      <div
-        style={{
-          width: 980,
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          rowGap: 14,
-          fontFamily: FONT,
-          fontWeight: 900,
-          fontSize: 88,
-          lineHeight: 1.18,
-          letterSpacing: -2,
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {LINES[line].map((tok, i) => (
-          <Word key={`${line}-${i}`} tok={tok} idx={i} local={local} exitT={exitT} />
-        ))}
-      </div>
+      {LINES[line].map((row, r) => (
+        <div
+          key={`${line}-${r}`}
+          style={{
+            width: 1000,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            fontFamily: FONT,
+            fontWeight: 900,
+            fontSize: ROW_SIZE[r],
+            lineHeight: 1.2,
+            letterSpacing: -2,
+            fontVariantNumeric: 'tabular-nums',
+            marginTop: r === 0 ? 0 : 6,
+          }}
+        >
+          {row.map((tok, i) => (
+            <Word key={`${line}-${r}-${i}`} tok={tok} idx={(r === 0 ? 0 : LINES[line][0].length) + i} local={local} exitT={exitT} size={ROW_SIZE[r]} />
+          ))}
+        </div>
+      ))}
       <div
         style={{
           marginTop: 26,
