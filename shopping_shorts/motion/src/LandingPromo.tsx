@@ -1,6 +1,6 @@
 // 랜딩 프로모 2편 — price_compare(1280x640) · free_banner(1600x360). 확대 0회, 블러 그림자 없음.
 import React from 'react';
-import {AbsoluteFill, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Img, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {useFont} from './LandingHeroWall';
 import {Word, parse} from './LandingTour';
 import hero from './hero_data.json';
@@ -212,6 +212,114 @@ export const FreeBanner: React.FC = () => {
         >
           <span style={{position: 'relative', zIndex: 1}}>지금 무료로 보기 →</span>
           <div style={{position: 'absolute', top: 0, bottom: 0, left: `${sweep * 100}%`, width: 120, background: 'linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,.75), rgba(255,255,255,0))', transform: 'skewX(-18deg)'}} />
+        </div>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+// ── 3) ④ 렌더화면 칸 (1080x1080, 10s) — 완성 쇼츠 4편이 폰 프레임 안에서 이어 재생 ─
+// 재료 public/render/clip1~4.mp4 (400x712, 서버 mix_jobs final.mp4에서 2.5s씩 축소 컷, gitignore)
+//   clip1=e0fb23f90286(CHUZHAO 카메라) clip2=4d9f89b50ba1(쿼티폰) clip3=1c8130dc5cfc(옷감 얼룩) clip4=f0bf15850de4(벽패널)
+// 컴포지션 프레임 startFrom 부터 클립 0초가 재생되게
+const OffthreadVideoAt: React.FC<{src: string; startFrom: number}> = ({src, startFrom}) => (
+  <Sequence from={startFrom} layout="none">
+    <OffthreadVideo src={src} muted style={{width: '100%', height: '100%', display: 'block'}} />
+  </Sequence>
+);
+
+export const SQ4 = {width: 1080, height: 1080, fps: 30, durationInFrames: 300};
+const CLIP_F = 75; // 2.5s
+const PH_W = 400;
+const PH_H = 712;
+const PH_X = 310;
+const PH_Y = 96;
+
+export const SqRender: React.FC = () => {
+  useFont();
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const D = SQ4.durationInFrames;
+  const idx = Math.min(3, Math.floor(frame / CLIP_F));
+  const local = frame - idx * CLIP_F;
+  const slide = spring({frame: local, fps, config: {damping: 16, stiffness: 140}});
+  // 버튼: 매 클립 시작에 "눌림" 펄스
+  const press = spring({frame: local, fps, config: {damping: 8, stiffness: 260}});
+  const btnScale = 1 - 0.08 * Math.sin(Math.min(1, local / 10) * Math.PI);
+  const fade = Math.min(
+    interpolate(frame, [0, 6], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
+    interpolate(frame, [D - 8, D - 1], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}),
+  );
+  const ring = interpolate(local, [0, 22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  return (
+    <AbsoluteFill style={{background: BG, overflow: 'hidden', opacity: fade}}>
+      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(50% 60% at 50% 45%, rgba(111,240,214,.12), transparent 70%)'}} />
+      {/* 왼쪽 버튼 */}
+      <div style={{position: 'absolute', left: 20, top: 430, width: 280, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, fontFamily: FONT}}>
+        <div
+          style={{
+            position: 'relative',
+            padding: '18px 30px',
+            borderRadius: 999,
+            background: MINT,
+            color: '#062018',
+            fontWeight: 900,
+            fontSize: 32,
+            letterSpacing: -1,
+            whiteSpace: 'nowrap',
+            boxShadow: `0 0 0 ${ring * 14}px rgba(111,240,214,${0.35 * (1 - ring)}), 0 16px 40px rgba(111,240,214,.35)`,
+            transform: `scale(${btnScale})`,
+          }}
+        >
+          ▶ 완성본 만들기
+        </div>
+        <div style={{color: 'rgba(255,255,255,.7)', fontWeight: 700, fontSize: 24, opacity: press}}>버튼 한 번</div>
+        <svg width="120" height="44" viewBox="0 0 120 44" style={{opacity: 0.9, transform: `translateX(${(1 - press) * -20}px)`}}>
+          <path d="M4 22h96" stroke={MINT} strokeWidth="6" strokeLinecap="round" strokeDasharray="110" strokeDashoffset={110 * (1 - press)} />
+          <path d="M84 8l18 14-18 14" fill="none" stroke={MINT} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" opacity={press} />
+        </svg>
+      </div>
+      {/* 폰 프레임 */}
+      <div
+        style={{
+          position: 'absolute',
+          left: PH_X - 12,
+          top: PH_Y - 12,
+          width: PH_W + 24,
+          height: PH_H + 24,
+          borderRadius: 44,
+          background: '#0d1218',
+          boxShadow: '0 0 0 3px #232a33, 0 30px 80px rgba(0,0,0,.65), 0 0 60px rgba(111,240,214,.18)',
+        }}
+      >
+        <div style={{position: 'absolute', left: 12, top: 12, width: PH_W, height: PH_H, borderRadius: 34, overflow: 'hidden', background: '#000'}}>
+          {[0, 1, 2, 3].map((i) => {
+            if (i !== idx && i !== idx - 1) return null;
+            const isCur = i === idx;
+            const x = isCur ? (1 - slide) * PH_W : -slide * PH_W;
+            const start = i * CLIP_F;
+            return (
+              <div key={i} style={{position: 'absolute', left: x, top: 0, width: PH_W, height: PH_H}}>
+                <OffthreadVideoAt src={staticFile(`render/clip${i + 1}.mp4`)} startFrom={start} />
+              </div>
+            );
+          })}
+          {/* 노치 */}
+          <div style={{position: 'absolute', left: PH_W / 2 - 60, top: 10, width: 120, height: 26, borderRadius: 13, background: '#000'}} />
+        </div>
+      </div>
+      {/* 오른쪽 자막 */}
+      <div style={{position: 'absolute', left: PH_X + PH_W + 30, top: 400, width: 330, fontFamily: FONT}}>
+        <div style={{display: 'flex', flexWrap: 'wrap', fontWeight: 900, fontSize: 46, lineHeight: 1.25, letterSpacing: -1.5}}>
+          {parse('자막·음성 입힌 [완성본] 바로 나옴').map((tok, i) => (
+            <Word key={i} tok={tok} idx={i} local={frame - 8} size={46} />
+          ))}
+        </div>
+        <div style={{marginTop: 16, display: 'flex', gap: 8, alignItems: 'center', opacity: interpolate(frame, [40, 52], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}}>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} style={{width: i === idx ? 34 : 12, height: 12, borderRadius: 6, background: i === idx ? MINT : 'rgba(255,255,255,.25)'}} />
+          ))}
+          <span style={{marginLeft: 8, color: 'rgba(255,255,255,.7)', fontWeight: 700, fontSize: 22}}>{idx + 1} / 4편</span>
         </div>
       </div>
     </AbsoluteFill>

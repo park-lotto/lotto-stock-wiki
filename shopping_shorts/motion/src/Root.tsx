@@ -10,13 +10,14 @@ import {FullReel} from './FullReel';
 import {LandingHeroWall, HERO_WALL} from './LandingHeroWall';
 import {LandingSquare, SQUARE, SQUARES} from './LandingSquare';
 import {TOURS, TOUR_BASE} from './LandingTour';
-import {PriceCompare, PRICE, FreeBanner, BANNER} from './LandingPromo';
+import {PriceCompare, PRICE, FreeBanner, BANNER, SqRender, SQ4} from './LandingPromo';
 
 export const RemotionRoot: React.FC = () => (
   <>
     <Composition id="LandingHeroWall" component={LandingHeroWall} {...HERO_WALL} />
     <Composition id="PriceCompare" component={PriceCompare} {...PRICE} />
     <Composition id="FreeBanner" component={FreeBanner} {...BANNER} />
+    <Composition id="SqRender" component={SqRender} {...SQ4} />
     {Object.entries(TOURS).map(([id, t]) => (
       <Composition key={id} id={`LandingTour-${id.replace(/_/g, '-')}`} component={t.component} {...TOUR_BASE} durationInFrames={t.durationInFrames} />
     ))}
