@@ -189,6 +189,13 @@ h1{font-size:16px;margin:0;font-weight:700}
     color:#ff9d9d;border:1px solid var(--line);border-radius:5px;padding:0 5px;
     font-size:12px;line-height:16px;cursor:pointer}
 .tbcut .delx:hover{background:#a03434;color:#fff;border-color:transparent}
+/* 🔒 컷 잠금(2026-09-16 사장님 "고정시킬 건 냅두고 다른 거 조작").
+   ★풀림(🔓)도 **늘 보이게** 둔다 — 잠긴 것만 보이면 "잠글 수 있다"는 걸 아무도 모른다. */
+.tbcut .lockbtn{position:absolute;left:3px;bottom:6px;z-index:4;background:rgba(0,0,0,.72);
+    color:#9fb4d0;border:1px solid var(--line);border-radius:5px;padding:0 5px;
+    font-size:12px;line-height:16px;cursor:pointer;opacity:.75}
+.tbcut .lockbtn:hover{opacity:1;border-color:#7aa2d0}
+.tbcut .lockbtn.on{background:#2d4a76;color:#fff;border-color:#7aa2d0;opacity:1}
 
 /* ── 타임프레임(내 영상 전체) ─────────────────────────────────────────────
    위=전체 한 줄, 아래=고를 조각. 사장님 손그림 구조. 띠는 가로로만 스크롤한다. */
@@ -2855,8 +2862,11 @@ function renderBand(){
              onclick="bandCutClick(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')"
              title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · ✕ 버튼이나 두 번 클릭 = 빼기">
-             <img src="${SL.thumb(c.seg_id)}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '✋' : ''}${c.dur.toFixed(1)}</span
-             ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
+             <img src="${SL.thumb(c.seg_id)}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '🔒' : ''}${c.dur.toFixed(1)}</span
+             >${CUTS[i] ? `<button type="button" class="lockbtn ${cutLocked(i, ci) ? 'on' : ''}"
+             title="${cutLocked(i, ci) ? '🔒 잠김 — 다른 컷을 만져도 이 길이를 지킵니다. 누르면 풉니다' : '🔓 풀림 — 누르면 지금 길이(' + c.dur.toFixed(1) + '초)로 잠급니다'}"
+             onclick="event.stopPropagation();clearTimeout(clickTimer);toggleCutLock(${i}, ${ci})">${cutLocked(i, ci) ? '🔒' : '🔓'}</button>` : ''
+             }<input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
                     ondblclick="event.stopPropagation()"><button type="button" class="rollbtn boxbtn" title="이 컷 길이(${c.dur.toFixed(2)}초)로 잠긴 오렌지박스를 소스 필름에 띄웁니다 — 영상을 갈아 열어도 유지, Esc로 끄기"
@@ -3534,8 +3544,10 @@ function hydrateCuts(cuts, slow){
   Object.keys(CUTS).forEach(k => delete CUTS[k]);
   Object.keys(SLOW).forEach(k => delete SLOW[k]);
   for (const [k, v] of Object.entries(cuts || {})){
+    // 🔒 잠금(lock)도 함께 되살린다 — 빼먹으면 새로고침에 잠금이 사라진다(FIXLEN이 한 실수).
     if (Array.isArray(v)) CUTS[k] = v.filter(c => c && c.seg_id && c.dur > 0)
-                                     .map(c => ({seg_id: c.seg_id, dur: +c.dur}));
+                                     .map(c => c.lock ? {seg_id: c.seg_id, dur: +c.dur, lock: 1}
+                                                      : {seg_id: c.seg_id, dur: +c.dur});
   }
   for (const [k, v] of Object.entries(slow || {})) if (+v > 1) SLOW[k] = +v;
 }
@@ -3947,7 +3959,9 @@ function _editPayload(){
       list: (lists[i] || []).slice(), stretch: !!STRETCH[i],
       phrase: phraseSyncOn(i),      // 구절 맞춤 — 렌더도 같은 경계로(video_assemble)
       // 끈 칸 = 화면에 보이는 컷 그대로 렌더(2026-09-14). 켠 칸은 안 보낸다.
-      cuts: phraseSyncOn(i) ? null : (CUTS[i] || []).map(c => ({seg_id: c.seg_id, dur: c.dur})),
+      cuts: phraseSyncOn(i) ? null : (CUTS[i] || []).map(c => c.lock
+              ? ({seg_id: c.seg_id, dur: c.dur, lock: 1})     // 🔒 잠금도 저장(새로고침·다른 PC 유지)
+              : ({seg_id: c.seg_id, dur: c.dur})),
       slow: phraseSyncOn(i) ? 1 : (SLOW[i] || 1)})),
     trims: TRIMS,
     merges: MERGES,          // 🔗 합친 조각(대표 → 이어 붙일 조각들) — 서버는 긴 구간 하나로 받는다
