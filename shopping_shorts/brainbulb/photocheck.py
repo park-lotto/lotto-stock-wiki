@@ -57,8 +57,54 @@ def metrics(path):
             "why": why}
 
 
-def build_review_request(path, subtitle, want=""):
-    """모델에게 보낼 질문. 사진 한 장 + 그 컷 자막 (+ 그 자리에 무엇을 찾으려 했는지).
+def quality(path):
+    """규격·화질 — 기계로 잰다(막지 않고 기록만). → {"w","h","ratio","blur","why"} 또는 None."""
+    try:
+        import cv2
+    except ImportError:
+        return None
+    from .photos import imread
+    img = imread(path)
+    if img is None:
+        return None
+    h, w = img.shape[:2]
+    g = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blur = float(cv2.Laplacian(g, cv2.CV_64F).var())
+    why = []
+    if min(w, h) < spec.PHOTO_MIN_SIDE:
+        why.append(f"작다({w}×{h})")
+    if blur < spec.PHOTO_BLUR_MIN:
+        why.append(f"흐리다({blur:.0f})")
+    return {"w": w, "h": h, "ratio": round(w / h, 3) if h else 0,
+            "blur": round(blur, 1), "why": " · ".join(why)}
+
+
+def rules_ask():
+    """기준표 → 모델에게 묻는 말. ★여기서만 만든다 — 표에 한 줄 더하면 질문도 따라온다."""
+    parts = []
+    for r in spec.PHOTO_RULES:
+        if r["ask"]:
+            parts.append(r["ask"])
+    return "\n\n".join(parts)
+
+
+def rules_json_shape():
+    """기준표 → 모델이 돌려줄 JSON 모양."""
+    return ('{"verdict": "accepted 또는 retry",'
+            ' "visual_kind": "photo 또는 illustration",'
+            ' "fabricated_text": ["지어낸 기록만"],'
+            ' "who_what": "그림에 실제로 찍힌 것 한 문장",'
+            ' "matches_subtitle": true 또는 false,'
+            ' "product_ok": true 또는 false,'
+            ' "single_scene": true 또는 false,'
+            ' "reason": "보이는 것을 근거로 한 판정 이유"}')
+
+
+def build_review_request(path, subtitle, want="", topic=""):
+    """모델에게 보낼 질문. 사진 한 장 + 그 컷 자막 (+ 그 자리에 무엇을 찾으려 했는지 + 소재 한 줄).
+
+    ★`topic` 은 이 편이 무엇에 관한 것인지(제목). 「제품이 맞나」 판정에 필요하다 —
+      소재를 모르면 모델이 «이 파우치가 그 제품인가»를 판단할 근거가 없다.
 
     ★세 가지를 한 번에 묻는다:
       ① 이게 **사진인가 그림인가**(볼케이노가 묻는 것)
@@ -70,58 +116,24 @@ def build_review_request(path, subtitle, want=""):
     """
     return (
         "첨부한 그림 한 장을 보고 판정하라. 추측하지 말고 **보이는 것만** 근거로 삼아라.\n"
+        "★답은 반드시 한국어로 쓴다(who_what·reason 포함).\n"
         "\n"
         f"[이 그림이 쓰일 자막] «{subtitle}»\n"
         + (f"[이 자리에 넣으려던 것] {want}\n" if want else "")
+        + (f"[소재] {topic}\n" if topic else "")
         + "\n"
-        "[판정 1 — 사진인가 그림인가]\n"
-        "  photo        실제 카메라로 찍은 것처럼 보인다(피부 모공·직물 주름·머리카락 질감·자연광 명암)\n"
-        "  illustration 윤곽선·평면 색면·셀 셰이딩·과장된 비율이 보인다\n"
+        "먼저 한 문장으로 적어라: 이 그림에 **실제로 무엇이 찍혀 있나**(who_what).\n"
         "\n"
-        "[판정 2 — **지어낸 기록**이 있나]\n"
-        "  ★묻는 것은 '글자가 있나'가 아니라 '**없는 사실을 진짜처럼 보여주나**'다.\n"
-        "  적어야 할 것 — 화면·간판·표가 **수치나 이름을 내세우는** 경우:\n"
-        "    없는 채널 이름 밑의 구독자 수 · 가짜 주가지수·환율 · 지어낸 뉴스 헤드라인\n"
-        "    실존 회사 간판(신한투자증권 같은) · 읽히는 가격표·계기판\n"
-        "  적지 마라 — 실제 사진에 자연히 있는 글자:\n"
-        "    옷·가방의 브랜드(NIKE·YALE) · 간판이나 표지판의 지명 · 흐릿한 배경 글자\n"
-        "    번호판·상표 조각처럼 **주장을 담지 않는** 글자\n"
-        "  판단 기준: 그 글자가 **틀린 정보를 사실처럼 전달하나**. 아니면 적지 마라.\n"
-        "  ★fabricated_text를 하나라도 적었으면 verdict는 반드시 retry다. 둘을 어긋나게 내지 마라.\n"
-        "\n"
-        "[판정 3 — 자막과 맞나]  ★여기서 느슨하면 검수가 무의미해진다\n"
-        "  ★기준은 «어긋나지 않는다»가 아니라 «**이 자막을 보여주는 그림인가**»다.\n"
-        "    모순이 없다는 이유로 통과시키지 마라 — 그러면 아무 사진이나 다 통과한다.\n"
-        "\n"
-        "  먼저 한 문장으로 적어라: 이 그림에 **실제로 무엇이 찍혀 있나**(who_what).\n"
-        "\n"
-        "  ★이 그림은 **자막이 말하는 사건의 현장 사진이 아니다.** 숏폼의 배경 그림이다.\n"
-        "    그러니 «그 장면이 찍혔나»를 묻지 마라 — 그건 어떤 사진도 통과하지 못한다.\n"
-        "    물어야 할 것은 딱 하나다: **이 그림을 이 자막과 함께 틀어도 어색하지 않은가.**\n"
-        "\n"
-        "  통과(true)로 두어라:\n"
-        "    · 자막이 말하는 **사람**이 그 사람이거나, 성별·나이대가 맞는 경우\n"
-        "      (예: 자막 «최민식은 …» + 나이 든 한국 남자 사진 → 맞다.\n"
-        "           자막이 그 사람의 말·행동을 설명해도 사진은 인물 사진이면 된다)\n"
-        "    · 자막이 말하는 **사물·장소**가 화면에 보이는 경우\n"
-        "    · 자막이 앞뒤 맥락을 잇는 말이고, 그림이 그 이야기의 인물·장소인 경우\n"
-        "\n"
-        "  ★반려(false)로 내야 할 것 — 함께 틀면 **딴 이야기로 보이는** 경우:\n"
-        "    · 자막은 «어음 용지»·«통장» 같은 **사물**인데 그림엔 그 사물이 없고 딴 게 찍혔다\n"
-        "    · 자막이 말하는 사람과 그림 속 사람의 **성별이 다르다**\n"
-        "    · 자막은 «1980년대» 인데 그림은 요즘 사무실·요즘 옷차림이다\n"
-        "    · 자막은 한 나라인데 그림은 다른 나라다(«케냐 슬럼가» + 한국 지하철)\n"
-        "\n"
-        "  ★'이 자리에 넣으려던 것'이 함께 주어졌으면 **그것이 실제로 왔는지** 대조하라.\n"
-        "    «검색: 1980년대 어음 용지» 라고 했는데 사람 인터뷰 사진이 왔으면 false 다 —\n"
-        "    검색이 엉뚱한 것을 물어온 것이므로, 그림이 아무리 좋아도 그 자리엔 못 쓴다.\n"
-        "    «생성 이미지» 라고 적혀 있으면 검색 대조는 건너뛰고 위 기준만 본다.\n"
+        # ★묻는 말은 기준표(spec.PHOTO_RULES)에서만 나온다 — 표에 한 줄 더하면 여기도 따라온다
+        + rules_ask()
+        + "\n\n"
+        "★'이 자리에 넣으려던 것'이 주어졌으면 **그것이 실제로 왔는지** 대조하라.\n"
+        "  «검색: 1980년대 어음 용지» 라고 했는데 사람 인터뷰 사진이 왔으면 matches_subtitle=false 다.\n"
+        "  «생성 이미지» 라고 적혀 있으면 검색 대조는 건너뛰고 위 기준만 본다.\n"
+        "★어느 항목이든 어긋난 것을 적었으면 verdict는 반드시 retry다. 둘을 어긋나게 내지 마라.\n"
         "\n"
         "JSON 하나만 출력하라:\n"
-        '{"verdict": "accepted 또는 retry", "visual_kind": "photo 또는 illustration",'
-        ' "fabricated_text": ["지어낸 기록만"], "who_what": "그림에 실제로 찍힌 것 한 문장",'
-        ' "matches_subtitle": true 또는 false,'
-        ' "reason": "보이는 것을 근거로 한 판정 이유"}\n'
+        + rules_json_shape() + "\n"
     )
 
 
@@ -132,22 +144,46 @@ def parse_review(raw):
         d = parse_any(raw)
     except Exception:  # noqa: BLE001
         return {"verdict": "accepted", "reason": "판정을 못 읽어 통과 처리"}
-    v = str(d.get("verdict") or "accepted").lower()
-    kind = str(d.get("visual_kind") or "photo").lower()
-    # ★"읽히는 글자"가 아니라 **지어낸 기록**만 본다 — 옷의 NIKE·YALE 때문에
-    #   실제 뉴스 사진이 버려지고 생성 이미지로 바뀌었다(실측 2026-09-13 v9 슬롯4).
-    text = [t for t in (d.get("fabricated_text") or d.get("legible_text") or []) if str(t).strip()]
-    match = d.get("matches_subtitle")
-    bad = (v == "retry" or kind == "illustration" or bool(text) or match is False)
-    return {"verdict": "retry" if bad else "accepted", "visual_kind": kind,
-            "fabricated_text": text, "matches_subtitle": match,
+    # 옛 이름 호환: legible_text → fabricated_text
+    if d.get("legible_text") and not d.get("fabricated_text"):
+        d["fabricated_text"] = d["legible_text"]
+
+    # ★어긋난 항목을 **기준표로** 가린다 — 조건을 여기 손으로 적지 않는다.
+    #   표에 blocking 항목을 더하면 판정도 자동으로 따라온다(0순위-B).
+    failed = []
+    for r in spec.PHOTO_RULES:
+        if not r["blocking"] or not r["field"] or r["bad"] is None:
+            continue
+        if r["bad"](d.get(r["field"]), d):
+            failed.append(r["key"])
+
+    said_retry = str(d.get("verdict") or "accepted").lower() == "retry"
+    text = [t for t in (d.get("fabricated_text") or []) if str(t).strip()]
+    return {"verdict": "retry" if (failed or said_retry) else "accepted",
+            "failed": failed,                 # ★어느 기준에 걸렸나 — 화면·재시도 사유가 여기서 나온다
+            "visual_kind": str(d.get("visual_kind") or "photo").lower(),
+            "fabricated_text": text,
+            "matches_subtitle": d.get("matches_subtitle"),
+            "product_ok": d.get("product_ok"),
+            "single_scene": d.get("single_scene"),
             # ★그림에 실제로 무엇이 찍혔는지를 받아 둔다 — 나중에 "왜 통과했나"를 볼 때
             #   판정 이유보다 이게 더 빠르다(실측: 「어음 용지」 자리에 한복 할머니가 왔다).
             "who_what": str(d.get("who_what") or "")[:200],
             "reason": str(d.get("reason") or "")[:300]}
 
 
-def check(files, subtitles, *, reviewer=None, log=print, force_all=True, wants=None):
+def fail_reason(rv):
+    """반려 사유 한 줄 — 다시 만들 때 프롬프트에 붙이고, 화면에도 그대로 쓴다."""
+    names = {r["key"]: r["label"] for r in spec.PHOTO_RULES}
+    hit = [names.get(k, k) for k in (rv.get("failed") or [])]
+    head = " · ".join(hit) if hit else "반려"
+    if rv.get("fabricated_text"):
+        head += f" ({', '.join(str(t)[:20] for t in rv['fabricated_text'][:2])})"
+    return f"{head} — {rv.get('reason', '')[:120]}"
+
+
+def check(files, subtitles, *, reviewer=None, log=print, force_all=True, wants=None,
+          topic="", searched=None):
     """→ {"checked", "reviewed", "retry": [슬롯…]}
 
     files      {슬롯: 경로} · subtitles {슬롯: 그 슬롯 자막}
@@ -170,20 +206,22 @@ def check(files, subtitles, *, reviewer=None, log=print, force_all=True, wants=N
         if not p or not os.path.exists(p):
             continue
         m = metrics(p)
-        rec = {"slot": slot, "metrics": m}
+        # ★기록만 하는 두 항목(막지 않는다) — 나중에 문턱을 정할 근거가 된다
+        rec = {"slot": slot, "metrics": m, "quality": quality(p),
+               "searched": (searched or {}).get(slot)}
         suspect = force_all or (m and m.get("why"))
         if suspect and reviewer:
             try:
                 raw = reviewer(build_review_request(p, subtitles.get(slot, ""),
-                                                    (wants or {}).get(slot, "")), p)
+                                                    (wants or {}).get(slot, ""), topic), p)
                 rv = parse_review(raw)
             except Exception as e:  # noqa: BLE001 — 검수 실패가 편을 멈추면 안 된다
                 log(f"[brainbulb.photocheck] 슬롯 {slot} 검수 실패(통과 처리): {e!r:.70}")
-                rv = {"verdict": "accepted", "reason": "검수 호출 실패"}
+                rv = {"verdict": "accepted", "failed": [], "reason": "검수 호출 실패"}
             rec["review"] = rv
             if rv["verdict"] == "retry":
                 retry.append(slot)
-                log(f"[brainbulb.photocheck] 슬롯 {slot} 반려 — {rv.get('reason', '')[:70]}")
+                log(f"[brainbulb.photocheck] 슬롯 {slot} 반려 — {fail_reason(rv)[:90]}")
         out.append(rec)
     log(f"[brainbulb.photocheck] {len(out)}장 검사 · 모델 판정 "
         f"{sum(1 for r in out if 'review' in r)}장 · 반려 {len(retry)}장")

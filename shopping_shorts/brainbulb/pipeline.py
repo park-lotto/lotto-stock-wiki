@@ -158,6 +158,8 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
                 #    표현으로 나왔다. 검수는 «종합주가지수 -2,886.83 신한투자증권»을 읽어내 반려했다).
                 #   볼케이노도 같은 구조다 — review_policy={"provider":"client"}.
                 if reviewer is not None:
+                    topic = ((d["script"]["script"].get("title") or {}).get("h1") or "")
+                    searched = _images.searched_map(files)   # 「검색 진짜 됐나」 — 기록만 한다
                     subs = _subtitles_by_slot(d["script"]["script"])
                     # ★그 자리에 **무엇을 넣으려 했는지**도 함께 보낸다 — 이게 없으면 검수가
                     #   사진만 보고 "사람이 말하고 있으니 말이 되네" 하고 넘긴다
@@ -167,11 +169,31 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
                     for k, s in (d["prompts"].get("sources") or {}).items():
                         q = (s or {}).get("query") or ""
                         wants[str(k)] = f"검색: {q}" if q else "생성 이미지"
-                    chk = _photocheck.check(files, subs, reviewer=reviewer, log=log, wants=wants)
-                    d["photo_check"] = chk
-                    if chk["retry"]:
+                    # ★반려 → 사유를 붙여 다시 만들기를 **최대 PHOTO_RETRY_MAX 회** 반복한다
+                    #   (2026-09-16 사장님 지시). 종전엔 한 번 다시 만들고 그 결과가
+                    #   좋든 나쁘든 그냥 다음 단계로 갔다 — 재생성분이 또 틀려도 아무도 안 봤다.
+                    rounds = []
+                    chk = _photocheck.check(files, subs, reviewer=reviewer, log=log, wants=wants,
+                                            topic=topic, searched=searched)
+                    for n in range(spec.PHOTO_RETRY_MAX):
+                        if not chk["retry"]:
+                            break
+                        reasons = {r["slot"]: _photocheck.fail_reason(r["review"])
+                                   for r in chk["reviewed"] if r.get("review", {}).get("failed")}
+                        rounds.append({"round": n + 1, "retry": list(chk["retry"]),
+                                       "reasons": reasons})
+                        log(f"[brainbulb.images] 재시도 {n + 1}/{spec.PHOTO_RETRY_MAX} — 슬롯 {chk['retry']}")
                         files = _images.regenerate(chk["retry"], d["prompts"]["prompts"], wd,
-                                                   imagegen, files, log=log)
+                                                   imagegen, files, log=log, reasons=reasons)
+                        chk = _photocheck.check({k: files[k] for k in chk["retry"] if k in files},
+                                                subs, reviewer=reviewer, log=log, wants=wants,
+                                                topic=topic, searched=searched)
+                    chk["rounds"] = rounds
+                    chk["unresolved"] = list(chk["retry"])   # 끝까지 못 고친 슬롯 — 기록에 남긴다
+                    if chk["unresolved"]:
+                        log(f"[brainbulb.images] ★{spec.PHOTO_RETRY_MAX}회에도 못 고친 슬롯: {chk['unresolved']}"
+                            f" — 그대로 쓴다(편을 멈추지 않는다)")
+                    d["photo_check"] = chk
                 d["images"] = {"files": files}
             _invalidate_after(job, "images")
 

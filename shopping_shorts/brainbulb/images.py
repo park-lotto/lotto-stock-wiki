@@ -324,17 +324,47 @@ def generate_all(prompts, workdir, imagegen, *, sources=None, log=print):
                     failed.append(str(slot))
         if not done:
             continue
-        json.dump({"hash": h, "kind": used_kind, "query": query, "prompt": p},
+        # ★asked(대본이 고른 것) ≠ used(실제로 쓴 것)이면 **검색이 실패해 생성으로 떨어진 것**이다.
+        #   종전엔 이 사실이 아무 데도 안 남아 "scene 8장"이 진짜 검색된 건지 알 수 없었다.
+        json.dump({"hash": h, "kind": used_kind, "asked_kind": kind, "query": query, "prompt": p},
                   open(side, "w", encoding="utf-8"), ensure_ascii=False)
         made += 1
         by_kind[used_kind] = by_kind.get(used_kind, 0) + 1
         out[str(slot)] = path
     log(f"[brainbulb.images] {len(out)}장 (새로 {made}장) — 실물 {by_kind.get('real',0)} · 변형 {by_kind.get('variant',0)} · 장소 {by_kind.get('scene',0)} · 생성 {by_kind.get('gen',0)}"
         + (f" · 실패 슬롯 {failed}" if failed else ""))
+    fell = [s for s, v in searched_map(out).items() if v and not v["ok"]]
+    if fell:
+        log(f"[brainbulb.images] ★검색이 안 돼 생성으로 떨어진 슬롯: {fell}")
     return out
 
 
-def regenerate(slots, prompts, workdir, imagegen, files, *, log=print):
+def searched_map(files):
+    """{슬롯: {"asked","used","ok","query"}} — 「검색 진짜 됐나」의 근거.
+
+    ok=False 는 대본이 real/variant/scene 을 골랐는데 **검색이 실패해 생성으로 떨어진** 것.
+    대본이 처음부터 gen 을 고른 슬롯은 None(잴 것이 없다).
+    """
+    out = {}
+    for slot, path in (files or {}).items():
+        side = str(path) + ".json"
+        if not os.path.exists(side):
+            out[str(slot)] = None
+            continue
+        try:
+            d = json.load(open(side, encoding="utf-8"))
+        except Exception:      # noqa: BLE001 — 옆 파일이 깨져도 편은 진행된다
+            out[str(slot)] = None
+            continue
+        asked = d.get("asked_kind") or d.get("kind")
+        used = d.get("kind")
+        out[str(slot)] = (None if asked == "gen" else
+                          {"asked": asked, "used": used, "ok": used != "gen",
+                           "query": d.get("query", "")})
+    return out
+
+
+def regenerate(slots, prompts, workdir, imagegen, files, *, log=print, reasons=None):
     """검수에서 반려된 슬롯만 다시 만든다. → 갱신된 files
 
     ★같은 프롬프트로 다시 만들면 같은 것이 나온다(실측: 가짜 간판을 두 번 그렸다).
@@ -352,8 +382,21 @@ def regenerate(slots, prompts, workdir, imagegen, files, *, log=print):
         orig = (prompts or {}).get(str(slot)) or ""
         body = orig.split(spec.IMAGE_PROMPT_SUFFIX)[0] if orig else ""
         if body:
-            safe = (body + ", shot from behind or at an angle so that no sign, screen or printed"
-                    " text is visible in frame, shallow depth of field" + spec.IMAGE_PROMPT_SUFFIX)
+            # ★반려 사유에 맞춰 고친다 — 사유를 안 보면 같은 이유로 또 반려된다
+            #   (종전엔 이유와 무관하게 늘 '글자 안 보이게'만 붙였다).
+            why = str((reasons or {}).get(str(slot)) or (reasons or {}).get(slot) or "")
+            fix = []
+            if "여러 장면" in why:
+                fix.append("a single continuous scene from one camera viewpoint,"
+                           " not a collage, not split panels")
+            if "제품" in why:
+                fix.append("do not show any branded packaging or product label in frame")
+            if "사진인가" in why:
+                fix.append("photorealistic documentary photograph, natural light, real camera depth")
+            if "지어낸" in why or not fix:
+                fix.append("shot from behind or at an angle so that no sign, screen or printed"
+                           " text is visible in frame, shallow depth of field")
+            safe = body + ", " + ", ".join(fix) + spec.IMAGE_PROMPT_SUFFIX
         else:
             safe = spec.IMAGE_PROMPT_PREFIX + spec.PROMPT_REGEN_FALLBACK + spec.IMAGE_PROMPT_SUFFIX
         try:

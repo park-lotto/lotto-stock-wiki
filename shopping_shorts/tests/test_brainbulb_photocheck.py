@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from shopping_shorts.brainbulb import photocheck, spec
+from shopping_shorts.brainbulb import images, photocheck, spec
 
 
 def _noise(path, size=(600, 400), seed=0):
@@ -263,3 +263,93 @@ def test_parse_review_keeps_who_what():
                       "who_what": "한복 입은 나이 든 여성이 소파에 앉아 있다",
                       "matches_subtitle": True, "reason": "x"})
     assert "한복" in photocheck.parse_review(raw)["who_what"]
+
+
+# ── 검수 기준표 (2026-09-16 사장님 지시) ──────────────────────────────────────
+# ★규칙을 표로 뺀 이유는 "규칙만 늘고 판정이 없는" 사고를 구조적으로 막기 위해서다
+#   (핸드오프: "지시문에 적고 판정을 안 붙였다 — 일곱 번"). 그러니 표 자체를 시험한다.
+
+def _ok_review(**kw):
+    d = {"verdict": "accepted", "visual_kind": "photo", "fabricated_text": [],
+         "matches_subtitle": True, "product_ok": True, "single_scene": True,
+         "who_what": "양파밭", "reason": "좋다"}
+    d.update(kw)
+    return json.dumps(d, ensure_ascii=False)
+
+
+def test_every_blocking_rule_has_a_judge_and_a_question():
+    """★표에 blocking 으로 적어놓고 판정(bad)이나 묻는 말(ask)을 안 붙이면 그 규칙은 죽은 규칙이다."""
+    for r in spec.PHOTO_RULES:
+        if not r["blocking"]:
+            continue
+        assert r["field"], f"{r['key']}: 볼 필드가 없다"
+        assert callable(r["bad"]), f"{r['key']}: 판정 함수가 없다"
+        assert r["ask"].strip(), f"{r['key']}: 모델에게 묻는 말이 없다"
+
+
+def test_every_blocking_rule_reaches_the_prompt():
+    """표에 한 줄 더하면 묻는 말도 따라와야 한다 — 프롬프트를 따로 고치게 두지 않는다."""
+    q = photocheck.build_review_request("x.png", "자막", "검색: 무엇", "소재")
+    for r in spec.PHOTO_RULES:
+        if r["blocking"]:
+            head = r["ask"].splitlines()[0]
+            assert head in q, f"{r['key']}: 기준표에 있는데 프롬프트에 없다"
+
+
+def test_every_blocking_rule_actually_rejects():
+    """★각 기준이 정말로 반려를 내는지 하나씩 어긋뜨려 본다(사보타주)."""
+    bad_by_key = {
+        "visual_kind": {"visual_kind": "illustration"},
+        "fabricated": {"fabricated_text": ["EXP046724"]},
+        "subtitle": {"matches_subtitle": False},
+        "product": {"product_ok": False},
+        "collage": {"single_scene": False},
+    }
+    for r in spec.PHOTO_RULES:
+        if not r["blocking"]:
+            continue
+        assert r["key"] in bad_by_key, f"{r['key']}: 새 기준인데 이 시험에 경우가 없다"
+        rv = photocheck.parse_review(_ok_review(**bad_by_key[r["key"]]))
+        assert rv["verdict"] == "retry", f"{r['key']}: 어긋났는데 통과시킨다"
+        assert r["key"] in rv["failed"], f"{r['key']}: 어느 기준에 걸렸는지 안 남는다"
+
+
+def test_clean_review_passes():
+    """전부 맞으면 통과해야 한다 — 다 반려하는 검수는 검수가 아니다."""
+    rv = photocheck.parse_review(_ok_review())
+    assert rv["verdict"] == "accepted" and rv["failed"] == []
+
+
+def test_model_saying_accepted_cannot_override_a_failed_rule():
+    """★모델이 «통과»라고 해도 어긋난 것을 적었으면 반려다(앞뒤 안 맞는 답 방어)."""
+    rv = photocheck.parse_review(_ok_review(verdict="accepted", product_ok=False))
+    assert rv["verdict"] == "retry" and "product" in rv["failed"]
+
+
+def test_fail_reason_names_the_rule():
+    """재시도 프롬프트와 화면이 쓰는 사유 — 어느 기준인지 사람 말로 나와야 한다."""
+    rv = photocheck.parse_review(_ok_review(single_scene=False, reason="분할 화면"))
+    assert "여러 장면" in photocheck.fail_reason(rv)
+
+
+def test_searched_map_marks_search_fallback():
+    """★scene 을 골랐는데 생성으로 떨어졌으면 ok=False — 이게 안 남아 «검색됐나»를 못 봤다."""
+    import tempfile, os as _os
+    with tempfile.TemporaryDirectory() as d:
+        p = _os.path.join(d, "01.png")
+        open(p, "wb").close()
+        json.dump({"hash": "x", "kind": "gen", "asked_kind": "scene", "query": "양파밭"},
+                  open(p + ".json", "w", encoding="utf-8"), ensure_ascii=False)
+        m = images.searched_map({"1": p})
+        assert m["1"]["ok"] is False and m["1"]["asked"] == "scene"
+
+
+def test_searched_map_ignores_slots_that_asked_for_generation():
+    """처음부터 gen 이면 잴 것이 없다 — 생성 슬롯을 «검색 실패»로 세면 실패율이 거짓말이 된다."""
+    import tempfile, os as _os
+    with tempfile.TemporaryDirectory() as d:
+        p = _os.path.join(d, "02.png")
+        open(p, "wb").close()
+        json.dump({"hash": "x", "kind": "gen", "asked_kind": "gen", "query": ""},
+                  open(p + ".json", "w", encoding="utf-8"), ensure_ascii=False)
+        assert images.searched_map({"2": p})["2"] is None
