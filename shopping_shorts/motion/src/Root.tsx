@@ -7,9 +7,30 @@ import {ListReveal} from './ListReveal';
 import {CalloutCard} from './CalloutCard';
 import {SceneRemotion} from './SceneRemotion';
 import {FullReel} from './FullReel';
+import {LandingHeroWall, HERO_WALL} from './LandingHeroWall';
+import {LandingSquare, SQUARE, SQUARES} from './LandingSquare';
+import {TOURS, TOUR_BASE} from './LandingTour';
+import {FlowCell, FLOWS, FLOW_BASE} from './LandingFlow';
+import {PriceCompare, PRICE, FreeBanner, BANNER, SqRender, SQ4, HookWall, HOOK, TrendBanner, TREND, Easy60, EASY} from './LandingPromo';
 
 export const RemotionRoot: React.FC = () => (
   <>
+    <Composition id="LandingHeroWall" component={LandingHeroWall} {...HERO_WALL} />
+    <Composition id="PriceCompare" component={PriceCompare} {...PRICE} />
+    <Composition id="FreeBanner" component={FreeBanner} {...BANNER} />
+    <Composition id="SqRender" component={SqRender} {...SQ4} />
+    {Object.entries(FLOWS).map(([id, props]) => (
+      <Composition key={id} id={`Flow-${id.replace(/_/g, "-")}`} component={FlowCell} {...FLOW_BASE} durationInFrames={props.dur} defaultProps={props} />
+    ))}
+    <Composition id="HookWall" component={HookWall} {...HOOK} />
+    <Composition id="TrendBanner" component={TrendBanner} {...TREND} />
+    <Composition id="Easy60" component={Easy60} {...EASY} />
+    {Object.entries(TOURS).map(([id, t]) => (
+      <Composition key={id} id={`LandingTour-${id.replace(/_/g, '-')}`} component={t.component} {...TOUR_BASE} durationInFrames={t.durationInFrames} />
+    ))}
+    {Object.entries(SQUARES).map(([id, props]) => (
+      <Composition key={id} id={`LandingSquare-${id.replace(/_/g, "-")}`} component={LandingSquare} {...SQUARE} defaultProps={props} />
+    ))}
     <Composition id="SwipeLeft" component={SwipeLeft} durationInFrames={18} fps={30} width={720} height={1280} />
     <Composition id="Sparkle" component={Sparkle} durationInFrames={30} fps={30} width={300} height={300} />
     <Composition

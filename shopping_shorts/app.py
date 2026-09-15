@@ -10816,7 +10816,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
                "/help", "/api/help/items",
                "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
-               "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order",   # 토스 카드결제(2026-09-15)
+               "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order", "/api/landing/hits",   # 토스 카드결제(2026-09-15)
                "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
                # 가입 전 안내(2026-08-23) — ★반드시 비로그인 공개다. 이 두 장은 아직 회원이
                # 아닌 사람에게 뿌리는 링크(공지·카톡)라, 로그인에 막히면 링크가 통째로 죽는다.
@@ -10867,7 +10867,7 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 #   없어서(실측) prefix로 열면 상한 없이 샌다.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
-                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order",   # 토스 카드결제(2026-09-15)
+                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order", "/api/landing/hits",   # 토스 카드결제(2026-09-15)
                    # ★가입 마무리 화면(2026-08-24). 등급과 무관하게 열려야 한다 —
                    #   막으면 **빠져나갈 수 없는 막다른 길**이 된다: 어느 화면을 열든
                    #   미들웨어가 /welcome으로 보내는데(_needs_welcome), 정작 /welcome이
@@ -11213,10 +11213,34 @@ def _with_pay(html: str) -> str:
     name, amount = _toss_order_name_amount()
     ck, sk = _toss_keys()
     card_href, card_label = ("/pay/toss", "💳 카드로 결제하기") if (ck and sk) else (href, label)
+    # 모집 마감·다음 기수 가격(2026-09-15 사장님 "1기 9월말 마감, 10월 1일부터 2기 88만원").
+    #   관리자 설정으로 바꿀 수 있게 settings에서 읽고, 없으면 사장님이 말한 값을 쓴다.
+    _st = Store(DB_PATH)
+    dl_iso = (_st.get_setting("recruit_deadline", "") or "2026-09-30T23:59:59+09:00").strip()
+    try:
+        _dl = datetime.fromisoformat(dl_iso)
+        dl_label = f"{_dl.month}월 {_dl.day}일"
+        _nx = _dl + timedelta(seconds=1)
+        nx_label = f"{_nx.month}월 {_nx.day}일"
+    except ValueError:
+        dl_label, nx_label = "마감일", "다음 기수"
+    try:
+        next_price = int(_st.get_setting("next_price", "") or 880000)
+    except ValueError:
+        next_price = 880000
+    # 정가(할인 전) — 사장님 "150만원 → 77만원 할인중 표시"(2026-09-15). 설정 list_price로 바꾼다.
+    try:
+        list_price = int(_st.get_setting("list_price", "") or 1500000)
+    except ValueError:
+        list_price = 1500000
+    discount = max(0, round((1 - amount / list_price) * 100)) if list_price > amount else 0
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
                 .replace("__PRO_NAME__", _toss_esc(name))
                 .replace("__PRO_PRICE__", f"{amount:,}원")
                 .replace("__CARD_HREF__", card_href).replace("__CARD_LABEL__", card_label)
+                .replace("__DEADLINE_ISO__", dl_iso).replace("__DEADLINE_LABEL__", dl_label)
+                .replace("__NEXT_START_LABEL__", nx_label).replace("__NEXT_PRICE__", f"{next_price:,}원")
+                .replace("__LIST_PRICE__", f"{list_price:,}원").replace("__DISCOUNT__", str(discount))
                 .replace("__BIZFOOT__", _biz_foot()))
 
 
@@ -11758,7 +11782,9 @@ else{btn.href="/pricing";btn.textContent="카톡으로 문의";}
 })();</script>
 </body></html>"""
 
-_LANDING_HTML = _fill_brand(_LANDING_TMPL)
+# ★랜딩 v2(2026-09-15 사장님 "지금 랜딩 교체") — 본문은 파일 한 곳(landing.html)에서 관리한다.
+#   가격·마감 숫자는 파일에 없고 _with_pay가 채운다. 옛 _LANDING_TMPL은 되돌리기용으로 남긴다.
+_LANDING_HTML = _fill_brand((Path(__file__).parent / "landing.html").read_text(encoding="utf-8"))
 
 _PC_BLOCKED_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>등록된 PC에서만 쓸 수 있어요</title>
@@ -12213,6 +12239,9 @@ def _deposit_contact(kakao, phone):
 _TOSS_CONFIRM_URL = "https://api.tosspayments.com/v1/payments/confirm"
 
 
+_APPLY_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScd2daWqtFnea1e_5y5ZKq6OkDPOeuw3qLg3tBinv6G2P4eCQ/viewform"
+
+
 def _toss_keys():
     return (os.environ.get("TOSS_CLIENT_KEY", "").strip(),
             os.environ.get("TOSS_SECRET_KEY", "").strip())
@@ -12264,6 +12293,39 @@ def _toss_page(title, body):
             f"</head><body><div class=box>{body}</div></body></html>")
 
 
+_LANDING_HITS_CACHE = {"at": 0.0, "data": None}
+
+
+@app.get("/api/landing/hits")
+def _landing_hits():
+    """랜딩 히어로의 '100만뷰+ 쇼핑쇼츠' 벽(2026-09-15 사장님 "지금 터지는 쇼츠 중 유튜브 100만
+    이상을 보여주면서 매일 이런 게 뜬다는 걸 강조").
+
+    ★실제로 우리가 수집한 영상만 쓴다(reel_history) — 지어낸 숫자·영상 금지.
+    ★차단 채널은 뺀다. 쇼핑 결 카테고리만(기타는 먹방·연예가 섞인다).
+    공개 경로라 10분 캐시 — 방문자마다 DB를 치지 않는다.
+    """
+    now = time.time()
+    if _LANDING_HITS_CACHE["data"] and now - _LANDING_HITS_CACHE["at"] < 600:
+        return _LANDING_HITS_CACHE["data"]
+    cats = ("제품정체형", "오용형", "홈템", "장비템", "차량템", "레시피", "뷰티")
+    st = Store(DB_PATH)
+    blocked = st.removed_usernames()
+    ph = ",".join("?" * len(cats))
+    with st._conn() as c:
+        rows = c.execute(
+            f"SELECT shortcode, username, name, caption, views, first_seen FROM reel_history "
+            f"WHERE platform='youtube' AND views>=1000000 AND category IN ({ph}) "
+            f"ORDER BY first_seen DESC, views DESC LIMIT 200", cats).fetchall()
+    # ★최근에 랭킹에 잡힌 순서(사장님 "매일 랭킹에 수집되는 대박 쇼츠") — 날짜를 같이 준다.
+    items = [{"id": r[0], "name": r[2] or "", "title": (r[3] or "")[:60], "views": int(r[4] or 0),
+              "seen": (r[5] or "")[:10]}
+             for r in rows if (r[1] or "").strip().lstrip("@").lower() not in blocked and r[0]]
+    data = {"ok": True, "count": len(items), "items": items[:36]}
+    _LANDING_HITS_CACHE.update(at=now, data=data)
+    return data
+
+
 @app.get("/pay/toss", response_class=HTMLResponse)
 def _toss_checkout(request: Request):
     """결제자 정보 → 주문 생성(POST) → 토스 결제창 (2026-09-15 사장님 "결제자 정보를 입력하게 하고
@@ -12286,8 +12348,19 @@ def _toss_checkout(request: Request):
              if ck.startswith("test_") else "")
     inp = ("width:100%;box-sizing:border-box;margin-top:8px;padding:13px;border-radius:10px;"
            "border:1px solid #1f3a33;background:#0a1113;color:#e8f3ef;font-size:15px;font-family:inherit")
+    # ★신청서(구글폼) 먼저 — 사장님 2026-09-15 "신청할 때 신청폼 반드시 쓸 수 있게".
+    #   폼 제출 여부는 구글 쪽이라 서버가 확인할 수 없다 → 폼 링크를 눌러야 체크칸이 열리고, 체크해야 결제된다.
+    form_url = (Store(DB_PATH).get_setting("apply_form_url", "") or _APPLY_FORM_URL).strip()
     body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
 <div class=amt>{amount:,}원</div>
+<div style="border:1px solid #6ff0d6;border-radius:12px;padding:14px;margin:6px 0 16px;background:#0c1a17">
+  <div style="font-weight:800;font-size:16px">① 신청서 작성 <span style="color:#ff8a8a">(필수)</span></div>
+  <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 1기 신청서를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
+  <a id=fl href="{_toss_esc(form_url)}" target=_blank rel=noopener style="display:block;text-align:center;padding:12px;border-radius:10px;background:#e0a33d;color:#111;font-weight:800;text-decoration:none">📝 신청서 작성하기</a>
+  <label class=p style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px">
+    <input id=fd type=checkbox disabled> <span id=fdl style="opacity:.5">신청서를 작성해 제출했습니다</span></label>
+</div>
+<div style="font-weight:800;font-size:16px">② 결제자 정보</div>
 <div class=p>결제하시는 분의 정보를 입력해 주세요. 결제 확인과 이용 안내에 쓰입니다.</div>
 <input id=pn placeholder="성함" maxlength=40 style="{inp}">
 <input id=pp placeholder="연락처 (010-0000-0000)" maxlength=40 inputmode=tel style="{inp}">
@@ -12300,6 +12373,9 @@ def _toss_checkout(request: Request):
 <div class="p err" id=msg></div>
 <script src="https://js.tosspayments.com/v2/standard"></script>
 <script>
+function _fdOpen() {{ fd.disabled = false; fdl.style.opacity = 1; }}
+try {{ if (localStorage.getItem('apply_form_opened')) _fdOpen(); }} catch (e) {{}}
+fl.addEventListener('click', () => {{ _fdOpen(); try {{ localStorage.setItem('apply_form_opened', '1'); }} catch (e) {{}} }});
 (function () {{
   try {{
     const s = JSON.parse(sessionStorage.getItem('prereg_payer') || 'null');
@@ -12311,6 +12387,7 @@ document.getElementById('go').onclick = async () => {{
   const msg = document.getElementById('msg'); msg.textContent = '';
   if (busy) return;
   const payer = {{ name: pn.value.trim(), phone: pp.value.trim(), email: pe.value.trim() }};
+  if (!fd.checked) {{ msg.textContent = '① 신청서를 먼저 작성·제출하고 체크해 주세요.'; return; }}
   if (!payer.name || !payer.phone || !payer.email) {{ msg.textContent = '성함·연락처·이메일을 모두 입력해 주세요.'; return; }}
   if (!pa.checked) {{ msg.textContent = '환불정책·이용약관 동의에 체크해 주세요.'; return; }}
   busy = true; go.disabled = true; go.textContent = '결제창 여는 중…';
@@ -13071,7 +13148,8 @@ async def _auth_guard(request: Request, call_next):
     # /api/coupang/relay/*도 같은 이유다(2026-07-29) — 쿠팡은 한국 IP가 아니면 막아서
     #   사장님 PC의 도우미가 로그인 쿠키 없이 폴링한다. 엔드포인트가 자체 토큰
     #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
-    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
+    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
+            or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
             or path.startswith("/s/") or path.startswith("/api/share/v/")
             or path.startswith("/api/share/t/")
