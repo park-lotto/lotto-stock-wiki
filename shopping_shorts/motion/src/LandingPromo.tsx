@@ -335,10 +335,6 @@ export const SqRender: React.FC = () => {
             <PhoneCard clip={seg.center} x={centerX} y={0} scale={interpolate(enter, [0, 1], [0.92, 1])} rot={(1 - enter) * -10} style={{filter: 'grayscale(1) brightness(.85)'}} />
             <div style={{position: 'absolute', left: centerX, top: 0, width: CARD_W, height: CARD_H, borderRadius: 34, overflow: 'hidden', clipPath: `circle(${colorR}% at ${(cx / CARD_W) * 100}% ${(cy / CARD_H) * 100}%)`, transform: `scale(${interpolate(enter, [0, 1], [0.92, 1])})`, transformOrigin: '50% 50%'}}>
               <OffthreadVideo src={staticFile(`render/full${seg.center}.mp4`)} muted style={{width: '100%', height: '100%', display: 'block'}} />
-              {/* 자막 영역 강조 박스 */}
-              {segLocal > 14 && (
-                <div style={{position: 'absolute', left: seg.box.x, top: seg.box.y, width: seg.box.w, height: seg.box.h, border: `4px solid ${YEL}`, borderRadius: 14, boxShadow: '0 0 26px rgba(255,216,77,.8), inset 0 0 0 999px rgba(255,216,77,.08)', opacity: interpolate(segLocal, [14, 22], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) * (0.7 + 0.3 * Math.sin(segLocal / 5))}} />
-              )}
             </div>
             {/* 글리치 슬라이스 */}
             {glitch > 0 && [0, 1, 2, 3].map((k) => (
