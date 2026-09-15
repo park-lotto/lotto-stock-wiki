@@ -48,6 +48,20 @@ def test_complete_supported_audit_is_authoritative_over_duplicate_summary():
     assert not next(c for c in checks() if c["name"] == "사실 근거")["ok"]
 
 
+def test_judge_resolves_only_valid_canonical_references(monkeypatch):
+    evidence = {"items": [{"evidence_id": "scene:real", "kind": "visual", "text": "행주로 물기를 닦는다"}]}
+    raw = {"claim_checks": [{"unit_index": 0, "kind": "objective", "supported": True,
+                             "supports": [{"evidence_index": 0}]}], "unsupported_claims": []}
+    monkeypatch.setattr(sg, "_call_json", lambda *a, **k: copy.deepcopy(raw))
+    actual = sg._speaker_judge("물기를 닦는다", "행주", evidence)
+    assert not gate._claim_audit_errors("물기를 닦는다", evidence, actual)
+    assert actual["claim_checks"][0]["supports"][0]["quote"] == "행주로 물기를 닦는다"
+    for invalid in (1, -1, True, "0"):
+        raw["claim_checks"][0]["supports"][0]["evidence_index"] = invalid
+        actual = sg._speaker_judge("물기를 닦는다", "행주", evidence)
+        assert gate._claim_audit_errors("물기를 닦는다", evidence, actual)
+
+
 def test_evidence_keeps_observation_and_excludes_template_and_interpretation():
     evidence = sg.claim_evidence(sources(), "[은행] 현지에서 품절대란\n[AI 지식] 몇만 원")
     rendered = json.dumps(evidence, ensure_ascii=False)
