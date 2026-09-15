@@ -46,7 +46,9 @@ def test_guarded_pickup_never_returns_wrong_subject_after_retries(monkeypatch):
     out = sg.generate_guarded_variations({}, SOURCES, {}, {}, n=1,
                                          rejection_reasons=reasons)
 
-    assert out == []
+    assert len(out) == 1 and out[0]["made_by"] == "장면근거"
+    assert "3-way 여행용 가방" in out[0]["script"]
+    assert "기름때" not in out[0]["script"] and "행주" not in out[0]["script"]
     assert len(calls) == sg.PICKUP_MATERIAL_REWRITES + 1
     assert len(reasons) == len(calls)
 
@@ -74,7 +76,7 @@ def test_pickup_api_passes_shared_material_bundle_to_guarded_generator(tmp_path,
     assert len(r.json()["materials"]["sources"]) == 2
 
 
-def test_pickup_api_returns_error_instead_of_saving_subject_leak(tmp_path, monkeypatch):
+def test_pickup_api_recovers_grounded_draft_instead_of_saving_subject_leak(tmp_path, monkeypatch):
     db = tmp_path / "pickup.db"
     monkeypatch.setattr(app_mod, "DB_PATH", db)
     Store(db).save_to_wiki(
@@ -90,7 +92,10 @@ def test_pickup_api_returns_error_instead_of_saving_subject_leak(tmp_path, monke
     monkeypatch.setattr(app_mod.script_generate, "generate_guarded_variations", reject_all)
     r = TestClient(app_mod.app).post("/api/wiki/generate?shortcode=seed", json={"n": 1})
 
-    assert r.status_code == 502
-    assert "차단" in r.json()["error"]
+    assert r.status_code == 200, r.text
+    drafts = r.json()["drafts"]
+    assert len(drafts) == 1 and drafts[0]["made_by"] == "장면근거"
+    assert "3-way 여행용 가방" in drafts[0]["script"]
+    assert "기름때" not in drafts[0]["script"] and "행주" not in drafts[0]["script"]
     with sqlite3.connect(db) as conn:
-        assert conn.execute("SELECT count(*) FROM script_drafts").fetchone()[0] == 0
+        assert conn.execute("SELECT count(*) FROM script_drafts").fetchone()[0] == 1
