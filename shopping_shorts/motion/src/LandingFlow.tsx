@@ -74,10 +74,15 @@ const DrawBox: React.FC<{r: Rect; local: number; t0: number}> = ({r, local, t0})
 const TILE_GAP = 14;
 const TileView: React.FC<{tile: Tile; local: number; len: number}> = ({tile, local, len}) => {
   const {crop} = tile;
-  const [dx, dy] = tile.pan ?? [0, 0];
+  const [dx0, dy0] = tile.pan ?? [0, 0];
   const t = Math.min(1, local / len);
-  const px = -crop.x - dx * t;
-  const py = -crop.y - dy * t;
+  // 패닝은 원본 밖으로 못 나가게 클램프(빈 여백 방지) — 박스도 같은 실제 이동량을 쓴다
+  const clampX = (v: number) => Math.max(-(tile.full.w - crop.w), Math.min(0, v));
+  const clampY = (v: number) => Math.max(-(tile.full.h - crop.h), Math.min(0, v));
+  const px = clampX(-crop.x - dx0 * t);
+  const py = clampY(-crop.y - dy0 * t);
+  const dx = (-crop.x - px) / (t || 1);
+  const dy = (-crop.y - py) / (t || 1);
   const wipeP = tile.wipe ? interpolate(local, [14, 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 0;
   return (
     <div style={{position: 'relative', width: crop.w, height: crop.h, overflow: 'hidden', borderRadius: 18, boxShadow: '0 0 0 2px rgba(255,255,255,.07)'}}>
