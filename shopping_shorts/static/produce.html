@@ -5087,9 +5087,12 @@ function mkEnsure(){
 // ★스티커·뱃지(2026-08-28 사장님 "이모티콘이나 뱃지같은거 다양하고 예쁘고 유료급으로").
 //   가림막(masks)에 kind로 얹는다 — 위치·크기·회전·드래그·저장이 이미 거기 다 있다.
 //   새 배관을 파면 그 규칙이 두 벌이 된다(0순위-B).
-const MK_EMOJI=window.SCENE_DECORATION_CATALOG.emoji;
+const SCENE_DECORATION_CATALOG=globalThis.window?.SCENE_DECORATION_CATALOG||{
+  emoji:[],badges:[],shapeDraw:{},shapes:[],thumbnailBadges:[]
+};
+const MK_EMOJI=SCENE_DECORATION_CATALOG.emoji;
 // 뱃지 = 글자 + 색. 색은 12색 팔레트에서 고른 것을 그대로 쓴다(따로 색을 두지 않는다).
-const MK_BADGE=window.SCENE_DECORATION_CATALOG.badges;
+const MK_BADGE=SCENE_DECORATION_CATALOG.badges;
 
 const MK_QUICK={
   sub:    {l:6,  t:44, w:88, h:12, shape:'round', fx:'fade', soft:35},
@@ -15584,8 +15587,8 @@ function drawSticker(ctx, L, W, H){
 //
 // 좌표계 약속: 각 그리기 함수는 **-0.5~0.5 정규 공간**에 그린다(호출부가 px로 스케일).
 // 그래야 도형을 추가할 때 크기 계산을 매번 다시 하지 않는다.
-const THUMB_SHAPES = window.SCENE_DECORATION_CATALOG.shapeDraw;
-const THUMB_SHAPE_LIST = window.SCENE_DECORATION_CATALOG.shapes;
+const THUMB_SHAPES = SCENE_DECORATION_CATALOG.shapeDraw;
+const THUMB_SHAPE_LIST = SCENE_DECORATION_CATALOG.shapes;
 
 function drawShape(ctx, L, W, H){
   const fn = THUMB_SHAPES[L.shape]; if (!fn) return;
@@ -15607,7 +15610,7 @@ function drawShape(ctx, L, W, H){
 //   (스티커·도형이 같은 이유로 별도 레이어인 것과 같은 판단 — 0순위-B)
 // L = {kind:'badge', text, size:(캔버스 폭 대비 % — 글자 높이), x, y, rot,
 //      color:(알약 바탕), text_color:(글자), dot:(왼쪽 동그라미 표시 여부)}
-const THUMB_BADGE_LIST = window.SCENE_DECORATION_CATALOG.thumbnailBadges;
+const THUMB_BADGE_LIST = SCENE_DECORATION_CATALOG.thumbnailBadges;
 
 // ★알약 크기 계산은 **여기 한 곳**에서만 한다(0순위-B). 그리기(drawBadge)와 손잡이
 //   (renderThumbHandles)가 각자 계산하면 점선 박스와 실제 알약이 어긋난다.

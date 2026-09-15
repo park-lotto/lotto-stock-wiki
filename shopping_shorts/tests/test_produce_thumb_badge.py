@@ -17,6 +17,7 @@ import tempfile
 import pytest
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
+DECOR_CATALOG = pathlib.Path(__file__).resolve().parents[1] / "static" / "scene-decoration-catalog.js"
 NODE = shutil.which("node")
 
 _START = "// ── 6단계 썸네일"
@@ -38,7 +39,8 @@ def _real_deps():
     #   발명하면 0% 동작도 초록이 된다(메모리 feedback_harness_invented_contract).
     f = re.search(r"^const HC_FONTS=\[.*?^\];", src, re.M | re.S)
     assert f, "HC_FONTS 선언을 못 찾았다 — thumbFontCss가 이걸 쓴다"
-    return m.group(0) + chr(10) + f.group(0) + chr(10)
+    catalog = "globalThis.window=globalThis;\n" + DECOR_CATALOG.read_text(encoding="utf-8")
+    return catalog + chr(10) + m.group(0) + chr(10) + f.group(0) + chr(10)
 
 
 def _slice_source():
