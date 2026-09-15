@@ -2572,6 +2572,20 @@ def api_refs_video_category(request: Request, shortcode: str, category: str = ""
     return {"ok": True, "shortcode": shortcode, "category": cat}
 
 
+@app.post("/api/refs/channel_force")
+def api_refs_channel_force(request: Request, username: str, category: str = ""):
+    """채널 고정 — 이 채널의 지금·앞으로 영상을 전부 이 카테고리로(관리자 전용, 2026-09-15).
+    category 빈값 = 해제. 영상별 지정(video_category)은 이것보다 우선한다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    cat = (category or "").strip()
+    if not (username or "").strip() or (cat and cat not in _MOVABLE_CATEGORIES):
+        return JSONResponse(status_code=422, content={"ok": False, "error": f"알 수 없는 카테고리: {cat}"})
+    Store(DB_PATH).set_channel_force(username, cat)
+    return {"ok": True, "username": username, "category": cat}
+
+
 @app.post("/api/reference/register")
 def api_reference_register(request: Request, url: str):
     """레퍼런스 채널을 URL 붙여넣기로 직접 등록(2026-07-18). 인스타 채널/릴스
