@@ -11,6 +11,8 @@ import hashlib
 import json
 import re
 import secrets
+import threading
+from contextlib import contextmanager
 from pathlib import Path
 
 from . import frame_extract, mix_pipeline, video_assemble
@@ -19,10 +21,21 @@ from . import frame_extract, mix_pipeline, video_assemble
 _LAB_ID_RE = re.compile(r"lab_[0-9a-f]{12}\Z")
 _MANIFEST_NAME = "manifest.json"
 FRAME_TOLERANCE = 0.034
+_LOCKS: dict[str, threading.RLock] = {}
+_LOCKS_GUARD = threading.Lock()
 
 
 class LabPreconditionError(RuntimeError):
     """시험을 시작하기 전에 사용자가 해결해야 하는 조건 오류."""
+
+
+@contextmanager
+def _lab_lock(work_root: Path | str, lab_id: str):
+    key = str(lab_dir(work_root, lab_id).resolve())
+    with _LOCKS_GUARD:
+        lock = _LOCKS.setdefault(key, threading.RLock())
+    with lock:
+        yield
 
 
 def contract_from_context(context: dict, clean_signature: str) -> dict:
@@ -94,14 +107,16 @@ def _manifest_path(work_root: Path | str, lab_id: str) -> Path:
 def write_manifest(target: Path, manifest: dict) -> None:
     """완전한 JSON만 보이도록 임시 파일을 거쳐 교체한다."""
     target = Path(target)
-    target.mkdir(parents=True, exist_ok=True)
-    final = target / _MANIFEST_NAME
-    temporary = target / (_MANIFEST_NAME + ".tmp")
-    temporary.write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-    temporary.replace(final)
+    lab_id = target.name
+    with _lab_lock(target.parent.parent, lab_id):
+        target.mkdir(parents=True, exist_ok=True)
+        final = target / _MANIFEST_NAME
+        temporary = target / (_MANIFEST_NAME + ".tmp")
+        temporary.write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        temporary.replace(final)
 
 
 def read_manifest(work_root: Path | str, lab_id: str) -> dict:
@@ -115,20 +130,58 @@ def _snapshot_signature(snapshot: dict | None) -> str:
 
 def merge_generated_fields(work_root: Path | str, started: dict, **fields: dict) -> dict:
     """생성 시작 뒤 설정이 그대로일 때 산출 필드만 최신 manifest에 합친다."""
-    current = read_manifest(work_root, started["lab_id"])
-    if _snapshot_signature(current.get("scene_style")) != _snapshot_signature(started.get("scene_style")):
-        raise LabPreconditionError("렌더 중 장면꾸미기 설정이 바뀌었습니다")
-    started_generation = ((started.get("render_state") or {}).get("generation"))
-    current_generation = ((current.get("render_state") or {}).get("generation"))
-    if started_generation is not None and started_generation != current_generation:
-        raise LabPreconditionError("새 렌더 요청이 시작되어 이전 결과를 버렸습니다")
-    for name, value in fields.items():
-        if name in {"outputs", "receipts", "contracts"}:
-            current.setdefault(name, {}).update(copy.deepcopy(value))
-        else:
-            current[name] = copy.deepcopy(value)
-    write_manifest(lab_dir(work_root, started["lab_id"]), current)
-    return current
+    lab_id = started["lab_id"]
+    with _lab_lock(work_root, lab_id):
+        current = read_manifest(work_root, lab_id)
+        if _snapshot_signature(current.get("scene_style")) != _snapshot_signature(started.get("scene_style")):
+            raise LabPreconditionError("렌더 중 장면꾸미기 설정이 바뀌었습니다")
+        started_generation = ((started.get("render_state") or {}).get("generation"))
+        current_generation = ((current.get("render_state") or {}).get("generation"))
+        if started_generation is not None and started_generation != current_generation:
+            raise LabPreconditionError("새 렌더 요청이 시작되어 이전 결과를 버렸습니다")
+        for name, value in fields.items():
+            if name in {"outputs", "receipts", "contracts"}:
+                current.setdefault(name, {}).update(copy.deepcopy(value))
+            else:
+                current[name] = copy.deepcopy(value)
+        write_manifest(lab_dir(work_root, lab_id), current)
+        return current
+
+
+def queue_render(work_root: Path | str, lab_id: str) -> tuple[str, dict]:
+    """새 렌더 세대를 원자적으로 발급하고 이전 MP4 포인터를 무효화한다."""
+    with _lab_lock(work_root, lab_id):
+        manifest = read_manifest(work_root, lab_id)
+        generation = secrets.token_hex(8)
+        manifest["render_state"] = {
+            "status": "queued", "error": None, "generation": generation,
+        }
+        manifest.setdefault("outputs", {}).pop("mp4", None)
+        manifest.setdefault("receipts", {}).pop("mp4", None)
+        manifest.setdefault("contracts", {}).pop("mp4", None)
+        manifest["contracts"].pop("landing", None)
+        write_manifest(lab_dir(work_root, lab_id), manifest)
+        return generation, manifest
+
+
+def manifest_for_generation(work_root: Path | str, lab_id: str, generation: str) -> dict | None:
+    with _lab_lock(work_root, lab_id):
+        manifest = read_manifest(work_root, lab_id)
+        if ((manifest.get("render_state") or {}).get("generation")) != generation:
+            return None
+        return manifest
+
+
+def set_render_state(work_root: Path | str, lab_id: str, generation: str, status: str, error=None) -> bool:
+    with _lab_lock(work_root, lab_id):
+        manifest = read_manifest(work_root, lab_id)
+        if ((manifest.get("render_state") or {}).get("generation")) != generation:
+            return False
+        manifest["render_state"] = {
+            "status": status, "error": error, "generation": generation,
+        }
+        write_manifest(lab_dir(work_root, lab_id), manifest)
+        return True
 
 
 def _file_sha256(path: Path) -> str:
@@ -258,16 +311,17 @@ def save_snapshot(work_root: Path | str, lab_id: str, snapshot: dict) -> dict:
     candidate = copy.deepcopy(snapshot or {})
     candidate["hookCaptionMode"] = "hidden"
     saved = validate_snapshot(candidate)
-    manifest = read_manifest(work_root, lab_id)
-    changed = saved != manifest.get("scene_style")
-    manifest["scene_style"] = saved
-    manifest["hook_caption_mode"] = "hidden"
-    if changed:
-        manifest["outputs"] = {}
-        manifest["contracts"] = {}
-        manifest["receipts"] = {}
-        manifest["render_state"] = {"status": "idle", "error": None}
-    write_manifest(lab_dir(work_root, lab_id), manifest)
+    with _lab_lock(work_root, lab_id):
+        manifest = read_manifest(work_root, lab_id)
+        changed = saved != manifest.get("scene_style")
+        manifest["scene_style"] = saved
+        manifest["hook_caption_mode"] = "hidden"
+        if changed:
+            manifest["outputs"] = {}
+            manifest["contracts"] = {}
+            manifest["receipts"] = {}
+            manifest["render_state"] = {"status": "idle", "error": None}
+        write_manifest(lab_dir(work_root, lab_id), manifest)
     return saved
 
 

@@ -188,3 +188,26 @@ def test_output_merge_rejects_snapshot_changed_during_render(tmp_path):
     saved = lab.read_manifest(tmp_path, started["lab_id"])
     assert saved["scene_style"]["hookMotion"] == "popup"
     assert "mp4" not in saved["outputs"]
+
+
+def test_only_latest_queued_render_generation_can_start(tmp_path):
+    from shopping_shorts import scene_style_lab as lab
+
+    target = lab.lab_dir(tmp_path, "lab_000000000008")
+    target.mkdir(parents=True)
+    lab.write_manifest(target, {
+        "lab_id": "lab_000000000008",
+        "scene_style": {"version": 1, "mode": "story", "presetId": "t11"},
+        "outputs": {"mp4": str(target / "old.mp4")},
+        "contracts": {"mp4": {"old": True}, "landing": {"old": True}},
+        "receipts": {"mp4": {"old": True}},
+    })
+
+    first, _ = lab.queue_render(tmp_path, "lab_000000000008")
+    second, latest = lab.queue_render(tmp_path, "lab_000000000008")
+
+    assert first != second
+    assert lab.manifest_for_generation(tmp_path, "lab_000000000008", first) is None
+    assert lab.manifest_for_generation(tmp_path, "lab_000000000008", second) == latest
+    assert latest["outputs"].get("mp4") is None
+    assert latest["contracts"].get("landing") is None
