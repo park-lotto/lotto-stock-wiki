@@ -40,8 +40,19 @@ export const PriceCompare: React.FC = () => {
   const {fps} = useVideoConfig();
   const D = PRICE.durationInFrames;
   const cardIn = (d: number) => spring({frame: frame - d, fps, config: {damping: 14, stiffness: 120}});
-  const l = cardIn(2);
+  // 왼쪽 카드: 오버슈트 스프링(0.6→1.08→1) + 2.5초마다 펄스(1→1.05→1) + 민트 링 확산
+  const lIn = spring({frame: frame - 2, fps, config: {damping: 9, stiffness: 150, mass: 0.8}});
+  const lScaleIn = interpolate(lIn, [0, 1], [0.6, 1]);
+  const PULSE_T = 75;
+  const pLocal = frame >= 60 ? (frame - 60) % PULSE_T : -1;
+  const pulseL = pLocal >= 0 && pLocal < 14 ? 1 + 0.05 * Math.sin((pLocal / 14) * Math.PI) : 1;
+  const ringT = pLocal >= 0 ? interpolate(pLocal, [0, 30], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 1;
+  const l = Math.min(1, lIn);
   const r = cardIn(8);
+  // 770,000 카운트업(등장) + 펄스 때 살짝 흔들림
+  const priceN = Math.round(interpolate(frame, [8, 34], [0, 770000], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}));
+  const priceStr = priceN.toLocaleString('ko-KR');
+  const shake = pLocal >= 0 && pLocal < 12 ? Math.sin((pLocal / 12) * Math.PI * 3) * 2.5 : 0;
   const stamp = spring({frame: frame - 34, fps, config: {damping: 9, stiffness: 220, mass: 0.8}});
   const strike = interpolate(frame, [22, 34], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const glow = 0.5 + 0.5 * Math.sin((frame / 30) * Math.PI); // 왼쪽 카드 숨쉬는 테두리
@@ -69,8 +80,9 @@ export const PriceCompare: React.FC = () => {
           ...card,
           left: 60,
           background: 'linear-gradient(160deg, #10201c, #0b1512)',
-          boxShadow: `0 0 0 3px rgba(111,240,214,${0.55 + 0.45 * glow}), 0 0 ${30 + 30 * glow}px rgba(111,240,214,.35), 0 30px 60px rgba(0,0,0,.6)`,
-          transform: `translateY(${(1 - l) * 40}px)`,
+          boxShadow: `0 0 0 3px rgba(111,240,214,${0.55 + 0.45 * glow}), 0 0 0 ${ringT * 26}px rgba(111,240,214,${0.4 * (1 - ringT)}), 0 0 ${30 + 30 * glow}px rgba(111,240,214,.35), 0 30px 60px rgba(0,0,0,.6)`,
+          transform: `translateY(${(1 - l) * 40}px) scale(${lScaleIn * pulseL})`,
+          transformOrigin: '50% 50%',
           opacity: l,
         }}
       >
@@ -79,8 +91,8 @@ export const PriceCompare: React.FC = () => {
           정가 1,500,000원
           <div style={{position: 'absolute', left: -4, top: '52%', height: 5, width: `calc(${strike * 100}% + 8px)`, background: RED, borderRadius: 3, transform: 'rotate(-4deg)'}} />
         </div>
-        <div style={{marginTop: 6, fontSize: 92, fontWeight: 900, color: '#fff', letterSpacing: -3, lineHeight: 1.1, textShadow: SHADOW}}>
-          770,000<span style={{fontSize: 44, marginLeft: 6}}>원</span>
+        <div style={{marginTop: 6, fontSize: 92, fontWeight: 900, color: '#fff', letterSpacing: -3, lineHeight: 1.1, textShadow: SHADOW, fontVariantNumeric: 'tabular-nums', transform: `rotate(${shake}deg) scale(${1 + Math.abs(shake) * 0.02})`, transformOrigin: '20% 60%', display: 'inline-block'}}>
+          {priceStr}<span style={{fontSize: 44, marginLeft: 6}}>원</span>
         </div>
         <div style={{marginTop: 10, fontSize: 26, fontWeight: 700, color: MINT}}>지금 신청하면 이 가격 그대로</div>
         {/* 49% 할인 도장 */}
