@@ -68,3 +68,13 @@ def test_admin_lab_ui_exposes_four_output_comparison_and_actions():
     assert "showDirectoryPicker" in script
     assert "/scene-style-lab/" in script
     assert "URLSearchParams" in script
+    assert "render_state" in script
+    assert "실파일 해시" in script
+    assert "JSON 역검증" in script
+
+
+def test_embedded_lab_does_not_restore_browser_local_branding():
+    script = (Path(__file__).parents[2] / "out" / "precision20-ui.js").read_text(encoding="utf-8")
+    assert "const labMode=query.get('lab')==='1'" in script
+    assert "if(!qaMode&&!labMode)" in script
+    assert "saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding())" in script

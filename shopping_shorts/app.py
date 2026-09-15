@@ -18678,11 +18678,22 @@ def api_scene_style_lab_snapshot(lab_id: str, request: Request, body: dict):
 def _run_scene_style_lab_render(lab_id: str):
     from . import scene_style_lab
 
-    manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
-    source_job = Store(DB_PATH).get_mix_job(manifest["source_job_id"])
-    if not source_job:
-        raise scene_style_lab.LabPreconditionError("원본 작업이 없습니다")
-    scene_style_lab.render_copy(manifest, source_job, _MIX_WORK_DIR)
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+        source_job = Store(DB_PATH).get_mix_job(manifest["source_job_id"])
+        if not source_job:
+            raise scene_style_lab.LabPreconditionError("원본 작업이 없습니다")
+        scene_style_lab.render_copy(manifest, source_job, _MIX_WORK_DIR)
+        current = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+        current["render_state"] = {"status": "ready", "error": None}
+        scene_style_lab.write_manifest(scene_style_lab.lab_dir(_MIX_WORK_DIR, lab_id), current)
+    except Exception as exc:
+        try:
+            current = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+            current["render_state"] = {"status": "error", "error": str(exc)}
+            scene_style_lab.write_manifest(scene_style_lab.lab_dir(_MIX_WORK_DIR, lab_id), current)
+        except Exception:
+            pass
 
 
 @app.post("/api/admin/scene-style-lab/{lab_id}/render")
@@ -18698,6 +18709,12 @@ def api_scene_style_lab_render(lab_id: str, request: Request, background_tasks: 
         return JSONResponse(status_code=404, content={"error": "시험 없음"})
     if not _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id")):
         return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    manifest["render_state"] = {"status": "queued", "error": None}
+    manifest.setdefault("outputs", {}).pop("mp4", None)
+    manifest.setdefault("receipts", {}).pop("mp4", None)
+    manifest.setdefault("contracts", {}).pop("mp4", None)
+    manifest["contracts"].pop("landing", None)
+    scene_style_lab.write_manifest(scene_style_lab.lab_dir(_MIX_WORK_DIR, lab_id), manifest)
     background_tasks.add_task(_run_scene_style_lab_render, lab_id)
     return {"ok": True, "status": "queued"}
 
@@ -18713,8 +18730,13 @@ def scene_style_lab_landing(lab_id: str, request: Request):
         manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
     except (ValueError, OSError, json.JSONDecodeError):
         return JSONResponse(status_code=404, content={"error": "시험 없음"})
-    if not _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id")):
+    source_job = _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id"))
+    if not source_job:
         return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, source_job)
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
     return FileResponse(
         Path(__file__).parent / "static" / "scene_style_lab_landing.html",
         headers={"X-Robots-Tag": "noindex, nofollow, noarchive", "Cache-Control": "no-store"},
@@ -18732,9 +18754,11 @@ def api_scene_style_lab_video(lab_id: str, request: Request):
         manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
     except (ValueError, OSError, json.JSONDecodeError):
         return JSONResponse(status_code=404, content={"error": "시험 없음"})
-    if not _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id")):
+    source_job = _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id"))
+    if not source_job:
         return JSONResponse(status_code=404, content={"error": "시험 없음"})
     try:
+        scene_style_lab.assert_fresh(manifest, source_job)
         video = scene_style_lab.output_path(_MIX_WORK_DIR, lab_id, "mp4")
     except scene_style_lab.LabPreconditionError as exc:
         return JSONResponse(status_code=409, content={"error": str(exc)})
@@ -18743,6 +18767,9 @@ def api_scene_style_lab_video(lab_id: str, request: Request):
         media_type="video/mp4",
         headers={
             "X-Scene-Style-Lab": lab_id,
+            "X-Scene-Artifact-SHA256": str(
+                (((manifest.get("receipts") or {}).get("mp4") or {}).get("sha256") or "")
+            ),
             "Cache-Control": "no-store",
             "X-Robots-Tag": "noindex, nofollow, noarchive",
         },
@@ -18807,8 +18834,13 @@ def api_scene_style_lab_capcut_asset(lab_id: str, name: str, request: Request):
         manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
     except (ValueError, OSError, json.JSONDecodeError):
         return JSONResponse(status_code=404, content={"error": "시험 없음"})
-    if not _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id")):
+    source_job = _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id"))
+    if not source_job:
         return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, source_job)
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
     project = Path(str((manifest.get("outputs") or {}).get("capcut_project") or "")).resolve()
     allowed = (scene_style_lab.lab_dir(_MIX_WORK_DIR, lab_id) / "capcut").resolve()
     asset = (project / name).resolve()

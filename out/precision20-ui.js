@@ -2,7 +2,8 @@
   const storyRows=window.PRECISION20||[],fixedRows=window.CONTINUOUS20||[];
   let rows=storyRows,mode='story';
   const root=document;
-  const qaMode=new URLSearchParams(location.search).has('qa');
+  const query=new URLSearchParams(location.search),qaMode=query.has('qa');
+  const labMode=query.get('lab')==='1';
   const preview=root.getElementById('a-live-preview');
   const grid=root.querySelector('.layout-a .preset-grid');
   if(!rows.length||!preview||!grid)return;
@@ -98,7 +99,7 @@
   const value=k=>inputs[k]?.value||' ';
   const rgba=hex=>hex&&/^#[0-9a-f]{6}$/i.test(hex)?hex:'#111111';
   const rememberedBranding=()=>{try{return JSON.parse(localStorage.getItem('scene_style_branding')||'{}')}catch{return {}}};
-  let sceneContext=null,effects={},branding=rememberedBranding();
+  let sceneContext=null,effects={},branding=labMode?{}:rememberedBranding();
   const sceneKind=index=>sceneContext?.scenes?.[index]?.kind||(index===0?'hook':'body');
   const frameFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame:p[sceneKind(index)];
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
@@ -741,10 +742,10 @@
   Promise.all(premiumFaces.map(family=>document.fonts?.load?.(`400 32px "${family}"`))).then(()=>{fittedText.clear();renderEdit()});
   document.fonts?.addEventListener?.('loadingdone',()=>{if(!window.sceneStyleExporting){fittedText.clear();renderEdit()}});
   saveButton&&(saveButton.textContent='현재 설정 저장');
-  const query=new URLSearchParams(location.search),initialPreset=Math.max(0,Number(query.get('preset'))||0);
+  const initialPreset=Math.max(0,Number(query.get('preset'))||0);
   if(query.get('mode')==='continuous'){modeBar.querySelector('[data-template-mode="continuous"]').click();if(initialPreset<rows.length)selectPreset(initialPreset)}else selectPreset(Math.min(initialPreset,rows.length-1));
   if(mode==='story'&&query.get('frame')==='body')showFrame('body');
-  if(!qaMode){
+  if(!qaMode&&!labMode){
     try{
       const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');
       if(saved){
@@ -768,7 +769,7 @@
     snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
-      branding=Object.keys(saved?.branding||{}).length?saved.branding:rememberedBranding();
+      branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
       if(saved){
         for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts})){
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
@@ -788,12 +789,12 @@
     geometry:()=>({media:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
     effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
     copyEffectsToAll(){const value=structuredClone(effects[String(sceneIndex)]||{});for(let i=0;i<sceneTotal();i++)effects[String(i)]=structuredClone(value);},
-    branding(value){if(value!==undefined){branding=value;try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
+    branding(value){if(value!==undefined){branding=value;if(!labMode)try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
     context:()=>sceneContext,
     resetCaptionText(){captionTexts.delete(captionKey());syncCaption();markDirty('caption');renderEdit()},
     refresh(){fittedText.clear();renderEdit()},
     motionAt(time){return runHookMotion({time})},
     cameraAt,
   };
-  try{effects=JSON.parse(localStorage.getItem('scene_style_preset')||'null')?.effects||{}}catch{}
+  if(!labMode)try{effects=JSON.parse(localStorage.getItem('scene_style_preset')||'null')?.effects||{}}catch{}
 })();

@@ -151,6 +151,44 @@ def test_capcut_overlay_verifier_rejects_timing_mismatch():
         scene_style_lab.verify_capcut_overlay_draft(draft, expected)
 
 
+def test_motion_layer_expands_to_30fps_frames_then_static_remainder(tmp_path):
+    for name in (
+        "scene-style-layer-0.png",
+        "scene-style-motion-0-0000.png",
+        "scene-style-motion-0-0001.png",
+    ):
+        (tmp_path / name).write_bytes(b"png")
+    scene = {"start": 1.8, "end": 2.0, "caption_visible": True}
+    layer = {
+        "file": "scene-style-layer-0.png",
+        "animation": {"pattern": "scene-style-motion-0-%04d.png", "count": 2},
+        "camera": None,
+    }
+
+    specs = scene_style_lab.overlay_specs_for_scene(scene, layer, tmp_path)
+
+    assert [(item["start"], item["end"]) for item in specs] == pytest.approx([
+        (1.8, 1.8 + 1 / 30),
+        (1.8 + 1 / 30, 1.8 + 2 / 30),
+        (1.8 + 2 / 30, 2.0),
+    ])
+    assert [Path(item["path"]).name for item in specs] == [
+        "scene-style-motion-0-0000.png",
+        "scene-style-motion-0-0001.png",
+        "scene-style-layer-0.png",
+    ]
+
+
+def test_capcut_copy_rejects_untransferred_camera_motion(tmp_path):
+    (tmp_path / "scene-style-layer-0.png").write_bytes(b"png")
+    with pytest.raises(scene_style_lab.LabPreconditionError, match="카메라 모션"):
+        scene_style_lab.overlay_specs_for_scene(
+            {"start": 0.0, "end": 1.0},
+            {"file": "scene-style-layer-0.png", "camera": [{"scale": 1.1}]},
+            tmp_path,
+        )
+
+
 def test_build_capcut_copy_uses_manifest_clean_source_and_updates_only_lab(tmp_path, monkeypatch):
     clean = tmp_path / "clean.mp4"
     tts0 = tmp_path / "b0.mp3"
@@ -165,6 +203,7 @@ def test_build_capcut_copy_uses_manifest_clean_source_and_updates_only_lab(tmp_p
         "lab_id": "lab_000000000002",
         "source_job_id": "source",
         "source_plan_signature": scene_style_lab.clean_plan_signature(plan),
+        "source_timing_signature": scene_style_lab.timing_signature(plan),
         "edit_plan": plan,
         "headcopy": {"text": "훅 제목"},
         "caption_style": {},

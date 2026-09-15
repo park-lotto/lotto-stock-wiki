@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import re
 import secrets
@@ -61,6 +62,24 @@ def clean_plan_signature(plan: dict | None) -> str:
     return mix_pipeline._plan_signature(plan or {})
 
 
+def timing_signature(plan: dict | None) -> str:
+    """TTS 파일 내용과 말자막 분할·시작을 묶은 LAB 전용 freshness 서명."""
+    fields = (
+        "beat_idx", "narration", "tts_path", "target_seconds", "duration", "head_trim",
+        "caption_lines", "cap_durs", "cap_lead", "cap_offset", "tts_ver",
+    )
+    rows = []
+    for beat in (plan or {}).get("beats") or []:
+        row = {name: copy.deepcopy(beat.get(name)) for name in fields}
+        path = Path(str(beat.get("tts_path") or ""))
+        row["tts_sha256"] = (
+            hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+        )
+        rows.append(row)
+    raw = json.dumps(rows, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+
 def lab_dir(work_root: Path | str, lab_id: str) -> Path:
     """경로순회가 불가능한 시험 폴더 경로를 만든다."""
     if not _LAB_ID_RE.fullmatch(str(lab_id or "")):
@@ -89,6 +108,28 @@ def read_manifest(work_root: Path | str, lab_id: str) -> dict:
     return json.loads(_manifest_path(work_root, lab_id).read_text(encoding="utf-8"))
 
 
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def artifact_receipt(path: Path | str) -> dict:
+    """실제로 생성된 MP4 파일의 내용과 재생시간을 고정한다."""
+    target = Path(path)
+    duration = float(video_assemble._probe_duration(str(target)) or 0.0)
+    if not target.is_file() or target.stat().st_size <= 0 or duration <= 0:
+        raise RuntimeError("시험 MP4를 재생 가능한 파일로 확인하지 못했습니다")
+    return {
+        "sha256": _file_sha256(target),
+        "bytes": target.stat().st_size,
+        "duration": duration,
+        "verified_by": "artifact-receipt",
+    }
+
+
 def output_path(work_root: Path | str, lab_id: str, output_name: str) -> Path:
     """manifest가 가리키는 산출물이 해당 LAB 폴더 안의 실제 파일인지 확인한다."""
     manifest = read_manifest(work_root, lab_id)
@@ -99,6 +140,12 @@ def output_path(work_root: Path | str, lab_id: str, output_name: str) -> Path:
     allowed = lab_dir(work_root, lab_id).resolve()
     if target == allowed or allowed not in target.parents or not target.is_file():
         raise LabPreconditionError("시험 산출물 경로가 올바르지 않습니다")
+    receipt = ((manifest.get("receipts") or {}).get(output_name) or {})
+    if output_name == "mp4":
+        if not receipt.get("sha256"):
+            raise LabPreconditionError("시험 산출물 검증 기록이 없습니다")
+        if _file_sha256(target) != receipt["sha256"] or target.stat().st_size != receipt.get("bytes"):
+            raise LabPreconditionError("시험 산출물 파일이 바뀌었습니다")
     return target
 
 
@@ -153,6 +200,7 @@ def create_copy(job_id: str, job: dict, work_root: Path | str) -> dict:
         "lab_id": lab_id,
         "source_job_id": str(job_id),
         "source_plan_signature": clean_plan_signature(edit_plan),
+        "source_timing_signature": timing_signature(edit_plan),
         "edit_plan": edit_plan,
         "headcopy": copy.deepcopy(source_job.get("headcopy")),
         "caption_style": copy.deepcopy(source_job.get("caption_style")),
@@ -174,6 +222,10 @@ def assert_fresh(manifest: dict, source_job: dict) -> None:
     actual = clean_plan_signature((source_job or {}).get("edit_plan") or {})
     if not expected or expected != actual:
         raise LabPreconditionError("복사 후 원본 편성이 바뀌었습니다")
+    expected_timing = str((manifest or {}).get("source_timing_signature") or "")
+    actual_timing = timing_signature((source_job or {}).get("edit_plan") or {})
+    if not expected_timing or expected_timing != actual_timing:
+        raise LabPreconditionError("복사 후 원본 음성 또는 자막 타이밍이 바뀌었습니다")
 
 
 def save_snapshot(work_root: Path | str, lab_id: str, snapshot: dict) -> dict:
@@ -190,6 +242,8 @@ def save_snapshot(work_root: Path | str, lab_id: str, snapshot: dict) -> dict:
     if changed:
         manifest["outputs"] = {}
         manifest["contracts"] = {}
+        manifest["receipts"] = {}
+        manifest["render_state"] = {"status": "idle", "error": None}
     write_manifest(lab_dir(work_root, lab_id), manifest)
     return saved
 
@@ -259,13 +313,23 @@ def render_copy(manifest: dict, source_job: dict, work_root: Path | str) -> Path
 
     updated = copy.deepcopy(manifest)
     updated.setdefault("outputs", {})["mp4"] = str(output)
+    receipt = artifact_receipt(output)
+    updated.setdefault("receipts", {})["mp4"] = receipt
     from .scene_style import context_for
     render_contract = contract_from_context(
         context_for(timeline, manifest.get("headcopy"), snapshot, manifest.get("lab_id")),
         (manifest.get("clean") or {}).get("signature"),
     )
     updated.setdefault("contracts", {})["mp4"] = render_contract
+    updated["contracts"]["mp4"].update({
+        "artifact_sha256": receipt["sha256"],
+        "verified_by": receipt["verified_by"],
+    })
     updated["contracts"]["landing"] = copy.deepcopy(render_contract)
+    updated["contracts"]["landing"].update({
+        "artifact_sha256": receipt["sha256"],
+        "verified_by": "same-file",
+    })
     write_manifest(target, updated)
     manifest.clear()
     manifest.update(updated)
@@ -358,6 +422,60 @@ def verify_capcut_overlay_draft(draft: dict, expected_layers: list[dict]) -> Non
         raise LabPreconditionError("CapCut 장면꾸미기 타이밍이 실제 자막 타임라인과 다릅니다")
 
 
+def _checked_layer_path(layer_dir: Path, name: str) -> Path:
+    target = (layer_dir / str(name or "")).resolve()
+    if layer_dir.resolve() not in target.parents or not target.is_file():
+        raise LabPreconditionError("장면 레이어 파일이 없거나 경로가 올바르지 않습니다")
+    return target
+
+
+def overlay_specs_for_scene(scene: dict, layer: dict, layer_dir: Path | str) -> list[dict]:
+    """브라우저가 뽑은 모션 PNG를 CapCut 30fps 구간으로 펼친다."""
+    layer_dir = Path(layer_dir)
+    if layer.get("camera"):
+        raise LabPreconditionError(
+            "CapCut 시험 초안은 화면 전체 카메라 모션을 아직 정확히 옮길 수 없습니다"
+        )
+    start = float(scene["start"])
+    end = float(scene["end"])
+    common = {
+        "caption_visible": scene.get("caption_visible") is not False,
+    }
+    static_path = _checked_layer_path(layer_dir, layer.get("file"))
+    animation = layer.get("animation") or {}
+    count = int(animation.get("count") or 0)
+    pattern = str(animation.get("pattern") or "")
+    specs = []
+    for frame in range(count):
+        frame_start = start + frame / 30
+        frame_end = min(end, start + (frame + 1) / 30)
+        if frame_start >= end:
+            break
+        try:
+            frame_name = pattern % frame
+        except (TypeError, ValueError):
+            raise LabPreconditionError("장면 모션 프레임 이름이 올바르지 않습니다") from None
+        specs.append({
+            "path": str(_checked_layer_path(layer_dir, frame_name)),
+            "start": frame_start,
+            "end": frame_end,
+            "t0": frame_start,
+            "dur": frame_end - frame_start,
+            **common,
+        })
+    covered_until = specs[-1]["end"] if specs else start
+    if covered_until < end:
+        specs.append({
+            "path": str(static_path),
+            "start": covered_until,
+            "end": end,
+            "t0": covered_until,
+            "dur": end - covered_until,
+            **common,
+        })
+    return specs
+
+
 def build_capcut_copy(
     manifest: dict,
     source_job: dict,
@@ -392,17 +510,7 @@ def build_capcut_copy(
         raise LabPreconditionError("장면 레이어 개수가 실제 자막 타임라인과 다릅니다")
     overlay_layers = []
     for scene, layer in zip(context["scenes"], rendered, strict=True):
-        layer_path = (layer_dir / str(layer.get("file") or "")).resolve()
-        if layer_dir.resolve() not in layer_path.parents or not layer_path.is_file():
-            raise LabPreconditionError("장면 레이어 파일이 없거나 경로가 올바르지 않습니다")
-        overlay_layers.append({
-            "path": str(layer_path),
-            "start": float(scene["start"]),
-            "end": float(scene["end"]),
-            "t0": float(scene["start"]),
-            "dur": float(scene["end"]) - float(scene["start"]),
-            "caption_visible": scene.get("caption_visible") is not False,
-        })
+        overlay_layers.extend(overlay_specs_for_scene(scene, layer, layer_dir))
 
     out_root = target / "capcut"
     project_name = f"장면꾸미기시험 {manifest['lab_id'][-4:]}"

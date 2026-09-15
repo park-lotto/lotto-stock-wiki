@@ -138,6 +138,28 @@ def test_admin_can_queue_isolated_render(tmp_path, monkeypatch):
     assert response.status_code == 200
     assert response.json()["status"] == "queued"
     assert calls == [(lab_id, "j1", work_root)]
+    saved = scene_style_lab.read_manifest(work_root, lab_id)
+    assert saved["render_state"] == {"status": "ready", "error": None}
+
+
+def test_background_render_failure_is_recorded_for_admin_ui(tmp_path, monkeypatch):
+    from shopping_shorts import scene_style_lab
+
+    store, work_root = _setup(tmp_path, monkeypatch)
+    _create_ready_job(store, work_root)
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    manifest = owner.post("/api/admin/scene-style-lab", json={"job_id": "j1"}).json()["manifest"]
+    monkeypatch.setattr(
+        scene_style_lab,
+        "render_copy",
+        lambda *_args: (_ for _ in ()).throw(RuntimeError("ffmpeg stopped")),
+    )
+
+    response = owner.post(f"/api/admin/scene-style-lab/{manifest['lab_id']}/render")
+
+    assert response.status_code == 200
+    saved = scene_style_lab.read_manifest(work_root, manifest["lab_id"])
+    assert saved["render_state"] == {"status": "error", "error": "ffmpeg stopped"}
 
 
 def test_lab_frame_is_admin_only_and_marks_clean_signature(tmp_path, monkeypatch):

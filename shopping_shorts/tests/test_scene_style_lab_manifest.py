@@ -137,3 +137,27 @@ def test_saving_new_snapshot_invalidates_old_outputs_and_comparisons(tmp_path):
     saved = lab.read_manifest(tmp_path, manifest["lab_id"])
     assert saved["outputs"] == {}
     assert saved["contracts"] == {}
+
+
+def test_freshness_rejects_changed_caption_timing_or_replaced_tts(tmp_path):
+    from shopping_shorts import scene_style_lab as lab
+
+    tts = tmp_path / "beat.wav"
+    tts.write_bytes(b"first-audio")
+    source = {"edit_plan": {"beats": [{
+        "beat_idx": 0, "narration": "같은 대사", "tts_path": str(tts),
+        "cap_durs": [0.4, 0.6], "primary": {"video_id": "s0", "start": 0, "end": 1},
+    }]}}
+    manifest = {
+        "source_plan_signature": lab.clean_plan_signature(source["edit_plan"]),
+        "source_timing_signature": lab.timing_signature(source["edit_plan"]),
+    }
+
+    changed_timing = deepcopy(source)
+    changed_timing["edit_plan"]["beats"][0]["cap_durs"] = [0.5, 0.5]
+    with pytest.raises(lab.LabPreconditionError, match="음성.*자막"):
+        lab.assert_fresh(manifest, changed_timing)
+
+    tts.write_bytes(b"replaced-audio")
+    with pytest.raises(lab.LabPreconditionError, match="음성.*자막"):
+        lab.assert_fresh(manifest, source)

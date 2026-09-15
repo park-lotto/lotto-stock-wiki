@@ -1,4 +1,5 @@
 from copy import deepcopy
+import hashlib
 from pathlib import Path
 import wave
 
@@ -40,6 +41,7 @@ def _manifest(job, clean):
         "lab_id": "lab_000000000001",
         "source_job_id": "j1",
         "source_plan_signature": scene_style_lab.clean_plan_signature(job["edit_plan"]),
+        "source_timing_signature": scene_style_lab.timing_signature(job["edit_plan"]),
         "edit_plan": deepcopy(job["edit_plan"]),
         "headcopy": deepcopy(job["headcopy"]),
         "caption_style": deepcopy(job["caption_style"]),
@@ -78,6 +80,7 @@ def test_render_uses_only_manifest_clean_sources_and_lab_output(tmp_path, monkey
         return out_path
 
     monkeypatch.setattr(scene_style_lab.video_assemble, "assemble", fake_assemble)
+    monkeypatch.setattr(scene_style_lab.video_assemble, "_probe_duration", lambda _path: 1.0)
 
     output = scene_style_lab.render_copy(manifest, job, tmp_path)
 
@@ -88,7 +91,41 @@ def test_render_uses_only_manifest_clean_sources_and_lab_output(tmp_path, monkey
     saved = scene_style_lab.read_manifest(tmp_path, manifest["lab_id"])
     assert saved["outputs"]["mp4"] == str(output)
     assert saved["contracts"]["mp4"]["hook_caption_count"] == 0
-    assert saved["contracts"]["landing"] == saved["contracts"]["mp4"]
+    assert saved["receipts"]["mp4"] == {
+        "sha256": hashlib.sha256(b"rendered").hexdigest(),
+        "bytes": len(b"rendered"),
+        "duration": 1.0,
+        "verified_by": "artifact-receipt",
+    }
+    assert saved["contracts"]["landing"]["artifact_sha256"] == saved["receipts"]["mp4"]["sha256"]
+    assert saved["contracts"]["landing"]["verified_by"] == "same-file"
+
+
+def test_output_path_rejects_mp4_changed_after_receipt(tmp_path, monkeypatch):
+    tts = tmp_path / "tts.mp3"
+    clean = tmp_path / "clean.mp4"
+    _write_audio(tts)
+    clean.write_bytes(b"clean")
+    job = _job(tts)
+    manifest = _manifest(
+        job,
+        {"kind": "sources", "paths": {"s0": str(clean)},
+         "signature": scene_style_lab.clean_plan_signature(job["edit_plan"])},
+    )
+    target = scene_style_lab.lab_dir(tmp_path, manifest["lab_id"])
+    target.mkdir(parents=True)
+    scene_style_lab.write_manifest(target, manifest)
+    monkeypatch.setattr(
+        scene_style_lab.video_assemble,
+        "assemble",
+        lambda _plan, _tts, _sources, out_path, **_kwargs: Path(out_path).write_bytes(b"rendered"),
+    )
+    monkeypatch.setattr(scene_style_lab.video_assemble, "_probe_duration", lambda _path: 1.0)
+    output = scene_style_lab.render_copy(manifest, job, tmp_path)
+    output.write_bytes(b"tampered")
+
+    with pytest.raises(scene_style_lab.LabPreconditionError, match="산출물 파일이 바뀌었습니다"):
+        scene_style_lab.output_path(tmp_path, manifest["lab_id"], "mp4")
 
 
 def test_render_final_clean_uses_live_split_and_plan_adapters(tmp_path, monkeypatch):
@@ -130,6 +167,7 @@ def test_render_final_clean_uses_live_split_and_plan_adapters(tmp_path, monkeypa
         "assemble",
         lambda plan, tts_paths, sources, out_path, **kwargs: Path(out_path).write_bytes(b"rendered"),
     )
+    monkeypatch.setattr(scene_style_lab.video_assemble, "_probe_duration", lambda _path: 1.0)
 
     scene_style_lab.render_copy(manifest, job, tmp_path)
 

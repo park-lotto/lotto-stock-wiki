@@ -24,7 +24,7 @@
     const value=(actual,key)=>{if(!actual)return [null,'아직 생성 안 됨'];if(key==='hook')return [actual.hook_caption_count===0,`${actual.hook_caption_count}개`];if(key==='body'){const ok=expected.body_first_start===null?actual.body_first_start===null:Math.abs(Number(actual.body_first_start)-expected.body_first_start)<=.034;return [ok,actual.body_first_start===null?'-':Number(actual.body_first_start).toFixed(3)+'초']}return [actual.clean_signature===expected.clean_signature,String(actual.clean_signature||'-').slice(0,12)]};
     const rows=[['훅 자막','hook'],['본문 첫 시작','body'],['청소본','clean']];
     compare.innerHTML=rows.map(([label,key])=>`<tr><th>${label}</th>${cols.map(([,actual])=>cell(...value(actual,key))).join('')}</tr>`).join('')+
-      `<tr><th>위치</th>${cell(true,'편집기')}${cell(!!packet.manifest.outputs?.mp4,packet.manifest.outputs?.mp4?'LAB MP4':'-')}${cell(!!packet.manifest.outputs?.capcut_project,packet.manifest.outputs?.capcut_project?'LAB 초안':'-')}${cell(!!packet.manifest.outputs?.mp4,'관리자 전용')}</tr>`;
+      `<tr><th>위치</th>${cell(true,'화면 컨텍스트')}${cell(!!packet.manifest.receipts?.mp4,packet.manifest.receipts?.mp4?'실파일 해시':'-')}${cell(!!packet.manifest.outputs?.capcut_project,packet.manifest.outputs?.capcut_project?'JSON 역검증':'-')}${cell(!!packet.manifest.contracts?.landing?.artifact_sha256,packet.manifest.contracts?.landing?.artifact_sha256?'동일 MP4 해시':'-')}</tr>`;
     const ready=!!packet.manifest.outputs?.mp4;resultVideo.hidden=!ready;if(ready)resultVideo.src=labUrl('/video')+'?v='+Date.now();
     landing.href=`/scene-style-lab/${encodeURIComponent(packet.manifest.lab_id)}`;
   }
@@ -72,8 +72,8 @@
   render.addEventListener('click',async()=>{
     error.textContent='';render.disabled=true;status.textContent='시험 MP4 만드는 중…';
     try{const response=await fetch(labUrl('/render'),{method:'POST'}),data=await response.json();if(!response.ok)throw Error(data.error||'렌더 시작 실패');
-      for(let i=0;i<120;i++){await new Promise(resolve=>setTimeout(resolve,1000));await reloadPacket();if(packet.manifest.outputs?.mp4)break}
-      if(!packet.manifest.outputs?.mp4)throw Error('렌더가 제한 시간 안에 끝나지 않았습니다');status.textContent='시험 MP4 완료 · 랜딩 재생 가능';
+      for(let i=0;i<120;i++){await new Promise(resolve=>setTimeout(resolve,1000));await reloadPacket();const state=packet.manifest.render_state||{};if(state.status==='error')throw Error(state.error||'렌더 실패');if(state.status==='ready'&&packet.manifest.outputs?.mp4)break}
+      if(packet.manifest.render_state?.status!=='ready'||!packet.manifest.outputs?.mp4)throw Error('렌더가 제한 시간 안에 끝나지 않았습니다');status.textContent='시험 MP4 완료 · 실파일 검증됨';
     }catch(cause){error.textContent=cause.message;status.textContent='시험 MP4 실패'}finally{render.disabled=false}
   });
   async function detectCapCutRoot(dir){
