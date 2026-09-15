@@ -3228,15 +3228,23 @@ function _catMoveHTML(i){
   const cur = TOPIC_CTYPE[i.category];
   const hide = CTYPE_HIDDEN[i.platform||PLATFORM] || [];
   return `<div class="catmove">${CAT_MOVE.filter(([c])=>!hide.includes(TOPIC_CTYPE[c])).map(([c,l])=>
-    `<button class="${TOPIC_CTYPE[c]===cur?'on':''}" onclick="moveCategory('${esc(i.shortcode)}','${c}',this)">${l}</button>`).join('')}</div>`;
+    `<button class="${TOPIC_CTYPE[c]===cur?'on':''}" onclick="moveCategory('${esc(i.shortcode)}','${c}',this,'${esc(_normUser(i.username||''))}')">${l}</button>`).join('')}</div>`;
 }
-async function moveCategory(sc, cat, btn){
+async function moveCategory(sc, cat, btn, user){
+  // 채널째로 옮길지 묻는다 — 한 번 정하면 그 채널의 앞으로 영상도 자동으로 이 칸에 들어간다.
+  const all = user && confirm(`@${user} 채널의 영상을 앞으로도 전부 이 카테고리로 넣을까요?
+
+[확인] 채널 전체 고정 (지금 영상 + 앞으로 들어올 영상)
+[취소] 이 영상 하나만 옮기기`);
   if(btn) btn.disabled = true;
   try{
-    const r = await fetch(`/api/refs/video_category?shortcode=${encodeURIComponent(sc)}&category=${encodeURIComponent(cat)}`, {method:'POST'});
+    const url = all
+      ? `/api/refs/channel_force?username=${encodeURIComponent(user)}&category=${encodeURIComponent(cat)}`
+      : `/api/refs/video_category?shortcode=${encodeURIComponent(sc)}&category=${encodeURIComponent(cat)}`;
+    const r = await fetch(url, {method:'POST'});
     const d = await r.json().catch(()=>({}));
     if(!r.ok || !d.ok) throw new Error(d.error || ('HTTP '+r.status));
-    STATE.items.forEach(x=>{ if(x.shortcode===sc) x.category = cat; });
+    STATE.items.forEach(x=>{ if(all ? _normUser(x.username)===user : x.shortcode===sc) x.category = cat; });
     render();
   }catch(e){
     alert('카테고리 이동 실패: '+e.message);

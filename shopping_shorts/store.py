@@ -1146,6 +1146,16 @@ class Store:
                     set_at TEXT
                 )
             """)
+            # 채널 고정 카테고리(2026-09-15 사장님 "카테이동한 채널은 앞으로 영상도 그 안으로").
+            # channel_categories(비전태그에 지는 폴백)와 다르다 — 이건 판정기·비전태그를 이긴다.
+            # 영상별 지정(category_overrides)만 이것보다 우선한다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS channel_category_force (
+                    username TEXT PRIMARY KEY,
+                    category TEXT NOT NULL,
+                    set_at TEXT
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS removed_channels (
                     username TEXT PRIMARY KEY,
@@ -2640,6 +2650,18 @@ class Store:
                 n += 1
         return n
 
+    def set_channel_force(self, username, category):
+        """채널 고정 카테고리 저장. category 빈값 = 해제."""
+        u = (username or "").strip().lstrip("@").lower()
+        if not u:
+            return
+        with self._conn() as c:
+            if category:
+                c.execute("INSERT OR REPLACE INTO channel_category_force(username, category, set_at) "
+                          "VALUES(?,?,?)", (u, category, datetime.now(timezone.utc).isoformat()))
+            else:
+                c.execute("DELETE FROM channel_category_force WHERE username=?", (u,))
+
     def _apply_overrides(self, items, conn=None):
         """사람 지정 카테고리를 덮는다 — **저장하는 자리(save/merge)에서만** 부른다(0순위-B).
 
@@ -2655,10 +2677,26 @@ class Store:
         except sqlite3.Error:
             return items
         ov = dict(rows)
-        if ov:
+        try:
+            q = "SELECT username, category FROM channel_category_force"
+            if conn is not None:
+                force = dict(conn.execute(q).fetchall())
+            else:
+                with self._conn() as c:
+                    force = dict(c.execute(q).fetchall())
+        except sqlite3.Error:
+            force = {}
+        if ov or force:
+            # 우선순위: 영상별 지정 > 채널 고정 > 자동판정
             for x in items or []:
-                if isinstance(x, dict) and x.get("shortcode") in ov:
+                if not isinstance(x, dict):
+                    continue
+                if x.get("shortcode") in ov:
                     x["category"] = ov[x["shortcode"]]
+                else:
+                    u = (x.get("username") or "").strip().lstrip("@").lower()
+                    if u in force:
+                        x["category"] = force[u]
         return items
 
     def _fill_delta(self, platform, items):
