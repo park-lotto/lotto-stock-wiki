@@ -233,12 +233,22 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 @keyframes whyGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,77,77,.0)}50%{box-shadow:0 0 0 6px rgba(255,77,77,.18),0 0 28px rgba(255,77,77,.45)}}
 @keyframes whyShine{0%{left:-60%}60%,100%{left:130%}}
 @media(prefers-reduced-motion:reduce){.price .why,.price .why::after{animation:none}}
+.dl{background:linear-gradient(90deg,#5a0f16,#8a1520 50%,#5a0f16)!important;border-bottom:2px solid #ff4d4d!important}
+.dl .in{padding:12px 20px!important}
+.dl .t{font-size:clamp(17px,2vw,22px)!important;font-weight:900!important;color:#fff;animation:breathe 1.6s ease-in-out infinite}
+.cd{gap:8px!important}.cd b{min-width:62px!important;font-size:30px!important;padding:5px 8px!important;color:#ffd84d!important;border-color:rgba(255,216,77,.5)!important;background:#1a0508!important}
+.cd b small{font-size:12px!important;color:#ffc9c9!important}
+.dl .p{font-size:16px!important;color:#fff!important;font-weight:700}.dl .p b{font-size:30px!important;color:#ffd84d!important}
+.dl .p em{font-style:normal;color:#ffb3b3;font-size:14px;font-weight:800}
+.brand .sym{width:52px!important;height:52px!important}.brand .nm{font-size:30px!important}.brand .en{font-size:11px!important}
+.nav .login{font-size:17px!important}
+.nobrain.big small{font-size:clamp(18px,2.2vw,26px)!important;color:#e8f3ef!important;font-weight:700!important;margin-top:10px!important}
 </style></head><body>
 
 <div class=dl><div class=in>
   <div class=t>⏰ 1기 모집 마감까지</div>
   <div class=cd id=cd><b id=cdD>0<small>일</small></b><b id=cdH>00<small>시간</small></b><b id=cdM>00<small>분</small></b><b id=cdS>00<small>초</small></b></div>
-  <div class=p>__DEADLINE_LABEL__까지 <b>__PRO_PRICE__</b><br><s>__NEXT_START_LABEL__부터 __NEXT_PRICE__</s></div>
+  <div class=p>__DEADLINE_LABEL__까지 <b>__PRO_PRICE__</b><br><em>__NEXT_START_LABEL__부터 __NEXT_PRICE__ 인상</em></div>
 </div></div>
 
 <div class=wrap>
