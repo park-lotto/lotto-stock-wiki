@@ -3584,12 +3584,12 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         it.get("structure") or {}, _pick_src, elem_modes, category_lookup,
         rejection_reasons=_material_rejected, facts_block=_pick_facts, **_gen_kw)
     if not drafts:
-        if _material_rejected:
-            return JSONResponse(status_code=502, content={
-                "ok": False,
-                "error": "자료로 확인되지 않는 내용이 반복 생성되어 차단했습니다 — 다시 생성해주세요.",
-                "reasons": _material_rejected})
-        return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
+        # 생성기 내부 폴백까지 예외적으로 빈손이어도 영상 재료가 있는 요청은 막지 않는다.
+        # 실패한 AI 본문이 아니라 위에서 확정한 동일 재료의 원본 발화·장면만 사용한다.
+        drafts = [script_generate._grounded_fallback(
+            _pick_src, _pick_facts,
+            script_generate._sources_product(_pick_src) or my_topic or subject,
+            reasons=_material_rejected)]
     _pickup_rejected = []
     if _seed_hook:
         _ok, _bad = pickup_script.filter_drafts(drafts, _seed_hook, _seed_cta)

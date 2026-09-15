@@ -162,16 +162,16 @@ def test_style_rejects_unsupported_claim_and_sends_observation_fallback(monkeypa
     assert "그 칸을 확인된 동작이나 사용 상황으로 다시 써라" in prompts[0]
 
 
-def test_all_fact_rejected_styles_return_review_candidates_but_topic_rejected_never_does(monkeypatch):
-    """사실 검사는 살리되 전부 폐기돼 제작소가 0안이 되는 회귀를 막는다."""
+def test_all_rejected_styles_return_grounded_fallback_without_failed_ai_claims(monkeypatch):
+    """실패 초안은 노출하지 않고 원본 장면으로 최소 한 안을 복구한다."""
     def fake_generate(_sources, style, *_args, note=None, **_kwargs):
         note["reason"] = style["reason"]
         note["detail"] = style["reason"] + " 상세"
         if style["reason"] == "근거부족":
             note["review_candidate"] = {
                 "style_id": style["id"], "style_name": style["name"],
-                "beats": [{"role": "hook", "text": "얼음정수기 초안"}],
-                "script": "얼음정수기 초안", "hook": "얼음정수기 초안",
+                "beats": [{"role": "hook", "text": "변기는 몇만 원이고 품절입니다"}],
+                "script": "변기는 몇만 원이고 품절입니다", "hook": "변기는 몇만 원이고 품절입니다",
                 "checks": [{"name": "사실 근거", "ok": False, "detail": "근거 없음"}],
                 "passed": False,
             }
@@ -179,7 +179,7 @@ def test_all_fact_rejected_styles_return_review_candidates_but_topic_rejected_ne
 
     monkeypatch.setattr(sg, "generate_one_style", fake_generate)
     reasons = []
-    result = sg.generate_by_styles([], [
+    result = sg.generate_by_styles(sources(), [
         {"id": 1, "name": "사실만 실패", "reason": "근거부족"},
         {"id": 2, "name": "다른 제품", "reason": "소재이탈"},
     ], reasons=reasons)
@@ -187,9 +187,24 @@ def test_all_fact_rejected_styles_return_review_candidates_but_topic_rejected_ne
     assert len(result) == 1
     assert result[0]["style_id"] == 1
     assert result[0]["needs_review"] is True
-    assert result[0]["review_reason"] == "사실 근거를 확인하지 못한 초안"
-    assert all(row["style_id"] != 2 for row in result)
+    assert result[0]["made_by"] == "장면근거"
+    assert PRODUCT in result[0]["script"]
+    assert "몇만 원" not in result[0]["script"] and "품절" not in result[0]["script"]
     assert {row["kind"] for row in reasons} == {"근거부족", "소재이탈"}
+
+
+def test_empty_generator_response_still_returns_grounded_draft(monkeypatch):
+    monkeypatch.setattr(sg, "generate_one_style", lambda *_a, **_k: None)
+    result = sg.generate_by_styles(sources(), [{"id": 1, "name": "발견형"}], reasons=[])
+    assert len(result) == 1
+    assert result[0]["made_by"] == "장면근거"
+    assert PRODUCT in result[0]["script"]
+
+
+def test_passed_draft_wins_without_grounded_fallback(monkeypatch):
+    passed = {"beats": [{"role": "hook", "text": "정상 대본"}], "passed": True}
+    monkeypatch.setattr(sg, "generate_one_style", lambda *_a, **_k: passed)
+    assert sg.generate_by_styles(sources(), [{"id": 1}], reasons=[]) == [passed]
 
 
 def test_trim_rejudges_actual_final_text_instead_of_reusing_claim_success(monkeypatch):
@@ -287,6 +302,14 @@ def test_pickup_retry_gets_specific_failed_claim_feedback(monkeypatch):
     assert len(result) == 1 and "품절" not in result[0]["script"]
     assert "현지선 변기가 품절입니다." in contexts[1]
     assert "재고 자료가 없다" in contexts[1]
+
+
+def test_pickup_empty_response_also_returns_grounded_fallback(monkeypatch):
+    monkeypatch.setattr(sg, "generate_variations", lambda *_a, **_k: [])
+    result = sg.generate_guarded_variations({}, sources(), {}, {}, n=1)
+    assert len(result) == 1
+    assert result[0]["made_by"] == "장면근거"
+    assert PRODUCT in result[0]["script"]
 
 
 def audited_verdict(text, evidence_id, quote, kind="objective"):
