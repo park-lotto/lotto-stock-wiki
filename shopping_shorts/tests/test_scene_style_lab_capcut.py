@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -148,3 +149,85 @@ def test_capcut_overlay_verifier_rejects_timing_mismatch():
     draft["tracks"][-1]["segments"][1]["target_timerange"]["start"] += 1
     with pytest.raises(scene_style_lab.LabPreconditionError, match="타이밍"):
         scene_style_lab.verify_capcut_overlay_draft(draft, expected)
+
+
+def test_build_capcut_copy_uses_manifest_clean_source_and_updates_only_lab(tmp_path, monkeypatch):
+    clean = tmp_path / "clean.mp4"
+    tts0 = tmp_path / "b0.mp3"
+    tts1 = tmp_path / "b1.mp3"
+    for path in (clean, tts0, tts1):
+        path.write_bytes(b"input")
+    plan = deepcopy(PLAN)
+    plan["beats"][0]["tts_path"] = str(tts0)
+    plan["beats"][1]["tts_path"] = str(tts1)
+    manifest = {
+        "version": 1,
+        "lab_id": "lab_000000000002",
+        "source_job_id": "source",
+        "source_plan_signature": scene_style_lab.clean_plan_signature(plan),
+        "edit_plan": plan,
+        "headcopy": {"text": "훅 제목"},
+        "caption_style": {},
+        "deco": {},
+        "clean": {
+            "kind": "sources",
+            "paths": {"v0": str(clean)},
+            "signature": scene_style_lab.clean_plan_signature(plan),
+        },
+        "scene_style": {
+            "version": 1, "mode": "story", "presetId": "t11",
+            "hookCaptionMode": "hidden",
+        },
+        "outputs": {},
+    }
+    source_job = {"job_id": "source", "edit_plan": deepcopy(plan)}
+    source_before = deepcopy(source_job)
+    target = scene_style_lab.lab_dir(tmp_path, manifest["lab_id"])
+    target.mkdir(parents=True)
+    scene_style_lab.write_manifest(target, manifest)
+    monkeypatch.setattr(scene_style_lab.video_assemble, "_beat_timeline", lambda *_args: deepcopy(TIMELINE))
+
+    def fake_layers(_timeline, _snapshot, output, **_kwargs):
+        output = Path(output)
+        result = []
+        for index in range(2):
+            name = f"scene-style-layer-{index}.png"
+            (output / name).write_bytes(b"png")
+            result.append({"file": name})
+        return result
+
+    captured = {}
+
+    def fake_assemble(out_root, base_abs, **kwargs):
+        captured.update(base_abs=base_abs, **kwargs)
+        project = Path(out_root) / "LAB"
+        project.mkdir(parents=True)
+        draft, _ = capcut_draft.build_draft(
+            plan=kwargs["plan"], timeline=kwargs["timeline"],
+            source_video_paths=kwargs["source_video_paths"],
+            tts_paths=kwargs["tts_paths"],
+            asset_paths={str(clean): "C:/CapCut/LAB/clean.mp4",
+                         str(tts0): "C:/CapCut/LAB/b0.mp3",
+                         str(tts1): "C:/CapCut/LAB/b1.mp3"},
+            project_name="LAB",
+            scene_overlay_layers=[{**layer, "_capcut_path": f"C:/CapCut/LAB/{Path(layer['path']).name}"}
+                                  for layer in kwargs["scene_overlay_layers"]],
+        )
+        (project / "draft_content.json").write_text(json.dumps(draft), encoding="utf-8")
+        return project, "LAB", ["draft_content.json"]
+
+    monkeypatch.setattr(scene_style, "render_layers", fake_layers)
+    monkeypatch.setattr(capcut_draft, "assemble_draft_folder", fake_assemble)
+
+    project = scene_style_lab.build_capcut_copy(
+        manifest, source_job, tmp_path, "C:/CapCut Drafts"
+    )
+
+    assert project == target / "capcut" / "LAB"
+    assert captured["source_video_paths"] == {"v0": str(clean)}
+    assert captured["scene_overlay_layers"][0]["caption_visible"] is False
+    assert captured["scene_overlay_layers"][1]["caption_visible"] is True
+    assert source_job == source_before
+    saved = scene_style_lab.read_manifest(tmp_path, manifest["lab_id"])
+    assert saved["outputs"]["capcut_project"] == str(project)
+    assert saved["contracts"]["capcut"]["hook_caption_count"] == 0

@@ -17,6 +17,9 @@
     .checks{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:8px}.check{background:#112933;padding:10px;border-radius:9px}
     .check b{display:block;color:#66e6c9;margin-bottom:4px}.error{color:#ff8c96;white-space:pre-wrap}
     iframe{width:100%;height:76vh;border:1px solid #294550;border-radius:14px;background:#08151d}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.actions a{color:#06130f;background:#61f2d0;text-decoration:none;padding:11px 14px;border-radius:9px;font-weight:800}
+    .compare{width:100%;border-collapse:collapse;margin:12px 0;background:#0e2029}.compare th,.compare td{border:1px solid #294550;padding:9px;text-align:center}.compare th:first-child{text-align:left}.pass{color:#61f2d0}.fail{color:#ff8c96}.pending{color:#9bb8b8}
+    #resultVideo{display:block;width:min(360px,100%);max-height:64vh;margin:12px auto;border-radius:12px;background:#000}
     [hidden]{display:none!important}
   </style>
 </head>
@@ -26,6 +29,14 @@
   <section class="toolbar"><select id="job" aria-label="시험할 작업"></select><button id="clone" disabled>시험 복사본 만들기</button></section>
   <section class="checks" id="checks"></section>
   <p class="error" id="error"></p>
+  <section id="outputs" hidden>
+    <div class="actions"><button id="render">시험 MP4 만들기</button><button id="capcut">CapCut 시험 초안 보내기</button><a id="landing" target="_blank" rel="noopener">시험 랜딩 열기</a></div>
+    <table class="compare" aria-label="네 출구 비교">
+      <thead><tr><th>검사항목</th><th>미리보기</th><th>MP4</th><th>CapCut</th><th>랜딩</th></tr></thead>
+      <tbody id="compare"><tr><th>훅 자막</th></tr><tr><th>본문 첫 시작</th></tr><tr><th>청소본</th></tr><tr><th>위치</th></tr></tbody>
+    </table>
+    <video id="resultVideo" controls playsinline hidden></video>
+  </section>
   <iframe id="editor" title="장면꾸미기 편집기" hidden></iframe>
 </main>
 <script src="/scene-style-lab.js"></script>

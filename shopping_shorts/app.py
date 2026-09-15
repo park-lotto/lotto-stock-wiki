@@ -18749,6 +18749,74 @@ def api_scene_style_lab_video(lab_id: str, request: Request):
     )
 
 
+@app.get("/api/admin/scene-style-lab/{lab_id}/capcut")
+def api_scene_style_lab_capcut(lab_id: str, request: Request, base: str = ""):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(
+        Store(DB_PATH), request, manifest.get("source_job_id")
+    )
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        project = scene_style_lab.build_capcut_copy(
+            manifest, source_job, _MIX_WORK_DIR, base
+        )
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    except (OSError, RuntimeError, ValueError) as exc:
+        return JSONResponse(status_code=500, content={"error": str(exc)})
+
+    texts, assets = {}, []
+    for path in sorted(Path(project).iterdir()):
+        if not path.is_file():
+            continue
+        if path.suffix.lower() == ".json":
+            texts[path.name] = path.read_text(encoding="utf-8")
+        else:
+            assets.append({
+                "name": path.name,
+                "url": f"/api/admin/scene-style-lab/{lab_id}/capcut-asset/{path.name}",
+            })
+    return {
+        "ok": True,
+        "project": Path(project).name,
+        "texts": texts,
+        "assets": assets,
+        "contract": (manifest.get("contracts") or {}).get("capcut"),
+    }
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}/capcut-asset/{name}")
+def api_scene_style_lab_capcut_asset(lab_id: str, name: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    if os.path.basename(name) != name or name in ("", ".", ".."):
+        return JSONResponse(status_code=400, content={"error": "잘못된 파일명"})
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    if not _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id")):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    project = Path(str((manifest.get("outputs") or {}).get("capcut_project") or "")).resolve()
+    allowed = (scene_style_lab.lab_dir(_MIX_WORK_DIR, lab_id) / "capcut").resolve()
+    asset = (project / name).resolve()
+    if allowed not in project.parents or project not in asset.parents or not asset.is_file():
+        return JSONResponse(status_code=404, content={"error": "파일 없음"})
+    return FileResponse(asset, headers={"Cache-Control": "no-store"})
+
+
 @app.get("/api/admin/scene-style-lab/{lab_id}/frame/{scene_index}")
 def api_scene_style_lab_frame(lab_id: str, scene_index: int, request: Request):
     denied = _scene_style_lab_denied(request)

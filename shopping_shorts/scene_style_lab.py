@@ -17,10 +17,43 @@ from . import frame_extract, mix_pipeline, video_assemble
 
 _LAB_ID_RE = re.compile(r"lab_[0-9a-f]{12}\Z")
 _MANIFEST_NAME = "manifest.json"
+FRAME_TOLERANCE = 0.034
 
 
 class LabPreconditionError(RuntimeError):
     """시험을 시작하기 전에 사용자가 해결해야 하는 조건 오류."""
+
+
+def contract_from_context(context: dict, clean_signature: str) -> dict:
+    """한 출구가 지켜야 할 훅/본문/청소본 계약을 실제 장면 컨텍스트에서 뽑는다."""
+    scenes = (context or {}).get("scenes") or []
+    visible_speech = [
+        scene for scene in scenes
+        if str(scene.get("caption") or "").strip() and scene.get("caption_visible") is not False
+    ]
+    hook_count = sum(1 for scene in visible_speech if scene.get("kind") == "hook")
+    body = [scene for scene in visible_speech if scene.get("kind") == "body"]
+    return {
+        "hook_caption_count": hook_count,
+        "body_first_start": float(body[0]["start"]) if body else None,
+        "clean_signature": str(clean_signature or ""),
+    }
+
+
+def compare_contract(expected: dict, actual: dict) -> dict:
+    """두 출구의 핵심 배선을 30fps 한 프레임 허용치로 비교한다."""
+    expected_start = expected.get("body_first_start")
+    actual_start = actual.get("body_first_start")
+    body_start_ok = expected_start is None and actual_start is None
+    if expected_start is not None and actual_start is not None:
+        body_start_ok = abs(float(actual_start) - float(expected_start)) <= FRAME_TOLERANCE
+    checks = {
+        "hook_caption_count": int(actual.get("hook_caption_count", -1)) == 0,
+        "body_first_start": body_start_ok,
+        "clean_signature": str(actual.get("clean_signature") or "") ==
+                           str(expected.get("clean_signature") or ""),
+    }
+    return {"ok": all(checks.values()), "checks": checks}
 
 
 def clean_plan_signature(plan: dict | None) -> str:
@@ -151,8 +184,12 @@ def save_snapshot(work_root: Path | str, lab_id: str, snapshot: dict) -> dict:
     candidate["hookCaptionMode"] = "hidden"
     saved = validate_snapshot(candidate)
     manifest = read_manifest(work_root, lab_id)
+    changed = saved != manifest.get("scene_style")
     manifest["scene_style"] = saved
     manifest["hook_caption_mode"] = "hidden"
+    if changed:
+        manifest["outputs"] = {}
+        manifest["contracts"] = {}
     write_manifest(lab_dir(work_root, lab_id), manifest)
     return saved
 
@@ -222,6 +259,13 @@ def render_copy(manifest: dict, source_job: dict, work_root: Path | str) -> Path
 
     updated = copy.deepcopy(manifest)
     updated.setdefault("outputs", {})["mp4"] = str(output)
+    from .scene_style import context_for
+    render_contract = contract_from_context(
+        context_for(timeline, manifest.get("headcopy"), snapshot, manifest.get("lab_id")),
+        (manifest.get("clean") or {}).get("signature"),
+    )
+    updated.setdefault("contracts", {})["mp4"] = render_contract
+    updated["contracts"]["landing"] = copy.deepcopy(render_contract)
     write_manifest(target, updated)
     manifest.clear()
     manifest.update(updated)
@@ -312,3 +356,80 @@ def verify_capcut_overlay_draft(draft: dict, expected_layers: list[dict]) -> Non
     ]
     if actual != expected:
         raise LabPreconditionError("CapCut 장면꾸미기 타이밍이 실제 자막 타임라인과 다릅니다")
+
+
+def build_capcut_copy(
+    manifest: dict,
+    source_job: dict,
+    work_root: Path | str,
+    base_abs: str,
+) -> Path:
+    """같은 청소본·타임라인·스냅샷으로 관리자용 CapCut 시험 초안을 만든다."""
+    if not str(base_abs or "").strip():
+        raise LabPreconditionError("캡컷 Drafts 폴더의 절대경로가 필요합니다")
+    assert_fresh(manifest, source_job)
+    from . import capcut_draft, scene_style
+
+    edit_plan = copy.deepcopy(manifest.get("edit_plan") or {})
+    tts_paths = _tts_paths(edit_plan)
+    target = lab_dir(work_root, manifest["lab_id"])
+    target.mkdir(parents=True, exist_ok=True)
+    timeline = video_assemble._beat_timeline(edit_plan, tts_paths)
+    capcut_plan, source_paths = _clean_sources_for_render(manifest, timeline, target)
+
+    snapshot = copy.deepcopy(manifest.get("scene_style") or {})
+    snapshot["hookCaptionMode"] = "hidden"
+    layer_dir = target / "capcut-overlay-source"
+    layer_dir.mkdir(parents=True, exist_ok=True)
+    context = scene_style.context_for(
+        timeline, manifest.get("headcopy"), snapshot, manifest.get("lab_id")
+    )
+    rendered = scene_style.render_layers(
+        timeline, snapshot, layer_dir,
+        headcopy=manifest.get("headcopy"), job_id=manifest.get("lab_id"),
+    )
+    if len(rendered) != len(context["scenes"]):
+        raise LabPreconditionError("장면 레이어 개수가 실제 자막 타임라인과 다릅니다")
+    overlay_layers = []
+    for scene, layer in zip(context["scenes"], rendered, strict=True):
+        layer_path = (layer_dir / str(layer.get("file") or "")).resolve()
+        if layer_dir.resolve() not in layer_path.parents or not layer_path.is_file():
+            raise LabPreconditionError("장면 레이어 파일이 없거나 경로가 올바르지 않습니다")
+        overlay_layers.append({
+            "path": str(layer_path),
+            "start": float(scene["start"]),
+            "end": float(scene["end"]),
+            "t0": float(scene["start"]),
+            "dur": float(scene["end"]) - float(scene["start"]),
+            "caption_visible": scene.get("caption_visible") is not False,
+        })
+
+    out_root = target / "capcut"
+    project_name = f"장면꾸미기시험 {manifest['lab_id'][-4:]}"
+    project, _, _ = capcut_draft.assemble_draft_folder(
+        out_root,
+        str(base_abs),
+        plan=capcut_plan,
+        timeline=timeline,
+        source_video_paths=source_paths,
+        tts_paths=tts_paths,
+        project_name=project_name,
+        caption_style=None,
+        deco={},
+        scene_overlay_layers=overlay_layers,
+    )
+    draft_path = Path(project) / "draft_content.json"
+    if not draft_path.is_file():
+        raise RuntimeError("CapCut 시험 초안이 생성되지 않았습니다")
+    draft = json.loads(draft_path.read_text(encoding="utf-8"))
+    verify_capcut_overlay_draft(draft, overlay_layers)
+
+    updated = copy.deepcopy(manifest)
+    updated.setdefault("outputs", {})["capcut_project"] = str(project)
+    updated.setdefault("contracts", {})["capcut"] = contract_from_context(
+        context, (manifest.get("clean") or {}).get("signature")
+    )
+    write_manifest(target, updated)
+    manifest.clear()
+    manifest.update(updated)
+    return Path(project)

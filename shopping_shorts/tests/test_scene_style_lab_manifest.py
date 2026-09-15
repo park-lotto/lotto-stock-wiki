@@ -112,3 +112,28 @@ def test_resolve_clean_contract_accepts_only_existing_source_files(tmp_path):
         "paths": {"s0": str(clean)},
         "signature": lab.clean_plan_signature(job["edit_plan"]),
     }
+
+
+def test_saving_new_snapshot_invalidates_old_outputs_and_comparisons(tmp_path):
+    from shopping_shorts import scene_style_lab as lab
+
+    manifest = {
+        "version": 1,
+        "lab_id": "lab_000000000003",
+        "scene_style": {"version": 1, "mode": "story", "presetId": "t11",
+                        "hookCaptionMode": "hidden"},
+        "outputs": {"mp4": "old.mp4", "capcut_project": "old-capcut"},
+        "contracts": {"mp4": {"hook_caption_count": 0}},
+    }
+    target = lab.lab_dir(tmp_path, manifest["lab_id"])
+    target.mkdir(parents=True)
+    lab.write_manifest(target, manifest)
+
+    lab.save_snapshot(
+        tmp_path, manifest["lab_id"],
+        {**manifest["scene_style"], "hookMotion": "pop"},
+    )
+
+    saved = lab.read_manifest(tmp_path, manifest["lab_id"])
+    assert saved["outputs"] == {}
+    assert saved["contracts"] == {}

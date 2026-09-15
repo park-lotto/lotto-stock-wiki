@@ -56,6 +56,12 @@ def test_lab_landing_is_private_and_streams_exact_lab_output(tmp_path, monkeypat
     assert response.content == video.read_bytes()
     assert response.headers["x-scene-style-lab"] == manifest["lab_id"]
     assert response.headers["cache-control"] == "no-store"
+    partial = owner.get(
+        f"/api/admin/scene-style-lab/{manifest['lab_id']}/video",
+        headers={"Range": "bytes=0-4"},
+    )
+    assert partial.status_code == 206
+    assert partial.content == b"exact"
 
 
 def test_lab_video_rejects_manifest_output_outside_its_lab_folder(tmp_path, monkeypatch):

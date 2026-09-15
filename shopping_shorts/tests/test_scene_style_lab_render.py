@@ -85,7 +85,10 @@ def test_render_uses_only_manifest_clean_sources_and_lab_output(tmp_path, monkey
     assert calls[0][3] == str(target / "lab-final.mp4")
     assert calls[0][4]["deco"]["scene_style"]["hookCaptionMode"] == "hidden"
     assert output == target / "lab-final.mp4"
-    assert scene_style_lab.read_manifest(tmp_path, manifest["lab_id"])["outputs"]["mp4"] == str(output)
+    saved = scene_style_lab.read_manifest(tmp_path, manifest["lab_id"])
+    assert saved["outputs"]["mp4"] == str(output)
+    assert saved["contracts"]["mp4"]["hook_caption_count"] == 0
+    assert saved["contracts"]["landing"] == saved["contracts"]["mp4"]
 
 
 def test_render_final_clean_uses_live_split_and_plan_adapters(tmp_path, monkeypatch):

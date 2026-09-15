@@ -160,3 +160,45 @@ def test_lab_frame_is_admin_only_and_marks_clean_signature(tmp_path, monkeypatch
     assert blocked.status_code == 404
     assert response.status_code == 200
     assert response.headers["x-clean-signature"] == manifest["clean"]["signature"]
+
+
+def test_admin_can_build_and_download_isolated_capcut_draft(tmp_path, monkeypatch):
+    from shopping_shorts import scene_style_lab
+
+    store, work_root = _setup(tmp_path, monkeypatch)
+    _create_ready_job(store, work_root)
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    other_id = store.create_customer("capcut-blocked", "pw12")
+    other = TestClient(appmod.app, cookies={"dash_auth": _cookie(other_id)})
+    manifest = owner.post("/api/admin/scene-style-lab", json={"job_id": "j1"}).json()["manifest"]
+    lab_id = manifest["lab_id"]
+
+    def fake_build(current, _source, root, base):
+        project = scene_style_lab.lab_dir(root, current["lab_id"]) / "capcut" / "LAB"
+        project.mkdir(parents=True)
+        (project / "draft_content.json").write_text('{"tracks":[]}', encoding="utf-8")
+        (project / "overlay.png").write_bytes(b"overlay")
+        current.setdefault("outputs", {})["capcut_project"] = str(project)
+        scene_style_lab.write_manifest(scene_style_lab.lab_dir(root, current["lab_id"]), current)
+        assert base == "C:/CapCut Drafts"
+        return project
+
+    monkeypatch.setattr(scene_style_lab, "build_capcut_copy", fake_build)
+
+    blocked = other.get(
+        f"/api/admin/scene-style-lab/{lab_id}/capcut", params={"base": "C:/CapCut Drafts"}
+    )
+    response = owner.get(
+        f"/api/admin/scene-style-lab/{lab_id}/capcut", params={"base": "C:/CapCut Drafts"}
+    )
+
+    assert blocked.status_code == 404
+    assert response.status_code == 200
+    data = response.json()
+    assert data["texts"]["draft_content.json"] == '{"tracks":[]}'
+    assert data["assets"] == [{
+        "name": "overlay.png",
+        "url": f"/api/admin/scene-style-lab/{lab_id}/capcut-asset/overlay.png",
+    }]
+    asset = owner.get(data["assets"][0]["url"])
+    assert asset.status_code == 200 and asset.content == b"overlay"
