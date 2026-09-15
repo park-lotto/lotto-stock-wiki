@@ -120,6 +120,7 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 .tabs button.on{color:#062018;background:var(--grad);border-color:transparent;transform:translateY(-2px);box-shadow:0 6px 20px rgba(111,240,214,.25)}
 .bar{height:3px;background:var(--line);border-radius:3px;margin:14px auto;max-width:900px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--grad)}
 .pane{animation:paneIn .5s ease}
+.tour .wide img{object-fit:contain!important;object-position:center!important;background:#0b1118}
 @keyframes paneIn{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
 .pane p{text-align:center;font-size:17px;color:var(--muted);margin-top:14px}.pane p b{color:var(--txt)}
 .easy{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:760px;margin:0 auto}
@@ -142,7 +143,7 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 .sq{position:relative;aspect-ratio:1/1;border-radius:22px;overflow:hidden;background:#05080b;border:2px solid var(--line);transition:border-color .5s,box-shadow .5s}
 .fs.on .sq{border-color:var(--mint);box-shadow:0 0 0 4px rgba(111,240,214,.12),0 24px 60px rgba(111,240,214,.18)}
 .sq video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.sq img{object-fit:contain!important;object-position:center 42%!important;padding:54px 6px 66px;background:#0b1118;image-rendering:auto}
+.sq img{object-fit:contain!important;object-position:center 42%!important;padding:50px 4px 60px;background:#0b1118;image-rendering:auto}
 /* 칸 안에서 "이게 뭘 보여주는지" 바로 읽히게 — 위에 큰 단계명, 아래에 입력→결과 */
 .sq .cap{position:absolute;left:14px;top:14px;z-index:3;display:flex;align-items:center;gap:8px;background:rgba(6,10,14,.82);backdrop-filter:blur(4px);border:1px solid rgba(111,240,214,.35);border-radius:12px;padding:8px 14px;font-size:22px;font-weight:900}
 .sq .cap i{font-style:normal;width:30px;height:30px;border-radius:9px;background:var(--grad);color:#062018;display:inline-flex;align-items:center;justify-content:center;font-size:17px}
@@ -235,10 +236,10 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
   <h2 class=reveal>담기만 하면, <span class=hl>네 단계</span>로 영상이 됩니다</h2>
   <p class="lead reveal">원본 영상을 담으면 장면을 읽고, 대본을 쓰고, 장면을 맞춰 완성본까지 뽑아냅니다.</p>
   <div class="flow reveal" id=flow>
-    <div class=fs><div class=sq data-video=step_s1 data-label="장면분석"><div class=cap><i>1</i>장면분석</div><div class=io><span>영상을 담으면</span><b>→</b><strong>장면마다 무엇이 나오는지 AI가 적어줌</strong></div></div></div>
-    <div class=fs><div class=sq data-video=step_s2 data-label="대본생성"><div class=cap><i>2</i>대본생성</div><div class=io><span>잘 된 영상의 구성으로</span><b>→</b><strong>내 제품 대본이 자동으로 써짐</strong></div></div></div>
-    <div class=fs><div class=sq data-video=step_s3 data-label="장면매칭"><div class=cap><i>3</i>장면매칭</div><div class=io><span>대본 한 줄마다</span><b>→</b><strong>딱 맞는 장면이 자동으로 붙음</strong></div></div></div>
-    <div class=fs><div class=sq data-video=step_s4 data-label="렌더화면"><div class=cap><i>4</i>렌더화면</div><div class=io><span>버튼 한 번에</span><b>→</b><strong>자막·음성 입힌 완성 쇼츠가 나옴</strong></div></div></div>
+    <div class=fs><div class=sq data-video=sq_1 data-label="장면분석"><div class=cap><i>1</i>장면분석</div><div class=io><span>영상을 담으면</span><b>→</b><strong>장면마다 무엇이 나오는지 AI가 적어줌</strong></div></div></div>
+    <div class=fs><div class=sq data-video=sq_2b data-label="대본생성"><div class=cap><i>2</i>대본생성</div><div class=io><span>잘 된 영상의 구성으로</span><b>→</b><strong>내 제품 대본이 자동으로 써짐</strong></div></div></div>
+    <div class=fs><div class=sq data-video=sq_3b data-label="장면매칭"><div class=cap><i>3</i>장면매칭</div><div class=io><span>대본 한 줄마다</span><b>→</b><strong>딱 맞는 장면이 자동으로 붙음</strong></div></div></div>
+    <div class=fs><div class=sq data-video=sq_4 data-label="렌더화면"><div class=cap><i>4</i>렌더화면</div><div class=io><span>버튼 한 번에</span><b>→</b><strong>자막·음성 입힌 완성 쇼츠가 나옴</strong></div></div></div>
   </div>
 </div>
 </div>
@@ -275,11 +276,11 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
     </div>
     <div class=bar><i id=tourBar></i></div>
     <div class=stage>
-      <div class=pane data-i=0><div class=wide data-video=step1 data-label="레퍼런스 랭킹"></div><p><b>오늘 뭘 만들지</b> — 유튜브·틱톡·인스타에서 지금 터지는 쇼핑쇼츠를 매일 줄 세웁니다.</p></div>
-      <div class=pane data-i=1 hidden><div class=wide data-video=step2 data-label="숏템파워검색"></div><p><b>같은 제품 영상을 6곳에서</b> — 유튜브·틱톡·인스타·도우인·샤오홍슈·핀터레스트를 한 번에.</p></div>
-      <div class=pane data-i=2 hidden><div class=wide data-video=step3 data-label="대본"></div><p><b>잘 된 구성은 살리고</b> — 원본 대본을 뽑아 내 이야기로 다시 씁니다.</p></div>
-      <div class=pane data-i=3 hidden><div class=wide data-video=step4 data-label="장면매칭"></div><p><b>대본 한 줄마다 맞는 장면</b> — 자막·AI 보이스까지 한 화면에서.</p></div>
-      <div class=pane data-i=4 hidden><div class=wide data-video=step5 data-label="캡컷 이지버전"></div><p><b>캡컷으로 넘겨 마무리</b> — 장면·자막·음성이 들어간 채로 열립니다.</p></div>
+      <div class=pane data-i=0><div class=wide data-video=tour_step1b data-label="레퍼런스 랭킹"></div><p><b>오늘 뭘 만들지</b> — 유튜브·틱톡·인스타에서 지금 터지는 쇼핑쇼츠를 매일 줄 세웁니다.</p></div>
+      <div class=pane data-i=1 hidden><div class=wide data-video=tour_step2 data-label="숏템파워검색"></div><p><b>같은 제품 영상을 6곳에서</b> — 유튜브·틱톡·인스타·도우인·샤오홍슈·핀터레스트를 한 번에.</p></div>
+      <div class=pane data-i=2 hidden><div class=wide data-video=tour_step3b data-label="대본"></div><p><b>잘 된 구성은 살리고</b> — 원본 대본을 뽑아 내 이야기로 다시 씁니다.</p></div>
+      <div class=pane data-i=3 hidden><div class=wide data-video=tour_step4b data-label="장면매칭"></div><p><b>대본 한 줄마다 맞는 장면</b> — 자막·AI 보이스까지 한 화면에서.</p></div>
+      <div class=pane data-i=4 hidden><div class=wide data-video=tour_step5 data-label="캡컷 이지버전"></div><p><b>캡컷으로 넘겨 마무리</b> — 장면·자막·음성이 들어간 채로 열립니다.</p></div>
     </div>
   </div>
 </div>
