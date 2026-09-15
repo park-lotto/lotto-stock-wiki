@@ -21494,10 +21494,55 @@ def _topic_group_for_name(topic, resolution, job):
     return groups[0] if len(groups) == 1 else ""
 
 
+def _selected_source_id(item, selected, job):
+    """외부 위키 카드가 job의 어느 영상인지 URL/원문 완전일치로 복원한다."""
+    extract = (job or {}).get("extract") or {}
+    selected = str(selected or "")
+    if selected in extract:
+        return selected
+    matches = []
+    item_url = str((item or {}).get("url") or (item or {}).get("video_url") or "").strip()
+    if item_url:
+        matches.extend("s%d" % i for i, url in enumerate((job or {}).get("urls") or [])
+                       if str(url or "").strip() == item_url)
+        matches.extend(str(sid) for sid, source in extract.items()
+                       if isinstance(source, dict) and
+                       str(source.get("_source_url") or "").strip() == item_url)
+
+    item_text = re.sub(r"\s+", "", str((item or {}).get("full_text") or ""))
+    if item_text:
+        for sid, source in extract.items():
+            if not isinstance(source, dict):
+                continue
+            source_text = source.get("full_text_ko") or source.get("full_text") or ""
+            if re.sub(r"\s+", "", str(source_text)) == item_text:
+                matches.append(str(sid))
+    return next((sid for sid in dict.fromkeys(matches) if sid in extract), "")
+
+
+def _selected_group_topic(item, selected, job, resolution):
+    """선택 카드와 같은 내부 재료의 제품군 하나만 보수적으로 고른다."""
+    membership = resolution.get("membership") or {}
+    groups = resolution.get("groups") or []
+    candidate_ids = [str(selected or ""), _selected_source_id(item, selected, job)]
+
+    group_id = next((membership.get(sid) for sid in candidate_ids if membership.get(sid)), "")
+    chosen = next((group for group in groups if group.get("group_id") == group_id), None)
+    if not chosen:
+        brief = (item or {}).get("source_brief") or {}
+        item_product = str(brief.get("product") or "").strip() if isinstance(brief, dict) else ""
+        same = [group for group in groups
+                if item_product and _same_topic_product(item_product, group.get("product") or "")]
+        chosen = same[0] if len(same) == 1 else None
+    # 레퍼런스를 내부 영상이나 제품명으로 확인하지 못했으면 임의의 첫 그룹을 고르지 않는다.
+    # 그 경우 호출부가 기존의 명시적 오류/리스트형 처리로 넘긴다.
+    return str((chosen or {}).get("product") or "").strip()
+
+
 def _topic_product_for_generate(item, body, job, store):
     """선택 카드의 제품을 생성 주제 정본으로 복원한다. 자료 순서는 근거가 아니다."""
-    # 사용자가 직접 쓴 이식 주제/고정 소재만 명시값이다. 씨앗 카드는 구조·훅 선택일 뿐
-    # 그 카드의 제품을 전체 작업 주제로 승격하지 않는다.
+    # 직접 쓴 이식 주제가 있으면 그것이 우선이고, 없으면 사용자가 고른 레퍼런스 제품을
+    # 생성 주제로 고정한다. 추가 영상 수가 많다고 주제를 다수결로 뒤집지 않는다.
     explicit = str((body or {}).get("my_topic") or (body or {}).get("subject") or "").strip()
     if explicit:
         return explicit
@@ -21507,21 +21552,30 @@ def _topic_product_for_generate(item, body, job, store):
     # 이름의 마지막 토큰 대신, 관측으로 확인한 제품군 소속을 합의/필터가 함께 쓴다.
     resolution = _topic_resolution_for_job(job)
     groups = resolution["groups"]
-    sx = ((job or {}).get("extract") or {}).get(selected)
+    selected_source_id = _selected_source_id(item, selected, job)
+    sx = ((job or {}).get("extract") or {}).get(selected_source_id)
     selected_product = ""
     if isinstance(sx, dict) and isinstance(sx.get("source_brief"), dict):
         selected_product = (sx["source_brief"].get("product") or "").strip()
     if groups:
         group_id = groups[0]["group_id"]
+        selected_group_id = resolution["membership"].get(selected_source_id)
         if frozen:
             frozen_group = _topic_group_for_name(frozen, resolution, job)
-            if not frozen_group or (not resolution["ambiguous"] and frozen_group != group_id):
+            if (not frozen_group or
+                    (selected_group_id and frozen_group != selected_group_id) or
+                    (not selected_group_id and not resolution["ambiguous"] and
+                     frozen_group != group_id)):
                 return None
             return frozen
+        # 사용자가 고른 레퍼런스가 정본이다. 추가 영상의 다른 제품이 수적으로 더 많아도
+        # 대표 제품을 뒤집지 않고, 아래 자료 필터가 이 제품군의 추가 영상만 보태게 한다.
+        if selected_group_id:
+            selected_group = next(
+                (group for group in groups if group["group_id"] == selected_group_id), None)
+            return selected_product or str((selected_group or {}).get("product") or "").strip()
         if resolution["ambiguous"]:
             return None
-        if selected_product and resolution["membership"].get(selected) == group_id:
-            return selected_product
         return resolution["product"]
     brief = (item or {}).get("source_brief")
     if isinstance(brief, dict) and (brief.get("product") or "").strip():
@@ -21568,7 +21622,8 @@ def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES,
                     "url": url or "", "source_id": source_id or "",
                     "segments": segments or []})
 
-    _item_sid = item.get("shortcode") or preferred_shortcode or ""
+    _item_sid = (_selected_source_id(item, preferred_shortcode, job) or
+                 item.get("shortcode") or preferred_shortcode or "")
     # 작업 추출에 같은 ID가 있으면 서버의 관측 정본을 사용한다. body base_script나
     # 낡은 위키 요약이 그 ID를 선점하여 제품군 검증을 우회하면 안 된다.
     if _item_sid not in ((job or {}).get("extract") or {}):
@@ -21767,20 +21822,28 @@ def _materials_for_generate(item, body, store, cid, spines=None):
         _topic_body["subject"] = _requested_frozen
     _topic_product = _topic_product_for_generate(item, _topic_body, _job, store)
     if _topic_product is None:
-        if (((_job or {}).get("_topic_resolution") or {}).get("error")
-                == "judge_unavailable"):
-            raise ValueError("AI 제품 판정 서비스가 일시적으로 응답하지 않습니다. 자동 재시도 후에도 연결되지 않았습니다. 잠시 후 다시 생성해 주세요")
         _frozen = str(body.get("topic_product") or "").strip()
-        if _frozen:
-            raise ValueError("전체 생성 때 확정한 제품 주제와 현재 자료가 다릅니다")
-        if spines and all(isinstance(sp, dict) and sp.get("is_list") for sp in spines):
-            # 나열형은 여러 제품이 각각 한 항목이 되는 정상 입력이다. 단일제품 합의를
-            # 강제하지 않고 편별 슬롯/장면 계약으로 넘긴다.
+        _list_style = bool(
+            spines and all(isinstance(sp, dict) and sp.get("is_list") for sp in spines))
+        if not _frozen and _list_style:
+            # 나열형은 여러 제품 각각이 한 항목이 되는 정상 입력이다.
             _topic_product = ""
-        else:
-            if ((_job or {}).get("_topic_resolution") or {}).get("method") == "unresolved":
-                raise ValueError("영상 자료 판정 응답을 검증하지 못했습니다. 잠시 후 다시 생성해 주세요")
-            raise ValueError("담긴 영상에 서로 다른 제품이 같은 수로 섞여 주제를 확정할 수 없습니다")
+        elif not _frozen:
+            # 제품 판정 서비스 장애와 서로 다른 제품군 동률은 모두 대본 실패 사유가 아니다.
+            # 사용자가 고른 카드와 같은 그룹 하나만 남겨 다른 제품 자료를 섞지 않는다.
+            _topic_product = (_selected_group_topic(
+                item, _selected, _job, (_job or {}).get("_topic_resolution") or {}) or None)
+        if _topic_product is None:
+            if _frozen:
+                raise ValueError("전체 생성 때 확정한 제품 주제와 현재 자료가 다릅니다")
+            if _list_style:
+                # 나열형은 여러 제품이 각각 한 항목이 되는 정상 입력이다. 단일제품 합의를
+                # 강제하지 않고 편별 슬롯/장면 계약으로 넘긴다.
+                _topic_product = ""
+            else:
+                if ((_job or {}).get("_topic_resolution") or {}).get("method") == "unresolved":
+                    raise ValueError("영상 자료 판정 응답을 검증하지 못했습니다. 잠시 후 다시 생성해 주세요")
+                raise ValueError("담긴 영상에 서로 다른 제품이 같은 수로 섞여 주제를 확정할 수 없습니다")
     _explicit_topic = bool(str(
         _topic_body.get("my_topic") or _topic_body.get("subject") or "").strip())
     _src = _sources_for_generate(item, _job, preferred_shortcode=_selected,
