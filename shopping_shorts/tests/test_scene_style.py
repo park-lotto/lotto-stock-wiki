@@ -1,4 +1,7 @@
+import sys
+
 import pytest
+from shopping_shorts import scene_style
 from shopping_shorts.scene_style import context_for, validate_snapshot
 
 
@@ -28,6 +31,33 @@ def test_real_caption_gaps_and_hook_beat_are_preserved():
     assert context['scenes'][-1]['end']==3
     assert context['text']['hook1']=='실제 제목'
     assert context['text']['hook2']=='둘째 제목'
+
+
+def test_linux_layer_render_enables_chrome_no_sandbox(monkeypatch, tmp_path):
+    """운영 Linux에서 user namespace가 막혀도 Chrome 레이어 렌더가 시작돼야 한다."""
+    captured = {}
+
+    def fake_run(_cmd, **kwargs):
+        captured.update(kwargs)
+        (tmp_path / "scene-style-layers.json").write_text("[]", encoding="utf-8")
+
+        class Result:
+            returncode = 0
+            stderr = ""
+
+        return Result()
+
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.delenv("SCENE_STYLE_NO_SANDBOX", raising=False)
+    monkeypatch.setattr(scene_style.subprocess, "run", fake_run)
+
+    scene_style.render_layers(
+        [{"beat_idx": 0, "t0": 0, "dur": 1, "narration": "훅"}],
+        {"mode": "story", "presetId": "t11"},
+        tmp_path,
+    )
+
+    assert captured["env"]["SCENE_STYLE_NO_SANDBOX"] == "1"
 
 
 @pytest.mark.parametrize('extra',[
