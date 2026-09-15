@@ -18675,6 +18675,65 @@ def api_scene_style_lab_snapshot(lab_id: str, request: Request, body: dict):
     return {"ok": True, "snapshot": snapshot}
 
 
+def _run_scene_style_lab_render(lab_id: str):
+    from . import scene_style_lab
+
+    manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    source_job = Store(DB_PATH).get_mix_job(manifest["source_job_id"])
+    if not source_job:
+        raise scene_style_lab.LabPreconditionError("원본 작업이 없습니다")
+    scene_style_lab.render_copy(manifest, source_job, _MIX_WORK_DIR)
+
+
+@app.post("/api/admin/scene-style-lab/{lab_id}/render")
+def api_scene_style_lab_render(lab_id: str, request: Request, background_tasks: BackgroundTasks):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    if not _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id")):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    background_tasks.add_task(_run_scene_style_lab_render, lab_id)
+    return {"ok": True, "status": "queued"}
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}/frame/{scene_index}")
+def api_scene_style_lab_frame(lab_id: str, scene_index: int, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(
+        Store(DB_PATH), request, manifest.get("source_job_id")
+    )
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        frame = scene_style_lab.frame_for_scene(
+            manifest, source_job, _MIX_WORK_DIR, scene_index
+        )
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    return FileResponse(
+        frame,
+        media_type="image/jpeg",
+        headers={
+            "Cache-Control": "no-store",
+            "X-Clean-Signature": str((manifest.get("clean") or {}).get("signature") or ""),
+        },
+    )
+
+
 # 고정카피(헤드카피 후보) — 확정 대본에서 AI가 4개 뽑는다.
 # ★캐시가 핵심이다: 꾸미기에 들어올 때마다 자동 생성이라, 캐시가 없으면 사장님이
 #   6단계를 오갈 때마다 과금된다. 키는 **기존 _script_hash**를 쓴다(새 규칙을 만들지

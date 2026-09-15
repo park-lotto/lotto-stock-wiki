@@ -115,3 +115,48 @@ def test_non_admin_cannot_probe_lab_api(tmp_path, monkeypatch):
     assert other.get("/api/admin/scene-style-lab/jobs").status_code == 404
     assert other.post("/api/admin/scene-style-lab", json={"job_id": "missing"}).status_code == 404
     assert other.get("/api/admin/scene-style-lab/lab_000000000000").status_code == 404
+
+
+def test_admin_can_queue_isolated_render(tmp_path, monkeypatch):
+    from shopping_shorts import scene_style_lab
+
+    store, work_root = _setup(tmp_path, monkeypatch)
+    _create_ready_job(store, work_root)
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    created = owner.post("/api/admin/scene-style-lab", json={"job_id": "j1"}).json()
+    lab_id = created["manifest"]["lab_id"]
+    calls = []
+
+    monkeypatch.setattr(
+        scene_style_lab,
+        "render_copy",
+        lambda manifest, source_job, root: calls.append((manifest["lab_id"], source_job["job_id"], root)) or (root / "done.mp4"),
+    )
+
+    response = owner.post(f"/api/admin/scene-style-lab/{lab_id}/render")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "queued"
+    assert calls == [(lab_id, "j1", work_root)]
+
+
+def test_lab_frame_is_admin_only_and_marks_clean_signature(tmp_path, monkeypatch):
+    from shopping_shorts import scene_style_lab
+
+    store, work_root = _setup(tmp_path, monkeypatch)
+    _create_ready_job(store, work_root)
+    other_id = store.create_customer("frame-blocked", "pw12")
+    owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})
+    other = TestClient(appmod.app, cookies={"dash_auth": _cookie(other_id)})
+    manifest = owner.post("/api/admin/scene-style-lab", json={"job_id": "j1"}).json()["manifest"]
+    lab_id = manifest["lab_id"]
+    frame = tmp_path / "frame.jpg"
+    frame.write_bytes(b"jpg")
+    monkeypatch.setattr(scene_style_lab, "frame_for_scene", lambda *_args: frame)
+
+    blocked = other.get(f"/api/admin/scene-style-lab/{lab_id}/frame/0")
+    response = owner.get(f"/api/admin/scene-style-lab/{lab_id}/frame/0")
+
+    assert blocked.status_code == 404
+    assert response.status_code == 200
+    assert response.headers["x-clean-signature"] == manifest["clean"]["signature"]

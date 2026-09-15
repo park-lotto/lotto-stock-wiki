@@ -12,7 +12,7 @@ import re
 import secrets
 from pathlib import Path
 
-from . import mix_pipeline
+from . import frame_extract, mix_pipeline, video_assemble
 
 
 _LAB_ID_RE = re.compile(r"lab_[0-9a-f]{12}\Z")
@@ -142,3 +142,141 @@ def save_snapshot(work_root: Path | str, lab_id: str, snapshot: dict) -> dict:
     manifest["hook_caption_mode"] = "hidden"
     write_manifest(lab_dir(work_root, lab_id), manifest)
     return saved
+
+
+def _tts_paths(edit_plan: dict) -> dict:
+    beats = (edit_plan or {}).get("beats") or []
+    paths = {beat["beat_idx"]: str(beat["tts_path"]) for beat in beats
+             if beat.get("tts_path") and Path(beat["tts_path"]).is_file()}
+    if not beats or len(paths) != len(beats):
+        raise LabPreconditionError("음성 파일이 완전하지 않습니다")
+    return paths
+
+
+def _clean_sources_for_render(manifest: dict, timeline: list, target: Path) -> tuple[dict, dict]:
+    """시험 manifest의 청소본을 라이브 assemble 입력으로 변환한다."""
+    clean = manifest.get("clean") or {}
+    expected_signature = str(manifest.get("source_plan_signature") or "")
+    if clean.get("signature") != expected_signature:
+        raise LabPreconditionError("청소본 편성 서명이 다릅니다")
+    if clean.get("kind") == "sources":
+        paths = {str(key): str(value) for key, value in (clean.get("paths") or {}).items()}
+        if not paths or not all(Path(path).is_file() for path in paths.values()):
+            raise LabPreconditionError("자막제거 청소본 파일이 없습니다")
+        return copy.deepcopy(manifest["edit_plan"]), paths
+    if clean.get("kind") == "final":
+        clean_final = Path(str(clean.get("path") or ""))
+        if not clean_final.is_file():
+            raise LabPreconditionError("자막제거 청소본 파일이 없습니다")
+        clips = mix_pipeline.split_final_into_beat_clips(
+            str(clean_final), timeline, target, prefix="lab"
+        )
+        if not clips:
+            raise LabPreconditionError("자막제거 청소본을 장면별로 나누지 못했습니다")
+        plan = mix_pipeline.plan_using_beat_clips(
+            manifest["edit_plan"], clips, timeline, prefix="lab"
+        )
+        return plan, dict(clips)
+    raise LabPreconditionError("자막제거 청소본 정보가 올바르지 않습니다")
+
+
+def render_copy(manifest: dict, source_job: dict, work_root: Path | str) -> Path:
+    """라이브 assemble 경로를 쓰되 출력은 LAB 폴더에만 만든다."""
+    assert_fresh(manifest, source_job)
+    edit_plan = copy.deepcopy(manifest.get("edit_plan") or {})
+    tts_paths = _tts_paths(edit_plan)
+    target = lab_dir(work_root, manifest["lab_id"])
+    target.mkdir(parents=True, exist_ok=True)
+    timeline = video_assemble._beat_timeline(edit_plan, tts_paths)
+    render_plan, source_paths = _clean_sources_for_render(manifest, timeline, target)
+
+    snapshot = copy.deepcopy(manifest.get("scene_style") or {})
+    snapshot["hookCaptionMode"] = "hidden"
+    deco = copy.deepcopy(manifest.get("deco") or {})
+    deco["scene_style"] = snapshot
+    output = target / "lab-final.mp4"
+    video_assemble.assemble(
+        render_plan,
+        tts_paths,
+        source_paths,
+        str(output),
+        headcopy=copy.deepcopy(manifest.get("headcopy")),
+        caption_style=copy.deepcopy(manifest.get("caption_style")),
+        deco=deco,
+    )
+    if not output.is_file():
+        raise RuntimeError("시험 MP4가 생성되지 않았습니다")
+
+    updated = copy.deepcopy(manifest)
+    updated.setdefault("outputs", {})["mp4"] = str(output)
+    write_manifest(target, updated)
+    manifest.clear()
+    manifest.update(updated)
+    return output
+
+
+def clean_preview_for(manifest: dict, source_job: dict, work_root: Path | str) -> Path:
+    """편집기 배경에 쓸 청소 영상. 원본 폴백은 없다."""
+    assert_fresh(manifest, source_job)
+    clean = manifest.get("clean") or {}
+    if clean.get("signature") != manifest.get("source_plan_signature"):
+        raise LabPreconditionError("청소본 편성 서명이 다릅니다")
+    if clean.get("kind") == "final":
+        path = Path(str(clean.get("path") or ""))
+        if not path.is_file():
+            raise LabPreconditionError("자막제거 청소본 파일이 없습니다")
+        return path
+    if clean.get("kind") != "sources":
+        raise LabPreconditionError("자막제거 청소본 정보가 올바르지 않습니다")
+
+    source_paths = {str(key): str(value) for key, value in (clean.get("paths") or {}).items()}
+    if not source_paths or not all(Path(path).is_file() for path in source_paths.values()):
+        raise LabPreconditionError("자막제거 청소본 파일이 없습니다")
+    target = lab_dir(work_root, manifest["lab_id"])
+    target.mkdir(parents=True, exist_ok=True)
+    output = target / "lab-clean-preview.mp4"
+    if output.is_file() and output.stat().st_size:
+        return output
+    video_assemble.assemble(
+        copy.deepcopy(manifest.get("edit_plan") or {}),
+        _tts_paths(manifest.get("edit_plan") or {}),
+        source_paths,
+        str(output),
+        deco={},
+        burn_captions=False,
+    )
+    if not output.is_file():
+        raise RuntimeError("시험용 청소 미리보기가 생성되지 않았습니다")
+    return output
+
+
+def frame_for_scene(
+    manifest: dict,
+    source_job: dict,
+    work_root: Path | str,
+    scene_index: int,
+) -> Path:
+    """같 자막 장면의 중앙 프레임을 반드시 청소 영상에서 뽑는다."""
+    from .scene_style import context_for
+
+    edit_plan = manifest.get("edit_plan") or {}
+    timeline = video_assemble._beat_timeline(edit_plan, _tts_paths(edit_plan))
+    context = context_for(
+        timeline,
+        manifest.get("headcopy"),
+        manifest.get("scene_style") or {},
+        manifest.get("lab_id"),
+    )
+    try:
+        scene = context["scenes"][int(scene_index)]
+    except (IndexError, TypeError, ValueError):
+        raise LabPreconditionError("장면 번호가 올바르지 않습니다") from None
+    source = clean_preview_for(manifest, source_job, work_root)
+    target = lab_dir(work_root, manifest["lab_id"]) / "frames"
+    at = (float(scene["start"]) + float(scene["end"])) / 2
+    frame = frame_extract.extract_frame_at(
+        str(source), target, at, filename=f"scene-{int(scene_index):04d}.jpg"
+    )
+    if not frame:
+        raise RuntimeError("시험용 청소 프레임을 추출하지 못했습니다")
+    return Path(frame)
