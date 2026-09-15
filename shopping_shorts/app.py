@@ -19491,10 +19491,10 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
         return clean_map, None, None, "_clean", True
     if job.get("clean_status") != "ready":
         return {}, None, None, "", False
-    cvp = job.get("clean_video_path")
-    if not cvp or not Path(cvp).exists():
-        return {}, None, None, "", False
-    # ★지금 편성으로 청소한 파일이 있으면 **그 파일**을 쓴다(2026-09-02).
+    # ★지금 편성으로 청소한 파일이 있으면 **그 파일**을 먼저 쓴다(2026-09-15).
+    #   완성본 1편 청소의 정본은 final_clean_{편성서명}.mp4이고 clean_video_path는
+    #   구형 호환 칸이라 비어 있을 수 있다. 종전 코드는 그 구형 칸을 먼저 검사해
+    #   정본이 멀쩡히 있어도 여기서 원본으로 돌아갔다(박진우님 c9ae4dc6b8a6).
     #   clean_video_path(clean_preview.mp4)는 편성을 바꿔 재청소해도 갱신되지 않아
     #   옛 편성 그림이다 — 판정만 고치고 출처를 그대로 두면 옛 장면이 뜬다(짝이다).
     _fresh_path = mix_pipeline.clean_final_path_for_plan(job, work)
@@ -19511,6 +19511,12 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
         if _alt is not None:
             cvp = str(_alt)
             fresh = True      # 청소본에서 뜬다 — 좌표는 근사, 자막은 확실히 없다
+        else:
+            # 아주 오래된 작업은 서명 파일 없이 clean_video_path만 남아 있다.
+            # 그 호환 경로까지 없을 때에만 원본으로 물러선다.
+            cvp = job.get("clean_video_path")
+            if not cvp or not Path(cvp).exists():
+                return {}, None, None, "", False
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}
