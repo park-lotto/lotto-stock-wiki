@@ -4331,10 +4331,10 @@ function renderLens(shortcode, mountId){
       ${st.cnErr?`<div style="font-size:11px;color:#e0623d;margin-top:6px">${esc(st.cnErr)}</div>`:''}
     </div>`;
   // ── ② 찾기 ── (언어 = LENS_LANGS에서 러시아어만 뺀다. 러시아어 검색어 자체는 그대로 둔다)
-  const _langs=LENS_LANGS.filter(L=>L.k!=='ru');
-  const _langName={auto:'나라별 자동',ko:'한국어',zh:'중국어',en:'영어',ja:'일본어'};
+  const _langs=LENS_LANGS;   // 러시아어 복구(2026-09-15 사장님) — 인스타만 영어로 대체(_lensKwFor)
+  const _langName={auto:'나라별 자동',ko:'한국어',zh:'중국어',en:'영어',ja:'일본어',ru:'러시아어'};
   const langSeg=`<span style="display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden">${_langs.map(L=>{
-      const on=(st.lang||'auto')===L.k || (L.k==='auto' && st.lang==='ru');
+      const on=(st.lang||'auto')===L.k;
       return `<button onclick="setLensLang('${shortcode}','${L.k}')" title="${L.title}" style="font-size:13px;padding:5px 12px;border:0;border-right:1px solid var(--line);cursor:pointer;background:${on?'#12302c':'transparent'};color:${on?'var(--accent)':'var(--sub)'};font-weight:${on?'700':'400'}">${_langName[L.k]||L.label}</button>`;
     }).join('')}</span>`;
   const _plats0=[
@@ -4347,7 +4347,7 @@ function renderLens(shortcode, mountId){
   const _icoCss='text-decoration:none;width:40px;height:44px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:1px solid var(--line);border-radius:9px;font-size:15px;line-height:1.1;color:var(--fg,inherit);background:transparent;cursor:pointer';
   const rows=(st.cnCands||[]).map((c,idx)=>{
     const kw=c.ko||c.zh;
-    const _L=(st.lang==='ru')?'auto':(st.lang||'auto');
+    const _L=st.lang||'auto';
     const plats=_plats0.map(p=>{ const q=_lensKwFor(c, p.k, _L); return Object.assign({}, p, {q, url:q?_lensSearchUrl(p.k, q):''}); });
     return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid #1a212b">
       <div style="flex:1 1 220px;min-width:180px">
@@ -4366,9 +4366,9 @@ function renderLens(shortcode, mountId){
   }).join('');
   const findBox=`<div style="${_secCss}">
       <div style="${_lblCss};justify-content:space-between;flex-wrap:wrap"><span style="display:flex;align-items:center;gap:8px">${_num(2)}찾기</span>${langSeg}</div>
-      <div style="font-size:12px;color:var(--sub);margin:-2px 0 4px">${(st.lang||'auto')==='auto'||st.lang==='ru'
+      <div style="font-size:12px;color:var(--sub);margin:-2px 0 4px">${(st.lang||'auto')==='auto'
         ?'나라별 자동 = 샤오홍슈·도우인은 중국어, 틱톡·인스타·핀터레스트는 영어로 검색'
-        :`지금은 다섯 곳 모두 <b>${_langName[st.lang]||''}</b>로 검색`}</div>
+        :`지금은 다섯 곳 모두 <b>${_langName[st.lang]||''}</b>로 검색${st.lang==='ru'?' (인스타는 러시아어 결과가 없어 영어로 엽니다)':''}`}</div>
       ${st.openNote?`<div style="font-size:11.5px;color:#e0a33d;padding:4px 0">⚠️ ${esc(st.openNote)}</div>`:''}
       ${st.kwSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.kwSearchKw||'')} 검색 중… (10~30초)</div>`:''}
       ${st.cnSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.cnSearchKw||'')} 검색 중… (10~30초)</div>`:''}
