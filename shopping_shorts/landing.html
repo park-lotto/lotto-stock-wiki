@@ -140,10 +140,8 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
 .fs.on .fl span{background:var(--grad);color:#062018}
 .fl b{display:block;font-size:21px;font-weight:900}
 .fl small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
-.arrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
-.arrows path{fill:none;stroke:var(--mint);stroke-width:.9;stroke-linecap:round;stroke-dasharray:2 2;animation:dash 1.2s linear infinite;vector-effect:non-scaling-stroke;stroke-width:4px}
 @keyframes dash{to{stroke-dashoffset:-4}}
-@media(max-width:820px){.flow{grid-template-columns:1fr;gap:28px}.arrows{display:none}}
+@media(max-width:820px){.flow{grid-template-columns:1fr;gap:28px}}
 /* 가격 박스 */
 .price{max-width:520px;margin:0 auto;text-align:center;background:var(--panel);border:1px solid rgba(255,207,111,.35);border-radius:22px;padding:30px 24px;box-shadow:0 0 0 1px rgba(255,207,111,.1) inset}
 .price .tag{display:inline-block;background:var(--gold-grad);color:#2a1a00;font-weight:800;font-size:13px;padding:4px 14px;border-radius:999px}
@@ -223,9 +221,6 @@ background:repeating-linear-gradient(135deg,#0c1218 0 14px,#0e151c 14px 28px)}
     <div class=fs><div class=sq data-video=flow2 data-label="대본생성"></div><div class=fl><span>2</span><div><b>대본생성</b><small>잘 된 구성을 살려 내 대본을 씁니다</small></div></div></div>
     <div class=fs><div class=sq data-video=flow3 data-label="장면매칭"></div><div class=fl><span>3</span><div><b>장면매칭</b><small>대본 한 줄마다 맞는 장면을 배치합니다</small></div></div></div>
     <div class=fs><div class=sq data-video=flow4 data-label="렌더화면"></div><div class=fl><span>4</span><div><b>렌더화면</b><small>음성·자막을 입혀 완성본을 뽑습니다</small></div></div></div>
-    <svg class=arrows viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden=true>
-      <path d="M45 24 L55 24"/><path d="M55 44 L45 56"/><path d="M45 76 L55 76"/>
-    </svg>
   </div>
 </div>
 </div>
