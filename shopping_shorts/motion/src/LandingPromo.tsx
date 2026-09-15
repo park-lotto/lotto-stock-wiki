@@ -1,7 +1,7 @@
 // 랜딩 프로모 2편 — price_compare(1280x640) · free_banner(1600x360). 확대 0회, 블러 그림자 없음.
 import React from 'react';
 import {AbsoluteFill, Img, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {useFont} from './LandingHeroWall';
+import {useFont, fmtViews} from './LandingHeroWall';
 import {Word, parse} from './LandingTour';
 import hero from './hero_data.json';
 
@@ -321,6 +321,71 @@ export const SqRender: React.FC = () => {
           ))}
           <span style={{marginLeft: 8, color: 'rgba(255,255,255,.7)', fontWeight: 700, fontSize: 22}}>{idx + 1} / 4편</span>
         </div>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+// ── 4) 첫 화면 후킹 hook_wall (1600x800, 12s) — 100만뷰 썸네일 3줄 벽 + 중앙 키네틱 자막 ─
+export const HOOK = {width: 1600, height: 800, fps: 30, durationInFrames: 360};
+const HK_ROWS = [
+  [0, 1, 2, 6, 8],
+  [11, 12, 14, 16, 0],
+  [1, 6, 8, 11, 14],
+]; // 뷰티 얼굴 클로즈업(3·4·5·7·9·10·13·15·17) 제외
+const HK_H = 262; // 3줄 + 간격
+const HK_W = Math.round((HK_H * 9) / 16); // 147 → 원본 1080 축소
+const HK_GAP = 14;
+const HK_LINES = ['오늘 [뭘 만들지] 고민 끝.', '매일 랭킹에\n{100만뷰 쇼츠}가 줄 서 있습니다', '그대로 <내 제품>으로\n10분이면 똑같이'];
+const HK_LINE_F = 120;
+
+export const HookWall: React.FC = () => {
+  useFont();
+  const frame = useCurrentFrame();
+  const D = HOOK.durationInFrames;
+  const items = hero.items as {file: string; views: number}[];
+  const line = Math.floor(frame / HK_LINE_F) % HK_LINES.length;
+  const local = frame - line * HK_LINE_F;
+  const out = interpolate(local, [HK_LINE_F - 10, HK_LINE_F - 2], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const rows = HK_LINES[line].split('\n');
+  return (
+    <AbsoluteFill style={{background: BG, overflow: 'hidden'}}>
+      {HK_ROWS.map((row, r) => {
+        const cycle = row.length * (HK_W + HK_GAP);
+        const dir = r === 1 ? -1 : 1;
+        const off = (frame / D) * cycle * dir + r * 190; // 1주기/루프
+        const y = 8 + r * (HK_H + HK_GAP - 8);
+        return row.map((idx, i) =>
+          [0, 1, 2].map((k) => {
+            const x = ((i * (HK_W + HK_GAP) - off) % cycle + cycle) % cycle + (k - 1) * cycle;
+            if (x + HK_W < 0 || x > 1600) return null;
+            const it = items[idx];
+            return (
+              <div key={`${r}-${i}-${k}`} style={{position: 'absolute', left: x, top: y, width: HK_W, height: HK_H, borderRadius: 18, overflow: 'hidden', background: '#111'}}>
+                <Img src={staticFile(it.file)} style={{width: '100%', height: '100%', objectFit: 'cover', display: 'block'}} />
+                <div style={{position: 'absolute', left: 0, right: 0, bottom: 0, height: 90, background: 'linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.8))'}} />
+                <div style={{position: 'absolute', left: 8, bottom: 8, display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px 6px 8px', borderRadius: 999, background: 'rgba(0,0,0,.65)', color: '#fff', fontFamily: FONT, fontWeight: 900, fontSize: 26, lineHeight: 1.1, letterSpacing: -0.5}}>
+                  <svg width="20" height="20" viewBox="0 0 24 24"><path d="M6 3.5v17l14-8.5z" fill="#fff" /></svg>
+                  <span>{fmtViews(it.views)}</span>
+                </div>
+              </div>
+            );
+          }),
+        );
+      })}
+      {/* 중앙 어두운 판 */}
+      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(70% 70% at 50% 50%, rgba(7,11,15,.9) 0%, rgba(7,11,15,.75) 42%, rgba(7,11,15,.22) 100%)'}} />
+      <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: out, fontFamily: FONT, fontWeight: 900}}>
+        {rows.map((row, ri) => {
+          const offset = ri === 0 ? 0 : parse(rows[0]).length;
+          return (
+            <div key={`${line}-${ri}`} style={{display: 'flex', alignItems: 'center', fontSize: rows.length > 1 ? 80 : 92, lineHeight: 1.25, letterSpacing: -2}}>
+              {parse(row).map((tok, i) => (
+                <Word key={`${line}-${ri}-${i}`} tok={tok} idx={offset + i} local={local} size={rows.length > 1 ? 80 : 92} />
+              ))}
+            </div>
+          );
+        })}
       </div>
     </AbsoluteFill>
   );
