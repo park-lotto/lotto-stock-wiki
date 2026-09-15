@@ -11124,7 +11124,16 @@ def _pay_cta():
 def _with_pay(html: str) -> str:
     """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다."""
     href, label = _pay_cta()
+    # ★상품명·가격·카드결제 버튼(2026-09-15 토스 심사 "상품 금액 = 결제 금액").
+    #   가격은 결제가 실제로 받는 금액(_toss_order_name_amount) **한 곳**에서 읽는다 —
+    #   화면 숫자를 따로 적으면 결제 금액과 어긋나 심사 불가 사유가 된다.
+    name, amount = _toss_order_name_amount()
+    ck, sk = _toss_keys()
+    card_href, card_label = ("/pay/toss", "💳 카드로 결제하기") if (ck and sk) else (href, label)
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
+                .replace("__PRO_NAME__", _toss_esc(name))
+                .replace("__PRO_PRICE__", f"{amount:,}원")
+                .replace("__CARD_HREF__", card_href).replace("__CARD_LABEL__", card_label)
                 .replace("__BIZFOOT__", _biz_foot()))
 
 
@@ -11302,10 +11311,11 @@ a{text-decoration:none;color:inherit}
 <a class=cta href="/login" style="width:100%;justify-content:center;font-size:14px;padding:12px">무료로 시작</a></div>
 <div style="background:var(--panel);border:1px solid rgba(255,207,111,.4);box-shadow:0 0 0 1px rgba(255,207,111,.14) inset;border-radius:18px;padding:24px;text-align:center;position:relative">
 <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--gold-grad);color:#3a2600;font-family:'Black Han Sans',sans-serif;font-size:12px;padding:4px 12px;border-radius:999px">추천</div>
-<div style="color:var(--gold);font-weight:700;font-size:14px">Pro 이용권</div>
-<div class=display style="font-size:34px;margin:6px 0;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent">가격 문의</div>
+<div style="color:var(--gold);font-weight:700;font-size:14px">__PRO_NAME__</div>
+<div class=display style="font-size:34px;margin:6px 0;background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent">__PRO_PRICE__</div>
 <div style="color:var(--faint);font-size:13px;margin-bottom:16px">전 기능 무제한 · 무제한 제작</div>
-<a href="__PAY_HREF__" target=_blank rel=noopener style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">__PAY_LABEL__</a></div></div>
+<a href="__CARD_HREF__" style="display:inline-flex;width:100%;justify-content:center;background:var(--gold-grad);color:#3a2600;font-weight:700;font-size:14px;padding:12px;border-radius:12px;text-decoration:none">__CARD_LABEL__</a>
+<a href="__PAY_HREF__" target=_blank rel=noopener style="display:block;margin-top:8px;color:var(--faint);font-size:12px;text-decoration:underline">계좌이체 · 결제 안내</a></div></div>
 <div class=reveal style="text-align:center;margin-top:20px"><a href="/pricing" style="color:var(--mint);font-weight:700;font-size:14px">요금 자세히 보기 →</a></div></div>
 <div class="band reveal">
 <h2>손자한테 안 물어봐도 됩니다</h2>
@@ -11544,16 +11554,15 @@ a{text-decoration:none;color:inherit}
 <a class="btn pri" href="/login">무료로 시작</a></div>
 <div class="plan pro">
 <div class=rec>추천</div>
-<div class="pt pro-t">Pro 이용권</div>
-<div class=price>가격 문의<small></small></div>
-<div class=pd>기간·구성은 카톡으로 안내 (준비 중)</div>
+<div class="pt pro-t">__PRO_NAME__</div>
+<div class=price>__PRO_PRICE__<small></small></div>
+<div class=pd>카드결제 또는 계좌이체</div>
 <ul>
 <li><span class=c>✓</span> 전 기능 무제한</li>
 <li><span class=c>✓</span> 쇼츠 무제한 제작</li>
 <li><span class=c>✓</span> 렌즈·대본·보이스 전부</li>
 <li><span class=c>✓</span> 우선 문의·운영 노하우</li></ul>
-<a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
-<div class=tbd style="text-align:center">※ 가격·이용권 기간은 확정 후 표기됩니다(현재 플레이스홀더).</div>
+<a class="btn kko" href="__CARD_HREF__">__CARD_LABEL__</a></div></div>
 <div class=sec>
 <h2>이용권에 들어있는 것</h2>
 <div class=lead>파는 사람이 처음부터 끝까지 쓰는 도구</div>
