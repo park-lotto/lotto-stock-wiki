@@ -9,6 +9,9 @@
   const query=new URLSearchParams(location.search);
   const initialLab=query.get('lab');
   const requestedJob=query.get('job');
+  const embeddedTab=query.get('embedded')==='tab';
+  if(embeddedTab)document.documentElement.classList.add('embedded-tab');
+  const rememberedLabKey=()=>`scene-style-canary-lab:${requestedJob||''}`;
 
   const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const selected=()=>jobs.find(row=>row.job_id===job.value);
@@ -49,20 +52,32 @@
     renderChecks(selected());status.textContent=jobs.length?'시험할 작업을 고르세요':'시험 가능한 작업이 없습니다';
   }
   job.addEventListener('change',()=>renderChecks(selected()));
-  clone.addEventListener('click',async()=>{
+  async function openLabCopy(existingLab=''){
     error.textContent='';clone.disabled=true;status.textContent='시험 복사본 만드는 중…';
     try{
       const exact=selected(),sourceJobId=requestedJob||job.value;
       if(!exact||String(exact.job_id)!==sourceJobId)throw Error('현재 작업 확인에 실패했습니다. 다른 작업으로 대신 열지 않습니다.');
-      const response=await fetch('/api/admin/scene-style-lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:sourceJobId})});
-      const created=await response.json();if(!response.ok)throw Error(created.error||'시험 복사본을 만들지 못했습니다');
-      const loaded=await fetch('/api/admin/scene-style-lab/'+encodeURIComponent(created.manifest.lab_id),{cache:'no-store'});
+      let labId=existingLab;
+      if(!labId){
+        const response=await fetch('/api/admin/scene-style-lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:sourceJobId})});
+        const created=await response.json();if(!response.ok)throw Error(created.error||'시험 복사본을 만들지 못했습니다');
+        labId=created.manifest.lab_id;
+      }
+      const loaded=await fetch('/api/admin/scene-style-lab/'+encodeURIComponent(labId),{cache:'no-store'});
       packet=await loaded.json();if(!loaded.ok)throw Error(packet.error||'시험 자료를 읽지 못했습니다');
+      if(String(packet.manifest?.source_job_id||'')!==sourceJobId)throw Error('시험 복사본의 원본 작업이 현재 작업과 다릅니다.');
+      if(embeddedTab)sessionStorage.setItem(rememberedLabKey(),packet.manifest.lab_id);
       editor.hidden=false;editor.src='/api/produce/scene-style/assets/out/scene-style-ui-showcase.html?embedded=1&lab=1';
       outputs.hidden=false;renderCompare();
       status.textContent='LAB 복사본 · 훅 말자막 숨김';
-    }catch(cause){error.textContent=cause.message;status.textContent='시험 시작 실패';renderChecks(selected())}
-  });
+      document.documentElement.classList.add('editor-ready');
+    }catch(cause){
+      if(existingLab&&embeddedTab){sessionStorage.removeItem(rememberedLabKey());return openLabCopy();}
+      error.textContent=cause.message;status.textContent='시험 시작 실패';renderChecks(selected());
+      document.documentElement.classList.remove('editor-ready');
+    }
+  }
+  clone.addEventListener('click',()=>openLabCopy());
   addEventListener('message',async event=>{
     if(event.origin!==location.origin||event.source!==editor.contentWindow||!packet)return;
     if(event.data?.type==='scene-style-ready'){
@@ -99,9 +114,10 @@
     }catch(cause){if(cause?.name!=='AbortError'){error.textContent=cause.message;status.textContent='CapCut 시험 실패'}}finally{capcut.disabled=false}
   });
   loadJobs().then(async()=>{
+    if(embeddedTab&&requestedJob){await openLabCopy(sessionStorage.getItem(rememberedLabKey())||'');return;}
     if(!initialLab)return;
     const response=await fetch('/api/admin/scene-style-lab/'+encodeURIComponent(initialLab),{cache:'no-store'});
     const data=await response.json();if(!response.ok)throw Error(data.error||'기존 시험을 읽지 못했습니다');
-    packet=data;editor.hidden=false;editor.src='/api/produce/scene-style/assets/out/scene-style-ui-showcase.html?embedded=1&lab=1';outputs.hidden=false;renderCompare();status.textContent='기존 LAB 시험 열림';
+    packet=data;editor.hidden=false;editor.src='/api/produce/scene-style/assets/out/scene-style-ui-showcase.html?embedded=1&lab=1';outputs.hidden=false;renderCompare();status.textContent='기존 LAB 시험 열림';document.documentElement.classList.add('editor-ready');
   }).catch(cause=>{error.textContent=cause.message;status.textContent='불러오기 실패'});
 })();
