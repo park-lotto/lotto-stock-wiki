@@ -9042,6 +9042,62 @@ def api_thumb_file(job_id: str, name: str):
     return FileResponse(str(path), headers={"Cache-Control": "no-cache"})
 
 
+@app.post("/api/produce/thumb/upload")
+async def api_thumb_upload(job_id: str = Form(...), file: UploadFile = File(...)):
+    """🖼 **내 이미지를 썸네일 후보로 직접 올린다**(2026-09-16 회원 제보).
+
+    여태 후보는 둘뿐이었다 — 완성본을 등분해 뽑거나(thumb/frames), 6단계에서 보던
+    장면을 보내거나(thumb/pin). 회원이 미리 만들어 둔 이미지를 쓰려면 방법이 없었고,
+    그 이미지를 "영상 맨 앞에 넣기"(thumbnail.intro)도 못 했다.
+
+    ★핀과 **같은 목록(thumbnail.pins)** 에 넣는다 — 그래야 고르기·꾸미기·인트로가
+      한 줄도 안 바뀌고 그대로 돈다(0순위-B: 같은 판단을 두 번 적지 않는다).
+    ★파일명은 서버가 정한다(thumb/save와 같은 원칙) — 올린 이름은 경로순회 재료다.
+    ★받은 바이트를 그대로 저장하지 않고 **Pillow로 열어 다시 쓴다**. 이미지로 안 열리는
+      파일(확장자만 바꾼 스크립트 등)은 여기서 걸러지고, EXIF 회전도 이때 반영된다.
+    """
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+
+    data = await file.read()
+    _MAX = 20 * 1024 * 1024
+    if not data:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "빈 파일이에요"})
+    if len(data) > _MAX:
+        return JSONResponse(status_code=413,
+                            content={"ok": False, "error": "20MB까지 올릴 수 있어요"})
+    try:
+        from PIL import Image, ImageOps
+        im = Image.open(io.BytesIO(data))
+        im = ImageOps.exif_transpose(im)          # 휴대폰 사진이 눕지 않게
+        im = im.convert("RGB")
+    except Exception as e:      # noqa: BLE001 — 열리지 않으면 이미지가 아니다
+        print(f"[thumb-upload] 이미지 아님: {e!r}", file=sys.stderr)
+        return JSONResponse(status_code=400,
+                            content={"ok": False, "error": "이미지 파일이 아니에요(jpg·png로 올려주세요)"})
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    thumb = job.get("thumbnail") or {}
+    pins = list(thumb.get("pins") or [])
+    # 이름은 내용 해시 — 같은 그림을 두 번 올리면 후보가 중복으로 쌓이지 않는다(핀과 같은 원칙).
+    import hashlib as _hl
+    name = f"up_{_hl.sha1(data).hexdigest()[:16]}.jpg"
+    im.save(str(out_dir / name), "JPEG", quality=92)
+
+    label = (os.path.basename(file.filename or "").rsplit(".", 1)[0] or "내 이미지")[:24]
+    pins = [p for p in pins if str(p.get("name") or "") != name]
+    pins.insert(0, {"name": name, "label": f"🖼 {label}", "uploaded": True})
+    thumb["pins"] = pins
+    _save_render_inputs(store, job_id, thumbnail=thumb)
+    return {"ok": True, "name": name, "label": f"🖼 {label}", "pins": pins,
+            "url": f"/api/produce/thumb/file/{job_id}/{name}"}
+
+
 @app.post("/api/produce/thumb/save")
 async def api_thumb_save(job_id: str = Form(...), meta: str = Form(...),
                          file: UploadFile = File(...)):
