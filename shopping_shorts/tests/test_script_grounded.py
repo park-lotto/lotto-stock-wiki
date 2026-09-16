@@ -143,8 +143,13 @@ def test_src_seg_는_여러_번호를_허용하고_첫_번째가_대표다(monke
     assert d["beats"][0]["src_seg"] == "s0-1" and d["beats"][0]["src_segs"] == ["s0-1", "s0-2"]
 
 
-def test_장면_목록이_비면_grounded를_끄고_남긴다(monkeypatch):
-    """리뷰 M7: 세그 없는 소스에 grounded면 '장면 근거'가 구조적으로 3회 실패."""
+def test_장면_목록이_비면_생성을_멈추고_이유를_남긴다(monkeypatch):
+    """리뷰 M7: 세그 없는 소스에 grounded면 '장면 근거'가 구조적으로 3회 실패.
+
+    ★2026-09-16 계약 변경: 예전엔 grounded를 끄고 종전 모드로 강등해 '뭐라도' 냈다.
+      그런데 강등본은 근거 없이 쓰이므로 사실 근거 검사에 또 걸려 3회를 다 태우고
+      버려졌다(실측 work fb4d991d14e8 — 2안 요청에 1안만 생존, 반려까지 ~20초 낭비).
+      이제는 **모델을 한 번도 부르지 않고 멈추고** 원인을 note에 담는다."""
     from shopping_shorts import bank_assemble
     seen = []
     monkeypatch.setattr(bank_assemble, "style_block", lambda style, seconds=30, seed="", **kw: "[스타일]")
@@ -156,8 +161,11 @@ def test_장면_목록이_비면_grounded를_끄고_남긴다(monkeypatch):
     d = SG.generate_one_style([{"name": "홈템", "full_text": "x", "structure": {}, "segments": []}],
                               {"id": "t", "name": "t", "beat_roles": ["hook"], "chars_per_30s": 60},
                               target_seconds=10, grounded=True, note=note)
-    assert "[장면에 보이는 것만 써라" not in seen[0] and note.get("grounded_downgraded")
-    assert not any(c["name"] == "장면 근거" for c in d["checks"])
+    assert d is None                       # 지어낼 바에는 내지 않는다
+    assert not seen                         # ★모델을 아예 안 부른다(낭비 호출 0)
+    assert note.get("reason") == "장면없음"
+    assert "장면" in (note.get("detail") or "")
+    assert note.get("grounded_downgraded")  # 화면이 읽던 옛 키도 유지
 
 
 def test_장면근거_문구는_상수에서_나온다():
