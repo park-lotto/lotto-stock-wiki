@@ -1864,7 +1864,8 @@
                ★왜 필요한가: 큰 자막 박스는 기본 방식이 못 메워 **다른 장면 픽셀이 띠로
                  끌려온다**(고객 이윤정 제보, 실측). 고급(Smart Pro)은 깨끗하게 복원된다.
                ★기본값은 '기본'이다 — 고급은 비싸므로 고객이 **직접 고를 때만** 쓴다.
-               ★고급은 VMake 새 API 키가 있어야 한다. 없는 사람에게 조용히 기본을 주면
+               ★고급은 **새 API 키**라야 된다(업체명은 이 파일에 쓰지 않는다 — 브랜드 정책,
+                 test_subclean_ui가 검사한다). 없는 사람에게 조용히 기본을 주면
                  "고급 골랐는데 왜 그대로냐"가 되므로, 서버가 무엇이 필요한지 말해준다. -->
           <div id="cleanTierWrap" style="margin-top:12px;display:none">
             <div class="hint" style="margin-bottom:6px">지우는 방식</div>
@@ -13316,6 +13317,18 @@ function cleanFailHtml(kind){
       + '<a class="cp-redo" href="/settings#keys" target="_blank" rel="noopener" '
       + 'style="display:inline-block;text-decoration:none">🔑 내 키 등록하기</a>';
   }
+  if(kind === 'need_new_api_key'){
+    // ★고급(Smart Pro)은 **새 API 키**라야 된다. 키가 있어도 옛 것이면 못 쓴다 —
+    //   그래서 need_own_key와 갈라 둔다("키를 등록하세요"만 보면 이미 등록한 사람은
+    //   무엇을 더 해야 할지 모른다). 재시도 버튼은 안 준다: 키를 바꾸기 전엔 같은 결과다.
+    return '<div class="cp-fail"><b>고급 자막 지우기는 새 API 키가 필요해요.</b><br>'
+      + '<span style="opacity:.85">지금 등록된 키는 예전 방식이라 고급을 쓸 수 없습니다.</span></div>'
+      + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 키를 발급받은 곳의 '
+      + '대시보드에서 <b>새 API로 전환</b>한 뒤, <b>새로 발급된 키</b>를 설정 화면에 '
+      + '다시 등록해 주세요. 그대로 <b>기본</b>으로 지우셔도 됩니다.</div>'
+      + '<a class="cp-redo" href="/settings#keys" target="_blank" rel="noopener" '
+      + 'style="display:inline-block;text-decoration:none">🔑 내 키 다시 등록하기</a>';
+  }
   if(kind === 'no_credit'){
     // ★2026-08-25: "소스 1편당 1회"는 더 이상 사실이 아니다. 소스를 이어붙여
     //   **영상 1편당 1회**로 바뀌었다(3a573e381, mix_pipeline._charge_clean은
@@ -13429,6 +13442,10 @@ function paintCleanTier(){
   const madeThis = !!done[tier], madeOther = !!done[tier==='pro'?'basic':'pro'];
   let msg = (tier==='pro')
     ? '큰 자막·자막 박스도 깨끗하게 지워요. <b>비용이 기본의 2배</b>예요.'
+      + '<br><span style="color:var(--fire,#ff9a5a)">⚠️ 고급은 <b>새 API 키</b>가 필요해요.</span> '
+      + '키를 발급받은 곳의 대시보드에서 <b>새 API로 전환</b>하고, 새로 나온 키를 '
+      + '<a href="/settings#keys" target="_blank" rel="noopener"><b>내 키 등록</b></a>에 '
+      + '다시 넣어 주세요. (예전 키로는 고급이 안 돼요)'
     : '보통 자막에 충분해요. 큰 자막 박스가 지저분하게 남으면 <b>고급</b>으로 바꿔 보세요.';
   if(madeThis) msg += ' <span style="color:var(--ok,#7ef0b0)">— 이 방식으로 만든 결과가 있어요(추가 비용 없이 바로 씁니다).</span>';
   else if(madeOther) msg += ' <b style="color:var(--fire,#ff9a5a)">— 아래 [자막제거 시작하기]를 다시 눌러야 이 방식으로 만들어져요.</b>';
