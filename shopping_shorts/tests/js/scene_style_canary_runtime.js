@@ -20,6 +20,11 @@ const elements = {
 const context = {
   URLSearchParams,
   structuredClone,
+  sessionStorage: {
+    values: new Map(),
+    setItem(key, value) { this.values.set(key, value); },
+    getItem(key) { return this.values.get(key) || null; },
+  },
   location: { search: '?scene_style_canary=1', origin: 'http://local.test' },
   MIX_JOB: 'exact-job',
   document: {
