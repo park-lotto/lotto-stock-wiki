@@ -52,6 +52,13 @@
       <button class="btn-ghost" onclick="selectNone()">선택해제</button>
       <button class="btn-ghost" onclick="selectAnalyzed()" title="분석이 끝난 것만 골라줍니다">✅ 분석완료만 선택</button>
       <button class="btn-ghost" onclick="analyzeSelected()" title="고른 영상을 미리 분석해 둡니다(천천히 돌아갑니다)">🔎 분석 시작</button>
+      <!-- 🗑 골라서 한꺼번에 빼기(2026-09-16 사장님 제보 "진행한 영상들을 지우고 있는데
+           전체선택 체크하고 빼기 버튼이 있으면 좋겠다"). 여태 카드마다 [🗑 빼기]를
+           하나씩 눌러야 했다 — 다 쓴 영상 20개를 지우려면 클릭 20번.
+           ★거는 API는 카드의 [🗑 빼기]와 **같은 것**이다(0순위-B) — 한 개를 빼는 뜻이
+             두 군데에서 달라질 일이 없다. 여기서는 고른 만큼 반복할 뿐이다. -->
+      <button class="btn-ghost" onclick="removeSelected()"
+              title="고른 영상을 즐겨찾기에서 뺍니다(원본 영상은 그대로입니다)">🗑 선택한 것 빼기</button>
       <button class="btn-send" onclick="sendToProduce()">🎬 영상제작으로 보내기</button>
     </div>
   </div>
@@ -201,6 +208,27 @@ async function removeItem(sc){
   SELECTED.delete(sc);
   loadItems();
 }
+// 🗑 고른 것을 한꺼번에 뺀다(2026-09-16). 되돌릴 수 없으니 개수를 보여주고 한 번 묻는다.
+// ★한 개를 빼는 일은 removeItem이 아니라 **같은 API**를 직접 부른다 — removeItem은
+//   호출마다 목록을 다시 그려서(loadItems) 20개면 화면을 20번 새로 그린다.
+//   여기서는 다 뺀 **뒤에 한 번만** 그린다.
+async function removeSelected(){
+  const picks=[...SELECTED];
+  if(!picks.length){ alert('뺄 항목을 먼저 선택하세요'); return; }
+  if(!confirm(picks.length+'개를 즐겨찾기에서 뺍니다. (원본 영상은 그대로 남습니다)')) return;
+  let failed=0;
+  for(const sc of picks){
+    try{
+      const r=await fetch('/api/mix/basket/remove',{method:'POST',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify({shortcode:sc})});
+      if(!r.ok) throw new Error('실패');
+      SELECTED.delete(sc);
+    }catch(e){ failed++; }
+  }
+  loadItems();
+  if(failed) alert(failed+'개는 못 뺐어요. 잠시 뒤 다시 눌러 주세요.');
+}
+
 // ── 어디로 보낼지 고른다(2026-08-18 사장님: "만들던 곳에 합쳐지는 걸 막아야 해") ──
 // 종전엔 제작소가 **진행 중 작업에 무조건 이어 붙였다**(랭킹에서 두 번 보내면 앞 것이
 // 지워지던 2026-07-18 버그의 처방). 그 규칙 자체는 맞지만, 즐겨찾기에서 새 영상 묶음을
