@@ -697,12 +697,21 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     # grounded(2026-09-04): 장면 전부 + 규칙 + 게이트 '장면 근거'. 아니면 종전 문장 그대로.
     _is_recipe = any("레시피" in (s.get("name") or "") for s in (sources or []))
     _scene_ids = scene_ids_of(sources) if grounded else None
-    # ★장면 목록이 비면(세그 없는 소스) grounded는 구조적으로 3회 다 실패한다(2026-09-05 리뷰 M7) → 종전 모드로 강등하고 남긴다
+    # ★장면 목록이 비면(세그 없는 소스) grounded는 구조적으로 3회 다 실패한다(2026-09-05 리뷰 M7).
+    #   ★2026-09-16 수정: 예전엔 여기서 grounded를 끄고 종전 모드로 강등했다. 그런데 강등된
+    #     대본은 근거 없이 쓰이므로 사실 근거 검사에 또 걸려, 3회를 다 태우고 버려졌다
+    #     (실측 work fb4d991d14e8 "영상에서 재료를 못 뽑았습니다" → 사실 근거 반려 → 1안만 생존).
+    #     될 리 없는 생성을 3회 돌리는 것이 느림의 큰 몫이었다. 그래서 **즉시 멈추고**
+    #     원인을 그대로 말한다 — 재료부터 다시 담는 것이 유일한 해법이기 때문이다.
     if grounded and not _scene_ids:
-        print("generate_one_style: 장면 목록 0개 — grounded를 끄고 종전 모드로", file=sys.stderr)
+        print("generate_one_style: 장면 목록 0개 — 생성 중단(재료부터 다시)", file=sys.stderr)
         if isinstance(note, dict):
+            note["reason"] = "장면없음"
+            note["detail"] = ("영상에서 장면을 뽑지 못했습니다 — 본 것만 쓰는 모드에서는 "
+                              "쓸 장면이 없으면 대본을 지어내게 되므로 여기서 멈춥니다. "
+                              "재료(영상)를 다시 담거나 장면 추출을 먼저 돌려주세요.")
             note["grounded_downgraded"] = "장면 목록 0개"
-        grounded, _scene_ids = False, None
+        return None
     # ★장면을 실제로 **가진** 소스가 몇 편인가(2026-09-05). 게이트 '장면 근거'가 이 값으로
     #   "여러 편을 넣었는데 한 편만 썼나"를 본다. 장면 없는 소스는 애초에 고를 수 없으니 세지 않는다.
     _source_count = sum(1 for s in (sources or [])[:SOURCE_MAX] if (s.get("segments") or [])) or None
