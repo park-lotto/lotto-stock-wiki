@@ -1,5 +1,6 @@
 """소스 URL을 플랫폼별로 다운로드 — instagram=Apify, youtube/tiktok=yt-dlp(무료)."""
 import json
+import logging
 import os
 import re
 import subprocess
@@ -49,8 +50,28 @@ def _cookies_arg(url):
         extra = []
     else:
         return []
-    cookies = ["--cookies", path] if path and Path(path).exists() else []
+    cookies = ["--cookies", path] if _cookie_file_usable(path) else []
     return cookies + extra
+
+
+def _cookie_file_usable(path) -> bool:
+    """쿠키 파일이 실제로 쓸 만한지 — 존재 + 비어있지 않음.
+
+    2026-09-16 실사고: 서버 youtube_cookies.txt가 0바이트로 비워진 채 `--cookies`로
+    넘어가 yt-dlp가 "does not look like a Netscape format cookies file"로 즉사 →
+    렌즈 유튜브 분석이 통째로 실패. 빈 파일이면 쿠키 없이(프록시·릴레이 경로) 가는
+    편이 낫다. 로그를 남겨 '조용한 폴백'이 되지 않게 한다."""
+    if not path:
+        return False
+    try:
+        st = Path(path).stat()
+    except OSError:
+        return False
+    if st.st_size == 0:
+        logging.getLogger(__name__).warning(
+            "쿠키 파일이 비어 있어 무시합니다(쿠키 없이 진행): %s", path)
+        return False
+    return True
 
 
 def _ig_cookies_file():
