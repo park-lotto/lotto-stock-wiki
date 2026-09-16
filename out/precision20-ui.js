@@ -71,7 +71,7 @@
       : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${esc(fontLabel(p))} · 훅+본문</small></button>`).join('');
   };
   const presetPane=grid.closest('.pane'),modeBar=document.createElement('div');modeBar.className='template-mode-bar';
-  modeBar.innerHTML='<button type="button" data-template-mode="story" class="active">썰쇼핑형 <small>20</small></button><button type="button" data-template-mode="continuous">전장면 고정형 <small>20</small></button>';
+  modeBar.innerHTML='<button type="button" data-template-mode="manual">템플릿 없이</button><button type="button" data-template-mode="legacy">기존 스타일</button><button type="button" data-template-mode="story" class="active">썰쇼핑형 <small>20</small></button><button type="button" data-template-mode="continuous">전장면 고정형 <small>20</small></button>';
   presetPane.querySelector('.pane-head').after(modeBar);renderGrid();
 
   preview.classList.add('is-pristine');
@@ -595,8 +595,16 @@
   grid.addEventListener('click',e=>{const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
   modeBar.addEventListener('click',event=>{
     const button=event.target.closest('[data-template-mode]');if(!button)return;
-    mode=button.dataset.templateMode;rows=mode==='continuous'?fixedRows:storyRows;if(!rows.length)return;
+    const requested=button.dataset.templateMode;
+    if(requested==='manual'||requested==='legacy'){
+      parent.postMessage({type:'scene-style-host-mode',mode:requested},location.origin);return;
+    }
+    mode=requested;rows=mode==='continuous'?fixedRows:storyRows;if(!rows.length)return;
     modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));current=0;kind='hook';sceneIndex=0;renderGrid();selectPreset(0);
+  });
+  addEventListener('message',event=>{
+    if(event.origin!==location.origin||event.source!==parent||event.data?.type!=='scene-style-select-template-mode')return;
+    const button=modeBar.querySelector(`[data-template-mode="${event.data.mode}"]`);if(button)button.click();
   });
   root.querySelectorAll('.layout-a [data-frame]').forEach(button=>button.addEventListener('click',()=>showFrame(button.dataset.frame)));
   root.querySelector('.layout-a .scene-navigator')?.addEventListener('click',event=>{

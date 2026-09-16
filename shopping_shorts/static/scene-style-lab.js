@@ -79,7 +79,13 @@
   }
   clone.addEventListener('click',()=>openLabCopy());
   addEventListener('message',async event=>{
+    if(event.origin===location.origin&&event.source===parent&&event.data?.type==='scene-style-select-template-mode'){
+      editor.contentWindow?.postMessage(event.data,location.origin);return;
+    }
     if(event.origin!==location.origin||event.source!==editor.contentWindow||!packet)return;
+    if(event.data?.type==='scene-style-host-mode'){
+      parent.postMessage(event.data,location.origin);return;
+    }
     if(event.data?.type==='scene-style-ready'){
       editor.contentWindow.postMessage({type:'scene-style-context',context:packet.context,snapshot:packet.snapshot},location.origin);return;
     }

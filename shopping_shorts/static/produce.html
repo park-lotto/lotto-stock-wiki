@@ -2118,6 +2118,12 @@
            scene-style-canary-active를 붙여 아래 기존 UI를 숨긴다(실패 시 fail-closed). -->
       <section id="sceneStyleCanary" hidden style="margin-top:10px">
         <div id="sceneStyleCanaryStatus" role="status" style="margin:0 0 10px;padding:10px 12px;border:1px solid #35505b;border-radius:10px;background:#0b2029;color:#bdeee5"></div>
+        <div id="sceneStyleCanaryReturn" hidden style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px">
+          <button type="button" class="tab" data-scene-style-host-mode="manual">템플릿 없이</button>
+          <button type="button" class="tab" data-scene-style-host-mode="legacy">기존 스타일</button>
+          <button type="button" class="tab" data-scene-style-host-mode="story">썰쇼핑형 <small>20</small></button>
+          <button type="button" class="tab" data-scene-style-host-mode="continuous">전장면 고정형 <small>20</small></button>
+        </div>
         <iframe id="sceneStyleCanaryFrame" title="관리자 전용 장면꾸미기 LAB" style="display:none;width:100%;height:calc(100vh - 210px);min-height:720px;border:1px solid #35505b;border-radius:12px;background:#071118"></iframe>
       </section>
       <button type="button" class="btn" onclick="openSceneStyleEditor()">장면꾸미기 · 문구와 효과 편집</button>
@@ -2406,6 +2412,7 @@
                           </div>
           </div>
           <div id="decoPaneStyle">
+          <section id="legacyStylePresets">
           <!-- 🎯 완성 스타일 카드(Task2가 renderStyleCards로 채움) -->
           <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 끝</span></div>
           <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
@@ -2418,6 +2425,7 @@
             <input id="myPresetName" type="text" placeholder="이 스타일 이름" style="flex:1;min-width:130px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
             <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 14px;font-size:12px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 지금 스타일 저장</button>
           </div>
+          </section>
           <!-- ★기본 펼침(2026-08-18). 사장님이 "폰트·색상·크기 조정이 없다"고 하셨는데
                실제로는 여기 다 있었다 — 접힘 안에 또 접혀 있어 못 찾으신 것이다.
                조절을 새로 만들면 같은 값이 두 군데 생겨 어긋난다(0순위-B) → 펼쳐서 보이게만 한다. -->

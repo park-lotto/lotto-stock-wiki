@@ -48,6 +48,25 @@ def test_embedded_canary_opens_editor_only_and_reuses_exact_job_copy():
     assert "openLabCopy" in script
 
 
+def test_canary_template_tabs_keep_legacy_and_new_editors_separate():
+    html = (STATIC / "produce.html").read_text(encoding="utf-8")
+    host = (STATIC / "scene-style-produce.js").read_text(encoding="utf-8")
+    lab = (STATIC / "scene-style-lab.js").read_text(encoding="utf-8")
+    editor = (STATIC.parents[1] / "out" / "precision20-ui.js").read_text(encoding="utf-8")
+
+    for label in ("템플릿 없이", "기존 스타일", "썰쇼핑형", "전장면 고정형"):
+        assert label in html or label in editor
+    assert 'data-template-mode="manual"' in editor
+    assert 'data-template-mode="legacy"' in editor
+    assert "scene-style-host-mode" in editor
+    assert "scene-style-host-mode" in lab
+    assert "scene-style-select-template-mode" in lab
+    assert "scene-style-select-template-mode" in host
+    assert "legacyStylePresets" in html
+    assert "presets.hidden=mode==='manual'" in host
+    assert "기존 화면은 현재 원본 작업에 저장됩니다" in host
+
+
 def test_canary_runtime_activates_only_for_the_exact_current_job():
     result = subprocess.run(
         ["node", str(Path(__file__).parent / "js" / "scene_style_canary_runtime.js")],

@@ -12,15 +12,45 @@
   const status=()=>document.getElementById('sceneStyleStatus');
   const draftKey=id=>'scene-style-draft:'+id;
   const timelineKey=context=>JSON.stringify(context.scenes.map(s=>[s.beat_idx,s.start,s.end,s.caption]));
+  function showCanaryMode(mode){
+    const panel=document.querySelector('.panel[data-step="3"]');
+    const shell=document.getElementById('sceneStyleCanary');
+    const note=document.getElementById('sceneStyleCanaryStatus');
+    const lab=document.getElementById('sceneStyleCanaryFrame');
+    const back=document.getElementById('sceneStyleCanaryReturn');
+    const presets=document.getElementById('legacyStylePresets');
+    const manual=document.getElementById('advDetails');
+    if(!panel||!shell||!note||!lab||!back)return;
+    const legacy=mode==='manual'||mode==='legacy';
+    panel.classList.toggle('scene-style-canary-active',!legacy);
+    lab.style.display=legacy?'none':'block';back.hidden=!legacy;
+    back.querySelectorAll('[data-scene-style-host-mode]').forEach(button=>button.classList.toggle('on',button.dataset.sceneStyleHostMode===mode));
+    if(presets)presets.hidden=mode==='manual';
+    if(manual)manual.open=mode==='manual';
+    if(legacy){
+      note.style.borderColor='#8a5a24';note.style.color='#ffd59a';
+      note.textContent=mode==='manual'
+        ?'템플릿 없이 직접 꾸미기 · 기존 화면은 현재 원본 작업에 저장됩니다.'
+        :'기존 스타일 · 기존 완성 스타일과 내 프리셋을 그대로 사용합니다. 이 화면은 현재 원본 작업에 저장됩니다.';
+      setTimeout(()=>document.getElementById(mode==='manual'?'advDetails':'legacyStylePresets')?.scrollIntoView({block:'start'}),0);
+      return;
+    }
+    note.style.borderColor='#35505b';note.style.color='#bdeee5';
+    note.textContent=`관리자 시험 모드 · 현재 작업 ${canaryJobId}의 복사본만 사용합니다.`;
+    lab.contentWindow?.postMessage({type:'scene-style-select-template-mode',mode},location.origin);
+  }
+  window.selectSceneStyleCanaryMode=showCanaryMode;
   function showCanaryFallback(message){
     const panel=document.querySelector('.panel[data-step="3"]');
     const shell=document.getElementById('sceneStyleCanary');
     const note=document.getElementById('sceneStyleCanaryStatus');
     const lab=document.getElementById('sceneStyleCanaryFrame');
+    const back=document.getElementById('sceneStyleCanaryReturn');
     panel?.classList.remove('scene-style-canary-active');
     if(shell)shell.hidden=!canaryEnabled;
     if(note)note.textContent=message||'';
     if(lab)lab.style.display='none';
+    if(back)back.hidden=true;
   }
   window.syncSceneStyleCanary=async()=>{
     if(!canaryEnabled)return false;
@@ -56,6 +86,9 @@
     const style=document.createElement('style');
     style.textContent='.panel[data-step="3"].scene-style-canary-active>:not(h3):not(#sceneStyleCanary){display:none!important}';
     document.head.append(style);
+    document.getElementById('sceneStyleCanaryReturn')?.addEventListener('click',event=>{
+      const button=event.target.closest('[data-scene-style-host-mode]');if(button)showCanaryMode(button.dataset.sceneStyleHostMode);
+    });
     setTimeout(()=>window.syncSceneStyleCanary(),0);
   }
   function stashDraft(){
@@ -139,6 +172,10 @@
     }catch(error){status().textContent=error.message;}
   };
   addEventListener('message',async event=>{
+    const canaryFrame=document.getElementById('sceneStyleCanaryFrame');
+    if(canaryFrame&&event.source===canaryFrame.contentWindow&&event.origin===location.origin&&event.data?.type==='scene-style-host-mode'){
+      showCanaryMode(event.data.mode);return;
+    }
     if(!frame||event.source!==frame.contentWindow||event.origin!==location.origin)return;
     if(event.data?.type==='scene-style-ready')frame.contentWindow.postMessage({type:'scene-style-context',...packet},location.origin);
     if(event.data?.type==='scene-style-lines'){
