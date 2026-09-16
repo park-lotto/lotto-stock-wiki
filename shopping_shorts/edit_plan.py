@@ -365,6 +365,16 @@ def _build_scene_blocks(seg_map, target_seconds):
 # 찾아 붙여서, 못 찾으면 어긋나고 모자라면 때웠다(며칠간의 두더지 잡기).
 REWRITE_MIX = os.getenv("REWRITE_MIX", "1") == "1"   # 0이면 옛 경로(덩어리/스파인)
 _MIN_LINE_SECS = 1.2      # 이보다 짧은 구간은 옆과 합친다(한 줄이 3자짜리가 되는 걸 막는다)
+
+# ★컷 한 개의 "짧지 않다" 기준 — **정하는 곳은 여기 하나**(0순위-B).
+#   2026-09-17 사장님: "컷당 장면이 너무 짧다는 사람이 많다, 1.2초 이상이면 좋겠다."
+#   종전엔 2단계 조립기(backbone_assemble.MIN_CUT_SECS=0.8)에만 있고 **3단계 채우기엔 아예
+#   없어서**(_fill_beat_screen_time은 시간거리·같은그림만 봤다) 채우기가 짧은 컷까지 긁어 썼다.
+#   실측(reference.db 컷 100,658개): 중앙값 1.67초 · 1.2초 미만 29.3% → 1.2로 걸러도 70.7%가 남는다.
+#   ⚠️짧은 컷이 '좋은 컷'은 아니다 — 사장님이 손으로 바꾼 2,773건에서 버린 컷의 1.2초 미만
+#     비율 25.2% vs 고른 컷 24.5%로 **차이가 없다**(길이는 매칭 품질과 무관). 즉 이 값은
+#     조각남만 고치고 매칭은 안 고친다. 두 문제를 섞지 마라.
+MIN_GOOD_CUT_SECS = float(os.environ.get("MIN_GOOD_CUT_SECS", "1.2") or 1.2)
 # 문장이 끝났다고 볼 종결(한국어 구어 자막은 마침표가 자주 없다 → 어미로 판정).
 _SENT_END = ("요", "다", "죠", "네", "까", "군", "걸", "야", "임", "함", "죠?", "래요", "거든요")
 
@@ -4300,6 +4310,47 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
     for v in by_video.values():
         v.sort(key=lambda s: float(s.get("start") or 0))
     used = {sid for ids in per_line for sid in ids}
+
+    # ★줄마다 화면을 **대사 길이만큼** 여기서 채운다(2026-09-17). 이게 이 함수의 핵심 변경이다.
+    #   왜 여기냐 — 2단계는 "어느 장면이냐"만 답하고(그건 잘한다) **몇 초어치냐는 답한 적이 없다**.
+    #   지시문은 `src_seg`에 번호를 적으라고만 하고, "한 장면은 한 줄에만"·대표 1개 정규화까지
+    #   겹쳐 줄당 컷이 1개(0.6~1초)로 배급된다. 대사는 2.5초라 **빈칸이 구조적**이었다.
+    #   그 빈칸을 3단계 `_fill_beat_screen_time`이 메우면서 중복·시간역행·조각남이 났다
+    #   (실측 job 26698eb0a362: 10줄 지목 10컷 → 최종 26컷, 같은 그림 15/26).
+    #   ⚠️2단계에 "분량도 지정하라"고 시키는 길은 **이미 실패했다** — A/B 4회 83/83/78/80%로
+    #     효과 0(모델이 초 계산을 못 한다). 커밋 e2904f384에서 철회했다. 초 계산은 코드가 한다.
+    #   ⚠️채우기에 하한을 붙이는 길도 두더지다(07-31·08-10·08-16·08-18·08-26·09-16 여섯 번 고친 자리).
+    #     붙일 게 줄면 재사용 폴백(같은 컷 반복)으로 떨어져 중복이 는다. **채우기가 안 돌게** 하는 게 답.
+    def _secs_of(sid):
+        s = seg_map.get(sid) or {}
+        try:
+            return max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
+        except (TypeError, ValueError):
+            return 0.0
+
+    for i, ids in enumerate(per_line):
+        if not ids or i >= len(lines):
+            continue                      # 출처 없는 줄은 종전대로 _fill_for가 b-roll을 고른다
+        need = narr_secs(lines[i])
+        have = sum(_secs_of(s) for s in ids)
+        if have >= need:
+            continue
+        # 지목 컷의 **같은 소스·시간순 다음 컷**부터 잇는다. 앞(시간 역행)으로는 안 간다 —
+        # 화면이 되감기고, 앞 컷은 앞줄이 이미 쓰고 있을 때가 많다(09-16 `5e7e36876`와 같은 판단).
+        anchor = seg_map.get(ids[-1]) or {}
+        tail = [s for s in by_video.get(anchor.get("video_id"), [])
+                if float(s.get("start") or 0) > float(anchor.get("start") or 0)
+                and s["seg_id"] not in used]
+        # 짧은 컷은 **뒤로 민다(막지 않는다)** — 막으면 이을 게 동나 다시 채우기로 넘어간다.
+        # 사장님 2026-09-17: "1.2초 이상이면 좋겠다는 반응이 많다". 실측상 70.7%가 이 기준을 넘는다.
+        tail.sort(key=lambda s: (_secs_of(s["seg_id"]) < MIN_GOOD_CUT_SECS,
+                                 float(s.get("start") or 0)))
+        for s in tail:
+            if have >= need:
+                break
+            ids.append(s["seg_id"])
+            used.add(s["seg_id"])
+            have += _secs_of(s["seg_id"])
 
     def _next_cut(prev_sid):
         """앞 비트 장면의 다음 컷(같은 소스·시간순·미사용) → 없으면 미사용 아무 컷 → None."""

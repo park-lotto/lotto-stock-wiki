@@ -125,6 +125,13 @@ def audit(job_id, plan_json, struct_json, extract_json, verbose=False):
         else:
             seen.append(t)
 
+    # ★조각남(2026-09-17 사장님 "1.2초 이상이면 좋겠다는 반응이 많다"):
+    #   결손·중복이 0이어도 컷이 잘면 "너무 조각난다"는 불만이 나온다 — 덧붙음·같은그림으로는
+    #   안 보이는 축이라 따로 잰다. 실측(reference.db 컷 100,658개): 중앙값 1.67초,
+    #   1.2초 미만이 29.3%. 원본은 충분히 긴데 채우기가 짧은 쪽까지 긁어 쓰는 게 조각남의 뿌리다.
+    final_lens = [seglen.get(sid, 0.0) for sid in final_ids if seglen.get(sid)]
+    short_cuts = sum(1 for x in final_lens if x < MIN_GOOD_CUT_SECS)
+
     res = {
         "job": job_id,
         "beats": len(beats),
@@ -135,6 +142,9 @@ def audit(job_id, plan_json, struct_json, extract_json, verbose=False):
         "final_cuts": final,
         "added_cuts": final - picked,
         "dup_cuts": dup,
+        "avg_cut_secs": round(sum(final_lens) / len(final_lens), 2) if final_lens else 0,
+        "short_cuts": short_cuts,
+        "short_pct": round(short_cuts / len(final_lens) * 100, 0) if final_lens else 0,
         "generator": plan.get("generator") or "",
     }
     if verbose:
