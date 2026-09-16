@@ -87,10 +87,10 @@ def _sweep_cookie_scratch(tmpdir, max_age_sec=3600):
             try:
                 if now - f.stat().st_mtime > max_age_sec:
                     f.unlink()
-            except OSError:
-                pass
-    except OSError:
-        pass
+            except OSError as e:  # 다른 프로세스가 먼저 지웠거나 아직 쓰는 중 — 무해
+                logging.getLogger(__name__).debug("쿠키 사본 정리 건너뜀 %s: %s", f, e)
+    except OSError as e:  # tmp 폴더 나열 실패 — 정리만 못 할 뿐 본작업엔 무해
+        logging.getLogger(__name__).debug("쿠키 사본 정리 실패(무해): %s", e)
 
 
 def _cookie_file_usable(path) -> bool:
