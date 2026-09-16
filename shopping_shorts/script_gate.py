@@ -596,7 +596,7 @@ def _uses_wow(full, hooks, min_hits=2):
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
           speaker_judge=None, scene_ids=None, scene_secs=None, grounded=False, is_recipe=False,
           source_count=None, targets=None, person_required=False, materials_text="",
-          topic_required=False, claim_evidence=None, claims_required=False):
+          topic_required=False, claim_evidence=None, claims_required=False, scene_descs=None):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -827,7 +827,8 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
 
     if grounded and scene_ids is not None:
         ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe,
-                                          source_count=source_count, scene_secs=scene_secs)
+                                          source_count=source_count, scene_secs=scene_secs,
+                                          scene_descs=scene_descs)
         checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
     return checks, full
 
@@ -1052,8 +1053,28 @@ def _read_secs(text):
     return max(1.5, len((text or "").strip()) / _speech_cps())
 
 
+def _shares_word(text, desc):
+    """문장과 장면 설명이 한글 2글자 어간을 하나라도 공유하나(순수 함수, 모델 0회).
+
+    ★유일한 '의미' 검사(2026-09-16 경로 정리 3단계). 종전 게이트는 장면 번호가 목록에 **있는지**만
+      봐서, "친구네 집 갔다가"에 팬케이크 컷을 붙여도 통과했다(실측 job c393b1c7c2f9, 10줄 중 5줄).
+      정교한 의미 판정을 모델에 맡기면 호출·재시도가 는다 — 대신 아주 느슨한 낱말 겹침만 본다.
+      겹침 0 = 그 줄이 그 장면 이야기가 아닐 가능성이 크다. 오탐을 줄이려고 2글자 어간을 쓴다
+      (인스타 슬롯 조립에서 실측으로 잡은 기준). 숫자도 한 낱말로 친다."""
+    import re
+    def _stems(s):
+        out = set()
+        for run in re.findall(r"[가-힣]{2,}", s or ""):
+            for i in range(len(run) - 1):
+                out.add(run[i:i + 2])
+        out.update(re.findall(r"\d+", s or ""))
+        return out
+    a, b = _stems(text), _stems(desc)
+    return bool(a & b)
+
+
 def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, source_count=None,
-                          scene_secs=None):
+                          scene_secs=None, scene_descs=None):
     """(ok, detail) — 줄마다 src_seg가 실제 장면 목록에 있는지, 장면이 필요한 줄이 비지 않았는지.
 
     · 지어낸 번호(목록에 없음) → 실패(레시피도)
@@ -1064,7 +1085,7 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
     detail은 재작성 지시문에 그대로 들어간다 — 어느 줄이 왜 걸렸는지."""
     ids = {str(x) for x in (scene_ids or set())}
     beats = beats or []
-    invented, missing, with_scene = [], [], 0
+    invented, missing, unrelated, with_scene = [], [], [], 0
     primary_at = {}      # 대표 장면 번호 -> 처음 쓴 칸 번호
     all_used = set()     # 대표+보조 전부(소스 분산 판정용)
     repeats = []         # (뒤 칸, 앞 칸, 번호, 뒤 칸 앞머리)
@@ -1077,6 +1098,12 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
             invented.append(f"{i}번 '{text}' src_seg={','.join(bad_ids)}(목록에 없음)")
         elif sids:
             with_scene += 1
+            # ★대표 장면 설명과 겹치는 낱말이 하나도 없으면 "장면과 무관한 문장"(2026-09-16).
+            #   scene_descs를 안 준 호출(옛 경로·테스트)은 이 판정이 아예 없다 = 회귀 0.
+            if scene_descs and (b.get("text") or "").strip():
+                _desc = scene_descs.get(sids[0], "")
+                if _desc and not _shares_word(b.get("text") or "", _desc):
+                    unrelated.append(f"{i}번 '{text}' ↔ {sids[0]}({_desc[:24]})")
             head = sids[0]                    # ★대표만 본다(보조는 겹쳐도 정당하다 — _GROUNDED_RULE)
             all_used.update(sids)             # 소스 분산 판정은 보조 번호까지 본다(아래 주석)
             if head in primary_at:
@@ -1086,6 +1113,10 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
         elif need:
             missing.append(f"{i}번 '{text}'")
     problems = []
+    if unrelated:
+        problems.append("장면과 무관한 문장: " + "; ".join(unrelated[:4])
+                        + " — 그 장면에 실제로 보이는 사물·동작을 문장에 담거나, 화면에 없는 이야기면 "
+                          "src_seg를 비우고 needs_scene=false로 두어라(억지로 장면을 붙이지 마라)")
     if invented:
         problems.append("지어낸 장면 번호: " + "; ".join(invented[:4]) + " — 장면 목록의 번호만 써라")
     if missing:

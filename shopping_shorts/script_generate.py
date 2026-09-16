@@ -394,11 +394,14 @@ def _speech_sps():
 
 _GROUNDED_RULE = (
     "\n\n★★[장면에 보이는 것만 써라 — 제품형 규칙]\n"
-    "- 제품의 **장점·효과·특징·동작·결과**를 말하는 줄은 반드시 위 '장면 목록'에 실제로 보이는 장면에서 "
-    "나와야 하고, 그 장면 번호를 src_seg에 적어라(needs_scene=true). 목록에 없는 장점은 쓰지 마라 — "
-    "장면이 없는 장점 한 줄이 들어가면 반려된다.\n"
-    "- 훅·감정·연결·가격·약속·마무리처럼 특정 화면을 요구하지 않는 줄은 src_seg를 빈칸으로 두고 "
-    "needs_scene=false로 표시해라. 단 대본의 3분의 1 이상은 장면이 붙은 줄이어야 한다(시연·결과·증거 칸은 반드시).\n"
+    "- **장면을 먼저 고르고, 그 장면에 보이는 것을 말로 옮겨라.** 제품의 장점·효과·특징·동작·결과를 "
+    "말하는 줄은 위 '장면 목록'에서 그것이 실제로 보이는 장면을 먼저 골라 src_seg에 적고(needs_scene=true), "
+    "text에는 그 장면의 '화면' 설명에 있는 **사물·동작을 반드시 담아라**. 장면에 없는 것을 말하고 "
+    "번호만 붙이면 '장면과 무관한 문장'으로 되돌아온다. 목록에 없는 장점은 쓰지 마라.\n"
+    "- 훅·감정·연결·가격·약속·마무리처럼 화면에 없는 이야기(누구 집에 갔다·건강에 좋다·값이 얼마다)는 "
+    "src_seg를 **빈칸**으로 두고 needs_scene=false로 표시해라 — 억지로 장면을 붙이지 마라, 3단계가 "
+    "알아서 앞 장면의 다음 컷을 깐다. 단 대본의 3분의 1 이상은 장면이 붙은 줄이어야 한다"
+    "(시연·결과·증거 칸은 반드시).\n"
     "- src_seg에는 장면 목록의 번호만 적어라(없는 번호 = 반려). 한 줄이 여러 장면에 걸치면 쉼표로 "
     "여러 번호를 적되 **첫 번째가 대표 장면**이다.\n"
     "- **한 장면은 한 줄에만 쓴다** — 앞줄에서 대표로 쓴 번호를 뒷줄에서 또 대표로 쓰지 마라. "
@@ -419,6 +422,19 @@ def scene_ids_of(sources):
             if isinstance(x, dict) and x.get("seg_id"):
                 ids.add(str(x["seg_id"]))
     return ids
+
+
+def scene_descs_of(sources):
+    """seg_id → 그 장면의 화면 설명(scene_desc·change·action을 이어 붙인 것). 게이트 '장면 근거'가
+    "이 줄이 정말 그 장면 이야기인가"를 낱말 겹침으로 볼 때 쓴다(2026-09-16 경로 정리 3단계).
+    scene_ids_of와 같은 범위(SOURCE_MAX·GROUNDED_SCENE_MAX)만 본다 — 목록에 실린 장면만."""
+    out = {}
+    for s in (sources or [])[:SOURCE_MAX]:
+        for x in (s.get("segments") or [])[:GROUNDED_SCENE_MAX]:
+            if isinstance(x, dict) and x.get("seg_id"):
+                out[str(x["seg_id"])] = " ".join(
+                    str(x.get(k) or "") for k in ("scene_desc", "change", "action", "use_point"))
+    return out
 
 
 def scene_secs_of(sources):
@@ -563,12 +579,19 @@ _STYLE_SCHEMA = {
                 #   1순위로 붙인다 — 짐작이 아니라 '원래 그 말이 나온 그림'이라 가장 정확하다.
                 #   지어낼 수 없게 후보 목록에 있는 것만 쓰라고 프롬프트에서 못 박는다.
                 #   못 고르면 빈 문자열(그때는 종전대로 3단계가 알아서 고른다 = 회귀 0).
-                "properties": {"role": {"type": "string"}, "text": {"type": "string"},
-                               "src_seg": {"type": "string"},
+                # ★칸 순서 = 생각 순서(2026-09-16 경로 정리 3단계). 종전엔 {role, text, src_seg}라
+                #   모델이 **문장을 먼저 쓰고** 장면 번호를 나중에 끼워 맞췄다 — 실측 job c393b1c7c2f9:
+                #   "친구네 집 갔다가"에 팬케이크 컷, "단백질까지"에 반으로 가르는 컷(10줄 중 5줄 무관).
+                #   이제 needs_scene → src_seg → text 순으로 **장면을 먼저 고르고 그 장면을 보며** 쓴다.
+                #   propertyOrdering은 Gemini 구조화 출력이 실제로 이 순서로 생성하게 하는 키다.
+                "properties": {"role": {"type": "string"},
                                # grounded 모드(2026-09-04): 이 줄이 특정 화면을 요구하는가(장점·효과·동작·결과).
                                # 종전 호출은 안 채워도 된다(required 아님 = 회귀 0).
-                               "needs_scene": {"type": "boolean"}},
-                "required": ["role", "text", "src_seg"],
+                               "needs_scene": {"type": "boolean"},
+                               "src_seg": {"type": "string"},
+                               "text": {"type": "string"}},
+                "propertyOrdering": ["role", "needs_scene", "src_seg", "text"],
+                "required": ["role", "src_seg", "text"],
             },
         },
     },
@@ -750,6 +773,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     # grounded(2026-09-04): 장면 전부 + 규칙 + 게이트 '장면 근거'. 아니면 종전 문장 그대로.
     _is_recipe = any("레시피" in (s.get("name") or "") for s in (sources or []))
     _scene_ids = scene_ids_of(sources) if grounded else None
+    _scene_descs = scene_descs_of(sources) if grounded else None   # 장면 근거의 '무관한 문장' 판정용
     # ★장면 길이 — 게이트 "화면 분량" 판정용. ids와 **같은 목록·같은 상한**을 본다(짝).
     _scene_secs = scene_secs_of(sources) if grounded else None
     # ★장면 목록이 비면(세그 없는 소스) grounded는 구조적으로 3회 다 실패한다(2026-09-05 리뷰 M7).
@@ -783,7 +807,9 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                "\n\n각 칸마다 src_seg에 **그 문장을 쓸 때 참고한 장면 번호**를 적어라"
                "([대본 N]의 '장면 목록'에 있는 번호만. 3단계가 그 장면을 화면으로 붙인다)."
                " 참고한 대목이 딱히 없으면 빈 문자열.")
-            + ("\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg, needs_scene}."
+            + ("\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, needs_scene, src_seg, text} — "
+               "★이 순서대로 정해라: 이 칸이 화면을 요구하는가(needs_scene) → 어느 장면인가(src_seg) → "
+               "**그 장면에 실제로 보이는 것**을 말로 옮긴 문장(text). 문장을 먼저 쓰고 장면을 끼워 맞추지 마라."
                if grounded else
                "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg}."))
     if _evidence:          # 프롬프트 지시는 공짜다(모델 0회) — 근거 있는 것만 말하라는 안내는 유지
@@ -815,7 +841,8 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          product=_sources_product(sources) or (product or ""),
                                          seconds=seconds,
                                          speaker_judge=_speaker_judge,
-                                         scene_ids=_scene_ids, scene_secs=_scene_secs, grounded=bool(grounded),
+                                         scene_ids=_scene_ids, scene_secs=_scene_secs, scene_descs=_scene_descs,
+                                         grounded=bool(grounded),
                                          is_recipe=_is_recipe, source_count=_source_count,
                                          materials_text=_materials_text(sources),
                                          claim_evidence=(_evidence if _claim_required else None),
@@ -903,7 +930,8 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          seconds=seconds,
                                          speaker_judge=(_speaker_judge if _claim_required
                                                         else script_gate.prior_verdict(checks)),
-                                         scene_ids=_scene_ids, scene_secs=_scene_secs, grounded=bool(grounded),
+                                         scene_ids=_scene_ids, scene_secs=_scene_secs, scene_descs=_scene_descs,
+                                         grounded=bool(grounded),
                                          is_recipe=_is_recipe, source_count=_source_count,
                                          materials_text=_materials_text(sources),
                                          claim_evidence=(_evidence if _claim_required else None),
