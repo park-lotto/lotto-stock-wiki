@@ -85,3 +85,12 @@ def test_same_script_different_family_does_not_share_cache(spy):
     assert len(spy) == before + 3
     assert [family for _, family in spy[-3:]] == [
         "youtube_reveal", "instagram_story", "demo_direct"]
+
+
+def test_non_admin_customer_stays_on_existing_generic_copy(monkeypatch, spy):
+    """세 카피 계열은 사장님 시험용이며 일반 고객의 기존 제목 생성은 바꾸지 않는다."""
+    monkeypatch.setattr(app_mod, "_cid", lambda request: 17)
+    r = client.post("/api/produce/headcopy/suggest", json={
+        "script": "일반 고객 격리 확인 대본", "copy_family": "instagram_story"})
+    assert r.status_code == 200
+    assert spy[-1][1] == "generic"

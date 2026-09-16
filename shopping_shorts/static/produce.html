@@ -5899,7 +5899,9 @@ function frSwapHeadcopy(){
   const picked=items[FR_HC_IDX]||{};
   t.value=(picked.subline||picked.text||'').trim();
   const hc=document.getElementById('hcText');
-  if(hc&&picked.text){ hc.value=picked.text; window._hcPicked=FR_HC_IDX; updateHC(); }
+  // 보조문구가 있는 새 세트만 큰 제목까지 함께 교체한다. 일반 고객의 기존 generic
+  // 후보(text만 있음)는 병합 전처럼 흰 띠 제목만 순환한다.
+  if(picked.subline&&hc&&picked.text){ hc.value=picked.text; window._hcPicked=FR_HC_IDX; updateHC(); }
   frHcLabel();          // 번호 문구를 만드는 곳은 frHcLabel 하나(0순위-B)
   frUpdate();
 }

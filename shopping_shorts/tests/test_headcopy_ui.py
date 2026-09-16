@@ -48,3 +48,10 @@ def test_paired_subline_is_applied_only_when_user_picks_copy():
     body = HTML[i:i + 900]
     assert "c.subline" in body
     assert "frTitle" in body
+
+
+def test_generic_customer_swap_keeps_existing_headcopy_behavior():
+    """보조문구가 없는 기존 generic 후보는 흰 띠만 돌리고 큰 제목까지 바꾸지 않는다."""
+    i = HTML.index("function frSwapHeadcopy")
+    body = HTML[i:i + 1500]
+    assert "if(picked.subline" in body

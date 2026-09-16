@@ -7,6 +7,8 @@
 정규화하고, "못 뽑았다"의 표시는 호출부(화면)가 한다 — 조용히 빈 카드를 띄우면
 사장님이 고장인지 준비중인지 구분 못 한다.
 """
+import json
+
 from shopping_shorts.script_generate import _call_json
 
 _MAX_LEN = 26          # ★썸네일 문구는 두 줄이 전부다(2026-08-18). 40자였을 땐 화면에서 4줄로
@@ -178,43 +180,56 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
     maxlen = 23 if paired else _MAX_LEN
     linelen = 11 if paired else _LINE_LEN
     prompt = _FAMILY_PROMPTS.get(family, _PROMPT)
+    def clean(data):
+        copies = data.get("copies") if isinstance(data, dict) else None
+        copies = copies if isinstance(copies, list) else []
+        out, seen = [], set()
+        for c in copies:
+            if not isinstance(c, dict):
+                continue
+            text = c.get("text")
+            text = text.strip() if isinstance(text, str) else ""
+            if not text or len(text) > maxlen:
+                continue
+            # ★접은 **뒤에** 중복을 본다. 접기 전 문자열로 검사하고 접은 걸 저장하면
+            #   같은 문구가 두 번 통과한다(실측: 테스트 test_dedupes_identical_text가 잡음).
+            text = two_lines(text)     # 두 줄 고정은 여기 한 곳(화면에서 또 접지 않는다)
+            if paired and any(len(line) > linelen for line in text.split("\n")):
+                continue              # 실제 틀에서 좌우가 잘리는 문구는 후보로 내지 않는다
+            if text in seen:
+                continue
+            label = c.get("label")
+            label = label.strip() if isinstance(label, str) else ""
+            why = c.get("why")
+            why = why.strip() if isinstance(why, str) else ""
+            seen.add(text)
+            item = {"label": label or "제안", "text": text, "why": why[:_WHY_LEN]}
+            if paired:
+                subline = c.get("subline")
+                upload_title = c.get("upload_title")
+                if isinstance(subline, str) and subline.strip():
+                    item["subline"] = subline.strip()[:32]
+                if isinstance(upload_title, str) and upload_title.strip():
+                    item["upload_title"] = upload_title.strip()[:50]
+            out.append(item)
+            if len(out) >= want:
+                break
+        return out
+
     data = _call_json(prompt.format(script=s[:4000], maxlen=maxlen,
                                     linelen=linelen, whylen=_WHY_LEN), _SCHEMA) or {}
-    copies = data.get("copies") if isinstance(data, dict) else None
-    if not isinstance(copies, list):
-        copies = []
-    out, seen = [], set()
-    for c in copies:
-        if not isinstance(c, dict):
-            continue
-        text = c.get("text")
-        text = text.strip() if isinstance(text, str) else ""
-        if not text or len(text) > maxlen:
-            continue
-        # ★접은 **뒤에** 중복을 본다. 접기 전 문자열로 검사하고 접은 걸 저장하면
-        #   같은 문구가 두 번 통과한다(실측: 테스트 test_dedupes_identical_text가 잡음).
-        text = two_lines(text)         # 두 줄 고정은 여기 한 곳(화면에서 또 접지 않는다)
-        if paired and any(len(line) > linelen for line in text.split("\n")):
-            continue                  # 실제 이븐쇼핑 틀에서 좌우가 잘리는 문구는 후보로 내지 않는다
-        if text in seen:
-            continue
-        label = c.get("label")
-        label = label.strip() if isinstance(label, str) else ""
-        # ★why가 없어도 죽지 않는다 — 옛 캐시·구버전 응답이 그대로 올 수 있다.
-        why = c.get("why")
-        why = why.strip() if isinstance(why, str) else ""
-        seen.add(text)
-        item = {"label": label or "제안", "text": text, "why": why[:_WHY_LEN]}
-        # 첫 후킹 계열은 큰 제목과 흰 보조띠를 **같은 응답의 한 세트**로 보관한다.
-        # 둘을 따로 생성하면 후보를 바꿀 때 서로 다른 약속이 섞인다.
-        if paired:
-            subline = c.get("subline")
-            upload_title = c.get("upload_title")
-            if isinstance(subline, str) and subline.strip():
-                item["subline"] = subline.strip()[:32]
-            if isinstance(upload_title, str) and upload_title.strip():
-                item["upload_title"] = upload_title.strip()[:50]
-        out.append(item)
-        if len(out) >= want:
-            break
+    out = clean(data)
+    # 실측: 모델이 "11자 이내"를 보고도 12~15자로 네 후보를 전부 써서 결과가 0개가 됐다.
+    # 안전폭을 풀지 않고, 받은 세트의 뜻은 유지한 채 길이만 한 번 압축한다.
+    raw = data.get("copies") if isinstance(data, dict) else None
+    if paired and not out and isinstance(raw, list) and raw:
+        retry_prompt = f"""다음 제목 세트는 화면 폭 규칙을 어겼다.
+각 후보의 text만 정확히 두 줄로 다시 압축하라. 각 줄은 공백 포함 {linelen}자 이내,
+전체는 줄바꿈 포함 {maxlen}자 이내다. subline·upload_title·why의 의미는 유지하라.
+JSON 스키마대로 copies를 반환하라.
+
+[원래 후보]
+{json.dumps(raw, ensure_ascii=False)}
+"""
+        out = clean(_call_json(retry_prompt, _SCHEMA) or {})
     return out

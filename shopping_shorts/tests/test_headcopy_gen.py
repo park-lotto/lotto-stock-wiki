@@ -212,3 +212,29 @@ def test_demo_direct_family_returns_product_demo_set(monkeypatch):
     assert out[0]["upload_title"].startswith("양파를 넣고")
     assert "제품·행동·효과" in seen["prompt"]
     assert "정체를 숨기지" in seen["prompt"]
+
+
+def test_paired_family_retries_once_when_every_title_is_too_wide(monkeypatch):
+    """실제 모델이 12~15자로 쓰더라도 빈 목록 대신 한 번 압축 보정을 요청한다."""
+    calls = []
+
+    def fake(prompt, schema):
+        calls.append(prompt)
+        if len(calls) == 1:
+            return {"copies": [{
+                "label": "너무 김",
+                "text": "엄마가 칼질하다 손 베일까봐\n몰래 챙겨드린 비밀 아이템",
+                "subline": "엄마가 써본 후기", "upload_title": "엄마를 위한 주방도구",
+            }]}
+        return {"copies": [{
+            "label": "압축본",
+            "text": "엄마가 걱정돼서\n몰래 챙겨드림",
+            "subline": "써보더니 보인 반응", "upload_title": "엄마에게 챙겨드린 주방도구",
+        }]}
+
+    monkeypatch.setattr(headcopy_gen, "_call_json", fake)
+    out = headcopy_gen.suggest("엄마에게 전동 다지기를 드린 대본", family="instagram_story")
+
+    assert len(calls) == 2
+    assert "공백 포함 11자" in calls[1]
+    assert out[0]["text"] == "엄마가 걱정돼서\n몰래 챙겨드림"

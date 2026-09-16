@@ -19089,13 +19089,16 @@ _HEADCOPY_CACHE_MAX = 200
 
 
 @app.post("/api/produce/headcopy/suggest")
-def api_produce_headcopy_suggest(body: dict):
+def api_produce_headcopy_suggest(request: Request, body: dict):
     """확정 대본+틀 계열 → 짝이 맞는 헤드카피 후보."""
     script = (body.get("script") or "").strip()
     if not script:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "대본이 비어 있습니다"})
-    family = headcopy_gen.normalize_family(body.get("copy_family"))
+    # 새 계열은 사장님(cid 0) 시험 전용이다. 일반 고객은 요청을 조작해도 병합 전과 같은
+    # generic 프롬프트만 탄다 — 테스트 페이지 기능이 공용 produce에 새는 것을 서버에서 차단한다.
+    requested_family = body.get("copy_family") if _cid(request) == 0 else "generic"
+    family = headcopy_gen.normalize_family(requested_family)
     # 같은 대본이라도 화법 계열이 다르면 결과가 다르다. 계열을 빼면 인스타형 요청이
     # 이븐쇼핑형 캐시에 맞아 AI를 부르지도 않고 잘못된 제목을 받는다.
     key = f"{_script_hash(script)}:{family}"
