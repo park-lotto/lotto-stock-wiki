@@ -11,9 +11,11 @@ def test_produce_canary_is_explicit_admin_exact_job_and_fail_closed():
 
     assert "scene_style_canary=1" not in html
     assert "scene-style-canary-active" in script
-    assert "get('scene_style_canary')==='1'" in script
-    assert "sessionStorage.setItem(canaryKey,'1')" in script
-    assert "sessionStorage.getItem(canaryKey)==='1'" in script
+    assert "get('scene_style_canary')" in script
+    assert "canaryParam==='1'" in script
+    assert "localStorage.setItem(canaryKey,'1')" in script
+    assert "localStorage.getItem(canaryKey)==='1'" in script
+    assert "localStorage.removeItem(canaryKey)" in script
     assert "requested!==currentMixJob()" in script
     assert "typeof MIX_JOB==='undefined'" in script
     assert ".find(row=>String(row.job_id)===requested)" in script
