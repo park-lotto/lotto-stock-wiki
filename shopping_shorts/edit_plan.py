@@ -1604,6 +1604,23 @@ def _speech_speed():
     return min(2.0, max(1.0, v))
 
 
+def narr_secs(text):
+    """그 대사를 실제로 읽는 시간(초) = **모든 target_seconds의 단일 출처**(2026-09-16).
+
+    ★왜 함수로 뽑았나 — 같은 계산이 파일 안에 11벌이었고 **두 가지 식이 섞여 있었다**:
+      7곳은 `len/_SYLLABLES_PER_SEC`(배속 미적용), 4곳은 `len/(_SYLLABLES_PER_SEC*_speech_speed())`.
+      2026-08-09에 "보정 없이 두면 화면이 44% 과충전된다"며 4곳만 고치고 나머지를 빠뜨렸고,
+      2026-09-04에 새로 생긴 상속 경로(build_inherit_plan)는 그 수정을 아예 못 받았다.
+      결과: 상속 경로의 목표 초가 **1.7배** 부풀고, `_fill_beat_screen_time`이 그만큼
+      대본과 무관한 컷을 덧붙였다(실측 job 26698eb0a362: 10줄 지목 10컷 → 최종 26컷).
+      같은 판단은 한 곳에서만 정한다(0순위-B).
+    ⚠️라이브 실측(2026-09-16, 최근 60 job·비트 389개의 TTS 실길이): **9.69자/초**
+      (중앙 9.69·평균 9.71). 지금 식은 5.7 × _speech_speed()다 — 배속 기본값이 낮으면
+      여전히 과대추정이지만, 그 값은 **게이트의 대본 글자수 상한과 짝**이라(script_gate._speech_cps)
+      여기서 같이 올리면 대본 길이가 함께 바뀐다. 배속 조정은 별건으로 다룬다."""
+    return round(max(1.5, len((text or "").strip()) / (_SYLLABLES_PER_SEC * _speech_speed())), 1)
+
+
 def _seg_benefits(seg):
     """세그먼트의 product_benefits → 문장 리스트(fail-open []). list/str 모두 허용.
     무자막 소스(text 빈칸)에서 대본이 쓸 수 있는 유일한 언어 재료라 여기서 흘리면 안 된다."""
@@ -4335,7 +4352,7 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
             "beat_idx": len(beats),
             "role": str(srcs[i].get("role") or ""),
             "narration": line,
-            "target_seconds": round(max(1.5, n / _SYLLABLES_PER_SEC), 1),
+            "target_seconds": narr_secs(line),
             "primary": refs[0],
             "alternates": refs[1:],
             "effect": "cut",
@@ -4973,8 +4990,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 # ★speed 보정(2026-08-09): 이 값이 _fill_beat_screen_time의 need가 된다.
                 #   보정 없이 두면 그 비트만 5.7자/초로 잡혀 화면이 44% 과충전된다
                 #   (실측: 같은 66자인데 한 비트는 8.0초, 보정 빠진 비트는 11.6초).
-                "target_seconds": round(
-                    max(1.5, len(narration) / (_SYLLABLES_PER_SEC * _speech_speed())), 1),
+                "target_seconds": narr_secs(narration),
                 "primary": _clean(covered[0]),
                 "alternates": [_clean(s) for s in covered[1:]],
                 "effect": "cut", "fit": 5, "forced": False,
@@ -6271,7 +6287,7 @@ def _rebuild_beats_by_lines(beats, sents):
         nb["primary"] = uniq[0] if uniq else None
         nb["alternates"] = uniq[1:]
         nb["narration"] = ln
-        nb["target_seconds"] = round(slot["sec"] or (len(ln) / _SYLLABLES_PER_SEC), 2)
+        nb["target_seconds"] = round(slot["sec"] or narr_secs(ln), 2)
         nb["narration_reordered"] = True
         nb.pop("narration_manual", None)
         _drop_stale_tts(nb)
