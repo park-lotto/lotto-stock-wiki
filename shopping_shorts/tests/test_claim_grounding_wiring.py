@@ -67,5 +67,6 @@ def test_assembled_output_uses_and_records_real_claim_gate(monkeypatch, supporte
         assert len(out) == 1 and not left
         assert any(c["name"] == "사실 근거" and c["ok"] for c in out[0]["checks"])
     else:
-        assert not out and left == [style]
-        assert any("사실 근거" in message for message in why)
+        # 2026-09-16 경로 정리: 근거 부족은 치명이 아니다 — 조립본은 남고 '사실 근거' 실패만 붙는다.
+        assert len(out) == 1 and not left
+        assert any(c["name"] == "사실 근거" and not c["ok"] for c in out[0]["checks"])

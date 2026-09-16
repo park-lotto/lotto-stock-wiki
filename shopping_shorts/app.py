@@ -14039,8 +14039,16 @@ def _setting_gate(store, key, customer_id):
 
 
 def _script_grounded(store, customer_id):
-    """2단계 '본 것만 쓰기' 스위치 — `_setting_gate` 참조."""
-    return _setting_gate(store, "script_grounded_enabled", customer_id)
+    """2단계 '본 것만 쓰기' — **항상 켬**(2026-09-16 경로 정리 1단계).
+
+    ★왜 스위치를 없앴나: 라이브 실측 `script_grounded_enabled='admin'` — 사장님 계정만 이 경로를
+      타고 고객은 grounded 없는 생성기를 탔다. 사장님이 테스트하는 파이프라인과 고객이 쓰는
+      파이프라인이 **달랐다.** 지도(docs/superpowers/specs/2026-09-16-대본경로-지도.md) 기준
+      남기는 경로는 "씨앗 고정 → 담은 영상의 장면을 보며 대본" 하나이고, 그것이 grounded다.
+      스위치가 남아 있으면 누군가 또 끄거나 admin으로 돌려 두 파이프라인이 다시 갈라진다.
+    설정값 `script_grounded_enabled`는 더 이상 읽지 않는다(호출부 2곳 — api_wiki_generate·
+    api_produce_script_mix — 는 그대로 이 함수를 부른다. 정하는 곳은 여기 한 곳)."""
+    return True
 
 
 def _is_admin(customer_id):
@@ -18525,9 +18533,12 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
         script_structure = None   # 잘못된 형식은 조용히 버린다(보관 전용이라 무해)
     # ★3단계 상속 스위치(2026-09-04): 켜져 있으면 잡에 표식을 남겨 mix_pipeline이 2단계 출처 장면을 그대로 잇는다
     #   (Gemini 0회·추측 층 없음). 기본 꺼짐 — 고객 화면 불변.
-    if _setting_gate(Store(DB_PATH), "edl_inherit_enabled", getattr(request.state, "customer_id", 0)):
-        script_structure = dict(script_structure or {})
-        script_structure["inherit_scenes"] = True
+    # ★2026-09-16 경로 정리 1단계: 스위치를 없애고 **항상** 상속한다. 라이브 실측
+    #   `edl_inherit_enabled='admin'` — 사장님만 상속(①)을 타고 고객은 ②대본매칭(모델 재추측)을
+    #   탔다. 2단계 grounded가 항상 켜진 이상(_script_grounded 참조) 3단계도 그 출처를 그대로
+    #   받는 것이 짝이다. beat_sources가 없으면 mix_pipeline이 알아서 옛 경로로 간다(회귀 0).
+    script_structure = dict(script_structure or {})
+    script_structure["inherit_scenes"] = True
     # 유료게이트(2026-07-20 E): 제작소 2단계도 결국 run_mix_job→렌더로 돈이 나간다. /api/mix/start와
     # 동일하게 render 과금+글로벌캡을 건다 — 안 걸면 제작소 흐름으로 하루 상한·전역 상한을 통째로
     # 우회할 수 있다(1단계 script 과금은 별개 자원이라 render 과금을 대체하지 못한다). 검증(위 ssrf·
