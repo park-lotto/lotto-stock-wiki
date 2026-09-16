@@ -821,8 +821,7 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
         # ★fatal 아님(2026-09-16, 위 FATAL_CHECKS 주석과 같은 이유) — 같은 09-14 커밋에서
         #   들어온 동적 치명이다. 수치 하나 때문에 안을 통째로 버리지 않는다.
         checks.append({"name": "수치 근거", "ok": ok_g,
-                       # 스위치를 끄면 이것도 안을 죽이지 않는다(위 claim_fatal_enabled 주석).
-                       "fatal": bool(claims_required) and claim_fatal_enabled(),
+                       # 치명 아님(2026-09-16, FATAL_CHECKS 주석) — 수치 하나로 안을 버리지 않는다.
                        "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
                                   + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
 
@@ -1137,61 +1136,30 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
 #:   과잉 처방이었다. 검사 자체는 그대로 둔다 — 화면에 뜨고 재작성 루프도 그대로 돈다.
 #:   다만 안을 죽이지는 않는다. 진짜 엉뚱한 대본(소재가 남의 것)은 '소재 일치'·'주제
 #:   단일성'·'재료 밖 판매처'(09-09·09-11)가 계속 치명으로 잡는다.
-#:   ★단 **스위치로 뒀다**(기본은 지금까지와 똑같이 치명). 설정 `script_claim_fatal`을
-#:     "0"으로 두면 사실·수치 근거가 안을 죽이지 않는다. 이상하면 "1"로 즉시 되돌린다.
-FATAL_CHECKS = ("소재 일치", "주제 단일성", "재료 밖 판매처", "사실 근거")
-
-#: 스위치를 끈 상태의 치명 목록(= 09-14 이전과 같은 결과).
-FATAL_CHECKS_LENIENT = ("소재 일치", "주제 단일성", "재료 밖 판매처")
-
-
-def claim_fatal_enabled():
-    """'사실·수치 근거'가 안을 통째로 죽이는가. 기본 True(= 09-14 이후 현행).
-
-    끄는 법(둘 중 하나):
-      · 설정 `script_claim_fatal` = "0"   (화면/DB에서 바꾸면 재시작 없이 먹는다)
-      · 환경변수 SCRIPT_CLAIM_FATAL=0     (설정보다 우선 — 급할 때 쓰는 비상구)
-    ★fail-safe: 설정을 못 읽으면 True(현행 유지). 읽기 실패가 라이브 동작을 조용히
-      바꾸면 그게 더 위험하다.
-    """
-    import os
-    _env = os.getenv("SCRIPT_CLAIM_FATAL")
-    if _env is not None and str(_env).strip() != "":
-        return str(_env).strip().lower() not in ("0", "false", "off", "no")
-    try:
-        from shopping_shorts.store import Store
-        from shopping_shorts.config import DB_PATH
-        return str(Store(DB_PATH).get_setting("script_claim_fatal", "1")).strip() != "0"
-    except Exception:
-        return True
+#: ★2026-09-16 경로 정리 2단계 — 치명은 이 셋뿐이고 **스위치는 없다.**
+#:   같은 날 오전에 `script_claim_check`·`script_claim_fatal` 스위치를 얹어 급한 불을 껐지만,
+#:   스위치는 층을 하나 더 만드는 것이라(누가 또 켜면 파이프라인이 다시 갈라진다) 정리하며 걷어낸다.
+#:   '사실 근거'·'수치 근거'는 검사로 남아 화면에 뜨고 재작성 1회를 유도하지만 안을 죽이지 않는다 —
+#:   그 둘은 09-14(2aab09821)에 들어와 "2안 요청에 1안" + 반려당 ~20초 낭비를 만든 장본인이었다.
+#:   엉뚱한 제품 대본(볼펜인데 채칼·새송이)은 아래 셋이 계속 막는다.
+FATAL_CHECKS = ("소재 일치", "주제 단일성", "재료 밖 판매처")
 
 
 def claim_check_enabled():
-    """사실·수치 근거 검사를 **아예 돌릴 것인가**. 기본 True(= 09-14 이후 현행).
+    """A2 스타일 생성 경로에서 문장별 사실 판정을 돌릴 것인가 — **아니오, 항상 False.**
 
-    ★fatal 스위치와 다르다(2026-09-16). `script_claim_fatal=0`은 "안을 버리지 않는다"일
-      뿐이라 `passed()`가 여전히 False → **재시도 3회는 그대로 돌고 문장별 판정 호출도
-      그대로다**(느림이 안 풀린다). 이 스위치를 끄면 검사 자체가 생기지 않아
-      09-14 이전과 같은 속도가 된다 — 대신 그때처럼 가끔 엉뚱한 주장이 섞일 수 있다.
-
-    끄는 법: 설정 `script_claim_check` = "0" (또는 환경변수 SCRIPT_CLAIM_CHECK=0).
-    ★소재 일치·주제 단일성·재료 밖 판매처는 이 스위치와 무관하게 계속 돈다.
-    """
-    import os
-    _env = os.getenv("SCRIPT_CLAIM_CHECK")
-    if _env is not None and str(_env).strip() != "":
-        return str(_env).strip().lower() not in ("0", "false", "off", "no")
-    try:
-        from shopping_shorts.store import Store
-        from shopping_shorts.config import DB_PATH
-        return str(Store(DB_PATH).get_setting("script_claim_check", "1")).strip() != "0"
-    except Exception:
-        return True
+    남기는 경로는 grounded(장면 전부를 보여주고 그 안에서만 쓰기)이고, 거기서는 '장면 근거'
+    검사가 같은 일을 더 싸게 한다(모델 판정 호출 없음). 문장별 사실 판정은 A2에서 호출당
+    수 초씩 먹으며 재시도를 유발했다. 픽업 경로(generate_guarded_variations)는 자기 판단
+    (`_claims_required`)을 그대로 쓴다 — 이 함수는 A2 전용이다.
+    ★함수로 남긴 이유: 호출부(script_generate._claims_required)가 이 이름을 보고 있고,
+      "왜 False인지"를 한 곳에 적어두기 위해서다."""
+    return False
 
 
 def active_fatal_checks():
     """지금 적용되는 치명 검사 목록 — 판정은 여기 한 곳에서만 정한다(0순위-B)."""
-    return FATAL_CHECKS if claim_fatal_enabled() else FATAL_CHECKS_LENIENT
+    return FATAL_CHECKS
 
 
 def fatal_content_checks(full, product="", materials_text=""):

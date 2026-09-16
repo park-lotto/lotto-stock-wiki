@@ -537,7 +537,10 @@ _STYLE_SCHEMA = {
     "required": ["beats"],
 }
 
-STYLE_REWRITES = 2       # 게이트 실패 시 다시 쓰는 횟수. 그래도 안 되면 실패로 남긴다.
+#: 게이트 실패 시 다시 쓰는 횟수. ★2→1(2026-09-16 경로 정리 2단계). 실측 tries 기록에서
+#: 2차 재작성이 1차와 같은 항목으로 실패하는 일이 잦았고(볼펜 건 재시도 3~4회), 그동안 사용자는
+#: 기다린다. 한 번 고쳐서 안 되면 "그나마 나은 안"을 그대로 낸다(치명=소재 이탈만 버림, 0안 없음).
+STYLE_REWRITES = 1
 
 
 
@@ -571,12 +574,8 @@ def _sources_product(sources):
 
 
 def _claims_required(sources):
-    # ★단일 진입점(0순위-B) — 사실 검사를 켤지 말지는 여기 한 곳에서만 정한다.
-    #   끄면 프롬프트 지시·문장별 판정 호출·게이트 검사가 **전부** 안 생긴다
-    #   = 09-14 이전 속도(사장님 "며칠 전엔 잘됐다"). script_gate 주석 참조.
-    from shopping_shorts import script_gate as _gate   # 지역 import(모듈 최상단은 순환)
-    if not _gate.claim_check_enabled():
-        return False
+    # 픽업 경로(generate_guarded_variations)의 주제 고정 판단. A2 스타일 생성은 이 함수를
+    # 쓰지 않는다(generate_one_style 안 `_claim_required = False` 참조, 2026-09-16).
     return any(isinstance(s, dict) and (s.get("topic_product") or "").strip()
                and s.get("topic_semantic_required", True) for s in (sources or []))
 
@@ -690,7 +689,10 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     """
     from shopping_shorts import bank_assemble, script_gate
 
-    _claim_required = _claims_required(sources)
+    # ★A2는 문장별 사실 판정을 돌리지 않는다(2026-09-16 경로 정리 2단계, script_gate.claim_check_enabled).
+    #   이 경로는 grounded라 '장면 근거'가 같은 일을 모델 호출 없이 한다. 문장별 판정(09-14)은
+    #   호출당 수 초 + 재시도 유발 + 치명 반려로 "2안 요청에 1안"을 만든 장본인이었다.
+    _claim_required = script_gate.claim_check_enabled()
     _evidence = claim_evidence(sources, facts_block) if _claim_required else None
     seconds = max(5, min(int(target_seconds or 30), 90))
     # ★seed(job_id)를 넘겨 문장틀 순서를 job마다 돌린다 — 안 넘기면 항상 같은
