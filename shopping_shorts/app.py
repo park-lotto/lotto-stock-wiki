@@ -16902,7 +16902,12 @@ def api_produce_works_get(request: Request, work_id: str):
             settings = {"headcopy": job.get("headcopy"),
                         "caption_style": job.get("caption_style"),
                         "deco": job.get("deco"),
-                        "subtitle_removal": job.get("subtitle_removal")}
+                        "subtitle_removal": job.get("subtitle_removal"),
+                        # 지우는 방식(기본/고급) — 화면이 job에서 되읽는다(0순위-B)
+                        "clean_tier": job.get("clean_tier"),
+                        # 이미 만들어 둔 등급 — 되돌리기가 공짜인지 화면이 안내한다
+                        "clean_tiers_ready": mix_pipeline.clean_tiers_ready(
+                            job, _MIX_WORK_DIR / w["job_id"])}
     return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"],
             "settings": settings}
 
@@ -18619,6 +18624,11 @@ def api_produce_mix_settings(body: dict):
     fields = {}
     if "subtitle_removal" in body:
         fields["subtitle_removal"] = bool(body.get("subtitle_removal"))
+    if "clean_tier" in body:
+        # 자막제거 등급. 아는 값만 받는다 — 모르는 값이 들어오면 기본으로 떨어뜨린다
+        # (등급 이름의 정의처는 vmake_client, 해석은 mix_pipeline.clean_tier_of).
+        from .vmake_client import TIER_BASIC, TIER_PRO
+        fields["clean_tier"] = TIER_PRO if body.get("clean_tier") == TIER_PRO else TIER_BASIC
     if "headcopy" in body:
         fields["headcopy"] = body.get("headcopy")  # dict or None
     if "caption_style" in body:

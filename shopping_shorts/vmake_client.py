@@ -15,6 +15,36 @@ _VIDEO_TASK = "videoscreenclear"
 # 결과를 URL로 받는다(우리는 그 URL을 다운로드).
 _DEFAULT_PARAMS = {"parameter": {"rsp_media_type": "url"}}
 
+# ── 새 VMake API(2026-09-16) ────────────────────────────────────────────────
+# 사장님 계정을 새 API로 전환하니 프리셋이 6개로 늘었다(SKM0001~0006). 우리가 쓰는 둘:
+#     SKM0003 = Smart      (视频智能消除普通档位)  — 초당 2크레딧
+#     SKM0005 = Smart Pro  (视频智能消除Pro档位)  — 초당 4크레딧, Pro 멤버십 전용
+# ★왜 필요한가(2026-09-16 고객 이윤정 제보): 큰 흰박스 자막을 옛 경로(legacy
+#   videoscreenclear)가 못 메워 **다른 장면 픽셀이 띠로 끌려왔다**. 같은 클립을
+#   Smart Pro로 돌리니 깨끗하게 복원됐다(실측). 재시도로는 절대 안 고쳐진다 —
+#   같은 입력에 같은 결과가 나온다(사장님 키로 재시도해 확인).
+# ★버전 문자열이 갈림길이다. v1.x로 config을 받으면 옛 4개만 오고, v2.0.0으로
+#   받아야 SKM*이 열린다. legacy 키로 v2를 부르면 [60007]이 떨어진다 — 그게
+#   "이 키가 아직 안 옮겼다"는 **유일하게 확실한 판별법**이다(is_legacy_key).
+NEW_API_VERSION = "v2.0.0"
+TASK_SMART = "SKM0003"
+TASK_SMART_PRO = "SKM0005"
+# 등급 이름(화면·DB가 쓰는 값)의 정의처. 여기 한 곳에서만 정한다(0순위-B).
+TIER_BASIC = "basic"
+TIER_PRO = "pro"
+
+
+def is_legacy_key(err) -> bool:
+    """이 오류가 **'아직 legacy API에 묶인 키'**인가.
+
+    실측 원문: "[60007] Your current Access Key only supports the legacy Skill.
+                Switch to the new API in the dashboard and try again."
+    ★is_no_credit과 같은 원칙으로 좁게 본다 — 넓게 잡으면 네트워크 오류까지
+      "옛날 키"로 오해해 새 API를 쓸 수 있는 사람까지 옛 경로로 떨어뜨린다.
+    """
+    t = str(err or "")
+    return "60007" in t or "legacy skill" in t.lower()
+
 
 # ── "이 키는 크레딧이 떨어졌다"의 판정 (2026-08-29) ───────────────────────────
 # ★판정은 여기 한 곳에서만 한다(0순위-B). 쓰는 곳이 둘이다:
@@ -53,11 +83,29 @@ def _client(ak, sk):
     return SkillClient(ak=ak, sk=sk)
 
 
-def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200):
+def _new_api_client(ak, sk):
+    """새 API(SKM*)를 쓸 수 있는 client. 못 쓰는 키면 legacy 오류를 그대로 올린다.
+
+    ★fetch_config(version='v2.0.0')이 관문이다 — 이게 통과해야 config.INVOKE에
+      SKM0003/SKM0005가 채워진다. legacy 키면 여기서 [60007]이 난다.
+    """
+    client = _client(ak, sk)
+    client.fetch_config(version=NEW_API_VERSION)
+    return client
+
+
+def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER_BASIC):
     """video_path의 하드섭/화면텍스트를 VMake로 제거 → out_path에 저장하고 경로 반환.
 
     흐름(SDK 내부): 로컬영상 OSS 업로드 → /skill/consume.json(크레딧) →
     알고리즘 job 제출 → 비동기 상태 폴링 → 결과 URL. 그 URL을 out_path로 내려받는다.
+
+    tier: 'basic'(기본) | 'pro'(Smart Pro). **경로를 고르는 유일한 자리**다(0순위-B).
+      · 새 API 키  → basic=SKM0003, pro=SKM0005
+      · legacy 키  → basic이면 옛 videoscreenclear로 **조용히 내려간다**(지금까지와 동일).
+                     pro면 못 하므로 무엇이 필요한지 말하고 막는다 — 조용히 기본으로
+                     떨어뜨리면 고객은 고급을 골랐는데 기본 결과를 받고 "왜 그대로냐"가 된다
+                     (조용한 폴백은 이 저장소가 여러 번 데인 함정이다).
 
     api_key 없으면 ValueError. 처리 실패/타임아웃은 상위로 raise.
     poll_timeout은 하위호환용 인자 — 실제 폴링 예산은 SDK가 서버 config +
@@ -66,12 +114,20 @@ def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200):
     if not api_key:
         raise ValueError("AI 자막 제거 API 키가 등록되지 않았습니다")
     ak, sk = _split_key(api_key)
-    client = _client(ak, sk)
-    result = client.run_task(
-        task_name=_VIDEO_TASK,
-        image_path=video_path,
-        params=_DEFAULT_PARAMS,
-    )
+    want_pro = (tier == TIER_PRO)
+    try:
+        client = _new_api_client(ak, sk)
+        task, params = (TASK_SMART_PRO, None) if want_pro else (TASK_SMART, _DEFAULT_PARAMS)
+    except Exception as exc:                      # noqa: BLE001 — legacy인지 진짜 오류인지 가른다
+        if not is_legacy_key(exc):
+            raise
+        if want_pro:
+            raise RuntimeError(
+                "고급 자막제거(Smart Pro)는 VMake 새 API 키가 필요합니다. "
+                "VMake 대시보드에서 'Switch to New API'로 전환한 뒤 다시 시도해 주세요."
+            ) from exc
+        client, task, params = _client(ak, sk), _VIDEO_TASK, _DEFAULT_PARAMS
+    result = client.run_task(task_name=task, image_path=video_path, params=params)
     # 성공: dict에 output_urls. 실패: {"error":..., "skill_status":"failed", "detail":...}
     if isinstance(result, dict) and result.get("error"):
         detail = result.get("detail") or result.get("error")

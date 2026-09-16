@@ -1871,7 +1871,29 @@ def _vmake_keys(store, customer_id=0):
     return list(keys or [])
 
 
-def _vmake_clean(video_path, keys, out_path):
+# ── 초당 과금 안전판 (2026-09-16) ───────────────────────────────────────────
+# 새 VMake API는 **초당** 과금이다(Smart 2크레딧/초, Smart Pro 4크레딧/초).
+# 옛 legacy는 콜당 정액이라 길이가 길어도 돈이 안 튀었지만, 이제는 길이가 곧 돈이다.
+# ★실측 위험: _clean_strategy가 'sources'로 갈리면 **원본 길이**를 보낸다. 코드 주석에
+#   남은 실측이 `소스 111.6초 / 완성본 30.3초`다 — 3.7배다. 조립본(30초)이면 Smart Pro가
+#   약 1,173원인데 111초면 4,300원이 된다. 그래서 **보내기 직전에 초를 재서** 상한을
+#   넘으면 아예 안 보낸다. 어떤 경로로 새어도 여기서 막힌다(단일 관문, 0순위-B).
+_CLEAN_MAX_SEC = float(os.environ.get("SHORTS_CLEAN_MAX_SEC", "90"))
+
+
+def _probe_seconds(path):
+    """영상 길이(초). 못 재면 None — 못 쟀다고 막지는 않는다(가드는 아는 것만 막는다)."""
+    try:
+        out = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", str(path)],
+            capture_output=True, text=True, timeout=60)
+        return float((out.stdout or "").strip())
+    except Exception:                               # noqa: BLE001 — 길이를 몰라도 진행
+        return None
+
+
+def _vmake_clean(video_path, keys, out_path, tier=None):
     """VMake 청소 1회 — **크레딧이 떨어진 키는 건너뛰고 다음 키로** 이어서 시도한다.
 
     ★키를 넘기는 판단은 여기 한 곳에서만 한다(0순위-B). 호출부 셋(_clean_one·
@@ -1882,14 +1904,23 @@ def _vmake_clean(video_path, keys, out_path):
     ★전부 소진이면 마지막 오류를 그대로 올린다 → 화면은 종전처럼 'no_credit'을 띄운다
       (사장님 결정 2026-08-29: 회원 키가 다 떨어져도 본사 키로 넘기지 않는다).
     """
-    from shopping_shorts.vmake_client import is_no_credit
+    from shopping_shorts.vmake_client import is_no_credit, TIER_BASIC
     ks = [k for k in (keys or []) if k]
     if not ks:
         raise ValueError("자막제거 키가 없습니다")
+    tier = tier or TIER_BASIC
+    # ★돈이 나가기 **전에** 잰다(위 _CLEAN_MAX_SEC 주석 참조).
+    sec = _probe_seconds(video_path)
+    if sec is not None and sec > _CLEAN_MAX_SEC:
+        raise RuntimeError(
+            f"자막제거 대상이 너무 깁니다({sec:.0f}초 > 상한 {_CLEAN_MAX_SEC:.0f}초). "
+            "비용이 초 단위로 나가므로 중단했습니다.")
+    print(f"[clean] tier={tier} 길이={sec if sec is None else round(sec, 1)}초 "
+          f"파일={Path(video_path).name}", file=sys.stderr)
     last = None
     for i, k in enumerate(ks):
         try:
-            return remove_subtitles(video_path, k, out_path=out_path)
+            return remove_subtitles(video_path, k, out_path=out_path, tier=tier)
         except Exception as e:                      # noqa: BLE001 — 다음 키로 넘길지 가른다
             last = e
             if not is_no_credit(e):
@@ -2816,6 +2847,52 @@ def _clean_strategy(job):
     return "final" if _FINAL_CLEAN else "sources"
 
 
+def clean_tier_of(job):
+    """이 job이 고른 자막제거 등급. 'basic'|'pro'. **판정은 여기 한 곳**(0순위-B).
+
+    화면·워커·경로계산이 각자 job에서 꺼내 보면, 한쪽만 pro로 읽어 **기본으로 만든
+    청소본을 고급인 줄 알고 재사용**하는 조용한 실패가 난다.
+    """
+    from shopping_shorts.vmake_client import TIER_BASIC, TIER_PRO
+    return TIER_PRO if (job or {}).get("clean_tier") == TIER_PRO else TIER_BASIC
+
+
+def _clean_sig(job):
+    """완성본 청소본 파일명에 쓸 서명. **등급이 다르면 다른 파일**이어야 한다.
+
+    ★안 섞으면: 기본으로 한 번 청소한 뒤 고급으로 바꿔도 `final_clean_{sig}.mp4`가
+      이미 있어 "편성 그대로, 과금 0"으로 **옛 기본 결과가 그대로 나간다**. 고객은
+      돈을 더 낼 각오로 고급을 골랐는데 화면은 그대로다.
+    ★basic은 접미사를 안 붙인다 — 옛 작업의 서명이 그대로라 재청소가 안 일어난다
+      (편성 서명이 '지정 없으면 안 붙인다'로 옛 작업을 지키는 것과 같은 원칙).
+    ★_plan_signature 자체는 **안 건드린다**. 그건 scene_style_lab이 "편성이 바뀌었나"를
+      보는 데 쓰는 값이라, 등급을 섞으면 편성이 그대로인데 바뀐 것으로 오판한다.
+    """
+    from shopping_shorts.vmake_client import TIER_PRO
+    sig = _plan_signature((job or {}).get("edit_plan") or {})
+    return (sig + "p") if clean_tier_of(job) == TIER_PRO else sig
+
+
+def clean_tiers_ready(job, work):
+    """이 편성으로 **이미 만들어 둔** 등급들 → {'basic': bool, 'pro': bool}.
+
+    ★되돌리기가 공짜인지 화면이 알아야 한다(2026-09-16 사장님 요청: "스마트로 지웠는데
+      마음에 안 들면 되돌리고 다시 프로로"). 등급마다 파일이 따로 남으므로, 전에 만든
+      등급으로 되돌리면 재청소 없이 그 파일을 그대로 쓴다(과금 0).
+    ★판정은 파일 존재로 한다 — DB 상태는 렌더 도중에도 바뀌지만 파일은 결과 그 자체다.
+    """
+    from shopping_shorts.vmake_client import TIER_BASIC, TIER_PRO
+    out = {TIER_BASIC: False, TIER_PRO: False}
+    try:
+        base = _plan_signature((job or {}).get("edit_plan") or {})
+        for tier, sig in ((TIER_BASIC, base), (TIER_PRO, base + "p")):
+            f = Path(work) / ("final_clean_%s.mp4" % sig)
+            out[tier] = f.exists() and f.stat().st_size > 1024
+    except Exception:      # noqa: BLE001 — 안내용이다. 못 알아내도 기능을 막지 않는다
+        pass
+    return out
+
+
 def _plan_signature(plan):
     """편집안 → 완성본 **그림**을 결정하는 것만 뽑은 서명(sha1 앞 16자).
 
@@ -2915,7 +2992,7 @@ def clean_final_path_for_plan(job, work):
     try:
         if (job or {}).get("clean_sources"):
             return None     # 소스별 청소본 경로 — 호출부가 그 맵을 그대로 쓴다
-        sig = _plan_signature((job or {}).get("edit_plan") or {})
+        sig = _clean_sig(job)          # 등급까지 반영한 서명(0순위-B: _clean_sig 한 곳)
         f = Path(work) / ("final_clean_%s.mp4" % sig)
         if f.exists() and f.stat().st_size > 1024:
             return f
@@ -2935,7 +3012,8 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
     ★실패하면 예외를 올린다 — 호출부(run_render)가 환불하고 상태를 failed로 만든다.
     """
     def _clean(mix_raw):
-        sig = _plan_signature(job.get("edit_plan") or {})
+        tier = clean_tier_of(job)
+        sig = _clean_sig(job)          # 등급이 다르면 다른 파일 — 옛 기본 결과를 재사용하지 않는다
         out = Path(work) / f"final_clean_{sig}.mp4"
         if out.exists() and out.stat().st_size > 1024:
             print(f"[clean] 완성본 재사용(편성 그대로, 과금 0): {out.name}", file=sys.stderr)
@@ -2943,8 +3021,8 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
             return str(out)
         charged = _charge_clean(store, customer_id, 1)
         try:
-            print(f"[clean] 완성본 1편만 청소 시작 sig={sig}", file=sys.stderr)
-            res = _vmake_clean(str(mix_raw), keys, str(out))
+            print(f"[clean] 완성본 1편만 청소 시작 sig={sig} tier={tier}", file=sys.stderr)
+            res = _vmake_clean(str(mix_raw), keys, str(out), tier=tier)
         except Exception:
             if charged:
                 _refund_clean(store, customer_id, charged)
