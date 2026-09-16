@@ -1166,6 +1166,29 @@ def claim_fatal_enabled():
         return True
 
 
+def claim_check_enabled():
+    """사실·수치 근거 검사를 **아예 돌릴 것인가**. 기본 True(= 09-14 이후 현행).
+
+    ★fatal 스위치와 다르다(2026-09-16). `script_claim_fatal=0`은 "안을 버리지 않는다"일
+      뿐이라 `passed()`가 여전히 False → **재시도 3회는 그대로 돌고 문장별 판정 호출도
+      그대로다**(느림이 안 풀린다). 이 스위치를 끄면 검사 자체가 생기지 않아
+      09-14 이전과 같은 속도가 된다 — 대신 그때처럼 가끔 엉뚱한 주장이 섞일 수 있다.
+
+    끄는 법: 설정 `script_claim_check` = "0" (또는 환경변수 SCRIPT_CLAIM_CHECK=0).
+    ★소재 일치·주제 단일성·재료 밖 판매처는 이 스위치와 무관하게 계속 돈다.
+    """
+    import os
+    _env = os.getenv("SCRIPT_CLAIM_CHECK")
+    if _env is not None and str(_env).strip() != "":
+        return str(_env).strip().lower() not in ("0", "false", "off", "no")
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return str(Store(DB_PATH).get_setting("script_claim_check", "1")).strip() != "0"
+    except Exception:
+        return True
+
+
 def active_fatal_checks():
     """지금 적용되는 치명 검사 목록 — 판정은 여기 한 곳에서만 정한다(0순위-B)."""
     return FATAL_CHECKS if claim_fatal_enabled() else FATAL_CHECKS_LENIENT
