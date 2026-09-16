@@ -13499,9 +13499,9 @@ function paintCleanTier(){
   // ★발급 안내는 글로만 두지 않고 **그림 안내로 바로 보낸다**(설정 화면과 같은 주소,
   //   api_manual.html의 자막제거 안내 — 정의처는 settings.html의 '📖 그림으로 보는 발급 방법').
   let msg = (tier==='pro')
-    ? '큰 자막·자막 박스도 깨끗하게 지워요.'
+    ? '큰 자막·자막 박스도 깨끗하게 지워요. <b>1초에 4크레딧</b>(30초 영상이면 120크레딧, 초 단위 올림).'
       + '<br><span style="color:var(--fire,#ff9a5a)">⚠️ 고급은 <b>Pro 요금제(월 44,000원)</b>의 <b>새 API 키</b>가 필요해요.</span><br>'
-      + '<span style="opacity:.85">Plus(월 14,000원)는 기본만 돼요. Pro는 크레딧이 4,500으로 넉넉해서 영상을 많이 만드시면 한 편당 비용이 오히려 줄어요.</span><br>'
+      + '<span style="opacity:.85">Plus(월 14,000원·크레딧 1,000)는 기본만 돼요. Pro(월 44,000원·크레딧 4,500)는 30초 영상 기준 <b>고급 약 37편</b> 또는 <b>기본 약 75편</b>이에요. <span style="opacity:.75">(참고용 — 정확한 요금은 키를 발급받은 곳의 요금표를 확인해 주세요)</span></span><br>'
       + '키를 발급받은 곳의 대시보드에서 <b>새 API로 전환</b>하고, 새로 나온 키를 '
       + '<a href="/settings#keys" target="_blank" rel="noopener"><b>내 키 등록</b></a>에 '
       + '다시 넣어 주세요. (예전 키로는 고급이 안 돼요)'
@@ -13509,7 +13509,8 @@ function paintCleanTier(){
       + 'style="display:inline-block;margin-top:8px;padding:8px 14px;border-radius:10px;'
       + 'background:#10324b;border:2px solid #2aa3e8;color:#fff;text-decoration:none;font-weight:700">'
       + '📖 그림으로 보는 발급 방법</a>'
-    : '보통 자막에 충분해요. 큰 자막 박스가 지저분하게 남으면 <b>고급</b>으로 바꿔 보세요.';
+    : '보통 자막에 충분해요. <b>1초에 2크레딧</b>(30초 영상이면 60크레딧, 초 단위 올림). '
+      + '큰 자막 박스가 지저분하게 남으면 <b>고급</b>으로 바꿔 보세요.';
   if(madeThis) msg += ' <span style="color:var(--ok,#7ef0b0)">— 이 방식으로 만든 결과가 있어요(추가 비용 없이 바로 씁니다).</span>';
   else if(madeOther) msg += ' <b style="color:var(--fire,#ff9a5a)">— 아래 [자막제거 시작하기]를 다시 눌러야 이 방식으로 만들어져요.</b>';
   h.innerHTML = msg;
