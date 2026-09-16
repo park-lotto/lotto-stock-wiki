@@ -2856,7 +2856,7 @@
             </div>
             <div class="hint" style="margin-bottom:10px">
               보여주고 싶은 곳에 원을 얹습니다. <b>왼쪽 미리보기에서 원을 끌어</b> 자리를 잡으세요.
-              원은 장면 내내 떠 있고, 나올 때 톡 커집니다. <b>장면마다 따로</b> 지정합니다.
+              원은 그 컷 내내 떠 있고, 나올 때 톡 커집니다. <b>컷마다 따로</b> 지정합니다 — 자막 하나가 컷 여러 개면 지금 보는 컷에만 붙습니다.
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
               <button type="button" class="tab" id="hlOffBtn" onclick="hlSetMode('')">끄기</button>
@@ -8055,7 +8055,10 @@ function _queueSceneStyleSave(run){
 function _hlSaveSoon(){
   if(_HL_SAVE_T) clearTimeout(_HL_SAVE_T);
   const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
-  _HL_PENDING=b ? {b, payload:{beat_idx:_beatNo(b),on:HL.on,mode:HL.mode,shape:HL.shape,
+  // ★컷 번호를 함께 보낸다(2026-09-16 회원 제보 "자막 단위가 아닌 컷 단위로 적용").
+  //   cut_of는 서버가 "옛 비트 전체 값을 컷별로 펼칠 때" 몇 칸으로 펼지 알려고 쓴다.
+  _HL_PENDING=b ? {b, payload:{beat_idx:_beatNo(b),cut:(b.cut==null?null:b.cut),cut_of:(b.cut_of||0),
+                               on:HL.on,mode:HL.mode,shape:HL.shape,
                                cx:HL.cx,cy:HL.cy,r:HL.r,zoom:HL.zoom}} : null;
   _HL_SAVE_T=setTimeout(()=>{ _HL_SAVE_T=null; const s=_HL_PENDING; _HL_PENDING=null; if(s) _hlSave(false,s); }, 400);
 }
@@ -8063,7 +8066,8 @@ async function _hlSave(wait, snap){
   if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;
   const b=(snap&&snap.b) || ((typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null);
   if(!b) return;
-  const payload=(snap&&snap.payload) || {beat_idx:_beatNo(b),on:HL.on,mode:HL.mode,shape:HL.shape,
+  const payload=(snap&&snap.payload) || {beat_idx:_beatNo(b),cut:(b.cut==null?null:b.cut),cut_of:(b.cut_of||0),
+                                       on:HL.on,mode:HL.mode,shape:HL.shape,
                                        cx:HL.cx,cy:HL.cy,r:HL.r,zoom:HL.zoom};
   const p=_queueSceneStyleSave(()=>fetch('/api/produce/mix/'+MIX_JOB+'/scenehl',{method:'POST',
     headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
