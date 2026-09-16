@@ -148,6 +148,41 @@ def r_speaker_voice(s, ctx):
                   "도입·뒤집히는 자리·어이없는 자리에 «~인데» «근데» «벌써 ~나» 를 2~5컷 넣어 보세요")]
 
 
+def r_ending_declared(s, ctx):
+    """★밝힌 어미 계열과 **실제 대본이 맞는지** 본다.
+
+    왜 필요한가 (2026-09-16 사장님): 프롬프트에 "사건이 시간순이면 음슴체"라고 적어놨는데
+    검사가 없으니 모델이 늘 뉴스체로 썼다 — 우리 편 3개가 전부 음슴 0이었다.
+    규칙을 적어놓고 판정을 안 붙이면 그 규칙은 없는 것과 같다(같은 실수 여덟 번째).
+
+    판정:
+      · `ending_style.style` 을 안 밝히면 통과 — 옛 대본·시험 데이터가 막히면 안 된다
+      · 음슴체라 밝혔으면 **종결 컷의 과반**이 음슴이어야 한다
+        (실측: 이동건 15/25 · 테이저건 9/22. 두세 컷만 음슴이면 음슴체가 아니다)
+      · 뉴스체라 밝혔으면 음슴이 과반이면 안 된다
+      ★분모는 '종결이 잡힌 컷'이다 — 체언으로 끝나는 컷(«그때 그 소녀의 나이»)이
+        많아 전체 컷으로 나누면 어떤 편도 과반을 못 넘는다.
+    """
+    style = ((s.get("ending_style") or {}).get("style") or "").strip()
+    if not style:
+        return []
+    gs = _groups(s)
+    news = sum(1 for g in gs if _END_NEWS.search((g.get("text") or "").strip()))
+    eum = sum(1 for g in gs if _END_EUM.search((g.get("text") or "").strip()))
+    total = news + eum
+    if total < 4:                      # 종결 컷이 너무 적으면 셀 수 없다
+        return []
+    want_eum = "음슴" in style
+    got_eum = eum > news
+    if want_eum == got_eum:
+        return []
+    said, real = ("음슴체", "뉴스체") if want_eum else ("뉴스체", "음슴체")
+    return [Issue("ending_declared", REJECT, "ending_style", style,
+                  f"{said}로 쓰겠다고 밝혔는데 실제 대본은 {real}입니다"
+                  f" (음슴 {eum} · 뉴스 {news}). 밝힌 계열로 **전부 다시 닫아라** — "
+                  f"음슴체면 «~함/~됨/~임/~옴», 뉴스체면 «~였다/~했다»")]
+
+
 def r_ending_mix(s, ctx):
     """한 대본 안에서 어미 계열을 섞지 마라 — 뉴스체로 가든 음슴체로 가든 **하나로**.
 
@@ -415,6 +450,7 @@ RULES = [
     Rule("enum", REJECT, f"색은 {'/'.join(spec.COLORS)}, 역할은 {'/'.join(spec.ROLES)}만. 컷마다 img(슬롯 번호) 또는 meme(감정) 중 하나. 밈 감정은 다음 문자열 그대로: {' · '.join(spec.EMOTIONS)}.", r_enum),
     Rule("nonwhite_run", REJECT, "흰색이 아닌 강조색을 3컷 연달아 쓰지 마라. 사이에 WHITE를 둬라.", r_nonwhite_run),
     Rule("formal", REJECT, "나레는 반말체(~였다/~했다 또는 ~임/~됨). '-습니다'가 과반이면 안 되고 '-습니까/-십시오'는 쓰지 마라.", r_formal),
+    Rule("ending_declared", REJECT, "`ending_style.style` 에 음슴체/뉴스체 중 어느 쪽으로 쓸지 먼저 밝히고, **밝힌 계열로 실제 대본을 써라**. 음슴체라 밝혔으면 종결 컷의 과반을 «~함/~됨/~임/~옴»으로 닫아라.", r_ending_declared),
     Rule("speaker_voice", WARN, "전부 3인칭 서술로 쓰지 마라 — 도입·뒤집히는 자리·어이없는 자리에 말을 거는 컷(«~인데» «근데» «벌써 ~나»)을 2~5컷 넣어라. 실물 5편 실측 0~5컷.", r_speaker_voice),
     Rule("ending_mix", REJECT, "어미는 **한 편 안에서 하나로 통일**하라 — 뉴스체(~였다·~이다)로 갈지 음슴체(~음·~함·~임)로 갈지 먼저 정하고 끝까지 그것만 써라. 둘을 섞으면 반려된다(PUNCH도 같은 계열로 닫아라).", r_ending_mix),
     Rule("h2_abstract", REJECT, "h2(노란 아랫줄)에는 숫자를 넣고, 이유·사연 같은 추상명사로 끝내지 마라.", r_h2_abstract),

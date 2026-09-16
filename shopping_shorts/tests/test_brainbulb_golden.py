@@ -29,7 +29,7 @@ _NEEDS_LAYOUT = {r.id for r in lint.RULES if r.needs_layout}
 
 # 정답 5편으로 검증되는 REJECT 규칙 목록. 규칙을 추가하면 여기에도 넣어라(②).
 CHECKED = {
-    "title_punct", "comma", "enum", "nonwhite_run", "formal", "ending_mix",
+    "title_punct", "comma", "enum", "nonwhite_run", "formal", "ending_mix", "ending_declared",
     "h2_abstract", "card", "punch", "last_standalone", "copy", "cut_count", "card_img", "slot_seq", "slot_count",
 }
 
@@ -123,3 +123,38 @@ def test_prompt_tells_which_ending_style_to_pick():
     from shopping_shorts.brainbulb import prompt
     t = prompt.TARGETS
     assert "시간순으로 벌어지는" in t and "~함/~됨/~임" in t, "어느 소재에 어느 계열인지가 없다"
+
+
+def _styled(style, eum, news):
+    g = [{"text": "다가옴", "color": "WHITE"} for _ in range(eum)]
+    g += [{"text": "열일곱이었다", "color": "WHITE"} for _ in range(news)]
+    return {"ending_style": {"style": style}, "groups": g}
+
+
+def test_declared_ending_style_must_match_the_script():
+    """★밝힌 계열과 실제가 어긋나면 반려한다.
+
+    사장님 2026-09-16: "어떤 소재이던 규칙을 지키게 해야지 / 소녀병도 음슴체를 한다면
+    그렇게 나와야지 뉴스체가 나오면 검사하고."
+    프롬프트에 «사건이 시간순이면 음슴체»라고 적어두고 판정을 안 붙였더니 모델이 늘
+    뉴스체로 썼다 — 우리 편 3개가 전부 음슴 0이었다.
+    """
+    assert lint.r_ending_declared(_styled("음슴체", 2, 10), {}), "음슴체라 해놓고 뉴스체인데 통과시킨다"
+    assert lint.r_ending_declared(_styled("뉴스체", 10, 1), {}), "뉴스체라 해놓고 음슴체인데 통과시킨다"
+    assert not lint.r_ending_declared(_styled("음슴체", 10, 2), {}), "음슴체로 맞게 썼는데 반려한다"
+    assert not lint.r_ending_declared(_styled("뉴스체", 1, 10), {}), "뉴스체로 맞게 썼는데 반려한다"
+
+
+def test_declared_ending_style_is_optional():
+    """안 밝힌 대본(옛 산출물·시험 데이터)은 막지 않는다 — 없는 필드로 반려하면 안 된다."""
+    s = _styled("", 2, 10)
+    s.pop("ending_style")
+    assert not lint.r_ending_declared(s, {})
+
+
+def test_declared_ending_counts_only_closed_cuts():
+    """★분모는 '종결이 잡힌 컷'이다. 체언으로 끝나는 컷이 많아 전체 컷으로 나누면
+    어떤 편도 과반을 못 넘어 규칙이 늘 반려하게 된다."""
+    s = _styled("음슴체", 6, 2)
+    s["groups"] += [{"text": "그때 그 소녀의 나이", "color": "WHITE"} for _ in range(14)]
+    assert not lint.r_ending_declared(s, {}), "체언 종결 컷 때문에 과반 판정이 깨진다"
