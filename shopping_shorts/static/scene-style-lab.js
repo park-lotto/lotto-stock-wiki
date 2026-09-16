@@ -6,7 +6,9 @@
   const capcut=document.getElementById('capcut'),landing=document.getElementById('landing');
   const compare=document.getElementById('compare'),resultVideo=document.getElementById('resultVideo');
   let packet=null,jobs=[];
-  const initialLab=new URLSearchParams(location.search).get('lab');
+  const query=new URLSearchParams(location.search);
+  const initialLab=query.get('lab');
+  const requestedJob=query.get('job');
 
   const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const selected=()=>jobs.find(row=>row.job_id===job.value);
@@ -37,14 +39,22 @@
   async function loadJobs(){
     const response=await fetch('/api/admin/scene-style-lab/jobs',{cache:'no-store'});
     const data=await response.json();if(!response.ok)throw Error(data.error||'작업을 읽지 못했습니다');
-    jobs=data.jobs||[];job.innerHTML=jobs.map(row=>`<option value="${esc(row.job_id)}">${esc(row.title)} · ${esc(row.job_id)}</option>`).join('');
+    jobs=data.jobs||[];
+    if(requestedJob){
+      const exact=jobs.find(row=>String(row.job_id)===requestedJob);
+      if(!exact)throw Error('현재 작업이 LAB 목록에 없습니다. 다른 작업으로 대신 열지 않습니다.');
+      jobs=[exact];job.disabled=true;
+    }
+    job.innerHTML=jobs.map(row=>`<option value="${esc(row.job_id)}">${esc(row.title)} · ${esc(row.job_id)}</option>`).join('');
     renderChecks(selected());status.textContent=jobs.length?'시험할 작업을 고르세요':'시험 가능한 작업이 없습니다';
   }
   job.addEventListener('change',()=>renderChecks(selected()));
   clone.addEventListener('click',async()=>{
     error.textContent='';clone.disabled=true;status.textContent='시험 복사본 만드는 중…';
     try{
-      const response=await fetch('/api/admin/scene-style-lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:job.value})});
+      const exact=selected(),sourceJobId=requestedJob||job.value;
+      if(!exact||String(exact.job_id)!==sourceJobId)throw Error('현재 작업 확인에 실패했습니다. 다른 작업으로 대신 열지 않습니다.');
+      const response=await fetch('/api/admin/scene-style-lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:sourceJobId})});
       const created=await response.json();if(!response.ok)throw Error(created.error||'시험 복사본을 만들지 못했습니다');
       const loaded=await fetch('/api/admin/scene-style-lab/'+encodeURIComponent(created.manifest.lab_id),{cache:'no-store'});
       packet=await loaded.json();if(!loaded.ok)throw Error(packet.error||'시험 자료를 읽지 못했습니다');

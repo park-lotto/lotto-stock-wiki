@@ -2113,6 +2113,13 @@
     </section>
     <section class="panel" data-step="3">
       <h3 data-steptitle="deco">6 · 장면꾸미기</h3>
+      <!-- 관리자 카나리에서만 보이는 실데이터 LAB. 기본 /produce와 기존 장면꾸미기는
+           그대로 둔다. JS가 관리자 권한 + 현재 MIX_JOB의 정확한 일치를 확인한 뒤에만
+           scene-style-canary-active를 붙여 아래 기존 UI를 숨긴다(실패 시 fail-closed). -->
+      <section id="sceneStyleCanary" hidden style="margin-top:10px">
+        <div id="sceneStyleCanaryStatus" role="status" style="margin:0 0 10px;padding:10px 12px;border:1px solid #35505b;border-radius:10px;background:#0b2029;color:#bdeee5"></div>
+        <iframe id="sceneStyleCanaryFrame" title="관리자 전용 장면꾸미기 LAB" style="display:none;width:100%;height:calc(100vh - 210px);min-height:720px;border:1px solid #35505b;border-radius:12px;background:#071118"></iframe>
+      </section>
       <button type="button" class="btn" onclick="openSceneStyleEditor()">장면꾸미기 · 문구와 효과 편집</button>
       <span id="sceneStyleStatus" class="hint"></span>
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
@@ -4145,6 +4152,7 @@ function showPanel(){
   if(cur===1) refreshSub();
   if(cur===2) loadTtsBeats();
   if(cur===3) initHeadcopy();
+  if(cur===3 && typeof syncSceneStyleCanary==='function') syncSceneStyleCanary();
   if(cur===4) initThumb();
   if(cur===5) initSeo();
   // 10단계(패널 9)를 열면 Buffer 채널을 불러온다 — 다른 패널에선 부르지 않는다
@@ -18458,6 +18466,6 @@ async function checkTtsKey(){
 }
 try{ checkTtsKey(); }catch(e){}
 </script>
-<script src="/scene-style-produce.js?v=2"></script>
+<script src="/scene-style-produce.js?v=3"></script>
 </body>
 </html>

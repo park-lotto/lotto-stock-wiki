@@ -1,9 +1,58 @@
 (()=>{
   let dialog,frame,jobId,packet,appliedOnServer=false;
   let saveQueue=Promise.resolve();
+  const canaryEnabled=new URLSearchParams(location.search).get('scene_style_canary')==='1';
+  let canaryRequest=0,canaryJobId='';
+  const currentMixJob=()=>String(typeof MIX_JOB==='undefined'?'':(MIX_JOB||'')).trim();
   const status=()=>document.getElementById('sceneStyleStatus');
   const draftKey=id=>'scene-style-draft:'+id;
   const timelineKey=context=>JSON.stringify(context.scenes.map(s=>[s.beat_idx,s.start,s.end,s.caption]));
+  function showCanaryFallback(message){
+    const panel=document.querySelector('.panel[data-step="3"]');
+    const shell=document.getElementById('sceneStyleCanary');
+    const note=document.getElementById('sceneStyleCanaryStatus');
+    const lab=document.getElementById('sceneStyleCanaryFrame');
+    panel?.classList.remove('scene-style-canary-active');
+    if(shell)shell.hidden=!canaryEnabled;
+    if(note)note.textContent=message||'';
+    if(lab)lab.style.display='none';
+  }
+  window.syncSceneStyleCanary=async()=>{
+    if(!canaryEnabled)return false;
+    const panel=document.querySelector('.panel[data-step="3"]');
+    const shell=document.getElementById('sceneStyleCanary');
+    const note=document.getElementById('sceneStyleCanaryStatus');
+    const lab=document.getElementById('sceneStyleCanaryFrame');
+    if(!panel||!shell||!note||!lab)return false;
+    const requested=currentMixJob();
+    if(!requested){showCanaryFallback('현재 작업 번호가 아직 없습니다. 기존 장면꾸미기를 유지합니다.');return false;}
+    if(canaryJobId===requested&&panel.classList.contains('scene-style-canary-active'))return true;
+    const request=++canaryRequest;
+    showCanaryFallback('관리자 권한과 현재 작업을 확인하는 중…');
+    try{
+      const response=await fetch('/api/admin/scene-style-lab/jobs',{cache:'no-store'});
+      const data=await response.json();
+      if(!response.ok)throw Error(data.error||'관리자 LAB 권한을 확인하지 못했습니다.');
+      if(request!==canaryRequest||requested!==currentMixJob())return false;
+      const exact=(data.jobs||[]).find(row=>String(row.job_id)===requested);
+      if(!exact)throw Error('현재 작업이 관리자 LAB 목록에 없습니다. 다른 작업으로 대신 열지 않습니다.');
+      canaryJobId=requested;
+      shell.hidden=false;note.textContent=`관리자 시험 모드 · 현재 작업 ${requested}의 복사본만 사용합니다.`;
+      const target='/scene_style_lab.html?embedded=tab&job='+encodeURIComponent(requested);
+      if(lab.dataset.jobId!==requested){lab.dataset.jobId=requested;lab.src=target;}
+      lab.style.display='block';panel.classList.add('scene-style-canary-active');
+      return true;
+    }catch(error){
+      if(request===canaryRequest)showCanaryFallback(`${error.message} 기존 장면꾸미기를 유지합니다.`);
+      return false;
+    }
+  };
+  if(canaryEnabled){
+    const style=document.createElement('style');
+    style.textContent='.panel[data-step="3"].scene-style-canary-active>:not(h3):not(#sceneStyleCanary){display:none!important}';
+    document.head.append(style);
+    setTimeout(()=>window.syncSceneStyleCanary(),0);
+  }
   function stashDraft(){
     const api=frame?.contentWindow?.sceneStyle;
     if(!dialog?.open||api?.context()?.jobId!==jobId)return null;
