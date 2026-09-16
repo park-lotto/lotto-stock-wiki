@@ -6733,6 +6733,13 @@ def clean_failure_kind(clean_error):
     from shopping_shorts.vmake_client import is_no_credit as _vmake_no_credit
     if _vmake_no_credit(e):
         return "no_credit"
+    # 고급(Smart Pro)을 골랐는데 키가 아직 옛 API에 묶여 있다(2026-09-16).
+    # ★재시도로는 영원히 안 된다 — 고객이 VMake에서 새 API로 전환하고 **키를 다시
+    #   등록**해야 한다. need_own_key와 갈라 둔다: 키는 있는데 **종류가 다른** 것이라
+    #   "키를 등록하세요"만 보여주면 이미 등록한 사람이 무엇을 해야 할지 모른다.
+    from shopping_shorts.vmake_client import is_legacy_key as _vmake_legacy
+    if _vmake_legacy(e) or "새 API 키가 필요" in e:
+        return "need_new_api_key"
     # 배포·재시작으로 BackgroundTask가 죽은 경우 — 이건 진짜로 다시 시도하면 된다.
     if "서버 재시작" in e or "중단되었습니다" in e:
         return "interrupted"
@@ -16958,7 +16965,12 @@ def api_produce_works_get(request: Request, work_id: str):
             settings = {"headcopy": job.get("headcopy"),
                         "caption_style": job.get("caption_style"),
                         "deco": job.get("deco"),
-                        "subtitle_removal": job.get("subtitle_removal")}
+                        "subtitle_removal": job.get("subtitle_removal"),
+                        # 지우는 방식(기본/고급) — 화면이 job에서 되읽는다(0순위-B)
+                        "clean_tier": job.get("clean_tier"),
+                        # 이미 만들어 둔 등급 — 되돌리기가 공짜인지 화면이 안내한다
+                        "clean_tiers_ready": mix_pipeline.clean_tiers_ready(
+                            job, _MIX_WORK_DIR / w["job_id"])}
     return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"],
             "settings": settings}
 
@@ -18675,6 +18687,11 @@ def api_produce_mix_settings(body: dict):
     fields = {}
     if "subtitle_removal" in body:
         fields["subtitle_removal"] = bool(body.get("subtitle_removal"))
+    if "clean_tier" in body:
+        # 자막제거 등급. 아는 값만 받는다 — 모르는 값이 들어오면 기본으로 떨어뜨린다
+        # (등급 이름의 정의처는 vmake_client, 해석은 mix_pipeline.clean_tier_of).
+        from .vmake_client import TIER_BASIC, TIER_PRO
+        fields["clean_tier"] = TIER_PRO if body.get("clean_tier") == TIER_PRO else TIER_BASIC
     if "headcopy" in body:
         fields["headcopy"] = body.get("headcopy")  # dict or None
     if "caption_style" in body:

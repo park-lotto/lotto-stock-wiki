@@ -1860,6 +1860,34 @@
               <span class="chip">⚡ <span><b>원클릭</b> 미리보기</span></span>
             </div>
           </div>
+          <!-- 🧽 지우는 방식 고르기 (2026-09-16) — 자막제거를 켰을 때만 보인다.
+               ★왜 필요한가: 큰 자막 박스는 기본 방식이 못 메워 **다른 장면 픽셀이 띠로
+                 끌려온다**(고객 이윤정 제보, 실측). 고급(Smart Pro)은 깨끗하게 복원된다.
+               ★기본값은 '기본'이다 — 고급은 비싸므로 고객이 **직접 고를 때만** 쓴다.
+               ★고급은 **새 API 키**라야 된다(업체명은 이 파일에 쓰지 않는다 — 브랜드 정책,
+                 test_subclean_ui가 검사한다). 없는 사람에게 조용히 기본을 주면
+                 "고급 골랐는데 왜 그대로냐"가 되므로, 서버가 무엇이 필요한지 말해준다. -->
+          <div id="cleanTierWrap" style="margin-top:12px;display:none">
+            <div class="hint" style="margin-bottom:6px">지우는 방식</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" id="tierBasic" class="tier-btn on" onclick="setCleanTier('basic')">
+                기본<span class="tier-sub">빠르고 저렴 · 보통 자막</span>
+              </button>
+              <button type="button" id="tierPro" class="tier-btn" onclick="setCleanTier('pro')">
+                고급<span class="tier-sub">큰 자막·박스까지 · 비용 2배</span>
+              </button>
+            </div>
+            <div id="tierHint" class="hint" style="margin-top:8px"></div>
+          </div>
+          <style>
+            .tier-btn{flex:1;min-width:150px;padding:12px 14px;border-radius:12px;cursor:pointer;
+              background:#182634;color:#cfe0ef;border:2px solid #2b3f52;font-size:15px;font-weight:700;
+              display:flex;flex-direction:column;gap:3px;text-align:left}
+            .tier-btn:hover{border-color:#3d5a75}
+            .tier-btn.on{background:#10324b;border-color:#2aa3e8;color:#fff}
+            .tier-sub{font-size:12px;font-weight:400;color:#8fa6c4}
+            .tier-btn.on .tier-sub{color:#b8d9f0}
+          </style>
           <div id="subState" class="hint" style="margin-top:10px"></div>
           <div id="cleanPreviewWrap" style="margin-top:14px;display:none">
             <!-- 문구: "내 영상으로 미리보기"는 뭘 하는 버튼인지 안 보였다 → 행동을 그대로 쓴다(2026-07-30 사장님 지시) -->
@@ -9274,6 +9302,13 @@ async function _restoreWork(workId){
   // deco는 null이 아니라 **모양**이 있어야 한다 — 5단계가 STATE.deco.extra_texts에서 터진다.
   STATE.deco = sg.deco || { extra_texts: [], motion: null };
   STATE.subtitleRemoval = !!sg.subtitle_removal;
+  // 지우는 방식도 **job에서** 되읽는다(subtitle_removal과 같은 이유 — 진실의 원천은 job 하나).
+  STATE.cleanTier = (sg.clean_tier === 'pro') ? 'pro' : 'basic';
+  // 되돌리기가 공짜인지 안내용. ★try로 감싼다 — 이 복원 함수를 **앵커로 잘라** 도는
+  //   테스트 하네스에는 아래 선언부(let CLEAN_DONE_TIERS)가 안 들어와 ReferenceError로
+  //   복원이 통째로 죽는다(실측: test_produce_boot_step_restore가 cur=7 대신 0을 받았다).
+  //   이 파일의 _mergeHandoffItems·_s2Hydrate가 typeof 가드를 쓰는 것과 같은 이유다.
+  try{ CLEAN_DONE_TIERS = sg.clean_tiers_ready || {}; }catch(_){}
   // ★복원된 스타일이 하나라도 있으면 꾸미기 패널이 그걸 덮지 않게 표시한다(위 선언 참조).
   // headcopy/caption STYLE(색·폰트·크기)은 DOM 입력칸에서 되읽히므로 STATE만으로는 안 남는다 —
   // initHeadcopy가 이 플래그를 보고 applyConfig로 DOM을 채운다.
@@ -13327,6 +13362,18 @@ function cleanFailHtml(kind){
       + '<a class="cp-redo" href="/settings#keys" target="_blank" rel="noopener" '
       + 'style="display:inline-block;text-decoration:none">🔑 내 키 등록하기</a>';
   }
+  if(kind === 'need_new_api_key'){
+    // ★고급(Smart Pro)은 **새 API 키**라야 된다. 키가 있어도 옛 것이면 못 쓴다 —
+    //   그래서 need_own_key와 갈라 둔다("키를 등록하세요"만 보면 이미 등록한 사람은
+    //   무엇을 더 해야 할지 모른다). 재시도 버튼은 안 준다: 키를 바꾸기 전엔 같은 결과다.
+    return '<div class="cp-fail"><b>고급 자막 지우기는 새 API 키가 필요해요.</b><br>'
+      + '<span style="opacity:.85">지금 등록된 키는 예전 방식이라 고급을 쓸 수 없습니다.</span></div>'
+      + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 키를 발급받은 곳의 '
+      + '대시보드에서 <b>새 API로 전환</b>한 뒤, <b>새로 발급된 키</b>를 설정 화면에 '
+      + '다시 등록해 주세요. 그대로 <b>기본</b>으로 지우셔도 됩니다.</div>'
+      + '<a class="cp-redo" href="/settings#keys" target="_blank" rel="noopener" '
+      + 'style="display:inline-block;text-decoration:none">🔑 내 키 다시 등록하기</a>';
+  }
   if(kind === 'no_credit'){
     // ★2026-08-25: "소스 1편당 1회"는 더 이상 사실이 아니다. 소스를 이어붙여
     //   **영상 1편당 1회**로 바뀌었다(3a573e381, mix_pipeline._charge_clean은
@@ -13360,6 +13407,7 @@ function cleanFailHtml(kind){
 // ── 3단계 자막제거 ──────────────
 function refreshSub(){
   const cb=document.getElementById('subToggle'); if(cb) cb.checked=STATE.subtitleRemoval;
+  paintCleanTier();          // 지우는 방식 버튼도 같은 자리에서 다시 그린다
   const s=document.getElementById('subState');
   if(s) s.textContent = MIX_JOB ? '' : '⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.';
   // ★방어심층(2026-07-30): 화면에 켜졌다고 그린 값을 job에도 확실히 박는다.
@@ -13421,8 +13469,48 @@ async function renderCleanCost(){
       + (short ? ' <span style="color:var(--fire)">— 포인트가 모자라 지금은 실행할 수 없어요</span>' : '');
   }catch(e){ /* 가격 안내 실패가 기능을 막으면 안 된다 */ }
 }
+// ── 🧽 지우는 방식(기본/고급) ─────────────────────────────────────────────
+// 값의 주인은 STATE.cleanTier 하나다. 화면은 그걸 보여주고, 서버는 job.clean_tier로
+// 받는다(해석은 mix_pipeline.clean_tier_of 한 곳 — 0순위-B).
+function paintCleanTier(){
+  const on = !!STATE.subtitleRemoval, tier = STATE.cleanTier || 'basic';
+  const wrap=document.getElementById('cleanTierWrap');
+  if(wrap) wrap.style.display = on ? '' : 'none';
+  const b=document.getElementById('tierBasic'), p=document.getElementById('tierPro');
+  if(b) b.classList.toggle('on', tier!=='pro');
+  if(p) p.classList.toggle('on', tier==='pro');
+  const h=document.getElementById('tierHint');
+  if(!h) return;
+  // ★한 번 지워본 뒤 방식을 바꿨으면, **다시 지워야 반영된다**는 걸 분명히 말한다.
+  //   등급마다 결과 파일이 따로 남으므로 되돌리기는 공짜다(전에 만든 결과를 그대로 다시 쓴다).
+  const done = (typeof CLEAN_DONE_TIERS !== 'undefined') ? CLEAN_DONE_TIERS : {};
+  const madeThis = !!done[tier], madeOther = !!done[tier==='pro'?'basic':'pro'];
+  let msg = (tier==='pro')
+    ? '큰 자막·자막 박스도 깨끗하게 지워요. <b>비용이 기본의 2배</b>예요.'
+      + '<br><span style="color:var(--fire,#ff9a5a)">⚠️ 고급은 <b>새 API 키</b>가 필요해요.</span> '
+      + '키를 발급받은 곳의 대시보드에서 <b>새 API로 전환</b>하고, 새로 나온 키를 '
+      + '<a href="/settings#keys" target="_blank" rel="noopener"><b>내 키 등록</b></a>에 '
+      + '다시 넣어 주세요. (예전 키로는 고급이 안 돼요)'
+    : '보통 자막에 충분해요. 큰 자막 박스가 지저분하게 남으면 <b>고급</b>으로 바꿔 보세요.';
+  if(madeThis) msg += ' <span style="color:var(--ok,#7ef0b0)">— 이 방식으로 만든 결과가 있어요(추가 비용 없이 바로 씁니다).</span>';
+  else if(madeOther) msg += ' <b style="color:var(--fire,#ff9a5a)">— 아래 [자막제거 시작하기]를 다시 눌러야 이 방식으로 만들어져요.</b>';
+  h.innerHTML = msg;
+}
+// 이미 만들어 둔 등급들(되돌리기가 공짜인지 안내하는 데만 쓴다). 서버가 알려준다.
+let CLEAN_DONE_TIERS = {};
+async function setCleanTier(tier){
+  STATE.cleanTier = (tier==='pro') ? 'pro' : 'basic';
+  paintCleanTier();
+  saveWork();
+  if(!MIX_JOB) return;              // 매칭 전이면 설정만 기억해 둔다(자막제거 토글과 같은 규칙)
+  try{
+    await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, clean_tier:STATE.cleanTier})});
+  }catch(e){ const h=document.getElementById('tierHint'); if(h) h.textContent='설정 저장 실패'; }
+}
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
+  paintCleanTier();
   // T7: disabled 노출 대신 숨김 — 자막제거 켜짐+매칭됨일 때만 미리보기 버튼이 나타난다.
   const cwrap=document.getElementById('cleanPreviewWrap');
   if(cwrap) cwrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
