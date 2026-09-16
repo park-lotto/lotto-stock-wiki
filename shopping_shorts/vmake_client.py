@@ -119,7 +119,10 @@ def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER
         client = _new_api_client(ak, sk)
         task, params = (TASK_SMART_PRO, None) if want_pro else (TASK_SMART, _DEFAULT_PARAMS)
     except Exception as exc:                      # noqa: BLE001 — legacy인지 진짜 오류인지 가른다
-        if not is_legacy_key(exc):
+        # AttributeError = 이 SDK에 fetch_config이 없다(번들 SDK를 되돌렸거나 옛 버전).
+        # ★그때도 **기본 자막제거는 살아 있어야 한다** — 새 기능 때문에 되던 게 죽으면
+        #   고객 전체가 멈춘다. 고급만 막고 기본은 옛 경로로 간다.
+        if not (is_legacy_key(exc) or isinstance(exc, AttributeError)):
             raise
         if want_pro:
             raise RuntimeError(

@@ -9263,7 +9263,11 @@ async function _restoreWork(workId){
   STATE.subtitleRemoval = !!sg.subtitle_removal;
   // 지우는 방식도 **job에서** 되읽는다(subtitle_removal과 같은 이유 — 진실의 원천은 job 하나).
   STATE.cleanTier = (sg.clean_tier === 'pro') ? 'pro' : 'basic';
-  CLEAN_DONE_TIERS = sg.clean_tiers_ready || {};   // 되돌리기가 공짜인지 안내용
+  // 되돌리기가 공짜인지 안내용. ★try로 감싼다 — 이 복원 함수를 **앵커로 잘라** 도는
+  //   테스트 하네스에는 아래 선언부(let CLEAN_DONE_TIERS)가 안 들어와 ReferenceError로
+  //   복원이 통째로 죽는다(실측: test_produce_boot_step_restore가 cur=7 대신 0을 받았다).
+  //   이 파일의 _mergeHandoffItems·_s2Hydrate가 typeof 가드를 쓰는 것과 같은 이유다.
+  try{ CLEAN_DONE_TIERS = sg.clean_tiers_ready || {}; }catch(_){}
   // ★복원된 스타일이 하나라도 있으면 꾸미기 패널이 그걸 덮지 않게 표시한다(위 선언 참조).
   // headcopy/caption STYLE(색·폰트·크기)은 DOM 입력칸에서 되읽히므로 STATE만으로는 안 남는다 —
   // initHeadcopy가 이 플래그를 보고 applyConfig로 DOM을 채운다.
