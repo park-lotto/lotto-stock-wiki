@@ -291,6 +291,8 @@
       if (!res.ok) throw new Error(res.d && res.d.error ? res.d.error : "접수에 실패했어요");
       btn.textContent = "✅ 접수됐습니다 — 결제 안내로 이동합니다";
       msg.textContent = "잠시 후 결제 안내 화면으로 넘어갑니다.";
+      // 결제 화면(카드결제)에서 결제자 칸을 미리 채우려고 잠깐 보관한다(같은 탭 세션만).
+      try { sessionStorage.setItem("prereg_payer", JSON.stringify({ name: v("f_name"), phone: v("f_phone"), email: v("f_email") })); } catch (e) {}
       setTimeout(function () { location.href = res.d.pay_href || "/pay"; }, 900);
     }).catch(function (err) {
       busy = false;

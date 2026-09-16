@@ -114,3 +114,41 @@ def test_음성서비스_오류는_원인별로_갈라_말한다():
     assert "크레딧이 부족" in f("401 Client Error: quota_exceeded" + base)
     # 음성 서비스가 아닌 오류는 종전 규칙 그대로
     assert "영상을 가져오지" in f("apify 다운로드 실패")
+
+
+def test_목소리404는_기다리라고_하면_안된다():
+    """★2026-09-09 실사고(cid 163) — 3일간 6잡이 전부 같은 404로 죽었다.
+
+    일레븐랩스 계정 전용 보이스를 개인 키로 부르면 404가 난다. 그런데 404 규칙이
+    아예 없어 _USER_ERROR_RULES의 뭉뚱그리기("api.elevenlabs.io")에 걸려
+    **"음성 서비스가 잠시 몰려…1~2분 뒤 다시"**로 나갔다 = 정반대 안내.
+    실측: 그 회원 잔액 129,296크레딧 정상, 몰린 것도 아니었다. 고객은 재시도만 반복했다.
+    """
+    f = _load()
+    원문 = ("404 Client Error: Not Found for url: "
+           "https://api.elevenlabs.io/v1/text-to-speech/FWn6AUnLRCEbJ8qmS9fq")
+    msg = f(원문)
+    assert "잠시 몰려" not in msg, "404를 '몰렸다'로 안내하면 고객이 영원히 기다린다"
+    assert "다시 시도" not in msg, "기다렸다 재시도하라는 안내가 남으면 안 된다(3일간 그랬다)"
+    assert "목소리" in msg, "무엇을 바꿔야 하는지(목소리)를 말해야 한다"
+    # 내부 사정이 새면 안 된다 — voice_id·URL·벤더 호스트는 고객 화면에 나가지 않는다
+    assert "elevenlabs" not in msg.lower() and "FWn6" not in msg
+
+
+def test_목소리404가_키문제로_오진되지_않는다():
+    """★규칙 **순서**가 핵심이다 — 404 줄이 401/403보다 위에 있어야 한다.
+
+    아래 401/403 규칙은 단순 문자열 검사라, voice_id·URL에 '403'이 우연히 들어가면
+    "키를 다시 넣어라"는 틀린 안내가 나간다. 키는 멀쩡한데 키를 의심하게 만든다.
+    """
+    f = _load()
+    msg = f("404 Client Error: Not Found for url: "
+            "https://api.elevenlabs.io/v1/text-to-speech/ab403cd")
+    assert "키를 다시" not in msg and "새 키를 넣어" not in msg, \
+        "404인데 키 재등록을 시키면 고객이 멀쩡한 키를 지운다"
+    # ★'목소리' 한 단어로 단언하면 안 된다 — 타입캐스트 403 안내에도 그 말이 들어 있어
+    #   404 규칙이 아래로 밀려도 우연히 통과한다(사보타주로 실제 확인했다).
+    #   일레븐랩스 404인데 **타입캐스트** 안내가 나가는 것 자체가 오진이다.
+    assert "타입캐스트" not in msg, "일레븐랩스 404가 타입캐스트 안내로 나가면 오진이다"
+    assert "403" not in msg, "404인데 403이라고 말하면 안 된다"
+    assert "다른 계정에 속해" in msg, "404 전용 안내가 나가야 한다"

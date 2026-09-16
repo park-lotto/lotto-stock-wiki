@@ -405,7 +405,7 @@ def _watermark_material(wm, font_path):
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None,
                 caption_style=None, deco=None, headcopy_layer=None, bgm_layer=None,
-                sfx_layers=None, cutaway_layers=None):
+                sfx_layers=None, cutaway_layers=None, scene_overlay_layers=None):
     """편집안 → (draft_content_dict, assets_to_copy).
 
     asset_paths: {real_path: 캡컷이 볼 절대경로} — 호출부가 파일을 그 절대경로에 두고 넘긴다.
@@ -432,6 +432,9 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                  "name": "", "is_default_name": True, "segments": []}
     hc_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
                 "name": "", "is_default_name": True, "segments": []}
+    scene_overlay_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+                           "name": "scene-style-overlay", "is_default_name": False,
+                           "segments": []}
     beats_by_idx = {b["beat_idx"]: b for b in plan.get("beats", [])}
     assets_to_copy = []
     total_us = 0
@@ -526,22 +529,43 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
         # ── 자막 트랙: 비트 나레이션 ──
         #   ★렌더와 같은 구절 나누기·시간표(video_assemble.caption_schedule, 0순위-B).
         #     종전엔 비트 문장 통째로 캡션 하나 → 캡컷 화면 밖으로 넘쳤다(2026-09-03 실측).
-        from shopping_shorts.video_assemble import caption_schedule
-        _tail = 0.5 if tl is timeline[-1] else 0.0
-        for _txt, _s, _e in caption_schedule(tl, tail=_tail):
-            _txt = (_txt or "").strip()
-            if not _txt or _e - _s <= 0.05:
-                continue
-            anim = _sticker_animation()
-            mats["material_animations"].append(anim)
-            tm = _text_material(_txt, font_path, caption_style)
-            mats["texts"].append(tm)
-            # ★실측(캡컷이 만든 캡션 세그먼트): render_index=0 · track_render_index=2.
-            #   종전엔 render_index=14000(텍스트 관례)이라 자막 패널에서 다르게 다뤄졌다.
-            seg = _base_segment(tm["id"], _us(_s), _us(_e - _s), source_timerange=False,
-                                render_index=0, extra_refs=[anim["id"]])
-            seg["track_render_index"] = 3      # 소스(0)·머리카피(1)·틀(2) 위 = 맨 위
-            txt_track["segments"].append(seg)
+        if not scene_overlay_layers:
+            from shopping_shorts.video_assemble import caption_schedule
+            _tail = 0.5 if tl is timeline[-1] else 0.0
+            for _txt, _s, _e in caption_schedule(tl, tail=_tail):
+                _txt = (_txt or "").strip()
+                if not _txt or _e - _s <= 0.05:
+                    continue
+                anim = _sticker_animation()
+                mats["material_animations"].append(anim)
+                tm = _text_material(_txt, font_path, caption_style)
+                mats["texts"].append(tm)
+                # ★실측(캡컷이 만든 캡션 세그먼트): render_index=0 · track_render_index=2.
+                #   종전엔 render_index=14000(텍스트 관례)이라 자막 패널에서 다르게 다뤄졌다.
+                seg = _base_segment(tm["id"], _us(_s), _us(_e - _s), source_timerange=False,
+                                    render_index=0, extra_refs=[anim["id"]])
+                seg["track_render_index"] = 3      # 소스(0)·머리카피(1)·틀(2) 위 = 맨 위
+                txt_track["segments"].append(seg)
+
+    # 장면꾸미기 레이어에는 자막·제목·브랜딩이 이미 합쳐져 있다.
+    for layer in scene_overlay_layers or []:
+        source_path = layer.get("path")
+        path = layer.get("_capcut_path") or asset_paths.get(source_path)
+        start = _us(layer.get("start", layer.get("t0", 0.0)))
+        if "end" in layer:
+            duration = _us(layer.get("end", 0.0)) - start
+        else:
+            duration = _us(layer.get("dur", 0.0))
+        if not path or duration <= 0:
+            continue
+        if source_path and asset_paths.get(source_path) == path:
+            assets_to_copy.append((source_path, path))
+        material = _photo_material(path, path.rsplit("/", 1)[-1], cw, ch)
+        mats["videos"].append(material)
+        segment = _base_segment(material["id"], start, duration, source_start=0,
+                                source_dur=duration, render_index=0, volume=0.0)
+        segment["track_render_index"] = 4
+        scene_overlay_track["segments"].append(segment)
 
     # ── 🖼 꾸미기 틀(템플릿) — 영상 위에 얹는 투명 PNG (2026-08-28 고객 제보 3단계) ──
     #   ★이미 그림 파일로 존재한다: deco_frame이 미리보기·렌더와 **같은 함수**로 굽는다
@@ -646,7 +670,8 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
         wm_track["segments"].append(wseg)
 
     tracks = [t for t in (vid_track, cut_track, hc_track, tpl_track,   # 머리카피가 틀 아래
-                          aud_track, bgm_track, sfx_track, txt_track, wm_track)
+                          aud_track, bgm_track, sfx_track, txt_track, wm_track,
+                          scene_overlay_track)
               if t["segments"]]
     draft = _skeleton(project_name, cw, ch, total_us)
     draft["materials"].update(mats)
@@ -698,7 +723,7 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
                           tts_paths, project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT,
                           probe=None, final_video=None, caption_style=None, deco=None,
                           headcopy_png=None, headcopy_span=None, sfx_events=None,
-                          cutaway_paths=None):
+                          cutaway_paths=None, scene_overlay_layers=None):
     """draft 폴더를 out_root/<project>/ 에 실제로 조립한다(에셋 복사 + draft_content.json + meta).
 
     base_abs: 캡컷이 이 draft 폴더를 볼 **절대경로**(예: C:/capcutproject/CapCut Drafts). draft가
@@ -802,12 +827,21 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
         if _cp:
             cutaway_layers[_idx] = {"_capcut_path": _cp, "dur": _cd}
 
+    copied_scene_layers = []
+    for index, layer in enumerate(scene_overlay_layers or []):
+        source = layer.get("path")
+        extension = Path(str(source or "")).suffix.lower() or ".png"
+        capcut_path, _ = _bring(source, f"scene-style-{index:04d}{extension}")
+        if capcut_path:
+            copied_scene_layers.append({**layer, "_capcut_path": capcut_path})
+
     draft, _ = build_draft(caption_style=caption_style, deco=deco,
                            plan=plan, timeline=timeline, source_video_paths=source_video_paths,
                            tts_paths=tts_paths, asset_paths=asset_paths, project_name=project,
                            canvas=canvas, font_path=font_path, video_durs=video_durs,
                            headcopy_layer=headcopy_layer, bgm_layer=bgm_layer,
-                           sfx_layers=sfx_layers, cutaway_layers=cutaway_layers)
+                           sfx_layers=sfx_layers, cutaway_layers=cutaway_layers,
+                           scene_overlay_layers=copied_scene_layers)
 
     # ── 미디어 보관함(2026-08-23 사장님 "라이브러리에 조각 영상들 불러올 수 있게") ──
     #   타임라인은 그대로 두고, **장면 조각을 캡컷 보관함에 넣어** 끌어다 갈아끼울 수 있게 한다.

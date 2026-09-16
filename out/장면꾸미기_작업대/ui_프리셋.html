@@ -77,6 +77,30 @@ body{margin:0;background:var(--bg);color:var(--txt);
        border-radius:10px;padding:12px;cursor:pointer;font-size:12.5px;font-weight:700}
 .mkbtn:hover{border-color:var(--accent);color:var(--accent)}
 
+/* ★ 내 HTML 붙여넣기(2026-09-09 사장님 "여기에 내가 만든 html 넣으면 적용되게").
+   GPT가 만든 틀 HTML을 그대로 붙이면 카드·미리보기에 바로 얹힌다.
+   ★iframe srcdoc으로 그린다 — 시안 CSS와 섞이지 않게 격리하기 위해서다. */
+.pastebg{position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:50;
+     display:none;align-items:center;justify-content:center;padding:24px}
+.pastebg.on{display:flex}
+.pastebox{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+     width:min(760px,94vw);max-height:88vh;display:flex;flex-direction:column;padding:16px 18px}
+.pastebox h3{margin:0 0 3px;font-size:15px;font-weight:800}
+.pastebox .why{font-size:12px;color:var(--sub);margin-bottom:10px;line-height:1.5}
+.pastebox textarea{flex:1;min-height:260px;background:var(--inset);border:1px solid var(--line);
+     color:var(--txt);border-radius:9px;padding:11px;font:12px/1.5 ui-monospace,Consolas,monospace;
+     resize:vertical}
+.pastebox .btns{display:flex;gap:8px;margin-top:11px}
+.pastebox .btns button{flex:1;padding:11px;border-radius:9px;font-size:13.5px;
+     font-weight:800;cursor:pointer;border:1px solid var(--line)}
+.pastebox .ok{background:var(--accent);color:#062018;border:none}
+.pastebox .no{background:transparent;color:var(--sub)}
+.pastemsg{font-size:11.5px;margin-top:7px;min-height:15px}
+.tpl .del{position:absolute;top:3px;left:4px;width:16px;height:16px;border-radius:50%;
+     background:rgba(0,0,0,.72);color:#ff8f8f;font-size:11px;font-weight:900;z-index:4;
+     display:flex;align-items:center;justify-content:center;cursor:pointer}
+.frm{width:100%;height:100%;border:0;display:block;background:#000}
+
 /* ══ 가운데: 미리보기 ══ */
 .pvcol{flex:0 0 auto;width:var(--pvw);display:flex;flex-direction:column}
 .stage{width:100%;aspect-ratio:9/16;background:#000;border-radius:12px;
@@ -214,6 +238,8 @@ details.more[open] summary::before{transform:rotate(90deg)}
       <div class="pv-ttl"  id="pvTtl"></div>
       <div class="pv-blk"  id="pvBlk"></div>
       <div class="pv-vid"  id="pvVid">▶ 실제 영상이 여기서 재생됩니다<span style="font-size:11px">00:00 / 00:28</span></div>
+      <iframe id="pvFrame" class="frm" sandbox="allow-scripts" scrolling="no"
+              style="position:absolute;inset:0;display:none"></iframe>
       <div class="pv-cap"  id="pvCap">여기에 자막이 나옵니다</div>
     </div>
     <div class="scenebar">
@@ -352,6 +378,21 @@ details.more[open] summary::before{transform:rotate(90deg)}
   </div>
 </div>
 
+<!-- ★ 내 HTML 붙여넣기 창 -->
+<div class="pastebg" id="pasteBg">
+  <div class="pastebox">
+    <h3>🧩 내가 만든 HTML 넣기</h3>
+    <div class="why">GPT에서 받은 <b>틀 HTML을 통째로</b> 붙여넣으세요. 9:16 화면에 그대로 얹혀
+      왼쪽 목록에 카드로 남습니다(이 브라우저에 저장 — 다른 PC에서도 쓰시려면 다시 붙여넣으세요).</div>
+    <textarea id="pasteTa" placeholder="&lt;div style=&quot;...&quot;&gt; ... &lt;/div&gt;  또는  &lt;html&gt;…&lt;/html&gt; 통째로"></textarea>
+    <div class="pastemsg" id="pasteMsg"></div>
+    <div class="btns">
+      <button class="ok" onclick="applyPaste()">✓ 적용하기</button>
+      <button class="no" onclick="closePaste()">닫기</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ── 프리셋 19종 = 실제 채널 프레임 실측(channel_layouts.json 2026-09-03).
       px는 1080x1920 기준 → 미리보기에선 %로 환산한다. ── */
@@ -385,7 +426,7 @@ const pct = px => (px/H*100);
 const hex = (c,a)=>{ if(!c) return 'transparent';
   const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
   return `rgba(${r},${g},${b},${(a??100)/100})`; };
-const cur = ()=>P.find(x=>x.n===CUR);
+const cur = ()=>P.find(x=>x.n===CUR) || P[0];   /* 커스텀일 땐 크기칸만 기본값을 쓴다 */
 
 /* 카드 미니 그림 */
 function mini(p,kind){
@@ -405,6 +446,56 @@ function mini(p,kind){
     <div class="ttl" style="top:${barH+ (p.headH?headH*0.3:6)}%;color:${p.headH?p.tc:p.c1};font-size:5.4px">${p.l1} ${p.l2}</div>
     <div class="vid" style="top:${barH+(p.headH?headH:18)}%"></div></div>`;
 }
+/* ── 🧩 내가 만든 HTML(2026-09-09) ─────────────────────────────────────
+   사장님이 GPT에서 받은 틀 HTML을 그대로 붙여 쓰는 길. 값을 뜯어 고치지 않고
+   **HTML 자체를 iframe에 그린다** — 우리가 색·좌표를 다시 흉내내면 원본과 어긋난다
+   (핸드오프 '눈대중 값 금지'와 같은 이유).
+   ★저장은 이 브라우저(localStorage)다. 서버에 올리는 건 다음 단계(deco_frame.PRESETS 통합). */
+const CKEY='decoCustomTpl';
+let CUSTOM=[];
+try{ CUSTOM=JSON.parse(localStorage.getItem(CKEY)||'[]'); }catch(e){ CUSTOM=[]; }
+const isCustom = n => String(n).startsWith('C');
+const curC = ()=>CUSTOM.find(x=>x.n===CUR);
+function saveCustom(){ try{ localStorage.setItem(CKEY,JSON.stringify(CUSTOM)); }catch(e){} }
+
+function openPaste(){ document.getElementById('pasteBg').classList.add('on');
+  document.getElementById('pasteMsg').textContent='';
+  document.getElementById('pasteTa').focus(); }
+function closePaste(){ document.getElementById('pasteBg').classList.remove('on'); }
+
+/* 통째 문서면 body만 꺼내 쓴다 — <html>을 srcdoc에 그대로 넣어도 되지만
+   9:16 칸에 맞추려면 우리 래퍼(margin 0, 100%)를 씌워야 한다. */
+function _wrapHtml(raw){
+  let h=raw.trim(), head='';
+  const mh=h.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+  if(mh) head=mh[1].replace(/<title[\s\S]*?<\/title>/i,'');
+  const mb=h.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  if(mb) h=mb[1];
+  return '<!doctype html><meta charset="utf-8">'+head
+    +'<style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000}'
+    +'body>*{max-width:100%}</style>'+h;
+}
+function applyPaste(){
+  const ta=document.getElementById('pasteTa'), msg=document.getElementById('pasteMsg');
+  const raw=(ta.value||'').trim();
+  if(raw.length<20){ msg.textContent='HTML을 붙여넣어 주세요.'; msg.style.color='#ff8f8f'; return; }
+  if(!/</.test(raw)){ msg.textContent='HTML이 아닌 것 같아요 — 태그(<div …>)가 없습니다.';
+                      msg.style.color='#ff8f8f'; return; }
+  const n='C'+(CUSTOM.length+1)+'_'+Date.now().toString(36).slice(-4);
+  CUSTOM.push({n, name:'내 템플릿', html:_wrapHtml(raw)});
+  saveCustom();
+  msg.textContent='넣었어요 — 왼쪽 목록 맨 아래에 카드로 생겼습니다.'; msg.style.color='var(--accent)';
+  ta.value='';
+  CUR=n; drawGrid(); draw();
+  setTimeout(closePaste,700);
+}
+function delCustom(ev,n){
+  ev.stopPropagation();
+  CUSTOM=CUSTOM.filter(x=>x.n!==n); saveCustom();
+  if(CUR===n) CUR='01';
+  drawGrid(); syncSz(); draw();
+}
+
 function drawGrid(){
   const q=(document.getElementById('q').value||'').trim();
   const list=P.filter(p=>!q||p.n.includes(q)||p.name.includes(q));
@@ -418,7 +509,15 @@ function drawGrid(){
         </div>
         <div class="tplname"><span class="tplno">${p.n}</span></div>
       </div>`).join('')
-    + `<button class="mkbtn" onclick="alert('빈 템플릿에서 시작합니다')">＋ 직접 만들기</button>`;
+    + CUSTOM.filter(c=>!q||c.n.includes(q)||c.name.includes(q)).map(c=>`
+      <div class="tpl ${c.n===CUR?'on':''}" onclick="pick('${c.n}')" title="내가 넣은 HTML">
+        <div class="del" onclick="delCustom(event,'${c.n}')" title="빼기">✕</div>
+        <div class="duo"><div class="front" style="inset:0">
+          <iframe class="frm" sandbox="allow-scripts" srcdoc="${c.html.replace(/"/g,'&quot;')}"
+                  scrolling="no"></iframe></div></div>
+        <div class="tplname" style="color:var(--accent2)">🧩 내 것</div>
+      </div>`).join('')
+    + `<button class="mkbtn" onclick="openPaste()">＋ 내 HTML 넣기</button>`;
 }
 function pick(n){ CUR=n; uTtl=uTtl2=uBar=null; drawGrid(); syncSz(); draw(); }
 function setDuo(d){
@@ -452,6 +551,22 @@ function syncSz(){
 function resetAll(){ uTtl=uTtl2=uBar=null; uCap=30; syncSz(); draw(); }
 
 function draw(){
+  /* 🧩 내가 넣은 HTML — 그 자체를 iframe에 그리고 우리 레이어는 숨긴다 */
+  const fr=document.getElementById('pvFrame');
+  if(isCustom(CUR)){
+    const c=curC();
+    if(c){
+      fr.style.display=''; if(fr.getAttribute('srcdoc')!==c.html) fr.setAttribute('srcdoc',c.html);
+      ['pvBar','pvBand','pvTtl','pvBlk','pvVid'].forEach(id=>
+        document.getElementById(id).style.display='none');
+      document.getElementById('pvCap').style.display='none';
+      return;
+    }
+  }
+  fr.style.display='none'; fr.removeAttribute('srcdoc');
+  ['pvBar','pvBand','pvVid'].forEach(id=>document.getElementById(id).style.display='');
+  document.getElementById('pvCap').style.display='';
+
   const p=cur(), st=document.getElementById('stage');
   const w=st.clientWidth||460, k=w/W;                 /* 1080px → 화면px 배율 */
   const barH=pct(p.barH), bandH=pct(p.bandH), headH=pct(p.headH);

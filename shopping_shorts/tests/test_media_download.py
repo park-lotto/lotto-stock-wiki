@@ -305,3 +305,30 @@ def test_probe_grab_meta_threads_forwards_timeout(monkeypatch):
     monkeypatch.setattr(md, "_probe_threads_meta", fake_probe)
     md.probe_grab_meta("https://www.threads.com/@u/post/Abc", timeout=40)
     assert captured["timeout"] == 40
+
+
+# 2026-09-16 실사고: 서버 youtube_cookies.txt가 0바이트 → yt-dlp "not a Netscape format" 즉사.
+def test_cookies_arg_ignores_empty_cookie_file(tmp_path, monkeypatch):
+    from shopping_shorts import media_download as md
+    empty = tmp_path / "youtube_cookies.txt"
+    empty.write_bytes(b"")
+    monkeypatch.setattr(md.config, "YTDLP_COOKIES_BROWSER_YOUTUBE", "")
+    monkeypatch.setattr(md.config, "YTDLP_COOKIES_YOUTUBE", str(empty))
+    args = md._cookies_arg("https://www.youtube.com/watch?v=abc")
+    assert "--cookies" not in args
+
+
+def test_cookies_arg_uses_nonempty_cookie_file(tmp_path, monkeypatch):
+    from shopping_shorts import media_download as md
+    f = tmp_path / "youtube_cookies.txt"
+    f.write_text("# Netscape HTTP Cookie File\n", encoding="utf-8")
+    monkeypatch.setattr(md.config, "YTDLP_COOKIES_BROWSER_YOUTUBE", "")
+    monkeypatch.setattr(md.config, "YTDLP_COOKIES_YOUTUBE", str(f))
+    args = md._cookies_arg("https://www.youtube.com/watch?v=abc")
+    assert args[0] == "--cookies"
+    # yt-dlp가 종료 시 다시 쓰므로 원본이 아닌 사본을 넘긴다(2026-09-16 0바이트 사고)
+    assert args[1] != str(f)
+    assert open(args[1], encoding="utf-8").read() == "# Netscape HTTP Cookie File\n"
+    # 사본을 비워도 원본은 그대로
+    open(args[1], "w").close()
+    assert f.stat().st_size > 0

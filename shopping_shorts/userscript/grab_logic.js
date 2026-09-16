@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-09-02-b  (LOGIC_VER가 정본)
+// 로직 버전: 2026-09-11  (LOGIC_VER가 정본)
+//   · 핀터레스트 — 핀 페이지 플로팅 담기 + 검색 그리드 카드마다 📥 (2026-09-11 고객 문의)
 //   · ⭐볼채널등록 — 회원용 개인 채널 즐겨찾기
 //   · 유튜브는 쇼츠에서만 동작 — 메인·롱폼 차단
 //   ★두 트랙이 같은 날 각각 20260905를 달아 병합에서 부딪혔다. 합친 파일이라
@@ -14,7 +15,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260909;
+  var LOGIC_VER = 20260911;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -55,7 +56,19 @@
   //   그런데 브라우저에는 CDN 주소가 그대로 있다. 담는 순간 그걸 함께 보내면 서버가
   //   그 주소로 바로 받는다(download_any가 video_url을 우선 쓴다).
   //   blob:은 이 탭 안에서만 유효하므로 보내지 않는다 — 서버가 받을 수 없다.
-  var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com"];
+  var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com", "rednotecdn.com"];
+  function _mediaFromPageHtml() {
+    // RedNote의 새 플레이어는 실제 mp4를 MediaSource에 넣고 <video src>에는 blob:만
+    // 남긴다(2026-09-14 라이브 실측). 그래도 현재 노트의 직접 mp4는 렌더된 DOM 안에
+    // sns-v*.rednotecdn.com/...mp4로 남아 있으므로, 사람이 담기를 누르는 그 순간 찾는다.
+    // 매 tick마다 큰 DOM을 훑지 않고 currentVideoSrc() 호출 때만 실행한다.
+    try {
+      var html = document.documentElement.innerHTML || "";
+      var ms = html.match(/https:\/\/[^\"'<>\\\s]*(?:xhscdn|rednotecdn)\.com\/[^\"'<>\\\s]*\.mp4(?:\?[^\"'<>\\\s]*)?/gi) || [];
+      return ms.length ? ms[0].replace(/&amp;/g, "&") : "";
+    } catch (e) {}
+    return "";
+  }
   function currentVideoSrc() {
     try {
       var vs = document.querySelectorAll("video");
@@ -72,7 +85,7 @@
         }
       }
     } catch (e) {}
-    return "";
+    return _mediaFromPageHtml();
   }
   // ★지금 보는 영상의 **커버 이미지**(2026-08-17 사장님 "도우인은 썸네일이 없음").
   //   도우인 영상 페이지는 SPA라 og:image가 없다(og:title도 "观看更多精彩视频 - 抖音"
@@ -791,7 +804,8 @@
 
   // 지금 보고 있는 게 '단일 영상/게시물' 페이지인가 (인스타 /p/·/reel/, 틱톡 /video/ 등)
   function isSinglePost() {
-    return /\/(p|reel|reels|video)\/[^/]+/.test(location.pathname);
+    return /\/(p|reel|reels|video)\/[^/]+/.test(location.pathname) ||
+           /\/(?:discovery\/item|search_result)\/[^/]+/.test(location.pathname);
   }
 
   // 검색·탐색 '그리드' 페이지에서만 카드 버튼을 붙인다. 단일 영상 페이지에선 관련영상 카드가
@@ -1151,6 +1165,55 @@
     }
   }
 
+  // ── 핀터레스트(2026-09-11) ────────────────────────────────────────────
+  //   고객: "숏템파워검색 → 📌 누르면 영상은 뜨는데 담기 버튼이 없다". 📌는 pinterest.com
+  //   검색을 새 탭에 여는 버튼이라 우리 버튼이 있을 리 없었다 — 이 로직이 핀터레스트를
+  //   아예 몰랐다(@match에도 없었다). 서버 쪽 받기(media_download._download_pinterest)는
+  //   이미 있었으니 화면만 붙인다.
+  //   · 핀 페이지(/pin/숫자/) = 단일 영상 → 플로팅 📥 담기(location.href 그대로).
+  //   · 검색·피드 그리드 = 핀 카드(a[href^="/pin/"])마다 📥. 플로팅은 숨긴다 — 검색 페이지
+  //     주소를 담으면 서버가 "지원 안 함"을 낼 뿐이라 혼동만 준다.
+  function _isPin() { return location.host.indexOf("pinterest.") >= 0; }
+  function _pinSingle() { return /^\/pin\/[^/]+/.test(location.pathname); }
+  function addPinCardBtns() {
+    if (!_isPin() || _pinSingle()) return;
+    // ★핀터레스트 실측(2026-09-11): 핀 링크 <a href="/pin/…">는 **0x0**(레이아웃 없음)이고
+    //   크기를 가진 상자는 [data-test-id="pin"] 래퍼다. 영상 핀은 <img> 대신 <video>만 있다.
+    //   그래서 래퍼 기준으로 크기·버튼 자리를 잡고, 썸네일은 img.src 또는 video.poster.
+    var cards = document.querySelectorAll('[data-test-id="pin"]');
+    for (var i = 0; i < cards.length; i++) {
+      var c = cards[i];
+      if (c.getAttribute("data-ssgrab")) continue;
+      var a = c.querySelector('a[href^="/pin/"]');
+      var im = c.querySelector("img, video");
+      if (!a || !im) continue;
+      var rr = c.getBoundingClientRect();
+      if (rr.width < 100 || rr.height < 100) continue;     // 아직 안 그려진(0x0) 카드는 다음 tick에
+      c.setAttribute("data-ssgrab", "1");
+      if (getComputedStyle(c).position === "static") c.style.position = "relative";
+      var b = document.createElement("button");
+      b.className = "ss-card-grab";
+      b.textContent = "📥";
+      b.title = "이 핀 담기";
+      b.style.cssText =
+        "position:absolute;top:8px;left:8px;z-index:99999;background:#1f6feb;color:#fff;" +
+        "border:none;border-radius:16px;width:34px;height:34px;font-size:16px;" +
+        "box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer";
+      (function (a, im) {
+        b.addEventListener("click", function (e) {
+          e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+          openGrab(a.href, im.poster || im.src || "", im.alt || im.getAttribute("aria-label") || "");
+        }, true);
+      })(a, im);
+      c.appendChild(b);
+    }
+  }
+  function syncPinFloat() {
+    if (!_isPin()) return;
+    var f = document.getElementById("ss-grab-btn");
+    if (f) f.style.display = _pinSingle() ? "" : "none";
+  }
+
   // ── 유튜브는 '쇼츠'에서만 동작한다 (2026-09-02 사장님 요청) ──────────────
   //   메인·구독·검색·채널 등 목록 화면과 **롱폼(watch)** 에선 버튼을 아예 띄우지 않는다.
   //   예외: 공유 링크로 열린 쇼츠는 /watch?v=... 로 뜨기도 한다 → 재생 중인 영상 길이가
@@ -1175,7 +1238,7 @@
     } catch (e) {}
   }
 
-  function tick() { if (_ytOff()) { _ytClear(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
+  function tick() { if (_ytOff()) { _ytClear(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncPinFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.

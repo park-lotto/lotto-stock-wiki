@@ -1,0 +1,42 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>천재 채널 판정 4차</title><style>
+body{margin:0;background:#111;color:#eee;font-family:'Malgun Gothic',sans-serif;padding:16px}
+h1{font-size:20px;margin:0 0 4px}.sub{color:#aaa;font-size:13px;margin-bottom:12px}
+.bar{position:sticky;top:0;background:#111;padding:8px 0;z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bar button{padding:8px 14px;border-radius:8px;border:0;font-weight:700;cursor:pointer}
+.card{background:#1c1c1c;border:2px solid #333;border-radius:12px;padding:12px;margin:12px 0}
+.card.o{border-color:#2ecc71}.card.x{border-color:#e74c3c;opacity:.55}
+.head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.name{font-size:17px;font-weight:700}.name a{color:#fff}.meta{color:#aaa;font-size:13px}
+.btns button{font-size:16px;padding:8px 18px;border-radius:8px;border:2px solid #555;background:#222;color:#eee;cursor:pointer;margin-left:6px}
+.card.o .bo{background:#2ecc71;color:#000;border-color:#2ecc71}.card.x .bx{background:#e74c3c;border-color:#e74c3c}
+.vids{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:10px}
+.v a{color:#ddd;text-decoration:none}.v img{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:6px;background:#000}
+.v div{font-size:12px;line-height:1.3;margin-top:3px}.v .s{color:#f1c40f}
+textarea{width:100%;height:120px;background:#000;color:#0f0;margin-top:8px}
+</style></head><body>
+<h1>천재 발명품·활용법 계열 — 통과 채널 판정 (4차)</h1>
+<div class="sub">채널마다 조회수 높은 영상 8편. <b>O=썰쇼핑으로 등록</b> / <b>X=뺀다</b>. 노란 제목 = 판정기가 썰쇼핑으로 읽은 영상. 찍은 것은 이 브라우저에 자동 저장.</div>
+<div class="bar"><span id="cnt"></span><button onclick="exportRes()" style="background:#3498db;color:#fff">결과 내보내기</button></div>
+<textarea id="out" hidden readonly></textarea>
+<div id="list"></div>
+<script>
+const D=[{"cid": "UCbM9Z7SMdPbtQVyFVr2EPuQ", "title": "원픽10", "subs": 8520, "score": 10, "n": 42, "videos": [{"id": "THkNGXskttQ", "t": "홍현희 이거 한잔 마시고 10kg 빠졌다고? #홍현희 다이어트#다이어트 식초#다이어트 식단#와인식초", "views": 2079251, "ssul": false}, {"id": "9KLedjedPvU", "t": "샤넬에 00억쓰고 이별 선언한 김준희#샤넬스카프#스카프#샤넬#쇼핑쇼츠", "views": 166100, "ssul": false}, {"id": "C4J3QXq27-0", "t": "샤넬만 수십 개 있는 한혜진이 실용성 1위로 뽑은 역대급 가방은? #한혜진 #한혜진 샤넬백 #샤넬백 #명품백#연예인백 #쇼핑쇼츠 #쿠팡추천템", "views": 69651, "ssul": false}, {"id": "-cxmdNLCIwY", "t": "트와이스지효가 미국에서산 애착 가방 #지효백백 # 미니백팩 # 지효가방 #쿠팡추천템", "views": 20995, "ssul": false}, {"id": "BmzWmTIA2Lg", "t": "나연이 적극 강추하는 역대급 구강 청결템 #혀클리너 #구강관리 #쇼핑쇼츠 #꿀템", "views": 19621, "ssul": false}, {"id": "V_xlZswnoZI", "t": "브라이언이 극찬한 다이소 청소템 3가지 #다이소추천템 #청소 #브라이언", "views": 13506, "ssul": true}, {"id": "Rr3Z92JHn0I", "t": "차예련이 매일 들고 다니는 가방 정체 #차예련 가방 #차예련 #데일리 가방 # 비치백", "views": 13448, "ssul": false}, {"id": "YPvMO9u-3po", "t": "덱스도 기절한 장원영 5성급 아이스크림 비밀 레시피#장원영 아이스크림#5성급아이스크림#말돈솔트#마카다미아#트러플오일", "views": 12567, "ssul": true}]}, {"cid": "UCenlclB39lDWXZWrhb6GHyw", "title": "라희홈", "subs": 1030, "score": 9, "n": 33, "videos": [{"id": "03EFLw_CJJk", "t": "엄마가 보시고 다 갸지고 가셨어요!", "views": 8797, "ssul": false}, {"id": "e2jwJh9FaLY", "t": "청소해도 지저분한 베란다 바닥 이걸로 해결했어요!!", "views": 3481, "ssul": false}, {"id": "YeybUSEX2Zg", "t": "수박의 탈을 쓴 오이!!?😲", "views": 3336, "ssul": false}, {"id": "FVDtB1sIjPk", "t": "이런 식기세척기가 있다구요?", "views": 2269, "ssul": false}, {"id": "tgmqSEd6T0c", "t": "죽은 공간 살리는 미니어처 하우스 키트!", "views": 2245, "ssul": false}, {"id": "a7Nr_ypSadA", "t": "세상에 이런게 있었어요?😲", "views": 2137, "ssul": true}, {"id": "McgfLWr4aUE", "t": "누가 좀 말려주세요!!", "views": 2128, "ssul": false}, {"id": "ldCNUxlJkfI", "t": "칼질 못하는 천재가 만들었다는데!!", "views": 2097, "ssul": true}]}, {"cid": "UC_ZXDJwBc9ScFlFecaKEVWw", "title": "꿈꾸는사람들", "subs": 54300, "score": 9, "n": 37, "videos": [{"id": "peu896Nx-gI", "t": "온가족이 '이것' 시작하고 2년만에 6억 번 부업은?", "views": 10081, "ssul": true}, {"id": "ylxXGTdWZsA", "t": "비밀창고 다 쓸어담아 40억을 번 남자", "views": 4706, "ssul": true}, {"id": "O_HwM6WFHsE", "t": "AI가 대본 다 써주는데 5억 4000만원 번 00년생", "views": 4284, "ssul": false}, {"id": "XWy_Eh3psBk", "t": "하루 단 5분으로 달러 채굴하는 남자", "views": 3658, "ssul": false}, {"id": "inDQLwgwmHI", "t": "90% 할인하는 아는 사람만 아는 비밀창고가 있다?!", "views": 3569, "ssul": true}, {"id": "Cc-COoiyVtg", "t": "'이것' 전세계로 수출해 돈 복사하는 28살", "views": 3216, "ssul": false}, {"id": "rEX73RpLMSk", "t": "AI로 30초만에 끝! 월 5000 버는 아빠", "views": 3105, "ssul": false}, {"id": "h4cWIsuYsF0", "t": "AI로 3분만에 가능?! 1000만원 버는 65세", "views": 2757, "ssul": false}]}, {"cid": "UCCzrlNVLDme7q8nLTZyx7jw", "title": "쇼핑뱅크", "subs": 44, "score": 8, "n": 34, "videos": [{"id": "A-vfdVgdFnU", "t": "목수도 인정한 흠집 복원템, 못자국까지 감쪽같이 🪵", "views": 4427, "ssul": false}, {"id": "ENPtPISr1ds", "t": "다이소 Best템, 셀프 집수리러 극찬 🏠", "views": 3132, "ssul": true}, {"id": "VuNyyhzGSSw", "t": "주부 9단 생활템, 싱크대 하부장 활용 하시나요? 🧺", "views": 2607, "ssul": false}, {"id": "AMcWieLJmew", "t": "셀프로 집값 올려버리기 🧱 쿠팡 인테리어 추천템!! #쿠팡추천템 #인테리어", "views": 2233, "ssul": false}, {"id": "3gnxwMjkP4M", "t": "용이 불을 뿜는다? 이 무드등 실화입니다 🐉🔥", "views": 1673, "ssul": false}, {"id": "L2xGVrENucY", "t": "타일 시공기사도 인정한 보수제, 다이소 HOT템 🔧", "views": 1637, "ssul": true}, {"id": "cA81X2xpdi4", "t": "다이소 가격인데 호텔에서도 쓴다는 이 시트 고정클립🛏️", "views": 1618, "ssul": false}, {"id": "9npEmPJVLEQ", "t": "삼배체 굴 요리해봤습니다.🦪", "views": 1504, "ssul": false}]}, {"cid": "UCeUzgNQMmwQDFkL5vehPsIQ", "title": "어르신이 행복한 세상", "subs": 935, "score": 8, "n": 14, "videos": [{"id": "WjT8Yum6MTE", "t": "겨울을 버텨낸 나무가 가장 아름다운 나이테를 새긴다 #버트런드러셀 #인생명언 #중년에세이 #명언에세이 #기다림 #마음챙김 #인생조언 #동기부여 #자기계발 #긍정의힘 #위로가필요할때", "views": 1176, "ssul": false}, {"id": "Z_dwAp7Tlw4", "t": "한전이 삼성·하이닉스에 25조 선납 요청한 충격적 이유 한국전력 #삼성전자 #SK하이닉스 #전기요금선납 #반도체클러스터 #용인반도체 #AI전력수요 #송전망건설 #경제이슈 #산업뉴스", "views": 1129, "ssul": false}, {"id": "8qwx79C4CJc", "t": "나이는 핑계일 뿐…진짜 늙음은 따로 있다 #중년감성 #인생에세이 #헨리포드 #배움의즐거움 #인생후반전 #동기부여명언 #마음치유 #중년의삶 #나이든다는것 #위로와공감 #힐링영상", "views": 763, "ssul": true}, {"id": "9pt4CbF9fM0", "t": "나이 들수록 말을 줄여야 하는 이유 #중년감성 #인생에세이 #어른의대화법 #경청의힘 #인간관계 #대화의기술 #인생후반전 #마음치유 #위로와공감 #지혜로운삶 #인생명언 #관계수업", "views": 723, "ssul": true}, {"id": "3CtOfGhdswo", "t": "모든 걸 잃은 천재가 선택한 것  다산 정약용 #중년감성 #인생에세이 #다산정약용 #고난극복 #인생후반전 #마음치유 #위로와공감 #회복탄력성 #인생명언 #지혜로운삶 #마음다스리기", "views": 710, "ssul": true}, {"id": "1bVs2UJh5Lc", "t": "중년의 공부가 인생 2막 VIP 여권이 되는 이유 #중년에세이 #평생학습 #명언에세이 #인생조언 #동기부여 #하버드명언 #인생명언 #자기계발 #힐링에세이 #배움의즐거움 #마음챙김", "views": 465, "ssul": false}, {"id": "t0b5fcMw7-M", "t": "장영실이 증명한 것 – 인생은 마음이 멈출 때 끝난다 #중년감성 #인생에세이 #장영실 #자존감수업 #인생후반전 #동기부여 #위로와공감 #마음치유 #어른의지혜 #인생명언 #힐링영상", "views": 459, "ssul": true}, {"id": "unH6vNMDdrw", "t": "사람의 마음을 여는 진짜 열쇠  데일 카네기의 충격적인 조언 #중년감성 #인생에세이 #데일카네기 #인간관계 #인생후반전 #어른의지혜 #마음치유 #경청의힘 #중년의삶 #위로와공감", "views": 432, "ssul": true}]}];
+let S={};try{S=JSON.parse(localStorage.getItem('genius_judge4')||'{}')}catch(e){}
+function save(){try{localStorage.setItem('genius_judge4',JSON.stringify(S))}catch(e){}}
+function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function render(){
+ document.getElementById('list').innerHTML=D.map((c,i)=>`<div class="card ${S[c.cid]||''}" id="c${i}">
+ <div class="head"><div><div class="name">${i+1}. <a href="https://www.youtube.com/channel/${c.cid}/shorts" target="_blank">${esc(c.title)}</a></div>
+ <div class="meta">썰 ${c.score}편 / 최근 ${c.n}편 · 구독 ${(c.subs||0).toLocaleString()}</div></div>
+ <div class="btns"><button class="bo" onclick="mark('${c.cid}','o')">O</button><button class="bx" onclick="mark('${c.cid}','x')">X</button></div></div>
+ <div class="vids">${c.videos.map(v=>`<div class="v"><a href="https://www.youtube.com/shorts/${v.id}" target="_blank"><img loading="lazy" src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg"><div class="${v.ssul?'s':''}">${esc(v.t)}</div><div style="color:#888">조회 ${v.views.toLocaleString()}</div></a></div>`).join('')}</div></div>`).join('');
+ const o=D.filter(c=>S[c.cid]==='o').length,x=D.filter(c=>S[c.cid]==='x').length;
+ document.getElementById('cnt').textContent=`O ${o} · X ${x} · 남음 ${D.length-o-x} / ${D.length}`;
+}
+function mark(cid,v){S[cid]=S[cid]===v?'':v;save();render()}
+function exportRes(){const t=document.getElementById('out');t.hidden=false;
+ t.value='천재채널판정4\nO: '+D.filter(c=>S[c.cid]==='o').map(c=>c.cid+' '+c.title).join(' | ')+'\nX: '+D.filter(c=>S[c.cid]==='x').map(c=>c.cid+' '+c.title).join(' | ');
+ t.select();try{navigator.clipboard.writeText(t.value)}catch(e){}}
+render();
+</script></body></html>

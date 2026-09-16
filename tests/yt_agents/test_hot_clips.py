@@ -41,7 +41,22 @@ def test_search_videos_returns_parsed_list():
     called_params = mock_get.call_args.kwargs["params"]
     assert called_params["q"] == "반도체 조정"
     assert called_params["maxResults"] == 5
-    assert called_params["order"] == "viewCount"
+    assert called_params["order"] == "relevance"
+    assert "publishedAfter" in called_params
+
+
+def test_relevance_score_prefers_exact_topic_match():
+    exact = hot_clips._relevance_score("쇼핑쇼츠", "쇼핑 쇼츠 만드는 법")
+    unrelated = hot_clips._relevance_score("쇼핑쇼츠", "MOWGLI JUNGLE BOOK")
+
+    assert exact == 100
+    assert unrelated == 0
+
+
+def test_parse_iso_duration_supports_shorts_and_longform():
+    assert hot_clips._parse_iso_duration("PT58S") == 58
+    assert hot_clips._parse_iso_duration("PT2M30S") == 150
+    assert hot_clips._parse_iso_duration("PT1H2M3S") == 3723
 
 
 def test_search_videos_decodes_html_entities_in_title():

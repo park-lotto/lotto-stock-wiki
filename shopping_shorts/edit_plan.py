@@ -18,6 +18,7 @@ import re
 import sys
 import threading
 import time
+from pathlib import Path
 
 from google.genai import types
 
@@ -1603,6 +1604,23 @@ def _speech_speed():
     return min(2.0, max(1.0, v))
 
 
+def narr_secs(text):
+    """그 대사를 실제로 읽는 시간(초) = **모든 target_seconds의 단일 출처**(2026-09-16).
+
+    ★왜 함수로 뽑았나 — 같은 계산이 파일 안에 11벌이었고 **두 가지 식이 섞여 있었다**:
+      7곳은 `len/_SYLLABLES_PER_SEC`(배속 미적용), 4곳은 `len/(_SYLLABLES_PER_SEC*_speech_speed())`.
+      2026-08-09에 "보정 없이 두면 화면이 44% 과충전된다"며 4곳만 고치고 나머지를 빠뜨렸고,
+      2026-09-04에 새로 생긴 상속 경로(build_inherit_plan)는 그 수정을 아예 못 받았다.
+      결과: 상속 경로의 목표 초가 **1.7배** 부풀고, `_fill_beat_screen_time`이 그만큼
+      대본과 무관한 컷을 덧붙였다(실측 job 26698eb0a362: 10줄 지목 10컷 → 최종 26컷).
+      같은 판단은 한 곳에서만 정한다(0순위-B).
+    ⚠️라이브 실측(2026-09-16, 최근 60 job·비트 389개의 TTS 실길이): **9.69자/초**
+      (중앙 9.69·평균 9.71). 지금 식은 5.7 × _speech_speed()다 — 배속 기본값이 낮으면
+      여전히 과대추정이지만, 그 값은 **게이트의 대본 글자수 상한과 짝**이라(script_gate._speech_cps)
+      여기서 같이 올리면 대본 길이가 함께 바뀐다. 배속 조정은 별건으로 다룬다."""
+    return round(max(1.5, len((text or "").strip()) / (_SYLLABLES_PER_SEC * _speech_speed())), 1)
+
+
 def _seg_benefits(seg):
     """세그먼트의 product_benefits → 문장 리스트(fail-open []). list/str 모두 허용.
     무자막 소스(text 빈칸)에서 대본이 쓸 수 있는 유일한 언어 재료라 여기서 흘리면 안 된다."""
@@ -2934,11 +2952,26 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
         #   (:445-471 = 릴의 안 쓴 뒷부분 아무 데나)을 edit_plan 단계로 앞당긴 것뿐이었다.
         #   실측: "요리할 때마다 닦는 게 진짜"에 스티커 정지컷, "스티커까지 붙이니까"에
         #   실리콘 도구 컷. → 나레이션과 '변화:'·'화면:' 문구가 겹치는 장면을 먼저 쓴다.
-        words = {w for w in _claim_key(b.get("narration") or "")}
+        # ★낱말 겹침(_rel)은 2026-09-16에 뺐다. 09-08 컷뱅크 실측: 사장님이 손으로 바꾼 1,027건에서
+        #   버린 컷의 낱말 겹침(0.82)이 고른 컷(0.73)보다 **높았다** — 낱말 겹침은 좋은 장면의 기준이 아니다.
+        #   같은 소스 안에서도 낱말 순으로 고르니 시간이 점프해 "반죽 섞기"가 CTA에 붙었다(job 26698eb0a362).
+        #   대신 **지목 컷과의 시간 거리**로 고른다(아래 _dist) — 대본이 고른 컷의 바로 다음 컷이 1순위.
+        #   원본 영상들이 실제로 그렇게 찍는다: 한 흐름을 이어가다 필요할 때만 앵글을 바꾼다(사장님 07-19).
+        _anchor = b.get("primary") or {}
+        try:
+            _anchor_end = float(_anchor.get("end") or 0)
+            _anchor_vid = _anchor.get("video_id")
+        except (TypeError, ValueError):
+            _anchor_end, _anchor_vid = 0.0, None
 
-        def _rel(s):
-            txt = f"{s.get('change') or ''} {s.get('scene_desc') or ''}"
-            return len(words & set(_claim_key(txt)))
+        def _dist(s):
+            """지목 컷 끝에서 얼마나 떨어졌나. 다른 소스면 큰 값(같은 소스 안에서만 거리가 뜻이 있다).
+            앞쪽(시간 역행)은 같은 거리라도 뒤로 민다 — 뒤 컷이 흐름을 잇는다."""
+            if s.get("video_id") != _anchor_vid:
+                return 1e9
+            st = float(s.get("start") or 0)
+            d = st - _anchor_end
+            return d if d >= 0 else (-d) * 2 + 0.01
 
         # ★이미 쓴 화면과 **같아 보이는** 것은 뒤로 민다(2026-08-16 사장님 "왜 같은데 2장이
         #   붙지"). 소스를 여러 개 올리면 같은 장면이 소스마다 있고 seg_id가 달라, 종전의
@@ -2975,9 +3008,16 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
         # ⚠ 첫·끝(CTA·썸네일) 조각은 자동으로 안 붙인다(2026-08-26) — edge 표식이
         #   생기면서 seg_map에 살아 들어오므로 여기서 걸러야 종전 동작이 유지된다.
         pool = sorted((s for s in seg_map.values() if not _is_edge_seg(s)),
+                      # 기준 순서(2026-09-16): 같은 소스 → 짧은 컷 뒤로 → 같은 그림 뒤로 → **지목 컷에서 가까운 순**.
+                      #   '같은 그림'을 맨 앞에 두면 같은 소스가 통째로 뒤로 밀려 다른 소스의 0.9초 조각이
+                      #   먼저 온다(test_같은_영상에서_이어_붙인다) — 08-18 사장님 "짧은 거 여기저기서 붙이면
+                      #   눈 아프다"와 정면충돌. 그래서 같은 그림 회피는 **같은 소스 안에서만** 작동한다.
+                      #   오늘 "앞뒤 컷이면 지루해지나"(사장님)는 이 안에서 답한다: 바로 다음 컷이 같은
+                      #   그림이면 같은 소스의 다른 그림이 먼저, 그래도 없을 때만 다른 소스.
                       key=lambda s: (s.get("video_id") != home,
                                      _seg_secs(s) < _MIN_CUT_SECONDS,
-                                     _same_look(s), -_rel(s), s.get("start") or 0))
+                                     _same_look(s),
+                                     _dist(s), s.get("start") or 0))
         alts = list(b.get("alternates") or [])
         for s in pool:
             if have >= need or len(alts) >= max_alts:
@@ -4083,7 +4123,7 @@ def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
 
 def build_edit_plan(source_scripts, target_seconds, structure="template", video_type=None,
                     n_alternates=2, max_retries=_KEY_TRY_LIMIT, quota_sleep=8, given_script=None,
-                    is_recipe=False):
+                    is_recipe=False, source_video_paths=None, seg_thumb_dir=None):
     """소스 대본들 → 그라운딩·표절검사된 EDL(설계 §3-2). 실패 시 빈 EDL.
 
     video_type이 None이면 detect_video_type()으로 자동 판별한다(설계 §3-1).
@@ -4140,6 +4180,20 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     # ★대본을 고치기 전에 **화면부터 다시 고른다**(2026-08-14). 더 맞는 화면을 찾으면 fit이
     #   올라가 아래 재작성 대상에서 자연히 빠지고, 못 찾은 비트만 종전대로 대사를 고친다.
     grounded["beats"] = _repick_weak_beats(grounded["beats"], seg_map)
+    # ★고른 화면이 정말 맞는지 비트마다 되묻는다(2026-09-09, 기본 OFF).
+    #   _repick 뒤에 둔다 — 재선택으로 고쳐진 것까지 검증해야 최종 결과를 본다.
+    #   교체는 하지 않고 fit만 깎아 검수판에 드러낸다(회귀 0).
+    frame_resolver = None
+    if source_video_paths and seg_thumb_dir:
+        def frame_resolver(seg_id, seg):
+            from shopping_shorts import frame_extract
+            src = source_video_paths.get(seg.get("video_id"))
+            if not src:
+                return None
+            return frame_extract.extract_segment_thumb(
+                src, seg_thumb_dir, seg, f"{seg_id}.jpg")
+    grounded["beats"] = verify_beat_screens(
+        grounded["beats"], seg_map, store=_verify_store(), frame_resolver=frame_resolver)
     grounded["beats"] = _reconcile_weak_beats(grounded["beats"])
     # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
     # 나레이션 읽는 시간 ≈ 글자수÷_SYLLABLES_PER_SEC초). UI 표시 초와 실제 길이가 어긋나지 않게.
@@ -4320,7 +4374,7 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
             "beat_idx": len(beats),
             "role": str(srcs[i].get("role") or ""),
             "narration": line,
-            "target_seconds": round(max(1.5, n / _SYLLABLES_PER_SEC), 1),
+            "target_seconds": narr_secs(line),
             "primary": refs[0],
             "alternates": refs[1:],
             "effect": "cut",
@@ -4338,6 +4392,113 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
     return {"structure": structure, "beats": beats, "plagiarism_flags": [],
             "detected_type": _normalize_video_type(video_type), "affiliate_target": "",
             "generator": "inherit"}
+
+
+# ── 화면 검증(2026-09-09) — 프롬프트·스키마는 여기 한 곳에서만 정한다(0순위-B).
+#   ★"맞나?"만 묻는다. 더 나은 걸 고르라고 하면 앞 실험처럼 84%가 바뀌어 회귀 위험이 크다.
+#   ★"최소한 맥락으로 어색하지 않으면 통과"를 넣은 이유: 이게 없으면 문자 그대로 따져
+#     멀쩡한 것까지 떨군다(요구먼저 방식이 67% 과잉 기각한 그 실패).
+_SCREEN_VERIFY_PROMPT = """내레이션: "{narration}"
+첨부 이미지가 실제로 재생될 화면의 대표 프레임이다.
+
+이 내레이션을 말할 때 이 화면을 띄우면 시청자가 자연스럽게 볼까?
+- 내레이션이 말하는 사물·동작이 화면에 **실제로 보이거나**, 최소한 그 얘기의 맥락으로
+  어색하지 않으면 ok=true.
+- 전혀 다른 것을 보여주고 있거나 수치·대상이 어긋나면 ok=false.
+JSON만 출력하라."""
+
+_SCREEN_VERIFY_SCHEMA = {
+    "type": "object",
+    "properties": {"ok": {"type": "boolean"}, "why": {"type": "string"}},
+    "required": ["ok"],
+}
+
+
+def _verify_store():
+    """설정 조회용 Store — edit_plan은 평소 DB를 안 쓰므로 여기서만 만든다.
+    실패하면 None을 돌려 검증이 꺼진 것으로 본다(fail-open)."""
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return Store(str(DB_PATH))
+    except Exception as e:      # noqa: BLE001 — 설정을 못 읽으면 그냥 끈다
+        print(f"[verify_screens] store 생성 실패(끈다): {e!r}", file=sys.stderr)
+        return None
+
+
+def _vault_call_image(prompt, schema, frame_path):
+    """대표 프레임 1장을 기존 Gemini 키회전 경로로 보낸다."""
+    try:
+        image = types.Part.from_bytes(data=Path(frame_path).read_bytes(),
+                                      mime_type="image/jpeg")
+    except (OSError, TypeError, ValueError) as e:
+        print(f"[verify_screens] 프레임 읽기 실패(건너뜀): {e!r}", file=sys.stderr)
+        return None
+    return _vault_call([prompt, image], schema)
+
+
+def verify_beat_screens(beats, seg_map, call=None, store=None, frame_resolver=None):
+    """★고른 화면이 그 대사에 정말 맞는지 **비트마다 따로** 되묻는다 (2026-09-09).
+
+    사장님: "분명히 태깅과 대본에 맞는 게 있는데 엉뚱하고 다른 걸 배치하는 게 문제.
+            제미니가 그 단계 과정을 더 촘촘하게 해보라는 거야."
+
+    ■ 왜 이 모양인가 — 라이브 실측으로 세 번 갈아엎은 결과다(2026-09-09, job 7~12개씩)
+      ① 「바로 고르기」   억지로 고른 것을 **하나도** 못 잡았다(0%). 모델은 재료가 없어도 고른다.
+      ② 「요구 먼저 적기」 "필요한 화면"을 먼저 적게 했더니 그 문장에 갇혀 **과잉 기각**(67%가
+         가짜 '없음'). 예: "물에 슥 씻기만 하면"에 '식재료 씻는 모습'이라 적고, 정작 있는
+         '롤러를 헹구는 장면'을 없다고 했다.
+      ③ 「고르기 → 검증」 이 순서만 정확했다. 탈락 17%가 전부 진짜 억지였고 오탐이 없었다.
+         (탈락 예: "55도 정온 유지"에 '60도→37도로 내려가는 화면' → 수치 불일치를 잡아냈다)
+
+    ■ 무엇을 하나 / 안 하나
+      · **아무것도 교체하지 않는다.** 탈락한 비트의 fit을 2로 낮추고 근거만 남긴다 →
+        검수판이 이미 fit<=2에 ⚠️를 띄우므로 사장님 눈에 그대로 걸린다.
+        (교체까지 자동으로 하면 84%가 바뀐다 — 회귀 위험이 커서 지금은 '표시'까지만 간다)
+      · 후보 목록을 **주지 않는다**. 다시 고르라는 게 아니라 이것만 보라는 것이다.
+      · 비트마다 1회. 한 번에 몰아 물으면 집중이 흩어진다(1차가 그래서 놓친다).
+      · fail-open — 키·모델이 죽어도 원본 그대로 돌려준다.
+
+    ■ 스위치
+      기본 OFF(`store` 설정 `verify_screens_enabled`). 검증 안 된 걸 라이브에 켜두면
+      조용히 비용만 나간다(2026-07-31 B1 실사고 계보).
+    """
+    if not beats or not seg_map:
+        return beats
+    if store is not None:
+        try:
+            if str(store.get_setting("verify_screens_enabled", "") or "") != "1":
+                return beats
+        except Exception as e:      # noqa: BLE001 — 설정 조회 실패로 제작을 죽이지 않는다
+            print(f"[verify_screens] 설정 조회 실패(끈 것으로 본다): {e!r}", file=sys.stderr)
+            return beats
+    call = call or _vault_call_image
+    out = []
+    for b in beats:
+        nb = dict(b)
+        narr = (nb.get("narration") or "").strip()
+        sid = (nb.get("primary") or {}).get("seg_id")
+        seg = (seg_map or {}).get(sid) or {}
+        # 화면 증거를 요구하지 않는 문장(감정·설명·CTA)은 대상이 아니다 — 화면이 안 맞는 게
+        # 정상이라 여기서 깎으면 멀쩡한 칸에 빨간불이 켜진다(2026-09-08 실측 49%).
+        if not narr or not seg or nb.get("visual_verb") is False or nb.get("respined"):
+            out.append(nb)
+            continue
+        frame_path = frame_resolver(sid, seg) if frame_resolver else None
+        if not frame_path:
+            out.append(nb)
+            continue
+        res = call(_SCREEN_VERIFY_PROMPT.format(narration=narr[:200]),
+                   _SCREEN_VERIFY_SCHEMA, frame_path)
+        if not res:                     # 키 소진·모델 실패 → 그대로 둔다
+            out.append(nb)
+            continue
+        if not bool(res.get("ok")):
+            nb["fit"] = min(int(nb.get("fit") or 5), 2)
+            nb["fit_evidence"] = "verify_failed"
+            nb["verify_why"] = (res.get("why") or "")[:40]
+        out.append(nb)
+    return out
 
 
 def _verify_fits(beats):
@@ -4851,8 +5012,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 # ★speed 보정(2026-08-09): 이 값이 _fill_beat_screen_time의 need가 된다.
                 #   보정 없이 두면 그 비트만 5.7자/초로 잡혀 화면이 44% 과충전된다
                 #   (실측: 같은 66자인데 한 비트는 8.0초, 보정 빠진 비트는 11.6초).
-                "target_seconds": round(
-                    max(1.5, len(narration) / (_SYLLABLES_PER_SEC * _speech_speed())), 1),
+                "target_seconds": narr_secs(narration),
                 "primary": _clean(covered[0]),
                 "alternates": [_clean(s) for s in covered[1:]],
                 "effect": "cut", "fit": 5, "forced": False,
@@ -5689,8 +5849,41 @@ def apply_scene_lab(plan, seg_map, edits):
         # 표식이 없으면 렌더는 종전 배분 그대로다(옛 job 회귀 0).
         if eb.get("phrase"):
             beat["phrase_sync"] = True
+        elif eb.get("phrase") is False:
+            # ★끈 칸은 표식을 **남긴다**(2026-09-14 사장님). 표식 없는 옛 job은 종전 배분 그대로.
+            beat["phrase_sync"] = False
         else:
             beat.pop("phrase_sync", None)
+        # ★끈 칸 = 화면에 보이던 컷 **그대로** 렌더(2026-09-14 사장님 "그 화면 그대로, 경계만 조절").
+        #   화면(scene_play.js CUTS)이 정한 컷을 받아 원본 위치로 풀어 둔다 — 서버가 다시 나누지 않는다.
+        _mc = []
+        if eb.get("phrase") is False and isinstance(eb.get("cuts"), list):
+            _seen = {}
+            for _c in eb["cuts"]:
+                try:
+                    _sid = str(_c.get("seg_id")); _d = float(_c.get("dur"))
+                except (AttributeError, TypeError, ValueError):
+                    continue
+                if _sid not in seg_map or not (_d > 0):
+                    continue
+                _g = seg_map[_sid]
+                _st = _seen.get(_sid, float(_g["start"]))   # 같은 장면 여러 컷 = 이어서 튼다(화면과 같음)
+                _seen[_sid] = _st + _d
+                _mc.append({"seg_id": _sid, "video_id": _g["video_id"],
+                            "start": round(_st, 3), "dur": round(_d, 3)})
+        if _mc:
+            beat["manual_cuts"] = _mc
+            try:
+                _slow = float(eb.get("slow") or 1)
+            except (TypeError, ValueError):
+                _slow = 1.0
+            if _slow > 1:
+                beat["slow"] = round(_slow, 4)
+            else:
+                beat.pop("slow", None)
+        else:
+            beat.pop("manual_cuts", None)
+            beat.pop("slow", None)
         applied += 1
     # ★오려낸 조각도 함께 남긴다(2026-09-05, 고객 다수 제보 "자막제거 후 다시 오면
     #   다 지워지고 까만색"). 종전엔 위에서 seg_map **사본**에만 병합하고 버려서,
@@ -6116,7 +6309,7 @@ def _rebuild_beats_by_lines(beats, sents):
         nb["primary"] = uniq[0] if uniq else None
         nb["alternates"] = uniq[1:]
         nb["narration"] = ln
-        nb["target_seconds"] = round(slot["sec"] or (len(ln) / _SYLLABLES_PER_SEC), 2)
+        nb["target_seconds"] = round(slot["sec"] or narr_secs(ln), 2)
         nb["narration_reordered"] = True
         nb.pop("narration_manual", None)
         _drop_stale_tts(nb)

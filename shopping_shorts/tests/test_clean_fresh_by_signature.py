@@ -37,6 +37,15 @@ def test_서명파일이_있으면_신선하다(job_and_work):
     assert mp.clean_final_matches_plan(job, work) is True
 
 
+def test_구형경로가_없어도_서명파일이_있으면_신선하다(job_and_work):
+    """신형 작업은 clean_video_path를 채우지 않아도 서명 파일 자체가 정본이다."""
+    job, work = job_and_work
+    (work / "clean_preview.mp4").unlink()
+    job["clean_video_path"] = None
+    _sig_file(job, work)
+    assert mp.clean_final_matches_plan(job, work) is True
+
+
 def test_재청소가_더_새것이어도_신선하다(job_and_work):
     """★이게 이번 버그다 — 새 청소본이 clean_preview보다 새것이라고 원본으로 떨어지면 안 된다."""
     import os

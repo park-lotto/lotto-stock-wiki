@@ -32,7 +32,7 @@ except Exception:
 sys.stdout.reconfigure(encoding="utf-8")
 
 try:
-    from fastapi import FastAPI, Request
+    from fastapi import FastAPI, Request, UploadFile, File, Form
     from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, FileResponse, RedirectResponse, PlainTextResponse
     from starlette.concurrency import run_in_threadpool
     import uvicorn
@@ -6975,6 +6975,77 @@ _위키 정식 ingest는 후속 연결 예정_
 
 
 # ── §5 유튜브 영상제작 대시보드 (/yt) ──────────────────────────
+try:
+    import evolink_api as _evolink
+except ImportError:
+    _evolink = None
+
+YT_PROJECTS_DIR = os.path.join(ROOT, "data", "yt_projects")
+YT_ANALYSIS_CACHE_DIR = os.path.join(ROOT, "data", "yt_analysis_cache")
+_YT_PROJECT_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{6,80}$")
+_YT_VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
+_YT_UPLOAD_EXTS = {
+    ".mp4", ".mov", ".mkv", ".webm", ".mp3", ".wav", ".m4a",
+    ".png", ".jpg", ".jpeg", ".webp", ".pdf", ".txt", ".md",
+}
+
+
+def _yt_now():
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def _yt_topic_default():
+    return {
+        "mode": "topic", "objective": "views", "seed_topic": "",
+        "published_days": 90, "video_format": "any", "sort_by": "meaningful",
+        "manual_urls": "", "search_results": [], "selected_video_ids": [],
+        "astra_decision": {}, "locked_at": None,
+    }
+
+
+def _yt_normalize_project(project):
+    default = _yt_topic_default()
+    current = project.get("topic_discovery") or {}
+    default.update(current)
+    project["topic_discovery"] = default
+    project.setdefault("video_analyses", [])
+    return project
+
+
+def _yt_project_path(project_id):
+    if not _YT_PROJECT_ID_RE.fullmatch(str(project_id or "")):
+        raise ValueError("잘못된 프로젝트 ID")
+    return os.path.join(YT_PROJECTS_DIR, project_id, "project.json")
+
+
+def _yt_load_project(project_id):
+    path = _yt_project_path(project_id)
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return _yt_normalize_project(json.load(f))
+
+
+def _yt_save_project(project):
+    _yt_normalize_project(project)
+    path = _yt_project_path(project["id"])
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    project["updated_at"] = _yt_now()
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(project, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+    return project
+
+
+def _yt_scene(project, scene_id):
+    return next((s for s in project.get("scenes", []) if s.get("id") == scene_id), None)
+
+
+def _yt_evolink_key():
+    return _env_key("EVOLINK_API_KEY")
+
+
 @app.get("/yt", response_class=HTMLResponse)
 def yt_page():
     p = os.path.join(HERE, "yt.html")
@@ -6984,6 +7055,393 @@ def yt_page():
         html = f.read()
     # 브라우저 캐시로 옛 버전 남는 것 방지 (계속 수정할 페이지라 매번 최신 서빙)
     return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
+
+
+@app.get("/yt/projects")
+def api_yt_projects():
+    rows = []
+    if os.path.isdir(YT_PROJECTS_DIR):
+        for path in glob.glob(os.path.join(YT_PROJECTS_DIR, "*", "project.json")):
+            try:
+                with open(path, encoding="utf-8") as f:
+                    p = json.load(f)
+                rows.append({
+                    "id": p["id"], "title": p.get("title", "제목 없음"),
+                    "status": p.get("status", "draft"),
+                    "current_step": p.get("current_step", 1),
+                    "scene_count": len(p.get("scenes", [])),
+                    "updated_at": p.get("updated_at", ""),
+                })
+            except (OSError, ValueError, KeyError, json.JSONDecodeError):
+                continue
+    rows.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
+    return JSONResponse(content={"projects": rows})
+
+
+@app.post("/yt/projects")
+async def api_yt_project_create(req: Request):
+    body = await req.json()
+    title = str(body.get("title") or "").strip()
+    if not title:
+        return JSONResponse(content={"error": "프로젝트 제목이 필요합니다"}, status_code=400)
+    now = _yt_now()
+    project_id = datetime.now().strftime("%Y%m%d%H%M%S") + "-" + uuid.uuid4().hex[:8]
+    project = {
+        "id": project_id, "title": title[:120], "status": "draft",
+        "current_step": 1, "format": body.get("format") or "longform",
+        "goal": body.get("goal") or "", "audience": body.get("audience") or "",
+        "target_minutes": int(body.get("target_minutes") or 10),
+        "idea": body.get("idea") or "", "references": [],
+        "topic_discovery": _yt_topic_default(), "video_analyses": [],
+        "plan_text": "", "script_text": "", "scenes": [],
+        "voice": {"provider": "elevenlabs", "name": "Liam", "speed": 1.0},
+        "created_at": now, "updated_at": now,
+    }
+    _yt_save_project(project)
+    return JSONResponse(content=project, status_code=201)
+
+
+@app.get("/yt/projects/{project_id}")
+def api_yt_project_get(project_id: str):
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    if project is None:
+        return JSONResponse(content={"error": "프로젝트를 찾을 수 없습니다"}, status_code=404)
+    return JSONResponse(content=project)
+
+
+@app.patch("/yt/projects/{project_id}")
+async def api_yt_project_update(project_id: str, req: Request):
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    if project is None:
+        return JSONResponse(content={"error": "프로젝트를 찾을 수 없습니다"}, status_code=404)
+    body = await req.json()
+    allowed = {
+        "title", "status", "current_step", "format", "goal", "audience",
+        "target_minutes", "idea", "references", "plan_text", "script_text",
+        "scenes", "voice", "topic_discovery", "video_analyses",
+    }
+    for key in allowed:
+        if key in body:
+            project[key] = body[key]
+    _yt_save_project(project)
+    return JSONResponse(content=project)
+
+
+def _yt_analysis_cache_path(video_id):
+    if not _YT_VIDEO_ID_RE.fullmatch(str(video_id or "")):
+        raise ValueError("잘못된 YouTube 영상 ID")
+    return os.path.join(YT_ANALYSIS_CACHE_DIR, f"{video_id}.json")
+
+
+def _yt_analysis_cache_load(video_id):
+    path = _yt_analysis_cache_path(video_id)
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+
+
+def _yt_analysis_cache_save(card):
+    path = _yt_analysis_cache_path(card["video_id"])
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(card, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+
+
+@app.post("/yt/projects/{project_id}/topic/analyze")
+async def api_yt_topic_analyze(project_id: str, req: Request):
+    """선택 영상 1~10개를 해체하고 Astra 규칙의 주제 확정 카드를 저장한다."""
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    if project is None:
+        return JSONResponse(content={"error": "프로젝트를 찾을 수 없습니다"}, status_code=404)
+    if _teardown is None:
+        return JSONResponse(content={"error": "영상 분석 모듈을 불러올 수 없습니다"}, status_code=503)
+
+    body = await req.json()
+    raw_videos = body.get("videos") or []
+    videos, seen = [], set()
+    for raw in raw_videos[:10]:
+        value = raw if isinstance(raw, str) else raw.get("video_id") or raw.get("url") or ""
+        video_id = _teardown.parse_video_id(str(value))
+        if not video_id or video_id in seen:
+            continue
+        seen.add(video_id)
+        item = {"video_id": video_id}
+        if isinstance(raw, dict):
+            item.update({
+                "title": str(raw.get("title") or "")[:300],
+                "channel": str(raw.get("channel") or raw.get("channel_title") or "")[:200],
+                "stats": raw.get("stats") or {
+                    "view_count": raw.get("view_count") or 0,
+                    "view_pct_above_avg": raw.get("view_pct_above_avg"),
+                    "contribution_grade": raw.get("contribution_grade") or "",
+                    "thumbnail": raw.get("thumbnail") or "",
+                },
+            })
+        videos.append(item)
+    if not videos:
+        return JSONResponse(content={"error": "분석할 YouTube 영상이 필요합니다"}, status_code=400)
+
+    context = {
+        "seed_topic": str(body.get("seed_topic") or "")[:300],
+        "audience": str(body.get("audience") or project.get("audience") or "")[:300],
+        "objective": str(body.get("objective") or "views")[:40],
+        "format": project.get("format", "longform"),
+        "target_minutes": project.get("target_minutes", 10),
+    }
+
+    def _stream():
+        cards = []
+        for index, video in enumerate(videos, 1):
+            video_id = video["video_id"]
+            yield f"data: {json.dumps({'type':'video_start','index':index,'total':len(videos),'video_id':video_id}, ensure_ascii=False)}\n\n"
+            try:
+                card = _yt_analysis_cache_load(video_id)
+                cached = card is not None
+                if card is None:
+                    card = _teardown.teardown(
+                        video_id, video.get("title", ""), video.get("channel", ""),
+                        video.get("stats") or {}, context={},
+                    )
+                    _yt_analysis_cache_save(card)
+                stats = video.get("stats") or {}
+                if stats.get("view_count"):
+                    card.setdefault("metrics", {})["view_count"] = int(stats["view_count"])
+                if stats.get("view_pct_above_avg") is not None:
+                    card.setdefault("metrics", {})["view_pct_above_avg"] = stats["view_pct_above_avg"]
+                cards.append(card)
+                yield f"data: {json.dumps({'type':'video_done','index':index,'total':len(videos),'cached':cached,'card':card}, ensure_ascii=False)}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'type':'video_error','index':index,'total':len(videos),'video_id':video_id,'message':str(e)[:200]}, ensure_ascii=False)}\n\n"
+
+        if not cards:
+            yield f"data: {json.dumps({'type':'error','message':'분석에 성공한 영상이 없습니다'}, ensure_ascii=False)}\n\n"
+            return
+        yield f"data: {json.dumps({'type':'synthesizing','count':len(cards)}, ensure_ascii=False)}\n\n"
+        try:
+            decision = _teardown.synthesize(cards, context)
+            project["video_analyses"] = cards
+            topic = project["topic_discovery"]
+            topic.update({
+                "mode": str(body.get("mode") or topic.get("mode") or "topic"),
+                "objective": context["objective"], "seed_topic": context["seed_topic"],
+                "selected_video_ids": [c["video_id"] for c in cards],
+                "astra_decision": decision, "locked_at": None,
+            })
+            project["idea"] = decision.get("topic") or context["seed_topic"]
+            project["references"] = [{
+                "video_id": c["video_id"], "title": c.get("title", ""),
+                "channel_title": c.get("channel", ""),
+                "view_pct_above_avg": (c.get("metrics") or {}).get("view_pct_above_avg") or 0,
+            } for c in cards]
+            _yt_save_project(project)
+            yield f"data: {json.dumps({'type':'done','decision':decision,'project':project}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")
+
+
+@app.post("/yt/projects/{project_id}/assets")
+async def api_yt_project_asset_upload(
+        project_id: str, scene_id: str = Form(...), file: UploadFile = File(...)):
+    if not _YT_PROJECT_ID_RE.fullmatch(scene_id):
+        return JSONResponse(content={"error": "잘못된 장면 ID"}, status_code=400)
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    if project is None:
+        return JSONResponse(content={"error": "프로젝트를 찾을 수 없습니다"}, status_code=404)
+    scene = _yt_scene(project, scene_id)
+    if scene is None:
+        return JSONResponse(content={"error": "장면을 찾을 수 없습니다"}, status_code=404)
+    original = os.path.basename(file.filename or "upload")
+    ext = os.path.splitext(original)[1].lower()
+    if ext not in _YT_UPLOAD_EXTS:
+        return JSONResponse(content={"error": "지원하지 않는 파일 형식입니다"}, status_code=400)
+    asset_id = uuid.uuid4().hex[:12]
+    safe_name = re.sub(r"[^0-9A-Za-z가-힣._-]+", "_", original)[:140]
+    asset_dir = os.path.join(YT_PROJECTS_DIR, project_id, "assets", scene_id)
+    os.makedirs(asset_dir, exist_ok=True)
+    dest = os.path.join(asset_dir, f"{asset_id}_{safe_name}")
+    size = 0
+    with open(dest, "wb") as out:
+        while True:
+            chunk = await file.read(1024 * 1024)
+            if not chunk:
+                break
+            size += len(chunk)
+            if size > 1024 * 1024 * 1024:
+                out.close()
+                os.remove(dest)
+                return JSONResponse(content={"error": "파일은 1GB 이하만 등록할 수 있습니다"}, status_code=413)
+            out.write(chunk)
+    asset = {
+        "id": asset_id, "name": original, "size": size,
+        "content_type": file.content_type or "application/octet-stream",
+        "stored_name": os.path.basename(dest), "created_at": _yt_now(),
+    }
+    scene.setdefault("assets", []).append(asset)
+    scene["status"] = "ready"
+    _yt_save_project(project)
+    return JSONResponse(content={"asset": asset, "project": project}, status_code=201)
+
+
+@app.get("/yt/projects/{project_id}/assets/{scene_id}/{asset_id}")
+def api_yt_project_asset(project_id: str, scene_id: str, asset_id: str):
+    if not _YT_PROJECT_ID_RE.fullmatch(scene_id):
+        return JSONResponse(content={"error": "잘못된 장면 ID"}, status_code=400)
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError:
+        project = None
+    scene = _yt_scene(project, scene_id) if project else None
+    asset = next((a for a in (scene or {}).get("assets", []) if a.get("id") == asset_id), None)
+    if not asset:
+        return JSONResponse(content={"error": "파일을 찾을 수 없습니다"}, status_code=404)
+    stored_name = str(asset.get("stored_name") or "")
+    if not stored_name or os.path.basename(stored_name) != stored_name:
+        return JSONResponse(content={"error": "잘못된 저장 파일 정보"}, status_code=400)
+    path = os.path.join(YT_PROJECTS_DIR, project_id, "assets", scene_id, stored_name)
+    if not os.path.isfile(path):
+        return JSONResponse(content={"error": "저장 파일이 없습니다"}, status_code=404)
+    return FileResponse(path, media_type=asset.get("content_type"), filename=asset.get("name"))
+
+
+@app.get("/yt/evolink/status")
+def api_yt_evolink_status():
+    """키 자체는 노출하지 않고 에보링크 연결 준비 상태와 허용 모델만 보낸다."""
+    models = list(_evolink.MODELS) if _evolink is not None else []
+    return JSONResponse(content={
+        "configured": bool(_yt_evolink_key()),
+        "available": _evolink is not None,
+        "models": models,
+        "default_model": _evolink.DEFAULT_MODEL if _evolink is not None else "",
+    })
+
+
+@app.post("/yt/projects/{project_id}/scenes/{scene_id}/ai-video")
+async def api_yt_scene_ai_video_create(project_id: str, scene_id: str, req: Request):
+    """장면 하나를 EvoLink 유료 영상 생성 작업으로 제출한다."""
+    if _evolink is None:
+        return JSONResponse(content={"error": "에보링크 연결 모듈을 불러올 수 없습니다"}, status_code=503)
+    key = _yt_evolink_key()
+    if not key:
+        return JSONResponse(
+            content={"error": "에보링크 API 키가 없습니다. .env에 EVOLINK_API_KEY를 등록한 뒤 서버를 다시 시작하세요."},
+            status_code=503,
+        )
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    scene = _yt_scene(project, scene_id) if project else None
+    if scene is None:
+        return JSONResponse(content={"error": "장면을 찾을 수 없습니다"}, status_code=404)
+    current = scene.get("ai_video") or {}
+    if current.get("status") in {"pending", "processing"}:
+        return JSONResponse(content={"error": "이미 생성 중인 AI 영상이 있습니다"}, status_code=409)
+
+    body = await req.json()
+    prompt = str(body.get("prompt") or scene.get("ai_prompt") or scene.get("script") or "").strip()
+    try:
+        task = await run_in_threadpool(
+            _evolink.create_video,
+            api_key=key,
+            prompt=prompt,
+            model=str(body.get("model") or _evolink.DEFAULT_MODEL),
+            duration=int(body.get("duration") or 5),
+            quality=str(body.get("quality") or "720p"),
+            aspect_ratio=str(body.get("aspect_ratio") or ("9:16" if project.get("format") == "shorts" else "16:9")),
+            generate_audio=bool(body.get("generate_audio", False)),
+        )
+    except (ValueError, _evolink.EvoLinkError) as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+
+    scene["production_type"] = "ai_generated"
+    scene["ai_prompt"] = prompt
+    scene["ai_video"] = {
+        "task_id": task["id"], "status": task.get("status") or "pending",
+        "progress": int(task.get("progress") or 0),
+        "model": task.get("model") or body.get("model") or _evolink.DEFAULT_MODEL,
+        "duration": int(body.get("duration") or 5),
+        "quality": str(body.get("quality") or "720p"),
+        "aspect_ratio": str(body.get("aspect_ratio") or ("9:16" if project.get("format") == "shorts" else "16:9")),
+        "estimated_time": (task.get("task_info") or {}).get("estimated_time"),
+        "submitted_at": _yt_now(), "asset_id": None, "error": "",
+    }
+    _yt_save_project(project)
+    return JSONResponse(content={"task": scene["ai_video"], "project": project}, status_code=202)
+
+
+@app.get("/yt/projects/{project_id}/scenes/{scene_id}/ai-video")
+async def api_yt_scene_ai_video_status(project_id: str, scene_id: str):
+    """생성 상태를 조회하고 완료된 원격 영상을 즉시 프로젝트에 저장한다."""
+    if _evolink is None:
+        return JSONResponse(content={"error": "에보링크 연결 모듈을 불러올 수 없습니다"}, status_code=503)
+    key = _yt_evolink_key()
+    if not key:
+        return JSONResponse(content={"error": "에보링크 API 키가 없습니다"}, status_code=503)
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    scene = _yt_scene(project, scene_id) if project else None
+    ai_video = (scene or {}).get("ai_video") or {}
+    if not ai_video.get("task_id"):
+        return JSONResponse(content={"error": "이 장면에 AI 영상 작업이 없습니다"}, status_code=404)
+
+    try:
+        task = await run_in_threadpool(_evolink.get_task, api_key=key, task_id=ai_video["task_id"])
+        status = str(task.get("status") or ai_video.get("status") or "pending")
+        ai_video["status"] = status
+        ai_video["progress"] = int(task.get("progress") or 0)
+        if status == "failed":
+            error = task.get("error") or task.get("message") or "영상 생성에 실패했습니다"
+            if isinstance(error, dict):
+                error = error.get("message") or error.get("code") or "영상 생성에 실패했습니다"
+            ai_video["error"] = str(error)[:300]
+        if status == "completed" and not ai_video.get("asset_id"):
+            results = task.get("results") or []
+            first = results[0] if results else ""
+            result_url = first.get("url") if isinstance(first, dict) else first
+            if not result_url:
+                raise _evolink.EvoLinkError("완료 응답에 영상 주소가 없습니다")
+            asset_id = uuid.uuid4().hex[:12]
+            filename = f"evolink_{scene_id}_{asset_id}.mp4"
+            asset_dir = os.path.join(YT_PROJECTS_DIR, project_id, "assets", scene_id)
+            stored_name = f"{asset_id}_{filename}"
+            path = os.path.join(asset_dir, stored_name)
+            size = await run_in_threadpool(_evolink.download_result, result_url, path)
+            asset = {
+                "id": asset_id, "name": filename, "size": size,
+                "content_type": "video/mp4", "stored_name": stored_name,
+                "source": "evolink", "created_at": _yt_now(),
+            }
+            scene.setdefault("assets", []).append(asset)
+            scene["status"] = "ready"
+            ai_video["asset_id"] = asset_id
+            ai_video["saved_at"] = _yt_now()
+        scene["ai_video"] = ai_video
+        _yt_save_project(project)
+    except _evolink.EvoLinkError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    return JSONResponse(content={"task": ai_video, "project": project})
 
 
 @app.get("/yt/refs", response_class=HTMLResponse)
@@ -7005,8 +7463,25 @@ async def api_yt_hot_clips(req: Request):
     if find_hot_clips is None:
         return JSONResponse(content={"error": "hot_clips 모듈을 불러올 수 없음"}, status_code=503)
 
+    try:
+        published_days = int(body.get("published_days") or 90)
+    except (TypeError, ValueError):
+        published_days = 90
+    video_format = str(body.get("video_format") or "any")
+    sort_by = str(body.get("sort_by") or "meaningful")
+
     def _do():
-        return find_hot_clips(q)
+        ranked = find_hot_clips(
+            q,
+            published_days=published_days,
+            video_format=video_format,
+            sort_by=sort_by,
+            require_relevance=True,
+        )
+        # YouTube 검색은 relevanceLanguage/regionCode를 힌트로만 취급하므로 완전히
+        # 무관한 글로벌 대형 영상이 섞일 수 있다. 관련성 근거가 없는 후보는 분석·
+        # 자동 선택 단계로 보내지 않는다.
+        return [item for item in ranked if int(item.get("relevance_score") or 0) >= 20]
 
     try:
         results = await run_in_threadpool(_do)

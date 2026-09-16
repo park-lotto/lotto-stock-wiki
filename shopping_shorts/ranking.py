@@ -470,10 +470,25 @@ def fill_intensity(items, now=None):
             it["density"] = (comments / views) if views else 0.0
         if it.get("fan_density") is None:
             it["fan_density"] = (comments / followers) if followers else 0.0
+        # ★"채웠다"와 "원래 그 값이다"를 갈라 적는다(2026-09-10 사장님 "기간+지표를
+        #   크로스해서 눌렀을 때 안 맞는다").
+        #
+        #   여기서 0을 넣는 건 **화면이 죽지 않게 하려는 자리 채우기**지 실제 값이 아니다.
+        #   그런데 화면 정렬은 `i.delta ?? i.comments`였고 JS의 `??`는 null만 폴백한다
+        #   → `0 ?? comments`가 **0**이 되어 기본 지표 '전체'의 줄세우기가 통째로 사라졌다.
+        #   실측(2026-09-10 서버, 이번 주 탭): 유튜브 400건·인스타 373건 **전부** delta 0.
+        #
+        #   그래서 어떤 값이 '모르는 값'인지 목록으로 함께 보낸다. 판단은 화면 한 곳
+        #   (sortKey / 무효 안내)에서만 한다 — 0을 특별취급하는 규칙을 여기저기 적으면
+        #   반드시 어긋난다(0순위-B).
+        unknown = []
         for k, v in (("delta", 0), ("accel", 0.0), ("is_new", False),
                      ("likes", 0), ("views", 0), ("followers", 0)):
             if it.get(k) is None:
                 it[k] = v
+                unknown.append(k)
+        if unknown:
+            it["metrics_unknown"] = unknown
     return items
 
 

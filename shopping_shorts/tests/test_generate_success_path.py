@@ -30,7 +30,7 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from shopping_shorts import app as appmod
+from shopping_shorts import app as appmod, script_gate
 from shopping_shorts.store import Store
 
 
@@ -38,6 +38,16 @@ from shopping_shorts.store import Store
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
     monkeypatch.setattr(appmod, "_AUTH_ON", False)
+    # 성공경로는 생성기뿐 아니라 외부 의미판정도 격리한다. 그렇지 않으면
+    # 로컬 .env 유무에 따라 실제 Gemini를 호출해 200/502가 달라진다.
+    # 판정기 장애·주제 이탈의 fail-close는 test_script_topic_contract가 검증한다.
+    monkeypatch.setattr(appmod.script_generate, "_speaker_judge", lambda *a, **k: {
+        "ok": True, "why": "", "topic_ok": True, "topic_why": "", "foreign_products": [],
+        "claims_ok": True, "claims_why": "", "claim_checks": [{"unit_index": i, "claim": t, "kind": "subjective",
+                          "supported": True, "supports": []}
+                         for i, t in enumerate(script_gate.claim_units(a[0]))],
+        "unsupported_claims": []})
+    monkeypatch.setattr(appmod, "_wow_block_for", lambda *a, **k: "")
     return TestClient(appmod.app)
 
 
@@ -86,7 +96,8 @@ def _fake_styles(*a, **kw):
 
 def _fake_variations(*a, **kw):
     """generate_variations(다른 분기) 응답 — 이쪽도 리스트다."""
-    return [{"hook": "훅", "script": "본문", "elements": {}}]
+    # 픽업 경로도 소재 출구 검사를 거치므로 라이브 fixture 제품이 든 정상 응답을 돌려준다.
+    return [{"hook": "훅", "script": "분리형 미니 세탁기 본문", "elements": {}}]
 
 
 def test_대본생성_성공경로가_200으로_끝난다(client, tmp_path, monkeypatch):
@@ -152,3 +163,13 @@ def test_재료가_비어도_500이_아니라_사유를_준다(client, monkeypat
     r = client.post("/api/wiki/generate?shortcode=SC_NONE", json={
         "mode": "remake", "subject": "x", "n": 1})
     assert r.status_code != 500, f"재료 없음이 500으로 샜다: {r.text[:300]}"
+
+
+def test_생성실패문구가_사실반려를_카테고리불일치로_오인하지_않는다():
+    msg = appmod._gen_fail_message([
+        {"kind": "근거부족", "detail": "가격 근거 없음"},
+        {"kind": "소재이탈", "detail": "다른 제품"},
+    ], "설정에서 틀 조립을 꺼두었습니다")
+    assert "카테고리" not in msg
+    assert "사실 근거" in msg
+    assert "가격 근거 없음" in msg

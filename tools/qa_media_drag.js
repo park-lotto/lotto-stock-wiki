@@ -1,0 +1,11 @@
+const pptr=require('puppeteer'),assert=require('assert'),fs=require('fs');
+(async()=>{const b=await pptr.launch({headless:true});try{const p=await b.newPage();await p.setViewport({width:1800,height:1400});const errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:8767/out/scene-style-ui-showcase.html?qa=1',{waitUntil:'networkidle0'});await p.click('[data-frame="body"]');await p.click('[data-editor-tab="effects"]');await p.$eval('[data-effect="zoom"]',e=>{e.value='1.8';e.dispatchEvent(new Event('input',{bubbles:true}))});
+ const drag=async(selector,dx,dy)=>{const r=await(await p.$(selector)).boundingBox();await p.mouse.move(r.x+r.width/2,r.y+r.height*.65);await p.mouse.down();await p.mouse.move(r.x+r.width/2+dx,r.y+r.height*.65+dy,{steps:8});await p.mouse.up()};
+ await drag('.scene-media-clip',45,35);let e=await p.evaluate(()=>sceneStyle.effect());assert.ok(e.panX>.1&&e.panY>.1);
+ await p.click('[data-effect-mode="zoom"]');await drag('.scene-focus',-35,40);e=await p.evaluate(()=>sceneStyle.effect());assert.ok(e.highlight.cx<.5&&e.highlight.cy>.55);
+ await p.click('[data-add-mask="fade"]');e=await p.evaluate(()=>sceneStyle.effect());assert.equal(e.masks[0].fx,'blur');assert.equal(e.masks[0].soft,80);
+ await p.click('[data-effects-all]');const snap=await p.evaluate(()=>sceneStyle.snapshot());assert.equal(Object.keys(snap.effects).length,12);assert.deepEqual(snap.effects['11'],snap.effects['1']);
+ await p.evaluate(()=>{const e=structuredClone(sceneStyle.effect());e.zoom=2;sceneStyle.effect(e)});assert.equal(await p.evaluate(()=>sceneStyle.snapshot().effects['11'].zoom),1.8);
+ await p.click('.layout-a .edit-pane > .primary');const saved=await p.evaluate(()=>sceneStyle.snapshot());await p.goto('http://127.0.0.1:8767/out/scene-style-ui-showcase.html',{waitUntil:'networkidle0'});assert.deepEqual(await p.evaluate(()=>sceneStyle.snapshot().effects),saved.effects);
+ await p.click('[data-editor-tab="effects"]');await p.screenshot({path:'.tmp/scene-style-qa/media-drag.png'});fs.writeFileSync('.tmp/scene-style-qa/media-drag-snapshot.json',JSON.stringify(saved));assert.deepEqual(errors,[]);console.log(JSON.stringify({ok:true,pan:true,lensDrag:true,transparentBlur:true,allScenes:true,isolatedEdit:true,restore:true}));
+}finally{await b.close()}})().catch(e=>{console.error(e);process.exit(1)});

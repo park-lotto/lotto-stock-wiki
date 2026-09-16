@@ -750,3 +750,18 @@ def test_plan_fills_from_source_tail_not_replay():
 
 def src_durs_of(vid):
     return {"A": 30.0, "B": 1.5}[vid]
+
+
+def test_drawtext_expansion_none_for_percent_text(tmp_path):
+    """★% 한 글자가 자막 줄을 통째로 지우던 회귀 방지(2026-09-09).
+
+    drawtext 기본 expansion=normal은 텍스트를 %{...} 치환식으로 훑어서, "99.9%"처럼
+    %가 그냥 글자로 들어가면 **아무것도 안 그린다**(에러 없이 조용히). 실측 job
+    851e2d9893b1 beat5 seg1 "되고, 99.9%"가 완성본에서 사라져 있었다.
+    우리는 %{...} 치환을 쓰지 않으므로 모든 drawtext에 expansion=none을 박는다.
+    """
+    style = {"font": "", "size": 64, "color": "#FFFFFF"}
+    parts = va._segmented_drawtext("되고, 99.9%", style, tmp_path, "cap", 50, 80,
+                                   single_line=True)
+    assert parts, "자막 필터가 만들어져야 한다"
+    assert all("expansion=none" in p for p in parts if "drawtext=" in p)
