@@ -730,8 +730,15 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     # ★A2는 문장별 사실 판정을 돌리지 않는다(2026-09-16 경로 정리 2단계, script_gate.claim_check_enabled).
     #   이 경로는 grounded라 '장면 근거'가 같은 일을 모델 호출 없이 한다. 문장별 판정(09-14)은
     #   호출당 수 초 + 재시도 유발 + 치명 반려로 "2안 요청에 1안"을 만든 장본인이었다.
+    #   ★셋을 가른다(2026-09-16):
+    #     _topic_required — 주제 단일성(새송이·채칼 같은 남의 제품 차단, 치명). 판정기 1회. **유지.**
+    #     _evidence       — 재료의 검증 블록(순수 파싱, 모델 0회). 스타일 틀의 미입증 문장 중화
+    #                       (fact_aware_style)와 프롬프트 지시(_claim_prompt)에만 쓴다. **유지.**
+    #     _claim_required — 문장별 사실 판정(모델 호출 + 재시도 유발). **끈다.** 게이트엔 evidence를
+    #                       안 넘겨 '사실 근거' 검사 자체가 생기지 않게 한다.
+    _topic_required = _claims_required(sources)
     _claim_required = script_gate.claim_check_enabled()
-    _evidence = claim_evidence(sources, facts_block) if _claim_required else None
+    _evidence = claim_evidence(sources, facts_block) if _topic_required else None
     seconds = max(5, min(int(target_seconds or 30), 90))
     # ★seed(job_id)를 넘겨 문장틀 순서를 job마다 돌린다 — 안 넘기면 항상 같은
     #   순서라 모델이 앞쪽 틀에 쏠린다(실측: 훅 10개 중 6개가 한 번도 안 나옴).
@@ -779,7 +786,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             + ("\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg, needs_scene}."
                if grounded else
                "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg}."))
-    if _claim_required:
+    if _evidence:          # 프롬프트 지시는 공짜다(모델 0회) — 근거 있는 것만 말하라는 안내는 유지
         base += _claim_prompt(_evidence)
         lo, hi = script_gate.density_range(style, seconds)
         count = max(1, len(style.get("beat_roles") or []))
@@ -811,8 +818,9 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          scene_ids=_scene_ids, scene_secs=_scene_secs, grounded=bool(grounded),
                                          is_recipe=_is_recipe, source_count=_source_count,
                                          materials_text=_materials_text(sources),
-                                         claim_evidence=_evidence, claims_required=_claim_required,
-                                         topic_required=_claim_required)
+                                         claim_evidence=(_evidence if _claim_required else None),
+                                         claims_required=_claim_required,
+                                         topic_required=_topic_required)
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
@@ -898,8 +906,9 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          scene_ids=_scene_ids, scene_secs=_scene_secs, grounded=bool(grounded),
                                          is_recipe=_is_recipe, source_count=_source_count,
                                          materials_text=_materials_text(sources),
-                                         claim_evidence=_evidence, claims_required=_claim_required,
-                                         topic_required=_claim_required)
+                                         claim_evidence=(_evidence if _claim_required else None),
+                                         claims_required=_claim_required,
+                                         topic_required=_topic_required)
         tries.append({"chars": len(script_gate.norm(full)), "trimmed": True,
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.fatal_fail(checks):
