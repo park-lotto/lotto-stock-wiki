@@ -78,9 +78,10 @@ def test_copy_family_is_forwarded_to_generator(spy):
 
 def test_same_script_different_family_does_not_share_cache(spy):
     script = "계열별 캐시 분리 확인용 대본"
-    client.post("/api/produce/headcopy/suggest", json={
-        "script": script, "copy_family": "youtube_reveal"})
-    n = len(spy)
-    client.post("/api/produce/headcopy/suggest", json={
-        "script": script, "copy_family": "generic"})
-    assert len(spy) == n + 1
+    before = len(spy)
+    for family in ("youtube_reveal", "instagram_story", "demo_direct"):
+        client.post("/api/produce/headcopy/suggest", json={
+            "script": script, "copy_family": family})
+    assert len(spy) == before + 3
+    assert [family for _, family in spy[-3:]] == [
+        "youtube_reveal", "instagram_story", "demo_direct"]

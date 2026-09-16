@@ -166,3 +166,49 @@ def test_youtube_reveal_rejects_a_line_wider_than_template(monkeypatch):
         "subline": "정체?", "upload_title": "제목",
     }]})
     assert headcopy_gen.suggest("대본", family="youtube_reveal") == []
+
+
+def test_instagram_story_family_returns_relationship_story_set(monkeypatch):
+    """인스타형은 관계 사건으로 열고 큰 제목·보조띠·업로드 제목을 함께 보존한다."""
+    seen = {}
+
+    def fake(prompt, schema):
+        seen["prompt"] = prompt
+        return {"copies": [{
+            "label": "관계 반전형",
+            "text": "시어머니가 줬다는데\n써보니 반전이었음",
+            "subline": "주방에서 이걸 꺼낸 이유",
+            "upload_title": "시어머니가 건넨 주방도구를 써본 며느리 반응",
+            "why": "사람 관계와 반전 전조로 다음 장면을 보게 합니다",
+        }]}
+
+    monkeypatch.setattr(headcopy_gen, "_call_json", fake)
+    out = headcopy_gen.suggest("주방도구를 선물받아 사용하는 대본", family="instagram_story")
+
+    assert out[0]["subline"] == "주방에서 이걸 꺼낸 이유"
+    assert out[0]["upload_title"].startswith("시어머니가 건넨")
+    assert "관계·상황·반전 전조" in seen["prompt"]
+    assert "~했다는데" in seen["prompt"]
+
+
+def test_demo_direct_family_returns_product_demo_set(monkeypatch):
+    """직접시연형은 제품 행동과 효과를 바로 말하는 제목 세트를 보존한다."""
+    seen = {}
+
+    def fake(prompt, schema):
+        seen["prompt"] = prompt
+        return {"copies": [{
+            "label": "사용 효과형",
+            "text": "양파를 넣고 누르면\n다지기가 끝남",
+            "subline": "칼질 없이 5초 만에 다지기",
+            "upload_title": "양파를 넣고 누르면 다지기가 끝나는 주방도구",
+            "why": "사용 행동과 결과를 한눈에 보여줍니다",
+        }]}
+
+    monkeypatch.setattr(headcopy_gen, "_call_json", fake)
+    out = headcopy_gen.suggest("전동 다지기에 양파를 넣고 누르는 대본", family="demo_direct")
+
+    assert out[0]["subline"] == "칼질 없이 5초 만에 다지기"
+    assert out[0]["upload_title"].startswith("양파를 넣고")
+    assert "제품·행동·효과" in seen["prompt"]
+    assert "정체를 숨기지" in seen["prompt"]

@@ -16,17 +16,17 @@
 - Modify: `shopping_shorts/headcopy_gen.py`
 - Modify: `shopping_shorts/tests/test_headcopy_gen.py`
 
-- [ ] **Step 1: Write failing family tests**
+- [x] **Step 1: Write failing family tests**
 
 Add tests that call `suggest(..., family="instagram_story")` and `suggest(..., family="demo_direct")`, capture the prompt, and assert that `text`, `subline`, and `upload_title` survive as one candidate. Assert the Instagram prompt contains relationship-story instructions and the direct-demo prompt contains product/use instructions.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `py -m pytest shopping_shorts/tests/test_headcopy_gen.py -q`
 
 Expected: both new-family tests fail because `normalize_family()` currently collapses them to `youtube_reveal`.
 
-- [ ] **Step 3: Implement minimal generator support**
+- [x] **Step 3: Implement minimal generator support**
 
 Extend the allowed family set:
 
@@ -43,7 +43,7 @@ prompt = _FAMILY_PROMPTS.get(family, _PROMPT)
 
 For all paired families, preserve `subline` and `upload_title`; keep the existing maximum lengths and reject any rendered line wider than 11 characters.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
 Run: `py -m pytest shopping_shorts/tests/test_headcopy_gen.py -q`
 
@@ -56,7 +56,7 @@ Expected: all generator tests pass.
 - Modify: `shopping_shorts/tests/test_headcopy_ui.py`
 - Create: `shopping_shorts/tests/test_script_copy_family_ui.py`
 
-- [ ] **Step 1: Write failing UI wiring tests**
+- [x] **Step 1: Write failing UI wiring tests**
 
 Add static regression tests asserting:
 
@@ -68,13 +68,13 @@ STATE.script_copy_family = s2CopyFamilyForDraft(dr);
 
 Also assert `_workState`, `_restoreWork`, `revertWork`, and `_consumeProduceHandoff` save/restore both fields. Assert `currentCopyFamily()` reads `STATE.script_copy_family` unless `frame.copy_family_override` is true.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `py -m pytest shopping_shorts/tests/test_headcopy_ui.py shopping_shorts/tests/test_script_copy_family_ui.py -q`
 
 Expected: failures for missing style mapping, persistence, and override markers.
 
-- [ ] **Step 3: Implement one mapping function**
+- [x] **Step 3: Implement one mapping function**
 
 Add:
 
@@ -89,11 +89,11 @@ function s2CopyFamilyForDraft(dr){
 
 In `s2Confirm()` and `s2ConfirmToNewWork()`, store `script_style_id` and `script_copy_family`. Add them to `_workState()` and all three work restoration paths with old-data-safe defaults.
 
-- [ ] **Step 4: Implement explicit template precedence**
+- [x] **Step 4: Implement explicit template precedence**
 
 Make `currentCopyFamily()` return the template family only when `frame.copy_family_override` is true; otherwise return `STATE.script_copy_family`, then template/default. When `frPick(preset)` is called with a preset, store `copy_family_override:true` in the frame state.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `py -m pytest shopping_shorts/tests/test_headcopy_ui.py shopping_shorts/tests/test_script_copy_family_ui.py shopping_shorts/tests/test_produce_work_save.py shopping_shorts/tests/test_produce_work_restore.py -q`
 
@@ -107,26 +107,26 @@ Expected: all tests pass.
 - Modify: `handoff/장면꾸미기재편.md`
 - Modify: `wiki/log.d/장면꾸미기재편.md`
 
-- [ ] **Step 1: Add failing cache-separation coverage**
+- [x] **Step 1: Add cache-separation coverage**
 
 Parameterize the API cache test over `youtube_reveal`, `instagram_story`, and `demo_direct`, asserting the same script calls the generator once per family.
 
-- [ ] **Step 2: Verify RED if the API does not distinguish all values**
+- [x] **Step 2: Verify the API distinguishes all values**
 
 Run: `py -m pytest shopping_shorts/tests/test_headcopy_api.py -q`
 
 Expected before normalization support: the two new values collapse to one cache key and the test fails.
 
-- [ ] **Step 3: Expand browser QA**
+- [x] **Step 3: Expand browser QA**
 
 For each family, inject a paired candidate, set `STATE.script_copy_family`, call `useHeadcopy(0)`, and assert the large title and subline both reach the preview. Then call `frPick('sul_even')` and assert explicit template selection resolves to `youtube_reveal`.
 
-- [ ] **Step 4: Run full relevant verification**
+- [x] **Step 4: Run full relevant verification**
 
 Run all headcopy, frame-decoration, work-save, and work-restore tests, then run the Puppeteer QA against the local `/produce` server.
 
 Expected: zero pytest failures, browser `errors: []`, and no clipped two-line headline in the saved screenshots.
 
-- [ ] **Step 5: Record and commit**
+- [x] **Step 5: Record and commit**
 
 Append the three-family behavior and verification evidence to the handoff and log, inspect `git diff --check`, and commit only the intended files. Do not merge to `main` or deploy.

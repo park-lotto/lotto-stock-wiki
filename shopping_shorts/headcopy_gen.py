@@ -14,8 +14,9 @@ _LINE_LEN = 13         #   무너져 문단처럼 보였다 — 두 줄 x 13자�
 _WANT = 4
 _WHY_LEN = 80          # ★이유문은 카드 밑에 한 줄로 깔린다(썸네일 제목 추천과 같은 모양).
                        #   길어지면 카드가 문단이 돼 고르기가 더 어려워진다.
-_FAMILIES = {"generic", "youtube_reveal"}
+_FAMILIES = {"generic", "youtube_reveal", "instagram_story", "demo_direct"}
 _DEFAULT_FAMILY = "youtube_reveal"
+_PAIRED_FAMILIES = {"youtube_reveal", "instagram_story", "demo_direct"}
 
 _SCHEMA = {
     "type": "object",
@@ -89,6 +90,54 @@ _YOUTUBE_REVEAL_PROMPT = """너는 이븐쇼핑류 유튜브 쇼츠의 **첫 후
 {script}
 """
 
+_INSTAGRAM_STORY_PROMPT = """너는 인스타 릴스의 **관계썰 제목 세트**를 쓴다.
+
+아래 대본에서 서로 다른 후보 4개를 써라. 각 후보는 반드시 한 세트다.
+- upload_title: 업로드용 제목. 사람·관계·상황·반전 전조를 자연스럽게 잇는다.
+- text: 영상 상단 큰 제목. 정확히 두 줄이며 대화하듯 자연스러운 관계 사건으로 연다.
+- subline: 큰 제목 아래 보조문구. 다음 상황이 궁금해지는 목격담이나 질문을 쓴다.
+- why: 어떤 관계썰 장치인지 한 줄로 설명한다.
+
+전개 규칙:
+- 가족·손님·친구·직장 동료처럼 대본에 어울리는 사람과 상황을 먼저 놓는다.
+- '~했다는데', '~했더니', '알고 보니'처럼 썰을 이어가는 말투를 자유롭게 쓴다.
+- 관계 갈등이나 반전은 흥미롭게 각색해도 되지만 제품 정체·작동 방식·핵심 효능은 바꾸지 않는다.
+- 마지막 재후킹에서 공개할 최강 장점은 subline에 미리 쓰지 않는다.
+- text는 두 줄, 각 줄 {linelen}자 이내, 전체 {maxlen}자 이내다.
+- subline은 32자 이내, upload_title은 50자 이내다.
+- 이모지·해시태그·따옴표를 쓰지 않는다.
+
+[대본]
+{script}
+"""
+
+_DEMO_DIRECT_PROMPT = """너는 제품을 직접 보여주는 쇼츠의 **시연형 제목 세트**를 쓴다.
+
+아래 대본에서 서로 다른 후보 4개를 써라. 각 후보는 반드시 한 세트다.
+- upload_title: 업로드용 제목. 제품·행동·효과가 한눈에 이해되게 쓴다.
+- text: 영상 상단 큰 제목. 정확히 두 줄이며 사용 행동과 결과를 바로 말한다.
+- subline: 큰 제목 아래 보조문구. 사용법·비교·핵심 기능 중 하나를 짧게 받친다.
+- why: 어떤 시연 장치인지 한 줄로 설명한다.
+
+전개 규칙:
+- 제품 정체를 숨기지 말고 화면에서 보이는 행동과 효익을 먼저 설명한다.
+- 사용 전후, 시간 절약, 번거로움 해결처럼 대본에서 확인되는 변화에 집중한다.
+- 대본에 없는 가족 갈등·천재 개발자·해외 품절 같은 서사를 억지로 만들지 않는다.
+- 제품 정체·작동 방식·핵심 효능은 대본과 다르게 바꾸지 않는다.
+- text는 두 줄, 각 줄 {linelen}자 이내, 전체 {maxlen}자 이내다.
+- subline은 32자 이내, upload_title은 50자 이내다.
+- 마침표·이모지·해시태그·따옴표를 쓰지 않는다.
+
+[대본]
+{script}
+"""
+
+_FAMILY_PROMPTS = {
+    "youtube_reveal": _YOUTUBE_REVEAL_PROMPT,
+    "instagram_story": _INSTAGRAM_STORY_PROMPT,
+    "demo_direct": _DEMO_DIRECT_PROMPT,
+}
+
 
 def normalize_family(value):
     """외부 입력을 아는 문구 계열 하나로 정규화한다."""
@@ -125,9 +174,10 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
     if not s:
         return []                      # 재료가 없으면 부르지 않는다(빈 재료로 지어낸다)
     family = normalize_family(family)
-    maxlen = 23 if family == "youtube_reveal" else _MAX_LEN
-    linelen = 11 if family == "youtube_reveal" else _LINE_LEN
-    prompt = _YOUTUBE_REVEAL_PROMPT if family == "youtube_reveal" else _PROMPT
+    paired = family in _PAIRED_FAMILIES
+    maxlen = 23 if paired else _MAX_LEN
+    linelen = 11 if paired else _LINE_LEN
+    prompt = _FAMILY_PROMPTS.get(family, _PROMPT)
     data = _call_json(prompt.format(script=s[:4000], maxlen=maxlen,
                                     linelen=linelen, whylen=_WHY_LEN), _SCHEMA) or {}
     copies = data.get("copies") if isinstance(data, dict) else None
@@ -144,7 +194,7 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
         # ★접은 **뒤에** 중복을 본다. 접기 전 문자열로 검사하고 접은 걸 저장하면
         #   같은 문구가 두 번 통과한다(실측: 테스트 test_dedupes_identical_text가 잡음).
         text = two_lines(text)         # 두 줄 고정은 여기 한 곳(화면에서 또 접지 않는다)
-        if family == "youtube_reveal" and any(len(line) > linelen for line in text.split("\n")):
+        if paired and any(len(line) > linelen for line in text.split("\n")):
             continue                  # 실제 이븐쇼핑 틀에서 좌우가 잘리는 문구는 후보로 내지 않는다
         if text in seen:
             continue
@@ -157,7 +207,7 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
         item = {"label": label or "제안", "text": text, "why": why[:_WHY_LEN]}
         # 첫 후킹 계열은 큰 제목과 흰 보조띠를 **같은 응답의 한 세트**로 보관한다.
         # 둘을 따로 생성하면 후보를 바꿀 때 서로 다른 약속이 섞인다.
-        if family == "youtube_reveal":
+        if paired:
             subline = c.get("subline")
             upload_title = c.get("upload_title")
             if isinstance(subline, str) and subline.strip():
