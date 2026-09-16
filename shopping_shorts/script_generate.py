@@ -382,6 +382,16 @@ def _scene_line_full(x, include_interpretation=True):
     return " | ".join(parts)
 
 
+def _speech_sps():
+    """말속도(초당 음절)의 **정본은 edit_plan** — 여기서 숫자를 다시 적지 않는다.
+    (메모리 `reference_말속도_상수_4벌`: 상수가 여러 벌이면 길이 버그가 재발한다)"""
+    try:
+        from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC
+        return float(_SYLLABLES_PER_SEC)
+    except Exception:
+        return 5.7
+
+
 _GROUNDED_RULE = (
     "\n\n★★[장면에 보이는 것만 써라 — 제품형 규칙]\n"
     "- 제품의 **장점·효과·특징·동작·결과**를 말하는 줄은 반드시 위 '장면 목록'에 실제로 보이는 장면에서 "
@@ -394,6 +404,10 @@ _GROUNDED_RULE = (
     "- **한 장면은 한 줄에만 쓴다** — 앞줄에서 대표로 쓴 번호를 뒷줄에서 또 대표로 쓰지 마라. "
     "같은 화면이 두 번 나오면 영상이 반복돼 보인다. 비슷한 장면이 여러 개면 각 줄에 다른 번호를 골라라 "
     "(보조 번호는 겹쳐도 된다).\n"
+    "- ★**그 줄을 읽는 동안 화면이 비면 안 된다** — src_seg에 적은 장면들의 길이(각 줄 앞 `(N.Ns)`) "
+    "합이 **그 줄을 소리 내 읽는 시간 이상**이어야 한다. 읽는 시간 ≈ 글자수 ÷ {sps}초(최소 1.5초)다. "
+    "한 장면으로 모자라면 **그 줄의 내용을 이어서 보여주는 장면 번호를 쉼표로 더 적어라**(첫 번째가 대표). "
+    "예: 20자짜리 줄(약 3.5초)에 1.2초 장면 하나만 적으면 2.3초가 빈다 — 뒤 화면이 딴 내용으로 메워진다.\n"
     "- 재료 대본이 **여러 영상**이면 장면도 여러 영상에서 골라 써라. 앞에 있는 것부터 채워 **한 영상에서만** 다 가져오지 마라 — 여러 편을 넣는 이유가 한 편에 끌려가지 않기 위해서다. 다만 소재가 서로 다른 제품이면 억지로 섞지 말고 그 줄에 정말 맞는 장면을 골라라.")
 
 
@@ -405,6 +419,30 @@ def scene_ids_of(sources):
             if isinstance(x, dict) and x.get("seg_id"):
                 ids.add(str(x["seg_id"]))
     return ids
+
+
+def scene_secs_of(sources):
+    """장면 목록에 실린 seg_id -> 길이(초). 게이트의 '분량' 판정이 쓴다.
+
+    ★왜(2026-09-16 실측, job 26698eb0a362): 2단계는 줄마다 장면을 **1개씩만** 지목하는데
+      컷 하나는 평균 1.3초고 줄 하나는 평균 2.5초다 → **구조적으로 화면의 절반이 빈다**
+      (그 job은 대사 24.8초에 지목 화면 12.9초 = 52% 결손). 그 빈칸을 3단계
+      `_fill_beat_screen_time`이 대본을 안 보고 메우면서 중복·시간역행·CTA 7컷이 났다.
+      채우는 **방법**은 07-31부터 다섯 번 고쳤다(1차·2차·상한·같은그림·산만함) — 전부
+      두더지였다. 빈칸이 안 생기게 하는 곳은 **고르는 주체인 2단계 한 곳**이다(0순위-B).
+    ⚠️ids와 같은 목록·같은 상한을 봐야 짝이 맞는다(scene_ids_of와 나란히 고칠 것)."""
+    out = {}
+    for s in (sources or [])[:SOURCE_MAX]:
+        for x in (s.get("segments") or [])[:GROUNDED_SCENE_MAX]:
+            if not (isinstance(x, dict) and x.get("seg_id")):
+                continue
+            try:
+                secs = round(float(x.get("end") or 0) - float(x.get("start") or 0), 2)
+            except (TypeError, ValueError):
+                secs = 0.0
+            if secs > 0:
+                out[str(x["seg_id"])] = secs
+    return out
 
 
 def _mix_source_block(sources, full_scenes=False):
@@ -705,6 +743,8 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     # grounded(2026-09-04): 장면 전부 + 규칙 + 게이트 '장면 근거'. 아니면 종전 문장 그대로.
     _is_recipe = any("레시피" in (s.get("name") or "") for s in (sources or []))
     _scene_ids = scene_ids_of(sources) if grounded else None
+    # ★장면 길이 — 게이트 "화면 분량" 판정용. ids와 **같은 목록·같은 상한**을 본다(짝).
+    _scene_secs = scene_secs_of(sources) if grounded else None
     # ★장면 목록이 비면(세그 없는 소스) grounded는 구조적으로 3회 다 실패한다(2026-09-05 리뷰 M7).
     #   ★2026-09-16 수정: 예전엔 여기서 grounded를 끄고 종전 모드로 강등했다. 그런데 강등된
     #     대본은 근거 없이 쓰이므로 사실 근거 검사에 또 걸려, 3회를 다 태우고 버려졌다
@@ -730,7 +770,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             + _style_extra()
             + (("\n" + facts_block) if facts_block else "")
             + "\n\n" + head
-            + ((_GROUNDED_RULE if not _is_recipe else
+            + ((_GROUNDED_RULE.replace("{sps}", str(_speech_sps())) if not _is_recipe else
                 "\n\n★[장면 번호] 장면을 보고 쓴 줄은 src_seg에 장면 목록의 번호를 적어라(없는 번호 금지). "
                 "레시피는 감각·전개 줄이 장면 없이도 된다(needs_scene=false).") if grounded else
                "\n\n각 칸마다 src_seg에 **그 문장을 쓸 때 참고한 장면 번호**를 적어라"
@@ -768,7 +808,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          product=_sources_product(sources) or (product or ""),
                                          seconds=seconds,
                                          speaker_judge=_speaker_judge,
-                                         scene_ids=_scene_ids, grounded=bool(grounded),
+                                         scene_ids=_scene_ids, scene_secs=_scene_secs, grounded=bool(grounded),
                                          is_recipe=_is_recipe, source_count=_source_count,
                                          materials_text=_materials_text(sources),
                                          claim_evidence=_evidence, claims_required=_claim_required,
@@ -855,7 +895,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          seconds=seconds,
                                          speaker_judge=(_speaker_judge if _claim_required
                                                         else script_gate.prior_verdict(checks)),
-                                         scene_ids=_scene_ids, grounded=bool(grounded),
+                                         scene_ids=_scene_ids, scene_secs=_scene_secs, grounded=bool(grounded),
                                          is_recipe=_is_recipe, source_count=_source_count,
                                          materials_text=_materials_text(sources),
                                          claim_evidence=_evidence, claims_required=_claim_required,
