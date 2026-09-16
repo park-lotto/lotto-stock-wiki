@@ -17734,8 +17734,9 @@ function s2ShowSeedText(i){
   // 원문은 AI PICK 응답(candidates[].text)에 이미 실려 온다 — 따로 부르지 않는다.
   // ⚠️`/api/produce/source_brief`에는 대본 원문이 없다(brief·segments뿐, 실측 확인).
   //   거기서 가져오려다 응답 필드를 짐작하는 실수를 했다 — 없는 걸 부르면 조용히 빈다.
-  box.textContent = (s.text||'').trim()
-    || '이 영상의 대본 원문이 아직 없습니다(1단계 분석이 끝나면 보입니다)';
+  // ★원문이 없을 때 "아직 없습니다"라고 쓰지 않는다(2026-09-16 회원 제보). 말 없는 영상은
+  //   분석이 끝나도 원문이 안 생긴다 — "아직"은 틀린 안내라 고장처럼 보였다. 대본은 화면으로 만든다.
+  box.textContent = (s.text||'').trim() || '말 없는 영상이에요 — 화면을 재료로 대본을 만듭니다';
 }
 function s2ManualSeed(){
   const t=prompt('씨앗으로 쓸 대본을 붙여넣으세요');
@@ -17758,9 +17759,9 @@ function s2RenderSeedInfo(){
     box.style.display='';
     document.getElementById('s2SeedQuote').textContent='';
     document.getElementById('s2SeedStrip').innerHTML='';
+    // ★"대본 원문이 아직 없어요" 문구는 뺐다(2026-09-16 회원 제보 — 고장으로 읽혔다). 길이만 남긴다.
     document.getElementById('s2SeedMeta').innerHTML=
-      '이 영상은 <b>대본 원문이 아직 없어요</b> — 1단계에서 분석이 끝나면 뼈대가 여기 나옵니다.'
-      + (s.tiles && s.tiles.seconds!=null ? ('길이 <b>'+s.tiles.seconds+'초</b>') : '');
+      (s.tiles && s.tiles.seconds!=null ? ('길이 <b>'+s.tiles.seconds+'초</b>') : '');
     document.getElementById('s2SeedStyle').style.display='none';
     return;
   }
