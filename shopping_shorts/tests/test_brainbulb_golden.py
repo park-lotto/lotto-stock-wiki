@@ -86,3 +86,40 @@ def test_golden_fixtures_are_intact():
         s, _ = _script(job)
         counts[job] = len(s["groups"])
     assert counts == {"parksuhong": 28, "leedonggun": 25, "taser": 22, "borneo": 32, "parkwi": 28}, counts
+
+
+# ── 말맛 규칙 (2026-09-16 사장님 "너무 나열식 밋밋하고 재미없는거 아닌가") ──────────
+
+def test_speaker_voice_warns_only_when_none(tmp_path):
+    """★말 거는 컷이 하나도 없을 때만 알린다. 실물 박위 편이 0/28 이므로 REJECT 면 안 된다."""
+    from shopping_shorts.brainbulb import lint
+    plain = {"groups": [{"text": "그는 열일곱이었다", "color": "WHITE"} for _ in range(22)]}
+    assert lint.r_speaker_voice(plain, {}), "전부 3인칭인데 알리지 않는다"
+    spoken = dict(plain)
+    spoken["groups"] = list(plain["groups"])
+    spoken["groups"][3] = {"text": "근데 카트리지가 끼워져 있었음", "color": "WHITE"}
+    assert not lint.r_speaker_voice(spoken, {}), "말 거는 컷이 있는데도 알린다"
+
+
+def test_speaker_voice_is_a_warning_not_a_reject():
+    """실물 한 편(박위)이 0개다 — 반려로 만들면 정답 편이 막힌다."""
+    from shopping_shorts.brainbulb import lint
+    r = next(r for r in lint.RULES if r.id == "speaker_voice")
+    assert r.level == lint.WARN
+
+
+def test_speaker_voice_passes_four_of_five_golden():
+    """★실물로 재라 — 규칙이 정답 편을 무더기로 막으면 그 규칙이 틀린 것이다.
+
+    실측 2026-09-16: 말 거는 컷은 테이저건 5 · 박수홍 4 · 이동건 3 · 보르네오 1 · 박위 0.
+    박위만 0개이므로 경고도 박위 하나여야 한다.
+    """
+    warned = [n for n in GOLDEN if lint.r_speaker_voice(_script(n)[0], {})]
+    assert warned == ["parkwi"], f"실물에서 예상 밖 경고: {warned}"
+
+
+def test_prompt_tells_which_ending_style_to_pick():
+    """★«둘 중 하나로 통일»만 있으면 모델이 늘 뉴스체로 도망간다(우리 두 편 음슴 0)."""
+    from shopping_shorts.brainbulb import prompt
+    t = prompt.TARGETS
+    assert "시간순으로 벌어지는" in t and "~함/~됨/~임" in t, "어느 소재에 어느 계열인지가 없다"

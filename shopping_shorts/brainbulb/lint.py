@@ -123,6 +123,31 @@ def r_formal(s, ctx):
     return out
 
 
+_SPEAKER = re.compile(r"(인데|는데|아닌데|근데|벌써|다고$|줄 알았나|알았나|잖|더라|라니|냐$)")
+
+
+def r_speaker_voice(s, ctx):
+    """화자가 **말을 거는 컷**이 하나도 없으면 리포트처럼 밋밋해진다.
+
+    실측 2026-09-16 — 실물 5편은 편당 0~5컷에 말 거는 어미가 있다:
+        테이저건 5/22 · 박수홍 4/28 · 이동건 3/25 · 보르네오 1/32 · 박위 0/28
+    우리가 쓴 두 편은 **둘 다 0**이었다(소녀병 0/27 · 제로카레 0/30).
+    사실은 맞는데 전부 3인칭 서술이라 "나열식·밋밋"하다는 평을 받았다(사장님).
+
+    ★WARN 이다. 박위 편이 0/28 이므로 **반려하면 실물 한 편이 막힌다** —
+      금지가 아니라 "빠졌다"는 알림이다. 컷이 20개 넘는데 0개일 때만 띄운다.
+    """
+    gs = _groups(s)
+    if len(gs) < 20:
+        return []
+    hits = [i for i, g in enumerate(gs) if _SPEAKER.search((g.get("text") or "").strip())]
+    if hits:
+        return []
+    return [Issue("speaker_voice", WARN, "groups", "",
+                  "말을 거는 컷이 한 개도 없습니다 — 전부 3인칭 서술이면 리포트처럼 들립니다. "
+                  "도입·뒤집히는 자리·어이없는 자리에 «~인데» «근데» «벌써 ~나» 를 2~5컷 넣어 보세요")]
+
+
 def r_ending_mix(s, ctx):
     """한 대본 안에서 어미 계열을 섞지 마라 — 뉴스체로 가든 음슴체로 가든 **하나로**.
 
@@ -390,6 +415,7 @@ RULES = [
     Rule("enum", REJECT, f"색은 {'/'.join(spec.COLORS)}, 역할은 {'/'.join(spec.ROLES)}만. 컷마다 img(슬롯 번호) 또는 meme(감정) 중 하나. 밈 감정은 다음 문자열 그대로: {' · '.join(spec.EMOTIONS)}.", r_enum),
     Rule("nonwhite_run", REJECT, "흰색이 아닌 강조색을 3컷 연달아 쓰지 마라. 사이에 WHITE를 둬라.", r_nonwhite_run),
     Rule("formal", REJECT, "나레는 반말체(~였다/~했다 또는 ~임/~됨). '-습니다'가 과반이면 안 되고 '-습니까/-십시오'는 쓰지 마라.", r_formal),
+    Rule("speaker_voice", WARN, "전부 3인칭 서술로 쓰지 마라 — 도입·뒤집히는 자리·어이없는 자리에 말을 거는 컷(«~인데» «근데» «벌써 ~나»)을 2~5컷 넣어라. 실물 5편 실측 0~5컷.", r_speaker_voice),
     Rule("ending_mix", REJECT, "어미는 **한 편 안에서 하나로 통일**하라 — 뉴스체(~였다·~이다)로 갈지 음슴체(~음·~함·~임)로 갈지 먼저 정하고 끝까지 그것만 써라. 둘을 섞으면 반려된다(PUNCH도 같은 계열로 닫아라).", r_ending_mix),
     Rule("h2_abstract", REJECT, "h2(노란 아랫줄)에는 숫자를 넣고, 이유·사연 같은 추상명사로 끝내지 마라.", r_h2_abstract),
     Rule("card", REJECT, f"카드는 오프닝에서 읽어주는 한 문장, {spec.POLICY_CARD_MAX_CHARS}자 안(실제 편 26~33자). 낱말로 끊지 마라.", r_card),
