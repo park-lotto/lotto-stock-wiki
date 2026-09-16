@@ -9317,6 +9317,7 @@ async function _restoreWork(workId){
   //   복원이 통째로 죽는다(실측: test_produce_boot_step_restore가 cur=7 대신 0을 받았다).
   //   이 파일의 _mergeHandoffItems·_s2Hydrate가 typeof 가드를 쓰는 것과 같은 이유다.
   try{ CLEAN_DONE_TIERS = sg.clean_tiers_ready || {}; }catch(_){}
+  try{ CLEAN_PRO_READY = (sg.clean_pro_ready === true); }catch(_){}   // 내 키로 고급이 되면 등록 경고를 뺀다
   // ★복원된 스타일이 하나라도 있으면 꾸미기 패널이 그걸 덮지 않게 표시한다(위 선언 참조).
   // headcopy/caption STYLE(색·폰트·크기)은 DOM 입력칸에서 되읽히므로 STATE만으로는 안 남는다 —
   // initHeadcopy가 이 플래그를 보고 applyConfig로 DOM을 채운다.
@@ -13498,7 +13499,11 @@ function paintCleanTier(){
   // ★비용 배수는 적지 않는다 — 사장님 지시(2026-09-16) "비용 두배라고 쓰지 말고".
   // ★발급 안내는 글로만 두지 않고 **그림 안내로 바로 보낸다**(설정 화면과 같은 주소,
   //   api_manual.html의 자막제거 안내 — 정의처는 settings.html의 '📖 그림으로 보는 발급 방법').
-  let msg = (tier==='pro')
+  const proReady = (typeof CLEAN_PRO_READY !== 'undefined') && CLEAN_PRO_READY;
+  let msg = (tier==='pro' && proReady)
+    ? '큰 자막·자막 박스도 깨끗하게 지워요. <b>1초에 4크레딧</b>(30초 영상이면 120크레딧, 초 단위 올림).'
+      + '<br><span style="color:var(--ok,#7ef0b0)">✅ 지금 등록된 키로 고급을 쓸 수 있어요.</span>'
+    : (tier==='pro')
     ? '큰 자막·자막 박스도 깨끗하게 지워요. <b>1초에 4크레딧</b>(30초 영상이면 120크레딧, 초 단위 올림).'
       + '<br><span style="color:var(--fire,#ff9a5a)">⚠️ 고급은 <b>Pro 요금제(월 44,000원)</b>의 <b>새 API 키</b>가 필요해요.</span><br>'
       + '<span style="opacity:.85">Plus(월 14,000원·크레딧 1,000)는 기본만 돼요. Pro(월 44,000원·크레딧 4,500)는 30초 영상 기준 <b>고급 약 37편</b> 또는 <b>기본 약 75편</b>이에요. <span style="opacity:.75">(참고용 — 정확한 요금은 키를 발급받은 곳의 요금표를 확인해 주세요)</span></span><br>'
@@ -13517,6 +13522,8 @@ function paintCleanTier(){
 }
 // 이미 만들어 둔 등급들(되돌리기가 공짜인지 안내하는 데만 쓴다). 서버가 알려준다.
 let CLEAN_DONE_TIERS = {};
+// 이 계정의 키로 고급(Smart Pro)이 되는가 — 서버(_clean_pro_ready)가 알려준다. 모르면 false(경고 유지).
+let CLEAN_PRO_READY = false;
 async function setCleanTier(tier){
   STATE.cleanTier = (tier==='pro') ? 'pro' : 'basic';
   paintCleanTier();
