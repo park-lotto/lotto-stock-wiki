@@ -3489,11 +3489,12 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     _gen_kw = dict(mode=mode, my_topic=my_topic, subject=subject, n=n)
     _use_bank = body.get("use_bank") or (store.get_setting("ping_pong_enabled", "") == "1")
     _bank_ctx = ""
-    if _use_bank:
-        _bank = bank_assemble.assemble_bank_context(store, it.get("category") or "")
-        if _bank:
-            _gen_kw["bank_context"] = _bank
-            _bank_ctx = _bank
+    # ★여기서는 조립하지 않는다(2026-09-16). 재료를 아직 모르니 예산을 못 걸고, 예산 없는
+    #   은행을 미리 실어두면 아래에서 잘라도 이미 실린 쪽은 안 고쳐진다 — 그래서 같은 사고가
+    #   **세 번** 났다(08-18 재료 750 vs 은행 2,822 / 09-07 233 vs 1,832 / 09-16 사장님
+    #   "새송이가 나오고 전혀 다른 게 가끔 나온다"). 매번 경로 하나씩만 막아 재발했다.
+    #   _gen_kw는 3705 한 곳에서만 쓰이므로 미리 채울 이유가 없다 → 재료를 안 뒤
+    #   **딱 한 번** 조립해 _bank_ctx·_gen_kw에 같이 넣는다(0순위-B: 한 군데에서만 정한다).
     # ★스타일 강제 경로(2026-08-15) — style_ids가 오면 스타일마다 1안씩 만들고 script_gate로
     #   구조를 대조한다. 안 오면 기존 경로 그대로라 회귀 0(호출부가 안 보내면 아무 일도 없다).
     #   기존 경로와 다른 점: 같은 프롬프트를 n번 굴리는 게 아니라 **스타일마다 프롬프트가 갈려**
@@ -3553,11 +3554,18 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   몰라 예산을 못 건다 — 그대로 두면 은행이 재료를 압도한 채 프롬프트에 실린다
         #   (실측 사고: 재료 750자 vs 은행 2,822자 → 대본이 은행 소재로 끌려감).
         #   여기서 source_chars를 넘겨 은행이 재료의 1.5배를 넘지 않게 자른다.
-        if _bank_ctx:
+        # ★은행 조립은 여기 한 곳에서만 한다(2026-09-16). 재료를 아는 지점이 여기뿐이므로
+        #   예산을 걸 수 있는 곳도 여기뿐이고, 결과는 쓰는 쪽 **둘 다**에 같이 넣는다
+        #   (_bank_ctx = 스타일 경로 / _gen_kw = 옛 경로). 앞에서 미리 조립해두면 잘라도
+        #   이미 실린 쪽이 안 고쳐져 같은 사고가 반복된다 — 실제로 세 번 났다.
+        if _use_bank:
             _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:_FACTS_MAX_SOURCES])
-            if _sc:
-                _bank_ctx = bank_assemble.assemble_bank_context(
-                    store, it.get("category") or "", source_chars=_sc) or _bank_ctx
+            _bank_ctx = bank_assemble.assemble_bank_context(
+                store, it.get("category") or "", source_chars=_sc) or ""
+            if _bank_ctx:
+                _gen_kw["bank_context"] = _bank_ctx
+            else:
+                _gen_kw.pop("bank_context", None)
         # ★구조 템플릿 조립을 먼저 시도한다(2026-08-19 사장님 지시: "구조템플릿 만드는게
         #   중요해. 같은 해외영상이나 여러영상을 가져와도 거기에 딱 들어갈 말들만 있음 되게").
         #   슬롯이 **전부** 차는 스타일만 조립본으로 만들고, 모자라면 기존 생성기로 간다.
@@ -3682,14 +3690,20 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     #   1,985자가 실려 남의 제품 이야기가 재료의 16배였고, 대본이 통째로 다른 제품
     #   ("3D 요술봉 카드케이스")으로 끌려갔다. 같은 사고가 2026-08-18에도 있었다
     #   (재료 750자 vs 은행 2,822자). 재료를 모르는 채 은행을 짜면 반드시 재발한다.
-    if _gen_kw.get("bank_context"):
+    # ★2026-09-16: 조건을 `_gen_kw에 이미 은행이 있으면`에서 `은행을 쓰기로 했으면`으로
+    #   바꿨다. 종전엔 위에서 **예산 없이 미리 담아둔 값**이 있어야만 여기서 잘랐고,
+    #   그래서 미리 담는 코드를 지우면 이 경로가 통째로 은행을 잃었다(테스트가 잡았다).
+    #   생성 호출 바로 앞인 여기가 재료를 아는 마지막 지점이자 **유일한 출구**다 —
+    #   조립을 여기 한 곳에서만 하면 "한쪽만 잘려 있는" 사고가 구조적으로 안 난다(0순위-B).
+    if _use_bank:
         _pick_chars = sum(len(s.get("full_text") or "")
                           for s in (_pick_src or [])[:_FACTS_MAX_SOURCES])
-        if _pick_chars:
-            _trimmed = bank_assemble.assemble_bank_context(
-                store, it.get("category") or "", source_chars=_pick_chars)
-            if _trimmed:
-                _gen_kw["bank_context"] = _trimmed
+        _trimmed = bank_assemble.assemble_bank_context(
+            store, it.get("category") or "", source_chars=_pick_chars)
+        if _trimmed:
+            _gen_kw["bank_context"] = _trimmed
+        else:
+            _gen_kw.pop("bank_context", None)
     _material_rejected = []
     drafts = script_generate.generate_guarded_variations(
         it.get("structure") or {}, _pick_src, elem_modes, category_lookup,
