@@ -382,7 +382,7 @@ def _scene_line_full(x, include_interpretation=True):
     return " | ".join(parts)
 
 
-def _speech_sps():
+def _speech_sps():          # (2026-09-16 분량 규칙 철회로 현재 미사용 — 향후 재도입 시 재사용)
     """말속도(초당 음절)의 **정본은 edit_plan** — 여기서 숫자를 다시 적지 않는다.
     (메모리 `reference_말속도_상수_4벌`: 상수가 여러 벌이면 길이 버그가 재발한다)"""
     try:
@@ -407,10 +407,6 @@ _GROUNDED_RULE = (
     "- **한 장면은 한 줄에만 쓴다** — 앞줄에서 대표로 쓴 번호를 뒷줄에서 또 대표로 쓰지 마라. "
     "같은 화면이 두 번 나오면 영상이 반복돼 보인다. 비슷한 장면이 여러 개면 각 줄에 다른 번호를 골라라 "
     "(보조 번호는 겹쳐도 된다).\n"
-    "- ★**그 줄을 읽는 동안 화면이 비면 안 된다** — src_seg에 적은 장면들의 길이(각 줄 앞 `(N.Ns)`) "
-    "합이 **그 줄을 소리 내 읽는 시간 이상**이어야 한다. 읽는 시간 ≈ 글자수 ÷ {sps}초(최소 1.5초)다. "
-    "한 장면으로 모자라면 **그 줄의 내용을 이어서 보여주는 장면 번호를 쉼표로 더 적어라**(첫 번째가 대표). "
-    "예: 20자짜리 줄(약 3.5초)에 1.2초 장면 하나만 적으면 2.3초가 빈다 — 뒤 화면이 딴 내용으로 메워진다.\n"
     "- 재료 대본이 **여러 영상**이면 장면도 여러 영상에서 골라 써라. 앞에 있는 것부터 채워 **한 영상에서만** 다 가져오지 마라 — 여러 편을 넣는 이유가 한 편에 끌려가지 않기 위해서다. 다만 소재가 서로 다른 제품이면 억지로 섞지 말고 그 줄에 정말 맞는 장면을 골라라.")
 
 
@@ -801,7 +797,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             + _style_extra()
             + (("\n" + facts_block) if facts_block else "")
             + "\n\n" + head
-            + ((_GROUNDED_RULE.replace("{sps}", str(_speech_sps())) if not _is_recipe else
+            + ((_GROUNDED_RULE if not _is_recipe else
                 "\n\n★[장면 번호] 장면을 보고 쓴 줄은 src_seg에 장면 목록의 번호를 적어라(없는 번호 금지). "
                 "레시피는 감각·전개 줄이 장면 없이도 된다(needs_scene=false).") if grounded else
                "\n\n각 칸마다 src_seg에 **그 문장을 쓸 때 참고한 장면 번호**를 적어라"

@@ -1086,6 +1086,7 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
     ids = {str(x) for x in (scene_ids or set())}
     beats = beats or []
     invented, missing, unrelated, with_scene = [], [], [], 0
+    unrelated_idx = set()   # ★분량 판정에서 뺄 줄(아래 '정반대 지시' 주석)
     primary_at = {}      # 대표 장면 번호 -> 처음 쓴 칸 번호
     all_used = set()     # 대표+보조 전부(소스 분산 판정용)
     repeats = []         # (뒤 칸, 앞 칸, 번호, 뒤 칸 앞머리)
@@ -1104,6 +1105,7 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
                 _desc = scene_descs.get(sids[0], "")
                 if _desc and not _shares_word(b.get("text") or "", _desc):
                     unrelated.append(f"{i}번 '{text}' ↔ {sids[0]}({_desc[:24]})")
+                    unrelated_idx.add(i)
             head = sids[0]                    # ★대표만 본다(보조는 겹쳐도 정당하다 — _GROUNDED_RULE)
             all_used.update(sids)             # 소스 분산 판정은 보조 번호까지 본다(아래 주석)
             if head in primary_at:
@@ -1130,36 +1132,6 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
         problems.append("같은 장면을 두 줄에 썼다: "
                         + "; ".join(f"{i}번 '{t}'이 {j}번과 같은 {sid}" for i, j, sid, t in repeats[:4])
                         + " — 한 장면은 한 줄에만. 뒷줄은 장면 목록에서 다른 번호를 골라라")
-    # ★★화면 분량(2026-09-16 실측, job 26698eb0a362 = 사장님 "중복 많고 대본이랑 맞냐" 제보).
-    #   지목한 장면이 **그 줄을 읽는 시간보다 짧으면** 남는 시간을 3단계 `_fill_beat_screen_time`이
-    #   대본을 안 보고 메운다 — 그게 중복·시간역행·CTA 7컷의 정체였다. 실측: 대사 24.8초에
-    #   2단계 지목 화면 12.9초(52% 결손) → 16컷이 덧붙었다. 반대로 결손 17%였던 job은 중복 0건.
-    #   지시(_GROUNDED_RULE '읽는 동안 화면이 비면 안 된다')와 이 판정은 짝이다 — 지시만 있고
-    #   판정이 없으면 안 지켜진다(메모리 `reference_prompt_says_but_nobody_checks`).
-    #   ★fail-open 3겹: ①길이를 못 받았으면 통과(종전과 완전히 같다 = 회귀 0)
-    #     ②재고 총량이 대사 총량보다 적으면 통과(구조적으로 불가능한 요구 → 영영 반려 방지)
-    #     ③여유 1.0초를 준다(모델이 초를 정확히 더하진 못한다 — 크게 빈 줄만 잡는다)
-    if scene_secs and not is_recipe:
-        need_secs = _read_secs
-        short = []
-        total_need = total_have = 0.0
-        for i, b in enumerate(beats, 1):
-            sids = parse_src_segs(b.get("src_seg"))
-            if not sids:
-                continue
-            want = need_secs((b.get("text") or ""))
-            got = sum(float(scene_secs.get(str(x)) or 0) for x in sids)
-            total_need += want
-            total_have += got
-            if got + 1.0 < want:
-                short.append((i, (b.get("text") or "").strip()[:30], want, got))
-        stock = sum(float(v or 0) for v in scene_secs.values())
-        if short and stock >= total_need:
-            problems.append(
-                "화면이 대사보다 짧은 줄: "
-                + "; ".join("%d번 '%s'(대사 %.1f초인데 장면 %.1f초)" % (i, t, w, g) for i, t, w, g in short[:4])
-                + " — 그 줄의 내용을 이어 보여주는 장면 번호를 쉼표로 더 적어 길이 합을 대사 이상으로 채워라")
-
     # ★여러 소스를 넣었는데 한 편만 쓰던 것(2026-09-05 실측 b1_two_sources 3회: 소스 2편을 넣어도
     #   2단계가 고른 장면이 **전부 첫 소스**였다 — 빠듯/넉넉/같은제품 셋 다 s1 사용 0).
     #   사장님(2026-08-17): "한 편만 넣으면 그 한 편에 끌려가 편협해진다. 다 넣으면 고를 일이 없어진다."
