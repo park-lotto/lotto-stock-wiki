@@ -1,8 +1,0 @@
-parksuhong   ok
-taser        ok
-borneo       ok
-parkwi       WARN
-leedonggun   ok
---- 우리 두 편 (WARN 떠야 정상) ---
-소녀병          WARN
-제로카레         WARN
