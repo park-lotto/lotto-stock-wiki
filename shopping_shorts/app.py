@@ -6714,7 +6714,8 @@ def clean_failure_kind(clean_error):
       ⚠️새 실패 사유를 만들 땐 여기도 같이 늘려라. 안 늘리면 'unknown'으로 새어
         "다시 시도해 주세요"라는 **거짓 안내**가 나간다 — 그게 이 함수가 생긴 이유다.
 
-    반환: 'no_points' | 'no_credit' | 'interrupted' | 'unsupported' | 'unknown'
+    반환: 'no_points' | 'no_credit' | 'need_own_key' | 'need_new_api_key'
+        | 'interrupted' | 'vendor_down' | 'unsupported' | 'unknown'
     """
     e = (clean_error or "")
     low = e.lower()
@@ -6743,6 +6744,14 @@ def clean_failure_kind(clean_error):
     # 배포·재시작으로 BackgroundTask가 죽은 경우 — 이건 진짜로 다시 시도하면 된다.
     if "서버 재시작" in e or "중단되었습니다" in e:
         return "interrupted"
+    # ★업체(VMake) 게이트웨이 장애 — 영상 탓이 아니다(2026-09-17 실측, job 1556910737b6).
+    #   30029 = '前置开放平台事件处理失败'(앞단 개방플랫폼 이벤트 처리 실패). 같은 응답 안에
+    #   영상은 1080x1920·683프레임으로 정상 파싱돼 있었다.
+    #   ★반드시 아래 'unsupported'보다 **먼저** 본다 — 두 사유가 "결과가 비었습니다"라는
+    #     같은 껍데기를 쓰기 때문에, 순서가 뒤집히면 업체 장애가 영상 탓으로 둔갑하고
+    #     고객은 멀쩡한 소재를 버리러 간다(0순위-B: 판단이 문자열 하나에 겹쳐 있다).
+    if "30029" in e:
+        return "vendor_down"
     # 영상 자체를 VMake가 처리 못 한 경우(실측 code 10101 'right reduce error').
     if "10101" in e or "결과가 비었습니다" in e:
         return "unsupported"
