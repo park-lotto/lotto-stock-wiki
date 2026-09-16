@@ -50,8 +50,47 @@ def _cookies_arg(url):
         extra = []
     else:
         return []
-    cookies = ["--cookies", path] if _cookie_file_usable(path) else []
+    cookies = ["--cookies", _cookie_scratch_copy(path)] if _cookie_file_usable(path) else []
     return cookies + extra
+
+
+_COOKIE_SCRATCH_PREFIX = "ytdlp_cookies_"
+
+
+def _cookie_scratch_copy(path) -> str:
+    """yt-dlp에 원본 대신 **1회용 사본**을 넘긴다.
+
+    2026-09-16 실사고의 진짜 뿌리: yt-dlp는 `--cookies` 파일을 종료 시 다시 쓴다
+    (YoutubeDL.save_cookies → 열면서 먼저 비우고(truncate) 그 다음 쓴다). 타임아웃으로
+    죽이거나(subprocess timeout) 여러 yt-dlp가 겹치면 그 틈에 원본이 0바이트로 남아
+    이후 모든 호출이 "not a Netscape format"으로 즉사했다(유튜브 15:17·17:45, 틱톡 17:44).
+    사본을 넘기면 yt-dlp가 뭘 하든 원본은 그대로다. 사본 실패 시 원본 경로(종전 동작)."""
+    try:
+        import shutil
+        import tempfile
+        tmpdir = Path(tempfile.gettempdir())
+        _sweep_cookie_scratch(tmpdir)
+        fd, tmp = tempfile.mkstemp(prefix=_COOKIE_SCRATCH_PREFIX, suffix=".txt", dir=str(tmpdir))
+        os.close(fd)
+        shutil.copyfile(path, tmp)
+        return tmp
+    except Exception as e:  # noqa: BLE001
+        logging.getLogger(__name__).warning("쿠키 사본 실패, 원본 경로 사용: %s (%s)", path, e)
+        return str(path)
+
+
+def _sweep_cookie_scratch(tmpdir, max_age_sec=3600):
+    """한 시간 넘은 쿠키 사본 정리(호출마다 하나씩 생기므로 쌓이지 않게)."""
+    now = time.time()
+    try:
+        for f in tmpdir.glob(_COOKIE_SCRATCH_PREFIX + "*.txt"):
+            try:
+                if now - f.stat().st_mtime > max_age_sec:
+                    f.unlink()
+            except OSError:
+                pass
+    except OSError:
+        pass
 
 
 def _cookie_file_usable(path) -> bool:

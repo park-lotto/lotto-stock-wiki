@@ -325,4 +325,10 @@ def test_cookies_arg_uses_nonempty_cookie_file(tmp_path, monkeypatch):
     monkeypatch.setattr(md.config, "YTDLP_COOKIES_BROWSER_YOUTUBE", "")
     monkeypatch.setattr(md.config, "YTDLP_COOKIES_YOUTUBE", str(f))
     args = md._cookies_arg("https://www.youtube.com/watch?v=abc")
-    assert args[:2] == ["--cookies", str(f)]
+    assert args[0] == "--cookies"
+    # yt-dlp가 종료 시 다시 쓰므로 원본이 아닌 사본을 넘긴다(2026-09-16 0바이트 사고)
+    assert args[1] != str(f)
+    assert open(args[1], encoding="utf-8").read() == "# Netscape HTTP Cookie File\n"
+    # 사본을 비워도 원본은 그대로
+    open(args[1], "w").close()
+    assert f.stat().st_size > 0
