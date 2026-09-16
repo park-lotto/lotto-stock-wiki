@@ -1867,26 +1867,34 @@
                ★고급은 **새 API 키**라야 된다(업체명은 이 파일에 쓰지 않는다 — 브랜드 정책,
                  test_subclean_ui가 검사한다). 없는 사람에게 조용히 기본을 주면
                  "고급 골랐는데 왜 그대로냐"가 되므로, 서버가 무엇이 필요한지 말해준다. -->
-          <div id="cleanTierWrap" style="margin-top:12px;display:none">
-            <div class="hint" style="margin-bottom:6px">지우는 방식</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div id="cleanTierWrap" style="margin-top:16px;display:none">
+            <div class="tier-title">지우는 방식을 골라 주세요</div>
+            <div class="tier-row">
               <button type="button" id="tierBasic" class="tier-btn on" onclick="setCleanTier('basic')">
-                기본<span class="tier-sub">빠르고 저렴 · 보통 자막</span>
+                <span class="tier-name">기본</span><span class="tier-sub">보통 자막에 충분해요</span>
               </button>
               <button type="button" id="tierPro" class="tier-btn" onclick="setCleanTier('pro')">
-                고급<span class="tier-sub">큰 자막·박스까지 · 비용 2배</span>
+                <span class="tier-name">고급</span><span class="tier-sub">큰 자막·자막 박스까지</span>
               </button>
             </div>
-            <div id="tierHint" class="hint" style="margin-top:8px"></div>
+            <div id="tierHint" class="tier-hint"></div>
           </div>
           <style>
-            .tier-btn{flex:1;min-width:150px;padding:12px 14px;border-radius:12px;cursor:pointer;
-              background:#182634;color:#cfe0ef;border:2px solid #2b3f52;font-size:15px;font-weight:700;
-              display:flex;flex-direction:column;gap:3px;text-align:left}
-            .tier-btn:hover{border-color:#3d5a75}
-            .tier-btn.on{background:#10324b;border-color:#2aa3e8;color:#fff}
-            .tier-sub{font-size:12px;font-weight:400;color:#8fa6c4}
-            .tier-btn.on .tier-sub{color:#b8d9f0}
+            /* ★두 버튼을 **가운데·크게** — 사장님 지시(2026-09-16) "둘 다 중앙 배치에 눈에 잘 보이게".
+               왼쪽 정렬·작은 글씨였을 땐 고를 수 있는 곳인지 잘 안 보였다(60대 기준, 숨겨도 편하게). */
+            .tier-title{text-align:center;font-size:16px;font-weight:800;color:#e8f2fb;margin-bottom:10px}
+            .tier-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+            .tier-btn{flex:0 1 220px;min-width:160px;padding:18px 16px;border-radius:14px;cursor:pointer;
+              background:#182634;color:#cfe0ef;border:3px solid #2b3f52;
+              display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;
+              transition:border-color .15s,background .15s,transform .1s}
+            .tier-btn:hover{border-color:#3d5a75;transform:translateY(-1px)}
+            .tier-btn.on{background:#10324b;border-color:#2aa3e8;color:#fff;box-shadow:0 0 0 3px #2aa3e833}
+            .tier-name{font-size:22px;font-weight:900;letter-spacing:1px}
+            .tier-sub{font-size:14px;font-weight:500;color:#8fa6c4}
+            .tier-btn.on .tier-sub{color:#cfe8f8}
+            .tier-hint{text-align:center;font-size:14px;line-height:1.7;color:#b9cbe0;margin:12px auto 0;max-width:560px}
+            .tier-hint a{color:#6fd0ff}
           </style>
           <div id="subState" class="hint" style="margin-top:10px"></div>
           <div id="cleanPreviewWrap" style="margin-top:14px;display:none">
@@ -13371,6 +13379,8 @@ function cleanFailHtml(kind){
       + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 키를 발급받은 곳의 '
       + '대시보드에서 <b>새 API로 전환</b>한 뒤, <b>새로 발급된 키</b>를 설정 화면에 '
       + '다시 등록해 주세요. 그대로 <b>기본</b>으로 지우셔도 됩니다.</div>'
+      + '<a class="cp-redo" href="/api_manual.html#subclean" target="_blank" rel="noopener" '
+      + 'style="display:inline-block;text-decoration:none;margin-right:6px">📖 그림으로 보는 발급 방법</a>'
       + '<a class="cp-redo" href="/settings#keys" target="_blank" rel="noopener" '
       + 'style="display:inline-block;text-decoration:none">🔑 내 키 다시 등록하기</a>';
   }
@@ -13485,12 +13495,19 @@ function paintCleanTier(){
   //   등급마다 결과 파일이 따로 남으므로 되돌리기는 공짜다(전에 만든 결과를 그대로 다시 쓴다).
   const done = (typeof CLEAN_DONE_TIERS !== 'undefined') ? CLEAN_DONE_TIERS : {};
   const madeThis = !!done[tier], madeOther = !!done[tier==='pro'?'basic':'pro'];
+  // ★비용 배수는 적지 않는다 — 사장님 지시(2026-09-16) "비용 두배라고 쓰지 말고".
+  // ★발급 안내는 글로만 두지 않고 **그림 안내로 바로 보낸다**(설정 화면과 같은 주소,
+  //   api_manual.html의 자막제거 안내 — 정의처는 settings.html의 '📖 그림으로 보는 발급 방법').
   let msg = (tier==='pro')
-    ? '큰 자막·자막 박스도 깨끗하게 지워요. <b>비용이 기본의 2배</b>예요.'
-      + '<br><span style="color:var(--fire,#ff9a5a)">⚠️ 고급은 <b>새 API 키</b>가 필요해요.</span> '
+    ? '큰 자막·자막 박스도 깨끗하게 지워요.'
+      + '<br><span style="color:var(--fire,#ff9a5a)">⚠️ 고급은 <b>새 API 키</b>가 필요해요.</span><br>'
       + '키를 발급받은 곳의 대시보드에서 <b>새 API로 전환</b>하고, 새로 나온 키를 '
       + '<a href="/settings#keys" target="_blank" rel="noopener"><b>내 키 등록</b></a>에 '
       + '다시 넣어 주세요. (예전 키로는 고급이 안 돼요)'
+      + '<br><a href="/api_manual.html#subclean" target="_blank" rel="noopener" '
+      + 'style="display:inline-block;margin-top:8px;padding:8px 14px;border-radius:10px;'
+      + 'background:#10324b;border:2px solid #2aa3e8;color:#fff;text-decoration:none;font-weight:700">'
+      + '📖 그림으로 보는 발급 방법</a>'
     : '보통 자막에 충분해요. 큰 자막 박스가 지저분하게 남으면 <b>고급</b>으로 바꿔 보세요.';
   if(madeThis) msg += ' <span style="color:var(--ok,#7ef0b0)">— 이 방식으로 만든 결과가 있어요(추가 비용 없이 바로 씁니다).</span>';
   else if(madeOther) msg += ' <b style="color:var(--fire,#ff9a5a)">— 아래 [자막제거 시작하기]를 다시 눌러야 이 방식으로 만들어져요.</b>';
