@@ -571,6 +571,12 @@ def _sources_product(sources):
 
 
 def _claims_required(sources):
+    # ★단일 진입점(0순위-B) — 사실 검사를 켤지 말지는 여기 한 곳에서만 정한다.
+    #   끄면 프롬프트 지시·문장별 판정 호출·게이트 검사가 **전부** 안 생긴다
+    #   = 09-14 이전 속도(사장님 "며칠 전엔 잘됐다"). script_gate 주석 참조.
+    from shopping_shorts import script_gate as _gate   # 지역 import(모듈 최상단은 순환)
+    if not _gate.claim_check_enabled():
+        return False
     return any(isinstance(s, dict) and (s.get("topic_product") or "").strip()
                and s.get("topic_semantic_required", True) for s in (sources or []))
 
