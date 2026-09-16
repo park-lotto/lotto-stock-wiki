@@ -65,7 +65,6 @@ def cmd_select(n, out):
         "from mix_jobs m left join produce_works p on p.job_id = m.job_id "
         "where m.extract_json is not null and length(m.extract_json) > 2000 "
         "order by m.created_at desc limit ?", (n * 4,)).fetchall()
-    from shopping_shorts.script_generate import _sources_product
     from shopping_shorts.store import Store
     st = Store(DB)
     picked_jobs, seen_products = [], set()
@@ -73,22 +72,20 @@ def cmd_select(n, out):
         srcs = _sources(c, job_id)
         if len(srcs) < 1:
             continue
-        product = _sources_product(srcs) or ""
-        if not product or product in seen_products:      # 같은 제품 중복 배제 → 재료 다양성
-            continue
-        style_ids = []
+        # ★제품명은 재료 dict에 없다(앱이 _materials_for_generate로 따로 주입한다) — 2단계 화면이
+        #   저장한 materials.topic_product가 정본. 없으면 그 job은 비교에서 뺀다(제품 모르면 판정 불가).
+        product, s2 = "", {}
         try:
             s2 = (json.loads(state_json) if state_json else {}).get("s2") or {}
-            style_ids = [int(x) for x in (s2.get("picked") or []) if str(x).isdigit()][:2]
+            product = ((s2.get("materials") or {}).get("topic_product") or "").strip()
         except Exception:
             pass
+        if not product or product in seen_products:      # 같은 제품 중복 배제 → 재료 다양성
+            continue
+        style_ids = [int(x) for x in (s2.get("picked") or []) if str(x).isdigit()][:2]
         if len(style_ids) < 2:
             # 사장님이 안 고른 job은 화면과 같은 규칙(추천 상위 2)으로
-            cat = ""
-            try:
-                cat = (json.loads(product_json) if product_json else {}).get("category") or ""
-            except Exception:
-                pass
+            cat = (srcs[0].get("category") or "") if isinstance(srcs[0], dict) else ""
             auto = st.list_style_spines(category=cat or None) or st.list_style_spines(category=None)
             style_ids = [s["id"] for s in auto[:2]]
         if len(style_ids) < 2:
@@ -119,9 +116,11 @@ def cmd_run(code, jobs_path, out, secs):
         if j["job_id"] in done:
             continue
         srcs = _sources(c, j["job_id"])
-        styles = [s for s in st.list_style_spines(category=None, status=None) if s["id"] in j["style_ids"]] \
-            if "status" in st.list_style_spines.__code__.co_varnames else \
-            [s for s in st.list_style_spines(category=None) if s["id"] in j["style_ids"]]
+        # 앱(_materials_for_generate)과 같게 재료마다 제품명을 실어 준다 — 주제 고정·소재 일치 판정이 이걸 본다.
+        for s in srcs:
+            s.setdefault("product", j["product"])
+            s.setdefault("topic_product", j["product"])
+        styles = [s for s in st.list_style_spines(category=None) if s["id"] in j["style_ids"]]
         descs = _descs(srcs)
         reasons = []
         t = time.time()
