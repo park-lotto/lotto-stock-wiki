@@ -254,8 +254,22 @@
   {
     "date": "2026-09-16",
     "category": "스탁브레인",
+    "track": "main 동기화",
+    "summary": "main 브랜치 git pull 실행 — 이미 최신(cec62bf05), 변경 없음",
+    "next": "작업 트랙 지정 후 착수"
+  },
+  {
+    "date": "2026-09-16",
+    "category": "스탁브레인",
     "track": "main·위키/조사",
-    "summary": "main 브랜치 git pull 실행. 세션시작 훅에서 3e390e52a → cd6f813e7 fast-forward 완료, 재확인 시 Already up to date.",
-    "next": "작업 지시 대기"
+    "summary": "git pull 실행 — 이미 최신 상태(Already up to date). 로컬에 pipeline/dashboard_log.json 수정만 남아있음.",
+    "next": "사장님 지시 대기"
+  },
+  {
+    "date": "2026-09-16",
+    "category": "스탁브레인",
+    "track": "장면꾸미기",
+    "summary": "고객 제보(템플릿 안 썼는데 렌더에 템플릿) 원인 확정: 장면꾸미기 대화상자를 열었다 닫기/ESC/이탈만 해도 saveAndClose가 기본 스냅샷(presetId t11)을 무조건 저장하고, 스냅샷에 '템플릿 없음' 상태가 없어 렌더(video_assemble.py:2892)가 그대로 합성함. 이용재 job 53c0d41edc39 실측 = template:null인데 scene_style t11이고 편집 흔적 전무.",
+    "next": "명시적 [이 영상에 적용]을 누른 적 없는 job은 자동 저장 금지하도록 static/scene-style-produce.js 수정(트랙 폴더에서) + 라이브 브라우저 실측 검증. 급하면 해당 job의 scene_style 선삭제."
   }
 ]

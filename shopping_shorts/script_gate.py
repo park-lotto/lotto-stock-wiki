@@ -818,8 +818,11 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     ok_g, bad = (grounded_quantity_check(full, claim_evidence) if claims_required
                  else grounding_check(full, facts_text))
     if (facts_text or "").strip() or claims_required:
+        # ★fatal 아님(2026-09-16, 위 FATAL_CHECKS 주석과 같은 이유) — 같은 09-14 커밋에서
+        #   들어온 동적 치명이다. 수치 하나 때문에 안을 통째로 버리지 않는다.
         checks.append({"name": "수치 근거", "ok": ok_g,
-                       "fatal": bool(claims_required),
+                       # 스위치를 끄면 이것도 안을 죽이지 않는다(위 claim_fatal_enabled 주석).
+                       "fatal": bool(claims_required) and claim_fatal_enabled(),
                        "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
                                   + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
 
@@ -1164,7 +1167,69 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
 #: (2026-09-09 사장님 재발 제보. 09-07엔 프롬프트 가드만 넣었고 출구는 그대로 열려 있었다.)
 #: '재료 밖 판매처'도 치명이다(2026-09-11) — 소재는 맞아도 "다이소 매니저 지인"이 지어낸
 #: 말이면 그 대본은 거짓말이다. 고쳐서 내보낼 것이 아니라 그 스타일을 빼야 한다.
+#: ★'사실 근거'는 치명이 아니다(2026-09-16 사장님 "이전까지 잘되던데 며칠 전에 가끔씩
+#:   이상한 대본 나오는 것 때문에 꼬였다"). 이 검사는 2aab09821(09-14 21:25)에서 처음
+#:   들어왔고 **들어오자마자 치명**이었다 — 근거를 못 잡으면 재시도 3회 뒤 그 안을 통째로
+#:   버린다. 그래서 "2안을 골랐는데 1안만" + 느려짐이 상시로 났다(라이브 6시간 19건,
+#:   반려 1건당 ~20초). 가끔 나던 엉뚱한 대본을 막으려다 **정상 대본까지 못 나오게** 한
+#:   과잉 처방이었다. 검사 자체는 그대로 둔다 — 화면에 뜨고 재작성 루프도 그대로 돈다.
+#:   다만 안을 죽이지는 않는다. 진짜 엉뚱한 대본(소재가 남의 것)은 '소재 일치'·'주제
+#:   단일성'·'재료 밖 판매처'(09-09·09-11)가 계속 치명으로 잡는다.
+#:   ★단 **스위치로 뒀다**(기본은 지금까지와 똑같이 치명). 설정 `script_claim_fatal`을
+#:     "0"으로 두면 사실·수치 근거가 안을 죽이지 않는다. 이상하면 "1"로 즉시 되돌린다.
 FATAL_CHECKS = ("소재 일치", "주제 단일성", "재료 밖 판매처", "사실 근거")
+
+#: 스위치를 끈 상태의 치명 목록(= 09-14 이전과 같은 결과).
+FATAL_CHECKS_LENIENT = ("소재 일치", "주제 단일성", "재료 밖 판매처")
+
+
+def claim_fatal_enabled():
+    """'사실·수치 근거'가 안을 통째로 죽이는가. 기본 True(= 09-14 이후 현행).
+
+    끄는 법(둘 중 하나):
+      · 설정 `script_claim_fatal` = "0"   (화면/DB에서 바꾸면 재시작 없이 먹는다)
+      · 환경변수 SCRIPT_CLAIM_FATAL=0     (설정보다 우선 — 급할 때 쓰는 비상구)
+    ★fail-safe: 설정을 못 읽으면 True(현행 유지). 읽기 실패가 라이브 동작을 조용히
+      바꾸면 그게 더 위험하다.
+    """
+    import os
+    _env = os.getenv("SCRIPT_CLAIM_FATAL")
+    if _env is not None and str(_env).strip() != "":
+        return str(_env).strip().lower() not in ("0", "false", "off", "no")
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return str(Store(DB_PATH).get_setting("script_claim_fatal", "1")).strip() != "0"
+    except Exception:
+        return True
+
+
+def claim_check_enabled():
+    """사실·수치 근거 검사를 **아예 돌릴 것인가**. 기본 True(= 09-14 이후 현행).
+
+    ★fatal 스위치와 다르다(2026-09-16). `script_claim_fatal=0`은 "안을 버리지 않는다"일
+      뿐이라 `passed()`가 여전히 False → **재시도 3회는 그대로 돌고 문장별 판정 호출도
+      그대로다**(느림이 안 풀린다). 이 스위치를 끄면 검사 자체가 생기지 않아
+      09-14 이전과 같은 속도가 된다 — 대신 그때처럼 가끔 엉뚱한 주장이 섞일 수 있다.
+
+    끄는 법: 설정 `script_claim_check` = "0" (또는 환경변수 SCRIPT_CLAIM_CHECK=0).
+    ★소재 일치·주제 단일성·재료 밖 판매처는 이 스위치와 무관하게 계속 돈다.
+    """
+    import os
+    _env = os.getenv("SCRIPT_CLAIM_CHECK")
+    if _env is not None and str(_env).strip() != "":
+        return str(_env).strip().lower() not in ("0", "false", "off", "no")
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return str(Store(DB_PATH).get_setting("script_claim_check", "1")).strip() != "0"
+    except Exception:
+        return True
+
+
+def active_fatal_checks():
+    """지금 적용되는 치명 검사 목록 — 판정은 여기 한 곳에서만 정한다(0순위-B)."""
+    return FATAL_CHECKS if claim_fatal_enabled() else FATAL_CHECKS_LENIENT
 
 
 def fatal_content_checks(full, product="", materials_text=""):
@@ -1214,8 +1279,9 @@ def fatal_fail(checks):
       A안이 채칼·도마 대본으로 나왔고, 게이트는 `소재 일치 False`로 정확히 잡고도
       그대로 화면에 실렸다.
     """
+    _fatal_names = active_fatal_checks()
     for c in checks or []:
-        if not c.get("ok") and (c.get("name") in FATAL_CHECKS or c.get("fatal") is True):
+        if not c.get("ok") and (c.get("name") in _fatal_names or c.get("fatal") is True):
             return c.get("name") or ""
     return ""
 
