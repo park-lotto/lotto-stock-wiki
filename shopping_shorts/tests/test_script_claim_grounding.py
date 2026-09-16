@@ -117,14 +117,11 @@ def test_judge_uses_one_real_call_boundary_and_separate_claim_schema(monkeypatch
     "급똥을 참으면 방광에 최악입니다.",
     "냄새 분자까지 완전히 차단합니다.",
 ])
-def test_unsupported_verdict_is_flagged_but_not_fatal(claim):
-    """2026-09-16 경로 정리: '사실 근거'는 검사로 남아 실패로 뜨지만 안을 죽이지 않는다
-    (script_gate.FATAL_CHECKS 주석 — 치명은 소재 일치·주제 단일성·재료 밖 판매처 셋뿐)."""
+def test_unsupported_verdict_is_fatal_even_when_topic_matches(claim):
     checks = gate.semantic_content_checks(
         claim, PRODUCT, lambda *_a, **_k: verdict(False, claim),
         evidence=sg.claim_evidence(sources()), topic_required=True, claims_required=True)
-    assert gate.fatal_fail(checks) == ""
-    assert not next(c["ok"] for c in checks if c["name"] == "사실 근거")
+    assert gate.fatal_fail(checks) == "사실 근거"
     assert claim in next(c["detail"] for c in checks if c["name"] == "사실 근거")
 
 
@@ -132,13 +129,11 @@ def test_unsupported_verdict_is_flagged_but_not_fatal(claim):
     {"topic_ok": True, "claims_ok": True},
     {"topic_ok": True, "claims_ok": True, "unsupported_claims": "invalid"},
     dict(verdict(), unsupported_claims=[{"claim": "품절", "reason": "근거없음"}])])
-def test_missing_malformed_or_contradictory_claim_verdict_is_flagged(response):
-    """판정이 비거나 깨지거나 모순이면 '사실 근거' 실패로 뜬다 — 단 치명은 아니다(2026-09-16)."""
+def test_missing_malformed_or_contradictory_claim_verdict_is_closed(response):
     checks = gate.semantic_content_checks(
         "변기", PRODUCT, lambda *_a, **_k: response,
         evidence=sg.claim_evidence(sources()), claims_required=True)
-    assert gate.fatal_fail(checks) == ""
-    assert not next(c["ok"] for c in checks if c["name"] == "사실 근거")
+    assert gate.fatal_fail(checks) == "사실 근거"
 
 
 def test_legacy_nonproduct_and_supported_subjective_expression_are_preserved():
@@ -149,10 +144,7 @@ def test_legacy_nonproduct_and_supported_subjective_expression_are_preserved():
     assert not gate.fatal_fail(checks)
 
 
-def test_style_keeps_draft_and_never_calls_claim_judge(monkeypatch):
-    """2026-09-16 경로 정리: A2 스타일 생성은 문장별 사실 판정을 **부르지 않는다**
-    (script_gate.claim_check_enabled=False). grounded의 '장면 근거'가 같은 일을 모델 호출 없이 한다.
-    09-14 계약(근거 없으면 None 반환·'근거부족')은 "2안 요청에 1안"과 반려당 ~20초 낭비의 원인이었다."""
+def test_style_rejects_unsupported_claim_and_sends_observation_fallback(monkeypatch):
     prompts = []
     monkeypatch.setattr(sg, "STYLE_REWRITES", 0)
     monkeypatch.setattr(sg, "_style_extra", lambda: "[스타일 예시] 현지선 없어서 못 구함")
@@ -164,12 +156,9 @@ def test_style_keeps_draft_and_never_calls_claim_judge(monkeypatch):
         return verdict(False, "몇만 원", "가격 근거 없음")
     monkeypatch.setattr(sg, "_speaker_judge", judge)
     note = {}
-    out = sg.generate_one_style(sources(), {"beat_roles": ["hook"]}, note=note)
-    assert out is not None and out["beats"][0]["text"] == "변기는 몇만 원입니다."
-    # 판정기는 주제 단일성(남의 제품 차단)용으로만 불린다 — 문장별 사실 근거(evidence)는 넘기지 않는다.
-    assert all(e is None for e in received)
-    assert note.get("reason") is None
-    # 프롬프트 쪽 안내(_claim_prompt)는 모델 0회라 그대로 남는다 — 근거 있는 것만 말하라는 지시.
+    assert sg.generate_one_style(sources(), {"beat_roles": ["hook"]}, note=note) is None
+    assert note["reason"] == "근거부족"
+    assert received[0] == sg.claim_evidence(sources())
     assert "그 칸을 확인된 동작이나 사용 상황으로 다시 써라" in prompts[0]
 
 
@@ -231,12 +220,9 @@ def test_trim_rejudges_actual_final_text_instead_of_reusing_claim_success(monkey
         return verdict("냄새분자" not in script, "냄새분자 완전 차단", text=script)
     monkeypatch.setattr(sg, "_speaker_judge", judge)
     note = {}
-    out = sg.generate_one_style(sources(), {"beat_roles": ["hook"], "chars_per_30s": 100}, note=note)
-    # 2026-09-16: A2는 사실 판정을 부르지 않는다 — 재단 뒤에도. 재단된 최종 문장이 그대로 나간다.
-    assert out is not None and out["beats"][0]["text"] == "변기는 냄새분자를 완전히 차단한다"
-    # 주제 판정 1회뿐 — 재단 뒤에는 앞 판정을 물려받고(prior_verdict) 문장별 사실 재판정은 없다.
-    assert len(seen) == 1
-    assert note.get("reason") is None
+    assert sg.generate_one_style(sources(), {"beat_roles": ["hook"], "chars_per_30s": 100}, note=note) is None
+    assert len(seen) == 2 and seen[-1] == "변기는 냄새분자를 완전히 차단한다"
+    assert note["reason"] == "근거부족"
 
 
 def test_partial_checks_exact_merged_script_and_blocks_claim_left_in_other_slot(monkeypatch):
@@ -249,11 +235,8 @@ def test_partial_checks_exact_merged_script_and_blocks_claim_left_in_other_slot(
     def judge(text, product, evidence=None):
         seen.append(text)
         return verdict(False, "현지선 없어서 못 구해요")
-    res = sg.regen_one_beat(sources(), None, "use", beats=copy.deepcopy(beats),
-                            beat_index=0, topic_product=PRODUCT, topic_judge=judge)
-    # 2026-09-16: 다른 칸에 남은 미입증 주장은 검사 실패로 뜨지만 치명이 아니라 결과를 막지 않는다.
-    #   판정은 여전히 **합쳐진 전체 대본**을 본다(경계 보존).
-    assert res is not None and res["text"] == "변기를 접어 넣으면 편해요"
+    assert sg.regen_one_beat(sources(), None, "use", beats=copy.deepcopy(beats),
+                            beat_index=0, topic_product=PRODUCT, topic_judge=judge) is None
     assert seen[0] == "변기를 접어 넣으면 편해요\n현지선 없어서 못 구해요"
 
 
@@ -298,14 +281,11 @@ def test_pickup_uses_same_evidence_gate_and_keeps_valid_draft(monkeypatch):
                         verdict("품절" not in text, "품절", text=text))
     reasons = []
     result = sg.generate_guarded_variations({}, sources(), {}, {}, n=2, rejection_reasons=reasons)
-    # 2026-09-16: 근거 부족은 치명이 아니다 — 두 안이 다 남고, 검사 결과가 각 안에 그대로 붙는다.
-    #   (픽업 경로는 판정기를 계속 부른다 — 화면이 '사실 근거' 실패를 보여줄 수 있게.)
-    assert [x["script"] for x in result] == ["변기가 현지서 품절입니다.", "변기를 펼치면 편하겠네요."]
-    assert reasons == []
+    assert [x["script"] for x in result] == ["변기를 펼치면 편하겠네요."]
+    assert reasons[0]["reason"] == "근거부족"
     assert "사실 판정에 사용하는 근거" in kwargs_seen[0]["claim_context"]
-    assert any(c["name"] == "사실 근거" and not c["ok"] for c in result[0]["checks"])
-    assert any(c["name"] == "사실 근거" and c["ok"] for c in result[1]["checks"])
-    assert any(c["name"] == "주제 단일성" and c["ok"] for c in result[1]["checks"])
+    assert any(c["name"] == "사실 근거" and c["ok"] for c in result[0]["checks"])
+    assert any(c["name"] == "주제 단일성" and c["ok"] for c in result[0]["checks"])
 
 
 def test_pickup_retry_gets_specific_failed_claim_feedback(monkeypatch):
@@ -319,11 +299,9 @@ def test_pickup_retry_gets_specific_failed_claim_feedback(monkeypatch):
     monkeypatch.setattr(sg, "_speaker_judge", lambda text, *_a, **_k:
                         verdict("품절" not in text, "현지선 변기가 품절입니다.", "재고 자료가 없다", text=text))
     result = sg.generate_guarded_variations({}, sources(), {}, {}, n=1)
-    # 2026-09-16: 근거 부족은 치명이 아니라 재요청을 유발하지 않는다 — 첫 안이 그대로 남고
-    #   '사실 근거' 실패가 안에 붙는다. 재시도 루프(회당 ~20초)가 사라진 것이 핵심.
-    assert len(result) == 1 and "품절" in result[0]["script"]
-    assert len(contexts) == 1
-    assert any(c["name"] == "사실 근거" and not c["ok"] for c in result[0]["checks"])
+    assert len(result) == 1 and "품절" not in result[0]["script"]
+    assert "현지선 변기가 품절입니다." in contexts[1]
+    assert "재고 자료가 없다" in contexts[1]
 
 
 def test_pickup_empty_response_also_returns_grounded_fallback(monkeypatch):
@@ -354,9 +332,7 @@ def test_phase2_real_claims_cannot_pass_with_unrelated_visual_quote(text):
     response = audited_verdict(text, "scene:toilet:toilet-0:visual", "변기를 펼쳐 비닐을 씌운다.")
     checks = gate.semantic_content_checks(text, PRODUCT, lambda *_a, **_k: response,
                                           evidence=evidence, claims_required=True)
-    # 2026-09-16: 무관한 화면 인용으로는 여전히 근거가 안 된다(검사 실패) — 다만 치명은 아니다.
-    assert gate.fatal_fail(checks) == ""
-    assert not next(c["ok"] for c in checks if c["name"] == "사실 근거")
+    assert gate.fatal_fail(checks) == "사실 근거"
 
 
 def test_claim_coverage_rejects_omitted_sentence_duplicate_and_changed_claim():

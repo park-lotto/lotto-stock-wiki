@@ -596,7 +596,7 @@ def _uses_wow(full, hooks, min_hits=2):
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
           speaker_judge=None, scene_ids=None, scene_secs=None, grounded=False, is_recipe=False,
           source_count=None, targets=None, person_required=False, materials_text="",
-          topic_required=False, claim_evidence=None, claims_required=False, scene_descs=None):
+          topic_required=False, claim_evidence=None, claims_required=False):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -821,14 +821,14 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
         # ★fatal 아님(2026-09-16, 위 FATAL_CHECKS 주석과 같은 이유) — 같은 09-14 커밋에서
         #   들어온 동적 치명이다. 수치 하나 때문에 안을 통째로 버리지 않는다.
         checks.append({"name": "수치 근거", "ok": ok_g,
-                       # 치명 아님(2026-09-16, FATAL_CHECKS 주석) — 수치 하나로 안을 버리지 않는다.
+                       # 스위치를 끄면 이것도 안을 죽이지 않는다(위 claim_fatal_enabled 주석).
+                       "fatal": bool(claims_required) and claim_fatal_enabled(),
                        "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
                                   + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
 
     if grounded and scene_ids is not None:
         ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe,
-                                          source_count=source_count, scene_secs=scene_secs,
-                                          scene_descs=scene_descs)
+                                          source_count=source_count, scene_secs=scene_secs)
         checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
     return checks, full
 
@@ -1053,28 +1053,8 @@ def _read_secs(text):
     return max(1.5, len((text or "").strip()) / _speech_cps())
 
 
-def _shares_word(text, desc):
-    """문장과 장면 설명이 한글 2글자 어간을 하나라도 공유하나(순수 함수, 모델 0회).
-
-    ★유일한 '의미' 검사(2026-09-16 경로 정리 3단계). 종전 게이트는 장면 번호가 목록에 **있는지**만
-      봐서, "친구네 집 갔다가"에 팬케이크 컷을 붙여도 통과했다(실측 job c393b1c7c2f9, 10줄 중 5줄).
-      정교한 의미 판정을 모델에 맡기면 호출·재시도가 는다 — 대신 아주 느슨한 낱말 겹침만 본다.
-      겹침 0 = 그 줄이 그 장면 이야기가 아닐 가능성이 크다. 오탐을 줄이려고 2글자 어간을 쓴다
-      (인스타 슬롯 조립에서 실측으로 잡은 기준). 숫자도 한 낱말로 친다."""
-    import re
-    def _stems(s):
-        out = set()
-        for run in re.findall(r"[가-힣]{2,}", s or ""):
-            for i in range(len(run) - 1):
-                out.add(run[i:i + 2])
-        out.update(re.findall(r"\d+", s or ""))
-        return out
-    a, b = _stems(text), _stems(desc)
-    return bool(a & b)
-
-
 def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, source_count=None,
-                          scene_secs=None, scene_descs=None):
+                          scene_secs=None):
     """(ok, detail) — 줄마다 src_seg가 실제 장면 목록에 있는지, 장면이 필요한 줄이 비지 않았는지.
 
     · 지어낸 번호(목록에 없음) → 실패(레시피도)
@@ -1085,7 +1065,7 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
     detail은 재작성 지시문에 그대로 들어간다 — 어느 줄이 왜 걸렸는지."""
     ids = {str(x) for x in (scene_ids or set())}
     beats = beats or []
-    invented, missing, unrelated, with_scene = [], [], [], 0
+    invented, missing, with_scene = [], [], 0
     primary_at = {}      # 대표 장면 번호 -> 처음 쓴 칸 번호
     all_used = set()     # 대표+보조 전부(소스 분산 판정용)
     repeats = []         # (뒤 칸, 앞 칸, 번호, 뒤 칸 앞머리)
@@ -1098,12 +1078,6 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
             invented.append(f"{i}번 '{text}' src_seg={','.join(bad_ids)}(목록에 없음)")
         elif sids:
             with_scene += 1
-            # ★대표 장면 설명과 겹치는 낱말이 하나도 없으면 "장면과 무관한 문장"(2026-09-16).
-            #   scene_descs를 안 준 호출(옛 경로·테스트)은 이 판정이 아예 없다 = 회귀 0.
-            if scene_descs and (b.get("text") or "").strip():
-                _desc = scene_descs.get(sids[0], "")
-                if _desc and not _shares_word(b.get("text") or "", _desc):
-                    unrelated.append(f"{i}번 '{text}' ↔ {sids[0]}({_desc[:24]})")
             head = sids[0]                    # ★대표만 본다(보조는 겹쳐도 정당하다 — _GROUNDED_RULE)
             all_used.update(sids)             # 소스 분산 판정은 보조 번호까지 본다(아래 주석)
             if head in primary_at:
@@ -1113,10 +1087,6 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
         elif need:
             missing.append(f"{i}번 '{text}'")
     problems = []
-    if unrelated:
-        problems.append("장면과 무관한 문장: " + "; ".join(unrelated[:4])
-                        + " — 그 장면에 실제로 보이는 사물·동작을 문장에 담거나, 화면에 없는 이야기면 "
-                          "src_seg를 비우고 needs_scene=false로 두어라(억지로 장면을 붙이지 마라)")
     if invented:
         problems.append("지어낸 장면 번호: " + "; ".join(invented[:4]) + " — 장면 목록의 번호만 써라")
     if missing:
@@ -1205,30 +1175,61 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
 #:   과잉 처방이었다. 검사 자체는 그대로 둔다 — 화면에 뜨고 재작성 루프도 그대로 돈다.
 #:   다만 안을 죽이지는 않는다. 진짜 엉뚱한 대본(소재가 남의 것)은 '소재 일치'·'주제
 #:   단일성'·'재료 밖 판매처'(09-09·09-11)가 계속 치명으로 잡는다.
-#: ★2026-09-16 경로 정리 2단계 — 치명은 이 셋뿐이고 **스위치는 없다.**
-#:   같은 날 오전에 `script_claim_check`·`script_claim_fatal` 스위치를 얹어 급한 불을 껐지만,
-#:   스위치는 층을 하나 더 만드는 것이라(누가 또 켜면 파이프라인이 다시 갈라진다) 정리하며 걷어낸다.
-#:   '사실 근거'·'수치 근거'는 검사로 남아 화면에 뜨고 재작성 1회를 유도하지만 안을 죽이지 않는다 —
-#:   그 둘은 09-14(2aab09821)에 들어와 "2안 요청에 1안" + 반려당 ~20초 낭비를 만든 장본인이었다.
-#:   엉뚱한 제품 대본(볼펜인데 채칼·새송이)은 아래 셋이 계속 막는다.
-FATAL_CHECKS = ("소재 일치", "주제 단일성", "재료 밖 판매처")
+#:   ★단 **스위치로 뒀다**(기본은 지금까지와 똑같이 치명). 설정 `script_claim_fatal`을
+#:     "0"으로 두면 사실·수치 근거가 안을 죽이지 않는다. 이상하면 "1"로 즉시 되돌린다.
+FATAL_CHECKS = ("소재 일치", "주제 단일성", "재료 밖 판매처", "사실 근거")
+
+#: 스위치를 끈 상태의 치명 목록(= 09-14 이전과 같은 결과).
+FATAL_CHECKS_LENIENT = ("소재 일치", "주제 단일성", "재료 밖 판매처")
+
+
+def claim_fatal_enabled():
+    """'사실·수치 근거'가 안을 통째로 죽이는가. 기본 True(= 09-14 이후 현행).
+
+    끄는 법(둘 중 하나):
+      · 설정 `script_claim_fatal` = "0"   (화면/DB에서 바꾸면 재시작 없이 먹는다)
+      · 환경변수 SCRIPT_CLAIM_FATAL=0     (설정보다 우선 — 급할 때 쓰는 비상구)
+    ★fail-safe: 설정을 못 읽으면 True(현행 유지). 읽기 실패가 라이브 동작을 조용히
+      바꾸면 그게 더 위험하다.
+    """
+    import os
+    _env = os.getenv("SCRIPT_CLAIM_FATAL")
+    if _env is not None and str(_env).strip() != "":
+        return str(_env).strip().lower() not in ("0", "false", "off", "no")
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return str(Store(DB_PATH).get_setting("script_claim_fatal", "1")).strip() != "0"
+    except Exception:
+        return True
 
 
 def claim_check_enabled():
-    """A2 스타일 생성 경로에서 문장별 사실 판정을 돌릴 것인가 — **아니오, 항상 False.**
+    """사실·수치 근거 검사를 **아예 돌릴 것인가**. 기본 True(= 09-14 이후 현행).
 
-    남기는 경로는 grounded(장면 전부를 보여주고 그 안에서만 쓰기)이고, 거기서는 '장면 근거'
-    검사가 같은 일을 더 싸게 한다(모델 판정 호출 없음). 문장별 사실 판정은 A2에서 호출당
-    수 초씩 먹으며 재시도를 유발했다. 픽업 경로(generate_guarded_variations)는 자기 판단
-    (`_claims_required`)을 그대로 쓴다 — 이 함수는 A2 전용이다.
-    ★함수로 남긴 이유: 호출부(script_generate._claims_required)가 이 이름을 보고 있고,
-      "왜 False인지"를 한 곳에 적어두기 위해서다."""
-    return False
+    ★fatal 스위치와 다르다(2026-09-16). `script_claim_fatal=0`은 "안을 버리지 않는다"일
+      뿐이라 `passed()`가 여전히 False → **재시도 3회는 그대로 돌고 문장별 판정 호출도
+      그대로다**(느림이 안 풀린다). 이 스위치를 끄면 검사 자체가 생기지 않아
+      09-14 이전과 같은 속도가 된다 — 대신 그때처럼 가끔 엉뚱한 주장이 섞일 수 있다.
+
+    끄는 법: 설정 `script_claim_check` = "0" (또는 환경변수 SCRIPT_CLAIM_CHECK=0).
+    ★소재 일치·주제 단일성·재료 밖 판매처는 이 스위치와 무관하게 계속 돈다.
+    """
+    import os
+    _env = os.getenv("SCRIPT_CLAIM_CHECK")
+    if _env is not None and str(_env).strip() != "":
+        return str(_env).strip().lower() not in ("0", "false", "off", "no")
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return str(Store(DB_PATH).get_setting("script_claim_check", "1")).strip() != "0"
+    except Exception:
+        return True
 
 
 def active_fatal_checks():
     """지금 적용되는 치명 검사 목록 — 판정은 여기 한 곳에서만 정한다(0순위-B)."""
-    return FATAL_CHECKS
+    return FATAL_CHECKS if claim_fatal_enabled() else FATAL_CHECKS_LENIENT
 
 
 def fatal_content_checks(full, product="", materials_text=""):

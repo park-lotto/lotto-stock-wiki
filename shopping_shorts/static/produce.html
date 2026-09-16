@@ -11600,9 +11600,14 @@ function _pmChecksHtml(dr){
   if(dr.passed){
     return '<div class="da" style="color:#0a7d3f">✅ '+esc(dr.style_name||'스타일')+' 구조 지킴'+again+'</div>';
   }
-  // ★못 지킨 항목·사실 근거 경고는 고객 화면에 띄우지 않는다(2026-09-16 사장님 "이런거 자체를
-  //   쓰지마"). 내부 지표를 보여주면 멀쩡한 대본이 잘못 나온 것처럼 보인다. 검사는 그대로 돈다.
-  return '';
+  if(dr.needs_review){
+    return '<div class="da" style="color:var(--fire)">⚠️ 사실 근거 확인이 필요한 초안'+again+': '
+         + bad.map(c=>esc(c.name)).join(' · ')
+         + '<div style="color:var(--mut);font-size:12px;margin-top:2px">확정 전 표시된 문장을 고치거나 다시 생성해 주세요.</div></div>';
+  }
+  return '<div class="da" style="color:var(--fire)">⚠️ 못 지킨 항목'+again+': '
+       + bad.map(c=>esc(c.name)).join(' · ')
+       + '<div style="color:var(--mut);font-size:12px;margin-top:2px">그대로 써도 되지만, 다시 생성하면 더 맞을 수 있어요.</div></div>';
 }
 function pmRenderDrafts(drafts){
   const res=document.getElementById('pmResults'); window._pmDrafts=drafts;
@@ -18092,10 +18097,10 @@ function s2DraftHtml(dr,i){
   // 통과는 조용히 뱃지 하나. 실패는 못 지킨 항목을 그대로 — 조용히 통과시키지 않는 게 핵심.
   // ★내 대본엔 스타일 게이트를 붙이지 않는다 — AI가 만든 게 아니라 사장님이 쓴 것이다.
   //   'hook 문장틀 준수' 같은 빨간 줄을 띄우면 사장님 문장을 틀렸다고 말하는 꼴이 된다.
-  // ★실패 뱃지(⚠️ 사실 근거 확인 필요 / 말 밀도 …)는 띄우지 않는다(2026-09-16 사장님 "이런거 자체를
-  //   쓰지마. 사람들 봐서 좋을거 없자나"). 통과 뱃지만 남긴다 — 검사는 그대로 돌고 표시만 안 한다.
-  const gate=dr.mine?'':(dr.checks&&dr.checks.length&&dr.passed)
-    ? `<span class="s2-gate pass" title="게이트 통과 — 스타일 구조를 지켰습니다">✅ 구조 지킴${again}</span>`
+  const gate=dr.mine?'':(dr.checks&&dr.checks.length)
+    ? (dr.passed
+        ? `<span class="s2-gate pass" title="게이트 통과 — 스타일 구조를 지켰습니다">✅ 구조 지킴${again}</span>`
+        : `<span class="s2-gate fail">⚠️ ${sceneFallback?'장면 근거로 자동 복구':(needsReview?'사실 근거 확인 필요':esc(bad.map(c=>c.name).join(' · ')))}</span>`)
     : '';
   const rows=beats.map((b,j)=>{
     const isBad=!dr.passed && bad.some(c=>(c.name||'').indexOf(b.role)>=0);
