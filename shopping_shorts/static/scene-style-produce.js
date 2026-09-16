@@ -1,7 +1,12 @@
 (()=>{
   let dialog,frame,jobId,packet,appliedOnServer=false;
   let saveQueue=Promise.resolve();
-  const canaryEnabled=new URLSearchParams(location.search).get('scene_style_canary')==='1';
+  const canaryKey='scene-style-canary-enabled';
+  const canaryParam=new URLSearchParams(location.search).get('scene_style_canary');
+  const canaryRequested=canaryParam==='1';
+  if(canaryRequested)localStorage.setItem(canaryKey,'1');
+  if(canaryParam==='0')localStorage.removeItem(canaryKey);
+  const canaryEnabled=canaryRequested||localStorage.getItem(canaryKey)==='1';
   let canaryRequest=0,canaryJobId='';
   const currentMixJob=()=>String(typeof MIX_JOB==='undefined'?'':(MIX_JOB||'')).trim();
   const status=()=>document.getElementById('sceneStyleStatus');
