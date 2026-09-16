@@ -88,7 +88,10 @@ def test_normalize_reading_4digit_no_comma_unaffected():
 def test_normalize_reading_does_not_swallow_plain_comma():
     """일반 문장부호 쉼표는 숫자의 일부가 아니다 — 삼키면 안 된다."""
     text, n = normalize_reading("안녕, 1개")
-    assert text == "안녕, 일개"
+    # ★기대값 갱신(2026-09-16): '개'는 고유어 단위라 "한 개"로 읽는다(옛 기대는 "일개").
+    #   이 테스트가 지키는 것은 **쉼표를 숫자로 삼키지 않는다**는 것이고, 쉼표 앞뒤가
+    #   그대로 남아 있으므로 그 목적은 그대로 지켜진다.
+    assert text == "안녕, 한 개"
     assert n == 1
 
 

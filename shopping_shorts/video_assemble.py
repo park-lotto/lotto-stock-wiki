@@ -252,7 +252,7 @@ _HL_DARK = 0.60          # 스포트라이트에서 원 **밖**을 어둡게 하
 _HL_RING = 3             # 흰 테두리 두께(px, 반지름 기준)
 
 
-def scene_hl_of(beat):
+def scene_hl_of(beat, cut=None):
     """장면 하나에 사장님이 지정한 강조를 꺼낸다 → dict 또는 None(=강조 없음).
 
     ★해석은 **여기 한 곳에서만** 한다(0순위-B) — 화면(미리보기)과 렌더가 같은 뜻으로
@@ -261,10 +261,32 @@ def scene_hl_of(beat):
         r      : 화면 **폭** 대비 반지름 (0~1) — 폭 기준이라 세로 영상에서도 원이 원이다
         zoom   : 원 안 확대 배율(mode=zoom일 때만 의미)
         mode   : 'zoom'(원 안을 확대) | 'spot'(원 밖을 어둡게)
+
+    cut — **컷 번호**(2026-09-16 회원 제보 "자막 단위가 아닌 컷 단위로 적용"). 자막
+      한 덩어리가 컷 여러 개로 쪼개지는데 값이 비트에 하나뿐이라 네 컷 전부에 같은
+      원이 붙었다. beat["scene_hl_cuts"]={"<컷>":{...}} 가 있으면 그 컷 것만 쓴다.
+      ★컷 지정이 하나라도 있으면 지정 안 한 컷은 강조 없음이다 — "이 컷만"이라고
+        골랐는데 나머지에 옛 값이 남으면 제보가 그대로 재발한다.
+      ★없으면 종전대로 scene_hl을 비트 전체에 건다(이미 만든 job 회귀 0).
+      cut=None(미리보기·썸네일처럼 컷을 모르는 자리)이면 지정된 것 중 첫 컷을 대표로 준다.
     """
     if not isinstance(beat, dict):
         return None
-    hl = beat.get("scene_hl")
+    per_cut = beat.get("scene_hl_cuts")
+    if isinstance(per_cut, dict) and per_cut:
+        if cut is None:
+            # 대표값 — 컷 번호가 가장 작은 '켜진' 지정. 숫자로 못 읽는 키는 뒤로 민다.
+            def _k(item):
+                try:
+                    return (0, int(item[0]))
+                except (TypeError, ValueError):
+                    return (1, 0)
+            hl = next((v for _, v in sorted(per_cut.items(), key=_k)
+                       if isinstance(v, dict) and v.get("on")), None)
+        else:
+            hl = per_cut.get(str(cut))
+    else:
+        hl = beat.get("scene_hl")
     if not isinstance(hl, dict) or not hl.get("on"):
         return None
     def _f(key, dflt, lo, hi):
@@ -301,7 +323,7 @@ def _hl_px(hl):
     return cx, cy, r
 
 
-def highlight_fc(beat, base_vf, grow=True):
+def highlight_fc(beat, base_vf, grow=True, cut=None):
     """base_vf(기존 크롭/줌 체인) 뒤에 강조를 얹은 **filter_complex 문자열**. 강조가 없으면 None.
 
     반환값을 쓰는 쪽은 `-vf base_vf` 대신 `-filter_complex <이것> -map [out]`을 쓴다.
@@ -313,8 +335,9 @@ def highlight_fc(beat, base_vf, grow=True):
       그래서 커지는 동안 비용이 0이다.
     grow=False — 한 비트가 컷 여러 개로 쪼개졌을 때 **두 번째 컷부터**. 안 그러면 컷마다
       원이 다시 톡톡 튀어 사장님이 "왜 여러 번 나오냐"고 보게 된다.
+    cut — 컷 번호. 컷별 강조를 쓰는 job이면 그 컷 것만 얹는다(scene_hl_of 참고).
     """
-    hl = scene_hl_of(beat)
+    hl = scene_hl_of(beat, cut)
     if not hl:
         return None
     cx, cy, r = _hl_px(hl)
@@ -1805,7 +1828,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             sub = work / f"beat_{idx}_{j}.mp4"
             # 🔎 강조가 있으면 -vf 대신 filter_complex(오버레이가 필요해 단일 체인으로 안 된다).
             #   성장 애니메이션은 **첫 컷에서만** — 컷마다 다시 튀면 여러 번 나오는 것처럼 보인다.
-            _hl_fc = highlight_fc(beat, vf_full, grow=(j == 0))
+            # ★컷별 강조(2026-09-16)일 때 grow는 **그 컷의 첫 등장**이라 늘 켠다 —
+            #   컷 하나에만 걸린 원이 안 자라면 "왜 안 나타나지"로 보인다.
+            _hl_per_cut = isinstance(beat.get("scene_hl_cuts"), dict) and bool(beat.get("scene_hl_cuts"))
+            _hl_fc = highlight_fc(beat, vf_full, grow=(_hl_per_cut or j == 0), cut=j)
             _vf_args = (["-filter_complex", _hl_fc, "-map", "[out]"] if _hl_fc
                         else ["-vf", vf_full])
             _run_ffmpeg([

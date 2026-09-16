@@ -2847,10 +2847,16 @@ def _plan_signature(plan):
         _z, _px, _py = _va.scene_zoom_of(b)
         if _z > 1.0001:                        # 지정 없으면 아무것도 안 붙인다
             parts.append("z=%.4f,%.5f,%.5f" % (_z, _px, _py))   # → 옛 작업 서명 불변
-        _hl = _va.scene_hl_of(b)
-        if _hl:                                 # 강조가 구워진 청소본을 옛 캐시로 덮지 않는다
-            parts.append("hl=%s,%s,%.5f,%.5f,%.5f,%.4f" % (
-                _hl["mode"], _hl["shape"], _hl["cx"], _hl["cy"], _hl["r"], _hl["zoom"]))
+        # ★컷별 강조(2026-09-16)는 컷마다 값이 다르므로 **컷 번호까지** 서명에 넣는다.
+        #   비트 대표값 하나만 넣으면 "2번 컷에서 3번 컷으로 옮겼다"가 서명에 안 잡혀
+        #   옛 청소본이 그대로 재사용된다(자막 줄 나누기가 겪은 그 사고와 같은 모양).
+        _per = b.get("scene_hl_cuts")
+        _hls = ([(k, _va.scene_hl_of(b, k)) for k in sorted(_per)] if isinstance(_per, dict) and _per
+                else [("", _va.scene_hl_of(b))])
+        for _ck, _hl in _hls:
+            if _hl:                             # 강조가 구워진 청소본을 옛 캐시로 덮지 않는다
+                parts.append("hl%s=%s,%s,%.5f,%.5f,%.5f,%.4f" % (
+                    _ck, _hl["mode"], _hl["shape"], _hl["cx"], _hl["cy"], _hl["r"], _hl["zoom"]))
         parts.append("|")
     return hashlib.sha1("".join(parts).encode("utf-8")).hexdigest()[:16]
 

@@ -9042,6 +9042,62 @@ def api_thumb_file(job_id: str, name: str):
     return FileResponse(str(path), headers={"Cache-Control": "no-cache"})
 
 
+@app.post("/api/produce/thumb/upload")
+async def api_thumb_upload(job_id: str = Form(...), file: UploadFile = File(...)):
+    """🖼 **내 이미지를 썸네일 후보로 직접 올린다**(2026-09-16 회원 제보).
+
+    여태 후보는 둘뿐이었다 — 완성본을 등분해 뽑거나(thumb/frames), 6단계에서 보던
+    장면을 보내거나(thumb/pin). 회원이 미리 만들어 둔 이미지를 쓰려면 방법이 없었고,
+    그 이미지를 "영상 맨 앞에 넣기"(thumbnail.intro)도 못 했다.
+
+    ★핀과 **같은 목록(thumbnail.pins)** 에 넣는다 — 그래야 고르기·꾸미기·인트로가
+      한 줄도 안 바뀌고 그대로 돈다(0순위-B: 같은 판단을 두 번 적지 않는다).
+    ★파일명은 서버가 정한다(thumb/save와 같은 원칙) — 올린 이름은 경로순회 재료다.
+    ★받은 바이트를 그대로 저장하지 않고 **Pillow로 열어 다시 쓴다**. 이미지로 안 열리는
+      파일(확장자만 바꾼 스크립트 등)은 여기서 걸러지고, EXIF 회전도 이때 반영된다.
+    """
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+
+    data = await file.read()
+    _MAX = 20 * 1024 * 1024
+    if not data:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "빈 파일이에요"})
+    if len(data) > _MAX:
+        return JSONResponse(status_code=413,
+                            content={"ok": False, "error": "20MB까지 올릴 수 있어요"})
+    try:
+        from PIL import Image, ImageOps
+        im = Image.open(io.BytesIO(data))
+        im = ImageOps.exif_transpose(im)          # 휴대폰 사진이 눕지 않게
+        im = im.convert("RGB")
+    except Exception as e:      # noqa: BLE001 — 열리지 않으면 이미지가 아니다
+        print(f"[thumb-upload] 이미지 아님: {e!r}", file=sys.stderr)
+        return JSONResponse(status_code=400,
+                            content={"ok": False, "error": "이미지 파일이 아니에요(jpg·png로 올려주세요)"})
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    thumb = job.get("thumbnail") or {}
+    pins = list(thumb.get("pins") or [])
+    # 이름은 내용 해시 — 같은 그림을 두 번 올리면 후보가 중복으로 쌓이지 않는다(핀과 같은 원칙).
+    import hashlib as _hl
+    name = f"up_{_hl.sha1(data).hexdigest()[:16]}.jpg"
+    im.save(str(out_dir / name), "JPEG", quality=92)
+
+    label = (os.path.basename(file.filename or "").rsplit(".", 1)[0] or "내 이미지")[:24]
+    pins = [p for p in pins if str(p.get("name") or "") != name]
+    pins.insert(0, {"name": name, "label": f"🖼 {label}", "uploaded": True})
+    thumb["pins"] = pins
+    _save_render_inputs(store, job_id, thumbnail=thumb)
+    return {"ok": True, "name": name, "label": f"🖼 {label}", "pins": pins,
+            "url": f"/api/produce/thumb/file/{job_id}/{name}"}
+
+
 @app.post("/api/produce/thumb/save")
 async def api_thumb_save(job_id: str = Form(...), meta: str = Form(...),
                          file: UploadFile = File(...)):
@@ -19740,23 +19796,53 @@ def _scenehl_locked(store, job_id, body):
     plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
     if err:
         return err
+    # ★컷 번호(2026-09-16 회원 제보 "자막 단위가 아닌 컷 단위로 적용"). 주면 그 컷에만,
+    #   안 주면 종전대로 비트 전체에 저장한다(옛 클라이언트 회귀 0).
+    cut = body.get("cut")
+    try:
+        cut = None if cut is None or cut == "" else str(int(cut))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "cut은 숫자여야 해요"})
     if not body.get("on"):
-        hit.pop("scene_hl", None)
+        if cut is None:
+            hit.pop("scene_hl", None)
+            hit.pop("scene_hl_cuts", None)     # 비트 전체 끄기는 컷 지정도 함께 지운다
+        else:
+            cuts = hit.get("scene_hl_cuts")
+            if isinstance(cuts, dict):
+                cuts.pop(cut, None)
+                if not cuts:
+                    hit.pop("scene_hl_cuts", None)
     else:
         def _f(key, dflt):
             try:
                 return float(body.get(key))
             except (TypeError, ValueError):
                 return dflt
-        hit["scene_hl"] = {
+        val = {
             "on": True,
             "mode": "spot" if str(body.get("mode") or "zoom") == "spot" else "zoom",
             "shape": "round" if str(body.get("shape") or "circle") == "round" else "circle",
             "cx": round(_f("cx", 0.5), 5), "cy": round(_f("cy", 0.5), 5),
             "r": round(_f("r", 0.28), 5), "zoom": round(_f("zoom", 2.0), 4),
         }
+        if cut is None:
+            hit["scene_hl"] = val
+            hit.pop("scene_hl_cuts", None)     # 비트 전체 지정이 컷 지정을 대체한다
+        else:
+            cuts = hit.get("scene_hl_cuts")
+            if not isinstance(cuts, dict):
+                # 비트 전체 값이 있었다면 **모든 컷에 걸려 있던 것**이므로 컷별로 펼쳐
+                # 옮겨 담는다 — 안 그러면 한 컷을 고치는 순간 나머지 컷의 원이 사라진다.
+                cuts = {}
+                old = hit.pop("scene_hl", None)
+                if isinstance(old, dict) and old.get("on"):
+                    for k in range(int(body.get("cut_of") or 0) or 0):
+                        cuts[str(k)] = dict(old)
+                hit["scene_hl_cuts"] = cuts
+            cuts[cut] = val
     _save_render_inputs(store, job_id, edit_plan=plan)
-    return {"ok": True, "hl": video_assemble.scene_hl_of(hit)}
+    return {"ok": True, "hl": video_assemble.scene_hl_of(hit, cut)}
 
 
 @app.get("/api/tts/quota")
@@ -20260,7 +20346,8 @@ def api_produce_mix_beats_preview(job_id: str):
             #   화면이 스스로 가두면 렌더와 두 벌이 된다(0순위-B, cap_pos와 같은 방식).
             "zoom": _z_of(b)[0], "pan_x": _z_of(b)[1], "pan_y": _z_of(b)[2],
             # 🔎 장면별 강조(원형 돋보기/스포트라이트, 2026-08-30). 같은 이유로 서버가 준다.
-            "hl": video_assemble.scene_hl_of(b),
+            # ★이 **컷**의 강조를 준다(2026-09-16) — 컷별 지정이 없으면 비트 값이 그대로 온다.
+            "hl": video_assemble.scene_hl_of(b, _ci),
             })
     # 전체 칸 수 — 화면의 "n / N 장면"이 이 값을 쓴다(비트 수가 아니라 컷 수).
     for _k, _o in enumerate(out):
