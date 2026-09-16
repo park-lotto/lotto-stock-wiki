@@ -16945,6 +16945,23 @@ def api_produce_works_list(request: Request):
     return {"ok": True, "works": Store(DB_PATH).list_produce_works(customer_id=_cid(request))}
 
 
+def _clean_pro_ready(store, cid):
+    """이 계정이 **실제로 쓰게 될 자막제거 키**로 고급이 되는가. True/False/None(모름).
+
+    ★키 고르기는 keyroute.keys_for 한 곳(0순위-B) — 워커가 청소할 때 쓰는 키와 같아야
+      "화면은 된다는데 막상 실패"가 안 난다. 판정은 vmake_client.key_supports_new_api(캐시 1시간).
+    ★실패해도 화면 로딩을 막지 않는다 — None이면 화면은 안내를 그대로 둔다.
+    """
+    try:
+        from . import keyroute
+        from .vmake_client import key_supports_new_api
+        keys, _ = keyroute.keys_for(store, cid, keyroute.SVC_VMAKE)
+        keys = [k for k in (keys or []) if k]
+        return key_supports_new_api(keys[0]) if keys else False
+    except Exception:          # noqa: BLE001
+        return None
+
+
 @app.get("/api/produce/works/{work_id}")
 def api_produce_works_get(request: Request, work_id: str):
     st = Store(DB_PATH)
@@ -16970,7 +16987,9 @@ def api_produce_works_get(request: Request, work_id: str):
                         "clean_tier": job.get("clean_tier"),
                         # 이미 만들어 둔 등급 — 되돌리기가 공짜인지 화면이 안내한다
                         "clean_tiers_ready": mix_pipeline.clean_tiers_ready(
-                            job, _MIX_WORK_DIR / w["job_id"])}
+                            job, _MIX_WORK_DIR / w["job_id"]),
+                        # 이 계정의 키로 고급을 쓸 수 있나 — True면 화면이 "키 다시 등록" 경고를 뺀다
+                        "clean_pro_ready": _clean_pro_ready(st, _cid(request))}
     return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"],
             "settings": settings}
 

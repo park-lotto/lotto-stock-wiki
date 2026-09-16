@@ -94,6 +94,38 @@ def _new_api_client(ak, sk):
     return client
 
 
+# ── 이 키로 고급을 쓸 수 있나 (2026-09-16) ─────────────────────────────────
+# 사장님 제보: 이미 새 API로 옮겨 고급이 **되는** 계정인데도 화면이 늘 "Pro 쓰려면 키를
+# 다시 등록하라"고 띄웠다. 화면이 판단 근거 없이 경고를 박아 뒀기 때문이다.
+# ★판정은 remove_subtitles와 **같은 관문**(fetch_config v2.0.0)으로 한다 — 다른 방법으로
+#   재면 "화면은 된다는데 실제로는 안 된다"가 난다(0순위-B).
+# ★config 조회만 한다 — 크레딧이 나가지 않는다(실측: legacy 호출도 Free Usage 0).
+_PRO_READY_CACHE = {}          # 키 해시 → (시각, True/False)
+_PRO_READY_TTL = 3600
+
+
+def key_supports_new_api(api_key):
+    """True=새 API 키(고급 가능) / False=옛 키 / None=모르겠음(네트워크 등 — 화면은 경고 유지)."""
+    import hashlib
+    import time
+    if not api_key:
+        return None
+    h = hashlib.sha256(api_key.encode("utf-8")).hexdigest()[:16]
+    hit = _PRO_READY_CACHE.get(h)
+    if hit and time.time() - hit[0] < _PRO_READY_TTL:
+        return hit[1]
+    try:
+        ak, sk = _split_key(api_key)
+        _new_api_client(ak, sk)
+        ok = True
+    except Exception as exc:                      # noqa: BLE001 — 판정만 한다
+        if not is_legacy_key(exc):
+            return None                           # 모르는 실패는 캐시하지 않는다
+        ok = False
+    _PRO_READY_CACHE[h] = (time.time(), ok)
+    return ok
+
+
 def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER_BASIC):
     """video_path의 하드섭/화면텍스트를 VMake로 제거 → out_path에 저장하고 경로 반환.
 
