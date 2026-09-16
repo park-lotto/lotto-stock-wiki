@@ -33,7 +33,21 @@ def fetch_article(url, timeout=10):
     if not body:
         raise RuntimeError(f"source: 기사 본문을 못 뽑았습니다 — {url}")
     text = (title + "\n\n" if title else "") + body
-    return {"title": title, "text": text, "url": url}
+    return {"title": _unescape(title), "text": _unescape(text), "url": url}
+
+
+def _unescape(s):
+    """HTML 엔티티를 풀고 방송 대본 표시를 정리한다.
+
+    ★실측 2026-09-17(SBS 기사): 본문에 `&#10;` 24개·`&lt;앵커&gt;`가 그대로 실려 왔다.
+      대본을 쓰는 모델에게 «&lt;앵커&gt;»가 그대로 가면 그걸 문장으로 오해하거나
+      «&#10;»을 낱말로 센다. 눈에 잘 안 띄는 만큼 조용히 품질을 갉는다.
+    """
+    import html
+    s = html.unescape(s or "")
+    s = re.sub(r"<\s*/?\s*(앵커|기자|영상편집|영상취재|리포트)\s*>", " ", s)   # 방송 대본 표시
+    s = re.sub(r"[ \t ]+", " ", s)
+    return re.sub(r"\n{3,}", "\n\n", s).strip()
 
 
 # ── Gemini ───────────────────────────────────────────────────────────────────────

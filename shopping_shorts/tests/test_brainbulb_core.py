@@ -129,3 +129,24 @@ def test_font_probe_all_fonts_resolve():
     from shopping_shorts.brainbulb import measure
     res = measure.font_probe()
     assert all(v["ok"] for v in res.values()), res
+
+
+def test_fetch_article_unescapes_html_entities():
+    """★기사 본문에 HTML 엔티티가 그대로 실려 오면 대본 모델이 그걸 낱말로 센다.
+
+    실측 2026-09-17(SBS 055/0001388840): `&#10;` 24개 · `&lt;앵커&gt;` 가 본문에 그대로
+    있었다. 눈에 잘 안 띄어 조용히 품질을 갉는다.
+    """
+    from shopping_shorts.brainbulb.providers import _unescape
+    raw = "&lt;앵커&gt; &#10; &#10;개미를 &#39;토핑&#39;으로 썼다 &quot;벌금형&quot;"
+    out = _unescape(raw)
+    assert "&" not in out, f"엔티티가 남았다: {out}"
+    assert "앵커" not in out, "방송 대본 표시 <앵커>가 남았다"
+    assert "개미를 '토핑'으로 썼다" in out and '"벌금형"' in out, out
+
+
+def test_unescape_keeps_real_text_intact():
+    """엔티티가 없는 평범한 본문은 건드리지 않는다 — 과하게 지우면 기사가 깎인다."""
+    from shopping_shorts.brainbulb.providers import _unescape
+    s = "지난해 7월 강남의 한 음식점에 단속반이 들어섰다.\n\n냉장고에서 통이 발견됐다."
+    assert _unescape(s) == s
