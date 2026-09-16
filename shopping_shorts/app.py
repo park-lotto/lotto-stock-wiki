@@ -19090,15 +19090,18 @@ _HEADCOPY_CACHE_MAX = 200
 
 @app.post("/api/produce/headcopy/suggest")
 def api_produce_headcopy_suggest(body: dict):
-    """확정 대본 → 헤드카피 후보. {script} → {ok, cached, copies:[{label,text}]}"""
+    """확정 대본+틀 계열 → 짝이 맞는 헤드카피 후보."""
     script = (body.get("script") or "").strip()
     if not script:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "대본이 비어 있습니다"})
-    key = _script_hash(script)
+    family = headcopy_gen.normalize_family(body.get("copy_family"))
+    # 같은 대본이라도 화법 계열이 다르면 결과가 다르다. 계열을 빼면 인스타형 요청이
+    # 이븐쇼핑형 캐시에 맞아 AI를 부르지도 않고 잘못된 제목을 받는다.
+    key = f"{_script_hash(script)}:{family}"
     if key in _HEADCOPY_CACHE:
         return {"ok": True, "cached": True, "copies": _HEADCOPY_CACHE[key]}
-    copies = headcopy_gen.suggest(script)
+    copies = headcopy_gen.suggest(script, family=family)
     # 못 뽑은 것도 캐시하면 "다시 시도"가 영영 막힌다 → 성공했을 때만 담는다.
     if copies:
         if len(_HEADCOPY_CACHE) >= _HEADCOPY_CACHE_MAX:
@@ -19136,6 +19139,9 @@ def api_produce_frame_presets():
                          "has_head": v.get("has_head"),
                          "demo_views": v.get("demo_views"),
                          "demo_comments": v.get("demo_comments"),
+                         # 현재 장면꾸미기 채널 틀은 전부 유튜브 썰쇼핑 계열이다.
+                         # 이후 인스타 틀을 추가할 때 이 값만 바꾸면 생성 배선이 따라간다.
+                         "copy_family": v.get("copy_family", "youtube_reveal"),
                          "headcopy": v.get("headcopy"),
                          # ★자막도 한 세트로 내려준다(2026-08-25). 틀·헤드카피만
                          #   채널 질감을 따라가고 자막만 우리 기본값이면 "한 세트로

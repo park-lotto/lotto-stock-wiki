@@ -4683,25 +4683,32 @@ const PREVIEW_W=380, VIDEO_W=720;
 // ✍ 고정카피 — 확정 대본에서 후보 4개. 캐시는 서버가 한다(같은 대본이면 호출 0회).
 // ★textarea를 자동으로 채우지 않는다. 카드를 누를 때만 들어간다(2026-07-19 결정).
 let HC_COPY_LOADED_HASH = null;
+function currentCopyFamily(){
+  const f=STATE&&STATE.deco&&STATE.deco.template&&STATE.deco.template.frame;
+  const meta=(typeof FR_PRESETS!=='undefined'&&FR_PRESETS||[]).find(p=>p.id===(f&&f.preset));
+  return (meta&&meta.copy_family)||'youtube_reveal';
+}
 async function loadHeadcopySuggest(force){
   const box=document.getElementById('hcCopyCards'), msg=document.getElementById('hcCopyMsg');
   if(!box) return;
   const script=(STATE.script||'').trim();
   if(!script){ box.innerHTML=''; if(msg) msg.textContent='대본을 먼저 확정하면 문구를 뽑아드려요.'; return; }
   let h=''; try{ h=await _scriptHash(script); }catch(e){}
-  if(!force && h && h===HC_COPY_LOADED_HASH) return;
+  const copyFamily=currentCopyFamily();
+  const cacheKey=h+'|'+copyFamily;
+  if(!force && h && cacheKey===HC_COPY_LOADED_HASH) return;
   if(msg) msg.textContent='문구 뽑는 중…';
   try{
     const d=await (await fetch('/api/produce/headcopy/suggest',
       {method:'POST',headers:{'Content-Type':'application/json'},
-       body:JSON.stringify({script})})).json();
+       body:JSON.stringify({script,copy_family:copyFamily})})).json();
     const list=(d&&d.copies)||[];
     if(!list.length){
       box.innerHTML='';
       if(msg) msg.innerHTML='<span style="color:var(--gold)">문구를 못 뽑았어요 — 아래 칸에 직접 입력하시거나 ↻ 다시 뽑기를 눌러주세요</span>';
       return;
     }
-    HC_COPY_LOADED_HASH=h;
+    HC_COPY_LOADED_HASH=cacheKey;
     window._hcCopies=list;
     // 후보가 막 도착한 순간에도 번호가 보이게 한다 — 이 전엔 후보가 0개라 빈칸이었다.
     if(typeof frHcLabel==='function') frHcLabel();
@@ -4745,7 +4752,12 @@ function useHeadcopy(i){
   const c=(window._hcCopies||[])[i]; if(!c) return;
   const t=document.getElementById('hcText'); if(!t) return;
   t.value=c.text||'';
+  window._hcPicked=i;
   updateHC();          // 미리보기·STATE 반영은 기존 경로 그대로(새로 만들지 않는다)
+  // 첫 후킹 스타일은 큰 제목과 흰 보조띠가 한 후보 세트다. 사용자가 카드를
+  // 눌렀을 때만 둘을 함께 적용한다(후보 도착만으로 기존 입력을 덮지 않는다).
+  const ft=document.getElementById('frTitle');
+  if(c.subline && ft){ ft.value=c.subline; frUpdate(); frHcLabel(); }
   try{ logPick('S6copy', {picked:i, candidates:(window._hcCopies||[]).map(x=>x.text)}); }catch(e){}
 }
 // 🗑 문구 지우기 — 사장님이 버튼을 눌렀을 때만 비운다(자동으로 비우지 않는다).
@@ -5079,6 +5091,7 @@ function frPick(preset){
     //   (2026-08-25 사장님 "헤드카피는 자동생성돼서 제목에 자동으로 한개 들어가게").
     //   틀을 고른 순간 제목칸이 비어 있으면 "완성된 그림"이 안 된다.
     const hc=((document.getElementById('hcText')||{}).value||'') || _hcFirstCopy();
+    const pairedSubline=_hcPickedSubline()||_hcFirstSubline();
     // ★띠 높이는 그 틀이 갖고 온 실측값을 쓴다(2026-08-20). 화면이 190을 우기면
     //   20종이 전부 같은 비율이 돼 원본을 벤치마킹한 의미가 사라진다.
     // ★**다른 틀로 갈아탈 땐 새 틀의 높이**를 쓴다 — 앞 틀의 값을 물고 가면 어떤 틀을
@@ -5099,7 +5112,7 @@ function frPick(preset){
       //   허전해서 그 틀이 어떻게 생겼는지 판단이 안 된다. 사장님이 고치면 그대로 둔다.
       //   ★순서: 이 작업에 이미 적어둔 값 → 계정에 기억해둔 내 채널 → 샘플(2026-08-30).
       //     예전엔 가운데가 없어서 새 작업마다 '숏템메이커'로 되돌아갔다.
-      channel:old.channel||MY_CHANNEL||'숏템메이커', title:old.title||hc,
+      channel:old.channel||MY_CHANNEL||'숏템메이커', title:old.title||pairedSubline||hc,
       views:(old.views!=null&&old.views!=='')?old.views:(meta.has_head?(meta.demo_views||''):''),
       comments:(old.comments!=null&&old.comments!=='')?old.comments:(meta.has_head?(meta.demo_comments||''):''),
       // ★지금 틀에 값이 있으면 그것, 없으면 **마지막에 고른 것**(2026-09-02)
@@ -5837,13 +5850,19 @@ function fillFrameFontSelects(){
 function frFromHeadcopy(){
   const t=document.getElementById('frTitle'), hc=document.getElementById('hcText');
   if(!t||!hc) return;
-  t.value=(hc.value||'') || _hcFirstCopy();
+  t.value=_hcPickedSubline()||_hcFirstSubline()||(hc.value||'')||_hcFirstCopy();
   frUpdate();
 }
 // ── ✍ 헤드카피 후보 다루기 — 값의 주인은 loadHeadcopySuggest가 채우는 window._hcCopies ──
 // ★후보를 여기서 다시 뽑지 않는다(0순위-B). 뽑는 곳은 한 곳, 여기선 꺼내 쓰기만 한다.
-function _hcCopyList(){ return (window._hcCopies||[]).map(c=>(c&&c.text||'').trim()).filter(Boolean); }
+function _hcCopyItems(){ return (window._hcCopies||[]).filter(c=>c&&(c.text||'').trim()); }
+function _hcCopyList(){ return _hcCopyItems().map(c=>(c.text||'').trim()); }
 function _hcFirstCopy(){ return _hcCopyList()[0]||''; }
+function _hcFirstSubline(){ const c=_hcCopyItems()[0]||{}; return (c.subline||'').trim(); }
+function _hcPickedSubline(){
+  const c=_hcCopyItems()[Number.isInteger(window._hcPicked)?window._hcPicked:0]||{};
+  return (c.subline||'').trim();
+}
 let FR_HC_IDX=0;
 function frHcLabel(){
   // 지금 제목칸이 몇 번 문구인지 표시한다(2026-08-26 사장님 "네" — 템플릿을 눌러
@@ -5854,7 +5873,7 @@ function frHcLabel(){
   //   고치면 FR_HC_IDX는 옛 번호로 남아 거짓말이 된다.
   const msg=document.getElementById('frHcMsg'); if(!msg) return;
   const t=document.getElementById('frTitle');
-  const list=_hcCopyList();
+  const list=_hcCopyItems().map(c=>(c.subline||c.text||'').trim()).filter(Boolean);
   if(!list.length){ msg.textContent=''; return; }   // 후보가 없으면 조용히(안내는 누를 때만)
   const at=list.indexOf(((t||{}).value||'').trim());
   msg.textContent = at>=0 ? `문구 ${at+1} / ${list.length}`
@@ -5863,7 +5882,7 @@ function frHcLabel(){
 function frSwapHeadcopy(){
   // 제목칸의 문구를 다음 후보로 돌린다(2026-08-25 사장님 "교체는 헤드카피 바꾸기
   // 버튼을 만들어줘 템플릿쪽에서 하게"). 후보가 없으면 왜 없는지 알려준다.
-  const list=_hcCopyList(), t=document.getElementById('frTitle');
+  const items=_hcCopyItems(), list=items.map(c=>(c.subline||c.text||'').trim()).filter(Boolean), t=document.getElementById('frTitle');
   const msg=document.getElementById('frHcMsg');
   if(!t) return;
   if(!list.length){
@@ -5874,7 +5893,10 @@ function frSwapHeadcopy(){
   const cur=(t.value||'').trim();
   const at=list.indexOf(cur);
   FR_HC_IDX = at>=0 ? (at+1)%list.length : 0;
-  t.value=list[FR_HC_IDX];
+  const picked=items[FR_HC_IDX]||{};
+  t.value=(picked.subline||picked.text||'').trim();
+  const hc=document.getElementById('hcText');
+  if(hc&&picked.text){ hc.value=picked.text; window._hcPicked=FR_HC_IDX; updateHC(); }
   frHcLabel();          // 번호 문구를 만드는 곳은 frHcLabel 하나(0순위-B)
   frUpdate();
 }

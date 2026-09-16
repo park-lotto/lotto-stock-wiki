@@ -14,6 +14,8 @@ _LINE_LEN = 13         #   무너져 문단처럼 보였다 — 두 줄 x 13자�
 _WANT = 4
 _WHY_LEN = 80          # ★이유문은 카드 밑에 한 줄로 깔린다(썸네일 제목 추천과 같은 모양).
                        #   길어지면 카드가 문단이 돼 고르기가 더 어려워진다.
+_FAMILIES = {"generic", "youtube_reveal"}
+_DEFAULT_FAMILY = "youtube_reveal"
 
 _SCHEMA = {
     "type": "object",
@@ -23,7 +25,9 @@ _SCHEMA = {
             "items": {
                 "type": "object",
                 "properties": {"label": {"type": "string"}, "text": {"type": "string"},
-                               "why": {"type": "string"}},
+                               "why": {"type": "string"},
+                               "subline": {"type": "string"},
+                               "upload_title": {"type": "string"}},
                 "required": ["label", "text", "why"],
             },
         }
@@ -58,6 +62,38 @@ _PROMPT = """너는 쇼츠 영상의 **헤드카피**(영상 위에 크게 박�
 {script}
 """
 
+_YOUTUBE_REVEAL_PROMPT = """너는 이븐쇼핑류 유튜브 쇼츠의 **첫 후킹 제목 세트**를 쓴다.
+
+아래 대본에서 서로 다른 후보 4개를 써라. 각 후보는 반드시 한 세트다.
+- upload_title: 업로드용 결과형 제목. 제품명보다 먼저 큰 결과·사건을 말한다.
+- text: 영상 상단 큰 제목. 정확히 두 줄이며 3인칭 관찰자 화법을 쓴다.
+- subline: 큰 제목 아래 흰 띠 문구. 정체를 보조 제목에서 공개하지 말고 질문·미스터리로 남긴다.
+- why: 어떤 후킹 장치인지 한 줄로 설명한다.
+
+전개 규칙:
+- 큰 제목은 ‘누가/무엇을 어떻게 바꿨는가’라는 결과를 먼저 보여준다.
+- 나라·천재·개발자·돈방석·주문 폭주·업계 반응은 후킹을 위해 자유롭게 각색해도 된다.
+- 단, 제품의 정체·작동 방식·핵심 효능은 대본과 다른 물건으로 바꾸지 않는다.
+- 마지막 재후킹에서 공개할 최강 장점은 subline에 미리 쓰지 않는다.
+- text는 두 줄, 각 줄 {linelen}자 이내, 전체 {maxlen}자 이내다.
+- subline은 32자 이내, upload_title은 50자 이내다.
+- 마침표·이모지·해시태그·따옴표를 쓰지 않는다.
+
+좋은 세트 예:
+  upload_title: "칼질 포기자를 살린 한국 천재의 발명품"
+  text: "칼질 포기자를 살린\n한국 천재의 발명품"
+  subline: "텀블러처럼 생긴 주방도구의 정체?"
+  why: "큰 결과를 먼저 던지고 제품 정체는 흰 띠에서도 숨겼습니다"
+
+[대본]
+{script}
+"""
+
+
+def normalize_family(value):
+    """외부 입력을 아는 문구 계열 하나로 정규화한다."""
+    return value if value in _FAMILIES else _DEFAULT_FAMILY
+
 
 def two_lines(text):
     """무슨 일이 있어도 **두 줄**로 만든다.
@@ -83,13 +119,17 @@ def two_lines(text):
     return " ".join(words[:best]) + "\n" + " ".join(words[best:])
 
 
-def suggest(script, want=_WANT):
+def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
     """대본 → [{label, text}] (최대 want개). 실패·무키·빈 대본이면 **빈 리스트**."""
     s = (script or "").strip()
     if not s:
         return []                      # 재료가 없으면 부르지 않는다(빈 재료로 지어낸다)
-    data = _call_json(_PROMPT.format(script=s[:4000], maxlen=_MAX_LEN,
-                                     linelen=_LINE_LEN, whylen=_WHY_LEN), _SCHEMA) or {}
+    family = normalize_family(family)
+    maxlen = 23 if family == "youtube_reveal" else _MAX_LEN
+    linelen = 11 if family == "youtube_reveal" else _LINE_LEN
+    prompt = _YOUTUBE_REVEAL_PROMPT if family == "youtube_reveal" else _PROMPT
+    data = _call_json(prompt.format(script=s[:4000], maxlen=maxlen,
+                                    linelen=linelen, whylen=_WHY_LEN), _SCHEMA) or {}
     copies = data.get("copies") if isinstance(data, dict) else None
     if not isinstance(copies, list):
         copies = []
@@ -99,11 +139,13 @@ def suggest(script, want=_WANT):
             continue
         text = c.get("text")
         text = text.strip() if isinstance(text, str) else ""
-        if not text or len(text) > _MAX_LEN:
+        if not text or len(text) > maxlen:
             continue
         # ★접은 **뒤에** 중복을 본다. 접기 전 문자열로 검사하고 접은 걸 저장하면
         #   같은 문구가 두 번 통과한다(실측: 테스트 test_dedupes_identical_text가 잡음).
         text = two_lines(text)         # 두 줄 고정은 여기 한 곳(화면에서 또 접지 않는다)
+        if family == "youtube_reveal" and any(len(line) > linelen for line in text.split("\n")):
+            continue                  # 실제 이븐쇼핑 틀에서 좌우가 잘리는 문구는 후보로 내지 않는다
         if text in seen:
             continue
         label = c.get("label")
@@ -112,7 +154,17 @@ def suggest(script, want=_WANT):
         why = c.get("why")
         why = why.strip() if isinstance(why, str) else ""
         seen.add(text)
-        out.append({"label": label or "제안", "text": text, "why": why[:_WHY_LEN]})
+        item = {"label": label or "제안", "text": text, "why": why[:_WHY_LEN]}
+        # 첫 후킹 계열은 큰 제목과 흰 보조띠를 **같은 응답의 한 세트**로 보관한다.
+        # 둘을 따로 생성하면 후보를 바꿀 때 서로 다른 약속이 섞인다.
+        if family == "youtube_reveal":
+            subline = c.get("subline")
+            upload_title = c.get("upload_title")
+            if isinstance(subline, str) and subline.strip():
+                item["subline"] = subline.strip()[:32]
+            if isinstance(upload_title, str) and upload_title.strip():
+                item["upload_title"] = upload_title.strip()[:50]
+        out.append(item)
         if len(out) >= want:
             break
     return out

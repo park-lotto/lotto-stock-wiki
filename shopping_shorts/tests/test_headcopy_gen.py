@@ -135,3 +135,34 @@ def test_two_lines_always_two_and_balanced():
     assert two_lines("한방에") == "한방에"     # 어절 하나면 접을 수 없다
     assert two_lines("") == ""
     assert two_lines("이미 두\n줄인것").count("\n") == 1
+
+
+def test_youtube_reveal_family_returns_matching_title_set(monkeypatch):
+    """첫 후킹 스타일은 큰 제목과 흰 보조띠를 한 세트로 만들어야 한다."""
+    seen = {}
+
+    def fake(prompt, schema):
+        seen["prompt"] = prompt
+        return {"copies": [{
+            "label": "결과형",
+            "text": "칼질 포기자를 살린\n한국 천재의 발명품",
+            "subline": "텀블러처럼 생긴 주방도구의 정체?",
+            "upload_title": "칼질 포기자를 살린 한국 천재의 발명품",
+        }]}
+
+    monkeypatch.setattr(headcopy_gen, "_call_json", fake)
+    out = headcopy_gen.suggest("전동 채소 다지기 대본", family="youtube_reveal")
+
+    assert out[0]["subline"] == "텀블러처럼 생긴 주방도구의 정체?"
+    assert out[0]["upload_title"].startswith("칼질 포기자")
+    assert "정체를 보조 제목에서 공개하지" in seen["prompt"]
+    assert "나라·천재·개발자·돈방석" in seen["prompt"]
+
+
+def test_youtube_reveal_rejects_a_line_wider_than_template(monkeypatch):
+    """총 글자 수가 짧아도 한 줄이 11자를 넘으면 실제 이븐쇼핑 틀에서 잘린다."""
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": [{
+        "label": "너무 넓음", "text": "가나다라마바사아자차카타\n짧은 둘째 줄",
+        "subline": "정체?", "upload_title": "제목",
+    }]})
+    assert headcopy_gen.suggest("대본", family="youtube_reveal") == []
