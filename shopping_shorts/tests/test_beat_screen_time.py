@@ -62,14 +62,19 @@ def test_reuses_when_inventory_exhausted():
     assert ep._beat_screen_secs(b) > 1.0        # 뭐라도 더 붙었다
 
 
-def test_prefers_scene_that_matches_the_narration():
-    """말이 통하는 장면부터 채운다 — 아무 컷이나 채우면 렌더 땜질을 앞당긴 것뿐이다."""
+def test_prefers_the_cut_right_after_the_picked_one():
+    """지목 컷의 **바로 다음 컷**부터 채운다(2026-09-16) — 낱말이 겹치는 먼 컷이 아니라.
+
+    종전 계약은 '낱말 겹침 우선'이었다. 09-08 컷뱅크 실측(사장님이 손으로 바꾼 1,027건)에서
+    버린 컷의 낱말 겹침(0.82)이 고른 컷(0.73)보다 높았다 — 낱말은 좋은 장면의 기준이 아니고,
+    같은 소스 안에서 낱말 순으로 고르면 시간이 점프해 "반죽 섞기"가 CTA에 붙었다(job 26698eb0a362).
+    원본 영상은 한 흐름을 이어가다 필요할 때만 앵글을 바꾼다 — 채우기도 그렇게."""
     sm = _seg_map(4)
-    sm["A-3"]["change"] = "기름때가 물에 씻겨나간다"
+    sm["A-3"]["change"] = "기름때가 물에 씻겨나간다"      # 낱말은 겹치지만 먼 컷
     b = _beat("A-0", 3.0, sm)
     b["narration"] = "기름때가 물로 싹 씻겨나가요"
     ep._fill_beat_screen_time([b], sm)
-    assert b["alternates"][0]["seg_id"] == "A-3"
+    assert b["alternates"][0]["seg_id"] == "A-1", "지목 컷(A-0) 바로 다음(A-1)이 먼저다"
 
 
 def test_prompt_states_the_duration_rule():

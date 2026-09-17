@@ -6714,7 +6714,8 @@ def clean_failure_kind(clean_error):
       ⚠️새 실패 사유를 만들 땐 여기도 같이 늘려라. 안 늘리면 'unknown'으로 새어
         "다시 시도해 주세요"라는 **거짓 안내**가 나간다 — 그게 이 함수가 생긴 이유다.
 
-    반환: 'no_points' | 'no_credit' | 'interrupted' | 'unsupported' | 'unknown'
+    반환: 'no_points' | 'no_credit' | 'need_own_key' | 'need_new_api_key'
+        | 'interrupted' | 'vendor_down' | 'unsupported' | 'unknown'
     """
     e = (clean_error or "")
     low = e.lower()
@@ -6743,6 +6744,14 @@ def clean_failure_kind(clean_error):
     # 배포·재시작으로 BackgroundTask가 죽은 경우 — 이건 진짜로 다시 시도하면 된다.
     if "서버 재시작" in e or "중단되었습니다" in e:
         return "interrupted"
+    # ★업체(VMake) 게이트웨이 장애 — 영상 탓이 아니다(2026-09-17 실측, job 1556910737b6).
+    #   30029 = '前置开放平台事件处理失败'(앞단 개방플랫폼 이벤트 처리 실패). 같은 응답 안에
+    #   영상은 1080x1920·683프레임으로 정상 파싱돼 있었다.
+    #   ★반드시 아래 'unsupported'보다 **먼저** 본다 — 두 사유가 "결과가 비었습니다"라는
+    #     같은 껍데기를 쓰기 때문에, 순서가 뒤집히면 업체 장애가 영상 탓으로 둔갑하고
+    #     고객은 멀쩡한 소재를 버리러 간다(0순위-B: 판단이 문자열 하나에 겹쳐 있다).
+    if "30029" in e:
+        return "vendor_down"
     # 영상 자체를 VMake가 처리 못 한 경우(실측 code 10101 'right reduce error').
     if "10101" in e or "결과가 비었습니다" in e:
         return "unsupported"
@@ -16945,6 +16954,23 @@ def api_produce_works_list(request: Request):
     return {"ok": True, "works": Store(DB_PATH).list_produce_works(customer_id=_cid(request))}
 
 
+def _clean_pro_ready(store, cid):
+    """이 계정이 **실제로 쓰게 될 자막제거 키**로 고급이 되는가. True/False/None(모름).
+
+    ★키 고르기는 keyroute.keys_for 한 곳(0순위-B) — 워커가 청소할 때 쓰는 키와 같아야
+      "화면은 된다는데 막상 실패"가 안 난다. 판정은 vmake_client.key_supports_new_api(캐시 1시간).
+    ★실패해도 화면 로딩을 막지 않는다 — None이면 화면은 안내를 그대로 둔다.
+    """
+    try:
+        from . import keyroute
+        from .vmake_client import key_supports_new_api
+        keys, _ = keyroute.keys_for(store, cid, keyroute.SVC_VMAKE)
+        keys = [k for k in (keys or []) if k]
+        return key_supports_new_api(keys[0]) if keys else False
+    except Exception:          # noqa: BLE001
+        return None
+
+
 @app.get("/api/produce/works/{work_id}")
 def api_produce_works_get(request: Request, work_id: str):
     st = Store(DB_PATH)
@@ -16970,7 +16996,9 @@ def api_produce_works_get(request: Request, work_id: str):
                         "clean_tier": job.get("clean_tier"),
                         # 이미 만들어 둔 등급 — 되돌리기가 공짜인지 화면이 안내한다
                         "clean_tiers_ready": mix_pipeline.clean_tiers_ready(
-                            job, _MIX_WORK_DIR / w["job_id"])}
+                            job, _MIX_WORK_DIR / w["job_id"]),
+                        # 이 계정의 키로 고급을 쓸 수 있나 — True면 화면이 "키 다시 등록" 경고를 뺀다
+                        "clean_pro_ready": _clean_pro_ready(st, _cid(request))}
     return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"],
             "settings": settings}
 
@@ -19089,16 +19117,22 @@ _HEADCOPY_CACHE_MAX = 200
 
 
 @app.post("/api/produce/headcopy/suggest")
-def api_produce_headcopy_suggest(body: dict):
-    """확정 대본 → 헤드카피 후보. {script} → {ok, cached, copies:[{label,text}]}"""
+def api_produce_headcopy_suggest(request: Request, body: dict):
+    """확정 대본+틀 계열 → 짝이 맞는 헤드카피 후보."""
     script = (body.get("script") or "").strip()
     if not script:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "대본이 비어 있습니다"})
-    key = _script_hash(script)
+    # 새 계열은 사장님(cid 0) 시험 전용이다. 일반 고객은 요청을 조작해도 병합 전과 같은
+    # generic 프롬프트만 탄다 — 테스트 페이지 기능이 공용 produce에 새는 것을 서버에서 차단한다.
+    requested_family = body.get("copy_family") if _cid(request) == 0 else "generic"
+    family = headcopy_gen.normalize_family(requested_family)
+    # 같은 대본이라도 화법 계열이 다르면 결과가 다르다. 계열을 빼면 인스타형 요청이
+    # 이븐쇼핑형 캐시에 맞아 AI를 부르지도 않고 잘못된 제목을 받는다.
+    key = f"{_script_hash(script)}:{family}"
     if key in _HEADCOPY_CACHE:
         return {"ok": True, "cached": True, "copies": _HEADCOPY_CACHE[key]}
-    copies = headcopy_gen.suggest(script)
+    copies = headcopy_gen.suggest(script, family=family)
     # 못 뽑은 것도 캐시하면 "다시 시도"가 영영 막힌다 → 성공했을 때만 담는다.
     if copies:
         if len(_HEADCOPY_CACHE) >= _HEADCOPY_CACHE_MAX:
@@ -19136,6 +19170,9 @@ def api_produce_frame_presets():
                          "has_head": v.get("has_head"),
                          "demo_views": v.get("demo_views"),
                          "demo_comments": v.get("demo_comments"),
+                         # 현재 장면꾸미기 채널 틀은 전부 유튜브 썰쇼핑 계열이다.
+                         # 이후 인스타 틀을 추가할 때 이 값만 바꾸면 생성 배선이 따라간다.
+                         "copy_family": v.get("copy_family", "youtube_reveal"),
                          "headcopy": v.get("headcopy"),
                          # ★자막도 한 세트로 내려준다(2026-08-25). 틀·헤드카피만
                          #   채널 질감을 따라가고 자막만 우리 기본값이면 "한 세트로
@@ -19512,6 +19549,60 @@ def api_produce_frame_png(request: Request):
     out = deco_frame.render_to(spec, deco_frame.cache_path(spec))
     return FileResponse(str(out), media_type="image/png",
                         headers={"Cache-Control": "public, max-age=31536000"})
+
+
+@app.get("/api/produce/comment-card/styles")
+def api_produce_comment_card_styles():
+    """댓글 카드 라이브러리 목록. 스타일 정의는 comment_card 한 곳만 쓴다."""
+    from shopping_shorts import comment_card
+    return {"ok": True, "styles": comment_card.styles()}
+
+
+@app.get("/api/produce/comment-card.png")
+def api_produce_comment_card_png(spec: str = "", job_id: str = ""):
+    """편집기와 최종 영상이 공유하는 댓글 카드 PNG 렌더러."""
+    from shopping_shorts import comment_card
+    try:
+        payload = json.loads(spec or "{}")
+        if not isinstance(payload, dict):
+            payload = {}
+    except (TypeError, ValueError):
+        payload = {}
+    avatar_file = Path(str(payload.get("avatar_file") or "")).name
+    if avatar_file and job_id and re.fullmatch(r"[A-Za-z0-9_-]+", job_id or ""):
+        avatar_path = _MIX_WORK_DIR / job_id / avatar_file
+        if avatar_path.is_file():
+            payload["avatar_path"] = str(avatar_path)
+    out = comment_card.CACHE_DIR / f"{comment_card.cache_key(payload)}.png"
+    if not out.exists():
+        comment_card.render_to(payload, out)
+    return FileResponse(str(out), media_type="image/png",
+                        headers={"Cache-Control": "public, max-age=31536000"})
+
+
+@app.post("/api/produce/mix/comment-avatar")
+async def api_produce_comment_avatar(job_id: str = Form(...), file: UploadFile = File(...)):
+    """댓글 카드용 프로필 사진을 작업 폴더에 정규화된 PNG로 저장한다."""
+    store = Store(DB_PATH)
+    if not job_id or not store.get_mix_job(job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    raw = await file.read()
+    if not raw or len(raw) > 5 * 1024 * 1024:
+        return JSONResponse(status_code=413, content={"ok": False, "error": "프로필 이미지는 5MB 이하만 가능해요"})
+    try:
+        from PIL import Image, ImageOps
+        with Image.open(io.BytesIO(raw)) as source:
+            avatar = ImageOps.fit(source.convert("RGBA"), (512, 512), method=Image.Resampling.LANCZOS)
+            output = io.BytesIO()
+            avatar.save(output, "PNG", optimize=True)
+            normalized = output.getvalue()
+    except (OSError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "이미지를 읽지 못했어요"})
+    name = f"comment_avatar_{hashlib.sha1(normalized).hexdigest()[:16]}.png"
+    target = _MIX_WORK_DIR / job_id / name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(normalized)
+    return {"ok": True, "file": name}
 
 
 @app.post("/api/produce/mix/bgm")
