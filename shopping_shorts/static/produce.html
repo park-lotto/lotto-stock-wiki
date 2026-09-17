@@ -9276,7 +9276,16 @@ function _applyPendingNewName(){
   saveWork();                           // title_manual이 실린 state로 다시 저장(가드는 saveWork 안에)
 }
 if(typeof window !== 'undefined') window.__ssApplyWorkTitle = _applyWorkTitle;
+// 최초 생성 응답 전에 이름 저장·자동 저장이 겹치면 둘 다 WORK_ID=null로 POST되어
+// 같은 작업이 두 줄 생겼다(2026-09-17 실측). 저장 요청을 호출 순서대로 한 줄로 세워,
+// 앞 요청이 받은 work_id를 뒤 요청이 _workState()/payload를 만들 때 반드시 재사용한다.
+let _workPushTail = Promise.resolve();
 async function _pushWork(){
+  const previousPush = _workPushTail;
+  let releasePush;
+  _workPushTail = new Promise(resolve => { releasePush = resolve; });
+  await previousPush.catch(()=>{});
+  try{
   // 디바운스가 끝난 시점의 **최신** 상태를 보낸다(예약 시점의 스냅샷이 아니다).
   const st = _workState();
   // ★saveWork의 가드와 **같은 조건**이어야 한다(0순위-B). 여기만 빠뜨리면 로컬엔 남고
@@ -9326,6 +9335,9 @@ async function _pushWork(){
       }catch(e){}
     }
   }catch(e){ _markLocalOnly(); }   // 서버가 죽어도 sessionStorage 복원은 살아 있다 — 저장 실패로 작업을 막지 않는다
+  }finally{
+    releasePush();
+  }
 }
 function saveWork(){
   // ★가드가 **여기 안**에 있다(2026-07-17). 예전엔 호출부 5곳마다 각각 HANDOFF 길이를 검사한 뒤에만
