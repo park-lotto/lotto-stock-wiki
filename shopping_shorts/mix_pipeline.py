@@ -6,6 +6,7 @@ run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 """
 import copy
 import hashlib
+import math
 import os
 import json
 import logging
@@ -1917,17 +1918,59 @@ def _vmake_clean(video_path, keys, out_path, tier=None):
             "비용이 초 단위로 나가므로 중단했습니다.")
     print(f"[clean] tier={tier} 길이={sec if sec is None else round(sec, 1)}초 "
           f"파일={Path(video_path).name}", file=sys.stderr)
+    from shopping_shorts.vmake_client import is_preprocess_fail
     last = None
-    for i, k in enumerate(ks):
-        try:
-            return remove_subtitles(video_path, k, out_path=out_path, tier=tier)
-        except Exception as e:                      # noqa: BLE001 — 다음 키로 넘길지 가른다
-            last = e
-            if not is_no_credit(e):
-                raise                               # 소진이 아니면 키 문제가 아니다
-            print(f"[clean] 키 {i + 1}/{len(ks)} 크레딧 소진 → 다음 키로: {e}",
+    src = video_path
+    reencoded = None
+    try:
+        for i, k in enumerate(ks):
+            while True:
+                try:
+                    return remove_subtitles(src, k, out_path=out_path, tier=tier)
+                except Exception as e:              # noqa: BLE001 — 다음 키로 넘길지·재인코딩할지 가른다
+                    last = e
+                    # ★30029 = VMake가 파일을 못 읽음. 이어 붙인 조립본에서만 나고, 한 번 다시
+                    #   인코딩하면 됐다(2026-09-17 실측). **딱 한 번만** 재인코딩해 같은 키로 다시 보낸다.
+                    if is_preprocess_fail(e) and reencoded is None:
+                        reencoded = _reencode_for_vmake(video_path)
+                        if reencoded:
+                            print(f"[clean] VMake 30029(파일 준비 실패) → 재인코딩 후 1회 재시도: "
+                                  f"{Path(reencoded).name}", file=sys.stderr)
+                            src = reencoded
+                            continue
+                    break
+            if not is_no_credit(last):
+                raise last                          # 소진이 아니면 키 문제가 아니다
+            print(f"[clean] 키 {i + 1}/{len(ks)} 크레딧 소진 → 다음 키로: {last}",
                   file=sys.stderr)
-    raise last
+        raise last
+    finally:
+        if reencoded:
+            try:
+                Path(reencoded).unlink()
+            except OSError as e:                     # 임시 파일이 남을 뿐 — 청소 결과엔 영향 없음
+                print(f"[clean] 재인코딩 임시파일 삭제 실패(무시): {e!r}", file=sys.stderr)
+
+
+def _reencode_for_vmake(video_path):
+    """VMake가 읽기 쉬운 한 덩어리 파일로 다시 인코딩 → 새 경로. 실패하면 None(원래 오류를 그대로 올린다).
+
+    ★길이·해상도는 그대로 — 초 단위 과금이 바뀌지 않고, 청소본 좌표도 안 어긋난다.
+    """
+    src = Path(video_path)
+    out = src.with_name(src.stem + "_reenc.mp4")
+    try:
+        r = subprocess.run(
+            ["ffmpeg", "-y", "-loglevel", "error", "-i", str(src),
+             "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p",
+             "-c:a", "aac", "-movflags", "+faststart", str(out)],
+            capture_output=True, text=True, timeout=600)
+        if r.returncode == 0 and out.exists() and out.stat().st_size > 1024:
+            return str(out)
+        print(f"[clean] 재인코딩 실패 rc={r.returncode}: {(r.stderr or '')[:200]}", file=sys.stderr)
+    except Exception as exc:                        # noqa: BLE001
+        print(f"[clean] 재인코딩 실패: {exc!r}", file=sys.stderr)
+    return None
 
 
 class NotEnoughPoints(Exception):
@@ -2904,6 +2947,56 @@ def clean_tiers_ready(job, work):
             out[tier] = f.exists() and f.stat().st_size > 1024
     except Exception:      # noqa: BLE001 — 안내용이다. 못 알아내도 기능을 막지 않는다
         pass
+    return out
+
+
+def clean_credit_estimate(seconds, tier=None):
+    """이 길이를 지울 때 나가는 **크레딧 추정**. 길이를 모르면 None.
+
+    ★화면에 적힌 요금과 **같은 식**이어야 한다(1초에 기본 2·고급 4크레딧, 초 단위 올림).
+      안내 문구와 추정이 갈리면 그 자체가 거짓 안내다 — 그래서 단가를 여기 한 곳에
+      두고 화면은 이 값을 받아 쓴다(0순위-B).
+    ★못 재면 숫자를 지어내지 않는다 — 확인창은 숫자 없이 뜬다.
+    """
+    from shopping_shorts.vmake_client import TIER_PRO
+    if seconds is None:
+        return None
+    try:
+        sec = float(seconds)
+    except (TypeError, ValueError):
+        return None
+    if sec <= 0:
+        return None
+    per_sec = 4 if tier == TIER_PRO else 2
+    return int(math.ceil(sec)) * per_sec
+
+
+def clean_redo_state(job, work):
+    """자막제거를 **다시 눌러야 하는 상태인가** → {'ready', 'stale', 'tiers'}.
+
+    ★왜 필요한가(2026-09-17 사장님): "지운 뒤에 3단계에서 장면 바꾸고 다시 오니까
+      이전 장면들로 해야 한다." 장면을 바꾸면 편성 서명이 바뀌어 옛 청소본은 이미
+      재사용되지 않는다(그건 맞게 돌고 있었다). 없던 건 **화면이 그걸 아는 길**이다 —
+      지금 편성 결과가 없고 옛 결과만 있다는 사실을 못 받으니, 고객은 옛 장면 그림을
+      보면서 무엇을 눌러야 하는지 몰랐다.
+
+      ready=True  지금 편성으로 만든 청소본이 있다 (그대로 쓰면 된다, 과금 0)
+      stale=True  지금 편성 것은 없는데 **옛 편성으로 만든 건 있다** → 다시 지워야 한다
+      둘 다 False 아직 한 번도 안 지웠다 (첫 실행 — '다시'라고 하면 거짓말이다)
+    """
+    out = {"ready": False, "stale": False, "tiers": {}}
+    try:
+        work = Path(work)
+        out["tiers"] = clean_tiers_ready(job, work)
+        out["ready"] = bool(clean_final_path_for_plan(job, work))
+        if not out["ready"]:
+            # 옛 편성으로 만든 청소본이 하나라도 남아 있으면 '다시 지워야 하는' 상태다.
+            out["stale"] = any(f.stat().st_size > 1024
+                               for f in work.glob("final_clean_*.mp4"))
+    except Exception as e:      # noqa: BLE001 — 안내용이다. 못 알아내도 기능을 막지 않는다
+        # ★조용히 삼키지 않는다 — 여기가 죽으면 화면이 '다시 지우기'를 영영 안 띄워
+        #   장면을 바꾼 걸 고객이 모른 채 옛 결과를 쓴다. 사유는 남긴다.
+        print("[clean] 재청소 상태 판정 실패(안내 생략): %r" % (e,), file=sys.stderr)
     return out
 
 

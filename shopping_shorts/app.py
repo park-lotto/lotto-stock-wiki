@@ -6875,7 +6875,12 @@ def api_produce_mix_clean_clips(job_id: str):
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     if job.get("clean_status") != "ready":
-        return {"ok": True, "clips": [], "stale": False, "ready": False}
+        # ★ready가 아니어도 **옛 청소본이 남아 있으면** 그 사실을 알린다(2026-09-17).
+        #   실측(이윤정님 job 1556910737b6, clean_status=failed): 여기서 늘 stale=False를
+        #   답해서 화면이 "옛 결과가 있다"를 몰랐다 → 아무 설명 없는 빈 비교화면이 뜨고
+        #   고객은 무엇을 눌러야 할지 모른다. 판정은 clean_redo_state 한 곳(0순위-B).
+        _redo = mix_pipeline.clean_redo_state(job, _MIX_WORK_DIR / job_id)
+        return {"ok": True, "clips": [], "stale": bool(_redo.get("stale")), "ready": False}
     r = mix_pipeline.clean_compare_clips(job, _MIX_WORK_DIR / job_id)
     clips = [{"ci": c["ci"], "si": c["si"], "beat_idx": c["beat_idx"],
               "dur": round(float(c["dur"]), 3)} for c in (r.get("clips") or [])]
@@ -16872,6 +16877,65 @@ def api_my_channel_set(request: Request, body: dict):
     return {"ok": True, "channel": name, "is_default": False}
 
 
+# ── 💾 제작소 프리셋 3종(내 프리셋·내 템플릿·자막 프리셋) — 계정 저장(2026-09-17) ──
+# ★종전엔 produce.html이 localStorage에만 담아 회사 PC에서 저장한 게 집 PC엔 없었다
+#   (이윤정님 제보). 값의 주인을 customer_prefs 한 곳으로 옮긴다(내 채널명과 같은 방식).
+# 저장 단위는 종류별 **목록 통째**(전체 교체) — 폰트 즐겨찾기와 같은 이유(순서 뒤집힘 방지).
+# {merge:[...]}는 옛 브라우저 저장분을 계정에 합치는 이관용 — 같은 내용(JSON 동일)은 안 겹친다.
+_PRESET_KINDS = ("hc_my_presets", "fr_my_templates", "cap_presets")
+_PRESET_MAX_ITEMS = 50          # 한 종류당 개수 — 화면이 버튼 줄이라 그 이상은 못 고른다
+_PRESET_MAX_BYTES = 200_000     # 한 종류당 JSON 크기 — 틀 하나가 1KB 안팎이라 넉넉하다
+
+
+def _preset_clean(items):
+    """이름 있는 dict만 남기고 개수 상한을 자른다. 값 구조(hc/cap/frame)는 화면이 정한다."""
+    out = []
+    for it in items or []:
+        if isinstance(it, dict) and str(it.get("name") or "").strip():
+            it = dict(it)
+            it["name"] = str(it["name"]).strip()[:40]
+            out.append(it)
+    return out[:_PRESET_MAX_ITEMS]
+
+
+@app.get("/api/produce/presets/{kind}")
+def api_produce_presets_get(request: Request, kind: str):
+    if kind not in _PRESET_KINDS:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 종류"})
+    saved = Store(DB_PATH).get_pref("preset::" + kind, customer_id=_cid(request))
+    return {"ok": True, "items": saved if isinstance(saved, list) else [],
+            "is_default": saved is None}
+
+
+@app.post("/api/produce/presets/{kind}")
+def api_produce_presets_set(request: Request, kind: str, body: dict):
+    """body: {items:[...]} 전체 교체 / {merge:[...]} 기존에 없는 것만 뒤에 붙임(이관)."""
+    if kind not in _PRESET_KINDS:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 종류"})
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    key = "preset::" + kind
+    if "merge" in body:
+        if not isinstance(body["merge"], list):
+            return JSONResponse(status_code=422, content={"ok": False, "error": "merge 배열 필요"})
+        cur = store.get_pref(key, customer_id=cid)
+        cur = cur if isinstance(cur, list) else []
+        seen = {json.dumps(x, sort_keys=True, ensure_ascii=False) for x in cur}
+        for it in _preset_clean(body["merge"]):
+            sig = json.dumps(it, sort_keys=True, ensure_ascii=False)
+            if sig not in seen:
+                cur.append(it); seen.add(sig)
+        items = cur[:_PRESET_MAX_ITEMS]
+    else:
+        if not isinstance(body.get("items"), list):
+            return JSONResponse(status_code=422, content={"ok": False, "error": "items 배열 필요"})
+        items = _preset_clean(body["items"])
+    if len(json.dumps(items, ensure_ascii=False)) > _PRESET_MAX_BYTES:
+        return JSONResponse(status_code=413, content={"ok": False, "error": "프리셋이 너무 큽니다"})
+    store.set_pref(key, items, customer_id=cid)
+    return {"ok": True, "items": items, "is_default": False}
+
+
 @app.get("/api/produce/picks")
 def api_produce_picks(request: Request):
     """영상제작에 담긴 도서관 대본(전체 데이터). 우리믹스 탭 기본 목록."""
@@ -16971,6 +17035,24 @@ def _clean_pro_ready(store, cid):
         return None
 
 
+def _clean_credit_est(job, job_id):
+    """다시 지울 때 나갈 크레딧 추정. 못 재면 None — **숫자를 지어내지 않는다**.
+
+    ★길이는 1단계 미리보기(preview.mp4)로 잰다 — 완성본과 같은 편성·같은 길이이고
+      이미 만들어져 있어 추가 비용이 0이다. 없으면 None(확인창은 숫자 없이 뜬다).
+    ★단가 계산은 mix_pipeline.clean_credit_estimate 한 곳(0순위-B) — 화면 안내 문구와
+      같은 식이라야 "안내는 120인데 실제는 다른 값"이 안 난다.
+    """
+    try:
+        p = job.get("preview_path")
+        if not p or not Path(p).exists():
+            return None
+        return mix_pipeline.clean_credit_estimate(
+            mix_pipeline._probe_seconds(p), mix_pipeline.clean_tier_of(job))
+    except Exception:          # noqa: BLE001 — 안내용이다. 실패해도 화면을 막지 않는다
+        return None
+
+
 @app.get("/api/produce/works/{work_id}")
 def api_produce_works_get(request: Request, work_id: str):
     st = Store(DB_PATH)
@@ -16997,6 +17079,12 @@ def api_produce_works_get(request: Request, work_id: str):
                         # 이미 만들어 둔 등급 — 되돌리기가 공짜인지 화면이 안내한다
                         "clean_tiers_ready": mix_pipeline.clean_tiers_ready(
                             job, _MIX_WORK_DIR / w["job_id"]),
+                        # 장면을 바꾼 뒤 '다시 지워야 하는' 상태인가(2026-09-17 사장님).
+                        # ready/stale/tiers — 화면이 이걸 받아야 "옛 장면 결과"를 알아본다.
+                        "clean_redo": mix_pipeline.clean_redo_state(
+                            job, _MIX_WORK_DIR / w["job_id"]),
+                        # 확인창에 쓸 크레딧 추정. 길이를 못 재면 None(숫자 없이 뜬다).
+                        "clean_credit_est": _clean_credit_est(job, w["job_id"]),
                         # 이 계정의 키로 고급을 쓸 수 있나 — True면 화면이 "키 다시 등록" 경고를 뺀다
                         "clean_pro_ready": _clean_pro_ready(st, _cid(request))}
     return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"],
