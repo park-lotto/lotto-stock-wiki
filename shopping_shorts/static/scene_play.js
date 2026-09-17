@@ -629,7 +629,13 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         // 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시 본다(같은 내용 반복).
         let st = pos[idx];
         if (seg.end != null && seg.end - st < Math.min(d, MIN_CLIP) - EPS) st = seg.start;
-        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: st, dur: Math.round(d * 100) / 100 });
+        const clip = { seg_id: seg.seg_id, video_id: seg.video_id, start: st, dur: Math.round(d * 100) / 100 };
+        // ★조각 끝을 넘지 않는다(2026-09-17 이윤정님 "미리보기에서 중간에 다른 화면이 짧게").
+        //   구절이 조각보다 길면 종전엔 dur만큼 그대로 틀어 조각 뒤 **다음 장면**이 새어 나왔다
+        //   (소스를 하나씩 누르면 그 조각만 틀어 멀쩡했다). src_dur을 남기면 applyRate가 그
+        //   비율만큼 느리게 틀어 조각 안에서 끝난다 — 서버 _plan_phrase_clips와 같은 규칙.
+        if (seg.end != null && seg.end - st < d - EPS) clip.src_dur = Math.max(0.1, +(seg.end - st).toFixed(3));
+        clips.push(clip);
         pos[idx] = st + d;
       }
       return clips;
@@ -659,7 +665,10 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         let take = (seg.end - seg.start) * scale;
         if (k === usable.length - 1) take = Math.max(0, ttsDur - filled);
         if (take <= EPS) return;
-        clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take});
+        const clip = {seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take};
+        // 구절 맞춤 끈 칸도 같은 규칙 — 조각보다 길게 틀지 않는다(느리게 채운다).
+        if (seg.end - seg.start < take - EPS) clip.src_dur = +(seg.end - seg.start).toFixed(3);
+        clips.push(clip);
         filled += take;
       });
     }
