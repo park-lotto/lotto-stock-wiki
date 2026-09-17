@@ -16971,6 +16971,24 @@ def _clean_pro_ready(store, cid):
         return None
 
 
+def _clean_credit_est(job, job_id):
+    """다시 지울 때 나갈 크레딧 추정. 못 재면 None — **숫자를 지어내지 않는다**.
+
+    ★길이는 1단계 미리보기(preview.mp4)로 잰다 — 완성본과 같은 편성·같은 길이이고
+      이미 만들어져 있어 추가 비용이 0이다. 없으면 None(확인창은 숫자 없이 뜬다).
+    ★단가 계산은 mix_pipeline.clean_credit_estimate 한 곳(0순위-B) — 화면 안내 문구와
+      같은 식이라야 "안내는 120인데 실제는 다른 값"이 안 난다.
+    """
+    try:
+        p = job.get("preview_path")
+        if not p or not Path(p).exists():
+            return None
+        return mix_pipeline.clean_credit_estimate(
+            mix_pipeline._probe_seconds(p), mix_pipeline.clean_tier_of(job))
+    except Exception:          # noqa: BLE001 — 안내용이다. 실패해도 화면을 막지 않는다
+        return None
+
+
 @app.get("/api/produce/works/{work_id}")
 def api_produce_works_get(request: Request, work_id: str):
     st = Store(DB_PATH)
@@ -16997,6 +17015,12 @@ def api_produce_works_get(request: Request, work_id: str):
                         # 이미 만들어 둔 등급 — 되돌리기가 공짜인지 화면이 안내한다
                         "clean_tiers_ready": mix_pipeline.clean_tiers_ready(
                             job, _MIX_WORK_DIR / w["job_id"]),
+                        # 장면을 바꾼 뒤 '다시 지워야 하는' 상태인가(2026-09-17 사장님).
+                        # ready/stale/tiers — 화면이 이걸 받아야 "옛 장면 결과"를 알아본다.
+                        "clean_redo": mix_pipeline.clean_redo_state(
+                            job, _MIX_WORK_DIR / w["job_id"]),
+                        # 확인창에 쓸 크레딧 추정. 길이를 못 재면 None(숫자 없이 뜬다).
+                        "clean_credit_est": _clean_credit_est(job, w["job_id"]),
                         # 이 계정의 키로 고급을 쓸 수 있나 — True면 화면이 "키 다시 등록" 경고를 뺀다
                         "clean_pro_ready": _clean_pro_ready(st, _cid(request))}
     return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"],

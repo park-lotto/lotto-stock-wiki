@@ -9318,6 +9318,10 @@ async function _restoreWork(workId){
   //   이 파일의 _mergeHandoffItems·_s2Hydrate가 typeof 가드를 쓰는 것과 같은 이유다.
   try{ CLEAN_DONE_TIERS = sg.clean_tiers_ready || {}; }catch(_){}
   try{ CLEAN_PRO_READY = (sg.clean_pro_ready === true); }catch(_){}   // 내 키로 고급이 되면 등록 경고를 뺀다
+  // 장면을 바꾼 뒤 '다시 지워야 하는' 상태 + 확인창에 쓸 크레딧 추정(2026-09-17).
+  // ★위와 같은 이유로 try — 앵커로 잘라 도는 테스트 하네스엔 선언부가 없다.
+  try{ CLEAN_REDO = sg.clean_redo || {}; }catch(_){}
+  try{ CLEAN_CREDIT_EST = (typeof sg.clean_credit_est === 'number') ? sg.clean_credit_est : null; }catch(_){}
   // ★복원된 스타일이 하나라도 있으면 꾸미기 패널이 그걸 덮지 않게 표시한다(위 선언 참조).
   // headcopy/caption STYLE(색·폰트·크기)은 DOM 입력칸에서 되읽히므로 STATE만으로는 안 남는다 —
   // initHeadcopy가 이 플래그를 보고 applyConfig로 DOM을 채운다.
@@ -13190,8 +13194,15 @@ function renderCleanReady(job){
         +'<button class="cp-pg" onclick="cleanGo('+(_L[Math.min(_L.length-1,_at+1)])+','+pos+')"'+(_at>=_L.length-1?' disabled':'')+'>▶</button>'
       : '';
   }
+  // ★장면을 바꾼 뒤엔 '무엇을 눌러야 하는지'를 준다(2026-09-17 사장님). 예전엔 경고만
+  //   있고 버튼 이름이 '↻ 다시 미리보기'라, 이게 돈이 나가는 재청소인지 알 수 없었다.
   const staleNote = CLEAN_STALE
-    ? '<div class="hint" style="text-align:center;color:var(--fire)">⚠️ 장면을 바꾼 뒤라 이 결과는 바꾸기 전 편성 기준이에요 — 최종 렌더 때 새 편성으로 다시 지웁니다(크레딧 추가). 지금 확인하려면 ↻ 다시 미리보기.</div>'
+    ? '<div class="hint" style="text-align:center;color:var(--fire)">'
+      + '⚠️ <b>장면을 바꾸기 전</b> 결과예요 — 지금 장면으로 다시 지워야 합니다.'
+      + '<br><span style="opacity:.85">그냥 두면 최종 렌더 때 자동으로 다시 지웁니다(크레딧은 그때 나갑니다).</span>'
+      + '</div>'
+      + '<button class="cp-redo" onclick="redoCleanForNewScenes()" '
+      + 'style="background:#3a1d10;border-color:var(--fire,#ff9a5a)">🔁 지금 장면으로 다시 지우기</button>'
     : '';
   box.innerHTML='<div class="cp-compare">'
     +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'&kind=original"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
@@ -13232,6 +13243,20 @@ async function restoreCleanPreview(){
       CLEAN_POLL=setInterval(()=>pollClean(myGen,job),3000);
     }
   }catch(e){ /* 상태를 못 받으면 화면 그대로 둔다 */ }
+}
+// 장면을 바꾼 뒤 '지금 장면으로 다시 지우기' (2026-09-17 사장님).
+// ★누르기 전에 확인창 — 돈이 나가는 일은 모르고 태우지 않게 한다(사장님 선택).
+//   크레딧 추정은 서버(clean_credit_estimate)가 준다. 모르면 숫자를 지어내지 않는다.
+function redoCleanForNewScenes(){
+  const est = (typeof CLEAN_CREDIT_EST === 'number' && CLEAN_CREDIT_EST > 0)
+    ? CLEAN_CREDIT_EST : null;
+  const tierName = ((STATE.cleanTier||'basic')==='pro') ? '고급' : '기본';
+  const msg = '지금 장면으로 자막을 다시 지웁니다.\n\n'
+    + '방식: ' + tierName + '\n'
+    + (est ? ('크레딧이 약 ' + est + ' 나갑니다.\n\n') : '크레딧이 추가로 나갑니다.\n\n')
+    + '계속할까요?';
+  if(!confirm(msg)) return;
+  startCleanPreview();
 }
 async function startCleanPreview(){
   const box=document.getElementById('cleanPreview');
@@ -13524,12 +13549,20 @@ function paintCleanTier(){
       + '📖 그림으로 보는 발급 방법</a>'
     : '보통 자막에 충분해요. <b>1초에 2크레딧</b>(30초 영상이면 60크레딧, 초 단위 올림). '
       + '큰 자막 박스가 지저분하게 남으면 <b>고급</b>으로 바꿔 보세요.';
-  if(madeThis) msg += ' <span style="color:var(--ok,#7ef0b0)">— 이 방식으로 만든 결과가 있어요(추가 비용 없이 바로 씁니다).</span>';
-  else if(madeOther) msg += ' <b style="color:var(--fire,#ff9a5a)">— 아래 [자막제거 시작하기]를 다시 눌러야 이 방식으로 만들어져요.</b>';
+  // ★한 번 지운 뒤 방식을 바꿨을 때 무엇이 일어나는지 분명히 말한다(2026-09-17 사장님:
+  //   "기본으로 지운 뒤에 별로면 고급으로 다시 할 수 있게"). 되돌리기는 공짜(파일이 남아
+  //   있다), 새 방식은 유료 — 이 둘을 섞어 적으면 고객이 비용을 오해한다.
+  if(madeThis) msg += ' <span style="color:var(--ok,#7ef0b0)">— ✅ 이 방식으로 만든 결과가 <b>이미 있어요</b>. 추가 비용 없이 바로 씁니다.</span>';
+  else if(madeOther) msg += ' <b style="color:var(--fire,#ff9a5a)">— 아래 [✨ 자막제거 시작하기]를 눌러야 이 방식으로 만들어져요(크레딧이 나갑니다).</b>'
+    + '<span style="opacity:.85"><br>전에 쓰던 방식으로 되돌리면 그때 만든 결과를 <b>추가 비용 없이</b> 그대로 씁니다.</span>';
   h.innerHTML = msg;
 }
 // 이미 만들어 둔 등급들(되돌리기가 공짜인지 안내하는 데만 쓴다). 서버가 알려준다.
 let CLEAN_DONE_TIERS = {};
+// 장면을 바꾼 뒤 다시 지워야 하는 상태 {ready, stale, tiers} — 서버(clean_redo_state)가 준다.
+let CLEAN_REDO = {};
+// 다시 지울 때 나갈 크레딧 추정. null이면 모른다 — 확인창에 숫자를 안 적는다.
+let CLEAN_CREDIT_EST = null;
 // 이 계정의 키로 고급(Smart Pro)이 되는가 — 서버(_clean_pro_ready)가 알려준다. 모르면 false(경고 유지).
 let CLEAN_PRO_READY = false;
 async function setCleanTier(tier){

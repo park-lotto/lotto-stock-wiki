@@ -6,6 +6,7 @@ run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 """
 import copy
 import hashlib
+import math
 import os
 import json
 import logging
@@ -2888,6 +2889,54 @@ def clean_tiers_ready(job, work):
         for tier, sig in ((TIER_BASIC, base), (TIER_PRO, base + "p")):
             f = Path(work) / ("final_clean_%s.mp4" % sig)
             out[tier] = f.exists() and f.stat().st_size > 1024
+    except Exception:      # noqa: BLE001 — 안내용이다. 못 알아내도 기능을 막지 않는다
+        pass
+    return out
+
+
+def clean_credit_estimate(seconds, tier=None):
+    """이 길이를 지울 때 나가는 **크레딧 추정**. 길이를 모르면 None.
+
+    ★화면에 적힌 요금과 **같은 식**이어야 한다(1초에 기본 2·고급 4크레딧, 초 단위 올림).
+      안내 문구와 추정이 갈리면 그 자체가 거짓 안내다 — 그래서 단가를 여기 한 곳에
+      두고 화면은 이 값을 받아 쓴다(0순위-B).
+    ★못 재면 숫자를 지어내지 않는다 — 확인창은 숫자 없이 뜬다.
+    """
+    from shopping_shorts.vmake_client import TIER_PRO
+    if seconds is None:
+        return None
+    try:
+        sec = float(seconds)
+    except (TypeError, ValueError):
+        return None
+    if sec <= 0:
+        return None
+    per_sec = 4 if tier == TIER_PRO else 2
+    return int(math.ceil(sec)) * per_sec
+
+
+def clean_redo_state(job, work):
+    """자막제거를 **다시 눌러야 하는 상태인가** → {'ready', 'stale', 'tiers'}.
+
+    ★왜 필요한가(2026-09-17 사장님): "지운 뒤에 3단계에서 장면 바꾸고 다시 오니까
+      이전 장면들로 해야 한다." 장면을 바꾸면 편성 서명이 바뀌어 옛 청소본은 이미
+      재사용되지 않는다(그건 맞게 돌고 있었다). 없던 건 **화면이 그걸 아는 길**이다 —
+      지금 편성 결과가 없고 옛 결과만 있다는 사실을 못 받으니, 고객은 옛 장면 그림을
+      보면서 무엇을 눌러야 하는지 몰랐다.
+
+      ready=True  지금 편성으로 만든 청소본이 있다 (그대로 쓰면 된다, 과금 0)
+      stale=True  지금 편성 것은 없는데 **옛 편성으로 만든 건 있다** → 다시 지워야 한다
+      둘 다 False 아직 한 번도 안 지웠다 (첫 실행 — '다시'라고 하면 거짓말이다)
+    """
+    out = {"ready": False, "stale": False, "tiers": {}}
+    try:
+        work = Path(work)
+        out["tiers"] = clean_tiers_ready(job, work)
+        out["ready"] = bool(clean_final_path_for_plan(job, work))
+        if not out["ready"]:
+            # 옛 편성으로 만든 청소본이 하나라도 남아 있으면 '다시 지워야 하는' 상태다.
+            out["stale"] = any(f.stat().st_size > 1024
+                               for f in work.glob("final_clean_*.mp4"))
     except Exception:      # noqa: BLE001 — 안내용이다. 못 알아내도 기능을 막지 않는다
         pass
     return out
