@@ -2937,8 +2937,10 @@ def clean_redo_state(job, work):
             # 옛 편성으로 만든 청소본이 하나라도 남아 있으면 '다시 지워야 하는' 상태다.
             out["stale"] = any(f.stat().st_size > 1024
                                for f in work.glob("final_clean_*.mp4"))
-    except Exception:      # noqa: BLE001 — 안내용이다. 못 알아내도 기능을 막지 않는다
-        pass
+    except Exception as e:      # noqa: BLE001 — 안내용이다. 못 알아내도 기능을 막지 않는다
+        # ★조용히 삼키지 않는다 — 여기가 죽으면 화면이 '다시 지우기'를 영영 안 띄워
+        #   장면을 바꾼 걸 고객이 모른 채 옛 결과를 쓴다. 사유는 남긴다.
+        print("[clean] 재청소 상태 판정 실패(안내 생략): %r" % (e,), file=sys.stderr)
     return out
 
 
