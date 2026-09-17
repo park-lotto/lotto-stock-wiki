@@ -16309,15 +16309,19 @@ function drawThumb(ctx, img, layers, W, H, view){
       if (+L.shadow > 0){
         const k = Math.min(100, +L.shadow) / 100;
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,' + (0.55 + 0.4 * k) + ')';
-        ctx.shadowBlur = size * 0.10 * k;
-        ctx.shadowOffsetX = size * 0.07 * k; ctx.shadowOffsetY = size * 0.09 * k;
+        // ★진하게(2026-09-17 사장님 "너무 약해") — 번짐은 줄이고(또렷), 거리는 늘리고, 같은 그림자를
+        //   3번 겹쳐 깐다. 한 번만 깔면 번진 가장자리가 반투명이라 밝은 배경에서 회색으로 뜬다.
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = size * 0.06 * k;
+        ctx.shadowOffsetX = size * 0.10 * k; ctx.shadowOffsetY = size * 0.13 * k;
+        for (let _p = 0; _p < 3; _p++){
         if (L.outline && L.outline.w){
           ctx.lineWidth = Math.max(L.outline.w * s, size * 0.085);
           ctx.strokeStyle = L.outline.color; ctx.lineJoin = 'round';
           runs.forEach(r => ctx.strokeText(r.text, r.x, y));
         } else {
           runs.forEach(r => { ctx.fillStyle = r.color; ctx.fillText(r.text, r.x, y); });
+        }
         }
         ctx.restore();
       }
