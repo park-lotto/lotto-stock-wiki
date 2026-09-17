@@ -60,7 +60,7 @@
       //   딱 맞는 칸(3.6/3.6)에도 떠서 틀린 경고였다. 모자람은 머리글 문구 한 곳에서만 알린다.
       const stretchPx = 0;
       const inRep = REPLACE && REPLACE.i === i && REPLACE.k === k;
-      return `<div class="tl-cut" data-k="${k}" data-seg="${c.seg_id}"
+      return `<div class="tl-cut${cutLocked(i, k) ? ' locked' : ''}" data-k="${k}" data-seg="${c.seg_id}"
         style="left:${left.toFixed(1)}px;width:${wd.toFixed(1)}px"
         title="${esc((DATA.segments[c.seg_id] || {}).label || c.seg_id)} · ${c.dur.toFixed(2)}초 — 누르면 필름식으로 펼쳐집니다"
         onclick="event.stopPropagation();tlToggleCut(${i},${k})">
@@ -74,6 +74,10 @@
         <button type="button" class="tl-repbtn${inRep ? ' on' : ''}"
           title="${inRep ? '교체 모드 끄기' : `이 컷을 바꿉니다 — ${c.dur.toFixed(2)}초 고정 박스가 아래 소스 필름에 뜹니다`}"
           onclick="event.stopPropagation();tlReplaceToggle(${i},${k})">🔁</button>
+        ${CUTS[i] ? `<button type="button" class="tl-lockbtn${cutLocked(i, k) ? ' on' : ''}"
+          title="${cutLocked(i, k) ? '🔒 잠김 — 다른 컷을 만져도 이 길이를 지킵니다. 누르면 풉니다'
+                                   : `🔓 풀림 — 누르면 지금 길이(${c.dur.toFixed(1)}초)로 잠급니다`}"
+          onclick="event.stopPropagation();toggleCutLock(${i},${k})">${cutLocked(i, k) ? '🔒' : '🔓'}</button>` : ''}
         ${stretchPx > 4 ? `<span class="tl-stretch" style="width:${stretchPx.toFixed(1)}px"
            title="재료가 ${f.lack.toFixed(1)}초 모자라 이 컷이 그만큼 늘어납니다"></span>` : ''}
       </div>`;

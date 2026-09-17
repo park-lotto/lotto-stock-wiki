@@ -154,12 +154,8 @@
 
 <div class="wrap">
   <h1 id="top">API 발급<br>매뉴얼</h1>
-  <p class="lede">숏템메이커는 <b>5가지 외부 서비스</b>를 씁니다.<br>한 번만 받아서 넣어두면 계속 쓰입니다.<br>필요한 것부터 <b>하나씩</b> 하셔도 됩니다.</p>
-
-  <div class="done" style="margin:0 0 34px">
-    <span style="flex:0 0 auto; font-size:34px; line-height:1">🅿️</span>
-    <div><b>꼭 받으셔야 하는 건 아닙니다</b><span>발급이 번거로우시면 <b>포인트를 충전해 차감하는 방식</b>으로 그대로 쓰실 수 있습니다. 키를 등록하시면 그만큼 <b>포인트를 아끼는 것</b>입니다.</span></div>
-  </div>
+  <p class="lede">숏템메이커는 <b>5가지 외부 서비스</b>를 씁니다.<br>한 번 받아서 넣어두면 계속 쓰입니다
+    (<b>Buffer 키만 30일마다 새로</b> 받으셔야 합니다 — ⑥번 참고).<br>필요한 것부터 <b>하나씩</b> 하셔도 됩니다.</p>
 
   <div class="card">
     <div class="card-head"><div class="num">📍</div><h3>받은 키는<br>여기에 넣습니다</h3></div>
@@ -467,12 +463,16 @@
   <a class="top" href="#top">↑ 맨 위로</a>
 
   <!-- ══════════════ ④ Vmake ══════════════ -->
+  <!-- 별칭 주소 #subclean — 제작소(produce.html)는 업체명을 쓸 수 없어(브랜드 정책,
+       test_no_vmake_anywhere_in_produce_html) 이 이름으로 여기를 가리킨다. -->
+  <a id="subclean" style="position:relative;top:-80px;display:block;height:0"></a>
   <div class="svc" id="vmake">
     <h2 class="svc-t">④ Vmake</h2>
     <div class="tags">
       <span class="tag">자막 지우기</span>
-      <span class="tag pay">월 14,000원 수준</span>
+      <span class="tag pay">Plus 월 14,000원 · Pro 월 44,000원</span>
       <span class="tag">키를 둘 합쳐 넣습니다</span>
+      <span class="tag pay">고급 지우기는 Pro(44,000원)만</span>
     </div>
   </div>
 
@@ -497,6 +497,99 @@
     </div>
     <p class="say">사이트에 가입한 뒤 <b>Developers</b>(개발자) 페이지로 들어가, <b>Dashboard → API key</b> 를 여세요.</p>
     <a class="go-btn" href="https://vmake.ai/developers" target="_blank" rel="noopener">Vmake 개발자 페이지 열기 →</a>
+  </div>
+
+  <!-- ★2026-09-16 추가: 새 API 전환. 고급(Smart Pro)은 새 API에서만 된다.
+       사장님 계정 실측 — 전환 뒤 같은 키로 기본·고급이 둘 다 돌았다(크레딧 초당 차감 확인). -->
+  <div class="card">
+    <div class="card-head"><div class="num">1-2</div><h3>★ 새 API로 전환하기<br>(고급 지우기를 쓰려면)</h3></div>
+    <div class="pic">
+      <svg viewBox="0 0 560 170" role="img" aria-label="API Key 화면 위쪽 띠의 View the API upgrades를 누르고, 뜨는 창에서 파란 Switch to New API 버튼을 누르는 그림">
+        <rect x="14" y="14" width="532" height="30" rx="8" fill="#1C242E"/>
+        <text x="30" y="34" font-family="'IBM Plex Sans KR',sans-serif" font-size="12" fill="#E5EAF0" opacity=".8">The legacy API is no longer maintained</text>
+        <rect x="370" y="19" width="164" height="20" rx="6" fill="#3B6CF6"/>
+        <text x="382" y="33" font-family="'IBM Plex Sans KR',sans-serif" font-size="11" fill="#fff" font-weight="600">View the API upgrades</text>
+
+        <path d="M452 50v18" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".3"/>
+        <path d="M445 62l7 9 7-9" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
+
+        <rect x="170" y="78" width="376" height="84" rx="12" fill="var(--screen)" stroke="var(--screen-line)" stroke-width="2"/>
+        <text x="188" y="100" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="#E5EAF0" font-weight="700">Upgraded API capabilities</text>
+        <rect x="188" y="116" width="160" height="32" rx="8" fill="#2A333F"/>
+        <text x="200" y="136" font-family="'IBM Plex Sans KR',sans-serif" font-size="11" fill="#E5EAF0" opacity=".7">Continue using legacy</text>
+        <rect x="360" y="116" width="170" height="32" rx="8" fill="#3B6CF6" stroke="#E23A5E" stroke-width="3"/>
+        <text x="384" y="137" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="#fff" font-weight="700">Switch to New API</text>
+        <text x="14" y="104" font-family="'IBM Plex Sans KR',sans-serif" font-size="14" fill="#E23A5E" font-weight="600">파란 버튼을</text>
+        <text x="14" y="126" font-family="'IBM Plex Sans KR',sans-serif" font-size="14" fill="#E23A5E" font-weight="600">누르세요 →</text>
+      </svg>
+    </div>
+    <p class="say">숏템메이커의 <b>고급 자막 지우기</b>는 Vmake의 <b>새 API</b>에서만 됩니다.<br>
+      <b>①</b> Developers 화면 <b>맨 위 띠</b>의 <b>View the API upgrades</b>를 누르고<br>
+      <b>②</b> 뜨는 창에서 <b>파란 버튼 Switch to New API</b>를 누르세요.<br>
+      이미 새 API라면 이 띠와 창이 안 보입니다 — 그대로 다음 단계로 가시면 됩니다.</p>
+    <div class="warnbox"><span class="ic">⚠</span><span>
+      <b>고급은 Pro 플랜(월 44,000원)</b>에서만 됩니다. <b>Plus(월 14,000원)</b>는 기본만 됩니다.<br>
+      전환은 <b>되돌릴 수 없습니다</b> — 전환하면 예전 방식은 더 이상 못 씁니다. 기본 지우기는 전환 뒤에도 그대로 됩니다.<br>
+      전환 뒤 숏템메이커에서 고급이 안 되면, <b>API Key 화면에서 키를 새로 만들어</b> 아래 2번 방법으로 <b>다시 등록</b>해 주세요.
+    </span></div>
+  </div>
+
+  <!-- ★2026-09-16 요금·크레딧 참고 카드. 숫자는 **이 카드 한 곳에만** 둔다(3번 카드·제작소 안내는 여기로 보낸다).
+       근거: 사장님 계정 실측(가격표 Smart 2·Smart Pro 4 크레딧/초, 25.6초 고급 104 차감=초 단위 올림).
+       예전 방식 건당 50크레딧은 코드 주석(mix_pipeline._ensure_clean_sources)과 사장님 확인. -->
+  <div class="card" id="subclean-price">
+    <div class="card-head"><div class="num">1-3</div><h3>요금제·크레딧<br>(참고용)</h3></div>
+    <div class="say" style="padding-top:14px">
+      <table style="width:100%;border-collapse:collapse;font-size:16px;line-height:1.5">
+        <tr style="border-bottom:2px solid var(--line)">
+          <th style="text-align:left;padding:8px 6px">방식</th>
+          <th style="text-align:left;padding:8px 6px">크레딧</th>
+          <th style="text-align:left;padding:8px 6px">30초 영상 1편</th>
+        </tr>
+        <tr style="border-bottom:1px solid var(--line-2)">
+          <td style="padding:8px 6px"><b>예전 방식</b><br><span style="opacity:.7">(새 API 전환 전)</span></td>
+          <td style="padding:8px 6px">한 번에 <b>50크레딧</b><br><span style="opacity:.7">길이와 무관</span></td>
+          <td style="padding:8px 6px">50크레딧<br><span style="opacity:.7">Plus 기준 약 700원</span></td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--line-2)">
+          <td style="padding:8px 6px"><b>새 API · 기본</b></td>
+          <td style="padding:8px 6px"><b>1초에 2크레딧</b><br><span style="opacity:.7">초 단위 올림</span></td>
+          <td style="padding:8px 6px">60크레딧</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 6px"><b>새 API · 고급</b><br><span style="opacity:.7">Pro만 가능</span></td>
+          <td style="padding:8px 6px"><b>1초에 4크레딧</b><br><span style="opacity:.7">초 단위 올림</span></td>
+          <td style="padding:8px 6px">120크레딧</td>
+        </tr>
+      </table>
+      <table style="width:100%;border-collapse:collapse;font-size:16px;line-height:1.5;margin-top:18px">
+        <tr style="border-bottom:2px solid var(--line)">
+          <th style="text-align:left;padding:8px 6px">요금제</th>
+          <th style="text-align:left;padding:8px 6px">월 크레딧</th>
+          <th style="text-align:left;padding:8px 6px">30초 영상 (새 API)</th>
+        </tr>
+        <tr style="border-bottom:1px solid var(--line-2)">
+          <td style="padding:8px 6px"><b>Plus</b> 월 14,000원</td>
+          <td style="padding:8px 6px">1,000</td>
+          <td style="padding:8px 6px">기본 약 16편 · <b>고급 불가</b></td>
+        </tr>
+        <tr>
+          <td style="padding:8px 6px"><b>Pro</b> 월 44,000원</td>
+          <td style="padding:8px 6px">4,500</td>
+          <td style="padding:8px 6px">기본 약 75편 <b>또는</b> 고급 약 37편</td>
+        </tr>
+      </table>
+    </div>
+    <p class="say" style="padding-top:0">
+      <b>Pro 요금제는 기본·고급 둘 다</b> 쓸 수 있습니다(고른 방식대로 크레딧이 빠집니다).<br>
+      <b>새 API로 전환하면 기본도 “한 번에 50크레딧(약 700원)”이 아니라 초 단위</b>로 계산됩니다 — 기본 1초 2크레딧, 고급 1초 4크레딧.
+    </p>
+    <div class="warnbox"><span class="ic">ⓘ</span><span>
+      위 금액·크레딧은 <b>2026년 9월 기준 참고용</b>이며, Vmake 정책에 따라 <b>언제든 바뀔 수 있습니다</b>.
+      <b>정확한 요금·크레딧·결제 조건은 반드시 Vmake 사이트에서 확인</b>해 주세요.<br>
+      요금제 가입·결제·환불은 <b>Vmake와 직접</b> 이뤄지며, 숏템메이커는 Vmake의 요금·결제에 관여하지 않습니다.
+    </span></div>
+    <a class="go-btn" href="https://vmake.ai/pricing" target="_blank" rel="noopener">Vmake 요금제 확인하기 →</a>
   </div>
 
   <div class="card">
@@ -541,7 +634,9 @@
         <text x="360" y="66" font-family="'IBM Plex Sans KR',sans-serif" font-size="15" fill="currentColor" opacity=".65">지워서 가져옵니다</text>
       </svg>
     </div>
-    <p class="say">자막 지우기는 <b>쓸 때마다 비용</b>이 듭니다. 안 쓰시면 나가는 돈은 없습니다.<br>키를 안 넣으시면 <b>포인트 차감</b>으로도 쓰실 수 있습니다.</p>
+    <!-- ★2026-09-16: "키를 안 넣으시면 포인트 차감으로도 쓰실 수 있습니다"는 삭제 —
+         2026-09-02부터 대납이 없어져 **키가 없으면 자막 지우기를 못 쓴다**(틀린 안내였다). -->
+    <p class="say">자막 지우기는 <b>쓸 때마다 크레딧</b>이 듭니다. 안 쓰시면 나가는 돈은 없습니다.<br>얼마나 빠지는지는 위 <a href="#subclean-price"><b>요금제·크레딧(참고용)</b></a> 표를 보세요 — 정확한 요금은 Vmake 사이트 기준입니다. 숏템메이커는 <b>완성된 영상 한 편</b>만 보내므로 짧게 나갑니다.<br><b>키를 등록해야</b> 자막 지우기를 쓸 수 있습니다.</p>
   </div>
   <a class="top" href="#top">↑ 맨 위로</a>
 
@@ -669,7 +764,7 @@
     <div class="pic">
       <svg viewBox="0 0 560 130" role="img" aria-label="Buffer에 인스타·유튜브·틱톡 계정을 연결하는 그림">
         <rect x="14" y="18" width="250" height="94" rx="12" fill="var(--screen)" stroke="var(--screen-line)" stroke-width="2"/>
-        <text x="34" y="46" font-size="13" fill="#E5EAF0">＋ Connect a channel</text>
+        <text x="34" y="46" font-size="13" fill="#E5EAF0">＋ 커넥트 채널</text>
         <rect x="34" y="58" width="94" height="24" rx="12" fill="#2A333F"/>
         <text x="48" y="75" font-size="12" fill="#E5EAF0">Instagram</text>
         <rect x="136" y="58" width="86" height="24" rx="12" fill="#2A333F"/>
@@ -687,8 +782,10 @@
         <text x="392" y="87" font-size="13" fill="currentColor" opacity=".85">연결됨 ✓</text>
       </svg>
     </div>
-    <p class="say">Buffer 안에서 <b>＋ Connect a channel</b> 을 눌러 올리고 싶은 SNS를 연결하세요.<br>
+    <p class="say">Buffer 첫 화면의 <b>＋ 커넥트 채널</b>(＋ Connect Channel) 을 눌러 올리고 싶은 SNS를 연결하세요.<br>
       이때 인스타·유튜브 <b>로그인은 Buffer가 안내</b>해 줍니다. 우리는 관여하지 않습니다.</p>
+    <div class="warnbox"><span class="ic">❗</span><span><b>키를 만든 계정과 채널을 연결한 계정이
+      같아야 합니다.</b> 계정이 다르면 키는 멀쩡한데 <b>채널 목록이 비어</b> 보입니다.</span></div>
     <div class="warnbox"><span class="ic">💡</span><span>여기서 연결한 채널이 그대로 숏템메이커
       <b>10단계 「SNS 예약」</b>에 목록으로 뜹니다.</span></div>
   </div>
@@ -701,22 +798,26 @@
         <rect x="32" y="34" width="214" height="24" rx="12" fill="#1C242E"/>
         <text x="44" y="51" font-family="'Consolas',monospace" font-size="11" fill="#E5EAF0">publish.buffer.com/settings/api</text>
         <rect x="32" y="70" width="130" height="26" rx="13" fill="var(--accent-soft)"/>
-        <text x="46" y="88" font-size="12" fill="currentColor">Generate API Key</text>
+        <text x="46" y="88" font-size="12" fill="currentColor">＋ 새 키</text>
 
         <path d="M282 65h38" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".3"/>
         <path d="M312 58l10 7-10 7" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
 
         <rect x="340" y="26" width="206" height="78" rx="12" fill="var(--card)" stroke="#E23A5E" stroke-width="2.5"/>
         <rect x="358" y="52" width="146" height="28" rx="8" fill="var(--line-2)"/>
-        <text x="368" y="71" font-family="'Consolas',monospace" font-size="13" fill="currentColor" opacity=".75">1/xxxxxxxx··········</text>
+        <text x="368" y="71" font-family="'Consolas',monospace" font-size="13" fill="currentColor" opacity=".75">··············ay4F</text>
         <rect x="510" y="52" width="24" height="28" rx="8" fill="none" stroke="#E23A5E" stroke-width="2.5"/>
       </svg>
     </div>
-    <p class="say">Buffer 설정의 <b>API</b> 로 가서 <b>Generate API Key</b> 를 누르세요
-      (<code>publish.buffer.com/settings/api</code>).<br>
-      이름은 <b>숏템메이커</b> 처럼 아무거나 적으시면 됩니다.</p>
+    <p class="say">왼쪽 메뉴 맨 아래 <b>설정 → API</b> 로 가서 <b>＋ 새 키</b> 를 누르세요
+      (<code>publish.buffer.com/settings/api</code>). 「개인 접근」 탭입니다.<br>
+      이름은 <b>숏템</b> 처럼 아무거나 적으시면 됩니다.</p>
     <div class="warnbox"><span class="ic">❗</span><span>키는 <b>만들 때 딱 한 번</b> 전부 보입니다.
-      그 뒤에는 뒷 4자리만 보이니 <b>그 자리에서 바로 복사</b>해 두세요.</span></div>
+      그 뒤에는 뒷 4자리만 보이니(<code>••••ay4F</code>) <b>그 자리에서 바로 복사</b>해 두세요.</span></div>
+    <div class="warnbox" style="border-color:#E23A5E"><span class="ic">🚨</span><span>
+      <b>Buffer 키는 30일이면 만료됩니다.</b> 키 옆에 <b>만료일</b>이 적혀 있으니 확인해 두세요.
+      만료되면 <b>예약 발행이 조용히 멈춥니다</b> — 그때는 <b>＋ 새 키</b>로 다시 만들어
+      숏템메이커에 <b>새로 붙여넣으시면</b> 됩니다. (다른 4가지 키는 만료가 없습니다)</span></div>
     <div class="warnbox"><span class="ic">💡</span><span>키를 만들려면 그 Buffer 조직의
       <b>소유자</b>여야 합니다. 남이 만든 팀에 초대만 받으신 상태면 안 됩니다.</span></div>
   </div>
@@ -766,7 +867,15 @@
     </div>
     <div class="fix-row">
       <div class="q"><span class="ic">?</span><span>Buffer 키를 넣었는데 <b>채널이 안 뜹니다</b></span></div>
-      <div class="a"><span class="ic">→</span><span>Buffer 안에서 <b>SNS 계정을 아직 연결하지 않으신</b> 경우입니다. ⑥-2단계로 돌아가 <b>＋ Connect a channel</b> 로 연결해 주세요.</span></div>
+      <div class="a"><span class="ic">→</span><span>둘 중 하나입니다. ① Buffer 안에서 <b>SNS 계정을 아직 연결하지 않으신</b> 경우 — ⑥-2단계의 <b>＋ 커넥트 채널</b>로 연결해 주세요. ② <b>키를 만든 계정과 채널을 연결한 계정이 다른</b> 경우 — 같은 계정으로 맞춰 주세요.</span></div>
+    </div>
+    <div class="fix-row">
+      <div class="q"><span class="ic">?</span><span>잘 되던 <b>예약 발행이 갑자기 멈췄습니다</b></span></div>
+      <div class="a"><span class="ic">→</span><span><b>Buffer 키가 만료됐을 가능성이 큽니다 — 키 수명이 30일입니다.</b> <code>publish.buffer.com/settings/api</code>에서 키 옆 <b>만료일</b>을 확인하시고, 지났으면 <b>＋ 새 키</b>로 다시 만들어 숏템메이커에 새로 붙여넣으세요.</span></div>
+    </div>
+    <div class="fix-row">
+      <div class="q"><span class="ic">?</span><span>Buffer <b>가입이 안 됩니다</b> (hCAPTCHA 오류 · "뭔가 잘못됐어요")</span></div>
+      <div class="a"><span class="ic">→</span><span>가입 화면의 <b>사람 확인(캡차)</b>이 막혀서 생깁니다. <b>회원가입 버튼이 회색</b>이면 아직 통과가 안 된 것입니다. ① <b>시크릿 창</b>(Ctrl+Shift+N)에서 다시 해보세요(광고차단 확장이 꺼집니다) ② 그래도 안 되면 <b>다른 브라우저</b> ③ 그래도 안 되면 <b>휴대폰 데이터</b>로(VPN은 끄세요).</span></div>
     </div>
     <div class="fix-row">
       <div class="q"><span class="ic">?</span><span>Buffer에서 <b>키 만들기 버튼이 없습니다</b></span></div>
@@ -777,8 +886,8 @@
       <div class="a"><span class="ic">→</span><span>안 됩니다. <b>내 SNS 계정에 올리는 일</b>이라 반드시 내 Buffer 키가 있어야 합니다. 다른 키들과 다른 점입니다.</span></div>
     </div>
     <div class="fix-row">
-      <div class="q"><span class="ic">?</span><span>키를 <b>안 넣고</b> 쓸 수는 없나요</span></div>
-      <div class="a"><span class="ic">→</span><span>됩니다. 키가 없으면 <b>포인트가 차감</b>되는 방식으로 그대로 쓰실 수 있습니다. 키를 넣으시면 그만큼 포인트를 아끼는 것입니다.</span></div>
+      <div class="q"><span class="ic">?</span><span>Buffer 키를 <b>안 넣고</b> 쓸 수는 없나요</span></div>
+      <div class="a"><span class="ic">→</span><span>안 됩니다. <b>내 SNS 계정에 올리는 일</b>이라 Buffer 키는 반드시 내 것이 있어야 합니다.</span></div>
     </div>
     <div class="fix-row">
       <div class="q"><span class="ic">?</span><span>키가 <b>새어나가지</b> 않나요</span></div>

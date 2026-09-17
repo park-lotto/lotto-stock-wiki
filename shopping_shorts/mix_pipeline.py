@@ -6,6 +6,7 @@ run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 """
 import copy
 import hashlib
+import math
 import os
 import json
 import logging
@@ -1871,7 +1872,29 @@ def _vmake_keys(store, customer_id=0):
     return list(keys or [])
 
 
-def _vmake_clean(video_path, keys, out_path):
+# ── 초당 과금 안전판 (2026-09-16) ───────────────────────────────────────────
+# 새 VMake API는 **초당** 과금이다(Smart 2크레딧/초, Smart Pro 4크레딧/초).
+# 옛 legacy는 콜당 정액이라 길이가 길어도 돈이 안 튀었지만, 이제는 길이가 곧 돈이다.
+# ★실측 위험: _clean_strategy가 'sources'로 갈리면 **원본 길이**를 보낸다. 코드 주석에
+#   남은 실측이 `소스 111.6초 / 완성본 30.3초`다 — 3.7배다. 조립본(30초)이면 Smart Pro가
+#   약 1,173원인데 111초면 4,300원이 된다. 그래서 **보내기 직전에 초를 재서** 상한을
+#   넘으면 아예 안 보낸다. 어떤 경로로 새어도 여기서 막힌다(단일 관문, 0순위-B).
+_CLEAN_MAX_SEC = float(os.environ.get("SHORTS_CLEAN_MAX_SEC", "90"))
+
+
+def _probe_seconds(path):
+    """영상 길이(초). 못 재면 None — 못 쟀다고 막지는 않는다(가드는 아는 것만 막는다)."""
+    try:
+        out = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", str(path)],
+            capture_output=True, text=True, timeout=60)
+        return float((out.stdout or "").strip())
+    except Exception:                               # noqa: BLE001 — 길이를 몰라도 진행
+        return None
+
+
+def _vmake_clean(video_path, keys, out_path, tier=None):
     """VMake 청소 1회 — **크레딧이 떨어진 키는 건너뛰고 다음 키로** 이어서 시도한다.
 
     ★키를 넘기는 판단은 여기 한 곳에서만 한다(0순위-B). 호출부 셋(_clean_one·
@@ -1882,21 +1905,72 @@ def _vmake_clean(video_path, keys, out_path):
     ★전부 소진이면 마지막 오류를 그대로 올린다 → 화면은 종전처럼 'no_credit'을 띄운다
       (사장님 결정 2026-08-29: 회원 키가 다 떨어져도 본사 키로 넘기지 않는다).
     """
-    from shopping_shorts.vmake_client import is_no_credit
+    from shopping_shorts.vmake_client import is_no_credit, TIER_BASIC
     ks = [k for k in (keys or []) if k]
     if not ks:
         raise ValueError("자막제거 키가 없습니다")
+    tier = tier or TIER_BASIC
+    # ★돈이 나가기 **전에** 잰다(위 _CLEAN_MAX_SEC 주석 참조).
+    sec = _probe_seconds(video_path)
+    if sec is not None and sec > _CLEAN_MAX_SEC:
+        raise RuntimeError(
+            f"자막제거 대상이 너무 깁니다({sec:.0f}초 > 상한 {_CLEAN_MAX_SEC:.0f}초). "
+            "비용이 초 단위로 나가므로 중단했습니다.")
+    print(f"[clean] tier={tier} 길이={sec if sec is None else round(sec, 1)}초 "
+          f"파일={Path(video_path).name}", file=sys.stderr)
+    from shopping_shorts.vmake_client import is_preprocess_fail
     last = None
-    for i, k in enumerate(ks):
-        try:
-            return remove_subtitles(video_path, k, out_path=out_path)
-        except Exception as e:                      # noqa: BLE001 — 다음 키로 넘길지 가른다
-            last = e
-            if not is_no_credit(e):
-                raise                               # 소진이 아니면 키 문제가 아니다
-            print(f"[clean] 키 {i + 1}/{len(ks)} 크레딧 소진 → 다음 키로: {e}",
+    src = video_path
+    reencoded = None
+    try:
+        for i, k in enumerate(ks):
+            while True:
+                try:
+                    return remove_subtitles(src, k, out_path=out_path, tier=tier)
+                except Exception as e:              # noqa: BLE001 — 다음 키로 넘길지·재인코딩할지 가른다
+                    last = e
+                    # ★30029 = VMake가 파일을 못 읽음. 이어 붙인 조립본에서만 나고, 한 번 다시
+                    #   인코딩하면 됐다(2026-09-17 실측). **딱 한 번만** 재인코딩해 같은 키로 다시 보낸다.
+                    if is_preprocess_fail(e) and reencoded is None:
+                        reencoded = _reencode_for_vmake(video_path)
+                        if reencoded:
+                            print(f"[clean] VMake 30029(파일 준비 실패) → 재인코딩 후 1회 재시도: "
+                                  f"{Path(reencoded).name}", file=sys.stderr)
+                            src = reencoded
+                            continue
+                    break
+            if not is_no_credit(last):
+                raise last                          # 소진이 아니면 키 문제가 아니다
+            print(f"[clean] 키 {i + 1}/{len(ks)} 크레딧 소진 → 다음 키로: {last}",
                   file=sys.stderr)
-    raise last
+        raise last
+    finally:
+        if reencoded:
+            try:
+                Path(reencoded).unlink()
+            except OSError as e:                     # 임시 파일이 남을 뿐 — 청소 결과엔 영향 없음
+                print(f"[clean] 재인코딩 임시파일 삭제 실패(무시): {e!r}", file=sys.stderr)
+
+
+def _reencode_for_vmake(video_path):
+    """VMake가 읽기 쉬운 한 덩어리 파일로 다시 인코딩 → 새 경로. 실패하면 None(원래 오류를 그대로 올린다).
+
+    ★길이·해상도는 그대로 — 초 단위 과금이 바뀌지 않고, 청소본 좌표도 안 어긋난다.
+    """
+    src = Path(video_path)
+    out = src.with_name(src.stem + "_reenc.mp4")
+    try:
+        r = subprocess.run(
+            ["ffmpeg", "-y", "-loglevel", "error", "-i", str(src),
+             "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p",
+             "-c:a", "aac", "-movflags", "+faststart", str(out)],
+            capture_output=True, text=True, timeout=600)
+        if r.returncode == 0 and out.exists() and out.stat().st_size > 1024:
+            return str(out)
+        print(f"[clean] 재인코딩 실패 rc={r.returncode}: {(r.stderr or '')[:200]}", file=sys.stderr)
+    except Exception as exc:                        # noqa: BLE001
+        print(f"[clean] 재인코딩 실패: {exc!r}", file=sys.stderr)
+    return None
 
 
 class NotEnoughPoints(Exception):
@@ -1998,6 +2072,20 @@ def resolve_deco_media(deco, work):
             p = work / item["file"]
             if p.exists():
                 deco[key] = {**item, "_abspath": str(p)}
+    card = deco.get("comment_card") or {}
+    if str(card.get("text") or "").strip():
+        from shopping_shorts import comment_card
+        payload = dict(card)
+        avatar_file = Path(str(payload.get("avatar_file") or "")).name
+        if avatar_file:
+            avatar_path = work / avatar_file
+            if avatar_path.is_file():
+                payload["avatar_path"] = str(avatar_path)
+        clean = comment_card.normalize(payload)
+        out = work / f"comment_card_{comment_card.cache_key(payload)}.png"
+        if not out.exists():
+            comment_card.render_to(payload, out)
+        deco["comment_card"] = {**clean, "_abspath": str(out)}
     return deco
 
 
@@ -2816,6 +2904,102 @@ def _clean_strategy(job):
     return "final" if _FINAL_CLEAN else "sources"
 
 
+def clean_tier_of(job):
+    """이 job이 고른 자막제거 등급. 'basic'|'pro'. **판정은 여기 한 곳**(0순위-B).
+
+    화면·워커·경로계산이 각자 job에서 꺼내 보면, 한쪽만 pro로 읽어 **기본으로 만든
+    청소본을 고급인 줄 알고 재사용**하는 조용한 실패가 난다.
+    """
+    from shopping_shorts.vmake_client import TIER_BASIC, TIER_PRO
+    return TIER_PRO if (job or {}).get("clean_tier") == TIER_PRO else TIER_BASIC
+
+
+def _clean_sig(job):
+    """완성본 청소본 파일명에 쓸 서명. **등급이 다르면 다른 파일**이어야 한다.
+
+    ★안 섞으면: 기본으로 한 번 청소한 뒤 고급으로 바꿔도 `final_clean_{sig}.mp4`가
+      이미 있어 "편성 그대로, 과금 0"으로 **옛 기본 결과가 그대로 나간다**. 고객은
+      돈을 더 낼 각오로 고급을 골랐는데 화면은 그대로다.
+    ★basic은 접미사를 안 붙인다 — 옛 작업의 서명이 그대로라 재청소가 안 일어난다
+      (편성 서명이 '지정 없으면 안 붙인다'로 옛 작업을 지키는 것과 같은 원칙).
+    ★_plan_signature 자체는 **안 건드린다**. 그건 scene_style_lab이 "편성이 바뀌었나"를
+      보는 데 쓰는 값이라, 등급을 섞으면 편성이 그대로인데 바뀐 것으로 오판한다.
+    """
+    from shopping_shorts.vmake_client import TIER_PRO
+    sig = _plan_signature((job or {}).get("edit_plan") or {})
+    return (sig + "p") if clean_tier_of(job) == TIER_PRO else sig
+
+
+def clean_tiers_ready(job, work):
+    """이 편성으로 **이미 만들어 둔** 등급들 → {'basic': bool, 'pro': bool}.
+
+    ★되돌리기가 공짜인지 화면이 알아야 한다(2026-09-16 사장님 요청: "스마트로 지웠는데
+      마음에 안 들면 되돌리고 다시 프로로"). 등급마다 파일이 따로 남으므로, 전에 만든
+      등급으로 되돌리면 재청소 없이 그 파일을 그대로 쓴다(과금 0).
+    ★판정은 파일 존재로 한다 — DB 상태는 렌더 도중에도 바뀌지만 파일은 결과 그 자체다.
+    """
+    from shopping_shorts.vmake_client import TIER_BASIC, TIER_PRO
+    out = {TIER_BASIC: False, TIER_PRO: False}
+    try:
+        base = _plan_signature((job or {}).get("edit_plan") or {})
+        for tier, sig in ((TIER_BASIC, base), (TIER_PRO, base + "p")):
+            f = Path(work) / ("final_clean_%s.mp4" % sig)
+            out[tier] = f.exists() and f.stat().st_size > 1024
+    except Exception:      # noqa: BLE001 — 안내용이다. 못 알아내도 기능을 막지 않는다
+        pass
+    return out
+
+
+def clean_credit_estimate(seconds, tier=None):
+    """이 길이를 지울 때 나가는 **크레딧 추정**. 길이를 모르면 None.
+
+    ★화면에 적힌 요금과 **같은 식**이어야 한다(1초에 기본 2·고급 4크레딧, 초 단위 올림).
+      안내 문구와 추정이 갈리면 그 자체가 거짓 안내다 — 그래서 단가를 여기 한 곳에
+      두고 화면은 이 값을 받아 쓴다(0순위-B).
+    ★못 재면 숫자를 지어내지 않는다 — 확인창은 숫자 없이 뜬다.
+    """
+    from shopping_shorts.vmake_client import TIER_PRO
+    if seconds is None:
+        return None
+    try:
+        sec = float(seconds)
+    except (TypeError, ValueError):
+        return None
+    if sec <= 0:
+        return None
+    per_sec = 4 if tier == TIER_PRO else 2
+    return int(math.ceil(sec)) * per_sec
+
+
+def clean_redo_state(job, work):
+    """자막제거를 **다시 눌러야 하는 상태인가** → {'ready', 'stale', 'tiers'}.
+
+    ★왜 필요한가(2026-09-17 사장님): "지운 뒤에 3단계에서 장면 바꾸고 다시 오니까
+      이전 장면들로 해야 한다." 장면을 바꾸면 편성 서명이 바뀌어 옛 청소본은 이미
+      재사용되지 않는다(그건 맞게 돌고 있었다). 없던 건 **화면이 그걸 아는 길**이다 —
+      지금 편성 결과가 없고 옛 결과만 있다는 사실을 못 받으니, 고객은 옛 장면 그림을
+      보면서 무엇을 눌러야 하는지 몰랐다.
+
+      ready=True  지금 편성으로 만든 청소본이 있다 (그대로 쓰면 된다, 과금 0)
+      stale=True  지금 편성 것은 없는데 **옛 편성으로 만든 건 있다** → 다시 지워야 한다
+      둘 다 False 아직 한 번도 안 지웠다 (첫 실행 — '다시'라고 하면 거짓말이다)
+    """
+    out = {"ready": False, "stale": False, "tiers": {}}
+    try:
+        work = Path(work)
+        out["tiers"] = clean_tiers_ready(job, work)
+        out["ready"] = bool(clean_final_path_for_plan(job, work))
+        if not out["ready"]:
+            # 옛 편성으로 만든 청소본이 하나라도 남아 있으면 '다시 지워야 하는' 상태다.
+            out["stale"] = any(f.stat().st_size > 1024
+                               for f in work.glob("final_clean_*.mp4"))
+    except Exception as e:      # noqa: BLE001 — 안내용이다. 못 알아내도 기능을 막지 않는다
+        # ★조용히 삼키지 않는다 — 여기가 죽으면 화면이 '다시 지우기'를 영영 안 띄워
+        #   장면을 바꾼 걸 고객이 모른 채 옛 결과를 쓴다. 사유는 남긴다.
+        print("[clean] 재청소 상태 판정 실패(안내 생략): %r" % (e,), file=sys.stderr)
+    return out
+
+
 def _plan_signature(plan):
     """편집안 → 완성본 **그림**을 결정하는 것만 뽑은 서명(sha1 앞 16자).
 
@@ -2847,10 +3031,16 @@ def _plan_signature(plan):
         _z, _px, _py = _va.scene_zoom_of(b)
         if _z > 1.0001:                        # 지정 없으면 아무것도 안 붙인다
             parts.append("z=%.4f,%.5f,%.5f" % (_z, _px, _py))   # → 옛 작업 서명 불변
-        _hl = _va.scene_hl_of(b)
-        if _hl:                                 # 강조가 구워진 청소본을 옛 캐시로 덮지 않는다
-            parts.append("hl=%s,%s,%.5f,%.5f,%.5f,%.4f" % (
-                _hl["mode"], _hl["shape"], _hl["cx"], _hl["cy"], _hl["r"], _hl["zoom"]))
+        # ★컷별 강조(2026-09-16)는 컷마다 값이 다르므로 **컷 번호까지** 서명에 넣는다.
+        #   비트 대표값 하나만 넣으면 "2번 컷에서 3번 컷으로 옮겼다"가 서명에 안 잡혀
+        #   옛 청소본이 그대로 재사용된다(자막 줄 나누기가 겪은 그 사고와 같은 모양).
+        _per = b.get("scene_hl_cuts")
+        _hls = ([(k, _va.scene_hl_of(b, k)) for k in sorted(_per)] if isinstance(_per, dict) and _per
+                else [("", _va.scene_hl_of(b))])
+        for _ck, _hl in _hls:
+            if _hl:                             # 강조가 구워진 청소본을 옛 캐시로 덮지 않는다
+                parts.append("hl%s=%s,%s,%.5f,%.5f,%.5f,%.4f" % (
+                    _ck, _hl["mode"], _hl["shape"], _hl["cx"], _hl["cy"], _hl["r"], _hl["zoom"]))
         parts.append("|")
     return hashlib.sha1("".join(parts).encode("utf-8")).hexdigest()[:16]
 
@@ -2915,7 +3105,7 @@ def clean_final_path_for_plan(job, work):
     try:
         if (job or {}).get("clean_sources"):
             return None     # 소스별 청소본 경로 — 호출부가 그 맵을 그대로 쓴다
-        sig = _plan_signature((job or {}).get("edit_plan") or {})
+        sig = _clean_sig(job)          # 등급까지 반영한 서명(0순위-B: _clean_sig 한 곳)
         f = Path(work) / ("final_clean_%s.mp4" % sig)
         if f.exists() and f.stat().st_size > 1024:
             return f
@@ -2935,7 +3125,8 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
     ★실패하면 예외를 올린다 — 호출부(run_render)가 환불하고 상태를 failed로 만든다.
     """
     def _clean(mix_raw):
-        sig = _plan_signature(job.get("edit_plan") or {})
+        tier = clean_tier_of(job)
+        sig = _clean_sig(job)          # 등급이 다르면 다른 파일 — 옛 기본 결과를 재사용하지 않는다
         out = Path(work) / f"final_clean_{sig}.mp4"
         if out.exists() and out.stat().st_size > 1024:
             print(f"[clean] 완성본 재사용(편성 그대로, 과금 0): {out.name}", file=sys.stderr)
@@ -2943,8 +3134,8 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
             return str(out)
         charged = _charge_clean(store, customer_id, 1)
         try:
-            print(f"[clean] 완성본 1편만 청소 시작 sig={sig}", file=sys.stderr)
-            res = _vmake_clean(str(mix_raw), keys, str(out))
+            print(f"[clean] 완성본 1편만 청소 시작 sig={sig} tier={tier}", file=sys.stderr)
+            res = _vmake_clean(str(mix_raw), keys, str(out), tier=tier)
         except Exception:
             if charged:
                 _refund_clean(store, customer_id, charged)

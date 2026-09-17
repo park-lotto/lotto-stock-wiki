@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>장면꾸미기 시험 영상</title>
+  <style>
+    :root{color-scheme:dark;font-family:Pretendard,system-ui,sans-serif;background:#071118;color:#eefafa}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;box-sizing:border-box}
+    main{width:min(420px,100%)}h1{font-size:20px;margin:0 0 12px}p{color:#9bb8b8;font-size:14px}
+    video{display:block;width:100%;max-height:82vh;background:#000;border:1px solid #294550;border-radius:16px}
+  </style>
+</head>
+<body>
+<main>
+  <h1>장면꾸미기 관리자 시험 영상</h1>
+  <video id="video" controls playsinline preload="metadata"></video>
+  <p>공개 공유 기록을 만들지 않는 관리자 전용 재생 화면입니다.</p>
+</main>
+<script>
+  const labId=location.pathname.split('/').filter(Boolean).pop();
+  document.getElementById('video').src='/api/admin/scene-style-lab/'+encodeURIComponent(labId)+'/video';
+</script>
+</body>
+</html>

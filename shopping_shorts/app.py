@@ -344,6 +344,61 @@ def _media_code(url):
 _SNAPSHOT_PLATFORMS = ("youtube", "tiktok", "threads", "naverclip",
                        "pinterest", "xiaohongshu", "douyin")
 
+# 담기·렌즈 항목의 플랫폼을 정하는 데 쓰는 이름들.
+# mix_basket엔 platform 컬럼이 **없는데**(store.py mix_basket_list) _download_item_video는
+# platform을 보고 인스타 릴스 주소를 조립할지 정한다 — 비워두면 기본값 'instagram'으로
+# 떨어져 유튜브 항목에 **없는 주소**를 받으러 간다(2026-09-06 가드가 막으려던 그 사고).
+_BASKET_CODE_PLATFORMS = ("instagram", "youtube", "tiktok", "threads", "naverclip",
+                          "pinterest", "xiaohongshu", "douyin")
+# lens_discover._platform_of가 모르는 도메인만 여기서 보탠다(그쪽이 정본 — 0순위-B).
+# 실측 2026-09-16: 담긴 8,710건 중 naver 4건이 여기 해당한다.
+_EXTRA_DOMAIN_PLATFORMS = (("naver.com", "naverclip"), ("naver.me", "naverclip"),
+                           ("threads.net", "threads"), ("threads.com", "threads"))
+
+
+def _basket_item_platform(shortcode, url=""):
+    """담긴 항목의 플랫폼. 모르면 "" (지어내지 않는다).
+
+    ★판정 근거는 **url이 먼저**, 코드 접두사는 폴백이다(2026-09-16 실측으로 정한 순서):
+
+        담긴 8,710건 중 `lens_`/`grab_` 접두사가 있는 것  7,374건
+          └ 접두사가 말하는 플랫폼 vs 실제 도메인 **불일치 0건** (접두사는 믿을 만하다)
+        접두사가 **없는** 것                              1,336건
+          └ 그중 인스타가 아닌 것 213건 (youtube 209 · naver 4)
+
+      즉 접두사만 보면 저 213건이 플랫폼 없이 나가 인스타로 오인된다. 실제로 그렇게
+      새는 카드를 라이브에서 잡았다(`ylKFpMNzDbU`, 바구니에 있는 유튜브 영상).
+      url은 접두사가 있든 없든 **항상** 진실을 말하므로 url을 1순위로 둔다.
+
+    ★도메인 표를 새로 만들지 않는다(0순위-B) — lens_discover._platform_of가 정본이고,
+      거기 없는 것(네이버·쓰레드)만 _EXTRA_DOMAIN_PLATFORMS로 보탠다.
+    ★모르는 걸 'instagram'으로 메우면 안 된다 — 없는 릴스 주소를 받으러 가서
+      실패 사유가 "인스타 다운로드 실패"로 뭉개진다.
+    """
+    u = (url or "").strip()
+    if u:
+        try:
+            plat = lens_discover._platform_of(u)
+            if plat:
+                return plat
+        except Exception as e:  # noqa: BLE001 — 판정 실패는 '모른다'(아래 접두사로)
+            import sys as _sys
+            print(f"[find_item] 도메인 판정 실패(접두사로 계속): {e!r}", file=_sys.stderr)
+        host = (urllib.parse.urlparse(u).netloc or "").lower()
+        for dom, plat in _EXTRA_DOMAIN_PLATFORMS:
+            if host == dom or host.endswith("." + dom):
+                return plat
+
+    sc = (shortcode or "").strip().lower()
+    for prefix in ("lens_", "grab_"):
+        if sc.startswith(prefix):
+            rest = sc[len(prefix):]
+            for plat in _BASKET_CODE_PLATFORMS:
+                if rest.startswith(plat + "_"):
+                    return plat
+            break
+    return ""
+
 
 def _find_collected_item(store, shortcode):
     """shortcode → 수집항목(item). 없으면 None.
@@ -362,12 +417,35 @@ def _find_collected_item(store, shortcode):
       last_run::youtube 8,524건, **겹치는 것 0건**. 대본캐시 보유율도 인스타
       19%(25/134) vs 유튜브 0.5%(40/8,524)로 갈렸다.
 
+    ★2026-09-16 실사고(사장님 제보): 같은 문구가 **또** 떴다 — 레퍼런스 카드의
+      「📝 대본 분석해서 정확히 찾기」. 09-06에 스냅샷은 뚫었는데 **서랍이 두 개 더
+      빠져 있었다.** 화면이 카드를 꺼내는 곳은 /api/reference의 네 갈래인데:
+
+        archive=1  → channel_archive  (역대 히트작)   ← 안 봤다
+        days>0     → reel_history     (이번 주/달)    ← 안 봤다
+        인스타 기본 → last_run                         ← 봤다
+        그 외      → last_run::<platform>              ← 봤다
+
+      게다가 렌즈·담기 카드(`lens_youtube_…`·`grab_instagram_…`)는 **어느 스냅샷에도
+      원리적으로 없다** — mix_basket에만 있고 그 코드는 우리가 지어낸 것이라 수집이
+      담을 수가 없다(store.shortcodes_for_url 주석의 그 사정과 같은 뿌리).
+
+      라이브 실측(2026-09-16, 서버 reference.db):
+        lens_/grab_ 카드 4종 전부 이 함수에서 None → 100% 404
+        mix_basket 8,710건 중 lens_/grab_ = 7,374건(전부 url 보유)
+        platform_snapshots 유튜브 55,346건 중 last_run::youtube에 없는 것 45,143건
+
     0순위-B: 이 "항목 찾기"가 네 군데에 따로 적혀 있었다(대본추출·위키저장·영상분석 등).
       같은 판단을 여러 번 적으면 반드시 어긋난다 → 여기 하나로 모으고 전부 이걸 부른다.
       새 플랫폼이 늘어도 _SNAPSHOT_PLATFORMS만 고치면 전 경로가 같이 따라온다.
+      **서랍을 늘릴 때도 여기만 고친다** — 호출부 3곳(/api/extract_script ·
+      /api/wiki/save · /api/find/analyze)이 같이 따라온다.
 
-    인스타를 먼저 본다(종전 동작 유지 — 같은 코드가 양쪽에 있으면 결과가 안 바뀐다).
-    스냅샷 하나가 깨져도 나머지는 계속 본다 — 한 곳의 고장이 전체를 죽이면 안 된다.
+    찾는 순서 = 정보가 풍부한 순서. 앞이 이기므로 **종전에 찾히던 것은 그대로 찾힌다**(회귀 0):
+      ① last_run(인스타) → ② 플랫폼 스냅샷 : 카드 필드 일습(카테고리·비전태그 등)
+      ③ 담기 바구니                         : 담을 때 확보한 video_url·caption이 있다
+      ④ reel_history → ⑤ channel_archive    : url·썸네일 정도지만 대본추출엔 충분하다
+    서랍 하나가 깨져도 나머지는 계속 본다 — 한 곳의 고장이 전체를 죽이면 안 된다.
     """
     if not shortcode:
         return None
@@ -378,23 +456,53 @@ def _find_collected_item(store, shortcode):
                      if i.get("shortcode") == shortcode
                      or _media_code(i.get("shortcode") or "") == target_code), None)
 
-    try:
-        item = _pick(store.load_last_run()[0])
-        if item:
-            return item
-    except Exception as e:  # noqa: BLE001 — 한 스냅샷의 고장이 나머지를 막지 않는다
-        import sys as _sys
-        print(f"[find_item] last_run 조회 실패(계속 진행): {e!r}", file=_sys.stderr)
+    def _try(label, fn):
+        """서랍 하나를 연다. 깨져 있으면 사유를 남기고 None(조용한 전멸 금지)."""
+        try:
+            return fn()
+        except Exception as e:  # noqa: BLE001 — 한 서랍의 고장이 나머지를 막지 않는다
+            import sys as _sys
+            print(f"[find_item] {label} 조회 실패(계속 진행): {e!r}", file=_sys.stderr)
+            return None
+
+    item = _try("last_run", lambda: _pick(store.load_last_run()[0]))
+    if item:
+        return item
 
     for platform in _SNAPSHOT_PLATFORMS:
-        try:
-            item = _pick(store.load_last_run_platform(platform)[0])
-        except Exception as e:  # noqa: BLE001
-            import sys as _sys
-            print(f"[find_item] {platform} 스냅샷 조회 실패(계속 진행): {e!r}", file=_sys.stderr)
-            continue
+        item = _try(f"{platform} 스냅샷",
+                    lambda p=platform: _pick(store.load_last_run_platform(p)[0]))
         if item:
             return item
+
+    # ③ 담기 바구니 — 렌즈·담기 카드는 여기에만 있다.
+    #    platform 컬럼이 없어 url·코드에서 알아낸다(_basket_item_platform 주석 참고).
+    item = _try("담기 바구니",
+                lambda: getattr(store, "basket_item_any_customer", lambda _s: None)(shortcode))
+    if item:
+        if not (item.get("platform") or "").strip():
+            plat = _basket_item_platform(item.get("shortcode") or shortcode,
+                                         item.get("url") or "")
+            if plat:
+                item["platform"] = plat
+        return item
+
+    # ④ reel_history — '이번 주/달' 카드(hits_since). platform을 들고 온다.
+    item = _try("reel_history",
+                lambda: getattr(store, "history_item", lambda _s: None)(shortcode))
+    if item:
+        item.setdefault("shortcode", shortcode)
+        return item
+
+    # ⑤ channel_archive — '역대 히트작' 카드(archive_hits).
+    #    ⚠️ platform 컬럼이 **없는** 인스타 전용 테이블이라 여기서 인스타로 친다
+    #    (store.py CREATE TABLE channel_archive 참고).
+    item = _try("channel_archive",
+                lambda: getattr(store, "archive_item", lambda _s: None)(shortcode))
+    if item:
+        item.setdefault("shortcode", shortcode)
+        item.setdefault("platform", "instagram")
+        return item
     return None
 
 
@@ -507,8 +615,11 @@ def _run_collect_job(job_id, platform, category, limit, cid):
                 store.save_last_run(items, collected_at)
             _translate_new_subjects(items)
             _bank_ingest_collected_bg(DB_PATH, items, collected_at)
-        except Exception:
-            pass
+        except Exception as state_exc:
+            logging.getLogger("scene_style_lab").warning(
+                "render error state could not be recorded for %s/%s: %r",
+                lab_id, generation, state_exc,
+            )
 
 
 # playwright 경로는 채널마다 진행률을 써서 updated_at이 갱신된다 — 진짜로 멈춘 경우만
@@ -3296,10 +3407,29 @@ def _gen_fail_message(reasons, asm_why=""):
                     if r.get("kind") == "api_error" and r.get("detail")), "")
         # ★키 문제가 아니다. '잠시 후 재시도'라고 말하지 않는다 — 기다려도 안 풀린다.
         return "AI 응답 오류입니다(키 문제가 아닙니다)%s" % ((" — %s" % det) if det else "")
+    if "근거부족" in kinds:
+        det = next((r.get("detail") for r in (reasons or [])
+                    if r.get("kind") == "근거부족" and r.get("detail")), "")
+        return ("대본은 만들었지만 사실 근거 검사에서 모두 반려됐습니다"
+                + ((" — %s" % det) if det else ""))
+    if "판매처이탈" in kinds:
+        det = next((r.get("detail") for r in (reasons or [])
+                    if r.get("kind") == "판매처이탈" and r.get("detail")), "")
+        return ("재료에 없는 판매처가 대본에 섞여 반려됐습니다"
+                + ((" — %s" % det) if det else ""))
+    if "소재이탈" in kinds:
+        det = next((r.get("detail") for r in (reasons or [])
+                    if r.get("kind") == "소재이탈" and r.get("detail")), "")
+        return ("고른 제품과 다른 소재의 대본이 나와 반려됐습니다"
+                + ((" — %s" % det) if det else ""))
     if "empty" in kinds:
         return ("AI가 조건에 맞는 문장을 만들지 못했습니다 — 스타일을 바꾸거나 "
                 "담긴 영상(재료)을 늘려서 다시 시도해 주세요."
                 + ((" (틀 조립: %s)" % asm_why) if asm_why else ""))
+    if reasons:
+        det = next((r.get("detail") for r in reasons if r.get("detail")), "")
+        return ("대본 생성 조건을 통과하지 못했습니다"
+                + ((" — %s" % det) if det else ""))
     # 여기까지 왔으면 애초에 시도조차 안 됐다(고른 스타일이 카테고리에 다 걸러진 경우 등).
     return ("만들 수 있는 대본이 없습니다 — 고른 스타일이 이 카테고리에 맞지 않을 수 있어요."
             + ((" (%s)" % asm_why) if asm_why else ""))
@@ -3359,11 +3489,12 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     _gen_kw = dict(mode=mode, my_topic=my_topic, subject=subject, n=n)
     _use_bank = body.get("use_bank") or (store.get_setting("ping_pong_enabled", "") == "1")
     _bank_ctx = ""
-    if _use_bank:
-        _bank = bank_assemble.assemble_bank_context(store, it.get("category") or "")
-        if _bank:
-            _gen_kw["bank_context"] = _bank
-            _bank_ctx = _bank
+    # ★여기서는 조립하지 않는다(2026-09-16). 재료를 아직 모르니 예산을 못 걸고, 예산 없는
+    #   은행을 미리 실어두면 아래에서 잘라도 이미 실린 쪽은 안 고쳐진다 — 그래서 같은 사고가
+    #   **세 번** 났다(08-18 재료 750 vs 은행 2,822 / 09-07 233 vs 1,832 / 09-16 사장님
+    #   "새송이가 나오고 전혀 다른 게 가끔 나온다"). 매번 경로 하나씩만 막아 재발했다.
+    #   _gen_kw는 3705 한 곳에서만 쓰이므로 미리 채울 이유가 없다 → 재료를 안 뒤
+    #   **딱 한 번** 조립해 _bank_ctx·_gen_kw에 같이 넣는다(0순위-B: 한 군데에서만 정한다).
     # ★스타일 강제 경로(2026-08-15) — style_ids가 오면 스타일마다 1안씩 만들고 script_gate로
     #   구조를 대조한다. 안 오면 기존 경로 그대로라 회귀 0(호출부가 안 보내면 아무 일도 없다).
     #   기존 경로와 다른 점: 같은 프롬프트를 n번 굴리는 게 아니라 **스타일마다 프롬프트가 갈려**
@@ -3423,11 +3554,18 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   몰라 예산을 못 건다 — 그대로 두면 은행이 재료를 압도한 채 프롬프트에 실린다
         #   (실측 사고: 재료 750자 vs 은행 2,822자 → 대본이 은행 소재로 끌려감).
         #   여기서 source_chars를 넘겨 은행이 재료의 1.5배를 넘지 않게 자른다.
-        if _bank_ctx:
+        # ★은행 조립은 여기 한 곳에서만 한다(2026-09-16). 재료를 아는 지점이 여기뿐이므로
+        #   예산을 걸 수 있는 곳도 여기뿐이고, 결과는 쓰는 쪽 **둘 다**에 같이 넣는다
+        #   (_bank_ctx = 스타일 경로 / _gen_kw = 옛 경로). 앞에서 미리 조립해두면 잘라도
+        #   이미 실린 쪽이 안 고쳐져 같은 사고가 반복된다 — 실제로 세 번 났다.
+        if _use_bank:
             _sc = sum(len((s.get("full_text") or "")) for s in (_src or [])[:_FACTS_MAX_SOURCES])
-            if _sc:
-                _bank_ctx = bank_assemble.assemble_bank_context(
-                    store, it.get("category") or "", source_chars=_sc) or _bank_ctx
+            _bank_ctx = bank_assemble.assemble_bank_context(
+                store, it.get("category") or "", source_chars=_sc) or ""
+            if _bank_ctx:
+                _gen_kw["bank_context"] = _bank_ctx
+            else:
+                _gen_kw.pop("bank_context", None)
         # ★구조 템플릿 조립을 먼저 시도한다(2026-08-19 사장님 지시: "구조템플릿 만드는게
         #   중요해. 같은 해외영상이나 여러영상을 가져와도 거기에 딱 들어갈 말들만 있음 되게").
         #   슬롯이 **전부** 차는 스타일만 조립본으로 만들고, 모자라면 기존 생성기로 간다.
@@ -3552,25 +3690,31 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     #   1,985자가 실려 남의 제품 이야기가 재료의 16배였고, 대본이 통째로 다른 제품
     #   ("3D 요술봉 카드케이스")으로 끌려갔다. 같은 사고가 2026-08-18에도 있었다
     #   (재료 750자 vs 은행 2,822자). 재료를 모르는 채 은행을 짜면 반드시 재발한다.
-    if _gen_kw.get("bank_context"):
+    # ★2026-09-16: 조건을 `_gen_kw에 이미 은행이 있으면`에서 `은행을 쓰기로 했으면`으로
+    #   바꿨다. 종전엔 위에서 **예산 없이 미리 담아둔 값**이 있어야만 여기서 잘랐고,
+    #   그래서 미리 담는 코드를 지우면 이 경로가 통째로 은행을 잃었다(테스트가 잡았다).
+    #   생성 호출 바로 앞인 여기가 재료를 아는 마지막 지점이자 **유일한 출구**다 —
+    #   조립을 여기 한 곳에서만 하면 "한쪽만 잘려 있는" 사고가 구조적으로 안 난다(0순위-B).
+    if _use_bank:
         _pick_chars = sum(len(s.get("full_text") or "")
                           for s in (_pick_src or [])[:_FACTS_MAX_SOURCES])
-        if _pick_chars:
-            _trimmed = bank_assemble.assemble_bank_context(
-                store, it.get("category") or "", source_chars=_pick_chars)
-            if _trimmed:
-                _gen_kw["bank_context"] = _trimmed
+        _trimmed = bank_assemble.assemble_bank_context(
+            store, it.get("category") or "", source_chars=_pick_chars)
+        if _trimmed:
+            _gen_kw["bank_context"] = _trimmed
+        else:
+            _gen_kw.pop("bank_context", None)
     _material_rejected = []
     drafts = script_generate.generate_guarded_variations(
         it.get("structure") or {}, _pick_src, elem_modes, category_lookup,
         rejection_reasons=_material_rejected, facts_block=_pick_facts, **_gen_kw)
     if not drafts:
-        if _material_rejected:
-            return JSONResponse(status_code=502, content={
-                "ok": False,
-                "error": "자료로 확인되지 않는 내용이 반복 생성되어 차단했습니다 — 다시 생성해주세요.",
-                "reasons": _material_rejected})
-        return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
+        # 생성기 내부 폴백까지 예외적으로 빈손이어도 영상 재료가 있는 요청은 막지 않는다.
+        # 실패한 AI 본문이 아니라 위에서 확정한 동일 재료의 원본 발화·장면만 사용한다.
+        drafts = [script_generate._grounded_fallback(
+            _pick_src, _pick_facts,
+            script_generate._sources_product(_pick_src) or my_topic or subject,
+            reasons=_material_rejected)]
     _pickup_rejected = []
     if _seed_hook:
         _ok, _bad = pickup_script.filter_drafts(drafts, _seed_hook, _seed_cta)
@@ -6570,7 +6714,8 @@ def clean_failure_kind(clean_error):
       ⚠️새 실패 사유를 만들 땐 여기도 같이 늘려라. 안 늘리면 'unknown'으로 새어
         "다시 시도해 주세요"라는 **거짓 안내**가 나간다 — 그게 이 함수가 생긴 이유다.
 
-    반환: 'no_points' | 'no_credit' | 'interrupted' | 'unsupported' | 'unknown'
+    반환: 'no_points' | 'no_credit' | 'need_own_key' | 'need_new_api_key'
+        | 'interrupted' | 'vendor_down' | 'unsupported' | 'unknown'
     """
     e = (clean_error or "")
     low = e.lower()
@@ -6589,9 +6734,24 @@ def clean_failure_kind(clean_error):
     from shopping_shorts.vmake_client import is_no_credit as _vmake_no_credit
     if _vmake_no_credit(e):
         return "no_credit"
+    # 고급(Smart Pro)을 골랐는데 키가 아직 옛 API에 묶여 있다(2026-09-16).
+    # ★재시도로는 영원히 안 된다 — 고객이 VMake에서 새 API로 전환하고 **키를 다시
+    #   등록**해야 한다. need_own_key와 갈라 둔다: 키는 있는데 **종류가 다른** 것이라
+    #   "키를 등록하세요"만 보여주면 이미 등록한 사람이 무엇을 해야 할지 모른다.
+    from shopping_shorts.vmake_client import is_legacy_key as _vmake_legacy
+    if _vmake_legacy(e) or "새 API 키가 필요" in e:
+        return "need_new_api_key"
     # 배포·재시작으로 BackgroundTask가 죽은 경우 — 이건 진짜로 다시 시도하면 된다.
     if "서버 재시작" in e or "중단되었습니다" in e:
         return "interrupted"
+    # ★업체(VMake) 게이트웨이 장애 — 영상 탓이 아니다(2026-09-17 실측, job 1556910737b6).
+    #   30029 = '前置开放平台事件处理失败'(앞단 개방플랫폼 이벤트 처리 실패). 같은 응답 안에
+    #   영상은 1080x1920·683프레임으로 정상 파싱돼 있었다.
+    #   ★반드시 아래 'unsupported'보다 **먼저** 본다 — 두 사유가 "결과가 비었습니다"라는
+    #     같은 껍데기를 쓰기 때문에, 순서가 뒤집히면 업체 장애가 영상 탓으로 둔갑하고
+    #     고객은 멀쩡한 소재를 버리러 간다(0순위-B: 판단이 문자열 하나에 겹쳐 있다).
+    if "30029" in e:
+        return "vendor_down"
     # 영상 자체를 VMake가 처리 못 한 경우(실측 code 10101 'right reduce error').
     if "10101" in e or "결과가 비었습니다" in e:
         return "unsupported"
@@ -6715,7 +6875,12 @@ def api_produce_mix_clean_clips(job_id: str):
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     if job.get("clean_status") != "ready":
-        return {"ok": True, "clips": [], "stale": False, "ready": False}
+        # ★ready가 아니어도 **옛 청소본이 남아 있으면** 그 사실을 알린다(2026-09-17).
+        #   실측(이윤정님 job 1556910737b6, clean_status=failed): 여기서 늘 stale=False를
+        #   답해서 화면이 "옛 결과가 있다"를 몰랐다 → 아무 설명 없는 빈 비교화면이 뜨고
+        #   고객은 무엇을 눌러야 할지 모른다. 판정은 clean_redo_state 한 곳(0순위-B).
+        _redo = mix_pipeline.clean_redo_state(job, _MIX_WORK_DIR / job_id)
+        return {"ok": True, "clips": [], "stale": bool(_redo.get("stale")), "ready": False}
     r = mix_pipeline.clean_compare_clips(job, _MIX_WORK_DIR / job_id)
     clips = [{"ci": c["ci"], "si": c["si"], "beat_idx": c["beat_idx"],
               "dur": round(float(c["dur"]), 3)} for c in (r.get("clips") or [])]
@@ -8896,6 +9061,62 @@ def api_thumb_file(job_id: str, name: str):
     # 브라우저가 휴리스틱 캐시로 옛 이미지를 재검증 없이 내보낸다(2026-07-30 자막제거 제보).
     # 위 ?v= 캐시버스터와 이중 방어 — 버스터가 안 붙은 옛 URL(DB에 저장된 frames)도 살린다.
     return FileResponse(str(path), headers={"Cache-Control": "no-cache"})
+
+
+@app.post("/api/produce/thumb/upload")
+async def api_thumb_upload(job_id: str = Form(...), file: UploadFile = File(...)):
+    """🖼 **내 이미지를 썸네일 후보로 직접 올린다**(2026-09-16 회원 제보).
+
+    여태 후보는 둘뿐이었다 — 완성본을 등분해 뽑거나(thumb/frames), 6단계에서 보던
+    장면을 보내거나(thumb/pin). 회원이 미리 만들어 둔 이미지를 쓰려면 방법이 없었고,
+    그 이미지를 "영상 맨 앞에 넣기"(thumbnail.intro)도 못 했다.
+
+    ★핀과 **같은 목록(thumbnail.pins)** 에 넣는다 — 그래야 고르기·꾸미기·인트로가
+      한 줄도 안 바뀌고 그대로 돈다(0순위-B: 같은 판단을 두 번 적지 않는다).
+    ★파일명은 서버가 정한다(thumb/save와 같은 원칙) — 올린 이름은 경로순회 재료다.
+    ★받은 바이트를 그대로 저장하지 않고 **Pillow로 열어 다시 쓴다**. 이미지로 안 열리는
+      파일(확장자만 바꾼 스크립트 등)은 여기서 걸러지고, EXIF 회전도 이때 반영된다.
+    """
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+
+    data = await file.read()
+    _MAX = 20 * 1024 * 1024
+    if not data:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "빈 파일이에요"})
+    if len(data) > _MAX:
+        return JSONResponse(status_code=413,
+                            content={"ok": False, "error": "20MB까지 올릴 수 있어요"})
+    try:
+        from PIL import Image, ImageOps
+        im = Image.open(io.BytesIO(data))
+        im = ImageOps.exif_transpose(im)          # 휴대폰 사진이 눕지 않게
+        im = im.convert("RGB")
+    except Exception as e:      # noqa: BLE001 — 열리지 않으면 이미지가 아니다
+        print(f"[thumb-upload] 이미지 아님: {e!r}", file=sys.stderr)
+        return JSONResponse(status_code=400,
+                            content={"ok": False, "error": "이미지 파일이 아니에요(jpg·png로 올려주세요)"})
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    thumb = job.get("thumbnail") or {}
+    pins = list(thumb.get("pins") or [])
+    # 이름은 내용 해시 — 같은 그림을 두 번 올리면 후보가 중복으로 쌓이지 않는다(핀과 같은 원칙).
+    import hashlib as _hl
+    name = f"up_{_hl.sha1(data).hexdigest()[:16]}.jpg"
+    im.save(str(out_dir / name), "JPEG", quality=92)
+
+    label = (os.path.basename(file.filename or "").rsplit(".", 1)[0] or "내 이미지")[:24]
+    pins = [p for p in pins if str(p.get("name") or "") != name]
+    pins.insert(0, {"name": name, "label": f"🖼 {label}", "uploaded": True})
+    thumb["pins"] = pins
+    _save_render_inputs(store, job_id, thumbnail=thumb)
+    return {"ok": True, "name": name, "label": f"🖼 {label}", "pins": pins,
+            "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
 
 @app.post("/api/produce/thumb/save")
@@ -16656,6 +16877,65 @@ def api_my_channel_set(request: Request, body: dict):
     return {"ok": True, "channel": name, "is_default": False}
 
 
+# ── 💾 제작소 프리셋 3종(내 프리셋·내 템플릿·자막 프리셋) — 계정 저장(2026-09-17) ──
+# ★종전엔 produce.html이 localStorage에만 담아 회사 PC에서 저장한 게 집 PC엔 없었다
+#   (이윤정님 제보). 값의 주인을 customer_prefs 한 곳으로 옮긴다(내 채널명과 같은 방식).
+# 저장 단위는 종류별 **목록 통째**(전체 교체) — 폰트 즐겨찾기와 같은 이유(순서 뒤집힘 방지).
+# {merge:[...]}는 옛 브라우저 저장분을 계정에 합치는 이관용 — 같은 내용(JSON 동일)은 안 겹친다.
+_PRESET_KINDS = ("hc_my_presets", "fr_my_templates", "cap_presets")
+_PRESET_MAX_ITEMS = 50          # 한 종류당 개수 — 화면이 버튼 줄이라 그 이상은 못 고른다
+_PRESET_MAX_BYTES = 200_000     # 한 종류당 JSON 크기 — 틀 하나가 1KB 안팎이라 넉넉하다
+
+
+def _preset_clean(items):
+    """이름 있는 dict만 남기고 개수 상한을 자른다. 값 구조(hc/cap/frame)는 화면이 정한다."""
+    out = []
+    for it in items or []:
+        if isinstance(it, dict) and str(it.get("name") or "").strip():
+            it = dict(it)
+            it["name"] = str(it["name"]).strip()[:40]
+            out.append(it)
+    return out[:_PRESET_MAX_ITEMS]
+
+
+@app.get("/api/produce/presets/{kind}")
+def api_produce_presets_get(request: Request, kind: str):
+    if kind not in _PRESET_KINDS:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 종류"})
+    saved = Store(DB_PATH).get_pref("preset::" + kind, customer_id=_cid(request))
+    return {"ok": True, "items": saved if isinstance(saved, list) else [],
+            "is_default": saved is None}
+
+
+@app.post("/api/produce/presets/{kind}")
+def api_produce_presets_set(request: Request, kind: str, body: dict):
+    """body: {items:[...]} 전체 교체 / {merge:[...]} 기존에 없는 것만 뒤에 붙임(이관)."""
+    if kind not in _PRESET_KINDS:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 종류"})
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    key = "preset::" + kind
+    if "merge" in body:
+        if not isinstance(body["merge"], list):
+            return JSONResponse(status_code=422, content={"ok": False, "error": "merge 배열 필요"})
+        cur = store.get_pref(key, customer_id=cid)
+        cur = cur if isinstance(cur, list) else []
+        seen = {json.dumps(x, sort_keys=True, ensure_ascii=False) for x in cur}
+        for it in _preset_clean(body["merge"]):
+            sig = json.dumps(it, sort_keys=True, ensure_ascii=False)
+            if sig not in seen:
+                cur.append(it); seen.add(sig)
+        items = cur[:_PRESET_MAX_ITEMS]
+    else:
+        if not isinstance(body.get("items"), list):
+            return JSONResponse(status_code=422, content={"ok": False, "error": "items 배열 필요"})
+        items = _preset_clean(body["items"])
+    if len(json.dumps(items, ensure_ascii=False)) > _PRESET_MAX_BYTES:
+        return JSONResponse(status_code=413, content={"ok": False, "error": "프리셋이 너무 큽니다"})
+    store.set_pref(key, items, customer_id=cid)
+    return {"ok": True, "items": items, "is_default": False}
+
+
 @app.get("/api/produce/picks")
 def api_produce_picks(request: Request):
     """영상제작에 담긴 도서관 대본(전체 데이터). 우리믹스 탭 기본 목록."""
@@ -16738,6 +17018,41 @@ def api_produce_works_list(request: Request):
     return {"ok": True, "works": Store(DB_PATH).list_produce_works(customer_id=_cid(request))}
 
 
+def _clean_pro_ready(store, cid):
+    """이 계정이 **실제로 쓰게 될 자막제거 키**로 고급이 되는가. True/False/None(모름).
+
+    ★키 고르기는 keyroute.keys_for 한 곳(0순위-B) — 워커가 청소할 때 쓰는 키와 같아야
+      "화면은 된다는데 막상 실패"가 안 난다. 판정은 vmake_client.key_supports_new_api(캐시 1시간).
+    ★실패해도 화면 로딩을 막지 않는다 — None이면 화면은 안내를 그대로 둔다.
+    """
+    try:
+        from . import keyroute
+        from .vmake_client import key_supports_new_api
+        keys, _ = keyroute.keys_for(store, cid, keyroute.SVC_VMAKE)
+        keys = [k for k in (keys or []) if k]
+        return key_supports_new_api(keys[0]) if keys else False
+    except Exception:          # noqa: BLE001
+        return None
+
+
+def _clean_credit_est(job, job_id):
+    """다시 지울 때 나갈 크레딧 추정. 못 재면 None — **숫자를 지어내지 않는다**.
+
+    ★길이는 1단계 미리보기(preview.mp4)로 잰다 — 완성본과 같은 편성·같은 길이이고
+      이미 만들어져 있어 추가 비용이 0이다. 없으면 None(확인창은 숫자 없이 뜬다).
+    ★단가 계산은 mix_pipeline.clean_credit_estimate 한 곳(0순위-B) — 화면 안내 문구와
+      같은 식이라야 "안내는 120인데 실제는 다른 값"이 안 난다.
+    """
+    try:
+        p = job.get("preview_path")
+        if not p or not Path(p).exists():
+            return None
+        return mix_pipeline.clean_credit_estimate(
+            mix_pipeline._probe_seconds(p), mix_pipeline.clean_tier_of(job))
+    except Exception:          # noqa: BLE001 — 안내용이다. 실패해도 화면을 막지 않는다
+        return None
+
+
 @app.get("/api/produce/works/{work_id}")
 def api_produce_works_get(request: Request, work_id: str):
     st = Store(DB_PATH)
@@ -16758,7 +17073,20 @@ def api_produce_works_get(request: Request, work_id: str):
             settings = {"headcopy": job.get("headcopy"),
                         "caption_style": job.get("caption_style"),
                         "deco": job.get("deco"),
-                        "subtitle_removal": job.get("subtitle_removal")}
+                        "subtitle_removal": job.get("subtitle_removal"),
+                        # 지우는 방식(기본/고급) — 화면이 job에서 되읽는다(0순위-B)
+                        "clean_tier": job.get("clean_tier"),
+                        # 이미 만들어 둔 등급 — 되돌리기가 공짜인지 화면이 안내한다
+                        "clean_tiers_ready": mix_pipeline.clean_tiers_ready(
+                            job, _MIX_WORK_DIR / w["job_id"]),
+                        # 장면을 바꾼 뒤 '다시 지워야 하는' 상태인가(2026-09-17 사장님).
+                        # ready/stale/tiers — 화면이 이걸 받아야 "옛 장면 결과"를 알아본다.
+                        "clean_redo": mix_pipeline.clean_redo_state(
+                            job, _MIX_WORK_DIR / w["job_id"]),
+                        # 확인창에 쓸 크레딧 추정. 길이를 못 재면 None(숫자 없이 뜬다).
+                        "clean_credit_est": _clean_credit_est(job, w["job_id"]),
+                        # 이 계정의 키로 고급을 쓸 수 있나 — True면 화면이 "키 다시 등록" 경고를 뺀다
+                        "clean_pro_ready": _clean_pro_ready(st, _cid(request))}
     return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"],
             "settings": settings}
 
@@ -18469,22 +18797,401 @@ def api_produce_mix_settings(body: dict):
     """3단계 자막제거 등 렌더 전 설정 갱신. body: {job_id, subtitle_removal}."""
     job_id = (body.get("job_id") or "").strip()
     store = Store(DB_PATH)
-    if not job_id or not store.get_mix_job(job_id):
+    job = store.get_mix_job(job_id) if job_id else None
+    if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     fields = {}
     if "subtitle_removal" in body:
         fields["subtitle_removal"] = bool(body.get("subtitle_removal"))
+    if "clean_tier" in body:
+        # 자막제거 등급. 아는 값만 받는다 — 모르는 값이 들어오면 기본으로 떨어뜨린다
+        # (등급 이름의 정의처는 vmake_client, 해석은 mix_pipeline.clean_tier_of).
+        from .vmake_client import TIER_BASIC, TIER_PRO
+        fields["clean_tier"] = TIER_PRO if body.get("clean_tier") == TIER_PRO else TIER_BASIC
     if "headcopy" in body:
         fields["headcopy"] = body.get("headcopy")  # dict or None
     if "caption_style" in body:
         fields["caption_style"] = body.get("caption_style")  # dict or None
     if "deco" in body:
         fields["deco"] = body.get("deco")  # 워터마크·추가텍스트·오버레이·BGM dict or None
+        if isinstance(fields["deco"], dict) and fields["deco"].get("scene_style") is not None:
+            from .scene_style import validate_snapshot
+            try:
+                fields["deco"]["scene_style"] = validate_snapshot(fields["deco"]["scene_style"])
+            except (ValueError, TypeError) as exc:
+                return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
+    if "scene_style" in body:
+        from .scene_style import validate_snapshot
+        try:
+            snapshot = validate_snapshot(body["scene_style"])
+        except (ValueError, TypeError) as exc:
+            return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
+        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), "scene_style": snapshot}
     if "seo" in body:
         fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
         _save_render_inputs(store, job_id, **fields)
     return {"ok": True}
+
+
+@app.get("/api/produce/scene-style/assets/{asset_path:path}")
+def api_scene_style_asset(asset_path: str):
+    from .scene_style import ROOT
+    candidate = (ROOT / asset_path).resolve()
+    names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js"}
+    allowed = (asset_path.startswith("out/") and asset_path[4:] in names)
+    allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "out/scene-style-labels.js"}
+    allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
+    allowed |= asset_path.startswith("shopping_shorts/static/fonts/") and candidate.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}
+    if ".." in Path(asset_path).parts or "\\" in asset_path or not allowed or not candidate.is_relative_to(ROOT) or not candidate.is_file():
+        return JSONResponse(status_code=404, content={"error": "파일 없음"})
+    return FileResponse(candidate, headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/api/produce/scene-style/context/{job_id}")
+def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = ""):
+    from .scene_style import context_for
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
+        return JSONResponse(status_code=404, content={"error": "영상 없음"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    tts = {b["beat_idx"]: b["tts_path"] for b in beats if b.get("tts_path")}
+    if not beats or len(tts) != len(beats):
+        return JSONResponse(status_code=409, content={"error": "음성·장면 준비를 먼저 완료해 주세요"})
+    try:
+        timeline = video_assemble._beat_timeline(plan, tts)
+    except Exception:
+        return JSONResponse(status_code=409, content={"error": "음성 파일을 확인할 수 없습니다. 미리보기를 다시 만들어 주세요"})
+    snapshot = (job.get("deco") or {}).get("scene_style")
+    context = context_for(timeline, {"text": headcopy_text[:2000]} if headcopy_text else job.get("headcopy"), snapshot, job_id)
+    for scene in context["scenes"]:
+        scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{scene['beat_idx']}"
+    return {"context": context, "snapshot": snapshot}
+
+
+# 관리자 전용 장면꾸미기 실데이터 시험판. 기존 제작소 job은 읽기만 하고
+# 스냅샷과 산출물은 _scene_style_lab 폴더에만 쓴다.
+def _scene_style_lab_denied(request: Request):
+    if not _is_admin(_cid(request)):
+        return JSONResponse(status_code=404, content={"error": "Not Found"})
+    return None
+
+
+def _scene_style_lab_owned_job(store, request, job_id):
+    job = store.get_mix_job(job_id)
+    if not job or int(job.get("customer_id") or 0) != _cid(request):
+        return None
+    return job
+
+
+@app.get("/api/admin/scene-style-lab/jobs")
+def api_scene_style_lab_jobs(request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    rows = []
+    for job in Store(DB_PATH).list_recent_mix_jobs(customer_id=_cid(request), limit=50):
+        plan = job.get("edit_plan") or {}
+        beats = plan.get("beats") or []
+        title = ((job.get("headcopy") or {}).get("text") or
+                 (beats[0].get("narration") if beats else "") or job["job_id"])
+        clean = scene_style_lab.resolve_clean_contract(job, _MIX_WORK_DIR / job["job_id"])
+        rows.append({
+            "job_id": job["job_id"],
+            "title": str(title)[:100],
+            "updated_at": job.get("updated_at"),
+            "status": job.get("status"),
+            "beat_count": len(beats),
+            "tts_ready": bool(beats) and all(b.get("tts_path") and Path(b["tts_path"]).is_file() for b in beats),
+            "clean_ready": clean is not None,
+            "clean_signature": clean.get("signature") if clean else None,
+        })
+    return {"ok": True, "jobs": rows}
+
+
+@app.post("/api/admin/scene-style-lab")
+def api_scene_style_lab_create(request: Request, body: dict):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    job_id = str(body.get("job_id") or "").strip()
+    store = Store(DB_PATH)
+    job = _scene_style_lab_owned_job(store, request, job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "작업 없음"})
+    try:
+        manifest = scene_style_lab.create_copy(job_id, job, _MIX_WORK_DIR)
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    return {"ok": True, "manifest": manifest}
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}")
+def api_scene_style_lab_get(lab_id: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+    from .scene_style import context_for
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    store = Store(DB_PATH)
+    job = _scene_style_lab_owned_job(store, request, manifest.get("source_job_id"))
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, job)
+        beats = (manifest.get("edit_plan") or {}).get("beats") or []
+        tts_paths = {b["beat_idx"]: b["tts_path"] for b in beats
+                     if b.get("tts_path") and Path(b["tts_path"]).is_file()}
+        if not beats or len(tts_paths) != len(beats):
+            raise scene_style_lab.LabPreconditionError("음성 파일이 완전하지 않습니다")
+        timeline = video_assemble._beat_timeline(manifest["edit_plan"], tts_paths)
+    except (scene_style_lab.LabPreconditionError, OSError, RuntimeError, ValueError) as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    snapshot = manifest["scene_style"]
+    context = context_for(timeline, manifest.get("headcopy"), snapshot, lab_id)
+    for index, scene in enumerate(context["scenes"]):
+        scene["media"] = f"/api/admin/scene-style-lab/{lab_id}/frame/{index}"
+    return {"ok": True, "manifest": manifest, "context": context, "snapshot": snapshot}
+
+
+@app.put("/api/admin/scene-style-lab/{lab_id}/snapshot")
+def api_scene_style_lab_snapshot(lab_id: str, request: Request, body: dict):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    store = Store(DB_PATH)
+    job = _scene_style_lab_owned_job(store, request, manifest.get("source_job_id"))
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, job)
+        snapshot = scene_style_lab.save_snapshot(_MIX_WORK_DIR, lab_id, body.get("snapshot"))
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    except (TypeError, ValueError) as exc:
+        return JSONResponse(status_code=422, content={"error": str(exc)})
+    return {"ok": True, "snapshot": snapshot}
+
+
+def _run_scene_style_lab_render(lab_id: str, generation: str):
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.manifest_for_generation(
+            _MIX_WORK_DIR, lab_id, generation
+        )
+        if manifest is None:
+            return
+        source_job = Store(DB_PATH).get_mix_job(manifest["source_job_id"])
+        if not source_job:
+            raise scene_style_lab.LabPreconditionError("원본 작업이 없습니다")
+        scene_style_lab.render_copy(manifest, source_job, _MIX_WORK_DIR)
+        scene_style_lab.set_render_state(
+            _MIX_WORK_DIR, lab_id, generation, "ready", None
+        )
+    except Exception as exc:
+        try:
+            scene_style_lab.set_render_state(
+                _MIX_WORK_DIR, lab_id, generation, "error", str(exc)
+            )
+        except Exception:
+            pass
+
+
+@app.post("/api/admin/scene-style-lab/{lab_id}/render")
+def api_scene_style_lab_render(lab_id: str, request: Request, background_tasks: BackgroundTasks):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    if not _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id")):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    generation, _ = scene_style_lab.queue_render(_MIX_WORK_DIR, lab_id)
+    background_tasks.add_task(_run_scene_style_lab_render, lab_id, generation)
+    return {"ok": True, "status": "queued"}
+
+
+@app.get("/scene-style-lab/{lab_id}")
+def scene_style_lab_landing(lab_id: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id"))
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, source_job)
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    return FileResponse(
+        Path(__file__).parent / "static" / "scene_style_lab_landing.html",
+        headers={"X-Robots-Tag": "noindex, nofollow, noarchive", "Cache-Control": "no-store"},
+    )
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}/video")
+def api_scene_style_lab_video(lab_id: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id"))
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, source_job)
+        video = scene_style_lab.output_path(_MIX_WORK_DIR, lab_id, "mp4")
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    return FileResponse(
+        video,
+        media_type="video/mp4",
+        headers={
+            "X-Scene-Style-Lab": lab_id,
+            "X-Scene-Artifact-SHA256": str(
+                (((manifest.get("receipts") or {}).get("mp4") or {}).get("sha256") or "")
+            ),
+            "Cache-Control": "no-store",
+            "X-Robots-Tag": "noindex, nofollow, noarchive",
+        },
+    )
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}/capcut")
+def api_scene_style_lab_capcut(lab_id: str, request: Request, base: str = ""):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(
+        Store(DB_PATH), request, manifest.get("source_job_id")
+    )
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        project = scene_style_lab.build_capcut_copy(
+            manifest, source_job, _MIX_WORK_DIR, base
+        )
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    except (OSError, RuntimeError, ValueError) as exc:
+        return JSONResponse(status_code=500, content={"error": str(exc)})
+
+    texts, assets = {}, []
+    for path in sorted(Path(project).iterdir()):
+        if not path.is_file():
+            continue
+        if path.suffix.lower() == ".json":
+            texts[path.name] = path.read_text(encoding="utf-8")
+        else:
+            assets.append({
+                "name": path.name,
+                "url": f"/api/admin/scene-style-lab/{lab_id}/capcut-asset/{path.name}",
+            })
+    return {
+        "ok": True,
+        "project": Path(project).name,
+        "texts": texts,
+        "assets": assets,
+        "contract": (manifest.get("contracts") or {}).get("capcut"),
+    }
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}/capcut-asset/{name}")
+def api_scene_style_lab_capcut_asset(lab_id: str, name: str, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    if os.path.basename(name) != name or name in ("", ".", ".."):
+        return JSONResponse(status_code=400, content={"error": "잘못된 파일명"})
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(Store(DB_PATH), request, manifest.get("source_job_id"))
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        scene_style_lab.assert_fresh(manifest, source_job)
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    project = Path(str((manifest.get("outputs") or {}).get("capcut_project") or "")).resolve()
+    allowed = (scene_style_lab.lab_dir(_MIX_WORK_DIR, lab_id) / "capcut").resolve()
+    asset = (project / name).resolve()
+    if allowed not in project.parents or project not in asset.parents or not asset.is_file():
+        return JSONResponse(status_code=404, content={"error": "파일 없음"})
+    return FileResponse(asset, headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/admin/scene-style-lab/{lab_id}/frame/{scene_index}")
+def api_scene_style_lab_frame(lab_id: str, scene_index: int, request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    from . import scene_style_lab
+
+    try:
+        manifest = scene_style_lab.read_manifest(_MIX_WORK_DIR, lab_id)
+    except (ValueError, OSError, json.JSONDecodeError):
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    source_job = _scene_style_lab_owned_job(
+        Store(DB_PATH), request, manifest.get("source_job_id")
+    )
+    if not source_job:
+        return JSONResponse(status_code=404, content={"error": "시험 없음"})
+    try:
+        frame = scene_style_lab.frame_for_scene(
+            manifest, source_job, _MIX_WORK_DIR, scene_index
+        )
+    except scene_style_lab.LabPreconditionError as exc:
+        return JSONResponse(status_code=409, content={"error": str(exc)})
+    return FileResponse(
+        frame,
+        media_type="image/jpeg",
+        headers={
+            "Cache-Control": "no-store",
+            "X-Clean-Signature": str((manifest.get("clean") or {}).get("signature") or ""),
+        },
+    )
 
 
 # 고정카피(헤드카피 후보) — 확정 대본에서 AI가 4개 뽑는다.
@@ -18498,16 +19205,22 @@ _HEADCOPY_CACHE_MAX = 200
 
 
 @app.post("/api/produce/headcopy/suggest")
-def api_produce_headcopy_suggest(body: dict):
-    """확정 대본 → 헤드카피 후보. {script} → {ok, cached, copies:[{label,text}]}"""
+def api_produce_headcopy_suggest(request: Request, body: dict):
+    """확정 대본+틀 계열 → 짝이 맞는 헤드카피 후보."""
     script = (body.get("script") or "").strip()
     if not script:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "대본이 비어 있습니다"})
-    key = _script_hash(script)
+    # 새 계열은 사장님(cid 0) 시험 전용이다. 일반 고객은 요청을 조작해도 병합 전과 같은
+    # generic 프롬프트만 탄다 — 테스트 페이지 기능이 공용 produce에 새는 것을 서버에서 차단한다.
+    requested_family = body.get("copy_family") if _cid(request) == 0 else "generic"
+    family = headcopy_gen.normalize_family(requested_family)
+    # 같은 대본이라도 화법 계열이 다르면 결과가 다르다. 계열을 빼면 인스타형 요청이
+    # 이븐쇼핑형 캐시에 맞아 AI를 부르지도 않고 잘못된 제목을 받는다.
+    key = f"{_script_hash(script)}:{family}"
     if key in _HEADCOPY_CACHE:
         return {"ok": True, "cached": True, "copies": _HEADCOPY_CACHE[key]}
-    copies = headcopy_gen.suggest(script)
+    copies = headcopy_gen.suggest(script, family=family)
     # 못 뽑은 것도 캐시하면 "다시 시도"가 영영 막힌다 → 성공했을 때만 담는다.
     if copies:
         if len(_HEADCOPY_CACHE) >= _HEADCOPY_CACHE_MAX:
@@ -18545,6 +19258,9 @@ def api_produce_frame_presets():
                          "has_head": v.get("has_head"),
                          "demo_views": v.get("demo_views"),
                          "demo_comments": v.get("demo_comments"),
+                         # 현재 장면꾸미기 채널 틀은 전부 유튜브 썰쇼핑 계열이다.
+                         # 이후 인스타 틀을 추가할 때 이 값만 바꾸면 생성 배선이 따라간다.
+                         "copy_family": v.get("copy_family", "youtube_reveal"),
                          "headcopy": v.get("headcopy"),
                          # ★자막도 한 세트로 내려준다(2026-08-25). 틀·헤드카피만
                          #   채널 질감을 따라가고 자막만 우리 기본값이면 "한 세트로
@@ -18923,6 +19639,60 @@ def api_produce_frame_png(request: Request):
                         headers={"Cache-Control": "public, max-age=31536000"})
 
 
+@app.get("/api/produce/comment-card/styles")
+def api_produce_comment_card_styles():
+    """댓글 카드 라이브러리 목록. 스타일 정의는 comment_card 한 곳만 쓴다."""
+    from shopping_shorts import comment_card
+    return {"ok": True, "styles": comment_card.styles()}
+
+
+@app.get("/api/produce/comment-card.png")
+def api_produce_comment_card_png(spec: str = "", job_id: str = ""):
+    """편집기와 최종 영상이 공유하는 댓글 카드 PNG 렌더러."""
+    from shopping_shorts import comment_card
+    try:
+        payload = json.loads(spec or "{}")
+        if not isinstance(payload, dict):
+            payload = {}
+    except (TypeError, ValueError):
+        payload = {}
+    avatar_file = Path(str(payload.get("avatar_file") or "")).name
+    if avatar_file and job_id and re.fullmatch(r"[A-Za-z0-9_-]+", job_id or ""):
+        avatar_path = _MIX_WORK_DIR / job_id / avatar_file
+        if avatar_path.is_file():
+            payload["avatar_path"] = str(avatar_path)
+    out = comment_card.CACHE_DIR / f"{comment_card.cache_key(payload)}.png"
+    if not out.exists():
+        comment_card.render_to(payload, out)
+    return FileResponse(str(out), media_type="image/png",
+                        headers={"Cache-Control": "public, max-age=31536000"})
+
+
+@app.post("/api/produce/mix/comment-avatar")
+async def api_produce_comment_avatar(job_id: str = Form(...), file: UploadFile = File(...)):
+    """댓글 카드용 프로필 사진을 작업 폴더에 정규화된 PNG로 저장한다."""
+    store = Store(DB_PATH)
+    if not job_id or not store.get_mix_job(job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    raw = await file.read()
+    if not raw or len(raw) > 5 * 1024 * 1024:
+        return JSONResponse(status_code=413, content={"ok": False, "error": "프로필 이미지는 5MB 이하만 가능해요"})
+    try:
+        from PIL import Image, ImageOps
+        with Image.open(io.BytesIO(raw)) as source:
+            avatar = ImageOps.fit(source.convert("RGBA"), (512, 512), method=Image.Resampling.LANCZOS)
+            output = io.BytesIO()
+            avatar.save(output, "PNG", optimize=True)
+            normalized = output.getvalue()
+    except (OSError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "이미지를 읽지 못했어요"})
+    name = f"comment_avatar_{hashlib.sha1(normalized).hexdigest()[:16]}.png"
+    target = _MIX_WORK_DIR / job_id / name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(normalized)
+    return {"ok": True, "file": name}
+
+
 @app.post("/api/produce/mix/bgm")
 async def api_produce_mix_bgm(job_id: str = Form(...), file: UploadFile = File(...)):
     """BGM 오디오 업로드 → job work dir에 bgm.{ext}로 저장. deco.bgm.file로 참조·렌더 시 믹스."""
@@ -19222,23 +19992,53 @@ def _scenehl_locked(store, job_id, body):
     plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
     if err:
         return err
+    # ★컷 번호(2026-09-16 회원 제보 "자막 단위가 아닌 컷 단위로 적용"). 주면 그 컷에만,
+    #   안 주면 종전대로 비트 전체에 저장한다(옛 클라이언트 회귀 0).
+    cut = body.get("cut")
+    try:
+        cut = None if cut is None or cut == "" else str(int(cut))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "cut은 숫자여야 해요"})
     if not body.get("on"):
-        hit.pop("scene_hl", None)
+        if cut is None:
+            hit.pop("scene_hl", None)
+            hit.pop("scene_hl_cuts", None)     # 비트 전체 끄기는 컷 지정도 함께 지운다
+        else:
+            cuts = hit.get("scene_hl_cuts")
+            if isinstance(cuts, dict):
+                cuts.pop(cut, None)
+                if not cuts:
+                    hit.pop("scene_hl_cuts", None)
     else:
         def _f(key, dflt):
             try:
                 return float(body.get(key))
             except (TypeError, ValueError):
                 return dflt
-        hit["scene_hl"] = {
+        val = {
             "on": True,
             "mode": "spot" if str(body.get("mode") or "zoom") == "spot" else "zoom",
             "shape": "round" if str(body.get("shape") or "circle") == "round" else "circle",
             "cx": round(_f("cx", 0.5), 5), "cy": round(_f("cy", 0.5), 5),
             "r": round(_f("r", 0.28), 5), "zoom": round(_f("zoom", 2.0), 4),
         }
+        if cut is None:
+            hit["scene_hl"] = val
+            hit.pop("scene_hl_cuts", None)     # 비트 전체 지정이 컷 지정을 대체한다
+        else:
+            cuts = hit.get("scene_hl_cuts")
+            if not isinstance(cuts, dict):
+                # 비트 전체 값이 있었다면 **모든 컷에 걸려 있던 것**이므로 컷별로 펼쳐
+                # 옮겨 담는다 — 안 그러면 한 컷을 고치는 순간 나머지 컷의 원이 사라진다.
+                cuts = {}
+                old = hit.pop("scene_hl", None)
+                if isinstance(old, dict) and old.get("on"):
+                    for k in range(int(body.get("cut_of") or 0) or 0):
+                        cuts[str(k)] = dict(old)
+                hit["scene_hl_cuts"] = cuts
+            cuts[cut] = val
     _save_render_inputs(store, job_id, edit_plan=plan)
-    return {"ok": True, "hl": video_assemble.scene_hl_of(hit)}
+    return {"ok": True, "hl": video_assemble.scene_hl_of(hit, cut)}
 
 
 @app.get("/api/tts/quota")
@@ -19742,7 +20542,8 @@ def api_produce_mix_beats_preview(job_id: str):
             #   화면이 스스로 가두면 렌더와 두 벌이 된다(0순위-B, cap_pos와 같은 방식).
             "zoom": _z_of(b)[0], "pan_x": _z_of(b)[1], "pan_y": _z_of(b)[2],
             # 🔎 장면별 강조(원형 돋보기/스포트라이트, 2026-08-30). 같은 이유로 서버가 준다.
-            "hl": video_assemble.scene_hl_of(b),
+            # ★이 **컷**의 강조를 준다(2026-09-16) — 컷별 지정이 없으면 비트 값이 그대로 온다.
+            "hl": video_assemble.scene_hl_of(b, _ci),
             })
     # 전체 칸 수 — 화면의 "n / N 장면"이 이 값을 쓴다(비트 수가 아니라 컷 수).
     for _k, _o in enumerate(out):
@@ -21475,10 +22276,55 @@ def _topic_group_for_name(topic, resolution, job):
     return groups[0] if len(groups) == 1 else ""
 
 
+def _selected_source_id(item, selected, job):
+    """외부 위키 카드가 job의 어느 영상인지 URL/원문 완전일치로 복원한다."""
+    extract = (job or {}).get("extract") or {}
+    selected = str(selected or "")
+    if selected in extract:
+        return selected
+    matches = []
+    item_url = str((item or {}).get("url") or (item or {}).get("video_url") or "").strip()
+    if item_url:
+        matches.extend("s%d" % i for i, url in enumerate((job or {}).get("urls") or [])
+                       if str(url or "").strip() == item_url)
+        matches.extend(str(sid) for sid, source in extract.items()
+                       if isinstance(source, dict) and
+                       str(source.get("_source_url") or "").strip() == item_url)
+
+    item_text = re.sub(r"\s+", "", str((item or {}).get("full_text") or ""))
+    if item_text:
+        for sid, source in extract.items():
+            if not isinstance(source, dict):
+                continue
+            source_text = source.get("full_text_ko") or source.get("full_text") or ""
+            if re.sub(r"\s+", "", str(source_text)) == item_text:
+                matches.append(str(sid))
+    return next((sid for sid in dict.fromkeys(matches) if sid in extract), "")
+
+
+def _selected_group_topic(item, selected, job, resolution):
+    """선택 카드와 같은 내부 재료의 제품군 하나만 보수적으로 고른다."""
+    membership = resolution.get("membership") or {}
+    groups = resolution.get("groups") or []
+    candidate_ids = [str(selected or ""), _selected_source_id(item, selected, job)]
+
+    group_id = next((membership.get(sid) for sid in candidate_ids if membership.get(sid)), "")
+    chosen = next((group for group in groups if group.get("group_id") == group_id), None)
+    if not chosen:
+        brief = (item or {}).get("source_brief") or {}
+        item_product = str(brief.get("product") or "").strip() if isinstance(brief, dict) else ""
+        same = [group for group in groups
+                if item_product and _same_topic_product(item_product, group.get("product") or "")]
+        chosen = same[0] if len(same) == 1 else None
+    # 레퍼런스를 내부 영상이나 제품명으로 확인하지 못했으면 임의의 첫 그룹을 고르지 않는다.
+    # 그 경우 호출부가 기존의 명시적 오류/리스트형 처리로 넘긴다.
+    return str((chosen or {}).get("product") or "").strip()
+
+
 def _topic_product_for_generate(item, body, job, store):
     """선택 카드의 제품을 생성 주제 정본으로 복원한다. 자료 순서는 근거가 아니다."""
-    # 사용자가 직접 쓴 이식 주제/고정 소재만 명시값이다. 씨앗 카드는 구조·훅 선택일 뿐
-    # 그 카드의 제품을 전체 작업 주제로 승격하지 않는다.
+    # 직접 쓴 이식 주제가 있으면 그것이 우선이고, 없으면 사용자가 고른 레퍼런스 제품을
+    # 생성 주제로 고정한다. 추가 영상 수가 많다고 주제를 다수결로 뒤집지 않는다.
     explicit = str((body or {}).get("my_topic") or (body or {}).get("subject") or "").strip()
     if explicit:
         return explicit
@@ -21488,21 +22334,30 @@ def _topic_product_for_generate(item, body, job, store):
     # 이름의 마지막 토큰 대신, 관측으로 확인한 제품군 소속을 합의/필터가 함께 쓴다.
     resolution = _topic_resolution_for_job(job)
     groups = resolution["groups"]
-    sx = ((job or {}).get("extract") or {}).get(selected)
+    selected_source_id = _selected_source_id(item, selected, job)
+    sx = ((job or {}).get("extract") or {}).get(selected_source_id)
     selected_product = ""
     if isinstance(sx, dict) and isinstance(sx.get("source_brief"), dict):
         selected_product = (sx["source_brief"].get("product") or "").strip()
     if groups:
         group_id = groups[0]["group_id"]
+        selected_group_id = resolution["membership"].get(selected_source_id)
         if frozen:
             frozen_group = _topic_group_for_name(frozen, resolution, job)
-            if not frozen_group or (not resolution["ambiguous"] and frozen_group != group_id):
+            if (not frozen_group or
+                    (selected_group_id and frozen_group != selected_group_id) or
+                    (not selected_group_id and not resolution["ambiguous"] and
+                     frozen_group != group_id)):
                 return None
             return frozen
+        # 사용자가 고른 레퍼런스가 정본이다. 추가 영상의 다른 제품이 수적으로 더 많아도
+        # 대표 제품을 뒤집지 않고, 아래 자료 필터가 이 제품군의 추가 영상만 보태게 한다.
+        if selected_group_id:
+            selected_group = next(
+                (group for group in groups if group["group_id"] == selected_group_id), None)
+            return selected_product or str((selected_group or {}).get("product") or "").strip()
         if resolution["ambiguous"]:
             return None
-        if selected_product and resolution["membership"].get(selected) == group_id:
-            return selected_product
         return resolution["product"]
     brief = (item or {}).get("source_brief")
     if isinstance(brief, dict) and (brief.get("product") or "").strip():
@@ -21549,7 +22404,8 @@ def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES,
                     "url": url or "", "source_id": source_id or "",
                     "segments": segments or []})
 
-    _item_sid = item.get("shortcode") or preferred_shortcode or ""
+    _item_sid = (_selected_source_id(item, preferred_shortcode, job) or
+                 item.get("shortcode") or preferred_shortcode or "")
     # 작업 추출에 같은 ID가 있으면 서버의 관측 정본을 사용한다. body base_script나
     # 낡은 위키 요약이 그 ID를 선점하여 제품군 검증을 우회하면 안 된다.
     if _item_sid not in ((job or {}).get("extract") or {}):
@@ -21748,20 +22604,28 @@ def _materials_for_generate(item, body, store, cid, spines=None):
         _topic_body["subject"] = _requested_frozen
     _topic_product = _topic_product_for_generate(item, _topic_body, _job, store)
     if _topic_product is None:
-        if (((_job or {}).get("_topic_resolution") or {}).get("error")
-                == "judge_unavailable"):
-            raise ValueError("AI 제품 판정 서비스가 일시적으로 응답하지 않습니다. 자동 재시도 후에도 연결되지 않았습니다. 잠시 후 다시 생성해 주세요")
         _frozen = str(body.get("topic_product") or "").strip()
-        if _frozen:
-            raise ValueError("전체 생성 때 확정한 제품 주제와 현재 자료가 다릅니다")
-        if spines and all(isinstance(sp, dict) and sp.get("is_list") for sp in spines):
-            # 나열형은 여러 제품이 각각 한 항목이 되는 정상 입력이다. 단일제품 합의를
-            # 강제하지 않고 편별 슬롯/장면 계약으로 넘긴다.
+        _list_style = bool(
+            spines and all(isinstance(sp, dict) and sp.get("is_list") for sp in spines))
+        if not _frozen and _list_style:
+            # 나열형은 여러 제품 각각이 한 항목이 되는 정상 입력이다.
             _topic_product = ""
-        else:
-            if ((_job or {}).get("_topic_resolution") or {}).get("method") == "unresolved":
-                raise ValueError("영상 자료 판정 응답을 검증하지 못했습니다. 잠시 후 다시 생성해 주세요")
-            raise ValueError("담긴 영상에 서로 다른 제품이 같은 수로 섞여 주제를 확정할 수 없습니다")
+        elif not _frozen:
+            # 제품 판정 서비스 장애와 서로 다른 제품군 동률은 모두 대본 실패 사유가 아니다.
+            # 사용자가 고른 카드와 같은 그룹 하나만 남겨 다른 제품 자료를 섞지 않는다.
+            _topic_product = (_selected_group_topic(
+                item, _selected, _job, (_job or {}).get("_topic_resolution") or {}) or None)
+        if _topic_product is None:
+            if _frozen:
+                raise ValueError("전체 생성 때 확정한 제품 주제와 현재 자료가 다릅니다")
+            if _list_style:
+                # 나열형은 여러 제품이 각각 한 항목이 되는 정상 입력이다. 단일제품 합의를
+                # 강제하지 않고 편별 슬롯/장면 계약으로 넘긴다.
+                _topic_product = ""
+            else:
+                if ((_job or {}).get("_topic_resolution") or {}).get("method") == "unresolved":
+                    raise ValueError("영상 자료 판정 응답을 검증하지 못했습니다. 잠시 후 다시 생성해 주세요")
+                raise ValueError("담긴 영상에 서로 다른 제품이 같은 수로 섞여 주제를 확정할 수 없습니다")
     _explicit_topic = bool(str(
         _topic_body.get("my_topic") or _topic_body.get("subject") or "").strip())
     _src = _sources_for_generate(item, _job, preferred_shortcode=_selected,
@@ -22239,6 +23103,17 @@ def _voice_tune_page(request: Request):
 
 app.add_api_route("/voice_tune", _voice_tune_page, include_in_schema=False)
 app.add_api_route("/voice_tune.html", _voice_tune_page, include_in_schema=False)
+
+
+def _scene_style_lab_page(request: Request):
+    denied = _scene_style_lab_denied(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "scene_style_lab.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/scene-style-lab", _scene_style_lab_page, include_in_schema=False)
+app.add_api_route("/scene_style_lab.html", _scene_style_lab_page, include_in_schema=False)
 
 
 # 레퍼런스 채널 통합 관리페이지(2026-07-24) — 관리자(customer_id==0) 전용.

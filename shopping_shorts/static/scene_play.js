@@ -408,28 +408,45 @@ const SLOW = {};                    // beat_idx → 재생 배율(>1 = 느리게
 const CUT_MIN = 0.3;
 function cutsSum(i){ return (CUTS[i] || []).reduce((a, c) => a + c.dur, 0); }
 function _r2(x){ return Math.round(x * 100) / 100; }
+// 🔒 잠근 컷(2026-09-16 사장님 "고정시킬 건 냅두고 다른 거 조작").
+//   ★잠금은 컷의 속성이다 — 따로 창고를 만들면 컷이 빠지거나 자리를 옮길 때 짝이
+//     어긋난다(0순위-B). 그래서 CUTS[i][k].lock 으로 컷 자신이 들고 다닌다.
+//   ★기본은 풀림(lock 없음). 끈 칸 전용 — 켠 칸은 FIXLEN(✋)이 따로 있다.
+function cutLocked(i, k){ const c = (CUTS[i] || [])[k]; return !!(c && c.lock); }
+// 잠긴 컷을 뺀 나머지가 쓸 수 있는 초 — 줄이기·나누기는 전부 이 몫 안에서만 움직인다.
+function freeCutIdx(i){ return (CUTS[i] || []).map((c, k) => k).filter(k => !cutLocked(i, k)); }
 // 목록(lists)과 얼린 컷을 맞춘다 — 빼기③·넣기④·음성 짧아짐⑤를 **여기 한 곳**에서 처리한다.
 function syncCuts(i, segIds, ttsDur){
   const cuts = CUTS[i]; if (!cuts) return null;
   const want = segIds.filter(id => DATA.segments && DATA.segments[id]);
   // ③ 목록에서 빠진 장면 → 앞 컷(없으면 뒤 컷)이 시간을 받는다
+  //   ★🔒 잠근 컷은 시간을 안 받는다(2026-09-16). 앞뒤가 다 잠겼으면 가장 가까운
+  //     풀린 컷에게 준다 — 줄 곳이 하나도 없으면 ⑤가 뒤에서 안내한다.
   for (let k = 0; k < cuts.length; ){
     if (want.includes(cuts[k].seg_id)) { k++; continue; }
     const d = cuts[k].dur; cuts.splice(k, 1);
-    const nb = cuts[k - 1] || cuts[k];
+    let nb = null;
+    for (let s = 0; s < cuts.length && !nb; s++){          // k에서 가까운 순으로 풀린 컷 찾기
+      const a = k - 1 - s, b = k + s;
+      if (a >= 0 && !cuts[a].lock) nb = cuts[a];
+      else if (b < cuts.length && !cuts[b].lock) nb = cuts[b];
+    }
     if (nb) nb.dur = _r2(nb.dur + d);
   }
   // ④ 새로 들어온 장면 — ★빈 시간이 있으면 **그 빈 시간을 꽉 채운다**(다른 컷 불변),
   //   빈 시간이 없을 때만 마지막 컷을 반으로 나눠 갖는다(2026-09-14 사장님 "남은 부분 꽉차게 /
   //   6번째 올리면 마지막 조각이 반씩"). 종전엔 빈 시간이 있어도 마지막 컷을 먼저 쪼개 맞춰둔 컷이 줄었다.
+  //   ★🔒 잠근 컷은 쪼개지 않는다(2026-09-16) — 반으로 나눌 대상은 **풀린** 마지막 컷이다.
   for (const id of want){
     if (cuts.some(c => c.seg_id === id)) continue;
     const gap = ttsDur - cuts.reduce((a, c) => a + c.dur, 0);
-    const last = cuts[cuts.length - 1];
+    const free = cuts.filter(c => !c.lock);
+    const last = free[free.length - 1];                    // 쪼갤 수 있는 마지막 컷
     let d;
-    if (!last) d = ttsDur;
+    if (!cuts.length) d = ttsDur;
     else if (gap >= CUT_MIN - 0.005) d = _r2(gap);
-    else { d = _r2(last.dur / 2); last.dur = _r2(last.dur - d); }
+    else if (last && last.dur / 2 >= CUT_MIN) { d = _r2(last.dur / 2); last.dur = _r2(last.dur - d); }
+    else d = _r2(Math.max(gap, CUT_MIN));                  // 전부 잠김 → 넘치면 ⑤가 안내한다
     cuts.push({seg_id: id, dur: d});
   }
   // 순서는 목록(카드) 순서를 따른다 — 같은 장면이 여러 컷이면 그 무리째로 옮긴다
@@ -437,8 +454,12 @@ function syncCuts(i, segIds, ttsDur){
   const sorted = cuts.slice().sort((a, b) => pos(a.seg_id) - pos(b.seg_id));
   if (sorted.some((c, k) => c !== cuts[k])){ cuts.length = 0; sorted.forEach(c => cuts.push(c)); }
   // ⑤ 음성보다 길면 뒤에서부터 줄인다(하한까지). 짧으면 그대로 둔다(안내만)
+  //   ★🔒 잠근 컷은 건너뛴다(2026-09-16 사장님 "고정시킬 건 냅두고 다른 거 조작").
+  //     풀린 컷만으로 다 못 줄이면 **억지로 줄이지 않고** 남겨 둔다 — cutsGap/화면이
+  //     "잠긴 컷 때문에 넘친다"고 안내한다(잠금이 거짓말하면 안 된다).
   let over = cutsSum(i) - ttsDur;
   for (let k = cuts.length - 1; k >= 0 && over > 0.005; k--){
+    if (cuts[k].lock) continue;
     const cut = Math.min(over, cuts[k].dur - CUT_MIN);
     if (cut > 0){ cuts[k].dur = _r2(cuts[k].dur - cut); over -= cut; }
   }
@@ -487,10 +508,23 @@ function cutMaxSec(i, k){
 }
 function dragCut(i, k, sec){
   const cuts = CUTS[i]; if (!cuts || !cuts[k]) return;
+  if (cuts[k].lock){                    // 🔒 잠근 컷은 끌어도 안 바뀐다(2026-09-16)
+    if (typeof nsay === 'function') nsay('🔒 잠긴 컷이에요 — 자물쇠를 풀고 조절하세요');
+    (typeof render === 'function' && render());
+    return;
+  }
   const slow = SLOW[i] > 1 ? SLOW[i] : 1;
   delete SLOW[i];                       // 손대면 느리게는 풀린다 — 다시 고르게 한다
   const d = Math.min(cutMaxSec(i, k), Math.max(CUT_MIN, sec / slow));
   cuts[k].dur = _r2(d);
+  (typeof render === 'function' && render());
+  if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
+}
+// 🔒 잠금 토글(2026-09-16 사장님). 기본은 풀림 — 누르면 지금 길이로 묶인다.
+//   ★길이를 여기서 바꾸지 않는다. "지금 값을 그대로 지킨다"는 표시만 세운다.
+function toggleCutLock(i, k){
+  const cuts = CUTS[i]; if (!cuts || !cuts[k]) return;
+  if (cuts[k].lock) delete cuts[k].lock; else cuts[k].lock = 1;
   (typeof render === 'function' && render());
   if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
 }
@@ -595,7 +629,13 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         // 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시 본다(같은 내용 반복).
         let st = pos[idx];
         if (seg.end != null && seg.end - st < Math.min(d, MIN_CLIP) - EPS) st = seg.start;
-        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: st, dur: Math.round(d * 100) / 100 });
+        const clip = { seg_id: seg.seg_id, video_id: seg.video_id, start: st, dur: Math.round(d * 100) / 100 };
+        // ★조각 끝을 넘지 않는다(2026-09-17 이윤정님 "미리보기에서 중간에 다른 화면이 짧게").
+        //   구절이 조각보다 길면 종전엔 dur만큼 그대로 틀어 조각 뒤 **다음 장면**이 새어 나왔다
+        //   (소스를 하나씩 누르면 그 조각만 틀어 멀쩡했다). src_dur을 남기면 applyRate가 그
+        //   비율만큼 느리게 틀어 조각 안에서 끝난다 — 서버 _plan_phrase_clips와 같은 규칙.
+        if (seg.end != null && seg.end - st < d - EPS) clip.src_dur = Math.max(0.1, +(seg.end - st).toFixed(3));
+        clips.push(clip);
         pos[idx] = st + d;
       }
       return clips;
@@ -625,7 +665,10 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         let take = (seg.end - seg.start) * scale;
         if (k === usable.length - 1) take = Math.max(0, ttsDur - filled);
         if (take <= EPS) return;
-        clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take});
+        const clip = {seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take};
+        // 구절 맞춤 끈 칸도 같은 규칙 — 조각보다 길게 틀지 않는다(느리게 채운다).
+        if (seg.end - seg.start < take - EPS) clip.src_dur = +(seg.end - seg.start).toFixed(3);
+        clips.push(clip);
         filled += take;
       });
     }

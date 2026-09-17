@@ -1,4 +1,26 @@
-import {Composition} from 'remotion';
+import {Composition, staticFile, continueRender, delayRender} from 'remotion';
+import {SsulOverlay} from './SsulOverlay';
+import {LilySub} from './LilySub';
+import {LilyBoxed} from './LilyBoxed';
+import {LilyStack} from './LilyStack';
+import {LilyNewsBar} from './LilyNewsBar';
+import {LilyStamp} from './LilyStamp';
+import {LilyNameBar} from './LilyNameBar';
+import {LilyTyping} from './LilyTyping';
+import {LilyQuote} from './LilyQuote';
+import {LilyQuestion} from './LilyQuestion';
+import {LilyUnderline} from './LilyUnderline';
+import {LilyLower} from './LilyLower';
+import {LilyHandBox} from './LilyHandBox';
+import {LilyPop} from './LilyPop';
+import {LilyNews} from './LilyNews';
+import {LilyDeco} from './LilyDeco';
+import {LilyBubble} from './LilyBubble';
+import {LilyBurst} from './LilyBurst';
+import {LilyList} from './LilyList';
+import {LilyXmas} from './LilyXmas';
+import {LilyHealing} from './LilyHealing';
+import {LilyBasic} from './LilyBasic';
 import {SwipeLeft} from './SwipeLeft';
 import {Sparkle} from './Sparkle';
 import {ImpactText} from './ImpactText';
@@ -13,8 +35,118 @@ import {TOURS, TOUR_BASE} from './LandingTour';
 import {FlowCell, FLOWS, FLOW_BASE} from './LandingFlow';
 import {PriceCompare, PRICE, FreeBanner, BANNER, SqRender, SQ4, HookWall, HOOK, TrendBanner, TREND, Easy60, EASY} from './LandingPromo';
 
+// 릴리리아 자막용 폰트를 @font-face로 등록(Remotion public/). 없으면 다른 폰트로 그려져 느낌이 깨진다.
+const lilyFontHandle = delayRender('lily-font');
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `@font-face{font-family:'TmonMonsori';src:url('${staticFile('fonts/TmonMonsori.ttf')}') format('truetype');font-weight:900;}`;
+  document.head.appendChild(style);
+  const f = new FontFace('TmonMonsori', `url('${staticFile('fonts/TmonMonsori.ttf')}')`);
+  f.load().then((loaded) => {
+    (document as unknown as {fonts: {add: (x: FontFace) => void}}).fonts.add(loaded);
+    continueRender(lilyFontHandle);
+  }).catch(() => continueRender(lilyFontHandle));
+} else {
+  continueRender(lilyFontHandle);
+}
+
 export const RemotionRoot: React.FC = () => (
   <>
+<<<<<<< HEAD
+    {/* 썰쇼츠 자막 오버레이 — 컷은 --props 로 넘긴다.
+        길이는 마지막 컷의 끝(+여유 0.5초)에서 자동으로 정한다. */}
+    <Composition
+      id="SsulOverlay"
+      component={SsulOverlay}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{cuts: [{t: 0, d: 2, kind: 'narr' as const, text: '자막 오버레이 미리보기'}]}}
+      calculateMetadata={({props}) => {
+        const cuts = props.cuts ?? [];
+        const end = cuts.reduce((m, c) => Math.max(m, c.t + c.d), 0);
+        return {durationInFrames: Math.max(1, Math.ceil((end + 0.5) * 30))};
+      }}
+    />
+    <Composition id="LilyQuote" component={LilyQuote} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{sub: '명언을 말 할 것 같은..', text: '감성적인 템플릿', color: '#ffffff'}} />
+    <Composition id="LilyQuestion" component={LilyQuestion} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{text: '오늘 이 대회에서 1등 하신 소감을 말씀해 주시겠어요??', mark: 'Q.'}} />
+    <Composition id="LilyUnderline" component={LilyUnderline} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{sub: '두 줄로 사용이 가능한', text: '깔끔하고 편리한 자막 템플릿'}} />
+    <Composition id="LilyLower" component={LilyLower} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{name: '지혜', text: '조금은 설렌다고 말하고 싶네요..', variant: 'bar', color: '#3b6ea5'}} />
+    <Composition id="LilyHandBox" component={LilyHandBox} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{text: '"당신의 x는\\n당신을 선택했습니다"', bg: '#e59ab0', heart: '#e0466a'}} />
+    <Composition id="LilyPop" component={LilyPop} durationInFrames={45} fps={30} width={1080} height={1920} defaultProps={{word: '머뭇', color: '#ffffff'}} />
+    <Composition id="LilyNews" component={LilyNews} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{variant: 'headline', title: '빈대와의 전쟁 시작...', text: '빈대 잡으려다 초가삼간 타 태운다.', color: '#2f6fd0'}} />
+    <Composition id="LilyDeco" component={LilyDeco} durationInFrames={45} fps={30} width={1080} height={1920} defaultProps={{word: 'ㅋㅋㅋㅋㅋㅋ', anim: 'shake', color: '#ffffff'}} />
+    <Composition id="LilyBubble" component={LilyBubble} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{label: '첨자 자리 입니당!', text: '엄청나게 귀여운 말풍선 자막!', highlight: '말풍선', labelBg: '#ff7ab8', hlColor: '#ff5fb0'}} />
+    <Composition id="LilyBurst" component={LilyBurst} durationInFrames={45} fps={30} width={1080} height={1920} defaultProps={{text: '이건\\n아니지!', burstColor: '#e23a3a'}} />
+    <Composition id="LilyList" component={LilyList} durationInFrames={75} fps={30} width={1080} height={1920} defaultProps={{head: '강호동 [3등]으로 도착!', items: ['[천하장사] 출신', '대한민국 [국민MC]', '특기 : [잘먹기]'], hlColor: '#ffb000'}} />
+    <Composition id="LilyXmas" component={LilyXmas} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{variant: 'label', title: '이번 크리스마스도', text: '소중한 사람들과 함께합니다!', highlight: '함께합니다!', accent: '#e23a3a', icon: '🎄'}} />
+    <Composition id="LilyHealing" component={LilyHealing} durationInFrames={70} fps={30} width={1080} height={1920} defaultProps={{variant: 'brace', sub: '자화자찬의 시간', text: 'LOVE MYSELF', accent: '#d98f5a'}} />
+    <Composition id="LilyBasic" component={LilyBasic} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{variant: 'box', text: '이렇게 하면 [훨씬] 깔끔합니다', hlColor: '#ffe14d', position: 'bottom'}} />
+    <Composition
+      id="LilyTyping"
+      component={LilyTyping}
+      durationInFrames={90}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{text: '커서가 깜빡이는 타이핑 자막', color: '#ffffff'}}
+    />
+    <Composition
+      id="LilyNameBar"
+      component={LilyNameBar}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{name: '지혜', text: '조금은 설렌다고 말하고 싶네요..', color: '#ffffff'}}
+    />
+    <Composition
+      id="LilyNewsBar"
+      component={LilyNewsBar}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{text: '경기 침체 계속 될 것으로 보여...', logo: 'SBC\nNEWS'}}
+    />
+    <Composition
+      id="LilyStamp"
+      component={LilyStamp}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{text: 'REJECTED', color: '#e01d1d', rotate: -11}}
+    />
+    <Composition
+      id="LilyBoxed"
+      component={LilyBoxed}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{text: 'Merry Christmas', color: '#e8b73a', position: 'bottom'}}
+    />
+    <Composition
+      id="LilyStack"
+      component={LilyStack}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{sub: '굉장히 쓰기 좋은', text: '심플한 자막 템플릿입니다.', position: 'bottom'}}
+    />
+    <Composition
+      id="LilySub"
+      component={LilySub}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{text: '이게 정말 진정한 행복 같아요!', highlight: '행복', preset: 'hee_pink', position: 'mid'}}
+    />
+=======
     <Composition id="LandingHeroWall" component={LandingHeroWall} {...HERO_WALL} />
     <Composition id="PriceCompare" component={PriceCompare} {...PRICE} />
     <Composition id="FreeBanner" component={FreeBanner} {...BANNER} />
@@ -31,6 +163,7 @@ export const RemotionRoot: React.FC = () => (
     {Object.entries(SQUARES).map(([id, props]) => (
       <Composition key={id} id={`LandingSquare-${id.replace(/_/g, "-")}`} component={LandingSquare} {...SQUARE} defaultProps={props} />
     ))}
+>>>>>>> 3e390e52ac9d553f127d75b2579f5437ac526efc
     <Composition id="SwipeLeft" component={SwipeLeft} durationInFrames={18} fps={30} width={720} height={1280} />
     <Composition id="Sparkle" component={Sparkle} durationInFrames={30} fps={30} width={300} height={300} />
     <Composition

@@ -189,6 +189,9 @@ h1{font-size:16px;margin:0;font-weight:700}
     color:#ff9d9d;border:1px solid var(--line);border-radius:5px;padding:0 5px;
     font-size:12px;line-height:16px;cursor:pointer}
 .tbcut .delx:hover{background:#a03434;color:#fff;border-color:transparent}
+/* 🔒 컷 잠금은 **위쪽 필름(타임라인)**에 있다(2026-09-16 사장님 "자물쇠는 카드가 아니라
+   위쪽 필름 위에 있어야 한다") — 길이를 끌어 조절하는 곳이 거기다. CSS는 scene_timeline.js
+   쪽 .tl-cut 규칙에 있다. 카드 아래줄은 이미 꽉 차 있어(체크박스·📦박스·✕) 넣을 자리도 없다. */
 
 /* ── 타임프레임(내 영상 전체) ─────────────────────────────────────────────
    위=전체 한 줄, 아래=고를 조각. 사장님 손그림 구조. 띠는 가로로만 스크롤한다. */
@@ -647,14 +650,9 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 .captag{display:block;height:14px;line-height:14px;font-size:10.5px;font-weight:700;
   letter-spacing:.3px;margin-bottom:2px}
 .captag.sub{color:var(--good)}
-/* ★오른쪽(담긴) 썸네일을 왼쪽 팔레트로 끌어오면 빠진다(2026-08-15 사장님 "좌측으로
-   끌어다 버리면 빠지게"). 끄는 동안 왼쪽 패널이 휴지통임을 눈에 보이게 알린다. */
-.pane.left.bin{box-shadow:inset 0 0 0 3px var(--bad)}
-.pane.left.bin #palette{opacity:.4}
-#binmsg{display:none;position:sticky;top:0;z-index:5;background:var(--bad);color:#fff;
-  font-weight:800;text-align:center;padding:11px;border-radius:8px;font-size:15px;
-  margin-bottom:10px}
-.pane.left.bin #binmsg{display:block}
+/* ★휴지통(왼쪽 패널에 끌어다 놓아 빼기)은 2026-09-16 사장님 지시로 제거했다.
+   빼기는 썸네일 두 번 클릭 하나로만 한다 — 경로가 둘이면 상태(bin·dragFrom)가
+   어긋나 빨간 띠가 남고 화면이 먹통이 됐다(0순위-B: 같은 일을 두 군데서 정하지 마라). */
 /* ══ 촘촘히 보기(2026-08-26 사장님 "쓸데없는 텍스트 다 죽이고 영상이 한눈에") ══
    기능은 하나도 안 없앤다 — 글자를 썸네일 위로 올리거나 한 번 더 눌러야 나오게 접을 뿐이다.
    ★모든 규칙을 body.tight 아래 한 곳에 모은다. 여기저기 흩으면 켜고 끄는 판단이
@@ -865,7 +863,6 @@ body.tight .srcgroup{margin-bottom:8px}
 body.tight .pane{padding:4px 10px}
 body.tight .pane.left{padding-top:2px}
 body.tight .wrap{gap:6px}
-body.tight #binmsg:not(.on){display:none}
 
 /* 화면 한가운데 큰 재생 버튼 — 위 [▶️ 전체 재생] 줄을 대신한다 */
 #pvbigplay{width:74px;height:74px;border-radius:50%;border:2px solid var(--accent);
@@ -1047,6 +1044,17 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 .tl-repbtn:hover{background:#ffd24a;color:#3a2a08}
 .tl-repbtn.on{background:#ffd24a;color:#3a2a08}
 .tl-cut.rep{border-color:#ffd24a;box-shadow:0 0 8px rgba(255,210,74,.5)}
+/* 🔒 컷 잠금(2026-09-16 사장님 "자물쇠는 카드가 아니라 위쪽 필름 위에") — 길이를 끌어
+   조절하는 곳이 여기라 잠금도 여기 있어야 한다. 윗줄은 찼다(왼쪽 tl-len·오른쪽 tl-repbtn)
+   → 아래 왼쪽. 양옆 tl-edge(8px)와도 안 겹치게 left:11px.
+   ★풀림(🔓)도 늘 보이게 둔다 — 잠긴 것만 보이면 잠글 수 있다는 걸 아무도 모른다. */
+.tl-lockbtn{position:absolute;bottom:2px;left:11px;z-index:5;background:rgba(0,0,0,.66);
+    color:#9fb4d0;border:none;border-radius:3px;font-size:11px;cursor:pointer;
+    padding:1px 4px;opacity:.8;line-height:1.3}
+.tl-lockbtn:hover{opacity:1;background:rgba(0,0,0,.85)}
+.tl-lockbtn.on{background:#2d4a76;color:#fff;opacity:1}
+/* 잠긴 컷은 테두리로도 알린다 — 여러 컷 중 뭐가 묶였는지 한눈에 */
+.tl-cut.locked{border-color:#7aa2d0;box-shadow:0 0 6px rgba(122,162,208,.45)}
 /* 싱크 산출 단계 배지(⑦a) */
 .tl-src{border-radius:8px;padding:0 6px;font-size:9.5px;margin-right:4px}
 .tl-src.ok{background:#14321f;color:#7fe0a8;border:1px solid #2f5c42}
@@ -1199,10 +1207,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 </div>
 
 <div class="wrap">
-  <div class="pane left"
-       ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
-       ondrop="paneDrop(event)">
-    <div id="binmsg">🗑 여기에 놓으면 이 장면이 빠집니다</div>
+  <div class="pane left">
     <div class="lbl" id="dropmsg"></div>
     <div id="palette"></div>
   </div>
@@ -1224,7 +1229,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
   <button class="act" onclick="revertServer()"
           title="내가 고친 편성을 걷어내고 AI가 처음 배치한 편집안으로 되돌립니다(원본은 안 건드렸으므로 100% 복구)">↩ AI 배치로 되돌리기</button>
   <span id="savedmsg" class="hint" style="color:var(--good)"></span>
-  <div class="hint">왼쪽 장면: 끌어다 놓기·두 번 클릭 = 담기 · 오른쪽 장면: 왼쪽으로 끌기·두 번 클릭 = 빼기 · 클릭 = 재생</div>
+  <div class="hint">왼쪽 장면: 끌어다 놓기·두 번 클릭 = 담기 · 오른쪽 장면: ✕ 버튼·두 번 클릭 = 빼기 · 클릭 = 재생 · 끌기 = 순서 바꾸기</div>
 </footer>
 
 <script id="scene-lab-data" type="application/json">null</script>
@@ -1689,7 +1694,11 @@ function useTags(sid){
 //   사실상 같은** 컷을 잡는다. 실측(job 409f894230c6): s3-2↔s3-20 거리0, s3-5↔s3-21 거리1,
 //   s3-1↔s3-18 거리4(사장님이 지목한 그 쌍).
 const DUP_MAX = 8;                 // 해밍거리 이 이하면 '비슷'
-let hideDup = true;                // 비슷한 것은 대표 1장만 보이기(기본 켬)
+// ★기본은 **끔**(2026-09-16 사장님 "아래 영상소스카드들이 몇 개만 보이는 건 전체 다
+//   조각별 순서대로 나오게 해줘"). 접기가 기본이면 4-4처럼 중간 번호가 통째로 사라져
+//   조각 번호가 뚝뚝 끊긴 채로 보인다 — 눈으로 순서를 훑는 게 이 화면의 본체인데
+//   그걸 막고 있었다. 필요하면 체크박스를 눌러 다시 접는다(기능은 그대로).
+let hideDup = false;               // 비슷한 것도 전부 보이기(기본 끔)
 function _hash(sid){ return (DATA.phash || {})[sid] || ''; }
 function _dist(a, b){
   if (!a || !b || a.length !== b.length) return 99;
@@ -2863,8 +2872,8 @@ function renderBand(){
              ondrop="bandDrop(${i}, '${c.seg_id}', event)"
              onclick="bandCutClick(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')"
-             title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
-             <img src="${SL.thumb(c.seg_id)}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '✋' : ''}${c.dur.toFixed(1)}</span
+             title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · ✕ 버튼이나 두 번 클릭 = 빼기">
+             <img src="${SL.thumb(c.seg_id)}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '🔒' : ''}${c.dur.toFixed(1)}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
@@ -3271,7 +3280,7 @@ function render(){
                  ondragover="event.preventDefault()" ondrop="dragDrop(${i},${k},event)"
                  onclick="clickPlay('${id}',event)"
                  ondblclick="event.stopPropagation();clearTimeout(clickTimer);delSeg(${i},${k})"
-                 title="끌어서 순서 바꾸기 · 왼쪽 팔레트로 끌면 빠짐 · 클릭 = 재생 · 두 번 클릭 = 빼기${used.has(id)?'':' (지금은 시간이 모자라 화면에 안 나옵니다)'}">
+                 title="끌어서 순서 바꾸기 · 클릭 = 재생 · 두 번 클릭 = 빼기${used.has(id)?'':' (지금은 시간이 모자라 화면에 안 나옵니다)'}">
               ${(() => {
                 // ★쓰인 초/가진 초(2026-08-15 사장님 "1번 1.6/1.6초 2번2.2/3.8초 이런식으로").
                 //   앞 > 뒤 = 억지로 늘어난 것 · 앞 < 뒤 = 아직 여유 있음. 뒤는 트림 반영(effLen).
@@ -3346,31 +3355,20 @@ let dragFrom = null;
 function dragStart(i, k, ev){
   dragFrom = {i, k};
   if (ev && ev.dataTransfer) ev.dataTransfer.effectAllowed = 'move';
-  // 담긴 썸네일을 끄는 동안 왼쪽 팔레트 = 휴지통(2026-08-15 사장님 "좌측으로 끌어다 버리면").
-  const p = document.querySelector('.pane.left');
-  if (p) p.classList.add('bin');
 }
 function itemDragEnd(){                    // dragend는 drop 뒤에 온다 — 여기서 뒷정리만
   dragFrom = null;
-  const p = document.querySelector('.pane.left');
-  if (p) p.classList.remove('bin');
-}
-// 왼쪽 팔레트에 떨어뜨리면 그 장면을 칸에서 뺀다(빼기 로직은 기존 delSeg 그대로).
-function paneDrop(ev){
-  if (!dragFrom) return;
-  if (ev){ ev.preventDefault(); ev.stopPropagation(); }
-  const {i, k} = dragFrom;
-  itemDragEnd();
-  delSeg(i, k);
 }
 function dragDrop(i, k, ev){
   if (ev) ev.preventDefault();
-  if (!dragFrom || dragFrom.i !== i || dragFrom.k === k){ dragFrom = null; return; }
+  // ★끝내는 길은 itemDragEnd() 하나뿐이다. 종전엔 여기서 dragFrom만 비우고
+  //   휴지통 표시(bin)는 안 걷어서, 제자리에 놓으면 빨간 띠가 남아 먹통이 됐다.
+  if (!dragFrom || dragFrom.i !== i || dragFrom.k === k){ itemDragEnd(); return; }
   if (ev) ev.stopPropagation();      // 순서 변경이 칸 드롭(beatDrop)까지 번지지 않게
   const l = lists[i];
   const [moved] = l.splice(dragFrom.k, 1);
   l.splice(k, 0, moved);
-  itemDragEnd();   // render()가 끌던 요소를 지우면 dragend가 안 와서 휴지통 표시가 남는다
+  itemDragEnd();   // render()가 끌던 요소를 지우면 dragend가 안 와서 dragFrom이 남는다
   render();
 }
 // ★버튼 없이 마우스만으로(2026-08-14 사장님 "버튼 다 없애. 끌어당기고 움직이는 걸로 충분").
@@ -3554,8 +3552,10 @@ function hydrateCuts(cuts, slow){
   Object.keys(CUTS).forEach(k => delete CUTS[k]);
   Object.keys(SLOW).forEach(k => delete SLOW[k]);
   for (const [k, v] of Object.entries(cuts || {})){
+    // 🔒 잠금(lock)도 함께 되살린다 — 빼먹으면 새로고침에 잠금이 사라진다(FIXLEN이 한 실수).
     if (Array.isArray(v)) CUTS[k] = v.filter(c => c && c.seg_id && c.dur > 0)
-                                     .map(c => ({seg_id: c.seg_id, dur: +c.dur}));
+                                     .map(c => c.lock ? {seg_id: c.seg_id, dur: +c.dur, lock: 1}
+                                                      : {seg_id: c.seg_id, dur: +c.dur});
   }
   for (const [k, v] of Object.entries(slow || {})) if (+v > 1) SLOW[k] = +v;
 }
@@ -3967,7 +3967,9 @@ function _editPayload(){
       list: (lists[i] || []).slice(), stretch: !!STRETCH[i],
       phrase: phraseSyncOn(i),      // 구절 맞춤 — 렌더도 같은 경계로(video_assemble)
       // 끈 칸 = 화면에 보이는 컷 그대로 렌더(2026-09-14). 켠 칸은 안 보낸다.
-      cuts: phraseSyncOn(i) ? null : (CUTS[i] || []).map(c => ({seg_id: c.seg_id, dur: c.dur})),
+      cuts: phraseSyncOn(i) ? null : (CUTS[i] || []).map(c => c.lock
+              ? ({seg_id: c.seg_id, dur: c.dur, lock: 1})     // 🔒 잠금도 저장(새로고침·다른 PC 유지)
+              : ({seg_id: c.seg_id, dur: c.dur})),
       slow: phraseSyncOn(i) ? 1 : (SLOW[i] || 1)})),
     trims: TRIMS,
     merges: MERGES,          // 🔗 합친 조각(대표 → 이어 붙일 조각들) — 서버는 긴 구간 하나로 받는다

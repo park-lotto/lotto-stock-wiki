@@ -1,5 +1,6 @@
 """소스 URL을 플랫폼별로 다운로드 — instagram=Apify, youtube/tiktok=yt-dlp(무료)."""
 import json
+import logging
 import os
 import re
 import subprocess
@@ -49,8 +50,67 @@ def _cookies_arg(url):
         extra = []
     else:
         return []
-    cookies = ["--cookies", path] if path and Path(path).exists() else []
+    cookies = ["--cookies", _cookie_scratch_copy(path)] if _cookie_file_usable(path) else []
     return cookies + extra
+
+
+_COOKIE_SCRATCH_PREFIX = "ytdlp_cookies_"
+
+
+def _cookie_scratch_copy(path) -> str:
+    """yt-dlp에 원본 대신 **1회용 사본**을 넘긴다.
+
+    2026-09-16 실사고의 진짜 뿌리: yt-dlp는 `--cookies` 파일을 종료 시 다시 쓴다
+    (YoutubeDL.save_cookies → 열면서 먼저 비우고(truncate) 그 다음 쓴다). 타임아웃으로
+    죽이거나(subprocess timeout) 여러 yt-dlp가 겹치면 그 틈에 원본이 0바이트로 남아
+    이후 모든 호출이 "not a Netscape format"으로 즉사했다(유튜브 15:17·17:45, 틱톡 17:44).
+    사본을 넘기면 yt-dlp가 뭘 하든 원본은 그대로다. 사본 실패 시 원본 경로(종전 동작)."""
+    try:
+        import shutil
+        import tempfile
+        tmpdir = Path(tempfile.gettempdir())
+        _sweep_cookie_scratch(tmpdir)
+        fd, tmp = tempfile.mkstemp(prefix=_COOKIE_SCRATCH_PREFIX, suffix=".txt", dir=str(tmpdir))
+        os.close(fd)
+        shutil.copyfile(path, tmp)
+        return tmp
+    except Exception as e:  # noqa: BLE001
+        logging.getLogger(__name__).warning("쿠키 사본 실패, 원본 경로 사용: %s (%s)", path, e)
+        return str(path)
+
+
+def _sweep_cookie_scratch(tmpdir, max_age_sec=3600):
+    """한 시간 넘은 쿠키 사본 정리(호출마다 하나씩 생기므로 쌓이지 않게)."""
+    now = time.time()
+    try:
+        for f in tmpdir.glob(_COOKIE_SCRATCH_PREFIX + "*.txt"):
+            try:
+                if now - f.stat().st_mtime > max_age_sec:
+                    f.unlink()
+            except OSError as e:  # 다른 프로세스가 먼저 지웠거나 아직 쓰는 중 — 무해
+                logging.getLogger(__name__).debug("쿠키 사본 정리 건너뜀 %s: %s", f, e)
+    except OSError as e:  # tmp 폴더 나열 실패 — 정리만 못 할 뿐 본작업엔 무해
+        logging.getLogger(__name__).debug("쿠키 사본 정리 실패(무해): %s", e)
+
+
+def _cookie_file_usable(path) -> bool:
+    """쿠키 파일이 실제로 쓸 만한지 — 존재 + 비어있지 않음.
+
+    2026-09-16 실사고: 서버 youtube_cookies.txt가 0바이트로 비워진 채 `--cookies`로
+    넘어가 yt-dlp가 "does not look like a Netscape format cookies file"로 즉사 →
+    렌즈 유튜브 분석이 통째로 실패. 빈 파일이면 쿠키 없이(프록시·릴레이 경로) 가는
+    편이 낫다. 로그를 남겨 '조용한 폴백'이 되지 않게 한다."""
+    if not path:
+        return False
+    try:
+        st = Path(path).stat()
+    except OSError:
+        return False
+    if st.st_size == 0:
+        logging.getLogger(__name__).warning(
+            "쿠키 파일이 비어 있어 무시합니다(쿠키 없이 진행): %s", path)
+        return False
+    return True
 
 
 def _ig_cookies_file():

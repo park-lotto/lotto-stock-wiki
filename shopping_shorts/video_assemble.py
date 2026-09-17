@@ -252,7 +252,7 @@ _HL_DARK = 0.60          # 스포트라이트에서 원 **밖**을 어둡게 하
 _HL_RING = 3             # 흰 테두리 두께(px, 반지름 기준)
 
 
-def scene_hl_of(beat):
+def scene_hl_of(beat, cut=None):
     """장면 하나에 사장님이 지정한 강조를 꺼낸다 → dict 또는 None(=강조 없음).
 
     ★해석은 **여기 한 곳에서만** 한다(0순위-B) — 화면(미리보기)과 렌더가 같은 뜻으로
@@ -261,10 +261,32 @@ def scene_hl_of(beat):
         r      : 화면 **폭** 대비 반지름 (0~1) — 폭 기준이라 세로 영상에서도 원이 원이다
         zoom   : 원 안 확대 배율(mode=zoom일 때만 의미)
         mode   : 'zoom'(원 안을 확대) | 'spot'(원 밖을 어둡게)
+
+    cut — **컷 번호**(2026-09-16 회원 제보 "자막 단위가 아닌 컷 단위로 적용"). 자막
+      한 덩어리가 컷 여러 개로 쪼개지는데 값이 비트에 하나뿐이라 네 컷 전부에 같은
+      원이 붙었다. beat["scene_hl_cuts"]={"<컷>":{...}} 가 있으면 그 컷 것만 쓴다.
+      ★컷 지정이 하나라도 있으면 지정 안 한 컷은 강조 없음이다 — "이 컷만"이라고
+        골랐는데 나머지에 옛 값이 남으면 제보가 그대로 재발한다.
+      ★없으면 종전대로 scene_hl을 비트 전체에 건다(이미 만든 job 회귀 0).
+      cut=None(미리보기·썸네일처럼 컷을 모르는 자리)이면 지정된 것 중 첫 컷을 대표로 준다.
     """
     if not isinstance(beat, dict):
         return None
-    hl = beat.get("scene_hl")
+    per_cut = beat.get("scene_hl_cuts")
+    if isinstance(per_cut, dict) and per_cut:
+        if cut is None:
+            # 대표값 — 컷 번호가 가장 작은 '켜진' 지정. 숫자로 못 읽는 키는 뒤로 민다.
+            def _k(item):
+                try:
+                    return (0, int(item[0]))
+                except (TypeError, ValueError):
+                    return (1, 0)
+            hl = next((v for _, v in sorted(per_cut.items(), key=_k)
+                       if isinstance(v, dict) and v.get("on")), None)
+        else:
+            hl = per_cut.get(str(cut))
+    else:
+        hl = beat.get("scene_hl")
     if not isinstance(hl, dict) or not hl.get("on"):
         return None
     def _f(key, dflt, lo, hi):
@@ -301,7 +323,7 @@ def _hl_px(hl):
     return cx, cy, r
 
 
-def highlight_fc(beat, base_vf, grow=True):
+def highlight_fc(beat, base_vf, grow=True, cut=None):
     """base_vf(기존 크롭/줌 체인) 뒤에 강조를 얹은 **filter_complex 문자열**. 강조가 없으면 None.
 
     반환값을 쓰는 쪽은 `-vf base_vf` 대신 `-filter_complex <이것> -map [out]`을 쓴다.
@@ -313,8 +335,9 @@ def highlight_fc(beat, base_vf, grow=True):
       그래서 커지는 동안 비용이 0이다.
     grow=False — 한 비트가 컷 여러 개로 쪼개졌을 때 **두 번째 컷부터**. 안 그러면 컷마다
       원이 다시 톡톡 튀어 사장님이 "왜 여러 번 나오냐"고 보게 된다.
+    cut — 컷 번호. 컷별 강조를 쓰는 job이면 그 컷 것만 얹는다(scene_hl_of 참고).
     """
-    hl = scene_hl_of(beat)
+    hl = scene_hl_of(beat, cut)
     if not hl:
         return None
     cx, cy, r = _hl_px(hl)
@@ -600,6 +623,24 @@ def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
     return (capped, out_dur - capped)
 
 
+def _piece_end_limit(c, segs, src_total):
+    """컷 c가 속한 조각(같은 video_id, seg.start ≤ c.start < seg.end)의 끝. 못 찾으면 소스 끝.
+
+    전환 여유·여운처럼 '남은 실프레임'을 더 읽을 때 상한으로 쓴다 — 조각은 장면 경계에서
+    잘려 있어 그 뒤는 다른 장면이다(2026-09-17). src_total ≤ 0이면 0(=여유 없음)."""
+    try:
+        st = float(c.get("start", 0.0))
+        for s in segs or []:
+            if s.get("video_id") != c.get("video_id"):
+                continue
+            a, b = float(s.get("start", 0.0)), float(s.get("end", 0.0) or 0.0)
+            if b > a and a - 1e-3 <= st < b:
+                return min(float(src_total), b) if src_total > 0 else 0.0
+    except Exception as e:  # noqa: BLE001 — 상한 계산 실패는 종전 동작(소스 끝)으로
+        print(f"[assemble] 조각 끝 상한 계산 실패(무해, 소스 끝 사용): {e!r}", file=sys.stderr)
+    return float(src_total) if src_total > 0 else 0.0
+
+
 def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
     """마지막 비트 계획의 끝에 여운 runout초를 붙인다(plan 제자리 수정, 반환 동일 객체).
 
@@ -853,8 +894,15 @@ def _plan_phrase_clips(beat, segs, tts_dur):
             # 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시(같은 내용 반복).
             if _end is not None and float(_end) - st < min(d, _MIN_CLIP) - 1e-3:
                 st = float(segs[idx]["start"])
+            # ★조각 끝을 넘지 않는다(2026-09-17 이윤정님 "미리보기에서 중간에 다른 화면이 짧게").
+            #   구절 길이 d가 조각 남은 길이보다 길면 종전엔 src_dur=d로 그대로 넘겨 조각 뒤의
+            #   **다음 장면**이 새어 나왔다(실측 job 1939bd7f3c50: s1 조각 5.92~7.29 뒤 7.29부터가
+            #   딴 장면인데 구절 1.45초 > 조각 1.37초 → 0.08초 노출). 소스는 조각 안에서만 읽고
+            #   모자란 만큼은 out_dur만 유지해 _speed_and_freeze(완만 슬로모→정지)가 채운다.
+            #   화면(scene_play.js planClips)도 같은 규칙 — 짝으로 움직인다(0순위-B).
+            src_d = d if _end is None else max(0.1, min(d, float(_end) - st))
             plan.append({"video_id": segs[idx]["video_id"], "start": st,
-                         "src_dur": d, "out_dur": d})
+                         "src_dur": src_d, "out_dur": d})
             pos[idx] = st + d
         return plan
     except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
@@ -1782,7 +1830,12 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             _c_src, _c_out = c["src_dur"], c["out_dur"]
             if _pad > 1e-3:
                 _sd = _src_dur(c["video_id"])
-                _room = max(0.0, _sd - (c["start"] + _c_src)) if _sd > 0 else 0.0
+                # ★여유도 **담은 조각 안**에서만 꺼낸다(2026-09-17 이윤정님 "미리보기에서 다른
+                #   화면이 짧게"). 종전엔 소스 파일 끝(_sd)까지를 '남은 실프레임'으로 보고 조각 뒤
+                #   **다음 장면**을 3프레임 끌어왔다(실측 job 1939bd7f3c50 s1 조각 7.29 뒤 사무실).
+                #   조각 밖이면 out만 늘려 슬로모/freeze가 채운다 — 총 길이는 그대로다.
+                _lim = _piece_end_limit(c, segs, _sd)
+                _room = max(0.0, _lim - (c["start"] + _c_src)) if _lim > 0 else 0.0
                 _c_src = _c_src + min(_pad, _room)
                 _c_out = _c_out + _pad
             play_out, freeze = _speed_and_freeze(_c_src, _c_out)
@@ -1805,7 +1858,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             sub = work / f"beat_{idx}_{j}.mp4"
             # 🔎 강조가 있으면 -vf 대신 filter_complex(오버레이가 필요해 단일 체인으로 안 된다).
             #   성장 애니메이션은 **첫 컷에서만** — 컷마다 다시 튀면 여러 번 나오는 것처럼 보인다.
-            _hl_fc = highlight_fc(beat, vf_full, grow=(j == 0))
+            # ★컷별 강조(2026-09-16)일 때 grow는 **그 컷의 첫 등장**이라 늘 켠다 —
+            #   컷 하나에만 걸린 원이 안 자라면 "왜 안 나타나지"로 보인다.
+            _hl_per_cut = isinstance(beat.get("scene_hl_cuts"), dict) and bool(beat.get("scene_hl_cuts"))
+            _hl_fc = highlight_fc(beat, vf_full, grow=(_hl_per_cut or j == 0), cut=j)
             _vf_args = (["-filter_complex", _hl_fc, "-map", "[out]"] if _hl_fc
                         else ["-vf", vf_full])
             _run_ffmpeg([
@@ -1976,7 +2032,10 @@ def _motion_layer_filters(layers, next_input_idx, vcur):
         path = L.get("_abspath")
         if not path:
             continue
-        input_args += ["-i", path]
+        if L.get("loop"):
+            input_args += ["-loop", "1", "-i", path]
+        else:
+            input_args += ["-i", path]
         w = L.get("width")
         scale = f"scale={int(w)}:-1," if w else ""
         aa = max(0.0, min(1.0, float(L.get("alpha", 1))))
@@ -1988,9 +2047,22 @@ def _motion_layer_filters(layers, next_input_idx, vcur):
         # start>0일 때만 setpts를 얹는다(start=0은 원점이라 이동이 no-op — 필터 문자열을
         # 불필요하게 늘리지 않고 기존 산출물과의 호환성도 유지).
         ts = f"setpts=PTS-STARTPTS+{start:.3f}/TB," if start > 0 else ""
-        fc.append(f"[{idx}:v]{ts}{scale}format=rgba,colorchannelmixer=aa={aa:.2f}[{lab}]")
+        fades = ""
+        if L.get("animation") == "slide_up" and dur is not None:
+            fade_d = min(0.22, max(0.08, float(dur) / 4))
+            fade_out = max(start, start + float(dur) - fade_d)
+            fades = (f"fade=t=in:st={start:.3f}:d={fade_d:.3f}:alpha=1,"
+                     f"fade=t=out:st={fade_out:.3f}:d={fade_d:.3f}:alpha=1")
+        fc.append(f"[{idx}:v]{ts}{scale}format=rgba,colorchannelmixer=aa={aa:.2f}"
+                  f"{',' + fades if fades else ''}[{lab}]")
         en = f":enable='between(t,{start:.3f},{start + float(dur):.3f})'" if dur is not None else ""
-        fc.append(f"[{vcur}][{lab}]overlay=x=W*{xf:.4f}-w/2:y=H*{yf:.4f}-h/2{en}[{out}]")
+        ypos = f"H*{yf:.4f}-h/2"
+        if L.get("animation") == "slide_up":
+            ypos = (f"'{ypos}+if(lt(t,{start + 0.420:.3f}),"
+                    f"H*0.10*pow(1-(t-{start:.3f})/0.420,3)-"
+                    f"H*0.012*sin(PI*(t-{start:.3f})/0.420),0)'")
+        stop = ":shortest=1" if L.get("loop") else ""
+        fc.append(f"[{vcur}][{lab}]overlay=x=W*{xf:.4f}-w/2:y={ypos}{stop}{en}[{out}]")
         vcur = out
         idx += 1
     return input_args, fc, vcur, idx
@@ -2665,7 +2737,7 @@ def _pre_compose_under_text(in_video, deco, work):
     return str(out), deco
 
 
-def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None):
+def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None, skip_text=False):
     """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
     비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
     타임라인 기준으로 배치한다(_caption_drawtexts에 t0 오프셋 전달). drawtext 값 안의
@@ -2689,18 +2761,18 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     if _color_filter.strip():
         filters.append(_color_filter.strip())
     timeline = _beat_timeline(edit_plan, tts_paths)
-    for b in timeline:
+    for b in ([] if skip_text else timeline):
         # 마지막 비트만 0.5초 여운(영상 끝에서 자막이 툭 사라지지 않게). 중간 비트는 tail=0 —
         # 여운을 주면 그 자막이 다음 비트로 0.5초 넘어가 다음 자막과 겹쳐 뭉갠다(전환 겹침, 실측).
         _tail = 0.5 if b is timeline[-1] else 0.0
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
                                           b["t0"], _beat_cap_style(caption_style, b),
                                           real_durs=b.get("cap_durs"),
-                                           cap_offset=b.get("cap_offset", 0.0), tail=_tail,
-                                           cap_lines=b.get("caption_lines"),
-                                           lead_in=b.get("cap_lead", 0.0),
-                                           cap_xy_segs=b.get("cap_xy_segs")))
-    if headcopy and (headcopy.get("text") or "").strip():
+                                          cap_offset=b.get("cap_offset", 0.0), tail=_tail,
+                                          cap_lines=b.get("caption_lines"),
+                                          lead_in=b.get("cap_lead", 0.0),
+                                          cap_xy_segs=b.get("cap_xy_segs")))
+    if not skip_text and headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
         if not hc_enable:
@@ -2749,6 +2821,17 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         if tpl.get("dur"):
             tl["dur"] = float(tpl["dur"])
         motion_layers = list(motion_layers) + [tl]
+    # 댓글 카드도 기존 타임드 레이어 배관을 공유한다. 합성 규칙을
+    # 따로 복제하지 않아 스티커·템플릿과 같은 시간축을 쓴다.
+    comment = deco.get("comment_card") or {}
+    if comment.get("_abspath") and str(comment.get("text") or "").strip():
+        motion_layers = list(motion_layers) + [{
+            "_abspath": comment["_abspath"],
+            "x": comment.get("x", 50), "y": comment.get("y", 72),
+            "width": comment.get("width", 880), "alpha": comment.get("alpha", 1),
+            "start": comment.get("start", 0.4), "dur": comment.get("dur", 3.5),
+            "animation": comment.get("animation", "slide_up"), "loop": True,
+        }]
     has_motion = bool(motion_layers)
     # 효과음(sfx): 비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다
     # (별도 계산 금지 — 저장위치=읽기위치). first=0.0 / last=마지막 세그먼트 직전까지의 합
@@ -2889,6 +2972,15 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
         #   없어 문제가 안 보였을 뿐이다. 화면을 꽉 채우는 이미지 틀에선 글자가 통째로 묻힌다.
         #   → 그림을 **자막 굽기 전에** 먼저 영상에 합성하고, 틀 슬롯은 비운다(두 번 얹으면
         #     또 덮는다). 순서를 정하는 곳은 여기 한 곳이다(0순위-B).
+        if (deco or {}).get("scene_style"):
+            from .scene_style import compose
+            # 기존 BGM·효과음은 유지하고, 옛 틀/문구는 새 템플릿과 중복하지 않는다.
+            audio_deco = {k: v for k, v in deco.items() if k not in ("template", "extra_texts", "watermark", "overlay", "motion")}
+            with_audio = work / "scene-style-audio.mp4"
+            _burn_captions(base_video, edit_plan, tts_paths, with_audio, work,
+                           deco=audio_deco, sfx_paths=sfx_paths, skip_text=True)
+            return compose(with_audio, _beat_timeline(edit_plan, tts_paths),
+                           deco["scene_style"], out_path, work, headcopy)
         base_video, deco = _pre_compose_under_text(base_video, deco, work)
         return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)
     finally:

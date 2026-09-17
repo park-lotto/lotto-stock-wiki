@@ -382,6 +382,16 @@ def _scene_line_full(x, include_interpretation=True):
     return " | ".join(parts)
 
 
+def _speech_sps():          # (2026-09-16 분량 규칙 철회로 현재 미사용 — 향후 재도입 시 재사용)
+    """말속도(초당 음절)의 **정본은 edit_plan** — 여기서 숫자를 다시 적지 않는다.
+    (메모리 `reference_말속도_상수_4벌`: 상수가 여러 벌이면 길이 버그가 재발한다)"""
+    try:
+        from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC
+        return float(_SYLLABLES_PER_SEC)
+    except Exception:
+        return 5.7
+
+
 _GROUNDED_RULE = (
     "\n\n★★[장면에 보이는 것만 써라 — 제품형 규칙]\n"
     "- 제품의 **장점·효과·특징·동작·결과**를 말하는 줄은 반드시 위 '장면 목록'에 실제로 보이는 장면에서 "
@@ -405,6 +415,30 @@ def scene_ids_of(sources):
             if isinstance(x, dict) and x.get("seg_id"):
                 ids.add(str(x["seg_id"]))
     return ids
+
+
+def scene_secs_of(sources):
+    """장면 목록에 실린 seg_id -> 길이(초). 게이트의 '분량' 판정이 쓴다.
+
+    ★왜(2026-09-16 실측, job 26698eb0a362): 2단계는 줄마다 장면을 **1개씩만** 지목하는데
+      컷 하나는 평균 1.3초고 줄 하나는 평균 2.5초다 → **구조적으로 화면의 절반이 빈다**
+      (그 job은 대사 24.8초에 지목 화면 12.9초 = 52% 결손). 그 빈칸을 3단계
+      `_fill_beat_screen_time`이 대본을 안 보고 메우면서 중복·시간역행·CTA 7컷이 났다.
+      채우는 **방법**은 07-31부터 다섯 번 고쳤다(1차·2차·상한·같은그림·산만함) — 전부
+      두더지였다. 빈칸이 안 생기게 하는 곳은 **고르는 주체인 2단계 한 곳**이다(0순위-B).
+    ⚠️ids와 같은 목록·같은 상한을 봐야 짝이 맞는다(scene_ids_of와 나란히 고칠 것)."""
+    out = {}
+    for s in (sources or [])[:SOURCE_MAX]:
+        for x in (s.get("segments") or [])[:GROUNDED_SCENE_MAX]:
+            if not (isinstance(x, dict) and x.get("seg_id")):
+                continue
+            try:
+                secs = round(float(x.get("end") or 0) - float(x.get("start") or 0), 2)
+            except (TypeError, ValueError):
+                secs = 0.0
+            if secs > 0:
+                out[str(x["seg_id"])] = secs
+    return out
 
 
 def _mix_source_block(sources, full_scenes=False):
@@ -571,6 +605,12 @@ def _sources_product(sources):
 
 
 def _claims_required(sources):
+    # ★단일 진입점(0순위-B) — 사실 검사를 켤지 말지는 여기 한 곳에서만 정한다.
+    #   끄면 프롬프트 지시·문장별 판정 호출·게이트 검사가 **전부** 안 생긴다
+    #   = 09-14 이전 속도(사장님 "며칠 전엔 잘됐다"). script_gate 주석 참조.
+    from shopping_shorts import script_gate as _gate   # 지역 import(모듈 최상단은 순환)
+    if not _gate.claim_check_enabled():
+        return False
     return any(isinstance(s, dict) and (s.get("topic_product") or "").strip()
                and s.get("topic_semantic_required", True) for s in (sources or []))
 
@@ -697,12 +737,23 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     # grounded(2026-09-04): 장면 전부 + 규칙 + 게이트 '장면 근거'. 아니면 종전 문장 그대로.
     _is_recipe = any("레시피" in (s.get("name") or "") for s in (sources or []))
     _scene_ids = scene_ids_of(sources) if grounded else None
-    # ★장면 목록이 비면(세그 없는 소스) grounded는 구조적으로 3회 다 실패한다(2026-09-05 리뷰 M7) → 종전 모드로 강등하고 남긴다
+    # ★장면 길이 — 게이트 "화면 분량" 판정용. ids와 **같은 목록·같은 상한**을 본다(짝).
+    _scene_secs = scene_secs_of(sources) if grounded else None
+    # ★장면 목록이 비면(세그 없는 소스) grounded는 구조적으로 3회 다 실패한다(2026-09-05 리뷰 M7).
+    #   ★2026-09-16 수정: 예전엔 여기서 grounded를 끄고 종전 모드로 강등했다. 그런데 강등된
+    #     대본은 근거 없이 쓰이므로 사실 근거 검사에 또 걸려, 3회를 다 태우고 버려졌다
+    #     (실측 work fb4d991d14e8 "영상에서 재료를 못 뽑았습니다" → 사실 근거 반려 → 1안만 생존).
+    #     될 리 없는 생성을 3회 돌리는 것이 느림의 큰 몫이었다. 그래서 **즉시 멈추고**
+    #     원인을 그대로 말한다 — 재료부터 다시 담는 것이 유일한 해법이기 때문이다.
     if grounded and not _scene_ids:
-        print("generate_one_style: 장면 목록 0개 — grounded를 끄고 종전 모드로", file=sys.stderr)
+        print("generate_one_style: 장면 목록 0개 — 생성 중단(재료부터 다시)", file=sys.stderr)
         if isinstance(note, dict):
+            note["reason"] = "장면없음"
+            note["detail"] = ("영상에서 장면을 뽑지 못했습니다 — 본 것만 쓰는 모드에서는 "
+                              "쓸 장면이 없으면 대본을 지어내게 되므로 여기서 멈춥니다. "
+                              "재료(영상)를 다시 담거나 장면 추출을 먼저 돌려주세요.")
             note["grounded_downgraded"] = "장면 목록 0개"
-        grounded, _scene_ids = False, None
+        return None
     # ★장면을 실제로 **가진** 소스가 몇 편인가(2026-09-05). 게이트 '장면 근거'가 이 값으로
     #   "여러 편을 넣었는데 한 편만 썼나"를 본다. 장면 없는 소스는 애초에 고를 수 없으니 세지 않는다.
     _source_count = sum(1 for s in (sources or [])[:SOURCE_MAX] if (s.get("segments") or [])) or None
@@ -751,7 +802,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          product=_sources_product(sources) or (product or ""),
                                          seconds=seconds,
                                          speaker_judge=_speaker_judge,
-                                         scene_ids=_scene_ids, grounded=bool(grounded),
+                                         scene_ids=_scene_ids, scene_secs=_scene_secs, grounded=bool(grounded),
                                          is_recipe=_is_recipe, source_count=_source_count,
                                          materials_text=_materials_text(sources),
                                          claim_evidence=_evidence, claims_required=_claim_required,
@@ -838,7 +889,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          seconds=seconds,
                                          speaker_judge=(_speaker_judge if _claim_required
                                                         else script_gate.prior_verdict(checks)),
-                                         scene_ids=_scene_ids, grounded=bool(grounded),
+                                         scene_ids=_scene_ids, scene_secs=_scene_secs, grounded=bool(grounded),
                                          is_recipe=_is_recipe, source_count=_source_count,
                                          materials_text=_materials_text(sources),
                                          claim_evidence=_evidence, claims_required=_claim_required,
@@ -1324,6 +1375,17 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
             "matched": (not want) or script_gate.template_matches(out, want), "tries": tries}
 
 
+def _grounded_fallback(sources, facts_block="", product="", style=None, reasons=None):
+    """생성 출구들이 공유하는 마지막 한 안. 실패한 AI 본문은 받지 않는다."""
+    from shopping_shorts import script_fallback
+    reason = next((r.get("detail") or r.get("kind") or r.get("reason")
+                   for r in (reasons or []) if isinstance(r, dict)
+                   and (r.get("detail") or r.get("kind") or r.get("reason"))), "")
+    return script_fallback.build_grounded_fallback(
+        _sources_product(sources) or product or "영상 속 제품",
+        claim_evidence(sources, facts_block), style or {}, reason)
+
+
 def generate_by_styles(sources, styles, target_seconds=30, bank_context="", facts_block="",
                        reasons=None, seed="", grounded=False, product=""):
     """스타일 목록(보통 2개) → 각 1안. 실패한 스타일은 건너뛴다(하나라도 나오면 화면은 산다).
@@ -1337,7 +1399,8 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
       **주지 않으면 종전과 완전히 동일하게 동작한다**(기본값 None = 회귀 0).
     """
     out = []
-    for st in styles or []:
+    style_rows = list(styles or [])
+    for st in style_rows:
         note = {} if reasons is not None else None
         try:
             d = generate_one_style(sources, st, target_seconds, bank_context, facts_block,
@@ -1357,7 +1420,15 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
                             "kind": (note or {}).get("reason") or "empty",
                             "keys": (note or {}).get("keys"),
                             "detail": (note or {}).get("detail") or ""})
-    return out
+    if out:
+        return out
+    # ★재료가 있는데 결과 0개는 금지한다(2026-09-16 박복래 제보). 생성기·판정기는
+    # 확률적이라 모두 실패할 수 있다. 그때 실패한 AI 문장을 내보내거나 502로 막지 않고,
+    # 원본 발화·장면 관측만 읽는 결정적 폴백 한 안을 반환한다.
+    if sources:
+        return [_grounded_fallback(sources, facts_block, product,
+                                   style_rows[0] if style_rows else {}, reasons)]
+    return []
 
 
 def _elem_lines(structure, elem_modes, category_lookup):
@@ -1507,7 +1578,8 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
     material_text = _materials_text(sources)
     full_text = "\n\n".join((s.get("full_text") or "").strip() for s in sources)
     if not full_text:
-        return []
+        return ([_grounded_fallback(all_sources, facts_block, locked_product,
+                                    reasons=rejection_reasons)] if all_sources else [])
 
     normalized_mode = {"A": "remake", "B": "transplant"}.get(mode, mode)
     guard_product = ((my_topic or "").strip() if normalized_mode == "transplant"
@@ -1564,7 +1636,14 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
             return accepted
         if topic_locked:
             kwargs["claim_context"] = initial_claim_context + script_gate.gate_feedback(retry_checks)
-    return accepted
+    if accepted:
+        return accepted
+    fallback_style = {"name": "장면 근거 복구", "beat_roles": [
+        row.get("role") for row in ((structure or {}).get("beats") or [])
+        if isinstance(row, dict) and row.get("role")
+    ]}
+    return [_grounded_fallback(all_sources, facts_block, guard_product,
+                               fallback_style, rejection_reasons)]
 
 
 _REFINE_SCHEMA = {

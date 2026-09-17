@@ -1,0 +1,13 @@
+﻿const puppeteer=require('puppeteer'),assert=require('assert');
+(async()=>{const browser=await puppeteer.launch({headless:true});try{const page=await browser.newPage();await page.setViewport({width:1800,height:1300});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:8767/out/scene-style-ui-showcase.html?qa=1',{waitUntil:'networkidle0'});await page.click('[data-editor-tab="effects"]');
+await page.evaluate(()=>{sceneStyle.effect({masks:[{kind:'badge',text:'FIRST',l:10,t:45,w:32,h:8,color:'#ff3355',op:100},{kind:'emoji',ch:'🔥',l:65,t:55,w:15,h:10,op:100},{kind:'graphic',graphic:'arrow_bold',l:10,t:45,w:40,h:22.5,color:'#ff4444',op:100,motion:'none'}]});sceneDecorations.refresh()});
+const rect=await(await page.$('#a-live-preview')).boundingBox();await page.mouse.click(rect.x+rect.width*.13,rect.y+rect.height*.47);
+assert.equal(await page.$eval('.scene-decoration.selected',e=>e.dataset.decIndex),'0','transparent last canvas lets first badge select');
+await page.$eval('[data-dec="text"]',e=>{e.value='EDITED';e.dispatchEvent(new Event('input',{bubbles:true}))});
+assert.equal(await page.evaluate(()=>sceneStyle.effect().masks[0].text),'EDITED');
+await page.mouse.click(rect.x+rect.width*.70,rect.y+rect.height*.60);assert.equal(await page.$eval('.scene-decoration.selected',e=>e.dataset.decIndex),'1');
+await page.click('[data-overlay-delete]');assert.equal(await page.evaluate(()=>sceneStyle.effect().masks.length),2);
+await page.click('[data-dec-select="0"]');await page.screenshot({path:'.tmp/scene-style-qa/dec-selection-delete.png'});
+await page.click('[data-dec-remove="1"]');assert.equal(await page.evaluate(()=>sceneStyle.effect().masks.length),1);
+await page.click('.layout-a .edit-pane > .primary');await page.goto('http://127.0.0.1:8767/out/scene-style-ui-showcase.html',{waitUntil:'networkidle0'});assert.equal(await page.evaluate(()=>sceneStyle.effect().masks.length),1);
+assert.deepEqual(errors,[]);console.log(JSON.stringify({ok:true,selectEarlier:true,editEarlier:true,deleteOverlay:true,deleteRow:true,saveRestore:true}));}finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});

@@ -163,3 +163,13 @@ def test_재료가_비어도_500이_아니라_사유를_준다(client, monkeypat
     r = client.post("/api/wiki/generate?shortcode=SC_NONE", json={
         "mode": "remake", "subject": "x", "n": 1})
     assert r.status_code != 500, f"재료 없음이 500으로 샜다: {r.text[:300]}"
+
+
+def test_생성실패문구가_사실반려를_카테고리불일치로_오인하지_않는다():
+    msg = appmod._gen_fail_message([
+        {"kind": "근거부족", "detail": "가격 근거 없음"},
+        {"kind": "소재이탈", "detail": "다른 제품"},
+    ], "설정에서 틀 조립을 꺼두었습니다")
+    assert "카테고리" not in msg
+    assert "사실 근거" in msg
+    assert "가격 근거 없음" in msg

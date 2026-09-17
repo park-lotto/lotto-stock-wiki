@@ -1604,6 +1604,23 @@ def _speech_speed():
     return min(2.0, max(1.0, v))
 
 
+def narr_secs(text):
+    """그 대사를 실제로 읽는 시간(초) = **모든 target_seconds의 단일 출처**(2026-09-16).
+
+    ★왜 함수로 뽑았나 — 같은 계산이 파일 안에 11벌이었고 **두 가지 식이 섞여 있었다**:
+      7곳은 `len/_SYLLABLES_PER_SEC`(배속 미적용), 4곳은 `len/(_SYLLABLES_PER_SEC*_speech_speed())`.
+      2026-08-09에 "보정 없이 두면 화면이 44% 과충전된다"며 4곳만 고치고 나머지를 빠뜨렸고,
+      2026-09-04에 새로 생긴 상속 경로(build_inherit_plan)는 그 수정을 아예 못 받았다.
+      결과: 상속 경로의 목표 초가 **1.7배** 부풀고, `_fill_beat_screen_time`이 그만큼
+      대본과 무관한 컷을 덧붙였다(실측 job 26698eb0a362: 10줄 지목 10컷 → 최종 26컷).
+      같은 판단은 한 곳에서만 정한다(0순위-B).
+    ⚠️라이브 실측(2026-09-16, 최근 60 job·비트 389개의 TTS 실길이): **9.69자/초**
+      (중앙 9.69·평균 9.71). 지금 식은 5.7 × _speech_speed()다 — 배속 기본값이 낮으면
+      여전히 과대추정이지만, 그 값은 **게이트의 대본 글자수 상한과 짝**이라(script_gate._speech_cps)
+      여기서 같이 올리면 대본 길이가 함께 바뀐다. 배속 조정은 별건으로 다룬다."""
+    return round(max(1.5, len((text or "").strip()) / (_SYLLABLES_PER_SEC * _speech_speed())), 1)
+
+
 def _seg_benefits(seg):
     """세그먼트의 product_benefits → 문장 리스트(fail-open []). list/str 모두 허용.
     무자막 소스(text 빈칸)에서 대본이 쓸 수 있는 유일한 언어 재료라 여기서 흘리면 안 된다."""
@@ -2935,11 +2952,26 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
         #   (:445-471 = 릴의 안 쓴 뒷부분 아무 데나)을 edit_plan 단계로 앞당긴 것뿐이었다.
         #   실측: "요리할 때마다 닦는 게 진짜"에 스티커 정지컷, "스티커까지 붙이니까"에
         #   실리콘 도구 컷. → 나레이션과 '변화:'·'화면:' 문구가 겹치는 장면을 먼저 쓴다.
-        words = {w for w in _claim_key(b.get("narration") or "")}
+        # ★낱말 겹침(_rel)은 2026-09-16에 뺐다. 09-08 컷뱅크 실측: 사장님이 손으로 바꾼 1,027건에서
+        #   버린 컷의 낱말 겹침(0.82)이 고른 컷(0.73)보다 **높았다** — 낱말 겹침은 좋은 장면의 기준이 아니다.
+        #   같은 소스 안에서도 낱말 순으로 고르니 시간이 점프해 "반죽 섞기"가 CTA에 붙었다(job 26698eb0a362).
+        #   대신 **지목 컷과의 시간 거리**로 고른다(아래 _dist) — 대본이 고른 컷의 바로 다음 컷이 1순위.
+        #   원본 영상들이 실제로 그렇게 찍는다: 한 흐름을 이어가다 필요할 때만 앵글을 바꾼다(사장님 07-19).
+        _anchor = b.get("primary") or {}
+        try:
+            _anchor_end = float(_anchor.get("end") or 0)
+            _anchor_vid = _anchor.get("video_id")
+        except (TypeError, ValueError):
+            _anchor_end, _anchor_vid = 0.0, None
 
-        def _rel(s):
-            txt = f"{s.get('change') or ''} {s.get('scene_desc') or ''}"
-            return len(words & set(_claim_key(txt)))
+        def _dist(s):
+            """지목 컷 끝에서 얼마나 떨어졌나. 다른 소스면 큰 값(같은 소스 안에서만 거리가 뜻이 있다).
+            앞쪽(시간 역행)은 같은 거리라도 뒤로 민다 — 뒤 컷이 흐름을 잇는다."""
+            if s.get("video_id") != _anchor_vid:
+                return 1e9
+            st = float(s.get("start") or 0)
+            d = st - _anchor_end
+            return d if d >= 0 else (-d) * 2 + 0.01
 
         # ★이미 쓴 화면과 **같아 보이는** 것은 뒤로 민다(2026-08-16 사장님 "왜 같은데 2장이
         #   붙지"). 소스를 여러 개 올리면 같은 장면이 소스마다 있고 seg_id가 달라, 종전의
@@ -2976,9 +3008,16 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
         # ⚠ 첫·끝(CTA·썸네일) 조각은 자동으로 안 붙인다(2026-08-26) — edge 표식이
         #   생기면서 seg_map에 살아 들어오므로 여기서 걸러야 종전 동작이 유지된다.
         pool = sorted((s for s in seg_map.values() if not _is_edge_seg(s)),
+                      # 기준 순서(2026-09-16): 같은 소스 → 짧은 컷 뒤로 → 같은 그림 뒤로 → **지목 컷에서 가까운 순**.
+                      #   '같은 그림'을 맨 앞에 두면 같은 소스가 통째로 뒤로 밀려 다른 소스의 0.9초 조각이
+                      #   먼저 온다(test_같은_영상에서_이어_붙인다) — 08-18 사장님 "짧은 거 여기저기서 붙이면
+                      #   눈 아프다"와 정면충돌. 그래서 같은 그림 회피는 **같은 소스 안에서만** 작동한다.
+                      #   오늘 "앞뒤 컷이면 지루해지나"(사장님)는 이 안에서 답한다: 바로 다음 컷이 같은
+                      #   그림이면 같은 소스의 다른 그림이 먼저, 그래도 없을 때만 다른 소스.
                       key=lambda s: (s.get("video_id") != home,
                                      _seg_secs(s) < _MIN_CUT_SECONDS,
-                                     _same_look(s), -_rel(s), s.get("start") or 0))
+                                     _same_look(s),
+                                     _dist(s), s.get("start") or 0))
         alts = list(b.get("alternates") or [])
         for s in pool:
             if have >= need or len(alts) >= max_alts:
@@ -4335,7 +4374,7 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
             "beat_idx": len(beats),
             "role": str(srcs[i].get("role") or ""),
             "narration": line,
-            "target_seconds": round(max(1.5, n / _SYLLABLES_PER_SEC), 1),
+            "target_seconds": narr_secs(line),
             "primary": refs[0],
             "alternates": refs[1:],
             "effect": "cut",
@@ -4973,8 +5012,7 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
                 # ★speed 보정(2026-08-09): 이 값이 _fill_beat_screen_time의 need가 된다.
                 #   보정 없이 두면 그 비트만 5.7자/초로 잡혀 화면이 44% 과충전된다
                 #   (실측: 같은 66자인데 한 비트는 8.0초, 보정 빠진 비트는 11.6초).
-                "target_seconds": round(
-                    max(1.5, len(narration) / (_SYLLABLES_PER_SEC * _speech_speed())), 1),
+                "target_seconds": narr_secs(narration),
                 "primary": _clean(covered[0]),
                 "alternates": [_clean(s) for s in covered[1:]],
                 "effect": "cut", "fit": 5, "forced": False,
@@ -6271,7 +6309,7 @@ def _rebuild_beats_by_lines(beats, sents):
         nb["primary"] = uniq[0] if uniq else None
         nb["alternates"] = uniq[1:]
         nb["narration"] = ln
-        nb["target_seconds"] = round(slot["sec"] or (len(ln) / _SYLLABLES_PER_SEC), 2)
+        nb["target_seconds"] = round(slot["sec"] or narr_secs(ln), 2)
         nb["narration_reordered"] = True
         nb.pop("narration_manual", None)
         _drop_stale_tts(nb)
