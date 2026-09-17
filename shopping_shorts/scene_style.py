@@ -178,9 +178,17 @@ def render_layers(timeline, snapshot, output, headcopy=None, job_id=None):
         # 기본 sandbox가 기동하지 않는다. 이 자식 프로세스는 우리가 만든 로컬 HTML만
         # 렌더하므로 Linux에서만 Puppeteer의 기존 opt-in 플래그를 켠다.
         node_env.setdefault("SCENE_STYLE_NO_SANDBOX", "1")
+    # ★시간 상한은 프레임 수에 비례해야 한다(2026-09-17 김성현님 실사고).
+    #   워터마크 '떠다니기'나 훅 모션이 있으면 render_scene_style.js가 **매 프레임** PNG를
+    #   찍는다(30fps). 28초 영상 = 892프레임인데 상한이 240초 고정이라 3번 연속 시간초과로
+    #   죽었고, 고객은 "렌더가 안 된다"만 봤다. 실측 속도는 프레임당 약 0.25초(정적 장면
+    #   레이어는 장당 6~8초) → 여유 있게 프레임당 0.8초 + 장면당 10초 + 기본 120초.
+    scenes = context["scenes"]
+    total_frames = sum(max(0, round(sc["end"] * 30) - round(sc["start"] * 30)) for sc in scenes)
+    timeout = max(240, 120 + len(scenes) * 10 + int(total_frames * 0.8))
     run = subprocess.run(
         ["node", str(ROOT / "tools/render_scene_style.js"), str(request)],
-        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=240,
+        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout,
         env=node_env,
     )
     if run.returncode:
