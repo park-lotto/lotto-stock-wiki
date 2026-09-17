@@ -4275,7 +4275,17 @@ def _extend_refs_to_narration(refs, narration, by_video, used, slack=0.3, max_re
     26→23컷이었다(job 26698eb0a362). 유일하게 빈칸 0을 만든 건 **앞에서 컷을 길이만큼 지정**한
     조립기(assign_cuts, 7→7컷)였다. 그 원리를 상속 경로에 그대로 둔다.
     모자랄 때만 작동한다 — 컷이 대사보다 길면 아무것도 안 붙인다. 다음 컷이 없으면 그만둔다(폴백 없음,
-    그때는 종전처럼 _fill_beat_screen_time이 받는다)."""
+    그때는 종전처럼 _fill_beat_screen_time이 받는다).
+
+    ★짧은 컷 정책(집 세션 ffad9c56a, 사장님 2026-09-17 "1.2초 이상이면 좋겠다는 반응이 많다"):
+      MIN_GOOD_CUT_SECS(1.2) 미만은 **뒤로 밀되 막지 않는다** — 막으면 이을 게 동나 다시 채우기로 넘어간다.
+      실측(reference.db 컷 100,658개): 중앙값 1.67초 · 1.2초 미만 29.3% → 걸러도 70.7%가 남는다.
+      ⚠️짧은 컷이 '나쁜 컷'은 아니다 — 손교체 2,773건에서 버린 컷의 1.2초 미만 비율 25.2% vs 고른 컷 24.5%로
+      길이는 매칭 품질과 무관. 이 값은 조각남만 다스린다. 렌더가 독립 클립으로 안 만드는 0.8초 미만
+      (video_assemble._MIN_CLIP)만 건너뛴다 — 붙여도 화면에 안 나온다.
+    ★왜 2차 패스인가: 집 세션은 이걸 1차 루프(per_line) 안에서 했는데, 그러면 앞 줄이 훅·CTA의
+      b-roll 후보('완성' 결)를 먼저 먹어 기존 테스트 2개가 깨진다(스크래치 실측: CTA s0-6→s0-4).
+      지정 컷·b-roll이 전부 used에 든 뒤 남은 컷으로만 잇는다."""
     from shopping_shorts import config as _cfg
     cap = float(getattr(_cfg, "MAX_SHOT_SECONDS", 2.2) or 2.2)
     # 건너뛸 최소 길이는 **렌더가 독립 클립으로 안 만드는** 기준(video_assemble._MIN_CLIP 0.8)을 빌린다.
@@ -4302,16 +4312,13 @@ def _extend_refs_to_narration(refs, narration, by_video, used, slack=0.3, max_re
             last_end = float(last.get("end") or 0)
         except (TypeError, ValueError):
             break
-        nxt = None
-        for s in by_video.get(vid, []):          # 시간순 정렬돼 있다
-            if s["seg_id"] in used:
-                continue
-            if float(s.get("start") or 0) < last_end:
-                continue
-            if _seg_secs(s) < _skip_below:       # 렌더가 흡수해 화면에 안 나오는 조각
-                continue
-            nxt = s
-            break
+        cands = [s for s in by_video.get(vid, [])          # 시간순 정렬돼 있다
+                 if s["seg_id"] not in used
+                 and float(s.get("start") or 0) >= last_end
+                 and _seg_secs(s) >= _skip_below]           # 렌더가 흡수해 화면에 안 나오는 조각은 제외
+        # 짧은 컷(<MIN_GOOD_CUT_SECS)은 뒤로 — 막지는 않는다(위 docstring). 같은 등급 안에선 가까운 순.
+        cands.sort(key=lambda s: (_seg_secs(s) < MIN_GOOD_CUT_SECS, float(s.get("start") or 0)))
+        nxt = cands[0] if cands else None
         if nxt is None:
             break
         used.add(nxt["seg_id"])
@@ -4367,47 +4374,6 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
     for v in by_video.values():
         v.sort(key=lambda s: float(s.get("start") or 0))
     used = {sid for ids in per_line for sid in ids}
-
-    # ★줄마다 화면을 **대사 길이만큼** 여기서 채운다(2026-09-17). 이게 이 함수의 핵심 변경이다.
-    #   왜 여기냐 — 2단계는 "어느 장면이냐"만 답하고(그건 잘한다) **몇 초어치냐는 답한 적이 없다**.
-    #   지시문은 `src_seg`에 번호를 적으라고만 하고, "한 장면은 한 줄에만"·대표 1개 정규화까지
-    #   겹쳐 줄당 컷이 1개(0.6~1초)로 배급된다. 대사는 2.5초라 **빈칸이 구조적**이었다.
-    #   그 빈칸을 3단계 `_fill_beat_screen_time`이 메우면서 중복·시간역행·조각남이 났다
-    #   (실측 job 26698eb0a362: 10줄 지목 10컷 → 최종 26컷, 같은 그림 15/26).
-    #   ⚠️2단계에 "분량도 지정하라"고 시키는 길은 **이미 실패했다** — A/B 4회 83/83/78/80%로
-    #     효과 0(모델이 초 계산을 못 한다). 커밋 e2904f384에서 철회했다. 초 계산은 코드가 한다.
-    #   ⚠️채우기에 하한을 붙이는 길도 두더지다(07-31·08-10·08-16·08-18·08-26·09-16 여섯 번 고친 자리).
-    #     붙일 게 줄면 재사용 폴백(같은 컷 반복)으로 떨어져 중복이 는다. **채우기가 안 돌게** 하는 게 답.
-    def _secs_of(sid):
-        s = seg_map.get(sid) or {}
-        try:
-            return max(0.0, float(s.get("end") or 0) - float(s.get("start") or 0))
-        except (TypeError, ValueError):
-            return 0.0
-
-    for i, ids in enumerate(per_line):
-        if not ids or i >= len(lines):
-            continue                      # 출처 없는 줄은 종전대로 _fill_for가 b-roll을 고른다
-        need = narr_secs(lines[i])
-        have = sum(_secs_of(s) for s in ids)
-        if have >= need:
-            continue
-        # 지목 컷의 **같은 소스·시간순 다음 컷**부터 잇는다. 앞(시간 역행)으로는 안 간다 —
-        # 화면이 되감기고, 앞 컷은 앞줄이 이미 쓰고 있을 때가 많다(09-16 `5e7e36876`와 같은 판단).
-        anchor = seg_map.get(ids[-1]) or {}
-        tail = [s for s in by_video.get(anchor.get("video_id"), [])
-                if float(s.get("start") or 0) > float(anchor.get("start") or 0)
-                and s["seg_id"] not in used]
-        # 짧은 컷은 **뒤로 민다(막지 않는다)** — 막으면 이을 게 동나 다시 채우기로 넘어간다.
-        # 사장님 2026-09-17: "1.2초 이상이면 좋겠다는 반응이 많다". 실측상 70.7%가 이 기준을 넘는다.
-        tail.sort(key=lambda s: (_secs_of(s["seg_id"]) < MIN_GOOD_CUT_SECS,
-                                 float(s.get("start") or 0)))
-        for s in tail:
-            if have >= need:
-                break
-            ids.append(s["seg_id"])
-            used.add(s["seg_id"])
-            have += _secs_of(s["seg_id"])
 
     def _next_cut(prev_sid):
         """앞 비트 장면의 다음 컷(같은 소스·시간순·미사용) → 없으면 미사용 아무 컷 → None."""

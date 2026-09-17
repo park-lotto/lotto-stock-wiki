@@ -22,6 +22,12 @@ import os
 import sqlite3
 import sys
 
+# ★짧은 컷 기준은 edit_plan이 정본(집 세션 ffad9c56a). 서버 /tmp에서 단독 실행될 때(sys.path에 repo 없음)를 위해 폴백.
+try:
+    from shopping_shorts.edit_plan import MIN_GOOD_CUT_SECS
+except Exception:
+    MIN_GOOD_CUT_SECS = float(os.environ.get("MIN_GOOD_CUT_SECS", "1.2") or 1.2)
+
 DB_CANDIDATES = [
     "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/reference.db",
     os.path.join(os.path.dirname(__file__), "..", "shopping_shorts", "data", "reference.db"),
