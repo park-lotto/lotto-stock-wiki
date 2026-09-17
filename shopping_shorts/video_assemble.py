@@ -623,6 +623,24 @@ def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
     return (capped, out_dur - capped)
 
 
+def _piece_end_limit(c, segs, src_total):
+    """컷 c가 속한 조각(같은 video_id, seg.start ≤ c.start < seg.end)의 끝. 못 찾으면 소스 끝.
+
+    전환 여유·여운처럼 '남은 실프레임'을 더 읽을 때 상한으로 쓴다 — 조각은 장면 경계에서
+    잘려 있어 그 뒤는 다른 장면이다(2026-09-17). src_total ≤ 0이면 0(=여유 없음)."""
+    try:
+        st = float(c.get("start", 0.0))
+        for s in segs or []:
+            if s.get("video_id") != c.get("video_id"):
+                continue
+            a, b = float(s.get("start", 0.0)), float(s.get("end", 0.0) or 0.0)
+            if b > a and a - 1e-3 <= st < b:
+                return min(float(src_total), b) if src_total > 0 else 0.0
+    except Exception as e:  # noqa: BLE001 — 상한 계산 실패는 종전 동작(소스 끝)으로
+        print(f"[assemble] 조각 끝 상한 계산 실패(무해, 소스 끝 사용): {e!r}", file=sys.stderr)
+    return float(src_total) if src_total > 0 else 0.0
+
+
 def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
     """마지막 비트 계획의 끝에 여운 runout초를 붙인다(plan 제자리 수정, 반환 동일 객체).
 
@@ -1812,7 +1830,12 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             _c_src, _c_out = c["src_dur"], c["out_dur"]
             if _pad > 1e-3:
                 _sd = _src_dur(c["video_id"])
-                _room = max(0.0, _sd - (c["start"] + _c_src)) if _sd > 0 else 0.0
+                # ★여유도 **담은 조각 안**에서만 꺼낸다(2026-09-17 이윤정님 "미리보기에서 다른
+                #   화면이 짧게"). 종전엔 소스 파일 끝(_sd)까지를 '남은 실프레임'으로 보고 조각 뒤
+                #   **다음 장면**을 3프레임 끌어왔다(실측 job 1939bd7f3c50 s1 조각 7.29 뒤 사무실).
+                #   조각 밖이면 out만 늘려 슬로모/freeze가 채운다 — 총 길이는 그대로다.
+                _lim = _piece_end_limit(c, segs, _sd)
+                _room = max(0.0, _lim - (c["start"] + _c_src)) if _lim > 0 else 0.0
                 _c_src = _c_src + min(_pad, _room)
                 _c_out = _c_out + _pad
             play_out, freeze = _speed_and_freeze(_c_src, _c_out)
