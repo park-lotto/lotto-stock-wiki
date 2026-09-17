@@ -4758,6 +4758,11 @@ function useHeadcopy(i){
   t.value=c.text||'';
   window._hcPicked=i;
   updateHC();          // 미리보기·STATE 반영은 기존 경로 그대로(새로 만들지 않는다)
+  // 큰 제목·흰 띠·업로드 제목은 한 세트다. 장면꾸미기와 최종 렌더가 다시
+  // 추측해 만들지 않도록 선택 순간의 짝을 headcopy 한 객체에 함께 보존한다.
+  STATE.headcopy.subline=(c.subline||'').trim();
+  STATE.headcopy.upload_title=(c.upload_title||'').trim();
+  STATE.headcopy.copy_family=currentCopyFamily();
   // 첫 후킹 스타일은 큰 제목과 흰 보조띠가 한 후보 세트다. 사용자가 카드를
   // 눌렀을 때만 둘을 함께 적용한다(후보 도착만으로 기존 입력을 덮지 않는다).
   const ft=document.getElementById('frTitle');
@@ -7758,6 +7763,7 @@ function hcQuickSync(hc){
 }
 function updateHC(){
   const g=id=>document.getElementById(id);
+  const previous=(STATE&&STATE.headcopy)||{};
   const hc={
     text:g('hcText').value, font:g('hcFont').value||'TmonMonsori.ttf',
     color:g('hcColor').value, weight:+g('hcWeight').value,
@@ -7765,6 +7771,10 @@ function updateHC(){
     outline:g('hcOutline').checked, outline_color:g('hcOutColor').value, outline_w:+g('hcOutW').value,
     box:g('hcBox').checked, box_color:g('hcBoxColor').value, box_pad:+g('hcBoxPad').value, box_opacity:+g('hcBoxOpacity').value,
   };
+  // 글꼴·위치를 만져도 선택한 카피 세트의 짝이 사라지지 않게 한다.
+  for(const key of ['subline','upload_title','copy_family']){
+    if(typeof previous[key]==='string'&&previous[key]) hc[key]=previous[key];
+  }
   STATE.headcopy=hc;
   g('hcSizeV').textContent=hc.size; g('hcYV').textContent=hc.y; g('hcXV').textContent=hc.x;
   const el=g('hcPreviewText');

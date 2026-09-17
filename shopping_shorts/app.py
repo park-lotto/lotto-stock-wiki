@@ -18874,7 +18874,8 @@ def api_scene_style_asset(asset_path: str):
 
 
 @app.get("/api/produce/scene-style/context/{job_id}")
-def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = ""):
+def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = "",
+                            headcopy_subline: str = "", copy_family: str = ""):
     from .scene_style import context_for
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
@@ -18889,7 +18890,14 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     except Exception:
         return JSONResponse(status_code=409, content={"error": "음성 파일을 확인할 수 없습니다. 미리보기를 다시 만들어 주세요"})
     snapshot = (job.get("deco") or {}).get("scene_style")
-    context = context_for(timeline, {"text": headcopy_text[:2000]} if headcopy_text else job.get("headcopy"), snapshot, job_id)
+    headcopy = dict(job.get("headcopy") or {})
+    if headcopy_text:
+        headcopy["text"] = headcopy_text[:2000]
+    if headcopy_subline:
+        headcopy["subline"] = headcopy_subline[:200]
+    if copy_family:
+        headcopy["copy_family"] = headcopy_gen.normalize_family(copy_family)
+    context = context_for(timeline, headcopy, snapshot, job_id)
     for scene in context["scenes"]:
         scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{scene['beat_idx']}"
     return {"context": context, "snapshot": snapshot}

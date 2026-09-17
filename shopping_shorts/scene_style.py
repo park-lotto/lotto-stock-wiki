@@ -132,6 +132,7 @@ def validate_snapshot(value):
 
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     from .video_assemble import caption_schedule
+    from .template_copy import scene_text
     scenes = []
     hide_hook_captions = (snapshot or {}).get("hookCaptionMode") == "hidden"
     for index, beat in enumerate(timeline):
@@ -149,11 +150,10 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
             cursor = b
         if cursor < end - .001:
             scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
-    title = str((headcopy or {}).get("text") or (timeline[0].get("narration") if timeline else "") or "").strip()
-    parts = title.splitlines()
-    if len(parts) < 2 and title:
-        words=title.split(); half=max(1,len(words)//2);parts=[" ".join(words[:half])," ".join(words[half:])]
-    text = {"channel":"숏템메이커","hook1":parts[0] if parts else "","hook2":" ".join(parts[1:]),"bodyTitle":title}
+    copy = dict(headcopy) if isinstance(headcopy, dict) else {}
+    if not (copy.get("text") or "").strip():
+        copy["text"] = (timeline[0].get("narration") if timeline else "") or ""
+    text = {"channel": "숏템메이커", **scene_text(copy)}
     text.update({k:v for k,v in (snapshot or {}).get("text",{}).items() if k != "caption"})
     return {"jobId":job_id,"text":text,"scenes":scenes}
 

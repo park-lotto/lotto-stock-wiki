@@ -79,6 +79,14 @@
   else primary.textContent='현재 설정 저장';
   primary.addEventListener('click',()=>{
     if(saving)return;
+    const violations=api.validation?.()||[];
+    if(violations.length){
+      const status=pane.querySelector('[data-connection-status]');
+      if(status)status.textContent=violations[0]+' 글씨를 줄이지 않고 원본 크기를 유지합니다.';
+      primary.textContent='문구 길이를 확인해 주세요';
+      setTimeout(()=>primary.textContent=embedded?'이 영상에 적용':'현재 설정 저장',1800);
+      return;
+    }
     if(!embedded){save.click();primary.textContent='✓ 현재 설정 저장됨';setTimeout(()=>primary.textContent='현재 설정 저장',1500);return;}
     if(!context)return;
     saving=true;primary.disabled=true;primary.textContent='영상에 저장 중…';
