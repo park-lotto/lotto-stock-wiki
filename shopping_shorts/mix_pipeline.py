@@ -1948,8 +1948,8 @@ def _vmake_clean(video_path, keys, out_path, tier=None):
         if reencoded:
             try:
                 Path(reencoded).unlink()
-            except OSError:
-                pass
+            except OSError as e:                     # 임시 파일이 남을 뿐 — 청소 결과엔 영향 없음
+                print(f"[clean] 재인코딩 임시파일 삭제 실패(무시): {e!r}", file=sys.stderr)
 
 
 def _reencode_for_vmake(video_path):
