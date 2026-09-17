@@ -134,3 +134,41 @@ def test_stale_note_tells_what_to_do_not_just_that_it_is_stale():
     block = _HTML[i:i + 1200]
     assert "다시 지우기" in block                  # 행동을 준다
     assert "장면을 바꾸기 전" in block              # 왜 그런지 말한다
+
+
+# ── 실패한 뒤 돌아왔을 때 — 옛 결과가 있으면 그 사실을 말해야 한다 ──────────
+# ★2026-09-17 실측(이윤정님 job 1556910737b6): clean_status='failed'인데
+#   /clean_clips가 stale=False로 답해서, 화면은 "옛 청소본이 있다"는 걸 몰랐다.
+#   고객이 보는 건 **아무 설명 없는 빈 비교화면**이다 — 무엇을 눌러야 할지 모른다.
+#   ready가 아니어도 옛 청소본이 남아 있으면 stale로 알린다.
+def test_clean_clips_reports_stale_when_failed_but_old_clean_exists(tmp_path, monkeypatch):
+    import shopping_shorts.app as appmod
+
+    job = {"job_id": "j", "clean_status": "failed",
+           "edit_plan": _plan("s4"), "clean_tier": TIER_BASIC}
+    work = tmp_path / "j"
+    work.mkdir()
+    _mk(work, {"edit_plan": _plan("s0")}, TIER_BASIC)   # 옛 편성으로 만든 청소본이 남아 있다
+
+    monkeypatch.setattr(appmod, "_MIX_WORK_DIR", tmp_path)
+    monkeypatch.setattr(appmod, "Store", lambda _p: type("S", (), {
+        "get_mix_job": staticmethod(lambda _j: job)})())
+
+    r = appmod.api_produce_mix_clean_clips("j")
+    assert r["ready"] is False
+    assert r["stale"] is True          # ★옛 결과가 있다는 걸 숨기지 않는다
+
+
+def test_clean_clips_not_stale_on_a_never_cleaned_job(tmp_path, monkeypatch):
+    """한 번도 안 지운 작업은 stale이 아니다 — 첫 실행에 '옛 결과'라고 하면 거짓말이다."""
+    import shopping_shorts.app as appmod
+
+    job = {"job_id": "j2", "clean_status": None,
+           "edit_plan": _plan(), "clean_tier": TIER_BASIC}
+    (tmp_path / "j2").mkdir()
+    monkeypatch.setattr(appmod, "_MIX_WORK_DIR", tmp_path)
+    monkeypatch.setattr(appmod, "Store", lambda _p: type("S", (), {
+        "get_mix_job": staticmethod(lambda _j: job)})())
+
+    r = appmod.api_produce_mix_clean_clips("j2")
+    assert r["ready"] is False and r["stale"] is False
