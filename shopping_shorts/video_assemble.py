@@ -636,8 +636,8 @@ def _piece_end_limit(c, segs, src_total):
             a, b = float(s.get("start", 0.0)), float(s.get("end", 0.0) or 0.0)
             if b > a and a - 1e-3 <= st < b:
                 return min(float(src_total), b) if src_total > 0 else 0.0
-    except Exception:  # noqa: BLE001 — 상한 계산 실패는 종전 동작(소스 끝)으로
-        pass
+    except Exception as e:  # noqa: BLE001 — 상한 계산 실패는 종전 동작(소스 끝)으로
+        print(f"[assemble] 조각 끝 상한 계산 실패(무해, 소스 끝 사용): {e!r}", file=sys.stderr)
     return float(src_total) if src_total > 0 else 0.0
 
 
