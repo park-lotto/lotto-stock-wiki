@@ -9251,6 +9251,10 @@ function _workState(){
           script_copy_family:STATE.script_copy_family||'', step:cur, work_id:WORK_ID,
           hook_inpoint_delta:(STATE.hook_inpoint_delta||0)};   // 3초 훅 미세조정(P1, 서버 render가 읽음)
   if(STATE.title_manual) _st.title_manual = STATE.title_manual;
+  // ★화면 제목 임시 보관(2026-09-17): 헤드카피의 진실은 job인데 2단계 확정 시점엔 job이 아직 없다.
+  //   안 실으면 새로고침·'이 안으로 새 작업' 직후 화면 제목이 사라진다(실측: work 70a340903146).
+  //   job이 생기면 saveHeadcopy가 job에 쓰므로 그때부터는 싣지 않는다(두 벌 금지).
+  if(!MIX_JOB && STATE.headcopy && STATE.headcopy.text) _st.headcopy = STATE.headcopy;
   // ★2단계 결과 대본(2026-08-17): 안 실으면 새로고침·재방문 때 S2.drafts가 빈 배열이라
   //   s2RenderDrafts가 ③밴드를 통째로 display:none 처리한다 = "만든 대본이 사라졌다"
   //   (사장님 제보). STATE.script는 **확정한 1편의 텍스트뿐**이라 A안·B안·역할 칸(beats)·
@@ -9535,7 +9539,8 @@ async function _restoreWork(workId){
   // 도는데** UI는 STATE.subtitleRemoval=false라 "꺼짐"이라 표시한다 — 몰래 과금.
   // 서버가 job에서 읽어 내려준 값이다(작업파일에 복제하지 않는다 = 진실의 원천은 job 하나).
   const sg = d.settings || {};
-  STATE.headcopy = sg.headcopy || null;
+  // job이 아직 없을 때만 작업 상태에 임시 보관한 화면 제목을 쓴다(_workState와 한 쌍).
+  STATE.headcopy = sg.headcopy || ((!d.job_id && w.headcopy && w.headcopy.text) ? w.headcopy : null);
   STATE.captionStyle = sg.caption_style || null;
   // deco는 null이 아니라 **모양**이 있어야 한다 — 5단계가 STATE.deco.extra_texts에서 터진다.
   STATE.deco = sg.deco || { extra_texts: [], motion: null };
