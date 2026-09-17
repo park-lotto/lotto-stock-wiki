@@ -303,19 +303,25 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
     # 먼저 돌며 첫 묶음(박스 열기) 컷 7개를 다 먹어 정작 "패키지·구성품" 줄엔 거리 풍경만 남았다(job bb4c2734ce80).
     def _looks_whole(s):
         d = str(seg_index[s].get("desc") or "")
-        return any(k in d for k in ("전체", "외관", "정면", "형태", "들어 올", "손에", "제품을 보여"))
+        return any(k in d for k in ("전체", "외관", "정면", "형태", "들어 올", "손에", "제품을 보여", "옆면", "뒷면", "마감", "돌려가며", "박스"))
     def _is_person(s):
         d = str(seg_index[s].get("desc") or "")
         return any(k in d for k in ("남성", "여성", "사람", "얼굴", "댓글", "구매처", "언급", "말하", "인사"))
     free = [s for s in all_sub if s not in in_group]
+    # ★구조 줄 몫 예약(2026-09-17, job bb50a7ba99ba 실측): 특징 줄이 '제품 전체·외관' 컷까지 다 쓰면
+    #   정체·떼돈 줄엔 거리 풍경·샘플 사진만 남는다. 구조 줄 수만큼 외관 컷을 먼저 떼어 두고,
+    #   특징 줄은 그 묶음에 다른 컷이 없을 때만 예약 컷을 쓴다.
+    n_struct = sum(1 for L in lines if not (L.get("group") is not None and 0 <= L.get("group") < len(groups_out["groups"])))
+    whole_all = [s for s in all_sub if _looks_whole(s) and not _is_person(s) and seg_index[s]["secs"] >= MIN_CUT_SECS]
+    reserved = whole_all[:max(0, n_struct)]
 
     def _structural_pool():
         """특징 줄이 다 가져간 **뒤**에 부른다. ① 특징 묶음에서 남은 컷(=제품 컷) ② 묶음 밖 '전체' 컷
         ③ 묶음 밖 나머지 ④ 사람·댓글 컷은 맨 뒤. 실측(job bba6caa3ee81): 묶음 밖 컷은 곧 찌꺼기
         (남의 채널 CTA 자막·얼굴)라 정체·떼돈 줄이 전부 그걸 받았다."""
-        left = [s for s in all_sub if s in in_group and s not in used]
-        rest = [s for s in free if not _is_person(s)]
-        return (left + [s for s in rest if _looks_whole(s)] + [s for s in rest if not _looks_whole(s)]
+        left = [s for s in all_sub if s in in_group and s not in used and s not in reserved]
+        rest = [s for s in free if not _is_person(s) and s not in reserved]
+        return (list(reserved) + [s for s in rest if _looks_whole(s)] + left + [s for s in rest if not _looks_whole(s)]
                 + [s for s in free if _is_person(s)])
     beat_sources, report = [None] * len(lines), [None] * len(lines)
     feature_first = sorted(range(len(lines)), key=lambda i: 0 if 0 <= (lines[i].get("group") if lines[i].get("group") is not None else -1) < len(groups_out["groups"]) else 1)
@@ -324,7 +330,8 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
         need = _secs(L["text"])
         gi = L.get("group", -1)
         if gi is not None and 0 <= gi < len(groups_out["groups"]):
-            sids = list(groups_out["groups"][gi].get("cuts") or [])
+            gc = list(groups_out["groups"][gi].get("cuts") or [])
+            sids = [c for c in gc if c not in reserved] + [c for c in gc if c in reserved]
         else:
             sids = _structural_pool()
         picked, have = _fill(sids, need)

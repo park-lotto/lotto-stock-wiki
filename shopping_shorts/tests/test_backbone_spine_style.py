@@ -52,7 +52,8 @@ def test_구조줄이_특징_컷을_먼저_먹지_않는다():
              {"role": "solve", "text": "가" * 8, "group": 0}]
     bs, rep = ba.assign_cuts(lines, groups, idx, "bb")
     assert bs[2]["segs"][0] in ("box1", "box2"), bs
-    assert bs[0]["segs"][0] == "whole", "구조 줄은 특징 밖 '전체' 컷을 먼저 쓴다: %s" % bs
+    assert bs[0]["segs"][0] in ("box1", "box2", "whole"), "구조 줄은 제품 컷(예약 외관→묶음 잔여)을 먼저, 거리 컷은 뒤: %s" % bs
+    assert "street" not in bs[0]["segs"][:1]
     assert [b["role"] for b in bs] == ["title", "bait", "solve"], "출력 순서는 대본 순서 그대로"
 
 
@@ -71,3 +72,14 @@ def test_구조줄은_남은_제품컷을_먼저_사람컷은_맨뒤():
     assert bs[1]["segs"] and all(x.startswith("box") for x in bs[1]["segs"])
     assert bs[0]["segs"][0].startswith("box"), "묶음에서 남은 제품 컷을 먼저 쓴다: %s" % bs
     assert "face" not in bs[0]["segs"][:1] and "cta" not in bs[0]["segs"][:1]
+
+
+def test_외관컷은_구조줄_몫으로_예약된다():
+    """job bb50a7ba99ba: 특징 줄이 '옆면·뒷면 마감' 컷까지 써서 정체 줄엔 거리 풍경만 남았다."""
+    idx = _idx(whole=(3.0, "손으로 카메라의 옆면과 뒷면을 돌려가며 마감을 보여줌"), open1=(3.0, "포장을 벗김"),
+               open2=(3.0, "박스에서 꺼냄"), street=(3.0, "거리 풍경 결과물"))
+    groups = {"product": "카메라", "groups": [{"name": "언박싱", "cuts": ["open1", "whole", "open2"]}], "order": [0]}
+    lines = [{"role": "title", "text": "가" * 8, "group": -1}, {"role": "solve", "text": "가" * 20, "group": 0}]
+    bs, _ = ba.assign_cuts(lines, groups, idx, "bb")
+    assert bs[0]["segs"][0] == "whole", bs
+    assert "whole" not in bs[1]["segs"], "특징 줄은 다른 컷이 있으면 예약 컷을 안 쓴다: %s" % bs
