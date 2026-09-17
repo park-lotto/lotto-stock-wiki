@@ -15,7 +15,7 @@
  */
 
 var FORM_ID  = '1j7DEOvChLxsUDl8VHnj9o18kPw1c5hDvZbZW4sWMd5Q';
-var CARD_URL = 'https://stmaker.kr/surl/O/3068';
+var CARD_URL = 'https://smartstore.naver.com/makerslab7/products/13765673887';
 var PRICE    = '77만원';
 var BANK     = '국민은행 649701-01-357828 (예금주: 메이커스랩)';
 

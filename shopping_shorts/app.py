@@ -11425,6 +11425,22 @@ def _pay_cta():
     return kakao, "카톡으로 문의"
 
 
+def _card_cta(fallback_href="", fallback_label=""):
+    """카드결제 버튼(주소·문구)의 **단일 출처**(0순위-B).
+
+    우선순위: 관리자 설정 `pay_url`(외부 카드결제 링크, 예: 스마트스토어) > 토스 결제창(/pay/toss)
+    > 넘겨받은 폴백(_pay_cta 결과). 2026-09-17 사장님: 토스 카드결제가 고객에게 "1회 한도 초과"로
+    막혀 스마트스토어 링크로 받는다 — 링크는 설정 한 곳(pay_url)만 바꾸면 랜딩·요금·대기·
+    마이페이지 안내가 같이 바뀐다. 요청마다 읽어 재시작 없이 반영된다."""
+    pay = (Store(DB_PATH).get_setting("pay_url", "") or "").strip()
+    if pay:
+        return pay, "💳 카드로 결제하기"
+    ck, sk = _toss_keys()
+    if ck and sk:
+        return "/pay/toss", "💳 카드로 결제하기"
+    return fallback_href, fallback_label
+
+
 def _with_pay(html: str) -> str:
     """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다."""
     href, label = _pay_cta()
@@ -11433,7 +11449,7 @@ def _with_pay(html: str) -> str:
     #   화면 숫자를 따로 적으면 결제 금액과 어긋나 심사 불가 사유가 된다.
     name, amount = _toss_order_name_amount()
     ck, sk = _toss_keys()
-    card_href, card_label = ("/pay/toss", "💳 카드로 결제하기") if (ck and sk) else (href, label)
+    card_href, card_label = _card_cta(href, label)
     # 모집 마감·다음 기수 가격(2026-09-15 사장님 "1기 9월말 마감, 10월 1일부터 2기 88만원").
     #   관리자 설정으로 바꿀 수 있게 settings에서 읽고, 없으면 사장님이 말한 값을 쓴다.
     _st = Store(DB_PATH)
@@ -12381,10 +12397,12 @@ def _deposit_card_html():
     테스트 키면 버튼에 '테스트'를 붙여 고객이 진짜 결제로 착각하지 않게 한다.
     """
     ck, sk = _toss_keys()
-    if not (ck and sk):
+    pay = (Store(DB_PATH).get_setting("pay_url", "") or "").strip()
+    if not pay and not (ck and sk):
         return ""
-    tag = " (테스트)" if ck.startswith("test_") else ""
-    return ('<a href="/pay/toss" style="display:block;text-align:center;text-decoration:none;'
+    # 외부 링크(pay_url)가 있으면 그것이 카드결제다 — _card_cta와 같은 우선순위(2026-09-17).
+    tag = "" if pay else (" (테스트)" if ck.startswith("test_") else "")
+    return ('<a href="' + (pay or "/pay/toss") + '" style="display:block;text-align:center;text-decoration:none;'
             'background:linear-gradient(135deg,#ffd27a,#f0a53a);color:#1a1206;border-radius:12px;'
             'padding:15px;font-size:16px;font-weight:800;margin-bottom:10px">💳 카드로 결제하기' + tag + '</a>'
             '<div style="text-align:center;color:#6f8583;font-size:13px;margin:6px 0 14px">또는 계좌이체</div>')
