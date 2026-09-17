@@ -365,6 +365,16 @@ def _build_scene_blocks(seg_map, target_seconds):
 # 찾아 붙여서, 못 찾으면 어긋나고 모자라면 때웠다(며칠간의 두더지 잡기).
 REWRITE_MIX = os.getenv("REWRITE_MIX", "1") == "1"   # 0이면 옛 경로(덩어리/스파인)
 _MIN_LINE_SECS = 1.2      # 이보다 짧은 구간은 옆과 합친다(한 줄이 3자짜리가 되는 걸 막는다)
+
+# ★컷 한 개의 "짧지 않다" 기준 — **정하는 곳은 여기 하나**(0순위-B).
+#   2026-09-17 사장님: "컷당 장면이 너무 짧다는 사람이 많다, 1.2초 이상이면 좋겠다."
+#   종전엔 2단계 조립기(backbone_assemble.MIN_CUT_SECS=0.8)에만 있고 **3단계 채우기엔 아예
+#   없어서**(_fill_beat_screen_time은 시간거리·같은그림만 봤다) 채우기가 짧은 컷까지 긁어 썼다.
+#   실측(reference.db 컷 100,658개): 중앙값 1.67초 · 1.2초 미만 29.3% → 1.2로 걸러도 70.7%가 남는다.
+#   ⚠️짧은 컷이 '좋은 컷'은 아니다 — 사장님이 손으로 바꾼 2,773건에서 버린 컷의 1.2초 미만
+#     비율 25.2% vs 고른 컷 24.5%로 **차이가 없다**(길이는 매칭 품질과 무관). 즉 이 값은
+#     조각남만 고치고 매칭은 안 고친다. 두 문제를 섞지 마라.
+MIN_GOOD_CUT_SECS = float(os.environ.get("MIN_GOOD_CUT_SECS", "1.2") or 1.2)
 # 문장이 끝났다고 볼 종결(한국어 구어 자막은 마침표가 자주 없다 → 어미로 판정).
 _SENT_END = ("요", "다", "죠", "네", "까", "군", "걸", "야", "임", "함", "죠?", "래요", "거든요")
 
@@ -4265,7 +4275,17 @@ def _extend_refs_to_narration(refs, narration, by_video, used, slack=0.3, max_re
     26→23컷이었다(job 26698eb0a362). 유일하게 빈칸 0을 만든 건 **앞에서 컷을 길이만큼 지정**한
     조립기(assign_cuts, 7→7컷)였다. 그 원리를 상속 경로에 그대로 둔다.
     모자랄 때만 작동한다 — 컷이 대사보다 길면 아무것도 안 붙인다. 다음 컷이 없으면 그만둔다(폴백 없음,
-    그때는 종전처럼 _fill_beat_screen_time이 받는다)."""
+    그때는 종전처럼 _fill_beat_screen_time이 받는다).
+
+    ★짧은 컷 정책(집 세션 ffad9c56a, 사장님 2026-09-17 "1.2초 이상이면 좋겠다는 반응이 많다"):
+      MIN_GOOD_CUT_SECS(1.2) 미만은 **뒤로 밀되 막지 않는다** — 막으면 이을 게 동나 다시 채우기로 넘어간다.
+      실측(reference.db 컷 100,658개): 중앙값 1.67초 · 1.2초 미만 29.3% → 걸러도 70.7%가 남는다.
+      ⚠️짧은 컷이 '나쁜 컷'은 아니다 — 손교체 2,773건에서 버린 컷의 1.2초 미만 비율 25.2% vs 고른 컷 24.5%로
+      길이는 매칭 품질과 무관. 이 값은 조각남만 다스린다. 렌더가 독립 클립으로 안 만드는 0.8초 미만
+      (video_assemble._MIN_CLIP)만 건너뛴다 — 붙여도 화면에 안 나온다.
+    ★왜 2차 패스인가: 집 세션은 이걸 1차 루프(per_line) 안에서 했는데, 그러면 앞 줄이 훅·CTA의
+      b-roll 후보('완성' 결)를 먼저 먹어 기존 테스트 2개가 깨진다(스크래치 실측: CTA s0-6→s0-4).
+      지정 컷·b-roll이 전부 used에 든 뒤 남은 컷으로만 잇는다."""
     from shopping_shorts import config as _cfg
     cap = float(getattr(_cfg, "MAX_SHOT_SECONDS", 2.2) or 2.2)
     # 건너뛸 최소 길이는 **렌더가 독립 클립으로 안 만드는** 기준(video_assemble._MIN_CLIP 0.8)을 빌린다.
@@ -4292,16 +4312,13 @@ def _extend_refs_to_narration(refs, narration, by_video, used, slack=0.3, max_re
             last_end = float(last.get("end") or 0)
         except (TypeError, ValueError):
             break
-        nxt = None
-        for s in by_video.get(vid, []):          # 시간순 정렬돼 있다
-            if s["seg_id"] in used:
-                continue
-            if float(s.get("start") or 0) < last_end:
-                continue
-            if _seg_secs(s) < _skip_below:       # 렌더가 흡수해 화면에 안 나오는 조각
-                continue
-            nxt = s
-            break
+        cands = [s for s in by_video.get(vid, [])          # 시간순 정렬돼 있다
+                 if s["seg_id"] not in used
+                 and float(s.get("start") or 0) >= last_end
+                 and _seg_secs(s) >= _skip_below]           # 렌더가 흡수해 화면에 안 나오는 조각은 제외
+        # 짧은 컷(<MIN_GOOD_CUT_SECS)은 뒤로 — 막지는 않는다(위 docstring). 같은 등급 안에선 가까운 순.
+        cands.sort(key=lambda s: (_seg_secs(s) < MIN_GOOD_CUT_SECS, float(s.get("start") or 0)))
+        nxt = cands[0] if cands else None
         if nxt is None:
             break
         used.add(nxt["seg_id"])

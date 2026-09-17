@@ -81,3 +81,21 @@ def test_build_inherit_plan에_배선돼_있다():
     import inspect
     src = inspect.getsource(ep.build_inherit_plan)
     assert "_extend_refs_to_narration(" in src
+
+
+def test_짧은_컷은_뒤로_밀되_막지_않는다():
+    """집 세션 정책(ffad9c56a, 사장님 "1.2초 이상이면 좋겠다"): MIN_GOOD_CUT_SECS 미만은 뒤로.
+    막으면 이을 게 동나 채우기로 넘어가니, 긴 컷이 없을 땐 짧은 컷이라도 붙는다."""
+    a0 = _seg("A", 0, 0.0, 1.0)
+    short_next = _seg("A", 1, 1.0, 1.0)        # 바로 다음이지만 1.2초 미만
+    long_later = _seg("A", 2, 2.0, 2.0)        # 더 뒤지만 1.2초 이상
+    bv = _by_video(a0, short_next, long_later)
+    used = {"A-0"}
+    refs = ep._extend_refs_to_narration([a0], "가" * 12, bv, used)    # 12자 ≈ 1.6초 → 하나만 더
+    ids = [r["seg_id"] for r in refs]
+    assert ids[1] == "A-2", f"1.2초 이상인 컷을 먼저 잇는다: {ids}"
+    # 긴 컷이 없으면 짧은 컷이라도 — 막지 않는다
+    used2 = {"A-0"}
+    bv2 = _by_video(a0, short_next)
+    refs2 = ep._extend_refs_to_narration([a0], "가" * 12, bv2, used2)
+    assert [r["seg_id"] for r in refs2] == ["A-0", "A-1"], "짧아도 붙인다(막지 않는다)"
