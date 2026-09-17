@@ -193,23 +193,14 @@ def test_density_target_capped_by_speech_speed():
     ★단위 주의(2026-08-24): DB `chars_per_30s`는 **raw**(공백 포함)로 쌓여 있고
       천장·판정은 **norm**(공백 제외)이다. density_target이 그 경계에서 환산한다
       (`script_gate.norm_chars_per_30s`). 그래서 여기 기대값도 norm으로 적는다.
-
-    ★2026-09-18 계약 정정: 종전엔 `== cap`으로 **"항상 잘린다"**를 단언했는데, 그건
-      천장(말속도)이 히트작 최고 밀도보다 낮을 때만 참인 **우연한 등식**이었다.
-      말속도를 실측(9.69자/초)으로 고치자 30초 천장이 290 > norm(377)=278이 되어
-      아무도 안 잘리는데 테스트가 깨졌다 — 지키려던 계약은 "말속도보다 빠른 대본은
-      없다"(≤)이지 "반드시 천장에 붙는다"(==)가 아니다. 부등식으로 되돌린다.
-      ⚠️`==`로 적으면 상수를 정당하게 고칠 때마다 무관한 테스트가 깨진다.
     """
     from shopping_shorts.script_gate import (density_target, norm_chars_per_30s,
                                              SPEECH_CHARS_PER_SEC)
     cap = int(SPEECH_CHARS_PER_SEC * 30)
-    # 어떤 밀도를 적어도 천장을 넘지 않는다 — 이것이 지켜야 할 계약이다
-    assert density_target({"chars_per_30s": 377}, 30) <= cap
-    # 천장보다 높은 밀도를 적으면 천장이 이긴다(잘림이 실제로 작동하는지)
-    assert density_target({"chars_per_30s": int(cap / 0.7395) + 200}, 30) == cap
+    # 히트작 실측 밀도는 환산해도 천장을 넘는다 → 천장이 이긴다
+    assert density_target({"chars_per_30s": 377}, 30) == cap
     # 길이를 늘려 잡으면 천장도 같이 올라간다
-    assert density_target({"chars_per_30s": 377}, 60) <= int(SPEECH_CHARS_PER_SEC * 60)
+    assert density_target({"chars_per_30s": 377}, 60) == int(SPEECH_CHARS_PER_SEC * 60)
 
 
 def test_density_target_respects_styles_below_the_cap():
