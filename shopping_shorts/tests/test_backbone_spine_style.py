@@ -81,5 +81,5 @@ def test_외관컷은_구조줄_몫으로_예약된다():
     groups = {"product": "카메라", "groups": [{"name": "언박싱", "cuts": ["open1", "whole", "open2"]}], "order": [0]}
     lines = [{"role": "title", "text": "가" * 8, "group": -1}, {"role": "solve", "text": "가" * 20, "group": 0}]
     bs, _ = ba.assign_cuts(lines, groups, idx, "bb")
-    assert bs[0]["segs"][0] == "whole", bs
-    assert "whole" not in bs[1]["segs"], "특징 줄은 다른 컷이 있으면 예약 컷을 안 쓴다: %s" % bs
+    assert bs[0]["segs"][0] in ("whole", "open2"), "구조 줄은 예약된 외관·박스 컷을 받는다: %s" % bs
+    assert bs[1]["segs"][0] == "open1", "특징 줄은 예약 안 된 컷을 먼저 쓴다: %s" % bs

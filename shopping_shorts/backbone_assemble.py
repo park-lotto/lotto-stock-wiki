@@ -313,7 +313,7 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
     #   특징 줄은 그 묶음에 다른 컷이 없을 때만 예약 컷을 쓴다.
     n_struct = sum(1 for L in lines if not (L.get("group") is not None and 0 <= L.get("group") < len(groups_out["groups"])))
     whole_all = [s for s in all_sub if _looks_whole(s) and not _is_person(s) and seg_index[s]["secs"] >= MIN_CUT_SECS]
-    reserved = whole_all[:max(0, n_struct)]
+    reserved = whole_all[:max(0, n_struct * MIN_CUTS_PER_LINE)]   # 줄당 2컷 규칙만큼(실측: 5컷은 3줄에서 동났다, job bb5c64454fd7)
 
     def _structural_pool():
         """특징 줄이 다 가져간 **뒤**에 부른다. ① 특징 묶음에서 남은 컷(=제품 컷) ② 묶음 밖 '전체' 컷
