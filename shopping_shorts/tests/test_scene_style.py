@@ -71,3 +71,12 @@ def test_linux_layer_render_enables_chrome_no_sandbox(monkeypatch, tmp_path):
 def test_invalid_saved_configuration_is_rejected(extra):
     with pytest.raises(ValueError):
         validate_snapshot({'mode':'story','presetId':'t11',**extra})
+
+
+def test_레이어_제한시간은_영상길이에_비례한다():
+    """2026-09-17: 29.7초 영상이 245초 걸려 고정 240초 제한에 세 번 연속 잘렸다."""
+    from shopping_shorts.scene_style import _layer_render_timeout as t
+    assert t({"scenes": [{"end": 5}]}) == 240            # 짧으면 종전 그대로
+    assert t({"scenes": [{"end": 29.7}]}) > 245 + 60     # 실측 245초에 여유
+    assert t({"scenes": [{"end": 600}]}) == 900          # 상한
+    assert t({}) == 240
