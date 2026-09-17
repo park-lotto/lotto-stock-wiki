@@ -8550,7 +8550,11 @@ def api_mix_capcut(job_id: str, base: str = ""):
     #   자르기가 실패하면 원본으로 두지 않고 **막는다** — 자막 남은 결과물을 조용히 내보내는
     #   것이 더 나쁘다(사장님이 캡컷에서야 알게 된다).
     if job.get("subtitle_removal") and not (job.get("clean_sources") or {}):
-        _cf = job.get("clean_video_path")
+        # ★청소본은 **지금 편성의 서명 파일**로 찾는다(mix_pipeline.clean_final_path_for_plan, 0순위-B).
+        #   2026-09-17 고객 제보(job 4efcc4c06d41): 렌더 완료·청소본 파일이 있는데도 "자막 없는 완성본이
+        #   없어요"로 막혔다. 편집을 바꾸면 _save_render_inputs가 clean_video_path를 비우고, 완성본
+        #   렌더 때 만든 청소본(_final_clean_fn)은 그 칸을 다시 안 채우기 때문이다. 칸은 옛 호환용으로만 본다.
+        _cf = mix_pipeline.clean_final_path_for_plan(job, work) or job.get("clean_video_path")
         if _cf and Path(_cf).exists():
             try:
                 _clips = mix_pipeline.split_final_into_beat_clips(_cf, timeline, work)
