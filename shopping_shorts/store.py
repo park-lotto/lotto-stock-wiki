@@ -1328,6 +1328,8 @@ class Store:
             for col, ddl in (
                 ("subtitle_removal", "INTEGER NOT NULL DEFAULT 0"),
                 ("clean_video_path", "TEXT"),
+                ("clean_tier", "TEXT"),    # 자막제거 등급 'basic'|'pro'(Smart Pro). 2026-09-16.
+                                           # ★NULL = 기본 — 옛 job은 손대지 않아도 지금까지와 같다.
                 ("given_script", "TEXT"),  # 영상제작 2단계 given_script 모드(2026-07-13)
                 ("headcopy_json", "TEXT"),  # 영상제작 5단계 꾸미기 헤드카피(2026-07-13)
                 ("caption_style_json", "TEXT"),  # 영상제작 5단계 자막 스타일(2026-07-14)
@@ -5211,7 +5213,7 @@ class Store:
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
                 "scene_first, backbone_main, clean_regions_json, product_json, "
-                "mix_charged, cta_cut_sec "
+                "mix_charged, cta_cut_sec, clean_tier "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -5246,6 +5248,8 @@ class Store:
             "mix_charged": row[36],
             # CTA 비트 시작 시각(초, final.mp4 기준). None = 옛 job이거나 CTA 없는 대본.
             "cta_cut_sec": row[37],
+            # 자막제거 등급. None = 기본(옛 job 포함). 해석은 mix_pipeline.clean_tier_of 한 곳.
+            "clean_tier": row[38],
         }
 
     def list_recent_mix_jobs(self, customer_id=LEGACY_CUSTOMER_ID, limit=50):
@@ -5307,6 +5311,9 @@ class Store:
         if "deco" in fields:
             cols.append("deco_json=?")
             vals.append(json.dumps(fields["deco"], ensure_ascii=False) if fields["deco"] else None)
+        if "clean_tier" in fields:
+            cols.append("clean_tier=?")
+            vals.append(fields["clean_tier"] or None)
         if "thumbnail" in fields:
             cols.append("thumbnail_json=?")
             vals.append(json.dumps(fields["thumbnail"], ensure_ascii=False)

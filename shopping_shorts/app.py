@@ -6714,7 +6714,8 @@ def clean_failure_kind(clean_error):
       ⚠️새 실패 사유를 만들 땐 여기도 같이 늘려라. 안 늘리면 'unknown'으로 새어
         "다시 시도해 주세요"라는 **거짓 안내**가 나간다 — 그게 이 함수가 생긴 이유다.
 
-    반환: 'no_points' | 'no_credit' | 'interrupted' | 'unsupported' | 'unknown'
+    반환: 'no_points' | 'no_credit' | 'need_own_key' | 'need_new_api_key'
+        | 'interrupted' | 'vendor_down' | 'unsupported' | 'unknown'
     """
     e = (clean_error or "")
     low = e.lower()
@@ -6733,9 +6734,24 @@ def clean_failure_kind(clean_error):
     from shopping_shorts.vmake_client import is_no_credit as _vmake_no_credit
     if _vmake_no_credit(e):
         return "no_credit"
+    # 고급(Smart Pro)을 골랐는데 키가 아직 옛 API에 묶여 있다(2026-09-16).
+    # ★재시도로는 영원히 안 된다 — 고객이 VMake에서 새 API로 전환하고 **키를 다시
+    #   등록**해야 한다. need_own_key와 갈라 둔다: 키는 있는데 **종류가 다른** 것이라
+    #   "키를 등록하세요"만 보여주면 이미 등록한 사람이 무엇을 해야 할지 모른다.
+    from shopping_shorts.vmake_client import is_legacy_key as _vmake_legacy
+    if _vmake_legacy(e) or "새 API 키가 필요" in e:
+        return "need_new_api_key"
     # 배포·재시작으로 BackgroundTask가 죽은 경우 — 이건 진짜로 다시 시도하면 된다.
     if "서버 재시작" in e or "중단되었습니다" in e:
         return "interrupted"
+    # ★업체(VMake) 게이트웨이 장애 — 영상 탓이 아니다(2026-09-17 실측, job 1556910737b6).
+    #   30029 = '前置开放平台事件处理失败'(앞단 개방플랫폼 이벤트 처리 실패). 같은 응답 안에
+    #   영상은 1080x1920·683프레임으로 정상 파싱돼 있었다.
+    #   ★반드시 아래 'unsupported'보다 **먼저** 본다 — 두 사유가 "결과가 비었습니다"라는
+    #     같은 껍데기를 쓰기 때문에, 순서가 뒤집히면 업체 장애가 영상 탓으로 둔갑하고
+    #     고객은 멀쩡한 소재를 버리러 간다(0순위-B: 판단이 문자열 하나에 겹쳐 있다).
+    if "30029" in e:
+        return "vendor_down"
     # 영상 자체를 VMake가 처리 못 한 경우(실측 code 10101 'right reduce error').
     if "10101" in e or "결과가 비었습니다" in e:
         return "unsupported"
@@ -6859,7 +6875,12 @@ def api_produce_mix_clean_clips(job_id: str):
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     if job.get("clean_status") != "ready":
-        return {"ok": True, "clips": [], "stale": False, "ready": False}
+        # ★ready가 아니어도 **옛 청소본이 남아 있으면** 그 사실을 알린다(2026-09-17).
+        #   실측(이윤정님 job 1556910737b6, clean_status=failed): 여기서 늘 stale=False를
+        #   답해서 화면이 "옛 결과가 있다"를 몰랐다 → 아무 설명 없는 빈 비교화면이 뜨고
+        #   고객은 무엇을 눌러야 할지 모른다. 판정은 clean_redo_state 한 곳(0순위-B).
+        _redo = mix_pipeline.clean_redo_state(job, _MIX_WORK_DIR / job_id)
+        return {"ok": True, "clips": [], "stale": bool(_redo.get("stale")), "ready": False}
     r = mix_pipeline.clean_compare_clips(job, _MIX_WORK_DIR / job_id)
     clips = [{"ci": c["ci"], "si": c["si"], "beat_idx": c["beat_idx"],
               "dur": round(float(c["dur"]), 3)} for c in (r.get("clips") or [])]
@@ -9040,6 +9061,62 @@ def api_thumb_file(job_id: str, name: str):
     # 브라우저가 휴리스틱 캐시로 옛 이미지를 재검증 없이 내보낸다(2026-07-30 자막제거 제보).
     # 위 ?v= 캐시버스터와 이중 방어 — 버스터가 안 붙은 옛 URL(DB에 저장된 frames)도 살린다.
     return FileResponse(str(path), headers={"Cache-Control": "no-cache"})
+
+
+@app.post("/api/produce/thumb/upload")
+async def api_thumb_upload(job_id: str = Form(...), file: UploadFile = File(...)):
+    """🖼 **내 이미지를 썸네일 후보로 직접 올린다**(2026-09-16 회원 제보).
+
+    여태 후보는 둘뿐이었다 — 완성본을 등분해 뽑거나(thumb/frames), 6단계에서 보던
+    장면을 보내거나(thumb/pin). 회원이 미리 만들어 둔 이미지를 쓰려면 방법이 없었고,
+    그 이미지를 "영상 맨 앞에 넣기"(thumbnail.intro)도 못 했다.
+
+    ★핀과 **같은 목록(thumbnail.pins)** 에 넣는다 — 그래야 고르기·꾸미기·인트로가
+      한 줄도 안 바뀌고 그대로 돈다(0순위-B: 같은 판단을 두 번 적지 않는다).
+    ★파일명은 서버가 정한다(thumb/save와 같은 원칙) — 올린 이름은 경로순회 재료다.
+    ★받은 바이트를 그대로 저장하지 않고 **Pillow로 열어 다시 쓴다**. 이미지로 안 열리는
+      파일(확장자만 바꾼 스크립트 등)은 여기서 걸러지고, EXIF 회전도 이때 반영된다.
+    """
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+
+    data = await file.read()
+    _MAX = 20 * 1024 * 1024
+    if not data:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "빈 파일이에요"})
+    if len(data) > _MAX:
+        return JSONResponse(status_code=413,
+                            content={"ok": False, "error": "20MB까지 올릴 수 있어요"})
+    try:
+        from PIL import Image, ImageOps
+        im = Image.open(io.BytesIO(data))
+        im = ImageOps.exif_transpose(im)          # 휴대폰 사진이 눕지 않게
+        im = im.convert("RGB")
+    except Exception as e:      # noqa: BLE001 — 열리지 않으면 이미지가 아니다
+        print(f"[thumb-upload] 이미지 아님: {e!r}", file=sys.stderr)
+        return JSONResponse(status_code=400,
+                            content={"ok": False, "error": "이미지 파일이 아니에요(jpg·png로 올려주세요)"})
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    thumb = job.get("thumbnail") or {}
+    pins = list(thumb.get("pins") or [])
+    # 이름은 내용 해시 — 같은 그림을 두 번 올리면 후보가 중복으로 쌓이지 않는다(핀과 같은 원칙).
+    import hashlib as _hl
+    name = f"up_{_hl.sha1(data).hexdigest()[:16]}.jpg"
+    im.save(str(out_dir / name), "JPEG", quality=92)
+
+    label = (os.path.basename(file.filename or "").rsplit(".", 1)[0] or "내 이미지")[:24]
+    pins = [p for p in pins if str(p.get("name") or "") != name]
+    pins.insert(0, {"name": name, "label": f"🖼 {label}", "uploaded": True})
+    thumb["pins"] = pins
+    _save_render_inputs(store, job_id, thumbnail=thumb)
+    return {"ok": True, "name": name, "label": f"🖼 {label}", "pins": pins,
+            "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
 
 @app.post("/api/produce/thumb/save")
@@ -16800,6 +16877,65 @@ def api_my_channel_set(request: Request, body: dict):
     return {"ok": True, "channel": name, "is_default": False}
 
 
+# ── 💾 제작소 프리셋 3종(내 프리셋·내 템플릿·자막 프리셋) — 계정 저장(2026-09-17) ──
+# ★종전엔 produce.html이 localStorage에만 담아 회사 PC에서 저장한 게 집 PC엔 없었다
+#   (이윤정님 제보). 값의 주인을 customer_prefs 한 곳으로 옮긴다(내 채널명과 같은 방식).
+# 저장 단위는 종류별 **목록 통째**(전체 교체) — 폰트 즐겨찾기와 같은 이유(순서 뒤집힘 방지).
+# {merge:[...]}는 옛 브라우저 저장분을 계정에 합치는 이관용 — 같은 내용(JSON 동일)은 안 겹친다.
+_PRESET_KINDS = ("hc_my_presets", "fr_my_templates", "cap_presets")
+_PRESET_MAX_ITEMS = 50          # 한 종류당 개수 — 화면이 버튼 줄이라 그 이상은 못 고른다
+_PRESET_MAX_BYTES = 200_000     # 한 종류당 JSON 크기 — 틀 하나가 1KB 안팎이라 넉넉하다
+
+
+def _preset_clean(items):
+    """이름 있는 dict만 남기고 개수 상한을 자른다. 값 구조(hc/cap/frame)는 화면이 정한다."""
+    out = []
+    for it in items or []:
+        if isinstance(it, dict) and str(it.get("name") or "").strip():
+            it = dict(it)
+            it["name"] = str(it["name"]).strip()[:40]
+            out.append(it)
+    return out[:_PRESET_MAX_ITEMS]
+
+
+@app.get("/api/produce/presets/{kind}")
+def api_produce_presets_get(request: Request, kind: str):
+    if kind not in _PRESET_KINDS:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 종류"})
+    saved = Store(DB_PATH).get_pref("preset::" + kind, customer_id=_cid(request))
+    return {"ok": True, "items": saved if isinstance(saved, list) else [],
+            "is_default": saved is None}
+
+
+@app.post("/api/produce/presets/{kind}")
+def api_produce_presets_set(request: Request, kind: str, body: dict):
+    """body: {items:[...]} 전체 교체 / {merge:[...]} 기존에 없는 것만 뒤에 붙임(이관)."""
+    if kind not in _PRESET_KINDS:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 종류"})
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    key = "preset::" + kind
+    if "merge" in body:
+        if not isinstance(body["merge"], list):
+            return JSONResponse(status_code=422, content={"ok": False, "error": "merge 배열 필요"})
+        cur = store.get_pref(key, customer_id=cid)
+        cur = cur if isinstance(cur, list) else []
+        seen = {json.dumps(x, sort_keys=True, ensure_ascii=False) for x in cur}
+        for it in _preset_clean(body["merge"]):
+            sig = json.dumps(it, sort_keys=True, ensure_ascii=False)
+            if sig not in seen:
+                cur.append(it); seen.add(sig)
+        items = cur[:_PRESET_MAX_ITEMS]
+    else:
+        if not isinstance(body.get("items"), list):
+            return JSONResponse(status_code=422, content={"ok": False, "error": "items 배열 필요"})
+        items = _preset_clean(body["items"])
+    if len(json.dumps(items, ensure_ascii=False)) > _PRESET_MAX_BYTES:
+        return JSONResponse(status_code=413, content={"ok": False, "error": "프리셋이 너무 큽니다"})
+    store.set_pref(key, items, customer_id=cid)
+    return {"ok": True, "items": items, "is_default": False}
+
+
 @app.get("/api/produce/picks")
 def api_produce_picks(request: Request):
     """영상제작에 담긴 도서관 대본(전체 데이터). 우리믹스 탭 기본 목록."""
@@ -16882,6 +17018,41 @@ def api_produce_works_list(request: Request):
     return {"ok": True, "works": Store(DB_PATH).list_produce_works(customer_id=_cid(request))}
 
 
+def _clean_pro_ready(store, cid):
+    """이 계정이 **실제로 쓰게 될 자막제거 키**로 고급이 되는가. True/False/None(모름).
+
+    ★키 고르기는 keyroute.keys_for 한 곳(0순위-B) — 워커가 청소할 때 쓰는 키와 같아야
+      "화면은 된다는데 막상 실패"가 안 난다. 판정은 vmake_client.key_supports_new_api(캐시 1시간).
+    ★실패해도 화면 로딩을 막지 않는다 — None이면 화면은 안내를 그대로 둔다.
+    """
+    try:
+        from . import keyroute
+        from .vmake_client import key_supports_new_api
+        keys, _ = keyroute.keys_for(store, cid, keyroute.SVC_VMAKE)
+        keys = [k for k in (keys or []) if k]
+        return key_supports_new_api(keys[0]) if keys else False
+    except Exception:          # noqa: BLE001
+        return None
+
+
+def _clean_credit_est(job, job_id):
+    """다시 지울 때 나갈 크레딧 추정. 못 재면 None — **숫자를 지어내지 않는다**.
+
+    ★길이는 1단계 미리보기(preview.mp4)로 잰다 — 완성본과 같은 편성·같은 길이이고
+      이미 만들어져 있어 추가 비용이 0이다. 없으면 None(확인창은 숫자 없이 뜬다).
+    ★단가 계산은 mix_pipeline.clean_credit_estimate 한 곳(0순위-B) — 화면 안내 문구와
+      같은 식이라야 "안내는 120인데 실제는 다른 값"이 안 난다.
+    """
+    try:
+        p = job.get("preview_path")
+        if not p or not Path(p).exists():
+            return None
+        return mix_pipeline.clean_credit_estimate(
+            mix_pipeline._probe_seconds(p), mix_pipeline.clean_tier_of(job))
+    except Exception:          # noqa: BLE001 — 안내용이다. 실패해도 화면을 막지 않는다
+        return None
+
+
 @app.get("/api/produce/works/{work_id}")
 def api_produce_works_get(request: Request, work_id: str):
     st = Store(DB_PATH)
@@ -16902,7 +17073,20 @@ def api_produce_works_get(request: Request, work_id: str):
             settings = {"headcopy": job.get("headcopy"),
                         "caption_style": job.get("caption_style"),
                         "deco": job.get("deco"),
-                        "subtitle_removal": job.get("subtitle_removal")}
+                        "subtitle_removal": job.get("subtitle_removal"),
+                        # 지우는 방식(기본/고급) — 화면이 job에서 되읽는다(0순위-B)
+                        "clean_tier": job.get("clean_tier"),
+                        # 이미 만들어 둔 등급 — 되돌리기가 공짜인지 화면이 안내한다
+                        "clean_tiers_ready": mix_pipeline.clean_tiers_ready(
+                            job, _MIX_WORK_DIR / w["job_id"]),
+                        # 장면을 바꾼 뒤 '다시 지워야 하는' 상태인가(2026-09-17 사장님).
+                        # ready/stale/tiers — 화면이 이걸 받아야 "옛 장면 결과"를 알아본다.
+                        "clean_redo": mix_pipeline.clean_redo_state(
+                            job, _MIX_WORK_DIR / w["job_id"]),
+                        # 확인창에 쓸 크레딧 추정. 길이를 못 재면 None(숫자 없이 뜬다).
+                        "clean_credit_est": _clean_credit_est(job, w["job_id"]),
+                        # 이 계정의 키로 고급을 쓸 수 있나 — True면 화면이 "키 다시 등록" 경고를 뺀다
+                        "clean_pro_ready": _clean_pro_ready(st, _cid(request))}
     return {"ok": True, "state": w["state"], "job_id": w["job_id"], "step": w["step"],
             "settings": settings}
 
@@ -18619,6 +18803,11 @@ def api_produce_mix_settings(body: dict):
     fields = {}
     if "subtitle_removal" in body:
         fields["subtitle_removal"] = bool(body.get("subtitle_removal"))
+    if "clean_tier" in body:
+        # 자막제거 등급. 아는 값만 받는다 — 모르는 값이 들어오면 기본으로 떨어뜨린다
+        # (등급 이름의 정의처는 vmake_client, 해석은 mix_pipeline.clean_tier_of).
+        from .vmake_client import TIER_BASIC, TIER_PRO
+        fields["clean_tier"] = TIER_PRO if body.get("clean_tier") == TIER_PRO else TIER_BASIC
     if "headcopy" in body:
         fields["headcopy"] = body.get("headcopy")  # dict or None
     if "caption_style" in body:
@@ -19016,16 +19205,22 @@ _HEADCOPY_CACHE_MAX = 200
 
 
 @app.post("/api/produce/headcopy/suggest")
-def api_produce_headcopy_suggest(body: dict):
-    """확정 대본 → 헤드카피 후보. {script} → {ok, cached, copies:[{label,text}]}"""
+def api_produce_headcopy_suggest(request: Request, body: dict):
+    """확정 대본+틀 계열 → 짝이 맞는 헤드카피 후보."""
     script = (body.get("script") or "").strip()
     if not script:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "대본이 비어 있습니다"})
-    key = _script_hash(script)
+    # 새 계열은 사장님(cid 0) 시험 전용이다. 일반 고객은 요청을 조작해도 병합 전과 같은
+    # generic 프롬프트만 탄다 — 테스트 페이지 기능이 공용 produce에 새는 것을 서버에서 차단한다.
+    requested_family = body.get("copy_family") if _cid(request) == 0 else "generic"
+    family = headcopy_gen.normalize_family(requested_family)
+    # 같은 대본이라도 화법 계열이 다르면 결과가 다르다. 계열을 빼면 인스타형 요청이
+    # 이븐쇼핑형 캐시에 맞아 AI를 부르지도 않고 잘못된 제목을 받는다.
+    key = f"{_script_hash(script)}:{family}"
     if key in _HEADCOPY_CACHE:
         return {"ok": True, "cached": True, "copies": _HEADCOPY_CACHE[key]}
-    copies = headcopy_gen.suggest(script)
+    copies = headcopy_gen.suggest(script, family=family)
     # 못 뽑은 것도 캐시하면 "다시 시도"가 영영 막힌다 → 성공했을 때만 담는다.
     if copies:
         if len(_HEADCOPY_CACHE) >= _HEADCOPY_CACHE_MAX:
@@ -19063,6 +19258,9 @@ def api_produce_frame_presets():
                          "has_head": v.get("has_head"),
                          "demo_views": v.get("demo_views"),
                          "demo_comments": v.get("demo_comments"),
+                         # 현재 장면꾸미기 채널 틀은 전부 유튜브 썰쇼핑 계열이다.
+                         # 이후 인스타 틀을 추가할 때 이 값만 바꾸면 생성 배선이 따라간다.
+                         "copy_family": v.get("copy_family", "youtube_reveal"),
                          "headcopy": v.get("headcopy"),
                          # ★자막도 한 세트로 내려준다(2026-08-25). 틀·헤드카피만
                          #   채널 질감을 따라가고 자막만 우리 기본값이면 "한 세트로
@@ -19441,6 +19639,60 @@ def api_produce_frame_png(request: Request):
                         headers={"Cache-Control": "public, max-age=31536000"})
 
 
+@app.get("/api/produce/comment-card/styles")
+def api_produce_comment_card_styles():
+    """댓글 카드 라이브러리 목록. 스타일 정의는 comment_card 한 곳만 쓴다."""
+    from shopping_shorts import comment_card
+    return {"ok": True, "styles": comment_card.styles()}
+
+
+@app.get("/api/produce/comment-card.png")
+def api_produce_comment_card_png(spec: str = "", job_id: str = ""):
+    """편집기와 최종 영상이 공유하는 댓글 카드 PNG 렌더러."""
+    from shopping_shorts import comment_card
+    try:
+        payload = json.loads(spec or "{}")
+        if not isinstance(payload, dict):
+            payload = {}
+    except (TypeError, ValueError):
+        payload = {}
+    avatar_file = Path(str(payload.get("avatar_file") or "")).name
+    if avatar_file and job_id and re.fullmatch(r"[A-Za-z0-9_-]+", job_id or ""):
+        avatar_path = _MIX_WORK_DIR / job_id / avatar_file
+        if avatar_path.is_file():
+            payload["avatar_path"] = str(avatar_path)
+    out = comment_card.CACHE_DIR / f"{comment_card.cache_key(payload)}.png"
+    if not out.exists():
+        comment_card.render_to(payload, out)
+    return FileResponse(str(out), media_type="image/png",
+                        headers={"Cache-Control": "public, max-age=31536000"})
+
+
+@app.post("/api/produce/mix/comment-avatar")
+async def api_produce_comment_avatar(job_id: str = Form(...), file: UploadFile = File(...)):
+    """댓글 카드용 프로필 사진을 작업 폴더에 정규화된 PNG로 저장한다."""
+    store = Store(DB_PATH)
+    if not job_id or not store.get_mix_job(job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    raw = await file.read()
+    if not raw or len(raw) > 5 * 1024 * 1024:
+        return JSONResponse(status_code=413, content={"ok": False, "error": "프로필 이미지는 5MB 이하만 가능해요"})
+    try:
+        from PIL import Image, ImageOps
+        with Image.open(io.BytesIO(raw)) as source:
+            avatar = ImageOps.fit(source.convert("RGBA"), (512, 512), method=Image.Resampling.LANCZOS)
+            output = io.BytesIO()
+            avatar.save(output, "PNG", optimize=True)
+            normalized = output.getvalue()
+    except (OSError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "이미지를 읽지 못했어요"})
+    name = f"comment_avatar_{hashlib.sha1(normalized).hexdigest()[:16]}.png"
+    target = _MIX_WORK_DIR / job_id / name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(normalized)
+    return {"ok": True, "file": name}
+
+
 @app.post("/api/produce/mix/bgm")
 async def api_produce_mix_bgm(job_id: str = Form(...), file: UploadFile = File(...)):
     """BGM 오디오 업로드 → job work dir에 bgm.{ext}로 저장. deco.bgm.file로 참조·렌더 시 믹스."""
@@ -19740,23 +19992,53 @@ def _scenehl_locked(store, job_id, body):
     plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
     if err:
         return err
+    # ★컷 번호(2026-09-16 회원 제보 "자막 단위가 아닌 컷 단위로 적용"). 주면 그 컷에만,
+    #   안 주면 종전대로 비트 전체에 저장한다(옛 클라이언트 회귀 0).
+    cut = body.get("cut")
+    try:
+        cut = None if cut is None or cut == "" else str(int(cut))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "cut은 숫자여야 해요"})
     if not body.get("on"):
-        hit.pop("scene_hl", None)
+        if cut is None:
+            hit.pop("scene_hl", None)
+            hit.pop("scene_hl_cuts", None)     # 비트 전체 끄기는 컷 지정도 함께 지운다
+        else:
+            cuts = hit.get("scene_hl_cuts")
+            if isinstance(cuts, dict):
+                cuts.pop(cut, None)
+                if not cuts:
+                    hit.pop("scene_hl_cuts", None)
     else:
         def _f(key, dflt):
             try:
                 return float(body.get(key))
             except (TypeError, ValueError):
                 return dflt
-        hit["scene_hl"] = {
+        val = {
             "on": True,
             "mode": "spot" if str(body.get("mode") or "zoom") == "spot" else "zoom",
             "shape": "round" if str(body.get("shape") or "circle") == "round" else "circle",
             "cx": round(_f("cx", 0.5), 5), "cy": round(_f("cy", 0.5), 5),
             "r": round(_f("r", 0.28), 5), "zoom": round(_f("zoom", 2.0), 4),
         }
+        if cut is None:
+            hit["scene_hl"] = val
+            hit.pop("scene_hl_cuts", None)     # 비트 전체 지정이 컷 지정을 대체한다
+        else:
+            cuts = hit.get("scene_hl_cuts")
+            if not isinstance(cuts, dict):
+                # 비트 전체 값이 있었다면 **모든 컷에 걸려 있던 것**이므로 컷별로 펼쳐
+                # 옮겨 담는다 — 안 그러면 한 컷을 고치는 순간 나머지 컷의 원이 사라진다.
+                cuts = {}
+                old = hit.pop("scene_hl", None)
+                if isinstance(old, dict) and old.get("on"):
+                    for k in range(int(body.get("cut_of") or 0) or 0):
+                        cuts[str(k)] = dict(old)
+                hit["scene_hl_cuts"] = cuts
+            cuts[cut] = val
     _save_render_inputs(store, job_id, edit_plan=plan)
-    return {"ok": True, "hl": video_assemble.scene_hl_of(hit)}
+    return {"ok": True, "hl": video_assemble.scene_hl_of(hit, cut)}
 
 
 @app.get("/api/tts/quota")
@@ -20260,7 +20542,8 @@ def api_produce_mix_beats_preview(job_id: str):
             #   화면이 스스로 가두면 렌더와 두 벌이 된다(0순위-B, cap_pos와 같은 방식).
             "zoom": _z_of(b)[0], "pan_x": _z_of(b)[1], "pan_y": _z_of(b)[2],
             # 🔎 장면별 강조(원형 돋보기/스포트라이트, 2026-08-30). 같은 이유로 서버가 준다.
-            "hl": video_assemble.scene_hl_of(b),
+            # ★이 **컷**의 강조를 준다(2026-09-16) — 컷별 지정이 없으면 비트 값이 그대로 온다.
+            "hl": video_assemble.scene_hl_of(b, _ci),
             })
     # 전체 칸 수 — 화면의 "n / N 장면"이 이 값을 쓴다(비트 수가 아니라 컷 수).
     for _k, _o in enumerate(out):
