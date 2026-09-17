@@ -191,6 +191,11 @@ def _pick_role_asset(pool, narration):
 # 여기와 렌더 둘 중 한쪽만 늘리면 조용히 기본값(last)으로 떨어진다(0순위-B).
 SFX_POSITIONS = ("first", "last", "transition")
 
+# ★효과음 한 발의 길이 상한(초) — 이보다 길면 컷을 덮는다.
+#   이븐쇼핑류 실측: 중앙 80ms · 200ms 이하가 93%(channel/strategy/효과음_패턴분석.md, 441건).
+#   상한을 200ms에 맞추면 뇌전구 팩에서 pop4·click·x_click·r3_click 4계열 25개가 남는다.
+_SFX_MAX_SECS = 0.20
+
 # ★타점 기본값 = **칸이 넘어가는 순간**(transition), 역할 무관 (2026-08-29).
 #
 # 종전엔 훅만 transition이고 나머지는 "last"(칸의 마지막 자막)였다. 실측해보니
@@ -224,6 +229,67 @@ def _sfx_candidates(assets):
             if a.get("asset_type") == "sfx" and a.get("role") in _ROLES]
 
 
+# ★벤치마크 순환 공식 — 추측이 아니라 **실측된 것**을 그대로 옮긴다.
+#   (channel/volcano/뇌전구_역분석_8편_2026-09-12.md: "32컷 전 구간 5편 완전 동일(접미사까지,
+#    전편 3편 포함 8/8). 4칸 틀 × 계열별 주기". ⚠"12주기 반복"이 아니다 — 13번째가 r3_click이다.)
+#     i%4==0 → pop4                                         ← ★첫 컷(훅)은 항상 이것
+#     i%4==1 → click, r3_click, x_click, r3_click, x_click  (주기 5)
+#     i%4==2 → boing, hit, r3_hit                           (주기 3)
+#     i%4==3 → ding, r3_ding, x_ding                        (주기 3)
+#   ⚠️2·3번 자리(boing·hit·ding류)는 우리 실측에서 600~1500ms로 길어 컷을 덮는다.
+#     쇼핑 숏폼(컷 1.7초)엔 안 맞아 _SFX_MAX_SECS로 걸러진다 → 그 자리는 남은 짧은 계열이 채운다.
+_CYCLE_SLOTS = (
+    ("pop4",),
+    ("click", "r3_click", "x_click", "r3_click", "x_click"),
+    ("boing", "hit", "r3_hit"),
+    ("ding", "r3_ding", "x_ding"),
+)
+
+
+def _has_pack(cands):
+    """벤치마크 팩이 깔려 있나 — 그 경우에만 공식 순환을 쓴다(없으면 종전 역할 경로)."""
+    return any((a.get("source_ref") or "") == "volcano/sfx_norm" for a in cands)
+
+
+def _cycle_pool(cands):
+    """역할표 밖 칸이 돌려 쓸 효과음 줄 세우기 — **벤치마크 순환 공식**대로.
+
+    ★첫 컷(i=0)은 pop4 — 8편 실측에서 예외 없이 같았다(사장님: "후킹 처음에 들어가는 공통 효과음").
+    공식이 부르는 계열이 (길이 상한에 걸려) 없으면 남은 계열에서 가로로 이어 채운다.
+    ★팩에 든 것만 쓴다 — 08-21 검증용 톤("띠용(테스트)"·"뿅(테스트)")이 섞이면 결이 튄다.
+    결정적(정렬 고정)이라 같은 대본이면 항상 같은 배열이 나온다.
+    """
+    packed = [a for a in cands if (a.get("source_ref") or "") == "volcano/sfx_norm"] or cands
+    # ★긴 소리는 뺀다(2026-09-17 사장님 "이븐쇼핑이랑 최대한 비슷하게 해").
+    #   실측 대조 — 뇌전구 팩 79개: 길이 중앙 421ms · 200ms 이하 29% · 반짝 25%/붐 53%
+    #             이븐쇼핑류 12편 441건: 길이 중앙 80ms · 200ms 이하 93% · 반짝 80%/붐 17%
+    #   팩이 5배 길고 계열 비율이 거의 반대다. 컷이 1.7초인데 drum(1535ms)·ding(1060ms)을
+    #   얹으면 컷 하나를 통째로 덮는다(실측 job sfxb04ef8057에 censor·drum·fail이 들어갔다).
+    #   ★이름으로 고르지 않는다 — 팩이 바뀌면 또 어긋난다(0순위-B). **잰 길이**로 거른다.
+    #   통과분(실측): pop4 38ms · click 125ms · x_click 127ms · r3_click 167ms = 4계열 25개.
+    short = [a for a in packed if 0 < float(a.get("duration") or 0) <= _SFX_MAX_SECS]
+    packed = short or packed          # 길이를 못 잰 팩이면 종전대로(조용히 비지 않게)
+    lanes = {}
+    for a in sorted(packed, key=lambda x: x["id"]):
+        fam = ((a.get("keywords") or [""])[0] if isinstance(a.get("keywords"), list)
+               else str(a.get("keywords") or "").split(",")[0])
+        lanes.setdefault(fam or "기타", []).append(a)
+    # 공식대로 한 바퀴 — 각 계열은 자기 줄에서 순서대로 뽑아 쓴다(같은 파일 연속 금지).
+    order = sorted(lanes)                      # 계열 이름순 = 실행마다 같다
+    take = {k: 0 for k in lanes}
+    out, rounds = [], max(len(v) for v in lanes.values()) * len(_CYCLE_SLOTS)
+    for i in range(rounds):
+        slot = _CYCLE_SLOTS[i % len(_CYCLE_SLOTS)]
+        fam = slot[(i // len(_CYCLE_SLOTS)) % len(slot)]
+        if fam not in lanes:                   # 길이 상한에 걸려 없는 계열 → 남은 것으로 대체
+            left = [k for k in order if take[k] < len(lanes[k])] or order
+            fam = left[i % len(left)]
+        lane = lanes[fam]
+        out.append(lane[take[fam] % len(lane)])
+        take[fam] += 1
+    return out or [a for v in lanes.values() for a in v]
+
+
 def match_sfx(plan, assets):
     """비트 역할 → 효과음 역할 결정적 매칭. Gemini 0회. plan을 복사해 반환.
     beat["sfx"] = {asset_id, match_type:"role", position}. 클립 컷어웨이(beat["cutaway"])와
@@ -240,9 +306,38 @@ def match_sfx(plan, assets):
         #   조용히 되돌아간다 — "바꿨는데 그대로"로 겪는다.
         if (beat.get("sfx") or {}).get("match_type") == "manual":
             continue
+        # ★팩(뇌전구)이 깔려 있으면 **역할을 보지 않고 공식 순환**을 쓴다(2026-09-17 사장님
+        #   "이븐쇼핑이랑 최대한 비슷하게 해" · "후킹 처음에 들어가는 공통 효과음 있어").
+        #   역할 경로로 가면 길이 상한을 안 타서 훅에 r3_pop(353ms)·CTA에 x_ding(859ms) 같은
+        #   긴 소리가 붙었다(실측). 벤치마크는 훅이 **항상 pop4**(8편 전부 동일)이고 컷 번호로만
+        #   정한다 — 역할별 표는 그 실측과 어긋난다. 팩이 없으면 종전 역할 경로 그대로(회귀 0).
+        cyc = _cycle_pool(cands) if _has_pack(cands) else None
+        if cyc:
+            chosen = cyc[beat.get("beat_idx", 0) % len(cyc)]
+            beat["sfx"] = {"asset_id": chosen["id"], "match_type": "cycle",
+                           "position": _sfx_position(beat.get("role"))}
+            continue
         compatible = _ROLE_FALLBACK.get(beat.get("role") or "")
         if not compatible:
-            continue   # 이 비트 역할은 효과음 자리가 아님 → 빈 채로
+            # ★역할표에 없는 역할도 **빈 채로 두지 않는다**(2026-09-17 사장님 "효과음이랑 짤을
+            #   뇌전구 껄로 쓰라는 거야"). 종전엔 표에 없으면 통째로 건너뛰어, 백본 대본처럼
+            #   역할이 `feature`인 칸은 **전부 소리가 없었다**(실측 job cut1da908c80: 배치 0/7칸,
+            #   자산은 81개인데 하나도 안 붙음). 표를 늘리는 건 두더지다 — 역할이 새로 생길
+            #   때마다 또 빈다(조사 기록: `match_sfx` 배치 5/9칸도 같은 원인).
+            #   실측이 가리키는 답: 벤치마크는 **역할을 안 보고 컷마다 순환**한다
+            #   (뇌전구 역분석 — 27컷 전부 1발씩, pop4→click→boing→ding… 컷 번호대로 고정 순환.
+            #    무작위 아님. 효과음 실측 12편에서도 "역할이 아니라 컷에 붙는다").
+            #   그래서 표에 없으면 **전체 후보를 비트 순번으로 돌려쓴다**(결정적 = 재실행해도 같다).
+            if not cands:
+                continue
+            # ★계열을 **번갈아** 돈다 — 벤치마크 순환이 pop4→click→boing→ding처럼 매 컷 결이
+            #   바뀐다. id 순으로만 돌리면 boing_0,1,2,3이 연달아 나와 한 소리만 반복된다(실측).
+            #   계열별로 한 줄씩 세우고 가로로 읽어 계열이 겹치지 않게 한다.
+            pool = _cycle_pool(cands)
+            chosen = pool[beat.get("beat_idx", 0) % len(pool)]
+            beat["sfx"] = {"asset_id": chosen["id"], "match_type": "cycle",
+                           "position": _sfx_position(beat.get("role"))}
+            continue
         pool = [a for role in compatible for a in by_role.get(role, [])]   # 중복 허용
         if not pool:
             continue
