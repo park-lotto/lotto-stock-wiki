@@ -158,6 +158,21 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     return {"jobId":job_id,"text":text,"scenes":scenes}
 
 
+def _layer_render_timeout(context):
+    """장면꾸미기 레이어 생성 제한시간(초) — **영상 길이에 비례**한다.
+
+    ★2026-09-17 실측(김성현님 job eeb35a6e9878, 29.7초·33장면, 워터마크 '둥둥'):
+      움직이는 워터마크가 있으면 전 장면을 **프레임마다** 캡처한다(render_scene_style.js).
+      925장을 245.1초에 만들었다(초당 약 3.8장). 고정 240초 제한에 5초 모자라 **세 번 연속**
+      실패했고, 고객은 두 번의 렌더 대기(약 20분) 끝에 실패만 봤다.
+    ★30fps 프레임 수 × 0.5초 + 여유 120초. 짧은 영상은 종전 240초 그대로, 상한 900초.
+      (전체 렌더가 10분 넘으면 _render_is_stale이 죽은 렌더로 보므로 상한을 거기 맞춘다.)
+    """
+    scenes = (context or {}).get("scenes") or []
+    total = max((float(sc.get("end") or 0) for sc in scenes), default=0.0)
+    return int(min(900, max(240, 120 + total * 30 * 0.5)))
+
+
 def render_layers(timeline, snapshot, output, headcopy=None, job_id=None):
     """브라우저 미리보기와 외부 편집기가 함께 쓰는 투명 장면 레이어를 만든다."""
     snapshot = validate_snapshot(snapshot)
@@ -178,17 +193,10 @@ def render_layers(timeline, snapshot, output, headcopy=None, job_id=None):
         # 기본 sandbox가 기동하지 않는다. 이 자식 프로세스는 우리가 만든 로컬 HTML만
         # 렌더하므로 Linux에서만 Puppeteer의 기존 opt-in 플래그를 켠다.
         node_env.setdefault("SCENE_STYLE_NO_SANDBOX", "1")
-    # ★시간 상한은 프레임 수에 비례해야 한다(2026-09-17 김성현님 실사고).
-    #   워터마크 '떠다니기'나 훅 모션이 있으면 render_scene_style.js가 **매 프레임** PNG를
-    #   찍는다(30fps). 28초 영상 = 892프레임인데 상한이 240초 고정이라 3번 연속 시간초과로
-    #   죽었고, 고객은 "렌더가 안 된다"만 봤다. 실측 속도는 프레임당 약 0.25초(정적 장면
-    #   레이어는 장당 6~8초) → 여유 있게 프레임당 0.8초 + 장면당 10초 + 기본 120초.
-    scenes = context["scenes"]
-    total_frames = sum(max(0, round(sc["end"] * 30) - round(sc["start"] * 30)) for sc in scenes)
-    timeout = max(240, 120 + len(scenes) * 10 + int(total_frames * 0.8))
     run = subprocess.run(
         ["node", str(ROOT / "tools/render_scene_style.js"), str(request)],
-        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        timeout=_layer_render_timeout(context),
         env=node_env,
     )
     if run.returncode:

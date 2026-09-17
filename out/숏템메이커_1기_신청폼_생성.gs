@@ -3,7 +3,7 @@
  * 사용법: script.google.com 새 프로젝트에 통째로 붙여넣고 createForm() 실행
  */
 
-var CARD_URL   = 'https://stmaker.kr/surl/O/3068';
+var CARD_URL   = 'https://smartstore.naver.com/makerslab7/products/13765673887';
 var CARD_OPEN  = '8월 31일(일) 오전 11시';
 var PRICE      = '77만원';
 var BANK       = '카카오뱅크 3333-13-9497518 (예금주: 최지희)';
