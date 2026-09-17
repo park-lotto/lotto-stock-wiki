@@ -1918,17 +1918,59 @@ def _vmake_clean(video_path, keys, out_path, tier=None):
             "비용이 초 단위로 나가므로 중단했습니다.")
     print(f"[clean] tier={tier} 길이={sec if sec is None else round(sec, 1)}초 "
           f"파일={Path(video_path).name}", file=sys.stderr)
+    from shopping_shorts.vmake_client import is_preprocess_fail
     last = None
-    for i, k in enumerate(ks):
-        try:
-            return remove_subtitles(video_path, k, out_path=out_path, tier=tier)
-        except Exception as e:                      # noqa: BLE001 — 다음 키로 넘길지 가른다
-            last = e
-            if not is_no_credit(e):
-                raise                               # 소진이 아니면 키 문제가 아니다
-            print(f"[clean] 키 {i + 1}/{len(ks)} 크레딧 소진 → 다음 키로: {e}",
+    src = video_path
+    reencoded = None
+    try:
+        for i, k in enumerate(ks):
+            while True:
+                try:
+                    return remove_subtitles(src, k, out_path=out_path, tier=tier)
+                except Exception as e:              # noqa: BLE001 — 다음 키로 넘길지·재인코딩할지 가른다
+                    last = e
+                    # ★30029 = VMake가 파일을 못 읽음. 이어 붙인 조립본에서만 나고, 한 번 다시
+                    #   인코딩하면 됐다(2026-09-17 실측). **딱 한 번만** 재인코딩해 같은 키로 다시 보낸다.
+                    if is_preprocess_fail(e) and reencoded is None:
+                        reencoded = _reencode_for_vmake(video_path)
+                        if reencoded:
+                            print(f"[clean] VMake 30029(파일 준비 실패) → 재인코딩 후 1회 재시도: "
+                                  f"{Path(reencoded).name}", file=sys.stderr)
+                            src = reencoded
+                            continue
+                    break
+            if not is_no_credit(last):
+                raise last                          # 소진이 아니면 키 문제가 아니다
+            print(f"[clean] 키 {i + 1}/{len(ks)} 크레딧 소진 → 다음 키로: {last}",
                   file=sys.stderr)
-    raise last
+        raise last
+    finally:
+        if reencoded:
+            try:
+                Path(reencoded).unlink()
+            except OSError:
+                pass
+
+
+def _reencode_for_vmake(video_path):
+    """VMake가 읽기 쉬운 한 덩어리 파일로 다시 인코딩 → 새 경로. 실패하면 None(원래 오류를 그대로 올린다).
+
+    ★길이·해상도는 그대로 — 초 단위 과금이 바뀌지 않고, 청소본 좌표도 안 어긋난다.
+    """
+    src = Path(video_path)
+    out = src.with_name(src.stem + "_reenc.mp4")
+    try:
+        r = subprocess.run(
+            ["ffmpeg", "-y", "-loglevel", "error", "-i", str(src),
+             "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p",
+             "-c:a", "aac", "-movflags", "+faststart", str(out)],
+            capture_output=True, text=True, timeout=600)
+        if r.returncode == 0 and out.exists() and out.stat().st_size > 1024:
+            return str(out)
+        print(f"[clean] 재인코딩 실패 rc={r.returncode}: {(r.stderr or '')[:200]}", file=sys.stderr)
+    except Exception as exc:                        # noqa: BLE001
+        print(f"[clean] 재인코딩 실패: {exc!r}", file=sys.stderr)
+    return None
 
 
 class NotEnoughPoints(Exception):
