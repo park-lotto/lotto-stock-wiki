@@ -486,6 +486,42 @@ def _download_douyin_inner(url, dest_dir, timeout):
 _YTDLP_CLIENTS = [None, "android", "ios"]
 
 
+_ERR_MARKERS = ("ERROR:", "OSError", "IOError", "Errno", "Traceback",
+                "HTTP Error", "Unable to", "urlopen error", "SSLError",
+                "Connection", "Timeout", "timed out")
+
+
+def _ytdlp_reason(stderr, limit=400):
+    """yt-dlp stderr에서 **원인 줄**을 골라낸다 (2026-09-18 실사고).
+
+    ★왜 꼬리를 자르면 안 되나: 종전엔 `stderr[-300:]`로 **끝 300자**만 남겼다.
+      yt-dlp는 실패해도 경고·스택트레이스를 길게 뱉어서, 정작 원인은 **앞쪽에서
+      잘려나간다**. 실제로 로그에 이렇게 남았다:
+
+          yt-dlp 실패(...3회 시도): rrent      ← "current"의 꼬리 5글자
+
+      그 뒤에 `OSError: [Errno 28] No space left on device`(디스크 가득참)가 있었는데
+      기록되지 않아, 유튜브 차단으로 오해하고 **세 번 연속 오진**했다.
+
+    그래서 위치가 아니라 **내용**으로 고른다 — 원인을 담은 줄만 뒤에서부터 모은다.
+    표식이 하나도 없으면(형식이 바뀌었을 때) 마지막 몇 줄로 폴백해 빈손은 면한다.
+    """
+    lines = [ln.strip() for ln in (stderr or "").splitlines() if ln.strip()]
+    if not lines:
+        return "(stderr 없음)"
+    picked, seen = [], set()
+    for ln in reversed(lines):                  # 최종 원인이 대개 뒤에 있다
+        if any(m in ln for m in _ERR_MARKERS) and ln not in seen:
+            seen.add(ln)
+            picked.append(ln)
+            if len(picked) >= 3:                # 원인 줄 3개면 충분하다
+                break
+    if not picked:
+        picked = list(reversed(lines[-2:]))     # 표식 없음 → 마지막 2줄
+    msg = " | ".join(reversed(picked))
+    return msg[:limit]
+
+
 def _download_ytdlp(url, dest_dir, max_attempts=3):
     """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열).
 
@@ -496,6 +532,7 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
     out = str(Path(dest_dir) / (uuid.uuid4().hex[:8] + ".%(ext)s"))
     stem = Path(out).stem.split('.')[0]
     last_err = ""
+    attempts_err = []          # 시도별 실패 사유 — 마지막 것만 남기면 진단이 막힌다
     for attempt in range(max_attempts):
         # ★화질 천장(2026-07-27 사장님 "원본 동일"): 예전 -f "mp4/..."는 mp4(progressive
         #   단일 스트림)를 먼저 잡아 유튜브에서 720p·360p 저화질을 받았다(원본이 고화질이어도).
@@ -536,10 +573,23 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
                 return str(files[0]), ""
             last_err = "산출물 없음"
         else:
-            last_err = r.stderr[-300:]
+            last_err = _ytdlp_reason(r.stderr)
+        # ★시도별 사유를 **전부** 모은다(2026-09-18): 종전엔 last_err 하나만 남아
+        #   3회가 각각 다른 이유로 죽어도 마지막 것만 보였다. 클라이언트를 바꿔가며
+        #   재시도하므로 시도마다 원인이 다른 게 정상이고, 그 차이가 곧 진단 정보다.
+        attempts_err.append((f"{attempt + 1}회[{_client or '기본'}]", last_err))
         if attempt < max_attempts - 1:
             time.sleep(2 * (attempt + 1))   # 2s·4s 백오프 — 틱톡 챌린지/레이트리밋 완화
-    raise RuntimeError(f"yt-dlp 실패({url}, {max_attempts}회 시도): {last_err}")
+    # 같은 사유는 한 번만 적고 어느 시도였는지 묶는다 — 3회가 똑같은 에러면
+    # "1·2·3회[…] 사유" 하나로, 서로 다르면 사유별로 갈라져 그대로 다 보인다.
+    # ★묶는 기준은 **사유**다. 접두사까지 합쳐 비교하면 클라이언트 이름이 달라
+    #   같은 에러도 매번 다른 줄로 남아 중복 제거가 무의미해진다(테스트가 잡았다).
+    grouped = {}
+    for tag, reason in attempts_err:
+        grouped.setdefault(reason, []).append(tag)
+    parts = [f"{'·'.join(tags)} {reason}" for reason, tags in grouped.items()]
+    raise RuntimeError(
+        f"yt-dlp 실패({url}, {max_attempts}회 시도): " + " ;; ".join(parts))
 
 
 def _download_via_relay(url, dest_dir):
