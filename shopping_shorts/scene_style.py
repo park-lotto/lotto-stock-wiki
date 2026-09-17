@@ -158,6 +158,21 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     return {"jobId":job_id,"text":text,"scenes":scenes}
 
 
+def _layer_render_timeout(context):
+    """장면꾸미기 레이어 생성 제한시간(초) — **영상 길이에 비례**한다.
+
+    ★2026-09-17 실측(김성현님 job eeb35a6e9878, 29.7초·33장면, 워터마크 '둥둥'):
+      움직이는 워터마크가 있으면 전 장면을 **프레임마다** 캡처한다(render_scene_style.js).
+      925장을 245.1초에 만들었다(초당 약 3.8장). 고정 240초 제한에 5초 모자라 **세 번 연속**
+      실패했고, 고객은 두 번의 렌더 대기(약 20분) 끝에 실패만 봤다.
+    ★30fps 프레임 수 × 0.5초 + 여유 120초. 짧은 영상은 종전 240초 그대로, 상한 900초.
+      (전체 렌더가 10분 넘으면 _render_is_stale이 죽은 렌더로 보므로 상한을 거기 맞춘다.)
+    """
+    scenes = (context or {}).get("scenes") or []
+    total = max((float(sc.get("end") or 0) for sc in scenes), default=0.0)
+    return int(min(900, max(240, 120 + total * 30 * 0.5)))
+
+
 def render_layers(timeline, snapshot, output, headcopy=None, job_id=None):
     """브라우저 미리보기와 외부 편집기가 함께 쓰는 투명 장면 레이어를 만든다."""
     snapshot = validate_snapshot(snapshot)
@@ -180,7 +195,8 @@ def render_layers(timeline, snapshot, output, headcopy=None, job_id=None):
         node_env.setdefault("SCENE_STYLE_NO_SANDBOX", "1")
     run = subprocess.run(
         ["node", str(ROOT / "tools/render_scene_style.js"), str(request)],
-        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=240,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        timeout=_layer_render_timeout(context),
         env=node_env,
     )
     if run.returncode:
