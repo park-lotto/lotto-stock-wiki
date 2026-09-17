@@ -168,6 +168,15 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None)
         g = groups_out["groups"][gi]
         desc = " / ".join(seg_index.get(c, {}).get("desc", "")[:50] for c in (g.get("cuts") or [])[:2] if c in seg_index)
         feats.append(f"  {k + 1}. [{gi}] {g.get('name')} — {g.get('claim')} (화면: {desc})")
+    roles, tpl = _spine_style(hook_spine)
+    if roles and tpl:
+        # ★스파인에 문장틀(templates)·역할순서(beat_roles)가 있으면 **그 꼴 그대로** 쓴다(2026-09-17 사장님:
+        #   "이븐쇼핑 스타일" = 천재·떼돈·「이건 바로 OO」·CTA 없음). 전엔 훅 한 줄만 빌리고 나머지는
+        #   자체 [훅]+[특징]+[댓글CTA]로 써서 스타일이 통째로 사라졌다.
+        n_lines = len(roles) + max(0, len(groups_out["order"]) - len(_feature_roles(roles, tpl)))
+        per_line = max(12, int(target_seconds * cps / max(1, n_lines)))
+        prompt = _spine_prompt(groups_out, hook_spine, roles, tpl, feats, per_line)
+        return _clean_lines(_sg._call_json(prompt, _LINES_SCHEMA, note=note) or {})
     prompt = (
         f"제품: {groups_out.get('product')}\n"
         f"훅 스타일: 「{hook_spine.get('name')}」 — {hook_rule}\n"
@@ -181,6 +190,10 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None)
         "- 훅은 훅 스타일 규칙대로. CTA는 반드시 「궁금하면 댓글에 '○○' 남겨주세요」 꼴 — ○○은 제품과 관련된 두세 글자 낱말.\n"
         "- 화면에 없는 기능·수치를 지어내지 마라.")
     out = _sg._call_json(prompt, _LINES_SCHEMA, note=note) or {}
+    return _clean_lines(out)
+
+
+def _clean_lines(out):
     lines = []
     for L in (out.get("lines") or []):
         t = re.sub(r"\s+", " ", str(L.get("text") or "")).strip()
@@ -190,6 +203,70 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None)
         t = t.rstrip(".!?。") .replace(". ", ", ").replace("!", ",").replace("?", ",") + "."
         lines.append({"role": str(L.get("role") or "feature"), "text": t, "group": int(L.get("group", -1))})
     return lines
+
+
+# ── 스파인 문장틀 그대로 쓰기 ─────────────────────────────────────────
+def _spine_style(spine):
+    """(beat_roles, templates). list_spines가 풀어준 값이 없으면 *_json 컬럼에서. 둘 다 없으면 ([], {})."""
+    roles = spine.get("beat_roles")
+    tpl = spine.get("templates")
+    if roles is None or tpl is None:
+        try:
+            roles = json.loads(spine.get("beat_roles_json") or "[]")
+            tpl = json.loads(spine.get("templates_json") or "{}")
+        except Exception:
+            return [], {}
+    return list(roles or []), dict(tpl or {})
+
+
+def _feature_roles(roles, tpl):
+    """{효능…} 자리가 있는 역할 = 특징 하나를 말하는 줄. 나머지는 구조 줄(정체 숨기기·공개·마무리)."""
+    return [r for r in roles if any("{효능" in t for t in (tpl.get(r) or []))]
+
+
+def _spine_plan(roles, tpl, n_feat):
+    """[(role, group)] — 구조 줄은 group=-1, 특징 줄은 order 번호. 특징이 효능 자리보다 많으면
+    두 번째 효능 역할(more 류)을 마지막 효능 역할(twist) 앞에 반복해 늘린다. 적으면 남는 자리는 뺀다."""
+    feat_roles = _feature_roles(roles, tpl)
+    plan, used = [], 0
+    for r in roles:
+        if r in feat_roles:
+            if used < n_feat:
+                plan.append([r, None]); used += 1          # 번호는 마지막에 순서대로
+        else:
+            plan.append([r, -1])
+    if used < n_feat and feat_roles:
+        rep = feat_roles[1] if len(feat_roles) > 1 else feat_roles[0]
+        pos = next((i for i, (r, _) in enumerate(plan) if r == feat_roles[-1]), len(plan))
+        while used < n_feat:
+            plan.insert(pos, [rep, None]); used += 1; pos += 1
+    gi = 0
+    for item in plan:
+        if item[1] is None:
+            item[1] = gi; gi += 1
+    return [tuple(x) for x in plan]
+
+
+def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line):
+    plan = _spine_plan(roles, tpl, len(groups_out["order"]))
+    lines_spec = []
+    for k, (r, gi) in enumerate(plan):
+        ex = " / ".join((tpl.get(r) or [])[:3])
+        tgt = f"group={gi} (특징 {gi + 1}번)" if gi >= 0 else "group=-1"
+        lines_spec.append(f"  {k + 1}. role={r}, {tgt} — 문장틀 예: {ex}")
+    return (
+        f"제품: {groups_out.get('product')}\n"
+        f"대본 스타일: 「{spine.get('name')}」 — {spine.get('situation_type') or ''}\n"
+        f"감정선: {spine.get('emotion_arc') or ''}\n\n"
+        "특징(화면은 이미 정해져 있다 — 그 화면에서 보이는 것만 말해라):\n" + "\n".join(feats) + "\n\n"
+        f"아래 줄을 **이 순서·이 역할 그대로** {len(plan)}줄 써라. 각 줄은 문장틀 예 중 하나를 골라 {{…}} 자리만 제품에 맞게 채운다.\n"
+        + "\n".join(lines_spec) + "\n\n"
+        "규칙:\n"
+        "- 줄 수·순서·role·group을 바꾸지 마라. 줄을 합치거나 빼지 마라.\n"
+        f"- 한 줄은 **마침표 하나**로 끝나는 문장 하나. 쉼표는 써도 된다. 줄당 {per_line}자 안팎.\n"
+        "- 문장틀의 말투(반말·'~다는데'·'~라고')를 유지해라. 댓글 유도·구독 요청 같은 CTA를 덧붙이지 마라.\n"
+        "- {나라}는 화면·자막에서 알 수 없으면 '해외'로. 화면에 없는 기능·수치를 지어내지 마라.\n"
+        "- 원본 영상의 문장을 그대로 베끼지 마라.")
 
 
 # ── 컷 지정 (코드 — 부탁하지 않는다) ──────────────────────────────────
