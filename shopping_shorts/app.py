@@ -6875,7 +6875,12 @@ def api_produce_mix_clean_clips(job_id: str):
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     if job.get("clean_status") != "ready":
-        return {"ok": True, "clips": [], "stale": False, "ready": False}
+        # ★ready가 아니어도 **옛 청소본이 남아 있으면** 그 사실을 알린다(2026-09-17).
+        #   실측(이윤정님 job 1556910737b6, clean_status=failed): 여기서 늘 stale=False를
+        #   답해서 화면이 "옛 결과가 있다"를 몰랐다 → 아무 설명 없는 빈 비교화면이 뜨고
+        #   고객은 무엇을 눌러야 할지 모른다. 판정은 clean_redo_state 한 곳(0순위-B).
+        _redo = mix_pipeline.clean_redo_state(job, _MIX_WORK_DIR / job_id)
+        return {"ok": True, "clips": [], "stale": bool(_redo.get("stale")), "ready": False}
     r = mix_pipeline.clean_compare_clips(job, _MIX_WORK_DIR / job_id)
     clips = [{"ci": c["ci"], "si": c["si"], "beat_idx": c["beat_idx"],
               "dur": round(float(c["dur"]), 3)} for c in (r.get("clips") or [])]
