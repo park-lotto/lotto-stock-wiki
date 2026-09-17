@@ -302,6 +302,38 @@ def beat_descs(style):
     return out
 
 
+_TITLE_SPOKEN_HOOK_DESC = (
+    "화면 제목을 소리 내어 되풀이하지 말고, 제목이 만든 궁금증을 바로 이어받는 "
+    "첫 TTS 한 문장으로 쓴다. 다음 본문 칸으로 자연스럽게 넘어가되 결론을 먼저 다 말하지 않는다"
+)
+
+
+def with_spoken_hook(style):
+    """화면 제목형 스파인을 ``제목(무음) → 첫 TTS 훅 → 본문`` 계약으로 보강한다.
+
+    DB에는 제목 다음이 곧바로 story인 옛 스파인이 남아 있다. DB 시드만 고치면 이미 운영 중인
+    행은 그대로라 화면·전체 생성·부분 재생성이 서로 달라진다. 그래서 스타일을 소비하는 모든
+    경로가 이 함수 하나를 통과한다. 원본 dict는 바꾸지 않는다.
+    """
+    if not isinstance(style, dict):
+        return style
+    roles = list(style.get("beat_roles") or [])
+    if not roles or roles[0] != "title" or (len(roles) > 1 and roles[1] == "hook"):
+        return style
+    adapted = copy.deepcopy(style)
+    adapted["beat_roles"] = ["title", "hook"] + roles[1:]
+    descs = beat_descs(style)
+    adapted["beat_descs"] = {
+        role: (_TITLE_SPOKEN_HOOK_DESC if role == "hook" else descs.get(role, ""))
+        for role in adapted["beat_roles"]
+    }
+    templates = dict(adapted.get("templates") or {})
+    templates.setdefault("hook", [])
+    adapted["templates"] = templates
+    adapted["title_visual_only"] = True
+    return adapted
+
+
 _FACT_STYLE_NEUTRAL = (
     "이 role은 출력 순서를 식별하는 이름일 뿐이다. 아래 검증 근거에서 직접 확인되는 "
     "제품 동작이나 사용 상황 하나를 앞 칸과 겹치지 않게 이어 말한다. 가격·인기·품절·"

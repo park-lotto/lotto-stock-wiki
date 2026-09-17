@@ -17832,7 +17832,7 @@ function _s2Hydrate(w){
 //   빠지면 s2RoleName이 '· 영어'로 흘려보낸다(막지는 않는다).
 const S2_ROLE = {
   // 여는 말
-  hook:'🎣 첫말', title:'📌 제목', bait:'🪝 미끼', story:'📖 사연', origin:'🌱 유래',
+  hook:'🎙 첫 TTS 후킹', title:'📌 화면 제목', bait:'🪝 미끼', story:'📖 사연', origin:'🌱 유래',
   situation:'🏠 상황', problem:'😰 문제', before:'😰 문제', mistake:'❌ 실수',
   notice:'👀 발견', ask:'❓ 질문',
   // 받치는 근거
@@ -18476,7 +18476,7 @@ function s2SecTag(sec, target){
   return `<span style="font-size:11px;color:${over?'var(--gold)':'var(--sub)'}">${over?'⚠️ ':''}${sec.toFixed(1)}초</span>`;
 }
 function s2DraftSec(dr){
-  const bs=s2Beats(dr);
+  const bs=s2NarrationBeats(dr);
   if(!s2Cps()) return null;
   return Math.round(bs.reduce((a,b)=>a+(s2SecOf(b.text)||0),0)*10)/10;
 }
@@ -18485,7 +18485,7 @@ function s2RefreshSec(i,j){
   const one=document.getElementById(`s2sec-${i}-${j}`), tot=document.getElementById(`s2tot-${i}`);
   const dr=S2.drafts[i]; if(!dr) return;
   const bs=s2Beats(dr);
-  if(one && bs[j]) one.outerHTML=`<span id="s2sec-${i}-${j}">${s2SecTag(s2SecOf(bs[j].text))}</span>`;
+  if(one && bs[j]) one.outerHTML=`<span id="s2sec-${i}-${j}">${bs[j].role==='title'?'<span style="font-size:11px;color:var(--accent)">화면 전용 · TTS 제외</span>':s2SecTag(s2SecOf(bs[j].text))}</span>`;
   if(tot) tot.outerHTML=`<span id="s2tot-${i}">${s2SecTag(s2DraftSec(dr), 30)}</span>`;
 }
 function s2Beats(dr){
@@ -18588,7 +18588,7 @@ function s2DraftHtml(dr,i){
     const chk=(b.role==='cta')?'<span class="s2-chk">📢 헌장: 댓글에 뭘 남기면 뭘 받는지</span>':'';
     return `<div class="s2-row${isBad?' bad':''}" id="s2r-${i}-${j}" data-role="${esc(b.role||'')}">
       <div class="s2-row-in">
-        <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${s2SecTag(s2SecOf(b.text))}</span></div>
+        <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${b.role==='title'?'<span style="font-size:11px;color:var(--accent)">화면 전용 · TTS 제외</span>':s2SecTag(s2SecOf(b.text))}</span></div>
         <div class="s2-sent-wrap">
           <div class="s2-sent" contenteditable="true" data-ph="${esc(s2RoleName(b.role).replace(/^\S+\s*/,''))} — 여기에 쓰세요"
                oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}</div>${chk}
@@ -18847,11 +18847,11 @@ async function s2ConfirmToNewWork(i){
   const idx=(i==null)?S2.curDraft:i;
   const dr=S2.drafts[idx];
   if(!dr){ toast('먼저 대본을 만들어 주세요'); return; }
-  const script=s2ScriptLines(dr);       // ★칸을 줄로(2026-09-03) — s2Confirm과 같은 단위
-  if(!script){ toast('대본이 비어 있습니다'); return; }
+  const contract=s2DraftContract(dr);
+  if(!contract.script){ toast('대본이 비어 있습니다'); return; }
   try{ _pushWorkNow(); }catch(e){}          // 지금 작업부터 확실히 저장(디바운스 대기 금지)
   const st=_workState();                    // 소스·장면·2안 스냅샷까지 그대로 복제
-  st.script=script;
+  s2ApplyDraftContract(st, dr);
   st.script_style_id=dr.style_id||null;
   st.script_copy_family=s2CopyFamilyForDraft(dr);
   st.script_from_wiki=(S2.seed&&S2.seed.shortcode)||'';
@@ -18870,10 +18870,36 @@ async function s2ConfirmToNewWork(i){
   location.href='/produce?work='+encodeURIComponent(d.work_id);
 }
 function s2ScriptLines(dr){
-  // 칸이 있으면 칸 텍스트를 줄로, 없으면(내 대본·옛 초안) 원문 그대로.
+  // 화면 제목은 영상 카피지 음성이 아니다. 첫 TTS는 반드시 그 다음 hook부터 시작한다.
+  // 칸이 없으면(내 대본·옛 초안) 역할을 모르므로 원문을 그대로 둔다.
   const bs=(dr&&dr.beats&&dr.beats.length)?dr.beats:null;
-  if(bs) return bs.map(b=>((b&&b.text)||'').trim()).filter(Boolean).join('\n');
+  if(bs) return s2NarrationBeats(dr).map(b=>((b&&b.text)||'').trim()).filter(Boolean).join('\n');
   return ((dr&&dr.script)||'').trim();
+}
+function s2NarrationBeats(dr){
+  const bs=(dr&&dr.beats&&dr.beats.length)?dr.beats:[];
+  return bs.filter(b=>(b&&b.role)!=='title');
+}
+function s2VisualTitle(dr){
+  const b=((dr&&dr.beats)||[]).find(x=>(x&&x.role)==='title');
+  return ((b&&b.text)||'').trim();
+}
+function s2DraftContract(dr){
+  return {script:s2ScriptLines(dr), visualTitle:s2VisualTitle(dr),
+          narrationBeats:s2NarrationBeats(dr)};
+}
+function s2ApplyDraftContract(target, dr){
+  const c=s2DraftContract(dr);
+  target.script=c.script;
+  if(c.visualTitle){
+    // 글꼴·색 등 사용자가 잡은 장면꾸미기 값은 보존하되, 다른 작업의 문구는 남기지 않는다.
+    target.headcopy=Object.assign({}, target.headcopy||{}, {text:c.visualTitle, subline:''});
+  }
+  const srcs=c.narrationBeats.map(b=>({role:(b&&b.role)||'', seg:(b&&b.src_seg)||'',
+    segs:Array.isArray(b&&b.src_segs)?b.src_segs.filter(Boolean):[]}));
+  if(srcs.some(x=>x.seg)) target.script_beat_sources=srcs;
+  else delete target.script_beat_sources;
+  return c;
 }
 function s2Confirm(i){
   const idx=(i==null)?S2.curDraft:i;
@@ -18882,8 +18908,8 @@ function s2Confirm(i){
   // ★칸(첫말/문제/…)을 **줄로** 넘긴다(2026-09-03 사장님 "훅이랑 문제가 믹스에서 합쳐진다").
   //   서버 초안의 script는 공백으로 이어 붙인 통짜라 3단계가 마침표로 다시 잘라 칸을 잃었다.
   //   줄 하나 = 3단계 칸 하나(서버 script_sentences가 줄을 단위로 본다).
-  STATE.script=s2ScriptLines(dr);
-  if(!STATE.script){ toast('대본이 비어 있습니다'); return; }
+  const contract=s2ApplyDraftContract(STATE, dr);
+  if(!contract.script){ toast('대본이 비어 있습니다'); return; }
   STATE.script_style_id=dr.style_id||null;
   STATE.script_copy_family=s2CopyFamilyForDraft(dr);
   STATE.script_from_wiki=(S2.seed&&S2.seed.shortcode)||'';
@@ -18893,13 +18919,6 @@ function s2Confirm(i){
   //   실어 보내야 3단계가 짐작하지 않고 **원래 그 말이 나온 그림**을 붙일 수 있다.
   //   ⚠️새 통로를 만들지 않는다 — script_structure는 이미 dict로 3단계까지 가는 자리다.
   //   src_seg가 하나도 없으면(옛 대본·무자막 소스) 키를 안 만든다 = 종전 그대로.
-  try{
-    // segs: 2단계 grounded가 남긴 장면 전부(첫 번째=대표). 3단계 상속(edl_inherit)이 alternates로 쓴다(2026-09-04).
-    const _srcs=(dr.beats||[]).map(b=>({role:(b&&b.role)||'', seg:(b&&b.src_seg)||'',
-      segs:Array.isArray(b&&b.src_segs)?b.src_segs.filter(Boolean):[]}));
-    if(_srcs.some(x=>x.seg)) STATE.script_beat_sources=_srcs;
-    else delete STATE.script_beat_sources;
-  }catch(e){}
   try{ setScriptMode('manual'); }catch(e){}
   try{ refreshFinalPeek(); }catch(e){}
   saveWork();

@@ -3525,7 +3525,8 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   사라졌다** — 사장님이 2개를 골랐는데 1안만 나왔다(실측: ⚠️타소재 2개가 버려지고
         #   ✅검증 1개만 생성). 같은 판단이 화면과 서버 두 곳에 다르게 적혀 있던 것(0순위-B).
         #   경고는 화면이 이미 했다. 고른 건 그대로 존중한다.
-        _by_id = {s["id"]: s for s in store.list_style_spines(category=None)}
+        _by_id = {s["id"]: bank_assemble.with_spoken_hook(s)
+                  for s in store.list_style_spines(category=None)}
         _picked = [_by_id[i] for i in _style_ids if i in _by_id]
         if not _picked:
             return JSONResponse(status_code=422, content={
@@ -16761,7 +16762,8 @@ def api_produce_script_mix(request: Request, body: dict):
     style_ids = [int(x) for x in (body.get("style_ids") or []) if str(x).isdigit()]
     if style_ids:
         _st = Store(DB_PATH)
-        _by_id = {s["id"]: s for s in _st.list_style_spines()}
+        _by_id = {s["id"]: bank_assemble.with_spoken_hook(s)
+                  for s in _st.list_style_spines()}
         picked = [_by_id[i] for i in style_ids if i in _by_id]
         if not picked:
             return JSONResponse(status_code=422,
@@ -21542,7 +21544,8 @@ def api_script_styles(request: Request, category: str = None, job: str = None):
         fit="타소재" = 다른 소재에서 검증됨(써도 되지만 어울림은 확인 필요)
       정렬은 검증 먼저, 그다음 실적순 — 첫 번째가 곧 추천이다."""
     store = Store(DB_PATH)
-    styles = store.list_style_spines(category=None)     # 잠그지 않고 전부
+    styles = [bank_assemble.with_spoken_hook(s)
+              for s in store.list_style_spines(category=None)]     # 잠그지 않고 전부
     cat = (category or "").strip()
     # ★job이 오면 "지금 담긴 재료로 이 틀이 몇 칸 차나"를 함께 준다(2026-08-20 사장님
     #   아이디어: "필요한 장면 / 있는 것 / 없는 것을 보여줘라" — 무분별 수집 방지).
@@ -22954,10 +22957,12 @@ def api_script_style_templates(spine_id: int, role: str = None):
             break
     if not sp:
         return JSONResponse(status_code=404, content={"ok": False, "error": "없는 스타일"})
+    sp = bank_assemble.with_spoken_hook(sp)
     templates = sp.get("templates") or {}
     roles = sp.get("beat_roles") or []
-    # 칸 설명은 beat_chain(사람이 읽는 자연어)에서 순서대로 빌린다 — style_block과 같은 규칙.
-    descs = dict(zip(roles, sp.get("beat_chain") or []))
+    # 칸 설명은 생성 프롬프트와 같은 함수가 정한다. 제목형에 첫 TTS 훅을 보강해도
+    # 옛 beat_chain이 한 칸씩 밀리지 않는다(화면과 생성이 같은 계약을 본다).
+    descs = bank_assemble.beat_descs(sp)
     want = [role] if role else roles
     out = []
     for r in want:
@@ -23019,6 +23024,7 @@ def api_script_beat_regen(request: Request, body: dict):
         style = next((s for s in store.list_style_spines(category=None) if s["id"] == style_id), None)
         if not style:
             return JSONResponse(status_code=404, content={"ok": False, "error": "없는 스타일"})
+        style = bank_assemble.with_spoken_hook(style)
 
     # 재료 — 전체 생성과 같은 경로로 씨앗 항목을 찾는다(위키에 없으면 body 폴백도 동일).
     shortcode = (body.get("shortcode") or "").strip()
