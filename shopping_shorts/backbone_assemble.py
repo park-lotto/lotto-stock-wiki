@@ -152,7 +152,7 @@ _LINES_SCHEMA = {
 }
 
 
-def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None):
+def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None, seed=None):
     """훅 1줄 + 특징 묶음마다 1줄 + CTA 1줄. 각 줄은 **마침표 하나**(문장분리기가 줄 수를 세는 함정)."""
     from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, _speech_speed
     cps = _SYLLABLES_PER_SEC * _speech_speed()
@@ -175,7 +175,10 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None)
         #   자체 [훅]+[특징]+[댓글CTA]로 써서 스타일이 통째로 사라졌다.
         n_lines = len(roles) + max(0, len(groups_out["order"]) - len(_feature_roles(roles, tpl)))
         per_line = max(12, int(target_seconds * cps / max(1, n_lines)))
-        prompt = _spine_prompt(groups_out, hook_spine, roles, tpl, feats, per_line)
+        # ★seed를 그대로 넘긴다 — 안 넘기면 늘 0이라 **매번 첫 틀만** 쓰여 틀을 6개 만들어도
+        #   같은 대본이 나온다(2026-09-18 실측으로 잡은 배선 누락). seed가 바뀌면 칸마다
+        #   다음 틀로 돌아 같은 재료에서 N가지 대본이 나온다.
+        prompt = _spine_prompt(groups_out, hook_spine, roles, tpl, feats, per_line, seed=seed)
         return _clean_lines(_sg._call_json(prompt, _LINES_SCHEMA, note=note) or {})
     prompt = (
         f"제품: {groups_out.get('product')}\n"
@@ -247,27 +250,54 @@ def _spine_plan(roles, tpl, n_feat):
     return [tuple(x) for x in plan]
 
 
-def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line):
+def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line, seed=None):
     plan = _spine_plan(roles, tpl, len(groups_out["order"]))
     lines_spec = []
     order = groups_out.get("order") or []
+    # ★틀은 **코드가 골라 하나만** 준다(2026-09-18 사장님 "5개 중 랜덤으로 골라주면 반려고 뭐고 없다").
+    #   종전엔 `[:3]`으로 앞 3개를 나열해 모델에게 맡겼다. 두 가지가 고장났다:
+    #     ① 틀을 5~6개로 늘려도 **뒤엣것은 보이지도 않는다**(56번은 6개 중 3개만).
+    #     ② 여러 개를 보여주면 모델이 대개 첫 번째를 쓰고, 그 어조를 다음 줄에 복제한다
+    #        → 한 어미가 50~70%(실측: 68번 `미쳤다는 거` 3줄, 67번 `~함` 5줄).
+    #   하나만 주면 고를 여지가 없어 틀 그대로 나오고, 같은 칸이 여러 줄이면(more×N)
+    #   **줄마다 다른 틀**이 돌아가 어미가 저절로 섞인다. 판정에 기대지 않는 게 핵심이다.
+    #   ★무작위가 아니라 **순서대로 돌린다**(2026-09-18 사장님). 난수는 우연히 같은 틀을 두 번
+    #     뽑을 수 있지만, 순서대로면 틀이 N개일 때 **N가지가 반드시 다 나온다**. 재현도 된다.
+    #     시작 위치만 seed로 옮겨 같은 재료에서 여러 편을 뽑을 때 첫 줄이 겹치지 않게 한다.
+    start = (seed or 0)
+    pick_count = {}
     for k, (r, gi) in enumerate(plan):
-        ex = " / ".join((tpl.get(r) or [])[:3])
+        cands = list(tpl.get(r) or [])
+        if cands:
+            i = pick_count.get(r, start)       # 같은 칸이 또 오면 **다음 틀**로(순환)
+            ex = cands[i % len(cands)]
+            pick_count[r] = i + 1
+        else:
+            ex = ""
         # ★group은 묶음 **원번호**(assign_cuts가 groups[gi]로 찾는다) — 순서 번호를 주면 다른 묶음 컷이 붙는다
         tgt = f"group={order[gi]} (특징 {gi + 1}번)" if 0 <= gi < len(order) else "group=-1"
-        lines_spec.append(f"  {k + 1}. role={r}, {tgt} — 문장틀 예: {ex}")
+        lines_spec.append(f"  {k + 1}. role={r}, {tgt} — 문장틀: {ex}")
     return (
         f"제품: {groups_out.get('product')}\n"
         f"대본 스타일: 「{spine.get('name')}」 — {spine.get('situation_type') or ''}\n"
         f"감정선: {spine.get('emotion_arc') or ''}\n\n"
         "특징(화면은 이미 정해져 있다 — 그 화면에서 보이는 것만 말해라):\n" + "\n".join(feats) + "\n\n"
-        f"아래 줄을 **이 순서·이 역할 그대로** {len(plan)}줄 써라. 각 줄은 문장틀 예 중 하나를 골라 {{…}} 자리만 제품에 맞게 채운다.\n"
+        f"아래 줄을 **이 순서·이 역할 그대로** {len(plan)}줄 써라. 줄마다 **그 줄에 적힌 문장틀 하나**를 쓰고 "
+        f"{{…}} 자리만 제품에 맞게 채운다 — 틀을 바꾸거나 다른 줄의 틀을 쓰지 마라(말끝이 줄마다 달라야 한다).\n"
         + "\n".join(lines_spec) + "\n\n"
         "규칙:\n"
         "- 줄 수·순서·role·group을 바꾸지 마라. 줄을 합치거나 빼지 마라.\n"
         f"- 한 줄은 **마침표 하나**로 끝나는 문장 하나. 쉼표는 써도 된다. 줄당 {per_line}자 안팎.\n"
         "- 문장틀의 말투(반말·'~다는데'·'~라고')를 유지해라. 댓글 유도·구독 요청 같은 CTA를 덧붙이지 마라.\n"
-        "- {나라}는 화면·자막에서 알 수 없으면 '해외'로. 화면에 없는 기능·수치를 지어내지 마라.\n"
+        "- {나라}는 화면·자막에서 알 수 없으면 '해외'로.\n"
+        # ★빈칸에 무엇을 넣을지 **원문 예시로** 못 박는다(2026-09-18 실측). 안 적어두면
+        #   {성과}에 형용사가 들어가 "정교한 해외 천재의 발명품"처럼 어색해진다.
+        #   원문은 전부 동사구다: 세월을 되찾아주는 / 업계 자체를 망하게 한 / 여름을 지배해 버린.
+        "- {성과}는 **동사구**로 채워라 — 예: '세월을 되찾아주는', '업계 자체를 망하게 한', "
+        "'여름을 지배해 버린'. 형용사 한 단어('정교한')는 쓰지 마라.\n"
+        "- {대상}은 사람·업계 같은 **명사**로 — 예: '문구 업계', '다이어트 하는 사람들'.\n"
+        "- ★문장틀의 **끝말을 바꾸지 마라**. 틀이 '~는데'로 끝나면 '~는데'로, '~다는 거'면 "
+        "'~다는 거'로 끝내라(실측: 틀을 벗어나면 '~하는 거'처럼 이 채널에 없는 말이 된다).\n"
         "- 원본 영상의 문장을 그대로 베끼지 마라.")
 
 
@@ -364,7 +394,7 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
         note["reason"] = "groups_empty"
         return None, None, {"note": note}
     spine = pick_hook_spine(store, spine_id=spine_id, seed=seed)
-    lines = write_lines(groups_out, spine, seg_index, target_seconds, note=note)
+    lines = write_lines(groups_out, spine, seg_index, target_seconds, note=note, seed=seed)
     if len(lines) < 3:
         note["reason"] = "lines_short"
         return None, None, {"note": note, "groups": groups_out}
