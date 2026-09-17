@@ -8551,6 +8551,14 @@ def api_mix_capcut(job_id: str, base: str = ""):
     #   것이 더 나쁘다(사장님이 캡컷에서야 알게 된다).
     if job.get("subtitle_removal") and not (job.get("clean_sources") or {}):
         _cf = job.get("clean_video_path")
+        # ★clean_video_path는 꾸미기 자동저장(scene_lab/apply)이 편성을 건드릴 때마다
+        #   None으로 지워진다(_apply_mix_fields, render_changed). 청소본 파일은 그대로 있는데
+        #   경로만 없어 캡컷이 409 "완성본을 먼저 만들라"로 막혔다(2026-09-17 실측: 최근 일주일
+        #   ready인데 경로 None인 작업 96건, 오늘 캡컷 호출 4건 전부 409). 정본은 편성 서명이
+        #   박힌 final_clean_{sig}.mp4다(0순위-B: clean_final_path_for_plan 한 곳) — 그걸 쓴다.
+        if not (_cf and Path(_cf).exists()):
+            _alt = mix_pipeline.clean_final_path_for_plan(job, work)
+            _cf = str(_alt) if _alt else None
         if _cf and Path(_cf).exists():
             try:
                 _clips = mix_pipeline.split_final_into_beat_clips(_cf, timeline, work)

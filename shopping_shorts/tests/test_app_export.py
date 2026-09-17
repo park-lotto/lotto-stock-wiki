@@ -308,3 +308,22 @@ def test_capcut_still_exports_without_extras(monkeypatch, tmp_path):
     assert r.status_code == 200
     draft = __import__("json").loads(r.json()["texts"]["draft_content.json"])
     assert {t["type"] for t in draft["tracks"]} == {"video", "audio", "text"}
+
+
+def test_capcut_recovers_clean_final_when_path_cleared(monkeypatch, tmp_path):
+    """자동저장이 clean_video_path를 지워도 편성 서명 청소본이 있으면 캡컷이 409로 막히지 않는다
+    (2026-09-17 실측: ready인데 경로 None인 작업 96건, 캡컷 호출 전부 409)."""
+    from shopping_shorts import mix_pipeline as mp
+    client = _seed(monkeypatch, tmp_path)
+    store = Store(app_module.DB_PATH)
+    store.update_mix_job("j1", subtitle_removal=1, clean_status="ready", clean_video_path=None)
+    job = store.get_mix_job("j1")
+    work = app_module._MIX_WORK_DIR / "j1"
+    sig = mp._clean_sig(job)
+    _mk_video(work / f"final_clean_{sig}.mp4", 4)          # 서명 파일은 살아 있다
+    r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
+    assert r.status_code == 200, r.text
+    # 서명 파일마저 없으면 종전처럼 막는다(자막 남은 결과물을 조용히 내보내지 않는다)
+    (work / f"final_clean_{sig}.mp4").unlink()
+    r2 = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
+    assert r2.status_code == 409
