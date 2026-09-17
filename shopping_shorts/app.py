@@ -16872,6 +16872,65 @@ def api_my_channel_set(request: Request, body: dict):
     return {"ok": True, "channel": name, "is_default": False}
 
 
+# ── 💾 제작소 프리셋 3종(내 프리셋·내 템플릿·자막 프리셋) — 계정 저장(2026-09-17) ──
+# ★종전엔 produce.html이 localStorage에만 담아 회사 PC에서 저장한 게 집 PC엔 없었다
+#   (이윤정님 제보). 값의 주인을 customer_prefs 한 곳으로 옮긴다(내 채널명과 같은 방식).
+# 저장 단위는 종류별 **목록 통째**(전체 교체) — 폰트 즐겨찾기와 같은 이유(순서 뒤집힘 방지).
+# {merge:[...]}는 옛 브라우저 저장분을 계정에 합치는 이관용 — 같은 내용(JSON 동일)은 안 겹친다.
+_PRESET_KINDS = ("hc_my_presets", "fr_my_templates", "cap_presets")
+_PRESET_MAX_ITEMS = 50          # 한 종류당 개수 — 화면이 버튼 줄이라 그 이상은 못 고른다
+_PRESET_MAX_BYTES = 200_000     # 한 종류당 JSON 크기 — 틀 하나가 1KB 안팎이라 넉넉하다
+
+
+def _preset_clean(items):
+    """이름 있는 dict만 남기고 개수 상한을 자른다. 값 구조(hc/cap/frame)는 화면이 정한다."""
+    out = []
+    for it in items or []:
+        if isinstance(it, dict) and str(it.get("name") or "").strip():
+            it = dict(it)
+            it["name"] = str(it["name"]).strip()[:40]
+            out.append(it)
+    return out[:_PRESET_MAX_ITEMS]
+
+
+@app.get("/api/produce/presets/{kind}")
+def api_produce_presets_get(request: Request, kind: str):
+    if kind not in _PRESET_KINDS:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 종류"})
+    saved = Store(DB_PATH).get_pref("preset::" + kind, customer_id=_cid(request))
+    return {"ok": True, "items": saved if isinstance(saved, list) else [],
+            "is_default": saved is None}
+
+
+@app.post("/api/produce/presets/{kind}")
+def api_produce_presets_set(request: Request, kind: str, body: dict):
+    """body: {items:[...]} 전체 교체 / {merge:[...]} 기존에 없는 것만 뒤에 붙임(이관)."""
+    if kind not in _PRESET_KINDS:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 종류"})
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    key = "preset::" + kind
+    if "merge" in body:
+        if not isinstance(body["merge"], list):
+            return JSONResponse(status_code=422, content={"ok": False, "error": "merge 배열 필요"})
+        cur = store.get_pref(key, customer_id=cid)
+        cur = cur if isinstance(cur, list) else []
+        seen = {json.dumps(x, sort_keys=True, ensure_ascii=False) for x in cur}
+        for it in _preset_clean(body["merge"]):
+            sig = json.dumps(it, sort_keys=True, ensure_ascii=False)
+            if sig not in seen:
+                cur.append(it); seen.add(sig)
+        items = cur[:_PRESET_MAX_ITEMS]
+    else:
+        if not isinstance(body.get("items"), list):
+            return JSONResponse(status_code=422, content={"ok": False, "error": "items 배열 필요"})
+        items = _preset_clean(body["items"])
+    if len(json.dumps(items, ensure_ascii=False)) > _PRESET_MAX_BYTES:
+        return JSONResponse(status_code=413, content={"ok": False, "error": "프리셋이 너무 큽니다"})
+    store.set_pref(key, items, customer_id=cid)
+    return {"ok": True, "items": items, "is_default": False}
+
+
 @app.get("/api/produce/picks")
 def api_produce_picks(request: Request):
     """영상제작에 담긴 도서관 대본(전체 데이터). 우리믹스 탭 기본 목록."""
