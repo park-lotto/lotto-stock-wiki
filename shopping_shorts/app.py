@@ -6671,6 +6671,9 @@ def api_mix_render(request: Request, background_tasks: BackgroundTasks, body: di
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "렌더할 job 없음"})
+    _pro = _pro_block_or_none(store, job)      # 예전 키로 고급 → 1분 뒤 실패 대신 바로 안내
+    if _pro:
+        return _pro
     # removing_subtitles = VMake 유료 단계 진행 중. 여기서 재예약되면 그 돈이 두 번 나간다.
     if job.get("status") in ("rendering", "removing_subtitles") and not _render_is_stale(job):
         return {"ok": True, "status": job["status"]}
@@ -6852,6 +6855,9 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
     _blocked = _need_own_key_or_402(job.get("customer_id"), keyroute.SVC_VMAKE)
     if _blocked:
         return _blocked
+    _pro = _pro_block_or_none(store, job)
+    if _pro:
+        return _pro
     if job.get("clean_status") == "cleaning" and not _render_is_stale(job):
         return {"ok": True, "status": "cleaning"}       # 더블클릭 — VMake를 두 번 안 돌린다
     # 'cleaning'을 여기서 동기 기록(응답 전) — run 안에서 쓰면 이중예약된다(preview 라우트 주석 참조)
@@ -17077,6 +17083,43 @@ def _clean_credit_est(job, job_id):
         return None
 
 
+PRO_BLOCK_MSG = ("고급 자막 지우기는 새 API 키가 필요해요. 지금 키로는 고급을 쓸 수 없어요 — "
+                 "지우는 방식을 '기본'으로 바꾸시거나, 키를 발급받은 곳에서 Pro로 바꾼 뒤 "
+                 "'Switch to New API'를 눌러 주세요(키는 그대로 쓰시면 됩니다).")
+
+
+def _pro_block_or_none(store, job):
+    """고급을 골랐는데 **이 job 주인의 키가 고급을 못 쓰면** 409를 돌려준다. 아니면 None.
+
+    ★사장님 지시(2026-09-17): "고급으로 누르면 안 되게 막혀야지". 박선정(cid 174)이 예전 키로
+      고급을 고른 채 렌더를 세 번 눌러 매번 약 1분 뒤 실패했다.
+    ★막는 곳은 **서버**다 — 화면만 막으면 옛 탭·저장된 설정으로 그대로 뚫린다(0순위-B).
+    ★False(확실히 예전 키)일 때만 막는다. None(판정 실패)이면 막지 않는다 — 네트워크 한 번에
+      멀쩡한 고객이 통째로 막히면 안 된다. 그 경우는 워커에서 원래대로 안내된다.
+    ★이 편성으로 **이미 만든 고급 청소본이 있으면** 막지 않는다(재사용이라 키가 필요 없다).
+    """
+    from .vmake_client import TIER_PRO
+    if not job or not job.get("subtitle_removal"):
+        return None
+    if mix_pipeline.clean_tier_of(job) != TIER_PRO:
+        return None
+    try:
+        if mix_pipeline.clean_final_path_for_plan(job, _MIX_WORK_DIR / job["job_id"]):
+            return None
+    except Exception as e:     # noqa: BLE001 — 재사용 판정 실패는 키 판정으로 넘긴다
+        print(f"[pro_block] 재사용 판정 실패(키 판정으로): {e!r}", file=sys.stderr)
+    if _clean_pro_ready(store, job.get("customer_id") or 0) is False:
+        return JSONResponse(status_code=409, content={
+            "ok": False, "error_code": "need_new_api_key", "error": PRO_BLOCK_MSG})
+    return None
+
+
+@app.get("/api/produce/clean/pro_ready")
+def api_clean_pro_ready(request: Request):
+    """로그인한 사람의 키로 고급이 되는가 — 화면이 고급 버튼을 잠글지 정한다. true/false/null."""
+    return {"ok": True, "ready": _clean_pro_ready(Store(DB_PATH), _cid(request))}
+
+
 @app.get("/api/produce/works/{work_id}")
 def api_produce_works_get(request: Request, work_id: str):
     st = Store(DB_PATH)
@@ -18832,6 +18875,10 @@ def api_produce_mix_settings(body: dict):
         # (등급 이름의 정의처는 vmake_client, 해석은 mix_pipeline.clean_tier_of).
         from .vmake_client import TIER_BASIC, TIER_PRO
         fields["clean_tier"] = TIER_PRO if body.get("clean_tier") == TIER_PRO else TIER_BASIC
+        # ★고급은 키가 되는 사람만 고를 수 있다(2026-09-17 사장님 "고급으로 누르면 안 되게 막혀야지").
+        if fields["clean_tier"] == TIER_PRO and _clean_pro_ready(store, job.get("customer_id") or 0) is False:
+            return JSONResponse(status_code=409, content={
+                "ok": False, "error_code": "need_new_api_key", "error": PRO_BLOCK_MSG})
     if "headcopy" in body:
         fields["headcopy"] = body.get("headcopy")  # dict or None
     if "caption_style" in body:

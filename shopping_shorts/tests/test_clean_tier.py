@@ -122,3 +122,35 @@ def test_옛키로_고급실패는_키미등록으로_안내하지_않는다():
     e = "고급 자막제거(Smart Pro)는 VMake 새 API 키가 필요합니다. VMake 대시보드에서 'Switch to New API'로 전환한 뒤 다시 시도해 주세요."
     assert clean_failure_kind(e) == "need_new_api_key"
     assert clean_failure_kind("자막 지우기 API 키가 필요합니다") == "need_own_key"
+
+
+class TestProLock:
+    """예전 키로 고급을 못 고르게 서버에서 막는다 — 2026-09-17 사장님 "고급으로 누르면 안 되게"."""
+
+    def _job(self, tier="pro"):
+        return {"job_id": "j1", "customer_id": 174, "subtitle_removal": True,
+                "clean_tier": tier, "edit_plan": {"beats": []}}
+
+    def test_예전키면_409(self, monkeypatch):
+        import shopping_shorts.app as a
+        monkeypatch.setattr(a, "_clean_pro_ready", lambda st, cid: False)
+        monkeypatch.setattr(a.mix_pipeline, "clean_final_path_for_plan", lambda j, w: None)
+        r = a._pro_block_or_none(None, self._job())
+        assert r is not None and r.status_code == 409
+
+    def test_모르면_막지_않는다(self, monkeypatch):
+        import shopping_shorts.app as a
+        monkeypatch.setattr(a, "_clean_pro_ready", lambda st, cid: None)
+        monkeypatch.setattr(a.mix_pipeline, "clean_final_path_for_plan", lambda j, w: None)
+        assert a._pro_block_or_none(None, self._job()) is None
+
+    def test_이미_고급_청소본이_있으면_막지_않는다(self, monkeypatch):
+        import shopping_shorts.app as a
+        monkeypatch.setattr(a, "_clean_pro_ready", lambda st, cid: False)
+        monkeypatch.setattr(a.mix_pipeline, "clean_final_path_for_plan", lambda j, w: "x.mp4")
+        assert a._pro_block_or_none(None, self._job()) is None
+
+    def test_기본은_막지_않는다(self, monkeypatch):
+        import shopping_shorts.app as a
+        monkeypatch.setattr(a, "_clean_pro_ready", lambda st, cid: False)
+        assert a._pro_block_or_none(None, self._job("basic")) is None
