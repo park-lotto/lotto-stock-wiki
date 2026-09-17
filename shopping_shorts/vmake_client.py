@@ -34,6 +34,17 @@ TIER_BASIC = "basic"
 TIER_PRO = "pro"
 
 
+def is_preprocess_fail(err) -> bool:
+    """VMake가 **영상 파일을 준비하다** 멈췄나 — `[30029] 前置开放平台事件处理失败`.
+
+    실측(2026-09-17, 영상 1556910737b6): 우리 조립본(mix_raw, concat -c copy)을 보내면
+    사장님 키·고객 키 모두 이 오류로 실패했는데, 같은 영상을 **한 번 다시 인코딩**하거나
+    조각내 보내면 성공했다. 실패 요청은 크레딧이 안 빠졌다(대시보드 잔액 대조).
+    ★좁게 본다 — 코드 30029만. 다른 실패까지 재인코딩으로 돌리면 헛돈이 든다.
+    """
+    return "30029" in str(err or "")
+
+
 def is_legacy_key(err) -> bool:
     """이 오류가 **'아직 legacy API에 묶인 키'**인가.
 
@@ -92,6 +103,38 @@ def _new_api_client(ak, sk):
     client = _client(ak, sk)
     client.fetch_config(version=NEW_API_VERSION)
     return client
+
+
+# ── 이 키로 고급을 쓸 수 있나 (2026-09-16) ─────────────────────────────────
+# 사장님 제보: 이미 새 API로 옮겨 고급이 **되는** 계정인데도 화면이 늘 "Pro 쓰려면 키를
+# 다시 등록하라"고 띄웠다. 화면이 판단 근거 없이 경고를 박아 뒀기 때문이다.
+# ★판정은 remove_subtitles와 **같은 관문**(fetch_config v2.0.0)으로 한다 — 다른 방법으로
+#   재면 "화면은 된다는데 실제로는 안 된다"가 난다(0순위-B).
+# ★config 조회만 한다 — 크레딧이 나가지 않는다(실측: legacy 호출도 Free Usage 0).
+_PRO_READY_CACHE = {}          # 키 해시 → (시각, True/False)
+_PRO_READY_TTL = 3600
+
+
+def key_supports_new_api(api_key):
+    """True=새 API 키(고급 가능) / False=옛 키 / None=모르겠음(네트워크 등 — 화면은 경고 유지)."""
+    import hashlib
+    import time
+    if not api_key:
+        return None
+    h = hashlib.sha256(api_key.encode("utf-8")).hexdigest()[:16]
+    hit = _PRO_READY_CACHE.get(h)
+    if hit and time.time() - hit[0] < _PRO_READY_TTL:
+        return hit[1]
+    try:
+        ak, sk = _split_key(api_key)
+        _new_api_client(ak, sk)
+        ok = True
+    except Exception as exc:                      # noqa: BLE001 — 판정만 한다
+        if not is_legacy_key(exc):
+            return None                           # 모르는 실패는 캐시하지 않는다
+        ok = False
+    _PRO_READY_CACHE[h] = (time.time(), ok)
+    return ok
 
 
 def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER_BASIC):

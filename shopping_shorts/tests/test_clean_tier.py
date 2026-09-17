@@ -79,3 +79,38 @@ class TestLengthGuard:
         monkeypatch.setattr(mp, "remove_subtitles", _fake)
         mp._vmake_clean("in.mp4", ["ak:sk"], "out.mp4", tier=vc.TIER_PRO)
         assert seen["tier"] == vc.TIER_PRO
+
+
+class TestPreprocessRetry:
+    """VMake 30029(파일 준비 실패) → 딱 한 번 재인코딩해 다시 보낸다 — 2026-09-17."""
+
+    def _setup(self, monkeypatch, results):
+        calls = []
+        monkeypatch.setattr(mp, "_probe_seconds", lambda p: 20.0)
+        monkeypatch.setattr(mp, "_reencode_for_vmake", lambda p: "in_reenc.mp4")
+
+        def fake(src, key, out_path=None, tier=None):
+            calls.append(src)
+            r = results.pop(0)
+            if isinstance(r, Exception):
+                raise r
+            return r
+        monkeypatch.setattr(mp, "remove_subtitles", fake)
+        return calls
+
+    def test_30029면_재인코딩본으로_한번_더_보낸다(self, monkeypatch):
+        calls = self._setup(monkeypatch, [RuntimeError("code 30029"), "out.mp4"])
+        assert mp._vmake_clean("in.mp4", ["ak:sk"], "out.mp4", tier=vc.TIER_PRO) == "out.mp4"
+        assert calls == ["in.mp4", "in_reenc.mp4"]
+
+    def test_재인코딩본도_실패하면_더_안_돌고_올린다(self, monkeypatch):
+        calls = self._setup(monkeypatch, [RuntimeError("30029"), RuntimeError("30029")])
+        with pytest.raises(RuntimeError):
+            mp._vmake_clean("in.mp4", ["ak:sk"], "out.mp4")
+        assert len(calls) == 2, "무한 재시도하면 안 된다"
+
+    def test_다른_오류는_재인코딩하지_않는다(self, monkeypatch):
+        calls = self._setup(monkeypatch, [RuntimeError("network down")])
+        with pytest.raises(RuntimeError):
+            mp._vmake_clean("in.mp4", ["ak:sk"], "out.mp4")
+        assert calls == ["in.mp4"]
