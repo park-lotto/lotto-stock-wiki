@@ -8777,7 +8777,18 @@ function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
 // 박아둔다. ⚠️ 둘 중 하나만 고치면 화면 "N자·약 N초" 표시와 편집계획(target_seconds)이
 // 갈라진다 — speed 재튜닝으로 실측치가 바뀌면 두 파일을 같이 고칠 것.
 const SYLLABLES_PER_SEC = 5.7;
-function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.length}자 · 약 ${Math.round(c/SYLLABLES_PER_SEC)}초`; }
+// ★실제 발화 속도 = SYLLABLES_PER_SEC × 배속(edit_plan._speech_speed, 기본 1.30) = 7.41자/초.
+//   2026-09-18까지 화면은 **배속을 안 곱해** 5.7로만 계산했다 — 서버(7.41)와 30% 갈라져 있었다.
+//   실측(라이브 완성 job 20개·비트 168개의 TTS 실파일 길이 대조):
+//     화면(5.7) 642초 = 실제보다 **+31%**  /  서버(7.41) 494초 = +1%  /  실제 TTS 491초
+//   → 25초짜리를 만들면 화면엔 33초로 떴다. **job당 평균 7.6초 과대 표시.**
+//   위 주석이 경고한 "둘 중 하나만 고치면 갈라진다"가 이미 일어나 있던 것이다
+//   (배속은 2026-08-22에 들어왔는데 JS는 그때 같이 안 고쳐졌다).
+// ⚠️SYLLABLES_PER_SEC(5.7)은 **음절 기준 실측치**라 그대로 둔다 — 바꿀 것은 '자/초'다.
+//   서버 배속을 튜닝하면 여기 SPEECH_SPEED도 같이 고쳐야 한다(0순위-B: 짝으로 움직인다).
+const SPEECH_SPEED = 1.30;                                  // = edit_plan._speech_speed() 기본값
+const SPEECH_CHARS_PER_SEC = SYLLABLES_PER_SEC * SPEECH_SPEED;   // 7.41자/초
+function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.length}자 · 약 ${Math.round(c/SPEECH_CHARS_PER_SEC)}초`; }
 // ★2026-07-17 병합 해결: 보이스 트랙의 SYLLABLES_PER_SEC(위)와 작업파일 T3의 가드 제거(아래)를
 // 둘 다 살린다. main 쪽은 saveWork() 앞에 HANDOFF 길이 가드가 붙어 있는데, 그걸 그대로 받으면
 // 영상 없이 대본만 확정한 작업이 다시 저장되지 않는다 — 그게 사장님이 잃어버린 구간이다.
@@ -12639,7 +12650,9 @@ function onCandLineEdit(ta, idx, li){
 // 후보 대본의 예상 발화시간(초) — 자막·보이스 추정과 같은 SYLLABLES_PER_SEC로 계산(공백 제외 글자수÷음절속도).
 // AI PICK 카드의 '길이'는 원본 영상 길이(고정)라, 여기선 '이 대본을 읽으면 나올 영상 길이'를 따로 보여준다.
 function _candSecs(c){
-  const sps = (typeof SYLLABLES_PER_SEC!=='undefined') ? SYLLABLES_PER_SEC : 5.7;   // 슬라이스 테스트(전역 없음) 방어
+  // ★lenText와 **같은 상수**를 쓴다(0순위-B). 2026-09-18까지 여기만 배속 없는 5.7이라
+  //   같은 화면의 "N자·약 N초"와 "⏱ 예상 영상시간"이 서로 다른 초를 말할 수 있었다.
+  const sps = (typeof SPEECH_CHARS_PER_SEC!=='undefined') ? SPEECH_CHARS_PER_SEC : 7.41;   // 슬라이스 테스트(전역 없음) 방어
   // ★lines가 있으면 그쪽이 진실이다(고쳐 쓴 글자가 예상초에 바로 반영돼야 한다).
   const src = (Array.isArray(c.lines) && c.lines.length) ? c.lines.join(' ') : (c.script || c.hook || '');
   const t = src.replace(/\s/g,'');

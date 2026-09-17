@@ -56,17 +56,32 @@ console.log('PASS'); process.exit(0);
 
 @pytest.mark.skipif(NODE is None, reason="node 없음 — JS 회귀 테스트 스킵")
 def test_len_text_uses_syllables_per_sec_not_a_different_number(tmp_path):
-    """220자 스크립트 → 실제 발화초 기준(220/5.7≈38.6초)이지, 옛 6.5 기준(≈33.8초)이 아니다."""
+    """220자 → **실제 발화초** 기준(220/7.41≈29.7초)이다.
+
+    ★2026-09-18 계약 정정: 종전엔 `220 / SYLLABLES_PER_SEC`(5.7) = 38.6초를 잠갔는데,
+      5.7은 **배속 1.0 기준 음절 속도**라 실제 발화가 아니다. 서버는
+      `_SYLLABLES_PER_SEC × _speech_speed()` = 7.41자/초를 쓰는데 화면만 5.7이라
+      **30% 갈라져 있었다**(배속이 2026-08-22에 들어왔는데 JS를 같이 안 고침).
+      실측(라이브 job 20개·비트 168개, TTS 실파일): 화면 642초 vs 실제 491초 = **+31%**.
+      잠글 값은 '음절 상수'가 아니라 **화면이 실제 음성과 맞는가**다.
+    """
     suffix = r"""
 const text = '가'.repeat(220);
 const out = lenText(text);
-const expectedSec = Math.round(220 / SYLLABLES_PER_SEC);
+const expectedSec = Math.round(220 / SPEECH_CHARS_PER_SEC);
 if (out.indexOf('약 ' + expectedSec + '초') === -1) {
-  console.error('FAIL: lenText(220자)=' + out + '(기대 "약 ' + expectedSec + '초" 포함, SYLLABLES_PER_SEC=' + SYLLABLES_PER_SEC + ')');
+  console.error('FAIL: lenText(220자)=' + out + '(기대 "약 ' + expectedSec + '초" 포함, SPEECH_CHARS_PER_SEC=' + SPEECH_CHARS_PER_SEC + ')');
   process.exit(1);
 }
 if (expectedSec === 34) {
   console.error('FAIL: 결과가 옛 6.5 기준(약 34초)과 같음 — 상수가 실제로 안 바뀐 것 같다'); process.exit(1);
+}
+if (expectedSec === 39) {
+  console.error('FAIL: 배속을 안 곱한 5.7 기준(약 39초) — 서버(7.41)와 30% 갈라진다'); process.exit(1);
+}
+if (Math.abs(SPEECH_CHARS_PER_SEC - 7.41) > 0.01) {
+  console.error('FAIL: SPEECH_CHARS_PER_SEC=' + SPEECH_CHARS_PER_SEC + ' (기대 7.41 = 5.7 x 1.30, 서버 _speech_cps와 같아야 한다)');
+  process.exit(1);
 }
 console.log('PASS'); process.exit(0);
 """
