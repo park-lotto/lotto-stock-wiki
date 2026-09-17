@@ -11432,13 +11432,16 @@ def _pay_cta():
 def _card_cta(fallback_href="", fallback_label=""):
     """카드결제 버튼(주소·문구)의 **단일 출처**(0순위-B).
 
-    우선순위: 관리자 설정 `pay_url`(외부 카드결제 링크, 예: 스마트스토어) > 토스 결제창(/pay/toss)
+    우선순위: 관리자 설정 `card_url`(외부 카드결제 링크, 예: 스마트스토어) > 토스 결제창(/pay/toss)
     > 넘겨받은 폴백(_pay_cta 결과). 2026-09-17 사장님: 토스 카드결제가 고객에게 "1회 한도 초과"로
-    막혀 스마트스토어 링크로 받는다 — 링크는 설정 한 곳(pay_url)만 바꾸면 랜딩·요금·대기·
-    마이페이지 안내가 같이 바뀐다. 요청마다 읽어 재시작 없이 반영된다."""
-    pay = (Store(DB_PATH).get_setting("pay_url", "") or "").strip()
-    if pay:
-        return pay, "💳 카드로 결제하기"
+    막혀 스마트스토어 링크로 받는다 — 링크는 설정 한 곳(card_url)만 바꾸면 랜딩·요금·대기·
+    /pay 안내의 **카드 버튼만** 같이 바뀐다. 요청마다 읽어 재시작 없이 반영된다.
+    ★`pay_url`이 아니다 — 그건 _pay_cta(메인 CTA '1기 신청하기')의 목적지라, 거기에 카드 링크를
+      넣으면 신청 버튼이 결제 안내(/pay: 현금·폼·카드 선택)를 건너뛰고 스마트스토어로 직행한다
+      (09-17 사장님 "기존것처럼 그대로 냅두고 이 안에서 카드결제를 누르면 들어가게")."""
+    card = (Store(DB_PATH).get_setting("card_url", "") or "").strip()
+    if card:
+        return card, "💳 카드로 결제하기"
     ck, sk = _toss_keys()
     if ck and sk:
         return "/pay/toss", "💳 카드로 결제하기"
@@ -12401,10 +12404,10 @@ def _deposit_card_html():
     테스트 키면 버튼에 '테스트'를 붙여 고객이 진짜 결제로 착각하지 않게 한다.
     """
     ck, sk = _toss_keys()
-    pay = (Store(DB_PATH).get_setting("pay_url", "") or "").strip()
+    pay = (Store(DB_PATH).get_setting("card_url", "") or "").strip()
     if not pay and not (ck and sk):
         return ""
-    # 외부 링크(pay_url)가 있으면 그것이 카드결제다 — _card_cta와 같은 우선순위(2026-09-17).
+    # 외부 링크(card_url)가 있으면 그것이 카드결제다 — _card_cta와 같은 우선순위(2026-09-17).
     tag = "" if pay else (" (테스트)" if ck.startswith("test_") else "")
     return ('<a href="' + (pay or "/pay/toss") + '" style="display:block;text-align:center;text-decoration:none;'
             'background:linear-gradient(135deg,#ffd27a,#f0a53a);color:#1a1206;border-radius:12px;'
