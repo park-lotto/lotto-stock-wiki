@@ -288,7 +288,14 @@ def verdict(db_path, cores=None, now_queued=None):
     max_run = max((x["max_running"] or 0) for x in d)
     q_day = max(d, key=lambda x: (x["max_queued"] or 0))
     max_q = q_day["max_queued"] or 0
-    min_free = min((x["min_disk_free_gb"] or 9999) for x in d)
+    # ★0.0을 `or`로 거르면 안 된다(2026-09-18 실사고). `x or 9999`는 **0.0도 falsy**라
+    #   디스크가 **완전히 찬 날만 골라서** 9999로 바꿔 버린다 — 가장 위험한 순간에
+    #   경보가 침묵한다. 실측: 09-16·09-17이 0.0GB였는데 min_free가 259.5GB로 나와
+    #   danger(<50)가 끝내 안 떴다. 그 사이 yt-dlp가 "No space left on device"로 죽고
+    #   있었지만 아무도 몰랐다(고객 제보로 겨우 발견).
+    #   → None(표본 없음)만 걸러내고 **0.0은 그대로 산다**.
+    _frees = [x["min_disk_free_gb"] for x in d if x["min_disk_free_gb"] is not None]
+    min_free = min(_frees) if _frees else 9999
     tx_month = sum(x["tx_gb"] for x in d) / max(len(d), 1) * 30
 
     if min_free < 50:
