@@ -16303,6 +16303,24 @@ function drawThumb(ctx, img, layers, W, H, view){
         ctx.textAlign = 'center';
         runs = [{text: line, x: tx, color: _fill}];
       }
+      // 🌑 그림자(2026-09-17 사장님) — L.shadow 0~100. 없으면 0 → 옛 저장본 그림이 안 바뀐다.
+      // ★글자 크기 비율로 깐다(자간·행간과 같은 계약) — 미리보기(270)와 저장(1080)이 같은 그림.
+      // 외곽선이 있으면 외곽선 두께째로 그림자를 떨어뜨려야 테두리 밖으로 그림자가 보인다.
+      if (+L.shadow > 0){
+        const k = Math.min(100, +L.shadow) / 100;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,' + (0.55 + 0.4 * k) + ')';
+        ctx.shadowBlur = size * 0.10 * k;
+        ctx.shadowOffsetX = size * 0.07 * k; ctx.shadowOffsetY = size * 0.09 * k;
+        if (L.outline && L.outline.w){
+          ctx.lineWidth = Math.max(L.outline.w * s, size * 0.085);
+          ctx.strokeStyle = L.outline.color; ctx.lineJoin = 'round';
+          runs.forEach(r => ctx.strokeText(r.text, r.x, y));
+        } else {
+          runs.forEach(r => { ctx.fillStyle = r.color; ctx.fillText(r.text, r.x, y); });
+        }
+        ctx.restore();
+      }
       if (L.outline && L.outline.w){
         ctx.save();
         ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = size * 0.05; ctx.shadowOffsetY = size * 0.02;
@@ -16820,9 +16838,35 @@ function applyThumbPreset(i){
   // x만 살아남아 "왜 위아래만 튀지"가 된다 — 위 주석이 선언한 계약을 지키려면 셋 다 필요하다.
   styled.x = cur.x; styled.y = cur.y; styled.rot = cur.rot;
   styled.fx = cur.fx;   // 강조 효과도 사장님 것 — 색 프리셋을 바꿔도 밑줄·형광펜이 안 사라진다
+  styled.shadow = cur.shadow;   // 그림자 세기도 사장님 것(2026-09-17)
   styled.hl = cur.hl;   // 🖍 글자별 색도 사장님 것 — 프리셋을 바꿔도 고른 글자 색이 남는다
   THUMB_STATE.layers[THUMB_STATE.sel] = styled;
   renderThumbLayers(); renderThumbCanvas();
+}
+
+// 숫자 + −＋ 버튼 + 슬라이더 한 줄(2026-09-17). 편집칸을 다시 그리면 끌던 슬라이더가 끊기므로
+// 숫자·슬라이더만 직접 맞춘다. 범위는 data-*에 한 번만 적고 버튼·슬라이더가 같이 읽는다.
+function thumbNumRow(key, val, min, max, step){
+  const bs = 'flex:0 0 38px;min-width:auto;padding:6px 0;font-size:16px;font-weight:900';
+  return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+    <button type="button" class="tab" style="${bs}" onclick="thumbNumStep('${key}', -${step})">−</button>
+    <input type="range" id="thumbR_${key}" min="${min}" max="${max}" value="${val}" data-min="${min}" data-max="${max}"
+           oninput="thumbNumSet('${key}', this.value)" style="flex:1;min-width:0">
+    <button type="button" class="tab" style="${bs}" onclick="thumbNumStep('${key}', ${step})">＋</button>
+    <b id="thumbN_${key}" style="flex:0 0 38px;text-align:right;font-size:14px">${val}</b>
+  </div>`;
+}
+function thumbNumSet(key, val){
+  const r = document.getElementById('thumbR_' + key), n = document.getElementById('thumbN_' + key);
+  let v = Math.round(+val || 0);
+  if (r) v = Math.max(+r.dataset.min, Math.min(+r.dataset.max, v));
+  if (r && +r.value !== v) r.value = v;
+  if (n) n.textContent = v;
+  setThumbField(key, v);
+}
+function thumbNumStep(key, d){
+  const r = document.getElementById('thumbR_' + key); if (!r) return;
+  thumbNumSet(key, (+r.value || 0) + d);
 }
 
 function setThumbField(key, val){
@@ -16830,7 +16874,7 @@ function setThumbField(key, val){
   if (key === 'outline_w'){ L.outline = L.outline || {color: '#000000', w: 0}; L.outline.w = +val; }
   else if (key === 'outline_color'){ L.outline = L.outline || {color: '#000000', w: 4}; L.outline.color = val; }
   else if (key === 'box'){ L.box = val ? {color: '#000000', pad: 16, opacity: 80} : null; }
-  else if (key === 'size' || key === 'rot' || key === 'tracking' || key === 'leading'){ L[key] = +val; }
+  else if (key === 'size' || key === 'rot' || key === 'tracking' || key === 'leading' || key === 'shadow'){ L[key] = +val; }
   else L[key] = val;
   if (key === 'text') thumbHoldSizeWhileTyping();   // 치는 동안 크기 고정(2026-08-27 고객 제보)
   renderThumbCanvas();
@@ -17110,8 +17154,13 @@ function renderThumbLayers(){
       <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('mid')">⏺ 가운데</button>
       <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('bot')">⬇ 아래</button>
     </div>
-    <label style="font-size:11px;color:var(--sub)">크기 미세조정 <span style="color:var(--sub);opacity:.7">(자동으로 화면 폭을 꽉 채워요 · 필요하면 조절)</span></label>
-    <input type="range" min="30" max="200" value="${L.size}" oninput="setThumbField('size', this.value)" style="width:100%">
+    <!-- ★크기·그림자는 숫자 + −＋ 버튼(2026-09-17 사장님 "숫자+버튼표시가 있어야").
+         슬라이더만으로는 지금 값이 몇인지 안 보이고 1씩 맞추기 어렵다. 값의 주인은 그대로 L.size/L.shadow —
+         버튼·슬라이더 둘 다 thumbNumSet 한 곳을 거쳐 setThumbField로 간다. -->
+    <label style="font-size:11px;color:var(--sub)">글자 크기 <span style="color:var(--sub);opacity:.7">(자동으로 화면 폭을 꽉 채워요 · 필요하면 조절)</span></label>
+    ${thumbNumRow('size', L.size, 30, 200, 5)}
+    <label style="font-size:11px;color:var(--sub)">그림자 <span style="color:var(--sub);opacity:.7">(글자 뒤에 깔리는 검은 그림자 · 0이면 없음)</span></label>
+    ${thumbNumRow('shadow', Number(L.shadow || 0), 0, 100, 10)}
     <label style="font-size:11px;color:var(--sub)">자간 ${Number(L.tracking || 0) > 0 ? '+' : ''}${Number(L.tracking || 0)}
       <span style="color:var(--sub);opacity:.7">(글자 사이 간격 · 0이 기본)</span></label>
     <input type="range" min="-10" max="40" value="${Number(L.tracking || 0)}"
