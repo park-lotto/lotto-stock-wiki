@@ -36,3 +36,38 @@ def test_프롬프트에_CTA_금지와_문장틀이_들어간다():
 
 def test_틀_없는_스파인은_옛_경로():
     assert ba._spine_style({"name": "x"}) == ([], {})
+
+
+def _idx(**kw):
+    return {k: {"vid": "sub", "secs": v[0], "desc": v[1]} for k, v in kw.items()}
+
+
+def test_구조줄이_특징_컷을_먼저_먹지_않는다():
+    """job bb4c2734ce80 실측: title·bait·fame이 박스 컷 7개를 다 먹어 '패키지' 줄에 거리 풍경만 남았다."""
+    idx = _idx(box1=(3.0, "박스 뚜껑을 열어 카메라가 드러남"), box2=(3.0, "구성품을 꺼내 보여줌"),
+               whole=(3.0, "손으로 카메라 전체 형태를 보여줌"), street=(3.0, "거리 풍경 결과물"))
+    groups = {"product": "카메라", "groups": [{"name": "패키지", "cuts": ["box1", "box2"]}], "order": [0]}
+    lines = [{"role": "title", "text": "가" * 8, "group": -1},
+             {"role": "bait", "text": "가" * 8, "group": -1},
+             {"role": "solve", "text": "가" * 8, "group": 0}]
+    bs, rep = ba.assign_cuts(lines, groups, idx, "bb")
+    assert bs[2]["segs"][0] in ("box1", "box2"), bs
+    assert bs[0]["segs"][0] == "whole", "구조 줄은 특징 밖 '전체' 컷을 먼저 쓴다: %s" % bs
+    assert [b["role"] for b in bs] == ["title", "bait", "solve"], "출력 순서는 대본 순서 그대로"
+
+
+def test_프롬프트의_group은_묶음_원번호다():
+    g = {"product": "x", "order": [2, 0]}          # 순서 1번 = 묶음 2, 순서 2번 = 묶음 0
+    p = ba._spine_prompt(g, {"name": "s"}, ROLES, TPL, ["a", "b"], 20)
+    assert "role=solve, group=2 (특징 1번)" in p and "role=more, group=0 (특징 2번)" in p
+
+
+def test_구조줄은_남은_제품컷을_먼저_사람컷은_맨뒤():
+    idx = _idx(box1=(3.0, "박스를 열어 카메라가 드러남"), box2=(3.0, "구성품을 꺼냄"), box3=(3.0, "본체를 꺼내 보여줌"),
+               face=(3.0, "남성이 카메라를 들고 구매처를 언급함"), cta=(3.0, "댓글 유도 화면"))
+    groups = {"product": "카메라", "groups": [{"name": "패키지", "cuts": ["box1", "box2", "box3"]}], "order": [0]}
+    lines = [{"role": "title", "text": "가" * 8, "group": -1}, {"role": "solve", "text": "가" * 8, "group": 0}]
+    bs, _ = ba.assign_cuts(lines, groups, idx, "bb")
+    assert bs[1]["segs"] and all(x.startswith("box") for x in bs[1]["segs"])
+    assert bs[0]["segs"][0].startswith("box"), "묶음에서 남은 제품 컷을 먼저 쓴다: %s" % bs
+    assert "face" not in bs[0]["segs"][:1] and "cta" not in bs[0]["segs"][:1]

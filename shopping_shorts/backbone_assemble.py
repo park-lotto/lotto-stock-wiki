@@ -250,9 +250,11 @@ def _spine_plan(roles, tpl, n_feat):
 def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line):
     plan = _spine_plan(roles, tpl, len(groups_out["order"]))
     lines_spec = []
+    order = groups_out.get("order") or []
     for k, (r, gi) in enumerate(plan):
         ex = " / ".join((tpl.get(r) or [])[:3])
-        tgt = f"group={gi} (특징 {gi + 1}번)" if gi >= 0 else "group=-1"
+        # ★group은 묶음 **원번호**(assign_cuts가 groups[gi]로 찾는다) — 순서 번호를 주면 다른 묶음 컷이 붙는다
+        tgt = f"group={order[gi]} (특징 {gi + 1}번)" if 0 <= gi < len(order) else "group=-1"
         lines_spec.append(f"  {k + 1}. role={r}, {tgt} — 문장틀 예: {ex}")
     return (
         f"제품: {groups_out.get('product')}\n"
@@ -294,37 +296,54 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
         return picked, have
 
     all_sub = [s for s, v in seg_index.items() if v["vid"] != backbone_vid]
-    # 훅·CTA 화면: 첫/끝 묶음의 서브 컷을 먼저(아무 서브 컷보다 흐름이 맞는다)
     order = groups_out.get("order") or []
-    edge_first = list(groups_out["groups"][order[0]].get("cuts") or []) if order else []
-    edge_last = list(groups_out["groups"][order[-1]].get("cuts") or []) if order else []
-    beat_sources, report = [], []
-    for L in lines:
+    in_group = {c for g in groups_out["groups"] for c in (g.get("cuts") or [])}
+    # 구조 줄(정체·떼돈·이건 바로·한계·마무리)용 후보: 어느 특징에도 안 들어간 컷 중 '제품 전체·외관'을 먼저,
+    # 그다음 나머지 미배정 컷, 마지막에야 특징 컷. ★특징 줄이 먼저 배정받는다(아래 순서) — 전엔 구조 줄이
+    # 먼저 돌며 첫 묶음(박스 열기) 컷 7개를 다 먹어 정작 "패키지·구성품" 줄엔 거리 풍경만 남았다(job bb4c2734ce80).
+    def _looks_whole(s):
+        d = str(seg_index[s].get("desc") or "")
+        return any(k in d for k in ("전체", "외관", "정면", "형태", "들어 올", "손에", "제품을 보여"))
+    def _is_person(s):
+        d = str(seg_index[s].get("desc") or "")
+        return any(k in d for k in ("남성", "여성", "사람", "얼굴", "댓글", "구매처", "언급", "말하", "인사"))
+    free = [s for s in all_sub if s not in in_group]
+
+    def _structural_pool():
+        """특징 줄이 다 가져간 **뒤**에 부른다. ① 특징 묶음에서 남은 컷(=제품 컷) ② 묶음 밖 '전체' 컷
+        ③ 묶음 밖 나머지 ④ 사람·댓글 컷은 맨 뒤. 실측(job bba6caa3ee81): 묶음 밖 컷은 곧 찌꺼기
+        (남의 채널 CTA 자막·얼굴)라 정체·떼돈 줄이 전부 그걸 받았다."""
+        left = [s for s in all_sub if s in in_group and s not in used]
+        rest = [s for s in free if not _is_person(s)]
+        return (left + [s for s in rest if _looks_whole(s)] + [s for s in rest if not _looks_whole(s)]
+                + [s for s in free if _is_person(s)])
+    beat_sources, report = [None] * len(lines), [None] * len(lines)
+    feature_first = sorted(range(len(lines)), key=lambda i: 0 if 0 <= (lines[i].get("group") if lines[i].get("group") is not None else -1) < len(groups_out["groups"]) else 1)
+    for li in feature_first:
+        L = lines[li]
         need = _secs(L["text"])
         gi = L.get("group", -1)
         if gi is not None and 0 <= gi < len(groups_out["groups"]):
             sids = list(groups_out["groups"][gi].get("cuts") or [])
-        elif L.get("role") == "cta":
-            sids = edge_last + all_sub
         else:
-            sids = edge_first + all_sub
+            sids = _structural_pool()
         picked, have = _fill(sids, need)
         # ★모자라면 서브에서 보충 — 짧은 컷(<MIN_CUT_SECS)을 거르고 나면 그룹 컷만으론 부족할 때가 있다
         #   (실측 1회차: 펜촉 줄 화면 2.6s < 대사 4.9s). 안 채우면 3단계 채우기가 대본 안 보고 메운다.
         if have < need + SLACK_SECS:
-            more, more_have = _fill(all_sub, need - have)
+            more, more_have = _fill(free + all_sub, need - have)   # 특징 밖 컷부터(남의 특징 컷을 뺏지 않게)
             picked += more; have += more_have
         # ★길이는 찼는데 **컷이 1개뿐**이면 한 장 더 붙인다(2026-09-17). 위 보충은 길이가 모자랄
         #   때만 돌아서, 6.3초짜리 한 컷이 3.5초 대사를 덮으면 그대로 1컷으로 끝났다 = 밋밋.
         #   렌더 라운드로빈은 컷 2개 이상에서만 작동하므로 여기서 개수를 채워야 한다.
         if len(picked) < MIN_CUTS_PER_LINE and need > TARGET_CUT_SECS:
-            more, more_have = _fill(all_sub, 0.0)        # 0.0 = 개수만 채운다(길이는 이미 찼다)
+            more, more_have = _fill(free + all_sub, 0.0)  # 0.0 = 개수만 채운다(길이는 이미 찼다)
             picked += more; have += more_have
         if not picked:                                   # 그래도 없으면 원본 아무 컷
             picked, have = _fill(list(seg_index), need)
-        beat_sources.append({"role": L["role"], "seg": picked[0] if picked else "", "segs": picked})
-        report.append({"text": L["text"], "need": round(need, 1), "have": round(have, 1),
-                       "cuts": picked, "from_sub": all(seg_index[s]["vid"] != backbone_vid for s in picked)})
+        beat_sources[li] = {"role": L["role"], "seg": picked[0] if picked else "", "segs": picked}
+        report[li] = {"text": L["text"], "need": round(need, 1), "have": round(have, 1),
+                      "cuts": picked, "from_sub": all(seg_index[s]["vid"] != backbone_vid for s in picked)}
     return beat_sources, report
 
 
