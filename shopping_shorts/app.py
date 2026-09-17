@@ -20413,6 +20413,14 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
             cvp = job.get("clean_video_path")
             if not cvp or not Path(cvp).exists():
                 return {}, None, None, "", False
+    # ★캐시 꼬리표에 **어느 청소본인지**를 박는다(2026-09-17 이윤정님 실사고).
+    #   종전엔 꼬리표가 "_clean" 하나라, 기본 등급으로 지웠을 때 뜬 컷 그림 14장이
+    #   고급으로 다시 지운 뒤에도 파일이 있다는 이유로 그대로 재사용됐다 — 검수 화면은
+    #   고급 결과인데 꾸미기는 기본 등급 얼룩(손 조각)을 보여줬고 새로고침으로도 안 바뀌었다.
+    #   청소본 파일명(final_clean_{편성서명}{등급})이 곧 정체이므로 그 줄기를 꼬리표로 쓴다.
+    #   poster·beatframe이 모두 이 꼬리표로 파일명을 만들므로 여기 한 곳만 고친다(0순위-B).
+    _stem = Path(cvp).stem
+    _ctag = "_clean_" + re.sub(r"[^0-9a-zA-Z]", "", _stem[len("final_clean_"):] if _stem.startswith("final_clean_") else _stem)
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}
@@ -20439,10 +20447,10 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
         #   그러면 자막·워터마크가 화면에 그대로 나온다(08-27 회귀의 정체).
         #   비트 근사로라도 청소본을 가리킨다. 정확도는 떨어져도 '지워진 그림'이다.
         r = mix_pipeline._final_time_of_beat(_plan, beat_idx)
-        return {}, cvp, (r if r is not None else 0.5), "_clean", fresh
+        return {}, cvp, (r if r is not None else 0.5), _ctag, fresh
     _d = frame_extract._probe_duration(cvp) or 0.0
     # 호출부는 '비율'을 받는다 — 파일 길이가 계획 합과 달라도 초를 비율로 환산해 넘긴다.
-    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), "_clean", fresh
+    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), _ctag, fresh
 
 
 def _extract_beat_frame(work, beat, out_path, clean_sources=None,

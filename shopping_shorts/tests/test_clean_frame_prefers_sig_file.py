@@ -57,4 +57,26 @@ def test_서명_청소본이_없으면_옛_청소본이라도_쓴다(tmp_path, m
 
     assert cfin == str(stale)
     assert is_fresh is True, "옛 청소본이라도 청소본에서 뜬다 — 원본이면 자막이 보인다"
-    assert tag == "_clean"
+    assert tag.startswith("_clean")   # 꼬리표엔 어느 청소본인지(파일 줄기)가 붙는다(2026-09-17)
+
+
+def test_기본으로_지운_뒤_고급으로_지우면_꼬리표가_갈린다(tmp_path, monkeypatch):
+    """2026-09-17 이윤정님 실사고: 꼬리표가 "_clean" 하나라 기본 등급 때 뜬 컷 그림이
+    고급 청소 뒤에도 재사용됐다(beatframes 14장 전부 13:31~13:40, 고급은 14:31 완료).
+    검수 화면은 고급인데 꾸미기는 기본 얼룩 — 새로고침으로도 안 바뀐다.
+    계약: 기본 청소본과 고급 청소본은 캐시 꼬리표가 달라야 한다."""
+    plan = {"beats": [{"beat_idx": 0, "primary": {"video_id": "s0", "start": 0}}]}
+    sig = mix_pipeline._plan_signature(plan)
+    basic = _mk(tmp_path / ("final_clean_%s.mp4" % sig))
+    monkeypatch.setattr(A, "_resolve_sources", lambda *a, **k: {})
+    monkeypatch.setattr(A.frame_extract, "_probe_duration", lambda *a, **k: 30.0)
+    job = _job(plan, basic); job["clean_tier"] = "basic"
+    _, cfin_b, _, tag_b, _ = A._clean_frame_src(job, tmp_path, 0)
+
+    pro = _mk(tmp_path / ("final_clean_%sp.mp4" % sig))
+    job["clean_tier"] = "pro"
+    _, cfin_p, _, tag_p, _ = A._clean_frame_src(job, tmp_path, 0)
+
+    assert cfin_b == str(basic) and cfin_p == str(pro)
+    assert tag_b != tag_p, "꼬리표가 같으면 기본 등급 그림이 고급 뒤에도 그대로 재사용된다"
+    assert sig in tag_b and (sig + "p") in tag_p
