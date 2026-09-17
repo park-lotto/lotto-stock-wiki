@@ -4253,6 +4253,63 @@ def scene_swap_rows(plan_before, plan_after, job=None):
     return rows
 
 
+def _extend_refs_to_narration(refs, narration, by_video, used, slack=0.3, max_refs=6):
+    """★컷 이어붙이기(2026-09-17, 사장님 "컷이 모자랄 때 같은 영상 다음 컷을 이어 붙여라").
+
+    2단계가 준 컷이 대사보다 짧으면 **같은 소스의 시간순 다음 컷**을 이어 붙여 대사 길이를 채운다.
+    한 컷의 기여는 config.MAX_SHOT_SECONDS(2.2초)까지만 센다 — 렌더(planClips)가 장면 2개 이상이면
+    그만큼씩 돌려 담으므로, 6초 컷 하나를 "충분"으로 보면 화면 한 장이 3.5초 내내 멈춘다
+    (실측 자동조립 ba630a537511: 컷당 3.5s, 원본은 1.7s). 여러 컷을 붙여야 리듬이 원본에 가깝다.
+
+    왜 여기서(3단계 채우기 말고): 채우기는 '뒤에서 메우기'라 대본을 안 본다 — 어제 정렬을 고쳐도
+    26→23컷이었다(job 26698eb0a362). 유일하게 빈칸 0을 만든 건 **앞에서 컷을 길이만큼 지정**한
+    조립기(assign_cuts, 7→7컷)였다. 그 원리를 상속 경로에 그대로 둔다.
+    모자랄 때만 작동한다 — 컷이 대사보다 길면 아무것도 안 붙인다. 다음 컷이 없으면 그만둔다(폴백 없음,
+    그때는 종전처럼 _fill_beat_screen_time이 받는다)."""
+    from shopping_shorts import config as _cfg
+    cap = float(getattr(_cfg, "MAX_SHOT_SECONDS", 2.2) or 2.2)
+    # 건너뛸 최소 길이는 **렌더가 독립 클립으로 안 만드는** 기준(video_assemble._MIN_CLIP 0.8)을 빌린다.
+    # 채우기의 _MIN_CUT_SECONDS(1.5)는 "뒤로 미는" 기준이지 막는 기준이 아니고, 이어붙이기는
+    # 순서가 핵심이라 1초짜리 다음 컷도 붙여야 한다(팬케이크 job 컷이 0.6~1.0초 — 1.5로 막으면 하나도 못 붙인다).
+    try:
+        from shopping_shorts.video_assemble import _MIN_CLIP as _skip_below
+    except Exception:
+        _skip_below = 0.8
+    need = narr_secs(narration)
+
+    def _contrib(r):
+        try:
+            return min(cap, max(0.0, float(r.get("end") or 0) - float(r.get("start") or 0)))
+        except (TypeError, ValueError):
+            return 0.0
+
+    refs = list(refs)
+    have = sum(_contrib(r) for r in refs)
+    while have < need + slack and len(refs) < max_refs:
+        last = refs[-1]
+        vid = last.get("video_id")
+        try:
+            last_end = float(last.get("end") or 0)
+        except (TypeError, ValueError):
+            break
+        nxt = None
+        for s in by_video.get(vid, []):          # 시간순 정렬돼 있다
+            if s["seg_id"] in used:
+                continue
+            if float(s.get("start") or 0) < last_end:
+                continue
+            if _seg_secs(s) < _skip_below:       # 렌더가 흡수해 화면에 안 나오는 조각
+                continue
+            nxt = s
+            break
+        if nxt is None:
+            break
+        used.add(nxt["seg_id"])
+        refs.append(dict(nxt))
+        have += _contrib(nxt)
+    return refs
+
+
 def build_inherit_plan(source_scripts, given_script, beat_sources, structure="template", video_type=None):
     """3단계 '붙어 온 장면 그대로 쓰기'(2026-09-04, 설계 §3-5·§9 — 사장님 "3단계는 상속만").
 
@@ -4388,6 +4445,14 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
         prev_sid = refs[-1]["seg_id"]
     if not beats:
         return None
+    # ★컷 이어붙이기는 **모든 줄의 컷이 정해진 뒤 2차 패스**로(2026-09-17).
+    #   1차 루프 안에서 하면 앞 줄이 뒤 줄의 b-roll 후보(훅·CTA의 '완성' 결 컷)를 먼저 먹는다
+    #   (test_훅과_CTA의_b_roll: demo가 s0-3·s0-5까지 가져가 CTA가 s0-1로 밀렸다).
+    #   지정 컷·b-roll이 전부 used에 들어간 다음에 남은 컷으로만 이어 붙인다.
+    for b in beats:
+        refs = [b["primary"]] + list(b.get("alternates") or [])
+        refs = _extend_refs_to_narration(refs, b["narration"], by_video, used)
+        b["primary"], b["alternates"] = refs[0], refs[1:]
     beats = _fill_beat_screen_time(beats, seg_map)
     return {"structure": structure, "beats": beats, "plagiarism_flags": [],
             "detected_type": _normalize_video_type(video_type), "affiliate_target": "",

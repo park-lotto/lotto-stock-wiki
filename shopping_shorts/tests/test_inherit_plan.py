@@ -92,6 +92,11 @@ def test_훅과_CTA의_b_roll은_규칙표의_결로_고른다():
     assert b[0]["primary"]["seg_id"] == "s0-6", "훅은 완성 결 중 ★핵심을 먼저"
     assert b[2]["primary"]["seg_id"] == "s0-3", "표에 없는 역할(misc)은 앞 비트(s0-2)의 다음 컷"
     assert b[3]["primary"]["seg_id"] == "s0-5", "CTA는 남은 완성 결"
+    # ★2026-09-17 컷 이어붙이기는 **2차 패스** — 위 b-roll 배정이 전부 끝난 뒤 남은 컷으로만 붙인다.
+    #   demo(s0-2, 2초)가 대사보다 짧으니 이어 붙이되, s0-3은 misc가 이미 가졌으므로 그 다음 s0-4.
+    #   (1차 루프 안에서 붙이면 demo가 s0-3·s0-5를 먹어 misc·CTA가 밀린다 — 실제로 그렇게 깨졌었다)
+    demo_ids = [b[1]["primary"]["seg_id"]] + [a["seg_id"] for a in (b[1].get("alternates") or [])]
+    assert demo_ids[:2] == ["s0-2", "s0-4"], f"demo는 남은 컷 중 다음(s0-4)을 이어 붙인다: {demo_ids}"
 
 
 def test_명시된_출처는_첫_끝_컷이라도_잇고_자동_채움만_edge를_뺀다():
