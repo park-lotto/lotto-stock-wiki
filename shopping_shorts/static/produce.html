@@ -1407,7 +1407,8 @@
   .s2-sent{min-width:0;font-size:16px;line-height:1.65;outline:none;border-radius:8px;padding:4px 8px;margin:0 -8px;overflow-wrap:break-word}
   .s2-sent:hover{background:var(--hover)}
   .s2-sent:focus{background:var(--panel);box-shadow:0 0 0 1.5px var(--accent)}
-  .s2-chk{display:block;font-size:11px;font-weight:400;color:var(--ok);margin-top:4px}
+  .s2-sent-wrap{min-width:0}
+  .s2-chk{display:block;font-size:11px;font-weight:400;color:var(--ok);margin-top:4px;padding:0 8px;margin-left:-8px}
   .s2-swap{justify-self:stretch;font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:8px;padding:8px 0;text-align:center;white-space:nowrap;cursor:pointer}
   .s2-swap:hover{border-color:var(--accent)}
   /* ★줄 삭제(2026-08-22 사장님 "여기서 대본을 어떻게 지우나"). 종전엔 글자를 전부 지워
@@ -18455,12 +18456,17 @@ function s2DraftHtml(dr,i){
     : '';
   const rows=beats.map((b,j)=>{
     const isBad=!dr.passed && bad.some(c=>(c.name||'').indexOf(b.role)>=0);
-    const chk=(b.role==='cta')?'<span class="s2-chk" contenteditable="false">📢 헌장: 댓글에 뭘 남기면 뭘 받는지</span>':'';
+    // ★헌장 안내는 입력칸 **밖**에 둔다(2026-09-17 이윤정님 "직접 안 써진다"). 안에 넣으면
+    //   빈 칸이 :empty가 아니라 '여기에 쓰세요' 안내가 안 뜨고, 클릭 시 커서가 안내 문구
+    //   뒤에 잡혀 글을 못 친다(안내 span이 contenteditable=false라 그 안엔 못 들어간다).
+    const chk=(b.role==='cta')?'<span class="s2-chk">📢 헌장: 댓글에 뭘 남기면 뭘 받는지</span>':'';
     return `<div class="s2-row${isBad?' bad':''}" id="s2r-${i}-${j}" data-role="${esc(b.role||'')}">
       <div class="s2-row-in">
         <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${s2SecTag(s2SecOf(b.text))}</span></div>
-        <div class="s2-sent" contenteditable="true" data-ph="${esc(s2RoleName(b.role).replace(/^\S+\s*/,''))} — 여기에 쓰세요"
-             oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}${chk}</div>
+        <div class="s2-sent-wrap">
+          <div class="s2-sent" contenteditable="true" data-ph="${esc(s2RoleName(b.role).replace(/^\S+\s*/,''))} — 여기에 쓰세요"
+               oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}</div>${chk}
+        </div>
         <div class="s2-acts">
           ${dr.mine?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
           <button class="s2-del" title="이 줄을 대본에서 아주 뺍니다 — 3단계에서 이 장면 칸도 안 생깁니다"
