@@ -72,3 +72,13 @@ console.log(JSON.stringify(out));
     c = clips[0]
     assert c["dur"] == pytest.approx(1.45, abs=1e-6), "화면 시간은 구절 그대로"
     assert c["start"] + c["src_dur"] <= 7.29 + 1e-6, "소스는 조각 끝을 넘지 않는다(src_dur)"
+
+
+def test_전환_여유의_상한은_조각_끝이다():
+    """전환(xfade) 여유로 '남은 실프레임'을 더 읽을 때도 조각 밖(다음 장면)은 안 읽는다."""
+    from shopping_shorts.video_assemble import _piece_end_limit
+    segs = [{"video_id": "s1", "start": 5.92, "end": 7.29}]
+    c = {"video_id": "s1", "start": 5.92, "src_dur": 1.37}
+    assert _piece_end_limit(c, segs, 26.3) == pytest.approx(7.29)      # 조각 끝이 상한
+    assert _piece_end_limit({"video_id": "s9", "start": 1.0}, segs, 26.3) == pytest.approx(26.3)  # 조각 못 찾으면 소스 끝
+    assert _piece_end_limit(c, segs, 0) == 0.0
