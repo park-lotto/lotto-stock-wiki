@@ -86,3 +86,28 @@ def test_char_target_and_recalc_agree_for_a_given_duration(monkeypatch):
     out = edit_plan.build_edit_plan(_scripts(), target_seconds=target_seconds, structure="template",
                                      video_type="product_reveal")
     assert out["beats"][0]["target_seconds"] == pytest.approx(target_seconds, abs=0.2)
+
+# ── 2026-09-18: narr_secs 단위 어긋남(raw vs norm) ────────────────────────
+#   분모 _SYLLABLES_PER_SEC × _speech_speed() = 7.41자/초는 **공백 뺀 norm** 기준인데
+#   분자만 len(text.strip())으로 공백을 세고 있었다. 단위가 다르면 배수를 맞춰도 안 맞는다.
+#   실측(완성 job 25개·비트 210개 TTS 실길이): 계획 791초 vs 실제 608초 = 30%% 과대,
+#   비트 94%%(197/210)가 부풀었다. 고친 뒤 1%% 과대 / 10%%로 떨어졌다.
+#   과대분은 _fill_beat_screen_time이 화면으로 채운다 = 대본과 무관한 컷이 붙는다.
+#   메모리: reference_길이단위_raw_norm_혼용 (08-24에 script_gate만 고치고 여기를 빠뜨렸다)
+
+def test_narr_secs_는_공백을_세지_않는다():
+    """★공백을 세면 같은 문장이 1.35배(=1/0.7395) 길게 잡힌다."""
+    no_space = "가" * 20
+    spaced = " ".join("가" * 20)          # 같은 20자인데 공백 19개가 끼어 있다
+    assert edit_plan.narr_secs(no_space) == edit_plan.narr_secs(spaced), (
+        "공백이 초 계산에 섞였다 — 분모(7.41자/초)는 norm 기준이라 분자도 norm이어야 한다")
+
+
+def test_narr_secs_가_실제_발화속도와_맞는다():
+    """★계획 초가 실제 TTS보다 길면 그 차이를 컷으로 채워 무관한 화면이 붙는다."""
+    cps = edit_plan._SYLLABLES_PER_SEC * edit_plan._speech_speed()
+    text = " ".join(["안녕하세요"] * 20)       # 공백 19개가 낀 100자
+    expect = len("".join(text.split())) / cps
+    got = edit_plan.narr_secs(text)
+    assert abs(got - expect) < 0.15, (
+        f"narr_secs {got}초 != norm 기준 {expect:.1f}초 — 단위가 어긋났다")
