@@ -876,8 +876,15 @@ def _plan_phrase_clips(beat, segs, tts_dur):
             # 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시(같은 내용 반복).
             if _end is not None and float(_end) - st < min(d, _MIN_CLIP) - 1e-3:
                 st = float(segs[idx]["start"])
+            # ★조각 끝을 넘지 않는다(2026-09-17 이윤정님 "미리보기에서 중간에 다른 화면이 짧게").
+            #   구절 길이 d가 조각 남은 길이보다 길면 종전엔 src_dur=d로 그대로 넘겨 조각 뒤의
+            #   **다음 장면**이 새어 나왔다(실측 job 1939bd7f3c50: s1 조각 5.92~7.29 뒤 7.29부터가
+            #   딴 장면인데 구절 1.45초 > 조각 1.37초 → 0.08초 노출). 소스는 조각 안에서만 읽고
+            #   모자란 만큼은 out_dur만 유지해 _speed_and_freeze(완만 슬로모→정지)가 채운다.
+            #   화면(scene_play.js planClips)도 같은 규칙 — 짝으로 움직인다(0순위-B).
+            src_d = d if _end is None else max(0.1, min(d, float(_end) - st))
             plan.append({"video_id": segs[idx]["video_id"], "start": st,
-                         "src_dur": d, "out_dur": d})
+                         "src_dur": src_d, "out_dur": d})
             pos[idx] = st + d
         return plan
     except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
