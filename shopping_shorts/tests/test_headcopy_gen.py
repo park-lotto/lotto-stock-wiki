@@ -236,5 +236,5 @@ def test_paired_family_retries_once_when_every_title_is_too_wide(monkeypatch):
     out = headcopy_gen.suggest("엄마에게 전동 다지기를 드린 대본", family="instagram_story")
 
     assert len(calls) == 2
-    assert "공백 포함 11자" in calls[1]
+    assert "공백 포함 10자" in calls[1]   # 두 줄 모두 둘째 줄 한도(hook2_line_max)로 받는다
     assert out[0]["text"] == "엄마가 걱정돼서\n몰래 챙겨드림"

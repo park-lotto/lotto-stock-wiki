@@ -46,7 +46,8 @@
     const measured=Math.max(5,Math.min(18,(band?.height||ln?.h||frame.height*.07)/frame.height*100));
     return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:mode==='continuous'?6.5:measured};
   };
-  const captionVisible=()=>sceneContext?.scenes?.[sceneIndex]?.caption_visible!==false;
+  // 고정형은 훅이 없다 — '훅 말자막 숨김'(이븐쇼핑 큰 제목용)이 첫 장면 자막까지 지우지 않게 항상 보인다(2026-09-18 실측: LAB 1/23 자막 없음).
+  const captionVisible=()=>mode==='continuous'||sceneContext?.scenes?.[sceneIndex]?.caption_visible!==false;
   const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body');
   const captionSettings=()=>{
     const frame=frameFor(rows[current]),source=captionSource(frame),saved=captionLayouts.get(captionKey())||{};
@@ -366,7 +367,7 @@
     input.classList.toggle('contract-invalid',length>limit);
     input.setAttribute('aria-invalid',length>limit?'true':'false');
   }
-  const evenLimits={channel:12,hook1:11,hook2:11,bodyTitle:22,caption:22};
+  const evenLimits={channel:12,hook1:11,hook2:10,bodyTitle:22,caption:22};   // 둘째 줄 10자: 11자면 화면 양끝을 넘어 잘린다(2026-09-18 실측)
   function syncFieldLimits(){
     const limits=rows[current]?.id==='t11'?evenLimits:{channel:12,hook1:18,hook2:18,bodyTitle:22,caption:24};
     for(const [bind,input] of Object.entries(inputs)){

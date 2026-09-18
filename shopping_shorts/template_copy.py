@@ -13,6 +13,7 @@ from dataclasses import dataclass
 class TemplateCopyContract:
     hook_line_max: int
     hook_total_max: int
+    hook2_line_max: int  # 둘째 줄은 글자가 더 커서(t11 50 vs 43) 한 글자 적다
     support_max: int
     body_title_max: int
     caption_max: int
@@ -22,7 +23,9 @@ class TemplateCopyContract:
 # 인스타형도 내용만 다르고 이 슬롯 크기를 그대로 쓴다.
 EVEN_SHOPPING = TemplateCopyContract(
     hook_line_max=11,
-    hook_total_max=23,  # 두 줄 11자씩 + 줄바꿈 1자
+    hook_total_max=22,  # 첫 줄 11자 + 둘째 줄 10자 + 줄바꿈 1자
+    # 2026-09-18 실측: 둘째 줄 11자「기차 케이크의 반전법」이 화면 양끝을 5px씩 넘어 잘렸다 → 원본 비율대로 10자.
+    hook2_line_max=10,
     support_max=22,
     body_title_max=22,
     caption_max=22,
@@ -74,12 +77,13 @@ def issues(text: object, contract: TemplateCopyContract = EVEN_SHOPPING) -> list
     """템플릿에 넣기 전에 사람이 이해할 수 있는 구조 위반을 반환한다."""
     source = text if isinstance(text, dict) else {}
     found: list[str] = []
-    for key, label in (("hook1", "훅 제목 1"), ("hook2", "훅 제목 2")):
+    for key, label, limit in (("hook1", "훅 제목 1", contract.hook_line_max),
+                              ("hook2", "훅 제목 2", contract.hook2_line_max)):
         value = str(source.get(key) or "")
         if "\n" in value or "\r" in value:
             found.append(f"{label}은 한 줄이어야 합니다")
-        if len(value) > contract.hook_line_max:
-            found.append(f"{label}은 공백 포함 {contract.hook_line_max}자 이하여야 합니다")
+        if len(value) > limit:
+            found.append(f"{label}은 공백 포함 {limit}자 이하여야 합니다")
     if not str(source.get("hook1") or "").strip() or not str(source.get("hook2") or "").strip():
         found.append("훅 제목은 두 줄이 모두 있어야 합니다")
     for key, label, limit in (

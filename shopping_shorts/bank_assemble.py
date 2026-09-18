@@ -309,9 +309,9 @@ def title_len_rule():
     좌우가 잘렸다. 한도를 여기 따로 적으면 슬롯 계약과 어긋난다(0순위-B).
     """
     from shopping_shorts.template_copy import EVEN_SHOPPING as c
-    total = c.hook_line_max * 2
-    return ("공백 포함 %d자 이내. 두 줄로 나뉘어 화면에 크게 박히므로 각 줄 %d자 안에서 끊기게 "
-            "쓴다. 길면 잘려서 못 쓴다" % (total, c.hook_line_max))
+    total = c.hook_line_max + c.hook2_line_max
+    return ("공백 포함 %d자 이내. 두 줄로 나뉘어 화면에 크게 박히므로 첫 줄 %d자·둘째 줄 %d자 안에서 끊기게 "
+            "쓴다. 길면 잘려서 못 쓴다" % (total, c.hook_line_max, c.hook2_line_max))
 
 
 def title_too_long(text):
@@ -320,7 +320,7 @@ def title_too_long(text):
     # 장면꾸미기가 실제로 나누는 방식(split_hook)으로 나눠 봐야 같은 판정이 된다 —
     #   총 22자여도 어절 경계 때문에 한 줄이 12자가 될 수 있다.
     h1, h2 = split_hook(text)
-    return len(h1) > c.hook_line_max or len(h2) > c.hook_line_max
+    return len(h1) > c.hook_line_max or len(h2) > c.hook2_line_max
 
 
 def with_spoken_hook(style):
