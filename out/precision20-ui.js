@@ -82,7 +82,7 @@
   const badge=document.createElement('div');badge.className='precision-badge';badge.textContent='원본 실측 편집';layer.appendChild(badge);
   preview.append(base,media,layer);
 
-  let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandRise=false,hookMotionSpeed=.72,hookCaptionMode='visible';
+  let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',hookMotionSpeed=.72,hookCaptionMode='visible';
   const fontScales=new Map();
   const fittedText=new Map();
   const textOffsets=new Map();
@@ -167,7 +167,7 @@
   if(colorRow)colorRow.innerHTML='<label class="swatch"> <input type="color" data-color-role="white" value="#ffffff"><span>흰색</span></label><label class="swatch"><input type="color" data-color-role="accent" value="#ffe600"><span>강조</span></label><label class="swatch"><input type="color" data-color-role="background" value="#211f19"><span>배경</span></label>';
   const motionPanel=document.createElement('section');
   motionPanel.className='hook-motion';
-  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button><button type="button" data-hook-motion="push-in">천천히 확대</button><button type="button" data-hook-motion="shake">떨림</button></div><div class="hook-speed hook-band-rise"><span>흰 띠</span><button type="button" data-hook-band-rise="1">스윽 올라오기 켜기</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
+  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button><button type="button" data-hook-motion="push-in">천천히 확대</button><button type="button" data-hook-motion="shake">떨림</button></div><div class="hook-speed hook-band-motion"><span>흰 띠</span><button type="button" data-hook-band-motion="">없음</button><button type="button" data-hook-band-motion="rise">스윽 올라오기</button><button type="button" data-hook-band-motion="grow">천천히 확대</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
   root.querySelector('.layout-a .ai-card')?.after(motionPanel);
   const fixedPanel=document.createElement('section');
   fixedPanel.className='fixed-quick-panel';
@@ -179,9 +179,9 @@
     motionPanel.hidden=false;
     motionPanel.querySelectorAll('[data-hook-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookMotion===hookMotion));
     motionPanel.querySelectorAll('[data-hook-speed]').forEach(b=>b.classList.toggle('active',Number(b.dataset.hookSpeed)===hookMotionSpeed));
-    if(hookMotion==='rise'){hookMotion='zoom-punch';hookBandRise=true;}   // 잠깐 있던 단독 'rise' 저장값은 조합형으로 옮긴다
-    const rb=motionPanel.querySelector('[data-hook-band-rise]');if(rb){rb.classList.toggle('active',hookBandRise);rb.textContent=hookBandRise?'스윽 올라오기 켜짐':'스윽 올라오기 켜기';}
-    motionPanel.querySelector('.hook-motion-head small').textContent=(hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':hookMotion==='push-in'?'화면 전체가 천천히 확대':hookMotion==='shake'?'화면 전체가 훅 내내 잘게 떨림':'제목에만 적용')+(hookBandRise?' + 흰 띠 스윽':'');
+    if(hookMotion==='rise'){hookMotion='zoom-punch';hookBandMotion='rise';}   // 잠깐 있던 단독 'rise' 저장값은 조합형으로 옮긴다
+    motionPanel.querySelectorAll('[data-hook-band-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookBandMotion===hookBandMotion));
+    motionPanel.querySelector('.hook-motion-head small').textContent=(hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':hookMotion==='push-in'?'화면 전체가 천천히 확대':hookMotion==='shake'?'화면 전체가 훅 내내 잘게 떨림':'제목에만 적용')+(hookBandMotion==='rise'?' + 흰 띠 스윽':hookBandMotion==='grow'?' + 흰 띠 확대':'');
   }
   const minimumFixedTop=frame=>Math.min(46,Math.max(12,Math.ceil((Math.max(0,...(frame?.lines||[]).filter(line=>line.bind!=='caption').map(line=>line.y1))+2)/(frame?.height||1)*100)));
   function syncMediaLayout(){
@@ -237,7 +237,7 @@
     //   다시 seek하므로 안 지우면 멈춘 옛 애니메이션이 상자에 쌓인다.
     layer.querySelectorAll('.precision-text,.precision-patch').forEach(el=>el.getAnimations?.().forEach(animation=>animation.cancel()));
     // 흰 띠 스윽이 켜져 있으면 흰 띠 글자(bodyTitle)는 스윽이 맡는다 — 제목 모션까지 걸면 글자만 옆으로 튀고 상자와 갈라진다.
-    const texts=[...layer.querySelectorAll('.precision-text')].filter(el=>['hook1','hook2',...(hookBandRise?[]:['bodyTitle'])].includes(el.dataset.editBind));
+    const texts=[...layer.querySelectorAll('.precision-text')].filter(el=>['hook1','hook2',...(hookBandMotion?[]:['bodyTitle'])].includes(el.dataset.editBind));
     let duration=0;
     const timing={duration:620,easing:'cubic-bezier(.18,.88,.25,1)',fill:'both'};
     const time=value=>Math.round(value*hookMotionSpeed);
@@ -252,17 +252,34 @@
     };
     // 흰 띠 스윽 올라오기는 어느 모션과도 겹쳐 쓸 수 있다(2026-09-18 사장님 "줌펀치+스윽 조합").
     //   줌 펀치=화면 전체(카메라), 스윽=흰 띠 한 덩어리라 서로 다른 층을 움직인다.
-    if(hookBandRise){
-      // 스윽 올라오기(2026-09-18 사장님) — 흰 띠(글자 + 뒤의 상자)를 한 덩어리로 아래에서 천천히 올린다.
-      //   상자는 이름표가 없는 patch라 '글자를 세로로 감싸고 높이가 글자의 2.2배 이하'로 짝을 찾는다
-      //   (그보다 큰 patch는 제목판 전체 배경이라 같이 움직이면 틀이 흔들린다).
+    // 흰 띠 효과는 어느 화면 모션과도 겹쳐 쓴다(2026-09-18 사장님 "줌펀치+스윽 조합", "흰 띠도 천천히 확대").
+    //   흰 띠 = 글자(bodyTitle) + 뒤의 상자(patch). 상자는 이름표가 없어 '글자를 세로로 감싸고 높이가
+    //   글자의 2.2배 이하'로 짝을 찾는다(더 큰 patch는 제목판 배경이라 같이 움직이면 틀이 흔들린다).
+    if(hookBandMotion){
       const band=[...layer.querySelectorAll('.precision-text')].find(el=>el.dataset.editBind==='bodyTitle');
       if(band){
         const T=band.getBoundingClientRect();
         const box=[...layer.querySelectorAll('.precision-patch')].filter(el=>{const r=el.getBoundingClientRect();
           return r.width>0&&r.top<=T.top+2&&r.bottom>=T.bottom-2&&r.height<=T.height*2.2;});
-        const riseTiming={duration:time(1500),easing:'cubic-bezier(.33,.3,.25,1)',fill:'both'};   // 천천히: 앞쪽 가속을 줄인 곡선
-        [band,...box].forEach(el=>play(el,[{opacity:0,transform:'translateY(38px)'},{opacity:1,transform:'translateY(0)'}],riseTiming));
+        if(hookBandMotion==='grow'){
+          // 천천히 확대: 흰 띠 한 덩어리를 띠 가운데를 기준으로 1→1.12배. 글자와 상자가 같은 점을 기준으로 커져야
+          //   간격이 벌어지지 않으므로 각자의 기준점을 '글자 가운데'로 맞춘다.
+          const cx=T.left+T.width/2,cy=T.top+T.height/2;
+          [band,...box].forEach(el=>{const r=el.getBoundingClientRect();el.style.transformOrigin=`${cx-r.left}px ${cy-r.top}px`;});
+          const growTiming={duration:Math.round(1500*hookMotionSpeed/.72),easing:'cubic-bezier(.25,.1,.25,1)',fill:'both'};
+          // 긴 문구는 1.12배면 화면 양끝에 닿는다(실측: 활용정점) — 실제 글자 폭 기준으로 화면 안 97%까지만 키운다.
+          const range=document.createRange();range.selectNodeContents(band);const textW=range.getBoundingClientRect().width||T.width;
+          // 2026-09-18 사장님 "좀 더 앞으로 많이 나오게, 너무 약하다" → 1.12→1.35배 + 상자 그림자가 짙어져 떠오르는 입체감.
+          const screenW=preview.getBoundingClientRect().width,maxScale=Math.max(1,Math.min(1.35,screenW*.99/textW));
+          //   긴 문구(20자+)는 화면 폭 제한으로 끝 배율이 1.1배 안팎에서 멈춘다(실측 20종 중 18종) → 0.82배에서 출발해
+          //   커지는 폭 자체를 키운다(보이는 변화 1.33~1.6배). 끝 크기는 그대로라 글자는 화면 밖으로 안 나간다.
+          play(band,[{transform:'scale(.82)'},{transform:`scale(${maxScale.toFixed(4)})`}],growTiming);
+          box.forEach(el=>play(el,[{transform:'scale(.82)',filter:'drop-shadow(0 0 0 rgba(0,0,0,0))'},
+            {transform:`scale(${maxScale.toFixed(4)})`,filter:'drop-shadow(0 10px 14px rgba(0,0,0,.55))'}],growTiming));
+        }else{
+          const riseTiming={duration:time(1500),easing:'cubic-bezier(.33,.3,.25,1)',fill:'both'};   // 천천히: 앞쪽 가속을 줄인 곡선
+          [band,...box].forEach(el=>play(el,[{opacity:0,transform:'translateY(38px)'},{opacity:1,transform:'translateY(0)'}],riseTiming));
+        }
       }
     }
     if(CAMERA_MOTIONS.includes(hookMotion)){
@@ -359,7 +376,7 @@
     const hasChannel=!!(frame?.channel_box||frame?.channel_boxes?.length);
     const lineCount=frame?.lines?.length||0;
     return p.id==='s0101'
-      ? (frameKind==='hook'?['channel','hook1','hook2']:['channel','bodyTitle','caption'])
+      ? (frameKind==='hook'?['channel','hook1','hook2',...(((p.hook?.lines?.length||0)>2||p.hook?.white_box?.text)?['bodyTitle']:[])]:['channel','bodyTitle','caption'])
       : frameKind==='hook'
         ? [...(hasChannel?['channel']:[]),...(lineCount?['hook1']:[]),...(lineCount>1?['hook2']:[]),...(lineCount>2||frame?.white_box?.text?['bodyTitle']:[])]
         : [...(hasChannel?['channel']:[]),...(lineCount?['bodyTitle']:[]),...(lineCount>1||frame?.white_box?.text?['caption']:[])];
@@ -711,7 +728,8 @@
   motionPanel.addEventListener('click',event=>{
     const choice=event.target.closest('[data-hook-motion]');
     if(choice){hookMotion=choice.dataset.hookMotion;if(sceneIndex!==0){sceneIndex=0;showFrame('hook');}syncHookMotionUI();runHookMotion();return}
-    if(event.target.closest('[data-hook-band-rise]')){hookBandRise=!hookBandRise;if(sceneIndex!==0){sceneIndex=0;showFrame('hook');}syncHookMotionUI();runHookMotion();return}
+    const bandChoice=event.target.closest('[data-hook-band-motion]');
+    if(bandChoice){hookBandMotion=bandChoice.dataset.hookBandMotion;if(sceneIndex!==0){sceneIndex=0;showFrame('hook');}syncHookMotionUI();runHookMotion();return}
     const speed=event.target.closest('[data-hook-speed]');
     if(speed){hookMotionSpeed=Number(speed.dataset.hookSpeed);motionPanel.querySelectorAll('[data-hook-speed]').forEach(button=>button.classList.toggle('active',button===speed));runHookMotion();return}
   });
@@ -837,12 +855,12 @@
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
-        hookMotion=saved.hookMotion||hookMotion;hookBandRise=!!saved.hookBandRise||saved.hookMotion==='rise';hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;renderEdit();syncHookMotionUI();
+        hookMotion=saved.hookMotion||hookMotion;hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;renderEdit();syncHookMotionUI();
       }
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandRise,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
@@ -851,7 +869,7 @@
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};
-        hookMotion=saved.hookMotion||hookMotion;hookBandRise=!!saved.hookBandRise||saved.hookMotion==='rise';hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
+        hookMotion=saved.hookMotion||hookMotion;hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
         modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
