@@ -1734,8 +1734,24 @@ const PAL_FOLD = (() => { try { return new Set(JSON.parse(localStorage.getItem('
 function _palFoldSave(){ try { localStorage.setItem('sceneLab:palFold', JSON.stringify([...PAL_FOLD])); } catch (e) {} }
 // 소스 목록 높이 = 사람이 실제로 보는 화면 높이 − 목록 위쪽 끝 위치. 제작소 안(iframe)이면
 //   부모 창 기준으로 잰다 — iframe 자체 높이는 내용에 맞춰 늘어나 기준이 될 수 없다.
+// ★영상소스 '다 보기'(2026-09-18 사장님 "원래 펼쳐져 있던 게 지금은 2개만 보인다 — 접기/펼치기 버튼으로 다 보이게").
+//   09-14에 목록 높이를 화면에 맞춰 묶고 안에서 스크롤하게 바꾸면서(위 미리보기·칸이 늘 보이게) 묶음이 두 개만
+//   보이게 됐다. 둘 다 필요한 쓰임이라 없애지 않고 **고르게** 한다 — 켜면 높이 제한을 풀어 전부 펼쳐 보인다.
+//   고른 값은 브라우저에 기억한다(다시 열어도 그대로).
+// var(let 아님): 화면 그리기가 이 줄보다 먼저 불려도 TDZ 오류로 목록 전체가 죽지 않게.
+var PAL_ALL = (() => { try { return localStorage.getItem('sceneLab:palAll') === '1'; } catch (e) { return false; } })();
+function togglePalAll(){
+  PAL_ALL = !PAL_ALL;
+  try { localStorage.setItem('sceneLab:palAll', PAL_ALL ? '1' : '0'); } catch (e) {}
+  fitPalette();
+  const b = document.getElementById('palAllBtn');
+  if (b){ b.textContent = PAL_ALL ? '⤒ 영상소스 줄여 보기' : '⤓ 영상소스 다 보기'; b.classList.toggle('on', PAL_ALL); }
+  // 제작소 안(iframe)이면 부모가 내용 높이에 맞춰 늘린다 — 크기 알림을 한 번 쏴 준다.
+  try { window.dispatchEvent(new Event('resize')); } catch (e) {}
+}
 function fitPalette(){
   const pal = document.getElementById('palette'); if (!pal) return;
+  if (PAL_ALL){ document.documentElement.style.setProperty('--pal-h', 'none'); return; }
   // 기준: 장면편집 맨 위를 화면 맨 위에 맞췄을 때 목록이 화면 바닥까지 딱 차는 높이.
   //   (부모가 얼마나 내려가 있든 같은 값 — 스크롤할 때마다 높이가 출렁이지 않는다)
   const topInLab = pal.getBoundingClientRect().top + (window.scrollY || 0);
@@ -3039,6 +3055,8 @@ function render(){
                title="어느 소스 영상에서 온 장면인지로 묶습니다 — 여러 영상을 골고루 쓰는지 보입니다">소스별</button>
        <button type="button" class="gm" onclick="palFoldAll(true)" title="모든 영상의 조각을 접습니다">▸ 전체 접기</button>
        <button type="button" class="gm" onclick="palFoldAll(false)" title="모든 영상의 조각을 펼칩니다">▾ 전체 펼치기</button>
+       <button type="button" class="gm ${PAL_ALL?'on':''}" id="palAllBtn" onclick="togglePalAll()"
+               title="영상소스 목록을 화면 높이에 맞춰 줄여 볼지, 아래로 전부 펼쳐 볼지 고릅니다">${PAL_ALL ? '⤒ 영상소스 줄여 보기' : '⤓ 영상소스 다 보기'}</button>
        ${/* ★필름형 토글은 없앴다(2026-08-26 사장님 "필름형을 없애고 소스별에 영상1
              영상2 옆에 필름이라고 만들고"). 소스별 머리줄의 [🎞 필름] 버튼이 같은 일을
              하고, 그쪽은 조각 카드도 함께 보여 고를 게 더 많다 — 모드를 하나 줄인다. */''}

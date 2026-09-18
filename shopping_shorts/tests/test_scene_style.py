@@ -33,6 +33,17 @@ def test_real_caption_gaps_and_hook_beat_are_preserved():
     assert context['text']['hook2']=='둘째 제목'
 
 
+def test_scene_context_uses_paired_subline_for_even_body_structure():
+    timeline=[{"beat_idx":0,"t0":0,"dur":1,"narration":"훅"},
+              {"beat_idx":1,"t0":1,"dur":1,"narration":"본문"}]
+    context=context_for(timeline,{"text":"건망증 환자를 살려낸\n일본 천재의 발명품",
+                                  "subline":"건망증 환자를 살려낸 발명품?"})
+    assert context["text"]["hook1"] == "건망증 환자를 살려낸"
+    assert context["text"]["hook2"] == "일본 천재의 발명품"
+    assert context["text"]["bodyTitle"] == "건망증 환자를 살려낸 발명품?"
+    assert context["text"]["supportTitle"] == context["text"]["bodyTitle"]
+
+
 def test_linux_layer_render_enables_chrome_no_sandbox(monkeypatch, tmp_path):
     """운영 Linux에서 user namespace가 막혀도 Chrome 레이어 렌더가 시작돼야 한다."""
     captured = {}

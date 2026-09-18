@@ -671,6 +671,15 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
         got_cmp = got
     checks = [{"name": "구간 순서", "ok": got_cmp == want,
                "detail": "기대 %s / 실제 %s" % (want, got_cmp)}]
+    # ★화면 제목 길이(2026-09-18) — 제목형은 title이 장면꾸미기 슬롯에 그대로 박힌다.
+    #   실측: 27자 제목이 이븐쇼핑(줄당 11자·자동 축소 금지)에서 좌우로 잘렸다.
+    #   한도는 bank_assemble.title_too_long 한 곳(=template_copy)에서 본다. fatal 아님 —
+    #   재시도 때 gate_feedback으로 모델에 되돌려 줄이게 하는 용도다.
+    if style.get("title_visual_only"):
+        from shopping_shorts.bank_assemble import title_too_long, title_len_rule
+        _t = next((b.get("text", "") for b in beats if b.get("role") == "title"), "")
+        checks.append({"name": "화면 제목 길이", "ok": not title_too_long(_t),
+                       "detail": "%d자 「%s」 — %s" % (len(" ".join(str(_t).split())), _t, title_len_rule())})
 
     # ★'문장틀 준수'는 **조립 대본에만** 묻는다(2026-08-22 실측).
     #   이 검사는 대본을 템플릿 원문과 **글자 단위로** 대조한다(template_matches).

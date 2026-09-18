@@ -110,8 +110,12 @@ def validate_snapshot(value):
         if hl:
             for key,default,lo,hi in (("cx",.5,0,1),("cy",.55,0,1),("r",.22,.06,.9),("zoom",2,1.1,4)):
                 number(hl.get(key,default),lo,hi)
-    if value.get("hookMotion") not in (None,"zoom-punch","pop","slide","flash"):
+    if value.get("hookMotion") not in (None,"zoom-punch","pop","slide","flash","rise","push-in","shake"):
         raise ValueError("제목 효과가 올바르지 않습니다")
+    if value.get("hookBandMotion") not in (None, "", "rise", "grow"):
+        raise ValueError("흰 띠 효과 값이 올바르지 않습니다")
+    if "hookBandRise" in value and not isinstance(value["hookBandRise"], bool):
+        raise ValueError("흰 띠 스윽 올라오기 값이 올바르지 않습니다")
     if "hookMotionSpeed" in value:
         number(value["hookMotionSpeed"],.5,2)
     if value.get("hookCaptionMode") not in (None,"visible","hidden"):
@@ -126,12 +130,13 @@ def validate_snapshot(value):
                 number(item.get(key,default),lo,hi)
             if not re.fullmatch(r"#[0-9a-fA-F]{6}",item.get("color","#ffffff")):
                 raise ValueError("표시 색상이 올바르지 않습니다")
-    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     from .video_assemble import caption_schedule
+    from .template_copy import scene_text
     scenes = []
     hide_hook_captions = (snapshot or {}).get("hookCaptionMode") == "hidden"
     for index, beat in enumerate(timeline):
@@ -149,11 +154,10 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
             cursor = b
         if cursor < end - .001:
             scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
-    title = str((headcopy or {}).get("text") or (timeline[0].get("narration") if timeline else "") or "").strip()
-    parts = title.splitlines()
-    if len(parts) < 2 and title:
-        words=title.split(); half=max(1,len(words)//2);parts=[" ".join(words[:half])," ".join(words[half:])]
-    text = {"channel":"숏템메이커","hook1":parts[0] if parts else "","hook2":" ".join(parts[1:]),"bodyTitle":title}
+    copy = dict(headcopy) if isinstance(headcopy, dict) else {}
+    if not (copy.get("text") or "").strip():
+        copy["text"] = (timeline[0].get("narration") if timeline else "") or ""
+    text = {"channel": "숏템메이커", **scene_text(copy)}
     text.update({k:v for k,v in (snapshot or {}).get("text",{}).items() if k != "caption"})
     return {"jobId":job_id,"text":text,"scenes":scenes}
 

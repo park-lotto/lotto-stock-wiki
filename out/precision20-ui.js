@@ -20,7 +20,8 @@
     return {top:Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100),bottom:0};
   };
   const layoutKey=(presetId,frame)=>presetId.startsWith('fixed_')?presetId:`${presetId}:${frame===storyRows.find(p=>p.id===presetId)?.hook?'hook':'body'}`;
-  const fixedLayoutFor=(presetId,frame)=>({...fixedBaseLayout(frame),...(fixedLayouts.get(layoutKey(presetId,frame))||{}),bottom:0});
+  // 하단 칸(2026-09-18 사장님 "빠른조절에 하단 칸도 만들어서 올리고 내릴수있게") — 저장한 값만 쓰고 기본은 0.
+  const fixedLayoutFor=(presetId,frame)=>{const saved=fixedLayouts.get(layoutKey(presetId,frame))||{};return {...fixedBaseLayout(frame),...saved,bottom:Number(saved.bottom)||0};};
   const fixedBaseColors=frame=>{
     const titleLines=(frame?.lines||[]).filter(line=>line.bind!=='caption');
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
@@ -41,9 +42,13 @@
     const surface=ln&&(frame.surfaces||[]).find(s=>s.y<=ln.y0+ln.h/2&&s.y+s.height>=ln.y0+ln.h/2&&s.y>start*.45);
     const band=frame===rows[current]?.body&&frame.white_box?{y:frame.white_box.y0,height:frame.white_box.y1-frame.white_box.y0,background:frame.white_box.background}:surface;
     const cut=ln&&ln.y0<start?(band?.y??ln.y0):start;
-    return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:Math.max(5,Math.min(18,(band?.height||ln?.h||frame.height*.07)/frame.height*100))};
+    // 고정형 자막칸 높이는 위시언니(6.5%) 하나로 통일(2026-09-18 사장님 "딱 이 사이즈로 다들 해줘야 비례가 맞지").
+    //   실측: 20종 중 14종이 원본 측정값 상한 17.9%라 제목보다 자막칸이 두꺼웠다. 사용자가 저장한 높이는 그대로 우선.
+    const measured=Math.max(5,Math.min(18,(band?.height||ln?.h||frame.height*.07)/frame.height*100));
+    return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:mode==='continuous'?6.5:measured};
   };
-  const captionVisible=()=>sceneContext?.scenes?.[sceneIndex]?.caption_visible!==false;
+  // 고정형은 훅이 없다 — '훅 말자막 숨김'(이븐쇼핑 큰 제목용)이 첫 장면 자막까지 지우지 않게 항상 보인다(2026-09-18 실측: LAB 1/23 자막 없음).
+  const captionVisible=()=>mode==='continuous'||sceneContext?.scenes?.[sceneIndex]?.caption_visible!==false;
   const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body');
   const captionSettings=()=>{
     const frame=frameFor(rows[current]),source=captionSource(frame),saved=captionLayouts.get(captionKey())||{};
@@ -55,9 +60,10 @@
     return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
   };
   const mediaBounds=(frame,presetId)=>{
-    if(!frame)return {top:0,height:100};
+    if(!frame||noTemplate)return {top:0,height:100};   // 템플릿 없음 = 영상이 화면 전체
     const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'?captionSettings().h:0);
-    return {top,height:100-top};
+    const bottom=fixedLayoutFor(presetId||rows[current].id,frame).bottom;
+    return {top,height:Math.max(10,100-top-bottom)};
   };
   const fixedThumb=p=>`assets/scene-style/thumbnails/fixed-${p.source_id}.png`;
   const storyThumb=(p,kind)=>`assets/scene-style/thumbnails/story-${p.id}-${kind}.png`;
@@ -66,7 +72,7 @@
   const captionBadge=p=>presetHasCaptionSlot(p)?'<span class="caption-kind reserved">자막칸</span>':'<span class="caption-kind overlay">영상 위</span>';
   const renderGrid=()=>{
     const count=root.querySelector('.layout-a .pane-head .count');if(count)count.textContent=`${storyRows.length+fixedRows.length}개`;
-    grid.innerHTML=rows.map((p,i)=>mode==='continuous'
+    grid.innerHTML='<button class="preset-card none-card" data-none><span class="check">✓</span><div class="none-thumb">원본 영상<br>그대로</div><b>템플릿 없음</b><small>제목·자막 꾸미기 없이</small></button>'+rows.map((p,i)=>mode==='continuous'
       ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="fixed-thumb" style="background-image:url('${fixedThumb(p)}')"></div><b>${esc(p.name)}</b><small>${esc(fontLabel(p))} · 고정형</small></button>`
       : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${esc(fontLabel(p))} · 훅+본문</small></button>`).join('');
   };
@@ -82,7 +88,10 @@
   const badge=document.createElement('div');badge.className='precision-badge';badge.textContent='원본 실측 편집';layer.appendChild(badge);
   preview.append(base,media,layer);
 
-  let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookMotionSpeed=.72,hookCaptionMode='visible';
+  // 템플릿 없음(2026-09-18 사장님 "템플릿 없는 거 쓰는 사람들") — 선택하면 snapshot()이 null을 내고 제작소가 그대로 서버에 저장,
+  //   최종 렌더(video_assemble)는 scene_style이 비면 꾸미기를 건너뛴다.
+  let noTemplate=false;
+  let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',hookMotionSpeed=.72,hookCaptionMode='visible';
   const fontScales=new Map();
   const fittedText=new Map();
   const textOffsets=new Map();
@@ -167,7 +176,7 @@
   if(colorRow)colorRow.innerHTML='<label class="swatch"> <input type="color" data-color-role="white" value="#ffffff"><span>흰색</span></label><label class="swatch"><input type="color" data-color-role="accent" value="#ffe600"><span>강조</span></label><label class="swatch"><input type="color" data-color-role="background" value="#211f19"><span>배경</span></label>';
   const motionPanel=document.createElement('section');
   motionPanel.className='hook-motion';
-  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
+  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button><button type="button" data-hook-motion="push-in">천천히 확대</button><button type="button" data-hook-motion="shake">떨림</button></div><div class="hook-speed hook-band-motion"><span>흰 띠</span><button type="button" data-hook-band-motion="">없음</button><button type="button" data-hook-band-motion="rise">스윽 올라오기</button><button type="button" data-hook-band-motion="grow">천천히 확대</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
   root.querySelector('.layout-a .ai-card')?.after(motionPanel);
   const fixedPanel=document.createElement('section');
   fixedPanel.className='fixed-quick-panel';
@@ -179,27 +188,51 @@
     motionPanel.hidden=false;
     motionPanel.querySelectorAll('[data-hook-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookMotion===hookMotion));
     motionPanel.querySelectorAll('[data-hook-speed]').forEach(b=>b.classList.toggle('active',Number(b.dataset.hookSpeed)===hookMotionSpeed));
-    motionPanel.querySelector('.hook-motion-head small').textContent=hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':'제목에만 적용';
+    if(hookMotion==='rise'){hookMotion='zoom-punch';hookBandMotion='rise';}   // 잠깐 있던 단독 'rise' 저장값은 조합형으로 옮긴다
+    motionPanel.querySelectorAll('[data-hook-band-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookBandMotion===hookBandMotion));
+    const bandLabel=motionPanel.querySelector('.hook-band-motion > span');if(bandLabel)bandLabel.textContent=mode==='continuous'?'자막 등장':'흰 띠';
+    motionPanel.querySelector('.hook-motion-head small').textContent=(hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':hookMotion==='push-in'?'화면 전체가 천천히 확대':hookMotion==='shake'?'화면 전체가 훅 내내 잘게 떨림':'제목에만 적용')+(hookBandMotion==='rise'?' + 흰 띠 스윽':hookBandMotion==='grow'?' + 흰 띠 확대':'');
   }
   const minimumFixedTop=frame=>Math.min(46,Math.max(12,Math.ceil((Math.max(0,...(frame?.lines||[]).filter(line=>line.bind!=='caption').map(line=>line.y1))+2)/(frame?.height||1)*100)));
+  // 썰쇼핑형은 글자를 안 줄이므로 원래 칸의 85%보다 좁히면 줄끼리 겹친다.
+  const minimumStoryTop=frame=>Math.max(8,Math.ceil(captionSource(frame).cut/frame.height*100*.85));
   function syncMediaLayout(){
+    if(noTemplate){Object.assign(media.style,{top:'0%',height:'100%'});return;}
     const p=rows[current],frame=frameFor(p),bounds=mediaBounds(frame,p?.id);
     Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
   }
   function syncFixedPanel(){
     fixedPanel.hidden=false;
-    fixedPanel.querySelector('[data-fixed-size="bottom"]').hidden=true;fixedPanel.querySelector('[data-fixed-color="bottom"]').closest('label').hidden=true;
+    fixedPanel.querySelector('[data-fixed-size="bottom"] span').textContent='하단 칸';
     fixedPanel.querySelector('.fixed-quick-head b').textContent=mode==='continuous'?'고정형 빠른 조절':`${kind==='hook'?'훅':'본문'} 빠른 조절`;
     const p=rows[current],frame=frameFor(p),layout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame)},colors=fixedColorsFor(p.id,frame);
     fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
       const key=row.dataset.fixedSize,input=row.querySelector('input'),output=row.querySelector('output');
-      if(key==='top')input.min=String(mode==='continuous'?minimumFixedTop(frame):8);
+      if(key==='top')input.min=String(mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame));
       input.value=String(layout[key]);output.textContent=Math.round(layout[key])+'%';
     });
     fixedPanel.querySelectorAll('[data-fixed-color]').forEach(input=>input.value=colors[input.dataset.fixedColor]);
   }
   const punchFrames=[{at:0,zoom:1,dx:0,dy:0},{at:.25,zoom:1.105,dx:0,dy:0},{at:.40,zoom:1.085,dx:-.007,dy:.002},{at:.53,zoom:1.065,dx:.006,dy:-.002},{at:.66,zoom:1.045,dx:-.003,dy:.001},{at:1,zoom:1,dx:0,dy:0}];
+  // 화면 전체(카메라) 모션 — 편집기 미리보기와 최종 렌더(FFmpeg)가 같은 이 숫자를 쓴다.
+  //   push-in·shake는 2026-09-18 사장님이 보낸 레퍼런스 실측값:
+  //   63wyUy6d0Jc 제목 폭 125→180px/1.2초(화면 전체가 천천히 확대, 흔들림 없음)
+  //   ZaPpvrHkZ1U 크기 고정·매 프레임 가로 ±2px/세로 ±3px(360px 기준) 떨림, 훅 내내
+  const CAMERA_MOTIONS=['zoom-punch','push-in','shake'];
+  const hookEndMs=()=>{const hs=(sceneContext?.scenes||[]).filter(s=>s.kind==='hook');return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
   function cameraAt(ms){
+    if(hookMotion==='push-in'){
+      if(ms>=hookEndMs())return {zoom:1,dx:0,dy:0};   // 훅이 끝나면 본문은 원래 크기(레퍼런스도 전환 순간 복귀)
+      const dur=Math.round(1500*hookMotionSpeed/.72);   // 기본(빠름)=1.5초, 느림≈2.8초
+      const t=Math.max(0,Math.min(1,ms/dur)),e=1-Math.pow(1-t,2);   // 처음 빠르고 끝에서 부드럽게 멈춤
+      return {zoom:1+.32*e,dx:0,dy:0};
+    }
+    if(hookMotion==='shake'){
+      if(ms>=hookEndMs())return {zoom:1,dx:0,dy:0};
+      const f=Math.floor(ms/33.333),r=n=>{const x=Math.sin((f+1)*n)*43758.5453;return (x-Math.floor(x))*2-1;};
+      const amp=.72/hookMotionSpeed;   // 빠름=기본 세기, 느림일수록 약하게
+      return {zoom:1.03,dx:r(12.9898)*.0058*amp,dy:r(78.233)*.0047*amp};   // 3% 확대로 가장자리 빈틈 가림
+    }
     if(hookMotion!=='zoom-punch')return {zoom:1,dx:0,dy:0};
     const t=Math.max(0,Math.min(1,ms/Math.round(760*hookMotionSpeed)));
     const i=Math.max(1,punchFrames.findIndex(f=>f.at>=t)),a=punchFrames[i-1],b=punchFrames[i],p=(t-a.at)/(b.at-a.at);
@@ -213,8 +246,11 @@
     const seeking=options&&typeof options==='object'&&Number.isFinite(options.time);
     const camera=cameraLayer();camera.getAnimations().forEach(a=>a.cancel());camera.style.transform='none';
     if(!seeking&&(qaMode||sceneIndex!==0||matchMedia('(prefers-reduced-motion: reduce)').matches))return 0;
-    layer.querySelectorAll('.precision-text').forEach(el=>el.getAnimations?.().forEach(animation=>animation.cancel()));
-    const texts=[...layer.querySelectorAll('.precision-text')].filter(el=>['hook1','hook2','bodyTitle'].includes(el.dataset.editBind));
+    // 글자뿐 아니라 상자(patch)도 지운다 — '스윽 올라오기'가 흰 띠 상자를 같이 움직이는데, 렌더는 프레임마다
+    //   다시 seek하므로 안 지우면 멈춘 옛 애니메이션이 상자에 쌓인다.
+    layer.querySelectorAll('.precision-text,.precision-patch').forEach(el=>el.getAnimations?.().forEach(animation=>animation.cancel()));
+    // 흰 띠 스윽이 켜져 있으면 흰 띠 글자(bodyTitle)는 스윽이 맡는다 — 제목 모션까지 걸면 글자만 옆으로 튀고 상자와 갈라진다.
+    const texts=[...layer.querySelectorAll('.precision-text')].filter(el=>['hook1','hook2',...(hookBandMotion?[]:['bodyTitle'])].includes(el.dataset.editBind));
     let duration=0;
     const timing={duration:620,easing:'cubic-bezier(.18,.88,.25,1)',fill:'both'};
     const time=value=>Math.round(value*hookMotionSpeed);
@@ -227,12 +263,48 @@
       else animation.finished.then(()=>animation.cancel()).catch(()=>{});
       return animation;
     };
-    if(hookMotion==='zoom-punch'){
+    // 흰 띠 스윽 올라오기는 어느 모션과도 겹쳐 쓸 수 있다(2026-09-18 사장님 "줌펀치+스윽 조합").
+    //   줌 펀치=화면 전체(카메라), 스윽=흰 띠 한 덩어리라 서로 다른 층을 움직인다.
+    // 흰 띠 효과는 어느 화면 모션과도 겹쳐 쓴다(2026-09-18 사장님 "줌펀치+스윽 조합", "흰 띠도 천천히 확대").
+    //   흰 띠 = 글자(bodyTitle) + 뒤의 상자(patch). 상자는 이름표가 없어 '글자를 세로로 감싸고 높이가
+    //   글자의 2.2배 이하'로 짝을 찾는다(더 큰 patch는 제목판 배경이라 같이 움직이면 틀이 흔들린다).
+    if(hookBandMotion){
+      const band=[...layer.querySelectorAll('.precision-text')].find(el=>el.dataset.editBind==='bodyTitle');
+      if(band){
+        const T=band.getBoundingClientRect();
+        const box=[...layer.querySelectorAll('.precision-patch')].filter(el=>{const r=el.getBoundingClientRect();
+          return r.width>0&&r.top<=T.top+2&&r.bottom>=T.bottom-2&&r.height<=T.height*2.2;});
+        if(hookBandMotion==='grow'){
+          // 천천히 확대: 흰 띠 한 덩어리를 띠 가운데를 기준으로 1→1.12배. 글자와 상자가 같은 점을 기준으로 커져야
+          //   간격이 벌어지지 않으므로 각자의 기준점을 '글자 가운데'로 맞춘다.
+          const cx=T.left+T.width/2,cy=T.top+T.height/2;
+          [band,...box].forEach(el=>{const r=el.getBoundingClientRect();el.style.transformOrigin=`${cx-r.left}px ${cy-r.top}px`;});
+          const growTiming={duration:Math.round(1500*hookMotionSpeed/.72),easing:'cubic-bezier(.25,.1,.25,1)',fill:'both'};
+          // 긴 문구는 1.12배면 화면 양끝에 닿는다(실측: 활용정점) — 실제 글자 폭 기준으로 화면 안 97%까지만 키운다.
+          const range=document.createRange();range.selectNodeContents(band);const textW=range.getBoundingClientRect().width||T.width;
+          // 2026-09-18 사장님 "좀 더 앞으로 많이 나오게, 너무 약하다" → 1.12→1.35배 + 상자 그림자가 짙어져 떠오르는 입체감.
+          const screenW=preview.getBoundingClientRect().width,maxScale=Math.max(1,Math.min(1.35,screenW*.99/textW));
+          //   긴 문구(20자+)는 화면 폭 제한으로 끝 배율이 1.1배 안팎에서 멈춘다(실측 20종 중 18종) → 0.82배에서 출발해
+          //   커지는 폭 자체를 키운다(보이는 변화 1.33~1.6배). 끝 크기는 그대로라 글자는 화면 밖으로 안 나간다.
+          play(band,[{transform:'scale(.82)'},{transform:`scale(${maxScale.toFixed(4)})`}],growTiming);
+          box.forEach(el=>play(el,[{transform:'scale(.82)',filter:'drop-shadow(0 0 0 rgba(0,0,0,0))'},
+            {transform:`scale(${maxScale.toFixed(4)})`,filter:'drop-shadow(0 10px 14px rgba(0,0,0,.55))'}],growTiming));
+        }else{
+          const riseTiming={duration:time(1500),easing:'cubic-bezier(.33,.3,.25,1)',fill:'both'};   // 천천히: 앞쪽 가속을 줄인 곡선
+          [band,...box].forEach(el=>play(el,[{opacity:0,transform:'translateY(38px)'},{opacity:1,transform:'translateY(0)'}],riseTiming));
+        }
+      }
+    }
+    if(CAMERA_MOTIONS.includes(hookMotion)){
+      // 렌더(sceneStyleExporting)는 카메라를 PNG에 굽지 않는다 — FFmpeg가 cameraAt 숫자로 따로 건다(중복 확대 방지).
+      const total=hookMotion==='zoom-punch'?time(760):hookMotion==='push-in'?Math.round(1500*hookMotionSpeed/.72):Math.round(hookEndMs());
       if(!window.sceneStyleExporting){
-        const animation=camera.animate(punchFrames.map(f=>({offset:f.at,transform:`translate(${f.dx*100}%,${f.dy*100}%) scale(${f.zoom})`})),{duration:time(760),easing:'linear',fill:'both'});
+        const steps=Math.max(2,Math.ceil(total/33.333)),frames=[];
+        for(let i=0;i<=steps;i++){const c=cameraAt(i/steps*total);frames.push({offset:i/steps,transform:`translate(${c.dx*100}%,${c.dy*100}%) scale(${c.zoom})`});}
+        const animation=camera.animate(frames,{duration:total,easing:'linear',fill:'forwards'});
         if(seeking){animation.pause();animation.currentTime=options.time;}else animation.finished.then(()=>animation.cancel()).catch(()=>{});
       }
-      return time(760);
+      return Math.max(total,duration);
     }else if(hookMotion==='pop'){
       texts.forEach((el,index)=>play(el,[{opacity:0,transform:'scale(.25)'},{opacity:1,transform:'scale(1.14)',offset:.68},{opacity:1,transform:'scale(1)'}],{...timing,duration:time(520),delay:time(index*90)}));
     }else if(hookMotion==='slide'){
@@ -243,6 +315,26 @@
       texts.forEach((el,index)=>play(el,[{opacity:0,transform:'scale(1.32)',filter:'brightness(2)'},{opacity:1,transform:'scale(.96)',filter:'brightness(1.7)',offset:.3},{opacity:1,transform:'scale(1)',filter:'brightness(1)'}],{...timing,duration:time(480),delay:time(70+index*55)}));
     }
     return duration;
+  }
+  // 고정형 자막 등장 효과(2026-09-18) — 고정형은 훅이 없고 자막이 1~1.5초마다 바뀐다. 훅용 1.5초 효과를 그대로 걸면
+  //   자리 잡기 전에 다음 자막이 와 계속 흔들리므로, 자막이 바뀔 때마다 0.3초만 짧게 들어온다.
+  //   고르는 곳은 흰 띠 줄(스윽/확대)과 같다 — 자막 글자 + 자막 가림막 상자를 한 덩어리로 움직인다.
+  const CAPTION_ENTER_MS=300;
+  function runCaptionEnter(options){
+    const seeking=options&&typeof options==='object'&&Number.isFinite(options.time);
+    if(mode!=='continuous'||!hookBandMotion)return 0;
+    const text=layer.querySelector('.precision-text[data-edit-bind="caption"]'),mask=layer.querySelector('.caption-mask');
+    if(!text||!text.textContent.trim())return 0;
+    const els=[text,mask].filter(Boolean);els.forEach(el=>el.getAnimations().forEach(a=>a.cancel()));
+    if(!seeking&&(qaMode||matchMedia('(prefers-reduced-motion: reduce)').matches))return 0;
+    const T=text.getBoundingClientRect(),cx=T.left+T.width/2,cy=T.top+T.height/2;
+    const frames=hookBandMotion==='grow'?[{transform:'scale(.84)'},{transform:'scale(1)'}]:[{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}];
+    els.forEach(el=>{
+      if(hookBandMotion==='grow'){const r=el.getBoundingClientRect();el.style.transformOrigin=`${cx-r.left}px ${cy-r.top}px`;}
+      const animation=el.animate(frames,{duration:CAPTION_ENTER_MS,easing:'cubic-bezier(.2,.8,.3,1)',fill:'both'});
+      if(seeking){animation.pause();animation.currentTime=options.time;}else animation.finished.then(()=>animation.cancel()).catch(()=>{});
+    });
+    return CAPTION_ENTER_MS;
   }
   function sceneTotal(){return sceneContext?.scenes?.length||12}
   function updateSceneUI(){
@@ -276,8 +368,32 @@
     return bind==='channel'?(p.sample.channel||'숏템메이커'):p.sample[bind];
   }
   function updateCount(input){
+    const limit=Number(input.dataset.max)||Infinity;
+    const length=[...input.value].length;
     const counter=input.closest('.field')?.querySelector('[data-count]');
-    if(counter)counter.textContent=`${[...input.value].length}/${input.dataset.max}`;
+    if(counter)counter.textContent=`${length}/${input.dataset.max}`;
+    input.classList.toggle('contract-invalid',length>limit);
+    input.setAttribute('aria-invalid',length>limit?'true':'false');
+  }
+  const evenLimits={channel:12,hook1:11,hook2:10,bodyTitle:22,caption:22};   // 둘째 줄 10자: 11자면 화면 양끝을 넘어 잘린다(2026-09-18 실측)
+  function syncFieldLimits(){
+    const limits=rows[current]?.id==='t11'?evenLimits:{channel:12,hook1:18,hook2:18,bodyTitle:22,caption:24};
+    for(const [bind,input] of Object.entries(inputs)){
+      input.dataset.max=String(limits[bind]||24);
+      updateCount(input);
+    }
+  }
+  function templateViolations(){
+    if(rows[current]?.id!=='t11')return [];
+    const labels={channel:'채널명',hook1:'훅 제목 1',hook2:'훅 제목 2',bodyTitle:'보조·본문 제목',caption:'본문 자막'};
+    const found=[];
+    for(const [bind,limit] of Object.entries(evenLimits)){
+      const text=inputs[bind]?.value||'';
+      if((bind==='hook1'||bind==='hook2')&&!text.trim())found.push(`${labels[bind]}이 비어 있습니다.`);
+      if([...text].length>limit)found.push(`${labels[bind]}은 공백 포함 ${limit}자 이하여야 합니다.`);
+      if((bind==='hook1'||bind==='hook2')&&/[\r\n]/.test(text))found.push(`${labels[bind]}은 한 줄이어야 합니다.`);
+    }
+    return found;
   }
   function resetField(bind){
     const input=inputs[bind];if(!input)return;
@@ -293,7 +409,7 @@
     const hasChannel=!!(frame?.channel_box||frame?.channel_boxes?.length);
     const lineCount=frame?.lines?.length||0;
     return p.id==='s0101'
-      ? (frameKind==='hook'?['channel','hook1','hook2']:['channel','bodyTitle','caption'])
+      ? (frameKind==='hook'?['channel','hook1','hook2',...(((p.hook?.lines?.length||0)>2||p.hook?.white_box?.text)?['bodyTitle']:[])]:['channel','bodyTitle','caption'])
       : frameKind==='hook'
         ? [...(hasChannel?['channel']:[]),...(lineCount?['hook1']:[]),...(lineCount>1?['hook2']:[]),...(lineCount>2||frame?.white_box?.text?['bodyTitle']:[])]
         : [...(hasChannel?['channel']:[]),...(lineCount?['bodyTitle']:[]),...(lineCount>1||frame?.white_box?.text?['caption']:[])];
@@ -306,6 +422,7 @@
     const label2=root.querySelector('.layout-a [data-field-key="hook2"] [data-field-label]');
     if(label1)label1.textContent=mode==='continuous'?'제목 1':'훅 제목 1';
     if(label2)label2.textContent=mode==='continuous'?'제목 2':'훅 제목 2';
+    syncFieldLimits();
   }
   function addPatch(y,h,color,x=0,w=100,bind=''){
     const el=document.createElement('div');el.className='precision-patch';
@@ -397,12 +514,24 @@
     if(chosen){el.style.color=chosen;el.querySelectorAll('span').forEach(span=>span.style.color=chosen);}
     layer.insertBefore(el,badge);
     if(bind==='caption'){el.style.left=(left+captionX())+'%';el.style.right=(right-captionX())+'%';}
-    const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
-    if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
-    else {const isStory=mode==='story',manualSize=fontScales.has(scaleKey(bind));if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=manualSize?1:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
+    // 이븐쇼핑 기준형은 원본 폰트 크기·자간·가로비를 잠근다. 긴 문구를 몰래
+    // 축소하거나 찌그러뜨리지 않고 templateViolations가 적용 전에 되돌려 보낸다.
+    const lockedReference=rows[current]?.id==='t11'&&frame.reference_style;
+    if(!lockedReference){
+      const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
+      if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
+      else {const isStory=mode==='story',manualSize=fontScales.has(scaleKey(bind));if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=manualSize?1:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
+    }
     return el;
   }
+  function setNoTemplate(){
+    noTemplate=true;document.body.classList.add('no-template');
+    grid.querySelectorAll('[data-p20]').forEach(x=>x.classList.remove('selected'));grid.querySelector('[data-none]')?.classList.add('selected');
+    renderEdit();
+  }
   function renderEdit(){
+    // 글자층을 비워야 scene-style-connect의 감시(MutationObserver)가 돌아 영상 틀을 화면 전체로 다시 잡는다.
+    if(noTemplate){[...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());layer.hidden=true;Object.assign(media.style,{top:'0%',height:'100%'});return;}
     [...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());
     const p=rows[current],frame=frameFor(p);if(!frame)return;
     sourceClean.replaceChildren();
@@ -496,28 +625,44 @@
       const key=kind==='hook'?'bodyTitle':'caption';
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
-    if(mode==='story')applyStoryLayout(frame,p);
+    if(mode==='story'){
+      applyStoryLayout(frame,p);
+      const storyBottom=fixedLayoutFor(p.id,frame).bottom;
+      if(storyBottom>0)addPatch(100-storyBottom,storyBottom,fixedColorsFor(p.id,frame).bottom,0,100,'bottom-band');
+    }
     const paint=fixedColors.get(layoutKey(p.id,frame));
     if(paint){
       const channelColor=fixedColorsFor(p.id,frame).channel;
       layer.querySelectorAll('.precision-text[data-edit-bind="channel"]').forEach(el=>{el.style.color=channelColor;el.querySelectorAll('span').forEach(span=>span.style.color=channelColor);});
       if(paint.top)layer.querySelectorAll('.body-ornament').forEach(el=>el.style.color=readableInk(paint.top));
+      // 채널명 칸도 제목 배경색을 따른다 — 안 그러면 빠른 조절 색을 바꿔도 채널명 뒤만 원래 검정으로 남는다(2026-09-18 사장님 제보).
+      if(paint.top)layer.querySelectorAll('[data-edit-bind="channel"]').forEach(el=>{if(el.style.background||el.style.backgroundColor)el.style.background=paint.top;});
     }
     if(hasEditableCaption())renderCaption(frame);
     syncMediaLayout();
   }
   function applyStoryLayout(frame,p){
+    // 이븐쇼핑 원본형은 측정 좌표 자체가 계약이다. 장면별 자막칸 보정으로
+    // 제목 영역이나 글자 크기를 다시 압축하면 훅/본문이 서로 흔들린다.
     const source=captionSource(frame),cut=source.cut/frame.height*100,next=titleHeight(frame),paint=fixedColors.get(layoutKey(p.id,frame));
+    // 이븐쇼핑 원본형은 측정 좌표 자체가 계약 — 제목칸을 안 건드렸으면 그대로 둔다.
+    const moved=Math.abs(next-cut)>.05;
+    if(p.id==='t11'&&frame.reference_style&&!moved)return;
+    // 상단 제목칸 조절 = 칸만 커지고 줄어든다(2026-09-18 사장님 "칸만 줄어들어야 하는데 글자도 비율로 줄어들면 안 좋다",
+    //   "50%로 키우면 흰 띠 아래가 까맣게 빈다"). 글자·띠 크기는 그대로 두고 **위치만** 칸 안에 고르게 벌린다:
+    //   맨 위(채널명)는 거의 제자리, 맨 아래(흰 띠)는 칸 바닥을 따라가고, 가운데는 그 사이 비율만큼.
+    //   칸 전체를 채우는 배경판만 새 높이로 늘린다.
     for(const el of [...layer.children].filter(el=>el!==badge)){
       const top=parseFloat(el.style.top),height=parseFloat(el.style.height);if(!Number.isFinite(top))continue;
       if(top>=cut&&hasEditableCaption()){el.remove();continue;}
-      el.style.top=top*next/Math.max(.01,cut)+'%';
-      if(Number.isFinite(height))el.style.height=Math.max(0,Math.min(height,cut-top)*next/Math.max(.01,cut))+'%';
-      // Compress the type with its title area; moving line origins alone overlaps lines.
-      if(el.classList.contains('precision-text')&&next<cut){
-        const ratio=next/Math.max(.01,cut);
-        el.style.fontSize=parseFloat(el.style.fontSize)*ratio+'px';
-        el.style.letterSpacing=(parseFloat(el.style.letterSpacing)||0)*ratio+'px';
+      if(moved){
+        const h=Number.isFinite(height)?Math.min(height,cut-top):(el.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100);
+        if(top<=.5&&Number.isFinite(height)&&height>=cut*.8){el.style.height=next+'%';}
+        else{
+          const f=Math.max(0,Math.min(1,(top+h)/Math.max(.01,cut)));   // 아래 끝 기준 — 흰 띠가 칸 바닥에 딱 붙어 따라간다
+          el.style.top=Math.max(0,Math.min(next-h,top+(next-cut)*f))+'%';
+          if(Number.isFinite(height))el.style.height=Math.max(0,h)+'%';
+        }
       }
       if(paint){
         if(el.classList.contains('precision-text')){
@@ -527,6 +672,38 @@
       }
     }
   }
+  // 고정형 자막칸 디자인(2026-09-18 사장님 "이븐쇼핑 흰 띠처럼 그라데이션 있게, 다 똑같으면 밋밋하니 다르게").
+  //   템플릿마다 6가지 중 하나가 고정으로 붙는다(프리셋 id로 고르므로 같은 템플릿은 늘 같은 모양).
+  //   사용자가 자막칸 배경을 직접 저장했으면 그 색이 우선 — 디자인을 덮지 않는다.
+  //   accent = 그 템플릿 제목 둘째 줄 색(템플릿 성격을 자막칸에도 잇는다).
+  const CAPTION_LOOKS=[
+    a=>({color:'#080808',box:{background:'linear-gradient(180deg,#FFFFFF,#FFFFFF 70%,#E6E8E6)',boxShadow:'0 0 12px 6px rgba(255,255,255,.55)',left:'1.2%',width:'97.6%',borderRadius:'2px'}}),   // 이븐쇼핑형 흰 띠
+    a=>({color:'#FFFFFF',box:{background:'linear-gradient(180deg,#2B2B2B,#0E0E0E)',boxShadow:`inset 0 1px 0 rgba(255,255,255,.18),0 3px 10px rgba(0,0,0,.55)`,borderTop:`2px solid ${a}`}}),                    // 검정 유리 + 윗선 포인트
+    a=>({color:'#111111',box:{background:`linear-gradient(90deg,${a}33,#FFFFFF 18%,#FFFFFF 82%,${a}33)`,boxShadow:'0 4px 10px rgba(0,0,0,.35)'}}),                                                          // 흰 바탕 양끝 포인트색 번짐
+    a=>({color:'#FFFFFF',box:{background:`linear-gradient(180deg,${a},${a}CC)`,boxShadow:'0 4px 12px rgba(0,0,0,.45)',left:'4%',width:'92%',borderRadius:'999px'}}),                                          // 포인트색 알약
+    a=>({color:'#141414',box:{background:'linear-gradient(180deg,#FFF9E8,#F3E9CF)',boxShadow:'0 5px 12px rgba(0,0,0,.4)',left:'3%',width:'94%',borderRadius:'6px'}}),                                         // 종이 카드
+    a=>({color:'#FFFFFF',box:{background:'linear-gradient(90deg,rgba(0,0,0,0),rgba(0,0,0,.85) 15%,rgba(0,0,0,.85) 85%,rgba(0,0,0,0))',borderBottom:`3px solid ${a}`}}),                                   // 가운데 짙은 띠 + 밑줄 포인트
+    // 2026-09-18 사장님 "그라데이션이나 고급스러운 거 몇 개 넣어줘" — 고를 수 있는 고급형 4종
+    a=>({color:'#2A1B00',box:{background:'linear-gradient(180deg,#FFF3C4,#E8C46A 55%,#C99A2E)',boxShadow:'inset 0 1px 0 rgba(255,255,255,.7),0 4px 12px rgba(0,0,0,.45)',left:'3%',width:'94%',borderRadius:'6px'}}),   // 골드
+    a=>({color:'#F6E7B8',box:{background:'linear-gradient(180deg,#1B2A4A,#0B1428)',boxShadow:'0 4px 12px rgba(0,0,0,.5)',borderTop:'2px solid #D9B45A',borderBottom:'2px solid #D9B45A'}}),                        // 네이비 + 금테
+    a=>({color:'#FFFFFF',box:{background:'linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.10))',backdropFilter:'blur(8px)',border:'1px solid rgba(255,255,255,.45)',boxShadow:'0 4px 14px rgba(0,0,0,.35)',left:'4%',width:'92%',borderRadius:'12px'},text:{textShadow:'0 1px 3px rgba(0,0,0,.6)'}}),   // 반투명 유리
+    a=>({color:'#FFFFFF',box:{background:'linear-gradient(90deg,#FF4FA3,#7B5CFF 55%,#2EC5FF)',boxShadow:'0 4px 14px rgba(123,92,255,.55)',left:'4%',width:'92%',borderRadius:'999px'}}),                            // 3색 그라데이션 알약
+  ];
+  const CAPTION_LOOK_NAMES=['흰 띠','검정 유리','흰 바탕 번짐','포인트 알약','종이 카드','짙은 띠','골드','네이비 금테','반투명 유리','3색 그라데이션'];
+  // 자막박스 없음 — 박스 없이 흰 글자 + 검은 외곽선·그림자만(영상 위에 바로 얹힌 자막).
+  const CAPTION_NONE={color:'#FFFFFF',box:{background:'transparent',boxShadow:'none',border:'0',backdropFilter:'none'},text:{textShadow:'0 0 3px #000,0 0 3px #000,0 2px 4px rgba(0,0,0,.8)',WebkitTextStroke:'0.6px #000'}};
+  function captionLook(frame){
+    // 사용자가 배경색을 직접 고른 때만(bgUser) 디자인을 끈다. 끌어 옮기기도 captionSettings() 전체를 저장해 background가
+    //   늘 들어가 있어서, 옛 조건(background 있음)으로는 한 번 끌면 디자인이 회색 띠로 바뀌었다(2026-09-18 사장님 제보·재현).
+    const saved=captionLayouts.get(captionKey())||{};
+    if(saved.look==='none')return CAPTION_NONE;
+    const accent0=(fixedColorsFor(rows[current].id,frame).title2||'#00F9ED').slice(0,7);
+    if(Number.isInteger(saved.look)&&CAPTION_LOOKS[saved.look])return CAPTION_LOOKS[saved.look](accent0);   // 사용자가 고른 모양(썰쇼핑형 본문에도 적용)
+    if(mode!=='continuous'||saved.bgUser)return null;
+    const id=rows[current].id||'';let h=0;for(const ch of id)h=(h*31+ch.charCodeAt(0))>>>0;
+    const accent=(fixedColorsFor(id,frame).title2||'#00F9ED').slice(0,7);
+    return CAPTION_LOOKS[h%6](accent);   // 자동 배정은 원래 6종 안에서(템플릿마다 늘 같은 모양 유지)
+  }
   function renderCaption(frame){
     if(!captionVisible())return;
     const settings=captionSettings(),source=captionSource(frame),drag=captionDrags.get(captionKey())||{x:0,y:0};
@@ -534,12 +711,18 @@
     const x=settings.placement==='title'?0:Math.max(0,Math.min(100-w,(100-w)/2+drag.x));
     const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,titleHeight(frame)+drag.y+textOffset('caption')));
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
+    const capLook=captionLook(frame);
+    if(capLook){const {left,width,...look}=capLook.box;Object.assign(patch.style,settings.placement==='title'?capLook.box:look);if(!settings.colorUser)settings.color=capLook.color;}   // 옮긴 자막은 옮긴 자리·폭 유지
     const original=source.ln||{font_size:frame.height*.032,font_family:frame.font_family||'Pretendard',font_weight:900};
-    const ln={...original,x0:(x+2)/100*frame.width,x1:(x+w-2)/100*frame.width,y0:y/100*frame.height,h:h/100*frame.height,max_lines:1,no_patch:true};
+    // 고정형 자막 기본 크기 = 템플릿 값의 82%(2026-09-18 사장님 "자막쪽이 너무 크다"). 이븐쇼핑 본문과 같은 3.6%였지만
+    //   굵은 흰 글씨·제목과의 크기 차이가 작아 커 보였다. −/+ 조절(textScale)은 이 위에 그대로 곱해진다.
+    const baseSize=(original.font_size||frame.height*.032)*(mode==='continuous'?.82:1);
+    const ln={...original,font_size:baseSize,x0:(x+2)/100*frame.width,x1:(x+w-2)/100*frame.width,y0:y/100*frame.height,h:h/100*frame.height,max_lines:1,no_patch:true};
     addText(value('caption'),ln,frame,settings.color,'center','caption');
     const text=layer.querySelector('.precision-text[data-edit-bind="caption"]');
     Object.assign(text.style,{left:(x+2)+'%',right:'auto',width:Math.max(1,w-4)+'%',top:y+'%',height:h+'%',transform:'none',display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'pre-wrap',lineHeight:'1.15',color:settings.color});
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
+    if(capLook?.text)Object.assign(text.style,capLook.text);
   }
   function showFrame(next){
     kind=mode==='continuous'?'hook':next;
@@ -553,7 +736,7 @@
     preview.classList.toggle('is-continuous',mode==='continuous');
     const seg=root.querySelector('.layout-a .seg');if(seg)seg.hidden=mode==='continuous';
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
+    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);requestAnimationFrame(()=>runCaptionEnter());
   }
   function showScene(nextIndex){
     sceneIndex=Math.max(0,Math.min(sceneTotal()-1,nextIndex));
@@ -568,6 +751,7 @@
     syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
   }
   function selectPreset(index){
+    noTemplate=false;document.body.classList.remove('no-template');grid.querySelector('[data-none]')?.classList.remove('selected');
     current=index;const p=rows[index];
     if(mode==='continuous')kind='hook';else sceneIndex=kind==='hook'?0:Math.max(1,sceneIndex);
     preview.classList.remove('template-shortem');
@@ -592,7 +776,7 @@
     if(sceneContext?.text)for(const [key,text] of Object.entries(sceneContext.text))if(inputs[key])inputs[key].value=text;
     preview.classList.remove('is-pristine');showFrame(kind);
   }
-  grid.addEventListener('click',e=>{const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
+  grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
   modeBar.addEventListener('click',event=>{
     const button=event.target.closest('[data-template-mode]');if(!button)return;
     mode=button.dataset.templateMode;rows=mode==='continuous'?fixedRows:storyRows;if(!rows.length)return;
@@ -636,12 +820,15 @@
   motionPanel.addEventListener('click',event=>{
     const choice=event.target.closest('[data-hook-motion]');
     if(choice){hookMotion=choice.dataset.hookMotion;if(sceneIndex!==0){sceneIndex=0;showFrame('hook');}syncHookMotionUI();runHookMotion();return}
+    const bandChoice=event.target.closest('[data-hook-band-motion]');
+    if(bandChoice&&mode==='continuous'){hookBandMotion=bandChoice.dataset.hookBandMotion;syncHookMotionUI();if(sceneIndex===0)showScene(1);else runCaptionEnter();return}
+    if(bandChoice){hookBandMotion=bandChoice.dataset.hookBandMotion;if(sceneIndex!==0){sceneIndex=0;showFrame('hook');}syncHookMotionUI();runHookMotion();return}
     const speed=event.target.closest('[data-hook-speed]');
     if(speed){hookMotionSpeed=Number(speed.dataset.hookSpeed);motionPanel.querySelectorAll('[data-hook-speed]').forEach(button=>button.classList.toggle('active',button===speed));runHookMotion();return}
   });
   const applyFixedSize=(key,rawValue)=>{
     const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame),titleOnly:true};
-    const min=key==='top'?(mode==='continuous'?minimumFixedTop(frame):8):0,max=key==='top'?50:35;
+    const min=key==='top'?(mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame)):0,max=key==='top'?50:35;
     currentLayout[key]=Math.round(Math.max(min,Math.min(max,Number(rawValue))));
     if(currentLayout.top+currentLayout.bottom>70)currentLayout[key]=70-currentLayout[key==='top'?'bottom':'top'];
     fixedLayouts.set(layoutKey(p.id,frame),currentLayout);fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
@@ -684,7 +871,7 @@
   });
   captionField?.addEventListener('input',event=>{
     const input=event.target.closest('[data-caption-layout]');if(!input)return;
-    const settings=captionSettings();settings[input.dataset.captionLayout]=input.type==='range'?Number(input.value):input.value;
+    const settings=captionSettings();settings[input.dataset.captionLayout]=input.type==='range'?Number(input.value):input.value;if(input.dataset.captionLayout==='background'){settings.bgUser=true;delete settings.look;}if(input.dataset.captionLayout==='color')settings.colorUser=true;
     captionLayouts.set(captionKey(),settings);markDirty('caption');renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
@@ -703,6 +890,18 @@
   const maskDetails=document.createElement('details');maskDetails.style.gridColumn='1/-1';maskDetails.innerHTML='<summary style="cursor:pointer">자막박스 크기 · 색상</summary><div class="caption-position"></div>';
   captionPlacement?.querySelectorAll('label').forEach(label=>maskDetails.querySelector('div').append(label));
   captionPlacement?.append(maskDetails);
+  // 자막박스 모양 고르기(2026-09-18) — 기본(템플릿) / 없음 / 10종. 고르면 직접 고른 박스색은 풀린다.
+  const lookRow=document.createElement('div');lookRow.className='caption-looks';
+  lookRow.innerHTML='<span>자막박스 모양</span>'+[['auto','기본'],['none','박스 없음'],...CAPTION_LOOK_NAMES.map((n,i)=>[String(i),n])].map(([v,n])=>`<button type="button" data-caption-look="${v}">${n}</button>`).join('');
+  maskDetails.querySelector('div').prepend(lookRow);
+  function syncCaptionLookButtons(){const saved=captionLayouts.get(captionKey())||{};const cur=saved.look==='none'?'none':Number.isInteger(saved.look)?String(saved.look):'auto';lookRow.querySelectorAll('[data-caption-look]').forEach(b=>b.classList.toggle('active',b.dataset.captionLook===cur));}
+  lookRow.addEventListener('click',event=>{
+    const b=event.target.closest('[data-caption-look]');if(!b)return;
+    const settings={...captionSettings(),...(captionLayouts.get(captionKey())||{})};delete settings.bgUser;delete settings.colorUser;
+    if(b.dataset.captionLook==='auto')delete settings.look;else settings.look=b.dataset.captionLook==='none'?'none':Number(b.dataset.captionLook);
+    captionLayouts.set(captionKey(),settings);markDirty('caption');renderEdit();syncCaptionLookButtons();
+  });
+  maskDetails.addEventListener('toggle',syncCaptionLookButtons);
   function applyCaptionMoveScope(){
     moveScope.hidden=false;
     if(captionMoveScope!=='all')return;
@@ -761,12 +960,12 @@
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
-        hookMotion=saved.hookMotion||hookMotion;hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;renderEdit();syncHookMotionUI();
+        hookMotion=saved.hookMotion||hookMotion;hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;renderEdit();syncHookMotionUI();
       }
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
@@ -775,7 +974,7 @@
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};
-        hookMotion=saved.hookMotion||hookMotion;hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
+        hookMotion=saved.hookMotion||hookMotion;hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
         modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
@@ -786,15 +985,76 @@
       fittedText.clear();renderEdit();
     },
     show(index){showScene(index);return this.geometry()},
-    geometry:()=>({media:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
+    geometry:()=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
     effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
     copyEffectsToAll(){const value=structuredClone(effects[String(sceneIndex)]||{});for(let i=0;i<sceneTotal();i++)effects[String(i)]=structuredClone(value);},
     branding(value){if(value!==undefined){branding=value;if(!labMode)try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
     context:()=>sceneContext,
+    validation:()=>templateViolations(),
     resetCaptionText(){captionTexts.delete(captionKey());syncCaption();markDirty('caption');renderEdit()},
     refresh(){fittedText.clear();renderEdit()},
     motionAt(time){return runHookMotion({time})},
+    captionEnterAt(time){return runCaptionEnter({time})},   // 고정형 자막 등장(장면 시작 기준 ms) — 렌더러가 장면마다 찍는다
     cameraAt,
   };
   if(!labMode)try{effects=JSON.parse(localStorage.getItem('scene_style_preset')||'null')?.effects||{}}catch{}
+})();
+
+// 문구/텍스트 탭 단락 접기(2026-09-18 사장님): 안내 상자는 숨기고, 단락마다 제목이 붙은 한 줄 카드로 기본 접는다.
+//   훅 모션 효과 / 빠른 조절 / 제목 / 자막. 칸을 옮기기만 하고 새로 만들지 않는다 — 기존 코드는 선택자(data-field-key 등)로
+//   칸을 찾아 숨김·보임만 바꾸므로 위치가 바뀌어도 그대로 돈다. 안내 상자(.ai-card)는 연결 스크립트의 기준점이라 지우지 않고 숨긴다.
+(()=>{
+  const GROUPS=[
+    {key:'motion',title:'훅 모션 효과',pick:p=>[...p.querySelectorAll(':scope > .hook-motion')]},
+    {key:'quick',title:'빠른 조절',pick:p=>[...p.querySelectorAll(':scope > .fixed-quick-panel')]},
+    {key:'title',title:'제목',pick:p=>['channel','hook1','hook2','bodyTitle'].map(k=>p.querySelector(`:scope > [data-field-key="${k}"]`)).filter(Boolean)},
+    {key:'caption',title:'자막',pick:p=>[p.querySelector(':scope > [data-field-key="caption"]'),p.querySelector(':scope > .scene-line-editor')].filter(Boolean)},
+  ];
+  const style=document.createElement('style');
+  style.textContent=`.scene-text-panel > .ai-card{display:none!important}
+  .text-group{border:1px solid #294451;border-radius:12px;background:#0b1a22;margin:0 0 8px}
+  .text-group > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 14px;min-height:22px}
+  .text-group > summary::-webkit-details-marker{display:none}
+  .text-group > summary b{color:#e8f3f0;font-size:13px;font-weight:900;white-space:nowrap}
+  .text-group > summary small{margin-left:auto;color:#63edc6;font-size:10px;font-weight:800;max-width:58%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .text-group > summary::after{content:'▾';color:#8fa3ad;font-size:11px;transition:transform .15s}
+  .text-group:not([open]) > summary::after{transform:rotate(-90deg)}
+  .text-group[open] > summary{border-bottom:1px solid #1d3440}
+  .text-group > .text-group-body{padding:10px 12px 12px}
+  .text-group > .text-group-body > section{margin:0;border:0;background:none;padding:0}`;
+  document.head.append(style);
+  function hint(key,body){
+    const val=sel=>body.querySelector(sel)?.value?.trim()||'';
+    if(key==='motion'){const m=body.querySelector('.hook-motion-grid .active')?.textContent||'',b=body.querySelector('[data-hook-band-motion].active')?.textContent||'';return [m,b&&b!=='없음'?b:''].filter(Boolean).join(' + ');}
+    if(key==='quick')return body.querySelector('.fixed-size-control output')?.textContent?`상단 ${body.querySelector('.fixed-size-control output').textContent}`:'';
+    if(key==='title')return [...body.querySelectorAll('[data-field-key]:not([hidden]) input')].map(i=>i.value.trim()).filter(Boolean)[1]||val('input');
+    if(key==='caption')return val('textarea');
+    return '';
+  }
+  function build(){
+    const panel=document.querySelector('.layout-a .scene-text-panel');if(!panel)return;
+    for(const g of GROUPS){
+      let box=panel.querySelector(`:scope > .text-group[data-group="${g.key}"]`);
+      const nodes=g.pick(panel);if(!box&&!nodes.length)continue;
+      if(!box){box=document.createElement('details');box.className='text-group';box.dataset.group=g.key;
+        box.innerHTML=`<summary><b>${g.title}</b><small></small></summary><div class="text-group-body"></div>`;nodes[0].before(box);}
+      const body=box.querySelector('.text-group-body');nodes.forEach(n=>body.append(n));
+    }
+    // 그룹 순서를 고정(나중에 끼어든 요소가 순서를 바꾸지 않게)
+    GROUPS.map(g=>panel.querySelector(`:scope > .text-group[data-group="${g.key}"]`)).filter(Boolean).reduce((prev,cur)=>{if(prev)prev.after(cur);return cur;},null);
+    refresh();
+  }
+  function refresh(){
+    document.querySelectorAll('.layout-a .scene-text-panel > .text-group').forEach(box=>{
+      const body=box.querySelector('.text-group-body');
+      // 안의 칸이 전부 숨겨진 단락(예: 훅 화면의 자막)은 카드째 숨긴다
+      // 값이 바뀔 때만 쓴다 — 이 함수가 감시 대상 안을 고치므로, 같은 값을 다시 쓰면 감시→갱신이 끝없이 돈다.
+      const hide=![...body.children].some(c=>!c.hidden);if(box.hidden!==hide)box.hidden=hide;
+      const small=box.querySelector('summary small'),text=hint(box.dataset.group,body);if(small.textContent!==text)small.textContent=text;
+    });
+  }
+  const start=()=>{build();const panel=document.querySelector('.layout-a .scene-text-panel');if(!panel)return;
+    new MutationObserver(()=>{if([...panel.children].some(c=>!c.classList.contains('text-group')&&!c.classList.contains('ai-card')&&GROUPS.some(g=>g.pick(panel).includes(c))))build();else refresh();}).observe(panel,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','class']});
+    panel.addEventListener('input',refresh);};
+  if(document.readyState==='complete')setTimeout(start,0);else addEventListener('load',()=>setTimeout(start,0));
 })();

@@ -37,7 +37,7 @@
   function renderChecks(row){
     if(!row){checks.innerHTML='';return}
     checks.innerHTML=`<div class="check"><b>음성</b>${row.tts_ready?'준비됨':'부족'}</div><div class="check"><b>청소본</b>${row.clean_ready?'현재 편성 일치':'없음/낡음'}</div><div class="check"><b>장면</b>${row.beat_count}개 비트</div><div class="check"><b>편성 서명</b>${esc(row.clean_signature||'-')}</div>`;
-    clone.disabled=!(row.tts_ready&&row.clean_ready);
+    clone.disabled=!(row.tts_ready&&(row.clean_ready||row.unclean_preview_ready));   // 청소본 없으면 미리보기 완성본으로(관리자 시험)
   }
   async function loadJobs(){
     const response=await fetch('/api/admin/scene-style-lab/jobs',{cache:'no-store'});
@@ -59,7 +59,7 @@
       if(!exact||String(exact.job_id)!==sourceJobId)throw Error('현재 작업 확인에 실패했습니다. 다른 작업으로 대신 열지 않습니다.');
       let labId=existingLab;
       if(!labId){
-        const response=await fetch('/api/admin/scene-style-lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:sourceJobId})});
+        const response=await fetch('/api/admin/scene-style-lab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:sourceJobId,allow_unclean:true})});
         const created=await response.json();if(!response.ok)throw Error(created.error||'시험 복사본을 만들지 못했습니다');
         labId=created.manifest.lab_id;
       }
@@ -69,12 +69,14 @@
       if(embeddedTab)sessionStorage.setItem(rememberedLabKey(),packet.manifest.lab_id);
       editor.hidden=false;editor.src='/api/produce/scene-style/assets/out/scene-style-ui-showcase.html?embedded=1&lab=1';
       outputs.hidden=false;renderCompare();
-      status.textContent='LAB 복사본 · 훅 말자막 숨김';
+      status.textContent=packet.manifest?.clean?.unclean?'LAB 복사본 · 자막제거 안 함(원본 자막 남음) · 훅 말자막 숨김':'LAB 복사본 · 훅 말자막 숨김';
+      document.documentElement.classList.remove('lab-error');
       document.documentElement.classList.add('editor-ready');
     }catch(cause){
       if(existingLab&&embeddedTab){sessionStorage.removeItem(rememberedLabKey());return openLabCopy();}
       error.textContent=cause.message;status.textContent='시험 시작 실패';renderChecks(selected());
       document.documentElement.classList.remove('editor-ready');
+      document.documentElement.classList.add('lab-error');   // '여는 중…' 덮개를 걷어 오류를 보이게
     }
   }
   clone.addEventListener('click',()=>openLabCopy());
