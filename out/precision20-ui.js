@@ -943,3 +943,62 @@
   };
   if(!labMode)try{effects=JSON.parse(localStorage.getItem('scene_style_preset')||'null')?.effects||{}}catch{}
 })();
+
+// 문구/텍스트 탭 단락 접기(2026-09-18 사장님): 안내 상자는 숨기고, 단락마다 제목이 붙은 한 줄 카드로 기본 접는다.
+//   훅 모션 효과 / 빠른 조절 / 제목 / 자막. 칸을 옮기기만 하고 새로 만들지 않는다 — 기존 코드는 선택자(data-field-key 등)로
+//   칸을 찾아 숨김·보임만 바꾸므로 위치가 바뀌어도 그대로 돈다. 안내 상자(.ai-card)는 연결 스크립트의 기준점이라 지우지 않고 숨긴다.
+(()=>{
+  const GROUPS=[
+    {key:'motion',title:'훅 모션 효과',pick:p=>[...p.querySelectorAll(':scope > .hook-motion')]},
+    {key:'quick',title:'빠른 조절',pick:p=>[...p.querySelectorAll(':scope > .fixed-quick-panel')]},
+    {key:'title',title:'제목',pick:p=>['channel','hook1','hook2','bodyTitle'].map(k=>p.querySelector(`:scope > [data-field-key="${k}"]`)).filter(Boolean)},
+    {key:'caption',title:'자막',pick:p=>[p.querySelector(':scope > [data-field-key="caption"]'),p.querySelector(':scope > .scene-line-editor')].filter(Boolean)},
+  ];
+  const style=document.createElement('style');
+  style.textContent=`.scene-text-panel > .ai-card{display:none!important}
+  .text-group{border:1px solid #294451;border-radius:12px;background:#0b1a22;margin:0 0 8px}
+  .text-group > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 14px;min-height:22px}
+  .text-group > summary::-webkit-details-marker{display:none}
+  .text-group > summary b{color:#e8f3f0;font-size:13px;font-weight:900;white-space:nowrap}
+  .text-group > summary small{margin-left:auto;color:#63edc6;font-size:10px;font-weight:800;max-width:58%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .text-group > summary::after{content:'▾';color:#8fa3ad;font-size:11px;transition:transform .15s}
+  .text-group:not([open]) > summary::after{transform:rotate(-90deg)}
+  .text-group[open] > summary{border-bottom:1px solid #1d3440}
+  .text-group > .text-group-body{padding:10px 12px 12px}
+  .text-group > .text-group-body > section{margin:0;border:0;background:none;padding:0}`;
+  document.head.append(style);
+  function hint(key,body){
+    const val=sel=>body.querySelector(sel)?.value?.trim()||'';
+    if(key==='motion'){const m=body.querySelector('.hook-motion-grid .active')?.textContent||'',b=body.querySelector('[data-hook-band-motion].active')?.textContent||'';return [m,b&&b!=='없음'?b:''].filter(Boolean).join(' + ');}
+    if(key==='quick')return body.querySelector('.fixed-size-control output')?.textContent?`상단 ${body.querySelector('.fixed-size-control output').textContent}`:'';
+    if(key==='title')return [...body.querySelectorAll('[data-field-key]:not([hidden]) input')].map(i=>i.value.trim()).filter(Boolean)[1]||val('input');
+    if(key==='caption')return val('textarea');
+    return '';
+  }
+  function build(){
+    const panel=document.querySelector('.layout-a .scene-text-panel');if(!panel)return;
+    for(const g of GROUPS){
+      let box=panel.querySelector(`:scope > .text-group[data-group="${g.key}"]`);
+      const nodes=g.pick(panel);if(!box&&!nodes.length)continue;
+      if(!box){box=document.createElement('details');box.className='text-group';box.dataset.group=g.key;
+        box.innerHTML=`<summary><b>${g.title}</b><small></small></summary><div class="text-group-body"></div>`;nodes[0].before(box);}
+      const body=box.querySelector('.text-group-body');nodes.forEach(n=>body.append(n));
+    }
+    // 그룹 순서를 고정(나중에 끼어든 요소가 순서를 바꾸지 않게)
+    GROUPS.map(g=>panel.querySelector(`:scope > .text-group[data-group="${g.key}"]`)).filter(Boolean).reduce((prev,cur)=>{if(prev)prev.after(cur);return cur;},null);
+    refresh();
+  }
+  function refresh(){
+    document.querySelectorAll('.layout-a .scene-text-panel > .text-group').forEach(box=>{
+      const body=box.querySelector('.text-group-body');
+      // 안의 칸이 전부 숨겨진 단락(예: 훅 화면의 자막)은 카드째 숨긴다
+      // 값이 바뀔 때만 쓴다 — 이 함수가 감시 대상 안을 고치므로, 같은 값을 다시 쓰면 감시→갱신이 끝없이 돈다.
+      const hide=![...body.children].some(c=>!c.hidden);if(box.hidden!==hide)box.hidden=hide;
+      const small=box.querySelector('summary small'),text=hint(box.dataset.group,body);if(small.textContent!==text)small.textContent=text;
+    });
+  }
+  const start=()=>{build();const panel=document.querySelector('.layout-a .scene-text-panel');if(!panel)return;
+    new MutationObserver(()=>{if([...panel.children].some(c=>!c.classList.contains('text-group')&&!c.classList.contains('ai-card')&&GROUPS.some(g=>g.pick(panel).includes(c))))build();else refresh();}).observe(panel,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','class']});
+    panel.addEventListener('input',refresh);};
+  if(document.readyState==='complete')setTimeout(start,0);else addEventListener('load',()=>setTimeout(start,0));
+})();
