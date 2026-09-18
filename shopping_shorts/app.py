@@ -12873,7 +12873,7 @@ _BIZ_DEFAULTS = {
     "biz_name": "주식회사 메이커스랩",
     "biz_owner": "정기영",
     "biz_regno": "104-87-04013",
-    "biz_sales_no": "",
+    "biz_sales_no": "2026-용인수지-3213",
     "biz_addr": "경기도 용인시 수지구 현암로 148 (죽전동) 스카이프라자 602호",
     "biz_tel": "010-5202-7840",
     "biz_email": "makerslab07@gmail.com",
