@@ -155,3 +155,11 @@ def test_슬롯_이름이_글자로_새면_지운다():
 def test_유형으로_고르면_hook_3s_없는_스파인도_후보():
     st = _FakeStore([{"id": 52, "fit_categories": ["지인증언형"]}, {"id": 55, "hook_3s": "x", "fit_categories": ["제품정체형"]}])
     assert ba.pick_hook_spine(st, seed=0, style="지인증언형")["id"] == 52
+
+
+def test_more_칸_없는_인스타형은_줄을_안_늘린다():
+    roles = ["hook", "ask", "reveal", "method", "result", "cta"]
+    tpl = {"hook": ["충격 받았어요"], "ask": ["이거 하나면 {효능}다는 거예요"], "reveal": ["알고 보니 {효능}라는 거 있죠"],
+           "method": ["{효능}, 그러면 끝이라는데"], "result": ["진짜 {효능} 거 있죠"], "cta": ["댓글에 나도"]}
+    plan = ba._spine_plan(roles, tpl, 6)
+    assert [r for r, _ in plan] == roles, plan

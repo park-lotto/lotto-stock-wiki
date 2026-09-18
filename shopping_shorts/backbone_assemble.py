@@ -278,7 +278,9 @@ def _spine_plan(roles, tpl, n_feat):
     n_feat = min(n_feat, used + MAX_EXTRA_FEATURE_LINES)
     # ★효능 칸이 3개 미만(오용형: cases·twist뿐)이면 늘리지 않는다 — 늘리면 twist("근데 미친 활용법은 따로 있는데")가
     #   3번 이어진다(실측 오용형0~4 전부). 오용형은 cases 한 줄이 특징을 나열하는 구조라 틀 그대로 6줄이 맞다.
-    if len(feat_roles) < 3:
+    if len(feat_roles) < 3 or "more" not in roles:
+        # ★'심지어(more)' 칸이 없는 틀(오용형·인스타형)은 칸마다 역할이 달라 반복하면 어색하다
+        #   (실측 인스타 지인증언형 job bb22636a44f0: "알고 보니…" 3줄 연속). 유튜브 정체·발명품형만 늘린다.
         n_feat = min(n_feat, used)
     if used < n_feat and feat_roles:
         rep = feat_roles[1] if len(feat_roles) > 1 else feat_roles[0]
