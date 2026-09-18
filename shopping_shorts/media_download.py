@@ -375,6 +375,15 @@ def _download_instagram(url, dest_dir):
 
     m = _IG_CODE_RE.search(url or "")
     code = m.group(1) if m else ""
+    # ⓪ 1080p 경로(2026-09-18 실사고): 아래 ①·①-b는 **영상+음성이 합쳐진 단일 스트림**만
+    #   고르는데, 인스타는 그 단일 스트림이 720x1280까지다(서버 소스 88건 중 81건이 720p).
+    #   1080x1920·1440x2560은 DASH 영상전용 스트림이라 음성과 따로 받아 합쳐야 한다 —
+    #   _download_ytdlp가 그 일을 한다(로컬 실측 DdShJZpJqr5 → 1080x1920). 실패하면 종전
+    #   경로 그대로(회귀 0).
+    try:
+        return _download_ytdlp(url, dest_dir, max_attempts=1)
+    except Exception:          # noqa: BLE001 — 720p 경로로 물러선다
+        pass
     # ① 무료 경로 — 릴스 페이지에서 mp4 direct URL을 뽑는다(오늘 서버 실측으로 동작 확인).
     if code:
         try:
@@ -708,6 +717,100 @@ def normalize_playable(path):
     return str(out)
 
 
+# ── 샤오홍슈 원본 화질(2026-09-18 사장님 "다들 하는데 왜 우리만 안 되냐") ─────────────────
+#   yt-dlp·검색 API가 주는 스트림은 **720p 재인코딩본**뿐이다(노트 2건 -F 실측: 720x1280 단일).
+#   그런데 노트 페이지(로그인 세션)의 __INITIAL_STATE__에는 `originVideoKey`가 있고,
+#   그 키를 CDN 호스트에 그대로 대면 **업로드 원본**이 나온다(다른 다운로더들이 쓰는 경로).
+#   실측(서버): 6a975f43 → sns-video-bd/pre_post/… 1080x1920 hevc 11.5Mbps(70MB, 종전 720p 1.8Mbps)
+#              6a997ff0 → sns-video-qn/… 113MB. 키에 '/'가 있으면 bd, 없으면 qn·bak-v1이 받았다.
+#   원본이 hevc면 download_any의 normalize_playable이 h264로 바꾼다(종전 도우인과 같은 길).
+#   실패(세션 없음·키 없음·CDN 404·4K 초과)는 전부 종전 yt-dlp 720p 경로로 물러선다 — 회귀 0.
+_XHS_ORIGIN_HOSTS_SLASH = ("sns-video-bd.xhscdn.com", "sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com")
+_XHS_ORIGIN_HOSTS_PLAIN = ("sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com", "sns-video-bd.xhscdn.com")
+_XHS_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+           "(KHTML, like Gecko) Chrome/128 Safari/537.36")
+
+
+def _xhs_session_cookie_header():
+    """서버의 rednote 로그인 세션(Playwright storage_state) → Cookie 헤더. 없으면 ""."""
+    from shopping_shorts import config as _cfg
+    path = getattr(_cfg, "XIAOHONGSHU_SESSION_PATH", "") or ""
+    if not path or not Path(path).exists():
+        return ""
+    try:
+        st = json.loads(Path(path).read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return ""
+    cookies = st.get("cookies", []) if isinstance(st, dict) else []
+    # 세션 파일의 쿠키 도메인은 .rednote.com 계열이다(실측) — 페이지도 rednote.com으로 연다.
+    return "; ".join(f"{c.get('name')}={c.get('value')}" for c in cookies
+                     if "rednote" in (c.get("domain") or ""))
+
+
+def _xhs_note_page_url(url):
+    """담긴 URL(xiaohongshu/rednote · explore/search_result/discovery) → rednote 노트 페이지 URL."""
+    u = re.sub(r"://(www\.)?xiaohongshu\.com", "://www.rednote.com", url, flags=re.I)
+    u = u.replace("/search_result/", "/discovery/item/").replace("/explore/", "/discovery/item/")
+    return u
+
+
+def xhs_origin_video_key(url, cookie_header=None):
+    """노트 페이지에서 originVideoKey를 뽑는다. 없으면 ""(비디오가 아니거나 세션 만료)."""
+    ck = _xhs_session_cookie_header() if cookie_header is None else cookie_header
+    if not ck:
+        return ""
+    import urllib.request
+    req = urllib.request.Request(_xhs_note_page_url(url), headers={
+        "User-Agent": _XHS_UA, "Cookie": ck, "Accept": "text/html"})
+    html = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "ignore")
+    m = re.search(r'originVideoKey":"([^"]+)', html)
+    if not m:
+        return ""
+    # 페이지 원문은 슬래시를 / 로 이스케이프해 둔다(실측 'pre_post/1040g…') — 되돌린다.
+    return m.group(1).replace("\\u002F", "/").replace("\\/", "/")
+
+
+def xhs_origin_probe(key):
+    """키 → (재생 가능한 원본 URL, (w, h)). CDN 호스트를 차례로 HEAD해 200·video만 통과.
+    긴 변이 1920을 넘으면 받지 않는다(4K는 화면에 안 쓰이고 대역폭만 먹는다)."""
+    import requests
+    hosts = _XHS_ORIGIN_HOSTS_SLASH if "/" in key else _XHS_ORIGIN_HOSTS_PLAIN
+    for host in hosts:
+        cand = f"https://{host}/{key}"
+        try:
+            r = requests.head(cand, headers={"User-Agent": _XHS_UA}, timeout=15, allow_redirects=True)
+        except Exception:  # noqa: BLE001
+            continue
+        if r.status_code != 200 or "video" not in (r.headers.get("Content-Type") or ""):
+            continue
+        try:
+            pr = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0",
+                                 "-show_entries", "stream=width,height", "-of", "csv=p=0", cand],
+                                capture_output=True, text=True, timeout=60)
+            w, h = [int(x) for x in pr.stdout.strip().split(",")[:2]]
+        except Exception:  # noqa: BLE001
+            continue
+        if max(w, h) > 1920:
+            print(f"[media] 샤오홍슈 원본 {w}x{h} — 1920 초과라 720p 경로로", file=sys.stderr)
+            return "", (w, h)
+        return cand, (w, h)
+    return "", (0, 0)
+
+
+def _download_xiaohongshu_origin(url, dest_dir):
+    """샤오홍슈 노트 → 업로드 원본 mp4 경로. 못 받으면 ""(호출부가 yt-dlp로 간다)."""
+    key = xhs_origin_video_key(url)
+    if not key:
+        return ""
+    cand, (w, h) = xhs_origin_probe(key)
+    if not cand:
+        return ""
+    from shopping_shorts.frame_extract import download_video
+    out = download_video(cand, Path(dest_dir))
+    print(f"[media] 샤오홍슈 원본 {w}x{h} 수신: {Path(out).name}", file=sys.stderr)
+    return str(out)
+
+
 def download_any(url, dest_dir):
     """소스 URL 다운로드 → (mp4경로, caption) 튜플.
 
@@ -790,6 +893,14 @@ def _download_any_raw(url, dest_dir):
             raise
         except Exception:  # noqa: BLE001 — 폴백 사유일 뿐, 최종 에러는 yt-dlp가 말한다
             pass
+    # ★샤오홍슈는 원본 키 경로를 먼저 — yt-dlp는 720p 재인코딩본만 준다(위 _download_xiaohongshu_origin).
+    if "xiaohongshu.com" in u or "rednote.com" in u:
+        try:
+            _orig = _download_xiaohongshu_origin(url, dest_dir)
+            if _orig:
+                return _orig, ""
+        except Exception as e:  # noqa: BLE001 — 폴백 사유일 뿐(세션·CDN·네트워크)
+            print(f"[media] 샤오홍슈 원본 경로 실패 → yt-dlp: {e}", file=sys.stderr)
     if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
                              "xiaohongshu.com", "xhslink.com", "douyin.com",
                              "iesdouyin.com", "rednote.com")):
