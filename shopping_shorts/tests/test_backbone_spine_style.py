@@ -334,3 +334,11 @@ def test_join_fix_action_plus_mandeuleo():
     from shopping_shorts import backbone_assemble as ba
     assert ba._fix_join("근데 고수들은 얇게 접어 틈새에 보관하는 것 만들어 버림.") == "근데 고수들은 얇게 접어 틈새에 보관하는 데 써 버림."
     assert ba._fix_join("진정한 고수들은 카드 지갑을 만들어 버림.") == "진정한 고수들은 카드 지갑을 만들어 버림."
+
+
+def test_country_before_thing_is_dropped_not_haeoe():
+    from shopping_shorts import backbone_assemble as ba
+    out = ba._no_made_up_country([{"text": "일본 냉장고 보고 만들었다는 일본 천재의 아이디어."}], {})
+    assert out[0]["text"] == "냉장고 보고 만들었다는 해외 천재의 아이디어."
+    out = ba._no_made_up_country([{"text": "프랑스 천재의 발명품."}], {})
+    assert out[0]["text"] == "해외 천재의 발명품."
