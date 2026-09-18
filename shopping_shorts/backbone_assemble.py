@@ -41,6 +41,8 @@ MIN_CUTS_PER_LINE = 2   # 줄마다 최소 이만큼 — 그래야 렌더 라운
 # 한 줄 평균 몇 초로 잡을까 — 목표 초 ÷ 이 값 = 최대 줄 수. 실측(2026-09-18 카메라): 11줄 34.8초 = 3.2초/줄,
 #   10줄 30.6초 = 3.1초/줄. 25초에 8줄이 맞다 → 3.1.
 SECS_PER_LINE = 3.1
+MISUSE_STYLE = "오용형"             # 재료에 딴 용도가 없으면 이 유형 스파인은 안 쓴다(사장님 09-18)
+MISUSE_FALLBACK_STYLE = "제품정체형"
 
 
 def _secs(text):
@@ -88,8 +90,9 @@ _GROUP_SCHEMA = {
             "cuts": {"type": "array", "items": {"type": "string"}},
         }, "required": ["name", "claim", "where", "doubt", "cuts"]}},
         "order": {"type": "array", "items": {"type": "integer"}},
+        "alt_use": {"type": "boolean"},
     },
-    "required": ["product", "groups", "order"],
+    "required": ["product", "groups", "order", "alt_use"],
 }
 
 
@@ -126,13 +129,16 @@ def build_groups(sources, backbone_vid, note=None):
         "4) order: 묶음 인덱스(0부터)를 **영상에 나올 순서**로. 원본의 논리 순서(소개→변신→증명→원리)를 지키되, "
         "서브에만 있는 특징(휴대·개봉·보관 등)은 자연스러운 자리에 끼워라. doubt=true 묶음은 order에서 빼라.\n"
         "5) product: 제품 이름 한 줄 — **한국어로**(영문 제품명은 뜻을 옮기고 브랜드만 영문. 예: 'NORDECO 빈티지 미니 카메라').\n"
+        "6) alt_use: 제품을 **원래 용도가 아닌 엉뚱한 곳에 쓰는 장면**(예: 커튼 고리를 벽 수납에, 몰딩을 선반으로)이 "
+        "화면이나 말에 실제로 있으면 true. 원래 용도대로 쓰는 장면뿐이면 false.\n"
         "★컷 번호는 목록에 있는 것만. 지어내지 마라.\n\n" + blocks)
     out = _sg._call_json(prompt, _GROUP_SCHEMA, note=note) or {}
     groups = [g for g in (out.get("groups") or []) if isinstance(g, dict)]
     order = [i for i in (out.get("order") or []) if isinstance(i, int) and 0 <= i < len(groups)]
     if not order:
         order = [i for i, g in enumerate(groups) if not g.get("doubt")]
-    return {"product": out.get("product") or "", "groups": groups, "order": order[:MAX_GROUPS]}
+    return {"product": out.get("product") or "", "groups": groups, "order": order[:MAX_GROUPS],
+            "alt_use": bool(out.get("alt_use"))}
 
 
 # ── 훅 고르기 ─────────────────────────────────────────────────────────
@@ -653,6 +659,13 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
         return None, None, {"note": note}
     groups_out = dict(groups_out, order=_shuffle_middle(groups_out["order"], seed))
     spine = pick_hook_spine(store, spine_id=spine_id, seed=seed, style=style)
+    # ★오용형은 재료에 '딴 용도' 장면이 있을 때만(2026-09-18 사장님 결정). 볼펜·후드집업처럼 없으면
+    #   "고수들은 카드 지갑 비상 필기구 만들어 버림" 같은 억지 용도를 지어낸다(실측 batch 7편 중 3편).
+    #   없으면 같은 seed로 제품정체형을 고른다 — 조용히 바꾸지 않고 note에 남긴다.
+    if MISUSE_STYLE in (spine.get("fit_categories") or []) and not groups_out.get("alt_use"):
+        note["style_switched"] = {"from": spine.get("name"), "why": "재료에 딴 용도 장면 없음"}
+        spine = pick_hook_spine(store, seed=seed, style=MISUSE_FALLBACK_STYLE)
+        note["style_switched"]["to"] = spine.get("name")
     lines = write_lines(groups_out, spine, seg_index, target_seconds, note=note, seed=seed)
     if len(lines) < 3:
         note["reason"] = "lines_short"
@@ -662,6 +675,26 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
     meta = {"product": groups_out["product"], "spine": {"id": spine.get("id"), "name": spine.get("name")},
             "groups": groups_out, "report": report, "note": note}
     return given, beat_sources, meta
+
+
+def to_draft(given, beat_sources, meta):
+    """assemble 결과 → 2단계 초안 모양(script_generate.generate_by_styles와 같은 키).
+    화면(produce.html s2Confirm)은 beats[].text를 줄로, beats[].src_seg/src_segs를 3단계 장면으로 넘긴다
+    — 그래서 화면·3단계는 한 글자도 안 고친다(새 통로를 만들지 않는다)."""
+    from shopping_shorts import script_gate
+    lines = [l for l in (given or "").split("\n") if l.strip()]
+    beats = []
+    for i, t in enumerate(lines):
+        b = (beat_sources[i] if i < len(beat_sources or []) else {}) or {}
+        segs = [x for x in (b.get("segs") or []) if x]
+        beats.append({"role": b.get("role") or "", "text": t, "src_seg": b.get("seg") or (segs[0] if segs else ""),
+                      "src_segs": segs, "sec": script_gate.est_seconds(t)})
+    full = " ".join(lines)
+    sp = (meta or {}).get("spine") or {}
+    return {"style_id": sp.get("id"), "style_name": sp.get("name"), "beats": beats, "script": full,
+            "hook": lines[0] if lines else "", "checks": [], "passed": True, "tries": 1,
+            "chars": len(script_gate.norm(full)), "sec": script_gate.est_seconds(full),
+            "made_by": "백본", "style_switched": ((meta or {}).get("note") or {}).get("style_switched")}
 
 
 def sources_from_extract(extract):

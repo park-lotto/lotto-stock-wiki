@@ -342,3 +342,14 @@ def test_country_before_thing_is_dropped_not_haeoe():
     assert out[0]["text"] == "냉장고 보고 만들었다는 해외 천재의 아이디어."
     out = ba._no_made_up_country([{"text": "프랑스 천재의 발명품."}], {})
     assert out[0]["text"] == "해외 천재의 발명품."
+
+
+def test_to_draft_shape_matches_style_drafts():
+    """2단계 화면이 받는 모양(beats[].text/src_seg/src_segs) 그대로 — 화면·3단계 무수정 연결."""
+    from shopping_shorts import backbone_assemble as ba
+    d = ba.to_draft("첫 줄.\n둘째 줄.", [{"role": "title", "seg": "a-1", "segs": ["a-1", "b-2"]},
+                                       {"role": "twist", "seg": "", "segs": []}],
+                    {"spine": {"id": 56, "name": "x"}, "note": {}})
+    assert [b["text"] for b in d["beats"]] == ["첫 줄.", "둘째 줄."]
+    assert d["beats"][0]["src_seg"] == "a-1" and d["beats"][0]["src_segs"] == ["a-1", "b-2"]
+    assert d["style_id"] == 56 and d["made_by"] == "백본" and d["script"] == "첫 줄. 둘째 줄."
