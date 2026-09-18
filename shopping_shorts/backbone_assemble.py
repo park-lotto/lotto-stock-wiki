@@ -18,6 +18,7 @@ import json
 import random
 import re
 import sys
+import time
 
 from shopping_shorts import script_generate as _sg
 
@@ -37,6 +38,11 @@ SLACK_SECS = 0.3        # 컷 길이 합이 대사보다 이만큼은 더 길게
 #   즉 고칠 자리는 렌더가 아니라 **컷을 여러 개 주는 것**이다(0순위-B: 정하는 곳은 여기 한 곳).
 TARGET_CUT_SECS = 2.0   # 한 컷이 이보다 길면 줄을 더 쪼갤 여지가 있다고 본다(렌더 상한 2.2와 짝)
 MIN_CUTS_PER_LINE = 2   # 줄마다 최소 이만큼 — 그래야 렌더 라운드로빈(>1)이 작동한다
+# 한 줄 평균 몇 초로 잡을까 — 목표 초 ÷ 이 값 = 최대 줄 수. 실측(2026-09-18 카메라): 11줄 34.8초 = 3.2초/줄,
+#   10줄 30.6초 = 3.1초/줄. 25초에 8줄이 맞다 → 3.1.
+SECS_PER_LINE = 3.1
+MISUSE_STYLE = "오용형"             # 재료에 딴 용도가 없으면 이 유형 스파인은 안 쓴다(사장님 09-18)
+MISUSE_FALLBACK_STYLE = "제품정체형"
 
 
 def _secs(text):
@@ -63,7 +69,10 @@ def _seg_index(sources):
                 secs = 0.0
             idx[str(sid)] = {"secs": secs, "desc": (x.get("scene_desc") or "").strip(),
                              "change": (x.get("change") or "").strip(), "role": x.get("shot_role") or "",
-                             "key": bool(x.get("is_key")), "vid": _vid_of(sid),
+                             # ★vid는 **소스 번호(video_id, 예 s0)**로 — 백본을 그 번호로 부른다.
+                             #   컷 번호 접두어(예 DdOayfhAnpx)로 두면 백본과 절대 안 맞아 '서브 먼저·원본 나중'이
+                             #   통째로 무력이었다(2026-09-18 실측: 씨앗 s0 백본인데 원본 컷 10/29).
+                             "key": bool(x.get("is_key")), "vid": s.get("video_id") or _vid_of(sid),
                              "text": (x.get("text") or "").strip()}
     return idx
 
@@ -81,8 +90,9 @@ _GROUP_SCHEMA = {
             "cuts": {"type": "array", "items": {"type": "string"}},
         }, "required": ["name", "claim", "where", "doubt", "cuts"]}},
         "order": {"type": "array", "items": {"type": "integer"}},
+        "alt_use": {"type": "boolean"},
     },
-    "required": ["product", "groups", "order"],
+    "required": ["product", "groups", "order", "alt_use"],
 }
 
 
@@ -118,26 +128,62 @@ def build_groups(sources, backbone_vid, note=None):
         "화면은 같은 동작이라도 말이 다르면 true.\n"
         "4) order: 묶음 인덱스(0부터)를 **영상에 나올 순서**로. 원본의 논리 순서(소개→변신→증명→원리)를 지키되, "
         "서브에만 있는 특징(휴대·개봉·보관 등)은 자연스러운 자리에 끼워라. doubt=true 묶음은 order에서 빼라.\n"
-        "5) product: 제품 이름 한 줄.\n"
+        "5) product: 제품 이름 한 줄 — **한국어로**(영문 제품명은 뜻을 옮기고 브랜드만 영문. 예: 'NORDECO 빈티지 미니 카메라').\n"
+        "6) alt_use: 제품을 **원래 용도가 아닌 엉뚱한 곳에 쓰는 장면**(예: 커튼 고리를 벽 수납에, 몰딩을 선반으로)이 "
+        "화면이나 말에 실제로 있으면 true. 원래 용도대로 쓰는 장면뿐이면 false.\n"
         "★컷 번호는 목록에 있는 것만. 지어내지 마라.\n\n" + blocks)
     out = _sg._call_json(prompt, _GROUP_SCHEMA, note=note) or {}
     groups = [g for g in (out.get("groups") or []) if isinstance(g, dict)]
     order = [i for i in (out.get("order") or []) if isinstance(i, int) and 0 <= i < len(groups)]
     if not order:
         order = [i for i, g in enumerate(groups) if not g.get("doubt")]
-    return {"product": out.get("product") or "", "groups": groups, "order": order[:MAX_GROUPS]}
+    return {"product": out.get("product") or "", "groups": groups, "order": order[:MAX_GROUPS],
+            "alt_use": bool(out.get("alt_use"))}
 
 
 # ── 훅 고르기 ─────────────────────────────────────────────────────────
-def pick_hook_spine(store, spine_id=None, seed=None):
-    """승인 스파인 중 훅 규칙(hook_3s)이 있는 것. 지정 없으면 무작위 — 같은 재료로 여러 편이 나오게."""
-    spines = [s for s in store.list_spines(status="approved") if s.get("hook_3s")]
+def _seed_int(seed):
+    if isinstance(seed, int):
+        return seed
+    if seed:
+        import zlib
+        return zlib.crc32(str(seed).encode("utf-8"))
+    return 0
+
+
+def _RECIPE_ONLY_MARK(fit):
+    """fit_categories가 [유형, '레시피'] 꼴(=레시피 말고 붙은 물건 카테고리가 없음)이면 '레시피'를 돌려 표식으로 쓴다."""
+    others = [c for c in fit if c not in ("레시피",) and not c.endswith("형")]
+    return "레시피" if ("레시피" in fit and not others) else ""
+
+
+def pick_hook_spine(store, spine_id=None, seed=None, style=None):
+    """승인 스파인 중 훅 규칙(hook_3s)이 있는 것.
+    ★style(유형, 예 '오용형'·'발명품형')을 주면 **그 유형의 스파인들을 id 순으로 세워 seed로 순번**을 정한다
+      (2026-09-18 사장님: "오용형을 고르면 그 유형 채널들의 잘 쓴 대본 스파인 5~10개가 순번대로 나오는 구조").
+      전엔 spine_id 지정 아니면 무작위였고, 유형으로 고르는 길이 없었다.
+    spine_id가 오면 그게 우선. 둘 다 없으면 무작위(seed 고정)."""
+    all_sp = store.list_spines(status="approved")
+    spines = [s for s in all_sp if s.get("hook_3s")]
     if spine_id is not None:
-        for s in spines:
+        for s in all_sp:
             if s.get("id") == spine_id:
                 return s
+    if style:
+        # 인스타 스파인(52~62)은 hook_3s가 없다 — 유형으로 고를 땐 전부 후보(2026-09-18)
+        # ★레시피 전용 틀(fit에 '레시피'뿐인 것, 예 53 단정명령형 "무조건 이렇게 드세요")은 물건 소재에 주면
+        #   "행주를 드세요·별미"가 된다(실측 job bbdd4bb0a0ff). 유형이 '레시피'가 아니면 뺀다.
+        def _ok(sp):
+            fit = sp.get("fit_categories") or []
+            if style not in fit:
+                return False
+            return style == "레시피" or "레시피" not in _RECIPE_ONLY_MARK(fit)
+        pool = sorted([s for s in all_sp if _ok(s)], key=lambda s: s.get("id") or 0)
+        if pool:
+            return pool[_seed_int(seed) % len(pool)]
+    # 유형에 맞는 스파인이 없으면 무작위 폴백(훅 있는 것 우선)
     if not spines:
-        spines = store.list_spines(status="approved")
+        spines = all_sp
     rnd = random.Random(seed)
     return rnd.choice(spines) if spines else {}
 
@@ -173,13 +219,26 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         # ★스파인에 문장틀(templates)·역할순서(beat_roles)가 있으면 **그 꼴 그대로** 쓴다(2026-09-17 사장님:
         #   "이븐쇼핑 스타일" = 천재·떼돈·「이건 바로 OO」·CTA 없음). 전엔 훅 한 줄만 빌리고 나머지는
         #   자체 [훅]+[특징]+[댓글CTA]로 써서 스타일이 통째로 사라졌다.
-        n_lines = len(roles) + max(0, len(groups_out["order"]) - len(_feature_roles(roles, tpl)))
+        # ★목표 초에 맞춰 특징 줄 수를 자른다(2026-09-18 실측: 정체형 10~11줄 = 30.6~34.8초, 목표 25초).
+        #   구조 줄(정체·떼돈·이건 바로·마무리)은 스타일의 뼈대라 안 자르고, 특징 줄만 앞에서부터 남긴다.
+        #   줄당 SECS_PER_LINE초로 잡으면 몇 줄까지 되는지가 나온다.
+        feat_n = len(_feature_roles(roles, tpl))
+        structural = len(roles) - feat_n
+        allow = max(1, int(target_seconds // SECS_PER_LINE) - structural)
+        if len(groups_out["order"]) > allow:
+            groups_out = dict(groups_out, order=list(groups_out["order"])[:allow])
+            feats = feats[:allow]
+        n_lines = len(roles) + max(0, len(groups_out["order"]) - feat_n)
         per_line = max(12, int(target_seconds * cps / max(1, n_lines)))
         # ★seed를 그대로 넘긴다 — 안 넘기면 늘 0이라 **매번 첫 틀만** 쓰여 틀을 6개 만들어도
         #   같은 대본이 나온다(2026-09-18 실측으로 잡은 배선 누락). seed가 바뀌면 칸마다
         #   다음 틀로 돌아 같은 재료에서 N가지 대본이 나온다.
         prompt = _spine_prompt(groups_out, hook_spine, roles, tpl, feats, per_line, seed=seed)
-        return _clean_lines(_sg._call_json(prompt, _LINES_SCHEMA, note=note) or {})
+        lines = _clean_lines(_sg._call_json(prompt, _LINES_SCHEMA, note=note) or {})
+        lines = _repair_joins(lines, plan_for_repair(groups_out, roles, tpl, seed, hook_spine), note=note)
+        lines = _one_full_name(lines, groups_out.get("product") or "")
+        lines = _no_made_up_country(lines, seg_index)
+        return _fit_length(lines, target_seconds, note=note)
     prompt = (
         f"제품: {groups_out.get('product')}\n"
         f"훅 스타일: 「{hook_spine.get('name')}」 — {hook_rule}\n"
@@ -196,10 +255,81 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
     return _clean_lines(out)
 
 
+# ★'한국'은 넣지 않는다 — 우리 시청자 기준 말("한국은 물론 전 세계")이라 바꾸면 "해외은 물론"이 된다(실측 bbbd6f20fe39)
+_COUNTRY = re.compile(r"(미국|일본|중국|독일|프랑스|영국|이탈리아|스웨덴|덴마크|대만|베트남|태국|호주|캐나다|스페인|네덜란드|스위스)")
+# 나라 이름 뒤에 오면 '해외'로 바꿔도 되는 말(사람·회사). 이 밖의 말(냉장고·주방) 앞의 나라 이름은 뺀다
+_PERSONISH = r"(천재|개발자|디자이너|엔지니어|사람|주부|엄마|아빠|회사|기업|브랜드|제조사|직원|장인|발명가|공학자|교수|의사|박사|셰프|현지)"
+# '해외'로 바꾼 뒤 받침 없는 말에 맞게 조사 고치기(나라 이름은 받침이 제각각이라)
+_JOSA_FIX = [("해외은", "해외는"), ("해외이 ", "해외가 "), ("해외을", "해외를"), ("해외과", "해외와"), ("해외으로", "해외로")]
+
+
+def _no_made_up_country(lines, seg_index):
+    """소스(태깅 설명·말)에 없는 나라 이름은 '해외'로 바꾼다.
+    프롬프트('모르면 해외로')를 모델이 어겼다(실측 행주 job bb4246b57a36: "프랑스 천재" — 소스 어디에도 없음)."""
+    blob = " ".join((v.get("desc") or "") + " " + (v.get("text") or "") for v in (seg_index or {}).values())
+    out = []
+    for L in lines:
+        t = L["text"]
+        for c in set(_COUNTRY.findall(t)):
+            if c not in blob:
+                # ★사람·회사 앞이면 '해외'(해외 천재), 물건 앞이면 나라만 뺀다(09-18 실측 76번
+                #   "일본 냉장고 보고 만든 일본 천재" → "해외 냉장고 … 해외 천재"로 두 번 걸렸다)
+                t = re.sub(c + r" (?!" + _PERSONISH + r")", "", t)
+                t = t.replace(c, "해외")
+        for x, y in _JOSA_FIX:
+            t = t.replace(x, y)
+        out.append(dict(L, text=t.replace("해외 해외", "해외")))
+    return out
+
+
+def _one_full_name(lines, product):
+    """제품 전체 이름은 **공개 줄(reveal) 한 번만**. 나머지 줄은 끝 낱말(카메라·수납함)로 줄인다.
+    프롬프트로 말해도 모델이 어겼다(실측 job bb38c10bcca9: 5번 줄 "NORDECO 빈티지 미니 TLR 카메라로") → 코드로 못 박는다."""
+    words = (product or "").split()
+    if len(words) < 2:
+        return lines
+    short = words[-1]
+    out = []
+    for L in lines:
+        t = L["text"]
+        if L.get("role") != "reveal" and product in t:
+            t = t.replace(product, short)
+        out.append(dict(L, text=t))
+    return out
+
+
+def _fit_length(lines, target_seconds, note=None, slack=2.0):
+    """실제 읽는 초(narr_secs 합)를 재서 목표+slack을 넘으면 **가운데 특징 줄부터** 뺀다.
+    ★줄 수로만 맞추면 안 된다(2026-09-18 실측: 8줄인데 정체형 30.3초·발명품형 29.1초 — bait 틀 하나가 50자).
+      구조 줄(group=-1: 훅·정체·공개·마무리)과 첫·마지막 특징 줄은 남긴다(반전이 끝맺음).
+    짧은 건 늘리지 않는다 — 없는 말을 지어내게 된다(오용형 6줄 18초는 틀 구조 그대로)."""
+    def total(ls):
+        return sum(_secs(L["text"]) for L in ls)
+    lines = list(lines)
+    dropped = []
+    while total(lines) > target_seconds + slack:
+        feat_idx = [i for i, L in enumerate(lines) if (L.get("group") if L.get("group") is not None else -1) >= 0]
+        # ★특징 줄은 3개까지 남긴다(2026-09-18 사장님 "용도 보통 4개 아닌가"). 2개까지 빼면 오용형의
+        #   초보→고수→반전에서 고수 줄이 빠져 용도가 2개가 됐다(실측 6편 중 3편). 원문 중앙값도 3이다
+        #   (이븐쇼핑 78편 장점 전환 · 초보고수 꼴 183편 용도 전환).
+        if len(feat_idx) <= MIN_FEATURE_LINES:
+            break
+        k = feat_idx[len(feat_idx) // 2]
+        dropped.append(lines.pop(k)["text"])
+    if note is not None and dropped:
+        note["length_dropped"] = dropped
+    return lines
+
+
 def _clean_lines(out):
     lines = []
     for L in (out.get("lines") or []):
         t = re.sub(r"\s+", " ", str(L.get("text") or "")).strip()
+        if not t:
+            continue
+        # ★슬롯 이름이 글자로 새는 것(실측 job bbd3cfdd12de "…숨기는 용도끝.") — 중괄호 유무 모두 지운다
+        t = re.sub(r"\{[^{}]*\}", "", t)
+        t = re.sub(r"\s*(용도끝|용도[0-9]?|효능[0-9]?|속성[0-9]?|본래용도|권위자|제품군|성과|대상)\s*(?=[.,]|$)", "", t).strip()
         if not t:
             continue
         # 마침표 하나로 강제 — 문장 안 마침표는 쉼표로, 끝은 마침표
@@ -222,22 +352,41 @@ def _spine_style(spine):
     return list(roles or []), dict(tpl or {})
 
 
+MAX_EXTRA_FEATURE_LINES = 2   # 틀 밖으로 늘리는 특징 줄 상한(위 실측)
+MIN_FEATURE_LINES = 3         # 길이 맞추기에서 남기는 특징 줄 하한(_fit_length)
+
+
 def _feature_roles(roles, tpl):
-    """{효능…} 자리가 있는 역할 = 특징 하나를 말하는 줄. 나머지는 구조 줄(정체 숨기기·공개·마무리)."""
-    return [r for r in roles if any("{효능" in t for t in (tpl.get(r) or []))]
+    """{효능…}·{용도…} 자리가 있는 역할 = 특징 하나를 말하는 줄. 나머지는 구조 줄(정체 숨기기·공개·마무리)."""
+    return [r for r in roles if any(("{효능" in t or "{용도" in t) for t in (tpl.get(r) or []))]
 
 
 def _spine_plan(roles, tpl, n_feat):
     """[(role, group)] — 구조 줄은 group=-1, 특징 줄은 order 번호. 특징이 효능 자리보다 많으면
     두 번째 효능 역할(more 류)을 마지막 효능 역할(twist) 앞에 반복해 늘린다. 적으면 남는 자리는 뺀다."""
     feat_roles = _feature_roles(roles, tpl)
+    # 특징이 효능 칸보다 적으면 **첫 칸과 마지막 칸(반전)을 남기고 가운데부터** 뺀다
+    #   (25초 맞추기에서 twist가 잘리던 것 — 반전이 스타일의 끝맺음이라 빠지면 안 된다)
+    keep_feat = list(feat_roles)
+    while len(keep_feat) > max(n_feat, 0) and len(keep_feat) > 2:
+        keep_feat.pop(len(keep_feat) // 2)
+    if n_feat < len(keep_feat):                 # 1개만 남으면 첫 효능 줄(반전만 덩그러니면 어색)
+        keep_feat = keep_feat[:n_feat]
     plan, used = [], 0
     for r in roles:
         if r in feat_roles:
-            if used < n_feat:
+            if r in keep_feat and used < n_feat:
                 plan.append([r, None]); used += 1          # 번호는 마지막에 순서대로
         else:
             plan.append([r, -1])
+    # ★반복은 최대 2줄까지(2026-09-18 실측 오용형2: 특징 5개에 twist류가 4번 이어져 9줄·34초). 틀의 6~9줄 구조가 본체다.
+    n_feat = min(n_feat, used + MAX_EXTRA_FEATURE_LINES)
+    # ★효능 칸이 3개 미만(오용형: cases·twist뿐)이면 늘리지 않는다 — 늘리면 twist("근데 미친 활용법은 따로 있는데")가
+    #   3번 이어진다(실측 오용형0~4 전부). 오용형은 cases 한 줄이 특징을 나열하는 구조라 틀 그대로 6줄이 맞다.
+    if len(feat_roles) < 3 or "more" not in roles:
+        # ★'심지어(more)' 칸이 없는 틀(오용형·인스타형)은 칸마다 역할이 달라 반복하면 어색하다
+        #   (실측 인스타 지인증언형 job bb22636a44f0: "알고 보니…" 3줄 연속). 유튜브 정체·발명품형만 늘린다.
+        n_feat = min(n_feat, used)
     if used < n_feat and feat_roles:
         rep = feat_roles[1] if len(feat_roles) > 1 else feat_roles[0]
         pos = next((i for i, (r, _) in enumerate(plan) if r == feat_roles[-1]), len(plan))
@@ -264,16 +413,12 @@ def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line, seed=None):
     #   ★무작위가 아니라 **순서대로 돌린다**(2026-09-18 사장님). 난수는 우연히 같은 틀을 두 번
     #     뽑을 수 있지만, 순서대로면 틀이 N개일 때 **N가지가 반드시 다 나온다**. 재현도 된다.
     #     시작 위치만 seed로 옮겨 같은 재료에서 여러 편을 뽑을 때 첫 줄이 겹치지 않게 한다.
-    start = (seed or 0)
-    pick_count = {}
+    # seed는 호출부마다 꼴이 다르다 — 배치는 job id **문자열**(bb_batch5.py `seed=base`), 시험은 int.
+    #   문자열이면 `i % len`이 TypeError(2026-09-18 4건 전부 예외). 문자열은 crc32로 정수화한다.
+    # 시작점(seed + 스파인id×7, 스파인마다 엇갈림)과 칸별 순번은 _pick_templates 한 곳에서 정한다
+    picked = _pick_templates(plan, tpl, seed, spine)
     for k, (r, gi) in enumerate(plan):
-        cands = list(tpl.get(r) or [])
-        if cands:
-            i = pick_count.get(r, start)       # 같은 칸이 또 오면 **다음 틀**로(순환)
-            ex = cands[i % len(cands)]
-            pick_count[r] = i + 1
-        else:
-            ex = ""
+        ex = picked[k]
         # ★group은 묶음 **원번호**(assign_cuts가 groups[gi]로 찾는다) — 순서 번호를 주면 다른 묶음 컷이 붙는다
         tgt = f"group={order[gi]} (특징 {gi + 1}번)" if 0 <= gi < len(order) else "group=-1"
         lines_spec.append(f"  {k + 1}. role={r}, {tgt} — 문장틀: {ex}")
@@ -290,16 +435,111 @@ def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line, seed=None):
         f"- 한 줄은 **마침표 하나**로 끝나는 문장 하나. 쉼표는 써도 된다. 줄당 {per_line}자 안팎.\n"
         "- 문장틀의 말투(반말·'~다는데'·'~라고')를 유지해라. 댓글 유도·구독 요청 같은 CTA를 덧붙이지 마라.\n"
         "- {나라}는 화면·자막에서 알 수 없으면 '해외'로.\n"
+        # ★가격·숫자를 지어내지 않는다(실측 68·69: "단돈 몇만 원"·"몇천 원짜리"). 특징·화면에 가격이 없으면 '이 가격'으로.
+        # ★제품 이름이 영문 그대로 나왔다(실측 job bb1b0f32df87 "이건 바로 Retro Style Mini TLR Digital Camera").
+        "- 제품 이름 전체({제품})는 **'이건 바로' 공개 줄에서 한 번만** 써라. 다른 줄은 '이 제품'·'이 카메라'처럼 짧은 일반명({제품군})으로(실측: 한 편에 제품명 3번 반복).\n"
+        "- {제품}·{제품군}은 **한국어로** 써라. 영문 제품명은 뜻을 한국어로 옮기고, 브랜드명만 영문 그대로 둔다(예: 'NORDECO 빈티지 미니 카메라').\n"
+        "- {가격}은 위 특징·화면에 **실제 가격이 있을 때만** 채워라. 없으면 '이 가격'·'이 값'으로 쓰고 숫자를 지어내지 마라. "
+        "{본래용도}도 원본에서 확인된 것만 — 모르면 그 틀 대신 '평범해 보이는' 식으로 에둘러라.\n"
         # ★빈칸에 무엇을 넣을지 **원문 예시로** 못 박는다(2026-09-18 실측). 안 적어두면
         #   {성과}에 형용사가 들어가 "정교한 해외 천재의 발명품"처럼 어색해진다.
         #   원문은 전부 동사구다: 세월을 되찾아주는 / 업계 자체를 망하게 한 / 여름을 지배해 버린.
         "- {성과}는 **동사구**로 채워라 — 예: '세월을 되찾아주는', '업계 자체를 망하게 한', "
         "'여름을 지배해 버린'. 형용사 한 단어('정교한')는 쓰지 마라.\n"
         "- {대상}은 사람·업계 같은 **명사**로 — 예: '문구 업계', '다이어트 하는 사람들'.\n"
+        # ★빈칸 뒤에 어미가 바로 붙는 틀({효능}는데·{효능}다는 거·{효능}주는데)은 빈칸을 **어간**으로 끝내야
+        #   맞물린다. 실측(2026-09-18 4건): '분류한다+는는데'·'빨아들여 주는+는데'·'쓰는 건+까지 해 준다는데'.
+        "- ★빈칸 바로 뒤에 어미가 붙어 있으면 빈칸은 **그 어미에 맞물리는 어간**으로 끝내라. 완성된 문장을 빈칸에 넣지 마라. "
+        "예) '{효능}는데' → '연기를 싹 빨아들이는데' / '{효능}다는 거' → '기름을 알아서 모은다는 거' / "
+        "'{효능}주는데' → '한 장씩 뜯어 쓰게 해 주는데' / '{효능2}까지 해 준다는데' → '어디서나 가볍게 쓰는 것까지 해 준다는데'. "
+        "'~는는데'·'~다는는데'·'~는 건까지 해'처럼 같은 어미가 겹치면 틀린 것이다.\n"
         "- ★문장틀의 **끝말을 바꾸지 마라**. 틀이 '~는데'로 끝나면 '~는데'로, '~다는 거'면 "
         "'~다는 거'로 끝내라(실측: 틀을 벗어나면 '~하는 거'처럼 이 채널에 없는 말이 된다).\n"
         "- 원본 영상의 문장을 그대로 베끼지 마라.")
 
+
+
+# ── 어미 결합 검사·수리 ────────────────────────────────────────────────
+# 틀 '{효능}는데'에 모델이 '분류한다는'을 넣으면 '분류한다는는데'가 된다(2026-09-18 실측 4건).
+# 순서: ①기계 수리(겹친 어미 축약) ②그래도 깨졌으면 그 줄만 다시 쓰게 1회 ③그래도면 기계 수리본 유지.
+_JOIN_FIXES = [
+    (re.compile(r"는는데"), "는데"), (re.compile(r"다는는데"), "다는데"), (re.compile(r"는는 거"), "는 거"),
+    (re.compile(r"다는다는"), "다는"), (re.compile(r"는데는데"), "는데"), (re.compile(r"는 건까지 해"), "까지 해"),
+    (re.compile(r"주는는데"), "주는데"), (re.compile(r"^근대 "), "근데 "), (re.compile(r"한다는는"), "한다는"),
+    # 문장이 '~다는'에서 끊김(실측 job bb931fdbf7c8 "느끼게 해준다는.") → '~다는 거'
+    (re.compile(r"다는(?=\.?$)"), "다는 거"),       # 끝 마침표가 붙어 와도 잡는다
+    # '~주게 해 주는데' 이중(실측 행주 정체형 "살려주게 해 주는데") → '~주는데'
+    (re.compile(r"주게 해 주"), "주"),
+    # 고수 줄 '{용도2} 만들어 버림'에 동작이 들어오면 "보관하는 것 만들어 버림"(09-18 실측 2편) → '~하는 데 써 버림'
+    (re.compile(r"(\S+는) 것 만들어 버림"), r"\1 데 써 버림"),
+]
+_BAD_JOIN = re.compile(r"는는|데데|다는다는|는데는데|는 건까지 해")
+
+
+def _bad_join(text):
+    t = str(text or "").rstrip(".").strip()
+    return bool(_BAD_JOIN.search(t))
+
+
+def _fix_join(text):
+    t = str(text or "")
+    for rx, rep in _JOIN_FIXES:
+        t = rx.sub(rep, t)
+    return t
+
+
+def _pick_templates(plan, tpl, seed, spine):
+    """줄마다 쓸 문장틀 — **한 곳에서만** 정한다(_spine_prompt·plan_for_repair 공용, 0순위-B).
+    ★칸마다 **따로** 돈다(혼합진법): 칸 k의 순번 = (시작점 ÷ 앞 칸들 틀 수의 곱) mod 이 칸 틀 수.
+      전엔 모든 칸이 같은 숫자로 같이 움직여, 칸마다 틀이 3개면 회원 100명에게 조합이 **3가지**뿐이었다
+      (2026-09-18 실측 66번: 100명 중 44명이 같은 대본). 이제 조합 수 = 칸별 틀 수의 곱.
+    같은 칸이 또 오면(more×N) 그 칸 안에서 다음 틀로."""
+    import zlib
+    # 시작점 = (seed, 스파인id)를 **함께** 해시 — 같은 회원이라도 스파인이 다르면 조합 전체가 달라진다
+    #   (단순 덧셈이면 혼합진법 둘째 칸부터 다시 겹쳤다: 74·75 bait 동일, 테스트로 잡음)
+    start = zlib.crc32(("%s|%s" % (_seed_int(seed), (spine or {}).get("id") or 0)).encode("utf-8"))
+    base, radix = {}, 1
+    for r, _ in plan:
+        if r in base:
+            continue
+        n = len(tpl.get(r) or [])
+        if n:
+            base[r] = (start // radix) % n
+            radix *= n
+    out, used = [], {}
+    for r, _ in plan:
+        cands = list(tpl.get(r) or [])
+        if not cands:
+            out.append(""); continue
+        i = base.get(r, 0) + used.get(r, 0); used[r] = used.get(r, 0) + 1
+        out.append(cands[i % len(cands)])
+    return out
+
+
+def plan_for_repair(groups_out, roles, tpl, seed, spine=None):
+    """줄 번호 → 그 줄에 쓰인 문장틀(다시 쓸 때 같은 틀을 준다). 시작점은 `_spine_prompt`와 **같은 규칙**."""
+    plan = _spine_plan(roles, tpl, len(groups_out["order"]))
+    return _pick_templates(plan, tpl, seed, spine)
+
+
+_ONE_LINE_SCHEMA = {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}
+
+
+def _repair_joins(lines, templates, note=None):
+    for i, L in enumerate(lines):
+        t = _fix_join(L["text"])
+        if _bad_join(t):
+            tpl = templates[i] if i < len(templates) else ""
+            prompt = (f"아래 문장은 문장틀 「{tpl}」의 빈칸을 채운 것인데 어미가 겹쳐 틀렸다.\n"
+                      f"틀린 문장: {t}\n"
+                      "틀의 끝말은 그대로 두고 빈칸 부분만 어간으로 고쳐 자연스러운 한 문장으로 다시 써라. "
+                      "뜻·길이는 유지하고 새 내용을 넣지 마라. 마침표 하나로 끝내라.")
+            out = _sg._call_json(prompt, _ONE_LINE_SCHEMA, note=note) or {}
+            t2 = _fix_join(re.sub(r"\s+", " ", str(out.get("text") or "")).strip())
+            if t2 and not _bad_join(t2):
+                t = t2.rstrip(".!?。") + "."
+        L["text"] = t
+    return lines
 
 # ── 컷 지정 (코드 — 부탁하지 않는다) ──────────────────────────────────
 def assign_cuts(lines, groups_out, seg_index, backbone_vid):
@@ -384,16 +624,48 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
     return beat_sources, report
 
 
+def _shuffle_middle(order, seed):
+    """특징 순서 바꾸기(사장님 구조 ②, 2026-09-18) — **첫 특징(소개)과 마지막(마무리)은 두고 가운데만** seed로 섞는다.
+    ★머리말엔 '순서 섞기'라 적어 놓고 build_groups는 '원본 순서를 지켜라'였다 → 원본과 같은 순서로 나왔다(자가점검으로 발견).
+      통째로 섞으면 '개봉 → 사용' 같은 흐름이 깨질 수 있어 양 끝은 고정한다. 회원마다(seed) 다른 순서."""
+    order = list(order or [])
+    if len(order) <= 3:
+        return order
+    mid = order[1:-1]
+    rnd = random.Random(_seed_int(seed) ^ 0x5EED)
+    for _ in range(3):                     # 원본 순서 그대로 나오면 다시 섞는다(가운데 2개 이상일 때)
+        rnd.shuffle(mid)
+        if mid != order[1:-1]:
+            break
+    return [order[0]] + mid + [order[-1]]
+
+
 # ── 한 번에 ───────────────────────────────────────────────────────────
-def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, seed=None, note=None):
+def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, seed=None, note=None, style=None):
     """(given_script, beat_sources, meta). 실패하면 (None, None, meta) — 조용히 폴백하지 않는다."""
     note = note if note is not None else {}
     seg_index = _seg_index(sources)
     groups_out = build_groups(sources, backbone_vid, note=note)
+    # ★모델 혼잡(503)은 잠깐 뒤 다시 하면 된다 — 전엔 0.7초 만에 포기해 대본 0개(09-18 실측 42건 중 2건 전부 503).
+    #   혼잡일 때만 다시 한다. 다른 이유로 비면(재료 문제) 바로 실패로 둔다.
+    for wait in (4, 10):
+        if groups_out["groups"] or not re.search(r"503|UNAVAILABLE|overloaded|high demand", str(note.get("detail") or ""), re.I):
+            break
+        time.sleep(wait)
+        note.pop("detail", None)
+        groups_out = build_groups(sources, backbone_vid, note=note)
     if not groups_out["groups"]:
         note["reason"] = "groups_empty"
         return None, None, {"note": note}
-    spine = pick_hook_spine(store, spine_id=spine_id, seed=seed)
+    groups_out = dict(groups_out, order=_shuffle_middle(groups_out["order"], seed))
+    spine = pick_hook_spine(store, spine_id=spine_id, seed=seed, style=style)
+    # ★오용형은 재료에 '딴 용도' 장면이 있을 때만(2026-09-18 사장님 결정). 볼펜·후드집업처럼 없으면
+    #   "고수들은 카드 지갑 비상 필기구 만들어 버림" 같은 억지 용도를 지어낸다(실측 batch 7편 중 3편).
+    #   없으면 같은 seed로 제품정체형을 고른다 — 조용히 바꾸지 않고 note에 남긴다.
+    if MISUSE_STYLE in (spine.get("fit_categories") or []) and not groups_out.get("alt_use"):
+        note["style_switched"] = {"from": spine.get("name"), "why": "재료에 딴 용도 장면 없음"}
+        spine = pick_hook_spine(store, seed=seed, style=MISUSE_FALLBACK_STYLE)
+        note["style_switched"]["to"] = spine.get("name")
     lines = write_lines(groups_out, spine, seg_index, target_seconds, note=note, seed=seed)
     if len(lines) < 3:
         note["reason"] = "lines_short"
@@ -403,6 +675,26 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
     meta = {"product": groups_out["product"], "spine": {"id": spine.get("id"), "name": spine.get("name")},
             "groups": groups_out, "report": report, "note": note}
     return given, beat_sources, meta
+
+
+def to_draft(given, beat_sources, meta):
+    """assemble 결과 → 2단계 초안 모양(script_generate.generate_by_styles와 같은 키).
+    화면(produce.html s2Confirm)은 beats[].text를 줄로, beats[].src_seg/src_segs를 3단계 장면으로 넘긴다
+    — 그래서 화면·3단계는 한 글자도 안 고친다(새 통로를 만들지 않는다)."""
+    from shopping_shorts import script_gate
+    lines = [l for l in (given or "").split("\n") if l.strip()]
+    beats = []
+    for i, t in enumerate(lines):
+        b = (beat_sources[i] if i < len(beat_sources or []) else {}) or {}
+        segs = [x for x in (b.get("segs") or []) if x]
+        beats.append({"role": b.get("role") or "", "text": t, "src_seg": b.get("seg") or (segs[0] if segs else ""),
+                      "src_segs": segs, "sec": script_gate.est_seconds(t)})
+    full = " ".join(lines)
+    sp = (meta or {}).get("spine") or {}
+    return {"style_id": sp.get("id"), "style_name": sp.get("name"), "beats": beats, "script": full,
+            "hook": lines[0] if lines else "", "checks": [], "passed": True, "tries": 1,
+            "chars": len(script_gate.norm(full)), "sec": script_gate.est_seconds(full),
+            "made_by": "백본", "style_switched": ((meta or {}).get("note") or {}).get("style_switched")}
 
 
 def sources_from_extract(extract):
