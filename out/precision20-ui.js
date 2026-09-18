@@ -269,8 +269,13 @@
           const growTiming={duration:Math.round(1500*hookMotionSpeed/.72),easing:'cubic-bezier(.25,.1,.25,1)',fill:'both'};
           // 긴 문구는 1.12배면 화면 양끝에 닿는다(실측: 활용정점) — 실제 글자 폭 기준으로 화면 안 97%까지만 키운다.
           const range=document.createRange();range.selectNodeContents(band);const textW=range.getBoundingClientRect().width||T.width;
-          const screenW=preview.getBoundingClientRect().width,maxScale=Math.max(1,Math.min(1.12,screenW*.97/textW));
-          [band,...box].forEach(el=>play(el,[{transform:'scale(1)'},{transform:`scale(${maxScale.toFixed(4)})`}],growTiming));
+          // 2026-09-18 사장님 "좀 더 앞으로 많이 나오게, 너무 약하다" → 1.12→1.35배 + 상자 그림자가 짙어져 떠오르는 입체감.
+          const screenW=preview.getBoundingClientRect().width,maxScale=Math.max(1,Math.min(1.35,screenW*.99/textW));
+          //   긴 문구(20자+)는 화면 폭 제한으로 끝 배율이 1.1배 안팎에서 멈춘다(실측 20종 중 18종) → 0.82배에서 출발해
+          //   커지는 폭 자체를 키운다(보이는 변화 1.33~1.6배). 끝 크기는 그대로라 글자는 화면 밖으로 안 나간다.
+          play(band,[{transform:'scale(.82)'},{transform:`scale(${maxScale.toFixed(4)})`}],growTiming);
+          box.forEach(el=>play(el,[{transform:'scale(.82)',filter:'drop-shadow(0 0 0 rgba(0,0,0,0))'},
+            {transform:`scale(${maxScale.toFixed(4)})`,filter:'drop-shadow(0 10px 14px rgba(0,0,0,.55))'}],growTiming));
         }else{
           const riseTiming={duration:time(1500),easing:'cubic-bezier(.33,.3,.25,1)',fill:'both'};   // 천천히: 앞쪽 가속을 줄인 곡선
           [band,...box].forEach(el=>play(el,[{opacity:0,transform:'translateY(38px)'},{opacity:1,transform:'translateY(0)'}],riseTiming));

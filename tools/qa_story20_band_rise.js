@@ -53,7 +53,7 @@ const BANDS = ['rise', 'grow'];   // 흰 띠 효과: 스윽 올라오기 / 천�
                 overflow: band.scrollWidth > band.clientWidth + 2, anims: band.getAnimations().length, name: document.querySelector(`[data-p20].active, [data-p20][aria-pressed="true"]`)?.textContent?.trim().slice(0, 12)};
       }, m, bm);
       const ok = !r.err && (bm === 'grow'
-        ? r.tScale > 1.02 && r.tScale <= 1.121 && Math.abs(r.tScale - r.bScale) < .005 && r.centerGap <= 1.5 && r.op === '1.00/1.00/1.00/1.00' && (r.textInside || m === 'push-in')   // 화면 천천히 확대는 화면 전체를 1.32배로 잘라 보이게 하는 효과라 가장자리가 잘리는 게 정상(레퍼런스도 제목이 화면 밖으로 나간다)
+        ? r.tScale > 1.25 && r.tScale <= 1.351/.82 && Math.abs(r.tScale - r.bScale) < .005 && r.centerGap <= 1.5 && r.op === '1.00/1.00/1.00/1.00' && (r.textInside || m === 'push-in')   // 화면 천천히 확대는 화면 전체를 1.32배로 잘라 보이게 하는 효과라 가장자리가 잘리는 게 정상(레퍼런스도 제목이 화면 밖으로 나간다)
         : r.textMove > 20 && Math.abs(r.gapDrift) <= 1.5 && r.op === '0.00/1.00/0.00/1.00' && !r.overflow);
       if (!ok) fail++;
       if (!ok) console.log(ok ? 'OK ' : 'NG ', String(i).padStart(2), bm, m.padEnd(10), JSON.stringify(r));
