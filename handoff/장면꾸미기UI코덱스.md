@@ -410,17 +410,70 @@
 - 남은 것: 자막제거를 안 해서 원본 영상의 박힌 자막·워터마크(reureu·soi_home)가 보인다(시험이라 의도). 줌 펀치 최대 확대 순간 제목 2줄 좌우가 화면 밖으로 살짝 잘린다(0.3초). 이븐쇼핑 본문의 '조회수·댓글' 줄은 우리 틀에 없다.
 
 
-## 2026-09-18 밤 (회사 PC) — 편집기 12건 수정, 전부 라이브(v92) 확인
-완료(라이브 편집기에서 실측):
-- 썰쇼핑형 훅 10종에 채널명 칸 추가(tools/add_story_hook_channel.js, 겹치는 4종은 제목·영상 아래로 이동)
-- 상단 제목칸 조절 = 글자 크기 유지, 위치만 벌림(흰 띠가 칸 바닥 따라감) / 빠른 조절에 '하단 칸' 추가
-- 장식 손잡이 층이 도구막대 배경을 물려받아 미리보기 덮던 문제 / 자막칸 끌면 회색 띠 되던 문제(bgUser 플래그)
-- 흰 띠·속도 3칸 정렬 / 빠른 조절 색 → 채널명 칸도 같은 색 / 분류칩 숨김
-- '템플릿 없음' 카드: snapshot()=null → /api/produce/mix/settings가 scene_style=None 저장 → video_assemble가 꾸미기 건너뜀
-- 자막박스 모양 12종(기본·박스 없음·흰 띠…골드·네이비 금테·반투명 유리·3색 그라데이션), captionLayouts.look
-검사 도구: tools/qa_story_fields_topband.js, qa_decoration_direct_edit.js(갱신)
+## 2026-09-18 밤 (회사 PC) — 편집기 12건 수정, 전부 라이브(v92) 확인 ★집에서 여기부터
 
-⏭ 다음:
-- 템플릿 없음·새 효과(흰 띠 스윽/확대·천천히 확대·떨림·자막 등장)·자막박스 모양이 **최종 MP4**에 들어가는지 LAB 렌더로 확인
-- 제작소 안에서 [이 영상에 적용] → 서버 저장(특히 null) 실측
-- s0101 훅 둘째 줄 10자 양끝 잘림
+### 0. 현재 상태 한눈에
+- 트랙: `장면꾸미기UI코덱스` (폴더 `.tracks/장면꾸미기UI코덱스`, 브랜치 `track/장면꾸미기UI코덱스`)
+- main·서버 반영 완료 커밋: 25d53897e 5be89bcd7 6adf822ef dff39c03b 20c5fc8ca 6222fd0e2 8495110e4 0009c6d16 c5e62a758 2f440c9d6 b5605ab14
+  (서버 22:15 재시작, `out/scene-style-ui-showcase.html`이 precision20-ui.js?v=92 로드 — 실측)
+- 트랙에만 있는 커밋: 핸드오프·로그 커밋(a81fc7112 이후) — 코드 변경 없음, finish 필요 없음
+- 캐시 버전(바꿀 때마다 올릴 것, `out/scene-style-ui-showcase.html`):
+  precision20-ui.js v92 / precision20-ui.css v59 / precision20-data.js v60 / scene-style-decorations.js v67 / scene-style-labels.js v6
+  제작소 쪽 `shopping_shorts/static/produce.html` → scene-style-produce.js v4
+- 라이브 주소(관리자 로그인 필요, Ctrl+F5):
+  편집기 단독 https://shoppingshorts.duckdns.org/api/produce/scene-style/assets/out/scene-style-ui-showcase.html?embedded=1
+  카나리 제작소 https://shoppingshorts.duckdns.org/produce?scene_style_canary=1&work=a8caaca16bcb
+- 로컬 확인 서버: http://127.0.0.1:8771/out/scene-style-ui-showcase.html (트랙 폴더 루트 정적 서버. 없으면 `py -m http.server 8771`)
+
+### 1. 사장님 요청 → 무엇을 어떻게 고쳤나 (전부 라이브 편집기에서 JS로 실측)
+1) **훅에 채널명/훅제목1/훅제목2/보조제목 4칸 전부** — 썰쇼핑형 20종 중 10종(t11 t05 t06 t07 t08 t10 t13 t14 t16 t19)은 훅에 채널명 칸이 아예 없었다.
+   `tools/add_story_hook_channel.js`(멱등)로 같은 템플릿 본문 channel_box를 훅에 복사: y=14, 높이≤26, 글자색은 훅 배경 밝기로 흑/백.
+   t11(이븐쇼핑)은 본문 머리띠 그대로(y6 h48 fs40). 첫 제목줄이 칸 바로 밑이면(t06 t13 t14 t19) 제목·흰 띠·영상 시작을 함께 13~21px 내림.
+   ★y=8로 두면 글자 윗부분이 화면 밖에서 잘렸다(캡처로 확인) → 14.
+   ★precision20-data.js는 생성기로 재현 안 됨 → 반드시 이 패치 도구로. 되돌릴 땐 `git checkout out/precision20-data.js` 후 재적용.
+   본문 3칸(채널명·본문제목·자막)은 원래 20종 다 있었다.
+2) **상단 제목칸 조절 = 칸만 변하고 글자는 그대로** — `applyStoryLayout()`(precision20-ui.js): 예전엔 top×비율로 늘리고 줄일 땐 글자까지 축소.
+   지금은 요소 **아래 끝** 비율(f=(top+h)/cut)만큼 위치만 이동, 칸 전체 배경판(top≈0, 높이≥cut×0.8)만 새 높이로.
+   → 흰 띠가 칸 바닥에 붙어 따라감(50%에서 흰 띠 아래 까만 빈칸 사라짐). 최소값 `minimumStoryTop`=원래 칸의 85%(더 줄이면 줄 겹침).
+   t11은 칸을 안 움직였을 때만 측정 좌표 그대로(`moved` 플래그). 테스트 `test_even_template_ui_contract.py` 13줄도 이 문자열로 갱신.
+3) **빠른 조절 하단 칸** — `fixedLayoutFor`가 bottom을 늘 0으로 덮어쓰던 것을 저장값 사용으로. `mediaBounds` 높이=100-top-bottom.
+   썰쇼핑형은 renderEdit 끝에 bottom-band 패치 추가. 고정형은 기존 코드(544줄 부근)가 이미 그림. 라벨 '하단 칸', 색은 '하단 배경'.
+4) **도형·가림막 넣으면 화면 어두워짐** — 손잡이 층(`scene-decoration-handles`)이 카메라 층 밖에 있으려고 `scene-decoration-toolbar` 클래스를 같이 달아
+   도구막대의 어두운 배경·민트 테두리를 물려받아 미리보기 전체를 덮었다. 인라인으로 background/border/padding/boxShadow 제거.
+   ★display:block을 인라인으로 주면 hidden 속성을 이겨서 늘 보이게 된다 — 넣지 말 것.
+5) **자막칸 잡고 이동하면 모양 변함** — 끌기가 `captionSettings()` 전체(기본 background 포함)를 저장 → `captionLook()`이 '사용자가 색 골랐다'로 읽고 디자인 끔 → 회색 띠.
+   이제 `bgUser` 플래그(박스색 직접 고를 때만)로 판단. 옮긴 자막은 디자인의 left/width를 무시하고 옮긴 자리·폭 유지.
+6) **훅 모션 정렬** — CSS `.hook-speed`를 3칸 1fr + 제목(span) 한 줄 위. 모션 6개(3×2)와 폭이 같다.
+7) **빠른 조절 색 → 채널명 배경 검정** — renderEdit의 paint 블록에서 `[data-edit-bind=channel]` 중 배경 있는 것에 paint.top. 고정형 20종 분홍 팔레트 검사 어긋남 0.
+8) **분류칩(추천·쇼핑·리뷰·정보) 삭제** — CSS `.layout-a .chips{display:none}` (HTML은 그대로, 다른 코드가 참조할 수 있어 숨김만).
+9) **템플릿 없음** — 그리드 맨 앞 `[data-none]` 카드. `noTemplate=true`면
+   snapshot()=null / mediaBounds·geometry = 전체(0,100) / renderEdit가 글자층 비우고 숨김(비워야 scene-style-connect의 MutationObserver가 영상 틀을 다시 잡는다)
+   / body.no-template이면 문구 카드 숨김. 제작소 `scene-style-produce.js`: null 저장·임시저장 복원·줄편집 remap에 null 가드.
+   서버 `app.py` /api/produce/mix/settings: `scene_style: null` → None 저장. 최종 렌더 `video_assemble.py:2975`는 scene_style이 비면 꾸미기 건너뜀.
+   `scene-style-labels.js` 37줄 `api.snapshot().presetId` → `?.` (null이면 예외로 편집기 전체가 죽었음).
+10) **자막박스 모양 고르기** — '자막박스 크기·색상' 펼치면 맨 위 12버튼(3칸): 기본(템플릿 자동) / 박스 없음 / 흰 띠·검정 유리·흰 바탕 번짐·포인트 알약·종이 카드·짙은 띠
+   (기존 6) + 골드·네이비 금테·반투명 유리·3색 그라데이션(신규 4). 저장 = captionLayouts[key].look ('none' 또는 번호).
+   고르면 bgUser·colorUser 해제, 박스색 직접 고르면 look 삭제. 자동 배정은 원래 6종 안에서만(h%6 — 템플릿별 모양 안 바뀌게).
+   고른 모양은 썰쇼핑형 본문 자막에도 적용(자동 배정은 고정형만). 박스 없음 = 흰 글자+검은 외곽선·그림자.
+
+### 2. 검사 도구 (로컬 8771 기준, 인자로 URL 줄 수 있음)
+- `node tools/qa_story_fields_topband.js [url] [캡처폴더]` — 20종 훅/본문 칸·채널명-제목 겹침·상단 50/20 글자크기·흰 띠 간격·하단 15
+- `node tools/qa_decoration_direct_edit.js` — 가림막(blur) 편집칸·회전±180·손잡이 크기/회전·배지 두 번 눌러 고치기 (09-18 solid→blur, 클릭을 evaluate로 갱신)
+- `node tools/qa_text_panel_groups.js` / `qa_effects_panel_layout.js` / `qa_continuous_caption_look.js` / `qa_story20_band_rise.js`(느림)
+- 마지막 실행: 위 5개 전부 통과
+
+### 3. ⏭ 집에서 할 일 (우선순위)
+1. **최종 MP4 확인(아직 한 번도 안 함)** — LAB(`/scene_style_lab.html`, 관리자)에서 복사본 만들어 렌더:
+   ① 자막박스 모양(골드·박스 없음·반투명 유리 — backdropFilter가 puppeteer 스크린샷에 나오는지)
+   ② 흰 띠 스윽/확대, 화면 천천히 확대·떨림, 자막 등장 ③ 하단 칸·상단 칸 바꾼 상태
+   렌더러 = `tools/render_scene_style.js`(편집기 페이지를 puppeteer로 열어 장면별 PNG) → 미리보기와 같은 코드라 대체로 같겠지만 **실측 전엔 '된다' 말하지 말 것**.
+2. **제작소에서 [이 영상에 적용]** 실제 눌러 저장 확인 — 특히 템플릿 없음(null)이 job deco.scene_style=None으로 저장되고, 완성본이 원본 그대로 나오는지.
+   ⚠️ 적용한 적 없는 job은 닫기만 해선 저장 안 함(appliedOnServer). 다시 열면 템플릿 없음 선택이 기억 안 되고 기본 t11로 보인다 — 필요하면 packet에 '없음 적용됨' 표시 추가.
+3. s0101(숏템 기본형) 훅 둘째 줄 10자 양끝 −11px 잘림.
+4. 박스 없음 자막을 고정형 '제목 아래' 자리에 두면 영상이 아니라 제목판 검정 위에 뜬다 — 사장님 반응 보고 '박스 없음이면 영상 위로' 할지 결정.
+
+### 4. 함정 메모
+- finish 두 개 겹쳐 돌리지 말 것(끝나고 다음). 게이트 기준선 18건.
+- 낮 배포는 `touch /home/ubuntu/DEPLOY_NOW` 후 `sudo systemctl restart shopping-shorts`(서버 3.35.251.172, 키 crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem).
+- 라이브 편집기 curl은 401(로그인) → 크롬(로그인된 창)에서 JS로 확인.
+- 로컬 8767 서버는 옛것(v67)일 수 있음 — 8771을 쓸 것.
