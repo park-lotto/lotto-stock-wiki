@@ -244,3 +244,16 @@ def test_제품_전체이름은_공개줄에만():
 def test_다는으로_끊기면_거를_붙인다():
     assert ba._fix_join("레버를 돌려 손맛까지 느끼게 해준다는.") == "레버를 돌려 손맛까지 느끼게 해준다는 거."
     assert ba._fix_join("이러니 난리가 났다는데.") == "이러니 난리가 났다는데."
+
+
+def test_특징_순서는_양끝_두고_가운데를_섞는다():
+    o = [0, 1, 2, 3, 4]
+    outs = {tuple(ba._shuffle_middle(o, "bb%03d" % i)) for i in range(30)}
+    assert all(x[0] == 0 and x[-1] == 4 and sorted(x) == o for x in outs)
+    assert len(outs) >= 3, "회원마다 다른 순서"
+    assert tuple(o) not in outs or len(outs) > 1
+    assert ba._shuffle_middle([0, 1, 2], 1) == [0, 1, 2]
+
+
+def test_주게_해_주는데_이중어미():
+    assert ba._fix_join("이게 말도 안 되는게 주방 인테리어를 살려주게 해 주는데.") == "이게 말도 안 되는게 주방 인테리어를 살려주는데."

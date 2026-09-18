@@ -426,6 +426,8 @@ _JOIN_FIXES = [
     (re.compile(r"주는는데"), "주는데"), (re.compile(r"^근대 "), "근데 "), (re.compile(r"한다는는"), "한다는"),
     # 문장이 '~다는'에서 끊김(실측 job bb931fdbf7c8 "느끼게 해준다는.") → '~다는 거'
     (re.compile(r"다는(?=\.?$)"), "다는 거"),       # 끝 마침표가 붙어 와도 잡는다
+    # '~주게 해 주는데' 이중(실측 행주 정체형 "살려주게 해 주는데") → '~주는데'
+    (re.compile(r"주게 해 주"), "주"),
 ]
 _BAD_JOIN = re.compile(r"는는|데데|다는다는|는데는데|는 건까지 해")
 
@@ -578,6 +580,22 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
     return beat_sources, report
 
 
+def _shuffle_middle(order, seed):
+    """특징 순서 바꾸기(사장님 구조 ②, 2026-09-18) — **첫 특징(소개)과 마지막(마무리)은 두고 가운데만** seed로 섞는다.
+    ★머리말엔 '순서 섞기'라 적어 놓고 build_groups는 '원본 순서를 지켜라'였다 → 원본과 같은 순서로 나왔다(자가점검으로 발견).
+      통째로 섞으면 '개봉 → 사용' 같은 흐름이 깨질 수 있어 양 끝은 고정한다. 회원마다(seed) 다른 순서."""
+    order = list(order or [])
+    if len(order) <= 3:
+        return order
+    mid = order[1:-1]
+    rnd = random.Random(_seed_int(seed) ^ 0x5EED)
+    for _ in range(3):                     # 원본 순서 그대로 나오면 다시 섞는다(가운데 2개 이상일 때)
+        rnd.shuffle(mid)
+        if mid != order[1:-1]:
+            break
+    return [order[0]] + mid + [order[-1]]
+
+
 # ── 한 번에 ───────────────────────────────────────────────────────────
 def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, seed=None, note=None, style=None):
     """(given_script, beat_sources, meta). 실패하면 (None, None, meta) — 조용히 폴백하지 않는다."""
@@ -587,6 +605,7 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
     if not groups_out["groups"]:
         note["reason"] = "groups_empty"
         return None, None, {"note": note}
+    groups_out = dict(groups_out, order=_shuffle_middle(groups_out["order"], seed))
     spine = pick_hook_spine(store, spine_id=spine_id, seed=seed, style=style)
     lines = write_lines(groups_out, spine, seg_index, target_seconds, note=note, seed=seed)
     if len(lines) < 3:
