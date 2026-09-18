@@ -261,6 +261,10 @@ def _spine_plan(roles, tpl, n_feat):
             plan.append([r, -1])
     # ★반복은 최대 2줄까지(2026-09-18 실측 오용형2: 특징 5개에 twist류가 4번 이어져 9줄·34초). 틀의 6~9줄 구조가 본체다.
     n_feat = min(n_feat, used + MAX_EXTRA_FEATURE_LINES)
+    # ★효능 칸이 3개 미만(오용형: cases·twist뿐)이면 늘리지 않는다 — 늘리면 twist("근데 미친 활용법은 따로 있는데")가
+    #   3번 이어진다(실측 오용형0~4 전부). 오용형은 cases 한 줄이 특징을 나열하는 구조라 틀 그대로 6줄이 맞다.
+    if len(feat_roles) < 3:
+        n_feat = min(n_feat, used)
     if used < n_feat and feat_roles:
         rep = feat_roles[1] if len(feat_roles) > 1 else feat_roles[0]
         pos = next((i for i, (r, _) in enumerate(plan) if r == feat_roles[-1]), len(plan))

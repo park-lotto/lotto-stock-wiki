@@ -135,3 +135,11 @@ def test_유형을_주면_그_유형_스파인들을_순번대로_돈다():
 def test_특징이_많아도_틀_밖_반복은_2줄까지():
     plan = ba._spine_plan(ROLES, TPL, 7)      # 효능 자리 3개 + 특징 7개
     assert len([1 for r, g in plan if g >= 0]) == 3 + ba.MAX_EXTRA_FEATURE_LINES
+
+
+def test_효능칸이_둘뿐인_오용형은_줄을_안_늘린다():
+    roles = ["title", "bait", "origin", "notice", "cases", "twist"]
+    tpl = {"title": ["{권위자}도 몰랐던"], "bait": ["요새 난리인데"], "origin": ["원래는 {본래용도}였음"], "notice": ["근데 {속성}에 주목"],
+           "cases": ["초보는 {용도} 고수는 {용도2}"], "twist": ["근데 미친 활용법은 따로 있었는데 {용도끝}"]}
+    plan = ba._spine_plan(roles, tpl, 5)
+    assert [r for r, _ in plan] == roles, plan
