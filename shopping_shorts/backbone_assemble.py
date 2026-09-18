@@ -264,7 +264,15 @@ def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line, seed=None):
     #   ★무작위가 아니라 **순서대로 돌린다**(2026-09-18 사장님). 난수는 우연히 같은 틀을 두 번
     #     뽑을 수 있지만, 순서대로면 틀이 N개일 때 **N가지가 반드시 다 나온다**. 재현도 된다.
     #     시작 위치만 seed로 옮겨 같은 재료에서 여러 편을 뽑을 때 첫 줄이 겹치지 않게 한다.
-    start = (seed or 0)
+    # seed는 호출부마다 꼴이 다르다 — 배치는 job id **문자열**(bb_batch5.py `seed=base`), 시험은 int.
+    #   문자열이면 `i % len`이 TypeError(2026-09-18 4건 전부 예외). 문자열은 crc32로 정수화한다.
+    if isinstance(seed, int):
+        start = seed
+    elif seed:
+        import zlib
+        start = zlib.crc32(str(seed).encode("utf-8"))
+    else:
+        start = 0
     pick_count = {}
     for k, (r, gi) in enumerate(plan):
         cands = list(tpl.get(r) or [])

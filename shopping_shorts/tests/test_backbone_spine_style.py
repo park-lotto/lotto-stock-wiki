@@ -83,3 +83,11 @@ def test_외관컷은_구조줄_몫으로_예약된다():
     bs, _ = ba.assign_cuts(lines, groups, idx, "bb")
     assert bs[0]["segs"][0] in ("whole", "open2"), "구조 줄은 예약된 외관·박스 컷을 받는다: %s" % bs
     assert bs[1]["segs"][0] == "open1", "특징 줄은 예약 안 된 컷을 먼저 쓴다: %s" % bs
+
+
+def test_seed가_문자열이어도_틀을_고른다():
+    """배치는 seed=job id 문자열을 넘긴다(2026-09-18 4건 전부 TypeError)."""
+    g = {"product": "x", "order": [0]}
+    p1 = ba._spine_prompt(g, {"name": "s"}, ROLES, TPL, ["a"], 20, seed="iba25602b41")
+    p2 = ba._spine_prompt(g, {"name": "s"}, ROLES, TPL, ["a"], 20, seed=3)
+    assert "role=solve" in p1 and "role=solve" in p2
