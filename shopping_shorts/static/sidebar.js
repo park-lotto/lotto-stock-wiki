@@ -1322,13 +1322,18 @@
       .then(function (d) {
         if (!d || !d.replies || !d.replies.length) return;
         var rep = d.replies[0];
+        // ★운영 안내도 같은 통로로 보낸다(2026-09-18, 죽은 회원 키 교체 요청). 신고한 적 없는 회원에게
+        //   "신고하신 건 답변드립니다"가 뜨면 이상하다 — message가 "[안내]"로 시작하면 안내 제목으로 띄운다.
+        var isNotice = (rep.message || "").indexOf("[안내]") === 0;
         css();
         var back = document.createElement("div");
         back.className = "ssbug-back";
         back.innerHTML =
           '<div class="ssbug">' +
-            "<h3>📩 신고하신 건 답변드립니다</h3>" +
-            '<p class="sub">' + esc((rep.message || "").slice(0, 80)) + "</p>" +
+            (isNotice ? "<h3>📢 숏템메이커에서 알려드립니다</h3>"
+                      : "<h3>📩 신고하신 건 답변드립니다</h3>") +
+            '<p class="sub">' + esc((isNotice ? (rep.message || "").slice(4).trim()
+                                              : (rep.message || "")).slice(0, 80)) + "</p>" +
             '<div class="info" style="color:#d7e3e3;font-size:14px;white-space:pre-wrap">' +
               esc(rep.reply) + "</div>" +
             '<div class="row"><button class="ok" id="ssRepOk">확인했어요</button></div>' +
