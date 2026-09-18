@@ -240,9 +240,12 @@ def _spine_style(spine):
     return list(roles or []), dict(tpl or {})
 
 
+MAX_EXTRA_FEATURE_LINES = 2   # 틀 밖으로 늘리는 특징 줄 상한(위 실측)
+
+
 def _feature_roles(roles, tpl):
-    """{효능…} 자리가 있는 역할 = 특징 하나를 말하는 줄. 나머지는 구조 줄(정체 숨기기·공개·마무리)."""
-    return [r for r in roles if any("{효능" in t for t in (tpl.get(r) or []))]
+    """{효능…}·{용도…} 자리가 있는 역할 = 특징 하나를 말하는 줄. 나머지는 구조 줄(정체 숨기기·공개·마무리)."""
+    return [r for r in roles if any(("{효능" in t or "{용도" in t) for t in (tpl.get(r) or []))]
 
 
 def _spine_plan(roles, tpl, n_feat):
@@ -256,6 +259,8 @@ def _spine_plan(roles, tpl, n_feat):
                 plan.append([r, None]); used += 1          # 번호는 마지막에 순서대로
         else:
             plan.append([r, -1])
+    # ★반복은 최대 2줄까지(2026-09-18 실측 오용형2: 특징 5개에 twist류가 4번 이어져 9줄·34초). 틀의 6~9줄 구조가 본체다.
+    n_feat = min(n_feat, used + MAX_EXTRA_FEATURE_LINES)
     if used < n_feat and feat_roles:
         rep = feat_roles[1] if len(feat_roles) > 1 else feat_roles[0]
         pos = next((i for i, (r, _) in enumerate(plan) if r == feat_roles[-1]), len(plan))

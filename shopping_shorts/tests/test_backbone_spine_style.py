@@ -130,3 +130,8 @@ def test_유형을_주면_그_유형_스파인들을_순번대로_돈다():
     assert ba.pick_hook_spine(st, seed="jobid-abc", style="오용형")["id"] == 56
     assert ba.pick_hook_spine(st, spine_id=56, seed=0, style="발명품형")["id"] == 56, "spine_id가 우선"
     assert ba.pick_hook_spine(st, seed=0, style="없는유형")["id"] in (56, 60, 65, 66), "유형에 스파인이 없으면 무작위 폴백"
+
+
+def test_특징이_많아도_틀_밖_반복은_2줄까지():
+    plan = ba._spine_plan(ROLES, TPL, 7)      # 효능 자리 3개 + 특징 7개
+    assert len([1 for r, g in plan if g >= 0]) == 3 + ba.MAX_EXTRA_FEATURE_LINES
