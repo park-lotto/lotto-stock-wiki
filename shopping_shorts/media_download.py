@@ -382,8 +382,8 @@ def _download_instagram(url, dest_dir):
     #   경로 그대로(회귀 0).
     try:
         return _download_ytdlp(url, dest_dir, max_attempts=1)
-    except Exception:          # noqa: BLE001 — 720p 경로로 물러선다
-        pass
+    except Exception as e:     # noqa: BLE001 — 720p 경로로 물러선다
+        print(f"[media] 인스타 1080p 병합 경로 실패 → 단일 스트림: {str(e)[-160:]}", file=sys.stderr)
     # ① 무료 경로 — 릴스 페이지에서 mp4 direct URL을 뽑는다(오늘 서버 실측으로 동작 확인).
     if code:
         try:
@@ -740,7 +740,8 @@ def _xhs_session_cookie_header():
         return ""
     try:
         st = json.loads(Path(path).read_text(encoding="utf-8"))
-    except Exception:  # noqa: BLE001
+    except Exception as e:  # noqa: BLE001 — 세션 파일이 깨졌으면 원본 경로만 포기한다
+        print(f"[media] 샤오홍슈 세션 파일 읽기 실패: {e!r}", file=sys.stderr)
         return ""
     cookies = st.get("cookies", []) if isinstance(st, dict) else []
     # 세션 파일의 쿠키 도메인은 .rednote.com 계열이다(실측) — 페이지도 rednote.com으로 연다.
@@ -780,7 +781,8 @@ def xhs_origin_probe(key):
         cand = f"https://{host}/{key}"
         try:
             r = requests.head(cand, headers={"User-Agent": _XHS_UA}, timeout=15, allow_redirects=True)
-        except Exception:  # noqa: BLE001
+        except Exception as e:  # noqa: BLE001 — 다음 호스트로
+            print(f"[media] 샤오홍슈 원본 HEAD 실패 {host}: {e!r}", file=sys.stderr)
             continue
         if r.status_code != 200 or "video" not in (r.headers.get("Content-Type") or ""):
             continue
@@ -789,7 +791,8 @@ def xhs_origin_probe(key):
                                  "-show_entries", "stream=width,height", "-of", "csv=p=0", cand],
                                 capture_output=True, text=True, timeout=60)
             w, h = [int(x) for x in pr.stdout.strip().split(",")[:2]]
-        except Exception:  # noqa: BLE001
+        except Exception as e:  # noqa: BLE001 — 해상도를 못 읽으면 다음 호스트로
+            print(f"[media] 샤오홍슈 원본 ffprobe 실패 {host}: {e!r}", file=sys.stderr)
             continue
         # ★4K 원본도 받는다(2026-09-18 실측 6a97fbd2: 원본 2160x3840 hevc 155MB, yt-dlp는 720p뿐).
         #   처음엔 1920 초과를 걸렀는데 그 결과가 **720p**라 오히려 손해다. download_any의
