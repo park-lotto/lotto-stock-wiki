@@ -5751,6 +5751,9 @@ class Store:
             "group_id": r[14] or r[0], "variant": r[15] or "stable",
             "naturalize_profile": json.loads(r[16]) if len(r) > 16 and r[16] else None,
             "best": bool(r[17]) if len(r) > 17 else False,
+            # DB에는 값이 있었지만 SELECT 결과에서 빠져 중복 성우를 소유자별로 판정할 수
+            # 없었다. 그 결과 같은 성우를 다시 누르면 샘플 4건을 또 구웠다(2026-09-18).
+            "owner_customer_id": int(r[18] or 0) if len(r) > 18 else 0,
         }
 
     def get_voice_preset(self, preset_id):
@@ -5758,7 +5761,7 @@ class Store:
             r = c.execute("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,"
                           "model_id,voice_settings_json,default_speed,default_silence_trim,"
                           "sample_file,source_ref,origin,created_at,group_id,variant,"
-                          "naturalize_profile_json,best FROM voice_presets "
+                          "naturalize_profile_json,best,owner_customer_id FROM voice_presets "
                           "WHERE preset_id=?", (preset_id,)).fetchone()
         return self._row_to_preset(r) if r else None
 
@@ -5773,7 +5776,7 @@ class Store:
         q = ("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,model_id,"
              "voice_settings_json,default_speed,default_silence_trim,sample_file,"
              "source_ref,origin,created_at,group_id,variant,naturalize_profile_json,"
-             "best FROM voice_presets")
+             "best,owner_customer_id FROM voice_presets")
         where, args = [], []
         if lang:
             where.append("lang=?"); args.append(lang)

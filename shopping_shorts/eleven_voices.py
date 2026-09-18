@@ -163,25 +163,64 @@ def make_preview(voice_id, force=False):
     return out, False
 
 
+def registration_statuses(store, owner_customer_id=0):
+    """한 고객의 라이브러리 성우별 등록·4톤 샘플 상태를 반환한다."""
+    owner = int(owner_customer_id or 0)
+    rows = [p for p in store.list_voice_presets()
+            if p.get("origin") == ORIGIN
+            and int(p.get("owner_customer_id") or 0) == owner]
+    by_voice = {}
+    for row in rows:
+        by_voice.setdefault(row.get("base_voice_id"), []).append(row)
+    out = {}
+    for voice_id, voice_rows in by_voice.items():
+        gid = voice_rows[0].get("group_id")
+        variants = {p.get("variant"): p for p in voice_rows if p.get("group_id") == gid}
+        ready = set(variants) >= {v for v, _ in VARIANT_SPECS}
+        if ready:
+            for p in variants.values():
+                sample = p.get("sample_file")
+                if not sample or not (voice_presets.SAMPLES_DIR / sample).exists():
+                    ready = False
+                    break
+        out[voice_id] = {"registered": True, "group_id": gid,
+                         "ready": ready, "rows": voice_rows}
+    return out
+
+
+def registration_status(store, voice_id, owner_customer_id=0):
+    """같은 고객의 같은 보이스가 등록됐는지와 4톤 샘플 준비 여부를 반환한다."""
+    return registration_statuses(store, owner_customer_id).get(
+        voice_id, {"registered": False, "group_id": None, "ready": False, "rows": []})
+
+
 def register(store, voice_id, name, one_liner="", lang="KR", bake=True,
-             owner_customer_id=0):
+             owner_customer_id=0, group_id=None, missing_only=False):
     """보이스 등록 = 프리셋 4종 upsert (+ 샘플 굽기). 등록된 group_id와 실패한 샘플 목록 반환.
 
     owner_customer_id(2026-08-24): 0=공용(사장님이 담은 것, 모두에게 보임) /
       N=그 고객이 라이브러리에서 담은 것 — **본인에게만** 보인다.
       담기는 각자 일레븐랩스 계정에 되므로, 남에게 보이면 그 사람 키엔 없는 voice_id라
       합성이 실패한다. 기존 호출부는 이 인자를 안 넘겨 0 그대로다(회귀 없음)."""
-    rows = build_group(voice_id, name, one_liner, lang)
+    rows = build_group(voice_id, name, one_liner, lang, group_id=group_id)
     failed = []
     for p in rows:
+        old = store.get_voice_preset(p["preset_id"]) if hasattr(store, "get_voice_preset") else None
+        old_sample = (old or {}).get("sample_file")
+        old_sample_ok = bool(old_sample and (voice_presets.SAMPLES_DIR / old_sample).exists())
         if bake:
-            try:
-                bake_sample(p, customer_id=owner_customer_id)
-            except Exception as e:                 # 크레딧·네트워크 등 — 등록 자체는 진행
-                failed.append(f"{p['preset_id']}: {e}")
-                p["sample_file"] = None
+            if missing_only and old_sample_ok:
+                # 재시도 때 이미 성공한 톤까지 다시 굽지 않는다(시간·크레딧 중복 방지).
+                p["sample_file"] = old_sample
+            else:
+                try:
+                    bake_sample(p, customer_id=owner_customer_id)
+                except Exception as e:             # 크레딧·네트워크 등 — 카드 자체는 유지
+                    failed.append(f"{p['preset_id']}: {e}")
+                    p["sample_file"] = old_sample if old_sample_ok else None
         else:
-            p["sample_file"] = None
+            # 카드부터 즉시 등록하는 경로. 기존 샘플을 NULL로 되돌리지 않는다.
+            p["sample_file"] = old_sample if old_sample_ok else None
         p["owner_customer_id"] = int(owner_customer_id or 0)
         store.upsert_voice_preset(p)
     return {"group_id": rows[0]["group_id"], "count": len(rows), "sample_failed": failed}
