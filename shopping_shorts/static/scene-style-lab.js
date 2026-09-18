@@ -37,7 +37,7 @@
   function renderChecks(row){
     if(!row){checks.innerHTML='';return}
     checks.innerHTML=`<div class="check"><b>음성</b>${row.tts_ready?'준비됨':'부족'}</div><div class="check"><b>청소본</b>${row.clean_ready?'현재 편성 일치':'없음/낡음'}</div><div class="check"><b>장면</b>${row.beat_count}개 비트</div><div class="check"><b>편성 서명</b>${esc(row.clean_signature||'-')}</div>`;
-    clone.disabled=!(row.tts_ready&&row.clean_ready);
+    clone.disabled=!(row.tts_ready&&(row.clean_ready||row.unclean_preview_ready));   // 청소본 없으면 미리보기 완성본으로(관리자 시험)
   }
   async function loadJobs(){
     const response=await fetch('/api/admin/scene-style-lab/jobs',{cache:'no-store'});
