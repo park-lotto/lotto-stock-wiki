@@ -187,7 +187,8 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
     family = normalize_family(family)
     paired = family in _PAIRED_FAMILIES
     maxlen = EVEN_SHOPPING.hook_total_max if paired else _MAX_LEN
-    linelen = EVEN_SHOPPING.hook_line_max if paired else _LINE_LEN
+    # 두 줄 모두 둘째 줄 한도(10자)로 받는다 — 모델이 어느 줄에 긴 말을 넣을지 몰라 좁은 쪽에 맞춘다.
+    linelen = EVEN_SHOPPING.hook2_line_max if paired else _LINE_LEN
     prompt = _FAMILY_PROMPTS.get(family, _PROMPT)
     def clean(data):
         copies = data.get("copies") if isinstance(data, dict) else None

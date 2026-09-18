@@ -14,7 +14,7 @@ def test_even_reference_does_not_auto_shrink_or_scale_x():
 
 
 def test_even_contract_blocks_save_when_copy_is_too_long():
-    assert "const evenLimits={channel:12,hook1:11,hook2:11,bodyTitle:22,caption:22}" in UI
+    assert "const evenLimits={channel:12,hook1:11,hook2:10,bodyTitle:22,caption:22}" in UI   # 둘째 줄 10자(2026-09-18, 11자면 양끝 잘림)
     assert "validation:()=>templateViolations()" in UI
     assert "const violations=api.validation?.()||[]" in CONNECT
 

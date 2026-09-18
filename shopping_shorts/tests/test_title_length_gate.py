@@ -20,7 +20,7 @@ def _style():
 def test_title_desc_carries_len_rule():
     st = bank_assemble.with_spoken_hook(_style())
     assert st["beat_roles"] == ["title", "story"]
-    assert ("%d자 이내" % (EVEN_SHOPPING.hook_line_max * 2)) in st["beat_descs"]["title"]
+    assert ("%d자 이내" % (EVEN_SHOPPING.hook_line_max + EVEN_SHOPPING.hook2_line_max)) in st["beat_descs"]["title"]
     assert st["beat_descs"]["title"].startswith("궁금증")
 
 
