@@ -36,26 +36,36 @@ def main():
               "브랜드(다이소·이케아 등)도 {권위자}로. 문장마다 하나씩.\n\n" + "\n".join("- " + f for f in firsts))
     schema = {"type": "object", "properties": {"titles": {"type": "array", "items": {"type": "string"}}}, "required": ["titles"]}
     got = (_sg._call_json(prompt, schema) or {}).get("titles") or []
+    from shopping_shorts.store import Store as _St
+    banmal = bool(next(x for x in _St(DB).list_spines(status="approved") if x["id"] == sid).get("hook_3s"))
     blob = "\n".join(f.replace(" ", "") for f in firsts)
     keep = []
     for t in got:
         t = re.sub(r"\s+", " ", str(t)).strip(" .")
         parts = [p.replace(" ", "") for p in SLOT.split(t) if len(p.strip()) >= 3]
-        if SLOT.search(t) and parts and all(p in blob for p in parts) and not BRANDS.search(t) and t not in keep:
+        # ★점검기(audit_spines)와 같은 기준으로 거른다 — 실측 74: {미국}·{공학자}·{복도} 같은 멋대로 빈칸, '때돈' 오타,
+        #   두 문장 이어붙이기, 존댓말이 들어왔다. 거르는 기준을 한 곳(audit_spines)에서 빌려 쓴다(0순위-B).
+        from tools.spine_presets.audit_spines import KNOWN_SLOTS, HONORIFIC
+        slots_ok = all(x.strip("{}") in KNOWN_SLOTS for x in SLOT.findall(t))
+        if (SLOT.search(t) and parts and all(p in blob for p in parts) and not BRANDS.search(t) and t not in keep
+                and slots_ok and len(t) <= 30 and not re.search(r"때돈|이\{|[.!?] ", t)
+                and not (banmal and HONORIFIC.search(t))):
             keep.append(t)
     from shopping_shorts.store import Store
     st = Store(DB)
     sp = next(s for s in st.list_spines(status="approved") if s["id"] == sid)
     tpl = sp.get("templates") or {}
-    cur = list(tpl.get("title") or [])
+    # ★훅 칸 이름은 스파인마다 다르다(67=react·68=price·69=deal) — 'title' 고정이면 안 쓰이는 칸에 들어간다(실측)
+    hook_role = (sp.get("beat_roles") or ["title"])[0]
+    cur = list(tpl.get(hook_role) or [])
     new = [t for t in keep if t not in cur]
     print("  기존", len(cur), "+ 새", len(new))
     for t in new:
         print("   +", t)
     if apply and new:
-        tpl["title"] = cur + new
+        tpl[hook_role] = cur + new
         st.set_spine_style(sid, templates=tpl)
-        print("  APPLIED title", len(tpl["title"]))
+        print("  APPLIED", hook_role, len(tpl[hook_role]))
     return 0
 
 
