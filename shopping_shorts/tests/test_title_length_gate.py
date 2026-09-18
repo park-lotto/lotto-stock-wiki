@@ -19,7 +19,7 @@ def _style():
 
 def test_title_desc_carries_len_rule():
     st = bank_assemble.with_spoken_hook(_style())
-    assert st["beat_roles"] == ["title", "hook", "story"]
+    assert st["beat_roles"] == ["title", "story"]
     assert ("%d자 이내" % (EVEN_SHOPPING.hook_line_max * 2)) in st["beat_descs"]["title"]
     assert st["beat_descs"]["title"].startswith("궁금증")
 
@@ -27,8 +27,7 @@ def test_title_desc_carries_len_rule():
 def test_gate_flags_long_title_not_fatal():
     st = bank_assemble.with_spoken_hook(_style())
     long_t = "제조사도 예상 못한 움직이는 기차 케이크 활용법"   # 27자(실측 사고)
-    beats = [{"role": "title", "text": long_t}, {"role": "hook", "text": "와 이거 봤음"},
-             {"role": "story", "text": "사연임"}]
+    beats = [{"role": "title", "text": long_t}, {"role": "story", "text": "사연임"}]
     checks, _ = script_gate.check(st, beats)
     c = next(x for x in checks if x["name"] == "화면 제목 길이")
     assert c["ok"] is False and not c.get("fatal")

@@ -24,53 +24,29 @@ var SS_CANARY={'true' if canary else 'false'};
 """)
 
 
-def test_화면제목은_대본에서_빠지고_첫tts후킹부터_시작한다():
+def test_카나리_제목은_첫TTS로_읽고_헤드카피로도_간다():
     out = _run("""
+const target={headcopy:{font:'P',subline:'옛 문구'}};
 const dr={beats:[
-  {role:'title',text:'독일 개발자도 놀란 기차 케이크',src_seg:'s0-1'},
-  {role:'hook',text:'근데 이 케이크는 자르고 나서가 더 놀라워요.',src_seg:'s0-2'},
-  {role:'story',text:'장난감 대신 케이크 위 기차가 움직여요.',src_seg:'s0-3'}]};
-console.log(JSON.stringify(s2DraftContract(dr)));
-""")
-    got = json.loads(out)
-    assert got["visualTitle"] == "독일 개발자도 놀란 기차 케이크"
-    assert got["script"].splitlines() == [
-        "근데 이 케이크는 자르고 나서가 더 놀라워요.",
-        "장난감 대신 케이크 위 기차가 움직여요.",
-    ]
-    assert [b["role"] for b in got["narrationBeats"]] == ["hook", "story"]
-
-
-def test_확정계약은_제목을_헤드카피로_보내고_장면출처도_tts와_맞춘다():
-    out = _run("""
-const target={headcopy:{font:'Pretendard',subline:'옛 문구'}};
-const dr={beats:[
-  {role:'title',text:'움직이는 기차 케이크',src_seg:'s0-1'},
-  {role:'hook',text:'아이들이 촛불보다 먼저 이것부터 봐요.',src_seg:'s0-2',src_segs:['s0-2']},
-  {role:'story',text:'레일을 올리면 기차가 케이크 위를 돌아요.',src_seg:'s0-3'}]};
-s2ApplyDraftContract(target,dr);
+  {role:'title',text:'천재가 왜 게으른지 알 수 있는 제품',src_seg:'s0-1'},
+  {role:'story',text:'지금 이 용도를 알 수 없는 물건이',src_seg:'s0-2'}]};
+s2ApplyDraftContract(target, dr);
 console.log(JSON.stringify(target));
 """)
     got = json.loads(out)
-    assert got["headcopy"] == {
-        "font": "Pretendard", "text": "움직이는 기차 케이크", "subline": ""}
-    assert got["script"].startswith("아이들이 촛불보다")
-    assert [b["role"] for b in got["script_beat_sources"]] == ["hook", "story"]
+    assert got["headcopy"]["text"] == "천재가 왜 게으른지 알 수 있는 제품"
+    assert got["headcopy"]["subline"] == ""
+    assert got["headcopy"]["font"] == "P"
+    assert got["script"].splitlines() == ["천재가 왜 게으른지 알 수 있는 제품", "지금 이 용도를 알 수 없는 물건이"]
 
 
-def test_역할없는_옛대본은_그대로_둔다():
-    out = _run("console.log(JSON.stringify(s2ScriptLines({script:'첫 줄\\n둘째 줄',beats:[]}))); ")
-    assert json.loads(out) == "첫 줄\n둘째 줄"
-
-
-def test_카나리_밖_고객은_제목도_음성에_그대로_남는다():
+def test_카나리_밖_고객은_헤드카피를_건드리지_않는다():
     out = _run("""
-const dr={beats:[
-  {role:'title',text:'독일 개발자도 놀란 기차 케이크'},
-  {role:'story',text:'장난감 대신 케이크 위 기차가 움직여요.'}]};
-console.log(JSON.stringify(s2DraftContract(dr)));
+const target={headcopy:{text:'원래 제목'}};
+const dr={beats:[{role:'title',text:'새 제목'},{role:'story',text:'본문'}]};
+s2ApplyDraftContract(target, dr);
+console.log(JSON.stringify(target));
 """, canary=False)
     got = json.loads(out)
-    assert got["visualTitle"] == ""
-    assert got["script"].splitlines()[0] == "독일 개발자도 놀란 기차 케이크"
-    assert [b["role"] for b in got["narrationBeats"]] == ["title", "story"]
+    assert got["headcopy"]["text"] == "원래 제목"
+    assert got["script"].splitlines() == ["새 제목", "본문"]
