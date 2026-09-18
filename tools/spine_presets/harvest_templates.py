@@ -30,8 +30,14 @@ def _load_texts(pattern, corpus, limit):
         rows = [(h["video_id"], h.get("channel") or "", h.get("full_text") or "") for h in hits]
     elif corpus == "insta":
         c = sqlite3.connect(DB)
-        rows = [(str(r[0]), r[2] or "", r[1] or "") for r in c.execute("select rowid, full_text, source_url from script_wiki")
-                if "instagram" in str(r[2] or "") and len(r[1] or "") >= 300]
+        def _ko(t):    # 한글 비율(실측: 긴 순으로 뽑으니 영어·힌디·포르투갈어가 먼저 왔다)
+            L = [ch for ch in t if ch.isalpha()]
+            return (sum(1 for ch in L if "가" <= ch <= "힣") / len(L)) if L else 0
+        seen = set(); rows = []
+        for r in c.execute("select rowid, full_text, source_url from script_wiki"):
+            txt = r[1] or ""
+            if "instagram" in str(r[2] or "") and len(txt) >= 300 and _ko(txt) >= 0.8 and txt[:80] not in seen:
+                seen.add(txt[:80]); rows.append((str(r[0]), r[2] or "", txt))
     else:
         c = sqlite3.connect(DB)
         cols = [r[1] for r in c.execute("pragma table_info(script_wiki)")]
@@ -85,6 +91,9 @@ def harvest(spine, texts, note=None):
             s = re.sub(r"\s+", " ", str(s)).strip().rstrip(".!?。")
             if not s:
                 continue
+            L = [ch for ch in s if ch.isalpha()]
+            if L and sum(1 for ch in L if "가" <= ch <= "힣") / len(L) < 0.6:
+                dropped.setdefault(r, []).append("(외국어) " + s); continue
             (kept if _verbatim_ok(s, texts_only) else dropped).setdefault(r, []).append(s)
     return kept, dropped
 
