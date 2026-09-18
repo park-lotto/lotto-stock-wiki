@@ -246,16 +246,34 @@ def resolve_clean_contract(job: dict, job_work: Path | str) -> dict | None:
     return None
 
 
-def create_copy(job_id: str, job: dict, work_root: Path | str) -> dict:
-    """원본 job을 바꾸지 않고 독립 시험 manifest를 만든다."""
+def unclean_preview_contract(job: dict) -> dict | None:
+    """자막제거를 건너뛴 관리자 시험용 — 현재 편성의 미리보기 완성본을 그대로 쓴다(2026-09-18 사장님
+    "자막제거는 없이 해도 된다, 테스트니까"). 원본 자막이 남으므로 ``unclean=True``를 달아 화면에
+    표시한다. ``resolve_clean_contract``의 None 의미(청소본 없음)는 그대로 두고, 호출자가 명시적으로
+    ``allow_unclean``일 때만 이 함수로 온다."""
+    job = job or {}
+    preview = str(job.get("preview_path") or "")
+    if job.get("preview_status") == "ready" and preview and Path(preview).is_file():
+        return {"kind": "final", "path": preview,
+                "signature": clean_plan_signature(job.get("edit_plan") or {}), "unclean": True}
+    return None
+
+
+def create_copy(job_id: str, job: dict, work_root: Path | str, allow_unclean: bool = False) -> dict:
+    """원본 job을 바꾸지 않고 독립 시험 manifest를 만든다.
+
+    allow_unclean: 청소본이 없을 때 미리보기 완성본(원본 자막 남음)으로라도 연다. 관리자 시험 전용."""
     source_job = job or {}
     edit_plan = copy.deepcopy(source_job.get("edit_plan") or {})
     if not edit_plan.get("beats"):
         raise LabPreconditionError("편집안이 없습니다")
 
     clean = resolve_clean_contract(source_job, Path(work_root) / job_id)
+    if clean is None and allow_unclean:
+        clean = unclean_preview_contract(source_job)
     if clean is None:
-        raise LabPreconditionError("현재 편성과 일치하는 자막제거 청소본이 없습니다")
+        raise LabPreconditionError("현재 편성과 일치하는 자막제거 청소본이 없습니다"
+                                   + ("(미리보기 완성본도 없음)" if allow_unclean else ""))
 
     from .scene_style import validate_snapshot
 
