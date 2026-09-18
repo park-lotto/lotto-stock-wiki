@@ -110,8 +110,10 @@ def validate_snapshot(value):
         if hl:
             for key,default,lo,hi in (("cx",.5,0,1),("cy",.55,0,1),("r",.22,.06,.9),("zoom",2,1.1,4)):
                 number(hl.get(key,default),lo,hi)
-    if value.get("hookMotion") not in (None,"zoom-punch","pop","slide","flash"):
+    if value.get("hookMotion") not in (None,"zoom-punch","pop","slide","flash","rise","push-in","shake"):
         raise ValueError("제목 효과가 올바르지 않습니다")
+    if "hookBandRise" in value and not isinstance(value["hookBandRise"], bool):
+        raise ValueError("흰 띠 스윽 올라오기 값이 올바르지 않습니다")
     if "hookMotionSpeed" in value:
         number(value["hookMotionSpeed"],.5,2)
     if value.get("hookCaptionMode") not in (None,"visible","hidden"):
@@ -126,7 +128,7 @@ def validate_snapshot(value):
                 number(item.get(key,default),lo,hi)
             if not re.fullmatch(r"#[0-9a-fA-F]{6}",item.get("color","#ffffff")):
                 raise ValueError("표시 색상이 올바르지 않습니다")
-    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
