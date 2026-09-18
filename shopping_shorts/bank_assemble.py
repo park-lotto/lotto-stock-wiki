@@ -308,6 +308,24 @@ _TITLE_SPOKEN_HOOK_DESC = (
 )
 
 
+def title_len_rule():
+    """화면 제목의 글자 한도 안내 — 장면꾸미기 슬롯 계약(template_copy)에서 빌려 온다.
+
+    2026-09-18 실측: 제목형 대본이 27자 제목을 내놓아 이븐쇼핑(줄당 11자·자동 축소 금지)에서
+    좌우가 잘렸다. 한도를 여기 따로 적으면 슬롯 계약과 어긋난다(0순위-B).
+    """
+    from shopping_shorts.template_copy import EVEN_SHOPPING as c
+    total = c.hook_line_max * 2
+    return ("공백 포함 %d자 이내. 두 줄로 나뉘어 화면에 크게 박히므로 각 줄 %d자 안에서 끊기게 "
+            "쓴다. 길면 잘려서 못 쓴다" % (total, c.hook_line_max))
+
+
+def title_too_long(text):
+    """화면 제목이 슬롯 한도를 넘는지 — 프롬프트 안내와 같은 수를 본다."""
+    from shopping_shorts.template_copy import EVEN_SHOPPING as c
+    return len(" ".join(str(text or "").split())) > c.hook_line_max * 2
+
+
 def with_spoken_hook(style):
     """화면 제목형 스파인을 ``제목(무음) → 첫 TTS 훅 → 본문`` 계약으로 보강한다.
 
@@ -327,6 +345,11 @@ def with_spoken_hook(style):
         role: (_TITLE_SPOKEN_HOOK_DESC if role == "hook" else descs.get(role, ""))
         for role in adapted["beat_roles"]
     }
+    # 제목은 화면 슬롯에 박히는 글자라 길이 한도가 곧 규격이다. 스타일별 설명 뒤에 붙인다.
+    adapted["beat_descs"]["title"] = (
+        (str(descs.get("title") or "").strip() + ". " if descs.get("title") else "")
+        + "★" + title_len_rule()
+    )
     templates = dict(adapted.get("templates") or {})
     templates.setdefault("hook", [])
     adapted["templates"] = templates
