@@ -167,7 +167,7 @@
   if(colorRow)colorRow.innerHTML='<label class="swatch"> <input type="color" data-color-role="white" value="#ffffff"><span>흰색</span></label><label class="swatch"><input type="color" data-color-role="accent" value="#ffe600"><span>강조</span></label><label class="swatch"><input type="color" data-color-role="background" value="#211f19"><span>배경</span></label>';
   const motionPanel=document.createElement('section');
   motionPanel.className='hook-motion';
-  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
+  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button><button type="button" data-hook-motion="rise">스윽 올라오기</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
   root.querySelector('.layout-a .ai-card')?.after(motionPanel);
   const fixedPanel=document.createElement('section');
   fixedPanel.className='fixed-quick-panel';
@@ -179,7 +179,7 @@
     motionPanel.hidden=false;
     motionPanel.querySelectorAll('[data-hook-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookMotion===hookMotion));
     motionPanel.querySelectorAll('[data-hook-speed]').forEach(b=>b.classList.toggle('active',Number(b.dataset.hookSpeed)===hookMotionSpeed));
-    motionPanel.querySelector('.hook-motion-head small').textContent=hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':'제목에만 적용';
+    motionPanel.querySelector('.hook-motion-head small').textContent=hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':hookMotion==='rise'?'흰 띠가 아래에서 천천히 올라옴 · 제목 고정':'제목에만 적용';
   }
   const minimumFixedTop=frame=>Math.min(46,Math.max(12,Math.ceil((Math.max(0,...(frame?.lines||[]).filter(line=>line.bind!=='caption').map(line=>line.y1))+2)/(frame?.height||1)*100)));
   function syncMediaLayout(){
@@ -213,7 +213,9 @@
     const seeking=options&&typeof options==='object'&&Number.isFinite(options.time);
     const camera=cameraLayer();camera.getAnimations().forEach(a=>a.cancel());camera.style.transform='none';
     if(!seeking&&(qaMode||sceneIndex!==0||matchMedia('(prefers-reduced-motion: reduce)').matches))return 0;
-    layer.querySelectorAll('.precision-text').forEach(el=>el.getAnimations?.().forEach(animation=>animation.cancel()));
+    // 글자뿐 아니라 상자(patch)도 지운다 — '스윽 올라오기'가 흰 띠 상자를 같이 움직이는데, 렌더는 프레임마다
+    //   다시 seek하므로 안 지우면 멈춘 옛 애니메이션이 상자에 쌓인다.
+    layer.querySelectorAll('.precision-text,.precision-patch').forEach(el=>el.getAnimations?.().forEach(animation=>animation.cancel()));
     const texts=[...layer.querySelectorAll('.precision-text')].filter(el=>['hook1','hook2','bodyTitle'].includes(el.dataset.editBind));
     let duration=0;
     const timing={duration:620,easing:'cubic-bezier(.18,.88,.25,1)',fill:'both'};
@@ -233,6 +235,18 @@
         if(seeking){animation.pause();animation.currentTime=options.time;}else animation.finished.then(()=>animation.cancel()).catch(()=>{});
       }
       return time(760);
+    }else if(hookMotion==='rise'){
+      // 스윽 올라오기(2026-09-18 사장님) — 흰 띠(글자 + 뒤의 상자)를 한 덩어리로 아래에서 천천히 올린다.
+      //   상자는 이름표가 없는 patch라 '글자를 세로로 감싸고 높이가 글자의 2.2배 이하'로 짝을 찾는다
+      //   (그보다 큰 patch는 제목판 전체 배경이라 같이 움직이면 틀이 흔들린다).
+      const band=[...layer.querySelectorAll('.precision-text')].find(el=>el.dataset.editBind==='bodyTitle');
+      if(band){
+        const T=band.getBoundingClientRect();
+        const box=[...layer.querySelectorAll('.precision-patch')].filter(el=>{const r=el.getBoundingClientRect();
+          return r.width>0&&r.top<=T.top+2&&r.bottom>=T.bottom-2&&r.height<=T.height*2.2;});
+        const riseTiming={duration:time(1500),easing:'cubic-bezier(.33,.3,.25,1)',fill:'both'};   // 천천히: 앞쪽 가속을 줄인 곡선
+        [band,...box].forEach(el=>play(el,[{opacity:0,transform:'translateY(38px)'},{opacity:1,transform:'translateY(0)'}],riseTiming));
+      }
     }else if(hookMotion==='pop'){
       texts.forEach((el,index)=>play(el,[{opacity:0,transform:'scale(.25)'},{opacity:1,transform:'scale(1.14)',offset:.68},{opacity:1,transform:'scale(1)'}],{...timing,duration:time(520),delay:time(index*90)}));
     }else if(hookMotion==='slide'){

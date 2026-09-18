@@ -110,7 +110,7 @@ def validate_snapshot(value):
         if hl:
             for key,default,lo,hi in (("cx",.5,0,1),("cy",.55,0,1),("r",.22,.06,.9),("zoom",2,1.1,4)):
                 number(hl.get(key,default),lo,hi)
-    if value.get("hookMotion") not in (None,"zoom-punch","pop","slide","flash"):
+    if value.get("hookMotion") not in (None,"zoom-punch","pop","slide","flash","rise"):
         raise ValueError("제목 효과가 올바르지 않습니다")
     if "hookMotionSpeed" in value:
         number(value["hookMotionSpeed"],.5,2)
