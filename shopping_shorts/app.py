@@ -18978,6 +18978,7 @@ def api_scene_style_lab_jobs(request: Request):
             "beat_count": len(beats),
             "tts_ready": bool(beats) and all(b.get("tts_path") and Path(b["tts_path"]).is_file() for b in beats),
             "clean_ready": clean is not None,
+            "unclean_preview_ready": scene_style_lab.unclean_preview_contract(job) is not None,
             "clean_signature": clean.get("signature") if clean else None,
         })
     return {"ok": True, "jobs": rows}
@@ -18996,7 +18997,8 @@ def api_scene_style_lab_create(request: Request, body: dict):
     if not job:
         return JSONResponse(status_code=404, content={"error": "작업 없음"})
     try:
-        manifest = scene_style_lab.create_copy(job_id, job, _MIX_WORK_DIR)
+        manifest = scene_style_lab.create_copy(job_id, job, _MIX_WORK_DIR,
+                                               allow_unclean=bool(body.get("allow_unclean")))
     except scene_style_lab.LabPreconditionError as exc:
         return JSONResponse(status_code=409, content={"error": str(exc)})
     return {"ok": True, "manifest": manifest}
