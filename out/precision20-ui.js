@@ -683,14 +683,26 @@
     a=>({color:'#FFFFFF',box:{background:`linear-gradient(180deg,${a},${a}CC)`,boxShadow:'0 4px 12px rgba(0,0,0,.45)',left:'4%',width:'92%',borderRadius:'999px'}}),                                          // 포인트색 알약
     a=>({color:'#141414',box:{background:'linear-gradient(180deg,#FFF9E8,#F3E9CF)',boxShadow:'0 5px 12px rgba(0,0,0,.4)',left:'3%',width:'94%',borderRadius:'6px'}}),                                         // 종이 카드
     a=>({color:'#FFFFFF',box:{background:'linear-gradient(90deg,rgba(0,0,0,0),rgba(0,0,0,.85) 15%,rgba(0,0,0,.85) 85%,rgba(0,0,0,0))',borderBottom:`3px solid ${a}`}}),                                   // 가운데 짙은 띠 + 밑줄 포인트
+    // 2026-09-18 사장님 "그라데이션이나 고급스러운 거 몇 개 넣어줘" — 고를 수 있는 고급형 4종
+    a=>({color:'#2A1B00',box:{background:'linear-gradient(180deg,#FFF3C4,#E8C46A 55%,#C99A2E)',boxShadow:'inset 0 1px 0 rgba(255,255,255,.7),0 4px 12px rgba(0,0,0,.45)',left:'3%',width:'94%',borderRadius:'6px'}}),   // 골드
+    a=>({color:'#F6E7B8',box:{background:'linear-gradient(180deg,#1B2A4A,#0B1428)',boxShadow:'0 4px 12px rgba(0,0,0,.5)',borderTop:'2px solid #D9B45A',borderBottom:'2px solid #D9B45A'}}),                        // 네이비 + 금테
+    a=>({color:'#FFFFFF',box:{background:'linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.10))',backdropFilter:'blur(8px)',border:'1px solid rgba(255,255,255,.45)',boxShadow:'0 4px 14px rgba(0,0,0,.35)',left:'4%',width:'92%',borderRadius:'12px'},text:{textShadow:'0 1px 3px rgba(0,0,0,.6)'}}),   // 반투명 유리
+    a=>({color:'#FFFFFF',box:{background:'linear-gradient(90deg,#FF4FA3,#7B5CFF 55%,#2EC5FF)',boxShadow:'0 4px 14px rgba(123,92,255,.55)',left:'4%',width:'92%',borderRadius:'999px'}}),                            // 3색 그라데이션 알약
   ];
+  const CAPTION_LOOK_NAMES=['흰 띠','검정 유리','흰 바탕 번짐','포인트 알약','종이 카드','짙은 띠','골드','네이비 금테','반투명 유리','3색 그라데이션'];
+  // 자막박스 없음 — 박스 없이 흰 글자 + 검은 외곽선·그림자만(영상 위에 바로 얹힌 자막).
+  const CAPTION_NONE={color:'#FFFFFF',box:{background:'transparent',boxShadow:'none',border:'0',backdropFilter:'none'},text:{textShadow:'0 0 3px #000,0 0 3px #000,0 2px 4px rgba(0,0,0,.8)',WebkitTextStroke:'0.6px #000'}};
   function captionLook(frame){
     // 사용자가 배경색을 직접 고른 때만(bgUser) 디자인을 끈다. 끌어 옮기기도 captionSettings() 전체를 저장해 background가
     //   늘 들어가 있어서, 옛 조건(background 있음)으로는 한 번 끌면 디자인이 회색 띠로 바뀌었다(2026-09-18 사장님 제보·재현).
-    if(mode!=='continuous'||(captionLayouts.get(captionKey())||{}).bgUser)return null;
+    const saved=captionLayouts.get(captionKey())||{};
+    if(saved.look==='none')return CAPTION_NONE;
+    const accent0=(fixedColorsFor(rows[current].id,frame).title2||'#00F9ED').slice(0,7);
+    if(Number.isInteger(saved.look)&&CAPTION_LOOKS[saved.look])return CAPTION_LOOKS[saved.look](accent0);   // 사용자가 고른 모양(썰쇼핑형 본문에도 적용)
+    if(mode!=='continuous'||saved.bgUser)return null;
     const id=rows[current].id||'';let h=0;for(const ch of id)h=(h*31+ch.charCodeAt(0))>>>0;
     const accent=(fixedColorsFor(id,frame).title2||'#00F9ED').slice(0,7);
-    return CAPTION_LOOKS[h%CAPTION_LOOKS.length](accent);
+    return CAPTION_LOOKS[h%6](accent);   // 자동 배정은 원래 6종 안에서(템플릿마다 늘 같은 모양 유지)
   }
   function renderCaption(frame){
     if(!captionVisible())return;
@@ -700,7 +712,7 @@
     const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,titleHeight(frame)+drag.y+textOffset('caption')));
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
     const capLook=captionLook(frame);
-    if(capLook){const {left,width,...look}=capLook.box;Object.assign(patch.style,settings.placement==='title'?capLook.box:look);settings.color=capLook.color;}   // 옮긴 자막은 옮긴 자리·폭 유지
+    if(capLook){const {left,width,...look}=capLook.box;Object.assign(patch.style,settings.placement==='title'?capLook.box:look);if(!settings.colorUser)settings.color=capLook.color;}   // 옮긴 자막은 옮긴 자리·폭 유지
     const original=source.ln||{font_size:frame.height*.032,font_family:frame.font_family||'Pretendard',font_weight:900};
     // 고정형 자막 기본 크기 = 템플릿 값의 82%(2026-09-18 사장님 "자막쪽이 너무 크다"). 이븐쇼핑 본문과 같은 3.6%였지만
     //   굵은 흰 글씨·제목과의 크기 차이가 작아 커 보였다. −/+ 조절(textScale)은 이 위에 그대로 곱해진다.
@@ -710,6 +722,7 @@
     const text=layer.querySelector('.precision-text[data-edit-bind="caption"]');
     Object.assign(text.style,{left:(x+2)+'%',right:'auto',width:Math.max(1,w-4)+'%',top:y+'%',height:h+'%',transform:'none',display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'pre-wrap',lineHeight:'1.15',color:settings.color});
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
+    if(capLook?.text)Object.assign(text.style,capLook.text);
   }
   function showFrame(next){
     kind=mode==='continuous'?'hook':next;
@@ -858,7 +871,7 @@
   });
   captionField?.addEventListener('input',event=>{
     const input=event.target.closest('[data-caption-layout]');if(!input)return;
-    const settings=captionSettings();settings[input.dataset.captionLayout]=input.type==='range'?Number(input.value):input.value;if(input.dataset.captionLayout==='background')settings.bgUser=true;
+    const settings=captionSettings();settings[input.dataset.captionLayout]=input.type==='range'?Number(input.value):input.value;if(input.dataset.captionLayout==='background'){settings.bgUser=true;delete settings.look;}if(input.dataset.captionLayout==='color')settings.colorUser=true;
     captionLayouts.set(captionKey(),settings);markDirty('caption');renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
@@ -877,6 +890,18 @@
   const maskDetails=document.createElement('details');maskDetails.style.gridColumn='1/-1';maskDetails.innerHTML='<summary style="cursor:pointer">자막박스 크기 · 색상</summary><div class="caption-position"></div>';
   captionPlacement?.querySelectorAll('label').forEach(label=>maskDetails.querySelector('div').append(label));
   captionPlacement?.append(maskDetails);
+  // 자막박스 모양 고르기(2026-09-18) — 기본(템플릿) / 없음 / 10종. 고르면 직접 고른 박스색은 풀린다.
+  const lookRow=document.createElement('div');lookRow.className='caption-looks';
+  lookRow.innerHTML='<span>자막박스 모양</span>'+[['auto','기본'],['none','박스 없음'],...CAPTION_LOOK_NAMES.map((n,i)=>[String(i),n])].map(([v,n])=>`<button type="button" data-caption-look="${v}">${n}</button>`).join('');
+  maskDetails.querySelector('div').prepend(lookRow);
+  function syncCaptionLookButtons(){const saved=captionLayouts.get(captionKey())||{};const cur=saved.look==='none'?'none':Number.isInteger(saved.look)?String(saved.look):'auto';lookRow.querySelectorAll('[data-caption-look]').forEach(b=>b.classList.toggle('active',b.dataset.captionLook===cur));}
+  lookRow.addEventListener('click',event=>{
+    const b=event.target.closest('[data-caption-look]');if(!b)return;
+    const settings={...captionSettings(),...(captionLayouts.get(captionKey())||{})};delete settings.bgUser;delete settings.colorUser;
+    if(b.dataset.captionLook==='auto')delete settings.look;else settings.look=b.dataset.captionLook==='none'?'none':Number(b.dataset.captionLook);
+    captionLayouts.set(captionKey(),settings);markDirty('caption');renderEdit();syncCaptionLookButtons();
+  });
+  maskDetails.addEventListener('toggle',syncCaptionLookButtons);
   function applyCaptionMoveScope(){
     moveScope.hidden=false;
     if(captionMoveScope!=='all')return;
