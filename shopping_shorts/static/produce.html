@@ -12222,6 +12222,11 @@ async function startProduceMix(){
     clearInterval(PREVIEW_POLL); PREVIEW_POLL=null; ++PREVIEW_GEN;
     PREVIEW_STATUS=null; WATCHED_ALL=false;
     MIX_JOB=d.job_id;
+    // ★2단계 화면 제목을 새 job에 바로 넘긴다(2026-09-18 실측 job 21623b29b569). 헤드카피의
+    //   진실은 job인데, job이 생기기 전 _workState에만 임시 보관하던 값은 job이 생기는 이 순간
+    //   job에 써 주지 않으면 다음 saveWork가 작업 상태에서 지우고 job엔 애초에 없어 **양쪽 다 사라진다**.
+    //   장면꾸미기는 그 빈자리를 첫 TTS 문장으로 메워 제목 자리에 대사가 박혔다.
+    try{ if(STATE.headcopy && STATE.headcopy.text && typeof saveHeadcopy==='function') saveHeadcopy(); }catch(e){}
     // 이 job이 실제로 쓴 대본 — 2단계 확정본과 대조용.
     // ★try 필수: 이 함수만 잘라 도는 테스트 하네스는 'use strict'라 선언부(위쪽 let)가
     //   슬라이스 밖이면 미선언 대입이 ReferenceError로 죽고, 함수가 통째로 중단된다
