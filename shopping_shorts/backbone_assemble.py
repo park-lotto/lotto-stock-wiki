@@ -168,16 +168,9 @@ def pick_hook_spine(store, spine_id=None, seed=None, style=None):
         pool = sorted([s for s in all_sp if _ok(s)], key=lambda s: s.get("id") or 0)
         if pool:
             return pool[_seed_int(seed) % len(pool)]
-    if spine_id is not None:
-        for s in spines:
-            if s.get("id") == spine_id:
-                return s
-    if style:
-        pool = sorted([s for s in spines if style in (s.get("fit_categories") or [])], key=lambda s: s.get("id") or 0)
-        if pool:
-            return pool[_seed_int(seed) % len(pool)]
+    # 유형에 맞는 스파인이 없으면 무작위 폴백(훅 있는 것 우선)
     if not spines:
-        spines = store.list_spines(status="approved")
+        spines = all_sp
     rnd = random.Random(seed)
     return rnd.choice(spines) if spines else {}
 
@@ -220,7 +213,7 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         #   다음 틀로 돌아 같은 재료에서 N가지 대본이 나온다.
         prompt = _spine_prompt(groups_out, hook_spine, roles, tpl, feats, per_line, seed=seed)
         lines = _clean_lines(_sg._call_json(prompt, _LINES_SCHEMA, note=note) or {})
-        return _repair_joins(lines, plan_for_repair(groups_out, roles, tpl, seed), note=note)
+        return _repair_joins(lines, plan_for_repair(groups_out, roles, tpl, seed, hook_spine), note=note)
     prompt = (
         f"제품: {groups_out.get('product')}\n"
         f"훅 스타일: 「{hook_spine.get('name')}」 — {hook_rule}\n"
@@ -323,13 +316,9 @@ def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line, seed=None):
     #     시작 위치만 seed로 옮겨 같은 재료에서 여러 편을 뽑을 때 첫 줄이 겹치지 않게 한다.
     # seed는 호출부마다 꼴이 다르다 — 배치는 job id **문자열**(bb_batch5.py `seed=base`), 시험은 int.
     #   문자열이면 `i % len`이 TypeError(2026-09-18 4건 전부 예외). 문자열은 crc32로 정수화한다.
-    if isinstance(seed, int):
-        start = seed
-    elif seed:
-        import zlib
-        start = zlib.crc32(str(seed).encode("utf-8"))
-    else:
-        start = 0
+    start = _seed_int(seed)
+    # ★스파인마다 시작점을 엇갈린다(실측 카메라 74·75·76: 셋 다 bait 첫 틀 → 같은 문장). 같은 틀을 공유해도 다른 문장이 나온다.
+    start += int(spine.get("id") or 0) * 7
     pick_count = {}
     for k, (r, gi) in enumerate(plan):
         cands = list(tpl.get(r) or [])
@@ -355,6 +344,9 @@ def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line, seed=None):
         f"- 한 줄은 **마침표 하나**로 끝나는 문장 하나. 쉼표는 써도 된다. 줄당 {per_line}자 안팎.\n"
         "- 문장틀의 말투(반말·'~다는데'·'~라고')를 유지해라. 댓글 유도·구독 요청 같은 CTA를 덧붙이지 마라.\n"
         "- {나라}는 화면·자막에서 알 수 없으면 '해외'로.\n"
+        # ★가격·숫자를 지어내지 않는다(실측 68·69: "단돈 몇만 원"·"몇천 원짜리"). 특징·화면에 가격이 없으면 '이 가격'으로.
+        "- {가격}은 위 특징·화면에 **실제 가격이 있을 때만** 채워라. 없으면 '이 가격'·'이 값'으로 쓰고 숫자를 지어내지 마라. "
+        "{본래용도}도 원본에서 확인된 것만 — 모르면 그 틀 대신 '평범해 보이는' 식으로 에둘러라.\n"
         # ★빈칸에 무엇을 넣을지 **원문 예시로** 못 박는다(2026-09-18 실측). 안 적어두면
         #   {성과}에 형용사가 들어가 "정교한 해외 천재의 발명품"처럼 어색해진다.
         #   원문은 전부 동사구다: 세월을 되찾아주는 / 업계 자체를 망하게 한 / 여름을 지배해 버린.
@@ -396,10 +388,10 @@ def _fix_join(text):
     return t
 
 
-def plan_for_repair(groups_out, roles, tpl, seed):
-    """줄 번호 → 그 줄에 쓰인 문장틀(다시 쓸 때 같은 틀을 준다)."""
+def plan_for_repair(groups_out, roles, tpl, seed, spine=None):
+    """줄 번호 → 그 줄에 쓰인 문장틀(다시 쓸 때 같은 틀을 준다). 시작점은 `_spine_prompt`와 **같은 규칙**."""
     plan = _spine_plan(roles, tpl, len(groups_out["order"]))
-    start = seed if isinstance(seed, int) else 0
+    start = _seed_int(seed) + int((spine or {}).get("id") or 0) * 7
     out, pick = [], {}
     for r, gi in plan:
         cands = list(tpl.get(r) or [])

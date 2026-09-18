@@ -173,3 +173,12 @@ def test_레시피_전용_스파인은_물건_유형에서_안_뽑힌다():
     assert ba.pick_hook_spine(st, seed=0, style="권유지시형")["id"] == 99
     assert ba.pick_hook_spine(st, seed=0, style="지인증언형")["id"] == 52
     assert ba.pick_hook_spine(st, seed=0, style="레시피")["id"] in (53, 52)
+
+
+def test_스파인이_다르면_같은_틀이어도_시작점이_다르다():
+    g = {"product": "x", "order": [0]}
+    tpl = {r: ["A{효능}는데", "B{효능}는데", "C{효능}는데"] if r in ("solve", "more", "twist") else ["%s1" % r, "%s2" % r, "%s3" % r] for r in ROLES}
+    p74 = ba._spine_prompt(g, {"id": 74, "name": "s"}, ROLES, tpl, ["a"], 20, seed=0)
+    p75 = ba._spine_prompt(g, {"id": 75, "name": "s"}, ROLES, tpl, ["a"], 20, seed=0)
+    bait = lambda p: [l for l in p.splitlines() if "role=bait" in l][0]
+    assert bait(p74) != bait(p75)
