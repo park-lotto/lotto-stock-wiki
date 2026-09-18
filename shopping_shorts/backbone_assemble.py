@@ -316,18 +316,10 @@ def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line, seed=None):
     #     시작 위치만 seed로 옮겨 같은 재료에서 여러 편을 뽑을 때 첫 줄이 겹치지 않게 한다.
     # seed는 호출부마다 꼴이 다르다 — 배치는 job id **문자열**(bb_batch5.py `seed=base`), 시험은 int.
     #   문자열이면 `i % len`이 TypeError(2026-09-18 4건 전부 예외). 문자열은 crc32로 정수화한다.
-    start = _seed_int(seed)
-    # ★스파인마다 시작점을 엇갈린다(실측 카메라 74·75·76: 셋 다 bait 첫 틀 → 같은 문장). 같은 틀을 공유해도 다른 문장이 나온다.
-    start += int(spine.get("id") or 0) * 7
-    pick_count = {}
+    # 시작점(seed + 스파인id×7, 스파인마다 엇갈림)과 칸별 순번은 _pick_templates 한 곳에서 정한다
+    picked = _pick_templates(plan, tpl, seed, spine)
     for k, (r, gi) in enumerate(plan):
-        cands = list(tpl.get(r) or [])
-        if cands:
-            i = pick_count.get(r, start)       # 같은 칸이 또 오면 **다음 틀**로(순환)
-            ex = cands[i % len(cands)]
-            pick_count[r] = i + 1
-        else:
-            ex = ""
+        ex = picked[k]
         # ★group은 묶음 **원번호**(assign_cuts가 groups[gi]로 찾는다) — 순서 번호를 주면 다른 묶음 컷이 붙는다
         tgt = f"group={order[gi]} (특징 {gi + 1}번)" if 0 <= gi < len(order) else "group=-1"
         lines_spec.append(f"  {k + 1}. role={r}, {tgt} — 문장틀: {ex}")
@@ -391,16 +383,38 @@ def _fix_join(text):
     return t
 
 
+def _pick_templates(plan, tpl, seed, spine):
+    """줄마다 쓸 문장틀 — **한 곳에서만** 정한다(_spine_prompt·plan_for_repair 공용, 0순위-B).
+    ★칸마다 **따로** 돈다(혼합진법): 칸 k의 순번 = (시작점 ÷ 앞 칸들 틀 수의 곱) mod 이 칸 틀 수.
+      전엔 모든 칸이 같은 숫자로 같이 움직여, 칸마다 틀이 3개면 회원 100명에게 조합이 **3가지**뿐이었다
+      (2026-09-18 실측 66번: 100명 중 44명이 같은 대본). 이제 조합 수 = 칸별 틀 수의 곱.
+    같은 칸이 또 오면(more×N) 그 칸 안에서 다음 틀로."""
+    import zlib
+    # 시작점 = (seed, 스파인id)를 **함께** 해시 — 같은 회원이라도 스파인이 다르면 조합 전체가 달라진다
+    #   (단순 덧셈이면 혼합진법 둘째 칸부터 다시 겹쳤다: 74·75 bait 동일, 테스트로 잡음)
+    start = zlib.crc32(("%s|%s" % (_seed_int(seed), (spine or {}).get("id") or 0)).encode("utf-8"))
+    base, radix = {}, 1
+    for r, _ in plan:
+        if r in base:
+            continue
+        n = len(tpl.get(r) or [])
+        if n:
+            base[r] = (start // radix) % n
+            radix *= n
+    out, used = [], {}
+    for r, _ in plan:
+        cands = list(tpl.get(r) or [])
+        if not cands:
+            out.append(""); continue
+        i = base.get(r, 0) + used.get(r, 0); used[r] = used.get(r, 0) + 1
+        out.append(cands[i % len(cands)])
+    return out
+
+
 def plan_for_repair(groups_out, roles, tpl, seed, spine=None):
     """줄 번호 → 그 줄에 쓰인 문장틀(다시 쓸 때 같은 틀을 준다). 시작점은 `_spine_prompt`와 **같은 규칙**."""
     plan = _spine_plan(roles, tpl, len(groups_out["order"]))
-    start = _seed_int(seed) + int((spine or {}).get("id") or 0) * 7
-    out, pick = [], {}
-    for r, gi in plan:
-        cands = list(tpl.get(r) or [])
-        i = pick.get(r, start); pick[r] = i + 1
-        out.append(cands[i % len(cands)] if cands else "")
-    return out
+    return _pick_templates(plan, tpl, seed, spine)
 
 
 _ONE_LINE_SCHEMA = {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}

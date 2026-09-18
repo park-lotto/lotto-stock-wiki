@@ -180,5 +180,21 @@ def test_스파인이_다르면_같은_틀이어도_시작점이_다르다():
     tpl = {r: ["A{효능}는데", "B{효능}는데", "C{효능}는데"] if r in ("solve", "more", "twist") else ["%s1" % r, "%s2" % r, "%s3" % r] for r in ROLES}
     p74 = ba._spine_prompt(g, {"id": 74, "name": "s"}, ROLES, tpl, ["a"], 20, seed=0)
     p75 = ba._spine_prompt(g, {"id": 75, "name": "s"}, ROLES, tpl, ["a"], 20, seed=0)
-    bait = lambda p: [l for l in p.splitlines() if "role=bait" in l][0]
-    assert bait(p74) != bait(p75)
+    picked = lambda p: [l.split("문장틀:")[-1] for l in p.splitlines() if "문장틀:" in l]
+    assert picked(p74) != picked(p75), "스파인이 다르면 조합이 달라야"
+
+
+def test_칸마다_따로_돌아_회원100명_조합이_많다():
+    """2026-09-18 실측 66번: 칸마다 틀 3개인데 모든 칸이 같이 움직여 100명 중 조합 3가지뿐."""
+    import uuid
+    roles = ["a", "b", "c", "d"]
+    tpl = {r: ["%s1" % r, "%s2" % r, "%s3" % r] for r in roles}
+    plan = [(r, -1) for r in roles]
+    combos = {tuple(ba._pick_templates(plan, tpl, "bb" + uuid.uuid4().hex[:10], {"id": 66})) for _ in range(100)}
+    assert len(combos) >= 40, len(combos)          # 3^4=81가지 중 100명이면 40가지 이상 나와야
+
+
+def test_같은_칸이_반복되면_다음_틀():
+    tpl = {"more": ["m1", "m2", "m3"]}
+    out = ba._pick_templates([("more", 0), ("more", 1)], tpl, 0, {"id": 0})
+    assert out[0] != out[1]
