@@ -359,7 +359,7 @@
     const hasChannel=!!(frame?.channel_box||frame?.channel_boxes?.length);
     const lineCount=frame?.lines?.length||0;
     return p.id==='s0101'
-      ? (frameKind==='hook'?['channel','hook1','hook2']:['channel','bodyTitle','caption'])
+      ? (frameKind==='hook'?['channel','hook1','hook2',...(((p.hook?.lines?.length||0)>2||p.hook?.white_box?.text)?['bodyTitle']:[])]:['channel','bodyTitle','caption'])
       : frameKind==='hook'
         ? [...(hasChannel?['channel']:[]),...(lineCount?['hook1']:[]),...(lineCount>1?['hook2']:[]),...(lineCount>2||frame?.white_box?.text?['bodyTitle']:[])]
         : [...(hasChannel?['channel']:[]),...(lineCount?['bodyTitle']:[]),...(lineCount>1||frame?.white_box?.text?['caption']:[])];
