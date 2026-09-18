@@ -66,7 +66,10 @@ def _seg_index(sources):
                 secs = 0.0
             idx[str(sid)] = {"secs": secs, "desc": (x.get("scene_desc") or "").strip(),
                              "change": (x.get("change") or "").strip(), "role": x.get("shot_role") or "",
-                             "key": bool(x.get("is_key")), "vid": _vid_of(sid),
+                             # ★vid는 **소스 번호(video_id, 예 s0)**로 — 백본을 그 번호로 부른다.
+                             #   컷 번호 접두어(예 DdOayfhAnpx)로 두면 백본과 절대 안 맞아 '서브 먼저·원본 나중'이
+                             #   통째로 무력이었다(2026-09-18 실측: 씨앗 s0 백본인데 원본 컷 10/29).
+                             "key": bool(x.get("is_key")), "vid": s.get("video_id") or _vid_of(sid),
                              "text": (x.get("text") or "").strip()}
     return idx
 

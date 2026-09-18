@@ -257,3 +257,16 @@ def test_특징_순서는_양끝_두고_가운데를_섞는다():
 
 def test_주게_해_주는데_이중어미():
     assert ba._fix_join("이게 말도 안 되는게 주방 인테리어를 살려주게 해 주는데.") == "이게 말도 안 되는게 주방 인테리어를 살려주는데."
+
+
+def test_백본은_소스번호로_불러도_원본컷을_가린다():
+    """2026-09-18 실측: 컷 번호는 플랫폼 id 접두어(DdOayfhAnpx-3)인데 백본은 's0'으로 불러
+    '서브 먼저' 규칙이 원본 컷을 한 번도 못 알아봤다(씨앗 s0인데 원본 컷 10/29)."""
+    sources = [{"video_id": "s0", "segments": [{"seg_id": "DdOayfhAnpx-%d" % i, "start": i, "end": i + 2, "scene_desc": "원본 행주 닦기"} for i in range(4)]},
+               {"video_id": "s1", "segments": [{"seg_id": "tiktokXYZ-%d" % i, "start": i, "end": i + 2, "scene_desc": "서브 행주 닦기"} for i in range(4)]}]
+    idx = ba._seg_index(sources)
+    assert idx["DdOayfhAnpx-0"]["vid"] == "s0" and idx["tiktokXYZ-0"]["vid"] == "s1"
+    groups = {"product": "행주", "groups": [{"name": "닦기", "cuts": ["DdOayfhAnpx-0", "DdOayfhAnpx-1", "tiktokXYZ-0", "tiktokXYZ-1"]}], "order": [0]}
+    lines = [{"role": "solve", "text": "가" * 10, "group": 0}]
+    bs, _ = ba.assign_cuts(lines, groups, idx, "s0")
+    assert all(not s.startswith("DdOayfhAnpx") for s in bs[0]["segs"]), bs
