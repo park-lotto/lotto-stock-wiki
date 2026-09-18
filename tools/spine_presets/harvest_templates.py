@@ -36,7 +36,7 @@ def _load_texts(pattern, corpus, limit):
         seen = set(); rows = []
         for r in c.execute("select rowid, full_text, source_url from script_wiki"):
             txt = r[1] or ""
-            if "instagram" in str(r[2] or "") and len(txt) >= 300 and _ko(txt) >= 0.8 and txt[:80] not in seen:
+            if "instagram" in str(r[2] or "") and len(txt) >= 150 and _ko(txt) >= 0.8 and txt[:80] not in seen:
                 seen.add(txt[:80]); rows.append((str(r[0]), r[2] or "", txt))
     else:
         c = sqlite3.connect(DB)
