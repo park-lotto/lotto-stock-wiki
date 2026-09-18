@@ -644,6 +644,24 @@
       }
     }
   }
+  // 고정형 자막칸 디자인(2026-09-18 사장님 "이븐쇼핑 흰 띠처럼 그라데이션 있게, 다 똑같으면 밋밋하니 다르게").
+  //   템플릿마다 6가지 중 하나가 고정으로 붙는다(프리셋 id로 고르므로 같은 템플릿은 늘 같은 모양).
+  //   사용자가 자막칸 배경을 직접 저장했으면 그 색이 우선 — 디자인을 덮지 않는다.
+  //   accent = 그 템플릿 제목 둘째 줄 색(템플릿 성격을 자막칸에도 잇는다).
+  const CAPTION_LOOKS=[
+    a=>({color:'#080808',box:{background:'linear-gradient(180deg,#FFFFFF,#FFFFFF 70%,#E6E8E6)',boxShadow:'0 0 12px 6px rgba(255,255,255,.55)',left:'1.2%',width:'97.6%',borderRadius:'2px'}}),   // 이븐쇼핑형 흰 띠
+    a=>({color:'#FFFFFF',box:{background:'linear-gradient(180deg,#2B2B2B,#0E0E0E)',boxShadow:`inset 0 1px 0 rgba(255,255,255,.18),0 3px 10px rgba(0,0,0,.55)`,borderTop:`2px solid ${a}`}}),                    // 검정 유리 + 윗선 포인트
+    a=>({color:'#111111',box:{background:`linear-gradient(90deg,${a}33,#FFFFFF 18%,#FFFFFF 82%,${a}33)`,boxShadow:'0 4px 10px rgba(0,0,0,.35)'}}),                                                          // 흰 바탕 양끝 포인트색 번짐
+    a=>({color:'#FFFFFF',box:{background:`linear-gradient(180deg,${a},${a}CC)`,boxShadow:'0 4px 12px rgba(0,0,0,.45)',left:'4%',width:'92%',borderRadius:'999px'}}),                                          // 포인트색 알약
+    a=>({color:'#141414',box:{background:'linear-gradient(180deg,#FFF9E8,#F3E9CF)',boxShadow:'0 5px 12px rgba(0,0,0,.4)',left:'3%',width:'94%',borderRadius:'6px'}}),                                         // 종이 카드
+    a=>({color:'#FFFFFF',box:{background:'linear-gradient(90deg,rgba(0,0,0,0),rgba(0,0,0,.85) 15%,rgba(0,0,0,.85) 85%,rgba(0,0,0,0))',borderBottom:`3px solid ${a}`}}),                                   // 가운데 짙은 띠 + 밑줄 포인트
+  ];
+  function captionLook(frame){
+    if(mode!=='continuous'||(captionLayouts.get(captionKey())||{}).background)return null;
+    const id=rows[current].id||'';let h=0;for(const ch of id)h=(h*31+ch.charCodeAt(0))>>>0;
+    const accent=(fixedColorsFor(id,frame).title2||'#00F9ED').slice(0,7);
+    return CAPTION_LOOKS[h%CAPTION_LOOKS.length](accent);
+  }
   function renderCaption(frame){
     if(!captionVisible())return;
     const settings=captionSettings(),source=captionSource(frame),drag=captionDrags.get(captionKey())||{x:0,y:0};
@@ -651,6 +669,8 @@
     const x=settings.placement==='title'?0:Math.max(0,Math.min(100-w,(100-w)/2+drag.x));
     const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,titleHeight(frame)+drag.y+textOffset('caption')));
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
+    const capLook=captionLook(frame);
+    if(capLook){Object.assign(patch.style,capLook.box);settings.color=capLook.color;}
     const original=source.ln||{font_size:frame.height*.032,font_family:frame.font_family||'Pretendard',font_weight:900};
     // 고정형 자막 기본 크기 = 템플릿 값의 82%(2026-09-18 사장님 "자막쪽이 너무 크다"). 이븐쇼핑 본문과 같은 3.6%였지만
     //   굵은 흰 글씨·제목과의 크기 차이가 작아 커 보였다. −/+ 조절(textScale)은 이 위에 그대로 곱해진다.
