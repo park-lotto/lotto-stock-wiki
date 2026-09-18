@@ -48,7 +48,6 @@ def test_done_task_does_not_block(store):
 
 
 @pytest.mark.parametrize("mod", [
-    "scripts.daily_instagram_collect",
     "scripts.daily_instagram_discover",
     "scripts.daily_youtube_collect",
 ])
@@ -59,6 +58,15 @@ def test_auto_crawl_entrypoints_call_the_gate(mod):
     path = Path(__file__).resolve().parents[2] / (mod.replace(".", "/") + ".py")
     src = path.read_text(encoding="utf-8")
     assert "heavy_job_active" in src, f"{mod}에 렌더 양보 가드가 없다"
+
+
+def test_instagram_collect_does_not_wait_for_heavy_jobs():
+    """증설 서버에서는 렌더 중에도 인스타 정기 수집을 즉시 시작한다."""
+    from pathlib import Path
+    path = Path(__file__).resolve().parents[2] / "scripts/daily_instagram_collect.py"
+    src = path.read_text(encoding="utf-8")
+    assert "heavy_job_active" not in src
+    assert "_wait_until_idle" not in src
 
 
 def test_bg_loops_call_the_gate():

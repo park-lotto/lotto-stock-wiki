@@ -724,6 +724,8 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     """
     from shopping_shorts import bank_assemble, script_gate
 
+    style = bank_assemble.with_spoken_hook(style)
+
     _claim_required = _claims_required(sources)
     _evidence = claim_evidence(sources, facts_block) if _claim_required else None
     seconds = max(5, min(int(target_seconds or 30), 90))
@@ -1135,6 +1137,8 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
     beats: 지금 대본 전체 — **앞뒤 문맥**으로 넣는다. 이게 없으면 새 문장이 앞뒤와 따로 논다.
     """
     from shopping_shorts import bank_assemble, script_gate
+
+    style = bank_assemble.with_spoken_hook(style)
 
     role = (role or "").strip()
     if not role:

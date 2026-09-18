@@ -302,6 +302,68 @@ def beat_descs(style):
     return out
 
 
+_TITLE_SPOKEN_HOOK_DESC = (
+    "화면 제목을 소리 내어 되풀이하지 말고, 제목이 만든 궁금증을 바로 이어받는 "
+    "첫 TTS 한 문장으로 쓴다. 다음 본문 칸으로 자연스럽게 넘어가되 결론을 먼저 다 말하지 않는다"
+)
+
+
+def title_len_rule():
+    """화면 제목의 글자 한도 안내 — 장면꾸미기 슬롯 계약(template_copy)에서 빌려 온다.
+
+    2026-09-18 실측: 제목형 대본이 27자 제목을 내놓아 이븐쇼핑(줄당 11자·자동 축소 금지)에서
+    좌우가 잘렸다. 한도를 여기 따로 적으면 슬롯 계약과 어긋난다(0순위-B).
+    """
+    from shopping_shorts.template_copy import EVEN_SHOPPING as c
+    total = c.hook_line_max * 2
+    return ("공백 포함 %d자 이내. 두 줄로 나뉘어 화면에 크게 박히므로 각 줄 %d자 안에서 끊기게 "
+            "쓴다. 길면 잘려서 못 쓴다" % (total, c.hook_line_max))
+
+
+def title_too_long(text):
+    """화면 제목이 슬롯 한도를 넘는지 — 프롬프트 안내와 같은 수를 본다."""
+    from shopping_shorts.template_copy import EVEN_SHOPPING as c, split_hook
+    # 장면꾸미기가 실제로 나누는 방식(split_hook)으로 나눠 봐야 같은 판정이 된다 —
+    #   총 22자여도 어절 경계 때문에 한 줄이 12자가 될 수 있다.
+    h1, h2 = split_hook(text)
+    return len(h1) > c.hook_line_max or len(h2) > c.hook_line_max
+
+
+def with_spoken_hook(style):
+    """화면 제목형 스파인을 ``제목(무음) → 첫 TTS 훅 → 본문`` 계약으로 보강한다.
+
+    DB에는 제목 다음이 곧바로 story인 옛 스파인이 남아 있다. DB 시드만 고치면 이미 운영 중인
+    행은 그대로라 화면·전체 생성·부분 재생성이 서로 달라진다. 그래서 스타일을 소비하는 모든
+    경로가 이 함수 하나를 통과한다. 원본 dict는 바꾸지 않는다.
+    """
+    if not isinstance(style, dict):
+        return style
+    # ★관리자 카나리 밖에서는 손대지 않는다(2026-09-18) — 고객은 종전 대본 그대로 받는다.
+    from shopping_shorts import canary
+    if not canary.on():
+        return style
+    roles = list(style.get("beat_roles") or [])
+    if not roles or roles[0] != "title" or (len(roles) > 1 and roles[1] == "hook"):
+        return style
+    adapted = copy.deepcopy(style)
+    adapted["beat_roles"] = ["title", "hook"] + roles[1:]
+    descs = beat_descs(style)
+    adapted["beat_descs"] = {
+        role: (_TITLE_SPOKEN_HOOK_DESC if role == "hook" else descs.get(role, ""))
+        for role in adapted["beat_roles"]
+    }
+    # 제목은 화면 슬롯에 박히는 글자라 길이 한도가 곧 규격이다. 스타일별 설명 뒤에 붙인다.
+    adapted["beat_descs"]["title"] = (
+        (str(descs.get("title") or "").strip() + ". " if descs.get("title") else "")
+        + "★" + title_len_rule()
+    )
+    templates = dict(adapted.get("templates") or {})
+    templates.setdefault("hook", [])
+    adapted["templates"] = templates
+    adapted["title_visual_only"] = True
+    return adapted
+
+
 _FACT_STYLE_NEUTRAL = (
     "이 role은 출력 순서를 식별하는 이름일 뿐이다. 아래 검증 근거에서 직접 확인되는 "
     "제품 동작이나 사용 상황 하나를 앞 칸과 겹치지 않게 이어 말한다. 가격·인기·품절·"
