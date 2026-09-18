@@ -258,6 +258,19 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                  #   근거를 되짚을 방법이 없다.
                  outcome, http, (str(detail)[:1200] if detail else None),
                  dur_ms, _proc_kind()))
+            # ★죽은 키가 **회원 등록 키**면 그 회원 화면에도 '죽음'으로 보이게 한다(2026-09-18).
+            #   실측: 회원 290·315의 키는 401/403으로 영구 제외됐는데 customer_keys.status는 'ok'라
+            #   회원은 자기 키가 죽은 줄 모르고, 사장님 경보만 "env에서 빼라"고 헛처방을 냈다.
+            #   정확한 키 지문(keycrypt.fingerprint = key_hash)으로만 맞춘다 — 꼬리 비교로 남의 키를 건드리지 않는다.
+            if outcome == OUT_AUTH and key:
+                try:
+                    from shopping_shorts import keycrypt
+                    conn.execute(
+                        "UPDATE customer_keys SET status='bad', checked_at=? "
+                        "WHERE key_hash=? AND COALESCE(status,'') <> 'bad'",
+                        (int(now.timestamp()), keycrypt.fingerprint(key)))
+                except Exception as e:    # noqa: BLE001 — 회원 키 표시 갱신 실패가 기록을 막으면 안 된다
+                    log.debug("api_health: 회원 키 상태 갱신 실패(무해) %r", e)
             conn.commit()
         finally:
             conn.close()
@@ -565,6 +578,24 @@ def aggregates(hours=24):
                 "FROM api_events WHERE outcome=? AND ts >= ? "
                 "GROUP BY service, pool, key_tail, customer_id ORDER BY hits DESC LIMIT 50",
                 (OUT_AUTH, since))]
+            # ★공용 풀에 합류한 **회원 키**의 주인을 찾아 붙인다(2026-09-18 실측). 풀은 '누구 것'을
+            #   안 따지므로(keypool) 호출 기록에 customer_id가 비어, 회원 키 사망이 **운영 키 사망**으로
+            #   잡혀 danger + "env에서 죽은 키를 빼라"가 사장님께 올라갔다. 실측: 경보의 …EARXNg(회원 57)·
+            #   …ZOEC5Q/…FiSBsw(회원 290)·…sJbmaQ(회원 315)는 env에 없는 회원 등록 키였다 = 할 수 없는 처방.
+            #   customer_keys.label은 keycrypt.mask(앞8·뒤5)라 꼬리 5자로 맞춘다(같은 DB, 복호 불필요).
+            for _d in out["dead_keys"]:
+                _t = str(_d.get("key_tail") or "")
+                if _d.get("customer_id") or len(_t) < 5:
+                    continue
+                try:
+                    _own = conn.execute(
+                        "SELECT customer_id FROM customer_keys WHERE service=? AND label LIKE ? "
+                        "ORDER BY id DESC LIMIT 1", (_d.get("service"), "%" + _t[-5:])).fetchone()
+                except sqlite3.OperationalError:     # customer_keys 없는 DB(테스트) — 종전대로
+                    _own = None
+                if _own and _own[0] is not None:
+                    _d["customer_id"] = str(_own[0])
+                    _d["pooled_member"] = True
 
             out["heartbeats"] = [dict(r) for r in conn.execute(
                 "SELECT proc, pid, ts, detail FROM api_heartbeats ORDER BY proc, pid")]

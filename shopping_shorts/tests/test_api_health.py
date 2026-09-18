@@ -172,6 +172,31 @@ def test_verdict_shorts_pool_truly_dead_is_danger(tmp_db):
     assert any("전멸" in p for p in v["problems"])
 
 
+def test_pooled_member_key_death_is_member_warn_not_ops_danger(tmp_db, monkeypatch):
+    """★2026-09-18 실측: 공용 풀에 합류한 회원 키(57·290·315)가 401/403으로 죽었는데 호출 기록에
+    customer_id가 비어 운영 키로 잡혀 danger + "env에서 죽은 키를 빼라"(env엔 없음)가 올라갔다.
+    주인을 찾아 회원 경로(warn)로 보내고, 그 회원 키 상태를 'bad'로 바꿔 회원 화면에도 드러나게 한다."""
+    import importlib
+    from shopping_shorts import keycrypt
+    from shopping_shorts.store import Store
+    monkeypatch.setenv("BYOK_MASTER_KEY", "NZAowCs7o9LHVnJdZbxrVmYI7MHqyPFkydIUd1mc8To=")
+    importlib.reload(keycrypt)          # test_api_watch_boost와 같은 방식
+    st = Store(tmp_db)
+    member_key = "AQ.Ab8RN" + "M" * 30 + "ZOEC5Q"
+    st.add_customer_key(290, "gemini", member_key)
+    for _ in range(8):
+        api_health.record("gemini", api_health.OUT_AUTH, pool="shorts",
+                          key=member_key, detail=_AUTH_MSG2)
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert not any("죽은 키" in p for p in v["problems"]), v["problems"]
+    assert any("회원 290" in w for w in v["warns"]), v["warns"]
+    with sqlite3.connect(str(tmp_db)) as c:
+        status = c.execute("SELECT status FROM customer_keys WHERE key_hash=?",
+                           (keycrypt.fingerprint(member_key),)).fetchone()[0]
+    assert status == "bad"
+
+
 def test_verdict_auth_dead_is_danger(tmp_db):
     api_health.record("gemini", api_health.OUT_AUTH, detail=_AUTH_MSG)
     v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
