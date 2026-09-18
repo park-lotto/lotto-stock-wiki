@@ -28,6 +28,10 @@ def _load_texts(pattern, corpus, limit):
     if corpus == "hits":
         hits = json.load(io.open(HITS, encoding="utf-8"))
         rows = [(h["video_id"], h.get("channel") or "", h.get("full_text") or "") for h in hits]
+    elif corpus == "insta":
+        c = sqlite3.connect(DB)
+        rows = [(str(r[0]), r[2] or "", r[1] or "") for r in c.execute("select rowid, full_text, source_url from script_wiki")
+                if "instagram" in str(r[2] or "") and len(r[1] or "") >= 300]
     else:
         c = sqlite3.connect(DB)
         cols = [r[1] for r in c.execute("pragma table_info(script_wiki)")]
@@ -35,6 +39,8 @@ def _load_texts(pattern, corpus, limit):
         # 유튜브 출처만(인스타는 존댓말이라 유튜브형 반말 스파인과 안 맞는다)
         rows = [(str(r[0]), r[2] or "", r[1] or "") for r in c.execute(f"select rowid, {tcol}, source_url from script_wiki")
                 if "youtu" in str(r[2] or "")]
+    if pattern == "*":                      # 훅 문구가 없는 스파인(인스타형): 긴 원문부터
+        return sorted(rows, key=lambda r: -len(r[2]))[:limit]
     rx = re.compile(pattern)
     out = [r for r in rows if r[2] and rx.search(r[2][:200])]
     return out[:limit]

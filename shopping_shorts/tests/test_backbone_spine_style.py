@@ -143,3 +143,15 @@ def test_효능칸이_둘뿐인_오용형은_줄을_안_늘린다():
            "cases": ["초보는 {용도} 고수는 {용도2}"], "twist": ["근데 미친 활용법은 따로 있었는데 {용도끝}"]}
     plan = ba._spine_plan(roles, tpl, 5)
     assert [r for r, _ in plan] == roles, plan
+
+
+def test_슬롯_이름이_글자로_새면_지운다():
+    out = {"lines": [{"role": "twist", "text": "근데 진짜 충격적인 포인트는 슬라이딩 덮개로 물건을 숨기는 용도끝", "group": -1},
+                     {"role": "x", "text": "이건 {효능}다는 거", "group": 0}]}
+    L = ba._clean_lines(out)
+    assert L[0]["text"] == "근데 진짜 충격적인 포인트는 슬라이딩 덮개로 물건을 숨기는." and "{" not in L[1]["text"]
+
+
+def test_유형으로_고르면_hook_3s_없는_스파인도_후보():
+    st = _FakeStore([{"id": 52, "fit_categories": ["지인증언형"]}, {"id": 55, "hook_3s": "x", "fit_categories": ["제품정체형"]}])
+    assert ba.pick_hook_spine(st, seed=0, style="지인증언형")["id"] == 52

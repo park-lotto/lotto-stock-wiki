@@ -144,7 +144,17 @@ def pick_hook_spine(store, spine_id=None, seed=None, style=None):
       (2026-09-18 사장님: "오용형을 고르면 그 유형 채널들의 잘 쓴 대본 스파인 5~10개가 순번대로 나오는 구조").
       전엔 spine_id 지정 아니면 무작위였고, 유형으로 고르는 길이 없었다.
     spine_id가 오면 그게 우선. 둘 다 없으면 무작위(seed 고정)."""
-    spines = [s for s in store.list_spines(status="approved") if s.get("hook_3s")]
+    all_sp = store.list_spines(status="approved")
+    spines = [s for s in all_sp if s.get("hook_3s")]
+    if spine_id is not None:
+        for s in all_sp:
+            if s.get("id") == spine_id:
+                return s
+    if style:
+        # 인스타 스파인(52~62)은 hook_3s가 없다 — 유형으로 고를 땐 전부 후보(2026-09-18)
+        pool = sorted([s for s in all_sp if style in (s.get("fit_categories") or [])], key=lambda s: s.get("id") or 0)
+        if pool:
+            return pool[_seed_int(seed) % len(pool)]
     if spine_id is not None:
         for s in spines:
             if s.get("id") == spine_id:
@@ -218,6 +228,11 @@ def _clean_lines(out):
     lines = []
     for L in (out.get("lines") or []):
         t = re.sub(r"\s+", " ", str(L.get("text") or "")).strip()
+        if not t:
+            continue
+        # ★슬롯 이름이 글자로 새는 것(실측 job bbd3cfdd12de "…숨기는 용도끝.") — 중괄호 유무 모두 지운다
+        t = re.sub(r"\{[^{}]*\}", "", t)
+        t = re.sub(r"\s*(용도끝|용도[0-9]?|효능[0-9]?|속성[0-9]?|본래용도|권위자|제품군|성과|대상)\s*(?=[.,]|$)", "", t).strip()
         if not t:
             continue
         # 마침표 하나로 강제 — 문장 안 마침표는 쉼표로, 끝은 마침표
