@@ -60,7 +60,7 @@ def test_구조줄이_특징_컷을_먼저_먹지_않는다():
 def test_프롬프트의_group은_묶음_원번호다():
     g = {"product": "x", "order": [2, 0]}          # 순서 1번 = 묶음 2, 순서 2번 = 묶음 0
     p = ba._spine_prompt(g, {"name": "s"}, ROLES, TPL, ["a", "b"], 20)
-    assert "role=solve, group=2 (특징 1번)" in p and "role=more, group=0 (특징 2번)" in p
+    assert "role=solve, group=2 (특징 1번)" in p and "role=twist, group=0 (특징 2번)" in p   # 2개면 첫·마지막(반전)
 
 
 def test_구조줄은_남은_제품컷을_먼저_사람컷은_맨뒤():
@@ -198,3 +198,44 @@ def test_같은_칸이_반복되면_다음_틀():
     tpl = {"more": ["m1", "m2", "m3"]}
     out = ba._pick_templates([("more", 0), ("more", 1)], tpl, 0, {"id": 0})
     assert out[0] != out[1]
+
+
+def test_특징이_줄면_가운데부터_빼고_반전은_남긴다():
+    plan = ba._spine_plan(ROLES, TPL, 2)          # 효능 칸 solve·more·twist 중 2개만
+    feat = [r for r, g in plan if g >= 0]
+    assert feat == ["solve", "twist"], plan
+
+
+def test_25초면_정체형은_8줄_안팎():
+    g = {"product": "x", "order": list(range(7))}
+    roles = ROLES
+    feat_n = len(ba._feature_roles(roles, TPL))
+    allow = max(1, int(25 // ba.SECS_PER_LINE) - (len(roles) - feat_n))
+    plan = ba._spine_plan(roles, TPL, min(len(g["order"]), allow))
+    assert 7 <= len(plan) <= 9, len(plan)
+
+
+def test_읽는_초가_넘치면_가운데_특징줄부터_뺀다():
+    long = "가" * 40
+    lines = [{"role": "title", "text": long, "group": -1}] + \
+            [{"role": "f%d" % i, "text": long, "group": i} for i in range(5)] + \
+            [{"role": "land", "text": "끝", "group": -1}]
+    out = ba._fit_length(lines, 25)
+    assert sum(ba._secs(L["text"]) for L in out) <= 27 or len([L for L in out if L["group"] >= 0]) == 2
+    assert out[0]["role"] == "title" and out[-1]["role"] == "land"
+    feats = [L["role"] for L in out if L["group"] >= 0]
+    assert feats[0] == "f0" and feats[-1] == "f4", feats
+
+
+def test_짧으면_그대로():
+    lines = [{"role": "a", "text": "짧다", "group": 0}]
+    assert ba._fit_length(lines, 25) == lines
+
+
+def test_제품_전체이름은_공개줄에만():
+    p = "NORDECO 빈티지 미니 카메라"
+    lines = [{"role": "title", "text": "미친 %s의 정체." % p, "group": -1},
+             {"role": "reveal", "text": "이건 바로 %s." % p, "group": -1},
+             {"role": "more", "text": "%s로 찍으면 감성." % p, "group": 0}]
+    out = ba._one_full_name(lines, p)
+    assert out[0]["text"] == "미친 카메라의 정체." and p in out[1]["text"] and out[2]["text"].startswith("카메라로")

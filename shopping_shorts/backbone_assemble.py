@@ -37,6 +37,9 @@ SLACK_SECS = 0.3        # 컷 길이 합이 대사보다 이만큼은 더 길게
 #   즉 고칠 자리는 렌더가 아니라 **컷을 여러 개 주는 것**이다(0순위-B: 정하는 곳은 여기 한 곳).
 TARGET_CUT_SECS = 2.0   # 한 컷이 이보다 길면 줄을 더 쪼갤 여지가 있다고 본다(렌더 상한 2.2와 짝)
 MIN_CUTS_PER_LINE = 2   # 줄마다 최소 이만큼 — 그래야 렌더 라운드로빈(>1)이 작동한다
+# 한 줄 평균 몇 초로 잡을까 — 목표 초 ÷ 이 값 = 최대 줄 수. 실측(2026-09-18 카메라): 11줄 34.8초 = 3.2초/줄,
+#   10줄 30.6초 = 3.1초/줄. 25초에 8줄이 맞다 → 3.1.
+SECS_PER_LINE = 3.1
 
 
 def _secs(text):
@@ -206,14 +209,25 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         # ★스파인에 문장틀(templates)·역할순서(beat_roles)가 있으면 **그 꼴 그대로** 쓴다(2026-09-17 사장님:
         #   "이븐쇼핑 스타일" = 천재·떼돈·「이건 바로 OO」·CTA 없음). 전엔 훅 한 줄만 빌리고 나머지는
         #   자체 [훅]+[특징]+[댓글CTA]로 써서 스타일이 통째로 사라졌다.
-        n_lines = len(roles) + max(0, len(groups_out["order"]) - len(_feature_roles(roles, tpl)))
+        # ★목표 초에 맞춰 특징 줄 수를 자른다(2026-09-18 실측: 정체형 10~11줄 = 30.6~34.8초, 목표 25초).
+        #   구조 줄(정체·떼돈·이건 바로·마무리)은 스타일의 뼈대라 안 자르고, 특징 줄만 앞에서부터 남긴다.
+        #   줄당 SECS_PER_LINE초로 잡으면 몇 줄까지 되는지가 나온다.
+        feat_n = len(_feature_roles(roles, tpl))
+        structural = len(roles) - feat_n
+        allow = max(1, int(target_seconds // SECS_PER_LINE) - structural)
+        if len(groups_out["order"]) > allow:
+            groups_out = dict(groups_out, order=list(groups_out["order"])[:allow])
+            feats = feats[:allow]
+        n_lines = len(roles) + max(0, len(groups_out["order"]) - feat_n)
         per_line = max(12, int(target_seconds * cps / max(1, n_lines)))
         # ★seed를 그대로 넘긴다 — 안 넘기면 늘 0이라 **매번 첫 틀만** 쓰여 틀을 6개 만들어도
         #   같은 대본이 나온다(2026-09-18 실측으로 잡은 배선 누락). seed가 바뀌면 칸마다
         #   다음 틀로 돌아 같은 재료에서 N가지 대본이 나온다.
         prompt = _spine_prompt(groups_out, hook_spine, roles, tpl, feats, per_line, seed=seed)
         lines = _clean_lines(_sg._call_json(prompt, _LINES_SCHEMA, note=note) or {})
-        return _repair_joins(lines, plan_for_repair(groups_out, roles, tpl, seed, hook_spine), note=note)
+        lines = _repair_joins(lines, plan_for_repair(groups_out, roles, tpl, seed, hook_spine), note=note)
+        lines = _one_full_name(lines, groups_out.get("product") or "")
+        return _fit_length(lines, target_seconds, note=note)
     prompt = (
         f"제품: {groups_out.get('product')}\n"
         f"훅 스타일: 「{hook_spine.get('name')}」 — {hook_rule}\n"
@@ -228,6 +242,42 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         "- 화면에 없는 기능·수치를 지어내지 마라.")
     out = _sg._call_json(prompt, _LINES_SCHEMA, note=note) or {}
     return _clean_lines(out)
+
+
+def _one_full_name(lines, product):
+    """제품 전체 이름은 **공개 줄(reveal) 한 번만**. 나머지 줄은 끝 낱말(카메라·수납함)로 줄인다.
+    프롬프트로 말해도 모델이 어겼다(실측 job bb38c10bcca9: 5번 줄 "NORDECO 빈티지 미니 TLR 카메라로") → 코드로 못 박는다."""
+    words = (product or "").split()
+    if len(words) < 2:
+        return lines
+    short = words[-1]
+    out = []
+    for L in lines:
+        t = L["text"]
+        if L.get("role") != "reveal" and product in t:
+            t = t.replace(product, short)
+        out.append(dict(L, text=t))
+    return out
+
+
+def _fit_length(lines, target_seconds, note=None, slack=2.0):
+    """실제 읽는 초(narr_secs 합)를 재서 목표+slack을 넘으면 **가운데 특징 줄부터** 뺀다.
+    ★줄 수로만 맞추면 안 된다(2026-09-18 실측: 8줄인데 정체형 30.3초·발명품형 29.1초 — bait 틀 하나가 50자).
+      구조 줄(group=-1: 훅·정체·공개·마무리)과 첫·마지막 특징 줄은 남긴다(반전이 끝맺음).
+    짧은 건 늘리지 않는다 — 없는 말을 지어내게 된다(오용형 6줄 18초는 틀 구조 그대로)."""
+    def total(ls):
+        return sum(_secs(L["text"]) for L in ls)
+    lines = list(lines)
+    dropped = []
+    while total(lines) > target_seconds + slack:
+        feat_idx = [i for i, L in enumerate(lines) if (L.get("group") if L.get("group") is not None else -1) >= 0]
+        if len(feat_idx) <= 2:
+            break
+        k = feat_idx[len(feat_idx) // 2]
+        dropped.append(lines.pop(k)["text"])
+    if note is not None and dropped:
+        note["length_dropped"] = dropped
+    return lines
 
 
 def _clean_lines(out):
@@ -273,10 +323,17 @@ def _spine_plan(roles, tpl, n_feat):
     """[(role, group)] — 구조 줄은 group=-1, 특징 줄은 order 번호. 특징이 효능 자리보다 많으면
     두 번째 효능 역할(more 류)을 마지막 효능 역할(twist) 앞에 반복해 늘린다. 적으면 남는 자리는 뺀다."""
     feat_roles = _feature_roles(roles, tpl)
+    # 특징이 효능 칸보다 적으면 **첫 칸과 마지막 칸(반전)을 남기고 가운데부터** 뺀다
+    #   (25초 맞추기에서 twist가 잘리던 것 — 반전이 스타일의 끝맺음이라 빠지면 안 된다)
+    keep_feat = list(feat_roles)
+    while len(keep_feat) > max(n_feat, 0) and len(keep_feat) > 2:
+        keep_feat.pop(len(keep_feat) // 2)
+    if n_feat < len(keep_feat):                 # 1개만 남으면 첫 효능 줄(반전만 덩그러니면 어색)
+        keep_feat = keep_feat[:n_feat]
     plan, used = [], 0
     for r in roles:
         if r in feat_roles:
-            if used < n_feat:
+            if r in keep_feat and used < n_feat:
                 plan.append([r, None]); used += 1          # 번호는 마지막에 순서대로
         else:
             plan.append([r, -1])

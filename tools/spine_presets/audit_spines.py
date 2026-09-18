@@ -25,6 +25,8 @@ DB = os.environ.get("SS_DB", "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data
 BAD_JOIN = re.compile(r"\}버렸|\}해 버려|\}데다가|\}는 정신 나간|\}주면 되는데|\}뿐만 아니라|\}서 \{")
 HONORIFIC = re.compile(r"(요|니다|세요|죠|습니까)[.!?]?$")
 BRAND = re.compile(r"다이소|이케아|코스트코|쿠팡|구글|아이소|성심당")
+# 유형 고유 말투 — 다른 유형 스파인에 섞이면 결함(실측 2026-09-18: 발명품형 65에 "초보들은 기껏해야…"·"미친 활용법")
+STYLE_MARK = {"오용형": re.compile(r"초보들은|중수들은|고수들은|(?<!\{)활용법|(?<!\{)사용법(?!\})|엉뚱한 용도|원래는 \{본래용도\}|이게 원래는")}
 SLOT = re.compile(r"\{([^{}]+)\}")
 KNOWN_SLOTS = {"제품", "제품군", "제품군2", "효능", "효능2", "효능3", "효능4", "나라", "대상", "대상들", "성과", "본래용도",
                "가격", "권위자", "장소", "속성", "속성2", "용도", "용도2", "용도3", "용도끝", "적용대상", "적용대상들",
@@ -74,6 +76,10 @@ def audit(members=100, only=None):
                     fails.append((sid, "존댓말", f"{r}: {t}"))
                 if _ko_ratio(t) < 0.6:
                     fails.append((sid, "외국어", f"{r}: {t}"))
+                fits = s.get("fit_categories") or []
+                for style_name, rx in STYLE_MARK.items():
+                    if style_name not in fits and rx.search(t):
+                        fails.append((sid, "스타일섞임", f"{r}: {t} ({style_name} 말투)"))
                 if BRAND.search(t):
                     fails.append((sid, "브랜드", f"{r}: {t}"))
                 for sl in SLOT.findall(t):
