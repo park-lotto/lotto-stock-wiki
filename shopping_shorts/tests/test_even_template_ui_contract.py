@@ -10,7 +10,8 @@ PRODUCE = (ROOT / "shopping_shorts" / "static" / "scene-style-produce.js").read_
 def test_even_reference_does_not_auto_shrink_or_scale_x():
     assert "lockedReference=rows[current]?.id==='t11'&&frame.reference_style" in UI
     assert "if(!lockedReference)" in UI
-    assert "if(p.id==='t11'&&frame.reference_style)return" in UI
+    # 제목칸을 안 건드렸을 때만 측정 좌표 그대로(2026-09-18: 칸을 움직이면 글자 크기는 두고 위치만 벌린다)
+    assert "if(p.id==='t11'&&frame.reference_style&&!moved)return" in UI
 
 
 def test_even_contract_blocks_save_when_copy_is_too_long():

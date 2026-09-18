@@ -18972,7 +18972,9 @@ def api_produce_mix_settings(body: dict):
     if "scene_style" in body:
         from .scene_style import validate_snapshot
         try:
-            snapshot = validate_snapshot(body["scene_style"])
+            # None = '템플릿 없음'(2026-09-18 사장님 "템플릿 없는 거 쓰는 사람들"). 렌더(video_assemble)는
+            #   scene_style이 비어 있으면 꾸미기를 건너뛰므로 원본 영상 그대로 나간다.
+            snapshot = None if body["scene_style"] is None else validate_snapshot(body["scene_style"])
         except (ValueError, TypeError) as exc:
             return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
         fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), "scene_style": snapshot}

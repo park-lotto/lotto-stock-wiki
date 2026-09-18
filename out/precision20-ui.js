@@ -20,7 +20,8 @@
     return {top:Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100),bottom:0};
   };
   const layoutKey=(presetId,frame)=>presetId.startsWith('fixed_')?presetId:`${presetId}:${frame===storyRows.find(p=>p.id===presetId)?.hook?'hook':'body'}`;
-  const fixedLayoutFor=(presetId,frame)=>({...fixedBaseLayout(frame),...(fixedLayouts.get(layoutKey(presetId,frame))||{}),bottom:0});
+  // 하단 칸(2026-09-18 사장님 "빠른조절에 하단 칸도 만들어서 올리고 내릴수있게") — 저장한 값만 쓰고 기본은 0.
+  const fixedLayoutFor=(presetId,frame)=>{const saved=fixedLayouts.get(layoutKey(presetId,frame))||{};return {...fixedBaseLayout(frame),...saved,bottom:Number(saved.bottom)||0};};
   const fixedBaseColors=frame=>{
     const titleLines=(frame?.lines||[]).filter(line=>line.bind!=='caption');
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
@@ -59,9 +60,10 @@
     return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
   };
   const mediaBounds=(frame,presetId)=>{
-    if(!frame)return {top:0,height:100};
+    if(!frame||noTemplate)return {top:0,height:100};   // 템플릿 없음 = 영상이 화면 전체
     const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'?captionSettings().h:0);
-    return {top,height:100-top};
+    const bottom=fixedLayoutFor(presetId||rows[current].id,frame).bottom;
+    return {top,height:Math.max(10,100-top-bottom)};
   };
   const fixedThumb=p=>`assets/scene-style/thumbnails/fixed-${p.source_id}.png`;
   const storyThumb=(p,kind)=>`assets/scene-style/thumbnails/story-${p.id}-${kind}.png`;
@@ -70,7 +72,7 @@
   const captionBadge=p=>presetHasCaptionSlot(p)?'<span class="caption-kind reserved">자막칸</span>':'<span class="caption-kind overlay">영상 위</span>';
   const renderGrid=()=>{
     const count=root.querySelector('.layout-a .pane-head .count');if(count)count.textContent=`${storyRows.length+fixedRows.length}개`;
-    grid.innerHTML=rows.map((p,i)=>mode==='continuous'
+    grid.innerHTML='<button class="preset-card none-card" data-none><span class="check">✓</span><div class="none-thumb">원본 영상<br>그대로</div><b>템플릿 없음</b><small>제목·자막 꾸미기 없이</small></button>'+rows.map((p,i)=>mode==='continuous'
       ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="fixed-thumb" style="background-image:url('${fixedThumb(p)}')"></div><b>${esc(p.name)}</b><small>${esc(fontLabel(p))} · 고정형</small></button>`
       : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${esc(fontLabel(p))} · 훅+본문</small></button>`).join('');
   };
@@ -86,6 +88,9 @@
   const badge=document.createElement('div');badge.className='precision-badge';badge.textContent='원본 실측 편집';layer.appendChild(badge);
   preview.append(base,media,layer);
 
+  // 템플릿 없음(2026-09-18 사장님 "템플릿 없는 거 쓰는 사람들") — 선택하면 snapshot()이 null을 내고 제작소가 그대로 서버에 저장,
+  //   최종 렌더(video_assemble)는 scene_style이 비면 꾸미기를 건너뛴다.
+  let noTemplate=false;
   let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',hookMotionSpeed=.72,hookCaptionMode='visible';
   const fontScales=new Map();
   const fittedText=new Map();
@@ -189,18 +194,21 @@
     motionPanel.querySelector('.hook-motion-head small').textContent=(hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':hookMotion==='push-in'?'화면 전체가 천천히 확대':hookMotion==='shake'?'화면 전체가 훅 내내 잘게 떨림':'제목에만 적용')+(hookBandMotion==='rise'?' + 흰 띠 스윽':hookBandMotion==='grow'?' + 흰 띠 확대':'');
   }
   const minimumFixedTop=frame=>Math.min(46,Math.max(12,Math.ceil((Math.max(0,...(frame?.lines||[]).filter(line=>line.bind!=='caption').map(line=>line.y1))+2)/(frame?.height||1)*100)));
+  // 썰쇼핑형은 글자를 안 줄이므로 원래 칸의 85%보다 좁히면 줄끼리 겹친다.
+  const minimumStoryTop=frame=>Math.max(8,Math.ceil(captionSource(frame).cut/frame.height*100*.85));
   function syncMediaLayout(){
+    if(noTemplate){Object.assign(media.style,{top:'0%',height:'100%'});return;}
     const p=rows[current],frame=frameFor(p),bounds=mediaBounds(frame,p?.id);
     Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
   }
   function syncFixedPanel(){
     fixedPanel.hidden=false;
-    fixedPanel.querySelector('[data-fixed-size="bottom"]').hidden=true;fixedPanel.querySelector('[data-fixed-color="bottom"]').closest('label').hidden=true;
+    fixedPanel.querySelector('[data-fixed-size="bottom"] span').textContent='하단 칸';
     fixedPanel.querySelector('.fixed-quick-head b').textContent=mode==='continuous'?'고정형 빠른 조절':`${kind==='hook'?'훅':'본문'} 빠른 조절`;
     const p=rows[current],frame=frameFor(p),layout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame)},colors=fixedColorsFor(p.id,frame);
     fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
       const key=row.dataset.fixedSize,input=row.querySelector('input'),output=row.querySelector('output');
-      if(key==='top')input.min=String(mode==='continuous'?minimumFixedTop(frame):8);
+      if(key==='top')input.min=String(mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame));
       input.value=String(layout[key]);output.textContent=Math.round(layout[key])+'%';
     });
     fixedPanel.querySelectorAll('[data-fixed-color]').forEach(input=>input.value=colors[input.dataset.fixedColor]);
@@ -516,7 +524,14 @@
     }
     return el;
   }
+  function setNoTemplate(){
+    noTemplate=true;document.body.classList.add('no-template');
+    grid.querySelectorAll('[data-p20]').forEach(x=>x.classList.remove('selected'));grid.querySelector('[data-none]')?.classList.add('selected');
+    renderEdit();
+  }
   function renderEdit(){
+    // 글자층을 비워야 scene-style-connect의 감시(MutationObserver)가 돌아 영상 틀을 화면 전체로 다시 잡는다.
+    if(noTemplate){[...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());layer.hidden=true;Object.assign(media.style,{top:'0%',height:'100%'});return;}
     [...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());
     const p=rows[current],frame=frameFor(p);if(!frame)return;
     sourceClean.replaceChildren();
@@ -610,12 +625,18 @@
       const key=kind==='hook'?'bodyTitle':'caption';
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
-    if(mode==='story')applyStoryLayout(frame,p);
+    if(mode==='story'){
+      applyStoryLayout(frame,p);
+      const storyBottom=fixedLayoutFor(p.id,frame).bottom;
+      if(storyBottom>0)addPatch(100-storyBottom,storyBottom,fixedColorsFor(p.id,frame).bottom,0,100,'bottom-band');
+    }
     const paint=fixedColors.get(layoutKey(p.id,frame));
     if(paint){
       const channelColor=fixedColorsFor(p.id,frame).channel;
       layer.querySelectorAll('.precision-text[data-edit-bind="channel"]').forEach(el=>{el.style.color=channelColor;el.querySelectorAll('span').forEach(span=>span.style.color=channelColor);});
       if(paint.top)layer.querySelectorAll('.body-ornament').forEach(el=>el.style.color=readableInk(paint.top));
+      // 채널명 칸도 제목 배경색을 따른다 — 안 그러면 빠른 조절 색을 바꿔도 채널명 뒤만 원래 검정으로 남는다(2026-09-18 사장님 제보).
+      if(paint.top)layer.querySelectorAll('[data-edit-bind="channel"]').forEach(el=>{if(el.style.background||el.style.backgroundColor)el.style.background=paint.top;});
     }
     if(hasEditableCaption())renderCaption(frame);
     syncMediaLayout();
@@ -623,18 +644,25 @@
   function applyStoryLayout(frame,p){
     // 이븐쇼핑 원본형은 측정 좌표 자체가 계약이다. 장면별 자막칸 보정으로
     // 제목 영역이나 글자 크기를 다시 압축하면 훅/본문이 서로 흔들린다.
-    if(p.id==='t11'&&frame.reference_style)return;
     const source=captionSource(frame),cut=source.cut/frame.height*100,next=titleHeight(frame),paint=fixedColors.get(layoutKey(p.id,frame));
+    // 이븐쇼핑 원본형은 측정 좌표 자체가 계약 — 제목칸을 안 건드렸으면 그대로 둔다.
+    const moved=Math.abs(next-cut)>.05;
+    if(p.id==='t11'&&frame.reference_style&&!moved)return;
+    // 상단 제목칸 조절 = 칸만 커지고 줄어든다(2026-09-18 사장님 "칸만 줄어들어야 하는데 글자도 비율로 줄어들면 안 좋다",
+    //   "50%로 키우면 흰 띠 아래가 까맣게 빈다"). 글자·띠 크기는 그대로 두고 **위치만** 칸 안에 고르게 벌린다:
+    //   맨 위(채널명)는 거의 제자리, 맨 아래(흰 띠)는 칸 바닥을 따라가고, 가운데는 그 사이 비율만큼.
+    //   칸 전체를 채우는 배경판만 새 높이로 늘린다.
     for(const el of [...layer.children].filter(el=>el!==badge)){
       const top=parseFloat(el.style.top),height=parseFloat(el.style.height);if(!Number.isFinite(top))continue;
       if(top>=cut&&hasEditableCaption()){el.remove();continue;}
-      el.style.top=top*next/Math.max(.01,cut)+'%';
-      if(Number.isFinite(height))el.style.height=Math.max(0,Math.min(height,cut-top)*next/Math.max(.01,cut))+'%';
-      // Compress the type with its title area; moving line origins alone overlaps lines.
-      if(el.classList.contains('precision-text')&&next<cut){
-        const ratio=next/Math.max(.01,cut);
-        el.style.fontSize=parseFloat(el.style.fontSize)*ratio+'px';
-        el.style.letterSpacing=(parseFloat(el.style.letterSpacing)||0)*ratio+'px';
+      if(moved){
+        const h=Number.isFinite(height)?Math.min(height,cut-top):(el.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100);
+        if(top<=.5&&Number.isFinite(height)&&height>=cut*.8){el.style.height=next+'%';}
+        else{
+          const f=Math.max(0,Math.min(1,(top+h)/Math.max(.01,cut)));   // 아래 끝 기준 — 흰 띠가 칸 바닥에 딱 붙어 따라간다
+          el.style.top=Math.max(0,Math.min(next-h,top+(next-cut)*f))+'%';
+          if(Number.isFinite(height))el.style.height=Math.max(0,h)+'%';
+        }
       }
       if(paint){
         if(el.classList.contains('precision-text')){
@@ -655,12 +683,26 @@
     a=>({color:'#FFFFFF',box:{background:`linear-gradient(180deg,${a},${a}CC)`,boxShadow:'0 4px 12px rgba(0,0,0,.45)',left:'4%',width:'92%',borderRadius:'999px'}}),                                          // 포인트색 알약
     a=>({color:'#141414',box:{background:'linear-gradient(180deg,#FFF9E8,#F3E9CF)',boxShadow:'0 5px 12px rgba(0,0,0,.4)',left:'3%',width:'94%',borderRadius:'6px'}}),                                         // 종이 카드
     a=>({color:'#FFFFFF',box:{background:'linear-gradient(90deg,rgba(0,0,0,0),rgba(0,0,0,.85) 15%,rgba(0,0,0,.85) 85%,rgba(0,0,0,0))',borderBottom:`3px solid ${a}`}}),                                   // 가운데 짙은 띠 + 밑줄 포인트
+    // 2026-09-18 사장님 "그라데이션이나 고급스러운 거 몇 개 넣어줘" — 고를 수 있는 고급형 4종
+    a=>({color:'#2A1B00',box:{background:'linear-gradient(180deg,#FFF3C4,#E8C46A 55%,#C99A2E)',boxShadow:'inset 0 1px 0 rgba(255,255,255,.7),0 4px 12px rgba(0,0,0,.45)',left:'3%',width:'94%',borderRadius:'6px'}}),   // 골드
+    a=>({color:'#F6E7B8',box:{background:'linear-gradient(180deg,#1B2A4A,#0B1428)',boxShadow:'0 4px 12px rgba(0,0,0,.5)',borderTop:'2px solid #D9B45A',borderBottom:'2px solid #D9B45A'}}),                        // 네이비 + 금테
+    a=>({color:'#FFFFFF',box:{background:'linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.10))',backdropFilter:'blur(8px)',border:'1px solid rgba(255,255,255,.45)',boxShadow:'0 4px 14px rgba(0,0,0,.35)',left:'4%',width:'92%',borderRadius:'12px'},text:{textShadow:'0 1px 3px rgba(0,0,0,.6)'}}),   // 반투명 유리
+    a=>({color:'#FFFFFF',box:{background:'linear-gradient(90deg,#FF4FA3,#7B5CFF 55%,#2EC5FF)',boxShadow:'0 4px 14px rgba(123,92,255,.55)',left:'4%',width:'92%',borderRadius:'999px'}}),                            // 3색 그라데이션 알약
   ];
+  const CAPTION_LOOK_NAMES=['흰 띠','검정 유리','흰 바탕 번짐','포인트 알약','종이 카드','짙은 띠','골드','네이비 금테','반투명 유리','3색 그라데이션'];
+  // 자막박스 없음 — 박스 없이 흰 글자 + 검은 외곽선·그림자만(영상 위에 바로 얹힌 자막).
+  const CAPTION_NONE={color:'#FFFFFF',box:{background:'transparent',boxShadow:'none',border:'0',backdropFilter:'none'},text:{textShadow:'0 0 3px #000,0 0 3px #000,0 2px 4px rgba(0,0,0,.8)',WebkitTextStroke:'0.6px #000'}};
   function captionLook(frame){
-    if(mode!=='continuous'||(captionLayouts.get(captionKey())||{}).background)return null;
+    // 사용자가 배경색을 직접 고른 때만(bgUser) 디자인을 끈다. 끌어 옮기기도 captionSettings() 전체를 저장해 background가
+    //   늘 들어가 있어서, 옛 조건(background 있음)으로는 한 번 끌면 디자인이 회색 띠로 바뀌었다(2026-09-18 사장님 제보·재현).
+    const saved=captionLayouts.get(captionKey())||{};
+    if(saved.look==='none')return CAPTION_NONE;
+    const accent0=(fixedColorsFor(rows[current].id,frame).title2||'#00F9ED').slice(0,7);
+    if(Number.isInteger(saved.look)&&CAPTION_LOOKS[saved.look])return CAPTION_LOOKS[saved.look](accent0);   // 사용자가 고른 모양(썰쇼핑형 본문에도 적용)
+    if(mode!=='continuous'||saved.bgUser)return null;
     const id=rows[current].id||'';let h=0;for(const ch of id)h=(h*31+ch.charCodeAt(0))>>>0;
     const accent=(fixedColorsFor(id,frame).title2||'#00F9ED').slice(0,7);
-    return CAPTION_LOOKS[h%CAPTION_LOOKS.length](accent);
+    return CAPTION_LOOKS[h%6](accent);   // 자동 배정은 원래 6종 안에서(템플릿마다 늘 같은 모양 유지)
   }
   function renderCaption(frame){
     if(!captionVisible())return;
@@ -670,7 +712,7 @@
     const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,titleHeight(frame)+drag.y+textOffset('caption')));
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
     const capLook=captionLook(frame);
-    if(capLook){Object.assign(patch.style,capLook.box);settings.color=capLook.color;}
+    if(capLook){const {left,width,...look}=capLook.box;Object.assign(patch.style,settings.placement==='title'?capLook.box:look);if(!settings.colorUser)settings.color=capLook.color;}   // 옮긴 자막은 옮긴 자리·폭 유지
     const original=source.ln||{font_size:frame.height*.032,font_family:frame.font_family||'Pretendard',font_weight:900};
     // 고정형 자막 기본 크기 = 템플릿 값의 82%(2026-09-18 사장님 "자막쪽이 너무 크다"). 이븐쇼핑 본문과 같은 3.6%였지만
     //   굵은 흰 글씨·제목과의 크기 차이가 작아 커 보였다. −/+ 조절(textScale)은 이 위에 그대로 곱해진다.
@@ -680,6 +722,7 @@
     const text=layer.querySelector('.precision-text[data-edit-bind="caption"]');
     Object.assign(text.style,{left:(x+2)+'%',right:'auto',width:Math.max(1,w-4)+'%',top:y+'%',height:h+'%',transform:'none',display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'pre-wrap',lineHeight:'1.15',color:settings.color});
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
+    if(capLook?.text)Object.assign(text.style,capLook.text);
   }
   function showFrame(next){
     kind=mode==='continuous'?'hook':next;
@@ -708,6 +751,7 @@
     syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
   }
   function selectPreset(index){
+    noTemplate=false;document.body.classList.remove('no-template');grid.querySelector('[data-none]')?.classList.remove('selected');
     current=index;const p=rows[index];
     if(mode==='continuous')kind='hook';else sceneIndex=kind==='hook'?0:Math.max(1,sceneIndex);
     preview.classList.remove('template-shortem');
@@ -732,7 +776,7 @@
     if(sceneContext?.text)for(const [key,text] of Object.entries(sceneContext.text))if(inputs[key])inputs[key].value=text;
     preview.classList.remove('is-pristine');showFrame(kind);
   }
-  grid.addEventListener('click',e=>{const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
+  grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
   modeBar.addEventListener('click',event=>{
     const button=event.target.closest('[data-template-mode]');if(!button)return;
     mode=button.dataset.templateMode;rows=mode==='continuous'?fixedRows:storyRows;if(!rows.length)return;
@@ -784,7 +828,7 @@
   });
   const applyFixedSize=(key,rawValue)=>{
     const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame),titleOnly:true};
-    const min=key==='top'?(mode==='continuous'?minimumFixedTop(frame):8):0,max=key==='top'?50:35;
+    const min=key==='top'?(mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame)):0,max=key==='top'?50:35;
     currentLayout[key]=Math.round(Math.max(min,Math.min(max,Number(rawValue))));
     if(currentLayout.top+currentLayout.bottom>70)currentLayout[key]=70-currentLayout[key==='top'?'bottom':'top'];
     fixedLayouts.set(layoutKey(p.id,frame),currentLayout);fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
@@ -827,7 +871,7 @@
   });
   captionField?.addEventListener('input',event=>{
     const input=event.target.closest('[data-caption-layout]');if(!input)return;
-    const settings=captionSettings();settings[input.dataset.captionLayout]=input.type==='range'?Number(input.value):input.value;
+    const settings=captionSettings();settings[input.dataset.captionLayout]=input.type==='range'?Number(input.value):input.value;if(input.dataset.captionLayout==='background'){settings.bgUser=true;delete settings.look;}if(input.dataset.captionLayout==='color')settings.colorUser=true;
     captionLayouts.set(captionKey(),settings);markDirty('caption');renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
@@ -846,6 +890,18 @@
   const maskDetails=document.createElement('details');maskDetails.style.gridColumn='1/-1';maskDetails.innerHTML='<summary style="cursor:pointer">자막박스 크기 · 색상</summary><div class="caption-position"></div>';
   captionPlacement?.querySelectorAll('label').forEach(label=>maskDetails.querySelector('div').append(label));
   captionPlacement?.append(maskDetails);
+  // 자막박스 모양 고르기(2026-09-18) — 기본(템플릿) / 없음 / 10종. 고르면 직접 고른 박스색은 풀린다.
+  const lookRow=document.createElement('div');lookRow.className='caption-looks';
+  lookRow.innerHTML='<span>자막박스 모양</span>'+[['auto','기본'],['none','박스 없음'],...CAPTION_LOOK_NAMES.map((n,i)=>[String(i),n])].map(([v,n])=>`<button type="button" data-caption-look="${v}">${n}</button>`).join('');
+  maskDetails.querySelector('div').prepend(lookRow);
+  function syncCaptionLookButtons(){const saved=captionLayouts.get(captionKey())||{};const cur=saved.look==='none'?'none':Number.isInteger(saved.look)?String(saved.look):'auto';lookRow.querySelectorAll('[data-caption-look]').forEach(b=>b.classList.toggle('active',b.dataset.captionLook===cur));}
+  lookRow.addEventListener('click',event=>{
+    const b=event.target.closest('[data-caption-look]');if(!b)return;
+    const settings={...captionSettings(),...(captionLayouts.get(captionKey())||{})};delete settings.bgUser;delete settings.colorUser;
+    if(b.dataset.captionLook==='auto')delete settings.look;else settings.look=b.dataset.captionLook==='none'?'none':Number(b.dataset.captionLook);
+    captionLayouts.set(captionKey(),settings);markDirty('caption');renderEdit();syncCaptionLookButtons();
+  });
+  maskDetails.addEventListener('toggle',syncCaptionLookButtons);
   function applyCaptionMoveScope(){
     moveScope.hidden=false;
     if(captionMoveScope!=='all')return;
@@ -909,7 +965,7 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
@@ -929,7 +985,7 @@
       fittedText.clear();renderEdit();
     },
     show(index){showScene(index);return this.geometry()},
-    geometry:()=>({media:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
+    geometry:()=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
     effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
     copyEffectsToAll(){const value=structuredClone(effects[String(sceneIndex)]||{});for(let i=0;i<sceneTotal();i++)effects[String(i)]=structuredClone(value);},
     branding(value){if(value!==undefined){branding=value;if(!labMode)try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
