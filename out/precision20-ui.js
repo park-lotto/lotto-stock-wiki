@@ -236,7 +236,8 @@
     // 글자뿐 아니라 상자(patch)도 지운다 — '스윽 올라오기'가 흰 띠 상자를 같이 움직이는데, 렌더는 프레임마다
     //   다시 seek하므로 안 지우면 멈춘 옛 애니메이션이 상자에 쌓인다.
     layer.querySelectorAll('.precision-text,.precision-patch').forEach(el=>el.getAnimations?.().forEach(animation=>animation.cancel()));
-    const texts=[...layer.querySelectorAll('.precision-text')].filter(el=>['hook1','hook2','bodyTitle'].includes(el.dataset.editBind));
+    // 흰 띠 스윽이 켜져 있으면 흰 띠 글자(bodyTitle)는 스윽이 맡는다 — 제목 모션까지 걸면 글자만 옆으로 튀고 상자와 갈라진다.
+    const texts=[...layer.querySelectorAll('.precision-text')].filter(el=>['hook1','hook2',...(hookBandRise?[]:['bodyTitle'])].includes(el.dataset.editBind));
     let duration=0;
     const timing={duration:620,easing:'cubic-bezier(.18,.88,.25,1)',fill:'both'};
     const time=value=>Math.round(value*hookMotionSpeed);
