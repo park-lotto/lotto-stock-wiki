@@ -276,8 +276,32 @@
     return bind==='channel'?(p.sample.channel||'숏템메이커'):p.sample[bind];
   }
   function updateCount(input){
+    const limit=Number(input.dataset.max)||Infinity;
+    const length=[...input.value].length;
     const counter=input.closest('.field')?.querySelector('[data-count]');
-    if(counter)counter.textContent=`${[...input.value].length}/${input.dataset.max}`;
+    if(counter)counter.textContent=`${length}/${input.dataset.max}`;
+    input.classList.toggle('contract-invalid',length>limit);
+    input.setAttribute('aria-invalid',length>limit?'true':'false');
+  }
+  const evenLimits={channel:12,hook1:11,hook2:11,bodyTitle:22,caption:22};
+  function syncFieldLimits(){
+    const limits=rows[current]?.id==='t11'?evenLimits:{channel:12,hook1:18,hook2:18,bodyTitle:22,caption:24};
+    for(const [bind,input] of Object.entries(inputs)){
+      input.dataset.max=String(limits[bind]||24);
+      updateCount(input);
+    }
+  }
+  function templateViolations(){
+    if(rows[current]?.id!=='t11')return [];
+    const labels={channel:'채널명',hook1:'훅 제목 1',hook2:'훅 제목 2',bodyTitle:'보조·본문 제목',caption:'본문 자막'};
+    const found=[];
+    for(const [bind,limit] of Object.entries(evenLimits)){
+      const text=inputs[bind]?.value||'';
+      if((bind==='hook1'||bind==='hook2')&&!text.trim())found.push(`${labels[bind]}이 비어 있습니다.`);
+      if([...text].length>limit)found.push(`${labels[bind]}은 공백 포함 ${limit}자 이하여야 합니다.`);
+      if((bind==='hook1'||bind==='hook2')&&/[\r\n]/.test(text))found.push(`${labels[bind]}은 한 줄이어야 합니다.`);
+    }
+    return found;
   }
   function resetField(bind){
     const input=inputs[bind];if(!input)return;
@@ -306,6 +330,7 @@
     const label2=root.querySelector('.layout-a [data-field-key="hook2"] [data-field-label]');
     if(label1)label1.textContent=mode==='continuous'?'제목 1':'훅 제목 1';
     if(label2)label2.textContent=mode==='continuous'?'제목 2':'훅 제목 2';
+    syncFieldLimits();
   }
   function addPatch(y,h,color,x=0,w=100,bind=''){
     const el=document.createElement('div');el.className='precision-patch';
@@ -397,9 +422,14 @@
     if(chosen){el.style.color=chosen;el.querySelectorAll('span').forEach(span=>span.style.color=chosen);}
     layer.insertBefore(el,badge);
     if(bind==='caption'){el.style.left=(left+captionX())+'%';el.style.right=(right-captionX())+'%';}
-    const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
-    if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
-    else {const isStory=mode==='story',manualSize=fontScales.has(scaleKey(bind));if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=manualSize?1:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
+    // 이븐쇼핑 기준형은 원본 폰트 크기·자간·가로비를 잠근다. 긴 문구를 몰래
+    // 축소하거나 찌그러뜨리지 않고 templateViolations가 적용 전에 되돌려 보낸다.
+    const lockedReference=rows[current]?.id==='t11'&&frame.reference_style;
+    if(!lockedReference){
+      const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
+      if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
+      else {const isStory=mode==='story',manualSize=fontScales.has(scaleKey(bind));if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=manualSize?1:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
+    }
     return el;
   }
   function renderEdit(){
@@ -507,6 +537,9 @@
     syncMediaLayout();
   }
   function applyStoryLayout(frame,p){
+    // 이븐쇼핑 원본형은 측정 좌표 자체가 계약이다. 장면별 자막칸 보정으로
+    // 제목 영역이나 글자 크기를 다시 압축하면 훅/본문이 서로 흔들린다.
+    if(p.id==='t11'&&frame.reference_style)return;
     const source=captionSource(frame),cut=source.cut/frame.height*100,next=titleHeight(frame),paint=fixedColors.get(layoutKey(p.id,frame));
     for(const el of [...layer.children].filter(el=>el!==badge)){
       const top=parseFloat(el.style.top),height=parseFloat(el.style.height);if(!Number.isFinite(top))continue;
@@ -791,6 +824,7 @@
     copyEffectsToAll(){const value=structuredClone(effects[String(sceneIndex)]||{});for(let i=0;i<sceneTotal();i++)effects[String(i)]=structuredClone(value);},
     branding(value){if(value!==undefined){branding=value;if(!labMode)try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
     context:()=>sceneContext,
+    validation:()=>templateViolations(),
     resetCaptionText(){captionTexts.delete(captionKey());syncCaption();markDirty('caption');renderEdit()},
     refresh(){fittedText.clear();renderEdit()},
     motionAt(time){return runHookMotion({time})},

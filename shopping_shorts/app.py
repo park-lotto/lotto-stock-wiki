@@ -94,7 +94,7 @@ from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRI
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
-from shopping_shorts import keycrypt, keyctx, keyroute, pricing
+from shopping_shorts import keycrypt, keyctx, keyroute, pricing, canary
 from shopping_shorts import buffer_api      # BYOK(사용자 키·포인트). points는 위에서 이미 import
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
@@ -3525,7 +3525,8 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         #   사라졌다** — 사장님이 2개를 골랐는데 1안만 나왔다(실측: ⚠️타소재 2개가 버려지고
         #   ✅검증 1개만 생성). 같은 판단이 화면과 서버 두 곳에 다르게 적혀 있던 것(0순위-B).
         #   경고는 화면이 이미 했다. 고른 건 그대로 존중한다.
-        _by_id = {s["id"]: s for s in store.list_style_spines(category=None)}
+        _by_id = {s["id"]: bank_assemble.with_spoken_hook(s)
+                  for s in store.list_style_spines(category=None)}
         _picked = [_by_id[i] for i in _style_ids if i in _by_id]
         if not _picked:
             return JSONResponse(status_code=422, content={
@@ -13408,6 +13409,7 @@ async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
         request.state.customer_id = 0
         keyctx.set_owner(0)
+        canary.activate_from_request(request, True)   # 인증 없는 로컬 = 관리자(0)
         return await call_next(request)
     path = request.url.path
     # /api/find/frame/*는 Google Lens·SerpApi 등 외부 이미지검색 크롤러가 인증
@@ -13440,6 +13442,8 @@ async def _auth_guard(request: Request, call_next):
         # ★제미나이처럼 '인자로 cid를 못 흘리는' 경로가 이걸 읽는다(keyctx 참조).
         #   미들웨어에서 한 번만 정하므로 엔드포인트가 각자 챙길 필요가 없다.
         keyctx.set_owner(customer_id)
+        # 관리자 카나리(canary.py) — 관리자 + 쿠키 ss_canary=1일 때만 새 대본 동작. 고객은 항상 꺼짐.
+        canary.activate_from_request(request, lambda: _is_admin(customer_id))
         _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
         _track_activity(customer_id, path)     # 접속중·활동기록(best-effort)
         lvl = access_level(customer_id)
@@ -16794,7 +16798,8 @@ def api_produce_script_mix(request: Request, body: dict):
     style_ids = [int(x) for x in (body.get("style_ids") or []) if str(x).isdigit()]
     if style_ids:
         _st = Store(DB_PATH)
-        _by_id = {s["id"]: s for s in _st.list_style_spines()}
+        _by_id = {s["id"]: bank_assemble.with_spoken_hook(s)
+                  for s in _st.list_style_spines()}
         picked = [_by_id[i] for i in style_ids if i in _by_id]
         if not picked:
             return JSONResponse(status_code=422,
@@ -18907,7 +18912,8 @@ def api_scene_style_asset(asset_path: str):
 
 
 @app.get("/api/produce/scene-style/context/{job_id}")
-def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = ""):
+def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = "",
+                            headcopy_subline: str = "", copy_family: str = ""):
     from .scene_style import context_for
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
@@ -18922,7 +18928,14 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     except Exception:
         return JSONResponse(status_code=409, content={"error": "음성 파일을 확인할 수 없습니다. 미리보기를 다시 만들어 주세요"})
     snapshot = (job.get("deco") or {}).get("scene_style")
-    context = context_for(timeline, {"text": headcopy_text[:2000]} if headcopy_text else job.get("headcopy"), snapshot, job_id)
+    headcopy = dict(job.get("headcopy") or {})
+    if headcopy_text:
+        headcopy["text"] = headcopy_text[:2000]
+    if headcopy_subline:
+        headcopy["subline"] = headcopy_subline[:200]
+    if copy_family:
+        headcopy["copy_family"] = headcopy_gen.normalize_family(copy_family)
+    context = context_for(timeline, headcopy, snapshot, job_id)
     for scene in context["scenes"]:
         scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{scene['beat_idx']}"
     return {"context": context, "snapshot": snapshot}
@@ -21567,7 +21580,8 @@ def api_script_styles(request: Request, category: str = None, job: str = None):
         fit="타소재" = 다른 소재에서 검증됨(써도 되지만 어울림은 확인 필요)
       정렬은 검증 먼저, 그다음 실적순 — 첫 번째가 곧 추천이다."""
     store = Store(DB_PATH)
-    styles = store.list_style_spines(category=None)     # 잠그지 않고 전부
+    styles = [bank_assemble.with_spoken_hook(s)
+              for s in store.list_style_spines(category=None)]     # 잠그지 않고 전부
     cat = (category or "").strip()
     # ★job이 오면 "지금 담긴 재료로 이 틀이 몇 칸 차나"를 함께 준다(2026-08-20 사장님
     #   아이디어: "필요한 장면 / 있는 것 / 없는 것을 보여줘라" — 무분별 수집 방지).
@@ -22979,10 +22993,12 @@ def api_script_style_templates(spine_id: int, role: str = None):
             break
     if not sp:
         return JSONResponse(status_code=404, content={"ok": False, "error": "없는 스타일"})
+    sp = bank_assemble.with_spoken_hook(sp)
     templates = sp.get("templates") or {}
     roles = sp.get("beat_roles") or []
-    # 칸 설명은 beat_chain(사람이 읽는 자연어)에서 순서대로 빌린다 — style_block과 같은 규칙.
-    descs = dict(zip(roles, sp.get("beat_chain") or []))
+    # 칸 설명은 생성 프롬프트와 같은 함수가 정한다. 제목형에 첫 TTS 훅을 보강해도
+    # 옛 beat_chain이 한 칸씩 밀리지 않는다(화면과 생성이 같은 계약을 본다).
+    descs = bank_assemble.beat_descs(sp)
     want = [role] if role else roles
     out = []
     for r in want:
@@ -23044,6 +23060,7 @@ def api_script_beat_regen(request: Request, body: dict):
         style = next((s for s in store.list_style_spines(category=None) if s["id"] == style_id), None)
         if not style:
             return JSONResponse(status_code=404, content={"ok": False, "error": "없는 스타일"})
+        style = bank_assemble.with_spoken_hook(style)
 
     # 재료 — 전체 생성과 같은 경로로 씨앗 항목을 찾는다(위키에 없으면 body 폴백도 동일).
     shortcode = (body.get("shortcode") or "").strip()

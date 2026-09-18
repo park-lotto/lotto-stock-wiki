@@ -7,6 +7,9 @@
   if(canaryRequested)localStorage.setItem(canaryKey,'1');
   if(canaryParam==='0')localStorage.removeItem(canaryKey);
   const canaryEnabled=canaryRequested||localStorage.getItem(canaryKey)==='1';
+  // 서버 카나리(canary.py)와 짝 — 관리자 + 이 쿠키일 때만 새 대본 동작. 켜고 끄는 자리는 여기 한 곳.
+  document.cookie='ss_canary='+(canaryEnabled?'1':'0')+'; path=/; max-age='+(canaryEnabled?31536000:0)+'; SameSite=Lax';
+  window.SS_CANARY=canaryEnabled;
   let canaryRequest=0,canaryJobId='';
   const currentMixJob=()=>String(typeof MIX_JOB==='undefined'?'':(MIX_JOB||'')).trim();
   const status=()=>document.getElementById('sceneStyleStatus');
@@ -115,7 +118,12 @@
     if(!MIX_JOB){status().textContent='영상의 음성·장면을 먼저 준비해 주세요.';return;}
     jobId=MIX_JOB;status().textContent='실제 제목과 자막을 불러오는 중…';
     try{
-      const response=await fetch('/api/produce/scene-style/context/'+encodeURIComponent(jobId)+'?headcopy_text='+encodeURIComponent(STATE.headcopy?.text||''));
+      const params=new URLSearchParams({
+        headcopy_text:STATE.headcopy?.text||'',
+        headcopy_subline:STATE.headcopy?.subline||document.getElementById('frTitle')?.value||'',
+        copy_family:STATE.headcopy?.copy_family||STATE.script_copy_family||''
+      });
+      const response=await fetch('/api/produce/scene-style/context/'+encodeURIComponent(jobId)+'?'+params);
       packet=await response.json();if(!response.ok)throw Error(packet.error||'장면을 불러오지 못했습니다.');
       appliedOnServer=!!packet.snapshot;   // 서버에 이미 저장된 설정이 있는 job만 자동 저장 대상
       try{
