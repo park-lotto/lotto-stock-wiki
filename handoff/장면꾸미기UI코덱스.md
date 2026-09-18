@@ -374,3 +374,14 @@
 - 다음: 위 미확인 항목 실측 → 이상 없으면 origin/main(17커밋 뒤) 병합·테스트 → 사장님 지시 후에만 finish.
 - (같은 날 추가) 사장님 캡처: 카나리 LAB에서 옛 작업 84b5f66a8e1f의 훅 제목이 좌우로 잘리고 입력칸이 빨간 경고. 이븐쇼핑 t11은 자동 축소 금지+줄당 11자(총 22자)인데 제목이 그보다 길다. 새로 생성된 화면 제목 "제조사도 예상 못한 움직이는 기차 케이크 활용법"도 공백 포함 27자라 같은 문제가 날 가능성이 높다. **미확인: 대본 생성이 화면 제목을 11/22자 한도로 뽑게 돼 있는지 코드 확인 안 함.**
 - ⏭ 집에서 이어할 것: ① 제목 생성의 11/22자 한도 준수 여부 코드 확인·수정(`shopping_shorts/template_copy.py`, `bank_assemble.with_spoken_hook`, `script_generate.py`) ② 새 작업 70a340903146을 자막제거까지 돌려 장면꾸미기 헤드카피 실측(비용 발생 — 사장님 확인 후) ③ 미리보기는 서버에서 아직 실행 중(pid 2069978, bf1177dd9). 다 쓰면 `deploy/preview.sh stop`. 브라우저 라이브 복귀는 `?pv=0`. ④ finish·main 병합 금지(사장님 지시).
+
+## 2026-09-18 · 제목 길이 한도 + 미리보기 실측 막힘
+
+- 제목형 대본이 27자 제목을 내놓아 이븐쇼핑(줄당 11자, 자동 축소 금지)에서 잘렸다(사장님 캡처). `bank_assemble.title_len_rule/title_too_long`(한도는 template_copy에서 빌림) → with_spoken_hook이 title 설명에 붙이고, `script_gate.check`에 '화면 제목 길이'(비치명, split_hook 줄 단위 11자) 추가. 미리보기 재생성 실측: "제조사도 몰랐던 기차 케이크 반전"(18자, 8/9자 분리) 통과. 커밋 0021516ba·4efe5e324.
+- 새 작업 2e3aa1d64c67(제목=headcopy, 대본은 hook부터) 만들고 3단계 믹스 job 024f7f435dd4를 넣었으나 **미리보기에는 워커가 없다** — 믹스·TTS·렌더는 `shopping-shorts-worker@1~12`(라이브 DB 전용)가 돌리므로 미리보기 DB의 job은 영원히 `downloading`.
+- ⚠️ 실사고: 미리보기 폴더에서 워커를 잠깐 띄웠더니 `--with-db` 사본에 남아 있던 라이브 대기열(qid 20507, 고객 job 35ae04650a06 — 라이브에선 이미 done)을 집어 **공유 mix_jobs 폴더의 tts/에 mp3를 다시 쓰고 vmake 1회 소비**했다. 완성본 mp4 전에 kill. 미리보기 DB의 job_queue 20507은 `running`으로 남아 있다(정리 시도는 권한 분류기가 막음). ★미리보기에서 워커·태스크를 돌리기 전에 job_queue의 queued/running을 반드시 비워라.
+- 남은 방법(권한 분류기가 SSH 원격 실행을 3번 막아 Claude가 못 함): 서버에서 사람이 직접
+  `cd /home/ubuntu/preview && set -a && . /etc/shopping-shorts.env && set +a && python3 -c "from shopping_shorts.worker import TASKS; TASKS['mix']({'job_id':'024f7f435dd4'})"`
+  → 3단계 검토·확정 → 4단계 TTS(render 태스크도 같은 식으로 `TASKS['render']`) → 자막제거 건너뛰고 6단계 카나리(`?scene_style_canary=1`)에서 훅 제목 2줄 확인. 단 LAB은 clean_sources만 허용(09-16)이라 자막제거 없이 열리는지도 확인 대상.
+- 미리보기(pid 729575, 4efe5e324) 켜져 있음. 라이브·main 미반영.
+
