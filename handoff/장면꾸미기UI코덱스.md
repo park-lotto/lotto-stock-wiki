@@ -385,3 +385,11 @@
   → 3단계 검토·확정 → 4단계 TTS(render 태스크도 같은 식으로 `TASKS['render']`) → 자막제거 건너뛰고 6단계 카나리(`?scene_style_canary=1`)에서 훅 제목 2줄 확인. 단 LAB은 clean_sources만 허용(09-16)이라 자막제거 없이 열리는지도 확인 대상.
 - 미리보기(pid 729575, 4efe5e324) 켜져 있음. 라이브·main 미반영.
 
+## 2026-09-18 · 관리자 카나리 스위치로 라이브 반영
+
+- `shopping_shorts/canary.py`(contextvar) 추가. `_auth_guard`가 요청마다 `관리자 + 쿠키 ss_canary=1`일 때만 켠다(쿠키 없으면 DB 판정 안 부름). `with_spoken_hook`(제목형 분리)·`headcopy_gen._support_max`(보조제목 22자, 밖에선 종전 32자)·produce.html `s2TitleSplitOn()`(음성에서 제목 제외·헤드카피 전달·'TTS 제외' 라벨)이 전부 이 스위치를 본다. 쿠키는 `scene-style-produce.js`가 `?scene_style_canary=1/0`로 심고 지운다(localStorage와 같은 자리). 워커엔 요청이 없어 항상 꺼짐 — 대본 생성은 웹 프로세스에서만 돈다.
+- 실측: 미리보기·라이브 둘 다 `/api/script/styles`가 쿠키 없으면 `title>bait/story…`(옛), 쿠키 있으면 `title>hook>…`(새). 고객 기본값 꺼짐 테스트 `test_canary_default_off.py`.
+- finish 게이트 통과(기존 실패 18건 동일) → main `f1ab0d4ac`. 자동배포는 시간창 밖이라 DEPLOY_NOW로 pull, 웹 재시작은 '고객 접속 중' 연기 → 사장님 승인 후 14:06 수동 재시작. 라이브 확인 완료.
+- 미리보기 서버·임시 워커 내림. 미리보기 DB의 옛 job_queue 항목(20507 running)은 그대로 남아 있다 — 다음에 미리보기 워커 띄우기 전 비울 것.
+- ⏭ 사장님 실측: `produce?pv=0&scene_style_canary=1`로 열어 케이크 대본 새로 생성 → 3단계·TTS → 6단계 카나리 LAB에서 훅 제목 2줄·흰 띠 확인. 자막제거 없이 LAB이 열리는지도 확인(LAB은 clean_sources만 허용). 새 작업 2e3aa1d64c67은 미리보기 DB에만 있으므로 라이브에선 다시 만들어야 한다.
+
