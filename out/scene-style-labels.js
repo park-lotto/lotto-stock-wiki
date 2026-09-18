@@ -34,7 +34,7 @@
  });
  caption.after(lines);let lastKey='',pending=false;
  function fillLines(){const context=api.context(),scene=context?.scenes[api.geometry().sceneIndex],input=caption.querySelector('[data-bind="caption"]');const values=scene?context.scenes.filter(s=>s.beat_idx===scene.beat_idx&&s.caption).map(s=>s.caption):input.value.split('\n');const box=lines.querySelector('[data-line-inputs]');box.replaceChildren(...values.map((text,i)=>window.makeCaptionLineInput(text,i)));}
- function sync(){const context=api.context(),index=api.geometry().sceneIndex,key=context?`${context.jobId}:${context.scenes[index]?.beat_idx}`:`local:${api.snapshot().presetId}:${index}`;lines.hidden=!context&&caption.hidden;lines.querySelector('[data-lines-context]').textContent=context?'':'샘플 자막';if(key!==lastKey){lastKey=key;fillLines()}controls();draw()}
+ function sync(){const context=api.context(),index=api.geometry().sceneIndex,key=context?`${context.jobId}:${context.scenes[index]?.beat_idx}`:`local:${api.snapshot()?.presetId||"none"}:${index}`;lines.hidden=!context&&caption.hidden;lines.querySelector('[data-lines-context]').textContent=context?'':'샘플 자막';if(key!==lastKey){lastKey=key;fillLines()}controls();draw()}
  const status=message=>lines.querySelector('[data-lines-status]').textContent=message;
  lines.addEventListener('toggle',()=>{if(lines.open&&!pending)fillLines()});
  lines.addEventListener('click',event=>{const reset=!!event.target.closest('[data-lines-reset]');if(!reset&&!event.target.closest('[data-lines-save]'))return;if(pending)return;const values=[...lines.querySelectorAll('[data-capline]')].map(e=>e.value.trim()).filter(Boolean);if(!reset&&!values.length){status('줄을 입력해 주세요.');return;}const context=api.context();

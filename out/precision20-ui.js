@@ -60,7 +60,7 @@
     return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
   };
   const mediaBounds=(frame,presetId)=>{
-    if(!frame)return {top:0,height:100};
+    if(!frame||noTemplate)return {top:0,height:100};   // 템플릿 없음 = 영상이 화면 전체
     const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'?captionSettings().h:0);
     const bottom=fixedLayoutFor(presetId||rows[current].id,frame).bottom;
     return {top,height:Math.max(10,100-top-bottom)};
@@ -72,7 +72,7 @@
   const captionBadge=p=>presetHasCaptionSlot(p)?'<span class="caption-kind reserved">자막칸</span>':'<span class="caption-kind overlay">영상 위</span>';
   const renderGrid=()=>{
     const count=root.querySelector('.layout-a .pane-head .count');if(count)count.textContent=`${storyRows.length+fixedRows.length}개`;
-    grid.innerHTML=rows.map((p,i)=>mode==='continuous'
+    grid.innerHTML='<button class="preset-card none-card" data-none><span class="check">✓</span><div class="none-thumb">원본 영상<br>그대로</div><b>템플릿 없음</b><small>제목·자막 꾸미기 없이</small></button>'+rows.map((p,i)=>mode==='continuous'
       ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="fixed-thumb" style="background-image:url('${fixedThumb(p)}')"></div><b>${esc(p.name)}</b><small>${esc(fontLabel(p))} · 고정형</small></button>`
       : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${esc(fontLabel(p))} · 훅+본문</small></button>`).join('');
   };
@@ -88,6 +88,9 @@
   const badge=document.createElement('div');badge.className='precision-badge';badge.textContent='원본 실측 편집';layer.appendChild(badge);
   preview.append(base,media,layer);
 
+  // 템플릿 없음(2026-09-18 사장님 "템플릿 없는 거 쓰는 사람들") — 선택하면 snapshot()이 null을 내고 제작소가 그대로 서버에 저장,
+  //   최종 렌더(video_assemble)는 scene_style이 비면 꾸미기를 건너뛴다.
+  let noTemplate=false;
   let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',hookMotionSpeed=.72,hookCaptionMode='visible';
   const fontScales=new Map();
   const fittedText=new Map();
@@ -194,6 +197,7 @@
   // 썰쇼핑형은 글자를 안 줄이므로 원래 칸의 85%보다 좁히면 줄끼리 겹친다.
   const minimumStoryTop=frame=>Math.max(8,Math.ceil(captionSource(frame).cut/frame.height*100*.85));
   function syncMediaLayout(){
+    if(noTemplate){Object.assign(media.style,{top:'0%',height:'100%'});return;}
     const p=rows[current],frame=frameFor(p),bounds=mediaBounds(frame,p?.id);
     Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
   }
@@ -520,7 +524,14 @@
     }
     return el;
   }
+  function setNoTemplate(){
+    noTemplate=true;document.body.classList.add('no-template');
+    grid.querySelectorAll('[data-p20]').forEach(x=>x.classList.remove('selected'));grid.querySelector('[data-none]')?.classList.add('selected');
+    renderEdit();
+  }
   function renderEdit(){
+    // 글자층을 비워야 scene-style-connect의 감시(MutationObserver)가 돌아 영상 틀을 화면 전체로 다시 잡는다.
+    if(noTemplate){[...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());layer.hidden=true;Object.assign(media.style,{top:'0%',height:'100%'});return;}
     [...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());
     const p=rows[current],frame=frameFor(p);if(!frame)return;
     sourceClean.replaceChildren();
@@ -727,6 +738,7 @@
     syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
   }
   function selectPreset(index){
+    noTemplate=false;document.body.classList.remove('no-template');grid.querySelector('[data-none]')?.classList.remove('selected');
     current=index;const p=rows[index];
     if(mode==='continuous')kind='hook';else sceneIndex=kind==='hook'?0:Math.max(1,sceneIndex);
     preview.classList.remove('template-shortem');
@@ -751,7 +763,7 @@
     if(sceneContext?.text)for(const [key,text] of Object.entries(sceneContext.text))if(inputs[key])inputs[key].value=text;
     preview.classList.remove('is-pristine');showFrame(kind);
   }
-  grid.addEventListener('click',e=>{const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
+  grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
   modeBar.addEventListener('click',event=>{
     const button=event.target.closest('[data-template-mode]');if(!button)return;
     mode=button.dataset.templateMode;rows=mode==='continuous'?fixedRows:storyRows;if(!rows.length)return;
@@ -928,7 +940,7 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
@@ -948,7 +960,7 @@
       fittedText.clear();renderEdit();
     },
     show(index){showScene(index);return this.geometry()},
-    geometry:()=>({media:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
+    geometry:()=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
     effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
     copyEffectsToAll(){const value=structuredClone(effects[String(sceneIndex)]||{});for(let i=0;i<sceneTotal();i++)effects[String(i)]=structuredClone(value);},
     branding(value){if(value!==undefined){branding=value;if(!labMode)try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
