@@ -20,7 +20,8 @@
     return {top:Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100),bottom:0};
   };
   const layoutKey=(presetId,frame)=>presetId.startsWith('fixed_')?presetId:`${presetId}:${frame===storyRows.find(p=>p.id===presetId)?.hook?'hook':'body'}`;
-  const fixedLayoutFor=(presetId,frame)=>({...fixedBaseLayout(frame),...(fixedLayouts.get(layoutKey(presetId,frame))||{}),bottom:0});
+  // 하단 칸(2026-09-18 사장님 "빠른조절에 하단 칸도 만들어서 올리고 내릴수있게") — 저장한 값만 쓰고 기본은 0.
+  const fixedLayoutFor=(presetId,frame)=>{const saved=fixedLayouts.get(layoutKey(presetId,frame))||{};return {...fixedBaseLayout(frame),...saved,bottom:Number(saved.bottom)||0};};
   const fixedBaseColors=frame=>{
     const titleLines=(frame?.lines||[]).filter(line=>line.bind!=='caption');
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
@@ -61,7 +62,8 @@
   const mediaBounds=(frame,presetId)=>{
     if(!frame)return {top:0,height:100};
     const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'?captionSettings().h:0);
-    return {top,height:100-top};
+    const bottom=fixedLayoutFor(presetId||rows[current].id,frame).bottom;
+    return {top,height:Math.max(10,100-top-bottom)};
   };
   const fixedThumb=p=>`assets/scene-style/thumbnails/fixed-${p.source_id}.png`;
   const storyThumb=(p,kind)=>`assets/scene-style/thumbnails/story-${p.id}-${kind}.png`;
@@ -189,18 +191,20 @@
     motionPanel.querySelector('.hook-motion-head small').textContent=(hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':hookMotion==='push-in'?'화면 전체가 천천히 확대':hookMotion==='shake'?'화면 전체가 훅 내내 잘게 떨림':'제목에만 적용')+(hookBandMotion==='rise'?' + 흰 띠 스윽':hookBandMotion==='grow'?' + 흰 띠 확대':'');
   }
   const minimumFixedTop=frame=>Math.min(46,Math.max(12,Math.ceil((Math.max(0,...(frame?.lines||[]).filter(line=>line.bind!=='caption').map(line=>line.y1))+2)/(frame?.height||1)*100)));
+  // 썰쇼핑형은 글자를 안 줄이므로 원래 칸의 85%보다 좁히면 줄끼리 겹친다.
+  const minimumStoryTop=frame=>Math.max(8,Math.ceil(captionSource(frame).cut/frame.height*100*.85));
   function syncMediaLayout(){
     const p=rows[current],frame=frameFor(p),bounds=mediaBounds(frame,p?.id);
     Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
   }
   function syncFixedPanel(){
     fixedPanel.hidden=false;
-    fixedPanel.querySelector('[data-fixed-size="bottom"]').hidden=true;fixedPanel.querySelector('[data-fixed-color="bottom"]').closest('label').hidden=true;
+    fixedPanel.querySelector('[data-fixed-size="bottom"] span').textContent='하단 칸';
     fixedPanel.querySelector('.fixed-quick-head b').textContent=mode==='continuous'?'고정형 빠른 조절':`${kind==='hook'?'훅':'본문'} 빠른 조절`;
     const p=rows[current],frame=frameFor(p),layout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame)},colors=fixedColorsFor(p.id,frame);
     fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
       const key=row.dataset.fixedSize,input=row.querySelector('input'),output=row.querySelector('output');
-      if(key==='top')input.min=String(mode==='continuous'?minimumFixedTop(frame):8);
+      if(key==='top')input.min=String(mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame));
       input.value=String(layout[key]);output.textContent=Math.round(layout[key])+'%';
     });
     fixedPanel.querySelectorAll('[data-fixed-color]').forEach(input=>input.value=colors[input.dataset.fixedColor]);
@@ -610,7 +614,11 @@
       const key=kind==='hook'?'bodyTitle':'caption';
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
-    if(mode==='story')applyStoryLayout(frame,p);
+    if(mode==='story'){
+      applyStoryLayout(frame,p);
+      const storyBottom=fixedLayoutFor(p.id,frame).bottom;
+      if(storyBottom>0)addPatch(100-storyBottom,storyBottom,fixedColorsFor(p.id,frame).bottom,0,100,'bottom-band');
+    }
     const paint=fixedColors.get(layoutKey(p.id,frame));
     if(paint){
       const channelColor=fixedColorsFor(p.id,frame).channel;
@@ -623,18 +631,25 @@
   function applyStoryLayout(frame,p){
     // 이븐쇼핑 원본형은 측정 좌표 자체가 계약이다. 장면별 자막칸 보정으로
     // 제목 영역이나 글자 크기를 다시 압축하면 훅/본문이 서로 흔들린다.
-    if(p.id==='t11'&&frame.reference_style)return;
     const source=captionSource(frame),cut=source.cut/frame.height*100,next=titleHeight(frame),paint=fixedColors.get(layoutKey(p.id,frame));
+    // 이븐쇼핑 원본형은 측정 좌표 자체가 계약 — 제목칸을 안 건드렸으면 그대로 둔다.
+    const moved=Math.abs(next-cut)>.05;
+    if(p.id==='t11'&&frame.reference_style&&!moved)return;
+    // 상단 제목칸 조절 = 칸만 커지고 줄어든다(2026-09-18 사장님 "칸만 줄어들어야 하는데 글자도 비율로 줄어들면 안 좋다",
+    //   "50%로 키우면 흰 띠 아래가 까맣게 빈다"). 글자·띠 크기는 그대로 두고 **위치만** 칸 안에 고르게 벌린다:
+    //   맨 위(채널명)는 거의 제자리, 맨 아래(흰 띠)는 칸 바닥을 따라가고, 가운데는 그 사이 비율만큼.
+    //   칸 전체를 채우는 배경판만 새 높이로 늘린다.
     for(const el of [...layer.children].filter(el=>el!==badge)){
       const top=parseFloat(el.style.top),height=parseFloat(el.style.height);if(!Number.isFinite(top))continue;
       if(top>=cut&&hasEditableCaption()){el.remove();continue;}
-      el.style.top=top*next/Math.max(.01,cut)+'%';
-      if(Number.isFinite(height))el.style.height=Math.max(0,Math.min(height,cut-top)*next/Math.max(.01,cut))+'%';
-      // Compress the type with its title area; moving line origins alone overlaps lines.
-      if(el.classList.contains('precision-text')&&next<cut){
-        const ratio=next/Math.max(.01,cut);
-        el.style.fontSize=parseFloat(el.style.fontSize)*ratio+'px';
-        el.style.letterSpacing=(parseFloat(el.style.letterSpacing)||0)*ratio+'px';
+      if(moved){
+        const h=Number.isFinite(height)?Math.min(height,cut-top):(el.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100);
+        if(top<=.5&&Number.isFinite(height)&&height>=cut*.8){el.style.height=next+'%';}
+        else{
+          const f=Math.max(0,Math.min(1,(top+h)/Math.max(.01,cut)));   // 아래 끝 기준 — 흰 띠가 칸 바닥에 딱 붙어 따라간다
+          el.style.top=Math.max(0,Math.min(next-h,top+(next-cut)*f))+'%';
+          if(Number.isFinite(height))el.style.height=Math.max(0,h)+'%';
+        }
       }
       if(paint){
         if(el.classList.contains('precision-text')){
@@ -784,7 +799,7 @@
   });
   const applyFixedSize=(key,rawValue)=>{
     const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame),titleOnly:true};
-    const min=key==='top'?(mode==='continuous'?minimumFixedTop(frame):8):0,max=key==='top'?50:35;
+    const min=key==='top'?(mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame)):0,max=key==='top'?50:35;
     currentLayout[key]=Math.round(Math.max(min,Math.min(max,Number(rawValue))));
     if(currentLayout.top+currentLayout.bottom>70)currentLayout[key]=70-currentLayout[key==='top'?'bottom':'top'];
     fixedLayouts.set(layoutKey(p.id,frame),currentLayout);fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
