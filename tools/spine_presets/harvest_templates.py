@@ -137,7 +137,12 @@ def main():
     # 슬롯 없이 받는 칸도 **일반어**가 있어야 한다(실측 70~73: "이게 원래는 … 초음파 세정기였습니다" 같은 제품 문장이 bait로 들어옴)
     GENERIC = re.compile(r"아이템|제품|이거|이게|이걸|사람들|SNS|난리|논란|화제|천재|직원|개발자|제조사|판매자|업체|떼돈|바이럴|미쳤|충격")
     ORIGIN_WORDS = re.compile(r"원래")     # '원래는 …'은 origin 칸 문장 — bait·fame에 들어오면 칸이 틀린 것
+    # 인스타형 칸 이름(situation·cta·escalation…)은 NO_SLOT_OK에 없다 — 인스타 원문은 슬롯 없는 일반 문장이 정상이라
+    #   --allow-noslot hook,cta,… 로 칸을 지정해 받는다(2026-09-18). 대신 결과는 사람이 읽고 apply_curated.py로만 넣는다.
+    _extra = set(sys.argv[sys.argv.index("--allow-noslot") + 1].split(",")) if "--allow-noslot" in sys.argv else set()
     def _ok(r, x):
+        if r in _extra and not SLOT.search(x):
+            return not ORIGIN_WORDS.search(x) or r == "origin"
         if SLOT.search(x):
             return not (r in ("bait", "fame", "title") and ORIGIN_WORDS.search(x))
         return r in NO_SLOT_OK and bool(GENERIC.search(x)) and not ORIGIN_WORDS.search(x)
