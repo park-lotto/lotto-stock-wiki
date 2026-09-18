@@ -730,8 +730,14 @@ def normalize_playable(path):
 #   원본이 hevc면 download_any의 normalize_playable이 h264로 바꾼다(종전 도우인과 같은 길).
 #   실패(세션 없음·키 없음·CDN 404·4K 초과)는 전부 종전 yt-dlp 720p 경로로 물러선다 — 회귀 0.
 #   원본이 4K(2160x3840)면 받아서 normalize가 1920p로 줄인다(실측 6a97fbd2 155MB).
-_XHS_ORIGIN_HOSTS_SLASH = ("sns-video-bd.xhscdn.com", "sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com")
-_XHS_ORIGIN_HOSTS_PLAIN = ("sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com", "sns-video-bd.xhscdn.com")
+# 호스트마다 가진 원본이 다르다(실측 09-18: 최근 노트=bd/qn/bak-v1, 옛 노트 68ca10b6=bak-v8/hw/qc만 200).
+_XHS_ORIGIN_HOSTS_SLASH = ("sns-video-bd.xhscdn.com", "sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com",
+                           "sns-bak-v8.xhscdn.com", "sns-video-hw.xhscdn.com", "sns-video-qc.xhscdn.com")
+_XHS_ORIGIN_HOSTS_PLAIN = ("sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com", "sns-video-bd.xhscdn.com",
+                           "sns-bak-v8.xhscdn.com", "sns-video-hw.xhscdn.com", "sns-video-qc.xhscdn.com")
+# 원본 파일 크기 상한 — 업로드 원본이 1.1GB인 노트가 있었다(68ca10b6). 그걸 받으면 담기 한 건에
+# 수십 초~분이 걸리고 디스크를 먹는다. 넘으면 720p 경로로 물러선다.
+_XHS_ORIGIN_MAX_BYTES = 350 * 1024 * 1024
 _XHS_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
            "(KHTML, like Gecko) Chrome/128 Safari/537.36")
 
@@ -790,6 +796,13 @@ def xhs_origin_probe(key):
             continue
         if r.status_code != 200 or "video" not in (r.headers.get("Content-Type") or ""):
             continue
+        try:
+            _size = int(r.headers.get("Content-Length") or 0)
+        except ValueError:
+            _size = 0
+        if _size > _XHS_ORIGIN_MAX_BYTES:
+            print(f"[media] 샤오홍슈 원본 {_size // (1024 * 1024)}MB — 상한 초과라 720p 경로로", file=sys.stderr)
+            return "", (0, 0)
         try:
             pr = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0",
                                  "-show_entries", "stream=width,height", "-of", "csv=p=0", cand],
