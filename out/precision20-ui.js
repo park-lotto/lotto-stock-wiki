@@ -41,7 +41,10 @@
     const surface=ln&&(frame.surfaces||[]).find(s=>s.y<=ln.y0+ln.h/2&&s.y+s.height>=ln.y0+ln.h/2&&s.y>start*.45);
     const band=frame===rows[current]?.body&&frame.white_box?{y:frame.white_box.y0,height:frame.white_box.y1-frame.white_box.y0,background:frame.white_box.background}:surface;
     const cut=ln&&ln.y0<start?(band?.y??ln.y0):start;
-    return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:Math.max(5,Math.min(18,(band?.height||ln?.h||frame.height*.07)/frame.height*100))};
+    // 고정형 자막칸 높이는 위시언니(6.5%) 하나로 통일(2026-09-18 사장님 "딱 이 사이즈로 다들 해줘야 비례가 맞지").
+    //   실측: 20종 중 14종이 원본 측정값 상한 17.9%라 제목보다 자막칸이 두꺼웠다. 사용자가 저장한 높이는 그대로 우선.
+    const measured=Math.max(5,Math.min(18,(band?.height||ln?.h||frame.height*.07)/frame.height*100));
+    return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:mode==='continuous'?6.5:measured};
   };
   const captionVisible=()=>sceneContext?.scenes?.[sceneIndex]?.caption_visible!==false;
   const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body');
