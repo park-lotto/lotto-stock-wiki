@@ -317,3 +317,20 @@ def test_assemble_retries_on_503(monkeypatch):
     monkeypatch.setattr(ba, "build_groups", empty_groups)
     g, b, meta = ba.assemble([], "s0", None)
     assert g is None and len(calls) == 1
+
+
+def test_fit_length_keeps_three_feature_lines():
+    """길이가 넘쳐도 특징 줄 3개(오용형 초보→고수→반전)는 남긴다 — 2개까지 빼면 고수 줄이 빠졌다(09-18 실측 6편 중 3편)."""
+    from shopping_shorts import backbone_assemble as ba
+    long = "아주 긴 문장입니다 " * 12
+    lines = [{"role": "title", "group": -1, "text": long}] + \
+            [{"role": r, "group": i, "text": long} for i, r in enumerate(["cases", "escalation", "twist", "more"])]
+    out = ba._fit_length(lines, 10)
+    assert [L["role"] for L in out if L["group"] >= 0] == ["cases", "escalation", "twist"] or \
+           len([L for L in out if L["group"] >= 0]) == 3
+
+
+def test_join_fix_action_plus_mandeuleo():
+    from shopping_shorts import backbone_assemble as ba
+    assert ba._fix_join("근데 고수들은 얇게 접어 틈새에 보관하는 것 만들어 버림.") == "근데 고수들은 얇게 접어 틈새에 보관하는 데 써 버림."
+    assert ba._fix_join("진정한 고수들은 카드 지갑을 만들어 버림.") == "진정한 고수들은 카드 지갑을 만들어 버림."

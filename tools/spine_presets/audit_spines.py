@@ -28,6 +28,8 @@ BRAND = re.compile(r"다이소|이케아|코스트코|쿠팡|구글|아이소|�
 FAKE_FACT = re.compile(r"[0-9]+ ?(만|천|억|%|명|개|배|년|달|주)|수천억|수백억|수백만|수천만 ?(명|개|원)|매달 [0-9]")
 # 유형 고유 말투 — 다른 유형 스파인에 섞이면 결함(실측 2026-09-18: 발명품형 65에 "초보들은 기껏해야…"·"미친 활용법")
 STYLE_MARK = {"오용형": re.compile(r"초보들은|중수들은|고수들은|(?<!\{)활용법|(?<!\{)사용법(?!\})|엉뚱한 용도|원래는 \{본래용도\}|이게 원래는")}
+FRAGMENT = re.compile(r"(면서|알아채고|채고|지만|는데도|해서)\s*$")
+SET_PIECE = re.compile(r"^(그나마 )?중수들?은")
 SLOT = re.compile(r"\{([^{}]+)\}")
 KNOWN_SLOTS = {"제품", "제품군", "제품군2", "효능", "효능2", "효능3", "효능4", "나라", "대상", "대상들", "성과", "본래용도",
                "가격", "권위자", "장소", "속성", "속성2", "용도", "용도2", "용도3", "용도끝", "적용대상", "적용대상들",
@@ -86,6 +88,12 @@ def audit(members=100, only=None):
                         fails.append((sid, "스타일섞임", f"{r}: {t} ({style_name} 말투)"))
                 if BRAND.search(t):
                     fails.append((sid, "브랜드", f"{r}: {t}"))
+                # 한 줄이 '~면서/~고/~지만'에서 끊김 — 마침표가 붙으면 문장이 덜 끝난다(09-18 "주목하면서.")
+                if FRAGMENT.search(t):
+                    fails.append((sid, "끊긴문장", f"{r}: {t}"))
+                # 초보·중수·고수 세트의 조각 — 앞줄 없이 혼자 뽑히면 어색하다(09-18 "그나마 중수들은" 단독)
+                if SET_PIECE.search(t):
+                    fails.append((sid, "세트조각", f"{r}: {t}"))
                 for sl in SLOT.findall(t):
                     if sl not in KNOWN_SLOTS:
                         fails.append((sid, "슬롯오타", f"{r}: {{{sl}}} in {t}"))

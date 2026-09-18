@@ -7,7 +7,8 @@ ROLE_KO = {"title": "제목(첫 3초)", "bait": "떡밥", "fame": "화제성", "
            "solve": "해결", "more": "추가 장점", "twist": "반전 포인트", "land": "마무리", "hook": "훅",
            "origin": "원래 용도", "misuse": "뜻밖의 사용", "result": "결과", "benefit": "장점", "good": "좋은 점",
            "howto": "사용법", "vs": "비교", "price": "가격", "pain": "불편함", "cta": "행동 유도",
-           "situation": "상황", "escalation": "고조", "proof": "증거", "feature": "특징"}
+           "situation": "상황", "escalation": "한 단계 더(고수)", "cases": "사용 사례(초보)", "notice": "눈치챔",
+           "spread": "입소문", "scale": "화제 규모", "targets": "누구에게", "limit": "기존 불편", "proof": "증거", "feature": "특징"}
 
 
 def load(sp, au):

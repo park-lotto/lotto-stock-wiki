@@ -298,7 +298,10 @@ def _fit_length(lines, target_seconds, note=None, slack=2.0):
     dropped = []
     while total(lines) > target_seconds + slack:
         feat_idx = [i for i, L in enumerate(lines) if (L.get("group") if L.get("group") is not None else -1) >= 0]
-        if len(feat_idx) <= 2:
+        # ★특징 줄은 3개까지 남긴다(2026-09-18 사장님 "용도 보통 4개 아닌가"). 2개까지 빼면 오용형의
+        #   초보→고수→반전에서 고수 줄이 빠져 용도가 2개가 됐다(실측 6편 중 3편). 원문 중앙값도 3이다
+        #   (이븐쇼핑 78편 장점 전환 · 초보고수 꼴 183편 용도 전환).
+        if len(feat_idx) <= MIN_FEATURE_LINES:
             break
         k = feat_idx[len(feat_idx) // 2]
         dropped.append(lines.pop(k)["text"])
@@ -339,6 +342,7 @@ def _spine_style(spine):
 
 
 MAX_EXTRA_FEATURE_LINES = 2   # 틀 밖으로 늘리는 특징 줄 상한(위 실측)
+MIN_FEATURE_LINES = 3         # 길이 맞추기에서 남기는 특징 줄 하한(_fit_length)
 
 
 def _feature_roles(roles, tpl):
@@ -455,6 +459,8 @@ _JOIN_FIXES = [
     (re.compile(r"다는(?=\.?$)"), "다는 거"),       # 끝 마침표가 붙어 와도 잡는다
     # '~주게 해 주는데' 이중(실측 행주 정체형 "살려주게 해 주는데") → '~주는데'
     (re.compile(r"주게 해 주"), "주"),
+    # 고수 줄 '{용도2} 만들어 버림'에 동작이 들어오면 "보관하는 것 만들어 버림"(09-18 실측 2편) → '~하는 데 써 버림'
+    (re.compile(r"(\S+는) 것 만들어 버림"), r"\1 데 써 버림"),
 ]
 _BAD_JOIN = re.compile(r"는는|데데|다는다는|는데는데|는 건까지 해")
 
