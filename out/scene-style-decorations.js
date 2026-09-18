@@ -2,9 +2,9 @@
  const api=window.sceneStyle,catalog=window.SCENE_DECORATION_CATALOG;if(!api||!catalog)return;
  const panel=document.querySelector('.scene-effects-panel'),preview=document.querySelector('#a-live-preview');
  const box=document.createElement('section');box.className='scene-decoration-panel';
- box.innerHTML=`<details open><summary>가림막</summary><div class="dec-choices"><button data-add-mask="solid">단색</button><button data-add-mask="fade">그라데이션</button><button data-add-mask="blur">흐림</button><button data-add-mask="blurdark">흐림+어둡게</button></div></details>
+ box.innerHTML=`<details open><summary>가림막</summary><div class="dec-choices"><button data-add-mask="blur">흐림</button><button data-add-mask="fade">그라데이션</button></div></details>
  <details open><summary>스티커 · 도형 · 배지</summary><div class="dec-kit"><button data-dec-kit="sticker" class="active">😀 스티커</button><button data-dec-kit="shape">🎨 도형</button><button data-dec-kit="badge">🏷 배지</button></div><div data-kit="sticker"><div class="dec-categories"></div><div class="dec-stickers"></div></div><div data-kit="shape" hidden><p>움직이는 도형 · 눌러서 영상 위에 추가</p><div class="dec-shapes"></div></div><div data-kit="badge" hidden><p>문구와 색, 모양을 바꿀 수 있어요</p><div class="dec-badges"></div></div></details>
- <div class="dec-items"></div><div class="dec-edit" hidden><p>화면에서 끌어 이동하세요.</p><label data-badge-text>배지 문구<input data-dec="text" type="text" maxlength="24"></label><label data-badge-style>배지 모양<select data-dec="badgeStyle"><option value="pill">그라데이션 알약</option><option value="ticket">티켓</option><option value="glass">유리 배지</option><option value="burst">포인트 배지</option></select></label><label data-motion-control>움직임<select data-dec="motion"><option value="none">없음</option><option value="point">가리키기</option><option value="pulse">두근두근</option><option value="spin">회전</option><option value="float">둥실둥실</option><option value="reveal">쓱 나타나기</option></select></label><label>크기<input data-dec="size" type="range" min="5" max="90" step="1"></label><label data-mask-height>높이<input data-dec="h" type="range" min="2" max="35" step="1"></label><label>회전<input data-dec="rot" type="range" min="-180" max="180" step="1"></label><label>투명도<input data-dec="op" type="range" min="10" max="100" step="1"></label><label data-mask-color>색상<input data-dec="color" type="color"></label><button data-dec-delete>선택한 항목 삭제</button></div>`;
+ <div class="dec-items"></div><div class="dec-edit" hidden><p>화면에서 끌어 이동 · ↘ 손잡이로 크기 · ⟳ 손잡이로 회전</p><label data-badge-text>배지 문구<input data-dec="text" type="text" maxlength="24"></label><label data-badge-style>배지 모양<select data-dec="badgeStyle"><option value="pill">그라데이션 알약</option><option value="ticket">티켓</option><option value="glass">유리 배지</option><option value="burst">포인트 배지</option></select></label><label data-motion-control>움직임<select data-dec="motion"><option value="none">없음</option><option value="point">가리키기</option><option value="pulse">두근두근</option><option value="spin">회전</option><option value="float">둥실둥실</option><option value="reveal">쓱 나타나기</option></select></label><label>크기<input data-dec="size" type="range" min="5" max="90" step="1"></label><label data-mask-height>높이<input data-dec="h" type="range" min="2" max="35" step="1"></label><label>회전<input data-dec="rot" type="range" min="-180" max="180" step="1"></label><label>투명도<input data-dec="op" type="range" min="10" max="100" step="1"></label><label data-mask-color>색상<input data-dec="color" type="color"></label><button data-dec-delete>선택한 항목 삭제</button></div>`;
  panel.append(box);
  const itemList=box.querySelector('.dec-items');
  box.prepend(itemList);
@@ -32,8 +32,12 @@
    toolbar.hidden=!list[selected];toolbar.querySelector('span').textContent=list[selected]?`${selected+1}번 선택`:'';
    const edit=box.querySelector('.dec-edit'),m=list[selected];edit.hidden=!m;if(!m)return;
    edit.querySelectorAll('[data-dec]').forEach(el=>el.value=el.dataset.dec==='size'?m.w:m[el.dataset.dec]??0);
+   edit.querySelectorAll('label').forEach(l=>l.hidden=false);   // 항목 종류가 바뀔 때 앞 항목의 숨김이 남지 않게 먼저 전부 보이게
    edit.querySelector('[data-mask-height]').hidden=m.kind==='emoji';edit.querySelector('[data-mask-color]').hidden=m.kind==='emoji';
    edit.querySelector('[data-badge-text]').hidden=m.kind!=='badge';edit.querySelector('[data-badge-style]').hidden=m.kind!=='badge';edit.querySelector('[data-motion-control]').hidden=m.kind==='shape';
+   // 가림막은 투명도만(2026-09-18 사장님). 크기·위치는 화면 손잡이와 끌기로 한다.
+   const isMask=m.kind==='shape';
+   edit.querySelectorAll('label').forEach(l=>{if(isMask)l.hidden=!l.querySelector('[data-dec="op"]');});
  }
  // 화면에서 바로 고치기(2026-09-18 사장님 "여기서 직접 수정되게 편하게"): 고른 항목에 손잡이 두 개.
  //   ↘ 오른쪽 아래 = 크기(가림막은 가로·세로 따로, 나머지는 비율 유지) / ⟳ 위 = 회전. 렌더 때는 그리지 않는다.
