@@ -56,7 +56,10 @@ def ensure_schema(conn):
         )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_capacity_at ON capacity_samples(at)")
     # ★웹 체감 지표 두 칸(2026-09-18) — 이미 있는 표에는 ALTER로 붙인다(없으면 무시).
-    for col in ("web_latency_ms REAL", "web_main_cpu REAL"):
+    # run_customers = 동시에 돌고 있는 **서로 다른 고객** 수 / wait_customers = 자기 작업이 하나도 안 돌면서
+    # 기다리는 고객 수(=남 때문에 굶는 사람). 같은 고객의 두 번째 작업은 규칙(계정당 1개)상 대기라 안 센다.
+    # 2026-09-18 사장님 "100명 기준인데 4개밖에?" — 대기 100시간이 규칙 때문인지 서버 때문인지 가르는 칸.
+    for col in ("web_latency_ms REAL", "web_main_cpu REAL", "run_customers INTEGER", "wait_customers INTEGER"):
         try:
             conn.execute(f"ALTER TABLE capacity_samples ADD COLUMN {col}")
         except sqlite3.OperationalError:
@@ -163,6 +166,17 @@ def sample(db_path):
         #   권한도 필요하다. 알고 싶은 건 '상한'이 아니라 **실제 동시 처리량**이므로
         #   큐를 물고 있던 서로 다른 owner 수로 센다.
         running, queued, owners = (row[0] or 0), (row[1] or 0), (row[2] or 0)
+        # 서로 다른 고객 몇 명이 돌고 / 몇 명이 **남 때문에** 기다리나(2026-09-18).
+        #   기다리는 고객 = 대기 작업이 있는데 자기 작업이 하나도 안 도는 고객. 자기 작업이 돌고 있으면
+        #   '계정당 1개' 규칙으로 줄 선 것이라 서버 탓이 아니다 — 그건 안 센다.
+        cust = conn.execute(
+            "SELECT "
+            "  COUNT(DISTINCT CASE WHEN state='running' AND owner IS NOT NULL THEN owner END), "
+            "  COUNT(DISTINCT CASE WHEN state='queued' AND owner IS NOT NULL "
+            "        AND owner NOT IN (SELECT owner FROM job_queue WHERE state='running' AND owner IS NOT NULL) "
+            "        THEN owner END) "
+            "FROM job_queue").fetchone()
+        run_customers, wait_customers = (cust[0] or 0), (cust[1] or 0)
 
         try:
             # ★윈도우에는 getloadavg 자체가 없다(AttributeError). 서버는 리눅스라
@@ -184,12 +198,15 @@ def sample(db_path):
             "net_tx_gb": round(tx / gb, 3), "net_rx_gb": round(rx / gb, 3),
             # 웹 체감(2026-09-18) — 둘 다 1~2초면 끝난다(요청 3번 + /proc 두 번 읽기)
             "web_latency_ms": _web_latency_ms(), "web_main_cpu": _web_main_cpu(),
+            "run_customers": run_customers, "wait_customers": wait_customers,
         }
         conn.execute(
             "INSERT INTO capacity_samples (at,running,queued,workers,load1,cores,"
-            " disk_used_gb,disk_free_gb,net_tx_gb,net_rx_gb,web_latency_ms,web_main_cpu) "
+            " disk_used_gb,disk_free_gb,net_tx_gb,net_rx_gb,web_latency_ms,web_main_cpu,"
+            " run_customers,wait_customers) "
             "VALUES (:at,:running,:queued,:workers,:load1,:cores,"
-            " :disk_used_gb,:disk_free_gb,:net_tx_gb,:net_rx_gb,:web_latency_ms,:web_main_cpu)", data)
+            " :disk_used_gb,:disk_free_gb,:net_tx_gb,:net_rx_gb,:web_latency_ms,:web_main_cpu,"
+            " :run_customers,:wait_customers)", data)
         conn.commit()
         return data
     finally:
@@ -214,7 +231,9 @@ def daily(db_path, days=14):
         rows = conn.execute(
             "SELECT substr(at,1,10) d, "
             "       MAX(running), MAX(queued), MAX(workers), MAX(load1), "
-            "       MIN(disk_free_gb), MAX(disk_used_gb), COUNT(*) "
+            "       MIN(disk_free_gb), MAX(disk_used_gb), COUNT(*), "
+            "       MAX(run_customers), MAX(wait_customers), "
+            "       5*SUM(CASE WHEN COALESCE(wait_customers,0) > 0 THEN 1 ELSE 0 END) "
             "  FROM capacity_samples "
             " WHERE at >= date('now', ?) "
             " GROUP BY d ORDER BY d DESC", (f"-{int(days)} days",)).fetchall()
@@ -222,7 +241,10 @@ def daily(db_path, days=14):
         return [{"date": r[0], "max_running": r[1], "max_queued": r[2],
                  "max_workers": r[3], "max_load1": r[4],
                  "min_disk_free_gb": r[5], "max_disk_used_gb": r[6],
-                 "tx_gb": round(tx.get(r[0], 0.0), 2), "samples": r[7]} for r in rows]
+                 "tx_gb": round(tx.get(r[0], 0.0), 2), "samples": r[7],
+                 # 2026-09-18: 서버 탓인 대기만 따로 — 동시 고객 최대 / 남 때문에 기다린 고객 최대 / 그런 분(分)
+                 "max_run_customers": r[8], "max_wait_customers": r[9],
+                 "wait_customers_min": r[10]} for r in rows]
     finally:
         conn.close()
 
