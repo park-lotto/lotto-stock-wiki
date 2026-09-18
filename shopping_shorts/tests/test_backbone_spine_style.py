@@ -285,3 +285,35 @@ def test_나라_바꿀때_조사와_한국은_그대로():
                                   {"role": "c", "text": "영국은 물론 미국이 난리.", "group": -1}], idx)
     assert out[0]["text"] == "한국은 물론 전 세계 SNS에서."
     assert out[1]["text"] == "해외는 물론 해외가 난리."
+
+
+def test_assemble_retries_on_503(monkeypatch):
+    """모델 혼잡(503)으로 묶음이 비면 잠깐 뒤 다시 한다 — 재료 문제로 비면 바로 실패(09-18 실측 42건 중 2건)."""
+    from shopping_shorts import backbone_assemble as ba
+    calls = []
+
+    def fake_groups(sources, vid, note=None):
+        calls.append(1)
+        if len(calls) == 1:
+            note["detail"] = "ServerError: 503 UNAVAILABLE high demand"
+            return {"groups": [], "order": []}
+        return {"groups": [], "order": []} if len(calls) < 0 else {"groups": [{"name": "x"}], "order": [0], "product": "p"}
+
+    monkeypatch.setattr(ba, "build_groups", fake_groups)
+    monkeypatch.setattr(ba.time, "sleep", lambda s: None)
+    monkeypatch.setattr(ba, "pick_hook_spine", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("reached")))
+    import pytest
+    with pytest.raises(RuntimeError, match="reached"):
+        ba.assemble([], "s0", None)
+    assert len(calls) == 2
+
+    calls.clear()
+
+    def empty_groups(sources, vid, note=None):
+        calls.append(1)
+        note["detail"] = "재료 없음"
+        return {"groups": [], "order": []}
+
+    monkeypatch.setattr(ba, "build_groups", empty_groups)
+    g, b, meta = ba.assemble([], "s0", None)
+    assert g is None and len(calls) == 1

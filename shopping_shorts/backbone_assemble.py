@@ -18,6 +18,7 @@ import json
 import random
 import re
 import sys
+import time
 
 from shopping_shorts import script_generate as _sg
 
@@ -628,6 +629,14 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
     note = note if note is not None else {}
     seg_index = _seg_index(sources)
     groups_out = build_groups(sources, backbone_vid, note=note)
+    # ★모델 혼잡(503)은 잠깐 뒤 다시 하면 된다 — 전엔 0.7초 만에 포기해 대본 0개(09-18 실측 42건 중 2건 전부 503).
+    #   혼잡일 때만 다시 한다. 다른 이유로 비면(재료 문제) 바로 실패로 둔다.
+    for wait in (4, 10):
+        if groups_out["groups"] or not re.search(r"503|UNAVAILABLE|overloaded|high demand", str(note.get("detail") or ""), re.I):
+            break
+        time.sleep(wait)
+        note.pop("detail", None)
+        groups_out = build_groups(sources, backbone_vid, note=note)
     if not groups_out["groups"]:
         note["reason"] = "groups_empty"
         return None, None, {"note": note}
