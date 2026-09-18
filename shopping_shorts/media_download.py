@@ -486,6 +486,9 @@ def _download_douyin_inner(url, dest_dir, timeout):
 _YTDLP_CLIENTS = [None, "android", "ios"]
 
 
+_Q_CAP = "[width<=1920][height<=1920]"   # 1080p급 상한 — 세로(1080x1920)·가로(1920x1080) 둘 다 통과, 4K 차단
+
+
 def _download_ytdlp(url, dest_dir, max_attempts=3):
     """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열).
 
@@ -524,8 +527,13 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
                                        or "youtu.be" in (url or "").lower()) else [])
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp",
-             "-f", ("bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/"
-                    "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"),
+             # ★세로 숏폼의 1080p는 **높이가 1920**이다(2026-09-18 실사고). 종전 `height<=1080`은
+             #   1080x1920을 걸러내 그 아래 등급을 골랐다 — 서버 소스 350개 실측: 유튜브 33건 중
+             #   27건이 608x1080, 틱톡 130건 중 112건이 576x1024(둘 다 1080x1920이 있었는데도).
+             #   완성본은 1080x1920이라 540p급을 2배 키워 렌더한 셈 — 고객 "흐리다" 제보의 뿌리.
+             #   상한은 그대로 1080p급(4K 차단)이되, 가로·세로 **긴 변 1920**으로 잰다.
+             "-f", (f"bestvideo{_Q_CAP}[ext=mp4]+bestaudio[ext=m4a]/"
+                    f"bestvideo{_Q_CAP}+bestaudio/best{_Q_CAP}/best"),
              "--merge-output-format", "mp4",
              "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), *_client_arg,
              "-o", out, url],
