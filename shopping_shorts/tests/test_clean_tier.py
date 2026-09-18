@@ -114,3 +114,11 @@ class TestPreprocessRetry:
         with pytest.raises(RuntimeError):
             mp._vmake_clean("in.mp4", ["ak:sk"], "out.mp4")
         assert calls == ["in.mp4"]
+
+
+def test_옛키로_고급실패는_키미등록으로_안내하지_않는다():
+    """2026-09-17 박진우(cid 341): 키 등록돼 있는데 '아직 키를 등록하지 않으셨다'가 떴다."""
+    from shopping_shorts.app import clean_failure_kind
+    e = "고급 자막제거(Smart Pro)는 VMake 새 API 키가 필요합니다. VMake 대시보드에서 'Switch to New API'로 전환한 뒤 다시 시도해 주세요."
+    assert clean_failure_kind(e) == "need_new_api_key"
+    assert clean_failure_kind("자막 지우기 API 키가 필요합니다") == "need_own_key"

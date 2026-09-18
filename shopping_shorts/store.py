@@ -6,6 +6,7 @@ import os
 import secrets
 import sqlite3
 import sys
+import threading
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -252,10 +253,35 @@ def _is_mobile_ua(ua):
 
 
 class Store:
+    #: ★스키마 초기화는 **프로세스당 DB 경로당 한 번**(2026-09-18 사장님 "박현옥님이 전체적으로 느려졌다").
+    #:   py-spy로 웹 프로세스 메인 스레드(99.9% CPU)를 3번 찍었더니 셋 다 `_auth_guard → Store() → _init_schema`.
+    #:   _init_schema는 1,274줄·SQL 116개인데 1회 가드가 없었고, Store()는 app.py에 419곳 — 인증 미들웨어만
+    #:   요청마다 2번이라 **요청 하나에 SQL 232개 + 파일 stat**이 이벤트 루프에서 돌았다. 고객 11명 동시 접속 +
+    #:   썸네일 폭주(10분 2,800건)에서 첫 페이지가 로컬에서도 0.46초(정상 0.01초). 아래 옛 주석의
+    #:   "소규모 스케일에선 허용"이 더는 성립하지 않는다.
+    #:   경로별 1회로 바꾸면 419곳을 안 고치고도 전부 빨라진다(0순위-B: 정하는 곳은 여기 하나).
+    #:   ⚠️테스트가 같은 경로에 DB 파일을 새로 만들면 `Store.reset_schema_cache()`로 캐시를 비운다.
+    _schema_ready: set = set()
+    _schema_lock = threading.Lock()
+
     def __init__(self, db_path):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._init_schema()
+        key = str(self.db_path.resolve())
+        if key not in Store._schema_ready:
+            with Store._schema_lock:
+                if key not in Store._schema_ready:
+                    self._init_schema()
+                    Store._schema_ready.add(key)
+
+    @classmethod
+    def reset_schema_cache(cls, db_path=None):
+        """테스트용 — 같은 경로에 DB를 새로 만들었을 때 스키마를 다시 깔게 한다."""
+        with cls._schema_lock:
+            if db_path is None:
+                cls._schema_ready.clear()
+            else:
+                cls._schema_ready.discard(str(Path(db_path).resolve()))
         # 주: access_level이 요청마다 Store를 만들어 _init_schema(멱등)를 재실행하는 비용은
         #     Opus 리뷰 P1 지적사항이나, 경로별 1회 가드는 마이그레이션 의존 테스트를 깨서 보류.
         #     소규모(지인 판매) 스케일에선 허용. 필요 시 요청스코프 캐시로 별도 최적화.

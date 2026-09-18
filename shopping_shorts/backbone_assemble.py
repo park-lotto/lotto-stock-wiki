@@ -26,6 +26,18 @@ MAX_GROUPS = 7          # 훅·CTA 제외 특징 수 상한 — 25초에 7개면
 MIN_CUT_SECS = 0.8      # 이보다 짧은 컷은 렌더가 흡수해 화면에 안 나온다(칸채우기 핸드오프 함정 2)
 SLACK_SECS = 0.3        # 컷 길이 합이 대사보다 이만큼은 더 길게 — 채우기가 안 돌게
 
+# ★한 줄에 컷을 최소 몇 개 붙일까(2026-09-17 사장님 "근데 밋밋한거지").
+#   실측: 자동조립 job ba630a537511은 7줄 전부 **컷 1개**였고 컷당 6.5초였다(대사 3.5초인데
+#   첫 컷이 6.3초라 `_fill`이 한 개에서 멈춘다). 떡상 채널은 컷당 0.73~1.37초다
+#   (이븐쇼핑 0.78/1.02/1.22 · 순찌홈 0.73 · 긍정템 1.07 · 치트키요정 1.13 — 12편 실측,
+#    `channel/strategy/효과음_패턴분석.md`). 4.7배 느리니 화면이 안 바뀌어 밋밋하다.
+#   ★떡상 채널도 그림 재고는 적다(이븐쇼핑 화면 70%가 같은 손 샷) — **있는 그림을 잘게 쪼개** 쓴다.
+#   렌더(video_assemble)에 이미 2.2초 상한 라운드로빈이 있는데 **`len(segments) > 1`일 때만** 돈다
+#   (`_plan_beat_clips:940`). 컷이 1개면 else 경로로 빠져 통째 재생된다 — 그래서 상한이 안 먹었다.
+#   즉 고칠 자리는 렌더가 아니라 **컷을 여러 개 주는 것**이다(0순위-B: 정하는 곳은 여기 한 곳).
+TARGET_CUT_SECS = 2.0   # 한 컷이 이보다 길면 줄을 더 쪼갤 여지가 있다고 본다(렌더 상한 2.2와 짝)
+MIN_CUTS_PER_LINE = 2   # 줄마다 최소 이만큼 — 그래야 렌더 라운드로빈(>1)이 작동한다
+
 
 def _secs(text):
     """대사 읽는 시간 — 정본은 edit_plan.narr_secs 하나(말속도 상수 여러 벌 금지)."""
@@ -193,10 +205,14 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
         return sub + org      # 서브 먼저
 
     def _fill(sids, need):
+        """길이가 대사를 넘을 때까지 + **컷 수가 최소 개수를 넘을 때까지** 붙인다.
+        ★길이만 보면 6.3초짜리 컷 하나로 3.5초 대사가 끝나 화면이 안 바뀐다(밋밋).
+          렌더 라운드로빈은 컷이 2개 이상일 때만 돌아 2.2초씩 번갈아 보여준다."""
+        want = MIN_CUTS_PER_LINE if need > TARGET_CUT_SECS else 1
         picked, have = [], 0.0
         for s in _cands(sids):
             picked.append(s); used.add(s); have += seg_index[s]["secs"]
-            if have >= need + SLACK_SECS:
+            if have >= need + SLACK_SECS and len(picked) >= want:
                 break
         return picked, have
 
@@ -220,6 +236,12 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
         #   (실측 1회차: 펜촉 줄 화면 2.6s < 대사 4.9s). 안 채우면 3단계 채우기가 대본 안 보고 메운다.
         if have < need + SLACK_SECS:
             more, more_have = _fill(all_sub, need - have)
+            picked += more; have += more_have
+        # ★길이는 찼는데 **컷이 1개뿐**이면 한 장 더 붙인다(2026-09-17). 위 보충은 길이가 모자랄
+        #   때만 돌아서, 6.3초짜리 한 컷이 3.5초 대사를 덮으면 그대로 1컷으로 끝났다 = 밋밋.
+        #   렌더 라운드로빈은 컷 2개 이상에서만 작동하므로 여기서 개수를 채워야 한다.
+        if len(picked) < MIN_CUTS_PER_LINE and need > TARGET_CUT_SECS:
+            more, more_have = _fill(all_sub, 0.0)        # 0.0 = 개수만 채운다(길이는 이미 찼다)
             picked += more; have += more_have
         if not picked:                                   # 그래도 없으면 원본 아무 컷
             picked, have = _fill(list(seg_index), need)

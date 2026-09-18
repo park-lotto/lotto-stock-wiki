@@ -30,6 +30,7 @@ from __future__ import annotations
 import os
 import shutil
 import sqlite3
+import time
 from datetime import datetime, timezone
 
 
@@ -54,6 +55,79 @@ def ensure_schema(conn):
             net_rx_gb    REAL
         )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_capacity_at ON capacity_samples(at)")
+    # ★웹 체감 지표 두 칸(2026-09-18) — 이미 있는 표에는 ALTER로 붙인다(없으면 무시).
+    for col in ("web_latency_ms REAL", "web_main_cpu REAL"):
+        try:
+            conn.execute(f"ALTER TABLE capacity_samples ADD COLUMN {col}")
+        except sqlite3.OperationalError:
+            pass
+
+
+def _web_latency_ms(url="http://127.0.0.1:8849/", n=3, timeout=5.0):
+    """웹 첫 페이지를 n번 불러 **가장 느린** 응답(ms). 서버 안에서 재므로 망 지연이 없다 —
+    정상 10~40ms, 이벤트 루프가 막히면 수백 ms(2026-09-18 실측: 막힘 460ms → 수리 후 20ms)."""
+    import urllib.request
+    worst = None
+    for _ in range(n):
+        t = time.time()
+        try:
+            urllib.request.urlopen(url, timeout=timeout).read(64)
+        except Exception:      # noqa: BLE001 — 응답 자체가 없으면 timeout 값으로 친다
+            ms = timeout * 1000
+        else:
+            ms = (time.time() - t) * 1000
+        worst = ms if worst is None else max(worst, ms)
+    return round(worst, 1) if worst is not None else None
+
+
+def _web_main_cpu(match="uvicorn shopping_shorts.app", interval=1.0):
+    """웹 프로세스 **메인 스레드**의 CPU %(리눅스 /proc). 비동기 서버는 이 스레드 하나가
+    모든 요청을 나르므로 이 값이 90%대면 고객 전원이 느려진다(2026-09-18: 요청마다 DB 스키마
+    초기화 116개가 여기서 돌아 99.9%였다). 못 재면 None(리눅스 아님·프로세스 없음)."""
+    try:
+        pid = None
+        for d in os.listdir("/proc"):
+            if not d.isdigit():
+                continue
+            try:
+                with open(f"/proc/{d}/cmdline", "rb") as f:
+                    if match.encode() in f.read().replace(b"\0", b" "):
+                        pid = int(d)
+                        break
+            except OSError:
+                continue
+        if pid is None:
+            return None
+
+        def ticks():
+            with open(f"/proc/{pid}/task/{pid}/stat") as f:
+                parts = f.read().rsplit(")", 1)[1].split()
+            return int(parts[11]) + int(parts[12])       # utime + stime
+        a = ticks()
+        time.sleep(interval)
+        b = ticks()
+        hz = os.sysconf("SC_CLK_TCK")
+        return round((b - a) / hz / interval * 100, 1)
+    except Exception:      # noqa: BLE001
+        return None
+
+
+def server_verdict(data):
+    """방금 찍은 표본 한 줄로 **지금** 서버가 아픈지 판정한다 — 용량 verdict(7일 최대치, 화면용)와
+    달리 이건 즉시 경보용이다(2026-09-18 사장님 "누가 말해줘야 작동이 되면 안 되잖아").
+    실사고: 디스크 100%(09-16)와 메인 스레드 99.9%(09-18)를 고객이 말해줘서 알았다."""
+    lat, cpu, free = data.get("web_latency_ms"), data.get("web_main_cpu"), data.get("disk_free_gb")
+    if free is not None and free < 30:
+        return ("danger", f"디스크 여유 {free:.0f}GB — 지금 차고 있습니다. 큰 폴더(du -xh --max-depth=1 /tmp)부터 보세요.")
+    if lat is not None and lat > 1000:
+        return ("danger", f"웹 첫 페이지 응답 {lat:.0f}ms(정상 40ms 이하) — 이벤트 루프 막힘 의심. "
+                          f"메인 스레드 CPU {cpu if cpu is not None else '?'}%. py-spy dump로 확인.")
+    if cpu is not None and cpu > 85:
+        return ("danger", f"웹 메인 스레드 CPU {cpu:.0f}% — 요청이 줄을 섭니다(응답 {lat}ms). "
+                          f"py-spy dump --pid <uvicorn> 로 무엇을 하는지 보세요.")
+    if (free is not None and free < 60) or (lat is not None and lat > 400):
+        return ("warn", f"디스크 여유 {free}GB / 응답 {lat}ms / 메인 CPU {cpu}%")
+    return ("ok", "")
 
 
 def _net_bytes():
@@ -108,12 +182,14 @@ def sample(db_path):
             "disk_used_gb": round(du.used / gb, 2),
             "disk_free_gb": round(du.free / gb, 2),
             "net_tx_gb": round(tx / gb, 3), "net_rx_gb": round(rx / gb, 3),
+            # 웹 체감(2026-09-18) — 둘 다 1~2초면 끝난다(요청 3번 + /proc 두 번 읽기)
+            "web_latency_ms": _web_latency_ms(), "web_main_cpu": _web_main_cpu(),
         }
         conn.execute(
             "INSERT INTO capacity_samples (at,running,queued,workers,load1,cores,"
-            " disk_used_gb,disk_free_gb,net_tx_gb,net_rx_gb) "
+            " disk_used_gb,disk_free_gb,net_tx_gb,net_rx_gb,web_latency_ms,web_main_cpu) "
             "VALUES (:at,:running,:queued,:workers,:load1,:cores,"
-            " :disk_used_gb,:disk_free_gb,:net_tx_gb,:net_rx_gb)", data)
+            " :disk_used_gb,:disk_free_gb,:net_tx_gb,:net_rx_gb,:web_latency_ms,:web_main_cpu)", data)
         conn.commit()
         return data
     finally:
@@ -316,7 +392,25 @@ def verdict(db_path, cores=None, now_queued=None):
 if __name__ == "__main__":      # 크론: */5 * * * * python -m shopping_shorts.capacity_watch
     from shopping_shorts.config import DB_PATH
 
-    print(sample(DB_PATH))
+    _s = sample(DB_PATH)
+    print(_s)
+    # ── 서버 즉시 경보(2026-09-18) — 디스크·응답 지연·메인 스레드 CPU가 문턱을 넘으면
+    #    사람이 말해주기 전에 ops_alert(텔레그램+쪽지)로 나간다. 크론 본업을 죽이면 안 되므로 삼킨다.
+    try:
+        _lv, _msg = server_verdict(_s)
+        print(f"[serverwatch] {_lv}: {_msg[:120]}")
+        if _lv == "danger":
+            from datetime import datetime, timedelta, timezone
+            from shopping_shorts import ops_alert
+            _when = datetime.now(timezone(timedelta(hours=9))).strftime("%m-%d %H:%M")
+            _kind = "server_disk" if "디스크" in _msg else "server_slow"
+            ops_alert.raise_alert(
+                _kind, f"[서버 {_when}] {_msg[:60]}", f"[발생 {_when} KST] {_msg}",
+                grade=ops_alert.GRADE_OPS,
+                # 같은 수준의 같은 사고면 쿨다운 뒤에도 재도배하지 않는다(값이 바뀌면 다시)
+                signature=f"{_kind}:{int((_s.get('web_latency_ms') or 0) // 500)}:{int((_s.get('disk_free_gb') or 0) // 10)}")
+    except Exception as e:      # noqa: BLE001
+        print(f"[serverwatch] 판정 실패(무시): {e}")
     # ── API 관측판 무인 경보(2026-09-01) — 아무도 화면을 안 보고 있어도 5분마다
     #    판정이 돌아 danger면 ops_alert(텔레그램+쪽지, 30분 쿨다운)가 나간다.
     #    관측이 크론 본업(용량 표본)을 죽이면 안 되므로 전부 삼킨다.

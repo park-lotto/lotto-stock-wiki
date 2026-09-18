@@ -9292,7 +9292,16 @@ function _applyPendingNewName(){
   saveWork();                           // title_manual이 실린 state로 다시 저장(가드는 saveWork 안에)
 }
 if(typeof window !== 'undefined') window.__ssApplyWorkTitle = _applyWorkTitle;
+// 최초 생성 응답 전에 이름 저장·자동 저장이 겹치면 둘 다 WORK_ID=null로 POST되어
+// 같은 작업이 두 줄 생겼다(2026-09-17 실측). 저장 요청을 호출 순서대로 한 줄로 세워,
+// 앞 요청이 받은 work_id를 뒤 요청이 _workState()/payload를 만들 때 반드시 재사용한다.
+let _workPushTail = Promise.resolve();
 async function _pushWork(){
+  const previousPush = _workPushTail;
+  let releasePush;
+  _workPushTail = new Promise(resolve => { releasePush = resolve; });
+  await previousPush.catch(()=>{});
+  try{
   // 디바운스가 끝난 시점의 **최신** 상태를 보낸다(예약 시점의 스냅샷이 아니다).
   const st = _workState();
   // ★saveWork의 가드와 **같은 조건**이어야 한다(0순위-B). 여기만 빠뜨리면 로컬엔 남고
@@ -9342,6 +9351,9 @@ async function _pushWork(){
       }catch(e){}
     }
   }catch(e){ _markLocalOnly(); }   // 서버가 죽어도 sessionStorage 복원은 살아 있다 — 저장 실패로 작업을 막지 않는다
+  }finally{
+    releasePush();
+  }
 }
 function saveWork(){
   // ★가드가 **여기 안**에 있다(2026-07-17). 예전엔 호출부 5곳마다 각각 HANDOFF 길이를 검사한 뒤에만
@@ -13641,9 +13653,9 @@ function cleanFailHtml(kind){
     //   무엇을 더 해야 할지 모른다). 재시도 버튼은 안 준다: 키를 바꾸기 전엔 같은 결과다.
     return '<div class="cp-fail"><b>고급 자막 지우기는 새 API 키가 필요해요.</b><br>'
       + '<span style="opacity:.85">지금 등록된 키로는 고급을 쓸 수 없습니다. 고급은 <b>Pro 요금제(월 44,000원)</b>에서 <b>새 API로 전환</b>한 키라야 돼요.</span></div>'
-      + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 키를 발급받은 곳의 '
-      + '대시보드에서 <b>새 API로 전환</b>한 뒤, <b>새로 발급된 키</b>를 설정 화면에 '
-      + '다시 등록해 주세요. 그대로 <b>기본</b>으로 지우셔도 됩니다.</div>'
+      + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 <b>① Pro 요금제로 바꾸고</b> → '
+      + '<b>② 키를 발급받은 곳 개발자 페이지에서 "Switch to New API"</b>를 눌러 주세요. '
+      + '<b>키는 그대로</b> 쓰시면 됩니다. 급하시면 <b>기본</b>을 골라 지우셔도 됩니다.</div>'
       + '<a class="cp-redo" href="/api_manual.html#subclean" target="_blank" rel="noopener" '
       + 'style="display:inline-block;text-decoration:none;margin-right:6px">📖 그림으로 보는 발급 방법</a>'
       + '<a class="cp-redo" href="/settings#keys" target="_blank" rel="noopener" '
@@ -13779,9 +13791,9 @@ function paintCleanTier(){
     ? '큰 자막·자막 박스도 깨끗하게 지워요. <b>1초에 4크레딧</b>(30초 영상이면 120크레딧, 초 단위 올림).'
       + '<br><span style="color:var(--fire,#ff9a5a)">⚠️ 고급은 <b>Pro 요금제(월 44,000원)</b>의 <b>새 API 키</b>가 필요해요.</span><br>'
       + '<span style="opacity:.85">Plus(월 14,000원·크레딧 1,000)는 기본만 돼요. Pro(월 44,000원·크레딧 4,500)는 30초 영상 기준 <b>고급 약 37편</b> 또는 <b>기본 약 75편</b>이에요. <span style="opacity:.75">(참고용 — 정확한 요금은 키를 발급받은 곳의 요금표를 확인해 주세요)</span></span><br>'
-      + '키를 발급받은 곳의 대시보드에서 <b>새 API로 전환</b>하고, 새로 나온 키를 '
-      + '<a href="/settings#keys" target="_blank" rel="noopener"><b>내 키 등록</b></a>에 '
-      + '다시 넣어 주세요. (예전 키로는 고급이 안 돼요)'
+      + '<b>① Pro 요금제로 바꾸고 → ② 키를 발급받은 곳 개발자 페이지 맨 위 띠의 "View the API upgrades" → 파란 버튼 "Switch to New API"</b>를 눌러 주세요. '
+      + '<b>키는 다시 등록하지 않아도 돼요</b>(그대로 고급이 됩니다). '
+      + '그래도 안 되면 키를 새로 만들어 <a href="/settings#keys" target="_blank" rel="noopener"><b>내 키 등록</b></a>에 넣어 주세요.'
       + '<br><a href="/api_manual.html#subclean" target="_blank" rel="noopener" '
       + 'style="display:inline-block;margin-top:8px;padding:8px 14px;border-radius:10px;'
       + 'background:#10324b;border:2px solid #2aa3e8;color:#fff;text-decoration:none;font-weight:700">'
@@ -16326,15 +16338,19 @@ function drawThumb(ctx, img, layers, W, H, view){
       if (+L.shadow > 0){
         const k = Math.min(100, +L.shadow) / 100;
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,' + (0.55 + 0.4 * k) + ')';
-        ctx.shadowBlur = size * 0.10 * k;
-        ctx.shadowOffsetX = size * 0.07 * k; ctx.shadowOffsetY = size * 0.09 * k;
+        // ★진하게(2026-09-17 사장님 "너무 약해") — 번짐은 줄이고(또렷), 거리는 늘리고, 같은 그림자를
+        //   3번 겹쳐 깐다. 한 번만 깔면 번진 가장자리가 반투명이라 밝은 배경에서 회색으로 뜬다.
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = size * 0.06 * k;
+        ctx.shadowOffsetX = size * 0.10 * k; ctx.shadowOffsetY = size * 0.13 * k;
+        for (let _p = 0; _p < 3; _p++){
         if (L.outline && L.outline.w){
           ctx.lineWidth = Math.max(L.outline.w * s, size * 0.085);
           ctx.strokeStyle = L.outline.color; ctx.lineJoin = 'round';
           runs.forEach(r => ctx.strokeText(r.text, r.x, y));
         } else {
           runs.forEach(r => { ctx.fillStyle = r.color; ctx.fillText(r.text, r.x, y); });
+        }
         }
         ctx.restore();
       }

@@ -6720,6 +6720,12 @@ def clean_failure_kind(clean_error):
     """
     e = (clean_error or "")
     low = e.lower()
+    # ★고급을 골랐는데 키가 **옛 API**다(2026-09-17 순서 수리). **need_own_key보다 먼저** 본다 —
+    #   원문 "새 API 키가 필요합니다"에 아래의 "API 키가 필요"가 들어 있어, 뒤에 두면 키를 이미
+    #   등록한 고객(박진우 cid 341)에게 "아직 키를 등록하지 않으셨다"는 틀린 안내가 나갔다.
+    from shopping_shorts.vmake_client import is_legacy_key as _vmake_legacy
+    if _vmake_legacy(e) or "새 API 키가 필요" in e:
+        return "need_new_api_key"
     # ★내 키 미등록(2026-09-01) — 키를 등록하기 전엔 재시도해도 영원히 안 된다.
     #   포인트 부족보다 **먼저** 본다: 이제 포인트는 없고 사유는 키 미등록뿐이다.
     if "키를 등록해야" in e or "need_own_key" in e or "API 키가 필요" in e:
@@ -6735,13 +6741,6 @@ def clean_failure_kind(clean_error):
     from shopping_shorts.vmake_client import is_no_credit as _vmake_no_credit
     if _vmake_no_credit(e):
         return "no_credit"
-    # 고급(Smart Pro)을 골랐는데 키가 아직 옛 API에 묶여 있다(2026-09-16).
-    # ★재시도로는 영원히 안 된다 — 고객이 VMake에서 새 API로 전환하고 **키를 다시
-    #   등록**해야 한다. need_own_key와 갈라 둔다: 키는 있는데 **종류가 다른** 것이라
-    #   "키를 등록하세요"만 보여주면 이미 등록한 사람이 무엇을 해야 할지 모른다.
-    from shopping_shorts.vmake_client import is_legacy_key as _vmake_legacy
-    if _vmake_legacy(e) or "새 API 키가 필요" in e:
-        return "need_new_api_key"
     # 배포·재시작으로 BackgroundTask가 죽은 경우 — 이건 진짜로 다시 시도하면 된다.
     if "서버 재시작" in e or "중단되었습니다" in e:
         return "interrupted"
@@ -9725,6 +9724,37 @@ def _thumb_via_oembed(url: str, shortcode: str | None):
         return None
 
 
+#: ★죽은 썸네일 주소의 **서버 안 기억**(2026-09-18 사장님 "박현옥님이 전체적으로 느려졌다").
+#:   실측: 한 고객 화면이 10분에 /api/thumb 2,563건, 그중 2,505건이 404. 404 한 번을 내려면 아래
+#:   핸들러가 oembed 조회 + 유튜브 대체 규격 여러 번(각 6초 제한)을 **바깥으로** 시도한다 →
+#:   스레드풀(40개)이 죽은 주소 재시도로 꽉 차 **다른 고객의 요청까지 줄을 섰다**.
+#:   브라우저 캐시(Cache-Control)로 막으면 안 된다 — 아래 404가 no-store인 이유(서버가 나중에
+#:   복구해도 카드가 까맣게 남던 사고)가 있다. 그래서 브라우저는 그대로 두고 **서버가 5분간
+#:   그 주소를 기억해** 바깥 조회 없이 즉시 404를 낸다. 5분 뒤엔 다시 복구를 시도한다.
+_THUMB_NEG: dict = {}
+_THUMB_NEG_TTL = 300
+_THUMB_NEG_LOCK = threading.Lock()
+
+
+def _thumb_neg_hit(url):
+    exp = _THUMB_NEG.get(url)
+    if exp is None:
+        return False
+    if exp < time.time():
+        with _THUMB_NEG_LOCK:
+            _THUMB_NEG.pop(url, None)
+        return False
+    return True
+
+
+def _thumb_neg_put(url):
+    with _THUMB_NEG_LOCK:
+        if len(_THUMB_NEG) > 5000:        # 무한히 안 자라게 — 오래된 것부터 반쯤 비운다
+            for k in sorted(_THUMB_NEG, key=_THUMB_NEG.get)[:2500]:
+                _THUMB_NEG.pop(k, None)
+        _THUMB_NEG[url] = time.time() + _THUMB_NEG_TTL
+
+
 @app.get("/api/thumb")
 def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
     """인스타 CDN 썸네일 프록시 (핫링크 차단 우회). url=원본 이미지 주소.
@@ -9760,6 +9790,8 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
     #   뒤에** 바꾼다 — 순서가 바뀌면 검사 대상이 원본이 아니게 된다. 영상ID는 보존되므로
     #   호스트도 그대로다. 캐시 키도 이 주소로 잡혀 큰 파일을 아예 안 받는다.
     url = _yt_thumb_downscale(url)
+    if _thumb_neg_hit(url):           # 5분 안에 죽은 걸 확인한 주소 — 바깥 조회 없이 즉시 404
+        return Response(status_code=404, content=b"", headers={"Cache-Control": "no-store"})
     cache = _thumb_cache_path(url)
     if cache is not None and cache.exists():
         return Response(content=cache.read_bytes(), media_type="image/jpeg",
@@ -9837,6 +9869,7 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
         # 캐싱으로 이 404를 몇 시간 기억한다. 그 뒤 우리가 이미지를 복구해 디스크 캐시에
         # 넣어도 **브라우저가 재요청을 안 해** 카드가 계속 까맣게 남는다(실측: 서버는
         # 200/71KB를 주는데 화면만 검은 상태). URL이 글자까지 같아 캐시버스팅도 안 먹는다.
+        _thumb_neg_put(url)               # 서버만 5분 기억 — 위 _THUMB_NEG 주석
         return Response(status_code=404, content=b"",
                         headers={"Cache-Control": "no-store"})
 
