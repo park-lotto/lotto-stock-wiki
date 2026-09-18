@@ -163,3 +163,13 @@ def test_more_칸_없는_인스타형은_줄을_안_늘린다():
            "method": ["{효능}, 그러면 끝이라는데"], "result": ["진짜 {효능} 거 있죠"], "cta": ["댓글에 나도"]}
     plan = ba._spine_plan(roles, tpl, 6)
     assert [r for r, _ in plan] == roles, plan
+
+
+def test_레시피_전용_스파인은_물건_유형에서_안_뽑힌다():
+    sp = [{"id": 53, "fit_categories": ["권유지시형", "레시피"]},              # 레시피 전용
+          {"id": 52, "fit_categories": ["지인증언형", "홈템", "뷰티", "레시피"]},  # 물건에도 씀
+          {"id": 99, "fit_categories": ["권유지시형", "홈템"]}]
+    st = _FakeStore(sp)
+    assert ba.pick_hook_spine(st, seed=0, style="권유지시형")["id"] == 99
+    assert ba.pick_hook_spine(st, seed=0, style="지인증언형")["id"] == 52
+    assert ba.pick_hook_spine(st, seed=0, style="레시피")["id"] in (53, 52)

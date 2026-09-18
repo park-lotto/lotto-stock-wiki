@@ -138,6 +138,12 @@ def _seed_int(seed):
     return 0
 
 
+def _RECIPE_ONLY_MARK(fit):
+    """fit_categories가 [유형, '레시피'] 꼴(=레시피 말고 붙은 물건 카테고리가 없음)이면 '레시피'를 돌려 표식으로 쓴다."""
+    others = [c for c in fit if c not in ("레시피",) and not c.endswith("형")]
+    return "레시피" if ("레시피" in fit and not others) else ""
+
+
 def pick_hook_spine(store, spine_id=None, seed=None, style=None):
     """승인 스파인 중 훅 규칙(hook_3s)이 있는 것.
     ★style(유형, 예 '오용형'·'발명품형')을 주면 **그 유형의 스파인들을 id 순으로 세워 seed로 순번**을 정한다
@@ -152,7 +158,14 @@ def pick_hook_spine(store, spine_id=None, seed=None, style=None):
                 return s
     if style:
         # 인스타 스파인(52~62)은 hook_3s가 없다 — 유형으로 고를 땐 전부 후보(2026-09-18)
-        pool = sorted([s for s in all_sp if style in (s.get("fit_categories") or [])], key=lambda s: s.get("id") or 0)
+        # ★레시피 전용 틀(fit에 '레시피'뿐인 것, 예 53 단정명령형 "무조건 이렇게 드세요")은 물건 소재에 주면
+        #   "행주를 드세요·별미"가 된다(실측 job bbdd4bb0a0ff). 유형이 '레시피'가 아니면 뺀다.
+        def _ok(sp):
+            fit = sp.get("fit_categories") or []
+            if style not in fit:
+                return False
+            return style == "레시피" or "레시피" not in _RECIPE_ONLY_MARK(fit)
+        pool = sorted([s for s in all_sp if _ok(s)], key=lambda s: s.get("id") or 0)
         if pool:
             return pool[_seed_int(seed) % len(pool)]
     if spine_id is not None:
