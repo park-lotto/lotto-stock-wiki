@@ -9733,6 +9733,16 @@ def _thumb_via_oembed(url: str, shortcode: str | None):
 #:   그 주소를 기억해** 바깥 조회 없이 즉시 404를 낸다. 5분 뒤엔 다시 복구를 시도한다.
 _THUMB_NEG: dict = {}
 _THUMB_NEG_TTL = 300
+#: ★죽은 썸네일 응답(404·400)에 붙이는 **브라우저 쪽 짧은 기억**(2026-09-18). 한 번만 정한다(0순위-B).
+#:   실측: 한 고객 화면이 40분에 9,634건 — 같은 주소를 최대 72번(1위는 `chrome-extension://…svg`,
+#:   2위 `youtube.com/img/…png`처럼 **영원히 안 열리는 주소**). 제작소 화면이 몇 초마다 목록을 다시
+#:   그릴 때마다 브라우저가 다시 요청했다 — 404가 no-store, 400은 헤더가 없어(400은 휴리스틱 캐시
+#:   대상도 아니다) 브라우저가 **한 번도 기억하지 않았기** 때문이다. 호출부가 produce.html에만 7곳이라
+#:   거기를 하나씩 고치는 대신 응답 한 곳에서 막는다.
+#:   no-store였던 이유(08-09 사고: 서버가 복구해도 브라우저가 옛 404를 몇 시간 들고 있어 카드가
+#:   까맣게 남음)는 **짧게, 명시적으로** 두면 피한다 — 120초는 서버 쪽 기억(_THUMB_NEG_TTL 300초)보다
+#:   짧아서, 서버가 복구를 다시 시도하기 전에 브라우저 기억이 먼저 풀린다 = 복구 지연이 늘지 않는다.
+_THUMB_DEAD_HEADERS = {"Cache-Control": "private, max-age=120"}
 _THUMB_NEG_LOCK = threading.Lock()
 
 
@@ -9785,13 +9795,13 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
             _h = "?"
         _why = "ssrf" if _reject_ssrf(url) is not None else "not-in-allowlist"
         print("[thumb-host-blocked] %s (%s)" % (_h, _why), flush=True)
-        return Response(status_code=400, content=b"invalid host")
+        return Response(status_code=400, content=b"invalid host", headers=_THUMB_DEAD_HEADERS)
     # ★카드 크기에 맞는 가벼운 규격으로 낮춘다(2026-08-30). 화이트리스트 검사를 **통과한
     #   뒤에** 바꾼다 — 순서가 바뀌면 검사 대상이 원본이 아니게 된다. 영상ID는 보존되므로
     #   호스트도 그대로다. 캐시 키도 이 주소로 잡혀 큰 파일을 아예 안 받는다.
     url = _yt_thumb_downscale(url)
     if _thumb_neg_hit(url):           # 5분 안에 죽은 걸 확인한 주소 — 바깥 조회 없이 즉시 404
-        return Response(status_code=404, content=b"", headers={"Cache-Control": "no-store"})
+        return Response(status_code=404, content=b"", headers=_THUMB_DEAD_HEADERS)
     cache = _thumb_cache_path(url)
     if cache is not None and cache.exists():
         return Response(content=cache.read_bytes(), media_type="image/jpeg",
@@ -9865,13 +9875,13 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
                                 headers={"Cache-Control": "public, max-age=86400"})
             except Exception:
                 continue        # 이 규격도 없으면 다음 후보로
-        # ★실패는 절대 캐시하지 않는다(2026-08-09). 헤더가 없으면 브라우저가 휴리스틱
+        # ★실패는 **오래** 캐시하지 않는다(2026-08-09 → 09-18 120초로 조정, _THUMB_DEAD_HEADERS). 헤더가 없으면 브라우저가 휴리스틱
         # 캐싱으로 이 404를 몇 시간 기억한다. 그 뒤 우리가 이미지를 복구해 디스크 캐시에
         # 넣어도 **브라우저가 재요청을 안 해** 카드가 계속 까맣게 남는다(실측: 서버는
         # 200/71KB를 주는데 화면만 검은 상태). URL이 글자까지 같아 캐시버스팅도 안 먹는다.
         _thumb_neg_put(url)               # 서버만 5분 기억 — 위 _THUMB_NEG 주석
         return Response(status_code=404, content=b"",
-                        headers={"Cache-Control": "no-store"})
+                        headers=_THUMB_DEAD_HEADERS)   # 짧게·명시적으로 — 위 _THUMB_DEAD_HEADERS 주석
 
 
 @app.get("/api/video")

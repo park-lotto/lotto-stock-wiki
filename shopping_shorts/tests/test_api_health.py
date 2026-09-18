@@ -120,13 +120,26 @@ def test_heartbeat_upserts_one_row_per_process(tmp_db):
 
 # ── 판정 ──────────────────────────────────────────────────────────────────
 
-def test_verdict_silent_fallback_is_danger(tmp_db):
-    """무음 폴백은 1건이라도 danger — 고객이 무음 영상을 받은 것이다."""
+def test_verdict_silent_fallback_is_danger(tmp_db, monkeypatch):
+    """고객 프로세스(worker·web)의 무음 폴백은 1건이라도 danger — 고객이 무음 영상을 받은 것이다."""
+    monkeypatch.setattr(api_health, "_proc_kind", lambda: "worker")
     api_health.record("elevenlabs", api_health.OUT_SILENT)
     v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
                            agg=api_health.aggregates(hours=1))
     assert v["level"] == "danger"
     assert any("무음" in p for p in v["problems"])
+
+
+def test_verdict_silent_fallback_from_adhoc_script_is_not_customer_impact(tmp_db, monkeypatch):
+    """★2026-09-18 실측: 경보 21건이 전부 proc='bb_style'(다른 세션이 /tmp에서 키 환경 없이 돌린
+    시험 스크립트)였는데 '고객이 무음 영상을 받았다'로 올라갔다. 고객 영상은 web·worker만 만든다."""
+    monkeypatch.setattr(api_health, "_proc_kind", lambda: "bb_style")
+    for _ in range(7):
+        api_health.record("elevenlabs", api_health.OUT_SILENT)
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert not any("무음" in p for p in v["problems"])
+    assert v["level"] == "ok"
 
 
 def test_verdict_ok_when_quiet(tmp_db):

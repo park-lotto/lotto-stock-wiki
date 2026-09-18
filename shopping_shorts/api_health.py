@@ -508,6 +508,16 @@ def aggregates(hours=24):
                 f"COUNT(*) n FROM api_events "
                 f"WHERE ts >= ? GROUP BY service, outcome, customer_id", (since,))]
 
+            # ★고객에게 나간 무음만 따로 센다(2026-09-18). 무음 폴백은 '키 없는 환경에서 합성했다'이지
+            #   '고객이 무음 영상을 받았다'가 아니다 — 실측: 09-16·09-18 경보 21건이 전부
+            #   proc='bb_style'(다른 세션이 /tmp에서 키 환경 없이 돌린 시험 스크립트, 1분 뒤 키 싣고
+            #   재실행해 성공 23건). 경보 문구는 "고객이 무음 영상을 받았다"였고 사장님께 그대로 올라갔다.
+            #   고객 영상을 만드는 프로세스는 web(미리듣기·재합성)과 worker(렌더)뿐이다.
+            out["silent_customer"] = {r["service"]: r["n"] for r in conn.execute(
+                "SELECT service, COUNT(*) n FROM api_events "
+                "WHERE ts >= ? AND outcome = ? AND proc IN ('web','worker') "
+                "GROUP BY service", (since, OUT_SILENT))}
+
             out["by_op"] = [dict(r) for r in conn.execute(
                 "SELECT COALESCE(op,'(미상)') op, service, outcome, COUNT(*) n "
                 "FROM api_events WHERE ts >= ? GROUP BY op, service, outcome "
@@ -629,7 +639,13 @@ def verdict(snap=None, agg=None):
                 else:
                     fails[svc] = fails.get(svc, 0) + row.get("n", 0)
             if row.get("outcome") == OUT_SILENT and row.get("n", 0) > 0:
-                problems.append(f"{svc}: 무음 폴백 {row['n']}건 — 고객이 무음 영상을 받았다")
+                # 고객 프로세스(web·worker)에서 난 것만 고객영향이다 — aggregates()의 silent_customer.
+                #   시험 스크립트·크론의 무음은 경보하지 않는다(09-18 bb_style 오경보 21건).
+                #   silent_customer가 없는 옛 집계(테스트가 손으로 만든 agg)는 종전대로 센다.
+                _sc = agg.get("silent_customer")
+                _n = (_sc or {}).get(svc, 0) if _sc is not None else row["n"]
+                if _n > 0 and f"{svc}: 무음 폴백" not in " ".join(problems):
+                    problems.append(f"{svc}: 무음 폴백 {_n}건 — 고객이 무음 영상을 받았다")
             # OUT_AUTH는 아래에서 '키 개수' 기준으로 따로 판정한다(호출 건수로 세지 않는다).
         # ★죽은 키 판정 — 키 개수가 본체, 호출 횟수는 "얼마나 헛되이 때렸나"의 근거.
         #   ★회원이 직접 넣은 키(customer_id 있음)가 죽은 것은 **운영사고가 아니다**(2026-09-04
