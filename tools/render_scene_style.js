@@ -15,7 +15,8 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
       const g=await page.evaluate(i=>window.sceneStyle.show(i),index);
       await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
       const file=`scene-style-layer-${index}.png`;
-      const duration=(request.snapshot.hookMotion&&request.snapshot.hookMotion!=='zoom-punch')||request.snapshot.hookBandRise?await page.evaluate(()=>window.sceneStyle.motionAt(100000)):0;   // 흰 띠 스윽은 줌 펀치와 겹쳐도 프레임별로 찍는다
+      const CAMERA=['zoom-punch','push-in','shake'],isCamera=CAMERA.includes(request.snapshot.hookMotion);
+      const duration=(request.snapshot.hookMotion&&!isCamera)||request.snapshot.hookBandRise?await page.evaluate(()=>window.sceneStyle.motionAt(100000)):0;   // 흰 띠 스윽은 줌 펀치와 겹쳐도 프레임별로 찍는다
       const moving=await page.evaluate(()=>{const shape=window.sceneDecorations?.motionAt(0),brand=window.sceneBranding?.motionAt(0);return shape||brand||false});
       await page.screenshot({path:path.join(request.output,file),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
       const scene=request.context.scenes[index],first=Math.round(scene.start*30),end=Math.round(scene.end*30);
@@ -41,7 +42,7 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
         }
         animation={pattern,count};
       }
-      const camera=request.snapshot.hookMotion==='zoom-punch'?await page.evaluate(({first,end})=>Array.from({length:end-first},(_,f)=>window.sceneStyle.cameraAt((first+f)/30*1000)),{first,end}):null;
+      const camera=isCamera?await page.evaluate(({first,end})=>Array.from({length:end-first},(_,f)=>window.sceneStyle.cameraAt((first+f)/30*1000)),{first,end}):null;
       layers.push({...g,file,animation,camera});
     }
     if(errors.length)throw new Error(errors.join('\n'));
