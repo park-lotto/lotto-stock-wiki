@@ -14,10 +14,37 @@ from tools.spine_presets.harvest_templates import _load_texts, _verbatim_ok, DB
 from tools.spine_presets.audit_spines import BAD_JOIN, FAKE_FACT, BRAND, SLOT, KNOWN_SLOTS, _ko_ratio
 
 
+# 자동 자막(유튜브) 오타 — 원문 대조 전에만 바로잡는다(틀에 오타를 넣지 않으려고). 2026-09-18 실측 빈도순
+ASR_FIX = [("때돈", "떼돈"), ("돈방 앉은", "돈방석에 앉은"), ("돈방에 앉", "돈방석에 앉"), ("이키아", "이케아"), ("바이러럴", "바이럴")]
+
+
+def _corpus_texts(argv):
+    """원문 대조 대상. 기본 = 인스타(예전 그대로).
+    --corpus=insta,wiki,texts  wiki = script_wiki 전 출처(유튜브·틱톡·인스타 대본)
+    --texts=<json>             유튜브 자막 원문 파일(문자열 리스트) — PC에서 모은 썰쇼핑 자막(서버엔 없다)"""
+    want = next((a.split("=", 1)[1] for a in argv if a.startswith("--corpus=")), "insta").split(",")
+    out = []
+    if "insta" in want:
+        out += [t for _, _, t in _load_texts("*", "insta", 100000)]
+    if "wiki" in want:
+        import sqlite3
+        c = sqlite3.connect(DB)
+        out += [r[0] or "" for r in c.execute("select full_text from script_wiki")]
+    tf = next((a.split("=", 1)[1] for a in argv if a.startswith("--texts=")), None)
+    if tf:
+        out += list(json.load(io.open(tf, encoding="utf-8")))
+    fixed = []
+    for t in out:
+        for a, b in ASR_FIX:
+            t = t.replace(a, b)
+        fixed.append(t)
+    return fixed
+
+
 def main():
     cur_file = sys.argv[1]; apply = "--apply" in sys.argv
     want = json.load(io.open(cur_file, encoding="utf-8"))
-    texts = [t for _, _, t in _load_texts("*", "insta", 100000)]
+    texts = _corpus_texts(sys.argv)
     from shopping_shorts.store import Store
     st = Store(DB)
     sp_all = {s["id"]: s for s in st.list_spines(status="approved")}
