@@ -74,3 +74,21 @@ console.log(JSON.stringify(s2DraftContract(dr)));
     assert got["visualTitle"] == ""
     assert got["script"].splitlines()[0] == "독일 개발자도 놀란 기차 케이크"
     assert [b["role"] for b in got["narrationBeats"]] == ["title", "story"]
+
+
+def test_보조제목은_음성에서_빠지고_헤드카피_subline으로_간다():
+    out = _run("""
+const target={headcopy:{font:'P'}};
+const dr={beats:[
+  {role:'title',text:'제조사도 예상 못한 기차 케이크'},
+  {role:'subline',text:'자르고 나면 장난감이 되는 케이크'},
+  {role:'hook',text:'이거 케이크 아니었음.'},
+  {role:'story',text:'기차가 돌아요.'}]};
+s2ApplyDraftContract(target, dr);
+console.log(JSON.stringify(target));
+""")
+    got = json.loads(out)
+    assert got["headcopy"]["text"] == "제조사도 예상 못한 기차 케이크"
+    assert got["headcopy"]["subline"] == "자르고 나면 장난감이 되는 케이크"
+    assert got["script"].splitlines() == ["이거 케이크 아니었음.", "기차가 돌아요."]
+

@@ -29,7 +29,8 @@ def test_옛_제목형은_화면제목_첫tts후킹_본문으로_보강된다():
     old = _legacy_style()
     got = bank_assemble.with_spoken_hook(old)
 
-    assert got["beat_roles"] == ["title", "hook", "story", "benefit"]
+    assert got["beat_roles"] == ["title", "subline", "hook", "story", "benefit"]
+    assert "22자" in got["beat_descs"]["subline"] and "읽지 않는다" in got["beat_descs"]["subline"]
     assert got["title_visual_only"] is True
     assert "첫 TTS" in got["beat_descs"]["hook"]
     assert "되풀이하지" in got["beat_descs"]["hook"]

@@ -13,7 +13,7 @@ def test_on_switches_contract():
     canary.set_active(True)
     try:
         st = {"beat_roles": ["title", "story"], "beat_descs": {}, "templates": {}}
-        assert bank_assemble.with_spoken_hook(st)["beat_roles"] == ["title", "hook", "story"]
+        assert bank_assemble.with_spoken_hook(st)["beat_roles"] == ["title", "subline", "hook", "story"]
         assert headcopy_gen._support_max() == 22
     finally:
         canary.set_active(False)

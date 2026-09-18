@@ -308,6 +308,19 @@ _TITLE_SPOKEN_HOOK_DESC = (
 )
 
 
+def _SUBLINE_DESC():
+    from shopping_shorts.template_copy import EVEN_SHOPPING as c
+    return ("화면 보조제목 — 큰 제목 바로 아래 흰 띠에 한 줄로 박힌다. 소리 내어 읽지 않는다. "
+            "화면 제목을 되풀이하지 말고 '무엇이 놀라운지'를 구체적으로 한 줄로 풀어라. "
+            "★공백 포함 %d자 이내, 한 줄. 길면 잘려서 못 쓴다" % c.support_max)
+
+
+def subline_too_long(text):
+    from shopping_shorts.template_copy import EVEN_SHOPPING as c
+    t = " ".join(str(text or "").split())
+    return len(t) > c.support_max
+
+
 def title_len_rule():
     """화면 제목의 글자 한도 안내 — 장면꾸미기 슬롯 계약(template_copy)에서 빌려 온다.
 
@@ -343,13 +356,16 @@ def with_spoken_hook(style):
     if not canary.on():
         return style
     roles = list(style.get("beat_roles") or [])
-    if not roles or roles[0] != "title" or (len(roles) > 1 and roles[1] == "hook"):
+    if not roles or roles[0] != "title" or (len(roles) > 1 and roles[1] in ("hook", "subline")):
         return style
     adapted = copy.deepcopy(style)
-    adapted["beat_roles"] = ["title", "hook"] + roles[1:]
+    # ★보조제목(subline, 2026-09-18 사장님 "해봐") — 이븐쇼핑 흰 띠 한 줄. 비워 두면 장면꾸미기가
+    #   훅 제목을 그대로 한 번 더 찍어 반복돼 보였다. 음성 없음(화면 전용).
+    adapted["beat_roles"] = ["title", "subline", "hook"] + roles[1:]
     descs = beat_descs(style)
     adapted["beat_descs"] = {
-        role: (_TITLE_SPOKEN_HOOK_DESC if role == "hook" else descs.get(role, ""))
+        role: (_TITLE_SPOKEN_HOOK_DESC if role == "hook"
+               else _SUBLINE_DESC() if role == "subline" else descs.get(role, ""))
         for role in adapted["beat_roles"]
     }
     # 제목은 화면 슬롯에 박히는 글자라 길이 한도가 곧 규격이다. 스타일별 설명 뒤에 붙인다.

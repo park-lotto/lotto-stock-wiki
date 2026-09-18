@@ -17860,7 +17860,7 @@ function _s2Hydrate(w){
 //   빠지면 s2RoleName이 '· 영어'로 흘려보낸다(막지는 않는다).
 const S2_ROLE = {
   // 여는 말
-  hook:'🎙 첫 TTS 후킹', title:'📌 화면 제목', bait:'🪝 미끼', story:'📖 사연', origin:'🌱 유래',
+  hook:'🎙 첫 TTS 후킹', title:'📌 화면 제목', subline:'🏷 보조제목', bait:'🪝 미끼', story:'📖 사연', origin:'🌱 유래',
   situation:'🏠 상황', problem:'😰 문제', before:'😰 문제', mistake:'❌ 실수',
   notice:'👀 발견', ask:'❓ 질문',
   // 받치는 근거
@@ -18513,7 +18513,7 @@ function s2RefreshSec(i,j){
   const one=document.getElementById(`s2sec-${i}-${j}`), tot=document.getElementById(`s2tot-${i}`);
   const dr=S2.drafts[i]; if(!dr) return;
   const bs=s2Beats(dr);
-  if(one && bs[j]) one.outerHTML=`<span id="s2sec-${i}-${j}">${(bs[j].role==='title'&&s2TitleSplitOn())?'<span style="font-size:11px;color:var(--accent)">화면 전용 · TTS 제외</span>':s2SecTag(s2SecOf(bs[j].text))}</span>`;
+  if(one && bs[j]) one.outerHTML=`<span id="s2sec-${i}-${j}">${(s2VisualRole(bs[j].role)&&s2TitleSplitOn())?'<span style="font-size:11px;color:var(--accent)">화면 전용 · TTS 제외</span>':s2SecTag(s2SecOf(bs[j].text))}</span>`;
   if(tot) tot.outerHTML=`<span id="s2tot-${i}">${s2SecTag(s2DraftSec(dr), 30)}</span>`;
 }
 function s2Beats(dr){
@@ -18616,7 +18616,7 @@ function s2DraftHtml(dr,i){
     const chk=(b.role==='cta')?'<span class="s2-chk">📢 헌장: 댓글에 뭘 남기면 뭘 받는지</span>':'';
     return `<div class="s2-row${isBad?' bad':''}" id="s2r-${i}-${j}" data-role="${esc(b.role||'')}">
       <div class="s2-row-in">
-        <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${(b.role==='title'&&s2TitleSplitOn())?'<span style="font-size:11px;color:var(--accent)">화면 전용 · TTS 제외</span>':s2SecTag(s2SecOf(b.text))}</span></div>
+        <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${(s2VisualRole(b.role)&&s2TitleSplitOn())?'<span style="font-size:11px;color:var(--accent)">화면 전용 · TTS 제외</span>':s2SecTag(s2SecOf(b.text))}</span></div>
         <div class="s2-sent-wrap">
           <div class="s2-sent" contenteditable="true" data-ph="${esc(s2RoleName(b.role).replace(/^\S+\s*/,''))} — 여기에 쓰세요"
                oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}</div>${chk}
@@ -18907,10 +18907,17 @@ function s2ScriptLines(dr){
 // ★관리자 카나리(scene-style-produce.js가 켠다)에서만 화면 제목을 음성에서 뺀다 —
 //   고객은 종전대로 title 칸도 그대로 읽는다(서버 with_spoken_hook도 같은 스위치를 본다).
 function s2TitleSplitOn(){ return (typeof SS_CANARY!=='undefined') && !!SS_CANARY; }
+// 화면 전용 칸 — 음성에서 빼고 헤드카피로 보낸다(title=큰 제목, subline=흰 띠 보조제목).
+function s2VisualRole(role){ return role==='title' || role==='subline'; }
 function s2NarrationBeats(dr){
   const bs=(dr&&dr.beats&&dr.beats.length)?dr.beats:[];
   if(!s2TitleSplitOn()) return bs;
-  return bs.filter(b=>(b&&b.role)!=='title');
+  return bs.filter(b=>!s2VisualRole(b&&b.role));
+}
+function s2VisualSubline(dr){
+  if(!s2TitleSplitOn()) return '';
+  const b=((dr&&dr.beats)||[]).find(x=>(x&&x.role)==='subline');
+  return ((b&&b.text)||'').trim();
 }
 function s2VisualTitle(dr){
   if(!s2TitleSplitOn()) return '';
@@ -18918,7 +18925,7 @@ function s2VisualTitle(dr){
   return ((b&&b.text)||'').trim();
 }
 function s2DraftContract(dr){
-  return {script:s2ScriptLines(dr), visualTitle:s2VisualTitle(dr),
+  return {script:s2ScriptLines(dr), visualTitle:s2VisualTitle(dr), visualSubline:s2VisualSubline(dr),
           narrationBeats:s2NarrationBeats(dr)};
 }
 function s2ApplyDraftContract(target, dr){
@@ -18926,7 +18933,7 @@ function s2ApplyDraftContract(target, dr){
   target.script=c.script;
   if(c.visualTitle){
     // 글꼴·색 등 사용자가 잡은 장면꾸미기 값은 보존하되, 다른 작업의 문구는 남기지 않는다.
-    target.headcopy=Object.assign({}, target.headcopy||{}, {text:c.visualTitle, subline:''});
+    target.headcopy=Object.assign({}, target.headcopy||{}, {text:c.visualTitle, subline:c.visualSubline||''});
   }
   const srcs=c.narrationBeats.map(b=>({role:(b&&b.role)||'', seg:(b&&b.src_seg)||'',
     segs:Array.isArray(b&&b.src_segs)?b.src_segs.filter(Boolean):[]}));
