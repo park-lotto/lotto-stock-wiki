@@ -283,6 +283,9 @@ def create_copy(job_id: str, job: dict, work_root: Path | str, allow_unclean: bo
         "presetId": "t11",
     })
     snapshot["hookCaptionMode"] = "hidden"
+    # 훅 줌 펀치는 이븐쇼핑형의 기본이다(2026-09-18 사장님 "렌더할 때도 줌펀치 당연히"). 편집기 기본값에만
+    # 기대면 저장값이 비어 있을 때 렌더 쪽이 다르게 읽을 수 있어 명시한다. 사용자가 고른 값은 그대로.
+    snapshot.setdefault("hookMotion", "zoom-punch")
     try:
         snapshot = validate_snapshot(snapshot)
     except (TypeError, ValueError) as exc:
