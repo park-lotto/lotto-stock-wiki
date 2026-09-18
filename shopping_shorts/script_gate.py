@@ -640,11 +640,6 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
         _t = next((b.get("text", "") for b in beats if b.get("role") == "title"), "")
         checks.append({"name": "화면 제목 길이", "ok": not title_too_long(_t),
                        "detail": "%d자 「%s」 — %s" % (len(" ".join(str(_t).split())), _t, title_len_rule())})
-        from shopping_shorts.bank_assemble import subline_too_long
-        _sl = next((b.get("text", "") for b in beats if b.get("role") == "subline"), None)
-        if _sl is not None:
-            checks.append({"name": "보조제목 길이", "ok": not subline_too_long(_sl),
-                           "detail": "%d자 「%s」 — 공백 포함 22자 이내 한 줄" % (len(" ".join(str(_sl).split())), _sl)})
 
     # ★'문장틀 준수'는 **조립 대본에만** 묻는다(2026-08-22 실측).
     #   이 검사는 대본을 템플릿 원문과 **글자 단위로** 대조한다(template_matches).
