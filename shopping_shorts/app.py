@@ -7355,6 +7355,61 @@ def api_typecast_voices_mine(request: Request):
     return {"ok": True, "voices": mine, "total": len(allv), "error": None}
 
 
+# 성우 카드 등록은 즉시 끝내고, 실제 TTS 샘플 4건은 응답 뒤 스레드풀에서 굽는다.
+# 같은 고객·보이스 작업은 하나만 허용한다. 2026-09-18 실사고에서 추가 3건이 웹 이벤트
+# 루프를 약 3분 막아 기존 즐겨찾기 샘플 요청까지 전부 대기한 것이 이 분리의 이유다.
+_VOICE_SAMPLE_JOBS = set()
+_VOICE_SAMPLE_JOBS_LOCK = threading.Lock()
+_VOICE_SAMPLE_BAKE_LIMIT = threading.Semaphore(2)
+
+
+def _bake_voice_samples_job(job_key, voice_id, name, one_liner, lang,
+                            owner_customer_id, group_id):
+    from shopping_shorts import eleven_voices
+    try:
+        # 여러 성우를 연속으로 눌러도 ElevenLabs 호출이 무제한 폭증하지 않게 두 작업만.
+        # 웹 요청 스레드가 아니라 응답 뒤 작업이므로 대기 중에도 기존 미리듣기는 정상이다.
+        with _VOICE_SAMPLE_BAKE_LIMIT:
+            res = eleven_voices.register(
+                Store(DB_PATH), voice_id, name, one_liner=one_liner, lang=lang, bake=True,
+                owner_customer_id=owner_customer_id, group_id=group_id, missing_only=True)
+        if res.get("sample_failed"):
+            print(f"[voice-samples] 일부 실패 key={job_key!r}: {res['sample_failed']!r}",
+                  file=sys.stderr)
+    except Exception as e:  # 응답 뒤 작업의 예외가 웹서버까지 전파되면 안 된다.
+        print(f"[voice-samples] 생성 실패 key={job_key!r}: {e!r}", file=sys.stderr)
+    finally:
+        with _VOICE_SAMPLE_JOBS_LOCK:
+            _VOICE_SAMPLE_JOBS.discard(job_key)
+
+
+def _register_voice_card(background_tasks, voice_id, name, one_liner="", lang="KR",
+                         owner_customer_id=0, bake=True):
+    """카드 메타데이터는 즉시 저장하고, 필요한 샘플만 중복 없이 뒤에서 만든다."""
+    from shopping_shorts import eleven_voices
+    store = Store(DB_PATH)
+    status = eleven_voices.registration_status(store, voice_id, owner_customer_id)
+    if status["ready"]:
+        return {"group_id": status["group_id"], "count": len(status["rows"]),
+                "sample_failed": [], "samples_pending": False, "already_registered": True}
+
+    res = eleven_voices.register(
+        store, voice_id, name, one_liner=one_liner, lang=lang, bake=False,
+        owner_customer_id=owner_customer_id, group_id=status.get("group_id"))
+    pending = False
+    if bake:
+        job_key = (int(owner_customer_id or 0), str(voice_id))
+        with _VOICE_SAMPLE_JOBS_LOCK:
+            if job_key not in _VOICE_SAMPLE_JOBS:
+                _VOICE_SAMPLE_JOBS.add(job_key)
+                background_tasks.add_task(
+                    _bake_voice_samples_job, job_key, voice_id, name, one_liner, lang,
+                    int(owner_customer_id or 0), res["group_id"])
+            pending = True
+    return {**res, "samples_pending": pending,
+            "already_registered": bool(status["registered"])}
+
+
 @app.get("/api/voice-library/search")
 def api_voice_library_search(request: Request, q: str = "", language: str = "",
                              gender: str = "", page: int = 0, sort: str = ""):
@@ -7398,17 +7453,16 @@ def api_voice_library_mine(request: Request):
                 "error": "내 일레븐랩스 키를 등록하면 내가 만든 목소리를 그대로 쓸 수 있어요."}
     res = eleven_voices.list_account_voices(cid)
     # 이미 카드로 만든 것은 화면에서 '등록됨'으로 보여준다 — 두 번 등록하면 카드가 겹친다.
-    mine = {}
-    for pr in Store(DB_PATH).list_voice_presets():
-        if pr.get("base_voice_id") and int(pr.get("owner_customer_id") or 0) == int(cid):
-            mine[pr["base_voice_id"]] = pr.get("group_id")
+    mine = eleven_voices.registration_statuses(Store(DB_PATH), cid)
     for v in res.get("voices") or []:
-        v["registered_group"] = mine.get(v["voice_id"])
+        state = mine.get(v["voice_id"]) or {}
+        v["registered_group"] = state.get("group_id")
+        v["samples_ready"] = bool(state.get("ready"))
     return res
 
 
 @app.post("/api/voice-library/mine/register")
-async def api_voice_library_mine_register(request: Request):
+async def api_voice_library_mine_register(request: Request, background_tasks: BackgroundTasks):
     """내 계정 목소리 하나를 성우 카드로 만든다. body: {voice_id, name, one_liner?}
 
     ★담기(add_shared)를 하지 않는다 — **이미 내 계정에 있는** 목소리라 담을 필요가 없다.
@@ -7430,24 +7484,28 @@ async def api_voice_library_mine_register(request: Request):
         return JSONResponse({"ok": False, "error": "목소리를 골라 주세요."}, status_code=400)
     # ★내 계정에 **정말 있는** voice_id인지 확인하고 등록한다 — 화면 값만 믿고 등록하면
     #   남의 voice_id로 카드를 만들 수 있고, 그 카드는 합성 때 반드시 실패한다.
-    acc = eleven_voices.list_account_voices(cid)
+    acc = await run_in_threadpool(eleven_voices.list_account_voices, cid)
     if not acc.get("ok"):
         return JSONResponse({"ok": False, "error": acc.get("error") or "계정 목소리를 읽지 못했습니다."},
                             status_code=502)
     if not any(v.get("voice_id") == vid for v in (acc.get("voices") or [])):
         return JSONResponse({"ok": False, "error": "내 계정에 없는 목소리입니다."}, status_code=400)
     try:
-        res = eleven_voices.register(Store(DB_PATH), vid, name,
-                                     one_liner=((body or {}).get("one_liner") or "")[:60],
-                                     lang="KR", bake=True, owner_customer_id=cid)
+        res = _register_voice_card(
+            background_tasks, vid, name,
+            one_liner=((body or {}).get("one_liner") or "")[:60],
+            lang="KR", bake=True, owner_customer_id=cid)
     except Exception as e:      # noqa: BLE001
         print(f"[voice-mine] 카드 등록 실패: {e!r}", file=sys.stderr)
         return JSONResponse({"ok": False, "error": "성우 카드 등록에 실패했습니다."}, status_code=502)
-    return {"ok": True, "group_id": res["group_id"], "sample_failed": res.get("sample_failed") or []}
+    return {"ok": True, "group_id": res["group_id"],
+            "sample_failed": res.get("sample_failed") or [],
+            "samples_pending": res.get("samples_pending", False),
+            "already_registered": res.get("already_registered", False)}
 
 
 @app.post("/api/voice-library/add")
-async def api_voice_library_add(request: Request):
+async def api_voice_library_add(request: Request, background_tasks: BackgroundTasks):
     """고른 공개 음성을 **내 계정에 담고 성우 카드까지 만든다**.
 
     body: {voice_id, public_owner_id, name, one_liner?}
@@ -7467,14 +7525,16 @@ async def api_voice_library_add(request: Request):
     vid = (body or {}).get("voice_id") or ""
     owner = (body or {}).get("public_owner_id") or ""
     name = ((body or {}).get("name") or "내 성우").strip()[:40]
-    added = eleven_voices.add_shared(cid, owner, vid, name)
+    # requests.post는 동기 I/O다. async 라우트에서 직접 부르면 최대 20초 동안 웹 전체가 멎는다.
+    added = await run_in_threadpool(eleven_voices.add_shared, cid, owner, vid, name)
     if not added.get("ok"):
         return JSONResponse({"ok": False, "error": added.get("error") or "담기 실패"},
                             status_code=502)
     try:
-        res = eleven_voices.register(Store(DB_PATH), added["voice_id"], name,
-                                     one_liner=((body or {}).get("one_liner") or "")[:60],
-                                     lang="KR", bake=True, owner_customer_id=cid)
+        res = _register_voice_card(
+            background_tasks, added["voice_id"], name,
+            one_liner=((body or {}).get("one_liner") or "")[:60],
+            lang="KR", bake=True, owner_customer_id=cid)
     except Exception as e:      # noqa: BLE001 — 담기는 됐으니 그 사실은 알려준다
         print(f"[voice-library] 카드 등록 실패: {e!r}", file=sys.stderr)
         return JSONResponse({"ok": False, "added": True,
@@ -7482,7 +7542,9 @@ async def api_voice_library_add(request: Request):
                             status_code=502)
     return {"ok": True, "already": added.get("already", False),
             "group_id": res["group_id"], "count": res["count"],
-            "sample_failed": res.get("sample_failed") or []}
+            "sample_failed": res.get("sample_failed") or [],
+            "samples_pending": res.get("samples_pending", False),
+            "already_registered": res.get("already_registered", False)}
 
 
 @app.post("/api/typecast/voices/adopt")
@@ -7575,7 +7637,7 @@ def api_voice_presets(request: Request, lang: str = "KR"):
             # 프론트가 group_id 접두사("tc-") 따위로 추측하면 판단이 두 곳이 된다(0순위-B).
             "engine": ("typecast" if typecast_tts.is_typecast(p.get("model_id"))
                        else "elevenlabs"),
-            "default_variant": "stable", "variants": {},
+            "default_variant": "stable", "variants": {}, "samples_pending": False,
         })
         g["variants"][p["variant"]] = {
             "preset_id": p["preset_id"], "voice_id": p["base_voice_id"],
@@ -7583,6 +7645,8 @@ def api_voice_presets(request: Request, lang: str = "KR"):
             "default_silence_trim": p["default_silence_trim"],
             "sample_url": f"/api/voice-presets/{p['preset_id']}/sample" if p["sample_file"] else None,
         }
+        if p.get("origin") == "library" and not p.get("sample_file"):
+            g["samples_pending"] = True
     # 🎙 마지막으로 쓴 성우(2026-09-02) — 화면이 그 성우를 미리 골라둔 상태로 연다.
     #   ★왜 여기냐: 이 라우트는 이미 로그인 고객 기준(_cid)이고 4단계가 열릴 때 한 번 부른다.
     #     /api/mix/status는 **인증이 없어**(job_id만 알면 열림) 거기 실으면 남의 선택이 샌다.
@@ -7611,17 +7675,16 @@ def api_admin_eleven_voices(request: Request):
     res = eleven_voices.list_account_voices(0)
     # 이미 등록된 것은 화면에서 '등록됨'으로 보여야 한다 — 같은 보이스를 두 번 등록하면
     # 성우 카드가 중복으로 늘어난다.
-    registered = {}
-    for p in Store(DB_PATH).list_voice_presets():
-        if p.get("base_voice_id"):
-            registered[p["base_voice_id"]] = p.get("group_id")
+    registered = eleven_voices.registration_statuses(Store(DB_PATH), 0)
     for v in res["voices"]:
-        v["registered_group"] = registered.get(v["voice_id"])
+        state = registered.get(v["voice_id"]) or {}
+        v["registered_group"] = state.get("group_id")
+        v["samples_ready"] = bool(state.get("ready"))
     return res
 
 
 @app.post("/api/admin/eleven-voices/register")
-async def api_admin_eleven_voice_register(request: Request):
+async def api_admin_eleven_voice_register(request: Request, background_tasks: BackgroundTasks):
     """보이스 1개 등록 → 톤 4종(안정/자연/표현/속삭임) 프리셋 + 미리듣기 샘플 생성.
 
     샘플 굽기는 실제 TTS 호출이라 크레딧을 쓴다(4건). 그래서 등록 버튼은 관리자만 누른다."""
@@ -7633,10 +7696,11 @@ async def api_admin_eleven_voice_register(request: Request):
     name = (body.get("name") or "").strip()
     if not voice_id or not name:
         return JSONResponse({"ok": False, "error": "voice_id·name 필요"}, status_code=400)
-    res = eleven_voices.register(Store(DB_PATH), voice_id, name,
-                                 one_liner=(body.get("one_liner") or "").strip(),
-                                 lang=(body.get("lang") or "KR").strip() or "KR",
-                                 bake=bool(body.get("bake", True)))
+    res = _register_voice_card(
+        background_tasks, voice_id, name,
+        one_liner=(body.get("one_liner") or "").strip(),
+        lang=(body.get("lang") or "KR").strip() or "KR",
+        bake=bool(body.get("bake", True)), owner_customer_id=0)
     return {"ok": True, **res}
 
 
@@ -7654,7 +7718,8 @@ async def api_admin_eleven_voice_preview(request: Request):
     if not voice_id:
         return JSONResponse({"ok": False, "error": "voice_id 필요"}, status_code=400)
     try:
-        _, cached = eleven_voices.make_preview(voice_id, force=bool(body.get("force")))
+        _, cached = await run_in_threadpool(
+            eleven_voices.make_preview, voice_id, bool(body.get("force")))
     except Exception as e:
         return JSONResponse({"ok": False, "error": f"샘플 생성 실패: {e}"}, status_code=502)
     return {"ok": True, "cached": cached,
