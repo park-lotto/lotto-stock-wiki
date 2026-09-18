@@ -230,6 +230,7 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         lines = _clean_lines(_sg._call_json(prompt, _LINES_SCHEMA, note=note) or {})
         lines = _repair_joins(lines, plan_for_repair(groups_out, roles, tpl, seed, hook_spine), note=note)
         lines = _one_full_name(lines, groups_out.get("product") or "")
+        lines = _no_made_up_country(lines, seg_index)
         return _fit_length(lines, target_seconds, note=note)
     prompt = (
         f"제품: {groups_out.get('product')}\n"
@@ -245,6 +246,23 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         "- 화면에 없는 기능·수치를 지어내지 마라.")
     out = _sg._call_json(prompt, _LINES_SCHEMA, note=note) or {}
     return _clean_lines(out)
+
+
+_COUNTRY = re.compile(r"(미국|일본|중국|한국|독일|프랑스|영국|이탈리아|스웨덴|덴마크|대만|베트남|태국|호주|캐나다|스페인|네덜란드|스위스)")
+
+
+def _no_made_up_country(lines, seg_index):
+    """소스(태깅 설명·말)에 없는 나라 이름은 '해외'로 바꾼다.
+    프롬프트('모르면 해외로')를 모델이 어겼다(실측 행주 job bb4246b57a36: "프랑스 천재" — 소스 어디에도 없음)."""
+    blob = " ".join((v.get("desc") or "") + " " + (v.get("text") or "") for v in (seg_index or {}).values())
+    out = []
+    for L in lines:
+        t = L["text"]
+        for c in set(_COUNTRY.findall(t)):
+            if c not in blob:
+                t = t.replace(c, "해외")
+        out.append(dict(L, text=t.replace("해외 해외", "해외")))
+    return out
 
 
 def _one_full_name(lines, product):

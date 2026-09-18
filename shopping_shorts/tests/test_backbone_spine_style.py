@@ -270,3 +270,10 @@ def test_백본은_소스번호로_불러도_원본컷을_가린다():
     lines = [{"role": "solve", "text": "가" * 10, "group": 0}]
     bs, _ = ba.assign_cuts(lines, groups, idx, "s0")
     assert all(not s.startswith("DdOayfhAnpx") for s in bs[0]["segs"]), bs
+
+
+def test_소스에_없는_나라는_해외로():
+    idx = {"a-0": {"desc": "주방에서 행주를 뜯는다", "text": "일본에서 유행"}}
+    out = ba._no_made_up_country([{"role": "title", "text": "주부들 구원한 프랑스 천재의 발명품.", "group": -1},
+                                  {"role": "bait", "text": "일본에서 난리난 행주.", "group": -1}], idx)
+    assert out[0]["text"] == "주부들 구원한 해외 천재의 발명품." and out[1]["text"] == "일본에서 난리난 행주."

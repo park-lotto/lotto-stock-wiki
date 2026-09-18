@@ -25,6 +25,7 @@ DB = os.environ.get("SS_DB", "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data
 BAD_JOIN = re.compile(r"\}버렸|\}해 버려|\}데다가|\}는 정신 나간|\}주면 되는데|\}뿐만 아니라|\}서 \{")
 HONORIFIC = re.compile(r"(요|니다|세요|죠|습니까)[.!?]?$")
 BRAND = re.compile(r"다이소|이케아|코스트코|쿠팡|구글|아이소|성심당")
+FAKE_FACT = re.compile(r"[0-9]+ ?(만|천|억|%|명|개|배|년|달|주)|수천억|수백억|수백만|수천만 ?(명|개|원)|매달 [0-9]")
 # 유형 고유 말투 — 다른 유형 스파인에 섞이면 결함(실측 2026-09-18: 발명품형 65에 "초보들은 기껏해야…"·"미친 활용법")
 STYLE_MARK = {"오용형": re.compile(r"초보들은|중수들은|고수들은|(?<!\{)활용법|(?<!\{)사용법(?!\})|엉뚱한 용도|원래는 \{본래용도\}|이게 원래는")}
 SLOT = re.compile(r"\{([^{}]+)\}")
@@ -76,6 +77,9 @@ def audit(members=100, only=None):
                     fails.append((sid, "존댓말", f"{r}: {t}"))
                 if _ko_ratio(t) < 0.6:
                     fails.append((sid, "외국어", f"{r}: {t}"))
+                # 틀에 박힌 구체 수치는 어느 제품에 붙어도 거짓말(실측 2026-09-18 행주: "매달 3만 명이 구매", "수천억")
+                if FAKE_FACT.search(t):
+                    fails.append((sid, "박힌수치", f"{r}: {t}"))
                 fits = s.get("fit_categories") or []
                 for style_name, rx in STYLE_MARK.items():
                     if style_name not in fits and rx.search(t):
