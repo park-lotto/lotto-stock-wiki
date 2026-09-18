@@ -624,6 +624,8 @@
       const channelColor=fixedColorsFor(p.id,frame).channel;
       layer.querySelectorAll('.precision-text[data-edit-bind="channel"]').forEach(el=>{el.style.color=channelColor;el.querySelectorAll('span').forEach(span=>span.style.color=channelColor);});
       if(paint.top)layer.querySelectorAll('.body-ornament').forEach(el=>el.style.color=readableInk(paint.top));
+      // 채널명 칸도 제목 배경색을 따른다 — 안 그러면 빠른 조절 색을 바꿔도 채널명 뒤만 원래 검정으로 남는다(2026-09-18 사장님 제보).
+      if(paint.top)layer.querySelectorAll('[data-edit-bind="channel"]').forEach(el=>{if(el.style.background||el.style.backgroundColor)el.style.background=paint.top;});
     }
     if(hasEditableCaption())renderCaption(frame);
     syncMediaLayout();
