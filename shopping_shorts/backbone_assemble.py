@@ -129,13 +129,30 @@ def build_groups(sources, backbone_vid, note=None):
 
 
 # ── 훅 고르기 ─────────────────────────────────────────────────────────
-def pick_hook_spine(store, spine_id=None, seed=None):
-    """승인 스파인 중 훅 규칙(hook_3s)이 있는 것. 지정 없으면 무작위 — 같은 재료로 여러 편이 나오게."""
+def _seed_int(seed):
+    if isinstance(seed, int):
+        return seed
+    if seed:
+        import zlib
+        return zlib.crc32(str(seed).encode("utf-8"))
+    return 0
+
+
+def pick_hook_spine(store, spine_id=None, seed=None, style=None):
+    """승인 스파인 중 훅 규칙(hook_3s)이 있는 것.
+    ★style(유형, 예 '오용형'·'발명품형')을 주면 **그 유형의 스파인들을 id 순으로 세워 seed로 순번**을 정한다
+      (2026-09-18 사장님: "오용형을 고르면 그 유형 채널들의 잘 쓴 대본 스파인 5~10개가 순번대로 나오는 구조").
+      전엔 spine_id 지정 아니면 무작위였고, 유형으로 고르는 길이 없었다.
+    spine_id가 오면 그게 우선. 둘 다 없으면 무작위(seed 고정)."""
     spines = [s for s in store.list_spines(status="approved") if s.get("hook_3s")]
     if spine_id is not None:
         for s in spines:
             if s.get("id") == spine_id:
                 return s
+    if style:
+        pool = sorted([s for s in spines if style in (s.get("fit_categories") or [])], key=lambda s: s.get("id") or 0)
+        if pool:
+            return pool[_seed_int(seed) % len(pool)]
     if not spines:
         spines = store.list_spines(status="approved")
     rnd = random.Random(seed)
@@ -455,7 +472,7 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
 
 
 # ── 한 번에 ───────────────────────────────────────────────────────────
-def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, seed=None, note=None):
+def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, seed=None, note=None, style=None):
     """(given_script, beat_sources, meta). 실패하면 (None, None, meta) — 조용히 폴백하지 않는다."""
     note = note if note is not None else {}
     seg_index = _seg_index(sources)
@@ -463,7 +480,7 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
     if not groups_out["groups"]:
         note["reason"] = "groups_empty"
         return None, None, {"note": note}
-    spine = pick_hook_spine(store, spine_id=spine_id, seed=seed)
+    spine = pick_hook_spine(store, spine_id=spine_id, seed=seed, style=style)
     lines = write_lines(groups_out, spine, seg_index, target_seconds, note=note, seed=seed)
     if len(lines) < 3:
         note["reason"] = "lines_short"

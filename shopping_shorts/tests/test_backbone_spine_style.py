@@ -114,3 +114,19 @@ def test_정상_문장은_안_건드린다():
     for o in ok:
         assert not ba._bad_join(o), o
         assert ba._fix_join(o) == o
+
+
+class _FakeStore:
+    def __init__(self, spines): self._s = spines
+    def list_spines(self, status=None): return self._s
+
+
+def test_유형을_주면_그_유형_스파인들을_순번대로_돈다():
+    """2026-09-18 사장님: 오용형 고르면 그 유형 스파인들이 순번대로."""
+    sp = [{"id": 60, "hook_3s": "x", "fit_categories": ["발명품형"]}, {"id": 65, "hook_3s": "x", "fit_categories": ["발명품형"]},
+          {"id": 66, "hook_3s": "x", "fit_categories": ["발명품형"]}, {"id": 56, "hook_3s": "x", "fit_categories": ["오용형"]}]
+    st = _FakeStore(sp)
+    assert [ba.pick_hook_spine(st, seed=i, style="발명품형")["id"] for i in range(4)] == [60, 65, 66, 60]
+    assert ba.pick_hook_spine(st, seed="jobid-abc", style="오용형")["id"] == 56
+    assert ba.pick_hook_spine(st, spine_id=56, seed=0, style="발명품형")["id"] == 56, "spine_id가 우선"
+    assert ba.pick_hook_spine(st, seed=0, style="없는유형")["id"] in (56, 60, 65, 66), "유형에 스파인이 없으면 무작위 폴백"
