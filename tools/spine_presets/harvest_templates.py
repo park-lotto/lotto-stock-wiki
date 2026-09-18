@@ -24,9 +24,22 @@ HITS = os.environ.get("SS_HITS", "/home/ubuntu/lotto-stock-wiki/raw/analysis/썰
 SLOT = re.compile(r"\{[^{}]+\}")
 
 
+def _verified_channels():
+    """SS_VERIFIED=verified_channels.json 이 있으면 S·A 등급 채널 이름 집합, 없으면 None(거르지 않음).
+    등급 기준은 grade_yt_channels.py 한 곳(0순위-B)."""
+    p = os.environ.get("SS_VERIFIED")
+    if not p or not os.path.exists(p):
+        return None
+    g = json.load(io.open(p, encoding="utf-8"))
+    return {ch for ch, v in g.items() if v.get("grade") in ("S", "A")}
+
+
 def _load_texts(pattern, corpus, limit):
     if corpus == "hits":
         hits = json.load(io.open(HITS, encoding="utf-8"))
+        _vc = _verified_channels()          # 검증(S·A) 채널 원문만 — 사장님 "S급 채널은 검증하고 받는거야?"
+        if _vc is not None:
+            hits = [h for h in hits if (h.get("channel") or "") in _vc]
         rows = [(h["video_id"], h.get("channel") or "", h.get("full_text") or "") for h in hits]
     elif corpus == "insta":
         c = sqlite3.connect(DB)

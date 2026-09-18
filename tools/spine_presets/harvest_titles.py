@@ -12,6 +12,16 @@ SLOT = re.compile(r"\{[^{}]+\}")
 BRANDS = re.compile(r"다이소|이케아|코스트코|쿠팡|구글|아이소|애플|삼성")
 
 
+def _verified_channels():
+    """SS_VERIFIED=verified_channels.json 이 있으면 S·A 등급 채널 이름 집합, 없으면 None(거르지 않음).
+    등급 기준은 grade_yt_channels.py 한 곳(0순위-B)."""
+    p = os.environ.get("SS_VERIFIED")
+    if not p or not os.path.exists(p):
+        return None
+    g = json.load(io.open(p, encoding="utf-8"))
+    return {ch for ch, v in g.items() if v.get("grade") in ("S", "A")}
+
+
 def first_sentence(t):
     t = re.sub(r"\[[^\]]*\]|&gt;", " ", t or "")
     m = re.split(r"(?<=[.!?])\s|(?<=[다요음임죠함])\s", t.strip(), maxsplit=1)
@@ -21,6 +31,9 @@ def first_sentence(t):
 def main():
     sid = int(sys.argv[1]); pat = sys.argv[2]; apply = "--apply" in sys.argv
     hits = json.load(io.open(HITS, encoding="utf-8"))
+    _vc = _verified_channels()          # 검증(S·A) 채널 원문만 — 사장님 "S급 채널은 검증하고 받는거야?"
+    if _vc is not None:
+        hits = [h for h in hits if (h.get("channel") or "") in _vc]
     firsts = []
     for h in sorted(hits, key=lambda h: -h.get("views", 0)):
         f = first_sentence(h.get("full_text"))
