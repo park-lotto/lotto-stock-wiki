@@ -8537,6 +8537,16 @@ def api_mix_capcut(job_id: str, base: str = ""):
         source_video_paths = _resolve_sources(job, work)
     except Exception:
         source_video_paths = {}
+    # 자막 제거본이 타임라인 소스를 대신하더라도 캡컷 보관함에는 편집에 쓰인 긴 원본을 함께 보낸다.
+    # 원본 집합 판정은 capcut_draft.used_video_ids 한 곳만 사용해 타임라인 소스 판정과 어긋나지 않게 한다.
+    _original_source_video_paths = dict(source_video_paths)
+    _original_library_sources = {}
+    if job.get("subtitle_removal"):
+        _used_original_ids = capcut_draft.used_video_ids(plan)
+        _original_library_sources = {
+            vid: path for vid, path in _original_source_video_paths.items()
+            if vid in _used_original_ids
+        }
     # ★자막제거(2단계)를 했으면 캡컷도 '자막 없는' 청소본을 써야 한다 — 안 그러면 원본 자막이
     # 그대로 살아난다(2026-07-21 사장님 제보). clean_sources={video_id: 청소본}을 원본 위에 덮는다.
     for _vid, _cp in (job.get("clean_sources") or {}).items():
@@ -8682,7 +8692,8 @@ def api_mix_capcut(job_id: str, base: str = ""):
         deco=(_deco if _style_on else None),
         headcopy_png=(_hc_png if _style_on else None),
         headcopy_span=_hc_span,
-        sfx_events=_sfx_events, cutaway_paths=_cutaways)
+        sfx_events=_sfx_events, cutaway_paths=_cutaways,
+        extra_library_video_paths=_original_library_sources)
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):

@@ -719,11 +719,22 @@ def _skeleton(name, cw, ch, duration_us):
     }
 
 
+def used_video_ids(plan):
+    """편집안에서 실제 타임라인 후보로 쓰는 원본 video_id 집합."""
+    used = set()
+    for beat in (plan or {}).get("beats", []):
+        segments = beat.get("scene_override") or (
+            [beat.get("primary")] + list(beat.get("alternates") or []))
+        used.update(segment.get("video_id") for segment in segments if segment and segment.get("video_id"))
+    return used
+
+
 def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_paths,
                           tts_paths, project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT,
                           probe=None, final_video=None, caption_style=None, deco=None,
                           headcopy_png=None, headcopy_span=None, sfx_events=None,
-                          cutaway_paths=None, scene_overlay_layers=None):
+                          cutaway_paths=None, scene_overlay_layers=None,
+                          extra_library_video_paths=None):
     """draft 폴더를 out_root/<project>/ 에 실제로 조립한다(에셋 복사 + draft_content.json + meta).
 
     base_abs: 캡컷이 이 draft 폴더를 볼 **절대경로**(예: C:/capcutproject/CapCut Drafts). draft가
@@ -743,12 +754,7 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
     #   alternates 소스가 복사되지 않아 asset_paths에 없고, 그러면 아래 build_draft가
     #   그 조각을 **조용히 건너뛴다**(실측: 화면 3개인 비트가 타임라인에 2개만 올라감).
     #   화면 재료의 단일 출처(_beat_material)와 같은 기준으로 모은다.
-    def _vids_of(pb):
-        segs = pb.get("scene_override") or ([pb.get("primary")] + list(pb.get("alternates") or []))
-        return {s.get("video_id") for s in segs if s}
-    used_vids = set()
-    for plan_beat in plan.get("beats", []):
-        used_vids |= _vids_of(plan_beat)
+    used_vids = used_video_ids(plan)
     asset_paths, video_durs = {}, {}
     for vid, real in source_video_paths.items():
         if vid not in used_vids or not real or not Path(real).exists():
@@ -848,6 +854,24 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
     #   자막·TTS는 트랙이 따로라 갈아끼워도 그대로 남는다.
     media = []
     cw2, ch2 = canvas
+    # 자막 제거 완성본을 비트 조각으로 쓰는 경우에도, 고객이 클립 앞뒤를 다시 고를 수 있도록
+    # 실제 긴 원본을 타임라인과 분리해 미디어 보관함에 함께 넣는다. 원본에는 기존 자막이 있을 수
+    # 있으므로 이름으로 분명히 구분하며, 타임라인 material에는 절대 연결하지 않는다.
+    copied_extra_sources = set()
+    for vid, real in (extra_library_video_paths or {}).items():
+        if (not real or not Path(real).exists() or real in asset_paths
+                or str(Path(real).resolve()) in copied_extra_sources):
+            continue
+        copied_extra_sources.add(str(Path(real).resolve()))
+        ext = Path(real).suffix.lower() or ".mp4"
+        name = f"original_full_{safe_project_name(str(vid))}{ext}"
+        shutil.copy(real, proj / name)
+        try:
+            dur = float(probe(real) or 0.0)
+        except Exception:
+            dur = 0.0
+        media.append({"path": f"{base_abs}/{project}/{name}", "name": name,
+                      "dur": dur, "w": cw2, "h": ch2})
     #   ① 장면 조각 — 원본에서 잘라낸 **깨끗한 화면**(자막·효과 안 구워짐).
     #      갈아끼워도 자막이 어긋나지 않는다. 파일명을 비트 순서로 지어 보관함에서 정렬된다.
     for tl in timeline:
