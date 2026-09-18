@@ -133,7 +133,11 @@ def _ig_cookies_file():
     src = max(_cands, key=lambda p: Path(p).stat().st_mtime)
     out = Path(src).with_suffix(".ytdlp-cookies.txt")
     try:
-        if out.exists() and out.stat().st_mtime >= Path(src).stat().st_mtime:
+        # ★0바이트 캐시는 캐시가 아니다(2026-09-18 실측: 09-16 디스크 풀 때 비워진
+        #   41170560843.ytdlp-cookies.txt가 이틀째 '최신'으로 재사용돼 인스타 1080p 경로가
+        #   "cookies 필요"로 전부 실패). 비어 있으면 원본에서 다시 만든다.
+        if (out.exists() and out.stat().st_size > 0
+                and out.stat().st_mtime >= Path(src).stat().st_mtime):
             return str(out)
         state = json.loads(Path(src).read_text(encoding="utf-8"))
         lines = ["# Netscape HTTP Cookie File"]
