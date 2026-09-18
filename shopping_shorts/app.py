@@ -94,7 +94,7 @@ from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRI
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
-from shopping_shorts import keycrypt, keyctx, keyroute, pricing
+from shopping_shorts import keycrypt, keyctx, keyroute, pricing, canary
 from shopping_shorts import buffer_api      # BYOK(사용자 키·포인트). points는 위에서 이미 import
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
@@ -13376,6 +13376,7 @@ async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
         request.state.customer_id = 0
         keyctx.set_owner(0)
+        canary.activate_from_request(request, True)   # 인증 없는 로컬 = 관리자(0)
         return await call_next(request)
     path = request.url.path
     # /api/find/frame/*는 Google Lens·SerpApi 등 외부 이미지검색 크롤러가 인증
@@ -13408,6 +13409,8 @@ async def _auth_guard(request: Request, call_next):
         # ★제미나이처럼 '인자로 cid를 못 흘리는' 경로가 이걸 읽는다(keyctx 참조).
         #   미들웨어에서 한 번만 정하므로 엔드포인트가 각자 챙길 필요가 없다.
         keyctx.set_owner(customer_id)
+        # 관리자 카나리(canary.py) — 관리자 + 쿠키 ss_canary=1일 때만 새 대본 동작. 고객은 항상 꺼짐.
+        canary.activate_from_request(request, lambda: _is_admin(customer_id))
         _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
         _track_activity(customer_id, path)     # 접속중·활동기록(best-effort)
         lvl = access_level(customer_id)

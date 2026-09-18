@@ -18492,7 +18492,7 @@ function s2RefreshSec(i,j){
   const one=document.getElementById(`s2sec-${i}-${j}`), tot=document.getElementById(`s2tot-${i}`);
   const dr=S2.drafts[i]; if(!dr) return;
   const bs=s2Beats(dr);
-  if(one && bs[j]) one.outerHTML=`<span id="s2sec-${i}-${j}">${bs[j].role==='title'?'<span style="font-size:11px;color:var(--accent)">화면 전용 · TTS 제외</span>':s2SecTag(s2SecOf(bs[j].text))}</span>`;
+  if(one && bs[j]) one.outerHTML=`<span id="s2sec-${i}-${j}">${(bs[j].role==='title'&&s2TitleSplitOn())?'<span style="font-size:11px;color:var(--accent)">화면 전용 · TTS 제외</span>':s2SecTag(s2SecOf(bs[j].text))}</span>`;
   if(tot) tot.outerHTML=`<span id="s2tot-${i}">${s2SecTag(s2DraftSec(dr), 30)}</span>`;
 }
 function s2Beats(dr){
@@ -18595,7 +18595,7 @@ function s2DraftHtml(dr,i){
     const chk=(b.role==='cta')?'<span class="s2-chk">📢 헌장: 댓글에 뭘 남기면 뭘 받는지</span>':'';
     return `<div class="s2-row${isBad?' bad':''}" id="s2r-${i}-${j}" data-role="${esc(b.role||'')}">
       <div class="s2-row-in">
-        <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${b.role==='title'?'<span style="font-size:11px;color:var(--accent)">화면 전용 · TTS 제외</span>':s2SecTag(s2SecOf(b.text))}</span></div>
+        <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${(b.role==='title'&&s2TitleSplitOn())?'<span style="font-size:11px;color:var(--accent)">화면 전용 · TTS 제외</span>':s2SecTag(s2SecOf(b.text))}</span></div>
         <div class="s2-sent-wrap">
           <div class="s2-sent" contenteditable="true" data-ph="${esc(s2RoleName(b.role).replace(/^\S+\s*/,''))} — 여기에 쓰세요"
                oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}</div>${chk}
@@ -18883,11 +18883,16 @@ function s2ScriptLines(dr){
   if(bs) return s2NarrationBeats(dr).map(b=>((b&&b.text)||'').trim()).filter(Boolean).join('\n');
   return ((dr&&dr.script)||'').trim();
 }
+// ★관리자 카나리(scene-style-produce.js가 켠다)에서만 화면 제목을 음성에서 뺀다 —
+//   고객은 종전대로 title 칸도 그대로 읽는다(서버 with_spoken_hook도 같은 스위치를 본다).
+function s2TitleSplitOn(){ return (typeof SS_CANARY!=='undefined') && !!SS_CANARY; }
 function s2NarrationBeats(dr){
   const bs=(dr&&dr.beats&&dr.beats.length)?dr.beats:[];
+  if(!s2TitleSplitOn()) return bs;
   return bs.filter(b=>(b&&b.role)!=='title');
 }
 function s2VisualTitle(dr){
+  if(!s2TitleSplitOn()) return '';
   const b=((dr&&dr.beats)||[]).find(x=>(x&&x.role)==='title');
   return ((b&&b.text)||'').trim();
 }

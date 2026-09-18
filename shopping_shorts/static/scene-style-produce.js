@@ -7,6 +7,9 @@
   if(canaryRequested)localStorage.setItem(canaryKey,'1');
   if(canaryParam==='0')localStorage.removeItem(canaryKey);
   const canaryEnabled=canaryRequested||localStorage.getItem(canaryKey)==='1';
+  // 서버 카나리(canary.py)와 짝 — 관리자 + 이 쿠키일 때만 새 대본 동작. 켜고 끄는 자리는 여기 한 곳.
+  document.cookie='ss_canary='+(canaryEnabled?'1':'0')+'; path=/; max-age='+(canaryEnabled?31536000:0)+'; SameSite=Lax';
+  window.SS_CANARY=canaryEnabled;
   let canaryRequest=0,canaryJobId='';
   const currentMixJob=()=>String(typeof MIX_JOB==='undefined'?'':(MIX_JOB||'')).trim();
   const status=()=>document.getElementById('sceneStyleStatus');

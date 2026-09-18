@@ -338,6 +338,10 @@ def with_spoken_hook(style):
     """
     if not isinstance(style, dict):
         return style
+    # ★관리자 카나리 밖에서는 손대지 않는다(2026-09-18) — 고객은 종전 대본 그대로 받는다.
+    from shopping_shorts import canary
+    if not canary.on():
+        return style
     roles = list(style.get("beat_roles") or [])
     if not roles or roles[0] != "title" or (len(roles) > 1 and roles[1] == "hook"):
         return style

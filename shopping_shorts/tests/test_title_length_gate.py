@@ -1,6 +1,15 @@
 """화면 제목 길이 — 프롬프트 안내와 게이트가 template_copy 한 곳의 수를 본다(2026-09-18)."""
-from shopping_shorts import bank_assemble, script_gate
+import pytest
+from shopping_shorts import bank_assemble, canary, script_gate
 from shopping_shorts.template_copy import EVEN_SHOPPING
+
+
+@pytest.fixture(autouse=True)
+def canary_on():
+    """이 파일의 계약은 관리자 카나리 안에서만 켜진다(2026-09-18). 고객 기본값은 꺼짐."""
+    canary.set_active(True)
+    yield
+    canary.set_active(False)
 
 
 def _style():

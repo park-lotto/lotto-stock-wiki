@@ -1,5 +1,14 @@
 """제목형 유튜브 템플릿의 화면/음성 경계를 잠근다."""
-from shopping_shorts import bank_assemble
+import pytest
+from shopping_shorts import bank_assemble, canary
+
+
+@pytest.fixture(autouse=True)
+def canary_on():
+    """이 파일의 계약은 관리자 카나리 안에서만 켜진다(2026-09-18). 고객 기본값은 꺼짐."""
+    canary.set_active(True)
+    yield
+    canary.set_active(False)
 
 
 def _legacy_style():

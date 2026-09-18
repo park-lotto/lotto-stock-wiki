@@ -15,8 +15,10 @@ def _src():
     return src[start:end]
 
 
-def _run(tail):
+def _run(tail, canary=True):
+    # 관리자 카나리(window.SS_CANARY)가 켜진 상태가 이 계약의 전제다. 꺼지면(고객) 옛 동작.
     return run_js(f"""
+var SS_CANARY={'true' if canary else 'false'};
 {_src()}
 {tail}
 """)
@@ -60,3 +62,15 @@ def test_역할없는_옛대본은_그대로_둔다():
     out = _run("console.log(JSON.stringify(s2ScriptLines({script:'첫 줄\\n둘째 줄',beats:[]}))); ")
     assert json.loads(out) == "첫 줄\n둘째 줄"
 
+
+def test_카나리_밖_고객은_제목도_음성에_그대로_남는다():
+    out = _run("""
+const dr={beats:[
+  {role:'title',text:'독일 개발자도 놀란 기차 케이크'},
+  {role:'story',text:'장난감 대신 케이크 위 기차가 움직여요.'}]};
+console.log(JSON.stringify(s2DraftContract(dr)));
+""", canary=False)
+    got = json.loads(out)
+    assert got["visualTitle"] == ""
+    assert got["script"].splitlines()[0] == "독일 개발자도 놀란 기차 케이크"
+    assert [b["role"] for b in got["narrationBeats"]] == ["title", "story"]

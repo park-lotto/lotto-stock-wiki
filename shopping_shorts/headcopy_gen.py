@@ -12,6 +12,14 @@ import json
 from shopping_shorts.script_generate import _call_json
 from shopping_shorts.template_copy import EVEN_SHOPPING
 
+_LEGACY_SUBLINE_LEN = 32   # 카나리 밖(고객)의 종전 보조제목 한도 — 2026-09-17 이전 동작 그대로
+
+
+def _support_max():
+    """보조제목 한도 — 관리자 카나리에서만 장면꾸미기 슬롯 계약(22자)을 쓴다(2026-09-18)."""
+    from shopping_shorts import canary
+    return EVEN_SHOPPING.support_max if canary.on() else _LEGACY_SUBLINE_LEN
+
 _MAX_LEN = 26          # ★썸네일 문구는 두 줄이 전부다(2026-08-18). 40자였을 땐 화면에서 4줄로
 _LINE_LEN = 13         #   무너져 문단처럼 보였다 — 두 줄 x 13자를 넘기지 않는다.
 _WANT = 4
@@ -210,9 +218,12 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
                 upload_title = c.get("upload_title")
                 if isinstance(subline, str) and subline.strip():
                     clean_subline = " ".join(subline.split())
-                    if len(clean_subline) > EVEN_SHOPPING.support_max:
-                        continue
-                    item["subline"] = clean_subline
+                    if _support_max() == _LEGACY_SUBLINE_LEN:
+                        item["subline"] = clean_subline[:_LEGACY_SUBLINE_LEN]   # 고객: 종전 32자 자르기
+                    elif len(clean_subline) > _support_max():
+                        continue                                              # 카나리: 22자 계약, 초과 후보 제외
+                    else:
+                        item["subline"] = clean_subline
                 if isinstance(upload_title, str) and upload_title.strip():
                     item["upload_title"] = upload_title.strip()[:50]
             out.append(item)
@@ -221,7 +232,7 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
         return out
 
     data = _call_json(prompt.format(script=s[:4000], maxlen=maxlen,
-                                    linelen=linelen, supportlen=EVEN_SHOPPING.support_max,
+                                    linelen=linelen, supportlen=_support_max(),
                                     whylen=_WHY_LEN), _SCHEMA) or {}
     out = clean(data)
     # 실측: 모델이 "11자 이내"를 보고도 12~15자로 네 후보를 전부 써서 결과가 0개가 됐다.
@@ -230,7 +241,7 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
     if paired and not out and isinstance(raw, list) and raw:
         retry_prompt = f"""다음 제목 세트는 화면 폭 규칙을 어겼다.
 각 후보의 text만 정확히 두 줄로 다시 압축하라. 각 줄은 공백 포함 {linelen}자 이내,
-전체는 줄바꿈 포함 {maxlen}자 이내다. subline은 {EVEN_SHOPPING.support_max}자 이내로 줄이고
+전체는 줄바꿈 포함 {maxlen}자 이내다. subline은 {_support_max()}자 이내로 줄이고
 upload_title·why의 의미는 유지하라.
 JSON 스키마대로 copies를 반환하라.
 
