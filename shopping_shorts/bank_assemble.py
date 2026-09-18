@@ -322,8 +322,11 @@ def title_len_rule():
 
 def title_too_long(text):
     """화면 제목이 슬롯 한도를 넘는지 — 프롬프트 안내와 같은 수를 본다."""
-    from shopping_shorts.template_copy import EVEN_SHOPPING as c
-    return len(" ".join(str(text or "").split())) > c.hook_line_max * 2
+    from shopping_shorts.template_copy import EVEN_SHOPPING as c, split_hook
+    # 장면꾸미기가 실제로 나누는 방식(split_hook)으로 나눠 봐야 같은 판정이 된다 —
+    #   총 22자여도 어절 경계 때문에 한 줄이 12자가 될 수 있다.
+    h1, h2 = split_hook(text)
+    return len(h1) > c.hook_line_max or len(h2) > c.hook_line_max
 
 
 def with_spoken_hook(style):
