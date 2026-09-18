@@ -424,6 +424,8 @@ _JOIN_FIXES = [
     (re.compile(r"는는데"), "는데"), (re.compile(r"다는는데"), "다는데"), (re.compile(r"는는 거"), "는 거"),
     (re.compile(r"다는다는"), "다는"), (re.compile(r"는데는데"), "는데"), (re.compile(r"는 건까지 해"), "까지 해"),
     (re.compile(r"주는는데"), "주는데"), (re.compile(r"^근대 "), "근데 "), (re.compile(r"한다는는"), "한다는"),
+    # 문장이 '~다는'에서 끊김(실측 job bb931fdbf7c8 "느끼게 해준다는.") → '~다는 거'
+    (re.compile(r"다는(?=\.?$)"), "다는 거"),       # 끝 마침표가 붙어 와도 잡는다
 ]
 _BAD_JOIN = re.compile(r"는는|데데|다는다는|는데는데|는 건까지 해")
 

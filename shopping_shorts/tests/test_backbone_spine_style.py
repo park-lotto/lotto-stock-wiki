@@ -239,3 +239,8 @@ def test_제품_전체이름은_공개줄에만():
              {"role": "more", "text": "%s로 찍으면 감성." % p, "group": 0}]
     out = ba._one_full_name(lines, p)
     assert out[0]["text"] == "미친 카메라의 정체." and p in out[1]["text"] and out[2]["text"].startswith("카메라로")
+
+
+def test_다는으로_끊기면_거를_붙인다():
+    assert ba._fix_join("레버를 돌려 손맛까지 느끼게 해준다는.") == "레버를 돌려 손맛까지 느끼게 해준다는 거."
+    assert ba._fix_join("이러니 난리가 났다는데.") == "이러니 난리가 났다는데."
