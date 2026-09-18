@@ -725,6 +725,7 @@ def normalize_playable(path):
 #              6a997ff0 → sns-video-qn/… 113MB. 키에 '/'가 있으면 bd, 없으면 qn·bak-v1이 받았다.
 #   원본이 hevc면 download_any의 normalize_playable이 h264로 바꾼다(종전 도우인과 같은 길).
 #   실패(세션 없음·키 없음·CDN 404·4K 초과)는 전부 종전 yt-dlp 720p 경로로 물러선다 — 회귀 0.
+#   원본이 4K(2160x3840)면 받아서 normalize가 1920p로 줄인다(실측 6a97fbd2 155MB).
 _XHS_ORIGIN_HOSTS_SLASH = ("sns-video-bd.xhscdn.com", "sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com")
 _XHS_ORIGIN_HOSTS_PLAIN = ("sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com", "sns-video-bd.xhscdn.com")
 _XHS_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -772,7 +773,7 @@ def xhs_origin_video_key(url, cookie_header=None):
 
 def xhs_origin_probe(key):
     """키 → (재생 가능한 원본 URL, (w, h)). CDN 호스트를 차례로 HEAD해 200·video만 통과.
-    긴 변이 1920을 넘으면 받지 않는다(4K는 화면에 안 쓰이고 대역폭만 먹는다)."""
+    긴 변이 3840(4K)을 넘으면 받지 않는다 — 4K까지는 normalize가 1920p로 줄인다."""
     import requests
     hosts = _XHS_ORIGIN_HOSTS_SLASH if "/" in key else _XHS_ORIGIN_HOSTS_PLAIN
     for host in hosts:
@@ -790,8 +791,12 @@ def xhs_origin_probe(key):
             w, h = [int(x) for x in pr.stdout.strip().split(",")[:2]]
         except Exception:  # noqa: BLE001
             continue
-        if max(w, h) > 1920:
-            print(f"[media] 샤오홍슈 원본 {w}x{h} — 1920 초과라 720p 경로로", file=sys.stderr)
+        # ★4K 원본도 받는다(2026-09-18 실측 6a97fbd2: 원본 2160x3840 hevc 155MB, yt-dlp는 720p뿐).
+        #   처음엔 1920 초과를 걸렀는데 그 결과가 **720p**라 오히려 손해다. download_any의
+        #   normalize_playable이 1920p h264로 줄여 준다(도우인 2160 hevc 실측 141초와 같은 비용).
+        #   CDN 직결이라 프록시 대역폭도 안 쓴다. 상한은 4K(3840)까지 — 그 위는 없다고 봐도 된다.
+        if max(w, h) > 3840:
+            print(f"[media] 샤오홍슈 원본 {w}x{h} — 3840 초과라 720p 경로로", file=sys.stderr)
             return "", (w, h)
         return cand, (w, h)
     return "", (0, 0)
