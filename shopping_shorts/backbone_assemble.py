@@ -179,7 +179,8 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         #   같은 대본이 나온다(2026-09-18 실측으로 잡은 배선 누락). seed가 바뀌면 칸마다
         #   다음 틀로 돌아 같은 재료에서 N가지 대본이 나온다.
         prompt = _spine_prompt(groups_out, hook_spine, roles, tpl, feats, per_line, seed=seed)
-        return _clean_lines(_sg._call_json(prompt, _LINES_SCHEMA, note=note) or {})
+        lines = _clean_lines(_sg._call_json(prompt, _LINES_SCHEMA, note=note) or {})
+        return _repair_joins(lines, plan_for_repair(groups_out, roles, tpl, seed), note=note)
     prompt = (
         f"제품: {groups_out.get('product')}\n"
         f"훅 스타일: 「{hook_spine.get('name')}」 — {hook_rule}\n"
@@ -304,10 +305,71 @@ def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line, seed=None):
         "- {성과}는 **동사구**로 채워라 — 예: '세월을 되찾아주는', '업계 자체를 망하게 한', "
         "'여름을 지배해 버린'. 형용사 한 단어('정교한')는 쓰지 마라.\n"
         "- {대상}은 사람·업계 같은 **명사**로 — 예: '문구 업계', '다이어트 하는 사람들'.\n"
+        # ★빈칸 뒤에 어미가 바로 붙는 틀({효능}는데·{효능}다는 거·{효능}주는데)은 빈칸을 **어간**으로 끝내야
+        #   맞물린다. 실측(2026-09-18 4건): '분류한다+는는데'·'빨아들여 주는+는데'·'쓰는 건+까지 해 준다는데'.
+        "- ★빈칸 바로 뒤에 어미가 붙어 있으면 빈칸은 **그 어미에 맞물리는 어간**으로 끝내라. 완성된 문장을 빈칸에 넣지 마라. "
+        "예) '{효능}는데' → '연기를 싹 빨아들이는데' / '{효능}다는 거' → '기름을 알아서 모은다는 거' / "
+        "'{효능}주는데' → '한 장씩 뜯어 쓰게 해 주는데' / '{효능2}까지 해 준다는데' → '어디서나 가볍게 쓰는 것까지 해 준다는데'. "
+        "'~는는데'·'~다는는데'·'~는 건까지 해'처럼 같은 어미가 겹치면 틀린 것이다.\n"
         "- ★문장틀의 **끝말을 바꾸지 마라**. 틀이 '~는데'로 끝나면 '~는데'로, '~다는 거'면 "
         "'~다는 거'로 끝내라(실측: 틀을 벗어나면 '~하는 거'처럼 이 채널에 없는 말이 된다).\n"
         "- 원본 영상의 문장을 그대로 베끼지 마라.")
 
+
+
+# ── 어미 결합 검사·수리 ────────────────────────────────────────────────
+# 틀 '{효능}는데'에 모델이 '분류한다는'을 넣으면 '분류한다는는데'가 된다(2026-09-18 실측 4건).
+# 순서: ①기계 수리(겹친 어미 축약) ②그래도 깨졌으면 그 줄만 다시 쓰게 1회 ③그래도면 기계 수리본 유지.
+_JOIN_FIXES = [
+    (re.compile(r"는는데"), "는데"), (re.compile(r"다는는데"), "다는데"), (re.compile(r"는는 거"), "는 거"),
+    (re.compile(r"다는다는"), "다는"), (re.compile(r"는데는데"), "는데"), (re.compile(r"는 건까지 해"), "까지 해"),
+    (re.compile(r"주는는데"), "주는데"), (re.compile(r"^근대 "), "근데 "), (re.compile(r"한다는는"), "한다는"),
+]
+_BAD_JOIN = re.compile(r"는는|데데|다는다는|는데는데|는 건까지 해")
+
+
+def _bad_join(text):
+    t = str(text or "").rstrip(".").strip()
+    return bool(_BAD_JOIN.search(t))
+
+
+def _fix_join(text):
+    t = str(text or "")
+    for rx, rep in _JOIN_FIXES:
+        t = rx.sub(rep, t)
+    return t
+
+
+def plan_for_repair(groups_out, roles, tpl, seed):
+    """줄 번호 → 그 줄에 쓰인 문장틀(다시 쓸 때 같은 틀을 준다)."""
+    plan = _spine_plan(roles, tpl, len(groups_out["order"]))
+    start = seed if isinstance(seed, int) else 0
+    out, pick = [], {}
+    for r, gi in plan:
+        cands = list(tpl.get(r) or [])
+        i = pick.get(r, start); pick[r] = i + 1
+        out.append(cands[i % len(cands)] if cands else "")
+    return out
+
+
+_ONE_LINE_SCHEMA = {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}
+
+
+def _repair_joins(lines, templates, note=None):
+    for i, L in enumerate(lines):
+        t = _fix_join(L["text"])
+        if _bad_join(t):
+            tpl = templates[i] if i < len(templates) else ""
+            prompt = (f"아래 문장은 문장틀 「{tpl}」의 빈칸을 채운 것인데 어미가 겹쳐 틀렸다.\n"
+                      f"틀린 문장: {t}\n"
+                      "틀의 끝말은 그대로 두고 빈칸 부분만 어간으로 고쳐 자연스러운 한 문장으로 다시 써라. "
+                      "뜻·길이는 유지하고 새 내용을 넣지 마라. 마침표 하나로 끝내라.")
+            out = _sg._call_json(prompt, _ONE_LINE_SCHEMA, note=note) or {}
+            t2 = _fix_join(re.sub(r"\s+", " ", str(out.get("text") or "")).strip())
+            if t2 and not _bad_join(t2):
+                t = t2.rstrip(".!?。") + "."
+        L["text"] = t
+    return lines
 
 # ── 컷 지정 (코드 — 부탁하지 않는다) ──────────────────────────────────
 def assign_cuts(lines, groups_out, seg_index, backbone_vid):

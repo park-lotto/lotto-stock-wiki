@@ -91,3 +91,26 @@ def test_seed가_문자열이어도_틀을_고른다():
     p1 = ba._spine_prompt(g, {"name": "s"}, ROLES, TPL, ["a"], 20, seed="iba25602b41")
     p2 = ba._spine_prompt(g, {"name": "s"}, ROLES, TPL, ["a"], 20, seed=3)
     assert "role=solve" in p1 and "role=solve" in p2
+
+
+def test_어미_겹침을_잡고_기계로_고친다():
+    """2026-09-18 실측 4건(job bba3a1e8f7a1·bbe6fcfabec1)."""
+    bad = ["심지어 칸막이로 소품을 분류한다는는데.", "이건 틈새 공간을 최대로 활용한다는는데.",
+           "연기를 강력하게 싹 빨아들여 주는는데.", "심지어 진짜 대박인 건 어디서나 가볍게 쓰는 건까지 해 준다는데.",
+           "근대 진짜 충격적인 포인트는 설치 후 정리가 너무 완벽하다는 거."]
+    for b in bad[:4]:
+        assert ba._bad_join(b), b
+    fixed = [ba._fix_join(b) for b in bad]
+    assert fixed[0] == "심지어 칸막이로 소품을 분류한다는데." and fixed[2] == "연기를 강력하게 싹 빨아들여 주는데."
+    assert fixed[3] == "심지어 진짜 대박인 건 어디서나 가볍게 쓰까지 해 준다는데." or "건까지 해" not in fixed[3]
+    assert fixed[4].startswith("근데 ")
+    for f in fixed[:3]:
+        assert not ba._bad_join(f), f
+
+
+def test_정상_문장은_안_건드린다():
+    ok = ["이건 보풀 없이 식기 물기를 닦아낼 수 있다는 거.", "이게 말도 안 되는게 그냥 필터만 갈아 끼워주면 되는데.",
+          "최근 누가 봐도 평범한 이 미니 후드 하나가 전 세계에서 미친 듯이 품절 대란이라는데.", "완벽하다고."]
+    for o in ok:
+        assert not ba._bad_join(o), o
+        assert ba._fix_join(o) == o
