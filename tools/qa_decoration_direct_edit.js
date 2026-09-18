@@ -10,7 +10,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8771/out/scene-style-ui-showcas
   await new Promise(r => setTimeout(r, 200));
   const res = {};
   // 가림막 추가 → 편집 칸 위치·회전 범위
-  await p.click('[data-add-mask="solid"]'); await new Promise(r => setTimeout(r, 100));
+  await p.click('[data-add-mask="blur"]'); await new Promise(r => setTimeout(r, 100));
   res.edit = await p.evaluate(() => { const items = document.querySelector('.dec-items'), edit = document.querySelector('.dec-edit');
     return {nextToList: items.nextElementSibling === edit, visible: !edit.hidden, heightShown: !document.querySelector('[data-mask-height]').hidden,
             rotRange: [document.querySelector('[data-dec="rot"]').min, document.querySelector('[data-dec="rot"]').max]}; });
@@ -22,7 +22,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8771/out/scene-style-ui-showcas
   [x, y] = await handle('rotate'); await p.mouse.move(x, y); await p.mouse.down(); await p.mouse.move(x + 120, y + 60, {steps: 6}); await p.mouse.up();
   res.rotate = (await get()).rot;
   // 배지 추가 → 두 번 눌러 글자 고치기
-  await p.click('[data-dec-kit="badge"]'); await p.click('[data-add-badge]'); await new Promise(r => setTimeout(r, 100));
+  await p.evaluate(() => { document.querySelector('[data-dec-kit="badge"]').click(); document.querySelector('[data-add-badge]').click(); }); await new Promise(r => setTimeout(r, 100));
   const badgeText0 = (await get()).text;
   const c = await p.evaluate(() => { const els = document.querySelectorAll('.scene-decoration'); const r = els[els.length - 1].getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
   // 사람이 두 번 누르는 것처럼 누름·뗌을 두 번(puppeteer clickCount:2는 누름이 한 번만 가서 검사가 틀린다)
@@ -31,7 +31,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8771/out/scene-style-ui-showcas
   res.badge = [badgeText0, (await get()).text];
   res.errors = errors;
   console.log(JSON.stringify(res, null, 1));
-  const ok = res.edit.nextToList && res.edit.visible && res.edit.heightShown && res.edit.rotRange.join() === '-180,180'
+  const ok = res.edit.nextToList && res.edit.visible && !res.edit.heightShown &&   /* 가림막은 투명도만(09-18 사장님) */ res.edit.rotRange.join() === '-180,180'
     && res.resize.w[1] < res.resize.w[0] && res.resize.h[1] !== res.resize.h[0] && Math.abs(res.rotate) > 30 && res.badge[1] === '오늘만 특가' && !errors.length;
   console.log(ok ? '전부 통과' : '실패'); await b.close(); process.exit(ok ? 0 : 1);
 })().catch(e => { console.error(e); process.exit(1); });

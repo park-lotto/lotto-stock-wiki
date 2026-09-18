@@ -43,7 +43,8 @@
  //   ↘ 오른쪽 아래 = 크기(가림막은 가로·세로 따로, 나머지는 비율 유지) / ⟳ 위 = 회전. 렌더 때는 그리지 않는다.
  const handles=document.createElement('div');handles.className='scene-decoration-toolbar scene-decoration-handles';handles.hidden=true;
  handles.innerHTML='<button type="button" data-handle="resize" title="끌어서 크기">↘</button><button type="button" data-handle="rotate" title="끌어서 회전">⟳</button>';
- Object.assign(handles.style,{position:'absolute',inset:'0',pointerEvents:'none',zIndex:30});
+ // 도구막대 클래스를 같이 달아(카메라 층 밖에 두려고) 어두운 배경·테두리까지 물려받아 화면 전체가 덮였다(2026-09-18 실측) → 지운다.
+ Object.assign(handles.style,{position:'absolute',inset:'0',pointerEvents:'none',zIndex:30,background:'transparent',border:'0',padding:'0',boxShadow:'none'});
  handles.querySelectorAll('button').forEach(b=>Object.assign(b.style,{position:'absolute',width:'26px',height:'26px',marginLeft:'-13px',marginTop:'-13px',borderRadius:'50%',border:'2px solid #fff',background:'#11B98C',color:'#fff',fontSize:'14px',lineHeight:'1',padding:'0',cursor:b.dataset.handle==='resize'?'nwse-resize':'grab',pointerEvents:'auto',boxShadow:'0 2px 6px #0007'}));
  preview.append(handles);
  function placeHandles(m){
