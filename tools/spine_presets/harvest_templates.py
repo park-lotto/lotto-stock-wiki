@@ -106,9 +106,16 @@ def main():
     # ★슬롯 없는 문장은 제품이 박힌 문장일 가능성이 크다(실측 56번: "엉뚱한 용도로 초대방난 테이프"·"다이서도 놀란 이유").
     #   bait·fame·land·notice·react 처럼 원래 제품과 무관한 칸만 슬롯 없이 허용한다.
     NO_SLOT_OK = {"bait", "fame", "land", "notice", "react"}
+    # 슬롯 없이 받는 칸도 **일반어**가 있어야 한다(실측 70~73: "이게 원래는 … 초음파 세정기였습니다" 같은 제품 문장이 bait로 들어옴)
+    GENERIC = re.compile(r"아이템|제품|이거|이게|이걸|사람들|SNS|난리|논란|화제|천재|직원|개발자|제조사|판매자|업체|떼돈|바이럴|미쳤|충격")
+    ORIGIN_WORDS = re.compile(r"원래")     # '원래는 …'은 origin 칸 문장 — bait·fame에 들어오면 칸이 틀린 것
+    def _ok(r, x):
+        if SLOT.search(x):
+            return not (r in ("bait", "fame", "title") and ORIGIN_WORDS.search(x))
+        return r in NO_SLOT_OK and bool(GENERIC.search(x)) and not ORIGIN_WORDS.search(x)
     for r in list(kept):
-        bad = [x for x in kept[r] if not SLOT.search(x) and r not in NO_SLOT_OK]
-        kept[r] = [x for x in kept[r] if SLOT.search(x) or r in NO_SLOT_OK]
+        bad = [x for x in kept[r] if not _ok(r, x)]
+        kept[r] = [x for x in kept[r] if _ok(r, x)]
         if bad:
             dropped.setdefault(r, []).extend("(슬롯없음) " + x for x in bad)
     if exclude:
