@@ -17,17 +17,20 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
       const file=`scene-style-layer-${index}.png`;
       const CAMERA=['zoom-punch','push-in','shake'],isCamera=CAMERA.includes(request.snapshot.hookMotion);
       const duration=(request.snapshot.hookMotion&&!isCamera)||request.snapshot.hookBandMotion||request.snapshot.hookBandRise?await page.evaluate(()=>window.sceneStyle.motionAt(100000)):0;   // 흰 띠 스윽은 줌 펀치와 겹쳐도 프레임별로 찍는다
+      // 고정형 자막 등장(0.3초): 훅뿐 아니라 자막이 바뀌는 모든 장면의 시작을 프레임별로 찍는다.
+      const enter=request.snapshot.mode==='continuous'&&request.snapshot.hookBandMotion?await page.evaluate(()=>window.sceneStyle.captionEnterAt?.(100000)||0):0;
       const moving=await page.evaluate(()=>{const shape=window.sceneDecorations?.motionAt(0),brand=window.sceneBranding?.motionAt(0);return shape||brand||false});
       await page.screenshot({path:path.join(request.output,file),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
       const scene=request.context.scenes[index],first=Math.round(scene.start*30),end=Math.round(scene.end*30);
       let animation=null;
-      if(moving||(duration>first/30*1000&&g.kind==='hook')){
-        const count=moving?end-first:Math.min(end-first,Math.ceil(duration/1000*30)-first+1);
+      const hookCount=duration>first/30*1000&&g.kind==='hook'?Math.ceil(duration/1000*30)-first+1:0,enterCount=enter?Math.ceil(enter/1000*30)+1:0;
+      if(moving||hookCount||enterCount){
+        const count=moving?end-first:Math.min(end-first,Math.max(hookCount,enterCount));
         const pattern=`scene-style-motion-${index}-%04d.png`;
         for(let f=0;f<count;f++){
           await page.evaluate(i=>window.sceneStyle.show(i),index);
           await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
-          await page.evaluate(({title,shape,brand})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape);window.sceneBranding?.motionAt(brand)},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000,brand:(first+f)/30*1000});
+          await page.evaluate(({title,shape,brand,cap})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape);window.sceneBranding?.motionAt(brand);if(cap!==null)window.sceneStyle.captionEnterAt?.(cap)},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000,brand:(first+f)/30*1000,cap:enter?f/30*1000:null});
           await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
           // Materialize the sampled animation state for Chromium's screenshot compositor.
           await page.evaluate(()=>{

@@ -181,6 +181,7 @@
     motionPanel.querySelectorAll('[data-hook-speed]').forEach(b=>b.classList.toggle('active',Number(b.dataset.hookSpeed)===hookMotionSpeed));
     if(hookMotion==='rise'){hookMotion='zoom-punch';hookBandMotion='rise';}   // 잠깐 있던 단독 'rise' 저장값은 조합형으로 옮긴다
     motionPanel.querySelectorAll('[data-hook-band-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookBandMotion===hookBandMotion));
+    const bandLabel=motionPanel.querySelector('.hook-band-motion > span');if(bandLabel)bandLabel.textContent=mode==='continuous'?'자막 등장':'흰 띠';
     motionPanel.querySelector('.hook-motion-head small').textContent=(hookMotion==='zoom-punch'?'화면 전체 확대 · 짧은 흔들림':hookMotion==='push-in'?'화면 전체가 천천히 확대':hookMotion==='shake'?'화면 전체가 훅 내내 잘게 떨림':'제목에만 적용')+(hookBandMotion==='rise'?' + 흰 띠 스윽':hookBandMotion==='grow'?' + 흰 띠 확대':'');
   }
   const minimumFixedTop=frame=>Math.min(46,Math.max(12,Math.ceil((Math.max(0,...(frame?.lines||[]).filter(line=>line.bind!=='caption').map(line=>line.y1))+2)/(frame?.height||1)*100)));
@@ -302,6 +303,26 @@
       texts.forEach((el,index)=>play(el,[{opacity:0,transform:'scale(1.32)',filter:'brightness(2)'},{opacity:1,transform:'scale(.96)',filter:'brightness(1.7)',offset:.3},{opacity:1,transform:'scale(1)',filter:'brightness(1)'}],{...timing,duration:time(480),delay:time(70+index*55)}));
     }
     return duration;
+  }
+  // 고정형 자막 등장 효과(2026-09-18) — 고정형은 훅이 없고 자막이 1~1.5초마다 바뀐다. 훅용 1.5초 효과를 그대로 걸면
+  //   자리 잡기 전에 다음 자막이 와 계속 흔들리므로, 자막이 바뀔 때마다 0.3초만 짧게 들어온다.
+  //   고르는 곳은 흰 띠 줄(스윽/확대)과 같다 — 자막 글자 + 자막 가림막 상자를 한 덩어리로 움직인다.
+  const CAPTION_ENTER_MS=300;
+  function runCaptionEnter(options){
+    const seeking=options&&typeof options==='object'&&Number.isFinite(options.time);
+    if(mode!=='continuous'||!hookBandMotion)return 0;
+    const text=layer.querySelector('.precision-text[data-edit-bind="caption"]'),mask=layer.querySelector('.caption-mask');
+    if(!text||!text.textContent.trim())return 0;
+    const els=[text,mask].filter(Boolean);els.forEach(el=>el.getAnimations().forEach(a=>a.cancel()));
+    if(!seeking&&(qaMode||matchMedia('(prefers-reduced-motion: reduce)').matches))return 0;
+    const T=text.getBoundingClientRect(),cx=T.left+T.width/2,cy=T.top+T.height/2;
+    const frames=hookBandMotion==='grow'?[{transform:'scale(.84)'},{transform:'scale(1)'}]:[{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}];
+    els.forEach(el=>{
+      if(hookBandMotion==='grow'){const r=el.getBoundingClientRect();el.style.transformOrigin=`${cx-r.left}px ${cy-r.top}px`;}
+      const animation=el.animate(frames,{duration:CAPTION_ENTER_MS,easing:'cubic-bezier(.2,.8,.3,1)',fill:'both'});
+      if(seeking){animation.pause();animation.currentTime=options.time;}else animation.finished.then(()=>animation.cancel()).catch(()=>{});
+    });
+    return CAPTION_ENTER_MS;
   }
   function sceneTotal(){return sceneContext?.scenes?.length||12}
   function updateSceneUI(){
@@ -627,7 +648,10 @@
     const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,titleHeight(frame)+drag.y+textOffset('caption')));
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
     const original=source.ln||{font_size:frame.height*.032,font_family:frame.font_family||'Pretendard',font_weight:900};
-    const ln={...original,x0:(x+2)/100*frame.width,x1:(x+w-2)/100*frame.width,y0:y/100*frame.height,h:h/100*frame.height,max_lines:1,no_patch:true};
+    // 고정형 자막 기본 크기 = 템플릿 값의 82%(2026-09-18 사장님 "자막쪽이 너무 크다"). 이븐쇼핑 본문과 같은 3.6%였지만
+    //   굵은 흰 글씨·제목과의 크기 차이가 작아 커 보였다. −/+ 조절(textScale)은 이 위에 그대로 곱해진다.
+    const baseSize=(original.font_size||frame.height*.032)*(mode==='continuous'?.82:1);
+    const ln={...original,font_size:baseSize,x0:(x+2)/100*frame.width,x1:(x+w-2)/100*frame.width,y0:y/100*frame.height,h:h/100*frame.height,max_lines:1,no_patch:true};
     addText(value('caption'),ln,frame,settings.color,'center','caption');
     const text=layer.querySelector('.precision-text[data-edit-bind="caption"]');
     Object.assign(text.style,{left:(x+2)+'%',right:'auto',width:Math.max(1,w-4)+'%',top:y+'%',height:h+'%',transform:'none',display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'pre-wrap',lineHeight:'1.15',color:settings.color});
@@ -645,7 +669,7 @@
     preview.classList.toggle('is-continuous',mode==='continuous');
     const seg=root.querySelector('.layout-a .seg');if(seg)seg.hidden=mode==='continuous';
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
+    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);requestAnimationFrame(()=>runCaptionEnter());
   }
   function showScene(nextIndex){
     sceneIndex=Math.max(0,Math.min(sceneTotal()-1,nextIndex));
@@ -729,6 +753,7 @@
     const choice=event.target.closest('[data-hook-motion]');
     if(choice){hookMotion=choice.dataset.hookMotion;if(sceneIndex!==0){sceneIndex=0;showFrame('hook');}syncHookMotionUI();runHookMotion();return}
     const bandChoice=event.target.closest('[data-hook-band-motion]');
+    if(bandChoice&&mode==='continuous'){hookBandMotion=bandChoice.dataset.hookBandMotion;syncHookMotionUI();if(sceneIndex===0)showScene(1);else runCaptionEnter();return}
     if(bandChoice){hookBandMotion=bandChoice.dataset.hookBandMotion;if(sceneIndex!==0){sceneIndex=0;showFrame('hook');}syncHookMotionUI();runHookMotion();return}
     const speed=event.target.closest('[data-hook-speed]');
     if(speed){hookMotionSpeed=Number(speed.dataset.hookSpeed);motionPanel.querySelectorAll('[data-hook-speed]').forEach(button=>button.classList.toggle('active',button===speed));runHookMotion();return}
@@ -889,6 +914,7 @@
     resetCaptionText(){captionTexts.delete(captionKey());syncCaption();markDirty('caption');renderEdit()},
     refresh(){fittedText.clear();renderEdit()},
     motionAt(time){return runHookMotion({time})},
+    captionEnterAt(time){return runCaptionEnter({time})},   // 고정형 자막 등장(장면 시작 기준 ms) — 렌더러가 장면마다 찍는다
     cameraAt,
   };
   if(!labMode)try{effects=JSON.parse(localStorage.getItem('scene_style_preset')||'null')?.effects||{}}catch{}
