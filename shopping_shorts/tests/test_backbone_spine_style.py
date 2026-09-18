@@ -277,3 +277,11 @@ def test_소스에_없는_나라는_해외로():
     out = ba._no_made_up_country([{"role": "title", "text": "주부들 구원한 프랑스 천재의 발명품.", "group": -1},
                                   {"role": "bait", "text": "일본에서 난리난 행주.", "group": -1}], idx)
     assert out[0]["text"] == "주부들 구원한 해외 천재의 발명품." and out[1]["text"] == "일본에서 난리난 행주."
+
+
+def test_나라_바꿀때_조사와_한국은_그대로():
+    idx = {"a-0": {"desc": "행주", "text": ""}}
+    out = ba._no_made_up_country([{"role": "b", "text": "한국은 물론 전 세계 SNS에서.", "group": -1},
+                                  {"role": "c", "text": "영국은 물론 미국이 난리.", "group": -1}], idx)
+    assert out[0]["text"] == "한국은 물론 전 세계 SNS에서."
+    assert out[1]["text"] == "해외는 물론 해외가 난리."

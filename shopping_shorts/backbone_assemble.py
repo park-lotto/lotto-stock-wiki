@@ -248,7 +248,10 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
     return _clean_lines(out)
 
 
-_COUNTRY = re.compile(r"(미국|일본|중국|한국|독일|프랑스|영국|이탈리아|스웨덴|덴마크|대만|베트남|태국|호주|캐나다|스페인|네덜란드|스위스)")
+# ★'한국'은 넣지 않는다 — 우리 시청자 기준 말("한국은 물론 전 세계")이라 바꾸면 "해외은 물론"이 된다(실측 bbbd6f20fe39)
+_COUNTRY = re.compile(r"(미국|일본|중국|독일|프랑스|영국|이탈리아|스웨덴|덴마크|대만|베트남|태국|호주|캐나다|스페인|네덜란드|스위스)")
+# '해외'로 바꾼 뒤 받침 없는 말에 맞게 조사 고치기(나라 이름은 받침이 제각각이라)
+_JOSA_FIX = [("해외은", "해외는"), ("해외이 ", "해외가 "), ("해외을", "해외를"), ("해외과", "해외와"), ("해외으로", "해외로")]
 
 
 def _no_made_up_country(lines, seg_index):
@@ -261,6 +264,8 @@ def _no_made_up_country(lines, seg_index):
         for c in set(_COUNTRY.findall(t)):
             if c not in blob:
                 t = t.replace(c, "해외")
+        for x, y in _JOSA_FIX:
+            t = t.replace(x, y)
         out.append(dict(L, text=t.replace("해외 해외", "해외")))
     return out
 
