@@ -3608,14 +3608,27 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                         _picked = _ranked[:len(_picked)]
             except Exception as _e:      # noqa: BLE001 — 축 판정 실패가 생성을 막으면 안 된다
                 print("축 판정 건너뜀: %s" % str(_e)[:120])
-        _assembled, _asm_left, _asm_why = _assembled_drafts(
-            _picked, _src, store, body.get("target_seconds") or 25, job_id=_jid,
-            topic_product=script_generate._sources_product(_src),
-            facts_block=_facts_block,
-            topic_semantic_required=any(
-                s.get("topic_product") and s.get("topic_semantic_required", True)
-                for s in (_src or [])))
-        _styled = list(_assembled)
+        # ★백본-먼저(2026-09-19, 장면분량 트랙·사장님 계정 먼저): 원본의 특징(말·화면 짝)을 묶어
+        #   훅만 갈아끼우고 컷을 대사 길이만큼 앞에서 지정한다 → 3단계 채우기가 돌 일이 없다.
+        #   스위치 backbone_script_enabled(기본 끔). 실패하면 아래 옛 경로로 가되 이유를 응답에 싣는다.
+        _bb_drafts, _bb_why = [], ""
+        if _setting_gate(store, "backbone_script_enabled", _cid(request)):
+            if (_job or {}).get("extract"):
+                _bb_drafts, _bb_why = _backbone_drafts(
+                    _picked, _job, store, body.get("target_seconds") or 25, job_id=_jid)
+            else:
+                _bb_why = "제작 job 재료 없음"
+        if _bb_drafts:
+            _assembled, _asm_left, _asm_why = [], [], ""
+        else:
+            _assembled, _asm_left, _asm_why = _assembled_drafts(
+                _picked, _src, store, body.get("target_seconds") or 25, job_id=_jid,
+                topic_product=script_generate._sources_product(_src),
+                facts_block=_facts_block,
+                topic_semantic_required=any(
+                    s.get("topic_product") and s.get("topic_semantic_required", True)
+                    for s in (_src or [])))
+        _styled = list(_bb_drafts) + list(_assembled)
         _gen_reasons = []
         if _asm_left:
             _styled += script_generate.generate_by_styles(
@@ -3660,6 +3673,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                     # ★조립을 못 했으면 **이유**를 말한다. 이유 없이 옛 경로로 조용히
                     #   넘어가면 사장님은 왜 결과가 공허한지 알 수 없다.
                     "assemble_skipped": _asm_why,
+                    "backbone": [d.get("style_name") for d in _styled
+                                 if d.get("made_by") == "백본"],
+                    "backbone_skipped": _bb_why,
                     "styles": [s.get("name") for s in _picked],
                     # ★어떻게 골랐는지 화면이 말할 수 있게(조용한 폴백 금지).
                     "style_axis": _axis_pick or "",
@@ -22204,6 +22220,42 @@ def _insta_slot_sets(sources, store, cache_only=False):
     if len(sets) < 2:
         return [], "나열형은 화면 근거가 있는 영상이 2편 이상 필요합니다(현재 %d편)" % len(sets)
     return sets, ""
+
+
+def _backbone_drafts(spines, job, store, seconds=25, job_id=""):
+    """백본-먼저 대본(2026-09-19, 장면분량 트랙). 특징 묶기→스파인 훅·틀로 문장→컷을 대사 길이만큼 지정.
+    반환 (drafts, why). drafts가 비면 why에 이유 — 호출부가 옛 경로로 가되 화면에 이유를 싣는다(조용한 폴백 금지).
+    ★씨앗(백본) = job.backbone_main 소스, 없으면 한국어 원문이 가장 긴 소스(tools/spine_presets/batch_scripts와 같은 규칙).
+    ★화면·3단계는 안 고친다 — to_draft가 기존 초안 모양(beats[].src_seg/src_segs)으로 돌려준다."""
+    from shopping_shorts import backbone_assemble as ba
+    ext = (job or {}).get("extract") or {}
+    srcs = ba.sources_from_extract(ext)
+    if not srcs:
+        return [], "재료 분석(extract)이 아직 없음"
+    bb = None
+    bm = (job or {}).get("backbone_main")
+    if bm is not None and isinstance(ext.get("s%d" % int(bm)), dict):
+        want = ba.sources_from_extract({"s%d" % int(bm): ext["s%d" % int(bm)]})
+        bb = next((s for s in srcs if want and s.get("video_id") == want[0].get("video_id")), None)
+    if bb is None:
+        def _ko(t):
+            return sum(1 for c in t if "가" <= c <= "힣") / max(1, sum(1 for c in t if c.isalpha()))
+        kor = [s for s in srcs if _ko(s.get("full_text") or "") > 0.7]
+        bb = max(kor or srcs, key=lambda s: len((s.get("full_text") or "").strip()))
+    drafts, whys = [], []
+    for sp in spines or []:
+        note = {}
+        try:
+            given, bs, meta = ba.assemble(srcs, bb.get("video_id"), store, spine_id=sp.get("id"),
+                                          target_seconds=seconds, seed=job_id or None, note=note)
+        except Exception as e:      # noqa: BLE001 — 한 스타일 실패가 나머지를 막으면 안 된다
+            whys.append("%s: 예외 %s" % (sp.get("name"), str(e)[:80]))
+            continue
+        if not given:
+            whys.append("%s: %s" % (sp.get("name"), note.get("reason") or note.get("detail") or "실패"))
+            continue
+        drafts.append(ba.to_draft(given, bs, meta))
+    return drafts, "; ".join(whys)
 
 
 def _assembled_drafts(spines, sources, store, seconds=30, job_id="", topic_product="",
