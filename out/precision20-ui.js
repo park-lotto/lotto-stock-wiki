@@ -79,6 +79,27 @@
   const presetPane=grid.closest('.pane'),modeBar=document.createElement('div');modeBar.className='template-mode-bar';
   modeBar.innerHTML='<button type="button" data-template-mode="story" class="active">썰쇼핑형 <small>20</small></button><button type="button" data-template-mode="continuous">전장면 고정형 <small>20</small></button>';
   presetPane.querySelector('.pane-head').after(modeBar);renderGrid();
+  // 왼쪽 맨 위 탭(2026-09-19 사장님): '템플릿 선택' 머리말 자리에 [장면 템플릿 | 폰트 템플릿].
+  //   오른쪽 문구/효과 탭과 같은 .tool-tabs 모양. 폰트 템플릿(채널명·제목·자막 한 세트)은 다음 단계 — 지금은 자리만.
+  {
+    const head=presetPane.querySelector('.pane-head'),leftTabs=document.createElement('div');
+    leftTabs.className='tool-tabs left-pane-tabs';
+    leftTabs.innerHTML='<button type="button" class="active" data-left-tab="scene">장면 템플릿</button><button type="button" data-left-tab="font">폰트 템플릿</button>';
+    const fontPane=document.createElement('div');fontPane.className='font-template-pane';fontPane.hidden=true;
+    const drawFontSets=()=>{fontPane.innerHTML='<div class="font-set-grid">'+[{id:'',name:'템플릿 기본',channel:'',title:'',caption:''},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
+    window.addEventListener('scene-style-fontset',()=>{if(!fontPane.hidden)drawFontSets();});   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
+    fontPane.addEventListener('click',event=>{const c=event.target.closest('[data-font-set]');if(!c)return;fontSet=c.dataset.fontSet;fittedText.clear();drawFontSets();renderEdit();});
+    head.hidden=true;head.before(leftTabs);grid.after(fontPane);
+    const sceneParts=[modeBar,grid];
+    leftTabs.addEventListener('click',event=>{
+      const b=event.target.closest('[data-left-tab]');if(!b)return;
+      leftTabs.querySelectorAll('[data-left-tab]').forEach(x=>x.classList.toggle('active',x===b));
+      const font=b.dataset.leftTab==='font';sceneParts.forEach(el=>el.hidden=font);fontPane.hidden=!font;if(font)drawFontSets();
+    });
+    const css=document.createElement('style');
+    css.textContent='.font-set-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.font-set-card{display:grid;gap:4px;justify-items:start;text-align:left;padding:10px;border:1px solid #294451;border-radius:12px;background:#1b1b1b;color:#fff;cursor:pointer}.font-set-card.selected{border-color:#43e2b4;box-shadow:0 0 0 2px #43e2b455}.font-set-card .fs-ch{background:#000;border-radius:4px;padding:1px 7px;font-size:12px}.font-set-card .fs-title{font-size:19px;line-height:1.15}.font-set-card .fs-title em{font-style:normal;color:#ffe500}.font-set-card .fs-cap{background:#fff;color:#111;padding:1px 7px;font-size:14px}.font-set-card b{font:800 12px system-ui,sans-serif;color:#9eb0b9;margin-top:4px}.font-set-card.selected b{color:#63edc6}.layout-a .pane-head[hidden]{display:none!important}.left-pane-tabs{margin:0 0 12px}.template-mode-bar[hidden],.preset-grid[hidden]{display:none!important}.font-template-empty{border:1px dashed #294451;border-radius:12px;padding:28px 16px;text-align:center;display:grid;gap:6px;color:#8fa3ad}.font-template-empty b{color:#e8f3f0;font-size:14px}';
+    document.head.append(css);
+  }
 
   preview.classList.add('is-pristine');
   const base=document.createElement('img');base.className='precision-base';
@@ -91,7 +112,7 @@
   // 템플릿 없음(2026-09-18 사장님 "템플릿 없는 거 쓰는 사람들") — 선택하면 snapshot()이 null을 내고 제작소가 그대로 서버에 저장,
   //   최종 렌더(video_assemble)는 scene_style이 비면 꾸미기를 건너뛴다.
   let noTemplate=false;
-  let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',bodyCaptionMotion='',hookMotionSpeed=.72,hookCaptionMode='visible';
+  let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',bodyCaptionMotion='',fontSet='',hookMotionSpeed=.72,hookCaptionMode='visible';
   const fontScales=new Map();
   const fittedText=new Map();
   const textOffsets=new Map();
@@ -180,6 +201,25 @@
   root.querySelector('.layout-a .ai-card')?.after(motionPanel);
   // 본문 모션(2026-09-19 사장님): 본문 장면 자막이 바뀔 때마다 들어오는 효과. 흰 띠 스윽/확대를 자막 효과로 넓혔다.
   //   값 목록은 BODY_CAPTION_MOTIONS 한 곳 — 버튼·미리보기·렌더(captionEnterAt)가 모두 여기서 읽는다. 서버 허용값은 scene_style.py와 짝.
+  // 폰트 템플릿(2026-09-19 사장님): 채널명 · 제목 · 자막 폰트를 한 세트로. 모든 장면 공통.
+  //   편집기 @font-face로 등록된 글꼴만 쓴다(최종 영상은 이 페이지를 그대로 찍으므로 같은 글꼴이 나온다).
+  //   초안 10종 — 사장님이 고르고 고칠 목록. 서버 허용값(scene_style.py)은 id 형식만 검사한다.
+  const FONT_SETS=[
+    {id:'aggro',name:'강렬 어그로',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},
+    {id:'jalnan',name:'잘난 쇼핑',channel:'YgJalnan',title:'YgJalnan',caption:'Pretendard'},
+    {id:'blackhan',name:'검은고딕 뉴스',channel:'BlackHanSans',title:'BlackHanSans',caption:'Pretendard'},
+    {id:'gmarket',name:'G마켓 깔끔',channel:'GmarketSansBold',title:'GmarketSansBold',caption:'GmarketSansBold'},
+    {id:'baemin',name:'배민 도현',channel:'BMDOHYEON',title:'BMDOHYEON',caption:'BMJUA'},
+    {id:'cafe24',name:'카페24 각진',channel:'Cafe24Ohsquare',title:'Cafe24Ohsquare',caption:'Pretendard'},
+    {id:'gasoek',name:'묵직 가석',channel:'GasoekOne',title:'GasoekOne',caption:'BlackHanSans'},
+    {id:'binggrae',name:'부드러운 빙그레',channel:'BinggraeBold',title:'BinggraeBold',caption:'BMJUA'},
+    {id:'ganpan',name:'간판체',channel:'KCCGanpan',title:'KCCGanpan',caption:'GmarketSansBold'},
+    {id:'jalnangothic',name:'잘난고딕',channel:'JalnanGothic',title:'Jalnan2',caption:'JalnanGothic'},
+  ];
+  function fontSetFamily(bind){
+    const set=FONT_SETS.find(f=>f.id===fontSet);if(!set)return '';
+    return bind==='channel'?set.channel:bind==='caption'?set.caption:['hook1','hook2','bodyTitle'].includes(bind)?set.title:'';
+  }
   const BODY_CAPTION_MOTIONS={
     rise:{label:'스윽 올라오기',frames:[{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}]},
     grow:{label:'천천히 확대',origin:true,frames:[{transform:'scale(.84)'},{transform:'scale(1)'}]},
@@ -512,8 +552,9 @@
     const fontPx=ln.font_size?ln.font_size*scale:ln.h*scale*1.05;
     // 기본 외곽선/그림자는 제거하고 색 대비 부족 시에만 아래에서 얇게 보정한다.
     const stroke=0,shadowY=0;
-    const family=ln.font_family||frame.font_family||'TmonMonsori';
-    const weight=ln.font_weight||frame.font_weight||400;
+    const pickedFont=fontSetFamily(bind);
+    const family=pickedFont||ln.font_family||frame.font_family||'TmonMonsori';
+    const weight=pickedFont?400:(ln.font_weight||frame.font_weight||400);   // 세트 폰트는 한 굵기뿐 — 가짜 볼드 방지
     const letterPx=ln.letter_spacing!=null?ln.letter_spacing*scale:Math.max(-1.5,-.035*fontPx);
     const manualScale=textScale(bind),scaledFont=Math.max(9,fontPx*manualScale);
     const topOffset=(bind==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(bind);
@@ -985,12 +1026,12 @@
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;renderEdit();syncHookMotionUI();
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;renderEdit();syncHookMotionUI();
       }
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
@@ -999,7 +1040,7 @@
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
         modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
