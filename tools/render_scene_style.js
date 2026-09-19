@@ -18,7 +18,7 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
       const CAMERA=['zoom-punch','push-in','shake'],isCamera=CAMERA.includes(request.snapshot.hookMotion);
       const duration=(request.snapshot.hookMotion&&!isCamera)||request.snapshot.hookBandMotion||request.snapshot.hookBandRise?await page.evaluate(()=>window.sceneStyle.motionAt(100000)):0;   // 흰 띠 스윽은 줌 펀치와 겹쳐도 프레임별로 찍는다
       // 고정형 자막 등장(0.3초): 훅뿐 아니라 자막이 바뀌는 모든 장면의 시작을 프레임별로 찍는다.
-      const enter=request.snapshot.mode==='continuous'&&request.snapshot.hookBandMotion?await page.evaluate(()=>window.sceneStyle.captionEnterAt?.(100000)||0):0;
+      const enter=(request.snapshot.mode==='continuous'&&request.snapshot.hookBandMotion)||request.snapshot.bodyCaptionMotion?await page.evaluate(()=>window.sceneStyle.captionEnterAt?.(100000)||0):0;
       const moving=await page.evaluate(()=>{const shape=window.sceneDecorations?.motionAt(0),brand=window.sceneBranding?.motionAt(0);return shape||brand||false});
       await page.screenshot({path:path.join(request.output,file),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
       const scene=request.context.scenes[index],first=Math.round(scene.start*30),end=Math.round(scene.end*30);
