@@ -401,7 +401,8 @@
     const motion=captionMotionNow();if(!motion)return 0;
     const text=layer.querySelector('.precision-text[data-edit-bind="caption"]'),mask=layer.querySelector('.caption-mask');
     if(!text||text.hidden||!text.textContent.trim())return 0;
-    const els=[text,mask].filter(Boolean);els.forEach(el=>el.getAnimations().forEach(a=>a.cancel()));
+    [text,mask].filter(Boolean).forEach(el=>el.getAnimations().forEach(a=>a.cancel()));const els=[text];   // 09-19: 상자는 두고 글자만 움직인다 — 상자가 움직이면 뒤 검은 칸이 드러났다
+    
     if(!seeking&&(qaMode||matchMedia('(prefers-reduced-motion: reduce)').matches))return 0;
     const T=text.getBoundingClientRect(),cx=T.left+T.width/2,cy=T.top+T.height/2,ms=motion.ms||CAPTION_ENTER_MS;
     els.forEach(el=>{
