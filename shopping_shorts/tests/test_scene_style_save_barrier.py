@@ -21,6 +21,21 @@ def test_debounced_scene_saves_capture_target_and_values_immediately():
     assert "seen=new Set()" in zoom  # flattened cuts send one request per real beat
 
 
+def test_scene_zoom_defaults_to_current_scene_only():
+    """확대는 사용자가 직접 전체 적용을 켠 경우에만 모든 장면으로 퍼진다."""
+    checkbox = HTML.split('id="zoomAll"', 1)[1].split(">", 1)[0]
+    assert "checked" not in checkbox
+
+    predicate = HTML.split("function zoomAllOn(){", 1)[1].split("}", 1)[0]
+    assert "return !!(el && el.checked)" in predicate
+
+    snapshot = HTML.split("function _zoomSaveSnapshot(){", 1)[1].split(
+        "async function _zoomSaveAll", 1
+    )[0]
+    assert "zoomAllOn()&&list.length" in snapshot
+    assert "[list[BEAT_IDX]]" in snapshot
+
+
 def test_final_render_waits_for_every_scene_style_save_and_fails_closed():
     render = HTML.split("async function renderFinal(){", 1)[1].split("async function pollFinal", 1)[0]
     assert "await flushSceneStyleSaves()" in render
