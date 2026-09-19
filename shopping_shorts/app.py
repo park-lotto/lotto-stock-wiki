@@ -17297,7 +17297,7 @@ def _extract_as_source_item(store, shortcode):
     }
 
 
-def _load_work_sources(work_id, cid):
+def _load_work_sources(work_id, cid, dropped=None):
     """AI PICK용 소스 목록. '영상제작에 담긴(handoff)' 영상 전부 — 도서관에 있으면 그 행을,
     backbone/aipick이 기대하는 얇은 필드로 변환한다.
     ⚠️ views(조회수)는 이 시스템 어디에도 저장되지 않는다(script_wiki 스키마 확인,
@@ -17406,11 +17406,23 @@ def _load_work_sources(work_id, cid):
     #   (2026-09-19 이연정님 사고: 틱톡 7개+받기 실패 인스타 1개. 인스타가 영원히 pending이라
     #   build_aipick이 hold=True로 메인 확정을 무한 보류 → 2단계에 영상이 안 넘어왔다).
     try:
-        _tried = store.autoload_attempts(pending_codes) if pending_codes else {}
+        _tried = store.autoload_status(pending_codes) if pending_codes else {}
     except Exception:  # noqa: BLE001 — 조회 실패면 종전대로 기다린다
         _tried = {}
-    pending_codes = [sc for sc in pending_codes
-                     if int(_tried.get(sc) or 0) < _AUTOLOAD_MAX_ATTEMPTS]
+    _still = []
+    for sc in pending_codes:
+        st = _tried.get(sc) or {}
+        if int(st.get("attempts") or 0) >= _AUTOLOAD_MAX_ATTEMPTS:
+            # 화면이 "이 영상은 받지 못해 빼고 진행했어요"를 말할 수 있게 넘긴다(사장님 09-19
+            #   "고객이 어떻게 해야 하나 안내가 있어야지").
+            if dropped is not None:
+                e = entry_by_code.get(sc) or {}
+                dropped.append({"video_id": sc, "name": e.get("name") or "",
+                                "url": e.get("url") or "",
+                                "reason": _autoload_reason_ko(st.get("last_error") or "")})
+        else:
+            _still.append(sc)
+    pending_codes = _still
     for sc in pending_codes:
         e = entry_by_code.get(sc) or {}
         sources.append({
@@ -18334,9 +18346,12 @@ def api_produce_aipick(request: Request, work_id: str = "", forced: str = ""):
     """1단계 "AI가 미리 픽 추천" 조회 — 지금 담긴 소스를 pick_backbone/score_backbones/
     analyze_structure로 사전분석해 프론트 계약 하나로 묶어 반환(build_aipick)."""
     cid = _cid(request)
-    sources = _load_work_sources(work_id, cid)
+    dropped = []
+    sources = _load_work_sources(work_id, cid, dropped=dropped)
     meta = _build_source_meta(sources)
-    return build_aipick(sources, meta, forced=(forced or _forced_backbone(work_id, cid)) or None)
+    d = build_aipick(sources, meta, forced=(forced or _forced_backbone(work_id, cid)) or None)
+    d["dropped"] = dropped        # 받기를 포기한 영상 — 화면이 빼고 진행했다고 알린다
+    return d
 
 
 # ── 담긴 영상 자동 대본적재(2026-07-26) ─────────────────────────────────
