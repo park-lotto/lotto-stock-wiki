@@ -231,13 +231,14 @@
     return bind==='channel'?set.channel:bind==='caption'?set.caption:['hook1','hook2','bodyTitle'].includes(bind)?set.title:'';
   }
   const BODY_CAPTION_MOTIONS={
-    rise:{label:'스윽 올라오기',frames:[{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}]},
-    grow:{label:'천천히 확대',origin:true,frames:[{transform:'scale(.84)'},{transform:'scale(1)'}]},
-    pop:{label:'톡 튀어나오기',origin:true,ms:360,frames:[{opacity:0,transform:'scale(.55)'},{opacity:1,transform:'scale(1.08)',offset:.7},{transform:'scale(1)'}]},
-    slide:{label:'옆에서 밀려오기',frames:[{opacity:0,transform:'translateX(-40px)'},{opacity:1,transform:'translateX(0)'}]},
-    drop:{label:'위에서 떨어지기',ms:360,frames:[{opacity:0,transform:'translateY(-22px)'},{opacity:1,transform:'translateY(3px)',offset:.75},{transform:'translateY(0)'}]},
-    fade:{label:'서서히 나타나기',frames:[{opacity:0},{opacity:1}]},
-    wide:{label:'옆으로 펼치기',origin:true,frames:[{opacity:0,transform:'scaleX(.3)'},{opacity:1,transform:'scaleX(1)'}]},
+    // 09-19 사장님 '느낌이 다 비슷하다' → 이동 거리·시간·튕김을 모션마다 확실히 다르게(예전: 14px·0.3초로 거의 같았다)
+    rise:{label:'스윽 올라오기',ms:380,easing:'cubic-bezier(.16,1,.3,1)',frames:[{opacity:0,transform:'translateY(70px)'},{opacity:1,transform:'translateY(0)'}]},
+    grow:{label:'천천히 확대',origin:true,ms:650,easing:'cubic-bezier(.25,.8,.35,1)',frames:[{opacity:.2,transform:'scale(.45)'},{opacity:1,transform:'scale(1)'}]},
+    pop:{label:'톡 튀어나오기',origin:true,ms:480,easing:'linear',frames:[{opacity:0,transform:'scale(0)'},{opacity:1,transform:'scale(1.3)',offset:.45},{transform:'scale(.92)',offset:.7},{transform:'scale(1.04)',offset:.87},{transform:'scale(1)'}]},
+    slide:{label:'옆에서 밀려오기',ms:450,easing:'cubic-bezier(.2,.9,.3,1)',frames:[{opacity:0,transform:'translateX(-320px)'},{opacity:1,transform:'translateX(18px)',offset:.72},{transform:'translateX(0)'}]},
+    drop:{label:'위에서 떨어지기',ms:560,easing:'linear',frames:[{opacity:0,transform:'translateY(-160px)'},{opacity:1,transform:'translateY(0)',offset:.55},{transform:'translateY(-26px)',offset:.72},{transform:'translateY(0)',offset:.86},{transform:'translateY(-6px)',offset:.93},{transform:'translateY(0)'}]},
+    fade:{label:'서서히 나타나기',ms:700,easing:'ease-out',frames:[{opacity:0,filter:'blur(10px)'},{opacity:1,filter:'blur(0)'}]},
+    wide:{label:'옆으로 펼치기',origin:true,ms:420,easing:'cubic-bezier(.2,.9,.3,1)',frames:[{opacity:0,transform:'scaleX(0)'},{opacity:1,transform:'scaleX(1.12)',offset:.7},{transform:'scaleX(1)'}]},
   };
   const bodyMotionPanel=document.createElement('section');
   bodyMotionPanel.className='hook-motion body-motion';
@@ -407,7 +408,7 @@
     const T=text.getBoundingClientRect(),cx=T.left+T.width/2,cy=T.top+T.height/2,ms=motion.ms||CAPTION_ENTER_MS;
     els.forEach(el=>{
       if(motion.origin){const r=el.getBoundingClientRect();el.style.transformOrigin=`${cx-r.left}px ${cy-r.top}px`;}
-      const animation=el.animate(motion.frames,{duration:ms,easing:'cubic-bezier(.2,.8,.3,1)',fill:'both'});
+      const animation=el.animate(motion.frames,{duration:ms,easing:motion.easing||'cubic-bezier(.2,.8,.3,1)',fill:'both'});
       if(seeking){animation.pause();animation.currentTime=options.time;}else animation.finished.then(()=>animation.cancel()).catch(()=>{});
     });
     return ms;
