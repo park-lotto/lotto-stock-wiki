@@ -477,3 +477,9 @@
 - 낮 배포는 `touch /home/ubuntu/DEPLOY_NOW` 후 `sudo systemctl restart shopping-shorts`(서버 3.35.251.172, 키 crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem).
 - 라이브 편집기 curl은 401(로그인) → 크롬(로그인된 창)에서 JS로 확인.
 - 로컬 8767 서버는 옛것(v67)일 수 있음 — 8771을 쓸 것.
+
+## 2026-09-19 — 효과 탭 카드 / 본문 모션, 라이브(v94) 확인
+- 효과 탭도 접는 카드 4개(워터마크·광고 / 화면 확대·강조 / 가림막 / 스티커·도형·배지), 초기화·전장면 적용은 카드 밖 아래. precision20-ui.js 끝 IIFE, 카드 모양은 .text-group 재사용.
+- 문구 탭 '훅 모션 효과'→'훅 모션'. 본문 장면에서만 '본문 모션' 카드: 자막 등장 7종(BODY_CAPTION_MOTIONS 한 곳). snapshot.bodyCaptionMotion, 서버 허용값 scene_style.py(짝), 렌더 render_scene_style.js enter 조건에 추가. 고정형은 본문 모션 없으면 기존 흰 띠 줄 값 유지.
+- 실측: 로컬 3초 MP4에서 '옆에서 밀려오기' 1.03/1.13/1.5초 프레임으로 자막 이동 확인. 라이브 v94 편집기에서 카드·본문 모션 동작 확인. 검사 5종 통과, 게이트 기준선 18 유지.
+- ⏭ 남은 정리 요청(사장님 09-19): 자막 모양은 전장면 공통·위치만 이 장면/모든 장면 선택 / 자막 카드 안 소단락 정리 / 본문 맨 위 빠른 조절 / 훅 자막 제거 범위 확인. 라이브 고객 영상 최종 MP4는 여전히 미확인.
