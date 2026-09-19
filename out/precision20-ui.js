@@ -1058,3 +1058,40 @@
     panel.addEventListener('input',refresh);};
   if(document.readyState==='complete')setTimeout(start,0);else addEventListener('load',()=>setTimeout(start,0));
 })();
+
+// 효과 탭 단락 접기(2026-09-19 사장님): 문구 탭과 같은 한 줄 카드로 기본 접는다.
+//   워터마크 · 광고 / 화면 확대 · 강조 / 가림막 / 스티커 · 도형 · 배지. 초기화·다른 장면 적용 버튼은 카드 밖 맨 아래.
+//   칸은 옮기기만 한다 — connect·decorations·labels는 참조(변수)나 하위 선택자로 칸을 찾으므로 위치가 바뀌어도 돈다.
+//   카드 모양은 위 문구 탭의 .text-group 스타일을 그대로 쓴다(한 곳에서 정한다).
+(()=>{
+  // 효과 패널의 기존 details·section 규칙이 카드에 여백을 더해 문구 탭 카드와 줄이 어긋났다(실측 11~12px) → 0으로
+  const style=document.createElement('style');
+  style.textContent='.scene-effects-panel .text-group{padding:0!important;margin:0 0 8px!important}';
+  document.head.append(style);
+  function card(details,key,title){
+    details.classList.add('text-group');details.dataset.group=key;details.open=false;
+    let summary=details.querySelector(':scope > summary');if(!summary){summary=document.createElement('summary');details.prepend(summary);}
+    summary.innerHTML=`<b>${title}</b><small></small>`;
+    const body=document.createElement('div');body.className='text-group-body';
+    [...details.children].filter(c=>c!==summary).forEach(c=>body.append(c));details.append(body);return details;
+  }
+  function hint(box){
+    const key=box.dataset.group;
+    if(key==='brand')return [...box.querySelectorAll('[data-brand]')].filter(r=>r.querySelector('[data-brand-field="on"]')?.checked).map(r=>r.dataset.brand==='ad'?'광고':'워터마크').join(' · ');
+    if(key==='zoom'){const z=box.querySelector('[data-effect-value="zoom"]')?.textContent||'',m=box.querySelector('[data-effect-mode].active')?.textContent||'';return [z&&z!=='100%'?`확대 ${z}`:'',m&&m!=='없음'?m:''].filter(Boolean).join(' · ');}
+    return '';
+  }
+  function refresh(panel){panel.querySelectorAll(':scope .text-group[data-group]').forEach(box=>{const s=box.querySelector(':scope > summary small');if(!s)return;const t=hint(box);if(s.textContent!==t)s.textContent=t;});}
+  function build(){
+    const panel=document.querySelector('.scene-effects-panel');if(!panel||panel.dataset.grouped)return;
+    const brand=panel.querySelector(':scope > .scene-label-settings');if(brand)card(brand,'brand','워터마크 · 광고');
+    const zoomNodes=[panel.querySelector(':scope > p'),panel.querySelector(':scope > label:has([data-effect="zoom"])'),panel.querySelector(':scope > .scene-effect-choices'),panel.querySelector(':scope > [data-highlight-controls]')].filter(Boolean);
+    if(zoomNodes.length){const box=document.createElement('details');zoomNodes[0].before(box);zoomNodes.forEach(n=>box.append(n));card(box,'zoom','화면 확대 · 강조');}
+    const deco=panel.querySelector(':scope > .scene-decoration-panel');
+    if(deco)deco.querySelectorAll(':scope > details').forEach((d,i)=>{const t=d.querySelector(':scope > summary')?.textContent.trim()||'';card(d,i?'decor':'mask',t||(i?'스티커 · 도형 · 배지':'가림막'));});
+    panel.querySelectorAll(':scope > .scene-effects-reset').forEach(b=>panel.append(b));
+    panel.dataset.grouped='1';refresh(panel);
+    ['input','change','click'].forEach(ev=>panel.addEventListener(ev,()=>setTimeout(()=>refresh(panel),0)));
+  }
+  if(document.readyState==='complete')setTimeout(build,0);else addEventListener('load',()=>setTimeout(build,0));
+})();

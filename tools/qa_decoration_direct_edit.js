@@ -7,6 +7,8 @@ const url = process.argv[2] || 'http://127.0.0.1:8771/out/scene-style-ui-showcas
   const errors = []; p.on('pageerror', e => errors.push(e.message));
   await p.goto(url, {waitUntil: 'networkidle0'});
   await p.evaluate(() => [...document.querySelectorAll('button')].find(x => x.textContent.trim() === '효과')?.click());
+  // 09-19 효과 탭이 접힌 카드가 됨 → 사람처럼 카드 제목을 눌러 연다
+  await p.evaluate(() => document.querySelectorAll('.scene-effects-panel .text-group > summary').forEach(s => { if (!s.parentElement.open) s.click(); }));
   await new Promise(r => setTimeout(r, 200));
   const res = {};
   // 가림막 추가 → 편집 칸 위치·회전 범위
