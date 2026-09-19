@@ -215,6 +215,16 @@
     {id:'binggrae',name:'부드러운 빙그레',channel:'BinggraeBold',title:'BinggraeBold',caption:'BMJUA'},
     {id:'ganpan',name:'간판체',channel:'KCCGanpan',title:'KCCGanpan',caption:'GmarketSansBold'},
     {id:'jalnangothic',name:'잘난고딕',channel:'JalnanGothic',title:'Jalnan2',caption:'JalnanGothic'},
+    {id:'bagel',name:'베이글 팝',channel:'BagelFatOne',title:'BagelFatOne',caption:'BMJUA'},
+    {id:'dongle',name:'동글 귀여움',channel:'DongleBold',title:'DongleBold',caption:'GmarketSansBold'},
+    {id:'kkubulim',name:'꾸불림 재미',channel:'Kkubulim',title:'Kkubulim',caption:'BMJUA'},
+    {id:'myeongjo',name:'명조 고급',channel:'NanumMyeongjoEB',title:'NanumMyeongjoEB',caption:'RIDIBatang'},
+    {id:'ridi',name:'리디 감성',channel:'RIDIBatang',title:'RIDIBatang',caption:'Pretendard'},
+    {id:'chalk',name:'분필 칠판',channel:'HakgyoansimBunpil',title:'HakgyoansimBunpil',caption:'NotoSansKRBold'},
+    {id:'brush',name:'붓글씨',channel:'NanumBrushScript',title:'NanumBrushScript',caption:'GmarketSansBold'},
+    {id:'gaegu',name:'개구 손글씨',channel:'GaeguBold',title:'GaeguBold',caption:'GaeguBold'},
+    {id:'danjung',name:'단정 카페',channel:'Cafe24Danjunghae',title:'Cafe24Danjunghae',caption:'Pretendard'},
+    {id:'suit',name:'SUIT 모던',channel:'SUITBold',title:'SUITBold',caption:'SUITBold'},
   ];
   function fontSetFamily(bind){
     const set=FONT_SETS.find(f=>f.id===fontSet);if(!set)return '';
@@ -1003,7 +1013,7 @@
     markDirty('caption');renderEdit();
   });
   for(const type of ['pointerup','pointercancel','lostpointercapture'])preview.addEventListener(type,()=>{if(captionDrag)applyCaptionMoveScope();captionDrag=null;});
-  const premiumFaces=['SBAggroB','YgJalnan','JalnanGothic','Jalnan2','GothicA1Black','GmarketSansBold','GasoekOne','Cafe24Ohsquare','KCCGanpan','BinggraeBold','BlackHanSans','Pretendard'];
+  const premiumFaces=['SBAggroB','YgJalnan','JalnanGothic','Jalnan2','GothicA1Black','GmarketSansBold','GasoekOne','Cafe24Ohsquare','KCCGanpan','BinggraeBold','BlackHanSans','Pretendard','BMDOHYEON','BMJUA','BagelFatOne','DongleBold','Kkubulim','NanumMyeongjoEB','RIDIBatang','HakgyoansimBunpil','NanumBrushScript','GaeguBold','Cafe24Danjunghae','SUITBold','NotoSansKRBold'];
   Promise.all(premiumFaces.map(family=>document.fonts?.load?.(`400 32px "${family}"`))).then(()=>{fittedText.clear();renderEdit()});
   document.fonts?.addEventListener?.('loadingdone',()=>{if(!window.sceneStyleExporting){fittedText.clear();renderEdit()}});
   saveButton&&(saveButton.textContent='현재 설정 저장');
