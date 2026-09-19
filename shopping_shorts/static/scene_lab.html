@@ -1245,6 +1245,10 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 var RENDERED_SIG = '';
 // 렌더가 도는 중인 편성(출발 시점에 찍고, 영상이 걸릴 때 RENDERED_SIG로 확정).
 var PENDING_SIG = '';
+// 서버 편성 판본. 오래 열린 탭은 이 값이 달라져 저장이 거절된다.
+var SCENE_REV = '';
+// render()는 화면 그리기에도 쓰인다. 부팅·동일 상태 재그리기는 저장 동작이 아니어야 한다.
+var _booting = true, _lastPersistedWork = null;
 
 function pvTab(which){
   var host = document.getElementById('playerhost');
@@ -1295,7 +1299,13 @@ async function _askRender(){
   //   여기서 기다리면 저장이 반드시 앞선다. 실패해도 렌더는 진행한다 — 막으면 더 나쁘다.
   body.innerHTML = '<div class="cfLoad">⏳ 편집 내용 저장 중…</div>';
   try{ if (typeof flushApply === 'function') await flushApply(); }
-  catch(e){ console.warn('편집 반영 실패(렌더는 계속)', e); }
+  catch(e){
+    if (_sceneConflict){
+      body.innerHTML = '<div class="cfLoad">⚠️ 다른 화면의 최신 편성을 보호했습니다.<br>새로고침한 뒤 다시 만들어 주세요.</div>';
+      return;
+    }
+    console.warn('편집 반영 실패(렌더는 계속)', e);
+  }
   body.innerHTML = '';                               // startPreview가 자기 로더를 그린다
   // ★렌더에 들어가는 편성을 **출발 시점에** 찍는다(2026-09-03). 완료 시점에 찍으면,
   //   렌더가 도는 20초 사이에 편집한 것까지 "이 영상에 들어간 것"으로 잘못 기록돼
@@ -3517,7 +3527,12 @@ function saveWork(){
   }
   if (cur) _undoCur = cur;
   undoBtnSync();
-  // 저장본에는 at을 붙인다 — serverEditIsNewer가 이 시각을 본다.
+  // ★읽기와 쓰기를 분리한다. 화면을 열 때의 복원·phash/자막 배경 갱신도 render()를
+  //   부르지만 사람의 편집은 아니다. 예전에는 이 자리에서 무조건 POST해, 재렌더 뒤
+  //   MIX에 돌아오기만 해도 브라우저의 옛 배치가 서버 최신본을 덮었다(박세현님 실측).
+  if (_booting || !cur || cur === _lastPersistedWork) return;
+  _lastPersistedWork = cur;
+  // 저장본에는 복구·진단용 시각을 붙인다(서버 충돌 판정은 내용 판본을 쓴다).
   try{ if (snap) localStorage.setItem(SAVE_KEY, JSON.stringify(Object.assign({}, snap, {at: new Date().toISOString()}))); }catch(e){}
   const el = document.getElementById('savedmsg');
   if (el) el.textContent = '💾 내 편집 저장됨 (새로고침해도 남습니다)';
@@ -3530,8 +3545,9 @@ function saveWork(){
 //   '칼로 빵 조각내는 손'이었다. 사용자는 화면대로 나올 줄 알고 넘어간다 = 조용한 어긋남.
 //   편집이 멈춘 뒤 1.2초에 한 번만 보낸다(끌어놓는 중에 매번 SSH를 때리면 느려진다).
 let _autoApplyTimer = null, _autoApplyBusy = false, _autoApplyAgain = false;
+let _sceneConflict = false;
 function autoApply(){
-  if (!SL.server) return;                 // 로컬 실험실은 얹을 서버가 없다
+  if (!SL.server || _sceneConflict) return; // 충돌 뒤 자동 재시도는 최신본을 덮을 수 있다
   clearTimeout(_autoApplyTimer);
   _autoApplyTimer = setTimeout(() => { applyServer({auto: true}); }, 1200);
 }
@@ -3543,26 +3559,16 @@ function autoApply(){
 //    그래서 없애지 않고 "지금 비운다"를 따로 만든다.)
 async function flushApply(){
   if (!SL.server) return;
+  if (_sceneConflict) throw new Error('scene_lab_revision_conflict');
   clearTimeout(_autoApplyTimer); _autoApplyTimer = null;
   await applyServer({auto: true});        // 보내는 중이면 applyServer가 알아서 한 번 더 보낸다
+  if (_sceneConflict) throw new Error('scene_lab_revision_conflict');
   // 보내는 중이었다면 _autoApplyAgain으로 재전송이 예약된다 — 그것까지 끝나길 짧게 기다린다.
   for (let i = 0; i < 40 && (_autoApplyBusy || _autoApplyAgain); i++){
     await new Promise(r => setTimeout(r, 100));
   }
 }
 window.flushApply = flushApply;
-// ★내 저장본 vs 서버 편성 — **새 쪽**을 쓴다(2026-08-21 버그리뷰 P1).
-//   종전엔 localStorage가 무조건 이겼다. 그래서 화면에 보이는 편성과 실제로 렌더되는
-//   편성이 다른 상태가 계속 유지됐다(실측 job 14e75ac6024a: 화면은 2번 칸 '장면 없음'인데
-//   서버엔 3.2초짜리가 남아 있었다 / 다른 잡은 화면 12.1초 vs 서버 7.0초).
-//   다른 PC·다른 브라우저에서 열면 편성이 다르게 보이던 것도 같은 뿌리다.
-//
-// ⚠️판정 기준을 mix_jobs.updated_at으로 하면 안 된다 — 음성 생성 같은 다른 이유로도
-//   움직여서 서버가 늘 새로워 보이고, 그러면 사장님이 방금 한 편집을 매번 버린다.
-//   그래서 서버가 **편성을 얹은 시각**(edit_plan.scene_lab.at)만 본다.
-// ⚠️여유 30초: 내 저장(saveWork) → 서버 반영(autoApply 1.2초 뒤)이라 서버 시각이 내
-//   저장본보다 늘 조금 늦다. 여유가 없으면 **내가 방금 한 편집을 내가 버린다.**
-//   다른 기기에서 고친 경우는 보통 몇 분 이상 벌어지므로 30초로 충분히 갈린다.
 // ✋ FIXLEN 복원은 이 함수 하나로(복원 경로가 loadWork·loadSaved·서버편성 셋이다 —
 //    ★저장가드 교훈: 하이드레이션 함수 하나, 값이 없으면 **비운다**(캐리오버 방지)).
 // 얼린 컷 복원 — 옛 저장본엔 없다 → 비운다(끈 칸은 planClips가 처음 볼 때 지금 화면을 얼린다)
@@ -3599,16 +3605,6 @@ function fixlenFromBeats(){
     for (const [sid, v] of Object.entries(b.fixed_lens || {})) out[i + ':' + sid] = v;
   });
   return out;
-}
-function serverEditIsNewer(){
-  const sAt = DATA && DATA.scene_lab_at;
-  if (!sAt) return false;                       // 서버에 얹힌 편성이 없다 → 내 것이 맞다
-  let lAt = null;
-  try{ lAt = (JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') || {}).at; }catch(e){}
-  if (!lAt) return false;
-  const sv = Date.parse(sAt), lo = Date.parse(lAt);
-  if (!sv || !lo) return false;                 // 시각을 못 읽으면 종전대로(내 것 우선)
-  return (sv - lo) > 30000;
 }
 function loadWork(){
   try{
@@ -4005,6 +4001,7 @@ function _editSig(){ return JSON.stringify(_editPayload()); }
 async function applyServer(opt){
   const auto = !!(opt && opt.auto);
   // 보내는 중에 또 고쳤으면 끝나고 한 번 더 보낸다(마지막 상태가 반드시 서버에 남게).
+  if (_sceneConflict) return;
   if (_autoApplyBusy){ _autoApplyAgain = true; return; }
   _autoApplyBusy = true;
   const msg = document.getElementById('savedmsg');
@@ -4012,9 +4009,10 @@ async function applyServer(opt){
   if (msg) msg.textContent = auto ? '💾 저장 중…' : '📤 서버에 반영하는 중… (SSH, 몇 초)';
   try{
     const r = await fetch(SL.applyUrl(), {method:'POST', headers:{'Content-Type':'application/json'},
-                                     body: JSON.stringify({payload})});
+                                     body: JSON.stringify({payload, base_revision: SCENE_REV})});
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || '실패');
+    if (j.revision) SCENE_REV = j.revision;
     // ★편성이 바뀌었으면 **이미 만든 완성본은 낡았다** — 비워서 다음 탭 클릭에 새로 만들게 한다
     //   (2026-08-25 고객 제보: "소재를 빼고 넣은 뒤 완성본 만들기를 눌렀는데 처음 것이 그대로").
     //   원인은 _askRender가 #confirmBody가 비었을 때만 렌더하는데, 편집 저장 경로에서
@@ -4039,7 +4037,10 @@ async function applyServer(opt){
   }catch(e){
     // ★자동이라고 조용히 넘기지 않는다 — 안 올라간 걸 모르면 화면과 렌더가 어긋난다.
     if (msg) msg.textContent = '⚠ 저장 실패: ' + (e.message || e) + ' — 잠시 뒤 다시 시도돼요';
-    if (auto) setTimeout(autoApply, 5000);      // 네트워크 일시장애면 곧 성공한다
+    if (/다른 화면에서 편성이 바뀌었습니다/.test(e.message || '')){
+      _sceneConflict = true;
+      saylo('⚠ 다른 화면의 최신 편성을 보호했습니다. 이 화면을 새로고침한 뒤 다시 고쳐주세요.');
+    } else if (auto) setTimeout(autoApply, 5000); // 네트워크 일시장애면 곧 성공한다
   }finally{
     _autoApplyBusy = false;
     if (_autoApplyAgain){ _autoApplyAgain = false; autoApply(); }
@@ -4051,9 +4052,10 @@ async function revertServer(){
   if (msg) msg.textContent = '↩ 반영 취소하는 중…';
   try{
     const r = await fetch(SL.applyUrl(), {method:'POST', headers:{'Content-Type':'application/json'},
-                                     body: JSON.stringify({revert: true})});
+                                     body: JSON.stringify({revert: true, base_revision: SCENE_REV})});
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || '실패');
+    if (j.revision) SCENE_REV = j.revision;
     if (msg) msg.textContent = '↩ 반영 취소됨 — 원래 편집안(AI 배치)으로 되돌렸습니다';
   }catch(e){
     if (msg) msg.textContent = '⚠ 취소 실패: ' + (e.message || e);
@@ -4419,6 +4421,7 @@ async function boot(){
     if (!d || !d.ok) return bootFail((d && d.error) || '데이터를 불러오지 못했습니다');
     DATA = d.data;
   }
+  SCENE_REV = DATA.scene_lab_revision || '';
   normalizeData();
   SAVE_KEY = 'sceneLab:' + (DATA.job_id || 'job');
   if (DATA.picks && (DATA.picks.lists || []).length){
@@ -4428,10 +4431,11 @@ async function boot(){
   }
   // ★저장된 내 편집이 있으면 그것부터 — 없을 때만 기본 배치로 연다.
   warmVideos();
-  if (serverEditIsNewer()){
-    // 다른 곳에서 더 최근에 고쳤다 — 내 옛 저장본을 버리고 서버 편성으로 연다.
+  if (hasServerEdit()){
+    // 서버 편성이 있으면 무조건 그것이 기준이다. 30초 시각 추정으로 로컬 저장본을
+    // 이기게 두면 렌더 직후 재진입처럼 간격이 짧을 때 옛 로컬이 최신 서버를 덮는다.
     clearWork();
-    restoreServer('🔄 다른 곳에서 편집한 내용이 더 최신이라 서버 편성을 불러왔어요');
+    restoreServer('🔄 서버에 저장된 최신 편성을 불러왔어요');
   }
   else if (loadWork()) render();
   else if (loadSaved()) render();                       // 다른 PC에서 넘어온 조립
@@ -4448,6 +4452,9 @@ async function boot(){
   loadSfxList().then(l => { if (l && l.length) renderBand(); });
   autoOpenRoll();                  // 필름 자리를 켠 채로 연다
   autoMakeTts();
+  // 여기까지는 읽기/복원이다. 이후 사람 조작으로 상태가 달라질 때만 저장한다.
+  _lastPersistedWork = JSON.stringify(snapWork());
+  _booting = false;
   undoMark();                      // ↩ 되돌리기 기준점 — 이걸 안 박으면 **첫 편집**이 되돌려지지 않는다
   stampConfirmSigIfMissing();      // 복원된 옛 미리보기에 지금 편성 지문을 — 편성이 다 실린 뒤라야 계산된다
 }
