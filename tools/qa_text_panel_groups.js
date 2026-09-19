@@ -21,7 +21,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8771/out/scene-style-ui-showcas
   const lag = await p.evaluate(() => new Promise(res => { const t0 = performance.now(); setTimeout(() => res(Math.round(performance.now() - t0 - 300)), 300); }));
   console.log(JSON.stringify({hook, body, typed, lag, errors}, null, 1));
   const titles = hook.cards.map(c => c.t).join();
-  const ok = hook.note === 'none' && titles === '훅 모션 효과,빠른 조절,제목,자막' && hook.cards.every(c => !c.open)
+  const ok = hook.note === 'none' && titles === '훅 모션,본문 모션,빠른 조절,제목,자막' && hook.cards.find(c => c.t === '본문 모션').hidden === true && body.cards.find(c => c.t === '본문 모션').hidden === false && hook.cards.every(c => !c.open)
     && hook.cards.find(c => c.t === '자막').hidden === true && body.cards.find(c => c.t === '자막').hidden === false
     && !hook.loose.length && !body.loose.length && typed && lag < 150 && !errors.length;
   console.log(ok ? '전부 통과' : '실패'); await b.close(); process.exit(ok ? 0 : 1);
