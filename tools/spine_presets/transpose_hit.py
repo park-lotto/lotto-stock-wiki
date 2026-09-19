@@ -30,18 +30,31 @@ def _bones(tpl):
     return [re.sub(r"\s", "", b) for b in re.split(r"\{[^{}]+\}", tpl) if b.strip()]
 
 
+AUTH = {"개발자", "개발진", "본사", "제조사", "천재", "천재들", "디자이너", "직원", "직원들", "사장님", "사장님들", "업계", "의사", "약사",
+        "간호사", "셰프", "장인", "고수", "고수들", "주부", "주부들", "엄마들", "더쿠들", "과학자", "엔지니어"}
+LOOP_END = re.compile(r"(근데|그런데|근데 진짜|하지만|는데|은데|하는|쓰이는|로도|해서|이게)\s*$")
+
+
+def _orig_vals(hook_cell):
+    out = {}
+    for v in hook_cell.get("values") or []:
+        out.setdefault((v.get("slot") or "").strip("{} "), []).append(v.get("value") or "")
+    return out
+
+
 def hook_exact(hook_cell, new_text, vals):
     """훅은 원문 글자 그대로 두고 빈칸만 바꾼다. 모델 결과가 뼈 글자를 전부 지키면 그대로,
     아니면 코드가 템플릿 빈칸을 채운다. 채울 값이 없으면 모델 결과(검사에서 '훅 글자 바뀜'으로 걸린다)."""
     tpl = hook_cell.get("template") or ""
     if hook_cell.get("why_bad") or not tpl:
         return new_text
-    flat = re.sub(r"\s", "", new_text)
-    if all(b in flat for b in _bones(tpl)):
-        return new_text
+    orig = _orig_vals(hook_cell)
     out = tpl
     for n in re.findall(r"\{([^{}]+)\}", tpl):
-        v = (vals or {}).get(n) or ""
+        o = (orig.get(n) or [""]).pop(0) if orig.get(n) else ""
+        # ★'개발자도 예상 못한'의 개발자는 제품 말이 아니라 권위어 — 제품 이름으로 바꾸면
+        #   '가스레인지 틈새도 예상 못한'이 된다(09-19 실측). 권위어는 원문 그대로 둔다.
+        v = o if o.strip() in AUTH else ((vals or {}).get(n) or "")
         if not v:
             return new_text
         out = out.replace("{%s}" % n, v, 1)
@@ -62,11 +75,14 @@ def transpose(hit, mat):
     cells = [c for c in hit["cells"] if c.get("original")]
     tpl = "\n".join("[%s] %s" % (c["role"], dedup(c["original"])) for c in cells)
     hook = _hook(hit)
+    loop = bool(cells) and bool(LOOP_END.search(dedup(cells[-1]["original"]).rstrip(" .!?")) and not re.search(r"[.!?요다]\s*$", cells[-1]["original"]))
+    loop_rule = ("- ★반복 재생 기법: 히트 대본의 마지막 칸은 문장을 끝맺지 않고 끊겨 첫 문장으로 이어진다. "
+                 "새 대본의 마지막 칸도 **똑같이 끊어서** 첫 문장(훅)으로 이어지게 하라.\n") if loop else ""
     hook_rule = ("- ★훅(첫 칸)은 이 틀의 글자를 **한 글자도 바꾸지 말고** {}빈칸만 바꿔라: %s\n" % hook["template"]) if hook else ""
     p = f"""아래 [히트 대본]은 조회수 {hit['views']:,}회가 나온 쇼핑 숏폼이다. 이걸 틀로 삼아 [새 제품]의 대본을 써라.
 
 규칙
-{hook_rule}- 칸 수와 순서를 똑같이. 칸 이름은 [히트 대본]의 한글 이름 그대로. 칸마다 히트 대본의 **말투·어미·연결어·문장 길이**를 최대한 그대로 살려라.
+{hook_rule}{loop_rule}- 칸 수와 순서를 똑같이. 칸 이름은 [히트 대본]의 한글 이름 그대로. 칸마다 히트 대본의 **말투·어미·연결어·문장 길이**를 최대한 그대로 살려라.
 - 제품 이야기(제품 이름·효능·동작·불편·숫자)는 **전부 [새 제품] 재료에 있는 것으로만** 바꿔라. 히트 대본의 원래 제품 이야기는 한 조각도 남기지 마라.
 - 인물·장소·반응 같은 이야기 장치는 새 제품에 자연스럽게 맞게 바꿔도 된다. 단, 대본 전체에서 인물은 한 사람으로 이어져야 한다.
 - 재료에 없는 숫자·출처·수상·판매량은 쓰지 마라. 같은 문장을 두 번 쓰지 마라.
@@ -95,8 +111,8 @@ def checks(hit, new, mat):
     nums = [n for n in re.findall(r"\d+(?:[.,]\d+)?", txt) if n not in mat]
     if nums:
         out.append("재료에 없는 숫자 %s" % nums)
-    leak = sorted({v["value"] for c in hit["cells"] for v in (c.get("values") or [])
-                   if (v.get("slot") or "").strip("{} ") not in STORY_WORDS and len(v.get("value") or "") >= 3
+    leak = sorted({v["value"] for c in hit["cells"] if c["role"] != "훅" for v in (c.get("values") or [])
+                   if (v.get("slot") or "").strip("{} ") not in STORY_WORDS and v["value"] not in AUTH and len(v.get("value") or "") >= 3
                    and v["value"] in txt and v["value"] not in mat})
     if leak:
         out.append("원래 제품 말 새어나옴 %s" % leak)
