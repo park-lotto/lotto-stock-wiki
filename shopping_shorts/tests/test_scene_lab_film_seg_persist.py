@@ -65,6 +65,7 @@ def _apply_film_cut(client, job_id="j1"):
     }})
     assert r.status_code == 200, r.text
     assert r.json().get("ok"), r.text
+    return r.json().get("revision")
 
 
 # ── ① 왕복: 담고 → 다시 열면 조각이 살아 있어야 한다 ────────────────────────
@@ -172,10 +173,10 @@ def test_film_seg_survives_apply_without_extra_segs(monkeypatch, tmp_path):
     """★자동저장이 조각을 지우면 안 된다 — 서버 저장본으로 되살린다."""
     client, store = _client(monkeypatch, tmp_path)
     _seed(store)
-    _apply_film_cut(client)                      # ① 사람이 오려 담았다(EXTRA 함께 옴)
+    rev = _apply_film_cut(client)                # ① 사람이 오려 담았다(EXTRA 함께 옴)
 
     # ② 자동저장: 같은 편성을 **extra_segs 없이** 다시 보낸다(화면이 못 채운 경우)
-    r = client.post("/api/mix/scene_lab/j1/apply", json={"payload": {
+    r = client.post("/api/mix/scene_lab/j1/apply", json={"base_revision": rev, "payload": {
         "beats": [{"beat_idx": 0, "list": [FILM_ID], "stretch": False}],
     }})
     assert r.status_code == 200, r.text
@@ -195,9 +196,9 @@ def test_client_extra_segs_wins_over_saved(monkeypatch, tmp_path):
     """사람이 구간을 고쳐 보내면 **클라가 이긴다** — 저장본이 옛 값을 되살리면 안 된다."""
     client, store = _client(monkeypatch, tmp_path)
     _seed(store)
-    _apply_film_cut(client)                      # 7.2~9.8로 저장돼 있다
+    rev = _apply_film_cut(client)                # 7.2~9.8로 저장돼 있다
 
-    r = client.post("/api/mix/scene_lab/j1/apply", json={"payload": {
+    r = client.post("/api/mix/scene_lab/j1/apply", json={"base_revision": rev, "payload": {
         "beats": [{"beat_idx": 0, "list": [FILM_ID], "stretch": False}],
         "extra_segs": {FILM_ID: {"video_id": "s0", "start": 7.5, "end": 9.0,
                                  "label": "다시 오린 구간", "text": ""}},

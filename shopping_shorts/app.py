@@ -6093,8 +6093,9 @@ def api_mix_scene_lab_data(job_id: str):
         if _v and _b:
             src_brief[_v] = _b
     caps, tts_dur = _lab_captions(plan)
-    # ★편성이 서버에 얹힌 시각 — 화면이 "내 저장본과 서버 중 뭐가 최신인가"를 가른다.
+    # 편성이 서버에 얹힌 시각 — 기존 응답 계약과 이력 표시용. 충돌 판정은 아래 내용 지문이 한다.
     scene_lab_at = (plan.get("scene_lab") or {}).get("at")
+    scene_lab_revision = _scene_lab_revision(plan)
     # ★소재 종류(2026-08-17 사장님 "레시피 틀로 고정돼서 재료·반죽 준비 이런 게 들어왔다").
     #   실험실 팔레트 머리글이 요리 전용으로 하드코딩돼 있어, 젤펜 영상인데도
     #   '🥣 재료·반죽 준비 · 섞기·짜기'가 떴다(실측 job 202377f690d9: 소스 4개 전부 cat=기타).
@@ -6113,7 +6114,9 @@ def api_mix_scene_lab_data(job_id: str):
     return {"ok": True, "data": {
         "job_id": job_id,
         "category": category,
-        "scene_lab_at": scene_lab_at,      # 편성이 서버에 얹힌 시각(화면이 최신 판정에 쓴다)
+        "scene_lab_at": scene_lab_at,
+        # 열린 탭이 오래 들고 있던 전체 편성으로 최신 편성을 덮지 못하게 하는 판본 번호.
+        "scene_lab_revision": scene_lab_revision,
         "beats": plan.get("beats") or [],
         "urls": job.get("urls") or [],
         "src_brief": src_brief,
@@ -6389,12 +6392,8 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
         return JSONResponse(status_code=409,
                             content={"ok": False, "error": "생성·렌더 중에는 반영할 수 없어요"})
     plan = job["edit_plan"]
-    if body.get("revert"):
-        _edit_plan.revert_scene_lab(plan)
-        _save_render_inputs(store, job_id, edit_plan=plan)
-        return {"ok": True, "reverted": True}
     payload = body.get("payload") or {}
-    if not payload.get("beats"):
+    if not body.get("revert") and not payload.get("beats"):
         return JSONResponse(status_code=422, content={"ok": False, "error": "payload.beats 필요"})
     # ★자동저장이 계속 도는 자리다 — 편집안을 **잠금 안에서 다시 읽어** 고친다(_plan_lock 주석).
     #   위에서 읽은 job은 검사용이고, 실제로 고칠 판은 여기서 새로 뜬다. 안 그러면 그 사이에
@@ -6402,7 +6401,47 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
     with _plan_lock(job_id):
         job = store.get_mix_job(job_id) or job
         plan = job.get("edit_plan") or plan
+        conflict = _scene_lab_revision_conflict(plan, body.get("base_revision"))
+        if conflict:
+            return conflict
+        if body.get("revert"):
+            _edit_plan.revert_scene_lab(plan)
+            _save_render_inputs(store, job_id, edit_plan=plan)
+            return {"ok": True, "reverted": True,
+                    "revision": _scene_lab_revision(plan)}
         return _scene_lab_apply_locked(store, job_id, job, plan, payload)
+
+
+def _scene_lab_revision(plan):
+    """현재 장면 편성의 내용 지문. 저장 시각은 내용이 아니므로 제외한다."""
+    lab = (plan or {}).get("scene_lab") or {}
+    stable = {k: v for k, v in lab.items() if k != "at"}
+    raw = json.dumps(stable, ensure_ascii=False, sort_keys=True,
+                     separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()[:20]
+
+
+def _scene_lab_revision_conflict(plan, base_revision):
+    """오래 열린 화면의 통짜 저장을 거절한다(optimistic concurrency control).
+
+    예전 화면과 첫 저장의 호환을 위해 서버 편성이 아직 없을 때만 판본 없는 요청을
+    허용한다. 이미 편성이 있는데 판본이 없거나 다르면 새로고침 전까지 절대 덮지 않는다.
+    """
+    current = _scene_lab_revision(plan)
+    lab = (plan or {}).get("scene_lab") or {}
+    has_saved = bool(isinstance(lab, dict) and lab.get("beats"))
+    # 새 화면은 편성이 비어 있어도 GET에서 받은 빈 편성의 지문을 보낸다. 따라서 판본을
+    # 보낸 요청은 언제나 정확히 맞아야 한다. 판본 없는 구버전 화면만 첫 저장에 한해 허용.
+    conflict = (base_revision is not None and base_revision != current) \
+        or (has_saved and base_revision is None)
+    if conflict:
+        return JSONResponse(status_code=409, content={
+            "ok": False,
+            "error": "다른 화면에서 편성이 바뀌었습니다. 새로고침해 최신 편성을 불러온 뒤 다시 고쳐주세요.",
+            "code": "scene_lab_revision_conflict",
+            "revision": current,
+        })
+    return None
 
 
 def _scene_lab_apply_locked(store, job_id, job, plan, payload):
@@ -6418,7 +6457,8 @@ def _scene_lab_apply_locked(store, job_id, job, plan, payload):
         _swapped = store.add_scene_swaps(job_id, job.get("customer_id", 0), _rows)
     except Exception as _e:      # noqa: BLE001 — 기록 실패가 적용을 막으면 안 된다
         print(f"[scene_swaps] 기록 실패(무해): {_e!r}", file=sys.stderr)
-    return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0), "swapped": _swapped}
+    return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0),
+            "swapped": _swapped, "revision": _scene_lab_revision(plan)}
 
 
 @app.get("/api/mix/scene_lab/{job_id}/history")
