@@ -2923,12 +2923,11 @@
               <span>🖱 화면을 눌러서 확대</span>
             </label>
             <!-- ★모든 장면에 같은 배율 (2026-08-30 사장님 "해당 장면을 확대했으면 다른
-                 전체 장면도 같은 비율로 적용할지 말지 체크버튼"). 기본 켬 — 장면을 넘겨도
-                 배율이 유지되는 게 지금까지의 동작이고, 대개 그걸 원한다. 끄면 장면을
-                 넘길 때마다 100%로 돌아가 그 장면만 따로 확대해 볼 수 있다. -->
+                 전체 장면도 같은 비율로 적용할지 말지 체크버튼"). 기본 끔 — 선택한 장면만
+                 확대하는 것이 기본이고, 사용자가 직접 켰을 때만 전 장면에 같은 구도를 적용한다. -->
             <div class="zoomFoot">
               <label class="zoomAll" id="zoomAllWrap">
-                <input type="checkbox" id="zoomAll" checked onchange="zoomAllChanged()">
+                <input type="checkbox" id="zoomAll" onchange="zoomAllChanged()">
                 <span>모든 장면에 같은 배율</span>
               </label>
               <!-- ★자동 저장은 이미 되지만 **저장됐는지 눈에 보여야** 안심이 된다
@@ -8085,12 +8084,12 @@ function zoomSet(v){
 function zoomStep(d){ zoomSet(ZOOM + d*ZOOM_STEP); _zoomSaveSoon(); }
 function zoomReset(){ ZOOM=1; ZTX=0; ZTY=0; _zoomApply(); _zoomSaveSoon(); }
 // ★모든 장면에 같은 배율? (2026-08-30 사장님 "다른 전체 장면도 같은 비율로 적용할지 말지")
-//   켬(기본) = 장면을 넘겨도 배율·위치가 그대로 — 여러 장면을 같은 확대로 훑어볼 때.
-//   끔       = 장면을 넘기면 100%로 돌아간다 — 이 장면만 잠깐 확대해 볼 때.
+//   켬       = 장면을 넘겨도 배율·위치가 그대로 — 여러 장면을 같은 확대로 훑어볼 때.
+//   끔(기본) = 장면을 넘기면 그 장면에 저장된 구도를 복원 — 선택한 장면만 확대할 때.
 //   ★판단은 이 함수 하나에서만 한다(0순위-B). showBeat은 이걸 부르기만 한다.
 function zoomAllOn(){
   const el=document.getElementById('zoomAll');
-  return !el || el.checked;      // 요소가 아직 없으면 종전 동작(유지)이 기본
+  return !!(el && el.checked);   // 요소가 아직 없어도 전 장면 적용으로 오인하지 않는다
 }
 function zoomAllChanged(){
   // 방금 껐다면 지금 화면부터 원래대로 — 안 그러면 "껐는데 왜 아직 커져 있나"가 된다.
