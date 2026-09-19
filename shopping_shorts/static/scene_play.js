@@ -1604,7 +1604,21 @@ function seekTo(t){
   const c = seq[k];
   const v = c._px || vidFor(c.video_id, c._slot);
   v.currentTime = cutStart(c) + (t - seqBounds[k][0]);
-  showVid(v);
+  // ★다른 재생기로 옮길 땐 **시크가 끝난 뒤에** 화면을 바꾼다(2026-09-18 이윤정님
+  //   "1번↔2번 왔다갔다하면 3번 장면이 낀다"). 컷2에 있을 때 컷1 재생기(슬롯0)는 seat()가
+  //   컷3 시작점에 미리 앉혀 둔 상태다. 여기서 바로 showVid하면 시크가 끝나기 전 그 재생기의
+  //   현재 프레임 = **컷3 장면**이 먼저 보인다(라이브 실측 job 1939bd7f3c50: s5:0이 17.16초
+  //   =컷3에 있다가 0.3초로 시크, seeking 동안 노출). 시크 중엔 지금 보이는 재생기(직전 자리)를
+  //   그대로 두고, seeked 때 바꾼다. 같은 재생기면 프레임이 제자리에서 바뀌므로 종전과 같다.
+  //   안전핀 400ms: 이벤트를 놓쳐도 그 안에 반드시 바꾼다(느린 회선에선 종전 동작으로 수렴).
+  if (v !== curVid && v.seeking){
+    let done = false;
+    const go = () => { if (done) return; done = true; v.onseeked = null; showVid(v); };
+    v.onseeked = go;
+    setTimeout(go, 400);
+  } else {
+    showVid(v);
+  }
   const remain = Math.max(50, (seqBounds[k][1] - t) * 1000);
   if (seqPaused){
     seqRemain = remain;                          // 멈춘 채로 자리만 옮김 — 재개하면 여기부터

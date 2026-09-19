@@ -84,6 +84,7 @@ def test_migration_adds_column_to_existing_db(store):
         c.execute("INSERT INTO voice_presets(preset_id, name, lang, base_voice_id, "
                   "group_id, variant, voice_settings_json, created_at) "
                   "VALUES('old','old','KR','v1','old','stable','{}','2026-07-16T00:00:00+00:00')")
+    Store.reset_schema_cache(store.db_path)   # 같은 프로세스 안 '재기동' 흉내(스키마 1회 가드)
     s2 = Store(store.db_path)          # 재기동 = 마이그레이션 재실행
     rows = {r["preset_id"]: r["best"] for r in s2.list_voice_presets(lang="KR")}
     assert rows["old"] is False
