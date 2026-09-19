@@ -83,7 +83,7 @@ def main():
     except Exception:      # noqa: BLE001
         done = {}
     for i, r in enumerate(R):
-        if r["id"] in done:
+        if r["id"] in done and done[r["id"]].get("cells"):      # 빈 응답(혼잡)은 다시 한다
             continue
         out = sg._call_json(prompt(r["text"]), SCHEMA) or {}
         cells = []
