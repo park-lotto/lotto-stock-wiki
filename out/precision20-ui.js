@@ -204,7 +204,7 @@
   const channelColorLabel=document.createElement('label');channelColorLabel.innerHTML='<span>채널명</span><input type="color" data-fixed-color="channel">';fixedPanel.querySelector('.fixed-color-grid').append(channelColorLabel);
   const fixedPalettes={mint:{top:'#082923',bottom:'#082923',title1:'#FFFFFF',title2:'#43E2B4'},yellow:{top:'#17140A',bottom:'#17140A',title1:'#FFFFFF',title2:'#FFE24A'},pink:{top:'#24101A',bottom:'#24101A',title1:'#FFFFFF',title2:'#FF78B7'}};
   function syncHookMotionUI(){
-    motionPanel.hidden=false;
+    motionPanel.hidden=sceneIndex>0;   // 09-19 사장님: 본문 장면에선 훅 모션 숨김(훅 전용)
     bodyMotionPanel.hidden=sceneIndex===0;
     bodyMotionPanel.querySelectorAll('[data-body-caption-motion]').forEach(b=>b.classList.toggle('active',b.dataset.bodyCaptionMotion===bodyCaptionMotion));
     motionPanel.querySelectorAll('[data-hook-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookMotion===hookMotion));
@@ -773,7 +773,7 @@
     const p=rows[current],source=imageFor(p,sceneIndex);
     base.src=source;const frame=frameFor(p,sceneIndex),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
+    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);requestAnimationFrame(()=>runCaptionEnter());   // 09-19: [다음]으로 넘길 때도 본문 모션이 돈다(전엔 showFrame에만 있었다)
   }
   function selectPreset(index){
     noTemplate=false;document.body.classList.remove('no-template');grid.querySelector('[data-none]')?.classList.remove('selected');
