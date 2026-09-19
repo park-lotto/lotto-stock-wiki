@@ -12342,7 +12342,11 @@ async function pollMix(){
     if(d.status==='failed'){ setMatchingUI(false);
       // ★실패면 도는 점을 반드시 지운다 — className을 안 되돌리면 실패해놓고 영원히
       //   도는 것처럼 보인다(2026-08-23). textContent만 바꾸면 클래스가 남는다.
-      setMixStatusText('❌ 매칭 실패'+(d.error?' — '+d.error:''));
+      // ★머리말을 원인에 맞춘다(2026-09-19 cid 174): 음성 키가 거절된 건데 '매칭 실패'로 떠서
+      //   고객·사장님 모두 장면 매칭 문제로 읽었다. 안내가 여러 줄이라 줄바꿈도 살린다.
+      const _isVoice=/음성|TTS|ElevenLabs|타입캐스트|목소리/i.test(d.error||'');
+      const _st=setMixStatusText((_isVoice?'❌ 음성 만들기 실패':'❌ 매칭 실패')+(d.error?' — '+d.error:''));
+      if(_st) _st.style.whiteSpace='pre-line';
       if(d.error_detail){
         const dt=document.createElement('details');
         dt.style.cssText='margin-top:6px;font-size:12px;color:var(--sub)';
