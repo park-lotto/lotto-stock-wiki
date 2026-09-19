@@ -15917,7 +15917,9 @@ function thumbFontCss(file){
 // 자동 2줄: 사장님이 \n으로 직접 나눴으면 존중. 아니면 길면 공백 중 중앙 근처에서 2줄로 쪼갠다
 // (바이럴 썸네일은 보통 2줄). 짧거나 공백 없으면 1줄.
 function thumbAutoLines(text){
-  const paras = String(text == null ? '' : text).split('\n');
+  // 제목 끝의 Enter는 보이지 않는 빈 줄이다. 화면에는 두 줄인데 계산만 세 줄로
+  // 잡히는 일을 막는다(2026-09-19 박세현님 실측).
+  const paras = String(text == null ? '' : text).replace(/\n+$/, '').split('\n');
   if (paras.length > 1) return paras;
   const t = paras[0];
   if (t.length <= 6 || t.indexOf(' ') < 0) return [t];
@@ -15928,26 +15930,11 @@ function thumbAutoLines(text){
   return best < 0 ? [t] : [t.slice(0, best), t.slice(best + 1)];
 }
 
-// grow-to-fill: 제목이 폭(92%)을 꽉 채우게 폰트를 키우거나 줄인다 — 짧아도 큼직(바이럴 썸네일 룩,
-// 2026-07-19 사장님 레퍼런스 실측 반영). 예전엔 줄이기만 해서 짧은 제목이 작게 남았다.
-// 슬라이더(L.size)는 미세조정(90=꽉 채움). 높이 상한(44%)으로 2줄이 화면을 안 넘게.
-// ★크기가 캔버스 폭에 비례하므로 270 프리뷰와 1080 결과가 같은 비율(계약 유지).
-// ★타이핑 중에는 글자 크기를 **붙잡아 둔다**(2026-08-27 고객 제보 "썸네일 글씨가 원래
-//   저렇게 크기가 왔다갔다 하는 게 맞아요?"). 아래 grow-to-fill은 글자 수에 맞춰 매번
-//   폰트를 다시 재므로, 한 글자씩 칠 때마다 크기가 출렁인다 —
-//   실측: "어" 422px → "얼린고기" 248px → "얼린고기 보관은 이렇게 하세요" 135px (3배 차이).
-//   결과물은 정상인데 **치는 과정이 고장난 것처럼 보인다**.
-//   그래서 입력이 멈출 때까지(THUMB_TYPE_MS) 직전 비율을 유지하고, 멈추면 한 번만 맞춘다.
-//   ⚠️비율(size/W)로 잡아둔다 — 미리보기(270)와 저장(1080)이 같은 그림이어야 한다.
-//   작으면 사장님·고객이 [크기 미세조정] 슬라이더로 조절한다(종전 그대로).
-// ★사장님 지시(2026-08-27): "1로 해주고 작으면 각자 크기조정으로".
-//   → 문구를 치는 동안은 물론이고 **다 친 뒤에도 크기를 도로 줄이지 않는다.**
-//     처음 잡은 크기를 그 레이어의 기준으로 계속 쓰고, 작다 싶으면 사람이
-//     [크기 미세조정] 슬라이더로 올린다. 자동으로 오르내리는 게 제보의 핵심이었다.
-//   ⚠️단 폭·높이 상한은 그대로 건다 — 안 그러면 긴 문구가 캔버스를 넘친다.
-//   WeakMap에 담는 이유: 레이어 객체는 그대로 서버에 저장된다(썸네일 meta).
-//   L에 필드를 심으면 저장 데이터가 오염되고, 인덱스로 담으면 순서가 바뀔 때 어긋난다.
-const THUMB_FIT_HOLD = new WeakMap();   // 레이어 → {ratio} (캔버스 폭 대비 글자 크기)
+// ★고정 글자 크기(2026-09-19 박세현님 제보).
+// 같은 85인데 문구 길이에 따라 실제 글자가 달라지던 grow-to-fill을 없앴다.
+// 1080 캔버스에서 size 90 = 194.4px. 캔버스 폭에 비례하므로 작은 미리보기와
+// 저장 PNG는 같은 비율로 보인다. 긴 제목도 자동 축소하지 않고 사용자가 직접 조절한다.
+const THUMB_FONT_SIZE_BASE = 500;       // 실제 px = W * L.size / 500
 
 // ── 자간(letter-spacing) ─────────────────────────────────────────────
 // L.tracking = 글자 크기 대비 % (0 = 종전 그대로). 없으면 0 → 옛 저장본도 그림이 안 바뀐다.
@@ -15986,46 +15973,11 @@ function _trackPx(ctx, L, size){
 
 function thumbFit(ctx, L, W, H){
   const family = thumbFontCss(L.font);
-  const maxW = W * 0.92, maxH = H * 0.44;
-  const scale = Math.max(0.35, (L.size || 90) / 90);
   const lines = thumbAutoLines(L.text);
   if (!lines.some(l => (l || '').trim())) return {lines: [''], size: W * 0.06, family};
-  ctx.font = `900 100px ${family}`;
-  _setTrack(ctx, L, 100);          // 100px 기준으로 재므로 자간도 그 기준으로 건다
-  const widest = Math.max(1, ...lines.map(l => ctx.measureText(l).width));
-  _setTrack(ctx, {tracking: 0}, 0);   // 잰 뒤엔 원상복구 — 다른 레이어 측정에 새면 안 된다
-  let size = 100 * (maxW / widest) * scale;                       // 폭 꽉 채우기 × 미세조정
-  // ★이 레이어에 붙잡아 둔 크기가 있으면 그걸 쓴다(글자 수가 바뀌어도 안 흔들린다).
-  //   비율(size/W)로 담아 두므로 미리보기(270)와 저장(1080)이 같은 그림이 된다.
-  const _hold = (typeof THUMB_FIT_HOLD !== 'undefined' && THUMB_FIT_HOLD.get)
-    ? THUMB_FIT_HOLD.get(L) : null;
-  if (_hold) size = _hold.ratio * W * scale;
-  // 높이 상한 — 행간을 좁히면 그만큼 글자를 더 키울 수 있어야 한다(_thumbLH 하나가 주인)
-  if (lines.length * _thumbLH(L, size) > maxH) size *= maxH / (lines.length * _thumbLH(L, size));
-  size = Math.max(W * 0.02, Math.min(size, H * 0.22));            // 안전 하한·상한
+  const value = Number(L.size == null ? 90 : L.size);
+  const size = W * Math.max(1, value) / THUMB_FONT_SIZE_BASE;
   return {lines, size, family};
-}
-
-// 문구를 처음 칠 때 **그 순간의 크기**를 이 레이어의 기준으로 붙잡는다.
-// 한 번 잡히면 글자를 더 치거나 지워도 안 흔들린다. 작으면 슬라이더로 올린다(사장님 지시).
-function thumbHoldSizeWhileTyping(){
-  const L = (THUMB_STATE.layers || [])[THUMB_STATE.sel];
-  if (!L || L.kind) return;                       // 글자 레이어만(배지·스티커·도형 제외)
-  if (THUMB_FIT_HOLD.get(L)) return;              // 이미 잡아 뒀다
-  if (!String(L.text || '').trim()) return;       // 빈 칸에선 잡지 않는다(0으로 굳는다)
-  try {
-    const cv = document.getElementById('thumbCanvas');
-    // ★기준을 잡을 땐 홀드 없이 원래 식으로 잰다 — 지금 막 잡으려는 참이라 get은 비어 있다.
-    const f = thumbFit(cv.getContext('2d'), L, THUMB_W, THUMB_H);
-    const scale = Math.max(0.35, (L.size || 90) / 90);
-    // 슬라이더 몫(scale)은 빼고 담는다 — 쓸 때 다시 곱하므로 두 번 곱하면 커진다.
-    THUMB_FIT_HOLD.set(L, {ratio: (f.size / THUMB_W) / scale});
-  } catch (e) { /* 못 재면 종전대로(매번 맞춤) — 기능이 죽지는 않는다 */ }
-}
-
-// 새 문구 레이어·프리셋 적용처럼 **판을 새로 짜는** 경우엔 기준을 놓아준다.
-function thumbReleaseFitHold(L){
-  try { if (L) THUMB_FIT_HOLD.delete(L); } catch (e) {}
 }
 
 // ── ✨ 강조 효과(2026-08-18) — 눈에 확 들어오는 '포인트'를 글자에 얹는다 ──────────────
@@ -16359,7 +16311,7 @@ function drawThumb(ctx, img, layers, W, H, view){
     if (L.kind === 'shape'){ drawShape(ctx, L, W, H); return; }
     if (L.kind === 'badge'){ drawBadge(ctx, L, W, H); return; }
     if (!L.text) return;
-    const {lines, size, family} = thumbFit(ctx, L, W, H);      // 자동 2줄 + grow-to-fill
+    const {lines, size, family} = thumbFit(ctx, L, W, H);      // 자동 2줄 + 사용자 고정 크기
     const lh = _thumbLH(L, size);                               // 줄 간격(L.leading %)
     ctx.save();
     ctx.translate(L.x * W, L.y * H);                            // 앵커 = 여러 줄 블록의 세로 중앙
@@ -16875,7 +16827,7 @@ function addThumbStickerFromInput(){
   if (!_isEmojiOnly(raw)){
     addThumbLayer();                                  // 글자 레이어 하나 새로 만들고
     const L = THUMB_STATE.layers[THUMB_STATE.sel];
-    if (L){ L.text = raw; thumbReleaseFitHold(L); }   // 문구를 넣는다(크기는 새로 맞춘다)
+    if (L) L.text = raw;                              // 문구를 넣어도 고정 크기는 그대로
     el.value = '';
     renderThumbLayers(); renderThumbCanvas();
     if (hint) hint.textContent = '“' + raw + '” 를 글자로 얹었어요 — 크기·색은 아래에서 바꾸세요';
@@ -16975,7 +16927,6 @@ function setThumbField(key, val){
   else if (key === 'box'){ L.box = val ? {color: '#000000', pad: 16, opacity: 80} : null; }
   else if (key === 'size' || key === 'rot' || key === 'tracking' || key === 'leading' || key === 'shadow'){ L[key] = +val; }
   else L[key] = val;
-  if (key === 'text') thumbHoldSizeWhileTyping();   // 치는 동안 크기 고정(2026-08-27 고객 제보)
   renderThumbCanvas();
   // 글자에도 손잡이가 생겼으니(2026-08-28) 슬라이더로 바꿔도 점선 박스가 따라와야 한다.
   // ★#thumbHandles만 다시 그린다 — 편집칸(#thumbEdit)을 다시 그리면 끌던 슬라이더가
@@ -17256,7 +17207,7 @@ function renderThumbLayers(){
     <!-- ★크기·그림자는 숫자 + −＋ 버튼(2026-09-17 사장님 "숫자+버튼표시가 있어야").
          슬라이더만으로는 지금 값이 몇인지 안 보이고 1씩 맞추기 어렵다. 값의 주인은 그대로 L.size/L.shadow —
          버튼·슬라이더 둘 다 thumbNumSet 한 곳을 거쳐 setThumbField로 간다. -->
-    <label style="font-size:11px;color:var(--sub)">글자 크기 <span style="color:var(--sub);opacity:.7">(자동으로 화면 폭을 꽉 채워요 · 필요하면 조절)</span></label>
+    <label style="font-size:11px;color:var(--sub)">글자 크기 <span style="color:var(--sub);opacity:.7">(고정 · 문구가 달라도 같은 숫자는 같은 크기)</span></label>
     ${thumbNumRow('size', L.size, 30, 200, 5)}
     <label style="font-size:11px;color:var(--sub)">그림자 <span style="color:var(--sub);opacity:.7">(글자 뒤에 깔리는 검은 그림자 · 0이면 없음)</span></label>
     ${thumbNumRow('shadow', Number(L.shadow || 0), 0, 100, 10)}
