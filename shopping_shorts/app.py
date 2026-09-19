@@ -17402,6 +17402,15 @@ def _load_work_sources(work_id, cid):
                         (_ex_brief.get("product") if isinstance(_ex_brief, dict) else "")),
         })
     # 추출 대기 중인 영상 — 목록에서 빼지 않고 pending으로 실어 보낸다(화면이 "분석 중"을 말하게).
+    # ★단 자동적재 시도를 다 쓴 영상(_AUTOLOAD_MAX_ATTEMPTS)은 더 기다려도 안 온다 — 빼야 한다
+    #   (2026-09-19 이연정님 사고: 틱톡 7개+받기 실패 인스타 1개. 인스타가 영원히 pending이라
+    #   build_aipick이 hold=True로 메인 확정을 무한 보류 → 2단계에 영상이 안 넘어왔다).
+    try:
+        _tried = store.autoload_attempts(pending_codes) if pending_codes else {}
+    except Exception:  # noqa: BLE001 — 조회 실패면 종전대로 기다린다
+        _tried = {}
+    pending_codes = [sc for sc in pending_codes
+                     if int(_tried.get(sc) or 0) < _AUTOLOAD_MAX_ATTEMPTS]
     for sc in pending_codes:
         e = entry_by_code.get(sc) or {}
         sources.append({
