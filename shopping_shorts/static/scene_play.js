@@ -169,7 +169,54 @@ function ttsEl(slot){
   }
   return audioEl._alt;
 }
-function audio(){ return curAud || ttsEl(0); }
+// ★합본이 붙은 칸에서는 **합본 자신이 음성**이다 — 시계가 하나가 되는 지점.
+//
+//   (2026-09-21 사장님 "이렇게 안 끝날 일이 아닌데")
+//   편집 화면은 시계가 둘이었다: 영상 한 벌(<video>), 음성 한 벌(<audio>). 되감을 때마다
+//   둘을 손으로 맞췄는데, mp3 는 요청한 자리에 못 앉고 뒤쪽 프레임 경계로만 앉는다 —
+//   실측 2026-09-21: 13개 컷 전부에서 음성이 화면보다 +0.14~0.19초 앞섰다.
+//   없앨 수 없는 오차를 맞추려 드니 같은 자리에서 여섯 번 터졌다
+//   (08-14 08-15 08-17 08-20 09-02 09-18). **맞추기를 포기하고 하나로 만든다.**
+//
+//   합본에는 이제 음성이 같이 구워져 있다(app.py _pvproxy_build). 그러니 그 칸의 음성을
+//   찾을 이유가 없다 — 합본의 소리가 곧 그 칸의 소리다. 아래 어댑터는 합본(전체 타임라인)을
+//   **그 칸만 있는 음성인 척** 보이게 해, 부르는 쪽(자막·진행바·전체재생)을 한 줄도 안 고친다.
+function pvxAudio(){
+  const v = PVX.vid, b = seqBeat;
+  if (!v || b == null || !PVX.offs || PVX.offs[b] == null) return null;
+  if (!(seq && seq[0] && seq[0]._px)) return null;        // 이 칸이 합본을 안 쓰면 해당 없음
+  const off = PVX.offs[b];
+  const end = (PVX.offs[b + 1] != null) ? PVX.offs[b + 1] : (PVX.dur || v.duration || 0);
+  const len = Math.max(0.01, end - off);
+  return {
+    _pvx: true, _el: v,
+    get currentTime(){ return Math.max(0, Math.min(len, v.currentTime - off)); },
+    set currentTime(t){ v.currentTime = off + Math.max(0, Math.min(len, +t || 0)); },
+    get duration(){ return len; },
+    get paused(){ return v.paused; },
+    get ended(){ return v.currentTime >= end - 0.03; },
+    get error(){ return v.error; },
+    get src(){ return v.src; },
+    get readyState(){ return v.readyState; },
+    play(){ return v.play(); },
+    pause(){ try { v.pause(); } catch(e){} },
+    load(){},
+    // 전체 재생은 '이 칸 음성이 끝났다'는 신호로 다음 칸에 넘어간다. 합본은 한 파일이라
+    // 칸이 끝나도 ended 가 안 온다 — 그 칸의 끝 시각을 지켜보다 같은 신호를 준다.
+    set onended(fn){
+      if (v._pxEndT){ clearInterval(v._pxEndT); v._pxEndT = 0; }
+      if (!fn) return;
+      v._pxEndT = setInterval(() => {
+        if (v.ended || v.currentTime >= end - 0.03){
+          clearInterval(v._pxEndT); v._pxEndT = 0;
+          try { fn(); } catch(e){}
+        }
+      }, 50);
+    },
+    get onended(){ return null; },
+  };
+}
+function audio(){ return pvxAudio() || curAud || ttsEl(0); }
 // ★음성을 '시계'로 쓸 수 있는가 — 판단은 여기 한 곳(0순위-B, 2026-08-20 사장님
 //   "미리보기에는 여러분까지만 나오고 다음이 안나온다").
 //   미리보기의 시계가 두 벌이었다: 화면(컷)은 seqTimer로 돌고, 자막·시간·전체재생은
@@ -839,6 +886,12 @@ function seatTts(i, slot){
   return a;
 }
 function playTts(i, slot){
+  // ★합본이 붙었으면 소리도 합본에서 난다 — 여기서 또 틀면 **같은 말이 두 번** 들린다.
+  const px = pvxAudio();
+  if (px){
+    if (curAud){ try { curAud.pause(); } catch(e){} }
+    return px;
+  }
   const a = seatTts(i, slot || 0);
   if (curAud && curAud !== a) curAud.pause();      // 앞 칸 음성은 여기서 확실히 끈다
   curAud = a;
@@ -1033,14 +1086,16 @@ function pvxTick(){
   if (PVX.pending === p.key) return;
   PVX.pending = p.key;
   fetch(`/api/mix/preview_proxy/${SL.job}`, {method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({cuts: p.cuts})})
+        // 칸마다 컷이 몇 개인지 같이 보낸다 — 서버가 칸 끝을 그 칸 음성 길이에 맞춘다.
+        //   안 보내면 칸 경계가 조금씩 밀려 뒤로 갈수록 쌓인다(실측 6칸에 0.425초).
+        body: JSON.stringify({cuts: p.cuts, beat_lens: p.beats.map(b => JSON.parse(b).length)})})
     .then(r => r.ok ? r.json() : null)
     .then(j => {
       if (!j || j.state !== 'ready' || !j.url){ PVX.pending = ''; setTimeout(() => { try { pvxTick(); } catch(e){} }, 1000); return; }   // 만드는 중 — 1초 뒤 다시 묻는다
       return fetch(j.url).then(r => r.ok ? r.blob() : null).then(bl => {
         PVX.pending = '';
         if (!bl || !bl.size) return;
-        PVX.ready = {bl, p, sig: j.sig};
+        PVX.ready = {bl, p, sig: j.sig, j};   // j: 서버가 준 칸 위치(offs)까지 같이 들고 간다
         pvxSwap();
       });
     })
@@ -1064,8 +1119,17 @@ function pvxSwap(){
         PVX.url = URL.createObjectURL(bl);
         v.src = PVX.url;
         let off = 0;
-        PVX.offs = p.beats.map(s => { const a = off; JSON.parse(s).forEach(c => off += c.dur); return a; });
-        PVX.beats = p.beats; PVX.key = p.key; pvxBtns("");
+        // ★칸 시작 위치는 **서버가 잰 값**을 쓴다(짐작 금지).
+        //   컷 길이를 더해 짐작하면 구워진 영상과 어긋난다 — 영상은 프레임 단위(1/30초)로만
+        //   끊기기 때문이다(실측 6칸에 0.147초). 그만큼 되감을 자리가 밀린다.
+        //   서버가 안 주면(옛 합본) 예전처럼 짐작한다 — 폴백.
+        PVX.offs = (r.j && Array.isArray(r.j.offs) && r.j.offs.length === p.beats.length)
+          ? r.j.offs.slice()
+          : p.beats.map(s => { const a = off; JSON.parse(s).forEach(c => off += c.dur); return a; });
+        PVX.beats = p.beats; PVX.key = p.key;
+        PVX.dur = (r.j && r.j.dur) || 0;   // 합본 전체 길이 — 마지막 칸의 끝을 아는 데 쓴다
+        PVX.cuts = (r.j && Array.isArray(r.j.cuts)) ? r.j.cuts : null;  // 칸 안 컷 경계(실측)
+        pvxBtns("");
         console.log('[pvx] 합본 준비', r.sig, p.cuts.length + '컷', (bl.size/1e6).toFixed(1) + 'MB');
   }
 }
@@ -1079,8 +1143,20 @@ function pvxAttach(i, clips){
   const mine = JSON.stringify(clips.map(c => ({video_id: c.video_id, start: +(+c.start).toFixed(3),
                dur: +(+c.dur).toFixed(3), src_dur: +(+(c.src_dur || 0)).toFixed(3)})));
   if (PVX.beats[i] !== mine) return false;
-  let off = PVX.offs[i];
-  clips.forEach(c => { c._px = PVX.vid; c._pstart = off; off += +(+c.dur).toFixed(3); });
+  // ★컷이 합본 어디서 시작하는지 — **서버가 잰 값**을 쓴다(짐작 금지).
+  //   컷 길이를 더해 짐작하면 합본과 어긋난다(구워진 영상은 프레임 단위로만 끊긴다).
+  //   그 어긋남 때문에 화면이 합본보다 먼저 "칸 끝"이라며 멈춰 세웠고, 합본은 그 자리에서
+  //   영영 안 끝나 전체 재생이 칸0에 멈췄다(실측 2026-09-21: 화면 5.52 vs 합본 5.60).
+  const mo = PVX.cuts && PVX.cuts[i];
+  const base = PVX.offs[i];
+  if (mo && mo.length === clips.length){
+    clips.forEach((c, k) => { c._px = PVX.vid; c._pstart = base + mo[k];
+                              c._pdur = (mo[k + 1] != null ? mo[k + 1] : (PVX.offs[i + 1] != null
+                                          ? PVX.offs[i + 1] - base : c.dur + mo[k])) - mo[k]; });
+  } else {
+    let off = base;
+    clips.forEach(c => { c._px = PVX.vid; c._pstart = off; off += +(+c.dur).toFixed(3); });
+  }
   return true;
 }
 function pvxStep(c){
@@ -1092,7 +1168,11 @@ function pvxStep(c){
   try { if (v.playbackRate !== 1) v.playbackRate = 1; } catch(e){}
   if (v.paused){ const pr = v.play(); if (pr && pr.catch) pr.catch(()=>{}); }   // 합본은 1배속(늘리기는 서버가 구워 둠)
   paintCut();
-  schedStep(c.dur * 1000);
+  // ★컷을 넘기는 시간도 **실측 길이**를 쓴다(짐작 금지).
+  //   짐작(c.dur)으로 넘기면 칸의 컷을 다 쓴 시각이 합본의 칸 끝보다 앞선다 —
+  //   화면이 거기서 "재생 끝"이라며 합본을 멈춰 세우고, 합본은 칸 끝에 못 닿아
+  //   전체 재생이 그 칸에 영영 멈춘다(실측 2026-09-21: 화면 5.52 vs 합본 5.60).
+  schedStep(((c._pdur > 0) ? c._pdur : c.dur) * 1000);
 }
 // 합본은 **음성 시계에 묶는다** — 컷 타이머(벽시계)만 따르면 음성이 늦게 뜬 만큼 화면이 앞선다
 //   (로컬 실측: 첫 칸 0.47초 앞섬). 음성이 흐르는 동안 0.12초 넘게 벌어지면 합본을 그 자리로 옮긴다.
@@ -1235,6 +1315,8 @@ function warmVideos(){
 }
 
 function stopPlay(){
+  // 합본의 칸 끝 감시를 끈다 — 안 끄면 멈춘 뒤에도 다음 칸으로 넘어간다.
+  try { if (PVX.vid && PVX.vid._pxEndT){ clearInterval(PVX.vid._pxEndT); PVX.vid._pxEndT = 0; } } catch(e){}
   clearTimeout(seqTimer); seqTimer = null; seq = [];
   _unhidePinned();      // 가려둔 재생기를 되돌린다 — 안 하면 멈춘 화면이 빈 채로 남는다
   clearSfxTimers();                              // 예약된 효과음도 끈다 — 안 끄면 멈춘 뒤에 울린다
@@ -1311,6 +1393,21 @@ function playBeat(i, ev){
   playKey = 'beat:' + i;
   seqLabel = `칸 ${i+1} 전체`;
   seqBeat = i;
+  // ★칸별 재생도 합본으로 튼다(2026-09-21 사장님 "근본적으로 발생하게된 우리 구조적 문제를 뽑는건데").
+  //
+  //   화면을 트는 길이 둘이었다:
+  //     · 합본(_px)  — 미리 이어붙인 영상 한 개를 이어 튼다. 시크 없음. 재생기 한 개.
+  //     · 조각       — 컷마다 다른 <video>를 골라 그 자리로 시크한다.
+  //   역대 사고 여섯 건(08-14 08-15 08-17 08-20 09-02 09-18)이 **전부 조각 쪽**이다.
+  //   조각은 (ㄱ)재생기를 컷끼리 나눠 쓰고 (ㄴ)다음 컷을 미리 앉혀 두므로, 되감으면
+  //   미리 앉혀 둔 다음다음 장면이 스친다 — 이윤정님 "1번과 2번 사이에 3번이 살짝 나온다".
+  //   지금까지 그 프레임을 **안 보이게 하는 방법만** 바꿔 왔다(가리기). 길 자체는 그대로였다.
+  //
+  //   그런데 합본은 **이미 만들어져 있었다**(실측 2026-09-21: 3개 job 전 칸 캐시됨,
+  //   readyState 4). 쓰는 곳이 전체 재생 한 군데뿐이라 칸별 재생·되감기가 조각으로 갔을 뿐이다.
+  //   여기서 붙여 주면 seekTo 도 c._px 를 따라가(1740줄) 되감기까지 합본이 된다.
+  //   합본이 아직 없으면 pvxAttach 가 false 라 예전 조각 경로 그대로 — 폴백이 자연히 된다.
+  pvxAttach(i, clips);
   startSeq(clips);
   // 음성은 화면과 별개 트랙 — 같이 0초부터 튼다(캡컷의 오디오 트랙과 같은 개념).
   playTts(i, 0);
@@ -1408,7 +1505,8 @@ function startSeq(clips, slot0){
   seq = clips; seqI = 0; seqPaused = false;
   // 컷 경계 누적(자막을 컷 단위로 끊어 보여주려면 각 컷의 [시작,끝) 초가 필요하다)
   let off = 0;
-  seqBounds = clips.map(c => { const a = off; off += c.dur; return [a, off]; });
+  // 합본이 붙은 컷은 **실측 길이**(_pdur)를 쓴다 — 짐작(dur)으로 재면 칸 끝이 어긋난다.
+  seqBounds = clips.map(c => { const a = off; off += (c._px && c._pdur > 0) ? c._pdur : c.dur; return [a, off]; });
   // ★뿌리를 없앤다(2026-09-20 사장님 "두더지금지"): **한 재생기가 두 컷을 담당하지 않게** 한다.
   //
   //   종전은 `k % 2` 라 컷0과 컷2가 같은 슬롯이었다. 그 둘이 **같은 소스**면 vidFor가 같은
@@ -1474,7 +1572,12 @@ function holdShot(c, on){
 function step(){
   if (seqI >= seq.length){
     document.getElementById('pinfo').textContent = `${seqLabel} — 재생 끝 (${seq.length}컷)`;
-    if (curVid) curVid.pause();
+    // ★합본은 여기서 멈추면 안 된다 — 한 파일이라 칸 끝까지 이어져야 한다.
+    //   컷 타이머(벽시계)는 합본의 칸 끝보다 조금 먼저 닿는다. 그때 멈춰 세우면 합본이
+    //   칸 끝에 못 닿아 '이 칸 끝났다' 신호가 영영 안 오고, 전체 재생이 그 칸에 선다
+    //   (실측 2026-09-21: 칸0 에서 60초 동안 멈춤). 끝을 정하는 건 **합본 시각 하나**다.
+    const _px0 = seq[0] && seq[0]._px;
+    if (curVid && !_px0) curVid.pause();
     // ★전체 재생의 칸 넘김은 원래 audio.onended 뿐이다 — 음성 없는 칸(합성 전 404 ·
     //   대본 바뀜 409)에선 ended가 영영 안 와 그 칸에서 멈췄다(2026-08-20 사장님
     //   "다음이 안나온다"). 음성이 시계 노릇을 못 하면 화면(컷)이 다 끝난 여기서 넘긴다.
