@@ -760,7 +760,10 @@
       const wbH=savedCap>0?savedCap:(wb.y1-wb.y0+1)/frame.height*100;   // 09-19: 훅 흰 띠도 '자막 칸' 값을 따른다
       addPatch(wb.y0/frame.height*100,wbH,movedCaption?(fixedColorsFor(p.id,frame).top||bg):(wb.background||'#FFFFFF'),0,100,'white-box');
     }
-    if(wb?.text&&kind==='hook'){
+    // 2026-09-21 사장님: 훅 화면에 큰 제목과 흰 띠 글자가 같은 문장이라 두 번 보였다.
+    //   두 글이 같은 때만 띠 글자를 그리지 않는다(띠 배경은 그대로, 다른 문구면 예전처럼 보인다).
+    const hookTitleSame=kind==='hook'&&String(value('bodyTitle')||'').replace(/\s+/g,'')===String((value('hook1')||'')+(value('hook2')||'')).replace(/\s+/g,'');
+    if(wb?.text&&kind==='hook'&&!hookTitleSame){
       const key=kind==='hook'?'bodyTitle':'caption';
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
