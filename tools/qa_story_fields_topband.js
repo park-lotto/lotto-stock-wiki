@@ -52,7 +52,9 @@ const shots = process.argv[3];
   console.log(JSON.stringify(res));
   for (const key of ['top50', 'top20']) {
     const m = res[key];
-    if (Math.abs(m.font - base.font) > .01) { fail++; console.log('NG 글자크기 바뀜', key); }
+    // 09-19: 폭 자동 맞춤이 0.5px 단위로 움직일 수 있다(글꼴을 바꾸면 폭이 달라져 잘리던 문제를 막는 장치).
+    //   칸 높이에 비례해 글자가 커지/작아지는 회귀는 1px을 훌쩍 넘으므로 0.8px까지만 허용한다.
+    if (Math.abs(m.font - base.font) > .8) { fail++; console.log('NG 글자크기 바뀜', key, m.font, base.font); }
     if (Math.abs((m.mediaTop - m.bandBottom) - (base.mediaTop - base.bandBottom)) > 1) { fail++; console.log('NG 흰 띠-영상 간격', key, m.bandBottom, m.mediaTop); }
   }
   if (!(res.bottom15.bottomBand && Math.abs(res.bottom15.mediaTop + res.bottom15.mediaH - 85) < .6)) { fail++; console.log('NG 하단칸'); }

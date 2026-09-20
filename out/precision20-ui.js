@@ -158,6 +158,7 @@
   // 고정형 20종 제목 배치 표준(2026-09-19 사장님): 원본마다 채널명과 제목 사이 빈칸이 5~12%씩 제각각이었다.
   //   이제 제목칸 높이(T)에 대한 같은 비율로 다시 놓는다 — 채널명 아래 곧바로 제목, 줄 간격·글자 크기도 T 비례.
   //   한 곳에서만 정한다(미리보기·최종 렌더 모두 이 함수를 거친다). 사용자가 −/＋로 키운 값은 그 뒤에 곱해진다.
+  const WRAP3=['bodyTitle','caption'],CHANNEL_MAX=.045;   // 본문 제목·자막 3줄 허용 / 채널명 글자 크기 상한(화면 높이 대비)
   const FIXED_TITLE={band:26,first:.33,pad:.06,line:.25,gap:.045,fontOfLine:.76};   // band=제목칸 높이(%), pad=자막 칸 앞 여백
   const fixedDrawLine=(line,frame)=>{
     if(mode!=='continuous'||line.bind==='caption')return line;
@@ -593,7 +594,8 @@
     const family=pickedFont||ln.font_family||frame.font_family||'TmonMonsori';
     const weight=pickedFont?400:(ln.font_weight||frame.font_weight||400);   // 세트 폰트는 한 굵기뿐 — 가짜 볼드 방지
     const letterPx=ln.letter_spacing!=null?ln.letter_spacing*scale:Math.max(-1.5,-.035*fontPx);
-    const manualScale=textScale(bind),scaledFont=Math.max(9,fontPx*manualScale);
+    const capped=bind==='channel'&&pickedFont?Math.min(fontPx,frame.height*scale*CHANNEL_MAX):fontPx;   // 09-19: 채널명 기본 크기 상한
+    const manualScale=textScale(bind),scaledFont=Math.max(9,capped*manualScale);
     const topOffset=(bind==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(bind);
     const verticalNudge=bind==='channel'?.7:-.35;
     const baseHeight=ln.h/frame.height*100+.9,displayHeight=baseHeight*Math.max(1,manualScale);
@@ -612,18 +614,24 @@
     contrastOutline(el,ln,frame,bind);
     if(frame.reference_style){el.style.webkitTextStroke=ln.stroke?`${ln.stroke*scale}px #080808`:'0px';el.style.textShadow=ln.shadow_y?`0 ${ln.shadow_y*scale}px ${2*scale}px #000000AA`:'none';}
     if(manualLines>1){el.textContent=text;el.style.whiteSpace='pre-wrap';el.style.display='block';el.style.lineHeight='1.2';el.style.textWrap='wrap';}
-    else if(ln.max_lines>1){el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.2';}
+    else if(ln.max_lines>1||WRAP3.includes(bind)){el.style.whiteSpace='normal';el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.18';el.style.display='-webkit-box';el.style.webkitBoxOrient='vertical';el.style.webkitLineClamp='3';}   // 09-19 사장님: 본문 제목·자막은 3줄까지
     const chosen=colorOverrides.get(colorKey(bind==='hook2'?'accent':'white'));
     if(chosen){el.style.color=chosen;el.querySelectorAll('span').forEach(span=>span.style.color=chosen);}
     layer.insertBefore(el,badge);
     if(bind==='caption'){el.style.left=(left+captionX())+'%';el.style.right=(right-captionX())+'%';}
     // 이븐쇼핑 기준형은 원본 폰트 크기·자간·가로비를 잠근다. 긴 문구를 몰래
     // 축소하거나 찌그러뜨리지 않고 templateViolations가 적용 전에 되돌려 보낸다.
-    const lockedReference=rows[current]?.id==='t11'&&frame.reference_style;
+    const lockedReference=rows[current]?.id==='t11'&&frame.reference_style&&!pickedFont;   // 09-19: 글꼴을 바꾸면 원본 크기 잠금을 풀어야 글자가 안 잘린다
     if(!lockedReference){
       const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
-      if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
-      else {const isStory=mode==='story',manualSize=fontScales.has(scaleKey(bind));if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=manualSize?1:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
+      let useCache=cached&&chars<=cached.capacity;
+      if(useCache){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}
+        // 09-19: 기억해 둔 크기를 그대로 쓰면 글꼴이 바뀐 뒤 글자가 칸 밖으로 나갔다(본문 제목 좌우 잘림). 넘치면 캐시를 버리고 다시 맞춘다.
+        const probe=document.createRange();probe.selectNodeContents(el);
+        if(Math.max(el.scrollWidth,probe.getBoundingClientRect().width)*xscale>el.clientWidth+1){useCache=false;fittedText.delete(fitKey);el.style.transform='none';el.style.letterSpacing='';}
+      }
+      if(!useCache){const isStory=mode==='story',manualSize=fontScales.has(scaleKey(bind));const heightFit=!(rows[current]?.id==='t11'&&frame.reference_style);   // 09-19: 이븐쇼핑은 칸 높이를 바꿔도 글자 크기는 그대로(폭만 맞춘다)
+        if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,heightFit);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=manualSize?1:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
     }
     return el;
   }
