@@ -1088,7 +1088,7 @@ function pvxStep(c){
   const v = c._px;
   if (Math.abs(v.currentTime - c._pstart) > 0.25) v.currentTime = c._pstart;
   holdShot(null, false);
-  showVid(v);
+  showVid(v, v.currentTime);          // 방금 보낸 자리에 도착했는지 showVid 가 본다
   try { if (v.playbackRate !== 1) v.playbackRate = 1; } catch(e){}
   if (v.paused){ const pr = v.play(); if (pr && pr.catch) pr.catch(()=>{}); }   // 합본은 1배속(늘리기는 서버가 구워 둠)
   paintCut();
@@ -1142,11 +1142,32 @@ function previewTimeNow(){
 }
 
 let curVid = null;
-function showVid(v){
-  if (curVid === v) return;
+function showVid(v, want){
+  // ★화면을 켜는 **모든 길**이 여기를 지난다 — 그래서 보호도 여기 하나에만 둔다(0순위-B).
+  //   2026-09-20 코드 감사: showVid 호출처가 6곳인데 되감기 2곳만 막아두었다. 나머지 넷
+  //   (특히 재생 중 컷 갈아끼우기)은 `v.currentTime = …` 하고 **곧바로** 켜는 같은 모양이라
+  //   같은 증상이 난다. 한 곳씩 막으면 새 경로가 생길 때마다 또 샌다.
+  //
+  //   want = 그 재생기를 **보내려는 시각**. 주면 값으로 판정하고(정확), 안 주면 시크 중인지로
+  //   본다. 아직 안 왔으면 **가린 채** 켜고, 자리에 온 것을 확인하고 드러낸다.
+  if (curVid === v){
+    if (want != null && !_seekSettled(v, want) && v.style.visibility !== 'hidden'){
+      v.style.visibility = 'hidden';                  // 같은 재생기라도 딴 자리로 보냈으면 가린다
+      _pinHidden(v, want);
+    }
+    return;
+  }
   if (curVid){ curVid.pause(); curVid.style.display = 'none'; }
+  const settled = (want != null) ? _seekSettled(v, want) : !v.seeking;
   v.style.display = 'block';
   curVid = v;
+  if (settled){
+    _unhidePinned();
+    v.style.visibility = '';
+  } else {
+    v.style.visibility = 'hidden';
+    _pinHidden(v, (want != null) ? want : null);
+  }
 }
 
 // ★되감기 때 '다음다음 컷'이 스치는 것을 막는 두 조각(2026-09-20, seekTo가 쓴다).
@@ -1156,6 +1177,8 @@ const _SEEK_EPS = 0.05;          // 이 안쪽이면 그 자리에 왔다고 본
 let _hidePin = null;             // 가려둔 재생기 {v, go, timer} — 한 번에 하나뿐이다
 
 function _seekSettled(v, want){
+  // want 를 모르면 시크 중인지로만 본다(그래도 '곧바로 켜는' 것보다 훨씬 안전하다).
+  if (want == null) return !v.seeking;
   return !v.seeking && Math.abs((v.currentTime || 0) - want) <= _SEEK_EPS;
 }
 
@@ -1447,7 +1470,7 @@ function step(){
     //   있는데 컷만 넘어가 '재생이 안 된다'로 보였다(실측: 영상 시각 19.74에서 정지인데
     //   pinfo는 컷 3/3). 폴백도 200ms는 너무 짧아 첫 재생에서 늘 걸렸다.
     const show = () => {
-      showVid(v);
+      showVid(v, v.currentTime);   // 자리에 왔는지는 showVid 한 곳에서 본다
       applyRate(v, c);          // ★[전체 늘리기]면 그 비율만큼 느리게 튼다
       v.play().catch(()=>{});
       paintCut();
@@ -1549,7 +1572,7 @@ function step(){
       if (off >= (c.dur || 0) - 0.2) return;   // 거의 끝난 컷은 굳이 갈아끼우지 않는다
       try{
         v.currentTime = c.start + off;         // 흘러간 만큼 건너뛰어야 싱크가 안 밀린다
-        showVid(v); applyRate(v, c); v.play().catch(()=>{});
+        showVid(v, v.currentTime); applyRate(v, c); v.play().catch(()=>{});
         const late = () => { v.onseeked = null; v.oncanplay = null; holdShot(null, false); };
         if (v.readyState >= 2 && !v.seeking) late();
         else { v.onseeked = late; v.oncanplay = late; }
@@ -1704,16 +1727,10 @@ function seekTo(t){
   //        넘으면 **고치려던 그 프레임(컷N+2)을 그대로 보여준다.** 안전핀이 증상을 되살렸다.
   //        → 못 기다릴 땐 **가린 채로** 넘긴다. 잠깐 빈 화면이 엉뚱한 장면보다 낫다.
   //   같은 재생기면 프레임이 제자리에서 바뀌므로 종전과 같다.
-  const _want = v.currentTime;
-  _unhidePinned();                     // 앞선 전환이 숨겨둔 재생기가 있으면 먼저 되돌린다
-  if (v !== curVid && !_seekSettled(v, _want)){
-    // 가린 채 전환 → **자리에 온 것을 확인하고** 드러낸다.
-    v.style.visibility = 'hidden';
-    showVid(v);
-    _pinHidden(v, _want);
-  } else {
-    showVid(v);
-  }
+  //   ★2026-09-20 2차: 이 자리에만 두었던 보호를 **showVid 안으로 옮겼다**. 화면을 켜는
+  //     길이 6곳인데 여기 하나만 막으면 나머지에서 같은 증상이 난다. 이제 보낼 시각만
+  //     넘기면 showVid 가 알아서 가리고, 자리에 온 것을 확인하고 드러낸다.
+  showVid(v, v.currentTime);
   const remain = Math.max(50, (seqBounds[k][1] - t) * 1000);
   if (seqPaused){
     seqRemain = remain;                          // 멈춘 채로 자리만 옮김 — 재개하면 여기부터
