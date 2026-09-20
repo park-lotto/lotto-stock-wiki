@@ -119,6 +119,7 @@
   const fontScales=new Map();
   const fittedText=new Map();
   const textOffsets=new Map();
+  const textDrags=new Map();   // 제목·채널명을 마우스로 옮긴 양(칸 기준 %)
   const colorOverrides=new Map();
   const dirtyFields=new Map();
   const captionPositions=new Map();
@@ -607,11 +608,13 @@
     const letterPx=ln.letter_spacing!=null?ln.letter_spacing*scale:Math.max(-1.5,-.035*fontPx);
     const capped=bind==='channel'&&pickedFont?Math.min(fontPx,frame.height*scale*CHANNEL_MAX):fontPx;   // 09-19: 채널명 기본 크기 상한
     const manualScale=textScale(bind),scaledFont=Math.max(9,capped*manualScale);
-    const topOffset=(bind==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(bind);
+    const moved=textDrags.get(scaleKey(bind))||{x:0,y:0};   // 09-19 사장님: 제목·채널명도 마우스로 옮긴다
+    const topOffset=(bind==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(bind)+(bind==='caption'?0:moved.y);
     const verticalNudge=bind==='channel'?.7:-.35;
     const baseHeight=ln.h/frame.height*100+.9,displayHeight=baseHeight*Math.max(1,manualScale);
     const displayTop=ln.y0/frame.height*100+verticalNudge+topOffset-(displayHeight-baseHeight)/2;
-    Object.assign(el.style,{left:left+'%',right:right+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
+    const shiftX=bind==='caption'?0:moved.x;
+    Object.assign(el.style,{left:(left+shiftX)+'%',right:(right-shiftX)+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
     const fixedColorKey=bind==='hook1'?'title1':(bind==='hook2'||bind==='bodyTitle')?'title2':null;
     const forcedColor=fixedColorKey&&mode==='continuous'&&fixedColors.get(rows[current].id)?.[fixedColorKey];
     if(forcedColor){el.style.color=forcedColor;el.textContent=text||' ';
@@ -797,7 +800,11 @@
     if(isStoryBody(frame)){
       const el=layer.querySelector('.precision-text[data-edit-bind="bodyTitle"]');
       if(el){
-        const top=STORY_BODY.cut*STORY_BODY.titleTop;el.style.top=top+'%';
+        // 채널명 아래 최소 1.2% 띄운다(원본 채널 위치가 6.3~11.1%로 제각각이라 붙거나 겹쳤다)
+        const chEl=layer.querySelector('.precision-text[data-edit-bind="channel"]');
+        const pvBox=preview.getBoundingClientRect();
+        const chBottom=chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100):0;
+        const top=Math.max(STORY_BODY.cut*STORY_BODY.titleTop,chBottom+1.2);el.style.top=top+'%';
         // 자막 칸을 덮지 않는 선까지만 칸을 키운다(3줄 허용). 글자를 손으로 키웠어도 칸을 넘으면 줄인다 — 넘치면 자막·영상을 가린다.
         el.style.height=Math.max(STORY_BODY.cut*STORY_BODY.titleH,Math.min(STORY_BODY.cut-top-1,STORY_BODY.cut*STORY_BODY.titleH*3))+'%';
         let size=parseFloat(el.style.fontSize)||0;
@@ -1012,7 +1019,7 @@
     captionPositions.set(captionKey(),Number(button.dataset.captionPosition));markDirty('caption');updateCaptionButtons();renderEdit();
   });
   addEventListener('resize',()=>{if(!window.sceneStyleExporting&&!preview.classList.contains('is-pristine'))renderEdit()});
-  let captionDrag=null,captionMoveScope='scene';
+  let captionDrag=null,captionMoveScope='scene',textDrag=null;
   const moveScope=document.createElement('div');moveScope.className='caption-position';
   moveScope.hidden=true;
   moveScope.innerHTML='<button type="button" data-caption-scope="all" style="grid-column:1/-1">이 위치를 다른 장면에도 적용</button><small style="grid-column:1/-1" data-caption-scope-status></small>';
@@ -1062,6 +1069,26 @@
     captionMoveScope='scene';
     moveScope.querySelector('[data-caption-scope-status]').textContent='모든 장면에 적용했어요.';
   });
+  // 제목·채널명 끌어 옮기기(2026-09-19 사장님). 자막은 아래 기존 코드가 담당한다.
+  preview.addEventListener('pointerdown',event=>{
+    if(event.button!==0)return;
+    const hit=event.target.closest('.precision-text[data-edit-bind]');
+    const bind=hit?.dataset.editBind;
+    if(!bind||!['channel','hook1','hook2','bodyTitle'].includes(bind))return;
+    const rect=preview.getBoundingClientRect(),origin=textDrags.get(scaleKey(bind))||{x:0,y:0};
+    textDrag={pointer:event.pointerId,bind,key:scaleKey(bind),startX:event.clientX,startY:event.clientY,rect,origin,box:hit.getBoundingClientRect()};
+    preview.setPointerCapture(event.pointerId);event.preventDefault();
+  });
+  preview.addEventListener('pointermove',event=>{
+    if(!textDrag||event.pointerId!==textDrag.pointer)return;
+    const d=textDrag;
+    // 미리보기 밖으로 나가지 않게 막는다
+    const dx=Math.max(Math.min(0,d.rect.left-d.box.left),Math.min(Math.max(0,d.rect.right-d.box.right),event.clientX-d.startX));
+    const dy=Math.max(Math.min(0,d.rect.top-d.box.top),Math.min(Math.max(0,d.rect.bottom-d.box.bottom),event.clientY-d.startY));
+    textDrags.set(d.key,{x:d.origin.x+dx/d.rect.width*100,y:d.origin.y+dy/d.rect.height*100});
+    markDirty(d.bind);renderEdit();
+  });
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])preview.addEventListener(type,()=>{if(textDrag)rememberLocal({textDrags:Object.fromEntries(textDrags)});textDrag=null;});   /* 옮긴 자리를 바로 기억 */
   preview.addEventListener('pointerdown',event=>{
     if(event.button!==0||!event.target.closest('[data-edit-bind="caption"]'))return;
     const rect=preview.getBoundingClientRect(),text=layer.querySelector('.precision-text[data-edit-bind="caption"]');if(!text)return;
@@ -1092,7 +1119,7 @@
       if(saved){
         branding=Object.keys(saved.branding||{}).length?saved.branding:rememberedBranding();
         if(saved.presetId==='t11'&&saved.text?.channel==='이븐쇼핑')saved.text.channel='숏템메이커';
-        for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
+        for(const [name,map] of Object.entries({fontScales,textOffsets,textDrags,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         if(!query.has('preset')&&!query.has('mode')){
           modeBar.querySelector(`[data-template-mode="${saved.mode==='continuous'?'continuous':'story'}"]`).click();
           const index=rows.findIndex(p=>p.id===saved.presetId);if(index>=0)selectPreset(index);
@@ -1107,12 +1134,12 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
       if(saved){
-        for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts})){
+        for(const [name,map] of Object.entries({fontScales,textOffsets,textDrags,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts})){
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};

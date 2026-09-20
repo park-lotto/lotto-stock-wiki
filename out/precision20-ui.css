@@ -37,7 +37,8 @@
 .precision-base{z-index:1;object-fit:cover;object-position:top}
 .precision-media{z-index:3;inset:auto 0 auto 0;object-fit:cover;object-position:center 63%}
 .precision-edit-layer{z-index:6;pointer-events:none;overflow:hidden}
-.precision-edit-layer [data-edit-bind="caption"]{pointer-events:auto;cursor:grab;touch-action:none;user-select:none}
+/* 09-19 사장님: 제목·채널명도 마우스로 옮긴다 — 자막과 같은 조건으로 포인터를 받는다 */
+.precision-edit-layer [data-edit-bind="caption"],.precision-edit-layer [data-edit-bind="channel"],.precision-edit-layer [data-edit-bind="hook1"],.precision-edit-layer [data-edit-bind="hook2"],.precision-edit-layer [data-edit-bind="bodyTitle"]{pointer-events:auto;cursor:grab;touch-action:none;user-select:none}
 .precision-edit-layer [data-edit-bind="caption"]:active{cursor:grabbing}
 .dynamic-phone.is-pristine .precision-edit-layer{display:none}
 .precision-patch{position:absolute;display:flex;align-items:center;justify-content:center;overflow:hidden}

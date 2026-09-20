@@ -39,7 +39,7 @@ def validate_snapshot(value):
         elif isinstance(obj, str) and len(obj) > 2000:
             raise ValueError("문구가 너무 깁니다")
     walk(value)
-    for name in ("text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"):
+    for name in ("text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"):
         if name in value and not isinstance(value[name], dict):
             raise ValueError(f"{name} 설정이 올바르지 않습니다")
     for color in (value.get("colors") or {}).values():
@@ -134,7 +134,7 @@ def validate_snapshot(value):
                 number(item.get(key,default),lo,hi)
             if not re.fullmatch(r"#[0-9a-fA-F]{6}",item.get("color","#ffffff")):
                 raise ValueError("표시 색상이 올바르지 않습니다")
-    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "fontSet", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "fontSet", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
