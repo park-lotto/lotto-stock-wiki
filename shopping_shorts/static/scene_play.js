@@ -1165,6 +1165,33 @@ function _unhidePinned(){
   catch (e) { /* 재생기가 이미 사라졌으면 할 일이 없다 */ }
   _hidePin = null;
 }
+
+//: 가린 화면을 드러낼 때까지 기다리는 한도. 이 안에 안 오면 그냥 드러낸다(영영 빈 화면 방지).
+const _PIN_MAX_MS = 3000;
+const _PIN_STEP_MS = 60;
+
+function _pinHidden(v, want){
+  // ★시크가 **정말 끝났는지 확인하고** 드러낸다(2026-09-20 실측으로 잡은 결함).
+  //   처음엔 seeked 이벤트 + 안전핀 1500ms로 두었는데, 진짜 크롬 검증에서
+  //   **안전핀이 터지는 순간 아직 시크 중이면 컷3이 그대로 드러났다**(프레임 1장 노출 실측).
+  //   안전핀이 고치려던 증상을 되살린 것이다 — 9/18판이 400ms로 그랬던 것과 같은 모양.
+  //   그래서 시간이 아니라 **자리에 왔는지**로 드러낸다. 못 오면 짧게 다시 본다.
+  let waited = 0;
+  const reveal = () => {
+    if (!_hidePin || _hidePin.v !== v) return;        // 그 사이 다른 전환이 일어났다
+    v.onseeked = null;
+    v.style.visibility = '';
+    _hidePin = null;
+  };
+  const tick = () => {
+    if (!_hidePin || _hidePin.v !== v) return;
+    if (_seekSettled(v, want) || waited >= _PIN_MAX_MS) return reveal();
+    waited += _PIN_STEP_MS;
+    _hidePin.timer = setTimeout(tick, _PIN_STEP_MS);
+  };
+  v.onseeked = () => { if (_seekSettled(v, want)) reveal(); };   // 빨리 끝나면 곧바로
+  _hidePin = { v: v, go: reveal, timer: setTimeout(tick, _PIN_STEP_MS) };
+}
 const vid = () => curVid || document.getElementById('vid');
 // 페이지가 열리면 소스들을 미리 열어 둔다(첫 전환도 매끄럽게).
 // 페이지가 열리면 소스들의 **머리말(metadata)만** 미리 받아 둔다 — 본문은 안 당긴다.
@@ -1680,20 +1707,10 @@ function seekTo(t){
   const _want = v.currentTime;
   _unhidePinned();                     // 앞선 전환이 숨겨둔 재생기가 있으면 먼저 되돌린다
   if (v !== curVid && !_seekSettled(v, _want)){
-    // 가린 채 전환 → 준비되면 드러낸다. 엉뚱한 프레임은 어떤 경우에도 안 보인다.
+    // 가린 채 전환 → **자리에 온 것을 확인하고** 드러낸다.
     v.style.visibility = 'hidden';
     showVid(v);
-    let done = false;
-    const go = () => {
-      if (done) return;
-      done = true;
-      v.onseeked = null;
-      clearTimeout(_hidePin && _hidePin.timer);
-      v.style.visibility = '';
-      _hidePin = null;
-    };
-    v.onseeked = go;
-    _hidePin = { v: v, go: go, timer: setTimeout(go, 1500) };
+    _pinHidden(v, _want);
   } else {
     showVid(v);
   }
