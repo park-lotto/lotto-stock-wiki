@@ -533,7 +533,14 @@ def spine_origin(spine):
        "앞으로 아기 인형 들고 다닐 일은 없겠는데요"). 히트작 원문 한 편을 통째로 보여주고
       제품 이야기만 바꿔 쓰게 하면 흐름·조사가 안 깨진다(소재 12종 36편 중 34편 검사 통과).
     스파인은 그대로 남는다 — 유형·말투·훅 고정·회원별 순번을 정하는 관리 단위."""
-    _, tpl = _spine_style(spine)
+    # ★templates만 있고 beat_roles가 없는 스파인도 있다 — _spine_style은 둘 다 없으면 ([],{})라
+    #   원문을 못 찾는다. 여기선 templates만 보고 판단한다.
+    tpl = spine.get("templates")
+    if not isinstance(tpl, dict):
+        try:
+            tpl = json.loads(spine.get("templates_json") or "{}")
+        except Exception:      # noqa: BLE001
+            tpl = {}
     o = tpl.get("_origin") if isinstance(tpl, dict) else None
     return o if isinstance(o, dict) and o.get("cells") else None
 

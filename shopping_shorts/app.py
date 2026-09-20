@@ -22253,14 +22253,25 @@ def _backbone_drafts(spines, job, store, seconds=25, job_id=""):
         typ = ba.seed_type(srcs, (job or {}).get("backbone_main"), note=note)
     except Exception as e:      # noqa: BLE001 — 유형 판정 실패가 생성을 막으면 안 된다
         print("씨앗 유형 판정 건너뜀: %s" % str(e)[:100])
-    cand = ba.origin_spines(store, typ) if typ else []
     note["seed_type"] = typ
-    got = ba.assemble_clean(srcs, bb.get("video_id"), store, cand or list(spines or []),
-                            target_seconds=seconds, seed=job_id or None, want=2, note=note)
+    # ★안은 둘이다(2026-09-20 사장님): ①씨앗 유형 자동(끌 수 없음) ②사용자가 고른 스타일 1개.
+    #   자동 안은 씨앗 유형의 원문형 스파인에서, 고른 안은 그 스타일에서 각각 통과본 1편씩.
+    auto_c = ba.origin_spines(store, typ) if typ else []
+    got = ba.assemble_clean(srcs, bb.get("video_id"), store, auto_c,
+                            target_seconds=seconds, seed=job_id or None, want=1, note=note)
+    for g in got:
+        g["auto"] = True
+    picked_c = [sp for sp in (spines or []) if ba.spine_origin(sp)]
+    if picked_c:
+        n2 = {}
+        got += ba.assemble_clean(srcs, bb.get("video_id"), store, picked_c,
+                                 target_seconds=seconds, seed=(job_id or "") + "p", want=1, note=n2)
+        note["skipped"] = (note.get("skipped") or []) + (n2.get("skipped") or [])
     drafts = []
     for g in got:
         d = ba.to_draft(g["given"], g["beat_sources"], g["meta"])
         d["seed_type"] = typ                      # 화면 문구 "이 영상에 딱 맞는 스타일입니다"의 근거
+        d["auto_pick"] = bool(g.get("auto"))       # 자동 안인지(끌 수 없는 1안)
         d["style_name"] = (g["spine"] or {}).get("name") or d.get("style_name")
         drafts.append(d)
     whys = ["%s: %s" % (t.get("spine") or "", t.get("why") or "") for t in (note.get("skipped") or [])]

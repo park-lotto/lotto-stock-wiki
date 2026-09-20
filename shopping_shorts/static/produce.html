@@ -18235,10 +18235,12 @@ function s2RenderStyles(){
   //   원인은 버그가 아니라 설계였다 — 종전엔 `S2.picked.length===0`일 때만 픽업이 켜지는
   //   **배타 구조**라(픽업 = '스타일 0개'), 스타일을 하나 고르면 픽업이 자동으로 꺼졌다.
   //   이제 별도 플래그(S2.usePickup)라 '픽업 + 스타일 1개 = 2안'이 나온다.
-  const auto=`<div class="s2-card${(S2.usePickup!==false)?' sel':''}" onclick="s2TogglePickup()" title="담은 씨앗 영상의 대본 구조·훅 문형을 그대로 쓰고, 스토리·등장인물·CTA만 새로 씁니다 (다른 스타일과 함께 고를 수 있어요)">
-    <div class="t">📌 픽업영상 대본 <span class="sp"></span><span class="s2-badge ok">기본값</span></div>
-    <div class="s2-quote plain">${_sh.length?esc(_sh.join(' → ')):'씨앗 영상 구조 그대로 · 내용은 새로'}</div>
-    <div class="s2-meta"><span class="r">훅 문형</span><span class="r">구조</span><span class="d">스토리·CTA는 새로</span></div>
+  // ★씨앗 유형 자동 선택(2026-09-20 사장님) — 픽업영상 대본은 없앴다. 씨앗 영상이 이미 그 유형으로
+  //   찍혀 있으니 그 유형 스파인을 서버가 고른다. 사용자는 **끄지 못한다**(재료와 늘 맞는 안이라 기본값).
+  const auto=`<div class="s2-card sel locked" onclick="s2AutoLockedMsg()" title="담은 씨앗 영상과 같은 유형의 스타일로 자동으로 만듭니다 — 재료와 늘 맞아 끌 수 없어요">
+    <div class="t">🎯 이 영상에 딱 맞는 스타일 <span class="sp"></span><span class="s2-badge ok">자동</span></div>
+    <div class="s2-quote plain">${_sh.length?esc(_sh.join(' → ')):'씨앗 영상 유형으로 자동 선택'}</div>
+    <div class="s2-meta"><span class="r">자동</span><span class="d">아래에서 한 개 더 고를 수 있어요</span></div>
   </div>`;
   // ★인스타 먼저, 유튜브 나중(2026-08-21 사장님 지시). 같은 판끼리 붙여놔야 눈이 안 튄다.
   //   그 안의 순서는 서버가 준 그대로 둔다(검증 먼저 → 실적순). 안정 정렬이라 안 뒤집힌다.
@@ -18349,18 +18351,9 @@ function s2RenderStyles(){
 function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
 // ★안은 최대 2개다(종전 그대로). 픽업도 한 안을 차지하므로 **함께 세어** 상한을 건다 —
 //   따로 세면 픽업+스타일 2개 = 3안이 되어 종전 규칙이 조용히 깨진다.
-function s2AnCount(){ return (S2.picked||[]).length + ((S2.usePickup!==false)?1:0); }
-function s2TogglePickup(){
-  if(S2.usePickup===false){
-    if(s2AnCount()>=2){ toast('안은 2개까지 — 스타일 하나를 해제하고 고르세요'); return; }
-    S2.usePickup=true;
-  } else {
-    // 픽업을 끄려는데 스타일이 하나도 없으면 만들 안이 0개가 된다 — 막는다.
-    if(!(S2.picked||[]).length){ toast('스타일을 하나 고르면 픽업을 끌 수 있어요'); return; }
-    S2.usePickup=false;
-  }
-  s2RenderStyles(); saveWork();
-}
+function s2AnCount(){ return (S2.picked||[]).length + 1; }   // 자동 1안은 늘 들어간다(끌 수 없음)
+function s2AutoLockedMsg(){ toast('씨앗 영상에 맞는 스타일이라 항상 들어갑니다 — 아래에서 한 개 더 고를 수 있어요'); }
+function s2TogglePickup(){ s2AutoLockedMsg(); }   // 자동 안은 끌 수 없다(2026-09-20)
 function s2ToggleStyle(id){
   const i=S2.picked.indexOf(id);
   if(i>=0) S2.picked.splice(i,1);
@@ -18422,7 +18415,7 @@ async function s2Generate(){
     // ★픽업과 스타일은 **함께** 고를 수 있다(2026-08-26). 서버는 한 요청에 둘 중 하나만
     //   처리하므로(style_ids가 오면 스타일 경로) **요청을 나눠 보내고 결과를 합친다** —
     //   서버를 건드리지 않는다(0순위-B: 생성 판정은 서버 한 곳에 그대로 둔다).
-    const _usePickup = (S2.usePickup!==false);
+    const _usePickup = false;      // ★픽업영상 대본 폐지(2026-09-20 사장님) — 자동 안은 서버가 씨앗 유형으로 만든다
     const _sents=s2SeedSentences((S2.seed&&S2.seed.text)||'');
     const _hook=_sents[0]||'';
     const _reqs=[];
