@@ -56,6 +56,10 @@ def split_hook(value: object) -> tuple[str, str]:
             len(" ".join(words[:index])) - len(" ".join(words[index:]))
         ),
     )
+    # 2026-09-21 사장님: '무릎 탁 / 친 천재적인'처럼 한 글자 낱말이 둘째 줄 앞에 떨어지면 말이 끊겨 보인다.
+    #   그런 경우 그 낱말을 윗줄로 올린다(전체 길이는 한 낱말만큼만 달라진다).
+    if best < len(words) - 1 and len(words[best]) <= 1:
+        best += 1
     return " ".join(words[:best]), " ".join(words[best:])
 
 
@@ -63,8 +67,9 @@ def scene_text(headcopy: object) -> dict[str, str]:
     """저장된 제목 세트를 장면꾸미기 슬롯으로 한 번만 변환한다."""
     source = headcopy if isinstance(headcopy, dict) else {}
     hook1, hook2 = split_hook(source.get("text"))
-    support = _one_line(source.get("subline")) or _one_line(f"{hook1} {hook2}")
-    body_title = _one_line(source.get("body_title")) or support
+    # 2026-09-21 사장님: 보조 문구가 없으면 비워 둔다 — 제목을 그대로 복사해 훅에 같은 글이 두 번 나왔다.
+    support = _one_line(source.get("subline"))
+    body_title = _one_line(source.get("body_title")) or support or _one_line(f"{hook1} {hook2}")   # 본문 제목은 비면 제목을 쓴다
     return {
         "hook1": hook1,
         "hook2": hook2,
