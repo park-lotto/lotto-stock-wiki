@@ -264,11 +264,9 @@
   });
   const fixedPanel=document.createElement('section');
   fixedPanel.className='fixed-quick-panel';
-  fixedPanel.innerHTML='<div class="fixed-quick-head"><b>고정형 빠른 조절</b><button type="button" data-fixed-reset>전체 초기화</button></div><div class="fixed-size-control" data-fixed-size="top"><span>상단 제목칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="12" max="50" step="1" data-fixed-range="top"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="bottom"><span>하단 자막칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="0" max="35" step="1" data-fixed-range="bottom"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-palette-row" data-texture-row><button type="button" data-band-texture="none">민무늬</button><button type="button" data-band-texture="weave" class="active">거친 결</button><button type="button" data-band-texture="paper">종이 결</button><button type="button" data-band-texture="soft">은은한 빛</button></div><div class="fixed-palette-row"><button type="button" data-fixed-palette="original">원본</button><button type="button" data-fixed-palette="mint">민트</button><button type="button" data-fixed-palette="yellow">옐로</button><button type="button" data-fixed-palette="pink">핑크</button></div><div class="fixed-color-grid"><label><span>제목 배경</span><input type="color" data-fixed-color="top"></label><label><span>하단 배경</span><input type="color" data-fixed-color="bottom"></label><label><span>제목 1</span><input type="color" data-fixed-color="title1"></label><label><span>제목 2</span><input type="color" data-fixed-color="title2"></label></div>';
+  fixedPanel.innerHTML='<div class="fixed-quick-head"><b>고정형 빠른 조절</b><button type="button" data-fixed-reset>전체 초기화</button></div><div class="fixed-size-control" data-fixed-size="top"><span>상단 제목칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="12" max="50" step="1" data-fixed-range="top"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="bottom"><span>하단 자막칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="0" max="35" step="1" data-fixed-range="bottom"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-palette-row"><button type="button" data-fixed-palette="original">원본</button><button type="button" data-fixed-palette="mint">민트</button><button type="button" data-fixed-palette="yellow">옐로</button><button type="button" data-fixed-palette="pink">핑크</button></div><div class="fixed-color-grid"><label><span>제목 배경</span><input type="color" data-fixed-color="top"></label><label><span>하단 배경</span><input type="color" data-fixed-color="bottom"></label><label><span>제목 1</span><input type="color" data-fixed-color="title1"></label><label><span>제목 2</span><input type="color" data-fixed-color="title2"></label></div>';
   bodyMotionPanel.after(fixedPanel);
   const channelColorLabel=document.createElement('label');channelColorLabel.innerHTML='<span>채널명</span><input type="color" data-fixed-color="channel">';fixedPanel.querySelector('.fixed-color-grid').append(channelColorLabel);
-  fixedPanel.addEventListener('click',event=>{const t=event.target.closest('[data-band-texture]');if(!t)return;
-    bandTexture=t.dataset.bandTexture;fixedPanel.querySelectorAll('[data-band-texture]').forEach(x=>x.classList.toggle('active',x===t));renderEdit();});
   const fixedPalettes={mint:{top:'#082923',bottom:'#082923',title1:'#FFFFFF',title2:'#43E2B4'},yellow:{top:'#17140A',bottom:'#17140A',title1:'#FFFFFF',title2:'#FFE24A'},pink:{top:'#24101A',bottom:'#24101A',title1:'#FFFFFF',title2:'#FF78B7'}};
   function syncHookMotionUI(){
     motionPanel.hidden=sceneIndex>0;   // 09-19 사장님: 본문 장면에선 훅 모션 숨김(훅 전용)
@@ -517,17 +515,6 @@
     if(label2)label2.textContent=mode==='continuous'?'제목 2':'훅 제목 2';
     syncFieldLimits();
   }
-  // 배경 질감(2026-09-19 사장님 '원색만 넣으니 기본 템플릿 같다'): 단색 위에 아주 옅은 결·빛·비네팅을 얹는다.
-  //   색은 그대로 두고 그림만 더한다 — 미리보기와 최종 렌더가 같은 DOM이라 영상에도 그대로 나온다.
-  //   결 종류는 여기 한 곳(TEXTURES)에서 정한다. 기본은 'weave'(거친 직물 결).
-  const TEXTURES={
-    none:()=>'',
-    weave:()=>'repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 2px,rgba(0,0,0,.035) 2px 4px),repeating-linear-gradient(-45deg,rgba(255,255,255,.022) 0 3px,rgba(0,0,0,.022) 3px 6px),radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.10),rgba(0,0,0,.16))',
-    paper:()=>'repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,rgba(0,0,0,.03) 1px 3px),radial-gradient(120% 80% at 50% 10%,rgba(255,255,255,.08),rgba(0,0,0,.14))',
-    soft:()=>'linear-gradient(180deg,rgba(255,255,255,.10),rgba(0,0,0,.12))',
-  };
-  let bandTexture='weave';
-  const texturize=el=>{const layers=TEXTURES[bandTexture]?.();if(layers)el.style.backgroundImage=layers;return el;};
   function addPatch(y,h,color,x=0,w=100,bind=''){
     const el=document.createElement('div');el.className='precision-patch';
     if(bind)el.dataset.editBind=bind;
@@ -653,14 +640,14 @@
     const fixedPaint=mode==='continuous'?fixedColorsFor(p.id,frame):null;
     if(mode==='story'&&!frame.design_label){
       addPatch(0,captionSource(frame).cut/frame.height*100,bg);
-      if(frame.top_band)texturize(addPatch(frame.top_band.y0/frame.height*100,(frame.top_band.y1-frame.top_band.y0+1)/frame.height*100,frame.top_band.color));
+      if(frame.top_band)addPatch(frame.top_band.y0/frame.height*100,(frame.top_band.y1-frame.top_band.y0+1)/frame.height*100,frame.top_band.color);
     }
     (frame.cleanup_regions||[]).forEach(region=>{
       if(region.role==='source-footer'||(mode==='continuous'&&region.role==='original-title'))return;
       addPatch(region.y/frame.height*100,region.height/frame.height*100,region.background,(region.x||0)/frame.width*100,(region.width||frame.width)/frame.width*100);
     });
     if(fixedLayout){
-      texturize(addPatch(0,fixedLayout.top,fixedPaint.top));
+      addPatch(0,fixedLayout.top,fixedPaint.top);
       if(fixedLayout.bottom>0)addPatch(100-fixedLayout.bottom,fixedLayout.bottom,fixedPaint.bottom);
     }
     if(dirty.size){
@@ -1065,12 +1052,12 @@
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';bandTexture=TEXTURES[saved.bandTexture]?saved.bandTexture:bandTexture;window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;renderEdit();syncHookMotionUI();
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;renderEdit();syncHookMotionUI();
       }
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,bandTexture,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
@@ -1079,7 +1066,7 @@
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';bandTexture=TEXTURES[saved.bandTexture]?saved.bandTexture:bandTexture;window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
         modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
