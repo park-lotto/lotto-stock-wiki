@@ -102,3 +102,20 @@ def test_stop_play_unhides():
 def test_helpers_defined_once(fn):
     """같은 이름을 두 번 만들면 나중 것이 앞 것을 조용히 덮는다(이 저장소가 데인 함정)."""
     assert JS.count("function %s(" % fn) == 1
+
+
+def test_pin_releases_the_previous_one_first():
+    """★가린 재생기를 **버리고 새로 가리면** 그것은 영영 안 드러난다(2026-09-20 실측).
+
+    칸0(컷 9개)처럼 연달아 전환하면 _hidePin 이 덮어써지고, 앞서 가려둔 재생기는
+    visibility:hidden 인 채로 남는다. 3초를 기다려도 화면이 안 그려지는 판이 나왔다
+    (3회 중 1회). 가리는 쪽에 **되돌리는 책임**을 같이 둔다.
+    """
+    body = _pin_body()
+    head = body[:body.index("let waited")]
+    assert "_unhidePinned()" in head, "앞서 가려둔 재생기를 먼저 되돌리지 않는다"
+    # reveal 은 자기 재생기를 조건 없이 되돌려야 한다(다른 전환이 맡았어도 화면은 되살린다)
+    rv = body[body.index("const reveal"):body.index("const tick")]
+    assert "visibility = ''" in rv
+    assert "if (!_hidePin || _hidePin.v !== v) return;" not in rv, \
+        "다른 전환이 끼면 되돌리지 않고 빠져나간다(가린 채 남는다)"
