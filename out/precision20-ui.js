@@ -325,9 +325,7 @@
     // 훅 화면에는 자막이 없다 — '자막 칸'은 본문·고정형에서만 보인다(훅에서 눌러도 안 먹어 혼란스러웠다)
     const capRow=fixedPanel.querySelector('[data-fixed-size="caption"]');if(capRow)capRow.hidden=false;   // 훅에서도 흰 띠(자막 칸) 높이를 조절한다
     // 09-19: '채널명 칸'은 머리띠(캡슐·아이콘)가 원본 그림이라 글자만 떨어져 나왔다. 템플릿 20종의 머리띠 좌표를 넣기 전까지 잠근다.
-    // 09-19: 머리띠 좌표는 다 쟀지만(out/scene-header-bands.js) 옮길 때 원본 머리띠가 그대로 남아 두 겹으로 보인다.
-    //   덮는 층이 applyStoryLayout의 재배치에 밀리는 것이 원인 — 그 정리 전까지 잠가 둔다.
-    const chRow=fixedPanel.querySelector('[data-fixed-size="channel"]');if(chRow)chRow.hidden=true;
+    const chRow=fixedPanel.querySelector('[data-fixed-size="channel"]');if(chRow)chRow.hidden=false;
     fixedPanel.querySelector('.fixed-quick-head b').textContent=mode==='continuous'?'고정형 빠른 조절':`${kind==='hook'?'훅':'본문'} 빠른 조절`;
     const p=rows[current],frame=frameFor(p),layout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame)},colors=fixedColorsFor(p.id,frame);
     fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
@@ -790,41 +788,18 @@
       const saved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
       const chEl0=layer.querySelector('.precision-text[data-edit-bind="channel"]');
       const chDrag=textDrags.get(scaleKey('channel'))||{x:0,y:0};   // 마우스로 옮긴 양은 칸 위치에 더한다(칸을 쓰면 드래그가 먹지 않던 문제)
+      // 09-19 사장님 선택①을 쉬운 길로: 머리띠만 오려 붙이지 않고 **원본 그림 자체를 내린다**.
+      //   그러면 캡슐·검색 아이콘·채널 글자가 한 덩어리로 같이 내려간다. 위에 생긴 빈 줄만 머리띠 색으로 채운다.
+      //   머리띠 아래 끝 값은 tools/measure_header_bands.js 가 그림에서 재 둔 것(out/scene-header-bands.js).
+      const band=(window.SCENE_HEADER_BANDS||{})[`${p.id}:${frameKind()}`];
+      const bandPct=band&&band.h?band.y1/band.h*100:0;
+      const shift=saved>0&&bandPct>0?Math.max(0,saved-bandPct):0;
+      base.style.top=shift+'%';
+      preview.style.backgroundColor=shift>0?(band?.color||fixedColorsFor(p.id,frame).top||'#000000'):'';
       if(saved>0&&chEl0){
         const h=chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
         const before=parseFloat(chEl0.style.top)||0,next=Math.max(0,saved-h+chDrag.y);
         chEl0.style.top=next+'%';
-        // 09-19 사장님 선택①: 머리띠(캡슐·검색 아이콘·글자)를 통째로 옮긴다.
-        //   원본 그림의 머리띠 구간(0~원래 채널 아래끝)을 그대로 잘라 새 자리에 붙이고, 위에 빈 곳은 머리띠 색으로 메운다.
-        const bandColor=fixedColorsFor(p.id,frame).top||frame.title_bg||frame.top_band?.color||'#000000';
-        layer.querySelectorAll('.channel-strip,.channel-strip-fill').forEach(e=>e.remove());
-        // 머리띠 구간은 tools/measure_header_bands.js 가 원본 그림에서 재 둔 값이다(out/scene-header-bands.js).
-        const band=(window.SCENE_HEADER_BANDS||{})[`${p.id}:${frameKind()}`];
-        const bandPct=band&&band.h?band.y1/band.h*100:0;
-        if(bandPct>0&&base?.src){
-          const headBottom=Math.max(bandPct,next+h);   // 머리띠 아래 끝을 칸 값에 맞춘다
-          // ① 원래 머리띠 자리는 머리띠 색으로 덮는다(옮긴 뒤 위가 비어 보이지 않게)
-          const fill=document.createElement('div');fill.className='precision-patch channel-strip-fill';
-          Object.assign(fill.style,{left:'0%',width:'100%',top:'0%',height:headBottom+'%',background:band.color||bandColor,zIndex:'0'});
-          layer.prepend(fill);
-          // ② 머리띠 그림(캡슐·검색 아이콘·채널 글자)을 통째로 잘라 새 자리에 붙인다
-          const strip=document.createElement('div');strip.className='precision-patch channel-strip';
-          Object.assign(strip.style,{left:'0%',width:'100%',top:Math.max(0,headBottom-bandPct)+'%',height:bandPct+'%',zIndex:'1',
-            backgroundImage:`url("${base.src}")`,backgroundSize:`100% ${100/(bandPct/100)}%`,backgroundPosition:'0% 0%',backgroundRepeat:'no-repeat'});
-          if(chEl0)layer.insertBefore(strip,chEl0);else layer.prepend(strip);
-          // ③ 채널명 글자는 머리띠 그림 안에 이미 있다. 문구를 고친 경우에만 그 자리를 덮고 새 글자를 보인다.
-          const edited=currentDirty().has('channel');
-          chEl0.hidden=!edited;
-          if(edited){
-            const chBox=frame.channel_box||(frame.channel_boxes||[])[0];
-            const chLine=(frame.lines||[]).find(l=>l.bind==='channel');
-            const y=chBox?chBox.y:(chLine?chLine.y0:0),hh=chBox?chBox.height:(chLine?(chLine.y1-chLine.y0):0);
-            if(hh>0){
-              const cover=addPatch(Math.max(0,headBottom-bandPct+y/frame.height*100-0.4),hh/frame.height*100+0.8,chBox?.background||band.color||bandColor,0,100,'');
-              cover.classList.add('channel-strip-fill');layer.insertBefore(cover,chEl0);
-            }
-          }
-        }
         layer.querySelectorAll('.precision-patch[data-edit-bind="channel"]').forEach(box=>{
           const t=parseFloat(box.style.top)||0;box.style.top=Math.max(0,t+(next-before))+'%';
         });
