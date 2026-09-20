@@ -323,7 +323,7 @@
     fixedPanel.hidden=false;
     fixedPanel.querySelector('[data-fixed-size="bottom"] span').textContent='하단 칸';
     // 훅 화면에는 자막이 없다 — '자막 칸'은 본문·고정형에서만 보인다(훅에서 눌러도 안 먹어 혼란스러웠다)
-    const capRow=fixedPanel.querySelector('[data-fixed-size="caption"]');if(capRow)capRow.hidden=mode==='story'&&kind==='hook';
+    const capRow=fixedPanel.querySelector('[data-fixed-size="caption"]');if(capRow)capRow.hidden=false;   // 훅에서도 흰 띠(자막 칸) 높이를 조절한다
     fixedPanel.querySelector('.fixed-quick-head b').textContent=mode==='continuous'?'고정형 빠른 조절':`${kind==='hook'?'훅':'본문'} 빠른 조절`;
     const p=rows[current],frame=frameFor(p),layout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame)},colors=fixedColorsFor(p.id,frame);
     fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
@@ -755,13 +755,14 @@
       // 원본 설명띠의 글자/흔적을 먼저 완전히 덮고 편집 가능한 텍스트만 다시 올린다.
       const movedCaption=kind==='body'&&(fixedLayouts.get(layoutKey(p.id,frame))?.bottom||0)>0;
       const savedCap=fixedLayoutFor(p.id,frame).caption;   // 09-19: '자막 칸' 슬라이더가 훅 흰 띠에도 먹게
-      const wbH=savedCap>0?savedCap:(wb.y1-wb.y0+1)/frame.height*100;
+      const wbH=savedCap>0?savedCap:(wb.y1-wb.y0+1)/frame.height*100;   // 09-19: 훅 흰 띠도 '자막 칸' 값을 따른다
       addPatch(wb.y0/frame.height*100,wbH,movedCaption?(fixedColorsFor(p.id,frame).top||bg):(wb.background||'#FFFFFF'),0,100,'white-box');
     }
     if(wb?.text&&kind==='hook'){
       const key=kind==='hook'?'bodyTitle':'caption';
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
+    applyChannelSlot(frame,p);   // 09-19: 고정형에서도 채널명 칸이 먹게
     if(mode==='story'){
       applyStoryLayout(frame,p);
       const storyBottom=fixedLayoutFor(p.id,frame).bottom;
@@ -777,6 +778,53 @@
     }
     if(hasEditableCaption())renderCaption(frame);
     syncMediaLayout();
+  }
+  // 채널명 칸(빠른 조절) — 썰쇼핑형·고정형 모두 적용. renderEdit 끝에서 한 번 부른다.
+  function applyChannelSlot(frame,p){
+    // 09-19: '채널명 칸' 슬라이더는 훅·본문 모두에 적용한다(전엔 본문에서만 먹었다)
+    {
+      const saved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
+      const chEl0=layer.querySelector('.precision-text[data-edit-bind="channel"]');
+      const chDrag=textDrags.get(scaleKey('channel'))||{x:0,y:0};   // 마우스로 옮긴 양은 칸 위치에 더한다(칸을 쓰면 드래그가 먹지 않던 문제)
+      if(saved>0&&chEl0){
+        const h=chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
+        const before=parseFloat(chEl0.style.top)||0,next=Math.max(0,saved-h+chDrag.y);
+        chEl0.style.top=next+'%';
+        // 채널명 배경(캡슐·띠)도 글자와 같이 움직인다. 원본 그림에 그려진 캡슐은 가리고 새 자리에 다시 그린다.
+        const boxes=frame.channel_boxes?.length?frame.channel_boxes:(frame.channel_box?[frame.channel_box]:[]);
+        const bandColor=fixedColorsFor(p.id,frame).top||frame.title_bg||frame.top_band?.color||'#000000';
+        layer.querySelectorAll('.channel-slot-box,.channel-slot-cover').forEach(e=>e.remove());
+        // 캡슐 정보가 데이터에 없으면(원본 그림에 그려진 경우) 원래 채널 자리를 배경색으로 덮는다
+        if(!boxes.length){
+          const defTop=fixedBaseLayout(frame).channel,hh=chEl0?chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100:6;
+          const cover=addPatch(Math.max(0,defTop-hh-1.5),hh+3,bandColor,0,100,'');cover.classList.add('channel-slot-cover');
+          if(chEl0)layer.insertBefore(cover,chEl0);
+        }
+        for(const c of boxes){
+          const y=c.y/frame.height*100,h=c.height/frame.height*100,x=c.x/frame.width*100,w=c.width/frame.width*100;
+          const cover=addPatch(Math.max(0,y-0.4),h+0.8,bandColor,Math.max(0,x-1),Math.min(100,w+2),'');cover.classList.add('channel-slot-cover');
+          if(c.designed)continue;   // 글자만 있는 채널(캡슐 없음)은 덮기만 한다
+          const box=addPatch(Math.max(0,next-0.2),h,c.background,x,w,'');box.classList.add('channel-slot-box');
+          box.style.borderRadius=((Number(c.radius)||0)*preview.clientHeight/frame.height)+'px';
+          if(c.border)box.style.border=`${Math.max(1,preview.clientHeight/frame.height)}px solid ${c.border}`;
+          if(chEl0)layer.insertBefore(box,chEl0);
+        }
+        layer.querySelectorAll('.precision-patch[data-edit-bind="channel"]').forEach(box=>{
+          const t=parseFloat(box.style.top)||0;box.style.top=Math.max(0,t+(next-before))+'%';
+        });
+      }
+      // 채널명을 내리면 제목 줄도 겹치지 않게 함께 내린다(훅·본문 공통)
+      if(saved>0){
+        let floor=saved+1.2;
+        for(const bind of ['hook1','hook2','bodyTitle']){
+          const t=layer.querySelector(`.precision-text[data-edit-bind="${bind}"]`);if(!t)continue;
+          const h=t.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
+          const cur=parseFloat(t.style.top)||0;
+          if(cur<floor)t.style.top=Math.min(96,floor)+'%';
+          floor=Math.max(floor,(parseFloat(t.style.top)||0)+h*0.9);
+        }
+      }
+    }
   }
   function applyStoryLayout(frame,p){
     // 이븐쇼핑 원본형은 측정 좌표 자체가 계약이다. 장면별 자막칸 보정으로
@@ -809,23 +857,6 @@
       }
     }
     // 09-19: 본문 제목은 20종 모두 같은 자리(자막 칸 시작 대비 비율). 위 배치 보정이 끝난 뒤 마지막에 자리를 잡는다.
-    // 09-19: '채널명 칸' 슬라이더는 훅·본문 모두에 적용한다(전엔 본문에서만 먹었다)
-    {
-      const saved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
-      const chEl0=layer.querySelector('.precision-text[data-edit-bind="channel"]');
-      if(saved>0&&chEl0){const h=chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;chEl0.style.top=Math.max(0,saved-h)+'%';}
-      // 채널명을 내리면 제목 줄도 겹치지 않게 함께 내린다(훅·본문 공통)
-      if(saved>0){
-        let floor=saved+1.2;
-        for(const bind of ['hook1','hook2','bodyTitle']){
-          const t=layer.querySelector(`.precision-text[data-edit-bind="${bind}"]`);if(!t)continue;
-          const h=t.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
-          const cur=parseFloat(t.style.top)||0;
-          if(cur<floor)t.style.top=Math.min(96,floor)+'%';
-          floor=Math.max(floor,(parseFloat(t.style.top)||0)+h*0.9);
-        }
-      }
-    }
     // 09-19: 손으로 키운 제목 줄이 서로 겹치던 문제 — 겹친 만큼 아래 줄을 내린다(줄 간격만 벌린다)
     const titleEls=['hook1','hook2','bodyTitle'].map(b=>layer.querySelector(`.precision-text[data-edit-bind="${b}"]`)).filter(Boolean);
     for(let i=1;i<titleEls.length;i++){
