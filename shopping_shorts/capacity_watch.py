@@ -244,6 +244,10 @@ def daily(db_path, days=14):
                  "tx_gb": round(tx.get(r[0], 0.0), 2), "samples": r[7],
                  # 2026-09-18: 서버 탓인 대기만 따로 — 동시 고객 최대 / 남 때문에 기다린 고객 최대 / 그런 분(分)
                  "max_run_customers": r[8], "max_wait_customers": r[9],
+                 # ⚠️wait_customers_min 은 5×(표본 수)라 **표본 간격이 5분일 때만** 맞다.
+                 #   화면을 열 때마다 표본이 더 찍혀 실제보다 2~5배 부푼다(2026-09-20 실측:
+                 #   09-19 표본 703개=간격 2.05분인데 65분으로 보고). 진짜 대기는
+                 #   wait_times()로 본다 — 큐의 created_at→claimed_at 을 직접 잰다.
                  "wait_customers_min": r[10]} for r in rows]
     finally:
         conn.close()
@@ -365,6 +369,99 @@ def waiting(db_path, limit=40):
     finally:
         conn.close()
 
+
+
+def _customer_tasks():
+    """고객이 화면 앞에서 기다리는 작업 이름들.
+
+    ★여기서 새로 정의하지 않는다(0순위-B). Store._TASK_JOB_FIELDS가 이미
+      "이 작업은 화면의 어느 칸을 물고 있나"를 정해둔 곳이고, 그 목록이 곧
+      '고객이 기다리는 작업'이다. 두 군데서 정하면 작업이 하나 늘었을 때
+      한쪽만 고쳐져 조용히 어긋난다.
+    """
+    from shopping_shorts.store import Store
+    return tuple(Store._TASK_JOB_FIELDS)
+
+
+def wait_times(db_path, days=7):
+    """**진짜** 대기 시간 — 큐에 선 시각(created_at)에서 시작된 시각(claimed_at)까지.
+
+    ★왜 따로 만들었나(2026-09-20 사장님 지적에서 나왔다).
+      daily()의 `wait_customers_min`은 `5 × (기다림이 잡힌 표본 수)`다. 표본이 정확히
+      5분마다 찍힌다는 가정인데 **실제로는 그렇지 않다** — 관리자가 capacity 화면을
+      열 때마다 표본이 한 점씩 더 붙는다(`_api_capacity`의 "열 때마다 한 점"). 실측:
+
+          09-18  표본 1399개 → 실제 간격 1.03분인데 5를 곱해 55분으로 보고됨
+          09-19  표본  703개 → 실제 간격 2.05분인데 5를 곱해 65분으로 보고됨
+
+      즉 **화면을 자주 열수록 대기가 길어 보인다.** 같은 날 큐 기록으로 직접 재면
+      렌더 대기는 평균 0.1분·최대 3.6분이었다 — 자리가 나면 곧바로 물어간다.
+      숫자가 관측 행위에 따라 변하면 그건 지표가 아니다. 그래서 큐를 직접 읽는다.
+
+    반환: 날짜·작업별 {건수, 평균분, 최대분, 3분초과건수}. 최대치와 함께 **평균**도
+    주는 이유는, 하루 한 건의 꼬리가 전체를 대표하는 것처럼 보이지 않게 하기 위함이다.
+    """
+    tasks = _customer_tasks()
+    marks = ",".join("?" for _ in tasks)
+    conn = sqlite3.connect(str(db_path), timeout=10)
+    try:
+        rows = conn.execute(
+            "SELECT substr(created_at,1,10) d, task, COUNT(*), "
+            "       AVG((julianday(claimed_at)-julianday(created_at))*1440), "
+            "       MAX((julianday(claimed_at)-julianday(created_at))*1440), "
+            "       SUM(CASE WHEN (julianday(claimed_at)-julianday(created_at))*1440 > 3 "
+            "                THEN 1 ELSE 0 END) "
+            "  FROM job_queue "
+            " WHERE claimed_at IS NOT NULL AND created_at >= date('now', ?) "
+            f"   AND task IN ({marks}) "
+            " GROUP BY d, task ORDER BY d DESC, 5 DESC",
+            (f"-{int(days)} days", *tasks)).fetchall()
+        return [{"date": r[0], "task": r[1], "n": r[2],
+                 "avg_min": round(r[3] or 0.0, 2), "max_min": round(r[4] or 0.0, 1),
+                 "over_3min": r[5] or 0} for r in rows]
+    finally:
+        conn.close()
+
+
+def deploy_victims(db_path, days=14):
+    """배포 재시작에 **고객 작업이 끊긴** 건 — 누가 언제 피해를 봤나(2026-09-20).
+
+    reap_stale()이 사유를 갈라 적어 둔 것을 그대로 읽는다(0순위-B: 여기서 다시
+    판정하지 않는다). 배경작업(durfill·prewarm·overseas)은 배포 때 일부러
+    희생시키는 것이라 '고장 아님'으로 적히고 — 그건 세지 않는다. 고객이 화면 앞에서
+    기다리다 끊긴 것만 센다. 실측(2026-09-20 기준 14일): 고객 4건 / 배경 25건.
+
+    ★배포 시각 로그를 따로 뒤지지 않는 이유: 그 흔적은 이미 큐에 남아 있다.
+      로그와 DB 두 군데서 같은 판단을 하면 언젠가 어긋난다.
+
+    lost_min = 시작된 뒤 끊기기까지 **버려진 시간**. 고객이 기다린 보람 없이
+    날아간 분(分)이라, 이 합이 곧 배포가 회원에게 끼친 손해다.
+    """
+    conn = sqlite3.connect(str(db_path), timeout=10)
+    try:
+        rows = conn.execute(
+            "SELECT id, task, owner, created_at, claimed_at, finished_at "
+            "  FROM job_queue "
+            " WHERE error LIKE '%워커가 중단%' AND finished_at >= date('now', ?) "
+            " ORDER BY finished_at DESC", (f"-{int(days)} days",)).fetchall()
+        out = []
+        for qid, task, owner, created, claimed, fin in rows:
+            lost = None
+            if claimed and fin:
+                try:
+                    lost = round((_parse(fin) - _parse(claimed)).total_seconds() / 60, 1)
+                except Exception:      # noqa: BLE001 — 시각이 깨져도 행은 보여준다
+                    lost = None
+            out.append({"qid": qid, "task": task, "owner": owner,
+                        "at": fin, "lost_min": lost})
+        return out
+    finally:
+        conn.close()
+
+
+def _parse(s):
+    """'YYYY-MM-DD HH:MM:SS' 또는 ISO 문자열 → datetime. 큐는 두 모양이 섞여 있다."""
+    return datetime.fromisoformat(str(s).replace("Z", "").strip())
 
 def verdict(db_path, cores=None, now_queued=None):
     """지금 서버를 늘려야 하나 — 숫자로 답한다. 화면 맨 위에 한 줄로 띄운다.

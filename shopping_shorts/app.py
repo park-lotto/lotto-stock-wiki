@@ -16319,9 +16319,21 @@ def _api_capacity(request: Request, days: int = 14):
         wait = capacity_watch.waiting(DB_PATH)
     except Exception:      # noqa: BLE001 — 대기 목록이 없다고 관측판이 죽으면 안 된다
         wait = {"rows": [], "by_customer": []}
+    # ★진짜 대기 시간과 배포 피해(2026-09-20). daily의 wait_customers_min은 표본 수로
+    #   환산한 값이라 화면을 열수록 부푼다 — 큐를 직접 읽은 아래 둘이 정답이다.
+    try:
+        wait_times = capacity_watch.wait_times(DB_PATH, days=max(1, min(days, 60)))
+    except Exception:      # noqa: BLE001
+        wait_times = []
+    try:
+        victims = capacity_watch.deploy_victims(DB_PATH, days=max(1, min(days, 60)))
+    except Exception:      # noqa: BLE001
+        victims = []
     return {"ok": True, "now": now,
             "daily": capacity_watch.daily(DB_PATH, days=max(1, min(days, 60))),
             "waiting": wait,
+            "wait_times": wait_times,
+            "deploy_victims": victims,
             "verdict": capacity_watch.verdict(DB_PATH, cores=now.get("cores"),
                                               now_queued=now.get("queued"))}
 
