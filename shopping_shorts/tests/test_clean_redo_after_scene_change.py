@@ -111,15 +111,14 @@ _HTML = io.open(os.path.join(os.path.dirname(__file__), "..", "static", "produce
                 encoding="utf-8").read()
 
 
-def test_redo_button_is_wired_to_the_confirming_function():
-    """stale일 때 나오는 버튼이 **확인창을 거치는** 함수를 불러야 한다.
-    startCleanPreview를 직접 부르면 확인 없이 크레딧이 나간다."""
-    assert "onclick=\"redoCleanForNewScenes()\"" in _HTML
-    assert "function redoCleanForNewScenes()" in _HTML
-    body = _HTML[_HTML.index("function redoCleanForNewScenes()"):]
-    body = body[:body.index("\n}\n")]
-    assert "confirm(" in body                      # 누르기 전에 묻는다
-    assert "startCleanPreview()" in body            # 확인하면 실제로 돈다
+def test_no_paid_redo_button_in_the_compare_screen():
+    """★비교 화면에 **돈 나가는 버튼**을 두지 않는다(2026-09-20 사장님 "헷갈리니까 없애").
+
+    장면을 바꿔도 고객이 할 일은 없다 — 최종 렌더가 알아서 다시 지운다. 그런데 버튼이
+    있으면 '해야 하는 일'로 읽혀 크레딧을 한 번 더 태운다. 함수까지 지워 죽은 코드를
+    남기지 않는다(다음 세션이 '왜 안 불리지?'로 헤매지 않게).
+    """
+    assert "redoCleanForNewScenes" not in _HTML
 
 
 def test_server_fields_are_read_into_the_page():
@@ -128,12 +127,33 @@ def test_server_fields_are_read_into_the_page():
     assert "sg.clean_credit_est" in _HTML
 
 
-def test_stale_note_tells_what_to_do_not_just_that_it_is_stale():
-    """★경고만 있고 지시가 없으면 고객은 무엇을 눌러야 할지 모른다(사장님 제보의 본체)."""
+def test_stale_note_is_quiet_and_only_warns_about_cost():
+    """★2026-09-20 사장님: "이런건 헷갈리니까 없애".
+
+    예전 이 자리는 '지금 장면으로 다시 지워야 합니다' + 빨간 재청소 버튼이었다. 고객은
+    그걸 **꼭 해야 하는 일**로 읽고 돈 나가는 버튼을 눌렀다 — 사실은 아무것도 안 해도
+    최종 렌더가 알아서 다시 지운다. 그래서 지시·버튼을 걷어내고 **돈 얘기 한 줄**만 남긴다.
+    """
     i = _HTML.index("const staleNote")
-    block = _HTML[i:i + 1200]
-    assert "다시 지우기" in block                  # 행동을 준다
-    assert "장면을 바꾸기 전" in block              # 왜 그런지 말한다
+    block = _HTML[i:i + 900]
+    assert "크레딧은 그때 나갑니다" in block         # 남겨야 할 단 하나: 돈
+    assert "다시 지워야 합니다" not in block         # 지시하지 않는다
+    assert "redoCleanForNewScenes()" not in block   # 돈 나가는 버튼을 여기 두지 않는다
+    # 되돌린 상태에서는 아예 안 뜬다 — 그땐 렌더가 청소를 안 하므로 돈도 안 나간다.
+    assert "CLEAN_IN_USE" in block
+
+
+def test_compare_shows_which_side_is_actually_used():
+    """★되돌렸는데 그림이 그대로면 '아무 일도 안 일어난' 것으로 보인다(2026-09-20 사장님 제보).
+
+    버튼만 바뀌고 BEFORE/AFTER가 그대로라 '자막 제거됨 ✓'이 살아 있었다. 지금 쓰는 쪽에
+    체크와 강조를 두고, 안 쓰는 쪽은 흐려야 한 눈에 갈린다.
+    """
+    i = _HTML.index("const _useClean = CLEAN_IN_USE")
+    block = _HTML[i:i + 1600]
+    assert "이걸 씁니다" in block                    # 원본을 쓸 때 그렇게 말한다
+    assert "지금은 안 씀" in block                   # 청소본이 놀고 있다는 표시
+    assert "grayscale" in block                     # 안 쓰는 쪽을 흐린다
 
 
 # ── 실패한 뒤 돌아왔을 때 — 옛 결과가 있으면 그 사실을 말해야 한다 ──────────
