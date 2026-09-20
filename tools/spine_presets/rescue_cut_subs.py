@@ -65,7 +65,15 @@ def fetch_full_text(vid, workdir):
     try:
         mp4, _cap = download_any("https://www.youtube.com/watch?v=" + vid, workdir)
     except Exception as e:                 # noqa: BLE001
-        return None, "download:%s" % type(e).__name__
+        # ★사유를 뭉개지 마라 — 타입만 적으면 전부 RuntimeError로 보여 오진한다
+        #   (2026-09-21 실사고: 봇차단인 줄 알았는데 실제론 '영상 없음'이었다).
+        m = str(e)
+        for k, tag in (("unavailable", "영상없음"), ("Private video", "비공개"),
+                       ("removed by the uploader", "삭제됨"), ("age", "연령제한"),
+                       ("Sign in to confirm", "봇차단"), ("not a bot", "봇차단")):
+            if k.lower() in m.lower():
+                return None, "download:" + tag
+        return None, "download:%s" % m[-90:].strip()
     if not mp4 or not os.path.exists(mp4):
         return None, "download:없음"
     try:

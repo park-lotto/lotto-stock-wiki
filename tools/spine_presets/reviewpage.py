@@ -49,19 +49,56 @@ _INSTA_CTA = re.compile(r"댓글|남겨|저장해|팔로우|프로필|링크|디
 _ENDS = re.compile(r"(다|요|임|음|죠|네|야|함|거|까|래|워|해|고요|든요)[.!?~]*$|[.!?]$")
 
 
+# ── 원문 자체가 망가진 것 (2026-09-21 사장님 "좋은 백본 많은데 이런건 걸러야되네") ──
+# 실사고: 스파인 387로 뽑은 대본이 ①존대·반말 혼재 ②`[음악]` 박힘 ③끝이 '진짜 미친'에서 잘림.
+# 백본은 제대로 돌았다 — **원문이 그 모양이라 그대로 베낀 것**이다. 그래서 원문에서 막는다.
+_NOISE = re.compile(r"\[(음악|박수|웃음|Music|Applause)\]", re.I)
+# 존댓말 종결 vs 반말 종결 — 한 대본에 섞이면 읽을 때 튄다.
+# ★연결어미(`~는데`·`~니까`·`~고`)는 **판정에서 뺀다**(2026-09-21 실측으로 정정).
+#   칸이 문장 중간에서 끊기면 연결어미로 끝나는데, 이걸 반말로 세면
+#   멀쩡한 존댓말 대본이 '섞임'으로 잡힌다(#125·#127·#130 전부 오탐이었다).
+#   실측: 연결어미를 넣으면 133개가 걸렸는데, 빼면 진짜 혼재만 남는다.
+_HONOR = re.compile(r"(어요|예요|에요|습니다|세요|해요|거예요|입니다|시죠|잖아요|더라고요|거죠)[.!?~]*$")
+_PLAIN = re.compile(r"(임|음|함|거임|했음|됨|았어|었어|거야|든다|한다|이다)[.!?~]*$")
+
+
+def _tone_mixed(cells):
+    """존대 칸과 반말 칸이 **둘 다** 있나. CTA는 코드가 갈아끼우므로 제외한다."""
+    hon = pla = 0
+    for c in cells:
+        t = (c.get("text") or "").strip()
+        if not t or c.get("role") == "CTA":
+            continue
+        if _HONOR.search(t):
+            hon += 1
+        elif _PLAIN.search(t):
+            pla += 1
+    return hon and pla
+
+
 def reject(r, typ):
-    """이 스파인을 걸러낼 이유 — 없으면 None. 유튜브형 3유형에만 건다."""
-    if typ not in YT_TYPES:
-        return None
+    """이 스파인을 걸러낼 이유 — 없으면 None.
+
+    ★①②③은 **모든 유형**에 건다(원문 품질이라 유형과 무관하다).
+      ④ 인스타 CTA만 유튜브형 3유형 전용이다(그 유형엔 CTA가 없어야 하므로)."""
     o = origin(r)
-    cta = [(c.get("text") or "").strip() for c in (o.get("cells") or []) if c.get("role") == "CTA"]
-    if not cta:
-        return None                      # CTA 칸이 없다 = 유튜브형 정상
-    t = cta[0]
-    if _INSTA_CTA.search(t):
-        return "인스타 CTA — 유튜브형엔 CTA가 없어야 함"
-    if not _ENDS.search(t):
+    cells = [c for c in (o.get("cells") or []) if (c.get("text") or "").strip()]
+    if not cells:
+        return "칸이 비었음"
+    # ① 끝이 잘림 — 마지막 칸이 종결어미로 안 끝난다(유튜브 자동자막이 멈춘 자리)
+    if not _ENDS.search(cells[-1]["text"].strip()):
         return "마지막 문장이 잘림 — 원문 불량"
+    # ② 자막 잡음이 원문에 박힘
+    if any(_NOISE.search(c["text"]) for c in cells):
+        return "[음악] 등 자막 잡음이 원문에 박힘"
+    # ③ 존대·반말 혼재
+    if _tone_mixed(cells):
+        return "존대·반말 섞임 — 대본이 튄다"
+    # ④ 유튜브형인데 인스타 CTA
+    if typ in YT_TYPES:
+        cta = [c["text"].strip() for c in cells if c.get("role") == "CTA"]
+        if cta and _INSTA_CTA.search(cta[0]):
+            return "인스타 CTA — 유튜브형엔 CTA가 없어야 함"
     return None
 
 
