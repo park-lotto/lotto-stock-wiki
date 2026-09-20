@@ -268,9 +268,35 @@ def cast_gap(lines, cast, product):
          "큰 오류 5가지: ①그 물건을 안 쓰는 사람에게 사주거나 선물함 ②같이 사는 사람이 '놀러 옴' 같은 관계 모순 "
          "③상황표에 없던 인물이 갑자기 나옴 ④여는 말과 뒤가 뒤집힘(혼내다가 근거 없이 칭찬 등) "
          "⑤마지막 줄이 잘렸거나 화자가 바뀜 ⑥첫 줄(훅)이 말이 안 됨(빈칸에 엉뚱한 말이 들어가 "
-         "'며느리 반응 받았어요'처럼 뜻이 깨짐)." % (json.dumps(cast, ensure_ascii=False), text))
+         "'며느리 반응 받았어요'처럼 뜻이 깨짐) ⑦첫 줄이 상황표의 opening과 다른 이야기." % (json.dumps(cast, ensure_ascii=False), text))
     out = _sg._call_json(p, _GAP_SCHEMA) or {}
     return [str(x) for x in (out.get("issues") or [])][:4]
+
+
+def _cta_keyword(product):
+    """댓글 키워드 — 제품 이름 끝 낱말 2~3글자(코드로 정해 매번 같은 꼴)."""
+    w = [x for x in re.findall(r"[가-힣]+", product or "") if len(x) >= 2]
+    t = w[-1] if w else "정보"
+    return t if len(t) <= 3 else t[-2:]
+
+
+def fix_insta_cta(lines, spine, product):
+    """인스타(존댓말) 스파인의 CTA는 **기존 문구 한 가지로** 고정한다 (2026-09-20 사장님:
+    "인스타형은 다 CTA가 이상해, 궁금하시면 댓글 이거 기존걸로 가야 한다").
+    원문마다 제각각인 마지막 인물 행동("언니 것도 하나 더 샀다")을 그대로 옮기다 어긋나던 자리다."""
+    try:
+        tone = (json.loads(spine.get("voice_json") or "{}") or {}).get("tone")
+    except Exception:      # noqa: BLE001
+        tone = None
+    if tone != "존댓말" or not lines:
+        return lines
+    cta = "궁금하시면 댓글에 '%s' 남겨주세요." % _cta_keyword(product)
+    last = lines[-1]
+    if str(last.get("role") or "").upper() in ("CTA", "CTA줄") or "댓글" in (last.get("text") or ""):
+        last["text"] = cta
+    else:
+        lines.append({"role": "CTA", "text": cta, "group": -1})
+    return lines
 
 
 def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds=25, note=None):
@@ -323,6 +349,7 @@ def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds
             lines, gaps = l2, left
     if note is not None:
         note["cast"] = {"table": cast, "issues": gaps}
+    lines = fix_insta_cta(lines, spine or {}, product)
     return _no_made_up_country(_one_full_name(lines, product), seg_index)
 
 
