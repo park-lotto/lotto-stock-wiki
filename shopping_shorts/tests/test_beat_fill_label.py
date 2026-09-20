@@ -33,7 +33,8 @@ def _harness(body):
     """
     src = JS.read_text(encoding="utf-8")
     keep = []
-    for name in ("function trimPieces", "function effLen", "function planClips",
+    for name in ("function trimPieces", "function effLen", "function beatSyncSpeed",
+                 "function planClips",
                  "function beatDur"):
         m = re.search(re.escape(name) + r".*?(?=\n(?:const |let |var |function |//))", src, re.S)
         assert m, f"{name} 를 scene_play.js에서 못 찾았다 — 이름이 바뀌었나?"

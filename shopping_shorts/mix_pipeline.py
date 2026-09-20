@@ -10,6 +10,7 @@ import math
 import os
 import json
 import logging
+import math
 import re
 import shutil
 import subprocess
@@ -445,6 +446,46 @@ def mismatched_beats(beats):
     return [b.get("beat_idx") for b in (beats or []) if not tts_matches_narration(b)]
 
 
+def voice_for_beat(base_voice, beat):
+    """잡의 기본 음성에 3단계 칸별 상대 배속을 한 번만 적용한다.
+
+    sync_speed를 TTS와 화면이 함께 읽는 유일한 값으로 둔다. 이미 절대 배속으로 바뀐
+    voice_override를 다시 곱하면 재생성할 때마다 빨라지므로 기본 voice에서만 계산한다.
+    """
+    out = dict(base_voice or {})
+    # 아무 속도도 지정하지 않은 기존 잡에는 speed 키를 새로 만들지 않는다. TTS 공급자의
+    # 기본 속도를 명시적 1.0으로 덮는 것도 설정 변화이고, 기존 비트 재생성 결과가 달라질 수 있다.
+    if out.get("speed") is None and (beat or {}).get("sync_speed") is None:
+        return out
+    try:
+        rel = float((beat or {}).get("sync_speed") or 1.0)
+    except (TypeError, ValueError):
+        rel = 1.0
+    if not math.isfinite(rel) or rel < 0.5 or rel > 2.0:
+        rel = 1.0
+    try:
+        base = float(out.get("speed") or 1.0)
+    except (TypeError, ValueError):
+        base = 1.0
+    out["speed"] = round(base * rel, 4)
+    return out
+
+
+def base_voice_for_beat(job_voice, beat):
+    """칸별 성우·톤은 보존하되 저장된 절대 배속을 상대배속 전으로 되돌린다."""
+    saved = (beat or {}).get("voice_override")
+    out = dict(saved or job_voice or {})
+    if saved:
+        try:
+            rel = float((beat or {}).get("sync_speed") or 1.0)
+            absolute = float(out.get("speed") or 1.0)
+        except (TypeError, ValueError):
+            rel, absolute = 1.0, 1.0
+        if math.isfinite(rel) and rel > 0 and math.isfinite(absolute):
+            out["speed"] = round(absolute / rel, 4)
+    return out
+
+
 def job_script_endings(job):
     """이 잡은 **대본이 어미를 정하는** 잡인가 (2026-09-04).
 
@@ -528,8 +569,9 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
         # tts_path가 다른 이름을 가리키거나(후보 스위치) 파일이 없으면 새로 합성한다.
         if skip_existing and beat.get("tts_path") == str(out) and out.exists():
             return
+        beat_voice = voice_for_beat(voice, beat)
         synthesize_line(
-            beat["narration"], out, voice=voice, beat_role=beat.get("role"),
+            beat["narration"], out, voice=beat_voice, beat_role=beat.get("role"),
             beat_index=i, beat_total=total,
             previous_text=beats[i - 1]["narration"] if i > 0 else None,
             next_text=beats[i + 1]["narration"] if i < total - 1 else None,
@@ -2786,6 +2828,9 @@ def plan_using_beat_clips(plan, clips, timeline, prefix="cc"):
                         "end": d if d > 0 else None}
         b["alternates"] = []
         b.pop("scene_override", None)
+        # 이 조각은 완성본에서 이미 배속까지 적용된 화면이다. 캡컷 계획에서 다시
+        # sync_speed를 읽으면 이중 가속된다.
+        b.pop("sync_speed", None)
     return out
 
 
@@ -3021,6 +3066,7 @@ def _plan_signature(plan):
         for m in _beat_materials(b):
             parts.append("%s:%s:%s" % (m.get("video_id"), m.get("start"), m.get("end")))
         parts.append("t=%s" % b.get("target_seconds"))
+        parts.append("speed=%s" % b.get("sync_speed", 1.0))
         # ★자막 줄 나누기(caption_lines)는 "자막"이지만 **컷 경계**를 정한다(_plan_phrase_clips:
         #   구절 수 = 컷 수, 조각 배정 1,1,2,2). 빼면 줄만 바꿔도 서명이 그대로라 옛 컷으로 만든
         #   청소본이 재사용된다(2026-09-11 실사고: 고객이 4줄로 바꾼 뒤 완성본을 다시 만들어도

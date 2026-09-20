@@ -9,6 +9,7 @@
 ⚠️ 샘플 draft엔 device_id·mac_address가 있으나 여기선 무해 기본값으로 채운다(로드 영향은 육안 검증).
 """
 import json
+import math
 import shutil
 import uuid
 from pathlib import Path
@@ -24,8 +25,16 @@ def _us(sec):
 
 
 # ── 동반 material(전부 단순, 세그먼트당 새로 생성) ──────────────
-def _speed():
-    return {"id": _uid(), "type": "speed", "mode": 0, "speed": 1.0, "curve_speed": None}
+def _speed(value=1.0):
+    """캡컷 소재 배속. 렌더 계획의 src_dur/out_dur 비율을 그대로 기록한다."""
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        value = 1.0
+    if not math.isfinite(value) or value <= 0:
+        value = 1.0
+    return {"id": _uid(), "type": "speed", "mode": 0,
+            "speed": round(value, 6), "curve_speed": None}
 
 
 def _sound_channel_mapping():
@@ -468,7 +477,13 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
             if c_dur <= 0:
                 continue
             assets_to_copy.append((src_real, abs_path))
-            sp, ca, sc, ph, vs = _speed(), _canvas(), _sound_channel_mapping(), _placeholder_info(), _vocal_separation()
+            _src_sec = float(c.get("src_dur", 0.0) or 0.0)
+            _out_sec = float(c.get("out_dur", 0.0) or 0.0)
+            _rate = (_src_sec / _out_sec) if _src_sec > 0 and _out_sec > 0 else 1.0
+            sp, ca, sc, ph, vs = (
+                _speed(_rate), _canvas(), _sound_channel_mapping(),
+                _placeholder_info(), _vocal_separation(),
+            )
             for m, key in ((sp, "speeds"), (ca, "canvases"), (sc, "sound_channel_mappings"),
                            (ph, "placeholder_infos"), (vs, "vocal_separations")):
                 mats[key].append(m)

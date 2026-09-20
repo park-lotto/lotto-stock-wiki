@@ -389,6 +389,12 @@ function unTrim(sid){
 let onePerSeg = false;
 const STRETCH = {};                 // beat_idx → true(늘려 채우기 켬)
 function toggleStretch(i, on){ if (on) STRETCH[i] = true; else delete STRETCH[i]; (typeof render === 'function' && render()); }
+function beatSyncSpeed(i){
+  const b = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[i] || {};
+  const v = Number(b.sync_speed || 1);
+  return isFinite(v) && v >= 0.5 && v <= 2 ? v : 1;
+}
+
 // ★구절 맞춤(2026-08-29 사장님 "활성화는 자막 분할 개수대로 / 개수+길이까지 1:1") —
 //   컷 경계 = 자막 구절 경계. 컷1이 리드인(첫말 전 무음)을 얹고, 마지막 컷이 꼬리를
 //   얹는다. 기본 **켬**(끄면 종전 배분). ✋수동 길이(FIXLEN)가 있는 칸은 수동이 이긴다.
@@ -556,6 +562,28 @@ function togglePhraseSync(i, on){
 // beatIdx는 **선택**이다 — 넘기면 그 칸의 수동 지정 길이(FIXLEN)를 반영한다.
 // 안 넘기는 옛 호출부는 종전과 똑같이 동작한다(하위호환).
 function planClips(segIds, ttsDur, spread, beatIdx){
+  // 서버 plan_beat_clips_for와 같은 규칙: 기존 편성의 출력 길이·구절 경계는 건드리지
+  // 않고, 각 컷이 읽는 원본 길이(src_dur)에만 통합 속도를 적용한다.
+  // 이 함수는 회귀 테스트와 진단 도구가 단독으로 떼어 실행하기도 한다. 외부 helper에
+  // 기대면 실제 브라우저에서는 되는데 배포 검사만 ReferenceError로 죽으므로 같은 저장값을
+  // 여기서 직접 읽는다(속도 판단식은 beatSyncSpeed와 동일).
+  const syncBeat = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[beatIdx] || {};
+  const syncRaw = Number(syncBeat.sync_speed || 1);
+  const syncSpeed = isFinite(syncRaw) && syncRaw >= 0.5 && syncRaw <= 2 ? syncRaw : 1;
+  const finish = base => {
+    if (!base.length) return base;
+    base.forEach(c => {
+      const natural = Number(c.src_dur || c.dur || 0);
+      let wanted = natural * syncSpeed;
+      const seg = ((typeof DATA === 'object' && DATA && DATA.segments) || {})[c.seg_id];
+      const sourceTotal = Number((((typeof DATA === 'object' && DATA) || {}).src_duration || {})[c.video_id] || 0);
+      const end = seg && Number.isFinite(Number(seg.end)) ? Number(seg.end) : sourceTotal;
+      if (end > Number(c.start || 0)) wanted = Math.min(wanted, end - Number(c.start || 0));
+      c.src_dur = Math.max(EPS, wanted);
+      c.speed = c.dur > EPS ? c.src_dur / c.dur : 1;
+    });
+    return base;
+  };
   // ✂ 트림된 장면은 '구멍 뺀 두 토막'으로 갈라서 넣는다 — 아래 분배 규칙은 그대로다.
   const segments = segIds.flatMap(id => trimPieces(id).map(p => ({...p, seg_id: id})))
                          .filter(s => s.start != null);
@@ -575,7 +603,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       .map(id => ({seg_id: id, dur: _r2((typeof effLen === 'function' ? effLen(id) : 0)
                                         || (DATA.segments[id].end - DATA.segments[id].start))}));
     const fc = frozenClips(beatIdx, segIds, ttsDur);
-    if (fc) return fc;
+    if (fc) return finish(fc);
   }
   // ── 구절 맞춤 경로: 자막 시간표가 있고, 수동 길이가 없을 때만.
   //    (라이브 렌더의 같은 규칙은 video_assemble의 phrase_sync 분기 — 짝으로 움직인다)
@@ -638,7 +666,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         clips.push(clip);
         pos[idx] = st + d;
       }
-      return clips;
+      return finish(clips);
     }
   }
   // ★구절 맞춤을 **끈** 칸 = 담은 장면이 전부 한 번씩(2026-09-14 사장님 "구절맞춤을 끄면
@@ -672,8 +700,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         filled += take;
       });
     }
-    return (typeof applyFixedLens === 'function')
-    ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
+    const fixed = (typeof applyFixedLens === 'function')
+      ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
+    return finish(fixed);
   }
   if (segments.length > 1){
     const pos = segments.map(s => s.start);
@@ -764,8 +793,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       if (short > EPS) clips[clips.length - 1].dur += short;
     }
   }
-  return (typeof applyFixedLens === 'function')
+  const fixed = (typeof applyFixedLens === 'function')
     ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
+  return finish(fixed);
 }
 
 // 타임프레임 한 줄 — 실제 컷을 시간 순서대로. 계산은 planClips 하나만 쓴다(아래 필름과 동일).
@@ -939,8 +969,9 @@ function applyRate(v, c){
   if (!v || !c) return 1;
   const src = +c.src_dur;
   let rate = 1;
-  if (src > 0 && c.dur > src + 1e-3){
-    rate = Math.max(1 / MAX_SLOWMO, src / c.dur);   // 느리게 = 1보다 작은 배속
+  if (src > 0 && c.dur > EPS){
+    rate = src / c.dur;
+    if (rate < 1) rate = Math.max(1 / MAX_SLOWMO, rate);   // 느리게 상한은 기존 유지
   }
   try { if (Math.abs(v.playbackRate - rate) > 1e-3) v.playbackRate = rate; } catch (e) {}
   return rate;
@@ -1074,9 +1105,16 @@ function pvxSync(){
   if (Math.abs(v.currentTime - want) > 0.12) { try { v.currentTime = want; } catch(e){} }
 }
 function cutStart(c){ return c._px ? c._pstart : c.start; }
+function clipRate(c){
+  if (!c || c._px) return 1;
+  const src = Number(c.src_dur || 0), out = Number(c.dur || 0);
+  if (src > 0 && out > EPS) return src / out;
+  return Number(c.speed || 1);
+}
 function seat(c){
   if (c._px) return c._px;                            // 합본은 이어 트는 중 — 미리 앉히면 화면이 튄다
   const v = wantFull(vidFor(c.video_id, c._slot));   // 곧 쓸 재생기다 — 여기서만 본문을 당긴다
+  applyRate(v, c);
   if (Math.abs(v.currentTime - c.start) > 0.05) v.currentTime = c.start;
   return v;
 }
@@ -1561,11 +1599,12 @@ function curT(){
   if (seqI >= seq.length){
     const last = seq.length - 1, lc = seq[last];
     if (curVid && lc) return Math.min(seqTotal(),
-      seqBounds[last][0] + Math.max(0, curVid.currentTime - cutStart(lc)));
+      seqBounds[last][0] + Math.max(0, curVid.currentTime - cutStart(lc)) / clipRate(lc));
     return seqTotal();
   }
   const c = seq[seqI];
-  return seqBounds[seqI][0] + Math.max(0, (curVid ? curVid.currentTime : cutStart(c)) - cutStart(c));
+  return seqBounds[seqI][0]
+    + Math.max(0, (curVid ? curVid.currentTime : cutStart(c)) - cutStart(c)) / clipRate(c);
 }
 function seekInput(val){
   const tot = seqTotal(); if (!tot) return;
@@ -1603,7 +1642,8 @@ function seekTo(t){
   seqI = k;
   const c = seq[k];
   const v = c._px || vidFor(c.video_id, c._slot);
-  v.currentTime = cutStart(c) + (t - seqBounds[k][0]);
+  if (!c._px) applyRate(v, c);
+  v.currentTime = cutStart(c) + (t - seqBounds[k][0]) * clipRate(c);
   // ★다른 재생기로 옮길 땐 **시크가 끝난 뒤에** 화면을 바꾼다(2026-09-18 이윤정님
   //   "1번↔2번 왔다갔다하면 3번 장면이 낀다"). 컷2에 있을 때 컷1 재생기(슬롯0)는 seat()가
   //   컷3 시작점에 미리 앉혀 둔 상태다. 여기서 바로 showVid하면 시크가 끝나기 전 그 재생기의

@@ -263,6 +263,10 @@ body.tight .tbsegs{display:none}          /* 촘촘히에선 글자를 걷는다
 .tbtools button{background:var(--panel2);border:1px solid var(--line);color:var(--dim);
   border-radius:5px;padding:1px 6px;cursor:pointer;font-size:10.5px}
 .tbtools button:hover{border-color:var(--accent);color:var(--ink)}
+.speedpick{appearance:auto;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:5px;padding:2px 5px;font-size:10.5px;font-weight:700;cursor:pointer;max-width:92px}
+.speedpick.changed{border-color:var(--accent);color:#fff;background:#17304a}
+.speedpick:disabled{opacity:.65;cursor:wait}
 /* 빼는 버튼만 눈에 띄게 — 되돌릴 수 없는 조작이라 실수로 안 누르게 색을 가른다(2026-08-16) */
 .tbtools button.danger{border-color:var(--warn);color:var(--warn);font-weight:700}
 .tbtools button.danger:hover{background:var(--warn);color:#3a2a08}
@@ -2126,7 +2130,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F29';   // 밴드 높이 고정은 촘촘히 전용 — 넓게는 내용만큼 자란다
+const BUILD_TAG = 'F30';   // 멘트 칸 통합 속도 + 밴드 높이 고정은 촘촘히 전용
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
@@ -2832,6 +2836,52 @@ function beatFill(i, clips){
            stretching: !!STRETCH[i] && cuts.length > 0 };
 }
 
+// ── 🎚 멘트 칸 통합 속도 ──────────────────────────────────────────────────
+// 기본 칸에는 아무것도 더 보이지 않는다. 고른 칸에만 작은 셀렉트가 열리고, 1.0이 아닌
+// 칸은 접혀도 배속을 남겨 "어디를 바꿨는지" 잊지 않게 한다.
+const SPEED_BUSY = {};
+function speedControl(i){
+  const cur = beatSyncSpeed(i);
+  if (sel !== i && Math.abs(cur - 1) < 0.01) return '';
+  const vals = [0.8,0.9,1.0,1.1,1.2,1.3,1.4];
+  return `<select class="speedpick ${Math.abs(cur-1)>0.01?'changed':''}"
+      title="이 멘트 칸의 음성과 장면을 함께 조절합니다"
+      ${SPEED_BUSY[i] ? 'disabled' : ''}
+      onclick="event.stopPropagation()" onchange="setBeatSpeed(${i},this.value,event)">
+    ${vals.map(v => `<option value="${v}" ${Math.abs(v-cur)<0.01?'selected':''}>${
+      SPEED_BUSY[i] && Math.abs(v-cur)<0.01 ? '변경 중…' : '속도 '+v.toFixed(1)+'×'}</option>`).join('')}
+  </select>`;
+}
+async function setBeatSpeed(i, raw, ev){
+  if (ev) ev.stopPropagation();
+  const wanted = Number(raw), beat = (DATA.beats || [])[i];
+  if (!beat || SPEED_BUSY[i] || !isFinite(wanted)) return;
+  const before = beatSyncSpeed(i);
+  if (Math.abs(before - wanted) < 0.01) return;
+  const beatId = beat.beat_idx == null ? i : beat.beat_idx;
+  const ver0 = beat.tts_ver || 0;
+  beat.sync_speed = wanted; SPEED_BUSY[i] = true; renderBand();
+  nsay(`🎚 ${i+1}번 칸 ${wanted.toFixed(1)}배 — 음성·장면을 함께 맞추는 중…`);
+  try{
+    const r = await fetch(`/api/mix/scene_lab/${SL.job}/speed/${beatId}`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({speed:wanted})});
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error(j.error || '속도 저장 실패');
+    try{ if (typeof clearConfirm === 'function') clearConfirm(); }catch(e){}
+    const ready = j.unchanged ? true : await waitNarrRegen(i, ver0);
+    if (!ready){
+      nsay(`⚠ ${i+1}번 칸 속도는 저장됐어요. 음성 생성이 길어져 잠시 뒤 새로고침해 확인해주세요`);
+      return;
+    }
+    nsay(`✅ ${i+1}번 칸 ${wanted.toFixed(1)}배 — 음성·장면·자막에 반영됐어요`);
+  }catch(e){
+    beat.sync_speed = before;
+    nsay('⚠ 속도 변경 실패: ' + (e.message || e));
+  }finally{
+    delete SPEED_BUSY[i]; renderBand();
+  }
+}
+
 // ★타임프레임이 보던 자리를 지킨다(2026-09-04 고객 접수: "CTA 구간을 재생하려고
 //   칸의 검정 빈자리를 누르면 작업화면이 딴 데로 가 있다").
 //   라이브 실측(mix job fb62adf0aad0, 칸 7개): 검정 빈자리 클릭 → scrollLeft
@@ -2972,6 +3022,7 @@ function renderBand(){
                //   담아도 안 나온다는 사실을 화면에서 알 길이 없었다.
                : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
           <span class="tbtools" onclick="event.stopPropagation()">
+            ${speedControl(i)}
             <label title="컷 경계를 자막 구절 경계에 1:1로 맞춥니다(구절 수만큼 컷·길이도 구절대로). ✋수동 길이가 있으면 수동이 우선"><input type="checkbox" ${phraseSyncOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>
             ${frozen ? '' : `<label title="담은 장면이 모자랄 때 어떻게 채울지 고릅니다 — 끄면 [뒷부분 채우기]: 담은 구간 뒤에 이어지는 원본을 1배속으로 더 틉니다(새 화면이 나옵니다). 켜면 [전체 늘리기]: 담은 장면 전부를 고르게 늘려 채웁니다(최대 1.15배, 티가 덜 납니다)"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 전체 늘리기</label>`}
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
@@ -3845,12 +3896,14 @@ async function saveNarr(i){
 // 재생성 완료는 tts_ver(단조 증가)로 안다 — mp3는 같은 경로라 겉으로 구분이 안 된다
 // (mix_pipeline.resynth_one_beat이 끝에서 이 값을 올린다).
 async function waitNarrRegen(i, ver0){
+  const beatId = (((DATA || {}).beats || [])[i] || {}).beat_idx;
+  const wantedId = beatId == null ? i : beatId;
   for (let n = 0; n < 40; n++){                 // 최대 ~40초
     await new Promise(r => setTimeout(r, 1000));
     try{
       const d = await (await fetch(`/api/mix/scene_lab/${SL.job}`, {cache:'no-store'})).json();
       if (!d.ok) continue;
-      const b = (d.data.beats || []).find(x => x.beat_idx === i);
+      const b = (d.data.beats || []).find(x => x.beat_idx === wantedId);
       if (b && (b.tts_ver || 0) > ver0){
         // 새 자막·길이를 통째로 갈아끼운다(서버 계산 결과가 유일한 진실).
         DATA.beats = d.data.beats; DATA.captions = d.data.captions;
