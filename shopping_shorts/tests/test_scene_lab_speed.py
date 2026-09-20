@@ -30,8 +30,8 @@ def test_속도_api는_한값을_저장하고_완성본을_무효화하며_톤�
     _seed(store)
     called = {}
 
-    def fake_resynth(job_id, beat_idx, voice, db_path, work_root):
-        called.update(job_id=job_id, beat_idx=beat_idx, voice=voice)
+    def fake_resynth(job_id, beat_idx, voice, db_path, work_root, **kwargs):
+        called.update(job_id=job_id, beat_idx=beat_idx, voice=voice, **kwargs)
 
     monkeypatch.setattr(app_module.mix_pipeline, "resynth_one_beat", fake_resynth)
     result = TestClient(app_module.app).post(
@@ -42,6 +42,7 @@ def test_속도_api는_한값을_저장하고_완성본을_무효화하며_톤�
     assert job["edit_plan"]["beats"][0]["sync_speed"] == 1.3
     assert job["video_path"] is None
     assert called["job_id"] == "speed-job" and called["beat_idx"] == 3
+    assert called["speed_only"] is True
     assert called["voice"] == {
         "voice_id": "picked", "settings": {"style": 0.4}, "speed": 1.43,
     }
