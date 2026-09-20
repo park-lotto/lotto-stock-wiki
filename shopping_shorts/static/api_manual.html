@@ -154,8 +154,8 @@
 
 <div class="wrap">
   <h1 id="top">API 발급<br>매뉴얼</h1>
-  <p class="lede">숏템메이커는 <b>5가지 외부 서비스</b>를 씁니다.<br>한 번 받아서 넣어두면 계속 쓰입니다
-    (<b>Buffer 키만 30일마다 새로</b> 받으셔야 합니다 — ⑥번 참고).<br>필요한 것부터 <b>하나씩</b> 하셔도 됩니다.</p>
+  <p class="lede">숏템메이커는 <b>7가지 외부 서비스</b>를 씁니다.<br>한 번 받아서 넣어두면 계속 쓰입니다
+    (<b>Buffer 키만 30일마다 새로</b> 받으셔야 합니다 — ⑦번 참고).<br>필요한 것부터 <b>하나씩</b> 하셔도 됩니다.</p>
 
   <div class="card">
     <div class="card-head"><div class="num">📍</div><h3>받은 키는<br>여기에 넣습니다</h3></div>
@@ -186,10 +186,11 @@
   <div class="toc">
     <a href="#gemini"><span class="ico">🤖</span><span class="tt"><b>① 구글 제미나이</b><span>대본 만들기 · 영상 분석 · 썸네일</span></span><span class="go">›</span></a>
     <a href="#elevenlabs"><span class="ico">🔊</span><span class="tt"><b>② ElevenLabs</b><span>영상에 넣을 AI 목소리</span></span><span class="go">›</span></a>
-    <a href="#serpapi"><span class="ico">🔎</span><span class="tt"><b>③ SerpApi</b><span>숏템 파워검색 (비슷한 영상 찾기)</span></span><span class="go">›</span></a>
-    <a href="#vmake"><span class="ico">🎬</span><span class="tt"><b>④ Vmake</b><span>영상에 박힌 자막 지우기</span></span><span class="go">›</span></a>
-    <a href="#youtube"><span class="ico">📺</span><span class="tt"><b>⑤ 유튜브</b><span>유튜브 영상 정보 가져오기</span></span><span class="go">›</span></a>
-    <a href="#buffer"><span class="ico">📅</span><span class="tt"><b>⑥ Buffer</b><span>완성한 영상을 SNS에 예약해 올리기</span></span><span class="go">›</span></a>
+    <a href="#typecast"><span class="ico">🎤</span><span class="tt"><b>③ 타입캐스트</b><span>한국 성우 목소리 (필재·김건·박창수…)</span></span><span class="go">›</span></a>
+    <a href="#serpapi"><span class="ico">🔎</span><span class="tt"><b>④ SerpApi</b><span>숏템 파워검색 (비슷한 영상 찾기)</span></span><span class="go">›</span></a>
+    <a href="#vmake"><span class="ico">🎬</span><span class="tt"><b>⑤ Vmake</b><span>영상에 박힌 자막 지우기</span></span><span class="go">›</span></a>
+    <a href="#youtube"><span class="ico">📺</span><span class="tt"><b>⑥ 유튜브</b><span>유튜브 영상 정보 가져오기</span></span><span class="go">›</span></a>
+    <a href="#buffer"><span class="ico">📅</span><span class="tt"><b>⑦ Buffer</b><span>완성한 영상을 SNS에 예약해 올리기</span></span><span class="go">›</span></a>
   </div>
 
   <!-- ══════════════ ① 제미나이 ══════════════ -->
@@ -372,9 +373,188 @@
   </div>
   <a class="top" href="#top">↑ 맨 위로</a>
 
-  <!-- ══════════════ ③ SerpApi ══════════════ -->
+  <!-- ══════════════ ③ 타입캐스트 ══════════════ -->
+  <div class="svc" id="typecast">
+    <h2 class="svc-t">③ 타입캐스트</h2>
+    <div class="tags">
+      <span class="tag">한국 성우 목소리(TTS)</span>
+      <span class="tag pay">API 월 15달러부터</span>
+      <span class="tag">필재 · 김건 · 박창수 · 용식이</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">⚠</div><h3>가장 많이 틀리는 곳<br>요금제가 <u>두 개</u>입니다</h3></div>
+    <div class="pic">
+      <svg viewBox="0 0 560 190" role="img" aria-label="타입캐스트는 에디터 요금제와 API 요금제가 따로이며, 에디터를 결제해도 API는 무료 상태로 남는다는 그림">
+        <rect x="14" y="16" width="250" height="158" rx="14" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+        <text x="34" y="46" font-family="'Gothic A1',sans-serif" font-size="16" font-weight="900" fill="currentColor" opacity=".75">🖥 에디터 요금제</text>
+        <text x="34" y="68" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="currentColor" opacity=".5">타입캐스트 홈페이지에서</text>
+        <text x="34" y="86" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="currentColor" opacity=".5">직접 만들 때 쓰는 것</text>
+        <rect x="32" y="100" width="214" height="30" rx="9" fill="var(--line-2)"/>
+        <text x="44" y="120" font-family="'IBM Plex Sans KR',sans-serif" font-size="14" fill="currentColor" opacity=".7">Basic $5 · Plus $19 · Pro $29</text>
+        <rect x="32" y="138" width="214" height="24" rx="8" fill="var(--ok-soft)"/>
+        <text x="44" y="155" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="#12775A" font-weight="600">숏템메이커와는 상관없습니다</text>
+
+        <text x="284" y="102" font-family="'Gothic A1',sans-serif" font-size="30" font-weight="900" fill="currentColor" opacity=".25">≠</text>
+
+        <rect x="316" y="16" width="230" height="158" rx="14" fill="var(--card)" stroke="#E23A5E" stroke-width="3"/>
+        <text x="336" y="46" font-family="'Gothic A1',sans-serif" font-size="16" font-weight="900" fill="#E23A5E">🔌 API 요금제</text>
+        <text x="336" y="68" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="currentColor" opacity=".5">다른 프로그램이 불러 쓸 때</text>
+        <text x="336" y="86" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="currentColor" opacity=".5">— 숏템메이커가 이쪽입니다</text>
+        <rect x="334" y="100" width="194" height="30" rx="9" fill="var(--accent-soft)"/>
+        <text x="346" y="120" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="#E23A5E" font-weight="600">Free · Lite $15 · Plus $280</text>
+        <rect x="334" y="138" width="194" height="24" rx="8" fill="var(--accent-soft)"/>
+        <text x="346" y="155" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="#E23A5E" font-weight="600">★ 여기를 결제하셔야 합니다</text>
+      </svg>
+    </div>
+    <p class="say">타입캐스트는 <b>요금제를 두 가지로 따로</b> 받습니다. 타입캐스트 홈페이지에서 <b>Pro $29</b>를 결제하셔도,
+      숏템메이커가 쓰는 <b>API는 여전히 무료</b>로 남아 있습니다 — <b>결제가 서로 이어지지 않습니다.</b></p>
+    <div class="warnbox"><span class="ic">⚠</span><span>실제로 가장 많이 생기는 일입니다. <b>「분명히 결제했는데 목소리가 안 나와요」</b>는
+      거의 다 <b>에디터 쪽만 결제</b>하신 경우입니다. 아래 <b>2단계</b>를 꼭 확인해 주세요.</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">1</div><h3>타입캐스트<br>가입 · 로그인</h3></div>
+    <div class="pic">
+      <svg viewBox="0 0 560 110" role="img" aria-label="타입캐스트 스튜디오에 접속해 로그인하는 그림">
+        <rect x="14" y="14" width="330" height="82" rx="12" fill="var(--screen)" stroke="var(--screen-line)" stroke-width="2"/>
+        <rect x="32" y="34" width="294" height="28" rx="14" fill="#1C242E"/>
+        <text x="50" y="53" font-family="'Consolas',monospace" font-size="14" fill="#E5EAF0">studio.typecast.ai</text>
+        <rect x="32" y="70" width="110" height="14" rx="7" fill="#2A333F"/>
+
+        <path d="M362 55h38" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".3"/>
+        <path d="M392 48l10 7-10 7" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
+
+        <rect x="420" y="30" width="126" height="50" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+        <text x="440" y="60" font-family="'IBM Plex Sans KR',sans-serif" font-size="15" fill="currentColor" opacity=".7">로그인</text>
+      </svg>
+    </div>
+    <p class="say">구글 계정으로 바로 가입할 수 있습니다. <b>한국 회사라 화면이 한글</b>이라 어렵지 않습니다.<br>
+      이미 타입캐스트를 쓰고 계셨다면 <b>그 계정 그대로</b> 쓰시면 됩니다.</p>
+    <a class="go-btn" href="https://studio.typecast.ai/sign-in" target="_blank" rel="noopener">타입캐스트 로그인 열기 →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">2</div><h3>★ API 요금제<br>결제하기</h3></div>
+    <div class="pic">
+      <svg viewBox="0 0 560 160" role="img" aria-label="API 전용 요금제 페이지에서 Lite 플랜을 고르는 그림">
+        <rect x="14" y="14" width="532" height="132" rx="12" fill="var(--screen)" stroke="var(--screen-line)" stroke-width="2"/>
+        <rect x="32" y="30" width="300" height="24" rx="12" fill="#1C242E"/>
+        <text x="46" y="47" font-family="'Consolas',monospace" font-size="13" fill="#E5EAF0">typecast.ai/pricing/api</text>
+
+        <rect x="36" y="66" width="152" height="66" rx="10" fill="#1C242E" stroke="#3A4552" stroke-width="2"/>
+        <text x="52" y="88" font-family="'IBM Plex Sans KR',sans-serif" font-size="14" fill="#8894A4" font-weight="600">Free</text>
+        <text x="52" y="108" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="#6B7684">월 3만 크레딧</text>
+        <text x="52" y="125" font-family="'IBM Plex Sans KR',sans-serif" font-size="12" fill="#E23A5E">← 지금 여기(막힘)</text>
+
+        <rect x="200" y="62" width="160" height="74" rx="10" fill="#242E1C" stroke="#7BC47F" stroke-width="3"/>
+        <text x="216" y="86" font-family="'IBM Plex Sans KR',sans-serif" font-size="15" fill="#A8E0AC" font-weight="700">Lite  $15/월</text>
+        <text x="216" y="106" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="#8FC493">20만 크레딧</text>
+        <text x="216" y="125" font-family="'IBM Plex Sans KR',sans-serif" font-size="12" fill="#7BC47F">★ 이걸 고르시면 됩니다</text>
+
+        <rect x="372" y="66" width="152" height="66" rx="10" fill="#1C242E" stroke="#3A4552" stroke-width="2"/>
+        <text x="388" y="88" font-family="'IBM Plex Sans KR',sans-serif" font-size="14" fill="#8894A4" font-weight="600">Plus  $280/월</text>
+        <text x="388" y="108" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="#6B7684">400만 크레딧</text>
+        <text x="388" y="125" font-family="'IBM Plex Sans KR',sans-serif" font-size="12" fill="#6B7684">회사용입니다</text>
+      </svg>
+    </div>
+    <p class="say"><b>반드시 위 주소(<code>/pricing/api</code>)로 들어가셔야 합니다.</b> 그냥 <code>typecast.ai/pricing</code>은
+      <b>에디터 요금제</b>라 결제하셔도 숏템메이커에서는 안 됩니다.<br>
+      <b>Lite($15/월)</b>면 숏폼 만들기에 넉넉합니다 — <b>글자 1개 = 1크레딧</b>입니다.</p>
+    <a class="go-btn" href="https://typecast.ai/pricing/api/" target="_blank" rel="noopener">API 요금제 페이지 열기 →</a>
+    <div class="warnbox"><span class="ic">💡</span><span>에디터를 따로 안 쓰신다면, 기존 <b>에디터 요금제는 해지</b>하셔도 됩니다.
+      API Lite는 <b>$15</b>로 에디터 Pro($29)보다 <b>싸고</b> 크레딧은 더 많습니다.</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">3</div><h3>API 키<br>만들어서 복사</h3></div>
+    <div class="pic">
+      <svg viewBox="0 0 560 140" role="img" aria-label="개발자 화면에서 API 키를 만들고 복사하는 그림">
+        <rect x="14" y="18" width="230" height="104" rx="12" fill="var(--screen)" stroke="var(--screen-line)" stroke-width="2"/>
+        <rect x="32" y="34" width="194" height="22" rx="11" fill="#1C242E"/>
+        <text x="42" y="50" font-family="'Consolas',monospace" font-size="11" fill="#E5EAF0">…/developers/api/api-key</text>
+        <rect x="32" y="66" width="120" height="16" rx="8" fill="#2A333F"/>
+        <rect x="126" y="90" width="100" height="26" rx="9" fill="#E23A5E"/>
+        <text x="140" y="108" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="#fff" font-weight="600">＋ 키 만들기</text>
+
+        <path d="M262 70h38" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".3"/>
+        <path d="M292 63l10 7-10 7" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
+
+        <rect x="320" y="18" width="226" height="104" rx="12" fill="var(--card)" stroke="#E23A5E" stroke-width="2.5"/>
+        <text x="340" y="44" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="#E23A5E">이 창에서만 보입니다</text>
+        <rect x="340" y="56" width="150" height="28" rx="8" fill="var(--line-2)"/>
+        <text x="350" y="75" font-family="'Consolas',monospace" font-size="13" fill="currentColor" opacity=".7">키 ··················</text>
+        <rect x="498" y="56" width="28" height="28" rx="8" fill="none" stroke="#E23A5E" stroke-width="2.5"/>
+        <rect x="505" y="63" width="9" height="12" rx="2" fill="none" stroke="#E23A5E" stroke-width="2"/>
+        <rect x="509" y="66" width="9" height="12" rx="2" fill="none" stroke="#E23A5E" stroke-width="2"/>
+        <text x="340" y="106" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="currentColor" opacity=".5">바로 복사해 두세요</text>
+      </svg>
+    </div>
+    <p class="say">결제가 끝나면 <b>API 키 화면</b>에서 키를 만듭니다. 이름은 아무거나(예: <code>shorttemp</code>) 적으시면 됩니다.<br>
+      나온 키를 <b>바로 복사</b>하세요.</p>
+    <a class="go-btn" href="https://studio.typecast.ai/developers/api/api-key" target="_blank" rel="noopener">API 키 화면 열기 →</a>
+    <div class="warnbox"><span class="ic">⚠</span><span>이 키도 <b>딱 한 번만 보여줍니다.</b> 창을 닫으면 다시 못 봅니다 — 그때는 새로 만드시면 됩니다.</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">4</div><h3>숏템메이커에<br>붙여넣기</h3></div>
+    <div class="pic">
+      <svg viewBox="0 0 560 150" role="img" aria-label="숏템메이커 설정의 목소리 타입캐스트 칸에 키를 붙여넣고 저장하는 그림">
+        <rect x="14" y="16" width="300" height="120" rx="12" fill="var(--screen)" stroke="var(--screen-line)" stroke-width="2"/>
+        <circle cx="32" cy="34" r="4" fill="#4A5563"/><circle cx="46" cy="34" r="4" fill="#4A5563"/><circle cx="60" cy="34" r="4" fill="#4A5563"/>
+        <text x="32" y="66" font-family="'IBM Plex Sans KR',sans-serif" font-size="15" fill="#E5EAF0">🎤 목소리 (타입캐스트)</text>
+        <rect x="32" y="78" width="196" height="30" rx="9" fill="none" stroke="#E23A5E" stroke-width="3"/>
+        <text x="43" y="98" font-family="'Consolas',monospace" font-size="14" fill="#8894A4">키 ··················</text>
+        <rect x="238" y="78" width="58" height="30" rx="9" fill="#E23A5E"/>
+        <text x="252" y="98" font-family="'IBM Plex Sans KR',sans-serif" font-size="14" fill="#fff" font-weight="600">저장</text>
+
+        <path d="M332 76h40" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".3"/>
+        <path d="M364 69l10 7-10 7" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
+
+        <circle cx="440" cy="76" r="26" fill="var(--ok-soft)"/>
+        <path d="M428 76l8 8 16-17" fill="none" stroke="#12775A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="478" y="70" font-family="'IBM Plex Sans KR',sans-serif" font-size="15" fill="currentColor" opacity=".6">● 정상</text>
+        <text x="478" y="90" font-family="'IBM Plex Sans KR',sans-serif" font-size="14" fill="currentColor" opacity=".45">이라고 뜨면 끝</text>
+      </svg>
+    </div>
+    <p class="say">설정 화면의 <b>🎤 목소리 (타입캐스트)</b> 칸에 붙여넣고 <b>저장</b>을 누르세요.<br>
+      <b>● 정상</b>이라고 뜨면 끝입니다.</p>
+    <a class="go-btn" href="/settings.html" target="_blank" rel="noopener">설정 화면 열기 →</a>
+    <div class="done"><span class="ic">✅</span><span><b>다 됐습니다</b>
+      <span>성우 목록에서 <b>필재 · 김건 · 박창수 · 용식이</b> 같은 한국 성우를 고르시면 이 키가 쓰입니다.
+      다른 성우는 <b>② ElevenLabs</b> 키를 씁니다.</span></span></div>
+  </div>
+
+  <h4>🔧 타입캐스트가 안 될 때</h4>
+  <div class="fix">
+    <div class="fix-row">
+      <div class="q"><span class="ic">Q</span><span>「비정상 활동이 감지되었습니다」 / <code>UNUSUAL_ACTIVITY_DETECTED</code> 라고 뜹니다</span></div>
+      <div class="a"><span class="ic">→</span><span><b>API 요금제가 아직 무료(Free)</b>라서 막힌 것입니다. 타입캐스트가 무료 계정의 API 사용을 차단한 상태입니다.
+        위 <b>2단계</b>로 가셔서 <b>API 요금제</b>를 결제해 주세요. <b>에디터 요금제를 결제하셔도 이건 안 풀립니다.</b></span></div>
+    </div>
+    <div class="fix-row">
+      <div class="q"><span class="ic">Q</span><span>분명히 <b>Pro로 결제</b>했는데 계속 안 됩니다</span></div>
+      <div class="a"><span class="ic">→</span><span>결제하신 것이 <b>에디터 요금제</b>일 가능성이 큽니다. 요금제 화면에
+        <b>Plus $19 · Pro $29 · Business $69</b>가 보였다면 그건 <b>에디터 쪽</b>입니다.
+        API 요금제는 <b>Free · Lite $15 · Plus $280</b>으로 금액이 전혀 다릅니다 — <code>typecast.ai/pricing/api</code>에서 다시 확인해 주세요.</span></div>
+    </div>
+    <div class="fix-row">
+      <div class="q"><span class="ic">Q</span><span>「키가 인식되지 않습니다(권한 없음)」 라고 뜹니다</span></div>
+      <div class="a"><span class="ic">→</span><span>키가 <b>잘못 복사</b>된 경우입니다. 앞뒤에 <b>빈칸이나 줄바꿈</b>이 끼면 안 됩니다.
+        <b>3단계</b>에서 키를 새로 만들어 다시 붙여넣어 주세요.</span></div>
+    </div>
+    <div class="fix-row">
+      <div class="q"><span class="ic">Q</span><span>크레딧이 얼마나 드나요?</span></div>
+      <div class="a"><span class="ic">→</span><span><b>글자 1개 = 1크레딧</b>입니다. 숏폼 한 편 대본이 보통 <b>400~600자</b>이니
+        Lite(20만 크레딧)면 <b>한 달에 300편 넘게</b> 만드실 수 있습니다.</span></div>
+    </div>
+  </div>
+  <a class="top" href="#top">↑ 맨 위로</a>
+
+  <!-- ══════════════ ④ SerpApi ══════════════ -->
   <div class="svc" id="serpapi">
-    <h2 class="svc-t">③ SerpApi</h2>
+    <h2 class="svc-t">④ SerpApi</h2>
     <div class="tags">
       <span class="tag">숏템 파워검색</span>
       <span class="tag free">월 250회 무료</span>
@@ -462,12 +642,12 @@
   </div>
   <a class="top" href="#top">↑ 맨 위로</a>
 
-  <!-- ══════════════ ④ Vmake ══════════════ -->
+  <!-- ══════════════ ⑤ Vmake ══════════════ -->
   <!-- 별칭 주소 #subclean — 제작소(produce.html)는 업체명을 쓸 수 없어(브랜드 정책,
        test_no_vmake_anywhere_in_produce_html) 이 이름으로 여기를 가리킨다. -->
   <a id="subclean" style="position:relative;top:-80px;display:block;height:0"></a>
   <div class="svc" id="vmake">
-    <h2 class="svc-t">④ Vmake</h2>
+    <h2 class="svc-t">⑤ Vmake</h2>
     <div class="tags">
       <span class="tag">자막 지우기</span>
       <span class="tag pay">Plus 월 14,000원 · Pro 월 44,000원</span>
@@ -675,9 +855,9 @@
   </div>
   <a class="top" href="#top">↑ 맨 위로</a>
 
-  <!-- ══════════════ ⑤ 유튜브 ══════════════ -->
+  <!-- ══════════════ ⑥ 유튜브 ══════════════ -->
   <div class="svc" id="youtube">
-    <h2 class="svc-t">⑤ 유튜브</h2>
+    <h2 class="svc-t">⑥ 유튜브</h2>
     <div class="tags">
       <span class="tag">영상 정보 가져오기</span>
       <span class="tag free">무료</span>
@@ -757,9 +937,9 @@
   </div>
   <a class="top" href="#top">↑ 맨 위로</a>
 
-  <!-- ══════════════ ⑥ Buffer ══════════════ -->
+  <!-- ══════════════ ⑦ Buffer ══════════════ -->
   <div class="svc" id="buffer">
-    <h2 class="svc-t">⑥ Buffer</h2>
+    <h2 class="svc-t">⑦ Buffer</h2>
     <div class="tags">
       <span class="tag">SNS 예약 발행</span>
       <span class="tag free">3채널까지 무료</span>
@@ -890,7 +1070,7 @@
     </div>
     <div class="fix-row">
       <div class="q"><span class="ic">?</span><span>유튜브 키가 <b>계속 틀렸다고</b> 나옵니다</span></div>
-      <div class="a"><span class="ic">→</span><span><b>YouTube Data API v3 「사용」</b>을 안 누르신 경우입니다. ⑤-2단계로 돌아가 켜 주세요.</span></div>
+      <div class="a"><span class="ic">→</span><span><b>YouTube Data API v3 「사용」</b>을 안 누르신 경우입니다. ⑥-2단계로 돌아가 켜 주세요.</span></div>
     </div>
     <div class="fix-row">
       <div class="q"><span class="ic">?</span><span><b>“이번 달 무료분을 다 썼습니다”</b></span></div>
@@ -902,7 +1082,7 @@
     </div>
     <div class="fix-row">
       <div class="q"><span class="ic">?</span><span>Buffer 키를 넣었는데 <b>채널이 안 뜹니다</b></span></div>
-      <div class="a"><span class="ic">→</span><span>둘 중 하나입니다. ① Buffer 안에서 <b>SNS 계정을 아직 연결하지 않으신</b> 경우 — ⑥-2단계의 <b>＋ 커넥트 채널</b>로 연결해 주세요. ② <b>키를 만든 계정과 채널을 연결한 계정이 다른</b> 경우 — 같은 계정으로 맞춰 주세요.</span></div>
+      <div class="a"><span class="ic">→</span><span>둘 중 하나입니다. ① Buffer 안에서 <b>SNS 계정을 아직 연결하지 않으신</b> 경우 — ⑦-2단계의 <b>＋ 커넥트 채널</b>로 연결해 주세요. ② <b>키를 만든 계정과 채널을 연결한 계정이 다른</b> 경우 — 같은 계정으로 맞춰 주세요.</span></div>
     </div>
     <div class="fix-row">
       <div class="q"><span class="ic">?</span><span>잘 되던 <b>예약 발행이 갑자기 멈췄습니다</b></span></div>
