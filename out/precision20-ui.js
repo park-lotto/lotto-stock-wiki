@@ -794,16 +794,11 @@
         const boxes=frame.channel_boxes?.length?frame.channel_boxes:(frame.channel_box?[frame.channel_box]:[]);
         const bandColor=fixedColorsFor(p.id,frame).top||frame.title_bg||frame.top_band?.color||'#000000';
         layer.querySelectorAll('.channel-slot-box,.channel-slot-cover').forEach(e=>e.remove());
-        // 캡슐 정보가 데이터에 없으면(원본 그림에 그려진 경우) 원래 채널 자리를 배경색으로 덮는다
-        if(!boxes.length){
-          const defTop=fixedBaseLayout(frame).channel,hh=chEl0?chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100:6;
-          const cover=addPatch(Math.max(0,defTop-hh-1.5),hh+3,bandColor,0,100,'');cover.classList.add('channel-slot-cover');
-          if(chEl0)layer.insertBefore(cover,chEl0);
-        }
+        // 09-19: 캡슐 정보가 없는 템플릿은 덮지 않는다 — 배경색이 달라 회색 사각형이 남았다(글자만 옮긴다)
         for(const c of boxes){
           const y=c.y/frame.height*100,h=c.height/frame.height*100,x=c.x/frame.width*100,w=c.width/frame.width*100;
+          if(c.designed)continue;   // 글자만 있는 채널은 옮길 캡슐이 없다
           const cover=addPatch(Math.max(0,y-0.4),h+0.8,bandColor,Math.max(0,x-1),Math.min(100,w+2),'');cover.classList.add('channel-slot-cover');
-          if(c.designed)continue;   // 글자만 있는 채널(캡슐 없음)은 덮기만 한다
           const box=addPatch(Math.max(0,next-0.2),h,c.background,x,w,'');box.classList.add('channel-slot-box');
           box.style.borderRadius=((Number(c.radius)||0)*preview.clientHeight/frame.height)+'px';
           if(c.border)box.style.border=`${Math.max(1,preview.clientHeight/frame.height)}px solid ${c.border}`;
