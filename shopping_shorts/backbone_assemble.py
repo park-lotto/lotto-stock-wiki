@@ -163,7 +163,12 @@ def pick_hook_spine(store, spine_id=None, seed=None, style=None):
       (2026-09-18 사장님: "오용형을 고르면 그 유형 채널들의 잘 쓴 대본 스파인 5~10개가 순번대로 나오는 구조").
       전엔 spine_id 지정 아니면 무작위였고, 유형으로 고르는 길이 없었다.
     spine_id가 오면 그게 우선. 둘 다 없으면 무작위(seed 고정)."""
-    all_sp = store.list_spines(status="approved")
+    all_sp = list(store.list_spines(status="approved") or [])
+    # ★원문형 스파인은 검수 중(pending)이라 승인 목록에 없다 — **id로 콕 집어 부를 때만** 같이 본다
+    #   (무작위·유형 선택 후보에는 안 들어간다: 아래 spines/pool은 all_sp가 아니라 승인분만 쓰도록 유지)
+    if spine_id is not None:
+        _appr = {s.get("id") for s in all_sp}
+        all_sp = all_sp + [s for s in (store.list_spines(status="pending") or []) if s.get("id") not in _appr]
     spines = [s for s in all_sp if s.get("hook_3s")]
     if spine_id is not None:
         for s in all_sp:
@@ -280,6 +285,28 @@ def _cta_keyword(product):
     return t if len(t) <= 3 else t[-2:]
 
 
+def enforce_hook(lines, origin, product):
+    """첫 줄(훅)은 **원문 글자 그대로**. 모델이 뼈 글자를 바꿨으면(예: '충격받았어요'→'배고파졌어요')
+    원문 훅으로 되돌리고, 제품 낱말 빈칸만 이 제품으로 채운다 (2026-09-20 사장님 지적)."""
+    cells = origin.get("cells") or []
+    tpl = (origin.get("hook_tpl") or "").strip()
+    orig = (cells[0].get("text") or "").strip() if cells else ""
+    if not lines or not (tpl or orig):
+        return lines
+    bones = [re.sub(r"\s", "", b) for b in re.split(r"\{[^{}]+\}", tpl) if b.strip()] if tpl else []
+    flat = re.sub(r"\s", "", lines[0].get("text") or "")
+    if bones and all(b in flat for b in bones):
+        return lines                     # 뼈 글자를 지켰다 — 그대로 둔다
+    fixed = tpl or orig
+    if tpl:
+        short = _cta_keyword(product)
+        for n in re.findall(r"\{([^{}]+)\}", tpl):
+            fill = product if n in ("제품군", "기존물건") else short
+            fixed = fixed.replace("{%s}" % n, fill, 1)
+    lines[0]["text"] = fixed if fixed.endswith((".", "!", "?")) else fixed + "."
+    return lines
+
+
 def fix_insta_cta(lines, spine, product):
     """인스타(존댓말) 스파인의 CTA는 **기존 문구 한 가지로** 고정한다 (2026-09-20 사장님:
     "인스타형은 다 CTA가 이상해, 궁금하시면 댓글 이거 기존걸로 가야 한다").
@@ -349,6 +376,7 @@ def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds
             lines, gaps = l2, left
     if note is not None:
         note["cast"] = {"table": cast, "issues": gaps}
+    lines = enforce_hook(lines, origin, product)
     lines = fix_insta_cta(lines, spine or {}, product)
     return _no_made_up_country(_one_full_name(lines, product), seg_index)
 
@@ -922,3 +950,48 @@ def assemble_clean(sources, backbone_vid, store, spines, target_seconds=25, seed
     if note is not None:
         note["skipped"] = tried          # 왜 안 썼는지 화면이 말할 수 있게(조용한 폴백 금지)
     return out
+
+
+_TYPES = ["오용형", "제품정체형", "발명품형", "지인증언형", "권유지시형", "물건발견형", "금지경고형", "사회증거형",
+          "정체의문형", "무지후회형", "목격담형", "가성비형", "만능템형", "다이소지목형", "내자랑형"]
+_SEEDT_SCHEMA = {"type": "object", "properties": {"type": {"type": "string"}, "why": {"type": "string"}},
+                 "required": ["type"]}
+
+
+def seed_type(sources, backbone_main=None, note=None):
+    """씨앗 영상이 이미 어떤 유형으로 찍혔는지 판정한다 — "이 영상에 딱 맞는 스타일"의 근거(2026-09-19 사장님).
+    씨앗 유형을 따르면 재료와 대본이 어긋나지 않는다(오용형은 딴 용도 장면이 이미 있다)."""
+    if not sources:
+        return ""
+    if backbone_main is not None:
+        try:
+            seed = sources[int(backbone_main)]
+        except Exception:      # noqa: BLE001
+            seed = None
+    else:
+        seed = None
+    if seed is None:
+        ko = lambda t: sum(1 for c in t if "가" <= c <= "힣") / max(1, sum(1 for c in t if c.isalpha()))
+        kor = [s for s in sources if ko(s.get("full_text") or "") > 0.7]
+        seed = max(kor or sources, key=lambda s: len(s.get("full_text") or ""))
+    text = (seed.get("full_text_ko") or seed.get("full_text") or "").strip()
+    if len(text) < 60:
+        return ""
+    out = _sg._call_json(
+        "아래는 쇼핑 숏폼 대본이다. 첫 문장이 **어떻게 여는가**로 유형을 하나 고르고 why 한 줄.\n유형: %s\n\n%s"
+        % (", ".join(_TYPES), text[:900]), _SEEDT_SCHEMA, note=note) or {}
+    t = str(out.get("type") or "").strip()
+    return t if t in _TYPES else ""
+
+
+def origin_spines(store, typ, limit=6):
+    """그 유형의 **원문형 스파인**(히트작 원문을 담은 것). 없으면 빈 목록 → 호출부가 옛 경로로 간다."""
+    out = []
+    for st in ("approved", "pending"):          # 승인된 것 먼저, 아직 검수 중인 것 나중
+        for sp in (store.list_spines(status=st) or []):
+            if not spine_origin(sp):
+                continue
+            if typ and typ not in (sp.get("fit_categories") or json.loads(sp.get("fit_categories_json") or "[]")):
+                continue
+            out.append(sp)
+    return out[:limit]

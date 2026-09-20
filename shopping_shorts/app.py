@@ -22245,10 +22245,24 @@ def _backbone_drafts(spines, job, store, seconds=25, job_id=""):
     # ★스파인을 여러 개 돌려 **인물·상황 검사를 통과한 대본만** 올린다(2026-09-20 사장님 B안).
     #   한 편을 규칙으로 완벽히 만들려 하면 규칙만 늘어난다(09-19~20 실측: 규칙을 더해도 8/18).
     #   통과본이 없으면 빈 목록 — 화면은 "이 영상엔 맞는 스타일이 없다"고 말하고 옛 경로로 간다.
+    # ★스파인 후보는 **씨앗 영상의 유형**으로 정한다(2026-09-19 사장님 "씨앗이 어떤 형태인지에 따라 정해진다").
+    #   그 유형의 원문형 스파인이 있으면 그것만 후보로. 없으면 화면이 고른 스타일 그대로 간다.
     note = {}
-    got = ba.assemble_clean(srcs, bb.get("video_id"), store, list(spines or []),
+    typ = ""
+    try:
+        typ = ba.seed_type(srcs, (job or {}).get("backbone_main"), note=note)
+    except Exception as e:      # noqa: BLE001 — 유형 판정 실패가 생성을 막으면 안 된다
+        print("씨앗 유형 판정 건너뜀: %s" % str(e)[:100])
+    cand = ba.origin_spines(store, typ) if typ else []
+    note["seed_type"] = typ
+    got = ba.assemble_clean(srcs, bb.get("video_id"), store, cand or list(spines or []),
                             target_seconds=seconds, seed=job_id or None, want=2, note=note)
-    drafts = [ba.to_draft(g["given"], g["beat_sources"], g["meta"]) for g in got]
+    drafts = []
+    for g in got:
+        d = ba.to_draft(g["given"], g["beat_sources"], g["meta"])
+        d["seed_type"] = typ                      # 화면 문구 "이 영상에 딱 맞는 스타일입니다"의 근거
+        d["style_name"] = (g["spine"] or {}).get("name") or d.get("style_name")
+        drafts.append(d)
     whys = ["%s: %s" % (t.get("spine") or "", t.get("why") or "") for t in (note.get("skipped") or [])]
     return drafts, "; ".join(whys)
 
