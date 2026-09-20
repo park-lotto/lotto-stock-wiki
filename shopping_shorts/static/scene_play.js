@@ -1199,15 +1199,19 @@ function _pinHidden(v, want){
   //   **안전핀이 터지는 순간 아직 시크 중이면 컷3이 그대로 드러났다**(프레임 1장 노출 실측).
   //   안전핀이 고치려던 증상을 되살린 것이다 — 9/18판이 400ms로 그랬던 것과 같은 모양.
   //   그래서 시간이 아니라 **자리에 왔는지**로 드러낸다. 못 오면 짧게 다시 본다.
+  // ★★앞서 가려둔 재생기가 있으면 **반드시 먼저 되돌린다**(2026-09-20 실측으로 잡은 결함).
+  //   안 그러면 그 재생기는 visibility:hidden 인 채로 버려져 **영영 안 드러난다**.
+  //   실측: 칸0(컷 9개)에서 연달아 전환하면 3초를 기다려도 화면이 안 그려지는 판이 나왔다
+  //   (3회 중 1회). 가리는 것을 도입했으면 **되돌리는 책임도 같은 자리**에 있어야 한다.
+  _unhidePinned();
   let waited = 0;
   const reveal = () => {
-    if (!_hidePin || _hidePin.v !== v) return;        // 그 사이 다른 전환이 일어났다
     v.onseeked = null;
-    v.style.visibility = '';
-    _hidePin = null;
+    v.style.visibility = '';                         // 이 재생기는 무조건 되돌린다
+    if (_hidePin && _hidePin.v === v) _hidePin = null;
   };
   const tick = () => {
-    if (!_hidePin || _hidePin.v !== v) return;
+    if (!_hidePin || _hidePin.v !== v) return;       // 그 사이 다른 전환이 맡았다
     if (_seekSettled(v, want) || waited >= _PIN_MAX_MS) return reveal();
     waited += _PIN_STEP_MS;
     _hidePin.timer = setTimeout(tick, _PIN_STEP_MS);
