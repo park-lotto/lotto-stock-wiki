@@ -10,7 +10,8 @@ sys.path.insert(0, "/tmp/ab")
 
 SCHEMA = {"type": "object", "properties": {
     "cells": {"type": "array", "items": {"type": "object", "properties": {
-        "role": {"type": "string"}, "text": {"type": "string"}}, "required": ["role", "text"]}},
+        "role": {"type": "string"}, "text": {"type": "string"},
+        "segs": {"type": "array", "items": {"type": "string"}}}, "required": ["role", "text", "segs"]}},
     "hook_values": {"type": "array", "items": {"type": "object", "properties": {
         "slot": {"type": "string"}, "value": {"type": "string"}}, "required": ["slot", "value"]}}},
     "required": ["cells"]}
@@ -66,11 +67,96 @@ def material(srcs):
                        " / ".join((g.get("scene_desc") or "") for g in (s.get("segments") or [])[:12]) for s in srcs[:4])
 
 
+def _vid(s):
+    """소스의 컷 번호 앞자리 — seg_id가 'lens_youtube_x-0'이면 'lens_youtube_x'.
+    ★sources_from_extract의 video_id는 's2'처럼 소스 번호라 seg_id와 안 맞는다(09-19 실측)."""
+    segs = s.get("segments") or []
+    return str(segs[0].get("seg_id", "")).rsplit("-", 1)[0] if segs else (s.get("video_id") or "")
+
+
+def seed_vid_of(srcs, backbone_main=None):
+    """씨앗(원본) 소스의 video_id — 화면이 원본과 같아 보이지 않게 가리는 기준(09-18 '원본이랑 달라야')."""
+    if backbone_main is not None:
+        try:
+            return _vid(srcs[int(backbone_main)])
+        except Exception:      # noqa: BLE001
+            pass
+    ko = lambda t: sum(1 for c in t if "가" <= c <= "힣") / max(1, sum(1 for c in t if c.isalpha()))
+    kor = [s for s in srcs if ko(s.get("full_text") or "") > 0.7]
+    return (_vid(max(kor or srcs, key=lambda s: len(s.get("full_text") or ""))) if srcs else "")
+
+
+def material_segs(srcs, per_src=18, seed_vid=""):
+    """컷 번호가 붙은 재료. **서브를 먼저 적고** 원본은 (원본)으로 표시한다 — 모델이 목록 앞쪽을
+    집는 성질 때문에 씨앗 컷만 골라 화면이 원본과 똑같아졌다(09-19 실측 문어인형 5/5줄)."""
+    sub = [s for s in srcs if _vid(s) != seed_vid]
+    out = []
+    for s in (sub + [x for x in srcs if _vid(x) == seed_vid])[:5]:
+        tag = "원본" if _vid(s) == seed_vid else "서브"
+        for g in (s.get("segments") or [])[:per_src]:
+            d = (g.get("scene_desc") or "").strip()
+            if g.get("seg_id") and d:
+                out.append("[%s] (%s) %s | 대사: %s" % (g["seg_id"], tag, d[:70], (g.get("text") or "")[:40]))
+    return "\n".join(out)
+
+
 def _hook(hit):
     return next((c for c in hit["cells"] if c.get("original") and c["role"] == "훅" and not c.get("why_bad")), None)
 
 
-def transpose(hit, mat):
+def seed_overlap(text, mat):
+    """새 대본의 6글자 조각 중 재료(원본 대사)에 그대로 있는 비율(diff_from_seed와 같은 잣대)."""
+    n = lambda t: re.sub(r"\s", "", t or "")
+    M = {n(mat)[i:i + 6] for i in range(len(n(mat)) - 5)}
+    t = n(text)
+    g = [t[i:i + 6] for i in range(len(t) - 5)]
+    return sum(x in M for x in g) / max(1, len(g))
+
+
+def seed_cut_ratio(cells, seed_vid):
+    ids = [x for c in cells for x in (c.get("segs") or [])]
+    return (sum(1 for i in ids if str(i).rsplit("-", 1)[0] == seed_vid) / len(ids)) if ids else 0.0
+
+
+def _stems(t):
+    """어간 2글자 묶음 — 장면 설명과 대사를 맞대 볼 때 조사·어미를 버린다(인스타 매칭과 같은 방식)."""
+    return {w[:2] for w in re.findall(r"[가-힣]{2,}", t or "")}
+
+
+def prefer_sub(cells, srcs, seed_vid, keep=0.4):
+    """모델이 고른 컷이 씨앗에 쏠리면(설명이 대사와 제일 닮아서) **같은 뜻의 서브 컷으로 바꾼다**.
+    09-19 실측: 서브 컷 14개가 있는데도 모델이 씨앗 12컷만 골라 화면이 원본과 똑같았다.
+    바꿀 서브 컷이 없으면 씨앗 컷을 그대로 둔다(빈 화면보다 낫다)."""
+    pool = []
+    for s in srcs:
+        if _vid(s) == seed_vid:
+            continue
+        for g in (s.get("segments") or []):
+            d = (g.get("scene_desc") or "").strip()
+            if g.get("seg_id") and d:
+                pool.append((g["seg_id"], _stems(d)))
+    if not pool:
+        return cells
+    used = set()
+    for c in cells:
+        want = _stems(c.get("text"))
+        segs = []
+        for sid in (c.get("segs") or []):
+            if str(sid).rsplit("-", 1)[0] != seed_vid:
+                segs.append(sid)
+                used.add(sid)
+                continue
+            cand = sorted(((len(want & st), sid2) for sid2, st in pool if sid2 not in used), reverse=True)
+            if cand and cand[0][0] >= 1:
+                segs.append(cand[0][1])
+                used.add(cand[0][1])
+            else:
+                segs.append(sid)
+        c["segs"] = segs
+    return cells
+
+
+def transpose(hit, mat, seg_list="", _retry=True):
     from shopping_shorts import script_generate as sg
     cells = [c for c in hit["cells"] if c.get("original")]
     tpl = "\n".join("[%s] %s" % (c["role"], dedup(c["original"])) for c in cells)
@@ -86,24 +172,49 @@ def transpose(hit, mat):
 - 제품 이야기(제품 이름·효능·동작·불편·숫자)는 **전부 [새 제품] 재료에 있는 것으로만** 바꿔라. 히트 대본의 원래 제품 이야기는 한 조각도 남기지 마라.
 - 인물·장소·반응 같은 이야기 장치는 새 제품에 자연스럽게 맞게 바꿔도 된다. 단, 대본 전체에서 인물은 한 사람으로 이어져야 한다.
 - 재료에 없는 숫자·출처·수상·판매량은 쓰지 마라. 같은 문장을 두 번 쓰지 마라.
+- ★[새 제품 재료]의 대사 문장을 **베끼지 마라**. 재료에서는 사실(무엇이 어떻게 된다)만 가져오고, 문장은 [히트 대본]의 말투로 새로 써라.
+  (원본 영상과 다른 영상이어야 한다 — 재료 문장이 6글자 넘게 그대로 이어지면 실패로 친다)
 - hook_values = 훅 빈칸마다 넣은 값.
 
 [히트 대본]
 {tpl}
 
 [새 제품 재료]
-{mat}"""
+{mat}
+""" + (("""
+[화면 컷 목록] — 칸마다 그 칸 내용이 **실제로 보이는 컷** 번호를 segs에 1~3개(보여줄 순서대로). 목록에 없는 번호 금지.
+훅은 가장 눈길 끄는 컷, 작동·심지어 칸은 그 동작이 보이는 컷.
+★(서브) 컷을 먼저 쓴다. (원본) 컷은 그 장면이 서브에 없을 때만 — 화면이 원본 영상과 같아 보이면 안 된다.
+""" + seg_list) if seg_list else "")
     out = sg._call_json(p, SCHEMA) or {}
     new = out.get("cells") or []
+    if not new and _retry:            # 모델 혼잡으로 빈 응답 — 한 번 더
+        out = sg._call_json(p, SCHEMA) or {}
+        new = out.get("cells") or []
     if hook and new:
         vals = {(v.get("slot") or "").strip("{} "): v.get("value") or "" for v in out.get("hook_values") or []}
         new[0]["text"] = hook_exact(hook, new[0]["text"], vals)
+    # ★씨앗 베끼기 막기(09-19 실측: 씨앗과 틀이 같은 유형이면 씨앗 대사 79% 복사) — 30% 넘으면 한 번 더
+    body = " ".join(c.get("text") or "" for c in new[1:])
+    if _retry and new and seed_overlap(body, mat) > 0.30:
+        again = transpose(hit, mat, seg_list, _retry=False)
+        if again and seed_overlap(" ".join(c.get("text") or "" for c in again[1:]), mat) < seed_overlap(body, mat):
+            return again
+    valid = set(re.findall(r"^\[([^\]]+)\]", seg_list, re.M))
     for c in new:
         c["text"] = dedup(c["text"])
+        c["segs"] = [x for x in (c.get("segs") or []) if x in valid]
     return new
 
 
-def checks(hit, new, mat):
+def transpose_job(hit, srcs, backbone_main=None):
+    """한 번에: 재료 → 대본 옮기기 → 서브 컷 우선 교체. (cells, seed_vid)"""
+    sv = seed_vid_of(srcs, backbone_main)
+    cells = transpose(hit, material(srcs), material_segs(srcs, seed_vid=sv))
+    return prefer_sub(cells, srcs, sv), sv
+
+
+def checks(hit, new, mat, seed_vid=""):
     out = []
     if [c["role"] for c in new] != [c["role"] for c in hit["cells"] if c.get("original")]:
         out.append("칸 순서 다름")
@@ -118,6 +229,15 @@ def checks(hit, new, mat):
         out.append("원래 제품 말 새어나옴 %s" % leak)
     if any(DUP.search(c["text"]) for c in new):
         out.append("같은 말 반복")
+    ov = seed_overlap(" ".join(c.get("text") or "" for c in new[1:]), mat)
+    if ov > 0.30:
+        out.append("원본 대사 베낌 %.0f%%" % (100 * ov))
+    if any(not c.get("segs") for c in new) and any(c.get("segs") for c in new):
+        out.append("컷 없는 칸 %d" % sum(1 for c in new if not c.get("segs")))
+    if seed_vid:
+        r = seed_cut_ratio(new, seed_vid)
+        if r > 0.4:
+            out.append("원본 컷 %.0f%%" % (100 * r))
     hook = _hook(hit)
     if hook and new and not all(b in re.sub(r"\s", "", new[0]["text"]) for b in _bones(hook["template"])):
         out.append("훅 글자 바뀜")
@@ -134,13 +254,14 @@ def main():
     for jid in jobs:
         srcs = ba.sources_from_extract((st.get_mix_job(jid) or {}).get("extract") or {})
         mat = material(srcs)
+        bm = (st.get_mix_job(jid) or {}).get("backbone_main")
         prod = next((s.get("product") for s in srcs if s.get("product")), "")
         for hid in hits:
             hit = T[hid]
-            new = transpose(hit, mat)
+            new, sv = transpose_job(hit, srcs, bm)
             res.append({"job": jid, "product": prod, "hit": hid, "hit_views": hit["views"], "hit_user": hit.get("user"),
                         "hit_cells": [{"role": c["role"], "text": dedup(c["original"])} for c in hit["cells"] if c.get("original")],
-                        "cells": new, "flags": checks(hit, new, mat)})
+                        "seed_vid": sv, "cells": new, "flags": checks(hit, new, mat, sv)})
             print(jid, hid, len(new), res[-1]["flags"], flush=True)
     json.dump(res, open(dst, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
