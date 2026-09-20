@@ -8874,6 +8874,37 @@ def api_mix_capcut(job_id: str, base: str = ""):
             caption_style=_cap_style, deco=_deco)
         _hc_span = video_assemble.headcopy_span(timeline)
 
+    # ★장면꾸미기(scene_style)를 캡컷에도 보낸다 — 2026-09-21 라이브 E2E 점검에서 발각.
+    #   최종렌더는 deco["scene_style"]을 보고 scene_style.compose가 장면별 투명 PNG를 씌우는데
+    #   (video_assemble.assemble 안), 캡컷 경로는 그 값을 **한 번도 보지 않았다**(grep 0건).
+    #   그래서 고객이 캡컷으로 보내면 머리띠·채널명·제목·자막 틀이 통째로 빠지고 흰 기본
+    #   글자 한 줄(headcopy.png)만 갔다. 실측: job be580a2ed41e의 headcopy.png = 템플릿 0.
+    #   ★받는 쪽은 이미 다 돼 있었다 — capcut_draft.assemble_draft_folder(scene_overlay_layers)와
+    #     build_draft의 scene-style-overlay 트랙. 호출부만 비어 있었다(0순위-B).
+    #   ★그림과 구간은 렌더가 쓰는 함수를 그대로 쓴다(render_layers·context_for) — 여기서
+    #     따로 그리면 완성본과 캡컷이 갈린다.
+    #   ★실패해도 내보내기는 그대로 된다 — 그때는 종전대로 머리카피만 간다.
+    _scene_layers = None
+    _ss_snapshot = (_deco or {}).get("scene_style") if _deco else None
+    if _style_on and _ss_snapshot:
+        try:
+            from shopping_shorts import scene_style as _scene_style
+            _ss_dir = work / "capcut_scene_style"
+            _ss_dir.mkdir(parents=True, exist_ok=True)
+            _ss_layers = _scene_style.render_layers(timeline, _ss_snapshot, _ss_dir, _hc, job_id)
+            _ss_scenes = _scene_style.context_for(timeline, _hc, _ss_snapshot, job_id)["scenes"]
+            _scene_layers = [{"path": str(_ss_dir / _lay["file"]),
+                              "start": float(_sc["start"]), "end": float(_sc["end"])}
+                             for _sc, _lay in zip(_ss_scenes, _ss_layers)
+                             if _lay.get("file")]
+        except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
+            import traceback as _tb4
+            _tb4.print_exc(file=sys.stderr)
+            _scene_layers = None
+    if _scene_layers:
+        # 제목·채널명은 장면 레이어에 이미 그려져 있다 — 머리카피를 또 올리면 겹쳐 보인다.
+        _hc_png, _hc_span = None, None
+
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
@@ -8883,6 +8914,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
         headcopy_png=(_hc_png if _style_on else None),
         headcopy_span=_hc_span,
         sfx_events=_sfx_events, cutaway_paths=_cutaways,
+        scene_overlay_layers=_scene_layers,
         extra_library_video_paths=_original_library_sources)
     texts, assets = {}, []
     for name in files:
