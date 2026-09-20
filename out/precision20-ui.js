@@ -512,7 +512,7 @@
   }
   function resetField(bind){
     const input=inputs[bind];if(!input)return;
-    input.value=presetValue(bind)||'';fontScales.delete(scaleKey(bind));textOffsets.delete(scaleKey(bind));
+    input.value=presetValue(bind)||'';fontScales.delete(scaleKey(bind));textOffsets.delete(scaleKey(bind));textDrags.delete(scaleKey(bind));   // 09-19: 마우스로 옮긴 자리도 되돌린다
     [...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));
     if(bind==='caption'){captionLayouts.delete(captionKey());captionPositions.delete(captionKey());captionDrags.delete(captionKey());captionTexts.delete(captionKey());syncCaption();}
     markDirty(bind);updateCount(input);updateSteppers();updateCaptionButtons();renderEdit();
@@ -779,7 +779,7 @@
     //   칸 전체를 채우는 배경판만 새 높이로 늘린다.
     for(const el of [...layer.children].filter(el=>el!==badge)){
       const top=parseFloat(el.style.top),height=parseFloat(el.style.height);if(!Number.isFinite(top))continue;
-      if(top>=cut&&hasEditableCaption()){el.remove();continue;}
+      if(top>=cut&&hasEditableCaption()){if(el.classList.contains('precision-text')&&['channel','hook1','hook2','bodyTitle'].includes(el.dataset.editBind))continue;el.remove();continue;}   // 09-19: 끌어 옮긴 제목·채널명은 지우지 않는다(사라지던 문제)
       if(moved){
         const h=Number.isFinite(height)?Math.min(height,cut-top):(el.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100);
         if(top<=.5&&Number.isFinite(height)&&height>=cut*.8){el.style.height=next+'%';}
@@ -804,7 +804,9 @@
         const chEl=layer.querySelector('.precision-text[data-edit-bind="channel"]');
         const pvBox=preview.getBoundingClientRect();
         const chBottom=chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100):0;
-        const top=Math.max(STORY_BODY.cut*STORY_BODY.titleTop,chBottom+1.2);el.style.top=top+'%';
+        const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
+        const base=Math.max(STORY_BODY.cut*STORY_BODY.titleTop,chBottom+1.2);
+        const top=Math.max(0,Math.min(95,base+drag.y));el.style.top=top+'%';   // 끌어 옮긴 만큼 반영(화면 안에서만)
         // 자막 칸을 덮지 않는 선까지만 칸을 키운다(3줄 허용). 글자를 손으로 키웠어도 칸을 넘으면 줄인다 — 넘치면 자막·영상을 가린다.
         el.style.height=Math.max(STORY_BODY.cut*STORY_BODY.titleH,Math.min(STORY_BODY.cut-top-1,STORY_BODY.cut*STORY_BODY.titleH*3))+'%';
         let size=parseFloat(el.style.fontSize)||0;
