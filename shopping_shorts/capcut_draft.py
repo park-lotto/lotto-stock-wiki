@@ -465,7 +465,21 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
         #   여기서 따로 나누면 또 어긋난다.
         _srcd = {vid: (video_durs or {}).get(real, 0.0)
                  for vid, real in source_video_paths.items() if real}
-        _clips = _beat_clips(beat, tl.get("dur", 0.0), _srcd)
+        try:
+            _baked_speed = float(beat.get("_capcut_baked_speed") or 0.0)
+        except (TypeError, ValueError):
+            _baked_speed = 0.0
+        _primary = beat.get("primary") or {}
+        _primary_vid = _primary.get("video_id")
+        if (_baked_speed > 0 and math.isfinite(_baked_speed)
+                and _primary_vid in _srcd):
+            # 완성본 조각을 배속만큼 역변환한 전용 소스다. target은 비트 길이 그대로,
+            # source는 target×배속으로 잡아 CapCut 속도칸에 MIX 값이 정확히 남는다.
+            _clips = [{"video_id": _primary_vid, "start": 0.0,
+                       "src_dur": float(tl.get("dur", 0.0) or 0.0) * _baked_speed,
+                       "out_dur": float(tl.get("dur", 0.0) or 0.0)}]
+        else:
+            _clips = _beat_clips(beat, tl.get("dur", 0.0), _srcd)
         _acc = t0
         for ci, c in enumerate(_clips):
             src_real = source_video_paths.get(c.get("video_id"))
