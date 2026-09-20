@@ -8779,8 +8779,14 @@ def api_mix_capcut(job_id: str, base: str = ""):
                 return JSONResponse(status_code=500, content={
                     "ok": False, "error": "자막 없는 조각을 만들지 못했습니다: %s" % e})
             if _clips:
+                # 완성본 조각에는 MIX 배속이 이미 구워져 있다. CapCut에서도 0.8x/1.4x가
+                # 보이게 하려면 조각을 먼저 역변환하고, 초안 speed material에 원값을 남긴다.
+                # 역변환 없이 speed만 기록하면 이중 배속이므로 두 단계는 반드시 한 묶음이다.
+                _clips = mix_pipeline.normalize_baked_clips_for_capcut(
+                    plan, _clips, timeline, work)
                 source_video_paths = dict(_clips)
-                plan = mix_pipeline.plan_using_beat_clips(plan, _clips, timeline)
+                plan = mix_pipeline.plan_using_beat_clips(
+                    plan, _clips, timeline, preserve_capcut_speed=True)
                 timeline = _beat_timeline(plan, tts_paths)
         elif job.get("clean_status") == "ready":
             return JSONResponse(status_code=409, content={

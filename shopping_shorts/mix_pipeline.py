@@ -2816,7 +2816,44 @@ def split_final_into_beat_clips(clean_final, timeline, work, prefix="cc"):
     return out
 
 
-def plan_using_beat_clips(plan, clips, timeline, prefix="cc"):
+def normalize_baked_clips_for_capcut(plan, clips, timeline, work, prefix="cc"):
+    """완성본에서 잘라낸 조각을 CapCut 배속 편집이 가능한 소스로 되돌린다.
+
+    조각에는 MIX 배속이 이미 구워져 있다. 그대로 CapCut speed까지 기록하면 이중 배속이고,
+    speed를 1.0으로 지우면 고객 눈에는 MIX 설정이 사라진다. 조각의 재생시간을 배속만큼
+    역변환한 새 소스를 만든 뒤 CapCut에서 원래 배속을 다시 적용하면 화면 결과는 같고
+    타임라인에는 0.8x/1.4x가 살아 있다.
+    """
+    work = Path(work)
+    work.mkdir(parents=True, exist_ok=True)
+    beats = {b.get("beat_idx"): b for b in (plan or {}).get("beats") or []}
+    out = dict(clips or {})
+    for row in timeline or []:
+        idx = row.get("beat_idx")
+        vid = f"{prefix}{idx}"
+        src = Path(str(out.get(vid) or ""))
+        beat = beats.get(idx) or {}
+        try:
+            speed = float(beat.get("sync_speed") or 1.0)
+        except (TypeError, ValueError):
+            speed = 1.0
+        if not src.is_file() or not math.isfinite(speed) or abs(speed - 1.0) <= 1e-6:
+            continue
+        dst = work / f"capcut_speed_{vid}_{_clip_sig(src, 0.0, speed)}.mp4"
+        if not (dst.exists() and dst.stat().st_size > 1024):
+            subprocess.run([
+                "ffmpeg", "-y", "-v", "error", "-i", str(src),
+                "-vf", f"setpts={speed:.6f}*PTS", "-an",
+                "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+                "-pix_fmt", "yuv420p", str(dst),
+            ], check=True)
+        if not dst.exists() or dst.stat().st_size < 1024:
+            raise RuntimeError(f"캡컷 배속 소스 변환 결과가 비었습니다: {vid}")
+        out[vid] = str(dst)
+    return out
+
+
+def plan_using_beat_clips(plan, clips, timeline, prefix="cc", *, preserve_capcut_speed=False):
     """편집안을 **조각 기준**으로 바꾼 사본. 각 비트가 자기 조각을 통째로(0~끝) 쓴다.
 
     조각은 그 비트의 화면을 이미 담고 있으므로 재료를 하나로 접는다 —
@@ -2834,12 +2871,25 @@ def plan_using_beat_clips(plan, clips, timeline, prefix="cc"):
         if vid not in clips:
             continue
         d = durs.get(idx) or 0.0
+        try:
+            speed = float(b.get("sync_speed") or 1.0)
+        except (TypeError, ValueError):
+            speed = 1.0
+        keep_speed = (preserve_capcut_speed and math.isfinite(speed)
+                      and speed > 0 and abs(speed - 1.0) > 1e-6)
+        source_d = d * speed if keep_speed else d
         b["primary"] = {"video_id": vid, "seg_id": f"{vid}-0", "start": 0.0,
-                        "end": d if d > 0 else None}
+                        "end": source_d if source_d > 0 else None}
         b["alternates"] = []
         b.pop("scene_override", None)
-        # 이 조각은 완성본에서 이미 배속까지 적용된 화면이다. 캡컷 계획에서 다시
-        # sync_speed를 읽으면 이중 가속된다.
+        if keep_speed:
+            # normalize_baked_clips_for_capcut이 역변환한 소스에만 쓰는 명시 표식.
+            # 공용 렌더 계획에 sync_speed를 다시 흘려 이중 적용하지 않는다.
+            b["_capcut_baked_speed"] = speed
+        else:
+            b.pop("_capcut_baked_speed", None)
+        # 조각은 완성본에서 이미 배속된 화면이다. 일반 경로는 배속을 지우고,
+        # CapCut 보존 경로는 위 전용 표식으로 capcut_draft 한 곳에서만 다시 적용한다.
         b.pop("sync_speed", None)
     return out
 

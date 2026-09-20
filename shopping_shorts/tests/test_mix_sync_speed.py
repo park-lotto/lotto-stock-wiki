@@ -91,6 +91,45 @@ def test_이미_렌더된_청소조각은_캡컷에서_이중가속하지_않는
     assert "sync_speed" not in out["beats"][0]
 
 
+def test_역변환한_청소조각은_캡컷_배속값을_보존한다():
+    src, tts = "/tmp/cc0.mp4", "/tmp/b.mp3"
+    plan = mix_pipeline.plan_using_beat_clips(
+        {"beats": [_beat(0.8)]}, {"cc0": src},
+        [{"beat_idx": 0, "dur": 2.0}], preserve_capcut_speed=True)
+    beat = plan["beats"][0]
+    assert beat["_capcut_baked_speed"] == pytest.approx(0.8)
+    assert beat["primary"]["end"] == pytest.approx(1.6)
+    assert "sync_speed" not in beat
+    draft, _ = capcut_draft.build_draft(
+        plan=plan,
+        timeline=[{"beat_idx": 0, "t0": 0.0, "dur": 2.0,
+                   "narration": "테스트 문장"}],
+        source_video_paths={"cc0": src}, tts_paths={0: tts},
+        asset_paths={src: "C:/draft/cc0.mp4", tts: "C:/draft/b.mp3"},
+        video_durs={src: 1.6}, project_name="speed-clean")
+    video_track = next(t for t in draft["tracks"] if t["type"] == "video")
+    refs = set(video_track["segments"][0]["extra_material_refs"])
+    speed_mat = next(m for m in draft["materials"]["speeds"] if m["id"] in refs)
+    assert speed_mat["speed"] == pytest.approx(0.8)
+    assert video_track["segments"][0]["target_timerange"]["duration"] == 2_000_000
+    assert video_track["segments"][0]["source_timerange"]["duration"] == 1_600_000
+
+
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg 없음")
+def test_구워진_청소조각을_캡컷_배속용_길이로_역변환한다(tmp_path):
+    src = tmp_path / "cc0.mp4"
+    subprocess.run([
+        "ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+        "-i", "testsrc2=s=160x284:r=30:d=2.0",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", str(src),
+    ], check=True, stdin=subprocess.DEVNULL)
+    clips = mix_pipeline.normalize_baked_clips_for_capcut(
+        {"beats": [_beat(0.8)]}, {"cc0": str(src)},
+        [{"beat_idx": 0, "dur": 2.0}], tmp_path)
+    assert clips["cc0"] != str(src)
+    assert video_assemble._probe_duration(clips["cc0"]) == pytest.approx(1.6, abs=0.08)
+
+
 def test_렌더는_빠른_setpts도_적용한다():
     src = inspect.getsource(video_assemble._render_mix)
     assert "abs(factor - 1.0)" in src
