@@ -803,7 +803,8 @@
         // 채널명 아래 최소 1.2% 띄운다(원본 채널 위치가 6.3~11.1%로 제각각이라 붙거나 겹쳤다)
         const chEl=layer.querySelector('.precision-text[data-edit-bind="channel"]');
         const pvBox=preview.getBoundingClientRect();
-        const chBottom=chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100):0;
+        const chMoved=textDrags.get(scaleKey('channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
+        const chBottom=chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0;
         const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
         const base=Math.max(STORY_BODY.cut*STORY_BODY.titleTop,chBottom+1.2);
         const top=Math.max(0,Math.min(95,base+drag.y));el.style.top=top+'%';   // 끌어 옮긴 만큼 반영(화면 안에서만)
