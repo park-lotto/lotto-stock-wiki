@@ -5,7 +5,7 @@
 # **스파인 전수**를 유형별로 봐야 해서 입력이 다르다(덤프 JSON 한 개).
 #
 # 쓰기: python tools/spine_presets/reviewpage.py <덤프.json> <출력.html>
-import json, html, sys, collections
+import json, html, re, sys, collections
 
 e = lambda s: html.escape(str(s or ""))
 rows = json.load(open(sys.argv[1], encoding="utf-8"))
@@ -35,6 +35,36 @@ def fits(r):
         return []
 
 
+# ── 유튜브형 3유형의 인스타 혼입 거르기 (2026-09-21 사장님) ──────────────────
+# 사장님: "발명품이랑 오용형 제품정체형 이건 cta없고 유튜브 스타일이야 인스타형태있는것 걸러내"
+#
+# ★두 종류를 함께 거른다 — 재보니 불량이 하나가 아니었다(실측 90개 중 39개):
+#   ① 인스타 CTA 13개 — "댓글에 'OO' 남겨주세요"·"저장해두시고". 유튜브형엔 CTA가 없어야 한다.
+#   ② 마지막 문장이 중간에 잘린 것 26개 — "근데"/"올해 장맞철 오기"처럼 종결어미 없이 끊긴 칸이
+#      CTA 역할로 붙어 있다. 원문 자체가 깨진 것이라 대본 끝이 무너진다.
+# 지우지 않고 **표시만** 한다(사장님 확정) — 전부 pending이라 고객에겐 안 나간다.
+YT_TYPES = {"발명품형", "오용형", "제품정체형"}
+_INSTA_CTA = re.compile(r"댓글|남겨|저장해|팔로우|프로필|링크|디엠|DM")
+# 한국어 종결어미 또는 문장부호로 끝나면 완결로 본다
+_ENDS = re.compile(r"(다|요|임|음|죠|네|야|함|거|까|래|워|해|고요|든요)[.!?~]*$|[.!?]$")
+
+
+def reject(r, typ):
+    """이 스파인을 걸러낼 이유 — 없으면 None. 유튜브형 3유형에만 건다."""
+    if typ not in YT_TYPES:
+        return None
+    o = origin(r)
+    cta = [(c.get("text") or "").strip() for c in (o.get("cells") or []) if c.get("role") == "CTA"]
+    if not cta:
+        return None                      # CTA 칸이 없다 = 유튜브형 정상
+    t = cta[0]
+    if _INSTA_CTA.search(t):
+        return "인스타 CTA — 유튜브형엔 CTA가 없어야 함"
+    if not _ENDS.search(t):
+        return "마지막 문장이 잘림 — 원문 불량"
+    return None
+
+
 og = [r for r in rows if origin(r)]
 by = collections.OrderedDict()
 for r in og:
@@ -43,7 +73,13 @@ for r in og:
 # 많은 유형부터 — 약한 유형(정체의문 6개)이 끝에 모여 보강 대상이 눈에 띈다
 by = collections.OrderedDict(sorted(by.items(), key=lambda kv: -len(kv[1])))
 
-nav = " · ".join('<a href="#t%d">%s <b>%d</b></a>' % (i, e(k), len(v))
+def _n_ok(k, v):
+    return sum(1 for r in v if not reject(r, k))
+
+
+nav = " · ".join('<a href="#t%d">%s <b>%d</b>%s</a>'
+                 % (i, e(k), _n_ok(k, v),
+                    ('<s>%d</s>' % (len(v) - _n_ok(k, v))) if len(v) - _n_ok(k, v) else "")
                  for i, (k, v) in enumerate(by.items()))
 secs = []
 for i, (typ, lst) in enumerate(by.items()):
@@ -51,19 +87,23 @@ for i, (typ, lst) in enumerate(by.items()):
     cards = []
     for r in lst:
         o = origin(r)
+        why = reject(r, typ)
         cells = "".join('<tr><td class="r">%s</td><td>%s</td></tr>' % (e(c.get("role")), e(c.get("text")))
                         for c in o.get("cells", []))
         cards.append(
-            '<details class="sp" id="s%d"><summary>'
-            '<span class="id">#%d</span> <b>%s</b>'
+            '<details class="sp%s" id="s%d"><summary>'
+            '<span class="id">#%d</span> <b>%s</b>%s'
             '<span class="sub">%s · 조회 %s · @%s · %d칸</span></summary>'
             '<div class="body"><div class="hk">훅 고정틀: <code>%s</code></div>'
             '<table>%s</table></div></details>'
-            % (r["id"], r["id"], e(r.get("name")), e(tone(r)),
-               format(o.get("views") or 0, ","), e(o.get("user")), len(o.get("cells") or []),
-               e(o.get("hook_tpl")), cells))
-    secs.append('<section id="t%d"><h2>%s <span class="sub">%d개</span></h2>%s</section>'
-                % (i, e(typ), len(lst), "".join(cards)))
+            % (" cut" if why else "", r["id"], r["id"], e(r.get("name")),
+               ('<span class="tag">걸러냄 · %s</span>' % e(why)) if why else "",
+               e(tone(r)), format(o.get("views") or 0, ","), e(o.get("user")),
+               len(o.get("cells") or []), e(o.get("hook_tpl")), cells))
+    nout = sum(1 for r in lst if reject(r, typ))
+    head = ('%d개 — <b>%d개 걸러냄</b>, 남는 것 %d개' % (len(lst), nout, len(lst) - nout)) if nout else ('%d개' % len(lst))
+    secs.append('<section id="t%d"><h2>%s <span class="sub">%s</span></h2>%s</section>'
+                % (i, e(typ), head, "".join(cards)))
 
 open(sys.argv[2], "w", encoding="utf-8").write("""<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>원문형 스파인 검수</title><style>
@@ -83,6 +123,10 @@ code{background:var(--hit);padding:1px 6px;border-radius:5px;font-size:13px;colo
 table{border-collapse:collapse;width:100%;background:var(--hit);border-radius:8px;overflow:hidden}
 td{padding:5px 9px;border-bottom:1px solid var(--line);vertical-align:top;font-size:14px}
 td.r{white-space:nowrap;color:var(--sub);width:58px;font-size:13px}
+.sp.cut{opacity:.5;border-style:dashed}
+.sp.cut summary{text-decoration:line-through;text-decoration-color:var(--sub)}
+.tag{background:#c0392b;color:#fff;font-size:11.5px;padding:1px 7px;border-radius:20px;margin-left:7px;white-space:nowrap;text-decoration:none;display:inline-block}
+nav s{color:#c0392b;margin-left:3px;font-size:12px}
 .lead{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:8px;padding:12px 14px;margin:12px 0;font-size:14.5px}
 </style></head><body><main>
 <h1>원문형 스파인 검수 — 368개</h1>
