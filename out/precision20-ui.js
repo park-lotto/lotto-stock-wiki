@@ -796,7 +796,13 @@
     // 09-19: 본문 제목은 20종 모두 같은 자리(자막 칸 시작 대비 비율). 위 배치 보정이 끝난 뒤 마지막에 자리를 잡는다.
     if(isStoryBody(frame)){
       const el=layer.querySelector('.precision-text[data-edit-bind="bodyTitle"]');
-      if(el){el.style.top=(STORY_BODY.cut*STORY_BODY.titleTop)+'%';el.style.height=(STORY_BODY.cut*STORY_BODY.titleH)+'%';}
+      if(el){
+        const top=STORY_BODY.cut*STORY_BODY.titleTop;el.style.top=top+'%';
+        // 자막 칸을 덮지 않는 선까지만 칸을 키운다(3줄 허용). 글자를 손으로 키웠어도 칸을 넘으면 줄인다 — 넘치면 자막·영상을 가린다.
+        el.style.height=Math.max(STORY_BODY.cut*STORY_BODY.titleH,Math.min(STORY_BODY.cut-top-1,STORY_BODY.cut*STORY_BODY.titleH*3))+'%';
+        let size=parseFloat(el.style.fontSize)||0;
+        for(let guard=0;guard<80&&size>9&&el.scrollHeight>el.clientHeight+1;guard++){size-=.5;el.style.fontSize=size+'px';}
+      }
     }
   }
   // 고정형 자막칸 디자인(2026-09-18 사장님 "이븐쇼핑 흰 띠처럼 그라데이션 있게, 다 똑같으면 밋밋하니 다르게").
@@ -1021,6 +1027,15 @@
   const lookRow=document.createElement('div');lookRow.className='caption-looks';
   lookRow.innerHTML='<span>자막박스 모양</span>'+[['auto','기본'],['none','박스 없음'],...CAPTION_LOOK_NAMES.map((n,i)=>[String(i),n])].map(([v,n])=>`<button type="button" data-caption-look="${v}">${n}</button>`).join('');
   maskDetails.querySelector('div').prepend(lookRow);
+  // 09-19 사장님 '버튼이 다 검정이라 뭐가 뭔지 모르겠다' — 버튼에 그 모양을 그대로 입혀 눈으로 고른다.
+  lookRow.querySelectorAll('[data-caption-look]').forEach(button=>{
+    const v=button.dataset.captionLook;
+    if(v==='auto')return;   // '기본'은 템플릿이 정하므로 칠하지 않는다
+    const look=v==='none'?CAPTION_NONE:CAPTION_LOOKS[Number(v)]?.('#43E2B4');if(!look)return;
+    Object.assign(button.style,{color:look.color,border:'1px solid #294451',borderRadius:'6px'});
+    for(const [k,val] of Object.entries(look.box||{}))if(!['left','width'].includes(k))button.style[k]=val;
+    if(v==='none'){button.style.background='#1b1b1b';Object.assign(button.style,look.text||{});}
+  });
   function syncCaptionLookButtons(){const saved=captionLayouts.get(captionKey())||{};const cur=saved.look==='none'?'none':Number.isInteger(saved.look)?String(saved.look):'auto';lookRow.querySelectorAll('[data-caption-look]').forEach(b=>b.classList.toggle('active',b.dataset.captionLook===cur));}
   lookRow.addEventListener('click',event=>{
     const b=event.target.closest('[data-caption-look]');if(!b)return;
