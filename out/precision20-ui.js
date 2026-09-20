@@ -59,7 +59,7 @@
   const titleHeight=frame=>{
     const original=(frame.video_from?.y||0)/frame.height*100,cut=captionSource(frame).cut/frame.height*100;
     const configured=fixedLayoutFor(rows[current].id,frame).top;
-    if(isStoryBody(frame)&&!fixedLayouts.get(layoutKey(rows[current].id,frame)))return STORY_BODY.cut;
+    if(isStoryBody(frame)&&!fixedLayouts.get(layoutKey(rows[current].id,frame)))return Math.min(STORY_BODY.cutMax,STORY_BODY.cut+(storyCutExtra.get(layoutKey(rows[current].id,frame))||0));
     return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
   };
   const mediaBounds=(frame,presetId)=>{
@@ -139,7 +139,8 @@
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
   const frameKind=()=>mode==='continuous'?'frame':kind;
   const scaleKey=bind=>`${rows[current].id}:${frameKind()}:${bind}${bind==='caption'?':'+sceneIndex:''}`;
-  const textScale=bind=>fontScales.get(scaleKey(bind))||1;
+  const BODY_CAPTION_SCALE=1.3;   // 09-19 사장님: 본문 자막 기본 크기 130%
+  const textScale=bind=>fontScales.get(scaleKey(bind))||(bind==='caption'&&mode==='story'&&sceneIndex>0?BODY_CAPTION_SCALE:1);
   const textOffset=bind=>textOffsets.get(scaleKey(bind))||0;
   const colorKey=role=>`${rows[current].id}:${frameKind()}:${role}`;
   const colorFor=(role,fallback)=>colorOverrides.get(colorKey(role))||fallback;
@@ -162,14 +163,16 @@
   //   한 곳에서만 정한다(미리보기·최종 렌더 모두 이 함수를 거친다). 사용자가 −/＋로 키운 값은 그 뒤에 곱해진다.
   // 09-19 사장님: 썰쇼핑형 본문도 이븐쇼핑 비율로 통일(원본은 제목 시작 13~21%, 영상 시작 29~39%로 제각각이었다).
   //   cut=자막 칸 시작(%), capH=자막 칸 높이(%), title=cut 대비 제목 위치·높이. 여기 한 곳에서만 정한다.
-  const STORY_BODY={cut:21,capH:10,titleTop:.52,titleH:.30,font:.76};
+  const STORY_BODY={cut:21,capH:10,titleTop:.52,titleH:.30,font:.76,cutMax:42};
+  const storyCutExtra=new Map();   // 제목을 키운 만큼 자막 칸을 내린 양(%)
+  let renderAgain=false;   // 칸을 내린 뒤 한 번만 다시 그린다(무한 반복 방지)
   const isStoryBody=frame=>mode==='story'&&frame===rows[current]?.body;
   const WRAP3=['bodyTitle','caption'],CHANNEL_MAX=.045;   // 본문 제목·자막 3줄 허용 / 채널명 글자 크기 상한(화면 높이 대비)
   const FIXED_TITLE={band:26,first:.33,pad:.06,line:.25,gap:.045,fontOfLine:.76};   // band=제목칸 높이(%), pad=자막 칸 앞 여백
   // 본문 제목은 자막 칸 시작(cut) 기준 같은 자리에 둔다
   const storyBodyLine=(line,frame)=>{
     if(!isStoryBody(frame)||line.bind!=='bodyTitle')return line;
-    const cut=titleHeight(frame)/100*frame.height,y0=cut*STORY_BODY.titleTop,h=cut*STORY_BODY.titleH;
+    const cut=STORY_BODY.cut/100*frame.height,y0=cut*STORY_BODY.titleTop,h=cut*STORY_BODY.titleH;   // 09-19: 기준 칸(21%)으로 고정 — 칸이 내려가도 기본 글자 크기는 그대로(＋로 키운 배율만 곱해진다)
     return {...line,y0,y1:y0+h,h,font_size:h*STORY_BODY.font};
   };
   const fixedDrawLine=(line,frame)=>{
@@ -613,6 +616,7 @@
     const verticalNudge=bind==='channel'?.7:-.35;
     const baseHeight=ln.h/frame.height*100+.9,displayHeight=baseHeight*Math.max(1,manualScale);
     const displayTop=ln.y0/frame.height*100+verticalNudge+topOffset-(displayHeight-baseHeight)/2;
+    el.dataset.wantFont=String(scaledFont);   // 손으로 키운 '원하는 크기'(줄이기 전) — 제목 칸 계산에 쓴다
     const shiftX=bind==='caption'?0:moved.x;
     Object.assign(el.style,{left:(left+shiftX)+'%',right:(right-shiftX)+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
     const fixedColorKey=bind==='hook1'?'title1':(bind==='hook2'||bind==='bodyTitle')?'title2':null;
@@ -806,12 +810,22 @@
         const chMoved=textDrags.get(scaleKey('channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
         const chBottom=chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0;
         const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
+        const cutNow=titleHeight(frame);
         const base=Math.max(STORY_BODY.cut*STORY_BODY.titleTop,chBottom+1.2);
         const top=Math.max(0,Math.min(95,base+drag.y));el.style.top=top+'%';   // 끌어 옮긴 만큼 반영(화면 안에서만)
-        // 자막 칸을 덮지 않는 선까지만 칸을 키운다(3줄 허용). 글자를 손으로 키웠어도 칸을 넘으면 줄인다 — 넘치면 자막·영상을 가린다.
-        el.style.height=Math.max(STORY_BODY.cut*STORY_BODY.titleH,Math.min(STORY_BODY.cut-top-1,STORY_BODY.cut*STORY_BODY.titleH*3))+'%';
-        let size=parseFloat(el.style.fontSize)||0;
-        for(let guard=0;guard<80&&size>9&&el.scrollHeight>el.clientHeight+1;guard++){size-=.5;el.style.fontSize=size+'px';}
+        // 제목 칸은 자막 칸 직전까지 쓴다. 손으로 키워서 더 필요하면 자막 칸을 그만큼 내린다(09-19: 키워도 안 커지던 문제).
+        const room=Math.max(STORY_BODY.cut*STORY_BODY.titleH,cutNow-top-0.8);
+        el.style.height=room+'%';
+        const key=layoutKey(p.id,frame),pvH=preview.clientHeight||1;
+        const wantFont=parseFloat(el.dataset.wantFont||'0')||parseFloat(el.style.fontSize)||0;
+        const shown=parseFloat(el.style.fontSize)||wantFont;el.style.fontSize=wantFont+'px';
+        const needPct=el.scrollHeight/pvH*100;el.style.fontSize=shown+'px';   // 원하는 크기로 재 본 뒤 되돌린다
+        const manual=fontScales.has(scaleKey('bodyTitle'));
+        const prev=storyCutExtra.get(key)||0,shortfall=needPct-room;   // 지금 칸으로 부족한 만큼만 더 내린다(한 번에 한 걸음)
+        const want=manual?Math.max(0,Math.min(STORY_BODY.cutMax-STORY_BODY.cut,prev+shortfall+0.4)):0;
+        if(Math.abs((storyCutExtra.get(key)||0)-want)>.3){storyCutExtra.set(key,want);if(!renderAgain){renderAgain=true;requestAnimationFrame(()=>{renderAgain=false;renderEdit();});}}
+        else{el.style.fontSize=wantFont+'px';let size=wantFont;
+          for(let guard=0;guard<80&&size>9&&el.scrollHeight>el.clientHeight+1;guard++){size-=.5;el.style.fontSize=size+'px';}}
       }
     }
   }
