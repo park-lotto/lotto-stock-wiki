@@ -240,8 +240,33 @@
     {id:'danjung',name:'단정 카페',channel:'Cafe24Danjunghae',title:'Cafe24Danjunghae',caption:'Pretendard'},
     {id:'suit',name:'SUIT 모던',channel:'SUITBold',title:'SUITBold',caption:'SUITBold'},
   ];
+  // 템플릿별 기본 글꼴(2026-09-19 사장님 '기본을 하나로 고정하지 말고 템플릿마다 어울리게'):
+  //   폰트 템플릿을 안 골랐을 때(=템플릿 기본) 쓰는 채널명·제목·자막 글꼴. 원본 제목 글꼴의 성격을 살리고
+  //   자막은 읽기 쉬운 글꼴로 짝지었다. 여기 없는 템플릿은 원본 데이터 글꼴을 그대로 쓴다.
+  const PRESET_FONTS={
+    fixed_s0034:{channel:'Pretendard',title:'GmarketSansBold',caption:'Pretendard'},
+    fixed_s0035:{channel:'Pretendard',title:'Jalnan2',caption:'Pretendard'},
+    fixed_s0090:{channel:'BMJUA',title:'YgJalnan',caption:'BMJUA'},
+    fixed_s0093:{channel:'GmarketSansBold',title:'Cafe24Ohsquare',caption:'Pretendard'},
+    fixed_s0121:{channel:'Pretendard',title:'BlackHanSans',caption:'Pretendard'},
+    fixed_s0144:{channel:'Pretendard',title:'JalnanGothic',caption:'GmarketSansBold'},
+    fixed_s0145:{channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},
+    fixed_s0155:{channel:'BMJUA',title:'Jalnan2',caption:'BMJUA'},
+    fixed_s0195:{channel:'Pretendard',title:'Pretendard',caption:'Pretendard'},
+    fixed_s0217:{channel:'GmarketSansBold',title:'GmarketSansBold',caption:'GmarketSansBold'},
+    fixed_s0218:{channel:'BinggraeBold',title:'BinggraeBold',caption:'BMJUA'},
+    fixed_s0234:{channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},
+    fixed_s0241:{channel:'Pretendard',title:'JalnanGothic',caption:'Pretendard'},
+    fixed_s0291:{channel:'GmarketSansBold',title:'YgJalnan',caption:'GmarketSansBold'},
+    fixed_s0311:{channel:'Pretendard',title:'Cafe24Ohsquare',caption:'Pretendard'},
+    fixed_s0340:{channel:'Pretendard',title:'SBAggroB',caption:'Pretendard'},
+    fixed_s0430:{channel:'BMJUA',title:'BMDOHYEON',caption:'BMJUA'},
+    fixed_s0431:{channel:'Pretendard',title:'Cafe24Ohsquare',caption:'Pretendard'},
+    fixed_s0446:{channel:'Pretendard',title:'BlackHanSans',caption:'Pretendard'},
+    fixed_s0460:{channel:'Pretendard',title:'Jalnan2',caption:'Pretendard'},
+  };
   function fontSetFamily(bind){
-    const set=FONT_SETS.find(f=>f.id===fontSet);if(!set)return '';
+    const set=FONT_SETS.find(f=>f.id===fontSet)||PRESET_FONTS[rows[current]?.id];if(!set)return '';
     return bind==='channel'?set.channel:bind==='caption'?set.caption:['hook1','hook2','bodyTitle'].includes(bind)?set.title:'';
   }
   const BODY_CAPTION_MOTIONS={
