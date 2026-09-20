@@ -19,7 +19,10 @@
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
     // 09-19 사장님: 고정형은 제목칸 높이도 20종을 하나로(원본은 25~33%로 제각각이라 영상 시작 줄이 안 맞았다)
     const original=Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100);
-    return {top:mode==='continuous'?FIXED_TITLE.band:original,bottom:0};
+    const chBox=frame?.channel_box||(frame?.channel_boxes||[])[0];
+    const chLine=(frame?.lines||[]).find(l=>l.bind==='channel');
+    const channel=chBox?(chBox.y+chBox.height)/(frame?.height||1)*100:(chLine?chLine.y1/(frame?.height||1)*100:6);
+    return {top:mode==='continuous'?FIXED_TITLE.band:original,bottom:0,channel:Math.round(channel),caption:0};
   };
   const layoutKey=(presetId,frame)=>presetId.startsWith('fixed_')?presetId:`${presetId}:${frame===storyRows.find(p=>p.id===presetId)?.hook?'hook':'body'}`;
   // 하단 칸(2026-09-18 사장님 "빠른조절에 하단 칸도 만들어서 올리고 내릴수있게") — 저장한 값만 쓰고 기본은 0.
@@ -47,7 +50,7 @@
     // 고정형 자막칸 높이는 위시언니(6.5%) 하나로 통일(2026-09-18 사장님 "딱 이 사이즈로 다들 해줘야 비례가 맞지").
     //   실측: 20종 중 14종이 원본 측정값 상한 17.9%라 제목보다 자막칸이 두꺼웠다. 사용자가 저장한 높이는 그대로 우선.
     const measured=Math.max(5,Math.min(18,(band?.height||ln?.h||frame.height*.07)/frame.height*100));
-    return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:mode==='continuous'?6.5:(isStoryBody(frame)?STORY_BODY.capH:measured)};
+    return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:(fixedLayoutFor(rows[current].id,frame).caption||0)>0?fixedLayoutFor(rows[current].id,frame).caption:(mode==='continuous'?6.5:(isStoryBody(frame)?STORY_BODY.capH:measured))};
   };
   // 고정형은 훅이 없다 — '훅 말자막 숨김'(이븐쇼핑 큰 제목용)이 첫 장면 자막까지 지우지 않게 항상 보인다(2026-09-18 실측: LAB 1/23 자막 없음).
   const captionVisible=()=>mode==='continuous'||sceneContext?.scenes?.[sceneIndex]?.caption_visible!==false;
@@ -293,7 +296,7 @@
   });
   const fixedPanel=document.createElement('section');
   fixedPanel.className='fixed-quick-panel';
-  fixedPanel.innerHTML='<div class="fixed-quick-head"><b>고정형 빠른 조절</b><button type="button" data-fixed-reset>전체 초기화</button></div><div class="fixed-size-control" data-fixed-size="top"><span>상단 제목칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="12" max="50" step="1" data-fixed-range="top"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="bottom"><span>하단 자막칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="0" max="35" step="1" data-fixed-range="bottom"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-palette-row"><button type="button" data-fixed-palette="original">원본</button><button type="button" data-fixed-palette="mint">민트</button><button type="button" data-fixed-palette="yellow">옐로</button><button type="button" data-fixed-palette="pink">핑크</button></div><div class="fixed-color-grid"><label><span>제목 배경</span><input type="color" data-fixed-color="top"></label><label><span>하단 배경</span><input type="color" data-fixed-color="bottom"></label><label><span>제목 1</span><input type="color" data-fixed-color="title1"></label><label><span>제목 2</span><input type="color" data-fixed-color="title2"></label></div>';
+  fixedPanel.innerHTML='<div class="fixed-quick-head"><b>고정형 빠른 조절</b><button type="button" data-fixed-reset>전체 초기화</button></div><div class="fixed-size-control" data-fixed-size="top"><span>상단 제목칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="12" max="50" step="1" data-fixed-range="top"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="channel"><span>채널명 칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="0" max="20" step="1" data-fixed-range="channel"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="caption"><span>자막 칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="4" max="24" step="1" data-fixed-range="caption"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="bottom"><span>하단 칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="0" max="35" step="1" data-fixed-range="bottom"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-palette-row"><button type="button" data-fixed-palette="original">원본</button><button type="button" data-fixed-palette="mint">민트</button><button type="button" data-fixed-palette="yellow">옐로</button><button type="button" data-fixed-palette="pink">핑크</button></div><div class="fixed-color-grid"><label><span>제목 배경</span><input type="color" data-fixed-color="top"></label><label><span>하단 배경</span><input type="color" data-fixed-color="bottom"></label><label><span>제목 1</span><input type="color" data-fixed-color="title1"></label><label><span>제목 2</span><input type="color" data-fixed-color="title2"></label></div>';
   bodyMotionPanel.after(fixedPanel);
   const channelColorLabel=document.createElement('label');channelColorLabel.innerHTML='<span>채널명</span><input type="color" data-fixed-color="channel">';fixedPanel.querySelector('.fixed-color-grid').append(channelColorLabel);
   const fixedPalettes={mint:{top:'#082923',bottom:'#082923',title1:'#FFFFFF',title2:'#43E2B4'},yellow:{top:'#17140A',bottom:'#17140A',title1:'#FFFFFF',title2:'#FFE24A'},pink:{top:'#24101A',bottom:'#24101A',title1:'#FFFFFF',title2:'#FF78B7'}};
@@ -802,14 +805,28 @@
       }
     }
     // 09-19: 본문 제목은 20종 모두 같은 자리(자막 칸 시작 대비 비율). 위 배치 보정이 끝난 뒤 마지막에 자리를 잡는다.
+    // 09-19: 손으로 키운 제목 줄이 서로 겹치던 문제 — 겹친 만큼 아래 줄을 내린다(줄 간격만 벌린다)
+    const titleEls=['hook1','hook2','bodyTitle'].map(b=>layer.querySelector(`.precision-text[data-edit-bind="${b}"]`)).filter(Boolean);
+    for(let i=1;i<titleEls.length;i++){
+      const up=titleEls[i-1],down=titleEls[i];
+      const r1=document.createRange();r1.selectNodeContents(up);const r2=document.createRange();r2.selectNodeContents(down);
+      const a=r1.getBoundingClientRect(),b=r2.getBoundingClientRect();if(!a.height||!b.height)continue;
+      const overlap=(a.bottom-b.top)/Math.max(1,preview.clientHeight)*100;
+      if(overlap>0.4){const cur=parseFloat(down.style.top)||0;down.style.top=Math.min(97,cur+overlap+0.4)+'%';}
+    }
     if(isStoryBody(frame)){
       const el=layer.querySelector('.precision-text[data-edit-bind="bodyTitle"]');
       if(el){
         // 채널명 아래 최소 1.2% 띄운다(원본 채널 위치가 6.3~11.1%로 제각각이라 붙거나 겹쳤다)
         const chEl=layer.querySelector('.precision-text[data-edit-bind="channel"]');
         const pvBox=preview.getBoundingClientRect();
+        const chSaved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
         const chMoved=textDrags.get(scaleKey('channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
-        const chBottom=chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0;
+        if(chSaved>0&&chEl){   // '채널명 칸' 슬라이더: 채널명 아래 끝을 그 값에 맞춘다
+          const h=chEl.getBoundingClientRect().height/Math.max(1,pvBox.height)*100;
+          chEl.style.top=Math.max(0,chSaved-h)+'%';
+        }
+        const chBottom=chSaved>0?chSaved:(chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0);
         const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
         const cutNow=titleHeight(frame);   // 상단 칸을 조절하면 그 칸 기준으로 다시 배치
         const base=Math.max(cutNow*STORY_BODY.titleTop,chBottom+1.2);
@@ -977,9 +994,11 @@
   });
   const applyFixedSize=(key,rawValue)=>{
     const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame),titleOnly:true};
-    const min=key==='top'?(mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame)):0,max=key==='top'?50:35;
+    const RANGE={top:[mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame),50],bottom:[0,35],channel:[0,20],caption:[4,24]};
+    const [min,max]=RANGE[key]||[0,35];
     currentLayout[key]=Math.round(Math.max(min,Math.min(max,Number(rawValue))));
     if(currentLayout.top+currentLayout.bottom>70)currentLayout[key]=70-currentLayout[key==='top'?'bottom':'top'];
+    if(key==='caption'&&currentLayout.caption>0)captionLayouts.set(captionKey(),{...captionSettings(),h:currentLayout.caption});
     fixedLayouts.set(layoutKey(p.id,frame),currentLayout);fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
   };
   fixedPanel.addEventListener('input',event=>{

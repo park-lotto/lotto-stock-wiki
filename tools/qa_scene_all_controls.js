@@ -89,6 +89,8 @@ const CHECK = () => {
         await clickAll('[data-caption-position]', `${where} 자막위치`);
         for (const v of [50, 20, 30]) await setRange('[data-fixed-range="top"]', v, `${where} 상단칸`);
         for (const v of [15, 0]) await setRange('[data-fixed-range="bottom"]', v, `${where} 하단칸`);
+        for (const v of [14, 6]) await setRange('[data-fixed-range="channel"]', v, `${where} 채널명칸`);
+        for (const v of [18, 8]) await setRange('[data-fixed-range="caption"]', v, `${where} 자막칸`);
         for (const bind of ['channel', 'hook1', 'hook2', 'bodyTitle', 'caption']) {
           for (const step of ['0.1', '-0.1']) {
             for (let i = 0; i < 3; i++) {
