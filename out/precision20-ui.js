@@ -324,6 +324,8 @@
     fixedPanel.querySelector('[data-fixed-size="bottom"] span').textContent='하단 칸';
     // 훅 화면에는 자막이 없다 — '자막 칸'은 본문·고정형에서만 보인다(훅에서 눌러도 안 먹어 혼란스러웠다)
     const capRow=fixedPanel.querySelector('[data-fixed-size="caption"]');if(capRow)capRow.hidden=false;   // 훅에서도 흰 띠(자막 칸) 높이를 조절한다
+    // 09-19: '채널명 칸'은 머리띠(캡슐·아이콘)가 원본 그림이라 글자만 떨어져 나왔다. 템플릿 20종의 머리띠 좌표를 넣기 전까지 잠근다.
+    const chRow=fixedPanel.querySelector('[data-fixed-size="channel"]');if(chRow)chRow.hidden=true;
     fixedPanel.querySelector('.fixed-quick-head b').textContent=mode==='continuous'?'고정형 빠른 조절':`${kind==='hook'?'훅':'본문'} 빠른 조절`;
     const p=rows[current],frame=frameFor(p),layout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame)},colors=fixedColorsFor(p.id,frame);
     fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
@@ -790,19 +792,19 @@
         const h=chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
         const before=parseFloat(chEl0.style.top)||0,next=Math.max(0,saved-h+chDrag.y);
         chEl0.style.top=next+'%';
-        // 채널명 배경(캡슐·띠)도 글자와 같이 움직인다. 원본 그림에 그려진 캡슐은 가리고 새 자리에 다시 그린다.
-        const boxes=frame.channel_boxes?.length?frame.channel_boxes:(frame.channel_box?[frame.channel_box]:[]);
+        // 09-19 사장님 선택①: 머리띠(캡슐·검색 아이콘·글자)를 통째로 옮긴다.
+        //   원본 그림의 머리띠 구간(0~원래 채널 아래끝)을 그대로 잘라 새 자리에 붙이고, 위에 빈 곳은 머리띠 색으로 메운다.
         const bandColor=fixedColorsFor(p.id,frame).top||frame.title_bg||frame.top_band?.color||'#000000';
-        layer.querySelectorAll('.channel-slot-box,.channel-slot-cover').forEach(e=>e.remove());
-        // 09-19: 캡슐 정보가 없는 템플릿은 덮지 않는다 — 배경색이 달라 회색 사각형이 남았다(글자만 옮긴다)
-        for(const c of boxes){
-          const y=c.y/frame.height*100,h=c.height/frame.height*100,x=c.x/frame.width*100,w=c.width/frame.width*100;
-          if(c.designed)continue;   // 글자만 있는 채널은 옮길 캡슐이 없다
-          const cover=addPatch(Math.max(0,y-0.4),h+0.8,bandColor,Math.max(0,x-1),Math.min(100,w+2),'');cover.classList.add('channel-slot-cover');
-          const box=addPatch(Math.max(0,next-0.2),h,c.background,x,w,'');box.classList.add('channel-slot-box');
-          box.style.borderRadius=((Number(c.radius)||0)*preview.clientHeight/frame.height)+'px';
-          if(c.border)box.style.border=`${Math.max(1,preview.clientHeight/frame.height)}px solid ${c.border}`;
-          if(chEl0)layer.insertBefore(box,chEl0);
+        layer.querySelectorAll('.channel-strip,.channel-strip-fill').forEach(e=>e.remove());
+        const defBottom=fixedBaseLayout(frame).channel;
+        if(defBottom>0&&base?.src){
+          const fill=document.createElement('div');fill.className='precision-patch channel-strip-fill';
+          Object.assign(fill.style,{left:'0%',width:'100%',top:'0%',height:Math.max(0,next+h)+'%',background:bandColor,zIndex:'0'});
+          layer.prepend(fill);
+          const strip=document.createElement('div');strip.className='precision-patch channel-strip';
+          Object.assign(strip.style,{left:'0%',width:'100%',top:Math.max(0,next+h-defBottom)+'%',height:defBottom+'%',zIndex:'1',
+            backgroundImage:`url("${base.src}")`,backgroundSize:`100% ${100/(defBottom/100)}%`,backgroundPosition:'0% 0%',backgroundRepeat:'no-repeat'});
+          if(chEl0)layer.insertBefore(strip,chEl0);else layer.prepend(strip);
         }
         layer.querySelectorAll('.precision-patch[data-edit-bind="channel"]').forEach(box=>{
           const t=parseFloat(box.style.top)||0;box.style.top=Math.max(0,t+(next-before))+'%';
