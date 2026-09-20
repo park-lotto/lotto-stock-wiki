@@ -42,20 +42,34 @@ def test_transfer_hides_until_seek_lands():
     blk = _seek_block()
     assert "visibility = 'hidden'" in blk          # 가리고 전환
     assert "_seekSettled(" in blk                  # 값으로 판정해 진입
-    # 안전핀이 터져도 showVid를 새로 하지 않는다(이미 전환했고, 드러내기만 한다).
-    # ★범위를 콜백 본문으로 정확히 자른다 — 넓게 자르면 아래 else의 showVid를 잘못 잡는다.
-    i = blk.index("const go = () => {")
-    go_body = blk[i:blk.index("};", i)]
-    assert "showVid" not in go_body, "안전핀이 옛 프레임을 노출한다(9/18 구멍 재발)"
-    assert "visibility = ''" in go_body, "안전핀이 화면을 드러내지 않는다"
+    assert "_pinHidden(" in blk                    # 드러내는 일은 한 곳에서만 한다
+
+
+def _pin_body():
+    i = JS.index("function _pinHidden(")
+    return JS[i:JS.index("\n}", i)]
+
+
+def test_reveal_requires_the_seek_to_have_landed():
+    """★시간이 아니라 **자리에 왔는지**로 드러낸다(2026-09-20 진짜 크롬 실측으로 잡은 결함).
+
+    처음엔 seeked + 안전핀 1500ms 였는데, 실제 크롬에서 **안전핀이 터지는 순간 아직 시크
+    중이면 컷3이 그대로 드러났다**(프레임 1장 노출: black → YELLOW → red). 시간으로 찍으면
+    느린 환경에서 반드시 샌다 — 9/18판이 400ms로 샌 것과 같은 구조다.
+    """
+    body = _pin_body()
+    assert "_seekSettled(v, want)" in body, "자리에 왔는지 확인하지 않고 드러낸다"
+    # seeked 로 곧바로 드러낼 때도 확인을 거쳐야 한다(이벤트가 와도 값이 안 맞을 수 있다)
+    assert body.count("_seekSettled(v, want)") >= 2, "빠른 경로에서 확인을 건너뛴다"
+    assert "_PIN_MAX_MS" in body, "한도가 없으면 영영 가려질 수 있다"
 
 
 def test_pin_reveals_and_cleans_up():
     """가려둔 화면은 반드시 다시 드러난다 — 안 그러면 빈 화면이 남는다."""
-    blk = _seek_block()
-    assert "visibility = ''" in blk                 # 드러내기
-    assert re.search(r"setTimeout\(go,\s*\d+\)", blk), "안전핀이 없으면 영영 가려질 수 있다"
-    assert "_unhidePinned()" in blk                 # 다음 전환 전에 앞선 것을 정리
+    body = _pin_body()
+    assert "visibility = ''" in body                            # 드러내기
+    assert re.search(r"setTimeout\(tick,\s*_PIN_STEP_MS\)", body)  # 못 왔으면 다시 본다
+    assert "_unhidePinned()" in _seek_block()                   # 다음 전환 전에 앞선 것을 정리
 
 
 def test_stop_play_unhides():
@@ -65,7 +79,7 @@ def test_stop_play_unhides():
     assert "_unhidePinned()" in body
 
 
-@pytest.mark.parametrize("fn", ["_seekSettled", "_unhidePinned"])
+@pytest.mark.parametrize("fn", ["_seekSettled", "_unhidePinned", "_pinHidden"])
 def test_helpers_defined_once(fn):
     """같은 이름을 두 번 만들면 나중 것이 앞 것을 조용히 덮는다(이 저장소가 데인 함정)."""
     assert JS.count("function %s(" % fn) == 1
