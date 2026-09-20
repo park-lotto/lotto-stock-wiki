@@ -171,7 +171,8 @@
   const storyBodyLine=(line,frame)=>{
     if(!isStoryBody(frame)||line.bind!=='bodyTitle')return line;
     const cut=titleHeight(frame)/100*frame.height,y0=cut*STORY_BODY.titleTop,h=cut*STORY_BODY.titleH;
-    return {...line,y0,y1:y0+h,h,font_size:h*STORY_BODY.font};
+    const baseCut=STORY_BODY.cut/100*frame.height;   // 글자 크기는 기준 칸(21%)으로 고정 — 칸을 올려도 글자는 그대로
+    return {...line,y0,y1:y0+h,h,font_size:baseCut*STORY_BODY.titleH*STORY_BODY.font};
   };
   const fixedDrawLine=(line,frame)=>{
     if(mode!=='continuous'||line.bind==='caption')return line;
@@ -649,7 +650,7 @@
         if(Math.max(el.scrollWidth,probe.getBoundingClientRect().width)*xscale>el.clientWidth+1){useCache=false;fittedText.delete(fitKey);el.style.transform='none';el.style.letterSpacing='';}
       }
       if(!useCache){const isStory=mode==='story',manualSize=fontScales.has(scaleKey(bind));const heightFit=!(rows[current]?.id==='t11'&&frame.reference_style);   // 09-19: 이븐쇼핑은 칸 높이를 바꿔도 글자 크기는 그대로(폭만 맞춘다)
-        if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,heightFit);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=manualSize?1:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
+        if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,heightFit);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const frameScale=Math.min(1,(preview.clientWidth-6)/Math.max(1,measuredWidth()));   /* 09-19: 손으로 키워도 미리보기 밖으로는 안 나가게 */const xscale=manualSize?frameScale:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
     }
     return el;
   }
@@ -810,10 +811,11 @@
         const chMoved=textDrags.get(scaleKey('channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
         const chBottom=chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0;
         const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
-        const base=Math.max(STORY_BODY.cut*STORY_BODY.titleTop,chBottom+1.2);
+        const cutNow=titleHeight(frame);   // 상단 칸을 조절하면 그 칸 기준으로 다시 배치
+        const base=Math.max(cutNow*STORY_BODY.titleTop,chBottom+1.2);
         const top=Math.max(0,Math.min(95,base+drag.y));el.style.top=top+'%';   // 끌어 옮긴 만큼 반영(화면 안에서만)
         // 자막 칸을 덮지 않는 선까지만 칸을 키운다(3줄 허용). 글자를 손으로 키웠어도 칸을 넘으면 줄인다 — 넘치면 자막·영상을 가린다.
-        el.style.height=Math.max(STORY_BODY.cut*STORY_BODY.titleH,STORY_BODY.cut-top-0.8)+'%';   // 09-19: 자막 칸 직전까지 제목 칸으로 쓴다(키운 글자가 도로 줄던 문제)
+        el.style.height=Math.max(STORY_BODY.cut*STORY_BODY.titleH,cutNow-top-0.8)+'%';   // 09-19: 자막 칸 직전까지 제목 칸으로 쓴다(키운 글자가 도로 줄던 문제)
         let size=parseFloat(el.style.fontSize)||0;
         for(let guard=0;guard<80&&size>9&&el.scrollHeight>el.clientHeight+1;guard++){size-=.5;el.style.fontSize=size+'px';}
       }
