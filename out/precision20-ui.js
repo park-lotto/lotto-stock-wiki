@@ -325,6 +325,8 @@
     // 훅 화면에는 자막이 없다 — '자막 칸'은 본문·고정형에서만 보인다(훅에서 눌러도 안 먹어 혼란스러웠다)
     const capRow=fixedPanel.querySelector('[data-fixed-size="caption"]');if(capRow)capRow.hidden=false;   // 훅에서도 흰 띠(자막 칸) 높이를 조절한다
     // 09-19: '채널명 칸'은 머리띠(캡슐·아이콘)가 원본 그림이라 글자만 떨어져 나왔다. 템플릿 20종의 머리띠 좌표를 넣기 전까지 잠근다.
+    // 09-19: 머리띠 좌표는 다 쟀지만(out/scene-header-bands.js) 옮길 때 원본 머리띠가 그대로 남아 두 겹으로 보인다.
+    //   덮는 층이 applyStoryLayout의 재배치에 밀리는 것이 원인 — 그 정리 전까지 잠가 둔다.
     const chRow=fixedPanel.querySelector('[data-fixed-size="channel"]');if(chRow)chRow.hidden=true;
     fixedPanel.querySelector('.fixed-quick-head b').textContent=mode==='continuous'?'고정형 빠른 조절':`${kind==='hook'?'훅':'본문'} 빠른 조절`;
     const p=rows[current],frame=frameFor(p),layout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame)},colors=fixedColorsFor(p.id,frame);
@@ -796,15 +798,32 @@
         //   원본 그림의 머리띠 구간(0~원래 채널 아래끝)을 그대로 잘라 새 자리에 붙이고, 위에 빈 곳은 머리띠 색으로 메운다.
         const bandColor=fixedColorsFor(p.id,frame).top||frame.title_bg||frame.top_band?.color||'#000000';
         layer.querySelectorAll('.channel-strip,.channel-strip-fill').forEach(e=>e.remove());
-        const defBottom=fixedBaseLayout(frame).channel;
-        if(defBottom>0&&base?.src){
+        // 머리띠 구간은 tools/measure_header_bands.js 가 원본 그림에서 재 둔 값이다(out/scene-header-bands.js).
+        const band=(window.SCENE_HEADER_BANDS||{})[`${p.id}:${frameKind()}`];
+        const bandPct=band&&band.h?band.y1/band.h*100:0;
+        if(bandPct>0&&base?.src){
+          const headBottom=Math.max(bandPct,next+h);   // 머리띠 아래 끝을 칸 값에 맞춘다
+          // ① 원래 머리띠 자리는 머리띠 색으로 덮는다(옮긴 뒤 위가 비어 보이지 않게)
           const fill=document.createElement('div');fill.className='precision-patch channel-strip-fill';
-          Object.assign(fill.style,{left:'0%',width:'100%',top:'0%',height:Math.max(0,next+h)+'%',background:bandColor,zIndex:'0'});
+          Object.assign(fill.style,{left:'0%',width:'100%',top:'0%',height:headBottom+'%',background:band.color||bandColor,zIndex:'0'});
           layer.prepend(fill);
+          // ② 머리띠 그림(캡슐·검색 아이콘·채널 글자)을 통째로 잘라 새 자리에 붙인다
           const strip=document.createElement('div');strip.className='precision-patch channel-strip';
-          Object.assign(strip.style,{left:'0%',width:'100%',top:Math.max(0,next+h-defBottom)+'%',height:defBottom+'%',zIndex:'1',
-            backgroundImage:`url("${base.src}")`,backgroundSize:`100% ${100/(defBottom/100)}%`,backgroundPosition:'0% 0%',backgroundRepeat:'no-repeat'});
+          Object.assign(strip.style,{left:'0%',width:'100%',top:Math.max(0,headBottom-bandPct)+'%',height:bandPct+'%',zIndex:'1',
+            backgroundImage:`url("${base.src}")`,backgroundSize:`100% ${100/(bandPct/100)}%`,backgroundPosition:'0% 0%',backgroundRepeat:'no-repeat'});
           if(chEl0)layer.insertBefore(strip,chEl0);else layer.prepend(strip);
+          // ③ 채널명 글자는 머리띠 그림 안에 이미 있다. 문구를 고친 경우에만 그 자리를 덮고 새 글자를 보인다.
+          const edited=currentDirty().has('channel');
+          chEl0.hidden=!edited;
+          if(edited){
+            const chBox=frame.channel_box||(frame.channel_boxes||[])[0];
+            const chLine=(frame.lines||[]).find(l=>l.bind==='channel');
+            const y=chBox?chBox.y:(chLine?chLine.y0:0),hh=chBox?chBox.height:(chLine?(chLine.y1-chLine.y0):0);
+            if(hh>0){
+              const cover=addPatch(Math.max(0,headBottom-bandPct+y/frame.height*100-0.4),hh/frame.height*100+0.8,chBox?.background||band.color||bandColor,0,100,'');
+              cover.classList.add('channel-strip-fill');layer.insertBefore(cover,chEl0);
+            }
+          }
         }
         layer.querySelectorAll('.precision-patch[data-edit-bind="channel"]').forEach(box=>{
           const t=parseFloat(box.style.top)||0;box.style.top=Math.max(0,t+(next-before))+'%';
