@@ -22242,19 +22242,14 @@ def _backbone_drafts(spines, job, store, seconds=25, job_id=""):
             return sum(1 for c in t if "가" <= c <= "힣") / max(1, sum(1 for c in t if c.isalpha()))
         kor = [s for s in srcs if _ko(s.get("full_text") or "") > 0.7]
         bb = max(kor or srcs, key=lambda s: len((s.get("full_text") or "").strip()))
-    drafts, whys = [], []
-    for sp in spines or []:
-        note = {}
-        try:
-            given, bs, meta = ba.assemble(srcs, bb.get("video_id"), store, spine_id=sp.get("id"),
-                                          target_seconds=seconds, seed=job_id or None, note=note)
-        except Exception as e:      # noqa: BLE001 — 한 스타일 실패가 나머지를 막으면 안 된다
-            whys.append("%s: 예외 %s" % (sp.get("name"), str(e)[:80]))
-            continue
-        if not given:
-            whys.append("%s: %s" % (sp.get("name"), note.get("reason") or note.get("detail") or "실패"))
-            continue
-        drafts.append(ba.to_draft(given, bs, meta))
+    # ★스파인을 여러 개 돌려 **인물·상황 검사를 통과한 대본만** 올린다(2026-09-20 사장님 B안).
+    #   한 편을 규칙으로 완벽히 만들려 하면 규칙만 늘어난다(09-19~20 실측: 규칙을 더해도 8/18).
+    #   통과본이 없으면 빈 목록 — 화면은 "이 영상엔 맞는 스타일이 없다"고 말하고 옛 경로로 간다.
+    note = {}
+    got = ba.assemble_clean(srcs, bb.get("video_id"), store, list(spines or []),
+                            target_seconds=seconds, seed=job_id or None, want=2, note=note)
+    drafts = [ba.to_draft(g["given"], g["beat_sources"], g["meta"]) for g in got]
+    whys = ["%s: %s" % (t.get("spine") or "", t.get("why") or "") for t in (note.get("skipped") or [])]
     return drafts, "; ".join(whys)
 
 

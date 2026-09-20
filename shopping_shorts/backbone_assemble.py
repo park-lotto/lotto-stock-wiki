@@ -198,101 +198,132 @@ _LINES_SCHEMA = {
 }
 
 
-_LIVE_WITH = ("남편", "아내", "와이프", "신랑", "여보", "우리 애", "우리 아기", "저희 아기")
-_VISIT = re.compile(r"(놀러\s*(왔|오|가)|집에\s*(왔|오)셨)")
-_GIFT = re.compile(r"(사드렸|선물|하나 더 (주문|사)|것도 하나)")
-_CAST_SCHEMA = {"type": "object", "properties": {"issues": {"type": "array", "items": {"type": "string"}}},
-                "required": ["issues"]}
-
-
-def _cast_check(lines, product):
-    """쓰고 나서 인물·상황이 말이 되는지 본다 (2026-09-20 사장님 지적: 남편이 '집에 놀러왔다',
-    아기 인형을 시어머니에게 '선물'). 원문의 인물 관계를 글자대로 옮기면 새 상황과 어긋난다."""
-    text = "\n".join(l.get("text") or "" for l in lines)
-    bad = []
-    for w in _LIVE_WITH:
-        if w in text and _VISIT.search(text):
-            seg = [l["text"] for l in lines if w in (l.get("text") or "") and _VISIT.search(l.get("text") or "")]
-            if seg:
-                bad.append("같이 사는 사람(%s)에게 '놀러 왔다'는 말이 안 된다: %s" % (w, seg[0][:40]))
-    out = _sg._call_json(
-        "아래는 %s 광고 대본이다. **인물·상황이 말이 되는지만** 본다. 어색한 곳을 짧게 적어라(없으면 빈 배열).\n"
-        "보는 것: 화자가 끝까지 같은 사람인가 / 같이 사는 사람에게 '놀러 왔다'처럼 안 맞는 말이 없나 / "
-        "그 물건을 실제로 쓰는 사람이 아닌 사람에게 사주거나 선물하지 않나 / 앞뒤 인과가 이어지나.\n\n%s"
-        % (product, text), _CAST_SCHEMA) or {}
-    return bad + [str(x) for x in (out.get("issues") or [])][:4]
-
-
-_ORIGIN_SCHEMA = {"type": "object", "properties": {"lines": {"type": "array", "items": {"type": "object", "properties": {
-    "role": {"type": "string"}, "text": {"type": "string"}, "group": {"type": "integer"}},
-    "required": ["role", "text", "group"]}}}, "required": ["lines"]}
+_ORIGIN_SCHEMA = _LINES_SCHEMA          # 원문형도 줄 모양은 같다(role·text·group)
 _DUP = re.compile(r"(\S.{3,}?[.!?]?)\s*\1")
 
 
 def _dedup(t):
+    """전사본의 같은 말 연달아 반복('세탁 남겨주세요. 세탁 남겨주세요.')을 한 번으로."""
     prev = None
     while prev != t:
         prev, t = t, _DUP.sub(r"\1", t)
-    return t.strip()
+    return (t or "").strip()
+
+
+_PREMISE_SCHEMA = {"type": "object", "properties": {
+    "uses_already": {"type": "boolean"}, "speaker": {"type": "string"}, "other": {"type": "string"},
+    "lives_together": {"type": "boolean"}, "who_admires": {"type": "string"}, "who_buys": {"type": "string"},
+    "emotion_from": {"type": "string"}, "emotion_to": {"type": "string"}, "needed_scene": {"type": "string"}},
+    "required": ["uses_already", "speaker", "other", "lives_together", "who_admires", "who_buys",
+                 "emotion_from", "emotion_to", "needed_scene"]}
+_CAST_SCHEMA = {"type": "object", "properties": {
+    "fit": {"type": "boolean"}, "why_not": {"type": "string"}, "speaker": {"type": "string"}, "other": {"type": "string"},
+    "lives_together": {"type": "boolean"}, "who_uses": {"type": "string"}, "who_buys": {"type": "string"},
+    "opening": {"type": "string"}, "turn": {"type": "string"}, "ending": {"type": "string"}},
+    "required": ["fit", "speaker", "other", "lives_together", "who_uses", "who_buys", "opening", "turn", "ending"]}
+_GAP_SCHEMA = {"type": "object", "properties": {"issues": {"type": "array", "items": {"type": "string"}}},
+               "required": ["issues"]}
+
+
+def _origin_text(origin):
+    return "\n".join("[%s] %s" % (c.get("role") or "", _dedup(c.get("text") or ""))
+                     for c in (origin.get("cells") or []))
+
+
+def read_premise(origin, note=None):
+    """히트작 원문에 숨은 **이야기 전제**를 뽑는다 — 누가 쓰고 있었나·누가 감탄하나·누가 사나·감정이 어디서 어디로.
+
+    ★왜(2026-09-20 사장님 "덕지덕지 붙는 거 아닌가"): 문장만 옮기면 모델이 제품에 맞추다 전제를 깬다
+      (엄마가 지저분하다고 지적했는데 바로 감탄 / 아기 인형을 시어머니에게 사드림). 어색할 때마다 검사를
+      덧붙이면 규칙만 늘어난다. 전제를 데이터로 넘기고 검사는 '상황표와 맞나' 하나로 모은다."""
+    p = ("아래 쇼핑 숏폼 대본에서 이야기 전제를 뽑아라.\n"
+         "uses_already=화자가 그 물건을 이미 쓰고 있었나 / other=상대가 누구인지(역할 이름) / "
+         "lives_together=화자와 같이 사나 / who_admires=감탄하는 쪽 / who_buys=사거나 선물하는 쪽 / "
+         "emotion_from→emotion_to=감정이 어디서 어디로 / needed_scene=이 이야기가 되려면 화면에 꼭 있어야 하는 장면 하나.\n"
+         "★모든 값에서 **제품·업종·물건 이름을 빼라**. '전기 자전거 타는 친구'가 아니라 '그 물건을 쓰고 있는 친구', "
+         "'거울 닦는 시어머니'가 아니라 '그 물건을 써 보는 어른'처럼. 어떤 제품에도 얹히는 뼈대여야 한다.\n\n"
+         + _origin_text(origin))
+    return _sg._call_json(p, _PREMISE_SCHEMA, note=note) or {}
+
+
+def build_cast(premise, product, feats, note=None):
+    """이 제품에 맞춘 상황표. fit=false면 이 스파인은 이 제품에 안 쓴다(억지로 맞추지 않는다)."""
+    p = ("[원문 전제]\n%s\n\n[이 제품] %s\n%s\n\n"
+         "위 전제를 이 제품 상황으로 옮긴 **상황표**를 만들어라.\n"
+         "- who_uses는 이 물건을 실제로 쓰는 사람. 화자가 쓰는 물건이면 화자가 who_uses다.\n"
+         "- 같이 사는 사람은 '놀러 오지' 않는다. 사주거나 선물하는 방향은 실제로 쓰는 사람 쪽으로만.\n"
+         "- opening/turn/ending = 대본이 어떻게 열고, 어디서 마음이 바뀌고, 어떻게 닫는지 한 줄씩.\n"
+         "- ★전제는 인물·상황 뼈대다. 제품 종류가 달라도 그 자체로는 안 맞는 게 아니다. "
+         "fit=false는 **화면(특징)에 그 상황을 보여줄 장면이 없을 때만** 쓴다(예: 남이 보고 감탄하는 이야기인데 "
+         "쓰는 장면이 하나도 없음). 그 경우 why_not 한 줄."
+         % (json.dumps(premise, ensure_ascii=False), product, "\n".join(feats)))
+    return _sg._call_json(p, _CAST_SCHEMA, note=note) or {}
+
+
+def cast_gap(lines, cast, product):
+    """검사는 하나로: **대본이 상황표와 맞는가**(잡다한 규칙을 덧붙이지 않는다)."""
+    text = "\n".join(l.get("text") or "" for l in lines)
+    p = ("[상황표]\n%s\n\n[대본]\n%s\n\n"
+         "**말이 안 되는 큰 오류만** 적어라(없으면 빈 배열). 취향·표현이 아쉬운 것은 적지 마라.\n"
+         "큰 오류 5가지: ①그 물건을 안 쓰는 사람에게 사주거나 선물함 ②같이 사는 사람이 '놀러 옴' 같은 관계 모순 "
+         "③상황표에 없던 인물이 갑자기 나옴 ④여는 말과 뒤가 뒤집힘(혼내다가 근거 없이 칭찬 등) "
+         "⑤마지막 줄이 잘렸거나 화자가 바뀜 ⑥첫 줄(훅)이 말이 안 됨(빈칸에 엉뚱한 말이 들어가 "
+         "'며느리 반응 받았어요'처럼 뜻이 깨짐)." % (json.dumps(cast, ensure_ascii=False), text))
+    out = _sg._call_json(p, _GAP_SCHEMA) or {}
+    return [str(x) for x in (out.get("issues") or [])][:4]
 
 
 def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds=25, note=None):
-    """원문형 스파인: 히트작 원문 한 편을 칸째 보여주고 **제품 이야기만** 바꿔 쓴다.
-
-    - 칸 수·순서·말투·연결어는 원문 그대로. 훅은 원문 글자 고정(빈칸만 교체).
-    - 원문이 끝을 끊고 첫 문장으로 잇는 꼴이면(반복재생) 새 대본도 똑같이 끊는다.
-    - 재료(씨앗) 대사를 베끼지 않는다 — 베끼면 원본과 같은 영상이 된다(09-18 사장님 기준).
-    """
+    """원문형 스파인: ①전제 읽기 → ②이 제품 상황표 → ③원문 말투로 대본 → ④상황표와 대조, 어긋나면 1회 재작성."""
     cells = [c for c in (origin.get("cells") or []) if (c.get("text") or "").strip()]
-    tpl_text = "\n".join("[%s] %s" % (c.get("role") or "", _dedup(c["text"])) for c in cells)
     feats = []
     for k, gi in enumerate(groups_out["order"]):
         g = groups_out["groups"][gi]
         desc = " / ".join(seg_index.get(c, {}).get("desc", "")[:50] for c in (g.get("cuts") or [])[:2] if c in seg_index)
         feats.append("  %d. [%d] %s — %s (화면: %s)" % (k + 1, gi, g.get("name"), g.get("claim"), desc))
+    product = groups_out.get("product") or ""
+    premise = origin.get("premise") or read_premise(origin, note=note)
+    cast = build_cast(premise, product, feats, note=note)
+    if cast.get("fit") is False:
+        if note is not None:
+            note["cast_unfit"] = cast.get("why_not") or "전제가 이 제품과 안 맞음"
+        return []
     hook_tpl = (origin.get("hook_tpl") or "").strip()
     hook_rule = ("- ★첫 줄(훅)은 이 틀의 글자를 한 글자도 바꾸지 말고 {}빈칸만 바꿔라: %s\n" % hook_tpl) if hook_tpl else ""
     last = _dedup(cells[-1]["text"]) if cells else ""
-    loop_rule = ("- ★원문은 마지막을 끝맺지 않고 끊어 첫 장면으로 잇는다(반복 재생). 새 대본도 똑같이 끊어라.\n"
-                 if last and not re.search(r"[.!?요다임]\s*$", last) else "")
+    loop = bool(last) and not re.search(r"[.!?요다임]\s*$", last)
+    loop_rule = "- ★원문은 마지막을 끝맺지 않고 끊어 첫 장면으로 잇는다(반복 재생). 새 대본도 똑같이 끊어라.\n" if loop else ""
     prompt = (
-        "아래 [원문]은 조회수 %s회가 나온 쇼핑 숏폼 대본이다. 이걸 틀로 삼아 [이 제품]의 대본을 써라.\n\n"
-        "규칙\n%s%s"
-        "- 칸 수와 순서를 원문과 똑같이. 칸마다 원문의 **말투·어미·연결어·문장 길이**를 그대로 살려라.\n"
-        "- 제품 이야기(이름·효능·동작·불편·숫자)는 **아래 특징에 있는 것만** 쓴다. 원문의 원래 제품 이야기는 한 조각도 남기지 마라.\n"
-        "- 인물·장소·반응은 이 제품에 맞게 바꿔도 된다. 단 대본 전체에서 인물은 한 사람으로 이어져야 한다.\n"
-        "- 특징에 없는 수치·출처·수상·판매량을 지어내지 마라. 같은 문장을 두 번 쓰지 마라.\n"
-        "- 원문과 특징 설명의 문장을 **베끼지 마라**. 사실만 가져오고 문장은 원문 말투로 새로 써라.\n"
+        "아래 [원문]은 조회수 %s회가 나온 쇼핑 숏폼 대본이다. [상황표]대로 [이 제품]의 대본을 써라.\n\n규칙\n%s%s"
+        "- 칸 수와 순서를 원문과 똑같이. 칸마다 원문의 말투·어미·연결어·문장 길이를 그대로 살려라.\n"
+        "- ★사람·장소·사는 사람은 [상황표]를 따른다. 원문의 인물 배치를 베끼지 마라.\n"
+        "- 제품 이야기는 아래 특징에 있는 것만. 원문의 원래 제품 이야기는 한 조각도 남기지 마라.\n"
+        "- 특징에 없는 수치·출처·판매량을 지어내지 마라. 같은 문장을 두 번 쓰지 마라. 원문·특징 문장을 베끼지 마라.\n"
         "- 줄마다 role(원문 칸 이름), group(그 줄이 말하는 특징 번호, 훅·마무리는 -1).\n\n"
-        "[원문]\n%s\n\n[이 제품] %s\n%s" % (origin.get("views") or 0, hook_rule, loop_rule,
-                                          tpl_text, groups_out.get("product") or "", "\n".join(feats)))
-    cast_rule = ("- ★인물 관계를 원문 그대로 베끼지 말고 **이 제품 상황에 맞게 다시 정하라**: 같이 사는 사람은 '놀러 오지' 않는다, "
-                 "그 물건을 실제로 쓰는 사람에게만 사주거나 선물한다, 화자는 끝까지 같은 사람이다.\n")
-    prompt = prompt.replace("- 줄마다 role", cast_rule + "- 줄마다 role")
-    out = _sg._call_json(prompt, _ORIGIN_SCHEMA, note=note) or {}
-    raw_last = ((out.get("lines") or [{}])[-1].get("text") or "").strip()
-    lines = _clean_lines(out)
-    for l in lines:
-        l["text"] = _dedup(l.get("text") or "")
-    # ★반복 재생 끝은 마침표를 붙이면 안 된다 — _clean_lines가 모든 줄에 마침표를 강제하므로 여기서 되돌린다
-    if lines and loop_rule and not re.search(r"[.!?]\s*$", raw_last):
-        lines[-1]["text"] = lines[-1]["text"].rstrip(".")
-    # ★인물·상황 검사 — 걸리면 무엇이 어색한지 붙여 한 번 다시 쓴다(고쳐도 남으면 note에 남긴다)
-    issues = _cast_check(lines, groups_out.get("product") or "")
-    if issues:
-        p2 = prompt + "\n\n[고칠 점] 앞서 쓴 대본에서 이런 게 어색했다. 같은 실수를 하지 마라:\n- " + "\n- ".join(issues)
-        out2 = _sg._call_json(p2, _ORIGIN_SCHEMA, note=note) or {}
-        l2 = _clean_lines(out2)
-        if l2:
-            for l in l2:
-                l["text"] = _dedup(l.get("text") or "")
-            if loop_rule and not re.search(r"[.!?]\s*$", ((out2.get("lines") or [{}])[-1].get("text") or "").strip()):
-                l2[-1]["text"] = l2[-1]["text"].rstrip(".")
-            left = _cast_check(l2, groups_out.get("product") or "")
-            if note is not None:
-                note["cast_fixed"] = {"before": issues, "after": left}
-            lines = l2 if len(left) < len(issues) else lines
-    return _no_made_up_country(_one_full_name(lines, groups_out.get("product") or ""), seg_index)
+        "[상황표]\n%s\n\n[원문]\n%s\n\n[이 제품] %s\n%s"
+        % (origin.get("views") or 0, hook_rule, loop_rule, json.dumps(cast, ensure_ascii=False),
+           _origin_text(origin), product, "\n".join(feats)))
+
+    def _run(p):
+        out = _sg._call_json(p, _ORIGIN_SCHEMA, note=note) or {}
+        ls = _clean_lines(out)
+        for l in ls:
+            l["text"] = _dedup(l.get("text") or "")
+        raw_last = ((out.get("lines") or [{}])[-1].get("text") or "").strip()
+        if ls and loop and not re.search(r"[.!?]\s*$", raw_last):
+            ls[-1]["text"] = ls[-1]["text"].rstrip(".")
+        return ls
+
+    lines = _run(prompt)
+    gaps = cast_gap(lines, cast, product) if lines else []
+    if gaps:
+        l2 = _run(prompt + "\n\n[고칠 점] 앞 대본이 상황표와 이렇게 어긋났다:\n- " + "\n- ".join(gaps))
+        left = cast_gap(l2, cast, product) if l2 else gaps
+        if l2 and len(left) < len(gaps):
+            lines, gaps = l2, left
+    if note is not None:
+        note["cast"] = {"table": cast, "issues": gaps}
+    return _no_made_up_country(_one_full_name(lines, product), seg_index)
 
 
 def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None, seed=None):
@@ -834,3 +865,33 @@ if __name__ == "__main__":       # 서버에서: python3 -m shopping_shorts.back
     sources = sources_from_extract(job.get("extract") or {})
     given, bs, meta = assemble(sources, bb, st, spine_id=sid)
     print(json.dumps({"given_script": given, "beat_sources": bs, "meta": meta}, ensure_ascii=False, indent=1))
+
+def assemble_clean(sources, backbone_vid, store, spines, target_seconds=25, seed=None, want=2, note=None):
+    """스파인 여러 개를 돌려 **인물·상황 검사를 통과한 대본만** 돌려준다 (2026-09-20 사장님 확정 B안).
+
+    대본 한 편을 규칙으로 완벽하게 만들려 하면 규칙만 늘어난다(09-19~20 실측). 대신 여러 편 뽑아
+    멀쩡한 것만 화면에 올린다. 통과본이 하나도 없으면 빈 목록 — 화면은 "이 영상엔 맞는 스타일이 없다"고 말한다.
+    반환: [{spine, given, beat_sources, meta}] (최대 want개, 앞에서부터 통과 순)
+    """
+    out, tried = [], []
+    for sp in (spines or []):
+        n = {}
+        try:
+            given, bs, meta = assemble(sources, backbone_vid, store, spine_id=sp.get("id"),
+                                       target_seconds=target_seconds, seed="%s-%s" % (seed or "", sp.get("id")), note=n)
+        except Exception as e:      # noqa: BLE001 — 한 스파인 실패가 나머지를 막으면 안 된다
+            tried.append({"spine": sp.get("name"), "why": repr(e)[:80]})
+            continue
+        issues = ((n.get("cast") or {}).get("issues")) or []
+        if not given:
+            tried.append({"spine": sp.get("name"), "why": n.get("cast_unfit") or n.get("reason") or "대본 없음"})
+            continue
+        if issues:
+            tried.append({"spine": sp.get("name"), "why": "; ".join(issues)[:120]})
+            continue
+        out.append({"spine": sp, "given": given, "beat_sources": bs, "meta": meta})
+        if len(out) >= want:
+            break
+    if note is not None:
+        note["skipped"] = tried          # 왜 안 썼는지 화면이 말할 수 있게(조용한 폴백 금지)
+    return out
