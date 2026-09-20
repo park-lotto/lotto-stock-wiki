@@ -542,7 +542,35 @@ def spine_origin(spine):
         except Exception:      # noqa: BLE001
             tpl = {}
     o = tpl.get("_origin") if isinstance(tpl, dict) else None
-    return o if isinstance(o, dict) and o.get("cells") else None
+    if not (isinstance(o, dict) and o.get("cells")):
+        return None
+    return _strip_caption_noise(o)
+
+
+# ★자막 잡음은 **읽는 자리에서** 지운다 (2026-09-21 사장님 "음악저게 이번에도 나오는게
+#   구조적으로 뭐가있네 문제"). 유튜브 자동자막이 남긴 `[음악]`·`[박수]`가 원문 칸에
+#   박혀 있었고, 백본은 원문을 그대로 베끼는 게 일이라 **대본에 그대로 나왔다**
+#   (실측 스파인 387: "…아이템이 [음악] 있어." → 생성된 대본에도 동일).
+#   DB만 고치면 새로 넣는 스파인에서 또 나온다 — 원문을 읽는 유일한 관문인
+#   여기서 걸러야 재발이 없다(0순위-B: 판정은 한 곳에서).
+_CAPTION_NOISE = re.compile(r"\s*\[\s*(음악|박수|웃음|박수소리|Music|Applause|Laughter)\s*\]\s*", re.I)
+
+
+def _strip_caption_noise(origin):
+    """원문 칸·훅틀에서 `[음악]` 같은 자막 잡음을 걷어낸 사본을 돌려준다.
+    원본 dict를 고치지 않는다 — 호출부가 DB 객체를 그대로 들고 있을 수 있다."""
+    cells = origin.get("cells") or []
+    if not any(_CAPTION_NOISE.search(c.get("text") or "") for c in cells)             and not _CAPTION_NOISE.search(origin.get("hook_tpl") or ""):
+        return origin                      # 흔한 길 — 사본을 안 만든다
+    out = dict(origin)
+    out["cells"] = [dict(c, text=_clean_noise_text(c.get("text") or "")) for c in cells]
+    if origin.get("hook_tpl"):
+        out["hook_tpl"] = _clean_noise_text(origin["hook_tpl"])
+    return out
+
+
+def _clean_noise_text(t):
+    return re.sub(r"\s{2,}", " ", _CAPTION_NOISE.sub(" ", t)).strip()
 
 
 def _spine_style(spine):
