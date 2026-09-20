@@ -1224,24 +1224,10 @@ const vid = () => curVid || document.getElementById('vid');
 function warmVideos(){
   const ids = new Set(Object.values(DATA.segments).map(s => s.video_id));
   ids.forEach(id => { vidFor(id, 0); vidFor(id, 1); vidFor(id, 2); vidFor(id, 3); });
-  // ★같은 소스가 한 칸에서 여러 번 쓰이면 startSeq가 슬롯 11,12,…를 준다(겹침을 없애려고).
-  //   그 재생기를 여기서 미리 만들어 두지 않으면 **그 컷에 가서야 처음 만들어져** 정지
-  //   그림이 된다 — 위 주석의 사고와 같은 모양이다. 칸마다 세어 필요한 만큼만 데운다.
-  try{
-    const need = {};
-    (DATA.beats || []).forEach(b => {
-      const cnt = {};
-      ((b.cuts || b.manual_cuts || b.scene_override || [])).forEach(c => {
-        const v = c && (c.video_id || (DATA.segments[c.seg_id] || {}).video_id);
-        if (!v) return;
-        cnt[v] = (cnt[v] || 0) + 1;
-        if (cnt[v] > (need[v] || 0)) need[v] = cnt[v];
-      });
-    });
-    Object.keys(need).forEach(id => {
-      for (let n = 1; n < need[id]; n++) vidFor(id, 10 + n);   // 두 번째 등장부터
-    });
-  }catch(e){ /* 모양이 다르면 종전대로 — 그때는 seat()가 만든다 */ }
+  // ★슬롯 11,12,…(같은 소스 두 번째 등장부터)는 **startSeq가 배정한 뒤 그 자리에서** 만든다.
+  //   여기서 DATA.beats 를 뒤져 미리 세려 했는데, 칸의 컷 목록이 manual_cuts 인지
+  //   scene_override 인지 내가 **짐작**해야 해서 그만뒀다. 짐작이 틀리면 조용히 안 데워지고,
+  //   그 컷은 정지 그림이 된다 — 확인할 수 없는 안전장치는 안전장치가 아니다.
 }
 
 function stopPlay(){
@@ -1436,6 +1422,10 @@ function startSeq(clips, slot0){
     const n = _seen[c.video_id] || 0;
     _seen[c.video_id] = n + 1;
     c._slot = (k === 0 && slot0 != null) ? slot0 : (n === 0 ? (k % 2) : 10 + n);
+    // ★배정한 자리에서 바로 만든다 — 그 컷에 가서야 처음 만들어지면 정지 그림이 된다
+    //   (코드에 같은 사고 기록이 있다). warmVideos 에서 미리 세려면 칸의 컷 목록 키를
+    //   짐작해야 하는데, 여기서는 **실제 배정된 것** 그대로라 짐작이 없다.
+    try { vidFor(c.video_id, c._slot); } catch (e) { /* 소스가 없으면 seat가 처리한다 */ }
   });
   if (clips[0]) seat(clips[0]);
   if (clips[1]) seat(clips[1]);
