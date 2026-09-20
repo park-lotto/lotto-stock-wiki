@@ -39,6 +39,22 @@ def test_tts도_잡기본속도에_상대배속을_한번만_곱한다():
     assert got["speed"] == pytest.approx(1.8)
 
 
+def test_음성스냅샷없는_옛작업도_실제기본속도에_상대배속한다():
+    beat = _beat(1.4)
+    base = mix_pipeline.base_voice_for_beat(None, beat)
+    assert base["speed"] == pytest.approx(mix_pipeline._DEFAULT_VOICE["speed"])
+    got = mix_pipeline.voice_for_beat(base, beat)
+    assert got["speed"] == pytest.approx(mix_pipeline._DEFAULT_VOICE["speed"] * 1.4)
+
+
+def test_절대값처럼_잘못저장된_첫배포_기본속도를_복구한다():
+    beat = _beat(1.4)
+    beat["voice_override"] = {"speed": 1.4}
+    base = mix_pipeline.base_voice_for_beat(None, beat)
+    assert base["speed"] == pytest.approx(mix_pipeline._DEFAULT_VOICE["speed"])
+    assert mix_pipeline.voice_for_beat(base, beat)["speed"] == pytest.approx(2.24)
+
+
 def test_저장된_칸별_성우톤은_배속을_바꿔도_보존되고_중복가속하지_않는다():
     beat = _beat(1.2)
     beat["voice_override"] = {

@@ -474,13 +474,23 @@ def voice_for_beat(base_voice, beat):
 def base_voice_for_beat(job_voice, beat):
     """칸별 성우·톤은 보존하되 저장된 절대 배속을 상대배속 전으로 되돌린다."""
     saved = (beat or {}).get("voice_override")
-    out = dict(saved or job_voice or {})
+    # voice 스냅샷이 없는 옛 작업도 실제 합성은 _voice_params에서 _DEFAULT_VOICE를 쓴다.
+    # 여기만 {}를 기본으로 보면 UI의 1.4×를 "기존 속도의 1.4배"가 아니라 절대 1.4로
+    # 바꿔 버린다(실측 job fdbdf33c16cb: 기본 1.6 → 1.4, 6.3초 → 6.55초).
+    out = dict(saved or job_voice or _DEFAULT_VOICE)
     if saved:
         try:
             rel = float((beat or {}).get("sync_speed") or 1.0)
             absolute = float(out.get("speed") or 1.0)
         except (TypeError, ValueError):
             rel, absolute = 1.0, 1.0
+        # 첫 배포의 위 버그로 만들어진 값은 voice_override={speed: sync_speed} 모양이다.
+        # 기본 음성 작업에 별도 성우·톤이 없는데 둘이 같다면 기본 1.6을 잃어버린 것이므로
+        # 여기서 정본으로 복구한다. 이 분기를 호출부에 또 쓰지 않는다.
+        if (not job_voice and set(out) <= {"speed"}
+                and math.isfinite(rel) and math.isfinite(absolute)
+                and math.isclose(absolute, rel, abs_tol=1e-6)):
+            return dict(_DEFAULT_VOICE)
         if math.isfinite(rel) and rel > 0 and math.isfinite(absolute):
             out["speed"] = round(absolute / rel, 4)
     return out
