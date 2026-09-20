@@ -21,10 +21,10 @@ import pytest
 JS = (Path(__file__).resolve().parents[1] / "static" / "scene_play.js").read_text(encoding="utf-8")
 
 
-def _seek_block():
-    """seekTo 안에서 재생기를 바꾸는 대목만 떼어낸다."""
-    i = JS.index("const _want = v.currentTime;")
-    return JS[i:i + 1200]
+def _show_body():
+    """화면을 켜는 **한 곳** — 보호는 여기 있어야 한다."""
+    i = JS.index("function showVid(")
+    return JS[i:JS.index("\n}", i)]
 
 
 def test_settled_is_judged_by_value_not_flag():
@@ -37,12 +37,31 @@ def test_settled_is_judged_by_value_not_flag():
     assert "v.seeking" in body or "!v.seeking" in body   # 플래그는 보조로만
 
 
-def test_transfer_hides_until_seek_lands():
-    """구멍② — 못 기다릴 땐 **가린 채** 넘긴다. 옛 프레임을 그냥 보여주지 않는다."""
-    blk = _seek_block()
-    assert "visibility = 'hidden'" in blk          # 가리고 전환
-    assert "_seekSettled(" in blk                  # 값으로 판정해 진입
-    assert "_pinHidden(" in blk                    # 드러내는 일은 한 곳에서만 한다
+def test_protection_lives_in_show_vid_not_in_callers():
+    """★보호는 **화면을 켜는 한 곳**에 있어야 한다(2026-09-20 사장님 "6곳중에 2곳 고친거면 또 그런다").
+
+    처음엔 되감기(seekTo) 자리에만 넣었다. 그런데 showVid 호출처가 6곳이고, 그중 재생 중
+    컷 갈아끼우기는 `v.currentTime = …` 하고 **곧바로** 켜는 같은 모양이라 거기서 또 샌다.
+    한 곳씩 막으면 새 경로가 생길 때마다 또 새므로, 보호를 showVid 안으로 옮겼다.
+    """
+    body = _show_body()
+    assert "visibility = 'hidden'" in body          # 아직 안 왔으면 가린다
+    assert "_seekSettled(" in body                  # 값(또는 시크중)으로 판정
+    assert "_pinHidden(" in body                    # 드러내는 일은 한 곳에서만
+
+
+def test_every_caller_passes_the_target_time():
+    """켤 때 **어디로 보냈는지**를 넘겨야 값으로 판정할 수 있다.
+
+    안 넘기면 '시크 중인가'로만 보게 되는데, 그건 브라우저가 플래그를 세우기 전 틈을 못 막는다
+    (9/18판이 그래서 샜다). 목표를 아는 호출처는 반드시 넘긴다.
+    """
+    calls = [ln.strip() for ln in JS.splitlines()
+             if "showVid(" in ln and "function showVid" not in ln]
+    assert len(calls) >= 5, "호출처를 못 찾았다(리팩터링으로 모양이 바뀌었나)"
+    # 목표를 모르는 곳은 '썸네일 잡기' 한 곳뿐 — 거긴 멈춘 상태라 showVid 가 시크중만 봐도 된다
+    bare = [c for c in calls if "showVid(v)" in c]
+    assert len(bare) <= 1, "목표 시각을 안 넘기는 호출처가 남았다: %s" % bare
 
 
 def _pin_body():
@@ -69,7 +88,7 @@ def test_pin_reveals_and_cleans_up():
     body = _pin_body()
     assert "visibility = ''" in body                            # 드러내기
     assert re.search(r"setTimeout\(tick,\s*_PIN_STEP_MS\)", body)  # 못 왔으면 다시 본다
-    assert "_unhidePinned()" in _seek_block()                   # 다음 전환 전에 앞선 것을 정리
+    assert "_unhidePinned()" in _show_body()                    # 자리에 왔으면 앞선 것을 정리
 
 
 def test_stop_play_unhides():
