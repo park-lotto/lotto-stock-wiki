@@ -284,9 +284,32 @@ function unTrim(sid){
 let onePerSeg = false;   
 const STRETCH = {};                 // beat_idx → true(늘려 채우기 켬)
 function toggleStretch(i, on){ if (on) STRETCH[i] = true; else delete STRETCH[i]; (typeof render === 'function' && render()); }
+function beatSyncSpeed(i){
+  const b = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[i] || {};
+  const v = Number(b.sync_speed || 1);
+  return isFinite(v) && v >= 0.5 && v <= 2 ? v : 1;
+}
 // beatIdx는 **선택**이다 — 넘기면 그 칸의 수동 지정 길이(FIXLEN)를 반영한다.
 // 안 넘기는 옛 호출부는 종전과 똑같이 동작한다(하위호환).
 function planClips(segIds, ttsDur, spread, beatIdx){
+  // 서버 plan_beat_clips_for와 같은 규칙: 새 TTS 출력 길이만큼 끝내되, 원본에서는
+  // 상대 배속만큼 더 긴 구간을 읽는다. 반환 dur은 출력초, src_dur은 원본초다.
+  const outDur = ttsDur;
+  const syncSpeed = beatSyncSpeed(beatIdx);
+  ttsDur = outDur * syncSpeed;
+  const finish = base => {
+    if (!base.length) return base;
+    let used = 0;
+    base.forEach((c, k) => {
+      c.src_dur = c.dur;
+      c.speed = syncSpeed;
+      c.dur = k === base.length - 1
+        ? Math.max(EPS, outDur - used)
+        : c.dur / syncSpeed;
+      used += c.dur;
+    });
+    return base;
+  };
   // ✂ 트림된 장면은 '구멍 뺀 두 토막'으로 갈라서 넣는다 — 아래 분배 규칙은 그대로다.
   const segments = segIds.flatMap(id => trimPieces(id).map(p => ({...p, seg_id: id})))
                          .filter(s => s.start != null);
@@ -315,8 +338,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         filled += take;
       });
     }
-    return (typeof applyFixedLens === 'function')
-    ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
+    const fixed = (typeof applyFixedLens === 'function')
+      ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
+    return finish(fixed);
   }
   if (segments.length > 1){
     const pos = segments.map(s => s.start);
@@ -400,8 +424,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       if (short > EPS) clips[clips.length - 1].dur += short;
     }
   }
-  return (typeof applyFixedLens === 'function')
+  const fixed = (typeof applyFixedLens === 'function')
     ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
+  return finish(fixed);
 }
 
 // 타임프레임 한 줄 — 실제 컷을 시간 순서대로. 계산은 planClips 하나만 쓴다(아래 필름과 동일).
@@ -516,6 +541,7 @@ function vidFor(videoId, slot){
 // 컷을 숨은 재생기에 미리 앉힌다(시크 완료까지 기다린다). 반환은 그 재생기.
 function seat(c){
   const v = vidFor(c.video_id, c._slot);
+  v.playbackRate = c.speed || 1;
   if (Math.abs(v.currentTime - c.start) > 0.05) v.currentTime = c.start;
   return v;
 }
@@ -764,6 +790,7 @@ function step(){
     //   pinfo는 컷 3/3). 폴백도 200ms는 너무 짧아 첫 재생에서 늘 걸렸다.
     const show = () => {
       showVid(v);
+      v.playbackRate = c.speed || 1;
       v.play().catch(()=>{});
       paintCut();
       if (seq[seqI + 1]) seat(seq[seqI + 1]);   // 다음 컷은 숨은 재생기에 미리 앉힌다
@@ -865,11 +892,12 @@ function curT(){
   if (seqI >= seq.length){
     const last = seq.length - 1, lc = seq[last];
     if (curVid && lc) return Math.min(seqTotal(),
-      seqBounds[last][0] + Math.max(0, curVid.currentTime - lc.start));
+      seqBounds[last][0] + Math.max(0, curVid.currentTime - lc.start) / (lc.speed || 1));
     return seqTotal();
   }
   const c = seq[seqI];
-  return seqBounds[seqI][0] + Math.max(0, (curVid ? curVid.currentTime : c.start) - c.start);
+  return seqBounds[seqI][0]
+    + Math.max(0, (curVid ? curVid.currentTime : c.start) - c.start) / (c.speed || 1);
 }
 function seekInput(val){
   const tot = seqTotal(); if (!tot) return;
@@ -907,7 +935,8 @@ function seekTo(t){
   seqI = k;
   const c = seq[k];
   const v = vidFor(c.video_id, c._slot);
-  v.currentTime = c.start + (t - seqBounds[k][0]);
+  v.playbackRate = c.speed || 1;
+  v.currentTime = c.start + (t - seqBounds[k][0]) * (c.speed || 1);
   showVid(v);
   const remain = Math.max(50, (seqBounds[k][1] - t) * 1000);
   if (seqPaused){

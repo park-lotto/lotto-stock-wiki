@@ -209,6 +209,10 @@ body.tight .tbsegs{display:none}          /* 촘촘히에선 글자를 걷는다
 .tbtools button{background:var(--panel2);border:1px solid var(--line);color:var(--dim);
   border-radius:5px;padding:1px 6px;cursor:pointer;font-size:10.5px}
 .tbtools button:hover{border-color:var(--accent);color:var(--ink)}
+.speedpick{appearance:auto;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:5px;padding:2px 5px;font-size:10.5px;font-weight:700;cursor:pointer;max-width:92px}
+.speedpick.changed{border-color:var(--accent);color:#fff;background:#17304a}
+.speedpick:disabled{opacity:.65;cursor:wait}
 /* 빼는 버튼만 눈에 띄게 — 되돌릴 수 없는 조작이라 실수로 안 누르게 색을 가른다(2026-08-16) */
 .tbtools button.danger{border-color:var(--warn);color:var(--warn);font-weight:700}
 .tbtools button.danger:hover{background:var(--warn);color:#3a2a08}
@@ -1505,7 +1509,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F21';   // 필름롤러 20차 — 대사 구절별 초 + 구간길이 자동
+const BUILD_TAG = 'F22';   // 멘트 칸 음성·장면 통합 속도
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
@@ -2181,6 +2185,52 @@ function beatFill(i, clips){
            stretching: !!STRETCH[i] && cuts.length > 0 };
 }
 
+// ── 🎚 멘트 칸 통합 속도 ──────────────────────────────────────────────────
+// 기본 칸에는 아무것도 더 보이지 않는다. 고른 칸에만 작은 셀렉트가 열리고, 1.0이 아닌
+// 칸은 접혀도 배속을 남겨 "어디를 바꿨는지" 잊지 않게 한다.
+const SPEED_BUSY = {};
+function speedControl(i){
+  const cur = beatSyncSpeed(i);
+  if (sel !== i && Math.abs(cur - 1) < 0.01) return '';
+  const vals = [0.8,0.9,1.0,1.1,1.2,1.3,1.4];
+  return `<select class="speedpick ${Math.abs(cur-1)>0.01?'changed':''}"
+      title="이 멘트 칸의 음성과 장면을 함께 조절합니다"
+      ${SPEED_BUSY[i] ? 'disabled' : ''}
+      onclick="event.stopPropagation()" onchange="setBeatSpeed(${i},this.value,event)">
+    ${vals.map(v => `<option value="${v}" ${Math.abs(v-cur)<0.01?'selected':''}>${
+      SPEED_BUSY[i] && Math.abs(v-cur)<0.01 ? '변경 중…' : '속도 '+v.toFixed(1)+'×'}</option>`).join('')}
+  </select>`;
+}
+async function setBeatSpeed(i, raw, ev){
+  if (ev) ev.stopPropagation();
+  const wanted = Number(raw), beat = (DATA.beats || [])[i];
+  if (!beat || SPEED_BUSY[i] || !isFinite(wanted)) return;
+  const before = beatSyncSpeed(i);
+  if (Math.abs(before - wanted) < 0.01) return;
+  const beatId = beat.beat_idx == null ? i : beat.beat_idx;
+  const ver0 = beat.tts_ver || 0;
+  beat.sync_speed = wanted; SPEED_BUSY[i] = true; renderBand();
+  nsay(`🎚 ${i+1}번 칸 ${wanted.toFixed(1)}배 — 음성·장면을 함께 맞추는 중…`);
+  try{
+    const r = await fetch(`/api/mix/scene_lab/${SL.job}/speed/${beatId}`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({speed:wanted})});
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error(j.error || '속도 저장 실패');
+    try{ if (typeof clearConfirm === 'function') clearConfirm(); }catch(e){}
+    const ready = j.unchanged ? true : await waitNarrRegen(i, ver0);
+    if (!ready){
+      nsay(`⚠ ${i+1}번 칸 속도는 저장됐어요. 음성 생성이 길어져 잠시 뒤 새로고침해 확인해주세요`);
+      return;
+    }
+    nsay(`✅ ${i+1}번 칸 ${wanted.toFixed(1)}배 — 음성·장면·자막에 반영됐어요`);
+  }catch(e){
+    beat.sync_speed = before;
+    nsay('⚠ 속도 변경 실패: ' + (e.message || e));
+  }finally{
+    delete SPEED_BUSY[i]; renderBand();
+  }
+}
+
 function renderBand(){
   const row = document.getElementById('tbrow'); if (!row) return;
   let total = 0;
@@ -2263,6 +2313,7 @@ function renderBand(){
                //   담아도 안 나온다는 사실을 화면에서 알 길이 없었다.
                : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
           <span class="tbtools" onclick="event.stopPropagation()">
+            ${speedControl(i)}
             <label title="재료가 모자랄 때 마지막 컷만 늘리지 않고 전체를 고르게 늘립니다"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 늘려 채우기</label>
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
                  대본수정 만들고"). 그 자리에 대본수정을 둔다 — 3단계에서 자막을 보다가
@@ -2975,12 +3026,14 @@ async function saveNarr(i){
 // 재생성 완료는 tts_ver(단조 증가)로 안다 — mp3는 같은 경로라 겉으로 구분이 안 된다
 // (mix_pipeline.resynth_one_beat이 끝에서 이 값을 올린다).
 async function waitNarrRegen(i, ver0){
+  const beatId = (((DATA || {}).beats || [])[i] || {}).beat_idx;
+  const wantedId = beatId == null ? i : beatId;
   for (let n = 0; n < 40; n++){                 // 최대 ~40초
     await new Promise(r => setTimeout(r, 1000));
     try{
       const d = await (await fetch(`/api/mix/scene_lab/${SL.job}`, {cache:'no-store'})).json();
       if (!d.ok) continue;
-      const b = (d.data.beats || []).find(x => x.beat_idx === i);
+      const b = (d.data.beats || []).find(x => x.beat_idx === wantedId);
       if (b && (b.tts_ver || 0) > ver0){
         // 새 자막·길이를 통째로 갈아끼운다(서버 계산 결과가 유일한 진실).
         DATA.beats = d.data.beats; DATA.captions = d.data.captions;

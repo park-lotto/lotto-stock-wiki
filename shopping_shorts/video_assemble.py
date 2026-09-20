@@ -11,6 +11,7 @@
 concat 후 원본 오디오를 제거하고 비트별 TTS를 이어붙인 트랙으로 교체한다.
 """
 import os
+import math
 import re
 import shutil
 import subprocess
@@ -385,14 +386,27 @@ _MAX_SLOWMO = 1.15
 _LAST_RUNOUT = 1.0
 
 
-def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
+def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO,
+                      preferred_speed=None):
     """소스 구간 src_dur초를 출력 out_dur초로 채울 때, (움직이는 재생 길이, 정지프레임 길이).
 
     - out_dur ≤ src_dur: 늘릴 필요 없음 → (out_dur, 0).
     - 필요한 배율이 상한 이내: 그대로 완만한 슬로우 → (out_dur, 0).
     - 상한 초과: 재생은 src_dur*max_slowmo까지만, 나머지는 freeze로 → (capped, out_dur-capped).
+    - preferred_speed가 있으면 그 배속으로 움직이고 남는 출력 시간만 freeze로 둔다.
 
     항상 play_out + freeze == out_dur (총 길이·오디오/자막 싱크 보존)."""
+    # 통합 속도가 있으면 먼저 그 속도를 지킨다. 특히 마지막 비트 여운이 out_dur에
+    # 붙었을 때 기존 계산은 전체를 슬로모션으로 바꿔 1.4배가 사라졌다. 실제 움직일
+    # 수 있는 길이만 지정 속도로 재생하고 남는 여운은 기존처럼 마지막 프레임을 둔다.
+    if preferred_speed is not None:
+        try:
+            wanted = float(preferred_speed)
+        except (TypeError, ValueError):
+            wanted = 1.0
+        if math.isfinite(wanted) and wanted > 0 and src_dur > 1e-9:
+            play_out = min(float(out_dur), float(src_dur) / wanted)
+            return (play_out, max(0.0, float(out_dur) - play_out))
     if src_dur <= 1e-9 or out_dur <= src_dur:
         return (out_dur, 0.0)
     capped = src_dur * max_slowmo
@@ -401,7 +415,7 @@ def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
     return (capped, out_dur - capped)
 
 
-def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
+def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT, playback_speed=1.0):
     """마지막 비트 계획의 끝에 여운 runout초를 붙인다(plan 제자리 수정, 반환 동일 객체).
 
     소스 구간 [start,end]에 실프레임 여유(slack)가 남았으면 그만큼 **1배속 실영상**으로
@@ -418,7 +432,14 @@ def _extend_last_clip_for_runout(plan, segs, runout=_LAST_RUNOUT):
     slack = 0.0
     if seg:
         slack = max(0.0, float(seg["end"]) - (float(c["start"]) + float(c["src_dur"])))
-    real_ext = min(runout, slack)
+    try:
+        speed = float(playback_speed)
+    except (TypeError, ValueError):
+        speed = 1.0
+    if not math.isfinite(speed) or speed <= 0:
+        speed = 1.0
+    # 출력 여운 1초도 앞 장면과 같은 배속으로 계속 움직이려면 원본은 speed초가 필요하다.
+    real_ext = min(runout * speed, slack)
     c["src_dur"] += real_ext
     c["out_dur"] += runout
     return plan
@@ -534,18 +555,36 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
     # 1장=1컷 모드(기본 off). 켜면 담은 장면이 순서대로 한 번씩만 나온다(되돌아옴 없음).
     _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
-    plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
-                            one_per_seg=_one)
+    # 3단계 통합 속도: 음성만 빨라지고 화면은 앞부분을 덜 쓰는 게 아니라, 같은 장면
+    # 구간을 같은 배속으로 재생한다. sync_speed는 상대 배속이고 실제 출력 길이는 이미
+    # 새 TTS 길이(tts_dur)다. 원본에서 읽을 시간은 tts_dur*sync_speed로 잡는다.
+    try:
+        _sync_speed = float(beat.get("sync_speed") or 1.0)
+    except (TypeError, ValueError):
+        _sync_speed = 1.0
+    if not math.isfinite(_sync_speed) or _sync_speed < 0.5 or _sync_speed > 2.0:
+        _sync_speed = 1.0
+    _source_budget = float(tts_dur) * _sync_speed
+    plan = _plan_beat_clips(segs, _source_budget, src_durs=beat_src_durs,
+                            max_shot=_max_shot, one_per_seg=_one)
     # ✋ 손으로 정한 컷 길이가 있으면 먼저 반영한다(칸 총합은 안 바뀐다).
     _fixed = beat.get("fixed_lens") or {}
     if _fixed:
-        _apply_fixed_lens(plan, _fixed, tts_dur)
+        _apply_fixed_lens(plan, _fixed, _source_budget)
     # ★늘려 채우기(실험실 칸별 토글): 부족분을 전 컷에 고르게 — 여운보다 먼저.
     #   여운은 일부러 붙이는 무성 꼬리라 재배분 대상이 아니다. 플래그 없으면 그대로.
     if beat.get("stretch_fill"):
         _spread_stretch(plan)
+    if abs(_sync_speed - 1.0) > 1e-6 and plan:
+        # src_dur은 그대로 두고 출력 시간만 바꾼다. 마지막 컷이 반올림 오차를 흡수해
+        # 합계가 실제 TTS 길이와 정확히 같아야 뒤 비트 자막이 밀리지 않는다.
+        used = 0.0
+        for c in plan[:-1]:
+            c["out_dur"] = float(c["out_dur"]) / _sync_speed
+            used += c["out_dur"]
+        plan[-1]["out_dur"] = max(1e-3, float(tts_dur) - used)
     if runout > 0:
-        _extend_last_clip_for_runout(plan, segs, runout)
+        _extend_last_clip_for_runout(plan, segs, runout, _sync_speed)
     return plan
 
 
@@ -1232,13 +1271,23 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 _room = max(0.0, _sd - (c["start"] + _c_src)) if _sd > 0 else 0.0
                 _c_src = _c_src + min(_pad, _room)
                 _c_out = _c_out + _pad
-            play_out, freeze = _speed_and_freeze(_c_src, _c_out)
+            _beat_speed = beat.get("sync_speed")
+            try:
+                _beat_speed = float(_beat_speed)
+            except (TypeError, ValueError):
+                _beat_speed = 1.0
+            if not math.isfinite(_beat_speed) or abs(_beat_speed - 1.0) <= 1e-6:
+                _beat_speed = None
+            play_out, freeze = _speed_and_freeze(
+                _c_src, _c_out, preferred_speed=_beat_speed)
             # freeze 클립은 움직이는 부분을 정적 베이스줌으로 두고, 켄번즈 모션은 freeze
             # 패스에서 전체(play+freeze)에 한 번만 건다(정지 구간도 살아있게, 2026-07-19).
             # 안 그러면 pass1 줌 + freeze 켄번즈가 겹쳐 줌이 두 번 쌓인다.
             clip_vf = _base_zoom_vf() if freeze > 1e-3 else vf
             factor = play_out / _c_src if _c_src > 1e-6 else 1.0
-            vf_full = f"{clip_vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else clip_vf
+            # 느리게(factor>1)뿐 아니라 빠르게(factor<1)도 같은 식으로 처리한다.
+            vf_full = (f"{clip_vf},setpts={factor:.6f}*PTS"
+                       if abs(factor - 1.0) > 1e-6 else clip_vf)
             # start를 소스 안으로 당긴다(타트랙 병합, 2026-07-19). 약한 매칭이 소스 밖을 잡으면
             #   -ss가 끝을 넘어 0프레임이 나와 concat이 죽는다. [start, start+src_dur]가 소스
             #   안에 들어오게 당기되, 소스가 src_dur보다 짧으면 0에서 있는 만큼 읽는다.

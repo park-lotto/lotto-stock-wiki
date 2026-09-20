@@ -4999,12 +4999,63 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
     # 톤/성우 키만 덮어쓴다 — 통째로 새 dict를 만들면 _voice_params가 나머지를 기본값으로
     # 채워 재생성 비트만 소리가 달라진다("작업대 소리 ≠ 렌더 소리", mix_pipeline._voice_params
     # 문서 참고, 2026-07-18 리뷰).
-    override = dict(job.get("voice") or {})
+    beat = next((b for b in job["edit_plan"].get("beats") or []
+                 if b.get("beat_idx") == beat_idx), None)
+    if beat is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+    override = mix_pipeline.base_voice_for_beat(job.get("voice") or {}, beat)
     for k in ("voice_id", "settings", "speed"):
         if body.get(k) is not None:
             override[k] = body.get(k)
+    # 장면 편집에서 통합 속도를 정한 뒤 성우·톤을 다시 골라도 음성만 1배속으로
+    # 돌아가지 않게 한다. 최종 합성에 들어갈 절대 속도는 여기서 한 번만 계산한다.
+    override = mix_pipeline.voice_for_beat(override, beat)
     background_tasks.add_task(resynth_one_beat, job_id, beat_idx, override, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
+
+
+@app.post("/api/mix/scene_lab/{job_id}/speed/{beat_idx}")
+def api_mix_scene_lab_speed(job_id: str, beat_idx: int, body: dict,
+                            background_tasks: BackgroundTasks):
+    """3단계 멘트 칸의 음성·장면 **통합 상대 배속**을 저장하고 그 칸 TTS를 다시 만든다.
+
+    화면만 빠르게 하고 음성은 그대로 두는 모드는 만들지 않는다. sync_speed 하나를
+    미리보기·렌더·캡컷이 함께 읽어 다음 단계에서 서로 다른 속도가 되는 것을 막는다.
+    """
+    try:
+        wanted = round(float(body.get("speed")), 1)
+    except (TypeError, ValueError):
+        wanted = 0.0
+    allowed = (0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4)
+    if wanted not in allowed:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "속도는 0.8~1.4배 중에서 골라주세요"})
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={
+            "ok": False, "error": "생성·렌더 중에는 속도를 바꿀 수 없어요"})
+    plan = job["edit_plan"]
+    beat = next((b for b in plan.get("beats") or [] if b.get("beat_idx") == beat_idx), None)
+    if beat is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+    before = round(float(beat.get("sync_speed") or 1.0), 1)
+    if before == wanted:
+        return {"ok": True, "unchanged": True, "tts_ver": beat.get("tts_ver") or 0}
+    # 이 칸에서 따로 고른 성우·톤이 있으면 보존한다. voice_override의 speed는 절대값이라
+    # 기존 상대배속을 먼저 벗겨낸 뒤 새 상대배속을 한 번만 적용한다.
+    voice_base = mix_pipeline.base_voice_for_beat(job.get("voice") or {}, beat)
+    beat["sync_speed"] = wanted
+    # 속도를 바꾸는 순간 기존 완성본은 낡는다. 파일을 지우지는 않고 DB 연결만 끊어
+    # 다음 [완성본 만들기]가 반드시 새 편집안으로 렌더하게 한다.
+    store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review",
+                         video_path=None, error=None)
+    voice = mix_pipeline.voice_for_beat(voice_base, beat)
+    background_tasks.add_task(mix_pipeline.resynth_one_beat, job_id, beat_idx, voice,
+                              DB_PATH, _MIX_WORK_DIR)
+    return {"ok": True, "speed": wanted, "tts_ver": beat.get("tts_ver") or 0}
 
 
 @app.post("/api/mix/scene_lab/{job_id}/narration/{beat_idx}")

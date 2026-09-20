@@ -8,6 +8,7 @@ import hashlib
 import os
 import json
 import logging
+import math
 import re
 import shutil
 import subprocess
@@ -321,6 +322,42 @@ def mismatched_beats(beats):
     return [b.get("beat_idx") for b in (beats or []) if not tts_matches_narration(b)]
 
 
+def voice_for_beat(base_voice, beat):
+    """잡의 기본 음성에 3단계 칸별 상대 배속을 한 번만 적용한다.
+
+    sync_speed를 TTS와 화면이 함께 읽는 유일한 값으로 둔다. 이미 절대 배속으로 바뀐
+    voice_override를 다시 곱하면 재생성할 때마다 빨라지므로 기본 voice에서만 계산한다.
+    """
+    out = dict(base_voice or {})
+    try:
+        rel = float((beat or {}).get("sync_speed") or 1.0)
+    except (TypeError, ValueError):
+        rel = 1.0
+    if not math.isfinite(rel) or rel < 0.5 or rel > 2.0:
+        rel = 1.0
+    try:
+        base = float(out.get("speed") or 1.0)
+    except (TypeError, ValueError):
+        base = 1.0
+    out["speed"] = round(base * rel, 4)
+    return out
+
+
+def base_voice_for_beat(job_voice, beat):
+    """칸별 성우·톤은 보존하되 저장된 절대 배속을 상대배속 전으로 되돌린다."""
+    saved = (beat or {}).get("voice_override")
+    out = dict(saved or job_voice or {})
+    if saved:
+        try:
+            rel = float((beat or {}).get("sync_speed") or 1.0)
+            absolute = float(out.get("speed") or 1.0)
+        except (TypeError, ValueError):
+            rel, absolute = 1.0, 1.0
+        if math.isfinite(rel) and rel > 0 and math.isfinite(absolute):
+            out["speed"] = round(absolute / rel, 4)
+    return out
+
+
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
                       customer_id=0):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
@@ -351,8 +388,9 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
         # tts_path가 다른 이름을 가리키거나(후보 스위치) 파일이 없으면 새로 합성한다.
         if skip_existing and beat.get("tts_path") == str(out) and out.exists():
             return
+        beat_voice = voice_for_beat(voice, beat)
         synthesize_line(
-            beat["narration"], out, voice=voice, beat_role=beat.get("role"),
+            beat["narration"], out, voice=beat_voice, beat_role=beat.get("role"),
             beat_index=i, beat_total=total,
             previous_text=beats[i - 1]["narration"] if i > 0 else None,
             next_text=beats[i + 1]["narration"] if i < total - 1 else None,
@@ -2157,6 +2195,9 @@ def plan_using_beat_clips(plan, clips, timeline, prefix="cc"):
                         "end": d if d > 0 else None}
         b["alternates"] = []
         b.pop("scene_override", None)
+        # 이 조각은 완성본에서 이미 배속까지 적용된 화면이다. 캡컷 계획에서 다시
+        # sync_speed를 읽으면 이중 가속된다.
+        b.pop("sync_speed", None)
     return out
 
 
@@ -2291,6 +2332,7 @@ def _plan_signature(plan):
         for m in _beat_materials(b):
             parts.append("%s:%s:%s" % (m.get("video_id"), m.get("start"), m.get("end")))
         parts.append("t=%s" % b.get("target_seconds"))
+        parts.append("speed=%s" % b.get("sync_speed", 1.0))
         parts.append("|")
     return hashlib.sha1("".join(parts).encode("utf-8")).hexdigest()[:16]
 
