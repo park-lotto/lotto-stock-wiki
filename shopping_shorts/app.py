@@ -7214,7 +7214,7 @@ def api_mix_scene_lab_speed(job_id: str, beat_idx: int, body: dict,
                          video_path=None, error=None)
     voice = mix_pipeline.voice_for_beat(voice_base, beat)
     background_tasks.add_task(mix_pipeline.resynth_one_beat, job_id, beat_idx, voice,
-                              DB_PATH, _MIX_WORK_DIR)
+                              DB_PATH, _MIX_WORK_DIR, speed_only=True)
     return {"ok": True, "speed": wanted, "tts_ver": beat.get("tts_ver") or 0}
 
 

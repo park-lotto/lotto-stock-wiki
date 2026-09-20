@@ -3854,7 +3854,13 @@ def run_render(job_id, db_path, work_root):
             _refund_render_charge(store, job.get("customer_id", 0), "trial")
 
 
-def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
+def _speed_base_path(out):
+    """통합 배속을 바꿔도 다시 합성하지 않을 기준 음성 경로."""
+    out = Path(out)
+    return out.with_name(f"{out.stem}_speed_base{out.suffix}")
+
+
+def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root, *, speed_only=False):
     """비트 하나만 voice_override로 재합성해 같은 mp3에 덮어쓰고 자막을 재동기한다.
     최종 렌더는 재합성 없이 이 mp3(beat['tts_path'])를 재사용하므로 교정이 그대로 남는다."""
     store = Store(db_path)
@@ -3880,14 +3886,44 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
     # 이 mp3는 최종 렌더가 skip_existing으로 재사용하므로, 전역 발음교정을 여기서도
     # 적용해야 재합성한 비트만 교정이 빠지는 일이 없다(Task2 리뷰 Important).
     try:
-        synthesize_line(
-            beat["narration"], out, voice=voice_override, beat_role=beat.get("role"),
-            beat_index=i, beat_total=total,
-            previous_text=plan["beats"][i - 1]["narration"] if i > 0 else None,
-            next_text=plan["beats"][i + 1]["narration"] if i < total - 1 else None,
-            global_pron=pron_corrections.load(store), customer_id=_cid_of_job,
-        )
+        # ★통합 배속은 TTS 공급자에게 매번 새로 읽히지 않는다(2026-09-20 실사고).
+        # 1.4→0.8로 되돌렸는데도 억양·톤이 돌아오지 않은 원인은 같은 문장을 매번 새로
+        # 합성해 같은 mp3에 덮어쓴 것이었다. 공급자 seed를 고정해도 생성 결과는 완전히
+        # 같다는 보장이 없다. 기준 음성을 한 번만 보관하고 그 파일에 atempo만 적용해야
+        # 1.4→1.0이 정확히 원음으로 돌아오며, TTS 비용도 반복 발생하지 않는다.
+        try:
+            rel = float(beat.get("sync_speed") or 1.0)
+        except (TypeError, ValueError):
+            rel = 1.0
+        if not math.isfinite(rel) or rel <= 0:
+            rel = 1.0
+        base_voice = dict(voice_override or {})
+        if base_voice.get("speed") is not None:
+            try:
+                base_voice["speed"] = round(float(base_voice["speed"]) / rel, 4)
+            except (TypeError, ValueError):
+                pass
+        base = _speed_base_path(out)
+        # 대본·성우·톤 변경은 기준 음성을 새로 만든다. 배속만 바꿀 때는 기존 기준 음성을
+        # 그대로 써야 앞뒤로 움직여도 같은 발화가 유지된다.
+        if not speed_only or not base.exists():
+            synthesize_line(
+                beat["narration"], base, voice=base_voice, beat_role=beat.get("role"),
+                beat_index=i, beat_total=total,
+                previous_text=plan["beats"][i - 1]["narration"] if i > 0 else None,
+                next_text=plan["beats"][i + 1]["narration"] if i < total - 1 else None,
+                global_pron=pron_corrections.load(store), customer_id=_cid_of_job,
+            )
+        if abs(rel - 1.0) < 1e-3:
+            shutil.copyfile(base, out)
+        else:
+            made = audio_post.post_process(base, out, tempo=rel)
+            # ffmpeg 시간초과 때 post_process는 기준 파일 경로를 반환한다. 예전 배속본이
+            # out에 남아 있는 것보다는 기준음을 쓰는 편이 안전하다(다음 변경 때 재시도).
+            if Path(made) != out or not out.exists():
+                shutil.copyfile(base, out)
         beat["tts_path"] = str(out)
+        beat["tts_speed_base_path"] = str(base)
         beat["voice_override"] = voice_override
         beat["cap_durs"] = None
         # ★probe를 밖으로 뺐으니 예외를 흡수해야 한다 — 예전엔 words가 있을 때만 불렸다.
