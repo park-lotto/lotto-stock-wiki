@@ -6259,7 +6259,32 @@ def _pvproxy_dir(job_id: str) -> Path:
     return _MIX_WORK_DIR / job_id / "pvproxy"
 
 
-def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict) -> None:
+def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
+                   beat_lens: list = None, tts: dict = None) -> None:
+    """미리보기 합본을 굽는다 — **영상과 음성을 한 파일로**.
+
+    ★왜 한 파일인가 (2026-09-21 사장님 "이렇게 안 끝날 일이 아닌데")
+      편집 화면은 시계가 둘이었다 — 영상 한 벌, 음성 한 벌. 둘을 손으로 맞추다 보니
+      한쪽을 맞추면 다른 쪽이 어긋났고, 같은 자리에서 여섯 번 터졌다
+      (08-14 08-15 08-17 08-20 09-02 09-18). 고치는 방법만 매번 바뀌었다.
+      실측 2026-09-21: 되감으면 음성이 화면보다 +0.14~0.19초 앞섰다(13개 컷 전부).
+      mp3 는 요청한 자리에 못 앉고 뒤쪽 프레임 경계로만 앉기 때문인데, 이건 우리가
+      없앨 수 없는 오차다. **맞추는 걸 포기하고 애초에 하나로 만든다.**
+      한 파일이면 맞출 것이 없다 — 어긋남이 존재할 수 없다.
+
+    ★왜 720인가
+      소재 원본이 720x1280 이다(실측). 360 으로 줄이면 화질만 잃는 게 아니라
+      **줄이는 연산 때문에 더 느리다** — 실측 41초 분량: 360 은 5.08초, 720 은 4.11초.
+      화질을 떨어뜨리려고 시간을 더 쓰고 있었다.
+
+    ★왜 칸마다 길이를 맞추나
+      칸 음성 합 41.592초 vs 컷 dur 합 41.167초 = 0.425초 차이(실측). 그냥 이어붙이면
+      칸마다 조금씩 밀려 **뒤로 갈수록 쌓인다**. 그래서 칸의 마지막에 정지 프레임을
+      넣어 그 칸 음성 길이에 정확히 맞춘다 → 칸 경계가 음성과 같은 자리에 선다.
+
+    beat_lens = 칸마다 컷이 몇 개인지. tts = {칸번호: mp3 경로}. 둘 다 없으면
+    예전처럼 영상만 굽는다(폴백).
+    """
     import subprocess
     from concurrent.futures import ThreadPoolExecutor
     d = _pvproxy_dir(job_id)
@@ -6272,7 +6297,9 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict) -> None:
             dur = max(0.04, float(c["dur"]))
             out = tmp / f"{k:04d}.ts"
             src = srcs.get(c.get("video_id"))
-            vf = "scale=360:640:force_original_aspect_ratio=decrease,pad=360:640:(ow-iw)/2:(oh-ih)/2,fps=30,setsar=1"
+            PW, PH = 720, 1280       # 소재 원본과 같은 크기 — 줄이지 않으므로 화질 손실도 없고 더 빠르다
+            vf = (f"scale={PW}:{PH}:force_original_aspect_ratio=decrease,"
+                  f"pad={PW}:{PH}:(ow-iw)/2:(oh-ih)/2,fps=30,setsar=1")
             if src:
                 take = float(c.get("src_dur") or 0) or dur
                 take = min(take, dur)
@@ -6282,7 +6309,7 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict) -> None:
                 cmd = ["ffmpeg", "-y", "-v", "error", "-threads", "1",
                        "-ss", f"{float(c['start']):.3f}", "-t", f"{take:.3f}", "-i", str(src)]
             else:   # 소재가 없으면 검은 화면으로 자리만 채운다 — 빼면 뒤 컷이 음성보다 앞선다
-                cmd = ["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "color=black:s=360x640:r=30"]
+                cmd = ["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=black:s={PW}x{PH}:r=30"]
             cmd += ["-an", "-vf", vf, "-t", f"{dur:.3f}", "-c:v", "libx264",
                     "-preset", "ultrafast", "-crf", "30", "-pix_fmt", "yuv420p", str(out)]
             r = subprocess.run(cmd, capture_output=True, timeout=120)
@@ -6292,17 +6319,129 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict) -> None:
 
         with ThreadPoolExecutor(4) as ex:
             parts = list(ex.map(enc, enumerate(cuts)))
-        lst = tmp / "list.txt"
-        lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
-        final_tmp = d / f"_{sig}.mp4"
-        r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst),
-                            "-c", "copy", "-movflags", "+faststart", str(final_tmp)],
-                           capture_output=True, timeout=120)
+
+        def _clist(items, name):
+            f = tmp / name
+            f.write_text("".join("file '%s'" % Path(x).as_posix() + chr(10) for x in items),
+                         encoding="utf-8")
+            return f
+
+        # -- 칸 단위로 묶어 **그 칸 음성 길이에 정확히** 맞춘다 --------------------
+        #   안 맞추면 칸마다 조금씩 밀려 뒤로 갈수록 쌓인다(실측 6칸에 0.425초).
+        #   모자라는 몫은 그 칸 마지막 프레임을 세워 메운다 - 컷 단위로 이미 쓰는 기법이다.
+        segs, auds, cuts_off = parts, [], []
+        if beat_lens and tts:
+            segs, k = [], 0
+            for bi, n in enumerate(beat_lens):
+                mine = parts[k:k + n]
+                mine_cuts = cuts[k:k + n]          # 경계를 계산하려면 컷 길이가 필요하다
+                k += n
+                if not mine:
+                    continue
+                ap = tts.get(bi)
+                want = 0.0
+                if ap:
+                    pr = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                                         "-of", "csv=p=0", str(ap)], capture_output=True, timeout=30)
+                    try:
+                        want = float(pr.stdout.decode().strip())
+                    except ValueError:
+                        want = 0.0
+                bl = tmp / ("b%03d.ts" % bi)
+                blst = _clist(mine, "b%03d.txt" % bi)
+                # ★컷 경계마다 **되감을 수 있는 지점(키프레임)**을 박는다.
+                #   브라우저는 시크하면 가장 가까운 키프레임으로만 간다. 드문드문 있으면
+                #   컷으로 되감아도 그만큼 밀린다 — 실측 2026-09-21: 키프레임을 안 박았을 때
+                #   +0.36~0.43초 밀렸다(칸 시작에만 있었던 탓). 컷마다 박으면 컷으로 되감는
+                #   우리 동작이 **항상 정확히** 앉는다.
+                kf, acc = [], 0.0
+                for c in mine_cuts:
+                    kf.append("%.3f" % acc)
+                    acc += float(c.get("dur") or 0)
+                kfx = ["-force_key_frames", ",".join(kf)] if kf else []
+                if want > 0:
+                    r2 = subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+                                         "-i", str(blst),
+                                         "-vf", "tpad=stop_mode=clone:stop_duration=%.3f" % want,
+                                         "-t", "%.3f" % want, "-c:v", "libx264", "-preset", "ultrafast",
+                                         "-crf", "30", "-pix_fmt", "yuv420p"] + kfx +
+                                        ["-g", "30", "-keyint_min", "1", "-sc_threshold", "0", str(bl)],
+                                        capture_output=True, timeout=120)
+                else:
+                    r2 = subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+                                         "-i", str(blst), "-c:v", "libx264", "-preset", "ultrafast",
+                                         "-crf", "30", "-pix_fmt", "yuv420p"] + kfx +
+                                        ["-g", "30", "-keyint_min", "1", "-sc_threshold", "0", str(bl)],
+                                        capture_output=True, timeout=120)
+                if r2.returncode != 0 or not bl.exists():
+                    raise RuntimeError(r2.stderr.decode("utf-8", "ignore")[-300:])
+                segs.append(bl)
+                # ★칸 **안**의 컷 경계도 실제로 잰다 — 여기가 짐작으로 남아 있으면
+                #   화면이 "칸 끝"이라며 합본보다 먼저 멈춰 세우고, 합본은 그 자리에서
+                #   영영 안 끝난다(실측: 화면 5.52 vs 합본 5.60 → 전체 재생이 칸0에 멈춤).
+                co, cacc = [], 0.0
+                for one in mine:
+                    co.append(round(cacc, 3))
+                    pc = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                                         "-of", "csv=p=0", str(one)], capture_output=True, timeout=30)
+                    try: cacc += float(pc.stdout.decode().strip())
+                    except ValueError: cacc += float(mine_cuts[len(co) - 1].get("dur") or 0)
+                cuts_off.append(co)
+                # ★칸 음성을 **그 칸 영상 길이에 정확히** 맞춘다(뒤에 무음을 채운다).
+                #   영상은 프레임 단위(1/30초)로만 끊겨 칸마다 최대 0.033초씩 길어진다.
+                #   그대로 두면 칸이 넘어갈 때마다 쌓여 뒤로 갈수록 자막이 밀린다
+                #   (실측 6칸에 0.131초). 칸마다 같은 길이로 맞추면 누적이 0이 된다.
+                if ap:
+                    pv = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                                         "-of", "csv=p=0", str(bl)], capture_output=True, timeout=30)
+                    try:
+                        vlen = float(pv.stdout.decode().strip())
+                    except ValueError:
+                        vlen = want
+                    pad = tmp / ("a%03d.m4a" % bi)
+                    r3 = subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(ap),
+                                         "-af", "apad", "-t", "%.3f" % vlen,
+                                         "-c:a", "aac", "-b:a", "96k", str(pad)],
+                                        capture_output=True, timeout=120)
+                    auds.append(pad if (r3.returncode == 0 and pad.exists()) else ap)
+
+        lst = _clist(segs, "list.txt")
+        final_tmp = d / ("_%s.mp4" % sig)
+        # ★음성을 같이 넣는다 - 이게 시계를 하나로 만드는 한 줄이다.
+        #   음성이 별도 트랙이면 되감을 때마다 맞춰야 하고, mp3 는 요청한 자리에 못 앉아
+        #   늘 밀린다(실측 +0.16초, 13개 컷 전부). 한 파일이면 맞출 일 자체가 없다.
+        if auds and len(auds) == len(segs):
+            alst = _clist(auds, "alist.txt")
+            cmd2 = ["ffmpeg", "-y", "-v", "error",
+                    "-f", "concat", "-safe", "0", "-i", str(lst),
+                    "-f", "concat", "-safe", "0", "-i", str(alst),
+                    "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "96k",
+                    "-movflags", "+faststart", str(final_tmp)]
+        else:
+            cmd2 = ["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst),
+                    "-c", "copy", "-movflags", "+faststart", str(final_tmp)]
+        r = subprocess.run(cmd2, capture_output=True, timeout=180)
         if r.returncode != 0:
             raise RuntimeError(r.stderr.decode("utf-8", "ignore")[-300:])
-        final_tmp.replace(d / f"{sig}.mp4")
-        for old in d.glob("*.mp4"):          # 최신 한 벌만 남긴다
-            if old.name != f"{sig}.mp4":
+        # ★칸마다 **실제로** 어디서 시작하는지 적어 둔다 — 화면이 짐작하지 않게.
+        #   화면은 컷 길이를 더해 칸 시작을 짐작해 왔는데, 구워진 영상은 프레임 단위(1/30초)로
+        #   끊겨 칸마다 조금씩 다르다(실측 6칸에 0.147초 차이). 되감을 자리가 그만큼 어긋난다.
+        #   짐작을 없애고 잰 값을 준다.
+        try:
+            offs, acc = [], 0.0
+            for bl in segs:
+                offs.append(round(acc, 3))
+                pv = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                                     "-of", "csv=p=0", str(bl)], capture_output=True, timeout=30)
+                acc += float(pv.stdout.decode().strip())
+            (d / ("%s.json" % sig)).write_text(
+                json.dumps({"offs": offs, "dur": round(acc, 3), "cuts": cuts_off}),
+                encoding="utf-8")
+        except Exception as e:
+            print("[pvproxy] %s 칸 위치 기록 실패: %s" % (job_id, e))
+        final_tmp.replace(d / ("%s.mp4" % sig))
+        for old in list(d.glob("*.mp4")) + list(d.glob("*.json")):   # 최신 한 벌만 남긴다
+            if old.stem != sig:
                 old.unlink(missing_ok=True)
     except Exception as e:
         print(f"[pvproxy] {job_id} {sig} 실패: {e}")
@@ -6327,9 +6466,24 @@ def api_mix_preview_proxy(job_id: str, body: dict):
                  "src_dur": round(float(c.get("src_dur") or 0), 3)} for c in cuts]
     except (TypeError, ValueError):
         return JSONResponse(status_code=422, content={"ok": False, "error": "컷 형식 오류"})
-    sig = hashlib.sha1(json.dumps(norm, sort_keys=True).encode()).hexdigest()[:16]
+    # 칸마다 컷이 몇 개인지 — 칸 경계를 음성 길이에 맞추려면 서버가 알아야 한다.
+    blens = body.get("beat_lens") or []
+    try:
+        blens = [int(x) for x in blens]
+    except (TypeError, ValueError):
+        blens = []
+    if sum(blens) != len(norm):
+        blens = []                       # 안 맞으면 안 쓴다(예전처럼 영상만 굽는다)
+    # ★sig 에 v2 를 넣는다 — 안 그러면 음성 없는 **옛 합본**을 ready 로 보고 그대로 쓴다.
+    sig = hashlib.sha1(json.dumps([norm, blens, "v4cut"], sort_keys=True).encode()).hexdigest()[:16]
     if (_pvproxy_dir(job_id) / f"{sig}.mp4").exists():
-        return {"ok": True, "sig": sig, "state": "ready", "url": f"/api/mix/preview_proxy/{job_id}/{sig}.mp4"}
+        res = {"ok": True, "sig": sig, "state": "ready",
+               "url": f"/api/mix/preview_proxy/{job_id}/{sig}.mp4"}
+        try:    # 칸마다 실제로 어디서 시작하는지 — 화면이 짐작 대신 이걸 쓴다
+            res.update(json.loads((_pvproxy_dir(job_id) / f"{sig}.json").read_text(encoding="utf-8")))
+        except Exception:
+            pass
+        return res
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
@@ -6344,7 +6498,17 @@ def api_mix_preview_proxy(job_id: str, body: dict):
                 if v and Path(v).exists()}
     except Exception:
         srcs = {}
-    threading.Thread(target=_pvproxy_build, args=(job_id, sig, norm, srcs), daemon=True).start()
+    # 칸별 음성 — 합본에 같이 굽는다(시계를 하나로). 없으면 영상만 굽고 예전처럼 돈다.
+    tts = {}
+    try:
+        for b in (job.get("edit_plan") or {}).get("beats") or []:
+            tp = b.get("tts_path")
+            if tp and Path(tp).exists():
+                tts[int(b["beat_idx"])] = tp
+    except Exception:
+        tts = {}
+    threading.Thread(target=_pvproxy_build, args=(job_id, sig, norm, srcs, blens, tts),
+                     daemon=True).start()
     return {"ok": True, "sig": sig, "state": "building"}
 
 
