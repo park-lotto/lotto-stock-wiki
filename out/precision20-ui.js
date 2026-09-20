@@ -158,7 +158,7 @@
   // 고정형 20종 제목 배치 표준(2026-09-19 사장님): 원본마다 채널명과 제목 사이 빈칸이 5~12%씩 제각각이었다.
   //   이제 제목칸 높이(T)에 대한 같은 비율로 다시 놓는다 — 채널명 아래 곧바로 제목, 줄 간격·글자 크기도 T 비례.
   //   한 곳에서만 정한다(미리보기·최종 렌더 모두 이 함수를 거친다). 사용자가 −/＋로 키운 값은 그 뒤에 곱해진다.
-  const FIXED_TITLE={band:26,first:.33,pad:.06,line:.25,gap:.045,fontOfLine:.82};   // band=제목칸 높이(%), pad=자막 칸 앞 여백
+  const FIXED_TITLE={band:26,first:.33,pad:.06,line:.25,gap:.045,fontOfLine:.76};   // band=제목칸 높이(%), pad=자막 칸 앞 여백
   const fixedDrawLine=(line,frame)=>{
     if(mode!=='continuous'||line.bind==='caption')return line;
     const T=fixedLayoutFor(rows[current].id,frame).top/100*frame.height;
@@ -266,6 +266,7 @@
     fixed_s0446:{channel:'Pretendard',title:'BlackHanSans',caption:'Pretendard'},
     fixed_s0460:{channel:'Pretendard',title:'Jalnan2',caption:'Pretendard'},
   };
+  window.PRESET_FONTS=PRESET_FONTS;   // 검사 도구가 기대 글꼴을 여기서 읽는다(한 곳에서만 정한다)
   function fontSetFamily(bind){
     const set=FONT_SETS.find(f=>f.id===fontSet)||PRESET_FONTS[rows[current]?.id];if(!set)return '';
     return bind==='channel'?set.channel:bind==='caption'?set.caption:['hook1','hook2','bodyTitle'].includes(bind)?set.title:'';
