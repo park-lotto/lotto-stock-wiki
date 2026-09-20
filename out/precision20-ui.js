@@ -805,16 +805,17 @@
       const el=layer.querySelector('.precision-text[data-edit-bind="bodyTitle"]');
       if(el){
         // 채널명 아래 최소 1.2% 띄운다(원본 채널 위치가 6.3~11.1%로 제각각이라 붙거나 겹쳤다)
-        const chEl=layer.querySelector('.precision-text[data-edit-bind="channel"]');
-        const pvBox=preview.getBoundingClientRect();
-        const chMoved=textDrags.get(scaleKey('channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
-        const chBottom=chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0;
+        // 채널명 아래 최소 간격: 화면 실측 대신 템플릿 데이터의 채널 자리로 계산한다(실측은 다시 그릴 때마다 밀려 글자 크기가 흔들렸다)
+        const chBox=frame.channel_box||(frame.channel_boxes||[])[0];
+        const chLine=(frame.lines||[]).find(l=>l.bind==='channel');
+        const chBottom=chBox?(chBox.y+chBox.height)/frame.height*100:(chLine?chLine.y1/frame.height*100:0);
         const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
         const cutNow=titleHeight(frame);
-        const base=Math.max(STORY_BODY.cut*STORY_BODY.titleTop,chBottom+1.2);
+        // 09-19: 다시 그릴 때마다 채널명 실측값이 조금씩 밀려(재배치 누적) 제목 칸이 줄고 글자가 작아졌다 → 상한을 둔다
+        const base=Math.min(13,Math.max(STORY_BODY.cut*STORY_BODY.titleTop,chBottom+1.2));
         const top=Math.max(0,Math.min(95,base+drag.y));el.style.top=top+'%';   // 끌어 옮긴 만큼 반영(화면 안에서만)
         // 제목 칸은 자막 칸 직전까지 쓴다. 손으로 키워서 더 필요하면 자막 칸을 그만큼 내린다(09-19: 키워도 안 커지던 문제).
-        const room=Math.max(STORY_BODY.cut*STORY_BODY.titleH,cutNow-top-0.8);
+        const room=Math.max(STORY_BODY.cut*STORY_BODY.titleH,cutNow-base-0.8);   // 09-19: 끌어 옮겨도 칸 크기는 그대로 — 옮긴 자리(top)가 아니라 원래 자리(base) 기준
         el.style.height=room+'%';
         const key=layoutKey(p.id,frame),pvH=preview.clientHeight||1;
         const wantFont=parseFloat(el.dataset.wantFont||'0')||parseFloat(el.style.fontSize)||0;
