@@ -47,7 +47,7 @@
     // 고정형 자막칸 높이는 위시언니(6.5%) 하나로 통일(2026-09-18 사장님 "딱 이 사이즈로 다들 해줘야 비례가 맞지").
     //   실측: 20종 중 14종이 원본 측정값 상한 17.9%라 제목보다 자막칸이 두꺼웠다. 사용자가 저장한 높이는 그대로 우선.
     const measured=Math.max(5,Math.min(18,(band?.height||ln?.h||frame.height*.07)/frame.height*100));
-    return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:mode==='continuous'?6.5:measured};
+    return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:mode==='continuous'?6.5:(isStoryBody(frame)?STORY_BODY.capH:measured)};
   };
   // 고정형은 훅이 없다 — '훅 말자막 숨김'(이븐쇼핑 큰 제목용)이 첫 장면 자막까지 지우지 않게 항상 보인다(2026-09-18 실측: LAB 1/23 자막 없음).
   const captionVisible=()=>mode==='continuous'||sceneContext?.scenes?.[sceneIndex]?.caption_visible!==false;
@@ -59,6 +59,7 @@
   const titleHeight=frame=>{
     const original=(frame.video_from?.y||0)/frame.height*100,cut=captionSource(frame).cut/frame.height*100;
     const configured=fixedLayoutFor(rows[current].id,frame).top;
+    if(isStoryBody(frame)&&!fixedLayouts.get(layoutKey(rows[current].id,frame)))return STORY_BODY.cut;
     return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
   };
   const mediaBounds=(frame,presetId)=>{
@@ -158,8 +159,18 @@
   // 고정형 20종 제목 배치 표준(2026-09-19 사장님): 원본마다 채널명과 제목 사이 빈칸이 5~12%씩 제각각이었다.
   //   이제 제목칸 높이(T)에 대한 같은 비율로 다시 놓는다 — 채널명 아래 곧바로 제목, 줄 간격·글자 크기도 T 비례.
   //   한 곳에서만 정한다(미리보기·최종 렌더 모두 이 함수를 거친다). 사용자가 −/＋로 키운 값은 그 뒤에 곱해진다.
+  // 09-19 사장님: 썰쇼핑형 본문도 이븐쇼핑 비율로 통일(원본은 제목 시작 13~21%, 영상 시작 29~39%로 제각각이었다).
+  //   cut=자막 칸 시작(%), capH=자막 칸 높이(%), title=cut 대비 제목 위치·높이. 여기 한 곳에서만 정한다.
+  const STORY_BODY={cut:21,capH:10,titleTop:.52,titleH:.30,font:.76};
+  const isStoryBody=frame=>mode==='story'&&frame===rows[current]?.body;
   const WRAP3=['bodyTitle','caption'],CHANNEL_MAX=.045;   // 본문 제목·자막 3줄 허용 / 채널명 글자 크기 상한(화면 높이 대비)
   const FIXED_TITLE={band:26,first:.33,pad:.06,line:.25,gap:.045,fontOfLine:.76};   // band=제목칸 높이(%), pad=자막 칸 앞 여백
+  // 본문 제목은 자막 칸 시작(cut) 기준 같은 자리에 둔다
+  const storyBodyLine=(line,frame)=>{
+    if(!isStoryBody(frame)||line.bind!=='bodyTitle')return line;
+    const cut=titleHeight(frame)/100*frame.height,y0=cut*STORY_BODY.titleTop,h=cut*STORY_BODY.titleH;
+    return {...line,y0,y1:y0+h,h,font_size:h*STORY_BODY.font};
+  };
   const fixedDrawLine=(line,frame)=>{
     if(mode!=='continuous'||line.bind==='caption')return line;
     const T=fixedLayoutFor(rows[current].id,frame).top/100*frame.height;
@@ -623,7 +634,7 @@
     // 축소하거나 찌그러뜨리지 않고 templateViolations가 적용 전에 되돌려 보낸다.
     const lockedReference=rows[current]?.id==='t11'&&frame.reference_style&&!pickedFont;   // 09-19: 글꼴을 바꾸면 원본 크기 잠금을 풀어야 글자가 안 잘린다
     if(!lockedReference){
-      const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
+      const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${Math.round(el.clientWidth)}`   /* 09-19: 세로 위치(y0)는 글자 폭과 무관 — 칸을 올리고 내릴 때마다 다시 맞춰 크기가 0.5~1.5px 튀었다 */,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
       let useCache=cached&&chars<=cached.capacity;
       if(useCache){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}
         // 09-19: 기억해 둔 크기를 그대로 쓰면 글꼴이 바뀐 뒤 글자가 칸 밖으로 나갔다(본문 제목 좌우 잘림). 넘치면 캐시를 버리고 다시 맞춘다.
@@ -712,7 +723,7 @@
     lines.forEach((ln,i)=>{
       const key=ln.bind||(kind==='hook'?(i===0?'hook1':i===1?'hook2':'bodyTitle'):(i===0?'bodyTitle':'caption'));
       if(key==='caption'||!dirty.has(key))return;
-      const drawLine=fixedDrawLine(ln,frame),pt=drawLine.patch_top??2,pb=drawLine.patch_bottom??2;
+      const drawLine=storyBodyLine(fixedDrawLine(ln,frame),frame),pt=drawLine.patch_top??2,pb=drawLine.patch_bottom??2;
       const offset=(key==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(key);
       const lineBackground=fixedPaint?(key==='caption'?fixedPaint.bottom:fixedPaint.top):(drawLine.background||bg);
       if(!drawLine.no_patch){
@@ -781,6 +792,11 @@
           if(color){el.style.color=color;el.querySelectorAll('span').forEach(s=>s.style.color=color);}
         }else if(el.style.background&&paint.top)el.style.background=paint.top;
       }
+    }
+    // 09-19: 본문 제목은 20종 모두 같은 자리(자막 칸 시작 대비 비율). 위 배치 보정이 끝난 뒤 마지막에 자리를 잡는다.
+    if(isStoryBody(frame)){
+      const el=layer.querySelector('.precision-text[data-edit-bind="bodyTitle"]');
+      if(el){el.style.top=(STORY_BODY.cut*STORY_BODY.titleTop)+'%';el.style.height=(STORY_BODY.cut*STORY_BODY.titleH)+'%';}
     }
   }
   // 고정형 자막칸 디자인(2026-09-18 사장님 "이븐쇼핑 흰 띠처럼 그라데이션 있게, 다 똑같으면 밋밋하니 다르게").
