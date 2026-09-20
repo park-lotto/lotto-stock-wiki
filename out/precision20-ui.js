@@ -811,7 +811,9 @@
           const t=layer.querySelector(`.precision-text[data-edit-bind="${bind}"]`);if(!t)continue;
           const h=t.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
           const cur=parseFloat(t.style.top)||0;
-          if(cur<floor)t.style.top=Math.min(96,floor)+'%';
+          // 09-19: 자막 칸을 넘어가지 않게 — 제목은 자막 칸 시작 전까지만 내린다
+          const limit=Math.max(0,titleHeight(frame)-h-0.6);
+          if(cur<floor)t.style.top=Math.min(96,Math.min(floor,limit))+'%';
           floor=Math.max(floor,(parseFloat(t.style.top)||0)+h*0.9);
         }
       }
@@ -881,7 +883,10 @@
         const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
         const cutNow=titleHeight(frame);   // 상단 칸을 조절하면 그 칸 기준으로 다시 배치
         const base=Math.max(cutNow*STORY_BODY.titleTop,chBottom+1.2);
-        const top=Math.max(0,Math.min(95,base+drag.y));el.style.top=top+'%';   // 끌어 옮긴 만큼 반영(화면 안에서만)
+        // 09-19: 제목은 자막 칸을 넘지 않는다(채널명 칸을 많이 내려도 자막 위로 올라타지 않게)
+        const elH=el.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
+        const ceiling=Math.max(0,cutNow-Math.max(elH,STORY_BODY.cut*STORY_BODY.titleH)-0.6);
+        const top=Math.max(0,Math.min(95,Math.min(base,ceiling)+drag.y));el.style.top=top+'%';   // 끌어 옮긴 만큼 반영(화면 안에서만)
         // 자막 칸을 덮지 않는 선까지만 칸을 키운다(3줄 허용). 글자를 손으로 키웠어도 칸을 넘으면 줄인다 — 넘치면 자막·영상을 가린다.
         el.style.height=Math.max(STORY_BODY.cut*STORY_BODY.titleH,cutNow-top-0.8)+'%';   // 09-19: 자막 칸 직전까지 제목 칸으로 쓴다(키운 글자가 도로 줄던 문제)
         let size=parseFloat(el.style.fontSize)||0;
@@ -1051,7 +1056,9 @@
     if(currentLayout.top+currentLayout.bottom>70)currentLayout[key]=70-currentLayout[key==='top'?'bottom':'top'];
     if(key==='caption'&&currentLayout.caption>0)captionLayouts.set(captionKey(),{...captionSettings(),h:currentLayout.caption});
     // 09-19: 채널명 칸을 키우면 제목이 들어갈 자리가 없어 뭉쳤다 → 두 칸이 최소 7% 떨어지게 서로 민다
-    if(key==='channel'&&currentLayout.top<currentLayout.channel+7)currentLayout.top=Math.min(50,currentLayout.channel+7);
+    // 09-19 사장님: 채널명 칸을 내려도 영상 시작은 그대로 둔다 → 상단 제목칸을 자동으로 늘리지 않는다.
+    //   대신 제목이 채널명과 겹치면 제목만 아래로 밀고(아래 코드), 칸을 더 못 내리게 한계를 둔다.
+    if(key==='channel')currentLayout.channel=Math.min(currentLayout.channel,Math.max(0,currentLayout.top-8));   // 제목 자리(약 6.3%)+여백을 남긴다
     if(key==='top'&&currentLayout.channel>currentLayout.top-7)currentLayout.channel=Math.max(0,currentLayout.top-7);
     fixedLayouts.set(layoutKey(p.id,frame),currentLayout);fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
   };
