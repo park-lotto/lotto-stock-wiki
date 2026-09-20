@@ -13439,20 +13439,23 @@ function cleanGo(si,pos,ci){
 var CLEAN_IN_USE = true;          // 서버 상태(clean_in_use)로 매번 덮어쓴다
 
 function cleanUseHtml(){
+  // ★버튼 이름에 **'자막제거 취소'**를 그대로 쓴다(2026-09-20 사장님 "원본으로 다시
+  //   지우기 눌르는게 취소맞아?"). '원본 영상으로 되돌리기'는 무슨 일이 일어나는지는
+  //   맞지만, 사장님·고객이 머릿속에서 부르는 이름은 '취소'다. 이름이 다르면 매번 묻는다.
   if(CLEAN_IN_USE){
     return '<div class="hint" style="text-align:center;margin-top:12px">'
-      + '지운 결과가 마음에 안 드시면 원본 영상으로 되돌릴 수 있어요. <b>비용은 들지 않습니다.</b>'
+      + '지운 결과가 마음에 안 드시면 <b>취소</b>하고 원본을 그대로 쓸 수 있어요. <b>비용은 들지 않습니다.</b>'
       + '</div>'
       + '<button class="cp-redo" onclick="setCleanUse(false,this)" '
-      + 'style="background:#2a2f38;border-color:#7d8794">↩ 원본 영상으로 되돌리기</button>';
+      + 'style="background:#2a2f38;border-color:#7d8794">↩ 자막제거 취소 — 원본 그대로 쓰기</button>';
   }
-  // 되돌린 상태 — 지금 무엇이 쓰이는지 분명히 말하고, 되살리는 길을 같이 준다.
+  // 취소한 상태 — 지금 무엇이 쓰이는지 분명히 말하고, 되돌리는 길을 같이 준다.
   return '<div class="hint" style="text-align:center;margin-top:12px;'
     + 'background:var(--ok-soft,#123);border-radius:12px;padding:12px">'
-    + '↩ <b>원본 영상을 쓰고 있습니다</b> — 자막이 그대로 나갑니다.'
+    + '↩ <b>자막제거를 취소했습니다</b> — 원본 영상이 그대로 나갑니다(자막 있음).'
     + '<br><span style="opacity:.85">지운 결과는 지워지지 않고 남아 있어요.</span>'
     + '</div>'
-    + '<button class="cp-redo" onclick="setCleanUse(true,this)">✓ 자막 지운 영상으로 다시 쓰기</button>';
+    + '<button class="cp-redo" onclick="setCleanUse(true,this)">✓ 취소 되돌리기 — 자막 지운 영상 쓰기</button>';
 }
 
 async function setCleanUse(use, btn){
@@ -13515,11 +13518,11 @@ function renderCleanReady(job){
   //   "뭘 꼭 해야 하는 것"으로 읽고 돈 나가는 버튼을 눌렀다. 사실 **아무것도 안 해도 된다**
   //   — 최종 렌더가 알아서 지금 장면으로 다시 지운다. 남길 가치가 있는 정보는 '그때 돈이
   //   나간다'는 것 하나뿐이라 그것만 담담하게 적는다(원본으로 되돌리면 그것도 안 나간다).
-  const staleNote = (CLEAN_STALE && CLEAN_IN_USE)
-    ? '<div class="hint" style="text-align:center;opacity:.8">'
-      + '장면을 바꾸셨네요 — 최종 렌더 때 <b>지금 장면으로 다시 지웁니다</b>(크레딧은 그때 나갑니다).'
-      + '</div>'
-    : '';
+  // ★장면 바뀜 안내는 **통째로 없앴다**(2026-09-20 사장님 "이런건 빼라고 의미없고 /
+  //   성공했는지만 표시"). 고객이 할 일이 없는 일을 알리면 '뭘 해야 하나' 하고 멈춘다.
+  //   렌더가 알아서 다시 지우고, 원본으로 되돌리면 그마저 안 한다 — 어느 쪽이든 고객이
+  //   지금 눌러야 할 것은 없다. 화면은 **성공했는지**만 말한다.
+  const staleNote = '';
   // ★되돌린 상태는 **그림에도** 보여야 한다(2026-09-20 사장님 "원본으로 눌렀는데 바뀌는게 없어").
   //   버튼만 바뀌고 BEFORE/AFTER가 그대로라, 되돌렸는데도 '자막 제거됨'에 체크가 살아 있어
   //   아무 일도 안 일어난 것처럼 보였다. 지금 쓰는 쪽에 체크를 옮기고, 안 쓰는 쪽은 흐린다.

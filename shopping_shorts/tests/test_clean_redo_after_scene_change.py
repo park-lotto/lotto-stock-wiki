@@ -127,20 +127,18 @@ def test_server_fields_are_read_into_the_page():
     assert "sg.clean_credit_est" in _HTML
 
 
-def test_stale_note_is_quiet_and_only_warns_about_cost():
-    """★2026-09-20 사장님: "이런건 헷갈리니까 없애".
+def test_stale_note_is_gone_entirely():
+    """★2026-09-20 사장님: "이런건 빼라고 의미없고 / 성공했는지만 표시".
 
-    예전 이 자리는 '지금 장면으로 다시 지워야 합니다' + 빨간 재청소 버튼이었다. 고객은
-    그걸 **꼭 해야 하는 일**로 읽고 돈 나가는 버튼을 눌렀다 — 사실은 아무것도 안 해도
-    최종 렌더가 알아서 다시 지운다. 그래서 지시·버튼을 걷어내고 **돈 얘기 한 줄**만 남긴다.
+    이 자리는 두 번 줄었다. ①'지금 장면으로 다시 지워야 합니다' + 빨간 재청소 버튼 →
+    ②'렌더 때 다시 지웁니다(크레딧)' 한 줄 → ③**없음**. 고객이 **할 일이 없는 일**을
+    알리면 '뭘 해야 하나' 하고 멈출 뿐이다. 화면은 성공했는지만 말한다.
     """
     i = _HTML.index("const staleNote")
-    block = _HTML[i:i + 900]
-    assert "크레딧은 그때 나갑니다" in block         # 남겨야 할 단 하나: 돈
-    assert "다시 지워야 합니다" not in block         # 지시하지 않는다
-    assert "redoCleanForNewScenes()" not in block   # 돈 나가는 버튼을 여기 두지 않는다
-    # 되돌린 상태에서는 아예 안 뜬다 — 그땐 렌더가 청소를 안 하므로 돈도 안 나간다.
-    assert "CLEAN_IN_USE" in block
+    block = _HTML[i:i + 400]
+    assert "const staleNote = '';" in block
+    assert "다시 지워야 합니다" not in block
+    assert "크레딧은 그때 나갑니다" not in block
 
 
 def test_compare_shows_which_side_is_actually_used():
