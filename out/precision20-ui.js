@@ -179,14 +179,17 @@
     const order=['hook1','hook2','bodyTitle'].indexOf(line.bind);
     if(order<0||!T){   // 채널명 등 제목이 아닌 줄은 예전처럼 칸 높이에 맞춰 비례 이동
       const baseTop=(frame.video_from?.y||frame.height*.25),ratio=T/baseTop;
-      return {...line,y0:line.y0*ratio,y1:line.y1*ratio,h:line.h*ratio,font_size:(line.font_size||line.h)*Math.min(1.18,Math.max(.82,ratio))};
+      // 09-19 사장님 '비율로 글자 크기 줄이지 마라' — 자리만 옮기고 글자 크기는 원본 그대로 둔다
+      return {...line,y0:line.y0*ratio,y1:line.y1*ratio,h:line.h*ratio,font_size:line.font_size||line.h};
     }
     // 제목 줄 수에 맞춰 칸 안에 들어가게 계산한다(3줄짜리가 자막 칸을 덮던 것)
     const count=Math.max(1,(frame.lines||[]).filter(l=>['hook1','hook2','bodyTitle'].includes(l.bind)).length);
     const pad=FIXED_TITLE.pad+Math.max(0,count-2)*.05;   // 줄이 많을수록 자막 칸 앞 여백을 더 둔다(3줄에서 1%까지 붙었다)
     const room=1-FIXED_TITLE.first-pad,lineH=Math.min(FIXED_TITLE.line,(room-FIXED_TITLE.gap*(count-1))/count);
     const y0=T*(FIXED_TITLE.first+order*(lineH+FIXED_TITLE.gap)),h=T*lineH;
-    return {...line,y0,y1:y0+h,h,font_size:T*lineH*FIXED_TITLE.fontOfLine};
+    // 글자 크기는 기준 칸(FIXED_TITLE.band)으로 고정 — 칸을 올리고 내려도 글자는 그대로(사장님 09-18·09-19)
+    const baseBand=FIXED_TITLE.band/100*frame.height;
+    return {...line,y0,y1:y0+h,h,font_size:baseBand*lineH*FIXED_TITLE.fontOfLine};
   };
   const currentDirty=()=>dirtyFields.get(dirtyKey())||new Set();
   const markDirty=bind=>{
