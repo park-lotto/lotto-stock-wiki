@@ -1148,6 +1148,23 @@ function showVid(v){
   v.style.display = 'block';
   curVid = v;
 }
+
+// ★되감기 때 '다음다음 컷'이 스치는 것을 막는 두 조각(2026-09-20, seekTo가 쓴다).
+//   판정을 seeking 플래그가 아니라 **값**으로 한다 — 플래그는 브라우저마다 세우는 시점이
+//   다르지만, currentTime이 목표에 닿았는지는 어디서나 같은 사실이다.
+const _SEEK_EPS = 0.05;          // 이 안쪽이면 그 자리에 왔다고 본다(프레임 한두 장)
+let _hidePin = null;             // 가려둔 재생기 {v, go, timer} — 한 번에 하나뿐이다
+
+function _seekSettled(v, want){
+  return !v.seeking && Math.abs((v.currentTime || 0) - want) <= _SEEK_EPS;
+}
+
+function _unhidePinned(){
+  if (!_hidePin) return;
+  try { _hidePin.v.onseeked = null; clearTimeout(_hidePin.timer); _hidePin.v.style.visibility = ''; }
+  catch (e) { /* 재생기가 이미 사라졌으면 할 일이 없다 */ }
+  _hidePin = null;
+}
 const vid = () => curVid || document.getElementById('vid');
 // 페이지가 열리면 소스들을 미리 열어 둔다(첫 전환도 매끄럽게).
 // 페이지가 열리면 소스들의 **머리말(metadata)만** 미리 받아 둔다 — 본문은 안 당긴다.
@@ -1161,6 +1178,7 @@ function warmVideos(){
 
 function stopPlay(){
   clearTimeout(seqTimer); seqTimer = null; seq = [];
+  _unhidePinned();      // 가려둔 재생기를 되돌린다 — 안 하면 멈춘 화면이 빈 채로 남는다
   clearSfxTimers();                              // 예약된 효과음도 끈다 — 안 끄면 멈춘 뒤에 울린다
   if (sfxAudio) { try{ sfxAudio.pause(); }catch(e){} }
   playKey = null; seqPaused = false;
@@ -1648,14 +1666,34 @@ function seekTo(t){
   //   "1번↔2번 왔다갔다하면 3번 장면이 낀다"). 컷2에 있을 때 컷1 재생기(슬롯0)는 seat()가
   //   컷3 시작점에 미리 앉혀 둔 상태다. 여기서 바로 showVid하면 시크가 끝나기 전 그 재생기의
   //   현재 프레임 = **컷3 장면**이 먼저 보인다(라이브 실측 job 1939bd7f3c50: s5:0이 17.16초
-  //   =컷3에 있다가 0.3초로 시크, seeking 동안 노출). 시크 중엔 지금 보이는 재생기(직전 자리)를
-  //   그대로 두고, seeked 때 바꾼다. 같은 재생기면 프레임이 제자리에서 바뀌므로 종전과 같다.
-  //   안전핀 400ms: 이벤트를 놓쳐도 그 안에 반드시 바꾼다(느린 회선에선 종전 동작으로 수렴).
-  if (v !== curVid && v.seeking){
+  //   =컷3에 있다가 0.3초로 시크, seeking 동안 노출).
+  //
+  // ★2026-09-20 보강 — 9/18 수정에 구멍이 둘 있었다(전 회원 실측: 최근 14일 1,068건 중
+  //   872건(82%)·58명 중 56명에게 이 구조가 있다. 즉 놓치면 거의 모두가 겪는다).
+  //     ① `v.seeking`으로만 판정했다 — currentTime을 막 넣은 직후라도 브라우저가 아직
+  //        seeking을 세우지 않은 창이 있다. 그 틈에 else로 빠져 **옛 프레임이 그대로** 나갔다.
+  //        → 플래그 대신 **실제 시각이 목표에 닿았는지**로 판정한다(값이 사실이다).
+  //     ② 안전핀(400ms)이 터지면 그냥 showVid를 했다 — 느린 PC·큰 영상에서 시크가 400ms를
+  //        넘으면 **고치려던 그 프레임(컷N+2)을 그대로 보여준다.** 안전핀이 증상을 되살렸다.
+  //        → 못 기다릴 땐 **가린 채로** 넘긴다. 잠깐 빈 화면이 엉뚱한 장면보다 낫다.
+  //   같은 재생기면 프레임이 제자리에서 바뀌므로 종전과 같다.
+  const _want = v.currentTime;
+  _unhidePinned();                     // 앞선 전환이 숨겨둔 재생기가 있으면 먼저 되돌린다
+  if (v !== curVid && !_seekSettled(v, _want)){
+    // 가린 채 전환 → 준비되면 드러낸다. 엉뚱한 프레임은 어떤 경우에도 안 보인다.
+    v.style.visibility = 'hidden';
+    showVid(v);
     let done = false;
-    const go = () => { if (done) return; done = true; v.onseeked = null; showVid(v); };
+    const go = () => {
+      if (done) return;
+      done = true;
+      v.onseeked = null;
+      clearTimeout(_hidePin && _hidePin.timer);
+      v.style.visibility = '';
+      _hidePin = null;
+    };
     v.onseeked = go;
-    setTimeout(go, 400);
+    _hidePin = { v: v, go: go, timer: setTimeout(go, 1500) };
   } else {
     showVid(v);
   }
