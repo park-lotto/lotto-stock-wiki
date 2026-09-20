@@ -317,7 +317,7 @@
   function syncMediaLayout(){
     if(noTemplate){Object.assign(media.style,{top:'0%',height:'100%'});return;}
     const p=rows[current],frame=frameFor(p),bounds=mediaBounds(frame,p?.id);
-    Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
+    Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});media.dataset.baseTop=String(bounds.top);   // 09-19: 그림을 내려도 영상은 이 자리를 지킨다
   }
   function syncFixedPanel(){
     fixedPanel.hidden=false;
@@ -795,6 +795,8 @@
       const bandPct=band&&band.h?band.y1/band.h*100:0;
       const shift=saved>0&&bandPct>0?Math.max(0,saved-bandPct):0;
       base.style.top=shift+'%';
+      // 그림을 내리면 훅에서는 영상도 따라 내려갔다 → 영상 자리를 그만큼 되올려 시작점을 고정한다
+      if(media&&media.dataset.baseTop!=null){const bt=Number(media.dataset.baseTop)||0;media.style.top=(bt-shift)+'%';}
       preview.style.backgroundColor=shift>0?(band?.color||fixedColorsFor(p.id,frame).top||'#000000'):'';
       if(saved>0&&chEl0){
         const h=chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
@@ -953,7 +955,7 @@
     else if(mode!=='continuous'&&sceneIndex===0)sceneIndex=1;
     const p=rows[current],source=imageFor(p);
     base.src=source;
-    const frame=frameFor(p),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
+    const frame=frameFor(p),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});media.dataset.baseTop=String(bounds.top);   // 09-19: 그림을 내려도 영상은 이 자리를 지킨다
     preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     preview.classList.toggle('is-continuous',mode==='continuous');
     const seg=root.querySelector('.layout-a .seg');if(seg)seg.hidden=mode==='continuous';
@@ -968,7 +970,7 @@
       inputs.caption.value=sceneIndex>0?(rows[current].sample.caption||'이런 방법이 있었네요'):'';
     }
     const p=rows[current],source=imageFor(p,sceneIndex);
-    base.src=source;const frame=frameFor(p,sceneIndex),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
+    base.src=source;const frame=frameFor(p,sceneIndex),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});media.dataset.baseTop=String(bounds.top);   // 09-19: 그림을 내려도 영상은 이 자리를 지킨다preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
     syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);requestAnimationFrame(()=>runCaptionEnter());   // 09-19: [다음]으로 넘길 때도 본문 모션이 돈다(전엔 showFrame에만 있었다)
   }
@@ -1049,6 +1051,7 @@
     if(speed){hookMotionSpeed=Number(speed.dataset.hookSpeed);motionPanel.querySelectorAll('[data-hook-speed]').forEach(button=>button.classList.toggle('active',button===speed));runHookMotion();return}
   });
   const applyFixedSize=(key,rawValue)=>{
+    const mediaBefore=mediaBounds(frameFor(rows[current]),rows[current].id).top;   // 09-19: 채널명 칸을 바꿔도 영상 시작은 그대로 두려고 먼저 재 둔다
     const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame),titleOnly:true};
     const RANGE={top:[mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame),50],bottom:[0,35],channel:[0,20],caption:[4,24]};
     const [min,max]=RANGE[key]||[0,35];
@@ -1060,7 +1063,12 @@
     //   대신 제목이 채널명과 겹치면 제목만 아래로 밀고(아래 코드), 칸을 더 못 내리게 한계를 둔다.
     if(key==='channel')currentLayout.channel=Math.min(currentLayout.channel,Math.max(0,currentLayout.top-8));   // 제목 자리(약 6.3%)+여백을 남긴다
     if(key==='top'&&currentLayout.channel>currentLayout.top-7)currentLayout.channel=Math.max(0,currentLayout.top-7);
-    fixedLayouts.set(layoutKey(p.id,frame),currentLayout);fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
+    fixedLayouts.set(layoutKey(p.id,frame),currentLayout);
+    if(key==='channel'){   // 훅에서 칸 계산이 반올림되며 영상이 1%쯤 밀리던 것 보정
+      const after=mediaBounds(frame,p.id).top,gap=after-mediaBefore;
+      if(Math.abs(gap)>0.05){currentLayout.top=currentLayout.top-gap;fixedLayouts.set(layoutKey(p.id,frame),currentLayout);}
+    }
+    fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
   };
   fixedPanel.addEventListener('input',event=>{
     const range=event.target.closest('[data-fixed-range]');
