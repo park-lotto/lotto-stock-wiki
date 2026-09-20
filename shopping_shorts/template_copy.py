@@ -100,10 +100,17 @@ def scene_text(headcopy: object) -> dict[str, str]:
     hook1, hook2 = split_hook(source.get("text"))
     # 2026-09-21 사장님: 보조 문구가 없으면 비워 둔다 — 제목을 그대로 복사해 훅에 같은 글이 두 번 나왔다.
     support = _one_line(source.get("subline"))
-    # ★본문 제목은 **큰 제목**을 쓴다 — 서브카피로 대체하지 않는다(2026-09-21).
-    #   종전엔 `or support`가 끼어 있어, 훅 서브카피를 채우는 순간 본문 상단 제목까지
-    #   그 한 줄로 바뀌었다. 훅 서브띠와 본문 제목은 서로 다른 슬롯이다.
-    body_title = _one_line(source.get("body_title")) or _one_line(f"{hook1} {hook2}")   # 본문 제목은 비면 제목을 쓴다
+    # ★사람이 넣은 서브카피(subline)는 종전대로 **본문 제목까지 몬다**
+    #   (test_support_copy_drives_hook_band_and_body_title이 지키는 계약).
+    # ★반면 대본에서 **자동으로 채운** 서브카피(subline_auto)는 훅 띠만 채우고 본문 제목은
+    #   건드리지 않는다(2026-09-21). 자동 채움이 본문 상단 제목까지 대본 한 구절로 바꿔
+    #   버리면, 사장님이 보던 본문 화면이 통째로 달라진다.
+    auto_support = _one_line(source.get("subline_auto"))
+    if not support:
+        support = auto_support
+    body_title = (_one_line(source.get("body_title"))
+                  or _one_line(source.get("subline"))
+                  or _one_line(f"{hook1} {hook2}"))   # 본문 제목은 비면 제목을 쓴다
     return {
         "hook1": hook1,
         "hook2": hook2,
