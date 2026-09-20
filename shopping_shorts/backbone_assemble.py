@@ -198,6 +198,103 @@ _LINES_SCHEMA = {
 }
 
 
+_LIVE_WITH = ("남편", "아내", "와이프", "신랑", "여보", "우리 애", "우리 아기", "저희 아기")
+_VISIT = re.compile(r"(놀러\s*(왔|오|가)|집에\s*(왔|오)셨)")
+_GIFT = re.compile(r"(사드렸|선물|하나 더 (주문|사)|것도 하나)")
+_CAST_SCHEMA = {"type": "object", "properties": {"issues": {"type": "array", "items": {"type": "string"}}},
+                "required": ["issues"]}
+
+
+def _cast_check(lines, product):
+    """쓰고 나서 인물·상황이 말이 되는지 본다 (2026-09-20 사장님 지적: 남편이 '집에 놀러왔다',
+    아기 인형을 시어머니에게 '선물'). 원문의 인물 관계를 글자대로 옮기면 새 상황과 어긋난다."""
+    text = "\n".join(l.get("text") or "" for l in lines)
+    bad = []
+    for w in _LIVE_WITH:
+        if w in text and _VISIT.search(text):
+            seg = [l["text"] for l in lines if w in (l.get("text") or "") and _VISIT.search(l.get("text") or "")]
+            if seg:
+                bad.append("같이 사는 사람(%s)에게 '놀러 왔다'는 말이 안 된다: %s" % (w, seg[0][:40]))
+    out = _sg._call_json(
+        "아래는 %s 광고 대본이다. **인물·상황이 말이 되는지만** 본다. 어색한 곳을 짧게 적어라(없으면 빈 배열).\n"
+        "보는 것: 화자가 끝까지 같은 사람인가 / 같이 사는 사람에게 '놀러 왔다'처럼 안 맞는 말이 없나 / "
+        "그 물건을 실제로 쓰는 사람이 아닌 사람에게 사주거나 선물하지 않나 / 앞뒤 인과가 이어지나.\n\n%s"
+        % (product, text), _CAST_SCHEMA) or {}
+    return bad + [str(x) for x in (out.get("issues") or [])][:4]
+
+
+_ORIGIN_SCHEMA = {"type": "object", "properties": {"lines": {"type": "array", "items": {"type": "object", "properties": {
+    "role": {"type": "string"}, "text": {"type": "string"}, "group": {"type": "integer"}},
+    "required": ["role", "text", "group"]}}}, "required": ["lines"]}
+_DUP = re.compile(r"(\S.{3,}?[.!?]?)\s*\1")
+
+
+def _dedup(t):
+    prev = None
+    while prev != t:
+        prev, t = t, _DUP.sub(r"\1", t)
+    return t.strip()
+
+
+def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds=25, note=None):
+    """원문형 스파인: 히트작 원문 한 편을 칸째 보여주고 **제품 이야기만** 바꿔 쓴다.
+
+    - 칸 수·순서·말투·연결어는 원문 그대로. 훅은 원문 글자 고정(빈칸만 교체).
+    - 원문이 끝을 끊고 첫 문장으로 잇는 꼴이면(반복재생) 새 대본도 똑같이 끊는다.
+    - 재료(씨앗) 대사를 베끼지 않는다 — 베끼면 원본과 같은 영상이 된다(09-18 사장님 기준).
+    """
+    cells = [c for c in (origin.get("cells") or []) if (c.get("text") or "").strip()]
+    tpl_text = "\n".join("[%s] %s" % (c.get("role") or "", _dedup(c["text"])) for c in cells)
+    feats = []
+    for k, gi in enumerate(groups_out["order"]):
+        g = groups_out["groups"][gi]
+        desc = " / ".join(seg_index.get(c, {}).get("desc", "")[:50] for c in (g.get("cuts") or [])[:2] if c in seg_index)
+        feats.append("  %d. [%d] %s — %s (화면: %s)" % (k + 1, gi, g.get("name"), g.get("claim"), desc))
+    hook_tpl = (origin.get("hook_tpl") or "").strip()
+    hook_rule = ("- ★첫 줄(훅)은 이 틀의 글자를 한 글자도 바꾸지 말고 {}빈칸만 바꿔라: %s\n" % hook_tpl) if hook_tpl else ""
+    last = _dedup(cells[-1]["text"]) if cells else ""
+    loop_rule = ("- ★원문은 마지막을 끝맺지 않고 끊어 첫 장면으로 잇는다(반복 재생). 새 대본도 똑같이 끊어라.\n"
+                 if last and not re.search(r"[.!?요다임]\s*$", last) else "")
+    prompt = (
+        "아래 [원문]은 조회수 %s회가 나온 쇼핑 숏폼 대본이다. 이걸 틀로 삼아 [이 제품]의 대본을 써라.\n\n"
+        "규칙\n%s%s"
+        "- 칸 수와 순서를 원문과 똑같이. 칸마다 원문의 **말투·어미·연결어·문장 길이**를 그대로 살려라.\n"
+        "- 제품 이야기(이름·효능·동작·불편·숫자)는 **아래 특징에 있는 것만** 쓴다. 원문의 원래 제품 이야기는 한 조각도 남기지 마라.\n"
+        "- 인물·장소·반응은 이 제품에 맞게 바꿔도 된다. 단 대본 전체에서 인물은 한 사람으로 이어져야 한다.\n"
+        "- 특징에 없는 수치·출처·수상·판매량을 지어내지 마라. 같은 문장을 두 번 쓰지 마라.\n"
+        "- 원문과 특징 설명의 문장을 **베끼지 마라**. 사실만 가져오고 문장은 원문 말투로 새로 써라.\n"
+        "- 줄마다 role(원문 칸 이름), group(그 줄이 말하는 특징 번호, 훅·마무리는 -1).\n\n"
+        "[원문]\n%s\n\n[이 제품] %s\n%s" % (origin.get("views") or 0, hook_rule, loop_rule,
+                                          tpl_text, groups_out.get("product") or "", "\n".join(feats)))
+    cast_rule = ("- ★인물 관계를 원문 그대로 베끼지 말고 **이 제품 상황에 맞게 다시 정하라**: 같이 사는 사람은 '놀러 오지' 않는다, "
+                 "그 물건을 실제로 쓰는 사람에게만 사주거나 선물한다, 화자는 끝까지 같은 사람이다.\n")
+    prompt = prompt.replace("- 줄마다 role", cast_rule + "- 줄마다 role")
+    out = _sg._call_json(prompt, _ORIGIN_SCHEMA, note=note) or {}
+    raw_last = ((out.get("lines") or [{}])[-1].get("text") or "").strip()
+    lines = _clean_lines(out)
+    for l in lines:
+        l["text"] = _dedup(l.get("text") or "")
+    # ★반복 재생 끝은 마침표를 붙이면 안 된다 — _clean_lines가 모든 줄에 마침표를 강제하므로 여기서 되돌린다
+    if lines and loop_rule and not re.search(r"[.!?]\s*$", raw_last):
+        lines[-1]["text"] = lines[-1]["text"].rstrip(".")
+    # ★인물·상황 검사 — 걸리면 무엇이 어색한지 붙여 한 번 다시 쓴다(고쳐도 남으면 note에 남긴다)
+    issues = _cast_check(lines, groups_out.get("product") or "")
+    if issues:
+        p2 = prompt + "\n\n[고칠 점] 앞서 쓴 대본에서 이런 게 어색했다. 같은 실수를 하지 마라:\n- " + "\n- ".join(issues)
+        out2 = _sg._call_json(p2, _ORIGIN_SCHEMA, note=note) or {}
+        l2 = _clean_lines(out2)
+        if l2:
+            for l in l2:
+                l["text"] = _dedup(l.get("text") or "")
+            if loop_rule and not re.search(r"[.!?]\s*$", ((out2.get("lines") or [{}])[-1].get("text") or "").strip()):
+                l2[-1]["text"] = l2[-1]["text"].rstrip(".")
+            left = _cast_check(l2, groups_out.get("product") or "")
+            if note is not None:
+                note["cast_fixed"] = {"before": issues, "after": left}
+            lines = l2 if len(left) < len(issues) else lines
+    return _no_made_up_country(_one_full_name(lines, groups_out.get("product") or ""), seg_index)
+
+
 def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None, seed=None):
     """훅 1줄 + 특징 묶음마다 1줄 + CTA 1줄. 각 줄은 **마침표 하나**(문장분리기가 줄 수를 세는 함정)."""
     from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, _speech_speed
@@ -214,6 +311,9 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         g = groups_out["groups"][gi]
         desc = " / ".join(seg_index.get(c, {}).get("desc", "")[:50] for c in (g.get("cuts") or [])[:2] if c in seg_index)
         feats.append(f"  {k + 1}. [{gi}] {g.get('name')} — {g.get('claim')} (화면: {desc})")
+    origin = spine_origin(hook_spine)
+    if origin:
+        return write_lines_from_origin(origin, groups_out, hook_spine, seg_index, target_seconds, note=note)
     roles, tpl = _spine_style(hook_spine)
     if roles and tpl:
         # ★스파인에 문장틀(templates)·역할순서(beat_roles)가 있으면 **그 꼴 그대로** 쓴다(2026-09-17 사장님:
@@ -339,6 +439,19 @@ def _clean_lines(out):
 
 
 # ── 스파인 문장틀 그대로 쓰기 ─────────────────────────────────────────
+def spine_origin(spine):
+    """원문형 스파인이면 {cells:[{role,text}], views, user, hook_tpl} — 아니면 None (2026-09-20 사장님 확정).
+
+    ★왜: 칸별 빈칸 문장틀을 조립하면 남의 문장에 제품 말만 끼워 문장이 깨진다
+      (실측 09-19~20: 칸 조각 조립 15편 전부 / 스파인 78·79 5줄 중 3줄 — "통잠이 쏙 올라오는데",
+       "앞으로 아기 인형 들고 다닐 일은 없겠는데요"). 히트작 원문 한 편을 통째로 보여주고
+      제품 이야기만 바꿔 쓰게 하면 흐름·조사가 안 깨진다(소재 12종 36편 중 34편 검사 통과).
+    스파인은 그대로 남는다 — 유형·말투·훅 고정·회원별 순번을 정하는 관리 단위."""
+    _, tpl = _spine_style(spine)
+    o = tpl.get("_origin") if isinstance(tpl, dict) else None
+    return o if isinstance(o, dict) and o.get("cells") else None
+
+
 def _spine_style(spine):
     """(beat_roles, templates). list_spines가 풀어준 값이 없으면 *_json 컬럼에서. 둘 다 없으면 ([], {})."""
     roles = spine.get("beat_roles")
