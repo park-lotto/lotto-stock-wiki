@@ -1,0 +1,68 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>장면꾸미기 · 틀 고르기</title>
+<style>
+:root{--line:#e3e6ea;--sub:#6b7280;--acc:#2563eb;--acc2:#eef4ff;--bg:#f6f7f9}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.55 "Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:#111;
+     display:flex;gap:18px;padding:16px;height:100vh;overflow:hidden}
+.stage{flex:none;width:330px;display:flex;flex-direction:column;align-items:center;gap:9px}
+.phone{position:relative;width:330px;height:587px;background:#111;border-radius:12px;overflow:hidden;box-shadow:0 6px 22px #0002}
+.phone img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.nav{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--sub)}
+.nav button{padding:6px 13px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer}
+.right{flex:1;min-width:0;overflow-y:auto;padding-right:6px}
+.step{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 17px;margin-bottom:13px}
+.step h3{margin:0 0 4px;font-size:16px;display:flex;align-items:center;gap:8px}
+.step p{margin:0 0 12px;font-size:12px;color:var(--sub)}
+.num{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--acc);color:#fff;
+     align-items:center;justify-content:center;font-size:13px;flex:none}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px}
+.chips button{padding:6px 13px;border:1px solid var(--line);background:#fff;border-radius:20px;font-size:13px;cursor:pointer}
+.chips button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.cards{display:flex;gap:11px;overflow-x:auto;padding-bottom:9px}
+.cards::-webkit-scrollbar{height:8px}.cards::-webkit-scrollbar-thumb{background:#c8ccd2;border-radius:6px}
+.card{flex:0 0 116px;border:3px solid transparent;border-radius:11px;overflow:hidden;background:#fff;cursor:pointer;transition:transform .12s}
+.card:hover{transform:translateY(-3px)}
+.card.on{border-color:var(--acc);box-shadow:0 0 0 4px var(--acc2)}
+.pv{position:relative;width:100%;aspect-ratio:9/16;background:#111;overflow:hidden}
+.pv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.card b{display:block;padding:6px 4px 2px;font-size:11.5px;text-align:center}
+.card i{display:block;padding:0 4px 6px;font-size:10px;color:var(--sub);text-align:center;font-style:normal}
+.slot{display:flex;gap:8px;align-items:center;font-size:13px}
+.slot button{padding:7px 14px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer}
+.slot button.on{background:#111;color:#fff;border-color:#111}
+.tip{background:#fffbe6;border:1px solid #ffe58f;border-radius:10px;padding:10px 13px;font-size:12.5px;margin-bottom:13px}
+.plan{display:flex;gap:3px;margin-top:10px}
+.plan div{flex:1;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;
+          font-size:10px;color:#fff;overflow:hidden}
+</style></head><body>
+
+<div class="stage">
+  <div class="phone"><img id="bg" src="bg.jpg"><img id="ovl"></div>
+  <div class="nav"><button onclick="mv(-1)">&#9664;</button><span id="no">1 / 26 컷</span>
+    <button onclick="mv(1)">&#9654;</button><span id="part">후킹</span></div>
+</div>
+
+<div class="right">
+  <div class="tip">💡 틀은 <b>tpl 폴더에 HTML을 넣으면 자동으로 여기에 뜹니다.</b> 등록 절차가 없습니다.</div>
+
+  <div class="step">
+    <h3><span class="num">1</span> 어디에 쓸 틀인가요?</h3>
+    <p>보통 둘만 고르면 26컷이 다 채워집니다</p>
+    <div class="slot">
+      <button class="on" data-s="hook" onclick="slot('hook')">🎣 후킹 (앞 <span id="hb">1</span>컷)</button>
+      <button data-s="body" onclick="slot('body')">📄 본문 (나머지)</button>
+      <button data-s="spot" onclick="slot('spot')">⭐ 이 컷부터</button>
+    </div>
+    <div class="plan" id="plan"></div>
+  </div>
+
+  <div class="step">
+    <h3><span class="num">2</span> 틀 고르기 <span id="cnt" style="font-size:12px;color:#6b7280;font-weight:400"></span></h3>
+    <p id="slotlbl">지금 고르는 자리: 후킹</p>
+    <div class="chips" id="chips"></div>
+    <div class="cards" id="cards"></div>
+  </div>
+</div>
+
+<script src="tpl_pick.js"></script>
+</body></html>

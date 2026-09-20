@@ -32,7 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from shopping_shorts.config import DB_PATH          # noqa: E402
 from shopping_shorts.store import Store             # noqa: E402
 
-SPINE_NAME = "유튜브 은폐형"
+SPINE_NAME = "유튜브 「이건 바로 OO」"
 OLD = "근데 진짜 충격적인 포인트는 {효능2} 심지어 {효능3}까지 된다는 거"
 NEW = "근데 진짜 충격적인 포인트는 {효능2} 심지어 {효능3}"
 

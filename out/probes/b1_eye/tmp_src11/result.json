@@ -1,0 +1,182 @@
+{
+ "segments": [
+  {
+   "seg_id": "s0-0",
+   "start": 0.0,
+   "end": 4.538,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "인물이 가위로 얼굴에 부착된 접착제나 보형물 테두리를 잘라내고 있다.",
+   "label": "제품 제거 준비",
+   "use_point": "분장이나 보형물을 제거하는 영상의 도입부에서, 제거 과정의 첫 단계를 시각적으로 보여주어 호기심을 유발하기 좋습니다.",
+   "action": "자르다",
+   "change": "피부 위 보형물 테두리가 잘려 나간다.",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "조작",
+   "product_benefits": [
+    "강력한 접착력으로 고정된 보형물을 정교하게 정리할 수 있다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-1",
+   "start": 4.538,
+   "end": 9.076,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "인물이 얼굴에 붙은 보형물을 떼어내고, 남아있는 접착제 흔적을 보여준다.",
+   "label": "보형물 제거",
+   "use_point": "특수 분장 제거 시 보형물이 쉽게 떨어지는 모습을 보여주어 제품의 제거 성능을 강조하는 대목에 적합합니다.",
+   "action": "당기다",
+   "change": "피부에서 보형물이 완전히 제거된다.",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "실증",
+   "product_benefits": [
+    "피부에 자극 없이 보형물을 깔끔하게 제거할 수 있다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-2",
+   "start": 9.076,
+   "end": 11.745,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "인물이 머리에 쓴 티아라를 벗고 가발을 정리하며 원래 머리 상태로 돌아간다.",
+   "label": "분장 해제 과정",
+   "use_point": "풀 메이크업 상태에서 일상 상태로 복귀하는 과정을 보여주어 전후 비교의 가교 역할로 활용하기 좋습니다.",
+   "action": "정리하다",
+   "change": "티아라와 가발이 제거된다.",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-3",
+   "start": 11.745,
+   "end": 12.646,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "인물이 가슴 부위에 묻은 잔여물을 손가락으로 닦아낸다.",
+   "label": "잔여물 제거",
+   "use_point": "제거제나 클렌저의 세정력을 보여주는 중간 과정으로 활용하여 깔끔한 마무리를 강조하기 좋습니다.",
+   "action": "닦다",
+   "change": "피부 표면의 이물질이 제거된다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "정리",
+   "product_benefits": [
+    "피부 표면의 잔여물을 손쉽게 닦아낼 수 있다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-4",
+   "start": 12.646,
+   "end": 13.547,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "인물이 머리띠를 착용하고 세안할 준비를 마친다.",
+   "label": "세안 준비",
+   "use_point": "세안 루틴을 본격적으로 시작하기 전 상황을 설정하여 시청자에게 준비 과정을 보여주는 대목입니다.",
+   "action": "끼우다",
+   "change": "머리띠가 착용된다.",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-5",
+   "start": 13.547,
+   "end": 14.915,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "인물이 머리띠 위치를 정돈하며 세안할 자세를 잡는다.",
+   "label": "세안 시작 전",
+   "use_point": "제품 사용 전 청결한 상태를 유지하려는 세안 루틴의 앞부분에 활용하기 적합합니다.",
+   "action": null,
+   "change": "머리띠의 위치가 고정된다.",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-6",
+   "start": 14.915,
+   "end": 21.355,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "인물이 세안제를 얼굴에 바르고 부드럽게 문질러 메이크업을 녹여낸다.",
+   "label": "클렌징 시연",
+   "use_point": "클렌징 제품의 제형과 세정력을 보여주는 핵심 대목으로, 메이크업이 녹는 과정을 시각적으로 확인시켜줍니다.",
+   "action": "붓다",
+   "change": "얼굴 위 화장품이 세안제와 섞여 녹아내린다.",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "도포",
+   "product_benefits": [
+    "짙은 화장도 부드럽게 녹여내어 깨끗하게 세정한다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-7",
+   "start": 21.355,
+   "end": 22.923,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "인물이 얼굴 전체에 퍼진 세안제 거품을 손으로 마사지하듯 문지른다.",
+   "label": "세안 마사지",
+   "use_point": "세안제의 거품 질감과 사용감을 강조하여 시청자에게 쾌적한 세안 경험을 전달하는 장면에 사용하기 좋습니다.",
+   "action": "섞다",
+   "change": "세안제가 얼굴 전체에 거품 형태로 도포된다.",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "조작",
+   "product_benefits": [
+    "풍성한 거품으로 피부 노폐물을 효과적으로 제거한다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-8",
+   "start": 22.923,
+   "end": 26.274,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "인물이 수건으로 얼굴을 닦아내고 세안 후의 깨끗한 얼굴을 보여준다.",
+   "label": "세안 결과 확인",
+   "use_point": "제품 사용 후 피부가 깨끗해진 최종 결과를 보여주어 시청자에게 구매 욕구를 자극하는 마무리 단계에 적합합니다.",
+   "action": "닦다",
+   "change": "얼굴의 모든 메이크업이 제거되고 깨끗한 피부가 드러난다.",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "after",
+   "product_benefits": [
+    "메이크업 잔여물 없이 투명하고 깨끗한 피부 상태를 만든다."
+   ],
+   "motion_level": null
+  }
+ ],
+ "full_text": "",
+ "product_benefits": [
+  "강력한 접착력으로 고정된 보형물을 정교하게 정리할 수 있다.",
+  "피부에 자극 없이 보형물을 깔끔하게 제거할 수 있다.",
+  "피부 표면의 잔여물을 손쉽게 닦아낼 수 있다.",
+  "짙은 화장도 부드럽게 녹여내어 깨끗하게 세정한다.",
+  "풍성한 거품으로 피부 노폐물을 효과적으로 제거한다.",
+  "메이크업 잔여물 없이 투명하고 깨끗한 피부 상태를 만든다."
+ ],
+ "source_brief": {},
+ "tag_empty_ratio": 0.0,
+ "transcript_status": "asr_none: HTTP 429 {\"error\":{\"message\":\"Rate limit reached for model `whisper-large-v3` in organization `org_01kxhq71aefhnrbch60qsczqc6` se",
+ "full_text_ko": ""
+}

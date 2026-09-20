@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>대본 스타일 실측 v2 — 라이브 DB</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b303c;
+  --ink:#e9ecf1; --dim:#9aa3b2; --faint:#6b7482;
+  --gold:#f2c14e; --hot:#ff6b4a; --bad:#f2545b; --blue:#63b3ff; --mint:#4ade80;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+  line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1140px;margin:0 auto;padding:44px 24px 96px}
+header.top{border-bottom:1px solid var(--line);padding-bottom:26px;margin-bottom:34px}
+h1{font-size:29px;margin:0 0 10px;letter-spacing:-.5px}
+.sub{color:var(--dim);font-size:14px;max-width:840px}
+.src{margin-top:14px;font-size:12.5px;color:var(--faint);
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:inline-block}
+.src b{color:var(--dim);font-weight:600}
+h2{font-size:19px;margin:46px 0 14px;padding-left:12px;border-left:3px solid var(--gold);letter-spacing:-.3px}
+.lead{color:var(--dim);font-size:13.5px;margin:-4px 0 16px;padding-left:15px}
+
+/* 반증 박스 */
+.alert{background:#1a1216;border:1px solid #5a2b33;border-radius:13px;padding:20px 24px;margin-bottom:8px}
+.alert h3{margin:0 0 12px;font-size:16px;color:var(--bad);letter-spacing:-.2px}
+.alert p{margin:0 0 12px;font-size:14px;color:#e8ccd1}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media(max-width:720px){.cmp{grid-template-columns:1fr}}
+.cmp>div{background:#12151c;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.cmp .h{font-size:12px;color:var(--faint);font-weight:700;letter-spacing:.6px;margin-bottom:8px}
+.cmp .big{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:4px}
+.cmp .g{color:var(--gold)} .cmp .r{color:var(--bad)}
+.cmp .d{font-size:12.5px;color:var(--dim)}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--panel);
+  border:1px solid var(--line);border-radius:11px;overflow:hidden}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--panel2);font-size:11.5px;letter-spacing:.8px;color:var(--dim);font-weight:700}
+tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+td.n{text-align:right;font-variant-numeric:tabular-nums;color:var(--faint);font-size:12.5px}
+.hi{color:var(--gold)} .lo{color:var(--bad)} .mid{color:var(--dim)}
+.tw{overflow-x:auto}
+
+/* 대본 해부 */
+.script{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:18px}
+.shead{display:flex;align-items:baseline;gap:12px;padding:15px 20px;background:var(--panel2);
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+.sv{font-size:19px;font-weight:800;color:var(--hot);font-variant-numeric:tabular-nums}
+.sc{font-size:12.5px;color:var(--faint)}
+.sbody{padding:6px 0}
+.seg{display:grid;grid-template-columns:130px 1fr;gap:14px;padding:11px 20px;border-bottom:1px solid #20242e}
+.seg:last-child{border-bottom:none}
+.seg .role{font-family:"Consolas","D2Coding",monospace;font-size:12px;color:var(--blue);padding-top:2px}
+.seg .role.esc{color:var(--gold)}
+.seg .txt{font-size:13.5px;color:#ded7c6}
+.seg .txt em{color:var(--gold);font-style:normal;font-weight:700}
+
+/* 틀 */
+.tpl{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:18px}
+.thead{display:flex;align-items:baseline;gap:12px;padding:16px 20px;background:var(--panel2);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tname{font-size:17px;font-weight:800}
+.tmult{font-size:13px;color:var(--gold);font-weight:700}
+.tfor{margin-left:auto;font-size:12px;color:var(--faint)}
+.chain{display:flex;gap:6px;padding:15px 20px 6px;flex-wrap:wrap;align-items:center}
+.node{background:#12151c;border:1px solid var(--line);border-radius:7px;padding:5px 10px;
+  font-family:"Consolas","D2Coding",monospace;font-size:12px;color:var(--blue);white-space:nowrap}
+.node.hook{border-color:#5a4a1e;color:var(--gold)}
+.node.cta{border-color:#2a4d33;color:var(--mint)}
+.arw{color:var(--faint);font-size:11px}
+.note{font-size:12.5px;color:var(--faint);padding:12px 20px;border-top:1px solid var(--line);background:#13161d}
+.note b{color:var(--hot)}
+.tag{display:inline-block;font-size:10px;letter-spacing:1px;color:var(--gold);
+  border:1px solid #4a3f22;border-radius:4px;padding:1px 6px;font-weight:700;margin-right:6px}
+
+.limit{background:#1a1216;border:1px solid #4a2630;border-radius:12px;padding:18px 22px;font-size:13.5px;color:#e3c9cd}
+.limit h3{margin:0 0 10px;font-size:14px;color:var(--bad)}
+.limit ul{margin:0;padding-left:18px} .limit li{margin-bottom:6px}
+footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>대본 스타일 실측 v2 — 라이브 DB에서 직접 쟀다</h1>
+  <div class="sub">
+    한 달 전 장비축 실측(624편)을 <b>지금 라이브 DB 전체</b>로 다시 쟀다.
+    결과가 크게 달랐다 — 그 차이가 이 문서의 핵심이다.
+  </div>
+  <div class="src">
+    <b>표본</b> 제목 9,189편 · 대본 구조분석 2,918편(조회수 붙은 349편) &nbsp;·&nbsp;
+    <b>출처</b> 서버 reference.db (reel_history · script_wiki) &nbsp;·&nbsp;
+    <b>측정</b> 2026-09-05 &nbsp;·&nbsp; <b>로컬 전용</b>
+  </div>
+</header>
+
+<h2>★ 먼저 — 앞서 만든 틀의 전제가 흔들렸다</h2>
+<div class="alert">
+  <h3>장비축의 큰 배율은 인스타 본진에서 재현되지 않는다</h3>
+  <p>
+    08-25 장비축 실측은 <b>유튜브 장비·공구 채널 2곳</b>이었다. 그 결과를 지금 라이브 전체(홈템·뷰티·레시피 본진)에
+    같은 방법으로 적용하니, <b>배율이 통째로 무너졌다.</b>
+  </p>
+  <div class="cmp">
+    <div>
+      <div class="h">장비축 624편 (유튜브 장비·공구)</div>
+      <div class="big g">10.97x</div>
+      <div class="d">비유격상 최고 배율 · 500만+ 영상은 <b>후킹 보유 100%</b></div>
+    </div>
+    <div>
+      <div class="h">라이브 9,189편 (인스타 본진)</div>
+      <div class="big r">1.52x</div>
+      <div class="d">최고 배율(리스트형) · 100만+ 영상도 <b>후킹 보유 42.6%</b>뿐</div>
+    </div>
+  </div>
+  <p style="margin-top:14px;margin-bottom:0">
+    <b>정체은폐</b>는 장비축에서 4.63x였는데 여기선 <b>0.82x</b>로 뒤집혔고,
+    <b>비유격상</b>도 10.97x → 1.09x로 내려앉았다.
+    즉 <b>제목 후킹은 인스타에서 조회수를 가르는 주 요인이 아니다.</b>
+  </p>
+</div>
+
+<h2>제목 후킹 축 — 라이브 9,189편 재측정</h2>
+<div class="lead">전체 중앙 조회수 3,607 대비. 표본 25편 이상만 실었다.</div>
+<div class="tw">
+<table>
+  <tr><th>축</th><th style="text-align:right">배율</th><th style="text-align:right">표본</th><th>판단</th></tr>
+  <tr><td><b>리스트형</b> <span style="color:var(--faint)">TOP3 · N가지 · 3대장</span></td><td class="num hi">1.52x</td><td class="n">563</td><td>유일하게 표본도 크고 배율도 높다 — <b>가장 믿을 만한 축</b></td></tr>
+  <tr><td><b>의문반전</b> <span style="color:var(--faint)">이런것도 있어..? · 한다고?</span></td><td class="num hi">1.45x</td><td class="n">122</td><td>홈템에서 2.20x로 특히 강함</td></tr>
+  <tr><td><b>희소지식</b> <span style="color:var(--faint)">아는 사람만 · 안 알려주는 · 비밀</span></td><td class="num hi">1.44x</td><td class="n">181</td><td>상위10%가 하위50%의 1.82배로 나옴</td></tr>
+  <tr><td>경고공포 <span style="color:var(--faint)">큰일나요 · 제발 꼭 보세요</span></td><td class="num mid">1.27x</td><td class="n">40</td><td>표본이 작다</td></tr>
+  <tr><td>무능포용 <span style="color:var(--faint)">똥손도 · 실패 없는</span></td><td class="num mid">1.26x</td><td class="n">52</td><td>표본이 작다</td></tr>
+  <tr><td>유명인차용 <span style="color:var(--faint)">장원영 · 연예인 · 셰프</span></td><td class="num mid">1.19x</td><td class="n">494</td><td>레시피에서만 4.20x로 튄다</td></tr>
+  <tr><td>비유격상 <span style="color:var(--faint)">계의 · 끝판왕 · 마법의</span></td><td class="num mid">1.09x</td><td class="n">239</td><td><b>장비축 10.97x → 여기선 1.09x</b></td></tr>
+  <tr><td>즉시효과</td><td class="num mid">1.05x</td><td class="n">79</td><td>—</td></tr>
+  <tr><td>장소전환</td><td class="num lo">0.94x</td><td class="n">29</td><td>장비축 3.00x → 무너짐</td></tr>
+  <tr><td>소유자작 <span style="color:var(--faint)">나도 · 셀프 · DIY</span></td><td class="num lo">0.89x</td><td class="n">221</td><td>장비축과 같게 <b>마이너스</b> — 유일하게 일치</td></tr>
+  <tr><td>극단수식</td><td class="num lo">0.87x</td><td class="n">439</td><td>장비축 2.57x → 뒤집힘</td></tr>
+  <tr><td>정체은폐 <span style="color:var(--faint)">이녀석 · 정체</span></td><td class="num lo">0.82x</td><td class="n">229</td><td><b>장비축 4.63x → 뒤집힘</b></td></tr>
+</table>
+</div>
+
+<h2>후킹 개수 — 이것도 뒤집혔다</h2>
+<div class="tw">
+<table>
+  <tr><th>후킹 개수</th><th style="text-align:right">중앙 조회수</th><th style="text-align:right">표본</th><th>장비축에서는</th></tr>
+  <tr><td>0개</td><td class="num">3,454</td><td class="n">6,784</td><td class="mid">—</td></tr>
+  <tr><td>1개</td><td class="num">3,927</td><td class="n">2,138</td><td class="mid">1개가 최고(5.4만)</td></tr>
+  <tr><td><b>2개</b></td><td class="num hi">4,310</td><td class="n">248</td><td class="lo">2개는 떨어짐(3.8만) → <b>여기선 반대</b></td></tr>
+</table>
+</div>
+<div class="lead" style="margin-top:10px">‘후킹은 1개일 때 가장 강하다’는 장비축 규칙은 <b>여기서 성립하지 않는다.</b> 겹쳐도 떨어지지 않는다.</div>
+
+<h2>여기서부터가 진짜 — 대본 구조 실측 (script_wiki 2,918편)</h2>
+<div class="lead">제목이 아니라 <b>대본 자체</b>를 분석해둔 데이터가 서버에 있었다. 훅 유형·전개·화자가 이미 붙어 있다.</div>
+<div class="tw">
+<table>
+  <tr><th>훅 유형</th><th style="text-align:right">배율</th><th style="text-align:right">표본</th><th>전개 방식</th><th style="text-align:right">배율</th><th style="text-align:right">표본</th></tr>
+  <tr><td><b>호기심갭형</b></td><td class="num hi">1.19x</td><td class="n">95</td><td><b>문제→해결</b></td><td class="num hi">1.07x</td><td class="n">203</td></tr>
+  <tr><td>권위인용형</td><td class="num mid">0.96x</td><td class="n">61</td><td>개인일화형</td><td class="num mid">0.95x</td><td class="n">99</td></tr>
+  <tr><td>공감형</td><td class="num lo">0.86x</td><td class="n">130</td><td>실험/시연형</td><td class="num lo">0.86x</td><td class="n">9</td></tr>
+  <tr><td>경고형</td><td class="num lo">0.70x</td><td class="n">30</td><td colspan="3" class="mid" style="font-size:12.5px">표본 8편 미만은 전부 뺐다 — 남겨두면 21.98x 같은 노이즈가 섞인다</td></tr>
+</table>
+</div>
+
+<h2>훅 × 전개 조합 — 이게 곧 스타일 틀이다</h2>
+<div class="tw">
+<table>
+  <tr><th>조합</th><th style="text-align:right">배율</th><th style="text-align:right">표본</th><th>판단</th></tr>
+  <tr><td><b>호기심갭형 × 문제→해결</b></td><td class="num hi">1.42x</td><td class="n">47</td><td><b>1위. 표본도 가장 크다 → 기본 틀로</b></td></tr>
+  <tr><td>권위인용형 × 개인일화형</td><td class="num hi">1.36x</td><td class="n">18</td><td>2위. “친구가 알려줬는데” 형</td></tr>
+  <tr><td>호기심갭형 × 개인일화형</td><td class="num mid">1.03x</td><td class="n">33</td><td>평범</td></tr>
+  <tr><td>권위인용형 × 문제→해결</td><td class="num mid">0.96x</td><td class="n">37</td><td>평범</td></tr>
+  <tr><td>공감형 × 개인일화형</td><td class="num lo">0.91x</td><td class="n">40</td><td>—</td></tr>
+  <tr><td>공감형 × 문제→해결</td><td class="num lo">0.86x</td><td class="n">74</td><td><b>가장 흔한데 성적은 아래</b> — 다들 이걸 쓴다</td></tr>
+  <tr><td>경고형 × 문제→해결</td><td class="num lo">0.57x</td><td class="n">21</td><td><b>최악 — 피할 것</b></td></tr>
+</table>
+</div>
+
+<h2>실제 히트 대본 해부 — 같은 틀 2편이 잡혔다</h2>
+<div class="lead">호기심갭형 × 문제→해결 중 상위. 95만·47만 두 편이 <b>글자 배치까지 같은 틀</b>이었다.</div>
+
+<div class="script">
+  <div class="shead"><span class="sv">957,802</span><span class="sc">제품정체형 · 호기심갭형 × 문제→해결</span></div>
+  <div class="sbody">
+    <div class="seg"><div class="role">hook</div><div class="txt">한국 천재가 만들어 돈방석 앉은 제품</div></div>
+    <div class="seg"><div class="role">scale</div><div class="txt">최근 전 세계적으로 각종 SNS에서 폭발적으로 조회수 및 바이럴이 터지며 논란인 한국 제품이 하나 있는데</div></div>
+    <div class="seg"><div class="role">reveal</div><div class="txt">이건 바로 <b>에어링</b></div></div>
+    <div class="seg"><div class="role">spec</div><div class="txt">젖병 소재의 프리미엄 실리콘과 2년 6개월간 개발자들이 피, 땀 흘려 개발한 독보적인 일체형 구조 기술</div></div>
+    <div class="seg"><div class="role esc">escalation</div><div class="txt"><em>진짜 충격적인 포인트는</em> 코골이까지 확실하게 잡아주는데다가</div></div>
+    <div class="seg"><div class="role">bonus</div><div class="txt">고강도 운동시에도 안정적인 호흡을 할 수 있게 해 준다고</div></div>
+  </div>
+</div>
+
+<div class="script">
+  <div class="shead"><span class="sv">474,586</span><span class="sc">홈템 · 호기심갭형 × 문제→해결</span></div>
+  <div class="sbody">
+    <div class="seg"><div class="role">hook</div><div class="txt">또 한번 사고쳤다는 다이소</div></div>
+    <div class="seg"><div class="role">scale</div><div class="txt">최근 딱 봤을 때 꼬챙이처럼 생긴 이 제품이 한국 sns에서 바이럴을 타면서 매출이 폭등해버렸다는데</div></div>
+    <div class="seg"><div class="role">spec</div><div class="txt">와이어 끝에 스텐 볼들이 저항을 줄여줘서 손목에 힘을 많이 안 줘도 잘 섞인데다</div></div>
+    <div class="seg"><div class="role">benefit</div><div class="txt">세울 수 있게 만들어 위생까지 알뜰살뜰 챙긴 아이디어 제품이라고</div></div>
+    <div class="seg"><div class="role esc">escalation</div><div class="txt"><em>진짜 미친 포인트는</em> 일반 거품기는 망 사이사이를 씻어내려면 번거로운데</div></div>
+    <div class="seg"><div class="role">result</div><div class="txt">이건 일자형 구조라 그냥 젓가락 닦듯이 수세미로 쓱 문지르면 설거지가 끝난다고</div></div>
+  </div>
+</div>
+
+<h2>여기서 뽑은 틀 — 바이럴 선언형</h2>
+<div class="tpl">
+  <div class="thead">
+    <span class="tname">바이럴 선언형</span>
+    <span class="tmult">호기심갭형 × 문제→해결 1.42x (n=47)</span>
+    <span class="tfor"><b>맞는 제품</b> 화제성이 있는 신제품 · 다이소류</span>
+  </div>
+  <div class="chain">
+    <span class="node hook">hook</span><span class="arw">→</span>
+    <span class="node">scale</span><span class="arw">→</span>
+    <span class="node">reveal</span><span class="arw">→</span>
+    <span class="node">spec</span><span class="arw">→</span>
+    <span class="node">benefit</span><span class="arw">→</span>
+    <span class="node">escalation</span><span class="arw">→</span>
+    <span class="node">result</span><span class="arw">→</span>
+    <span class="node cta">cta</span>
+  </div>
+  <div class="tw" style="padding:8px 20px 18px">
+  <table style="background:none;border:none">
+    <tr><th>칸</th><th>실제 히트작이 쓴 문형</th></tr>
+    <tr><td style="color:var(--gold);font-family:Consolas,monospace;font-size:12.5px;width:110px">hook</td><td>“한국 천재가 만들어 돈방석 앉은 제품” / “또 한번 사고쳤다는 다이소” — <b>제품명 없이 화제성만</b></td></tr>
+    <tr><td style="color:var(--blue);font-family:Consolas,monospace;font-size:12.5px">scale</td><td>“SNS에서 바이럴을 타면서 매출이 폭등해버렸다는데” — 왜 지금 화제인지</td></tr>
+    <tr><td style="color:var(--blue);font-family:Consolas,monospace;font-size:12.5px">reveal</td><td>“이건 바로 ○○” — 여기서 정체 공개</td></tr>
+    <tr><td style="color:var(--blue);font-family:Consolas,monospace;font-size:12.5px">spec</td><td>재질·개발기간·구조를 <b>구체 숫자로</b> (“2년 6개월”, “젖병 소재”)</td></tr>
+    <tr><td style="color:var(--blue);font-family:Consolas,monospace;font-size:12.5px">benefit</td><td>그래서 뭐가 좋아지는지</td></tr>
+    <tr><td style="color:var(--gold);font-family:Consolas,monospace;font-size:12.5px">escalation</td><td><b>“진짜 충격적인 포인트는” / “진짜 미친 포인트는”</b> — 두 편이 똑같이 쓴 전환어</td></tr>
+    <tr><td style="color:var(--blue);font-family:Consolas,monospace;font-size:12.5px">result</td><td>가장 센 장점 하나를 마지막에</td></tr>
+    <tr><td style="color:var(--mint);font-family:Consolas,monospace;font-size:12.5px">cta</td><td>받을 것을 반드시 말한다</td></tr>
+  </table>
+  </div>
+  <div class="note"><span class="tag">핵심</span> <b>escalation 칸이 이 틀의 심장이다.</b> 95만·47만 두 편이 “진짜 ○○ 포인트는”이라는 <b>같은 전환어</b>로 가장 센 장점을 뒤로 미뤘다. 좋은 걸 앞에 다 쏟지 않고 <b>한 개를 남겨두는 것</b>이 이 틀의 규칙이다.</div>
+</div>
+
+<h2>그래서 지금 뭘 믿어야 하나</h2>
+<div class="tw">
+<table>
+  <tr><th>규칙</th><th>근거</th><th>신뢰도</th></tr>
+  <tr><td>소유자작(나도·셀프·DIY)은 쓰지 않는다</td><td>장비축 0.80x · 라이브 0.89x</td><td class="hi">높음 — 두 표본이 일치</td></tr>
+  <tr><td>리스트형(N가지·TOP3)은 통한다</td><td>라이브 1.52x, 표본 563</td><td class="hi">높음 — 표본이 크다</td></tr>
+  <tr><td>호기심갭 × 문제→해결이 기본 틀</td><td>1.42x, 표본 47</td><td class="mid">보통 — 표본이 작다</td></tr>
+  <tr><td>“진짜 ○○ 포인트는” 전환어를 쓴다</td><td>95만·47만 두 편 실물 일치</td><td class="mid">보통 — 2편뿐이지만 우연으로 보기 어렵다</td></tr>
+  <tr><td>경고형 × 문제→해결은 피한다</td><td>0.57x, 표본 21</td><td class="mid">보통</td></tr>
+  <tr><td>정체은폐 · 비유격상 · 극단수식이 세다</td><td>장비축에서만 성립, 라이브에서 뒤집힘</td><td class="lo">낮음 — <b>유튜브 장비·공구에 한정</b></td></tr>
+</table>
+</div>
+
+<h2>이 문서의 한계</h2>
+<div class="limit">
+  <h3>확인한 것과 못 한 것</h3>
+  <ul>
+    <li>제목 후킹 배율은 <b>9,189편</b>으로 재서 표본이 크다. 하지만 대본 구조 배율은 <b>조회수가 붙은 349편</b>뿐이다 — 조합별로는 20~50편 수준이라 흔들릴 수 있다.</li>
+    <li>후킹 사전은 <b>내가 짠 정규식</b>이다. 장비축 교훈(‘드릴’이 전부 ‘보내드릴게요’였던 것)을 피하려 긴 복합어만 썼지만, 오탐이 남아 있을 수 있다.</li>
+    <li>표본은 <b>인스타 릴스 중심</b>이다. 사장님이 말씀한 ‘유튜브에서 터지는 채널’은 이 표본에 거의 없다 — 유튜브는 따로 재야 한다.</li>
+    <li><code>upload_ts</code>가 비어 있어 <b>‘최근 것만’으로 좁히지 못했다.</b> 트렌드 반영은 아직 안 된 상태다.</li>
+    <li>‘실제 히트 대본 해부’ 2편은 실물이지만, 그 구조가 통하는지는 <b>A/B로 재본 적 없다</b>.</li>
+  </ul>
+</div>
+
+<footer>
+  근거: 서버 reference.db — reel_history 13,490 · script_wiki 3,184 · 측정 2026-09-05 ·
+  <b>로컬 전용 — 라이브·DB 미반영</b>
+</footer>
+
+</div>
+</body>
+</html>

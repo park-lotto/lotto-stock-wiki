@@ -71,11 +71,38 @@ class Test청소_전에_TTS를_확정한다:
             assert "global_pron=" in window, f"{fn.__name__}: 발음교정을 안 넘긴다"
 
     def test_TTS_실패가_자막제거를_막지_않는다(self):
-        """음성이 안 나와도 청소는 되어야 한다 — 여기서 막으면 기능이 통째로 죽는다."""
+        """음성이 안 나와도 청소는 되어야 한다 — 여기서 막으면 기능이 통째로 죽는다.
+
+        ★판정을 '글자 거리'가 아니라 **구문 구조**로 본다(2026-09-04).
+          예전엔 `_synthesize_beats(` 뒤 900자 안에 "except Exception"이 있나로 봤는데,
+          그 호출에 인자 한 줄을 더하자(script_endings) except가 929자로 밀려 **보호는
+          멀쩡한데 테스트만 빨개졌다**. 문자열 거리 단언은 무관한 편집에 깨지고,
+          반대로 리팩터링으로 우연히 창 안에 들어오면 빈 단언이 된다.
+          AST로 "그 호출이 try 안에 있고, 그 try가 예외를 삼키나"를 직접 확인한다.
+        """
+        import ast
         import inspect
-        src = inspect.getsource(mp.run_clean_sources)
-        i = src.find("_synthesize_beats(")
-        assert "except Exception" in src[i:i + 900], "TTS 실패를 삼키지 않는다"
+        import textwrap
+        tree = ast.parse(textwrap.dedent(inspect.getsource(mp.run_clean_sources)))
+
+        def _calls(node):
+            return any(isinstance(n, ast.Call) and getattr(n.func, "id", None) == "_synthesize_beats"
+                       for n in ast.walk(node))
+
+        # ★TTS 호출을 **직접** 감싼 try를 고른다(그 사이에 다른 try가 끼지 않은 것).
+        #   run_clean_sources는 함수 전체를 감싼 바깥 try에도 except Exception이 있어서,
+        #   "TTS를 품은 try가 하나라도 예외를 삼키면 통과"로 보면 **TTS 전용 보호를 없애도
+        #   초록이 된다**. 실패를 삼켜야 하는 것은 TTS 바로 그 자리의 try다 — 바깥에서
+        #   잡히면 그 뒤 자막제거까지 통째로 건너뛴다(이 테스트가 막으려던 바로 그 사고).
+        direct = [t for t in ast.walk(tree)
+                  if isinstance(t, ast.Try)
+                  and any(_calls(b) and not any(isinstance(x, ast.Try) for x in ast.walk(b))
+                          for b in t.body)]
+        assert direct, "TTS 호출을 직접 감싼 try가 없다 — 합성 실패가 자막제거를 막는다"
+        for t in direct:
+            kinds = [("bare" if h.type is None else getattr(h.type, "id", "")) for h in t.handlers]
+            assert any(k in ("bare", "Exception", "BaseException") for k in kinds), (
+                "TTS를 감싼 try(line %d)가 예외를 안 삼킨다(%s)" % (t.lineno, kinds))
 
 
 class Test훅_시작점은_멱등이다:

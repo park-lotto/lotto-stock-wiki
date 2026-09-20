@@ -188,6 +188,28 @@ def test_produce_mix_settings_saves_highlight_rules_inside_deco(monkeypatch, tmp
     assert saved["deco"]["highlight_rules"][0]["keyword"] == "쿠팡"
 
 
+def test_scene_style_patch_preserves_other_deco_and_other_jobs(monkeypatch, tmp_path):
+    """장면꾸미기만 저장할 때 BGM 등 기존 꾸미기와 다른 작업 설정을 건드리지 않는다."""
+    client, store = _client(monkeypatch, tmp_path)
+    store.create_mix_job("scene-a", ["u0"], 20, "free")
+    store.create_mix_job("scene-b", ["u1"], 20, "free")
+    store.update_mix_job("scene-a", deco={"bgm": {"file": "a.mp3"}, "extra_texts": [{"text": "A"}]})
+    store.update_mix_job("scene-b", deco={"bgm": {"file": "b.mp3"}, "extra_texts": [{"text": "B"}]})
+    snapshot = {"mode": "story", "presetId": "t11", "sceneIndex": 2, "effects": {}}
+
+    response = client.post("/api/produce/mix/settings", json={
+        "job_id": "scene-a", "scene_style": snapshot,
+    })
+
+    assert response.status_code == 200
+    assert store.get_mix_job("scene-a")["deco"] == {
+        "bgm": {"file": "a.mp3"}, "extra_texts": [{"text": "A"}], "scene_style": snapshot,
+    }
+    assert store.get_mix_job("scene-b")["deco"] == {
+        "bgm": {"file": "b.mp3"}, "extra_texts": [{"text": "B"}],
+    }
+
+
 # ── 대본용 영상 URL 직접추출(2026-07-14) — last_run 의존 제거 ──────────
 
 def test_extract_from_url_extracts_without_last_run(monkeypatch, tmp_path):

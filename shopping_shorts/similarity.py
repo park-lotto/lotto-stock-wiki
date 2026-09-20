@@ -30,7 +30,8 @@ def _client_for_key(key):
         # 타임아웃 미지정 시 느린 Gemini 응답에 무한 대기할 수 있음(comment_gen._client_for_key
         # 참고 — 2026-07-14 실사고).
         _client_cache[key] = usage_meter.wrap(
-            genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000)))
+            genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000)),
+            pool="shorts", key=key)   # 관측판 귀속(2026-09-01)
     return _client_cache[key]
 
 
@@ -71,7 +72,7 @@ def score_candidate(original_frame_paths, candidate_thumbnail_url, max_retries=3
         except Exception as e:
             m = str(e)
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))  # 확실한 일일 한도 소진·계정비활성 영구 제외
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)  # 확실한 일일 한도 소진·계정비활성 영구 제외
                 continue
             if key_vault.is_quota_error(e):
                 # 분당 제한 등 "일일 소진"까지는 확인 안 되는 429 — 같은 키로

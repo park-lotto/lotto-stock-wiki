@@ -1,0 +1,2635 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-09-11T05:58:00.897485+00:00",
+  "purpose": "read_only_technical_inventory",
+  "approval_granted": false,
+  "technical_requested": true,
+  "ffprobe_available": true,
+  "sources": [
+    {
+      "domain": "fonts",
+      "registry": "shopping_shorts/static/fonts.json",
+      "scope": "local_files",
+      "items": [
+        {
+          "index": 0,
+          "legacy_id": "HCTmon",
+          "name": "티몬 몬소리",
+          "file": "TmonMonsori.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 3300016,
+          "sha256": "55d63a68d74e39239706a8a0ef4146518e4e71b0ce25a0c8302a42d9b4b90958",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 900,
+            "embedding_fs_type": 8,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 1,
+          "legacy_id": "HCJua",
+          "name": "배민 주아",
+          "file": "BMJUA.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 2101200,
+          "sha256": "0c44ba452204546ac2311f49240014b44149909959843de2d4ed52259b3d4134",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 2367,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 2,
+          "legacy_id": "HCDohyeon",
+          "name": "배민 도현",
+          "file": "BMDOHYEON.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 858292,
+          "sha256": "c2dd2b5ce27694085c1ef16a05353fd3fbddd33c4ffbd63170191872424dd566",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 2437,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 3,
+          "legacy_id": "HCBinggrae",
+          "name": "빙그레",
+          "file": "Binggrae-Bold.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 1923972,
+          "sha256": "5883716815b97eed6745cea008b7011654c86e923e6d023fda59313b2f9d078c",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 700,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 4,
+          "legacy_id": "HCKkubulim",
+          "name": "꾸불림체",
+          "file": "Kkubulim.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 2867404,
+          "sha256": "848a20ff3a82f8a685c0984b1cd4807a832aa7e527eb990a57a3b46d2f6cbe9a",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 5,
+          "legacy_id": "HCGmarket",
+          "name": "지마켓 산스",
+          "file": "GmarketSansBold.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 889716,
+          "sha256": "251d33f2be9af17b94037db112dbe1dd07351eb12202231cd38e17cd0a6c50a5",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 500,
+            "embedding_fs_type": 4,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 6,
+          "legacy_id": "HCSuit",
+          "name": "SUIT",
+          "file": "SUIT-Bold.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 352192,
+          "sha256": "40178aa07b8ce5ef7bfe8381641272de8e6020095245995d95ed71c26f54f2a8",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 700,
+            "embedding_fs_type": 4,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 7,
+          "legacy_id": "HCPretendard",
+          "name": "프리텐다드",
+          "file": "Pretendard-ExtraBold.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 1568512,
+          "sha256": "c35fe941b7568d52a96010561540e47f9d3948dfde66ba25bc1908233e0a40cd",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 800,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 8,
+          "legacy_id": "HCPretendardB",
+          "name": "프리텐다드 Bold",
+          "file": "Pretendard-Bold.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 1576660,
+          "sha256": "2e91915fab54df71cc9598ebf608b2bdb54c6fe3c066ac61dff0bc44fca71cc7",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 700,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 9,
+          "legacy_id": "HCPretendardS",
+          "name": "프리텐다드 SemiBold",
+          "file": "Pretendard-SemiBold.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 1583704,
+          "sha256": "c89bc43027dc7cde5726e96223376f8eec09302b2fc1f8147fd5b57cfc376118",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 600,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 10,
+          "legacy_id": "HCSpoqa",
+          "name": "스포카 한 산스",
+          "file": "SpoqaHanSansNeo-Bold.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 12865536,
+          "sha256": "47a25f01c527b605b65a83de3f578ea5eba154bdc37fe0846b9deb02318a777e",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 700,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 11,
+          "legacy_id": "HCIBM",
+          "name": "IBM Plex Sans",
+          "file": "IBMPlexSansKR-Bold.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 882532,
+          "sha256": "0c453bf67c976edaef9b544d120bcfa28ec96e7900e5d629392e0b60df50bd90",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 700,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 12,
+          "legacy_id": "HCNoto",
+          "name": "노토 산스",
+          "file": "NotoSansKR-Bold.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 16997996,
+          "sha256": "26d0c6748500a0444844280b308f5b62c7ae92ac6c6ac88148e502dd211eb52a",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 700,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 13,
+          "legacy_id": "HCNanum",
+          "name": "나눔고딕",
+          "file": "NanumGothic-Bold.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 2073868,
+          "sha256": "f96298f9fb18e364d2370f4c3ce948ac67a2b61af992d7234bc15c42b033c674",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 700,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 14,
+          "legacy_id": "HCGBatang",
+          "name": "경기천년바탕",
+          "file": "GBatang.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 3876688,
+          "sha256": "34dae91160cad62e95bb45e5ccf7ba9d283d557d4d4dc1a036559f3652ac23b3",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 4,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 15,
+          "legacy_id": "HCGowun",
+          "name": "고운바탕",
+          "file": "GowunBatang.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 8454836,
+          "sha256": "b6b6ebb1b62229ef54ca043ee6659edbc4b6a22d4cc020ea2f88c0394f78bb29",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 16,
+          "legacy_id": "HCRidi",
+          "name": "리디바탕",
+          "file": "RIDIBatang.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 2228364,
+          "sha256": "971d006cf8a19dac72f118db3122f3731501085e4035ce7f4211bc67a35895c6",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 17,
+          "legacy_id": "HCPretendardR",
+          "name": "프리텐다드 Reg",
+          "file": "Pretendard-Regular.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 1574352,
+          "sha256": "3ffbacde6ab8411f1d2db54bb9b1f0b3ee2a738932033722cf0388c06aed1c93",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 18,
+          "legacy_id": "HCSuitR",
+          "name": "SUIT Reg",
+          "file": "SUIT-Regular.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 351524,
+          "sha256": "75559147fba6cf373d3a9b5e4a2ea3ba2f8dfb22e5debaabb90277365b8831ad",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 4,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 19,
+          "legacy_id": "HCSpoqaR",
+          "name": "스포카 Reg",
+          "file": "SpoqaHanSansNeo-Regular.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 12640720,
+          "sha256": "ba5aeca436d91553cb664070afa66f0715d81f59fee6e2a0c72cc7589b4937f4",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 20,
+          "legacy_id": "HCIBMR",
+          "name": "IBM Plex Reg",
+          "file": "IBMPlexSansKR-Regular.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 1051004,
+          "sha256": "3638df0e5b7f8cc131d90e6d755f7b9fe8b78b01e59aadf9f64faa0a826aaa92",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 21,
+          "legacy_id": "HCGaegu",
+          "name": "손글씨 개구쟁이",
+          "file": "Gaegu-Bold.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 2962664,
+          "sha256": "cc38a4af9506a45254d1ce07c589ec473d9e5f0be319e5a77b17c214903f8c1c",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 2350,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 700,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 22,
+          "legacy_id": "HCNanumPen",
+          "name": "손글씨 나눔펜",
+          "file": "NanumPenScript.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 3201664,
+          "sha256": "6f0d1ab29c7894010dc88831fb7a0a51edb79136e450344183de5b1a8b52bd43",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 23,
+          "legacy_id": "HCNanumBrush",
+          "name": "손글씨 나눔붓",
+          "file": "NanumBrushScript.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 3564804,
+          "sha256": "27ceaf578c96f594cdf07fe0181b251790acbb746a164e45c1f6473f89911a31",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 24,
+          "legacy_id": "HCHiMelody",
+          "name": "손글씨 하이멜로디",
+          "file": "HiMelody.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 12623412,
+          "sha256": "360d2c0a880918aa48328d1d9219f5390788d09a1c9353e12b471de018673ae6",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 25,
+          "legacy_id": "HCSingleDay",
+          "name": "손글씨 싱글데이",
+          "file": "SingleDay.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 816524,
+          "sha256": "716ff67a4b0675b35c26d60a4bb83173f7d153ab754474ed36c3369593ca1ca8",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 26,
+          "legacy_id": "HCPoorStory",
+          "name": "손글씨 포스터리",
+          "file": "PoorStory.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 3966768,
+          "sha256": "831ab87f7b5463f9cd83ac249bf386816f3a478f1d226427c88cac907adb7ee2",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 27,
+          "legacy_id": "HCDokdo",
+          "name": "손글씨 독도",
+          "file": "Dokdo-Regular.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 2150860,
+          "sha256": "5b3a3d8d28af31fa9adec3fc5da81a88b52e1ff39ed3930c1db787aa4e79c36d",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 2350,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 28,
+          "legacy_id": "HCEastSea",
+          "name": "손글씨 동해독도",
+          "file": "EastSeaDokdo.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 3178684,
+          "sha256": "8cebb39d375134fdbcedef9bf4ec4f6c3f02c39ed0aacd6e83f7a0f435e593b2",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 2484,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 29,
+          "legacy_id": "HCGamja",
+          "name": "감자꽃",
+          "file": "GamjaFlower.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 12615444,
+          "sha256": "ece32819ed58536355a49a095b0cdfdd3b8ef9081c5ed9ca1cef8f5d999ae1ac",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 30,
+          "legacy_id": "HCCute",
+          "name": "귀여운체",
+          "file": "CuteFont.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 1027936,
+          "sha256": "c403227fe6288a8c1423ca48e93fd7efc81e3b81053f7d17adcf659bd95fa4c3",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 2350,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 31,
+          "legacy_id": "HCKirang",
+          "name": "레트로 킬사인",
+          "file": "KirangHaerang.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 5995608,
+          "sha256": "d677d28d466989017c520f00a2a7794ea581ea3d9fa9a830fbb44f1015eac72d",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 2479,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 32,
+          "legacy_id": "HCSunflower",
+          "name": "레트로 성실체",
+          "file": "Sunflower-Medium.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 770536,
+          "sha256": "6e216d6b2f77a850f6b73be25633d09e03385dfa63a3a632f9e7d83a90ea7f79",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 2350,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 500,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 33,
+          "legacy_id": "HCBWPic",
+          "name": "레트로 흑백사진",
+          "file": "BlackAndWhitePicture.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 9606352,
+          "sha256": "4d72cd6de1f210b446c86f06b4e13d7641cbcfb1b375c6927341388aa8e08056",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 34,
+          "legacy_id": "HCBlackHan",
+          "name": "임팩트 검은고딕",
+          "file": "BlackHanSans.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 998424,
+          "sha256": "31960809284026681774a8e52dc19ebcad26cf69b0ad9d560f288296fbb52739",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 2581,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 35,
+          "legacy_id": "HCGugi",
+          "name": "임팩트 구기",
+          "file": "Gugi-Regular.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 990856,
+          "sha256": "c0b1f979979cfc309fb2438fa9464f96173353e0c4842cc7a5919658184ed9d3",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 2350,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 36,
+          "legacy_id": "HCOhsquare",
+          "name": "카페24 아네모네",
+          "file": "Cafe24Ohsquare.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 1733404,
+          "sha256": "873eda89c8b36e3b35fa21f16c20579ed61494eb75aadb7eb1929dac60454780",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 8,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 37,
+          "legacy_id": "HCDanjunghae",
+          "name": "카페24 단정해",
+          "file": "Cafe24Danjunghae.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 2538588,
+          "sha256": "9ae10a66b2ef8633319a984b926aa46faa9e5edf04eb2a20026c15cd4ad7e550",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 8,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 38,
+          "legacy_id": "HCGanpan",
+          "name": "간판체",
+          "file": "KCCGanpan.otf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 2398720,
+          "sha256": "7219d26418b278e3674caf33d12d40ad620068b04bfcdc57ad6638abc419f95c",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 4,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        },
+        {
+          "index": 39,
+          "legacy_id": "HCBunpil",
+          "name": "손글씨 분필",
+          "file": "HakgyoansimBunpil.ttf",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 1702416,
+          "sha256": "4a997cd189b5f6ecf34bcde16dfdcf0de4bf29f17f2a180344300e0e98484ab0",
+          "technical": {
+            "status": "parsed",
+            "hangul_syllables": 11172,
+            "sample": "숏템메이커 놀라운 생활 아이디어 0123456789 ABC!?",
+            "missing_sample_glyphs": [],
+            "weight": 400,
+            "embedding_fs_type": 0,
+            "note": "Technical metadata only; fsType is not a license decision."
+          }
+        }
+      ],
+      "status": "inspected",
+      "registry_sha256": "14b56cc746180d201236a4d3f708b5c95fb23eafc75901a6350c6afffc98c682",
+      "registered_count": 40,
+      "counts": {
+        "present": 40
+      },
+      "physical_file_count": 41,
+      "unregistered_files": [
+        "OkMallangW.ttf"
+      ],
+      "duplicate_files": []
+    },
+    {
+      "domain": "motion",
+      "registry": "shopping_shorts/assets/motion/manifest.json",
+      "scope": "local_files",
+      "items": [
+        {
+          "index": 0,
+          "legacy_id": "ph_swipe",
+          "name": null,
+          "file": "ph_swipe.mov",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 408004,
+          "sha256": "7e56ce7b7e3934571f4447d5c9f9319d7860f963f8989011b810e98a10908ff0",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "qtrle",
+                "codec_type": "video",
+                "width": 720,
+                "height": 1280,
+                "pix_fmt": "argb"
+              }
+            ],
+            "format": {
+              "duration": "0.600000"
+            }
+          }
+        },
+        {
+          "index": 1,
+          "legacy_id": "ph_sparkle",
+          "name": null,
+          "file": "ph_sparkle.mov",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 21848,
+          "sha256": "d56169d7d4120c062e2dc8af1b673ce5d19a462ea79995352a933c0249880aae",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "qtrle",
+                "codec_type": "video",
+                "width": 300,
+                "height": 300,
+                "pix_fmt": "argb"
+              }
+            ],
+            "format": {
+              "duration": "1.000000"
+            }
+          }
+        },
+        {
+          "index": 2,
+          "legacy_id": "swipe_left",
+          "name": null,
+          "file": "swipe_left.mov",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 17768988,
+          "sha256": "c5db6c818566428a41d844f67f1aecb8c19e08e835d71b0be43228bc6f8b4817",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "qtrle",
+                "codec_type": "video",
+                "width": 720,
+                "height": 1280,
+                "pix_fmt": "argb"
+              }
+            ],
+            "format": {
+              "duration": "0.600000"
+            }
+          }
+        },
+        {
+          "index": 3,
+          "legacy_id": "sparkle",
+          "name": null,
+          "file": "sparkle.mov",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 1119645,
+          "sha256": "e5c53d01481916ca132739d81bd8bc53112a10dde3de5e5948f945fcb1f33987",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "qtrle",
+                "codec_type": "video",
+                "width": 300,
+                "height": 300,
+                "pix_fmt": "argb"
+              }
+            ],
+            "format": {
+              "duration": "1.000000"
+            }
+          }
+        }
+      ],
+      "status": "inspected",
+      "registry_sha256": "315182976a58f7be62b298768c9ded469ca4bf812ea9bfc5074f01ea3455bc2c",
+      "registered_count": 4,
+      "counts": {
+        "present": 4
+      },
+      "physical_file_count": 4,
+      "unregistered_files": [],
+      "duplicate_files": []
+    },
+    {
+      "domain": "voices",
+      "registry": "shopping_shorts/assets/voice_presets.json",
+      "scope": "local_files",
+      "items": [
+        {
+          "index": 0,
+          "legacy_id": "kr-mina-stable",
+          "name": "미나",
+          "file": "kr-mina-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 79202,
+          "sha256": "537492110f6417a75822cf62c972f6dc0b9f711ec79076f87e91b06ab6afcb0e",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.919592"
+            }
+          }
+        },
+        {
+          "index": 1,
+          "legacy_id": "kr-mina-natural",
+          "name": "미나",
+          "file": "kr-mina-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 73315,
+          "sha256": "bc70ecee702638d7934742d2b48af6f3c7205c46ec9a545a3026d9bd70797a1c",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.923515"
+            }
+          }
+        },
+        {
+          "index": 2,
+          "legacy_id": "kr-mina-expressive",
+          "name": "미나",
+          "file": "kr-mina-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 79018,
+          "sha256": "d22ee8f0f1c19a66b5df67ad9530b66d0ef4d65bab2ce69c458982d9ecabaa7a",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.923968"
+            }
+          }
+        },
+        {
+          "index": 3,
+          "legacy_id": "kr-chloecha-stable",
+          "name": "클로이차",
+          "file": "kr-chloecha-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 81448,
+          "sha256": "f674e3531838fabe6cc5f892714a5befcf4b534da192c8aa9aee301dac079d42",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.493651"
+            }
+          }
+        },
+        {
+          "index": 4,
+          "legacy_id": "kr-chloecha-natural",
+          "name": "클로이차",
+          "file": "kr-chloecha-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 82259,
+          "sha256": "9d2e28a2b040e30d6fa8f5bc2d1067ea920eaf71803a9ad13dea563ee72ebc81",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.488141"
+            }
+          }
+        },
+        {
+          "index": 5,
+          "legacy_id": "kr-chloecha-expressive",
+          "name": "클로이차",
+          "file": "kr-chloecha-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 82872,
+          "sha256": "3206cc0c71ee910e0b9adc23278f8da2d76699d5722f8d8b4cc1cf1eef87a83f",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.517528"
+            }
+          }
+        },
+        {
+          "index": 6,
+          "legacy_id": "kr-hanna-stable",
+          "name": "한나",
+          "file": "kr-hanna-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 85664,
+          "sha256": "3d8e982ae408f24af363b4eff29671fee345391ffb4bce95fb78a8cae95bb536",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.519569"
+            }
+          }
+        },
+        {
+          "index": 7,
+          "legacy_id": "kr-hanna-natural",
+          "name": "한나",
+          "file": "kr-hanna-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 81571,
+          "sha256": "8e22a8e6c54307c0f1f0a2df49407e9f7a1b515c1392fe0cb3771931c373e271",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.446485"
+            }
+          }
+        },
+        {
+          "index": 8,
+          "legacy_id": "kr-hanna-expressive",
+          "name": "한나",
+          "file": "kr-hanna-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 83082,
+          "sha256": "30d3c64fb29273ea0ddcf102882a3e52e9a8ac5a0068817e7294ea857905b9e6",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.449048"
+            }
+          }
+        },
+        {
+          "index": 9,
+          "legacy_id": "kr-juha-stable",
+          "name": "주하",
+          "file": "kr-juha-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 72560,
+          "sha256": "c75b42ea80a29b3560a688924c3058eeec6354aa2e3f27a5485b688ef782f3e0",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.957506"
+            }
+          }
+        },
+        {
+          "index": 10,
+          "legacy_id": "kr-juha-natural",
+          "name": "주하",
+          "file": "kr-juha-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 72357,
+          "sha256": "d059d658dc2d02b4f5c4439d5b2c80a4a02cda45ac7d14667e3995d0abb19b61",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.959116"
+            }
+          }
+        },
+        {
+          "index": 11,
+          "legacy_id": "kr-juha-expressive",
+          "name": "주하",
+          "file": "kr-juha-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 72624,
+          "sha256": "9dc9689469f9c21c54680f6f59ca3e7ba111e9e816a501192850e4cd2356dc2f",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.960317"
+            }
+          }
+        },
+        {
+          "index": 12,
+          "legacy_id": "kr-keleek-stable",
+          "name": "켈릭",
+          "file": "kr-keleek-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 77456,
+          "sha256": "3630f8d02f42a3a5f70aecc52a75d4432a9d3ec2ebdbb871da8d5189db8607af",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.997506"
+            }
+          }
+        },
+        {
+          "index": 13,
+          "legacy_id": "kr-keleek-natural",
+          "name": "켈릭",
+          "file": "kr-keleek-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 74575,
+          "sha256": "b962bdff0f951373cd0d2a2b3db1180927fb9d2f3778620550fd1ba60c55db17",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.994921"
+            }
+          }
+        },
+        {
+          "index": 14,
+          "legacy_id": "kr-keleek-expressive",
+          "name": "켈릭",
+          "file": "kr-keleek-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 74483,
+          "sha256": "56f8326ee0595fefb51151cb4679286342981964ae11aae8b8946c7b8cb06692",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.995918"
+            }
+          }
+        },
+        {
+          "index": 15,
+          "legacy_id": "kr-monobeige-stable",
+          "name": "모노베이지",
+          "file": "kr-monobeige-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 82167,
+          "sha256": "b9b2cefe38482501b3c1ddd3550e07268e921e16fcf5ec921fcaac16ca9fbfbb",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.185283"
+            }
+          }
+        },
+        {
+          "index": 16,
+          "legacy_id": "kr-monobeige-natural",
+          "name": "모노베이지",
+          "file": "kr-monobeige-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 79776,
+          "sha256": "8934f06c764ab1a54d8cf7f368182cd5676112bbece8c847610c9ab56286c21d",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.178685"
+            }
+          }
+        },
+        {
+          "index": 17,
+          "legacy_id": "kr-monobeige-expressive",
+          "name": "모노베이지",
+          "file": "kr-monobeige-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 81494,
+          "sha256": "e21fd35f1c713477d4d9c59baf088db52a793431a6c0faad9e2173fbf8b66703",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.208163"
+            }
+          }
+        },
+        {
+          "index": 18,
+          "legacy_id": "kr-minzy-stable",
+          "name": "민지",
+          "file": "kr-minzy-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 80470,
+          "sha256": "c2901739576f447690e992df7f5386e583715ab17f2a433936d1cc3b998639dc",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.325102"
+            }
+          }
+        },
+        {
+          "index": 19,
+          "legacy_id": "kr-minzy-natural",
+          "name": "민지",
+          "file": "kr-minzy-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 81383,
+          "sha256": "1f674d8a53a2ffa20b5b6f0e6ccc657d7d30702ed7610e8dc62d4318b0795b69",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.300930"
+            }
+          }
+        },
+        {
+          "index": 20,
+          "legacy_id": "kr-minzy-expressive",
+          "name": "민지",
+          "file": "kr-minzy-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 72815,
+          "sha256": "53ad875c98ba738e64f3cc34895eee4655474768723ae96c138f534762261718",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.551701"
+            }
+          }
+        },
+        {
+          "index": 21,
+          "legacy_id": "kr-yura-stable",
+          "name": "유라",
+          "file": "kr-yura-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 79773,
+          "sha256": "64ede2f050fc32ca04f6ed0fa44da9e4c9d9466f1c872bd0ee0427a16830de30",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.080839"
+            }
+          }
+        },
+        {
+          "index": 22,
+          "legacy_id": "kr-yura-natural",
+          "name": "유라",
+          "file": "kr-yura-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 75706,
+          "sha256": "3ffe0444123111e5c8d63a37549d237d55c50b18c8d4c497846b389d16d42159",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.859025"
+            }
+          }
+        },
+        {
+          "index": 23,
+          "legacy_id": "kr-yura-expressive",
+          "name": "유라",
+          "file": "kr-yura-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 78418,
+          "sha256": "a237a39195b12079091d60cbd5a8edc539475b038259fd55eacac438bf8b3469",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.859206"
+            }
+          }
+        },
+        {
+          "index": 24,
+          "legacy_id": "kr-han-stable",
+          "name": "한",
+          "file": "kr-han-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 76048,
+          "sha256": "5c22158b4f6dbf070fbe83e2ba139b68c0401951c8b95c90b0d4c35dc737e673",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.196916"
+            }
+          }
+        },
+        {
+          "index": 25,
+          "legacy_id": "kr-han-natural",
+          "name": "한",
+          "file": "kr-han-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 79632,
+          "sha256": "23c217de400d844179e0ee98b54986bdf7c1d52edf26724eaf0e234cff648f07",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.185692"
+            }
+          }
+        },
+        {
+          "index": 26,
+          "legacy_id": "kr-han-expressive",
+          "name": "한",
+          "file": "kr-han-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 75945,
+          "sha256": "1fdd27cc3059bf041ec3b012459319415f0c8bec746696ed1d71f20578fa5c4a",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.192766"
+            }
+          }
+        },
+        {
+          "index": 27,
+          "legacy_id": "kr-kanna-stable",
+          "name": "칸나",
+          "file": "kr-kanna-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 77379,
+          "sha256": "e9bf4153154034a68088da83bcf1bcd976fb5587fdcad8584fa6f61ce47343c1",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.133878"
+            }
+          }
+        },
+        {
+          "index": 28,
+          "legacy_id": "kr-kanna-natural",
+          "name": "칸나",
+          "file": "kr-kanna-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 77844,
+          "sha256": "16e33fe9113fe6f27f95a2e2da72af0ab85ae4ec9d4e28fd21b1e8fe218a8a01",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.138050"
+            }
+          }
+        },
+        {
+          "index": 29,
+          "legacy_id": "kr-kanna-expressive",
+          "name": "칸나",
+          "file": "kr-kanna-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 77114,
+          "sha256": "1b7dcf896d308e9ed84e05e6018e5d797f839f8dba524038cd5c4e3741cf001d",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.135533"
+            }
+          }
+        },
+        {
+          "index": 30,
+          "legacy_id": "kr-talia-stable",
+          "name": "탈리아",
+          "file": "kr-talia-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 85038,
+          "sha256": "8c22f3e0b2c79d8de67b7293cce95bf8920b525e9027183576f42e29639d6f84",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.284649"
+            }
+          }
+        },
+        {
+          "index": 31,
+          "legacy_id": "kr-talia-natural",
+          "name": "탈리아",
+          "file": "kr-talia-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 87693,
+          "sha256": "feaca7a82d43f32083a2b7224045910437498394048a2dbe802edc9519554f51",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.289229"
+            }
+          }
+        },
+        {
+          "index": 32,
+          "legacy_id": "kr-talia-expressive",
+          "name": "탈리아",
+          "file": "kr-talia-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 84620,
+          "sha256": "d151fb16517098009b1bbbb4b46c43a8c56dc663bddc473f5e366769ae382f10",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.280930"
+            }
+          }
+        },
+        {
+          "index": 33,
+          "legacy_id": "kr-hanabad-stable",
+          "name": "하나바드",
+          "file": "kr-hanabad-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 68996,
+          "sha256": "bb0481c81eb54b5762d725a8dc617e3a8c8b2e05caad6495b0d73357456dc4cb",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.495011"
+            }
+          }
+        },
+        {
+          "index": 34,
+          "legacy_id": "kr-hanabad-natural",
+          "name": "하나바드",
+          "file": "kr-hanabad-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 64276,
+          "sha256": "95db390946de5a21021b049eb5f28708e8fb82f7a325f8a2bcf306447e9bebf9",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.497755"
+            }
+          }
+        },
+        {
+          "index": 35,
+          "legacy_id": "kr-hanabad-expressive",
+          "name": "하나바드",
+          "file": "kr-hanabad-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 70616,
+          "sha256": "e8733af132705ca4f6a59015b31f296adfb6c4bc2318a9ab630bed1bfa5c7e75",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.501315"
+            }
+          }
+        },
+        {
+          "index": 36,
+          "legacy_id": "kr-jiana-stable",
+          "name": "지아나",
+          "file": "kr-jiana-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 77809,
+          "sha256": "fd33c40230c7c02389da18eeb8f443e9815c82aa024460c7ac86c9797c3dfe51",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.520000"
+            }
+          }
+        },
+        {
+          "index": 37,
+          "legacy_id": "kr-jiana-natural",
+          "name": "지아나",
+          "file": "kr-jiana-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 82503,
+          "sha256": "778c6267c76a43aa6a28d20a9478ce93d956c4abeb6876519c3b12759d4fe899",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.520000"
+            }
+          }
+        },
+        {
+          "index": 38,
+          "legacy_id": "kr-jiana-expressive",
+          "name": "지아나",
+          "file": "kr-jiana-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 79623,
+          "sha256": "98b4fbc9186b8e92df74760482ad059e3f63f0406a6c407d9c937bc48bff39dd",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.520000"
+            }
+          }
+        },
+        {
+          "index": 39,
+          "legacy_id": "kr-yooni-stable",
+          "name": "유니",
+          "file": "kr-yooni-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 72196,
+          "sha256": "abbb9ac5c10fcf785f0541a3775616b5b23713812ed69d4f5b59ab5ae5c1108f",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.573696"
+            }
+          }
+        },
+        {
+          "index": 40,
+          "legacy_id": "kr-yooni-natural",
+          "name": "유니",
+          "file": "kr-yooni-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 73162,
+          "sha256": "0f520d2037a9cd6103d129a1be9dedcda5b403a717dcef0f0a50895d19a89dfd",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.573696"
+            }
+          }
+        },
+        {
+          "index": 41,
+          "legacy_id": "kr-yooni-expressive",
+          "name": "유니",
+          "file": "kr-yooni-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 73429,
+          "sha256": "368467af2f7065eafa20925473d53c26e61bcfe9c7be7d8ae6789506e4232219",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.572063"
+            }
+          }
+        },
+        {
+          "index": 42,
+          "legacy_id": "kr-yooni-whisper",
+          "name": "유니",
+          "file": "kr-yooni-whisper.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 75620,
+          "sha256": "d80e4f8637aae5c8a9d6440c918d90bc8f3716e4cc37d66ffbdc055602e06a45",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.713061"
+            }
+          }
+        },
+        {
+          "index": 43,
+          "legacy_id": "kr-mina-whisper",
+          "name": "미나",
+          "file": "kr-mina-whisper.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 78430,
+          "sha256": "f25a709decb115cbcd3cd88581c593cb6414582916207c6a849a9e962b236c19",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.084422"
+            }
+          }
+        },
+        {
+          "index": 44,
+          "legacy_id": "kr-chloecha-whisper",
+          "name": "클로이차",
+          "file": "kr-chloecha-whisper.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 71220,
+          "sha256": "259f2508a0848f7bf59a284a203cbfbff2f756bd66afee37dab0690ec74f0419",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.539048"
+            }
+          }
+        },
+        {
+          "index": 45,
+          "legacy_id": "kr-kanna-whisper",
+          "name": "칸나",
+          "file": "kr-kanna-whisper.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 78777,
+          "sha256": "567fb5be9bd974186c76d172a6b43bb63ab091c1a78e792c53488583d75bfd28",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.074739"
+            }
+          }
+        },
+        {
+          "index": 46,
+          "legacy_id": "kr-hanabad-whisper",
+          "name": "하나바드",
+          "file": "kr-hanabad-whisper.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 73391,
+          "sha256": "762ff30c6c1e1ac7cb573a634900006f1288e13e1c337eb55603fafb10519b95",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "44100",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.624739"
+            }
+          }
+        },
+        {
+          "index": 47,
+          "legacy_id": "tc-piljae-stable",
+          "name": "필재",
+          "file": "tc-piljae-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 72717,
+          "sha256": "b978dc73dbcf53ce3ea3a899f495ab3a2acef22f1573221190b699616517b95f",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "5.887875"
+            }
+          }
+        },
+        {
+          "index": 48,
+          "legacy_id": "tc-piljae-natural",
+          "name": "필재",
+          "file": "tc-piljae-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 76797,
+          "sha256": "a0a0804d282ac7c4eabf9427eb2f1a548bbefa9f1d589fa8068ccd4a9b69b93b",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.125021"
+            }
+          }
+        },
+        {
+          "index": 49,
+          "legacy_id": "tc-piljae-expressive",
+          "name": "필재",
+          "file": "tc-piljae-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 70893,
+          "sha256": "38e4a575551b24f38ea0a51ecc86b9f33da16c80bf7f6f52e0e4850dcb414fac",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.333354"
+            }
+          }
+        },
+        {
+          "index": 50,
+          "legacy_id": "tc-gunn-stable",
+          "name": "김건",
+          "file": "tc-gunn-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 82317,
+          "sha256": "e738068d71404e2bf065942e3713ea8eecfcf796a5c5f162b6613679dcde35b4",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "5.733958"
+            }
+          }
+        },
+        {
+          "index": 51,
+          "legacy_id": "tc-gunn-natural",
+          "name": "김건",
+          "file": "tc-gunn-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 80877,
+          "sha256": "f37fec57af6b9deec85ec05c7ae6ff17b33885d06d3c301b677f0570a4b9f869",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "5.573854"
+            }
+          }
+        },
+        {
+          "index": 52,
+          "legacy_id": "tc-gunn-expressive",
+          "name": "김건",
+          "file": "tc-gunn-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 63141,
+          "sha256": "f1999c9f6febe7918edf0d22212bde34a563c504cb68b956c57d4038c4a3364d",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "5.208979"
+            }
+          }
+        },
+        {
+          "index": 53,
+          "legacy_id": "tc-changsu-stable",
+          "name": "박창수",
+          "file": "tc-changsu-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 79941,
+          "sha256": "5f62c385e38fbd98373c4039b0af8c4d91a540eaad01928fd1da4c56aa562e98",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "5.924167"
+            }
+          }
+        },
+        {
+          "index": 54,
+          "legacy_id": "tc-changsu-natural",
+          "name": "박창수",
+          "file": "tc-changsu-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 78765,
+          "sha256": "9f1655de98eef58e9f9d1b1c6d775a6ceba0e86ff880f7d7483994deec131760",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "5.583354"
+            }
+          }
+        },
+        {
+          "index": 55,
+          "legacy_id": "tc-changsu-expressive",
+          "name": "박창수",
+          "file": "tc-changsu-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 75981,
+          "sha256": "6edff34e96050175c0da241a32837db87f489e0dccd2410f38570991522bde96",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.375021"
+            }
+          }
+        },
+        {
+          "index": 56,
+          "legacy_id": "tc-yongsik-stable",
+          "name": "용식이",
+          "file": "tc-yongsik-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 75669,
+          "sha256": "dfb9c8071cd3153fb4add0825c66651bcdee7d4472e2219c6da6eb183db9a035",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "5.916667"
+            }
+          }
+        },
+        {
+          "index": 57,
+          "legacy_id": "tc-yongsik-natural",
+          "name": "용식이",
+          "file": "tc-yongsik-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 77277,
+          "sha256": "f9f8567e4c82325c30fdf1caf579e5b431ea5a97f1369dad9ba81616826ee8c3",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "6.208354"
+            }
+          }
+        },
+        {
+          "index": 58,
+          "legacy_id": "tc-yongsik-expressive",
+          "name": "용식이",
+          "file": "tc-yongsik-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 70701,
+          "sha256": "494c764d2a81a3d939aa35103983ddd09258ddf6582b7baae669f8862f90a02b",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "5.958354"
+            }
+          }
+        },
+        {
+          "index": 59,
+          "legacy_id": "tc-moonjung-stable",
+          "name": "문정",
+          "file": "tc-moonjung-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 87357,
+          "sha256": "01788a72fe76668f291b24524e5da3d5ceb64fdfb06840c820294a6c3dc413cd",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.924479"
+            }
+          }
+        },
+        {
+          "index": 60,
+          "legacy_id": "tc-moonjung-natural",
+          "name": "문정",
+          "file": "tc-moonjung-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 85341,
+          "sha256": "03f9770f875482b17fd61082f0e8b1fec18be07f076a909b273aceeaa196b81e",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "8.062188"
+            }
+          }
+        },
+        {
+          "index": 61,
+          "legacy_id": "tc-moonjung-expressive",
+          "name": "문정",
+          "file": "tc-moonjung-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 82269,
+          "sha256": "184e91db0031006261b3324c027efbb1b2ce0816f0ac4af5882191b71a26dddb",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.375021"
+            }
+          }
+        },
+        {
+          "index": 62,
+          "legacy_id": "tc-valkyrie-stable",
+          "name": "발키리",
+          "file": "tc-valkyrie-stable.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 88581,
+          "sha256": "ba28d8efaffb47cfbbd70b566991c618450956309986de8dde89fdbf7acfbbef",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.416979"
+            }
+          }
+        },
+        {
+          "index": 63,
+          "legacy_id": "tc-valkyrie-natural",
+          "name": "발키리",
+          "file": "tc-valkyrie-natural.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 90093,
+          "sha256": "5bafc6e2411cc37de856b9dc59d2ba117daffdc1aef3e6a640e807f7c13b8a50",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "7.791688"
+            }
+          }
+        },
+        {
+          "index": 64,
+          "legacy_id": "tc-valkyrie-expressive",
+          "name": "발키리",
+          "file": "tc-valkyrie-expressive.mp3",
+          "rights_status": "not_reviewed",
+          "status": "present",
+          "bytes": 102021,
+          "sha256": "3e4e394776567d79148983565eabd901497aba99c0b0990d591c7bbfaf8eea8d",
+          "technical": {
+            "status": "parsed",
+            "programs": [],
+            "stream_groups": [],
+            "streams": [
+              {
+                "codec_name": "mp3",
+                "codec_type": "audio",
+                "sample_rate": "48000",
+                "channels": 1
+              }
+            ],
+            "format": {
+              "duration": "8.916667"
+            }
+          }
+        }
+      ],
+      "status": "inspected",
+      "registry_sha256": "1ece3e0ec28e9feeba6a7506f58a01e4dd900fe70375c585a46d1520d0a56f73",
+      "registered_count": 65,
+      "counts": {
+        "present": 65
+      },
+      "physical_file_count": 65,
+      "unregistered_files": [],
+      "duplicate_files": []
+    }
+  ],
+  "database": {
+    "status": "inspected",
+    "scope": "local_database",
+    "tables": {
+      "scene_assets": 0,
+      "spine": 0,
+      "pattern_item": 37,
+      "pattern_source": 13,
+      "script_usage": 0
+    },
+    "note": "Counts only; no customer rows exported. This is not server inventory."
+  },
+  "limitations": [
+    "License and visual/editorial approval are not inferred from parse success.",
+    "Code-generated and customer-only recipes are inspected through the catalog adapters.",
+    "ffprobe metadata is not a full playback or listening test."
+  ]
+}

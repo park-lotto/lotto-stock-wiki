@@ -17,6 +17,7 @@ import tempfile
 import pytest
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
+DECOR_CATALOG = pathlib.Path(__file__).resolve().parents[1] / "static" / "scene-decoration-catalog.js"
 NODE = shutil.which("node")
 
 _START = "// ── 6단계 썸네일"
@@ -38,7 +39,8 @@ def _real_deps():
     #   발명하면 0% 동작도 초록이 된다(메모리 feedback_harness_invented_contract).
     f = re.search(r"^const HC_FONTS=\[.*?^\];", src, re.M | re.S)
     assert f, "HC_FONTS 선언을 못 찾았다 — thumbFontCss가 이걸 쓴다"
-    return m.group(0) + chr(10) + f.group(0) + chr(10)
+    catalog = "globalThis.window=globalThis;\n" + DECOR_CATALOG.read_text(encoding="utf-8")
+    return catalog + chr(10) + m.group(0) + chr(10) + f.group(0) + chr(10)
 
 
 def _slice_source():
@@ -278,7 +280,12 @@ console.log(JSON.stringify({
 """
     d = json.loads(_run_node(script))
     assert d["hasDel"], "배지에 ✕ 삭제 손잡이가 안 뜬다"
-    assert d["buttons"] == 4, f"손잡이는 삭제 1 + 크기·방향 3 = 4개여야 한다: {d['buttons']}"
+    # 2026-08-28 사장님 "손잡이 모서리 기능빼줘"로 모서리 3개를 뺐다가,
+    # 2026-09-02 고객 제보("스티커 크기 각도 조절이 미리보기 창에서 안 돼요")로 되살렸다.
+    # ★단, 예전처럼 한 손잡이가 크기+회전을 같이 잡지 않는다(그게 감도 불만의 뿌리였다) —
+    #   ⤢=크기만 / ↻=각도만. 그래서 버튼은 ✕·⤢·↻ 셋이다(점선 네모는 button이 아니다).
+    assert d["buttons"] == 3, f"손잡이는 ✕·⤢·↻ 셋이어야 한다: {d['buttons']}"
+    assert 'data-h="size"' in d["html"] and 'data-h="rot"' in d["html"]
 
 
 def test_badge_handle_box_matches_pill_width():

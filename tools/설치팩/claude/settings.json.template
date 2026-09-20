@@ -1,0 +1,126 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(*)",
+      "Write(*)",
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "TodoWrite(*)"
+    ],
+    "deny": []
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py \"__USERPROFILE__\\.claude\\dashboard\\stop_hook.py\""
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "prompt-architect@prompt-architect-marketplace": true,
+    "frontend-design@claude-plugins-official": true,
+    "watch@claude-video": true,
+    "understand-anything@understand-anything": true,
+    "context-engineering@context-engineering-marketplace": true,
+    "agentmemory@agentmemory": true,
+    "fablize@fablize": true
+  },
+  "extraKnownMarketplaces": {
+    "prompt-architect-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "ckelsoe/prompt-architect"
+      }
+    },
+    "superpowers-dev": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers"
+      }
+    },
+    "claude-video": {
+      "source": {
+        "source": "github",
+        "repo": "bradautomates/claude-video"
+      }
+    },
+    "understand-anything": {
+      "source": {
+        "source": "github",
+        "repo": "Lum1104/Understand-Anything"
+      }
+    },
+    "agentmemory": {
+      "source": {
+        "source": "github",
+        "repo": "rohitg00/agentmemory"
+      }
+    },
+    "context-engineering-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "muratcankoylan/Agent-Skills-for-Context-Engineering"
+      }
+    },
+    "fablize": {
+      "source": {
+        "source": "github",
+        "repo": "fivetaku/fablize"
+      }
+    }
+  },
+  "effortLevel": "low",
+  "autoCompactWindow": 900000,
+  "autoUpdatesChannel": "latest",
+  "tui": "fullscreen",
+  "skipWorkflowUsageWarning": true,
+  "theme": "dark",
+  "autoCompactEnabled": true,
+  "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "★사장님께 허가를 구하거나 이유를 설명할 때는 반드시 한국어로 쓴다. 명령어·파일경로·코드·에러 원문만 그대로 두고 나머지 문장은 전부 한국어(전역 CLAUDE.md '언어' 절과 같은 규칙)",
+      "Bash(git push --force*) in park-lotto/lotto-stock-wiki — repo is public with no branch protection or rulesets; force-push to main would be irreversible on the live remote",
+      "Bash(ssh ubuntu@43.200.48.69 * git add*) / Bash(ssh ubuntu@43.200.48.69 * git commit*) — CLAUDE.md documents server-side commits break the auto_deploy.sh pull-only workflow and silently halt deployment"
+    ],
+    "environment": [
+      "### 말투 규칙 (최우선)",
+      "**응답 언어**: 한국어. 허가 요청·위험 설명·완료 보고를 영어로 쓰지 마라. 명령어·파일경로·코드·에러 원문은 그대로 인용한다",
+      "### Org-wide",
+      "**Organization**: None configured",
+      "**Repository visibility**: PUBLIC — park-lotto/lotto-stock-wiki (github.com) — any push here is publishing",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Default / protected branches**: main (default). No branch protection rules or rulesets listed via gh — treat as unprotected",
+      "**CI/CD deploy targets**: stockbrain1.duckdns.org and shoppingshorts.duckdns.org via systemd services (stockbrain, shopping-shorts) on ubuntu@43.200.48.69, deployed by auto_deploy.sh cron pulling origin/main",
+      "**Network posture**: None configured",
+      "**Source control**: This repo (park-lotto/lotto-stock-wiki) and its origin remote only",
+      "**Trusted internal domains**: stockbrain1.duckdns.org, shoppingshorts.duckdns.org",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: ubuntu@43.200.48.69 (Lightsail deploy target for this repo's dashboard/shopping_shorts services)",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: .env, .env.example, db/.session_secret, scripts/kakao/.env(.example), shopping_shorts/.env, and other gitignored token/credential cache files listed in .gitignore — never commit or share outside the operator",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any host/namespace containing 'prod' or 'production' as a whole segment (none observed in this repo's config)",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries 'prod' or 'production' as a whole word or name segment",
+      "**Cloud provider(s)**: AWS Lightsail (server ubuntu@43.200.48.69) — used by this repo's deploy scripts",
+      "**Secrets management**: None configured — local .env/.gitignored token cache files only (.env, scripts/kakao/.env, scripts/.kiwoom_token_cache.json, scripts/.kis_token_cache.json, scripts/.*_token_cache.json, db/.session_secret, deploy/stockbrain.env, /etc/stockbrain.env, pipeline/push_token.txt, pipeline/atoms/.gemini_key_state.json, .env.bak*, .env.backup*)",
+      "### User-specific",
+      "**Primary use of Claude Code**: personal/hobby stock-analysis wiki and content pipeline (software development + content generation), routine under this repo",
+      "**Org-specific CLIs**: None configured — repo-specific tooling: tools/track.py, tools/find_work.py, tools/session_title.py, tools/log_view.py (py invoked 504× in this project)",
+      "**Trusted repo**: park-lotto/lotto-stock-wiki (public) and its origin remote — confidential/personal material (tokens, .env contents, credentials) must never be committed here despite being a trusted working repo; public visibility only clears this repo's own work, not ported/outside content",
+      "**routine under .tracks/<트랙명>/ prefix**: code edits and git operations scoped to .tracks/<트랙명> subfolders are this repo's convention for isolating concurrent work; main-folder code edits outside wiki/handoff are discouraged per CLAUDE.md"
+    ]
+  },
+  "model": "claude-fable-5-1[1m]"
+}

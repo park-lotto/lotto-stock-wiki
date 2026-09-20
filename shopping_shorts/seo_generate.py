@@ -213,7 +213,15 @@ def generate(job, captions=None, only=None, locked=None, keyword_stats=None):
     if not keys:
         return None
     prompt = _build_prompt(job, captions, only, locked, keyword_stats)
-    for key in keys:
+    # ★키를 페이서로 골라 쓴다(2026-09-01) — 종전 `for key in keys:`는 간격 0으로
+    #   연타해 키를 순식간에 다 태웠다. 사유·실측은 key_vault.pick_paced_key 참조.
+    #   시도 횟수·실패 처리는 종전과 같다.
+    pool = list(keys)
+    while pool:
+        key = key_vault.pick_paced_key(pool)
+        if not key:
+            break
+        pool.remove(key)      # 한 키는 한 번만 시도(종전 for문과 같은 계약)
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
                 model=_MODEL, contents=prompt,
@@ -223,7 +231,9 @@ def generate(job, captions=None, only=None, locked=None, keyword_stats=None):
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
+                # ★표시는 mark_failure가 정한다: 401/403/무효키=영구, 429=한시(2026-09-04).
+                #   종전 mark_exhausted는 죽은 키를 30분 뒤 다시 살려 매번 재호출됐다.
+                key_vault.mark_failure(key, e, group=key_vault._owner_group(key) or _GEN_GROUP)
                 continue
             if key_vault.is_quota_error(e):
                 continue  # 순간 rate limit — 다음 키로

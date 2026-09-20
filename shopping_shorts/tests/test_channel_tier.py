@@ -108,16 +108,24 @@ class TestDueToday:
         assert any(ct.due_today(tiers, day_index=d) for d in range(period))
 
 
-class TestFetchLimit:
-    def test_A는_기본개수(self):
-        assert ct.fetch_limit(ct.TIER_A) == ct.RESULTS_DEFAULT
+class Test등급은_개수를_깎지_않는다:
+    """★가드(2026-09-09). 되살리면 상한12가 통째로 무효가 된다.
 
-    def test_C는_1개만(self):
-        # C는 재료창고가 아니라 승격 감지기 — 최신 1개만 봐도 터졌는지 안다
-        assert ct.fetch_limit(ct.TIER_C) == 1
+    fetch_limit()은 C·D를 1건으로 깎았고 호출부가 한 번도 없었다. 배선했다면
+    실측 251채널(C143+D108 = 전체 345의 73%)이 1건으로 떨어졌을 것이다.
+    유실이 몰린 곳이 바로 C(70%)·D(77%)라 정확히 반대로 가는 값이었다.
+    """
 
-    def test_D도_1개만(self):
-        assert ct.fetch_limit(ct.TIER_D) == 1
+    def test_등급별_개수제한_함수가_없다(self):
+        # 이름만 되살아나도 잡는다 — 있으면 누군가 배선할 수 있다
+        assert not hasattr(ct, "fetch_limit"), (
+            "fetch_limit이 되살아났다. C·D를 1건으로 깎으면 251채널이 죽는다 "
+            "— 등급은 PERIOD_DAYS(주기)만 정한다"
+        )
+
+    def test_등급은_주기만_정한다(self):
+        # 등급이 정하는 것은 '얼마나 자주 여느냐'뿐이어야 한다
+        assert set(ct.PERIOD_DAYS) == {ct.TIER_A, ct.TIER_B, ct.TIER_C, ct.TIER_D}
 
 
 class TestSplitByTier:

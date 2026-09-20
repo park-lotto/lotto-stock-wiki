@@ -242,10 +242,40 @@ def refresh_member_gemini_keys(pooled):
     return len(_OWNER_GEMINI_KEYS), len(SHORTS_GEMINI_KEYS) - len(_OWNER_GEMINI_KEYS)
 
 
+# 유튜브 키를 **값으로 복사해 가는** 모듈들(2026-09-09 실측으로 전수 확인).
+#   grep 'from shopping_shorts.config import ... YOUTUBE_API_KEYS'
+_YT_IMPORTERS = ("youtube_client", "youtube_search", "seo_probe")
+
+
+def _push_youtube_pool_to_importers(keys):
+    """복사본을 들고 있는 모듈들의 YOUTUBE_API_KEYS를 갱신한다.
+
+    이미 import된 모듈만 건드린다(sys.modules) — 여기서 새로 import하면 순환이 난다.
+    """
+    import sys
+    for name in _YT_IMPORTERS:
+        mod = sys.modules.get("shopping_shorts." + name)
+        if mod is not None and hasattr(mod, "YOUTUBE_API_KEYS"):
+            mod.YOUTUBE_API_KEYS = keys
+
+
 def refresh_member_youtube_keys(pooled):
     """회원 유튜브 키를 공용 풀에 합류시킨다(제미니와 같은 규칙)."""
     global YOUTUBE_API_KEYS
     YOUTUBE_API_KEYS = _merge_pool(_OWNER_YOUTUBE_KEYS, pooled)
+    # ★★값을 복사해 간 모듈들에도 밀어 넣는다 — **이 줄이 없어서 사고가 났다**(2026-09-09).
+    #
+    #   제미니에는 2026-08-27에 같은 처방(_push_pool_to_importers)이 들어갔는데
+    #   유튜브에는 안 들어갔다. `from shopping_shorts.config import YOUTUBE_API_KEYS`는
+    #   **값 복사**라, 여기서 재할당해도 youtube_client·youtube_search는 옛 목록을 본다.
+    #
+    #   실측 피해(2026-09-09): keypool 배선을 넣어 로그에는
+    #     `[keypool] 유튜브 사장님 10 + 회원 52 = 62개`
+    #   가 찍혔는데, 실제 호출은 **이미 소진된 사장님 키 10개**로 나갔다.
+    #     수집 9,622건 → 922건 (썰쇼핑 813 → 37건, -93%)
+    #   로그가 "합류 성공"이라고 말하는데 실제로는 아무것도 안 바뀐 **조용한 실패**였다.
+    #   ⚠️키 풀을 늘리는 배선은 항상 두 짝이다 — config 갱신 + 복사본 갱신.
+    _push_youtube_pool_to_importers(YOUTUBE_API_KEYS)
     return len(_OWNER_YOUTUBE_KEYS), len(YOUTUBE_API_KEYS) - len(_OWNER_YOUTUBE_KEYS)
 
 
@@ -297,6 +327,13 @@ ELEVENLABS_TIMESTAMPS = os.getenv("ELEVENLABS_TIMESTAMPS", "1") not in ("0", "fa
 # 판단한다(0순위-B). 키가 없으면 기존과 같이 무음 mock으로 내려앉는다.
 TYPECAST_API_KEY = os.environ.get("TYPECAST_API_KEY", "")
 
+# ★타입캐스트를 쓸 것인가(2026-09-07 사장님 "지금 타입캐스트 안 쓰고 일레븐만 쓴다").
+#   기본 0 = 끔. 끄면 ①성우 카드에서 타입캐스트 성우가 사라지고 ②이미 그 성우로
+#   저장해 둔 job은 합성 직전에 일레븐랩스 성우로 **자동 대체**된다(3단계에서 나던
+#   "타입캐스트 오류"가 그래서 사라진다). 판정은 typecast_tts.enabled() 한 곳뿐(0순위-B).
+#   다시 쓰려면 서버 env에 TYPECAST_ENABLED=1만 넣으면 종전 동작으로 돌아온다.
+TYPECAST_ENABLED = os.environ.get("TYPECAST_ENABLED", "0") not in ("0", "false", "False", "")
+
 # ASR 라운드트립 검증(튜닝 작업대) — Whisper로 TTS를 재전사해 오독 탐지. GROQ 우선.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
@@ -315,6 +352,39 @@ TTS_MAX_WORKERS = int(os.getenv("TTS_MAX_WORKERS", "3"))
 # 넣으면 서버가 직접 유튜브를 그 IP로 받아 PC 없이 24/7·고객 다중 동시 처리된다(업체 무관, 형식
 # http://user:pass@host:port). 우선순위: 프록시 > 릴레이(A) > 직접. 미설정이면 기존 A/직접 그대로(회귀0).
 YTDLP_PROXY = os.getenv("YTDLP_PROXY", "")
+# ★유튜브 프록시를 **몇 개 슬롯으로 돌릴지**(2026-08-31 사장님 "프록시 몇 개 붙여야
+#   되는 거 아닌가"). 슬롯 하나로 고정하면 (1) 고객이 동시에 제작할 때 같은 출구 IP로
+#   몰려 유튜브가 다시 막고 (2) 그 IP가 죽으면 유튜브가 통째로 멈춘다.
+#   Webshare 자격증명(WEBSHARE_USER/PASS)이 있으면 kr-31.. 로 회전한다. 0이면
+#   종전대로 YTDLP_PROXY 한 개만 쓴다(회귀 0).
+YTDLP_PROXY_SLOTS = int(os.getenv("YTDLP_PROXY_SLOTS", "4"))
+
+
+# ★"주거용 IP로 나가야 하는 요청"의 프록시를 정하는 곳은 여기 하나다(0순위-B).
+#   2026-09-04 실사고: 핀터레스트가 REDDIT_PROXY만 읽었는데 서버에는 YTDLP_PROXY만
+#   깔려 있어(webshare) 핀터레스트만 데이터센터 IP로 나갔다. 핀터레스트는 그 IP에
+#   SEO용 JSON-LD를 아예 안 내려준다 → pin_video_info가 None → 믹스에서
+#   "영상이 없는 핀이에요(이미지 핀)"로 떨어졌다. 실측(라이브 담긴 핀 2건):
+#     프록시 없음 → None 2/2   /   YTDLP_PROXY 태움 → mp4 직링크 2/2.
+#   같은 자원(주거용 출구 IP)을 이름 두 개로 나눠 적어서 한쪽만 설정된 것이 뿌리다.
+#   전용 노브(REDDIT_PROXY)가 있으면 그것을 먼저 쓰고, 없으면 이미 깔려 있는
+#   YTDLP_PROXY로 넘어간다 — 둘 다 없으면 종전대로 직결(회귀 0).
+def residential_proxy():
+    """주거용 출구 IP 프록시 URL(없으면 빈 문자열)."""
+    return REDDIT_PROXY or YTDLP_PROXY or ""
+
+
+def residential_proxies():
+    """requests용 proxies dict(없으면 None = 직결)."""
+    u = residential_proxy()
+    return {"http": u, "https": u} if u else None
+
+# 네이버 클립 벤치마킹 채널 매일 자동수집(2026-08-31). 샤홍·인스타 발굴과 같은
+# 계약으로 **기본은 꺼둔다** — 켜는 건 서버 env에서 한다(병합만으로 라이브 동작이
+# 바뀌면 안 된다). 실측 부담: 15채널 915건에 4.2초라 배치에 얹어도 티가 안 난다.
+NAVERCLIP_AUTO_COLLECT = os.getenv("NAVERCLIP_AUTO_COLLECT", "") == "1"
+# 채널당 몇 편까지 볼 것인가. 매일 도는 거라 신규만 잡으면 되므로 크게 둘 이유가 없다.
+NAVERCLIP_AUTO_PER_CHANNEL = int(os.getenv("NAVERCLIP_AUTO_PER_CHANNEL", "60"))
 
 YT_RELAY_ENABLED = os.getenv("YT_RELAY_ENABLED", "") == "1"
 YT_RELAY_KEY = os.getenv("YT_RELAY_KEY", "")
@@ -327,7 +397,22 @@ WINDOW_HOURS = 48          # 48시간 이내만 랭킹(인스타 — 빠르게 �
 # 2026-07-13). 발굴 창을 넓게(14일) 잡아 언어필터 후에도 충분한 후보를 확보.
 YOUTUBE_WINDOW_HOURS = 336  # 14일
 YOUTUBE_MAX_PER_KW = 50     # 키워드당 검색 상한(YouTube API 한 호출 최대)
-RESULTS_PER_CHANNEL = 3    # 채널당 최신 상한
+# 채널당 최신 상한. ★3 → 12 (2026-09-08 실측).
+# 인스타 프로필 릴스 탭을 한 번 열면 graphql 첫 응답에 **12건**이 통째로 온다
+# (실측: long_2_salim·zip.ella_home 둘 다 nodes=12. instagram_playwright의
+#  "실측(수확 0이던 채널 30개, 15초): 30/30 전부 12건 회수" 주석과 같은 값).
+# 우리는 그 12건을 다 받아놓고 `nodes[:RESULTS_PER_CHANNEL]`로 3건만 쓰고 9건을
+# 버리고 있었다 — 자르기만 하므로 12로 올려도 **추가 요청·프록시 바이트 0**이다.
+# 왜 손실이 컸나(실측 2026-09-08, 60일 업로드 이력 기준):
+#   A(매일)  주기중 1.2건 업로드 → 유실 0%    ← 상한에 안 걸린다
+#   B(7일)   6.6건  → 3건만     → 유실 59%
+#   C(14일)  9.4건  → 3건만     → 유실 70%
+#   D(30일)  12.3건 → 3건만     → 유실 77%
+# 즉 손실은 전부 C·D에 몰려 있었고, 거기에 물건(홈템) 채널이 185개 있다.
+# ⚠️12를 넘기려면 스크롤이 필요해 추가 요청이 생긴다 — 공짜는 딱 12까지다.
+# ⚠️랭킹 수집은 Gemini 태깅을 부르지 않는다(태깅은 channel_archive 기반) →
+#   건수가 늘어도 AI 비용은 안 는다. 되돌리려면 이 숫자만 3으로.
+RESULTS_PER_CHANNEL = 12   # 채널당 최신 상한 (한 번 여는 값과 동일 = 버리는 것 없음)
 ONLY_NEWER_THAN = "2 days" # Apify 날짜필터 (창 + 여유)
 
 # 채널 등급제(2026-08-17) — 과거 성적으로 방문 주기를 가른다. 상세·실측근거: channel_tier.py
@@ -408,6 +493,13 @@ CATEGORIES = ["홈템", "레시피", "뷰티", "기타"]
 # 경로(플랫폼별 별도 — 계정 다르면 쿠키도 다르다). 파일이 없으면 빈 문자열이고,
 # media_download.py는 빈 값이면 --cookies 없이(기존처럼) 시도해 회귀가 없다.
 YTDLP_COOKIES_YOUTUBE = os.environ.get("YTDLP_COOKIES_YOUTUBE", "")
+# ★파일 스냅샷보다 브라우저 직독이 낫다(2026-08-31 실측): 브라우저에서 한 번 뽑아둔
+# cookies.txt는 그 브라우저로 유튜브를 계속 쓰면 유튜브가 세션을 회전시켜 30분 만에
+# 죽는다("Sign in to confirm you're not a bot" 재발). 이 값이 있으면 매 호출 브라우저에서
+# 직접 읽어 항상 최신 쿠키를 쓴다. 값 = yt-dlp의 --cookies-from-browser 인자(예: "firefox",
+# "firefox:<프로필경로>"). 크롬은 App-Bound Encryption(127+)으로 복호 불가라 못 쓴다.
+# 릴레이 PC에서만 켠다 — 서버엔 브라우저가 없다.
+YTDLP_COOKIES_BROWSER_YOUTUBE = os.environ.get("YTDLP_COOKIES_BROWSER_YOUTUBE", "")
 YTDLP_COOKIES_TIKTOK = os.environ.get("YTDLP_COOKIES_TIKTOK", "")
 
 # ── 쿠팡 상품검색 크롤(2026-07-29) ──
@@ -447,6 +539,24 @@ DOUYIN_SESSION_PATH = os.getenv("DOUYIN_SESSION_PATH", "/home/ubuntu/douyin_sess
 #   즉 샤오홍슈(세션 있음 → 무료 성공)와 도우인(세션 없음 → Apify)의 차이와 같다.
 #   이 파일이 생기는 순간 kw_search가 자동으로 무료 경로를 먼저 타고 비용이 0이 된다.
 TIKTOK_SESSION_PATH = os.getenv("TIKTOK_SESSION_PATH", "/home/ubuntu/tiktok_session.json")
+
+# ── 「🔎 여기서」(렌즈 모달 키워드 검색)에서 **돈 나가는 경로를 끈다** (2026-09-08 사장님 지시)
+#    사장님: "인스타는 막고 / 틱톡은 (무료로 긁게)".
+#
+#    왜 껐나 — 이 버튼은 화면상 '무료 검색'처럼 보이는데 실제로는 두 군데서 돈이 샜다:
+#      · 인스타 = Apify는 아니지만 **주거용 프록시**(INSTAGRAM_PROXY)라 GB 과금이다.
+#        코드 주석이 "무료"라고 적어둔 건 *렌즈 예산이 아니라 프록시 예산에서 나간다*는
+#        뜻일 뿐이고, 회당 몇 MB인지 우리는 **측정한 적이 없다**(단가 grep 0건).
+#      · 틱톡 = 세션이 없으면 Apify $0.0195/회로 폴백한다. 화면의 kwCost는 값을
+#        계산해 놓고 **그리지 않아서**(index.html) 사장님 눈에 안 보인 채 나갔다.
+#
+#    끈 뒤의 동작: 두 플랫폼은 「여기서」결과에서 빠지고, 모달의 새 탭 아이콘
+#    (📷 인스타 · 🎵 틱톡)으로 유도된다 — 그 링크는 우리 돈이 0원이다.
+#
+#    ★틱톡은 "유료 폴백만" 끈다. 세션 파일이 생기면 pw_tiktok이 무료로 성공하므로
+#      이 노브를 그대로 둔 채 자동으로 살아난다(_CHAIN·프론트 무수정).
+KW_SEARCH_INSTAGRAM = os.getenv("KW_SEARCH_INSTAGRAM", "0") == "1"
+KW_SEARCH_TIKTOK_APIFY = os.getenv("KW_SEARCH_TIKTOK_APIFY", "0") == "1"
 
 # ── 외부 도구 실행 상한 (2026-08-23 점검: 타임아웃이 없어 행이 걸리면 스레드가 영구 점유됐다)
 #    ★값은 여기서만 정한다 — 파일마다 따로 적으면 어긋난다(0순위-B).

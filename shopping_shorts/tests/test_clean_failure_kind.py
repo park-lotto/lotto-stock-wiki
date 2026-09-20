@@ -19,6 +19,12 @@ CASES = [
     ("[60002] You don't have enough credits for this API. Purchase a subscription", "no_credit"),
     ("서버 재시작으로 중단되었습니다", "interrupted"),
     ("vmake code 10101 right reduce error", "unsupported"),
+    # ★2026-09-17 실측(job 1556910737b6, 고급/Smart Pro): 업체 게이트웨이가 죽은 것이지
+    #   영상 탓이 아니다. 30029='前置开放平台事件处理失败'(앞단 개방플랫폼 이벤트 처리 실패).
+    #   같은 응답의 data.src_media_list엔 영상이 1080x1920·683프레임으로 **정상 파싱**돼
+    #   있었다 — 소스를 바꾸라고 안내하면 고객이 멀쩡한 소재를 버린다.
+    ("AI 자막 제거 결과가 비었습니다: {'code': 30029, 'error_code': 30029, "
+     "'message': '前置开放平台事件处理失败'}", "vendor_down"),
     ("알 수 없는 오류", "unknown"),
     ("", "unknown"),
     (None, "unknown"),
@@ -41,10 +47,42 @@ def test_ui_has_branch_for_every_kind():
         assert re.search(r"kind\s*===\s*['\"]%s['\"]" % kind, body), kind
 
 
-def test_no_points_does_not_offer_retry():
-    """포인트 부족은 다시 눌러도 같은 결과라 재시도 버튼을 주면 안 된다."""
+def test_vendor_down_is_not_blamed_on_the_video():
+    """★30029를 'unsupported'로 부르면 안 된다(2026-09-17 실사고).
+
+    두 사유의 원문이 **같은 껍데기**를 쓴다("AI 자막 제거 결과가 비었습니다: {...}").
+    그래서 껍데기만 보고 가르면 업체 장애가 영상 탓으로 둔갑한다 — 고객은 멀쩡한
+    소스를 버리러 가고, 진짜 원인(업체 복구 대기)은 아무도 못 본다.
+    코드(30029 vs 10101)로 갈라야 한다.
+    """
+    vendor = ("AI 자막 제거 결과가 비었습니다: {'code': 30029, "
+              "'message': '前置开放平台事件处理失败'}")
+    video = ("AI 자막 제거 결과가 비었습니다: {'code': 10101, "
+             "'message': 'right reduce error'}")
+    assert clean_failure_kind(vendor) == "vendor_down"
+    assert clean_failure_kind(video) == "unsupported"
+
+
+def test_vendor_down_offers_retry_but_does_not_tell_user_to_change_source():
+    """업체 장애는 **기다리면 풀린다** → 재시도는 주되, '다른 소스로 바꾸라'고 하면 안 된다."""
     p = os.path.join(os.path.dirname(__file__), "..", "static", "produce.html")
     html = io.open(p, encoding="utf-8").read()
-    start = html.index("if(kind === 'no_points')")
+    start = html.index("if(kind === 'vendor_down')")
+    block = html[start:html.index("if(kind ===", start + 10)]
+    assert "+ redo" in block                    # 다시 시도할 수 있어야 한다
+    assert "다른 소스" not in block              # 영상 탓으로 돌리지 않는다
+
+
+def test_need_own_key_does_not_offer_retry():
+    """★키 미등록은 다시 눌러도 같은 결과다 — 재시도 버튼을 주면 안 된다.
+    (2026-08-26에 6번 헛누른 고객이 있었다. 2026-09-01 포인트 폐지 후에도 같다.)
+
+    옛 사유 'no_points'도 같은 분기가 받는다 — 배포 직전에 담긴 job이 그 값을
+    들고 있기 때문이다."""
+    p = os.path.join(os.path.dirname(__file__), "..", "static", "produce.html")
+    html = io.open(p, encoding="utf-8").read()
+    start = html.index("if(kind === 'no_points'")          # 옛 사유도 같이 받는 분기
     block = html[start:html.index("if(kind === 'no_credit')", start)]
     assert "+ redo" not in block
+    assert "need_own_key" in block                          # 새 사유가 같은 분기에 있다
+    assert "등록" in block                                   # 무엇을 해야 하는지 적혀 있다

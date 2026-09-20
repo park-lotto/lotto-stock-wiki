@@ -55,11 +55,26 @@ def test_dm_set_shapes_all_three_lines():
     assert d["dm_desc"] == coupang_partners.DISCLOSURE        # 고지문구는 고정
 
 
-def test_dm_set_needs_both_number_and_name():
-    """번호나 이름이 없으면 만들지 않는다 — 반쪽 문구를 붙여넣게 하지 않는다."""
-    assert coupang_partners.dm_set("", "이름") is None
+def test_dm_set_needs_a_name():
+    """이름이 없으면 만들지 않는다 — 만들 게 없다."""
     assert coupang_partners.dm_set(1, "") is None
     assert coupang_partners.dm_set(None, None) is None
+
+
+def test_dm_set_without_number_is_blank(number=""):
+    """★번호는 비워둘 수 있다(2026-08-28 사장님 "번호는 공란으로 표시해줘").
+
+    전엔 전역 카운터로 자동 부여했는데 그 카운터를 **전 고객이 공유**해서 내 두 번째
+    영상이 29번을 받았다(실측: cid174=30·cid110=29·cid201=28). 자동 부여를 걷어낸
+    지금, 번호를 넣기 전까지는 번호 없는 문구를 보여준다.
+    """
+    d = coupang_partners.dm_set("", "미니 듀얼 세탁건조기")
+    assert d is not None
+    assert d["number"] == ""
+    assert d["listing_name"] == "미니 듀얼 세탁건조기"     # 앞에 "N. "이 안 붙는다
+    assert d["dm_title"] == "미니 듀얼 세탁건조기"
+    assert d["dm_button"] == "✅ 제품 확인하기"            # "N번 검색"이 없다
+    assert d["dm_desc"] == coupang_partners.DISCLOSURE
 
 
 def test_dm_set_squashes_whitespace():
@@ -69,8 +84,13 @@ def test_dm_set_squashes_whitespace():
 
 # ── API 배선 ────────────────────────────────────────────────
 
-def test_save_assigns_next_number_automatically(monkeypatch, tmp_path):
-    """8단계에서 저장이 끝나는 순간 번호가 붙는다 — 사장님이 번호를 입력하지 않는다."""
+def test_save_leaves_number_blank(monkeypatch, tmp_path):
+    """★저장해도 번호를 **자동으로 붙이지 않는다**(2026-08-28 정책 변경).
+
+    전엔 next_number(settings 전역 카운터)로 붙였는데, settings는 key가 PK라 계정
+    축이 없어(store.py:1072) 전 고객이 카운터 하나를 나눠 썼다. 고객 눈에는
+    "무작위로 29번"으로 보였다. 이제 사람이 넣는다.
+    """
     client, store = _client(monkeypatch, tmp_path)
     _job(store)
     r = client.post("/api/mix/product", json={
@@ -78,39 +98,50 @@ def test_save_assigns_next_number_automatically(monkeypatch, tmp_path):
         "partner_url": _PARTNER})
     body = r.json()
     assert body["ok"] is True
-    assert body["product"]["inpock_number"] == "1"          # 처음이면 1
-    assert body["dm_set"]["listing_name"] == "1. 미니 듀얼 세탁건조기"
+    assert body["product"]["inpock_number"] == ""            # 공란
+    assert body["dm_set"]["listing_name"] == "미니 듀얼 세탁건조기"
 
 
-def test_number_increments_across_jobs(monkeypatch, tmp_path):
-    """다음 영상은 마지막 번호 다음을 받는다."""
+def test_number_is_set_by_hand(monkeypatch, tmp_path):
+    """번호를 보내면 그대로 쓴다 — 화면의 '번호 저장' 버튼이 이 경로다."""
     client, store = _client(monkeypatch, tmp_path)
-    for jid in ("j1", "j2", "j3"):
-        _job(store, jid)
-        client.post("/api/mix/product", json={
-            "job_id": jid, "url": _URL, "name": "상품", "partner_url": _PARTNER})
-    got = [client.get(f"/api/mix/product/{j}").json()["product"]["inpock_number"]
-           for j in ("j1", "j2", "j3")]
-    assert got == ["1", "2", "3"]
+    _job(store)
+    r = client.post("/api/mix/product", json={
+        "job_id": "j1", "url": _URL, "name": "상품", "partner_url": _PARTNER,
+        "inpock_number": "29"})
+    assert r.json()["product"]["inpock_number"] == "29"
+    assert r.json()["dm_set"]["listing_name"] == "29. 상품"
+    assert "29번 검색" in r.json()["dm_set"]["dm_button"]
 
 
-def test_number_is_stable_across_edits(monkeypatch, tmp_path):
-    """★한 번 받은 번호는 링크를 고쳐도 안 바뀐다.
+def test_number_can_be_changed_and_cleared(monkeypatch, tmp_path):
+    """★한 번 넣은 번호도 고치고 지울 수 있다.
 
-    바뀌면 이미 인포크에 등록해둔 이름(`588. …`)과 어긋나 시청자가 못 찾는다.
-    inpock_registered를 저장 때마다 초기화하지 않는 것과 같은 이유다.
+    전엔 prev가 body보다 먼저라 한 번 붙은 번호를 영영 못 고쳤다 — 자동 부여가
+    엉뚱한 번호를 줬을 때 손쓸 방법이 없었던 이유다.
     """
     client, store = _client(monkeypatch, tmp_path)
     _job(store)
-    first = client.post("/api/mix/product", json={
-        "job_id": "j1", "url": _URL, "name": "상품", "partner_url": _PARTNER})
-    n1 = first.json()["product"]["inpock_number"]
+    base = {"job_id": "j1", "url": _URL, "name": "상품", "partner_url": _PARTNER}
+    client.post("/api/mix/product", json=dict(base, inpock_number="29"))
+    got = client.post("/api/mix/product", json=dict(base, inpock_number="7"))
+    assert got.json()["product"]["inpock_number"] == "7"      # 고쳐진다
+    cleared = client.post("/api/mix/product", json=dict(base, inpock_number=""))
+    assert cleared.json()["product"]["inpock_number"] == ""   # 비울 수도 있다
+    assert cleared.json()["dm_set"]["listing_name"] == "상품"
+
+
+def test_number_survives_edits_that_do_not_touch_it(monkeypatch, tmp_path):
+    """번호를 안 보내는 저장(링크만 고치기)은 기존 번호를 건드리지 않는다."""
+    client, store = _client(monkeypatch, tmp_path)
+    _job(store)
+    base = {"job_id": "j1", "url": _URL, "name": "상품", "partner_url": _PARTNER}
+    client.post("/api/mix/product", json=dict(base, inpock_number="29"))
     again = client.post("/api/mix/product", json={
         "job_id": "j1", "url": _URL, "name": "상품(이름 고침)",
         "partner_url": "https://link.coupang.com/re/AFF?lptag=NEW"})
-    assert again.json()["product"]["inpock_number"] == n1
-    # 이름을 고쳤으면 문구는 따라 바뀐다(번호만 고정).
-    assert again.json()["dm_set"]["listing_name"] == f"{n1}. 상품(이름 고침)"
+    assert again.json()["product"]["inpock_number"] == "29"   # 그대로
+    assert again.json()["dm_set"]["listing_name"] == "29. 상품(이름 고침)"
 
 
 def test_get_returns_dm_set_after_reload(monkeypatch, tmp_path):
@@ -130,13 +161,18 @@ def test_get_without_product_has_no_dm_set(monkeypatch, tmp_path):
     assert client.get("/api/mix/product/j1").json()["dm_set"] is None
 
 
-def test_clear_does_not_consume_a_number(monkeypatch, tmp_path):
-    """해제했다가 다시 저장하면 새 번호를 받는다 — 번호는 job이 아니라 등록에 붙는다."""
+def test_clear_drops_the_number(monkeypatch, tmp_path):
+    """해제하면 번호도 같이 없어진다 — 자동 부여를 걷어낸 뒤의 동작(2026-08-28).
+
+    전엔 여기서 '다음 번호(2)'를 새로 받았다. 이제 번호를 주는 곳은 사람뿐이라,
+    해제 후 다시 저장하면 공란에서 시작한다.
+    """
     client, store = _client(monkeypatch, tmp_path)
     _job(store)
     client.post("/api/mix/product", json={
-        "job_id": "j1", "url": _URL, "name": "상품", "partner_url": _PARTNER})
+        "job_id": "j1", "url": _URL, "name": "상품", "partner_url": _PARTNER,
+        "inpock_number": "29"})
     client.post("/api/mix/product", json={"job_id": "j1", "clear": True})
     d = client.post("/api/mix/product", json={
         "job_id": "j1", "url": _URL, "name": "상품", "partner_url": _PARTNER}).json()
-    assert d["product"]["inpock_number"] == "2"
+    assert d["product"]["inpock_number"] == ""

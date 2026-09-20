@@ -48,27 +48,45 @@ def test_사람이_고른_효과음은_재매칭이_안_덮는다():
 
 
 def test_렌더가_전환_타점을_칸_끝으로_계산한다():
-    """position 이름을 실제 초로 옮기는 지점. 전체 렌더는 ffmpeg가 필요해 소스로 확인한다."""
-    import pathlib
-    import re
-    src = (pathlib.Path(__file__).resolve().parents[1]
-           / "video_assemble.py").read_text(encoding="utf-8")
-    m = re.search(r'pos = sfx\.get\("position"\)(.*?)sfx_events\.append', src, re.S)
-    assert m, "타점 분기를 찾지 못했다"
-    body = m.group(1)
-    assert 'pos == "first"' in body and "offset = 0.0" in body
-    assert 'pos == "transition"' in body and 'offset = b["dur"]' in body
-    assert "sum(seg_durs[:-1])" in body, "기본(last) 계산이 사라졌다"
+    """position 이름을 실제 초로 옮기는 지점.
+
+    ★2026-08-30: 이 계산은 `video_assemble.sfx_events_for` **한 함수**로 빠졌다 —
+      캡컷 내보내기도 같은 타점을 써야 하기 때문이다(0순위-B). 소스 grep 대신
+      함수를 직접 불러 확인한다(진짜 동작을 본다).
+    """
+    from shopping_shorts.video_assemble import sfx_events_for
+    # 자막이 두 칸으로 갈리는 길이여야 last(=마지막 자막 자리)가 0이 아니다.
+    # 한 칸짜리 대사는 last도 0.0이 맞다(칸이 하나뿐이라 앞이 없다).
+    _long = "이거 하나면 방충망 먼지가 순식간에 사라지고 다시 붙지도 않아서 정말 편해요"
+    tl = [{"beat_idx": 0, "t0": 0.0, "dur": 6.0, "narration": _long},
+          {"beat_idx": 1, "t0": 6.0, "dur": 1.5, "narration": "사아자 차카타"}]
+    def _at(pos, i=0):
+        t = [dict(b) for b in tl]
+        t[i]["sfx"] = {"position": pos}
+        return sfx_events_for(t, {0: "a.mp3", 1: "b.mp3"})[0][1]
+    assert _at("first") == 0.0
+    assert _at("transition") == 6.0, "전환 = 칸이 끝나는 순간"
+    assert 0.0 < _at("last") < 6.0, "기본(last)은 칸의 마지막 자막 자리"
+    # 타점은 **절대시각**이다(비트 t0 + 오프셋) — 자막이 한 칸뿐인 비트면 그 칸 시작.
+    assert _at("last", 1) == 6.0, "자막이 한 칸뿐이면 last도 칸 시작이다"
 
 
-def test_sfx_position_others_are_last():
-    for role in ("problem", "info", "cta", "result_wow", "benefit"):
-        assert scene_match._sfx_position(role) == "last"
+def test_sfx_position_모든역할이_컷경계다():
+    """★2026-08-29 실측으로 기본값이 last→transition으로 바뀌었다.
+    대세 채널 3편에서 컷 55개 중 52개(95%)에 소리가 붙고, 타점은 컷 경계
+    ±12ms였다(역할 무관). 종전 'last'는 검증 안 된 추측이었다."""
+    for role in ("hook", "problem", "info", "cta", "result_wow", "benefit"):
+        assert scene_match._sfx_position(role) == "transition"
 
 
-def test_sfx_position_unknown_role_defaults_last():
-    assert scene_match._sfx_position("존재안함") == "last"
-    assert scene_match._sfx_position(None) == "last"
+def test_sfx_position_unknown_role도_컷경계():
+    assert scene_match._sfx_position("존재안함") == "transition"
+    assert scene_match._sfx_position(None) == "transition"
+
+
+def test_sfx_last는_수동으로_여전히_쓸_수_있다():
+    """기본값만 바뀐 것이지 last가 없어진 게 아니다 — 렌더가 계속 받아야 한다."""
+    assert "last" in scene_match.SFX_POSITIONS
 
 
 # ── match_sfx ──────────────────────────────────────────────────
@@ -103,10 +121,10 @@ def test_match_sfx_places_by_role():
     assert sfx["position"] == "transition"   # hook → 다음 칸으로 넘어가는 순간(2026-08-21)
 
 
-def test_match_sfx_non_hook_position_last():
+def test_match_sfx_non_hook도_컷경계():
     plan = _plan("cta")
     out = scene_match.match_sfx(plan, [_sfx(3, "CTA")])
-    assert out["beats"][0]["sfx"]["position"] == "last"
+    assert out["beats"][0]["sfx"]["position"] == "transition"
 
 
 def test_match_sfx_allows_duplicate_across_beats():

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GPT(코덱스) vs 클로드 — 모델 총정리 · 2026-09-07</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2129; --line:#2a3038;
+    --tx:#e6edf3; --dim:#8b949e; --gold:#d4a843;
+    --gpt:#10a37f; --cl:#d97757;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+    font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+    line-height:1.65;padding:32px 20px 80px}
+  .wrap{max-width:1120px;margin:0 auto}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.5px}
+  .sub{color:var(--dim);font-size:14px;margin-bottom:32px}
+  h2{font-size:20px;margin:44px 0 14px;padding-left:11px;border-left:4px solid var(--gold)}
+  h3{font-size:15px;color:var(--dim);margin:26px 0 10px;font-weight:600}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .verdict{background:linear-gradient(135deg,#1a2332,#161b22);border:1px solid var(--gold);border-radius:10px;padding:20px 22px;margin-bottom:8px}
+  .verdict b{color:var(--gold)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-bottom:8px}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600;font-size:12.5px;white-space:nowrap}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr:hover td{background:#1a1f27}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:700;vertical-align:middle}
+  .t-best{background:#3d2f0a;color:var(--gold);border:1px solid #6b5313}
+  .t-gpt{background:#0d2b22;color:#3ddc9a;border:1px solid #1a5943}
+  .t-cl{background:#33201a;color:#f0a184;border:1px solid #6b3a2a}
+  .t-dep{background:#2b1414;color:#f08585;border:1px solid #5c2424}
+  .win{color:#3ddc9a;font-weight:700}
+  .lose{color:#8b949e}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:800px){.grid{grid-template-columns:1fr}}
+  ul{margin:6px 0 0;padding-left:19px}
+  li{margin-bottom:5px}
+  .warn{background:#241a08;border:1px solid #5c4413;border-radius:8px;padding:13px 16px;font-size:13px;color:#e8c477;margin:14px 0}
+  .src{font-size:12px;color:var(--dim);margin-top:6px}
+  .src a{color:#58a6ff;text-decoration:none}
+  code{background:#20262e;padding:2px 6px;border-radius:4px;font-size:12.5px;color:#a5d6ff}
+  .bar{display:inline-block;height:7px;border-radius:4px;vertical-align:middle;margin-right:7px}
+  .bg-gpt{background:var(--gpt)} .bg-cl{background:var(--cl)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>GPT(코덱스) vs 클로드 — 모델 총정리</h1>
+<div class="sub">기준일 2026-09-07 · 웹 실측 조사 기반 · 사장님 요청("코덱스에서 가장 좋은 버전이 뭐고 전체 모델 + 클로드 대비 강점")</div>
+
+<div class="verdict">
+  <b>결론 3줄</b>
+  <ul>
+    <li><b>코덱스 최고 모델 = GPT-6 Astra</b> (2026-09-03 출시, OpenAI 최신 플래그십). 페이블 5.1과 같은 자리·같은 가격($10/$50).</li>
+    <li><b>강점이 갈린다</b> — 컴퓨터 조작·브라우징·수학·보안은 Astra 우위, 순수 코딩은 사실상 동급(0.4%p 차), 종합 지능지수는 클로드 페이블 5.1이 앞선다(65.7 vs 61.2).</li>
+    <li><b>비용 실속</b>은 클로드 Opus 5($5/$25)가 Astra 절반. 코딩만 볼 거면 Opus 5가 가성비 승.</li>
+  </ul>
+</div>
+
+<h2>1. 코덱스에서 지금 고를 수 있는 모델 전부</h2>
+<div class="card">
+<div class="scroll">
+<table>
+<thead><tr><th>모델</th><th>등급</th><th>설명</th><th>상태</th></tr></thead>
+<tbody>
+<tr><td><b>Astra</b> (GPT-6)</td><td><span class="tag t-best">최고</span></td><td>코드·앱·리서치 전반 최상위. 고급 추론 + 컴퓨터 조작 + 판단력. 데스크톱·웹·CLI·IDE·클라우드 전부 지원</td><td>현행 플래그십</td></tr>
+<tr><td><b>GPT-5.6 Sol</b></td><td><span class="tag t-gpt">상</span></td><td>5.6 계열 최강. 복잡한 코딩·컴퓨터 조작·리서치·보안</td><td>현행</td></tr>
+<tr><td><b>GPT-5.6 Terra</b></td><td><span class="tag t-gpt">중</span></td><td>일상 작업용 균형형. 5.5급 성능을 더 싸게</td><td>현행 (구 gpt-5.4 대체)</td></tr>
+<tr><td><b>GPT-5.6 Luna</b></td><td><span class="tag t-gpt">경량</span></td><td>계열 내 최저가·최고속. 가벼운 작업</td><td>현행 (구 gpt-5.4-mini 대체)</td></tr>
+<tr><td><b>5.3 Codex Spark</b></td><td><span class="tag t-gpt">초고속</span></td><td>텍스트 전용, 1,000+ tok/s 실시간 코딩 반복용. 128K 컨텍스트</td><td>리서치 프리뷰 · ChatGPT Pro 전용</td></tr>
+<tr><td>GPT-5.5</td><td class="lose">이전 세대</td><td>직전 플래그십. ChatGPT 로그인 세션 기본값으로 쓰이던 모델</td><td>구세대</td></tr>
+<tr><td>GPT-5.4 / 5.4 mini</td><td class="lose">-</td><td>-</td><td><span class="tag t-dep">2026-08-31 종료</span></td></tr>
+<tr><td>GPT-5.2 / 5.3-Codex</td><td class="lose">-</td><td>-</td><td><span class="tag t-dep">ChatGPT 로그인 시 폐기</span></td></tr>
+</tbody>
+</table>
+</div>
+<div class="warn">⚠️ <b>Astra Pro</b>가 별도로 있습니다 — Pro/Business/Enterprise 요금제만. 일반 Astra보다 한 단계 위.<br>
+⚠️ API 키로 붙일 때와 ChatGPT 계정으로 로그인할 때 고를 수 있는 모델이 다릅니다. 사장님이 ChatGPT 로그인으로 코덱스를 쓰시면 <b>Astra</b>를 고르시면 됩니다.</div>
+<div class="src">출처: <a href="https://learn.chatgpt.com/docs/models">learn.chatgpt.com/docs/models</a> · <a href="https://help.openai.com/en/articles/9624314-openai-codex-cli">OpenAI Help — Codex CLI</a></div>
+</div>
+
+<h2>2. 클로드 모델 라인업 (비교 대상)</h2>
+<div class="card">
+<div class="scroll">
+<table>
+<thead><tr><th>모델</th><th>모델 ID</th><th class="num">컨텍스트</th><th class="num">입력 $/1M</th><th class="num">출력 $/1M</th><th>위치</th></tr></thead>
+<tbody>
+<tr><td><b>Claude Fable 5.1</b></td><td><code>claude-fable-5-1</code></td><td class="num">1M</td><td class="num">$10.00</td><td class="num">$50.00</td><td><span class="tag t-best">최고</span> Astra와 동급 자리</td></tr>
+<tr><td>Claude Fable 5</td><td><code>claude-fable-5</code></td><td class="num">1M</td><td class="num">$10.00</td><td class="num">$50.00</td><td>직전 최상위</td></tr>
+<tr><td><b>Claude Opus 5</b></td><td><code>claude-opus-5</code></td><td class="num">1M</td><td class="num">$5.00</td><td class="num">$25.00</td><td><span class="tag t-cl">가성비 주력</span> 지금 이 세션 모델</td></tr>
+<tr><td>Claude Opus 4.8 / 4.7</td><td><code>claude-opus-4-8</code></td><td class="num">1M</td><td class="num">$5.00</td><td class="num">$25.00</td><td>이전 세대</td></tr>
+<tr><td>Claude Sonnet 5</td><td><code>claude-sonnet-5</code></td><td class="num">1M</td><td class="num">$2.00</td><td class="num">$10.00</td><td>대량 처리용</td></tr>
+<tr><td>Claude Haiku 4.5</td><td><code>claude-haiku-4-5</code></td><td class="num">200K</td><td class="num">$1.00</td><td class="num">$5.00</td><td>단순·초고속</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<h2>3. 정면 비교 — Astra vs 클로드</h2>
+<div class="card">
+<h3>벤치마크 실측치</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>항목</th><th>벤치마크</th><th class="num">GPT-6 Astra</th><th class="num">Fable 5.1</th><th class="num">Opus 5</th><th>승자</th></tr></thead>
+<tbody>
+<tr><td>전문업무 자동화</td><td>AutomationBench</td><td class="num win">41.4%</td><td class="num">31.4%</td><td class="num">26.9%</td><td class="win">Astra 압승</td></tr>
+<tr><td>고난도 수학</td><td>FrontierMath T4</td><td class="num win">97.6%</td><td class="num">87.8%</td><td class="num">73.2%</td><td class="win">Astra 압승</td></tr>
+<tr><td>보안·취약점</td><td>ExploitBench</td><td class="num win">100%</td><td class="num">70%</td><td class="num">—</td><td class="win">Astra 압승</td></tr>
+<tr><td>터미널 작업</td><td>Terminal-Bench 4.0</td><td class="num win">57.7%</td><td class="num">55.8%</td><td class="num">52.3%</td><td class="win">Astra 소폭</td></tr>
+<tr><td>에이전트 코딩</td><td>DeepSWE v1.1</td><td class="num">74.1%</td><td class="num">—</td><td class="num">73.7%</td><td>사실상 동률 (0.4%p)</td></tr>
+<tr><td>실제 코드 수정</td><td>SWE-bench Verified</td><td class="num">—</td><td class="num">—</td><td class="num win">97.0%</td><td class="win">Opus 5 (독립 측정 최고)</td></tr>
+<tr><td><b>종합 지능</b></td><td>Artificial Analysis v4.1.1</td><td class="num">61.2</td><td class="num win">65.7</td><td class="num">—</td><td class="win">Fable 5.1</td></tr>
+<tr><td>초장문 정확도</td><td>512K~1M 구간</td><td class="num win">96.3%</td><td class="num">—</td><td class="num">—</td><td class="win">Astra (Sol 73.8% 대비)</td></tr>
+</tbody>
+</table>
+</div>
+<div class="warn">⚠️ <b>이 표를 곧이곧대로 믿지 마십시오.</b> Astra를 포함한 <b>동일 하네스(같은 조건) 교차 벤치마크가 아직 없습니다.</b> 특히 SWE-bench는 Opus 5가 "bash만 쓰는 최소 하네스"에서 낸 독립 측정치라 Astra 수치와 직접 비교 불가입니다. 각 회사 자체 발표는 자기한테 유리한 조건으로 잽니다.</div>
+<div class="src">출처: <a href="https://www.vellum.ai/blog/gpt-6-astra-benchmarks-explained">Vellum</a> · <a href="https://www.morphllm.com/claude-benchmarks">MorphLLM Claude Benchmarks</a> · <a href="https://codersera.com/blog/gpt-6-astra-vs-claude-opus-5-2026/">Codersera 비교</a> · <a href="https://www.datacamp.com/blog/gpt-6-astra">DataCamp</a></div>
+</div>
+
+<h2>4. 강점 갈림 — 뭘 언제 쓰나</h2>
+<div class="grid">
+  <div class="card" style="border-color:#1a5943">
+    <h3 style="color:#3ddc9a">GPT-6 Astra가 확실히 나은 것</h3>
+    <ul>
+      <li><b>컴퓨터 조작(Computer Use)</b> — OS World 2.0 / ScreenSpot Pro 강세. 화면 보고 클릭·조작하는 자동화</li>
+      <li><b>브라우징·웹 리서치</b></li>
+      <li><b>고난도 수학</b> — FrontierMath 97.6% (Opus 5의 73.2% 대비 압도)</li>
+      <li><b>보안·취약점 분석</b> — ExploitBench 만점</li>
+      <li><b>초장문 정확도</b> — 1M 컨텍스트에서 96.3% 유지</li>
+      <li>ARC-AGI-3 99.9% (사실상 포화)</li>
+    </ul>
+  </div>
+  <div class="card" style="border-color:#6b3a2a">
+    <h3 style="color:#f0a184">클로드가 나은 것</h3>
+    <ul>
+      <li><b>종합 지능 지수</b> — Fable 5.1 65.7 &gt; Astra 61.2</li>
+      <li><b>실제 코드베이스 수정</b> — Opus 5 SWE-bench 97.0%</li>
+      <li><b>가격</b> — Opus 5는 Astra의 <b>절반</b>($5/$25 vs $10/$50). 코딩 성능은 거의 같은데</li>
+      <li><b>프롬프트 캐싱 생태계</b> — 반복 컨텍스트 90% 절감, 대량 작업 실비용이 크게 갈림</li>
+      <li>긴 대화 서버측 압축(compaction), 장시간 에이전트 운영</li>
+    </ul>
+  </div>
+</div>
+
+<div class="card">
+<h3>사장님 작업별 추천</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>작업</th><th>추천</th><th>이유</th></tr></thead>
+<tbody>
+<tr><td>쇼핑쇼츠·스탁브레인 코드 수정</td><td class="win">Claude Opus 5</td><td>코딩 동급 + 가격 절반 + 캐싱. 지금 쓰는 방식이 이미 맞음</td></tr>
+<tr><td>브라우저 자동화·크롤링 봇</td><td class="win">GPT-6 Astra</td><td>컴퓨터 조작이 Astra의 확실한 우위 영역</td></tr>
+<tr><td>수치 분석·백테스팅 수학</td><td class="win">GPT-6 Astra</td><td>FrontierMath 격차가 24%p로 큼</td></tr>
+<tr><td>대본·기획·분석 글쓰기</td><td class="win">Claude Fable 5.1</td><td>종합 지능지수 우위. 한국어 문체도 클로드 계열이 안정적</td></tr>
+<tr><td>대량 단순 처리 (태깅·분류)</td><td class="win">Sonnet 5 / Luna</td><td>플래그십 쓸 이유 없음. 비용만 나감</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<h2>5. 가격 한눈에</h2>
+<div class="card">
+<div class="scroll">
+<table>
+<thead><tr><th>모델</th><th class="num">입력 $/1M</th><th class="num">출력 $/1M</th><th>상대 비용</th></tr></thead>
+<tbody>
+<tr><td>GPT-6 Astra</td><td class="num">$10.00</td><td class="num">$50.00</td><td><span class="bar bg-gpt" style="width:200px"></span>기준 2x</td></tr>
+<tr><td>Claude Fable 5.1</td><td class="num">$10.00</td><td class="num">$50.00</td><td><span class="bar bg-cl" style="width:200px"></span>동일</td></tr>
+<tr><td>Claude Opus 5</td><td class="num">$5.00</td><td class="num">$25.00</td><td><span class="bar bg-cl" style="width:100px"></span>절반</td></tr>
+<tr><td>Claude Sonnet 5</td><td class="num">$2.00</td><td class="num">$10.00</td><td><span class="bar bg-cl" style="width:40px"></span>1/5</td></tr>
+<tr><td>Claude Haiku 4.5</td><td class="num">$1.00</td><td class="num">$5.00</td><td><span class="bar bg-cl" style="width:20px"></span>1/10</td></tr>
+</tbody>
+</table>
+</div>
+<div class="src">GPT-5.6 Sol은 프로모션 요금 적용 중이라 Astra의 약 1/2.5 수준. 클로드 가격은 Anthropic 1st-party 기준 (Bedrock·Vertex는 별도).</div>
+</div>
+
+<h2>6. 확인 못 한 것 (솔직히)</h2>
+<div class="card">
+<ul>
+  <li><b>Astra의 SWE-bench Verified 공식 점수</b> — 동일 하네스 교차 측정이 아직 공개 안 됨</li>
+  <li><b>Fable 5.1의 DeepSWE·SWE-bench 수치</b> — 이번 조사 결과에 안 나옴</li>
+  <li><b>Astra Pro의 별도 벤치마크</b> — 존재만 확인, 수치 미확인</li>
+  <li><b>코덱스 각 모델의 정확한 컨텍스트 윈도우</b> — 공식 문서에 미기재 (Spark 128K, Astra 1M만 확인)</li>
+  <li>한국어 성능 비교 벤치마크 — 없음. 이건 실제로 써보고 판단하셔야 합니다</li>
+</ul>
+</div>
+
+<div class="sub" style="margin-top:40px;padding-top:16px;border-top:1px solid var(--line)">
+작성 2026-09-07 · 로또의 주식 / out/모델비교_GPT_vs_Claude_2026-09-07.html
+</div>
+
+</div>
+</body>
+</html>

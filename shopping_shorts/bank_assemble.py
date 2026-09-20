@@ -2,6 +2,8 @@
 ★중괄호 소독 필수 — script_generate 프롬프트가 .format()을 돌린다(_STORY_RULES_CORE 옆에 낀다)."""
 import hashlib
 import random
+import copy
+import re
 
 from shopping_shorts.pattern_bank import STYLE_BUCKETS, CONTENT_BUCKETS
 
@@ -101,8 +103,8 @@ def parts_block(store, k=5, rng=random):
             "훅을 아래 3가지로 '서로 다르게' 만들어라(같은 틀 복제 금지):\n"
             "  ① 벤치마킹형 — 위 승인훅이 '왜 통했는지'(호기심·경고·반전 등 심리 트리거)만 "
             "가져와 우리 소재로 새로 써라. 문장을 그대로 베끼지 마라.\n"
-            "  ② 트렌드·반전형 — 이 카테고리의 지금 유행 어조를 반영해라(예: '다이소 가면 이건 "
-            "꼭 사와' 뿐 아니라 '이건 진짜 사지마' 같은 반전형도). 뻔한 정공법 대신 반전·금기로 열어라.\n"
+            "  ② 트렌드·반전형 — 이 카테고리의 지금 유행 어조를 반영해라(예: '이건 꼭 사와' 뿐 "
+            "아니라 '이건 진짜 사지마' 같은 반전형도). 뻔한 정공법 대신 반전·금기로 열어라.\n"
             "  ③ 신선·임팩트형 — 은행에 얽매이지 말고 3초 안에 스크롤을 멈출 가장 강한 훅을 "
             "자유롭게 창작해라.\n"
             "나머지 부품은 구조·리듬만 가져오고 단어·인물·소재는 우리 것으로. "
@@ -300,6 +302,215 @@ def beat_descs(style):
     return out
 
 
+def title_len_rule():
+    """화면 제목의 글자 한도 안내 — 장면꾸미기 슬롯 계약(template_copy)에서 빌려 온다.
+
+    2026-09-18 실측: 제목형 대본이 27자 제목을 내놓아 이븐쇼핑(줄당 11자·자동 축소 금지)에서
+    좌우가 잘렸다. 한도를 여기 따로 적으면 슬롯 계약과 어긋난다(0순위-B).
+    """
+    from shopping_shorts.template_copy import EVEN_SHOPPING as c
+    total = c.hook_line_max + c.hook2_line_max
+    return ("공백 포함 %d자 이내. 두 줄로 나뉘어 화면에 크게 박히므로 첫 줄 %d자·둘째 줄 %d자 안에서 끊기게 "
+            "쓴다. 길면 잘려서 못 쓴다" % (total, c.hook_line_max, c.hook2_line_max))
+
+
+def title_too_long(text):
+    """화면 제목이 슬롯 한도를 넘는지 — 프롬프트 안내와 같은 수를 본다."""
+    from shopping_shorts.template_copy import EVEN_SHOPPING as c, split_hook
+    # 장면꾸미기가 실제로 나누는 방식(split_hook)으로 나눠 봐야 같은 판정이 된다 —
+    #   총 22자여도 어절 경계 때문에 한 줄이 12자가 될 수 있다.
+    h1, h2 = split_hook(text)
+    return len(h1) > c.hook_line_max or len(h2) > c.hook2_line_max
+
+
+def with_spoken_hook(style):
+    """제목형 스파인을 **이븐쇼핑 원본 구조**로 맞춘다(2026-09-18 사장님 "이븐쇼핑처럼 첫 후킹 읽어주고
+    본문으로 넘어가는 걸로").
+
+    실측(이븐쇼핑 1위 ABjQ0YCZoes, 433만): 훅 1.5초 동안 큰 제목 2줄 + 흰 띠에 같은 제목을 띄우고
+    **목소리 첫 문장이 그 제목을 그대로 읽는다.** 제목 문장이 끝나면 본문으로 넘어간다.
+    그래서 칸은 바꾸지 않는다 — title이 첫 TTS이자 화면 제목이다. 대신 제목이 화면 슬롯(줄당 11자)에
+    들어가도록 글자 한도를 붙이고, 확정 때 헤드카피로도 넘기라는 표시(title_visual_only)를 단다.
+    (09-17~18 오전의 '제목 무음 + 별도 후킹 칸'은 원본과 반대여서 걷어냈다.)
+    원본 dict는 바꾸지 않는다. 관리자 카나리 밖에서는 손대지 않는다.
+    """
+    if not isinstance(style, dict):
+        return style
+    from shopping_shorts import canary
+    if not canary.on():
+        return style
+    roles = list(style.get("beat_roles") or [])
+    if not roles or roles[0] != "title" or style.get("title_visual_only"):
+        return style
+    adapted = copy.deepcopy(style)
+    descs = beat_descs(style)
+    adapted["beat_descs"] = {role: descs.get(role, "") for role in roles}
+    adapted["beat_descs"]["title"] = (
+        (str(descs.get("title") or "").strip() + ". " if descs.get("title") else "")
+        + "★이 문장은 화면 큰 제목이면서 **목소리 첫 문장**이다(그대로 읽는다). " + title_len_rule()
+    )
+    adapted["title_visual_only"] = True
+    return adapted
+
+
+_FACT_STYLE_NEUTRAL = (
+    "이 role은 출력 순서를 식별하는 이름일 뿐이다. 아래 검증 근거에서 직접 확인되는 "
+    "제품 동작이나 사용 상황 하나를 앞 칸과 겹치지 않게 이어 말한다. 가격·인기·품절·"
+    "판매량·출처·지역·주변 반응을 새로 만들지 않는다."
+)
+
+
+def _trusted_style_facts(evidence):
+    """스타일의 객관 단정을 열 수 있는 텍스트만 모은다.
+
+    visual은 물체·동작 관측이다. 화면만 보고 가격, 판매량, 지역, 입소문을 알 수 없으므로
+    이 범주의 근거로 승격하지 않는다.
+    """
+    if not isinstance(evidence, dict):
+        return ""
+    rows = []
+    for item in (evidence.get("items") or []):
+        if not isinstance(item, dict) or item.get("kind") == "visual":
+            continue
+        if item.get("kind") not in ("transcript", "product_fact", "general_fact"):
+            continue
+        text = str(item.get("text") or "").strip()
+        if text:
+            rows.append(text)
+    return "\n".join(rows)
+
+
+def _price_facets(text):
+    facets = set()
+    compact = re.sub(r"\s+", "", text or "")
+    amounts = []
+    for number, unit in re.findall(r"(?<!\d)(\d[\d,.]*)(만원|천원|원)", compact):
+        try:
+            value = float(number.replace(",", ""))
+        except ValueError:
+            continue
+        if unit == "만원":
+            value *= 10000
+        elif unit == "천원":
+            value *= 1000
+        amounts.append(value)
+    if amounts or re.search(r"(?:가격|판매가|정가)\s*[:은이가]", text or ""):
+        facets.add("price")
+    # 정확한 3,900원을 "몇천 원" 틀로 둥글릴지, 12,900원을 "몇만 원"이라 부를지는
+    # 작가 판단이 아니다. 그 표현 자체가 근거에 있을 때만 literal 틀을 연다.
+    if "몇천원" in compact:
+        facets.add("price_thousands")
+    if "몇만원" in compact:
+        facets.add("price_ten_thousands")
+    if re.search(r"저렴|싸(?:다|게|고|서)|부담\s*없|가성비", text or ""):
+        facets.add("affordable")
+    return facets
+
+
+def _style_fact_facets(text):
+    """근거가 실제로 말한 외부 사실의 종류. 넓은 인기와 품절은 따로 둔다."""
+    facets = _price_facets(text)
+    rules = {
+        "word_of_mouth": r"입소문|소문(?:이|을)?.{0,8}(?:퍼|났|나)|주변에.{0,8}알려",
+        "scarcity": r"품절|매진|물량.{0,8}(?:없|부족)|구할\s*수\s*없|못\s*구|품귀",
+        "popularity": r"인기|화제|난리|필수템|베스트셀러|줄\s*서|입소문|품절|매진",
+        "buzz": r"화제",
+        "hype": r"난리",
+        "must_have": r"필수템",
+        "queue": r"줄\s*서",
+        "local_only": r"현지.{0,6}에서만|현지에서만",
+        "created_for_problem": r"(?:문제|불편).{0,12}(?:때문|해결|위해).{0,12}(?:만들|개발|발명)|"
+                               r"(?:만들|개발|발명).{0,12}(?:문제|불편).{0,12}(?:해결|위해)",
+        "origin": r"현지|해외|국내|한국|미국|일본|중국|아마존|다이소|에서만|발명|개발|"
+                  r"만들어(?:진|낸|졌)",
+        "authority": r"전문가|기관|공식|연구|브랜드|제조사|의사|교수",
+        "reaction": r"후기|리뷰|사용자|구매자|써\s*본\s*사람|사람들.{0,8}(?:말|반응)|"
+                    r"다들.{0,8}(?:물어|찾)",
+        "rating": r"후기.{0,8}만점|리뷰.{0,8}만점|별점.{0,5}(?:5|오)점",
+    }
+    for facet, pattern in rules.items():
+        if re.search(pattern, text or "", re.S):
+            facets.add(facet)
+    if "word_of_mouth" in facets or "scarcity" in facets:
+        facets.add("popularity")
+    return facets
+
+
+def _style_claim_requirements(text, role=""):
+    """설명·문장틀이 사실로 전제하는 facet. 역할 이름 자체도 일부는 단정이다."""
+    text = str(text or "")
+    req = set()
+    if role == "price":
+        req.add("price")
+    elif role == "spread":
+        req.add("word_of_mouth")
+    elif role == "scale":
+        req.add("popularity")
+    elif role in ("source", "authority"):
+        req.add("authority")
+    elif role == "witness":
+        req.add("reaction")
+
+    patterns = {
+        "word_of_mouth": r"입소문|소문.{0,8}(?:퍼|났|나)|주변에.{0,8}알려",
+        "scarcity": r"품절|매진|물량.{0,8}(?:없|부족)|구할\s*수\s*없|못\s*구|"
+                    r"어렵게\s*구|검색해도.{0,8}(?:없|안\s*나)|대란",
+        "popularity": r"인기|베스트셀러",
+        "buzz": r"화제",
+        "hype": r"난리",
+        "must_have": r"필수템",
+        "queue": r"줄\s*서",
+        "local_only": r"현지.{0,6}에서만|현지에서만",
+        "created_for_problem": r"(?:문제|불편).{0,12}(?:때문|해결|위해).{0,12}(?:만들|개발|발명)|"
+                               r"(?:만들|개발|발명).{0,12}(?:문제|불편).{0,12}(?:해결|위해)",
+        "origin": r"현지|해외|아마존|다이소|에서만|발명|개발|만들어(?:진|낸|졌)",
+        "authority": r"\{권위[^}]*\}|전문가|기관|공식|연구|브랜드|제조사",
+        "reaction": r"후기|리뷰|사용자|구매자|써\s*본\s*사람|사람들.{0,8}(?:말|반응)|"
+                    r"다들.{0,8}(?:물어|찾)",
+        "rating": r"후기.{0,8}만점|리뷰.{0,8}만점|별점.{0,5}(?:5|오)점",
+    }
+    for facet, pattern in patterns.items():
+        if re.search(pattern, text, re.S):
+            req.add(facet)
+    if re.search(r"몇천\s*원", text):
+        req.add("price_thousands")
+    elif re.search(r"몇만\s*원", text):
+        req.add("price_ten_thousands")
+    elif "{가격}" in text or re.search(r"(?:이|그)\s*값|가격", text):
+        req.add("price")
+    if re.search(r"가격.{0,8}(?:싼|저렴)|부담\s*없|가성비", text):
+        req.add("affordable")
+    return req
+
+
+def fact_aware_style(style, evidence=None):
+    """잠긴 생성에서만 미입증 객관 단정을 뺀 prompt용 스타일 view를 만든다.
+
+    role·순서·이름·말투는 그대로다. evidence=None은 기존 unlocked 경로이며 원본을 그대로
+    반환한다. 근거가 있더라도 더 강한 틀(인기→품절, 가격→몇천 원)은 통과시키지 않는다.
+    """
+    if evidence is None or not isinstance(style, dict):
+        return style
+    adapted = copy.deepcopy(style)
+    facts = _trusted_style_facts(evidence)
+    facets = _style_fact_facets(facts)
+    descs = beat_descs(style)
+    templates = style.get("templates") or {}
+    adapted_descs, adapted_templates = {}, {}
+    for role in list(style.get("beat_roles") or []):
+        desc = str(descs.get(role) or "")
+        desc_req = _style_claim_requirements(desc, role)
+        adapted_descs[role] = desc if desc_req <= facets else _FACT_STYLE_NEUTRAL
+        kept = []
+        for template in (templates.get(role) or []):
+            if _style_claim_requirements(template, role) <= facets:
+                kept.append(template)
+        adapted_templates[role] = kept
+    adapted["beat_descs"] = adapted_descs
+    adapted["templates"] = adapted_templates
+    return adapted
+
+
 def _rotate(items, seed, role):
     """이 job·이 칸에서 몇 번째 틀부터 보여줄까 — 목록을 회전해 돌려준다(2026-08-23).
 
@@ -320,7 +531,7 @@ def _rotate(items, seed, role):
     return list(items[k:]) + list(items[:k])
 
 
-def style_block(style, seconds=30, seed=""):
+def style_block(style, seconds=30, seed="", facts_block=""):
     """★스타일(스파인+beat_roles) → **칸을 못 박는** 프롬프트 블록(2026-08-15).
 
     `spine_charter`와 다른 점이 핵심이다. charter는 "이 골격을 따르라"는 **권유**라 AI가
@@ -342,7 +553,27 @@ def style_block(style, seconds=30, seed=""):
     for i, role in enumerate(roles, 1):
         # ★job마다 다른 틀에서 시작한다 — 순서가 고정이면 모델이 앞쪽에 쏠린다.
         tmpl = _rotate(templates.get(role) or [], seed, role)
-        tail = ("\n     쓸 수 있는 문장틀(빈칸만 우리 소재에 맞게 채워라. 틀 자체를 새로 짓지 마라): "
+        # ★훅만은 하나만 준다(2026-09-08). 여러 개를 보여주면 모델이 늘 같은 틀을 고른다
+        #   (실측: 제목 공식 6개를 줬는데 6판 중 5판이 한 틀 - 나라만 갈렸다).
+        #   훅=제목이 이 장르의 변주 본체라, seed로 뽑은 하나로 못 박는다.
+        # ★은폐 스타일은 첫 칸에서 **제품 빈칸이 든 틀을 뺀다**(2026-09-09).
+        #   {제품군}을 채우라는 틀과 "이름을 쓰지 마라"는 지시가 부딪히면 틀이 이긴다
+        #   (실측: 뜻풀이를 붙여도 "공룡 버블건"이 그대로 들어갔다).
+        #   남는 게 없으면 원래대로 준다 — 틀이 0개가 되면 생성이 통째로 죽는다.
+        if i == 1 and style.get("hook_conceal") and tmpl:
+            _safe = [x for x in tmpl if "{제품군}" not in x and "{제품}" not in x]
+            if _safe:
+                tmpl = _safe
+        if role == "hook" and style.get("hook_pick_one") and len(tmpl) > 1:
+            tmpl = tmpl[:1]
+        # ★사실성이 틀 보존보다 우선한다(2026-09-11). "틀 자체를 새로 짓지 마라"만 있으면 모델은
+        #   틀에 박힌 판매처·소속("저희 언니가 다이소 점장인데")까지 그대로 옮긴다 — 지시를
+        #   정확히 따른 결과가 거짓말이 된다(실측: 반려동물 패드 재료에 '다이소 매니저 지인').
+        #   두 지시가 부딪히면 어느 쪽이 이기는지 **여기서** 정해 준다. 출구는 script_gate
+        #   '재료 밖 판매처'가 다시 본다 — 부탁만으로는 안 지켜진다.
+        tail = ("\n     쓸 수 있는 문장틀(빈칸만 우리 소재에 맞게 채워라. 틀 자체를 새로 짓지 마라. "
+                "★단, 틀에 박힌 판매처·소속·인맥·가격·판매실적은 **사실 주장**이다 — [재료 대본]에 "
+                "근거가 없으면 그 틀을 고르지 말고 그 자리를 재료의 사실로 바꿔라. 사실성이 틀 보존보다 우선한다): "
                 + " / ".join('"%s"' % _sanitize(x) for x in tmpl)) if tmpl else ""
         lines.append('  %d) role="%s" — %s%s' % (i, role, _sanitize(descs.get(role, "")), tail))
     chars = style.get("chars_per_30s") or 0
@@ -353,7 +584,8 @@ def style_block(style, seconds=30, seed=""):
         from shopping_shorts.script_gate import density_target
         target = density_target(style, seconds)
         dens = ("\n- 전체 %d초에 **%d자를 넘기지 마라** — 이 길이가 플랫폼 규격이다(히트작 밀도를 말속도로 환산한 값). "
-                "칸 하나에 평균 %d자 — 한 문장으로 끝내지 말고 2~3문장씩 써라. "
+                "칸 하나에 평균 %d자 — **한 칸은 한 문장으로** 끝내라(2026-09-06 사장님). "
+                "한 칸에 두 문장을 넣으면 그 칸이 6초씩 길어져 화면이 한 장면에 묶인다. "
                 "말이 비면 이 스타일이 아니다." % (seconds, target, max(1, target // len(roles))))
     return ("★[스타일: %s] — 아래 칸을 **이 순서 그대로** 채워라(순서를 바꾸거나 칸을 빼면 반려된다).\n"
             % _sanitize(style.get("name") or "")
@@ -361,8 +593,81 @@ def style_block(style, seconds=30, seed=""):
             + "\n- 각 칸의 role 값을 위와 **똑같이** 돌려줘라(검사기가 대조한다)." + dens
             # ★장르 규칙(반말체·CTA금지)을 프롬프트에도 싣는다 — 게이트만 검사하면
             #   모델은 그 판정을 못 보고 계속 같은 걸 쓴다(2026-08-22 사장님 화면).
+            + slot_facts_block(style, facts_block)
+            + storyline_block(style)
             + genre_block(style)
-            + voice_block(style))
+            + voice_block(style)
+            + escalation_ammo(style, facts_block))
+
+
+_STORYLINES = [
+    ("S01", "생활 밀착 + 실용 꿀템",
+     "일상 속 참기 힘든 불편 -> 상식을 뒤엎는 해결 -> 기가 막힌 디테일 폭로 -> 지갑 오픈"),
+    ("S02", "핫템 분석 + 소비자 정보",
+     "평범해 보이는 대상 -> 열광하는 진짜 이유 -> 숨겨진 반전 디테일 -> 가성비 미쳤음"),
+    ("S03", "덕후 몰이 + 굿즈/감성템",
+     "취향 저격 -> 브랜드/캐릭터 요소 해부 -> 꽉 채운 디테일 -> 소장 욕구 자극"),
+    ("S04", "고가 프리미엄 + 팩트 체크",
+     "과대광고 아니냐는 의심 -> 뜯어서 팩트 비교 -> 겉과 다른 성능 -> 찐 만족도"),
+    ("S05", "인테리어 + 감성 가전",
+     "공간을 망친 상황 -> 감각적 아이템 등장 -> 무드 변화 -> 1초 만에 감성 룸"),
+    ("S06", "아이디어 + 희귀 꿀템",
+     "찾기 힘든 유니크함 -> 듣도 보도 못한 구조 -> 쓸수록 놀라운 장점 -> 나만 알기 아까움"),
+    ("S07", "가성비 파괴 + 찐추천",
+     "돈 낭비하던 제품군 -> 작정하고 만든 판도 뒤집기 -> 극한의 퀄리티 -> 인생템 확정"),
+    ("S08", "브랜드 서사 + 1등 분석",
+     "흔한 템의 지루함 -> 미친 디테일과 설계 -> 구조적 비밀 -> 이래서 1등"),
+    ("S09", "시간 단축 + 스마트/자동화",
+     "삶의 질 갉아먹는 귀찮음 -> 손 안 대고 해결 -> 원리를 압축해 사이다 -> 삶의 질 상승"),
+    ("S10", "바이럴 대란 + 호기심",
+     "설마 이게 될까 -> 의외의 효능 -> SNS 뒤집은 대란 -> 품절 전에 사야 함"),
+]
+
+
+def storyline_block(style):
+    """S01~S10 목록 -> 프롬프트 블록. storyline_pick이 꺼져 있으면 빈 문자열(회귀 0).
+
+    왜 별도 스타일인가(2026-09-08 사장님 "다른 스타일로 하나 만들어봐, 기존건 건드리지말고"):
+    기존 스파인 12종은 **이야기 틀**로 뼈대를 정하고, S01~S10은 **제품 성격**으로 정한다.
+    축이 다르므로 섞으면 같은 판단이 두 곳에서 나와 어긋난다(0순위-B).
+    """
+    if not (style or {}).get("storyline_pick"):
+        return ""
+    lines = "\n".join("  %s [%s]: %s" % (c, n, d) for c, n, d in _STORYLINES)
+    return ("\n[스토리라인 - 제품 성격에 맞는 뼈대를 **하나만** 골라라]\n"
+            "  아래 10개 중 이 제품에 가장 맞는 번호 하나를 골라 그 흐름대로 칸을 채워라.\n"
+            "  고른 번호는 겉으로 쓰지 마라 - 뼈대로만 쓴다.\n"
+            + lines +
+            "\n  · 두 개를 섞지 마라. 하나를 골라 끝까지 밀어야 이야기가 선다.")
+
+
+def slot_facts_block(style, facts_block=""):
+    # ★2026-09-08 사장님: "그 안에 들어갈 것들 강제하지 마라 - 효능 뭐 이런걸로.
+    #   제미니가 자유롭게 제품에 대해 보고 쓸 수 있게 해봐."
+    #   문장틀(형태)은 고정이 맞다. 하지만 {효능}=why, {효능2}=peak 처럼
+    #   **빈칸에 무엇을 넣을지까지 지정하면** 재료를 그대로 옮겨 적게 되고
+    #   편마다 같은 자리에 같은 종류의 말이 와서 다 똑같아진다(실측 4편).
+    #   재료는 위 [이 제품에 대해...] 블록으로 이미 다 보여주고 있으니,
+    #   무엇을 고를지는 모델이 정하게 둔다.
+    return ""
+
+
+def escalation_ammo(style, facts_block=""):
+    """고조 칸 바로 옆에 놓는 '탄약' 블록. peak가 없으면 ''(회귀 0)."""
+    if not facts_block or not (style or {}).get("hook_3s"):
+        return ""
+    peak = [ln.strip(" -") for ln in facts_block.splitlines()
+            if "셀링포인트" in ln or "의외의 용도" in ln]
+    if not peak:
+        return ""
+    body = ("\n  ".join(p for p in peak))
+    return ("\n★[고조 칸에 쓸 탄약 - 여기서 골라라]\n"
+            "  '심지어 ~' 와 '근데 진짜 충격적인 건 ~' 두 칸은 **아래에서만** 골라 써라.\n"
+            "  " + body + "\n"
+            "  · 두 칸에 **서로 다른 것**을 써라. 뒤 칸이 더 놀라운 쪽이다.\n"
+            "  · 여기 없는 걸 쓰고 싶으면 그만큼 놀라운 것이어야 한다. "
+            "방수·충전식·가벼움·작아서 수납 편함처럼 **그 제품이면 당연한 소리는 금지**다 - "
+            "앞에 '당연히'를 붙여도 말이 되면 버려라.")
 
 
 def genre_block(style):
@@ -381,7 +686,14 @@ def genre_block(style):
       (판정만 두면 아무도 안 고치고, 프롬프트만 두면 안 지킨다 — 둘 다 필요하다)
     """
     out = []
-    if (style or {}).get("hook_3s"):
+    if (style or {}).get("hook_3s") and (style or {}).get("polite"):
+        out.append(
+            "\n★[말투 — 이 장르의 서명] 처음부터 끝까지 **존댓말**로 써라. "
+            "이 갈래만 존댓말이다(실측 30편 중 87%).\n"
+            "  · 쓸 것:  ~했습니다 / ~하더라고요 / ~인데요 / ~죠 / ~네요\n"
+            "  · 쓰지 말 것: ~했음 / ~하더라 / ~라는 거 / ~임\n"
+            "  · 단 딱딱한 설명체는 피해라. 옆에서 말해주듯 편하게.")
+    elif (style or {}).get("hook_3s"):
         out.append(
             "\n★[말투 — 이 장르의 서명] 처음부터 끝까지 **반말체**로 써라. "
             "존댓말을 단 한 문장도 쓰지 마라.\n"
@@ -396,14 +708,61 @@ def genre_block(style):
             "  · 이 장르는 완시청으로 먹는다 — 행동을 요구하면 흐름이 끊긴다"
             "(실측: 이 계열 히트작 전부 CTA가 없다).\n"
             "  · 마지막 칸도 CTA가 아니라 **이야기의 마무리**로 닫아라.")
+    # ★전환 훅 + 빈 고조 금지(2026-09-08 사장님 지침서).
+    #
+    #   왜: 라이브 실측(job e0fb23f90286, 레트로 카메라 A안)에서 대본이 이렇게 나왔다.
+    #       "이게 진짜 말도 안 되는 게 똥손이 셔터만 눌러도 영화 장면이 뽑힘"
+    #       "심지어 필름값 0원으로 수천 장을 막 찍어도 되는 거임"
+    #       "근데 진짜 충격적인 포인트는 따로 있는데 셔터 손맛이 쾌감 장난 아님"
+    #     연결어(심지어·진짜 충격적인)는 붙었는데 **그 뒤에 새 정보가 없다**.
+    #     "대단하다"고만 말하고 뭐가 대단한지는 안 말한다 = 빈 고조.
+    #     사장님: "사람들이 안 궁금하고 고조되는 게 실제 아무것도 없고"
+    #
+    #   ★같은 시각 재료(product_facts)에는 쓸 게 있었다 —
+    #     "USB 꽂으면 바로 웹캠으로 변신" / "폰카가 너무 선명해서 얼굴 단점이 부각".
+    #     즉 정보가 없어서가 아니라 **연결어 뒤에 정보를 놓는 습관이 없어서**다.
+    #
+    #   전환 훅 문구는 사장님이 준 지침서 그대로다(기→승 / 승→전 / 전→결).
+    if (style or {}).get("hook_3s"):
+        out.append(
+            "\n★[전환 훅 — 칸이 넘어갈 때 시청자를 붙잡아라]\n"
+            "  칸과 칸 사이에서 그냥 다음 말로 넘어가지 마라. 아래처럼 **한 번 당겼다가** 넘겨라.\n"
+            "  · 도입 → 전개: \"근데 사람들이 진짜 열광하는 포인트는 따로 있다고 함\" / "
+            "\"당연히 그냥 그럴 줄 알았지?\"\n"
+            "  · 전개 → 핵심: \"지금부터가 진짜 핵심인데 ㄷㄷ\" / "
+            "\"놀랍게도 원리는 이거였음\"\n"
+            "  · 핵심 → 마무리: \"이러니 사람들이 안 사고 배길 수가 있겠냐고\" / "
+            "\"절대 안 알려주는 꿀팁이니까 참고해라\"\n"
+            "  · 문구를 그대로 베끼지 말고 **결만 가져와라** — 매번 같은 말이면 그것도 광고가 된다.")
+        out.append(
+            "\n★[빈 고조 금지 — 이게 이 장르의 생사다]\n"
+            "  \"심지어\" \"진짜 충격적인 건\" \"말도 안 되는 게\" 같은 말을 쓸 거면 "
+            "**그 뒤에 반드시 새 정보 하나**를 놓아라.\n"
+            "  · X: \"이게 진짜 말도 안 되는 게 똥손이 눌러도 잘 나옴\"  ← 뭐가 말이 안 되나?\n"
+            "  · O: \"이게 진짜 말도 안 되는 게 USB만 꽂으면 그대로 웹캠이 됨\"  ← 새 사실이 왔다\n"
+            "  · 형용사(대박·미쳤음·쩐다)는 **정보 뒤에 붙는 양념**이다. 형용사만 있으면 "
+            "시청자는 아무것도 못 얻고 나간다.\n"
+            "  · 무엇을 고조 칸에 놓을지는 네가 정해라 - 이 제품에서 가장 놀라운 것 하나면 된다.")
     if (style or {}).get("hook_conceal"):
         out.append(
-            "\n★[훅에서 정체 숨기기] 첫 문장(훅)에 **제품 이름을 쓰지 마라**. "
+            "\n★[정체 숨기기] **앞 두 칸**(훅과 그다음 칸)에 제품 이름을 쓰지 마라. "
             "'이거 / 이것 / 이 제품'처럼 가려서 말해라.\n"
-            "  · O: \"여러분 다이소 가면 이거 꼭 사오세요\"\n"
-            "  · X: \"여러분 다이소 가면 이 앞머리 고데기 꼭 사오세요\" "
+            # ★예시에서 판매처 이름을 뺐다(2026-09-11 아스트라 검토). 정답 예시가 "다이소 가면"이면
+            #   은폐 스타일 전부가 재료에 없는 다이소를 배운다 — 스파인 57만 고쳐도 여기서 또 샌다.
+            "  · O: \"여러분 이거 하나는 진짜 꼭 챙기세요\"\n"
+            "  · X: \"여러분 이 앞머리 고데기 꼭 챙기세요\" "
             "(정체가 나오면 궁금할 이유가 없어져 훅이 죽는다)\n"
-            "  · 무엇인지는 뒤쪽 칸에서 밝혀라 — 그때까지 끌고 가는 게 이 구조의 힘이다.")
+            "  · 무엇인지는 뒤쪽 칸에서 밝혀라 — 그때까지 끌고 가는 게 이 구조의 힘이다.\n"
+            "  ★두 번째 칸도 마찬가지다. 판정은 **앞 3초 전체**를 보므로 "
+            "제목만 가려도 다음 문장에서 이름이 나오면 소용없다.")
+        out.append(
+            "\n★[문장틀의 {제품군}에 무엇을 넣나]\n"
+            "  {제품군}은 **제품 이름이 아니다**. 카테고리를 뭉뚱그린 말이다.\n"
+            "  · O: 청소 도구 / 주방템 / 수납템 / 육아템 / 차량용 아이템 / 그냥 '제품'·'아이템'\n"
+            "  · X: 스팀 청소기 / 선풍기 청소 브러시 / 접이식 폴딩 캐리어\n"
+            "  실측 히트작도 이렇게 쓴다 — \"한국 천재가 만들어 돈방석 앉은 **제품**\", "
+            "\"역발상으로 돈방석 앉은 육아천재의 **발명품**\".\n"
+            "  · 헷갈리면 그냥 '이 제품'이라고 써라. 뭉뚱그릴수록 궁금해진다.")
     return "".join(out)
 
 

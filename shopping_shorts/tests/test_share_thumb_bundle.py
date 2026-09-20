@@ -147,7 +147,12 @@ def test_selected_endpoint_null_when_none(env):
     assert r.status_code == 200
     # intro = 🖼 '썸네일을 영상 맨 앞에 넣기' 체크 상태(2026-08-18 신설). 안 골랐어도 함께 준다
     # — 8단계가 이 응답 하나로 카드와 체크박스를 같이 복원한다.
-    assert r.json() == {"ok": True, "name": None, "url": None, "intro": False}
+    # intro_default·intro_set = 이 사람의 마지막 체크값(2026-09-01 신설). 아직 안 고른 job은
+    # 이 둘을 보고 기본값을 정한다 → 응답에 늘 따라온다. 그래서 통째 비교가 아니라
+    # **이 네 칸이 이 값인지**만 잠근다(새 칸이 늘 때마다 이 테스트가 깨지면 안 된다).
+    got = r.json()
+    for k, v in {"ok": True, "name": None, "url": None, "intro": False}.items():
+        assert got.get(k) == v, f"{k}: {got}"
 
 
 def test_selected_endpoint_404_unknown_job(env):
@@ -189,3 +194,29 @@ def test_QR_링크는_서버가_재시작해도_산다(env):
     fresh = Store(tmp / "t.db")                      # 재시작 흉내 — 새 연결로 조회
     assert fresh.get_share_link(sid, int(time.time())) == "j1"
     assert c.get(f"/s/{sid}").status_code == 200      # 폰이 여는 공유 페이지가 살아 있다
+
+
+def test_새_Buffer_예약이_기존_예약_링크를_지우지_않는다(env):
+    """예약 영상은 14일 공개된다. 새 예약의 만료시각으로 청소하면 이전 예약이
+    아직 살아 있어도 삭제되어, 발행 시 Buffer가 영상을 받지 못한다."""
+    import time
+
+    _c, store, _tmp = env
+    now = int(time.time())
+    store.put_share_link("first", "j1", now + 14 * 86400)
+    store.put_share_link("second", "j2", now + 14 * 86400 + 60)
+
+    assert store.get_share_link("first", now) == "j1"
+    assert store.get_share_link("second", now) == "j2"
+
+
+def test_공유링크_저장할때_실제_만료분은_청소한다(env):
+    import time
+
+    _c, store, _tmp = env
+    now = int(time.time())
+    store.put_share_link("expired", "old", now - 1)
+    store.put_share_link("fresh", "new", now + 86400)
+
+    assert store.get_share_link("expired", now) is None
+    assert store.get_share_link("fresh", now) == "new"

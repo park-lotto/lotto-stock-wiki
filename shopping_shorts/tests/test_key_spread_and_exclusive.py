@@ -123,3 +123,44 @@ def test_고객작업끼리는_여전히_동시실행(tmp_path):
     st.enqueue("preview", {"job_id": "C", "customer_id": "3"})
     got = [st.claim_next() for _ in range(3)]
     assert all(got), f"고객 3명은 동시에 돌아야 한다: {got}"
+
+
+# ── 2026-08-31 실사고: 키를 늘려도 앞의 몇 개만 쓰고 포기했다 ────────────────
+
+def test_오프셋은_부를때마다_달라진다():
+    """★12워커가 전부 keys[0]부터 두들겼다. get_live_keys_cascade는 매번 같은
+    순서를 주는데 _vault_call의 key_offset 기본값이 0이었다.
+    실측 08-31: 제미니 1,825건 중 429가 816건(45%), 사유는 전부 '분당' 한도.
+    키가 모자란 게 아니라 앞쪽 키에 몰린 것이었다."""
+    from shopping_shorts import edit_plan
+    vals = [edit_plan._auto_key_offset() for _ in range(8)]
+    assert len(set(vals)) == 8, f"오프셋이 겹친다 {vals} — 같은 키에 몰린다"
+    assert len({v % 10 for v in vals}) == 8, "키 10개 풀에서 서로 다른 자리여야 한다"
+
+
+def test_키_시도_상한이_넉넉하다():
+    """★오늘 사고의 진짜 뿌리. build_edit_plan(max_retries=4)가 그대로
+    _vault_call(max_tries=4) → keys[:4]가 돼, 살아있는 키가 33개여도 **앞의 4개만**
+    두들기고 포기했다. 그래서 회원 키를 넣어 풀을 11→34개로 늘려도 고객 실패가
+    그대로였다(실측 job 96786f4a0e44: "키 4개를 다 돌았는데 결과 없음 — 429").
+    성공하면 즉시 반환하므로 크게 잡아도 손해가 없다."""
+    import inspect
+
+    from shopping_shorts import edit_plan
+    assert edit_plan._KEY_TRY_LIMIT >= 30, "키를 늘려도 앞의 몇 개만 쓰면 소용없다"
+    for fn in (edit_plan.build_edit_plan, edit_plan._vault_call, edit_plan._vault_call_once):
+        name = "max_retries" if fn is edit_plan.build_edit_plan else "max_tries"
+        got = inspect.signature(fn).parameters[name].default
+        assert got == edit_plan._KEY_TRY_LIMIT, (
+            f"{fn.__name__}의 {name} 기본값이 상한과 어긋난다({got}) — "
+            "한 곳에서 정해야 또 4로 돌아가지 않는다")
+
+
+def test_분당한도만_대기대상이다():
+    """분당은 쉬면 풀리고 일일·403은 안 풀린다. 뭉치면 전자를 후자처럼 버린다."""
+    from shopping_shorts import edit_plan
+    rpm = ("429 RESOURCE_EXHAUSTED Quota exceeded for quota metric "
+           "'Generate Content API requests per minute'")
+    assert edit_plan._is_per_minute_quota(rpm) is True
+    assert edit_plan._is_per_minute_quota("429 ... requests per day") is False
+    assert edit_plan._is_per_minute_quota("403 PERMISSION_DENIED") is False

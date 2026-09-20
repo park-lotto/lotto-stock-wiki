@@ -1,0 +1,593 @@
+{
+ "draft": {
+  "style_id": 57,
+  "style_name": "다이소 내부인형",
+  "beats": [
+   {
+    "role": "hook",
+    "text": "여러분 다이소 가면 이 과일 키링 시리즈는 무조건 데려오세요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.4,
+    "src_segs": []
+   },
+   {
+    "role": "problem",
+    "text": "가방에 뭘 달아도 밋밋해서 매번 예쁜 거 찾느라 고생했거든요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.4,
+    "src_segs": []
+   },
+   {
+    "role": "reveal",
+    "text": "다이소에서 일하는 친한 언니한테 들었는데, 이게 요즘 난리라더라고요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.9,
+    "src_segs": []
+   },
+   {
+    "role": "proof",
+    "text": "매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요.",
+    "src_seg": "s0-9",
+    "needs_scene": true,
+    "sec": 3.4,
+    "src_segs": [
+     "s0-9"
+    ]
+   },
+   {
+    "role": "demo",
+    "text": "가방에 가볍게 툭 걸어주면 끝이에요.",
+    "src_seg": "s0-8",
+    "needs_scene": true,
+    "sec": 2.0,
+    "src_segs": [
+     "s0-8"
+    ]
+   },
+   {
+    "role": "result",
+    "text": "와, 가방 분위기가 한 번에 살아나는 거 있죠.",
+    "src_seg": "s0-8",
+    "needs_scene": true,
+    "sec": 2.3,
+    "src_segs": [
+     "s0-8",
+     "s0-9"
+    ]
+   },
+   {
+    "role": "price",
+    "text": "심지어 가격도 너무 착해서 더 놀랍더라고요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.4,
+    "src_segs": []
+   },
+   {
+    "role": "cta",
+    "text": "다이소 꿀템 정보 필요하신 분 댓글 달아주시면 제품 정보 바로 보내드릴게요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 4.2,
+    "src_segs": []
+   }
+  ],
+  "script": "여러분 다이소 가면 이 과일 키링 시리즈는 무조건 데려오세요. 가방에 뭘 달아도 밋밋해서 매번 예쁜 거 찾느라 고생했거든요. 다이소에서 일하는 친한 언니한테 들었는데, 이게 요즘 난리라더라고요. 매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요. 가방에 가볍게 툭 걸어주면 끝이에요. 와, 가방 분위기가 한 번에 살아나는 거 있죠. 심지어 가격도 너무 착해서 더 놀랍더라고요. 다이소 꿀템 정보 필요하신 분 댓글 달아주시면 제품 정보 바로 보내드릴게요.",
+  "hook": "여러분 다이소 가면 이 과일 키링 시리즈는 무조건 데려오세요.",
+  "checks": [
+   {
+    "name": "구간 순서",
+    "ok": true,
+    "detail": "기대 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta'] / 실제 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta']"
+   },
+   {
+    "name": "CTA 단어유도",
+    "ok": true,
+    "detail": "소 꿀템 정보 필요하신 분 댓글 달아주시면 제품 정보 바로 보내드릴게요."
+   },
+   {
+    "name": "말 밀도(153~222자)",
+    "ok": true,
+    "detail": "185자 / 이 스타일 히트작 219자",
+    "over": false
+   },
+   {
+    "name": "고조 심화(1회)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "화자 일관성",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "장면 근거",
+    "ok": true,
+    "detail": "OK(3/8줄에 장면)"
+   }
+  ],
+  "passed": true,
+  "tries": [
+   {
+    "chars": 185,
+    "fails": []
+   }
+  ],
+  "chars": 185,
+  "sec": 25.0
+ },
+ "plan": {
+  "structure": "template",
+  "beats": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "narration": "여러분 다이소 가면 이 과일 키링 시리즈는 무조건 데려오세요.",
+    "target_seconds": 6.0,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-4",
+     "start": 5.606,
+     "end": 6.874,
+     "scene_desc": "손으로 초록색 사과 인형을 양옆에서 잡고 보여줌.",
+     "is_key": true,
+     "change": "인형이 손에 들려 정면으로 노출됨.",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-6",
+      "start": 7.975,
+      "end": 9.61,
+      "scene_desc": "손이 그물망 사과 인형의 볼륨감을 보여주기 위해 양옆에서 살짝 압박함.",
+      "is_key": true,
+      "change": "그물망 속 인형이 눌렸다가 다시 형태가 유지됨.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-7",
+      "start": 9.61,
+      "end": 11.411,
+      "scene_desc": "열린 파우치 안에 사과와 레몬 인형이 수납되어 있음.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-12",
+      "start": 19.92,
+      "end": 21.788,
+      "scene_desc": "손으로 조임 파우치 입구를 여닫으며 내부를 확인하고, 옆에 놓인 인형들을 보여줍니다.",
+      "is_key": false,
+      "change": "파우치 입구가 열리며 내부 공간이 드러납니다.",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "narration": "가방에 뭘 달아도 밋밋해서 매번 예쁜 거 찾느라 고생했거든요.",
+    "target_seconds": 6.0,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-2",
+     "start": 3.37,
+     "end": 4.438,
+     "scene_desc": "손이 수납 바구니 안의 빨간 사과 인형을 살짝 만지며 위치를 잡음.",
+     "is_key": true,
+     "change": "사과 인형의 위치가 손길에 의해 살짝 조정됨.",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-13",
+      "start": 21.788,
+      "end": 23.457,
+      "scene_desc": "손이 접착식 팝핑거를 스마트폰 뒤에 부착하고 눌러서 작동시키는 모습을 보여줍니다.",
+      "is_key": true,
+      "change": "팝핑거가 눌리며 기기 사용의 편의를 제공합니다.",
+      "shot_role": "조작"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-15",
+      "start": 24.424,
+      "end": 26.627,
+      "scene_desc": "손으로 투명 필통에 연필을 넣고 잠그는 모습을 보여줍니다.",
+      "is_key": true,
+      "change": "필통 안에 연필이 들어가 보관됩니다.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-20",
+      "start": 31.164,
+      "end": 32.22,
+      "scene_desc": "손으로 납작 파우치를 여닫고, 가위로 스티커 시트를 자르는 모습을 보여줍니다.",
+      "is_key": true,
+      "change": "스티커 시트가 가위에 의해 잘립니다.",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 2,
+    "role": "reveal",
+    "narration": "다이소에서 일하는 친한 언니한테 들었는데, 이게 요즘 난리라더라고요.",
+    "target_seconds": 6.7,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-3",
+     "start": 4.438,
+     "end": 5.606,
+     "scene_desc": "초록색 사과와 노란 레몬 캐릭터 인형이 나란히 배치되어 있음.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "after"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-22",
+      "start": 35.335,
+      "end": 36.87,
+      "scene_desc": "바나나 모양과 딸기 모양의 미니 캡가위를 각각 양손에 들고 보여줍니다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-31",
+      "start": 46.346,
+      "end": 50.717,
+      "scene_desc": "야외 매장처럼 꾸며진 전체 전시 공간을 보여주는 줌아웃 샷",
+      "is_key": false,
+      "change": "",
+      "shot_role": "완성"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 3,
+    "role": "proof",
+    "narration": "매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요.",
+    "target_seconds": 5.8,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-9",
+     "start": 14.848,
+     "end": 17.251,
+     "scene_desc": "손이 다양한 모양의 키캡 키홀더 제품을 각각 하나씩 집어 보여줌.",
+     "is_key": true,
+     "change": "각기 다른 캐릭터 키홀더가 차례로 노출됨.",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-5",
+      "start": 6.874,
+      "end": 7.975,
+      "scene_desc": "그물망에 담긴 사과 인형이 바닥에 놓여 있고 주변에 레몬 모형들이 있음.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "after"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-11",
+      "start": 18.819,
+      "end": 19.92,
+      "scene_desc": "지퍼백에 담긴 키홀더 2개 세트를 손이 들어 올리며 보여줌.",
+      "is_key": true,
+      "change": "키홀더 세트가 화면 중앙으로 들어옴.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-14",
+      "start": 23.457,
+      "end": 24.424,
+      "scene_desc": "스마트폰에 부착된 과일 모양의 팝핑거를 클로즈업합니다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "after"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-16",
+      "start": 26.627,
+      "end": 27.728,
+      "scene_desc": "핀셋으로 조각 스티커를 집어 종이에서 떼어내는 모습을 상세히 보여줍니다.",
+      "is_key": true,
+      "change": "스티커가 종이에서 분리됩니다.",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-9"
+   },
+   {
+    "beat_idx": 4,
+    "role": "demo",
+    "narration": "가방에 가볍게 툭 걸어주면 끝이에요.",
+    "target_seconds": 3.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-8",
+     "start": 11.411,
+     "end": 14.848,
+     "scene_desc": "가방에 키링 인형들이 달려 있는 모습이 그래픽과 함께 연출됨.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-17",
+      "start": 27.728,
+      "end": 27.79,
+      "scene_desc": "다양한 모양의 과일 스티커들이 바닥에 펼쳐져 있는 모습을 보여줍니다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "완성"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-8"
+   },
+   {
+    "beat_idx": 5,
+    "role": "result",
+    "narration": "와, 가방 분위기가 한 번에 살아나는 거 있죠.",
+    "target_seconds": 4.6,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-8",
+     "start": 11.411,
+     "end": 14.848,
+     "scene_desc": "가방에 키링 인형들이 달려 있는 모습이 그래픽과 함께 연출됨.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-9",
+      "start": 14.848,
+      "end": 17.251,
+      "scene_desc": "손이 다양한 모양의 키캡 키홀더 제품을 각각 하나씩 집어 보여줌.",
+      "is_key": true,
+      "change": "각기 다른 캐릭터 키홀더가 차례로 노출됨.",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-8"
+   },
+   {
+    "beat_idx": 6,
+    "role": "price",
+    "narration": "심지어 가격도 너무 착해서 더 놀랍더라고요.",
+    "target_seconds": 4.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-10",
+     "start": 17.251,
+     "end": 18.819,
+     "scene_desc": "아크릴 키홀더들이 바닥에 전시되어 있고 손이 하나를 집어 들음.",
+     "is_key": false,
+     "change": "아크릴 키홀더가 손에 들려 이동함.",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-18",
+      "start": 28.929,
+      "end": 29.83,
+      "scene_desc": "손으로 마스킹지 스티커 시트의 일부를 핀셋으로 집어 올리는 모습을 보여줍니다.",
+      "is_key": true,
+      "change": "스티커 시트가 핀셋에 의해 들어 올려집니다.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-19",
+      "start": 29.83,
+      "end": 31.164,
+      "scene_desc": "마스킹지 스티커 시트 묶음을 나란히 배치하여 종류별 디자인을 보여줍니다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "완성"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-21",
+      "start": 34.635,
+      "end": 35.335,
+      "scene_desc": "딸기 모양의 미니 캡가위를 손으로 들고 작동시키는 모습을 보여줍니다.",
+      "is_key": true,
+      "change": "가위 캡이 열리며 사용 가능한 상태가 됩니다.",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 7,
+    "role": "cta",
+    "narration": "다이소 꿀템 정보 필요하신 분 댓글 달아주시면 제품 정보 바로 보내드릴게요.",
+    "target_seconds": 7.4,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-1",
+     "start": 0.834,
+     "end": 3.37,
+     "scene_desc": "사과 모양의 인형이 수납 바구니 앞에 놓여 있고, 바구니 안에는 다른 과일 인형들이 있음.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "after"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-23",
+      "start": 36.87,
+      "end": 37.804,
+      "scene_desc": "손으로 연필깎이에 연필을 넣고 돌려 깎는 모습을 상세히 보여줍니다.",
+      "is_key": true,
+      "change": "연필이 연필깎이 안에서 깎입니다.",
+      "shot_role": "조작"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-24",
+      "start": 37.804,
+      "end": 39.139,
+      "scene_desc": "손이 토마토 모양 연필깎이의 뚜껑을 열고 닫는 모습",
+      "is_key": true,
+      "change": "연필깎이 뚜껑이 열렸다가 닫힌다.",
+      "shot_role": "조작"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-25",
+      "start": 39.139,
+      "end": 40.173,
+      "scene_desc": "손으로 접힌 분홍색 손잡이 바구니를 펼치는 과정",
+      "is_key": true,
+      "change": "접혀 있던 바구니가 입체적인 형태로 펼쳐진다.",
+      "shot_role": "설치"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-26",
+      "start": 40.173,
+      "end": 41.074,
+      "scene_desc": "펼쳐진 분홍색 손잡이 바구니를 위에서 아래로 잡고 세우는 모습",
+      "is_key": true,
+      "change": "바구니의 옆면이 고정되어 안정적인 수납 형태가 된다.",
+      "shot_role": "설치"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-27",
+      "start": 41.074,
+      "end": 42.309,
+      "scene_desc": "초록색과 분홍색 바구니가 나란히 놓여 있는 모습",
+      "is_key": false,
+      "change": "",
+      "shot_role": "after"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   }
+  ],
+  "plagiarism_flags": [],
+  "detected_type": "generic",
+  "affiliate_target": "",
+  "generator": "inherit"
+ },
+ "beat_sources": [
+  {
+   "role": "hook",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "problem",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "reveal",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "proof",
+   "seg": "s0-9",
+   "segs": [
+    "s0-9"
+   ]
+  },
+  {
+   "role": "demo",
+   "seg": "s0-8",
+   "segs": [
+    "s0-8"
+   ]
+  },
+  {
+   "role": "result",
+   "seg": "s0-8",
+   "segs": [
+    "s0-8",
+    "s0-9"
+   ]
+  },
+  {
+   "role": "price",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "cta",
+   "seg": "",
+   "segs": []
+  }
+ ]
+}

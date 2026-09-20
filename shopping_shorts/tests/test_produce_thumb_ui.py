@@ -13,6 +13,7 @@ import tempfile
 import pytest
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
+DECOR_CATALOG = pathlib.Path(__file__).resolve().parents[1] / "static" / "scene-decoration-catalog.js"
 NODE = shutil.which("node")
 
 _START = "// ── 6단계 썸네일"
@@ -22,7 +23,8 @@ _END = "// ── 썸네일 끝"
 def _slice_source():
     src = PRODUCE_HTML.read_text(encoding="utf-8")
     i, j = src.index(_START), src.index(_END)
-    return src[i:j]
+    catalog = "globalThis.window=globalThis;\n" + DECOR_CATALOG.read_text(encoding="utf-8")
+    return catalog + "\n" + src[i:j]
 
 
 def _run_node(script):
@@ -457,15 +459,16 @@ renderThumbLayers = () => {}; renderThumbCanvas = () => {};
 const out = {};
 toggleThumbFx(0); out.on = THUMB_STATE.layers[0].fx.underline;
 toggleThumbFx(0); out.off = THUMB_STATE.layers[0].fx.underline;
-toggleThumbFx(0); toggleThumbFx(1); out.exclusive = THUMB_STATE.layers[0].fx.underline;
-toggleThumbFx(2); out.marker = !!THUMB_STATE.layers[0].fx.marker;
-toggleThumbFx(2); out.marker_off = THUMB_STATE.layers[0].fx.marker;
+toggleThumbFx(0); out.on2 = THUMB_STATE.layers[0].fx.underline;
+toggleThumbFx(1); out.marker = !!THUMB_STATE.layers[0].fx.marker;
+toggleThumbFx(1); out.marker_off = THUMB_STATE.layers[0].fx.marker;
 console.log(JSON.stringify(out));
 """
     out = json.loads(_run_node(script))
     assert out["on"] == "line"
     assert out["off"] == "none"
-    assert out["exclusive"] == "brush", "붓밑줄을 켜면 일반 밑줄은 꺼져야 한다"
+    # 2026-09-05 '붓 밑줄' 버튼은 뺐다(사장님) — 이제 [0]=밑줄 [1]=형광펜 [2]=네온.
+    assert out["on2"] == "line"
     assert out["marker"] is True
     assert out["marker_off"] is None
 
@@ -683,19 +686,39 @@ console.log(JSON.stringify({html: HTML}));
     return json.loads(_run_node(script))["html"]
 
 
-def test_handles_show_for_sticker_with_delete_size_rotate():
-    """스티커를 고르면 ✕삭제(좌상) + 크기·방향 동시 모서리 3개가 뜬다."""
+def test_handles_show_delete_only():
+    """★모서리 ⤢(크기·방향)는 뺐다 — 2026-08-28 사장님 "손잡이 모서리 기능빼줘
+    버튼조절 기능 있으니까". 크기·회전은 편집칸 슬라이더가 맡는다.
+
+    남는 것은 ✕(삭제)와 점선 네모뿐이다. ✕는 슬라이더로 대신할 수 없고
+    (2026-08-27 "배지 넣고 취소하는거 없어"로 넣은 것), 점선은 선택 표시다.
+    """
     html = _handles_html({"kind": "sticker", "emoji": "F", "size": 20,
                           "x": 0.5, "y": 0.5, "rot": 0})
-    for h in ("del", "g-45", "g45", "g135"):
-        assert f'data-h="{h}"' in html, f"{h} 손잡이가 없다"
+    assert 'data-h="del"' in html, "삭제 손잡이가 없다"
+    assert "dashed" in html, "선택 표시(점선 네모)가 없다"
+    for h in ("g-45", "g45", "g135"):
+        assert f'data-h="{h}"' not in html, f"{h} 모서리 손잡이가 아직 있다"
 
 
-def test_handles_hidden_for_text_layer():
-    """글자 레이어엔 손잡이를 안 띄운다 — 글자는 편집창에서 다룬다(범위 고정)."""
+def test_handles_show_for_text_layer():
+    """글자 레이어도 ✕(삭제)와 선택 표시를 받는다.
+
+    ★두 번 뒤집힌 자리다 — 2026-08-18 "글자는 편집창에서 다룬다(범위 고정)"로 막아 뒀고,
+      2026-08-28 사장님 요청("전체잡고 늘려서")으로 열었다가, 같은 날 감도가 나쁘다는
+      제보로 **끌어서 조절하는 기능만** 도로 뺐다. 남은 것은 삭제·선택 표시다.
+    """
     html = _handles_html({"text": "A", "font": "X.ttf", "size": 78, "color": "#fff",
                           "outline": None, "box": None, "rot": 0, "x": 0.5, "y": 0.2})
-    assert html == "", "글자 레이어에 손잡이가 떴다"
+    assert 'data-h="del"' in html, "글자 레이어에 삭제 손잡이가 없다"
+    assert "dashed" in html, "글자 레이어에 선택 표시가 없다"
+
+
+def test_handles_hidden_for_empty_text_layer():
+    """문구가 비어 있으면 손잡이를 띄우지 않는다 — 잡을 글자가 없는데 점선만 뜬다."""
+    html = _handles_html({"text": "", "font": "X.ttf", "size": 78, "color": "#fff",
+                          "outline": None, "box": None, "rot": 0, "x": 0.5, "y": 0.2})
+    assert html == "", "빈 글자 레이어에 손잡이가 떴다"
 
 
 def test_handle_positions_follow_size():

@@ -38,11 +38,33 @@ def search_many(chains, keyword, max_results=10, cost_table=None, max_len=60):
     kw = (keyword or "").strip()
     if not kw:
         return {"items": [], "count": 0, "keyword": "", "meta": {}}
-    n = max(1, min(int(max_results or 10), max_len))
+    # 슬롯마다 같은 검색어를 쓰는 종전 동작 = 아래 일반형의 특수한 경우다(0순위-B:
+    # 병렬·예외격리·meta 합치기를 두 벌로 적지 않는다).
+    return search_many_kw({p: (chain, kw) for p, chain in chains.items()},
+                          max_results, cost_table, max_len, keyword=kw)
 
-    with ThreadPoolExecutor(max_workers=max(1, len(chains))) as ex:
-        futures = {p: ex.submit(run_chain, chain, kw, n, cost_table)
-                   for p, chain in chains.items()}
+
+def search_many_kw(slots, max_results=10, cost_table=None, max_len=60, keyword=""):
+    """슬롯마다 **검색어가 다를 수 있는** 병렬 실행 (2026-09-08).
+
+    slots: {슬롯키: (백엔드사슬, 그 슬롯에 넣을 검색어)}
+      슬롯키는 "youtube" 처럼 플랫폼명이어도 되고, 다국어를 돌릴 때처럼
+      "youtube@en" 이어도 된다 — meta의 키로만 쓰인다. 카드에 찍히는
+      `platform`은 백엔드가 normalize에서 정하므로 슬롯키와 무관하다.
+
+    왜 필요한가(사장님 지시 "중국어 영어 일본어까지 배치되게"): 소재 영상은
+    한국어 검색만으로는 안 나온다. 핀터레스트가 이미 그 이유로 자체 번역을
+    하고 있었는데(실측: '인덕션 테이블' 0건 / 'induction table' 12건), 그 판단이
+    한 백엔드 안에 갇혀 있어 다른 플랫폼은 혜택을 못 봤다.
+    """
+    n = max(1, min(int(max_results or 10), max_len))
+    live = {k: v for k, v in (slots or {}).items() if v and (v[1] or "").strip()}
+    if not live:
+        return {"items": [], "count": 0, "keyword": keyword or "", "meta": {}}
+
+    with ThreadPoolExecutor(max_workers=max(1, len(live))) as ex:
+        futures = {p: ex.submit(run_chain, chain, (kw_ or "").strip(), n, cost_table)
+                   for p, (chain, kw_) in live.items()}
         results = {}
         for platform, f in futures.items():
             try:
@@ -51,7 +73,18 @@ def search_many(chains, keyword, max_results=10, cost_table=None, max_len=60):
                 results[platform] = ([], {"backend": None, "n": 0, "cost_usd": 0})
 
     items, meta = [], {}
+    seen = set()
     for platform, (rows, m) in results.items():
-        items.extend(rows)
+        for r in rows:
+            # 같은 영상이 여러 언어 슬롯에서 겹쳐 올 수 있다(예: 영어 제목 영상이
+            # en·ja 양쪽에서). url로 한 번만 담는다 — 프론트도 중복을 거르지만
+            # 여기서 걸러야 meta의 건수와 화면 건수가 어긋나지 않는다.
+            u = r.get("url")
+            if u and u in seen:
+                continue
+            if u:
+                seen.add(u)
+            items.append(r)
         meta[platform] = m
-    return {"items": items, "count": len(items), "keyword": kw, "meta": meta}
+    return {"items": items, "count": len(items),
+            "keyword": keyword or "", "meta": meta}

@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>대본 틀 — 전문과 템플릿</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b303c;
+  --ink:#e9ecf1; --dim:#9aa3b2; --faint:#6b7482;
+  --gold:#f2c14e; --hot:#ff6b4a; --bad:#f2545b; --blue:#63b3ff; --mint:#4ade80;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:42px 24px 90px}
+header.top{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:20px}
+h1{font-size:28px;margin:0 0 9px;letter-spacing:-.5px}
+.sub{color:var(--dim);font-size:14px;max-width:880px}
+.src{margin-top:13px;font-size:12.5px;color:var(--faint);
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 14px;display:inline-block}
+.src b{color:var(--dim);font-weight:600}
+h2{font-size:18px;margin:40px 0 13px;padding-left:12px;border-left:3px solid var(--gold)}
+
+.vars{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 20px;margin-bottom:8px;font-size:13px;color:var(--dim)}
+.vars b{color:var(--ink)}
+.v{display:inline-block;background:#12151c;border:1px solid #3a3f4c;color:var(--blue);
+  border-radius:5px;padding:2px 8px;margin:3px 4px 3px 0;font-family:Consolas,monospace;font-size:12px}
+
+.tpl{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:20px}
+.thead{display:flex;align-items:baseline;gap:11px;padding:15px 20px;background:var(--panel2);
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tno{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;min-width:18px}
+.tname{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.tmeta{font-size:11.5px;color:var(--faint)}
+.tv{margin-left:auto;font-size:16px;font-weight:800;color:var(--hot);font-variant-numeric:tabular-nums}
+.tv small{font-size:11px;color:var(--faint);font-weight:500;margin-left:4px}
+
+.two{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.pane{padding:0}
+.pane+.pane{border-left:1px solid #20242e}
+@media(max-width:900px){.pane+.pane{border-left:none;border-top:1px solid #20242e}}
+.ptitle{font-size:11px;letter-spacing:1.2px;font-weight:800;padding:11px 20px;
+  border-bottom:1px solid #20242e;background:#13161d}
+.ptitle.l{color:var(--hot)} .ptitle.r{color:var(--mint)}
+.ptitle span{color:var(--faint);font-weight:600;letter-spacing:0;margin-left:6px;font-size:11px}
+.full{padding:16px 20px;font-size:13.2px;color:#ded7c6;line-height:1.85}
+.full em{color:var(--gold);font-style:normal;font-weight:700}
+
+.slot{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:10px 20px;border-bottom:1px solid #1c202a;font-size:12.8px}
+.slot:last-child{border-bottom:none}
+.slot .r{font-family:Consolas,"D2Coding",monospace;font-size:11.5px;color:var(--blue);padding-top:2px}
+.slot .r.hook{color:var(--gold)} .slot .r.cta{color:var(--mint)} .slot .r.key{color:var(--gold);font-weight:700}
+.slot .t{color:#cfd6e0;line-height:1.72}
+.slot .t code{background:#12151c;border:1px solid #3a3f4c;color:var(--blue);
+  border-radius:4px;padding:1px 5px;font-family:Consolas,monospace;font-size:11.5px}
+.fix{color:var(--gold);font-weight:700}
+
+.note{font-size:12.5px;color:var(--faint);padding:11px 20px;border-top:1px solid var(--line);background:#13161d}
+.note b{color:var(--hot)}
+.limit{background:#1a1216;border:1px solid #4a2630;border-radius:12px;padding:17px 22px;font-size:13.5px;color:#e3c9cd}
+.limit h3{margin:0 0 9px;font-size:14px;color:var(--bad)}
+.limit ul{margin:0;padding-left:18px} .limit li{margin-bottom:5px}
+footer{margin-top:44px;padding-top:17px;border-top:1px solid var(--line);font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>대본 틀 — 실제 전문과 빈칸 템플릿</h1>
+  <div class="sub">
+    왼쪽은 <b>실제로 터진 대본 전문</b>(자르지 않았다), 오른쪽은 그걸 칸으로 나눠 <b>빈칸으로 바꾼 템플릿</b>이다.
+    빈칸 이름은 지금 등록된 스파인이 쓰는 <b>22종 변수를 그대로</b> 썼다.
+  </div>
+  <div class="src">
+    <b>대본</b> script_wiki 실측 원문 &nbsp;·&nbsp;
+    <b>변수</b> spine templates_json 22종 &nbsp;·&nbsp;
+    <b>측정</b> 2026-09-05 &nbsp;·&nbsp; <b>로컬 전용</b>
+  </div>
+</header>
+
+<div class="vars">
+  <b>기존 시스템이 쓰는 빈칸 변수</b> — 새로 만들지 않고 이것만 썼다:
+  <div style="margin-top:7px">
+    <span class="v">{효과}</span><span class="v">{적용대상}</span><span class="v">{사용법}</span><span class="v">{불편함}</span>
+    <span class="v">{제품군}</span><span class="v">{나라}</span><span class="v">{차별점}</span><span class="v">{효능}</span>
+    <span class="v">{가격}</span><span class="v">{제품}</span><span class="v">{본래용도}</span><span class="v">{속성}</span>
+    <span class="v">{용도}</span><span class="v">{용도2}</span><span class="v">{수치}</span><span class="v">{계기}</span>
+    <span class="v">{적용대상들}</span><span class="v">{효능2}</span>
+  </div>
+</div>
+
+<!-- 1 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">01</span><span class="tname">제일 잘 산 거 꼽으라면</span>
+    <span class="tmeta">반복 19편 · 마무리에 “어디서 샀냐고” 63편</span><span class="tv">13만<small>실측</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">실제 대본 전문 <span>263자</span></div>
+      <div class="full">
+        <em>차량용품 중에 제일 잘 산 아이템 꼽으라면 이게 1등이더라고요</em>
+        커피 홀더에 물 놔두려고 하면 항상 꽉 차 있고 사이드 수납 공간에 두면 꺼내기도 불편했는데
+        이거 하나 차문 쪽에 딱 달아주니까 음료나 커피 넣어두기도 좋고 운전하면서 꺼내 마시기도 훨씬 수월하더라고요
+        가격도 저렴해서 보조석이랑 뒷좌석에도 하나씩 달아놨더니 간단한 짐이나 쓰레기통으로도 쓸 수 있어서 활용도가 진짜 좋은데
+        <em>차에 타는 지인들마다 이거 어디서 샀냐고 항상 물어보더라고요</em>
+        댓글에 "홀더" 남겨주세요
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>8칸</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t"><span class="fix">{제품군} 중에 제일 잘 산 아이템 꼽으라면 이게 1등이더라고요</span></div></div>
+      <div class="slot"><div class="r">problem</div><div class="t"><code>{불편함}</code> 하면 항상 <code>{불편함}</code> 이라 불편했는데</div></div>
+      <div class="slot"><div class="r">method</div><div class="t">이거 하나 <code>{적용대상}</code>에 딱 달아주니까</div></div>
+      <div class="slot"><div class="r">benefit</div><div class="t"><code>{효과}</code> 좋고 <code>{효과2}</code> 훨씬 수월하더라고요</div></div>
+      <div class="slot"><div class="r">price</div><div class="t">가격도 저렴해서 <code>{적용대상들}</code>에도 하나씩 달아놨더니</div></div>
+      <div class="slot"><div class="r">usage</div><div class="t"><code>{용도}</code>나 <code>{용도2}</code>로도 쓸 수 있어서 활용도가 진짜 좋은데</div></div>
+      <div class="slot"><div class="r key">witness</div><div class="t"><span class="fix">지인들마다 이거 어디서 샀냐고 항상 물어보더라고요</span></div></div>
+      <div class="slot"><div class="r cta">cta</div><div class="t">댓글에 "<code>{제품}</code>" 남겨주세요</div></div>
+    </div>
+  </div>
+  <div class="note"><b>고정 문장 2개</b>(금색)가 이 틀의 정체다. 나머지는 갈아끼운다. 품목이 많은 분야(차량·주방)에서만 성립한다.</div>
+</div>
+
+<!-- 2 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">02</span><span class="tname">보고 진짜 충격받았어요</span>
+    <span class="tmeta">반복 28편 · 소재 7종(가장 넓다)</span><span class="tv">12만<small>실측</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">실제 대본 전문 <span>276자</span></div>
+      <div class="full">
+        <em>저 이거 보고 진짜 충격받았어요.</em>
+        전셋집으로 이사 왔는데 바닥이 완전 까맣고 더러운 거예요. 30년 된 구축이라지만 이건 아니다 싶어
+        교체 비용 알아봤더니 너무 비싸더라고요.
+        아는 청소업체 사장님께 혹시나 여쭤봤는데 물에다가 이거 살짝 희석해서 닦아보라는 거예요.
+        여기 걸레를 적셔서 바닥을 슥 밀었더니 <em>30년 묵은 때들이 싹 녹아버리고</em> 심지어 바로 말라버리니까
+        바닥이 완전 뽀송해지면서 향기까지 나더라고요.
+        호텔에서 쓰는 제품이라며 로봇청소기도 사용할 수 있다는데 댓글에 '청소' 남겨주세요.
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>8칸</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t"><span class="fix">저 이거 보고 진짜 충격받았어요.</span></div></div>
+      <div class="slot"><div class="r">situation</div><div class="t"><code>{계기}</code> 했는데 <code>{적용대상}</code>이 <code>{불편함}</code> 거예요</div></div>
+      <div class="slot"><div class="r">conflict</div><div class="t">이건 아니다 싶어 <code>{사용법}</code> 알아봤더니 너무 비싸더라고요</div></div>
+      <div class="slot"><div class="r key">source</div><div class="t">아는 <code>{제품군}</code> 사장님께 혹시나 여쭤봤는데 <code>{사용법}</code> 해보라는 거예요</div></div>
+      <div class="slot"><div class="r">demo</div><div class="t">여기 <code>{사용법}</code> 했더니</div></div>
+      <div class="slot"><div class="r">result</div><div class="t"><code>{효과}</code> 싹 <code>{효과}</code> 심지어 <code>{효능2}</code> 까지</div></div>
+      <div class="slot"><div class="r">authority</div><div class="t"><code>{나라}</code>·호텔에서 쓰는 제품이라며 <code>{차별점}</code> 하다는데</div></div>
+      <div class="slot"><div class="r cta">cta</div><div class="t">댓글에 '<code>{제품}</code>' 남겨주세요</div></div>
+    </div>
+  </div>
+  <div class="note"><b>충격의 대상은 결과</b>여야 한다. 제품에 충격받으면 광고로 읽힌다. 전문가는 <b>“아는 ○○ 사장님”</b>처럼 한 다리 건너서 데려온다.</div>
+</div>
+
+<!-- 3 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">03</span><span class="tname">이게 뭐냐고 했더니</span>
+    <span class="tmeta">반복 19편 · 소재 4종</span><span class="tv">15만<small>실측</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">실제 대본 전문 <span>233자</span></div>
+      <div class="full">
+        가족여행 갔다가 남편한테 잠깐 둘째 맡겼더니 <em>애 몸에 이런 걸 달아둔 거예요</em>
+        <em>이게 뭐냐고 했더니</em> 쌍둥이 키우는 친구가 애들 데리고 여행 갈 때 꼭 챙긴다며 쥐여줬다는 거예요
+        안 그래도 호기심 많은 둘째라 사람 많은 곳만 가면 어디로 튈지 몰라 잠깐 눈도 못 뗐는데
+        이거 하나 채워 두니까 아이는 자유롭게 움직이면서도 멀리 떨어지지 않게 잡아 줄 수 있어서
+        한결 마음이 놓이는 거 있죠 댓글에 '안심' 남겨 주세요 :)
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>7칸</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t"><code>{계기}</code> 했더니 <span class="fix">이런 걸 달아둔 거예요</span></div></div>
+      <div class="slot"><div class="r key">ask</div><div class="t"><span class="fix">이게 뭐냐고 했더니</span></div></div>
+      <div class="slot"><div class="r">source</div><div class="t"><code>{적용대상}</code> 하는 친구가 <code>{계기}</code> 때 꼭 챙긴다며 쥐여줬다는 거예요</div></div>
+      <div class="slot"><div class="r">problem</div><div class="t">안 그래도 <code>{불편함}</code> 라 <code>{불편함}</code> 했는데</div></div>
+      <div class="slot"><div class="r">method</div><div class="t">이거 하나 <code>{사용법}</code> 하니까</div></div>
+      <div class="slot"><div class="r">result</div><div class="t"><code>{효과}</code> 하면서도 <code>{효능}</code> 해서 한결 마음이 놓이는 거 있죠</div></div>
+      <div class="slot"><div class="r cta">cta</div><div class="t">댓글에 '<code>{제품}</code>' 남겨 주세요 :)</div></div>
+    </div>
+  </div>
+  <div class="note"><b>출처가 2단계</b>다 — 남편 ← 친구. 내가 산 게 아니라 <b>목격</b>이라 광고 색이 옅다.</div>
+</div>
+
+<!-- 4 -->
+<div class="tpl">
+  <div class="thead"><span class="tname" style="margin-left:29px">남의 집 충격</span>
+    <span class="tno" style="order:-1">04</span>
+    <span class="tmeta">반복 38편 · 소재 4종</span><span class="tv">5.6만<small>실측</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">실제 대본 전문 <span>240자</span></div>
+      <div class="full">
+        <em>친구네 집에 갔다가 현관 보고 깜짝 놀랐어요</em>
+        <em>우리 집 현관은</em> 신발들이 널브러져 발에 걸리고 난장판이거든요
+        <em>근데 친구네는</em> 슬림한 수납장에 신발이 싹 숨겨져 있더라고요
+        이게 폭 20cm밖에 안 되니까 좁은 틈새에도 쏙 들어가서 공간 차지 일도 없어요
+        위쪽에는 차키나 소품 올려두고 아래에는 신발 수십 켤레를 싹 넣어 두니까 현관이 두 배는 넓어진 느낌이에요
+        이사 갈 때도 그대로 들고 가면 되니까 전셋집에도 걱정 없이 쓰기 좋더라고요
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>7칸</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t"><span class="fix">친구네 집에 갔다가</span> <code>{적용대상}</code> 보고 깜짝 놀랐어요</div></div>
+      <div class="slot"><div class="r key">conflict</div><div class="t"><span class="fix">우리 집</span> <code>{적용대상}</code>은 <code>{불편함}</code> 거든요</div></div>
+      <div class="slot"><div class="r">notice</div><div class="t"><span class="fix">근데 친구네는</span> <code>{차별점}</code> 있더라고요</div></div>
+      <div class="slot"><div class="r">spec</div><div class="t">이게 <code>{수치}</code> 밖에 안 되니까 <code>{효과}</code></div></div>
+      <div class="slot"><div class="r">usage</div><div class="t">위쪽에는 <code>{용도}</code> 아래에는 <code>{용도2}</code> 넣어 두니까</div></div>
+      <div class="slot"><div class="r">result</div><div class="t"><code>{적용대상}</code>이 두 배는 넓어진 느낌이에요</div></div>
+      <div class="slot"><div class="r">fit</div><div class="t">이사 갈 때도 그대로 들고 가면 되니까 <code>{적용대상}</code>에도 걱정 없이 쓰기 좋더라고요</div></div>
+    </div>
+  </div>
+  <div class="note"><b>“우리 집은 ~ / 근데 친구네는 ~”</b> 두 문장이 뼈대다. 내 쪽을 못난 쪽에 두는 게 규칙 — 뒤집으면 자랑이 된다.</div>
+</div>
+
+<!-- 5 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">05</span><span class="tname">그냥 ~인 줄 알았는데</span>
+    <span class="tmeta">반복 35편 · 소재 4종</span><span class="tv">3.1만<small>실측</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">실제 대본 전문 <span>255자</span></div>
+      <div class="full">
+        친정 갔는데 냉장고에 못 보던 게 있는 거예요. <em>엄마 이게 다 뭐야? 했더니</em>
+        매일 보고 싶어서 붙여 뒀지 하시는데
+        애들이 올 때마다 그린 그림이며 낙서까지 하나도 안 버리고 모아뒀다가 그대로 자석으로 만들어 붙여두신 거예요.
+        <em>그냥 낙서인 줄 알았는데</em> 엄마한텐 이런 것까지 다 추억이구나 싶어서 괜히 뭉클하더라고요.
+        집에 와서 서랍 속 사진들 싹 꺼내 애랑 같이 만들어봤는데 — 기록 남겨주세요 :)
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>7칸</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t"><code>{계기}</code> 갔는데 <code>{적용대상}</code>에 못 보던 게 있는 거예요</div></div>
+      <div class="slot"><div class="r">ask</div><div class="t">이게 다 뭐야? 했더니 <code>{계기}</code> 라고 하시는데</div></div>
+      <div class="slot"><div class="r">reveal</div><div class="t"><code>{본래용도}</code> 하나도 안 버리고 모아뒀다가 그대로 <code>{제품}</code>으로 만들어 두신 거예요</div></div>
+      <div class="slot"><div class="r key">twist</div><div class="t"><span class="fix">그냥 {본래용도}인 줄 알았는데</span> <code>{차별점}</code> 이구나 싶어서</div></div>
+      <div class="slot"><div class="r">emotion</div><div class="t">괜히 뭉클하더라고요</div></div>
+      <div class="slot"><div class="r">method</div><div class="t">집에 와서 <code>{사용법}</code> 같이 만들어봤는데</div></div>
+      <div class="slot"><div class="r cta">cta</div><div class="t">댓글에 '<code>{제품}</code>' 남겨주세요 :)</div></div>
+    </div>
+  </div>
+  <div class="note">유일하게 <b>감정으로 닫는</b> 틀이다(뭉클). 정보형 제품엔 안 맞고 <b>사연형</b>에 쓴다.</div>
+</div>
+
+<!-- 6 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">06</span><span class="tname">절대 버리지 마세요</span>
+    <span class="tmeta">반복 13편 · 소재 4종</span><span class="tv">1.1만<small>실측</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">실제 대본 전문 <span>268자</span></div>
+      <div class="full">
+        <em>목 늘어난 티셔츠 절대 버리지 마세요</em>
+        오염이 너무 심해서 단골 세탁소에 맡긴 옷을 보니까 사장님이 서비스로 우글거리던 목 라인을 새 옷처럼 만들어 주셨더라고요
+        <em>제발 비결을 알려달라고 조르니까 혼자만 알고 있으라며</em> 슬쩍 보여주시는데 가격이 괜찮아서 바로 사봤거든요
+        물에 살짝 풀어서 목 부분만 쏙 담갔더니 와! 애들이 막 입어서 목이 다 늘어난 옷들이 탄탄해지는데
+        저랑 남편 것까지 싹 다 살렸어요
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>7칸</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t"><code>{불편함}</code> <code>{적용대상}</code> <span class="fix">절대 버리지 마세요</span></div></div>
+      <div class="slot"><div class="r">situation</div><div class="t">오염이 너무 심해서 단골 <code>{제품군}</code>에 맡겼는데</div></div>
+      <div class="slot"><div class="r">notice</div><div class="t">사장님이 서비스로 <code>{효과}</code> 새것처럼 만들어 주셨더라고요</div></div>
+      <div class="slot"><div class="r key">source</div><div class="t"><span class="fix">비결을 알려달라고 조르니까 혼자만 알고 있으라며</span> 슬쩍 보여주시는데</div></div>
+      <div class="slot"><div class="r">price</div><div class="t"><code>{가격}</code>이 괜찮아서 바로 사봤거든요</div></div>
+      <div class="slot"><div class="r">demo</div><div class="t"><code>{사용법}</code> 했더니 와!</div></div>
+      <div class="slot"><div class="r">result</div><div class="t"><code>{적용대상들}</code>까지 싹 다 살렸어요</div></div>
+    </div>
+  </div>
+  <div class="note">금지경고형과 다르다 — 경고가 아니라 <b>구제</b>다. <b>이미 망가진 물건</b>이 전제라 새 제품엔 못 쓴다.</div>
+</div>
+
+<!-- 7 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">07</span><span class="tname">솔직 혹평</span>
+    <span class="tmeta">반복 45편 · 소재 4종 · 기존에 없는 축</span><span class="tv">105만<small>실측</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">실제 대본 전문 <span>662자 — 가장 길다</span></div>
+      <div class="full" style="font-size:12.6px;line-height:1.78">
+        얼마 전에 쇼핑하고 있는데 <em>전자레인지로만 스파게티 면을 익힐 수 있다는 제품</em>이 있어서 즉시 가져왔습니다.
+        기본적으로 플라스틱 외관에 … 몇 인분 정도 나올지 가늠할 수 있는 눈금과 물 붓는 선 그리고 물 버리는 구멍까지
+        <em>꽤나 디테일하게 만든 티가 나는데 뭐 중요한 건 역시 성능이겠죠</em>
+        … 면 2인분에 물선 맞춰 뜨거운 물과 소금 넣고 10~12분 … 저는 9분 정도만 돌렸고
+        면 꺼내서 먹어봤는데 <em>이거 뭐 면 식감이 나쁘지 않아요</em> 면이 서로 달라붙지도 않았고 꼬독꼬독 상당히 괜찮은 식감
+        … <em>지금까지는 나쁘지 않습니다</em>
+        … 이제 드셔보시면 오호 이게 면이 다 익고 나니까 그 파스타면 특유의 탱글함 없이 약간
+        <em>라면으로 치면 뽀글이 같은 맛이 납니다</em>
+        네 뭐 조금 편리하긴 한데요 <em>파스타는 그냥 냄비에 삶아드세요</em>
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>8칸</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t">얼마 전에 <code>{차별점}</code> 할 수 있다는 제품이 있어서 즉시 가져왔습니다</div></div>
+      <div class="slot"><div class="r">spec</div><div class="t"><code>{속성}</code>에 <code>{차별점}</code>까지 꽤나 디테일하게 만든 티가 나는데</div></div>
+      <div class="slot"><div class="r key">conflict</div><div class="t"><span class="fix">뭐 중요한 건 역시 성능이겠죠</span></div></div>
+      <div class="slot"><div class="r">steps</div><div class="t"><code>{사용법}</code> 넣고 <code>{수치}</code> 정도 <code>{사용법}</code></div></div>
+      <div class="slot"><div class="r">demo</div><div class="t">먹어봤는데 <code>{효과}</code> 나쁘지 않아요 … <span class="fix">지금까지는 나쁘지 않습니다</span></div></div>
+      <div class="slot"><div class="r key">twist</div><div class="t">이게 <code>{불편함}</code> 없이 약간 <code>{불편함}</code> 같은 맛이 납니다</div></div>
+      <div class="slot"><div class="r">fit</div><div class="t"><span class="fix">네 뭐 조금 편리하긴 한데요</span></div></div>
+      <div class="slot"><div class="r cta">cta</div><div class="t"><code>{제품군}</code>은 그냥 <code>{본래용도}</code> 하세요</div></div>
+    </div>
+  </div>
+  <div class="note"><b>주의 — 파는 물건엔 못 쓴다.</b> 우리 제품에 쓰려면 <b>경쟁품·기존 방식</b>을 이 틀로 깎고, 우리 걸 대안으로 붙인다.
+  <br>구조가 특이하다: <b>중간까지 칭찬하다가</b>(“지금까지는 나쁘지 않습니다”) 끝에서 뒤집는다. 처음부터 깎으면 안 본다.</div>
+</div>
+
+<h2>한계</h2>
+<div class="limit">
+  <h3>확인한 것과 못 한 것</h3>
+  <ul>
+    <li>왼쪽 <b>대본 전문은 DB 원문 그대로</b>다(반복 오타·중복 문구는 원본 상태라 일부 정리했다).</li>
+    <li>오른쪽 <b>빈칸 나누기는 내가 한 것</b>이다 — 어디를 고정하고 어디를 빈칸으로 둘지는 A/B로 재본 적 없다.</li>
+    <li>변수는 기존 22종만 썼지만, <code>{효과2}</code>처럼 <b>기존에 없던 번호 변형</b>을 몇 개 썼다. 등록 전에 확인이 필요하다.</li>
+    <li>각 틀의 근거는 <b>대표 1편</b>이다. 반복 편수(13~45편)는 <b>표식 문구가 반복된다</b>는 뜻이지 전체 구조가 같다는 뜻은 아니다.</li>
+    <li>조회수와 연결하지 않았다 — <b>“많이 쓰인다”이지 “잘 된다”가 아니다.</b></li>
+  </ul>
+</div>
+
+<footer>서버 reference.db · script_wiki 원문 · spine 변수 22종 · 2026-09-05 · <b>로컬 전용</b></footer>
+
+</div>
+</body>
+</html>

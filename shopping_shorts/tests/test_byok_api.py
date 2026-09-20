@@ -166,12 +166,33 @@ def test_verify_rejects_unknown_service(client):
     assert r.status_code == 422
 
 
-def test_probe_vmake_checks_format_only(monkeypatch):
-    """★vmake 실호출은 크레딧을 먹는다 — 형식만 본다."""
+def test_probe_vmake_verifies_signature_without_spending(monkeypatch):
+    """★vmake는 **서명까지** 본다 — 단, 크레딧을 쓰면 안 된다(2026-08-31).
+
+    종전엔 형식(`":" in key`)만 봐서 짝이 안 맞는 키도 '● 정상'으로 떴고,
+    고객은 제작을 돌리다 그제야 죽었다([10021] sign not equals client).
+    판정은 SkillClient 생성(=/skill/config.json 설정 조회)으로 한다 —
+    과금은 /skill/consume.json이라 여기선 돈이 안 나간다.
+    """
     monkeypatch.setattr(appmod.requests, "get",
-                        lambda *a, **k: pytest.fail("vmake는 실호출하면 안 된다"))
+                        lambda *a, **k: pytest.fail("vmake는 requests로 때리지 않는다"))
+    import shopping_shorts.vmake_sdk as sdk
+    seen = []
+
+    class _Ok:
+        def __init__(self, ak=None, sk=None):
+            seen.append((ak, sk))
+
+    monkeypatch.setattr(sdk, "SkillClient", _Ok)
     assert appmod._probe_user_key(keyroute.SVC_VMAKE, "ak:sk") is True
-    assert appmod._probe_user_key(keyroute.SVC_VMAKE, "콜론없음") is False
+    assert seen == [("ak", "sk")]          # 앞=API Key, 뒤=Secret 순서 그대로
+
+    class _Bad:
+        def __init__(self, ak=None, sk=None):
+            raise RuntimeError("[10021] sign not equals client")
+
+    monkeypatch.setattr(sdk, "SkillClient", _Bad)
+    assert appmod._probe_user_key(keyroute.SVC_VMAKE, "ak:sk") is False
 
 
 def test_probe_gemini_uses_rest_probe(monkeypatch):

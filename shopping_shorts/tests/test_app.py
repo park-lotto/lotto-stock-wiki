@@ -693,7 +693,8 @@ def test_wiki_generate_passes_subject(monkeypatch):
     captured = {}
     def fake_gen(structure, full_text, elem_modes, lookup, mode="remake", my_topic="", subject="", n=3):
         captured.update(mode=mode, subject=subject, my_topic=my_topic)
-        return [{"hook": "h", "script": "s", "applied": "a"}]
+        # 픽업 경로는 이제 subject 소재 출구 검사를 거친다. 소재가 들어간 정상 응답을 흉내낸다.
+        return [{"hook": "h", "script": f"{subject} 대본", "applied": "a"}]
     monkeypatch.setattr(script_generate, "generate_variations", fake_gen)
     client = TestClient(app_module.app)
     r = client.post("/api/wiki/generate?shortcode=ABC",

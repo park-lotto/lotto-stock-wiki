@@ -12,7 +12,7 @@ def test_record_access_dedups_same_combo(tmp_path):
     for _ in range(3):                                   # 같은 IP·기기·날짜 재접속
         s.record_access(cid, "1.1.1.1", "Chrome/UA", "2026-07-22")
     summ = s.access_summary(cid, "2026-07-01")
-    assert summ == {"ips": 1, "devices": 1}              # 하루 1행으로 dedup
+    assert summ == {"ips": 1, "devices": 1, "pc_ips": 1}              # 하루 1행으로 dedup
 
 
 def test_distinct_ips_and_devices_counted(tmp_path):
@@ -78,7 +78,7 @@ def test_boss_access_not_recorded(tmp_path, monkeypatch):
     appmod, s = _admin_setup(tmp_path, monkeypatch)
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(appmod, 0)})   # 사장님(0)
     c.get("/api/me", headers={"X-Forwarded-For": "9.9.9.9", "User-Agent": "Boss/1.0"})
-    assert s.access_summary(0, appmod._today_utc()) == {"ips": 0, "devices": 0}  # 사장님 제외
+    assert s.access_summary(0, appmod._today_utc()) == {"ips": 0, "devices": 0, "pc_ips": 0}  # 사장님 제외
 
 
 def test_admin_customers_exposes_access_7d(tmp_path, monkeypatch):

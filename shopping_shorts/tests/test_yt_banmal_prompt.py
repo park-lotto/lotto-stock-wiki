@@ -22,7 +22,7 @@ A안·B안 전부에서 떴다. 그런데 **경고만 하고 아무도 안 고�
 """
 from shopping_shorts import bank_assemble
 
-YT = {"name": "유튜브 은폐형", "beat_roles": ["title", "bait", "twist"],
+YT = {"name": "유튜브 「이건 바로 OO」", "beat_roles": ["title", "bait", "twist"],
       "templates": {}, "chars_per_30s": 270, "hook_3s": True, "no_cta": True}
 INSTA = {"name": "가족갈등 반전형", "beat_roles": ["hook", "cta"],
          "templates": {}, "chars_per_30s": 300}

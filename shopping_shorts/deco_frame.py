@@ -12,7 +12,7 @@ import json
 import pathlib
 import re
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 W, H = 1080, 1920
 _FONT_DIR = pathlib.Path(__file__).resolve().parent / "static" / "fonts"
@@ -338,12 +338,64 @@ PRESETS = {
     "news_lime":   {"name": "커뮤니티 · 연두", "bar": "#B5D46A", "on_bar": "#1A1A1A"},
     "news_gray":   {"name": "커뮤니티 · 그레이", "bar": "#6E6E6E", "on_bar": "#FFFFFF"},
     "news_navy":   {"name": "커뮤니티 · 네이비", "bar": "#2B3A67", "on_bar": "#FFFFFF"},
+    # ── 🧱 빈 틀(2026-08-28) — 글자·아이콘 없는 **색띠만**.
+    #   왜 필요한가: 지금 20종은 전부 가짜 채널 UI(☰·🔍·채널명)가 박혀 있어
+    #   "위아래 띠만 깔고 싶다"가 불가능했다. 아이콘을 하나씩 '없음'으로 돌리는
+    #   길은 있었지만 세 칸을 매번 만져야 했다 — 골라서 끝나게 한다.
+    #   ★띠 색은 화면에서 바꾼다(bar_color) — 여기 4종은 흔한 출발점일 뿐이다.
+    "plain_black": {"name": "빈 틀 · 검정", "bar": "#000000", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_white": {"name": "빈 틀 · 흰색", "bar": "#FFFFFF", "on_bar": "#111111",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_coral": {"name": "빈 틀 · 살구", "bar": "#F08080", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_navy":  {"name": "빈 틀 · 네이비", "bar": "#2B3A67", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    # ── 🖤 회색띠 2줄 헤드 (2026-08-31, 사장님이 가져온 실캡처 1장으로 만듦) ──
+    #   구조: 짙은 회색 띠 안에 **2줄 헤드카피**(1줄 흰색 / 2줄 형광초록) → 그 아래
+    #   흰 블록에 검은 제목 한 줄. 아이콘·채널명은 없다(띠가 곧 헤드라인 판이다).
+    #   ★색·높이는 캡처 픽셀 실측(339x600 → 1920 환산): 띠 0~23%, 흰 블록 24~35.5%,
+    #     띠 #404040, 2줄 강조 #00E500, 흰 블록 #F2F2F2 / 글자 #000000.
+    "gray_head2": {
+        "name": "회색띠 · 2줄 헤드", "ref": "사장님 캡처 실측(2026-08-31)",
+        # ★head_in_bar: 이 틀은 **띠 자체가 헤드라인 판**이다 — 기존 20종(띠=가짜 UI,
+        #   헤드카피는 그 아래)과 반대 갈래다. 그래서 "헤드카피는 틀 바닥 아래" 계약이
+        #   그대로 적용되면 안 된다(테스트가 갈래를 보고 검사를 뒤집는다).
+        "head_in_bar": True,
+        # ★442·96은 캡처 실측값이지만 엔진 상한(normalize: bar_h≤400)과 화면 입력칸
+        #   상한(크기≤90·외곽선≤10%)에 걸려 조용히 잘린다 → 상한값으로 맞춰 박는다.
+        "bar": "#404040", "on_bar": "#FFFFFF", "bar_h": 400,
+        "left_icon": "none", "right_icon": "none", "center_kind": "없음",
+        "sub_bg": "#F2F2F2", "sub_text": "#000000", "sub_h": 220,
+        "has_head": True, "demo_views": "264만", "demo_comments": "587",
+        "headcopy": _hc("BlackHanSans.ttf", 90, "#FFFFFF", "#00E500", 11, 9, "#000000"),
+        "caption": _cap("#FFFFFF", "#000000", 78, False),
+    },
 }
 
 # 기본 치수(1080x1920 기준). 사장님이 화면에서 바 높이를 조절하면 bar_h만 바뀐다.
 DEFAULTS = {
+    # ── 가림막(2026-08-28 고객 요청 "자막이 안 지워졌을때 가릴수 있는 네모 도형") ──
+    # ★VMake가 못 지운 자막·워터마크·스티커를 덮는다(반투명 대형 워터마크는 구조적으로
+    #   못 지운다는 걸 08-27에 확정했다 — eraser_watermark는 이미지 전용, 두 번 태워도 무효).
+    # 각 항목: {l,t,w,h}=% 좌표, shape=rect|round|pill|ellipse,
+    #          fx=solid|fade, color=#RRGGBB, op=0~100, soft=0~100(가장자리), rot=-45~45
+    # ★흐림 계열(blur/blurdark)은 여기서 못 그린다 — 배경을 흐리게 하는 건 영상 필터다.
+    #   PNG는 '위에 얹는 그림'이라 뒤를 못 만진다. 흐림은 렌더 쪽에서 따로 붙인다(2차).
+    "masks": [],
+    # ── 🖼 이미지 틀(2026-08-31 사장님 "너가 코드로 다시그리면 느낌이 안나와") ──────
+    # ★캔바 등에서 만든 그림을 **그대로** 맨 아래에 깐다. 코드로 재현하면 질감이 죽는다.
+    #   값 = 업로드가 돌려준 id(내용 sha1 16자)뿐이다 — 경로를 받으면 폴더 밖을 읽는다.
+    #   id가 내용 해시라 **그림이 바뀌면 id도 바뀐다** → 캐시키가 자동으로 갈린다.
+    #   빈값이면 지금까지와 완전히 같다(그리는 순서에 레이어 하나가 안 끼는 것뿐).
+    "bg_image": "",
     "preset": "news_coral",
     "bar_h": 190,          # 상단 띠 높이(px)
+    # 띠 끝부분 처리(2026-08-28 사장님 시안 "끝부분 효과").
+    #   solid=딱 자름(지금까지의 그림) / grad=투명으로 흘림 / blur=경계 뭉갬 /
+    #   blurdark=뭉갬+띠를 어둡게. ★기본이 solid라 옛 그림은 하나도 안 바뀐다.
+    "bar_fx": "solid",
+    "bar_soft": 0,         # 번지는 정도 %(띠 높이 대비). 0이면 효과 없음
     "bottom_h": 0,         # 하단 띠 높이(px) — 0이면 없음
     "channel": "",         # 가짜 채널명
     "ad_badge": False,     # [광고] 뱃지
@@ -367,6 +419,15 @@ DEFAULTS = {
     "title_font": "",      # 제목 폰트(빈값=Pretendard-ExtraBold)
     "title_size": 0,       # 제목 크기(0=62, 기존 값)
     "title_x": 50,         # 제목 가로 위치 %
+    # ── 세로 위치(2026-08-31 이미지 틀과 짝) ────────────────────────────────
+    # ★이미지 틀을 쓰면 글자를 **그림 안 빈자리**에 놓아야 한다. 지금까지는 세로가
+    #   "띠 바로 아래"로 고정이라 캔바 그림 위에서 자리를 못 맞췄다.
+    # ★0 = "안 정했음" → 지금까지의 자리 그대로(가로위치·크기와 같은 규약).
+    "ch_y": 0,             # 채널명 세로 위치 %(0=띠 한가운데)
+    "title_y": 0,          # 제목 블록 윗변 세로 위치 %(0=띠 바로 아래)
+    # ★이미지 틀에선 바탕 블록을 우리가 또 그리면 **그림을 덮어버린다**(질감이 죽는
+    #   바로 그 지점이다). 끄면 글자만 얹는다.
+    "head_block": True,
     # ── 제목 글자 꾸미기 확장(2026-08-28 사장님 "폰트쪽 꾸미는것 추가") ──────
     # ★빈값/0 = "안 정했음" → 지금까지의 자동 규칙 그대로(기존 그림 무변경).
     "title_color": "",     # 제목 글자색(빈값=바탕 밝기로 흑/백 자동)
@@ -395,6 +456,39 @@ DEFAULTS = {
     "post_author": "",     # 커뮤니티형: 작성자
     "post_time": "",       # 커뮤니티형: 작성 시간
     "post_likes": "",      # 커뮤니티형: 추천 수
+    # ── 후킹/본문 배치(2026-09-03 사장님 "템플릿 모양 배치까지 그대로" · 10채널 30편 프레임 실측) ──
+    # ★전부 0/빈값 = 종전과 완전히 같다(회귀 0).
+    "hook_band_h": 0,      # 후킹: 띠 아래 어두운 띠 높이 px(헤드라인이 앉는 자리). 실측 20~30%=384~576
+    "hook_band_color": "", # 그 띠 색(빈값=#000000)
+    "hook_band_alpha": 0,  # 그 띠 진하기 %(0=안 정함→60)
+    "sub_line": "",        # 후킹: 어두운 띠 아래 흰 한 줄 박스 문구(빈값=안 그림)
+    "sub_line_h": 0,       # 그 박스 높이 px(0=84)
+    "sub_line_bg": "",     # 그 박스 색(빈값=#FFFFFF)
+    "sub_line_color": "",  # 그 박스 글자색(빈값=#111111)
+    "head_h": 0,           # 본문: 흰 제목 블록 높이 px(0=내용만큼). 자막이 흰 영역 안에 앉게 25~33%=480~630
+    # 작은제목 박스 디테일(2026-09-03 사장님 "그라데이션처럼 네모박스 효과도 있고 디테일 살려봐")
+    "sub_line_w": 0,       # 박스 폭 px(0=글자 폭+80). 실측 이븐쇼핑형은 거의 화면 폭(≈940)
+    "sub_line_soft": 0,    # 가장자리 번짐 px(0=딱 자름). 실측 6~10
+    "sub_line_grad": 0,    # 아래쪽으로 옅어지는 정도 %(0=없음)
+    "sub_line_font": "",   # 소제목 폰트 파일명(빈값=제목 폰트)
+    "sub_line_size": 0,    # 소제목 글자 크기 UI px(0=박스 높이의 절반). 정하면 박스가 글자에 맞춰 자란다
+    # ── 실제 히트작 부품(2026-09-05 사장님 "부품부터 만들어 진짜 레퍼런스처럼") ──
+    # 사장님이 보낸 히트작 40여 편에 있는데 렌더에는 없던 것들. 전부 0/빈값 = 안 그림(회귀 0).
+    "profile": "",          # 동그란 채널 프로필 안 글자(보통 채널명 첫 글자). 빈값=안 그림
+    "profile_color": "",    # 그 원 색(빈값=#E8452C)
+    "profile_size": 0,      # 원 지름 px(0=64)
+    "profile_x": 0,         # 가로 위치 %(0=8)
+    "profile_y": 0,         # 세로 위치 %(0=상단 띠 바로 아래)
+    "yt_icons": 0,          # 유튜브 플레이어 아이콘 줄(스피커·CC·톱니). 0=안 그림
+    "yt_icons_color": "",   # 그 색(빈값=#FFFFFF)
+    "progress": 0,          # 하단 빨간 진행바. 0=안 그림, 1~100=진행 %
+    "progress_color": "",   # 진행바 색(빈값=#FF0033)
+    "shorts_logo": 0,       # Shorts 로고(우하단). 0=안 그림
+    "badge_text": "",       # 좌상단 알약 배지 문구. 빈값=안 그림
+    "badge_color": "",      # 배지 바탕색(빈값=#FF2D55)
+    "badge_text_color": "", # 배지 글자색(빈값=#FFFFFF)
+    "title_mark": "",       # 흰 블록 제목 강조: highlight(형광펜) / underline(밑줄) / 빈값=없음
+    "title_mark_color": "", # 그 색(빈값=#FFE600)
 }
 
 _FONTS = {
@@ -441,6 +535,198 @@ def _fade(color, pct):
     return (color[0], color[1], color[2], int(a * max(0, min(100, pct)) / 100))
 
 
+_BAR_FX = ("solid", "grad", "blur", "blurdark")
+# 가림막의 **종류**(2026-08-28 사장님 "이모티콘이나 뱃지같은거 … 가릴것들 가리게").
+#   shape = 색 도형(지금까지의 가림막)  ·  emoji = 이모지 스티커  ·  badge = 글자 뱃지
+# ★새 기계를 만들지 않고 masks에 종류를 얹었다. 위치·크기·회전·드래그·저장이 이미
+#   여기 다 있다 — 스티커용 배관을 따로 파면 그 규칙이 두 벌이 된다(0순위-B).
+_MASK_KINDS = ("shape", "emoji", "badge")
+_EMOJI_FONT = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
+_EMOJI_PX = 109          # Noto Color Emoji는 109px 고정 비트맵만 있다(실측)
+
+_MASK_SHAPES = ("rect", "round", "pill", "ellipse")
+# 흐림 계열은 **그림으로는 못 그린다** — 뒤에 있는 영상을 흐리게 하는 것이라
+# 렌더(ffmpeg)가 처리한다. PNG에는 안 그리고 마스크만 넘긴다(render_blur_mask).
+_MASK_BLUR_FX = ("blur", "blurdark")
+_MASK_FX = ("solid", "fade") + _MASK_BLUR_FX          # 흐림 계열은 PNG로 못 그린다(위 DEFAULTS 주석)
+_MASK_MAX = 12                        # 화면에서 실수로 수백 개를 만들어도 렌더가 안 죽게
+
+
+def _norm_masks(raw):
+    """가림막 목록을 정규화한다 — 범위 검사도 **여기 한 곳**(normalize와 같은 규약).
+
+    화면과 서버가 각자 자르면 미리보기와 결과가 갈린다. 이상한 항목은 통째로 버린다
+    (조용히 엉뚱한 자리에 그리는 것보다 안 그리는 게 낫다).
+    """
+    out = []
+    for m in (raw or [])[:_MASK_MAX]:
+        if not isinstance(m, dict):
+            continue
+        try:
+            l, t = float(m.get("l", 0)), float(m.get("t", 0))
+            w, h = float(m.get("w", 0)), float(m.get("h", 0))
+        except (TypeError, ValueError):
+            continue
+        if w <= 0 or h <= 0:
+            continue
+        l = max(0.0, min(100.0, l)); t = max(0.0, min(100.0, t))
+        # ★남은 자리보다 크면 줄인다. 자리 자체가 없으면(가장자리에 딱 붙었다) 버린다 —
+        #   하한(0.5%)을 억지로 붙이면 화면 밖으로 삐져나간다(테스트가 잡았다).
+        w = min(100.0 - l, w); h = min(100.0 - t, h)
+        if w < 0.5 or h < 0.5:
+            continue
+        shape = m.get("shape") if m.get("shape") in _MASK_SHAPES else "rect"
+        fx = m.get("fx") if m.get("fx") in _MASK_FX else "solid"
+        col = str(m.get("color") or "#000000")
+        if not (len(col) == 7 and col.startswith("#")):
+            col = "#000000"
+        def _i(k, d, lo, hi):
+            try:
+                return max(lo, min(hi, int(float(m.get(k, d)))))
+            except (TypeError, ValueError):
+                return d
+        kind = m.get("kind") if m.get("kind") in _MASK_KINDS else "shape"
+        # 이모지 1~2자 · 뱃지 글자는 8자까지(그 이상은 뱃지가 아니라 자막이다).
+        ch = str(m.get("ch") or "")[:2]
+        text = " ".join(str(m.get("text") or "").split())[:8]
+        if kind == "emoji" and not ch:
+            continue                       # 그릴 글자가 없으면 버린다(빈 자리를 남기지 않는다)
+        if kind == "badge" and not text:
+            continue
+        item = {"l": round(l, 3), "t": round(t, 3), "w": round(w, 3), "h": round(h, 3),
+                "kind": kind, "ch": ch, "text": text,
+                "shape": shape, "fx": fx, "color": col,
+                "op": _i("op", 100, 0, 100), "soft": _i("soft", 0, 0, 100),
+                "rot": _i("rot", 0, -45, 45)}
+        # 🎬 이 장면에만(2026-09-10 사장님 "장면에만 하는걸 만들고").
+        #   beat = 자막 칸 번호(beat_idx) · cut = 그 칸의 몇 번째 컷(None이면 칸 전체).
+        #   ★장면 지정이 **없으면 키를 아예 안 붙인다** — 붙이면 cache_key가 바뀌어
+        #     지금까지 만든 모든 틀 그림이 다시 그려진다(옛 작업 무변경).
+        sc = _scene_of_raw(m)
+        if sc is not None:
+            item["beat"], item["cut"] = sc
+        out.append(item)
+    return out
+
+
+def _scene_of_raw(m):
+    """가림막 dict에서 (beat, cut)을 읽는다. 장면 지정이 없거나 이상하면 None(=전체 장면)."""
+    b = m.get("beat")
+    if b is None or isinstance(b, bool):
+        return None
+    try:
+        b = int(b)
+    except (TypeError, ValueError):
+        return None
+    if b < 0:
+        return None
+    c = m.get("cut")
+    if c is None or isinstance(c, bool):
+        return (b, None)
+    try:
+        c = int(c)
+    except (TypeError, ValueError):
+        return (b, None)
+    return (b, c if c >= 0 else None)
+
+
+def split_scene_masks(spec):
+    """틀 spec → (전체 장면용 spec, {(beat, cut): [장면 전용 가림막...]}).
+
+    ★렌더가 쓰는 **유일한 갈림길**이다(0순위-B). 전체 장면 가림막은 지금까지처럼
+      틀 그림(한 장) 안에 그대로 들어가고, 장면 전용은 따로 떼어 그 장면 시간에만 얹는다.
+    ★장면 지정이 하나도 없으면 원본 spec을 **그대로** 돌려준다 — cache_key가 같아야
+      옛 틀 그림이 다시 그려지지 않는다.
+    """
+    spec = spec or {}
+    raw = spec.get("masks") or []
+    if not isinstance(raw, list) or not any(
+            isinstance(m, dict) and _scene_of_raw(m) is not None for m in raw):
+        return spec, {}
+    keep, scenes = [], {}
+    for m in raw:
+        if not isinstance(m, dict):
+            continue
+        sc = _scene_of_raw(m)
+        if sc is None:
+            keep.append(m)
+        else:
+            scenes.setdefault(sc, []).append(m)
+    return dict(spec, masks=keep), scenes
+
+
+def render_scene_masks_to(masks):
+    """장면 전용 가림막만 담은 **투명 그림** 한 장(1080x1920). 그릴 게 없으면 None.
+
+    ★그리는 함수는 틀 그림과 같은 _draw_masks다 — 전체용과 장면용이 모양이 갈리지 않는다.
+    흐림 계열은 여기서도 안 그린다(render_blur_mask_to가 따로 마스크를 만든다).
+    """
+    ms = _norm_masks(masks)
+    if not ms:
+        return None
+    key = hashlib.sha1(json.dumps(
+        {"m": ms, "_v": RENDER_VER}, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()[:16]
+    out = (pathlib.Path(__file__).resolve().parent / "data" / "frame_cache"
+           / f"{key}_scenemask.png")
+    if out.exists():
+        return out
+    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    _draw_masks(im, ms)
+    if im.getbbox() is None:          # 흐림만 있어 색 막이 하나도 없다
+        return None
+    out.parent.mkdir(parents=True, exist_ok=True)
+    im.save(out, "PNG")
+    return out
+
+
+_VALID_IMG_ID = re.compile(r"[0-9a-f]{16}")
+_BG_DIR = pathlib.Path(__file__).resolve().parent / "data" / "frame_images"
+# ── 기본 제공 이미지 틀(2026-08-31) ─────────────────────────────────────────
+# ★사장님: "내가 캔바에서 올려서 쓰라고? 너가 만든거 없어?" — 올리는 길만 만들고
+#   정작 쓸 틀이 없으면 빈 통이다. 우리가 구워서 함께 배포한다.
+# ★굽는 방법이 중요하다: PIL로 그리지 않고 **HTML/CSS를 진짜 크로미움으로 렌더**한다
+#   (tools/frame_kit/build_frames.py). 여러 겹 그림자·유리 흐림·그라데이션은 CSS가
+#   이미 잘하는 일이고, 그 결과가 그대로 PNG가 된다 — 그게 '느낌'의 정체다.
+_BUILTIN_DIR = pathlib.Path(__file__).resolve().parent / "static" / "frames"
+_VALID_BUILTIN_ID = re.compile(r"[a-z0-9_]{3,24}")
+
+
+def builtin_frames():
+    """기본 제공 틀 목록 [{id,name}]. 목록 파일이 없거나 깨져도 빈 목록을 준다."""
+    f = _BUILTIN_DIR / "frames.json"
+    if not f.exists():
+        return []
+    try:
+        items = json.loads(f.read_text(encoding="utf-8")) or []
+    except (OSError, ValueError):
+        return []
+    # ★목록에 적혀도 **파일이 실제로 있어야** 준다 — 없는 걸 주면 화면에 빈 칸이 뜬다
+    return [x for x in items if isinstance(x, dict)
+            and _VALID_BUILTIN_ID.fullmatch(str(x.get("id") or ""))
+            and (_BUILTIN_DIR / f"{x['id']}.png").exists()]
+
+
+def bg_image_path(img_id):
+    """이미지 틀 id → 실제 파일 경로. 없으면 None.
+
+    ★id 검사(normalize)를 통과한 값만 들어온다는 전제에 기대지 않고 여기서 **또** 본다 —
+      이 함수는 API·렌더 양쪽에서 불리고, 한쪽이 검사를 잊으면 경로탈출이 된다.
+    ★두 갈래를 **여기 한 곳에서** 푼다(0순위-B): 올린 것(16자 hex) / 기본 제공(이름).
+      두 군데서 풀면 한쪽만 경로검사를 잊는다.
+    """
+    if not img_id:
+        return None
+    sid = str(img_id)
+    if _VALID_IMG_ID.fullmatch(sid):
+        p = _BG_DIR / f"{sid}.png"
+        return p if p.exists() else None
+    if _VALID_BUILTIN_ID.fullmatch(sid):
+        p = _BUILTIN_DIR / f"{sid}.png"
+        return p if p.exists() else None
+    return None
+
+
 def normalize(spec):
     """화면이 준 값에 기본값을 채우고 범위를 자른다.
 
@@ -452,6 +738,7 @@ def normalize(spec):
             s[k] = v
     if s["preset"] not in PRESETS:
         s["preset"] = DEFAULTS["preset"]
+    s["masks"] = _norm_masks(s.get("masks"))
     # ★프리셋이 자기 띠 높이를 갖고 있으면 그게 기본이다(실측한 원본 비율).
     #   화면이 bar_h를 직접 보내오면 그건 사장님이 손으로 민 것이므로 존중한다.
     #   이 분기가 없으면 20종이 전부 같은 190px 띠가 돼 "비율이 원본과 다르다"가 된다.
@@ -461,6 +748,15 @@ def normalize(spec):
     #   190px 띠를 뒤집어쓴다. 있고 없고는 `is not None`으로 갈라야 한다.
     if "bar_h" not in (spec or {}) and p.get("bar_h") is not None:
         s["bar_h"] = p["bar_h"]
+    # 띠 끝부분 처리도 **여기 한 곳에서만** 자른다(위 bar_h와 같은 원칙).
+    # 모르는 값은 solid로 — 이름이 틀렸는데 조용히 다른 효과가 나가면 더 나쁘다.
+    v = str(s.get("bar_fx") or "solid").strip()
+    s["bar_fx"] = v if v in _BAR_FX else "solid"
+    try:
+        s["bar_soft"] = int(s.get("bar_soft") or 0)
+    except (TypeError, ValueError):
+        s["bar_soft"] = 0
+    s["bar_soft"] = max(0, min(100, s["bar_soft"]))
     # 위·아래 띠는 **같은 규칙**으로 자른다 — 한쪽만 다르게 자르면 언젠가 어긋난다
     for k in ("bar_h", "bottom_h"):
         try:
@@ -472,13 +768,22 @@ def normalize(spec):
         s[k] = str(s[k] or "").strip()[:60]
     s["ad_badge"] = bool(s["ad_badge"])
     s["icons"] = bool(s["icons"])
+    s["head_block"] = bool(s["head_block"])
     # ── 글자 꾸미기 값도 **여기 한 곳에서만** 자른다(위 bar_h와 같은 원칙) ──
     # ★0은 "안 정했음"이라 살려둔다 — 그림 그릴 때 프리셋 기본으로 되돌아간다.
     for k, lo, hi in (("ch_size", 0, 200), ("title_size", 0, 200),
                       ("ch_x", 0, 100), ("title_x", 0, 100),
+                      ("ch_y", 0, 100), ("title_y", 0, 100),
                       ("title_ol_w", 0, 20),
                       ("ad_size", 0, 200), ("ad_x", 0, 100), ("ad_y", 0, 100),
-                      ("ad_alpha", 0, 100)):
+                      ("ad_alpha", 0, 100),
+                      ("hook_band_h", 0, 1200), ("hook_band_alpha", 0, 100),
+                      ("sub_line_h", 0, 300), ("head_h", 0, 1400),
+                      ("sub_line_w", 0, 1080), ("sub_line_soft", 0, 40), ("sub_line_grad", 0, 100),
+                      ("sub_line_size", 0, 200),
+                      # 히트작 부품(2026-09-05) — 값 범위도 여기 한 곳에서만 자른다
+                      ("profile_size", 0, 300), ("profile_x", 0, 100), ("profile_y", 0, 100),
+                      ("yt_icons", 0, 1), ("progress", 0, 100), ("shorts_logo", 0, 1)):
         try:
             s[k] = int(s[k])
         except (TypeError, ValueError):
@@ -501,6 +806,11 @@ def normalize(spec):
     for k in ("left_icon", "right_icon"):
         v = str(s[k] or "").strip()
         s[k] = v if v in _ICON_CHOICES else ""
+    # 이미지 틀 id — 16자 hex만. 경로·확장자가 섞이면 폴더 밖을 읽을 수 있다(폰트와 같은 원칙).
+    v = str(s["bg_image"] or "").strip()
+    # ★형식만 보지 않고 **실제 파일이 있는지**로 받는다 — 이름이 그럴듯한데 파일이
+    #   없으면 렌더가 조용히 맨 그림을 내보내고 "왜 틀이 안 나오냐"가 된다.
+    s["bg_image"] = v if bg_image_path(v) else ""
     v = str(s["center_kind"] or "").strip()
     s["center_kind"] = v if v in _CENTER else ""
     v = str(s["layout"] or "").strip()
@@ -582,6 +892,76 @@ def _bookmark(d, cx, cy, color, w=30, h=42, th=8):
     d.line([cx + w // 2, cy + h // 2, cx, cy + h // 6], fill=color, width=th)
 
 
+def _profile(d, cx, cy, r, bg, text, fg=(255, 255, 255, 255)):
+    """동그란 채널 프로필. 사진 대신 색 원 + 첫 글자(실측: 히트작 대부분이 이 모양)."""
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=bg)
+    if text:
+        f = _font("title", max(10, int(r * 1.05)))
+        t = text[0]
+        bb = d.textbbox((0, 0), t, font=f)
+        d.text((cx - (bb[2] - bb[0]) / 2 - bb[0], cy - (bb[3] - bb[1]) / 2 - bb[1]), t, font=f, fill=fg)
+
+
+def _speaker(d, cx, cy, color, s=20, th=6):
+    """스피커 아이콘 — 네모+삼각 몸통에 음파 두 줄."""
+    d.rectangle([cx - s, cy - s * 0.4, cx - s * 0.35, cy + s * 0.4], fill=color)
+    d.polygon([(cx - s * 0.35, cy - s * 0.4), (cx + s * 0.15, cy - s),
+               (cx + s * 0.15, cy + s), (cx - s * 0.35, cy + s * 0.4)], fill=color)
+    for k in (0.55, 0.95):
+        d.arc([cx + s * 0.1, cy - s * k, cx + s * (0.1 + 2 * k), cy + s * k],
+              start=-60, end=60, fill=color, width=max(2, th - 2))
+
+
+def _cc(d, cx, cy, color, w=44, h=30, th=5):
+    """CC(자막) 아이콘 — 둥근 네모 안에 cc."""
+    d.rounded_rectangle([cx - w // 2, cy - h // 2, cx + w // 2, cy + h // 2],
+                        radius=7, outline=color, width=max(2, th - 2))
+    f = _font("bar", max(8, int(h * 0.62)))
+    bb = d.textbbox((0, 0), "cc", font=f)
+    d.text((cx - (bb[2] - bb[0]) / 2 - bb[0], cy - (bb[3] - bb[1]) / 2 - bb[1]), "cc", font=f, fill=color)
+
+
+def _gear(d, cx, cy, color, r=18, th=6):
+    """톱니 아이콘 — 원 + 사방 짧은 막대(작은 크기에서 톱니로 읽힌다)."""
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=color, width=max(2, th - 2))
+    d.ellipse([cx - r * 0.35, cy - r * 0.35, cx + r * 0.35, cy + r * 0.35], fill=color)
+    for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0), (-0.7, -0.7), (0.7, 0.7), (-0.7, 0.7), (0.7, -0.7)):
+        d.line([cx + dx * r * 0.95, cy + dy * r * 0.95, cx + dx * r * 1.45, cy + dy * r * 1.45],
+               fill=color, width=max(2, th - 3))
+
+
+def _progress_bar(d, W, y, pct, color, th=8, pad=28):
+    """쇼츠 하단 빨간 진행바 + 동그란 손잡이."""
+    x0, x1 = pad, W - pad
+    d.rounded_rectangle([x0, y - th // 2, x1, y + th // 2], radius=th // 2, fill=(255, 255, 255, 90))
+    px = x0 + (x1 - x0) * max(0, min(100, pct)) / 100.0
+    d.rounded_rectangle([x0, y - th // 2, px, y + th // 2], radius=th // 2, fill=color)
+    d.ellipse([px - th, y - th, px + th, y + th], fill=color)
+
+
+def _shorts_mark(d, cx, cy, scale=1.0):
+    """Shorts 로고 — 빨간 알약에 흰 삼각 + 글자."""
+    w, h = int(150 * scale), int(50 * scale)
+    d.rounded_rectangle([cx - w // 2, cy - h // 2, cx + w // 2, cy + h // 2],
+                        radius=h // 2, fill=(255, 0, 51, 235))
+    tx = cx - w // 2 + int(18 * scale)
+    d.polygon([(tx, cy - h * 0.26), (tx, cy + h * 0.26), (tx + h * 0.34, cy)], fill=(255, 255, 255, 255))
+    f = _font("bar", max(10, int(26 * scale)))
+    bb = d.textbbox((0, 0), "Shorts", font=f)
+    d.text((tx + h * 0.55, cy - (bb[3] - bb[1]) / 2 - bb[1]), "Shorts", font=f, fill=(255, 255, 255, 255))
+
+
+def _pill_badge(d, x, y, text, bg, fg, size=26, pad=16):
+    """좌상단 알약 배지(예: 진짜 봐야할 것). 그린 크기를 돌려준다."""
+    f = _font("bar", size)
+    bb = d.textbbox((0, 0), text, font=f)
+    tw, th = bb[2] - bb[0], bb[3] - bb[1]
+    w, h = tw + pad * 2, th + pad
+    d.rounded_rectangle([x, y, x + w, y + h], radius=h // 2, fill=bg)
+    d.text((x + pad - bb[0], y + (h - th) / 2 - bb[1]), text, font=f, fill=fg)
+    return w, h
+
+
 def _lum(c):
     """색의 밝기(0~255). 글자가 바탕에 묻히는지 판정하는 데만 쓴다."""
     return (c[0] * 299 + c[1] * 587 + c[2] * 114) / 1000
@@ -607,6 +987,81 @@ _CENTER = {"검색창": "search", "search": "search",
            "없음": "none", "none": "none", "": "none", None: "name"}
 
 
+def _draw_channel(d, s, color, bar_h, cy):
+    """채널명 한 줄을 (ch_x%, cy)에 그린다.
+
+    ★띠 안/밖 두 군데서 부르므로 **여기 한 곳에서만** 자리·크기를 정한다(0순위-B).
+      두 번 적으면 띠가 있을 때와 없을 때 글자가 다르게 나온다.
+    """
+    csize = s["ch_size"] or max(28, int(bar_h * 0.30))
+    f = _font("bar", csize, s["ch_font"])
+    cx = W * (s["ch_x"] / 100.0)
+    # 글자 절반이 화면 밖으로 나가지 않게 중심을 안쪽으로 당긴다.
+    half = _fg.text_px(f, s["channel"], csize) / 2
+    cx = max(half + 20, min(W - half - 20, cx))
+    _fg.draw_text(d, (cx, cy), s["channel"], f, color, "mm", csize)
+
+
+def _fit_cover(src):
+    """어떤 비율이든 1080x1920을 꽉 채우게 맞춘다(넘치는 쪽은 가운데 기준으로 자른다).
+
+    ★'맞춰 줄이기'(contain)가 아니라 '채우기'(cover)다 — 틀은 화면을 덮는 게 일이라
+      여백이 생기면 그 자리로 영상이 비쳐 나와 틀이 깨져 보인다.
+    """
+    sw, sh = src.size
+    if not sw or not sh:
+        return Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    k = max(W / sw, H / sh)
+    nw, nh = max(1, round(sw * k)), max(1, round(sh * k))
+    r = src.resize((nw, nh), Image.LANCZOS)
+    return r.crop(((nw - W) // 2, (nh - H) // 2, (nw - W) // 2 + W, (nh - H) // 2 + H))
+
+
+def _bar_layer(col, bar_h, fx, soft, top=True):
+    """띠 한 장(RGBA, W x H)을 만들어 돌려준다.
+
+    ★띠의 **끝부분 처리**를 정하는 유일한 자리다(0순위-B) — 위 띠와 아래 띠가
+      각자 다르게 잘리면 언젠가 어긋난다. 두 곳 다 이 함수를 부른다.
+
+    fx  solid    딱 잘린 띠(지금까지의 그림 — 기본값이라 회귀가 없다)
+        grad     안쪽 끝에서 투명으로 선형으로 흘린다
+        blur     경계를 가우시안으로 뭉갠다
+        blurdark 뭉갠 경계 + 띠 자체를 어둡게(배경이 밝을 때 글자가 산다)
+    soft 0~100   번지는 정도. 띠 높이에 대한 비율이라 띠를 키우면 같이 커진다.
+    """
+    layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    if bar_h <= 0:
+        return layer
+    if fx == "blurdark":
+        col = tuple([int(c * 0.55) for c in col[:3]] + [col[3] if len(col) > 3 else 255])
+    d = ImageDraw.Draw(layer)
+    y0, y1 = (0, bar_h - 1) if top else (H - bar_h, H - 1)
+    d.rectangle([0, y0, W, y1], fill=col)
+    if fx == "solid" or soft <= 0:
+        return layer
+    span = max(1, int(bar_h * soft / 100.0))
+    # 알파만 손본다 — 색은 그대로 두고 '얼마나 비치나'만 바꾼다.
+    a = layer.split()[3]
+    if fx == "grad":
+        da = ImageDraw.Draw(a)
+        for i in range(span):
+            v = int(255 * (1.0 - (i + 1) / float(span)))
+            y = (bar_h - span + i) if top else (H - bar_h + span - 1 - i)
+            da.line([(0, y), (W, y)], fill=v)
+    else:                                   # blur / blurdark
+        # ★그냥 블러하면 **화면 바깥쪽 끝까지 옅어진다**(위 띠의 맨 위가 반투명이 됨).
+        #   바깥으로 늘려서 블러한 뒤 잘라내면 안쪽 경계만 뭉개진다.
+        pad = span * 2
+        big = Image.new("L", (W, H + pad * 2), 0)
+        ImageDraw.Draw(big).rectangle(
+            [0, (0 if top else H - bar_h + pad), W, (bar_h + pad - 1 if top else H + pad * 2 - 1)],
+            fill=255)
+        big = big.filter(ImageFilter.GaussianBlur(max(1, span // 2)))
+        a = big.crop((0, pad, W, H + pad))
+    layer.putalpha(a)
+    return layer
+
+
 def render(spec):
     """spec → 1080x1920 RGBA 이미지. 가운데는 투명(영상이 비쳐야 한다)."""
     s = normalize(spec)
@@ -617,11 +1072,20 @@ def render(spec):
     on_bar = _rgb(s["on_bar_color"] or p["on_bar"])
 
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # ★이미지 틀은 **맨 아래**에 깔린다 — 그 위에 띠·글자가 얹힌다.
+    #   실패해도 그림 전체가 죽으면 안 된다(그림 한 장이 화면을 통째로 막는다).
+    _bg = bg_image_path(s["bg_image"])
+    if _bg:
+        try:
+            with Image.open(_bg) as _src:
+                im.alpha_composite(_fit_cover(_src.convert("RGBA")))
+        except Exception:      # noqa: BLE001 — 깨진 파일 하나로 미리보기가 막히면 안 된다
+            pass
     d = ImageDraw.Draw(im)
 
     bar_h = s["bar_h"]
     if bar_h > 0:
-        d.rectangle([0, 0, W, bar_h - 1], fill=bar_col)   # PIL은 끝점 포함 → -1
+        im.alpha_composite(_bar_layer(bar_col, bar_h, s["bar_fx"], s["bar_soft"], True))
         cy = bar_h // 2
         if s["icons"]:
             # ★어느 아이콘인지도 채널마다 다르다(실측: 햄버거·돋보기·⋮·←·북마크).
@@ -639,14 +1103,13 @@ def render(spec):
         if center == "search":
             _searchbar(d, W // 2, cy, on_bar, h=max(44, int(bar_h * 0.34)))
         elif center == "name" and s["channel"]:
-            # 크기 0 = "안 정했음" → 기존 자동 규칙(띠 높이의 30%)을 그대로 쓴다.
-            csize = s["ch_size"] or max(28, int(bar_h * 0.30))
-            f = _font("bar", csize, s["ch_font"])
-            cx = W * (s["ch_x"] / 100.0)
-            # 글자 절반이 화면 밖으로 나가지 않게 중심을 안쪽으로 당긴다.
-            half = _fg.text_px(f, s["channel"], csize) / 2
-            cx = max(half + 20, min(W - half - 20, cx))
-            _fg.draw_text(d, (cx, cy), s["channel"], f, on_bar, "mm", csize)
+            _draw_channel(d, s, on_bar, bar_h,
+                          int(H * s["ch_y"] / 100.0) if s["ch_y"] else cy)
+
+    # ★띠가 없어도 채널명을 그린다 — 이미지 틀은 띠를 그림이 갖고 있어서 bar_h=0인데,
+    #   그때 채널명이 통째로 사라지면 "글자를 얹을 수 없다"가 된다(세로위치와 짝).
+    if bar_h <= 0 and s["channel"] and s["ch_y"]:
+        _draw_channel(d, s, on_bar, 190, int(H * s["ch_y"] / 100.0))
 
     # ★[광고]는 **틀과 독립**이다(2026-08-22 사장님 "템플릿 없어도 사용가능").
     #   그래서 띠(bar_h>0) 블록 **밖**에서 그린다 — 띠가 없어도 나온다.
@@ -678,11 +1141,50 @@ def render(spec):
             d.text((ax, ay), "[광고]", font=fb, fill=fill, anchor="mm")
 
     if s["bottom_h"] > 0:
-        d.rectangle([0, H - s["bottom_h"], W, H - 1], fill=bar_col)
+        im.alpha_composite(_bar_layer(bar_col, s["bottom_h"], s["bar_fx"], s["bar_soft"], False))
+
+    # ── 후킹 배치: 띠 아래 어두운 띠 + 흰 한 줄 박스 (실측: 썰칩12·쇼핑천재·공가미·살림장착 등) ──
+    if s["hook_band_h"] > 0:
+        _bc = _rgb(s["hook_band_color"] or "#000000")
+        _al = int(255 * (s["hook_band_alpha"] or 60) / 100.0)
+        _band = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        ImageDraw.Draw(_band).rectangle([0, bar_h, W, bar_h + s["hook_band_h"]], fill=(_bc[0], _bc[1], _bc[2], _al))
+        im.alpha_composite(_band)
+    if s["sub_line"]:
+        if s["sub_line_size"] > 0:                       # 글자 크기가 주인 → 박스가 따라 자란다
+            _spx = int(round(s["sub_line_size"] * 1.5))
+            _sh = int(_spx * 1.7)
+        else:
+            _sh = s["sub_line_h"] or 84
+            _spx = int(_sh * 0.5)
+        _sy = (bar_h + s["hook_band_h"] - int(_sh * 0.35)) if s["hook_band_h"] > 0 else (bar_h + 24)
+        _sf = _font("title", _spx, s["sub_line_font"])
+        _sw = s["sub_line_w"] or (int(d.textlength(s["sub_line"], font=_sf)) + 80)
+        _sw = min(W - 40, _sw)
+        _sx = (W - _sw) // 2
+        _bgc = _rgb(s["sub_line_bg"] or "#FFFFFF")
+        _soft = s["sub_line_soft"]
+        # 박스는 별도 층에 그려 가장자리를 번지게(그라데이션 느낌) 한 뒤 얹는다 — 0이면 종전처럼 딱 자른다
+        _box = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        ImageDraw.Draw(_box).rounded_rectangle([_sx, _sy, _sx + _sw, _sy + _sh], radius=14, fill=_bgc)
+        if s["sub_line_grad"] > 0:   # 아래로 갈수록 옅어짐
+            _al = _box.split()[3]
+            _g = Image.new("L", (W, H), 255); _gd = ImageDraw.Draw(_g)
+            for _i in range(_sh):
+                _v = 255 - int(255 * s["sub_line_grad"] / 100.0 * (_i / max(1, _sh - 1)))
+                _gd.line([(0, _sy + _i), (W, _sy + _i)], fill=_v)
+            from PIL import ImageChops
+            _box.putalpha(ImageChops.multiply(_al, _g))
+        if _soft > 0:
+            _box = _box.filter(ImageFilter.GaussianBlur(_soft))
+        im.alpha_composite(_box)
+        d = ImageDraw.Draw(im)
+        _fg.draw_text(d, (W // 2, _sy + _sh // 2), s["sub_line"], _sf, _rgb(s["sub_line_color"] or "#111111"), "mm", _spx)
 
     # 제목·메타가 얹히는 흰 블록 — 내용이 있을 때만 그린다(빈 블록이 영상을 가리면 손해).
-    y = bar_h
-    if s["title"] or s["views"] or s["comments"]:
+    # ★0 = "안 정했음" → 지금까지처럼 띠 바로 아래(옛 그림 무변경).
+    y = int(H * s["title_y"] / 100.0) if s["title_y"] else bar_h
+    if s["title"] or s["views"] or s["comments"] or s["head_h"] > 0:
         tsize = s["title_size"] or 62
         ft = _font("title", tsize, s["title_font"])
         fm = _font("meta", 30)
@@ -700,6 +1202,8 @@ def render(spec):
         if s["comments"]:
             meta = (meta + " | " if meta else "") + f"댓글 {s['comments']}개"
         block_h = 36 + len(lines) * line_h + (52 if meta else 0) + 24
+        if s["head_h"] > 0:                      # 실측 채널은 자막까지 흰 블록 안에 앉는다
+            block_h = max(block_h, s["head_h"])
         # ★제목 블록의 **바탕색·글자색도 채널마다 다르다**(실측 sub_bg 5가지·sub_text 9가지).
         #   2026-08-25까지 소비처 0곳이라 흰 바탕+검은 글자 한 벌로만 나갔다(center_kind와 같은 사고).
         #   사장님이 화면에서 직접 정한 head_bg가 있으면 그게 먼저다(사람 손 > 실측).
@@ -725,7 +1229,9 @@ def render(spec):
         if not s["sub_text_c"] and abs(_lum(meta_fill) - _lum(bg)) < 60:
             meta_fill = _fallback_meta
         rule_fill = (210, 210, 210, 255) if dark_bg else (30, 30, 30, 255)
-        d.rectangle([0, y, W, y + block_h - 1], fill=bg)
+        # ★이미지 틀에선 이 바탕이 그림을 덮는다 — 끄면 글자만 얹힌다.
+        if s["head_block"]:
+            d.rectangle([0, y, W, y + block_h - 1], fill=bg)
         ty = y + 36
         # 외곽선(2026-08-28): 두께>0일 때만. 색을 안 정했으면 **바탕**과 대비되는 쪽
         # (밝은 바탕→검정, 어두운 바탕→흰색). ★글자색 기준으로 뒤집으면 흰 바탕에서
@@ -743,7 +1249,237 @@ def render(spec):
             d.text((60, ty + 6), meta, font=fm, fill=meta_fill, anchor="la")
             ty += 46
             d.rectangle([60, ty + 8, W - 60, ty + 11], fill=rule_fill)
+
+    # ── 실제 히트작 부품(2026-09-05) — 전부 0/빈값이면 한 줄도 안 그린다(회귀 0).
+    #    사장님 히트작 40여 편에 있는데 렌더에 없던 것들: 프로필 원·플레이어 아이콘·
+    #    진행바·Shorts 로고·알약 배지. 값이 있을 때만 이 층이 돈다.
+    if (s["profile"] or s["yt_icons"] or s["progress"] or s["shorts_logo"] or s["badge_text"]):
+        _pl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        _pd = ImageDraw.Draw(_pl)
+        if s["badge_text"]:
+            _pill_badge(_pd, int(W * 0.045), int(H * 0.022), s["badge_text"],
+                        _rgb(s["badge_color"] or "#FF2D55"),
+                        _rgb(s["badge_text_color"] or "#FFFFFF"),
+                        size=max(14, int(H * 0.026)))
+        if s["profile"]:
+            _pr = (s["profile_size"] or 64) // 2
+            _px = int(W * ((s["profile_x"] or 8) / 100.0))
+            _py = int(H * (s["profile_y"] / 100.0)) if s["profile_y"] else (bar_h + _pr + 12)
+            _profile(_pd, _px, _py, _pr, _rgb(s["profile_color"] or "#E8452C"), s["profile"])
+        if s["yt_icons"]:
+            _ic = _rgb(s["yt_icons_color"] or "#FFFFFF")
+            _iy = max(bar_h // 2, int(H * 0.035))
+            _speaker(_pd, int(W * 0.60), _iy, _ic, s=int(H * 0.020))
+            _cc(_pd, int(W * 0.72), _iy, _ic, w=int(W * 0.075), h=int(H * 0.030))
+            _gear(_pd, int(W * 0.84), _iy, _ic, r=int(H * 0.019))
+        if s["progress"]:
+            _progress_bar(_pd, W, int(H * 0.93), s["progress"],
+                          _rgb(s["progress_color"] or "#FF0033"), th=max(5, int(H * 0.008)))
+        if s["shorts_logo"]:
+            _shorts_mark(_pd, int(W * 0.82), int(H * 0.885), scale=W / 1080.0)
+        im.alpha_composite(_pl)
+
+    # ★가림막은 **맨 마지막**에 얹는다 — 띠·글자보다 위여야 원본 자막을 확실히 덮는다.
+    _draw_masks(im, s["masks"])
     return im
+
+
+def _draw_masks(im, masks):
+    """가림막을 그림 위에 얹는다. 모양은 _mask_shape_layer 한 곳에서 정한다.
+
+    ★흐림(blur)은 여기서 **안 그린다** — 그림 한 장으로는 뒤 영상을 흐리게 못 한다.
+      렌더가 마스크를 받아 처리한다. 흐림+어둡게(blurdark)는 '어둡게'만 여기서 얹는다.
+    """
+    for m in masks or []:
+        # ★이모지·뱃지는 '덮는 것'이 아니라 '얹는 것'이라 흐림 분기를 안 탄다.
+        #   자리·크기·회전 규칙은 도형과 똑같이 _mask_shape_layer 계열을 쓴다.
+        if m.get("kind") == "emoji":
+            _draw_emoji_mask(im, m)
+            continue
+        if m.get("kind") == "badge":
+            _draw_badge_mask(im, m)
+            continue
+        if m["fx"] == "blur":
+            continue
+        if m["fx"] == "blurdark":
+            # 진하기 100%를 그대로 검정으로 쓰면 완전히 까매져 흐림이 무의미해진다.
+            rgb, alpha = (0, 0, 0), int(255 * m["op"] / 100.0 * 0.45)
+        else:
+            rgb, alpha = _rgb(m["color"])[:3], int(255 * m["op"] / 100.0)
+        layer, x, y = _mask_shape_layer(m, rgb, alpha)
+        im.alpha_composite(layer, (x, y))
+
+
+def _mask_box(im, m):
+    """masks의 %좌표를 픽셀 상자로. 자리 계산은 도형과 **같은 식**을 쓴다(0순위-B)."""
+    W, H = im.size
+    x = int(W * m["l"] / 100.0)
+    y = int(H * m["t"] / 100.0)
+    w = max(1, int(W * m["w"] / 100.0))
+    h = max(1, int(H * m["h"] / 100.0))
+    return x, y, w, h
+
+
+def _draw_emoji_mask(im, m):
+    """이모지 스티커 한 장. 컬러 이모지는 Noto Color Emoji로만 그려진다.
+
+    ★109px 고정 비트맵이다(실측) — 다른 크기로 truetype()을 열면 예외가 난다.
+      그래서 **109로 그린 뒤 상자에 맞춰 줄인다**. 폰트가 없거나 실패하면 아무것도
+      안 그린다 — 두부(⊠)를 그리는 것보다 낫다(영문전용 폰트 사고와 같은 판단).
+    """
+    x, y, w, h = _mask_box(im, m)
+    try:
+        f = ImageFont.truetype(_EMOJI_FONT, _EMOJI_PX)
+    except Exception:                      # noqa: BLE001 — 폰트가 없는 환경(개발 PC)
+        return
+    pad = _EMOJI_PX // 4
+    n = max(1, len(m.get("ch") or ""))
+    tile = Image.new("RGBA", (_EMOJI_PX * n + pad * 2, _EMOJI_PX + pad * 2), (0, 0, 0, 0))
+    try:
+        ImageDraw.Draw(tile).text((pad, pad), m["ch"], font=f, embedded_color=True)
+    except Exception:                      # noqa: BLE001 — 지원 안 하는 글자
+        return
+    bb = tile.getbbox()
+    if not bb:
+        return
+    tile = tile.crop(bb)
+    tile = tile.resize((w, h), Image.LANCZOS)
+    if m["rot"]:
+        tile = tile.rotate(m["rot"], expand=True, resample=Image.BICUBIC)
+        x -= (tile.width - w) // 2
+        y -= (tile.height - h) // 2
+    if m["op"] < 100:
+        a = tile.getchannel("A").point(lambda v: int(v * m["op"] / 100.0))
+        tile.putalpha(a)
+    im.alpha_composite(tile, (max(0, x), max(0, y)))
+
+
+def _draw_badge_mask(im, m):
+    """글자 뱃지(SALE·NEW·인기…) 한 장 — 둥근 사각 + 가운데 글자.
+
+    색은 가림막과 같은 `color`를 쓰고, 글자색은 배경 밝기로 정한다(어두우면 흰 글자).
+    한 곳에서 정해야 화면 미리보기와 결과가 안 갈린다.
+    """
+    x, y, w, h = _mask_box(im, m)
+    rgb = _rgb(m["color"])[:3]
+    alpha = int(255 * m["op"] / 100.0)
+    tile = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(tile)
+    r = int(min(w, h) * 0.28)
+    d.rounded_rectangle([0, 0, w - 1, h - 1], radius=r, fill=rgb + (alpha,))
+    # 밝은 바탕엔 검은 글자 — 흰 뱃지에 흰 글자가 되는 걸 막는다.
+    lum = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
+    fg = (17, 17, 17, 255) if lum > 150 else (255, 255, 255, 255)
+    txt = m.get("text") or ""
+    size = max(10, int(h * 0.52))
+    for _ in range(12):                    # 상자에 들어갈 때까지 줄인다
+        f = _font("title", size)
+        bb = d.textbbox((0, 0), txt, font=f)
+        if bb[2] - bb[0] <= w * 0.84 or size <= 10:
+            break
+        size = int(size * 0.9)
+    bb = d.textbbox((0, 0), txt, font=f)
+    d.text(((w - (bb[2] - bb[0])) / 2 - bb[0], (h - (bb[3] - bb[1])) / 2 - bb[1]),
+           txt, font=f, fill=fg)
+    if m["rot"]:
+        tile = tile.rotate(m["rot"], expand=True, resample=Image.BICUBIC)
+        x -= (tile.width - w) // 2
+        y -= (tile.height - h) // 2
+    im.alpha_composite(tile, (max(0, x), max(0, y)))
+
+
+def _mask_shape_layer(m, rgb, alpha, feather=None):
+    """가림막 한 장을 자기 레이어에 그린다 — 모양·회전·가장자리 규칙의 **유일한 자리**.
+
+    ★색 막(_draw_masks)과 흐림 마스크(render_blur_mask)가 **같은 함수**를 쓴다.
+      두 벌로 그리면 "화면의 막"과 "실제로 흐려지는 자리"가 언젠가 어긋난다(0순위-B).
+    돌려주는 값: (레이어, 붙일 좌표 x, y)
+    """
+    x, y = int(W * m["l"] / 100.0), int(H * m["t"] / 100.0)
+    w, h = max(1, int(W * m["w"] / 100.0)), max(1, int(H * m["h"] / 100.0))
+    # 가장자리 흐림 크기를 먼저 정한다 — 레이어에 그만큼 여백이 있어야 **바깥으로 번진다**.
+    # ★여백 없이 흐리면 레이어 경계에서 잘려 안쪽만 흐려진다(테스트가 잡은 버그).
+    if feather is None:
+        blur_px = 0
+        if m["fx"] == "fade":
+            blur_px = max(2, int(min(w, h) * (0.12 + m["soft"] / 100.0 * 0.38)))
+        elif m["soft"] > 0 and m["fx"] not in _MASK_BLUR_FX:
+            blur_px = max(1, int(min(w, h) * m["soft"] / 100.0 * 0.30))
+    else:
+        blur_px = feather
+    pad = blur_px * 3                                   # 가우시안이 사실상 사라지는 거리
+    if m["rot"]:
+        pad = max(pad, int(max(w, h) * 0.5))            # 회전하면 모서리가 잘린다
+    layer = Image.new("RGBA", (w + pad * 2, h + pad * 2), (0, 0, 0, 0))
+    ld = ImageDraw.Draw(layer)
+    box = [pad, pad, pad + w - 1, pad + h - 1]
+    fill = tuple(rgb) + (alpha,)
+    if m["shape"] == "ellipse":
+        ld.ellipse(box, fill=fill)
+    elif m["shape"] == "pill":
+        ld.rounded_rectangle(box, radius=h // 2, fill=fill)
+    elif m["shape"] == "round":
+        ld.rounded_rectangle(box, radius=max(6, min(w, h) // 8), fill=fill)
+    else:
+        ld.rectangle(box, fill=fill)
+    # 가장자리 부드럽게(soft) / 그라데이션(fade) — 알파만 흐리면 색은 그대로다.
+    if blur_px:
+        layer.putalpha(layer.split()[3].filter(ImageFilter.GaussianBlur(blur_px)))
+    if m["rot"]:
+        layer = layer.rotate(m["rot"], resample=Image.BICUBIC, expand=False)
+    return layer, x - pad, y - pad
+
+
+def blur_sigma(masks):
+    """흐림 세기(ffmpeg gblur sigma). 막마다 다르게 줄 수 없어 **가장 센 것**으로 맞춘다.
+
+    ★'가장자리' 슬라이더(soft)가 흐림 계열에서는 세기를 겸한다 — 슬라이더를 하나 더
+      만들면 안 쓰는 칸이 늘고, 흐림에선 어차피 가장자리 값이 놀고 있었다.
+    """
+    best = 0.0
+    for m in masks or []:
+        if m.get("fx") in _MASK_BLUR_FX:
+            best = max(best, 25.0 + (m.get("soft", 0) / 100.0) * 55.0)
+    return round(best, 1)
+
+
+def render_blur_mask(spec):
+    """흐림을 먹일 영역만 **알파에** 칠한 마스크(RGBA). 흐림 막이 없으면 None.
+
+    렌더는 이 알파를 뽑아(alphaextract) 흐린 영상에 붙이고 원본 위에 얹는다.
+    ★모양은 색 막과 같은 함수로 그린다 — 보이는 자리와 흐려지는 자리가 같아야 한다.
+    """
+    masks = [m for m in _norm_masks(spec.get("masks")) if m["fx"] in _MASK_BLUR_FX]
+    if not masks:
+        return None
+    im = Image.new("RGBA", (W, H), (255, 255, 255, 0))
+    for m in masks:
+        # 경계가 칼로 자른 듯하면 흐림 티가 난다 — 늘 조금 부드럽게(soft와 별개).
+        w = max(1, int(W * m["w"] / 100.0))
+        h = max(1, int(H * m["h"] / 100.0))
+        feather = max(4, int(min(w, h) * (0.20 if m.get("soft",0)>=80 else 0.06)))
+        layer, x, y = _mask_shape_layer(m, (255, 255, 255), 255, feather=feather)
+        im.alpha_composite(layer, (x, y))
+    return im
+
+
+def blur_mask_path(spec):
+    """흐림 마스크 파일 자리. 틀 그림과 **같은 규약**(cache_key + 접미사)."""
+    return (pathlib.Path(__file__).resolve().parent / "data" / "frame_cache"
+            / f"{cache_key(spec)}_blurmask.png")
+
+
+def render_blur_mask_to(spec, out_path=None):
+    """마스크를 파일로 저장하고 경로를 돌려준다. 흐림 막이 없으면 None."""
+    out_path = pathlib.Path(out_path or blur_mask_path(spec))
+    if out_path.exists():
+        return out_path
+    im = render_blur_mask(spec)
+    if im is None:
+        return None
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    im.save(out_path, "PNG")
+    return out_path
 
 
 def cache_path(spec):

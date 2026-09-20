@@ -1,0 +1,414 @@
+{
+ "draft": {
+  "style_id": 60,
+  "style_name": "유튜브 발명품형",
+  "beats": [
+   {
+    "role": "title",
+    "text": "독일에서 난리 난 손목 보호대의 정체",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.0,
+    "src_segs": []
+   },
+   {
+    "role": "story",
+    "text": "장시간 컴퓨터 작업으로 손목 통증에 시달리던 직장인들이 쓰기 시작하면서 이 실리콘 보호대가 입소문을 타기 시작했는데",
+    "src_seg": "s0-2",
+    "needs_scene": true,
+    "sec": 6.7,
+    "src_segs": [
+     "s0-2",
+     "s0-3"
+    ]
+   },
+   {
+    "role": "authority",
+    "text": "출시되자마자 독일에서 품절 대란을 일으킨 전설의 아이템인데 써보니까 납득이 가더라고",
+    "src_seg": "s0-6",
+    "needs_scene": true,
+    "sec": 5.0,
+    "src_segs": [
+     "s0-6",
+     "s0-11"
+    ]
+   },
+   {
+    "role": "benefit",
+    "text": "핵심은 이거야 손목에 밀착되어 움직임은 자유롭지만 짱짱하게 지지해준다는 거",
+    "src_seg": "s0-1",
+    "needs_scene": true,
+    "sec": 4.5,
+    "src_segs": [
+     "s0-1",
+     "s0-10"
+    ]
+   },
+   {
+    "role": "escalate",
+    "text": "더 대박인 건 실리콘 소재라 물에 닿아도 젖지 않아서 설거지나 청소할 때도 그대로 쓸 수 있다는 점임",
+    "src_seg": "s0-8",
+    "needs_scene": true,
+    "sec": 5.4,
+    "src_segs": [
+     "s0-8",
+     "s0-7"
+    ]
+   },
+   {
+    "role": "twist",
+    "text": "근데 이거 물건인 이유가 따로 있는데 왼손 오른손 구분 없이 아무 때나 껴도 되니까 세상 편하더라",
+    "src_seg": "s0-10",
+    "needs_scene": true,
+    "sec": 5.3,
+    "src_segs": [
+     "s0-10"
+    ]
+   }
+  ],
+  "script": "독일에서 난리 난 손목 보호대의 정체 장시간 컴퓨터 작업으로 손목 통증에 시달리던 직장인들이 쓰기 시작하면서 이 실리콘 보호대가 입소문을 타기 시작했는데 출시되자마자 독일에서 품절 대란을 일으킨 전설의 아이템인데 써보니까 납득이 가더라고 핵심은 이거야 손목에 밀착되어 움직임은 자유롭지만 짱짱하게 지지해준다는 거 더 대박인 건 실리콘 소재라 물에 닿아도 젖지 않아서 설거지나 청소할 때도 그대로 쓸 수 있다는 점임 근데 이거 물건인 이유가 따로 있는데 왼손 오른손 구분 없이 아무 때나 껴도 되니까 세상 편하더라",
+  "hook": "독일에서 난리 난 손목 보호대의 정체",
+  "checks": [
+   {
+    "name": "구간 순서",
+    "ok": true,
+    "detail": "기대 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist'] / 실제 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist']"
+   },
+   {
+    "name": "CTA 금지(유튜브 썰)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "말끝(반말체)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "말 밀도(139~222자)",
+    "ok": true,
+    "detail": "214자 / 이 스타일 히트작 199자",
+    "over": false
+   },
+   {
+    "name": "고조 심화(1회)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "훅 3초 서론금지",
+    "ok": true,
+    "detail": "OK(독일에서난리난손목보호대의정체장시간컴퓨…)"
+   },
+   {
+    "name": "화자 일관성",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "장면 근거",
+    "ok": true,
+    "detail": "OK(5/6줄에 장면)"
+   }
+  ],
+  "passed": true,
+  "tries": [
+   {
+    "chars": 210,
+    "fails": [
+     "고조 심화(1회)"
+    ]
+   },
+   {
+    "chars": 220,
+    "fails": []
+   },
+   {
+    "chars": 214,
+    "trimmed": true,
+    "fails": []
+   }
+  ],
+  "chars": 214,
+  "sec": 28.9
+ },
+ "plan": {
+  "structure": "template",
+  "beats": [
+   {
+    "beat_idx": 0,
+    "role": "title",
+    "narration": "독일에서 난리 난 손목 보호대의 정체",
+    "target_seconds": 3.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-9",
+     "start": 45.879,
+     "end": 49.149,
+     "scene_desc": "엄지에 보호대를 걸어 고정한 상세 모습이 클로즈업됨.",
+     "is_key": true,
+     "change": "엄지에 걸려 보호대가 손목에서 흘러내리지 않고 단단히 고정되어 있음.",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-4",
+      "start": 14.964,
+      "end": 15.19,
+      "scene_desc": "여성이 양손을 들어 손목 보호대를 다시 보여주며 이야기를 이어간다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "설치"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 1,
+    "role": "story",
+    "narration": "장시간 컴퓨터 작업으로 손목 통증에 시달리던 직장인들이 쓰기 시작하면서 이 실리콘 보호대가 입소문을 타기 시작했는데",
+    "target_seconds": 11.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-2",
+     "start": 3.77,
+     "end": 9.367,
+     "scene_desc": "여성이 손목 보호대를 손에 들고 보여주다가 노트북으로 타이핑하는 화면으로 전환된다.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "문제"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-3",
+      "start": 9.367,
+      "end": 14.964,
+      "scene_desc": "노트북 타이핑 화면에서 손목을 주무르는 클로즈업 화면으로 전환된다.",
+      "is_key": true,
+      "change": "장시간 작업으로 손목이 뻐근해진 상태가 묘사된다.",
+      "shot_role": "문제"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-12",
+      "start": 61.642,
+      "end": 61.65,
+      "scene_desc": "여성이 정면을 보고 앉아 이야기를 하며 양손을 들어 손목 보호대를 보여준다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-2"
+   },
+   {
+    "beat_idx": 2,
+    "role": "authority",
+    "narration": "출시되자마자 독일에서 품절 대란을 일으킨 전설의 아이템인데 써보니까 납득이 가더라고",
+    "target_seconds": 8.1,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-6",
+     "start": 26.159,
+     "end": 32.732,
+     "scene_desc": "여성이 양손에 실리콘 손목 보호대 제품 상자를 들고 카메라를 응시하며 소개함.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "기타"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-11",
+      "start": 55.395,
+      "end": 61.642,
+      "scene_desc": "여성이 컴퓨터 키보드 타이핑을 하는 모습이 짧게 지나가고 다시 인물로 돌아옴.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-6"
+   },
+   {
+    "beat_idx": 3,
+    "role": "benefit",
+    "narration": "핵심은 이거야 손목에 밀착되어 움직임은 자유롭지만 짱짱하게 지지해준다는 거",
+    "target_seconds": 7.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-1",
+     "start": 3.237,
+     "end": 3.77,
+     "scene_desc": "여성이 양손의 주먹을 쥐었다 펴며 보호대를 착용 중인 손목을 보여준다.",
+     "is_key": true,
+     "change": "손목 보호대가 손목에 밀착되어 움직임을 보조한다.",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-10",
+      "start": 49.149,
+      "end": 55.395,
+      "scene_desc": "여성이 보호대를 양손에 번갈아 착용하며 내구성과 지지력을 시연.",
+      "is_key": true,
+      "change": "보호대가 손목을 짱짱하게 지지해주어 안정적인 상태를 유지함.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-5",
+      "start": 20.562,
+      "end": 20.98,
+      "scene_desc": "여성이 양손을 펴서 보호대 착용 모습을 보여주고 화면 하단에 텍스트가 나타난다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-1"
+   },
+   {
+    "beat_idx": 4,
+    "role": "escalate",
+    "narration": "더 대박인 건 실리콘 소재라 물에 닿아도 젖지 않아서 설거지나 청소할 때도 그대로 쓸 수 있다는 점임",
+    "target_seconds": 9.8,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-8",
+     "start": 39.306,
+     "end": 45.879,
+     "scene_desc": "보호대를 착용한 손으로 물을 틀어 씻거나 가전제품 손잡이를 잡는 모습이 겹쳐서 나타남.",
+     "is_key": true,
+     "change": "제품이 물에 젖거나 오염되지 않고 일상적인 가사 활동을 원활하게 수행함.",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-7",
+      "start": 32.732,
+      "end": 39.306,
+      "scene_desc": "여성이 카메라 앞에서 실리콘 보호대를 착용한 손목을 보여주며 움직임 시연.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-8"
+   },
+   {
+    "beat_idx": 5,
+    "role": "twist",
+    "narration": "근데 이거 물건인 이유가 따로 있는데 왼손 오른손 구분 없이 아무 때나 껴도 되니까 세상 편하더라",
+    "target_seconds": 9.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-10",
+     "start": 49.149,
+     "end": 55.395,
+     "scene_desc": "여성이 보호대를 양손에 번갈아 착용하며 내구성과 지지력을 시연.",
+     "is_key": true,
+     "change": "보호대가 손목을 짱짱하게 지지해주어 안정적인 상태를 유지함.",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 3.77,
+      "end": 7.02,
+      "scene_desc": "여성이 손목 보호대를 손에 들고 보여주다가 노트북으로 타이핑하는 화면으로 전환된다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "문제"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-10"
+   }
+  ],
+  "plagiarism_flags": [],
+  "detected_type": "generic",
+  "affiliate_target": "",
+  "generator": "inherit"
+ },
+ "beat_sources": [
+  {
+   "role": "title",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "story",
+   "seg": "s0-2",
+   "segs": [
+    "s0-2",
+    "s0-3"
+   ]
+  },
+  {
+   "role": "authority",
+   "seg": "s0-6",
+   "segs": [
+    "s0-6",
+    "s0-11"
+   ]
+  },
+  {
+   "role": "benefit",
+   "seg": "s0-1",
+   "segs": [
+    "s0-1",
+    "s0-10"
+   ]
+  },
+  {
+   "role": "escalate",
+   "seg": "s0-8",
+   "segs": [
+    "s0-8",
+    "s0-7"
+   ]
+  },
+  {
+   "role": "twist",
+   "seg": "s0-10",
+   "segs": [
+    "s0-10"
+   ]
+  }
+ ]
+}

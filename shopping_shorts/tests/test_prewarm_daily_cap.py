@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""예열 일일 상한 — 한국 날짜로 리셋, 상한 100 (2026-08-27).
+"""예열 일일 상한 — 한국 날짜로 리셋, 상한 300 (2026-08-28. 100도 하루에 찼다).
 
 ★사고: 상한의 '하루'가 UTC였다 → 리셋이 **한국 오전 9시**.
   낮에 상한을 다 쓰면 그날 저녁부터 다음날 아침 9시까지 담는 건 전부 조용히 스킵됐다.
@@ -53,8 +53,8 @@ class Test한국날짜로_센다:
 
 
 class Test상한:
-    def test_상한은_100(self):
-        assert pw._PREWARM_DAILY_CAP == 100
+    def test_상한은_300(self):
+        assert pw._PREWARM_DAILY_CAP == 300
 
     def test_상한_안이면_통과하고_1_올린다(self):
         s = _S(f"{_kst_today()}|5")
@@ -62,23 +62,23 @@ class Test상한:
         assert s.v == f"{_kst_today()}|6"
 
     def test_상한에_닿으면_막고_안_올린다(self):
-        s = _S(f"{_kst_today()}|100")
+        s = _S(f"{_kst_today()}|300")
         before = s.v
         assert pw._daily_take(s) is False
         assert s.v == before, "막았는데 카운터가 올라갔다"
 
-    def test_어제_100건이어도_오늘은_통과(self):
+    def test_어제_300건이어도_오늘은_통과(self):
         """★이게 사고의 핵심 — 날짜가 바뀌면 다시 쓸 수 있어야 한다."""
-        s = _S("2020-01-01|100")
+        s = _S("2020-01-01|300")
         assert pw._daily_take(s) is True
 
 
 class Test남은_몫_안내:
     def test_남은_건수를_센다(self):
-        assert pw.daily_remaining(_S(f"{_kst_today()}|30")) == 70
+        assert pw.daily_remaining(_S(f"{_kst_today()}|30")) == 270
 
     def test_다_썼으면_0(self):
-        assert pw.daily_remaining(_S(f"{_kst_today()}|100")) == 0
+        assert pw.daily_remaining(_S(f"{_kst_today()}|300")) == 0
 
     def test_넘겨도_음수가_아니다(self):
         assert pw.daily_remaining(_S(f"{_kst_today()}|999")) == 0

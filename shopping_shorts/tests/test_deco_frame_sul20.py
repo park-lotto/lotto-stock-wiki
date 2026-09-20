@@ -17,11 +17,16 @@ from shopping_shorts import deco_frame as df
 HTML = (pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html").read_text(encoding="utf-8")
 
 NEW = {k: v for k, v in df.PRESETS.items() if v.get("headcopy")}
+# ★두 갈래다(2026-08-31). 섞으면 한쪽 계약이 다른 쪽을 깬다.
+#   SUL   = 벤치마킹 20종. 띠 = 가짜 UI → 헤드카피는 **띠 아래**에 와야 안 먹힌다.
+#   INBAR = 띠 자체가 헤드라인 판인 틀 → 헤드카피가 **띠 안**에 들어와야 한다(검사가 뒤집힌다).
+INBAR = {k: v for k, v in NEW.items() if v.get("head_in_bar")}
+SUL = {k: v for k, v in NEW.items() if not v.get("head_in_bar")}
 LEGACY = ("news_coral", "news_lime", "news_gray", "news_navy")
 
 
 def test_twenty_benchmarked_presets():
-    assert len(NEW) == 20, f"썰쇼핑 벤치마킹 틀은 20종이어야 한다(현재 {len(NEW)})"
+    assert len(SUL) == 20, f"썰쇼핑 벤치마킹 틀은 20종이어야 한다(현재 {len(SUL)})"
 
 
 def test_each_preset_names_its_reference_channel():
@@ -76,7 +81,7 @@ def test_headcopy_set_is_complete_and_in_ui_range():
 
 def test_headcopy_y_clears_the_bar():
     """★글자가 '딱 들어가야' 한다 — 띠 아래에서 시작해야 띠에 안 먹힌다."""
-    for k, v in NEW.items():
+    for k, v in SUL.items():
         if v["bar_h"] == 0:
             continue          # 띠가 없으면 먹힐 것도 없다(풀블리드)
         bar_pct = v["bar_h"] / df.H * 100
@@ -260,7 +265,7 @@ def test_headcopy_clears_the_whole_frame_not_just_the_bar():
     ★y는 글자 블록의 **한가운데**다(미리보기가 translate(-50%,-50%)) — 블록 절반만큼
       더 내려야 첫 줄이 온전히 보인다. 크기는 720폭 기준이라 1920으로 환산해야 한다.
     """
-    for k, v in NEW.items():
+    for k, v in SUL.items():
         im = df.render({"preset": k, "channel": v["name"],
                         "title": "네일샵 안가요 다이소 꿀템 발견",
                         "views": "264만", "comments": "587"})
@@ -276,6 +281,22 @@ def test_headcopy_clears_the_whole_frame_not_just_the_bar():
         assert top >= floor, (
             f"{k}: 헤드카피 첫 줄(y={hc['y']}%, 윗변 {top:.0f}px)이 "
             f"틀 바닥({floor}px)에 가린다")
+
+
+def test_head_in_bar_headline_fits_inside_the_bar():
+    """★반대 갈래: 띠가 헤드라인 판인 틀은 2줄이 **띠 안에** 온전히 들어와야 한다.
+    (띠 아래로 흘러나가면 흰 제목블록을 덮는다 — SUL과 방향만 반대인 같은 사고다)"""
+    for k, v in INBAR.items():
+        hc = v["headcopy"]
+        # ★환산 계수는 렌더가 실제로 쓰는 값이다: video_assemble._ui_px = _OUT_W/_UI_REF_W
+        #   = 1080/720 = 1.5. (위 SUL 검사는 df.H/720=2.67로 부풀려 잡는다 — 그쪽은
+        #    "충분히 아래인가"라 과대추정이 안전 쪽이지만, 여기선 "안에 들어가는가"라
+        #    같은 계수를 쓰면 어떤 값도 통과 못 한다.)
+        block = hc["size"] * (df.W / 720) * 1.18 * 2      # 2줄 블록 높이
+        top = hc["y"] / 100 * df.H - block / 2
+        assert top >= 0, f"{k}: 헤드카피 첫 줄이 화면 위로 잘린다(윗변 {top:.0f}px)"
+        assert top + block <= v["bar_h"], (
+            f"{k}: 2줄이 띠({v['bar_h']}px)를 넘어 흘러나간다(아랫변 {top + block:.0f}px)")
 
 
 def test_outline_is_thin_enough_to_read():
@@ -318,7 +339,7 @@ def test_every_benchmarked_preset_ships_a_caption_set():
     """틀·헤드카피가 있으면 자막도 있어야 한다 — 셋이 한 세트다."""
     missing = [k for k in NEW if not df.PRESETS[k].get("caption")]
     assert not missing, f"자막 세트가 빠진 틀: {missing}"
-    assert len(CAPPED) == 20
+    assert len(CAPPED) == len(NEW), "헤드카피 있는 틀은 모두 자막 세트를 갖는다"
 
 
 def test_caption_set_is_complete_and_in_ui_range():

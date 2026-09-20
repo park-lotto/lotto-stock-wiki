@@ -71,12 +71,13 @@ def test_bad_work_id_never_breaks_generation():
     AttributeError로 500이 났다. 사장님 화면엔 '네트워크 오류'만 떴고 대본은
     한 줄도 안 나왔다. 클라이언트가 주는 값의 타입을 믿으면 안 된다.
     """
-    import pathlib as _p
-    src = (_p.Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
+    import inspect
+    from shopping_shorts.app import _materials_for_generate
+    # 소유권 검사가 사이에 추가돼도 문자 거리와 무관하게 실제 함수에서 확인한다.
+    src = inspect.getsource(_materials_for_generate)
     i = src.index("_extract_from_work(_wid")
-    win = src[i - 700:i + 200]
-    assert "isinstance(_wid, str)" in win, "문자열인지 먼저 확인해야 한다"
-    assert "except Exception" in win, "보강이 실패해도 생성은 계속돼야 한다"
+    assert "isinstance(_wid, str)" in src[:i], "문자열인지 먼저 확인해야 한다"
+    assert "except Exception" in src[i:i + 200], "보강이 실패해도 생성은 계속돼야 한다"
 
 
 def test_brief_can_be_dict_or_string():

@@ -112,10 +112,13 @@ def build_group(voice_id, name, one_liner="", lang="KR", group_id=None):
     return rows
 
 
-def bake_sample(preset):
+def bake_sample(preset, customer_id=0):
     """프리셋 1건의 미리듣기 mp3를 굽는다. 실패해도 등록은 살린다(샘플 없으면 카드에 재생버튼만 없음).
 
-    ★synthesize_line을 쓴다 — 이유는 파일 머리말 ②."""
+    ★synthesize_line을 쓴다 — 이유는 파일 머리말 ②.
+    ★customer_id = **누구 크레딧으로 굽나**(2026-09-02). 이걸 안 넘기던 동안에는
+      고객이 자기 목소리를 담아도 샘플 4건이 **사장님 키**로 나갔다. 등록하는 사람이
+      제 몫을 쓰는 게 맞다. 0이면 종전대로 사장님 키(관리자 등록 경로가 그렇다)."""
     from shopping_shorts.mix_pipeline import synthesize_line
     voice_presets.SAMPLES_DIR.mkdir(parents=True, exist_ok=True)
     out = voice_presets.SAMPLES_DIR / preset["sample_file"]
@@ -126,7 +129,7 @@ def bake_sample(preset):
                "silence_trim": preset.get("default_silence_trim", "off"),
                "naturalize_profile": None,
                "model_id": preset.get("model_id")},
-        beat_role="훅", beat_index=0, beat_total=5)
+        beat_role="훅", beat_index=0, beat_total=5, customer_id=int(customer_id or 0))
     return out
 
 
@@ -160,25 +163,64 @@ def make_preview(voice_id, force=False):
     return out, False
 
 
+def registration_statuses(store, owner_customer_id=0):
+    """한 고객의 라이브러리 성우별 등록·4톤 샘플 상태를 반환한다."""
+    owner = int(owner_customer_id or 0)
+    rows = [p for p in store.list_voice_presets()
+            if p.get("origin") == ORIGIN
+            and int(p.get("owner_customer_id") or 0) == owner]
+    by_voice = {}
+    for row in rows:
+        by_voice.setdefault(row.get("base_voice_id"), []).append(row)
+    out = {}
+    for voice_id, voice_rows in by_voice.items():
+        gid = voice_rows[0].get("group_id")
+        variants = {p.get("variant"): p for p in voice_rows if p.get("group_id") == gid}
+        ready = set(variants) >= {v for v, _ in VARIANT_SPECS}
+        if ready:
+            for p in variants.values():
+                sample = p.get("sample_file")
+                if not sample or not (voice_presets.SAMPLES_DIR / sample).exists():
+                    ready = False
+                    break
+        out[voice_id] = {"registered": True, "group_id": gid,
+                         "ready": ready, "rows": voice_rows}
+    return out
+
+
+def registration_status(store, voice_id, owner_customer_id=0):
+    """같은 고객의 같은 보이스가 등록됐는지와 4톤 샘플 준비 여부를 반환한다."""
+    return registration_statuses(store, owner_customer_id).get(
+        voice_id, {"registered": False, "group_id": None, "ready": False, "rows": []})
+
+
 def register(store, voice_id, name, one_liner="", lang="KR", bake=True,
-             owner_customer_id=0):
+             owner_customer_id=0, group_id=None, missing_only=False):
     """보이스 등록 = 프리셋 4종 upsert (+ 샘플 굽기). 등록된 group_id와 실패한 샘플 목록 반환.
 
     owner_customer_id(2026-08-24): 0=공용(사장님이 담은 것, 모두에게 보임) /
       N=그 고객이 라이브러리에서 담은 것 — **본인에게만** 보인다.
       담기는 각자 일레븐랩스 계정에 되므로, 남에게 보이면 그 사람 키엔 없는 voice_id라
       합성이 실패한다. 기존 호출부는 이 인자를 안 넘겨 0 그대로다(회귀 없음)."""
-    rows = build_group(voice_id, name, one_liner, lang)
+    rows = build_group(voice_id, name, one_liner, lang, group_id=group_id)
     failed = []
     for p in rows:
+        old = store.get_voice_preset(p["preset_id"]) if hasattr(store, "get_voice_preset") else None
+        old_sample = (old or {}).get("sample_file")
+        old_sample_ok = bool(old_sample and (voice_presets.SAMPLES_DIR / old_sample).exists())
         if bake:
-            try:
-                bake_sample(p)
-            except Exception as e:                 # 크레딧·네트워크 등 — 등록 자체는 진행
-                failed.append(f"{p['preset_id']}: {e}")
-                p["sample_file"] = None
+            if missing_only and old_sample_ok:
+                # 재시도 때 이미 성공한 톤까지 다시 굽지 않는다(시간·크레딧 중복 방지).
+                p["sample_file"] = old_sample
+            else:
+                try:
+                    bake_sample(p, customer_id=owner_customer_id)
+                except Exception as e:             # 크레딧·네트워크 등 — 카드 자체는 유지
+                    failed.append(f"{p['preset_id']}: {e}")
+                    p["sample_file"] = old_sample if old_sample_ok else None
         else:
-            p["sample_file"] = None
+            # 카드부터 즉시 등록하는 경로. 기존 샘플을 NULL로 되돌리지 않는다.
+            p["sample_file"] = old_sample if old_sample_ok else None
         p["owner_customer_id"] = int(owner_customer_id or 0)
         store.upsert_voice_preset(p)
     return {"group_id": rows[0]["group_id"], "count": len(rows), "sample_failed": failed}
@@ -198,8 +240,43 @@ _SHARED_ENDPOINT = "https://api.elevenlabs.io/v1/shared-voices"
 _ADD_ENDPOINT = "https://api.elevenlabs.io/v1/voices/add/{owner}/{vid}"
 
 
+# ★일레븐랩스가 **무엇이 잘못됐는지 정확히 말해주는데** 우리가 버리고 있었다
+#   (실사고 2026-09-02): 사장님 화면엔 "검색 실패 (HTTP 401)"만 떴고 서버 로그엔
+#   "키를 새로 만들어 다시 넣어주세요"가 찍혔다. 그런데 응답 본문의 진짜 사유는
+#     "The API key you used is missing the permission voices_read to execute this operation."
+#   — **키는 멀쩡하고 권한 한 칸이 빠진 것**이었다. 새 키를 만들어도 그 칸을 안 켜면
+#   똑같이 실패한다. 안내가 틀리면 고객은 고칠 수 없는 쳇바퀴를 돈다.
+#   ★판단은 여기 한 곳에서만 한다(0순위-B) — app._explain_key_failure도 이걸 부른다.
+_PERM_KO = {
+    "voices_read":   "목소리 보기(voices_read)",
+    "voices_write":  "목소리 담기/수정(voices_write)",
+    "text_to_speech": "음성 합성(text_to_speech)",
+    "user_read":     "내 정보 보기(user_read)",
+}
+
+
+def explain_error(code: int, body: str) -> str:
+    """일레븐랩스 응답 → 고객이 **무엇을 눌러야 하는지** 아는 한 줄. 모르면 빈 문자열."""
+    low = (body or "").lower()
+    if "api key id used as api key" in low or "key id" in low:
+        return ("키가 아니라 **키 ID**를 붙여넣으셨어요. ElevenLabs에서 키를 새로 만들 때 "
+                "한 번만 보이는 `sk_`로 시작하는 값을 넣어주세요.")
+    if "missing the permission" in low:
+        m = re.search(r"missing the permission ([a-z_]+)", low)
+        perm = (m.group(1) if m else "")
+        ko = _PERM_KO.get(perm, f"`{perm}`" if perm else "필요한 권한")
+        return (f"키는 정상인데 **{ko} 권한**이 꺼져 있습니다. "
+                "ElevenLabs → 내 프로필 → API Keys에서 그 키를 편집해 이 권한을 켜주세요 "
+                "(키를 새로 만들어도 권한을 안 켜면 똑같이 실패합니다).")
+    if code in (401, 403):
+        return "ElevenLabs가 이 키를 인식하지 못합니다. 키를 새로 만들어 다시 넣어주세요."
+    if code == 429:
+        return "요청이 너무 많습니다. 잠시 뒤 다시 시도해주세요."
+    return ""
+
+
 def search_shared(customer_id=0, query="", language=None, gender=None,
-                  category=None, page_size=24, page=0):
+                  category=None, page_size=24, page=0, sort=None):
     """공개 음성 라이브러리 검색 → {"ok","voices","has_more","error"}.
 
     voices 항목: voice_id·public_owner_id(담을 때 필요)·name·description·
@@ -222,14 +299,21 @@ def search_shared(customer_id=0, query="", language=None, gender=None,
         params["gender"] = gender
     if category:
         params["category"] = category
+    # ★인기순 정렬(2026-08-30 사장님 "거기서 추천하는 것들"). 일레븐랩스가 실제로 받는
+    #   값만 허용한다 — 실측: trending·cloned_by_count는 200, usage_character_count_7d나
+    #   most_users_chosen은 400을 뱉는다. 모르는 값을 그대로 넘기면 검색이 통째로 죽는다.
+    if sort in ("trending", "cloned_by_count"):
+        params["sort"] = sort
     try:
         r = requests.get(_SHARED_ENDPOINT, headers={"xi-api-key": api_key},
                          params=params, timeout=_TIMEOUT)
     except Exception as e:                                   # 네트워크 자체 실패
         return {"ok": False, "voices": [], "has_more": False, "error": f"검색 실패: {e}"}
     if r.status_code != 200:
+        # ★본문의 진짜 사유를 버리지 않는다 — "HTTP 401"만 보여주면 고객이 못 고친다.
+        why = explain_error(r.status_code, r.text or "")
         return {"ok": False, "voices": [], "has_more": False,
-                "error": f"검색 실패 (HTTP {r.status_code})"}
+                "error": why or f"검색 실패 (HTTP {r.status_code})"}
     try:
         body = r.json()
     except Exception:
@@ -253,6 +337,9 @@ def search_shared(customer_id=0, query="", language=None, gender=None,
             "use_case": (v.get("labels") or {}).get("use_case") or v.get("use_case") or "",
             "category": v.get("category") or "",
             "free": bool(v.get("free_users_allowed", True)),
+            # 인기 지표 — 화면에 "N명이 담아감"으로 띄운다. featured는 일레븐랩스 공식 추천.
+            "cloned_by_count": int(v.get("cloned_by_count") or 0),
+            "featured": bool(v.get("featured")),
         })
     return {"ok": True, "voices": out,
             "has_more": len(out) >= params["page_size"], "error": None}

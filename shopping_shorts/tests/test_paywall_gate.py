@@ -86,7 +86,7 @@ def test_anonymous_root_serves_landing(tmp_path, monkeypatch):
     r = c.get("/")
     assert r.status_code == 200
     assert appmod._BRAND["name"] in r.text
-    assert "무료로 시작하기" in r.text and "/login" in r.text
+    assert ("무료로 시작하기" in r.text or "무료로 레퍼런스 랭킹 둘러보기" in r.text) and "/login" in r.text
 
 
 def test_anonymous_protected_page_still_redirects_to_login(tmp_path, monkeypatch):

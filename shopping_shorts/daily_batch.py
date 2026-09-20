@@ -198,8 +198,9 @@ def run(db_path):
     n6 = store.auto_approve_style_buckets() + store.auto_approve_content_buckets()
     n7 = _auto_register_xiaohongshu()
     n8 = _auto_register_instagram()
+    n9 = _collect_naverclip_channels()
     print(f"daily_batch: 구조 {n1} · 통계 {n2} · 자동흡수 {n3} · perf {n4} · 스파인 {n5} · "
-          f"승인 {n6} · 샤홍발굴 {n7} · 인스타발굴 {n8}")
+          f"승인 {n6} · 샤홍발굴 {n7} · 인스타발굴 {n8} · 네클채널 {n9}")
     # ★디스크 정리(2026-08-22) — 완성본은 남기고 옛 작업의 중간 재료만 버린다.
     #   실측: 작업 1건당 82MB. 회원 100명이 하루 1편씩만 만들어도 한 달 246GB가
     #   쌓여 여유 226GB를 넘긴다. 디스크가 차면 렌더·수집이 통째로 죽으므로
@@ -210,6 +211,25 @@ def run(db_path):
         print(disk_cleanup.run(Path(db_path).parent, store=store))
     except Exception as e:      # noqa: BLE001
         print(f"디스크정리 실패(무시하고 계속): {e}")
+
+
+def _collect_naverclip_channels():
+    """네이버 클립 벤치마킹 채널 자동수집(킬스위치·실패격리). 새로 담긴 수 반환.
+
+    ★수집 로직은 app.collect_channels 한 곳뿐이다 — 화면 버튼과 **같은 코드**를
+      부른다(0순위-B). 여기서 따로 긁으면 언젠가 둘이 어긋난다.
+    """
+    from shopping_shorts import config
+    if not getattr(config, "NAVERCLIP_AUTO_COLLECT", False):
+        return 0
+    try:
+        from shopping_shorts import app as _app
+        r = _app.collect_channels(
+            per_channel=getattr(config, "NAVERCLIP_AUTO_PER_CHANNEL", 60))
+        return int((r or {}).get("added") or 0)
+    except Exception as e:      # 네이버가 통로를 바꿔도 배치 전체를 막지 않게
+        print(f"daily_batch: 네이버클립 채널수집 스킵 — {e}")
+        return 0
 
 
 def _auto_register_xiaohongshu():

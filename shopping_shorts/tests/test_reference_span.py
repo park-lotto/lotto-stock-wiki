@@ -73,8 +73,11 @@ class TestApiWiring:
         seen = {}
 
         class _S:
-            def hits_since(self, days, min_comments=500):
+            def hits_since(self, days, min_comments=500, platform="instagram",
+                           min_views=0):
                 seen["days"], seen["min"] = days, min_comments
+                seen["platform"] = platform          # 2026-09-04: 플랫폼도 전달돼야 한다
+                seen["min_views"] = min_views        # 2026-09-04: 유튜브는 조회수 기준
                 return []
 
             def removed_usernames(self):
@@ -85,20 +88,131 @@ class TestApiWiring:
         monkeypatch.setattr(app_mod, "_attach_durations", lambda *a, **k: None)
         monkeypatch.setattr(app_mod, "_attach_posted_at", lambda *a, **k: None)
         app_mod.api_reference(platform="instagram", days=7, min_comments=500)
-        assert seen == {"days": 7, "min": 500}
+        assert seen == {"days": 7, "min": 500, "platform": "instagram", "min_views": 0}
+
+    def test_유튜브도_기간탭이_열린다(self, monkeypatch):
+        """★2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데 이번주·이번달도".
+        여태 platform!='instagram'이면 **빈 목록**을 돌려줘 유튜브는 기간탭이 통째로 죽어 있었다.
+        이제 플랫폼을 그대로 store로 넘긴다(추가 크롤은 여전히 0)."""
+        from shopping_shorts import app as app_mod
+        seen = {}
+
+        class _S:
+            def hits_since(self, days, min_comments=500, platform="instagram",
+                           min_views=0):
+                seen["platform"] = platform
+                seen["min_views"] = min_views
+                return []
+
+            def removed_usernames(self):
+                return set()
+
+        monkeypatch.setattr(app_mod, "Store", lambda *a, **k: _S())
+        monkeypatch.setattr(app_mod, "_attach_vision_tags", lambda *a, **k: None)
+        monkeypatch.setattr(app_mod, "_attach_durations", lambda *a, **k: None)
+        monkeypatch.setattr(app_mod, "_attach_posted_at", lambda *a, **k: None)
+        app_mod.api_reference(platform="youtube", days=7, min_comments=0, min_views=100000)
+        assert seen.get("platform") == "youtube", "유튜브가 store까지 안 갔다(옛 인스타 전용 차단)"
+        assert seen.get("min_views") == 100000, "조회수 문턱이 store까지 안 갔다"
 
 
 class TestFrontend:
-    def test_기간탭_3개가_있다(self):
+    def test_기간탭_4개가_있다(self):
+        """2026-09-10: 12시간 탭 추가로 span=0이 **둘**이 됐다(12h·48h).
+
+        둘 다 서버 요청이 같다(days=0 → load_last_run) — 다른 건 화면에서 자르는
+        시간(data-hours)뿐이다. 그래서 span 목록엔 0이 두 번 나오는 게 정상이다.
+        """
         html = _INDEX.read_text(encoding="utf-8")
         spans = re.findall(r'data-span="(\d+)"', html)
-        assert spans == ["0", "7", "30"]
+        assert spans == ["0", "0", "7", "30"]
 
-    def test_30일탭은_문턱1000(self):
+    def test_시간탭은_data_hours로만_갈린다(self):
+        """창 크기는 SPAN_HOURS 한 곳에서만 정한다(0순위-B: 같은 판단을 두 번 적지 않는다).
+
+        ★컷은 반드시 ageHoursNow()로 한다. raw age_hours는 **수집한 순간의 스냅샷**이라
+          유튜브처럼 하루 1회 수집이면 최대 24시간이 통째로 빠져 12시간 탭에 30시간 전
+          영상이 남는다.
+        """
         html = _INDEX.read_text(encoding="utf-8")
-        assert "30: 1000" in html.replace(" ", " ")
+        # 12시간 탭은 2026-09-14 사장님 지시로 뺐다(늘 빈약). 24·48시간 탭이 같은 규칙을 쓴다.
+        assert 'data-hours="12"' not in html
+        assert 'data-hours="24"' in html and 'data-hours="48"' in html
+        assert 'SPAN_HOURS = parseInt(t.dataset.hours || "48", 10);' in html
+        assert "h <= SPAN_HOURS" in html
+        assert "const h = ageHoursNow(i); return h == null || h <= SPAN_HOURS" in html
 
+    def test_기간탭_문턱(self):
+        """2026-09-07 하향: 7일 500→200, 30일 1000→300.
+
+        왜 내렸나(서버 실측 2026-09-07, 인스타 4,255건):
+          이번주 댓글500+ = 148건 < 48시간 탭 315건
+            ← 기간을 넓혔는데 오히려 적어지는 역전이 나 있었다.
+          200+ = 610건 / 30일 300+ = 937건으로 역전이 풀린다.
+        종전 1000의 근거였던 "500이면 692건이라 명예의전당이 안 된다"는
+        채널이 적던 시기의 얘기다. 지금은 문턱이 재고를 말리는 쪽으로 뒤집혔다.
+        """
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "7: 200" in html and "30: 300" in html
     def test_기간0일땐_days파라미터를_안붙인다(self):
         # 붙이면 첫 화면이 이력 조회로 새버린다
         html = _INDEX.read_text(encoding="utf-8")
         assert "if(SPAN_DAYS > 0){" in html
+
+
+class TestBadgeGrade:
+    """뱃지·필터 판정(2026-09-10) — 문턱이 고정 숫자여야 화면에 흔들리지 않는다.
+
+    종전엔 '지금 보이는 목록 안에서의 백분위'라 카테고리·기간 탭을 바꾸면 같은 영상의
+    뱃지가 변했고, 무엇을 걸러도 항상 상위 5%가 나와 '진짜 봐야할 것'이 실측 526건이었다.
+
+    문턱 근거(서버 실측): 사장님이 실제로 담고 대본까지 뽑은 영상을 정답으로 두고 잰
+    적중력 — 유튜브 조회10만+시간당2,000 = 165건 12.7배 / 인스타 댓글1,500+시간당30 = 19건 5.9배.
+    """
+
+    def test_플랫폼마다_축이_다르다(self):
+        """유튜브는 조회수, 인스타는 댓글. 실측 댓글 중앙값이 1개 vs 161개라 한 잣대를 못 쓴다."""
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "youtube:   {axis:'views'," in html
+        assert "instagram: {axis:'comments'," in html
+
+    def test_문턱이_고정숫자다(self):
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "must:{v:100000, per_h:2000}" in html, "유튜브 🎯 문턱"
+        assert "must:{v:1500,   per_h:30}" in html, "인스타 🎯 문턱"
+
+    def test_급상승_문턱은_진짜봐야할것보다_낮다(self):
+        """같으면 그 속도를 넘는 순간 총량까지 채워 🎯로 넘어가 📈가 거의 안 남는다.
+
+        실측(2026-09-10 라이브, 유튜브 48시간 1,083건): 속도 문턱이 같던 때
+        🎯 10건에 📈 12건뿐이었고, 유형을 '썰쇼핑'으로 좁히면 📈가 0~1건이었다
+        (사장님 "급상승은 안뜸"). 낮춘 뒤 유튜브 90건 / 인스타 36건.
+        """
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "rising:{per_h:500}" in html, "유튜브 📈 문턱이 🎯(2000)보다 낮아야 한다"
+        assert "rising:{per_h:15}" in html, "인스타 📈 문턱이 🎯(30)보다 낮아야 한다"
+
+    def test_뱃지와_필터가_같은_판정식을_쓴다(self):
+        """따로 적으면 '뱃지는 붙었는데 필터엔 안 걸린다'가 난다(0순위-B)."""
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "const g = gradeOf(i);" in html, "뱃지가 gradeOf를 쓴다"
+        assert "items.filter(i => gradeOf(i) === want)" in html, "필터도 gradeOf를 쓴다"
+
+    def test_백분위_판정으로_되돌아가지_않았다(self):
+        """badgeHTML이 다시 ctx(화면 목록 백분위)로 판정하면 뱃지가 또 흔들린다."""
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "const score = vr*0.35" not in html, "옛 종합점수 판정이 되살아났다"
+
+    def test_설명은_문턱에서_자동으로_만든다(self):
+        """숫자를 title에 손으로 적어두면 문턱을 바꿀 때 반드시 한쪽만 고쳐진다.
+
+        실사고 2026-09-10: 급상승 문턱을 시간당 2,000→500으로 낮췄는데 버튼 설명은
+        '2,000회'인 채로 남아, 사장님이 1780.9짜리 급상승 카드를 보고
+        "시간당 조회수가 2000회가 안되는데?"라고 하셨다. 기준은 한 곳에서만 정한다(0순위-B).
+        """
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "function gradeTips()" in html, "설명 생성기가 있어야 한다"
+        assert "b.title = tips[g]" in html, "버튼 설명을 생성기로 채워야 한다"
+        # 뱃지 버튼에 숫자를 박은 title이 되살아나지 않았는지
+        for dead in ('title="유튜브: 조회 10만', 'title="지금 빠르게 오르는 중 — 유튜브 시간당'):
+            assert dead not in html, f"문턱 숫자가 설명에 다시 박혔다: {dead}"

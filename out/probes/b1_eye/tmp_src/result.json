@@ -1,0 +1,466 @@
+{
+ "segments": [
+  {
+   "seg_id": "s0-0",
+   "start": 0.0,
+   "end": 6.94,
+   "text": "Dish Mince Dice",
+   "text_ko": "다지고 썰어주세요",
+   "scene_desc": "푸른 하늘 배경에 다이소 판타지 월드 테마 로고와 구름 그래픽이 나타남",
+   "label": "도입 타이틀",
+   "use_point": "영상 시작부에서 테마파크 느낌의 판타지 컨셉을 명확히 제시하여 시청자의 호기심을 자극하기 좋습니다.",
+   "action": null,
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-1",
+   "start": 6.94,
+   "end": 7.908,
+   "text": "Roast",
+   "text_ko": "굽기",
+   "scene_desc": "다이소 판타지 월드 테마 배경지에 성 모양 그림과 스티커가 배치됨",
+   "label": "다이어리 꾸미기 시작",
+   "use_point": "다이어리 꾸미기라는 활동의 테마와 분위기를 설정하며 본격적인 제품 활용 시작을 알리기에 적합합니다.",
+   "action": "붙이다",
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "판타지 월드 테마의 아기자기한 다이어리 꾸미기가 가능합니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-2",
+   "start": 7.908,
+   "end": 14.715,
+   "text": "Cut in half Peel Peel Peel Cut",
+   "text_ko": "반으로 자르고 껍질을 벗기세요",
+   "scene_desc": "핀셋으로 다이소 스티커를 떼어 다이어리에 붙이는 과정이 보임",
+   "label": "스티커 부착 시연",
+   "use_point": "다꾸용 스티커의 활용법을 보여주는 대목에서 스티커의 디자인과 접착력을 확인시키는 용도로 쓰기 좋습니다.",
+   "action": "끼우다",
+   "change": "스티커가 다이어리 페이지 위에 깔끔하게 부착되었습니다.",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "실증",
+   "product_benefits": [
+    "접착력이 좋아 다이어리 페이지에 쉽게 밀착됩니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-3",
+   "start": 14.715,
+   "end": 15.449,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "다이어리에 스티커와 함께 인형 키링이 꾸며진 모습",
+   "label": "완성된 다꾸 클로즈업",
+   "use_point": "다양한 소품을 조합해 꾸민 다이어리 결과물을 보여줌으로써 제품의 시각적 완성도를 강조하는 대목에 좋습니다.",
+   "action": "붙이다",
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "after",
+   "product_benefits": [
+    "스티커와 인형 키링을 활용해 감성적인 다꾸 연출이 가능합니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-4",
+   "start": 15.449,
+   "end": 16.583,
+   "text": "in half Peel",
+   "text_ko": "반으로 자르고 껍질을 벗기세요",
+   "scene_desc": "인형 팔찌를 손목에 감아 착용하는 모습",
+   "label": "인형 팔찌 착용 시연",
+   "use_point": "팔찌형 제품의 사용법을 간단히 보여주어 테마파크 스타일링 아이템으로서의 편리함을 강조할 때 좋습니다.",
+   "action": "끼우다",
+   "change": "인형 팔찌가 손목에 부드럽게 감겨 고정되었습니다.",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "조작",
+   "product_benefits": [
+    "손목에 간편하게 감아 착용하는 귀여운 인형 팔찌입니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-5",
+   "start": 16.583,
+   "end": 18.619,
+   "text": "Peel",
+   "text_ko": "껍질 벗기기",
+   "scene_desc": "다른 디자인의 인형 팔찌를 손목에 착용함",
+   "label": "인형 팔찌 종류 시연",
+   "use_point": "여러 디자인의 제품을 교체해 보여줌으로써 테마파크 코디 옵션을 제시하는 대목에 사용하기 좋습니다.",
+   "action": "끼우다",
+   "change": "다른 캐릭터 디자인의 인형 팔찌로 교체 착용되었습니다.",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "조작",
+   "product_benefits": [
+    "캐릭터별로 다양한 디자인의 팔찌 선택이 가능합니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-6",
+   "start": 18.619,
+   "end": 21.622,
+   "text": "Peel Peel",
+   "text_ko": "껍질을 벗겨주세요",
+   "scene_desc": "두 사람이 판타지 월드 테마 텀블러를 들고 있음",
+   "label": "테마 텀블러 소개",
+   "use_point": "야외 활동 시 유용한 굿즈를 보여주며 테마파크 나들이 룩의 완성도를 높이는 장면으로 적합합니다.",
+   "action": null,
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "판타지 월드 캐릭터가 그려진 화려한 디자인의 텀블러입니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-7",
+   "start": 21.622,
+   "end": 23.09,
+   "text": "Peel Peel",
+   "text_ko": "껍질을 벗겨주세요",
+   "scene_desc": "텀블러를 가방에 넣고 꺼내는 등 정리하는 모습",
+   "label": "텀블러 휴대 시연",
+   "use_point": "텀블러의 적당한 크기와 휴대성을 보여주어 테마파크 나들이 시 유용함을 강조할 때 좋습니다.",
+   "action": "담다",
+   "change": "텀블러가 가방 내부로 부드럽게 수납되었습니다.",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "정리",
+   "product_benefits": [
+    "가방에 쏙 들어가는 사이즈로 야외 휴대성이 뛰어납니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-8",
+   "start": 23.09,
+   "end": 24.725,
+   "text": "Peel",
+   "text_ko": "껍질 벗기기",
+   "scene_desc": "두 사람이 판타지 머리띠를 함께 들고 있음",
+   "label": "테마 머리띠 소개",
+   "use_point": "테마파크 필수 아이템인 머리띠를 보여주며 나들이 설렘을 연출하는 장면으로 좋습니다.",
+   "action": null,
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "화려한 장식의 캐릭터 머리띠로 파크 룩을 완성합니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-9",
+   "start": 24.725,
+   "end": 26.126,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "머리띠를 머리에 쓰는 모습",
+   "label": "머리띠 착용 시연",
+   "use_point": "머리띠 착용 시 모습을 보여주어 실물을 착용했을 때의 느낌을 전달하기 좋습니다.",
+   "action": "끼우다",
+   "change": "머리띠가 머리에 안정적으로 안착되었습니다.",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "조작",
+   "product_benefits": [
+    "머리에 쓰기 편하고 시선을 끄는 포인트 액세서리입니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-10",
+   "start": 26.126,
+   "end": 27.227,
+   "text": "Peel",
+   "text_ko": "껍질 벗기기",
+   "scene_desc": "거울 제품을 열어서 사용함",
+   "label": "휴대용 거울 시연",
+   "use_point": "접이식 거울의 개폐 방식을 보여주어 기능성과 휴대성을 한눈에 설명할 때 효과적입니다.",
+   "action": "열다",
+   "change": "거울이 덮개에서 열려 내부 거울면이 나타났습니다.",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "실증",
+   "product_benefits": [
+    "접이식으로 사용이 간편하고 주머니에 쏙 들어갑니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-11",
+   "start": 27.227,
+   "end": 28.428,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "머리띠를 착용한 사람들이 야외를 배경으로 서 있음",
+   "label": "완성 스타일링 마무리",
+   "use_point": "영상 마지막에 모든 제품을 활용한 최종 룩을 보여주어 테마파크 컨셉을 강조하며 마무리하기 좋습니다.",
+   "action": null,
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "완성",
+   "product_benefits": [
+    "다이소 굿즈로 완성된 감성 가득한 테마파크 나들이 룩입니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-12",
+   "start": 28.428,
+   "end": 29.796,
+   "text": "Nori",
+   "text_ko": "김",
+   "scene_desc": "",
+   "label": "",
+   "use_point": "",
+   "action": null,
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-13",
+   "start": 29.796,
+   "end": 30.697,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "",
+   "label": "",
+   "use_point": "",
+   "action": null,
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-14",
+   "start": 30.697,
+   "end": 31.732,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "두 사람이 앉아 판타지 월드 샤르르 캔디 패키지를 함께 열고 꺼내는 모습.",
+   "label": "제품 간식 시연",
+   "use_point": "테마파크 내에서 간식을 즐기는 여유로운 상황을 연출할 때 활용하기 좋습니다.",
+   "action": "열다",
+   "change": "제품 패키지가 열려 내부가 보인다.",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "판타지 컨셉의 감성적인 패키지 디자인"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-15",
+   "start": 31.732,
+   "end": 32.866,
+   "text": "no shiitake",
+   "text_ko": "표고버섯 없음",
+   "scene_desc": "손목에 인형 팔찌를 한 사람이 캔디 패키지를 잡고 캔디를 꺼내어 전달하는 모습.",
+   "label": "간식 공유 연출",
+   "use_point": "친구와 함께 즐거운 시간을 보내는 구체적인 상황을 보여주어 제품의 활용도를 높이기 좋습니다.",
+   "action": "담다",
+   "change": "패키지 안에서 캔디가 밖으로 나온다.",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "테마파크 무드와 어울리는 귀여운 굿즈 디자인"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-16",
+   "start": 32.866,
+   "end": 34.401,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "사람이 인형이 들어있는 선물 가방을 들고 테마파크를 걸어가는 모습.",
+   "label": "나들이 무드 연출",
+   "use_point": "테마파크 이동 장면을 통해 굿즈가 나들이 필수 아이템임을 강조하는 대목에 적합합니다.",
+   "action": "걸다",
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "테마파크 감성을 극대화하는 캐릭터 굿즈"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-17",
+   "start": 34.401,
+   "end": 35.469,
+   "text": "Asoba",
+   "text_ko": "아소바",
+   "scene_desc": "테마파크 배경으로 뒷모습을 보인 두 사람이 풍선과 머리띠를 착용하고 서 있음.",
+   "label": "스타일링 시연",
+   "use_point": "영상 중반부에서 테마파크 나들이 룩을 제안할 때, 굿즈 활용법을 보여주는 씬으로 적합합니다.",
+   "action": null,
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "판타지 테마의 귀여운 디자인으로 테마파크 룩을 완성해준다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-18",
+   "start": 35.469,
+   "end": 36.703,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "머리띠를 쓴 사람이 스마트폰을 들고 풍경을 촬영하는 뒷모습.",
+   "label": "일상 활용 시연",
+   "use_point": "나들이 굿즈가 실생활에서 어떻게 어우러지는지 보여주는 감성 컷으로 활용하기 좋습니다.",
+   "action": null,
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "머리띠가 일상적인 활동에도 포인트 액세서리로 잘 어울린다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-19",
+   "start": 36.703,
+   "end": 37.938,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "캐릭터 인형이 담긴 선물 상자와 풍선을 들고 걷는 사람의 하체.",
+   "label": "제품 휴대 시연",
+   "use_point": "굿즈를 손에 들고 이동하는 자연스러운 모습을 보여주어 사용성을 강조할 때 좋습니다.",
+   "action": "담다",
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "가방이나 소품 형태의 패키지로 들고 다니기 좋다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-20",
+   "start": 37.938,
+   "end": 42.993,
+   "text": "Kiyoshi",
+   "text_ko": "키요시",
+   "scene_desc": "배낭에 인형 키링을 단 뒷모습과 다이어리 속지 클로즈업, 진열된 머리띠와 키링.",
+   "label": "굿즈 구성 소개",
+   "use_point": "영상 중반부에서 다이어리 꾸미기와 다양한 굿즈 라인업을 요약해서 보여주기에 좋습니다.",
+   "action": "열다",
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "키링으로 가방을 꾸미기 좋으며 아기자기한 다이어리 꾸미기가 가능하다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-21",
+   "start": 42.993,
+   "end": 48.048,
+   "text": "Don't forget to subscribe and like!",
+   "text_ko": "구독과 좋아요 잊지 마세요!",
+   "scene_desc": "손으로 머리띠를 정리하고, 탁자 위에 다양한 인형, 텀블러, 키링 등 굿즈들을 세팅함.",
+   "label": "제품 총정리",
+   "use_point": "영상 마무리 단계에서 전체적인 테마파크 굿즈 리스트를 한눈에 보여줄 때 적합합니다.",
+   "action": "정리하다",
+   "change": "탁자 위에 굿즈들이 정렬되어 있음.",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "완성",
+   "product_benefits": [
+    "다양한 소품들로 나만의 테마 공간을 꾸밀 수 있다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-22",
+   "start": 48.048,
+   "end": 49.597823,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "흰 배경에 붉은색 '국민가게 다이소' 로고가 출력됨.",
+   "label": "마무리·CTA",
+   "use_point": "영상의 마지막 부분에 브랜드 로고를 노출하여 신뢰도를 높이는 엔딩 씬으로 적합합니다.",
+   "action": null,
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  }
+ ],
+ "full_text": "Dish Mince Dice Roast Cut in half Peel Peel Peel Cut in half Peel Peel Peel Peel Peel Peel Peel Peel Nori no shiitake Asoba Kiyoshi Don't forget to subscribe and like!",
+ "product_benefits": [
+  "판타지 월드 테마의 아기자기한 다이어리 꾸미기가 가능합니다.",
+  "접착력이 좋아 다이어리 페이지에 쉽게 밀착됩니다.",
+  "스티커와 인형 키링을 활용해 감성적인 다꾸 연출이 가능합니다.",
+  "손목에 간편하게 감아 착용하는 귀여운 인형 팔찌입니다.",
+  "캐릭터별로 다양한 디자인의 팔찌 선택이 가능합니다.",
+  "판타지 월드 캐릭터가 그려진 화려한 디자인의 텀블러입니다.",
+  "가방에 쏙 들어가는 사이즈로 야외 휴대성이 뛰어납니다.",
+  "화려한 장식의 캐릭터 머리띠로 파크 룩을 완성합니다.",
+  "머리에 쓰기 편하고 시선을 끄는 포인트 액세서리입니다.",
+  "접이식으로 사용이 간편하고 주머니에 쏙 들어갑니다.",
+  "다이소 굿즈로 완성된 감성 가득한 테마파크 나들이 룩입니다.",
+  "판타지 컨셉의 감성적인 패키지 디자인",
+  "테마파크 무드와 어울리는 귀여운 굿즈 디자인",
+  "테마파크 감성을 극대화하는 캐릭터 굿즈",
+  "판타지 테마의 귀여운 디자인으로 테마파크 룩을 완성해준다.",
+  "머리띠가 일상적인 활동에도 포인트 액세서리로 잘 어울린다.",
+  "가방이나 소품 형태의 패키지로 들고 다니기 좋다.",
+  "키링으로 가방을 꾸미기 좋으며 아기자기한 다이어리 꾸미기가 가능하다.",
+  "다양한 소품들로 나만의 테마 공간을 꾸밀 수 있다."
+ ],
+ "source_brief": {
+  "product": "다이소 판타지 월드 테마 소품 및 굿즈",
+  "role": "테마파크 나들이를 위한 다이소 제품 활용 및 스타일링 제안",
+  "core": "다이소 판타지 월드 굿즈를 착용하고 테마파크를 즐기는 모습",
+  "summary": "다이소의 판타지 월드 테마 다이어리 꾸미기로 시작하여, 인형 팔찌, 머리띠, 텀블러 등 다양한 굿즈를 착용하고 테마파크를 방문하는 과정을 보여줍니다. 실제 사용 장면과 스타일링을 통해 제품의 분위기를 감성적으로 전달합니다.",
+  "flow": "0~11초 다이어리 꾸미기 → 11~27초 굿즈 착용 및 스타일링 → 27~48초 테마파크 야외 활동 및 결과 정리",
+  "confidence": "높음"
+ },
+ "tag_empty_ratio": 0.087,
+ "transcript_status": "ok",
+ "full_text_ko": "다지고 썰어주세요 굽기 반으로 자르고 껍질을 벗기세요 반으로 자르고 껍질을 벗기세요 껍질 벗기기 껍질을 벗겨주세요 껍질을 벗겨주세요 껍질 벗기기 껍질 벗기기 김 표고버섯 없음 아소바 키요시 구독과 좋아요 잊지 마세요!"
+}

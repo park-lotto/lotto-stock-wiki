@@ -75,9 +75,10 @@ def test_extract_script_frames_composes(tmp_path):
     def fake_boundaries(path):
         return [0.0, 3.0, 6.0]                       # 2구간
 
-    def fake_frame_at(path, dest, ts):
+    def fake_frame_at(path, dest, ts, filename=None):
         calls.setdefault("frame_ts", []).append(ts)
-        return f"{dest}/f_{ts}.jpg"                    # 실제 파일 안 만듦(태깅도 목)
+        calls.setdefault("names", []).append(filename)
+        return f"{dest}/{filename or ts}.jpg"         # 실제 파일 안 만듦(태깅도 목)
 
     def fake_transcribe(mp3):
         return [{"word": "우유", "start": 0.5, "end": 1.0},
@@ -86,8 +87,9 @@ def test_extract_script_frames_composes(tmp_path):
     def fake_extract_audio(video, out):
         return out
 
-    def fake_tag(frame_paths, caption, segs):
+    def fake_tag(frame_paths, caption, segs, brief=None):
         calls["n_frames"] = len(frame_paths)
+        calls["brief"] = brief
         return [{"scene_desc": "우유 붓기", "shot_role": "사용중", "is_key": False},
                 {"scene_desc": "완성 모찌", "shot_role": "완성", "is_key": True,
                  "product_benefits": ["쫀득"]}]
@@ -97,7 +99,10 @@ def test_extract_script_frames_composes(tmp_path):
         get_boundaries=fake_boundaries, extract_frame_at=fake_frame_at,
         extract_audio=fake_extract_audio, transcribe_words=fake_transcribe, tag_frames=fake_tag)
 
-    assert calls["n_frames"] == 2                      # 구간당 프레임 1장
+    assert calls["n_frames"] == 2                      # 구간별 묶음 2개(구간 수와 같다)
+    # ★2026-09-04: 구간당 프레임 3장(시작·중간·끝), 파일명은 전부 다르다(덮어쓰기 버그 재발 방지)
+    assert len(calls["frame_ts"]) == 6
+    assert len(set(calls["names"])) == 6 and all(calls["names"])
     segs = out["segments"]
     assert len(segs) == 2
     assert all(s.get("seg_id") for s in segs)         # seg_id 부여됨(다운스트림 계약)
@@ -138,7 +143,7 @@ def test_extract_script_frames_no_audio_fail_open(tmp_path):
         "v.mp4", "s1", get_boundaries=lambda p: [0.0, 2.0, 4.0],
         extract_frame_at=lambda *a: "x", extract_audio=lambda *a: a[-1],
         transcribe_words=lambda m: None,
-        tag_frames=lambda fp, c, s: [{"scene_desc": "a", "shot_role": "완성"},
+        tag_frames=lambda fp, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"},
                                      {"scene_desc": "b", "shot_role": "기타"}])
     segs = out["segments"]
     assert len(segs) == 2 and segs[0]["text"] == ""

@@ -38,7 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from shopping_shorts.config import DB_PATH          # noqa: E402
 from shopping_shorts.store import Store             # noqa: E402
 
-SPINE_NAME = "유튜브 오용형"
+SPINE_NAME = "유튜브 「원래 이렇게 쓰는 거 아닌데」"
 
 # 3슬롯 변형(있으면 그 **바로 뒤**에 끼운다). 없으면 맨 앞에 둔다.
 THREE = "심지어 {용도3}"

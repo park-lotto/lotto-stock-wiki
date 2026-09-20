@@ -45,15 +45,20 @@ _stop() {
 case "${1:-status}" in
   start)
     BRANCH="${2:-}"
-    [ -n "$BRANCH" ] || { echo "브랜치를 주세요: preview.sh start track/<트랙명>"; exit 1; }
+    [ -n "$BRANCH" ] || { echo "브랜치 또는 커밋을 주세요: preview.sh start track/<트랙명>|<sha>"; exit 1; }
     _stop
     cd "$LIVE" || exit 1
-    git fetch origin "$BRANCH" --quiet || { echo "fetch 실패: $BRANCH"; exit 1; }
-    if [ -d "$DIR" ]; then
-      git -C "$DIR" checkout --quiet --detach "origin/$BRANCH" || { echo "checkout 실패"; exit 1; }
-      git -C "$DIR" reset --hard --quiet "origin/$BRANCH"
+    if git rev-parse --verify --quiet "$BRANCH^{commit}" >/dev/null && ! git show-ref --quiet "refs/remotes/origin/$BRANCH"; then
+      REF="$BRANCH"                     # 커밋 sha(검수 뼈대: 라이브 HEAD와 같은 코드를 띄운다)
     else
-      git worktree add --detach "$DIR" "origin/$BRANCH" || { echo "worktree 생성 실패"; exit 1; }
+      git fetch origin "$BRANCH" --quiet || { echo "fetch 실패: $BRANCH"; exit 1; }
+      REF="origin/$BRANCH"
+    fi
+    if [ -d "$DIR" ]; then
+      git -C "$DIR" checkout --quiet --detach "$REF" || { echo "checkout 실패"; exit 1; }
+      git -C "$DIR" reset --hard --quiet "$REF"
+    else
+      git worktree add --detach "$DIR" "$REF" || { echo "worktree 생성 실패"; exit 1; }
     fi
     mkdir -p "$DIR/shopping_shorts/data"
     if [ "${3:-}" = "--with-db" ]; then

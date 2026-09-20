@@ -15,6 +15,15 @@ import requests
 from shopping_shorts import tts, typecast_tts, tts_timestamps, mix_pipeline
 
 
+# ★이 파일은 "타입캐스트가 켜져 있을 때의 배선"을 지킨다. 라이브 기본은 꺼짐
+#   (config.TYPECAST_ENABLED=0, 2026-09-07 사장님 "일레븐만 쓴다")이라 켜고 돌린다 —
+#   안 켜면 전부 일레븐랩스로 대체돼 이 계약을 검증할 수 없다.
+@pytest.fixture(autouse=True)
+def _typecast_on(monkeypatch):
+    from shopping_shorts import config
+    monkeypatch.setattr(config, "TYPECAST_ENABLED", True)
+
+
 # ── ① 엔진 분기 ────────────────────────────────────────────────────────────
 @pytest.mark.parametrize("model_id,expected", [
     ("ssfm-v30", True), ("ssfm-v21", True), ("SSFM-V30", True),
@@ -38,7 +47,7 @@ def test_synthesize_tts_routes_to_typecast(monkeypatch, tmp_path):
                 "character_end_times_seconds": [0.1]}
 
     monkeypatch.setattr(typecast_tts, "synthesize", fake_synth)
-    monkeypatch.setattr(typecast_tts, "api_key", lambda: "k")
+    monkeypatch.setattr(typecast_tts, "api_key", lambda *a, **kw: "k")
     # 일레븐랩스로 새면 즉시 터지게 한다
     monkeypatch.setattr(tts.requests, "post",
                         lambda *a, **k: pytest.fail("일레븐랩스로 샜다"))
@@ -84,7 +93,7 @@ def test_to_alignment_bad_shape_returns_none():
 
 def test_synthesize_saves_alignment_sidecar(monkeypatch, tmp_path):
     out = tmp_path / "c.mp3"
-    monkeypatch.setattr(typecast_tts, "api_key", lambda: "k")
+    monkeypatch.setattr(typecast_tts, "api_key", lambda *a, **kw: "k")
     monkeypatch.setattr(typecast_tts, "synthesize",
                         lambda text, o, **kw: typecast_tts.to_alignment(
                             [{"text": "가", "start": 0.0, "end": 0.5}]))
@@ -119,7 +128,7 @@ def test_build_payload_does_not_clamp_to_eleven_range():
 
 # ── ④ 키 없으면 무음 mock ──────────────────────────────────────────────────
 def test_no_key_falls_back_to_silent_mock(monkeypatch, tmp_path):
-    monkeypatch.setattr(typecast_tts, "api_key", lambda: "")
+    monkeypatch.setattr(typecast_tts, "api_key", lambda *a, **kw: "")
     monkeypatch.setattr(typecast_tts, "synthesize",
                         lambda *a, **k: pytest.fail("키 없는데 호출했다"))
     out = str(tmp_path / "d.mp3")
@@ -131,7 +140,7 @@ def test_no_key_falls_back_to_silent_mock(monkeypatch, tmp_path):
 def test_emotion_from_voice_settings(monkeypatch, tmp_path):
     """프리셋 settings의 emotion/intensity가 그대로 전달된다."""
     got = {}
-    monkeypatch.setattr(typecast_tts, "api_key", lambda: "k")
+    monkeypatch.setattr(typecast_tts, "api_key", lambda *a, **kw: "k")
 
     def fake(text, o, **kw):
         got.update(kw)
@@ -147,7 +156,7 @@ def test_emotion_from_voice_settings(monkeypatch, tmp_path):
 def test_eleven_settings_are_not_sent_as_emotion(monkeypatch, tmp_path):
     """일레븐랩스 축(stability/style)은 타입캐스트에 없다 — normal로 떨어진다."""
     got = {}
-    monkeypatch.setattr(typecast_tts, "api_key", lambda: "k")
+    monkeypatch.setattr(typecast_tts, "api_key", lambda *a, **kw: "k")
 
     def fake(text, o, **kw):
         got.update(kw)
@@ -202,7 +211,7 @@ def test_smart_context_also_stripped():
 def test_retry_on_network_error(monkeypatch, tmp_path):
     """네트워크 실패는 재시도한다(일레븐랩스 경로와 같은 계약)."""
     calls = {"n": 0}
-    monkeypatch.setattr(typecast_tts, "api_key", lambda: "k")
+    monkeypatch.setattr(typecast_tts, "api_key", lambda *a, **kw: "k")
     monkeypatch.setattr(tts.time, "sleep", lambda s: None)
 
     def flaky(text, o, **kw):

@@ -23,7 +23,7 @@ def _plan(n=3):
 class Test청소화면_출처판단:
     def test_소스별_청소본이_있으면_그걸_쓴다(self, tmp_path):
         job = {"clean_sources": {"s0": "/clean/s0.mp4"}, "clean_status": "ready"}
-        srcs, final, ratio, tag = A._clean_frame_src(job, tmp_path, 0)
+        srcs, final, ratio, tag, _fresh = A._clean_frame_src(job, tmp_path, 0)
         assert srcs == {"s0": "/clean/s0.mp4"}
         assert final is None and tag == "_clean"
 
@@ -32,15 +32,31 @@ class Test청소화면_출처판단:
         cvp.write_text("x")
         job = {"clean_sources": None, "clean_status": "ready",
                "clean_video_path": str(cvp), "edit_plan": _plan()}
-        srcs, final, ratio, tag = A._clean_frame_src(job, tmp_path, 1)
+        srcs, final, ratio, tag, _fresh = A._clean_frame_src(job, tmp_path, 1)
         assert srcs == {}
         assert final == str(cvp), "완성본을 안 쓰면 원본 자막이 그대로 보인다"
         assert 0.3 < ratio < 0.7, ratio          # 3칸 중 가운데
-        assert tag == "_clean", "캐시 이름을 안 가르면 원본 프레임이 재사용된다"
+        assert tag.startswith("_clean"), "캐시 이름을 안 가르면 원본 프레임이 재사용된다"
+
+    def test_구형경로가_비어도_현재편성_정본을_쓴다(self, tmp_path):
+        """박진우님 실사고: 성공한 final_clean 정본은 있는데 DB 호환 칸만 None이었다."""
+        from shopping_shorts import mix_pipeline as MP
+
+        plan = _plan()
+        sig = MP._plan_signature(plan)
+        canonical = tmp_path / f"final_clean_{sig}.mp4"
+        canonical.write_bytes(b"clean" * 500)
+        job = {"clean_sources": None, "clean_status": "ready",
+               "clean_video_path": None, "edit_plan": plan}
+
+        srcs, final, _ratio, tag, fresh = A._clean_frame_src(job, tmp_path, 1)
+        assert srcs == {}
+        assert final == str(canonical)
+        assert tag.startswith("_clean") and fresh is True
 
     def test_청소_전이면_아무것도_안_준다(self, tmp_path):
         job = {"clean_status": None, "edit_plan": _plan()}
-        assert A._clean_frame_src(job, tmp_path, 0) == ({}, None, None, "")
+        assert A._clean_frame_src(job, tmp_path, 0) [:4] == ({}, None, None, "")
 
     def test_청소중이면_아직_원본(self, tmp_path):
         cvp = tmp_path / "clean_preview.mp4"; cvp.write_text("x")
@@ -50,7 +66,7 @@ class Test청소화면_출처판단:
     def test_파일이_사라졌으면_원본으로_폴백(self, tmp_path):
         job = {"clean_status": "ready", "clean_video_path": str(tmp_path / "없다.mp4"),
                "edit_plan": _plan()}
-        assert A._clean_frame_src(job, tmp_path, 0) == ({}, None, None, "")
+        assert A._clean_frame_src(job, tmp_path, 0) [:4] == ({}, None, None, "")
 
     def test_칸마다_다른_지점(self, tmp_path):
         cvp = tmp_path / "c.mp4"; cvp.write_text("x")
@@ -64,9 +80,17 @@ class Test판단이_흩어지지_않았나:
     """★0순위-B — 화면 라우트가 clean_sources를 직접 보고 판단하면 이 사고가 재발한다."""
 
     def test_화면_라우트는_공용함수를_쓴다(self):
+        """★2026-08-30: 프레임을 뜨는 몸통이 `_beatframe_file`로 빠졌다(썸네일로 보내기가
+        같은 그림을 봐야 해서). 판단은 한 곳으로 더 모였고, 가드는 그 새 주인을 지킨다."""
         import inspect
-        for fn in (A.api_produce_mix_beatframe,):
+        for fn in (A._beatframe_file,):
             body = inspect.getsource(fn)
             assert "_clean_frame_src" in body, f"{fn.__name__}이 공용 판단을 안 쓴다"
+            assert 'job.get("clean_sources")' not in body, \
+                f"{fn.__name__}이 clean_sources를 또 직접 본다"
+        # 프레임을 쓰는 쪽(라우트·썸네일 핀)은 전부 그 몸통을 통해야 한다
+        for fn in (A.api_produce_mix_beatframe, A.api_thumb_pin):
+            body = inspect.getsource(fn)
+            assert "_beatframe_file" in body, f"{fn.__name__}이 공용 몸통을 안 쓴다"
             assert 'job.get("clean_sources")' not in body, \
                 f"{fn.__name__}이 clean_sources를 또 직접 본다"

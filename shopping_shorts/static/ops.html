@@ -48,7 +48,8 @@
 </head>
 <body>
 <h1>📊 관측판</h1>
-<div class="sub">서버가 얼마나 버티는지 — 늘려야 할 때를 <b>숫자로</b> 알려준다. 5분마다 표본이 쌓인다.</div>
+<div class="sub">서버가 얼마나 버티는지 — 늘려야 할 때를 <b>숫자로</b> 알려준다. 5분마다 표본이 쌓인다.
+  · <a href="/apiwatch">🔑 API 관측판(키가 버티나)</a></div>
 
 <div id="verdict" class="verdict">불러오는 중…</div>
 <div id="cards" class="cards"></div>
@@ -78,7 +79,10 @@
 
 <div class="wrap"><table id="tbl">
   <thead><tr>
-    <th>날짜</th><th>동시 렌더 최대</th><th>대기 최대</th><th>부하 최대</th>
+    <th>날짜</th><th>동시 렌더 최대</th><th>대기 최대</th>
+    <th title="서로 다른 고객 몇 명이 동시에 렌더했나 — 5명을 자주 넘으면 서버 증설 근거">동시 고객 최대</th>
+    <th title="자기 작업이 하나도 안 돌면서 기다린 고객 수(=남 때문에 굶음). 0이면 그날 대기는 전부 '계정당 1개' 규칙 때문">남 때문에 대기(명·분)</th>
+    <th>부하 최대</th>
     <th>디스크 사용</th><th>디스크 여유</th><th>그날 송신</th><th>표본</th>
   </tr></thead>
   <tbody><tr><td colspan="8">불러오는 중…</td></tr></tbody>
@@ -173,6 +177,9 @@ async function load(){
   $('#cards').innerHTML =
     card('지금 렌더 중', (now.running ?? '–') + '개', `코어 ${now.cores ?? '–'}개`) +
     card('대기 중', (now.queued ?? '–') + '개', '줄 서 있는 작업') +
+    // 2026-09-18 사장님 "100명 기준인데 4개밖에?" — 대기가 규칙(계정당 1개) 때문인지 서버 때문인지 가르는 두 칸
+    card('동시에 도는 고객', (now.run_customers ?? '–') + '명', '서로 다른 고객 수') +
+    card('남 때문에 기다리는 고객', (now.wait_customers ?? '–') + '명', '0이면 대기는 본인 앞 작업 때문') +
     card('부하(1분)', n1(now.load1), `코어 ${now.cores ?? '–'}개 기준`) +
     card('디스크 여유', n1(now.disk_free_gb) + 'GB', `사용 ${n1(now.disk_used_gb)}GB`) +
     card('누적 송신', n1(now.net_tx_gb) + 'GB', '부팅 후 · 월 6TB 무료');
@@ -190,13 +197,15 @@ async function load(){
       <td>${r.date}</td>
       <td class="${cls}">${run}</td>
       <td>${r.max_queued || 0}</td>
+      <td class="${(r.max_run_customers || 0) >= 5 ? 'hot' : ''}">${r.max_run_customers ?? '–'}</td>
+      <td class="${(r.max_wait_customers || 0) > 0 ? 'hot' : ''}">${r.max_wait_customers ?? '–'}${r.wait_customers_min ? ` <span style="color:var(--sub)">(${r.wait_customers_min}분)</span>` : ''}</td>
       <td>${n1(r.max_load1)}</td>
       <td>${n1(r.max_disk_used_gb)}GB</td>
       <td class="${freeCls}">${n1(r.min_disk_free_gb)}GB</td>
       <td>${n1(r.tx_gb)}GB</td>
       <td style="color:var(--sub)">${r.samples}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="8">아직 표본이 없습니다 — 5분마다 쌓입니다.</td></tr>';
+  }).join('') : '<tr><td colspan="10">아직 표본이 없습니다 — 5분마다 쌓입니다.</td></tr>';
 }
 
 load();

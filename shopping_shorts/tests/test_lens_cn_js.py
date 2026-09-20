@@ -73,3 +73,23 @@ def test_ig_keyword_trim_measured_cases():
     # 안전망: 2어절이면 마지막 한 단어(실측 '픽스플레이' 13건)
     assert got["고독스 픽스플레이 사용법"][1] == "픽스플레이"
     assert got["고독스 카메라"][1] == "카메라"
+
+
+# ── 영어(한글 없음) 검색어 — 2026-09-14 라이브 인스타 실측 ──
+# 'Mario phone case'(3)·'Super Mario phone case'(4) 결과 있음 / 5단어 이상 전부 0건.
+# 한국어식 '첫+끝'을 영어에 쓰면 'Mario phone case'가 'Mario case'로 망가졌다.
+@pytest.mark.skipif(NODE is None, reason="node 없음")
+def test_ig_keyword_english_keeps_up_to_4_words():
+    driver = _slice() + r"""
+    const cases=['Mario phone case','Super Mario phone case','Mario phone case with stand',
+                 'Super Mario 3D stand phone case'];
+    console.log(JSON.stringify(cases.map(c=>[c,_igKw(c)])));
+    """
+    out = run_js_proc(driver, capture_output=True, text=True,
+                      encoding="utf-8", stdin=subprocess.DEVNULL)
+    assert out.returncode == 0, out.stderr
+    got = dict(json.loads(out.stdout))
+    assert got["Mario phone case"] == "Mario phone case"
+    assert got["Super Mario phone case"] == "Super Mario phone case"
+    assert got["Mario phone case with stand"] == "Mario phone case stand"
+    assert len(got["Super Mario 3D stand phone case"].split()) <= 4

@@ -1,5 +1,6 @@
 """소스 URL을 플랫폼별로 다운로드 — instagram=Apify, youtube/tiktok=yt-dlp(무료)."""
 import json
+import logging
 import os
 import re
 import subprocess
@@ -30,8 +31,13 @@ def _cookies_arg(url):
     (이미 캐시 있으면 그냥 빠르게 스킵 — 매 호출 재다운로드 아님)."""
     u = (url or "").lower()
     if "youtube.com" in u or "youtu.be" in u:
-        path = config.YTDLP_COOKIES_YOUTUBE
         extra = ["--remote-components", "ejs:github"]
+        # 브라우저 직독이 파일 스냅샷보다 우선한다 — 스냅샷은 유튜브의 세션 회전으로
+        # 조용히 죽는다(2026-08-31 실측: 09:32 추출본이 10:15에 봇확인 재발, 같은
+        # 브라우저에서 새로 읽으면 즉시 성공). 설정돼 있으면 매번 최신 쿠키를 쓴다.
+        if config.YTDLP_COOKIES_BROWSER_YOUTUBE:
+            return ["--cookies-from-browser", config.YTDLP_COOKIES_BROWSER_YOUTUBE] + extra
+        path = config.YTDLP_COOKIES_YOUTUBE
     elif "tiktok.com" in u:
         path = config.YTDLP_COOKIES_TIKTOK
         extra = []
@@ -44,8 +50,67 @@ def _cookies_arg(url):
         extra = []
     else:
         return []
-    cookies = ["--cookies", path] if path and Path(path).exists() else []
+    cookies = ["--cookies", _cookie_scratch_copy(path)] if _cookie_file_usable(path) else []
     return cookies + extra
+
+
+_COOKIE_SCRATCH_PREFIX = "ytdlp_cookies_"
+
+
+def _cookie_scratch_copy(path) -> str:
+    """yt-dlp에 원본 대신 **1회용 사본**을 넘긴다.
+
+    2026-09-16 실사고의 진짜 뿌리: yt-dlp는 `--cookies` 파일을 종료 시 다시 쓴다
+    (YoutubeDL.save_cookies → 열면서 먼저 비우고(truncate) 그 다음 쓴다). 타임아웃으로
+    죽이거나(subprocess timeout) 여러 yt-dlp가 겹치면 그 틈에 원본이 0바이트로 남아
+    이후 모든 호출이 "not a Netscape format"으로 즉사했다(유튜브 15:17·17:45, 틱톡 17:44).
+    사본을 넘기면 yt-dlp가 뭘 하든 원본은 그대로다. 사본 실패 시 원본 경로(종전 동작)."""
+    try:
+        import shutil
+        import tempfile
+        tmpdir = Path(tempfile.gettempdir())
+        _sweep_cookie_scratch(tmpdir)
+        fd, tmp = tempfile.mkstemp(prefix=_COOKIE_SCRATCH_PREFIX, suffix=".txt", dir=str(tmpdir))
+        os.close(fd)
+        shutil.copyfile(path, tmp)
+        return tmp
+    except Exception as e:  # noqa: BLE001
+        logging.getLogger(__name__).warning("쿠키 사본 실패, 원본 경로 사용: %s (%s)", path, e)
+        return str(path)
+
+
+def _sweep_cookie_scratch(tmpdir, max_age_sec=3600):
+    """한 시간 넘은 쿠키 사본 정리(호출마다 하나씩 생기므로 쌓이지 않게)."""
+    now = time.time()
+    try:
+        for f in tmpdir.glob(_COOKIE_SCRATCH_PREFIX + "*.txt"):
+            try:
+                if now - f.stat().st_mtime > max_age_sec:
+                    f.unlink()
+            except OSError as e:  # 다른 프로세스가 먼저 지웠거나 아직 쓰는 중 — 무해
+                logging.getLogger(__name__).debug("쿠키 사본 정리 건너뜀 %s: %s", f, e)
+    except OSError as e:  # tmp 폴더 나열 실패 — 정리만 못 할 뿐 본작업엔 무해
+        logging.getLogger(__name__).debug("쿠키 사본 정리 실패(무해): %s", e)
+
+
+def _cookie_file_usable(path) -> bool:
+    """쿠키 파일이 실제로 쓸 만한지 — 존재 + 비어있지 않음.
+
+    2026-09-16 실사고: 서버 youtube_cookies.txt가 0바이트로 비워진 채 `--cookies`로
+    넘어가 yt-dlp가 "does not look like a Netscape format cookies file"로 즉사 →
+    렌즈 유튜브 분석이 통째로 실패. 빈 파일이면 쿠키 없이(프록시·릴레이 경로) 가는
+    편이 낫다. 로그를 남겨 '조용한 폴백'이 되지 않게 한다."""
+    if not path:
+        return False
+    try:
+        st = Path(path).stat()
+    except OSError:
+        return False
+    if st.st_size == 0:
+        logging.getLogger(__name__).warning(
+            "쿠키 파일이 비어 있어 무시합니다(쿠키 없이 진행): %s", path)
+        return False
+    return True
 
 
 def _ig_cookies_file():
@@ -68,7 +133,11 @@ def _ig_cookies_file():
     src = max(_cands, key=lambda p: Path(p).stat().st_mtime)
     out = Path(src).with_suffix(".ytdlp-cookies.txt")
     try:
-        if out.exists() and out.stat().st_mtime >= Path(src).stat().st_mtime:
+        # ★0바이트 캐시는 캐시가 아니다(2026-09-18 실측: 09-16 디스크 풀 때 비워진
+        #   41170560843.ytdlp-cookies.txt가 이틀째 '최신'으로 재사용돼 인스타 1080p 경로가
+        #   "cookies 필요"로 전부 실패). 비어 있으면 원본에서 다시 만든다.
+        if (out.exists() and out.stat().st_size > 0
+                and out.stat().st_mtime >= Path(src).stat().st_mtime):
             return str(out)
         state = json.loads(Path(src).read_text(encoding="utf-8"))
         lines = ["# Netscape HTTP Cookie File"]
@@ -85,16 +154,48 @@ def _ig_cookies_file():
         return ""
 
 
+_YT_SLOT_LOCK = threading.Lock()
+_YT_SLOT_SEQ = 0
+
+
+def _youtube_proxy_url():
+    """이번 호출에 쓸 유튜브 프록시 주소. 없으면 "".
+
+    ★슬롯을 돌린다(2026-08-31 사장님 "프록시 몇 개 붙여야 되는 거 아닌가"). 하나로
+      고정하면 고객이 동시에 제작할 때 같은 출구 IP로 몰려 유튜브가 다시 막고, 그 IP가
+      죽으면 유튜브가 통째로 멈춘다. _download_ytdlp는 재시도(3회)마다 _proxy_arg를
+      다시 부르므로 **재시도가 곧 다른 IP로의 재시도**가 된다.
+
+    주소 조립은 channel_archive.slot_proxy 한 곳에서만 한다(0순위-B) — 인스타가 쓰는
+    그 규칙 그대로다. 자격증명이 없거나 슬롯 0이면 종전처럼 config.YTDLP_PROXY를 쓴다.
+    """
+    global _YT_SLOT_SEQ
+    n = int(getattr(config, "YTDLP_PROXY_SLOTS", 0) or 0)
+    if n > 0:
+        try:
+            from shopping_shorts.channel_archive import slot_proxy
+            with _YT_SLOT_LOCK:
+                _YT_SLOT_SEQ += 1
+                i = _YT_SLOT_SEQ % n
+            p = slot_proxy(i, "ytdlp")
+            if p:
+                return p
+        except Exception as e:      # noqa: BLE001 — 슬롯 조립 실패는 단일 프록시로 견딘다
+            print(f"[ytdlp프록시] 슬롯 조립 실패(무해): {e!r}", file=sys.stderr)
+    return config.YTDLP_PROXY
+
+
 def _proxy_arg(url):
-    """B안(2026-07-24): 유튜브만 프록시로 보낸다(config.YTDLP_PROXY 설정 시). 서버 데이터센터 IP가
+    """B안(2026-07-24): 유튜브만 프록시로 보낸다. 서버 데이터센터 IP가
     유튜브에 봇차단당하는 걸 주거용 프록시로 우회 → PC 릴레이 없이 서버가 직접 받는다. 틱톡·샤오홍슈
     등은 서버서도 되므로 프록시를 안 태워(대역폭·비용 절약). 미설정이면 [](회귀0)."""
     u = (url or "").lower()
-    if config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
+    _px = _youtube_proxy_url()
+    if _px and ("youtube.com" in u or "youtu.be" in u):
         # 회전 주거용 프록시는 죽은 IP로 라우팅되면 502(Tunnel failed)를 뱉는다 — 재시도하면
         # 새 IP로 성공한다(2026-07-24 실측: GB풀 불량, DE/CA/FR 정상). 재시도를 넉넉히 줘서
         # 드문 502에 소스가 통째로 스킵되지 않게 한다.
-        return ["--proxy", config.YTDLP_PROXY,
+        return ["--proxy", _px,
                 "--extractor-retries", "10", "--retries", "10", "--socket-timeout", "30"]
     return []
 
@@ -278,6 +379,15 @@ def _download_instagram(url, dest_dir):
 
     m = _IG_CODE_RE.search(url or "")
     code = m.group(1) if m else ""
+    # ⓪ 1080p 경로(2026-09-18 실사고): 아래 ①·①-b는 **영상+음성이 합쳐진 단일 스트림**만
+    #   고르는데, 인스타는 그 단일 스트림이 720x1280까지다(서버 소스 88건 중 81건이 720p).
+    #   1080x1920·1440x2560은 DASH 영상전용 스트림이라 음성과 따로 받아 합쳐야 한다 —
+    #   _download_ytdlp가 그 일을 한다(로컬 실측 DdShJZpJqr5 → 1080x1920). 실패하면 종전
+    #   경로 그대로(회귀 0).
+    try:
+        return _download_ytdlp(url, dest_dir, max_attempts=1)
+    except Exception as e:     # noqa: BLE001 — 720p 경로로 물러선다
+        print(f"[media] 인스타 1080p 병합 경로 실패 → 단일 스트림: {str(e)[-160:]}", file=sys.stderr)
     # ① 무료 경로 — 릴스 페이지에서 mp4 direct URL을 뽑는다(오늘 서버 실측으로 동작 확인).
     if code:
         try:
@@ -384,6 +494,14 @@ def _download_douyin_inner(url, dest_dir, timeout):
     return path, ""
 
 
+# 유튜브 다운로드 시도별 player_client(2026-08-31). None=기본(종전 동작).
+# 기본이 403으로 막히는 영상이 있고, android로는 그대로 받아진다(실측 3/3).
+_YTDLP_CLIENTS = [None, "android", "ios"]
+
+
+_Q_CAP = "[width<=1920][height<=1920]"   # 1080p급 상한 — 세로(1080x1920)·가로(1920x1080) 둘 다 통과, 4K 차단
+
+
 def _download_ytdlp(url, dest_dir, max_attempts=3):
     """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열).
 
@@ -399,11 +517,39 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
         #   단일 스트림)를 먼저 잡아 유튜브에서 720p·360p 저화질을 받았다(원본이 고화질이어도).
         #   최고 해상도 영상+음성을 따로 받아 mp4로 머지한다 — 이래야 원본 해상도가 천장이 된다.
         #   (틱톡 등 분리 스트림이 없으면 best 단일로 폴백; 그 best는 보통 원본 해상도다.)
+        # ★화질 상한 1080p(2026-08-31 실사고). 상한이 없으면 유튜브 4K 원본을 받으러
+        #   간다 — 실측 GhBaFe-99RU는 **668MiB**였고, 주거용 프록시 속도로는 ETA 2시간
+        #   26분이라 그 사이 재생 URL이 만료돼 **HTTP 403**으로 죽었다(12건 중 3건이
+        #   전부 이 모양이었다). 같은 영상을 단일 스트림으로 받으면 29.6MB로 정상 완료된다.
+        #   최종 출력이 1080x1920이라 4K는 화면에 쓰이지도 않는다 — 받을 이유가 없다.
+        #   ★대역폭도 같이 지킨다: 668MB 몇 건이면 월 25GB 프록시 플랜이 날아간다
+        #   (2026-08-17 실제로 초과해 인스타 수집이 402로 멈춘 적이 있다).
+        #   상한을 넘는 영상만 영향을 받고, 1080p 이하 원본은 종전 그대로다.
+        # ★재시도마다 **다른 player_client**로 바꾼다(2026-08-31 실사고).
+        #   증상: 프록시를 켜 봇차단은 풀렸는데 12건 중 3건이 다운로드 단계에서
+        #   HTTP 403. 동시성·IP고정·파일크기·스트림종류·화질·연령제한을 하나씩
+        #   배제한 끝에, 같은 영상이 `player_client=android`로는 **그대로 받아졌다**
+        #   (12.8MB/10.5s · 43.6MB/15.7s · 21.6MB/17.8s — 3건 전부).
+        #   즉 403은 기본 클라이언트가 막힌 것이고 영상 문제가 아니다.
+        #   ⚠️ yt-dlp의 클라이언트 폴백은 **추출 단계**에만 걸린다 — 다운로드 403은
+        #     자동으로 안 넘어가므로 우리 재시도 루프가 직접 바꿔줘야 한다.
+        #   1차는 기본 그대로라 잘 되던 영상은 종전 경로를 탄다(회귀 0).
+        _client = _YTDLP_CLIENTS[attempt] if attempt < len(_YTDLP_CLIENTS) else None
+        _client_arg = (["--extractor-args", f"youtube:player_client={_client}"]
+                       if _client and ("youtube.com" in (url or "").lower()
+                                       or "youtu.be" in (url or "").lower()) else [])
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp",
-             "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+             # ★세로 숏폼의 1080p는 **높이가 1920**이다(2026-09-18 실사고). 종전 `height<=1080`은
+             #   1080x1920을 걸러내 그 아래 등급을 골랐다 — 서버 소스 350개 실측: 유튜브 33건 중
+             #   27건이 608x1080, 틱톡 130건 중 112건이 576x1024(둘 다 1080x1920이 있었는데도).
+             #   완성본은 1080x1920이라 540p급을 2배 키워 렌더한 셈 — 고객 "흐리다" 제보의 뿌리.
+             #   상한은 그대로 1080p급(4K 차단)이되, 가로·세로 **긴 변 1920**으로 잰다.
+             "-f", (f"bestvideo{_Q_CAP}[ext=mp4]+bestaudio[ext=m4a]/"
+                    f"bestvideo{_Q_CAP}+bestaudio/best{_Q_CAP}/best"),
              "--merge-output-format", "mp4",
-             "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), "-o", out, url],
+             "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), *_client_arg,
+             "-o", out, url],
             capture_output=True, text=True, timeout=300)
         if r.returncode == 0:
             files = sorted(Path(dest_dir).glob(stem + "*"))
@@ -460,12 +606,261 @@ def _is_direct_video(u):
         return True
     # 알려진 영상 CDN 호스트(샤오홍슈=xhscdn, 도우인=zjcdn/douyinvod, 인스타·쓰레드=
     # cdninstagram — 쓰레드 영상도 이 CDN에서 나온다). 페이지 도메인은 제외.
-    return any(h in u for h in ("xhscdn.com", "sns-video", "zjcdn.com", "douyinvod.com",
+    return any(h in u for h in ("xhscdn.com", "rednotecdn.com", "sns-video", "zjcdn.com", "douyinvod.com",
                                 "cdninstagram.com"))
 
 
+def _download_pinterest(url, dest_dir):
+    """핀터레스트 핀 페이지 URL → mp4 다운로드 (2026-08-29, 렌즈 핀터레스트 노출과 짝).
+
+    핀 페이지의 JSON-LD VideoObject에서 mp4 직링크를 뽑아(무료·무로그인,
+    pinterest_crawl.pin_video_info — 렌즈 검증과 **같은 한 곳**) 직접 받는다.
+    pinimg CDN은 핫링크 차단이 없다(실측 Referer 없이 200). 렌즈뿐 아니라
+    핀터레스트 탭에서 담은 핀(url=핀 페이지)도 이 분기로 받아진다 — 종전엔
+    분기가 없어 '지원하지 않는 URL'로 떨어졌다."""
+    from shopping_shorts import pinterest_crawl
+    from shopping_shorts.frame_extract import download_video
+    info = pinterest_crawl.pin_video_info(url)
+    if info is None:
+        raise RuntimeError(f"영상이 없는 핀이에요(이미지 핀): {url}")
+    caption = info.get("title") or info.get("description") or ""
+    return str(download_video(info["video_url"], Path(dest_dir))), caption
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# 사장님이 직접 올린 영상파일(2026-08-31). 링크가 없는 영상 — 직접 찍은 것, 편집해서
+# 뽑은 것 — 도 재료가 되게 한다. 파일은 서버에 두고 **URL 하나로 바꿔** 넘기므로
+# 그 아래 파이프라인(추출·매칭·렌더)은 종전 그대로 돈다.
+# ★판정은 여기 한 곳뿐이다(0순위-B). app.py의 업로드·서빙 라우트도 이 함수를 쓴다 —
+#   같은 판단을 두 곳에 적으면 언젠가 반드시 어긋난다.
+FOOTAGE_DIR = Path(__file__).parent / "data" / "footage_uploads"
+FOOTAGE_EXT = {".mp4", ".mov", ".m4v", ".webm"}
+FOOTAGE_URL_PREFIX = "/api/produce/footage/"
+
+
+def uploaded_footage_path(url):
+    """URL이 **우리가 보관 중인 업로드 파일**을 가리키면 실제 경로, 아니면 None.
+
+    토큰 모양(32자리 hex)과 확장자를 함께 검사한다 — 경로 탈출(../)은 이 검사에서
+    통째로 막힌다(이름이 토큰 모양이 아니면 무조건 None)."""
+    try:
+        path = urllib.parse.urlparse(str(url or "")).path or str(url or "")
+    except Exception:      # noqa: BLE001
+        return None
+    if FOOTAGE_URL_PREFIX not in path:
+        return None
+    name = path.rsplit("/", 1)[-1]
+    stem, _dot, ext = name.rpartition(".")
+    if not re.fullmatch(r"[0-9a-f]{32}", stem or "") or ("." + ext) not in FOOTAGE_EXT:
+        return None
+    f = FOOTAGE_DIR / name
+    return f if f.exists() else None
+
+
+def uploaded_footage_poster_path(url):
+    """업로드 영상의 **썸네일(jpg)** 경로. 아니면 None.
+
+    영상 본체는 uploaded_footage_path가 본다 — 확장자만 다르고 판정 규칙은 같다."""
+    try:
+        path = urllib.parse.urlparse(str(url or "")).path or str(url or "")
+    except Exception:      # noqa: BLE001
+        return None
+    if FOOTAGE_URL_PREFIX not in path:
+        return None
+    name = path.rsplit("/", 1)[-1]
+    if not re.fullmatch(r"[0-9a-f]{32}_poster\.jpg", name or ""):
+        return None
+    f = FOOTAGE_DIR / name
+    return f if f.exists() else None
+
+
+def normalize_playable(path):
+    """받아 온 mp4를 **브라우저가 확실히 재생하는 모양**으로 맞춘다 (2026-09-02).
+
+    ★왜 여기 한 곳인가: 도우인에만 있던 처방(douyin_fetch._normalize)을 틱톡이 그대로
+      필요로 했다 — 강규봉님 제보 "3단계 미리보기에서 틱톡 영상만 검게 보인다".
+      실측(job 26181de7df55): 틱톡 소스 3개가 전부 **hevc(H.265)**, 유튜브만 h264였다.
+      크롬·엣지는 hevc를 재생하지 못해 화면이 통째로 검게 뜬다(소리만 난다).
+      플랫폼마다 따로 적으면 다음 플랫폼에서 또 터진다 — 받는 문(download_any)에서
+      한 번만 건다(0순위-B).
+
+    h264이고 높이 1920 이하면 **아무것도 안 한다**(변환 0초). 그 밖에만 변환한다.
+    ffmpeg가 없거나 변환이 실패하면 원본을 그대로 쓴다 — 받아 온 것을 잃지 않는다.
+    """
+    try:
+        path = Path(path)
+        if not path.exists():
+            return str(path)
+        probe = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=codec_name,height", "-of", "csv=p=0", str(path)],
+            capture_output=True, text=True, timeout=60)
+        info = (probe.stdout or "").strip().split(",")
+        codec = info[0] if info else ""
+        height = int(info[1]) if len(info) > 1 and info[1].isdigit() else 0
+    except Exception:  # noqa: BLE001 — ffprobe가 없으면 손대지 않는다
+        return str(path)
+    if codec == "h264" and height <= 1920:
+        return str(path)
+    out = path.with_name(path.stem + "_h264.mp4")
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", str(path),
+             "-vf", "scale=-2:'min(1920,ih)'", "-c:v", "libx264", "-preset", "veryfast",
+             "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k",
+             "-movflags", "+faststart", str(out)],
+            capture_output=True, text=True, timeout=600, check=True)
+    except Exception:  # noqa: BLE001 — 변환 실패는 치명적이지 않다(원본으로 간다)
+        out.unlink(missing_ok=True)
+        return str(path)
+    if not out.exists() or out.stat().st_size < 10000:
+        out.unlink(missing_ok=True)
+        return str(path)
+    print(f"[media] {codec} {height}p → h264 변환: {out.name}", file=sys.stderr)
+    path.unlink(missing_ok=True)
+    return str(out)
+
+
+# ── 샤오홍슈 원본 화질(2026-09-18 사장님 "다들 하는데 왜 우리만 안 되냐") ─────────────────
+#   yt-dlp·검색 API가 주는 스트림은 **720p 재인코딩본**뿐이다(노트 2건 -F 실측: 720x1280 단일).
+#   그런데 노트 페이지(로그인 세션)의 __INITIAL_STATE__에는 `originVideoKey`가 있고,
+#   그 키를 CDN 호스트에 그대로 대면 **업로드 원본**이 나온다(다른 다운로더들이 쓰는 경로).
+#   실측(서버): 6a975f43 → sns-video-bd/pre_post/… 1080x1920 hevc 11.5Mbps(70MB, 종전 720p 1.8Mbps)
+#              6a997ff0 → sns-video-qn/… 113MB. 키에 '/'가 있으면 bd, 없으면 qn·bak-v1이 받았다.
+#   원본이 hevc면 download_any의 normalize_playable이 h264로 바꾼다(종전 도우인과 같은 길).
+#   실패(세션 없음·키 없음·CDN 404·4K 초과)는 전부 종전 yt-dlp 720p 경로로 물러선다 — 회귀 0.
+#   원본이 4K(2160x3840)면 받아서 normalize가 1920p로 줄인다(실측 6a97fbd2 155MB).
+# 호스트마다 가진 원본이 다르다(실측 09-18: 최근 노트=bd/qn/bak-v1, 옛 노트 68ca10b6=bak-v8/hw/qc만 200).
+_XHS_ORIGIN_HOSTS_SLASH = ("sns-video-bd.xhscdn.com", "sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com",
+                           "sns-bak-v8.xhscdn.com", "sns-video-hw.xhscdn.com", "sns-video-qc.xhscdn.com")
+_XHS_ORIGIN_HOSTS_PLAIN = ("sns-video-qn.xhscdn.com", "sns-bak-v1.xhscdn.com", "sns-video-bd.xhscdn.com",
+                           "sns-bak-v8.xhscdn.com", "sns-video-hw.xhscdn.com", "sns-video-qc.xhscdn.com")
+# 원본 파일 크기 상한 — 업로드 원본이 1.1GB인 노트가 있었다(68ca10b6). 그걸 받으면 담기 한 건에
+# 수십 초~분이 걸리고 디스크를 먹는다. 넘으면 720p 경로로 물러선다.
+_XHS_ORIGIN_MAX_BYTES = 350 * 1024 * 1024
+_XHS_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+           "(KHTML, like Gecko) Chrome/128 Safari/537.36")
+
+
+def _xhs_session_cookie_header():
+    """서버의 rednote 로그인 세션(Playwright storage_state) → Cookie 헤더. 없으면 ""."""
+    from shopping_shorts import config as _cfg
+    path = getattr(_cfg, "XIAOHONGSHU_SESSION_PATH", "") or ""
+    if not path or not Path(path).exists():
+        return ""
+    try:
+        st = json.loads(Path(path).read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001 — 세션 파일이 깨졌으면 원본 경로만 포기한다
+        print(f"[media] 샤오홍슈 세션 파일 읽기 실패: {e!r}", file=sys.stderr)
+        return ""
+    cookies = st.get("cookies", []) if isinstance(st, dict) else []
+    # 세션 파일의 쿠키 도메인은 .rednote.com 계열이다(실측) — 페이지도 rednote.com으로 연다.
+    return "; ".join(f"{c.get('name')}={c.get('value')}" for c in cookies
+                     if "rednote" in (c.get("domain") or ""))
+
+
+def _xhs_note_page_url(url):
+    """담긴 URL(xiaohongshu/rednote · explore/search_result/discovery) → rednote 노트 페이지 URL."""
+    u = re.sub(r"://(www\.)?xiaohongshu\.com", "://www.rednote.com", url, flags=re.I)
+    u = u.replace("/search_result/", "/discovery/item/").replace("/explore/", "/discovery/item/")
+    return u
+
+
+def xhs_origin_video_key(url, cookie_header=None):
+    """노트 페이지에서 originVideoKey를 뽑는다. 없으면 ""(비디오가 아니거나 세션 만료)."""
+    ck = _xhs_session_cookie_header() if cookie_header is None else cookie_header
+    if not ck:
+        return ""
+    import urllib.request
+    req = urllib.request.Request(_xhs_note_page_url(url), headers={
+        "User-Agent": _XHS_UA, "Cookie": ck, "Accept": "text/html"})
+    html = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "ignore")
+    m = re.search(r'originVideoKey":"([^"]+)', html)
+    if not m:
+        return ""
+    # 페이지 원문은 슬래시를 / 로 이스케이프해 둔다(실측 'pre_post/1040g…') — 되돌린다.
+    return m.group(1).replace("\\u002F", "/").replace("\\/", "/")
+
+
+def xhs_origin_probe(key):
+    """키 → (재생 가능한 원본 URL, (w, h)). CDN 호스트를 차례로 HEAD해 200·video만 통과.
+    긴 변이 3840(4K)을 넘으면 받지 않는다 — 4K까지는 normalize가 1920p로 줄인다."""
+    import requests
+    hosts = _XHS_ORIGIN_HOSTS_SLASH if "/" in key else _XHS_ORIGIN_HOSTS_PLAIN
+    for host in hosts:
+        cand = f"https://{host}/{key}"
+        try:
+            r = requests.head(cand, headers={"User-Agent": _XHS_UA}, timeout=15, allow_redirects=True)
+        except Exception as e:  # noqa: BLE001 — 다음 호스트로
+            print(f"[media] 샤오홍슈 원본 HEAD 실패 {host}: {e!r}", file=sys.stderr)
+            continue
+        if r.status_code != 200 or "video" not in (r.headers.get("Content-Type") or ""):
+            continue
+        try:
+            _size = int(r.headers.get("Content-Length") or 0)
+        except ValueError:
+            _size = 0
+        if _size > _XHS_ORIGIN_MAX_BYTES:
+            print(f"[media] 샤오홍슈 원본 {_size // (1024 * 1024)}MB — 상한 초과라 720p 경로로", file=sys.stderr)
+            return "", (0, 0)
+        try:
+            pr = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0",
+                                 "-show_entries", "stream=width,height", "-of", "csv=p=0", cand],
+                                capture_output=True, text=True, timeout=60)
+            w, h = [int(x) for x in pr.stdout.strip().split(",")[:2]]
+        except Exception as e:  # noqa: BLE001 — 해상도를 못 읽으면 다음 호스트로
+            print(f"[media] 샤오홍슈 원본 ffprobe 실패 {host}: {e!r}", file=sys.stderr)
+            continue
+        # ★4K 원본도 받는다(2026-09-18 실측 6a97fbd2: 원본 2160x3840 hevc 155MB, yt-dlp는 720p뿐).
+        #   처음엔 1920 초과를 걸렀는데 그 결과가 **720p**라 오히려 손해다. download_any의
+        #   normalize_playable이 1920p h264로 줄여 준다(도우인 2160 hevc 실측 141초와 같은 비용).
+        #   CDN 직결이라 프록시 대역폭도 안 쓴다. 상한은 4K(3840)까지 — 그 위는 없다고 봐도 된다.
+        if max(w, h) > 3840:
+            print(f"[media] 샤오홍슈 원본 {w}x{h} — 3840 초과라 720p 경로로", file=sys.stderr)
+            return "", (w, h)
+        return cand, (w, h)
+    return "", (0, 0)
+
+
+def _download_xiaohongshu_origin(url, dest_dir):
+    """샤오홍슈 노트 → 업로드 원본 mp4 경로. 못 받으면 ""(호출부가 yt-dlp로 간다)."""
+    key = xhs_origin_video_key(url)
+    if not key:
+        return ""
+    cand, (w, h) = xhs_origin_probe(key)
+    if not cand:
+        return ""
+    from shopping_shorts.frame_extract import download_video
+    out = download_video(cand, Path(dest_dir))
+    print(f"[media] 샤오홍슈 원본 {w}x{h} 수신: {Path(out).name}", file=sys.stderr)
+    return str(out)
+
+
 def download_any(url, dest_dir):
-    """소스 URL 다운로드 → (mp4경로, caption) 튜플. caption은 인스타에서만 채워짐."""
+    """소스 URL 다운로드 → (mp4경로, caption) 튜플.
+
+    ★받아 온 것은 **여기서 한 번** 재생 가능한 모양으로 맞춘다(normalize_playable).
+      플랫폼별 함수에 흩어 적으면 새 플랫폼마다 같은 사고가 난다(0순위-B).
+    """
+    path, caption = _download_any_raw(url, dest_dir)
+    return normalize_playable(path), caption
+
+
+def _download_any_raw(url, dest_dir):
+    """플랫폼별 실제 다운로드. caption은 인스타에서만 채워짐."""
+    # ★사장님이 **직접 올린 영상파일**이면 받을 게 없다 — 이미 서버에 있다(2026-08-31).
+    #   링크 없는 영상(직접 찍은 것·편집해 뽑은 것)을 재료로 쓰려고 만든 경로다.
+    #   판정은 app._uploaded_footage_path 한 곳에만 있다(0순위-B: 같은 판단을 두 번
+    #   적지 마라). 작업 폴더로 **복사**해서 넘긴다 — 파이프라인이 원본을 건드려
+    #   보관본을 망가뜨리는 일을 원천 차단한다.
+    _up = uploaded_footage_path(url)
+    if _up is not None:
+        import shutil
+        dst = Path(dest_dir) / _up.name
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        if str(dst) != str(_up):
+            shutil.copy2(str(_up), str(dst))
+        return str(dst), ""
     u = (url or "").lower()
     # ★yt-dlp는 rednote.com 도메인을 모른다(Unsupported URL) — 같은 사이트인 xiaohongshu.com으로
     # 정규화해야 추출기가 인식한다. 렌즈가 로그인벽 우회용으로 '원본 열기'를 rednote로 바꾼 URL이
@@ -489,6 +884,10 @@ def download_any(url, dest_dir):
         return _download_threads(url, dest_dir)
     if host == "instagram.com" or host.endswith(".instagram.com"):
         return _download_instagram(url, dest_dir)
+    # 핀터레스트 핀 페이지 — yt-dlp를 안 거치고 JSON-LD의 mp4 직링크로 받는다.
+    # (pinimg CDN 직링크가 이미 넘어온 경우는 .mp4라 아래 _is_direct_video로 간다)
+    if host == "pinterest.com" or host.endswith(".pinterest.com"):
+        return _download_pinterest(url, dest_dir)
     # 직접 mp4(예: 샤오홍슈 url_720p) — 담긴 샤오홍슈 url은 rednote.com/search_result 검색결과
     # '페이지'라 yt-dlp로 못 받는다. 프론트가 이미 확보한 직접 mp4(play_url)를 넘기면 이 경로로
     # 그대로 HTTP 다운로드한다(Apify 재호출 없음 = 추가 비용 0). CDN URL은 만료될 수 있어
@@ -519,6 +918,14 @@ def download_any(url, dest_dir):
             raise
         except Exception:  # noqa: BLE001 — 폴백 사유일 뿐, 최종 에러는 yt-dlp가 말한다
             pass
+    # ★샤오홍슈는 원본 키 경로를 먼저 — yt-dlp는 720p 재인코딩본만 준다(위 _download_xiaohongshu_origin).
+    if "xiaohongshu.com" in u or "rednote.com" in u:
+        try:
+            _orig = _download_xiaohongshu_origin(url, dest_dir)
+            if _orig:
+                return _orig, ""
+        except Exception as e:  # noqa: BLE001 — 폴백 사유일 뿐(세션·CDN·네트워크)
+            print(f"[media] 샤오홍슈 원본 경로 실패 → yt-dlp: {e}", file=sys.stderr)
     if any(s in u for s in ("youtube.com", "youtu.be", "tiktok.com",
                              "xiaohongshu.com", "xhslink.com", "douyin.com",
                              "iesdouyin.com", "rednote.com")):

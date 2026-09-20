@@ -32,7 +32,8 @@ def test_beats_preview_empty_when_no_edit_plan(tmp_path, monkeypatch):
     store.create_mix_job("j2", ["u0"], 20, "free")
     r = client.get("/api/produce/mix/beats_preview/j2")
     assert r.status_code == 200
-    assert r.json() == {"beats": []}
+    # fkey(청소 상태 키, 2026-09-09)가 함께 온다 — 목록이 비었는지만 본다
+    assert r.json().get("beats") == []
 
 
 import subprocess as _sp

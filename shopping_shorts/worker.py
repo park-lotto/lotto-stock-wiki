@@ -12,7 +12,8 @@ import logging
 import threading
 import time
 
-from shopping_shorts import duration_backfill, mix_pipeline, overseas_hot_jobs, prewarm
+from shopping_shorts import (duration_backfill, keypool, mix_pipeline,
+                             overseas_hot_jobs, prewarm)
 from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 
@@ -46,7 +47,7 @@ TASKS = {
     "prewarm":  lambda a: _log_prewarm(a, prewarm.run_prewarm(
         a.get("shortcode"), a.get("url"), caption=a.get("caption") or "",
         customer_id=a.get("customer_id") or "0", video_url=a.get("video_url") or "",
-        category=a.get("category"))),
+        category=a.get("category"), manual=bool(a.get("manual")))),
     # 랭킹 카드 ⏱ 길이 백필(2026-08-04) — /api/reference가 1시간에 1번 넣는다.
     # 실패해도 무해(run_backfill이 예외 없이 요약 문자열만 돌려준다).
     # codes: 렌즈 조회 경로가 넘긴 명시 shortcode(2026-08-11) — 없으면 종전 피드 스캔.
@@ -94,6 +95,14 @@ def run_one(store):
         if fn is None:
             store.finish(qid, False, f"모르는 작업: {task}")
             return True
+        # ★작업 직전에 회원 키를 공용 풀에 합류시킨다(2026-08-31 실사고).
+        #   워커는 FastAPI startup이 없어 종전엔 **한 번도 합류하지 않았다** —
+        #   제작 job이 사장님 키 12개만 쓰고 회원 키 44개는 놀았다(실측: 워커
+        #   유닛 [keypool] 로그 24시간 0건, 같은 날 제미니 429 45%).
+        #   기동 시 1회가 아니라 **작업마다** 하는 이유: 워커는 별도 프로세스라
+        #   웹에서 키를 등록해도 신호가 안 온다. 기동 시에만 하면 "등록했는데
+        #   왜 그대로냐"가 재기동 전까지 이어진다. 비용은 job당 DB 조회 1회다.
+        keypool.resync_pools(store)
         log.info("작업 시작 qid=%s task=%s args=%s", qid, task, json.dumps(args, ensure_ascii=False))
         fn(args)
         store.finish(qid, True)

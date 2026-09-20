@@ -30,6 +30,15 @@ db.execute("""CREATE TABLE IF NOT EXISTS channel_styles (
                  title      TEXT,
                  style      TEXT,
                  set_at     TEXT)""")
+# ★subs 컬럼(2026-09-09 사장님 "대형채널 위주로 먼저 수집 / 구독자 많은것").
+#   발굴은 채널을 만날 때 이미 구독자를 안다. 그런데 여기서 **버리고** 있었다 —
+#   그래서 수집이 새 채널을 구독자순으로 세울 방법이 없어 등록순(=크기와 무관)으로
+#   돌았고, 쿼터가 마르면 큰 채널이 통째로 잘렸다(실측 2026-09-09: 시드 2,170개 중
+#   1,020개만 응답 · 영상 9,622→7,323건). 아는 값을 버리지 말고 저장한다.
+try:
+    db.execute("ALTER TABLE channel_styles ADD COLUMN subs INTEGER DEFAULT 0")
+except sqlite3.OperationalError:
+    pass          # 이미 있다
 
 # ── 소스 세 곳을 합친다 ───────────────────────────────────────────────────
 buckets = {}          # style -> {cid: {title, subs, score}}
@@ -59,7 +68,17 @@ if os.path.exists("/tmp/harvest_state.json"):
 # 살림킹왕짱 — 이 장르의 기준 채널이라 어느 소스에도 안 들어 있어도 반드시 넣는다.
 _add("썰쇼핑", "UCBFu04us6bv9OFcwrJDXdMg", "살림킹왕짱", 14600, 20)
 
-# 3) 옛 연예인결합·레시피쇼핑 후보
+# 3) 피드 타기 발굴(scripts/harvest_by_feed.py) — 2026-09-09 추가.
+#    검색어 발굴은 사장님 채점에서 121개 중 O가 6개였지만, 피드 타기는 첫 사이클
+#    89개 중 21개(24%)가 쇼핑 결이었다. 그 결과가 등록으로 안 오면 발굴은 구경거리다.
+#    ★등록은 여기 한 곳에서만 한다(0순위-B) — 도구가 제 손으로 시드를 넣지 않는다.
+#    스타일은 실제 판정 결과로 가른다: 썰(제품정체형·오용형)이 3편 이상이면 썰쇼핑.
+if os.path.exists("/tmp/feed_state.json"):
+    for cid, i in (json.load(open("/tmp/feed_state.json")).get("pass") or {}).items():
+        style = "썰쇼핑" if (i.get("sul") or 0) >= 3 else "홈템"
+        _add(style, cid, i.get("title") or i.get("name"), i.get("subs"), i.get("good"))
+
+# 4) 옛 연예인결합·레시피쇼핑 후보
 if os.path.exists("/tmp/style_candidates.json"):
     for style, rows in json.load(open("/tmp/style_candidates.json")).items():
         for r in rows:
@@ -89,10 +108,12 @@ for style, rows in buckets.items():
             db.execute("insert into platform_seeds(platform,kind,value,added_at) values(?,?,?,?)",
                        ("youtube", "account", "https://www.youtube.com/channel/" + cid, now))
             have.add(cid)
-        db.execute("INSERT INTO channel_styles(channel_id,title,style,set_at) VALUES(?,?,?,?) "
+        db.execute("INSERT INTO channel_styles(channel_id,title,style,set_at,subs) VALUES(?,?,?,?,?) "
                    "ON CONFLICT(channel_id) DO UPDATE SET title=excluded.title, "
-                   "style=excluded.style, set_at=excluded.set_at",
-                   (cid, r["title"], style, now))
+                   "style=excluded.style, set_at=excluded.set_at, "
+                   # ★구독자는 큰 값을 남긴다 — 0으로 덮으면 정렬이 무너진다.
+                   "subs=MAX(IFNULL(channel_styles.subs,0), excluded.subs)",
+                   (cid, r["title"], style, now, int(r.get("subs") or 0)))
 
 if APPLY:
     db.commit()

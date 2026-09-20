@@ -79,7 +79,9 @@ def test_일시실패는_attempts를_안_태운다(monkeypatch, tmp_path):
     calls = {"rollback": 0, "mark_error": 0}
 
     class FakeStore:
-        def get_extract(self, code): return None          # 캐시 없음 → 진행
+        # ★method=(2026-09-05 추출 방식별 캐시)를 받는다 — 진짜 Store와 인자 모양이 어긋나면
+        #   가짜만 통과하고 라이브는 TypeError로 죽는다.
+        def get_extract(self, code, method=None): return None   # 캐시 없음 → 진행
         def autoload_attempts(self, codes): return {}     # 래치 안 걸림
         def autoload_mark_attempt(self, *a, **k): pass
         def autoload_rollback_attempt(self, code, err=""): calls["rollback"] += 1
@@ -88,7 +90,8 @@ def test_일시실패는_attempts를_안_태운다(monkeypatch, tmp_path):
         def set_setting(self, *a, **k): pass
 
     monkeypatch.setattr(pw, "Store", lambda *a, **k: FakeStore())
-    monkeypatch.setattr(pw, "_daily_take", lambda s: True)
+    # 호출부 형태 그대로 받는다 — run_prewarm은 manual= 키워드로 부른다(2026-08-28).
+    monkeypatch.setattr(pw, "_daily_take", lambda s, **kw: True)
     monkeypatch.setattr(pw, "_gate", lambda: (lambda cid, kind: True,
                                               lambda cid, kind: None,
                                               lambda kind: None,

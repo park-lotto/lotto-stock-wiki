@@ -1,0 +1,316 @@
+{
+ "10_쇼핑천재": {
+  "hook": {
+   "file": "10_쇼핑천재__hook.png",
+   "ui_pct": 14.1,
+   "caption": {
+    "top_pct": 19.0,
+    "bottom_pct": 23.7
+   }
+  },
+  "body": {
+   "file": "10_쇼핑천재__body.png",
+   "ui_pct": 35.8,
+   "caption": null
+  }
+ },
+ "11_이븐쇼핑": {
+  "hook": {
+   "file": "11_이븐쇼핑__hook.png",
+   "ui_pct": 14.1,
+   "caption": {
+    "top_pct": 14.1,
+    "bottom_pct": 18.4
+   }
+  }
+ },
+ "12_이거였네": {
+  "hook": {
+   "file": "12_이거였네__hook.png",
+   "ui_pct": 37.8,
+   "caption": null
+  },
+  "body": {
+   "file": "12_이거였네__body.png",
+   "ui_pct": 6.8,
+   "caption": {
+    "top_pct": 70.5,
+    "bottom_pct": 86.3
+   }
+  }
+ },
+ "13_달래샵": {
+  "hook": {
+   "file": "13_달래샵__hook.png",
+   "ui_pct": 17.2,
+   "caption": {
+    "top_pct": 17.3,
+    "bottom_pct": 22.7
+   }
+  },
+  "body": {
+   "file": "13_달래샵__body.png",
+   "ui_pct": 17.2,
+   "caption": {
+    "top_pct": 17.3,
+    "bottom_pct": 22.7
+   }
+  }
+ },
+ "14_꿀팁꿀템": {
+  "hook": {
+   "file": "14_꿀팁꿀템__hook.png",
+   "ui_pct": 9.0,
+   "caption": {
+    "top_pct": 45.2,
+    "bottom_pct": 52.8
+   }
+  },
+  "body": {
+   "file": "14_꿀팁꿀템__body.png",
+   "ui_pct": 9.0,
+   "caption": {
+    "top_pct": 9.1,
+    "bottom_pct": 14.4
+   }
+  }
+ },
+ "15_다있슈": {
+  "hook": {
+   "file": "15_다있슈__hook.png",
+   "ui_pct": 9.1,
+   "caption": {
+    "top_pct": 9.2,
+    "bottom_pct": 14.3
+   }
+  },
+  "body": {
+   "file": "15_다있슈__body.png",
+   "ui_pct": 60.0,
+   "caption": null
+  }
+ },
+ "16_인생갓템": {
+  "hook": {
+   "file": "16_인생갓템__hook.png",
+   "ui_pct": 12.1,
+   "caption": {
+    "top_pct": 12.5,
+    "bottom_pct": 16.6
+   }
+  },
+  "body": {
+   "file": "16_인생갓템__body.png",
+   "ui_pct": 6.7,
+   "caption": {
+    "top_pct": 47.2,
+    "bottom_pct": 64.5
+   }
+  }
+ },
+ "17_나만또모르고있었지": {
+  "hook": {
+   "file": "17_나만또모르고있었지__hook.png",
+   "ui_pct": 26.8,
+   "caption": null
+  },
+  "body": {
+   "file": "17_나만또모르고있었지__body.png",
+   "ui_pct": 8.2,
+   "caption": {
+    "top_pct": 29.8,
+    "bottom_pct": 33.1
+   }
+  }
+ },
+ "18_요새난리": {
+  "hook": {
+   "file": "18_요새난리__hook.png",
+   "ui_pct": 11.0,
+   "caption": {
+    "top_pct": 66.9,
+    "bottom_pct": 70.8
+   }
+  },
+  "body": {
+   "file": "18_요새난리__body.png",
+   "ui_pct": 11.0,
+   "caption": {
+    "top_pct": 11.2,
+    "bottom_pct": 14.9
+   }
+  }
+ },
+ "19_무슨템": {
+  "hook": {
+   "file": "19_무슨템__hook.png",
+   "ui_pct": 39.2,
+   "caption": {
+    "top_pct": 62.6,
+    "bottom_pct": 79.5
+   }
+  },
+  "body": {
+   "file": "19_무슨템__body.png",
+   "ui_pct": 39.4,
+   "caption": {
+    "top_pct": 41.5,
+    "bottom_pct": 52.9
+   }
+  }
+ },
+ "1_활용정점": {
+  "hook": {
+   "file": "1_활용정점__hook.png",
+   "ui_pct": 8.9,
+   "caption": {
+    "top_pct": 26.6,
+    "bottom_pct": 32.8
+   }
+  },
+  "body": {
+   "file": "1_활용정점__body.png",
+   "ui_pct": 8.9,
+   "caption": {
+    "top_pct": 9.1,
+    "bottom_pct": 12.0
+   }
+  }
+ },
+ "2_살림킹왕짱": {
+  "hook": {
+   "file": "2_살림킹왕짱__hook.png",
+   "ui_pct": 49.5,
+   "caption": {
+    "top_pct": 65.6,
+    "bottom_pct": 69.2
+   }
+  },
+  "body": {
+   "file": "2_살림킹왕짱__body.png",
+   "ui_pct": 6.9,
+   "caption": {
+    "top_pct": 61.3,
+    "bottom_pct": 72.6
+   }
+  }
+ },
+ "3_썰칩12": {
+  "hook": {
+   "file": "3_썰칩12__hook.png",
+   "ui_pct": 9.9,
+   "caption": {
+    "top_pct": 9.9,
+    "bottom_pct": 16.2
+   }
+  },
+  "body": {
+   "file": "3_썰칩12__body.png",
+   "ui_pct": 8.5,
+   "caption": {
+    "top_pct": 78.9,
+    "bottom_pct": 91.0
+   }
+  }
+ },
+ "4_방구석꿀템": {
+  "hook": {
+   "file": "4_방구석꿀템__hook.png",
+   "ui_pct": 5.6,
+   "caption": {
+    "top_pct": 20.2,
+    "bottom_pct": 22.6
+   }
+  },
+  "body": {
+   "file": "4_방구석꿀템__body.png",
+   "ui_pct": 5.6,
+   "caption": {
+    "top_pct": 16.7,
+    "bottom_pct": 19.3
+   }
+  }
+ },
+ "5_럭키박스": {
+  "hook": {
+   "file": "5_럭키박스__hook.png",
+   "ui_pct": 24.0,
+   "caption": {
+    "top_pct": 24.2,
+    "bottom_pct": 29.5
+   }
+  },
+  "body": {
+   "file": "5_럭키박스__body.png",
+   "ui_pct": 5.1,
+   "caption": {
+    "top_pct": 53.2,
+    "bottom_pct": 60.6
+   }
+  }
+ },
+ "6_쇼핑치트키": {
+  "hook": {
+   "file": "6_쇼핑치트키__hook.png",
+   "ui_pct": 11.4,
+   "caption": {
+    "top_pct": 11.4,
+    "bottom_pct": 14.7
+   }
+  },
+  "body": {
+   "file": "6_쇼핑치트키__body.png",
+   "ui_pct": 6.4,
+   "caption": {
+    "top_pct": 35.4,
+    "bottom_pct": 39.4
+   }
+  }
+ },
+ "7_공가미": {
+  "hook": {
+   "file": "7_공가미__hook.png",
+   "ui_pct": 15.3,
+   "caption": {
+    "top_pct": 86.4,
+    "bottom_pct": 89.3
+   }
+  }
+ },
+ "8_코어장바구니": {
+  "hook": {
+   "file": "8_코어장바구니__hook.png",
+   "ui_pct": 6.0,
+   "caption": {
+    "top_pct": 6.3,
+    "bottom_pct": 10.4
+   }
+  },
+  "body": {
+   "file": "8_코어장바구니__body.png",
+   "ui_pct": 6.0,
+   "caption": {
+    "top_pct": 58.4,
+    "bottom_pct": 92.0
+   }
+  }
+ },
+ "9_살림장착": {
+  "hook": {
+   "file": "9_살림장착__hook.png",
+   "ui_pct": 21.4,
+   "caption": {
+    "top_pct": 21.4,
+    "bottom_pct": 27.8
+   }
+  },
+  "body": {
+   "file": "9_살림장착__body.png",
+   "ui_pct": 4.5,
+   "caption": {
+    "top_pct": 18.9,
+    "bottom_pct": 22.4
+   }
+  }
+ }
+}

@@ -88,7 +88,15 @@ def _vault_fallback(prompt, schema, max_tries=4):
     keys = keyroute.gemini_keys("general")
     if not keys:
         return None
-    for key in keys[:max_tries]:
+    # ★키를 페이서로 골라 쓴다(2026-09-01) — 종전 `for key in keys:`는 간격 0으로
+    #   연타해 키를 순식간에 다 태웠다. 사유·실측은 key_vault.pick_paced_key 참조.
+    #   시도 횟수·실패 처리는 종전과 같다.
+    pool = list(keys)
+    for _ in range(min(max_tries, len(pool))):   # 시도 상한은 종전과 동일
+        key = kv.pick_paced_key(pool)
+        if not key:
+            break
+        pool.remove(key)
         try:
             resp = kv.get_client_for_key(key).models.generate_content(
                 model=_MODEL, contents=prompt,
@@ -98,7 +106,7 @@ def _vault_fallback(prompt, schema, max_tries=4):
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001
             if kv.is_daily_exhausted_error(e) or kv.is_account_disabled_error(e):
-                kv.mark_exhausted(kv._owner_group(key) or "general", key)
+                kv.mark_failure(key, e, group=kv._owner_group(key) or "general")   # 401/403=영구, 429=한시
                 continue
             if kv.is_quota_error(e):
                 continue
@@ -141,7 +149,7 @@ def _default_call(prompt, schema, max_key_tries=None):
             except Exception as e:  # noqa: BLE001 — 추출 실패는 치명적 아님(빈 dict로 처리)
                 if (comment_gen.key_vault.is_daily_exhausted_error(e)
                         or comment_gen.key_vault.is_account_disabled_error(e)):
-                    comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e))   # 일일 소진·계정 비활성 → 그날 제외
+                    comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e), exc=e)   # 일일 소진·계정 비활성 → 그날 제외
                     continue
                 if comment_gen.key_vault.is_quota_error(e):  # 분당 429 → 다른 키(제외 안 함)
                     continue

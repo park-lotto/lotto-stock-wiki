@@ -52,18 +52,74 @@
       <button class="btn-ghost" onclick="selectNone()">선택해제</button>
       <button class="btn-ghost" onclick="selectAnalyzed()" title="분석이 끝난 것만 골라줍니다">✅ 분석완료만 선택</button>
       <button class="btn-ghost" onclick="analyzeSelected()" title="고른 영상을 미리 분석해 둡니다(천천히 돌아갑니다)">🔎 분석 시작</button>
+      <!-- 🗑 골라서 한꺼번에 빼기(2026-09-16 사장님 제보 "진행한 영상들을 지우고 있는데
+           전체선택 체크하고 빼기 버튼이 있으면 좋겠다"). 여태 카드마다 [🗑 빼기]를
+           하나씩 눌러야 했다 — 다 쓴 영상 20개를 지우려면 클릭 20번.
+           ★거는 API는 카드의 [🗑 빼기]와 **같은 것**이다(0순위-B) — 한 개를 빼는 뜻이
+             두 군데에서 달라질 일이 없다. 여기서는 고른 만큼 반복할 뿐이다. -->
+      <button class="btn-ghost" onclick="removeSelected()"
+              title="고른 영상을 즐겨찾기에서 뺍니다(원본 영상은 그대로입니다)">🗑 선택한 것 빼기</button>
       <button class="btn-send" onclick="sendToProduce()">🎬 영상제작으로 보내기</button>
     </div>
   </div>
   <div class="cards" id="cards"></div>
 </main>
 <script>
+function cpKw(s){ /* 쿠팡 검색어: 이모지(서로게이트 쌍) 반 토막 방지 — 2026-09-04 라이브 사고: slice(0,60)가 이모지를 반으로 잘라 encodeURIComponent가 URIError를 던져 즐겨찾기·랭킹 카드 전부 안 그려짐 */ try{ return encodeURIComponent(Array.from(String(s==null?'':s).split('\n')[0]).slice(0,60).join('')); }catch(e){ return ''; } }
 function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 let ITEMS=[];
 const SELECTED=new Set();
+// ── 원본 내려받기(2026-09-04 사장님 "프로등급만·횟수제한 없음·영상즐겨찾기 페이지만") ──
+// ★버튼은 이용권 회원에게만 보인다. 판정은 서버(/api/me level)만 믿는다 — 화면에서
+//   따로 등급을 계산하면 서버 게이트와 어긋난다(0순위-B). 화면을 속여도 서버가 402로 막는다.
+let CAN_DL = false;
+// 제작소로 보낼 수 있는 영상 수 — **서버가 정본**(script_generate.SOURCE_MAX)이다.
+// 여기 값은 /api/me가 오기 전까지만 쓰는 임시값이라 숫자를 두 번 정하는 게 아니다.
+let SOURCE_MAX = 8;
+async function loadMe(){
+  try{
+    const d = await (await fetch('/api/me')).json();
+    CAN_DL = (d && d.level === 'full');
+    if(d && d.source_max) SOURCE_MAX = d.source_max;
+  }catch(e){ CAN_DL = false; }
+}
+async function downloadOne(sc, btn){
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ 받는 중…';
+  try{
+    // 서버가 원본을 받아 파일로 준다(플랫폼별 처리는 서버 download_any 한 곳).
+    // 링크로 열지 않고 fetch로 받는 이유: 402·502를 **문구로** 안내하기 위해서다.
+    const r = await fetch('/api/mix/basket/download?sc=' + encodeURIComponent(sc));
+    if(!r.ok){
+      let msg = '내려받지 못했어요.';
+      try{ const j = await r.json(); if(j && j.error) msg = j.error; }catch(e){}
+      alert(msg); btn.disabled = false; btn.textContent = old; return;
+    }
+    // 파일명은 서버가 Content-Disposition으로 준다 — 화면에서 다시 만들지 않는다.
+    let fname = '';
+    const cd = r.headers.get('Content-Disposition') || '';
+    const m = cd.match(/filename\*=utf-8''([^;]+)/i) || cd.match(/filename="([^"]+)"/i);
+    if(m){ try{ fname = decodeURIComponent(m[1]); }catch(e){ fname = m[1]; } }
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fname || (sc + '.mp4');
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 30000);
+    btn.textContent = '✅ 저장됨';
+    setTimeout(()=>{ btn.disabled = false; btn.textContent = old; }, 2500);
+  }catch(e){
+    alert('내려받지 못했어요. 잠시 후 다시 시도해 주세요.');
+    btn.disabled = false; btn.textContent = old;
+  }
+}
+
 async function loadItems(){
   try{
-    const d=await (await fetch('/api/mix/basket')).json();
+    const [d] = await Promise.all([
+      (await fetch('/api/mix/basket')).json(),
+      loadMe(),                       // 등급을 같이 읽어 버튼 노출을 정한다
+    ]);
     ITEMS=(d.items||[]).slice().reverse();   // 최근에 담은 게 맨 위로
   }catch(e){ ITEMS=[]; }
   render();                 // 목록부터 즉시 그리고(신호등은 잠깐 '분석 전'),
@@ -113,12 +169,23 @@ async function analyzeCodes(codes){
   if(!codes.length){ alert('분석할 항목을 먼저 선택하세요'); return; }
   codes.forEach(c=>{ ANALYSIS[c]={state:'pending',reason:''}; });   // 누른 즉시 표시
   render();
+  let res=null;
   try{
-    await fetch('/api/basket/analyze',{method:'POST',
+    const r=await fetch('/api/basket/analyze',{method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({shortcodes:codes})});
+    res=await r.json();
   }catch(e){}
   await loadAnalysis(); render();
+  // ★조용히 되돌아가지 않게 한다(2026-08-28 조율가 제보 "몇 초 하다가 분석 전으로 돌아감").
+  //   누른 직후엔 pending을 칠했는데 서버가 아무것도 안 걸었으면 배지가 '분석 전'으로
+  //   되돌아가고, 화면은 그 이유를 한 마디도 안 했다. 되돌아간 게 있으면 말해 준다.
+  if(res && res.note){ alert(res.note); return; }
+  const stuck=codes.filter(c=>{
+    const st=(ANALYSIS[c]||{}).state;
+    return st!=='pending' && st!=='done' && st!=='gave_up';
+  });
+  if(stuck.length) alert('분석을 걸지 못한 항목이 '+stuck.length+'개 있어요. 잠시 뒤 다시 눌러 보시고, 계속 그러면 알려 주세요.');
 }
 function analyzeSelected(){ analyzeCodes([...SELECTED]); }
 function analyzeOne(sc){ analyzeCodes([sc]); }
@@ -129,11 +196,39 @@ function selectAnalyzed(){
 }
 function selectAll(){ ITEMS.forEach(i=>SELECTED.add(i.shortcode)); render(); }
 function selectNone(){ SELECTED.clear(); render(); }
+// 🔍 숏템파워검색 — 랭킹(index.html)의 ?lens_url= 딥링크를 그대로 쓴다.
+// ★여기에 렌즈 검색을 다시 구현하지 마라(0순위-B): 모달·결과카드·담기·CN후보가
+//   전부 index.html 한 곳에 있고, 두 벌이 되면 한쪽만 고쳐진다.
+function powerSearch(url){
+  if(!url){ alert('원본 주소가 없어 파워검색을 할 수 없어요'); return; }
+  window.open('/?lens_url='+encodeURIComponent(url),'_blank');
+}
 async function removeItem(sc){
   try{ await fetch('/api/mix/basket/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({shortcode:sc})}); }catch(e){}
   SELECTED.delete(sc);
   loadItems();
 }
+// 🗑 고른 것을 한꺼번에 뺀다(2026-09-16). 되돌릴 수 없으니 개수를 보여주고 한 번 묻는다.
+// ★한 개를 빼는 일은 removeItem이 아니라 **같은 API**를 직접 부른다 — removeItem은
+//   호출마다 목록을 다시 그려서(loadItems) 20개면 화면을 20번 새로 그린다.
+//   여기서는 다 뺀 **뒤에 한 번만** 그린다.
+async function removeSelected(){
+  const picks=[...SELECTED];
+  if(!picks.length){ alert('뺄 항목을 먼저 선택하세요'); return; }
+  if(!confirm(picks.length+'개를 즐겨찾기에서 뺍니다. (원본 영상은 그대로 남습니다)')) return;
+  let failed=0;
+  for(const sc of picks){
+    try{
+      const r=await fetch('/api/mix/basket/remove',{method:'POST',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify({shortcode:sc})});
+      if(!r.ok) throw new Error('실패');
+      SELECTED.delete(sc);
+    }catch(e){ failed++; }
+  }
+  loadItems();
+  if(failed) alert(failed+'개는 못 뺐어요. 잠시 뒤 다시 눌러 주세요.');
+}
+
 // ── 어디로 보낼지 고른다(2026-08-18 사장님: "만들던 곳에 합쳐지는 걸 막아야 해") ──
 // 종전엔 제작소가 **진행 중 작업에 무조건 이어 붙였다**(랭킹에서 두 번 보내면 앞 것이
 // 지워지던 2026-07-18 버그의 처방). 그 규칙 자체는 맞지만, 즐겨찾기에서 새 영상 묶음을
@@ -192,8 +287,8 @@ function _doSend(target){
 }
 function sendToProduce(){
   // 영상당 역할(대본용/화면용)을 제작소에서 배정하려면 url뿐 아니라 shortcode·name·
-  // thumbnail·caption도 넘겨야 한다(대본 추출은 shortcode로). 최대 5개(2단계 입력 상한).
-  const picks=ITEMS.filter(i=>SELECTED.has(i.shortcode)).slice(0,5).map(i=>({
+  // thumbnail·caption도 넘겨야 한다(대본 추출은 shortcode로). 상한은 서버값(SOURCE_MAX).
+  const picks=ITEMS.filter(i=>SELECTED.has(i.shortcode)).slice(0,SOURCE_MAX).map(i=>({
     url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
     thumbnail:i.thumbnail||'', caption:i.caption||'', play_url:i.play_url||'',
     // ★지표 3종(2026-08-23 사장님 "여기로 온 영상들 댓글이랑 팔로워수 끌고오는거").
@@ -378,13 +473,19 @@ function render(){
         </div>
         ${(ANALYSIS[i.shortcode]||{}).state==='done' ? '' :
           `<button onclick="analyzeOne('${i.shortcode}')" style="width:100%;margin-top:6px;padding:7px;background:#2d333b;color:#adbac7;border:1px solid #555;border-radius:8px;font-weight:700;cursor:pointer">🔎 ${(ANALYSIS[i.shortcode]||{}).state==='gave_up'?'다시 분석':'분석'}</button>`}
+        ${i.url?`<button onclick="powerSearch('${esc(i.url)}')" title="구글렌즈로 유튜브·틱톡·인스타·샤오홍슈·도우인에서 비슷한 영상 찾기 (유료·월 한도)" style="width:100%;margin-top:6px;padding:7px;background:#3a2f10;color:#f0c14b;border:1px solid #6b5518;border-radius:8px;font-weight:800;cursor:pointer">🔍 숏템파워검색</button>`:''}
+        <button class="cp-btn" data-sc="${i.shortcode}" onclick="window.ssCoupangFind('', {shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}'), hint:this.getAttribute('data-product')||'', noProduct:this.getAttribute('data-noproduct')==='1'})" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" style="width:100%;margin-top:6px;padding:7px;background:#2a1808;color:#ffb570;border:1px solid #8a4b12;border-radius:8px;font-weight:800;cursor:pointer">🛒 쿠팡검색</button>
+        ${CAN_DL?`<button onclick="downloadOne('${i.shortcode}',this)" title="원본 영상을 mp4 파일로 내 컴퓨터에 저장합니다" style="width:100%;margin-top:6px;padding:7px;background:#10261a;color:#7ee2a8;border:1px solid #1d6b3f;border-radius:8px;font-weight:800;cursor:pointer">💾 영상 저장</button>`:''}
         <button onclick="sendOneToProduce('${i.shortcode}')" style="width:100%;margin-top:6px;padding:8px;background:#1f6feb;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">🎬 제작소로 보내기</button>
       </div>
     </div>`;
   }).join('');
+  try {
+    if (window.ssCoupangPrewarm) window.ssCoupangPrewarm(ITEMS.filter(function (x) { return x.thumbnail || x.caption; }).map(function (x) { return { shortcode: x.shortcode, thumbnail: x.thumbnail || "", caption: x.caption || "" }; }).slice(0, 48));
+  } catch (e) { /* 사전 판독 실패가 담기 화면을 막으면 안 된다 */ }
 }
 loadItems();
 </script>
-<script src="/sidebar.js?v=2"></script>
+<script src="/sidebar.js?v=3"></script>
 </body>
 </html>

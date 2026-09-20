@@ -46,6 +46,14 @@ _TAIL_EMI = ("거든요", "더라고요", "더라구요", "었어요", "았어�
 
 # 말 밀도 허용 폭 — 스타일 히트작 밀도의 70~140%. 밖이면 "그 스타일이 아니다".
 DENSITY_LO, DENSITY_HI = 0.7, 1.4
+
+# ★목표 초를 얼마나 채워야 "그 길이의 대본"인가 (2026-09-09).
+#   0.8 = 25초짜리면 최소 20초. 이 바닥이 없으면 스타일 밀도만 보고 9초짜리가 통과한다.
+_FILL_FLOOR = 0.8
+
+# 허용 **하한**을 목표 초의 몇 할로 잡을지. 0.7 = 25초짜리면 17.5초 미만은 반려.
+# _FILL_FLOOR보다 낮게 둔다 — 목표는 넉넉히 주되 반려는 명백히 짧을 때만 한다.
+_LEN_FLOOR = 0.7
 DEFAULT_CHARS_PER_30S = 135      # 스타일에 실측값이 없을 때만(일반 기준 4.5자/초)
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -123,11 +131,39 @@ def density_target(style, seconds=30):
     프롬프트(bank_assemble.style_block)와 판정(check)이 서로 다른 수를 쓰면
     "시킨 대로 썼는데 반려"가 난다."""
     sec = max(5, min(int(seconds or 30), 90))
+    # ★목표 초를 **바닥**으로 삼는다 (2026-09-09 사장님: "10초가 안 되는 대본이야").
+    #   여태 이 함수는 스타일 밀도만 보고 목표 초를 **길이의 근거로 안 썼다**.
+    #   실측: 25초짜리를 시켜놓고 게이트 목표가 112자(=15초)였고, 나온 건 71자(=9.6초)였다.
+    #   위 천장 주석("규격이 이긴다")과 짝이 되는 바닥이다 — 천장만 있고 바닥이 없어서
+    #   44초를 조인 뒤로는 반대쪽으로 새고 있었다.
+    #   0.8인 이유: 25초 목표면 20초는 채우게 한다. 1.0으로 두면 스타일의 색(느린 말투)이
+    #   통째로 죽고, 게이트 반려가 잦아지면 모델이 오히려 더 줄인다(2026-09-08 실측:
+    #   반려 뒤 127->200->118->112자로 쪼그라들었다).
+    _floor = int(_FILL_FLOOR * _speech_cps() * sec)
     # ★norm 기준으로 환산해서 쓴다 — 천장(_speech_cps)도 norm이라 단위가 맞아야
     #   비교가 성립한다. 종전엔 raw 예산을 norm 천장과 견줘 **항상 천장에 잘렸고**,
     #   그 탓에 스타일별 밀도가 전부 같은 값이 됐다(위 주석의 실측 참조).
     tgt = int(norm_chars_per_30s(style) * sec / 30)
-    return max(1, min(tgt, int(_speech_cps() * sec)))
+    return max(1, min(max(tgt, _floor), int(_speech_cps() * sec)))
+
+
+def density_range(style, seconds=30):
+    """이 스타일·이 길이에서 **허용 글자수 범위** (lo, hi). 길이 판단의 유일한 입구.
+
+    ★왜 함수로 뽑았나(2026-09-09): 같은 계산이 `check`와 `spine_fill._range`에
+      두 벌로 적혀 있었다. 바닥을 한쪽에만 넣으면 "판정은 반려인데 조립은 통과"가
+      난다 — 조용해서 더 나쁘다(0순위-B).
+
+    ★바닥이 두 개다:
+        스타일 바닥  tgt * DENSITY_LO   — 그 스타일치고 너무 얇은가
+        길이 바닥    0.7 * cps * sec    — **시킨 초를 못 채우는가**  ← 2026-09-09 추가
+      길이 바닥이 없어서 "25초짜리"에 9.6초 대본이 통과했다(사장님 제보).
+    """
+    sec = max(5, min(int(seconds or 30), 90))
+    tgt = density_target(style, sec)
+    cap = int(_speech_cps() * sec)
+    lo = max(int(tgt * DENSITY_LO), int(_LEN_FLOOR * cap))
+    return min(lo, cap), min(int(tgt * DENSITY_HI), cap)
 
 
 def norm(s):
@@ -244,8 +280,11 @@ def template_matches(text, templates, min_ratio=0.5):
 # 유튜브 썰쇼핑에서 나오면 안 되는 존댓말 어미(2026-08-19 실측).
 # 1개까지는 봐준다 — 한 문장쯤 섞이는 건 흔하고, 0개를 요구하면 멀쩡한 대본이 반려된다
 # (오탐이 미탐보다 나쁘다).
+# ★'더라고요'는 뺐다(2026-09-09) — 바로 아래 판정문이 그걸 **반말 예시**로 들고 있고
+#   ("~었음 / ~다는 거 / ~하더라고요") 실제 반말 대본에도 흔하다. 목록과 안내가 서로
+#   다른 말을 하면 멀쩡한 대본이 반려된다.
 _POLITE_TAILS = ("거든요", "가요", "에요", "예요", "해요", "드릴게요", "세요", "습니다",
-                 "합니다", "니다", "더라고요", "죠")
+                 "합니다", "니다", "죠")
 
 _ESCALATORS = ("심지어", "더대박", "더놀라운", "더좋은건", "미친포인트", "놀랍게도",
                "더군다나", "이럴수가있나싶게", "이걸왜몰랐는지", "진짜미쳐")
@@ -253,6 +292,60 @@ _ESCALATORS = ("심지어", "더대박", "더놀라운", "더좋은건", "미친
 # 숫자가 붙는 단위 — 대본에 수치가 나왔는데 재료에 없으면 지어낸 것이다(그라운딩 검사).
 _NUM_UNIT = re.compile(
     r"(\d[\d,.]*)\s*(mm|cm|m|kg|g|ml|l|초|분|시간|일|주|개월|년|개|장|자루|명|인|배|퍼센트|%|원)")
+
+
+# ★고조 칸에 **새 정보**가 들어갔는가 (2026-09-08). 연결어 개수만 세던 구멍을 막는다.
+_ESC_HEADS = ("심지어", "게다가", "거기다", "그것도", "더 대박인 건", "더대박인건",
+              "근데 진짜 충격적인 포인트는", "근데 충격적인 건", "근데 충격적인 포인트는",
+              "충격인 건", "근데 더 미친 건", "근데 진짜는 여기서부터인데", "놀랍게도")
+
+
+def _strip_esc_head(t):
+    """고조 연결어를 떼고 알맹이만 남긴다 — 판정은 알맹이로 해야 한다."""
+    t = (t or "").strip()
+    for h in sorted(_ESC_HEADS, key=len, reverse=True):
+        if t.startswith(h):
+            return t[len(h):].strip(" ,.")
+    return t
+
+
+_ESC_STOP = None
+
+
+def _stems(text):
+    """어간 2글자 집합. 조사·활용이 갈려도 잡히게(메모리: 어간 2글자 매칭)."""
+    global _ESC_STOP
+    ws = set(w[:2] for w in re.findall(r"[가-힣]{2,}", text or ""))
+    if _ESC_STOP is None:
+        _ESC_STOP = set(w[:2] for w in re.findall(r"[가-힣]{2,}",
+            "이것 그것 저것 있음 없음 하는 되는 수도 정도 진짜 완전 그냥 바로 대박 "
+            "미친 충격 포인트 심지어 근데 여기 저기 때문 이거 저거 정말 아주 매우"))
+    return ws - _ESC_STOP
+
+
+def escalation_content(beats, facts_text):
+    """고조 칸들이 **재료에서 온 말**인가. → (검사한 칸 수, 재료 밖인 칸들)
+
+    재료(facts_text)가 없으면 판정하지 않는다 = 기존 동작 그대로(회귀 0)."""
+    if not facts_text:
+        return 0, []
+    # ★peak 줄만 뽑는다 — specs/why(뻔한 사양)로는 고조를 세울 수 없다.
+    #   라벨은 product_facts.prompt_block()이 붙인다: "- 가장 센 셀링포인트(...)".
+    _peak = [ln for ln in facts_text.splitlines() if "셀링포인트" in ln or "의외의 용도" in ln]
+    fs = _stems(" ".join(_peak)) if _peak else set()
+    if not fs:
+        return 0, []
+    n = 0
+    bad = []
+    for b in (beats or []):
+        t = (b.get("text") or "") if isinstance(b, dict) else str(b)
+        if not any(h in t for h in _ESC_HEADS):
+            continue
+        n += 1
+        core = _strip_esc_head(t)
+        if len(_stems(core) & fs) < 2:
+            bad.append(core[:30])
+    return n, bad
 
 
 def _escalation(full):
@@ -296,6 +389,14 @@ def grounding_check(full, facts_text):
 
 #: 제품명에서 검사에 쓸 토큰을 뽑는다. 브랜드·수식어가 섞여 있어도 하나만 맞으면 된다.
 #  ★한 글자는 버린다 — '펜' 같은 조각은 아무 대본에나 걸려 검사가 무력해진다.
+#: 판매처 고유명사 — '재료 밖 판매처' 검사가 보는 목록. 스파인 문장틀이 이런 이름을
+#: 문장에 박아 두면("저희 언니가 다이소 점장인데") 모델은 틀을 그대로 써서 재료에 없는
+#: 판매처가 대본에 들어간다. 여기 적힌 이름만 본다 — 넓히면 오탐이 난다(0순위: 오탐 > 미탐).
+RETAILERS = ("다이소", "쿠팡", "올리브영", "이케아", "무인양품", "코스트코", "이마트",
+             "홈플러스", "롯데마트", "편의점", "세븐일레븐", "알리익스프레스", "테무",
+             "스타벅스", "GS25", "CU")
+
+
 #  ★'다이소'처럼 파는 곳 이름도 남긴다: 그 단어라도 나오면 우리 소재 얘기가 맞다.
 def _product_tokens(product):
     raw = (product or "").strip()
@@ -307,6 +408,11 @@ def _product_tokens(product):
         if len(t) >= 2:
             out.append(norm(t))
     return [t for t in out if t]
+
+
+def _product_core_tokens(product):
+    from shopping_shorts import topic_contract
+    return topic_contract.topic_mentions(product, product)
 
 
 # ── 훅 3초 게이트(2026-08-19) ─────────────────────────────────────────────
@@ -355,6 +461,14 @@ def hook_checks(style, full, product=""):
     if (style or {}).get("hook_conceal"):
         toks = _product_tokens(product)
         leaked = [t for t in toks if t in win]
+        # ★한 낱말만 겹치는 건 유출이 아니다 — "선풍기 틈새 청소 솔"의 '청소'처럼
+        #   카테고리어가 훅에 스치는 건 흔하고, 그걸 막으면 멀쩡한 훅이 계속 반려된다.
+        #   두 낱말이 함께 오면("틈새 청소") 그때는 정체가 드러난 것으로 본다.
+        # ⚠️단 **제품명 자체가 한 낱말이면** 그 한 낱말이 곧 정체다(예: "마늘다지기").
+        #   여기를 안 가르면 한 낱말 제품은 훅에 이름을 그대로 써도 통과한다 —
+        #   은폐형의 생명이 통째로 죽는다(2026-09-09 실측: 이 테스트가 그걸 잡았다).
+        if len(toks) > 1 and len(leaked) < 2:
+            leaked = []
         out.append({"name": "훅 3초 정체은폐", "ok": not leaked,
                     "detail": ("앞 3초에 제품 정체(%s)가 나왔다 — 은폐형은 정체를 "
                                "`reveal` 구간까지 숨긴다(실측 5~7초 공개). "
@@ -374,14 +488,115 @@ def prior_verdict(checks):
 
     앞에 판정이 없으면(키 소진 등) None을 돌려주는 판정기 → 검사 항목이 안 생긴다.
     """
-    hit = [c for c in (checks or []) if c.get("name") == "화자 일관성"]
+    hit = {c.get("name"): c for c in (checks or [])
+           if c.get("name") in ("화자 일관성", "주제 단일성")}
     if not hit:
-        return lambda _text: {}
-    return lambda _text: {"ok": hit[0]["ok"], "why": hit[0].get("detail") or ""}
+        return lambda _text, _product="": {}
+    def _cached(_text, _product=""):
+        speaker = hit.get("화자 일관성")
+        topic = hit.get("주제 단일성")
+        out = {}
+        if speaker:
+            out.update(ok=bool(speaker.get("ok")), why=speaker.get("detail") or "")
+        if topic:
+            out.update(topic_ok=bool(topic.get("ok")),
+                       topic_why=topic.get("detail") or "", foreign_products=[])
+        return out
+    return _cached
+
+
+# ── 사람이 나오는가 / 쓰임이 번지는가 ─────────────────────────────────────
+# ★레퍼런스 원본 630편 실측(2026-09-09)이 근거다. 감이 아니다.
+#     구체적인 사람이 나온다      299편 (47%)
+#     겪은 말투(더라고/샀는데)    308편 (49%)
+#   우리 대본은 "요즘 사람들"·"초보들은"·"고수들은" 같은 **익명 집단**만 쓴다.
+#   레퍼런스는 "육아선배 언니가"·"부모님 댁에 보내드렸더니"·"애들이 아지트라며"다.
+#   같은 말투를 흉내 내는데 정작 **그걸 겪은 사람이 없다** → 설명문이 된다.
+_PERSON_RE = re.compile(
+    "언니|누나|형|오빠|엄마|아빠|부모님|친구|남편|아내|와이프|애들|아이|딸|아들|"
+    "동생|시어머니|장모|이모|고모|삼촌|선배|후배|사장님|동료|저희|우리 ?집|"
+    "제가|내가|나는|우리 ?애")
+
+# 쓰임이 몇 군데로 번지나. 레퍼런스는 낮게→높여→늘려→책장으로 **4단**인데
+# 우리는 1단뿐이다. 재료(insta_facts.targets)에 이미 2~5개가 들어 있는데 안 쓴다.
+_USE_MIN = 2
+
+
+def has_person(full):
+    """대본에 **얼굴 있는 사람**이 나오나. 익명 집단(사람들·다들·초보들)은 사람이 아니다."""
+    return bool(_PERSON_RE.search(full or ""))
+
+
+def used_targets(full, targets):
+    """재료의 쓰임(targets) 중 대본이 실제로 쓴 것 — 어간 2글자 겹침으로 센다.
+
+    ★글자 그대로 베끼길 요구하지 않는다(영상 밖 정보 검사와 같은 기준).
+    """
+    from shopping_shorts import scene_match
+    body = set(scene_match._tokens(full))
+    hit = []
+    for t in (targets or []):
+        if len(body & set(scene_match._tokens(t))) >= 2:
+            hit.append(t)
+    return hit
+
+
+def _targets_from_facts(facts_text):
+    """재료 블록에서 **적용 대상(쓰임)** 목록을 되찾는다. 없으면 [].
+
+    ★호출부에 인자를 새로 심지 않는다 — check를 부르는 곳이 4군데인데 한 곳만
+      빠뜨리면 검사가 조용히 죽는다(0순위-B). 재료 원문은 이미 다 넘어온다.
+      표식은 `insta_facts.insta_prompt_block`이 쓰는 라벨이다.
+    """
+    for line in (facts_text or "").splitlines():
+        line = line.strip()
+        if line.startswith("- 적용 대상"):
+            _, _, rest = line.partition(":")
+            return [x.strip() for x in rest.split("/") if x.strip()]
+    return []
+
+
+def _wow_hooks(facts_text):
+    """재료 원문에서 **영상 밖 정보** 훅들을 되찾는다. 없으면 [](검사 자체를 안 만든다).
+
+    ★왜 필요한가(2026-09-09 사장님 실측): 웹에서 '폐쇄 효과'·'특정 음역대' 같은
+      알맹이를 3개나 찾아왔는데 대본은 한 줄도 안 썼다. 프롬프트에 "하나만 골라
+      넣어라"라고 **말만** 해뒀기 때문이다.
+      ★프롬프트가 말해도 아무도 검사 안 하면 안 지켜진다(같은 이름의 메모리 교훈).
+    """
+    from shopping_shorts import wow_facts
+    txt = facts_text or ""
+    i = txt.find(wow_facts.WOW_MARK)
+    if i < 0:
+        return []
+    out = []
+    for line in txt[i:].splitlines():
+        line = line.strip()
+        if line.startswith("- "):
+            out.append(line[2:].split("(근거:")[0].strip())
+        elif out and not line.startswith(("-", "★", "[")):
+            break          # 블록이 끝났다
+    return [x for x in out if x]
+
+
+def _uses_wow(full, hooks, min_hits=2):
+    """대본이 훅 중 **하나라도** 실제로 썼나 — 어간 2글자가 2개 이상 겹치면 썼다고 본다.
+
+    ★글자 그대로 베끼길 요구하지 않는다. 대본은 입말로 각색되므로 원문 일치를
+      요구하면 제대로 쓴 대본까지 반려된다(장면 좁히기와 같은 기준을 쓴다).
+    """
+    from shopping_shorts import scene_match
+    body = set(scene_match._tokens(full))
+    for h in hooks:
+        if len(body & set(scene_match._tokens(h))) >= min_hits:
+            return True, h
+    return False, ""
 
 
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
-          speaker_judge=None):
+          speaker_judge=None, scene_ids=None, scene_secs=None, grounded=False, is_recipe=False,
+          source_count=None, targets=None, person_required=False, materials_text="",
+          topic_required=False, claim_evidence=None, claims_required=False):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -390,6 +605,10 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
         검사한다. 안 주면 그 검사는 건너뛴다 — 기존 호출부는 그대로 = 회귀 0.
     assembled: 이 대본이 **조립**(spine_fill)으로 만들어졌나. 조립만 '문장틀 준수'를
         묻는다 — 아래 그 검사 주석 참조. 기본 False = 생성기.
+    targets: 재료의 **쓰임 목록**(insta_facts.targets). 주면 "쓰임이 번진다"를 검사한다.
+        안 주면 그 항목 자체를 안 만든다 — 기존 호출부 그대로 = 회귀 0.
+    person_required: True면 "사람이 나온다"를 검사한다. 기본 False —
+        정보형·스펙형 스타일까지 사람을 강제하면 멀쩡한 대본이 반려된다.
     speaker_judge: 대본 전문을 받아 {"ok": bool, "why": str}를 돌려주는 판정기.
         주면 '화자 일관성'을 검사한다. 안 주면 그 검사는 **항목 자체를 안 만든다**
         (기존 호출부 그대로 = 회귀 0). 아래 그 검사 주석 참조.
@@ -412,6 +631,15 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
         got_cmp = got
     checks = [{"name": "구간 순서", "ok": got_cmp == want,
                "detail": "기대 %s / 실제 %s" % (want, got_cmp)}]
+    # ★화면 제목 길이(2026-09-18) — 제목형은 title이 장면꾸미기 슬롯에 그대로 박힌다.
+    #   실측: 27자 제목이 이븐쇼핑(줄당 11자·자동 축소 금지)에서 좌우로 잘렸다.
+    #   한도는 bank_assemble.title_too_long 한 곳(=template_copy)에서 본다. fatal 아님 —
+    #   재시도 때 gate_feedback으로 모델에 되돌려 줄이게 하는 용도다.
+    if style.get("title_visual_only"):
+        from shopping_shorts.bank_assemble import title_too_long, title_len_rule
+        _t = next((b.get("text", "") for b in beats if b.get("role") == "title"), "")
+        checks.append({"name": "화면 제목 길이", "ok": not title_too_long(_t),
+                       "detail": "%d자 「%s」 — %s" % (len(" ".join(str(_t).split())), _t, title_len_rule())})
 
     # ★'문장틀 준수'는 **조립 대본에만** 묻는다(2026-08-22 실측).
     #   이 검사는 대본을 템플릿 원문과 **글자 단위로** 대조한다(template_matches).
@@ -452,7 +680,14 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #   → 스타일이 no_cta를 선언하면 **검사 항목 자체를 만들지 않는다**(ok=True로
     #     통과시키면 재작성 지시문에 CTA 얘기가 섞인다). 기본값은 기존 동작 = 회귀 0.
     if not style.get("no_cta"):
-        checks.append({"name": "CTA 단어유도", "ok": "남겨주" in norm(full),
+        # ★어간을 하나만 보면 **스타일 자신의 템플릿을 자기 게이트가 떨어뜨린다**
+        #   (2026-09-05 실측: spine 57 '다이소 내부인형'의 cta 템플릿 6개 중 2개가
+        #    "댓글 **달아주시면**"·"**물어봐 주시면**"이라, 모델이 그걸 고르면 무조건 FAIL.
+        #    취지인 "받는 게 보이는가"는 완벽히 만족하는 문장인데도 재작성 3회를 돌았다).
+        #   요구하는 형태는 여전히 위 헌장 그대로다 — 시청자에게 **행동을 청하는 말**.
+        _CTA_ASKS = ("남겨주", "달아주", "물어봐", "물어보", "말씀해주", "적어주")
+        checks.append({"name": "CTA 단어유도",
+                       "ok": any(w in norm(full) for w in _CTA_ASKS),
                        "detail": full[-40:]})
     else:
         # ★반대 방향 검사가 통째로 없었다(2026-08-19 라이브 실측). no_cta는 'CTA 검사를
@@ -468,18 +703,60 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     # ★말끝 검사(2026-08-19 사장님 제보 "존댓말이 갑자기"). 유튜브 썰은 '~었음 / ~다는 거'
     #   반말체인데 생성기가 '~가요 / ~거든요 / ~드릴게요' 존댓말로 썼다(실측 spine 55).
     #   인스타 스타일은 존댓말이 정답이므로 **유튜브 썰(hook_3s)에만** 건다.
-    if style.get("hook_3s"):
+    # ★말투는 스파인이 정한다(2026-09-09). polite를 켠 스파인은 존댓말이 정답이라
+    #   반말 검사를 건너뛴다(실측: 「이거 보고 충격 먹었습니다」 계열 30편이 존댓말 87%).
+    #   polite가 없으면 종전대로 반말을 강제한다 = 회귀 0.
+    if style.get("hook_3s") and not style.get("polite"):
+        # ★종류가 아니라 **있느냐**로 본다(2026-09-09). 종전엔 종류를 세어 문턱 1이라,
+        #   '거든요'가 열 번 나와도 1종류라 통과했다(실측: 사장님 화면 A안이 그 경우).
+        #   유튜브형은 반말이 서명이라 한 문장도 섞이면 안 된다.
         _po = [w for w in _POLITE_TAILS if w in norm(full)]
-        checks.append({"name": "말끝(반말체)", "ok": len(_po) <= 1,
+        checks.append({"name": "말끝(반말체)", "ok": not _po,
                        "detail": ("존댓말이 섞였다(%s) — 이 장르는 '~었음 / ~다는 거 / "
-                                  "~하더라고요' 반말체다(실측 히트작 전부)."
-                                  % ", ".join(_po[:4])) if len(_po) > 1 else "OK"})
+                                  "~하더라' 반말체다(실측 히트작 전부). 한 문장도 안 된다."
+                                  % ", ".join(_po[:4])) if _po else "OK"})
+
+    # ★사람이 나오나 (2026-09-09). 레퍼런스 원본 630편 중 **47%**에 구체적인 사람이
+    #   나온다(언니·부모님·애들). 우리 대본은 "요즘 사람들"·"초보들은" 같은 익명 집단만
+    #   써서 이야기가 아니라 설명문이 된다.
+    #   ★기본은 끈다(person_required=False) — 정보형 스타일까지 강제하면 회귀가 난다.
+    if person_required:
+        _has = has_person(full)
+        checks.append({"name": "사람이 나온다", "ok": _has,
+                       "detail": "OK" if _has else
+                       "대본에 사람이 한 명도 없다 — '요즘 사람들'·'다들'은 얼굴이 없다. "
+                       "누가 겪은 일인지 넣어라(언니가 / 엄마한테 보내드렸더니 / 애들이). "
+                       "히트작 47%가 그렇게 쓴다."})
+
+    # ★쓰임이 번지나 (2026-09-09). 히트작은 한 물건이 여러 곳으로 번진다
+    #   (낮게→높여→늘려→책장). 우리는 1단뿐인데, 재료엔 이미 2~5개가 들어 있다.
+    #   재료를 안 주면 항목 자체를 안 만든다 = 회귀 0.
+    targets = targets or _targets_from_facts(facts_text)
+    if targets:
+        _used = used_targets(full, targets)
+        checks.append({"name": "쓰임이 번진다", "ok": len(_used) >= _USE_MIN,
+                       "detail": ("%d곳에 쓴다" % len(_used)) if len(_used) >= _USE_MIN else
+                       ("쓰임을 %d개만 말했다 — 한 물건이 여러 곳에 번지는 게 이 장르의 "
+                        "핵심이다. 재료에 있는 것을 더 써라: %s"
+                        % (len(_used), " / ".join(str(t)[:24] for t in targets[:4])))})
+
+    # ★영상 밖에서 찾아온 정보를 **실제로 썼나**(2026-09-09). 재료에 그 블록이 없으면
+    #   항목 자체를 안 만든다 — 기존 호출부 그대로 = 회귀 0.
+    #   왜 검사인가: 프롬프트에 "하나만 골라 넣어라"라고 적어뒀는데 모델이 통째로
+    #   무시했다(라이브 실측: 훅 3개를 찾아왔는데 대본은 0개 사용).
+    _hooks = _wow_hooks(facts_text)
+    if _hooks:
+        _used, _which = _uses_wow(full, _hooks)
+        checks.append({"name": "영상 밖 정보", "ok": _used,
+                       "detail": ("'%s' 를 썼다" % _which[:40]) if _used else
+                       ("찾아온 사실을 하나도 안 썼다 — 화면에 이미 보이는 얘기만 하면 "
+                        "시청자가 볼 이유가 없다. 아래 중 **하나**를 대본 가운데에 "
+                        "네 말투로 풀어 넣어라: %s" % " / ".join(h[:40] for h in _hooks[:3]))})
 
     tgt = density_target(style, seconds)
-    # ★위 천장(hi)은 말속도 환산 길이를 절대 못 넘는다 — 안 그러면 245자로 시켜놓고
-    #   343자(=42초)까지 통과시켜 "30초짜리"가 다시 40초가 된다(2026-08-18).
-    _cap = int(_speech_cps() * max(5, min(int(seconds or 30), 90)))
-    lo, hi = int(tgt * DENSITY_LO), min(int(tgt * DENSITY_HI), _cap)
+    # ★천장은 말속도 환산 길이를 못 넘고(2026-08-18), 바닥은 시킨 초를 채워야 한다
+    #   (2026-09-09). 둘 다 `density_range` 한 곳에서 정한다 — 조립도 같은 것을 쓴다.
+    lo, hi = density_range(style, seconds)
     n = len(norm(full))
     # ★방향을 말해준다(2026-08-18 사장님 "40초 대본이 나오는데 고친 거 아니었나").
     #   예전 detail은 "300자 / 히트작 245자"라 넘쳤는지 모자란지가 안 드러났고, 재작성
@@ -501,30 +778,32 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #   서사가 없어 "한 단계 더 올라가는 문장"을 놓을 자리가 없다.
     #   여기서 면제하지 않으면 나열형은 영영 통과 못 한다.
     if style.get("is_list"):
-        esc = 1 if esc == 0 else esc      # 0회는 정상 / 남발(2회+)은 그대로 잡는다
-    checks.append({"name": "고조 심화(1회)", "ok": esc == 1,
+        esc = 1 if esc == 0 else esc      # 0회는 정상 / 남발은 그대로 잡는다
+    # ★허용 횟수는 스파인이 정한다(2026-09-08). 없으면 1 = 종전 동작(회귀 0).
+    _esc_max = int(style.get("esc_times") or 1)
+    checks.append({"name": "고조 심화(%d회)" % _esc_max,
+                   "ok": 1 <= esc <= _esc_max,
                    "detail": ("고조 연결어가 없다 — 해결 뒤에 '심지어/더 대박인 건'으로 "
                               "새로운 장점 하나를 더 얹어라" if esc == 0
-                              else ("%d번 나왔다 — 한 번만 써라(남발하면 죽는다)" % esc
-                                    if esc > 1 else "OK"))})
+                              else ("%d번 나왔다 — 이 스타일은 %d번까지다(남발하면 죽는다)"
+                                    % (esc, _esc_max) if esc > _esc_max else "OK"))})
 
-    # ★소재 일치(2026-08-18) — **출구 검사**. 이번 사고("재료는 네일펜인데 대본은 주방
-    #   기름 가림막")를 막으려고 지금까지 한 것은 전부 프롬프트에 경고를 더 넣는 일이었다.
-    #   그건 통로를 하나씩 막는 두더지잡기라, 새 통로가 생기면 또 샌다.
-    #   여기서 잡으면 **어디서 새든 결과에서 걸린다** — 출구는 하나뿐이다.
-    #   판정은 느슨하게: 제품명 토큰이 **하나라도** 나오면 통과. 대본이 제품을 '이거'로만
-    #   부르는 건 정상이므로 전체 일치를 요구하면 멀쩡한 대본을 반려한다(오탐이 더 나쁘다).
-    #   product를 안 주면 검사 자체를 건너뛴다 = 회귀 0.
-    if _product_tokens(product):
-        toks = _product_tokens(product)
-        nf = norm(full)
-        # 토큰 그대로 못 찾으면 **앞 2글자**로도 본다 — '네일펜'을 대본이 '네일'로만
-        # 부르는 건 정상이다. 오탐(멀쩡한 대본 반려)이 미탐보다 나쁘므로 느슨하게 잡는다.
-        hit = [t for t in toks if t in nf or (len(t) >= 3 and t[:2] in nf)]
-        checks.append({"name": "소재 일치", "ok": bool(hit),
-                       "detail": ("OK(%s)" % ", ".join(hit[:3])) if hit else
-                                 ("대본에 「%s」 얘기가 한 번도 안 나온다 — 다른 소재로 "
-                                  "샜을 가능성이 높다(재료 밖 소재 금지)" % product)})
+    # ★고조 '내용' 검사(2026-09-08) — 연결어만 있고 알맹이가 재료 밖이면 밋밋하다.
+    #   썰 계열(hook_3s)에만 건다: 이 장르는 고조가 생명이라 사장님이 "제일 심각"이라 했다.
+    #   재료가 없으면 판정 자체를 안 한다(회귀 0).
+    if style.get("hook_3s"):
+        _en, _ebad = escalation_content(beats, facts_text)
+        if _en:
+            checks.append({"name": "고조 알맹이", "ok": not _ebad,
+                           "detail": ("연결어 뒤가 밋밋하다(%s) — '심지어/충격적인 건' 뒤에는 "
+                                      "재료의 **'가장 센 셀링포인트'(의외의 쓰임)**에서 골라 놓아라. "
+                                      "방수·충전식·가벼움처럼 그 제품이면 당연한 소리는 안 된다."
+                                      % " / ".join('"%s"' % x for x in _ebad[:2]))
+                                     if _ebad else "OK"})
+
+    # 소재·판매처 출구 검사는 모든 생성 경로가 이 함수 한 벌을 쓴다. 픽업 생성기도
+    # fatal_content_fail()로 같은 판정을 호출한다(2026-09-14 우회 경로 제거).
+    checks += fatal_content_checks(full, product=product, materials_text=materials_text)
 
     # ★훅 3초(2026-08-19) — 스타일이 선언할 때만. 위 함수 하나가 판단을 전담한다.
     checks += hook_checks(style, full, product)
@@ -540,9 +819,177 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #     잡았다(오탐). 이 파일의 기존 원칙대로 오탐이 미탐보다 나쁘다 → LLM 판정.
     #   ★fail-open: 판정을 못 하면(_call_json이 키 소진 시 {} 반환·예외) **통과**시킨다.
     #     여기서 막으면 키가 마른 날 대본이 통째로 안 나온다.
+    checks += semantic_content_checks(
+        claim_text(b.get("text", "") for b in beats), product, speaker_judge, evidence=claim_evidence,
+        topic_required=topic_required, claims_required=claims_required)
+
+    # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
+    ok_g, bad = (grounded_quantity_check(full, claim_evidence) if claims_required
+                 else grounding_check(full, facts_text))
+    if (facts_text or "").strip() or claims_required:
+        # ★fatal 아님(2026-09-16, 위 FATAL_CHECKS 주석과 같은 이유) — 같은 09-14 커밋에서
+        #   들어온 동적 치명이다. 수치 하나 때문에 안을 통째로 버리지 않는다.
+        checks.append({"name": "수치 근거", "ok": ok_g,
+                       # 스위치를 끄면 이것도 안을 죽이지 않는다(위 claim_fatal_enabled 주석).
+                       "fatal": bool(claims_required) and claim_fatal_enabled(),
+                       "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
+                                  + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
+
+    if grounded and scene_ids is not None:
+        ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe,
+                                          source_count=source_count, scene_secs=scene_secs)
+        checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
+    return checks, full
+
+
+def claim_text(parts):
+    """반말체처럼 마침표가 없어도 대본 칸의 사실 검사 경계를 보존한다."""
+    return "\n".join(str(part or "").strip() for part in parts)
+
+
+def claim_units(text):
+    """판정 입력과 출력 검증이 공유하는 문장 단위. 숫자의 소수점은 자르지 않는다."""
+    return [s.strip() for s in re.findall(
+        r"[\s\S]+?(?:[.!?。！？][\"'”’)]*(?=\s|$)|\n+|$)", str(text or "")) if s.strip()]
+
+
+def _quote_norm(text):
+    # 장면 설명과 변화가 줄바꿈으로 연결된 원문을 모델이 마침표+공백으로
+    # 인용하는 경우는 같은 문장이다. 글자·수치·소수점은 그대로 대조한다.
+    value = re.sub(r"(?<=[^\W\d_])\.(?=\s|$)", "", str(text or ""))
+    return re.sub(r"\s+", "", value)
+
+
+_CLAIM_QUANTITY = re.compile(
+    r"(?<![\dA-Za-z])(?P<num>\d[\d,.]*|수십|수백|수천|몇|일|이|삼|사|오|육|칠|팔|구|십)"
+    r"\s*(?P<scale>천|만|억)?\s*(?P<unit>mm|cm|kg|ml|초|분|시간|개월|퍼센트|년|개|장|자루|명|인|배|%|원)")
+_POPULARITY_CLAIM = re.compile(r"입소문|품절|매진|판매량|베스트셀러|인기|유행|화제|대란|난리(?:가)?\s*났|난리\s*난|없어서\s*못\s*(?:구|사)")
+_ODOR_CLAIM = re.compile(r"탈취|(?:냄새|악취).{0,30}(?:차단|제거|잡아|잡아주|없|안\s*나|걱정할\s*필요)")
+_ODOR_EVIDENCE = re.compile(r"탈취|냄새|악취")
+_ODOR_RELIEF = re.compile(
+    r"탈취|(?:냄새|악취).{0,15}(?:차단|제거|없애|잡아|줄어|덜\s*나|나지\s*않|안\s*나|없|걱정.{0,10}없)")
+_ODOR_NEGATED = re.compile(r"없지\s*않|(?:차단|제거|탈취).{0,6}(?:안\s*(?:되|돼)|않|못|아니)")
+
+
+def _quantities(text):
+    out = []
+    korean = {"일": 1, "이": 2, "삼": 3, "사": 4, "오": 5, "육": 6,
+              "칠": 7, "팔": 8, "구": 9, "십": 10}
+    for match in _CLAIM_QUANTITY.finditer(str(text or "")):
+        num, unit = match["num"], match["unit"]
+        # '이 장면', '이 분' 같은 지시어를 수량/시간으로 오인하지 않는다.
+        if num in korean and (unit not in ("초", "분", "시간", "원")
+                              or re.search(r"\s", match.group(0))):
+            continue
+        scale = {"천": 1000, "만": 10000, "억": 100000000}.get(match["scale"], 1)
+        vague = num in ("몇", "수십", "수백", "수천")
+        if vague:
+            value = {"몇": 1, "수십": 10, "수백": 100, "수천": 1000}[num] * scale
+        else:
+            try:
+                value = korean[num] if num in korean else float(num.replace(",", "").rstrip("."))
+            except ValueError:
+                continue
+            value *= scale
+        factor, base = {"분": (60, "초"), "시간": (3600, "초"),
+                        "퍼센트": (1, "%")}.get(unit, (1, unit))
+        out.append((match.group(0), base, value * factor, vague))
+    return out
+
+
+def _quantity_supported(quantity, text):
+    _, unit, value, vague = quantity
+    for _, other_unit, other_value, other_vague in _quantities(text):
+        if unit != other_unit:
+            continue
+        if vague and value <= other_value < value * 10:
+            return True
+        if not vague and not other_vague and value == other_value:
+            return True
+    return False
+
+
+def grounded_quantity_check(full, evidence):
+    """확정 근거의 본문만 수치와 대조한다. seg_id/편집 길이/활용 추측은 근거가 아니다."""
+    text = "\n".join(str(row.get("text") or "") for row in (evidence or {}).get("items", [])
+                     if isinstance(row, dict))
+    bad = [q[0] for q in _quantities(full) if not _quantity_supported(q, text)]
+    return not bad, bad
+
+
+def _claim_audit_errors(full, evidence, verdict):
+    """모델의 초록 판정만 믿지 않고 문장 누락·허위 인용·고위험 주장 근거를 검증한다."""
+    units = claim_units(full)
+    audit = verdict.get("claim_checks") if isinstance(verdict, dict) else None
+    if not isinstance(audit, list):
+        return ["문장별 사실 근거 판정이 없다"]
+    items = {str(x.get("evidence_id")): x for x in (evidence or {}).get("items", [])
+             if isinstance(x, dict) and x.get("evidence_id") and x.get("text")}
+    errors, seen = [], set()
+    for row in audit:
+        if not isinstance(row, dict):
+            errors.append("문장별 판정 형식이 잘못됐다")
+            continue
+        index = row.get("unit_index")
+        if type(index) is not int or not 0 <= index < len(units) or index in seen:
+            errors.append("판정 문장 번호가 없거나 중복됐다")
+            continue
+        seen.add(index)
+        unit = units[index]
+        if _quote_norm(row.get("claim")) != _quote_norm(unit):
+            errors.append("%d번 문장 원문과 판정 대상이 다르다" % index)
+            continue
+        kind, supports = row.get("kind"), row.get("supports")
+        if kind not in ("objective", "subjective") or not isinstance(supports, list):
+            errors.append("%d번 문장의 주장 종류/근거 목록이 없다" % index)
+            continue
+        quantities = _quantities(unit)
+        popularity, odor = bool(_POPULARITY_CLAIM.search(unit)), bool(_ODOR_CLAIM.search(unit))
+        if row.get("supported") is not True:
+            errors.append("%d번 문장에 확인되지 않은 주장이 있다: %s" % (index, unit))
+        if kind == "subjective" and (quantities or popularity or odor):
+            errors.append("%d번 문장의 수치·인기도·냄새 주장을 주관적 감탄으로 면제했다" % index)
+        quotes, nonvisual_quotes = [], []
+        for support in supports:
+            item = items.get(str(support.get("evidence_id"))) if isinstance(support, dict) else None
+            quote = str(support.get("quote") or "").strip() if isinstance(support, dict) else ""
+            if not item or len(_quote_norm(quote)) < 3 or _quote_norm(quote) not in _quote_norm(item["text"]):
+                errors.append("%d번 문장의 근거 ID 또는 인용문이 실제 자료에 없다" % index)
+                continue
+            quotes.append(quote)
+            if item.get("kind") != "visual":
+                nonvisual_quotes.append(quote)
+        if kind == "objective" and not quotes:
+            errors.append("%d번 객관적 문장의 원문 근거가 없다: %s" % (index, unit))
+        quoted = "\n".join(quotes)
+        for quantity in quantities:
+            if not _quantity_supported(quantity, quoted):
+                errors.append("%d번 문장 수치 %s의 실제 근거가 없다" % (index, quantity[0]))
+        # 화면에 물건이 보인다는 사실은 유행·탈취 성능을 증명하지 않는다.
+        nonvisual = "\n".join(nonvisual_quotes)
+        if popularity and not _POPULARITY_CLAIM.search(nonvisual):
+            errors.append("%d번 문장 인기도·입소문·품절의 발화/검증 근거가 없다" % index)
+        if odor and (not _ODOR_RELIEF.search(nonvisual) or _ODOR_NEGATED.search(nonvisual)):
+            errors.append("%d번 문장 냄새·탈취 효과의 발화/검증 근거가 없다" % index)
+    if seen != set(range(len(units))):
+        errors.append("판정에서 빠진 문장 번호: " + ", ".join(str(i) for i in range(len(units)) if i not in seen))
+    return errors
+
+
+def semantic_content_checks(full, product="", speaker_judge=None, evidence=None,
+                            topic_required=False, claims_required=False):
+    """전체·부분·픽업·조립이 공유하는 화자/주제/사실 의미 판정 출구."""
+    checks, _v = [], {}
     if speaker_judge is not None:
         try:
-            _v = speaker_judge(full) or {}
+            try:
+                _v = (speaker_judge(full, product, evidence=evidence)
+                      if evidence is not None else speaker_judge(full, product)) or {}
+            except TypeError:  # 옛 판정기/테스트는 인자 하나 계약
+                try:
+                    _v = speaker_judge(full, product) or {}
+                except TypeError:
+                    _v = speaker_judge(full) or {}
         except Exception:      # noqa: BLE001 — 판정 실패가 대본 생성을 죽이면 안 된다
             _v = {}
         if isinstance(_v, dict) and isinstance(_v.get("ok"), bool):
@@ -551,18 +998,271 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
                                      ("말하는 사람이 도중에 바뀐다 — 훅에서 등장시킨 그 인물로 "
                                       "끝까지 꿰어라(3인칭은 '친구 남편'처럼 누구 것인지 밝혀라)")
                                      if not _v["ok"] else "OK"})
+        if product and isinstance(_v, dict) and isinstance(_v.get("topic_ok"), bool):
+            _foreign = ", ".join(str(x) for x in (_v.get("foreign_products") or [])[:4])
+            checks.append({"name": "주제 단일성", "ok": _v["topic_ok"],
+                           "detail": ((_v.get("topic_why") or "").strip()[:200]
+                                      or (("다른 제품이 섞였다: " + _foreign) if _foreign else
+                                          "대본의 중심 제품이 고정 주제와 다르다"))
+                                     if not _v["topic_ok"] else "OK"})
+        elif product and topic_required:
+            checks.append({"name": "주제 단일성", "ok": False,
+                           "detail": "고정 제품 주제를 확인하지 못해 결과를 내보내지 않는다"})
+    elif product and topic_required:
+        # 고정 주제 출구는 판정기 누락도 실패다. 호출부 하나가 judge를 빼먹었다고
+        # 조립/신규 경로만 검사를 우회하면 같은 사고가 다시 생긴다.
+        checks.append({"name": "주제 단일성", "ok": False,
+                       "detail": "고정 제품 주제 판정기가 없어 결과를 내보내지 않는다"})
 
-    # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
-    ok_g, bad = grounding_check(full, facts_text)
-    if (facts_text or "").strip():
-        checks.append({"name": "수치 근거", "ok": ok_g,
-                       "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
-                                  + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
-    return checks, full
+    if evidence is not None or claims_required:
+        decided = isinstance(_v, dict) and isinstance(_v.get("claims_ok"), bool)
+        unsupported = _v.get("unsupported_claims") if isinstance(_v, dict) else None
+        # 판정 결과가 서로 모순되거나 목록 타입이 깨진 경우도 성공으로 보지 않는다.
+        valid = decided and isinstance(unsupported, list)
+        audit_errors = _claim_audit_errors(full, evidence, _v) if claims_required else []
+        # 고정 주제는 모든 문장의 실제 근거 검증으로 합산한다. 동일 판단을 모델의
+        # 전체 bool에도 맡기면 전 문장 supported=true/누락 0인데 전체만 false인
+        # 모순 때문에 정상 수정본이 영원히 반려된다. 지적된 미지원 주장은 계속 실패다.
+        ok = ((isinstance(unsupported, list) and not unsupported and not audit_errors)
+              if claims_required else (valid and _v["claims_ok"] is True and not unsupported))
+        if valid or claims_required:
+            details = list(audit_errors)
+            for row in (unsupported or []) if isinstance(unsupported, list) else []:
+                if isinstance(row, dict):
+                    details.append("%s: %s" % (row.get("claim") or "문장",
+                                                row.get("reason") or "근거 없음"))
+                else:
+                    details.append(str(row))
+            checks.append({"name": "사실 근거", "ok": bool(ok),
+                           "detail": "OK" if ok else (" / ".join(details)[:500]
+                               or (_v.get("claims_why") if isinstance(_v, dict) else "")
+                               or "사실 근거를 확인하지 못해 결과를 내보내지 않는다")})
+    return checks
+
+
+def parse_src_segs(raw):
+    """src_seg 문자열 → 번호 목록(순수 함수). 모델은 한 줄에 여러 장면을 적는다(실측 "s3-10,s3-11,s3-12").
+    쉼표·공백·가운뎃점·슬래시로 가른다. 첫 번째가 대표(3단계 primary)."""
+    import re
+    s = str(raw or "").strip()
+    if not s:
+        return []
+    out = []
+    for tok in re.split(r"[,\s·/;]+", s):
+        tok = tok.strip().strip("[]")
+        if tok and tok not in out:
+            out.append(tok)
+    return out
+
+
+def _read_secs(text):
+    """그 줄을 소리 내 읽는 시간(초). **3단계 target_seconds와 같은 식**이어야 짝이 맞는다.
+    ★말속도는 이 파일이 이미 정한 `_speech_cps()`(= edit_plan 상수 × 라이브 배속)를 빌려 쓴다 —
+      새로 적으면 사본이 늘어 어긋난다(0순위-B, 메모리 `reference_말속도_상수_4벌`)."""
+    return max(1.5, len((text or "").strip()) / _speech_cps())
+
+
+def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, source_count=None,
+                          scene_secs=None):
+    """(ok, detail) — 줄마다 src_seg가 실제 장면 목록에 있는지, 장면이 필요한 줄이 비지 않았는지.
+
+    · 지어낸 번호(목록에 없음) → 실패(레시피도)
+    · needs_scene=true인데 src_seg 없음 → 실패(레시피도)
+    · 제품형: 장면 붙은 줄이 전체의 min_ratio 미만이면 실패(모델이 전부 needs_scene=false로 도망치는 것 방지)
+      ★min_ratio=0.34(2026-09-04 실측): 5칸 구조(첫말·문제·시연·결과·약속)는 첫말·문제·약속이 정당하게 장면 없음 →
+        절반(0.5)이면 시연·결과가 다 맞아도 2/5로 반려된다. 3분의 1이면 "시연·결과는 반드시"가 남는다.
+    detail은 재작성 지시문에 그대로 들어간다 — 어느 줄이 왜 걸렸는지."""
+    ids = {str(x) for x in (scene_ids or set())}
+    beats = beats or []
+    invented, missing, with_scene = [], [], 0
+    primary_at = {}      # 대표 장면 번호 -> 처음 쓴 칸 번호
+    all_used = set()     # 대표+보조 전부(소스 분산 판정용)
+    repeats = []         # (뒤 칸, 앞 칸, 번호, 뒤 칸 앞머리)
+    for i, b in enumerate(beats, 1):
+        sids = parse_src_segs(b.get("src_seg"))
+        need = bool(b.get("needs_scene"))
+        text = (b.get("text") or "").strip()[:30]
+        bad_ids = [x for x in sids if x not in ids]
+        if bad_ids:
+            invented.append(f"{i}번 '{text}' src_seg={','.join(bad_ids)}(목록에 없음)")
+        elif sids:
+            with_scene += 1
+            head = sids[0]                    # ★대표만 본다(보조는 겹쳐도 정당하다 — _GROUNDED_RULE)
+            all_used.update(sids)             # 소스 분산 판정은 보조 번호까지 본다(아래 주석)
+            if head in primary_at:
+                repeats.append((i, primary_at[head], head, text))
+            else:
+                primary_at[head] = i
+        elif need:
+            missing.append(f"{i}번 '{text}'")
+    problems = []
+    if invented:
+        problems.append("지어낸 장면 번호: " + "; ".join(invented[:4]) + " — 장면 목록의 번호만 써라")
+    if missing:
+        problems.append("장면이 필요한 줄인데 src_seg가 비었다: " + "; ".join(missing[:4])
+                        + " — 그 내용이 보이는 장면 번호를 적거나, 장면에 없는 장점이면 그 줄을 빼라")
+    # ★같은 장면이 두 칸에(2026-09-05 실측 15편: 장면 붙은 칸 66개 중 6개 중복, 5건이 이웃 칸).
+    #   재고 부족이 아니었다 — 44구간 영상에서도 났고 15편 전부 장면 수 ≥ 필요 칸 수였다.
+    #   지시(_GROUNDED_RULE '한 장면은 한 줄에만')와 이 판정은 짝이다.
+    #   ⚠️재고가 필요 칸보다 적으면 중복이 불가피하다 → 그런 소재는 면제(영영 반려 방지).
+    if not is_recipe and repeats and len(ids) >= with_scene:
+        problems.append("같은 장면을 두 줄에 썼다: "
+                        + "; ".join(f"{i}번 '{t}'이 {j}번과 같은 {sid}" for i, j, sid, t in repeats[:4])
+                        + " — 한 장면은 한 줄에만. 뒷줄은 장면 목록에서 다른 번호를 골라라")
+    # ★여러 소스를 넣었는데 한 편만 쓰던 것(2026-09-05 실측 b1_two_sources 3회: 소스 2편을 넣어도
+    #   2단계가 고른 장면이 **전부 첫 소스**였다 — 빠듯/넉넉/같은제품 셋 다 s1 사용 0).
+    #   사장님(2026-08-17): "한 편만 넣으면 그 한 편에 끌려가 편협해진다. 다 넣으면 고를 일이 없어진다."
+    #   중복 때와 같은 병 — 지시도 판정도 없어 앞에서부터 채우면 그만이었다. 지시는 _GROUNDED_RULE.
+    #   ⚠️면제: 장면 붙은 줄이 2개 미만이면 두 영상에서 고르는 것 자체가 불가능하다
+    #     (요구가 '최소 2편'이므로 면제 기준도 2다 — 옛 기준 `>= source_count`는 요구를 낮춘 뒤
+    #      낡아서, 6편 중 1편만 쓴 대본을 그냥 통과시켰다).
+    if not is_recipe and source_count and source_count > 1 and with_scene >= 2:
+        have = {str(x).rsplit("-", 1)[0] for x in ids}          # 목록에 실제로 있는 소스들
+        # ★대표뿐 아니라 **보조 번호까지** 본다(2026-09-05 실측으로 완화). 대표만 보면 소재가
+        #   서로 다른 제품일 때 모델이 게이트를 통과하려고 **억지로 섞는다** — 실측(비비크림+방수패드)
+        #   에서 8칸 중 4칸이 딴 제품 화면이 됐다. 지시문엔 이미 "다른 제품이면 억지로 섞지 마라"가
+        #   있으므로, 판정은 "다른 소스를 **아예 안 봤나**"만 잡는다.
+        got = {str(x).rsplit("-", 1)[0] for x in all_used}
+        # ★"전부 다 써라"가 아니다(2026-09-05 라이브 실측으로 재완화). 영상 6편·장면 칸 6개인
+        #   실제 작업에서 "2편을 한 줄도 안 썼다"로 4회 전부 반려당했고, 그 결과 **한 영상당 1칸씩
+        #   억지 배분**을 강요당해 더 맞는 장면을 못 골랐다("아이 건강"에 붙었어야 할 '아이가 주스를
+        #   마시는 근접 샷' 대신 '완성 컵 들어 보여주기' — 그 영상을 이미 한 번 썼다는 이유로).
+        #   사장님 취지(2026-08-17)는 "**한 편에 끌려가지 마라**"이지 "균등 배분하라"가 아니다.
+        #   → 하한만 본다: 최소 2편. 소스가 2편이면 둘 다(=여전히 한 편 몰빵을 잡는다).
+        want_srcs = 2 if len(have) > 2 else len(have)
+        if len(have) > 1 and len(got) < want_srcs:
+            problems.append("재료 영상 %d편을 줬는데 %s 것만 썼다 — 한 영상에만 기대지 말고 "
+                            "최소 %d편에서 골라라(그 줄에 정말 맞는 장면이 있는 영상을 쓰면 된다)"
+                            % (len(have), ", ".join(sorted(got)[:3]) or "아무것도", want_srcs))
+    need = max(1, int(len(beats) * min_ratio + 0.999)) if beats else 0
+    if not is_recipe and beats and with_scene < need:
+        # 문구의 기준은 상수에서 만든다(리뷰 L1: '절반'이라 적혀 있는데 실제는 1/3이었다)
+        problems.append("장면이 붙은 줄이 %d/%d — 최소 %d줄(전체의 %d%%)은 장면 목록에서 온 줄이어야 한다(제품형)"
+                        % (with_scene, len(beats), need, int(min_ratio * 100)))
+    return (not problems), ("; ".join(problems) if problems else "OK(%d/%d줄에 장면)" % (with_scene, len(beats)))
+
+
+#: 이것만은 "고쳐서라도 내보낸다"가 성립하지 않는 검사 — 소재가 틀리면 그 대본은 통째로 남의 것이다.
+#: (2026-09-09 사장님 재발 제보. 09-07엔 프롬프트 가드만 넣었고 출구는 그대로 열려 있었다.)
+#: '재료 밖 판매처'도 치명이다(2026-09-11) — 소재는 맞아도 "다이소 매니저 지인"이 지어낸
+#: 말이면 그 대본은 거짓말이다. 고쳐서 내보낼 것이 아니라 그 스타일을 빼야 한다.
+#: ★'사실 근거'는 치명이 아니다(2026-09-16 사장님 "이전까지 잘되던데 며칠 전에 가끔씩
+#:   이상한 대본 나오는 것 때문에 꼬였다"). 이 검사는 2aab09821(09-14 21:25)에서 처음
+#:   들어왔고 **들어오자마자 치명**이었다 — 근거를 못 잡으면 재시도 3회 뒤 그 안을 통째로
+#:   버린다. 그래서 "2안을 골랐는데 1안만" + 느려짐이 상시로 났다(라이브 6시간 19건,
+#:   반려 1건당 ~20초). 가끔 나던 엉뚱한 대본을 막으려다 **정상 대본까지 못 나오게** 한
+#:   과잉 처방이었다. 검사 자체는 그대로 둔다 — 화면에 뜨고 재작성 루프도 그대로 돈다.
+#:   다만 안을 죽이지는 않는다. 진짜 엉뚱한 대본(소재가 남의 것)은 '소재 일치'·'주제
+#:   단일성'·'재료 밖 판매처'(09-09·09-11)가 계속 치명으로 잡는다.
+#:   ★단 **스위치로 뒀다**(기본은 지금까지와 똑같이 치명). 설정 `script_claim_fatal`을
+#:     "0"으로 두면 사실·수치 근거가 안을 죽이지 않는다. 이상하면 "1"로 즉시 되돌린다.
+FATAL_CHECKS = ("소재 일치", "주제 단일성", "재료 밖 판매처", "사실 근거")
+
+#: 스위치를 끈 상태의 치명 목록(= 09-14 이전과 같은 결과).
+FATAL_CHECKS_LENIENT = ("소재 일치", "주제 단일성", "재료 밖 판매처")
+
+
+def claim_fatal_enabled():
+    """'사실·수치 근거'가 안을 통째로 죽이는가. 기본 True(= 09-14 이후 현행).
+
+    끄는 법(둘 중 하나):
+      · 설정 `script_claim_fatal` = "0"   (화면/DB에서 바꾸면 재시작 없이 먹는다)
+      · 환경변수 SCRIPT_CLAIM_FATAL=0     (설정보다 우선 — 급할 때 쓰는 비상구)
+    ★fail-safe: 설정을 못 읽으면 True(현행 유지). 읽기 실패가 라이브 동작을 조용히
+      바꾸면 그게 더 위험하다.
+    """
+    import os
+    _env = os.getenv("SCRIPT_CLAIM_FATAL")
+    if _env is not None and str(_env).strip() != "":
+        return str(_env).strip().lower() not in ("0", "false", "off", "no")
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return str(Store(DB_PATH).get_setting("script_claim_fatal", "1")).strip() != "0"
+    except Exception:
+        return True
+
+
+def claim_check_enabled():
+    """사실·수치 근거 검사를 **아예 돌릴 것인가**. 기본 True(= 09-14 이후 현행).
+
+    ★fatal 스위치와 다르다(2026-09-16). `script_claim_fatal=0`은 "안을 버리지 않는다"일
+      뿐이라 `passed()`가 여전히 False → **재시도 3회는 그대로 돌고 문장별 판정 호출도
+      그대로다**(느림이 안 풀린다). 이 스위치를 끄면 검사 자체가 생기지 않아
+      09-14 이전과 같은 속도가 된다 — 대신 그때처럼 가끔 엉뚱한 주장이 섞일 수 있다.
+
+    끄는 법: 설정 `script_claim_check` = "0" (또는 환경변수 SCRIPT_CLAIM_CHECK=0).
+    ★소재 일치·주제 단일성·재료 밖 판매처는 이 스위치와 무관하게 계속 돈다.
+    """
+    import os
+    _env = os.getenv("SCRIPT_CLAIM_CHECK")
+    if _env is not None and str(_env).strip() != "":
+        return str(_env).strip().lower() not in ("0", "false", "off", "no")
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return str(Store(DB_PATH).get_setting("script_claim_check", "1")).strip() != "0"
+    except Exception:
+        return True
+
+
+def active_fatal_checks():
+    """지금 적용되는 치명 검사 목록 — 판정은 여기 한 곳에서만 정한다(0순위-B)."""
+    return FATAL_CHECKS if claim_fatal_enabled() else FATAL_CHECKS_LENIENT
+
+
+def fatal_content_checks(full, product="", materials_text=""):
+    """생성 방식과 무관하게 적용하는 소재·판매처 출구 검사 한 벌."""
+    checks = []
+    # 제품 중심어를 확정할 수 있을 때만 어휘 검사를 한다. 자유 주제("물때 청소")를
+    # 억지로 제품명처럼 잘라 검사하면 정상 이식 대본을 막는다. 의미 고정 작업은 아래
+    # 주제 단일성 판정이 별도로 맡는다.
+    toks = _product_core_tokens(product)
+    if toks:
+        from shopping_shorts import topic_contract
+        hit = topic_contract.topic_mentions(full, product)
+        checks.append({"name": "소재 일치", "ok": bool(hit),
+                       "detail": ("OK(%s)" % ", ".join(hit[:3])) if hit else
+                                 ("대본에 「%s」 얘기가 한 번도 안 나온다 — 다른 소재로 "
+                                  "샜을 가능성이 높다(재료 밖 소재 금지)" % product)})
+
+    if materials_text:
+        mt = norm(materials_text).lower()
+        nf = norm(full).lower()
+        leaked = [r for r in RETAILERS if r.lower() in nf and r.lower() not in mt]
+        checks.append({"name": "재료 밖 판매처", "ok": not leaked,
+                       "detail": ("OK" if not leaked else
+                                  ("대본에 「%s」가 나오는데 재료 어디에도 없다 — 문장틀에 박힌 "
+                                   "판매처를 그대로 쓴 것이다. 재료에 없는 판매처·소속·인맥은 "
+                                   "쓰지 말고 그 자리를 재료의 사실로 바꿔라" % ", ".join(leaked[:3])))})
+    return checks
+
+
+def fatal_content_fail(full, product="", materials_text=""):
+    """대본 문자열 하나의 치명 소재 검사를 실행하고 실패 이름을 반환한다."""
+    return fatal_fail(fatal_content_checks(full, product=product,
+                                           materials_text=materials_text))
 
 
 def passed(checks):
     return bool(checks) and all(c["ok"] for c in checks)
+
+
+def fatal_fail(checks):
+    """치명 검사(소재 일치)가 깨졌으면 그 이름. 아니면 "".
+
+    ★왜 따로 두나(2026-09-09): generate_one_style은 재시도 뒤에도 통과 못 하면
+      **길이(밀도)가 가장 가까운 안을 그냥 내보낸다**(fail-open). 밀도·순서는 어설퍼도
+      쓸 수 있지만, 소재가 다르면 그 대본은 우리 제품 이야기가 아니다 —
+      실측(work f2547fc3a753): 재료는 'Mac Mini용 레트로 매킨토시 케이스'인데
+      A안이 채칼·도마 대본으로 나왔고, 게이트는 `소재 일치 False`로 정확히 잡고도
+      그대로 화면에 실렸다.
+    """
+    _fatal_names = active_fatal_checks()
+    for c in checks or []:
+        if not c.get("ok") and (c.get("name") in _fatal_names or c.get("fatal") is True):
+            return c.get("name") or ""
+    return ""
 
 
 def gate_feedback(checks):
@@ -578,5 +1278,12 @@ def gate_feedback(checks):
             + ("\n분량이 넘쳤다 — **문장을 덜어내거나 짧게 줄여라**. 칸 개수·순서는 "
                "그대로 두고 설명을 압축해라. 길이는 영상 규격이라 못 넘긴다."
                if any(c.get("over") for c in bad) else
-               "\n분량이 모자라면 문장을 더 쪼개고 상황 묘사를 늘려 채워라. "
-               "구조·문장틀은 그대로 두고 살만 붙여라."))
+               # ★"문장을 더 쪼개라"를 지웠다 (2026-09-09, 코덱스 지적).
+               #   길이 하한을 올린 그날 이 지시가 더 자주 나가면서 **칸을 더 쪼개게**
+               #   만들고 있었다 — 토막토막 끊기는 원인을 게이트가 부추긴 셈이다.
+               #   실측: 히트작 4,915편은 25초/4칸(칸당 6.3초), 우리는 19초/6칸(3.2초).
+               #   모자란 분량은 칸을 늘려서가 아니라 **한 칸 안을 두껍게** 채워야 한다.
+               chr(10) + "분량이 모자라다 — **칸을 더 쪼개지 마라**. 칸 개수·순서는 그대로 두고 "
+               "각 칸 안을 두껍게 채워라: 누가 겪었는지, 왜 그렇게 되는지, "
+               "그래서 뭐가 달라졌는지를 한 문장 안에 이어 붙여라."
+               if any(c.get("name", "").startswith("말 밀도") for c in bad) else ""))

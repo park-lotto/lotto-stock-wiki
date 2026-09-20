@@ -1,0 +1,10 @@
+[Unit]
+Description=Shopping Shorts 썰쇼핑 채널 3시간 갱신(유튜브, 채널당 2 units)
+After=network.target shopping-shorts.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+ExecStart=/usr/bin/python3 -m scripts.ssul_refresh

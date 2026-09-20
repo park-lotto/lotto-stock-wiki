@@ -1,0 +1,25 @@
+<!doctype html>
+<!--설명: [드롭인 시험] 좌측 세로바 · 좌측정렬 · 하단 칩-->
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:BHS;src:url('../../../shopping_shorts/static/fonts/BlackHanSans.ttf')}
+@font-face{font-family:PT;src:url('../../../shopping_shorts/static/fonts/Pretendard-ExtraBold.otf')}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;background:transparent}
+.wrap{position:relative;width:1080px;height:1920px;font-family:BHS,PT,sans-serif}
+.vbar{position:absolute;left:0;top:150px;width:26px;height:520px;background:{{COLOR2}}}
+.tt{position:absolute;left:74px;top:150px;width:930px;text-align:left}
+.l1,.l2{display:block;line-height:1.06;letter-spacing:-4px;
+  -webkit-text-stroke:12px #111;paint-order:stroke fill}
+.l1{color:{{COLOR1}};font-size:104px}
+.l2{color:{{COLOR2}};font-size:104px;margin-top:10px}
+.chip{position:absolute;left:74px;bottom:210px;max-width:930px;background:#111;color:#fff;
+  border-radius:60px;padding:26px 54px;font-family:PT;font-weight:900;font-size:44px}
+.ad{position:absolute;right:40px;top:34px;color:#fff;font-family:PT;font-size:32px;opacity:.85}
+</style></head><body>
+<div class="wrap">
+  <div class="ad">[광고]</div>
+  <div class="vbar"></div>
+  <div class="tt"><span class="l1">{{LINE1}}</span><span class="l2">{{LINE2}}</span></div>
+  <div class="chip">{{SUB}}</div>
+</div></body></html>

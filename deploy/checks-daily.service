@@ -1,0 +1,9 @@
+[Unit]
+Description=Shopping Shorts 검수 — 매일 06:10 전체(L0~L3)
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+ExecStart=/usr/bin/python3 -m shopping_shorts.checks.run_checks --trigger daily --force
+TimeoutStartSec=3600

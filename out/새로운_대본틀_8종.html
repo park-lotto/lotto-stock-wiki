@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>새로운 대본 틀 8종</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b303c;
+  --ink:#e9ecf1; --dim:#9aa3b2; --faint:#6b7482;
+  --gold:#f2c14e; --hot:#ff6b4a; --bad:#f2545b; --blue:#63b3ff; --mint:#4ade80;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1160px;margin:0 auto;padding:42px 24px 90px}
+header.top{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:22px}
+h1{font-size:28px;margin:0 0 9px;letter-spacing:-.5px}
+.sub{color:var(--dim);font-size:14px;max-width:840px}
+.src{margin-top:13px;font-size:12.5px;color:var(--faint);
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 14px;display:inline-block}
+.src b{color:var(--dim);font-weight:600}
+h2{font-size:18px;margin:42px 0 13px;padding-left:12px;border-left:3px solid var(--gold)}
+.lead{color:var(--dim);font-size:13.5px;margin:-3px 0 15px;padding-left:15px}
+
+.gap{background:#141b18;border:1px solid #2a4d33;border-radius:12px;padding:17px 21px;margin:18px 0 8px;font-size:14px;color:#cfe6d6}
+.gap b{color:var(--mint)}
+.gap .n{color:var(--gold);font-weight:800}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--panel);
+  border:1px solid var(--line);border-radius:11px;overflow:hidden}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--panel2);font-size:11.5px;letter-spacing:.8px;color:var(--dim);font-weight:700}
+tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.hi{color:var(--gold)} .lo{color:var(--bad)} .ok{color:var(--mint)}
+.tw{overflow-x:auto}
+
+.tpl{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.tpl.star{border-color:#5a4a1e}
+.thead{display:flex;align-items:baseline;gap:11px;padding:15px 20px;background:var(--panel2);
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tno{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;min-width:18px}
+.tname{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.new{font-size:10px;letter-spacing:.8px;background:#2a4d33;color:var(--mint);border-radius:4px;padding:2px 7px;font-weight:800}
+.tv{margin-left:auto;font-size:17px;font-weight:800;color:var(--hot);font-variant-numeric:tabular-nums}
+.tv small{font-size:11px;color:var(--faint);font-weight:500;margin-left:5px}
+.hookline{padding:13px 20px;background:#191614;border-bottom:1px solid var(--line);font-size:15px;color:var(--gold);font-weight:600}
+.hookline span{font-size:11px;color:var(--faint);font-weight:700;letter-spacing:1px;display:block;margin-bottom:5px}
+.chain{display:flex;gap:5px;padding:13px 20px 3px;flex-wrap:wrap;align-items:center}
+.node{background:#12151c;border:1px solid var(--line);border-radius:6px;padding:4px 9px;
+  font-family:Consolas,monospace;font-size:11.5px;color:var(--blue);white-space:nowrap}
+.node.hook{border-color:#5a4a1e;color:var(--gold)}
+.node.cta{border-color:#2a4d33;color:var(--mint)}
+.node.key{border-color:#5a4a1e;background:#1a1710;color:var(--gold);font-weight:700}
+.arw{color:var(--faint);font-size:10px}
+.body2{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #20242e;margin-top:11px}
+@media(max-width:780px){.body2{grid-template-columns:1fr}}
+.col{padding:15px 20px}
+.col+.col{border-left:1px solid #20242e}
+@media(max-width:780px){.col+.col{border-left:none;border-top:1px solid #20242e}}
+.lab{font-size:11px;letter-spacing:1.1px;color:var(--faint);font-weight:700;margin-bottom:8px}
+.real{font-size:13px;color:#ded7c6;line-height:1.72}
+.real em{color:var(--gold);font-style:normal;font-weight:700}
+.when{font-size:13px;color:var(--dim)}
+.when b{color:var(--ink)}
+.note{font-size:12.5px;color:var(--faint);padding:11px 20px;border-top:1px solid var(--line);background:#13161d}
+.note b{color:var(--hot)}
+.limit{background:#1a1216;border:1px solid #4a2630;border-radius:12px;padding:17px 22px;font-size:13.5px;color:#e3c9cd}
+.limit h3{margin:0 0 9px;font-size:14px;color:var(--bad)}
+.limit ul{margin:0;padding-left:18px} .limit li{margin-bottom:5px}
+footer{margin-top:46px;padding-top:17px;border-top:1px solid var(--line);font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>새로운 대본 틀 8종</h1>
+  <div class="sub">지금 등록된 스타일 <b>44개를 전부 확인한 뒤</b>, 거기 없는 것만 골랐다. 훅·대본은 실제 히트작 원문이다.</div>
+  <div class="src">
+    <b>대조</b> 서버 spine 44개(승인 35·대기 9) &nbsp;·&nbsp;
+    <b>발굴</b> script_wiki 히트작 15만+ 한국어 53편 &nbsp;·&nbsp;
+    <b>측정</b> 2026-09-05 &nbsp;·&nbsp; <b>로컬 전용</b>
+  </div>
+</header>
+
+<div class="gap">
+  <b>★ 기존 44개의 가장 큰 공백 — 화자(누가 말하나)</b><br>
+  등록된 스타일은 거의 전부 <b>“직접(나)”</b>가 말한다. 그런데 히트작 상위에는
+  <span class="n">전지적 관찰자 · 제품 분석가 · 지식 전달자</span> 같은 <b>제3자 시점</b>이 몰려 있다
+  (217만 · 74만 · 65만). 파는 사람이 아니라 <b>구경하는 사람</b>이 말할 때 광고 냄새가 사라진다.
+</div>
+
+<h2>기존 44개에 이미 있는 것 (이번엔 안 만듦)</h2>
+<div class="tw">
+<table>
+  <tr><th>히트작에서 본 축</th><th>이미 있는 기존 스타일</th></tr>
+  <tr><td>“절대 하지 마세요” 경고</td><td>금지경고형 · 역발상 경고형 · 의사 경고 혈당 아침식단형</td></tr>
+  <tr><td>정체 숨겼다 공개</td><td>유튜브 은폐형 · 정체의문형</td></tr>
+  <tr><td>엉뚱한 용도로 쓰더라</td><td>유튜브 오용형</td></tr>
+  <tr><td>탄생 배경 이야기</td><td>유튜브 발명품형</td></tr>
+  <tr><td>여러 개 나열</td><td>나열 추천형</td></tr>
+  <tr><td>전문가가 알려줌</td><td>단정 명령형 · 식당 사장님 비밀 레시피형 · 피부과 원장 추천 크림형 외 다수</td></tr>
+  <tr><td>남들이 다 쓴다(사회적 증거)</td><td>사회증거형</td></tr>
+  <tr><td>몰라서 후회했다</td><td>무지후회형</td></tr>
+  <tr><td>가족이 알려줌 / 오해했다</td><td>가족갈등 반전형</td></tr>
+</table>
+</div>
+
+<h2>새로 만든 8종</h2>
+
+<!-- 1 -->
+<div class="tpl star">
+  <div class="thead"><span class="tno">01</span><span class="tname">솔직 혹평형</span><span class="new">완전 신규</span>
+    <span class="tv">105만<small>실측</small></span></div>
+  <div class="hookline"><span>실제 훅 문장</span>전자레인지로만 스파게티 면을 익힐 수 있다는 제품이 있어서 즉시 가져왔습니다.</div>
+  <div class="chain">
+    <span class="node hook">hook</span><span class="arw">→</span><span class="node">spec</span><span class="arw">→</span>
+    <span class="node">steps</span><span class="arw">→</span><span class="node">demo</span><span class="arw">→</span>
+    <span class="node key">twist</span><span class="arw">→</span><span class="node">fit</span><span class="arw">→</span>
+    <span class="node cta">cta</span></div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본</div><div class="real">
+      … 눈금과 물 붓는 선 그리고 물 버리는 구멍까지 <b>꽤나 디테일하게 만든 티가 나는데</b>
+      뭐 중요한 건 역시 성능이겠죠 … 면 2인분에 물선 맞춰 … 9분 정도만 돌렸고 면 꺼내서 먹어봤는데
+      <em>이거 뭐 면 식감이 나쁘지…</em>
+      <div style="margin-top:8px;color:var(--faint);font-size:12.5px">→ 최종 결론: <b>“그냥 냄비에 삶아 먹으라”</b></div>
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">언제 쓰나 · 왜 새로운가</div>
+      <b>기존 44개에 ‘비판’이 하나도 없다.</b> 전부 좋다고만 한다.
+      실제로 써보고 <b>아쉬운 점을 말하는 대본이 105만</b>을 찍었다.
+      한 번 솔직하면 그 다음 추천이 믿긴다.
+    </div></div>
+  </div>
+  <div class="note"><b>주의</b> 파는 물건에 쓰면 안 된다. <b>비교 대상</b>을 깎고 우리 걸 올리는 식으로 변형해 쓴다.</div>
+</div>
+
+<!-- 2 -->
+<div class="tpl star">
+  <div class="thead"><span class="tno">02</span><span class="tname">셀프 반박형</span><span class="new">완전 신규</span>
+    <span class="tv">64만<small>실측</small></span></div>
+  <div class="hookline"><span>실제 훅 문장</span>셰프들이 보면 뒷목 잡을 변태적 설계의 파스타 쿠커</div>
+  <div class="chain">
+    <span class="node hook">hook</span><span class="arw">→</span><span class="node">problem</span><span class="arw">→</span>
+    <span class="node">reveal</span><span class="arw">→</span><span class="node">spec</span><span class="arw">→</span>
+    <span class="node key">conflict</span><span class="arw">→</span><span class="node key">mechanism</span><span class="arw">→</span>
+    <span class="node">bonus</span><span class="arw">→</span><span class="node cta">cta</span></div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본</div><div class="real">
+      보통 파스타 삶으려면 큰 냄비 꺼내고 롱면 삐져나와서 … <b>개고생</b>을 해야 했는데
+      어떤 <b>요리 미친 자</b>가 용기 하나로 다 끝내겠다며 괴물 쿠커를 만들어 버림 …
+      <em>“에이 전자레인지로 돌리면 면 불어서 맛없는 거 아님?”</em>
+      적은 물에 삶아져서 <b>갇힌 녹말</b> 때문에 오히려 소스가 면에 쫙 배어들어 미친 맛이 나고
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">언제 쓰나 · 왜 새로운가</div>
+      <b>보는 사람이 반박할 게 뻔한 제품.</b> 그 반박을 <b>내가 먼저 대사로 말하고</b> 깬다.
+      기존 44개는 반론을 다루지 않는다 — 좋은 점만 나열한다.
+      훅도 <b>전문가가 싫어할 물건</b>이라 권위인용형의 정반대다.
+    </div></div>
+  </div>
+  <div class="note"><span style="color:var(--gold)">★</span> 반박 문장을 <b>따옴표 대사</b>로 넣는 게 핵심이다. 설명조로 쓰면 힘이 빠진다.</div>
+</div>
+
+<!-- 3 -->
+<div class="tpl star">
+  <div class="thead"><span class="tno">03</span><span class="tname">회사 실수 대박형</span><span class="new">완전 신규</span>
+    <span class="tv">217만<small>실측</small></span></div>
+  <div class="hookline"><span>실제 훅 문장</span>덴마크 회사의 실수로 대박난 미친 연필</div>
+  <div class="chain">
+    <span class="node hook">hook</span><span class="arw">→</span><span class="node">origin</span><span class="arw">→</span>
+    <span class="node key">mistake</span><span class="arw">→</span><span class="node key">conflict</span><span class="arw">→</span>
+    <span class="node">twist</span><span class="arw">→</span><span class="node">scale</span><span class="arw">→</span>
+    <span class="node">proof</span><span class="arw">→</span><span class="node cta">cta</span></div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본</div><div class="real">
+      임원진이 <em>“얼마나 팔리겠어”</em> 막 만들어 가 하면서 원가 생각 안 하고 100% 유기농 씨앗을 때려 박아버림.
+      디자이너가 <em>“사장님 이래서 남습니까”</em> 했는데
+      <b>반전은</b> 전 세계에서 난리가 나버림 … 오바마 재단부터 이케아까지 … <b>5천만 자루</b>가 팔려나갔다고
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">언제 쓰나 · 왜 새로운가</div>
+      화자가 <b>전지적 관찰자</b>다 — “~해버림”, “~했다고”. 파는 사람이 아니다.
+      발명품형은 ‘성공한 탄생기’인데 이건 <b>실패담으로 시작</b>한다.
+      기존 44개에 <b>실패로 여는 틀이 없다.</b>
+    </div></div>
+  </div>
+  <div class="note"><span style="color:var(--gold)">★</span> <b>임원·디자이너 두 사람의 대사</b>가 이야기를 만든다. 등장인물 없이 설명만 하면 이 틀은 죽는다.</div>
+</div>
+
+<!-- 4 -->
+<div class="tpl star">
+  <div class="thead"><span class="tno">04</span><span class="tname">제조사도 몰랐던 쓰임형</span><span class="new">완전 신규</span>
+    <span class="tv">65만<small>실측</small></span></div>
+  <div class="hookline"><span>실제 훅 문장</span>다이소 기획자도 감탄한 공간 활용 끝판왕 — 당황했던 역대급 실수</div>
+  <div class="chain">
+    <span class="node hook">hook</span><span class="arw">→</span><span class="node">origin</span><span class="arw">→</span>
+    <span class="node key">mistake</span><span class="arw">→</span><span class="node key">witness</span><span class="arw">→</span>
+    <span class="node">spread</span><span class="arw">→</span><span class="node">escalation</span><span class="arw">→</span>
+    <span class="node cta">cta</span></div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본</div><div class="real">
+      원래는 가죽이나 천막 구멍 뚫을 때나 쓰던 아일렛 타공기였음. 제작자가
+      <em>“아, 손가락 찍히는 건 진짜 못 참지”</em> 하면서 헤드에 자석을 때려 박아버린 건데
+      이걸 본 자취생들이 <em>“어, 이거 고무장갑 뚫으면 대박이겠는데?”</em> 라며 싹 다 뚫어서 벽에 걸어버리기 시작했다는 거
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">언제 쓰나 · 왜 새로운가</div>
+      오용형과 다르다 — 오용형은 <b>사용자가 다르게 쓴다</b>지만,
+      이건 <b>제조사가 딴 이유로 넣은 기능</b>이 엉뚱하게 대박난 이야기다.
+      화자는 <b>제품 분석가(제3자)</b>.
+    </div></div>
+  </div>
+  <div class="note">대사 <b>2개</b>가 짝이다: 만든 사람의 말 → 쓰는 사람의 말. 둘 사이의 간격이 곧 재미다.</div>
+</div>
+
+<!-- 5 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">05</span><span class="tname">예산 선언형</span><span class="new">신규</span>
+    <span class="tv">78만<small>실측</small></span></div>
+  <div class="hookline"><span>실제 훅 문장</span>단돈 30만 원이면 우리 집 마당을 모두 엎어버립니다.</div>
+  <div class="chain">
+    <span class="node hook key">price</span><span class="arw">→</span><span class="node">spec</span><span class="arw">→</span>
+    <span class="node">ease</span><span class="arw">→</span><span class="node">demo</span><span class="arw">→</span>
+    <span class="node">result</span><span class="arw">→</span><span class="node cta">cta</span></div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본</div><div class="real">
+      <b>벽돌을 집어넣어도 그대로 튕겨낼 만큼</b> 파워가 미쳤는데요.
+      게다가 손잡이로 방향만 잡아주면 돼서 <b>여성 혼자서도 거뜬히</b> 밭을 갈 수 있습니다.
+      작업이 끝나면 <b>손으로도 푹 파질 만큼</b> 흙이 부드러워지는 게 …
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">언제 쓰나 · 왜 새로운가</div>
+      <b>가격을 첫 문장에 못박는다.</b> 기존은 가격을 뒤에 둔다(다이소 가성비형도 사연이 먼저).
+      “단돈 N원이면 ○○을 다 해버립니다” — <b>돈과 결과를 한 문장에</b> 붙인다.
+      전체 <b>4문장</b>으로 끝난다.
+    </div></div>
+  </div>
+  <div class="note">결과를 <b>몸으로 재게</b> 한다 — “손으로도 푹 파질 만큼”. 수치보다 감각이 세다.</div>
+</div>
+
+<!-- 6 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">06</span><span class="tname">남의 집 충격형</span><span class="new">신규</span>
+    <span class="tv">5.6만<small>실측</small></span></div>
+  <div class="hookline"><span>실제 훅 문장</span>친구네 집에 갔다가 현관 보고 깜짝 놀랐어요</div>
+  <div class="chain">
+    <span class="node hook">hook</span><span class="arw">→</span><span class="node key">conflict</span><span class="arw">→</span>
+    <span class="node">notice</span><span class="arw">→</span><span class="node">spec</span><span class="arw">→</span>
+    <span class="node">usage</span><span class="arw">→</span><span class="node">result</span><span class="arw">→</span>
+    <span class="node">fit</span><span class="arw">→</span><span class="node cta">cta</span></div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본</div><div class="real">
+      <b>우리 집 현관은</b> 신발들이 널브러져 발에 걸리고 난장판이거든요.
+      <b>근데 친구네는</b> 슬림한 수납장에 신발이 싹 숨겨져 있더라고요.
+      이게 폭 <b>20cm</b>밖에 안 되니까 … 이사 갈 때도 그대로 들고 가면 되니까 전셋집에도 …
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">언제 쓰나 · 왜 새로운가</div>
+      <b>내 집 = 못난 쪽</b>으로 두고 시작한다. 기존 44개엔 <b>비교 축이 없다</b>.
+      “우리 집은 ~ / 근데 친구네는 ~” 두 문장이 이 틀의 뼈대다.
+      샀다고 자랑하는 게 아니라 <b>부러워하는</b> 위치라 거부감이 없다.
+    </div></div>
+  </div>
+  <div class="note">비교는 <b>공간·상태</b>로 한다. 가격 비교로 바꾸면 05(예산 선언형)와 겹친다.</div>
+</div>
+
+<!-- 7 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">07</span><span class="tname">해외 거주자형</span><span class="new">신규</span>
+    <span class="tv">60만<small>실측</small></span></div>
+  <div class="hookline"><span>실제 훅 문장</span>일본 살면서 찾은 역대급 꿀템 알려드릴게요 — 혹시 일본 교도소 비누 들어보셨나요?</div>
+  <div class="chain">
+    <span class="node hook">hook</span><span class="arw">→</span><span class="node key">origin</span><span class="arw">→</span>
+    <span class="node">authority</span><span class="arw">→</span><span class="node">targets</span><span class="arw">→</span>
+    <span class="node">witness</span><span class="arw">→</span><span class="node">source</span><span class="arw">→</span>
+    <span class="node cta">cta</span></div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본</div><div class="real">
+      혹시 <b>일본 교도소 비누</b> 들어보셨나요? … 이게 <b>국제 인증까지 받을 정도</b>로 품질이 장난 아니에요.
+      특히 양말 찌든 때나 와이셔츠 목때를 그냥 쏙 빼고 …
+      <b>친정엄마가 매번 더 사오라고 난린데</b> 찾아보니까 <b>한국에도 파는 곳이 있더라구요</b>
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">언제 쓰나 · 왜 새로운가</div>
+      <b>해외 물건일 때.</b> 화자가 <b>거주 경험자</b>라 “저기서만 아는 것”이 자연스럽다.
+      기존 44개는 전부 국내 시점이다.
+      마지막에 <b>“한국에도 파는 곳이 있더라”</b>로 구매 장벽을 푼다 — 이게 이 틀의 필수 칸이다.
+    </div></div>
+  </div>
+  <div class="note">제품의 <b>출처 이야기</b>가 곧 후킹이다(교도소에서 만든 비누). 평범한 물건엔 안 통한다.</div>
+</div>
+
+<!-- 8 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">08</span><span class="tname">되나? 의문형</span><span class="new">신규</span>
+    <span class="tv">211만<small>실측</small></span></div>
+  <div class="hookline"><span>실제 훅 문장</span>종이에 써있는대로 올리면 요리 완성?</div>
+  <div class="chain">
+    <span class="node hook key">hook</span><span class="arw">→</span><span class="node">scale</span><span class="arw">→</span>
+    <span class="node">method</span><span class="arw">→</span><span class="node">spec</span><span class="arw">→</span>
+    <span class="node">escalation</span><span class="arw">→</span><span class="node">fit</span><span class="arw">→</span>
+    <span class="node cta">cta</span></div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본</div><div class="real">
+      지금 이케아에서 <b>신개념 치트키로 바이럴 터진 종이</b>가 있는데 …
+      그림 위에 재료를 <b>‘툭툭’ 올리고 쏙 말아주면</b> 요리 준비가 끝남.
+      심지어 <b>무해한 식용 잉크로 정량까지 다 그려져</b> 있어서 저울이나 계량스푼 따위는 아예 필요가 없다고 함 …
+      <em>진짜 충격적인 포인트는</em> 이대로 오븐에 넣고 구우면 … <b>프라이팬 설거지할 게 단 하나도 없다는 거</b>
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">언제 쓰나 · 왜 새로운가</div>
+      <b>믿기 힘든 제품.</b> 훅을 <b>물음표로 끝낸다</b> — 단정하지 않는다.
+      기존 44개 훅은 전부 단정형(“~하세요”, “~입니다”).
+      의심을 대신 말해주니 시청자가 <b>확인하러</b> 끝까지 본다.
+    </div></div>
+  </div>
+  <div class="note">의성어(‘툭툭’·‘쏙’)로 동작을 그린다. 그리고 <b>“진짜 충격적인 포인트는”</b>으로 가장 센 걸 뒤에 남긴다.</div>
+</div>
+
+<h2>8종 한눈에</h2>
+<div class="tw">
+<table>
+  <tr><th>틀</th><th>화자</th><th>기존에 없던 이유</th><th style="text-align:right">최고</th></tr>
+  <tr><td><b>01 솔직 혹평형</b></td><td>직접(나)</td><td class="ok">비판하는 틀이 하나도 없었다</td><td class="num">105만</td></tr>
+  <tr><td><b>02 셀프 반박형</b></td><td>직접(나)</td><td class="ok">예상 반론을 먼저 말하고 깨는 틀이 없었다</td><td class="num">64만</td></tr>
+  <tr><td><b>03 회사 실수 대박형</b></td><td class="hi">전지적 관찰자</td><td class="ok">실패담으로 여는 틀이 없었다</td><td class="num">217만</td></tr>
+  <tr><td><b>04 제조사도 몰랐던 쓰임형</b></td><td class="hi">제품 분석가</td><td class="ok">만든 사람↔쓰는 사람 대사 짝 구조가 없었다</td><td class="num">65만</td></tr>
+  <tr><td>05 예산 선언형</td><td>직접(나)</td><td class="ok">가격을 첫 문장에 두는 틀이 없었다</td><td class="num">78만</td></tr>
+  <tr><td>06 남의 집 충격형</td><td>직접(나)</td><td class="ok">비교 축이 없었다</td><td class="num">5.6만</td></tr>
+  <tr><td>07 해외 거주자형</td><td class="hi">해외 거주자</td><td class="ok">국외 시점이 없었다</td><td class="num">60만</td></tr>
+  <tr><td>08 되나? 의문형</td><td>직접(나)</td><td class="ok">물음표로 여는 훅이 없었다</td><td class="num">211만</td></tr>
+</table>
+</div>
+
+<h2>한계</h2>
+<div class="limit">
+  <h3>확인한 것과 못 한 것</h3>
+  <ul>
+    <li>기존 44개는 <b>이름·상황유형·beat_roles를 실제로 조회</b>해 대조했다. 다만 <b>templates(문장 예시)까지는 안 봤다</b> — 이름은 달라도 문장이 겹칠 수 있다.</li>
+    <li>훅·대본은 실제 히트작 원문이지만, <b>칸 배열은 내가 나눈 것</b>이고 A/B로 재본 적 없다.</li>
+    <li>각 틀의 근거는 <b>1~2편</b>이다. 배율이 아니라 “이런 게 실제로 터졌다”는 사례다.</li>
+    <li>06 남의 집 충격형은 5.6만으로 <b>다른 것보다 낮다</b>. 축이 새롭다는 이유로 넣었다.</li>
+    <li>트렌드(최근 것만) 필터는 아직 안 걸었다.</li>
+  </ul>
+</div>
+
+<footer>서버 reference.db · spine 44개 대조 · script_wiki 히트작 · 2026-09-05 · <b>로컬 전용</b></footer>
+
+</div>
+</body>
+</html>

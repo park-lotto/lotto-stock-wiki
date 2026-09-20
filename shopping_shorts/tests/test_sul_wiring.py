@@ -37,7 +37,7 @@ def test_썰카테고리만_추출한다():
         # ★라이브 실제 모양(2026-08-19 실측): 항목 category는 '홈템'이고
         #   썰 여부는 **고른 스파인의 fit_categories**로만 갈린다.
         #   이걸 안 보면 배선이 살아 있어도 라이브에서 영영 안 켜진다.
-        _sul_spine = {"id": 56, "name": "유튜브 오용형", "fit_categories": ["오용형"]}
+        _sul_spine = {"id": 56, "name": "유튜브 「원래 이렇게 쓰는 거 아닌데」", "fit_categories": ["오용형"]}
         assert app._sul_block_for_sources("홈템", src, None, [_sul_spine]) == "[블록]"
         assert app._sul_block_for_sources(
             "홈템", src, None, [{"fit_categories": ["홈템"]}]) == ""

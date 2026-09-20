@@ -14,7 +14,7 @@ def _ffprobe(args):
     # stdin=DEVNULL — pytest 기본 캡처(--capture=fd)가 fd 0을 무효화해서
     # 이게 없으면 테스트에서 OSError [WinError 6]이 난다. 실서비스에선 무해.
     r = subprocess.run(["ffprobe", "-v", "error"] + args,
-                       capture_output=True, text=True, check=False,
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", check=False,
                        stdin=subprocess.DEVNULL, timeout=_cfg.FFMPEG_TIMEOUT_SEC)
     if r.returncode != 0 or not r.stdout.strip():
         raise RuntimeError(f"ffprobe 실패: {r.stderr.strip() or '출력 없음'}")
@@ -58,7 +58,7 @@ def _boundary_frames(path, threshold, fps):
         ["ffmpeg", "-v", "info", "-i", str(path),
          "-vf", f"select='gt(scene,{threshold})',showinfo",
          "-vsync", "vfr", "-f", "null", "-"],
-        capture_output=True, text=True, check=False,
+        capture_output=True, text=True, encoding="utf-8", errors="replace", check=False,
         stdin=subprocess.DEVNULL, timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
     return {round(float(m) * fps) for m in _PTS_RE.findall(r.stderr)}
 
@@ -143,7 +143,7 @@ def frame_motion(path, ss=None, to=None):
     cmd += ["-i", str(path),
             "-vf", "signalstats,metadata=print:key=lavfi.signalstats.YDIF",
             "-vsync", "vfr", "-f", "null", "-"]
-    r = subprocess.run(cmd, capture_output=True, text=True, check=False,
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False,
                        stdin=subprocess.DEVNULL, timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
     out = {}
     frame_no = 0

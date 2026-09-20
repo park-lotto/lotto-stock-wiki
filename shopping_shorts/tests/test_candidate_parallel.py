@@ -9,6 +9,7 @@
   돌릴 때 셋이 **동시에** 같은 키를 때려 분당한도 429가 확정이다.
 """
 import time
+import threading
 
 import pytest
 
@@ -54,7 +55,7 @@ def _fixture(monkeypatch, delay=0.0, record=None):
         ("hook_contradicts", lambda b, mat, call: False),
         ("under_budget", lambda b, used, floor=0.85: (False, 0, 0)),
         ("hapsyo_violation", lambda b, style_name=None: False),
-        ("hook_opener_missing", lambda b, style_name=None: False),
+        ("hook_opener_missing", lambda b, style_name=None, on=None: False),   # on= 추가(2026-09-01 훅 감탄사 고객별 스위치) — 호출부 형태 그대로
     ):
         monkeypatch.setattr(real_ss, name, val, raising=False)
 
@@ -75,16 +76,29 @@ def _fixture(monkeypatch, delay=0.0, record=None):
 
 
 def test_후보3개가_병렬로_돈다(monkeypatch):
-    """순차면 3×delay, 병렬이면 ~1×delay."""
-    call = _fixture(monkeypatch, delay=0.30)
-    t0 = time.monotonic()
+    """세 후보가 모두 응답 대기에 진입해야 어느 후보도 반환할 수 있다."""
+    base_call = _fixture(monkeypatch)
+    rendezvous = threading.Barrier(3, timeout=10)
+    callers = set()
+    first_call = threading.local()
+    lock = threading.Lock()
+
+    def call(prompt, schema, **kw):
+        with lock:
+            callers.add(threading.get_ident())
+        # 실행시간 0.75초 기준은 전체 pytest의 CPU 경합도 실패로 판정할 수 있다.
+        # 실제 호출의 겹침을 검증한다. timeout은 교착 방지용이며 성능 기준이 아니다.
+        if not getattr(first_call, "entered", False):
+            first_call.entered = True
+            rendezvous.wait()
+        return base_call(prompt, schema, **kw)
+
     out = edit_plan._single_source_candidates(
         [{"segments": [{"start": 0, "end": 3}], "full_text": "본문", "video_id": "v"}],
         {}, 18.0, 3, call, "generic")
-    elapsed = time.monotonic() - t0
     assert out and len(out["candidates"]) == 3, out
-    # 순차였다면 최소 0.9초. 병렬이면 0.3초대.
-    assert elapsed < 0.75, f"병렬이 아니다 — {elapsed:.2f}초 걸렸다(순차면 0.9초+)"
+    assert not rendezvous.broken
+    assert len(callers) == 3, "후보 세 개가 서로 다른 스레드에서 함께 대기해야 한다"
 
 
 def test_후보_순서가_보존된다(monkeypatch):

@@ -69,8 +69,11 @@ function getCardFrag(groupId){
   const marker = "pickPreset('" + groupId + "')";
   const idx = _presetCardsHTML.indexOf(marker);
   if (idx === -1) return null;
-  const cardStart = _presetCardsHTML.lastIndexOf('<div onclick="pickPreset(', idx);
-  const nextStart = _presetCardsHTML.indexOf('<div onclick="pickPreset(', idx + marker.length);
+  // 카드 시작 마커 — 2026-08-30에 카드 마크업이 <div class="vcard ..." onclick=...>로 바뀌었다.
+  // 이 테스트가 지키는 것은 "role 선택이 **그 카드 안**에 그려지는가"이지 클래스 이름이 아니다.
+  const CARD = '<div class="vcard';
+  const cardStart = _presetCardsHTML.lastIndexOf(CARD, idx);
+  const nextStart = _presetCardsHTML.indexOf(CARD, idx + marker.length);
   return _presetCardsHTML.slice(cardStart, nextStart === -1 ? _presetCardsHTML.length : nextStart);
 }
 function mkGroup(id, name, variants){
@@ -139,7 +142,7 @@ if (rangeCount !== 0) {
   console.error('FAIL: whisper 선택 안에 range 입력 ' + rangeCount + '개(기대 0 — 강도 슬라이더 금지)');
   process.exit(1);
 }
-if (frag.indexOf("setWhisperPreset('reversal')\" class=\"tab active\"") === -1) {
+if (frag.indexOf("setWhisperPreset('reversal')\" class=\"tone on\"") === -1) {
   console.error('FAIL: 기본값 반전에만 버튼이 active가 아님 — ' + frag);
   process.exit(1);
 }
@@ -215,7 +218,7 @@ if (WHISPER_PICK !== 'hook') {
   console.error('FAIL: WHISPER_PICK=' + WHISPER_PICK + '(기대 hook)'); process.exit(1);
 }
 const frag = getCardFrag('g1');
-if (frag.indexOf("setWhisperPreset('hook')\" class=\"tab active\"") === -1) {
+if (frag.indexOf("setWhisperPreset('hook')\" class=\"tone on\"") === -1) {
   console.error('FAIL: 훅에만 버튼이 카드 안에서 active로 안 바뀜 — ' + frag); process.exit(1);
 }
 const roles = _whisperRolesForBody();

@@ -35,7 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from shopping_shorts.config import DB_PATH          # noqa: E402
 from shopping_shorts.store import Store             # noqa: E402
 
-SPINE_NAME = "유튜브 발명품형"
+SPINE_NAME = "유튜브 「OO 개발자도 무릎 탁」"
 
 # 계기 변형은 유지하고, **폴백만** 실측 결로 바꾼다.
 STORY = [

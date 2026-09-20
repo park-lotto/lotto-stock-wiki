@@ -1,6 +1,11 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-08-18-b  (⭐레퍼런스 등록 — 영상+채널 한 번에, 랭킹 즉시 반영)
+// 로직 버전: 2026-09-11  (LOGIC_VER가 정본)
+//   · 핀터레스트 — 핀 페이지 플로팅 담기 + 검색 그리드 카드마다 📥 (2026-09-11 고객 문의)
+//   · ⭐볼채널등록 — 회원용 개인 채널 즐겨찾기
+//   · 유튜브는 쇼츠에서만 동작 — 메인·롱폼 차단
+//   ★두 트랙이 같은 날 각각 20260905를 달아 병합에서 부딪혔다. 합친 파일이라
+//     번호를 한 칸 올린다 — 버전은 "무엇이 들어있나"의 유일한 표식이다.
 (function () {
   "use strict";
   // ── 중복 실행 방지 → '새 로직이 이긴다'로 교체(2026-08-18 실사고) ──────────
@@ -10,12 +15,12 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260818;
+  var LOGIC_VER = 20260911;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
     try {
-      var olds = document.querySelectorAll("#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-seek");
+      var olds = document.querySelectorAll("#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-adopt-btn,#ss-seek");
       for (var oi = 0; oi < olds.length; oi++) olds[oi].remove();
     } catch (e) {}
   }
@@ -31,7 +36,8 @@
   // JS 스코프만 격리하고 DOM은 페이지와 공유하므로 이 attribute를 페이지 스크립트가 읽는다.
   // 우리 도메인에선 담기 버튼을 붙이지 않고 여기서 끝낸다(자기 페이지에 엉뚱한 📥 방지).
   try {
-    if (location.hostname.indexOf("shoppingshorts.duckdns.org") >= 0) {
+    if (["shoppingshorts.duckdns.org", "app.stmaker.kr"]
+        .some(function (h) { return location.hostname.indexOf(h) >= 0; })) {
       document.documentElement.setAttribute("data-ss-grab-installed", "1");
       // localStorage는 JS월드가 아니라 '출처(origin)'로 공유돼 샌드박스 경계에 가장 강하다.
       try { localStorage.setItem("ss_grab_ok", "1"); } catch (e) {}
@@ -50,7 +56,19 @@
   //   그런데 브라우저에는 CDN 주소가 그대로 있다. 담는 순간 그걸 함께 보내면 서버가
   //   그 주소로 바로 받는다(download_any가 video_url을 우선 쓴다).
   //   blob:은 이 탭 안에서만 유효하므로 보내지 않는다 — 서버가 받을 수 없다.
-  var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com"];
+  var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com", "rednotecdn.com"];
+  function _mediaFromPageHtml() {
+    // RedNote의 새 플레이어는 실제 mp4를 MediaSource에 넣고 <video src>에는 blob:만
+    // 남긴다(2026-09-14 라이브 실측). 그래도 현재 노트의 직접 mp4는 렌더된 DOM 안에
+    // sns-v*.rednotecdn.com/...mp4로 남아 있으므로, 사람이 담기를 누르는 그 순간 찾는다.
+    // 매 tick마다 큰 DOM을 훑지 않고 currentVideoSrc() 호출 때만 실행한다.
+    try {
+      var html = document.documentElement.innerHTML || "";
+      var ms = html.match(/https:\/\/[^\"'<>\\\s]*(?:xhscdn|rednotecdn)\.com\/[^\"'<>\\\s]*\.mp4(?:\?[^\"'<>\\\s]*)?/gi) || [];
+      return ms.length ? ms[0].replace(/&amp;/g, "&") : "";
+    } catch (e) {}
+    return "";
+  }
   function currentVideoSrc() {
     try {
       var vs = document.querySelectorAll("video");
@@ -67,7 +85,7 @@
         }
       }
     } catch (e) {}
-    return "";
+    return _mediaFromPageHtml();
   }
   // ★지금 보는 영상의 **커버 이미지**(2026-08-17 사장님 "도우인은 썸네일이 없음").
   //   도우인 영상 페이지는 SPA라 og:image가 없다(og:title도 "观看更多精彩视频 - 抖音"
@@ -125,6 +143,25 @@
     if (location.host.indexOf("tiktok.com") >= 0) return "tiktok";
     return "";
   }
+  // 시크바·렌즈가 붙는 플랫폼(2026-09-01 사장님 "유튜브도 인스타랑 같게").
+  // _snsHost()는 인스타·틱톡 전용 로직(그리드 카드 등)에 계속 쓰인다 — 섞지 않는다.
+  function _playerPlat() {
+    var h = location.host;
+    if (h.indexOf("instagram.com") >= 0) return "instagram";
+    if (h.indexOf("tiktok.com") >= 0) return "tiktok";
+    if (h.indexOf("youtube.com") >= 0 || h.indexOf("youtu.be") >= 0) return "youtube";
+    if (h.indexOf("threads.com") >= 0 || h.indexOf("threads.net") >= 0) return "threads";
+    return "";
+  }
+  // 이 영상 한 편을 가리키는 키(캐시·통계용). 플랫폼마다 주소 모양이 다르다.
+  function _pageKey() {
+    var m = location.pathname.match(/\/(?:reel|reels|p|tv|video|shorts)\/[A-Za-z0-9_-]+/);
+    if (m) return m[0];
+    var v = location.search.match(/[?&]v=([A-Za-z0-9_-]+)/);       // 유튜브 watch
+    if (v && _playerPlat() === "youtube") return "/watch/" + v[1];
+    var t = location.pathname.match(/^\/@[\w.\-]+\/post\/[A-Za-z0-9_-]+/);  // 쓰레드
+    return t ? t[0] : "";
+  }
   function _ttProfile() {   // 틱톡 프로필(/@handle) — 영상 페이지(/@handle/video/..)는 제외
     var m = location.pathname.match(/^\/@([\w.\-]+)\/?$/);
     return m ? m[1] : "";
@@ -133,6 +170,40 @@
     var m = location.pathname.match(/^\/([^/]+)\/?(reels\/?)?$/);
     return (m && !_IG_RESERVED[m[1]]) ? m[1] : "";
   }
+  // ── 릴스/게시물 화면의 **작성자 핸들**을 화면에서 읽는다 (2026-09-02 사장님 제보) ──
+  //   증상: 릴스에서 📌채널수집을 누르면 "❌ 채널을 못 찾았어요"만 떴다.
+  //   원인: 서버가 username 없이 오면 yt-dlp로 인스타를 해석하는데, 로그인 없는 서버는
+  //         자주 막힌다(_resolve_uploader). 그런데 **화면에는 계정명이 이미 떠 있다** —
+  //         담기가 조회수를 화면에서 읽어 보내는 것과 같은 처방으로, 여기서 읽어 보낸다.
+  //   ★영상 근처(조상 6단계 안)의 프로필 링크만 고른다 — 사이드바 추천 계정을 집으면
+  //     엉뚱한 채널이 등록된다.
+  function _igAuthor() {
+    var ok = function (h) {
+      var m = String(h || "").match(/^\/([A-Za-z0-9._]+)\/?(\?|$)/);
+      return (m && !_IG_RESERVED[m[1]]) ? m[1] : "";
+    };
+    var vs = document.querySelectorAll("video"), best = null, area = 0;
+    for (var i = 0; i < vs.length; i++) {
+      var r = vs[i].getBoundingClientRect();
+      if (r.width * r.height > area) { area = r.width * r.height; best = vs[i]; }
+    }
+    var el = best && best.parentElement, guard = 0;
+    while (el && guard++ < 6) {
+      var as = el.querySelectorAll('a[href^="/"]');
+      for (var k = 0; k < as.length; k++) {
+        var u = ok(as[k].getAttribute("href"));
+        if (u) return u;
+      }
+      el = el.parentElement;
+    }
+    // 폴백: 페이지 안 JSON에 owner.username이 들어 있는 경우
+    try {
+      var m2 = (document.body.innerHTML || "").match(/"owner":\{[^}]*"username":"([A-Za-z0-9._]+)"/);
+      if (m2) return m2[1];
+    } catch (e) {}
+    return "";
+  }
+
   // ── 채널수집 버튼 — 인스타·틱톡에 이어 유튜브·쓰레드까지(2026-08-18 사장님 요청) ──
   // 플랫폼마다 '어디에 넣어야 수집이 잡느냐'가 다르다(인스타=discovered_channels,
   // 나머지=platform_seeds account). 그 갈래는 **서버 한 곳**(/api/discover/add_by_url)
@@ -165,7 +236,11 @@
     if (plat === "instagram") {
       var ig = _igProfileName();
       if (ig) return "username=" + encodeURIComponent(ig);
-      return isSinglePost() ? "url=" + encodeURIComponent(location.href) : "";
+      if (!isSinglePost()) return "";
+      var q = "url=" + encodeURIComponent(location.href);
+      var au = _igAuthor();
+      if (au) q += "&username=" + encodeURIComponent(au);   // 서버 yt-dlp 해석을 건너뛴다
+      return q;
     }
     if (plat === "tiktok")
       return (_ttProfile() || isSinglePost()) ? "url=" + encodeURIComponent(location.href) : "";
@@ -178,6 +253,10 @@
   function addChannelBtn() {
     if (document.getElementById("ss-chadd-btn") || !document.body) return;
     if (!_chQuery()) return;
+    // 회원에겐 아예 안 붙인다(관리자 전용 API라 눌러도 "관리자 필요"만 뜬다).
+    // ★syncExtraBtns에서 지우기만 하면 붙였다 지웠다를 반복해 깜빡인다 —
+    //   붙이는 쪽에서 막는 게 유일한 정답이다. 아직 모르는 동안(null)도 안 붙인다.
+    if (window.__ssIsAdmin !== true) return;
     var b = document.createElement("button");
     b.id = "ss-chadd-btn";
     b.textContent = "📌 채널수집";
@@ -277,28 +356,41 @@
     if (y < 2010 || y > 2100) return "";        // 공식이 안 맞는 ID면 표시 안 함
     return y + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
   }
+  // ★재생바 자리는 _dockBtns 한 곳에서만 정한다(0순위-B). 2026-09-02엔 여기(_placeSeekBar:
+  //   top+right)와 _dockBtns(left+bottom)가 같은 tick에서 따로 정해 **넷이 다 걸려** 상자가
+  //   담기 버튼 밑에서 영상 바닥까지 시커멓게 늘어났다(사장님 스샷 3장). 두 번 적지 마라.
+
   function syncSeekBar() {
-    if (!_snsHost()) return;
+    if (!_playerPlat()) return;
     var box = document.getElementById("ss-seek");
-    if (!isSinglePost()) { if (box) box.remove(); return; }
+    if (!_isVideoPage()) { if (box) box.remove(); return; }
     var v = _igVideo();
     if (!v) { if (box) box.remove(); return; }
     if (!box) {
       box = document.createElement("div");
       box.id = "ss-seek";
-      box.style.cssText = "position:fixed;right:18px;bottom:174px;z-index:2147483647;background:rgba(20,20,20,.92);" +
-        "border:1px solid #444;border-radius:14px;padding:8px 12px;display:flex;align-items:center;gap:8px;" +
-        "font-family:system-ui,sans-serif;color:#fff;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
+      // ★자리는 _dockBtns가 정한다 — 여기 값은 첫 그림 전 잠깐 쓰는 초기값이다.
+      box.style.cssText = "position:fixed;right:18px;bottom:174px;height:auto;width:auto;z-index:2147483647;background:rgba(20,20,20,.92);" +
+        "border:1px solid #444;border-radius:12px;padding:5px 8px;display:flex;align-items:center;gap:6px;" +
+        "font-family:system-ui,sans-serif;color:#fff;font-size:11px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
       box.innerHTML = "<button id='ss-seek-p' title='일시정지/재생' style='background:none;border:none;" +
-        "color:#fff;font-size:15px;cursor:pointer;padding:0 2px'>⏸</button>" +
-        "<input id='ss-seek-r' type='range' min='0' max='100' step='0.1' value='0' style='width:150px;cursor:pointer'>" +
-        "<span id='ss-seek-t' style='min-width:70px;text-align:right'>0:00/0:00</span>" +
-        "<span id='ss-seek-d' title='영상 등록일' style='color:#aaa;border-left:1px solid #555;padding-left:8px'></span>" +
-        "<span id='ss-seek-s' title='조회수·댓글수' style='color:#aaa;border-left:1px solid #555;padding-left:8px'></span>";
+        "color:#fff;font-size:13px;cursor:pointer;padding:0 2px'>⏸</button>" +
+        "<button id='ss-seek-x' title='재생 속도' style='background:none;border:none;" +
+        "color:#fff;font-size:11px;font-weight:800;cursor:pointer;padding:0 2px'>1x</button>" +
+        "<input id='ss-seek-r' type='range' min='0' max='100' step='0.1' value='0' style='width:90px;cursor:pointer'>" +
+        "<span id='ss-seek-t' style='min-width:58px;text-align:right'>0:00/0:00</span>" +
+        "<span id='ss-seek-d' title='영상 등록일' style='color:#aaa;border-left:1px solid #555;padding-left:6px'></span>" +
+        "<span id='ss-seek-s' title='조회수·댓글수' style='color:#aaa;border-left:1px solid #555;padding-left:6px'></span>";
       document.body.appendChild(box);
       var r = document.getElementById("ss-seek-r");
       r.addEventListener("input", function () {
         var vv = _igVideo(); if (vv) { try { vv.currentTime = parseFloat(this.value); } catch (e) {} }
+      });
+      var SPEEDS = [1, 1.25, 1.5, 2, 0.5];
+      document.getElementById("ss-seek-x").addEventListener("click", function () {
+        var vv = _igVideo(); if (!vv) return;
+        var i = SPEEDS.indexOf(vv.playbackRate);
+        vv.playbackRate = SPEEDS[(i + 1) % SPEEDS.length];   // 목록에 없으면 i=-1 → 1x
       });
       document.getElementById("ss-seek-p").addEventListener("click", function () {
         var vv = _igVideo(); if (!vv) return;
@@ -306,6 +398,7 @@
         this.textContent = vv.paused ? "▶" : "⏸";
       });
     }
+    // 자리는 _dockBtns가 정한다 — 여기서 top/right를 건드리지 마라(검은 판 사고).
     var r2 = document.getElementById("ss-seek-r"), t2 = document.getElementById("ss-seek-t"),
         p2 = document.getElementById("ss-seek-p");
     if (r2 && t2) {
@@ -314,6 +407,8 @@
       t2.textContent = _fmtT(v.currentTime) + "/" + _fmtT(v.duration);
       if (p2) p2.textContent = v.paused ? "▶" : "⏸";
     }
+    var x2 = document.getElementById("ss-seek-x");
+    if (x2) x2.textContent = (v.playbackRate || 1) + "x";
     var d2 = document.getElementById("ss-seek-d");
     if (d2) {                                    // SPA라 영상이 바뀌면 URL도 바뀜 — 매 tick 갱신
       var dd = _fmtDate(_postDate());
@@ -342,9 +437,8 @@
   function _syncStats() {
     var el = document.getElementById("ss-seek-s");
     if (!el) return;
-    var m = location.pathname.match(/\/(?:reel|reels|p|tv|video)\/[A-Za-z0-9_-]+/);
-    if (!m) { el.style.display = "none"; return; }
-    var key = m[0];
+    var key = _pageKey();
+    if (!key) { el.style.display = "none"; return; }
     if (_statsCache[key]) {
       var t = _statsText(_statsCache[key]);
       el.textContent = t; el.style.display = t ? "" : "none"; return;
@@ -544,9 +638,51 @@
         }
       });
   }
+  // ── ⭐볼채널등록(2026-09-02 사장님) — 회원용 개인 채널 즐겨찾기 ────────────
+  //  📌채널수집·⭐레퍼런스등록은 **관리자 전용 + 전역 수집**이라 회원이 눌러도
+  //  "관리자 필요"만 뜬다. 회원에겐 이 버튼이 그 자리를 대신한다.
+  //  ★담아도 크롤 대상은 안 늘어난다(순수 북마크) — 서버 주석과 같은 이유.
+  var _ssIsAdmin = null;      // null=아직 모름, true/false=확정
+  function _ssWhoAmI(cb) {
+    if (_ssIsAdmin !== null) { cb(_ssIsAdmin); return; }
+    _gmGet(BASE + "/api/me", function (st, text) {
+      try {
+        var d = (st === 200) ? JSON.parse(text) : null;
+        _ssIsAdmin = !!(d && d.is_admin);
+      } catch (e) { _ssIsAdmin = false; }
+      window.__ssIsAdmin = _ssIsAdmin;   // addChannelBtn이 읽는다(같은 판정 한 곳)
+      cb(_ssIsAdmin);
+    }, function () { _ssIsAdmin = false; window.__ssIsAdmin = false; cb(false); });
+  }
+  // 지금 화면의 대표 썸네일(카드에 그림을 채우는 용도 — 없으면 이름만 뜬다).
+  function _ssPageThumb() {
+    var v = document.querySelector("video[poster]");
+    if (v && v.getAttribute("poster")) return v.getAttribute("poster");
+    var og = document.querySelector("meta[property='og:image']");
+    return og ? (og.getAttribute("content") || "") : "";
+  }
+  function addFavChannelBtn() {
+    var b = document.getElementById("ss-favch-btn");
+    // 대상 판정은 📌채널수집과 **같은 함수**를 쓴다 — 여기서 또 정하면 어긋난다.
+    // ★관리자(사장님)에겐 안 띄운다 — 📌채널수집과 자리가 겹쳐 헷갈린다(2026-09-02 사장님).
+    //   회원에겐 그대로 필요하다(회원은 📌채널수집을 못 쓴다).
+    var want = !!_chQuery() && window.__ssIsAdmin !== true;
+    if (b && !want) { b.remove(); return; }
+    if (b || !want) return;
+    _miniBtn("ss-favch-btn", "⭐ 나만의 채널등록",
+             "이 채널을 내 즐겨찾기(나만의 채널등록)에 담습니다 — 수집 목록과는 별개", 278, "#d1a054",
+             function () {
+               var q = "url=" + encodeURIComponent(location.href);
+               var t = _ssPageThumb();
+               if (t) q += "&thumb=" + encodeURIComponent(t);
+               window.open(BASE + "/api/fav_channel/grab?" + q,
+                           "ss_favch", "width=400,height=250");
+             });
+  }
+
   function syncExtraBtns() {
     var lens = document.getElementById("ss-lens-btn");
-    if (_snsHost() && isSinglePost()) {
+    if (_playerPlat() && _isVideoPage()) {
       _miniBtn("ss-lens-btn", "🔍 렌즈", "이 영상으로 원본·유사 레퍼런스 역추적(화면 안에서)", 122, "#37b0e0",
                function () { _lensRun(location.href); });
     } else if (lens) { lens.remove(); }
@@ -555,8 +691,17 @@
     //   담기(📥)는 내 즐겨찾기로만 가고, 채널수집(📌)은 다음 수집까지 기다려야 했다.
     //   이 버튼은 **영상+채널을 한 번에** 넣고 그 영상을 지금 랭킹 스냅샷에 끼워 넣는다.
     //   ★영상 페이지에서만 띄운다 — 피드·프로필에선 "어느 영상"이 정해지지 않는다.
+    // ★회원에겐 관리자 전용 버튼(📌채널수집·⭐레퍼런스등록)을 감추고 ⭐볼채널등록을
+    //   대신 띄운다. 관리자(사장님)는 넷 다 보인다 — 개인 즐겨찾기도 쓰기 때문.
+    _ssWhoAmI(function (isAdmin) {
+      addFavChannelBtn();
+      if (!isAdmin) {   // 판정 전에 이미 붙은 것이 있으면 걷어낸다
+        var ch = document.getElementById("ss-chadd-btn"); if (ch) ch.remove();
+        var ad = document.getElementById("ss-adopt-btn"); if (ad) ad.remove();
+      }
+    });
     var adopt = document.getElementById("ss-adopt-btn");
-    var wantAdopt = !!_chPlat() && _isVideoPage();
+    var wantAdopt = !!_chPlat() && _isVideoPage() && window.__ssIsAdmin === true;
     if (adopt && !wantAdopt) adopt.remove();
     else if (!adopt && wantAdopt) {
       _miniBtn("ss-adopt-btn", "⭐ 레퍼런스 등록",
@@ -659,7 +804,8 @@
 
   // 지금 보고 있는 게 '단일 영상/게시물' 페이지인가 (인스타 /p/·/reel/, 틱톡 /video/ 등)
   function isSinglePost() {
-    return /\/(p|reel|reels|video)\/[^/]+/.test(location.pathname);
+    return /\/(p|reel|reels|video)\/[^/]+/.test(location.pathname) ||
+           /\/(?:discovery\/item|search_result)\/[^/]+/.test(location.pathname);
   }
 
   // 검색·탐색 '그리드' 페이지에서만 카드 버튼을 붙인다. 단일 영상 페이지에선 관련영상 카드가
@@ -906,7 +1052,193 @@
     } catch (e) { window.__ssDouyinInjected = false; }   // 실패 시 다음 tick에 재시도(폴백=플로팅)
   }
 
-  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} }
+
+  // ── 버튼 자리: 화면 오른쪽 끝 → **영상 칸 바로 옆**(2026-09-01 사장님 요청) ─────
+  //   종전엔 right:18px 고정이라 사이트 UI(쓰레드 '메시지' 팝업 등)와 겹쳤고,
+  //   넓은 화면에선 영상에서 한참 떨어진 구석에 붙어 있었다.
+  //   자리 판단은 **여기 한 곳에서만** 한다(0순위-B) — 만드는 쪽은 right:18px로 두고,
+  //   이 함수가 매 tick에 left로 덮어쓴다. 못 정하면 종전 자리 그대로 둔다.
+  // 위→아래 순서. 지금 화면에 있는 것만 골라 빈칸 없이 연속으로 쌓는다.
+  var DOCK_IDS = ["ss-adopt-btn", "ss-favch-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn"];
+  var DOCK_STEP = 52;      // 버튼 세로 간격
+  function _dockAnchor() {
+    // 가장 큰 <video>가 지금 보는 영상이다.
+    var vs = document.querySelectorAll("video"), best = null, area = 0;
+    for (var i = 0; i < vs.length; i++) {
+      var r = vs[i].getBoundingClientRect();
+      if (r.width * r.height > area) { area = r.width * r.height; best = vs[i]; }
+    }
+    if (!best || area < 10000) return null;
+    var v = best.getBoundingClientRect();
+    var right = v.right;
+    // ★조상 칸을 쓰되 '영상보다 지나치게 넓은 칸'은 버린다(2026-09-01 실사고).
+    //   유튜브 쇼츠의 ytd-reel-video-renderer는 **화면 전체 폭**이라, 그걸 그대로 쓰면
+    //   버튼이 브라우저 오른쪽 끝(주소창 밑)까지 날아갔다. 액션열까지만 감싸는 칸이 목표다.
+    // ★인스타 '모달'(프로필에서 영상을 클릭했을 때)은 왼쪽 영상 + 오른쪽 캡션판이 한 칸이다
+    //   (2026-09-02 사장님 스샷). 영상 오른쪽만 보면 버튼이 **캡션 글자 위를 덮는다** —
+    //   모달 칸 자체를 넘어 그 바깥(오른쪽 빈 공간)에 세워야 한다. 그래서 dialog·article은
+    //   폭 가드(영상의 1.6배)를 면제한다. 나머지 칸은 종전대로 — 유튜브 쇼츠의 화면 전체폭
+    //   조상을 집어 버튼이 브라우저 끝까지 날아갔던 사고(2026-09-01)를 막아야 한다.
+    var el = best.parentElement, guard = 0;
+    while (el && guard++ < 10) {
+      var rr = el.getBoundingClientRect();
+      // ★/reel/ 직접 주소 화면(2026-09-03 사장님 스샷)은 dialog·article이 아닌 칸이
+      //   영상+댓글판을 감싼다 — 댓글 입력창(textarea)을 품은 칸이면 같은 취급. 단 화면
+      //   거의 전체를 덮는 칸은 페이지 껍데기라 버린다(버튼이 브라우저 끝으로 날아간다).
+      var hasComment = !!(el.querySelector && el.querySelector("textarea")) &&
+                       rr.width <= window.innerWidth * 0.85;
+      var isModal = (el.getAttribute && el.getAttribute("role") === "dialog") ||
+                    el.tagName === "ARTICLE" || hasComment;
+      if (rr.right > right && rr.right < window.innerWidth &&
+          (isModal || rr.width <= v.width * 1.6)) right = rr.right;
+      el = el.parentElement;
+    }
+    // 액션열(좋아요·댓글·공유)이 영상 **바깥 형제**인 경우(유튜브 쇼츠) — 따로 찾아 넘는다.
+    var rails = document.querySelectorAll("#actions,ytd-reel-player-overlay-renderer #actions");
+    for (var k = 0; k < rails.length; k++) {
+      var q = rails[k].getBoundingClientRect();
+      if (q.height < 100 || q.width > 200) continue;                 // 세로 아이콘 열만
+      if (q.left < v.right - 40 || q.right > v.right + 300) continue; // 이 영상 옆의 것만
+      if (q.right > right) right = q.right;
+    }
+    if (right <= 0 || right >= window.innerWidth) return null;
+    return { top: v.top, bottom: v.bottom, right: right };
+  }
+  function _dockBtns() {
+    var rr = _dockAnchor();
+    var x = rr ? rr.right : 0;
+    // 버튼 4개: 영상 칸 오른쪽 + **위에서부터** 아래로(2026-09-01 사장님 요청 —
+    // 종전엔 아래에 깔려 사이트 액션 아이콘·'메시지' 팝업과 겹쳤다).
+    // ★스크롤로 영상이 화면 위로 밀리면 rr.top이 음수가 된다. 종전엔 각 버튼이
+    //   Math.max(8, rr.top + 8 + slot*STEP)라 **전부 top:8로 눌려 한 자리에 포개졌다**
+    //   (2026-09-02 사장님 "스크롤 조금 내리면 합쳐진다"). 바닥값을 버튼별로 두지 말고
+    //   **기준선 하나를 먼저 정하고** 거기서 간격을 더한다 — 그러면 절대 겹치지 않는다.
+    var live = [];
+    for (var i0 = 0; i0 < DOCK_IDS.length; i0++) {
+      var e0 = document.getElementById(DOCK_IDS[i0]);
+      if (e0) live.push(e0);
+    }
+    // 영상이 화면에서 거의 사라졌으면 버튼도 숨긴다(엉뚱한 자리에 떠 있는 것보다 낫다).
+    var gone = !!rr && (rr.bottom < 120 || rr.top > window.innerHeight - 80);
+    // ★사이트 **헤더 아래로만** 내려온다(2026-09-02 사장님 "이거때매 계정 눌러지지가
+    //   않는다"). 종전 바닥값 8px은 화면 맨 위라, 영상이 위로 올라간 화면에서 담기 버튼이
+    //   인스타 헤더의 **계정 아이콘 위를 덮어** 프로필을 못 눌렀다. 인스타·유튜브·틱톡
+    //   헤더가 모두 60px 안팎이라 그 아래(72px)를 바닥으로 둔다.
+    var HEADER_SAFE = 72;
+    var base = rr ? Math.max(HEADER_SAFE, Math.min(rr.top + 8,
+                 window.innerHeight - 8 - live.length * DOCK_STEP)) : 0;
+    var slot = 0;
+    for (var i = 0; i < live.length; i++) {
+      var el = live[i];
+      el.style.display = gone ? "none" : "";
+      if (gone) continue;
+      // 화면 밖으로 밀리면(좁은 창) 종전 오른쪽 아래 자리로 되돌린다.
+      var w = el.offsetWidth || 150;
+      if (!rr || x + 16 + w + 12 > window.innerWidth) {
+        el.style.left = ""; el.style.right = "18px"; el.style.top = ""; el.style.bottom = "";
+      } else {
+        el.style.right = "auto"; el.style.left = (x + 16) + "px";
+        el.style.bottom = "auto";
+        el.style.top = (base + slot * DOCK_STEP) + "px";
+        slot++;
+      }
+    }
+    // 시크바: **담기 버튼(도킹 줄 맨 아래) 바로 밑**에 붙인다(2026-09-02 사장님 "댓글을 못 써서").
+    // ★top·left만 건다. bottom·right는 반드시 auto로 푼다 — 고정 배치에서 top과 bottom이
+    //   같이 걸리면 그 사이만큼 상자가 늘어나 검은 판이 된다(2026-09-02~03 3번 재발).
+    var sk = document.getElementById("ss-seek");
+    if (sk) {
+      sk.style.display = gone ? "none" : "";
+      if (gone) return;
+      if (!rr || slot === 0) {
+        sk.style.left = ""; sk.style.top = "";
+        sk.style.right = "18px"; sk.style.bottom = "174px";
+      } else {
+        var sw = sk.offsetWidth || 260;
+        var sx = x + 16;
+        if (sx + sw + 12 > window.innerWidth) sx = Math.max(8, window.innerWidth - sw - 12);
+        sk.style.right = "auto"; sk.style.bottom = "auto";
+        sk.style.left = sx + "px";
+        sk.style.top = (base + slot * DOCK_STEP) + "px";   // 마지막 버튼 한 칸 아래
+      }
+      sk.style.height = "auto"; sk.style.maxHeight = "none"; sk.style.width = "auto";
+    }
+  }
+
+  // ── 핀터레스트(2026-09-11) ────────────────────────────────────────────
+  //   고객: "숏템파워검색 → 📌 누르면 영상은 뜨는데 담기 버튼이 없다". 📌는 pinterest.com
+  //   검색을 새 탭에 여는 버튼이라 우리 버튼이 있을 리 없었다 — 이 로직이 핀터레스트를
+  //   아예 몰랐다(@match에도 없었다). 서버 쪽 받기(media_download._download_pinterest)는
+  //   이미 있었으니 화면만 붙인다.
+  //   · 핀 페이지(/pin/숫자/) = 단일 영상 → 플로팅 📥 담기(location.href 그대로).
+  //   · 검색·피드 그리드 = 핀 카드(a[href^="/pin/"])마다 📥. 플로팅은 숨긴다 — 검색 페이지
+  //     주소를 담으면 서버가 "지원 안 함"을 낼 뿐이라 혼동만 준다.
+  function _isPin() { return location.host.indexOf("pinterest.") >= 0; }
+  function _pinSingle() { return /^\/pin\/[^/]+/.test(location.pathname); }
+  function addPinCardBtns() {
+    if (!_isPin() || _pinSingle()) return;
+    // ★핀터레스트 실측(2026-09-11): 핀 링크 <a href="/pin/…">는 **0x0**(레이아웃 없음)이고
+    //   크기를 가진 상자는 [data-test-id="pin"] 래퍼다. 영상 핀은 <img> 대신 <video>만 있다.
+    //   그래서 래퍼 기준으로 크기·버튼 자리를 잡고, 썸네일은 img.src 또는 video.poster.
+    var cards = document.querySelectorAll('[data-test-id="pin"]');
+    for (var i = 0; i < cards.length; i++) {
+      var c = cards[i];
+      if (c.getAttribute("data-ssgrab")) continue;
+      var a = c.querySelector('a[href^="/pin/"]');
+      var im = c.querySelector("img, video");
+      if (!a || !im) continue;
+      var rr = c.getBoundingClientRect();
+      if (rr.width < 100 || rr.height < 100) continue;     // 아직 안 그려진(0x0) 카드는 다음 tick에
+      c.setAttribute("data-ssgrab", "1");
+      if (getComputedStyle(c).position === "static") c.style.position = "relative";
+      var b = document.createElement("button");
+      b.className = "ss-card-grab";
+      b.textContent = "📥";
+      b.title = "이 핀 담기";
+      b.style.cssText =
+        "position:absolute;top:8px;left:8px;z-index:99999;background:#1f6feb;color:#fff;" +
+        "border:none;border-radius:16px;width:34px;height:34px;font-size:16px;" +
+        "box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer";
+      (function (a, im) {
+        b.addEventListener("click", function (e) {
+          e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+          openGrab(a.href, im.poster || im.src || "", im.alt || im.getAttribute("aria-label") || "");
+        }, true);
+      })(a, im);
+      c.appendChild(b);
+    }
+  }
+  function syncPinFloat() {
+    if (!_isPin()) return;
+    var f = document.getElementById("ss-grab-btn");
+    if (f) f.style.display = _pinSingle() ? "" : "none";
+  }
+
+  // ── 유튜브는 '쇼츠'에서만 동작한다 (2026-09-02 사장님 요청) ──────────────
+  //   메인·구독·검색·채널 등 목록 화면과 **롱폼(watch)** 에선 버튼을 아예 띄우지 않는다.
+  //   예외: 공유 링크로 열린 쇼츠는 /watch?v=... 로 뜨기도 한다 → 재생 중인 영상 길이가
+  //   3분 이하이면 쇼츠로 보고 허용한다(길이를 못 읽으면 롱폼으로 간주해 끈다).
+  function _ytOff() {
+    var h = location.host;
+    if (h.indexOf("youtube.com") < 0 && h.indexOf("youtu.be") < 0) return false;
+    if (/^\/shorts\//.test(location.pathname)) return false;      // 쇼츠 = 동작
+    if (/^\/watch/.test(location.pathname) || h.indexOf("youtu.be") >= 0) {
+      var v = document.querySelector("video");
+      var d = v && isFinite(v.duration) ? v.duration : 0;
+      if (d > 0 && d <= 180) return false;                        // watch로 열린 쇼츠
+    }
+    return true;                                                  // 그 외 유튜브 = 끔
+  }
+  // 유튜브 비대상 화면에서 이미 붙은 것들을 걷어낸다(SPA 이동 대응).
+  function _ytClear() {
+    try {
+      var els = document.querySelectorAll(
+        "#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-adopt-btn,#ss-seek,.ss-card-grab");
+      for (var i = 0; i < els.length; i++) els[i].remove();
+    } catch (e) {}
+  }
+
+  function tick() { if (_ytOff()) { _ytClear(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncPinFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.

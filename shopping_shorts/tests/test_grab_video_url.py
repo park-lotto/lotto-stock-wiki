@@ -49,10 +49,39 @@ def test_grabbable_media_guard_is_host_based():
     from shopping_shorts.app import _is_grabbable_media
     assert _is_grabbable_media("https://v3-dy-o.zjcdn.com/a?b=1")
     assert _is_grabbable_media("https://sns-video.xhscdn.com/y")
+    assert _is_grabbable_media("https://sns-v28.rednotecdn.com/stream/a.mp4")
     assert not _is_grabbable_media("https://evil.example.com/a.mp4")   # 확장자만으론 안 된다
     assert not _is_grabbable_media("https://zjcdn.com.evil.com/a")     # 접미 위장
     assert not _is_grabbable_media("blob:https://www.douyin.com/x")    # 브라우저 안에서만 유효
     assert not _is_grabbable_media("http://v3-dy-o.zjcdn.com/a")       # https만
+
+
+def test_rednote_direct_video_is_downloadable_without_ytdlp():
+    """새 RedNote CDN 직접 mp4는 페이지 추출기(yt-dlp)로 보내지 않는다."""
+    from shopping_shorts.media_download import _is_direct_video
+    assert _is_direct_video("https://sns-v28.rednotecdn.com/stream/a/video.mp4")
+
+
+def test_enqueue_prewarm_keeps_direct_video_url(tmp_path, monkeypatch):
+    """담기에서 얻은 mp4가 큐에서 빠지면 워커는 다시 실패한 페이지 URL을 받는다."""
+    from shopping_shorts import app as appmod
+    s = _store(tmp_path)
+    monkeypatch.setattr(appmod, "current_method", lambda: "screen")
+    assert appmod._enqueue_prewarm(
+        s, "grab_xhs_1", "https://www.rednote.com/discovery/item/1",
+        video_url="https://sns-v28.rednotecdn.com/stream/a.mp4",
+    )
+    with s._conn() as c:
+        args = c.execute("SELECT args_json FROM job_queue WHERE task='prewarm'").fetchone()[0]
+    assert "sns-v28.rednotecdn.com/stream/a.mp4" in args
+
+
+def test_grab_logic_recovers_rednote_mp4_hidden_behind_blob():
+    """RedNote <video src=blob:> 화면에서도 렌더된 DOM의 실제 mp4를 찾는 배선."""
+    logic = (pathlib.Path(__file__).resolve().parents[1] / "userscript" / "grab_logic.js").read_text(encoding="utf-8")
+    assert "_mediaFromPageHtml" in logic
+    assert "rednotecdn" in logic
+    assert "return _mediaFromPageHtml();" in logic
 
 
 def test_regrab_fills_missing_video_url(tmp_path):

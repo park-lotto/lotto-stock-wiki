@@ -1,0 +1,578 @@
+{
+ "draft": {
+  "style_id": 57,
+  "style_name": "다이소 내부인형",
+  "beats": [
+   {
+    "role": "hook",
+    "text": "여러분 다이소 가면 이 푸 인형 키링 무조건 사오세요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.8,
+    "src_segs": []
+   },
+   {
+    "role": "problem",
+    "text": "매번 가방에 달 키링이 마땅치 않아서 진짜 스트레스였거든요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.4,
+    "src_segs": []
+   },
+   {
+    "role": "reveal",
+    "text": "아는 언니가 다이소 점장인데 이번 디즈니 신상이 엄청 잘 나왔대요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.6,
+    "src_segs": []
+   },
+   {
+    "role": "proof",
+    "text": "매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요.",
+    "src_seg": "s0-0",
+    "needs_scene": true,
+    "sec": 3.4,
+    "src_segs": [
+     "s0-0"
+    ]
+   },
+   {
+    "role": "demo",
+    "text": "시계 뒤에서 쏙 꺼내 보여주기만 하면 끝이에요.",
+    "src_seg": "s0-0",
+    "needs_scene": true,
+    "sec": 2.6,
+    "src_segs": [
+     "s0-0"
+    ]
+   },
+   {
+    "role": "result",
+    "text": "와 푸 얼굴 디테일이 살아있어서 가방에 달면 포인트 확실하더라고요.",
+    "src_seg": "s0-1",
+    "needs_scene": true,
+    "sec": 3.8,
+    "src_segs": [
+     "s0-1"
+    ]
+   },
+   {
+    "role": "price",
+    "text": "심지어 가격도 착해서 더 놀랐어요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 1.9,
+    "src_segs": []
+   },
+   {
+    "role": "cta",
+    "text": "궁금하신 분들은 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.8,
+    "src_segs": []
+   }
+  ],
+  "script": "여러분 다이소 가면 이 푸 인형 키링 무조건 사오세요. 매번 가방에 달 키링이 마땅치 않아서 진짜 스트레스였거든요. 아는 언니가 다이소 점장인데 이번 디즈니 신상이 엄청 잘 나왔대요. 매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요. 시계 뒤에서 쏙 꺼내 보여주기만 하면 끝이에요. 와 푸 얼굴 디테일이 살아있어서 가방에 달면 포인트 확실하더라고요. 심지어 가격도 착해서 더 놀랐어요. 궁금하신 분들은 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요.",
+  "hook": "여러분 다이소 가면 이 푸 인형 키링 무조건 사오세요.",
+  "checks": [
+   {
+    "name": "구간 순서",
+    "ok": true,
+    "detail": "기대 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta'] / 실제 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta']"
+   },
+   {
+    "name": "CTA 단어유도",
+    "ok": true,
+    "detail": "요. 궁금하신 분들은 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요."
+   },
+   {
+    "name": "말 밀도(153~222자)",
+    "ok": true,
+    "detail": "187자 / 이 스타일 히트작 219자",
+    "over": false
+   },
+   {
+    "name": "고조 심화(1회)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "화자 일관성",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "장면 근거",
+    "ok": true,
+    "detail": "OK(3/8줄에 장면)"
+   }
+  ],
+  "passed": true,
+  "tries": [
+   {
+    "chars": 243,
+    "fails": [
+     "말 밀도(153~222자)",
+     "고조 심화(1회)"
+    ]
+   },
+   {
+    "chars": 187,
+    "fails": []
+   }
+  ],
+  "chars": 187,
+  "sec": 25.2
+ },
+ "plan": {
+  "structure": "template",
+  "beats": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "narration": "여러분 다이소 가면 이 푸 인형 키링 무조건 사오세요.",
+    "target_seconds": 5.3,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-12",
+     "start": 22.422,
+     "end": 24.825,
+     "scene_desc": "손가락으로 곰돌이 캐릭터가 그려진 쿠션 퍼프의 탄성을 보여줌.",
+     "is_key": true,
+     "change": "퍼프가 손가락에 의해 움푹 들어갔다가 다시 돌아온다.",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-3",
+      "start": 4.438,
+      "end": 6.34,
+      "scene_desc": "다양한 캐릭터와 빵 디자인이 담긴 3D 입체 스티커 시트를 손으로 들어서 흔들며 광택을 보여줍니다.",
+      "is_key": false,
+      "change": "스티커 시트가 흔들리며 입체적인 스티커들의 광택이 도드라집니다.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-4",
+      "start": 6.34,
+      "end": 7.34,
+      "scene_desc": "핀셋을 사용하여 하얀색 스마트폰 뒷면에 노란색 푸 얼굴 모양의 3D 입체 스티커를 부착합니다.",
+      "is_key": true,
+      "change": "스마트폰 뒷면에 귀여운 입체 스티커들이 하나씩 부착되어 폰이 꾸며집니다.",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "narration": "매번 가방에 달 키링이 마땅치 않아서 진짜 스트레스였거든요.",
+    "target_seconds": 5.8,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-15",
+     "start": 28.562,
+     "end": 29.463,
+     "scene_desc": "가방 주머니에 빗 거울 세트를 가볍게 수납하는 모습.",
+     "is_key": false,
+     "change": "빗 거울 세트가 주머니 속으로 들어간다.",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-5",
+      "start": 9.142,
+      "end": 11.912,
+      "scene_desc": "손으로 노란색 케이스를 열고 내부에서 베이지색 빗을 꺼내며 거울을 보여줍니다.",
+      "is_key": true,
+      "change": "투명한 케이스가 열리고 내부에 수납되어 있던 빗이 밖으로 꺼내집니다.",
+      "shot_role": "조작"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-6",
+      "start": 11.912,
+      "end": 14.147,
+      "scene_desc": "손으로 식빵 모양에 피글렛과 푸 얼굴이 각각 그려진 헤어 고정 시트 2종을 들어서 정면으로 보여줍니다.",
+      "is_key": false,
+      "change": "손가락 사이에 끼워진 두 종류의 캐릭터 고정 시트가 정면을 향해 보여집니다.",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 2,
+    "role": "reveal",
+    "narration": "아는 언니가 다이소 점장인데 이번 디즈니 신상이 엄청 잘 나왔대요.",
+    "target_seconds": 6.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-21",
+     "start": 37.504,
+     "end": 39.473,
+     "scene_desc": "다이소 디즈니 베이커리 푸 제품들이 테이블 위에 모여 있는 모습.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "완성"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-7",
+      "start": 14.147,
+      "end": 15.649,
+      "scene_desc": "여성의 검은 머리카락 측면에 식빵 모양의 캐릭터 헤어 고정 시트를 손으로 가볍게 대어 고정시킵니다.",
+      "is_key": true,
+      "change": "머리카락 위에 얹은 시트가 흘러내리지 않고 안정적으로 밀착되어 고정됩니다.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-9",
+      "start": 17.05,
+      "end": 18.986,
+      "scene_desc": "폴라로이드 디자인 프레임 속에 두 가지 타입(촉촉물광, 보송매끈)의 퍼프들을 가득 얹은 양손을 보여줍니다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-10",
+      "start": 18.986,
+      "end": 20.954,
+      "scene_desc": "노란색의 미니 식빵 모양 퍼프 시트에서 손가락으로 식빵 한 개 디자인의 작은 퍼프를 뜯어냅니다.",
+      "is_key": true,
+      "change": "길쭉한 퍼프 띠에서 식빵 모양의 미니 퍼프 한 개가 가볍게 뜯어져 나옵니다.",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 3,
+    "role": "proof",
+    "narration": "매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요.",
+    "target_seconds": 5.8,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-0",
+     "start": 0.0,
+     "end": 1.368,
+     "scene_desc": "손이 은색 탁상시계를 치우자 뒤에 숨어 있던 곰돌이 푸 모양의 노란색 봉제 인형 키링이 드러납니다.",
+     "is_key": false,
+     "change": "시계가 치워지면서 뒤에 숨겨져 있던 인형 키링이 온전히 드러납니다.",
+     "shot_role": "기타"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-13",
+      "start": 24.825,
+      "end": 27.394,
+      "scene_desc": "손등에 쿠션 퍼프를 가볍게 톡톡 두드리는 모습.",
+      "is_key": true,
+      "change": "퍼프가 손등에 닿으며 가볍게 눌린다.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-16",
+      "start": 29.463,
+      "end": 32.199,
+      "scene_desc": "동그란 미니 파츠 거울의 앞면과 뒷면을 손으로 돌려 보여줌.",
+      "is_key": false,
+      "change": "거울이 돌아가며 앞면과 뒷면이 모두 보여진다.",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-0"
+   },
+   {
+    "beat_idx": 4,
+    "role": "demo",
+    "narration": "시계 뒤에서 쏙 꺼내 보여주기만 하면 끝이에요.",
+    "target_seconds": 4.6,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-0",
+     "start": 0.0,
+     "end": 1.368,
+     "scene_desc": "손이 은색 탁상시계를 치우자 뒤에 숨어 있던 곰돌이 푸 모양의 노란색 봉제 인형 키링이 드러납니다.",
+     "is_key": false,
+     "change": "시계가 치워지면서 뒤에 숨겨져 있던 인형 키링이 온전히 드러납니다.",
+     "shot_role": "기타"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-18",
+      "start": 33.333,
+      "end": 34.968,
+      "scene_desc": "테이블 위에 놓인 여러 가지 헤어밴드 제품들을 손으로 만지는 모습.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-19",
+      "start": 34.968,
+      "end": 36.603,
+      "scene_desc": "글리터가 들어있는 헤어 브러시를 흔들어 내부 글리터가 움직이는 모습을 보여줌.",
+      "is_key": true,
+      "change": "브러시 내부의 글리터가 움직이며 섞인다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-0"
+   },
+   {
+    "beat_idx": 5,
+    "role": "result",
+    "narration": "와 푸 얼굴 디테일이 살아있어서 가방에 달면 포인트 확실하더라고요.",
+    "target_seconds": 6.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-1",
+     "start": 1.368,
+     "end": 2.736,
+     "scene_desc": "곰돌이 푸 캐릭터 모양의 봉제 인형 키링을 정면 클로즈업하여 상세히 보여줍니다.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "기타"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-8",
+      "start": 15.649,
+      "end": 17.05,
+      "scene_desc": "테이블 위에 놓인 갈색의 사각형 퍼프 시트에서 푸 얼굴 모양 메이크업 퍼프 하나를 톡 떼어냅니다.",
+      "is_key": true,
+      "change": "네모난 전체 시트에서 동그란 푸 캐릭터 퍼프가 한 조각 깔끔하게 분리됩니다.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-14",
+      "start": 27.394,
+      "end": 28.562,
+      "scene_desc": "접혀있던 빗 거울 세트를 손으로 펼쳐 거울과 빗 부분을 보여줌.",
+      "is_key": true,
+      "change": "닫혀있던 거울과 빗이 펼쳐진다.",
+      "shot_role": "조작"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-17",
+      "start": 32.199,
+      "end": 33.333,
+      "scene_desc": "귀여운 귀 모양이 달린 헤어밴드를 착용한 모습.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-20",
+      "start": 36.603,
+      "end": 37.504,
+      "scene_desc": "다양한 디자인의 헤어 브러시 제품들이 바구니에 담겨 있는 모습.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "완성"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 2.736,
+      "end": 3.26,
+      "scene_desc": "의자 위에 곰돌이 푸 얼굴 모양의 원형 메모리폼 방석을 손으로 꾹 누르며 올려놓습니다.",
+      "is_key": true,
+      "change": "손으로 누르는 힘에 따라 방석 표면이 부드럽게 눌렸다가 다시 복원됩니다.",
+      "shot_role": "설치"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-1"
+   },
+   {
+    "beat_idx": 6,
+    "role": "price",
+    "narration": "심지어 가격도 착해서 더 놀랐어요.",
+    "target_seconds": 3.3,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-2",
+     "start": 2.736,
+     "end": 4.438,
+     "scene_desc": "의자 위에 곰돌이 푸 얼굴 모양의 원형 메모리폼 방석을 손으로 꾹 누르며 올려놓습니다.",
+     "is_key": true,
+     "change": "손으로 누르는 힘에 따라 방석 표면이 부드럽게 눌렸다가 다시 복원됩니다.",
+     "shot_role": "설치"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-3",
+      "start": 4.438,
+      "end": 6.34,
+      "scene_desc": "다양한 캐릭터와 빵 디자인이 담긴 3D 입체 스티커 시트를 손으로 들어서 흔들며 광택을 보여줍니다.",
+      "is_key": false,
+      "change": "스티커 시트가 흔들리며 입체적인 스티커들의 광택이 도드라집니다.",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 7,
+    "role": "cta",
+    "narration": "궁금하신 분들은 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요.",
+    "target_seconds": 6.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-11",
+     "start": 20.954,
+     "end": 22.422,
+     "scene_desc": "네 손가락 끝에 귀여운 식빵 모양과 푸 캐릭터 디자인의 미니 퍼프들을 각각 끼워 흔들며 연출합니다.",
+     "is_key": false,
+     "change": "네 개의 손가락 끝에 미니 퍼프들이 각각 꼭 맞게 끼워져 있습니다.",
+     "shot_role": "완성"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 2.736,
+      "end": 4.438,
+      "scene_desc": "의자 위에 곰돌이 푸 얼굴 모양의 원형 메모리폼 방석을 손으로 꾹 누르며 올려놓습니다.",
+      "is_key": true,
+      "change": "손으로 누르는 힘에 따라 방석 표면이 부드럽게 눌렸다가 다시 복원됩니다.",
+      "shot_role": "설치"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-3",
+      "start": 4.438,
+      "end": 6.34,
+      "scene_desc": "다양한 캐릭터와 빵 디자인이 담긴 3D 입체 스티커 시트를 손으로 들어서 흔들며 광택을 보여줍니다.",
+      "is_key": false,
+      "change": "스티커 시트가 흔들리며 입체적인 스티커들의 광택이 도드라집니다.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-4",
+      "start": 6.34,
+      "end": 7.77,
+      "scene_desc": "핀셋을 사용하여 하얀색 스마트폰 뒷면에 노란색 푸 얼굴 모양의 3D 입체 스티커를 부착합니다.",
+      "is_key": true,
+      "change": "스마트폰 뒷면에 귀여운 입체 스티커들이 하나씩 부착되어 폰이 꾸며집니다.",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   }
+  ],
+  "plagiarism_flags": [],
+  "detected_type": "generic",
+  "affiliate_target": "",
+  "generator": "inherit"
+ },
+ "beat_sources": [
+  {
+   "role": "hook",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "problem",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "reveal",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "proof",
+   "seg": "s0-0",
+   "segs": [
+    "s0-0"
+   ]
+  },
+  {
+   "role": "demo",
+   "seg": "s0-0",
+   "segs": [
+    "s0-0"
+   ]
+  },
+  {
+   "role": "result",
+   "seg": "s0-1",
+   "segs": [
+    "s0-1"
+   ]
+  },
+  {
+   "role": "price",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "cta",
+   "seg": "",
+   "segs": []
+  }
+ ]
+}

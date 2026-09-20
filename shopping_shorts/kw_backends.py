@@ -71,6 +71,43 @@ _TIKTOK_EXTRACT = """
 """
 
 
+#: 릴레이가 붙어 있을 때 결과를 기다리는 시간(초). 로컬 실측 10~14초라 넉넉히 준다.
+_TIKTOK_RELAY_TIMEOUT = 75
+
+
+def _tiktok_via_relay(keyword, max_results):
+    """사장님 PC 릴레이에게 틱톡 검색을 맡긴다.
+
+    돌려주는 값:
+        list  릴레이가 처리했다(0건이어도 그건 진짜 0건이다)
+        None  릴레이가 없다/실패했다 → 호출부가 종전 경로로 내려간다
+
+    ★None과 []를 갈라서 돌려준다. 둘을 섞으면 "릴레이가 없어서 0건"과 "정말 없어서
+      0건"이 구별되지 않아, 오늘처럼 원인을 찾는 데 하루가 든다.
+    """
+    try:
+        from shopping_shorts import coupang_relay
+        if not coupang_relay.QUEUE.status().get("online"):
+            return None                      # PC가 안 켜져 있다
+        r = coupang_relay.QUEUE.submit(
+            keyword, max_results, _TIKTOK_RELAY_TIMEOUT,
+            kind="tiktok", payload={"keyword": keyword, "limit": max_results})
+    except Exception as e:      # noqa: BLE001 — 릴레이 사고로 검색 전체를 죽이지 않는다
+        print("[tiktok] 릴레이 호출 실패(종전 경로로): %r" % (e,))
+        return None
+    if not r:
+        return None                          # 타임아웃 — PC가 껐거나 느리다
+    out = []
+    for c in (r.get("items") or []):
+        u = (c or {}).get("url")
+        if not u:
+            continue
+        out.append(cn_backends.normalize({
+            "url": u, "title": c.get("title"), "thumbnail": c.get("thumb"),
+        }, "tiktok"))
+    return out[:max_results]
+
+
 def pw_tiktok(keyword, max_results):
     """틱톡 검색을 프록시+세션으로 긁는다. 비용 0.
 
@@ -84,6 +121,19 @@ def pw_tiktok(keyword, max_results):
       · 그런데 **본문이 비어** 있고 로그인 모달이 뜬다 → 세션 문제
     그래서 세션 없이 부르면 브라우저를 띄우지 않고 즉시 0건으로 접는다
     (괜히 띄우면 프록시 바이트만 버린다)."""
+    # ★서버에서는 어떻게 해도 0건이다 — 사장님 PC가 대신 긁는다(2026-09-08 실측).
+    #   4가지 환경을 갈라 재본 결과:
+    #     내 PC + 창 띄움  → 영상 24개 정상
+    #     내 PC + 헤드리스 → 0개  ("서버에서 문제가 발생했습니다")
+    #     서버 + 창(xvfb) + 프록시 → 0개
+    #     서버 + 창(xvfb) + 직결   → 0개
+    #   세션·프록시·IP는 전부 멀쩡했다. 틱톡이 헤드리스와 서버 환경 자체를 걸러낸다.
+    #   쿠팡이 같은 이유로 이미 PC 릴레이를 쓴다 — 그 큐를 그대로 탄다(0순위-B).
+    #   릴레이가 꺼져 있으면 아래 종전 경로로 내려가 0건이 된다(회귀 없음).
+    relayed = _tiktok_via_relay(keyword, max_results)
+    if relayed is not None:
+        return relayed
+
     session = getattr(config, "TIKTOK_SESSION_PATH", "")
     if not session or not os.path.exists(session):
         return []
@@ -153,6 +203,69 @@ def apify_tiktok(keyword, max_results):
             "thumbnail": r.get("thumbnail") or "",
         }, "tiktok"))
     return out
+
+
+# 렌즈의 롱폼 서버컷과 같은 기준(초). 핀터레스트 영상탭엔 롱폼도 섞여 온다.
+_PIN_LONGFORM_MAX = 180
+
+
+def pinterest_videos(keyword, max_results):
+    """핀터레스트 **영상탭** 검색(무료 — Playwright, 로그인·프록시 불필요).
+
+    왜 이렇게 하나(2026-08-29 사장님 "핀터레스트 검색결과도 노출 / 숏폼영상만" —
+    렌즈 시각검색 실측 ko+en 147건 중 영상 핀 0개라 키워드 검색으로 합류):
+    ★일반 핀 검색(/search/pins/)이 아니라 영상탭(/search/videos/)을 긁는다 —
+      일반 탭은 이미지가 대부분이라 4키워드 전부 영상 0개였다(실측).
+    ★검색어는 **영어로 번역**해 쓴다 — 같은 소재도 '인덕션 테이블' 0건 /
+      'induction table' 12건(실측). 한국어 인덱스가 사실상 없다.
+      번역 실패 시 원문 그대로 폴백(영어 입력이면 그대로 통한다).
+    비용: 번역 flash-lite 1회(0.5원 안쪽) 외 0원."""
+    try:
+        from shopping_shorts import pinterest_crawl, video_analysis
+        try:
+            en = (video_analysis.translate_keyword(keyword) or {}).get("en") or ""
+        except Exception:      # noqa: BLE001 — 번역 실패가 검색을 죽이면 안 된다
+            en = ""
+        # scrolls=3 — 익명 검색은 배치가 들쭉날쭉해서(실측: scrolls=2에서 같은 검색어가
+        # 2건↔12건) 한 번 더 스크롤해 안정시킨다.
+        rows = pinterest_crawl.search_videos(en or keyword, max_results=max_results * 2,
+                                             scrolls=3, tab="videos")
+    except Exception:          # noqa: BLE001 — 백엔드 계약: 예외를 밖으로 던지지 않는다
+        return []
+    out = []
+    for r in rows:
+        if not r.get("url"):
+            continue
+        dur = r.get("duration")
+        if dur and dur > _PIN_LONGFORM_MAX:
+            continue           # 렌즈는 숏폼 소재 자리 — 렌즈 서버컷과 같은 기준
+        out.append(cn_backends.normalize({
+            "url": r["url"],
+            "title": (r.get("title") or r.get("desc") or "").strip(),
+            "thumbnail": r.get("thumbnail") or "",
+            # 검색 응답에 mp4 직링크가 있다 — 카드 인라인 재생(/api/video 프록시)용.
+            "play_url": r.get("video_url") or "",
+            "duration": dur,
+        }, "pinterest"))
+        if len(out) >= max_results:
+            break
+    return out
+
+
+def naverclip_videos(keyword, max_results):
+    """네이버 클립 키워드 검색(2026-08-30) — 무료·로그인/프록시 없음.
+
+    핀터레스트와 달리 **브라우저를 안 띄운다** — HTTP 2번이 전부다.
+    상세 조회수·좋아요·mp4 직링크까지 한 번에 온다(`naverclip_search` 참고).
+
+    ⚠️`play_url`에는 만료(`hdnts=exp=...`)가 붙는다. 카드에 인라인 재생용으로
+      바로 쓰는 건 되지만, 저장해 두고 나중에 쓰면 실패한다."""
+    try:
+        from shopping_shorts import naverclip_search
+        rows = naverclip_search.search(keyword, max_results=max_results)
+    except Exception:          # noqa: BLE001 — 백엔드 계약: 예외를 밖으로 던지지 않는다
+        return []
+    return [cn_backends.normalize(r, "naverclip") for r in rows if r.get("url")]
 
 
 def youtube(keyword, max_results):

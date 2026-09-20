@@ -89,6 +89,15 @@ def save(mp3_path, alignment):
         return None
 
 
+def load(mp3_path):
+    """정렬 사이드카 → alignment dict. 없거나 깨졌으면 None."""
+    try:
+        with open(sidecar_path(mp3_path), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
+
+
 def copy(src_mp3, dst_mp3):
     """src의 정렬을 dst로 옮긴다(synthesize_best가 고른 take를 확정할 때).
     src에 정렬이 없으면 dst의 옛 정렬을 지운다 — 남겨두면 stale이다."""

@@ -1,0 +1,8 @@
+const pptr=require('puppeteer'),assert=require('assert'),fs=require('fs');
+(async()=>{const b=await pptr.launch({headless:true});try{const p=await b.newPage();await p.setViewport({width:1800,height:1300});await p.goto('http://127.0.0.1:8767/out/scene-style-ui-showcase.html?qa=1',{waitUntil:'networkidle0'});await p.click('[data-editor-tab="effects"]');await p.click('[data-brand="watermark"] [data-brand-field="on"]');
+ const center=()=>p.evaluate(()=>{const a=document.querySelector('#a-live-preview').getBoundingClientRect(),b=document.querySelector('[data-brand-label="watermark"]').getBoundingClientRect();return Math.abs(b.x+b.width/2-a.x-a.width/2)});
+ assert.ok(await center()<1);await p.$eval('[data-brand="watermark"] [data-brand-field="text"]',e=>{e.value='@a much longer watermark';e.dispatchEvent(new Event('input',{bubbles:true}))});assert.ok(await center()<1);
+ await p.select('[data-brand-field="motion"]','float');await p.evaluate(()=>sceneBranding.motionAt(0));const y0=await p.$eval('.scene-brand-ink',e=>e.getBoundingClientRect().y);await p.evaluate(()=>sceneBranding.motionAt(1200));const y1=await p.$eval('.scene-brand-ink',e=>e.getBoundingClientRect().y);assert.ok(y0-y1>2);assert.ok(await center()<1);
+ await p.screenshot({path:'.tmp/scene-style-qa/watermark-centered.png'});const s=await p.evaluate(()=>sceneStyle.snapshot());fs.writeFileSync('.tmp/scene-style-qa/watermark-motion-snapshot.json',JSON.stringify(s));await p.reload({waitUntil:'networkidle0'});assert.equal(await p.evaluate(()=>sceneStyle.branding().watermark.motion),'float');assert.ok(await center()<1);
+ console.log(JSON.stringify({ok:true,centeredAtAnyLength:true,animated:true,remembered:true}));
+}finally{await b.close()}})().catch(e=>{console.error(e);process.exit(1)});

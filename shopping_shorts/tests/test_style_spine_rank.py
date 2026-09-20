@@ -14,8 +14,8 @@ from shopping_shorts.store import style_spine_rank
 LIVE = [
     {"id": 62, "name": "무지후회형", "perf_score": 0.0, "source_count": 0},
     {"id": 61, "name": "정체의문형", "perf_score": 0.0, "source_count": 0},
-    {"id": 60, "name": "유튜브 발명품형", "perf_score": 0.0, "source_count": 23},
-    {"id": 56, "name": "유튜브 오용형", "perf_score": 0.0, "source_count": 4},
+    {"id": 60, "name": "유튜브 「OO 개발자도 무릎 탁」", "perf_score": 0.0, "source_count": 23},
+    {"id": 56, "name": "유튜브 「원래 이렇게 쓰는 거 아닌데」", "perf_score": 0.0, "source_count": 4},
     {"id": 53, "name": "단정 명령형", "perf_score": 0.0, "source_count": 12},
 ]
 
@@ -23,7 +23,7 @@ LIVE = [
 def test_근거가_많은_틀이_먼저_추천된다():
     """★perf_score가 전부 0이어도 히트작 근거(source_count)로 갈린다."""
     ranked = sorted(LIVE, key=style_spine_rank)
-    assert [s["name"] for s in ranked[:2]] == ["유튜브 발명품형", "단정 명령형"]
+    assert [s["name"] for s in ranked[:2]] == ["유튜브 「OO 개발자도 무릎 탁」", "단정 명령형"]
     # auto_style이 집는 상위 2개에 근거 0편짜리가 끼면 안 된다
     assert all(s["source_count"] > 0 for s in ranked[:2])
 

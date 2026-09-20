@@ -26,11 +26,15 @@ SVC_VMAKE = "vmake"
 SVC_ELEVENLABS = "elevenlabs"
 SVC_YOUTUBE = "youtube"
 SVC_SERPAPI = "serpapi"
+SVC_BUFFER = "buffer"      # SNS 예약발행. 고객이 자기 Buffer 개인 키를 넣는다
+SVC_TYPECAST = "typecast"  # 목소리 두 번째 백엔드. 프리셋 model_id가 `ssfm-*`면 이쪽으로 나간다
+SVC_COUPANG = "coupang"    # 쿠팡 파트너스 오픈API(상품검색·딥링크). 값은 'AccessKey:SecretKey' 한 줄. 개인 전용·폴백 없음(2026-09-04)
 
-SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI)
+SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST, SVC_YOUTUBE,
+            SVC_SERPAPI, SVC_BUFFER, SVC_COUPANG)
 
 # ★등록은 받지만 **실제 호출에 쓰이는** 서비스는 아직 이 둘뿐이다(2026-08-17 실측).
-#   - vmake     : mix_pipeline.py:1432-1433 job의 customer_id → _vmake_key → keys_for
+#   - vmake     : job의 customer_id → mix_pipeline._vmake_keys → keys_for (목록 전체)
 #   - serpapi   : app.py _lens_api_keys(cid) → 렌즈 호출부 2곳
 #   - gemini    : keyroute.gemini_keys()가 유일한 출구. cid는 인자가 아니라
 #                 keyctx(요청=미들웨어 / 워커=_owned_job 데코레이터)에서 읽는다.
@@ -56,17 +60,29 @@ SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI)
 #   용량은 사장님이 키를 더 만들어 채운다). 의도된 거래라 누수가 아니다.
 #   ⚠️단 합류 배선(config.refresh_member_gemini_keys 호출)이 살아 있어야 성립한다.
 #     그 호출을 지우면 여기 면제도 같이 빼라 — 안 그러면 08-17 사고가 그대로 재현된다.
-WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_GEMINI, SVC_YOUTUBE)
+# ★buffer는 **사장님 키가 아예 없다.** 고객이 자기 키를 넣어야만 되는 서비스다
+#   (Buffer는 제3자 OAuth가 안 열려 우리가 대신 발행할 수 없다 — buffer_api.py 참조).
+#   그래서 폴백이 없고, 우리 돈이 나가지도 않는다(발행은 고객의 Buffer 요금제로 나간다).
+#   ★2026-08-31 typecast 배선 완료 → WIRED에 넣었다.
+#     일레븐랩스와 **같은 경로**를 탄다: synthesize_tts(customer_id=…) →
+#     _synthesize_typecast → typecast_tts.api_key(customer_id) → keys_for.
+#     호출부는 이미 customer_id를 흘리고 있었고(일레븐랩스 배선 때 뚫린 길),
+#     타입캐스트 분기만 그 인자를 버리고 config 키를 쓰고 있었다.
+WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_TYPECAST, SVC_GEMINI,
+         SVC_YOUTUBE, SVC_BUFFER, SVC_COUPANG)   # coupang: app.py 쿠팡 검색·상품 저장이 keys_for로 읽는다
 
 # ★공용 풀 모델(2026-08-24 사장님 결정) — 이 서비스들은 회원 키를 **우리 풀에 합류**시키고
 #   회원은 풀 전체를 무료로 쓴다. 키 1개만 받는데 그 1개로만 돌리면 곧바로 한도에 걸려
 #   "부담 줄이려 1개만 받은" 취지가 뒤집히기 때문이다.
-#   나머지(vmake·serpapi·elevenlabs)는 **개인 전용**이다 — 회원이 자기 돈으로 결제하는
+#   나머지(vmake·serpapi·elevenlabs·typecast)는 **개인 전용**이다 — 회원이 자기 돈으로 결제하는
 #   서비스라 남의 키를 쓰면 안 되고, 자기 키만 쓴다(폴백 없음).
 POOLED = (SVC_GEMINI, SVC_YOUTUBE)
 
-# ★호출부가 **키 하나만** 쓰는 서비스(mix_pipeline._vmake_key·tts._api_key가
-#   둘 다 keys[0]만 집는다). 여기서만 **나중에 등록한 키를 앞에** 둔다.
+# ★호출부가 **키 하나만** 쓰는 서비스(tts._api_key가 keys[0]만 집는다).
+#   여기서만 **나중에 등록한 키를 앞에** 둔다.
+# ⚠️vmake는 2026-08-29부터 **목록 전체를 쓴다**(mix_pipeline._vmake_clean이 소진된 키를
+#   건너뛰고 다음 키로 넘긴다). 그래도 이 목록에 남겨 둔다 — 새로 등록한 키를 **먼저**
+#   시도하는 게 맞기 때문이다(갈아끼우려고 등록한 키가 뒤에 있으면 옛 키를 먼저 태운다).
 #   왜: get_customer_keys_plain은 ORDER BY id라 가장 오래된 키가 keys[0]이다.
 #   그래서 키를 갈아끼우려고 새로 등록해도 옛 키가 계속 쓰인다.
 #   실사고(2026-08-28 cid 57): 크레딧 떨어진 Vmake 계정을 버리고 새 계정
@@ -74,7 +90,7 @@ POOLED = (SVC_GEMINI, SVC_YOUTUBE)
 #   때려 [60002]로 실패했다. 화면엔 두 키가 다 'ok'라 고객은 이유를 모른다.
 #   ⚠️ serpapi는 **넣지 마라** — 거긴 키 개수만큼 한도를 주고(_lens_key_count)
 #     목록 전체를 쓴다. 순서를 뒤집을 이유가 없다.
-SINGLE_KEY = (SVC_VMAKE, SVC_ELEVENLABS)
+SINGLE_KEY = (SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST)
 
 
 def uses_single_key(service):
@@ -87,10 +103,147 @@ def is_pooled(service):
     return service in POOLED
 
 
+# ★개인 키가 **없으면 아예 못 쓰는** 서비스(2026-09-01 사장님 확정).
+#   "v메이크랑 tts는 없으면 못하게 막아"
+#
+#   왜 생겼나(실사고): 회원이 개인 키를 안 내면 **사장님 키로 조용히 나가고**
+#   포인트만 깎였다. 회원들은 "다 개인 API키로 쓴다"고 알고 있었고 아무도 포인트
+#   얘기를 못 들었다. 포인트가 남은 회원(유영창 9,500P·이정훈 105,530P …)은 계속
+#   사장님 일레븐랩스·VMake 계정을 태웠고, 잔액이 떨어진 회원만 402로 막혀
+#   "어떤 사람은 되고 어떤 사람은 안 되는" 상태가 됐다.
+#   실측(2026-09-01): 최근 30일 제작 46명 중 **16명이 TTS 키 없이** 86건을 만들었다.
+#
+#   그래서 폴백을 없앤다 — 키가 없으면 **기능 자체가 안 열린다**. 포인트로 때우는
+#   길을 막아야 회원이 키를 등록한다.
+#   ⚠️ gemini·youtube는 여기 넣지 마라. 저긴 공용 풀 정책(키 1개 받고 무료)이라
+#      회사 키로 도는 게 **의도된 거래**다.
+REQUIRE_OWN_KEY = (SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST)
+
+#: 차단 안내에 쓸 사람 말 이름 — 화면이 서비스 코드를 그대로 보여주면 안 된다.
+#   ★업체명을 쓰지 마라(브랜드 정책 — test_subclean_ui가 produce.html을 검사한다).
+#     이 문구는 서버가 만들어 그 화면에 그대로 실린다.
+SERVICE_LABEL = {
+    SVC_VMAKE: "자막 지우기",
+    SVC_ELEVENLABS: "목소리(ElevenLabs)",
+    SVC_TYPECAST: "목소리(타입캐스트)",
+    SVC_SERPAPI: "SerpAPI(렌즈 검색)",
+    SVC_BUFFER: "Buffer(SNS 예약)",
+    SVC_GEMINI: "제미니",
+    SVC_YOUTUBE: "유튜브",
+}
+
+
+# ★차단 면제 명단(2026-09-01 사장님 지정) — "박2/관리자/용석/정훈 4명은 제외한다".
+#   이분들은 키를 안 내도 회사 키로 계속 쓰신다(사장님이 비용을 감수하기로 한 계정).
+#   실측으로 확정한 cid:
+#     4  현경   arte.eum@gmail.com        (customers.admin=1 — 관리자)
+#     5  용석   koho851101@gmail.com      ┐ 같은 분의 계정 2개
+#     9  용석   851101ys@gmail.com        ┘
+#     11 이정훈 aijumpers85@gmail.com
+#     12 박2    parklotto20@gmail.com
+#   ⚠️ 여기에 cid를 더하면 그 회원의 VMake·TTS 비용을 회사가 계속 부담한다.
+#      사장님 지시 없이 늘리지 마라. 빼는 것은 언제든 안전하다.
+#   ⚠️ 이름으로 판단하지 마라 — 동명이인이 있다(민정훈 cid 234는 면제 대상이 아니다).
+#   ⚠️ 291 최일환 — **2026-09-03 하루만** 사장님 지시로 음성(TTS)을 열어둔 것이다.
+#      ("최일환 고객 tts 오늘만 무료로 내꺼로 열어줘")
+#      ★2026-09-04에 반드시 291을 이 줄에서 뺀다. 안 빼면 영구 무료가 된다.
+#      이 명단엔 기간 개념이 없어서 손으로 빼는 것 말고는 만료가 없다.
+#      그는 vmake 키를 이미 등록했으므로(실측) 자막 지우기는 자기 키로 나간다 —
+#      이 면제로 회사가 부담하는 건 음성뿐이다.
+BLOCK_EXEMPT_CIDS = frozenset({4, 5, 9, 11, 12, 291})
+
+
+def is_block_exempt(customer_id):
+    """차단 면제 대상인가. cid 0(사장님)과 지정 명단. 판단은 여기 한 곳(0순위-B)."""
+    cid = as_cid(customer_id)
+    return (not cid) or (cid in BLOCK_EXEMPT_CIDS)
+
+
+def requires_own_key(service):
+    """개인 키가 없으면 못 쓰는 서비스인가. 판단은 여기 한 곳(0순위-B)."""
+    return service in REQUIRE_OWN_KEY
+
+
+def has_own_key(store, customer_id, service):
+    """이 회원이 그 서비스의 **자기 키**를 등록했나. 사장님 키는 세지 않는다."""
+    try:
+        return bool(store.get_customer_keys_plain(as_cid(customer_id), service))
+    except AttributeError:      # store 스텁 — 판단 불가면 '없다'로 보지 않는다(작업을 막지 않게)
+        logging.warning("has_own_key: store에 get_customer_keys_plain이 없다 "
+                        "(cid=%r, service=%r) — 있음으로 처리한다", customer_id, service)
+        return True
+    except Exception as e:      # noqa: BLE001 — 조회 실패로 회원을 막으면 안 된다
+        logging.warning("has_own_key 조회 실패(있음으로 처리): %r", e)
+        return True
+
+
+def block_reason(store, customer_id, service):
+    """개인 키가 없어 막아야 하면 (코드, 사람이 읽는 문구), 아니면 None.
+
+    ★차단 판단은 여기 한 곳뿐이다 — 엔드포인트마다 다시 적으면 어긋난다(0순위-B).
+    ★사장님(cid 0)은 막지 않는다: 공용 보이스 굽기·샘플 제작 등 회사 자산 작업이
+      여기서 막히면 서비스가 통째로 선다.
+    """
+    if not requires_own_key(service):
+        return None
+    if is_block_exempt(customer_id):     # cid 0(사장님) + 지정 면제 명단
+        return None
+    if has_own_key(store, customer_id, service):
+        return None
+    label = SERVICE_LABEL.get(service, service)
+    return ("need_own_key",
+            f"{label} API 키를 등록해야 이용할 수 있어요. "
+            f"설정 > 🔑 API 키에서 등록해 주세요.")
+
+
+def tts_block_reason(store, customer_id):
+    """음성(TTS)은 일레븐랩스·타입캐스트 **둘 중 하나만** 있으면 된다.
+
+    ★서비스 하나씩 block_reason을 부르면 "일레븐랩스 없음"으로 막혀, 타입캐스트를
+      등록한 회원(실측 4명)이 억울하게 막힌다 — 그래서 음성은 이 함수가 판단한다.
+    """
+    if is_block_exempt(customer_id):     # cid 0(사장님) + 지정 면제 명단
+        return None
+    if (has_own_key(store, customer_id, SVC_ELEVENLABS)
+            or has_own_key(store, customer_id, SVC_TYPECAST)):
+        return None
+    return ("need_own_key",
+            "음성 생성을 하려면 일레븐랩스 또는 타입캐스트 API 키가 필요해요. "
+            "설정 > 🔑 API 키에서 등록해 주세요.")
+
+
 def uses_customer_key(service):
     """등록한 키가 실제 작업에 쓰이는 서비스인가. 화면 문구도 이걸 봐야
     "등록하면 0P"라는 거짓말이 안 나간다(0순위-B: 판단은 한 곳에서)."""
     return service in WIRED
+
+
+# ── 붙여넣은 키가 "가려진 키"인가 (2026-08-28 실사고) ────────────────────────
+# 두 고객이 같은 실수를 했다: VMake 화면에 **가려져 보이는** 키(`13a08ac2••••*****`)를
+# 그대로 복사해 등록했다. 그런데 등록은 성공(status=ok)으로 저장돼 화면엔 "등록 완료"가
+# 뜨고, 정작 쓸 때만 서명이 안 맞아 실패했다.
+#   실측 cid18 강민희: 키 140자(정상 184) / 라벨 끝 '*****' / 12:48~13:04 6회 전부 실패
+#     에러 `[10021] sign not equals client ... Access=13a08ac2eb5f4f` — 그 키가 실제로 쓰였다
+#   cid134 최소연도 같은 모양이었다가 재등록으로 정상화됐다(전수 22건 중 1건 남음).
+# 잘못된 키를 받아 두는 것이 제일 나쁘다 — 고객은 잘 된 줄 알고 있다가 나중에야 안다.
+# 그래서 **등록 시점에** 막는다. 판정은 여기 한 곳(0순위-B) — API·관리자 경로가 같이 쓴다.
+MASK_CHARS = "*•●·×✕✱∗"          # 서비스마다 가림문자가 다르다(별·가운뎃점·원)
+
+def masked_key_reason(raw):
+    """가려진 키로 보이면 사람이 읽을 이유를, 정상으로 보이면 None을 준다.
+
+    ★길이로는 판정하지 않는다 — 서비스마다 키 길이가 다르고, 새 형식이 나오면
+      멀쩡한 키를 막게 된다. **가림문자가 섞였는가**만 본다(오탐이 거의 없다).
+    """
+    t = (raw or "").strip()
+    if not t:
+        return None                       # 빈 값은 호출부가 따로 안내한다
+    hit = [ch for ch in MASK_CHARS if ch in t]
+    if hit:
+        return ("가려진 키를 붙여넣으신 것 같아요(‘%s’가 들어 있어요). "
+                "발급 화면에서 **전체 키**를 복사해 주세요 — 화면에 점이나 별표로 가려진 "
+                "부분은 실제 키가 아닙니다." % hit[0])
+    return None
 
 
 def as_cid(customer_id):
@@ -125,6 +278,13 @@ def _owner_keys(service):
         return list(config.YOUTUBE_API_KEYS)
     if service == SVC_ELEVENLABS:
         k = getattr(config, "ELEVENLABS_API_KEY", "")
+        return [k] if k else []
+    if service == SVC_TYPECAST:
+        # 2026-09-04 사장님 "타입캐스트 키 내 것도 등록해줘" — 운영자 키는 env(TYPECAST_API_KEY)에
+        # 이미 있는데 여기만 빠져 있어 관리자 잔액 조회(app._credit_mode owner)에 안 잡혔다.
+        # typecast_tts._api_key는 종전에도 keys_for가 비면 config로 폴백했으므로 실제 TTS 경로의
+        # 결과 키는 그대로다(폴백이 한 단계 앞당겨질 뿐).
+        k = getattr(config, "TYPECAST_API_KEY", "")
         return [k] if k else []
     if service == SVC_SERPAPI:
         # 렌즈 검색용. gemini/youtube와 같은 env 다중키 방식(SERPAPI_KEY~_30).
@@ -190,6 +350,90 @@ def keys_for(store, customer_id, service):
     return owner, False
 
 
+# ── 사장님이 회원 SerpApi 키를 조금씩 빌려 쓴다 (2026-09-08 사장님 지시) ──
+BORROW_SETTING = "admin_borrow_serpapi"   # "1"이면 켬. **기본은 꺼짐**
+BORROW_PER_KEY = 10                       # 키 하나당 한 달 최대 회수(사장님: "한 사람당 10개씩만")
+BORROW_COUNTER = "borrow_serpapi"         # settings 키 앞머리
+
+
+def _borrow_id(key):
+    """카운터에 쓸 키 식별자. **평문을 저장하지 않는다** — 설정값은 관리자 화면에 보인다."""
+    import hashlib
+    return hashlib.sha256((key or "").encode()).hexdigest()[:12]
+
+
+def _borrow_state(store, month):
+    import json
+    try:
+        return json.loads(store.get_setting(f"{BORROW_COUNTER}::{month}", "") or "{}")
+    except Exception:                     # noqa: BLE001 — 카운터가 깨져도 빌림만 멈춘다
+        return {}
+
+
+def _borrowable(store):
+    """빌릴 수 있는 회원 키 목록. 꺼진 키·소진된 키는 store가 걸러 준다.
+
+    ★죽은 키를 빌리면 회차만 날린다 — 우리는 빌리는 순간 세므로 회원 몫만 축나고
+      사장님은 못 쓴다. 그래서 살아 있는 키만 받는다(store.get_borrowable_keys).
+    """
+    try:
+        if hasattr(store, "get_borrowable_keys"):
+            return store.get_borrowable_keys(SVC_SERPAPI) or []
+        return store.get_pooled_keys(SVC_SERPAPI) or []
+    except Exception as e:                 # noqa: BLE001 — 빌림 실패로 렌즈를 막지 않는다
+        logging.warning("회원 SerpApi 키 조회 실패(빌리지 않는다): %r", e)
+        return []
+
+
+def borrow_serpapi(store, limit_per_key=BORROW_PER_KEY, month=None):
+    """사장님이 쓸 **회원 SerpApi 키 1개**를 빌린다(없으면 빈 목록).
+
+    ★왜 1개씩인가 (사장님 지시)
+      회원이 자기 돈으로 만든 무료 키(월 250회)다. 통째로 쓰면 그 회원이 못 쓴다.
+      그래서 **한 키당 한 달 10회까지만** 쓰고 다음 키로 넘어간다 — 회원 몫의 4%다.
+
+    ★왜 미리 세는가
+      어느 키가 실제로 나갔는지는 lens_discover 안에서만 알 수 있다. 호출 결과를
+      기다렸다 세면 실패분이 안 세어져 **실제보다 적게 세는** 쪽으로 어긋난다.
+      회원 보호가 우선이라 **빌리는 순간 센다** — 틀리더라도 덜 쓰는 쪽으로 틀린다.
+
+    ★적게 쓴 키부터 준다. 한 사람에게 몰리지 않는다.
+    """
+    import json, time
+    if str(store.get_setting(BORROW_SETTING, "") or "") != "1":
+        return []                          # 스위치가 꺼져 있으면 아무것도 안 빌린다
+    month = month or time.strftime("%Y-%m")
+    used = _borrow_state(store, month)
+    pool = _borrowable(store)
+    if not pool:
+        return []
+    live = [(used.get(_borrow_id(k), 0), k) for k in pool]
+    live = [(n, k) for n, k in live if n < limit_per_key]
+    if not live:
+        return []
+    live.sort(key=lambda x: x[0])          # 적게 쓴 키부터
+    n, key = live[0]
+    used[_borrow_id(key)] = n + 1
+    try:
+        store.set_setting(f"{BORROW_COUNTER}::{month}", json.dumps(used))
+    except Exception as e:                 # noqa: BLE001 — 못 세면 **빌리지 않는다**
+        logging.warning("빌림 카운터 저장 실패(빌리지 않는다): %r", e)
+        return []                          # 세지 못하면 한도를 못 지킨다 — 안 쓰는 쪽으로
+    return [key]
+
+
+def borrow_status(store, limit_per_key=BORROW_PER_KEY, month=None):
+    """지금 얼마나 빌려 썼나 — 관리자 화면·점검용."""
+    import time
+    month = month or time.strftime("%Y-%m")
+    used = _borrow_state(store, month)
+    pool = _borrowable(store)
+    left = sum(max(0, limit_per_key - used.get(_borrow_id(k), 0)) for k in pool)
+    return {"on": str(store.get_setting(BORROW_SETTING, "") or "") == "1",
+            "month": month, "keys": len(pool), "per_key": limit_per_key,
+            "used": sum(used.values()), "left": left}
+
+
 def should_charge(store, customer_id, service):
     """포인트를 깎아야 하는가. 사용자 키를 쓰면 안 깎는다.
 
@@ -240,4 +484,7 @@ def gemini_keys(group="general", customer_id=None):
 
     # cid는 더 이상 '누구 키를 쓸까'를 가르지 않는다(공용 풀). 소진 로그·디버깅용으로만 읽는다.
     _ = as_cid(customer_id if customer_id is not None else keyctx.owner_cid())
-    return key_vault.get_live_keys_cascade(group)
+    # ★회전해서 준다 — 이 목록을 `for key in keys`로 도는 호출부(대본생성·SEO·
+    #   썸네일문구·부품은행)가 전부 keys[0]부터 시작하면 앞쪽 키에만 몰린다.
+    #   어느 키부터 쓸지는 **여기 한 곳**에서만 정한다(0순위-B).
+    return key_vault.rotated(key_vault.get_live_keys_cascade(group))

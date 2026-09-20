@@ -26,7 +26,11 @@ def test_admin_customers_does_not_dump_all_settings():
     """★설정을 통째로 실으면 안 된다. 운영 로그가 응답에 섞여 화면이 멈춘다."""
     t = _app_text()
     i = t.index('@app.get("/api/admin/customers")')
-    body = t[i:i + 2600]
+    # ★고정 길이(2600자)로 자르면 함수가 조금만 길어져도 검사 범위 밖으로 나간다.
+    #   2026-08-29에 실제로 그랬다(일괄 한도 조회가 들어가며 본문이 늘었다).
+    #   함수 끝(다음 라우트 데코레이터)까지를 본문으로 잡는다.
+    nxt = t.find("\n@app.", i + 10)
+    body = t[i:nxt if nxt > 0 else i + 4000]
     assert '"settings": st.all_settings()' not in body, (
         "관리자 목록이 settings 전체를 보낸다 — last_run::* 같은 운영 로그까지 딸려간다")
     assert "_ADMIN_SETTING_KEYS" in body, "화면이 쓰는 키로 좁혀야 한다"

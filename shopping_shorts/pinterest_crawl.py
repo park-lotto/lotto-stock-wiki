@@ -19,16 +19,72 @@
 ★워터마크 자동 필터는 **넣지 않는다**(사장님 결정: "다 담고 눈으로 고른다").
   화면을 봐야 아는 판정을 코드가 대신하면 "왜 안 담기지"가 되고 근거도 남지 않는다.
 """
+import re
 import urllib.parse
 
 #: 기본 검색어 — 사장님 확정 "영어 먼저"(핀터레스트는 영어권이 압도적).
 #: 장비템·신박템 컨셉. 여기 없는 말은 화면에서 직접 넣는다.
+# 기본 검색어 — **실측 적중률 순**으로 담는다(2026-08-29).
+# ★쇼핑몰 겨냥이 확실히 통한다. 검색어에 `temu`가 있으면 핀 설명에도 있고,
+#   그러면 실제로 테무 링크가 붙어 있다:
+#       temu gadgets must have        4/4  = 100%
+#       temu tools gadget             1/1  = 100%
+#       temu home gadgets             5/9  =  56%
+#       kitchen gadgets amazon finds  3/6  =  50%
+#       temu haul kitchen             3/7  =  43%
+#   (기존 공구·차량 계열 전체는 18%)
+# ⚠️12개를 넘기지 마라 — 엔드포인트가 kws[:12]로 자른다(뒤쪽이 조용히 사라진다).
+# ⚠️같은 검색어를 또 돌리면 새 핀이 거의 안 나온다(검색어당 10~27개가 한계).
+#   많이 모으려면 화면 입력칸에 **다른 검색어**를 넣어 돌려라.
+# ★2026-09-06 개편 — 감이 아니라 **원본 적중률 실측**으로 갈아끼웠다.
+#   사장님: "테무 제품영상광고처럼 그런건 별로고 우리 쇼핑쇼츠에 들어갈만한걸 찾는게 핵심".
+#
+#   라이브 2,259건에서 검색어별로 쟀다(6건 이상 모인 126종). 원본 = pin_dest가
+#   'Uploaded by user' = 쇼핑몰 링크도 남의 릴스 재업로드도 아닌 것.
+#
+#   읽어낸 규칙 — 검색어를 늘릴 땐 이걸 따르라(test_pinterest_keywords.py가 지킨다):
+#     ① `<물건> gadget` 꼴  → 원본이 잘 나온다. 실사용 장면 위주.       (80~100%)
+#     ② `haul`(하울)        → 언박싱 광고물.                            (원본 0%)
+#     ③ `container`·`rack`·`dispenser` 등 제품 카테고리명 → 쇼핑몰 광고.  (원본 0%)
+#     ④ `asmr`              → 인스타 재업로드 88%.                       (원본 0%)
+#
+#   종전 목록엔 0%짜리 `temu haul kitchen`·`aliexpress gadgets cool`(실측 1건)이
+#   들어 있었고, 100%짜리는 하나도 없었다. 버튼만 눌러도 좋은 게 걸리게 한다.
 DEFAULT_KEYWORDS = [
-    "welding tool hack",
-    "diy tool invention",
-    "amazing tools gadget",
-    "workshop tool trick",
-    "clever tool idea",
+    # ── 실측 원본 적중률 80%+ (숫자는 2026-09-06 라이브 실측) ──
+    "temu toilet gadget",                # 100% (11건)
+    "viral shopping finds gadget",       # 100% (6건)
+    "temu shower gadget",                #  88% (9건)
+    "weird gadgets that actually work",  #  87% (8건)
+    "farm tool invention",               #  87% (8건)
+    "temu rice gadget",                  #  83% (18건)
+    "construction tool amazing",         #  81% (11건)
+    "temu garden gadget",                #  80% (10건)
+    # ── 실측 71~79% ──
+    "temu kids toy gadget",              #  75% (12건)
+    "temu plant gadget",                 #  75% (8건)
+    # ★아마존 축(2026-09-06 사장님 "테무아마존도 좋은게 많다"). 실측으로 골랐다 —
+    #   `amazon finds ~` 계열은 원본 0%(광고 재업)인데 아래 둘은 원본이 잘 나온다.
+    "cheap gadgets amazon finds",        # 원본 100% (3건)
+    "amazon cheap finds",                # 원본  75% + 아마존링크 25% (4건)
+]
+# ★상한 12개 — `/api/pinterest/collect`가 `kws[:12]`로 자른다(app.py, 폭주 방지).
+#   더 넣으면 **뒤쪽이 조용히 잘려** 넣어놓고 안 돌아가는 상태가 된다
+#   (test_pinterest.py::test_기본_키워드가_한_배치에_들어간다가 이걸 지킨다).
+#   새 축을 시험하려면 아래 후보를 화면의 검색어 칸에 직접 넣어 돌리고,
+#   적중률을 재서 위 목록의 낮은 것과 **교체**하라 — 덧붙이지 마라.
+CANDIDATE_KEYWORDS = [
+    # 실측은 좋은데 12칸이 모자라 뺀 것들(넣으려면 위와 교체)
+    "temu fitness gadget",               # 원본 75% (8건)
+    "satisfying gadget demo",            # 원본 71% (14건)
+    # ①규칙(`<물건> gadget`)으로 넓히는 새 축. 실측 전이라 기본값에는 안 넣는다.
+    "temu workshop gadget",
+    "temu repair gadget",
+    "temu winter gadget",
+    # 실측 66% — 12칸이 모자라 뺐다(넣으려면 위와 교체)
+    "temu camping gadget",
+    "tiktok made me buy it gadget",
+    "farming gadget amazing",
 ]
 
 _SEARCH_API_HINT = "BaseSearchResource/get"
@@ -108,9 +164,13 @@ def _thumb(pin):
     return ""
 
 
-def _crawl(keyword, scrolls, timeout_ms):
+def _crawl(keyword, scrolls, timeout_ms, tab="pins"):
     """실제 브라우저를 띄우는 유일한 함수 — 테스트는 이걸 주입 대체한다
-    (playwright_crawl._crawl_xiaohongshu과 같은 계약)."""
+    (playwright_crawl._crawl_xiaohongshu과 같은 계약).
+
+    tab: "pins"=일반 검색(종전 그대로) / "videos"=영상 전용 탭(2026-08-29 렌즈용).
+    ★영상 핀은 일반 탭에 거의 안 나온다 — 실측: '인덕션 테이블'·'induction table'
+      등 4키워드 전부 pins 탭 영상 0개, videos 탭은 12개씩."""
     from playwright.sync_api import sync_playwright   # 지연 import — 미설치 환경 보호
 
     caps = []
@@ -123,7 +183,8 @@ def _crawl(keyword, scrolls, timeout_ms):
         except Exception:      # noqa: BLE001 — JSON이 아니면 무시
             pass
 
-    url = "https://www.pinterest.com/search/pins/?q=" + urllib.parse.quote(keyword)
+    url = ("https://www.pinterest.com/search/%s/?q=" % (tab if tab == "videos" else "pins")
+           + urllib.parse.quote(keyword))
     with sync_playwright() as p:
         b = p.chromium.launch(headless=True)
         ctx = b.new_context(
@@ -142,14 +203,20 @@ def _crawl(keyword, scrolls, timeout_ms):
     return caps
 
 
-def search_videos(keyword, max_results=40, scrolls=5, timeout_ms=45000, _crawler=None):
+def search_videos(keyword, max_results=40, scrolls=5, timeout_ms=45000, _crawler=None,
+                  tab="pins"):
     """키워드 → 영상 핀 목록. 실패해도 예외를 던지지 않는다(빈 목록).
+
+    tab="videos"면 영상 전용 검색 탭을 긁는다(렌즈 '여기서' 검색용, 2026-08-29).
+    기본은 종전 그대로 "pins" — 핀터레스트 탭 수집의 동작은 안 바뀐다.
 
     ★수집이 서비스를 죽이면 안 된다 — 브라우저가 없거나 페이지가 바뀌어도 []를 준다.
       단 **조용히 삼키지는 않는다**(아래 print) — 0건이 '없음'인지 '고장'인지 구별해야 한다.
     """
     import sys
-    crawl = _crawler or _crawl
+    # ⚠️ 주입 크롤러(_crawler)의 계약은 (keyword, scrolls, timeout_ms) 3인자 그대로다
+    #    — 기존 테스트·수집이 이 모양을 쓴다. tab은 기본 _crawl에만 전달한다.
+    crawl = _crawler or (lambda k, s, t: _crawl(k, s, t, tab=tab))
     try:
         bodies = crawl(keyword, scrolls, timeout_ms)
     except Exception as e:  # noqa: BLE001
@@ -166,3 +233,151 @@ def search_videos(keyword, max_results=40, scrolls=5, timeout_ms=45000, _crawler
             if len(out) >= max_results:
                 return out
     return out
+
+
+# ── 핀 1개 실조회: 영상인가? (렌즈·다운로드 공용, 2026-08-29) ──────────────
+# 렌즈(구글렌즈)가 물어오는 핀터레스트 링크에는 영상 여부가 없다. 위 검색 크롤과 달리
+# **핀 상세 페이지는 로그인·브라우저 없이 requests로 열리고**, SEO용 JSON-LD에
+# 영상 핀이면 VideoObject(mp4 직링크·길이·썸네일·제목)가 박혀 있다.
+# 실측(2026-08-29, 익명 requests): 영상 핀 2/2 VideoObject 있음(contentUrl=
+# v1.pinimg.com mp4, duration=PT15S) / 이미지 핀 4/4 없음 / mp4·썸네일 모두
+# Referer 없이 200(핫링크 차단 없음). 비공식 API(PinResource/get)는 익명 403이라 못 쓴다.
+_PIN_PAGE_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/120.0 Safari/537.36")
+_LD_JSON_RE = re.compile(
+    r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', re.S)
+# PT15S / PT1M2S / PT1H2M3S → 초. schema.org duration(ISO8601)용.
+_ISO_DUR_RE = re.compile(r"^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$")
+
+
+def iso_duration_secs(raw):
+    """"PT15S" → 15.0. 못 읽으면 None(0으로 뭉개지 않는다 — 길이 모름과 0초는 다르다)."""
+    m = _ISO_DUR_RE.match(str(raw or "").strip())
+    if not m or not any(m.groups()):
+        return None
+    h, mi, s = m.groups()
+    return int(h or 0) * 3600 + int(mi or 0) * 60 + float(s or 0)
+
+
+_PIN_DOMAIN_RE = re.compile(r'"domain":"([^"]{2,60})"')
+_PIN_LINK_RE = re.compile(r'"link":"(https?://[^"]{5,300})"')
+
+
+def _ld_video_block(html):
+    """핀 상세 HTML → JSON-LD VideoObject dict / 없으면 None.
+
+    ★pin_destination과 pin_video_info가 **같은 판정을 두 번 적지 않게** 뽑은 함수다
+      (0순위-B). 둘 다 같은 상세 페이지를 읽으므로 파싱은 한 곳에서만 한다.
+    """
+    import json
+    for m in _LD_JSON_RE.finditer(html):
+        try:
+            block = json.loads(m.group(1))
+        except ValueError:
+            continue
+        for it in (block if isinstance(block, list) else [block]):
+            if not (isinstance(it, dict) and it.get("@type") == "VideoObject"):
+                continue
+            if not str(it.get("contentUrl") or ""):
+                continue
+            return it
+    return None
+
+
+def pin_destination(url, timeout=15):
+    """핀 상세 URL → (domain, link, caption). 못 읽으면 (None, None, "") — 지어내지 않는다.
+
+    ★2026-09-07: 반환이 2개→3개로 늘었다. 호출부를 함께 고쳐야 한다.
+
+    ★사장님 "알리 테무에서 나오는 상품들을 중점으로 어떻게 찾을수있나"(2026-08-29)에
+      대한 답이다. **검색 응답엔 링크가 없다**(핀 키는 id·images·videos뿐, 25개 전수
+      확인). 상세 페이지에만 있고, 주거용 프록시로 열어야 나온다:
+          "link":"https://temu.to/m/u9c4kk5ldcu"   "domain":"temu.to"
+
+    ★판정은 `"domain":` 필드로만 한다 — 문자열 검색은 오탐이다(실측: `amazon` 히트
+      하나가 CSP 헤더의 `m.media-amazon.com`이었다).
+
+    ⚠️목적지는 **덤**이다. 프록시가 죽거나 핀터레스트가 막아도 영상 수집 자체는
+      살아야 하므로 실패를 삼키고 빈 값을 준다(pin_video_info와 계약이 다르다 —
+      저쪽은 렌즈가 자를지 말지를 결정해야 해서 예외를 살려 보낸다).
+
+    전량 실측(624개·262초·실패0): Uploaded by user 234 · instagram 212 ·
+    amzn.to 34 · temu.to 20 · amazon 19 → 쇼핑몰 핀 85개(전부 영상 있음, 중앙값 15.8초).
+    """
+    import requests
+    from shopping_shorts.config import residential_proxies
+    try:
+        r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA,
+                                       "Accept-Encoding": "gzip, deflate"},
+                         proxies=residential_proxies(), timeout=timeout)
+        if r.status_code != 200:
+            return None, None
+        doms = [d for d in _PIN_DOMAIN_RE.findall(r.text) if d and d != "null"]
+        links = _PIN_LINK_RE.findall(r.text)
+        # ★캡션도 여기서 함께 건진다(2026-09-07) — 왕복은 늘지 않는다.
+        #   검색 API가 제목·설명을 아예 안 줘서 라이브 캡션 보유율이 0%(2,259건 중 1건)
+        #   였고, 캡션이 없으면 제작 쪽에서 소재를 고를 근거가 없다.
+        cap = ""
+        it = _ld_video_block(r.text)
+        if it:
+            cap = (str(it.get("name") or "").strip()
+                   or str(it.get("description") or "").strip())[:200]
+        return (doms[0] if doms else None), (links[0] if links else None), cap
+    except Exception:                  # noqa: BLE001 — 덤이 본업을 죽이면 안 된다
+        return None, None, ""
+
+
+# 쇼핑몰 판정용 — 화면 필터와 **같은 목록을 두 번 적지 않는다**(0순위-B).
+SHOP_DOMAINS = ("aliexpress", "temu", "amzn", "amazon", "alibaba", "shopee",
+                "lightinthebox", "banggood", "shein", "etsy", "ebay", "coupang")
+
+
+def is_shop_domain(domain):
+    """목적지가 쇼핑몰인가. None·빈값은 False(모름은 아님으로 친다)."""
+    d = (domain or "").lower()
+    return any(k in d for k in SHOP_DOMAINS)
+
+
+def pin_video_info(url, timeout=8):
+    """핀 상세 페이지 URL → 영상 정보 dict / 영상 아님 None. 네트워크 실패는 예외.
+
+    반환 dict: {video_url, duration(초|None), thumbnail, title, description}
+    ★세 가지 결과를 구분해서 준다 — 호출부의 처분이 다르기 때문이다:
+      dict = 영상 확정(렌즈: 남긴다·보강 / 다운로드: mp4 직접 받기)
+      None = 영상 아님 확정(렌즈: 잘라낸다 — 렌즈는 숏폼 소재를 찾는 자리)
+      예외 = 판정불가(렌즈: 자르면 안 된다 — 검증 불가가 회수율을 깎으면 안 됨)"""
+    import json
+    import requests
+    # ★두 가지를 함께 고쳐야 한다(2026-08-29 라이브 버그, 실측 표본 10개).
+    #
+    #   ①Accept-Encoding 명시 — 서버에 brotli 1.2.0이 깔려 있어 requests가 br을
+    #     자동 광고하는데 urllib3 2.0.7과의 조합에서 디코딩이 깨진다
+    #     (ContentDecodingError, 영상핀 8/8 전부 예외였다).
+    #   ②주거용 프록시 경유 — **진짜 원인은 IP였다.** 데이터센터 IP엔 핀터레스트가
+    #     SEO용 JSON-LD를 아예 안 내려준다:  직접 None 10/10 / 프록시 dict 10/10.
+    #     헤더를 브라우저처럼 갖춰도 안 되고 IP만 바꾸면 된다(둘 다 실측).
+    #
+    #   ⚠️①만 고치면 **오히려 나빠진다**: 예외(판정불가 → 렌즈가 안 자름)가
+    #     None(영상 아님 확정 → 렌즈가 잘라냄)으로 바뀌어 멀쩡한 영상이 사라진다.
+    #   프록시는 config.residential_proxies() 한 곳에서 정한다(0순위-B).
+    #   ★2026-09-04: 종전엔 reddit_source._proxies()(=REDDIT_PROXY만)를 썼는데
+    #     서버엔 YTDLP_PROXY만 깔려 있어 핀터레스트만 직결로 나갔다 → 담은 핀이
+    #     믹스에서 통째로 '이미지 핀'으로 떨어졌다(실측 None 2/2 → 프록시 태우면 2/2 정상).
+    #   미설정이면 None을 주므로 로컬·테스트에서도 안 깨진다.
+    from shopping_shorts.config import residential_proxies
+    r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA,
+                                   "Accept-Encoding": "gzip, deflate"},
+                     proxies=residential_proxies(), timeout=timeout)
+    if r.status_code != 200:
+        raise RuntimeError(f"핀 페이지 HTTP {r.status_code}: {url}")
+    it = _ld_video_block(r.text)      # 파싱은 한 곳에서만(0순위-B)
+    if it:
+            vurl = str(it.get("contentUrl") or "")
+            return {
+                "video_url": vurl,
+                "duration": iso_duration_secs(it.get("duration")),
+                "thumbnail": str(it.get("thumbnailUrl") or ""),
+                "title": str(it.get("name") or "").strip(),
+                "description": str(it.get("description") or "").strip()[:300],
+            }
+    return None

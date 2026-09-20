@@ -142,3 +142,57 @@ def test_run_clean_sources_assembly_failure_keeps_clean_status_ready(monkeypatch
     assert job["clean_status"] == "ready"
     assert job["clean_error"] is None
     assert "clean_video_path" not in job
+
+
+# ── 완성본 1편 청소(final) 경로 — 라이브 기본값이다(서버 SHORTS_CLEAN_FINAL=1) ──────
+# ★2026-09-17 실사고: job 44112f9a6e64가 clean_status='cleaning' + clean_error=None인 채로
+#   21시간 갇혔다. 큐(job_queue #19977)는 state='done'·error=''로 **정상 종료**였다.
+#   즉 워커는 끝났는데 종착 상태를 아무도 안 썼다. 그러면 화면은 영원히 ⏳이고,
+#   재시도 가드(app.py: clean_status=='cleaning')가 버튼까지 막아 탈출구가 없다.
+#   → final 경로의 **모든 끝**이 ready/failed 중 하나를 반드시 남겨야 한다.
+
+def _final_job():
+    return {"job_id": "j", "urls": ["u"], "customer_id": 0,
+            "edit_plan": {"beats": [{"beat_idx": 0, "src": "s0"}]}}
+
+
+def _patch_final(monkeypatch, tmp_path, assemble_result):
+    """라이브와 같은 final 전략으로 고정하고, 조립만 흉내낸다."""
+    monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+    monkeypatch.setattr(mp, "_synthesize_beats", lambda *a, **k: None)
+    monkeypatch.setattr(mp, "_resolve_sources", lambda job, work: {"s0": "/orig/s0.mp4"})
+    monkeypatch.setattr(mp, "assemble_clean_video", assemble_result)
+
+
+def test_final_path_marks_ready_when_assembled(monkeypatch, tmp_path):
+    job = _final_job()
+    store = _FakeStore(job)
+    monkeypatch.setattr(mp, "Store", lambda p: store)
+    _patch_final(monkeypatch, tmp_path, lambda *a, **k: str(tmp_path / "out.mp4"))
+    mp.run_clean_sources("j", "db", str(tmp_path))
+    assert job.get("clean_status") == "ready"
+
+
+def test_final_path_never_leaves_job_stuck_in_cleaning(monkeypatch, tmp_path):
+    """★조립이 조용히 None을 줘도 'cleaning'으로 남기면 안 된다 — 그게 21시간 잠금이었다."""
+    job = _final_job()
+    store = _FakeStore(job)
+    monkeypatch.setattr(mp, "Store", lambda p: store)
+    _patch_final(monkeypatch, tmp_path, lambda *a, **k: None)
+    mp.run_clean_sources("j", "db", str(tmp_path))
+    assert job.get("clean_status") == "failed"
+    assert job.get("clean_error")           # 사유 없이 실패로만 두면 화면이 안내를 못 만든다
+
+
+def test_final_path_records_error_when_assemble_raises(monkeypatch, tmp_path):
+    """유료 청소가 조립 안에서 돈다 — 거기서 터진 사유(30029 등)가 DB에 남아야
+    화면이 '업체 장애'인지 '영상 탓'인지 가를 수 있다."""
+    job = _final_job()
+    store = _FakeStore(job)
+    monkeypatch.setattr(mp, "Store", lambda p: store)
+    def _boom(*a, **k):
+        raise RuntimeError("AI 자막 제거 결과가 비었습니다: {'code': 30029}")
+    _patch_final(monkeypatch, tmp_path, _boom)
+    mp.run_clean_sources("j", "db", str(tmp_path))
+    assert job.get("clean_status") == "failed"
+    assert "30029" in (job.get("clean_error") or "")

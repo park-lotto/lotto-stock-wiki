@@ -1,0 +1,58 @@
+{
+ "segments": [
+  {
+   "seg_id": "s0-0",
+   "start": 0.0,
+   "end": 6.687,
+   "text": "Terima kasih telah",
+   "text_ko": "",
+   "scene_desc": "포크로 잎채소를 고정하고 나이프로 잎 부분을 접어 부피를 줄이는 과정이 반복됨.",
+   "label": "샐러드 접기 시연",
+   "use_point": "큰 잎채소를 먹기 좋게 손질하는 방법을 보여주어, 식사 매너나 깔끔한 음식 섭취 팁을 소개하는 영상 도입부에 쓰기 좋습니다.",
+   "action": "자르다",
+   "change": "넓게 퍼져 있던 채소 잎이 포크 위에서 작고 깔끔한 형태로 접혔다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "실증",
+   "product_benefits": [
+    "큰 채소도 포크에 깔끔하게 말려 한입에 먹기 좋다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-1",
+   "start": 6.687,
+   "end": 13.374,
+   "text": "menonton!",
+   "text_ko": "",
+   "scene_desc": "나이프로 채소를 단단히 고정하고 포크에 균형 있게 안착시켜 깔끔하게 마무리하는 모습.",
+   "label": "식사 마무리 시연",
+   "use_point": "잎채소가 흘러내리지 않게 고정하는 디테일한 동작을 보여주어, 시청자에게 신뢰감 있는 해결책을 제시하는 본론 대목에 적합합니다.",
+   "action": "누르다",
+   "change": "접힌 채소가 포크 위에 안정적으로 고정되어 흐트러지지 않는다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "완성",
+   "product_benefits": [
+    "입을 크게 벌릴 필요 없이 우아하고 정갈하게 식사할 수 있다."
+   ],
+   "motion_level": null
+  }
+ ],
+ "full_text": "Terima kasih telah menonton!",
+ "product_benefits": [
+  "큰 채소도 포크에 깔끔하게 말려 한입에 먹기 좋다.",
+  "입을 크게 벌릴 필요 없이 우아하고 정갈하게 식사할 수 있다."
+ ],
+ "source_brief": {
+  "product": "유럽식 샐러드 식사 매너",
+  "role": "유럽 여행 시 샐러드를 올바르게 먹는 방법 교육",
+  "core": "포크를 이용해 잎채소를 깔끔하게 접어 먹는 기술",
+  "summary": "유럽 여행 중 샐러드를 먹을 때 채소가 커서 겪는 불편함을 해결하는 방법을 보여준다. 포크를 사용해 채소를 접고 나이프로 정리하여 한입에 깔끔하게 먹는 과정을 시연한다.",
+  "flow": "3.3초 포크를 활용한 샐러드 접기 → 10.0초 나이프를 이용한 깔끔한 마무리",
+  "confidence": "높음"
+ },
+ "tag_empty_ratio": 0.0,
+ "transcript_status": "ok",
+ "full_text_ko": ""
+}

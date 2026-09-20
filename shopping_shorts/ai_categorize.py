@@ -93,7 +93,7 @@ def _classify_batch(batch, max_key_tries=3):
         except Exception as e:  # noqa: BLE001 — 분류 실패는 치명적이지 않다(키워드 폴백)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e))  # 소진 키 제외 후 다음 키로
+                comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e), exc=e)  # 소진 키 제외 후 다음 키로
                 continue
             return {}  # 그 외 오류는 이 배치만 포기(키워드 유지)
     return {}

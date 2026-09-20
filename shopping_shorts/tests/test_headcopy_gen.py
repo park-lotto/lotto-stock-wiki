@@ -135,3 +135,106 @@ def test_two_lines_always_two_and_balanced():
     assert two_lines("한방에") == "한방에"     # 어절 하나면 접을 수 없다
     assert two_lines("") == ""
     assert two_lines("이미 두\n줄인것").count("\n") == 1
+
+
+def test_youtube_reveal_family_returns_matching_title_set(monkeypatch):
+    """첫 후킹 스타일은 큰 제목과 흰 보조띠를 한 세트로 만들어야 한다."""
+    seen = {}
+
+    def fake(prompt, schema):
+        seen["prompt"] = prompt
+        return {"copies": [{
+            "label": "결과형",
+            "text": "칼질 포기자를 살린\n한국 천재의 발명품",
+            "subline": "텀블러처럼 생긴 주방도구의 정체?",
+            "upload_title": "칼질 포기자를 살린 한국 천재의 발명품",
+        }]}
+
+    monkeypatch.setattr(headcopy_gen, "_call_json", fake)
+    out = headcopy_gen.suggest("전동 채소 다지기 대본", family="youtube_reveal")
+
+    assert out[0]["subline"] == "텀블러처럼 생긴 주방도구의 정체?"
+    assert out[0]["upload_title"].startswith("칼질 포기자")
+    assert "정체를 보조 제목에서 공개하지" in seen["prompt"]
+    assert "나라·천재·개발자·돈방석" in seen["prompt"]
+
+
+def test_youtube_reveal_rejects_a_line_wider_than_template(monkeypatch):
+    """총 글자 수가 짧아도 한 줄이 11자를 넘으면 실제 이븐쇼핑 틀에서 잘린다."""
+    monkeypatch.setattr(headcopy_gen, "_call_json", lambda p, s: {"copies": [{
+        "label": "너무 넓음", "text": "가나다라마바사아자차카타\n짧은 둘째 줄",
+        "subline": "정체?", "upload_title": "제목",
+    }]})
+    assert headcopy_gen.suggest("대본", family="youtube_reveal") == []
+
+
+def test_instagram_story_family_returns_relationship_story_set(monkeypatch):
+    """인스타형은 관계 사건으로 열고 큰 제목·보조띠·업로드 제목을 함께 보존한다."""
+    seen = {}
+
+    def fake(prompt, schema):
+        seen["prompt"] = prompt
+        return {"copies": [{
+            "label": "관계 반전형",
+            "text": "시어머니가 줬다는데\n써보니 반전이었음",
+            "subline": "주방에서 이걸 꺼낸 이유",
+            "upload_title": "시어머니가 건넨 주방도구를 써본 며느리 반응",
+            "why": "사람 관계와 반전 전조로 다음 장면을 보게 합니다",
+        }]}
+
+    monkeypatch.setattr(headcopy_gen, "_call_json", fake)
+    out = headcopy_gen.suggest("주방도구를 선물받아 사용하는 대본", family="instagram_story")
+
+    assert out[0]["subline"] == "주방에서 이걸 꺼낸 이유"
+    assert out[0]["upload_title"].startswith("시어머니가 건넨")
+    assert "관계·상황·반전 전조" in seen["prompt"]
+    assert "~했다는데" in seen["prompt"]
+
+
+def test_demo_direct_family_returns_product_demo_set(monkeypatch):
+    """직접시연형은 제품 행동과 효과를 바로 말하는 제목 세트를 보존한다."""
+    seen = {}
+
+    def fake(prompt, schema):
+        seen["prompt"] = prompt
+        return {"copies": [{
+            "label": "사용 효과형",
+            "text": "양파를 넣고 누르면\n다지기가 끝남",
+            "subline": "칼질 없이 5초 만에 다지기",
+            "upload_title": "양파를 넣고 누르면 다지기가 끝나는 주방도구",
+            "why": "사용 행동과 결과를 한눈에 보여줍니다",
+        }]}
+
+    monkeypatch.setattr(headcopy_gen, "_call_json", fake)
+    out = headcopy_gen.suggest("전동 다지기에 양파를 넣고 누르는 대본", family="demo_direct")
+
+    assert out[0]["subline"] == "칼질 없이 5초 만에 다지기"
+    assert out[0]["upload_title"].startswith("양파를 넣고")
+    assert "제품·행동·효과" in seen["prompt"]
+    assert "정체를 숨기지" in seen["prompt"]
+
+
+def test_paired_family_retries_once_when_every_title_is_too_wide(monkeypatch):
+    """실제 모델이 12~15자로 쓰더라도 빈 목록 대신 한 번 압축 보정을 요청한다."""
+    calls = []
+
+    def fake(prompt, schema):
+        calls.append(prompt)
+        if len(calls) == 1:
+            return {"copies": [{
+                "label": "너무 김",
+                "text": "엄마가 칼질하다 손 베일까봐\n몰래 챙겨드린 비밀 아이템",
+                "subline": "엄마가 써본 후기", "upload_title": "엄마를 위한 주방도구",
+            }]}
+        return {"copies": [{
+            "label": "압축본",
+            "text": "엄마가 걱정돼서\n몰래 챙겨드림",
+            "subline": "써보더니 보인 반응", "upload_title": "엄마에게 챙겨드린 주방도구",
+        }]}
+
+    monkeypatch.setattr(headcopy_gen, "_call_json", fake)
+    out = headcopy_gen.suggest("엄마에게 전동 다지기를 드린 대본", family="instagram_story")
+
+    assert len(calls) == 2
+    assert "공백 포함 10자" in calls[1]   # 두 줄 모두 둘째 줄 한도(hook2_line_max)로 받는다
+    assert out[0]["text"] == "엄마가 걱정돼서\n몰래 챙겨드림"

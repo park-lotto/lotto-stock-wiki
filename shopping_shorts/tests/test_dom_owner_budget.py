@@ -37,7 +37,7 @@ BASELINE = {
     #   (2026-08-24 스캐너 수정 — 한 줄 다중선언의 둘째 변수를 놓치고 있었다).
     #   실측으로 확인: 손대지 않은 main에서도 똑같이 6·4다. 천장을 올린 게 아니라
     #   눈이 멀어 낮게 적혀 있던 것을 **사실에 맞춘** 것이다. 여전히 "더 늘면 실패"다.
-    "mixPreview": 6, "mixReview": 5, "aiPick": 4, "cleanPreview": 4,
+    "mixPreview": 6, "mixReview": 4, "aiPick": 4, "cleanPreview": 4,
     "finalVideo": 4, "mixCandidates": 4, "coupangSlot": 3, "pmResults": 4,
     "btnFinalRender": 2, "candStatus": 2, "finalStatus": 2, "frPresets": 2,
     "fxResult": 2, "handoffBanner": 2, "matOverlay": 2, "matchProgress": 2,

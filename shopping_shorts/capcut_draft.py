@@ -122,6 +122,30 @@ def _audio_material(path, name, dur_us):
             "check_flag": 1, "copyright_limit_type": "none"}
 
 
+def _hex_rgb(h, default=(1.0, 1.0, 1.0)):
+    """'#ffcc00' → (1.0, 0.8, 0.0). 캡컷 content는 0~1 실수 RGB를 쓴다.
+    이상한 값이면 기본색 — 자막이 안 나가는 것보다 흰색이라도 나가는 게 낫다."""
+    try:
+        t = str(h or "").strip().lstrip("#")
+        if len(t) == 3:
+            t = "".join(c * 2 for c in t)
+        if len(t) != 6:
+            return default
+        return tuple(int(t[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
+    except (TypeError, ValueError):
+        return default
+
+
+def _hex_norm(h, default="#ffffff"):
+    """'ffcc00'/'#FFCC00' → '#ffcc00'. 캡컷 머티리얼은 '#rrggbb' 문자열을 쓴다."""
+    t = str(h or "").strip()
+    if not t:
+        return default
+    if not t.startswith("#"):
+        t = "#" + t
+    return t.lower() if len(t) == 7 else default
+
+
 def _text_content(text, font_path, color=(1.0, 1.0, 1.0), size=15.0):
     import json
     r, g, b = color
@@ -133,7 +157,91 @@ def _text_content(text, font_path, color=(1.0, 1.0, 1.0), size=15.0):
         "text": text}, ensure_ascii=False)
 
 
-def _text_material(text, font_path):
+# 우리 화면(제작소 자막꾸미기)의 기본 글자 크기 — caption_style_json의 size 기본값.
+_UI_BASE_FONT_SIZE = 50.0
+# 꾸미기 UI 기준 폭 → 렌더 출력 폭 (video_assemble._ui_px와 같은 환산: px × 1080/720).
+_UI_REF_W, _OUT_W_PX = 720, 1080
+# ★캡컷 font_size 1단위가 1080폭 출력에서 차지하는 글자(em) 픽셀 — 2026-09-03 실측 추정.
+#   고객 제보(박세희, job fb62adf0aad0) 캡컷 화면과 우리 렌더 화면을 같은 폭으로 놓고 재니
+#   캡컷 글자가 약 1.7배 컸다(캡컷 17.5px vs 렌더 10px, 미리보기 235px 폭 기준).
+#   종전 식(우리 50 = 캡컷 16)은 추정이었고 그 결과가 1.7배였다 → 16/1.7 ≈ 9.4 = 75px/8.0.
+#   캡컷이 만든 캡션의 기본 font_size가 16(실측)이라 클램프 범위는 그 근처로 둔다.
+#   ⚠️정확한 단위는 캡컷 렌더 실측으로만 확정된다. 틀리면 **이 상수 하나만** 바꾼다.
+_CC_PX_PER_UNIT = 8.0
+_CC_BASE_FONT_SIZE = round(_UI_BASE_FONT_SIZE * _OUT_W_PX / _UI_REF_W / _CC_PX_PER_UNIT, 3)  # 9.375
+
+
+def _caption_style_to_cc(style):
+    """제작소 자막 스타일(caption_style_json) → 캡컷 캡션 머티리얼에 넣을 값들.
+
+    ★고객 제보(2026-08-28 "캡컷으로 보내니 템플릿은 안 따라온다"): 종전엔 색·크기·
+      외곽선·그림자가 **전부 고정값**이라 캡컷엔 늘 흰색 기본 자막만 갔다
+      (caption_style_json 참조 0건 — grep으로 확인).
+
+    ⚠️**위치(x_pct·y_pct)는 여기서 다루지 않는다.** 캡컷 clip.transform의 좌표계
+      (부호·스케일)를 실측한 근거가 없다. 짐작해서 넣으면 자막이 화면 밖으로 날아간다 —
+      안 옮기면 캡컷 기본 위치라 최소한 보이기는 한다. 실측 뒤에 붙일 것.
+    ⚠️폰트 파일도 아직 안 보낸다 — 고객 PC엔 우리 폰트가 없어 경로만 넣으면 깨진다.
+      draft 폴더에 동봉하는 작업이 따로 필요하다(다음 단계).
+    """
+    st = style if isinstance(style, dict) else {}
+    out = {}
+    # 글자색 — content(0~1 RGB)와 머티리얼(#rrggbb) 둘 다 캡컷이 본다.
+    out["rgb"] = _hex_rgb(st.get("color"), (1.0, 1.0, 1.0))
+    out["text_color"] = _hex_norm(st.get("color"))
+    # 크기 — 렌더와 같은 픽셀(UI px × 1080/720)을 캡컷 단위로 나눈다(_CC_PX_PER_UNIT 참고).
+    #   종전 "우리 50 = 캡컷 16" 비례식은 실물에서 1.7배 크게 나왔다(2026-09-03 고객 제보).
+    try:
+        ui = float(st.get("size") or _UI_BASE_FONT_SIZE)
+    except (TypeError, ValueError):
+        ui = _UI_BASE_FONT_SIZE
+    ratio = max(0.3, min(3.0, ui / _UI_BASE_FONT_SIZE))       # 과한 값은 잘라 안전하게
+    out["font_size"] = round(_CC_BASE_FONT_SIZE * ratio, 2)
+    # 배경 박스 — 실측(캡컷이 만든 캡션): background_style=1 + background_color(#rrggbb)
+    #   + background_alpha(0~1). 종전엔 전부 0/""로 고정이라 박스가 **한 번도** 안 갔다
+    #   (2026-09-03 고객 제보 "바탕이 없다"). 렌더는 box_color@box_opacity/100 로 그린다.
+    #   ⚠️여백(background_height/width 0.14)·모서리는 캡컷 단위 미실측 → 기본값 그대로 둔다.
+    if st.get("box"):
+        try:
+            op = float(st.get("box_opacity") if st.get("box_opacity") is not None else 80)
+        except (TypeError, ValueError):
+            op = 80.0
+        out["background_style"] = 1
+        out["background_color"] = _hex_norm(st.get("box_color"), "#000000")
+        out["background_alpha"] = round(max(0.0, min(1.0, op / 100.0)), 3)
+    else:
+        out["background_style"] = 0
+        out["background_color"] = ""
+        out["background_alpha"] = 0.0
+    # 외곽선 — 캡컷 캡션 기본 border_width=0.24(실측). 우리 outline_w(px)를 그 비율로.
+    if st.get("outline"):
+        try:
+            w = float(st.get("outline_w") or 0)
+        except (TypeError, ValueError):
+            w = 0
+        out["border_color"] = _hex_norm(st.get("outline_color"), "#000000")
+        out["border_width"] = round(0.24 * max(0.5, min(3.0, (w or 6) / 6.0)), 3)
+        out["border_alpha"] = 1.0
+    else:
+        out["border_color"] = ""
+        out["border_width"] = 0.0
+        out["border_alpha"] = 0.0
+    # 그림자
+    if st.get("shadow"):
+        out["has_shadow"] = True
+        out["shadow_color"] = _hex_norm(st.get("shadow_color"), "#000000")
+        try:
+            d = float(st.get("shadow_d") or 3)
+        except (TypeError, ValueError):
+            d = 3
+        out["shadow_distance"] = round(max(1.0, min(20.0, d * 1.7)), 2)   # 5.0(기본) ≈ 3×1.7
+    else:
+        out["has_shadow"] = False
+        out["shadow_color"] = ""
+    return out
+
+
+def _text_material(text, font_path, style=None):
     """자막 머티리얼 — **캡션(subtitle)** 으로 만든다(2026-08-26 고객 요청).
 
     ★고객 제보(진진님): "캡컷에 보내보니 자막이 **텍스트**로 붙더라. 캡션으로 붙게
@@ -148,16 +256,20 @@ def _text_material(text, font_path):
         캡컷이 자막 패널에서 다루려면 이 필드들을 본다.
     ★추측하지 않았다. 실제 캡컷이 저장한 파일에서 그대로 가져온 값이다.
     """
-    content = _text_content(text, font_path)
+    cc = _caption_style_to_cc(style)
+    content = _text_content(text, font_path, color=cc["rgb"], size=cc["font_size"])
     return {"id": _uid(), "type": "subtitle", "content": content,
             "base_content": "", "recognize_type": 0, "recognize_task_id": "",
             "recognize_text": "", "recognize_model": "", "punc_model": "",
-            "name": "", "font_path": font_path, "font_size": 16.0, "text_color": "#ffffff",
+            "name": "", "font_path": font_path,
+            "font_size": cc["font_size"], "text_color": cc["text_color"],
             "text_alpha": 1.0, "alignment": 1, "line_feed": 1, "letter_spacing": 0.0,
-            "line_spacing": 0.02, "text_size": 16, "border_width": 0.24, "border_alpha": 1.0,
-            "border_color": "", "border_mode": 0, "bold_width": 0.0,
-            "has_shadow": False, "background_alpha": 0.0, "background_color": "",
-            "background_style": 0, "background_round_radius": 0.0,
+            "line_spacing": 0.02, "text_size": int(round(cc["font_size"])),
+            "border_width": cc["border_width"], "border_alpha": cc["border_alpha"],
+            "border_color": cc["border_color"], "border_mode": 0, "bold_width": 0.0,
+            "has_shadow": cc["has_shadow"],
+            "background_alpha": cc["background_alpha"], "background_color": cc["background_color"],
+            "background_style": cc["background_style"], "background_round_radius": 0.0,
             "background_height": 0.14, "background_width": 0.14,
             "background_horizontal_offset": 0.0, "background_vertical_offset": 0.0,
             "layer_weight": 1, "line_max_width": 10.0,
@@ -166,7 +278,8 @@ def _text_material(text, font_path):
             "force_apply_line_max_width": False, "global_alpha": 1.0,
             "group_id": "", "initial_scale": 1.0, "is_rich_text": False,
             "italic_degree": 0, "language": "", "shadow_alpha": 0.9,
-            "shadow_angle": -45.0, "shadow_color": "", "shadow_distance": 5.0,
+            "shadow_angle": -45.0, "shadow_color": cc["shadow_color"],
+            "shadow_distance": cc.get("shadow_distance", 5.0),
             "shadow_smoothing": 1.0, "typesetting": 0, "underline": False,
             "underline_offset": 0.22, "underline_width": 0.05,
             "words": {"start_time": [], "end_time": [], "text": []},
@@ -178,8 +291,14 @@ def _text_material(text, font_path):
             "combo_info": {"text_templates": []}, "sub_type": 0, "check_flag": 31}
 
 
-_DEFAULT_FONT = ("C:/Users/TheRose/AppData/Local/CapCut/Apps/8.9.1.3802/"
-                 "Resources/Font/SystemFont/en.ttf")
+# 폰트 경로는 **비운다**(2026-08-30).
+#   종전 값은 `C:/Users/TheRose/.../CapCut/Apps/8.9.1.3802/.../en.ttf`였다 — 특정 PC의
+#   특정 사용자·특정 캡컷 버전 경로다. 실측: 이 회사 PC엔 그 경로가 없고(캡컷 8.7.0.3685)
+#   고객 PC엔 더더욱 없다. 즉 **모든 고객에게 없는 파일**을 가리키고 있었다.
+#   빈 값이면 캡컷이 자기 기본 폰트로 그린다 — 한글도 폴백으로 나온다.
+#   ⚠️우리 폰트(TmonMonsori 등)를 진짜로 따라가게 하려면 draft 폴더에 ttf를 동봉하고
+#     그 절대경로를 넣어야 한다. 그건 별도 작업이다(라이선스 확인 필요).
+_DEFAULT_FONT = ""
 
 
 def _safe_part(s, limit=20):
@@ -225,8 +344,77 @@ def _beat_clips(beat, beat_dur, src_durs):
     return []
 
 
+
+def _scene_zoom(beat):
+    """장면 확대 배율 — **렌더와 같은 함수**가 뜻을 정한다(video_assemble.scene_zoom_of).
+    구하지 못하면 1.0(확대 없음) — 확대 하나 때문에 내보내기가 죽으면 안 된다."""
+    try:
+        from shopping_shorts.video_assemble import scene_zoom_of
+        z, _px, _py = scene_zoom_of(beat or {})
+        return float(z)
+    except Exception:      # noqa: BLE001
+        return 1.0
+
+
+def _photo_material(path, name, width, height):
+    """정지 이미지(꾸미기 틀 PNG) 머티리얼.
+
+    ★캡컷은 사진도 **materials.videos** 배열에 넣고 type으로 가른다(video ↔ photo).
+      images 배열은 스켈레톤에 있지만 캡컷이 실제로 쓰는 자리가 아니다.
+    ★duration은 캡컷이 사진에 쓰는 관례값(10분)을 넣는다 — 세그먼트가 실제 표시 길이를
+      정하므로 이 값은 상한 역할만 한다.
+    """
+    return {"id": _uid(), "type": "photo", "path": path, "material_name": name,
+            "duration": 10800000000, "width": width, "height": height, "has_audio": False,
+            "category_name": "local", "source": 0, "source_platform": 0,
+            "crop": {"lower_left_x": 0.0, "lower_left_y": 1.0, "lower_right_x": 1.0,
+                     "lower_right_y": 1.0, "upper_left_x": 0.0, "upper_left_y": 0.0,
+                     "upper_right_x": 1.0, "upper_right_y": 0.0},
+            "crop_ratio": "free", "crop_scale": 1.0, "media_path": "", "aigc_type": "none"}
+
+
+def _watermark_material(wm, font_path):
+    """꾸미기 워터마크(채널 닉네임) → 캡컷 **텍스트** 머티리얼.
+
+    ★고객 제보(2026-08-28 "캡컷으로 보내니 템플릿은 안 따라온다")의 2단계.
+      자막(캡션)과 달리 이건 **텍스트**로 넣는다 — 자막 패널에 섞이면 대사 자막을
+      다룰 때 워터마크까지 함께 잡혀 오히려 불편하다(캡션 type='subtitle'은 자막 전용).
+
+    ⚠️**위치는 못 맞춘다.** 캡컷 clip.transform 좌표계를 실측한 근거가 없어(부호·스케일)
+      짐작해 넣으면 화면 밖으로 날아간다. 캡컷 기본 위치(가운데)로 들어가니
+      사장님·고객이 한 번 끌어서 옮기면 된다 — 안 오는 것보다 낫다.
+      좌표계를 실측하면 여기와 자막 위치를 함께 붙일 것.
+    """
+    text = str((wm or {}).get("text") or "").strip()
+    if not text:
+        return None
+    st = {"color": (wm or {}).get("color") or "#ffffff",
+          "size": (wm or {}).get("size") or 30,
+          "outline": (wm or {}).get("outline", True),
+          "outline_color": (wm or {}).get("outline_color") or "#000000",
+          "outline_w": (wm or {}).get("outline_w") or 3,
+          "shadow": False}
+    cc = _caption_style_to_cc(st)
+    m = _text_material(text, font_path, st)
+    # ★캡션이 아니라 **텍스트**로 되돌린다(실측값: type='text' · check_flag=7 ·
+    #   line_max_width=0.82). 이 셋이 캡션과 텍스트를 가르는 자리다.
+    m["type"] = "text"
+    m["check_flag"] = 7
+    m["line_max_width"] = 0.82
+    # 투명도(alpha) — 워터마크는 보통 반투명이다.
+    try:
+        a = float((wm or {}).get("alpha", 0.6))
+    except (TypeError, ValueError):
+        a = 0.6
+    m["text_alpha"] = max(0.05, min(1.0, a))
+    m["global_alpha"] = m["text_alpha"]
+    return m
+
+
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
-                project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None):
+                project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None,
+                caption_style=None, deco=None, headcopy_layer=None, bgm_layer=None,
+                sfx_layers=None, cutaway_layers=None, scene_overlay_layers=None):
     """편집안 → (draft_content_dict, assets_to_copy).
 
     asset_paths: {real_path: 캡컷이 볼 절대경로} — 호출부가 파일을 그 절대경로에 두고 넘긴다.
@@ -243,6 +431,19 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                  "name": "", "is_default_name": True, "segments": []}
     txt_track = {"id": _uid(), "type": "text", "attribute": 0, "flag": 0,
                  "name": "", "is_default_name": True, "segments": []}
+    # 컷어웨이(b-roll)·BGM·효과음은 각각 **자기 트랙**에 둔다 — 소스 영상/TTS와 같은 트랙에
+    # 넣으면 시간이 겹쳐 캡컷이 하나를 밀어낸다(워터마크에서 이미 겪은 함정).
+    cut_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+                 "name": "", "is_default_name": True, "segments": []}
+    bgm_track = {"id": _uid(), "type": "audio", "attribute": 0, "flag": 0,
+                 "name": "", "is_default_name": True, "segments": []}
+    sfx_track = {"id": _uid(), "type": "audio", "attribute": 0, "flag": 0,
+                 "name": "", "is_default_name": True, "segments": []}
+    hc_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+                "name": "", "is_default_name": True, "segments": []}
+    scene_overlay_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+                           "name": "scene-style-overlay", "is_default_name": False,
+                           "segments": []}
     beats_by_idx = {b["beat_idx"]: b for b in plan.get("beats", [])}
     assets_to_copy = []
     total_us = 0
@@ -296,6 +497,15 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                                 source_dur=_us(c.get("src_dur", 0.0)) or c_dur,
                                 render_index=0, volume=0.0,
                                 extra_refs=[sp["id"], ca["id"], sc["id"], ph["id"], vs["id"]])
+            # ── 🔍 장면 확대(6단계에서 끌어 맞춘 것) ──
+            #   뜻은 video_assemble.scene_zoom_of **한 곳**이 정한다(0순위-B) — 여기서
+            #   따로 파싱하면 화면·렌더와 갈린다.
+            #   ⚠️**이동(pan)은 아직 안 간다** — 캡컷 clip.transform의 좌표계(부호·스케일)를
+            #     실측한 근거가 없다. 짐작해 넣으면 화면 밖으로 날아간다(자막 위치와 같은 이유).
+            #     배율만 얹으면 최소한 "얼마나 당겨 봤는지"는 따라간다.
+            _z = _scene_zoom(beat)
+            if _z > 1.0:
+                seg["clip"]["scale"] = {"x": _z, "y": _z}
             vid_track["segments"].append(seg)
             _acc += c_dur
 
@@ -317,21 +527,167 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                                     extra_refs=[sp["id"], ph["id"], be["id"], sc["id"], vs["id"]])
                 aud_track["segments"].append(seg)
 
-        # ── 자막 트랙: 비트 나레이션 ──
-        text = (tl.get("narration") or "").strip()
-        if text:
-            anim = _sticker_animation()
-            mats["material_animations"].append(anim)
-            tm = _text_material(text, font_path)
-            mats["texts"].append(tm)
-            # ★실측(캡컷이 만든 캡션 세그먼트): render_index=0 · track_render_index=2.
-            #   종전엔 render_index=14000(텍스트 관례)이라 자막 패널에서 다르게 다뤄졌다.
-            seg = _base_segment(tm["id"], t0, dur, source_timerange=False,
-                                render_index=0, extra_refs=[anim["id"]])
-            seg["track_render_index"] = 2
-            txt_track["segments"].append(seg)
+        # ── 컷어웨이(장면라이브러리 b-roll): 비트 영상 위 풀프레임 오버레이 ──
+        #   렌더와 같은 창: [비트 시작, min(자산 길이, 비트 길이)] (video_assemble._render_mix).
+        _ca = (cutaway_layers or {}).get(idx)
+        if _ca and _ca.get("_capcut_path"):
+            _cadur = min(dur, _us(_ca.get("dur", 0.0)) or dur)
+            if _cadur > 0:
+                _cam = _video_material(_ca["_capcut_path"],
+                                       _ca["_capcut_path"].rsplit("/", 1)[-1], _cadur, cw, ch)
+                mats["videos"].append(_cam)
+                _cseg = _base_segment(_cam["id"], t0, _cadur, source_start=0,
+                                      source_dur=_cadur, render_index=0, volume=0.0)
+                _cseg["track_render_index"] = 1     # 소스 영상(0) 위
+                cut_track["segments"].append(_cseg)
 
-    tracks = [t for t in (vid_track, aud_track, txt_track) if t["segments"]]
+        # ── 자막 트랙: 비트 나레이션 ──
+        #   ★렌더와 같은 구절 나누기·시간표(video_assemble.caption_schedule, 0순위-B).
+        #     종전엔 비트 문장 통째로 캡션 하나 → 캡컷 화면 밖으로 넘쳤다(2026-09-03 실측).
+        if not scene_overlay_layers:
+            from shopping_shorts.video_assemble import caption_schedule
+            _tail = 0.5 if tl is timeline[-1] else 0.0
+            for _txt, _s, _e in caption_schedule(tl, tail=_tail):
+                _txt = (_txt or "").strip()
+                if not _txt or _e - _s <= 0.05:
+                    continue
+                anim = _sticker_animation()
+                mats["material_animations"].append(anim)
+                tm = _text_material(_txt, font_path, caption_style)
+                mats["texts"].append(tm)
+                # ★실측(캡컷이 만든 캡션 세그먼트): render_index=0 · track_render_index=2.
+                #   종전엔 render_index=14000(텍스트 관례)이라 자막 패널에서 다르게 다뤄졌다.
+                seg = _base_segment(tm["id"], _us(_s), _us(_e - _s), source_timerange=False,
+                                    render_index=0, extra_refs=[anim["id"]])
+                seg["track_render_index"] = 3      # 소스(0)·머리카피(1)·틀(2) 위 = 맨 위
+                txt_track["segments"].append(seg)
+
+    # 장면꾸미기 레이어에는 자막·제목·브랜딩이 이미 합쳐져 있다.
+    for layer in scene_overlay_layers or []:
+        source_path = layer.get("path")
+        path = layer.get("_capcut_path") or asset_paths.get(source_path)
+        start = _us(layer.get("start", layer.get("t0", 0.0)))
+        if "end" in layer:
+            duration = _us(layer.get("end", 0.0)) - start
+        else:
+            duration = _us(layer.get("dur", 0.0))
+        if not path or duration <= 0:
+            continue
+        if source_path and asset_paths.get(source_path) == path:
+            assets_to_copy.append((source_path, path))
+        material = _photo_material(path, path.rsplit("/", 1)[-1], cw, ch)
+        mats["videos"].append(material)
+        segment = _base_segment(material["id"], start, duration, source_start=0,
+                                source_dur=duration, render_index=0, volume=0.0)
+        segment["track_render_index"] = 4
+        scene_overlay_track["segments"].append(segment)
+
+    # ── 🖼 꾸미기 틀(템플릿) — 영상 위에 얹는 투명 PNG (2026-08-28 고객 제보 3단계) ──
+    #   ★이미 그림 파일로 존재한다: deco_frame이 미리보기·렌더와 **같은 함수**로 굽는다
+    #     (mix_pipeline._template_layer). 캡컷에도 그 PNG를 그대로 올린다 — 채널명 바·제목·
+    #     아이콘을 캡컷에서 다시 만들 필요가 없다.
+    #   ★전체 화면(1080x1920)이라 **위치를 옮길 필요가 없다** — 자막·워터마크와 달리
+    #     좌표계 문제가 없다(clip.transform 기본 0,0이 곧 정확한 자리다).
+    #   ★span: 'first'면 첫 비트만, 아니면 영상 전체 — 우리 렌더와 같은 규칙.
+    tpl_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+                 "name": "", "is_default_name": True, "segments": []}
+    _tpl = (deco or {}).get("template") or {}
+    _tpl_abs = _tpl.get("_capcut_path")        # 호출부가 캡컷 절대경로로 채워 준다
+    if _tpl_abs and total_us > 0:
+        _tdur = total_us
+        if _tpl.get("span") == "first" and timeline:
+            try:
+                _tdur = min(total_us, _us(float(timeline[0].get("dur") or 0)))
+            except (TypeError, ValueError):
+                _tdur = total_us
+        if _tdur > 0:
+            pm = _photo_material(_tpl_abs, _tpl_abs.rsplit("/", 1)[-1], cw, ch)
+            mats["videos"].append(pm)
+            tseg = _base_segment(pm["id"], 0, _tdur, source_start=0, source_dur=_tdur,
+                                 render_index=0, volume=0.0)
+            tseg["track_render_index"] = 2     # 소스(0)·머리카피(1) 위, 자막 아래
+            try:
+                a = float(_tpl.get("alpha", 1))
+            except (TypeError, ValueError):
+                a = 1.0
+            tseg["clip"]["alpha"] = max(0.05, min(1.0, a))
+            tpl_track["segments"].append(tseg)
+
+    # ── ✍ 머리카피(헤드카피) — 투명 PNG 한 장으로 올린다 ──
+    #   ★캡컷 텍스트로 다시 만들지 않는다: 여러 줄·배경박스·단어별 강조색·자동축소가
+    #     얽혀 있고, 무엇보다 위치(x·y%)를 옮기려면 clip.transform 좌표계 실측이 필요한데
+    #     아직 근거가 없다. 풀캔버스 PNG면 좌표 변환이 아예 필요 없다(틀과 같은 방법).
+    #   ★그림은 렌더와 같은 함수가 굽는다(video_assemble.headcopy_layer_png).
+    #   ★구간도 렌더와 한 벌(video_assemble.headcopy_span) — 마지막 비트 전까지.
+    if headcopy_layer and headcopy_layer.get("_capcut_path") and total_us > 0:
+        _hdur = min(total_us, _us(headcopy_layer.get("dur", 0.0)) or total_us)
+        _ht0 = _us(headcopy_layer.get("t0", 0.0))
+        if _hdur > 0:
+            hm = _photo_material(headcopy_layer["_capcut_path"],
+                                 headcopy_layer["_capcut_path"].rsplit("/", 1)[-1], cw, ch)
+            mats["videos"].append(hm)
+            hseg = _base_segment(hm["id"], _ht0, _hdur, source_start=0, source_dur=_hdur,
+                                 render_index=0, volume=0.0)
+            # ★렌더는 머리카피를 먼저 그리고 그 위에 틀을 얹는다(_burn_captions 순서) —
+            #   캡컷도 같은 쌓임이어야 한다. 종전 "틀 위"는 실물에서 틀 제목과 겹쳤다(2026-09-03).
+            hseg["track_render_index"] = 1     # 소스(0) 위, 틀(2) 아래
+            hc_track["segments"].append(hseg)
+
+    # ── 🎵 배경음악(BGM) — 영상 전체에 한 칸, 볼륨은 제작소 설정 그대로 ──
+    #   짧으면 캡컷에서 늘려 쓰면 된다(우리 렌더는 amix가 잘라 쓴다). 여기서 반복을
+    #   흉내내면 렌더와 다른 소리가 되므로 **원본 길이 그대로** 한 칸만 올린다.
+    if bgm_layer and bgm_layer.get("_capcut_path") and total_us > 0:
+        _bdur = _us(bgm_layer.get("dur", 0.0)) or total_us
+        _bdur = min(_bdur, total_us)
+        if _bdur > 0:
+            bm = _audio_material(bgm_layer["_capcut_path"],
+                                 bgm_layer["_capcut_path"].rsplit("/", 1)[-1], _bdur)
+            mats["audios"].append(bm)
+            try:
+                _bvol = float(bgm_layer.get("volume", 15)) / 100.0
+            except (TypeError, ValueError):
+                _bvol = 0.15
+            bseg = _base_segment(bm["id"], 0, _bdur, source_start=0, source_dur=_bdur,
+                                 render_index=0, volume=max(0.0, min(1.0, _bvol)))
+            bgm_track["segments"].append(bseg)
+
+    # ── 🔔 효과음(sfx) — 타점은 렌더와 같은 함수가 준다(video_assemble.sfx_events_for) ──
+    for _sx in (sfx_layers or []):
+        if not _sx.get("_capcut_path"):
+            continue
+        _sdur = _us(_sx.get("dur", 0.0))
+        _st0 = _us(_sx.get("at", 0.0))
+        if _sdur <= 0 or (total_us and _st0 >= total_us):
+            continue
+        if total_us:
+            _sdur = min(_sdur, total_us - _st0)     # 영상 끝을 넘으면 잘라 쓴다(amix와 같다)
+        sm = _audio_material(_sx["_capcut_path"], _sx["_capcut_path"].rsplit("/", 1)[-1], _sdur)
+        mats["audios"].append(sm)
+        try:
+            _svol = float(_sx.get("volume", 60)) / 100.0
+        except (TypeError, ValueError):
+            _svol = 0.6
+        sseg = _base_segment(sm["id"], _st0, _sdur, source_start=0, source_dur=_sdur,
+                             render_index=0, volume=max(0.0, min(1.0, _svol)))
+        sfx_track["segments"].append(sseg)
+
+    # ── 워터마크(채널 닉네임) — 영상 전체에 한 칸(2026-08-28 고객 제보 2단계) ──
+    #   ★자막 트랙과 **따로** 둔다: 같은 트랙에 넣으면 대사 자막과 시간이 겹쳐
+    #     캡컷이 하나를 밀어낸다(둘 다 전 구간에 있을 수 없다).
+    wm_track = {"id": _uid(), "type": "text", "attribute": 0, "flag": 0,
+                "name": "", "is_default_name": True, "segments": []}
+    wm_mat = _watermark_material((deco or {}).get("watermark"), font_path)
+    if wm_mat and total_us > 0:
+        mats["texts"].append(wm_mat)
+        wseg = _base_segment(wm_mat["id"], 0, total_us, source_timerange=False,
+                             render_index=0)
+        wseg["track_render_index"] = 3        # 자막(2)보다 위
+        wm_track["segments"].append(wseg)
+
+    tracks = [t for t in (vid_track, cut_track, hc_track, tpl_track,   # 머리카피가 틀 아래
+                          aud_track, bgm_track, sfx_track, txt_track, wm_track,
+                          scene_overlay_track)
+              if t["segments"]]
     draft = _skeleton(project_name, cw, ch, total_us)
     draft["materials"].update(mats)
     draft["tracks"] = tracks
@@ -378,9 +734,22 @@ def _skeleton(name, cw, ch, duration_us):
     }
 
 
+def used_video_ids(plan):
+    """편집안에서 실제 타임라인 후보로 쓰는 원본 video_id 집합."""
+    used = set()
+    for beat in (plan or {}).get("beats", []):
+        segments = beat.get("scene_override") or (
+            [beat.get("primary")] + list(beat.get("alternates") or []))
+        used.update(segment.get("video_id") for segment in segments if segment and segment.get("video_id"))
+    return used
+
+
 def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_paths,
                           tts_paths, project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT,
-                          probe=None, final_video=None):
+                          probe=None, final_video=None, caption_style=None, deco=None,
+                          headcopy_png=None, headcopy_span=None, sfx_events=None,
+                          cutaway_paths=None, scene_overlay_layers=None,
+                          extra_library_video_paths=None):
     """draft 폴더를 out_root/<project>/ 에 실제로 조립한다(에셋 복사 + draft_content.json + meta).
 
     base_abs: 캡컷이 이 draft 폴더를 볼 **절대경로**(예: C:/capcutproject/CapCut Drafts). draft가
@@ -400,12 +769,7 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
     #   alternates 소스가 복사되지 않아 asset_paths에 없고, 그러면 아래 build_draft가
     #   그 조각을 **조용히 건너뛴다**(실측: 화면 3개인 비트가 타임라인에 2개만 올라감).
     #   화면 재료의 단일 출처(_beat_material)와 같은 기준으로 모은다.
-    def _vids_of(pb):
-        segs = pb.get("scene_override") or ([pb.get("primary")] + list(pb.get("alternates") or []))
-        return {s.get("video_id") for s in segs if s}
-    used_vids = set()
-    for plan_beat in plan.get("beats", []):
-        used_vids |= _vids_of(plan_beat)
+    used_vids = used_video_ids(plan)
     asset_paths, video_durs = {}, {}
     for vid, real in source_video_paths.items():
         if vid not in used_vids or not real or not Path(real).exists():
@@ -424,15 +788,105 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
             shutil.copy(real, proj / name)
             asset_paths[real] = f"{base_abs}/{project}/{name}"
 
-    draft, _ = build_draft(plan=plan, timeline=timeline, source_video_paths=source_video_paths,
+    # ★꾸미기 틀 PNG를 draft 폴더로 복사하고 **캡컷이 볼 절대경로**를 심는다
+    #   (2026-08-28 고객 제보 3단계). 에셋은 절대경로여야 캡컷이 찾는다 —
+    #   상대경로는 2026-07-20에 Media Not Found로 확정 기각됐다.
+    deco = dict(deco or {})
+    _tpl_src = (deco.get("template") or {}).get("_abspath")
+    if _tpl_src and Path(_tpl_src).exists():
+        _tpl_name = "deco_frame.png"
+        shutil.copy(_tpl_src, proj / _tpl_name)
+        deco["template"] = {**deco["template"],
+                            "_capcut_path": f"{base_abs}/{project}/{_tpl_name}"}
+    # ── ✍ 머리카피 PNG · 🎵 BGM · 🔔 효과음 · 🎞 컷어웨이도 draft 폴더로 복사한다 ──
+    #   틀(template)과 같은 규칙: 파일을 폴더에 두고 **캡컷이 볼 절대경로**를 심는다
+    #   (상대경로는 2026-07-20에 Media Not Found로 확정 기각).
+    #   ⚠️어느 하나가 없거나 실패해도 내보내기는 그대로 된다 — 그 재료만 빠진다.
+    def _bring(src, name):
+        """파일 하나를 draft 폴더로 복사하고 (캡컷절대경로, 길이초)를 돌려준다."""
+        try:
+            if not src or not Path(src).exists():
+                return None, 0.0
+            shutil.copy(src, proj / name)
+            try:
+                d = float(probe(src) or 0.0)
+            except Exception:      # noqa: BLE001 — 길이를 못 재도 파일은 간다
+                d = 0.0
+            return f"{base_abs}/{project}/{name}", d
+        except Exception:      # noqa: BLE001
+            return None, 0.0
+
+    headcopy_layer = None
+    if headcopy_png:
+        _hp, _ = _bring(headcopy_png, "headcopy.png")
+        if _hp:
+            _ht0, _hdur = (headcopy_span or (0.0, 0.0))
+            headcopy_layer = {"_capcut_path": _hp, "t0": float(_ht0 or 0.0),
+                              "dur": float(_hdur or 0.0)}
+
+    bgm_layer = None
+    _bgm = (deco.get("bgm") or {}) if isinstance(deco, dict) else {}
+    if _bgm.get("_abspath"):
+        _ext = Path(_bgm["_abspath"]).suffix.lower() or ".mp3"
+        _bp, _bd = _bring(_bgm["_abspath"], "bgm" + _ext)
+        if _bp:
+            bgm_layer = {"_capcut_path": _bp, "dur": _bd,
+                         "volume": _bgm.get("volume", 15)}
+
+    sfx_layers = []
+    _sfx_vol = (deco or {}).get("sfx_volume", 60) if isinstance(deco, dict) else 60
+    for _i, (_spath, _sat) in enumerate(sfx_events or []):
+        _ext = Path(_spath).suffix.lower() or ".mp3"
+        _sp, _sd = _bring(_spath, "sfx_%02d%s" % (_i, _ext))
+        if _sp:
+            sfx_layers.append({"_capcut_path": _sp, "at": float(_sat or 0.0),
+                               "dur": _sd, "volume": _sfx_vol})
+
+    cutaway_layers = {}
+    for _idx, _cpath in (cutaway_paths or {}).items():
+        _cp, _cd = _bring(_cpath, "cutaway_%02d.mp4" % int(_idx))
+        if _cp:
+            cutaway_layers[_idx] = {"_capcut_path": _cp, "dur": _cd}
+
+    copied_scene_layers = []
+    for index, layer in enumerate(scene_overlay_layers or []):
+        source = layer.get("path")
+        extension = Path(str(source or "")).suffix.lower() or ".png"
+        capcut_path, _ = _bring(source, f"scene-style-{index:04d}{extension}")
+        if capcut_path:
+            copied_scene_layers.append({**layer, "_capcut_path": capcut_path})
+
+    draft, _ = build_draft(caption_style=caption_style, deco=deco,
+                           plan=plan, timeline=timeline, source_video_paths=source_video_paths,
                            tts_paths=tts_paths, asset_paths=asset_paths, project_name=project,
-                           canvas=canvas, font_path=font_path, video_durs=video_durs)
+                           canvas=canvas, font_path=font_path, video_durs=video_durs,
+                           headcopy_layer=headcopy_layer, bgm_layer=bgm_layer,
+                           sfx_layers=sfx_layers, cutaway_layers=cutaway_layers,
+                           scene_overlay_layers=copied_scene_layers)
 
     # ── 미디어 보관함(2026-08-23 사장님 "라이브러리에 조각 영상들 불러올 수 있게") ──
     #   타임라인은 그대로 두고, **장면 조각을 캡컷 보관함에 넣어** 끌어다 갈아끼울 수 있게 한다.
     #   자막·TTS는 트랙이 따로라 갈아끼워도 그대로 남는다.
     media = []
     cw2, ch2 = canvas
+    # 자막 제거 완성본을 비트 조각으로 쓰는 경우에도, 고객이 클립 앞뒤를 다시 고를 수 있도록
+    # 실제 긴 원본을 타임라인과 분리해 미디어 보관함에 함께 넣는다. 원본에는 기존 자막이 있을 수
+    # 있으므로 이름으로 분명히 구분하며, 타임라인 material에는 절대 연결하지 않는다.
+    copied_extra_sources = set()
+    for vid, real in (extra_library_video_paths or {}).items():
+        if (not real or not Path(real).exists() or real in asset_paths
+                or str(Path(real).resolve()) in copied_extra_sources):
+            continue
+        copied_extra_sources.add(str(Path(real).resolve()))
+        ext = Path(real).suffix.lower() or ".mp4"
+        name = f"original_full_{safe_project_name(str(vid))}{ext}"
+        shutil.copy(real, proj / name)
+        try:
+            dur = float(probe(real) or 0.0)
+        except Exception:
+            dur = 0.0
+        media.append({"path": f"{base_abs}/{project}/{name}", "name": name,
+                      "dur": dur, "w": cw2, "h": ch2})
     #   ① 장면 조각 — 원본에서 잘라낸 **깨끗한 화면**(자막·효과 안 구워짐).
     #      갈아끼워도 자막이 어긋나지 않는다. 파일명을 비트 순서로 지어 보관함에서 정렬된다.
     for tl in timeline:

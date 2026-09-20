@@ -1,0 +1,88 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>장면편집 오늘 고친 것 (2026-09-14)</title>
+<style>
+:root{--bg:#0f1218;--card:#171c25;--ink:#e9edf4;--dim:#98a2b3;--line:#2a3140;--acc:#ffb547;--ok:#4ade80;--bad:#ff6b6b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Pretendard","Malgun Gothic",system-ui,sans-serif;padding:24px 16px 60px}
+.wrap{max-width:980px;margin:0 auto}h1{font-size:28px;margin:0 0 6px}.sub{color:var(--dim);margin-bottom:26px}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 20px 16px;margin:18px 0}
+.sec h2{margin:0 0 4px;font-size:20px}.sec .one{color:var(--dim);margin:0 0 14px}
+.num{display:inline-block;background:var(--acc);color:#000;border-radius:8px;padding:0 9px;margin-right:8px;font-weight:800}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}.col{flex:1;min-width:260px}
+.lab{font-size:13px;color:var(--dim);margin:6px 0 4px;font-weight:700}.lab.b{color:var(--bad)}.lab.g{color:var(--ok)}
+.bar{display:flex;height:46px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#0b0e13}
+.c{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#111;border-right:2px solid #0b0e13;white-space:nowrap;overflow:hidden}
+.c1{background:#fbbf24}.c2{background:#60a5fa}.c3{background:#a78bfa}.c4{background:#34d399}.c5{background:#f472b6}
+.gap{background:repeating-linear-gradient(45deg,rgba(255,107,107,.25) 0 7px,transparent 7px 14px);color:var(--bad);border:2px dashed var(--bad)}
+.arrow{font-size:26px;color:var(--acc);padding:0 4px}
+.note{font-size:14px;color:var(--dim);margin-top:8px}.note b{color:var(--ink)}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:1px 10px;font-size:13px;margin:2px}
+.banner{background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.5);color:#ffc0c0;border-radius:8px;padding:6px 10px;font-size:14px;margin:6px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}th{color:var(--dim)}
+.tag{font-size:12px;border-radius:6px;padding:1px 7px;font-weight:700}.tag.ok{background:rgba(74,222,128,.15);color:var(--ok)}.tag.no{background:rgba(255,181,71,.15);color:var(--acc)}
+@media (max-width:600px){.c{font-size:11px}h1{font-size:22px}}
+</style></head><body><div class="wrap">
+<h1>장면편집 — 오늘 고친 것</h1>
+<div class="sub">2026-09-14 · 트랙 <b>담은장면전부</b> · 새벽 자동배포 예정 · 아래 색 막대는 전부 <b>음성 3.6초짜리 한 칸</b>이라고 보시면 됩니다</div>
+
+<div class="sec"><h2><span class="num">원칙</span>칸 길이는 정해진 상자, 컷은 내가 만진 것만 바뀐다</h2>
+<p class="one">구절 맞춤을 <b>끄면</b> 이 원칙으로 돌아갑니다. 컴퓨터가 몰래 다시 계산하지 않습니다.</p>
+<div class="bar"><div class="c c1" style="flex:.9">① 0.9초</div><div class="c c2" style="flex:.9">② 0.9초</div><div class="c c3" style="flex:1.1">③ 1.1초</div><div class="c c4" style="flex:.7">④ 0.7초</div></div>
+<div class="note">합계는 늘 <b>음성 길이(3.6초)</b> 그대로</div></div>
+
+<div class="sec"><h2><span class="num">1</span>구절 맞춤을 끄면 → 보던 화면이 그대로 멈춤</h2>
+<p class="one">예전엔 끄는 순간 2.2초 쪼개기·0.8초 하한으로 컷이 다시 짜여, 장면이 사라지거나 바뀌었습니다.</p>
+<div class="row"><div class="col"><div class="lab">구절 맞춤 켬</div><div class="bar"><div class="c c1" style="flex:.9">①</div><div class="c c2" style="flex:.9">②</div><div class="c c3" style="flex:1.1">③</div><div class="c c4" style="flex:.7">④</div></div></div>
+<div class="arrow">→</div>
+<div class="col"><div class="lab g">끄면 (지금)</div><div class="bar"><div class="c c1" style="flex:.9">①</div><div class="c c2" style="flex:.9">②</div><div class="c c3" style="flex:1.1">③</div><div class="c c4" style="flex:.7">④</div></div></div></div>
+<div class="note">같은 장면이 연달아 붙어 있으면 한 컷으로 합쳐 줍니다(화면은 같음).</div></div>
+
+<div class="sec"><h2><span class="num">2</span>컷 끝을 끌면 → 그 컷만 바뀜</h2>
+<p class="one">앞·뒤 가장자리 둘 다 잡을 수 있습니다. 최소 0.3초. 늘리면 뒤 컷들이 통째로 밀리고, 음성 끝에 닿으면 <b>끄는 도중에도</b> 멈춥니다.</p>
+<div class="lab">처음 (0.4초 빔)</div><div class="bar"><div class="c c1" style="flex:.8">① 0.8</div><div class="c c2" style="flex:1.1">② 1.1</div><div class="c c3" style="flex:.7">③ 0.7</div><div class="c c4" style="flex:.6">④ 0.6</div><div class="c gap" style="flex:.4">공백</div></div>
+<div class="lab g">② 를 1.5초로 늘림 → 다른 컷 길이 그대로, 공백만 사라짐</div><div class="bar"><div class="c c1" style="flex:.8">① 0.8</div><div class="c c2" style="flex:1.5">② 1.5</div><div class="c c3" style="flex:.7">③ 0.7</div><div class="c c4" style="flex:.6">④ 0.6</div></div>
+<div class="note">예전엔 ② 를 늘리면 ③ 이 작아지거나, 전부 ✋가 걸려 있으면 마지막 컷이 제자리로 튀었습니다.</div></div>
+
+<div class="sec"><h2><span class="num">3</span>시간이 비면 → "공백" 표시 + 버튼, 채우기 전엔 완성본 막힘</h2>
+<p class="one">몰래 채우지 않습니다. 사람이 고릅니다.</p>
+<div class="banner">⚠ 0.7초가 비었어요 — 앞 조각들에서 조금씩 장면을 길게 해주세요 &nbsp;<span class="pill">전체 살짝 느리게</span></div>
+<div class="bar"><div class="c c1" style="flex:.9">①</div><div class="c c2" style="flex:.9">②</div><div class="c c3" style="flex:.8">③</div><div class="c c4" style="flex:.3">④</div><div class="c gap" style="flex:.7">공백 0.7s</div></div>
+<div class="note"><b>[전체 살짝 느리게]</b> = 모든 컷을 조금 슬로우로 틀어 채움. 너무 느려지면 경고만 띄웁니다.<br>공백이 남은 채로 <b>완성본 만들기</b>를 누르면 "비어 있는 칸이 있어 만들 수 없어요"가 뜹니다.</div></div>
+
+<div class="sec"><h2><span class="num">4</span>장면 넣기 / 빼기</h2>
+<div class="row"><div class="col"><div class="lab g">넣기 — 공백이 있으면 그걸 꽉 채움</div>
+<div class="bar"><div class="c c1" style="flex:.4">①</div><div class="c c2" style="flex:.5">②</div><div class="c c3" style="flex:.3">③</div><div class="c c4" style="flex:.7">④</div><div class="c c5" style="flex:1.7">⑤ 새 카드 1.7</div></div></div>
+<div class="col"><div class="lab g">넣기 — 공백이 없으면 마지막 컷을 반으로</div>
+<div class="bar"><div class="c c1" style="flex:.4">①</div><div class="c c2" style="flex:.5">②</div><div class="c c3" style="flex:.3">③</div><div class="c c4" style="flex:.7">④</div><div class="c c5" style="flex:.85">⑤</div><div class="c c1" style="flex:.85">⑥</div></div></div></div>
+<div class="lab g" style="margin-top:12px">빼기 — 뺀 시간은 앞 컷이 받음 (③ 을 뺌)</div>
+<div class="bar"><div class="c c1" style="flex:.9">①</div><div class="c c2" style="flex:2.0">② (0.9 + 뺀 1.1)</div><div class="c c4" style="flex:.7">④</div></div>
+<div class="note">박스(🔁)로 조각을 바꾸면 그 컷 자리에 그대로 들어가고, 새 조각이 짧으면 그만큼 공백이 생깁니다.</div></div>
+
+<div class="sec"><h2><span class="num">5</span>고객 제보 — 5초 조각이 쪼개져 순서를 못 바꾸던 것</h2>
+<p class="one">훅 7초 = 1번 조각 2초 + 2번 조각 5초. 2.2초 상한 규칙이 5초를 둘로 잘랐습니다.</p>
+<div class="lab b">예전</div><div class="bar"><div class="c c1" style="flex:2">1번 2초</div><div class="c c2" style="flex:2.2">2번 앞</div><div class="c c2" style="flex:2.8;opacity:.75">2번 뒤</div></div>
+<div class="note">2번을 앞으로 옮기면 <b>2앞 | 1 | 2뒤</b> — 원하는 순서가 안 만들어짐</div>
+<div class="lab g" style="margin-top:10px">지금</div><div class="bar"><div class="c c1" style="flex:2">1번 2초</div><div class="c c2" style="flex:5">2번 5초</div></div>
+<div class="bar" style="margin-top:6px"><div class="c c2" style="flex:5">2번 5초</div><div class="c c1" style="flex:2">1번 2초</div></div>
+<div class="note">옮기면 통째로 옮겨집니다.</div></div>
+
+<div class="sec"><h2><span class="num">6</span>화면 조작</h2>
+<table><tr><th>무엇</th><th>예전</th><th>지금</th></tr>
+<tr><td>훅 조각을 옆 칸으로 끌기</td><td>떨어뜨려도 아무 일 없음</td><td>옆 칸 맨 뒤로 옮겨짐</td></tr>
+<tr><td>아래 소스 목록</td><td>스크롤하면 위 미리보기·칸이 밀려 안 보임</td><td>목록만 따로 스크롤 · 영상별/전체 <span class="pill">▾ 접기</span></td></tr>
+<tr><td>구절 맞춤 켜고 끌 때</td><td>칸이 넓어졌다 좁아짐</td><td>칸 폭 고정</td></tr>
+<tr><td>컷 위 빗금</td><td>뜻 모를 표시, 딱 맞는 칸에도 뜸</td><td>없앰</td></tr>
+<tr><td>1장=1컷 버튼</td><td>있음</td><td>없앰</td></tr></table></div>
+
+<div class="sec"><h2><span class="num">!</span>이번 배포에 들어가는 것 / 빠지는 것</h2>
+<table><tr><th>항목</th><th>상태</th></tr>
+<tr><td>1~6 장면편집 개선</td><td><span class="tag ok">배포</span></td></tr>
+<tr><td>자막 1초 미만 줄 합치기</td><td><span class="tag no">꺼둠</span> 장면 배치와 함께 고쳐야 담은 장면이 안 빠짐(아스트라·페이블 검토)</td></tr>
+<tr><td>구절 맞춤 <b>켠</b> 칸 (자막 줄 수 = 컷 수)</td><td>그대로</td></tr></table>
+<div class="note"><b>확인 방법:</b> 로컬 연습 화면 + 테스트. <b>아직 못 한 것:</b> 실제 영상 렌더·제작소 로그인 화면 — 배포 뒤 실제 job으로 확인 예정.</div></div>
+
+<div class="sec"><h2><span class="num">다음</span>사장님이 정하실 것 (자막·장면 배치 통합 작업)</h2>
+<table><tr><td>1</td><td>1.5초를 지키려면 자막 한 줄이 18자보다 길어져도 되나 (최대 약 3초)</td></tr>
+<tr><td>2</td><td>담은 장면이 칸에 다 안 들어갈 때: 다음 칸으로 넘기기 / "안 나옴" 표시 / 칸 늘리기</td></tr>
+<tr><td>3</td><td>장면 고르기: AI 자동 추천 개선 vs 사람이 편집하기 쉽게</td></tr>
+<tr><td>4</td><td>30칸 재생 확인</td></tr></table></div>
+</div></body></html>

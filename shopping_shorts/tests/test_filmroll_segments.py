@@ -320,3 +320,90 @@ def test_extra_seg_render_plan_ignores_server_seg_map():
     clips = video_assemble.plan_beat_clips_for(plan["beats"][0], 4.0, {"v": 30.0})
     starts = [round(c["start"], 2) for c in clips]
     assert any(s >= 12.0 for s in starts), f"오려낸 구간이 안 쓰였다: {starts}"
+
+
+# ── 필름 자막띠 구간 (2026-08-29 사장님 "장면 자막이 안 맞음") ──────────────────
+# 종전엔 자막의 끝을 **다음 자막 시작**으로 지어내, 말과 말 사이 공백이 앞 자막에
+# 통째로 먹혔다(실측: 0.0~1.2초 자막이 0.0~3.5초로 그려짐 = +2.3초. 마지막 자막은
+# 영상 끝까지 +20.9초). 진실은 세그의 end다 — 지어내지 말고 있는 값을 쓴다.
+# JS라 파이썬으로 못 부른다. 공용 하네스로 그 규칙만 떼어 실제로 돌린다
+# (★node -e 금지 — 윈도우 32,767자 상한. test_no_node_dash_e.py가 강제한다).
+import json as _json
+import pathlib as _pathlib
+import re as _re
+
+from shopping_shorts.tests.js_harness import requires_node, run_js
+
+pytestmark = requires_node
+
+
+def _caps_ends(caps):
+    """filmroll.js drawCaps의 '끝시각 정하는 규칙'을 그 파일에서 읽어 그대로 돌린다."""
+    js_path = _pathlib.Path(__file__).resolve().parents[1] / "static" / "filmroll.js"
+    js = js_path.read_text(encoding="utf-8")
+    pat = (r"const st = c\[0\];\s*\n\s*(const nxt = [^\n]+)"
+           r"\s*\n\s*(const en = [^\n]+)")
+    m = _re.search(pat, js)
+    assert m, "drawCaps의 끝시각 규칙을 못 찾았다 — 코드가 바뀌었으면 이 테스트도 같이 고쳐라"
+    code = (
+        "const caps=" + _json.dumps(caps, ensure_ascii=False) + ";const DUR=30;"
+        "const out=caps.map((c,i)=>{const st=c[0];" + m.group(1) + " " + m.group(2)
+        + " return [st,en];});console.log(JSON.stringify(out));"
+    )
+    return _json.loads(run_js(code))
+
+
+def test_film_caption_band_uses_real_end_not_next_start():
+    """자막띠는 실제 끝 시각으로 그린다 — 공백을 앞 자막이 먹지 않는다."""
+    caps = [[0.0, "아이 생일 때마다", 1.2], [3.5, "케이크 고민하던", 4.4],
+            [4.4, "엄마들 사이에서", 5.0], [8.0, "난리 난 물건인데", 9.1]]
+    got = _caps_ends(caps)
+    assert [round(e, 2) for _s, e in got] == [1.2, 4.4, 5.0, 9.1], got
+
+
+def test_film_caption_band_falls_back_when_no_end():
+    """끝이 없는 옛 2칸 caps는 종전대로(다음 시작까지) — 옛 호출부가 안 깨진다."""
+    got = _caps_ends([[0.0, "가"], [3.5, "나"]])
+    assert [round(e, 2) for _s, e in got] == [3.5, 30.0], got
+
+
+def test_film_caption_never_overruns_next_caption():
+    """end가 다음 자막을 넘겨 들어와도 겹치지 않는다(자막끼리 포개지면 못 읽는다)."""
+    got = _caps_ends([[0.0, "가", 9.9], [3.5, "나", 4.0]])
+    assert round(got[0][1], 2) == 3.5, got
+
+
+# ── 필름 칸 검정 (2026-08-30 사장님 "검정화면이 필름에 계속 나온다") ──────────────
+# 원인: strip/filmframes가 `loadedmetadata`(readyState 1 = 길이·크기만 앎)만 기다리고
+# drawImage를 했다. 그 상태엔 **그릴 픽셀이 없어** 검은 프레임이 나오고, 그게 CACHE에
+# 구워지면 아무도 다시 안 뽑아 **영영 검정**이었다.
+# 실측(400kbps+CPU 4배): 고치기 전 그려진 16칸이 16칸 모두 검정(0.25~5.75초 앞쪽 연속),
+# 고친 뒤 검정 0 + 네트워크가 풀리면 60칸 전부 자동으로 채워짐.
+
+def _filmroll_src():
+    return (_pathlib.Path(__file__).resolve().parents[1]
+            / "static" / "filmroll.js").read_text(encoding="utf-8")
+
+
+def test_그릴_수_있나_판정이_한_곳뿐이다():
+    """canShoot 정의는 하나여야 한다(0순위-B) — 두 벌이 되면 한쪽만 고쳐진다."""
+    src = _filmroll_src()
+    assert src.count("const canShoot =") == 1, "canShoot 정의가 여러 벌이다"
+    assert "v.readyState >= 2" in src, "readyState 2(픽셀 있음) 기준이 사라졌다"
+
+
+def test_픽셀_없이는_그리지_않는다():
+    """drawImage 앞에 canShoot 가드가 있어야 한다 — 없으면 검정이 캐시에 굽힌다."""
+    src = _filmroll_src()
+    for m in _re.finditer(r"drawImage\(", src):
+        before = src[max(0, m.start() - 900):m.start()]
+        assert "canShoot" in before, (
+            "canShoot 가드 없이 drawImage하는 자리가 있다 — 검은 프레임이 캐시된다 "
+            f"(위치 {src.count(chr(10), 0, m.start()) + 1}줄)")
+
+
+def test_빈_결과는_캐시하지_않는다():
+    """전부 빈 프레임이면 FRAME_CACHE에 굽지 않는다(구우면 다시 안 뽑는다)."""
+    src = _filmroll_src()
+    assert "if (out.some(Boolean)) FRAME_CACHE[key] = out;" in src, \
+        "filmframes가 빈 결과까지 캐시한다"

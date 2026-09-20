@@ -29,6 +29,31 @@
   .pane{display:none}
   .pane.on{display:block}
 
+  /* ── 💳 1기 참가비 결제 카드 (2026-08-30) ──────────── */
+  .payCard{background:var(--panel);border:2px solid var(--accent);border-radius:16px;
+    padding:24px;margin-bottom:20px}
+  .payTop{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .payTitle{font-size:18px;font-weight:800;color:var(--txt)}
+  .payPrice{font-size:28px;font-weight:900;letter-spacing:-1px;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .paySub{color:var(--sub);font-size:14px;margin-top:8px;line-height:1.6}
+  .payBtn{display:block;text-align:center;margin-top:16px;padding:15px;border-radius:12px;
+    font-size:16px;font-weight:800;text-decoration:none;color:#fff;background:var(--grad);
+    border:none;cursor:pointer}
+  .payBtn:hover{filter:brightness(1.08)}
+  .payBtn.off{background:var(--hover);color:var(--sub);cursor:not-allowed;
+    pointer-events:none;border:1px solid var(--line)}
+  .payOr{text-align:center;color:var(--sub);font-size:13px;margin:18px 0 10px}
+  .payBank{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--hover);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .payBankName{color:var(--sub);font-size:13px}
+  .payBankNo{font-size:19px;font-weight:800;letter-spacing:0.5px;color:var(--txt);margin-top:2px}
+  .payCopy{font-family:inherit;font-size:14px;font-weight:700;padding:9px 16px;
+    border-radius:9px;border:1px solid var(--line);background:var(--panel);
+    color:var(--txt);cursor:pointer;white-space:nowrap}
+  .payCopy:hover{background:var(--hover)}
+  .payNote{color:var(--sub);font-size:13px;line-height:1.7;margin-top:14px}
+
   /* ── 잔액 카드 ─────────────────────────────────────── */
   .balCard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
   .balCard .lbl{color:var(--sub);font-size:14px}
@@ -236,6 +261,52 @@
   </section>
 
   <section class="pane" id="paneAccount">
+    <!-- ═══════ 🖥 내 PC 등록 (2026-08-31 사장님 "마이페이지에 pc등록칸 만들고 직접 할수있게") ═══════
+         ★자동 등록은 없앴다: 페이지 하나 열 때 나가는 동시 요청들이 각각 다른 기기
+           도장을 만들어 **한 PC가 두 칸을 먹었다**(라이브 사고, 4명 전원 같은 IP).
+           사람이 이 버튼을 한 번 누를 때만 등록한다.
+         ★해제 버튼은 일부러 없다 — 스스로 풀 수 있으면 등록 제한이 의미가 없다. -->
+    <div class="card" id="pcCard" style="margin-bottom:14px">
+      <h3 style="margin:0 0 8px;font-size:16px">🖥 내 PC 등록 <span id="pcReq" style="font-size:12px;color:#f0b429"></span></h3>
+      <p class="hint" style="margin:0 0 10px">
+        계정 보호를 위해 <b>PC 2대</b>까지 등록해서 쓸 수 있어요.
+        휴대폰·태블릿은 등록 없이 그냥 쓰시면 됩니다.</p>
+      <div id="pcList" style="margin-bottom:10px"></div>
+      <button id="pcBtn" onclick="pcRegister()" style="padding:9px 16px;border-radius:8px;
+        border:1px solid #2f6b45;background:#16241c;color:#7ee787;cursor:pointer;font-size:14px">
+        이 PC 등록하기</button>
+      <span id="pcMsg" style="margin-left:10px;font-size:13px"></span>
+      <p class="hint" style="margin:10px 0 0;font-size:12px;color:#5f6773">
+        PC를 바꾸셨거나 자리가 다 찼으면 문의해 주세요 — 바로 비워드립니다.</p>
+    </div>
+    <!-- ═══════ 💳 1기 참가비 결제 안내 (2026-08-30) ═══════
+         Pro가 아닌 회원(체험·무료)에게만 뜬다. 판단은 /api/me의 plan·is_admin을
+         그대로 쓴다 — 결제 여부를 여기서 새로 계산하면 언젠가 어긋난다(0순위-B).
+         카드결제 오픈 시각 전에는 버튼을 눌러도 소용없으므로 아예 비활성으로 둔다. -->
+    <div class="payCard" id="payCard" hidden>
+      <div class="payTop">
+        <div class="payTitle">💳 1기 참가비 결제</div>
+        <div class="payPrice">77만원</div>
+      </div>
+      <div class="paySub" id="payCardSub">카드결제는 8월 31일(일) 오전 11시부터 열립니다.</div>
+
+      <a class="payBtn" id="payCardBtn" href="https://smartstore.naver.com/makerslab7/products/13765673887"
+         target="_blank" rel="noopener">카드로 결제하기 →</a>
+
+      <div class="payOr">또는 계좌이체</div>
+      <div class="payBank">
+        <div>
+          <div class="payBankName">국민은행 · 예금주 메이커스랩</div>
+          <div class="payBankNo" id="payAcctNo">649701-01-357828</div>
+        </div>
+        <button class="payCopy" type="button" onclick="copyAcct()">복사</button>
+      </div>
+      <div class="payNote">
+        입금자명은 <b>신청자 성함과 같게</b> 넣어주세요.<br>
+        결제·입금이 확인되면 이용권이 <b>Pro</b>로 바뀝니다. (확인까지 시간이 걸릴 수 있습니다)
+      </div>
+    </div>
+
     <div class="balCard">
       <div class="lbl">현재 플랜</div>
       <div class="balRow">
@@ -358,8 +429,11 @@ var GUIDE_VIDEO = {
   gemini: "",      // 구글(제미나이) 키 받는 법
   vmake: "",       // VMake 키 받는 법
   elevenlabs: "",  // ElevenLabs 키 받는 법
+  typecast: "",    // 타입캐스트 키 받는 법
   youtube: "",     // 유튜브 Data API 키 받는 법
-  serpapi: ""      // SerpApi 키 받는 법(렌즈 검색)
+  serpapi: "",     // SerpApi 키 받는 법(렌즈 검색)
+  buffer: "",      // Buffer 키 받는 법(SNS 예약발행)
+  coupang: ""      // 쿠팡 파트너스 API 키 받는 법
 };
 
 /* 서비스 정의 — 이름·설명·복수허용 여부를 한 곳에서만 정한다(CLAUDE.md 0순위-B). */
@@ -367,10 +441,26 @@ var SERVICES = [
   { id: "gemini",     icon: "🤖", name: "구글 (제미나이)",
     desc: "대본 뽑기 · 영상 분석 · 썸네일에 씁니다", multi: true,
     ph: "여러 개를 한 번에 붙여넣어도 됩니다" },
+  /* ★2026-09-01 사장님 확정: "v메이크랑 tts는 없으면 못하게 막아".
+     전엔 키가 없으면 사장님 키로 나가고 포인트만 깎였다 — 회원들은 그 사실을
+     몰랐고(아무도 설명 못 들음), 포인트가 남은 회원만 조용히 통과했다.
+     실측: 최근 30일 제작 46명 중 16명이 음성 키 없이 86건을 만들었다. */
   { id: "vmake",      icon: "🎬", name: "자막 지우기 (VMake)",
-    desc: "", multi: false, ph: "키 붙여넣기", freeOp: "vmake" },
+    desc: "이 키가 있어야 자막 지우기를 쓸 수 있습니다", multi: false,
+    ph: "키 붙여넣기", mustOwn: true },
   { id: "elevenlabs", icon: "🔊", name: "목소리 (ElevenLabs)",
-    desc: "영상에 넣을 목소리를 만듭니다", multi: false, ph: "키 붙여넣기" },
+    desc: "영상에 넣을 목소리를 만듭니다 — 목소리 키(이것 또는 타입캐스트)가 "
+        + "있어야 영상을 만들 수 있습니다",
+    multi: false, ph: "키 붙여넣기", mustOwn: true },
+  /* ★타입캐스트는 목소리의 **두 번째 엔진**입니다. 성우를 고를 때 정해집니다 —
+     필재·김건·박창수·용식이 같은 남자 성우가 여기 있습니다(ElevenLabs에 없는 라인업).
+     그래서 두 칸이 따로입니다: 고른 성우가 어느 쪽이냐에 따라 쓰이는 키가 다릅니다. */
+  { id: "typecast",   icon: "🎤", name: "목소리 (타입캐스트)",
+    desc: "한국 성우 목소리를 만듭니다 — ElevenLabs 대신 이 키만 있어도 됩니다",
+    multi: false, ph: "키 붙여넣기", mustOwn: true,
+    note: "성우 목록에서 <b>필재·김건·박창수·용식이</b> 같은 한국 성우를 고르면 " +
+          "이 키가 쓰입니다. 다른 성우는 위의 <b>ElevenLabs</b> 키를 씁니다 — " +
+          "두 곳 다 쓰시려면 키도 둘 다 넣어주세요." },
   { id: "youtube",    icon: "📺", name: "유튜브",
     desc: "유튜브 영상 정보를 가져올 때 씁니다", multi: false, ph: "키 붙여넣기" },
   /* ★렌즈 검색은 클릭 1번에 SerpApi를 3회 씁니다 — 코드에 박힌 값입니다
@@ -380,7 +470,28 @@ var SERVICES = [
     desc: "비슷한 영상 찾기에 씁니다. 검색 1번에 3회가 쓰입니다(한국어·영어·중국어로 각각 찾기)",
     multi: true, ph: "여러 개를 한 번에 붙여넣어도 됩니다", freeOp: "lens",
     note: "가입하면 <b>월 250회 무료</b>입니다 — 검색으로 치면 한 달에 약 83번. " +
-          "등록하셔도 <b>하루 10번</b> 제한은 그대로입니다(서버 보호)." }
+          "등록하셔도 <b>하루 10번</b> 제한은 그대로입니다(서버 보호)." },
+  /* ★Buffer는 **내 키가 있어야만** 되는 서비스입니다. 회사 키로 대신 올려드릴 수
+     없습니다 — Buffer가 '남을 대신해 발행'을 아직 안 열어놨습니다(2026-08 확인).
+     그래서 안내 문구가 다른 서비스와 다릅니다: 없으면 '느려지는' 게 아니라 '못 씁니다'. */
+  { id: "buffer",     icon: "📅", name: "SNS 예약 발행 (Buffer)",
+    desc: "완성한 영상을 인스타·유튜브·틱톡 등에 예약해 올립니다",
+    multi: false, ph: "키 붙여넣기",
+    note: "Buffer는 <b>무료 요금제</b>에도 키가 1개 나옵니다(월 3,000회 · 채널 3개). " +
+          "Buffer에서 <b>조직 소유자</b>만 키를 만들 수 있습니다. " +
+          "이 키는 <b>숏템메이커가 대신해 드릴 수 없습니다</b> — 내 SNS 계정에 올리는 일이라 " +
+          "반드시 내 Buffer 키가 있어야 합니다.",
+    /* ★내 키가 없으면 **아예 못 쓰는** 서비스다(포인트로 대신 못 쓴다).
+       배지·안내가 다른 서비스와 달라야 한다 — renderKeys의 mustOwn 분기 참조. */
+    mustOwn: true },
+  /* ★쿠팡 파트너스(2026-09-04) — 8단계에서 상품 카드를 클릭하면 **내 추적 링크**가 자동으로
+     만들어집니다. 키가 없으면 종전처럼 파트너스 사이트에서 손으로 만들어 붙여넣습니다. */
+  { id: "coupang",    icon: "🛒", name: "쿠팡 파트너스",
+    desc: "영상에 붙일 쿠팡 상품을 찾고, 내 추적 링크(수수료가 나에게 오는 링크)를 자동으로 만듭니다",
+    multi: false, ph: "AccessKey:SecretKey (두 값을 : 로 이어서)",
+    note: "파트너스 사이트 → <b>링크 생성 › API Key 발급</b>에서 받은 <b>Access Key</b>와 " +
+          "<b>Secret Key</b>를 가운데 <b>:</b> 로 이어 한 줄로 넣으세요. " +
+          "API 키는 <b>최종 승인</b>(판매 실적 발생)된 계정에만 발급됩니다. 유효기간 180일이라 만료되면 다시 발급해 넣어 주세요." }
 ];
 
 var STATUS = {
@@ -432,6 +543,9 @@ function showTab(which){
   if (which === "setup") {
     try { localStorage.setItem(FIRST_KEY, "1"); } catch (e) {}   // 봤다 → 다음부터 내 계정
   }
+  // 🖥 PC 등록 칸은 '내 계정' 탭에 있다 — 탭을 열 때마다 최신 상태로 다시 읽는다
+  // (다른 PC에서 등록했을 수 있다). 실패해도 탭 전환은 막지 않는다.
+  if (which === "account") { try { pcLoad(); } catch (e) {} }
   window.scrollTo(0, 0);
 }
 
@@ -439,6 +553,13 @@ function showTab(which){
    저장이 막힌 브라우저(시크릿 등)에서는 매번 안내가 먼저 뜬다 — 안 뜨는 것보다 낫다. */
 var FIRST_KEY = "ss_setup_seen";
 (function initTab(){
+  // ★PC 등록 안내에서 온 사람(#pc)은 무조건 '내 계정'으로 — 설치안내가 먼저 뜨면
+  //   등록 버튼을 못 찾는다(막혀서 온 사람이다).
+  if (location.hash === "#pc") { showTab("account"); return; }
+  // ★#keys로 온 사람은 '내 키 등록'으로(2026-09-02). 키가 없어 막힌 화면이
+  //   settings_url='/settings#keys'로 보내는데, 이 해시를 아무도 안 읽어서
+  //   '설치와 준비'가 뜨고 등록 칸을 못 찾았다 — 막아만 놓고 길은 안 알려준 셈이다.
+  if (location.hash === "#keys") { showTab("keys"); return; }
   var seen = false;
   try { seen = localStorage.getItem(FIRST_KEY) === "1"; } catch (e) {}
   showTab(seen ? "account" : "setup");
@@ -521,9 +642,13 @@ function renderKeys(){
   el("adminNotice").style.display = PERSONAL ? "none" : "";
   el("svcCards").innerHTML = SERVICES.map(function(s){
     var mine = keysOf(s.id);
+    /* ★2026-09-01: 포인트 제도를 없앴다. 이제 갈래는 둘뿐이다 —
+       내 키가 없으면 **못 쓰는** 서비스(mustOwn)와, 회사 풀로 무료인 서비스
+       (제미니·유튜브. 키 1개 내면 풀 전체를 쓰는 거래). 중간은 없다. */
     var badge = mine.length
       ? '<span class="svcBadge on">✓ ' + mine.length + '개 등록됨</span>'
-      : '<span class="svcBadge off">포인트로 사용중</span>';
+      : (s.mustOwn ? '<span class="svcBadge off">내 키 필요</span>'
+                   : '<span class="svcBadge off">무료로 사용중</span>');
 
     /* 설명 — 단가는 실제 값으로 보여준다(하드코딩하지 않는다).
        ★예전엔 freeOp가 있으면 desc를 통째로 덮어썼다. 렌즈처럼 desc에 꼭 필요한
@@ -534,8 +659,7 @@ function renderKeys(){
        거짓말이고, 서버도 그렇게 안 준다(keyroute.should_charge). */
     var freeTxt = (s.freeOp && PRICES[s.freeOp] != null && WIRED.indexOf(s.id) >= 0)
       ? "등록하면 " + num(PRICES[s.freeOp]) + "P → 0P" : "";
-    /* ★공용 풀 서비스는 "내 키로 돈다"가 아니다 — 키를 풀에 넣어주는 대신 무료로 쓴다.
-       사실대로 적는다: 내 키 1개만 내면 풀 전체를 쓰게 되고 포인트가 안 깎인다. */
+    /* ★공용 풀 서비스는 "내 키로 돈다"가 아니다 — 키를 풀에 넣어주는 대신 무료로 쓴다. */
     var isPooled = POOLED.indexOf(s.id) >= 0;
 
     var rows = mine.map(function(k){
@@ -697,15 +821,109 @@ async function verifyKeys(svc, quiet){
   }
 }
 
+/* ── 🖥 내 PC 등록 (2026-08-31) ────────────────────────────
+   ★등록만 있고 해제는 없다 — 스스로 풀 수 있으면 제한이 무의미하다(사장님 결정). */
+async function pcLoad(){
+  const list=document.getElementById('pcList'); if(!list) return;
+  let d;
+  try{ d=await (await fetch('/api/my/devices')).json(); }
+  catch(e){ list.innerHTML='<span class=hint>등록 정보를 못 읽었어요</span>'; return; }
+  if(!d||!d.ok) return;
+  // ★관리자는 게이트 대상이 아니다 — 칸 자체를 숨긴다. 눌러도 안 되는 버튼을
+  //   보여주면 "고장났다"로 보인다(2026-08-31 실측: 사장님 계정에서 그랬다).
+  const card=document.getElementById('pcCard');
+  if(d.exempt){ if(card) card.style.display='none'; return; }
+  if(card) card.style.display='';
+  const req=document.getElementById('pcReq');
+  if(req) req.textContent = d.required ? '(필수)' : '';
+  const rows=(d.devices||[]).map(function(x){
+    var when = x.last_seen ? new Date(x.last_seen*1000).toLocaleDateString('ko-KR') : '';
+    return '<div style="padding:6px 0;border-bottom:1px solid #1e2732;font-size:13px">'
+      + '<b>' + x.slot + '번 PC</b>'
+      + (x.is_this ? ' <span style="color:#7ee787">← 지금 이 PC</span>' : '')
+      + ' <span style="color:#5f6773">· 마지막 ' + when + '</span></div>';
+  }).join('');
+  list.innerHTML = rows || '<span class=hint>아직 등록한 PC가 없어요.</span>';
+  const btn=document.getElementById('pcBtn');
+  if(btn){
+    if(d.this_registered){
+      btn.disabled=true; btn.textContent='이 PC는 등록돼 있어요 ('+d.this_slot+'번)';
+      btn.style.opacity=.6; btn.style.cursor='default';
+    }else if((d.devices||[]).length >= d.slots){
+      btn.disabled=true; btn.textContent='자리가 다 찼어요 (문의 필요)';
+      btn.style.opacity=.6; btn.style.cursor='default';
+    }else{
+      btn.disabled=false; btn.textContent='이 PC 등록하기';
+      btn.style.opacity=1; btn.style.cursor='pointer';
+    }
+  }
+}
+async function pcRegister(){
+  const msg=document.getElementById('pcMsg'); if(msg) msg.textContent='등록 중…';
+  try{
+    const r=await (await fetch('/api/my/devices/register',{method:'POST'})).json();
+    if(msg){ msg.textContent = r.ok ? ('✅ ' + (r.message||'등록했어요')) : ('⚠️ ' + (r.error||'등록하지 못했어요'));
+             msg.style.color = r.ok ? '#7ee787' : '#ff6b6b'; }
+  }catch(e){ if(msg){ msg.textContent='⚠️ 등록하지 못했어요'; msg.style.color='#ff6b6b'; } }
+  pcLoad();
+}
+
 /* ── 👤 내 계정 ─────────────────────────────────────────
    예전 /account 페이지와 **같은 API(/api/me)**를 본다. 데이터를 두 곳에서
    따로 만들면 어긋난다 — 화면만 옮겨온 것이다. */
 var PLAN_LABEL = { pro: "Pro 이용권", trial: "체험 중", free: "무료" };
 
+/* ── 💳 1기 참가비 결제 카드 (2026-08-30) ─────────────
+   Pro/관리자가 아닌 회원에게만 보인다. 오픈 시각 전에는 카드결제 버튼을 잠근다. */
+var PAY_CARD_OPEN = new Date("2026-08-31T11:00:00+09:00").getTime();
+
+function renderPayCard(d){
+  var card = el("payCard");
+  if (!card) return;
+  var plan = String(d.plan || "free");
+  if (d.is_admin || plan === "pro") { card.hidden = true; return; }
+  card.hidden = false;
+
+  var btn = el("payCardBtn");
+  var sub = el("payCardSub");
+  if (Date.now() < PAY_CARD_OPEN) {
+    btn.classList.add("off");
+    btn.textContent = "카드결제 8월 31일(일) 오전 11시 오픈";
+    sub.textContent = "카드결제는 8월 31일(일) 오전 11시부터 열립니다. 계좌이체는 지금 바로 가능합니다.";
+  } else {
+    btn.classList.remove("off");
+    btn.textContent = "카드로 결제하기 →";
+    sub.textContent = "카드결제 또는 계좌이체 중 편하신 방법으로 결제해 주세요.";
+  }
+}
+
+function copyAcct(){
+  var t = (el("payAcctNo") || {}).textContent || "";
+  var btn = event && event.target;
+  function done(){
+    if (!btn) return;
+    var old = btn.textContent;
+    btn.textContent = "복사됨";
+    setTimeout(function(){ btn.textContent = old; }, 1500);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(done, fallback);
+  } else { fallback(); }
+  function fallback(){
+    // clipboard API가 막힌 환경(http·구형 브라우저)에서도 복사되게 한다
+    var ta = document.createElement("textarea");
+    ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+}
+
 async function loadAccount(){
   clearErr("acctErr");
   try {
     var d = await getJSON("/api/me");
+    renderPayCard(d);
     var plan = String(d.plan || "free");
     el("acctPlan").textContent = PLAN_LABEL[plan] || plan;
     el("acctPlanSub").textContent = (d.days_left != null)

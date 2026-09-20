@@ -28,13 +28,42 @@
 (function (global) {
   'use strict';
 
+  /* ★"지금 이 영상에서 그림을 뽑을 수 있나" — 판정은 이 파일에서 여기 하나뿐이다(0순위-B).
+     readyState는 0~4이고 **2(HAVE_CURRENT_DATA)부터** 그 시각의 픽셀이 있다.
+     1(HAVE_METADATA)은 길이·크기만 안다는 뜻이라, 그 상태로 drawImage하면 **검은 화면**이
+     그려진다. 그게 2026-08-30 사장님 "검정화면이 필름에 계속 나온다"의 원인이었다
+     (실측 400kbps+CPU 4배: 그려진 16칸이 16칸 모두 검정, 0.25~5.75초 = 정확히 앞쪽 연속).
+     ★검은 프레임은 **캐시에 구워지면 끝**이다 — 캐시가 있으니 아무도 다시 안 뽑는다.
+     그래서 '못 뽑을 때는 아예 안 그린다'가 규칙이다(빈 칸은 다음 차례에 다시 집는다). */
+  const canShoot = v => !!v && v.readyState >= 2;
+
+  /* 그림을 뽑을 수 있을 때까지 기다린다(최대 ms). 못 기다리면 false. */
+  function waitShootable(v, ms) {
+    if (canShoot(v)) return Promise.resolve(true);
+    return new Promise(r => {
+      let done = false;
+      const fin = ok => {
+        if (done) return;
+        done = true;
+        v.removeEventListener('loadeddata', on);
+        v.removeEventListener('canplay', on);
+        r(ok);
+      };
+      const on = () => { if (canShoot(v)) fin(true); };
+      v.addEventListener('loadeddata', on);
+      v.addEventListener('canplay', on);
+      setTimeout(() => fin(canShoot(v)), ms);
+    });
+  }
+
   const PPS_BASE = 54;                 // 칸 폭 54px일 때 1초
   const LADDER = [0.1, 0.2, 0.25, 0.5, 1, 2, 5];   // 확대 단계(오른쪽일수록 확대)
   const CH = 139;   // 칸 기본 높이(px). 훅 칸(78×16/9)과 같다 — CSS --fr-cell 기본값과 짝.
                     // ★끌어서 바꾸면 그 높이로 캔버스도 따라간다(안 그러면 그림이 눌린다).
-  // ★기본 확대 = 한 칸 0.25초(F21, 사장님). 자동확대(_fitToRange)도 이보다
-  //   성기게는 못 간다 — 기본값과 하한을 여기 한 곳에서만 정한다(0순위-B).
-  const ZOOM_MAX_STEP = 0.25;
+  // ★기본 확대 = 한 칸 0.5초(2026-08-29 사장님 "처음 펼치기하면 기본 셋팅이 0.5로" —
+  //   F21의 0.25 결정을 번복). 자동확대(_fitToRange)도 이보다 성기게는 못 간다 —
+  //   기본값과 하한을 여기 한 곳에서만 정한다(0순위-B).
+  const ZOOM_MAX_STEP = 0.5;
 
   // ★확대 슬라이더는 **한 칸 초(사다리 단계)**를 직접 고른다(2026-08-27 사장님
   //   "3단계가 0.25에서 조정이 안된다"). 종전엔 슬라이더가 칸 폭(px 26~240)이고
@@ -72,6 +101,7 @@
     let CW = cwFor(ZOOM_MAX_STEP), STEP = ZOOM_MAX_STEP, N = 0, off = 0;  // 기본 확대(위 상수)
     let _homed = false;      // 지금 쓰는 구간으로 한 번 옮겼나(처음 펼칠 때만)
     let MA = null;                     // 찍어둔 시작점
+    let HEAD_T = 0;                    // 빨간선이 가리키는 시각(초) — moveHead가 갱신한다
     // ★열 때 **이미 쓰는 구간**을 주황 박스로 올린다(2026-08-26 사장님 "상단에 카드형으로
     //   들어간걸 펼치면 … 해당 2.4초만 필름형으로 나오게"). 조각을 펼치면 그 조각이,
     //   영상을 펼치면 그 영상에서 담긴 구간들이 바로 손에 잡힌다(늘리고 줄이고 지운다).
@@ -83,6 +113,20 @@
       .map(b => ({ s: Math.round(+b.s * 100) / 100, e: Math.round(+b.e * 100) / 100 }))
       .filter(b => isFinite(b.s) && isFinite(b.e) && b.e - b.s >= 0.1)
       .sort((x, y) => x.s - y.s);
+    // ★길이 잠금 모드(2026-08-29 설계 ⑧ — "오렌지박스를 필름 위에 고정시켜놓고 마우스로만
+    //   옮기면서 맞는 장면을 찾는다"). 바꿀 컷의 길이로 박스 하나가 처음부터 떠 있고,
+    //   늘리고 줄이고 지우는 조작은 전부 잠긴다 — 옮기기와 🔁(교체)만 남는다.
+    //   그래야 올리는 순간 초가 항상 딱 맞는다.
+    // ★const가 아니라 let — ＋ 구간을 누르면 잠금을 푼다(2026-09-03 사장님 캡쳐 1042·1043
+    //   "구간박스 만들기는 박스 만들기를 하면 없어지고 새로고침을 해야 돌아온다.
+    //   구간박스 만들 수 있는 건 항상 고정으로 둬라"). 종전엔 잠금 헤더가 ＋ 구간을
+    //   아예 안 그려서 Esc·새로고침 말고는 돌아올 길이 없었다.
+    let LOCK = +opt.lockLen > 0;
+    if (LOCK) {
+      const a = Math.max(0, +opt.lockFrom || 0);
+      BOXES = [{ s: Math.round(a * 100) / 100,
+                 e: Math.round((a + +opt.lockLen) * 100) / 100 }];
+    }
     let ACTBOX = null;
     let destroyed = false;
     let raf = 0, scrubWant = null, scrubBusy = false, playing = false;
@@ -100,10 +144,22 @@
           //   아래쪽까지 필름높이는 높여"). 별도 줄로 두면 그 한 줄만큼 필름이 낮아진다.
           '<div class="frgrab" title="아래를 잡고 끌면 높이가 바뀝니다"></div>' +
           '<div class="frbar"></div>' +
-          '<span class="frzoom">확대 <input type="range" class="frz" min="0" max="' + SMAX + '" step="1" value="' + sliderFromStep(ZOOM_MAX_STEP) + '"></span>' +
+          '<span class="frzoom">확대 ' +
+            // ★버튼으로도 한 단계씩(2026-08-28 사장님 "마우스로 조절하는게 안된다").
+            //   단계가 7개라 슬라이더를 넓혀도 끌기는 여전히 섬세한 조작이다 — 누르는 길을 같이 둔다.
+            //   두 길 모두 아래 setStep() 하나를 부른다(0순위-B).
+            '<button type="button" class="zb" data-z="-1" title="한 단계 축소">－</button>' +
+            '<input type="range" class="frz" min="0" max="' + SMAX + '" step="1" value="' + sliderFromStep(ZOOM_MAX_STEP) + '">' +
+            '<button type="button" class="zb" data-z="1" title="한 단계 확대">＋</button></span>' +
           '<span class="frstep"></span>' +
           '<button type="button" class="frclose" title="접기">◀ 접기</button>' +
         '</div>' +
+        // ★위/아래 띠 = 다른 장면(칸)으로 넘어가기(2026-08-28 사장님 "빨간박스 위아래 2개는
+        //   훅에서 다른 장면으로 넘어갈 수 있는 걸로"). 필름을 접고 다시 펴는 왕복 없이
+        //   이 자리에서 앞뒤 칸을 훑는다. 부품은 어느 칸이 있는지 모른다 — 부모가 준
+        //   onGoBeat(-1|+1)에 넘길 뿐이다(없으면 띠도 안 만든다).
+        (typeof opt.onGoBeat === 'function'
+          ? '<button type="button" class="frgo up" data-go="-1" title="앞 장면의 필름으로">▲ 앞 장면</button>' : '') +
         '<div class="frwin">' +
           '<div class="frload">🎞 필름 뽑는 중…</div>' +
           '<div class="frbelt"></div>' +
@@ -111,17 +167,39 @@
           '<div class="fruse"></div>' +
           '<div class="frboxes"></div>' +
           '<div class="frmark"></div>' +
-          '<div class="frhead"><span class="frgrip"></span><span class="frdur"></span></div>' +
+          // ★조작법을 손잡이에 적어둔다(2026-08-28) — 도움말 버튼이 따로 없어서
+          //   우클릭 찍기가 있는 줄 모르고 쓰던 기능이다.
+          '<div class="frhead"><span class="frgrip" title="끌어서 이동 · 우클릭 = 구간 찍기 · ' +
+            'Q 시작 / W 끝 · 스페이스 재생"></span><span class="frdur"></span></div>' +
         '</div>' +
+        (typeof opt.onGoBeat === 'function'
+          ? '<button type="button" class="frgo down" data-go="1" title="다음 장면의 필름으로">▼ 다음 장면</button>' : '') +
         '<video class="frpv" muted playsinline preload="auto"></video>' +
         '<canvas class="frcv" style="display:none"></canvas>' +
       '</div>';
+
+    // ★필름 안에서 난 클릭이 **바깥 칸으로 새지 않게** 한다(2026-08-28 사장님
+    //   "확대조절을 하고 마우스를 놓으면 미리보기가 자동으로 재생됨").
+    //   필름은 칸(.tbeat) 안에 들어가는데 그 칸에는 onclick="selBeat();playBeatHere()"가
+    //   걸려 있다 — 확대 슬라이더를 놓는 click이 칸까지 올라가 재생이 시작됐다.
+    //   ★막는 곳은 여기 하나다(0순위-B). 부품마다 stopPropagation을 붙이면 새 버튼을
+    //     만들 때마다 빠뜨리고, 그때마다 같은 증상이 다시 난다.
+    //   버블 단계에서 막으므로 필름 **안쪽** 동작(빨간선·박스·버튼)은 그대로 돈다.
+    host.addEventListener('click', ev => ev.stopPropagation());
+    host.addEventListener('dblclick', ev => ev.stopPropagation());
 
     const $ = s => host.querySelector(s);
     const win = $('.frwin'), belt = $('.frbelt'), pv = $('.frpv'), cv = $('.frcv');
     const headEl = $('.frhead'), gripEl = $('.frgrip'), durEl = $('.frdur');
     const markEl = $('.frmark'), boxesEl = $('.frboxes'), capsEl = $('.frcaps');
     const useEl = $('.fruse'), barEl = $('.frbar'), loadEl = $('.frload');
+
+    host.querySelectorAll('.frgo').forEach(b => {
+      b.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        opt.onGoBeat(+b.dataset.go);
+      });
+    });
 
     $('.frname').textContent = opt.name || '';
     $('.frclose').onclick = () => { if (opt.onClose) opt.onClose(); };
@@ -162,11 +240,19 @@
     function seekRaw(v, t) {
       return new Promise(r => {
         let done = false;
-        const k = () => { if (done) return; done = true; v.removeEventListener('seeked', k); r(); };
-        v.addEventListener('seeked', k);
+        // ★왜 끝났는지 알려준다 — 부른 쪽이 '시간이 없어서 못 끝냈다'를 구분해야
+        //   검은 프레임을 캐시에 굽지 않는다(종전엔 타임아웃도 성공처럼 보였다).
+        const k = why => {
+          if (done) return;
+          done = true;
+          v.removeEventListener('seeked', ks);
+          r(why);
+        };
+        const ks = () => k('seeked');
+        v.addEventListener('seeked', ks);
         try { v.currentTime = Math.min(Math.max(0, t), Math.max(0, (v.duration || DUR) - 0.04)); }
-        catch (_) { done = true; r(); return; }
-        setTimeout(k, 800);
+        catch (_) { done = true; r('throw'); return; }
+        setTimeout(() => k('timeout'), 800);
       });
     }
 
@@ -176,6 +262,11 @@
       //   보고 있는지 알기 어렵다(2026-08-26 사장님). 부품은 부모를 모른다: 콜백만 부른다.
       if (typeof opt.onScrub === 'function') { try { opt.onScrub(t); } catch (_) {} }
       scrubWant = Math.max(0, Math.min(DUR - 0.03, t));
+      // ★손으로 옮긴 자리가 곧 다음 재생 지점이다(2026-08-28 사장님 제보: "한 번 재생
+      //   후 다른 지점 클릭하고 재생하면 빨간선부터 안 되고 엉뚱한 곳에서 재생된다").
+      //   RESUME(마지막 멈춘 자리)이 남아 있으면 아래 재생이 그걸 우선해, 방금 옮긴
+      //   빨간선을 무시하고 옛 자리에서 이어 갔다. 사용자가 직접 옮겼으면 그게 이긴다.
+      RESUME = scrubWant;
       moveHead(scrubWant);
       if (scrubBusy) return;
       scrubBusy = true;
@@ -193,6 +284,13 @@
     }
 
     function moveHead(t) {
+      // ★빨간선이 **지금 가리키는 시각**을 여기 한 곳에서 기록한다(2026-08-28 사장님
+      //   "한 칸 1초에선 정확한데 확대가 바뀌면 Q/W가 다른 곳에 찍힌다").
+      //   종전엔 Q/W가 pv.currentTime(영상 요소의 실제 시각)을 읽었는데, seek는
+      //   **비동기**라 방금 옮긴 자리가 아직 반영되기 전이다. 확대를 바꾸면 필름을
+      //   다시 뽑느라 그 지연이 커져 옛 시각이 찍혔다.
+      //   막대를 옮기는 길은 전부 moveHead를 지나므로 여기가 유일한 기록 지점이다(0순위-B).
+      HEAD_T = Math.round((+t || 0) * 100) / 100;
       if (!headEl) return;
       if (MA !== null && durEl) {
         durEl.textContent = Math.abs(t - MA).toFixed(2) + '초';
@@ -225,7 +323,13 @@
       capsEl.style.width = (DUR * pps()) + 'px';
       if (!caps.length) { capsEl.innerHTML = ''; return; }
       capsEl.innerHTML = caps.map((c, i) => {
-        const st = c[0], en = (i + 1 < caps.length) ? caps[i + 1][0] : DUR;
+        // ★자막이 실제로 끝나는 시각을 쓴다(2026-08-29 사장님 "장면 자막이 안 맞음").
+        //   종전엔 끝을 **다음 자막 시작**으로 지어냈다 — 말과 말 사이 공백이 앞 자막에
+        //   통째로 먹혀 자막띠가 그림보다 길게 깔렸다(실측 2.3~3.0초씩 초과).
+        //   c[2]=end가 오면 그걸 쓰고, 없으면(옛 2칸 caps) 종전대로 — 다음 시작을 넘진 않게.
+        const st = c[0];
+        const nxt = (i + 1 < caps.length) ? caps[i + 1][0] : DUR;
+        const en = (c.length > 2 && isFinite(c[2]) && c[2] > st) ? Math.min(c[2], nxt) : nxt;
         const w = (en - st) * pps() - 1;
         if (w < 8) return '';
         return `<span class="cp" style="left:${st * pps()}px;width:${w}px">${esc(c[1])}</span>`;
@@ -233,27 +337,40 @@
     }
 
     function drawBoxes() {
+      // ★자식 좌표는 **절대(t×pps)**다 — frboxes 층 자체가 applyW에서 translateX(-off)로
+      //   밀리므로, 여기서 secToX(off를 또 빼는 함수)를 쓰면 off가 **이중 차감**돼
+      //   박스만 왼쪽으로 스크롤량만큼 밀린다(2026-08-29 사장님 "1초 빼고 다 안 찍힌다"
+      //   — 실측: 어긋난 거리가 각 단계에서 정확히 off와 일치. 1·2·5초는 필름이 창보다
+      //   좁아 off=0이라 안 드러났을 뿐). caps·use 층과 같은 규약: 층은 translate, 자식은 절대.
       boxesEl.style.width = (DUR * pps()) + 'px';
       boxesEl.innerHTML = BOXES.map((b, i) =>
-        `<div class="bx${ACTBOX === i ? ' act' : ''}" data-i="${i}" ` +
-        `style="left:${secToX(b.s)}px;width:${Math.max(8, (b.e - b.s) * pps())}px">` +
-        `<span class="t">${(b.e - b.s).toFixed(2)}초</span>` +
+        `<div class="bx${ACTBOX === i ? ' act' : ''}${LOCK ? ' lock' : ''}" data-i="${i}" ` +
+        `style="left:${b.s * pps()}px;width:${Math.max(8, (b.e - b.s) * pps())}px">` +
+        `<span class="t">${(b.e - b.s).toFixed(2)}초${LOCK ? ' 🔒' : ''}</span>` +
+        // ★키 안내(2026-08-28 사장님 "시작Q 종료W 담기E 이렇게 써줘").
+        //   기능은 이미 있었지만 화면에 없으니 아무도 몰랐다 — 없는 기능과 같다.
+        //   잠금 모드에선 만들기·지우기 키가 다 잠기므로 안내도 옮기기 안내로 바뀐다.
+        // ★잠금 박스도 양끝을 당겨 크기를 바꿀 수 있다(2026-09-03 사장님 캡쳐 1044
+        //   "박스 자동으로 만들어진 것도 박스 크기 조절할 수 있게"). 잠기는 건 지우기뿐.
+        (LOCK
+          ? `<span class="k">끌어서 맞는 장면 위에 놓고 <b>🔁 교체</b> · 양끝을 당기면 길이가 바뀝니다</span>`
+          : `<span class="k">시작 <b>Q</b> · 종료 <b>W</b> · 담기 <b>E</b></span>`) +
         `<span class="e l" data-edge="l"></span><span class="e r" data-edge="r"></span>` +
-        `<span class="x" data-del="${i}">×</span>` +
+        (LOCK ? '' : `<span class="x" data-del="${i}">×</span>`) +
         // ★2026-08-26 사장님 "주황색 박스 만들면 위쪽 훅 있는 윗칸으로 더블클릭이나
         //   드래그로 옮기기". 박스 본체는 pointerdown에서 preventDefault를 하므로
         //   HTML5 dragstart가 안 뜬다(이동·양끝조절이 그 위에 서 있다) — 그래서
         //   **끌기 전용 손잡이**를 따로 둔다. 부품은 어디로 가는지 모른다: 부모가
         //   준 onBoxDrag에 넘길 뿐이다.
-        (typeof opt.onBoxDrag === 'function'
-          ? `<span class="g" draggable="true" data-g="${i}" title="위 칸으로 끌어다 놓으면 담깁니다">⬆</span>` : '') +
+        (!LOCK && typeof opt.onBoxDrag === 'function'
+          ? `<span class="g" draggable="true" data-g="${i}" title="누르면 바로 위 칸에 담깁니다 (끌어다 놓아도 됩니다)">⬆ 위로 담기</span>` : '') +
         `</div>`).join('');
       wireBoxes();
     }
 
     function wireBoxes() {
       boxesEl.querySelectorAll('.bx').forEach(el => {
-        let mode = null, sx = 0, s0 = 0, e0 = 0, moved = false;
+        let mode = null, sx = 0, s0 = 0, e0 = 0, moved = false, off0 = 0;
         el.addEventListener('pointerdown', ev => {
           const i = +el.dataset.i, b = BOXES[i]; if (!b) return;
           // ★두 번 누르기 = 담기. dblclick 이벤트는 **실제 마우스에서 안 온다**
@@ -277,27 +394,52 @@
             ACTBOX = null; drawBoxes(); drawBar(); return;
           }
           ev.stopPropagation(); ev.preventDefault();
-          mode = ev.target.dataset.edge || 'move';
-          sx = ev.clientX; s0 = b.s; e0 = b.e; moved = false;
+          mode = ev.target.dataset.edge || 'move';   // 잠금 박스도 양끝 조절 가능(2026-09-03)
+          sx = ev.clientX; s0 = b.s; e0 = b.e; moved = false; off0 = off;
           ACTBOX = i; el.classList.add('dragging');
           try { el.setPointerCapture(ev.pointerId); } catch (_) {}
         });
-        el.addEventListener('pointermove', ev => {
-          if (!mode) return;
+        // ★창 가장자리 자동 밀기(2026-09-03 사장님 캡쳐 1045 "옆으로 이동하면 옆으로
+        //   이동될 수 있게 감도 좋게"). 종전엔 박스를 창 끝까지 끌면 거기서 막혀
+        //   보이는 범위 밖으로는 못 갔다. 가장자리 28px 안이면 off를 밀어 필름이
+        //   따라 흐른다 — 좌표는 (clientX + off)라 밀린 만큼 박스도 같이 간다.
+        let panTimer = 0, panDir = 0, lastEv = null;
+        const stopPan = () => { if (panTimer) { clearInterval(panTimer); panTimer = 0; } panDir = 0; };
+        const stepPan = () => {
+          if (!mode || !panDir) { stopPan(); return; }
+          const before = off;
+          off = clamp(off + panDir * Math.max(6, winW() * 0.02));
+          if (off === before) { stopPan(); return; }
+          panW();
+          if (lastEv) applyMove(lastEv);
+        };
+        const applyMove = ev => {
           const i = +el.dataset.i, b = BOXES[i]; if (!b) return;
-          const d = (ev.clientX - sx) / pps();
-          if (Math.abs(ev.clientX - sx) > 3) moved = true;
+          // 끌기 시작 이후 off가 밀린 만큼을 더한다(off0 = 잡을 때의 off)
+          const d = (ev.clientX - sx + (off - off0)) / pps();
           if (mode === 'l') b.s = Math.max(0, Math.min(e0 - 0.1, s0 + d));
           else if (mode === 'r') b.e = Math.min(DUR, Math.max(s0 + 0.1, e0 + d));
           else { const len = e0 - s0, ns = Math.max(0, Math.min(DUR - len, s0 + d)); b.s = ns; b.e = ns + len; }
           b.s = Math.round(b.s * 100) / 100; b.e = Math.round(b.e * 100) / 100;
-          el.style.left = secToX(b.s) + 'px';
+          el.style.left = (b.s * pps()) + 'px';
           el.style.width = Math.max(8, (b.e - b.s) * pps()) + 'px';
-          const lab = el.querySelector('.t'); if (lab) lab.textContent = (b.e - b.s).toFixed(2) + '초';
+          const lab = el.querySelector('.t'); if (lab) lab.textContent = (b.e - b.s).toFixed(2) + '초' + (LOCK ? ' 🔒' : '');
+        };
+        el.addEventListener('pointermove', ev => {
+          if (!mode) return;
+          const i = +el.dataset.i, b = BOXES[i]; if (!b) return;
+          lastEv = ev;
+          const r = win.getBoundingClientRect(), EDGE = 28;
+          const dir = (ev.clientX > r.right - EDGE) ? 1 : (ev.clientX < r.left + EDGE) ? -1 : 0;
+          if (dir !== panDir) { stopPan(); panDir = dir; if (dir) panTimer = setInterval(stepPan, 40); }
+          const d = (ev.clientX - sx + (off - off0)) / pps();
+          if (Math.abs(ev.clientX - sx) > 3) moved = true;
+          applyMove(ev);            // 절대좌표 — drawBoxes와 같은 규약(계산은 한 곳)
           ev.stopPropagation();
         });
         const end = ev => {
           if (!mode) return;
+          stopPan(); lastEv = null;
           mode = null; el.classList.remove('dragging');
           const b = BOXES[+el.dataset.i];
           BOXES.sort((x, y) => x.s - y.s);
@@ -314,7 +456,17 @@
         const g = el.querySelector('.g');
         if (g) {
           g.addEventListener('pointerdown', ev => ev.stopPropagation());
-          g.addEventListener('click', ev => ev.stopPropagation());
+          // ★눌러도 담긴다(2026-08-28 사장님 "더블클릭이나 마우스로 잡고 훅쪽으로").
+          //   박스 두 번 누르기는 **실제 마우스에서 안 잡힌다**(라이브 실측: 박스 위를
+          //   정확히 두 번 눌러도 pointerdown이 오지 않아 담기지 않았다 — 위 LASTTAP
+          //   주석의 함정이 아직 살아 있다). 끌기 하나만 남기면 손이 떨리는 날엔 아예 못 담는다.
+          //   그래서 **누르기**를 정식 길로 둔다 — 담는 함수는 두 번 누르기와 같은
+          //   onBoxCommit 하나다(0순위-B: 담는 규칙을 두 벌로 두지 않는다).
+          g.addEventListener('click', ev => {
+            ev.stopPropagation(); ev.preventDefault();
+            const b = BOXES[+el.dataset.i]; if (!b) return;
+            if (typeof opt.onBoxCommit === 'function') opt.onBoxCommit({ s: b.s, e: b.e });
+          });
           g.addEventListener('dragstart', ev => {
             ev.stopPropagation();
             const b = BOXES[+el.dataset.i]; if (!b) return;
@@ -338,34 +490,132 @@
       return true;
     }
 
+    /* Q = 시작 찍기 · W = 끝 찍기 (2026-08-28 사장님 "단축키는 시작=Q 끝=W").
+       markHere(우클릭)는 한 번에 시작·끝을 번갈아 찍는 토글이라, 어느 쪽을 찍는
+       중인지 헷갈릴 때가 있다. Q/W는 **무엇을 찍는지 손가락이 정한다**.
+       ★박스를 만드는 규칙은 addBox 하나뿐이다 — 여기서 BOXES를 직접 건드리면
+         정렬·중복·최소길이 규칙이 두 벌이 된다(0순위-B). */
+    function headTime() {
+      // ★**화면에 보이는 그 자리**가 곧 시각이다(2026-08-28 실측).
+      //   HEAD_T만 믿었더니 0.2초 단계에서 W(종료)가 2.57초로 튀었다 —
+      //   빨간선은 700px(=0.80초)에 멀쩡히 서 있고 영상도 0.80초에 멈춰 있는데,
+      //   내부 값만 재생 tick 같은 다른 경로에 밀려 있었다.
+      //   찍히는 자리는 사장님이 보는 자리여야 한다. 그래서 막대의 실제 위치에서
+      //   되돌려 계산하고, 막대가 안 보일 때만 HEAD_T로 물러난다.
+      if (headEl && headEl.classList.contains('on')) {
+        const x = parseFloat(headEl.style.left);
+        if (isFinite(x)) return Math.round(xToSec(x) * 100) / 100;
+      }
+      return HEAD_T;
+    }
+    function markStart() {
+      MA = headTime();
+      drawMark(); drawBar(); moveHead(MA);
+    }
+    function markEnd() {
+      const t = headTime();
+      if (MA === null) {            // 시작을 안 찍었으면 여기를 시작으로 삼는다
+        MA = t; drawMark(); drawBar(); moveHead(t); return;
+      }
+      const a = Math.min(MA, t), b = Math.max(MA, t);
+      if (b - a < 0.15) { MA = null; drawMark(); drawBar(); moveHead(t); return; }
+      addBox(a, b); moveHead(t);
+    }
+
     /* 손잡이 우클릭 = 여기 찍기(시작 → 끝) */
     function markHere() {
-      const t = Math.round(pv.currentTime * 100) / 100;
+      const t = headTime();
       if (MA === null) { MA = t; drawMark(); drawBar(); moveHead(t); return; }
       const a = Math.min(MA, t), b = Math.max(MA, t);
       if (b - a < 0.15) { MA = null; drawMark(); drawBar(); moveHead(t); return; }
       addBox(a, b); moveHead(t);
     }
 
+    /* 🔓 잠금을 풀고 평소 필름으로 — 잠금 박스는 보통 박스로 남긴다(늘리고·줄이고·지울 수 있다).
+       부모(타임라인 📦 박스 모드)에게도 알려 모드를 접게 한다(onUnlock). 🔁는 잠금 전용
+       (그 컷 교체)이었으므로 부모가 준 onReplaceUnlocked(없으면 없음)로 되돌린다. */
+    function unlockAndMake() {
+      if (!LOCK) { makeBox(); return; }
+      LOCK = false;
+      opt.onReplace = (typeof opt.onReplaceUnlocked === 'function') ? opt.onReplaceUnlocked : null;
+      if (typeof opt.onUnlock === 'function') { try { opt.onUnlock(); } catch (e) {} }
+      makeBox();
+      drawBoxes(); drawBar();
+    }
+
     function makeBox() {
+      if (LOCK) return;                       // 길이 잠금 — 새 박스 금지
       const el = host.querySelector('.frlen');
       if (el) BOXLEN = Math.max(0.1, parseFloat(el.value) || BOXLEN);
       const n = BOXLEN;
-      const a = Math.max(0, Math.min(DUR - 0.1, pv.currentTime));
+      // ★빨간선이 화면 밖이면 **보이는 왼쪽 끝**에 만든다(2026-08-29). 조각 필름은
+      //   펼치면 그 조각 자리로 스크롤돼 있는데 HEAD_T 초기값은 0이라, 그대로 만들면
+      //   박스가 화면 밖(0초)에 생겨 "＋구간이 안 된다"로 보였다.
+      //   화면에 생겨야 기능이 있는 것이다 — 박스 규칙 자체는 addBox 하나 그대로다.
+      const base = (headEl && headEl.classList.contains('on')) ? headTime() : xToSec(8);
+      const a = Math.max(0, Math.min(DUR - 0.1, base));
       addBox(a, Math.min(DUR, a + n));
+    }
+
+    /* ✂ 지금 쓰는 구간을 그대로 주황 박스로 올린다(2026-08-29 사장님 "훅쪽 짧은 카드를
+       펼치고 끝에 다른 장면으로 이어지는 남는 부분을 잘라내려고").
+       꼬리를 자르려면 쓰는 구간이 손에 잡혀야 한다 — 박스로 올린 뒤 끝을 당기고
+       🔁(이 조각을 이 구간으로)로 확정하면 된다. 펼칠 때 미리 올리진 않는다
+       (08-29 "노란박스 아예없이" 결정 유지) — **누를 때만** 만든다.
+       박스를 만드는 규칙은 addBox 하나다(0순위-B). */
+    function useToBox() {
+      if (opt.from == null || opt.to == null) return;
+      const s = Math.round(Math.max(0, +opt.from) * 100) / 100;
+      const e = Math.round(Math.min(DUR || +opt.to, +opt.to) * 100) / 100;
+      if (!(e - s >= 0.1)) return;
+      const same = b => Math.abs(b.s - s) < 0.01 && Math.abs(b.e - e) < 0.01;
+      if (!BOXES.some(same)) addBox(s, e);          // 이미 있으면 또 안 만든다
+      ACTBOX = BOXES.findIndex(same);
+      drawBoxes(); drawBar();
     }
 
     function drawBar() {
       const total = BOXES.reduce((a, b) => a + (b.e - b.s), 0);
+      // ★길이 잠금(⑧) — 만들기·담기·비우기 없이 [▶듣기]와 [🔁 교체]만.
+      //   영상을 갈아 끼워도 이 줄 모양이 그대로라 "박스가 고정돼 있다"가 화면에서 읽힌다.
+      if (LOCK) {
+        barEl.innerHTML =
+          `<span class="frhint">🔒 ${(BOXES[0] ? BOXES[0].e - BOXES[0].s : +opt.lockLen).toFixed(2)}초 — 박스를 끌어 맞는 장면 위에 놓으세요 (양끝을 당기면 길이가 바뀝니다)</span>` +
+          `<button type="button" class="frbtn" data-act="play">▶ 미리보기에서 듣기</button>` +
+          (typeof opt.onReplace === 'function'
+            ? `<button type="button" class="frbtn rep">🔁 이 장면으로 교체</button>` : '') +
+          // ★＋ 구간은 잠금 중에도 항상 있다(2026-09-03 사장님). 누르면 잠금이 풀리고
+          //   바로 박스가 생긴다 — 새로고침 없이 평소 필름으로 돌아온다.
+          `<span class="frmk"><button type="button" class="frbtn mk" title="박스 모드를 끄고 구간 박스를 만듭니다">＋ 구간</button>` +
+          `<input type="number" class="frlen" step="0.1" min="0.1" value="${BOXLEN}"><span class="frhint">초</span></span>`;
+        const mk2 = barEl.querySelector('.mk'); if (mk2) mk2.onclick = unlockAndMake;
+        const len2 = barEl.querySelector('.frlen');
+        if (len2) len2.oninput = () => { const v = parseFloat(len2.value); if (v > 0) BOXLEN = v; };
+        const rep2 = barEl.querySelector('.rep');
+        if (rep2) rep2.onclick = () => {
+          if (BOXES.length === 1 && typeof opt.onReplace === 'function')
+            opt.onReplace({ s: BOXES[0].s, e: BOXES[0].e });
+        };
+        const pl2 = barEl.querySelector('[data-act="play"]');
+        if (pl2) pl2.onclick = () => {
+          const b = BOXES[0];
+          if (b && typeof opt.onPlay === 'function') opt.onPlay(b.s, b.e);
+        };
+        return;
+      }
       barEl.innerHTML =
         (MA !== null
-          ? `<span class="frhint">시작 <b>${MA.toFixed(2)}초</b> — 빨간선을 옮기고 <b>손잡이 클릭</b> 한 번 더</span>`
+          ? `<span class="frhint">시작 <b>${MA.toFixed(2)}초</b> — 빨간선을 옮기고 <b>W</b>(또는 손잡이 클릭)</span>`
           // ★상시 안내문은 뺐다(2026-08-26 사장님 캡쳐 532) — 한 줄을 통째로 먹으면서
           //   그만큼 필름이 낮아졌다. 조작법은 오른쪽 위 [?] 도움말에 있다.
           //   '시작 N초' 같은 **작업 중 상태**는 그대로 남긴다(그건 지금 뭘 하는지다).
           : '') +
         `<span class="frmk"><button type="button" class="frbtn mk">＋ 구간</button>` +
         `<input type="number" class="frlen" step="0.1" min="0.1" value="${BOXLEN}"><span class="frhint">초</span></span>` +
+        // ✂ 조각 하나를 펼친 필름에만 나온다(쓰는 구간 + 바꿀 대상이 있어야 하므로
+        //   from/to·onReplace 둘 다 필요 — 영상 통째 필름엔 안 나온다).
+        (opt.from != null && opt.to != null && typeof opt.onReplace === 'function'
+          ? `<button type="button" class="frbtn use" title="지금 쓰는 구간을 주황 박스로 올립니다 — 끝을 당겨 자르고 🔁로 확정">✂ 쓰는 구간 다듬기</button>` : '') +
         (BOXES.length
           ? `<button type="button" class="frbtn" data-act="play">▶ 미리보기에서 듣기</button>` +
             `<button type="button" class="frbtn ok">⬆ 담기 (${BOXES.length}개 · ${total.toFixed(2)}초)</button>` +
@@ -376,6 +626,7 @@
             `<button type="button" class="frbtn" data-act="clr">비우기</button>`
           : '');
       const mk = barEl.querySelector('.mk'); if (mk) mk.onclick = makeBox;
+      const use = barEl.querySelector('.use'); if (use) use.onclick = useToBox;
       const len = barEl.querySelector('.frlen');
       if (len) len.oninput = () => { const v = parseFloat(len.value); if (v > 0) BOXLEN = v; };
       const ok = barEl.querySelector('.ok');
@@ -395,6 +646,24 @@
       };
     }
 
+    /* ★끌기 전용 경량 경로(2026-08-29 사장님 "앞으로 땡기면 이동이 안 되고 놓는 순간
+       움직인다"). 원인은 applyW가 매 mousemove마다 자막·구간띠를 innerHTML로 통째
+       재구성해 메인스레드가 막히는 것 — 브라우저가 그릴 틈이 없어 놓는 순간에야
+       한꺼번에 그려졌다(합성 이벤트 실측으론 off가 매 이동 갱신됨 = 로직은 정상,
+       페인트가 굶은 것). 끌 때 바뀌는 건 off 하나 — 층들의 transform만 밀면 된다.
+       (모든 자식은 절대좌표 규약이라 transform만으로 정확히 따라온다) */
+    function panW() {
+      off = clamp(off);
+      belt.style.transform = `translateX(${-off}px)`;
+      boxesEl.style.transform = `translateX(${-off}px)`;
+      capsEl.style.transform = `translateX(${-off}px)`;
+      useEl.style.transform = `translateX(${-off}px)`;
+      drawMark();                    // left 한 줄 — 재구성 아님
+      moveHead(HEAD_T);
+      clearTimeout(applyW._fill);
+      applyW._fill = setTimeout(() => { fillVisible(); }, 60);
+    }
+
     function applyW() {
       off = clamp(off);
       belt.style.transform = `translateX(${-off}px)`;
@@ -405,7 +674,13 @@
       boxesEl.style.transform = `translateX(${-off}px)`;
       markEl.style.transform = 'none';
       drawCaps(); drawUse(); drawBoxes(); drawMark();
-      moveHead(pv.currentTime || 0);
+      // ★빨간선은 **자기 시각 그대로** 다시 그린다(2026-08-28 사장님 "0.5·0.2는 안 된다").
+      //   종전엔 pv.currentTime을 넣었는데, applyW는 확대·스크롤마다 불리므로
+      //   그때마다 HEAD_T가 **영상 요소의 실제 시각**으로 덮어써졌다.
+      //   seek는 비동기고 키프레임으로 스냅되므로 내가 찍은 자리와 다르다 —
+      //   실측(0.2초 단계): 0.30초 간격으로 Q/W를 찍었는데 1.75초짜리 박스가 생겼다.
+      //   재생 중에는 tick이 moveHead(t)를 계속 불러 최신 위치가 들어온다.
+      moveHead(HEAD_T);
       // 이번에 화면에 든 칸 중 아직 그림이 없는 것만 뽑는다(있는 건 건너뛴다).
       clearTimeout(applyW._fill);
       applyW._fill = setTimeout(() => { fillVisible(); }, 60);
@@ -470,12 +745,35 @@
       //   (조각 밖 구간을 잡으려면 원본이 다 보여야 한다) — 문제는 **0초에서 열려서**
       //   지금 쓰는 구간이 화면 밖에 있었다는 것이다. 처음 한 번만 그 구간으로 옮긴다
       //   (확대·축소로 다시 그릴 때는 그 자리를 지킨다 — 아래 frz 핸들러가 정한다).
-      if (!_homed && opt.from != null) {
+      if (!_homed && LOCK) {
+        // ★잠금 박스는 열리자마자 **화면 가운데**(2026-08-29 사장님 "옆으로 이동해서
+        //   찾아야 한다") — 박스를 찾으러 스크롤하게 두지 않는다.
+        _homed = true;
+        const _c = (Math.max(0, +opt.lockFrom || 0) + (+opt.lockLen || 0) / 2);
+        setTimeout(() => { off = clamp(_c * pps() - winW() / 2); applyW(); }, 0);
+      }
+      else if (!_homed && opt.from != null) {
         _homed = true;
         // ★배율은 **레이아웃이 잡힌 뒤** 정한다. 여기서 바로 재면 win.clientWidth가 아직
         //   0이라 winW()가 600 폴백을 쓰고, 그 폭 기준으로 엉뚱한 배율이 나온다
         //   (실측 2026-08-26: 2.4초 구간인데 창의 32%밖에 안 찼다).
-        requestAnimationFrame(() => { try{ _fitToRange(); }catch(_){} });
+        // ★async 함수의 예외는 try/catch로 안 잡힌다(Promise rejection이 된다).
+        //   그래서 여기가 실패해도 화면만 이상하고 아무 흔적이 없었다 — 실제로
+        //   2026-08-28에 '왜 안 도는지' 찾는 데 한참 걸렸다. 반드시 남긴다.
+        // ★requestAnimationFrame에 맡기면 **안 돌 때가 있다**(2026-08-28 실측:
+        //   iframe 문서가 visibilityState='hidden'이면 rAF 콜백이 아예 실행되지 않는다.
+        //   탭이 뒤에 있거나 브라우저가 절전으로 판단하면 그 상태가 된다).
+        //   그래서 자동확대가 통째로 안 걸렸다 — 예외도 없이 조용히.
+        //   setTimeout은 숨은 문서에서도 돈다(느려질 뿐). 레이아웃이 잡혔는지는
+        //   **창 폭이 잡혔는가**로 직접 확인한다(rAF의 원래 목적이 그것이었다).
+        let _fitTry = 0;
+        const _runFit = () => {
+          if (destroyed) return;
+          if ((win.clientWidth || 0) < 50 && _fitTry++ < 40) { setTimeout(_runFit, 50); return; }
+          Promise.resolve().then(_fitToRange)
+            .catch(e => console.error('[filmroll] 자동확대(_fitToRange) 실패', e));
+        };
+        setTimeout(_runFit, 0);
       }
       applyW(); drawBar();
     }
@@ -489,23 +787,38 @@
         //   (구간 밖을 못 보게 잘라버리면 '조각 범위 넓히기'가 통째로 막힌다).
         if (opt.fit) {
           const z = host.querySelector('.frz');
-          // ★후보는 사다리 단계뿐(8개)이다. '보이는 초'가 구간에 가장 가까운 단계를 고른다.
-          //   ★0.25초보다 성긴 단계는 뺀다(F21, 사장님 "0.25로 기본세팅") — 구간이 길면
-          //     '다 보이게' 맞추다 한 칸 1초까지 벌어져 기본 확대가 도로 풀렸다.
-          //     여기는 **열 때 기본값**일 뿐, 슬라이더는 어느 단계든 자유롭게 간다.
-          const W = winW() * 0.9;
-          let want = STEP, best = Infinity;
+          // ★조각을 펼치면 **그 길이만큼만** 옆으로 늘어난다(2026-08-28 사장님
+          //   "2.3초면 저 연두색 부분 정도만 늘어날 거잖아").
+          //
+          //   ⚠️앞서 두 번 실패했다. 되풀이하지 마라:
+          //     ① win.style.width를 직접 잡았다 → 보이는 칸 계산(fillVisible)이 레이아웃보다
+          //        먼저 돌아 **칸이 빈 검은색**으로 남았다.
+          //     ② clamp를 조각 구간으로 묶었다 → 주황 박스는 원본 시각으로 그려지므로
+          //        **볼 수 없는 자리**에 생겼다.
+          //   그래서 여기서는 **슬롯의 최대 폭만** 정하고(레이아웃은 브라우저가 잡는다),
+          //   폭이 반영된 **다음 프레임에** 다시 채운다. 스크롤 범위는 건드리지 않는다.
+          // ★칸 폭은 **읽을 만한 크기로 고정**한다. 그래야 필름이 조각 길이에 비례해
+          //   좁게/넓게 늘어난다(2026-08-28 사장님 "2.3초면 저 연두색 부분 정도만").
+          //   종전처럼 '조각이 창을 채우도록' 칸 폭을 키우면 0.8초짜리도 화면을 가로지른다.
+          // ★칸 폭은 **세로 영상 비율(9:16)**로 잡는다(2026-08-29 사장님 "저렇게 하려고
+          //   한 거였어?" — 46px 고정이라 칸이 홀쭉한 띠가 돼 뭐가 뭔지 안 보였다).
+          //   칸 높이는 그대로인데 폭만 줄이면 그림이 세로로 눌린다. 높이에서 폭을 낸다.
+          const FIT_CELL = Math.max(40, Math.round(cellNow() * 9 / 16));
+          const room = winW();
+          let want = ZOOM_MAX_STEP;                       // 한 칸 초는 0.25 기본을 지킨다(F21)
           for (const st of LADDER) {
-            if (st > ZOOM_MAX_STEP) continue;
-            const seen = W * st / cwFor(st);             // 그 배율에서 창에 보이는 초
-            const d = Math.abs(seen - span);
-            if (d < best) { best = d; want = st; }
+            if (st < ZOOM_MAX_STEP) continue;             // 기본보다 촘촘하게는 안 간다
+            want = st;
+            if ((span / st) * FIT_CELL <= room) break;    // 남는 폭 안에 들어오면 그만
           }
-          if (want !== STEP) {
-            STEP = want; CW = cwFor(STEP);
-            z.value = sliderFromStep(STEP);
-            await strip();                                // 칸 간격이 바뀌면 다시 뽑는다
-          }
+          const wantCW = FIT_CELL;
+          const restrip = (want !== STEP);
+          STEP = want; CW = wantCW;
+          z.value = sliderFromStep(STEP);
+          if (restrip) await strip();
+          // 슬롯이 조각 길이만큼만 차지하게 한다 — 폭 자체를 박지 않고 **상한**만 준다.
+          host.style.maxWidth = Math.ceil(span * pps() + 4) + 'px';
+          requestAnimationFrame(() => { applyW(); fillVisible(); });   // 폭이 반영된 뒤 채운다
         }
         const mid = opt.from + span / 2;
         off = clamp(mid * pps() - winW() / 2);
@@ -517,9 +830,15 @@
     /* ── 보이는 칸만 그림 채우기 ─────────────────────────────
        필름은 원본 전체를 그리지만 **화면에 든 칸만** 실제로 캡처한다.
        스크롤·확대 때마다 다시 부르면 그때 필요한 것만 뽑힌다(캐시는 그대로 쓴다). */
-    let _shotVid = null, _filling = false;
+    let _shotVid = null, _filling = false, _fillWant = false;
     async function fillVisible() {
-      if (_filling || destroyed || !_shotVid) return;
+      // ★도는 중에 온 요청을 **기억한다**(2026-08-29 사장님 "칸이 검게 빈다").
+      //   칸마다 영상을 seek해 캡처하므로 한 번 도는 데 오래 걸린다. 그 사이
+      //   자동확대가 폭·스크롤을 바꿔 다시 채워달라고 불러도 여기서 그냥 return했고,
+      //   앞의 것이 끝난 뒤엔 아무도 다시 부르지 않아 **보이는 칸이 영영 빈 채** 남았다
+      //   (실측: 보이는 칸 6개 중 그림 0개, 채워진 11개는 전부 맨 앞 0~1초 자리).
+      if (_filling) { _fillWant = true; return; }
+      if (destroyed || !_shotVid) return;
       _filling = true;
       try {
         const x = cv.getContext('2d');
@@ -536,14 +855,31 @@
           const key = ckey(STEP, i);
           let d = CACHE[key];
           if (!d) {
+            // ★그릴 픽셀이 아직 없으면 **기다린다**. 종전엔 그냥 그려서 검은 칸이
+            //   캐시에 구워졌고, 캐시가 있으니 아무도 다시 뽑지 않아 **영영 검정**이었다.
+            if (!canShoot(_shotVid)) await waitShootable(_shotVid, 3000);
+            if (destroyed || my !== _stripSeq) break;
             await seekRaw(_shotVid, t);
             if (destroyed || my !== _stripSeq) break;
+            // 아직 픽셀이 없으면 **이번엔 건너뛴다** — 칸을 비워 두면 다음 fillVisible이
+            // 다시 집는다(검정으로 굳혀 놓는 것보다 낫다). 시크가 타임아웃이었는지는
+            // 따로 안 본다: 결국 물어볼 것은 '지금 그릴 수 있나' 하나뿐이다(0순위-B).
+            if (!canShoot(_shotVid)) { _fillWant = true; continue; }
             try { x.drawImage(_shotVid, 0, 0, cv.width, cv.height); d = cv.toDataURL('image/jpeg', 0.6); CACHE[key] = d; }
             catch (_) { d = ''; }
           }
           if (d) c.insertAdjacentHTML('afterbegin', `<img src="${d}">`);
         }
-      } finally { _filling = false; }
+      } finally {
+        _filling = false;
+        // 도는 동안 화면이 바뀌었으면 그 자리를 다시 채운다(놓친 요청을 갚는다).
+        // ★영상이 아직 안 여물어 건너뛴 것도 여기로 온다 — 그때는 **텀을 두고** 다시
+        //   집는다(0ms로 되부르면 준비도 안 된 영상을 두들기며 CPU만 태운다).
+        if (_fillWant && !destroyed) {
+          _fillWant = false;
+          setTimeout(fillVisible, canShoot(_shotVid) ? 0 : 300);
+        }
+      }
     }
 
     host.addEventListener('pointerdown', () => { ACTIVE = SELF; }, true);
@@ -588,12 +924,39 @@
     // ★상태 선언을 배선보다 먼저 — 아래 핸들러들이 참조한다(TDZ 예방)
     let down = false, sx = 0, so = 0, dragged = false, dg = false;
     win.addEventListener('contextmenu', e => e.preventDefault());
-    win.addEventListener('click', e => {
-      if (dragged || e.target.closest('.bx')) return;
+    // ★가운데를 잡고 앞뒤로 밀기(2026-08-28 사장님 "가운데 부분은 마우스를 잡고
+    //   필름을 뒤쪽 앞쪽으로 넘길수있게"). 2026-08-26에 뺐던 조작인데, 그때 문제는
+    //   '밀기'와 '빨간선 찍기'가 **같은 왼쪽 버튼에서 구분 없이** 싸운 것이었다.
+    //   이제 움직인 거리로 가른다: 4px 넘게 끌면 밀기, 그 자리에서 놓으면 찍기.
+    //   (손잡이 gripEl이 이미 쓰는 판정과 같은 방식이다 — 판단 기준을 새로 만들지 않는다)
+    win.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || e.target.closest('.bx')) return;
+      down = true; sx = e.clientX; so = off; dragged = false;
+      win.style.cursor = 'grabbing';
+      try { win.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    win.addEventListener('pointermove', e => {
+      if (!down) return;
+      const dx = e.clientX - sx;
+      if (!dragged && Math.abs(dx) > 4) dragged = true;   // 여기부터는 '밀기'다
+      if (dragged) { off = clamp(so - dx); panW(); }   // 끌기 중엔 경량 경로(위 주석)
+    });
+    const _endPan = e => {
+      if (!down) return;
+      down = false; win.style.cursor = '';
+      try { win.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (dragged) { setTimeout(() => { dragged = false; }, 0); return; }  // 끌었으면 찍지 않는다
+      // 안 끌었다 = 그 자리를 찍는다(종전 동작 그대로)
       const r = win.getBoundingClientRect();
-      const t = Math.max(0, Math.min(DUR, xToSec(e.clientX - r.left)));
+      const tt = Math.max(0, Math.min(DUR, xToSec(e.clientX - r.left)));
       pv.pause(); playing = false;
-      scrubTo(t);
+      scrubTo(tt);
+    };
+    win.addEventListener('pointerup', _endPan);
+    win.addEventListener('pointercancel', e => { down = false; dragged = false; win.style.cursor = ''; });
+    win.addEventListener('click', e => {
+      // 위 pointerup이 이미 처리했다. click은 밖으로 새지 않게만 막는다.
+      e.stopPropagation();
     });
     win.addEventListener('wheel', e => {
       e.preventDefault();
@@ -609,10 +972,11 @@
         if (ns === STEP) return;
         z.value = nv; STEP = ns; CW = cwFor(STEP);
         const keep = () => { off = clamp(anchorT * pps() - (e.clientX - r.left)); applyW(); };
+        keep();                      // 다시 뽑기 **전에** 자리부터 잡는다(위 setStep과 같은 이유)
         strip().then(keep);
         return;
       }
-      off = clamp(off + ((e.deltaY || e.deltaX) > 0 ? pps() * 2 : -pps() * 2)); applyW();
+      off = clamp(off + ((e.deltaY || e.deltaX) > 0 ? pps() * 2 : -pps() * 2)); panW();
     }, { passive: false });
 
     // ★왼쪽 버튼으로 필름을 끌어 좌우로 미는 조작은 **없앴다**(2026-08-26 사장님 캡쳐 536
@@ -625,8 +989,14 @@
     // ★손잡이를 끌었는지(=훑어보기) 눌렀다 뗐는지(=여기 찍기) 가른다.
     //   끌고 난 뒤의 click까지 '찍기'로 받으면 훑을 때마다 구간이 생긴다.
     let gripMoved = false, gripX = 0;
+    // ★한 손 제스처(2026-08-29 사장님): 빨간선을 왼쪽으로 잡고 끌다가 **오른쪽 버튼을
+    //   겹쳐 누르면** 잡은 지점~지금 지점이 주황 박스가 된다(Q→W를 마우스 하나로).
+    //   겹친 버튼은 pointerdown이 아니라 **buttons 비트가 바뀐 pointermove**로 온다
+    //   (포인터 이벤트 규약 — chorded buttons). 우클릭 한 번 = 박스 하나(dgBoxed).
+    let dgT0 = null, dgBoxed = false;
     gripEl.addEventListener('pointerdown', e => {
       dg = true; gripMoved = false; gripX = e.clientX;
+      dgT0 = headTime(); dgBoxed = false;        // 잡은 순간의 시각 = 박스 시작점
       e.stopPropagation(); e.preventDefault();
       try { gripEl.setPointerCapture(e.pointerId); } catch (_) {}
     });
@@ -635,9 +1005,17 @@
       if (Math.abs(e.clientX - gripX) > 4) gripMoved = true;
       const r = win.getBoundingClientRect();
       scrubTo(xToSec(e.clientX - r.left));
+      if ((e.buttons & 2) && !dgBoxed && dgT0 != null && !LOCK) {
+        dgBoxed = true;                          // 우클릭이 눌려 있는 동안 한 번만
+        gripEl._chordAt = performance.now();     // 곧 올 contextmenu(찍기)를 무시하기 위해
+        const t1 = headTime();
+        if (addBox(Math.min(dgT0, t1), Math.max(dgT0, t1)))
+          dgT0 = t1;                             // 이어서 끌면 다음 박스는 여기부터
+      }
+      if (!(e.buttons & 2)) dgBoxed = false;     // 우클릭을 뗐다 — 다음 겹침을 받는다
       e.stopPropagation();
     });
-    gripEl.addEventListener('pointerup', e => { dg = false; e.stopPropagation(); });
+    gripEl.addEventListener('pointerup', e => { dg = false; dgT0 = null; e.stopPropagation(); });
     // ★2026-08-26 사장님 "빨간 막대 두번 누르면 시작점되고 주황박스 만들어지는 거
     //   그거 왜 구현 안 되어 있나". 되어 있었는데 **오른쪽 클릭에만** 걸려 있었다
     //   (왼쪽 클릭은 stopPropagation만 하고 아무 일도 안 했다) — 아무도 안 쓰는
@@ -648,14 +1026,37 @@
       if (gripMoved) { gripMoved = false; return; }
       markHere();
     });
-    gripEl.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); markHere(); });
+    gripEl.addEventListener('contextmenu', e => {
+      e.preventDefault(); e.stopPropagation();
+      // 끌기+우클릭(위 겹침 박스)의 우클릭 뗌이 여기로도 온다 — 그때 찍기까지 하면
+      // 박스 만들자마자 새 시작점이 찍혀 헷갈린다. 겹침 직후엔 조용히 넘어간다.
+      if (gripEl._chordAt && performance.now() - gripEl._chordAt < 600) return;
+      markHere();
+    });
 
-    host.querySelector('.frz').addEventListener('input', function () {
-      const centerT = xToSec(winW() / 2);
-      const ns = stepFromSlider(this.value);               // 한 칸 = 한 단계
-      if (ns === STEP) return;
-      STEP = ns; CW = cwFor(STEP);
+    // ★확대를 바꾸는 곳은 여기 하나다(슬라이더·＋－버튼·Ctrl+휠이 모두 이걸 부른다).
+    function setStep(sliderVal) {
+      const z = host.querySelector('.frz');
+      const v = Math.max(0, Math.min(SMAX, Math.round(+sliderVal)));
+      const ns = stepFromSlider(v);
+      if (ns === STEP) { z.value = v; return; }
+      const centerT = xToSec(winW() / 2);                  // 보던 자리를 지킨다
+      z.value = v; STEP = ns; CW = cwFor(STEP);
+      // ★스크롤 위치를 **다시 뽑기 전에** 정한다(2026-08-28 실측).
+      //   종전엔 strip().then 안에서 정했는데, 0.2초처럼 칸이 많은 단계는 다시 뽑는 데
+      //   시간이 걸린다. 그 사이에 찍으면 off가 아직 옛 값이라 좌표가 통째로 어긋났다
+      //   (실측: 길이는 0.30초로 정확한데 위치만 380px÷1350=0.28초 앞으로 밀렸다).
+      //   off는 숫자일 뿐이라 칸이 아직 없어도 먼저 정할 수 있다.
+      off = clamp(centerT * pps() - winW() / 2);
       strip().then(() => { off = clamp(centerT * pps() - winW() / 2); applyW(); });
+    }
+    host.querySelector('.frz').addEventListener('input', function () { setStep(this.value); });
+    host.querySelectorAll('.zb').forEach(b => {
+      b.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        const z = host.querySelector('.frz');
+        setStep((+z.value || 0) + (+b.dataset.z));
+      });
     });
 
     /* ▶ 빨간 막대를 [a,b] 구간 동안 움직인다(소리는 미리보기 창이 낸다).
@@ -722,12 +1123,30 @@
       // ★Esc = 구간 지우기(2026-08-26 사장님 "esc로 삭제되게"). 고른 게 있으면 그것,
       //   없으면 마지막에 만든 것. ×를 정확히 누르지 않아도 손이 닿는다.
       if (e.code === 'Escape' && !_typing) {
+        if (LOCK) return;                     // 길이 잠금 — 지우기 금지
         if (!BOXES.length) return;
         const i = (ACTBOX != null && BOXES[ACTBOX]) ? ACTBOX : BOXES.length - 1;
         BOXES.splice(i, 1);
         ACTBOX = null; MA = null;
         drawBoxes(); drawMark(); drawBar();
         e.preventDefault();
+        return;
+      }
+      // ★Q/W = 주황 박스 만들기(2026-08-28 사장님). Space(재생)와 같은 자리에서 처리해
+      //   '지금 만지는 필름만 받는다'(ACTIVE)와 입력칸 회피가 그대로 적용된다.
+      if (!_typing && (e.code === 'KeyQ' || e.code === 'KeyW' || e.code === 'KeyE')) {
+        if (LOCK) return;                     // 길이 잠금 — 만들기·담기 금지(옮기기·🔁만)
+        if (e.ctrlKey || e.metaKey || e.altKey) return;   // Ctrl+W(창 닫기) 등은 건드리지 않는다
+        e.preventDefault();
+        if (e.code === 'KeyQ') { markStart(); return; }
+        if (e.code === 'KeyW') { markEnd();   return; }
+        // ★E = 담기(2026-08-28 사장님). 손을 마우스로 옮기지 않고 Q→W→E로 끝낸다.
+        //   담는 함수는 ⬆ 손잡이·두 번 누르기와 같은 onBoxCommit 하나다(0순위-B).
+        //   고른 박스가 있으면 그것, 없으면 마지막에 만든 것(Esc가 지우는 것과 같은 기준).
+        if (!BOXES.length) return;
+        const bi = (ACTBOX != null && BOXES[ACTBOX]) ? ACTBOX : BOXES.length - 1;
+        const b = BOXES[bi];
+        if (b && typeof opt.onBoxCommit === 'function') opt.onBoxCommit({ s: b.s, e: b.e });
         return;
       }
       if (e.code !== 'Space') return;
@@ -752,10 +1171,16 @@
         //   재생이 파란구간만 되나" 캡쳐 535). 종전엔 '쓰는 구간 길이'(없으면 3초)만큼만
         //   돌아서, 앞뒤를 이어 보려 해도 파란 구간 언저리에서 툭 끊겼다.
         //   멈추는 건 스페이스 한 번이면 된다 — 길이를 미리 재단할 이유가 없다.
-        const s2 = bx ? bx.s : (pv.currentTime || 0);
-        const b2 = bx ? bx.e : DUR;
-        // 멈춘 자리가 이 구간 안이면 거기서 이어서(끝까지 봤으면 RESUME이 비어 처음부터).
-        const a2 = (RESUME != null && RESUME > s2 + 0.05 && RESUME < b2 - 0.05) ? RESUME : s2;
+        // ★빨간 막대가 **언제나 이긴다**(2026-08-28 사장님 제보: "빨간색을 스페이스로
+        //   한 번 재생 후 다른 지점 클릭하고 재생하면 빨간선부터 재생이 안 되고 엉뚱한
+        //   곳에서 재생된다"). 종전엔 박스가 있으면 s2=bx.s로 **박스 시작**부터 갔고,
+        //   RESUME은 '박스 안'일 때만 인정했다 — 그래서 막대를 박스 밖으로 옮기면
+        //   그 자리를 무시하고 박스 앞머리로 튀었다. 내가 놓은 자리가 곧 시작점이다.
+        //   (RESUME은 스크럽으로 옮길 때와 멈출 때 둘 다 갱신된다 — scrubTo/stopHead)
+        const a2 = (RESUME != null) ? RESUME : (bx ? bx.s : (pv.currentTime || 0));
+        // 끝은 쓰는 구간 끝까지. 막대가 그 뒤에 있으면 잘 곳이 없으니 필름 끝까지 돈다.
+        let b2 = bx ? bx.e : DUR;
+        if (b2 <= a2 + 0.05) b2 = DUR;
         opt.onPlay(a2, b2);
         runHead(a2, b2);
         return;
@@ -813,5 +1238,57 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  // ── 구간 프레임 추출(2026-08-29, 칸 타임라인 ④) ──────────────────────────
+  // 타임라인 컷 블록을 '필름식'으로 펼칠 때 쓴다 — 구간 [a,b]를 n장으로.
+  // 시크·캡처 원리는 위 fillVisible과 같다(같은 브라우저 검증을 통과한 방식).
+  // 여기(부품 파일)에 두는 이유: 프레임을 뽑는 코드가 두 벌이 되면 반드시
+  // 한쪽만 고쳐진다(0순위-B). 필름롤 자체와는 캐시가 다르다 — 필름롤은
+  // 칸(step) 단위, 이건 임의 구간 단위라 키가 애초에 다르다.
+  const FRAME_CACHE = {};                    // "vid|a|b|n" → [dataURL…]
+  const _FVIDS = {};                         // vid → <video> 재사용(매번 열면 느리다)
+  async function filmframes(vid, src, a, b, n) {
+    n = Math.max(1, Math.min(24, Math.round(n) || 1));
+    const key = `${vid}|${(+a).toFixed(2)}|${(+b).toFixed(2)}|${n}`;
+    if (FRAME_CACHE[key]) return FRAME_CACHE[key];
+    let v = _FVIDS[vid];
+    if (!v) {
+      v = document.createElement('video');
+      v.muted = true; v.preload = 'auto'; v.src = src;
+      _FVIDS[vid] = v;
+    }
+    await new Promise(r => {
+      if (v.readyState >= 1) return r();
+      v.addEventListener('loadedmetadata', r, { once: true });
+      setTimeout(r, 5000);
+    });
+    // ★그릴 픽셀이 생길 때까지 기다린다(길이만 아는 readyState 1로 그리면 검정이다).
+    //   여기서 못 여물면 **캐시에 굽지 않고** 빈 배열로 물러난다 — 검은 프레임을
+    //   저장하면 캐시 때문에 영영 검은 채로 남는다(strip 쪽과 같은 규칙, 0순위-B).
+    if (!canShoot(v)) await waitShootable(v, 3000);
+    if (!canShoot(v)) return [];
+    const cv = document.createElement('canvas');
+    cv.width = 96; cv.height = 170;                       // 9:16 소형 — 펼침용이라 충분
+    const x = cv.getContext('2d');
+    const out = [];
+    for (let k = 0; k < n; k++) {
+      const t = (+a) + ((+b) - (+a)) * (k + 0.5) / n;     // 칸 한가운데(위 strip과 같은 규칙)
+      await new Promise(r => {
+        let done = false;
+        const fin = () => { if (done) return; done = true; v.removeEventListener('seeked', fin); r(); };
+        v.addEventListener('seeked', fin);
+        try { v.currentTime = Math.max(0, t); } catch (e) { fin(); }
+        setTimeout(fin, 800);                              // 시크가 영영 안 오는 파일 대비
+      });
+      // 도중에 다시 여물지 않았으면 그 칸은 **빈 칸**으로 둔다(검정보다 낫다).
+      if (!canShoot(v)) { out.push(''); continue; }
+      try { x.drawImage(v, 0, 0, cv.width, cv.height); out.push(cv.toDataURL('image/jpeg', 0.6)); }
+      catch (e) { out.push(''); }                          // tainted 등 — 빈 칸으로 두고 계속
+    }
+    // ★한 칸이라도 건진 게 있을 때만 캐시한다 — 전부 빈 결과를 구우면 다시 안 뽑는다.
+    if (out.some(Boolean)) FRAME_CACHE[key] = out;
+    return out;
+  }
+
   global.filmroll = filmroll;
+  global.filmframes = filmframes;
 })(window);

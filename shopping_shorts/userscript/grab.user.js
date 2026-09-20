@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         로또 · 원클릭 담기
 // @namespace    lotto.shopping_shorts
-// @version      2.4.0
+// @version      2.5.0
 // @description  플랫폼 영상에 '📥 담기' 버튼. ★한 번만 설치하면 됩니다 — 담기 로직은 서버에서 매번 불러오므로 이후 업데이트는 재설치 없이 자동 반영됩니다.
 // @match        https://www.youtube.com/*
 // @match        https://*.threads.com/*
@@ -12,10 +12,13 @@
 // @match        https://*.rednote.com/*
 // @match        https://*.douyin.com/*
 // @match        https://*.iesdouyin.com/*
+// @match        https://*.pinterest.com/*
 // @match        https://shoppingshorts.duckdns.org/grab*
+// @match        https://app.stmaker.kr/grab*
 // @run-at       document-idle
 // @grant        GM_xmlhttpRequest
 // @connect      shoppingshorts.duckdns.org
+// @connect      app.stmaker.kr
 // @downloadURL  https://shoppingshorts.duckdns.org/grab.user.js
 // @updateURL    https://shoppingshorts.duckdns.org/grab.user.js
 // ==/UserScript==

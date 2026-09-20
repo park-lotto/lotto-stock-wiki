@@ -168,7 +168,8 @@ def plan_shorts(segs, n_shorts=5, api_key=None, model=None):
     for i, key in enumerate(keys):
         try:
             from shopping_shorts import usage_meter
-            cl = usage_meter.wrap(genai.Client(api_key=key))
+            cl = usage_meter.wrap(genai.Client(api_key=key),
+                                  pool="shorts", key=key)   # 관측판 귀속(2026-09-01)
             r = cl.models.generate_content(
                 model=model or _MODEL, contents=prompt,
                 config={"response_mime_type": "application/json"})
@@ -369,7 +370,7 @@ def _bumper(dur, dst, channel_name, tpl, logo_path=None):
         card.write_text(channel_name or " ", encoding="utf-8")
         tf = str(card).replace("\\", "/").replace(":", chr(92) + ":", 1)
         vin = ["-f", "lavfi", "-t", str(dur), "-i", f"color=c={bg}:s=1080x1920:r=30"]
-        vf = (f"drawtext=fontfile='{_FONT}':textfile='{tf}':fontsize=64:fontcolor=white"
+        vf = (f"drawtext=fontfile='{_FONT}':textfile='{tf}':expansion=none:fontsize=64:fontcolor=white"
               f":x=(w-tw)/2:y=(h-th)/2,"
               f"drawbox=x=390:y=1080:w=300:h=8:color={accent}:t=fill,format=yuv420p")
     subprocess.run(
@@ -390,7 +391,7 @@ def _reenc(src, start, dur, dst):
 def _dt(src, dst, tf, size, color, x, y, enable=None, border=(4, "black")):
     b = f":borderw={border[0]}:bordercolor={border[1]}" if border else ""
     en = f":enable='{enable}'" if enable else ""
-    return (f"[{src}]drawtext=fontfile='{_FONT}':textfile='{tf}':fontsize={size}"
+    return (f"[{src}]drawtext=fontfile='{_FONT}':textfile='{tf}':expansion=none:fontsize={size}"
             f":fontcolor={color}:x={x}:y={y}{b}{en}[{dst}];")
 
 

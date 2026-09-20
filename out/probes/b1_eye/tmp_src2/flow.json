@@ -1,0 +1,635 @@
+{
+ "draft": {
+  "style_id": 57,
+  "style_name": "다이소 내부인형",
+  "beats": [
+   {
+    "role": "hook",
+    "text": "여러분 다이소 가면 이거 무조건 사오세요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.3,
+    "src_segs": []
+   },
+   {
+    "role": "problem",
+    "text": "매번 물티슈 패키지가 찢어지고 마를 때마다 진짜 속상해서 하루 종일 예민했거든요.",
+    "src_seg": "s0-32",
+    "needs_scene": true,
+    "sec": 4.6,
+    "src_segs": [
+     "s0-32",
+     "s0-33"
+    ]
+   },
+   {
+    "role": "reveal",
+    "text": "제 지인이 다이소 매니저로 있거든요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.0,
+    "src_segs": []
+   },
+   {
+    "role": "proof",
+    "text": "물티슈 케이스 중에 가장 많이 나가는 게 바로 이 제품이라 보이면 바로 사라고 하더라고요.",
+    "src_seg": "s0-25",
+    "needs_scene": true,
+    "sec": 4.9,
+    "src_segs": [
+     "s0-25",
+     "s0-26"
+    ]
+   },
+   {
+    "role": "demo",
+    "text": "방법도 진짜 간단해요. 그냥 찢어진 패키지째로 케이스에 넣고 뚜껑 닫으면 끝이에요.",
+    "src_seg": "s0-34",
+    "needs_scene": true,
+    "sec": 4.6,
+    "src_segs": [
+     "s0-34",
+     "s0-35"
+    ]
+   },
+   {
+    "role": "result",
+    "text": "와, 마감도 매끄럽고 심플해서 인테리어까지 깔끔하게 해결되는 거 있죠.",
+    "src_seg": "s0-31",
+    "needs_scene": true,
+    "sec": 3.9,
+    "src_segs": [
+     "s0-31",
+     "s0-35"
+    ]
+   },
+   {
+    "role": "price",
+    "text": "심플한 디자인에 2천원밖에 안 한다는 게 놀랍더라고요.",
+    "src_seg": "s0-23",
+    "needs_scene": true,
+    "sec": 3.1,
+    "src_segs": [
+     "s0-23"
+    ]
+   },
+   {
+    "role": "cta",
+    "text": "이 다이소 꿀템 정보 필요하신 분 댓글 달아주시면 바로 품번 보내드릴게요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 4.0,
+    "src_segs": []
+   }
+  ],
+  "script": "여러분 다이소 가면 이거 무조건 사오세요. 매번 물티슈 패키지가 찢어지고 마를 때마다 진짜 속상해서 하루 종일 예민했거든요. 제 지인이 다이소 매니저로 있거든요. 물티슈 케이스 중에 가장 많이 나가는 게 바로 이 제품이라 보이면 바로 사라고 하더라고요. 방법도 진짜 간단해요. 그냥 찢어진 패키지째로 케이스에 넣고 뚜껑 닫으면 끝이에요. 와, 마감도 매끄럽고 심플해서 인테리어까지 깔끔하게 해결되는 거 있죠. 심플한 디자인에 2천원밖에 안 한다는 게 놀랍더라고요. 이 다이소 꿀템 정보 필요하신 분 댓글 달아주시면 바로 품번 보내드릴게요.",
+  "hook": "여러분 다이소 가면 이거 무조건 사오세요.",
+  "checks": [
+   {
+    "name": "구간 순서",
+    "ok": true,
+    "detail": "기대 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta'] / 실제 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta']"
+   },
+   {
+    "name": "CTA 단어유도",
+    "ok": false,
+    "detail": " 다이소 꿀템 정보 필요하신 분 댓글 달아주시면 바로 품번 보내드릴게요."
+   },
+   {
+    "name": "말 밀도(153~222자)",
+    "ok": true,
+    "detail": "218자 / 이 스타일 히트작 219자",
+    "over": false
+   },
+   {
+    "name": "고조 심화(1회)",
+    "ok": false,
+    "detail": "고조 연결어가 없다 — 해결 뒤에 '심지어/더 대박인 건'으로 새로운 장점 하나를 더 얹어라"
+   },
+   {
+    "name": "화자 일관성",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "장면 근거",
+    "ok": true,
+    "detail": "OK(5/8줄에 장면)"
+   }
+  ],
+  "passed": false,
+  "tries": [
+   {
+    "chars": 214,
+    "fails": [
+     "CTA 단어유도"
+    ]
+   },
+   {
+    "chars": 218,
+    "fails": [
+     "CTA 단어유도",
+     "고조 심화(1회)"
+    ]
+   },
+   {
+    "chars": 244,
+    "fails": [
+     "구간 순서",
+     "CTA 단어유도",
+     "말 밀도(153~222자)",
+     "고조 심화(1회)"
+    ]
+   }
+  ],
+  "chars": 218,
+  "sec": 29.4
+ },
+ "plan": {
+  "structure": "template",
+  "beats": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "narration": "여러분 다이소 가면 이거 무조건 사오세요.",
+    "target_seconds": 4.0,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-7",
+     "start": 10.0,
+     "end": 11.967,
+     "scene_desc": "손으로 휴지통을 들어 올리며 뚜껑을 다시 여는 모습을 보여줌.",
+     "is_key": true,
+     "change": "휴지통 뚜껑이 위로 들어 올려지며 내부 구조가 드러남",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-3",
+      "start": 3.333,
+      "end": 5.367,
+      "scene_desc": "다이소 매장 외부 간판이 지속적으로 비침.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "narration": "매번 물티슈 패키지가 찢어지고 마를 때마다 진짜 속상해서 하루 종일 예민했거든요.",
+    "target_seconds": 7.9,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-32",
+     "start": 58.333,
+     "end": 59.033,
+     "scene_desc": "기존 물티슈 팩이 보임.",
+     "is_key": true,
+     "change": "",
+     "shot_role": "문제"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-33",
+      "start": 59.033,
+      "end": 59.9,
+      "scene_desc": "손으로 찢어진 물티슈 팩을 누름.",
+      "is_key": true,
+      "change": "물티슈 팩이 압박되며 찢어진 부위가 더 도드라짐",
+      "shot_role": "문제"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-6",
+      "start": 7.767,
+      "end": 10.0,
+      "scene_desc": "손으로 회색 휴지통의 뚜껑을 열고 다시 닫는 동작을 반복함.",
+      "is_key": true,
+      "change": "휴지통 뚜껑이 손의 조작에 따라 열리고 닫힘",
+      "shot_role": "조작"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-9",
+      "start": 12.8,
+      "end": 14.9,
+      "scene_desc": "손으로 휴지통 옆면의 스티커를 제거하는 모습.",
+      "is_key": true,
+      "change": "제품 표면의 상품 정보 스티커가 제거되어 더 깔끔해짐",
+      "shot_role": "정리"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-11",
+      "start": 15.967,
+      "end": 17.633,
+      "scene_desc": "손으로 겉 케이스를 씌우고 비닐을 넣는 등 2중 구조의 조립을 보여줌.",
+      "is_key": true,
+      "change": "내부 케이스에 비닐이 씌워지고 겉 케이스가 덮이며 합쳐짐",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-14",
+      "start": 19.667,
+      "end": 20.0,
+      "scene_desc": "용기를 들어 올렸다가 다시 바닥에 내려놓으며 빈 내부를 보여줌.",
+      "is_key": false,
+      "change": "용기가 이동하며 전체적인 형태를 보여준다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-32"
+   },
+   {
+    "beat_idx": 2,
+    "role": "reveal",
+    "narration": "제 지인이 다이소 매니저로 있거든요.",
+    "target_seconds": 3.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-1",
+     "start": 1.667,
+     "end": 2.733,
+     "scene_desc": "다이소 매장 내부로 들어가는 입구 바닥과 매장 안쪽의 집기들이 보임.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "기타"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-28",
+      "start": 39.567,
+      "end": 42.0,
+      "scene_desc": "제품 패키지 설명서에서 실링 처리 부분을 손으로 가리킴.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 3,
+    "role": "proof",
+    "narration": "물티슈 케이스 중에 가장 많이 나가는 게 바로 이 제품이라 보이면 바로 사라고 하더라고요.",
+    "target_seconds": 8.8,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-25",
+     "start": 34.1,
+     "end": 35.2,
+     "scene_desc": "매장 선반에 진열된 흰색 물티슈 케이스 제품이 보임.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "기타"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-26",
+      "start": 35.2,
+      "end": 38.633,
+      "scene_desc": "손이 제품 포장지를 만지며 케이스를 클로즈업함.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-29",
+      "start": 44.483,
+      "end": 49.4,
+      "scene_desc": "제품 뚜껑을 열고 실리콘 실링 부분을 보여줌.",
+      "is_key": true,
+      "change": "뚜껑이 열리며 내부 실링 구조가 드러남",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-25"
+   },
+   {
+    "beat_idx": 4,
+    "role": "demo",
+    "narration": "방법도 진짜 간단해요. 그냥 찢어진 패키지째로 케이스에 넣고 뚜껑 닫으면 끝이에요.",
+    "target_seconds": 8.1,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-34",
+     "start": 59.9,
+     "end": 62.267,
+     "scene_desc": "기존 물티슈 팩을 케이스에 넣는 모습을 보여줌.",
+     "is_key": true,
+     "change": "물티슈 팩이 케이스 안으로 들어감",
+     "shot_role": "설치"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-35",
+      "start": 62.267,
+      "end": 66.267,
+      "scene_desc": "케이스 뚜껑을 닫고 정리된 모습을 보여줌.",
+      "is_key": true,
+      "change": "뚜껑이 닫히며 내용물이 깔끔하게 정리됨",
+      "shot_role": "after"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-30",
+      "start": 49.4,
+      "end": 51.13,
+      "scene_desc": "손으로 뚜껑의 실링 고무 부분을 잡아당기며 탄성을 보여줌.",
+      "is_key": true,
+      "change": "실링 고무가 유연하게 움직임",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-34"
+   },
+   {
+    "beat_idx": 5,
+    "role": "result",
+    "narration": "와, 마감도 매끄럽고 심플해서 인테리어까지 깔끔하게 해결되는 거 있죠.",
+    "target_seconds": 6.8,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-31",
+     "start": 53.867,
+     "end": 58.333,
+     "scene_desc": "제품의 전체적인 외관과 마감을 보여줌.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-35",
+      "start": 62.267,
+      "end": 66.267,
+      "scene_desc": "케이스 뚜껑을 닫고 정리된 모습을 보여줌.",
+      "is_key": true,
+      "change": "뚜껑이 닫히며 내용물이 깔끔하게 정리됨",
+      "shot_role": "after"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-31"
+   },
+   {
+    "beat_idx": 6,
+    "role": "price",
+    "narration": "심플한 디자인에 2천원밖에 안 한다는 게 놀랍더라고요.",
+    "target_seconds": 5.3,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-23",
+     "start": 31.6,
+     "end": 33.033,
+     "scene_desc": "검은 바탕에 하얀 글씨로 '다이소 다용도 밀폐 케이스'라는 제품명이 표시됨.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "완성"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 2.733,
+      "end": 3.333,
+      "scene_desc": "매장 내부 계단이 보이고 화면이 어두워지며 텍스트가 나타남.",
+      "is_key": false,
+      "change": "화면이 어두워짐",
+      "shot_role": "기타"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-4",
+      "start": 5.367,
+      "end": 6.433,
+      "scene_desc": "다이소 매장 간판이 다시 클로즈업됨.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-5",
+      "start": 6.433,
+      "end": 7.767,
+      "scene_desc": "진열대에 놓인 회색 원터치 휴지통과 상품 정보표가 보임.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "before"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-8",
+      "start": 11.967,
+      "end": 12.8,
+      "scene_desc": "깔끔한 회색 휴지통이 테이블 위에 놓여 있는 모습.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "after"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-10",
+      "start": 14.9,
+      "end": 14.93,
+      "scene_desc": "휴지통 내부 케이스를 분리하여 안쪽 상태를 보여줌.",
+      "is_key": true,
+      "change": "겉 케이스에서 내부 케이스가 분리됨",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-23"
+   },
+   {
+    "beat_idx": 7,
+    "role": "cta",
+    "narration": "이 다이소 꿀템 정보 필요하신 분 댓글 달아주시면 바로 품번 보내드릴게요.",
+    "target_seconds": 7.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-22",
+     "start": 29.467,
+     "end": 31.6,
+     "scene_desc": "용기 안에 휴지를 넣은 상태로 뚜껑을 다시 닫아 마무리하는 모습.",
+     "is_key": true,
+     "change": "용기가 닫히며 깔끔한 상태로 보관된다.",
+     "shot_role": "after"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-24",
+      "start": 33.033,
+      "end": 34.1,
+      "scene_desc": "다이소 매장 외부 간판이 보임.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-12",
+      "start": 17.633,
+      "end": 18.833,
+      "scene_desc": "손이 닫혀있는 회색 용기의 뚜껑을 눌러 원터치로 뚜껑을 여는 모습.",
+      "is_key": true,
+      "change": "용기의 뚜껑이 열려 내부가 드러난다.",
+      "shot_role": "조작"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-13",
+      "start": 18.833,
+      "end": 19.667,
+      "scene_desc": "열린 용기의 내부가 비어있는 상태에서 손가락으로 입구 가장자리를 가리킴.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-15",
+      "start": 22.5,
+      "end": 23.533,
+      "scene_desc": "빈 용기에 붉은색 캡슐 커피 하나를 넣는 장면.",
+      "is_key": true,
+      "change": "용기 내부에 캡슐 커피가 담긴다.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-16",
+      "start": 23.533,
+      "end": 24.233,
+      "scene_desc": "용기 안에 캡슐 커피가 들어있는 모습을 위에서 아래로 내려다보는 클로즈업.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-17",
+      "start": 24.233,
+      "end": 25.333,
+      "scene_desc": "손이 캡슐 커피 여러 개를 용기 안에 더 추가하여 채워 넣는 장면.",
+      "is_key": true,
+      "change": "용기 안이 여러 개의 캡슐 커피로 채워진다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   }
+  ],
+  "plagiarism_flags": [],
+  "detected_type": "generic",
+  "affiliate_target": "",
+  "generator": "inherit"
+ },
+ "beat_sources": [
+  {
+   "role": "hook",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "problem",
+   "seg": "s0-32",
+   "segs": [
+    "s0-32",
+    "s0-33"
+   ]
+  },
+  {
+   "role": "reveal",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "proof",
+   "seg": "s0-25",
+   "segs": [
+    "s0-25",
+    "s0-26"
+   ]
+  },
+  {
+   "role": "demo",
+   "seg": "s0-34",
+   "segs": [
+    "s0-34",
+    "s0-35"
+   ]
+  },
+  {
+   "role": "result",
+   "seg": "s0-31",
+   "segs": [
+    "s0-31",
+    "s0-35"
+   ]
+  },
+  {
+   "role": "price",
+   "seg": "s0-23",
+   "segs": [
+    "s0-23"
+   ]
+  },
+  {
+   "role": "cta",
+   "seg": "",
+   "segs": []
+  }
+ ]
+}

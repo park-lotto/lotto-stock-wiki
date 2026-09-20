@@ -77,3 +77,60 @@ class Test명단이_썩지_않게:
         assert not missing, (
             "이 모듈들이 SHORTS_GEMINI_KEYS를 값으로 복사해 가는데 _POOL_IMPORTERS에 "
             f"없다 — 회원 키가 안 닿는다: {missing}")
+
+
+# ── 2026-08-31 실사고: 웹은 합류하는데 워커는 한 번도 안 했다 ────────────────
+
+def test_워커_작업경로가_합류를_부른다():
+    """★합류가 app.py의 startup 이벤트에만 걸려 있었다. 그런데 영상 제작 job은
+    worker.py(별도 프로세스)에서 돈다 — FastAPI를 안 띄우니 startup이 없다.
+    실측: 웹 유닛엔 [keypool] 로그가 찍히는데 **워커 유닛 12개엔 24시간 0건**.
+    회원 키 49개가 등록만 된 채 놀았고, 고객 5명이 제작을 못 했다.
+
+    기동 시 1회가 아니라 **작업마다** 불러야 한다 — 워커는 별도 프로세스라
+    웹에서 키를 등록해도 신호가 안 온다."""
+    import inspect
+
+    from shopping_shorts import worker
+    assert "resync_pools" in inspect.getsource(worker.run_one), (
+        "워커가 회원 키를 합류시키지 않는다 — 제작 job이 사장님 키만 쓰게 된다")
+
+
+def test_합류규칙은_keypool_한곳이다():
+    """app이 _POOL_REFRESHERS 사본을 다시 가지면 두 벌이 돼 어긋난다(0순위-B)."""
+    import inspect
+
+    from shopping_shorts import app, keypool, keyroute
+    assert not hasattr(app, "_POOL_REFRESHERS"), (
+        "app에 합류 규칙 사본이 되살아났다 — keypool 한 곳이어야 한다")
+    assert "keypool" in inspect.getsource(app._resync_pools)
+    assert set(keypool._POOL_REFRESHERS) == set(keyroute.POOLED), (
+        "대상 서비스를 손으로 또 적으면 keyroute와 어긋난다")
+
+
+def test_합류가_회원키를_그대로_넘긴다(monkeypatch):
+    """전역을 실제로 바꾸지 않는다 — 뒤에 도는 테스트가 밟는다(단독 통과 = 오염)."""
+    from shopping_shorts import config, keypool, keyroute
+
+    seen = {}
+    monkeypatch.setattr(config, "refresh_member_gemini_keys",
+                        lambda p: (seen.__setitem__("gemini", list(p)), (0, len(p)))[1])
+    monkeypatch.setattr(config, "refresh_member_youtube_keys", lambda p: (0, len(p)))
+
+    class _Store:
+        def get_pooled_keys(self, svc):
+            return ["ZZ_MEMBER_1"] if svc == keyroute.SVC_GEMINI else []
+
+    keypool.resync_pools(_Store())
+    assert seen.get("gemini") == ["ZZ_MEMBER_1"], "회원 키가 합류 함수에 안 넘어갔다"
+
+
+def test_합류함수가_두_풀을_모두_채운다():
+    """제미니 풀은 두 벌이다 — SHORTS(태깅·댓글)와 key_vault(제작소 대본).
+    한쪽만 채우면 회원 키가 절반의 경로에서만 쓰인다."""
+    import inspect
+
+    from shopping_shorts import config
+    src = inspect.getsource(config.refresh_member_gemini_keys)
+    assert "SHORTS_GEMINI_KEYS" in src
+    assert "set_member_keys" in src, "제작소가 쓰는 key_vault 풀에 안 밀어 넣는다"
