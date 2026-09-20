@@ -564,7 +564,12 @@ function togglePhraseSync(i, on){
 function planClips(segIds, ttsDur, spread, beatIdx){
   // 서버 plan_beat_clips_for와 같은 규칙: 기존 편성의 출력 길이·구절 경계는 건드리지
   // 않고, 각 컷이 읽는 원본 길이(src_dur)에만 통합 속도를 적용한다.
-  const syncSpeed = beatSyncSpeed(beatIdx);
+  // 이 함수는 회귀 테스트와 진단 도구가 단독으로 떼어 실행하기도 한다. 외부 helper에
+  // 기대면 실제 브라우저에서는 되는데 배포 검사만 ReferenceError로 죽으므로 같은 저장값을
+  // 여기서 직접 읽는다(속도 판단식은 beatSyncSpeed와 동일).
+  const syncBeat = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[beatIdx] || {};
+  const syncRaw = Number(syncBeat.sync_speed || 1);
+  const syncSpeed = isFinite(syncRaw) && syncRaw >= 0.5 && syncRaw <= 2 ? syncRaw : 1;
   const finish = base => {
     if (!base.length) return base;
     base.forEach(c => {

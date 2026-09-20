@@ -453,6 +453,10 @@ def voice_for_beat(base_voice, beat):
     voice_override를 다시 곱하면 재생성할 때마다 빨라지므로 기본 voice에서만 계산한다.
     """
     out = dict(base_voice or {})
+    # 아무 속도도 지정하지 않은 기존 잡에는 speed 키를 새로 만들지 않는다. TTS 공급자의
+    # 기본 속도를 명시적 1.0으로 덮는 것도 설정 변화이고, 기존 비트 재생성 결과가 달라질 수 있다.
+    if out.get("speed") is None and (beat or {}).get("sync_speed") is None:
+        return out
     try:
         rel = float((beat or {}).get("sync_speed") or 1.0)
     except (TypeError, ValueError):

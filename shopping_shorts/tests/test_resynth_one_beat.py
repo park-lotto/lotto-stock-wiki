@@ -55,12 +55,18 @@ def test_api_mix_tts_regen_merges_override_onto_job_voice_snapshot(monkeypatch):
         "voice_id": "JOB_V", "model_id": "eleven_multilingual_v2",
         "silence_trim": "strong", "settings": {"stability": 0.5},
     }
-    job = {"edit_plan": {"beats": []}, "status": "ready_for_review", "voice": job_voice}
+    # 실제 API 계약처럼 요청 대상 비트가 존재하는 잡을 쓴다. 통합 속도는 비트 단위라
+    # 없는 번호는 404가 정상이며, 빈 beats로는 설정 병합 경로까지 도달하지 않는다.
+    job = {"edit_plan": {"beats": [{"beat_idx": 0}]},
+           "status": "ready_for_review", "voice": job_voice}
 
     class FakeStore:
         def __init__(self, *a, **k): pass
         def get_mix_job(self, j): return job
     monkeypatch.setattr(appmod, "Store", FakeStore)
+    # 이 테스트는 음성 설정 병합만 검증한다. 실제 키 유무는 전용
+    # test_require_own_key.py에서 검증하므로 로컬 설정값에 따라 선행 402가 나지 않게 격리한다.
+    monkeypatch.setattr(appmod, "_need_own_key_or_402", lambda *a, **k: None)
 
     body = {"voice_id": "TONE_V", "settings": {"stability": 0.2}}  # speed 미포함
     bg = BackgroundTasks()
