@@ -90,7 +90,7 @@
     const fontPane=document.createElement('div');fontPane.className='font-template-pane';fontPane.hidden=true;
     const drawFontSets=()=>{fontPane.innerHTML='<div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
     window.addEventListener('scene-style-fontset',()=>{if(!fontPane.hidden)drawFontSets();});   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
-    fontPane.addEventListener('click',event=>{const c=event.target.closest('[data-font-set]');if(!c)return;fontSet=c.dataset.fontSet;fittedText.clear();drawFontSets();renderEdit();});
+    fontPane.addEventListener('click',event=>{const c=event.target.closest('[data-font-set]');if(!c)return;fontSet=c.dataset.fontSet;fittedText.clear();drawFontSets();renderEdit();rememberLocal({fontSet});});   /* 저장 버튼을 안 눌러도 기억 — 새로고침하면 풀리던 문제 */
     head.hidden=true;head.before(leftTabs);grid.after(fontPane);
     const sceneParts=[modeBar,grid];
     leftTabs.addEventListener('click',event=>{
@@ -263,13 +263,15 @@
     fade:{label:'서서히 나타나기',ms:700,easing:'ease-out',frames:[{opacity:0,filter:'blur(10px)'},{opacity:1,filter:'blur(0)'}]},
     wide:{label:'옆으로 펼치기',origin:true,ms:420,easing:'cubic-bezier(.2,.9,.3,1)',frames:[{opacity:0,transform:'scaleX(0)'},{opacity:1,transform:'scaleX(1.12)',offset:.7},{transform:'scaleX(1)'}]},
   };
+  // 브라우저에 바로 기억시키기: '현재 설정 저장'을 누르지 않아도 고른 값이 새로고침 뒤에 남는다.
+  const rememberLocal=patch=>{if(qaMode||labMode)return;try{const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null')||{};localStorage.setItem('scene_style_preset',JSON.stringify({...saved,...patch}))}catch{}};
   const bodyMotionPanel=document.createElement('section');
   bodyMotionPanel.className='hook-motion body-motion';
   bodyMotionPanel.innerHTML='<div class="hook-motion-head"><b>본문 자막 등장</b><small>본문 모든 장면에 적용</small></div><div class="hook-motion-grid"><button type="button" data-body-caption-motion="">없음</button>'+Object.entries(BODY_CAPTION_MOTIONS).map(([k,v])=>`<button type="button" data-body-caption-motion="${k}">${v.label}</button>`).join('')+'</div>';
   motionPanel.after(bodyMotionPanel);
   bodyMotionPanel.addEventListener('click',event=>{
     const b=event.target.closest('[data-body-caption-motion]');if(!b)return;
-    bodyCaptionMotion=b.dataset.bodyCaptionMotion;syncHookMotionUI();if(sceneIndex===0)showScene(1);else runCaptionEnter();
+    bodyCaptionMotion=b.dataset.bodyCaptionMotion;syncHookMotionUI();rememberLocal({bodyCaptionMotion});if(sceneIndex===0)showScene(1);else runCaptionEnter();
   });
   const fixedPanel=document.createElement('section');
   fixedPanel.className='fixed-quick-panel';
@@ -1061,7 +1063,7 @@
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;renderEdit();syncHookMotionUI();
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
       }
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
