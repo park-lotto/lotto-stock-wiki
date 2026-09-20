@@ -13433,6 +13433,49 @@ function cleanGo(si,pos,ci){
   CLEAN_VIEW={si:si, pos:pos, job:CLEAN_VIEW.job};
   renderCleanReady(CLEAN_VIEW.job||MIX_JOB);
 }
+// ★지운 결과를 쓸지 말지 — 마음에 안 들면 원본으로 되돌리는 취소 버튼(2026-09-20 이윤정 고객 요청).
+//   결과 자체는 서버에 남겨둔 채 **쓸지 말지만** 뒤집는다. 그래서 되돌려도, 다시 켜도 0원이다.
+//   (돈이 나가는 것은 '↻ 다시 미리보기'뿐 — 그래서 버튼 생김새를 일부러 다르게 둔다)
+var CLEAN_IN_USE = true;          // 서버 상태(clean_in_use)로 매번 덮어쓴다
+
+function cleanUseHtml(){
+  if(CLEAN_IN_USE){
+    return '<div class="hint" style="text-align:center;margin-top:12px">'
+      + '지운 결과가 마음에 안 드시면 원본 영상으로 되돌릴 수 있어요. <b>비용은 들지 않습니다.</b>'
+      + '</div>'
+      + '<button class="cp-redo" onclick="setCleanUse(false,this)" '
+      + 'style="background:#2a2f38;border-color:#7d8794">↩ 원본 영상으로 되돌리기</button>';
+  }
+  // 되돌린 상태 — 지금 무엇이 쓰이는지 분명히 말하고, 되살리는 길을 같이 준다.
+  return '<div class="hint" style="text-align:center;margin-top:12px;'
+    + 'background:var(--ok-soft,#123);border-radius:12px;padding:12px">'
+    + '↩ <b>원본 영상을 쓰고 있습니다</b> — 자막이 그대로 나갑니다.'
+    + '<br><span style="opacity:.85">지운 결과는 지워지지 않고 남아 있어요.</span>'
+    + '</div>'
+    + '<button class="cp-redo" onclick="setCleanUse(true,this)">✓ 자막 지운 영상으로 다시 쓰기</button>';
+}
+
+async function setCleanUse(use, btn){
+  if(!MIX_JOB) return;
+  if(btn){ btn.disabled=true; btn.textContent = use ? '되살리는 중…' : '되돌리는 중…'; }
+  try{
+    const r = await fetch('/api/produce/mix/clean_use', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({job_id: MIX_JOB, use: !!use})
+    });
+    const d = await r.json();
+    if(!d.ok){ alert(d.error || '바꾸지 못했습니다.'); if(btn) btn.disabled=false; return; }
+    CLEAN_IN_USE = !!d.use;
+    // ★꾸미기(5단계) 배경도 같이 갈아준다 — 안 하면 되돌렸는데 화면엔 지운 그림이
+    //   남아 "적용이 안 됐다"로 읽힌다(자막제거 쪽에서 이미 한 번 겪은 함정).
+    try{ if(typeof toggleSceneBg==='function') toggleSceneBg(true); }catch(e){}
+    renderCleanReady(MIX_JOB);
+  }catch(e){
+    alert('바꾸지 못했습니다 — 잠시 후 다시 눌러 주세요.');
+    if(btn) btn.disabled=false;
+  }
+}
+
 function renderCleanReady(job){
   const box=document.getElementById('cleanPreview'); if(!box) return;
   CLEAN_VIEW.job=job;
@@ -13485,6 +13528,7 @@ function renderCleanReady(job){
     +'<div class="cp-pgbar">'+posBtns+srcNav+'</div>'
     +staleNote
     +'<div class="hint" style="text-align:center">다른 장면도 넘겨서 확인해 보세요 — 추가 비용은 없어요.</div>'
+    +cleanUseHtml()
     +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 미리보기</button>';
   const sc=document.getElementById('cleanShowcase'); if(sc) sc.style.display='none';
 }
@@ -13615,6 +13659,8 @@ async function pollClean(gen,job){
     }
     if(d.clean_status==='ready'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
+      // ★지운 결과를 지금 쓰고 있나 — 되돌리기 버튼이 현재 상태를 그대로 비추게 한다.
+      if(d.clean_in_use!==undefined) CLEAN_IN_USE=!!d.clean_in_use;
       if(d.clean_regions) CLEAN_REGIONS=d.clean_regions;   // 지워진 자막 자리(5단계 꾸미기가 씀)
       CLEAN_SRC_N = d.clean_source_count || 1;
       CLEAN_SRC_IDX = (d.clean_source_indices && d.clean_source_indices.length) ? d.clean_source_indices : null;

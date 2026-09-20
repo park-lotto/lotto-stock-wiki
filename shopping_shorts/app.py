@@ -5144,6 +5144,9 @@ def api_mix_status(job_id: str, request: Request):
             # ★실패 '종류'를 함께 준다(2026-08-25). 프론트가 원문을 문자열 검사하면
             #   같은 판단이 두 곳에 흩어진다(0순위-B) — 분류는 서버 한 곳에서만.
             "clean_error_kind": clean_failure_kind(clean_error) if clean_status == "failed" else None,
+            # ★지운 결과를 지금 쓰고 있나(2026-09-20) — '원본으로 되돌리기' 버튼의 현재 상태.
+            #   clean_status가 ready여도 이게 꺼져 있으면 렌더·캡컷은 **원본**을 쓴다.
+            "clean_in_use": bool(job.get("subtitle_removal")),
             # 자막제거 확인용 소스 개수(2026-08-18) — 3단계가 "소스 1/N"으로 넘겨보는 데만 쓴다.
             # 경로는 안 내보내고 개수만. 청소본이 있으면 그 개수, 없으면 담은 URL 개수.
             "clean_source_count": len(job.get("clean_sources") or {}) or len(job.get("urls") or []),
@@ -6888,6 +6891,41 @@ def api_produce_mix_preview_file(job_id: str, request: Request):
             logging.getLogger("preview").warning(
                 "faststart 보장 실패 job=%s: %s", job_id, type(e).__name__)
     return _range_mp4_response(path, request)
+
+
+@app.post("/api/produce/mix/clean_use")
+def api_produce_mix_clean_use(request: Request, body: dict):
+    """지운 결과를 **쓸지 말지**만 바꾼다 — 마음에 안 들면 원본으로 되돌리는 취소 버튼.
+
+    ★요청(2026-09-20 이윤정 고객): "고급으로 지웠는데 마음에 안 들면 원본으로 돌리고 싶다."
+
+    켜고 끄는 것은 `subtitle_removal` **하나뿐**이다. 렌더(mix_pipeline.run_render)와
+    캡컷 내보내기(api_mix_capcut)가 둘 다 이 값만 보고 청소본이냐 원본이냐를 정하므로,
+    여기만 뒤집으면 뒤쪽이 전부 따라온다(0순위-B: 같은 판단을 두 번 적지 않는다).
+
+    ★청소 결과(clean_video_path·clean_status·clean_regions)는 **지우지 않는다.**
+      지우면 되살릴 때 VMake를 다시 불러 **돈이 또 나간다.** 꺼두기만 하면 다시 켤 때
+      이미 있는 결과를 그대로 쓴다 — 취소도 복구도 0원이다.
+
+    body: {job_id, use: true/false}   use=false면 원본으로 되돌린다.
+    """
+    job_id = (body or {}).get("job_id")
+    use = bool((body or {}).get("use"))
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id) if job_id else None
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없습니다."})
+    # 내 작업인지 확인 — 남의 job_id로 남의 설정을 바꿀 수 있으면 안 된다.
+    if int(job.get("customer_id") or 0) != _cid(request):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
+    # ★다시 켜려는데 지운 결과가 없으면 거절한다. 켜두면 렌더가 그때 VMake를 불러
+    #   **말없이 과금**된다 — 되살리기 버튼이 결제 버튼이 되면 안 된다.
+    if use and not (job.get("clean_video_path") or job.get("clean_status") == "ready"):
+        return JSONResponse(status_code=400, content={
+            "ok": False, "error": "지운 결과가 없습니다 — 먼저 자막 지우기를 해주세요."})
+    store.update_mix_job(job_id, subtitle_removal=1 if use else 0)
+    return {"ok": True, "use": use,
+            "msg": ("자막 지운 영상을 씁니다." if use else "원본으로 되돌렸습니다. 지운 결과는 남아 있어 언제든 다시 쓸 수 있어요.")}
 
 
 @app.post("/api/produce/mix/clean")
