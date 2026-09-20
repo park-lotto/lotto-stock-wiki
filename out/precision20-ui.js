@@ -139,7 +139,8 @@
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
   const frameKind=()=>mode==='continuous'?'frame':kind;
   const scaleKey=bind=>`${rows[current].id}:${frameKind()}:${bind}${bind==='caption'?':'+sceneIndex:''}`;
-  const textScale=bind=>fontScales.get(scaleKey(bind))||1;
+  const BODY_CAPTION_SCALE=1.3;   // 09-19 사장님: 본문 자막 기본 130%(자막 칸 위치·높이는 그대로)
+  const textScale=bind=>fontScales.get(scaleKey(bind))||(bind==='caption'&&mode==='story'&&sceneIndex>0?BODY_CAPTION_SCALE:1);
   const textOffset=bind=>textOffsets.get(scaleKey(bind))||0;
   const colorKey=role=>`${rows[current].id}:${frameKind()}:${role}`;
   const colorFor=(role,fallback)=>colorOverrides.get(colorKey(role))||fallback;
@@ -809,7 +810,7 @@
         const base=Math.max(STORY_BODY.cut*STORY_BODY.titleTop,chBottom+1.2);
         const top=Math.max(0,Math.min(95,base+drag.y));el.style.top=top+'%';   // 끌어 옮긴 만큼 반영(화면 안에서만)
         // 자막 칸을 덮지 않는 선까지만 칸을 키운다(3줄 허용). 글자를 손으로 키웠어도 칸을 넘으면 줄인다 — 넘치면 자막·영상을 가린다.
-        el.style.height=Math.max(STORY_BODY.cut*STORY_BODY.titleH,Math.min(STORY_BODY.cut-top-1,STORY_BODY.cut*STORY_BODY.titleH*3))+'%';
+        el.style.height=Math.max(STORY_BODY.cut*STORY_BODY.titleH,STORY_BODY.cut-top-0.8)+'%';   // 09-19: 자막 칸 직전까지 제목 칸으로 쓴다(키운 글자가 도로 줄던 문제)
         let size=parseFloat(el.style.fontSize)||0;
         for(let guard=0;guard<80&&size>9&&el.scrollHeight>el.clientHeight+1;guard++){size-=.5;el.style.fontSize=size+'px';}
       }
