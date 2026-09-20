@@ -1,34 +1,48 @@
 {
- "brief": "캔바 이미지를 틀로 그대로 얹고 글자만 위에 올린다(코드 재현 금지 - 질감이 죽는다)",
- "created": "2026-08-31T01:16:51.767403+00:00",
+ "brief": "대본 경로 정리: 5겹 장치, 경로 3+3개를 사장님 흐름(씨앗>장면>대본) 하나로",
+ "created": "2026-09-16T04:51:14.805375+00:00",
  "goals": [
   {
    "id": "G001",
-   "title": "배경레이어",
-   "objective": "deco_frame에 bg_image 레이어 추가. 경로탈출 차단, 캐시키에 반영",
+   "title": "지도",
+   "objective": "0단계 지도 작성, docs/superpowers/specs/2026-09-16-대본경로-지도.md (완료)",
    "status": "complete",
-   "evidence": "pytest test_deco_bg_image.py 5 passed - 경로탈출 6종 차단, 투명유지, 캐시키 갈림, 깨진파일 fail-open, cover채움"
+   "evidence": "main fec06c8aa; 게이트 423 passed; 라이브 실측 팬케이크 19.3s 2/2, 볼펜 24.3s"
   },
   {
    "id": "G002",
-   "title": "업로드API",
-   "objective": "이미지 업로드/목록/삭제 엔드포인트, 고객별 저장소",
+   "title": "경로하나",
+   "objective": "제작소 2단계를 A2 grounded 경로 하나로, 조립/픽업은 제작소 버튼에서 분리",
    "status": "complete",
-   "evidence": "pytest test_frame_image_api.py 5 passed - 투명유지·1080x1920 정규화·중복1건·삭제는 목록만·깨진파일 422·id위조 404"
+   "evidence": "main fec06c8aa; 게이트 423 passed; 라이브 실측 팬케이크 19.3s 2/2, 볼펜 24.3s"
   },
   {
    "id": "G003",
-   "title": "글자세로위치",
-   "objective": "ch_y·title_y 추가, 0=안 정했음 규약 유지",
+   "title": "검사단일",
+   "objective": "치명=소재일치만, 재작성1회, 0안 없음, 이 경로의 스위치 제거",
    "status": "complete",
-   "evidence": "pytest 9 passed - 기본값이면 옛 그림과 픽셀동일(tobytes 일치), title_y 이동, head_block 끄면 덮인폭 감소, 띠없이 채널명 그려짐"
+   "evidence": "main fec06c8aa; 게이트 423 passed; 라이브 실측 팬케이크 19.3s 2/2, 볼펜 24.3s"
   },
   {
    "id": "G004",
-   "title": "제작소UI",
-   "objective": "이미지 틀 업로드·선택 카드 + 글자 위치 조절",
+   "title": "장면먼저",
+   "objective": "장면을 먼저 고르고 그 장면에 대해 쓰게, 의미 어긋남을 구조로 차단",
    "status": "complete",
-   "evidence": "실브라우저 검증: 업로드 200, 카드 33개(안씀/+내그림/내틀2/프리셋20), 미리보기에 캔바 그림 그대로, frameUrl이 bg_image 16자+head_block=0 전송. head_block 문자열 0 버그 발견·수정(DEFAULTS 타입에서 뽑도록)"
+   "evidence": "main fec06c8aa; 게이트 423 passed; 라이브 실측 팬케이크 19.3s 2/2, 볼펜 24.3s"
+  },
+  {
+   "id": "G005",
+   "title": "회귀세트",
+   "objective": "볼펜(fb4d991d14e8), 팬케이크(c393b1c7c2f9), 새송이 3건 고정 시험",
+   "status": "complete",
+   "evidence": "main fec06c8aa; 게이트 423 passed; 라이브 실측 팬케이크 19.3s 2/2, 볼펜 24.3s"
+  },
+  {
+   "id": "G006",
+   "title": "실측삭제",
+   "objective": "라이브 실제 job 실측 후 옛 경로 코드 삭제",
+   "status": "in_progress",
+   "evidence": null
   }
  ]
 }

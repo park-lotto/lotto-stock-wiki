@@ -36,3 +36,16 @@
 {"ts": "2026-08-31T01:22:19.000625+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "pytest 9 passed - 기본값이면 옛 그림과 픽셀동일(tobytes 일치), title_y 이동, head_block 끄면 덮인폭 감소, 띠없이 채널명 그려짐", "verify_cmd": "", "verify_evidence": ""}
 {"ts": "2026-08-31T01:31:19.968159+00:00", "event": "story_started", "id": "G004", "title": "제작소UI"}
 {"ts": "2026-08-31T01:31:37.743851+00:00", "event": "checkpoint", "id": "G004", "status": "complete", "evidence": "실브라우저 검증: 업로드 200, 카드 33개(안씀/+내그림/내틀2/프리셋20), 미리보기에 캔바 그림 그대로, frameUrl이 bg_image 16자+head_block=0 전송. head_block 문자열 0 버그 발견·수정(DEFAULTS 타입에서 뽑도록)", "verify_cmd": "pytest shopping_shorts/tests/test_frame_image_api.py test_deco_bg_image.py", "verify_evidence": "16 passed"}
+{"ts": "2026-09-16T04:50:57.409615+00:00", "event": "plan_created", "brief": "대본 경로 정리: 5겹 장치·경로 3+3개를 사장님 흐름(씨앗→장면→대본) 하나로", "count": 6}
+{"ts": "2026-09-16T04:51:14.807108+00:00", "event": "plan_created", "brief": "대본 경로 정리: 5겹 장치, 경로 3+3개를 사장님 흐름(씨앗>장면>대본) 하나로", "count": 6}
+{"ts": "2026-09-16T05:35:09.439066+00:00", "event": "story_started", "id": "G001", "title": "지도"}
+{"ts": "2026-09-16T05:35:36.966710+00:00", "event": "checkpoint", "id": "G001", "status": "complete", "evidence": "main fec06c8aa; 게이트 423 passed; 라이브 실측 팬케이크 19.3s 2/2, 볼펜 24.3s", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-09-16T05:35:37.062087+00:00", "event": "story_started", "id": "G002", "title": "경로하나"}
+{"ts": "2026-09-16T05:35:37.153722+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "main fec06c8aa; 게이트 423 passed; 라이브 실측 팬케이크 19.3s 2/2, 볼펜 24.3s", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-09-16T05:35:37.247528+00:00", "event": "story_started", "id": "G003", "title": "검사단일"}
+{"ts": "2026-09-16T05:35:37.342365+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "main fec06c8aa; 게이트 423 passed; 라이브 실측 팬케이크 19.3s 2/2, 볼펜 24.3s", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-09-16T05:35:37.437448+00:00", "event": "story_started", "id": "G004", "title": "장면먼저"}
+{"ts": "2026-09-16T05:35:37.539030+00:00", "event": "checkpoint", "id": "G004", "status": "complete", "evidence": "main fec06c8aa; 게이트 423 passed; 라이브 실측 팬케이크 19.3s 2/2, 볼펜 24.3s", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-09-16T05:35:37.641398+00:00", "event": "story_started", "id": "G005", "title": "회귀세트"}
+{"ts": "2026-09-16T05:35:37.740319+00:00", "event": "checkpoint", "id": "G005", "status": "complete", "evidence": "main fec06c8aa; 게이트 423 passed; 라이브 실측 팬케이크 19.3s 2/2, 볼펜 24.3s", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-09-16T05:35:37.837288+00:00", "event": "story_started", "id": "G006", "title": "실측삭제"}
