@@ -17,7 +17,9 @@
   const fixedLayouts=new Map(),fixedColors=new Map(),captionLayouts=new Map();
   const fixedBaseLayout=frame=>{
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
-    return {top:Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100),bottom:0};
+    // 09-19 사장님: 고정형은 제목칸 높이도 20종을 하나로(원본은 25~33%로 제각각이라 영상 시작 줄이 안 맞았다)
+    const original=Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100);
+    return {top:mode==='continuous'?FIXED_TITLE.band:original,bottom:0};
   };
   const layoutKey=(presetId,frame)=>presetId.startsWith('fixed_')?presetId:`${presetId}:${frame===storyRows.find(p=>p.id===presetId)?.hook?'hook':'body'}`;
   // 하단 칸(2026-09-18 사장님 "빠른조절에 하단 칸도 만들어서 올리고 내릴수있게") — 저장한 값만 쓰고 기본은 0.
@@ -153,11 +155,23 @@
     const layout=fixedLayoutFor(rows[current].id,frame);
     return 100-layout.bottom/2-originalCenter;
   };
+  // 고정형 20종 제목 배치 표준(2026-09-19 사장님): 원본마다 채널명과 제목 사이 빈칸이 5~12%씩 제각각이었다.
+  //   이제 제목칸 높이(T)에 대한 같은 비율로 다시 놓는다 — 채널명 아래 곧바로 제목, 줄 간격·글자 크기도 T 비례.
+  //   한 곳에서만 정한다(미리보기·최종 렌더 모두 이 함수를 거친다). 사용자가 −/＋로 키운 값은 그 뒤에 곱해진다.
+  const FIXED_TITLE={band:26,first:.33,pad:.06,line:.25,gap:.045,fontOfLine:.82};   // band=제목칸 높이(%), pad=자막 칸 앞 여백
   const fixedDrawLine=(line,frame)=>{
     if(mode!=='continuous'||line.bind==='caption')return line;
-    const baseTop=(frame.video_from?.y||frame.height*.25),nextTop=fixedLayoutFor(rows[current].id,frame).top/100*frame.height;
-    const ratio=nextTop/baseTop;
-    return {...line,y0:line.y0*ratio,y1:line.y1*ratio,h:line.h*ratio,font_size:(line.font_size||line.h)*Math.min(1.18,Math.max(.82,ratio))};
+    const T=fixedLayoutFor(rows[current].id,frame).top/100*frame.height;
+    const order=['hook1','hook2','bodyTitle'].indexOf(line.bind);
+    if(order<0||!T){   // 채널명 등 제목이 아닌 줄은 예전처럼 칸 높이에 맞춰 비례 이동
+      const baseTop=(frame.video_from?.y||frame.height*.25),ratio=T/baseTop;
+      return {...line,y0:line.y0*ratio,y1:line.y1*ratio,h:line.h*ratio,font_size:(line.font_size||line.h)*Math.min(1.18,Math.max(.82,ratio))};
+    }
+    // 제목 줄 수에 맞춰 칸 안에 들어가게 계산한다(3줄짜리가 자막 칸을 덮던 것)
+    const count=Math.max(1,(frame.lines||[]).filter(l=>['hook1','hook2','bodyTitle'].includes(l.bind)).length);
+    const room=1-FIXED_TITLE.first-FIXED_TITLE.pad,lineH=Math.min(FIXED_TITLE.line,(room-FIXED_TITLE.gap*(count-1))/count);
+    const y0=T*(FIXED_TITLE.first+order*(lineH+FIXED_TITLE.gap)),h=T*lineH;
+    return {...line,y0,y1:y0+h,h,font_size:T*lineH*FIXED_TITLE.fontOfLine};
   };
   const currentDirty=()=>dirtyFields.get(dirtyKey())||new Set();
   const markDirty=bind=>{
