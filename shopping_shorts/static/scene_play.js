@@ -1224,6 +1224,24 @@ const vid = () => curVid || document.getElementById('vid');
 function warmVideos(){
   const ids = new Set(Object.values(DATA.segments).map(s => s.video_id));
   ids.forEach(id => { vidFor(id, 0); vidFor(id, 1); vidFor(id, 2); vidFor(id, 3); });
+  // ★같은 소스가 한 칸에서 여러 번 쓰이면 startSeq가 슬롯 11,12,…를 준다(겹침을 없애려고).
+  //   그 재생기를 여기서 미리 만들어 두지 않으면 **그 컷에 가서야 처음 만들어져** 정지
+  //   그림이 된다 — 위 주석의 사고와 같은 모양이다. 칸마다 세어 필요한 만큼만 데운다.
+  try{
+    const need = {};
+    (DATA.beats || []).forEach(b => {
+      const cnt = {};
+      ((b.cuts || b.manual_cuts || b.scene_override || [])).forEach(c => {
+        const v = c && (c.video_id || (DATA.segments[c.seg_id] || {}).video_id);
+        if (!v) return;
+        cnt[v] = (cnt[v] || 0) + 1;
+        if (cnt[v] > (need[v] || 0)) need[v] = cnt[v];
+      });
+    });
+    Object.keys(need).forEach(id => {
+      for (let n = 1; n < need[id]; n++) vidFor(id, 10 + n);   // 두 번째 등장부터
+    });
+  }catch(e){ /* 모양이 다르면 종전대로 — 그때는 seat()가 만든다 */ }
 }
 
 function stopPlay(){
@@ -1401,9 +1419,24 @@ function startSeq(clips, slot0){
   // 컷 경계 누적(자막을 컷 단위로 끊어 보여주려면 각 컷의 [시작,끝) 초가 필요하다)
   let off = 0;
   seqBounds = clips.map(c => { const a = off; off += c.dur; return [a, off]; });
-  // 이웃한 컷은 다른 재생기 → 미리 앉히기 가능. 첫 컷만 slot0이 주어지면 그것을 쓴다
-  // (2·3은 0·1과 다른 값이라 이웃 구분은 그대로 유지된다).
-  clips.forEach((c, k) => { c._slot = (k === 0 && slot0 != null) ? slot0 : k % 2; });
+  // ★뿌리를 없앤다(2026-09-20 사장님 "두더지금지"): **한 재생기가 두 컷을 담당하지 않게** 한다.
+  //
+  //   종전은 `k % 2` 라 컷0과 컷2가 같은 슬롯이었다. 그 둘이 **같은 소스**면 vidFor가 같은
+  //   <video>를 돌려주어 재생기 하나가 두 컷을 맡는다. 그러면 컷1을 보는 동안 seat()가 그
+  //   재생기를 컷2로 보내 두고, 컷0으로 되감으면 컷2 프레임이 스친다 — 이윤정님 제보의 정체다.
+  //   지금껏 그 프레임을 **안 보이게 하는 방법만 네 번** 바꿨다(seeked 대기 → 안전핀 400 →
+  //   1500 → 상태 확인). 전부 증상 가리기였고, 겹침 자체는 그대로였다.
+  //
+  //   이제 **같은 소스가 한 칸에서 다시 나오면 다른 재생기**를 준다. 겹침이 없으면 미리
+  //   앉히기와 되감기가 부딪힐 일이 없다 — 가릴 것도 없어진다.
+  //   실측(최근 14일 7,730칸): 같은 소스 최대 10번 · 90%는 3번 이하 → 재생기가 크게 안 는다.
+  //   ⚠️번호는 10부터 — 0·1(종전 재생용)과 2·3(handoffSlot, 칸 넘김)을 피한다.
+  const _seen = {};
+  clips.forEach((c, k) => {
+    const n = _seen[c.video_id] || 0;
+    _seen[c.video_id] = n + 1;
+    c._slot = (k === 0 && slot0 != null) ? slot0 : (n === 0 ? (k % 2) : 10 + n);
+  });
   if (clips[0]) seat(clips[0]);
   if (clips[1]) seat(clips[1]);
   document.getElementById('player').classList.add('on');
