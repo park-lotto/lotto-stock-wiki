@@ -113,6 +113,35 @@ def _cookie_file_usable(path) -> bool:
     return True
 
 
+_IG_ALIVE_TTL = 600        # 10분. 세션 회수는 분 단위로 일어나지 않는다.
+_IG_ALIVE_CACHE = {}       # path -> (판정시각, 살아있나)
+_IG_ALIVE_LOCK = threading.Lock()
+
+
+def _ig_session_alive(path) -> bool:
+    """세션이 인스타에서 **아직 유효한가**(캐시 10분).
+
+    판정은 channel_archive.session_alive 한 곳에서만 한다(0순위-B) — 쿠키 존재로
+    판정하면 회수된 세션을 산 것으로 본다(그래서 2주간 몰랐던 전례가 있다).
+    담기 1건마다 인스타에 물으면 느리고 눈에 띄므로 경로별로 캐시한다.
+    판정 불가(네트워크 오류 등)는 True — 멀쩡한 계정을 우리 손으로 빼는 게 더 위험하다.
+    """
+    key = str(path)
+    now = time.time()
+    with _IG_ALIVE_LOCK:
+        hit = _IG_ALIVE_CACHE.get(key)
+        if hit and now - hit[0] < _IG_ALIVE_TTL:
+            return hit[1]
+    try:
+        from shopping_shorts.channel_archive import session_alive
+        ok = bool(session_alive(key))
+    except Exception:  # noqa: BLE001 — 판정 실패는 '살아있음'으로 본다
+        ok = True
+    with _IG_ALIVE_LOCK:
+        _IG_ALIVE_CACHE[key] = (now, ok)
+    return ok
+
+
 def _ig_cookies_file():
     """INSTAGRAM_SESSION_PATH(Playwright storage_state JSON) → yt-dlp용 Netscape cookies.txt.
 
@@ -123,14 +152,38 @@ def _ig_cookies_file():
     # 전부 원본 새탭으로 튄다(사장님 제보). 아카이브 크롤이 실제로 쓰는 로테이션
     # 세션(INSTAGRAM_SESSION_DIR)이 매일 갱신되는 살아있는 계정이므로, 메인 포함
     # 후보 중 **가장 최근 갱신된** 세션을 쿠키 소스로 쓴다.
-    import os as _os
-    _d = _os.getenv("INSTAGRAM_SESSION_DIR", "")
-    _cands = [src] if (src and Path(src).exists()) else []
-    if _d and Path(_d).is_dir():
-        _cands += [str(p) for p in Path(_d).glob("*.json")]
+    #
+    # ★후보 목록은 수집기와 **같은 함수**로 뽑는다(2026-09-21 실사고, 0순위-B).
+    #   종전엔 여기서 `Path(_d).glob("*.json")`을 따로 적었는데, 그 glob은 최상위만 본다.
+    #   그런데 살아있는 계정은 08-09 풀 분리로 `ig_sessions/reference/`(하위 폴더)에
+    #   있었고 최상위엔 8/9자 낡은 세션 하나만 남아 있었다 → "가장 최근"이 6주 묵은
+    #   죽은 계정으로 뽑혀 인스타가 로그인 페이지로 리다이렉트, 담기 메타 수집이
+    #   통째로 실패했다(실측: 최상위 → rate-limit / reference 풀 4개 → 4개 전부 성공).
+    #   증상은 "제작소 씨앗 카드 썸네일이 안 뜸"이었지만, 진짜는 **담길 때 빈 값 저장**.
+    #   수집(channel_archive)은 하위 폴더를 제대로 봐서 멀쩡했다 — 같은 판단을 두 군데
+    #   다르게 적은 것이 사고의 형태였으므로, 그 한 곳을 빌려 쓴다.
+    _cands = []
+    try:
+        from shopping_shorts.channel_archive import session_slots as _slots
+        _cands = [p for p in (_slots(pool="reference") or []) if p and Path(p).exists()]
+    except Exception:  # noqa: BLE001 — 수집기 의존이 쿠키를 막으면 안 된다
+        _cands = []
+    if not _cands:
+        # 폴백: 종전 방식(최상위 glob) — 수집기를 못 불러도 무쿠키로 떨어지지 않는다.
+        import os as _os
+        _d = _os.getenv("INSTAGRAM_SESSION_DIR", "")
+        if _d and Path(_d).is_dir():
+            _cands = [str(p) for p in Path(_d).glob("*.json")]
+    if src and Path(src).exists():
+        _cands.append(src)
     if not _cands:
         return ""
-    src = max(_cands, key=lambda p: Path(p).stat().st_mtime)
+    # ★살아있는 것 중에서 고른다. 파일이 새것이어도 인스타가 세션을 회수했으면
+    #   쿠키는 있는데 로그인 페이지로 튄다(channel_archive.session_alive 주석 참조) —
+    #   mtime만 보면 이번처럼 죽은 것을 계속 집는다. 판정이 전부 실패(네트워크 등)하면
+    #   후보 전체로 되돌려 **무쿠키로 떨어지지 않게** 한다.
+    _live = [p for p in _cands if _ig_session_alive(p)]
+    src = max(_live or _cands, key=lambda p: Path(p).stat().st_mtime)
     out = Path(src).with_suffix(".ytdlp-cookies.txt")
     try:
         # ★0바이트 캐시는 캐시가 아니다(2026-09-18 실측: 09-16 디스크 풀 때 비워진
