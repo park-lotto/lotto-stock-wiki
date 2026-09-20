@@ -25,9 +25,14 @@ def test_real_caption_gaps_and_hook_beat_are_preserved():
     timeline=[{"beat_idx":7,"t0":0,"dur":2,"narration":"첫 줄 다음 줄","caption_lines":["첫 줄","다음 줄"],"cap_durs":[.7,1.1],"cap_lead":.2},
               {"beat_idx":9,"t0":2,"dur":1,"narration":"본문","caption_lines":["본문"]}]
     context=context_for(timeline,{"text":"실제 제목\n둘째 제목"})
-    assert [s['caption'] for s in context['scenes']]==['','첫 줄','다음 줄','본문']
-    assert [s['kind'] for s in context['scenes']]==['hook','hook','hook','body']
-    assert context['scenes'][0]['end']==.2
+    # 2026-09-21 사장님 제보 "4번 장면 본문 첫인데 자막에 글자가 없고 5번부터 시작된다".
+    #   자막 리드(cap_lead)만큼의 자투리를 독립 장면으로 세우면 장면 번호가 밀려, 편집기에서
+    #   글자 없는 장면을 넘겨야 한다. 실측(최근 job 25개, 빈 자막 장면 70개): 최대 0.52초로
+    #   사실상 전부 자투리였다 → 이웃 구절이 삼킨다(scene_style._MIN_SILENT_SCENE).
+    #   ★이 테스트가 지키는 본질은 **시간축과 훅/본문 구분**이다 — 그건 그대로 검사한다.
+    assert [s['caption'] for s in context['scenes']]==['첫 줄','다음 줄','본문']
+    assert [s['kind'] for s in context['scenes']]==['hook','hook','body']
+    assert context['scenes'][0]['start']==0       # 리드가 앞 장면에 흡수돼 빈틈이 없다
     assert context['scenes'][-1]['end']==3
     assert context['text']['hook1']=='실제 제목'
     assert context['text']['hook2']=='둘째 제목'

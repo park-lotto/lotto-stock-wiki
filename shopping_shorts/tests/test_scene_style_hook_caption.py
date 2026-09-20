@@ -29,7 +29,9 @@ def test_context_hides_every_hook_caption_without_changing_text_or_time(monkeypa
 
     hook_scenes = [scene for scene in context["scenes"] if scene["kind"] == "hook"]
     body_scene = next(scene for scene in context["scenes"] if scene["kind"] == "body")
-    assert [scene["caption"] for scene in hook_scenes] == ["", "훅 첫줄", "훅 둘째줄"]
+    # 2026-09-21: 자막 리드 자투리는 이웃 구절이 삼킨다(빈 장면을 세우지 않는다).
+    #   이 테스트가 지키는 본질은 **훅 자막 숨김과 시간 보존**이고 그건 아래에서 그대로 검사한다.
+    assert [scene["caption"] for scene in hook_scenes] == ["훅 첫줄", "훅 둘째줄"]
     assert all(scene["caption_visible"] is False for scene in hook_scenes)
     assert body_scene["caption_visible"] is True
     assert (body_scene["start"], body_scene["end"]) == (1.8, 3.8)
