@@ -6150,8 +6150,14 @@ def api_mix_scene_lab_phash(job_id: str):
     return {"ok": True, "phash": _lab_phash_load(_MIX_WORK_DIR / job_id)}
 
 
-def _range_mp4_response(path, request):
-    """mp4를 Range(부분 요청)까지 지원해 내보낸다 — 브라우저가 구간 시크를 하려면 필수.
+def _range_media_response(path, request, media_type="video/mp4"):
+    """미디어를 Range(부분 요청)까지 지원해 내보낸다 — **재생용 파일은 전부 이 함수로**.
+
+    ★2026-09-20: 음성(TTS)이 이 길을 안 타고 FileResponse 로 나가고 있었다. 실측하니
+      Range 요청에 200 전체를 주어 **브라우저가 음성 시크를 못 했다**(어디로 보내도
+      0.42초에 멈춤, 9/9 컷). scene_play.js 는 음성이 목표에 못 가면 그 위치로 화면을
+      되돌리므로(1731줄), 컷을 골라도 화면이 안 바뀌고 되돌아가며 튀었다.
+      영상은 08-15에 고쳤는데 음성만 남아 있었다 — 그래서 **한 함수로 모은다**. — 브라우저가 구간 시크를 하려면 필수.
 
     ★2026-08-15 실사고: 예전엔 FileResponse만 돌려주고 주석에 "FileResponse가 Range를
       처리해 구간 시크가 된다"고 적어뒀는데 **사실이 아니었다**. 서버 starlette 0.36.3의
@@ -6165,9 +6171,9 @@ def _range_mp4_response(path, request):
     p = Path(path)
     size = p.stat().st_size
     raw = (request.headers.get("range") or "").strip() if request is not None else ""
-    base = {"accept-ranges": "bytes", "content-type": "video/mp4"}
+    base = {"accept-ranges": "bytes", "content-type": media_type}
     if not raw.startswith("bytes="):
-        return FileResponse(str(p), media_type="video/mp4", headers={"accept-ranges": "bytes"})
+        return FileResponse(str(p), media_type=media_type, headers={"accept-ranges": "bytes"})
     # "bytes=시작-끝" 한 구간만 다룬다(브라우저 영상 재생은 이 형태만 쓴다).
     try:
         s_txt, _, e_txt = raw[6:].split(",")[0].partition("-")
@@ -6178,7 +6184,7 @@ def _range_mp4_response(path, request):
             start = max(0, size - int(e_txt))
             end = size - 1
     except Exception:
-        return FileResponse(str(p), media_type="video/mp4", headers={"accept-ranges": "bytes"})
+        return FileResponse(str(p), media_type=media_type, headers={"accept-ranges": "bytes"})
     if start >= size:
         return Response(status_code=416, headers={"content-range": f"bytes */{size}"})
     end = min(end, size - 1)
@@ -6199,6 +6205,12 @@ def _range_mp4_response(path, request):
     headers["content-range"] = f"bytes {start}-{end}/{size}"
     headers["content-length"] = str(length)
     return StreamingResponse(_chunks(), status_code=206, headers=headers)
+
+
+
+def _range_mp4_response(path, request):
+    """옛 이름 — mp4 전용. 새 코드는 _range_media_response 를 쓴다."""
+    return _range_media_response(path, request, "video/mp4")
 
 
 @app.get("/api/mix/src/{job_id}/{video_id}")
@@ -7098,7 +7110,7 @@ def _find_beat(beats, beat_idx):
 
 
 @app.get("/api/mix/tts/{job_id}/{beat_idx}")
-def api_mix_tts(job_id: str, beat_idx: int):
+def api_mix_tts(job_id: str, beat_idx: int, request: Request):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False})
@@ -7119,7 +7131,9 @@ def api_mix_tts(job_id: str, beat_idx: int):
                 return JSONResponse(status_code=409, content={
                     "ok": False, "stale": True,
                     "error": "이 칸은 대본이 바뀐 뒤 음성을 다시 안 뽑았어요 — 🔊 음성 만들기를 눌러주세요"})
-            return FileResponse(b["tts_path"])
+            # ★Range 로 내보낸다 — 안 그러면 브라우저가 음성 시크를 못 하고,
+            #   화면이 음성 위치로 되돌아간다(2026-09-20 실측).
+            return _range_media_response(b["tts_path"], request, "audio/mpeg")
     return JSONResponse(status_code=404, content={"ok": False})
 
 
@@ -8429,44 +8443,9 @@ def api_share_link(job_id: str, request: Request):
 
 
 def _mp4_range_response(path: str, request: Request):
-    """mp4를 Range(부분 요청)까지 지원해 내보낸다.
-
-    ★왜 직접 짰나: 설치된 starlette 0.36의 FileResponse는 Range를 **무시하고**
-      200에 전체(수십 MB)를 보낸다(0.37부터 지원). 영상 수집기·플레이어는 앞부분만
-      Range로 띄 가 판정하므로, 그걸 못 받으면 "영상을 읽을 수 없다"고 거절한다
-      (Buffer 실측 2026-08-30). Accept-Ranges 헤더도 같이 준다.
-    """
-    size = os.path.getsize(path)
-    rng = (request.headers.get("range") or "").strip().lower()
-    m = re.match(r"bytes=(\d*)-(\d*)$", rng) if rng else None
-    if not m or (not m.group(1) and not m.group(2)):
-        return FileResponse(path, media_type="video/mp4", headers={"Accept-Ranges": "bytes"})
-    if m.group(1):
-        start = int(m.group(1))
-        end = int(m.group(2)) if m.group(2) else size - 1
-    else:                                   # bytes=-N → 끝에서 N바이트
-        start = max(0, size - int(m.group(2)))
-        end = size - 1
-    if start >= size:                       # 범위 밖 — 규격대로 416
-        return Response(status_code=416, headers={"Content-Range": f"bytes */{size}"})
-    end = min(end, size - 1)
-    length = end - start + 1
-
-    def _chunks():
-        with open(path, "rb") as f:
-            f.seek(start)
-            left = length
-            while left > 0:
-                buf = f.read(min(262144, left))
-                if not buf:
-                    break
-                left -= len(buf)
-                yield buf
-
-    return StreamingResponse(_chunks(), status_code=206, media_type="video/mp4", headers={
-        "Accept-Ranges": "bytes",
-        "Content-Range": f"bytes {start}-{end}/{size}",
-        "Content-Length": str(length)})
+    """★2026-09-20 한 곳으로 합쳤다 — 같은 일을 하는 함수가 두 벌이었다(0순위-B).
+    내용은 _range_media_response 와 똑같았고, 두 벌이면 한쪽만 고쳐져 어긋난다."""
+    return _range_media_response(path, request, "video/mp4")
 
 
 @app.api_route("/api/share/v/{sid}", methods=["GET", "HEAD"])
