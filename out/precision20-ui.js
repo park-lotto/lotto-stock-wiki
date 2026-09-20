@@ -17,7 +17,12 @@
   const fixedLayouts=new Map(),fixedColors=new Map(),captionLayouts=new Map();
   const fixedBaseLayout=frame=>{
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
-    return {top:Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100),bottom:0};
+    // 09-19 사장님: 고정형은 제목칸 높이도 20종을 하나로(원본은 25~33%로 제각각이라 영상 시작 줄이 안 맞았다)
+    const original=Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100);
+    const chBox=frame?.channel_box||(frame?.channel_boxes||[])[0];
+    const chLine=(frame?.lines||[]).find(l=>l.bind==='channel');
+    const channel=chBox?(chBox.y+chBox.height)/(frame?.height||1)*100:(chLine?chLine.y1/(frame?.height||1)*100:6);
+    return {top:mode==='continuous'?FIXED_TITLE.band:original,bottom:0,channel:Math.round(channel),caption:0};
   };
   const layoutKey=(presetId,frame)=>presetId.startsWith('fixed_')?presetId:`${presetId}:${frame===storyRows.find(p=>p.id===presetId)?.hook?'hook':'body'}`;
   // 하단 칸(2026-09-18 사장님 "빠른조절에 하단 칸도 만들어서 올리고 내릴수있게") — 저장한 값만 쓰고 기본은 0.
@@ -45,7 +50,7 @@
     // 고정형 자막칸 높이는 위시언니(6.5%) 하나로 통일(2026-09-18 사장님 "딱 이 사이즈로 다들 해줘야 비례가 맞지").
     //   실측: 20종 중 14종이 원본 측정값 상한 17.9%라 제목보다 자막칸이 두꺼웠다. 사용자가 저장한 높이는 그대로 우선.
     const measured=Math.max(5,Math.min(18,(band?.height||ln?.h||frame.height*.07)/frame.height*100));
-    return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:mode==='continuous'?6.5:measured};
+    return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:(fixedLayoutFor(rows[current].id,frame).caption||0)>0?fixedLayoutFor(rows[current].id,frame).caption:(mode==='continuous'?6.5:(isStoryBody(frame)?STORY_BODY.capH:measured))};
   };
   // 고정형은 훅이 없다 — '훅 말자막 숨김'(이븐쇼핑 큰 제목용)이 첫 장면 자막까지 지우지 않게 항상 보인다(2026-09-18 실측: LAB 1/23 자막 없음).
   const captionVisible=()=>mode==='continuous'||sceneContext?.scenes?.[sceneIndex]?.caption_visible!==false;
@@ -57,6 +62,7 @@
   const titleHeight=frame=>{
     const original=(frame.video_from?.y||0)/frame.height*100,cut=captionSource(frame).cut/frame.height*100;
     const configured=fixedLayoutFor(rows[current].id,frame).top;
+    if(isStoryBody(frame)&&!fixedLayouts.get(layoutKey(rows[current].id,frame)))return STORY_BODY.cut;
     return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
   };
   const mediaBounds=(frame,presetId)=>{
@@ -79,6 +85,27 @@
   const presetPane=grid.closest('.pane'),modeBar=document.createElement('div');modeBar.className='template-mode-bar';
   modeBar.innerHTML='<button type="button" data-template-mode="story" class="active">썰쇼핑형 <small>20</small></button><button type="button" data-template-mode="continuous">전장면 고정형 <small>20</small></button>';
   presetPane.querySelector('.pane-head').after(modeBar);renderGrid();
+  // 왼쪽 맨 위 탭(2026-09-19 사장님): '템플릿 선택' 머리말 자리에 [장면 템플릿 | 폰트 템플릿].
+  //   오른쪽 문구/효과 탭과 같은 .tool-tabs 모양. 폰트 템플릿(채널명·제목·자막 한 세트)은 다음 단계 — 지금은 자리만.
+  {
+    const head=presetPane.querySelector('.pane-head'),leftTabs=document.createElement('div');
+    leftTabs.className='tool-tabs left-pane-tabs';
+    leftTabs.innerHTML='<button type="button" class="active" data-left-tab="scene">장면 템플릿</button><button type="button" data-left-tab="font">폰트 템플릿</button>';
+    const fontPane=document.createElement('div');fontPane.className='font-template-pane';fontPane.hidden=true;
+    const drawFontSets=()=>{fontPane.innerHTML='<div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
+    window.addEventListener('scene-style-fontset',()=>{if(!fontPane.hidden)drawFontSets();});   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
+    fontPane.addEventListener('click',event=>{const c=event.target.closest('[data-font-set]');if(!c)return;fontSet=c.dataset.fontSet;fittedText.clear();drawFontSets();renderEdit();rememberLocal({fontSet});});   /* 저장 버튼을 안 눌러도 기억 — 새로고침하면 풀리던 문제 */
+    head.hidden=true;head.before(leftTabs);grid.after(fontPane);
+    const sceneParts=[modeBar,grid];
+    leftTabs.addEventListener('click',event=>{
+      const b=event.target.closest('[data-left-tab]');if(!b)return;
+      leftTabs.querySelectorAll('[data-left-tab]').forEach(x=>x.classList.toggle('active',x===b));
+      const font=b.dataset.leftTab==='font';sceneParts.forEach(el=>el.hidden=font);fontPane.hidden=!font;if(font)drawFontSets();
+    });
+    const css=document.createElement('style');
+    css.textContent='.font-template-pane{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scrollbar-color:#35505b #09161f;scrollbar-width:thin}.font-set-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.font-set-card{display:grid;gap:4px;justify-items:start;text-align:left;padding:10px;border:1px solid #294451;border-radius:12px;background:#1b1b1b;color:#fff;cursor:pointer}.font-set-card.selected{border-color:#43e2b4;box-shadow:0 0 0 2px #43e2b455}.font-set-card .fs-ch{background:#000;border-radius:4px;padding:1px 7px;font-size:12px}.font-set-card .fs-title{font-size:19px;line-height:1.15}.font-set-card .fs-title em{font-style:normal;color:#ffe500}.font-set-card .fs-cap{background:#fff;color:#111;padding:1px 7px;font-size:14px}.font-set-card b{font:800 12px system-ui,sans-serif;color:#9eb0b9;margin-top:4px}.font-set-card.selected b{color:#63edc6}.layout-a .pane-head[hidden]{display:none!important}.left-pane-tabs{margin:0 0 12px}.template-mode-bar[hidden],.preset-grid[hidden]{display:none!important}.font-template-empty{border:1px dashed #294451;border-radius:12px;padding:28px 16px;text-align:center;display:grid;gap:6px;color:#8fa3ad}.font-template-empty b{color:#e8f3f0;font-size:14px}';
+    document.head.append(css);
+  }
 
   preview.classList.add('is-pristine');
   const base=document.createElement('img');base.className='precision-base';
@@ -91,10 +118,11 @@
   // 템플릿 없음(2026-09-18 사장님 "템플릿 없는 거 쓰는 사람들") — 선택하면 snapshot()이 null을 내고 제작소가 그대로 서버에 저장,
   //   최종 렌더(video_assemble)는 scene_style이 비면 꾸미기를 건너뛴다.
   let noTemplate=false;
-  let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',bodyCaptionMotion='',hookMotionSpeed=.72,hookCaptionMode='visible';
+  let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',bodyCaptionMotion='',fontSet='',hookMotionSpeed=.72,hookCaptionMode='visible';
   const fontScales=new Map();
   const fittedText=new Map();
   const textOffsets=new Map();
+  const textDrags=new Map();   // 제목·채널명을 마우스로 옮긴 양(칸 기준 %)
   const colorOverrides=new Map();
   const dirtyFields=new Map();
   const captionPositions=new Map();
@@ -114,7 +142,8 @@
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
   const frameKind=()=>mode==='continuous'?'frame':kind;
   const scaleKey=bind=>`${rows[current].id}:${frameKind()}:${bind}${bind==='caption'?':'+sceneIndex:''}`;
-  const textScale=bind=>fontScales.get(scaleKey(bind))||1;
+  const BODY_CAPTION_SCALE=1.3;   // 09-19 사장님: 본문 자막 기본 130%(자막 칸 위치·높이는 그대로)
+  const textScale=bind=>fontScales.get(scaleKey(bind))||(bind==='caption'&&mode==='story'&&sceneIndex>0?BODY_CAPTION_SCALE:1);
   const textOffset=bind=>textOffsets.get(scaleKey(bind))||0;
   const colorKey=role=>`${rows[current].id}:${frameKind()}:${role}`;
   const colorFor=(role,fallback)=>colorOverrides.get(colorKey(role))||fallback;
@@ -132,11 +161,39 @@
     const layout=fixedLayoutFor(rows[current].id,frame);
     return 100-layout.bottom/2-originalCenter;
   };
+  // 고정형 20종 제목 배치 표준(2026-09-19 사장님): 원본마다 채널명과 제목 사이 빈칸이 5~12%씩 제각각이었다.
+  //   이제 제목칸 높이(T)에 대한 같은 비율로 다시 놓는다 — 채널명 아래 곧바로 제목, 줄 간격·글자 크기도 T 비례.
+  //   한 곳에서만 정한다(미리보기·최종 렌더 모두 이 함수를 거친다). 사용자가 −/＋로 키운 값은 그 뒤에 곱해진다.
+  // 09-19 사장님: 썰쇼핑형 본문도 이븐쇼핑 비율로 통일(원본은 제목 시작 13~21%, 영상 시작 29~39%로 제각각이었다).
+  //   cut=자막 칸 시작(%), capH=자막 칸 높이(%), title=cut 대비 제목 위치·높이. 여기 한 곳에서만 정한다.
+  const STORY_BODY={cut:21,capH:10,titleTop:.52,titleH:.30,font:.76};
+  const isStoryBody=frame=>mode==='story'&&frame===rows[current]?.body;
+  const WRAP3=['bodyTitle','caption'],CHANNEL_MAX=.045;   // 본문 제목·자막 3줄 허용 / 채널명 글자 크기 상한(화면 높이 대비)
+  const FIXED_TITLE={band:26,first:.33,pad:.06,line:.25,gap:.045,fontOfLine:.76};   // band=제목칸 높이(%), pad=자막 칸 앞 여백
+  // 본문 제목은 자막 칸 시작(cut) 기준 같은 자리에 둔다
+  const storyBodyLine=(line,frame)=>{
+    if(!isStoryBody(frame)||line.bind!=='bodyTitle')return line;
+    const cut=titleHeight(frame)/100*frame.height,y0=cut*STORY_BODY.titleTop,h=cut*STORY_BODY.titleH;
+    const baseCut=STORY_BODY.cut/100*frame.height;   // 글자 크기는 기준 칸(21%)으로 고정 — 칸을 올려도 글자는 그대로
+    return {...line,y0,y1:y0+h,h,font_size:baseCut*STORY_BODY.titleH*STORY_BODY.font};
+  };
   const fixedDrawLine=(line,frame)=>{
     if(mode!=='continuous'||line.bind==='caption')return line;
-    const baseTop=(frame.video_from?.y||frame.height*.25),nextTop=fixedLayoutFor(rows[current].id,frame).top/100*frame.height;
-    const ratio=nextTop/baseTop;
-    return {...line,y0:line.y0*ratio,y1:line.y1*ratio,h:line.h*ratio,font_size:(line.font_size||line.h)*Math.min(1.18,Math.max(.82,ratio))};
+    const T=fixedLayoutFor(rows[current].id,frame).top/100*frame.height;
+    const order=['hook1','hook2','bodyTitle'].indexOf(line.bind);
+    if(order<0||!T){   // 채널명 등 제목이 아닌 줄은 예전처럼 칸 높이에 맞춰 비례 이동
+      const baseTop=(frame.video_from?.y||frame.height*.25),ratio=T/baseTop;
+      // 09-19 사장님 '비율로 글자 크기 줄이지 마라' — 자리만 옮기고 글자 크기는 원본 그대로 둔다
+      return {...line,y0:line.y0*ratio,y1:line.y1*ratio,h:line.h*ratio,font_size:line.font_size||line.h};
+    }
+    // 제목 줄 수에 맞춰 칸 안에 들어가게 계산한다(3줄짜리가 자막 칸을 덮던 것)
+    const count=Math.max(1,(frame.lines||[]).filter(l=>['hook1','hook2','bodyTitle'].includes(l.bind)).length);
+    const pad=FIXED_TITLE.pad+Math.max(0,count-2)*.05;   // 줄이 많을수록 자막 칸 앞 여백을 더 둔다(3줄에서 1%까지 붙었다)
+    const room=1-FIXED_TITLE.first-pad,lineH=Math.min(FIXED_TITLE.line,(room-FIXED_TITLE.gap*(count-1))/count);
+    const y0=T*(FIXED_TITLE.first+order*(lineH+FIXED_TITLE.gap)),h=T*lineH;
+    // 글자 크기는 기준 칸(FIXED_TITLE.band)으로 고정 — 칸을 올리고 내려도 글자는 그대로(사장님 09-18·09-19)
+    const baseBand=FIXED_TITLE.band/100*frame.height;
+    return {...line,y0,y1:y0+h,h,font_size:baseBand*lineH*FIXED_TITLE.fontOfLine};
   };
   const currentDirty=()=>dirtyFields.get(dirtyKey())||new Set();
   const markDirty=bind=>{
@@ -180,31 +237,71 @@
   root.querySelector('.layout-a .ai-card')?.after(motionPanel);
   // 본문 모션(2026-09-19 사장님): 본문 장면 자막이 바뀔 때마다 들어오는 효과. 흰 띠 스윽/확대를 자막 효과로 넓혔다.
   //   값 목록은 BODY_CAPTION_MOTIONS 한 곳 — 버튼·미리보기·렌더(captionEnterAt)가 모두 여기서 읽는다. 서버 허용값은 scene_style.py와 짝.
+  // 폰트 템플릿(2026-09-19 사장님): 채널명 · 제목 · 자막 폰트를 한 세트로. 모든 장면 공통.
+  //   편집기 @font-face로 등록된 글꼴만 쓴다(최종 영상은 이 페이지를 그대로 찍으므로 같은 글꼴이 나온다).
+  //   초안 10종 — 사장님이 고르고 고칠 목록. 서버 허용값(scene_style.py)은 id 형식만 검사한다.
+  const FONT_SETS=[
+    {id:'aggro',name:'강렬 어그로',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},
+    {id:'jalnan',name:'잘난 쇼핑',channel:'YgJalnan',title:'YgJalnan',caption:'Pretendard'},
+    {id:'blackhan',name:'검은고딕 뉴스',channel:'BlackHanSans',title:'BlackHanSans',caption:'Pretendard'},
+    {id:'gmarket',name:'G마켓 깔끔',channel:'GmarketSansBold',title:'GmarketSansBold',caption:'GmarketSansBold'},
+    {id:'baemin',name:'배민 도현',channel:'BMDOHYEON',title:'BMDOHYEON',caption:'BMJUA'},
+    {id:'cafe24',name:'카페24 각진',channel:'Cafe24Ohsquare',title:'Cafe24Ohsquare',caption:'Pretendard'},
+    {id:'gasoek',name:'묵직 가석',channel:'GasoekOne',title:'GasoekOne',caption:'BlackHanSans'},
+    {id:'binggrae',name:'부드러운 빙그레',channel:'BinggraeBold',title:'BinggraeBold',caption:'BMJUA'},
+    {id:'ganpan',name:'간판체',channel:'KCCGanpan',title:'KCCGanpan',caption:'GmarketSansBold'},
+    {id:'jalnangothic',name:'잘난고딕',channel:'JalnanGothic',title:'Jalnan2',caption:'JalnanGothic'},
+    {id:'bagel',name:'베이글 팝',channel:'BagelFatOne',title:'BagelFatOne',caption:'BMJUA'},
+    {id:'dongle',name:'동글 귀여움',channel:'DongleBold',title:'DongleBold',caption:'GmarketSansBold'},
+    {id:'kkubulim',name:'꾸불림 재미',channel:'Kkubulim',title:'Kkubulim',caption:'BMJUA'},
+    {id:'myeongjo',name:'명조 고급',channel:'NanumMyeongjoEB',title:'NanumMyeongjoEB',caption:'RIDIBatang'},
+    {id:'ridi',name:'리디 감성',channel:'RIDIBatang',title:'RIDIBatang',caption:'Pretendard'},
+    {id:'chalk',name:'분필 칠판',channel:'HakgyoansimBunpil',title:'HakgyoansimBunpil',caption:'NotoSansKRBold'},
+    {id:'brush',name:'붓글씨',channel:'NanumBrushScript',title:'NanumBrushScript',caption:'GmarketSansBold'},
+    {id:'gaegu',name:'개구 손글씨',channel:'GaeguBold',title:'GaeguBold',caption:'GaeguBold'},
+    {id:'danjung',name:'단정 카페',channel:'Cafe24Danjunghae',title:'Cafe24Danjunghae',caption:'Pretendard'},
+    {id:'suit',name:'SUIT 모던',channel:'SUITBold',title:'SUITBold',caption:'SUITBold'},
+  ];
+  // 템플릿별 기본 글꼴(2026-09-19 사장님 '기본을 하나로 고정하지 말고 템플릿마다 어울리게'):
+  //   폰트 템플릿을 안 골랐을 때(=템플릿 기본) 쓰는 채널명·제목·자막 글꼴. 원본 제목 글꼴의 성격을 살리고
+  //   자막은 읽기 쉬운 글꼴로 짝지었다. 여기 없는 템플릿은 원본 데이터 글꼴을 그대로 쓴다.
+  // 09-19 사장님: 기본은 전부 '강렬 어그로'로 고정(템플릿별로 다르게 뒀다가 되돌림).
+  //   템플릿마다 다시 다르게 하려면 PRESET_FONTS에 id별로 적으면 된다 — 적힌 것이 DEFAULT_FONTS보다 우선.
+  const DEFAULT_FONTS={channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'};
+  const PRESET_FONTS={};
+  window.PRESET_FONTS=PRESET_FONTS;window.DEFAULT_FONTS=DEFAULT_FONTS;   // 검사 도구가 기대 글꼴을 여기서 읽는다(한 곳에서만 정한다)
+  function fontSetFamily(bind){
+    const set=FONT_SETS.find(f=>f.id===fontSet)||PRESET_FONTS[rows[current]?.id]||DEFAULT_FONTS;if(!set)return '';
+    return bind==='channel'?set.channel:bind==='caption'?set.caption:['hook1','hook2','bodyTitle'].includes(bind)?set.title:'';
+  }
   const BODY_CAPTION_MOTIONS={
-    rise:{label:'스윽 올라오기',frames:[{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}]},
-    grow:{label:'천천히 확대',origin:true,frames:[{transform:'scale(.84)'},{transform:'scale(1)'}]},
-    pop:{label:'톡 튀어나오기',origin:true,ms:360,frames:[{opacity:0,transform:'scale(.55)'},{opacity:1,transform:'scale(1.08)',offset:.7},{transform:'scale(1)'}]},
-    slide:{label:'옆에서 밀려오기',frames:[{opacity:0,transform:'translateX(-40px)'},{opacity:1,transform:'translateX(0)'}]},
-    drop:{label:'위에서 떨어지기',ms:360,frames:[{opacity:0,transform:'translateY(-22px)'},{opacity:1,transform:'translateY(3px)',offset:.75},{transform:'translateY(0)'}]},
-    fade:{label:'서서히 나타나기',frames:[{opacity:0},{opacity:1}]},
-    wide:{label:'옆으로 펼치기',origin:true,frames:[{opacity:0,transform:'scaleX(.3)'},{opacity:1,transform:'scaleX(1)'}]},
+    // 09-19 사장님 '느낌이 다 비슷하다' → 이동 거리·시간·튕김을 모션마다 확실히 다르게(예전: 14px·0.3초로 거의 같았다)
+    rise:{label:'스윽 올라오기',ms:380,easing:'cubic-bezier(.16,1,.3,1)',frames:[{opacity:0,transform:'translateY(70px)'},{opacity:1,transform:'translateY(0)'}]},
+    grow:{label:'천천히 확대',origin:true,ms:650,easing:'cubic-bezier(.25,.8,.35,1)',frames:[{opacity:.2,transform:'scale(.45)'},{opacity:1,transform:'scale(1)'}]},
+    pop:{label:'톡 튀어나오기',origin:true,ms:480,easing:'linear',frames:[{opacity:0,transform:'scale(0)'},{opacity:1,transform:'scale(1.3)',offset:.45},{transform:'scale(.92)',offset:.7},{transform:'scale(1.04)',offset:.87},{transform:'scale(1)'}]},
+    slide:{label:'옆에서 밀려오기',ms:450,easing:'cubic-bezier(.2,.9,.3,1)',frames:[{opacity:0,transform:'translateX(-320px)'},{opacity:1,transform:'translateX(18px)',offset:.72},{transform:'translateX(0)'}]},
+    drop:{label:'위에서 떨어지기',ms:560,easing:'linear',frames:[{opacity:0,transform:'translateY(-160px)'},{opacity:1,transform:'translateY(0)',offset:.55},{transform:'translateY(-26px)',offset:.72},{transform:'translateY(0)',offset:.86},{transform:'translateY(-6px)',offset:.93},{transform:'translateY(0)'}]},
+    fade:{label:'서서히 나타나기',ms:700,easing:'ease-out',frames:[{opacity:0,filter:'blur(10px)'},{opacity:1,filter:'blur(0)'}]},
+    wide:{label:'옆으로 펼치기',origin:true,ms:420,easing:'cubic-bezier(.2,.9,.3,1)',frames:[{opacity:0,transform:'scaleX(0)'},{opacity:1,transform:'scaleX(1.12)',offset:.7},{transform:'scaleX(1)'}]},
   };
+  // 브라우저에 바로 기억시키기: '현재 설정 저장'을 누르지 않아도 고른 값이 새로고침 뒤에 남는다.
+  const rememberLocal=patch=>{if(qaMode||labMode)return;try{const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null')||{};localStorage.setItem('scene_style_preset',JSON.stringify({...saved,...patch}))}catch{}};
   const bodyMotionPanel=document.createElement('section');
   bodyMotionPanel.className='hook-motion body-motion';
   bodyMotionPanel.innerHTML='<div class="hook-motion-head"><b>본문 자막 등장</b><small>본문 모든 장면에 적용</small></div><div class="hook-motion-grid"><button type="button" data-body-caption-motion="">없음</button>'+Object.entries(BODY_CAPTION_MOTIONS).map(([k,v])=>`<button type="button" data-body-caption-motion="${k}">${v.label}</button>`).join('')+'</div>';
   motionPanel.after(bodyMotionPanel);
   bodyMotionPanel.addEventListener('click',event=>{
     const b=event.target.closest('[data-body-caption-motion]');if(!b)return;
-    bodyCaptionMotion=b.dataset.bodyCaptionMotion;syncHookMotionUI();if(sceneIndex===0)showScene(1);else runCaptionEnter();
+    bodyCaptionMotion=b.dataset.bodyCaptionMotion;syncHookMotionUI();rememberLocal({bodyCaptionMotion});if(sceneIndex===0)showScene(1);else runCaptionEnter();
   });
   const fixedPanel=document.createElement('section');
   fixedPanel.className='fixed-quick-panel';
-  fixedPanel.innerHTML='<div class="fixed-quick-head"><b>고정형 빠른 조절</b><button type="button" data-fixed-reset>전체 초기화</button></div><div class="fixed-size-control" data-fixed-size="top"><span>상단 제목칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="12" max="50" step="1" data-fixed-range="top"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="bottom"><span>하단 자막칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="0" max="35" step="1" data-fixed-range="bottom"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-palette-row"><button type="button" data-fixed-palette="original">원본</button><button type="button" data-fixed-palette="mint">민트</button><button type="button" data-fixed-palette="yellow">옐로</button><button type="button" data-fixed-palette="pink">핑크</button></div><div class="fixed-color-grid"><label><span>제목 배경</span><input type="color" data-fixed-color="top"></label><label><span>하단 배경</span><input type="color" data-fixed-color="bottom"></label><label><span>제목 1</span><input type="color" data-fixed-color="title1"></label><label><span>제목 2</span><input type="color" data-fixed-color="title2"></label></div>';
+  fixedPanel.innerHTML='<div class="fixed-quick-head"><b>고정형 빠른 조절</b><button type="button" data-fixed-reset>전체 초기화</button></div><div class="fixed-size-control" data-fixed-size="channel"><span>채널명 칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="0" max="20" step="1" data-fixed-range="channel"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="top"><span>상단 제목칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="12" max="50" step="1" data-fixed-range="top"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="caption"><span>자막 칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="4" max="24" step="1" data-fixed-range="caption"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="bottom"><span>하단 칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="0" max="35" step="1" data-fixed-range="bottom"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-palette-row"><button type="button" data-fixed-palette="original">원본</button><button type="button" data-fixed-palette="mint">민트</button><button type="button" data-fixed-palette="yellow">옐로</button><button type="button" data-fixed-palette="pink">핑크</button></div><div class="fixed-color-grid"><label><span>제목 배경</span><input type="color" data-fixed-color="top"></label><label><span>하단 배경</span><input type="color" data-fixed-color="bottom"></label><label><span>제목 1</span><input type="color" data-fixed-color="title1"></label><label><span>제목 2</span><input type="color" data-fixed-color="title2"></label></div>';
   bodyMotionPanel.after(fixedPanel);
   const channelColorLabel=document.createElement('label');channelColorLabel.innerHTML='<span>채널명</span><input type="color" data-fixed-color="channel">';fixedPanel.querySelector('.fixed-color-grid').append(channelColorLabel);
   const fixedPalettes={mint:{top:'#082923',bottom:'#082923',title1:'#FFFFFF',title2:'#43E2B4'},yellow:{top:'#17140A',bottom:'#17140A',title1:'#FFFFFF',title2:'#FFE24A'},pink:{top:'#24101A',bottom:'#24101A',title1:'#FFFFFF',title2:'#FF78B7'}};
   function syncHookMotionUI(){
-    motionPanel.hidden=false;
+    motionPanel.hidden=sceneIndex>0;   // 09-19 사장님: 본문 장면에선 훅 모션 숨김(훅 전용)
     bodyMotionPanel.hidden=sceneIndex===0;
     bodyMotionPanel.querySelectorAll('[data-body-caption-motion]').forEach(b=>b.classList.toggle('active',b.dataset.bodyCaptionMotion===bodyCaptionMotion));
     motionPanel.querySelectorAll('[data-hook-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookMotion===hookMotion));
@@ -220,11 +317,15 @@
   function syncMediaLayout(){
     if(noTemplate){Object.assign(media.style,{top:'0%',height:'100%'});return;}
     const p=rows[current],frame=frameFor(p),bounds=mediaBounds(frame,p?.id);
-    Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
+    Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});media.dataset.baseTop=String(bounds.top);   // 09-19: 그림을 내려도 영상은 이 자리를 지킨다
   }
   function syncFixedPanel(){
     fixedPanel.hidden=false;
     fixedPanel.querySelector('[data-fixed-size="bottom"] span').textContent='하단 칸';
+    // 훅 화면에는 자막이 없다 — '자막 칸'은 본문·고정형에서만 보인다(훅에서 눌러도 안 먹어 혼란스러웠다)
+    const capRow=fixedPanel.querySelector('[data-fixed-size="caption"]');if(capRow)capRow.hidden=false;   // 훅에서도 흰 띠(자막 칸) 높이를 조절한다
+    // 09-19: '채널명 칸'은 머리띠(캡슐·아이콘)가 원본 그림이라 글자만 떨어져 나왔다. 템플릿 20종의 머리띠 좌표를 넣기 전까지 잠근다.
+    const chRow=fixedPanel.querySelector('[data-fixed-size="channel"]');if(chRow)chRow.hidden=false;
     fixedPanel.querySelector('.fixed-quick-head b').textContent=mode==='continuous'?'고정형 빠른 조절':`${kind==='hook'?'훅':'본문'} 빠른 조절`;
     const p=rows[current],frame=frameFor(p),layout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame)},colors=fixedColorsFor(p.id,frame);
     fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
@@ -351,12 +452,13 @@
     const motion=captionMotionNow();if(!motion)return 0;
     const text=layer.querySelector('.precision-text[data-edit-bind="caption"]'),mask=layer.querySelector('.caption-mask');
     if(!text||text.hidden||!text.textContent.trim())return 0;
-    const els=[text,mask].filter(Boolean);els.forEach(el=>el.getAnimations().forEach(a=>a.cancel()));
+    [text,mask].filter(Boolean).forEach(el=>el.getAnimations().forEach(a=>a.cancel()));const els=[text];   // 09-19: 상자는 두고 글자만 움직인다 — 상자가 움직이면 뒤 검은 칸이 드러났다
+    
     if(!seeking&&(qaMode||matchMedia('(prefers-reduced-motion: reduce)').matches))return 0;
     const T=text.getBoundingClientRect(),cx=T.left+T.width/2,cy=T.top+T.height/2,ms=motion.ms||CAPTION_ENTER_MS;
     els.forEach(el=>{
       if(motion.origin){const r=el.getBoundingClientRect();el.style.transformOrigin=`${cx-r.left}px ${cy-r.top}px`;}
-      const animation=el.animate(motion.frames,{duration:ms,easing:'cubic-bezier(.2,.8,.3,1)',fill:'both'});
+      const animation=el.animate(motion.frames,{duration:ms,easing:motion.easing||'cubic-bezier(.2,.8,.3,1)',fill:'both'});
       if(seeking){animation.pause();animation.currentTime=options.time;}else animation.finished.then(()=>animation.cancel()).catch(()=>{});
     });
     return ms;
@@ -422,7 +524,7 @@
   }
   function resetField(bind){
     const input=inputs[bind];if(!input)return;
-    input.value=presetValue(bind)||'';fontScales.delete(scaleKey(bind));textOffsets.delete(scaleKey(bind));
+    input.value=presetValue(bind)||'';fontScales.delete(scaleKey(bind));textOffsets.delete(scaleKey(bind));textDrags.delete(scaleKey(bind));   // 09-19: 마우스로 옮긴 자리도 되돌린다
     [...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));
     if(bind==='caption'){captionLayouts.delete(captionKey());captionPositions.delete(captionKey());captionDrags.delete(captionKey());captionTexts.delete(captionKey());syncCaption();}
     markDirty(bind);updateCount(input);updateSteppers();updateCaptionButtons();renderEdit();
@@ -512,15 +614,19 @@
     const fontPx=ln.font_size?ln.font_size*scale:ln.h*scale*1.05;
     // 기본 외곽선/그림자는 제거하고 색 대비 부족 시에만 아래에서 얇게 보정한다.
     const stroke=0,shadowY=0;
-    const family=ln.font_family||frame.font_family||'TmonMonsori';
-    const weight=ln.font_weight||frame.font_weight||400;
+    const pickedFont=fontSetFamily(bind);
+    const family=pickedFont||ln.font_family||frame.font_family||'TmonMonsori';
+    const weight=pickedFont?400:(ln.font_weight||frame.font_weight||400);   // 세트 폰트는 한 굵기뿐 — 가짜 볼드 방지
     const letterPx=ln.letter_spacing!=null?ln.letter_spacing*scale:Math.max(-1.5,-.035*fontPx);
-    const manualScale=textScale(bind),scaledFont=Math.max(9,fontPx*manualScale);
-    const topOffset=(bind==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(bind);
+    const capped=bind==='channel'&&pickedFont?Math.min(fontPx,frame.height*scale*CHANNEL_MAX):fontPx;   // 09-19: 채널명 기본 크기 상한
+    const manualScale=textScale(bind),scaledFont=Math.max(9,capped*manualScale);
+    const moved=textDrags.get(scaleKey(bind))||{x:0,y:0};   // 09-19 사장님: 제목·채널명도 마우스로 옮긴다
+    const topOffset=(bind==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(bind)+(bind==='caption'?0:moved.y);
     const verticalNudge=bind==='channel'?.7:-.35;
     const baseHeight=ln.h/frame.height*100+.9,displayHeight=baseHeight*Math.max(1,manualScale);
     const displayTop=ln.y0/frame.height*100+verticalNudge+topOffset-(displayHeight-baseHeight)/2;
-    Object.assign(el.style,{left:left+'%',right:right+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
+    const shiftX=bind==='caption'?0:moved.x;
+    Object.assign(el.style,{left:(left+shiftX)+'%',right:(right-shiftX)+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
     const fixedColorKey=bind==='hook1'?'title1':(bind==='hook2'||bind==='bodyTitle')?'title2':null;
     const forcedColor=fixedColorKey&&mode==='continuous'&&fixedColors.get(rows[current].id)?.[fixedColorKey];
     if(forcedColor){el.style.color=forcedColor;el.textContent=text||' ';
@@ -534,18 +640,24 @@
     contrastOutline(el,ln,frame,bind);
     if(frame.reference_style){el.style.webkitTextStroke=ln.stroke?`${ln.stroke*scale}px #080808`:'0px';el.style.textShadow=ln.shadow_y?`0 ${ln.shadow_y*scale}px ${2*scale}px #000000AA`:'none';}
     if(manualLines>1){el.textContent=text;el.style.whiteSpace='pre-wrap';el.style.display='block';el.style.lineHeight='1.2';el.style.textWrap='wrap';}
-    else if(ln.max_lines>1){el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.2';}
+    else if(ln.max_lines>1||WRAP3.includes(bind)){el.style.whiteSpace='normal';el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.18';el.style.display='-webkit-box';el.style.webkitBoxOrient='vertical';el.style.webkitLineClamp='3';}   // 09-19 사장님: 본문 제목·자막은 3줄까지
     const chosen=colorOverrides.get(colorKey(bind==='hook2'?'accent':'white'));
     if(chosen){el.style.color=chosen;el.querySelectorAll('span').forEach(span=>span.style.color=chosen);}
     layer.insertBefore(el,badge);
     if(bind==='caption'){el.style.left=(left+captionX())+'%';el.style.right=(right-captionX())+'%';}
     // 이븐쇼핑 기준형은 원본 폰트 크기·자간·가로비를 잠근다. 긴 문구를 몰래
     // 축소하거나 찌그러뜨리지 않고 templateViolations가 적용 전에 되돌려 보낸다.
-    const lockedReference=rows[current]?.id==='t11'&&frame.reference_style;
+    const lockedReference=rows[current]?.id==='t11'&&frame.reference_style&&!pickedFont;   // 09-19: 글꼴을 바꾸면 원본 크기 잠금을 풀어야 글자가 안 잘린다
     if(!lockedReference){
-      const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
-      if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
-      else {const isStory=mode==='story',manualSize=fontScales.has(scaleKey(bind));if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=manualSize?1:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
+      const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${Math.round(el.clientWidth)}`   /* 09-19: 세로 위치(y0)는 글자 폭과 무관 — 칸을 올리고 내릴 때마다 다시 맞춰 크기가 0.5~1.5px 튀었다 */,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
+      let useCache=cached&&chars<=cached.capacity;
+      if(useCache){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}
+        // 09-19: 기억해 둔 크기를 그대로 쓰면 글꼴이 바뀐 뒤 글자가 칸 밖으로 나갔다(본문 제목 좌우 잘림). 넘치면 캐시를 버리고 다시 맞춘다.
+        const probe=document.createRange();probe.selectNodeContents(el);
+        if(Math.max(el.scrollWidth,probe.getBoundingClientRect().width)*xscale>el.clientWidth+1){useCache=false;fittedText.delete(fitKey);el.style.transform='none';el.style.letterSpacing='';}
+      }
+      if(!useCache){const isStory=mode==='story',manualSize=fontScales.has(scaleKey(bind));const heightFit=!(rows[current]?.id==='t11'&&frame.reference_style);   // 09-19: 이븐쇼핑은 칸 높이를 바꿔도 글자 크기는 그대로(폭만 맞춘다)
+        if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,heightFit);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const frameScale=Math.min(1,(preview.clientWidth-6)/Math.max(1,measuredWidth()));   /* 09-19: 손으로 키워도 미리보기 밖으로는 안 나가게 */const xscale=manualSize?frameScale:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
     }
     return el;
   }
@@ -626,7 +738,7 @@
     lines.forEach((ln,i)=>{
       const key=ln.bind||(kind==='hook'?(i===0?'hook1':i===1?'hook2':'bodyTitle'):(i===0?'bodyTitle':'caption'));
       if(key==='caption'||!dirty.has(key))return;
-      const drawLine=fixedDrawLine(ln,frame),pt=drawLine.patch_top??2,pb=drawLine.patch_bottom??2;
+      const drawLine=storyBodyLine(fixedDrawLine(ln,frame),frame),pt=drawLine.patch_top??2,pb=drawLine.patch_bottom??2;
       const offset=(key==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(key);
       const lineBackground=fixedPaint?(key==='caption'?fixedPaint.bottom:fixedPaint.top):(drawLine.background||bg);
       if(!drawLine.no_patch){
@@ -644,12 +756,15 @@
     if(wb&&kind==='hook'){
       // 원본 설명띠의 글자/흔적을 먼저 완전히 덮고 편집 가능한 텍스트만 다시 올린다.
       const movedCaption=kind==='body'&&(fixedLayouts.get(layoutKey(p.id,frame))?.bottom||0)>0;
-      addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,movedCaption?(fixedColorsFor(p.id,frame).top||bg):(wb.background||'#FFFFFF'),0,100,'white-box');
+      const savedCap=fixedLayoutFor(p.id,frame).caption;   // 09-19: '자막 칸' 슬라이더가 훅 흰 띠에도 먹게
+      const wbH=savedCap>0?savedCap:(wb.y1-wb.y0+1)/frame.height*100;   // 09-19: 훅 흰 띠도 '자막 칸' 값을 따른다
+      addPatch(wb.y0/frame.height*100,wbH,movedCaption?(fixedColorsFor(p.id,frame).top||bg):(wb.background||'#FFFFFF'),0,100,'white-box');
     }
     if(wb?.text&&kind==='hook'){
       const key=kind==='hook'?'bodyTitle':'caption';
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
+    applyChannelSlot(frame,p);   // 09-19: 고정형에서도 채널명 칸이 먹게
     if(mode==='story'){
       applyStoryLayout(frame,p);
       const storyBottom=fixedLayoutFor(p.id,frame).bottom;
@@ -666,6 +781,46 @@
     if(hasEditableCaption())renderCaption(frame);
     syncMediaLayout();
   }
+  // 채널명 칸(빠른 조절) — 썰쇼핑형·고정형 모두 적용. renderEdit 끝에서 한 번 부른다.
+  function applyChannelSlot(frame,p){
+    // 09-19: '채널명 칸' 슬라이더는 훅·본문 모두에 적용한다(전엔 본문에서만 먹었다)
+    {
+      const saved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
+      const chEl0=layer.querySelector('.precision-text[data-edit-bind="channel"]');
+      const chDrag=textDrags.get(scaleKey('channel'))||{x:0,y:0};   // 마우스로 옮긴 양은 칸 위치에 더한다(칸을 쓰면 드래그가 먹지 않던 문제)
+      // 09-19 사장님 선택①을 쉬운 길로: 머리띠만 오려 붙이지 않고 **원본 그림 자체를 내린다**.
+      //   그러면 캡슐·검색 아이콘·채널 글자가 한 덩어리로 같이 내려간다. 위에 생긴 빈 줄만 머리띠 색으로 채운다.
+      //   머리띠 아래 끝 값은 tools/measure_header_bands.js 가 그림에서 재 둔 것(out/scene-header-bands.js).
+      const band=(window.SCENE_HEADER_BANDS||{})[`${p.id}:${frameKind()}`];
+      const bandPct=band&&band.h?band.y1/band.h*100:0;
+      const shift=saved>0&&bandPct>0?Math.max(0,saved-bandPct):0;
+      base.style.top=shift+'%';
+      // 그림을 내리면 훅에서는 영상도 따라 내려갔다 → 영상 자리를 그만큼 되올려 시작점을 고정한다
+      if(media&&media.dataset.baseTop!=null){const bt=Number(media.dataset.baseTop)||0;media.style.top=(bt-shift)+'%';}
+      preview.style.backgroundColor=shift>0?(band?.color||fixedColorsFor(p.id,frame).top||'#000000'):'';
+      if(saved>0&&chEl0){
+        const h=chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
+        const before=parseFloat(chEl0.style.top)||0,next=Math.max(0,saved-h+chDrag.y);
+        chEl0.style.top=next+'%';
+        layer.querySelectorAll('.precision-patch[data-edit-bind="channel"]').forEach(box=>{
+          const t=parseFloat(box.style.top)||0;box.style.top=Math.max(0,t+(next-before))+'%';
+        });
+      }
+      // 채널명을 내리면 제목 줄도 겹치지 않게 함께 내린다(훅·본문 공통)
+      if(saved>0){
+        let floor=saved+1.2;
+        for(const bind of ['hook1','hook2','bodyTitle']){
+          const t=layer.querySelector(`.precision-text[data-edit-bind="${bind}"]`);if(!t)continue;
+          const h=t.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
+          const cur=parseFloat(t.style.top)||0;
+          // 09-19: 자막 칸을 넘어가지 않게 — 제목은 자막 칸 시작 전까지만 내린다
+          const limit=Math.max(0,titleHeight(frame)-h-0.6);
+          if(cur<floor)t.style.top=Math.min(96,Math.min(floor,limit))+'%';
+          floor=Math.max(floor,(parseFloat(t.style.top)||0)+h*0.9);
+        }
+      }
+    }
+  }
   function applyStoryLayout(frame,p){
     // 이븐쇼핑 원본형은 측정 좌표 자체가 계약이다. 장면별 자막칸 보정으로
     // 제목 영역이나 글자 크기를 다시 압축하면 훅/본문이 서로 흔들린다.
@@ -679,7 +834,7 @@
     //   칸 전체를 채우는 배경판만 새 높이로 늘린다.
     for(const el of [...layer.children].filter(el=>el!==badge)){
       const top=parseFloat(el.style.top),height=parseFloat(el.style.height);if(!Number.isFinite(top))continue;
-      if(top>=cut&&hasEditableCaption()){el.remove();continue;}
+      if(top>=cut&&hasEditableCaption()){if(el.classList.contains('precision-text')&&['channel','hook1','hook2','bodyTitle'].includes(el.dataset.editBind))continue;el.remove();continue;}   // 09-19: 끌어 옮긴 제목·채널명은 지우지 않는다(사라지던 문제)
       if(moved){
         const h=Number.isFinite(height)?Math.min(height,cut-top):(el.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100);
         if(top<=.5&&Number.isFinite(height)&&height>=cut*.8){el.style.height=next+'%';}
@@ -694,6 +849,50 @@
           const color=el.dataset.editBind==='hook1'?paint.title1:['hook2','bodyTitle'].includes(el.dataset.editBind)?paint.title2:null;
           if(color){el.style.color=color;el.querySelectorAll('span').forEach(s=>s.style.color=color);}
         }else if(el.style.background&&paint.top)el.style.background=paint.top;
+      }
+    }
+    // 09-19: 본문 제목은 20종 모두 같은 자리(자막 칸 시작 대비 비율). 위 배치 보정이 끝난 뒤 마지막에 자리를 잡는다.
+    // 09-19: 손으로 키운 제목 줄이 서로 겹치던 문제 — 겹친 만큼 아래 줄을 내린다(줄 간격만 벌린다)
+    const titleEls=['hook1','hook2','bodyTitle'].map(b=>layer.querySelector(`.precision-text[data-edit-bind="${b}"]`)).filter(Boolean);
+    for(let i=1;i<titleEls.length;i++){
+      const up=titleEls[i-1],down=titleEls[i];
+      const r1=document.createRange();r1.selectNodeContents(up);const r2=document.createRange();r2.selectNodeContents(down);
+      const a=r1.getBoundingClientRect(),b=r2.getBoundingClientRect();if(!a.height||!b.height)continue;
+      const overlap=(a.bottom-b.top)/Math.max(1,preview.clientHeight)*100;
+      if(overlap>0.4){const cur=parseFloat(down.style.top)||0;down.style.top=Math.min(97,cur+overlap+0.4)+'%';}
+    }
+    // 09-19: 상단 칸을 키우면 원본 헤더 띠가 중간에 남아 배경이 어긋났다 → 칸 전체를 제목 배경색으로 덮는다
+    if(moved){
+      const fillColor=fixedColorsFor(p.id,frame).top||frame.title_bg||frame.top_band?.color||'#000000';
+      let fill=layer.querySelector('.story-band-fill');
+      if(!fill){fill=document.createElement('div');fill.className='precision-patch story-band-fill';layer.prepend(fill);}
+      else layer.prepend(fill);
+      Object.assign(fill.style,{left:'0%',width:'100%',top:'0%',height:next+'%',background:fillColor,zIndex:'0'});
+    } else layer.querySelector('.story-band-fill')?.remove();
+    if(isStoryBody(frame)){
+      const el=layer.querySelector('.precision-text[data-edit-bind="bodyTitle"]');
+      if(el){
+        // 채널명 아래 최소 1.2% 띄운다(원본 채널 위치가 6.3~11.1%로 제각각이라 붙거나 겹쳤다)
+        const chEl=layer.querySelector('.precision-text[data-edit-bind="channel"]');
+        const pvBox=preview.getBoundingClientRect();
+        const chSaved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
+        const chMoved=textDrags.get(scaleKey('channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
+        if(chSaved>0&&chEl){   // '채널명 칸' 슬라이더: 채널명 아래 끝을 그 값에 맞춘다
+          const h=chEl.getBoundingClientRect().height/Math.max(1,pvBox.height)*100;
+          chEl.style.top=Math.max(0,chSaved-h)+'%';
+        }
+        const chBottom=chSaved>0?chSaved:(chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0);
+        const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
+        const cutNow=titleHeight(frame);   // 상단 칸을 조절하면 그 칸 기준으로 다시 배치
+        const base=Math.max(cutNow*STORY_BODY.titleTop,chBottom+1.2);
+        // 09-19: 제목은 자막 칸을 넘지 않는다(채널명 칸을 많이 내려도 자막 위로 올라타지 않게)
+        const elH=el.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
+        const ceiling=Math.max(0,cutNow-Math.max(elH,STORY_BODY.cut*STORY_BODY.titleH)-0.6);
+        const top=Math.max(0,Math.min(95,Math.min(base,ceiling)+drag.y));el.style.top=top+'%';   // 끌어 옮긴 만큼 반영(화면 안에서만)
+        // 자막 칸을 덮지 않는 선까지만 칸을 키운다(3줄 허용). 글자를 손으로 키웠어도 칸을 넘으면 줄인다 — 넘치면 자막·영상을 가린다.
+        el.style.height=Math.max(STORY_BODY.cut*STORY_BODY.titleH,cutNow-top-0.8)+'%';   // 09-19: 자막 칸 직전까지 제목 칸으로 쓴다(키운 글자가 도로 줄던 문제)
+        let size=parseFloat(el.style.fontSize)||0;
+        for(let guard=0;guard<80&&size>9&&el.scrollHeight>el.clientHeight+1;guard++){size-=.5;el.style.fontSize=size+'px';}
       }
     }
   }
@@ -756,7 +955,7 @@
     else if(mode!=='continuous'&&sceneIndex===0)sceneIndex=1;
     const p=rows[current],source=imageFor(p);
     base.src=source;
-    const frame=frameFor(p),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
+    const frame=frameFor(p),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});media.dataset.baseTop=String(bounds.top);   // 09-19: 그림을 내려도 영상은 이 자리를 지킨다
     preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     preview.classList.toggle('is-continuous',mode==='continuous');
     const seg=root.querySelector('.layout-a .seg');if(seg)seg.hidden=mode==='continuous';
@@ -771,9 +970,9 @@
       inputs.caption.value=sceneIndex>0?(rows[current].sample.caption||'이런 방법이 있었네요'):'';
     }
     const p=rows[current],source=imageFor(p,sceneIndex);
-    base.src=source;const frame=frameFor(p,sceneIndex),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
+    base.src=source;const frame=frameFor(p,sceneIndex),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});media.dataset.baseTop=String(bounds.top);   // 09-19: 그림을 내려도 영상은 이 자리를 지킨다preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
+    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);requestAnimationFrame(()=>runCaptionEnter());   // 09-19: [다음]으로 넘길 때도 본문 모션이 돈다(전엔 showFrame에만 있었다)
   }
   function selectPreset(index){
     noTemplate=false;document.body.classList.remove('no-template');grid.querySelector('[data-none]')?.classList.remove('selected');
@@ -852,11 +1051,24 @@
     if(speed){hookMotionSpeed=Number(speed.dataset.hookSpeed);motionPanel.querySelectorAll('[data-hook-speed]').forEach(button=>button.classList.toggle('active',button===speed));runHookMotion();return}
   });
   const applyFixedSize=(key,rawValue)=>{
+    const mediaBefore=mediaBounds(frameFor(rows[current]),rows[current].id).top;   // 09-19: 채널명 칸을 바꿔도 영상 시작은 그대로 두려고 먼저 재 둔다
     const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame),titleOnly:true};
-    const min=key==='top'?(mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame)):0,max=key==='top'?50:35;
+    const RANGE={top:[mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame),50],bottom:[0,35],channel:[0,20],caption:[4,24]};
+    const [min,max]=RANGE[key]||[0,35];
     currentLayout[key]=Math.round(Math.max(min,Math.min(max,Number(rawValue))));
     if(currentLayout.top+currentLayout.bottom>70)currentLayout[key]=70-currentLayout[key==='top'?'bottom':'top'];
-    fixedLayouts.set(layoutKey(p.id,frame),currentLayout);fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
+    if(key==='caption'&&currentLayout.caption>0)captionLayouts.set(captionKey(),{...captionSettings(),h:currentLayout.caption});
+    // 09-19: 채널명 칸을 키우면 제목이 들어갈 자리가 없어 뭉쳤다 → 두 칸이 최소 7% 떨어지게 서로 민다
+    // 09-19 사장님: 채널명 칸을 내려도 영상 시작은 그대로 둔다 → 상단 제목칸을 자동으로 늘리지 않는다.
+    //   대신 제목이 채널명과 겹치면 제목만 아래로 밀고(아래 코드), 칸을 더 못 내리게 한계를 둔다.
+    if(key==='channel')currentLayout.channel=Math.min(currentLayout.channel,Math.max(0,currentLayout.top-8));   // 제목 자리(약 6.3%)+여백을 남긴다
+    if(key==='top'&&currentLayout.channel>currentLayout.top-7)currentLayout.channel=Math.max(0,currentLayout.top-7);
+    fixedLayouts.set(layoutKey(p.id,frame),currentLayout);
+    if(key==='channel'){   // 훅에서 칸 계산이 반올림되며 영상이 1%쯤 밀리던 것 보정
+      const after=mediaBounds(frame,p.id).top,gap=after-mediaBefore;
+      if(Math.abs(gap)>0.05){currentLayout.top=currentLayout.top-gap;fixedLayouts.set(layoutKey(p.id,frame),currentLayout);}
+    }
+    fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
   };
   fixedPanel.addEventListener('input',event=>{
     const range=event.target.closest('[data-fixed-range]');
@@ -904,7 +1116,7 @@
     captionPositions.set(captionKey(),Number(button.dataset.captionPosition));markDirty('caption');updateCaptionButtons();renderEdit();
   });
   addEventListener('resize',()=>{if(!window.sceneStyleExporting&&!preview.classList.contains('is-pristine'))renderEdit()});
-  let captionDrag=null,captionMoveScope='scene';
+  let captionDrag=null,captionMoveScope='scene',textDrag=null;
   const moveScope=document.createElement('div');moveScope.className='caption-position';
   moveScope.hidden=true;
   moveScope.innerHTML='<button type="button" data-caption-scope="all" style="grid-column:1/-1">이 위치를 다른 장면에도 적용</button><small style="grid-column:1/-1" data-caption-scope-status></small>';
@@ -919,6 +1131,15 @@
   const lookRow=document.createElement('div');lookRow.className='caption-looks';
   lookRow.innerHTML='<span>자막박스 모양</span>'+[['auto','기본'],['none','박스 없음'],...CAPTION_LOOK_NAMES.map((n,i)=>[String(i),n])].map(([v,n])=>`<button type="button" data-caption-look="${v}">${n}</button>`).join('');
   maskDetails.querySelector('div').prepend(lookRow);
+  // 09-19 사장님 '버튼이 다 검정이라 뭐가 뭔지 모르겠다' — 버튼에 그 모양을 그대로 입혀 눈으로 고른다.
+  lookRow.querySelectorAll('[data-caption-look]').forEach(button=>{
+    const v=button.dataset.captionLook;
+    if(v==='auto')return;   // '기본'은 템플릿이 정하므로 칠하지 않는다
+    const look=v==='none'?CAPTION_NONE:CAPTION_LOOKS[Number(v)]?.('#43E2B4');if(!look)return;
+    Object.assign(button.style,{color:look.color,border:'1px solid #294451',borderRadius:'6px'});
+    for(const [k,val] of Object.entries(look.box||{}))if(!['left','width'].includes(k))button.style[k]=val;
+    if(v==='none'){button.style.background='#1b1b1b';Object.assign(button.style,look.text||{});}
+  });
   function syncCaptionLookButtons(){const saved=captionLayouts.get(captionKey())||{};const cur=saved.look==='none'?'none':Number.isInteger(saved.look)?String(saved.look):'auto';lookRow.querySelectorAll('[data-caption-look]').forEach(b=>b.classList.toggle('active',b.dataset.captionLook===cur));}
   lookRow.addEventListener('click',event=>{
     const b=event.target.closest('[data-caption-look]');if(!b)return;
@@ -945,6 +1166,26 @@
     captionMoveScope='scene';
     moveScope.querySelector('[data-caption-scope-status]').textContent='모든 장면에 적용했어요.';
   });
+  // 제목·채널명 끌어 옮기기(2026-09-19 사장님). 자막은 아래 기존 코드가 담당한다.
+  preview.addEventListener('pointerdown',event=>{
+    if(event.button!==0)return;
+    const hit=event.target.closest('.precision-text[data-edit-bind]');
+    const bind=hit?.dataset.editBind;
+    if(!bind||!['channel','hook1','hook2','bodyTitle'].includes(bind))return;
+    const rect=preview.getBoundingClientRect(),origin=textDrags.get(scaleKey(bind))||{x:0,y:0};
+    textDrag={pointer:event.pointerId,bind,key:scaleKey(bind),startX:event.clientX,startY:event.clientY,rect,origin,box:hit.getBoundingClientRect()};
+    preview.setPointerCapture(event.pointerId);event.preventDefault();
+  });
+  preview.addEventListener('pointermove',event=>{
+    if(!textDrag||event.pointerId!==textDrag.pointer)return;
+    const d=textDrag;
+    // 미리보기 밖으로 나가지 않게 막는다
+    const dx=Math.max(Math.min(0,d.rect.left-d.box.left),Math.min(Math.max(0,d.rect.right-d.box.right),event.clientX-d.startX));
+    const dy=Math.max(Math.min(0,d.rect.top-d.box.top),Math.min(Math.max(0,d.rect.bottom-d.box.bottom),event.clientY-d.startY));
+    textDrags.set(d.key,{x:d.origin.x+dx/d.rect.width*100,y:d.origin.y+dy/d.rect.height*100});
+    markDirty(d.bind);renderEdit();
+  });
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])preview.addEventListener(type,()=>{if(textDrag)rememberLocal({textDrags:Object.fromEntries(textDrags)});textDrag=null;});   /* 옮긴 자리를 바로 기억 */
   preview.addEventListener('pointerdown',event=>{
     if(event.button!==0||!event.target.closest('[data-edit-bind="caption"]'))return;
     const rect=preview.getBoundingClientRect(),text=layer.querySelector('.precision-text[data-edit-bind="caption"]');if(!text)return;
@@ -962,7 +1203,7 @@
     markDirty('caption');renderEdit();
   });
   for(const type of ['pointerup','pointercancel','lostpointercapture'])preview.addEventListener(type,()=>{if(captionDrag)applyCaptionMoveScope();captionDrag=null;});
-  const premiumFaces=['SBAggroB','YgJalnan','JalnanGothic','Jalnan2','GothicA1Black','GmarketSansBold','GasoekOne','Cafe24Ohsquare','KCCGanpan','BinggraeBold','BlackHanSans','Pretendard'];
+  const premiumFaces=['SBAggroB','YgJalnan','JalnanGothic','Jalnan2','GothicA1Black','GmarketSansBold','GasoekOne','Cafe24Ohsquare','KCCGanpan','BinggraeBold','BlackHanSans','Pretendard','BMDOHYEON','BMJUA','BagelFatOne','DongleBold','Kkubulim','NanumMyeongjoEB','RIDIBatang','HakgyoansimBunpil','NanumBrushScript','GaeguBold','Cafe24Danjunghae','SUITBold','NotoSansKRBold'];
   Promise.all(premiumFaces.map(family=>document.fonts?.load?.(`400 32px "${family}"`))).then(()=>{fittedText.clear();renderEdit()});
   document.fonts?.addEventListener?.('loadingdone',()=>{if(!window.sceneStyleExporting){fittedText.clear();renderEdit()}});
   saveButton&&(saveButton.textContent='현재 설정 저장');
@@ -975,7 +1216,7 @@
       if(saved){
         branding=Object.keys(saved.branding||{}).length?saved.branding:rememberedBranding();
         if(saved.presetId==='t11'&&saved.text?.channel==='이븐쇼핑')saved.text.channel='숏템메이커';
-        for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
+        for(const [name,map] of Object.entries({fontScales,textOffsets,textDrags,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         if(!query.has('preset')&&!query.has('mode')){
           modeBar.querySelector(`[data-template-mode="${saved.mode==='continuous'?'continuous':'story'}"]`).click();
           const index=rows.findIndex(p=>p.id===saved.presetId);if(index>=0)selectPreset(index);
@@ -985,21 +1226,21 @@
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;renderEdit();syncHookMotionUI();
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
       }
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
       if(saved){
-        for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts})){
+        for(const [name,map] of Object.entries({fontScales,textOffsets,textDrags,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts})){
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
         modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
