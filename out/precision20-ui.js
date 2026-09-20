@@ -538,7 +538,9 @@
     return p.id==='s0101'
       ? (frameKind==='hook'?['channel','hook1','hook2',...(((p.hook?.lines?.length||0)>2||p.hook?.white_box?.text)?['bodyTitle']:[])]:['channel','bodyTitle','caption'])
       : frameKind==='hook'
-        ? [...(hasChannel?['channel']:[]),...(lineCount?['hook1']:[]),...(lineCount>1?['hook2']:[]),...(lineCount>2||frame?.white_box?.text?['bodyTitle']:[])]
+        // 2026-09-21: 훅의 셋째 줄은 **보조 제목(서브카피)**이다 — 본문 제목과 같은 칸을 쓰면
+        //   한쪽에서 고친 글이 다른 쪽을 덮는다. 칸을 갈라 값이 섞이지 않게 한다.
+        ? [...(hasChannel?['channel']:[]),...(lineCount?['hook1']:[]),...(lineCount>1?['hook2']:[]),...(lineCount>2||frame?.white_box?.text?['supportTitle']:[])]
         : [...(hasChannel?['channel']:[]),...(lineCount?['bodyTitle']:[]),...(lineCount>1||frame?.white_box?.text?['caption']:[])];
   }
   function fieldSet(frameKind,p){
@@ -737,12 +739,20 @@
     const lines=frame.lines||[];
     lines.forEach((ln,i)=>{
       const key=ln.bind||(kind==='hook'?(i===0?'hook1':i===1?'hook2':'bodyTitle'):(i===0?'bodyTitle':'caption'));
-      if(key==='caption'||!dirty.has(key))return;
+      // 훅의 셋째 줄은 글자만 보조 제목(supportTitle)에서 온다 — 자리·크기·드래그는 종전 키 그대로다.
+      const fieldKey=(kind==='hook'&&key==='bodyTitle')?'supportTitle':key;
+      if(key==='caption'||!dirty.has(fieldKey))return;
       // 2026-09-21 사장님: 훅 화면에 큰 제목(hook1·hook2)과 같은 문장이 본문 제목 줄로 한 번 더 그려졌다.
       //   같은 글일 때만 건너뛴다 — 다른 문구를 넣으면 예전처럼 보인다.
+      //   2026-09-21 사장님 확정: 훅 서브띠(썰쇼핑형 16종, 화면의 9.4%)에는 **서브카피**를 그린다.
+      //   그 자리는 글자가 온다는 전제로 디자인됐는데 subline을 아무도 안 만들어 늘 빈칸이었다
+      //   (최근 job 40개 전수: subline 0개). 서브카피는 대본 구절에서 온다 —
+      //   template_copy.support_from_phrases 한 곳에서 고르고 지어내지 않는다.
+      let drawValue=value(fieldKey);
       if(kind==='hook'&&key==='bodyTitle'){
         const flat=t=>String(t||'').replace(/\s+/g,'');
-        if(flat(value('bodyTitle'))===flat(String(value('hook1')||'')+String(value('hook2')||'')))return;
+        // 보조 제목이 비었거나 큰 제목을 그대로 복사한 것이면 그리지 않는다(빈 띠가 낫다).
+        if(!String(drawValue||'').trim()||flat(drawValue)===flat(String(value('hook1')||'')+String(value('hook2')||'')))return;
       }
       const drawLine=storyBodyLine(fixedDrawLine(ln,frame),frame),pt=drawLine.patch_top??2,pb=drawLine.patch_bottom??2;
       const offset=(key==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(key);
@@ -756,7 +766,7 @@
       const roleColor=key==='hook2'?'accent':key==='hook1'?'white':null;
       const fixedOverride=mode==='continuous'?fixedColors.get(p.id):null;
       const fixedTextColor=fixedOverride?(key==='hook1'?fixedOverride.title1:(key==='hook2'||key==='bodyTitle')?fixedOverride.title2:null):null;
-      addText(value(key),drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
+      addText(drawValue,drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
     });
     const wb=frame.white_box;
     if(wb&&kind==='hook'){
@@ -768,10 +778,14 @@
     }
     // 2026-09-21 사장님: 훅 화면에 큰 제목과 흰 띠 글자가 같은 문장이라 두 번 보였다.
     //   두 글이 같은 때만 띠 글자를 그리지 않는다(띠 배경은 그대로, 다른 문구면 예전처럼 보인다).
-    const hookTitleSame=kind==='hook'&&String(value('bodyTitle')||'').replace(/\s+/g,'')===String((value('hook1')||'')+(value('hook2')||'')).replace(/\s+/g,'');
+    // 훅 흰 박스에 들어갈 글자는 **보조 제목**이다(2026-09-21). 종전엔 본문 제목(bodyTitle)을
+    //   보고 판정했는데 그건 큰 제목의 복사본이라 늘 '같다'가 되어 흰 박스가 통째로 막혔다.
+    const hookTitleSame=kind==='hook'&&String(value('supportTitle')||'').replace(/\s+/g,'')===String((value('hook1')||'')+(value('hook2')||'')).replace(/\s+/g,'');
     if(wb?.text&&kind==='hook'&&!hookTitleSame){
       const key=kind==='hook'?'bodyTitle':'caption';
-      if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
+      // 훅 흰 박스도 글자는 보조 제목에서 온다 — 위 lines 경로와 같은 규칙이어야 한다(0순위-B).
+      const fieldKey=kind==='hook'?'supportTitle':key;
+      if(dirty.has(fieldKey)&&String(value(fieldKey)||'').trim()){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(fieldKey),wb.text,frame,'#111111','center',key);}
     }
     applyChannelSlot(frame,p);   // 09-19: 고정형에서도 채널명 칸이 먹게
     if(mode==='story'){
