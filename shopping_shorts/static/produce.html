@@ -4261,6 +4261,16 @@ function showPanel(){
   if(cur===2) loadTtsBeats();
   if(cur===3) initHeadcopy();
   if(cur===3 && typeof syncSceneStyleCanary==='function') syncSceneStyleCanary();
+  // ★장면꾸미기 단계에 들어오면 편집기를 바로 연다 — 2026-09-21 사장님이 이 단계에서 무엇을
+  //   눌러야 할지 몰라 옛 피팅룸에서 고치려 했다(거기서 고치면 최종 영상에 안 들어간다).
+  //   ★jump()가 아니라 여기(showPanel)에 두는 이유: 새로고침·서버 복원으로 이 단계에 바로
+  //     들어오는 길은 jump를 거치지 않는다(실측: 복원 뒤 패널3인데 편집기가 안 열렸다).
+  //     단계를 그리는 곳은 여기 한 곳이므로 어느 경로로 들어와도 걸린다(0순위-B).
+  //   ★한 번만 연다 — 닫고 나서 또 열리면 단계를 빠져나갈 수 없다.
+  if(cur===3 && typeof MIX_JOB!=='undefined' && MIX_JOB && !_sceneStyleAutoOpened
+     && typeof openSceneStyleEditor==='function'){
+    _sceneStyleAutoOpened=true; setTimeout(()=>{ try{ openSceneStyleEditor(); }catch(_){} }, 400);
+  }
   if(cur===4) initThumb();
   if(cur===5) initSeo();
   // 10단계(패널 9)를 열면 Buffer 채널을 불러온다 — 다른 패널에선 부르지 않는다
@@ -8745,12 +8755,6 @@ function jump(o){
   //   위의 어긋남 배너 버튼으로 사람이 누르게 한다.
   try{
     if(p===7 && STATE.script && !MIX_JOB && typeof startProduceMix==='function'){ startProduceMix(); }
-    // ★장면꾸미기(패널3)에 들어오면 편집기를 바로 연다 — 2026-09-21 사장님이 이 단계에서
-    //   무엇을 눌러야 할지 몰라 옛 피팅룸에서 고치려 했다. 딸깍(원클릭) 원칙대로 한 번에 띄운다.
-    //   ★한 번만 연다 — 닫고 나서 또 열리면 단계를 빠져나갈 수 없다.
-    if(p===3 && MIX_JOB && !_sceneStyleAutoOpened && typeof openSceneStyleEditor==='function'){
-      _sceneStyleAutoOpened=true; setTimeout(()=>{ try{ openSceneStyleEditor(); }catch(_){} }, 350);
-    }
   }catch(e){}
 }
 function go(d){
