@@ -2167,7 +2167,7 @@
         <a href="#" id="legacyDecoShow" style="color:#7fd7ff">옛 방식으로 고치기</a>
       </div>
       <span id="sceneStyleStatus" class="hint"></span>
-      <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
+      <div class="sub" id="legacyDecoHint">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div id="legacyDecoRoom" style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
         <!-- 좌: 큰 피팅 미러 (다듬기 스크롤 시 따라오도록 sticky) — T8: 좌측 슬롯 규약(.previewSlot) 공유 -->
@@ -3689,6 +3689,7 @@ const STEP_ICONS = [
 // ★SNS 예약(신규 패널 9)은 **완성본 뒤**에 붙는다 — 영상이 나와야 올릴 수 있다.
 const ORB_TO_PANEL = [0, 8, 7, 2, 1, 3, 4, 5, 6, 9];   // 2026-09-01 TTS를 자막제거 앞으로
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
+let _sceneStyleAutoOpened = false;   // 장면꾸미기 편집기 자동 열기는 단계당 한 번(2026-09-21)
 // ★안내 문구가 단계 번호를 직접 쓰지 않게 한다(2026-08-16). 예전엔 "1단계에서 영상 매칭을
 //   먼저 하세요" 같은 문장이 16곳에 손으로 박혀 있었는데, 9단계 개편으로 매칭이 3단계가
 //   되면서 **전부 거짓말이 됐다**. 다음에 순서가 또 바뀌어도 여기만 맞으면 문구가 따라온다
@@ -8744,6 +8745,12 @@ function jump(o){
   //   위의 어긋남 배너 버튼으로 사람이 누르게 한다.
   try{
     if(p===7 && STATE.script && !MIX_JOB && typeof startProduceMix==='function'){ startProduceMix(); }
+    // ★장면꾸미기(패널3)에 들어오면 편집기를 바로 연다 — 2026-09-21 사장님이 이 단계에서
+    //   무엇을 눌러야 할지 몰라 옛 피팅룸에서 고치려 했다. 딸깍(원클릭) 원칙대로 한 번에 띄운다.
+    //   ★한 번만 연다 — 닫고 나서 또 열리면 단계를 빠져나갈 수 없다.
+    if(p===3 && MIX_JOB && !_sceneStyleAutoOpened && typeof openSceneStyleEditor==='function'){
+      _sceneStyleAutoOpened=true; setTimeout(()=>{ try{ openSceneStyleEditor(); }catch(_){} }, 350);
+    }
   }catch(e){}
 }
 function go(d){
@@ -9592,10 +9599,12 @@ async function _restoreWork(workId){
     const notice = document.getElementById('legacyDecoNotice');
     if(room && notice){
       room.hidden = hasSceneStyle;
+      const hint = document.getElementById('legacyDecoHint');
+      if(hint) hint.hidden = hasSceneStyle;
       notice.hidden = !hasSceneStyle;
       const show = document.getElementById('legacyDecoShow');
       if(show && !show.dataset.wired){ show.dataset.wired='1';
-        show.addEventListener('click', e=>{ e.preventDefault(); room.hidden=false; show.hidden=true; }); }
+        show.addEventListener('click', e=>{ e.preventDefault(); room.hidden=false; if(hint) hint.hidden=false; show.hidden=true; }); }
     }
   }catch(_){}
 
