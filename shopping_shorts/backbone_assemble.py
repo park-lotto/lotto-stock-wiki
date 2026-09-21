@@ -296,7 +296,8 @@ def _cta_keyword(product):
 
 
 _SEED_CELL_SCHEMA = {"type": "object", "properties": {"lines": {"type": "array", "items": {
-    "type": "object", "properties": {"role": {"type": "string"}, "text": {"type": "string"}},
+    "type": "object", "properties": {"role": {"type": "string"}, "text": {"type": "string"},
+                                     "fixed": {"type": "array", "items": {"type": "string"}}},
     "required": ["role", "text"]}}}, "required": ["lines"]}
 
 
@@ -312,14 +313,44 @@ def origin_from_seed(seed_src, note=None):
     txt = ((seed_src or {}).get("full_text") or "").strip()
     if len(txt) < 60:
         return None
-    out = _sg._call_json(
-        "아래는 실제로 잘 된 쇼핑 숏폼 대본이다. 의미 단위로 칸을 나눠라.\n"
-        "- 원문 글자를 고치거나 빼지 말고 **그대로 나누기만** 해라.\n"
-        "- 칸마다 role(훅/계기/불편/전환/작동/심지어/감정/CTA 중 하나)과 text.\n\n%s" % txt[:1200],
-        _SEED_CELL_SCHEMA, note=note) or {}
-    cells = [{"role": str(x.get("role") or ""), "text": str(x.get("text") or "").strip()}
-             for x in (out.get("lines") or []) if str(x.get("text") or "").strip()]
+    p = ("아래는 실제로 잘 된 쇼핑 숏폼 대본이다. 의미 단위로 칸을 나눠라.\n"
+         "- 원문 글자를 고치거나 빼지 말고 **그대로 나누기만** 해라.\n"
+         "- 칸마다 role(훅/계기/불편/전환/작동/심지어/감정/CTA 중 하나)과 text.\n"
+         "- 칸마다 fixed: 그 칸에서 **제품이 바뀌어도 그대로 쓸 수 있는** 이 채널의 관용구·연결어를 원문 글자 그대로"
+         "(예: '이건 바로', '이게 말도 안 되는 게', '근데 진짜 미친 포인트는'). 제품 이름·기능 낱말은 넣지 마라. 없으면 [].\n\n%s"
+         % txt[:1200])
+    cells = []
+    # ★칸 나누기가 빈손이면 자동 안이 조용히 '남의 히트작 뼈대'로 되돌아간다(09-21 격리 실측 3회 중 1회).
+    #   모델 혼잡은 잠깐 뒤 다시 하면 된다 — 1회만 다시 한다.
+    for wait in (0, 4):
+        if wait:
+            time.sleep(wait)
+        out = _sg._call_json(p, _SEED_CELL_SCHEMA, note=note) or {}
+        cells = []
+        for x in (out.get("lines") or []):
+            t = str(x.get("text") or "").strip()
+            if not t:
+                continue
+            # 관용구는 **그 칸 원문에 실제로 있는 글자**만 받는다 — 모델이 지어낸 말을 고정하면 안 된다.
+            fx = [f.strip() for f in (x.get("fixed") or []) if isinstance(f, str) and len(f.strip()) >= 3 and f.strip() in t]
+            cells.append({"role": str(x.get("role") or ""), "text": t, "fixed": fx})
+        # 관용구만 있고 내용이 없는 칸("근데 진짜 미친 포인트는")은 다음 칸의 첫머리다 — 혼자 두면 대본에도
+        #   내용 없는 한 줄이 생기고 그 줄에 컷이 따로 배정된다(09-21 격리 실측: 나누기가 6칸/7칸으로 흔들림).
+        merged = []
+        for c in cells:
+            prev = merged[-1] if merged else None
+            nsp = re.sub(r"\s+", "", prev["text"]) if prev else ""
+            if prev and prev["fixed"] and nsp == re.sub(r"\s+", "", "".join(prev["fixed"])):
+                merged[-1] = {"role": prev["role"], "text": prev["text"] + " " + c["text"],
+                              "fixed": prev["fixed"] + c["fixed"]}
+            else:
+                merged.append(c)
+        cells = merged
+        if len(cells) >= 3:
+            break
     if len(cells) < 3:
+        if note is not None:
+            note["seed_origin_failed"] = "씨앗 칸 나누기 실패(%d칸)" % len(cells)
         return None
     return {"cells": cells, "views": (seed_src or {}).get("views") or 0,
             "user": (seed_src or {}).get("video_id") or "", "seed": True}
@@ -467,8 +498,77 @@ def fix_insta_cta(lines, spine, product):
     return lines
 
 
+_POLITE_END = re.compile(r"(요|니다|니까|세요|시오|죠)[\s.!?~…]*$")
+
+
+def _polite_ratio(texts):
+    ts = [t for t in (texts or []) if (t or "").strip()]
+    return (sum(1 for t in ts if _POLITE_END.search(t.strip())) / len(ts)) if ts else 0.0
+
+
+def _opener(text):
+    ws = (text or "").strip().split()
+    return re.sub(r"[^\w가-힣]", "", ws[0]) if ws else ""
+
+
+def seed_voice_gap(lines, cells):
+    """씨앗을 뼈대로 쓴 대본이 **씨앗의 화자·말투·칸 첫머리**를 지켰나 — 모델 호출 없이 센다.
+
+    ★상황표 대조(cast_gap)는 남의 히트작을 빌릴 때 검사다. 씨앗은 같은 제품의 영상이라 지킬 것이
+      반대다: 인물을 새로 짜는 게 아니라 **씨앗 그대로**여야 한다(2026-09-21 사장님 화면 확인 —
+      반말 소개체가 "저도 아내 쓰라고 장만했습니다"로 바뀌고 관용구 칸이 빠졌다).
+    반환: 어긋난 점 문장 목록(없으면 []).
+    """
+    cells = [c for c in (cells or []) if (c.get("text") or "").strip()]
+    texts = [(l.get("text") or "").strip() for l in (lines or []) if (l.get("text") or "").strip()]
+    gaps = []
+    if len(texts) != len(cells):
+        gaps.append("칸 수가 씨앗과 다르다(씨앗 %d칸, 대본 %d줄) — 칸을 합치거나 빼지 마라" % (len(cells), len(texts)))
+    po, pn = _polite_ratio([c["text"] for c in cells]), _polite_ratio(texts)
+    if abs(po - pn) > 0.4:
+        gaps.append("말투가 씨앗과 다르다(씨앗은 %s인데 대본은 %s) — 씨앗의 화자·말투 그대로 써라"
+                    % ("존댓말" if po >= 0.5 else "반말", "존댓말" if pn >= 0.5 else "반말"))
+    elif po <= 0.1 or po >= 0.9:
+        # 씨앗 말투가 한결같으면 **한 줄만 튀어도** 티가 난다(09-21 격리 실측: 반말 씨앗에 끝 줄만
+        #   "꺼내 써보세요"·"불편했단 말이죠"). 비율 문턱(0.4)은 이걸 못 잡는다 — 줄 단위로 본다.
+        odd = [t for t in texts if bool(_POLITE_END.search(t)) != (po >= 0.9)]
+        if odd:
+            gaps.append("씨앗은 전부 %s인데 이 줄만 다르다(%s) — 같은 말투로 고쳐라"
+                        % ("존댓말" if po >= 0.9 else "반말", " / ".join(o[-14:] for o in odd[:3])))
+    # 관용구: 씨앗에서 글자 그대로 뽑아 둔 말(cells[].fixed)이 **같은 칸**에 살아 있나. 첫 어절만 세면
+    #   "이게 말도 안 되는 게 → 이게 정말 편한 게"를 못 잡는다(09-21 격리 실측).
+    nsp = lambda s: re.sub(r"\s+", "", s or "")      # noqa: E731 — 띄어쓰기 차이는 같은 말이다
+    lost = [f for c, t in zip(cells, texts) for f in (c.get("fixed") or []) if nsp(f) not in nsp(t)]
+    if lost:
+        gaps.append("씨앗 관용구가 빠지거나 바뀌었다(%s) — 그 칸에 글자 그대로 넣어라" % ", ".join("'%s'" % f for f in lost[:6]))
+    # 통째로 옮김: 뼈대·말투·관용구는 씨앗 것이어도 **본문 문장**은 새로 써야 한다(남의 영상이다).
+    #   훅(첫 칸)은 글자 그대로 두는 게 설계라 뺀다(enforce_hook, 2026-09-20 사장님).
+    #   격리 실측(09-21): 같은 재료 3회에 6어절 겹침이 1.2%~14.9%로 흔들렸다 — 계기 칸을 절반쯤 옮긴 탓.
+    seed_words = " ".join(re.sub(r"[^\w가-힣\s]", " ", " ".join(c["text"] for c in cells)).split())
+    copied = []
+    for t in texts[1:]:
+        ws = re.sub(r"[^\w가-힣\s]", " ", t).split()
+        if len(ws) >= 6 and any((" " + " ".join(ws[i:i + 6]) + " ") in (" " + seed_words + " ")
+                                for i in range(len(ws) - 5)):
+            copied.append(" ".join(ws[:4]) + "…")
+    if copied:
+        gaps.append("씨앗 문장을 6어절 넘게 그대로 옮겼다(%s) — 관용구만 남기고 나머지는 네 말로 다시 써라" % ", ".join(copied[:4]))
+    if not any(c.get("fixed") for c in cells):       # 관용구를 못 뽑은 씨앗이면 첫머리로 대신 본다
+        miss = [c["text"].strip().split()[0] for c, t in zip(cells, texts)
+                if _opener(c["text"]) and _opener(c["text"]) != _opener(t)]
+        if cells and len(miss) > len(cells) / 2:
+            gaps.append("칸 첫머리가 씨앗과 다르다(씨앗 첫머리: %s) — 칸을 여는 말은 씨앗 그대로 둬라" % ", ".join(miss[:6]))
+    return gaps
+
+
 def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds=25, note=None, seed_src=None):
-    """원문형 스파인: ①전제 읽기 → ②이 제품 상황표 → ③원문 말투로 대본 → ④상황표와 대조, 어긋나면 1회 재작성."""
+    """원문형 스파인: ①전제 읽기 → ②이 제품 상황표 → ③원문 말투로 대본 → ④상황표와 대조, 어긋나면 1회 재작성.
+
+    ★origin이 **씨앗**(origin_from_seed, seed=True)이면 ①②④를 건너뛴다 — 상황표는 남의 히트작
+      인물 배치를 이 제품에 맞게 새로 짜는 장치인데, 씨앗은 이미 이 제품의 영상이다. 거기에 상황표를
+      들이대면 화자가 바뀐다(09-21 실측). 대신 seed_voice_gap으로 씨앗의 화자·말투·칸 첫머리를 지켰나 본다.
+    """
+    is_seed = bool(origin.get("seed"))
     cells = [c for c in (origin.get("cells") or []) if (c.get("text") or "").strip()]
     feats = []
     for k, gi in enumerate(groups_out["order"]):
@@ -476,8 +576,10 @@ def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds
         desc = " / ".join(seg_index.get(c, {}).get("desc", "")[:50] for c in (g.get("cuts") or [])[:2] if c in seg_index)
         feats.append("  %d. [%d] %s — %s (화면: %s)" % (k + 1, gi, g.get("name"), g.get("claim"), desc))
     product = groups_out.get("product") or ""
-    premise = origin.get("premise") or read_premise(origin, note=note)
-    cast = build_cast(premise, product, feats, note=note)
+    cast = {}
+    if not is_seed:
+        premise = origin.get("premise") or read_premise(origin, note=note)
+        cast = build_cast(premise, product, feats, note=note)
     if cast.get("fit") is False:
         if note is not None:
             note["cast_unfit"] = cast.get("why_not") or "전제가 이 제품과 안 맞음"
@@ -489,23 +591,38 @@ def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds
     loop_rule = "- ★원문은 마지막을 끝맺지 않고 끊어 첫 장면으로 잇는다(반복 재생). 새 대본도 똑같이 끊어라.\n" if loop else ""
     # 칸마다 원문 글자수를 알려준다 — 길이는 씨앗(원문)을 따른다(2026-09-21 사장님
     #   "씨앗 길이를 따라도 된다"). 목표 초를 따로 들이대면 원문 결이 먼저 깨진다.
-    cell_spec = "\n".join("  %d. %s - %d자 내외 (원문: %s)"
-                            % (i, c.get("role") or "", len(c.get("text") or ""), c.get("text") or "")
+    cell_spec = "\n".join("  %d. %s - %d자 내외 (원문: %s)%s"
+                            % (i, c.get("role") or "", len(c.get("text") or ""), c.get("text") or "",
+                               (" ★이 칸에 글자 그대로 넣을 말: %s" % " / ".join("'%s'" % f for f in c["fixed"]))
+                               if c.get("fixed") else "")
                             for i, c in enumerate(cells, 1))
+    # 인물·제품 규칙은 뼈대가 누구 것이냐로 갈린다 — 값은 여기 한 곳에서만 정한다(0순위-B).
+    if is_seed:
+        head = "[원문]은 바로 [이 제품]을 소개해 잘 된 영상이다. 그 뼈대·화자 그대로 [이 제품]의 대본을 새로 써라."
+        who_rule = ("- ★말하는 사람(화자)과 말투(반말/존댓말)는 원문 그대로다. 원문에 없는 '저·아내·남편·엄마' 같은 "
+                    "1인칭 사연이나 새 인물을 만들지 마라.\n"
+                    "- ★칸을 여는 말(원문 각 칸의 첫머리 관용구·연결어)은 그 칸 첫머리에 글자 그대로 둔다.\n"
+                    "- ★첫 줄(훅)은 원문 그대로 나간다. 훅이 부른 대상(누가 쓰는 물건인지)을 본문에서 다른 사람들로 바꾸지 마라.\n")
+        prod_rule = "- 제품 이야기는 아래 특징과 [재료]에 있는 것만. 원문이 말했어도 [재료] 화면에 없으면 빼라.\n"
+        cast_part = ""
+    else:
+        head = "[상황표]대로 [이 제품]의 대본을 써라."
+        who_rule = "- ★사람·장소·사는 사람은 [상황표]를 따른다. 원문의 인물 배치를 베끼지 마라.\n"
+        prod_rule = "- 제품 이야기는 아래 특징에 있는 것만. 원문의 원래 제품 이야기는 한 조각도 남기지 마라.\n"
+        cast_part = "[상황표]\n%s\n\n" % json.dumps(cast, ensure_ascii=False)
     prompt = (
-        "아래 [원문]은 조회수 %s회가 나온 쇼핑 숏폼 대본이다. [상황표]대로 [이 제품]의 대본을 써라.\n\n규칙\n%s%s"
+        "아래 [원문]은 조회수 %s회가 나온 쇼핑 숏폼 대본이다. %s\n\n규칙\n%s%s"
         "- 칸은 정확히 %d개, 순서는 원문과 똑같이. 칸을 더 만들거나 빼지 마라.\n"
         "- 칸마다 원문의 말투·어미·연결어를 그대로 살리고, 글자수도 [칸 구조]의 ±20%% 안으로.\n"
         "- ★원문에 없는 칸을 새로 만들지 마라. 원문에 CTA가 없으면 '써보세요' 같은 권유로 끝내지 마라.\n"
-        "- ★사람·장소·사는 사람은 [상황표]를 따른다. 원문의 인물 배치를 베끼지 마라.\n"
-        "- 제품 이야기는 아래 특징에 있는 것만. 원문의 원래 제품 이야기는 한 조각도 남기지 마라.\n"
+        "%s%s"
         "- ★[재료]의 장면 설명에 실제로 보이는 것만 말해라. 화면에 없는 수치·출처·판매량·효능을 지어내지 마라.\n"
         "- 같은 문장을 두 번 쓰지 마라. 원문·특징·재료 문장을 통째로 베끼지 말고 네 말로 다시 써라.\n"
         "- 줄마다 role(원문 칸 이름), group(그 줄이 말하는 특징 번호, 훅·마무리는 -1).\n\n"
-        "[상황표]\n%s\n\n[원문]\n%s\n\n[칸 구조]\n%s\n\n[이 제품] %s\n%s\n\n"
+        "%s[원문]\n%s\n\n[칸 구조]\n%s\n\n[이 제품] %s\n%s\n\n"
         "%s\n\n[재료 - 이 제품 영상들의 컷마다 길이·화면·그 컷에서 한 말]\n%s"
-        % (origin.get("views") or 0, hook_rule, loop_rule, len(cells),
-           json.dumps(cast, ensure_ascii=False), _origin_text(origin), cell_spec,
+        % (origin.get("views") or 0, head, hook_rule, loop_rule, len(cells), who_rule, prod_rule,
+           cast_part, _origin_text(origin), cell_spec,
            product, "\n".join(feats), seed_block(seed_src), material_block(seg_index)))
 
     # 원문 칸들이 부호 없이 이어지는 꼴이면 새 대본에도 마침표를 안 붙인다.
@@ -521,15 +638,21 @@ def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds
             ls[-1]["text"] = ls[-1]["text"].rstrip(".")
         return ls
 
+    # 검사는 뼈대에 맞는 것 하나만: 씨앗이면 '씨앗 그대로인가', 빌린 원문이면 '상황표와 맞나'.
+    _gap = (lambda ls: seed_voice_gap(ls, cells)) if is_seed else (lambda ls: cast_gap(ls, cast, product))
+    _what = "씨앗과" if is_seed else "상황표와"
     lines = _run(prompt)
-    gaps = cast_gap(lines, cast, product) if lines else []
+    gaps = _gap(lines) if lines else []
     if gaps:
-        l2 = _run(prompt + "\n\n[고칠 점] 앞 대본이 상황표와 이렇게 어긋났다:\n- " + "\n- ".join(gaps))
-        left = cast_gap(l2, cast, product) if l2 else gaps
+        l2 = _run(prompt + "\n\n[고칠 점] 앞 대본이 %s 이렇게 어긋났다:\n- " % _what + "\n- ".join(gaps))
+        left = _gap(l2) if l2 else gaps
         if l2 and len(left) < len(gaps):
             lines, gaps = l2, left
     if note is not None:
+        # ★assemble_clean은 note["cast"]["issues"]로 통과 여부를 본다 — 씨앗 검사도 같은 칸에 싣는다.
         note["cast"] = {"table": cast, "issues": gaps}
+        if is_seed:
+            note["seed_voice"] = {"issues": gaps}
     lines = enforce_hook(lines, origin, product)
     lines = fix_insta_cta(lines, spine or {}, product)
     return _no_made_up_country(_one_full_name(lines, product), seg_index)
@@ -566,6 +689,7 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
             origin = _so
             if note is not None:
                 note["origin_from_seed"] = True
+                note["seed_cells"] = _so.get("cells")     # 점검 도구가 **대본을 만든 그 칸**과 대조한다
     if origin:
         return write_lines_from_origin(origin, groups_out, hook_spine, seg_index, target_seconds,
                                        note=note, seed_src=seed_src)
@@ -654,11 +778,21 @@ def _one_full_name(lines, product):
     if len(words) < 2:
         return lines
     short = words[-1]
-    out = []
+    # ★원문형·씨앗 경로의 칸 이름은 훅/전환/작동…이라 'reveal' 줄이 없다. 그대로 두면 이름을 밝히는
+    #   유일한 줄까지 깎여 "이건 바로 빗"이 된다(09-21 격리 실측 3회 중 3회). 그땐 **처음 나온 곳**이 공개 줄이다.
+    has_reveal = any(L.get("role") == "reveal" for L in lines)
+    out, kept = [], False
     for L in lines:
         t = L["text"]
-        if L.get("role") != "reveal" and product in t:
-            t = t.replace(product, short)
+        if product in t:
+            if L.get("role") == "reveal":
+                pass
+            elif not has_reveal and not kept:
+                kept = True
+                head, _, tail = t.partition(product)
+                t = head + product + tail.replace(product, short)
+            else:
+                t = t.replace(product, short)
         out.append(dict(L, text=t))
     return out
 
@@ -1102,7 +1236,10 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
         return None, None, {"note": note, "groups": groups_out}
     beat_sources, report = assign_cuts(lines, groups_out, seg_index, backbone_vid)
     given = "\n".join(L["text"] for L in lines)
-    meta = {"product": groups_out["product"], "spine": {"id": spine.get("id"), "name": spine.get("name")},
+    # 씨앗을 뼈대로 썼으면 이름도 그렇게 말한다 — 유형을 고르느라 집은 스파인 이름("히트작 발명품형…")이
+    #   뜨면 그 스파인 틀로 만든 줄 안다(2026-09-21 사장님 화면 확인).
+    _sp_name = "씨앗 그대로" if note.get("origin_from_seed") else spine.get("name")
+    meta = {"product": groups_out["product"], "spine": {"id": spine.get("id"), "name": _sp_name},
             "groups": groups_out, "report": report, "note": note}
     return given, beat_sources, meta
 
