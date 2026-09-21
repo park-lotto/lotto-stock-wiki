@@ -853,9 +853,30 @@
         //   (실측 t02 본문 1.6%) 그림과 계속 어긋났다. 기준이 둘이면 반드시 벌어진다(0순위-B).
         const before=parseFloat(chEl0.style.top)||0,next=Math.max(0,before+shift+chDrag.y);
         chEl0.style.top=next+'%';
-        layer.querySelectorAll('.precision-patch[data-edit-bind="channel"]').forEach(box=>{
-          const t=parseFloat(box.style.top)||0;box.style.top=Math.max(0,t+(next-before))+'%';
-        });
+        // ★머리띠 장식(캡슐·돋보기·햄버거)도 채널명과 **함께** 내린다 — 2026-09-21 사장님이
+        //   라이브에서 직접 눌러 잡아준 것: 글자만 10.5%→19.9%로 가고 캡슐류(0.2·2.8·2.8·7.8)는
+        //   전부 제자리였다. 캡슐은 `data-edit-bind="channel"`이 아니라 frame.surfaces에서 온
+        //   `.body-material` 패치라, 그 표식만 보던 종전 코드가 하나도 못 옮겼다.
+        //   ★내 전수 검사도 같은 셀렉터를 써서 **엉뚱한 걸 재고 통과**했다(표식과 검사는 짝이다).
+        //   기준: 원래 채널 글자 아래끝보다 위에 있는 머리띠 조각만 옮긴다(제목·자막·영상은 그대로).
+        const delta=next-before;
+        if(delta){
+          // 머리띠 경계 = **제목 줄 위**까지. 채널 글자 바로 아래로 자르면 훅에서 캡슐 일부가
+          //   기준 밖으로 밀려 안 따라왔다(실측 16건: 글자 8.5% 움직일 때 캡슐 1.2%만).
+          const titleEl=layer.querySelector('.precision-text[data-edit-bind="hook1"]')
+                       ||layer.querySelector('.precision-text[data-edit-bind="bodyTitle"]');
+          const chH=chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
+          const titleTop=titleEl?(titleEl.getBoundingClientRect().top-preview.getBoundingClientRect().top)/Math.max(1,preview.clientHeight)*100:0;
+          const headLimit=Math.max(before+chH+0.6,titleTop-0.5);
+          layer.querySelectorAll('.precision-patch,.scene-brand-ink').forEach(el=>{
+            const bind=el.dataset.editBind||'';
+            if(bind&&bind!=='channel')return;                      // 제목·자막 줄 배경은 건드리지 않는다
+            if(el.classList.contains('story-band-fill'))return;     // 머리띠 바탕은 늘 맨 위를 덮어야 한다
+            const t=parseFloat(el.style.top)||0;
+            if(bind!=='channel'&&t>headLimit)return;                // 머리띠 아래 것은 그대로
+            el.style.top=Math.max(0,t+delta)+'%';
+          });
+        }
       }
       // 채널명을 내리면 제목 줄도 겹치지 않게 함께 내린다(훅·본문 공통)
       if(saved>0){
