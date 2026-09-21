@@ -68,14 +68,16 @@ def _run(cmd, cwd):
 
 
 def _xdist_args():
-    """pytest-xdist가 있으면 전 코어 병렬(-n auto). 전역 finish 락이 한 번에 하나의
+    """pytest-xdist가 있으면 4워커 병렬(-n 4, 원래 -n auto). 전역 finish 락이 한 번에 하나의
     게이트만 돌리므로 CPU 스래싱 없이 그 하나가 16코어를 다 쓴다 — 실측 직렬 312초 →
     병렬 44초(7배), 실패집합 완전 동일(9 failed/2396 passed). 미설치 환경은 직렬 폴백."""
     try:
         import xdist  # noqa: F401
     except Exception:
         return []
-    return ["-n", "auto"]
+    # 사장님(2026-09-21): 16코어를 다 쓸 일이 아니다 — 게이트가 돌 때마다 PC가 버벅였다.
+    # 4개로 묶어 나머지 코어는 다른 작업에 남긴다.
+    return ["-n", "4"]
 
 
 def snapshot(cwd=BASE, run=_run):
