@@ -79,3 +79,4 @@
   도구 tools/qa_channel_box_fit.js 신규. 캡슐은 designed(그림) 32칸 / DOM 28칸으로 갈라서 재야 한다.
   고치는 것은 다른 세션이 이어받는다 — 핸드오프에 볼 곳·주의사항 정리.
 - 09-21 이어서: 트랙을 v182로 맞추고 60칸 캡처 전수 확인 — 124건 대부분 보이지 않는 상자 기준 헛경보, 실제 깨짐은 보이는 캡슐 5칸+이븐쇼핑 아이콘. 도구 SHOT 캡처·qa_contact_sheet.py 추가. 고객 코드 변경 0
+- 09-21 밤: 서버 실제 job(관리자 93de4727fc85)을 로컬 미러(8772)로 옮겨 서버와 같은 코드·데이터로 장면꾸미기 편집기까지 열림 확인. 도구 mirror_live_job.py·serve_local_mirror.py·qa_mirror_open_scene_style.js. 서버는 읽기만, 고객 코드 변경 0
