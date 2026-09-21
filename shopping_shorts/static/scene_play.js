@@ -684,6 +684,18 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const nPhrase = caps.length;   // ★어제 그대로 — 자막 줄 수가 컷 수다
       const pos = segments.map(s => s.start);
       let ri = 0;
+      // ★어느 조각이 어느 구절을 덮는지는 **서버가 정해 실어 보낸다**(2026-09-21 박세현님 job
+      //   fe21f8a5dc71: 마지막 줄을 나눴더니 2번째 줄의 장면이 바뀌었다). 판단처는 서버
+      //   video_assemble.phrase_owners 한 곳 — 여기서 같은 규칙을 다시 짜지 않는다(0순위-B).
+      //   caps[k].owner = 그 구절을 덮는 조각 번호, owner_n = 그 값이 맞는 조각 수.
+      //   화면에서 조각을 넣고 빼 수가 달라지면 그 값은 못 쓴다 → 아래 종전 식으로 그리고,
+      //   저장(autoApply) 응답이 새 값을 주면 다시 맞춘다. 수가 **되돌아와도** 옛 값을 되살리면
+      //   안 되므로(서버는 그 사이 종전 식으로 다시 얼렸다) 실제 편성에서 어긋난 순간 지운다.
+      const ownOk = caps.every(c => Number.isInteger(c.owner) && c.owner >= 0
+                                    && c.owner < segments.length && c.owner_n === segments.length);
+      if (!ownOk && typeof lists !== 'undefined' && lists[beatIdx] === segIds)
+        caps.forEach(c => { delete c.owner; delete c.owner_n; });
+      let prevIdx = -1;
       for (let k = 0; k < nPhrase; k++) {
         const isLast = k === nPhrase - 1;
         const endB = isLast ? bounds[bounds.length - 1] : bounds[k + 1];
@@ -699,11 +711,16 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         //   같은 장면이 두 번(앞 것 0.57초) 나왔다. 이어붙이면 조각 k가 자기 몫의 구절을 연달아
         //   덮어 컷은 조각 수 그대로, 자막만 늘어난다. 자리는 여전히 k·개수만으로 정해진다.
         //   구절 ≤ 조각이면 종전처럼 1:1. ★서버(video_assemble._plan_phrase_clips)와 같은 식.
-        const idx = nPhrase <= segments.length ? k : Math.floor(k * segments.length / nPhrase);
+        const idx = ownOk ? caps[k].owner
+          : (nPhrase <= segments.length ? k : Math.floor(k * segments.length / nPhrase));
         const seg = segments[idx];
         // 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시 본다(같은 내용 반복).
+        // ★단 같은 조각이 **바로 앞 구절에 이어** 덮는 중이면 되감지 않고 끝 프레임에서 버틴다
+        //   (2026-09-21 — 줄을 나누기 전의 '한 컷 슬로모→정지'와 같은 그림. 서버와 같은 규칙).
         let st = pos[idx];
-        if (seg.end != null && seg.end - st < Math.min(d, MIN_CLIP) - EPS) st = seg.start;
+        if (seg.end != null && seg.end - st < Math.min(d, MIN_CLIP) - EPS)
+          st = (k > 0 && idx === prevIdx) ? Math.max(seg.start, Math.min(st, seg.end - 0.1)) : seg.start;
+        prevIdx = idx;
         const clip = { seg_id: seg.seg_id, video_id: seg.video_id, start: st, dur: Math.round(d * 100) / 100 };
         // ★조각 끝을 넘지 않는다(2026-09-17 이윤정님 "미리보기에서 중간에 다른 화면이 짧게").
         //   구절이 조각보다 길면 종전엔 dur만큼 그대로 틀어 조각 뒤 **다음 장면**이 새어 나왔다

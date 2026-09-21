@@ -96,7 +96,9 @@ def test_조각수가_바뀌면_얼린짝은_무효():
     assert va.phrase_owners(b, 2) == [0, 0, 1, 1]        # 조각 2개 = 종전 식
 
 
-def test_얼린짝_없는_옛_job은_종전과_바이트동일():
+def test_얼린짝_없는_옛_job은_장면_배정이_종전_그대로():
+    """배정(어느 줄에 어느 장면)은 옛 식 그대로다. ★달라지는 것 하나: 같은 장면이 바로 다음 줄로
+    이어질 때 재료가 모자라면 종전엔 처음부터 **되감았고** 이제는 끝 프레임에서 버틴다(의도한 변경)."""
     b = _beat(L4)
     plan = va._plan_phrase_clips(b, va._beat_material(b), 4.46)
     assert [c["video_id"] for c in plan] == ["s2", "s2", "s5", "s2"]
