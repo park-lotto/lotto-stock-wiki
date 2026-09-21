@@ -945,8 +945,60 @@ def phrase_owners(beat, n_seg, cap_segs=None):
     return owners
 
 
-def ensure_clip_anchor(beat):
+def carry_caption_lines(old_narration, old_lines, new_narration, min_keep=0.5):
+    """대사 글자를 고쳤을 때 **사람이 나눈 줄 경계를 새 문장으로 옮긴다**(2026-09-21 박세현님).
+
+    종전엔 대사가 한 글자만 바뀌어도 caption_lines를 통째로 버려 자동 분할로 돌아갔다 —
+    고객은 방금 합친 줄이 "풀렸다"고 봤다. 어절 단위로 옛/새 문장을 맞춰(difflib), 경계 바로
+    앞 어절이 그대로면 그 뒤에, 아니면 바로 뒤 어절이 그대로일 때 그 앞에 경계를 다시 세운다.
+    양쪽 다 바뀐 경계는 버린다(그 줄은 이웃과 합쳐진다). 옮길 게 없거나 문장이 절반 넘게
+    바뀌었으면 None — 부르는 쪽이 종전처럼 자동 분할로 내려간다."""
+    import difflib
+    lines = [str(x).strip() for x in (old_lines or []) if str(x).strip()]
+    new_words = (new_narration or "").split()
+    if len(lines) < 2 or len(new_words) < 2:
+        return None
+    if cap_preset_key("".join(lines)) != cap_preset_key(old_narration or ""):
+        return None                          # 옛 줄이 이미 옛 대사와 안 맞는다 — 믿을 경계가 없다
+    old_words, ends = [], []                 # ends = 줄마다 마지막 어절의 번호
+    for ln in lines:
+        old_words.extend(ln.split())
+        ends.append(len(old_words) - 1)
+    ok = [cap_preset_key(w) for w in old_words]
+    nk = [cap_preset_key(w) for w in new_words]
+    to_new = {}
+    for blk in difflib.SequenceMatcher(None, ok, nk, autojunk=False).get_matching_blocks():
+        for d in range(blk.size):
+            to_new[blk.a + d] = blk.b + d
+    if len(to_new) < min_keep * max(len(old_words), len(new_words)):
+        return None
+    cuts = set()                             # 새 문장에서 "이 어절 뒤에서 끊는다"
+    for e in ends[:-1]:
+        if e in to_new:
+            cuts.add(to_new[e])
+        elif (e + 1) in to_new:
+            cuts.add(to_new[e + 1] - 1)
+    cuts = {c for c in cuts if 0 <= c < len(new_words) - 1}
+    if not cuts:
+        return None
+    out, cur = [], []
+    for i, w in enumerate(new_words):
+        cur.append(w)
+        if i in cuts:
+            out.append(" ".join(cur))
+            cur = []
+    if cur:
+        out.append(" ".join(cur))
+    if cap_preset_key("".join(out)) != cap_preset_key(new_narration):
+        return None
+    return out
+
+
+def ensure_clip_anchor(beat, owners=None):
     """지금 **보이는 짝**을 글자 위치로 얼린다. 편집안을 저장하는 쪽(믹스 저장·자막 줄 저장)이 부른다.
+
+    owners를 주면 그 짝을 얼린다 — 대사 글자를 고쳐 글자 위치가 밀렸을 때, 고치기 전의 짝을
+    새 문장 위치로 옮겨 적는 데 쓴다(줄 수가 그대로일 때만 의미가 있다. 안 맞으면 무시).
 
     · 구절 수 == 조각 수면 1:1로 **새로** 얼린다(R1 — 잘못 얼려진 짝에서 빠져나오는 길).
     · 수가 다른데 유효한 짝이 이미 있으면 그대로 둔다(다시 얼리면 '안 나옴' 조각의 자리를 잃는다).
@@ -959,9 +1011,13 @@ def ensure_clip_anchor(beat):
     if not n_seg or not cap_segs:
         beat.pop("clip_anchor", None)
         return None
-    if len(cap_segs) != n_seg and _valid_clip_anchor(beat, n_seg) is not None:
-        return beat["clip_anchor"]
-    owners = phrase_owners(beat, n_seg, cap_segs)
+    _given = (isinstance(owners, (list, tuple)) and len(owners) == len(cap_segs)
+              and all(isinstance(o, int) and 0 <= o < n_seg for o in owners)
+              and list(owners) == sorted(owners))
+    if not _given:
+        if len(cap_segs) != n_seg and _valid_clip_anchor(beat, n_seg) is not None:
+            return beat["clip_anchor"]
+        owners = phrase_owners(beat, n_seg, cap_segs)
     starts, total = _phrase_key_starts(cap_segs)
     offs = [total] * n_seg                 # 아무 구절도 안 덮는 조각 = 끝(어떤 구절 시작보다 뒤)
     for k in range(len(owners) - 1, -1, -1):

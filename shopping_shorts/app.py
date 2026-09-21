@@ -7672,6 +7672,13 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
                                   dict(job.get("voice") or {}), DB_PATH, _MIX_WORK_DIR)
         return {"ok": True, "unchanged": True, "regen": True,
                 "tts_ver": beat.get("tts_ver") or 0}
+    # ★고치기 **전** 상태를 잡아 둔다(2026-09-21 박세현님 "대본 자막 손본 게 풀린다") — 아래에서
+    #   사람이 나눈 줄과 장면↔구절 짝을 새 문장으로 옮겨 적는다.
+    _old_narr = beat.get("narration") or ""
+    _old_lines = list(beat.get("caption_lines") or []) if beat.get("caption_lines_human") else None
+    _old_owners = None
+    if _old_lines and beat.get("phrase_sync"):
+        _old_owners = video_assemble.phrase_owners(beat, len(video_assemble._beat_material(beat)))
     beat["narration"] = text
     # ★사람이 직접 고쳤다는 표식 (2026-08-25 고객 오류신고 cid 110 "자막수정이 안되요").
     #   저장 출구(store._ensure_screen_time → enforce_scripted_narration)가 1단계 확정
@@ -7689,6 +7696,18 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
     # preset을 대조(공백 무시 일치)에서 떨어뜨려 조용히 규칙 폴백으로 내려간다.
     beat["caption_lines"] = None
     beat["caption_lines_human"] = False
+    # ★단 **사람이 직접 나눈 줄**은 버리지 않는다(2026-09-21). 실측(job fe21f8a5dc71): 세 줄을
+    #   한 줄로 합친 직후 「이건건식·습식」→「이건 건식,습식」으로 고치자 줄이 자동 분할로 돌아가
+    #   다시 합쳐야 했다. 안 바뀐 어절에 걸린 경계는 새 문장으로 옮긴다(carry_caption_lines).
+    #   못 옮기면(문장이 통째로 바뀜) 위 그대로 자동 분할이다. 시간(cap_durs)은 어느 쪽이든
+    #   음성을 다시 뽑을 때 새로 잰다 — _recompute가 이 줄을 preset으로 쓴다.
+    _carried = video_assemble.carry_caption_lines(_old_narr, _old_lines, text)
+    if _carried:
+        beat["caption_lines"] = _carried
+        beat["caption_lines_human"] = True
+        # 글자 위치가 밀렸으니 짝도 새 문장 위치로 옮겨 적는다. 줄 수가 달라졌으면 넘기지 않는다
+        # (ensure가 길이를 보고 무시한다 → 종전 식. 고객이 믹스 화면에서 바로 본다).
+        video_assemble.ensure_clip_anchor(beat, owners=_old_owners)
     _save_render_inputs(store, job_id, edit_plan=plan)
     if body.get("regen") is False:
         return {"ok": True, "saved": True, "regen": False}
