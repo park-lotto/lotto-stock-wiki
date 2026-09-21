@@ -59,22 +59,11 @@
     const frame=frameFor(rows[current]),source=captionSource(frame),saved=captionLayouts.get(captionKey())||{};
     return {placement:captionDrags.has(captionKey())?'free':'title',w:100,h:source.height,background:source.background,color:source.ln?.color||'#111111',...saved};
   };
-  // ★사장님이 제목을 키운 만큼 **칸도 넓어진다**(2026-09-21 선택: "칸을 자동으로 넓혀 누른 만큼 키운다").
-  //   실측(t05 본문): 표시 250%인데 실제 글꼴은 198%에서 멈췄다 — 칸이 안 커지니 아래 깎기 루프가
-  //   글꼴을 몰래 줄였다. 표시와 결과가 달라 "크기조절이 이상하다"로 보인다.
-  //   ★여기(titleHeight)는 칸·자막·영상 자리를 모두 정하는 **단일 출처**라, 여기서 넓히면
-  //     자막과 영상이 함께 밀려 서로 겹치지 않는다(0순위-B).
-  const storyTitleGrowth=frame=>{
-    if(mode!=='story'||!isStoryBody(frame))return 0;
-    const scale=fontScales.get(scaleKey('bodyTitle'))||1;
-    return scale>1?STORY_BODY.cut*STORY_BODY.titleH*(scale-1):0;
-  };
   const titleHeight=frame=>{
     const original=(frame.video_from?.y||0)/frame.height*100,cut=captionSource(frame).cut/frame.height*100;
     const configured=fixedLayoutFor(rows[current].id,frame).top;
-    const grown=storyTitleGrowth(frame);
-    if(isStoryBody(frame)&&!fixedLayouts.get(layoutKey(rows[current].id,frame)))return STORY_BODY.cut+grown;
-    return (mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original))+grown;
+    if(isStoryBody(frame)&&!fixedLayouts.get(layoutKey(rows[current].id,frame)))return STORY_BODY.cut;
+    return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
   };
   const mediaBounds=(frame,presetId)=>{
     if(!frame||noTemplate)return {top:0,height:100};   // 템플릿 없음 = 영상이 화면 전체
