@@ -22799,6 +22799,14 @@ def _backbone_drafts(spines, job, store, seconds=25, job_id=""):
     #   자동 안은 씨앗 유형의 원문형 스파인에서, 고른 안은 그 스타일에서 각각 통과본 1편씩.
     auto_c = ba.origin_spines(store, typ) if typ else []
     seed_src = ba.seed_source(srcs, (job or {}).get("backbone_main"))
+    # ★자동 안은 **씨앗 자신을 뼈대**로 쓴다(2026-09-21 사장님 "씨앗대로 자동배정이 하나 나오고").
+    #   전엔 같은 유형의 **다른 히트작 원문**(노트 발명품·볼펜)을 골격으로 빌려, 씨앗 내용을 거기
+    #   끼워 넣었다 — 사장님 평가 "썰채널 어설프게 따라한 것 같다". 씨앗이 뼈대면 그 채널의
+    #   관용구 자리와 흐름이 그대로 산다(09-21 실측: 관용구 6/7 일치, 6어절 겹침 1.1%).
+    #   씨앗 전사가 짧아 칸을 못 나누면 origin_from_seed가 None을 돌려 종전 경로로 간다.
+    auto_c = [dict(sp, _use_seed_origin=True) for sp in auto_c]
+    if not auto_c and seed_src:
+        auto_c = [{"id": None, "name": "씨앗 그대로", "_use_seed_origin": True}]
     got = ba.assemble_clean(srcs, bb.get("video_id"), store, auto_c,
                             target_seconds=seconds, seed=job_id or None, want=1, note=note,
                             seed_src=seed_src)
