@@ -18439,10 +18439,8 @@ function s2RenderStyles(){
 function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
 // ★안은 최대 2개다(종전 그대로). 픽업도 한 안을 차지하므로 **함께 세어** 상한을 건다 —
 //   따로 세면 픽업+스타일 2개 = 3안이 되어 종전 규칙이 조용히 깨진다.
-function s2AnCount(){
-  if(window.IS_ADMIN) return (S2.picked||[]).length + 1;   // 자동 1안은 늘 들어간다(끌 수 없음)
-  return (S2.picked||[]).length + ((S2.usePickup!==false)?1:0);   // 고객: 예전 규칙(픽업도 한 안)
-}
+// 사장님 계정: 자동 1안은 늘 들어간다 / 고객: 예전 규칙(픽업도 한 안). ★한 줄 유지 — test_s2_an_count_label_js가 이 줄을 뽑아 돌린다
+function s2AnCount(){ return (S2.picked||[]).length + ((typeof window!=='undefined' && window.IS_ADMIN) ? 1 : ((S2.usePickup!==false)?1:0)); }
 function s2AutoLockedMsg(){ toast('씨앗 영상에 맞는 스타일이라 항상 들어갑니다 — 아래에서 한 개 더 고를 수 있어요'); }
 function s2TogglePickup(){
   if(window.IS_ADMIN){ s2AutoLockedMsg(); return; }   // 사장님 계정: 자동 안은 끌 수 없다(2026-09-20)
