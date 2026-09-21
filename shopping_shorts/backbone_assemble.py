@@ -295,6 +295,36 @@ def _cta_keyword(product):
     return t if len(t) <= 3 else t[-2:]
 
 
+_SEED_CELL_SCHEMA = {"type": "object", "properties": {"lines": {"type": "array", "items": {
+    "type": "object", "properties": {"role": {"type": "string"}, "text": {"type": "string"}},
+    "required": ["role", "text"]}}}, "required": ["lines"]}
+
+
+def origin_from_seed(seed_src, note=None):
+    """씨앗 전사를 **대본 뼈대(origin)**로 만든다 — 남의 히트작 골격을 빌리지 않는다.
+
+    ★2026-09-21 사장님: "씨앗대로 자동배정이 하나 나오고". 그런데 자동 안이 쓰던 뼈대는
+      씨앗이 아니라 **다른 히트작 원문**(노트 발명품·볼펜)이었다. 씨앗 내용을 그 골격에
+      끼워 넣으니 "썰채널 어설프게 따라한" 꼴이 됐다.
+      실측(09-21 오전): 씨앗을 뼈대로 쓰면 관용구 자리 6/7이 제자리에 살고 6어절 겹침 1.1%다.
+    반환: {cells:[{role,text}], views, user, seed:True} — write_lines_from_origin이 그대로 먹는다.
+    """
+    txt = ((seed_src or {}).get("full_text") or "").strip()
+    if len(txt) < 60:
+        return None
+    out = _sg._call_json(
+        "아래는 실제로 잘 된 쇼핑 숏폼 대본이다. 의미 단위로 칸을 나눠라.\n"
+        "- 원문 글자를 고치거나 빼지 말고 **그대로 나누기만** 해라.\n"
+        "- 칸마다 role(훅/계기/불편/전환/작동/심지어/감정/CTA 중 하나)과 text.\n\n%s" % txt[:1200],
+        _SEED_CELL_SCHEMA, note=note) or {}
+    cells = [{"role": str(x.get("role") or ""), "text": str(x.get("text") or "").strip()}
+             for x in (out.get("lines") or []) if str(x.get("text") or "").strip()]
+    if len(cells) < 3:
+        return None
+    return {"cells": cells, "views": (seed_src or {}).get("views") or 0,
+            "user": (seed_src or {}).get("video_id") or "", "seed": True}
+
+
 def _drop_seed(sources, seed_src, note=None):
     """화면 후보에서 씨앗 영상을 뺀다. 씨앗밖에 없으면 그대로 둔다(화면이 통째로 비면 안 된다)."""
     if not seed_src or not sources:
@@ -505,7 +535,8 @@ def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds
     return _no_made_up_country(_one_full_name(lines, product), seg_index)
 
 
-def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None, seed=None, seed_src=None):
+def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None, seed=None, seed_src=None,
+                use_seed_origin=False):
     """훅 1줄 + 특징 묶음마다 1줄 + CTA 1줄. 각 줄은 **마침표 하나**(문장분리기가 줄 수를 세는 함정)."""
     from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, _speech_speed
     cps = _SYLLABLES_PER_SEC * _speech_speed()
@@ -521,7 +552,20 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         g = groups_out["groups"][gi]
         desc = " / ".join(seg_index.get(c, {}).get("desc", "")[:50] for c in (g.get("cuts") or [])[:2] if c in seg_index)
         feats.append(f"  {k + 1}. [{gi}] {g.get('name')} — {g.get('claim')} (화면: {desc})")
+    # ★길이는 씨앗을 따른다(2026-09-21 사장님 "씨앗 길이를 따라도 된다"). 씨앗이 37.8초인데
+    #   25초로 자르면 칸이 통째로 빠져 "부실하다"가 된다(실측 B안 16.3초).
+    _seed_secs = _secs((seed_src or {}).get("full_text") or "") if seed_src else 0.0
+    if _seed_secs >= 12.0:
+        target_seconds = _seed_secs
     origin = spine_origin(hook_spine)
+    # ★자동 안(씨앗 배정)은 **씨앗 자신을 뼈대**로 쓴다 — 남의 히트작 골격을 빌리지 않는다.
+    #   스파인이 씨앗 유형으로 고른 것이면 그 스파인의 원문 대신 씨앗 원문을 뼈대로 둔다.
+    if seed_src and (use_seed_origin or (hook_spine or {}).get("_use_seed_origin")):
+        _so = origin_from_seed(seed_src, note=note)
+        if _so:
+            origin = _so
+            if note is not None:
+                note["origin_from_seed"] = True
     if origin:
         return write_lines_from_origin(origin, groups_out, hook_spine, seg_index, target_seconds,
                                        note=note, seed_src=seed_src)
@@ -549,6 +593,12 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         _sb = seed_block(seed_src)
         if _sb:
             prompt += chr(10) + chr(10) + _sb
+        # ★틀 경로도 재료를 **전문으로** 본다(2026-09-21 사장님 "B는 완전 부실하게").
+        #   전엔 원문형 경로에만 넣어, 틀 경로는 `이름 - 주장 (화면 50자)` 요약만 보고 썼다.
+        #   그 결과가 "구멍의 정체"·"내부까지 밀봉" 같은 뜬 문장이다(재료엔 그런 말이 없다).
+        prompt += (chr(10) * 2 + "[재료 - 컷마다 길이·화면·그 컷에서 한 말]" + chr(10)
+                   + material_block(seg_index) + chr(10) * 2
+                   + "- 위 재료에 실제로 보이는 것만 말해라. 화면에 없는 기능·수치를 지어내지 마라.")
         lines = _clean_lines(_sg._call_json(prompt, _LINES_SCHEMA, note=note) or {})
         lines = _repair_joins(lines, plan_for_repair(groups_out, roles, tpl, seed, hook_spine), note=note)
         lines = _one_full_name(lines, groups_out.get("product") or "")
@@ -1011,7 +1061,7 @@ def _shuffle_middle(order, seed):
 
 # ── 한 번에 ───────────────────────────────────────────────────────────
 def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, seed=None, note=None, style=None,
-             seed_src=None):
+             seed_src=None, use_seed_origin=False):
     """(given_script, beat_sources, meta). 실패하면 (None, None, meta) — 조용히 폴백하지 않는다.
 
     ★대본은 씨앗을 쓰고 **화면은 씨앗 영상을 안 쓴다**(2026-09-21 사장님). 씨앗은 남의 히트작이라
@@ -1045,7 +1095,8 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
         note["style_switched"] = {"from": spine.get("name"), "why": "재료에 딴 용도 장면 없음"}
         spine = pick_hook_spine(store, seed=seed, style=MISUSE_FALLBACK_STYLE)
         note["style_switched"]["to"] = spine.get("name")
-    lines = write_lines(groups_out, spine, seg_index, target_seconds, note=note, seed=seed, seed_src=seed_src)
+    lines = write_lines(groups_out, spine, seg_index, target_seconds, note=note, seed=seed, seed_src=seed_src,
+                        use_seed_origin=use_seed_origin)
     if len(lines) < 3:
         note["reason"] = "lines_short"
         return None, None, {"note": note, "groups": groups_out}
@@ -1115,7 +1166,8 @@ def assemble_clean(sources, backbone_vid, store, spines, target_seconds=25, seed
         try:
             given, bs, meta = assemble(sources, backbone_vid, store, spine_id=sp.get("id"),
                                        target_seconds=target_seconds, seed="%s-%s" % (seed or "", sp.get("id")),
-                                       note=n, seed_src=seed_src)
+                                       note=n, seed_src=seed_src,
+                                       use_seed_origin=bool(sp.get("_use_seed_origin")))
         except Exception as e:      # noqa: BLE001 — 한 스파인 실패가 나머지를 막으면 안 된다
             tried.append({"spine": sp.get("name"), "why": repr(e)[:80]})
             continue
