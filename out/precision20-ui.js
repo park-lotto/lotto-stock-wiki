@@ -630,7 +630,13 @@
     const shiftX=bind==='caption'?0:moved.x;
     Object.assign(el.style,{left:(left+shiftX)+'%',right:(right-shiftX)+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
     const fixedColorKey=bind==='hook1'?'title1':(bind==='hook2'||bind==='bodyTitle')?'title2':null;
-    const forcedColor=fixedColorKey&&mode==='continuous'&&fixedColors.get(rows[current].id)?.[fixedColorKey];
+    // ★2026-09-21 사장님 "색상변경 안 됨" — 두 겹이었다.
+    //   ① 색은 layoutKey(프리셋+프레임) 키로 저장하는데 여기선 `rows[current].id`만으로 찾아
+    //      **영영 못 찾았다**(저장은 되는데 글자에 반영이 안 된다).
+    //   ② `mode==='continuous'` 조건 때문에 썰쇼핑형에서는 아예 돌지 않았다 — 그런데 색 칸은
+    //      syncFixedPanel이 무조건 보여준다(hidden=false). 보이는데 안 먹는 칸이었다.
+    //   사용자가 바꾼 값만 덮는다(저장분이 없으면 템플릿 색 그대로).
+    const forcedColor=fixedColorKey&&(fixedColors.get(layoutKey(rows[current].id,frame))||{})[fixedColorKey];
     if(forcedColor){el.style.color=forcedColor;el.textContent=text||' ';
     }else if(ln.word_colors?.length){
       String(text||' ').split(/\s+/).forEach((word,index,words)=>{const span=document.createElement('span');span.textContent=word;span.style.color=ln.word_colors[index]||ln.color||'#fff';if(index<words.length-1)span.style.marginRight=Math.max(2,fontPx*.11)+'px';el.append(span)});
@@ -764,7 +770,8 @@
       }
       const align=(drawLine.lpct??50)<4&&(drawLine.rpct??50)>10?'left':'center';
       const roleColor=key==='hook2'?'accent':key==='hook1'?'white':null;
-      const fixedOverride=mode==='continuous'?fixedColors.get(p.id):null;
+      // 위 addText와 같은 이유(키 어긋남·고정형 한정) — 여기도 layoutKey로 찾고 모드를 안 가린다.
+      const fixedOverride=fixedColors.get(layoutKey(p.id,frame))||null;
       const fixedTextColor=fixedOverride?(key==='hook1'?fixedOverride.title1:(key==='hook2'||key==='bodyTitle')?fixedOverride.title2:null):null;
       addText(drawValue,drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
     });
@@ -815,15 +822,25 @@
       //   그러면 캡슐·검색 아이콘·채널 글자가 한 덩어리로 같이 내려간다. 위에 생긴 빈 줄만 머리띠 색으로 채운다.
       //   머리띠 아래 끝 값은 tools/measure_header_bands.js 가 그림에서 재 둔 것(out/scene-header-bands.js).
       const band=(window.SCENE_HEADER_BANDS||{})[`${p.id}:${frameKind()}`];
-      const bandPct=band&&band.h?band.y1/band.h*100:0;
-      const shift=saved>0&&bandPct>0?Math.max(0,saved-bandPct):0;
+      // ★2026-09-21 사장님 "체널칸 상단제목칸도 조절하는게 이상해 이거 계속 안고쳐져".
+      //   실측: 채널명 칸을 6→10→14%로 올리면 **글자만** 내려가고(0.3→4.28→7.27) 바탕그림은
+      //   top:0% 그대로였다 — 캡슐·돋보기가 제자리에 남아 글자와 따로 논다.
+      //   뿌리: 글자는 슬라이더 값(saved)을 그대로 쓰는데 그림은 `saved - 머리띠비율`만큼만
+      //   움직였다. 두 개가 **다른 기준**이라 머리띠(t02 본문 14.1%)보다 크게 올려야만 그림이
+      //   따라왔고, 슬라이더 구간(0~20%) 대부분에서 어긋났다.
+      //   → 기준을 하나로: **기본값에서 얼마나 움직였나(delta)**를 글자·그림이 똑같이 쓴다.
+      //     기본값의 정의처는 fixedBaseLayout 한 곳이다(0순위-B).
+      const baseChannel=Number(fixedBaseLayout(frame)?.channel)||0;
+      const shift=saved>0?Math.max(0,saved-baseChannel):0;
       base.style.top=shift+'%';
       // 그림을 내리면 훅에서는 영상도 따라 내려갔다 → 영상 자리를 그만큼 되올려 시작점을 고정한다
       if(media&&media.dataset.baseTop!=null){const bt=Number(media.dataset.baseTop)||0;media.style.top=(bt-shift)+'%';}
       preview.style.backgroundColor=shift>0?(band?.color||fixedColorsFor(p.id,frame).top||'#000000'):'';
       if(saved>0&&chEl0){
-        const h=chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
-        const before=parseFloat(chEl0.style.top)||0,next=Math.max(0,saved-h+chDrag.y);
+        // ★글자도 그림과 **같은 delta**로 움직인다(2026-09-21). 종전엔 글자만 절대값
+        //   (saved - 글자높이)으로 잡아, 캡슐 상자 바닥(기본값)과 글자 바닥이 다른 만큼
+        //   (실측 t02 본문 1.6%) 그림과 계속 어긋났다. 기준이 둘이면 반드시 벌어진다(0순위-B).
+        const before=parseFloat(chEl0.style.top)||0,next=Math.max(0,before+shift+chDrag.y);
         chEl0.style.top=next+'%';
         layer.querySelectorAll('.precision-patch[data-edit-bind="channel"]').forEach(box=>{
           const t=parseFloat(box.style.top)||0;box.style.top=Math.max(0,t+(next-before))+'%';
@@ -900,11 +917,11 @@
         const pvBox=preview.getBoundingClientRect();
         const chSaved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
         const chMoved=textDrags.get(scaleKey('channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
-        if(chSaved>0&&chEl){   // '채널명 칸' 슬라이더: 채널명 아래 끝을 그 값에 맞춘다
-          const h=chEl.getBoundingClientRect().height/Math.max(1,pvBox.height)*100;
-          chEl.style.top=Math.max(0,chSaved-h)+'%';
-        }
-        const chBottom=chSaved>0?chSaved:(chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0);
+        // ★채널명 자리를 정하는 곳은 applyChannelSlot **한 곳**이다(2026-09-21).
+        //   여기에도 같은 계산(chSaved - 글자높이)이 한 벌 더 있어서, 먼저 돈 applyChannelSlot의
+        //   결과를 매번 덮었다 — 그래서 바탕그림만 따라오고 글자는 옛 자리에 남았다(0순위-B).
+        //   제목을 밀 기준(chBottom)은 **실제로 그려진 채널명 아래**를 읽어서 쓴다.
+        const chBottom=chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0;
         const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
         const cutNow=titleHeight(frame);   // 상단 칸을 조절하면 그 칸 기준으로 다시 배치
         const base=Math.max(cutNow*STORY_BODY.titleTop,chBottom+1.2);
