@@ -433,6 +433,37 @@
     css.textContent='.layout-a .tool-tabs.left-pane-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}.left-pane-tabs button{padding-left:2px;padding-right:2px;white-space:nowrap}.look-card{padding:8px}.lk-prev{display:grid;gap:2px;justify-items:center;width:100%;padding:10px 4px;border-radius:8px;border:1px solid #ffffff1f;font-size:17px;line-height:1.25;overflow:hidden;white-space:nowrap}.lk-prev i{font-style:normal}.lk-prev i:last-child{font-size:19px}.title-deco-ink{display:inline-block}';
     document.head.append(css);
   }
+  // ── 이 장면을 썸네일 후보로(2026-09-22 사장님): 구버전 6단계 화면의 [🖼 이 장면을 썸네일로]를 새 편집기로 옮겼다.
+  //   서버는 그대로 POST /api/produce/thumb/pin {job_id,beat_idx} — 7단계 썸네일 후보 맨 앞에 그 장면 화면이 꽂힌다.
+  //   보내는 것은 '꾸민 화면'이 아니라 그 장면의 원본 화면이다(구버전과 같다 — 썸네일은 7단계에서 따로 꾸민다).
+  //   이동은 부모(제작소)가 한다: scene-style-goto-thumb → 저장하고 닫은 뒤 7단계로. 샘플 작업대·LAB에는 실제 영상이 없어 안내만 한다.
+  {
+    const nav=root.querySelector('.scene-navigator');
+    if(nav&&!labMode){
+      const bar=document.createElement('div');bar.className='scene-thumb-pin';
+      bar.innerHTML='<button type="button" data-thumb-pin>🖼 이 장면을 썸네일 후보로</button><button type="button" data-thumb-go hidden>썸네일 단계로 이동 ›</button><small data-thumb-msg role="status"></small>';
+      nav.after(bar);
+      const pin=bar.querySelector('[data-thumb-pin]'),go=bar.querySelector('[data-thumb-go]'),msg=bar.querySelector('[data-thumb-msg]');
+      const say=(text,ok)=>{msg.textContent=text;msg.dataset.ok=ok?'1':'0';};
+      pin.addEventListener('click',async()=>{
+        const jobId=sceneContext?.jobId,scene=sceneContext?.scenes?.[sceneIndex];
+        if(!jobId||!scene){say('실제 영상을 열었을 때 쓸 수 있어요(지금은 샘플 화면)',false);return;}
+        pin.disabled=true;say('보내는 중…',true);
+        try{
+          const response=await fetch('/api/produce/thumb/pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:jobId,beat_idx:scene.beat_idx})});
+          const data=await response.json().catch(()=>({}));
+          if(!response.ok||!data.ok)throw new Error(data.error||'보내지 못했어요');
+          say(`✓ ${sceneIndex+1}번째 장면을 썸네일 후보 맨 앞에 넣었어요`,true);go.hidden=false;
+          window.parent?.postMessage({type:'scene-style-thumb-pinned',jobId,name:data.name},location.origin);
+        }catch(error){say('✕ '+error.message+' — 다시 눌러 주세요',false);}
+        finally{pin.disabled=false;}
+      });
+      go.addEventListener('click',()=>{window.parent?.postMessage({type:'scene-style-goto-thumb',jobId:sceneContext?.jobId},location.origin);});
+      const css=document.createElement('style');
+      css.textContent='.scene-thumb-pin{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:10px}.scene-thumb-pin button{padding:9px 14px;border-radius:10px;border:1px solid #294451;background:#0f1c25;color:#dce8ec;font-weight:700;cursor:pointer}.scene-thumb-pin button:hover{border-color:#3fe0b5}.scene-thumb-pin button:disabled{opacity:.55;cursor:wait}.scene-thumb-pin [data-thumb-go]{border-color:#3fe0b5;background:#0f2a26;color:#d9fff4}.scene-thumb-pin small{flex-basis:100%;text-align:center;font-size:12px;color:#ff9b9b;min-height:16px}.scene-thumb-pin small[data-ok="1"]{color:#7ee3c4}';
+      document.head.append(css);
+    }
+  }
   const BODY_CAPTION_MOTIONS={
     // 09-19 사장님 '느낌이 다 비슷하다' → 이동 거리·시간·튕김을 모션마다 확실히 다르게(예전: 14px·0.3초로 거의 같았다)
     rise:{label:'스윽 올라오기',ms:380,easing:'cubic-bezier(.16,1,.3,1)',frames:[{opacity:0,transform:'translateY(70px)'},{opacity:1,transform:'translateY(0)'}]},

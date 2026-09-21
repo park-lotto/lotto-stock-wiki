@@ -149,6 +149,9 @@
   addEventListener('message',async event=>{
     if(!frame||event.source!==frame.contentWindow||event.origin!==location.origin)return;
     if(event.data?.type==='scene-style-ready')frame.contentWindow.postMessage({type:'scene-style-context',...packet},location.origin);
+    // 09-22 편집기의 [이 장면을 썸네일 후보로]: 7단계를 이미 열어 봤으면 후보 목록을 바로 다시 그리고, [썸네일 단계로 이동]은 저장하고 닫은 뒤 7단계로 보낸다.
+    if(event.data?.type==='scene-style-thumb-pinned'){if(typeof THUMB_STATE!=='undefined'&&THUMB_STATE.job===MIX_JOB&&typeof loadThumbFrames==='function')loadThumbFrames();return;}
+    if(event.data?.type==='scene-style-goto-thumb'){await saveAndClose();if(!dialog.open&&typeof stepGo==='function')stepGo('thumb');return;}
     if(event.data?.type==='scene-style-lines'){
       try{
         if(event.data.jobId!==jobId||jobId!==MIX_JOB)throw Error('편집 중인 영상이 바뀌었습니다. 다시 열어 주세요.');
