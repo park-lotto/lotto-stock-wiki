@@ -18200,8 +18200,25 @@ function s2SeedOn(i){
 }
 function s2PickSeed(i){
   const s=S2.seeds[i]; if(!s) return;
+  const prev=S2.seed;
   S2.seed=s;                       // 구조·훅을 물려받을 씨앗 = 이 한 편
+  _seedFootageOff(prev, s);        // 대본은 씨앗, 화면은 씨앗을 안 쓴다
   s2RenderSeeds(); saveWork();
+}
+// ★씨앗 영상은 **화면 재료에서 뺀다**(2026-09-21 사장님 "대본은 씨앗 쓰고 화면은 씨앗을 안 쓰는 걸로").
+//   씨앗은 남의 히트작이라 그 화면을 그대로 깔면 우리 영상이 아니게 된다. 실측(work 7f7d2393eb0b):
+//   주컷 5/7·대안컷 69.6%가 씨앗 컷이었고, 담은 재료 7편 중 4편은 한 컷도 안 쓰였다.
+//   화면 재료의 판단처는 useFootage 하나다(collectMixUrls) — 새 통로를 만들지 않고 그 값을 끈다.
+//   앞서 씨앗이던 영상은 화면 사용을 되살린다(씨앗을 바꿨는데 계속 빠져 있으면 재료가 조용히 준다).
+function _seedFootageOff(prevSeed, nextSeed){
+  try{
+    const find=sc=>(sc? HANDOFF.find(h=>h && h.shortcode===sc) : null);
+    const prev=find(prevSeed && prevSeed.shortcode);
+    if(prev && prev._seedFootageOff){ prev.useFootage=true; delete prev._seedFootageOff; }
+    const cur=find(nextSeed && nextSeed.shortcode);
+    if(cur && cur.useFootage!==false){ cur.useFootage=false; cur._seedFootageOff=true; }
+    if(typeof renderPool==="function") renderPool();
+  }catch(_){ }
 }
 // ★원문은 alert이 아니라 **카드 아래로 접었다 편다**(2026-08-26 사장님 "원문누르면
 //   아래로 접었다 폈다고 넣어줘"). alert은 4000자에서 잘리고 복사도 안 되고 화면을 막는다.

@@ -22799,15 +22799,22 @@ def _backbone_drafts(spines, job, store, seconds=25, job_id=""):
     # ★안은 둘이다(2026-09-20 사장님): ①씨앗 유형 자동(끌 수 없음) ②사용자가 고른 스타일 1개.
     #   자동 안은 씨앗 유형의 원문형 스파인에서, 고른 안은 그 스타일에서 각각 통과본 1편씩.
     auto_c = ba.origin_spines(store, typ) if typ else []
+    seed_src = ba.seed_source(srcs, (job or {}).get("backbone_main"))
     got = ba.assemble_clean(srcs, bb.get("video_id"), store, auto_c,
-                            target_seconds=seconds, seed=job_id or None, want=1, note=note)
+                            target_seconds=seconds, seed=job_id or None, want=1, note=note,
+                            seed_src=seed_src)
     for g in got:
         g["auto"] = True
-    picked_c = [sp for sp in (spines or []) if ba.spine_origin(sp)]
+    # ★고른 스타일은 원문형이 아니어도 태운다(2026-09-21 사장님: "나머지 대본스타일 선택한 것도
+    #   씨앗의 내용을 바탕으로 나오게 해야 된다"). 전엔 원문형(368개)만 통과시켜 틀형(57개)을 고르면
+    #   후보에서 조용히 사라졌다 — 반려 사유조차 안 남아 화면엔 자동 안 1개만 떴다.
+    #   틀형은 write_lines의 틀 경로가 그대로 처리한다.
+    picked_c = list(spines or [])
     if picked_c:
         n2 = {}
         got += ba.assemble_clean(srcs, bb.get("video_id"), store, picked_c,
-                                 target_seconds=seconds, seed=(job_id or "") + "p", want=1, note=n2)
+                                 target_seconds=seconds, seed=(job_id or "") + "p", want=1, note=n2,
+                                 seed_src=seed_src)
         note["skipped"] = (note.get("skipped") or []) + (n2.get("skipped") or [])
     drafts = []
     for g in got:

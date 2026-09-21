@@ -295,6 +295,60 @@ def _cta_keyword(product):
     return t if len(t) <= 3 else t[-2:]
 
 
+def _drop_seed(sources, seed_src, note=None):
+    """화면 후보에서 씨앗 영상을 뺀다. 씨앗밖에 없으면 그대로 둔다(화면이 통째로 비면 안 된다)."""
+    if not seed_src or not sources:
+        return list(sources or [])
+    sid = seed_src.get("video_id")
+    out = [x for x in sources if x.get("video_id") != sid]
+    if not out:
+        return list(sources)
+    if note is not None and len(out) != len(sources):
+        note["seed_visual_excluded"] = sid
+    return out
+
+
+def seed_source(sources, backbone_main=None):
+    """씨앗 영상 = 사용자가 고른 것(backbone_main), 없으면 한국어 원문이 가장 긴 소스.
+
+    ★고르는 규칙이 두 군데 적히면 어긋난다(0순위-B). seed_type도 이 함수를 쓴다.
+    """
+    if not sources:
+        return None
+    if backbone_main is not None:
+        try:
+            return sources[int(backbone_main)]
+        except Exception:      # noqa: BLE001 — 범위를 벗어나면 아래 기본 규칙으로
+            pass
+    def _ko(t):
+        return sum(1 for ch in t if "가" <= ch <= "힣") / max(1, sum(1 for ch in t if ch.isalpha()))
+    kor = [x for x in sources if _ko(x.get("full_text") or "") > 0.7]
+    return max(kor or sources, key=lambda x: len((x.get("full_text") or "").strip()))
+
+
+def seed_block(seed_src):
+    """대본 프롬프트에 싣는 **씨앗 내용** — 사장님이 고른 그 영상의 제품과 실제로 한 말.
+
+    ★씨앗은 유형 한 단어만 뽑고 버려졌다(2026-09-21 사장님 지적: "씨앗을 고르면 사실상 다른
+      대본 스타일을 선택해도 안 나오는 거 아니냐"). 자동 안이든 고른 스타일이든 **씨앗 내용을
+      바탕으로** 나와야 한다. 결(말투·골격)은 스파인이, 소재·제품은 씨앗이 정한다.
+    """
+    if not seed_src:
+        return ""
+    br = seed_src.get("source_brief") or {}
+    txt = (seed_src.get("full_text") or "").strip()
+    out = ["[씨앗 영상 — 사장님이 고른 이 소재로 쓴다]"]
+    if br.get("product"):
+        out.append("  제품: %s" % br["product"])
+    if br.get("core"):
+        out.append("  핵심: %s" % br["core"])
+    if br.get("summary"):
+        out.append("  요약: %s" % br["summary"])
+    if txt:
+        out.append("  이 영상이 실제로 한 말: %s" % txt[:900])
+    return "\n".join(out) if len(out) > 1 else ""
+
+
 def material_block(seg_index, limit=140):
     """대본 쓰는 모델에게 줄 **재료 전문** — 컷마다 길이·화면·그 컷에서 한 말.
 
@@ -383,7 +437,7 @@ def fix_insta_cta(lines, spine, product):
     return lines
 
 
-def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds=25, note=None):
+def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds=25, note=None, seed_src=None):
     """원문형 스파인: ①전제 읽기 → ②이 제품 상황표 → ③원문 말투로 대본 → ④상황표와 대조, 어긋나면 1회 재작성."""
     cells = [c for c in (origin.get("cells") or []) if (c.get("text") or "").strip()]
     feats = []
@@ -419,10 +473,10 @@ def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds
         "- 같은 문장을 두 번 쓰지 마라. 원문·특징·재료 문장을 통째로 베끼지 말고 네 말로 다시 써라.\n"
         "- 줄마다 role(원문 칸 이름), group(그 줄이 말하는 특징 번호, 훅·마무리는 -1).\n\n"
         "[상황표]\n%s\n\n[원문]\n%s\n\n[칸 구조]\n%s\n\n[이 제품] %s\n%s\n\n"
-        "[재료 - 이 제품 영상들의 컷마다 길이·화면·그 컷에서 한 말]\n%s"
+        "%s\n\n[재료 - 이 제품 영상들의 컷마다 길이·화면·그 컷에서 한 말]\n%s"
         % (origin.get("views") or 0, hook_rule, loop_rule, len(cells),
            json.dumps(cast, ensure_ascii=False), _origin_text(origin), cell_spec,
-           product, "\n".join(feats), material_block(seg_index)))
+           product, "\n".join(feats), seed_block(seed_src), material_block(seg_index)))
 
     # 원문 칸들이 부호 없이 이어지는 꼴이면 새 대본에도 마침표를 안 붙인다.
     _open = sum(1 for c in cells if not re.search(r"[.!?。]\s*$", (c.get("text") or "").strip()))
@@ -451,7 +505,7 @@ def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds
     return _no_made_up_country(_one_full_name(lines, product), seg_index)
 
 
-def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None, seed=None):
+def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None, seed=None, seed_src=None):
     """훅 1줄 + 특징 묶음마다 1줄 + CTA 1줄. 각 줄은 **마침표 하나**(문장분리기가 줄 수를 세는 함정)."""
     from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, _speech_speed
     cps = _SYLLABLES_PER_SEC * _speech_speed()
@@ -469,7 +523,8 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         feats.append(f"  {k + 1}. [{gi}] {g.get('name')} — {g.get('claim')} (화면: {desc})")
     origin = spine_origin(hook_spine)
     if origin:
-        return write_lines_from_origin(origin, groups_out, hook_spine, seg_index, target_seconds, note=note)
+        return write_lines_from_origin(origin, groups_out, hook_spine, seg_index, target_seconds,
+                                       note=note, seed_src=seed_src)
     roles, tpl = _spine_style(hook_spine)
     if roles and tpl:
         # ★스파인에 문장틀(templates)·역할순서(beat_roles)가 있으면 **그 꼴 그대로** 쓴다(2026-09-17 사장님:
@@ -490,6 +545,10 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         #   같은 대본이 나온다(2026-09-18 실측으로 잡은 배선 누락). seed가 바뀌면 칸마다
         #   다음 틀로 돌아 같은 재료에서 N가지 대본이 나온다.
         prompt = _spine_prompt(groups_out, hook_spine, roles, tpl, feats, per_line, seed=seed)
+        # ★고른 스타일도 **씨앗 내용을 바탕으로** 쓴다(2026-09-21 사장님). 틀은 스파인이, 소재는 씨앗이.
+        _sb = seed_block(seed_src)
+        if _sb:
+            prompt += chr(10) + chr(10) + _sb
         lines = _clean_lines(_sg._call_json(prompt, _LINES_SCHEMA, note=note) or {})
         lines = _repair_joins(lines, plan_for_repair(groups_out, roles, tpl, seed, hook_spine), note=note)
         lines = _one_full_name(lines, groups_out.get("product") or "")
@@ -951,11 +1010,21 @@ def _shuffle_middle(order, seed):
 
 
 # ── 한 번에 ───────────────────────────────────────────────────────────
-def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, seed=None, note=None, style=None):
-    """(given_script, beat_sources, meta). 실패하면 (None, None, meta) — 조용히 폴백하지 않는다."""
+def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, seed=None, note=None, style=None,
+             seed_src=None):
+    """(given_script, beat_sources, meta). 실패하면 (None, None, meta) — 조용히 폴백하지 않는다.
+
+    ★대본은 씨앗을 쓰고 **화면은 씨앗 영상을 안 쓴다**(2026-09-21 사장님). 씨앗은 남의 히트작이라
+      그 화면을 그대로 깔면 우리 영상이 아니게 된다. 실측(work 7f7d2393eb0b): 주컷 5/7·대안 69.6%가
+      씨앗 컷이었고 재료 7편 중 4편은 한 컷도 안 쓰였다. 말투·골격·소재는 씨앗이, 그림은 재료가 준다.
+    """
     note = note if note is not None else {}
-    seg_index = _seg_index(sources)
-    groups_out = build_groups(sources, backbone_vid, note=note)
+    vis_sources = _drop_seed(sources, seed_src, note=note)
+    if backbone_vid not in {s_.get("video_id") for s_ in vis_sources} and vis_sources:
+        backbone_vid = max(vis_sources, key=lambda x: len(x.get("segments") or [])).get("video_id")
+        note["backbone_moved"] = backbone_vid      # 씨앗이 백본이었으면 재료 중 하나로 옮긴다
+    seg_index = _seg_index(vis_sources)
+    groups_out = build_groups(vis_sources, backbone_vid, note=note)
     # ★모델 혼잡(503)은 잠깐 뒤 다시 하면 된다 — 전엔 0.7초 만에 포기해 대본 0개(09-18 실측 42건 중 2건 전부 503).
     #   혼잡일 때만 다시 한다. 다른 이유로 비면(재료 문제) 바로 실패로 둔다.
     for wait in (4, 10):
@@ -976,7 +1045,7 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
         note["style_switched"] = {"from": spine.get("name"), "why": "재료에 딴 용도 장면 없음"}
         spine = pick_hook_spine(store, seed=seed, style=MISUSE_FALLBACK_STYLE)
         note["style_switched"]["to"] = spine.get("name")
-    lines = write_lines(groups_out, spine, seg_index, target_seconds, note=note, seed=seed)
+    lines = write_lines(groups_out, spine, seg_index, target_seconds, note=note, seed=seed, seed_src=seed_src)
     if len(lines) < 3:
         note["reason"] = "lines_short"
         return None, None, {"note": note, "groups": groups_out}
@@ -1032,7 +1101,8 @@ if __name__ == "__main__":       # 서버에서: python3 -m shopping_shorts.back
     given, bs, meta = assemble(sources, bb, st, spine_id=sid)
     print(json.dumps({"given_script": given, "beat_sources": bs, "meta": meta}, ensure_ascii=False, indent=1))
 
-def assemble_clean(sources, backbone_vid, store, spines, target_seconds=25, seed=None, want=2, note=None):
+def assemble_clean(sources, backbone_vid, store, spines, target_seconds=25, seed=None, want=2, note=None,
+                   seed_src=None):
     """스파인 여러 개를 돌려 **인물·상황 검사를 통과한 대본만** 돌려준다 (2026-09-20 사장님 확정 B안).
 
     대본 한 편을 규칙으로 완벽하게 만들려 하면 규칙만 늘어난다(09-19~20 실측). 대신 여러 편 뽑아
@@ -1044,7 +1114,8 @@ def assemble_clean(sources, backbone_vid, store, spines, target_seconds=25, seed
         n = {}
         try:
             given, bs, meta = assemble(sources, backbone_vid, store, spine_id=sp.get("id"),
-                                       target_seconds=target_seconds, seed="%s-%s" % (seed or "", sp.get("id")), note=n)
+                                       target_seconds=target_seconds, seed="%s-%s" % (seed or "", sp.get("id")),
+                                       note=n, seed_src=seed_src)
         except Exception as e:      # noqa: BLE001 — 한 스파인 실패가 나머지를 막으면 안 된다
             tried.append({"spine": sp.get("name"), "why": repr(e)[:80]})
             continue
@@ -1074,17 +1145,7 @@ def seed_type(sources, backbone_main=None, note=None):
     씨앗 유형을 따르면 재료와 대본이 어긋나지 않는다(오용형은 딴 용도 장면이 이미 있다)."""
     if not sources:
         return ""
-    if backbone_main is not None:
-        try:
-            seed = sources[int(backbone_main)]
-        except Exception:      # noqa: BLE001
-            seed = None
-    else:
-        seed = None
-    if seed is None:
-        ko = lambda t: sum(1 for c in t if "가" <= c <= "힣") / max(1, sum(1 for c in t if c.isalpha()))
-        kor = [s for s in sources if ko(s.get("full_text") or "") > 0.7]
-        seed = max(kor or sources, key=lambda s: len(s.get("full_text") or ""))
+    seed = seed_source(sources, backbone_main)
     text = (seed.get("full_text_ko") or seed.get("full_text") or "").strip()
     if len(text) < 60:
         return ""
