@@ -6152,6 +6152,37 @@ def script_sentences(script):
     return [s.strip() for s in _SENT_SPLIT.split(script or "") if s.strip()]
 
 
+# 한 줄에 두 문장이 들어온 대본을 줄로 가른다(2026-09-21 이정민님 제보 — 칸 하나가 91자).
+#   왜 길이 조건을 다는가: 줄을 준 사람의 단위를 서버가 마음대로 쪼개면 훅+문제가 갈라진다
+#   (2026-09-03 job 8b86200f50b3 실사고, script_sentences 주석 참고). 그래서 **한 칸이
+#   감당 못 할 만큼 길 때만** 가른다 — 기준은 말속도 상수 한 곳(_SYLLABLES_PER_SEC)에서 뽑는다.
+#   실측(job 2f14a7c705c7): 4번째 줄 91자 = 약 16초치인데 그 칸 화면은 7.5초였다.
+_LINE_SPLIT_MAX_SEC = 9.0            # 한 칸이 읽어도 되는 상한(초). 넘고 문장이 2개 이상이면 가른다
+
+
+def split_long_script_lines(script, max_sec=_LINE_SPLIT_MAX_SEC):
+    """확정 대본에서 **너무 길고 문장이 둘 이상인 줄**만 문장 단위로 가른다.
+
+    - 짧은 줄·문장 하나짜리 줄은 **손대지 않는다**(줄 = 칸 단위 원칙 유지).
+    - 가른 뒤 조각이 여전히 길면 그건 한 문장이 긴 것이라 그대로 둔다.
+    - 줄이 없는 통짜 대본은 종전 경로(script_sentences)가 문장으로 나누므로 그대로 반환.
+    """
+    if not script_has_lines(script):
+        return script
+    limit = max(1, int(round(max_sec * _SYLLABLES_PER_SEC)))
+    out = []
+    for ln in (script or "").split(chr(10)):
+        t = ln.strip()
+        if not t:
+            continue
+        if len(re.sub(r"\s+", "", t)) <= limit:
+            out.append(t)
+            continue
+        parts = [x.strip() for x in _SENT_SPLIT.split(t) if x.strip()]
+        out.extend(parts if len(parts) >= 2 else [t])
+    return chr(10).join(out)
+
+
 def enforce_scripted_narration(beats, given_script):
     """확정 대본에 없는 문장을 EDL이 지어냈으면, 빠뜨린 대본 문장으로 되돌린다.
 

@@ -2736,6 +2736,41 @@ async function _sfxPost(i, body){
 function setSfx(i, v){ _sfxPost(i, v ? {asset_id: Number(v)} : {}); }
 function setSfxPos(i, v){ _sfxPost(i, {position: v}); }
 
+// ── 음성 빠진 칸을 화면 위에 크게 알린다(2026-09-21 이정민님 제보) ─────────────────────
+//   대본을 고치면 그 칸의 옛 음성은 일부러 버린다(edit_plan._drop_stale_tts) — 딴소리 방지.
+//   그런데 화면은 조용해서, 고객은 그 칸을 눌러 봐야 "음성이 없다"를 안다. 실측(job
+//   2f14a7c705c7): 5칸 중 4칸이 음성 없이 남아 있었고 안내는 칸을 재생할 때만 떴다.
+//   ★판정은 서버 응답 코드 그대로 쓴다(404=아직 없음 / 409=대본 바뀜) — 화면이 따로 세지 않는다.
+let TTS_AUDIT_TIMER = 0;
+async function ttsAudit(){
+  if (!SL.server || TTS_RUNNING) return;
+  let bar = document.getElementById('ttsmiss');
+  const need = [];
+  for (let i = 0; i < (DATA.beats || []).length; i++){
+    try{
+      const r = await fetch(SL.tts(i, ttsVer(i)), {method: 'GET'});
+      if (!r.ok) need.push(i + 1);
+    }catch(e){ /* 네트워크 실패는 알림 대상이 아니다 */ }
+  }
+  if (!need.length){ if (bar) bar.remove(); return; }
+  if (!bar){
+    bar = document.createElement('div');
+    bar.id = 'ttsmiss';
+    bar.style.cssText = 'margin:0 0 8px;padding:10px 14px;border-radius:10px;background:#7a2b2b;'
+                      + 'color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;gap:10px';
+    const zone = document.getElementById('topzone');
+    if (zone && zone.parentNode) zone.parentNode.insertBefore(bar, zone);
+  }
+  bar.innerHTML = '🔇 <span>' + need.join('번, ') + '번 칸은 음성이 없어요 — 대본을 고치면 그 칸 음성은 다시 만들어야 합니다</span>';
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'act';
+  b.style.cssText = 'margin-left:auto;padding:4px 12px;font-size:13px';
+  b.textContent = '🔊 지금 음성 만들기';
+  b.onclick = () => makeTts();
+  bar.appendChild(b);
+}
+function ttsAuditSoon(ms){ clearTimeout(TTS_AUDIT_TIMER); TTS_AUDIT_TIMER = setTimeout(() => { ttsAudit(); }, ms || 800); }
+
 // 음성 만들기 — 칸마다 음성이 있는지 보고, 없는 것만 서버에 만들어 달라고 한다.
 // (엔드포인트는 이미 있던 것: POST /api/mix/tts/{job}/{beat}/regen → resynth_one_beat)
 let TTS_RUNNING = false;      // 재진입 가드 — 아래 autoMakeTts와 제작소가 둘 다 부를 수 있다
@@ -4620,7 +4655,7 @@ function wireBandPan(){
     moved = 0; scrolled = 0;      // 다음 클릭에 옛 값이 남지 않게 항상 비운다
   }, true);
 }
-boot();
+boot().then(() => { try{ ttsAuditSoon(1200); }catch(e){} });
 </script>
 <script>
 // ★Ctrl+Z(mac ⌘Z) = 한 단계 되돌리기. 글자를 치는 칸(대본·숫자)에서는 손대지 않는다

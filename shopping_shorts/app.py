@@ -19463,6 +19463,10 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     결과를 그대로 보관용으로 전달) — mix_jobs.structure(4번째 위치인자, template/free
     모드 플래그 문자열)와는 이름만 비슷할 뿐 전혀 다른 값이니 섞지 말 것."""
     script = (body.get("script") or "").strip()
+    # ★한 줄에 두 문장이 들어오면 여기서 가른다(2026-09-21 이정민님 job 2f14a7c705c7).
+    #   줄 = 칸이라 91자(약 16초치) 한 줄이 7.5초 칸에 통째로 꽂혀 음성·자막이 밀렸다.
+    #   판정·기준은 edit_plan.split_long_script_lines 한 곳(0순위-B) — 짧은 줄은 손대지 않는다.
+    script = _edit_plan.split_long_script_lines(script)
     urls = [u for u in (body.get("urls") or []) if u]
     if not script:
         return JSONResponse(status_code=422, content={"ok": False, "error": "확정 대본이 비어 있습니다(1단계)"})
