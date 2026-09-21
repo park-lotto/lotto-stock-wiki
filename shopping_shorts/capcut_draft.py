@@ -330,9 +330,27 @@ def _beat_clips(beat, beat_dur, src_durs):
     실패해도 draft 생성 자체는 살려야 하므로(내보내기가 통째로 죽으면 안 된다) 못 구하면
     primary 하나로 되돌아간다 — 종전 동작과 같다.
     """
+    # ★배속이 구워진 완성본 조각(_capcut_baked_speed) — 소스를 배속만큼 **늘려 둔** 전용 파일이다
+    #   (mix_pipeline.normalize_baked_clips_for_capcut). 조각 안의 컷 경계는 완성본 시각이라,
+    #   소스 좌표(시작·읽을 길이)에만 배속을 곱한다. target은 그대로 → 캡컷 속도칸에 MIX 값이 남는다.
+    #   타임라인과 보관함 조각이 **같은 이 함수**를 지난다(예전엔 타임라인에만 따로 적혀 있었다).
+    try:
+        _baked = float((beat or {}).get("_capcut_baked_speed") or 0.0)
+    except (TypeError, ValueError):
+        _baked = 0.0
+    if not (_baked > 0 and math.isfinite(_baked)):
+        _baked = 0.0
     try:
         from shopping_shorts.video_assemble import plan_beat_clips_for
         clips = plan_beat_clips_for(beat, float(beat_dur or 0.0), src_durs or {})
+        if clips and _baked:
+            if not (beat or {}).get("manual_cuts"):     # 컷 정보가 없으면 종전처럼 한 덩이
+                clips = [{"video_id": clips[0]["video_id"], "start": 0.0,
+                          "out_dur": float(beat_dur or 0.0)}]
+            for c in clips:
+                c["start"] = float(c.get("start") or 0.0) * _baked
+                c["src_dur"] = float(c.get("out_dur") or 0.0) * _baked
+                c.pop("playback_speed", None)
         if clips:
             return clips
     except Exception as e:      # noqa: BLE001 — 계획 실패가 내보내기를 죽이면 안 된다
@@ -465,21 +483,8 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
         #   여기서 따로 나누면 또 어긋난다.
         _srcd = {vid: (video_durs or {}).get(real, 0.0)
                  for vid, real in source_video_paths.items() if real}
-        try:
-            _baked_speed = float(beat.get("_capcut_baked_speed") or 0.0)
-        except (TypeError, ValueError):
-            _baked_speed = 0.0
-        _primary = beat.get("primary") or {}
-        _primary_vid = _primary.get("video_id")
-        if (_baked_speed > 0 and math.isfinite(_baked_speed)
-                and _primary_vid in _srcd):
-            # 완성본 조각을 배속만큼 역변환한 전용 소스다. target은 비트 길이 그대로,
-            # source는 target×배속으로 잡아 CapCut 속도칸에 MIX 값이 정확히 남는다.
-            _clips = [{"video_id": _primary_vid, "start": 0.0,
-                       "src_dur": float(tl.get("dur", 0.0) or 0.0) * _baked_speed,
-                       "out_dur": float(tl.get("dur", 0.0) or 0.0)}]
-        else:
-            _clips = _beat_clips(beat, tl.get("dur", 0.0), _srcd)
+        # 배속이 구워진 완성본 조각(_capcut_baked_speed)도 _beat_clips **한 곳**이 처리한다.
+        _clips = _beat_clips(beat, tl.get("dur", 0.0), _srcd)
         _acc = t0
         for ci, c in enumerate(_clips):
             src_real = source_video_paths.get(c.get("video_id"))
