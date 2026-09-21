@@ -18213,7 +18213,7 @@ function s2PickSeed(i){
 function _seedFootageOff(prevSeed, nextSeed){
   // ★지금은 사장님 계정만(2026-09-21 사장님 "고객들은 예전 걸로 해두고 나만 라이브"). 새 대본
   //   스위치(backbone_script_enabled=admin)와 짝 — 대본이 옛 경로인 고객은 화면 재료도 종전대로 둔다.
-  if(!window.IS_ADMIN) return;
+  if(!(typeof _s2SeedAuto==='function' && _s2SeedAuto())) return;
   try{
     const find=sc=>(sc? HANDOFF.find(h=>h && h.shortcode===sc) : null);
     const prev=find(prevSeed && prevSeed.shortcode);
@@ -18319,7 +18319,7 @@ function s2RenderStyles(){
   // ★고객은 예전 「픽업영상 대본」 그대로(2026-09-21 사장님 "고객들은 예전 걸로 해두고 나만 라이브").
   //   09-20의 '씨앗 유형 자동'은 서버 대본 경로(backbone_script_enabled=admin)와 짝이라 사장님 계정만 —
   //   고객에게 자동 카드를 보여주면 서버가 그 안을 안 만들어 **픽업 대본만 사라진** 꼴이 된다(09-20 21:05~).
-  const auto = window.IS_ADMIN ? `<div class="s2-card sel locked" onclick="s2AutoLockedMsg()" title="담은 씨앗 영상과 같은 유형의 스타일로 자동으로 만듭니다 — 재료와 늘 맞아 끌 수 없어요">
+  const auto = (typeof _s2SeedAuto==='function' && _s2SeedAuto()) ? `<div class="s2-card sel locked" onclick="s2AutoLockedMsg()" title="담은 씨앗 영상과 같은 유형의 스타일로 자동으로 만듭니다 — 재료와 늘 맞아 끌 수 없어요">
     <div class="t">🎯 이 영상에 딱 맞는 스타일 <span class="sp"></span><span class="s2-badge ok">자동</span></div>
     <div class="s2-quote plain">${_sh.length?esc(_sh.join(' → ')):'씨앗 영상 유형으로 자동 선택'}</div>
     <div class="s2-meta"><span class="r">자동</span><span class="d">아래에서 한 개 더 고를 수 있어요</span></div>
@@ -18432,7 +18432,7 @@ function s2RenderStyles(){
     const _n = s2AnCount();
     // ★고객은 예전 문구(2026-09-21 사장님 "고객들은 예전 걸로") — 자동 1안은 사장님 계정만 만들어진다.
     //   고객에게 '자동 1안'이라고 말하면 실제로 받는 픽업 대본과 다른 거짓 안내가 된다.
-    hint.textContent = (typeof window!=='undefined' && window.IS_ADMIN)
+    hint.textContent = (typeof _s2SeedAuto==='function' && _s2SeedAuto())
       ? ((S2.picked.length
           ? ('이 영상에 맞는 자동 1안 + 고른 '+S2.picked.length+'안 = 총 '+_n+'안을 만듭니다')
           : ('이 영상에 맞는 스타일로 1안을 만듭니다 — 아래에서 한 개 더 고를 수 있어요'))
@@ -18443,13 +18443,17 @@ function s2RenderStyles(){
   }
 }
 function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
+// ★씨앗 자동 안(2026-09-20)을 화면에 쓸지 — **판단은 여기 한 곳**(0순위-B).
+//   2026-09-21 사장님 "예전 버전. 픽업 한 개 의무 아닌 걸로": 사장님 계정도 예전(📌 픽업 끄고 켜기 ·
+//   끄면 스타일 2개)으로 되돌린다. 켜려면 이 함수만 true(또는 window.IS_ADMIN)로 바꾼다.
+function _s2SeedAuto(){ return false; }
 // ★안은 최대 2개다(종전 그대로). 픽업도 한 안을 차지하므로 **함께 세어** 상한을 건다 —
 //   따로 세면 픽업+스타일 2개 = 3안이 되어 종전 규칙이 조용히 깨진다.
 // 사장님 계정: 자동 1안은 늘 들어간다 / 고객: 예전 규칙(픽업도 한 안). ★한 줄 유지 — test_s2_an_count_label_js가 이 줄을 뽑아 돌린다
-function s2AnCount(){ return (S2.picked||[]).length + ((typeof window!=='undefined' && window.IS_ADMIN) ? 1 : ((S2.usePickup!==false)?1:0)); }
+function s2AnCount(){ return (S2.picked||[]).length + ((typeof _s2SeedAuto==='function' && _s2SeedAuto()) ? 1 : ((S2.usePickup!==false)?1:0)); }
 function s2AutoLockedMsg(){ toast('씨앗 영상에 맞는 스타일이라 항상 들어갑니다 — 아래에서 한 개 더 고를 수 있어요'); }
 function s2TogglePickup(){
-  if(window.IS_ADMIN){ s2AutoLockedMsg(); return; }   // 사장님 계정: 자동 안은 끌 수 없다(2026-09-20)
+  if((typeof _s2SeedAuto==='function' && _s2SeedAuto())){ s2AutoLockedMsg(); return; }   // 씨앗 자동 켜짐: 자동 안은 끌 수 없다(2026-09-20)
   if(S2.usePickup===false){
     if(s2AnCount()>=2){ toast('안은 2개까지 — 스타일 하나를 해제하고 고르세요'); return; }
     S2.usePickup=true;
@@ -18523,7 +18527,7 @@ async function s2Generate(){
     //   서버를 건드리지 않는다(0순위-B: 생성 판정은 서버 한 곳에 그대로 둔다).
     // ★사장님 계정만 픽업 폐지(자동 안은 서버가 씨앗 유형으로 만든다, 2026-09-20).
     //   고객은 예전대로 픽업 요청을 보낸다(2026-09-21 사장님 "고객들은 예전 걸로").
-    const _usePickup = window.IS_ADMIN ? false : (S2.usePickup!==false);
+    const _usePickup = (typeof _s2SeedAuto==='function' && _s2SeedAuto()) ? false : (S2.usePickup!==false);
     const _sents=s2SeedSentences((S2.seed&&S2.seed.text)||'');
     const _hook=_sents[0]||'';
     const _reqs=[];
