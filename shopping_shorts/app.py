@@ -4822,8 +4822,14 @@ def _save_render_inputs(store, job_id, **fields):
         if key == "seo":
             continue
         if key == "edit_plan":
-            old_beats = ((before.get("edit_plan") or {}).get("beats") or [])
-            new_beats = ((value or {}).get("beats") or [])
+            # ★clip_anchor(장면↔구절 짝을 얼린 값)는 비교에서 뺀다(2026-09-21). 얼리기는 **지금 적용
+            #   중인 짝을 적어 두는 것**이라 그림이 안 바뀐다 — 넣으면 옛 job을 믹스에서 열어 저장만
+            #   해도 멀쩡한 완성본이 무효가 된다. 짝이 실제로 달라지는 경우는 줄·장면이 같이 바뀐다.
+            def _no_anchor(bs):
+                return [{k: v for k, v in b.items() if k != "clip_anchor"} if isinstance(b, dict) else b
+                        for b in bs]
+            old_beats = _no_anchor((before.get("edit_plan") or {}).get("beats") or [])
+            new_beats = _no_anchor((value or {}).get("beats") or [])
             if old_beats != new_beats:
                 render_changed = True
         elif key == "thumbnail":
@@ -5063,6 +5069,21 @@ def _script_hash(text):
     return hashlib.sha1(s.encode("utf-8")).hexdigest()[:16] if s else ""
 
 
+def _sources_hash(urls):
+    """소스 영상 묶음의 지문 — "이 job이 지금 화면에 담긴 영상들로 만들어진 것인가"만 판별한다.
+
+    ★왜(2026-09-21 회원 제보): 영상을 빼고 다른 영상을 넣어도 대본이 그대로면 3단계가
+      옛 job을 그대로 보여줘, 뺀 영상의 장면이 계속 나왔다(대본 지문만 대조했다).
+    ★프론트(produce.html `_sourcesHash`)와 **같은 규칙이어야 한다**(0순위-B). 어긋나면
+      늘 '바뀐 것'으로 보여 재매칭이 반복되고, 매칭은 과금이다.
+    규칙: 각 URL 트림 → 빈 것·중복 제거 → 정렬 → 줄바꿈으로 이어 `_script_hash`.
+    (담긴 순서·중복은 같은 재료다 — 그걸로 다시 매칭하면 안 된다. 해시 규칙 자체는
+     `_script_hash` 하나만 쓴다 = 새 규칙을 만들지 않는다.)
+    """
+    uniq = sorted({(u or "").strip() for u in (urls or []) if isinstance(u, str)} - {""})
+    return _script_hash("\n".join(uniq))
+
+
 @app.get("/api/mix/status/{job_id}")
 def api_mix_status(job_id: str, request: Request):
     store = Store(DB_PATH)
@@ -5191,6 +5212,9 @@ def api_mix_status(job_id: str, request: Request):
             #   화면 대본과 대조해 **바뀌었으면 자동으로 다시 붙이려고** 쓴다(사장님 결정 A).
             #   원문을 실으면 응답만 무거워진다 — 같은지 다른지만 알면 되므로 해시로 보낸다.
             "script_hash": _script_hash(job.get("given_script") or ""),
+            # ★이 job이 어떤 영상들로 매칭됐는지의 지문(2026-09-21). 영상을 빼고 새로 넣었는데
+            #   대본이 그대로면 옛 job이 남아 뺀 영상이 계속 나왔다 — 화면이 이걸로 대조한다.
+            "sources_hash": _sources_hash(job.get("urls") or []),
             "candidates": candidates}
 
 
@@ -6071,8 +6095,17 @@ def _lab_captions(plan):
             segs, dur or (b.get("target_seconds") or 3.0), real_durs=rd)
         t = float(lead or 0.0)
         rows = []
-        for seg, dd in zip(segs, durs):
-            rows.append({"text": seg, "start": round(t, 3), "end": round(t + dd, 3)})
+        # ★구절마다 **몇 번째 조각이 덮는지**를 같이 싣는다(2026-09-21). 짝을 정하는 곳은
+        #   video_assemble.phrase_owners 하나 — 화면(scene_play.js)은 받은 값을 그대로 쓴다.
+        #   owner_n = 이 값이 맞는 조각 수. 화면에서 조각을 넣고 빼 수가 달라지면 화면은 옛 식으로
+        #   그리고(저장 시 서버도 같은 식으로 다시 얼린다), 저장 응답의 새 값으로 다시 맞춘다.
+        _n_seg = len(video_assemble._beat_material(b)) if b.get("phrase_sync") else 0
+        _own = video_assemble.phrase_owners(b, _n_seg, segs) if _n_seg else []
+        for k, (seg, dd) in enumerate(zip(segs, durs)):
+            row = {"text": seg, "start": round(t, 3), "end": round(t + dd, 3)}
+            if k < len(_own):
+                row["owner"], row["owner_n"] = _own[k], _n_seg
+            rows.append(row)
             t += dd
         caps[str(i)] = rows
     return caps, tts_dur
@@ -6784,6 +6817,7 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
             return conflict
         if body.get("revert"):
             _edit_plan.revert_scene_lab(plan)
+            _freeze_clip_anchors(plan)
             _save_render_inputs(store, job_id, edit_plan=plan)
             return {"ok": True, "reverted": True,
                     "revision": _scene_lab_revision(plan)}
@@ -6822,12 +6856,23 @@ def _scene_lab_revision_conflict(plan, base_revision):
     return None
 
 
+def _freeze_clip_anchors(plan):
+    """편성이 바뀐 직후 — 칸마다 **지금 보이는** 장면↔구절 짝을 얼린다(video_assemble.ensure_clip_anchor).
+    얼려 두면 나중에 자막 줄을 나눠도 렌더가 짝을 개수로 다시 나누지 않는다(2026-09-21)."""
+    for _b in (plan or {}).get("beats") or []:
+        try:
+            video_assemble.ensure_clip_anchor(_b)
+        except Exception as _e:      # noqa: BLE001 — 짝 얼리기 실패가 저장을 막으면 안 된다(없으면 옛 식)
+            print(f"[clip_anchor] 얼리기 실패(무해): {_e!r}", file=sys.stderr)
+
+
 def _scene_lab_apply_locked(store, job_id, job, plan, payload):
     """apply의 실제 작업 — 반드시 _plan_lock 안에서 부른다."""
     seg_map, _ = _edit_plan._build_inventory(list((job.get("extract") or {}).values()))
     # ★교체 기록(2026-09-04): 적용 전후 '첫 조각'이 바뀐 비트를 DB에 남긴다 — 매칭의 시험지. 픽 로직엔 안 쓴다.
     _before = {"beats": [dict(b) for b in plan.get("beats") or []], "generator": plan.get("generator")}
     _edit_plan.apply_scene_lab(plan, seg_map, payload)
+    _freeze_clip_anchors(plan)
     _save_render_inputs(store, job_id, edit_plan=plan)
     _swapped = 0
     try:
@@ -6836,7 +6881,8 @@ def _scene_lab_apply_locked(store, job_id, job, plan, payload):
     except Exception as _e:      # noqa: BLE001 — 기록 실패가 적용을 막으면 안 된다
         print(f"[scene_swaps] 기록 실패(무해): {_e!r}", file=sys.stderr)
     return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0),
-            "swapped": _swapped, "revision": _scene_lab_revision(plan)}
+            "swapped": _swapped, "revision": _scene_lab_revision(plan),
+            "captions": _lab_captions(plan)[0]}      # 새 짝(owner) — 화면이 서버와 다시 맞춘다
 
 
 @app.get("/api/mix/scene_lab/{job_id}/history")
@@ -6882,6 +6928,7 @@ def api_mix_scene_lab_restore_version(job_id: str, body: dict):
     if not _edit_plan.restore_scene_lab_version(plan, idx):
         return JSONResponse(status_code=404,
                             content={"ok": False, "error": "그 판본이 없어요"})
+    _freeze_clip_anchors(plan)
     _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0)}
 
@@ -7643,6 +7690,13 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
                                   dict(job.get("voice") or {}), DB_PATH, _MIX_WORK_DIR)
         return {"ok": True, "unchanged": True, "regen": True,
                 "tts_ver": beat.get("tts_ver") or 0}
+    # ★고치기 **전** 상태를 잡아 둔다(2026-09-21 박세현님 "대본 자막 손본 게 풀린다") — 아래에서
+    #   사람이 나눈 줄과 장면↔구절 짝을 새 문장으로 옮겨 적는다.
+    _old_narr = beat.get("narration") or ""
+    _old_lines = list(beat.get("caption_lines") or []) if beat.get("caption_lines_human") else None
+    _old_owners = None
+    if _old_lines and beat.get("phrase_sync"):
+        _old_owners = video_assemble.phrase_owners(beat, len(video_assemble._beat_material(beat)))
     beat["narration"] = text
     # ★사람이 직접 고쳤다는 표식 (2026-08-25 고객 오류신고 cid 110 "자막수정이 안되요").
     #   저장 출구(store._ensure_screen_time → enforce_scripted_narration)가 1단계 확정
@@ -7660,6 +7714,18 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
     # preset을 대조(공백 무시 일치)에서 떨어뜨려 조용히 규칙 폴백으로 내려간다.
     beat["caption_lines"] = None
     beat["caption_lines_human"] = False
+    # ★단 **사람이 직접 나눈 줄**은 버리지 않는다(2026-09-21). 실측(job fe21f8a5dc71): 세 줄을
+    #   한 줄로 합친 직후 「이건건식·습식」→「이건 건식,습식」으로 고치자 줄이 자동 분할로 돌아가
+    #   다시 합쳐야 했다. 안 바뀐 어절에 걸린 경계는 새 문장으로 옮긴다(carry_caption_lines).
+    #   못 옮기면(문장이 통째로 바뀜) 위 그대로 자동 분할이다. 시간(cap_durs)은 어느 쪽이든
+    #   음성을 다시 뽑을 때 새로 잰다 — _recompute가 이 줄을 preset으로 쓴다.
+    _carried = video_assemble.carry_caption_lines(_old_narr, _old_lines, text)
+    if _carried:
+        beat["caption_lines"] = _carried
+        beat["caption_lines_human"] = True
+        # 글자 위치가 밀렸으니 짝도 새 문장 위치로 옮겨 적는다. 줄 수가 달라졌으면 넘기지 않는다
+        # (ensure가 길이를 보고 무시한다 → 종전 식. 고객이 믹스 화면에서 바로 본다).
+        video_assemble.ensure_clip_anchor(beat, owners=_old_owners)
     _save_render_inputs(store, job_id, edit_plan=plan)
     if body.get("regen") is False:
         return {"ok": True, "saved": True, "regen": False}
@@ -20833,12 +20899,18 @@ def _caplines_locked(store, job_id, body):
     #   렌더는 preset을 버리고 규칙 폴백으로 내려갔다 = "줄 저장했는데 최종렌더 반영 안 됨".
     _cmp_key = video_assemble.cap_preset_key
 
+    # ★줄을 바꾸기 **전에** 지금 보이는 장면↔구절 짝을 얼린다(2026-09-21 박세현님).
+    #   안 얼리면 렌더가 새 줄 수로 짝을 처음부터 다시 나눠, 믹스에서 맞춘 장면이 밀린다.
+    #   자막 단계·장면꾸미기·믹스 타임라인의 줄 나눔이 전부 이 API 하나로 들어온다.
+    video_assemble.ensure_clip_anchor(hit)
+
     if body.get("reset"):
         # '↩ 자동으로' — 사람이 정한 줄을 지우고 규칙/AI 분할로 돌아간다.
         # ★caption_lines만 지우면 옛 경계 기준 cap_durs가 남아 자막이 밀린다 → 함께 비운다.
         hit["caption_lines"] = None
         hit["caption_lines_human"] = False
         hit["cap_durs"] = None
+        video_assemble.ensure_clip_anchor(hit)       # 줄 수 == 장면 수가 됐으면 1:1로 다시 얼린다
         _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True, "lines": video_assemble._caption_segments(narr), "timed": False}
     lines = [str(x).strip() for x in (body.get("lines") or []) if str(x).strip()]
@@ -20864,6 +20936,7 @@ def _caplines_locked(store, job_id, body):
             hit["cap_src"] = _wsrc if (words and timing) else "estimate"
         except Exception as e:  # noqa: BLE001 — 재계산 실패해도 줄 나누기는 살린다(글자수 폴백)
             print(f"[caplines] 타이밍 재계산 실패(폴백 사용): {e!r}", file=sys.stderr)
+    video_assemble.ensure_clip_anchor(hit)           # 줄 수 == 장면 수가 됐으면 1:1로 다시 얼린다
     _save_render_inputs(store, job_id, edit_plan=plan)
     # ★칸 타임라인(2026-08-29)이 이 응답으로 화면을 바로 갱신한다 — 새 시간표는
     #   GET과 같은 함수(_lab_captions)로 만든다. 여기서 따로 계산하면 두 벌이 된다(0순위-B).

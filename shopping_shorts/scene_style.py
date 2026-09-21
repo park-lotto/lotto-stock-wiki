@@ -9,14 +9,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# 자막 없는 장면으로 **따로 세울** 최소 길이(초) — 2026-09-21 사장님 제보
-#   "4번 장면 본문 첫인데 자막에 글자가 없고 5번부터 시작된다".
-#   비트 시작과 첫 자막 구절 사이의 자투리가 독립 장면으로 잡혀 장면 번호를 밀어냈다.
-#   ★실측(최근 job 25개, 빈 자막 장면 70개): 최소 0.03 · 중앙 0.15 · **최대 0.52초**,
-#     0.5초 이상은 단 1개. 즉 사실상 전부 자투리고 '말이 없는 진짜 구간'은 없었다.
-#   ★이 값보다 짧으면 이웃 구절이 삼킨다 — 장면이 줄어 편집기·렌더·캡컷이 함께 깔끔해진다.
-_MIN_SILENT_SCENE = 0.5
-
 
 def validate_snapshot(value):
     if not isinstance(value, dict) or len(json.dumps(value, ensure_ascii=False)) > 250_000:
@@ -161,34 +153,14 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
             if b <= a:
                 continue
             if a > cursor + .001:
-                if a - cursor < _MIN_SILENT_SCENE:
-                    a = cursor      # 자투리는 뒤 구절이 삼킨다(장면을 새로 만들지 않는다)
-                else:
-                    scenes.append({"start":cursor,"end":a,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
+                scenes.append({"start":cursor,"end":a,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
             scenes.append({"start":a,"end":b,"caption":caption,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
             cursor = b
         if cursor < end - .001:
-            if end - cursor < _MIN_SILENT_SCENE and scenes and scenes[-1]["beat_idx"] == beat["beat_idx"]:
-                scenes[-1]["end"] = end      # 비트 끝 자투리는 앞 구절이 삼킨다(뒤가 없다)
-            else:
-                scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
+            scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
     copy = dict(headcopy) if isinstance(headcopy, dict) else {}
     if not (copy.get("text") or "").strip():
         copy["text"] = (timeline[0].get("narration") if timeline else "") or ""
-    # ★훅 서브카피(썰쇼핑형 16종의 9.4% 띠)를 **대본 구절로** 채운다(2026-09-21).
-    #   비워 두면 템플릿 1/10이 늘 빈 흰 칸이었다 — 그 자리는 글자가 온다는 전제로 디자인됐다.
-    #   훅 다음 첫 본문 비트의 구절을 쓴다(훅 비트의 나레이션은 제목과 같은 문장이라 중복된다).
-    #   구절은 렌더 자막과 같은 단위를 그대로 쓴다 — 여기서 따로 자르면 화면마다 달라진다(0순위-B).
-    #   ★`subline`이 아니라 `subline_auto`에 넣는다 — 사람이 넣은 서브카피는 본문 제목까지
-    #     몰지만(종전 계약), 자동으로 채운 것은 훅 띠만 채운다.
-    if not (copy.get("subline") or "").strip():
-        from .template_copy import support_from_phrases
-        try:
-            phrases = [text for beat in (timeline or [])[1:2]
-                       for text, _t0, _t1 in caption_schedule(beat)]
-            copy["subline_auto"] = support_from_phrases(phrases)
-        except Exception:      # noqa: BLE001 — 서브카피 하나 때문에 장면꾸미기가 막히면 안 된다
-            copy["subline_auto"] = ""
     text = {"channel": "숏템메이커", **scene_text(copy)}
     text.update({k:v for k,v in (snapshot or {}).get("text",{}).items() if k != "caption"})
     return {"jobId":job_id,"text":text,"scenes":scenes}

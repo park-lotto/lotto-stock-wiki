@@ -3134,6 +3134,18 @@ def _plan_signature(plan):
         _cl = b.get("caption_lines")
         if _cl:
             parts.append("c=%s" % "/".join(str(x) for x in _cl))
+        # ★얼린 짝(clip_anchor, 2026-09-21)도 **컷 배정**을 정한다 — 줄·재료가 같아도 짝이 다르면
+        #   그림이 다르다. 빼면 짝을 바로잡아 다시 만들어도 옛 배정의 청소본이 재사용된다(09-11과
+        #   같은 모양). 종전 식과 결과가 같으면 안 붙인다 → 옛 작업 서명 불변(재청소·재과금 없음).
+        if b.get("phrase_sync"):
+            try:
+                _n = len(_va._beat_material(b))
+                _caps = _va._caption_segments(b.get("narration") or "", _cl)
+                _own = _va.phrase_owners(b, _n, _caps)
+                if _own != [_va._even_owner(k, len(_caps), _n) for k in range(len(_caps))]:
+                    parts.append("o=%s" % ",".join(str(x) for x in _own))
+            except Exception:      # noqa: BLE001 — 서명 계산이 렌더를 막으면 안 된다
+                pass
         _z, _px, _py = _va.scene_zoom_of(b)
         if _z > 1.0001:                        # 지정 없으면 아무것도 안 붙인다
             parts.append("z=%.4f,%.5f,%.5f" % (_z, _px, _py))   # → 옛 작업 서명 불변

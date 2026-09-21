@@ -59,22 +59,11 @@
     const frame=frameFor(rows[current]),source=captionSource(frame),saved=captionLayouts.get(captionKey())||{};
     return {placement:captionDrags.has(captionKey())?'free':'title',w:100,h:source.height,background:source.background,color:source.ln?.color||'#111111',...saved};
   };
-  // ★사장님이 제목을 키운 만큼 **칸도 넓어진다**(2026-09-21 선택: "칸을 자동으로 넓혀 누른 만큼 키운다").
-  //   실측(t05 본문): 표시 250%인데 실제 글꼴은 198%에서 멈췄다 — 칸이 안 커지니 아래 깎기 루프가
-  //   글꼴을 몰래 줄였다. 표시와 결과가 달라 "크기조절이 이상하다"로 보인다.
-  //   ★여기(titleHeight)는 칸·자막·영상 자리를 모두 정하는 **단일 출처**라, 여기서 넓히면
-  //     자막과 영상이 함께 밀려 서로 겹치지 않는다(0순위-B).
-  const storyTitleGrowth=frame=>{
-    if(mode!=='story'||!isStoryBody(frame))return 0;
-    const scale=fontScales.get(scaleKey('bodyTitle'))||1;
-    return scale>1?STORY_BODY.cut*STORY_BODY.titleH*(scale-1):0;
-  };
   const titleHeight=frame=>{
     const original=(frame.video_from?.y||0)/frame.height*100,cut=captionSource(frame).cut/frame.height*100;
     const configured=fixedLayoutFor(rows[current].id,frame).top;
-    const grown=storyTitleGrowth(frame);
-    if(isStoryBody(frame)&&!fixedLayouts.get(layoutKey(rows[current].id,frame)))return STORY_BODY.cut+grown;
-    return (mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original))+grown;
+    if(isStoryBody(frame)&&!fixedLayouts.get(layoutKey(rows[current].id,frame)))return STORY_BODY.cut;
+    return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
   };
   const mediaBounds=(frame,presetId)=>{
     if(!frame||noTemplate)return {top:0,height:100};   // 템플릿 없음 = 영상이 화면 전체
@@ -549,9 +538,7 @@
     return p.id==='s0101'
       ? (frameKind==='hook'?['channel','hook1','hook2',...(((p.hook?.lines?.length||0)>2||p.hook?.white_box?.text)?['bodyTitle']:[])]:['channel','bodyTitle','caption'])
       : frameKind==='hook'
-        // 2026-09-21: 훅의 셋째 줄은 **보조 제목(서브카피)**이다 — 본문 제목과 같은 칸을 쓰면
-        //   한쪽에서 고친 글이 다른 쪽을 덮는다. 칸을 갈라 값이 섞이지 않게 한다.
-        ? [...(hasChannel?['channel']:[]),...(lineCount?['hook1']:[]),...(lineCount>1?['hook2']:[]),...(lineCount>2||frame?.white_box?.text?['supportTitle']:[])]
+        ? [...(hasChannel?['channel']:[]),...(lineCount?['hook1']:[]),...(lineCount>1?['hook2']:[]),...(lineCount>2||frame?.white_box?.text?['bodyTitle']:[])]
         : [...(hasChannel?['channel']:[]),...(lineCount?['bodyTitle']:[]),...(lineCount>1||frame?.white_box?.text?['caption']:[])];
   }
   function fieldSet(frameKind,p){
@@ -641,13 +628,7 @@
     const shiftX=bind==='caption'?0:moved.x;
     Object.assign(el.style,{left:(left+shiftX)+'%',right:(right-shiftX)+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
     const fixedColorKey=bind==='hook1'?'title1':(bind==='hook2'||bind==='bodyTitle')?'title2':null;
-    // ★2026-09-21 사장님 "색상변경 안 됨" — 두 겹이었다.
-    //   ① 색은 layoutKey(프리셋+프레임) 키로 저장하는데 여기선 `rows[current].id`만으로 찾아
-    //      **영영 못 찾았다**(저장은 되는데 글자에 반영이 안 된다).
-    //   ② `mode==='continuous'` 조건 때문에 썰쇼핑형에서는 아예 돌지 않았다 — 그런데 색 칸은
-    //      syncFixedPanel이 무조건 보여준다(hidden=false). 보이는데 안 먹는 칸이었다.
-    //   사용자가 바꾼 값만 덮는다(저장분이 없으면 템플릿 색 그대로).
-    const forcedColor=fixedColorKey&&(fixedColors.get(layoutKey(rows[current].id,frame))||{})[fixedColorKey];
+    const forcedColor=fixedColorKey&&mode==='continuous'&&fixedColors.get(rows[current].id)?.[fixedColorKey];
     if(forcedColor){el.style.color=forcedColor;el.textContent=text||' ';
     }else if(ln.word_colors?.length){
       String(text||' ').split(/\s+/).forEach((word,index,words)=>{const span=document.createElement('span');span.textContent=word;span.style.color=ln.word_colors[index]||ln.color||'#fff';if(index<words.length-1)span.style.marginRight=Math.max(2,fontPx*.11)+'px';el.append(span)});
@@ -756,20 +737,12 @@
     const lines=frame.lines||[];
     lines.forEach((ln,i)=>{
       const key=ln.bind||(kind==='hook'?(i===0?'hook1':i===1?'hook2':'bodyTitle'):(i===0?'bodyTitle':'caption'));
-      // 훅의 셋째 줄은 글자만 보조 제목(supportTitle)에서 온다 — 자리·크기·드래그는 종전 키 그대로다.
-      const fieldKey=(kind==='hook'&&key==='bodyTitle')?'supportTitle':key;
-      if(key==='caption'||!dirty.has(fieldKey))return;
+      if(key==='caption'||!dirty.has(key))return;
       // 2026-09-21 사장님: 훅 화면에 큰 제목(hook1·hook2)과 같은 문장이 본문 제목 줄로 한 번 더 그려졌다.
       //   같은 글일 때만 건너뛴다 — 다른 문구를 넣으면 예전처럼 보인다.
-      //   2026-09-21 사장님 확정: 훅 서브띠(썰쇼핑형 16종, 화면의 9.4%)에는 **서브카피**를 그린다.
-      //   그 자리는 글자가 온다는 전제로 디자인됐는데 subline을 아무도 안 만들어 늘 빈칸이었다
-      //   (최근 job 40개 전수: subline 0개). 서브카피는 대본 구절에서 온다 —
-      //   template_copy.support_from_phrases 한 곳에서 고르고 지어내지 않는다.
-      let drawValue=value(fieldKey);
       if(kind==='hook'&&key==='bodyTitle'){
         const flat=t=>String(t||'').replace(/\s+/g,'');
-        // 보조 제목이 비었거나 큰 제목을 그대로 복사한 것이면 그리지 않는다(빈 띠가 낫다).
-        if(!String(drawValue||'').trim()||flat(drawValue)===flat(String(value('hook1')||'')+String(value('hook2')||'')))return;
+        if(flat(value('bodyTitle'))===flat(String(value('hook1')||'')+String(value('hook2')||'')))return;
       }
       const drawLine=storyBodyLine(fixedDrawLine(ln,frame),frame),pt=drawLine.patch_top??2,pb=drawLine.patch_bottom??2;
       const offset=(key==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(key);
@@ -781,10 +754,9 @@
       }
       const align=(drawLine.lpct??50)<4&&(drawLine.rpct??50)>10?'left':'center';
       const roleColor=key==='hook2'?'accent':key==='hook1'?'white':null;
-      // 위 addText와 같은 이유(키 어긋남·고정형 한정) — 여기도 layoutKey로 찾고 모드를 안 가린다.
-      const fixedOverride=fixedColors.get(layoutKey(p.id,frame))||null;
+      const fixedOverride=mode==='continuous'?fixedColors.get(p.id):null;
       const fixedTextColor=fixedOverride?(key==='hook1'?fixedOverride.title1:(key==='hook2'||key==='bodyTitle')?fixedOverride.title2:null):null;
-      addText(drawValue,drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
+      addText(value(key),drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
     });
     const wb=frame.white_box;
     if(wb&&kind==='hook'){
@@ -796,14 +768,10 @@
     }
     // 2026-09-21 사장님: 훅 화면에 큰 제목과 흰 띠 글자가 같은 문장이라 두 번 보였다.
     //   두 글이 같은 때만 띠 글자를 그리지 않는다(띠 배경은 그대로, 다른 문구면 예전처럼 보인다).
-    // 훅 흰 박스에 들어갈 글자는 **보조 제목**이다(2026-09-21). 종전엔 본문 제목(bodyTitle)을
-    //   보고 판정했는데 그건 큰 제목의 복사본이라 늘 '같다'가 되어 흰 박스가 통째로 막혔다.
-    const hookTitleSame=kind==='hook'&&String(value('supportTitle')||'').replace(/\s+/g,'')===String((value('hook1')||'')+(value('hook2')||'')).replace(/\s+/g,'');
+    const hookTitleSame=kind==='hook'&&String(value('bodyTitle')||'').replace(/\s+/g,'')===String((value('hook1')||'')+(value('hook2')||'')).replace(/\s+/g,'');
     if(wb?.text&&kind==='hook'&&!hookTitleSame){
       const key=kind==='hook'?'bodyTitle':'caption';
-      // 훅 흰 박스도 글자는 보조 제목에서 온다 — 위 lines 경로와 같은 규칙이어야 한다(0순위-B).
-      const fieldKey=kind==='hook'?'supportTitle':key;
-      if(dirty.has(fieldKey)&&String(value(fieldKey)||'').trim()){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(fieldKey),wb.text,frame,'#111111','center',key);}
+      if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
     applyChannelSlot(frame,p);   // 09-19: 고정형에서도 채널명 칸이 먹게
     if(mode==='story'){
@@ -833,25 +801,15 @@
       //   그러면 캡슐·검색 아이콘·채널 글자가 한 덩어리로 같이 내려간다. 위에 생긴 빈 줄만 머리띠 색으로 채운다.
       //   머리띠 아래 끝 값은 tools/measure_header_bands.js 가 그림에서 재 둔 것(out/scene-header-bands.js).
       const band=(window.SCENE_HEADER_BANDS||{})[`${p.id}:${frameKind()}`];
-      // ★2026-09-21 사장님 "체널칸 상단제목칸도 조절하는게 이상해 이거 계속 안고쳐져".
-      //   실측: 채널명 칸을 6→10→14%로 올리면 **글자만** 내려가고(0.3→4.28→7.27) 바탕그림은
-      //   top:0% 그대로였다 — 캡슐·돋보기가 제자리에 남아 글자와 따로 논다.
-      //   뿌리: 글자는 슬라이더 값(saved)을 그대로 쓰는데 그림은 `saved - 머리띠비율`만큼만
-      //   움직였다. 두 개가 **다른 기준**이라 머리띠(t02 본문 14.1%)보다 크게 올려야만 그림이
-      //   따라왔고, 슬라이더 구간(0~20%) 대부분에서 어긋났다.
-      //   → 기준을 하나로: **기본값에서 얼마나 움직였나(delta)**를 글자·그림이 똑같이 쓴다.
-      //     기본값의 정의처는 fixedBaseLayout 한 곳이다(0순위-B).
-      const baseChannel=Number(fixedBaseLayout(frame)?.channel)||0;
-      const shift=saved>0?Math.max(0,saved-baseChannel):0;
+      const bandPct=band&&band.h?band.y1/band.h*100:0;
+      const shift=saved>0&&bandPct>0?Math.max(0,saved-bandPct):0;
       base.style.top=shift+'%';
       // 그림을 내리면 훅에서는 영상도 따라 내려갔다 → 영상 자리를 그만큼 되올려 시작점을 고정한다
       if(media&&media.dataset.baseTop!=null){const bt=Number(media.dataset.baseTop)||0;media.style.top=(bt-shift)+'%';}
       preview.style.backgroundColor=shift>0?(band?.color||fixedColorsFor(p.id,frame).top||'#000000'):'';
       if(saved>0&&chEl0){
-        // ★글자도 그림과 **같은 delta**로 움직인다(2026-09-21). 종전엔 글자만 절대값
-        //   (saved - 글자높이)으로 잡아, 캡슐 상자 바닥(기본값)과 글자 바닥이 다른 만큼
-        //   (실측 t02 본문 1.6%) 그림과 계속 어긋났다. 기준이 둘이면 반드시 벌어진다(0순위-B).
-        const before=parseFloat(chEl0.style.top)||0,next=Math.max(0,before+shift+chDrag.y);
+        const h=chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
+        const before=parseFloat(chEl0.style.top)||0,next=Math.max(0,saved-h+chDrag.y);
         chEl0.style.top=next+'%';
         layer.querySelectorAll('.precision-patch[data-edit-bind="channel"]').forEach(box=>{
           const t=parseFloat(box.style.top)||0;box.style.top=Math.max(0,t+(next-before))+'%';
@@ -928,11 +886,11 @@
         const pvBox=preview.getBoundingClientRect();
         const chSaved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
         const chMoved=textDrags.get(scaleKey('channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
-        // ★채널명 자리를 정하는 곳은 applyChannelSlot **한 곳**이다(2026-09-21).
-        //   여기에도 같은 계산(chSaved - 글자높이)이 한 벌 더 있어서, 먼저 돈 applyChannelSlot의
-        //   결과를 매번 덮었다 — 그래서 바탕그림만 따라오고 글자는 옛 자리에 남았다(0순위-B).
-        //   제목을 밀 기준(chBottom)은 **실제로 그려진 채널명 아래**를 읽어서 쓴다.
-        const chBottom=chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0;
+        if(chSaved>0&&chEl){   // '채널명 칸' 슬라이더: 채널명 아래 끝을 그 값에 맞춘다
+          const h=chEl.getBoundingClientRect().height/Math.max(1,pvBox.height)*100;
+          chEl.style.top=Math.max(0,chSaved-h)+'%';
+        }
+        const chBottom=chSaved>0?chSaved:(chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0);
         const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
         const cutNow=titleHeight(frame);   // 상단 칸을 조절하면 그 칸 기준으로 다시 배치
         const base=Math.max(cutNow*STORY_BODY.titleTop,chBottom+1.2);
