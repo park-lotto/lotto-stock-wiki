@@ -295,6 +295,50 @@ def _cta_keyword(product):
     return t if len(t) <= 3 else t[-2:]
 
 
+def material_block(seg_index, limit=140):
+    """대본 쓰는 모델에게 줄 **재료 전문** — 컷마다 길이·화면·그 컷에서 한 말.
+
+    ★전엔 특징 요약 몇 줄(`이름 — 주장 (화면: 50자)`)만 넘겼다. 그 압축에서 재료의 구체적인 그림
+      (금속 롤러볼·가방에 쏙·티슈에 문질러 테스트)이 통째로 증발해 대본이 뜬구름이 됐다.
+      2026-09-21 실측: 같은 재료·같은 씨앗으로 전문을 주니 지어낸 사실 0에 디테일이 살아났다.
+      대본이 태깅을 봐야 하는 진짜 이유는 **말한 것이 화면에 있어야** 하기 때문이다.
+    """
+    by_vid = {}
+    for sid, v in seg_index.items():
+        if (v.get("secs") or 0) <= 0:
+            continue
+        by_vid.setdefault(v.get("vid") or _vid_of(sid), []).append((sid, v))
+    out, n = [], 0
+    for vid in sorted(by_vid):
+        rows = sorted(by_vid[vid], key=lambda kv: kv[0])
+        buf = ["[재료 %s]" % vid]
+        for sid, v in rows:
+            if n >= limit:
+                break
+            say = (v.get("text") or "").strip()
+            buf.append("  - %s (%.1f초) | %s%s"
+                       % (sid, v.get("secs") or 0.0, (v.get("desc") or "").strip(),
+                          ("  <말: %s>" % say[:60]) if say else ""))
+            n += 1
+        out.append("\n".join(buf))
+    return "\n\n".join(out)
+
+
+def _tpl_slots(tpl, orig):
+    """훅 틀과 원문 훅을 대조해 {슬롯}에 원래 있던 말을 뽑는다.
+    「디테일에 미쳐버린 {출처}이 만든 {제품군}인데」 + 원문 → {"출처": "100년 장인"}"""
+    names = re.findall(r"\{([^{}]+)\}", tpl or "")
+    if not names or not orig:
+        return {}
+    parts = re.split(r"\{[^{}]+\}", tpl)
+    pat = "".join(("(.+?)" if i else "") + re.escape(p) for i, p in enumerate(parts))
+    pat = pat.replace(re.escape(" "), r"\s*")
+    m = re.match(r"\s*%s\s*$" % pat, orig.strip())
+    if not m or len(m.groups()) != len(names):
+        return {}
+    return {n: g.strip() for n, g in zip(names, m.groups()) if g and g.strip()}
+
+
 def enforce_hook(lines, origin, product):
     """첫 줄(훅)은 **원문 글자 그대로**. 모델이 뼈 글자를 바꿨으면(예: '충격받았어요'→'배고파졌어요')
     원문 훅으로 되돌리고, 제품 낱말 빈칸만 이 제품으로 채운다 (2026-09-20 사장님 지적)."""
@@ -309,9 +353,12 @@ def enforce_hook(lines, origin, product):
         return lines                     # 뼈 글자를 지켰다 — 그대로 둔다
     fixed = tpl or orig
     if tpl:
+        # ★제품 슬롯이 아닌 칸(출처·인물·대상)에 제품 이름을 꽂으면 동어반복이 된다
+        #   (2026-09-21 실측: "액체빗이 만든 액체빗"). 그 자리의 **원문 낱말**을 뽑아 쓴다.
+        was = _tpl_slots(tpl, orig)
         short = _cta_keyword(product)
         for n in re.findall(r"\{([^{}]+)\}", tpl):
-            fill = product if n in ("제품군", "기존물건") else short
+            fill = product if n in ("제품군", "기존물건") else (was.get(n) or short)
             fixed = fixed.replace("{%s}" % n, fill, 1)
     lines[0]["text"] = fixed if fixed.endswith((".", "!", "?")) else fixed + "."
     return lines
@@ -356,20 +403,33 @@ def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds
     last = _dedup(cells[-1]["text"]) if cells else ""
     loop = bool(last) and not re.search(r"[.!?요다임]\s*$", last)
     loop_rule = "- ★원문은 마지막을 끝맺지 않고 끊어 첫 장면으로 잇는다(반복 재생). 새 대본도 똑같이 끊어라.\n" if loop else ""
+    # 칸마다 원문 글자수를 알려준다 — 길이는 씨앗(원문)을 따른다(2026-09-21 사장님
+    #   "씨앗 길이를 따라도 된다"). 목표 초를 따로 들이대면 원문 결이 먼저 깨진다.
+    cell_spec = "\n".join("  %d. %s - %d자 내외 (원문: %s)"
+                            % (i, c.get("role") or "", len(c.get("text") or ""), c.get("text") or "")
+                            for i, c in enumerate(cells, 1))
     prompt = (
         "아래 [원문]은 조회수 %s회가 나온 쇼핑 숏폼 대본이다. [상황표]대로 [이 제품]의 대본을 써라.\n\n규칙\n%s%s"
-        "- 칸 수와 순서를 원문과 똑같이. 칸마다 원문의 말투·어미·연결어·문장 길이를 그대로 살려라.\n"
+        "- 칸은 정확히 %d개, 순서는 원문과 똑같이. 칸을 더 만들거나 빼지 마라.\n"
+        "- 칸마다 원문의 말투·어미·연결어를 그대로 살리고, 글자수도 [칸 구조]의 ±20%% 안으로.\n"
+        "- ★원문에 없는 칸을 새로 만들지 마라. 원문에 CTA가 없으면 '써보세요' 같은 권유로 끝내지 마라.\n"
         "- ★사람·장소·사는 사람은 [상황표]를 따른다. 원문의 인물 배치를 베끼지 마라.\n"
         "- 제품 이야기는 아래 특징에 있는 것만. 원문의 원래 제품 이야기는 한 조각도 남기지 마라.\n"
-        "- 특징에 없는 수치·출처·판매량을 지어내지 마라. 같은 문장을 두 번 쓰지 마라. 원문·특징 문장을 베끼지 마라.\n"
+        "- ★[재료]의 장면 설명에 실제로 보이는 것만 말해라. 화면에 없는 수치·출처·판매량·효능을 지어내지 마라.\n"
+        "- 같은 문장을 두 번 쓰지 마라. 원문·특징·재료 문장을 통째로 베끼지 말고 네 말로 다시 써라.\n"
         "- 줄마다 role(원문 칸 이름), group(그 줄이 말하는 특징 번호, 훅·마무리는 -1).\n\n"
-        "[상황표]\n%s\n\n[원문]\n%s\n\n[이 제품] %s\n%s"
-        % (origin.get("views") or 0, hook_rule, loop_rule, json.dumps(cast, ensure_ascii=False),
-           _origin_text(origin), product, "\n".join(feats)))
+        "[상황표]\n%s\n\n[원문]\n%s\n\n[칸 구조]\n%s\n\n[이 제품] %s\n%s\n\n"
+        "[재료 - 이 제품 영상들의 컷마다 길이·화면·그 컷에서 한 말]\n%s"
+        % (origin.get("views") or 0, hook_rule, loop_rule, len(cells),
+           json.dumps(cast, ensure_ascii=False), _origin_text(origin), cell_spec,
+           product, "\n".join(feats), material_block(seg_index)))
 
+    # 원문 칸들이 부호 없이 이어지는 꼴이면 새 대본에도 마침표를 안 붙인다.
+    _open = sum(1 for c in cells if not re.search(r"[.!?。]\s*$", (c.get("text") or "").strip()))
+    _punct = _open < max(1, len(cells)) * 0.6
     def _run(p):
         out = _sg._call_json(p, _ORIGIN_SCHEMA, note=note) or {}
-        ls = _clean_lines(out)
+        ls = _clean_lines(out, punct=_punct)
         for l in ls:
             l["text"] = _dedup(l.get("text") or "")
         raw_last = ((out.get("lines") or [{}])[-1].get("text") or "").strip()
@@ -517,7 +577,7 @@ def _fit_length(lines, target_seconds, note=None, slack=2.0):
     return lines
 
 
-def _clean_lines(out):
+def _clean_lines(out, punct=True):
     lines = []
     for L in (out.get("lines") or []):
         t = re.sub(r"\s+", " ", str(L.get("text") or "")).strip()
@@ -529,7 +589,13 @@ def _clean_lines(out):
         if not t:
             continue
         # 마침표 하나로 강제 — 문장 안 마침표는 쉼표로, 끝은 마침표
-        t = t.rstrip(".!?。") .replace(". ", ", ").replace("!", ",").replace("?", ",") + "."
+        # ★원문이 부호 없이 다음 칸으로 이어지는 꼴(~없지만 / ~물론이고)이면 마침표를 안 붙인다.
+        #   붙이면 이어져야 할 말이 끊겨 비문이 된다(2026-09-21 실측 "…흘러내리지만.").
+        #   뒤 단계는 안전하다 — edit_plan.script_sentences는 **줄 단위**로 자르고(마침표 무관),
+        #   _narr_key는 문장부호를 지우고 비교한다.
+        t = t.rstrip(".!?。") .replace(". ", ", ").replace("!", ",").replace("?", ",")
+        if punct:
+            t += "."
         lines.append({"role": str(L.get("role") or "feature"), "text": t, "group": int(L.get("group", -1))})
     return lines
 
