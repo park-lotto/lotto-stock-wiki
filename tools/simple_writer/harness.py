@@ -54,6 +54,13 @@ def build_prompt(m):
         rows.append("[재료 %s]" % vid)
         rows += ["  - %.1f초 | %s%s" % (c["secs"], c["desc"], ("  <말: %s>" % c["say"]) if c["say"] else "") for c in cuts]
     brief = open(os.path.join(HERE, "brief.txt"), encoding="utf-8").read().strip()
+    if m.get("hook"):
+        # 훅 유형을 하나 골라 주는 방식(2026-09-21 사장님): 첫 줄을 씨앗에서 가져오지 않는다.
+        #   훅은 화자·말투를 같이 끌고 오므로 본문 말투도 첫 줄에 맞춘다(섞이면 반말·존대가 뒤섞인다).
+        brief = brief.replace("- 첫 줄은 씨앗의 첫 문장을 글자 그대로 쓴다.",
+                              "- 첫 줄은 [훅 틀]로 쓴다. {빈칸}만 이 제품에 맞게 채우고 나머지 글자는 그대로 둔다. "
+                              "화자와 말투는 이 첫 줄에 맞추고, 씨앗에서는 흐름(칸 순서)만 가져온다.")
+        brief += "\n\n[훅 틀]\n" + m["hook"]
     return "%s\n\n[씨앗]\n%s\n\n[재료 — 영상 %d편]\n%s" % (brief, m["seed_text"], len(m["videos"]), "\n".join(rows))
 
 
@@ -84,7 +91,11 @@ def guards(lines, m):
     if not lines:
         return ["대본이 비었다"]
     seed = m["seed_text"]
-    if not _nz(seed).startswith(_nz(lines[0])[:12]):
+    if m.get("hook"):
+        bones = [_nz(b) for b in re.split(r"\{[^{}]+\}", m["hook"]) if _nz(b)]
+        if not all(b in _nz(lines[0]) for b in bones):
+            bad.append("첫 줄이 훅 틀을 안 지켰다 — 빈칸만 바꾸고 나머지 글자는 그대로 써라: " + m["hook"])
+    elif not _nz(seed).startswith(_nz(lines[0])[:12]):
         bad.append("첫 줄이 씨앗의 첫 문장이 아니다 — 씨앗 첫 문장을 글자 그대로 첫 줄에 써라")
     # ★한 줄짜리(줄을 안 나눈 덩어리)를 '첫 줄 빼고' 재면 0%가 나와 통째 복사가 통과한다
     #   (2026-09-21 실측: 무료 필자 10건 중 3건). 줄을 못 나눈 것부터 실패로 본다.
@@ -206,6 +217,7 @@ def main():
     ap.add_argument("--works", required=True)
     ap.add_argument("--models", default="gemini-3.6-flash,gemini-3.1-flash-lite")
     ap.add_argument("--cid", type=int, default=0)
+    ap.add_argument("--hooks", default="", help="훅 틀을 || 로 구분. 작업마다 전부 돌려본다(고르는 건 코드 — 모델 호출 0회)")
     ap.add_argument("--out", default=os.path.join(HERE, "..", "..", "..", "..", "out", "단순필자_하네스.html"))
     a = ap.parse_args()
     from google import genai
@@ -216,6 +228,10 @@ def main():
         if m.get("error"):
             print("재료 실패 %s: %s" % (m["work"], m["error"]))
     mats = [m for m in mats if not m.get("error") and len(m.get("seed_text") or "") >= 40 and m.get("videos")]
+    hooks = [x.strip() for x in a.hooks.split("||") if x.strip()]
+    if hooks:
+        mats = [dict(m, hook=h, work="%s#%d" % (m["work"], k + 1), title="%s · 훅: %s" % (m.get("title") or "", h))
+                for m in mats for k, h in enumerate(hooks)]
     results = {}
     for m in mats:
         for model in models:
