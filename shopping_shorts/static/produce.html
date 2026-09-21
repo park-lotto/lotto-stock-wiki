@@ -18393,10 +18393,16 @@ function s2RenderStyles(){
   if(hint){
     // ★자동 1안은 늘 들어간다(2026-09-20 사장님) — '0안' 같은 거짓 안내가 안 나오게 s2AnCount()로만 센다.
     const _n = s2AnCount();
-    hint.textContent = (S2.picked.length
-      ? ('이 영상에 맞는 자동 1안 + 고른 '+S2.picked.length+'안 = 총 '+_n+'안을 만듭니다')
-      : ('이 영상에 맞는 스타일로 1안을 만듭니다 — 아래에서 한 개 더 고를 수 있어요'))
-      + ' · 대본을 읽어보시고 어색한 부분이 보이면 간단하게 수정해주세요.';
+    // ★고객은 예전 문구(2026-09-21 사장님 "고객들은 예전 걸로") — 자동 1안은 사장님 계정만 만들어진다.
+    //   고객에게 '자동 1안'이라고 말하면 실제로 받는 픽업 대본과 다른 거짓 안내가 된다.
+    hint.textContent = (typeof window!=='undefined' && window.IS_ADMIN)
+      ? ((S2.picked.length
+          ? ('이 영상에 맞는 자동 1안 + 고른 '+S2.picked.length+'안 = 총 '+_n+'안을 만듭니다')
+          : ('이 영상에 맞는 스타일로 1안을 만듭니다 — 아래에서 한 개 더 고를 수 있어요'))
+         + ' · 대본을 읽어보시고 어색한 부분이 보이면 간단하게 수정해주세요.')
+      : (S2.picked.length
+          ? (S2.picked.length+'개 스타일 → '+_n+'안이 나옵니다')
+          : ('AI가 스타일까지 골라 '+_n+'안을 만듭니다'));
   }
 }
 function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
