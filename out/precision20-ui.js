@@ -120,6 +120,7 @@
   let noTemplate=false;
   let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',bodyCaptionMotion='',fontSet='',hookMotionSpeed=.72,hookCaptionMode='visible';
   const fontScales=new Map();
+  let lastChannelSlot=null;   // applyChannelSlot이 이번 렌더에서 정한 채널명 칸 값 — applyStoryLayout이 같은 값을 읽는다(두 번 계산하지 않는다)
   let channelCap=null;   // 채널명이 자리 한계에 닿아 있으면 {key, effective(실제 배율)} — fitChannel이 적고 스테퍼가 읽는다(초기화 순서 때문에 여기서 선언)
   const fittedText=new Map();
   const textOffsets=new Map();
@@ -840,6 +841,27 @@
     if(hasEditableCaption())renderCaption(frame);
     syncMediaLayout();
   }
+  // 채널명 칸의 값 — 기본 끝(base)·실제 끝(bottom)·이동량(d)을 **여기 한 곳**에서 정한다(applyChannelSlot·applyStoryLayout·슬라이더 표시가 같이 쓴다).
+  //   제목이 들어갈 자리가 모자라면 제목 글자를 줄이지 않고 **칸이 거기서 멈춘다**(09-18 "글자도 비율로 줄어들면 안 좋다" · 09-19 "영상 시작은 그대로").
+  function channelSlot(frame,p){
+    const base=fixedBaseLayout(frame).channel,saved=Number(fixedLayouts.get(layoutKey(p.id,frame))?.channel)||0,T=titleHeight(frame);
+    // 머리띠 부품을 기본 자리에서 분류한다(이 함수는 부품을 옮기기 **전에** 한 번만 불린다 — 결과는 lastChannelSlot에 둔다)
+    const geo=el=>({top:parseFloat(el.style.top)||0,h:parseFloat(el.style.height)||0,w:el.style.width?parseFloat(el.style.width):100});
+    const parts=[...layer.querySelectorAll('.precision-patch,.body-ornament')].filter(el=>!el.classList.contains('story-band-fill')&&el.dataset.editBind!=='caption');
+    const bands=parts.filter(el=>{const g=geo(el);return g.w>=80&&g.top<=1.5&&g.h>=.9&&g.top+g.h<T-1.5&&g.top+g.h>=base-4;});          // 맨 위에서 시작해 제목칸 끝 전에 끝나는 넓은 면
+    const lines=parts.filter(el=>{const g=geo(el);return !bands.includes(el)&&g.h<.9&&g.w>=50&&g.top<T-2&&g.top>=base-4&&g.top<=base+6;});   // 칸 끝의 구분선
+    const floor0=Math.max(base,...bands.map(el=>{const g=geo(el);return g.top+g.h;}),...lines.map(el=>geo(el).top));                  // 눈에 보이는 칸 끝(기본 상태)
+    const members=parts.filter(el=>{const g=geo(el);return !bands.includes(el)&&!lines.includes(el)&&g.w<80&&g.top+g.h/2<floor0;});      // 알약·아이콘·점
+    let d=saved>0?saved-base:0;
+    const chEl=layer.querySelector('.precision-text[data-edit-bind="channel"]');
+    if(d<0&&chEl){const h=chEl.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;d=Math.max(d,Math.min(0,h+1-floor0));}   // 칸은 글자 높이보다 낮아지지 않는다
+    if(d>0){   // 늘릴 때: **지금 보이는 제목 바로 위까지만**. 제목은 칸에 맞춰 자동으로 줄어드는 글자라, 더 내리면 제목이 작아진다(사장님: 글자는 그대로).
+      const first=(isStoryBody(frame)?['bodyTitle']:['hook1','hook2','bodyTitle']).map(bind=>layer.querySelector(`.precision-text[data-edit-bind="${bind}"]`)).find(t=>t&&!t.hidden);
+      const titleTop=isStoryBody(frame)?Math.max(T*STORY_BODY.titleTop,base+1.2):(first?parseFloat(first.style.top)||T:T);
+      d=Math.max(0,Math.min(d,titleTop-.8-floor0));
+    }
+    return {base,floor0,d,bottom:base+d,bands,lines,members,geo};
+  }
   // 채널명 칸(빠른 조절) — 썰쇼핑형·고정형 모두 적용. renderEdit 끝에서 한 번 부른다.
   function applyChannelSlot(frame,p){
     // 09-19: '채널명 칸' 슬라이더는 훅·본문 모두에 적용한다(전엔 본문에서만 먹었다)
@@ -857,17 +879,21 @@
       // 그림을 내리면 훅에서는 영상도 따라 내려갔다 → 영상 자리를 그만큼 되올려 시작점을 고정한다
       if(media&&media.dataset.baseTop!=null){const bt=Number(media.dataset.baseTop)||0;media.style.top=(bt-shift)+'%';}
       preview.style.backgroundColor=shift>0?(band?.color||fixedColorsFor(p.id,frame).top||'#000000'):'';
-      if(saved>0&&chEl0){
-        const h=chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
-        const before=parseFloat(chEl0.style.top)||0,next=Math.max(0,saved-h+chDrag.y);
-        chEl0.style.top=next+'%';
-        layer.querySelectorAll('.precision-patch[data-edit-bind="channel"]').forEach(box=>{
-          const t=parseFloat(box.style.top)||0;box.style.top=Math.max(0,t+(next-before))+'%';
-        });
+      // ★채널명 칸 = **칸의 높이**(2026-09-21 사장님: "글자가 아니라 칸의 높이면 되야 한다").
+      //   전엔 글자 아래 끝만 슬라이더 값에 맞췄다 → 띠·알약·☰·🔍·구분선은 제자리라 머리띠가 흩어졌다.
+      //   이제 머리띠를 한 묶음으로 다룬다: 띠는 그만큼 늘고, 구분선은 칸 끝을 따라가고, 글자·알약·아이콘은 칸 세로 가운데에 같이 있는다.
+      //   글자 크기는 안 건드린다(크기는 ＋/− 로만).
+      const slot=lastChannelSlot=channelSlot(frame,p);
+      if(slot.d){
+        const d=slot.d,geo=slot.geo;
+        slot.bands.forEach(el=>{el.style.height=Math.max(1,geo(el).h+d)+'%';});            // 띠: 높이가 는다
+        slot.lines.forEach(el=>{el.style.top=Math.max(0,geo(el).top+d)+'%';});             // 구분선: 칸 끝을 따라간다
+        slot.members.forEach(el=>{el.style.top=Math.max(0,geo(el).top+d/2)+'%';});         // 알약·아이콘·점: 칸 가운데에 같이
+        if(chEl0)chEl0.style.top=Math.max(0,(parseFloat(chEl0.style.top)||0)+d/2)+'%';     // 채널명 글자도 같이(크기는 그대로)
       }
       // 채널명을 내리면 제목 줄도 겹치지 않게 함께 내린다(훅·본문 공통)
-      if(saved>0){
-        let floor=saved+1.2;
+      if(saved>0&&mode!=='story'||saved>0&&!isStoryBody(frame)){   // 본문 제목은 applyStoryLayout이 같은 slot 값으로 놓는다(두 군데서 정하지 않는다)
+        let floor=(lastChannelSlot?lastChannelSlot.floor0+lastChannelSlot.d:saved)+1.2;
         for(const bind of ['hook1','hook2','bodyTitle']){
           const t=layer.querySelector(`.precision-text[data-edit-bind="${bind}"]`);if(!t)continue;
           const h=t.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
@@ -936,11 +962,8 @@
         const pvBox=preview.getBoundingClientRect();
         const chSaved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
         const chMoved=textDrags.get(scaleKey('channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
-        if(chSaved>0&&chEl){   // '채널명 칸' 슬라이더: 채널명 아래 끝을 그 값에 맞춘다
-          const h=chEl.getBoundingClientRect().height/Math.max(1,pvBox.height)*100;
-          chEl.style.top=Math.max(0,chSaved-h)+'%';
-        }
-        const chBottom=chSaved>0?chSaved:(chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0);
+        // 09-21: 여기서도 채널명 글자를 옮기던 것을 없앴다 — 같은 결정이 두 군데 있었다(0순위-B). 칸은 applyChannelSlot 한 곳에서만 움직인다.
+        const chBottom=chSaved>0&&lastChannelSlot?lastChannelSlot.bottom:(chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0);
         const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
         const cutNow=titleHeight(frame);   // 상단 칸을 조절하면 그 칸 기준으로 다시 배치
         const base=Math.max(cutNow*STORY_BODY.titleTop,chBottom+1.2);
