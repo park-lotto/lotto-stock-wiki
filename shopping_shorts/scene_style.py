@@ -179,16 +179,14 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     #   비워 두면 템플릿 1/10이 늘 빈 흰 칸이었다 — 그 자리는 글자가 온다는 전제로 디자인됐다.
     #   훅 다음 첫 본문 비트의 구절을 쓴다(훅 비트의 나레이션은 제목과 같은 문장이라 중복된다).
     #   구절은 렌더 자막과 같은 단위를 그대로 쓴다 — 여기서 따로 자르면 화면마다 달라진다(0순위-B).
-    #   ★`subline`이 아니라 `subline_auto`에 넣는다 — 사람이 넣은 서브카피는 본문 제목까지
-    #     몰지만(종전 계약), 자동으로 채운 것은 훅 띠만 채운다.
     if not (copy.get("subline") or "").strip():
         from .template_copy import support_from_phrases
         try:
             phrases = [text for beat in (timeline or [])[1:2]
                        for text, _t0, _t1 in caption_schedule(beat)]
-            copy["subline_auto"] = support_from_phrases(phrases)
+            copy["subline"] = support_from_phrases(phrases)
         except Exception:      # noqa: BLE001 — 서브카피 하나 때문에 장면꾸미기가 막히면 안 된다
-            copy["subline_auto"] = ""
+            copy["subline"] = ""
     text = {"channel": "숏템메이커", **scene_text(copy)}
     text.update({k:v for k,v in (snapshot or {}).get("text",{}).items() if k != "caption"})
     return {"jobId":job_id,"text":text,"scenes":scenes}
