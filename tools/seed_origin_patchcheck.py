@@ -45,6 +45,7 @@ def main():
     ap.add_argument("--work", required=True)
     ap.add_argument("--cid", type=int, default=0)
     ap.add_argument("--live", action="store_true", help="고치기 전(라이브) 파일로 돌린다")
+    ap.add_argument("--dump-prompt", default="", help="대본 쓰기 호출에 실제로 들어간 프롬프트를 이 파일에 적는다")
     a = ap.parse_args()
 
     from shopping_shorts import app as live_app
@@ -69,6 +70,16 @@ def main():
     seed_src = ba.seed_source(srcs, job.get("backbone_main"))
     if not seed_src:
         sys.exit("씨앗 없음")
+    if a.dump_prompt:
+        # 모델이 **실제로 받는 글자**를 그대로 남긴다 — 같은 입력으로 다른 필자와 대조하려고(2026-09-21).
+        _real = ba._sg._call_json
+
+        def _spy(prompt, schema, note=None):
+            if "[칸 구조]" in prompt:
+                with open(a.dump_prompt, "w", encoding="utf-8") as f:
+                    f.write(prompt)
+            return _real(prompt, schema, note=note)
+        ba._sg._call_json = _spy
     note = {}
     got = ba.assemble_clean(srcs, seed_src.get("video_id"), store,
                             [{"id": None, "name": "씨앗 그대로", "_use_seed_origin": True}],
