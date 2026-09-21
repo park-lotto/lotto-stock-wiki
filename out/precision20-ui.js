@@ -90,7 +90,9 @@
   {
     const head=presetPane.querySelector('.pane-head'),leftTabs=document.createElement('div');
     leftTabs.className='tool-tabs left-pane-tabs';
-    leftTabs.innerHTML='<button type="button" class="active" data-left-tab="scene">장면 템플릿</button><button type="button" data-left-tab="font">폰트 템플릿</button>';
+    // 2026-09-22 사장님 확정: [추천|장면|폰트|색톤|꾸밈]. 추천·색톤·꾸밈 창은 아래 '장면폰트 룩' 블록이 만든다(scene-style-lefttab 이벤트로 연결).
+    //   처음 열리는 탭은 '장면' 그대로 — 템플릿 카드가 처음부터 보여야 하는 검사 도구·기존 사용 흐름을 안 깨려고.
+    leftTabs.innerHTML='<button type="button" data-left-tab="look">추천</button><button type="button" class="active" data-left-tab="scene">장면</button><button type="button" data-left-tab="font">폰트</button><button type="button" data-left-tab="tone">색톤</button><button type="button" data-left-tab="deco">꾸밈</button>';
     const fontPane=document.createElement('div');fontPane.className='font-template-pane';fontPane.hidden=true;
     const drawFontSets=()=>{fontPane.innerHTML='<div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
     window.addEventListener('scene-style-fontset',()=>{if(!fontPane.hidden)drawFontSets();});   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
@@ -100,7 +102,8 @@
     leftTabs.addEventListener('click',event=>{
       const b=event.target.closest('[data-left-tab]');if(!b)return;
       leftTabs.querySelectorAll('[data-left-tab]').forEach(x=>x.classList.toggle('active',x===b));
-      const font=b.dataset.leftTab==='font';sceneParts.forEach(el=>el.hidden=font);fontPane.hidden=!font;if(font)drawFontSets();
+      const tab=b.dataset.leftTab;sceneParts.forEach(el=>el.hidden=tab!=='scene');fontPane.hidden=tab!=='font';if(tab==='font')drawFontSets();
+      window.dispatchEvent(new CustomEvent('scene-style-lefttab',{detail:tab}));
     });
     const css=document.createElement('style');
     css.textContent='.font-template-pane{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scrollbar-color:#35505b #09161f;scrollbar-width:thin}.font-set-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.font-set-card{display:grid;gap:4px;justify-items:start;text-align:left;padding:10px;border:1px solid #294451;border-radius:12px;background:#1b1b1b;color:#fff;cursor:pointer}.font-set-card.selected{border-color:#43e2b4;box-shadow:0 0 0 2px #43e2b455}.font-set-card .fs-ch{background:#000;border-radius:4px;padding:1px 7px;font-size:12px}.font-set-card .fs-title{font-size:19px;line-height:1.15}.font-set-card .fs-title em{font-style:normal;color:#ffe500}.font-set-card .fs-cap{background:#fff;color:#111;padding:1px 7px;font-size:14px}.font-set-card b{font:800 12px system-ui,sans-serif;color:#9eb0b9;margin-top:4px}.font-set-card.selected b{color:#63edc6}.layout-a .pane-head[hidden]{display:none!important}.left-pane-tabs{margin:0 0 12px}.template-mode-bar[hidden],.preset-grid[hidden]{display:none!important}.font-template-empty{border:1px dashed #294451;border-radius:12px;padding:28px 16px;text-align:center;display:grid;gap:6px;color:#8fa3ad}.font-template-empty b{color:#e8f3f0;font-size:14px}';
@@ -307,6 +310,90 @@
     if(bind==='caption')return NO_FONT_METRIC;
     const set=FONT_SETS.find(f=>f.id===fontSet);
     return set&&set.scale?{scale:set.scale,dy:set.dy||0}:NO_FONT_METRIC;
+  }
+  // ── 장면폰트 룩(2026-09-22 사장님): 색톤 · 꾸밈 · 추천. 왼쪽 탭 [추천|장면|폰트|색톤|꾸밈]의 세 창을 여기서 만든다.
+  //   색톤  = 새 저장값 없음. 기존 fixedColors에 훅·본문 칸 값을 한 번에 써넣는다(서버 검증·렌더 경로 그대로).
+  //   꾸밈  = 새 저장값 titleDeco(id). 서버 허용 형식은 scene_style.py와 짝. 훅 제목 1·2줄에만 건다.
+  //   추천  = {폰트,색톤,꾸밈} 세 id를 가리키기만 한다 — 색값·글꼴은 각 목록 한 곳에서만 정한다.
+  const TONES=[
+    {id:'p01',name:'이븐 청록',bg:'#1B1B1F',c1:'#FFFFFF',c2:'#19F5E6'},{id:'p02',name:'경고 노랑',bg:'#141414',c1:'#FFFFFF',c2:'#FFE500'},
+    {id:'p03',name:'네온 라임',bg:'#0E1410',c1:'#FFFFFF',c2:'#B6FF3C'},{id:'p04',name:'핫핑크',bg:'#17101A',c1:'#FFFFFF',c2:'#FF5FA8'},
+    {id:'p05',name:'세일 레드',bg:'#151010',c1:'#FFFFFF',c2:'#FF3B3B'},{id:'p06',name:'귤 오렌지',bg:'#17120C',c1:'#FFFFFF',c2:'#FF9A1F'},
+    {id:'p07',name:'일렉트릭 블루',bg:'#0B1020',c1:'#FFFFFF',c2:'#3DA5FF'},{id:'p08',name:'노랑+청록 더블',bg:'#121212',c1:'#FFE500',c2:'#19F5E6'},
+    {id:'p09',name:'라벤더 밤',bg:'#15122B',c1:'#F3EEFF',c2:'#B69CFF'},{id:'p10',name:'민트 크림',bg:'#0F1F1C',c1:'#F4FFF9',c2:'#6FFFD2'},
+    {id:'p11',name:'피치 코랄',bg:'#22120F',c1:'#FFF4EC',c2:'#FF8F6B'},{id:'p12',name:'골드 프리미엄',bg:'#14110A',c1:'#FFF8E1',c2:'#F4C542'},
+    {id:'p13',name:'흰 바탕 빨강',bg:'#FFFFFF',c1:'#111111',c2:'#FF2D2D'},{id:'p14',name:'흰 바탕 로열블루',bg:'#FFFFFF',c1:'#111111',c2:'#1F4BFF'},
+    {id:'p15',name:'노랑 바탕 검정',bg:'#FFE500',c1:'#111111',c2:'#E60023'},{id:'p16',name:'딥 블루 바탕',bg:'#0D2A6B',c1:'#FFFFFF',c2:'#FFE45B'},
+  ];
+  // 꾸밈은 전부 em·currentColor로 적는다 — 글자 크기·색톤이 바뀌어도 따라오고, 렌더(1080px)에서도 같은 비율이다.
+  const DECOS=[
+    // --deco-edge = 그 줄 글자색의 반대(밝은 글자엔 검정, 어두운 글자엔 흰색) — 밝은 바탕 색톤에서 검은 글자에 검은 그림자가 뭉개지는 걸 막는다.
+    // 강조 줄만 칠하는 꾸밈(accent)은 템플릿이 제목 줄에 거는 외곽선·그림자를 먼저 끈다(안 끄면 박스 안 글자에 검은 테가 겹쳐 안 읽힌다).
+    {id:'outline',name:'외곽선',css:'-webkit-text-stroke:.085em var(--deco-edge);paint-order:stroke fill;text-shadow:0 .06em 0 color-mix(in srgb,var(--deco-edge) 85%,transparent)'},
+    {id:'box',name:'형광 박스',accent:'-webkit-text-stroke:0;text-shadow:none;background:currentColor;-webkit-text-fill-color:var(--deco-on-accent);border-radius:.14em;padding:.02em .2em'},
+    {id:'under',name:'형광펜 밑줄',accent:'-webkit-text-stroke:0;text-shadow:none;background:linear-gradient(transparent 54%,color-mix(in srgb,currentColor 72%,transparent) 54%);-webkit-text-fill-color:var(--deco-on-bg);padding:0 .1em'},
+    {id:'glow',name:'네온 글로우',accent:'-webkit-text-stroke:0;-webkit-text-fill-color:color-mix(in srgb,currentColor 30%,#fff);text-shadow:0 0 .1em currentColor,0 0 .32em color-mix(in srgb,currentColor 70%,transparent),0 0 .7em color-mix(in srgb,currentColor 40%,transparent)'},
+    {id:'grad',name:'그라데이션',accent:'-webkit-text-stroke:0;text-shadow:none;background:linear-gradient(180deg,#fff 8%,currentColor 66%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 .05em 0 rgba(0,0,0,.85))'},
+    {id:'shadow3d',name:'입체 그림자',css:'-webkit-text-stroke:.06em var(--deco-edge);paint-order:stroke fill;text-shadow:.05em .05em 0 var(--deco-edge),.1em .1em 0 var(--deco-edge),.15em .15em 0 var(--deco-edge)'},
+    {id:'tilt',name:'기울임 속도감',css:'display:inline-block;transform:skewX(-9deg);-webkit-text-stroke:.07em var(--deco-edge);paint-order:stroke fill;text-shadow:.06em .06em 0 color-mix(in srgb,var(--deco-edge) 80%,transparent)'},
+    {id:'sticker',name:'흰 테두리 스티커',accent:'-webkit-text-stroke:.1em #fff;paint-order:stroke fill;text-shadow:none;filter:drop-shadow(0 .06em 0 rgba(0,0,0,.75))'},
+  ];
+  const LOOKS=[
+    {id:'l01',name:'이븐 클래식',font:'f330',tone:'p01',deco:'outline'},{id:'l02',name:'속보 옐로',font:'f223',tone:'p02',deco:'box'},
+    {id:'l03',name:'네온 사인',font:'f1186',tone:'p03',deco:'glow'},{id:'l04',name:'핫딜 핑크',font:'f364',tone:'p04',deco:'sticker'},
+    {id:'l05',name:'세일 폭탄',font:'f676',tone:'p05',deco:'shadow3d'},{id:'l06',name:'귤빛 간판',font:'f321',tone:'p06',deco:'outline'},
+    {id:'l07',name:'일렉트릭',font:'f1456',tone:'p07',deco:'tilt'},{id:'l08',name:'더블 컬러',font:'f463',tone:'p08',deco:'outline'},
+    {id:'l09',name:'라벤더 뷰티',font:'f669',tone:'p09',deco:'grad'},{id:'l10',name:'민트 살림',font:'f458',tone:'p10',deco:'under'},
+    {id:'l11',name:'피치 간식',font:'f461',tone:'p11',deco:'box'},{id:'l12',name:'골드 프리미엄',font:'f876',tone:'p12',deco:'grad'},
+    {id:'l13',name:'뉴스 속보',font:'f1146',tone:'p13',deco:'box'},{id:'l14',name:'신뢰 블루',font:'f1405',tone:'p14',deco:'under'},
+    {id:'l15',name:'전단지 특가',font:'f1710',tone:'p15',deco:'shadow3d'},{id:'l16',name:'딥블루 어그로',font:'aggro',tone:'p16',deco:'tilt'},
+    {id:'l17',name:'예능 자막',font:'f82',tone:'p02',deco:'outline'},{id:'l18',name:'레트로 간판',font:'f499',tone:'p06',deco:'shadow3d'},
+    {id:'l19',name:'포스터',font:'f1042',tone:'p05',deco:'outline'},{id:'l20',name:'손맛 붓',font:'f1381',tone:'p03',deco:'outline'},
+    {id:'l21',name:'아삭 또렷',font:'f731',tone:'p01',deco:'shadow3d'},{id:'l22',name:'좁고 빽빽',font:'f1369',tone:'p08',deco:'outline'},
+    {id:'l23',name:'메이플 귀염',font:'f427',tone:'p04',deco:'box'},{id:'l24',name:'튼튼 교재',font:'f805',tone:'p16',deco:'outline'},
+  ];
+  let titleDeco='';
+  const toneKeys=p=>p.mode==='continuous'?[layoutKey(p.id,p.frame)]:[layoutKey(p.id,p.hook),layoutKey(p.id,p.body)];
+  // 지금 템플릿에 걸린 색톤 id — 따로 기억하지 않고 저장된 색값에서 읽어 낸다(같은 사실을 두 군데 적지 않는다).
+  const currentTone=()=>{const p=rows[current],paint=p&&fixedColors.get(toneKeys(p)[0]);if(!paint)return '';
+    const same=(a,b)=>String(a||'').toLowerCase()===String(b||'').toLowerCase();return TONES.find(t=>same(t.bg,paint.top)&&same(t.c1,paint.title1)&&same(t.c2,paint.title2))?.id||'';};
+  function applyTone(id){
+    const p=rows[current],tone=TONES.find(t=>t.id===id);if(!p)return;
+    for(const key of toneKeys(p)){if(tone)fixedColors.set(key,{top:tone.bg,bottom:tone.bg,title1:tone.c1,title2:tone.c2});else fixedColors.delete(key);}
+    for(const k of [...colorOverrides.keys()])if(k.startsWith(p.id+':'))colorOverrides.delete(k);   // 손으로 고른 색이 남아 있으면 색톤을 가린다
+    preview.classList.remove('is-pristine');renderEdit();syncFixedPanel();
+  }
+  // 훅 제목 글자에 꾸밈을 건다. ★글자 맞춤(fitText) 전에 불러야 한다 — 박스 여백·외곽선이 폭에 들어간다.
+  function applyTitleDeco(el,bind,frame){
+    const deco=DECOS.find(d=>d.id===titleDeco);if(!deco||!['hook1','hook2'].includes(bind))return;
+    const rule=[deco.css,bind==='hook2'?deco.accent:''].filter(Boolean).join(';');if(!rule)return;
+    const paint=fixedColorsFor(rows[current].id,frame),bg=(paint.top||frame.title_bg||'#000000').slice(0,7),accent=(colorOverrides.get(colorKey('accent'))||paint.title2||'#00F9ED').slice(0,7);
+    const ink=document.createElement('span');ink.className='title-deco-ink';ink.append(...el.childNodes);el.append(ink);
+    const own=bind==='hook2'?accent:(colorOverrides.get(colorKey('white'))||paint.title1||'#FFFFFF').slice(0,7);
+    ink.style.cssText=rule;ink.style.setProperty('--deco-edge',readableInk(own));ink.style.setProperty('--deco-on-accent',readableInk(accent));ink.style.setProperty('--deco-on-bg',readableInk(bg));
+  }
+  {
+    const fontPane=document.querySelector('.font-template-pane'),panes={};
+    for(const name of ['look','tone','deco']){const el=document.createElement('div');el.className='font-template-pane look-pane';el.hidden=true;fontPane.after(el);panes[name]=el;}
+    const sample=(tone,deco,family)=>{const d=DECOS.find(x=>x.id===deco)||{},on=c=>readableInk(c);
+      return `<span class="lk-prev" style="background:${tone.bg};font-family:'${family}',sans-serif"><i style="color:${tone.c1};--deco-edge:${on(tone.c1)};${d.css||''}">제목 첫줄</i><i style="color:${tone.c2};--deco-edge:${on(tone.c2)};--deco-on-accent:${on(tone.c2)};--deco-on-bg:${on(tone.bg)};${[d.css,d.accent].filter(Boolean).join(';')}">제목 둘째줄</i></span>`;};
+    const familyOf=id=>(FONT_SETS.find(f=>f.id===id)||DEFAULT_FONTS).title;
+    const draw=()=>{
+      const tone=TONES.find(t=>t.id===currentTone())||{bg:'#1b1b1b',c1:'#FFFFFF',c2:'#FFE24A'},family=familyOf(fontSet);
+      panes.look.innerHTML='<div class="font-set-grid">'+LOOKS.map(l=>`<button type="button" class="font-set-card look-card${l.font===fontSet&&l.tone===currentTone()&&l.deco===titleDeco?' selected':''}" data-look="${l.id}">${sample(TONES.find(t=>t.id===l.tone),l.deco,familyOf(l.font))}<b>${l.name}</b></button>`).join('')+'</div>';
+      panes.tone.innerHTML='<div class="font-set-grid">'+[{id:'',name:'템플릿 원래 색',bg:'#1b1b1b',c1:'#FFFFFF',c2:'#9aa7b0'},...TONES].map(t=>`<button type="button" class="font-set-card look-card${t.id===currentTone()?' selected':''}" data-tone="${t.id}">${sample(t,titleDeco,family)}<b>${t.name}</b></button>`).join('')+'</div>';
+      panes.deco.innerHTML='<div class="font-set-grid">'+[{id:'',name:'꾸밈 없음'},...DECOS].map(d=>`<button type="button" class="font-set-card look-card${d.id===titleDeco?' selected':''}" data-deco="${d.id}">${sample(tone,d.id,family)}<b>${d.name}</b></button>`).join('')+'</div>';
+    };
+    window.addEventListener('scene-style-lefttab',event=>{for(const [name,el] of Object.entries(panes))el.hidden=event.detail!==name;if(panes[event.detail])draw();});
+    window.addEventListener('scene-style-fontset',()=>{if(Object.values(panes).some(el=>!el.hidden))draw();});
+    const setDeco=id=>{titleDeco=DECOS.some(d=>d.id===id)?id:'';fittedText.clear();rememberLocal({titleDeco});};
+    panes.tone.addEventListener('click',event=>{const c=event.target.closest('[data-tone]');if(!c)return;applyTone(c.dataset.tone);draw();});
+    panes.deco.addEventListener('click',event=>{const c=event.target.closest('[data-deco]');if(!c)return;setDeco(c.dataset.deco);renderEdit();draw();});
+    panes.look.addEventListener('click',event=>{const c=event.target.closest('[data-look]'),look=c&&LOOKS.find(l=>l.id===c.dataset.look);if(!look)return;
+      fontSet=look.font;rememberLocal({fontSet});setDeco(look.deco);applyTone(look.tone);draw();});   // applyTone이 마지막에 다시 그린다
+    const css=document.createElement('style');
+    css.textContent='.layout-a .tool-tabs.left-pane-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}.left-pane-tabs button{padding-left:2px;padding-right:2px;white-space:nowrap}.look-card{padding:8px}.lk-prev{display:grid;gap:2px;justify-items:center;width:100%;padding:10px 4px;border-radius:8px;border:1px solid #ffffff1f;font-size:17px;line-height:1.25;overflow:hidden;white-space:nowrap}.lk-prev i{font-style:normal}.lk-prev i:last-child{font-size:19px}.title-deco-ink{display:inline-block}';
+    document.head.append(css);
   }
   const BODY_CAPTION_MOTIONS={
     // 09-19 사장님 '느낌이 다 비슷하다' → 이동 거리·시간·튕김을 모션마다 확실히 다르게(예전: 14px·0.3초로 거의 같았다)
@@ -674,6 +761,7 @@
     }else el.textContent=text||' ';
     contrastOutline(el,ln,frame,bind);
     if(frame.reference_style){el.style.webkitTextStroke=ln.stroke?`${ln.stroke*scale}px #080808`:'0px';el.style.textShadow=ln.shadow_y?`0 ${ln.shadow_y*scale}px ${2*scale}px #000000AA`:'none';}
+    applyTitleDeco(el,bind,frame);   // 09-22 장면폰트: 꾸밈은 맞춤 전에 — 박스 여백·외곽선이 폭에 들어간다
     if(manualLines>1){el.textContent=text;el.style.whiteSpace='pre-wrap';el.style.display='block';el.style.lineHeight='1.2';el.style.textWrap='wrap';}
     else if(ln.max_lines>1||WRAP3.includes(bind)){el.style.whiteSpace='normal';el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.18';el.style.display='-webkit-box';el.style.webkitBoxOrient='vertical';el.style.webkitLineClamp='3';}   // 09-19 사장님: 본문 제목·자막은 3줄까지
     const chosen=colorOverrides.get(colorKey(bind==='hook2'?'accent':'white'));
@@ -1270,12 +1358,12 @@
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
       }
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,titleDeco,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
@@ -1284,7 +1372,7 @@
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
         modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
