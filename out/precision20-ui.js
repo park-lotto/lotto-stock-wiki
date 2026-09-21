@@ -22,11 +22,31 @@
     const chBox=frame?.channel_box||(frame?.channel_boxes||[])[0];
     const chLine=(frame?.lines||[]).find(l=>l.bind==='channel');
     const channel=chBox?(chBox.y+chBox.height)/(frame?.height||1)*100:(chLine?chLine.y1/(frame?.height||1)*100:6);
-    return {top:mode==='continuous'?FIXED_TITLE.band:original,bottom:0,channel:Math.round(channel),caption:0};
+    const block=channelBlock(frame);
+    return {top:mode==='continuous'?FIXED_TITLE.band:original,bottom:0,channel:Math.round(block??channel),caption:0};
   };
   const layoutKey=(presetId,frame)=>presetId.startsWith('fixed_')?presetId:`${presetId}:${frame===storyRows.find(p=>p.id===presetId)?.hook?'hook':'body'}`;
   // 하단 칸(2026-09-18 사장님 "빠른조절에 하단 칸도 만들어서 올리고 내릴수있게") — 저장한 값만 쓰고 기본은 0.
   const fixedLayoutFor=(presetId,frame)=>{const saved=fixedLayouts.get(layoutKey(presetId,frame))||{};return {...fixedBaseLayout(frame),...saved,bottom:Number(saved.bottom)||0};};
+  // ★칸 구조(2026-09-21 시범: 이븐쇼핑 한 개) — 화면을 위에서부터 쌓이는 칸으로 본다: [채널명 칸][제목칸][자막칸][영상].
+  //   전엔 '칸'이 없고 부품마다 화면 절대 좌표뿐이라, 슬라이더가 글자만 옮기고 띠·구분선·아이콘은 제자리였다.
+  //   채널명 칸의 아래 끝 = 데이터의 구분선(얇은 면). 슬라이더는 **그 칸의 높이**만 바꾸고, 늘어난 만큼 아래 칸이 밀린다(channelDelta → titleHeight).
+  //   아무것도 안 건드리면 delta=0 → 기존 코드 경로 그대로(기본 화면 픽셀 동일).
+  const BLOCK_IDS=new Set(['t11']);
+  const channelBlock=frame=>{   // 채널명 칸 아래 끝(화면 높이 대비 %). 구분선이 없으면 null = 칸 구조 미적용
+    if(!frame||!BLOCK_IDS.has(rows[current]?.id))return null;
+    const ch=frame.channel_box||(frame.channel_boxes||[])[0];if(!ch)return null;
+    const firstTitle=Math.min(...(frame.lines||[]).filter(l=>l.bind!=='channel'&&l.bind!=='caption').map(l=>l.y0),frame.height);
+    const line=(frame.surfaces||[]).filter(s=>s.height<=2&&s.width>=frame.width*.5&&s.y>ch.y+ch.height*.5&&s.y<firstTitle).sort((a,b)=>a.y-b.y)[0];
+    return line?line.y/frame.height*100:null;
+  };
+  const channelDelta=frame=>{   // 채널명 칸이 기본보다 얼마나 늘었나(%). 칸은 글자 높이보다 낮아지지 않는다.
+    const c0=channelBlock(frame);if(c0==null)return 0;
+    const saved=Number(fixedLayouts.get(layoutKey(rows[current].id,frame))?.channel)||0;
+    if(!(saved>0)||saved===Math.round(c0))return 0;
+    const ch=frame.channel_box||(frame.channel_boxes||[])[0],floor=ch.height/frame.height*100+1.9;
+    return Math.max(floor,saved)-c0;
+  };
   const fixedBaseColors=frame=>{
     const titleLines=(frame?.lines||[]).filter(line=>line.bind!=='caption');
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
@@ -59,7 +79,8 @@
     const frame=frameFor(rows[current]),source=captionSource(frame),saved=captionLayouts.get(captionKey())||{};
     return {placement:captionDrags.has(captionKey())?'free':'title',w:100,h:source.height,background:source.background,color:source.ln?.color||'#111111',...saved};
   };
-  const titleHeight=frame=>{
+  const titleHeight=frame=>titleSetting(frame)+channelDelta(frame);   // 화면에서의 제목칸 끝 — 자막칸·영상 시작이 모두 여기서 나온다
+  const titleSetting=frame=>{   // '상단 제목칸' 슬라이더 값(채널명 칸 밀림 제외) — 저장·표시는 이 값으로
     const original=(frame.video_from?.y||0)/frame.height*100,cut=captionSource(frame).cut/frame.height*100;
     const configured=fixedLayoutFor(rows[current].id,frame).top;
     if(isStoryBody(frame)&&!fixedLayouts.get(layoutKey(rows[current].id,frame)))return STORY_BODY.cut;
@@ -120,8 +141,6 @@
   let noTemplate=false;
   let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',bodyCaptionMotion='',fontSet='',hookMotionSpeed=.72,hookCaptionMode='visible';
   const fontScales=new Map();
-  let lastChannelSlot=null;   // applyChannelSlot이 이번 렌더에서 정한 채널명 칸 값 — applyStoryLayout이 같은 값을 읽는다(두 번 계산하지 않는다)
-  let channelCap=null;   // 채널명이 자리 한계에 닿아 있으면 {key, effective(실제 배율)} — fitChannel이 적고 스테퍼가 읽는다(초기화 순서 때문에 여기서 선언)
   const fittedText=new Map();
   const textOffsets=new Map();
   const textDrags=new Map();   // 제목·채널명을 마우스로 옮긴 양(칸 기준 %)
@@ -329,7 +348,7 @@
     // 09-19: '채널명 칸'은 머리띠(캡슐·아이콘)가 원본 그림이라 글자만 떨어져 나왔다. 템플릿 20종의 머리띠 좌표를 넣기 전까지 잠근다.
     const chRow=fixedPanel.querySelector('[data-fixed-size="channel"]');if(chRow)chRow.hidden=false;
     fixedPanel.querySelector('.fixed-quick-head b').textContent=mode==='continuous'?'고정형 빠른 조절':`${kind==='hook'?'훅':'본문'} 빠른 조절`;
-    const p=rows[current],frame=frameFor(p),layout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame)},colors=fixedColorsFor(p.id,frame);
+    const p=rows[current],frame=frameFor(p),layout={...fixedLayoutFor(p.id,frame),top:titleSetting(frame)},colors=fixedColorsFor(p.id,frame);
     fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
       const key=row.dataset.fixedSize,input=row.querySelector('input'),output=row.querySelector('output');
       if(key==='top')input.min=String(mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame));
@@ -480,8 +499,7 @@
   function updateSteppers(){
     root.querySelectorAll('.layout-a [data-field-key]').forEach(field=>{
       const output=field.querySelector('.font-stepper output');
-      const bind=field.dataset.fieldKey,capped=bind==='channel'&&channelCap&&channelCap.key===scaleKey(bind)&&fontScales.has(channelCap.key);
-      if(output){output.textContent=Math.round((capped?channelCap.effective:textScale(bind))*100)+'%'+(capped?' 최대':'');output.title=capped?'이 템플릿에서 채널명이 들어갈 자리의 최대 크기입니다':'';}
+      if(output)output.textContent=Math.round(textScale(field.dataset.fieldKey)*100)+'%';
     });
   }
   function updateCaptionButtons(){
@@ -664,54 +682,6 @@
     }
     return el;
   }
-  // ★채널명 자리(2026-09-21 사장님 "채널명 크기 조정이 계속 깨진다") — 긴 채널명을 키우면 글자가 알약 밖으로 터지고
-  //   ☰·🔍 아이콘을 덮고 화면 끝에서 잘렸다. 자리를 정하는 곳이 없었기 때문이다(크기 상한 없음 · 알약은 글자와 무관 · 아이콘 무시).
-  //   쓸 수 있는 자리 = 좌우는 같은 줄 아이콘 사이(없으면 화면 2~98%), 위아래는 보이는 알약 높이(없으면 화면 위~아래 첫 경계).
-  //   그 안에서만 커지고, 알약은 글자를 따라 좌우로 늘어난다. 한계에 닿으면 저장값(표시 %)도 실제 크기로 맞춘다.
-  let inkContext=null;
-  function fitChannel(c,textEl,boxEl,frame,scale,ornaments,surfaceEls){
-    const W=frame.width,center=c.x+c.width/2,cy=c.y+c.height/2,gap=5,padX=9,padY=2.5;
-    let L=W*.02,R=W*.98;
-    ornaments.forEach(o=>{if(o.y<c.y+c.height&&o.y+o.height>c.y){if(o.x+o.width/2<center)L=Math.max(L,o.x+o.width+gap);else R=Math.min(R,o.x-gap);}});
-    const half=Math.max(8,Math.min(center-L,R-center));
-    // 보이는 알약: 둥근 모서리·테두리가 있고 채널 중심을 품은 좁은 면. (DOM으로 그리는 상자는 boxEl)
-    const pill=boxEl?{s:{x:c.x,y:c.y,width:c.width,height:c.height,radius:c.radius,border:c.border},el:boxEl}
-      :surfaceEls.filter(({s})=>(Number(s.radius)>0||s.border)&&s.width<W*.8&&s.x<=center&&s.x+s.width>=center&&s.y<=cy&&s.y+s.height>=cy).sort((a,b)=>a.s.width*a.s.height-b.s.width*b.s.height)[0];
-    const pillSeen=pill&&(Number(pill.s.radius)>0||pill.s.border);
-    // 위아래 한계: 알약이 보이면 그 높이, 아니면 채널 중심을 품은 면(머리띠)의 위아래 끝과 화면 위
-    let top=0,bottom=frame.height;
-    if(pillSeen){top=pill.s.y;bottom=pill.s.y+pill.s.height;}
-    else surfaceEls.forEach(({s})=>{if(s.width>=W*.8&&s.y<=cy&&s.y+s.height>=cy){top=Math.max(top,s.y);bottom=Math.min(bottom,s.y+s.height);}});
-    const limitH=2*Math.min(cy-top,bottom-cy);
-    // 글자는 아이콘 사이 가운데에 둔다
-    Object.assign(textEl.style,{left:(center-half)/W*100+'%',right:(W-center-half)/W*100+'%',transform:'none'});
-    const measure=()=>{const range=document.createRange();range.selectNodeContents(textEl);const line=range.getBoundingClientRect();
-      const cs=getComputedStyle(textEl);inkContext=inkContext||document.createElement('canvas').getContext('2d');inkContext.font=`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-      const m=inkContext.measureText(textEl.textContent||' '),fb=(m.fontBoundingBoxAscent+m.fontBoundingBoxDescent)||line.height||1;
-      const baseline=line.top+m.fontBoundingBoxAscent*(line.height/fb);
-      return {width:line.width,inkTop:baseline-m.actualBoundingBoxAscent,inkBottom:baseline+m.actualBoundingBoxDescent};};
-    let m=measure();
-    const roomW=(2*half-padX*2)*scale,roomH=(limitH-padY*2)*scale;
-    const k=Math.min(1,roomW/Math.max(1,m.width),roomH/Math.max(1,m.inkBottom-m.inkTop));
-    if(k<.999){
-      const size=parseFloat(textEl.style.fontSize)||parseFloat(getComputedStyle(textEl).fontSize),letter=parseFloat(textEl.style.letterSpacing)||0;
-      textEl.style.fontSize=Math.max(7,size*k)+'px';textEl.style.letterSpacing=letter*k+'px';m=measure();
-    }
-    // 한계에 닿았는지만 적어 둔다. 저장값(0.1 단위)은 안 건드린다 — 깎으면 −로 정확히 100%에 못 돌아온다.
-    channelCap=k<.999?{key:scaleKey('channel'),effective:textScale('channel')*k}:null;
-    // 보이는 알약 안에서는 글자 잉크를 알약 세로 가운데에 맞춘다(손으로 옮긴 적이 없을 때만 — 옮긴 자리는 존중한다)
-    const moved=textDrags.get(scaleKey('channel'))||{x:0,y:0};
-    if(pillSeen&&!moved.x&&!moved.y&&!textOffset('channel')){
-      const pv=preview.getBoundingClientRect(),want=pv.top+(pill.s.y+pill.s.height/2)*scale,delta=want-(m.inkTop+m.inkBottom)/2;
-      if(Math.abs(delta)>.4)textEl.style.top=(parseFloat(textEl.style.top)||0)+delta/pv.height*100+'%';
-    }
-    // 알약은 글자를 따라 좌우로만 늘어난다(원래 폭보다 줄지는 않는다 · 아이콘 자리와 화면 밖으로는 안 간다)
-    if(pill){
-      const needHalf=m.width/scale/2+padX;
-      const x0=Math.max(W*.02,Math.min(pill.s.x,center-needHalf)),x1=Math.min(W*.98,Math.max(pill.s.x+pill.s.width,center+needHalf));
-      Object.assign(pill.el.style,{left:x0/W*100+'%',width:(x1-x0)/W*100+'%'});
-    }
-  }
   function setNoTemplate(){
     noTemplate=true;document.body.classList.add('no-template');
     grid.querySelectorAll('[data-p20]').forEach(x=>x.classList.remove('selected'));grid.querySelector('[data-none]')?.classList.add('selected');
@@ -749,7 +719,7 @@
     if(dirty.size){
       (frame.boxes||[]).forEach(b=>{const box=addPatch(b.y/frame.height*100,b.height/frame.height*100,b.background,b.x/frame.width*100,b.width/frame.width*100);if(b.border)box.style.border=`${b.border_width||1}px solid ${b.border}`;});
     }
-    const designScale=preview.clientHeight/frame.height,surfaceEls=[];
+    const designScale=preview.clientHeight/frame.height;
     (frame.surfaces||[]).forEach(s=>{
       if(s.bind==='caption')return;
       const offset=s.bind==='caption'?captionOffset()+textOffset('caption'):0;
@@ -759,7 +729,6 @@
       surface.style.borderRadius=(s.radius||0)*designScale+'px';
       for(const [key,css] of [['border','border'],['borderTop','borderTop'],['borderBottom','borderBottom']])if(s[key])surface.style[css]=`${Math.max(.5,designScale)}px solid ${s[key]}`;
       if(s.shadow)surface.style.boxShadow=s.shadow;
-      surfaceEls.push({s,el:surface});
     });
     (frame.ornaments||[]).forEach(o=>{
       const el=document.createElement('i');el.className='body-ornament body-ornament-'+o.type;el.setAttribute('aria-hidden','true');
@@ -768,21 +737,22 @@
     });
     const channelBoxes=frame.channel_boxes?.length?frame.channel_boxes:(frame.channel_box?[frame.channel_box]:[]);
     if(dirty.has('channel')&&channelBoxes.length){
-      const ornaments=(frame.ornaments||[]).slice();   // 아래 ornaments.forEach가 그리는 것과 같은 목록
       channelBoxes.forEach(c=>{
-      const scale=preview.clientHeight/frame.height;
-      let box=null,channelText;
       if(c.designed){
         const ln={x0:c.x,x1:c.x+c.width,y0:c.y,h:c.height,font_size:c.font_size,font_family:c.font_family,font_weight:c.font_weight,letter_spacing:c.letter_spacing,background:c.background};
-        channelText=addText(value('channel'),ln,frame,c.color,'center precision-channel','channel');
-      }else{
-        const maxWidth=frame.width*.9,maxX=frame.width*.05;
-        box=addPatch(c.y/frame.height*100,c.height/frame.height*100,c.background,c.x/frame.width*100,c.width/frame.width*100,'channel');
-        box.style.borderRadius=((Number(c.radius)||0)*scale)+'px';if(c.border)box.style.border=`${Math.max(1,scale)}px solid ${c.border}`;
-        const channelLine={x0:maxX,x1:maxX+maxWidth,y0:c.y,y1:c.y+c.height,h:c.height,font_size:c.font_size,font_family:c.font_family,font_weight:c.font_weight,letter_spacing:c.letter_spacing,background:c.background,stroke:0,shadow_y:0};
-        channelText=addText(value('channel'),channelLine,frame,c.color,'center precision-channel','channel');
+        addText(value('channel'),ln,frame,c.color,'center precision-channel','channel');return;
       }
-      fitChannel(c,channelText,box,frame,scale,ornaments,surfaceEls);
+      const scale=preview.clientHeight/frame.height,maxWidth=frame.width*.9,maxX=frame.width*.05;
+      const box=addPatch(c.y/frame.height*100,c.height/frame.height*100,c.background,c.x/frame.width*100,c.width/frame.width*100,'channel');
+      box.style.borderRadius=((Number(c.radius)||0)*preview.clientHeight/frame.height)+'px';if(c.border)box.style.border=`${Math.max(1,preview.clientHeight/frame.height)}px solid ${c.border}`;
+      const channelLine={x0:maxX,x1:maxX+maxWidth,y0:c.y,y1:c.y+c.height,h:c.height,font_size:c.font_size,font_family:c.font_family,font_weight:c.font_weight,letter_spacing:c.letter_spacing,background:c.background,stroke:0,shadow_y:0};
+      const channelText=addText(value('channel'),channelLine,frame,c.color,'center precision-channel','channel');
+      const range=document.createRange();range.selectNodeContents(channelText);
+      const contentWidth=range.getBoundingClientRect().width/scale+18;
+      const expandedWidth=Math.min(maxWidth,Math.max(c.width,contentWidth));
+      const center=c.x+c.width/2,expandedX=Math.max(frame.width*.02,Math.min(frame.width*.98-expandedWidth,center-expandedWidth/2));
+      Object.assign(box.style,{left:expandedX/frame.width*100+'%',width:expandedWidth/frame.width*100+'%'});
+      Object.assign(channelText.style,{left:expandedX/frame.width*100+'%',right:(frame.width-expandedX-expandedWidth)/frame.width*100+'%'});
       });
     }
     const lines=frame.lines||[];
@@ -841,29 +811,9 @@
     if(hasEditableCaption())renderCaption(frame);
     syncMediaLayout();
   }
-  // 채널명 칸의 값 — 기본 끝(base)·실제 끝(bottom)·이동량(d)을 **여기 한 곳**에서 정한다(applyChannelSlot·applyStoryLayout·슬라이더 표시가 같이 쓴다).
-  //   제목이 들어갈 자리가 모자라면 제목 글자를 줄이지 않고 **칸이 거기서 멈춘다**(09-18 "글자도 비율로 줄어들면 안 좋다" · 09-19 "영상 시작은 그대로").
-  function channelSlot(frame,p){
-    const base=fixedBaseLayout(frame).channel,saved=Number(fixedLayouts.get(layoutKey(p.id,frame))?.channel)||0,T=titleHeight(frame);
-    // 머리띠 부품을 기본 자리에서 분류한다(이 함수는 부품을 옮기기 **전에** 한 번만 불린다 — 결과는 lastChannelSlot에 둔다)
-    const geo=el=>({top:parseFloat(el.style.top)||0,h:parseFloat(el.style.height)||0,w:el.style.width?parseFloat(el.style.width):100});
-    const parts=[...layer.querySelectorAll('.precision-patch,.body-ornament')].filter(el=>!el.classList.contains('story-band-fill')&&el.dataset.editBind!=='caption');
-    const bands=parts.filter(el=>{const g=geo(el);return g.w>=80&&g.top<=1.5&&g.h>=.9&&g.top+g.h<T-1.5&&g.top+g.h>=base-4;});          // 맨 위에서 시작해 제목칸 끝 전에 끝나는 넓은 면
-    const lines=parts.filter(el=>{const g=geo(el);return !bands.includes(el)&&g.h<.9&&g.w>=50&&g.top<T-2&&g.top>=base-4&&g.top<=base+6;});   // 칸 끝의 구분선
-    const floor0=Math.max(base,...bands.map(el=>{const g=geo(el);return g.top+g.h;}),...lines.map(el=>geo(el).top));                  // 눈에 보이는 칸 끝(기본 상태)
-    const members=parts.filter(el=>{const g=geo(el);return !bands.includes(el)&&!lines.includes(el)&&g.w<80&&g.top+g.h/2<floor0;});      // 알약·아이콘·점
-    let d=saved>0?saved-base:0;
-    const chEl=layer.querySelector('.precision-text[data-edit-bind="channel"]');
-    if(d<0&&chEl){const h=chEl.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;d=Math.max(d,Math.min(0,h+1-floor0));}   // 칸은 글자 높이보다 낮아지지 않는다
-    if(d>0){   // 늘릴 때: **지금 보이는 제목 바로 위까지만**. 제목은 칸에 맞춰 자동으로 줄어드는 글자라, 더 내리면 제목이 작아진다(사장님: 글자는 그대로).
-      const first=(isStoryBody(frame)?['bodyTitle']:['hook1','hook2','bodyTitle']).map(bind=>layer.querySelector(`.precision-text[data-edit-bind="${bind}"]`)).find(t=>t&&!t.hidden);
-      const titleTop=isStoryBody(frame)?Math.max(T*STORY_BODY.titleTop,base+1.2):(first?parseFloat(first.style.top)||T:T);
-      d=Math.max(0,Math.min(d,titleTop-.8-floor0));
-    }
-    return {base,floor0,d,bottom:base+d,bands,lines,members,geo};
-  }
   // 채널명 칸(빠른 조절) — 썰쇼핑형·고정형 모두 적용. renderEdit 끝에서 한 번 부른다.
   function applyChannelSlot(frame,p){
+    if(channelBlock(frame)!=null)return;   // 칸 구조: 채널명 칸은 applyStoryLayout의 칸 배치가 맡는다(두 군데서 정하지 않는다)
     // 09-19: '채널명 칸' 슬라이더는 훅·본문 모두에 적용한다(전엔 본문에서만 먹었다)
     {
       const saved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
@@ -879,21 +829,17 @@
       // 그림을 내리면 훅에서는 영상도 따라 내려갔다 → 영상 자리를 그만큼 되올려 시작점을 고정한다
       if(media&&media.dataset.baseTop!=null){const bt=Number(media.dataset.baseTop)||0;media.style.top=(bt-shift)+'%';}
       preview.style.backgroundColor=shift>0?(band?.color||fixedColorsFor(p.id,frame).top||'#000000'):'';
-      // ★채널명 칸 = **칸의 높이**(2026-09-21 사장님: "글자가 아니라 칸의 높이면 되야 한다").
-      //   전엔 글자 아래 끝만 슬라이더 값에 맞췄다 → 띠·알약·☰·🔍·구분선은 제자리라 머리띠가 흩어졌다.
-      //   이제 머리띠를 한 묶음으로 다룬다: 띠는 그만큼 늘고, 구분선은 칸 끝을 따라가고, 글자·알약·아이콘은 칸 세로 가운데에 같이 있는다.
-      //   글자 크기는 안 건드린다(크기는 ＋/− 로만).
-      const slot=lastChannelSlot=channelSlot(frame,p);
-      if(slot.d){
-        const d=slot.d,geo=slot.geo;
-        slot.bands.forEach(el=>{el.style.height=Math.max(1,geo(el).h+d)+'%';});            // 띠: 높이가 는다
-        slot.lines.forEach(el=>{el.style.top=Math.max(0,geo(el).top+d)+'%';});             // 구분선: 칸 끝을 따라간다
-        slot.members.forEach(el=>{el.style.top=Math.max(0,geo(el).top+d/2)+'%';});         // 알약·아이콘·점: 칸 가운데에 같이
-        if(chEl0)chEl0.style.top=Math.max(0,(parseFloat(chEl0.style.top)||0)+d/2)+'%';     // 채널명 글자도 같이(크기는 그대로)
+      if(saved>0&&chEl0){
+        const h=chEl0.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
+        const before=parseFloat(chEl0.style.top)||0,next=Math.max(0,saved-h+chDrag.y);
+        chEl0.style.top=next+'%';
+        layer.querySelectorAll('.precision-patch[data-edit-bind="channel"]').forEach(box=>{
+          const t=parseFloat(box.style.top)||0;box.style.top=Math.max(0,t+(next-before))+'%';
+        });
       }
       // 채널명을 내리면 제목 줄도 겹치지 않게 함께 내린다(훅·본문 공통)
-      if(saved>0&&mode!=='story'||saved>0&&!isStoryBody(frame)){   // 본문 제목은 applyStoryLayout이 같은 slot 값으로 놓는다(두 군데서 정하지 않는다)
-        let floor=(lastChannelSlot?lastChannelSlot.floor0+lastChannelSlot.d:saved)+1.2;
+      if(saved>0){
+        let floor=saved+1.2;
         for(const bind of ['hook1','hook2','bodyTitle']){
           const t=layer.querySelector(`.precision-text[data-edit-bind="${bind}"]`);if(!t)continue;
           const h=t.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
@@ -911,7 +857,9 @@
     // 제목 영역이나 글자 크기를 다시 압축하면 훅/본문이 서로 흔들린다.
     const source=captionSource(frame),cut=source.cut/frame.height*100,next=titleHeight(frame),paint=fixedColors.get(layoutKey(p.id,frame));
     // 이븐쇼핑 원본형은 측정 좌표 자체가 계약 — 제목칸을 안 건드렸으면 그대로 둔다.
-    const moved=Math.abs(next-cut)>.05;
+    const moved=Math.abs(next-cut)>.05,c0=channelBlock(frame);
+    // 슬라이더를 한 번도 안 건드렸으면(저장된 칸 값 없음) 예전 계산 그대로 — 기본 화면이 픽셀까지 같아야 한다(v182와 대조로 확인).
+    const blockOn=c0!=null&&!!fixedLayouts.get(layoutKey(p.id,frame));
     if(p.id==='t11'&&frame.reference_style&&!moved)return;
     // 상단 제목칸 조절 = 칸만 커지고 줄어든다(2026-09-18 사장님 "칸만 줄어들어야 하는데 글자도 비율로 줄어들면 안 좋다",
     //   "50%로 키우면 흰 띠 아래가 까맣게 빈다"). 글자·띠 크기는 그대로 두고 **위치만** 칸 안에 고르게 벌린다:
@@ -920,7 +868,17 @@
     for(const el of [...layer.children].filter(el=>el!==badge)){
       const top=parseFloat(el.style.top),height=parseFloat(el.style.height);if(!Number.isFinite(top))continue;
       if(top>=cut&&hasEditableCaption()){if(el.classList.contains('precision-text')&&['channel','hook1','hook2','bodyTitle'].includes(el.dataset.editBind))continue;el.remove();continue;}   // 09-19: 끌어 옮긴 제목·채널명은 지우지 않는다(사라지던 문제)
-      if(moved){
+      if(moved&&blockOn){   // ★칸 구조: 채널명 칸 부품은 그 칸 가운데에, 구분선은 칸 끝에, 제목칸 부품은 제목칸 안에서 예전 규칙대로
+        const dC=channelDelta(frame),c=c0+dC,full=Number.isFinite(height)?height:(el.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100);
+        if(top<=.5&&Number.isFinite(height)&&height>=cut*.8)el.style.height=next+'%';                       // 칸 전체 배경판
+        else if(full<.6&&Math.abs(top-c0)<.4)el.style.top=c+'%';                                             // 구분선 = 채널명 칸 끝
+        else if(top+full/2<c0)el.style.top=Math.max(0,top+dC/2)+'%';                                        // 채널명 칸 부품(글자·☰·🔍·알약): 크기 그대로, 칸 가운데
+        else{   // 제목칸 부품: 채널명 칸이 늘어난 만큼 그대로 밀리고, 제목칸 높이가 바뀌면 예전처럼 고르게 벌린다(09-18 규칙 · 자막칸을 넘는 부분은 잘라낸다)
+          const h=Number.isFinite(height)?Math.min(height,cut-top):full,span0=Math.max(.01,cut-c0),span=next-c,f=Math.max(0,Math.min(1,(top+h-c0)/span0));
+          el.style.top=Math.max(c,Math.min(next-h,top+dC+(span-span0)*f))+'%';
+          if(Number.isFinite(height))el.style.height=Math.max(0,h)+'%';
+        }
+      }else if(moved){
         const h=Number.isFinite(height)?Math.min(height,cut-top):(el.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100);
         if(top<=.5&&Number.isFinite(height)&&height>=cut*.8){el.style.height=next+'%';}
         else{
@@ -962,11 +920,17 @@
         const pvBox=preview.getBoundingClientRect();
         const chSaved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
         const chMoved=textDrags.get(scaleKey('channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
-        // 09-21: 여기서도 채널명 글자를 옮기던 것을 없앴다 — 같은 결정이 두 군데 있었다(0순위-B). 칸은 applyChannelSlot 한 곳에서만 움직인다.
-        const chBottom=chSaved>0&&lastChannelSlot?lastChannelSlot.bottom:(chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0);
+        if(chSaved>0&&chEl&&channelBlock(frame)==null){   // (옛 방식 — 칸 구조가 아닌 템플릿만) '채널명 칸' 슬라이더: 채널명 아래 끝을 그 값에 맞춘다
+          const h=chEl.getBoundingClientRect().height/Math.max(1,pvBox.height)*100;
+          chEl.style.top=Math.max(0,chSaved-h)+'%';
+        }
+        const chBottom=chSaved>0?chSaved:(chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0);
         const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
         const cutNow=titleHeight(frame);   // 상단 칸을 조절하면 그 칸 기준으로 다시 배치
-        const base=Math.max(cutNow*STORY_BODY.titleTop,chBottom+1.2);
+        const blockC0=channelBlock(frame);
+        const base=blockC0!=null
+          ?(blockC0+channelDelta(frame))+(cutNow-(blockC0+channelDelta(frame)))*((STORY_BODY.cut*STORY_BODY.titleTop-blockC0)/(STORY_BODY.cut-blockC0))   // 제목칸 위 끝 + 칸 안 비율
+          :Math.max(cutNow*STORY_BODY.titleTop,chBottom+1.2);
         // 09-19: 제목은 자막 칸을 넘지 않는다(채널명 칸을 많이 내려도 자막 위로 올라타지 않게)
         const elH=el.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100;
         const ceiling=Math.max(0,cutNow-Math.max(elH,STORY_BODY.cut*STORY_BODY.titleH)-0.6);
@@ -1101,9 +1065,8 @@
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-font-step]');if(!button)return;
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
-    if(bind==='channel'&&Number(button.dataset.fontStep)>0&&channelCap&&channelCap.key===scaleKey(bind)&&fontScales.has(channelCap.key))return;
     const next=Math.min(3,Math.max(.5,textScale(bind)+Number(button.dataset.fontStep)));
-    if(Math.abs(next-1)<.001)fontScales.delete(scaleKey(bind));else fontScales.set(scaleKey(bind),next);[...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));markDirty(bind);preview.classList.remove('is-pristine');renderEdit();updateSteppers();
+    if(Math.abs(next-1)<.001)fontScales.delete(scaleKey(bind));else fontScales.set(scaleKey(bind),next);[...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));markDirty(bind);preview.classList.remove('is-pristine');updateSteppers();renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-position-step]');if(!button)return;
@@ -1135,7 +1098,7 @@
   });
   const applyFixedSize=(key,rawValue)=>{
     const mediaBefore=mediaBounds(frameFor(rows[current]),rows[current].id).top;   // 09-19: 채널명 칸을 바꿔도 영상 시작은 그대로 두려고 먼저 재 둔다
-    const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame),titleOnly:true};
+    const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame),top:titleSetting(frame),titleOnly:true};
     const RANGE={top:[mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame),50],bottom:[0,35],channel:[0,20],caption:[4,24]};
     const [min,max]=RANGE[key]||[0,35];
     currentLayout[key]=Math.round(Math.max(min,Math.min(max,Number(rawValue))));
@@ -1144,10 +1107,11 @@
     // 09-19: 채널명 칸을 키우면 제목이 들어갈 자리가 없어 뭉쳤다 → 두 칸이 최소 7% 떨어지게 서로 민다
     // 09-19 사장님: 채널명 칸을 내려도 영상 시작은 그대로 둔다 → 상단 제목칸을 자동으로 늘리지 않는다.
     //   대신 제목이 채널명과 겹치면 제목만 아래로 밀고(아래 코드), 칸을 더 못 내리게 한계를 둔다.
-    if(key==='channel')currentLayout.channel=Math.min(currentLayout.channel,Math.max(0,currentLayout.top-8));   // 제목 자리(약 6.3%)+여백을 남긴다
-    if(key==='top'&&currentLayout.channel>currentLayout.top-7)currentLayout.channel=Math.max(0,currentLayout.top-7);
+    const blocky=channelBlock(frame)!=null;
+    if(key==='channel'&&!blocky)currentLayout.channel=Math.min(currentLayout.channel,Math.max(0,currentLayout.top-8));   // 제목 자리(약 6.3%)+여백을 남긴다
+    if(key==='top'&&!blocky&&currentLayout.channel>currentLayout.top-7)currentLayout.channel=Math.max(0,currentLayout.top-7);
     fixedLayouts.set(layoutKey(p.id,frame),currentLayout);
-    if(key==='channel'){   // 훅에서 칸 계산이 반올림되며 영상이 1%쯤 밀리던 것 보정
+    if(key==='channel'&&!blocky){   // 훅에서 칸 계산이 반올림되며 영상이 1%쯤 밀리던 것 보정
       const after=mediaBounds(frame,p.id).top,gap=after-mediaBefore;
       if(Math.abs(gap)>0.05){currentLayout.top=currentLayout.top-gap;fixedLayouts.set(layoutKey(p.id,frame),currentLayout);}
     }
