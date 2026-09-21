@@ -4324,20 +4324,38 @@ async function initMatch(){
   //   안 그러면 화면엔 옛 대본으로 만든 편집안이 남아, 고친 대본과 다른 영상이 나온다.
   //   판정은 서버 job의 given_script 지문과 대조한다 — 화면 기억이 아니라 실제 매칭에
   //   쓰인 값이라 새로고침·다른 기기에서도 정확하다.
-  try{ await _remixIfScriptChanged(); }catch(e){}
+  try{ await _remixIfChanged(); }catch(e){}
 }
-// 지금 job이 **지금 대본**으로 만들어진 것인지 확인하고, 아니면 다시 매칭한다.
-async function _remixIfScriptChanged(){
+// 소스 영상 묶음의 지문 — 서버 `_sources_hash`(app.py)와 **같은 규칙이어야 한다**(0순위-B).
+// 규칙: 각 URL 트림 → 빈 것·중복 제거 → 정렬 → 줄바꿈으로 이어 _scriptHash(해시 규칙은 하나만).
+async function _sourcesHash(urls){
+  const uniq = [...new Set((urls || []).filter(u => typeof u === 'string')
+                 .map(u => u.trim()).filter(Boolean))].sort();
+  return _scriptHash(uniq.join('\n'));
+}
+// 지금 job이 **지금 대본·지금 담긴 영상**으로 만들어진 것인지 확인하고, 아니면 다시 매칭한다.
+// ★영상 대조는 2026-09-21에 붙었다(회원 제보: 재봉틀 영상을 빼고 다른 영상 2개를 넣었는데
+//   3단계엔 계속 재봉틀이 나왔다). 종전엔 대본 지문만 봐서, 대본이 그대로면 옛 job이 남았다.
+async function _remixIfChanged(){
   if(!MIX_JOB || !(STATE.script || '').trim()) return;
   const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
   if(!s || !s.ok) return;
   // 아직 도는 중이면 건드리지 않는다 — 끝나고 나서 판단해도 늦지 않다(중복 과금 방지).
   if(!/^(ready_for_review|done|failed)$/.test(s.status || '')) return;
-  if(typeof s.script_hash !== 'string' || !s.script_hash) return;   // 옛 job엔 지문이 없다 → 그대로 둔다
-  const now = await _scriptHash(STATE.script);
-  if(!now || now === s.script_hash) return;                          // 안 바뀌었다
+  let why = '';
+  if(typeof s.script_hash === 'string' && s.script_hash){            // 옛 job엔 지문이 없다 → 그대로 둔다
+    const now = await _scriptHash(STATE.script);
+    if(now && now !== s.script_hash) why = '✏️ 대본이 바뀌었어요';
+  }
+  if(!why && typeof s.sources_hash === 'string' && s.sources_hash){
+    // 영상풀이 비어 있으면(복원 전·전부 뺌) 판정하지 않는다 — 매칭은 과금이라 확실할 때만 돈다.
+    const urls = (typeof collectMixUrls === 'function') ? collectMixUrls() : [];
+    const nowSrc = urls.length ? await _sourcesHash(urls) : '';
+    if(nowSrc && nowSrc !== s.sources_hash) why = '🎬 담은 영상이 바뀌었어요';
+  }
+  if(!why) return;                                                   // 안 바뀌었다
   // 이것도 '도는 중'이다 — 도는 점을 붙여 멈춘 것처럼 보이지 않게(2026-08-23).
-  drawMixStatus('✏️ 대본이 바뀌었어요 — 화면을 다시 붙이는 중이에요…', true);
+  drawMixStatus(why + ' — 화면을 다시 붙이는 중이에요…', true);
   await startProduceMix();
 }
 // ── 화면 붙이기 끝 ──
