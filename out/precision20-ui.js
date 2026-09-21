@@ -342,10 +342,6 @@
     fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
       const key=row.dataset.fixedSize,input=row.querySelector('input'),output=row.querySelector('output');
       if(key==='top')input.min=String(mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame));
-      // ★'채널명 칸'은 **기본 자리부터** 시작한다(2026-09-21 라이브 실측). 종전엔 0부터라,
-      //   기본값(t01 본문 9.3%)보다 작은 0~9 구간에서는 저장은 되는데 화면은 하나도 안 움직였다
-      //   — 슬라이더 절반이 죽은 구간이었다. 사장님이 '조절하면 이상하다'고 한 또 다른 면이다.
-      if(key==='channel')input.min=String(Math.round(Number(fixedBaseLayout(frame)?.channel)||0));
       input.value=String(layout[key]);output.textContent=Math.round(layout[key])+'%';
     });
     fixedPanel.querySelectorAll('[data-fixed-color]').forEach(input=>input.value=colors[input.dataset.fixedColor]);
@@ -1129,7 +1125,7 @@
   const applyFixedSize=(key,rawValue)=>{
     const mediaBefore=mediaBounds(frameFor(rows[current]),rows[current].id).top;   // 09-19: 채널명 칸을 바꿔도 영상 시작은 그대로 두려고 먼저 재 둔다
     const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame),titleOnly:true};
-    const RANGE={top:[mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame),50],bottom:[0,35],channel:[Math.round(Number(fixedBaseLayout(frame)?.channel)||0),24],caption:[4,24]};
+    const RANGE={top:[mode==='continuous'?minimumFixedTop(frame):minimumStoryTop(frame),50],bottom:[0,35],channel:[0,20],caption:[4,24]};
     const [min,max]=RANGE[key]||[0,35];
     currentLayout[key]=Math.round(Math.max(min,Math.min(max,Number(rawValue))));
     if(currentLayout.top+currentLayout.bottom>70)currentLayout[key]=70-currentLayout[key==='top'?'bottom':'top'];
