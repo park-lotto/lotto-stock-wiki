@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 ROOT = pathlib.Path(__file__).resolve().parents[2]; sys.path.insert(0, str(ROOT))
 from shopping_shorts import scene_style
 out = pathlib.Path(sys.argv[1]).resolve(); out.mkdir(parents=True, exist_ok=True)
-fid, bg, c1, c2 = (sys.argv[2:6] + ['yangjin', '#17101A', '#FFFFFF', '#FF5FA8'][len(sys.argv) - 2:])[:4]
+fid, bg, c1, c2 = (sys.argv[2:6] + ['f330', '#17101A', '#FFFFFF', '#FF5FA8'][len(sys.argv) - 2:])[:4]
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page(viewport={'width': 1600, 'height': 1000}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto('http://127.0.0.1:8773/out/scene-style-ui-showcase.html?qa=1', wait_until='networkidle')
@@ -17,7 +17,7 @@ with sync_playwright() as p:
     pg.evaluate('document.fonts.ready'); pg.wait_for_timeout(600)
     used = pg.evaluate("()=>[...document.querySelectorAll('#a-live-preview .precision-text')].map(e=>[e.dataset.editBind,getComputedStyle(e).fontFamily.split(',')[0],getComputedStyle(e).color,e.textContent.trim().slice(0,12)])")
     print('편집기 화면의 실제 글꼴·색:'); [print('  ', u) for u in used]
-    print('Yangjin 로드됨:', pg.evaluate("document.fonts.check('40px \"Yangjin\"','건망증')"))
+    print('글꼴 로드 대기 끝:', pg.evaluate('document.fonts.status'))
     pg.locator('#a-live-preview').screenshot(path=str(out / 'A_editor.png'))
     snap = pg.evaluate('window.sceneStyle.snapshot()'); print('페이지 오류', errs); b.close()
 snap = scene_style.validate_snapshot(snap)                                              # 서버가 저장 전에 돌리는 그 검증

@@ -261,7 +261,31 @@
     {id:'gaegu',name:'개구 손글씨',channel:'GaeguBold',title:'GaeguBold',caption:'GaeguBold'},
     {id:'danjung',name:'단정 카페',channel:'Cafe24Danjunghae',title:'Cafe24Danjunghae',caption:'Pretendard'},
     {id:'suit',name:'SUIT 모던',channel:'SUITBold',title:'SUITBold',caption:'SUITBold'},
-    {id:'yangjin',name:'양진 임팩트',channel:'Yangjin',title:'Yangjin',caption:'Pretendard'},
+    // 장면폰트:시작 — tools/scene_font_research/install_scene_fonts.py 가 쓴다. 손으로 고치지 마라
+    {id:'f330',name:'양진체',channel:'Scene330',title:'Scene330',caption:'Scene330',scale:0.87,dy:0.027},
+    {id:'f364',name:'쿠키런 Black',channel:'Scene364',title:'Scene364',caption:'BMJUA',scale:0.902,dy:-0.163},
+    {id:'f676',name:'원스토어 모바일POP',channel:'Scene676',title:'Scene676',caption:'Scene676',scale:0.956,dy:-0.1},
+    {id:'f223',name:'에스코어드림 9',channel:'Scene223',title:'Scene223',caption:'Scene223',scale:0.906,dy:-0.11},
+    {id:'f1456',name:'페이퍼로지 9',channel:'Scene1456',title:'Scene1456',caption:'Scene1456',scale:1.006,dy:-0.098},
+    {id:'f1369',name:'프리젠테이션 9',channel:'Scene1369',title:'Scene1369',caption:'Scene1369',scale:1.03,dy:-0.098},
+    {id:'f427',name:'메이플스토리 Bold',channel:'Scene427',title:'Scene427',caption:'BMJUA',scale:0.946,dy:-0.095},
+    {id:'f82',name:'즐거운이야기',channel:'Scene82',title:'Scene82',caption:'Pretendard',scale:1.27,dy:-0.048},
+    {id:'f463',name:'이사만루 Bold',channel:'Scene463',title:'Scene463',caption:'Scene463',scale:0.983,dy:-0.055},
+    {id:'f1146',name:'KBO 다이아고딕 Bold',channel:'Scene1146',title:'Scene1146',caption:'Scene1146',scale:0.967,dy:-0.117},
+    {id:'f669',name:'카페24 써라운드',channel:'Scene669',title:'Scene669',caption:'Scene669',scale:1.0,dy:-0.03},
+    {id:'f1381',name:'HS산토끼 2.0',channel:'Scene1381',title:'Scene1381',caption:'GmarketSansBold',scale:0.956,dy:-0.087},
+    {id:'f461',name:'빙그레 싸만코 Bold',channel:'Scene461',title:'Scene461',caption:'BMJUA',scale:1.152,dy:-0.103},
+    {id:'f1042',name:'태나다',channel:'Scene1042',title:'Scene1042',caption:'Pretendard',scale:1.061,dy:0.075},
+    {id:'f731',name:'창원단감아삭 Bold',channel:'Scene731',title:'Scene731',caption:'Scene731',scale:1.042,dy:-0.115},
+    {id:'f321',name:'을지로체',channel:'Scene321',title:'Scene321',caption:'GmarketSansBold',scale:0.956,dy:-0.033},
+    {id:'f499',name:'을지로10년후',channel:'Scene499',title:'Scene499',caption:'GmarketSansBold',scale:0.961,dy:-0.048},
+    {id:'f805',name:'강원교육튼튼',channel:'Scene805',title:'Scene805',caption:'Scene805',scale:1.074,dy:0.133},
+    {id:'f1710',name:'학교안심 포스터',channel:'Scene1710',title:'Scene1710',caption:'Scene1710',scale:0.946,dy:-0.107},
+    {id:'f458',name:'티머니 둥근바람 EB',channel:'Scene458',title:'Scene458',caption:'Scene458',scale:0.935,dy:-0.15},
+    {id:'f876',name:'영도체 Heavy',channel:'Scene876',title:'Scene876',caption:'Pretendard',scale:0.85,dy:-0.095},
+    {id:'f1186',name:'파셜산스',channel:'Scene1186',title:'Scene1186',caption:'Pretendard',scale:0.935,dy:-0.095},
+    {id:'f1405',name:'망고보드 또박 B',channel:'Scene1405',title:'Scene1405',caption:'Scene1405',scale:1.036,dy:-0.03},
+    // 장면폰트:끝
   ];
   // 템플릿별 기본 글꼴(2026-09-19 사장님 '기본을 하나로 고정하지 말고 템플릿마다 어울리게'):
   //   폰트 템플릿을 안 골랐을 때(=템플릿 기본) 쓰는 채널명·제목·자막 글꼴. 원본 제목 글꼴의 성격을 살리고
@@ -274,6 +298,15 @@
   function fontSetFamily(bind){
     const set=FONT_SETS.find(f=>f.id===fontSet)||PRESET_FONTS[rows[current]?.id]||DEFAULT_FONTS;if(!set)return '';
     return bind==='channel'?set.channel:bind==='caption'?set.caption:['hook1','hook2','bodyTitle'].includes(bind)?set.title:'';
+  }
+  // 글꼴별 실측 보정(2026-09-22 장면폰트): 같은 px이라도 글꼴마다 글자 높이·세로 위치가 다르다(실측 편차 1.5배).
+  //   scale=기본 글꼴과 같은 높이로 보이게 하는 배율, dy=잉크 중심을 줄 가운데로 옮기는 양(em). 값은 세트에 같이 적혀 있다(FONT_SETS).
+  //   자막은 세트의 caption 글꼴(기존 글꼴)을 쓰므로 보정하지 않는다. 폭이 넘치면 아래 fitText가 그대로 줄인다.
+  const NO_FONT_METRIC={scale:1,dy:0};
+  function fontSetMetric(bind){
+    if(bind==='caption')return NO_FONT_METRIC;
+    const set=FONT_SETS.find(f=>f.id===fontSet);
+    return set&&set.scale?{scale:set.scale,dy:set.dy||0}:NO_FONT_METRIC;
   }
   const BODY_CAPTION_MOTIONS={
     // 09-19 사장님 '느낌이 다 비슷하다' → 이동 거리·시간·튕김을 모션마다 확실히 다르게(예전: 14px·0.3초로 거의 같았다)
@@ -612,7 +645,8 @@
     const el=document.createElement('div');el.className='precision-text '+role;el.dataset.editBind=bind;
     const left=measuredBounds?Math.max(0,ln.x0/frame.width*100-1.6):Math.max(1.5,(ln.x0||0)/frame.width*100);
     const right=measuredBounds?Math.max(0,(frame.width-1-ln.x1)/frame.width*100-1.6):Math.max(1.5,(frame.width-1-(ln.x1??frame.width-1))/frame.width*100);
-    const fontPx=ln.font_size?ln.font_size*scale:ln.h*scale*1.05;
+    const fontMetric=fontSetMetric(bind);
+    const fontPx=(ln.font_size?ln.font_size*scale:ln.h*scale*1.05)*fontMetric.scale;
     // 기본 외곽선/그림자는 제거하고 색 대비 부족 시에만 아래에서 얇게 보정한다.
     const stroke=0,shadowY=0;
     const pickedFont=fontSetFamily(bind);
@@ -625,7 +659,7 @@
     const topOffset=(bind==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(bind)+(bind==='caption'?0:moved.y);
     const verticalNudge=bind==='channel'?.7:-.35;
     const baseHeight=ln.h/frame.height*100+.9,displayHeight=baseHeight*Math.max(1,manualScale);
-    const displayTop=ln.y0/frame.height*100+verticalNudge+topOffset-(displayHeight-baseHeight)/2;
+    const displayTop=ln.y0/frame.height*100+verticalNudge+topOffset-(displayHeight-baseHeight)/2+fontMetric.dy*scaledFont/(frame.height*scale)*100;
     const shiftX=bind==='caption'?0:moved.x;
     Object.assign(el.style,{left:(left+shiftX)+'%',right:(right-shiftX)+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
     const fixedColorKey=bind==='hook1'?'title1':(bind==='hook2'||bind==='bodyTitle')?'title2':null;
