@@ -4,12 +4,28 @@
 //   실행: node tools/qa_channel_box_fit.js [url]
 const puppeteer=require('puppeteer');
 const url=process.argv[2]||'http://127.0.0.1:8771/out/scene-style-ui-showcase.html';
+const SHOT=process.env.SHOT||'';   // SHOT=폴더 → 칸마다 원본/덧그림 캡처를 남긴다(숫자만 믿지 말고 눈으로 본다)
+const fs=require('fs');if(SHOT)fs.mkdirSync(SHOT,{recursive:true});
 const TOL=2;   // px 여유(미리보기 기준). 1080px 실화면에선 약 3배로 보인다.
 
 (async()=>{
   const browser=await puppeteer.launch({headless:true});
   const page=await browser.newPage();
-  await page.setViewport({width:1600,height:1100});
+  await page.setViewport({width:1600,height:1100,deviceScaleFactor:SHOT?3:1});
+  let shotNo=0;
+  const shoot=async(where,tag,m)=>{
+    if(!SHOT||!m||!m.박스)return;
+    const pv=await page.evaluate(()=>{const r=document.querySelector('#a-live-preview').getBoundingClientRect();return {x:r.left,y:r.top,width:r.width,height:r.height}});
+    const clip={x:pv.x,y:Math.max(0,Math.min(m.박스.위,m.글자.위)-30),width:pv.width,height:Math.max(m.박스.아래,m.글자.아래)-Math.min(m.박스.위,m.글자.위)+60};
+    clip.height=Math.min(Math.max(20,clip.height),1100-clip.y);
+    if(!(clip.width>0&&clip.height>0&&clip.y<1100))return;   // 화면 밖이면 캡처만 건너뛴다(측정은 계속)
+    const name=String(++shotNo).padStart(3,'0')+'_'+where.replace(/[\/\.\s]+/g,'_')+'_'+tag;
+    try{await page.screenshot({path:`${SHOT}/${name}_raw.png`,clip});}catch(e){console.error('캡처 실패',name,String(e).slice(0,80));return;}
+    await page.evaluate((b,t)=>{for(const [r,c] of [[b,'red'],[t,'blue']]){const d=document.createElement('div');d.className='__qa_ov';
+      Object.assign(d.style,{position:'fixed',left:r.좌+'px',top:r.위+'px',width:(r.우-r.좌)+'px',height:(r.아래-r.위)+'px',outline:'1px solid '+c,zIndex:99999,pointerEvents:'none'});document.body.append(d);}},m.박스,m.글자);
+    await page.screenshot({path:`${SHOT}/${name}_box.png`,clip});
+    await page.evaluate(()=>document.querySelectorAll('.__qa_ov').forEach(e=>e.remove()));
+  };
   await page.setCacheEnabled(false);
   const errors=[];page.on('pageerror',e=>errors.push(String(e).slice(0,140)));
   await page.goto(url,{waitUntil:'networkidle0'});
@@ -67,8 +83,9 @@ const TOL=2;   // px 여유(미리보기 기준). 1080px 실화면에선 약 3�
         await page.evaluate(()=>document.querySelectorAll('details').forEach(d=>d.open=true));
         const name=await page.evaluate(()=>document.querySelector('[data-stage-name]')?.textContent?.trim().slice(0,10)||'');
         const where=`${mode}/${name}/${sc?'본문':'훅'}`;
-        const base=judge(await measure());
+        const m0=await measure();const base=judge(m0);
         if(!base)continue;
+        await shoot(where,'기본',m0);
         잰칸++;
         const report=(tag,j)=>{ if(!j)return;
           for(const [k,label] of [['좌','왼쪽'],['우','오른쪽'],['위','위'],['아래','아래']])
@@ -78,7 +95,7 @@ const TOL=2;   // px 여유(미리보기 기준). 1080px 실화면에선 약 3�
         await page.evaluate(()=>{const f=document.querySelector('[data-field-key="channel"]');
           const b=f?.querySelector('[data-font-step="0.1"]');if(b)for(let i=0;i<5;i++)b.click();});
         await new Promise(r=>setTimeout(r,600));
-        report('키운뒤',judge(await measure()));
+        const m1=await measure();report('키운뒤',judge(m1));await shoot(where,'키운뒤',m1);
         await page.evaluate(()=>{const f=document.querySelector('[data-field-key="channel"]');
           const b=f?.querySelector('[data-font-step="-0.1"]');if(b)for(let i=0;i<5;i++)b.click();});
         await new Promise(r=>setTimeout(r,400));
