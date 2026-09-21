@@ -32,13 +32,19 @@
   //   전엔 '칸'이 없고 부품마다 화면 절대 좌표뿐이라, 슬라이더가 글자만 옮기고 띠·구분선·아이콘은 제자리였다.
   //   채널명 칸의 아래 끝 = 데이터의 구분선(얇은 면). 슬라이더는 **그 칸의 높이**만 바꾸고, 늘어난 만큼 아래 칸이 밀린다(channelDelta → titleHeight).
   //   아무것도 안 건드리면 delta=0 → 기존 코드 경로 그대로(기본 화면 픽셀 동일).
-  const BLOCK_IDS=new Set(['t11']);
-  const channelBlock=frame=>{   // 채널명 칸 아래 끝(화면 높이 대비 %). 구분선이 없으면 null = 칸 구조 미적용
-    if(!frame||!BLOCK_IDS.has(rows[current]?.id))return null;
+  // 채널명 칸 아래 끝(화면 높이 대비 %) — 60칸 전수(tools/qa_channel_boundary_census.js): 구분선 3 · 띠 끝 18 · 아무 경계 없음 39.
+  //   사장님 결정(09-21): 눈에 보이는 선을 새로 그리지 않는다. **보이지 않는 경계값**만 정한다 → 기본 화면은 그대로.
+  //   순서: ①구분선(얇은 면) ②머리띠가 끝나는 자리 ③둘 다 없으면 채널명 끝과 첫 제목 시작의 중간.
+  //   썰쇼핑형(훅·본문)만. 고정형은 배치 코드가 달라 아직 옛 방식(null).
+  const channelBlock=frame=>{
+    if(!frame||mode!=='story')return null;
     const ch=frame.channel_box||(frame.channel_boxes||[])[0];if(!ch)return null;
-    const firstTitle=Math.min(...(frame.lines||[]).filter(l=>l.bind!=='channel'&&l.bind!=='caption').map(l=>l.y0),frame.height);
-    const line=(frame.surfaces||[]).filter(s=>s.height<=2&&s.width>=frame.width*.5&&s.y>ch.y+ch.height*.5&&s.y<firstTitle).sort((a,b)=>a.y-b.y)[0];
-    return line?line.y/frame.height*100:null;
+    const titles=(frame.lines||[]).filter(l=>l.bind!=='channel'&&l.bind!=='caption'),firstTitle=titles.length?Math.min(...titles.map(l=>l.y0)):(frame.video_from?.y||frame.height);
+    const S=frame.surfaces||[],mid=ch.y+ch.height/2,limit=(frame.video_from?.y||frame.height)*.92;
+    const line=S.filter(s=>s.height<=2&&s.width>=frame.width*.5&&s.y>mid&&s.y<=firstTitle+2).sort((a,b)=>a.y-b.y)[0];
+    const band=S.filter(s=>s.width>=frame.width*.8&&s.y<=frame.height*.02&&s.height>2&&s.y+s.height>mid&&s.y+s.height<limit&&s.y+s.height<=firstTitle+2).sort((a,b)=>a.height-b.height)[0];
+    const y=line?line.y:band?band.y+band.height:(ch.y+ch.height+firstTitle)/2;
+    return y/frame.height*100;
   };
   const channelDelta=frame=>{   // 채널명 칸이 기본보다 얼마나 늘었나(%). 칸은 글자 높이보다 낮아지지 않는다.
     const c0=channelBlock(frame);if(c0==null)return 0;
@@ -871,6 +877,7 @@
       if(moved&&blockOn){   // ★칸 구조: 채널명 칸 부품은 그 칸 가운데에, 구분선은 칸 끝에, 제목칸 부품은 제목칸 안에서 예전 규칙대로
         const dC=channelDelta(frame),c=c0+dC,full=Number.isFinite(height)?height:(el.getBoundingClientRect().height/Math.max(1,preview.clientHeight)*100);
         if(top<=.5&&Number.isFinite(height)&&height>=cut*.8)el.style.height=next+'%';                       // 칸 전체 배경판
+        else if(top<=.8&&Number.isFinite(height)&&Math.abs(top+height-c0)<.8&&(parseFloat(el.style.width)||100)>=80)el.style.height=Math.max(1,height+dC)+'%';   // 머리띠: 칸과 같이 늘어난다
         else if(full<.6&&Math.abs(top-c0)<.4)el.style.top=c+'%';                                             // 구분선 = 채널명 칸 끝
         else if(top+full/2<c0)el.style.top=Math.max(0,top+dC/2)+'%';                                        // 채널명 칸 부품(글자·☰·🔍·알약): 크기 그대로, 칸 가운데
         else{   // 제목칸 부품: 채널명 칸이 늘어난 만큼 그대로 밀리고, 제목칸 높이가 바뀌면 예전처럼 고르게 벌린다(09-18 규칙 · 자막칸을 넘는 부분은 잘라낸다)
