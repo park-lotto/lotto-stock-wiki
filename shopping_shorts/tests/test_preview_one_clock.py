@@ -159,3 +159,28 @@ def test_no_manual_rebake_button():
     body = js[i:i + 1800]
     assert "if (stable) PVX.want = p.key;" in body, "장면이 바뀌어도 자동으로 안 굽는다"
     assert "'stale'" not in body, "버튼을 눌러야 굽는 옛 방식이 남아 있다"
+
+
+# ── ⑤ 소리가 실제로 나는가 (2026-09-21 사장님 "직접 너가 눌러보면 되는거 아니야?") ──
+#
+#   ★라이브 사고: 합본에 음성을 구워 넣고도 그 재생기를 **음소거로 두어** 미리보기가
+#     통째로 무음이었다(실측: 7칸 전부 소리 0, muted=true).
+#     다른 재생기(조각)는 영상 원음을 끄려고 muted 로 두는 게 맞다. 합본은 다르다 —
+#     이제 그 안에 성우 목소리가 들어 있다.
+#   ★왜 못 잡았나: 파일에는 소리가 있었고(칸별 -16dB) 싱크도 0.000초였다. 파일과 숫자만
+#     보는 검사는 전부 통과했다. **소리는 실제로 틀어서 재야** 잡힌다.
+
+def test_proxy_player_is_not_muted():
+    """합본 재생기는 음소거하면 안 된다 — 그 안에 성우 목소리가 들어 있다."""
+    js = _strip_js_comments(JS)
+    i = js.index("PVX.vid = v;")
+    head = js[max(0, i - 600):i]
+    assert "v.muted = true" not in head, "합본 재생기를 음소거한다(미리보기가 통째로 무음이 된다)"
+    assert "v.muted = false" in head, "합본 재생기의 음소거를 안 푼다"
+
+
+def test_cut_players_stay_muted():
+    """반대로 조각 재생기는 음소거여야 한다 — 영상 원음이 성우 목소리와 겹친다."""
+    js = _strip_js_comments(JS)
+    i = js.index("function vidFor(")
+    assert "v.muted = true" in js[i:i + 1200], "조각 재생기의 음소거가 풀렸다(원음이 겹쳐 들린다)"
