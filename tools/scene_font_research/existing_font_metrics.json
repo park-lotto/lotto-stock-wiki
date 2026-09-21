@@ -1,0 +1,78 @@
+{
+ "aggro": {
+  "name": "강렬 어그로",
+  "need": 1.0
+ },
+ "jalnan": {
+  "name": "잘난 쇼핑",
+  "need": 0.921
+ },
+ "blackhan": {
+  "name": "검은고딕 뉴스",
+  "need": 1.145
+ },
+ "gmarket": {
+  "name": "G마켓 깔끔",
+  "need": 1.018
+ },
+ "baemin": {
+  "name": "배민 도현",
+  "need": 1.145
+ },
+ "gasoek": {
+  "name": "묵직 가석",
+  "need": 0.994
+ },
+ "binggrae": {
+  "name": "부드러운 빙그레",
+  "need": 0.956
+ },
+ "ganpan": {
+  "name": "간판체",
+  "need": 1.018
+ },
+ "jalnangothic": {
+  "name": "잘난고딕",
+  "need": 0.921
+ },
+ "bagel": {
+  "name": "베이글 팝",
+  "need": 1.006
+ },
+ "dongle": {
+  "name": "동글 귀여움",
+  "need": 1.349
+ },
+ "kkubulim": {
+  "name": "꾸불림 재미",
+  "need": 1.012
+ },
+ "myeongjo": {
+  "name": "명조 고급",
+  "need": 0.935
+ },
+ "ridi": {
+  "name": "리디 감성",
+  "need": 0.921
+ },
+ "chalk": {
+  "name": "분필 칠판",
+  "need": 0.978
+ },
+ "brush": {
+  "name": "붓글씨",
+  "need": 1.152
+ },
+ "gaegu": {
+  "name": "개구 손글씨",
+  "need": 1.087
+ },
+ "danjung": {
+  "name": "단정 카페",
+  "need": 0.989
+ },
+ "suit": {
+  "name": "SUIT 모던",
+  "need": 0.989
+ }
+}

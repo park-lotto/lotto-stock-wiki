@@ -324,6 +324,15 @@
     {id:'p11',name:'피치 코랄',bg:'#22120F',c1:'#FFF4EC',c2:'#FF8F6B'},{id:'p12',name:'골드 프리미엄',bg:'#14110A',c1:'#FFF8E1',c2:'#F4C542'},
     {id:'p13',name:'흰 바탕 빨강',bg:'#FFFFFF',c1:'#111111',c2:'#FF2D2D'},{id:'p14',name:'흰 바탕 로열블루',bg:'#FFFFFF',c1:'#111111',c2:'#1F4BFF'},
     {id:'p15',name:'노랑 바탕 검정',bg:'#FFE500',c1:'#111111',c2:'#E60023'},{id:'p16',name:'딥 블루 바탕',bg:'#0D2A6B',c1:'#FFFFFF',c2:'#FFE45B'},
+    // 09-22 2차 확장(사장님 '더 많이'): 색 있는 바탕·밝은 바탕을 늘렸다. 실측은 어두운 바탕이 84/102라 남들과 달라 보이는 쪽.
+    {id:'p17',name:'체리 레드 바탕',bg:'#B3001B',c1:'#FFFFFF',c2:'#FFE45B'},{id:'p18',name:'포레스트 그린',bg:'#0E3B2E',c1:'#FFFFFF',c2:'#C8FF5A'},
+    {id:'p19',name:'퍼플 팝',bg:'#3B1A78',c1:'#FFFFFF',c2:'#FFD84A'},{id:'p20',name:'핑크 바탕',bg:'#E8337F',c1:'#FFFFFF',c2:'#FFF06A'},
+    {id:'p21',name:'오렌지 바탕',bg:'#E85D04',c1:'#FFFFFF',c2:'#FFF3A0'},{id:'p22',name:'민트 바탕',bg:'#19D3B5',c1:'#0B1F1B',c2:'#5B12C9'},
+    {id:'p23',name:'스카이 블루 바탕',bg:'#1769E0',c1:'#FFFFFF',c2:'#FFE500'},{id:'p24',name:'크림 베이지',bg:'#F6EBD8',c1:'#2A2018',c2:'#C8381A'},
+    {id:'p25',name:'차콜 코랄',bg:'#22252B',c1:'#FFFFFF',c2:'#FF6B6B'},{id:'p26',name:'미드나잇 골드',bg:'#0A0F24',c1:'#FFFFFF',c2:'#FFC93C'},
+    {id:'p27',name:'와인 로즈',bg:'#3A0D1E',c1:'#FFE9EF',c2:'#FF7FA3'},{id:'p28',name:'올리브 레몬',bg:'#2C331A',c1:'#F7F5E6',c2:'#E3F56B'},
+    {id:'p29',name:'아이스 블루',bg:'#E8F4FF',c1:'#0E2A47',c2:'#0A5CE0'},{id:'p30',name:'블랙 화이트',bg:'#000000',c1:'#FFFFFF',c2:'#FFFFFF'},
+    {id:'p31',name:'마젠타 네온',bg:'#12001A',c1:'#FFFFFF',c2:'#FF3DF2'},{id:'p32',name:'그린 세일 바탕',bg:'#007A3D',c1:'#FFFFFF',c2:'#FFF200'},
   ];
   // 꾸밈은 전부 em·currentColor로 적는다 — 글자 크기·색톤이 바뀌어도 따라오고, 렌더(1080px)에서도 같은 비율이다.
   const DECOS=[
@@ -337,10 +346,19 @@
     {id:'shadow3d',name:'입체 그림자',css:'-webkit-text-stroke:.06em var(--deco-edge);paint-order:stroke fill;text-shadow:.05em .05em 0 var(--deco-edge),.1em .1em 0 var(--deco-edge),.15em .15em 0 var(--deco-edge)'},
     {id:'tilt',name:'기울임 속도감',css:'display:inline-block;transform:skewX(-9deg);-webkit-text-stroke:.07em var(--deco-edge);paint-order:stroke fill;text-shadow:.06em .06em 0 color-mix(in srgb,var(--deco-edge) 80%,transparent)'},
     {id:'sticker',name:'흰 테두리 스티커',accent:'-webkit-text-stroke:.1em #fff;paint-order:stroke fill;text-shadow:none;filter:drop-shadow(0 .06em 0 rgba(0,0,0,.75))'},
+    // 09-22 2차 확장
+    {id:'pill',name:'알약 박스',accent:'-webkit-text-stroke:0;text-shadow:none;background:currentColor;-webkit-text-fill-color:var(--deco-on-accent);border-radius:999px;padding:.03em .42em'},
+    {id:'boxline',name:'테두리 박스',accent:'-webkit-text-stroke:0;text-shadow:none;box-shadow:inset 0 0 0 .07em currentColor;border-radius:.16em;padding:.02em .24em'},
+    {id:'ribbon',name:'기울인 띠',accent:'-webkit-text-stroke:0;text-shadow:none;background:currentColor;-webkit-text-fill-color:var(--deco-on-accent);padding:.02em .28em;transform:skewX(-10deg)'},
+    {id:'plate',name:'글자판',css:'-webkit-text-stroke:0;text-shadow:none;background:color-mix(in srgb,var(--deco-edge) 82%,transparent);border-radius:.1em;padding:.02em .2em'},
+    {id:'ring',name:'이중 테두리',css:'-webkit-text-stroke:.075em var(--deco-edge);paint-order:stroke fill;text-shadow:none',accent:'filter:drop-shadow(.04em 0 0 #fff) drop-shadow(-.04em 0 0 #fff) drop-shadow(0 .04em 0 #fff) drop-shadow(0 -.04em 0 #fff)'},
+    {id:'longshadow',name:'롱 섀도',css:'-webkit-text-stroke:0;text-shadow:.03em .03em 0 var(--deco-shade),.06em .06em 0 var(--deco-shade),.09em .09em 0 var(--deco-shade),.12em .12em 0 var(--deco-shade),.15em .15em 0 var(--deco-shade),.18em .18em 0 var(--deco-shade),.21em .21em 0 var(--deco-shade),.24em .24em 0 var(--deco-shade)'},
+    {id:'colorstroke',name:'색 외곽선',css:'-webkit-text-stroke:.085em var(--deco-edge);paint-order:stroke fill;text-shadow:none',accent:'-webkit-text-stroke:.1em color-mix(in srgb,currentColor 38%,#000);filter:drop-shadow(0 .05em 0 rgba(0,0,0,.7))'},
+    {id:'twotone',name:'위아래 투톤',accent:'-webkit-text-stroke:0;text-shadow:none;background:linear-gradient(180deg,currentColor 52%,color-mix(in srgb,currentColor 58%,#000) 52%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 .05em 0 rgba(0,0,0,.85))'},
   ];
   const LOOKS=[
     {id:'l01',name:'이븐 클래식',font:'f330',tone:'p01',deco:'outline'},{id:'l02',name:'속보 옐로',font:'f223',tone:'p02',deco:'box'},
-    {id:'l03',name:'네온 사인',font:'f1186',tone:'p03',deco:'glow'},{id:'l04',name:'핫딜 핑크',font:'f364',tone:'p04',deco:'sticker'},
+    {id:'l03',name:'네온 사인',font:'f1369',tone:'p03',deco:'glow'},{id:'l04',name:'핫딜 핑크',font:'f364',tone:'p04',deco:'shadow3d'},
     {id:'l05',name:'세일 폭탄',font:'f676',tone:'p05',deco:'shadow3d'},{id:'l06',name:'귤빛 간판',font:'f321',tone:'p06',deco:'outline'},
     {id:'l07',name:'일렉트릭',font:'f1456',tone:'p07',deco:'tilt'},{id:'l08',name:'더블 컬러',font:'f463',tone:'p08',deco:'outline'},
     {id:'l09',name:'라벤더 뷰티',font:'f669',tone:'p09',deco:'grad'},{id:'l10',name:'민트 살림',font:'f458',tone:'p10',deco:'under'},
@@ -349,8 +367,28 @@
     {id:'l15',name:'전단지 특가',font:'f1710',tone:'p15',deco:'shadow3d'},{id:'l16',name:'딥블루 어그로',font:'aggro',tone:'p16',deco:'tilt'},
     {id:'l17',name:'예능 자막',font:'f82',tone:'p02',deco:'outline'},{id:'l18',name:'레트로 간판',font:'f499',tone:'p06',deco:'shadow3d'},
     {id:'l19',name:'포스터',font:'f1042',tone:'p05',deco:'outline'},{id:'l20',name:'손맛 붓',font:'f1381',tone:'p03',deco:'outline'},
-    {id:'l21',name:'아삭 또렷',font:'f731',tone:'p01',deco:'shadow3d'},{id:'l22',name:'좁고 빽빽',font:'f1369',tone:'p08',deco:'outline'},
+    {id:'l21',name:'아삭 또렷',font:'f731',tone:'p01',deco:'shadow3d'},{id:'l22',name:'잘린 획 패션',font:'f1186',tone:'p08',deco:'outline'},
     {id:'l23',name:'메이플 귀염',font:'f427',tone:'p04',deco:'box'},{id:'l24',name:'튼튼 교재',font:'f805',tone:'p16',deco:'outline'},
+    // 룩 확장:시작 — tools/scene_font_research/build_looks.py 가 쓴다. 손으로 고치지 마라
+    {id:'l25',name:'오렌지 바탕 · 잘난 쇼핑',font:'jalnan',tone:'p21',deco:'sticker'},{id:'l26',name:'미드나잇 골드 · G마켓 깔끔',font:'gmarket',tone:'p26',deco:'pill'},
+    {id:'l27',name:'마젠타 네온 · 카페24 각진',font:'cafe24',tone:'p31',deco:'boxline'},{id:'l28',name:'퍼플 팝 · 묵직 가석',font:'gasoek',tone:'p19',deco:'under'},
+    {id:'l29',name:'크림 베이지 · 부드러운 빙그레',font:'binggrae',tone:'p24',deco:'ribbon'},{id:'l30',name:'아이스 블루 · 간판체',font:'ganpan',tone:'p29',deco:'plate'},
+    {id:'l31',name:'체리 레드 바탕 · 잘난고딕',font:'jalnangothic',tone:'p17',deco:'ring'},{id:'l32',name:'와인 로즈 · 베이글 팝',font:'bagel',tone:'p27',deco:'grad'},
+    {id:'l33',name:'그린 세일 바탕 · 꾸불림 재미',font:'kkubulim',tone:'p32',deco:'longshadow'},{id:'l34',name:'민트 바탕 · 명조 고급',font:'myeongjo',tone:'p22',deco:'colorstroke'},
+    {id:'l35',name:'핑크 바탕 · 리디 감성',font:'ridi',tone:'p20',deco:'twotone'},{id:'l36',name:'차콜 코랄 · 분필 칠판',font:'chalk',tone:'p25',deco:'glow'},
+    {id:'l37',name:'블랙 화이트 · 개구 손글씨',font:'gaegu',tone:'p30',deco:'pill'},{id:'l38',name:'포레스트 그린 · 단정 카페',font:'danjung',tone:'p18',deco:'boxline'},
+    {id:'l39',name:'스카이 블루 바탕 · SUIT 모던',font:'suit',tone:'p23',deco:'sticker'},{id:'l40',name:'올리브 레몬 · 양진체',font:'f330',tone:'p28',deco:'ribbon'},
+    {id:'l41',name:'피치 코랄 · 쿠키런 Black',font:'f364',tone:'p11',deco:'tilt'},{id:'l42',name:'오렌지 바탕 · 원스토어 모바일POP',font:'f676',tone:'p21',deco:'plate'},
+    {id:'l43',name:'미드나잇 골드 · 에스코어드림 9',font:'f223',tone:'p26',deco:'ring'},{id:'l44',name:'마젠타 네온 · 페이퍼로지 9',font:'f1456',tone:'p31',deco:'longshadow'},
+    {id:'l45',name:'라벤더 밤 · 프리젠테이션 9',font:'f1369',tone:'p09',deco:'colorstroke'},{id:'l46',name:'흰 바탕 로열블루 · 메이플스토리 Bold',font:'f427',tone:'p14',deco:'twotone'},
+    {id:'l47',name:'퍼플 팝 · 즐거운이야기',font:'f82',tone:'p19',deco:'glow'},{id:'l48',name:'크림 베이지 · 이사만루 Bold',font:'f463',tone:'p24',deco:'sticker'},
+    {id:'l49',name:'아이스 블루 · KBO 다이아고딕 Bold',font:'f1146',tone:'p29',deco:'pill'},{id:'l50',name:'일렉트릭 블루 · 카페24 써라운드',font:'f669',tone:'p07',deco:'boxline'},
+    {id:'l51',name:'골드 프리미엄 · HS산토끼 2.0',font:'f1381',tone:'p12',deco:'ribbon'},{id:'l52',name:'체리 레드 바탕 · 빙그레 싸만코 Bold',font:'f461',tone:'p17',deco:'plate'},
+    {id:'l53',name:'민트 바탕 · 태나다',font:'f1042',tone:'p22',deco:'ring'},{id:'l54',name:'와인 로즈 · 창원단감아삭 Bold',font:'f731',tone:'p27',deco:'under'},
+    {id:'l55',name:'그린 세일 바탕 · 을지로체',font:'f321',tone:'p32',deco:'longshadow'},{id:'l56',name:'민트 크림 · 을지로10년후',font:'f499',tone:'p10',deco:'colorstroke'},
+    {id:'l57',name:'노랑 바탕 검정 · 강원교육튼튼',font:'f805',tone:'p15',deco:'twotone'},{id:'l58',name:'핑크 바탕 · 학교안심 포스터',font:'f1710',tone:'p20',deco:'glow'},
+    {id:'l59',name:'차콜 코랄 · 티머니 둥근바람 EB',font:'f458',tone:'p25',deco:'grad'},{id:'l60',name:'블랙 화이트 · 영도체 Heavy',font:'f876',tone:'p30',deco:'tilt'},
+    // 룩 확장:끝
   ];
   let titleDeco='';
   const toneKeys=p=>p.mode==='continuous'?[layoutKey(p.id,p.frame)]:[layoutKey(p.id,p.hook),layoutKey(p.id,p.body)];
@@ -370,13 +408,13 @@
     const paint=fixedColorsFor(rows[current].id,frame),bg=(paint.top||frame.title_bg||'#000000').slice(0,7),accent=(colorOverrides.get(colorKey('accent'))||paint.title2||'#00F9ED').slice(0,7);
     const ink=document.createElement('span');ink.className='title-deco-ink';ink.append(...el.childNodes);el.append(ink);
     const own=bind==='hook2'?accent:(colorOverrides.get(colorKey('white'))||paint.title1||'#FFFFFF').slice(0,7);
-    ink.style.cssText=rule;ink.style.setProperty('--deco-edge',readableInk(own));ink.style.setProperty('--deco-on-accent',readableInk(accent));ink.style.setProperty('--deco-on-bg',readableInk(bg));
+    ink.style.cssText=rule;ink.style.setProperty('--deco-edge',readableInk(own));ink.style.setProperty('--deco-shade',`color-mix(in srgb,${bg} 45%,#000)`);ink.style.setProperty('--deco-on-accent',readableInk(accent));ink.style.setProperty('--deco-on-bg',readableInk(bg));
   }
   {
     const fontPane=document.querySelector('.font-template-pane'),panes={};
     for(const name of ['look','tone','deco']){const el=document.createElement('div');el.className='font-template-pane look-pane';el.hidden=true;fontPane.after(el);panes[name]=el;}
     const sample=(tone,deco,family)=>{const d=DECOS.find(x=>x.id===deco)||{},on=c=>readableInk(c);
-      return `<span class="lk-prev" style="background:${tone.bg};font-family:'${family}',sans-serif"><i style="color:${tone.c1};--deco-edge:${on(tone.c1)};${d.css||''}">제목 첫줄</i><i style="color:${tone.c2};--deco-edge:${on(tone.c2)};--deco-on-accent:${on(tone.c2)};--deco-on-bg:${on(tone.bg)};${[d.css,d.accent].filter(Boolean).join(';')}">제목 둘째줄</i></span>`;};
+      return `<span class="lk-prev" style="background:${tone.bg};font-family:'${family}',sans-serif"><i style="color:${tone.c1};--deco-shade:color-mix(in srgb,${tone.bg} 45%,#000);--deco-edge:${on(tone.c1)};${d.css||''}">제목 첫줄</i><i style="color:${tone.c2};--deco-shade:color-mix(in srgb,${tone.bg} 45%,#000);--deco-edge:${on(tone.c2)};--deco-on-accent:${on(tone.c2)};--deco-on-bg:${on(tone.bg)};${[d.css,d.accent].filter(Boolean).join(';')}">제목 둘째줄</i></span>`;};
     const familyOf=id=>(FONT_SETS.find(f=>f.id===id)||DEFAULT_FONTS).title;
     const draw=()=>{
       const tone=TONES.find(t=>t.id===currentTone())||{bg:'#1b1b1b',c1:'#FFFFFF',c2:'#FFE24A'},family=familyOf(fontSet);
