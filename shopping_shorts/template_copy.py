@@ -63,47 +63,13 @@ def split_hook(value: object) -> tuple[str, str]:
     return " ".join(words[:best]), " ".join(words[best:])
 
 
-def support_from_phrases(phrases: object) -> str:
-    """훅 서브카피 한 줄을 **대본 구절에서** 고른다(모델 호출 0회).
-
-    ★왜 필요한가(2026-09-21 실측): 썰쇼핑형 20종 중 **16종**의 훅에 서브카피 띠가 있고
-      크기가 전부 화면의 9.4%다. 그런데 그 자리에 들어갈 ``subline``을 파이프라인이
-      **한 번도 만들지 않았다**(최근 job 40개 전수: subline 있는 것 0개). 그래서 템플릿
-      1/10이 늘 빈 흰 칸이었다.
-    ★새 문장을 **지어내지 않는다** — 대본에 실제로 있는 구절만 쓴다. 지어내면 화면과
-      나레이션이 어긋나고, 없는 사실이 제목처럼 보인다.
-    ★구절 나누기는 렌더 자막과 같은 단위를 그대로 받는다(video_assemble.caption_schedule).
-      여기서 따로 자르면 화면마다 다른 문장이 나온다(0순위-B).
-    ★길이 계약은 이 파일의 support_max 한 곳이다. 넘치면 낱말 단위로 줄이고,
-      그래도 너무 짧아지면(6자 미만) **쓰지 않는다** — 토막난 말보다 빈칸이 낫다.
-    """
-    limit = EVEN_SHOPPING.support_max
-    for phrase in (phrases or []):
-        text = _one_line(phrase)
-        if not text:
-            continue
-        if len(text) <= limit:
-            return text if len(text) >= 6 else ""
-        words, kept = text.split(), []
-        for word in words:
-            if len(" ".join(kept + [word])) > limit:
-                break
-            kept.append(word)
-        trimmed = " ".join(kept)
-        return trimmed if len(trimmed) >= 6 else ""
-    return ""
-
-
 def scene_text(headcopy: object) -> dict[str, str]:
     """저장된 제목 세트를 장면꾸미기 슬롯으로 한 번만 변환한다."""
     source = headcopy if isinstance(headcopy, dict) else {}
     hook1, hook2 = split_hook(source.get("text"))
     # 2026-09-21 사장님: 보조 문구가 없으면 비워 둔다 — 제목을 그대로 복사해 훅에 같은 글이 두 번 나왔다.
     support = _one_line(source.get("subline"))
-    # ★본문 제목은 **큰 제목**을 쓴다 — 서브카피로 대체하지 않는다(2026-09-21).
-    #   종전엔 `or support`가 끼어 있어, 훅 서브카피를 채우는 순간 본문 상단 제목까지
-    #   그 한 줄로 바뀌었다. 훅 서브띠와 본문 제목은 서로 다른 슬롯이다.
-    body_title = _one_line(source.get("body_title")) or _one_line(f"{hook1} {hook2}")   # 본문 제목은 비면 제목을 쓴다
+    body_title = _one_line(source.get("body_title")) or support or _one_line(f"{hook1} {hook2}")   # 본문 제목은 비면 제목을 쓴다
     return {
         "hook1": hook1,
         "hook2": hook2,
