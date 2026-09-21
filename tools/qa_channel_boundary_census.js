@@ -9,9 +9,9 @@ const rows=await p.evaluate(()=>{
     if(!f)return;const ch=f.channel_box||(f.channel_boxes||[])[0];
     if(!ch){out.push({name,kind,종류:'채널명 없음'});return;}
     const titles=(f.lines||[]).filter(l=>l.bind!=='channel'&&l.bind!=='caption'),firstTitle=titles.length?Math.min(...titles.map(l=>l.y0)):f.height;
-    const S=f.surfaces||[],chMid=ch.y+ch.height/2,chBottom=ch.y+ch.height;
+    const S=[...(f.surfaces||[]),...(f.boxes||[]),...(f.cleanup_regions||[]).filter(r=>r.role!=='source-footer').map(r=>({...r,x:r.x||0,width:r.width||f.width})),...(f.top_band?[{x:0,y:f.top_band.y0,width:f.width,height:f.top_band.y1-f.top_band.y0+1}]:[])],chMid=ch.y+ch.height/2,chBottom=ch.y+ch.height;
     const line=S.filter(s=>s.height<=2&&s.width>=f.width*.5&&s.y>chMid&&s.y<=firstTitle+2).sort((a,b)=>a.y-b.y)[0];
-    const band=S.filter(s=>s.width>=f.width*.8&&s.y<=f.height*.02&&s.height>2&&s.y+s.height>chMid&&s.y+s.height<(f.video_from?.y||f.height)*.92).sort((a,b)=>a.height-b.height)[0];
+    const band=S.filter(s=>s.width>=f.width*.8&&s.y<=f.height*.02&&s.height>2&&s.y+s.height>chMid&&s.y+s.height<(f.video_from?.y||f.height)*.92&&s.y+s.height<=firstTitle+2).sort((a,b)=>a.height-b.height)[0];
     const bandEnd=band?band.y+band.height:null;
     out.push({name,kind,종류:line?'구분선':band?'띠 끝':'없음',경계:line?pct(line.y,f):band?pct(bandEnd,f):null,채널끝:pct(chBottom,f),첫제목:pct(firstTitle,f),
       겹침:(line?line.y:bandEnd)!=null&&(line?line.y:bandEnd)>firstTitle+1?'경계가 제목 시작보다 아래':''});
