@@ -14,12 +14,10 @@
 import json
 import pathlib
 import re
-import shutil
-import subprocess
-
-import pytest
-
 from shopping_shorts.app import _sources_hash
+from shopping_shorts.tests.js_harness import run_js, requires_node
+
+pytestmark = requires_node
 
 HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
 
@@ -51,13 +49,8 @@ def _fn(src, name):
 
 
 def _node(script):
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node 없음")
-    r = subprocess.run([node, "-e", script], capture_output=True, text=True,
-                       encoding="utf-8", stdin=subprocess.DEVNULL, timeout=60)
-    assert r.returncode == 0, r.stderr
-    return json.loads(r.stdout.strip().splitlines()[-1])
+    """공용 하네스로 돈다(임시파일 실행) — 인라인 실행은 test_no_node_dash_e가 막는다."""
+    return json.loads(run_js(script, timeout=60).splitlines()[-1])
 
 
 def test_order_and_duplicates_do_not_change_hash():
