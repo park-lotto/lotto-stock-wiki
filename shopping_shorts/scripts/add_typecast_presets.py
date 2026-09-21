@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""타입캐스트 성우 6명을 voice_presets.json에 추가한다 (2026-08-19).
+"""타입캐스트 성우를 voice_presets.json에 추가한다 (2026-08-19, 09-22 지훈 추가).
 
-사장님 지목: 남자 필재·김건·박창수·용식이 / 여자 문정·발키리.
+사장님 지목: 남자 필재·김건·박창수·용식이·지훈 / 여자 문정·발키리.
 남자 성우 라인업이 일레븐랩스에 없어서 타입캐스트를 나란히 붙이는 것이 목적.
 
 ★변형(variant) 이름은 일레븐랩스와 **같은 4종**(stable/natural/expressive/whisper)을 쓴다.
@@ -11,6 +11,8 @@
 
 실행: py shopping_shorts/scripts/add_typecast_presets.py
       py shopping_shorts/scripts/add_typecast_presets.py --bake   (샘플 mp3까지 굽기)
+      py shopping_shorts/scripts/add_typecast_presets.py --bake --only tc-jihoon
+          (그 성우 샘플만 굽기 — 성우 한 명 추가할 때 나머지를 다시 구워 크레딧을 쓰지 않게)
 """
 import argparse
 import io
@@ -35,6 +37,9 @@ VOICES = [
     ("tc-yongsik",  "용식이", "능청스럽고 개성있는 남성",      "tc_5feb2085cca1a479e73bac37", "M"),
     ("tc-moonjung", "문정",   "차분하고 단정한 여성",         "tc_68f9c6a72f0f04a417bb136f", "F"),
     ("tc-valkyrie", "발키리", "당차고 힘있는 여성",           "tc_60478557f12456064b353409", "F"),
+    # 2026-09-22 사장님 추가 지목. /v2/voices 실측: API 이름 Jihoon · male · young_adult ·
+    # Conversational. 한줄설명은 그 메타데이터만 옮겼다(청취 전이라 음색 형용사는 안 붙임).
+    ("tc-jihoon",   "지훈",   "대화체에 맞는 젊은 남성",       "tc_61f0859907085fc68561c9a1", "M"),
 ]
 
 # 일레븐랩스의 변형과 **같은 이름**에 타입캐스트 축(emotion/intensity)을 태운다.
@@ -59,7 +64,7 @@ SOURCE_REF = "타입캐스트 지목 성우(2026-08-19)"
 
 
 def build_rows():
-    """6명 x 4변형 = 24행. 순수 계산만 한다(테스트하기 쉽게)."""
+    """성우 수 x 변형 수(VOICES x VARIANT_SPECS) 행. 순수 계산만 한다(테스트하기 쉽게)."""
     rows = []
     for gid, name, one_liner, voice_id, _sex in VOICES:
         for variant, settings in VARIANT_SPECS:
@@ -90,6 +95,7 @@ def build_rows():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bake", action="store_true", help="샘플 mp3까지 굽는다(실제 크레딧 사용)")
+    ap.add_argument("--only", default="", help="--bake 대상을 이 group_id로 좁힌다(예: tc-jihoon)")
     args = ap.parse_args()
 
     path = voice_presets.PRESETS_JSON
@@ -119,11 +125,20 @@ def main():
     if not args.bake:
         print("샘플은 안 구웠다. 굽기: --bake")
         return
+    # ★엔진이 꺼져 있거나 키가 없으면 굽지 않는다(2026-09-22 실사고). synthesize_line은 그때
+    #   예외 없이 무음 mock(-91dB)을 쓰고 돌아와서, 이 스크립트가 무음 3개에 [OK]를 찍었다.
+    #   TYPECAST_ENABLED 기본값이 0이라(09-07~) 로컬에선 env로 켜야 한다.
+    from shopping_shorts import typecast_tts
+    if not typecast_tts.enabled() or not typecast_tts.api_key():
+        sys.exit("굽기 중단: TYPECAST_ENABLED=1 과 TYPECAST_API_KEY 가 env에 있어야 한다"
+                 "(없으면 무음 mock이 구워진다)")
     from shopping_shorts.mix_pipeline import synthesize_line
     voice_presets.SAMPLES_DIR.mkdir(parents=True, exist_ok=True)
     from shopping_shorts.scripts.build_voice_samples import DEMO_TEXT
     ok = fail = 0
     for p in new:
+        if args.only and p["group_id"] != args.only:
+            continue
         out = voice_presets.SAMPLES_DIR / p["sample_file"]
         try:
             synthesize_line(

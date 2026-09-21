@@ -1470,5 +1470,68 @@
     "source_ref": "타입캐스트 지목 성우(2026-08-19)",
     "origin": "curated",
     "best": false
+  },
+  {
+    "preset_id": "tc-jihoon-stable",
+    "group_id": "tc-jihoon",
+    "variant": "stable",
+    "name": "지훈",
+    "one_liner": "대화체에 맞는 젊은 남성",
+    "lang": "KR",
+    "archetype": "대화체에 맞는 젊은 남성",
+    "base_voice_id": "tc_61f0859907085fc68561c9a1",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.0
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-jihoon-stable.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-jihoon-natural",
+    "group_id": "tc-jihoon",
+    "variant": "natural",
+    "name": "지훈",
+    "one_liner": "대화체에 맞는 젊은 남성",
+    "lang": "KR",
+    "archetype": "대화체에 맞는 젊은 남성",
+    "base_voice_id": "tc_61f0859907085fc68561c9a1",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-jihoon-natural.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-jihoon-expressive",
+    "group_id": "tc-jihoon",
+    "variant": "expressive",
+    "name": "지훈",
+    "one_liner": "대화체에 맞는 젊은 남성",
+    "lang": "KR",
+    "archetype": "대화체에 맞는 젊은 남성",
+    "base_voice_id": "tc_61f0859907085fc68561c9a1",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "toneup",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-jihoon-expressive.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
   }
 ]
