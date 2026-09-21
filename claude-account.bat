@@ -24,10 +24,13 @@ if /i "%sel%"=="q" exit /b 0
 goto menu
 
 :main
-set "CLAUDE_CONFIG_DIR=%USERPROFILE%\.claude"
+rem Main account uses the DEFAULT location (%USERPROFILE%\.claude.json).
+rem Do NOT set CLAUDE_CONFIG_DIR here - pointing it at ~\.claude makes
+rem Claude look for ~\.claude\.claude.json, which does not exist.
+set "CLAUDE_CONFIG_DIR="
 echo.
 echo   [Main] parklotto12@gmail.com
-echo   config: %CLAUDE_CONFIG_DIR%
+echo   config: %%USERPROFILE%%\.claude.json (default)
 echo.
 goto run
 
