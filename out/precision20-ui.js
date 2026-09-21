@@ -1315,7 +1315,20 @@
     const b=event.target.closest('[data-caption-look]');if(!b)return;
     const settings={...captionSettings(),...(captionLayouts.get(captionKey())||{})};delete settings.bgUser;delete settings.colorUser;
     if(b.dataset.captionLook==='auto')delete settings.look;else settings.look=b.dataset.captionLook==='none'?'none':Number(b.dataset.captionLook);
-    captionLayouts.set(captionKey(),settings);markDirty('caption');renderEdit();syncCaptionLookButtons();
+    captionLayouts.set(captionKey(),settings);
+    // 09-22 사장님: 자막박스 '모양'은 모든 장면 공통, 장면별로 다른 것은 '위치 이동'뿐.
+    //   다른 장면에는 모양(look)만 옮긴다 — 그 장면의 위치·폭·높이는 건드리지 않는다. 모양을 바꾸면 손으로 고른 박스색·글자색도 같이 푼다(위와 같게).
+    for(let i=0;i<sceneTotal();i++){
+      const key=`${rows[current].id}:${mode}:${i}:caption`;if(key===captionKey())continue;
+      const other={...(captionLayouts.get(key)||{})};delete other.bgUser;delete other.colorUser;
+      // 서버(scene_style.py)는 자막 배치마다 placement를 필수로 본다 — 모양만 넣으면 저장이 거절된다.
+      //   기본값 규칙은 captionSettings와 같다(끌어 옮긴 장면='free', 아니면 'title'). 그 줄은 장면 세션이 고치는 구간 옆이라 건드리지 않고 여기 한 번 더 적었다.
+      const basePlacement=captionDrags.has(key)?'free':'title';other.placement=other.placement||basePlacement;
+      if('look' in settings)other.look=settings.look;else delete other.look;
+      const onlyDefault=Object.keys(other).length===1&&other.placement===basePlacement;   // 남은 게 기본 배치뿐이면 기록을 지운다
+      if(onlyDefault)captionLayouts.delete(key);else captionLayouts.set(key,other);
+    }
+    markDirty('caption');renderEdit();syncCaptionLookButtons();
   });
   maskDetails.addEventListener('toggle',syncCaptionLookButtons);
   function applyCaptionMoveScope(){
