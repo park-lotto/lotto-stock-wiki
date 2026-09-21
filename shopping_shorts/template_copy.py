@@ -6,6 +6,7 @@
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 
@@ -36,12 +37,63 @@ def _one_line(value: object) -> str:
     return " ".join(str(value or "").split())
 
 
-def split_hook(value: object) -> tuple[str, str]:
-    """저장된 제목의 명시적 두 줄을 보존하고, 옛 한 줄 데이터만 균형 분리한다.
+# 첫 줄이 이것으로 끝나면 말이 끊긴다 — 뒤 낱말과 한 덩어리인 자리다.
+#   "아니 텀블러이 / 있다고?"처럼 조사에서 끊으면 읽는 사람이 다시 읽는다(2026-09-22 사장님 제보).
+_CUT_BAD_END = re.compile(
+    r"(?:이|가|을|를|은|는|에|와|과|도|만|의|로|으로|부터|까지|에서|한테|보다|랑|이랑|처럼|마다|께|께서)$"
+)
+# 둘째 줄이 이것으로 시작해도 말이 끊긴다 — 앞 명사를 꾸미던 말이 떨어져 나온 자리다.
+#   "코스트코 본사도 / 몰랐던 천재 아이디어" → "코스트코 본사도 몰랐던 / 천재 아이디어"
+_CUT_BAD_START = re.compile(
+    r"^(?:몰랐던|못한|있는|없는|하는|되는|만든|나온|생긴|좋은|같은|아닌|쓰는|보는|드는|넘는|맞는"
+    r"|싶은|받는|사는|먹는|찾는|남는|난|된|한|할|될|그|이|저|더|또|안|못)$"
+)
+# 첫 줄이 이것으로 끝나면 **좋은 자리**다 — 한 마디가 여기서 닫힌다.
+#   실측(템플릿 견본 20개): 살려낸·몰랐던·발견한·놀랄·못한·덕후들의·보였지·있었지 — 전부 이 모양.
+_CUT_GOOD_END = re.compile(
+    r"(?:은|는|던|한|된|난|낸|랄|을|를)$"           # 관형형 어미 — 뒤 명사를 꾸미고 닫힌다
+    r"|(?:지|네|군|다|까|요|음|임)$"                # 종결어미 — 한 마디가 끝난다
+    r"|(?:는데|니까|어서|아서|면서|지만|는지|다가|거나|든지)$"   # 연결어미
+)
 
-    이 함수는 문구를 축약하거나 새 사실을 만들지 않는다. 길이 검증은 ``issues``가
-    담당하며 UI는 실패한 문구를 작게 찌그러뜨리는 대신 적용을 막는다.
+
+# 관형형 어미 — 이걸로 끝나는 낱말은 **뒤 명사를 꾸민다**(천재적인 활용법 / 몰랐던 생활).
+_MODIFIER_END = re.compile(r"(?:인|은|는|던|한|될|을|ㄹ)$")
+
+
+def _cut_is_clean(before: list[str], after: list[str]) -> bool:
+    """이 자리에서 끊으면 말이 안 끊기나."""
+    if not before or not after:
+        return False
+    last = before[-1]
+    # 한 글자 낱말이 줄 끝/줄 앞에 혼자 떨어지면 읽기 나쁘다(2026-09-21 '무릎 탁 / 친 천재적인').
+    if len(last) <= 1 or len(after[0]) <= 1:
+        return False
+    if len(last) > 1 and _CUT_BAD_END.search(last):
+        return False
+    if _CUT_BAD_START.match(after[0]):
+        return False
+    # ★꾸미는 말은 **뒤 명사를 데리고 가야** 한다 — 첫 줄 끝이 관형형인데 뒤에 명사가 더 있으면,
+    #   그 꾸밈말을 둘째 줄로 내려 '천재적인 활용법'처럼 한 덩어리로 만드는 쪽이 낫다.
+    #   (2026-09-22 실측: '다이소 덕후들의 천재적인 / 활용법' → '다이소 덕후들의 / 천재적인 활용법')
+    if _MODIFIER_END.search(last) and len(after) == 1:
+        return False
+    return True
+
+
+def split_hook(value: object, contract: "TemplateCopyContract | None" = None) -> tuple[str, str]:
+    """저장된 제목의 명시적 두 줄을 보존하고, 한 줄 데이터를 **두 줄 제목**으로 나눈다.
+
+    ★2026-09-22 사장님 결정 — 대본 첫 문장이 그대로 들어오므로 두 가지를 지킨다:
+      ①**말이 안 끊기는 자리 우선**. 조사로 끝나거나(텀블러'이') 꾸미는 말이 떨어지는
+        ('몰랐던' 천재…) 자리는 피한다. 길이 균형은 그다음이다.
+      ②**줄 길이 상한 안에서만 담는다**(이븐쇼핑 실측 11자/10자). 60자짜리 대본 문장이
+        통째로 들어오면 앞부분만 쓰고 나머지는 버린다 — 화면이 글자를 못 담는다.
+
+    이 함수는 문구를 축약하거나 새 사실을 만들지 않는다(자르기만 한다). 길이 검증은
+    ``issues``가 담당하며 UI는 실패한 문구를 작게 찌그러뜨리는 대신 적용을 막는다.
     """
+    contract = contract or EVEN_SHOPPING
     raw = str(value or "").strip()
     explicit = [line.strip() for line in raw.splitlines() if line.strip()]
     if len(explicit) >= 2:
@@ -50,17 +102,44 @@ def split_hook(value: object) -> tuple[str, str]:
     words = text.split()
     if len(words) < 2:
         return text, ""
-    best = min(
-        range(1, len(words)),
-        key=lambda index: abs(
-            len(" ".join(words[:index])) - len(" ".join(words[index:]))
-        ),
-    )
-    # 2026-09-21 사장님: '무릎 탁 / 친 천재적인'처럼 한 글자 낱말이 둘째 줄 앞에 떨어지면 말이 끊겨 보인다.
-    #   그런 경우 그 낱말을 윗줄로 올린다(전체 길이는 한 낱말만큼만 달라진다).
-    if best < len(words) - 1 and len(words[best]) <= 1:
-        best += 1
-    return " ".join(words[:best]), " ".join(words[best:])
+
+    # ★길이 상한은 **낱말을 자르는 데 쓰지 않는다**(2026-09-22 실측).
+    #   템플릿 견본 20개 중 둘째 줄이 계약 10자를 넘는 것이 13개(65%)였다 — '놀라운 생활
+    #   아이디어'(11자)가 실제로 화면에 들어간다. 상한으로 낱말을 자르면 '아이디어'가 사라진다.
+    #   그래서 상한은 **두 줄에 담을 낱말을 고르는 기준**으로만 쓰고, 고른 낱말은 통째로 남긴다.
+    max1, max2 = contract.hook_line_max, contract.hook2_line_max
+
+    def line_len(items: list[str]) -> int:
+        return len(" ".join(items))
+
+    # ① 두 줄에 담을 낱말 — 두 줄 상한의 합까지 담되, **낱말은 절대 자르지 않는다**.
+    #    한 낱말을 더 담아 상한을 살짝 넘는 쪽이, 낱말을 잘라 '놀라운 생활 아이디어'를
+    #    '놀라운 생활'로 만드는 것보다 낫다(2026-09-22 실측: 견본 13개가 상한을 넘는다).
+    room = max1 + max2 + 1
+    head = [words[0]]
+    for word in words[1:]:
+        if line_len(head + [word]) > room + len(word) - 1:
+            break
+        head.append(word)
+        if line_len(head) >= room:
+            break
+    if len(head) < 2:
+        return " ".join(head), ""
+
+    # ② 끊는 자리 — ⑴말이 끊기지 않고 ⑵어미로 닫히고 ⑶화면에 들어가고 ⑷두 줄이 고른 자리.
+    #    ★'어미로 닫히는 자리'가 여럿이면 **앞쪽**을 고른다. 뒤로 갈수록 첫 줄이 길어져
+    #      '다이소 덕후들의 천재적인 / 활용법'처럼 둘째 줄이 한 낱말만 남는다(2026-09-22 실측).
+    def score(index: int) -> tuple[int, int, int, int]:
+        before, after = head[:index], head[index:]
+        clean = 0 if _cut_is_clean(before, after) else 1           # 0이 좋다 — 말이 먼저
+        good = 0 if _CUT_GOOD_END.search(before[-1]) else 1        # 어미로 닫히면 좋다
+        over = max(0, line_len(before) - max1) + max(0, line_len(after) - max2)
+        # 첫 줄이 상한 안에 들어오면 길이 균형 대신 **앞쪽 자리**를 선호한다.
+        gap = line_len(before) if line_len(before) <= max1 else abs(line_len(before) - line_len(after))
+        return (clean, good, over, gap)
+
+    best = min(range(1, len(head)), key=score)
+    return " ".join(head[:best]), " ".join(head[best:])
 
 
 def scene_text(headcopy: object) -> dict[str, str]:
