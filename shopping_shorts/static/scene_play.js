@@ -1125,9 +1125,17 @@ function pvxSwap(){
         let v = PVX.vid;
         if (!v){
           v = document.createElement('video');
-          v.muted = true; v.playsInline = true; v.preload = 'auto'; v.style.display = 'none';
+          // ★합본은 **음소거하면 안 된다** — 이제 그 안에 성우 목소리가 들어 있다.
+          //   다른 재생기(조각)는 영상 원음을 끄려고 muted 로 둔다. 합본도 그대로 뒀더니
+          //   **미리보기 전체가 무음**이 됐다(실측 2026-09-21: 7칸 전부 소리 0, muted=true).
+          //   파일에는 소리가 있었고 싱크도 0.000초였다 — 그래서 파일만 보는 검사로는
+          //   못 잡았다. 소리는 **실제로 틀어서 재야** 한다.
+          v.muted = false; v.volume = 1;
+          v.playsInline = true; v.preload = 'auto'; v.style.display = 'none';
           box.appendChild(v); PVX.vid = v;
         }
+        // 이미 만들어져 있던 재생기도 풀어 준다(예전 판이 muted 로 만들어 뒀을 수 있다)
+        try { v.muted = false; v.volume = 1; } catch (e) {}
         if (PVX.url) { try { URL.revokeObjectURL(PVX.url); } catch(e){} }
         PVX.url = URL.createObjectURL(bl);
         v.src = PVX.url;
