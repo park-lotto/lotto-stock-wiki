@@ -3611,11 +3611,25 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # ★백본-먼저(2026-09-19, 장면분량 트랙·사장님 계정 먼저): 원본의 특징(말·화면 짝)을 묶어
         #   훅만 갈아끼우고 컷을 대사 길이만큼 앞에서 지정한다 → 3단계 채우기가 돌 일이 없다.
         #   스위치 backbone_script_enabled(기본 끔). 실패하면 아래 옛 경로로 가되 이유를 응답에 싣는다.
+        # ★이야기 작가(2026-09-22, 사장님 "내거에만 라이브스위치"): 대본을 **먼저** 쓰고 컷은 뒤에 붙인다.
+        #   스위치 story_writer_enabled(기본 끔, "admin"=관리자만). 백본보다 먼저 보고, 못 만들면
+        #   백본 스위치가 켜진 계정은 백본으로, 아니면 옛 경로로 간다 — 이유는 둘 다 응답에 싣는다.
         _bb_drafts, _bb_why = [], ""
-        if _setting_gate(store, "backbone_script_enabled", _cid(request)):
+        _story_on = _setting_gate(store, "story_writer_enabled", _cid(request))
+        _bb_on = _setting_gate(store, "backbone_script_enabled", _cid(request))
+        if _story_on or _bb_on:
             if (_job or {}).get("extract"):
-                _bb_drafts, _bb_why = _backbone_drafts(
-                    _picked, _job, store, body.get("target_seconds") or 25, job_id=_jid)
+                if _story_on:
+                    try:
+                        from shopping_shorts import story_writer as _sw
+                        _bb_drafts, _bb_why = _sw.make_drafts(
+                            _picked, _job, body.get("target_seconds") or 25, job_id=_jid)
+                    except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
+                        _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
+                if not _bb_drafts and _bb_on:
+                    _bb_drafts, _w2 = _backbone_drafts(
+                        _picked, _job, store, body.get("target_seconds") or 25, job_id=_jid)
+                    _bb_why = "; ".join(x for x in (_bb_why, _w2) if x)
             else:
                 _bb_why = "제작 job 재료 없음"
         if _bb_drafts:
