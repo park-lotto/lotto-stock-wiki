@@ -48,7 +48,36 @@ def fetch_materials(works, cid=0):
     return json.loads(txt[txt.index("@@JSON@@") + 8:])
 
 
+def fetch_styles(ids):
+    host = _host()
+    subprocess.run(["scp", "-o", "ConnectTimeout=10", "-i", KEY, os.path.join(HERE, "dump_styles.py"),
+                    "ubuntu@%s:/home/ubuntu/patchcheck/dump_styles.py" % host], check=True, capture_output=True)
+    r = subprocess.run(["ssh", "-o", "ConnectTimeout=10", "-i", KEY, "ubuntu@%s" % host,
+                        "python3 /home/ubuntu/patchcheck/dump_styles.py --styles %s 2>/dev/null" % ",".join(str(i) for i in ids)],
+                       capture_output=True)
+    txt = r.stdout.decode("utf-8", "replace")
+    return json.loads(txt[txt.index("@@JSON@@") + 8:])
+
+
+def skeleton(style, salt):
+    """칸마다 문장틀을 하나씩 **코드가** 골라 스타일 뼈대를 만든다(모델 호출 0회). salt로 작업마다 다른 조합."""
+    out = []
+    for k, role in enumerate(style.get("roles") or []):
+        opts = (style.get("templates") or {}).get(role) or []
+        if opts:
+            out.append(opts[(sum(ord(c) for c in salt) + k * 7) % len(opts)])
+    return out
+
+
 def build_prompt(m):
+    if m.get("skeleton"):
+        rows = []
+        for vid, cuts in m["videos"].items():
+            rows.append("[재료 %s]" % vid)
+            rows += ["  - %.1f초 | %s%s" % (c["secs"], c["desc"], ("  <말: %s>" % c["say"]) if c["say"] else "") for c in cuts]
+        brief = open(os.path.join(HERE, "brief_style.txt"), encoding="utf-8").read().strip()
+        return "%s\n\n[스타일 뼈대 — %s]\n%s\n\n[재료 — 영상 %d편]\n%s\n\n[같은 제품을 소개한 영상이 한 말]\n%s" % (
+            brief, m["style_name"], "\n".join(m["skeleton"]), len(m["videos"]), "\n".join(rows), m["seed_text"])
     rows = []
     for vid, cuts in m["videos"].items():
         rows.append("[재료 %s]" % vid)
@@ -91,6 +120,8 @@ def guards(lines, m):
     if not lines:
         return ["대본이 비었다"]
     seed = m["seed_text"]
+    if m.get("skeleton") and not m.get("hook"):
+        m = dict(m, hook=m["skeleton"][0])
     if m.get("hook"):
         bones = [_nz(b) for b in re.split(r"\{[^{}]+\}", m["hook"]) if _nz(b)]
         if not all(b in _nz(lines[0]) for b in bones):
@@ -106,8 +137,10 @@ def guards(lines, m):
         bad.append("씨앗 문장을 %.0f%% 그대로 옮겼다 — 말버릇만 남기고 나머지는 재료를 보고 새로 써라" % copy)
     mat = " ".join(c["desc"] + " " + c["say"] for cs in m["videos"].values() for c in cs)
     nums = [n for n in re.findall(r"\d+(?:[.,]\d+)?", " ".join(lines[1:])) if n not in mat]
+    # 한글로 쓴 값("만 원대")은 숫자 검사를 빠져나간다(2026-09-21 실측: 무료 필자가 재료에 없는 "만 원대"를 지어냄).
+    nums += [w for w in re.findall(r"[일이삼사오육칠팔구십백천만]+\s?원대?|반값", " ".join(lines)) if w.replace(" ", "") not in mat.replace(" ", "")]
     if nums:
-        bad.append("재료에 없는 숫자가 나왔다(%s) — 재료 화면·말에 없는 수치는 빼라" % ", ".join(sorted(set(nums))[:5]))
+        bad.append("재료에 없는 숫자·값이 나왔다(%s) — 재료 화면·말에 없는 수치는 빼라" % ", ".join(sorted(set(nums))[:5]))
     return bad
 
 
@@ -143,7 +176,9 @@ def run_one(client, model, m):
     sg = _grams(_words(m["seed_text"]))
     return {"lines": lines, "calls": calls, "first_bad": first_bad, "bad": bad, "sec": u["sec"],
             "cost": u["in"] * pi / 1e6 + u["out"] * po / 1e6, "prompt_chars": len(prompt),
-            "copy": copy_rate(lines, m["seed_text"]), "sg": sg}
+            "copy": copy_rate(lines, m["seed_text"]), "sg": sg,
+            "polite": sum(1 for l in lines if re.search(r"(요|니다|니까|세요|죠)[\s.!?~…]*$", l)) / max(1, len(lines)),
+            "skeleton": m.get("skeleton") or []}
 
 
 def mark(line, sg):
@@ -188,7 +223,12 @@ def render(mats, models, results, out_path):
             sum(r["copy"] for r in rs) / n, sum(r["cost"] for r in rs) / n)
     secs = ""
     for m in mats:
-        cards = '<div class="card seed"><h3>씨앗 원문 <small>%s</small></h3><p>%s</p></div>' % (html.escape(m.get("seed_vid") or ""), html.escape(m["seed_text"]))
+        if m.get("skeleton"):
+            cards0 = '<div class="card seed"><h3>스타일 뼈대 <small>코드가 칸마다 틀 하나씩 고른 것</small></h3>%s</div>' % "".join(
+                "<p>%s</p>" % html.escape(x) for x in m["skeleton"])
+        else:
+            cards0 = ""
+        cards = cards0 + '<div class="card seed"><h3>씨앗 원문 <small>%s</small></h3><p>%s</p></div>' % (html.escape(m.get("seed_vid") or ""), html.escape(m["seed_text"]))
         for model in models:
             r = results.get((m["work"], model))
             if not r:
@@ -197,12 +237,15 @@ def render(mats, models, results, out_path):
             tags = ('<span class="ok">가드 통과</span>' if not r["bad"] else "".join('<span class="bad">⚠ %s</span>' % html.escape(b.split(" — ")[0]) for b in r["bad"]))
             if r["first_bad"] and not r["bad"]:
                 tags += "<span>1회 다시 씀: %s</span>" % html.escape(" / ".join(b.split(" — ")[0] for b in r["first_bad"]))
-            cards += '<div class="card %s"><h3>%s</h3>%s<div class="meta">%s<span>모델 %d회</span><span>%.0f초</span><span>$%.4f</span><span>베낌 %.1f%%</span><span>%d줄</span></div></div>' % (
-                "fail" if r["bad"] else "", html.escape(model), body, tags, r["calls"], r["sec"], r["cost"], r["copy"], len(r["lines"]))
+            cards += '<div class="card %s"><h3>%s</h3>%s<div class="meta">%s<span>모델 %d회</span><span>%.0f초</span><span>$%.4f</span><span>베낌 %.1f%%</span><span>%d줄</span><span>존댓말 줄 %d%%</span></div></div>' % (
+                "fail" if r["bad"] else "", html.escape(model), body, tags, r["calls"], r["sec"], r["cost"], r["copy"], len(r["lines"]),
+                round(100 * r["polite"]))
         secs += '<section><h2>%s</h2><div class="kind">작업 %s · 재료 영상 %d편 · 컷 %d개 · 프롬프트 %s자</div><div class="grid">%s</div></section>' % (
             html.escape(m.get("title") or m["work"]), m["work"], len(m["videos"]), sum(len(c) for c in m["videos"].values()),
             format(results[(m["work"], models[0])]["prompt_chars"], ","), cards)
-    brief = html.escape(open(os.path.join(HERE, "brief.txt"), encoding="utf-8").read().strip())
+    # 실제로 쓴 지시문을 보여준다 — 스타일 경로는 brief_style.txt다(씨앗용을 띄우면 거짓 표시가 된다).
+    bfile = "brief_style.txt" if any(m.get("skeleton") for m in mats) else "brief.txt"
+    brief = html.escape(open(os.path.join(HERE, bfile), encoding="utf-8").read().strip())
     page = ("<!doctype html><html lang='ko'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
             "<title>단순 필자 하네스</title><style>%s</style></head><body><header><h1>단순 필자 하네스 — 지시 5줄 · 가드 4개</h1>"
             "<p>대본 1편 = 모델 1회(가드에 걸리면 1회만 다시). 길이 가드 없음. 재료 = 라이브 프로그램이 읽는 것과 같은 실제 재료.</p>"
@@ -217,6 +260,7 @@ def main():
     ap.add_argument("--works", required=True)
     ap.add_argument("--models", default="gemini-3.6-flash,gemini-3.1-flash-lite")
     ap.add_argument("--cid", type=int, default=0)
+    ap.add_argument("--styles", default="", help="고객이 고른 스타일(스파인 id)들. 작업마다 전부 돌려본다")
     ap.add_argument("--hooks", default="", help="훅 틀을 || 로 구분. 작업마다 전부 돌려본다(고르는 건 코드 — 모델 호출 0회)")
     ap.add_argument("--out", default=os.path.join(HERE, "..", "..", "..", "..", "out", "단순필자_하네스.html"))
     a = ap.parse_args()
@@ -228,6 +272,12 @@ def main():
         if m.get("error"):
             print("재료 실패 %s: %s" % (m["work"], m["error"]))
     mats = [m for m in mats if not m.get("error") and len(m.get("seed_text") or "") >= 40 and m.get("videos")]
+    sids = [int(x) for x in a.styles.split(",") if x.strip().isdigit()]
+    if sids:
+        styles = fetch_styles(sids)
+        mats = [dict(m, skeleton=skeleton(s, m["work"]), style_name=s["name"], work="%s@%d" % (m["work"], s["id"]),
+                     title="%s · 스타일: %s" % ((m.get("title") or "")[:18], s["name"]))
+                for m in mats for s in styles if skeleton(s, m["work"])]
     hooks = [x.strip() for x in a.hooks.split("||") if x.strip()]
     if hooks:
         mats = [dict(m, hook=h, work="%s#%d" % (m["work"], k + 1), title="%s · 훅: %s" % (m.get("title") or "", h))
