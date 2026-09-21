@@ -50,5 +50,6 @@ def test_이어붙임_규칙이_서버와_화면에_같이_있다():
     assert "Math.floor(k * segments.length / nPhrase)" in _PLAY
     assert "const idx = k % segments.length;" not in _PLAY, "순환(1,2,1,2)이 화면에 남아 있다"
     va = (Path(__file__).resolve().parents[1] / "video_assemble.py").read_text(encoding="utf-8")
-    assert "(k * n_seg) // len(durs)" in va
+    # 2026-09-21: 식은 _even_owner 한 곳으로 옮겼다(얼린 짝이 없을 때의 종전 식 — phrase_owners가 부른다).
+    assert "(k * n_seg) // n_phrase" in va
     assert "idx = k % len(segs)" not in va, "순환(1,2,1,2)이 서버에 남아 있다"

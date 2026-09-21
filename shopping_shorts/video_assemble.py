@@ -10,6 +10,7 @@
 한글 폰트가 없는 환경(폰트 미해결)에서는 자막을 생략하고 영상만 렌더한다.
 concat 후 원본 오디오를 제거하고 비트별 TTS를 이어붙인 트랙으로 교체한다.
 """
+import hashlib
 import os
 import math
 import re
@@ -876,6 +877,99 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     return plan
 
 
+# ── 구절 ↔ 조각 짝 (2026-09-21 박세현님 job fe21f8a5dc71) ─────────────────────
+# ★사고: 믹스에서 3줄↔3장면을 맞춘 뒤 자막 단계에서 **마지막 줄**을 둘로 나눴더니, 종전 식
+#   `(k*조각수)//구절수`가 어느 줄을 나눴는지 안 보고 앞에서부터 고르게 다시 나눠 **2번째 줄의
+#   장면이 바뀌었다**(닦는 장면 자리에 행주 장면 반복, 닦는 장면은 0.58초로 밀림 — 완성본 프레임 확인).
+#   뿌리 = "어느 말에 어느 장면을 붙였는지"를 어디에도 기억하지 않고 매번 개수로 다시 계산한 것.
+# ★그래서 짝을 **대사 글자 위치**로 얼려 둔다(beat["clip_anchor"]). 줄을 어디서 나누든(자막 단계·
+#   장면꾸미기·믹스 타임라인 — 전부 caplines API 하나) 조각은 자기가 덮던 글자를 계속 덮는다.
+#   얼린 짝은 **스스로 유효성을 증명**한다(대사 지문·조각 수) — caption_lines를 고치는 곳이
+#   app/edit_plan/mix_pipeline/single_source에 20곳 가까이라, 곳곳에서 지우게 하면 반드시 샌다(0순위-B).
+# ★짝을 정하는 곳은 phrase_owners **하나**다. 렌더(_plan_phrase_clips)와 화면(_lab_captions가 실어
+#   보내는 owner)이 같은 함수를 쓴다 — 화면(scene_play.js)은 받은 값을 그대로 쓴다.
+def _cap_key_hash(narration):
+    return hashlib.sha1(cap_preset_key(narration or "").encode("utf-8")).hexdigest()[:12]
+
+
+def _phrase_key_starts(cap_segs):
+    """구절마다 대사(정규화 키 글자 기준)에서 시작하는 위치 + 전체 길이."""
+    starts, t = [], 0
+    for s in cap_segs:
+        starts.append(t)
+        t += len(cap_preset_key(s))
+    return starts, t
+
+
+def _even_owner(k, n_phrase, n_seg):
+    """얼린 짝이 없을 때의 종전 식 — 구절 ≤ 조각이면 1:1, 많으면 이어붙임(1,1,2,2, 2026-09-11)."""
+    return k if n_phrase <= n_seg else (k * n_seg) // n_phrase
+
+
+def _valid_clip_anchor(beat, n_seg):
+    a = beat.get("clip_anchor")
+    if not isinstance(a, dict):
+        return None
+    offs = a.get("offs")
+    if (a.get("n") != n_seg or not isinstance(offs, list) or len(offs) != n_seg
+            or a.get("key") != _cap_key_hash(beat.get("narration"))):
+        return None
+    return offs
+
+
+def phrase_owners(beat, n_seg, cap_segs=None):
+    """구절 k를 몇 번째 조각이 덮는가 — **판단처는 여기 한 곳**(렌더·화면 공용).
+
+    R1 구절 수 == 조각 수 → 순서대로 1:1.
+    R2 수가 다르고 얼린 짝이 유효 → 구절 시작 글자 위치 이하에서 가장 뒤의 조각.
+       (줄을 나누면 새 줄은 같은 조각 몫 / 서로 다른 조각의 줄을 합치면 뒤 조각은 '안 나옴')
+    R3 얼린 짝이 없으면 종전 식 — 옛 job은 예전과 똑같이 나온다."""
+    if cap_segs is None:
+        cap_segs = _caption_segments(beat.get("narration") or "", beat.get("caption_lines"))
+    n = len(cap_segs)
+    if n_seg <= 0 or n <= 0:
+        return []
+    if n == n_seg:
+        return list(range(n))
+    offs = _valid_clip_anchor(beat, n_seg)
+    if offs is None:
+        return [_even_owner(k, n, n_seg) for k in range(n)]
+    starts, _total = _phrase_key_starts(cap_segs)
+    owners = []
+    for st in starts:
+        c = 0
+        for j, a in enumerate(offs):
+            if a <= st:
+                c = j
+        owners.append(c)
+    return owners
+
+
+def ensure_clip_anchor(beat):
+    """지금 **보이는 짝**을 글자 위치로 얼린다. 편집안을 저장하는 쪽(믹스 저장·자막 줄 저장)이 부른다.
+
+    · 구절 수 == 조각 수면 1:1로 **새로** 얼린다(R1 — 잘못 얼려진 짝에서 빠져나오는 길).
+    · 수가 다른데 유효한 짝이 이미 있으면 그대로 둔다(다시 얼리면 '안 나옴' 조각의 자리를 잃는다).
+    · 없으면 종전 식 결과를 얼린다 — 그 순간 화면에 보이던 짝 그대로다."""
+    if not beat.get("phrase_sync"):
+        beat.pop("clip_anchor", None)      # 구절 맞춤을 끈 칸은 컷을 화면이 정한다(manual_cuts)
+        return None
+    n_seg = len(_beat_material(beat))
+    cap_segs = _caption_segments(beat.get("narration") or "", beat.get("caption_lines"))
+    if not n_seg or not cap_segs:
+        beat.pop("clip_anchor", None)
+        return None
+    if len(cap_segs) != n_seg and _valid_clip_anchor(beat, n_seg) is not None:
+        return beat["clip_anchor"]
+    owners = phrase_owners(beat, n_seg, cap_segs)
+    starts, total = _phrase_key_starts(cap_segs)
+    offs = [total] * n_seg                 # 아무 구절도 안 덮는 조각 = 끝(어떤 구절 시작보다 뒤)
+    for k in range(len(owners) - 1, -1, -1):
+        offs[owners[k]] = starts[k]        # 그 조각이 덮는 **첫** 구절의 시작
+    beat["clip_anchor"] = {"key": _cap_key_hash(beat.get("narration")), "n": n_seg, "offs": offs}
+    return beat["clip_anchor"]
+
+
 def _plan_phrase_clips(beat, segs, tts_dur):
     """구절 맞춤 계획 — 컷 k = k번째 재료, 길이 = k번째 자막 구절 표시시간.
 
@@ -917,6 +1011,8 @@ def _plan_phrase_clips(beat, segs, tts_dur):
         plan = []
         pos = [float(g["start"]) for g in segs]
         ri = 0
+        _owners = phrase_owners(beat, len(segs), cap_segs)
+        _prev_idx = -1
         for k in range(len(durs)):
             end_b = bounds[-1] if k == len(durs) - 1 else bounds[k + 1]
             d = max(0.1, end_b - bounds[k])
@@ -937,13 +1033,22 @@ def _plan_phrase_clips(beat, segs, tts_dur):
             #   컷은 조각 수 그대로고, 자막만 늘어난다. 자리는 여전히 k·개수만으로 정해져
             #   09-02의 "조각 하나 빼면 뒤가 밀린다"도 그대로 막힌다.
             #   구절 ≤ 조각이면 종전과 같이 1:1(k번째 구절 = k번째 조각).
-            n_seg = len(segs)
-            idx = k if len(durs) <= n_seg else (k * n_seg) // len(durs)
+            # ★2026-09-21: 어느 조각이 덮는지는 phrase_owners 한 곳이 정한다(얼린 짝 우선,
+            #   없으면 바로 위 09-11 식 그대로). 줄을 나눠도 맞춰 둔 장면이 안 밀린다.
+            idx = _owners[k] if k < len(_owners) else _even_owner(k, len(durs), len(segs))
             _end = segs[idx].get("end")
             st = pos[idx]
             # 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시(같은 내용 반복).
+            # ★단 **같은 조각이 바로 앞 구절에 이어 덮는 중**이면 되감지 않는다(2026-09-21).
+            #   줄을 나누기 전엔 그 조각이 한 컷으로 '완만 슬로모→끝 프레임 정지'였는데, 나눈 뒤
+            #   되감으면 말 중간에 같은 장면이 처음부터 다시 나온다(박세현님 칸3 s0 두 번 = 09-11
+            #   고객이 오류로 본 "같은 장면이 두 번"과 같은 그림). 끝 프레임에서 버틴다.
             if _end is not None and float(_end) - st < min(d, _MIN_CLIP) - 1e-3:
-                st = float(segs[idx]["start"])
+                if k > 0 and idx == _prev_idx:
+                    st = max(float(segs[idx]["start"]), min(st, float(_end) - 0.1))
+                else:
+                    st = float(segs[idx]["start"])
+            _prev_idx = idx
             # ★조각 끝을 넘지 않는다(2026-09-17 이윤정님 "미리보기에서 중간에 다른 화면이 짧게").
             #   구절 길이 d가 조각 남은 길이보다 길면 종전엔 src_dur=d로 그대로 넘겨 조각 뒤의
             #   **다음 장면**이 새어 나왔다(실측 job 1939bd7f3c50: s1 조각 5.92~7.29 뒤 7.29부터가
