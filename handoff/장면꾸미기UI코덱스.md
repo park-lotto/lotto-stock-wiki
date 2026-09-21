@@ -1,5 +1,31 @@
 # 장면꾸미기 UI·정밀 템플릿 디자인 시스템
 
+## ★먼저 읽기 — 이 트랙이 고치는 **페이지**가 어디인가 (2026-09-21 정리. 여기서 여러 번 헷갈렸다)
+
+**지금 작업 대상 = 새 편집기(②)의 오른쪽 "빠른 조절" → `채널명 칸` 슬라이더.** 사장님이 캡처로 직접 짚은 자리다.
+
+고객이 제작소 **6단계 · 장면꾸미기**에서 보는 화면은 **두 개**다. 섞지 마라.
+
+| | ① 옛 꾸미기(피팅룸) | ② 새 편집기 ← **이 트랙** |
+|---|---|---|
+| 고객이 가는 길 | 제작소 6단계에 들어가면 바로 보이는 화면(자막·헤드카피·템플릿·효과 탭) | 6단계 위쪽 회색 버튼 **「장면꾸미기 · 문구와 효과 편집」** → 팝업(iframe) |
+| 파일 | `shopping_shorts/static/produce.html`(템플릿 탭 "📰 내용물 있는 틀" 2636행~) | `out/scene-style-ui-showcase.html` + **`out/precision20-ui.js`**(로직) + `out/precision20-data.js`(템플릿 60칸 좌표) |
+| 연결 | — | `shopping_shorts/static/scene-style-produce.js`(`openSceneStyleEditor`) → `/api/produce/scene-style/assets/out/...?embedded=1` · 실제 자막은 `/api/produce/scene-style/context/{job_id}`(`app.py`, 관리자 **또는 job 주인**이면 통과 = 고객에게도 열려 있다) |
+| 관리자 전용? | 아님 | 아님. 관리자 전용은 그 위 **카나리 영역**(`#sceneStyleCanary`)뿐 |
+| 이번에 손댔나 | 안 댔다(재지도 않았다) | 댔다 |
+
+②에서 깨진다고 짚인 곳: 오른쪽 패널 **"훅/본문 빠른 조절"**의 슬라이더 4개 중 `채널명 칸`(`data-fixed-range="channel"`), 그다음 `상단 제목칸`(`"top"`). 채널명 글자 ＋/−(`data-font-step`)는 **다른 컨트롤**이다 — 처음에 이걸 재느라 시간을 썼다.
+템플릿은 왼쪽 목록의 **썰쇼핑형 20**(훅+본문 = 40칸) / **전장면 고정형 20**(20칸) = 60칸.
+
+### 로컬에서 보는 주소(둘 다 이 트랙 폴더의 파일을 그대로 서빙 — 고치고 Ctrl+F5)
+| 주소 | 무엇 | 언제 |
+|---|---|---|
+| `http://127.0.0.1:8771/out/scene-style-ui-showcase.html` | ②의 **샘플 작업대**(솔 사진·12장 고정·위에 A/B/C/D 시안 탭 — 고객에겐 없는 탭). 트랙 폴더에서 띄운 정적 서버(`py -m http.server 8771`) | 60칸 전수 검사·빠른 확인. 검사 도구 기본 주소 |
+| `http://127.0.0.1:8772/produce.html` → 회색 버튼 | **서버 실제 job**(관리자 `93de4727fc85`, 자막 24개)으로 띄운 제작소. `py tools/serve_local_mirror.py`(선행 `py tools/mirror_live_job.py <job_id>`) | 고객 길 그대로 확인. 아직 칸 구조는 여기서 확인 안 함 |
+| 라이브 `shoppingshorts.duckdns.org` | 고객 화면. **v182 그대로**(서버 MD5 `7ac372f8…` 확인) | 사장님 승인 전엔 건드리지 않는다 |
+
+코드 위치: 전부 **`.tracks/장면꾸미기UI코덱스`**(브랜치 `track/장면꾸미기UI코덱스`). main·서버 변경 0. 로컬 캐시버스터는 `?v=190`(showcase.html 안).
+
 ## 2026-09-16 · 관리자 실데이터 LAB 네 출구 연결
 
 - 관리자 본인 작업만 복사하는 `/scene_style_lab.html`을 추가했다. 원본 job은 읽기만 하며 스냅샷·MP4·CapCut 산출물은 `mix_jobs/_scene_style_lab/<lab_id>`에만 쓴다. 일반 고객은 페이지·API·프레임·영상·CapCut 재료 모두 404다.
