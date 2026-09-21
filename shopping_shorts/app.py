@@ -5069,6 +5069,21 @@ def _script_hash(text):
     return hashlib.sha1(s.encode("utf-8")).hexdigest()[:16] if s else ""
 
 
+def _sources_hash(urls):
+    """소스 영상 묶음의 지문 — "이 job이 지금 화면에 담긴 영상들로 만들어진 것인가"만 판별한다.
+
+    ★왜(2026-09-21 회원 제보): 영상을 빼고 다른 영상을 넣어도 대본이 그대로면 3단계가
+      옛 job을 그대로 보여줘, 뺀 영상의 장면이 계속 나왔다(대본 지문만 대조했다).
+    ★프론트(produce.html `_sourcesHash`)와 **같은 규칙이어야 한다**(0순위-B). 어긋나면
+      늘 '바뀐 것'으로 보여 재매칭이 반복되고, 매칭은 과금이다.
+    규칙: 각 URL 트림 → 빈 것·중복 제거 → 정렬 → 줄바꿈으로 이어 `_script_hash`.
+    (담긴 순서·중복은 같은 재료다 — 그걸로 다시 매칭하면 안 된다. 해시 규칙 자체는
+     `_script_hash` 하나만 쓴다 = 새 규칙을 만들지 않는다.)
+    """
+    uniq = sorted({(u or "").strip() for u in (urls or []) if isinstance(u, str)} - {""})
+    return _script_hash("\n".join(uniq))
+
+
 @app.get("/api/mix/status/{job_id}")
 def api_mix_status(job_id: str, request: Request):
     store = Store(DB_PATH)
@@ -5197,6 +5212,9 @@ def api_mix_status(job_id: str, request: Request):
             #   화면 대본과 대조해 **바뀌었으면 자동으로 다시 붙이려고** 쓴다(사장님 결정 A).
             #   원문을 실으면 응답만 무거워진다 — 같은지 다른지만 알면 되므로 해시로 보낸다.
             "script_hash": _script_hash(job.get("given_script") or ""),
+            # ★이 job이 어떤 영상들로 매칭됐는지의 지문(2026-09-21). 영상을 빼고 새로 넣었는데
+            #   대본이 그대로면 옛 job이 남아 뺀 영상이 계속 나왔다 — 화면이 이걸로 대조한다.
+            "sources_hash": _sources_hash(job.get("urls") or []),
             "candidates": candidates}
 
 
