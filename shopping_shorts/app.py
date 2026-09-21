@@ -6259,6 +6259,97 @@ def _pvproxy_dir(job_id: str) -> Path:
     return _MIX_WORK_DIR / job_id / "pvproxy"
 
 
+def _pvproxy_prewarm(job_id: str) -> None:
+    """편집 화면을 열기 **전에** 합본을 미리 구워 둔다 — 합본이 없는 구간을 없앤다.
+
+    ★왜 (2026-09-21 사장님 "미리굽기만 해결하면 이제 된다는거지?")
+      편집 화면은 합본이 있을 때만 한 파일로 돈다. 합본이 없는 동안에는 옛 경로
+      (재생기를 컷끼리 나눠 쓰고 다음 컷을 미리 앉히는) 로 도는데, 튐이 나던 그 길이다.
+      종전엔 **화면을 열고 나서야** 굽기 시작해 11초가 비었다. 그 사이가 구멍이었다.
+
+    ★정확히 맞힐 필요가 없다 — 곳간을 채우는 것이 목적이다.
+      컷 목록은 화면(planClips)이 계산하고 여기서는 서버판(plan_beat_clips_for)을 쓴다.
+      두 계산은 반올림 경계에서 아주 조금 갈린다(실측 2026-09-21: 31컷 중 2컷, 0.01초).
+      그래도 **나머지 29컷은 곳간에서 그대로 재사용**되므로 화면이 열렸을 때 다시 굽는
+      값이 11초에서 2초 수준으로 준다(실측: 1컷만 다를 때 1.82초).
+      맞으면 즉시 쓰고, 조금 틀려도 손해가 없다.
+    """
+    import hashlib, subprocess
+    try:
+        from shopping_shorts import video_assemble as _va
+        job = Store(DB_PATH).get_mix_job(job_id)
+        if not job or not job.get("edit_plan"):
+            return
+        beats = (job["edit_plan"].get("beats") or [])
+        if not beats:
+            return
+        srcs = {k: v for k, v in (_resolve_sources(job, _MIX_WORK_DIR / job_id) or {}).items()
+                if v and Path(v).exists()}
+        if not srcs:
+            return
+        d = _pvproxy_dir(job_id)
+        d.mkdir(parents=True, exist_ok=True)
+
+        def _len(path):     # 길이(초) — 굽기 쪽과 같은 메모를 쓴다
+            path = Path(path)
+            memo = path.with_suffix(path.suffix + ".len")
+            try:
+                if memo.exists():
+                    a, b = memo.read_text().split(",", 1)
+                    if int(b) == path.stat().st_size:
+                        return float(a)
+            except (OSError, ValueError):
+                pass
+            r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                                "-of", "csv=p=0", str(path)], capture_output=True, timeout=30)
+            try:
+                v = float(r.stdout.decode().strip())
+            except ValueError:
+                return 0.0
+            try:
+                memo.write_text("%.6f,%d" % (v, path.stat().st_size))
+            except OSError:
+                pass
+            return v
+
+        src_durs = {k: _len(v) for k, v in srcs.items()}
+        tts, cuts, blens = {}, [], []
+        for b in beats:
+            bi = int(b.get("beat_idx", len(blens)))
+            tp = b.get("tts_path")
+            if not (tp and Path(tp).exists()):
+                return                      # 음성이 아직 없다 — 미리 구울 때가 아니다
+            tts[bi] = tp
+            td = _len(tp)
+            try:
+                mine = _va.plan_beat_clips_for(b, td, src_durs) or []
+            except Exception:
+                return
+            blens.append(len(mine))
+            for c in mine:
+                # ★화면과 같은 자리로 맞춘다(scene_play.js:707 Math.round(d*100)/100).
+                #   안 맞추면 곳간 키가 전부 달라져 한 조각도 재사용이 안 된다.
+                cuts.append({"video_id": str(c.get("video_id") or ""),
+                             "start": round(float(c.get("start") or 0), 3),
+                             "dur": math.floor(float(c.get("out_dur") or 0) * 100 + 0.5) / 100,
+                             # ★src_dur 도 같은 자리로 맞춘다 — 여기를 놓치면 키가 전부 어긋나
+                             #   곳간이 차 있어도 **한 조각도 재사용되지 않는다**
+                             #   (실측 2026-09-21: 1.67 vs 1.669 로 37조각이 전부 헛것이 됐다).
+                             "src_dur": math.floor(float(c.get("src_dur") or 0) * 100 + 0.5) / 100})
+        if not cuts or sum(blens) != len(cuts):
+            return
+        sig = hashlib.sha1(json.dumps([cuts, blens, "v4cut"], sort_keys=True).encode()).hexdigest()[:16]
+        if (d / ("%s.mp4" % sig)).exists():
+            return                          # 이미 있다
+        with _PVPROXY_LOCK:
+            if job_id in _PVPROXY_BUSY:
+                return                      # 누가 굽는 중 — 겹쳐 굽지 않는다
+            _PVPROXY_BUSY[job_id] = sig
+        _pvproxy_build(job_id, sig, cuts, srcs, blens, tts)
+    except Exception as e:                  # noqa: BLE001
+        print("[pvproxy] %s 미리굽기 실패(무해): %r" % (job_id, e), file=sys.stderr)
+
+
 def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                    beat_lens: list = None, tts: dict = None) -> None:
     """미리보기 합본을 굽는다 — **영상과 음성을 한 파일로**.
@@ -6292,9 +6383,81 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
     try:
         tmp.mkdir(parents=True, exist_ok=True)
 
+        # ── 컷 조각 곳간 ───────────────────────────────────────────────────
+        #   ★같은 컷을 두 번 굽지 않는다 (2026-09-21 사장님 "이런 방법이 있는데 왜 진작에").
+        #   종전은 굽고 나서 조각을 통째로 지웠다(rmtree). 그래서 장면을 하나만 바꿔도
+        #   **31컷을 전부 다시 구웠다** — 실측 8.9초. 그 값이 비싸서 자동으로 못 굽고
+        #   [바뀐 장면 렌더] 버튼을 두었고, 버튼을 안 누른 동안은 합본이 낡아 화면이
+        #   **옛 경로(조각 재생)** 로 돌았다. 튐이 나던 그 경로다.
+        #   조각을 남겨 두면 바뀐 컷만 구우면 된다 — 컷당 0.29초(31컷 8.9초 기준).
+        #   그러면 자동으로 굽는 값이 싸지고, 합본이 낡아 있는 구간 자체가 사라진다.
+        cache = d / "cuts"
+        cache.mkdir(parents=True, exist_ok=True)
+
+        def _dur(path):
+            """길이 — 한 번 재면 옆에 적어 둔다.
+            ★실측 2026-09-21: 전부 재사용해도 7.55초가 걸렸는데 그중 **3.31초(44%)**가
+              길이를 다시 재는 데(ffprobe 49번) 쓰였다. 굽는 값보다 재는 값이 더 컸다."""
+            path = Path(path)
+            memo = path.with_suffix(path.suffix + ".len")
+            # ★날짜로 판정하면 안 된다 — 곳간 파일은 '최근에 썼다'고 표시하려고 touch 하는데,
+            #   그러면 옆에 적어 둔 길이가 낡은 것으로 보여 **매번 다시 쟀다**
+            #   (실측 2026-09-21: 총 3.26초 중 2.48초=76%가 다시 재는 값이었다).
+            #   내용이 같은지는 **크기**로 본다 — 같은 파일이면 크기가 같다.
+            try:
+                sz = path.stat().st_size
+                if memo.exists():
+                    a, b = memo.read_text().split(",", 1)
+                    if int(b) == sz:
+                        return float(a)
+            except (OSError, ValueError):
+                pass
+            r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                                "-of", "csv=p=0", str(path)], capture_output=True, timeout=30)
+            try:
+                v = float(r.stdout.decode().strip())
+            except ValueError:
+                return 0.0
+            try:
+                memo.write_text("%.6f,%d" % (v, path.stat().st_size))
+            except OSError:
+                pass
+            return v
+
+        def _hash(parts):
+            import hashlib
+            return hashlib.sha1(json.dumps(parts, sort_keys=True).encode()).hexdigest()[:20]
+
+        def _cut_key(c):
+            """무엇이 같으면 같은 조각인가 — 소재·시작·길이·원본길이가 같으면 같다.
+
+            ★0.01초 단위로 뭉뚱그린다 (2026-09-21).
+              컷을 정하는 계산이 두 벌이다 — 화면(scene_play.js planClips)과
+              서버(video_assemble.plan_beat_clips_for). 규칙은 같지만 부동소수 반올림이
+              미세하게 갈려 **0.001~0.01초** 차이가 난다(실측: 31컷 중 5컷).
+              그 5컷이 4개 칸에 퍼져 있어 칸 4개를 통째로 다시 만들었다 — 미리 구워 둬도
+              절반밖에 못 썼다(10.9초 → 5.7초에서 멈춤).
+              영상 한 프레임이 0.033초다. 그보다 작은 차이는 **같은 그림**이므로 같은 조각으로
+              본다. 0.01 은 프레임의 3분의 1이라 다른 컷을 같다고 볼 위험이 없다.
+            """
+            import hashlib
+            def _q(x):      # 0.01초로 맞춘다(화면의 Math.round(d*100)/100 과 같은 자리)
+                return math.floor(float(x or 0) * 100 + 0.5) / 100
+            raw = json.dumps([str(c.get("video_id") or ""), _q(c.get("start")),
+                              _q(c.get("dur")), _q(c.get("src_dur")),
+                              str(srcs.get(c.get("video_id")) or "")], sort_keys=True)
+            return hashlib.sha1(raw.encode()).hexdigest()[:20]
+
         def enc(a):
             k, c = a
             dur = max(0.04, float(c["dur"]))
+            keep = cache / ("%s.ts" % _cut_key(c))
+            if keep.exists() and keep.stat().st_size > 0:
+                try:                      # 쓴 날짜를 갱신해 둔다 — 오래된 것부터 지울 때 쓴다
+                    keep.touch()
+                except OSError:
+                    pass
+                return keep               # ★이미 구워 둔 조각 — 다시 굽지 않는다
             out = tmp / f"{k:04d}.ts"
             src = srcs.get(c.get("video_id"))
             PW, PH = 720, 1280       # 소재 원본과 같은 크기 — 줄이지 않으므로 화질 손실도 없고 더 빠르다
@@ -6315,6 +6478,10 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             r = subprocess.run(cmd, capture_output=True, timeout=120)
             if r.returncode != 0 or not out.exists():
                 raise RuntimeError(r.stderr.decode("utf-8", "ignore")[-300:])
+            try:                          # 곳간에 넣어 둔다 — 다음에 같은 컷이면 그대로 쓴다
+                shutil.copy2(out, keep)
+            except OSError:
+                pass
             return out
 
         with ThreadPoolExecutor(4) as ex:
@@ -6341,13 +6508,25 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 ap = tts.get(bi)
                 want = 0.0
                 if ap:
-                    pr = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                                         "-of", "csv=p=0", str(ap)], capture_output=True, timeout=30)
-                    try:
-                        want = float(pr.stdout.decode().strip())
-                    except ValueError:
-                        want = 0.0
-                bl = tmp / ("b%03d.ts" % bi)
+                    want = _dur(ap)
+                # ★칸도 곳간에 둔다 — 장면 하나를 바꿔도 **그 칸만** 다시 만든다.
+                #   칸 만들기가 굽기의 44%였다(실측 2026-09-21: 칸영상 2.17초 + 칸음성 1.16초).
+                #   컷만 재사용해선 7.1초에서 안 줄었던 이유가 이것이다.
+                bkey = _hash([_cut_key(c) for c in mine_cuts] + [str(ap or ""), "%.3f" % want])
+                bl = cache / ("b_%s.ts" % bkey)
+                bpad = cache / ("b_%s.m4a" % bkey)
+                if bl.exists() and bl.stat().st_size > 0 and ((not ap) or
+                        (bpad.exists() and bpad.stat().st_size > 0)):
+                    try: bl.touch(); bpad.touch()
+                    except OSError: pass
+                    segs.append(bl)
+                    co, cacc = [], 0.0
+                    for one in mine:
+                        co.append(round(cacc, 3))
+                        cacc += _dur(one) or float(mine_cuts[len(co) - 1].get("dur") or 0)
+                    cuts_off.append(co)
+                    if ap: auds.append(bpad)
+                    continue
                 blst = _clist(mine, "b%03d.txt" % bi)
                 # ★컷 경계마다 **되감을 수 있는 지점(키프레임)**을 박는다.
                 #   브라우저는 시크하면 가장 가까운 키프레임으로만 간다. 드문드문 있으면
@@ -6382,23 +6561,15 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 co, cacc = [], 0.0
                 for one in mine:
                     co.append(round(cacc, 3))
-                    pc = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                                         "-of", "csv=p=0", str(one)], capture_output=True, timeout=30)
-                    try: cacc += float(pc.stdout.decode().strip())
-                    except ValueError: cacc += float(mine_cuts[len(co) - 1].get("dur") or 0)
+                    cacc += _dur(one) or float(mine_cuts[len(co) - 1].get("dur") or 0)
                 cuts_off.append(co)
                 # ★칸 음성을 **그 칸 영상 길이에 정확히** 맞춘다(뒤에 무음을 채운다).
                 #   영상은 프레임 단위(1/30초)로만 끊겨 칸마다 최대 0.033초씩 길어진다.
                 #   그대로 두면 칸이 넘어갈 때마다 쌓여 뒤로 갈수록 자막이 밀린다
                 #   (실측 6칸에 0.131초). 칸마다 같은 길이로 맞추면 누적이 0이 된다.
                 if ap:
-                    pv = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                                         "-of", "csv=p=0", str(bl)], capture_output=True, timeout=30)
-                    try:
-                        vlen = float(pv.stdout.decode().strip())
-                    except ValueError:
-                        vlen = want
-                    pad = tmp / ("a%03d.m4a" % bi)
+                    vlen = _dur(bl) or want
+                    pad = bpad
                     r3 = subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(ap),
                                          "-af", "apad", "-t", "%.3f" % vlen,
                                          "-c:a", "aac", "-b:a", "96k", str(pad)],
@@ -6431,9 +6602,7 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             offs, acc = [], 0.0
             for bl in segs:
                 offs.append(round(acc, 3))
-                pv = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                                     "-of", "csv=p=0", str(bl)], capture_output=True, timeout=30)
-                acc += float(pv.stdout.decode().strip())
+                acc += _dur(bl)
             (d / ("%s.json" % sig)).write_text(
                 json.dumps({"offs": offs, "dur": round(acc, 3), "cuts": cuts_off}),
                 encoding="utf-8")
@@ -6443,6 +6612,20 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
         for old in list(d.glob("*.mp4")) + list(d.glob("*.json")):   # 최신 한 벌만 남긴다
             if old.stem != sig:
                 old.unlink(missing_ok=True)
+        # ★곳간이 무한정 커지지 않게 — 오래 안 쓴 조각부터 지운다.
+        #   (예전에 서버 복사본이 디스크를 채워 렌더가 통째로 멈춘 적이 있다.)
+        #   한 편이 보통 30~60컷이니 200개면 최근 편성 서너 벌은 넉넉히 덮는다.
+        try:
+            keeps = sorted([f for f in cache.iterdir() if f.suffix in (".ts", ".m4a")],
+                           key=lambda f: f.stat().st_mtime, reverse=True)
+            for gone in keeps[400:]:
+                gone.unlink(missing_ok=True)
+                gone.with_suffix(gone.suffix + ".len").unlink(missing_ok=True)
+            for memo in cache.glob("*.len"):      # 짝을 잃은 길이 메모도 같이 치운다
+                if not Path(str(memo)[:-4]).exists():
+                    memo.unlink(missing_ok=True)
+        except OSError:
+            pass
     except Exception as e:
         print(f"[pvproxy] {job_id} {sig} 실패: {e}")
     finally:
@@ -8393,6 +8576,8 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
     #   중간에 죽어도 staleness 가드가 failed로 알려준다.
     store.update_mix_job(job_id, status="tts")
     background_tasks.add_task(resynth_tts_job, job_id, DB_PATH, _MIX_WORK_DIR)
+    # 음성이 다 되면 이어서 합본을 미리 굽는다 — 편집 화면을 열었을 때 이미 있게.
+    background_tasks.add_task(_pvproxy_prewarm, job_id)
     return {"ok": True}
 
 
