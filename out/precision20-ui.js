@@ -120,6 +120,7 @@
   let noTemplate=false;
   let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',bodyCaptionMotion='',fontSet='',hookMotionSpeed=.72,hookCaptionMode='visible';
   const fontScales=new Map();
+  let channelCap=null;   // 채널명이 자리 한계에 닿아 있으면 {key, effective(실제 배율)} — fitChannel이 적고 스테퍼가 읽는다(초기화 순서 때문에 여기서 선언)
   const fittedText=new Map();
   const textOffsets=new Map();
   const textDrags=new Map();   // 제목·채널명을 마우스로 옮긴 양(칸 기준 %)
@@ -478,7 +479,8 @@
   function updateSteppers(){
     root.querySelectorAll('.layout-a [data-field-key]').forEach(field=>{
       const output=field.querySelector('.font-stepper output');
-      if(output)output.textContent=Math.round(textScale(field.dataset.fieldKey)*100)+'%';
+      const bind=field.dataset.fieldKey,capped=bind==='channel'&&channelCap&&channelCap.key===scaleKey(bind)&&fontScales.has(channelCap.key);
+      if(output){output.textContent=Math.round((capped?channelCap.effective:textScale(bind))*100)+'%'+(capped?' 최대':'');output.title=capped?'이 템플릿에서 채널명이 들어갈 자리의 최대 크기입니다':'';}
     });
   }
   function updateCaptionButtons(){
@@ -661,6 +663,54 @@
     }
     return el;
   }
+  // ★채널명 자리(2026-09-21 사장님 "채널명 크기 조정이 계속 깨진다") — 긴 채널명을 키우면 글자가 알약 밖으로 터지고
+  //   ☰·🔍 아이콘을 덮고 화면 끝에서 잘렸다. 자리를 정하는 곳이 없었기 때문이다(크기 상한 없음 · 알약은 글자와 무관 · 아이콘 무시).
+  //   쓸 수 있는 자리 = 좌우는 같은 줄 아이콘 사이(없으면 화면 2~98%), 위아래는 보이는 알약 높이(없으면 화면 위~아래 첫 경계).
+  //   그 안에서만 커지고, 알약은 글자를 따라 좌우로 늘어난다. 한계에 닿으면 저장값(표시 %)도 실제 크기로 맞춘다.
+  let inkContext=null;
+  function fitChannel(c,textEl,boxEl,frame,scale,ornaments,surfaceEls){
+    const W=frame.width,center=c.x+c.width/2,cy=c.y+c.height/2,gap=5,padX=9,padY=2.5;
+    let L=W*.02,R=W*.98;
+    ornaments.forEach(o=>{if(o.y<c.y+c.height&&o.y+o.height>c.y){if(o.x+o.width/2<center)L=Math.max(L,o.x+o.width+gap);else R=Math.min(R,o.x-gap);}});
+    const half=Math.max(8,Math.min(center-L,R-center));
+    // 보이는 알약: 둥근 모서리·테두리가 있고 채널 중심을 품은 좁은 면. (DOM으로 그리는 상자는 boxEl)
+    const pill=boxEl?{s:{x:c.x,y:c.y,width:c.width,height:c.height,radius:c.radius,border:c.border},el:boxEl}
+      :surfaceEls.filter(({s})=>(Number(s.radius)>0||s.border)&&s.width<W*.8&&s.x<=center&&s.x+s.width>=center&&s.y<=cy&&s.y+s.height>=cy).sort((a,b)=>a.s.width*a.s.height-b.s.width*b.s.height)[0];
+    const pillSeen=pill&&(Number(pill.s.radius)>0||pill.s.border);
+    // 위아래 한계: 알약이 보이면 그 높이, 아니면 채널 중심을 품은 면(머리띠)의 위아래 끝과 화면 위
+    let top=0,bottom=frame.height;
+    if(pillSeen){top=pill.s.y;bottom=pill.s.y+pill.s.height;}
+    else surfaceEls.forEach(({s})=>{if(s.width>=W*.8&&s.y<=cy&&s.y+s.height>=cy){top=Math.max(top,s.y);bottom=Math.min(bottom,s.y+s.height);}});
+    const limitH=2*Math.min(cy-top,bottom-cy);
+    // 글자는 아이콘 사이 가운데에 둔다
+    Object.assign(textEl.style,{left:(center-half)/W*100+'%',right:(W-center-half)/W*100+'%',transform:'none'});
+    const measure=()=>{const range=document.createRange();range.selectNodeContents(textEl);const line=range.getBoundingClientRect();
+      const cs=getComputedStyle(textEl);inkContext=inkContext||document.createElement('canvas').getContext('2d');inkContext.font=`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const m=inkContext.measureText(textEl.textContent||' '),fb=(m.fontBoundingBoxAscent+m.fontBoundingBoxDescent)||line.height||1;
+      const baseline=line.top+m.fontBoundingBoxAscent*(line.height/fb);
+      return {width:line.width,inkTop:baseline-m.actualBoundingBoxAscent,inkBottom:baseline+m.actualBoundingBoxDescent};};
+    let m=measure();
+    const roomW=(2*half-padX*2)*scale,roomH=(limitH-padY*2)*scale;
+    const k=Math.min(1,roomW/Math.max(1,m.width),roomH/Math.max(1,m.inkBottom-m.inkTop));
+    if(k<.999){
+      const size=parseFloat(textEl.style.fontSize)||parseFloat(getComputedStyle(textEl).fontSize),letter=parseFloat(textEl.style.letterSpacing)||0;
+      textEl.style.fontSize=Math.max(7,size*k)+'px';textEl.style.letterSpacing=letter*k+'px';m=measure();
+    }
+    // 한계에 닿았는지만 적어 둔다. 저장값(0.1 단위)은 안 건드린다 — 깎으면 −로 정확히 100%에 못 돌아온다.
+    channelCap=k<.999?{key:scaleKey('channel'),effective:textScale('channel')*k}:null;
+    // 보이는 알약 안에서는 글자 잉크를 알약 세로 가운데에 맞춘다(손으로 옮긴 적이 없을 때만 — 옮긴 자리는 존중한다)
+    const moved=textDrags.get(scaleKey('channel'))||{x:0,y:0};
+    if(pillSeen&&!moved.x&&!moved.y&&!textOffset('channel')){
+      const pv=preview.getBoundingClientRect(),want=pv.top+(pill.s.y+pill.s.height/2)*scale,delta=want-(m.inkTop+m.inkBottom)/2;
+      if(Math.abs(delta)>.4)textEl.style.top=(parseFloat(textEl.style.top)||0)+delta/pv.height*100+'%';
+    }
+    // 알약은 글자를 따라 좌우로만 늘어난다(원래 폭보다 줄지는 않는다 · 아이콘 자리와 화면 밖으로는 안 간다)
+    if(pill){
+      const needHalf=m.width/scale/2+padX;
+      const x0=Math.max(W*.02,Math.min(pill.s.x,center-needHalf)),x1=Math.min(W*.98,Math.max(pill.s.x+pill.s.width,center+needHalf));
+      Object.assign(pill.el.style,{left:x0/W*100+'%',width:(x1-x0)/W*100+'%'});
+    }
+  }
   function setNoTemplate(){
     noTemplate=true;document.body.classList.add('no-template');
     grid.querySelectorAll('[data-p20]').forEach(x=>x.classList.remove('selected'));grid.querySelector('[data-none]')?.classList.add('selected');
@@ -698,7 +748,7 @@
     if(dirty.size){
       (frame.boxes||[]).forEach(b=>{const box=addPatch(b.y/frame.height*100,b.height/frame.height*100,b.background,b.x/frame.width*100,b.width/frame.width*100);if(b.border)box.style.border=`${b.border_width||1}px solid ${b.border}`;});
     }
-    const designScale=preview.clientHeight/frame.height;
+    const designScale=preview.clientHeight/frame.height,surfaceEls=[];
     (frame.surfaces||[]).forEach(s=>{
       if(s.bind==='caption')return;
       const offset=s.bind==='caption'?captionOffset()+textOffset('caption'):0;
@@ -708,6 +758,7 @@
       surface.style.borderRadius=(s.radius||0)*designScale+'px';
       for(const [key,css] of [['border','border'],['borderTop','borderTop'],['borderBottom','borderBottom']])if(s[key])surface.style[css]=`${Math.max(.5,designScale)}px solid ${s[key]}`;
       if(s.shadow)surface.style.boxShadow=s.shadow;
+      surfaceEls.push({s,el:surface});
     });
     (frame.ornaments||[]).forEach(o=>{
       const el=document.createElement('i');el.className='body-ornament body-ornament-'+o.type;el.setAttribute('aria-hidden','true');
@@ -716,22 +767,21 @@
     });
     const channelBoxes=frame.channel_boxes?.length?frame.channel_boxes:(frame.channel_box?[frame.channel_box]:[]);
     if(dirty.has('channel')&&channelBoxes.length){
+      const ornaments=(frame.ornaments||[]).slice();   // 아래 ornaments.forEach가 그리는 것과 같은 목록
       channelBoxes.forEach(c=>{
+      const scale=preview.clientHeight/frame.height;
+      let box=null,channelText;
       if(c.designed){
         const ln={x0:c.x,x1:c.x+c.width,y0:c.y,h:c.height,font_size:c.font_size,font_family:c.font_family,font_weight:c.font_weight,letter_spacing:c.letter_spacing,background:c.background};
-        addText(value('channel'),ln,frame,c.color,'center precision-channel','channel');return;
+        channelText=addText(value('channel'),ln,frame,c.color,'center precision-channel','channel');
+      }else{
+        const maxWidth=frame.width*.9,maxX=frame.width*.05;
+        box=addPatch(c.y/frame.height*100,c.height/frame.height*100,c.background,c.x/frame.width*100,c.width/frame.width*100,'channel');
+        box.style.borderRadius=((Number(c.radius)||0)*scale)+'px';if(c.border)box.style.border=`${Math.max(1,scale)}px solid ${c.border}`;
+        const channelLine={x0:maxX,x1:maxX+maxWidth,y0:c.y,y1:c.y+c.height,h:c.height,font_size:c.font_size,font_family:c.font_family,font_weight:c.font_weight,letter_spacing:c.letter_spacing,background:c.background,stroke:0,shadow_y:0};
+        channelText=addText(value('channel'),channelLine,frame,c.color,'center precision-channel','channel');
       }
-      const scale=preview.clientHeight/frame.height,maxWidth=frame.width*.9,maxX=frame.width*.05;
-      const box=addPatch(c.y/frame.height*100,c.height/frame.height*100,c.background,c.x/frame.width*100,c.width/frame.width*100,'channel');
-      box.style.borderRadius=((Number(c.radius)||0)*preview.clientHeight/frame.height)+'px';if(c.border)box.style.border=`${Math.max(1,preview.clientHeight/frame.height)}px solid ${c.border}`;
-      const channelLine={x0:maxX,x1:maxX+maxWidth,y0:c.y,y1:c.y+c.height,h:c.height,font_size:c.font_size,font_family:c.font_family,font_weight:c.font_weight,letter_spacing:c.letter_spacing,background:c.background,stroke:0,shadow_y:0};
-      const channelText=addText(value('channel'),channelLine,frame,c.color,'center precision-channel','channel');
-      const range=document.createRange();range.selectNodeContents(channelText);
-      const contentWidth=range.getBoundingClientRect().width/scale+18;
-      const expandedWidth=Math.min(maxWidth,Math.max(c.width,contentWidth));
-      const center=c.x+c.width/2,expandedX=Math.max(frame.width*.02,Math.min(frame.width*.98-expandedWidth,center-expandedWidth/2));
-      Object.assign(box.style,{left:expandedX/frame.width*100+'%',width:expandedWidth/frame.width*100+'%'});
-      Object.assign(channelText.style,{left:expandedX/frame.width*100+'%',right:(frame.width-expandedX-expandedWidth)/frame.width*100+'%'});
+      fitChannel(c,channelText,box,frame,scale,ornaments,surfaceEls);
       });
     }
     const lines=frame.lines||[];
@@ -1028,8 +1078,9 @@
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-font-step]');if(!button)return;
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
+    if(bind==='channel'&&Number(button.dataset.fontStep)>0&&channelCap&&channelCap.key===scaleKey(bind)&&fontScales.has(channelCap.key))return;
     const next=Math.min(3,Math.max(.5,textScale(bind)+Number(button.dataset.fontStep)));
-    if(Math.abs(next-1)<.001)fontScales.delete(scaleKey(bind));else fontScales.set(scaleKey(bind),next);[...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));markDirty(bind);preview.classList.remove('is-pristine');updateSteppers();renderEdit();
+    if(Math.abs(next-1)<.001)fontScales.delete(scaleKey(bind));else fontScales.set(scaleKey(bind),next);[...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));markDirty(bind);preview.classList.remove('is-pristine');renderEdit();updateSteppers();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-position-step]');if(!button)return;

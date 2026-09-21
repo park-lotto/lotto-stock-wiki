@@ -158,7 +158,11 @@ const judge=m=>{
         j0.forEach(t=>fails.push(where+' 기본('+m0.글꼴+') → '+t));await shoot(where,'기본',m0);
         await press('0.1',STEPS);
         const m1=await stable();await colorEdges(m1,!!m0.캡슐숨음);(judge(m1)||[]).forEach(t=>fails.push(where+' 키운뒤('+m1.글꼴+') → '+t));await shoot(where,'키운뒤',m1);
-        await press('-0.1',STEPS);
+        // 원복: 한계에 닿으면 ＋가 더 안 먹으므로 '누른 만큼 −'가 아니라 **표시가 100%가 될 때까지** −를 누른다(사장님이 하는 방식)
+        for(let t=0;t<30;t++){
+          const pct=await page.evaluate(()=>{const o=document.querySelector('[data-field-key="channel"] .font-stepper output');return o?parseInt(o.textContent,10):100});
+          if(pct<=100)break;await press('-0.1',1);
+        }
         const m2=await stable();if(m2&&m0.캡슐숨음&&m2.기준종류==='캡슐'){m2.기준종류='머리띠';m2.기준=m2.화면;}   // 원복: 키웠다 줄이면 처음 자리로 돌아와야 한다(v186·v187이 여기서 미완이었다)
         if(m2&&m2.ink&&['좌','우','위','아래'].some(k=>Math.abs(m2.ink[k]-m0.ink[k])>1||Math.abs(m2.기준[k]-m0.기준[k])>1))fails.push(where+' 원복 → 키웠다 줄였더니 처음 자리와 다르다');
       }
