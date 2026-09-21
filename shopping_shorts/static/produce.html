@@ -18211,6 +18211,9 @@ function s2PickSeed(i){
 //   화면 재료의 판단처는 useFootage 하나다(collectMixUrls) — 새 통로를 만들지 않고 그 값을 끈다.
 //   앞서 씨앗이던 영상은 화면 사용을 되살린다(씨앗을 바꿨는데 계속 빠져 있으면 재료가 조용히 준다).
 function _seedFootageOff(prevSeed, nextSeed){
+  // ★지금은 사장님 계정만(2026-09-21 사장님 "고객들은 예전 걸로 해두고 나만 라이브"). 백본 대본
+  //   스위치(backbone_script_enabled=admin)와 짝 — 대본이 옛 경로인 고객은 화면 재료도 종전대로 둔다.
+  if(!window.IS_ADMIN) return;
   try{
     const find=sc=>(sc? HANDOFF.find(h=>h && h.shortcode===sc) : null);
     const prev=find(prevSeed && prevSeed.shortcode);
