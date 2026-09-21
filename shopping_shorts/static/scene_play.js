@@ -1078,10 +1078,23 @@ function pvxTick(){
   let p; try { p = pvxCuts(); } catch(e){ return; }
   if (!p.cuts.length || p.key === PVX.key) { PVX.lastKey = p.key; pvxBtns(PVX.ready ? 'building' : ''); return; }
   if (PVX.ready) { pvxBtns('building'); return; }
+  // ★장면을 바꾸면 **자동으로** 다시 굽는다 (2026-09-21 사장님 "1 2 를 어떻게 없애냐고").
+  //
+  //   예전엔 [🎞 바뀐 장면 렌더] 버튼을 눌러야 다시 구웠다. 통째로 다시 굽느라 8.9초가
+  //   들어서 자동으로 못 했던 것이다. 그런데 버튼을 안 누른 동안 합본이 낡은 채로 남고,
+  //   화면은 그때 **옛 경로(조각 재생)** 로 돈다 — 재생기를 나눠 쓰고 다음 컷을 미리
+  //   앉히는, 튐이 나던 바로 그 길이다. 즉 버튼은 구멍을 만들고 있었다.
+  //
+  //   이제 컷·칸을 곳간에 두고 바뀐 것만 다시 만든다 — 실측 2026-09-21: 장면 1개를
+  //   바꿔도 **1.8초**(종전 8.9초, 6.2배). 이 값이면 손을 떼는 사이에 끝난다.
+  //   그래서 버튼을 없애고 늘 최신 합본을 유지한다 → 합본이 낡아 있는 구간이 사라진다.
+  //
+  //   ※연달아 만질 때 매번 굽지 않도록, 편성이 한 번 이상 그대로일 때(stable) 굽는다.
+  //     3초마다 확인하므로 손을 멈추면 곧바로 굽기 시작한다.
   const stable = p.key === PVX.lastKey;
   PVX.lastKey = p.key;
-  if (!PVX.key && !PVX.want) PVX.want = p.key;                    // 첫 배치 — 기다리지 않고 바로 자동
-  if (PVX.want !== p.key){ pvxBtns(PVX.key ? 'stale' : ''); return; }   // 바뀜 — 버튼 누를 때까지 대기
+  if (stable) PVX.want = p.key;
+  if (PVX.want !== p.key){ pvxBtns(''); return; }   // 아직 만지는 중 — 멈추면 다음 틱에 굽는다
   pvxBtns('building');
   if (PVX.pending === p.key) return;
   PVX.pending = p.key;
