@@ -2853,8 +2853,14 @@ def normalize_baked_clips_for_capcut(plan, clips, timeline, work, prefix="cc"):
     return out
 
 
-def plan_using_beat_clips(plan, clips, timeline, prefix="cc", *, preserve_capcut_speed=False):
+def plan_using_beat_clips(plan, clips, timeline, prefix="cc", *, preserve_capcut_speed=False,
+                          cuts=None):
     """편집안을 **조각 기준**으로 바꾼 사본. 각 비트가 자기 조각을 통째로(0~끝) 쓴다.
+
+    ★cuts(final_clip_pairs의 결과)를 주면 조각 **안의 컷 경계**를 남긴다(2026-09-21 이윤정님 제보:
+      캡컷에 `cc1` 한 덩이로 가서 본인이 자른 장면 컷이 사라졌다). 파일은 칸 단위 그대로 두고
+      — 칸 안에서 컷을 앞뒤로 늘릴 여분이 남는다 — 타임라인만 완성본과 같은 자리에서 나눈다.
+      경계는 렌더가 쓰는 계획에서 온 값이라 여기서 따로 계산하지 않는다(0순위-B).
 
     조각은 그 비트의 화면을 이미 담고 있으므로 재료를 하나로 접는다 —
     alternates·scene_override를 남기면 캡컷이 없는 파일을 찾는다.
@@ -2870,6 +2876,21 @@ def plan_using_beat_clips(plan, clips, timeline, prefix="cc", *, preserve_capcut
         vid = f"{prefix}{idx}"
         if vid not in clips:
             continue
+        # 원본 소스를 가리키는 컷·구절 짝은 조각 좌표에선 뜻이 없다 — 남기면 조각을 엉뚱한 데서 나눈다.
+        for _k in ("manual_cuts", "fixed_lens", "clip_anchor", "stretch_fill", "slow"):
+            b.pop(_k, None)
+        _mine = [c for c in (cuts or []) if c.get("beat_idx") == idx
+                 and float(c.get("dur") or 0.0) > 0]
+        if _mine:
+            b["phrase_sync"] = False
+            # 조각 안 시작 = 그 칸 컷 길이의 누적. 완성본 절대시각(fin)에서 빼지 않는다 —
+            # 음성 없는 칸을 세는 법이 final_clip_pairs와 _beat_timeline에서 달라 어긋날 수 있다.
+            _acc, _cuts = 0.0, []
+            for c in _mine:
+                _cuts.append({"video_id": vid, "seg_id": f"{vid}-0",
+                              "start": _acc, "dur": float(c["dur"])})
+                _acc += float(c["dur"])
+            b["manual_cuts"] = _cuts
         d = durs.get(idx) or 0.0
         try:
             speed = float(b.get("sync_speed") or 1.0)

@@ -145,3 +145,56 @@ class Test조각기준_편집안:
     def test_조각이_없는_비트는_그대로_둔다(self):
         out = mp.plan_using_beat_clips(_plan(), {"cc0": "/w/cc0.mp4"}, _timeline())
         assert out["beats"][1]["primary"]["video_id"] == "s1"
+
+
+class Test조각안의_컷경계:
+    """★2026-09-21 이윤정님 제보 — 캡컷에 `cc1` 한 덩이(5초20)로 가서 **본인이 자른 장면 컷이
+    사라졌다**. 조각은 칸 단위 파일 그대로 두되(칸 안에서 앞뒤로 늘릴 여분이 남는다),
+    타임라인은 완성본과 **같은 컷 경계**로 나뉘어야 한다."""
+
+    def _beat(self):
+        return {"beat_idx": 0, "narration": "첫째 말 둘째 말 셋째 말", "phrase_sync": False,
+                "primary": {"video_id": "a", "seg_id": "a-0", "start": 3.0, "end": 9.0},
+                "alternates": [{"video_id": "b", "seg_id": "b-0", "start": 10.0, "end": 14.0}],
+                "manual_cuts": [
+                    {"video_id": "a", "seg_id": "a-0", "start": 3.0, "dur": 1.5},
+                    {"video_id": "b", "seg_id": "b-0", "start": 11.0, "dur": 2.0},
+                    {"video_id": "a", "seg_id": "a-0", "start": 6.0, "dur": 2.5}]}
+
+    def _folded(self, beat, speed=None):
+        from shopping_shorts import video_assemble as va
+        if speed:
+            beat["sync_speed"] = speed
+        render = va.plan_beat_clips_for(beat, 6.0, {"a": 30.0, "b": 30.0})
+        cuts, t = [], 0.0
+        for c in render:
+            cuts.append({"beat_idx": 0, "fin": t, "dur": c["out_dur"]})
+            t += c["out_dur"]
+        tl = [{"beat_idx": 0, "t0": 0.0, "dur": 6.0}]
+        out = mp.plan_using_beat_clips({"beats": [beat]}, {"cc0": "/w/cc0.mp4"}, tl,
+                                       preserve_capcut_speed=True, cuts=cuts)
+        return render, out["beats"][0]
+
+    def test_캡컷_컷경계가_완성본과_같다(self):
+        from shopping_shorts import capcut_draft as cd
+        render, b = self._folded(self._beat())
+        got = cd._beat_clips(b, 6.0, {"cc0": 6.0})
+        assert [round(c["out_dur"], 3) for c in got] == [round(c["out_dur"], 3) for c in render]
+        assert [round(c["start"], 3) for c in got] == [0.0, 1.5, 3.5]
+        assert {c["video_id"] for c in got} == {"cc0"}
+
+    def test_배속이_구워진_조각은_소스_좌표를_배속만큼_늘린다(self):
+        """역변환 소스는 길이가 배속배다 — 컷 시작·읽을 길이도 같이 늘려야 같은 그림이다."""
+        from shopping_shorts import capcut_draft as cd
+        render, b = self._folded(self._beat(), speed=1.4)
+        got = cd._beat_clips(b, 6.0, {"cc0": 6.0 * 1.4})
+        assert len(got) == len(render) == 3
+        assert [round(c["out_dur"], 3) for c in got] == [round(c["out_dur"], 3) for c in render]
+        assert round(got[1]["start"], 3) == round(got[0]["out_dur"] * 1.4, 3)
+        for c in got:
+            assert round(c["src_dur"] / c["out_dur"], 3) == 1.4
+
+    def test_컷정보가_없으면_종전처럼_한덩이(self):
+        out = mp.plan_using_beat_clips({"beats": [self._beat()]}, {"cc0": "/w/cc0.mp4"},
+                                       [{"beat_idx": 0, "t0": 0.0, "dur": 6.0}])
+        assert "manual_cuts" not in out["beats"][0]

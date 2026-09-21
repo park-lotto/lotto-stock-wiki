@@ -9195,8 +9195,16 @@ def api_mix_capcut(job_id: str, base: str = ""):
                 _clips = mix_pipeline.normalize_baked_clips_for_capcut(
                     plan, _clips, timeline, work)
                 source_video_paths = dict(_clips)
+                # ★조각 안의 **컷 경계**를 같이 넘긴다(2026-09-21 이윤정님 제보: 캡컷에 칸 한 덩이로
+                #   가서 본인이 자른 장면 컷이 사라졌다). 경계는 렌더와 같은 계획에서 온다(0순위-B).
+                #   못 구하면 종전처럼 칸 한 덩이로 나간다 — 내보내기 자체는 막지 않는다.
+                try:
+                    _cuts = mix_pipeline.final_clip_pairs(
+                        plan, tts_paths, mix_pipeline._src_durs_for(job, work))
+                except Exception:      # noqa: BLE001
+                    _cuts = None
                 plan = mix_pipeline.plan_using_beat_clips(
-                    plan, _clips, timeline, preserve_capcut_speed=True)
+                    plan, _clips, timeline, preserve_capcut_speed=True, cuts=_cuts)
                 timeline = _beat_timeline(plan, tts_paths)
         elif job.get("clean_status") == "ready":
             return JSONResponse(status_code=409, content={
