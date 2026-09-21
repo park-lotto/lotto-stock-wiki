@@ -18211,7 +18211,7 @@ function s2PickSeed(i){
 //   화면 재료의 판단처는 useFootage 하나다(collectMixUrls) — 새 통로를 만들지 않고 그 값을 끈다.
 //   앞서 씨앗이던 영상은 화면 사용을 되살린다(씨앗을 바꿨는데 계속 빠져 있으면 재료가 조용히 준다).
 function _seedFootageOff(prevSeed, nextSeed){
-  // ★지금은 사장님 계정만(2026-09-21 사장님 "고객들은 예전 걸로 해두고 나만 라이브"). 백본 대본
+  // ★지금은 사장님 계정만(2026-09-21 사장님 "고객들은 예전 걸로 해두고 나만 라이브"). 새 대본
   //   스위치(backbone_script_enabled=admin)와 짝 — 대본이 옛 경로인 고객은 화면 재료도 종전대로 둔다.
   if(!window.IS_ADMIN) return;
   try{
@@ -18317,7 +18317,7 @@ function s2RenderStyles(){
   // ★씨앗 유형 자동 선택(2026-09-20 사장님) — 픽업영상 대본은 없앴다. 씨앗 영상이 이미 그 유형으로
   //   찍혀 있으니 그 유형 스파인을 서버가 고른다. 사용자는 **끄지 못한다**(재료와 늘 맞는 안이라 기본값).
   // ★고객은 예전 「픽업영상 대본」 그대로(2026-09-21 사장님 "고객들은 예전 걸로 해두고 나만 라이브").
-  //   09-20의 '씨앗 유형 자동'은 서버 백본 경로(backbone_script_enabled=admin)와 짝이라 사장님 계정만 —
+  //   09-20의 '씨앗 유형 자동'은 서버 대본 경로(backbone_script_enabled=admin)와 짝이라 사장님 계정만 —
   //   고객에게 자동 카드를 보여주면 서버가 그 안을 안 만들어 **픽업 대본만 사라진** 꼴이 된다(09-20 21:05~).
   const auto = window.IS_ADMIN ? `<div class="s2-card sel locked" onclick="s2AutoLockedMsg()" title="담은 씨앗 영상과 같은 유형의 스타일로 자동으로 만듭니다 — 재료와 늘 맞아 끌 수 없어요">
     <div class="t">🎯 이 영상에 딱 맞는 스타일 <span class="sp"></span><span class="s2-badge ok">자동</span></div>
