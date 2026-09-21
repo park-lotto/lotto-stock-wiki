@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>장면폰트 조사 — 글꼴·색톤·꾸밈 고르기</title>
+<style>
+:root{--bg:#0f1115;--card:#181b22;--line:#2a2f3a;--text:#e8eaf0;--mute:#8b93a5;--pick:#19f5e6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Pretendard,"Malgun Gothic",sans-serif;line-height:1.5}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:18px;margin:36px 0 6px}
+.sub{color:var(--mute);font-size:13px;margin:0 0 14px}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;max-width:1500px;margin:0 auto;padding:24px}
+aside{position:sticky;top:16px;align-self:start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.stat b{display:block;font-size:24px}.stat span{color:var(--mute);font-size:12px}
+.bars{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.bars>div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.bar{display:grid;grid-template-columns:86px 1fr 28px;gap:8px;align-items:center;font-size:12px;margin:4px 0}
+.bar i{display:block;height:10px;border-radius:5px;background:#3a4252}
+.sheet{width:100%;border-radius:12px;border:1px solid var(--line);margin-top:12px;display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.pick{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px;cursor:pointer;position:relative;text-align:left;color:inherit;font:inherit}
+.pick:hover{border-color:#4a5468}.pick.on{border-color:var(--pick);box-shadow:0 0 0 3px rgba(25,245,230,.18)}
+.pick.on::after{content:"선택";position:absolute;top:6px;right:6px;background:var(--pick);color:#001;font-size:11px;font-weight:800;padding:2px 7px;border-radius:9px}
+.pick .nm{font-weight:700;font-size:13px;margin-top:7px}.pick .nt{color:var(--mute);font-size:11.5px;min-height:34px}
+.pick .lic{font-size:10.5px;color:#7ddc9a}.pick .lic.warn{color:#ffc76b}
+.phone{aspect-ratio:9/16;width:100%;border-radius:10px;overflow:hidden;position:relative;container-type:inline-size;background:#222}
+.phone .band{height:5.2%;display:flex;align-items:center;justify-content:center;font-size:4.4cqw;opacity:.85}
+.phone .ttl{padding:3cqw 3cqw 4cqw;text-align:center}
+.phone .l1,.phone .l2{display:block;white-space:nowrap;line-height:1.3}
+.phone .l2 span{display:inline-block;padding:0 1.5cqw}.phone .ink{position:relative;display:inline-block}
+.phone .vid{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(160deg,#6d7f8f,#2f3a44 55%,#1b2229)}
+.phone .cap{position:absolute;left:0;right:0;bottom:9%;text-align:center;font-size:7cqw;color:#fff;-webkit-text-stroke:.9cqw #000;paint-order:stroke fill}
+.phone.body .ttl{padding:2cqw}.phone.body .bt{display:block;background:#fff;color:#080808;font-size:5.6cqw;padding:1.6cqw 1cqw;white-space:nowrap;overflow:hidden}
+.grid .phone{aspect-ratio:9/5.4}
+.chips{display:flex;gap:6px;margin-top:6px}.chips i{width:22px;height:22px;border-radius:6px;border:1px solid #0006;display:block}
+aside h3{margin:0 0 8px;font-size:15px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cnt{font-size:13px;margin:10px 0 4px;color:var(--mute)}.cnt b{color:var(--text)}
+.sel{font-size:12px;min-height:18px;color:#cfd6e6;word-break:keep-all}
+button.act{width:100%;margin-top:10px;padding:11px;border-radius:10px;border:0;background:var(--pick);color:#001;font-weight:800;font-size:14px;cursor:pointer}
+button.ghost{background:#252a35;color:var(--text)}
+#msg{font-size:12px;color:#7ddc9a;min-height:18px;margin-top:6px}
+textarea{width:100%;height:120px;margin-top:8px;background:#0c0e12;color:#cfd6e6;border:1px solid var(--line);border-radius:8px;font-size:11.5px;padding:8px}
+label.tg{display:flex;gap:8px;align-items:center;font-size:13px;margin-top:10px;cursor:pointer}
+input.txt{width:100%;margin-top:6px;background:#0c0e12;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px}
+table{border-collapse:collapse;font-size:12px;width:100%}td,th{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left}th{color:var(--mute);font-weight:600}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}aside{position:static}.stats{grid-template-columns:1fr 1fr}.bars{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<main>
+  <h1>장면폰트 조사 — 글꼴 · 색톤 · 꾸밈 고르기</h1>
+  <p class="sub">카드를 누르면 선택됩니다. 오른쪽 미리보기에 바로 합쳐서 보입니다. 다 고르신 뒤 「선택 결과 복사」를 눌러 붙여 주시면 그대로 만듭니다.</p>
+
+  <h2>1. 조사 결과 — 이븐쇼핑·썰쇼핑 채널 훅/본문 실측</h2>
+  <p class="sub">이미 수집돼 있던 채널 프레임(훅·본문 203장)의 실측값을 집계했습니다. 아래 그림은 그 훅 화면을 한 장에 모은 대조표입니다.</p>
+  <div class="stats" id="stats"></div>
+  <div class="bars"><div><b style="font-size:13px">2줄(강조 줄) 색 분포</b><div id="barAcc"></div></div><div><b style="font-size:13px">제목 바탕색 분포</b><div id="barBg"></div></div></div>
+  <img class="sheet" src="장면꾸미기_작업대/스타일수집/스타일_대조표.png" alt="수집한 채널 훅 화면 대조표">
+  <p class="sub" style="margin-top:8px">읽히는 것: ① 어두운 바탕 + 흰 1줄 + 색 있는 2줄이 압도적 표준 ② 2줄이 1줄보다 약간 큼 ③ 눈에 띄는 채널은 색만이 아니라 <b>형광 박스·기울임·두꺼운 테두리</b> 같은 글자 처리를 씀 → 그래서 3번(꾸밈)도 고르시게 했습니다.</p>
+
+  <h2>2. 새 글꼴 후보 <span id="nFont"></span>종 — 10개 고르기</h2>
+  <p class="sub">전부 눈누 페이지에서 「영상 사용 가능」을 확인한 상업용 무료 글꼴입니다. 지금 편집기에 없는 것만 골랐습니다. 카드 안 글자는 실제 그 글꼴로 그린 것입니다.</p>
+  <div class="grid" id="fonts"></div>
+
+  <h2>3. 색톤 <span id="nPal"></span>종 — 마음에 드는 만큼</h2>
+  <p class="sub">앞쪽은 실측 인기 조합을 곱게 다듬은 것, 뒤쪽은 상품군별 새 조합입니다.</p>
+  <div class="grid pal" id="pals"></div>
+
+  <h2>4. 꾸밈(글자 처리) <span id="nTr"></span>종 — 마음에 드는 만큼</h2>
+  <p class="sub">화려함·다양함은 여기서 갈립니다. 같은 글꼴·색이라도 처리에 따라 전혀 다른 템플릿이 됩니다.</p>
+  <div class="grid" id="trs"></div>
+
+  <h2>5. 글꼴별 크기 맞춤 — 실측</h2>
+  <p class="sub">같은 43px이라도 글꼴마다 실제 글자 높이·폭이 다릅니다. 이 브라우저에서 방금 잰 값입니다. 프리셋을 만들 때 이 배율을 넣어 <b>어느 글꼴을 골라도 제목이 같은 크기로 보이고 칸을 안 넘게</b> 합니다. 오른쪽 「크기 맞춤」을 껐다 켜며 차이를 보세요.</p>
+  <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px"><table id="metrics"><thead><tr><th>글꼴</th><th>글자 높이 ÷ 글꼴 크기</th><th>높이 보정 배율</th><th>세로 위치 보정</th><th>10글자 폭 ÷ 글꼴 크기</th><th>좁음·넓음</th></tr></thead><tbody></tbody></table></div>
+</main>
+
+<aside>
+  <h3>미리보기 (훅 · 본문)</h3>
+  <div class="duo"><div class="phone" id="pvHook"></div><div class="phone body" id="pvBody"></div></div>
+  <input class="txt" id="t1" value="건망증 환자를 살려낸" aria-label="제목 1줄">
+  <input class="txt" id="t2" value="일본 천재의 발명품" aria-label="제목 2줄">
+  <label class="tg"><input type="checkbox" id="norm" checked> 크기·위치 맞춤 (글꼴별 실측 보정)</label>
+  <div class="cnt">글꼴 <b id="cF">0</b> / 10</div><div class="sel" id="sF"></div>
+  <div class="cnt">색톤 <b id="cP">0</b></div><div class="sel" id="sP"></div>
+  <div class="cnt">꾸밈 <b id="cT">0</b></div><div class="sel" id="sT"></div>
+  <button class="act" id="copy">선택 결과 복사</button>
+  <button class="act ghost" id="reset">선택 모두 지우기</button>
+  <div id="msg"></div>
+  <textarea id="outTxt" readonly aria-label="선택 결과"></textarea>
+</aside>
+</div>
+
+<script>
+const DATA={"fonts": [{"id": "f330", "name": "양진체", "mood": "각진 임팩트 · 쇼츠 단골", "url": "https://cdn.jsdelivr.net/gh/supernovice-lab/font@0.9/yangjin.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/330"}, {"id": "f364", "name": "쿠키런 Black", "mood": "통통 굵은 · 게임 느낌", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/CookieRunOTF-Black00.woff", "video": true, "embed": "조건부 허용", "page": "https://noonnu.cc/font_page/364"}, {"id": "f676", "name": "원스토어 모바일POP", "mood": "팝 · 마트 전단 느낌", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/676"}, {"id": "f223", "name": "에스코어드림 9", "mood": "초굵은 고딕 · 뉴스 속보", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-9Black.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/223"}, {"id": "f1456", "name": "페이퍼로지 9", "mood": "초굵은 모던 고딕", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-9Black.woff2", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/1456"}, {"id": "f1369", "name": "프리젠테이션 9", "mood": "좁고 굵은 · 글자 많이 들어감", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/2404@1.0/Freesentation-9Black.woff2", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/1369"}, {"id": "f427", "name": "메이플스토리 Bold", "mood": "둥글 귀여움 · 친근", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/MaplestoryOTFBold.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/427"}, {"id": "f82", "name": "즐거운이야기", "mood": "예능 자막 느낌", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/OTEnjoystoriesBA.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/82"}, {"id": "f463", "name": "이사만루 Bold", "mood": "스포츠 중계 · 단단함", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10@1.0/GongGothicBold.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/463"}, {"id": "f1146", "name": "KBO 다이아고딕 Bold", "mood": "스포츠 · 각진 고딕", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/KBO-Dia-Gothic_bold.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/1146"}, {"id": "f669", "name": "카페24 써라운드", "mood": "둥근 굵은 · 부드러운 강조", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/Cafe24Ssurround.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/669"}, {"id": "f1381", "name": "HS산토끼 2.0", "mood": "손맛 굵은 붓 · 개성", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/2405@1.0/HSSanTokki20-Regular.woff2", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/1381"}, {"id": "f461", "name": "빙그레 싸만코 Bold", "mood": "말랑 둥근 · 간식 느낌", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10@1.0/BinggraeSamanco-Bold.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/461"}, {"id": "f1042", "name": "태나다", "mood": "세로로 긴 · 포스터", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2210-2@1.0/Tenada.woff2", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/1042"}, {"id": "f731", "name": "창원단감아삭 Bold", "mood": "아삭한 각 · 또렷", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/CWDangamAsac-Bold.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/731"}, {"id": "f321", "name": "을지로체", "mood": "간판 붓글씨 · 레트로", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/BMEULJIRO.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/321"}, {"id": "f499", "name": "을지로10년후", "mood": "낡은 간판 · 빈티지", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/BMEuljiro10yearslater.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/499"}, {"id": "f805", "name": "강원교육튼튼", "mood": "튼튼 굵은 · 어린이 교재", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2201-2@1.0/GangwonEduPowerExtraBoldA.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/805"}, {"id": "f1710", "name": "학교안심 포스터", "mood": "포스터 제목 · 굵고 곧음", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/2511-1@1.0/HakgyoansimPosterB.woff2", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/1710"}, {"id": "f458", "name": "티머니 둥근바람 EB", "mood": "둥근 고딕 · 깔끔 강조", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-07@1.0/TmoneyRoundWindExtraBold.woff", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/458"}, {"id": "f876", "name": "영도체 Heavy", "mood": "바다 도시 · 묵직한 곡선", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/2410-1@1.2/Yeongdo-Hv.woff2", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/876"}, {"id": "f1186", "name": "파셜산스", "mood": "잘린 획 · 실험적 · 패션", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-1@1.1/PartialSansKR-Regular.woff2", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/1186"}, {"id": "f1405", "name": "망고보드 또박 B", "mood": "또박또박 · 정보 전달", "url": "https://cdn.jsdelivr.net/gh/projectnoonnu/2405-3@1.1/MangoDdobak-B.woff2", "video": true, "embed": "사용 가능", "page": "https://noonnu.cc/font_page/1405"}], "stats": {"channels": 102, "two": 96, "nlines": {"2": 76, "1": 6, "3": 20}, "accent": [["노랑", 21], ["흰색·회색", 20], ["청록", 16], ["초록", 11], ["보라·핑크", 9], ["빨강", 8], ["주황", 7], ["파랑", 4]], "bg": [["검정·어두움", 84], ["흰색·회색", 5], ["파랑", 4], ["청록", 1], ["주황", 1], ["빨강", 1]], "ratio_med": 1.05, "ratio_q1": 1.0, "ratio_q3": 1.12}, "palettes": [{"id": "p01", "name": "이븐 청록", "bg": "#1B1B1F", "c1": "#FFFFFF", "c2": "#19F5E6", "note": "실측 2위 조합(15채널)을 살짝 맑게"}, {"id": "p02", "name": "경고 노랑", "bg": "#141414", "c1": "#FFFFFF", "c2": "#FFE500", "note": "실측 1위 조합(17채널)"}, {"id": "p03", "name": "네온 라임", "bg": "#0E1410", "c1": "#FFFFFF", "c2": "#B6FF3C", "note": "실측 초록 계열(8채널)을 형광으로"}, {"id": "p04", "name": "핫핑크", "bg": "#17101A", "c1": "#FFFFFF", "c2": "#FF5FA8", "note": "실측 핑크 계열(8채널)"}, {"id": "p05", "name": "세일 레드", "bg": "#151010", "c1": "#FFFFFF", "c2": "#FF3B3B", "note": "실측 빨강 계열(6채널)"}, {"id": "p06", "name": "귤 오렌지", "bg": "#17120C", "c1": "#FFFFFF", "c2": "#FF9A1F", "note": "실측 주황 계열(4채널)"}, {"id": "p07", "name": "일렉트릭 블루", "bg": "#0B1020", "c1": "#FFFFFF", "c2": "#3DA5FF", "note": "실측 파랑 계열(3채널)을 밝게"}, {"id": "p08", "name": "노랑+청록 더블", "bg": "#121212", "c1": "#FFE500", "c2": "#19F5E6", "note": "1줄도 색 — 실측엔 9채널이 1줄 노랑"}, {"id": "p09", "name": "라벤더 밤", "bg": "#15122B", "c1": "#F3EEFF", "c2": "#B69CFF", "note": "새 조합 · 뷰티·감성 상품용"}, {"id": "p10", "name": "민트 크림", "bg": "#0F1F1C", "c1": "#F4FFF9", "c2": "#6FFFD2", "note": "새 조합 · 살림·청소 상품용"}, {"id": "p11", "name": "피치 코랄", "bg": "#22120F", "c1": "#FFF4EC", "c2": "#FF8F6B", "note": "새 조합 · 식품·간식 상품용"}, {"id": "p12", "name": "골드 프리미엄", "bg": "#14110A", "c1": "#FFF8E1", "c2": "#F4C542", "note": "새 조합 · 고급·가전 상품용"}, {"id": "p13", "name": "흰 바탕 빨강", "bg": "#FFFFFF", "c1": "#111111", "c2": "#FF2D2D", "note": "실측 흰 바탕(5채널) · 뉴스 속보"}, {"id": "p14", "name": "흰 바탕 로열블루", "bg": "#FFFFFF", "c1": "#111111", "c2": "#1F4BFF", "note": "흰 바탕 변형 · 신뢰감"}, {"id": "p15", "name": "노랑 바탕 검정", "bg": "#FFE500", "c1": "#111111", "c2": "#E60023", "note": "새 조합 · 전단지·특가"}, {"id": "p16", "name": "딥 블루 바탕", "bg": "#0D2A6B", "c1": "#FFFFFF", "c2": "#FFE45B", "note": "실측 파랑 바탕(4채널)"}], "treatments": [{"id": "t_plain", "name": "기본 외곽선", "note": "검은 외곽선 + 아래 그림자. 지금 편집기 방식"}, {"id": "t_box", "name": "형광 박스", "note": "2줄 뒤에 강조색 박스, 글자는 어둡게. 실측 대조표에 여러 채널"}, {"id": "t_under", "name": "형광펜 밑줄", "note": "2줄 아래 절반만 강조색 칠"}, {"id": "t_glow", "name": "네온 글로우", "note": "강조색 빛 번짐"}, {"id": "t_grad", "name": "그라데이션 글자", "note": "2줄이 강조색→흰색으로 흐름"}, {"id": "t_3d", "name": "입체 그림자", "note": "오른쪽 아래로 두꺼운 단색 그림자"}, {"id": "t_tilt", "name": "기울임 속도감", "note": "살짝 기울여 움직이는 느낌"}, {"id": "t_thick", "name": "두꺼운 흰 테두리", "note": "스티커처럼 흰 테두리를 두껍게"}]};
+const KEY='scene-font-research-v1';
+const $=s=>document.querySelector(s);
+const state=Object.assign({fonts:[],pals:[],trs:[],focus:{f:null,p:'p01',t:'t_plain'}},JSON.parse(localStorage.getItem(KEY)||'{}'));
+const M={};   // 글꼴별 실측 {h,w,scale}
+const MC=document.createElement('canvas').getContext('2d');
+
+// 글꼴 등록 — 눈누 페이지에 적힌 실제 파일 주소
+const css=DATA.fonts.map(f=>`@font-face{font-family:"${f.id}";src:url("${f.url}");font-display:swap}`).join('\n');
+document.head.appendChild(Object.assign(document.createElement('style'),{textContent:css}));
+
+const isLight=c=>{const n=parseInt(c.slice(1),16);return ((n>>16)*299+((n>>8)&255)*587+(n&255)*114)/1000>150};
+function treat(el1,el2,pal,tid){
+  const dark=isLight(pal.bg)?'#fff':'#000', ink=isLight(pal.c2)?'#111':'#fff';
+  const stroke=isLight(pal.bg)?'':`-webkit-text-stroke:1.1cqw ${dark};paint-order:stroke fill;text-shadow:0 .7cqw 0 rgba(0,0,0,.85);`;
+  el1.style.cssText=`color:${pal.c1};${stroke}`;
+  const sp=el2.firstElementChild; sp.style.cssText='';
+  let s=`color:${pal.c2};${stroke}`;
+  if(tid==='t_box'){s='';sp.style.cssText=`background:${pal.c2};color:${ink};border-radius:1.2cqw;padding:.6cqw 2.4cqw`;}
+  if(tid==='t_under'){sp.style.cssText=`background:linear-gradient(transparent 52%,${pal.c2}BB 52%);`;s=`color:${isLight(pal.bg)?'#111':'#fff'};${stroke}`;}
+  if(tid==='t_glow'){s=`color:${pal.c2};text-shadow:0 0 2cqw ${pal.c2},0 0 5cqw ${pal.c2}AA,0 0 9cqw ${pal.c2}66;`;}
+  if(tid==='t_grad'){s='';sp.style.cssText=`background:linear-gradient(180deg,#fff 0%,${pal.c2} 55%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .7cqw 0 rgba(0,0,0,.8))`;}
+  if(tid==='t_3d'){s=`color:${pal.c2};-webkit-text-stroke:.9cqw ${dark};paint-order:stroke fill;text-shadow:.6cqw .6cqw 0 ${dark},1.2cqw 1.2cqw 0 ${dark},1.8cqw 1.8cqw 0 ${dark},2.4cqw 2.4cqw 0 ${dark};`;}
+  if(tid==='t_tilt'){s+=`transform:skewX(-9deg);`;el1.style.cssText+='transform:skewX(-9deg);';}
+  if(tid==='t_thick'){s=`color:${pal.c2};-webkit-text-stroke:2.6cqw #fff;paint-order:stroke fill;filter:drop-shadow(0 .8cqw 0 rgba(0,0,0,.7));`;}
+  el2.style.cssText=s;
+}
+function phone(el,{fid,pal,tid,body=false,t1,t2}){
+  // 크기 규칙(한 곳): ①글꼴별 높이 배율로 같은 크기로 보이게 ②그래도 실제 문구가 칸(92%)을 넘는 글꼴만 폭을 재서 줄인다
+  const on=$('#norm').checked&&M[fid], BASE=9.4;
+  let size=BASE*(on?M[fid].scale:1);
+  if(on&&!body){MC.font=`100px "${fid}"`;const need=Math.max(MC.measureText(t1).width,MC.measureText(t2).width*1.08+ (3*100/size))/100;size=Math.min(size,92/need);}
+  el.dataset.shrunk=(on&&size<BASE*M[fid].scale-0.01)?'1':'';
+  if(body){
+    el.innerHTML=`<div class="band" style="background:${pal.bg};color:${pal.c1}">숏템메이커</div><div class="ttl" style="background:${pal.bg}"><span class="bt"></span></div><div class="vid" style="top:17%"></div><div class="cap"></div>`;
+    el.querySelector('.bt').textContent=t1+' '+t2.split(' ').slice(-1)[0]+'?';
+    el.querySelector('.bt').style.fontFamily=`"${fid}",sans-serif`;
+    const c=el.querySelector('.cap');c.textContent='전 세계 건망증 환자들의';c.style.fontFamily=`"${fid}",sans-serif`;
+    return;
+  }
+  el.innerHTML=`<div class="band" style="background:${pal.bg};color:${pal.c1}">숏템메이커</div><div class="ttl" style="background:${pal.bg};font-family:'${fid}',sans-serif"><span class="l1"></span><span class="l2"><span></span></span></div><div class="vid"></div>`;
+  const l1=el.querySelector('.l1'),l2=el.querySelector('.l2');
+  const dy=($('#norm').checked&&M[fid])?M[fid].dy:0;l1.innerHTML='<span class="ink"></span>';l1.firstChild.textContent=t1;l2.firstElementChild.innerHTML='<span class="ink"></span>';l2.firstElementChild.firstChild.textContent=t2;[l1.firstChild,l2.firstElementChild.firstChild].forEach(e=>e.style.top=dy+'em');treat(l1,l2,pal,tid);l1.style.fontSize=size+'cqw';l2.style.fontSize=size*1.08+'cqw';
+  requestAnimationFrame(()=>{el.querySelector('.vid').style.top=(el.querySelector('.ttl').offsetTop+el.querySelector('.ttl').offsetHeight)/el.offsetHeight*100+'%';});
+}
+const palOf=id=>DATA.palettes.find(p=>p.id===id), T=()=>({t1:$('#t1').value,t2:$('#t2').value});
+
+function measure(){
+  const c=document.createElement('canvas').getContext('2d'),S=200,hs=[];
+  const med=a=>{a=[...a].sort((x,y)=>x-y);return a[a.length>>1]};
+  DATA.fonts.forEach(f=>{c.font=`${S}px "${f.id}"`;
+    // 글자 하나씩 재서 중앙값 — 문장 전체로 재면 삐침 긴 글자 하나가 배율을 깎는다
+    const per=[...'건망증환자를살려낸일본천재의발명품'].map(ch=>{const m=c.measureText(ch);return {h:m.actualBoundingBoxAscent+m.actualBoundingBoxDescent,cy:(m.actualBoundingBoxAscent-m.actualBoundingBoxDescent)/2,fc:(m.fontBoundingBoxAscent-m.fontBoundingBoxDescent)/2}});
+    M[f.id]={h:med(per.map(x=>x.h))/S,w:c.measureText('건망증환자를살려낸발').width/S,dy:(med(per.map(x=>x.cy))-per[0].fc)/S};hs.push(M[f.id].h);});
+  hs.sort((a,b)=>a-b);const ref=hs[hs.length>>1];
+  DATA.fonts.forEach(f=>M[f.id].scale=ref/M[f.id].h);
+  $('#metrics tbody').innerHTML=DATA.fonts.map(f=>{const m=M[f.id];return `<tr><td>${f.name}</td><td>${m.h.toFixed(3)}</td><td>×${m.scale.toFixed(2)}</td><td>${m.dy>0?'아래로 ':'위로 '}${Math.abs(m.dy*100).toFixed(1)}%</td><td>${m.w.toFixed(2)}</td><td>${m.w<8.6?'좁음(글자 많이 들어감)':m.w>9.6?'넓음(줄여야 칸에 맞음)':'보통'}</td></tr>`}).join('');
+}
+function draw(){
+  const f=state.focus,pal=palOf(f.p);
+  $('#fonts').innerHTML='';DATA.fonts.forEach(x=>{const b=document.createElement('button');b.className='pick'+(state.fonts.includes(x.id)?' on':'');b.type='button';
+    b.innerHTML=`<div class="phone"></div><div class="nm"></div><div class="nt"></div><div class="lic${x.embed.startsWith('사용 가능')?'':' warn'}"></div>`;
+    b.querySelector('.nm').textContent=x.name;b.querySelector('.nt').textContent=x.mood;b.querySelector('.lic').textContent='영상 가능 · 서버 탑재 '+x.embed;
+    phone(b.firstElementChild,{fid:x.id,pal,tid:f.t,...T()});b.onclick=()=>{toggle('fonts',x.id,10);state.focus.f=x.id;save()};$('#fonts').appendChild(b);});
+  const ff=f.f||DATA.fonts[0].id;
+  $('#pals').innerHTML='';DATA.palettes.forEach(p=>{const b=document.createElement('button');b.className='pick'+(state.pals.includes(p.id)?' on':'');b.type='button';
+    b.innerHTML=`<div class="phone"></div><div class="chips"><i style="background:${p.bg}"></i><i style="background:${p.c1}"></i><i style="background:${p.c2}"></i></div><div class="nm"></div><div class="nt"></div>`;
+    b.querySelector('.nm').textContent=p.name;b.querySelector('.nt').textContent=p.note;
+    phone(b.firstElementChild,{fid:ff,pal:p,tid:f.t,...T()});b.onclick=()=>{toggle('pals',p.id);state.focus.p=p.id;save()};$('#pals').appendChild(b);});
+  $('#trs').innerHTML='';DATA.treatments.forEach(t=>{const b=document.createElement('button');b.className='pick'+(state.trs.includes(t.id)?' on':'');b.type='button';
+    b.innerHTML=`<div class="phone"></div><div class="nm"></div><div class="nt"></div>`;b.querySelector('.nm').textContent=t.name;b.querySelector('.nt').textContent=t.note;
+    phone(b.firstElementChild,{fid:ff,pal,tid:t.id,...T()});b.onclick=()=>{toggle('trs',t.id);state.focus.t=t.id;save()};$('#trs').appendChild(b);});
+  phone($('#pvHook'),{fid:ff,pal,tid:f.t,...T()});phone($('#pvBody'),{fid:ff,pal,tid:f.t,body:true,...T()});
+  const nm=(arr,src)=>arr.map(id=>src.find(x=>x.id===id)?.name).filter(Boolean);
+  $('#cF').textContent=state.fonts.length;$('#cP').textContent=state.pals.length;$('#cT').textContent=state.trs.length;
+  $('#sF').textContent=nm(state.fonts,DATA.fonts).join(' · ');$('#sP').textContent=nm(state.pals,DATA.palettes).join(' · ');$('#sT').textContent=nm(state.trs,DATA.treatments).join(' · ');
+  $('#outTxt').value=`[장면폰트 선택]\n글꼴(${state.fonts.length}): ${nm(state.fonts,DATA.fonts).join(', ')}\n색톤(${state.pals.length}): ${nm(state.pals,DATA.palettes).join(', ')}\n꾸밈(${state.trs.length}): ${nm(state.trs,DATA.treatments).join(', ')}\nid: ${JSON.stringify({fonts:state.fonts,pals:state.pals,trs:state.trs})}`;
+}
+function toggle(k,id,max){const a=state[k],i=a.indexOf(id);if(i>=0)a.splice(i,1);else if(!max||a.length<max)a.push(id);else $('#msg').textContent=`글꼴은 ${max}개까지입니다. 하나를 빼고 고르세요.`;}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}draw();}
+
+function stats(){
+  const s=DATA.stats;
+  $('#stats').innerHTML=[[s.channels,'실측한 채널'],[s.two,'제목이 2줄 이상인 채널'],['×'+s.ratio_med,'2줄 ÷ 1줄 글자 높이(중앙값)'],[s.ratio_q1+'~'+s.ratio_q3,'그 배율의 가운데 절반 범위']].map(([b,t])=>`<div class="stat"><b>${b}</b><span>${t}</span></div>`).join('');
+  const sw={'노랑':'#FFE500','흰색·회색':'#e6e6e6','청록':'#19F5E6','초록':'#5CFF6A','보라·핑크':'#FF6FB5','빨강':'#FF3B3B','주황':'#FF9A1F','파랑':'#3DA5FF','검정·어두움':'#30343c'};
+  const bars=(rows,el)=>{const mx=rows[0][1];$(el).innerHTML=rows.map(([n,v])=>`<div class="bar"><span>${n}</span><i style="width:${v/mx*100}%;background:${sw[n]||'#3a4252'}"></i><span>${v}</span></div>`).join('')};
+  bars(s.accent,'#barAcc');bars(s.bg,'#barBg');
+  $('#nFont').textContent=DATA.fonts.length;$('#nPal').textContent=DATA.palettes.length;$('#nTr').textContent=DATA.treatments.length;
+}
+$('#copy').onclick=async()=>{const t=$('#outTxt');try{await navigator.clipboard.writeText(t.value);$('#msg').textContent='복사했습니다. 대화창에 붙여 주세요.'}catch(e){t.select();$('#msg').textContent='자동 복사가 막혔습니다. 아래 글을 직접 복사해 주세요.'}};
+$('#reset').onclick=()=>{state.fonts=[];state.pals=[];state.trs=[];$('#msg').textContent='선택을 모두 지웠습니다.';save()};
+['#t1','#t2'].forEach(s=>$(s).oninput=draw);$('#norm').onchange=draw;
+stats();draw();
+Promise.all(DATA.fonts.map(f=>document.fonts.load(`40px "${f.id}"`,'건망증'))).then(r=>{window.__fontsLoaded=r.map(x=>x.length);measure();draw();});
+</script>
+</body>
+</html>
