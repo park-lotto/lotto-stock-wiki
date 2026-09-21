@@ -21,9 +21,28 @@ const TOL=0.8;   // 허용 어긋남(%) — 글자 높이 반올림 정도는 �
     const one=sel=>{const e=document.querySelector(sel);if(!e)return null;const r=e.getBoundingClientRect();return r.height<1?null:pct(r.top)};
     const base=document.querySelector('.precision-base');
     const 그림=base&&base.getBoundingClientRect().height>1?pct(base.getBoundingClientRect().top):null;
+    const media=document.querySelector('.precision-media');
+    const mr=media?media.getBoundingClientRect():null;
     return {글자:one('.precision-text[data-edit-bind="channel"]'),
-            캡슐:one('.precision-patch[data-edit-bind="channel"]'),
-            그림:그림};
+            // ★캡슐·돋보기는 data-edit-bind가 없다 — frame.surfaces에서 온 .body-material 패치다.
+            //   2026-09-21: 종전 셀렉터(data-edit-bind="channel")는 엉뚱한 걸 재서 통과시켰다.
+            캡슐:(()=>{
+              // 머리띠 '바탕'(맨 위를 덮는 넓은 면)은 움직이면 안 되니 세지 않는다 —
+              // 실제 캡슐은 둥근 모서리가 있는 조각이다(2026-09-21 실측으로 갈랐다).
+              // ★'머리띠 안'에 있는 것만 캡슐로 본다 — 제목 아래 서브카피 띠(둥근 모서리)를
+              //   캡슐로 잘못 잡아 16건을 거짓 실패로 냈다(2026-09-21 실측으로 갈랐다).
+              const chEl=document.querySelector('.precision-text[data-edit-bind="channel"]');
+              const chBottom=chEl?pct(chEl.getBoundingClientRect().bottom):8;
+              const els=[...document.querySelectorAll('.precision-patch.body-material,.scene-brand-ink')]
+                .filter(e=>{const r=e.getBoundingClientRect();
+                  if(r.height<3)return false;
+                  if(pct(r.top)>chBottom+1)return false;   // 머리띠 아래 것은 채널명과 무관하다
+                  return parseFloat(getComputedStyle(e).borderRadius)>1;});
+              if(!els.length)return null;
+              return Math.min(...els.map(e=>pct(e.getBoundingClientRect().top)));})(),
+            그림:그림,
+            // ★영상이 미리보기 아래까지 채우는가 — 2026-09-21 회귀(영상만 위로 올라가 아래가 검정).
+            영상아래:mr?+pct(mr.bottom).toFixed(1):null};
   });
 
   const fails=[];const rows=[];
@@ -58,6 +77,8 @@ const TOL=0.8;   // 허용 어긋남(%) — 글자 높이 반올림 정도는 �
           if(Math.abs(v-글자)>TOL)fails.push(`${where} → 글자 ${글자}% vs ${nm} ${v}% (${Math.abs(v-글자).toFixed(2)}% 어긋남)`);
         }
         if(Math.abs(글자)<0.3)fails.push(`${where} → 슬라이더를 올려도 채널명이 안 움직인다`);
+        // 영상이 화면 아래(100%)까지 안 닿으면 그만큼 검정 빈칸이 남는다
+        if(moved.영상아래!=null&&moved.영상아래<99)fails.push(`${where} → 영상 아래가 ${moved.영상아래}%에서 끊긴다(검정 빈칸 ${(100-moved.영상아래).toFixed(1)}%)`);
         // 되돌린다
         await page.evaluate(v=>{const i=document.querySelector('[data-fixed-range="channel"]');i.value=v;i.dispatchEvent(new Event('input',{bubbles:true}));},base0);
         await new Promise(r=>setTimeout(r,250));
