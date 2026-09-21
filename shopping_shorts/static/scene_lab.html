@@ -3926,6 +3926,22 @@ async function waitNarrRegen(i, ver0){
 //   컷 수 = 자막 구절 수, 조각이 모자라면 담은 순서대로 순환(1,2,1,2)은 사장님이 정한 규칙(09-02,
 //   2026-09-11 재확인 "1212 기존으로") — 규칙은 두지 않고 **보는 것 = 나오는 것**만 맞춘다.
 //   제작소(produce.html _labRefreshCaptions)가 같은 도메인 iframe의 이 함수를 직접 부른다.
+// 서버가 실어 보낸 짝(owner)만 옮겨 담는다. 바뀐 게 있으면 true(다시 그려야 한다).
+function adoptOwners(caps){
+  let changed = false;
+  Object.keys(caps || {}).forEach(i => {
+    const cur = (DATA.captions || {})[i] || [], nw = caps[i] || [];
+    if (cur.length !== nw.length) return;
+    nw.forEach((r, k) => {
+      const o = Number.isInteger(r.owner) ? r.owner : undefined;
+      const n = Number.isInteger(r.owner_n) ? r.owner_n : undefined;
+      if (cur[k].owner !== o || cur[k].owner_n !== n) changed = true;
+      if (o === undefined){ delete cur[k].owner; delete cur[k].owner_n; }
+      else { cur[k].owner = o; cur[k].owner_n = n; }
+    });
+  });
+  return changed;
+}
 window.refreshCaptions = async function(i){
   if (!SL.server || !SL.job) return false;
   try{
@@ -4066,6 +4082,9 @@ async function applyServer(opt){
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || '실패');
     if (j.revision) SCENE_REV = j.revision;
+    // ★서버가 방금 얼린 장면↔구절 짝(owner)을 받아 화면을 서버와 다시 맞춘다(2026-09-21).
+    //   자막 글자·시간은 안 건드린다 — 짝만. 줄 수가 다르면(그 사이 자막이 바뀜) 건너뛴다.
+    if (j.captions && adoptOwners(j.captions) && typeof repaint === 'function') repaint();
     // ★편성이 바뀌었으면 **이미 만든 완성본은 낡았다** — 비워서 다음 탭 클릭에 새로 만들게 한다
     //   (2026-08-25 고객 제보: "소재를 빼고 넣은 뒤 완성본 만들기를 눌렀는데 처음 것이 그대로").
     //   원인은 _askRender가 #confirmBody가 비었을 때만 렌더하는데, 편집 저장 경로에서
