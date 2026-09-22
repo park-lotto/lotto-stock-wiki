@@ -869,12 +869,14 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
 
     sfx_layers = []
     _sfx_vol = (deco or {}).get("sfx_volume", 60) if isinstance(deco, dict) else 60
-    for _i, (_spath, _sat) in enumerate(sfx_events or []):
+    for _i, _ev in enumerate(sfx_events or []):
+        _spath, _sat = _ev[0], _ev[1]
+        _gain = float(_ev[2]) if len(_ev) > 2 else 1.0     # 팩 보정(sfx_pack.events) — 렌더와 같은 값
         _ext = Path(_spath).suffix.lower() or ".mp3"
         _sp, _sd = _bring(_spath, "sfx_%02d%s" % (_i, _ext))
         if _sp:
             sfx_layers.append({"_capcut_path": _sp, "at": float(_sat or 0.0),
-                               "dur": _sd, "volume": _sfx_vol})
+                               "dur": _sd, "volume": _sfx_vol * _gain})
 
     cutaway_layers = {}
     for _idx, _cpath in (cutaway_paths or {}).items():

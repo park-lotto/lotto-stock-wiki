@@ -116,6 +116,8 @@ def validate_snapshot(value):
         raise ValueError("흰 띠 효과 값이 올바르지 않습니다")
     if not re.fullmatch(r"[a-z0-9_-]{0,32}", str(value.get("fontSet") or "")):   # precision20-ui.js FONT_SETS의 id
         raise ValueError("폰트 템플릿 값이 올바르지 않습니다")
+    if not re.fullmatch(r"[a-z0-9_-]{0,32}", str(value.get("titleDeco") or "")):   # precision20-ui.js DECOS의 id(훅 제목 꾸밈)
+        raise ValueError("제목 꾸밈 값이 올바르지 않습니다")
     if value.get("bodyCaptionMotion") not in (None, "", "rise", "grow", "pop", "slide", "drop", "fade", "wide"):   # precision20-ui.js BODY_CAPTION_MOTIONS와 짝
         raise ValueError("본문 자막 효과 값이 올바르지 않습니다")
     if "hookBandRise" in value and not isinstance(value["hookBandRise"], bool):
@@ -134,8 +136,36 @@ def validate_snapshot(value):
                 number(item.get(key,default),lo,hi)
             if not re.fullmatch(r"#[0-9a-fA-F]{6}",item.get("color","#ffffff")):
                 raise ValueError("표시 색상이 올바르지 않습니다")
-    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "fontSet", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "fontSet", "titleDeco", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
+
+
+_TINY_GAP = 0.35   # 이보다 짧은 '자막 없는 틈'은 장면으로 세지 않는다(초)
+
+
+def _absorb_tiny_gaps(scenes):
+    """자막이 비는 아주 짧은 틈(음성이 비트 시작보다 살짝 늦는 cap_lead 등)을 이웃 자막 장면에 붙인다.
+
+    2026-09-22 사장님 "본문 첫 자막이 없음": job d29a2bd26032 본문 첫 비트가 3.58~3.74(0.16초) 빈 장면 → 편집기에
+    '5/35 장면'으로 빈 띠가 뜨고, 렌더에도 5프레임 빈 띠가 들어갔다. 훅 맨 앞 0.21초도 같은 꼴.
+    같은 비트 안에서만 붙인다(비트 경계는 넘지 않는다). 앞 틈은 뒤 자막에, 뒤 틈은 앞 자막에. 0.35초 이상 틈은 그대로(진짜 무자막 구간).
+    편집기·렌더러·캡컷이 모두 이 context를 쓰므로 셋이 같이 바뀐다."""
+    out = []
+    for sc in scenes:
+        if sc["caption"] or (sc["end"] - sc["start"]) >= _TINY_GAP:
+            out.append(dict(sc)); continue
+        if out and out[-1]["beat_idx"] == sc["beat_idx"] and out[-1]["caption"]:
+            out[-1]["end"] = sc["end"]           # 뒤 틈 → 앞 자막이 끝까지
+            continue
+        out.append(dict(sc, _lead=True))         # 앞 틈 → 다음 자막이 오면 거기에 붙인다
+    result = []
+    for sc in out:
+        if result and result[-1].get("_lead") and result[-1]["beat_idx"] == sc["beat_idx"] and sc["caption"]:
+            sc = dict(sc, start=result[-1]["start"]); result.pop()
+        result.append(sc)
+    for sc in result:
+        sc.pop("_lead", None)
+    return result
 
 
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
@@ -158,6 +188,7 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
             cursor = b
         if cursor < end - .001:
             scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
+    scenes = _absorb_tiny_gaps(scenes)
     copy = dict(headcopy) if isinstance(headcopy, dict) else {}
     if not (copy.get("text") or "").strip():
         copy["text"] = (timeline[0].get("narration") if timeline else "") or ""

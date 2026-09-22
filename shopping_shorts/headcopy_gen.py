@@ -12,13 +12,13 @@ import json
 from shopping_shorts.script_generate import _call_json
 from shopping_shorts.template_copy import EVEN_SHOPPING
 
-_LEGACY_SUBLINE_LEN = 32   # 카나리 밖(고객)의 종전 보조제목 한도 — 2026-09-17 이전 동작 그대로
-
-
 def _support_max():
-    """보조제목 한도 — 관리자 카나리에서만 장면꾸미기 슬롯 계약(22자)을 쓴다(2026-09-18)."""
-    from shopping_shorts import canary
-    return EVEN_SHOPPING.support_max if canary.on() else _LEGACY_SUBLINE_LEN
+    """보조제목 한도 = 장면꾸미기 슬롯 계약(22자) 한 곳에서만 정한다(2026-09-22 사장님 결정).
+
+    종전엔 카나리 밖 고객은 32자(_LEGACY_SUBLINE_LEN)였는데, 화면 계약은 22자라 같은 값이
+    두 군데서 달랐다(0순위-B). 실측: 대본 8편 중 2편이 소제목이 두 줄로 터지고 양끝이 잘렸다.
+    """
+    return EVEN_SHOPPING.support_max
 
 _MAX_LEN = 26          # ★썸네일 문구는 두 줄이 전부다(2026-08-18). 40자였을 땐 화면에서 4줄로
 _LINE_LEN = 13         #   무너져 문단처럼 보였다 — 두 줄 x 13자를 넘기지 않는다.
@@ -219,10 +219,8 @@ def suggest(script, want=_WANT, family=_DEFAULT_FAMILY):
                 upload_title = c.get("upload_title")
                 if isinstance(subline, str) and subline.strip():
                     clean_subline = " ".join(subline.split())
-                    if _support_max() == _LEGACY_SUBLINE_LEN:
-                        item["subline"] = clean_subline[:_LEGACY_SUBLINE_LEN]   # 고객: 종전 32자 자르기
-                    elif len(clean_subline) > _support_max():
-                        continue                                              # 카나리: 22자 계약, 초과 후보 제외
+                    if len(clean_subline) > _support_max():
+                        continue                                              # 22자 계약 초과 후보 제외
                     else:
                         item["subline"] = clean_subline
                 if isinstance(upload_title, str) and upload_title.strip():

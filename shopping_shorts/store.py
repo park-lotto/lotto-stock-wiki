@@ -16,6 +16,7 @@ from pathlib import Path
 # 이전) 데이터가 귀속되는 고객 ID(2026-07-13, 멀티테넌시). 기존 단일 관리자
 # 계정의 데이터를 그대로 보존하기 위한 값 — 신규 고객은 1부터 발급.
 LEGACY_CUSTOMER_ID = 0
+_LAST_VOICE_PREF = "last_voice"   # cid 0 전용 성우 기억 키(customer_prefs)
 
 # upsert_produce_work의 job_id/step 부분 업데이트 센티널(2026-07-17).
 # 파이썬 기본 인자값(None/0)은 "미지정"과 구별이 안 돼서, 부분 저장(재전송 안 한 필드)이
@@ -150,6 +151,16 @@ def _ensure_screen_time(plan, store, job_id):
         if not beats:
             return plan
         job = store.get_mix_job(job_id) or {}
+        # ★줄=칸=지목컷 불변식(2026-09-22 사장님 "안 되는 거 막지 말고 될 수밖에 없는 걸"): 2단계 이야기 작가가 만든
+        #   계획(generator=inherit)은 만들 때 이미 8줄=8칸=지목 컷 8개로 맞다. 그런데 이 관문이 저장마다 ②창작 되돌림
+        #   ③순서 재배분 ④화면 채우기를 다시 돌려 훅+미끼가 한 칸에 뭉치고(실측 job e8984a5c99fb) 조각이 4~7개로
+        #   되살아났다. 컷 리듬 스위치가 켜진 계정은 관문을 **지나지 않는다** — 고객 경로는 종전 그대로.
+        try:
+            from shopping_shorts.mix_pipeline import _cut_rhythm_on as _cr_on
+            if (plan or {}).get("generator") == "inherit" and _cr_on(store, job):
+                return plan
+        except Exception:      # noqa: BLE001 — 판정 실패는 종전 관문 그대로
+            pass
         extract = job.get("extract") or {}
         if not extract:
             return plan
@@ -5558,6 +5569,22 @@ class Store:
             )
             return wid
 
+    def get_work_state_by_job(self, job_id):
+        """믹스 job에 연결된 제작 작업의 state(dict) — 가장 최근 것. 없으면 None.
+        효과음팩이 '어떤 대본 틀을 골랐나'(script_style_id)를 읽는 데 쓴다(2026-09-22)."""
+        if not job_id:
+            return None
+        with self._conn() as c:
+            row = c.execute("SELECT state_json FROM produce_works WHERE job_id=? "
+                            "ORDER BY updated_at DESC LIMIT 1", (job_id,)).fetchone()
+        if not row or not row[0]:
+            return None
+        try:
+            st = json.loads(row[0])
+        except (TypeError, ValueError):
+            return None
+        return st if isinstance(st, dict) else None
+
     def get_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
         """작업 1건 → dict(state는 파싱됨). 없거나 남의 것이면 None
         (scene_assets의 get_scene_asset과 같은 관례, 2026-07-17 리뷰 반영)."""
@@ -6252,17 +6279,22 @@ class Store:
     def get_last_voice(self, customer_id):
         """고객이 마지막으로 적용한 voice 스냅샷 dict. 없거나 깨졌으면 None
         (→ 호출부는 종전대로 _DEFAULT_VOICE 폴백 = 동작 불변)."""
+        # ★cid 0(사장님 관리자 계정)은 customers 행이 없다 → customer_prefs에 둔다
+        #   (2026-09-22 사장님 "필재로 바꿨는데 다음 작업이 다시 미나"). 예전엔 cid 0을
+        #   "비로그인 공용"으로 보고 아예 안 기억했는데, 라이브는 로그인 게이트가 있어
+        #   cid 0 작업 = 사장님(과 사장님 자동작업)뿐이다.
         if not customer_id:
-            return None
-        with self._conn() as c:
-            row = c.execute("SELECT last_voice_json FROM customers WHERE id=?",
-                            (customer_id,)).fetchone()
-        if not row or not row[0]:
-            return None
-        try:
-            v = json.loads(row[0])
-        except (ValueError, TypeError):
-            return None      # 깨진 값이 영상제작을 막지 않는다
+            v = self.get_pref(_LAST_VOICE_PREF, 0)
+        else:
+            with self._conn() as c:
+                row = c.execute("SELECT last_voice_json FROM customers WHERE id=?",
+                                (customer_id,)).fetchone()
+            if not row or not row[0]:
+                return None
+            try:
+                v = json.loads(row[0])
+            except (ValueError, TypeError):
+                return None      # 깨진 값이 영상제작을 막지 않는다
         if not (isinstance(v, dict) and v.get("voice_id")):
             return None
         # ★못 쓰는 목소리에 **고착**되는 걸 막는다(2026-09-09 실사고 cid 163).
@@ -6301,11 +6333,14 @@ class Store:
     def set_last_voice(self, customer_id, voice):
         """이 고객의 다음 작업 기본 성우를 저장(upsert). voice=None이면 지운다.
         ⚠️voice_id 없는 스냅샷은 저장하지 않는다 — 넣어봐야 get_last_voice가 거른다."""
-        if not customer_id:
+        ok = isinstance(voice, dict) and bool(voice.get("voice_id"))
+        if not customer_id:                     # 사장님(cid 0) — get_last_voice 주석 참조
+            if ok:
+                self.set_pref(_LAST_VOICE_PREF, voice, 0)
+            else:
+                self.clear_pref(_LAST_VOICE_PREF, 0)
             return
-        val = None
-        if isinstance(voice, dict) and voice.get("voice_id"):
-            val = json.dumps(voice, ensure_ascii=False)
+        val = json.dumps(voice, ensure_ascii=False) if ok else None
         with self._conn() as c:
             c.execute("UPDATE customers SET last_voice_json=? WHERE id=?", (val, customer_id))
 

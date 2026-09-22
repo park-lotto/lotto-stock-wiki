@@ -97,7 +97,13 @@ def test_bgm_plus_sfx_amix_inputs_three(monkeypatch, tmp_path):
                           sfx={"asset_id": 1, "match_type": "role", "position": "last"})
     deco = {"bgm": {"_abspath": str(bgm), "volume": 15}, "sfx_volume": 60}
     cmd = _capture_burn(monkeypatch, tmp_path, plan, tts, deco, sfx_paths={0: "/x/1.mp3"})
-    assert "amix=inputs=3" in cmd          # 나레이션 + bgm + sfx1
+    # ★2026-09-22: 예전엔 amix=inputs=3(나레이션+bgm+sfx) 한 번에 섞어 나레이션이 1/3로 줄었다
+    #   (효과음을 켜는 순간 목소리만 작아짐 — 라이브 영상 팩 있음/없음 대조로 확인).
+    #   이제 나레이션+bgm은 **효과음 없을 때와 같은 그래프**, 효과음은 normalize=0으로 위에 얹는다.
+    assert "amix=inputs=2:duration=first:dropout_transition=2[nb]" in cmd   # 나레이션 + bgm (종전 그대로)
+    assert "amix=inputs=2:duration=first:normalize=0" in cmd                 # + 효과음(나누지 않음)
+    assert "amix=inputs=3" not in cmd
+    assert "alimiter=limit=0.95:level=0" in cmd                             # 더해 넘치는 순간만 누름
     assert "adelay=" in cmd                 # 효과음이 오프셋으로 지연
     assert "-c:a aac" in cmd                # 재믹스 → aac 인코드
 

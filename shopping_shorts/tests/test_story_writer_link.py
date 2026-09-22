@@ -103,7 +103,8 @@ def test_model_written_line_does_not_repeat_signal():
         lines = sw._to_lines(out, False, key, 0, FEATS)
         _, sigs = sw._pick(sw.YT_SETS, key, 0)
         twist = next(L["text"] for L in lines if L["role"] == "반전")
-        assert twist.startswith("심지어") == ("심지어" not in sigs)
+        # 반전은 프리셋의 마지막 낱말([3])로 열고, 모델이 쓴 '심지어'는 떼어 낸다 — 한 줄에 신호어 두 개 금지
+        assert twist.startswith(sigs[2]) and "심지어 심지어" not in twist and not twist.startswith(sigs[2] + " 심지어")
 
 
 def test_feature_number_beats_paraphrased_text():
@@ -122,3 +123,59 @@ def test_too_long_script_drops_whole_escalations_from_the_end():
     out, dropped = sw._fit_length(lines, 25)
     assert dropped == 2 and [x["role"] for x in out] == ["훅", "고조1", "고조1", "마무리"]   # 최소 1칸은 남는다
     assert sw._fit_length(lines, 999) == (lines, 0)
+
+
+def test_seed_platform_counts_deoragoyo_as_polite():
+    """2026-09-22 실측: "~더라고요"×3 + "남겨주세요" 씨앗이 썰(반말)로 판정돼 존댓말 체험담이 반말로 써졌다."""
+    seed = ("차량용품 중에 제일 잘 산 아이템 꼽으라면 이게 1등이더라고요 컵홀더에 물 놔두려고 하면 항상 꽉 차 있고 "
+            "사이드 수납 공간에 두면 꺼내기도 불편했는데 이거 하나 차문 쪽에 딱 달아 주니까 음료나 커피 넣어두기도 좋고 "
+            "운전하면서 꺼내 마시기도 훨씬 수월하더라고요 가격도 저렴해서 보조석이랑 뒷좌석에도 하나씩 달아놨더니 "
+            "간단한 짐이나 쓰레기통으로도 쓸 수 있어서 활용도가 진짜 좋은데 차에 타는 지인들마다 이거 어디서 샀냐고 "
+            "항상 물어보더라고요 댓글에 '홀더' 남겨주세요")
+    assert sw.seed_platform(seed) == "ig"
+    yt = ("출산 맘들 환장하게 만든 천재의 발명품 언뜻 봤을 땐 그냥 평범한 빗처럼 생긴 이 제품이 미친듯이 팔리고 있다는데 "
+          "이건 바로 두피 액체빗 이게 말도 안 되는 게 앰플을 손으로 바르면 골고루 바르기도 어려웠는데 "
+          "근데 진짜 미친 포인트는 남편이 선물해주면 사랑받기 딱 좋다고")
+    assert sw.seed_platform(yt) == "yt"
+
+
+def test_seed_platform_splits_glued_sentences():
+    """자막을 이어 붙여 문장 사이 띄어쓰기가 없는 전사(실측 homeditor_)도 존댓말로 본다."""
+    glued = "여러분 대파 절대 안 돼요저도 매번 그랬거든요기사 식당 이모님 말씀이래요냉동 보관하면 향이 다 날아가요그래서 이렇게 하더라고요"
+    assert sw.seed_platform(glued) == "ig"
+
+
+def test_insta_signal_goes_on_after_line_not_before():
+    """히트작 641편 실측: 신호어 뒤에 과거 불편이 온 적 0. before 줄에 붙이면 "게다가 전에는…"이 된다."""
+    o = {"opening": "와", "scene": "친구 집", "reveal": "이거", "feeling": "좋아요", "cta": "댓글",
+         "beats": [{"before": "전에는 매번 쏟았거든요", "after": "이제는 한 방울도 안 흘러요", "from_pain": "", "feat": 1},
+                   {"before": "전에는 손이 아팠어요", "after": "지금은 한 손으로 돼요", "from_pain": "", "feat": 1}]}
+    lines = sw._to_lines(o, True, "k", 0, feats=[{"name": "x"}])
+    texts = [L["text"] for L in lines if L["role"].startswith("고조")]
+    assert not any(t.split()[0] in sw.IG_SETS["A"] + sw.IG_SETS["B"] and "전에는" in t for t in texts)
+    assert any(t.startswith(sig) for t in texts for sig in sum(sw.IG_SETS.values(), []) if sig)
+
+
+def test_signal_strips_leading_conjunction():
+    o = {"hook": "h", "bait": "b", "reveal": "r", "twist": "t", "closing": "c",
+         "escalations": [{"moment": "근데 이건 물이 안 새", "what_happens": "x", "erased": "y", "from_pain": "", "feat": 1}]}
+    lines = sw._to_lines(o, False, "k", 0, feats=[{"name": "x"}])
+    first = [L["text"] for L in lines if L["role"] == "고조1"][0]
+    assert "근데 이건" not in first or not any(first.startswith(s) for s in sum(sw.YT_SETS.values(), []) if s)
+
+
+def test_signal_positions_fixed_contrast_first_then_escalations_then_twist():
+    """히트작 5편: 공개 → [1]이게 말도 안 되는게(대비) → [2]심지어(고조) → [3]근데 진짜 충격적인 포인트는(마지막)."""
+    o = {"hook": "h", "bait": "b", "reveal": "r", "contrast": "기존 컵홀더와는 달리 영하 3도까지 떨어뜨려 준다는 거",
+         "twist": "60도까지 데워주는 기능까지 있다고", "closing": "c",
+         "escalations": [{"moment": "m1", "what_happens": "w1", "erased": "e1", "from_pain": "", "feat": 1}]}
+    lines = sw._to_lines(o, False, "k", 0, feats=[{"name": "x"}])
+    _, preset = sw._pick(sw.YT_SETS, "k", 0)
+    by = {}
+    for L in lines:
+        by.setdefault(L["role"], L["text"])          # 칸의 첫 줄
+    if preset[0]:
+        assert by["대비"].startswith(preset[0])
+    assert by["고조1"].startswith(preset[1])
+    assert by["반전"].startswith(preset[2])
+    assert all(p[1] in ("심지어", "게다가", "거기다") for p in sw.YT_SETS.values())   # 두 번째 자리는 늘 '심지어' 급

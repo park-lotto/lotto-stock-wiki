@@ -14,6 +14,10 @@
   const currentMixJob=()=>String(typeof MIX_JOB==='undefined'?'':(MIX_JOB||'')).trim();
   const status=()=>document.getElementById('sceneStyleStatus');
   const draftKey=id=>'scene-style-draft:'+id;
+  // 저장본 비교 — 키 순서·undefined에 흔들리지 않게 정렬해 문자열로 견준다
+  const stable=v=>JSON.stringify(v,(k,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,key)=>{if(x[key]!==undefined)o[key]=x[key];return o},{}):x);
+  const sameSnapshot=(a,b)=>stable(a||null)===stable(b||null);
+  let serverText=null;   // 이번에 열 때 서버가 준 제목 글 — 임시저장 복원 때 '고친 칸' 판정 기준
   const timelineKey=context=>JSON.stringify(context.scenes.map(s=>[s.beat_idx,s.start,s.end,s.caption]));
   function showCanaryFallback(message){
     const panel=document.querySelector('.panel[data-step="3"]');
@@ -65,7 +69,8 @@
     const api=frame?.contentWindow?.sceneStyle;
     if(!dialog?.open||api?.context()?.jobId!==jobId)return null;
     const snapshot=api.snapshot();
-    try{localStorage.setItem(draftKey(jobId),JSON.stringify({snapshot,timeline:timelineKey(packet.context)}));}catch(error){status().textContent='임시 저장 공간이 부족합니다. 저장하고 닫기를 눌러 주세요.';}
+    // baseText = 이 편집기를 열 때 서버가 준 제목 글(임시저장 병합 전). 복원할 때 여기서 달라진 칸만 '사용자가 고친 것'으로 본다.
+    try{localStorage.setItem(draftKey(jobId),JSON.stringify({snapshot,timeline:timelineKey(packet.context),baseText:serverText||{}}));}catch(error){status().textContent='임시 저장 공간이 부족합니다. 저장하고 닫기를 눌러 주세요.';}
     return snapshot;
   }
   // ★자동 저장은 **이미 [이 영상에 적용]을 누른 적 있는 job에서만** 한다(2026-09-16 사장님 제보).
@@ -118,21 +123,51 @@
     if(!MIX_JOB){status().textContent='영상의 음성·장면을 먼저 준비해 주세요.';return;}
     jobId=MIX_JOB;status().textContent='실제 제목과 자막을 불러오는 중…';
     try{
+      // ★제목·소제목은 **누르지 않아도 들어가 있어야 한다**(2026-09-22 사장님:
+      //   "그냥 자동화가 되는 과정이야 눌러야 되는 거 없이 처음에 배치까지 잘 되야 하는 거야").
+      //   진입할 때 loadHeadcopySuggest가 후보를 자동으로 뽑아 window._hcCopies에 담아 둔다.
+      //   여기서 그 1번을 대비책으로 쓴다 — 옛 꾸미기(produce.html frPick)가 이미 쓰는
+      //   `hcText.value || _hcFirstCopy()`와 **같은 규칙**이다(0순위-B: 같은 판단을 두 벌로 두지 않는다).
+      //   안 쓰면 서버가 첫 나레이션을 제목에 넣어 "아니 텀블러이 / 있다고?"가 나온다(실측).
+      // ★후보가 아직 안 왔으면 기다린다(2026-09-22 라이브 저널: 컨텍스트 17:15:28 제목 빈칸 → 후보 17:15:32 도착.
+      //   회색 버튼을 후보보다 먼저 누르면 서버가 대본 첫 문장을 제목에 넣어 12/10자·23/22자로 넘쳤다).
+      //   loadHeadcopySuggest는 진행 중이면 같은 약속을 돌려주므로 중복 호출이 아니다.
+      if(!(STATE.headcopy?.text)&&!((typeof _hcFirstCopy==='function'&&_hcFirstCopy()))&&typeof loadHeadcopySuggest==='function'){
+        status().textContent='대본으로 제목 후보를 뽑는 중…';
+        try{await loadHeadcopySuggest(false);}catch(e){}
+      }
+      const fallbackCopy=(typeof _hcFirstCopy==='function'&&_hcFirstCopy())||'';
+      const fallbackSubline=(typeof _hcPickedSubline==='function'&&_hcPickedSubline())
+                          ||(typeof _hcFirstSubline==='function'&&_hcFirstSubline())||'';
       const params=new URLSearchParams({
-        headcopy_text:STATE.headcopy?.text||'',
-        headcopy_subline:STATE.headcopy?.subline||document.getElementById('frTitle')?.value||'',
+        headcopy_text:STATE.headcopy?.text||fallbackCopy||'',
+        headcopy_subline:STATE.headcopy?.subline||fallbackSubline
+                        ||document.getElementById('frTitle')?.value||'',
         copy_family:STATE.headcopy?.copy_family||STATE.script_copy_family||''
       });
       const response=await fetch('/api/produce/scene-style/context/'+encodeURIComponent(jobId)+'?'+params);
       packet=await response.json();if(!response.ok)throw Error(packet.error||'장면을 불러오지 못했습니다.');
+      serverText={...(packet.context?.text||{})};
       appliedOnServer=!!packet.snapshot;   // 서버에 이미 저장된 설정이 있는 job만 자동 저장 대상
       try{
         const draft=JSON.parse(localStorage.getItem(draftKey(jobId))||'null');
         if(draft?.timeline===timelineKey(packet.context)){
           // ★적용한 적 없는 job이면 임시저장본은 **편집기에만** 돌려놓고 서버엔 안 올린다.
           //   여기서 올리면 열었다 닫기만 한 사람도 결국 템플릿이 박힌다(applied() 주석 참조).
+          // ★제목 글은 **사용자가 고친 칸만** 되살린다(2026-09-22 사장님: 같은 작업을 다시 열어도 첫 문장 제목이 그대로).
+          //   임시저장본 text는 모든 칸의 값이라, 그대로 덮으면 서버가 새로 준 제목(후보 1번)이 옛 값에 밀린다.
+          //   열 때의 서버 글(baseText)과 다른 칸만 사용자 편집으로 본다. baseText가 없는 옛 임시저장본은 글을 되살리지 않는다.
+          if(draft.snapshot){
+            const base=draft.baseText,all=draft.snapshot.text||{};
+            const edited=base?Object.fromEntries(Object.entries(all).filter(([k,v])=>base[k]!==v)):{};
+            // ★서버에 올릴 땐 **완전한 글**(서버 저장본 글 + 고친 칸)로 만든다 — 고친 칸만 담긴 조각을 올리면 서버가
+            //   "설정이 바뀌었다"고 보고 완성본을 무효화한다(2026-09-22 21:05 실측: 열기만 했는데 렌더가 사라짐, 3단계 재다운로드).
+            draft.snapshot.text={...((packet.snapshot&&packet.snapshot.text)||serverText||{}),...edited};
+          }
+          const serverSnap=packet.snapshot;
           packet.snapshot=draft.snapshot;if(draft.snapshot)packet.context.text={...packet.context.text,...draft.snapshot.text};
-          if(applied())await saveSnapshot(draft.snapshot);
+          // ★서버 저장본과 실제로 다를 때만 올린다 — 같은데 올리면 저장 시각만 바뀌고 완성본이 무효화된다.
+          if(applied()&&!sameSnapshot(draft.snapshot,serverSnap))await saveSnapshot(draft.snapshot);
         }
       }catch(error){status().textContent='남겨둔 편집을 복원했습니다. 서버 저장은 다시 시도해 주세요.';}
       if(!dialog){
@@ -149,6 +184,9 @@
   addEventListener('message',async event=>{
     if(!frame||event.source!==frame.contentWindow||event.origin!==location.origin)return;
     if(event.data?.type==='scene-style-ready')frame.contentWindow.postMessage({type:'scene-style-context',...packet},location.origin);
+    // 09-22 편집기의 [이 장면을 썸네일 후보로]: 7단계를 이미 열어 봤으면 후보 목록을 바로 다시 그리고, [썸네일 단계로 이동]은 저장하고 닫은 뒤 7단계로 보낸다.
+    if(event.data?.type==='scene-style-thumb-pinned'){if(typeof THUMB_STATE!=='undefined'&&THUMB_STATE.job===MIX_JOB&&typeof loadThumbFrames==='function')loadThumbFrames();return;}
+    if(event.data?.type==='scene-style-goto-thumb'){await saveAndClose();if(!dialog.open&&typeof stepGo==='function')stepGo('thumb');return;}
     if(event.data?.type==='scene-style-lines'){
       try{
         if(event.data.jobId!==jobId||jobId!==MIX_JOB)throw Error('편집 중인 영상이 바뀌었습니다. 다시 열어 주세요.');

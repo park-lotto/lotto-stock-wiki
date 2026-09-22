@@ -555,12 +555,31 @@ def _resolve_font():
 _FF_TEXT = {"capture_output": True, "text": True, "encoding": "utf-8", "errors": "replace"}
 
 
+_PROBE_CACHE: dict = {}          # (경로, mtime_ns, size) → 초. 파일이 바뀌면 키가 바뀐다.
+_PROBE_CACHE_MAX = 4096
+
+
 def _probe_duration(path):
-    """ffprobe로 미디어 길이(초)."""
+    """ffprobe로 미디어 길이(초). 같은 파일(경로·수정시각·크기 동일)은 한 번만 잰다.
+
+    실측(2026-09-22): 장면꾸미기 컨텍스트가 비트마다 TTS를 ffprobe해 33비트면 33번,
+    부하 9인 서버에서 2~3초를 먹었다. 파일은 안 바뀌는데 매번 다시 쟀다."""
+    try:
+        st = os.stat(path)
+        key = (str(path), st.st_mtime_ns, st.st_size)
+    except OSError:
+        key = None
+    if key is not None and key in _PROBE_CACHE:
+        return _PROBE_CACHE[key]
     cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration",
            "-of", "default=noprint_wrappers=1:nokey=1", str(path)]
     out = subprocess.run(cmd, stdin=subprocess.DEVNULL, check=True, **_FF_TEXT)
-    return float(out.stdout.strip())
+    dur = float(out.stdout.strip())
+    if key is not None:
+        if len(_PROBE_CACHE) >= _PROBE_CACHE_MAX:
+            _PROBE_CACHE.clear()
+        _PROBE_CACHE[key] = dur
+    return dur
 
 
 _TRIM_FLOOR = 0.4  # 비트 트림 후 남길 최소 길이(초). 과트림·역전 방지.
@@ -800,6 +819,29 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     # 컷 밀도(2026-07-22): 한 컷을 MAX_SHOT_SECONDS 넘게 안 끌고 distinct 세그먼트를 번갈아
     # 재생 → 긴 정지 대신 컷. 포인트 비트는 홀드가 맞으니 라운드로빈 안 한다.
     _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
+    # ★컷 리듬(2026-09-22 사장님 "짧은 건 너무 정신없다 / 내 거 먼저"): 관리자 스위치 cut_rhythm_enabled 뒤.
+    #   히트작 11편 실측(docs/cut_rhythm_2026-09-22.md): 컷 중앙 1.9초·3초+ 홀드 편당 2~4개·최장 5초 — 우리는 2.2초
+    #   라운드로빈이라 컷이 2배 많고 절반 길이였다. 표식은 mix_pipeline._apply_cut_rhythm이 비트마다 단다.
+    #   hold = 핵심 줄(…없애 버렸다는 거 / 훅): 첫 조각 하나만 두고 상한 없이 이어 튼다(원본은 연속 촬영이라
+    #   조각 경계를 넘어가도 컷이 아니다). 나머지 줄은 상한 4초(문장 하나에 컷 하나가 기본).
+    _cr = beat.get("cut_rhythm") or {}
+    if _cr and not _bb.is_point_beat(beat):
+        if _cr.get("hold") and segs:
+            # ★홀드 = "첫 조각을 **이어 튼다**"인데 조각의 end에서 잘려 정지가 됐다(2026-09-22 실측 job 956a6843cdd5:
+            #   3번 비트 7.1초에 s4 9.9~11.0 한 조각 → 나머지 6초를 10.9초 프레임 정지+슬로모+켄번즈 확대로 채움.
+            #   0·6번 비트도 같은 꼴. 미리보기(표식 전)는 정상, 최종 렌더(표식 후)만 멈춤). 이어 틀려면 조각 end를
+            #   소스 끝까지 열어야 한다 — 단 비트 길이만큼만(딴 장면까지 헤매지 않게).
+            first = dict(segs[0])
+            src_total = float(src_durs.get(first.get("video_id"), 0.0) or 0.0)
+            first["end"] = max(float(first.get("end") or 0.0), min(src_total, float(first.get("start") or 0.0) + float(tts_dur) + 0.5))
+            segs = [first]
+            beat_src_durs = {s["video_id"]: src_durs[s["video_id"]] for s in segs}
+            _max_shot = None
+        else:
+            try:
+                _max_shot = float(_cr.get("max_shot") or 4.0)
+            except (TypeError, ValueError):
+                _max_shot = 4.0
     # 1장=1컷 모드(기본 off). 켜면 담은 장면이 순서대로 한 번씩만 나온다(되돌아옴 없음).
     _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
     # 3단계 통합 속도. 최신 편성의 구절 경계·수동 컷·전체 늘리기는 그대로 두고,
@@ -854,7 +896,7 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
                 plan, segs, runout, plan[-1].get("playback_speed", 1.0))
         return plan
     _phrase_plan = None
-    if beat.get("phrase_sync"):          # 구절맞춤 켬 = 구절이 ✋보다 우선(화면과 같은 규칙)
+    if beat.get("phrase_sync") and not _cr:   # 구절맞춤 켬 = 구절이 ✋보다 우선(화면과 같은 규칙). 컷 리듬 칸은 홀드가 우선
         _phrase_plan = _plan_phrase_clips(beat, segs, tts_dur)
     if _phrase_plan:
         plan = _phrase_plan
@@ -1994,6 +2036,10 @@ def _apply_hook_inpoint(edit_plan, source_video_paths, work):
     """훅 비트(beats[0]) primary.start를 모션 피크(자동) + UI delta로 이동(P1).
     소스 밖/윈도우 좁음/실패 시 무변경(렌더 안 죽인다). peak_at·hook_delta를 primary에 실어
     프리뷰 UI가 현재 시작점·미세조정을 표시·조절하게 한다."""
+    # ★청소본 정본 파생 사본(clean_base=True)은 재료가 이미 청소본 컷 좌표다 — 피크를 다시
+    #   찾아 옮기면 컷 밖(딴 장면)으로 나간다. 청소 시점에 이미 반영된 시작점을 그대로 쓴다(2026-09-22).
+    if (edit_plan or {}).get("clean_base"):
+        return
     try:
         from shopping_shorts import scene_cut as _sc
         beats = edit_plan.get("beats") or []
@@ -2908,6 +2954,14 @@ def sfx_events_for(timeline, sfx_paths):
     """
     sfx_paths = sfx_paths or {}
     events = []
+    pack = sfx_paths.get("_pack") if isinstance(sfx_paths, dict) else None
+    if pack:
+        # ★썰채널 효과음팩(2026-09-22) — 자막 줄 교체 기준(sfx_pack 모듈 docstring).
+        #   _resolve_sfx_paths가 팩이 있을 때 sfx_paths엔 사람이 고른(manual) 것만 남겼다.
+        #   그 비트는 사람 것을 쓰고, 팩은 그 비트를 건너뛴다.
+        from shopping_shorts import sfx_pack
+        manual = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"])}
+        events += sfx_pack.events(timeline, pack, manual_beats=manual)
     for b in timeline or []:
         sfx = b.get("sfx")
         path = sfx_paths.get(b["beat_idx"])
@@ -3197,15 +3251,38 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         idx += 1
     if has_sfx:                                       # 효과음(비트별 오프셋에 adelay)
         sfx_vol = max(0.0, min(1.0, (deco.get("sfx_volume", 60)) / 100.0))
-        for i, (sfx_path, offset_sec) in enumerate(sfx_events):
+        sfx_labels = []
+        for i, ev in enumerate(sfx_events):
+            sfx_path, offset_sec = ev[0], ev[1]
+            gain = float(ev[2]) if len(ev) > 2 else 1.0      # 팩 보정(sfx_pack.events)
             inputs += ["-i", sfx_path]
             ms = max(0, round(offset_sec * 1000))
-            fc.append(f"[{idx}:a]adelay={ms}:all=1,volume={sfx_vol:.3f}[sfx{i}]")
-            mix_labels.append(f"sfx{i}")
+            fc.append(f"[{idx}:a]adelay={ms}:all=1,volume={sfx_vol * gain:.3f}[sfx{i}]")
+            sfx_labels.append(f"sfx{i}")
             idx += 1
-    if len(mix_labels) > 1:
+        # ★효과음은 **한 줄로 먼저 합쳐**(sfxbus) 나레이션·BGM 믹스 **위에 얹는다**(2026-09-22 실측 2건).
+        #   ① amix는 기본(normalize=1)으로 입력 개수만큼 전체를 나눈다 — 효과음 26발을 따로 넣으면
+        #      입력 27개라 나레이션까지 1/27(-28.6dB)로 죽었다(실렌더: 평균 -16.8→-45.8dB).
+        #   ② 효과음을 나레이션과 같은 amix에 넣기만 해도 나레이션이 1/2(-6dB)이 됐다 — 효과음 없는
+        #      영상은 나레이션이 그대로 나가므로 **효과음을 켜는 순간 목소리만 작아졌다**(라이브 사장님
+        #      영상 bbbd6f20fe39 팩 있음/없음 두 판 대조로 확인).
+        #   그래서 나레이션(+BGM)은 **종전 그대로** 섞고, 효과음은 normalize=0으로 더한다.
+        #   더해서 넘칠 수 있는 순간만 alimiter(level=0 — 자동 음량 올림 끔)로 누른다.
+        if len(sfx_labels) > 1:
+            fc.append("".join(f"[{lb}]" for lb in sfx_labels)
+                      + f"amix=inputs={len(sfx_labels)}:duration=longest:normalize=0[sfxbus]")
+            sfx_bus = "sfxbus"
+        else:
+            sfx_bus = sfx_labels[0]
+    base = mix_labels[0]
+    if len(mix_labels) > 1:            # 나레이션 + BGM — 종전 그래프 그대로(음량 비율 불변)
         ins = "".join(f"[{lb}]" for lb in mix_labels)
-        fc.append(f"{ins}amix=inputs={len(mix_labels)}:duration=first:dropout_transition=2[a]")
+        fc.append(f"{ins}amix=inputs={len(mix_labels)}:duration=first:dropout_transition=2[nb]")
+        base = "nb"
+        amap = "[nb]"
+    if has_sfx:
+        fc.append(f"[{base}][{sfx_bus}]amix=inputs=2:duration=first:normalize=0,"
+                  f"alimiter=limit=0.95:level=0[a]")
         amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
