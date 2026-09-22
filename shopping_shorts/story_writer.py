@@ -264,11 +264,9 @@ def _to_lines(o, ig, key, nth, feats=None):
         all_sigs = list(sigs)          # 중복 제거는 세트 전체로 본다(대비가 첫 신호어를 가져가도)
         rows = [("훅", o.get("hook"), -1), ("미끼", o.get("bait"), -1), ("공개", o.get("reveal"), -1)]
         if (o.get("contrast") or "").strip():
-            # ★대비는 고조의 첫 칸처럼 신호어를 받는다(히트작: "이게 말도 안 되는게 기존 X와 달리 Y해 준다는 거 → 근데 진짜…").
-            #   사장님 09-22: "대비 다음에 바로 심지어로 가면 이상하다" — 대비가 첫 신호어를 쓰고 고조는 그 다음 신호어부터.
-            sig0 = sigs[0] if sigs else ""
-            rows.append(("대비", (sig0 + " " + _LEAD_CONJ.sub("", o["contrast"].strip())) if sig0 else o["contrast"], -1))
-            sigs = list(sigs[1:])
+            # ★대비는 신호어 없이 "기존 X와 달리 Y해 준다는 거"로 절을 닫고, 그 다음 고조 첫 칸이 "심지어"로 연다
+            #   (사장님 09-22 화면 확인: "대비 처음에 심지어가 붙었다 — ~달리 다음에 심지어로 붙어야").
+            rows.append(("대비", _LEAD_CONJ.sub("", o["contrast"].strip()), -1))
         tail = [("반전", o.get("twist"), -1), ("마무리", o.get("closing"), -1)]
     for i, e in enumerate(escs):
         n = e.get("feat")
