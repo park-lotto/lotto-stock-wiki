@@ -3198,20 +3198,29 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
             fc.append(f"[{idx}:a]adelay={ms}:all=1,volume={sfx_vol * gain:.3f}[sfx{i}]")
             sfx_labels.append(f"sfx{i}")
             idx += 1
-        # ★효과음은 **한 줄로 먼저 합쳐** 아래 amix에 입력 하나로만 넣는다(2026-09-22 실측).
-        #   amix는 기본(normalize=1)으로 **입력 개수만큼 전체를 나눈다** — 효과음 26발을
-        #   따로 넣으면 입력 27개라 나레이션까지 1/27(-28.6dB)로 죽었다(실렌더: 평균 -16.8→-45.8dB).
-        #   효과음끼리는 normalize=0으로 그대로 더하고(겹칠 일이 드물다 — 대부분 0.2초 이하),
-        #   1발일 때는 종전과 **완전히 같은 그래프**(나레이션·BGM 비율 불변)가 되게 한다.
+        # ★효과음은 **한 줄로 먼저 합쳐**(sfxbus) 나레이션·BGM 믹스 **위에 얹는다**(2026-09-22 실측 2건).
+        #   ① amix는 기본(normalize=1)으로 입력 개수만큼 전체를 나눈다 — 효과음 26발을 따로 넣으면
+        #      입력 27개라 나레이션까지 1/27(-28.6dB)로 죽었다(실렌더: 평균 -16.8→-45.8dB).
+        #   ② 효과음을 나레이션과 같은 amix에 넣기만 해도 나레이션이 1/2(-6dB)이 됐다 — 효과음 없는
+        #      영상은 나레이션이 그대로 나가므로 **효과음을 켜는 순간 목소리만 작아졌다**(라이브 사장님
+        #      영상 bbbd6f20fe39 팩 있음/없음 두 판 대조로 확인).
+        #   그래서 나레이션(+BGM)은 **종전 그대로** 섞고, 효과음은 normalize=0으로 더한다.
+        #   더해서 넘칠 수 있는 순간만 alimiter(level=0 — 자동 음량 올림 끔)로 누른다.
         if len(sfx_labels) > 1:
             fc.append("".join(f"[{lb}]" for lb in sfx_labels)
                       + f"amix=inputs={len(sfx_labels)}:duration=longest:normalize=0[sfxbus]")
-            mix_labels.append("sfxbus")
+            sfx_bus = "sfxbus"
         else:
-            mix_labels += sfx_labels
-    if len(mix_labels) > 1:
+            sfx_bus = sfx_labels[0]
+    base = mix_labels[0]
+    if len(mix_labels) > 1:            # 나레이션 + BGM — 종전 그래프 그대로(음량 비율 불변)
         ins = "".join(f"[{lb}]" for lb in mix_labels)
-        fc.append(f"{ins}amix=inputs={len(mix_labels)}:duration=first:dropout_transition=2[a]")
+        fc.append(f"{ins}amix=inputs={len(mix_labels)}:duration=first:dropout_transition=2[nb]")
+        base = "nb"
+        amap = "[nb]"
+    if has_sfx:
+        fc.append(f"[{base}][{sfx_bus}]amix=inputs=2:duration=first:normalize=0,"
+                  f"alimiter=limit=0.95:level=0[a]")
         amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])

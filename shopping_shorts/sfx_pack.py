@@ -14,12 +14,14 @@
       둥   반전·강조("충격적인", "말도 안 되는", "근데 이걸", "진짜는", "종결급")
       띠링 결과·감탄("변신", "끝판왕", "99.9%", "해결" …) · 마지막 칸 첫 줄
       뽁   동작(action_dict — 넣어/발라/잘라 …)
-      딸깍딸깍 시연 넘김 일부(실측 8%)
-      휙   나머지 기본값
-  밀도  초당 약 1.1발(이븐쇼핑 실측). 넘치면 **휙부터** 고르게 뺀다(둥·띠링·뽁은 남긴다).
+      나머지 기본값 자리 → DEFAULT_CYCLE
+  기본값 자리  휙·뽁·딸깍·틱을 DEFAULT_CYCLE 순서로 돌린다(한 가지만 반복하지 않게)
+  밀도  초당 약 1.1발(이븐쇼핑 실측). 넘치면 **기본값 자리부터** 고르게 뺀다(둥·띠링·동작 뽁은 남긴다).
 
 회원마다 팩 하나를 고정 배정한다(20종, 두 팩 사이 7칸 중 최소 4칸 다름) — 회원끼리 소리가 달라진다.
-켜는 조건: 관리자 설정 sfx_pack_enabled=1 **그리고** 썰쇼핑 계열 채널 틀을 쓴 영상.
+켜는 조건: 관리자 설정 sfx_pack_enabled=1 **그리고** 2단계에서 **썰 대본**(오용형·제품정체형·발명품형 틀)을 고른 영상.
+  ★채널 틀로 판정하지 않는다(2026-09-22 사장님 "썰대본을 골랐을경우만"). 라이브 최근 400건 실측:
+    썰 틀 262건 중 썰 대본은 28건뿐 — 틀 기준이면 234건에 잘못 켜지고 틀 없는 썰 대본 5건은 빠졌다.
 """
 import os
 import re
@@ -32,13 +34,18 @@ OPENER_AT = 0.06          # 실측: 12편 전부 0.03~0.07초
 WHOOSH_LEAD = 0.035       # 첫 넘김: 휙이 넘김보다 먼저(8편 중앙)
 TICK_LAG = 0.07           # 첫 넘김: 틱이 넘김보다 뒤(12편 중앙)
 TARGET_PER_SEC = 1.1      # 실측 밀도(떡밥 1.19 · 시연 1.23 · 반전 1.12 · 마무리 1.06)
-CLICK2_EVERY = 12         # 기본값(휙) 자리 중 이 간격마다 딸깍딸깍(실측 시연 8%)
+# 특별한 문구가 없는 자막(기본값 자리)에 돌려 쓰는 순서 — 결정적(같은 대본=같은 결과).
+#   ★2026-09-22 라이브 실측: 기본값을 전부 휙으로 두니 한 편에서 휙 66%(이븐쇼핑 27%)·뽁 11%(32%)·틱 3%(13%)
+#     — "휙만 계속 난다"가 됐다. 이븐쇼핑 12편은 문구 규칙(둥·띠링·동작 뽁) 밖의 자리에도 휙·뽁·딸깍·틱을 섞는다.
+#     실측 비율(휙 77·뽁 90·틱 38·딸깍 24건)에서 문구로 정해지는 몫을 빼고 8칸 순환으로 맞췄다.
+DEFAULT_CYCLE = ("whoosh", "pop", "whoosh", "click2", "whoosh", "pop", "tick", "pop")
 # 팩 소리 보정(배) — 실렌더에서 목소리 대비 크기를 이븐쇼핑과 맞춘 값(tools/sfx_bench/render_check.py).
 #   기본 효과음 볼륨 60%만으로는 이븐쇼핑보다 약 8dB 작았다(휙 -10.6 vs -2.7dB). 7.0으로 올리니 7종 모두
 #   +2.4~2.8dB 컸다(나레이션 차감 잔여로 잰 값) → 4.3.
 PACK_GAIN_DB = 4.3
 
-_DUNG = re.compile(r"충격|말도\s*안|근데\s*이걸|근데\s*진짜|진짜는|종결급|반전")
+# 둥 — 흐름을 꺾는 말. "심지어·하지만"은 2026-09-22 라이브 33편 실측에서 둥이 4%(이븐쇼핑 9.5%)라 보탰다.
+_DUNG = re.compile(r"충격|말도\s*안|근데\s*이걸|근데\s*진짜|진짜는|종결급|반전|심지어|하지만")
 _DING = re.compile(r"변신|끝판왕|완벽|원상\s*복구|뚝딱|해결|99|%|새\s*(것|걸|거)|반짝|야무지|대박|떼돈|돈방석|"
                    r"매출|폭등|품절|난리|역대급|환장|감탄")
 # 동작(뽁) 보충 — 공용 action_dict에 없는데 이븐쇼핑 시연 자막에 뽁이 붙은 동사(실측 문구 예:
@@ -77,27 +84,31 @@ def pack_for(customer_id, override=None):
     return packs[zlib.crc32(str(customer_id or 0).encode()) % len(packs)]
 
 
-def is_sul_deco(deco):
-    """이 영상이 썰쇼핑 계열 채널 틀을 쓰는가.
+def script_family(store, job):
+    """이 job의 대본이 고른 틀(스파인)의 갈래 목록. 모르면 [].
 
-    장면꾸미기 틀은 두 화면 모두 유튜브 썰쇼핑 계열이다(app.py 프리셋 목록 주석:
-    "현재 장면꾸미기 채널 틀은 전부 유튜브 썰쇼핑 계열"). 새 편집기=deco.scene_style,
-    옛 피팅룸=deco.template.frame. 틀에 copy_family가 따로 박혀 있고 유튜브 계열이 아니면 뺀다
-    (인스타 틀이 추가될 때를 대비 — 그때 이 값만 보면 된다).
+    job → 제작 작업(produce_works.job_id) → state.script_style_id(=2단계에서 고른 스파인 id,
+    app.py record_script_usage(spine_id=dr["style_id"])와 같은 값) → 스파인 fit_categories.
     """
-    if not isinstance(deco, dict):
-        return False
-    if deco.get("scene_style"):
-        return True
-    frame = (deco.get("template") or {}).get("frame") if isinstance(deco.get("template"), dict) else None
-    if not isinstance(frame, dict) or not frame:
-        return False
     try:
-        from shopping_shorts import deco_frame
-        p = deco_frame.PRESETS.get(frame.get("preset") or deco_frame.DEFAULTS["preset"]) or {}
-        return p.get("copy_family", "youtube_reveal") == "youtube_reveal"
-    except Exception:      # noqa: BLE001 — 판정 실패는 '끔'으로(조용히 켜지지 않게)
-        return False
+        st = store.get_work_state_by_job((job or {}).get("job_id"))
+    except Exception:      # noqa: BLE001
+        return []
+    sid = (st or {}).get("script_style_id")
+    if sid is None or not str(sid).strip().isdigit():
+        return []
+    try:
+        sp = next((x for x in store.list_spines() if int(x.get("id") or -1) == int(sid)), None)
+    except Exception:      # noqa: BLE001
+        return []
+    return list((sp or {}).get("fit_categories") or [])
+
+
+def is_sul_script(store, job):
+    """썰 대본(오용형·제품정체형·발명품형)을 골랐나 — 판정은 script_genre.is_context 한 벌."""
+    from shopping_shorts import script_genre
+    fam = script_family(store, job)
+    return script_genre.is_context("", [{"fit_categories": fam}], script_genre.YOUTUBE_SUL_FAMILY)
 
 
 def resolve(store, job):
@@ -113,7 +124,7 @@ def resolve(store, job):
             return None
     except Exception:      # noqa: BLE001
         return None
-    if not is_sul_deco(deco):
+    if not is_sul_script(store, job):
         return None
     got = pack_for(job.get("customer_id", 0), override=choice)
     return {"name": got[0], "dir": got[1]} if got else None
@@ -165,17 +176,17 @@ def plan_events(timeline, manual_beats=()):
             slot = classify(seg)
             if slot is None and b["beat_idx"] == last_idx and k == 0:
                 slot = "ding"   # 마무리 칸 첫 줄
-            body.append([slot, start, seg])
-    # 기본값(휙) 자리 중 일부를 딸깍딸깍으로 — 결정적(같은 대본이면 같은 결과)
+            body.append([slot, start, seg, slot is None])   # 4번째 = 기본값 자리(밀도 조절 대상)
+    # 기본값 자리는 DEFAULT_CYCLE 순서로 돌린다 — 결정적(같은 대본이면 같은 결과)
     d = 0
     for row in body:
         if row[0] is None:
+            row[0] = DEFAULT_CYCLE[d % len(DEFAULT_CYCLE)]
             d += 1
-            row[0] = "click2" if d % CLICK2_EVERY == CLICK2_EVERY // 2 else "whoosh"
-    # 밀도 맞추기: 초당 TARGET_PER_SEC를 넘으면 휙을 고르게 뺀다
+    # 밀도 맞추기: 초당 TARGET_PER_SEC를 넘으면 **기본값 자리**를 고르게 뺀다(둥·띠링·동작 뽁은 남긴다)
     budget = int(round(TARGET_PER_SEC * max(0.0, total - float(tl[0]["dur"]))))
-    fixed = len(ev) + sum(1 for r in body if r[0] != "whoosh")
-    whooshes = [i for i, r in enumerate(body) if r[0] == "whoosh"]
+    fixed = len(ev) + sum(1 for r in body if not r[3])
+    whooshes = [i for i, r in enumerate(body) if r[3]]
     keep_n = max(0, budget - fixed)
     if len(whooshes) > keep_n:
         drop = len(whooshes) - keep_n

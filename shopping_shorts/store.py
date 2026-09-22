@@ -5559,6 +5559,22 @@ class Store:
             )
             return wid
 
+    def get_work_state_by_job(self, job_id):
+        """믹스 job에 연결된 제작 작업의 state(dict) — 가장 최근 것. 없으면 None.
+        효과음팩이 '어떤 대본 틀을 골랐나'(script_style_id)를 읽는 데 쓴다(2026-09-22)."""
+        if not job_id:
+            return None
+        with self._conn() as c:
+            row = c.execute("SELECT state_json FROM produce_works WHERE job_id=? "
+                            "ORDER BY updated_at DESC LIMIT 1", (job_id,)).fetchone()
+        if not row or not row[0]:
+            return None
+        try:
+            st = json.loads(row[0])
+        except (TypeError, ValueError):
+            return None
+        return st if isinstance(st, dict) else None
+
     def get_produce_work(self, work_id, customer_id=LEGACY_CUSTOMER_ID):
         """작업 1건 → dict(state는 파싱됨). 없거나 남의 것이면 None
         (scene_assets의 get_scene_asset과 같은 관례, 2026-07-17 리뷰 반영)."""

@@ -29,6 +29,12 @@ class _Store:
     def get_scene_asset(self, *a, **k):
         return None
 
+    def get_work_state_by_job(self, job_id):      # 검증용: 발명품형 대본을 고른 것으로
+        return {"script_style_id": 70}
+
+    def list_spines(self, status=None):
+        return [{"id": 70, "fit_categories": ["발명품형"]}]
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -55,12 +61,15 @@ def main():
     base = out / "base.mp4"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", f"color=c=0x303030:s=1080x1920:r=30:d={total:.3f}",
                     "-i", str(narr), "-shortest", "-c:v", "libx264", "-preset", "veryfast", "-c:a", "aac", str(base)], check=True)
-    job = {"customer_id": a.cid, "deco": {"scene_style": {"presetId": "check"}}}
+    job = {"job_id": "render_check", "customer_id": a.cid, "deco": {}}
     sfx_paths = mix_pipeline._resolve_sfx_paths(_Store(), plan, a.cid, job=job)
     assert sfx_paths.get("_pack"), "팩이 안 잡혔다"
     work = out / "work"; work.mkdir(exist_ok=True)
     final = out / "final.mp4"
     va._burn_captions(str(base), plan, tts, str(final), work, deco={}, sfx_paths=sfx_paths)
+    # 대조판: 효과음 없이 같은 렌더 — 두 판의 목소리 크기가 같아야 하고, 빼면 효과음만 남아야 한다
+    work2 = out / "work2"; work2.mkdir(exist_ok=True)
+    va._burn_captions(str(base), plan, tts, str(out / "without.mp4"), work2, deco={}, sfx_paths={})
     tl = va._beat_timeline(plan, tts)
     ev = sfx_pack.plan_events(tl)
     caps = [(seg, st) for b in tl for seg, st, _ in va.caption_schedule(b)]
