@@ -61,6 +61,9 @@ def main():
     work = out / "work"; work.mkdir(exist_ok=True)
     final = out / "final.mp4"
     va._burn_captions(str(base), plan, tts, str(final), work, deco={}, sfx_paths=sfx_paths)
+    # 대조판: 효과음 없이 같은 렌더 — 두 판의 목소리 크기가 같아야 하고, 빼면 효과음만 남아야 한다
+    work2 = out / "work2"; work2.mkdir(exist_ok=True)
+    va._burn_captions(str(base), plan, tts, str(out / "without.mp4"), work2, deco={}, sfx_paths={})
     tl = va._beat_timeline(plan, tts)
     ev = sfx_pack.plan_events(tl)
     caps = [(seg, st) for b in tl for seg, st, _ in va.caption_schedule(b)]
