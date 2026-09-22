@@ -163,22 +163,18 @@ def test_signal_strips_leading_conjunction():
     assert "근데 이건" not in first or not any(first.startswith(s) for s in sum(sw.YT_SETS.values(), []) if s)
 
 
-def test_contrast_takes_first_signal_and_escalations_shift():
-    """히트작: "이게 말도 안 되는게 기존 X와 달리 Y해 준다는 거 → 근데 진짜 충격적인 포인트는…". 대비 뒤에 바로 같은 급 신호어가 오지 않는다."""
+def test_contrast_has_no_signal_and_first_escalation_opens_with_signal():
+    """사장님 09-22: 대비는 "기존 X와 달리 Y해 준다는 거"로 닫고, 그 다음 고조 첫 칸이 신호어로 연다."""
     o = {"hook": "h", "bait": "b", "reveal": "r", "contrast": "기존 컵홀더와는 달리 영하 3도까지 떨어뜨려 준다는 거",
          "twist": "t", "closing": "c",
-         "escalations": [{"moment": "m1", "what_happens": "w1", "erased": "e1", "from_pain": "", "feat": 1},
-                         {"moment": "m2", "what_happens": "w2", "erased": "e2", "from_pain": "", "feat": 1}]}
+         "escalations": [{"moment": "m1", "what_happens": "w1", "erased": "e1", "from_pain": "", "feat": 1}]}
     lines = sw._to_lines(o, False, "k", 0, feats=[{"name": "x"}])
     _, sigs = sw._pick(sw.YT_SETS, "k", 0)
     contrast = [L["text"] for L in lines if L["role"] == "대비"][0]
     esc1 = [L["text"] for L in lines if L["role"] == "고조1"][0]
+    assert contrast.startswith("기존 컵홀더와는 달리")
     if sigs[0]:
-        assert contrast.startswith(sigs[0])
-    if sigs[1]:
-        assert esc1.startswith(sigs[1])
-    assert not (sigs[0] and esc1.startswith(sigs[0]))
-
+        assert esc1.startswith(sigs[0])
 
 def test_repeat_signal_dropped_even_when_contrast_took_it():
     o = {"hook": "h", "bait": "b", "reveal": "r", "contrast": "기존 X와 달리 Y해 준다는 거",
