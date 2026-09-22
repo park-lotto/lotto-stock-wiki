@@ -119,7 +119,7 @@ def _tone(m):
     return "존댓말" if p > q else "반말" if q > p else "불명"
 
 
-def run_live(n, jobs, seconds):
+def run_live(n, jobs, seconds, preset="short"):
     from shopping_shorts.store import Store
     from shopping_shorts import app as A
     from shopping_shorts import backbone_assemble as ba
@@ -148,7 +148,7 @@ def run_live(n, jobs, seconds):
         if len(seed_text) < 60 or _FOREIGN.search(seed_text[:200]) and not re.search(r"[가-힣]{4}", seed_text[:200]):
             continue
         t0 = time.time()
-        drafts, why = sw.make_drafts([], job, seconds, job_id=jid)
+        drafts, why = sw.make_drafts([], job, seconds, job_id=jid, preset=preset)
         row = {"job_id": jid, "seed_vid": (seed or {}).get("video_id"),
                "seed_platform": sw.seed_platform(seed_text),
                "seed_text": seed_text[:1500], "seed": measure(_seed_sentences(seed_text)),
@@ -279,13 +279,14 @@ def main():
     ap.add_argument("--html", default="")
     ap.add_argument("--corpus", type=int, default=0, help="히트작 코퍼스에서 무작위 N편(인스타·유튜브 반반)")
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--preset", default="short", help="short 한입썰 | full 풀코스썰")
     a = ap.parse_args()
     if a.report:
         rows = json.load(open(a.report, encoding="utf-8"))
     elif a.corpus:
         rows = run_corpus(a.corpus, a.seed)
     else:
-        rows = run_live(a.n, [x.strip() for x in a.jobs.split(",") if x.strip()], a.seconds)
+        rows = run_live(a.n, [x.strip() for x in a.jobs.split(",") if x.strip()], a.seconds, a.preset)
     if a.out and not a.report:
         json.dump(rows, open(a.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     report(rows, a.html or None)
