@@ -3611,11 +3611,25 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # ★백본-먼저(2026-09-19, 장면분량 트랙·사장님 계정 먼저): 원본의 특징(말·화면 짝)을 묶어
         #   훅만 갈아끼우고 컷을 대사 길이만큼 앞에서 지정한다 → 3단계 채우기가 돌 일이 없다.
         #   스위치 backbone_script_enabled(기본 끔). 실패하면 아래 옛 경로로 가되 이유를 응답에 싣는다.
+        # ★이야기 작가(2026-09-22, 사장님 "내거에만 라이브스위치"): 대본을 **먼저** 쓰고 컷은 뒤에 붙인다.
+        #   스위치 story_writer_enabled(기본 끔, "admin"=관리자만). 백본보다 먼저 보고, 못 만들면
+        #   백본 스위치가 켜진 계정은 백본으로, 아니면 옛 경로로 간다 — 이유는 둘 다 응답에 싣는다.
         _bb_drafts, _bb_why = [], ""
-        if _setting_gate(store, "backbone_script_enabled", _cid(request)):
+        _story_on = _setting_gate(store, "story_writer_enabled", _cid(request))
+        _bb_on = _setting_gate(store, "backbone_script_enabled", _cid(request))
+        if _story_on or _bb_on:
             if (_job or {}).get("extract"):
-                _bb_drafts, _bb_why = _backbone_drafts(
-                    _picked, _job, store, body.get("target_seconds") or 25, job_id=_jid)
+                if _story_on:
+                    try:
+                        from shopping_shorts import story_writer as _sw
+                        _bb_drafts, _bb_why = _sw.make_drafts(
+                            _picked, _job, body.get("target_seconds") or 25, job_id=_jid)
+                    except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
+                        _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
+                if not _bb_drafts and _bb_on:
+                    _bb_drafts, _w2 = _backbone_drafts(
+                        _picked, _job, store, body.get("target_seconds") or 25, job_id=_jid)
+                    _bb_why = "; ".join(x for x in (_bb_why, _w2) if x)
             else:
                 _bb_why = "제작 job 재료 없음"
         if _bb_drafts:
@@ -9195,8 +9209,16 @@ def api_mix_capcut(job_id: str, base: str = ""):
                 _clips = mix_pipeline.normalize_baked_clips_for_capcut(
                     plan, _clips, timeline, work)
                 source_video_paths = dict(_clips)
+                # ★조각 안의 **컷 경계**를 같이 넘긴다(2026-09-21 이윤정님 제보: 캡컷에 칸 한 덩이로
+                #   가서 본인이 자른 장면 컷이 사라졌다). 경계는 렌더와 같은 계획에서 온다(0순위-B).
+                #   못 구하면 종전처럼 칸 한 덩이로 나간다 — 내보내기 자체는 막지 않는다.
+                try:
+                    _cuts = mix_pipeline.final_clip_pairs(
+                        plan, tts_paths, mix_pipeline._src_durs_for(job, work))
+                except Exception:      # noqa: BLE001
+                    _cuts = None
                 plan = mix_pipeline.plan_using_beat_clips(
-                    plan, _clips, timeline, preserve_capcut_speed=True)
+                    plan, _clips, timeline, preserve_capcut_speed=True, cuts=_cuts)
                 timeline = _beat_timeline(plan, tts_paths)
         elif job.get("clean_status") == "ready":
             return JSONResponse(status_code=409, content={
