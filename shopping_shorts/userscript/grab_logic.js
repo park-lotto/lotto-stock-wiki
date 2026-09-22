@@ -302,9 +302,15 @@
     }
     o.innerHTML = "<div style='background:#161616;color:#eee;border:1px solid #333;border-radius:14px;" +
       "padding:16px;max-width:720px;width:100%;max-height:82vh;overflow:auto;position:relative'>" +
-      "<button onclick='document.getElementById(\"ss-lens-ov\").remove()' style='position:absolute;" +
+      "<button id='ss-lens-x' type='button' style='position:absolute;" +
       "top:6px;right:12px;background:none;border:none;color:#fff;font-size:22px;cursor:pointer'>✕</button>" +
       "<div style='font-weight:800;margin-bottom:10px'>🔍 원본·유사 레퍼런스</div>" + html + "</div>";
+    // ★✕는 addEventListener로 묶는다(2026-09-22 사장님 제보: 인스타에서 ✕가 안 닫힘).
+    //   인라인 onclick=은 페이지 CSP(인스타: 'unsafe-inline' 없음)가 실행을 막는다 —
+    //   그래서 아래 '담기' 버튼도 onclick='void(0)'만 두고 JS로 묶어 왔다. ✕만 인라인에
+    //   기대고 있었다. 배경 클릭은 위에서 이미 JS로 묶여 있어 그것만 됐던 것.
+    var x = document.getElementById("ss-lens-x");
+    if (x) x.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); o.remove(); });
   }
   function _esc(s) { return String(s || "").replace(/[&<>"']/g, function (c) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
