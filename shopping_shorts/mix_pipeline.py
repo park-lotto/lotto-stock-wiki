@@ -3317,6 +3317,63 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
     return _clean
 
 
+def _cut_piece(src, ss, dur, dst):
+    """원본 소스에서 [ss, ss+dur) 한 조각을 규격 그대로 잘라낸다(증분 청소 입력)."""
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{ss:.3f}", "-i", str(src),
+                    "-t", f"{dur:.3f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+                    "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", str(dst)], check=True)
+    return str(dst)
+
+
+def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, uncovered, extend):
+    """정본에 없는 재료(바뀐 장면·큰 늘림)만 원본에서 잘라 **1콜**로 지우고 extras에 붙인다(2026-09-22).
+
+    ★돈이 나가는 함수다 — 콜 1회 선차감(_charge_clean), 실패 시 전액 환불 후 예외.
+    ★조각 vid: 바뀐 비트 cb{beat}_{k} · 늘림 cbx{beat}. 재료 키를 함께 저장해 같은 재료로
+      다시 오면 clean_base.coverage 가 covered 로 본다(재과금 0)."""
+    from shopping_shorts import clean_base as _cb
+    work = Path(work)
+    srcs = _resolve_sources(job, work)
+    beats = {int(b["beat_idx"]): b for b in (plan or {}).get("beats") or []}
+    items, meta = [], {}
+    for bi in uncovered:
+        b = beats.get(int(bi))
+        if not b:
+            continue
+        key = _cb.beat_material_key(b)
+        for k, m in enumerate(_beat_materials(b)):
+            src = srcs.get(m.get("video_id"))
+            if not src:
+                continue
+            s, e = float(m["start"]), float(m["end"])
+            vid = "cb%d_%d" % (int(bi), k)
+            dst = _cut_piece(src, s, e - s, work / f"{vid}.mp4")
+            items.append((vid, dst)); meta[vid] = (int(bi), key, e - s)
+    for ex in extend or []:
+        src = srcs.get(ex["video_id"])
+        b = beats.get(int(ex["beat_idx"]))
+        if not src or not b:
+            continue
+        vid = "cbx%d" % int(ex["beat_idx"])
+        s, e = float(ex["start"]), float(ex["end"])
+        dst = _cut_piece(src, s, e - s, work / f"{vid}.mp4")
+        items.append((vid, dst)); meta[vid] = (int(ex["beat_idx"]), _cb.beat_material_key(b), e - s)
+    if not items:
+        return base
+    charged = _charge_clean(store, customer_id, 1)
+    try:
+        print("[clean-base] 증분 청소 %d조각 1콜: %s" % (len(items), [v for v, _ in items]), file=sys.stderr)
+        paths, _regions = _clean_joined(items, keys, str(work), tag="cb")
+    except Exception:
+        if charged:
+            _refund_clean(store, customer_id, charged)
+        raise
+    for vid, p in paths.items():
+        bi, key, sec = meta[vid]
+        base = _cb.add_extra(work, base, vid=vid, path=p, beat_idx=bi, material_key=key, seconds=sec)
+    return base
+
+
 def _save_clean_base(job, work, sig, path, only_if_new=False):
     """청소본 정본 저장(clean_base.save_base) — 실패해도 청소는 성공이다(종전 경로로 남을 뿐).
     only_if_new: 정본이 없거나 서명이 다를 때만(재사용 분기)."""
