@@ -93,7 +93,25 @@ def measure(lines):
         "foreign": [l for l in lines if _FOREIGN.search(l)],
         "dup_signal": dup_sig,
         "talk": [l for l in lines if _TALK.search(l.strip())],
+        "sig_pos": signal_positions(lines)[0], "sig_bad": signal_positions(lines)[1],
     }
+
+
+_RANK = {"이게 말도 안 되는게": 1, "이게 말도 안 되는 게": 1, "진짜 말도 안 되는게": 1, "이게 미친 포인트인게": 1,
+         "심지어": 2, "게다가": 2, "거기다": 2,
+         "근데 진짜 충격적인 포인트는": 3, "진짜 충격적인 포인트는": 3, "근데 진짜 미친 포인트는": 3, "진짜 미친 포인트는": 3,
+         "충격적인 건": 3, "더 대박인 건": 3, "대박인 건": 3}
+
+
+def signal_positions(lines):
+    """줄마다 앞에 붙은 신호어 → [(줄번호, 신호어, 세기)]. 세기가 내려가면(심지어 뒤에 말도안되는게) 순서 위반."""
+    out = []
+    for i, l in enumerate(lines):
+        for s in sorted(_RANK, key=len, reverse=True):
+            if l.strip().startswith(s):
+                out.append((i + 1, s, _RANK[s])); break
+    bad = any(b[2] < a[2] for a, b in zip(out, out[1:]))
+    return out, bad
 
 
 def _tone(m):
@@ -101,7 +119,7 @@ def _tone(m):
     return "존댓말" if p > q else "반말" if q > p else "불명"
 
 
-def run_live(n, jobs, seconds):
+def run_live(n, jobs, seconds, preset="short"):
     from shopping_shorts.store import Store
     from shopping_shorts import app as A
     from shopping_shorts import backbone_assemble as ba
@@ -130,7 +148,7 @@ def run_live(n, jobs, seconds):
         if len(seed_text) < 60 or _FOREIGN.search(seed_text[:200]) and not re.search(r"[가-힣]{4}", seed_text[:200]):
             continue
         t0 = time.time()
-        drafts, why = sw.make_drafts([], job, seconds, job_id=jid)
+        drafts, why = sw.make_drafts([], job, seconds, job_id=jid, preset=preset)
         row = {"job_id": jid, "seed_vid": (seed or {}).get("video_id"),
                "seed_platform": sw.seed_platform(seed_text),
                "seed_text": seed_text[:1500], "seed": measure(_seed_sentences(seed_text)),
@@ -215,6 +233,11 @@ def report(rows, html=None):
             tot["drafts"] += 1
             tot["mixed"] += m["mixed"]; tot["flip"] += tone_flip; tot["flat"] += bool(m["flat"])
             tot["suggest"] += bool(m["suggest"]); tot["dup"] += bool(m["dup_signal"]); tot["quote"] += bool(m["quote"]); tot["talk"] += len(m.get("talk") or [])
+    for r in rows:
+        for d in r["drafts"]:
+            if d["platform"] == "yt":
+                pos, bad = signal_positions(d["lines"])
+                print("  신호어 위치 %s: %s%s" % (r["job_id"], " -> ".join("%d줄 %s" % (p, w) for p, w, _ in pos) or "(없음)", "  ★순서 위반" if bad else ""))
     print("\n합계: 대본 %d편 (실패 %d) · 말투 뒤섞임 %d · 씨앗과 말투 다름 %d · 설명문 %d · 권유 %d · 신호어 중복 %d · 따옴표 %d · 청자반말 줄 %d" % (
         tot["drafts"], tot["fail"], tot["mixed"], tot["flip"], tot["flat"], tot["suggest"], tot["dup"], tot["quote"], tot["talk"]))
     if html:
@@ -256,13 +279,14 @@ def main():
     ap.add_argument("--html", default="")
     ap.add_argument("--corpus", type=int, default=0, help="히트작 코퍼스에서 무작위 N편(인스타·유튜브 반반)")
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--preset", default="short", help="short 한입썰 | full 풀코스썰")
     a = ap.parse_args()
     if a.report:
         rows = json.load(open(a.report, encoding="utf-8"))
     elif a.corpus:
         rows = run_corpus(a.corpus, a.seed)
     else:
-        rows = run_live(a.n, [x.strip() for x in a.jobs.split(",") if x.strip()], a.seconds)
+        rows = run_live(a.n, [x.strip() for x in a.jobs.split(",") if x.strip()], a.seconds, a.preset)
     if a.out and not a.report:
         json.dump(rows, open(a.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     report(rows, a.html or None)

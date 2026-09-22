@@ -3550,6 +3550,12 @@
           </div>
           <div class="s2-regen">
             <button class="btn-next" id="s2GenBtn" onclick="s2Generate()">✨ 이 스타일로 대본 만들기</button>
+            <!-- 길이 프리셋(2026-09-22 사장님 "두 개 다 프리셋으로, 초 표시 말고 재밌게"). 이야기 작가(관리자 스위치) 전용이라
+                 IS_ADMIN일 때만 보인다. 한입썰=히트작 기준(기본) / 풀코스썰=고조를 끝까지 풀어 쓰는 긴 구조(배속 올려 맞춘다). -->
+            <span id="lenPresetWrap" style="display:none;align-items:center;gap:4px;margin-left:6px">
+              <button type="button" class="btn-ghost lenPreset" data-v="short" style="min-width:auto;padding:4px 10px" onclick="setLenPreset('short')" title="히트작 평균 길이 — 20~28초, 빠르게 치고 빠진다">🍢 한입썰</button>
+              <button type="button" class="btn-ghost lenPreset" data-v="full" style="min-width:auto;padding:4px 10px" onclick="setLenPreset('full')" title="고조를 끝까지 풀어 쓰는 긴 이야기 — 장면 풀이·마지막 셀링까지. 길면 배속을 올려 맞춘다">🍱 풀코스썰</button>
+            </span>
             <!-- ✍ 내가 직접 쓰기(2026-09-01 사장님 "그냥 내 대본을 그대로 하고 싶을 때 —
                  빈칸으로 자리를 만들어주고 쓸 수 있게"). AI를 안 부른다: 빈 칸만 만들고
                  사장님이 채운 그대로 확정된다(각색 없음). 칸 구성은 고른 스타일을 따른다. -->
@@ -18537,6 +18543,16 @@ function s2SeedReady(s){
   return !!(s && (s.shortcode || String((s && s.text) || '').trim()));
 }
 // ★생성 경로는 기존 pmRunGen과 **같은 엔드포인트**를 쓴다(판정·프롬프트가 한 벌, 0순위-B).
+// 길이 프리셋 — localStorage에 기억. 관리자만 보인다(이야기 작가 스위치가 admin 전용이라 고객 화면엔 안 뜬다).
+function getLenPreset(){ try{ return localStorage.getItem('ss_len_preset')||'short'; }catch(e){ return 'short'; } }
+function setLenPreset(v){
+  try{ localStorage.setItem('ss_len_preset', v); }catch(e){}
+  document.querySelectorAll('.lenPreset').forEach(b=>{ const on=b.dataset.v===v; b.style.background=on?'var(--accent)':''; b.style.color=on?'#000':''; b.style.fontWeight=on?'700':''; });
+}
+function showLenPresetIfAdmin(){
+  const w=document.getElementById('lenPresetWrap'); if(!w) return;
+  if(window.IS_ADMIN){ w.style.display='inline-flex'; setLenPreset(getLenPreset()); }
+}
 async function s2Generate(){
   // ★누른 버튼을 잡아둔다(2026-08-21 사장님 "전체 다시 만들기를 눌러도 안 된다").
   //   종전엔 진행·오류 표시가 **상단 s2GenBtn/s2GenHint에만** 나갔다. 결과 대본 아래의
@@ -18573,6 +18589,7 @@ async function s2Generate(){
     //   ②쿠팡 상세·리뷰 재료 ③1단계 장면 태깅(label·use_point)을 붙인다.
     //   안 보내면 코드가 다 있어도 **재료가 빈 채로** 대본이 나온다(내가 처음에 빠뜨린 것).
     if(typeof MIX_JOB!=='undefined' && MIX_JOB) body.job_id=MIX_JOB;
+    body.length_preset=getLenPreset();   // 한입썰/풀코스썰 — 서버 story_writer.LENGTH_PRESETS와 같은 키
     // ★work_id도 함께(2026-08-16). 3단계를 아직 안 돌렸으면 job이 없어 재료가 씨앗
     //   1편으로 줄고, 모자란 만큼 모델이 지어낸다(사장님 제보: 카메라 영상인데
     //   발뒤꿈치 각질 대본). work_id가 있으면 서버가 담긴 영상 전부를 재료로 모은다.
@@ -19168,7 +19185,8 @@ function s2Confirm(i){
 // 관리자(사장님 cid0) 판별 — 비유튜브 재료의 "정보 채우기" 버튼 노출 조건(index.html과 동일 플래그명).
 window.IS_ADMIN=false;
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{ if(d && d.customer_id===0){ window.IS_ADMIN=true;
-  const b=document.getElementById('openVoiceTune'); if(b) b.style.display=''; } }).catch(()=>{});
+  const b=document.getElementById('openVoiceTune'); if(b) b.style.display='';
+  try{ showLenPresetIfAdmin(); }catch(e){} } }).catch(()=>{});
 </script>
 <script src="/scene_play.js"></script>
 <script src="/loader.js"></script>

@@ -103,7 +103,8 @@ def test_model_written_line_does_not_repeat_signal():
         lines = sw._to_lines(out, False, key, 0, FEATS)
         _, sigs = sw._pick(sw.YT_SETS, key, 0)
         twist = next(L["text"] for L in lines if L["role"] == "반전")
-        assert twist.startswith("심지어") == ("심지어" not in sigs)
+        # 반전은 프리셋의 마지막 낱말([3])로 열고, 모델이 쓴 '심지어'는 떼어 낸다 — 한 줄에 신호어 두 개 금지
+        assert twist.startswith(sigs[2]) and "심지어 심지어" not in twist and not twist.startswith(sigs[2] + " 심지어")
 
 
 def test_feature_number_beats_paraphrased_text():
@@ -163,25 +164,18 @@ def test_signal_strips_leading_conjunction():
     assert "근데 이건" not in first or not any(first.startswith(s) for s in sum(sw.YT_SETS.values(), []) if s)
 
 
-def test_contrast_has_no_signal_and_first_escalation_opens_with_signal():
-    """사장님 09-22: 대비는 "기존 X와 달리 Y해 준다는 거"로 닫고, 그 다음 고조 첫 칸이 신호어로 연다."""
+def test_signal_positions_fixed_contrast_first_then_escalations_then_twist():
+    """히트작 5편: 공개 → [1]이게 말도 안 되는게(대비) → [2]심지어(고조) → [3]근데 진짜 충격적인 포인트는(마지막)."""
     o = {"hook": "h", "bait": "b", "reveal": "r", "contrast": "기존 컵홀더와는 달리 영하 3도까지 떨어뜨려 준다는 거",
-         "twist": "t", "closing": "c",
+         "twist": "60도까지 데워주는 기능까지 있다고", "closing": "c",
          "escalations": [{"moment": "m1", "what_happens": "w1", "erased": "e1", "from_pain": "", "feat": 1}]}
     lines = sw._to_lines(o, False, "k", 0, feats=[{"name": "x"}])
-    _, sigs = sw._pick(sw.YT_SETS, "k", 0)
-    contrast = [L["text"] for L in lines if L["role"] == "대비"][0]
-    esc1 = [L["text"] for L in lines if L["role"] == "고조1"][0]
-    assert contrast.startswith("기존 컵홀더와는 달리")
-    if sigs[0]:
-        assert esc1.startswith(sigs[0])
-
-def test_repeat_signal_dropped_even_when_contrast_took_it():
-    o = {"hook": "h", "bait": "b", "reveal": "r", "contrast": "기존 X와 달리 Y해 준다는 거",
-         "twist": "심지어 선물용으로도 대박이라는데", "closing": "c",
-         "escalations": [{"moment": "m1", "what_happens": "w1", "erased": "e1", "from_pain": "", "feat": 1}]}
-    # 세트 A(첫 신호어 '심지어')를 고르는 key를 찾는다
-    key = next(k for k in ("k%d" % i for i in range(200)) if sw._pick(sw.YT_SETS, k, 0)[1][0] == "심지어")
-    lines = sw._to_lines(o, False, key, 0, feats=[{"name": "x"}])
-    twist = [L["text"] for L in lines if L["role"] == "반전"][0]
-    assert not twist.startswith("심지어")
+    _, preset = sw._pick(sw.YT_SETS, "k", 0)
+    by = {}
+    for L in lines:
+        by.setdefault(L["role"], L["text"])          # 칸의 첫 줄
+    if preset[0]:
+        assert by["대비"].startswith(preset[0])
+    assert by["고조1"].startswith(preset[1])
+    assert by["반전"].startswith(preset[2])
+    assert all(p[1] in ("심지어", "게다가", "거기다") for p in sw.YT_SETS.values())   # 두 번째 자리는 늘 '심지어' 급

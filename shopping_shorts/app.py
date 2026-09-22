@@ -3623,7 +3623,8 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                     try:
                         from shopping_shorts import story_writer as _sw
                         _bb_drafts, _bb_why = _sw.make_drafts(
-                            _picked, _job, body.get("target_seconds") or 25, job_id=_jid)
+                            _picked, _job, body.get("target_seconds") or 25, job_id=_jid,
+                            preset=str(body.get("length_preset") or "short"))
                     except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
                         _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
                 if not _bb_drafts and _bb_on:
