@@ -91,6 +91,42 @@ def sounds_for_role(role):
 #   기본 효과음 볼륨 60%만으로는 이븐쇼핑보다 약 8dB 작았다(휙 -10.6 vs -2.7dB). 7.0으로 올리니 7종 모두
 #   +2.4~2.8dB 컸다(나레이션 차감 잔여로 잰 값) → 4.3.
 PACK_GAIN_DB = 4.3
+# 칸별 목표 크기(20ms 최대, dBFS) — 이븐쇼핑 12편 실측(목소리 중앙 -17.5 기준). 파일마다 실제 크기를 재서
+#   이 값에 맞춘다 → 팩·파일이 바뀌어도 크기가 저절로 맞는다(2026-09-22: 팩10 둥 파일이 목표보다 3dB 작아
+#   라이브 영상에서 둥이 약했다 — 팩을 만들 때 찢어짐 방지로 최대값을 눌러 뾰족한 소리만 작아졌던 것).
+LEVEL_TARGET_DB = {"opener": -8.8, "dung": -7.0, "pop": -11.9, "ding": -14.7,
+                   "whoosh": -20.2, "tick": -22.4, "click2": -20.6}
+_LEVEL_CACHE = {}
+
+
+def _peak20_db(path):
+    """wav 파일의 20ms 창 최대 세기(dBFS). 한 번 잰 파일은 기억한다."""
+    if path in _LEVEL_CACHE:
+        return _LEVEL_CACHE[path]
+    import wave
+    import numpy as np
+    try:
+        with wave.open(path, "rb") as w:
+            sr, ch, sw = w.getframerate(), w.getnchannels(), w.getsampwidth()
+            raw = w.readframes(w.getnframes())
+        x = np.frombuffer(raw, dtype={2: np.int16, 4: np.int32}[sw]).astype(float) / (2 ** (8 * sw - 1))
+        if ch > 1:
+            x = x.reshape(-1, ch).mean(1)
+        k = max(1, int(0.02 * sr))
+        v = float(20 * np.log10(np.sqrt(np.convolve(x ** 2, np.ones(k) / k, "valid")).max() + 1e-9))
+    except Exception:      # noqa: BLE001 — 못 재면 보정 없이(종전 크기 그대로)
+        v = None
+    _LEVEL_CACHE[path] = v
+    return v
+
+
+def _gain_for(path, slot):
+    """이 파일을 칸 목표 크기로 맞추고 팩 보정까지 곱한 배율."""
+    g = PACK_GAIN_DB
+    cur = _peak20_db(path)
+    if cur is not None and slot in LEVEL_TARGET_DB:
+        g += LEVEL_TARGET_DB[slot] - cur
+    return round(10 ** (g / 20), 4)
 
 def list_packs():
     """[(팩이름, 폴더)] — 7칸이 다 있는 팩만. 이름순 = 배정이 실행마다 같다."""
@@ -211,5 +247,8 @@ def events(timeline, pack, manual_beats=()):
     세 번째 칸(보정배)은 렌더·캡컷이 효과음 볼륨에 곱한다(없으면 1.0 — 종전 이벤트와 호환)."""
     if not pack or not pack.get("dir"):
         return []
-    g = round(10 ** (PACK_GAIN_DB / 20), 4)
-    return [(os.path.join(pack["dir"], slot + ".wav"), t, g) for slot, t, _ in plan_events(timeline, manual_beats)]
+    out = []
+    for slot, t, _ in plan_events(timeline, manual_beats):
+        path = os.path.join(pack["dir"], slot + ".wav")
+        out.append((path, t, _gain_for(path, slot)))
+    return out

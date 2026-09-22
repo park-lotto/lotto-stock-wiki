@@ -161,3 +161,13 @@ def test_no_single_sound_dominates():
     total = sum(c.values())
     assert max(c.values()) / total <= 0.5, c
     assert {"whoosh", "pop", "tick"} <= set(c)
+
+
+def test_every_pack_file_lands_on_slot_target():
+    """2026-09-22 라이브: 팩10 둥 파일이 목표보다 3dB 작아 둥이 약했다 → 렌더 때 파일마다 목표로 맞춘다."""
+    import math
+    for _, d in sfx_pack.list_packs():
+        for slot in sfx_pack.SLOTS:
+            p = os.path.join(d, slot + ".wav")
+            got = sfx_pack._peak20_db(p) + 20 * math.log10(sfx_pack._gain_for(p, slot)) - sfx_pack.PACK_GAIN_DB
+            assert abs(got - sfx_pack.LEVEL_TARGET_DB[slot]) < 0.05, (d, slot, got)
