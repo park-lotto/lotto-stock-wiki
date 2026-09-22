@@ -3623,7 +3623,8 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                     try:
                         from shopping_shorts import story_writer as _sw
                         _bb_drafts, _bb_why = _sw.make_drafts(
-                            _picked, _job, body.get("target_seconds") or 25, job_id=_jid)
+                            _picked, _job, body.get("target_seconds") or 25, job_id=_jid,
+                            preset=str(body.get("length_preset") or "short"))
                     except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
                         _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
                 if not _bb_drafts and _bb_on:
@@ -7413,6 +7414,39 @@ def api_produce_mix_clean_clips(job_id: str):
             "plan_used": r.get("plan_used"), "count": len(clips)}
 
 
+@app.get("/api/produce/mix/clean_base_preview/{job_id}")
+def api_produce_mix_clean_base_preview(job_id: str):
+    """최종렌더 전에 화면이 묻는다: 이번 렌더가 자막제거를 다시 타나? (2026-09-22)
+    정본이 있으면 바뀐 장면·큰 늘림만 초수로 알려준다. 판정은 clean_base.remap_plan 하나."""
+    from shopping_shorts import clean_base as _cb
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id:
+        return {"ok": False, "enabled": False}
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan") or not job.get("subtitle_removal"):
+        return {"ok": True, "enabled": False, "uncovered": [], "extend": [], "est_credits": None}
+    cid = job.get("customer_id") or 0
+    work = _MIX_WORK_DIR / job_id
+    if not mix_pipeline.clean_base_on(store, cid):
+        return {"ok": True, "enabled": False, "uncovered": [], "extend": [], "est_credits": None}
+    base = _cb.load_base(work)
+    if base is None:
+        return {"ok": True, "enabled": True, "base": False, "uncovered": [], "extend": [], "est_credits": None}
+    plan = job["edit_plan"]
+    beats = {int(b["beat_idx"]): b for b in plan.get("beats") or []}
+    _plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs={
+        int(b["beat_idx"]): float(b.get("target_seconds") or 0) for b in plan.get("beats") or []})
+    unc = []
+    for bi in uncovered:
+        secs = sum(float(m["end"]) - float(m["start"]) for m in mix_pipeline._beat_materials(beats[bi]))
+        unc.append({"beat_idx": bi, "seconds": round(secs, 2)})
+    ext = [{"beat_idx": e["beat_idx"], "need": e["need"]} for e in extend]
+    total = sum(u["seconds"] for u in unc) + sum(float(e["end"]) - float(e["start"]) for e in extend)
+    est = mix_pipeline.clean_credit_estimate(total, tier=mix_pipeline.clean_tier_of(job)) if total > 0 else 0
+    return {"ok": True, "enabled": True, "base": True, "uncovered": unc, "extend": ext, "est_credits": est}
+
+
 @app.get("/api/produce/mix/clean_thumb/{job_id}")
 def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
                                 si: int = 0, pos: float = 0.5, ci: int = -1):
@@ -9189,14 +9223,15 @@ def api_mix_export(job_id: str, part: str = ""):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
-    plan = job["edit_plan"]
     work = _MIX_WORK_DIR / job_id
     work.mkdir(parents=True, exist_ok=True)
-    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    # ★정본(2026-09-22)이면 재배치된 사본·청소본이 입력이다 — 렌더와 같은 함수(render_inputs_for)
     try:
-        source_video_paths = _resolve_sources(job, work)
+        plan, source_video_paths, _cbase = mix_pipeline.render_inputs_for(
+            Store(DB_PATH), job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
     except Exception:
-        source_video_paths = {}   # 소스 전멸이어도 srt/script/seo는 준다(설계 §6, 500 금지)
+        plan, source_video_paths = job["edit_plan"], {}   # 소스 전멸이어도 srt/script/seo는 준다(설계 §6, 500 금지)
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
     timeline = _beat_timeline(plan, tts_paths)
     parts = {"sources": ["sources"], "srt": ["srt"], "script": ["script"]}.get(
         part, export_bundle.ALL_PARTS)
@@ -9242,13 +9277,14 @@ def api_mix_capcut(job_id: str, base: str = ""):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
-    plan = job["edit_plan"]
     work = _MIX_WORK_DIR / job_id
-    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    # ★정본(2026-09-22)이면 재배치된 사본·청소본이 입력이다 — 렌더와 같은 함수(render_inputs_for)
     try:
-        source_video_paths = _resolve_sources(job, work)
+        plan, source_video_paths, _cbase = mix_pipeline.render_inputs_for(
+            Store(DB_PATH), job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
     except Exception:
-        source_video_paths = {}
+        plan, source_video_paths, _cbase = job["edit_plan"], {}, None
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
     # 자막 제거본이 타임라인 소스를 대신하더라도 캡컷 보관함에는 편집에 쓰인 긴 원본을 함께 보낸다.
     # 원본 집합 판정은 capcut_draft.used_video_ids 한 곳만 사용해 타임라인 소스 판정과 어긋나지 않게 한다.
     _original_source_video_paths = dict(source_video_paths)
@@ -9271,7 +9307,11 @@ def api_mix_capcut(job_id: str, base: str = ""):
     #     - 대신 캡컷에서 컷을 원본 범위 밖으로 **늘리는** 편집은 못 한다(조각 뒤가 없다)
     #   자르기가 실패하면 원본으로 두지 않고 **막는다** — 자막 남은 결과물을 조용히 내보내는
     #   것이 더 나쁘다(사장님이 캡컷에서야 알게 된다).
-    if job.get("subtitle_removal") and not (job.get("clean_sources") or {}):
+    # ★정본(_cbase)이면 아래 '완성본을 현재 타임라인으로 자르기'를 타지 않는다 — 청소본의 시간축은
+    #   청소 시점 편성이라, 앞 비트가 길어지면 뒤 비트가 청소본 끝을 넘어 빈 조각이 된다(LAB 실측
+    #   2026-09-22: src_cc5 띠 0.00). 정본 경로는 plan(재배치 사본)의 재료가 이미 청소본 좌표이므로
+    #   렌더와 같은 일반 경로(plan_beat_clips_for로 소스에서 자르기)가 정확하다.
+    if job.get("subtitle_removal") and not (job.get("clean_sources") or {}) and _cbase is None:
         # ★청소본은 **지금 편성의 서명 파일**로 찾는다(mix_pipeline.clean_final_path_for_plan, 0순위-B).
         #   2026-09-17 고객 제보(job 4efcc4c06d41): 렌더 완료·청소본 파일이 있는데도 "자막 없는 완성본이
         #   없어요"로 막혔다. 편집을 바꾸면 _save_render_inputs가 clean_video_path를 비우고, 완성본
@@ -12251,13 +12291,16 @@ def _card_cta(fallback_href="", fallback_label=""):
     /pay 안내의 **카드 버튼만** 같이 바뀐다. 요청마다 읽어 재시작 없이 반영된다.
     ★`pay_url`이 아니다 — 그건 _pay_cta(메인 CTA '1기 신청하기')의 목적지라, 거기에 카드 링크를
       넣으면 신청 버튼이 결제 안내(/pay: 현금·폼·카드 선택)를 건너뛰고 스마트스토어로 직행한다
-      (09-17 사장님 "기존것처럼 그대로 냅두고 이 안에서 카드결제를 누르면 들어가게")."""
-    card = (Store(DB_PATH).get_setting("card_url", "") or "").strip()
-    if card:
-        return card, "💳 카드로 결제하기"
+      (09-17 사장님 "기존것처럼 그대로 냅두고 이 안에서 카드결제를 누르면 들어가게").
+    ★2026-09-22 사장님 "결제연동창을 기존것(스마트스토어)에서 토스페이먼츠 연동창으로" — 토스 심사
+      (카드사가 실제 결제창을 확인)를 위해 **토스 키가 있으면 토스 결제창이 먼저**다. card_url은
+      토스 키가 없을 때만 쓰는 대체 링크로 내려갔다."""
     ck, sk = _toss_keys()
     if ck and sk:
         return "/pay/toss", "💳 카드로 결제하기"
+    card = (Store(DB_PATH).get_setting("card_url", "") or "").strip()
+    if card:
+        return card, "💳 카드로 결제하기"
     return fallback_href, fallback_label
 
 
@@ -12294,6 +12337,7 @@ def _with_pay(html: str) -> str:
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
                 .replace("__PRO_NAME__", _toss_esc(name))
                 .replace("__PRO_PRICE__", f"{amount:,}원")
+                .replace("__PRO_PERIOD__", _PRO_PERIOD)
                 .replace("__CARD_HREF__", card_href).replace("__CARD_LABEL__", card_label)
                 .replace("__DEADLINE_ISO__", dl_iso).replace("__DEADLINE_LABEL__", dl_label)
                 .replace("__NEXT_START_LABEL__", nx_label).replace("__NEXT_PRICE__", f"{next_price:,}원")
@@ -12702,7 +12746,7 @@ a{text-decoration:none;color:inherit}
 <div class=hero>
 <div class=eyebrow>요금 · 이용권</div>
 <h1 class=display>필요한 만큼만,<br>부담 없이 시작하세요</h1>
-<p>먼저 무료로 만들어보고, 마음에 들면 이용권으로 계속. 결제·문의는 카톡으로 간편하게 안내해 드립니다.</p>
+<p>먼저 무료로 레퍼런스 랭킹을 둘러보고, 마음에 들면 이용권으로 시작하세요. 결제는 카드·계좌이체로 바로, 문의는 카톡으로 안내해 드립니다.</p>
 <div class=row>
 <a class="btn pri" href="/login">무료로 시작하기 →</a>
 <a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
@@ -12712,18 +12756,16 @@ a{text-decoration:none;color:inherit}
 <div class=price>0<small>원</small></div>
 <div class=pd>가입하면 바로 시작 · 카드 없이</div>
 <ul>
-<li><span class=c>✓</span> 가입 후 일정 기간 전 기능 체험</li>
-<li><span class=c>✓</span> 레퍼런스 랭킹 열람</li>
-<li><span class=c>✓</span> 쇼츠 제작 체험</li></ul>
+<li><span class=c>✓</span> 레퍼런스 랭킹 열람</li></ul>
 <a class="btn pri" href="/login">무료로 시작</a></div>
 <div class="plan pro">
 <div class=rec>추천</div>
 <div class="pt pro-t">__PRO_NAME__</div>
 <div class=price>__PRO_PRICE__<small></small></div>
-<div class=pd>카드결제 또는 계좌이체</div>
+<div class=pd>이용기간 __PRO_PERIOD__ · 카드결제 또는 계좌이체</div>
 <ul>
-<li><span class=c>✓</span> 전 기능 무제한</li>
-<li><span class=c>✓</span> 쇼츠 무제한 제작</li>
+<li><span class=c>✓</span> 전 기능 이용</li>
+<li><span class=c>✓</span> 쇼츠 하루 10개 제작</li>
 <li><span class=c>✓</span> 렌즈·대본·보이스 전부</li>
 <li><span class=c>✓</span> 우선 문의·운영 노하우</li></ul>
 <a class="btn kko" href="__CARD_HREF__">__CARD_LABEL__</a></div></div>
@@ -12736,26 +12778,21 @@ a{text-decoration:none;color:inherit}
 <div class=i><b>✍️ 대본 추출·리메이크</b><span>내 상품 이야기로 다시 씀</span></div>
 <div class=i><b>🎬 제작소</b><span>장면·자막 원클릭 조립</span></div>
 <div class=i><b>🎙️ AI 보이스</b><span>자연스러운 나레이션 자동</span></div>
-<div class=i><b>♾️ 무제한 제작</b><span>많이 찍어낼수록 유리</span></div></div></div>
-<div class=sec>
-<h2>먼저 써본 분들</h2>
-<div class=lead>(후기 자리 — 실제 후기로 교체 예정)</div>
-<div class=revs>
-<div class=rev><p>"편집 하나도 몰랐는데 하루에 몇 개씩 만들어요. 이게 10분이면 된다는 게 신기합니다."</p><div class=who>— 준비 중</div></div>
-<div class=rev><p>"뭘 만들지 고민이 제일 힘들었는데, 잘 팔리는 걸 짚어주니 그냥 딸깍만 하면 돼요."</p><div class=who>— 준비 중</div></div></div></div>
+<div class=i><b>🎬 하루 10개 제작</b><span>많이 찍어낼수록 유리</span></div></div></div>
 <div class=sec>
 <h2>자주 묻는 질문</h2>
 <div class=faq>
-<div class=qa><div class=q>결제는 어떻게 하나요?</div><div class=a>카톡으로 문의하시면 안내해 드립니다. 확인 후 바로 이용권이 열립니다.</div></div>
-<div class=qa><div class=q>무료 체험만 써도 되나요?</div><div class=a>네. 체험 기간엔 전 기능을 그대로 쓰실 수 있고, 이후엔 레퍼런스 랭킹은 계속 보실 수 있어요.</div></div>
-<div class=qa><div class=q>환불되나요?</div><div class=a>환불 정책은 확정 후 안내드립니다(준비 중).</div></div></div></div>
+<div class=qa><div class=q>결제는 어떻게 하나요?</div><div class=a>[카드로 결제하기]로 바로 카드결제하시거나, 결제 안내에서 계좌이체하실 수 있습니다. 결제 확인 후 바로 이용권이 열립니다.</div></div>
+<div class=qa><div class=q>무료 체험만 써도 되나요?</div><div class=a>네. 무료 회원은 레퍼런스 랭킹을 보실 수 있어요. 대본·장면·보이스·영상 제작은 이용권에서 쓰실 수 있습니다.</div></div>
+<div class=qa><div class=q>환불되나요?</div><div class=a>이용권은 결제 확인 즉시 열려 모든 기능(대본·보이스·영상 제작 등)을 바로 쓸 수 있는 디지털 콘텐츠라, <b>이용권이 열린 뒤에는 환불되지 않습니다.</b> 이용권이 열리기 전에는 전액 환불됩니다. 자세한 기준은 <a href="/refund" style="color:inherit">환불정책</a>을 확인해 주세요.</div></div>
+<div class=qa><div class=q>전자상거래법상 7일 안에는 환불되지 않나요?</div><div class=a>전자상거래법 제17조제2항제5호에 따라, 디지털 콘텐츠는 <b>제공이 시작된 뒤에는 7일 이내라도 청약철회가 제한</b>됩니다. 숏템메이커 이용권은 결제 확인과 동시에 제공이 시작되므로 7일 이내라도 환불되지 않습니다. 이 내용은 결제 전 요금·결제 페이지와 1기 신청서의 동의 항목에서 미리 안내하고 동의를 받으며, 결제 전에 무료 회원으로 레퍼런스 랭킹을 먼저 써보실 수 있습니다.</div></div></div></div>
 <div class=band>
-<h2>일단 무료로 하나 만들어보세요</h2>
+<h2>무료로 레퍼런스 랭킹부터 둘러보세요</h2>
 <p>구글 계정이면 3초 · 카드 없이 시작. 궁금한 건 카톡으로.</p>
 <div class=row>
 <a class="btn pri" href="/login">무료로 시작하기 →</a>
 <a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
-<div class=foot>© __NAME__ · 요금·이용권 안내__LEGAL__</div>
+<div class=foot>© __NAME__ · 요금·이용권 안내__LEGAL____BIZFOOT__</div>
 </div></body></html>"""
 
 # ── 내 계정(유저 자기 설정) — 로그인 전용. /api/me로 플랜·한도·연락처를 채운다. ──
@@ -13177,6 +13214,7 @@ h1{font-size:20px;margin:0 0 4px;text-align:center}.sub{color:#8aa0a0;font-size:
 <h1>💳 결제 안내</h1><div class=sub>__NAME__ 이용권 · 계좌입금</div>
 __BODY__
 <a class=home href="/">← 돌아가기</a>
+__BIZFOOT__
 </div>
 <script>function cp(t){navigator.clipboard&&navigator.clipboard.writeText(t);var e=event.target;var o=e.textContent;e.textContent='복사됨';setTimeout(function(){e.textContent=o;},1200);}</script>
 </body></html>""")
@@ -13217,12 +13255,12 @@ def _deposit_card_html():
     테스트 키면 버튼에 '테스트'를 붙여 고객이 진짜 결제로 착각하지 않게 한다.
     """
     ck, sk = _toss_keys()
-    pay = (Store(DB_PATH).get_setting("card_url", "") or "").strip()
-    if not pay and not (ck and sk):
+    # 목적지는 _card_cta 한 곳에서만 정한다(0순위-B) — 여기서 card_url을 따로 읽으면 우선순위가 어긋난다.
+    pay, _label = _card_cta("", "")
+    if not pay:
         return ""
-    # 외부 링크(card_url)가 있으면 그것이 카드결제다 — _card_cta와 같은 우선순위(2026-09-17).
-    tag = "" if pay else (" (테스트)" if ck.startswith("test_") else "")
-    return ('<a href="' + (pay or "/pay/toss") + '" style="display:block;text-align:center;text-decoration:none;'
+    tag = (" (테스트)" if pay == "/pay/toss" and ck.startswith("test_") else "")
+    return ('<a href="' + pay + '" style="display:block;text-align:center;text-decoration:none;'
             'background:linear-gradient(135deg,#ffd27a,#f0a53a);color:#1a1206;border-radius:12px;'
             'padding:15px;font-size:16px;font-weight:800;margin-bottom:10px">💳 카드로 결제하기' + tag + '</a>'
             '<div style="text-align:center;color:#6f8583;font-size:13px;margin:6px 0 14px">또는 계좌이체</div>')
@@ -13306,9 +13344,14 @@ def _toss_keys():
             os.environ.get("TOSS_SECRET_KEY", "").strip())
 
 
+# 이용권 이용기간(2026-09-22 토스 심사 "서비스 제공기간을 상품 페이지에 명확히" — 사장님 12개월 확정).
+#   화면 표기는 전부 이 값 하나에서 읽는다(대문·요금·결제·약관).
+_PRO_PERIOD = "12개월"
+
+
 def _toss_order_name_amount():
     st = Store(DB_PATH)
-    name = (st.get_setting("toss_order_name", "") or "숏템메이커 1기 참가비").strip()
+    name = (st.get_setting("toss_order_name", "") or "숏템메이커 1기 이용권").strip()
     try:
         amount = int(st.get_setting("toss_amount", "") or 770000)
     except ValueError:
@@ -13349,7 +13392,7 @@ def _toss_page(title, body):
             "margin-top:18px}.test{display:inline-block;background:#e0a33d;color:#111;font-size:12px;"
             "font-weight:700;padding:3px 8px;border-radius:8px;margin-bottom:10px}.err{color:#ff8a8a}"
             "code{color:#6ff0d6}</style>"
-            f"</head><body><div class=box>{body}</div></body></html>")
+            f"</head><body><div class=box>{body}{_biz_foot()}</div></body></html>")
 
 
 _LANDING_HITS_CACHE = {"at": 0.0, "data": None}
@@ -13412,6 +13455,7 @@ def _toss_checkout(request: Request):
     form_url = (Store(DB_PATH).get_setting("apply_form_url", "") or _APPLY_FORM_URL).strip()
     body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
 <div class=amt>{amount:,}원</div>
+<div class=p style="margin:-4px 0 12px">이용기간: 결제(이용권 활성화)일로부터 {_PRO_PERIOD}</div>
 <div style="border:1px solid #6ff0d6;border-radius:12px;padding:14px;margin:6px 0 16px;background:#0c1a17">
   <div style="font-weight:800;font-size:16px">① 신청서 작성 <span style="color:#ff8a8a">(필수)</span></div>
   <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 1기 신청서를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
@@ -13427,7 +13471,8 @@ def _toss_checkout(request: Request):
 <label class=p style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px">
   <input id=pa type=checkbox style="margin-top:3px">
   <span><a href="/refund" target="_blank" style="color:#6ff0d6">환불정책</a>과
-  <a href="/terms" target="_blank" style="color:#6ff0d6">이용약관</a>을 확인했고 동의합니다.</span></label>
+  <a href="/terms" target="_blank" style="color:#6ff0d6">이용약관</a>을 확인했고 동의합니다.<br>
+  <b style="color:#ffcf6f">결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음</b>을 확인했습니다.</span></label>
 <button id=go>카드로 결제하기</button>
 <div class="p err" id=msg></div>
 <script src="https://js.tosspayments.com/v2/standard"></script>
@@ -13583,7 +13628,7 @@ def _toss_fail(code: str = "", message: str = "", orderId: str = ""):
 @app.get("/pay", response_class=HTMLResponse)
 def _deposit_page():
     """계좌입금 안내(공개). 사장님이 admin에 은행·계좌·예금주 넣으면 표시."""
-    return _DEPOSIT_TMPL.replace("__BODY__", _deposit_body())
+    return _DEPOSIT_TMPL.replace("__BODY__", _deposit_body()).replace("__BIZFOOT__", _biz_foot())
 
 
 # ── 법적 고지 문서(공개): 이용약관 · 개인정보처리방침 · 환불정책 ──
@@ -13689,8 +13734,9 @@ _TERMS_BODY = f"""
 <p>이용계약은 이용자가 구글 계정 등으로 가입하고 회사가 이를 승인함으로써 성립합니다. 회사는 운영상·기술상 필요에 따라 가입 승인을 보류하거나 이용을 제한할 수 있습니다.</p>
 <h2>제3조 (이용권과 결제)</h2>
 <ul>
-<li>이용권은 계좌입금 등 회사가 안내하는 방법으로 결제하며, 입금 확인 후 활성화됩니다.</li>
-<li>이용권별 제공 기능·기간·제작 횟수는 서비스 내 안내에 따릅니다.</li>
+<li>이용권은 신용카드(토스페이먼츠) 또는 계좌이체로 결제하며, 결제 확인 후 활성화됩니다.</li>
+<li>정식(Pro) 이용권의 이용기간은 결제(이용권 활성화)일로부터 <b>{_PRO_PERIOD}</b>입니다.</li>
+<li>이용권별 제공 기능·제작 횟수는 서비스 내 안내에 따릅니다.</li>
 <li>환불에 관한 사항은 별도의 <a href="/refund" style="color:#6ff0d6">환불정책</a>을 따릅니다.</li>
 </ul>
 <h2>제4조 (이용자의 의무)</h2>
@@ -13716,7 +13762,8 @@ _PRIVACY_BODY = f"""
 <h2>1. 수집하는 개인정보 항목</h2>
 <ul>
 <li>구글 계정 로그인 시: 이메일 주소, 이름(프로필), 계정 식별자</li>
-<li>이용·결제 과정에서: 연락처(전화번호), 입금자명 등 결제 확인에 필요한 정보</li>
+<li>회원가입 시: 성별, 연령대, 연락처(전화번호)</li>
+<li>결제 시: 결제자 성함, 연락처, 이메일, 입금자명 등 결제 확인에 필요한 정보 (카드번호 등 카드 정보는 토스페이먼츠가 처리하며 회사는 보관하지 않습니다)</li>
 <li>서비스 이용 과정에서 자동 생성: 접속 기록, 이용 내역, 기기·브라우저 정보</li>
 </ul>
 <h2>2. 개인정보의 이용 목적</h2>
@@ -13731,6 +13778,7 @@ _PRIVACY_BODY = f"""
 <p>회사는 이용자의 개인정보를 동의 없이 외부에 제공하지 않습니다. 다만 서비스 제공을 위해 아래와 같이 일부 처리를 위탁할 수 있습니다.</p>
 <ul>
 <li>구글(Google): 계정 로그인 인증</li>
+<li>토스페이먼츠(주): 신용카드 결제 처리</li>
 <li>AI·클라우드 인프라 제공사: 대본·음성·영상 생성 처리</li>
 </ul>
 <h2>5. 브라우저 확장프로그램 (로또 · 원클릭 담기)</h2>
@@ -13757,13 +13805,19 @@ _REFUND_BODY = f"""
 
 <h2>1. 전액 환불</h2>
 <ul>
-<li>결제 후 <b>정식(Pro) 계정으로 전환되기 전</b>: 전액 환불</li>
+<li>결제 후 <b>이용권이 열리기(정식 Pro 계정 전환) 전</b>: 전액 환불 (예: 계좌이체 입금 후 이용권 개통 전)</li>
 </ul>
 
 <h2>2. 청약철회의 제한 (사용 개시 후)</h2>
 <p><b>정식(Pro) 계정으로 전환된 시점</b>부터는 디지털 콘텐츠의 제공이
 개시된 것으로 보아, 「전자상거래 등에서의 소비자보호에 관한 법률」 제17조제2항에 따라
 청약철회가 제한됩니다.</p>
+<ul>
+<li>이용권은 결제 확인 즉시 열려 대본·보이스·영상 제작 등 모든 기능을 바로 쓸 수 있는 디지털 콘텐츠입니다.
+카드결제는 결제와 동시에 이용권이 열리므로, <b>결제 후 7일 이내라도 이용권이 열린 뒤에는 환불되지 않습니다.</b></li>
+<li>AI 대본·음성·영상 생성은 이용하는 즉시 외부 AI·클라우드 처리 비용이 발생하는 서비스 특성상, 제공이 시작된 뒤에는 되돌릴 수 없습니다.</li>
+<li>회사는 이 내용을 결제 전 요금 페이지·결제 페이지와 1기 신청서의 동의 항목에서 미리 알리고 동의를 받습니다.</li>
+</ul>
 <p style="color:#8aa0a0;font-size:13px">
 ※ 회사는 가입 전 <b>무료 멤버 등록</b>을 통해 레퍼런스랭킹 등 주요 기능을 미리 체험할 수 있도록
 제공하고 있습니다. 구매 전 충분히 확인하신 후 결제해 주시기 바랍니다.</p>
@@ -13781,6 +13835,7 @@ _REFUND_BODY = f"""
 <ul>
 <li>환불은 아래 사업자정보의 문의처로 요청해 주세요.</li>
 <li>계좌입금 결제분은 입금하신 계좌로, 요청 확인 후 영업일 기준 3일 이내 환불합니다.</li>
+<li>카드 결제분은 결제 취소로 환불하며, 카드사 사정에 따라 영업일 기준 3~7일이 걸릴 수 있습니다.</li>
 </ul>
 
 <p style="color:#8aa0a0;font-size:12.5px;margin-top:14px">※ 본 정책은 관련 법령의 소비자 보호
@@ -15030,7 +15085,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 2단계 '본 것만 쓰기' — ""/"0" 끔 · "admin" 관리자만 · "11,42" 고객 허용 목록 · "1" 전체
                        "script_grounded_enabled",
                        # 3단계 '붙어 온 장면 그대로'(Gemini 0회·추측 층 없음) — 값 규약은 위와 같다
-                       "edl_inherit_enabled"}
+                       "edl_inherit_enabled",
+                       # 자막제거 정본(2026-09-22) — 4단계 청소본을 정본으로, 꾸미기 뒤 재청소 없음. 값 규약 같음
+                       "clean_base_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -19725,6 +19782,11 @@ def api_scene_style_asset(asset_path: str):
     allowed |= asset_path.startswith("shopping_shorts/static/fonts/") and candidate.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}
     if ".." in Path(asset_path).parts or "\\" in asset_path or not allowed or not candidate.is_relative_to(ROOT) or not candidate.is_file():
         return JSONResponse(status_code=404, content={"error": "파일 없음"})
+    # 글꼴은 내용이 바뀌면 파일명이 바뀐다(fonts/w2/ 변환본) — 1년 캐시. 실측(2026-09-22): 편집기가
+    # 글꼴 50개를 매번 서버에 다시 물어봐서 느렸다("서버는 왜 이렇게 느리지, 로컬은 잘 되는데").
+    # html/js/css는 그대로 no-cache(?v= 번호로 갱신).
+    if candidate.suffix.lower() in {".woff2", ".woff", ".ttf", ".otf"}:
+        return FileResponse(candidate, headers={"Cache-Control": "public, max-age=31536000, immutable"})
     return FileResponse(candidate, headers={"Cache-Control": "no-cache"})
 
 
@@ -19745,6 +19807,9 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     except Exception:
         return JSONResponse(status_code=409, content={"error": "음성 파일을 확인할 수 없습니다. 미리보기를 다시 만들어 주세요"})
     snapshot = (job.get("deco") or {}).get("scene_style")
+    # ★장면 사진을 지금 뒤에서 한꺼번에 뽑아 둔다. 실측(2026-09-22 라이브 저널): 편집기가 장면을
+    #   넘길 때마다 beatframe을 한 장씩 ffmpeg로 뽑아 1~2.5초 간격으로 줄줄이 왔다("사진이 제일 늦다").
+    _prewarm_beatframes(job, job_id, [t["beat_idx"] for t in timeline])
     headcopy = dict(job.get("headcopy") or {})
     if headcopy_text:
         headcopy["text"] = headcopy_text[:2000]
@@ -21226,11 +21291,16 @@ def _final_cuts(job, work):
       (_clean_frame_src/_beatframe_file)이 **같은 컷 목록**을 봐야 한다. 각자 세면
       "3번 칸"이 서로 다른 그림을 가리킨다.
     실패하면 [] — 호출부는 비트 단위로 물러선다(조용히 깨지지 않게)."""
-    plan = (job or {}).get("edit_plan") or {}
+    # ★정본(2026-09-22)이면 재배치된 사본·청소본으로 컷을 편다 — 렌더와 같은 입력(render_inputs_for)
+    try:
+        plan, _srcs, _b = mix_pipeline.render_inputs_for(
+            Store(DB_PATH), job, Path(work).name, work, [], (job or {}).get("customer_id") or 0, allow_clean=False)
+    except Exception:      # noqa: BLE001
+        plan, _srcs = (job or {}).get("edit_plan") or {}, None
     tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
     try:
         durs = {v: (frame_extract._probe_duration(pth) or 0.0)
-                for v, pth in _resolve_sources(job, work).items()}
+                for v, pth in (_srcs if _srcs is not None else _resolve_sources(job, work)).items()}
     except Exception:      # noqa: BLE001
         durs = {}
     try:
@@ -21300,6 +21370,24 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
     #   poster·beatframe이 모두 이 꼬리표로 파일명을 만들므로 여기 한 곳만 고친다(0순위-B).
     _stem = Path(cvp).stem
     _ctag = "_clean_" + re.sub(r"[^0-9a-zA-Z]", "", _stem[len("final_clean_"):] if _stem.startswith("final_clean_") else _stem)
+    # ★정본(2026-09-22): 재배치된 사본의 컷은 재료가 곧 청소본 좌표("clean", start)다 — 그 시각에서 뜬다.
+    #   증분 조각(cb…)이면 그 조각 파일에서 뜬다. 판정·좌표는 render_inputs_for 하나.
+    _b = mix_pipeline.clean_base_for(job, work)
+    if _b is not None:
+        try:
+            _p2, _paths, _ = mix_pipeline.render_inputs_for(
+                Store(DB_PATH), job, Path(work).name, work, [], job.get("customer_id") or 0, allow_clean=False)
+            _t2 = {b["beat_idx"]: b["tts_path"] for b in (_p2.get("beats") or []) if b.get("tts_path")}
+            _d2 = {v: (frame_extract._probe_duration(pth) or 0.0) for v, pth in _paths.items()}
+            _cl = _cuts_of_beat(mix_pipeline.final_clip_pairs(_p2, _t2, _d2), beat_idx)
+            if _cl:
+                _c = _cl[cut] if (cut is not None and 0 <= cut < len(_cl)) else _cl[0]
+                _f = _paths.get(_c["video_id"]) or cvp
+                _dur = _d2.get(_c["video_id"]) or (frame_extract._probe_duration(_f) or 0.0)
+                _sec = float(_c["src"]) + float(_c["dur"]) * 0.5
+                return {}, _f, (min(0.98, max(0.02, _sec / _dur)) if _dur > 0 else 0.5), "_cb_%s" % _b["sig"], True
+        except Exception as e:      # noqa: BLE001 — 정본 좌표 실패는 아래 종전 계산으로
+            print(f"[beatframe] 정본 좌표 실패(종전 계산 사용): {e!r}", file=sys.stderr)
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}
@@ -21523,6 +21611,34 @@ def _beatframe_file(job, job_id: str, i: int, cut=None):
                             clean_final=_cfin, final_ratio=_crat, seg_spec=_spec,
                             clean_fresh=_cfresh)
     return out if out.exists() else None
+
+
+_PREWARM_LOCK = threading.Lock()
+_PREWARM_BUSY: set = set()          # 지금 뽑는 중인 job_id — 같은 job을 두 번 돌리지 않는다
+
+
+def _prewarm_beatframes(job, job_id: str, beat_idxs, workers: int = 4):
+    """장면 사진(beatframe)을 뒤에서 병렬로 미리 만든다. 이미 있는 파일은 _beatframe_file이
+    그냥 돌려주므로 두 번째부터는 비용 0. 실패해도 조용히 넘어간다(요청 때 다시 뽑는다)."""
+    idxs = [int(i) for i in beat_idxs]
+    if not idxs:
+        return
+    with _PREWARM_LOCK:
+        if job_id in _PREWARM_BUSY:
+            return
+        _PREWARM_BUSY.add(job_id)
+
+    def _run():
+        try:
+            with ThreadPoolExecutor(max_workers=workers) as ex:
+                list(ex.map(lambda i: _beatframe_file(job, job_id, i), idxs))
+        except Exception:
+            pass
+        finally:
+            with _PREWARM_LOCK:
+                _PREWARM_BUSY.discard(job_id)
+
+    threading.Thread(target=_run, name=f"beatframe-prewarm-{job_id}", daemon=True).start()
 
 
 @app.get("/api/produce/mix/beatframe/{job_id}/{i}")
