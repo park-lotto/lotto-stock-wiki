@@ -3272,11 +3272,30 @@ def clean_final_path_for_plan(job, work):
     try:
         if (job or {}).get("clean_sources"):
             return None     # 소스별 청소본 경로 — 호출부가 그 맵을 그대로 쓴다
+        # ★정본(2026-09-22): 스위치가 켜져 있고 clean_base.json이 있으면 그 파일이 곧 정본이다.
+        #   편성 서명이 바뀌어도(줄·확대·컷) 청소본은 유효하다 — 렌더가 그 위에서 조립하므로.
+        _b = clean_base_for(job, work)
+        if _b is not None:
+            return Path(_b["path"])
         sig = _clean_sig(job)          # 등급까지 반영한 서명(0순위-B: _clean_sig 한 곳)
         f = Path(work) / ("final_clean_%s.mp4" % sig)
         if f.exists() and f.stat().st_size > 1024:
             return f
         return None
+    except Exception:      # noqa: BLE001
+        return None
+
+
+def clean_base_for(job, work):
+    """이 job의 청소본 정본(dict) — 스위치가 켜져 있고 파일이 살아 있을 때만. 아니면 None.
+    화면(app.py)·비교·프레임이 전부 이 한 함수로 "정본이 있나"를 판정한다(0순위-B)."""
+    try:
+        from shopping_shorts import clean_base as _cb
+        if not (job or {}).get("subtitle_removal"):
+            return None
+        if not clean_base_on(Store(config.DB_PATH), (job or {}).get("customer_id") or 0):
+            return None
+        return _cb.load_base(work)
     except Exception:      # noqa: BLE001
         return None
 
@@ -3447,6 +3466,16 @@ def clean_compare_clips(job, work):
         fresh = clean_final_path_for_plan(job, work)
         if fresh is not None:
             plan, out["clean_path"], out["plan_used"] = (job.get("edit_plan") or {}), str(fresh), "current"
+            # ★정본이면 청소본의 시간축은 **청소 시점 편성**이다 — 그 스냅샷으로 좌우 컷을 편다.
+            _b = clean_base_for(job, work)
+            if _b is not None and Path(_b["path"]) == Path(str(fresh)):
+                _sp = _clean_plan_snapshot_path(work, _b["sig"])
+                if _sp.exists():
+                    try:
+                        plan = json.loads(_sp.read_text(encoding="utf-8"))
+                        out["plan_used"] = "snapshot"
+                    except Exception:      # noqa: BLE001
+                        pass
         else:
             out["stale"] = True
             cands = [f for f in work.glob("final_clean_*.mp4") if f.stat().st_size > 1024]

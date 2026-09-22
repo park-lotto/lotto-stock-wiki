@@ -9189,14 +9189,15 @@ def api_mix_export(job_id: str, part: str = ""):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
-    plan = job["edit_plan"]
     work = _MIX_WORK_DIR / job_id
     work.mkdir(parents=True, exist_ok=True)
-    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    # ★정본(2026-09-22)이면 재배치된 사본·청소본이 입력이다 — 렌더와 같은 함수(render_inputs_for)
     try:
-        source_video_paths = _resolve_sources(job, work)
+        plan, source_video_paths, _cbase = mix_pipeline.render_inputs_for(
+            Store(DB_PATH), job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
     except Exception:
-        source_video_paths = {}   # 소스 전멸이어도 srt/script/seo는 준다(설계 §6, 500 금지)
+        plan, source_video_paths = job["edit_plan"], {}   # 소스 전멸이어도 srt/script/seo는 준다(설계 §6, 500 금지)
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
     timeline = _beat_timeline(plan, tts_paths)
     parts = {"sources": ["sources"], "srt": ["srt"], "script": ["script"]}.get(
         part, export_bundle.ALL_PARTS)
@@ -9242,13 +9243,14 @@ def api_mix_capcut(job_id: str, base: str = ""):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
-    plan = job["edit_plan"]
     work = _MIX_WORK_DIR / job_id
-    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    # ★정본(2026-09-22)이면 재배치된 사본·청소본이 입력이다 — 렌더와 같은 함수(render_inputs_for)
     try:
-        source_video_paths = _resolve_sources(job, work)
+        plan, source_video_paths, _cbase = mix_pipeline.render_inputs_for(
+            Store(DB_PATH), job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
     except Exception:
-        source_video_paths = {}
+        plan, source_video_paths, _cbase = job["edit_plan"], {}, None
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
     # 자막 제거본이 타임라인 소스를 대신하더라도 캡컷 보관함에는 편집에 쓰인 긴 원본을 함께 보낸다.
     # 원본 집합 판정은 capcut_draft.used_video_ids 한 곳만 사용해 타임라인 소스 판정과 어긋나지 않게 한다.
     _original_source_video_paths = dict(source_video_paths)
@@ -21236,11 +21238,16 @@ def _final_cuts(job, work):
       (_clean_frame_src/_beatframe_file)이 **같은 컷 목록**을 봐야 한다. 각자 세면
       "3번 칸"이 서로 다른 그림을 가리킨다.
     실패하면 [] — 호출부는 비트 단위로 물러선다(조용히 깨지지 않게)."""
-    plan = (job or {}).get("edit_plan") or {}
+    # ★정본(2026-09-22)이면 재배치된 사본·청소본으로 컷을 편다 — 렌더와 같은 입력(render_inputs_for)
+    try:
+        plan, _srcs, _b = mix_pipeline.render_inputs_for(
+            Store(DB_PATH), job, Path(work).name, work, [], (job or {}).get("customer_id") or 0, allow_clean=False)
+    except Exception:      # noqa: BLE001
+        plan, _srcs = (job or {}).get("edit_plan") or {}, None
     tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
     try:
         durs = {v: (frame_extract._probe_duration(pth) or 0.0)
-                for v, pth in _resolve_sources(job, work).items()}
+                for v, pth in (_srcs if _srcs is not None else _resolve_sources(job, work)).items()}
     except Exception:      # noqa: BLE001
         durs = {}
     try:
@@ -21310,6 +21317,24 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
     #   poster·beatframe이 모두 이 꼬리표로 파일명을 만들므로 여기 한 곳만 고친다(0순위-B).
     _stem = Path(cvp).stem
     _ctag = "_clean_" + re.sub(r"[^0-9a-zA-Z]", "", _stem[len("final_clean_"):] if _stem.startswith("final_clean_") else _stem)
+    # ★정본(2026-09-22): 재배치된 사본의 컷은 재료가 곧 청소본 좌표("clean", start)다 — 그 시각에서 뜬다.
+    #   증분 조각(cb…)이면 그 조각 파일에서 뜬다. 판정·좌표는 render_inputs_for 하나.
+    _b = mix_pipeline.clean_base_for(job, work)
+    if _b is not None:
+        try:
+            _p2, _paths, _ = mix_pipeline.render_inputs_for(
+                Store(DB_PATH), job, Path(work).name, work, [], job.get("customer_id") or 0, allow_clean=False)
+            _t2 = {b["beat_idx"]: b["tts_path"] for b in (_p2.get("beats") or []) if b.get("tts_path")}
+            _d2 = {v: (frame_extract._probe_duration(pth) or 0.0) for v, pth in _paths.items()}
+            _cl = _cuts_of_beat(mix_pipeline.final_clip_pairs(_p2, _t2, _d2), beat_idx)
+            if _cl:
+                _c = _cl[cut] if (cut is not None and 0 <= cut < len(_cl)) else _cl[0]
+                _f = _paths.get(_c["video_id"]) or cvp
+                _dur = _d2.get(_c["video_id"]) or (frame_extract._probe_duration(_f) or 0.0)
+                _sec = float(_c["src"]) + float(_c["dur"]) * 0.5
+                return {}, _f, (min(0.98, max(0.02, _sec / _dur)) if _dur > 0 else 0.5), "_cb_%s" % _b["sig"], True
+        except Exception as e:      # noqa: BLE001 — 정본 좌표 실패는 아래 종전 계산으로
+            print(f"[beatframe] 정본 좌표 실패(종전 계산 사용): {e!r}", file=sys.stderr)
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}
