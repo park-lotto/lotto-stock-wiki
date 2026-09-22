@@ -161,3 +161,31 @@ def test_signal_strips_leading_conjunction():
     lines = sw._to_lines(o, False, "k", 0, feats=[{"name": "x"}])
     first = [L["text"] for L in lines if L["role"] == "고조1"][0]
     assert "근데 이건" not in first or not any(first.startswith(s) for s in sum(sw.YT_SETS.values(), []) if s)
+
+
+def test_contrast_takes_first_signal_and_escalations_shift():
+    """히트작: "이게 말도 안 되는게 기존 X와 달리 Y해 준다는 거 → 근데 진짜 충격적인 포인트는…". 대비 뒤에 바로 같은 급 신호어가 오지 않는다."""
+    o = {"hook": "h", "bait": "b", "reveal": "r", "contrast": "기존 컵홀더와는 달리 영하 3도까지 떨어뜨려 준다는 거",
+         "twist": "t", "closing": "c",
+         "escalations": [{"moment": "m1", "what_happens": "w1", "erased": "e1", "from_pain": "", "feat": 1},
+                         {"moment": "m2", "what_happens": "w2", "erased": "e2", "from_pain": "", "feat": 1}]}
+    lines = sw._to_lines(o, False, "k", 0, feats=[{"name": "x"}])
+    _, sigs = sw._pick(sw.YT_SETS, "k", 0)
+    contrast = [L["text"] for L in lines if L["role"] == "대비"][0]
+    esc1 = [L["text"] for L in lines if L["role"] == "고조1"][0]
+    if sigs[0]:
+        assert contrast.startswith(sigs[0])
+    if sigs[1]:
+        assert esc1.startswith(sigs[1])
+    assert not (sigs[0] and esc1.startswith(sigs[0]))
+
+
+def test_repeat_signal_dropped_even_when_contrast_took_it():
+    o = {"hook": "h", "bait": "b", "reveal": "r", "contrast": "기존 X와 달리 Y해 준다는 거",
+         "twist": "심지어 선물용으로도 대박이라는데", "closing": "c",
+         "escalations": [{"moment": "m1", "what_happens": "w1", "erased": "e1", "from_pain": "", "feat": 1}]}
+    # 세트 A(첫 신호어 '심지어')를 고르는 key를 찾는다
+    key = next(k for k in ("k%d" % i for i in range(200)) if sw._pick(sw.YT_SETS, k, 0)[1][0] == "심지어")
+    lines = sw._to_lines(o, False, key, 0, feats=[{"name": "x"}])
+    twist = [L["text"] for L in lines if L["role"] == "반전"][0]
+    assert not twist.startswith("심지어")
