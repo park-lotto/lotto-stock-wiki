@@ -1478,7 +1478,11 @@
       if(saved){
         branding=Object.keys(saved.branding||{}).length?saved.branding:rememberedBranding();
         if(saved.presetId==='t11'&&saved.text?.channel==='이븐쇼핑')saved.text.channel='숏템메이커';
-        for(const [name,map] of Object.entries({fontScales,textOffsets,textDrags,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
+        // ★장면별 자막 위치·문구(captionTexts/captionDrags/captionPositions/captionLayouts)는 브라우저 기억에서 되살리지 않는다(2026-09-22).
+        //   키가 '프리셋:모드:장면번호:caption'이라 **다른 작업**의 31번 장면 끌기 기록이 새 작업 31번 장면에 그대로 붙었다
+        //   — 사장님 실측: 새 영상인데 본문 흰 띠가 비고 자막이 영상 한가운데. 깨끗한 브라우저에선 정상(check_caption_band_restore.py).
+        //   작업마다의 자막 위치는 서버 저장본(job.deco.scene_style)이 갖고 온다. 글꼴·색·칸 배치 같은 취향은 그대로 되살린다.
+        for(const [name,map] of Object.entries({fontScales,textOffsets,textDrags,colors:colorOverrides,fixedLayouts,fixedColors}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         if(!query.has('preset')&&!query.has('mode')){
           modeBar.querySelector(`[data-template-mode="${saved.mode==='continuous'?'continuous':'story'}"]`).click();
           const index=rows.findIndex(p=>p.id===saved.presetId);if(index>=0)selectPreset(index);
