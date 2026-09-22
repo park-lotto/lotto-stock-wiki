@@ -7193,7 +7193,11 @@ def api_mix_render(request: Request, background_tasks: BackgroundTasks, body: di
     #   다시 받아 "전후 영상이 둘 다 있다 · 영상이 달라졌다"가 됐다(고객 박세현 제보).
     #   비워두면 완성본 카드·다운로드·QR이 전부 자동으로 사라진다 — 막는 판단이 한 곳이다.
     store.update_mix_job(job_id, status="rendering", error=None, video_path="")
-    Store(DB_PATH).enqueue("render", {"job_id": job_id})
+    # ★자막제거 없이 렌더(2026-09-22 사장님): 바뀐 장면을 다시 지우지 않고 그냥 만든다 — 그 장면엔 원본 자막이 남을 수 있다.
+    _args = {"job_id": job_id}
+    if body.get("skip_clean"):
+        _args["skip_clean"] = True
+    Store(DB_PATH).enqueue("render", _args)
     return {"ok": True, "status": "rendering"}
 
 

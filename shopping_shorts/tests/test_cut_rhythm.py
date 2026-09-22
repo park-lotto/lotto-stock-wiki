@@ -29,9 +29,12 @@ def test_hold는_첫_조각_하나로_문장_전체를_이어_튼다():
     assert len(plan) == 1 and plan[0]["video_id"] == "v1"
     assert abs(sum(c["out_dur"] for c in plan) - 4.5) < 0.05
     assert plan[0]["src_dur"] >= 4.0        # 조각(1.5초)을 넘어 원본을 실프레임으로 이어 튼다
+    # 긴 대사도 첫 조각의 소스 하나로 비트 끝까지 이어 튼다(main 30d0c5ed2, job 956a 정지 재현·tools/check_cut_rhythm_hold.py).
+    #   회사 09-22 트랙(370508332)의 "5초 홀드 + 두 번째 컷"은 조각이 하나뿐이면 5초 뒤 정지가 재발해 병합 때 접었다(09-23).
     long = va.plan_beat_clips_for(beat, tts_dur=9.0, src_durs={"v1": 30.0, "v2": 30.0, "v3": 30.0})
-    assert long[0]["video_id"] == "v1" and abs(long[0]["out_dur"] - 5.0) < 1e-6   # 9초 대사 = 원본 5초 홀드 + 두 번째 컷
-    assert len(long) == 2 and long[1]["video_id"] == "v2"
+    assert all(c["video_id"] == "v1" for c in long)
+    assert abs(sum(c["out_dur"] for c in long) - 9.0) < 0.05
+    assert sum(c.get("src_dur", 0) for c in long) > 8.5      # 실프레임으로 채운다(정지·늘리기 없음)
 
 
 def test_hold_아니면_상한_4초로_컷이_줄어든다():

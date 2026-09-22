@@ -14,6 +14,9 @@
   const currentMixJob=()=>String(typeof MIX_JOB==='undefined'?'':(MIX_JOB||'')).trim();
   const status=()=>document.getElementById('sceneStyleStatus');
   const draftKey=id=>'scene-style-draft:'+id;
+  // 저장본 비교 — 키 순서·undefined에 흔들리지 않게 정렬해 문자열로 견준다
+  const stable=v=>JSON.stringify(v,(k,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,key)=>{if(x[key]!==undefined)o[key]=x[key];return o},{}):x);
+  const sameSnapshot=(a,b)=>stable(a||null)===stable(b||null);
   let serverText=null;   // 이번에 열 때 서버가 준 제목 글 — 임시저장 복원 때 '고친 칸' 판정 기준
   const timelineKey=context=>JSON.stringify(context.scenes.map(s=>[s.beat_idx,s.start,s.end,s.caption]));
   function showCanaryFallback(message){
@@ -156,10 +159,15 @@
           //   열 때의 서버 글(baseText)과 다른 칸만 사용자 편집으로 본다. baseText가 없는 옛 임시저장본은 글을 되살리지 않는다.
           if(draft.snapshot){
             const base=draft.baseText,all=draft.snapshot.text||{};
-            draft.snapshot.text=base?Object.fromEntries(Object.entries(all).filter(([k,v])=>base[k]!==v)):{};
+            const edited=base?Object.fromEntries(Object.entries(all).filter(([k,v])=>base[k]!==v)):{};
+            // ★서버에 올릴 땐 **완전한 글**(서버 저장본 글 + 고친 칸)로 만든다 — 고친 칸만 담긴 조각을 올리면 서버가
+            //   "설정이 바뀌었다"고 보고 완성본을 무효화한다(2026-09-22 21:05 실측: 열기만 했는데 렌더가 사라짐, 3단계 재다운로드).
+            draft.snapshot.text={...((packet.snapshot&&packet.snapshot.text)||serverText||{}),...edited};
           }
+          const serverSnap=packet.snapshot;
           packet.snapshot=draft.snapshot;if(draft.snapshot)packet.context.text={...packet.context.text,...draft.snapshot.text};
-          if(applied())await saveSnapshot(draft.snapshot);
+          // ★서버 저장본과 실제로 다를 때만 올린다 — 같은데 올리면 저장 시각만 바뀌고 완성본이 무효화된다.
+          if(applied()&&!sameSnapshot(draft.snapshot,serverSnap))await saveSnapshot(draft.snapshot);
         }
       }catch(error){status().textContent='남겨둔 편집을 복원했습니다. 서버 저장은 다시 시도해 주세요.';}
       if(!dialog){
