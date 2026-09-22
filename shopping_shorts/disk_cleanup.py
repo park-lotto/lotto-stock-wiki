@@ -80,7 +80,7 @@ _KEEP_FILES = {"final.mp4", "preview.mp4", "clean_preview.mp4",
 
 # 보관 기간이 지나면 지우는 영상 파일 — 이름으로 화이트리스트(모르는 건 안 지운다).
 # 썸네일(thumb·cover)은 **남긴다**: 목록 카드가 그림 없이 깨지면 "다 지워졌다"로 보인다.
-_FINAL_VIDEO_FILES = {"final.mp4", "preview.mp4", "clean_preview.mp4"}
+_FINAL_VIDEO_FILES = {"final.mp4", "preview.mp4", "clean_preview.mp4", "edited.mp4"}
 
 
 def _is_junk_dir(name: str) -> bool:
