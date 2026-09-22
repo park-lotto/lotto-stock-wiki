@@ -6,7 +6,8 @@ def test_default_off_leaves_title_style_untouched():
     canary.set_active(False)
     st = {"beat_roles": ["title", "story"], "beat_descs": {"title": "궁금증"}, "templates": {}}
     assert bank_assemble.with_spoken_hook(st) is st
-    assert headcopy_gen._support_max() == headcopy_gen._LEGACY_SUBLINE_LEN == 32
+    # 보조제목 한도는 카나리와 무관하게 화면 계약 22자 한 곳(2026-09-22 통일)
+    assert headcopy_gen._support_max() == 22
 
 
 def test_on_switches_contract():
