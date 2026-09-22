@@ -555,12 +555,31 @@ def _resolve_font():
 _FF_TEXT = {"capture_output": True, "text": True, "encoding": "utf-8", "errors": "replace"}
 
 
+_PROBE_CACHE: dict = {}          # (경로, mtime_ns, size) → 초. 파일이 바뀌면 키가 바뀐다.
+_PROBE_CACHE_MAX = 4096
+
+
 def _probe_duration(path):
-    """ffprobe로 미디어 길이(초)."""
+    """ffprobe로 미디어 길이(초). 같은 파일(경로·수정시각·크기 동일)은 한 번만 잰다.
+
+    실측(2026-09-22): 장면꾸미기 컨텍스트가 비트마다 TTS를 ffprobe해 33비트면 33번,
+    부하 9인 서버에서 2~3초를 먹었다. 파일은 안 바뀌는데 매번 다시 쟀다."""
+    try:
+        st = os.stat(path)
+        key = (str(path), st.st_mtime_ns, st.st_size)
+    except OSError:
+        key = None
+    if key is not None and key in _PROBE_CACHE:
+        return _PROBE_CACHE[key]
     cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration",
            "-of", "default=noprint_wrappers=1:nokey=1", str(path)]
     out = subprocess.run(cmd, stdin=subprocess.DEVNULL, check=True, **_FF_TEXT)
-    return float(out.stdout.strip())
+    dur = float(out.stdout.strip())
+    if key is not None:
+        if len(_PROBE_CACHE) >= _PROBE_CACHE_MAX:
+            _PROBE_CACHE.clear()
+        _PROBE_CACHE[key] = dur
+    return dur
 
 
 _TRIM_FLOOR = 0.4  # 비트 트림 후 남길 최소 길이(초). 과트림·역전 방지.
