@@ -12251,13 +12251,16 @@ def _card_cta(fallback_href="", fallback_label=""):
     /pay 안내의 **카드 버튼만** 같이 바뀐다. 요청마다 읽어 재시작 없이 반영된다.
     ★`pay_url`이 아니다 — 그건 _pay_cta(메인 CTA '1기 신청하기')의 목적지라, 거기에 카드 링크를
       넣으면 신청 버튼이 결제 안내(/pay: 현금·폼·카드 선택)를 건너뛰고 스마트스토어로 직행한다
-      (09-17 사장님 "기존것처럼 그대로 냅두고 이 안에서 카드결제를 누르면 들어가게")."""
-    card = (Store(DB_PATH).get_setting("card_url", "") or "").strip()
-    if card:
-        return card, "💳 카드로 결제하기"
+      (09-17 사장님 "기존것처럼 그대로 냅두고 이 안에서 카드결제를 누르면 들어가게").
+    ★2026-09-22 사장님 "결제연동창을 기존것(스마트스토어)에서 토스페이먼츠 연동창으로" — 토스 심사
+      (카드사가 실제 결제창을 확인)를 위해 **토스 키가 있으면 토스 결제창이 먼저**다. card_url은
+      토스 키가 없을 때만 쓰는 대체 링크로 내려갔다."""
     ck, sk = _toss_keys()
     if ck and sk:
         return "/pay/toss", "💳 카드로 결제하기"
+    card = (Store(DB_PATH).get_setting("card_url", "") or "").strip()
+    if card:
+        return card, "💳 카드로 결제하기"
     return fallback_href, fallback_label
 
 
@@ -13218,12 +13221,12 @@ def _deposit_card_html():
     테스트 키면 버튼에 '테스트'를 붙여 고객이 진짜 결제로 착각하지 않게 한다.
     """
     ck, sk = _toss_keys()
-    pay = (Store(DB_PATH).get_setting("card_url", "") or "").strip()
-    if not pay and not (ck and sk):
+    # 목적지는 _card_cta 한 곳에서만 정한다(0순위-B) — 여기서 card_url을 따로 읽으면 우선순위가 어긋난다.
+    pay, _label = _card_cta("", "")
+    if not pay:
         return ""
-    # 외부 링크(card_url)가 있으면 그것이 카드결제다 — _card_cta와 같은 우선순위(2026-09-17).
-    tag = "" if pay else (" (테스트)" if ck.startswith("test_") else "")
-    return ('<a href="' + (pay or "/pay/toss") + '" style="display:block;text-align:center;text-decoration:none;'
+    tag = (" (테스트)" if pay == "/pay/toss" and ck.startswith("test_") else "")
+    return ('<a href="' + pay + '" style="display:block;text-align:center;text-decoration:none;'
             'background:linear-gradient(135deg,#ffd27a,#f0a53a);color:#1a1206;border-radius:12px;'
             'padding:15px;font-size:16px;font-weight:800;margin-bottom:10px">💳 카드로 결제하기' + tag + '</a>'
             '<div style="text-align:center;color:#6f8583;font-size:13px;margin:6px 0 14px">또는 계좌이체</div>')
@@ -13314,7 +13317,7 @@ _PRO_PERIOD = "12개월"
 
 def _toss_order_name_amount():
     st = Store(DB_PATH)
-    name = (st.get_setting("toss_order_name", "") or "숏템메이커 1기 참가비").strip()
+    name = (st.get_setting("toss_order_name", "") or "숏템메이커 1기 이용권").strip()
     try:
         amount = int(st.get_setting("toss_amount", "") or 770000)
     except ValueError:
