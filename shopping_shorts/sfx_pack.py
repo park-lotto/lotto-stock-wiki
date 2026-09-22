@@ -10,7 +10,7 @@
 규칙(12편 실측):
   영상 시작 0.06초       오프너 1발 (12/12). 제목 칸 안에서는 다른 소리 없음.
   첫 칸 → 둘째 칸 넘김   휙(넘김 0.035초 전) + 틱(0.07초 뒤)  (틱 12/12, 휙 8/12)
-  그 뒤 **칸(문장)마다 1발**, 그 칸의 첫 자막 줄에 — 소리는 **그 칸의 역할**이 정한다(ROLE_GROUPS → GROUP_SOUNDS).
+  그 뒤 **칸(장면)마다 2발**, 첫 자막 줄과 가운데 줄에 — 소리는 **그 칸의 역할**이 정한다(ROLE_GROUPS → GROUP_SOUNDS).
 
 회원마다 팩 하나를 고정 배정한다(20종, 두 팩 사이 7칸 중 최소 4칸 다름) — 회원끼리 소리가 달라진다.
 켜는 조건: 관리자 설정 sfx_pack_enabled=1 **그리고** 2단계에서 **썰 대본**(오용형·제품정체형·발명품형 틀)을 고른 영상.
@@ -94,8 +94,13 @@ PACK_GAIN_DB = 4.3
 # 칸별 목표 크기(20ms 최대, dBFS) — 이븐쇼핑 12편 실측(목소리 중앙 -17.5 기준). 파일마다 실제 크기를 재서
 #   이 값에 맞춘다 → 팩·파일이 바뀌어도 크기가 저절로 맞는다(2026-09-22: 팩10 둥 파일이 목표보다 3dB 작아
 #   라이브 영상에서 둥이 약했다 — 팩을 만들 때 찢어짐 방지로 최대값을 눌러 뾰족한 소리만 작아졌던 것).
-LEVEL_TARGET_DB = {"opener": -8.8, "dung": -7.0, "pop": -11.9, "ding": -14.7,
-                   "whoosh": -20.2, "tick": -22.4, "click2": -20.6}
+# ★작은 소리는 바닥을 올린다(2026-09-22 사장님 "잘 안 들린다"): 이븐쇼핑 실측대로면 휙·틱·딸깍이
+#   목소리 중앙(-17.5)보다 작아 우리 목소리에 묻혔다. -14.5로 올려도 그 순간 목소리가 큰 곳에서 13발 중 6발이
+#   묻혔다(tools/sfx_bench/audible.py) → -11.0. 이 크기면 덕킹(-14dBFS 이상)도 함께 걸려 목소리가 살짝 비켜 준다.
+_AUDIBLE_FLOOR_DB = -11.0
+LEVEL_TARGET_DB = {k: max(v, _AUDIBLE_FLOOR_DB) for k, v in {
+    "opener": -8.8, "dung": -7.0, "pop": -11.9, "ding": -14.7,
+    "whoosh": -20.2, "tick": -22.4, "click2": -20.6}.items()}
 _LEVEL_CACHE = {}
 
 
@@ -211,7 +216,7 @@ def resolve(store, job):
 def plan_events(timeline, manual_beats=()):
     """[(소리, 절대초, 자막)] — 파일 경로 없이 '무엇을 언제'만. 테스트·검증이 이걸 본다.
 
-    영상 시작 = 오프너 · 첫 칸→둘째 칸 넘김 = 휙+틱 · 셋째 칸부터 칸마다 첫 자막 줄에 1발(칸 역할의 소리).
+    영상 시작 = 오프너 · 첫 칸→둘째 칸 넘김 = 휙+틱 · 칸마다 첫 줄·가운데 줄에 2발(첫 줄은 칸 역할의 소리).
     시각은 렌더 자막 함수(caption_schedule)에서 그대로 받는다. manual_beats(사람이 고른 칸)는 건너뛴다.
     """
     from shopping_shorts.video_assemble import caption_schedule
@@ -228,20 +233,22 @@ def plan_events(timeline, manual_beats=()):
     for bi, b in enumerate(tl):
         if bi == 0 or b["beat_idx"] in manual:
             continue    # 제목 칸 안은 오프너만(실측 12/12)
-        if bi == 1:
-            continue    # 둘째 칸 첫 줄은 첫 넘김 휙+틱이 맡았다 — 그 칸은 그걸로 1발
-        # ★문장(칸) 하나에 효과음 하나 — 그 칸의 첫 자막 줄에만(2026-09-22 사장님 "한 문장에 하나").
-        #   실측: 이븐쇼핑 문장당 1.14개(0개 29%·1개 40%·2개 22%) — 구절마다 넣던 때는 문장당 3.0개였다.
+        # ★장면(칸)마다 2발 — 첫 자막 줄 + 가운데 자막 줄(2026-09-22 사장님 "장면당 2개").
+        #   (구절마다 넣으면 문장당 3.0개로 많았고, 1개로 줄이니 초당 0.30발로 이븐쇼핑 0.54보다 드물었다.)
         sched = caption_schedule(b)
         if not sched:
             continue
-        seg, start, _end = sched[0]
         first, ring = sounds_for_role(b.get("role"))
-        if first:
-            ev.append((first, start, seg))
-        else:
-            n = used.get(ring, 0); used[ring] = n + 1
-            ev.append((ring[n % len(ring)], start, seg))
+        picks = sorted({0, len(sched) // 2})
+        for k in picks:
+            if bi == 1 and k == 0:
+                continue    # 둘째 칸 첫 줄은 첫 넘김 휙+틱이 맡았다
+            seg, start, _end = sched[k]
+            if k == 0 and first:
+                ev.append((first, start, seg))
+            else:
+                n = used.get(ring, 0); used[ring] = n + 1
+                ev.append((ring[n % len(ring)], start, seg))
     ev = [e for e in ev if e[1] < total]
     ev.sort(key=lambda e: e[1])
     return ev

@@ -173,11 +173,16 @@ def test_every_pack_file_lands_on_slot_target():
             assert abs(got - sfx_pack.LEVEL_TARGET_DB[slot]) < 0.05, (d, slot, got)
 
 
-def test_one_sound_per_sentence():
-    """2026-09-22 사장님 "한 문장에 하나": 칸(문장)마다 효과음 1발, 그 칸 첫 자막 줄에만."""
+def test_two_sounds_per_scene():
+    """2026-09-22 사장님 "장면당 2개": 칸마다 첫 줄 + 가운데 줄."""
     tl = _tl()
     ev = [e for e in sfx_pack.plan_events(tl) if e[0] != "opener"]
     for b in tl[2:]:
+        sched = va.caption_schedule(b)
         inside = [e for e in ev if b["t0"] <= e[1] < b["t0"] + b["dur"]]
-        assert len(inside) == 1, (b["role"], inside)
-        assert abs(inside[0][1] - va.caption_schedule(b)[0][1]) < 1e-6      # 첫 자막 줄 시각
+        want = sorted({round(sched[0][1], 6), round(sched[len(sched) // 2][1], 6)})
+        assert sorted(round(e[1], 6) for e in inside) == want, (b["role"], inside)
+
+
+def test_quiet_slots_raised_to_audible_floor():
+    assert min(sfx_pack.LEVEL_TARGET_DB.values()) >= sfx_pack._AUDIBLE_FLOOR_DB
