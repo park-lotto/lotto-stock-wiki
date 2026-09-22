@@ -42,7 +42,7 @@ def _fake(monkeypatch, out=YT_OUT, feats=FEATS):
 def test_lines_get_feature_cuts_and_no_seed_cuts(monkeypatch):
     calls = _fake(monkeypatch)
     drafts, why = sw.make_drafts([], _job(), job_id="j1")
-    assert why == "" and len(drafts) == 1 and len(calls) == 2      # 특징 1회 + 자동 1안 1회
+    assert why == "" and len(drafts) == 1 and len(calls) == 3      # 특징 1회 + 자동 1안 1회 + AI 매칭 1회
     d = drafts[0]
     assert d["auto_pick"] is True and d["made_by"] == "이야기작가" and d["platform"] == "yt"
     esc = [b for b in d["beats"] if b["role"] == "고조1"]
@@ -67,7 +67,7 @@ def test_picked_style_adds_second_draft(monkeypatch):
     sp = {"id": 61, "name": "고른 스타일", "no_cta": True, "beat_roles": ["훅", "고조"]}
     drafts, _ = sw.make_drafts([sp, {"id": 62, "name": "둘째"}], _job(), job_id="j1")
     assert [d["style_name"] for d in drafts] == ["씨앗 결 이야기", "고른 스타일"]
-    assert [d["auto_pick"] for d in drafts] == [True, False] and len(calls) == 3
+    assert [d["auto_pick"] for d in drafts] == [True, False] and len(calls) == 5     # 특징 1 + (쓰기 1 + AI 매칭 1) × 2안
 
 
 def test_reasons_are_reported(monkeypatch):

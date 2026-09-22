@@ -623,7 +623,24 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short"):
         if LENGTH_PRESETS[preset]["cap_by_footage"]:
             limit = min(limit, footage * 0.65)
         lines, n["dropped_escalations"] = _fit_length(lines, limit)
+        # ★AI 매칭(2026-09-22 사장님 "매칭은 AI가 해봐"): 줄 전체 + 컷 목록을 한 번에 주고 줄마다 고르게 한다(호출 1회).
+        #   빈 줄이 남으면 그 줄만 코드 매칭(assign_cuts)이 채운다. AI가 아예 실패하면 전부 코드 매칭.
+        from shopping_shorts import ai_match as _am
+        _an = {}
+        ai_bs = _am.match(lines, seg_index, backbone_vid, note=_an)
         bs, report = ba.assign_cuts(lines, groups_out, seg_index, backbone_vid)
+        if ai_bs:
+            _used = {c for b in ai_bs for c in (b.get("segs") or [])}
+            for i, b in enumerate(ai_bs):
+                if b.get("segs"):
+                    bs[i] = b
+                else:                                          # AI가 비운 줄 = 코드 매칭 결과에서 안 겹치는 컷만
+                    keep = [c for c in (bs[i].get("segs") or []) if c not in _used]
+                    bs[i] = {"role": bs[i].get("role"), "seg": keep[0] if keep else "", "segs": keep}
+                    _used.update(keep)
+            n["matcher"] = "ai"
+        else:
+            n["matcher"] = "code(%s)" % (_an.get("reason") or "")
         n["no_cut_lines"] = _share_cuts(lines, bs, seg_index)     # 끝내 빈 줄 = 재료가 대본보다 짧다
         meta = {"product": product, "spine": {"id": (sp or {}).get("id"), "name": name},
                 "groups": groups_out, "report": report, "note": n}
