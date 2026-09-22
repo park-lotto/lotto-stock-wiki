@@ -2932,6 +2932,47 @@ def plan_using_beat_clips(plan, clips, timeline, prefix="cc", *, preserve_capcut
     return out
 
 
+# ── 컷 리듬(2026-09-22) — 관리자 스위치 cut_rhythm_enabled("admin"=관리자만 / "1"=전체 / ""=끔) ─────────
+_HOLD_END = re.compile(r"(는 거|버림|버렸다고|버렸다는데|준다는데)[.!?…]*$")   # 핵심 결과 줄 = 한 컷으로 길게
+
+
+def _cut_rhythm_on(store, job):
+    """app._setting_gate와 같은 판정(여기서 app을 못 부른다 — import 순환)."""
+    try:
+        v = (store.get_setting("cut_rhythm_enabled", "") or "").strip().lower()
+    except Exception:      # noqa: BLE001
+        return False
+    cid = job.get("customer_id", 0)
+    try:
+        cid = int(cid or 0)
+    except (TypeError, ValueError):
+        cid = 0
+    if v == "1":
+        return True
+    if v == "admin":
+        return cid == 0
+    if v and v not in ("0", "off", "false"):
+        return str(cid) in {x.strip() for x in v.split(",")} or cid == 0
+    return False
+
+
+def _apply_cut_rhythm(plan, store, job):
+    """비트마다 cut_rhythm 표식 — video_assemble.plan_beat_clips_for가 읽는다. 표식만 달고 계획은 안 바꾼다.
+    hold: 훅(첫 비트) + 핵심 결과 줄(_HOLD_END). 나머지: 상한 4초.
+    구절 맞춤·수동 컷을 켠 칸은 그 경로가 우선이라 표식이 있어도 안 쓴다(plan_beat_clips_for의 분기 순서)."""
+    if not _cut_rhythm_on(store, job):
+        return 0
+    n = 0
+    beats = (plan or {}).get("beats") or []
+    for i, b in enumerate(beats):
+        narr = (b.get("narration") or "").strip()
+        hold = (i == 0) or bool(_HOLD_END.search(narr))
+        b["cut_rhythm"] = {"max_shot": 4.0, "hold": hold}
+        n += 1
+    print(f"[cut_rhythm] 비트 {n}개에 표식 — hold {sum(1 for b in beats if (b.get('cut_rhythm') or {}).get('hold'))}개", file=sys.stderr)
+    return n
+
+
 def final_clip_pairs(plan, tts_paths, src_durs):
     """완성본의 **컷 하나하나**를 (video_id, 원본 시각, 완성본 시각, 길이)로 편다.
 
@@ -4068,6 +4109,7 @@ def run_render(job_id, db_path, work_root):
         # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
         cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
         sfx_paths = _resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job)
+        _apply_cut_rhythm(plan_used, store, job)
         assemble(plan_used, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)

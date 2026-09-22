@@ -813,6 +813,22 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     # 컷 밀도(2026-07-22): 한 컷을 MAX_SHOT_SECONDS 넘게 안 끌고 distinct 세그먼트를 번갈아
     # 재생 → 긴 정지 대신 컷. 포인트 비트는 홀드가 맞으니 라운드로빈 안 한다.
     _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
+    # ★컷 리듬(2026-09-22 사장님 "짧은 건 너무 정신없다 / 내 거 먼저"): 관리자 스위치 cut_rhythm_enabled 뒤.
+    #   히트작 11편 실측(docs/cut_rhythm_2026-09-22.md): 컷 중앙 1.9초·3초+ 홀드 편당 2~4개·최장 5초 — 우리는 2.2초
+    #   라운드로빈이라 컷이 2배 많고 절반 길이였다. 표식은 mix_pipeline._apply_cut_rhythm이 비트마다 단다.
+    #   hold = 핵심 줄(…없애 버렸다는 거 / 훅): 첫 조각 하나만 두고 상한 없이 이어 튼다(원본은 연속 촬영이라
+    #   조각 경계를 넘어가도 컷이 아니다). 나머지 줄은 상한 4초(문장 하나에 컷 하나가 기본).
+    _cr = beat.get("cut_rhythm") or {}
+    if _cr and not _bb.is_point_beat(beat):
+        if _cr.get("hold") and segs:
+            segs = segs[:1]
+            beat_src_durs = {s["video_id"]: src_durs[s["video_id"]] for s in segs}
+            _max_shot = None
+        else:
+            try:
+                _max_shot = float(_cr.get("max_shot") or 4.0)
+            except (TypeError, ValueError):
+                _max_shot = 4.0
     # 1장=1컷 모드(기본 off). 켜면 담은 장면이 순서대로 한 번씩만 나온다(되돌아옴 없음).
     _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
     # 3단계 통합 속도. 최신 편성의 구절 경계·수동 컷·전체 늘리기는 그대로 두고,
