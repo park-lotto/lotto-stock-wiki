@@ -171,3 +171,13 @@ def test_every_pack_file_lands_on_slot_target():
             p = os.path.join(d, slot + ".wav")
             got = sfx_pack._peak20_db(p) + 20 * math.log10(sfx_pack._gain_for(p, slot)) - sfx_pack.PACK_GAIN_DB
             assert abs(got - sfx_pack.LEVEL_TARGET_DB[slot]) < 0.05, (d, slot, got)
+
+
+def test_one_sound_per_sentence():
+    """2026-09-22 사장님 "한 문장에 하나": 칸(문장)마다 효과음 1발, 그 칸 첫 자막 줄에만."""
+    tl = _tl()
+    ev = [e for e in sfx_pack.plan_events(tl) if e[0] != "opener"]
+    for b in tl[2:]:
+        inside = [e for e in ev if b["t0"] <= e[1] < b["t0"] + b["dur"]]
+        assert len(inside) == 1, (b["role"], inside)
+        assert abs(inside[0][1] - va.caption_schedule(b)[0][1]) < 1e-6      # 첫 자막 줄 시각
