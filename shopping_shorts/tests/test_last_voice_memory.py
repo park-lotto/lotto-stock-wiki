@@ -116,10 +116,19 @@ def test_None이면_기억을_지운다(store):
     assert store.get_last_voice(cid) is None
 
 
-def test_비로그인_cid0은_기억하지_않는다(store):
-    """cid=0(레거시·비로그인)에 저장하면 전원이 한 성우를 공유하게 된다."""
+def test_사장님_cid0도_기억한다(store):
+    """2026-09-22: cid 0(사장님 관리자)은 customers 행이 없어 기억이 통째로 빠졌다
+    ("필재로 바꿨는데 다음 작업이 다시 미나"). customer_prefs에 둔다."""
     store.set_last_voice(0, VOICE)
+    assert store.get_last_voice(0) == VOICE
+    store.set_last_voice(0, None)
     assert store.get_last_voice(0) is None
+
+
+def test_cid0_기억이_새_작업에_심긴다(store):
+    store.set_last_voice(0, VOICE)
+    store.create_mix_job("j_cid0", ["u"], 30, "free", customer_id=0)
+    assert store.get_mix_job("j_cid0").get("voice") == VOICE
 
 
 # ── 엔드포인트 배선 (2026-09-02) ────────────────────────────────────────────
