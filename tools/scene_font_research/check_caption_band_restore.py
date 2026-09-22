@@ -47,6 +47,14 @@ with sync_playwright() as p:
     m2 = pg.evaluate(MEASURE); pg.screenshot(path=str(out / 'B_after_restore_body.png'))
     stayed = m2['capTop'] is not None and abs(m2['capTop'] - m1['capTop']) < 1
     need(bool(stayed), f"② 옛 작업의 자막 끌기 기록이 브라우저에 남아 있어도 새 작업 자막은 띠 안 그대로 (자막 top {m2['capTop']} vs 깨끗 {m1['capTop']}) — 고치기 전엔 82.9로 영상 위로 갔다")
+    # ③ 브라우저 프리셋의 글자 크기(본문 제목 170%)가 새 작업에 붙지 않는다(2026-09-22 사장님 "왜 폰트 크기가 다르냐" — 3작업에 1.7 동일)
+    T = "()=>{const e=document.querySelector('#a-live-preview .precision-text[data-edit-bind=\"bodyTitle\"]');return e?parseFloat(getComputedStyle(e).fontSize):null}"
+    pg.evaluate("()=>localStorage.removeItem('scene_style_preset')"); pg.goto(URL, wait_until='networkidle'); pg.evaluate('([c])=>window.sceneStyle.load(c,null)', [CTX]); pg.evaluate('()=>window.sceneStyle.show(1)'); pg.wait_for_timeout(500)
+    base_font = pg.evaluate(T)
+    pg.evaluate("""()=>localStorage.setItem('scene_style_preset', JSON.stringify({presetId:'t11', fontScales:{'t11:body:bodyTitle':1.7}}))""")
+    pg.goto(URL, wait_until='networkidle'); pg.evaluate('([c])=>window.sceneStyle.load(c,null)', [CTX]); pg.evaluate('()=>window.sceneStyle.show(1)'); pg.wait_for_timeout(500)
+    after_font = pg.evaluate(T)
+    need(base_font and after_font and abs(after_font - base_font) < 0.5, f"③ 프리셋에 본문 제목 170%가 있어도 새 작업 본문 제목은 기본 크기 ({base_font} → {after_font}px) — 고치기 전엔 1.7배")
     json.dump({'clean': m1, 'restored': m2}, open(out / 'measure.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     b.close()
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')

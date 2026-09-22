@@ -1510,7 +1510,10 @@
         //   키가 '프리셋:모드:장면번호:caption'이라 **다른 작업**의 31번 장면 끌기 기록이 새 작업 31번 장면에 그대로 붙었다
         //   — 사장님 실측: 새 영상인데 본문 흰 띠가 비고 자막이 영상 한가운데. 깨끗한 브라우저에선 정상(check_caption_band_restore.py).
         //   작업마다의 자막 위치는 서버 저장본(job.deco.scene_style)이 갖고 온다. 글꼴·색·칸 배치 같은 취향은 그대로 되살린다.
-        for(const [name,map] of Object.entries({fontScales,textOffsets,textDrags,colors:colorOverrides,fixedLayouts,fixedColors}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
+        // ★글자 크기(fontScales)·세로 위치(textOffsets)·끌어 옮김(textDrags)도 브라우저 기억에서 되살리지 않는다(2026-09-22 사장님 "왜 폰트 크기가 다르냐").
+        //   '현재 설정 저장'으로 남긴 프리셋의 본문 제목 170%가 새 작업 3개(956a·5682·d29a)에 똑같이 붙어 렌더 본문 제목이 116px(기본 68px)로 나왔다.
+        //   이 값들은 그 작업의 문장 길이에 맞춘 미세조정이라 작업마다 다르다 — 취향(글꼴·색·꾸밈·칸 배치·색톤)만 되살린다. 작업별 값은 서버 저장본이 갖고 온다.
+        for(const [name,map] of Object.entries({colors:colorOverrides,fixedLayouts,fixedColors}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         if(!query.has('preset')&&!query.has('mode')){
           modeBar.querySelector(`[data-template-mode="${saved.mode==='continuous'?'continuous':'story'}"]`).click();
           const index=rows.findIndex(p=>p.id===saved.presetId);if(index>=0)selectPreset(index);
