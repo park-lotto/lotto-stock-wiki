@@ -883,7 +883,7 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
                 plan, segs, runout, plan[-1].get("playback_speed", 1.0))
         return plan
     _phrase_plan = None
-    if beat.get("phrase_sync"):          # 구절맞춤 켬 = 구절이 ✋보다 우선(화면과 같은 규칙)
+    if beat.get("phrase_sync") and not _cr:   # 구절맞춤 켬 = 구절이 ✋보다 우선(화면과 같은 규칙). 컷 리듬 칸은 홀드가 우선
         _phrase_plan = _plan_phrase_clips(beat, segs, tts_dur)
     if _phrase_plan:
         plan = _phrase_plan
