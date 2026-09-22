@@ -118,9 +118,19 @@
     if(!MIX_JOB){status().textContent='영상의 음성·장면을 먼저 준비해 주세요.';return;}
     jobId=MIX_JOB;status().textContent='실제 제목과 자막을 불러오는 중…';
     try{
+      // ★제목·소제목은 **누르지 않아도 들어가 있어야 한다**(2026-09-22 사장님:
+      //   "그냥 자동화가 되는 과정이야 눌러야 되는 거 없이 처음에 배치까지 잘 되야 하는 거야").
+      //   진입할 때 loadHeadcopySuggest가 후보를 자동으로 뽑아 window._hcCopies에 담아 둔다.
+      //   여기서 그 1번을 대비책으로 쓴다 — 옛 꾸미기(produce.html frPick)가 이미 쓰는
+      //   `hcText.value || _hcFirstCopy()`와 **같은 규칙**이다(0순위-B: 같은 판단을 두 벌로 두지 않는다).
+      //   안 쓰면 서버가 첫 나레이션을 제목에 넣어 "아니 텀블러이 / 있다고?"가 나온다(실측).
+      const fallbackCopy=(typeof _hcFirstCopy==='function'&&_hcFirstCopy())||'';
+      const fallbackSubline=(typeof _hcPickedSubline==='function'&&_hcPickedSubline())
+                          ||(typeof _hcFirstSubline==='function'&&_hcFirstSubline())||'';
       const params=new URLSearchParams({
-        headcopy_text:STATE.headcopy?.text||'',
-        headcopy_subline:STATE.headcopy?.subline||document.getElementById('frTitle')?.value||'',
+        headcopy_text:STATE.headcopy?.text||fallbackCopy||'',
+        headcopy_subline:STATE.headcopy?.subline||fallbackSubline
+                        ||document.getElementById('frTitle')?.value||'',
         copy_family:STATE.headcopy?.copy_family||STATE.script_copy_family||''
       });
       const response=await fetch('/api/produce/scene-style/context/'+encodeURIComponent(jobId)+'?'+params);
