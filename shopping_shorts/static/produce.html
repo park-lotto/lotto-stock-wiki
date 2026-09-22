@@ -15970,6 +15970,7 @@ async function renderFinal(){
   // '체크했는데 안 붙었다'가 난다(저장 실패를 아무도 모른다).
   // ★자막제거 정본(2026-09-22): 스위치가 켜진 계정만. 바뀐 장면이 있을 때만 초수·크레딧을 알리고 확인받는다.
   //   나머지 장면은 4단계에서 지운 결과를 그대로 쓰므로 추가 과금이 없다. 실패하면 조용히 통과(렌더는 막지 않는다).
+  let _skipClean=false;
   try{
     const cbp=await (await fetch('/api/produce/mix/clean_base_preview/'+encodeURIComponent(MIX_JOB))).json();
     if(cbp && cbp.enabled && cbp.base){
@@ -15977,12 +15978,17 @@ async function renderFinal(){
       if(n>0){
         const secs=(cbp.uncovered||[]).reduce((a,u)=>a+(u.seconds||0),0)+(cbp.extend||[]).reduce((a,e)=>a+(e.need||0),0);
         const msg='바뀐 장면 '+n+'개('+secs.toFixed(1)+'초)만 자막제거를 다시 합니다'+(cbp.est_credits!=null?(' — 약 '+cbp.est_credits+'크레딧'):'')+'.\n나머지 장면은 지운 결과를 그대로 씁니다(추가 과금 없음).\n\n계속할까요?';
-        if(!confirm(msg)){ clearInterval(_rfTimer); _finalRenderRestore('렌더를 취소했어요'); return; }
+        if(!confirm(msg)){
+          // ★사장님(2026-09-22): "자막제거 안 하고 렌더할 수는 없나" — 두 번째 선택지. 바뀐 장면은 원본 자막이 남을 수 있다.
+          const skip=confirm('자막제거 없이 그냥 렌더할까요?\n바뀐 장면 '+n+'개에는 원본 자막이 남을 수 있어요(추가 과금 없음).\n\n[확인] 그냥 렌더 / [취소] 렌더 안 함');
+          if(!skip){ clearInterval(_rfTimer); _finalRenderRestore('렌더를 취소했어요'); return; }
+          _skipClean=true;
+        }
       }
     }
   }catch(_){}
   const _intro = !!(document.getElementById('thumbIntro')||{}).checked;
-  const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB, thumb_intro:_intro})});
+  const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB, thumb_intro:_intro, skip_clean:_skipClean})});
   const d=await r.json().catch(()=>({ok:false}));
   if(!r.ok||!d.ok){ _finalRenderRestore('❌ 렌더 시작 실패'); document.getElementById('finalVideo').innerHTML=''; return; }
   setMixPoll(pollFinal,3000); pollFinal();
