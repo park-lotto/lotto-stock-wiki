@@ -44,9 +44,12 @@ def call_claude(model, prompt, schema):
         import subprocess
         cli_model = "opus" if "opus" in model else "sonnet"
         # ★프롬프트는 표준입력으로 — 명령 인자로 넘기면 길이에 잘려 빈 답이 온다(실측 2026-09-22: 두 모델 다 0줄)
+        # ★프로젝트 폴더에서 부르면 CLAUDE.md·훅이 붙어 "JSON을 전달했습니다" 같은 요약만 돌아온다(실측) → 빈 임시 폴더에서 부른다
+        import tempfile
+        neutral = tempfile.mkdtemp(prefix="claude_match_")
         p = subprocess.run(["claude", "-p", "--model", cli_model, "--output-format", "text"],
-                           input=prompt + "\n\nJSON만 답하라(설명 없이). 스키마: " + json.dumps(schema, ensure_ascii=False),
-                           capture_output=True, text=True, encoding="utf-8", timeout=420)
+                           input=prompt + "\n\n답은 오직 JSON 객체 하나. 앞뒤 설명·마크다운 금지. 스키마: " + json.dumps(schema, ensure_ascii=False),
+                           capture_output=True, text=True, encoding="utf-8", timeout=420, cwd=neutral)
         txt = p.stdout
         if not (txt or "").strip():
             print("  claude CLI 빈 답:", (p.stderr or "")[:200], file=sys.stderr)
@@ -59,14 +62,23 @@ def main():
     ap.add_argument("--input", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--models", default="gemini-3.1-flash-lite,gemini-3.5-flash,gemini-3.6-flash,claude-sonnet-5,claude-opus-5")
+    ap.add_argument("--from-picks", default="", help="이미 받은 picks.json으로 표만 다시(모델 호출 0회)")
     a = ap.parse_args()
     d = json.load(open(a.input, encoding="utf-8"))
     lines, idx, bb = d["lines"], d["seg_index"], d["backbone_vid"]
     prompt, schema = build_prompt(lines, idx, bb)
-    from google import genai
-    gclient = genai.Client(vertexai=True, project=PROJECT, location="global")
     results = {}
-    for model in [x.strip() for x in a.models.split(",") if x.strip()]:
+    if a.from_picks:
+        for m, r in json.load(open(a.from_picks, encoding="utf-8")).items():
+            results[m] = {"picks": {int(k): tuple(v) for k, v in r["picks"].items()}, "sec": r.get("sec", 0), "error": None}
+    from google import genai
+    gclient = genai.Client(vertexai=True, project=PROJECT, location="global") if not a.from_picks else None
+    todo = [x.strip() for x in a.models.split(",") if x.strip()]
+    if a.from_picks:
+        todo = todo if a.models != ap.get_default("models") else []   # --models를 명시하면 그 모델은 다시 부른다(덮어씀)
+    for model in todo:
+        if gclient is None and not model.startswith("claude"):
+            gclient = genai.Client(vertexai=True, project=PROJECT, location="global")
         t0 = time.time()
         try:
             out = call_claude(model, prompt, schema) if model.startswith("claude") else call_gemini(gclient, model, prompt, schema)
@@ -80,8 +92,9 @@ def main():
                 pass
         results[model] = {"picks": picks, "sec": round(time.time() - t0, 1), "error": out.get("error")}
         print("%-24s %5.1f초 %s" % (model, results[model]["sec"], out.get("error") or ("줄 %d개 응답" % len(picks))))
-    json.dump({m: {"picks": {str(k): v for k, v in r["picks"].items()}, "sec": r["sec"]} for m, r in results.items()},
-              open(os.path.splitext(a.out)[0] + ".picks.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    if results:
+        json.dump({m: {"picks": {str(k): v for k, v in r["picks"].items()}, "sec": r["sec"]} for m, r in results.items()},
+                  open(os.path.splitext(a.out)[0] + ".picks.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     clipdir = os.path.join(os.path.dirname(os.path.abspath(a.out)), "clips")
     def clip_tag(c):
         f = os.path.join(clipdir, c + ".mp4")
