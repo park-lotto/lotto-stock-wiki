@@ -594,8 +594,8 @@ body.is-admin .admin-only{display:block}
       <!-- ⚡12시간 탭 제거(2026-09-14 사장님 "12시간을 빼는게 좋겠다") — 썰 470채널 중 12h 게시 22채널뿐이라 늘 빈약 -->
       <!-- ★베스트(2026-09-15 사장님 "탭 맨앞에 하나 만들고 24·48시간·이번주·이번달에서 제일 괜찮은거 중복없이").
            네 기간을 따로 불러 기간마다 상위만 뽑아 합친다 — 같은 영상은 한 번만(shortcode). -->
-      <div class="tab active" data-span="-2" title="24시간·48시간·이번 주·이번 달에서 기간마다 조회수 상위만 뽑아 겹치지 않게 모았습니다">🏅 베스트</div>
-      <div class="tab" data-span="0" data-hours="24" title="마지막 수집 회차 중 올라온 지 24시간 이내인 것만 — 하루치 신선한 것을 봅니다(발행시각을 모르는 플랫폼은 수집 기준)">🔆 24시간 히트작</div>
+      <div class="tab" data-span="-2" title="24시간·48시간·이번 주·이번 달에서 기간마다 조회수 상위만 뽑아 겹치지 않게 모았습니다">🏅 베스트</div>
+      <div class="tab active" data-span="0" data-hours="24" title="마지막 수집 회차 중 올라온 지 24시간 이내인 것만 — 하루치 신선한 것을 봅니다(발행시각을 모르는 플랫폼은 수집 기준)">🔆 24시간 히트작</div>
       <div class="tab" data-span="0" data-hours="48" title="마지막 수집 회차 중 올라온 지 48시간 이내인 것만 — 빠르게 터지는 것을 봅니다(발행시각을 모르는 플랫폼은 수집 기준)">🆕 48시간 히트작</div>
       <div class="tab" data-span="7" title="최근 7일 수집분 중 댓글 500개 넘은 것 — 이미 받아둔 데이터라 새로 긁지 않습니다">🔥 이번 주 터진 것</div>
       <div class="tab" data-span="30" title="최근 30일 중 댓글 1000개 넘은 것">👑 이번 달 명예의전당</div>
@@ -609,13 +609,13 @@ body.is-admin .admin-only{display:block}
     </div>
     <div class="tabs" id="tabs">
       <span class="tab-grp">강도 지표</span>
-      <div class="tab active" data-tab="comments" title="오늘 늘어난 조회수(직전 수집 대비 증가분) 순 — 매일 순위가 바뀝니다">📊 전체</div>
+      <div class="tab" data-tab="comments" title="오늘 늘어난 조회수(직전 수집 대비 증가분) 순 — 매일 순위가 바뀝니다">📊 전체</div>
       <div class="tab" data-tab="speed" title="댓글 ÷ 경과시간 — 올라온 뒤 시간당 평균 몇 개씩 댓글이 붙었는지. ★지금 이 순간의 속도가 아니라 게시 후 누적 평균입니다">⚡ 시간당댓글</div>
       <div class="tab" data-tab="density" title="댓글 ÷ 조회수 — 본 사람 100명 중 몇 명이 댓글을 달았는지. 조회수가 작아도 반응이 뜨거우면 상위권">💥 조회수당댓글</div>
       <div class="tab" data-tab="fan_density" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 얼마나 뜨거웠는지. 작은 채널의 대박을 잡는 눈(조회수당댓글과 보는 게 다릅니다)">🙌 팔로워당댓글</div>
       <span class="tab-div"></span>
       <span class="tab-grp">단순 지표</span>
-      <div class="tab" data-tab="recent" title="최근에 올라온 순 — 발행 시각이 새로운 것부터">🕒 최신순</div>
+      <div class="tab active" data-tab="recent" title="최근에 올라온 순 — 발행 시각이 새로운 것부터">🕒 최신순</div>
       <div class="tab" data-tab="rawcomments" title="댓글 수가 많은 순 (절대값)">💬 댓글순</div>
       <div class="tab" data-tab="followers" title="채널 팔로워(구독자)가 많은 순">👥 팔로워순</div>
       <div class="tab" data-tab="views" title="조회수가 많은 순">👁 조회수순</div>
@@ -821,7 +821,7 @@ const TOPIC_CTYPE = {홈템:"홈템", 가전:"홈템", 레시피:"비법형", �
 //   오용형 83건이 실재한다. 같이 숨기면 그 352건이 버튼으로는 못 찾게 된다.
 const CTYPE_HIDDEN = {instagram:["썰쇼핑", "장비템", "차량템"],
                       threads:["썰쇼핑", "장비템", "차량템"]};
-let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:"", style:"",
+let STATE = {items:[], tab:"recent", ctype:"썰쇼핑", cat:"전체", q:"", style:"",
              // 뱃지 필터(2026-09-10) — 지난번 고른 것을 기억한다. 읽기 실패는 '전체'로.
              grade:(function(){ try{ return localStorage.getItem('refGrade') || ''; }catch(e){ return ''; } })(),
              trend:'',
@@ -907,7 +907,8 @@ let LENS_LOCALES_OFF = new Set();   // 꺼둔 것만 저장한다(새 나라가 
    ⚠️ 나라 목록은 서버(/api/lens/locales)가 준다. 여기 **키만** 적는다 — 목록 자체를
       하드코딩하면 서버 env를 바꿨을 때 어긋난다(0순위-B). 서버에 새 나라가 늘면
       그 나라는 이 목록에 없으니 자동으로 '꺼짐'으로 시작한다(비용이 조용히 늘지 않는다). */
-const LENS_LOCALES_DEFAULT_ON = ['ko:kr'];   // 한국만
+// ★2026-09-22 사장님 "이 값을 기본값으로"(모든 고객): 미국+중국. 이미 칩을 만진 사람은 저장값이 우선한다.
+const LENS_LOCALES_DEFAULT_ON = ['en:us', 'zh-cn:tw'];
 function _loadLensLocalesOff(){
   const raw = (()=>{ try{ return localStorage.getItem('ss_lens_loc_off'); }catch(e){ return null; } })();
   if(raw !== null){
@@ -5303,7 +5304,11 @@ async function commitScene(){
   finally{ btn.disabled = false; btn.textContent = '💾 라이브러리에 저장'; }
 }
 
-renderCtypes(); renderCats(); renderStyles(); renderFilterButtons(); loadLast(); loadRefAdded(); updatePlatformCopy(PLATFORM);
+// ★첫 화면 기본값(2026-09-22 사장님, 모든 고객): 유튜브 · 24시간 히트작 · 최신순 · 썰쇼핑 · 채널당 2개.
+//   기간·정렬은 위 HTML의 active, 카테고리는 STATE.ctype. 플랫폼은 **사람이 누를 때와 같은 길**(switchPlatform)로
+//   연다 — PLATFORM만 바꾸면 패널 표시·지표탭 숨김이 인스타 상태로 남는다(0순위-B).
+renderStyles(); renderFilterButtons(); loadRefAdded();
+switchPlatform('youtube', document.querySelector('#platformTabs .ctype[data-platform="youtube"]'));
 initLensLocales();   // 🔍 렌즈 검색국가 칩(2026-08-22) — 서버 목록을 받아 줄을 띄운다
 
 // ── 관리자(사장님 cid0) 전용 운영버튼(2026-07-22) ──
