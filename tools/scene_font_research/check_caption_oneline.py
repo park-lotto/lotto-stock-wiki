@@ -52,6 +52,19 @@ with sync_playwright() as p:
     s2 = snap()
     need(s2.get(k1, {}).get('look') == 3 and s2.get(k2, {}).get('look') == 3, f"② [모든 장면]: 2·3장면 모두 모양 3 ({s2.get(k1)} / {s2.get(k2)})")
     pg.screenshot(path=str(out / 'look_scope.png'))
+    # ③ 훅 화면 보조 제목(흰 띠, 20/22자)도 두 줄로 꺾이지 않는다 — 사장님 "여기도 한 포인트 작게 하니까 맞는다"
+    CTX2 = dict(CTX); CTX2['text'] = {"channel": "숏템메이커", "hook1": "생일날 없으면 난리", "hook2": "주문 폭주 케이크", "bodyTitle": "이 케이크만 보면 애들이 멈추는 이유", "supportTitle": "이 케이크만 보면 애들이 멈추는 이유"}
+    pg.evaluate('([c])=>window.sceneStyle.load(c,null)', [CTX2]); pg.evaluate('()=>window.sceneStyle.show(0)'); pg.wait_for_timeout(500)
+    T = CAP.replace('[data-edit-bind="caption"]', '[data-edit-bind="bodyTitle"]')
+    sub = pg.evaluate(T); pg.screenshot(path=str(out / 'hook_subtitle.png'), clip={'x': 585, 'y': 255, 'width': 320, 'height': 575})
+    need(sub and sub['lines'] == 1, f"③ 훅 보조 제목 20자가 한 줄 (lines {sub and sub['lines']}, font {sub and sub['font']}, fit {sub and sub['fit']})")
+    # 보조 제목을 130%로 키워도(사장님 화면처럼 꺾이는 조건) 한 줄
+    plus2 = pg.query_selector('[data-field-key="bodyTitle"] [data-font-step="0.1"]')
+    need(plus2 is not None, '③ 보조 제목 크기 [+] 버튼을 찾았다')
+    if plus2:
+        for _ in range(3): plus2.evaluate('e=>e.click()'); pg.wait_for_timeout(120)
+        pg.wait_for_timeout(400); sub2 = pg.evaluate(T); pg.screenshot(path=str(out / 'hook_subtitle_130.png'), clip={'x': 585, 'y': 255, 'width': 320, 'height': 575})
+        need(sub2 and sub2['lines'] == 1 and sub2['fit'] and int(sub2['fit']) < 100, f"③ 130%: 보조 제목이 꺾이지 않고 줄어들어 한 줄 (lines {sub2 and sub2['lines']}, font {sub2 and sub2['font']}, fit {sub2 and sub2['fit']}) — 고치기 전엔 2줄")
     b.close()
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')
 sys.exit(1 if fails else 0)
