@@ -8917,6 +8917,24 @@ def api_share_v(request: Request, sid: str, dl: int = 0):
     return _mp4_range_response(job["video_path"], request)
 
 
+@app.api_route("/api/share/e/{sid}", methods=["GET", "HEAD"])
+def api_share_e(request: Request, sid: str):
+    """Buffer가 가져가는 **캡컷 편집본** 공개 주소(/api/share/v와 같은 단축 id·만료).
+
+    ★완성본 상태(_video_gone_reason)는 보지 않는다 — 예약 뒤 고객이 다시 렌더해도
+      이미 예약한 게시물은 그때 고른 편집본을 가져가야 한다(edited_video 머리말).
+    """
+    from shopping_shorts import edited_video
+    sid = sid[:-4] if sid.endswith(".mp4") else sid
+    job_id = _share_get(sid)
+    if not job_id:
+        return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
+    p = edited_video.served_path(_MIX_WORK_DIR / os.path.basename(job_id))
+    if not p:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집본이 정리됐어요"})
+    return _mp4_range_response(p, request)
+
+
 def _selected_thumb_path(job):
     """6단계에서 고른 최종 썸네일(thumbnail_json.selected)의 실제 파일 경로. 없으면 None.
 
@@ -9061,8 +9079,14 @@ async def api_buffer_schedule(request: Request):
     #   받아보다가 못 읽으면 "Video could not be read from its URL"로 거절하는데,
     #   렌더 시점에만 처리하면 **그 전에 만든 완성본**이 영영 안 올라간다.
     #   이미 앞에 있으면 아무 일도 안 한다(무해·즉시).
+    # ★캡컷 편집본이 있으면 그걸 보낸다(2026-09-22). 고르는 판단은 edited_video 한 곳이고,
+    #   화면이 source="final"을 보내면 원본 완성본을 쓴다.
+    from shopping_shorts import edited_video
+    use_edited = (str(body.get("source") or "") != "final"
+                  and edited_video.active_path(_MIX_WORK_DIR / job_id) is not None)
     try:
-        mix_pipeline.ensure_faststart(job["video_path"])
+        if not use_edited:
+            mix_pipeline.ensure_faststart(job["video_path"])
     except Exception as e:         # 실패해도 예약은 시도한다(원본은 그대로다) — 단 조용히 넘기지 않는다
         logging.getLogger("buffer").warning(
             "faststart 보장 실패 job=%s: %s", job_id, type(e).__name__)
@@ -9074,7 +9098,7 @@ async def api_buffer_schedule(request: Request):
     if base.startswith("http://"):
         base = "https://" + base[len("http://"):]
     # ★.mp4를 붙인다 — 확장자로 종류를 판단하는 수집기가 있다(라우트가 떼고 읽는다).
-    video_url = f"{base}/api/share/v/{sid}.mp4"
+    video_url = f"{base}/api/share/{'e' if use_edited else 'v'}/{sid}.mp4"
 
     out = []
     for cid_ in chans:
@@ -9092,7 +9116,66 @@ async def api_buffer_schedule(request: Request):
             out.append({"channel_id": cid_, "ok": True, "post_id": r["id"], "due_at": r["dueAt"]})
         except buffer_api.BufferError as e:
             out.append({"channel_id": cid_, "ok": False, "error": str(e)})
-    return {"ok": any(x["ok"] for x in out), "results": out, "video_url": video_url}
+    return {"ok": any(x["ok"] for x in out), "results": out, "video_url": video_url,
+            "source": "edited" if use_edited else "final"}
+
+
+@app.get("/api/mix/edited/{job_id}")
+def api_mix_edited_get(job_id: str, request: Request):
+    """캡컷 편집본 상태. {ok, edited: null | {name,size,duration,uploaded_at,stale}}"""
+    from shopping_shorts import edited_video
+    safe = os.path.basename(job_id)
+    job = Store(DB_PATH).get_mix_job(safe)
+    if not job or int(job.get("customer_id") or 0) != _cid(request):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요."})
+    return {"ok": True, "edited": edited_video.read_meta(_MIX_WORK_DIR / safe)}
+
+
+@app.post("/api/mix/edited/{job_id}")
+async def api_mix_edited_upload(job_id: str, request: Request, file: UploadFile = File(...)):
+    """✂️ 캡컷에서 고친 영상을 올린다 → Buffer 예약이 이걸 보낸다(2026-09-22 사장님).
+
+    ★내 작업만(남의 job_id에 끼워 넣으면 남의 SNS 예약 영상이 바뀐다).
+    ★ffprobe로 영상인지 보고, faststart까지 해서 둔다(edited_video.save).
+    """
+    from shopping_shorts import edited_video
+    safe = os.path.basename(job_id)
+    job = Store(DB_PATH).get_mix_job(safe)
+    if not job or int(job.get("customer_id") or 0) != _cid(request):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요."})
+    data = await file.read()
+    meta, err = await run_in_threadpool(
+        edited_video.save, _MIX_WORK_DIR / safe, data, file.filename,
+        mix_pipeline.ensure_faststart)
+    if err:
+        return JSONResponse(status_code=400, content={"ok": False, "error": err})
+    return {"ok": True, "edited": meta}
+
+
+@app.delete("/api/mix/edited/{job_id}")
+def api_mix_edited_delete(job_id: str, request: Request):
+    """편집본을 지우고 원래 완성본으로 되돌린다."""
+    from shopping_shorts import edited_video
+    safe = os.path.basename(job_id)
+    job = Store(DB_PATH).get_mix_job(safe)
+    if not job or int(job.get("customer_id") or 0) != _cid(request):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요."})
+    edited_video.remove(_MIX_WORK_DIR / safe)
+    return {"ok": True}
+
+
+@app.get("/api/mix/edited/{job_id}/video")
+def api_mix_edited_video(job_id: str, request: Request):
+    """화면 미리보기용(로그인·내 작업)."""
+    from shopping_shorts import edited_video
+    safe = os.path.basename(job_id)
+    job = Store(DB_PATH).get_mix_job(safe)
+    if not job or int(job.get("customer_id") or 0) != _cid(request):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요."})
+    p = edited_video.served_path(_MIX_WORK_DIR / safe)
+    if not p:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집본이 없어요."})
+    return _mp4_range_response(p, request)
 
 
 @app.get("/api/mix/export/{job_id}")
@@ -14128,6 +14211,7 @@ async def _auth_guard(request: Request, call_next):
             or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
             or path.startswith("/s/") or path.startswith("/api/share/v/")
+            or path.startswith("/api/share/e/")   # 캡컷 편집본(Buffer가 가져감, 2026-09-22)
             or path.startswith("/api/share/t/")
             or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")):
         return await call_next(request)

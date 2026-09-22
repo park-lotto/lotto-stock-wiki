@@ -3925,6 +3925,12 @@ def run_render(job_id, db_path, work_root):
         #   재인코딩이 아니라 -c copy 리멕스라 화질 손실도 시간도 거의 없다.
         #   ★여기 한 곳에서만 한다 — 완성본 경로를 DB에 박는 유일한 출구다(0순위-B).
         ensure_faststart(out_path)
+        # 새 완성본이 나왔다 — 캡컷 편집본은 옛 것을 고친 것이라 예약 기본값에서 뺀다.
+        try:
+            from shopping_shorts import edited_video
+            edited_video.mark_stale(Path(out_path).parent)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
