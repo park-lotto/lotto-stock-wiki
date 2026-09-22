@@ -36,6 +36,7 @@ _FLAT = re.compile(r"(있어|있어서|때문에|덕분에)\s*(편리|간편|좋
 _SUGGEST = re.compile(r"해 ?보세요|추천드려요|추천합니다|써 ?보세요|구매하세요")
 _QUOTE = re.compile(r"[\"“”'‘’]")
 _FOREIGN = re.compile(r"[A-Za-z]{3,}|[一-鿿]")
+_TALK = re.compile(r"(있지\?|있잖아|알지\?|해봐|들어봐|봐라|하지 마|말자|하자|냐\?|니\?|거야\?|지\?|잖아\?|봤어\?|었지\?|해 봐|해라)\s*$")   # 청자에게 말 거는 반말(사장님 09-22: 안 좋음)
 _SIGNALS = ["심지어", "게다가", "거기다", "무엇보다", "대박인 건", "이게 말도 안 되는게", "이게 말도 안 되는 게",
             "진짜 미친 포인트는", "근데 진짜 미친 포인트는", "이게 미친 포인트인게", "충격적인 건",
             "진짜 충격적인 포인트는", "근데 진짜 충격적인 포인트는", "진짜 말도 안 되는게", "진짜 대박인 건"]
@@ -91,6 +92,7 @@ def measure(lines):
         "quote": [l for l in lines if _QUOTE.search(re.sub(r"댓글에\s*[\"“”'‘’][^\"“”'‘’]{1,8}[\"“”'‘’]", "", l))],   # CTA 낱말 따옴표는 대사가 아니다
         "foreign": [l for l in lines if _FOREIGN.search(l)],
         "dup_signal": dup_sig,
+        "talk": [l for l in lines if _TALK.search(l.strip())],
     }
 
 
@@ -144,7 +146,7 @@ def run_live(n, jobs, seconds):
 
 
 def report(rows, html=None):
-    print("\n%-13s %-4s | %-22s %-5s | %-4s %-22s %-5s %-4s | 뒤섞임 설명문 권유 신호중복 따옴표" % (
+    print("\n%-13s %-4s | %-22s %-5s | %-4s %-22s %-5s %-4s | 뒤섞임 설명문 권유 신호중복 따옴표 청자반말" % (
         "job", "씨앗", "씨앗 어미(존/반/연/기)", "의태", "결과", "결과 어미(존/반/연/기)", "의태", "어절/줄"))
     tot = collections.Counter()
     for r in rows:
@@ -159,17 +161,17 @@ def report(rows, html=None):
         for d in r["drafts"]:
             m = d["m"]
             tone_flip = _tone(s) != "불명" and _tone(m) != "불명" and _tone(s) != _tone(m)
-            flags = "%s %s %s %s %s" % (
+            flags = "%s %s %s %s %s %s" % (
                 ("★줄%s" % (m["polite_lines"] if _tone(m) == "반말" else m["plain_lines"])) if m["mixed"] else "-",
-                len(m["flat"]) or "-", len(m["suggest"]) or "-", ",".join(m["dup_signal"]) or "-", len(m["quote"]) or "-")
+                len(m["flat"]) or "-", len(m["suggest"]) or "-", ",".join(m["dup_signal"]) or "-", len(m["quote"]) or "-", len(m.get("talk") or []) or "-")
             print("%-13s %-4s | %-22s %-5s | %-4s %-22s %-5s %-4s | %s%s" % (
                 r["job_id"], r["seed_platform"], e(s), s["mimetic_per100"], d["platform"], e(m), m["mimetic_per100"],
                 m["words_per_line"], flags, "  ★씨앗과 말투 다름(%s→%s)" % (_tone(s), _tone(m)) if tone_flip else ""))
             tot["drafts"] += 1
             tot["mixed"] += m["mixed"]; tot["flip"] += tone_flip; tot["flat"] += bool(m["flat"])
-            tot["suggest"] += bool(m["suggest"]); tot["dup"] += bool(m["dup_signal"]); tot["quote"] += bool(m["quote"])
-    print("\n합계: 대본 %d편 (실패 %d) · 말투 뒤섞임 %d · 씨앗과 말투 다름 %d · 설명문 %d · 권유 %d · 신호어 중복 %d · 따옴표 %d" % (
-        tot["drafts"], tot["fail"], tot["mixed"], tot["flip"], tot["flat"], tot["suggest"], tot["dup"], tot["quote"]))
+            tot["suggest"] += bool(m["suggest"]); tot["dup"] += bool(m["dup_signal"]); tot["quote"] += bool(m["quote"]); tot["talk"] += len(m.get("talk") or [])
+    print("\n합계: 대본 %d편 (실패 %d) · 말투 뒤섞임 %d · 씨앗과 말투 다름 %d · 설명문 %d · 권유 %d · 신호어 중복 %d · 따옴표 %d · 청자반말 줄 %d" % (
+        tot["drafts"], tot["fail"], tot["mixed"], tot["flip"], tot["flat"], tot["suggest"], tot["dup"], tot["quote"], tot["talk"]))
     if html:
         _html(rows, html)
         print("HTML:", html)
