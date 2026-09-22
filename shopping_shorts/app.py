@@ -19641,6 +19641,11 @@ def api_scene_style_asset(asset_path: str):
     allowed |= asset_path.startswith("shopping_shorts/static/fonts/") and candidate.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}
     if ".." in Path(asset_path).parts or "\\" in asset_path or not allowed or not candidate.is_relative_to(ROOT) or not candidate.is_file():
         return JSONResponse(status_code=404, content={"error": "파일 없음"})
+    # 글꼴은 내용이 바뀌면 파일명이 바뀐다(fonts/w2/ 변환본) — 1년 캐시. 실측(2026-09-22): 편집기가
+    # 글꼴 50개를 매번 서버에 다시 물어봐서 느렸다("서버는 왜 이렇게 느리지, 로컬은 잘 되는데").
+    # html/js/css는 그대로 no-cache(?v= 번호로 갱신).
+    if candidate.suffix.lower() in {".woff2", ".woff", ".ttf", ".otf"}:
+        return FileResponse(candidate, headers={"Cache-Control": "public, max-age=31536000, immutable"})
     return FileResponse(candidate, headers={"Cache-Control": "no-cache"})
 
 
