@@ -116,7 +116,8 @@ def test_render_seam_uses_pack(tmp_path):
     paths = mix_pipeline._resolve_sfx_paths(store, plan, 3, job=job)
     assert "_pack" in paths and not [k for k in paths if k != "_pack"]   # 자동 매칭분은 팩이 대신
     ev = va.sfx_events_for(_tl(), paths)
-    assert len(ev) >= 6 and all(os.path.isfile(p) for p, _ in ev)
+    assert len(ev) >= 6 and all(os.path.isfile(e[0]) for e in ev)
+    assert all(len(e) == 3 and e[2] > 1.0 for e in ev)      # 팩 보정배가 실린다
     # 스위치 꺼짐이면 종전 동작 그대로
     old = mix_pipeline._resolve_sfx_paths(_Store(on="", assets=store.assets), plan, 3, job=job)
     assert "_pack" not in old and old[0] == "auto.wav"

@@ -33,6 +33,10 @@ WHOOSH_LEAD = 0.035       # 첫 넘김: 휙이 넘김보다 먼저(8편 중앙)
 TICK_LAG = 0.07           # 첫 넘김: 틱이 넘김보다 뒤(12편 중앙)
 TARGET_PER_SEC = 1.1      # 실측 밀도(떡밥 1.19 · 시연 1.23 · 반전 1.12 · 마무리 1.06)
 CLICK2_EVERY = 12         # 기본값(휙) 자리 중 이 간격마다 딸깍딸깍(실측 시연 8%)
+# 팩 소리 보정(배) — 실렌더에서 목소리 대비 크기를 이븐쇼핑과 맞춘 값(tools/sfx_bench/render_check.py).
+#   기본 효과음 볼륨 60%만으로는 이븐쇼핑보다 약 8dB 작았다(휙 -10.6 vs -2.7dB). 7.0으로 올리니 7종 모두
+#   +2.4~2.8dB 컸다(나레이션 차감 잔여로 잰 값) → 4.3.
+PACK_GAIN_DB = 4.3
 
 _DUNG = re.compile(r"충격|말도\s*안|근데\s*이걸|근데\s*진짜|진짜는|종결급|반전")
 _DING = re.compile(r"변신|끝판왕|완벽|원상\s*복구|뚝딱|해결|99|%|새\s*(것|걸|거)|반짝|야무지|대박|떼돈|돈방석|"
@@ -185,7 +189,9 @@ def plan_events(timeline, manual_beats=()):
 
 
 def events(timeline, pack, manual_beats=()):
-    """[(경로, 절대초)] — sfx_events_for가 부른다. pack: resolve()의 결과."""
+    """[(경로, 절대초, 보정배)] — sfx_events_for가 부른다. pack: resolve()의 결과.
+    세 번째 칸(보정배)은 렌더·캡컷이 효과음 볼륨에 곱한다(없으면 1.0 — 종전 이벤트와 호환)."""
     if not pack or not pack.get("dir"):
         return []
-    return [(os.path.join(pack["dir"], slot + ".wav"), t) for slot, t, _ in plan_events(timeline, manual_beats)]
+    g = round(10 ** (PACK_GAIN_DB / 20), 4)
+    return [(os.path.join(pack["dir"], slot + ".wav"), t, g) for slot, t, _ in plan_events(timeline, manual_beats)]
