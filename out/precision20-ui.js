@@ -1012,6 +1012,8 @@
   }
   // 한 줄 규격(템플릿 max_lines 1)인 제목 줄이 꺾이거나 칸 밖으로 나가면 꺾이기 직전까지 줄인다. 글자 수 표 대신 실제 폭을 잰다 — 글꼴마다 폭이 달라 표는 어긋난다.
   function oneLineTitleLines(frame){
+    // ★훅 화면만(사장님 09-22 "보조 제목"). 본문 제목은 09-19 결정대로 3줄까지 허용 — 여기서 줄이면 칸(띠)은 2줄 높이로 남고 글자만 작아져 빈 띠가 생겼다(실측 job 956a, 170%).
+    if(frameKind()!=='hook')return;
     for(const ln of frame.lines||[]){
       if(ln.max_lines!==1||!['hook1','hook2','bodyTitle'].includes(ln.bind))continue;
       const el=layer.querySelector(`.precision-text[data-edit-bind="${ln.bind}"]`);if(!el)continue;
