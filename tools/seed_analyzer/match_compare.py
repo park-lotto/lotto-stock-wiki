@@ -43,10 +43,13 @@ def call_claude(model, prompt, schema):
     if txt is None:
         import subprocess
         cli_model = "opus" if "opus" in model else "sonnet"
-        p = subprocess.run(["claude", "-p", "--model", cli_model, "--output-format", "text",
-                            prompt + "\n\nJSON만 답하라(설명 없이). 스키마: " + json.dumps(schema, ensure_ascii=False)],
-                           capture_output=True, text=True, encoding="utf-8", timeout=300)
+        # ★프롬프트는 표준입력으로 — 명령 인자로 넘기면 길이에 잘려 빈 답이 온다(실측 2026-09-22: 두 모델 다 0줄)
+        p = subprocess.run(["claude", "-p", "--model", cli_model, "--output-format", "text"],
+                           input=prompt + "\n\nJSON만 답하라(설명 없이). 스키마: " + json.dumps(schema, ensure_ascii=False),
+                           capture_output=True, text=True, encoding="utf-8", timeout=420)
         txt = p.stdout
+        if not (txt or "").strip():
+            print("  claude CLI 빈 답:", (p.stderr or "")[:200], file=sys.stderr)
     m = re.search(r"\{.*\}", txt or "", re.S)
     return json.loads(m.group(0)) if m else {}
 
@@ -77,6 +80,12 @@ def main():
                 pass
         results[model] = {"picks": picks, "sec": round(time.time() - t0, 1), "error": out.get("error")}
         print("%-24s %5.1f초 %s" % (model, results[model]["sec"], out.get("error") or ("줄 %d개 응답" % len(picks))))
+    json.dump({m: {"picks": {str(k): v for k, v in r["picks"].items()}, "sec": r["sec"]} for m, r in results.items()},
+              open(os.path.splitext(a.out)[0] + ".picks.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    clipdir = os.path.join(os.path.dirname(os.path.abspath(a.out)), "clips")
+    def clip_tag(c):
+        f = os.path.join(clipdir, c + ".mp4")
+        return "<video src=clips/%s.mp4 muted autoplay loop playsinline style='height:170px;border-radius:4px;background:#000'></video><br>" % html.escape(c) if os.path.exists(f) else ""
     H = ["<meta charset=utf-8><style>body{font-family:sans-serif;font-size:13px;max-width:1600px;margin:16px auto}table{border-collapse:collapse;width:100%}"
          "td,th{border:1px solid #ccc;padding:6px;vertical-align:top}th{background:#f3f3f3}.bad{color:#c00}.why{color:#777;font-size:11px}.role{color:#36c;font-size:11px}</style>",
          "<h2>장면 매칭 모델 비교 · 같은 대본 8줄 · 컷 %d개</h2><table><tr><th style='width:260px'>대본</th>%s</tr>" % (
@@ -89,7 +98,7 @@ def main():
             for c in cuts:
                 v = idx.get(c)
                 cells.append("<span class=bad>%s (없는 컷)</span>" % html.escape(c) if not v else
-                             "<b>%s</b> [%s] %s <span class=why>%.1f초</span>" % (html.escape(v.get("vid") or ""), html.escape(v.get("role") or ""), html.escape((v.get("desc") or "")[:48]), v.get("secs", 0)))
+                             clip_tag(c) + "<b>%s</b> [%s] %s <span class=why>%.1f초</span>" % (html.escape(v.get("vid") or ""), html.escape(v.get("role") or ""), html.escape((v.get("desc") or "")[:48]), v.get("secs", 0)))
             H.append("<td>%s<div class=why>%s</div></td>" % ("<br>".join(cells) or ("<span class=bad>%s</span>" % html.escape(r.get("error") or "빈 답")), html.escape(why)))
         H.append("</tr>")
     H.append("</table>")
