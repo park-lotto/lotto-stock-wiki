@@ -10,13 +10,7 @@
 규칙(12편 실측):
   영상 시작 0.06초       오프너 1발 (12/12). 제목 칸 안에서는 다른 소리 없음.
   첫 칸 → 둘째 칸 넘김   휙(넘김 0.035초 전) + 틱(0.07초 뒤)  (틱 12/12, 휙 8/12)
-  그 뒤 자막 줄 교체마다  문구가 소리를 정한다:
-      둥   반전·강조("충격적인", "말도 안 되는", "근데 이걸", "진짜는", "종결급")
-      띠링 결과·감탄("변신", "끝판왕", "99.9%", "해결" …) · 마지막 칸 첫 줄
-      뽁   동작(action_dict — 넣어/발라/잘라 …)
-      나머지 기본값 자리 → DEFAULT_CYCLE
-  기본값 자리  휙·뽁·딸깍·틱을 DEFAULT_CYCLE 순서로 돌린다(한 가지만 반복하지 않게)
-  밀도  초당 약 1.1발(이븐쇼핑 실측). 넘치면 **기본값 자리부터** 고르게 뺀다(둥·띠링·동작 뽁은 남긴다).
+  그 뒤 자막 줄 교체마다  **그 칸의 역할**이 소리를 정한다(ROLE_GROUPS → GROUP_SOUNDS 표 하나).
 
 회원마다 팩 하나를 고정 배정한다(20종, 두 팩 사이 7칸 중 최소 4칸 다름) — 회원끼리 소리가 달라진다.
 켜는 조건: 관리자 설정 sfx_pack_enabled=1 **그리고** 2단계에서 **썰 대본**(오용형·제품정체형·발명품형 틀)을 고른 영상.
@@ -33,26 +27,70 @@ SLOTS = ("opener", "pop", "dung", "ding", "whoosh", "tick", "click2")
 OPENER_AT = 0.06          # 실측: 12편 전부 0.03~0.07초
 WHOOSH_LEAD = 0.035       # 첫 넘김: 휙이 넘김보다 먼저(8편 중앙)
 TICK_LAG = 0.07           # 첫 넘김: 틱이 넘김보다 뒤(12편 중앙)
-TARGET_PER_SEC = 1.1      # 실측 밀도(떡밥 1.19 · 시연 1.23 · 반전 1.12 · 마무리 1.06)
-# 특별한 문구가 없는 자막(기본값 자리)에 돌려 쓰는 순서 — 결정적(같은 대본=같은 결과).
-#   ★2026-09-22 라이브 실측: 기본값을 전부 휙으로 두니 한 편에서 휙 66%(이븐쇼핑 27%)·뽁 11%(32%)·틱 3%(13%)
-#     — "휙만 계속 난다"가 됐다. 이븐쇼핑 12편은 문구 규칙(둥·띠링·동작 뽁) 밖의 자리에도 휙·뽁·딸깍·틱을 섞는다.
-#     실측 비율(휙 77·뽁 90·틱 38·딸깍 24건)에서 문구로 정해지는 몫을 빼고 8칸 순환으로 맞췄다.
-DEFAULT_CYCLE = ("whoosh", "pop", "whoosh", "click2", "whoosh", "pop", "tick", "pop")
+
+# ★소리는 **대본 틀의 칸 역할**이 정한다(2026-09-22 사장님: "억지로 넣는 게 아니라 들어갈 수밖에 없는 구조").
+#   썰 대본은 틀(스파인)의 칸 역할대로 쓰이고, 그 역할이 곧 이븐쇼핑에서 소리를 가르던 문구 종류다
+#   ("이게 말도 안 되는 게"=limit → 둥 · "진짜 충격적인 포인트는"=twist → 둥 · 결과=more/benefit → 띠링 ·
+#    쓰는 법=solve/how/cases → 뽁·딸깍 · 떡밥=bait/fame → 휙). 단어 검색·순환·밀도 깎기는 없다.
+#   역할 이름은 틀마다 영어/한글이 섞여 있어 같은 구간끼리 묶는다(라이브 썰 대본 33편에서 나온 이름 전부).
+ROLE_GROUPS = {
+    "떡밥": ("bait", "fame", "story", "origin", "pain", "problem", "setup", "notice", "미끼", "상황 제시"),
+    "공개": ("reveal", "공개"),
+    "반박": ("limit", "대비"),
+    "시연": ("solve", "how", "demo", "cases", "escalate", "escalation", "고조", "기능 실증", "사용법 차별화", "제품 특징"),
+    "결과": ("more", "benefit"),
+    "반전": ("twist", "반전"),
+    "마무리": ("land", "cta", "마무리", "마무리 cta"),
+}
+# 구간별 소리 — **이븐쇼핑 12편 구간별 실측 건수 그대로**(짐작·반올림 없음). 순서는 _spread가 고르게 편다.
+RING_COUNTS = {
+    "떡밥": {"whoosh": 23, "pop": 21, "tick": 15, "ding": 10, "dung": 9, "click2": 3},     # 떡밥 100건
+    "시연": {"pop": 58, "whoosh": 29, "tick": 19, "click2": 17, "dung": 10, "ding": 10},  # 시연 202건
+    "반전": {"whoosh": 9, "pop": 9, "dung": 7, "ding": 3, "tick": 2, "click2": 2},        # 반전 43건
+    "마무리": {"whoosh": 12, "ding": 4, "pop": 2, "tick": 1, "click2": 1},                # 마무리 25건
+    "공개": {"whoosh": 4, "tick": 1, "dung": 1, "click2": 1},                             # 정체공개 12건
+}
+
+
+def _spread(counts, n=16):
+    """실측 건수 → 길이 n 순서. 각 소리가 제 비율만큼, 한 소리가 몰리지 않게 고르게 펴진다(결정적)."""
+    tot = sum(counts.values())
+    quota = {k: v * n / tot for k, v in counts.items()}
+    out, got = [], {k: 0 for k in counts}
+    for i in range(n):
+        k = max(counts, key=lambda x: (quota[x] * (i + 1) / n - got[x], counts[x]))
+        out.append(k); got[k] += 1
+    return tuple(out)
+
+
+RINGS = {g: _spread(c) for g, c in RING_COUNTS.items()}
+# 구간 → (칸 첫 자막에 고정되는 소리 또는 None, 나머지 자막이 도는 순서)
+#   첫 자막 고정은 **문구 종류가 소리를 정한 것만**(실측): 반전 "진짜 충격적인 포인트는"=둥 6/10 ·
+#   반박 "이게 말도 안 되는 게"=둥 · 결과("변신시켜버렸다는 거"·"끝판왕")=띠링.
+GROUP_SOUNDS = {
+    "떡밥": (None, "떡밥"),
+    "공개": (None, "공개"),
+    "반박": ("dung", "시연"),
+    "시연": (None, "시연"),
+    "결과": ("ding", "시연"),
+    "반전": ("dung", "반전"),
+    "마무리": (None, "마무리"),
+}
+DEFAULT_SOUNDS = (None, "떡밥")     # 표에 없는 역할
+_ROLE_TO_GROUP = {r: g for g, rs in ROLE_GROUPS.items() for r in rs}
+
+
+def sounds_for_role(role):
+    """칸 역할 → (첫 자막 고정 소리|None, 나머지가 도는 순서). 번호 붙은 역할("고조1")은 번호를 떼고 본다."""
+    r = re.sub(r"\d+$", "", str(role or "").strip().lower())
+    first, ring = GROUP_SOUNDS.get(_ROLE_TO_GROUP.get(r), DEFAULT_SOUNDS)
+    return first, RINGS[ring]
+
+
 # 팩 소리 보정(배) — 실렌더에서 목소리 대비 크기를 이븐쇼핑과 맞춘 값(tools/sfx_bench/render_check.py).
 #   기본 효과음 볼륨 60%만으로는 이븐쇼핑보다 약 8dB 작았다(휙 -10.6 vs -2.7dB). 7.0으로 올리니 7종 모두
 #   +2.4~2.8dB 컸다(나레이션 차감 잔여로 잰 값) → 4.3.
 PACK_GAIN_DB = 4.3
-
-# 둥 — 흐름을 꺾는 말. "심지어·하지만"은 2026-09-22 라이브 33편 실측에서 둥이 4%(이븐쇼핑 9.5%)라 보탰다.
-_DUNG = re.compile(r"충격|말도\s*안|근데\s*이걸|근데\s*진짜|진짜는|종결급|반전|심지어|하지만")
-_DING = re.compile(r"변신|끝판왕|완벽|원상\s*복구|뚝딱|해결|99|%|새\s*(것|걸|거)|반짝|야무지|대박|떼돈|돈방석|"
-                   r"매출|폭등|품절|난리|역대급|환장|감탄")
-# 동작(뽁) 보충 — 공용 action_dict에 없는데 이븐쇼핑 시연 자막에 뽁이 붙은 동사(실측 문구 예:
-#   "페이퍼로 칼을 감싸", "한쪽을 꺾어주면", "흔들어주면"). action_dict는 다른 기능도 쓰는
-#   통제어휘라 여기서만 보탠다.
-_POP_EXTRA = re.compile(r"감싸|꺾|흔들|달아|걸어|띄워|말아|쌓|집어|꽂아|돌리|채워|갈아|털어")
-
 
 def list_packs():
     """[(팩이름, 폴더)] — 7칸이 다 있는 팩만. 이름순 = 배정이 실행마다 같다."""
@@ -87,14 +125,18 @@ def pack_for(customer_id, override=None):
 def script_family(store, job):
     """이 job의 대본이 고른 틀(스파인)의 갈래 목록. 모르면 [].
 
-    job → 제작 작업(produce_works.job_id) → state.script_style_id(=2단계에서 고른 스파인 id,
-    app.py record_script_usage(spine_id=dr["style_id"])와 같은 값) → 스파인 fit_categories.
+    job.script_structure.script_style_id(없으면 제작 작업 produce_works.job_id → state.script_style_id)
+    = 2단계에서 고른 스파인 id(app.py record_script_usage(spine_id=dr["style_id"])와 같은 값) → fit_categories.
     """
-    try:
-        st = store.get_work_state_by_job((job or {}).get("job_id"))
-    except Exception:      # noqa: BLE001
-        return []
-    sid = (st or {}).get("script_style_id")
+    # ① job 자체에 박힌 번호(3단계 시작 때 produce.html이 script_structure에 싣는다 — 끊기지 않는다)
+    sid = ((job or {}).get("script_structure") or {}).get("script_style_id")         if isinstance((job or {}).get("script_structure"), dict) else None
+    # ② 옛 job(번호를 안 싣던 때)은 제작 기록에서 찾는다 — 기록이 지워졌으면 모른다(=끔)
+    if sid is None:
+        try:
+            st = store.get_work_state_by_job((job or {}).get("job_id"))
+        except Exception:      # noqa: BLE001
+            return []
+        sid = (st or {}).get("script_style_id")
     if sid is None or not str(sid).strip().isdigit():
         return []
     try:
@@ -130,29 +172,11 @@ def resolve(store, job):
     return {"name": got[0], "dir": got[1]} if got else None
 
 
-def classify(text):
-    """자막 한 줄 → 칸 이름(dung/ding/pop) 또는 None(=기본값 자리)."""
-    t = text or ""
-    if _DUNG.search(t):
-        return "dung"
-    if _DING.search(t):
-        return "ding"
-    if _POP_EXTRA.search(t):
-        return "pop"
-    try:
-        from shopping_shorts.action_dict import tag_action
-        if tag_action(t):
-            return "pop"
-    except Exception:      # noqa: BLE001
-        pass
-    return None
-
-
 def plan_events(timeline, manual_beats=()):
-    """[(칸, 절대초, 문구)] — 파일 경로 없이 '무엇을 언제'만. 테스트·검증이 이걸 본다.
+    """[(소리, 절대초, 자막)] — 파일 경로 없이 '무엇을 언제'만. 테스트·검증이 이걸 본다.
 
-    timeline: video_assemble._beat_timeline 결과. manual_beats: 사람이 고른 효과음이 있는
-    비트 번호 — 그 비트 안에는 팩 소리를 넣지 않는다(사람이 고른 것이 이긴다).
+    영상 시작 = 오프너 · 첫 칸→둘째 칸 넘김 = 휙+틱 · 그 뒤 자막 한 줄이 바뀔 때마다 그 칸 역할의 소리.
+    시각은 렌더 자막 함수(caption_schedule)에서 그대로 받는다. manual_beats(사람이 고른 칸)는 건너뛴다.
     """
     from shopping_shorts.video_assemble import caption_schedule
     tl = [b for b in (timeline or []) if float(b.get("dur") or 0) > 0]
@@ -164,36 +188,19 @@ def plan_events(timeline, manual_beats=()):
     if len(tl) >= 2 and tl[1]["beat_idx"] not in manual:
         t = float(tl[1]["t0"])
         ev += [("whoosh", max(0.0, t - WHOOSH_LEAD), ""), ("tick", t + TICK_LAG, "")]
-    last_idx = tl[-1]["beat_idx"]
-    body = []           # (칸 또는 None, 시각, 문구, 비트)
+    used = {}           # 순서별로 **영상 전체에서 이어 센다** — 칸마다 새로 세면 앞 몇 칸만 쓰인다(실측: 둥 19%)
     for bi, b in enumerate(tl):
         if bi == 0 or b["beat_idx"] in manual:
             continue    # 제목 칸 안은 오프너만(실측 12/12)
-        sched = caption_schedule(b)
-        for k, (seg, start, _end) in enumerate(sched):
+        first, ring = sounds_for_role(b.get("role"))
+        for k, (seg, start, _end) in enumerate(caption_schedule(b)):
             if bi == 1 and k == 0:
-                continue    # 첫 넘김은 휙+틱이 이미 맡았다
-            slot = classify(seg)
-            if slot is None and b["beat_idx"] == last_idx and k == 0:
-                slot = "ding"   # 마무리 칸 첫 줄
-            body.append([slot, start, seg, slot is None])   # 4번째 = 기본값 자리(밀도 조절 대상)
-    # 기본값 자리는 DEFAULT_CYCLE 순서로 돌린다 — 결정적(같은 대본이면 같은 결과)
-    d = 0
-    for row in body:
-        if row[0] is None:
-            row[0] = DEFAULT_CYCLE[d % len(DEFAULT_CYCLE)]
-            d += 1
-    # 밀도 맞추기: 초당 TARGET_PER_SEC를 넘으면 **기본값 자리**를 고르게 뺀다(둥·띠링·동작 뽁은 남긴다)
-    budget = int(round(TARGET_PER_SEC * max(0.0, total - float(tl[0]["dur"]))))
-    fixed = len(ev) + sum(1 for r in body if not r[3])
-    whooshes = [i for i, r in enumerate(body) if r[3]]
-    keep_n = max(0, budget - fixed)
-    if len(whooshes) > keep_n:
-        drop = len(whooshes) - keep_n
-        step = len(whooshes) / drop
-        gone = {whooshes[int(j * step + step / 2) % len(whooshes)] for j in range(drop)}
-        body = [r for i, r in enumerate(body) if i not in gone]
-    ev += [(r[0], r[1], r[2]) for r in body]
+                continue    # 첫 넘김은 휙+틱이 맡았다
+            if k == 0 and first:
+                ev.append((first, start, seg))
+            else:
+                n = used.get(ring, 0); used[ring] = n + 1
+                ev.append((ring[n % len(ring)], start, seg))
     ev = [e for e in ev if e[1] < total]
     ev.sort(key=lambda e: e[1])
     return ev

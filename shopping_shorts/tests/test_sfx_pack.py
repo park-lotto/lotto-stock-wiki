@@ -33,15 +33,15 @@ class _Store:
 def _tl():
     """제목 칸 + 본문 3칸 + 마무리 칸. 칸 안 자막은 caption_lines로 고정(2줄씩)."""
     rows = [
-        ("천재가 왜 게으른지 알수있는 제품", ["천재가 왜 게으른지", "알수있는 제품"], 1.6),
-        ("지금 해외 SNS에서 수억 조회수가 터지며", ["지금 해외 SNS에서", "수억 조회수가 터지며"], 2.4),
-        ("페이퍼로 칼을 감싸 버터를 썰어주면", ["페이퍼로 칼을 감싸", "버터를 썰어주면"], 2.4),
-        ("근데 진짜 충격적인 포인트는 여기부터", ["근데 진짜", "충격적인 포인트는 여기부터"], 2.4),
-        ("도마 접시 안 사고 이걸로 다 해결한다고", ["도마 접시 안 사고", "이걸로 다 해결한다고"], 2.4),
+        ("title", "천재가 왜 게으른지 알수있는 제품", ["천재가 왜 게으른지", "알수있는 제품"], 1.6),
+        ("bait", "지금 해외 SNS에서 수억 조회수가 터지며", ["지금 해외 SNS에서", "수억 조회수가 터지며"], 2.4),
+        ("how", "페이퍼로 칼을 감싸 버터를 썰어주면", ["페이퍼로 칼을 감싸", "버터를 썰어주면"], 2.4),
+        ("twist", "근데 진짜 충격적인 포인트는 여기부터", ["근데 진짜 충격적인", "포인트는 여기부터"], 2.4),
+        ("benefit", "도마 접시 안 사고 이걸로 다 해결한다고", ["도마 접시 안 사고", "이걸로 다 해결한다고"], 2.4),
     ]
     tl, t0 = [], 0.0
-    for i, (n, lines, d) in enumerate(rows):
-        tl.append({"beat_idx": i, "t0": t0, "dur": d, "narration": n, "caption_lines": lines,
+    for i, (role, n, lines, d) in enumerate(rows):
+        tl.append({"beat_idx": i, "t0": t0, "dur": d, "narration": n, "caption_lines": lines, "role": role,
                    "cap_durs": None, "cap_lead": 0.0, "cap_offset": 0.0})
         t0 += d
     return tl
@@ -74,6 +74,14 @@ def test_gate_is_the_chosen_script_not_the_frame():
     assert sfx_pack.resolve(_Store(style=999), frame_job) is None        # 없는 스파인 = 끔
 
 
+def test_style_id_saved_on_job_survives_deleted_work():
+    """실측 2026-09-22: 제작 기록이 지워지자 썰 대본인데 끔이 됐다 → job에 박힌 번호를 먼저 본다."""
+    job = {"job_id": "j9", "customer_id": 7, "deco": {}, "script_structure": {"script_style_id": 70}}
+    assert sfx_pack.resolve(_Store(style=None), job)                     # 제작 기록 없어도 켜짐
+    job12 = {**job, "script_structure": {"script_style_id": 12}}
+    assert sfx_pack.resolve(_Store(style=70), job12) is None             # job 번호가 우선(사회증거형=끔)
+
+
 def test_resolve_needs_admin_switch():
     job = {"job_id": "j1", "customer_id": 7, "deco": {}}
     assert sfx_pack.resolve(_Store(on=""), job) is None                  # 스위치 꺼짐 = 라이브 무변화
@@ -92,11 +100,11 @@ def test_events_follow_even_rules():
     # 첫 넘김: 휙이 먼저, 틱이 뒤
     assert ("whoosh", round(1.6 - 0.035, 3)) in [(s, round(t, 3)) for s, t, _ in ev]
     assert ("tick", round(1.6 + 0.07, 3)) in [(s, round(t, 3)) for s, t, _ in ev]
-    # 문구 규칙
+    # 칸 역할이 소리를 정한다(단어 검색 없음): 반전 칸 첫 자막=둥 · 결과 칸 첫 자막=띠링 · 시연 칸=시연 순서
     by_text = {txt: s for s, _, txt in ev if txt}
-    assert by_text.get("충격적인 포인트는 여기부터") == "dung"
-    assert by_text.get("이걸로 다 해결한다고") == "ding"
-    assert by_text.get("페이퍼로 칼을 감싸") == "pop"
+    assert by_text.get("근데 진짜 충격적인") == "dung"
+    assert by_text.get("도마 접시 안 사고") == "ding"
+    assert by_text.get("페이퍼로 칼을 감싸") in sfx_pack.RINGS["시연"]
     # 소리는 자막이 바뀌는 그 시각에 난다(렌더 자막 함수와 같은 값)
     starts = {round(st, 4) for b in tl for _, st, _ in va.caption_schedule(b)}
     for s, t, txt in ev:
@@ -105,15 +113,18 @@ def test_events_follow_even_rules():
     assert "opener" in slots
 
 
-def test_density_caps_whoosh_first():
-    tl, t0 = [], 0.0
-    for i in range(12):   # 휙만 나올 평범한 문구로 촘촘히
-        tl.append({"beat_idx": i, "t0": t0, "dur": 1.2, "narration": "평범한 문장 하나 둘",
-                   "caption_lines": ["평범한 문장", "하나 둘"], "cap_durs": None, "cap_lead": 0.0, "cap_offset": 0.0})
-        t0 += 1.2
-    ev = sfx_pack.plan_events(tl)
-    body = t0 - 1.2
-    assert len(ev) <= round(sfx_pack.TARGET_PER_SEC * body) + 1
+def test_rings_are_the_measured_even_counts():
+    """순서는 이븐쇼핑 구간별 실측 건수 그대로 — 16칸 안 비율이 실측 비율과 1칸 이내."""
+    from collections import Counter
+    for g, counts in sfx_pack.RING_COUNTS.items():
+        ring = sfx_pack.RINGS[g]; c = Counter(ring); tot = sum(counts.values())
+        for k, v in counts.items():
+            assert abs(c[k] - v * len(ring) / tot) <= 1.0, (g, k, c[k], v)
+
+
+def test_unknown_role_still_gets_sound():
+    assert sfx_pack.sounds_for_role("처음보는역할")[1] == sfx_pack.RINGS["떡밥"]
+    assert sfx_pack.sounds_for_role("고조3")[1] == sfx_pack.RINGS["시연"]    # 번호 뗀다
 
 
 def test_manual_beat_wins():
@@ -142,11 +153,11 @@ def test_no_single_sound_dominates():
     """2026-09-22 라이브 실측: 기본값을 전부 휙으로 두니 한 편에서 휙 66%(이븐쇼핑 27%)."""
     tl, t0 = [], 0.0
     for i in range(10):
-        tl.append({"beat_idx": i, "t0": t0, "dur": 3.0, "narration": "평범한 문장 하나 둘 셋",
+        tl.append({"beat_idx": i, "t0": t0, "dur": 3.0, "narration": "평범한 문장 하나 둘 셋", "role": "bait",
                    "caption_lines": ["평범한 문장", "하나 둘", "셋 넷"], "cap_durs": None, "cap_lead": 0.0, "cap_offset": 0.0})
         t0 += 3.0
     from collections import Counter
     c = Counter(s for s, _, _ in sfx_pack.plan_events(tl))
     total = sum(c.values())
     assert max(c.values()) / total <= 0.5, c
-    assert {"whoosh", "pop", "click2", "tick"} <= set(c)
+    assert {"whoosh", "pop", "tick"} <= set(c)
