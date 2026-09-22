@@ -1007,7 +1007,16 @@
       if(paint.top)layer.querySelectorAll('[data-edit-bind="channel"]').forEach(el=>{if(el.style.background||el.style.backgroundColor)el.style.background=paint.top;});
     }
     if(hasEditableCaption())renderCaption(frame);
+    oneLineTitleLines(frame);   // ★09-22 사장님: 보조 제목도 "한 포인트 작게 하니까 맞는다" — 한 줄 규격 제목 줄(훅 1·2줄, 보조 제목)도 같은 규칙
     syncMediaLayout();
+  }
+  // 한 줄 규격(템플릿 max_lines 1)인 제목 줄이 꺾이거나 칸 밖으로 나가면 꺾이기 직전까지 줄인다. 글자 수 표 대신 실제 폭을 잰다 — 글꼴마다 폭이 달라 표는 어긋난다.
+  function oneLineTitleLines(frame){
+    for(const ln of frame.lines||[]){
+      if(ln.max_lines!==1||!['hook1','hook2','bodyTitle'].includes(ln.bind))continue;
+      const el=layer.querySelector(`.precision-text[data-edit-bind="${ln.bind}"]`);if(!el)continue;
+      fitOneLine(el,fontScales.get(scaleKey(ln.bind))||1);
+    }
   }
   // 채널명 칸(빠른 조절) — 썰쇼핑형·고정형 모두 적용. renderEdit 끝에서 한 번 부른다.
   function applyChannelSlot(frame,p){
@@ -1195,16 +1204,17 @@
     Object.assign(text.style,{left:(x+2)+'%',right:'auto',width:Math.max(1,w-4)+'%',top:y+'%',height:h+'%',transform:'none',display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'pre-wrap',lineHeight:'1.15',color:settings.color});
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
     if(capLook?.text)Object.assign(text.style,capLook.text);
-    oneLineCaption(text,fontScales.get(scaleKey('caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다
+    fitOneLine(text,fontScales.get(scaleKey('caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다
   }
   // ★09-22 사장님: 자막이 살짝 커져 두 줄로 꺾이면 "두 포인트 줄이니까 한 줄에 들어간다" → 자막은 한 줄 규격이므로
   //   손으로 키운 크기든 기본이든 **꺾이기 직전까지만** 4%씩 줄인다(바닥 70%). 바닥까지 줄여도 안 들어가면 원래 크기로 두고
   //   줄바꿈을 허용한다(긴 문장은 두 줄이 낫다). 사용자가 직접 줄바꿈(Enter)한 자막은 건드리지 않는다. 렌더러도 같은 코드라 MP4가 화면과 같다.
-  function oneLineCaption(el,manual){
+  function fitOneLine(el,manual){
     const txt=el.textContent||'';if(!txt.trim()||txt.includes(String.fromCharCode(10)))return;
     const start=parseFloat(el.style.fontSize)||parseFloat(getComputedStyle(el).fontSize);let size=start;
     const floor=start/Math.max(.1,manual||1)*.7;   // 바닥 = 기본 크기(100%)의 70% — 손으로 키운 몫은 전부 되돌릴 수 있다
-    const over=()=>{el.style.whiteSpace='nowrap';const r=document.createRange();r.selectNodeContents(el);const w=Math.max(el.scrollWidth,r.getBoundingClientRect().width);el.style.whiteSpace='pre-wrap';return w>el.clientWidth+1;};
+    const orig=el.style.whiteSpace,xs=(/scaleX\(([\d.]+)\)/.exec(el.style.transform||'')||[])[1];
+    const over=()=>{el.style.whiteSpace='nowrap';const r=document.createRange();r.selectNodeContents(el);const w=Math.max(el.scrollWidth,r.getBoundingClientRect().width)*(xs?Number(xs):1);el.style.whiteSpace=orig;return w>el.clientWidth+1;};
     while(over()&&size>floor){size=Math.round(size*.96*10)/10;el.style.fontSize=size+'px';}
     if(over()){el.style.fontSize=start+'px';delete el.dataset.oneLineFit;}
     else{el.style.whiteSpace='nowrap';el.dataset.oneLineFit=String(Math.round(size/start*100));}
