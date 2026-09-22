@@ -396,13 +396,21 @@ def _drop_repeat_signal(lines, sigs):
     return lines
 
 
-_POLITE_WORD = re.compile(r"(어요|아요|에요|예요|해요|세요|네요|죠|니다|니까)[.!?~…]*$")
+# ★"~더라고요/~거든요/~는데요/~잖아요"가 빠져 있었다(2026-09-22 말맛 센서스 실측): 인스타 대표 어미(docstring에도
+#   95~98%라 적어 놓고!)를 안 세어, 차량용 홀더 씨앗("더라고요"×3)이 존댓말 어절 2개로 잡혀 **썰(반말)로 써졌다**.
+_POLITE_ENDS = r"(어요|아요|에요|예요|해요|세요|네요|죠|니다|니까|더라고요|더라구요|거든요|는데요|잖아요|고요|나요|까요|래요|대요|돼요|져요|봐요|줘요|워요|와요)"
+_POLITE_WORD = re.compile(_POLITE_ENDS + r"[.!?~…]*$")
+_POLITE_SPLIT = re.compile(_POLITE_ENDS + r"(?=[가-힣])")     # 어미 목록은 위 한 곳(0순위-B)
 
 
 def seed_platform(seed_text):
     """씨앗의 결 → "ig"(존댓말 체험담) | "yt"(반말 썰). **어절 단위**로 센다.
     ★전사엔 문장부호가 거의 없다(실측 524자에 2개) — 문장으로 나눠 끝말을 보면 한 덩어리가 돼 판정이 무의미하다."""
-    ws = (seed_text or "").split()
+    # ★자막을 이어 붙인 전사는 문장 사이 띄어쓰기가 없다("안 돼요저도 매번사실") → 어미 뒤에서 한 번 끊어 준다.
+    #   히트작 1,116편 대조(2026-09-22): 인스타 존댓말 놓침 38→26, 썰 소개체 362편 오판 0.
+    #   문턱(3개·3%)은 그대로 — 2개로 낮추면 놓침 16이 되지만 썰 소개체 12편이 인스타로 넘어간다.
+    t = _POLITE_SPLIT.sub(r"\1 ", seed_text or "")
+    ws = t.split()
     pol = sum(1 for w in ws if _POLITE_WORD.search(w))
     return "ig" if pol >= 3 and pol / max(1, len(ws)) >= 0.03 else "yt"
 
