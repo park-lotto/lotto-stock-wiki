@@ -11,7 +11,7 @@ import pytest
 
 from shopping_shorts import clean_base as cb
 
-DATA = Path(__file__).parent / "data" / "clean_base_job956.json"
+DATA = Path(__file__).parent / "fixtures" / "clean_base_job956.json"
 
 
 @pytest.fixture
