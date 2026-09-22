@@ -332,6 +332,10 @@ def extract_peaks(path, bars=_WAVE_BARS):
 _GAP_THRESHOLD = _PACE_THRESHOLD
 _GAP_MIN_DUR = 0.10       # 이보다 짧은 쉼은 리듬이라 후보로 안 올린다
 _GAP_KEEP = 0.06          # 구간을 지울 때 남길 숨(완전히 붙이면 기관총처럼 들린다)
+# 잘린 이음매에 거는 페이드(초). _PACE_FADE(12ms)는 클릭음 방지용이라 **너무 짧아**
+# 0.14 → 0 낙차를 못 감춘다(2026-09-23 실측: 그래도 한 칸에 떨어졌다).
+# 25ms면 귀가 '끊겼다'가 아니라 '잦아들었다'로 듣는다.
+_CUT_FADE = 0.025
 
 
 def find_gaps(path, threshold=None, min_dur=None, keep=_GAP_KEEP):
@@ -387,10 +391,20 @@ def cut_gaps(in_path, out_path, gaps, keep=_GAP_KEEP):
     if len(keeps) <= 1:
         return None                       # 자를 게 없거나 통째로 남는다
     parts = []
+    last = len(keeps) - 1
     for k, (a, b) in enumerate(keeps):
-        parts.append(f"[0:a]atrim=start={a:.3f}:end={b:.3f},asetpts=PTS-STARTPTS,"
-                     f"afade=t=in:st=0:d={_PACE_FADE},"
-                     f"afade=t=out:st={max(0.0, (b-a)-_PACE_FADE):.3f}:d={_PACE_FADE}[p{k}]")
+        seg = b - a
+        f = [f"[0:a]atrim=start={a:.3f}:end={b:.3f}", "asetpts=PTS-STARTPTS"]
+        # ★페이드는 **잘린 이음매에만** 건다(2026-09-23 사장님 "무음자르기후 5초가 뚝끊김").
+        #   첫 조각의 시작과 마지막 조각의 끝은 원래 문장의 앞뒤 끝이라 **말이 살아있다** —
+        #   거기에 페이드를 걸면 멀쩡한 말을 깎아 오히려 뚝 끊긴다.
+        #   실측(beat_0 끝): 0.141 -> 0.000 한 칸 낙하 = 사장님이 들으신 5.61초 그 지점.
+        if k > 0:
+            f.append(f"afade=t=in:st=0:d={min(_CUT_FADE, seg/2):.3f}")
+        if k < last:
+            d = min(_CUT_FADE, seg / 2)
+            f.append(f"afade=t=out:st={max(0.0, seg - d):.3f}:d={d:.3f}")
+        parts.append(",".join(f) + f"[p{k}]")
     fc = ";".join(parts) + ";" + "".join(f"[p{k}]" for k in range(len(keeps))) \
          + f"concat=n={len(keeps)}:v=0:a=1[out]"
     fd, tmp = tempfile.mkstemp(suffix=".mp3",

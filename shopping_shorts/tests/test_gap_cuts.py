@@ -76,6 +76,54 @@ def test_cut_gaps_noop_without_gaps(mid_gap_mp3, tmp_path):
     assert not out.exists(), "자를 게 없는데 파일을 만들었다"
 
 
+def test_cut_gaps_does_not_fade_the_outer_ends(mid_gap_mp3, tmp_path):
+    """★바깥쪽 끝(문장의 앞/뒤)에는 페이드를 걸지 않는다 (2026-09-23 "5초가 뚝끊김").
+
+    실사고: 조각마다 페이드를 걸면서 **마지막 조각의 끝**에도 걸었다. 거기는 원래 문장의
+    끝이라 말이 살아있는데, 페이드가 그 말을 깎아 0.141 -> 0.000 절벽을 만들었다.
+    → 페이드는 **잘린 이음매에만**. 바깥쪽 끝은 원본 그대로 둔다.
+
+    ⚠️첫 시도의 테스트는 "끝 음량이 절반 이상"이라는 느슨한 기준이라 옛 코드도 통과했다
+      (12ms 페이드는 10ms 해상도에서 거의 안 보인다). 그래서 **필터 문자열을 직접 검사**한다 —
+      의도가 코드에 있는지를 보는 것이 음량 비교보다 정확하다."""
+    import shopping_shorts.audio_post as ap
+
+    seen = {}
+
+    orig = ap.subprocess.run
+
+    def fake_run(cmd, **kw):
+        # ⚠️cut_gaps는 _audio_dur(ffprobe)도 부른다 — 그건 통과시켜야 한다.
+        #   전부 가로채면 길이가 0이 돼 필터를 만들기 전에 빠져나간다(첫 시도에서 이걸로 실패).
+        if "-filter_complex" in cmd:
+            seen["fc"] = cmd[cmd.index("-filter_complex") + 1]
+        return orig(cmd, **kw)
+
+    ap.subprocess.run = fake_run
+    try:
+        cut_gaps(str(mid_gap_mp3), str(tmp_path / "x.mp3"), find_gaps(str(mid_gap_mp3)))
+    finally:
+        ap.subprocess.run = orig
+
+    fc = seen.get("fc", "")
+    assert fc, "filter_complex를 못 잡았다"
+    pieces = fc.split(";")
+    first = next(p for p in pieces if p.endswith("[p0]"))
+    last_i = max(int(p.split("[p")[-1].rstrip("]")) for p in pieces if "[p" in p and p.endswith("]") and p.split("[p")[-1].rstrip("]").isdigit())
+    last = next(p for p in pieces if p.endswith(f"[p{last_i}]"))
+    assert "afade=t=in" not in first, f"첫 조각 시작에 페이드가 걸렸다: {first}"
+    assert "afade=t=out" not in last, f"★마지막 조각 끝에 페이드가 걸렸다(말이 깎인다): {last}"
+    # 이음매 쪽에는 있어야 한다
+    assert "afade=t=out" in first, "이음매(첫 조각 끝)에 페이드가 없다"
+    assert "afade=t=in" in last, "이음매(마지막 조각 시작)에 페이드가 없다"
+
+
+def test_cut_fade_long_enough():
+    """이음매 페이드가 너무 짧으면 낙차를 못 감춘다(12ms로는 한 칸에 떨어진다)."""
+    from shopping_shorts.audio_post import _CUT_FADE
+    assert _CUT_FADE >= 0.02, f"이음매 페이드가 너무 짧다({_CUT_FADE}s)"
+
+
 def test_cut_gaps_keeps_original_file(mid_gap_mp3, tmp_path):
     """원본은 절대 안 건드린다 — 되돌리기가 원본에 기대고 있다."""
     before = _audio_dur(str(mid_gap_mp3))
