@@ -3205,7 +3205,8 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         #      영상은 나레이션이 그대로 나가므로 **효과음을 켜는 순간 목소리만 작아졌다**(라이브 사장님
         #      영상 bbbd6f20fe39 팩 있음/없음 두 판 대조로 확인).
         #   그래서 나레이션(+BGM)은 **종전 그대로** 섞고, 효과음은 normalize=0으로 더한다.
-        #   더해서 넘칠 수 있는 순간만 alimiter(level=0 — 자동 음량 올림 끔)로 누른다.
+        #   더해서 넘칠 수 있는 순간만 alimiter(level=0 — 자동 음량 올림 끔)로 누른다. 천장은 -1dB(0.89):
+        #   0.95로 두니 AAC 압축 뒤 최고점이 +0.4dB로 튀었다(2026-09-22 실측).
         if len(sfx_labels) > 1:
             fc.append("".join(f"[{lb}]" for lb in sfx_labels)
                       + f"amix=inputs={len(sfx_labels)}:duration=longest:normalize=0[sfxbus]")
@@ -3228,7 +3229,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         fc.append(f"[{base}][sfxkeyp]sidechaincompress=threshold={_SFX_DUCK_THRESHOLD}:ratio={_SFX_DUCK_RATIO}"
                   f":attack=2:release=150[nbduck]")
         fc.append("[nbduck][sfxmix]amix=inputs=2:duration=first:normalize=0,"
-                  "alimiter=limit=0.95:level=0[a]")
+                  "alimiter=limit=0.89:level=0[a]")
         amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
