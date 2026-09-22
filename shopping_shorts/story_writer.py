@@ -297,8 +297,29 @@ def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, n
                   "칸 하나를 얇게 쓰지 마라. 남긴 칸은 깊게 파라." % (int(seconds * _CPS), int(seconds)))
     prompt = "%s\n\n[제품] %s\n\n[씨앗 — 이 제품으로 터진 영상의 말]\n%s\n\n[재료]\n%s" % (
         brief, product or "", (seed_text or "").strip(), _feats_block(feats))
-    out = _sg._call_json(prompt, IG_SCHEMA if ig else YT_SCHEMA, note=note) or {}
+    schema = IG_SCHEMA if ig else (_short_schema() if preset == "short" else YT_SCHEMA)
+    out = _sg._call_json(prompt, schema, note=note) or {}
     return _to_lines(out, ig, key, nth, feats, preset=preset)
+
+
+# 한입썰 칸별 최대 글자(공백 포함) — 썰 히트작 49편 실측 75% 지점을 조금 넘는 값. 지시문은 모델이 넘기지만
+#   스키마 maxLength는 구조라 넘길 수 없다(2026-09-22 실측: 같은 SHORT_BLOCK 지시로 한 씨앗은 227자, 다른 씨앗은 47초·380자).
+_SHORT_MAX = {"hook": 26, "bait": 62, "reveal": 22, "contrast": 0, "moment": 40, "what_happens": 46, "erased": 40,
+              "twist": 60, "closing": 22}
+
+
+def _short_schema():
+    import copy
+    sc = copy.deepcopy(YT_SCHEMA)
+    pr = sc["properties"]
+    for k in ("hook", "bait", "reveal", "twist", "closing"):
+        pr[k]["maxLength"] = _SHORT_MAX[k]
+    pr["contrast"]["maxLength"] = 1                       # 한입썰은 대비를 고조1 안에 녹인다(빈칸)
+    esc = pr["escalations"]["items"]["properties"]
+    for k in ("moment", "what_happens", "erased"):
+        esc[k]["maxLength"] = _SHORT_MAX[k]
+    pr["escalations"]["maxItems"] = 2
+    return sc
 
 
 def _group_of(from_pain, feats):

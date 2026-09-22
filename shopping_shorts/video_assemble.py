@@ -821,10 +821,16 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     _cr = beat.get("cut_rhythm") or {}
     if _cr and not _bb.is_point_beat(beat):
         if _cr.get("hold") and segs:
-            segs = segs[:1]
+            # 홀드 = 지목 컷을 **원본에서 이어** 최장 5초까지 튼다(히트작 최장 홀드 중앙 4.9초 — 원본은 연속 촬영이라
+            #   조각 경계를 넘어도 컷이 아니다). 대사가 5초를 넘으면 그때 두 번째 컷.
+            first = dict(segs[0])
+            _room = float(src_durs.get(first.get("video_id"), 0.0) or 0.0)
+            first["end"] = max(float(first.get("end") or 0.0), min(float(first.get("start") or 0.0) + 5.0, _room or float(first.get("end") or 0.0)))
+            segs = [first] + segs[1:2]
             beat_src_durs = {s["video_id"]: src_durs[s["video_id"]] for s in segs}
-            _max_shot = None
+            _max_shot = 5.0
         else:
+            segs = segs[:4]
             try:
                 _max_shot = float(_cr.get("max_shot") or 4.0)
             except (TypeError, ValueError):

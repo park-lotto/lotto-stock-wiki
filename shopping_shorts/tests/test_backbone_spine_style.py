@@ -353,3 +353,23 @@ def test_to_draft_shape_matches_style_drafts():
     assert [b["text"] for b in d["beats"]] == ["첫 줄.", "둘째 줄."]
     assert d["beats"][0]["src_seg"] == "a-1" and d["beats"][0]["src_segs"] == ["a-1", "b-2"]
     assert d["style_id"] == 56 and d["made_by"] == "백본" and d["script"] == "첫 줄. 둘째 줄."
+
+
+def test_공개_훅에는_문제컷이_안_붙고_미끼에는_문제컷이_먼저():
+    """2026-09-22 사장님 화면: 공개("이건 바로 스펀지")에 '일회용 청소포 뽑는 모습'(역할 문제)이 붙었다."""
+    from shopping_shorts import backbone_assemble as ba
+    seg_index = {
+        "p1": {"vid": "sub", "secs": 2.0, "desc": "청소포를 뽑는 모습", "role": "문제"},
+        "p2": {"vid": "sub", "secs": 2.0, "desc": "쌓인 청소포", "role": "문제"},
+        "u1": {"vid": "sub", "secs": 2.0, "desc": "스펀지로 환풍기를 닦는 모습", "role": "사용중"},
+        "u2": {"vid": "sub", "secs": 2.0, "desc": "스펀지를 물에 헹구는 모습", "role": "실증"},
+        "u3": {"vid": "sub", "secs": 2.0, "desc": "스펀지를 짜는 모습", "role": "실증"},
+    }
+    lines = [{"role": "훅", "text": "먼지 사냥꾼의 정체", "group": -1},
+             {"role": "미끼", "text": "물기나 닦으라고 만든 건데 먼지까지 잡는다는데", "group": -1},
+             {"role": "공개", "text": "이건 바로 먼지 흡착 스펀지", "group": -1}]
+    groups_out = {"order": [], "groups": []}
+    bs, _ = ba.assign_cuts(lines, groups_out, seg_index, backbone_vid="org")
+    roles = {b["role"]: [seg_index[s]["role"] for s in b["segs"]] for b in bs}
+    assert "문제" not in roles["공개"] and "문제" not in roles["훅"]
+    assert roles["미끼"][0] == "문제"

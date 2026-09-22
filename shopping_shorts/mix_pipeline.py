@@ -2975,10 +2975,19 @@ def _trim_for_cut_rhythm(plan):
     beats = (plan or {}).get("beats") or []
     for i, b in enumerate(beats):
         narr = (b.get("narration") or "").strip()
-        hold = (i == 0) or bool(_HOLD_END.search(narr))
+        role = str(b.get("role") or "")
+        # 미끼는 히트작에서 빠른 몽타주 자리(이븐쇼핑 0.6~1.5초 5컷) — "…났다는 거"로 끝나도 홀드하지 않는다
+        hold = (i == 0) or (bool(_HOLD_END.search(narr)) and not role.startswith("미끼"))
         alts = list(b.get("alternates") or [])
-        b["alternates"] = [] if hold else alts[:1]
-        b["cut_rhythm"] = {"max_shot": 4.0, "hold": hold}
+        # 컷 수는 줄 길이로(히트작 11편 컷 중앙 1.9초 → 약 2.5초에 한 컷): 3초 이하 1컷 · 6초 2컷 · 9초 3컷 · 최대 4컷.
+        #   홀드 줄은 5초 홀드 뒤 한 컷만 더. (2026-09-22 사장님 "9초 줄인데 2개만 쓴 건가" — 2개 고정이 무뎠다)
+        try:
+            secs = float(b.get("target_seconds") or 0.0)
+        except (TypeError, ValueError):
+            secs = 0.0
+        want = 1 if hold and secs <= 5.0 else (2 if hold else max(1, min(4, int(round(secs / 2.5)))))
+        b["alternates"] = alts[:max(0, want - 1)]
+        b["cut_rhythm"] = {"max_shot": (5.0 if hold else max(2.0, min(4.0, secs / want if want else 4.0))), "hold": hold}
         n += 1
     return n
 
@@ -2993,7 +3002,8 @@ def _apply_cut_rhythm(plan, store, job):
     beats = (plan or {}).get("beats") or []
     for i, b in enumerate(beats):
         narr = (b.get("narration") or "").strip()
-        hold = (i == 0) or bool(_HOLD_END.search(narr))
+        role = str(b.get("role") or "")
+        hold = (i == 0) or (bool(_HOLD_END.search(narr)) and not role.startswith("미끼"))
         b["cut_rhythm"] = {"max_shot": 4.0, "hold": hold}
         n += 1
     print(f"[cut_rhythm] 비트 {n}개에 표식 — hold {sum(1 for b in beats if (b.get('cut_rhythm') or {}).get('hold'))}개", file=sys.stderr)
