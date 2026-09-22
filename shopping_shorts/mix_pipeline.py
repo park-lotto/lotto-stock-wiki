@@ -4041,7 +4041,7 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
 
 
 @_owned_job
-def run_render(job_id, db_path, work_root):
+def run_render(job_id, db_path, work_root, skip_clean=False):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
     store = Store(db_path)
@@ -4066,15 +4066,19 @@ def run_render(job_id, db_path, work_root):
         # ★청소본 정본(2026-09-22): 스위치가 켜져 있고 4단계 정본이 있으면 청소본을 소스로 조립한다
         #   (VMake 0회, 바뀐 장면만 증분). 아니면 종전 그대로 원본 소스 + 아래 청소 분기.
         keys = _vmake_keys(store, job.get("customer_id") or 0) if job.get("subtitle_removal") else []
+        # skip_clean(2026-09-22): 사장님이 "자막제거 없이 그냥 렌더"를 고른 경우 — 바뀐 장면은 원본 재료 그대로,
+        #   업체 호출 0. 정본이 없는 job이면 아래 청소 분기도 건너뛴다(원본 자막이 남는 것을 알고 고른 것).
+        if skip_clean:
+            print("[render] skip_clean — 자막제거 없이 렌더", file=sys.stderr)
         plan_used, source_video_paths, _base = render_inputs_for(
-            store, job, job_id, work, keys, job.get("customer_id") or 0)
+            store, job, job_id, work, keys, job.get("customer_id") or 0, allow_clean=not skip_clean)
         if _base is not None:
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
 
         # 자막제거: 소스 원본을 미리(2단계) 또는 여기서(버튼 미사용 시) 청소해 그 소스로 조립한다.
         # mix_raw 위 clean_fn(구방식)은 폐기 — 소스단위여야 TTS/컷과 무관하게 캐시가 성립한다.
         final_clean_fn = None
-        if job.get("subtitle_removal") and _base is None:
+        if job.get("subtitle_removal") and _base is None and not skip_clean:
             # ★2단계 버튼을 안 거치고 바로 렌더로 오는 경로도 VMake를 탄다 — 여기도 과금해야
             #   구멍이 안 남는다(2단계에서 이미 청소됐으면 todo가 비어 자동으로 0원).
             customer_id = job.get("customer_id") or 0

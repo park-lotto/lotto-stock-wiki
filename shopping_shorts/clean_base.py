@@ -96,6 +96,47 @@ def _cuts_of(base, beat_idx):
     return [c for c in base.get("cuts") or [] if int(c.get("beat_idx", -1)) == int(beat_idx)]
 
 
+MIN_PIECE = 0.25        # 청소본 컷과 이만큼 이상 겹쳐야 그 조각을 쓴다(초)
+
+
+def piece_map(base, material):
+    """재료 조각 (video_id, start, end) 이 청소본 **어디에든** 있으면 그 자리를 청소본 좌표로 돌려준다.
+    반환 [{"video_id":"clean","seg_id":"clean-<i>","start":t0,"end":t1}, ...] (겹치는 컷마다 하나, 원본 시간순) — 없으면 [].
+
+    ★왜(2026-09-22 사장님 job 956a6843cdd5): 장면편집으로 조각을 빼거나 다른 칸으로 옮기면 칸 단위 재료 키가
+      달라져 '바뀐 장면'이 됐다(9칸 중 6칸, 25.4초 재청소 안내). 그런데 쓰는 조각은 전부 이미 청소돼 있었다.
+      조각이 청소본에 있으면 그걸 쓴다 — 칸이 바뀐 게 아니라 조각이 옮겨간 것이다."""
+    try:
+        vid = str(material.get("video_id")); s = float(material.get("start")); e = float(material.get("end"))
+    except (TypeError, ValueError):
+        return []
+    out = []
+    cuts = base.get("cuts") or []
+    for i, c in enumerate(cuts):
+        if str(c.get("video_id")) != vid:
+            continue
+        cs = float(c["src"]); ce = cs + float(c["dur"])
+        lo, hi = max(s, cs), min(e, ce)
+        if hi - lo >= MIN_PIECE:
+            fin = float(c["fin"])
+            out.append((lo, {"video_id": CLEAN_VID, "seg_id": "%s-%d" % (CLEAN_VID, i),
+                             "start": round(fin + (lo - cs), 3), "end": round(fin + (hi - cs), 3)}))
+    out.sort(key=lambda x: x[0])
+    return [x[1] for x in out]
+
+
+def _pieces_for_beat(base, beat):
+    """비트의 재료 전부가 청소본 조각으로 대체되면 그 목록, 하나라도 없으면 None."""
+    from shopping_shorts.mix_pipeline import _beat_materials
+    segs = []
+    for m in _beat_materials(beat or {}):
+        got = piece_map(base, m)
+        if not got:
+            return None
+        segs.extend(got)
+    return segs or None
+
+
 def coverage(plan, base):
     """{beat_idx: "covered" | "changed" | "new"} — 재료(장면)만 본다. 자막·확대·길이는 무관."""
     out = {}
@@ -104,11 +145,13 @@ def coverage(plan, base):
         key = beat_material_key(b)
         saved = base.get("beat_keys", {}).get(str(bi))
         if saved is None:
-            out[bi] = "covered" if _extra_for(base, bi, key)[0] else "new"
+            out[bi] = "covered" if (_extra_for(base, bi, key)[0] or _pieces_for_beat(base, b)) else "new"
         elif saved == _key_list(key) and _cuts_of(base, bi):
             out[bi] = "covered"
         elif _extra_for(base, bi, key)[0]:
             out[bi] = "covered"
+        elif _pieces_for_beat(base, b):
+            out[bi] = "covered"            # 조각이 청소본 어디엔가 있다(옮기기·빼기·잘라쓰기)
         else:
             out[bi] = "changed"
     return out
@@ -153,7 +196,10 @@ def remap_plan(plan, base, *, tts_durs=None):
                                "end": round(s + (need - have) + EXTEND_PAD, 3), "need": round(need - have, 3)})
         else:
             vid, ex = _extra_for(base, bi, key)
-            b["scene_override"] = [{"video_id": vid, "seg_id": vid, "start": 0.0, "end": float(ex["seconds"])}]
+            if vid:
+                b["scene_override"] = [{"video_id": vid, "seg_id": vid, "start": 0.0, "end": float(ex["seconds"])}]
+            else:
+                b["scene_override"] = _pieces_for_beat(base, b) or []   # coverage가 covered로 판정한 조각들
     return plan2, uncovered, extend
 
 
