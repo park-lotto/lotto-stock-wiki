@@ -2246,16 +2246,33 @@ def _resolve_cutaway_paths(store, plan, customer_id):
     return out
 
 
-def _resolve_sfx_paths(store, plan, customer_id):
+def _resolve_sfx_paths(store, plan, customer_id, job=None):
     """비트에 붙은 sfx asset_id → media_path. 컷어웨이와 같은 패턴(저장위치=읽기위치).
-    run_render·run_preview 둘 다 이걸 써서 미리보기와 최종본이 같은 효과음을 낸다."""
+    run_render·run_preview 둘 다 이걸 써서 미리보기와 최종본이 같은 효과음을 낸다.
+
+    ★썰채널 효과음팩(2026-09-22): job을 넘기면 sfx_pack.resolve가 팩을 정해 "_pack" 키로
+      함께 싣는다. 렌더·미리보기·청소본·캡컷이 **전부 이 함수를 거치므로** 팩 판정도 여기
+      한 곳이다(0순위-B). 팩이 있으면 사람이 고른(manual) 효과음만 남기고 자동 매칭분은
+      팩이 대신한다 — sfx_events_for가 "_pack"을 보고 자막 기준으로 타점을 낸다."""
     out = {}
+    pack = None
+    if job is not None:
+        try:
+            from shopping_shorts import sfx_pack
+            pack = sfx_pack.resolve(store, job)
+        except Exception:      # noqa: BLE001 — 팩 판정 실패가 렌더를 막지 않는다(종전 동작)
+            traceback.print_exc(file=sys.stderr)
+            pack = None
     for beat in plan["beats"]:
         sfx = beat.get("sfx")
         if sfx:
+            if pack and sfx.get("match_type") != "manual":
+                continue
             asset = store.get_scene_asset(sfx["asset_id"], customer_id=customer_id)
             if asset and asset.get("media_path"):
                 out[beat["beat_idx"]] = asset["media_path"]
+    if pack:
+        out["_pack"] = pack
     return out
 
 
@@ -3484,7 +3501,7 @@ def assemble_clean_video(job_id, db_path, work_root, clean_fn=None):
         # 소스)이 이미 없앴고, 여기선 우리 자막만 생략한다. 캡션 패스가 빠져 더 빠르기도 하다.
         assemble(plan, tts_paths, clean_map, str(out_path), clean_fn=clean_fn, deco={},
                  cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
-                 sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)),
+                 sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job),
                  burn_captions=False)
         store.update_mix_job(job_id, clean_video_path=str(out_path))
         return str(out_path)
@@ -3692,7 +3709,7 @@ def run_preview(job_id, db_path, work_root):
                      clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
                      deco={},                             # ← 꾸미기 없음(4단계 소관)
                      cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
-                     sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)))
+                     sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job))
         # ★moov를 앞으로(2026-08-31). 안 하면 브라우저가 목차를 얻으려고 파일 전체를
         #   받아야 첫 프레임이 떠서 **정지된 것처럼 보인다**(고객 제보의 뿌리 — 미리보기가
         #   12MB면 눈에 띄게 멈춘다). 종전엔 완성본에만 걸려 있었다. 이미 앞이면 무해·즉시.
@@ -3880,7 +3897,7 @@ def run_render(job_id, db_path, work_root):
         # 컷어웨이: 비트에 붙은 asset_id를 media_path로 해석해 assemble에 넘긴다.
         # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
         cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
-        sfx_paths = _resolve_sfx_paths(store, plan, job.get("customer_id", 0))
+        sfx_paths = _resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job)
         assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)

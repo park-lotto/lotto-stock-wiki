@@ -2853,6 +2853,14 @@ def sfx_events_for(timeline, sfx_paths):
     """
     sfx_paths = sfx_paths or {}
     events = []
+    pack = sfx_paths.get("_pack") if isinstance(sfx_paths, dict) else None
+    if pack:
+        # ★썰채널 효과음팩(2026-09-22) — 자막 줄 교체 기준(sfx_pack 모듈 docstring).
+        #   _resolve_sfx_paths가 팩이 있을 때 sfx_paths엔 사람이 고른(manual) 것만 남겼다.
+        #   그 비트는 사람 것을 쓰고, 팩은 그 비트를 건너뛴다.
+        from shopping_shorts import sfx_pack
+        manual = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"])}
+        events += sfx_pack.events(timeline, pack, manual_beats=manual)
     for b in timeline or []:
         sfx = b.get("sfx")
         path = sfx_paths.get(b["beat_idx"])
@@ -3142,12 +3150,26 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         idx += 1
     if has_sfx:                                       # 효과음(비트별 오프셋에 adelay)
         sfx_vol = max(0.0, min(1.0, (deco.get("sfx_volume", 60)) / 100.0))
-        for i, (sfx_path, offset_sec) in enumerate(sfx_events):
+        sfx_labels = []
+        for i, ev in enumerate(sfx_events):
+            sfx_path, offset_sec = ev[0], ev[1]
+            gain = float(ev[2]) if len(ev) > 2 else 1.0      # 팩 보정(sfx_pack.events)
             inputs += ["-i", sfx_path]
             ms = max(0, round(offset_sec * 1000))
-            fc.append(f"[{idx}:a]adelay={ms}:all=1,volume={sfx_vol:.3f}[sfx{i}]")
-            mix_labels.append(f"sfx{i}")
+            fc.append(f"[{idx}:a]adelay={ms}:all=1,volume={sfx_vol * gain:.3f}[sfx{i}]")
+            sfx_labels.append(f"sfx{i}")
             idx += 1
+        # ★효과음은 **한 줄로 먼저 합쳐** 아래 amix에 입력 하나로만 넣는다(2026-09-22 실측).
+        #   amix는 기본(normalize=1)으로 **입력 개수만큼 전체를 나눈다** — 효과음 26발을
+        #   따로 넣으면 입력 27개라 나레이션까지 1/27(-28.6dB)로 죽었다(실렌더: 평균 -16.8→-45.8dB).
+        #   효과음끼리는 normalize=0으로 그대로 더하고(겹칠 일이 드물다 — 대부분 0.2초 이하),
+        #   1발일 때는 종전과 **완전히 같은 그래프**(나레이션·BGM 비율 불변)가 되게 한다.
+        if len(sfx_labels) > 1:
+            fc.append("".join(f"[{lb}]" for lb in sfx_labels)
+                      + f"amix=inputs={len(sfx_labels)}:duration=longest:normalize=0[sfxbus]")
+            mix_labels.append("sfxbus")
+        else:
+            mix_labels += sfx_labels
     if len(mix_labels) > 1:
         ins = "".join(f"[{lb}]" for lb in mix_labels)
         fc.append(f"{ins}amix=inputs={len(mix_labels)}:duration=first:dropout_transition=2[a]")
