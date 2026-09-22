@@ -3287,6 +3287,8 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
         if out.exists() and out.stat().st_size > 1024:
             print(f"[clean] 완성본 재사용(편성 그대로, 과금 0): {out.name}", file=sys.stderr)
             _save_clean_plan_snapshot(work, sig, job.get("edit_plan"))
+            # 정본이 없거나 **다른 등급/서명의 파일**이면 이 파일로 정본을 다시 쓴다(등급 변경 = 새 정본)
+            _save_clean_base(job, work, sig, str(out), only_if_new=True)
             return str(out)
         charged = _charge_clean(store, customer_id, 1)
         try:
@@ -3297,8 +3299,28 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
                 _refund_clean(store, customer_id, charged)
             raise
         _save_clean_plan_snapshot(work, sig, job.get("edit_plan"))
+        # ★청소본 정본(2026-09-22): 이 파일과 그 시점 컷 지도를 job의 정본으로 남긴다.
+        #   이후 렌더·프레임·캡컷은 clean_base.remap_plan 으로 이 파일을 소스 삼아 조립한다.
+        _save_clean_base(job, work, sig, str(res))
         return res
     return _clean
+
+
+def _save_clean_base(job, work, sig, path, only_if_new=False):
+    """청소본 정본 저장(clean_base.save_base) — 실패해도 청소는 성공이다(종전 경로로 남을 뿐).
+    only_if_new: 정본이 없거나 서명이 다를 때만(재사용 분기)."""
+    try:
+        from shopping_shorts import clean_base as _cb
+        if only_if_new:
+            _old = _cb.load_base(work)
+            if _old is not None and _old.get("sig") == sig:
+                return
+        _plan = job.get("edit_plan") or {}
+        _tts = {b["beat_idx"]: b["tts_path"] for b in _plan.get("beats") or [] if b.get("tts_path")}
+        _cb.save_base(work, sig=sig, path=path,
+                      plan=_plan, cuts=final_clip_pairs(_plan, _tts, _src_durs_for(job, work)))
+    except Exception as _e:      # noqa: BLE001
+        print("[clean-base] 정본 저장 실패(무해, 종전 경로): %s" % _e, file=sys.stderr)
 
 
 def _clean_plan_snapshot_path(work, sig):

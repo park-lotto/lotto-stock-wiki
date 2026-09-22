@@ -1958,6 +1958,10 @@ def _apply_hook_inpoint(edit_plan, source_video_paths, work):
     """훅 비트(beats[0]) primary.start를 모션 피크(자동) + UI delta로 이동(P1).
     소스 밖/윈도우 좁음/실패 시 무변경(렌더 안 죽인다). peak_at·hook_delta를 primary에 실어
     프리뷰 UI가 현재 시작점·미세조정을 표시·조절하게 한다."""
+    # ★청소본 정본 파생 사본(clean_base=True)은 재료가 이미 청소본 컷 좌표다 — 피크를 다시
+    #   찾아 옮기면 컷 밖(딴 장면)으로 나간다. 청소 시점에 이미 반영된 시작점을 그대로 쓴다(2026-09-22).
+    if (edit_plan or {}).get("clean_base"):
+        return
     try:
         from shopping_shorts import scene_cut as _sc
         beats = edit_plan.get("beats") or []
