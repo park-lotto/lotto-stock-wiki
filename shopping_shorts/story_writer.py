@@ -40,7 +40,7 @@ YT_SETS = {
     "G": ["이게 말도 안 되는게", "심지어", "더 대박인 건"],
     "H": ["진짜 말도 안 되는게", "거기다", "근데 진짜 충격적인 포인트는"],
 }
-_ALL_SIGNAL_WORDS = sorted({w for v in YT_SETS.values() for w in v if w} | {"심지어", "게다가", "거기다"})
+_ALL_SIGNAL_WORDS = sorted({w for v in YT_SETS.values() for w in v if w} | {"심지어", "게다가", "거기다", "진짜 미친 건", "진짜 대박인 건", "미친 포인트는", "충격적인 포인트는", "이게 진짜 미친 게", "근데 진짜"})   # 모델이 반전을 자기 신호어로 열면 뗀다("근데 진짜 충격적인 포인트는 진짜 미친 건 …" 실측)
 # 인스타는 낱말이 다르다(실측: 심지어 73·게다가 39·대박인 건 21·거기다 7·무엇보다 6).
 # 썰의 "진짜 미친 포인트는"·"이게 말도 안 되는게"는 인스타에 거의 없다.
 IG_SETS = {
@@ -64,6 +64,18 @@ LENGTH_PRESETS = {
     "short": {"label": "한입썰", "seconds": 25, "cap_by_footage": True},
     "full":  {"label": "풀코스썰", "seconds": 46, "cap_by_footage": False},
 }
+
+# 한입썰 칸 크기 — 썰 히트작 49편 실측(2026-09-22, 공백 제외 글자 중앙값): 훅 16 · 미끼 53 · 공개 11 ·
+#   첫 칸(말도 안 되는게 ~ 버렸다는 거) 80 · 심지어 칸 39 · 충격 포인트 칸 48 · 전체 226.
+#   ★우리 결함(사장님 job 먼지스펀지): 대비 줄 51~62자 + 고조1 세 줄 ~70자 = 첫 칸 자리가 120~130자 → 37초.
+#   히트작은 "기존 X와 달리"가 첫 칸 **안에** 들어가 한 덩어리 80자다. 강제로 자르지 않고 칸 크기를 실측대로 준다.
+SHORT_BLOCK = """
+■ 칸 크기 (썰 히트작 49편 실측 — 공백 뺀 글자 수. 이 크기로 쓰면 저절로 23초 안팎이 된다)
+  훅 16자 · 미끼 53자 · 공개 11자 · 고조1 한 덩어리 80자 · 고조2 39자 · 반전(충격 포인트) 48자 · 마무리 12자
+  ★contrast(대비)는 **빈칸**으로 두고, 그 말("~하던 기존 X와는 달리")은 고조1의 moment 첫머리에 넣어라.
+    히트작은 "이게 말도 안 되는게 [기존 X와 달리 / 원래는 X였지만] 순간 → 지옥 → 없애 버렸다는 거"가 한 덩어리다.
+  ★고조는 2칸까지. 3칸째를 만들면 반전 자리를 먹는다.
+"""
 
 FULL_BLOCK = """
 ■ 풀코스 — 고조를 끝까지 풀어 쓴다 (히트작 시안 실측: 18줄·345자)
@@ -271,6 +283,8 @@ def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, n
     brief = IG_BRIEF if ig else YT_BRIEF
     if preset == "full":
         brief += IG_FULL_BLOCK if ig else FULL_BLOCK
+    elif not ig:
+        brief += SHORT_BLOCK
     if style:
         brief += ("\n\n■ 이번 대본의 스타일: %s\n스토리라인: %s\n첫 줄 각도: %s\n%s"
                   % (style.get("name") or "", style.get("flow") or "",
@@ -581,7 +595,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short"):
         #   65%의 근거(★job 13d4cab55fba 1건·재료 48.8초뿐이다 — 재료를 넓혀 다시 재라): 대본 31.8초 이하 4편은
         #   빈 줄 0, 33.3초 이상 5편은 빈 줄 1~4. 컷이 덩어리라(2초 대사에 4.8초 컷) 길이 합만큼은 못 쓴다.
         footage = sum(v["secs"] for v in seg_index.values() if v["secs"] >= ba.MIN_CUT_SECS)
-        limit = float(seconds) * 1.5
+        limit = float(seconds) * (1.25 if preset == "short" else 1.5)
         if LENGTH_PRESETS[preset]["cap_by_footage"]:
             limit = min(limit, footage * 0.65)
         lines, n["dropped_escalations"] = _fit_length(lines, limit)
