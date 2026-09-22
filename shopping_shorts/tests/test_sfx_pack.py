@@ -136,3 +136,17 @@ def test_render_seam_uses_pack(tmp_path):
     # 스위치 꺼짐이면 종전 동작 그대로
     old = mix_pipeline._resolve_sfx_paths(_Store(on="", assets=store.assets), plan, 3, job=job)
     assert "_pack" not in old and old[0] == "auto.wav"
+
+
+def test_no_single_sound_dominates():
+    """2026-09-22 라이브 실측: 기본값을 전부 휙으로 두니 한 편에서 휙 66%(이븐쇼핑 27%)."""
+    tl, t0 = [], 0.0
+    for i in range(10):
+        tl.append({"beat_idx": i, "t0": t0, "dur": 3.0, "narration": "평범한 문장 하나 둘 셋",
+                   "caption_lines": ["평범한 문장", "하나 둘", "셋 넷"], "cap_durs": None, "cap_lead": 0.0, "cap_offset": 0.0})
+        t0 += 3.0
+    from collections import Counter
+    c = Counter(s for s, _, _ in sfx_pack.plan_events(tl))
+    total = sum(c.values())
+    assert max(c.values()) / total <= 0.5, c
+    assert {"whoosh", "pop", "click2", "tick"} <= set(c)

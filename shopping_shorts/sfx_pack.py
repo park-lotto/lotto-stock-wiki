@@ -14,9 +14,9 @@
       둥   반전·강조("충격적인", "말도 안 되는", "근데 이걸", "진짜는", "종결급")
       띠링 결과·감탄("변신", "끝판왕", "99.9%", "해결" …) · 마지막 칸 첫 줄
       뽁   동작(action_dict — 넣어/발라/잘라 …)
-      딸깍딸깍 시연 넘김 일부(실측 8%)
-      휙   나머지 기본값
-  밀도  초당 약 1.1발(이븐쇼핑 실측). 넘치면 **휙부터** 고르게 뺀다(둥·띠링·뽁은 남긴다).
+      나머지 기본값 자리 → DEFAULT_CYCLE
+  기본값 자리  휙·뽁·딸깍·틱을 DEFAULT_CYCLE 순서로 돌린다(한 가지만 반복하지 않게)
+  밀도  초당 약 1.1발(이븐쇼핑 실측). 넘치면 **기본값 자리부터** 고르게 뺀다(둥·띠링·동작 뽁은 남긴다).
 
 회원마다 팩 하나를 고정 배정한다(20종, 두 팩 사이 7칸 중 최소 4칸 다름) — 회원끼리 소리가 달라진다.
 켜는 조건: 관리자 설정 sfx_pack_enabled=1 **그리고** 2단계에서 **썰 대본**(오용형·제품정체형·발명품형 틀)을 고른 영상.
@@ -34,7 +34,11 @@ OPENER_AT = 0.06          # 실측: 12편 전부 0.03~0.07초
 WHOOSH_LEAD = 0.035       # 첫 넘김: 휙이 넘김보다 먼저(8편 중앙)
 TICK_LAG = 0.07           # 첫 넘김: 틱이 넘김보다 뒤(12편 중앙)
 TARGET_PER_SEC = 1.1      # 실측 밀도(떡밥 1.19 · 시연 1.23 · 반전 1.12 · 마무리 1.06)
-CLICK2_EVERY = 12         # 기본값(휙) 자리 중 이 간격마다 딸깍딸깍(실측 시연 8%)
+# 특별한 문구가 없는 자막(기본값 자리)에 돌려 쓰는 순서 — 결정적(같은 대본=같은 결과).
+#   ★2026-09-22 라이브 실측: 기본값을 전부 휙으로 두니 한 편에서 휙 66%(이븐쇼핑 27%)·뽁 11%(32%)·틱 3%(13%)
+#     — "휙만 계속 난다"가 됐다. 이븐쇼핑 12편은 문구 규칙(둥·띠링·동작 뽁) 밖의 자리에도 휙·뽁·딸깍·틱을 섞는다.
+#     실측 비율(휙 77·뽁 90·틱 38·딸깍 24건)에서 문구로 정해지는 몫을 빼고 8칸 순환으로 맞췄다.
+DEFAULT_CYCLE = ("whoosh", "pop", "whoosh", "click2", "whoosh", "pop", "tick", "pop")
 # 팩 소리 보정(배) — 실렌더에서 목소리 대비 크기를 이븐쇼핑과 맞춘 값(tools/sfx_bench/render_check.py).
 #   기본 효과음 볼륨 60%만으로는 이븐쇼핑보다 약 8dB 작았다(휙 -10.6 vs -2.7dB). 7.0으로 올리니 7종 모두
 #   +2.4~2.8dB 컸다(나레이션 차감 잔여로 잰 값) → 4.3.
@@ -171,17 +175,17 @@ def plan_events(timeline, manual_beats=()):
             slot = classify(seg)
             if slot is None and b["beat_idx"] == last_idx and k == 0:
                 slot = "ding"   # 마무리 칸 첫 줄
-            body.append([slot, start, seg])
-    # 기본값(휙) 자리 중 일부를 딸깍딸깍으로 — 결정적(같은 대본이면 같은 결과)
+            body.append([slot, start, seg, slot is None])   # 4번째 = 기본값 자리(밀도 조절 대상)
+    # 기본값 자리는 DEFAULT_CYCLE 순서로 돌린다 — 결정적(같은 대본이면 같은 결과)
     d = 0
     for row in body:
         if row[0] is None:
+            row[0] = DEFAULT_CYCLE[d % len(DEFAULT_CYCLE)]
             d += 1
-            row[0] = "click2" if d % CLICK2_EVERY == CLICK2_EVERY // 2 else "whoosh"
-    # 밀도 맞추기: 초당 TARGET_PER_SEC를 넘으면 휙을 고르게 뺀다
+    # 밀도 맞추기: 초당 TARGET_PER_SEC를 넘으면 **기본값 자리**를 고르게 뺀다(둥·띠링·동작 뽁은 남긴다)
     budget = int(round(TARGET_PER_SEC * max(0.0, total - float(tl[0]["dur"]))))
-    fixed = len(ev) + sum(1 for r in body if r[0] != "whoosh")
-    whooshes = [i for i, r in enumerate(body) if r[0] == "whoosh"]
+    fixed = len(ev) + sum(1 for r in body if not r[3])
+    whooshes = [i for i, r in enumerate(body) if r[3]]
     keep_n = max(0, budget - fixed)
     if len(whooshes) > keep_n:
         drop = len(whooshes) - keep_n
