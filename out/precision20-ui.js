@@ -90,7 +90,9 @@
   {
     const head=presetPane.querySelector('.pane-head'),leftTabs=document.createElement('div');
     leftTabs.className='tool-tabs left-pane-tabs';
-    leftTabs.innerHTML='<button type="button" class="active" data-left-tab="scene">장면 템플릿</button><button type="button" data-left-tab="font">폰트 템플릿</button>';
+    // 2026-09-22 사장님 확정: [추천|장면|폰트|색톤|꾸밈]. 추천·색톤·꾸밈 창은 아래 '장면폰트 룩' 블록이 만든다(scene-style-lefttab 이벤트로 연결).
+    //   처음 열리는 탭은 '장면' 그대로 — 템플릿 카드가 처음부터 보여야 하는 검사 도구·기존 사용 흐름을 안 깨려고.
+    leftTabs.innerHTML='<button type="button" data-left-tab="look">추천</button><button type="button" class="active" data-left-tab="scene">장면</button><button type="button" data-left-tab="font">폰트</button><button type="button" data-left-tab="tone">색톤</button><button type="button" data-left-tab="deco">꾸밈</button>';
     const fontPane=document.createElement('div');fontPane.className='font-template-pane';fontPane.hidden=true;
     const drawFontSets=()=>{fontPane.innerHTML='<div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
     window.addEventListener('scene-style-fontset',()=>{if(!fontPane.hidden)drawFontSets();});   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
@@ -100,7 +102,8 @@
     leftTabs.addEventListener('click',event=>{
       const b=event.target.closest('[data-left-tab]');if(!b)return;
       leftTabs.querySelectorAll('[data-left-tab]').forEach(x=>x.classList.toggle('active',x===b));
-      const font=b.dataset.leftTab==='font';sceneParts.forEach(el=>el.hidden=font);fontPane.hidden=!font;if(font)drawFontSets();
+      const tab=b.dataset.leftTab;sceneParts.forEach(el=>el.hidden=tab!=='scene');fontPane.hidden=tab!=='font';if(tab==='font')drawFontSets();
+      window.dispatchEvent(new CustomEvent('scene-style-lefttab',{detail:tab}));
     });
     const css=document.createElement('style');
     css.textContent='.font-template-pane{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scrollbar-color:#35505b #09161f;scrollbar-width:thin}.font-set-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.font-set-card{display:grid;gap:4px;justify-items:start;text-align:left;padding:10px;border:1px solid #294451;border-radius:12px;background:#1b1b1b;color:#fff;cursor:pointer}.font-set-card.selected{border-color:#43e2b4;box-shadow:0 0 0 2px #43e2b455}.font-set-card .fs-ch{background:#000;border-radius:4px;padding:1px 7px;font-size:12px}.font-set-card .fs-title{font-size:19px;line-height:1.15}.font-set-card .fs-title em{font-style:normal;color:#ffe500}.font-set-card .fs-cap{background:#fff;color:#111;padding:1px 7px;font-size:14px}.font-set-card b{font:800 12px system-ui,sans-serif;color:#9eb0b9;margin-top:4px}.font-set-card.selected b{color:#63edc6}.layout-a .pane-head[hidden]{display:none!important}.left-pane-tabs{margin:0 0 12px}.template-mode-bar[hidden],.preset-grid[hidden]{display:none!important}.font-template-empty{border:1px dashed #294451;border-radius:12px;padding:28px 16px;text-align:center;display:grid;gap:6px;color:#8fa3ad}.font-template-empty b{color:#e8f3f0;font-size:14px}';
@@ -261,6 +264,31 @@
     {id:'gaegu',name:'개구 손글씨',channel:'GaeguBold',title:'GaeguBold',caption:'GaeguBold'},
     {id:'danjung',name:'단정 카페',channel:'Cafe24Danjunghae',title:'Cafe24Danjunghae',caption:'Pretendard'},
     {id:'suit',name:'SUIT 모던',channel:'SUITBold',title:'SUITBold',caption:'SUITBold'},
+    // 장면폰트:시작 — tools/scene_font_research/install_scene_fonts.py 가 쓴다. 손으로 고치지 마라
+    {id:'f330',name:'양진체',channel:'Scene330',title:'Scene330',caption:'Scene330',scale:0.87,dy:0.027},
+    {id:'f364',name:'쿠키런 Black',channel:'Scene364',title:'Scene364',caption:'BMJUA',scale:0.902,dy:-0.163},
+    {id:'f676',name:'원스토어 모바일POP',channel:'Scene676',title:'Scene676',caption:'Scene676',scale:0.956,dy:-0.1},
+    {id:'f223',name:'에스코어드림 9',channel:'Scene223',title:'Scene223',caption:'Scene223',scale:0.906,dy:-0.11},
+    {id:'f1456',name:'페이퍼로지 9',channel:'Scene1456',title:'Scene1456',caption:'Scene1456',scale:1.006,dy:-0.098},
+    {id:'f1369',name:'프리젠테이션 9',channel:'Scene1369',title:'Scene1369',caption:'Scene1369',scale:1.03,dy:-0.098},
+    {id:'f427',name:'메이플스토리 Bold',channel:'Scene427',title:'Scene427',caption:'BMJUA',scale:0.946,dy:-0.095},
+    {id:'f82',name:'즐거운이야기',channel:'Scene82',title:'Scene82',caption:'Pretendard',scale:1.27,dy:-0.048},
+    {id:'f463',name:'이사만루 Bold',channel:'Scene463',title:'Scene463',caption:'Scene463',scale:0.983,dy:-0.055},
+    {id:'f1146',name:'KBO 다이아고딕 Bold',channel:'Scene1146',title:'Scene1146',caption:'Scene1146',scale:0.967,dy:-0.117},
+    {id:'f669',name:'카페24 써라운드',channel:'Scene669',title:'Scene669',caption:'Scene669',scale:1.0,dy:-0.03},
+    {id:'f1381',name:'HS산토끼 2.0',channel:'Scene1381',title:'Scene1381',caption:'GmarketSansBold',scale:0.956,dy:-0.087},
+    {id:'f461',name:'빙그레 싸만코 Bold',channel:'Scene461',title:'Scene461',caption:'BMJUA',scale:1.152,dy:-0.103},
+    {id:'f1042',name:'태나다',channel:'Scene1042',title:'Scene1042',caption:'Pretendard',scale:1.061,dy:0.075},
+    {id:'f731',name:'창원단감아삭 Bold',channel:'Scene731',title:'Scene731',caption:'Scene731',scale:1.042,dy:-0.115},
+    {id:'f321',name:'을지로체',channel:'Scene321',title:'Scene321',caption:'GmarketSansBold',scale:0.956,dy:-0.033},
+    {id:'f499',name:'을지로10년후',channel:'Scene499',title:'Scene499',caption:'GmarketSansBold',scale:0.961,dy:-0.048},
+    {id:'f805',name:'강원교육튼튼',channel:'Scene805',title:'Scene805',caption:'Scene805',scale:1.074,dy:0.133},
+    {id:'f1710',name:'학교안심 포스터',channel:'Scene1710',title:'Scene1710',caption:'Scene1710',scale:0.946,dy:-0.107},
+    {id:'f458',name:'티머니 둥근바람 EB',channel:'Scene458',title:'Scene458',caption:'Scene458',scale:0.935,dy:-0.15},
+    {id:'f876',name:'영도체 Heavy',channel:'Scene876',title:'Scene876',caption:'Pretendard',scale:0.85,dy:-0.095},
+    {id:'f1186',name:'파셜산스',channel:'Scene1186',title:'Scene1186',caption:'Pretendard',scale:0.935,dy:-0.095},
+    {id:'f1405',name:'망고보드 또박 B',channel:'Scene1405',title:'Scene1405',caption:'Scene1405',scale:1.036,dy:-0.03},
+    // 장면폰트:끝
   ];
   // 템플릿별 기본 글꼴(2026-09-19 사장님 '기본을 하나로 고정하지 말고 템플릿마다 어울리게'):
   //   폰트 템플릿을 안 골랐을 때(=템플릿 기본) 쓰는 채널명·제목·자막 글꼴. 원본 제목 글꼴의 성격을 살리고
@@ -273,6 +301,168 @@
   function fontSetFamily(bind){
     const set=FONT_SETS.find(f=>f.id===fontSet)||PRESET_FONTS[rows[current]?.id]||DEFAULT_FONTS;if(!set)return '';
     return bind==='channel'?set.channel:bind==='caption'?set.caption:['hook1','hook2','bodyTitle'].includes(bind)?set.title:'';
+  }
+  // 글꼴별 실측 보정(2026-09-22 장면폰트): 같은 px이라도 글꼴마다 글자 높이·세로 위치가 다르다(실측 편차 1.5배).
+  //   scale=기본 글꼴과 같은 높이로 보이게 하는 배율, dy=잉크 중심을 줄 가운데로 옮기는 양(em). 값은 세트에 같이 적혀 있다(FONT_SETS).
+  //   자막은 세트의 caption 글꼴(기존 글꼴)을 쓰므로 보정하지 않는다. 폭이 넘치면 아래 fitText가 그대로 줄인다.
+  const NO_FONT_METRIC={scale:1,dy:0};
+  function fontSetMetric(bind){
+    if(bind==='caption')return NO_FONT_METRIC;
+    const set=FONT_SETS.find(f=>f.id===fontSet);
+    return set&&set.scale?{scale:set.scale,dy:set.dy||0}:NO_FONT_METRIC;
+  }
+  // ── 장면폰트 룩(2026-09-22 사장님): 색톤 · 꾸밈 · 추천. 왼쪽 탭 [추천|장면|폰트|색톤|꾸밈]의 세 창을 여기서 만든다.
+  //   색톤  = 새 저장값 없음. 기존 fixedColors에 훅·본문 칸 값을 한 번에 써넣는다(서버 검증·렌더 경로 그대로).
+  //   꾸밈  = 새 저장값 titleDeco(id). 서버 허용 형식은 scene_style.py와 짝. 훅 제목 1·2줄에만 건다.
+  //   추천  = {폰트,색톤,꾸밈} 세 id를 가리키기만 한다 — 색값·글꼴은 각 목록 한 곳에서만 정한다.
+  const TONES=[
+    {id:'p01',name:'이븐 청록',bg:'#1B1B1F',c1:'#FFFFFF',c2:'#19F5E6'},{id:'p02',name:'경고 노랑',bg:'#141414',c1:'#FFFFFF',c2:'#FFE500'},
+    {id:'p03',name:'네온 라임',bg:'#0E1410',c1:'#FFFFFF',c2:'#B6FF3C'},{id:'p04',name:'핫핑크',bg:'#17101A',c1:'#FFFFFF',c2:'#FF5FA8'},
+    {id:'p05',name:'세일 레드',bg:'#151010',c1:'#FFFFFF',c2:'#FF3B3B'},{id:'p06',name:'귤 오렌지',bg:'#17120C',c1:'#FFFFFF',c2:'#FF9A1F'},
+    {id:'p07',name:'일렉트릭 블루',bg:'#0B1020',c1:'#FFFFFF',c2:'#3DA5FF'},{id:'p08',name:'노랑+청록 더블',bg:'#121212',c1:'#FFE500',c2:'#19F5E6'},
+    {id:'p09',name:'라벤더 밤',bg:'#15122B',c1:'#F3EEFF',c2:'#B69CFF'},{id:'p10',name:'민트 크림',bg:'#0F1F1C',c1:'#F4FFF9',c2:'#6FFFD2'},
+    {id:'p11',name:'피치 코랄',bg:'#22120F',c1:'#FFF4EC',c2:'#FF8F6B'},{id:'p12',name:'골드 프리미엄',bg:'#14110A',c1:'#FFF8E1',c2:'#F4C542'},
+    {id:'p13',name:'흰 바탕 빨강',bg:'#FFFFFF',c1:'#111111',c2:'#FF2D2D'},{id:'p14',name:'흰 바탕 로열블루',bg:'#FFFFFF',c1:'#111111',c2:'#1F4BFF'},
+    {id:'p15',name:'노랑 바탕 검정',bg:'#FFE500',c1:'#111111',c2:'#E60023'},{id:'p16',name:'딥 블루 바탕',bg:'#0D2A6B',c1:'#FFFFFF',c2:'#FFE45B'},
+    // 09-22 2차 확장(사장님 '더 많이'): 색 있는 바탕·밝은 바탕을 늘렸다. 실측은 어두운 바탕이 84/102라 남들과 달라 보이는 쪽.
+    {id:'p17',name:'체리 레드 바탕',bg:'#B3001B',c1:'#FFFFFF',c2:'#FFE45B'},{id:'p18',name:'포레스트 그린',bg:'#0E3B2E',c1:'#FFFFFF',c2:'#C8FF5A'},
+    {id:'p19',name:'퍼플 팝',bg:'#3B1A78',c1:'#FFFFFF',c2:'#FFD84A'},{id:'p20',name:'핑크 바탕',bg:'#E8337F',c1:'#FFFFFF',c2:'#FFF06A'},
+    {id:'p21',name:'오렌지 바탕',bg:'#E85D04',c1:'#FFFFFF',c2:'#FFF3A0'},{id:'p22',name:'민트 바탕',bg:'#19D3B5',c1:'#0B1F1B',c2:'#5B12C9'},
+    {id:'p23',name:'스카이 블루 바탕',bg:'#1769E0',c1:'#FFFFFF',c2:'#FFE500'},{id:'p24',name:'크림 베이지',bg:'#F6EBD8',c1:'#2A2018',c2:'#C8381A'},
+    {id:'p25',name:'차콜 코랄',bg:'#22252B',c1:'#FFFFFF',c2:'#FF6B6B'},{id:'p26',name:'미드나잇 골드',bg:'#0A0F24',c1:'#FFFFFF',c2:'#FFC93C'},
+    {id:'p27',name:'와인 로즈',bg:'#3A0D1E',c1:'#FFE9EF',c2:'#FF7FA3'},{id:'p28',name:'올리브 레몬',bg:'#2C331A',c1:'#F7F5E6',c2:'#E3F56B'},
+    {id:'p29',name:'아이스 블루',bg:'#E8F4FF',c1:'#0E2A47',c2:'#0A5CE0'},{id:'p30',name:'블랙 화이트',bg:'#000000',c1:'#FFFFFF',c2:'#FFFFFF'},
+    {id:'p31',name:'마젠타 네온',bg:'#12001A',c1:'#FFFFFF',c2:'#FF3DF2'},{id:'p32',name:'그린 세일 바탕',bg:'#007A3D',c1:'#FFFFFF',c2:'#FFF200'},
+  ];
+  // 꾸밈은 전부 em·currentColor로 적는다 — 글자 크기·색톤이 바뀌어도 따라오고, 렌더(1080px)에서도 같은 비율이다.
+  const DECOS=[
+    // --deco-edge = 그 줄 글자색의 반대(밝은 글자엔 검정, 어두운 글자엔 흰색) — 밝은 바탕 색톤에서 검은 글자에 검은 그림자가 뭉개지는 걸 막는다.
+    // 강조 줄만 칠하는 꾸밈(accent)은 템플릿이 제목 줄에 거는 외곽선·그림자를 먼저 끈다(안 끄면 박스 안 글자에 검은 테가 겹쳐 안 읽힌다).
+    {id:'outline',name:'외곽선',css:'-webkit-text-stroke:.085em var(--deco-edge);paint-order:stroke fill;text-shadow:0 .06em 0 color-mix(in srgb,var(--deco-edge) 85%,transparent)'},
+    {id:'box',name:'형광 박스',accent:'-webkit-text-stroke:0;text-shadow:none;background:currentColor;-webkit-text-fill-color:var(--deco-on-accent);border-radius:.14em;padding:.02em .2em'},
+    {id:'under',name:'형광펜 밑줄',accent:'-webkit-text-stroke:0;text-shadow:none;background:linear-gradient(transparent 54%,color-mix(in srgb,currentColor 72%,transparent) 54%);-webkit-text-fill-color:var(--deco-on-bg);padding:0 .1em'},
+    {id:'glow',name:'네온 글로우',accent:'-webkit-text-stroke:0;-webkit-text-fill-color:color-mix(in srgb,currentColor 30%,#fff);text-shadow:0 0 .1em currentColor,0 0 .32em color-mix(in srgb,currentColor 70%,transparent),0 0 .7em color-mix(in srgb,currentColor 40%,transparent)'},
+    {id:'grad',name:'그라데이션',accent:'-webkit-text-stroke:0;text-shadow:none;background:linear-gradient(180deg,#fff 8%,currentColor 66%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 .05em 0 rgba(0,0,0,.85))'},
+    {id:'shadow3d',name:'입체 그림자',css:'-webkit-text-stroke:.06em var(--deco-edge);paint-order:stroke fill;text-shadow:.05em .05em 0 var(--deco-edge),.1em .1em 0 var(--deco-edge),.15em .15em 0 var(--deco-edge)'},
+    {id:'tilt',name:'기울임 속도감',css:'display:inline-block;transform:skewX(-9deg);-webkit-text-stroke:.07em var(--deco-edge);paint-order:stroke fill;text-shadow:.06em .06em 0 color-mix(in srgb,var(--deco-edge) 80%,transparent)'},
+    {id:'sticker',name:'흰 테두리 스티커',accent:'-webkit-text-stroke:.1em #fff;paint-order:stroke fill;text-shadow:none;filter:drop-shadow(0 .06em 0 rgba(0,0,0,.75))'},
+    // 09-22 2차 확장
+    {id:'pill',name:'알약 박스',accent:'-webkit-text-stroke:0;text-shadow:none;background:currentColor;-webkit-text-fill-color:var(--deco-on-accent);border-radius:999px;padding:.03em .42em'},
+    {id:'boxline',name:'테두리 박스',accent:'-webkit-text-stroke:0;text-shadow:none;box-shadow:inset 0 0 0 .07em currentColor;border-radius:.16em;padding:.02em .24em'},
+    {id:'ribbon',name:'기울인 띠',accent:'-webkit-text-stroke:0;text-shadow:none;background:currentColor;-webkit-text-fill-color:var(--deco-on-accent);padding:.02em .28em;transform:skewX(-10deg)'},
+    {id:'plate',name:'글자판',css:'-webkit-text-stroke:0;text-shadow:none;background:color-mix(in srgb,var(--deco-edge) 82%,transparent);border-radius:.1em;padding:.02em .2em'},
+    {id:'ring',name:'이중 테두리',css:'-webkit-text-stroke:.075em var(--deco-edge);paint-order:stroke fill;text-shadow:none',accent:'filter:drop-shadow(.04em 0 0 #fff) drop-shadow(-.04em 0 0 #fff) drop-shadow(0 .04em 0 #fff) drop-shadow(0 -.04em 0 #fff)'},
+    {id:'longshadow',name:'롱 섀도',css:'-webkit-text-stroke:0;text-shadow:.03em .03em 0 var(--deco-shade),.06em .06em 0 var(--deco-shade),.09em .09em 0 var(--deco-shade),.12em .12em 0 var(--deco-shade),.15em .15em 0 var(--deco-shade),.18em .18em 0 var(--deco-shade),.21em .21em 0 var(--deco-shade),.24em .24em 0 var(--deco-shade)'},
+    {id:'colorstroke',name:'색 외곽선',css:'-webkit-text-stroke:.085em var(--deco-edge);paint-order:stroke fill;text-shadow:none',accent:'-webkit-text-stroke:.1em color-mix(in srgb,currentColor 38%,#000);filter:drop-shadow(0 .05em 0 rgba(0,0,0,.7))'},
+    {id:'twotone',name:'위아래 투톤',accent:'-webkit-text-stroke:0;text-shadow:none;background:linear-gradient(180deg,currentColor 52%,color-mix(in srgb,currentColor 58%,#000) 52%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 .05em 0 rgba(0,0,0,.85))'},
+  ];
+  const LOOKS=[
+    {id:'l01',name:'이븐 클래식',font:'f330',tone:'p01',deco:'outline'},{id:'l02',name:'속보 옐로',font:'f223',tone:'p02',deco:'box'},
+    {id:'l03',name:'네온 사인',font:'f1369',tone:'p03',deco:'glow'},{id:'l04',name:'핫딜 핑크',font:'f364',tone:'p04',deco:'shadow3d'},
+    {id:'l05',name:'세일 폭탄',font:'f676',tone:'p05',deco:'shadow3d'},{id:'l06',name:'귤빛 간판',font:'f321',tone:'p06',deco:'outline'},
+    {id:'l07',name:'일렉트릭',font:'f1456',tone:'p07',deco:'tilt'},{id:'l08',name:'더블 컬러',font:'f463',tone:'p08',deco:'outline'},
+    {id:'l09',name:'라벤더 뷰티',font:'f669',tone:'p09',deco:'grad'},{id:'l10',name:'민트 살림',font:'f458',tone:'p10',deco:'under'},
+    {id:'l11',name:'피치 간식',font:'f461',tone:'p11',deco:'box'},{id:'l12',name:'골드 프리미엄',font:'f876',tone:'p12',deco:'grad'},
+    {id:'l13',name:'뉴스 속보',font:'f1146',tone:'p13',deco:'box'},{id:'l14',name:'신뢰 블루',font:'f1405',tone:'p14',deco:'under'},
+    {id:'l15',name:'전단지 특가',font:'f1710',tone:'p15',deco:'shadow3d'},{id:'l16',name:'딥블루 어그로',font:'aggro',tone:'p16',deco:'tilt'},
+    {id:'l17',name:'예능 자막',font:'f82',tone:'p02',deco:'outline'},{id:'l18',name:'레트로 간판',font:'f499',tone:'p06',deco:'shadow3d'},
+    {id:'l19',name:'포스터',font:'f1042',tone:'p05',deco:'outline'},{id:'l20',name:'손맛 붓',font:'f1381',tone:'p03',deco:'outline'},
+    {id:'l21',name:'아삭 또렷',font:'f731',tone:'p01',deco:'shadow3d'},{id:'l22',name:'잘린 획 패션',font:'f1186',tone:'p08',deco:'outline'},
+    {id:'l23',name:'메이플 귀염',font:'f427',tone:'p04',deco:'box'},{id:'l24',name:'튼튼 교재',font:'f805',tone:'p16',deco:'outline'},
+    // 룩 확장:시작 — tools/scene_font_research/build_looks.py 가 쓴다. 손으로 고치지 마라
+    {id:'l25',name:'오렌지 바탕 · 잘난 쇼핑',font:'jalnan',tone:'p21',deco:'sticker'},{id:'l26',name:'미드나잇 골드 · G마켓 깔끔',font:'gmarket',tone:'p26',deco:'pill'},
+    {id:'l27',name:'마젠타 네온 · 카페24 각진',font:'cafe24',tone:'p31',deco:'boxline'},{id:'l28',name:'퍼플 팝 · 묵직 가석',font:'gasoek',tone:'p19',deco:'under'},
+    {id:'l29',name:'크림 베이지 · 부드러운 빙그레',font:'binggrae',tone:'p24',deco:'ribbon'},{id:'l30',name:'아이스 블루 · 간판체',font:'ganpan',tone:'p29',deco:'plate'},
+    {id:'l31',name:'체리 레드 바탕 · 잘난고딕',font:'jalnangothic',tone:'p17',deco:'ring'},{id:'l32',name:'와인 로즈 · 베이글 팝',font:'bagel',tone:'p27',deco:'grad'},
+    {id:'l33',name:'그린 세일 바탕 · 꾸불림 재미',font:'kkubulim',tone:'p32',deco:'longshadow'},{id:'l34',name:'민트 바탕 · 명조 고급',font:'myeongjo',tone:'p22',deco:'colorstroke'},
+    {id:'l35',name:'핑크 바탕 · 리디 감성',font:'ridi',tone:'p20',deco:'twotone'},{id:'l36',name:'차콜 코랄 · 분필 칠판',font:'chalk',tone:'p25',deco:'glow'},
+    {id:'l37',name:'블랙 화이트 · 개구 손글씨',font:'gaegu',tone:'p30',deco:'pill'},{id:'l38',name:'포레스트 그린 · 단정 카페',font:'danjung',tone:'p18',deco:'boxline'},
+    {id:'l39',name:'스카이 블루 바탕 · SUIT 모던',font:'suit',tone:'p23',deco:'sticker'},{id:'l40',name:'올리브 레몬 · 양진체',font:'f330',tone:'p28',deco:'ribbon'},
+    {id:'l41',name:'피치 코랄 · 쿠키런 Black',font:'f364',tone:'p11',deco:'tilt'},{id:'l42',name:'오렌지 바탕 · 원스토어 모바일POP',font:'f676',tone:'p21',deco:'plate'},
+    {id:'l43',name:'미드나잇 골드 · 에스코어드림 9',font:'f223',tone:'p26',deco:'ring'},{id:'l44',name:'마젠타 네온 · 페이퍼로지 9',font:'f1456',tone:'p31',deco:'longshadow'},
+    {id:'l45',name:'라벤더 밤 · 프리젠테이션 9',font:'f1369',tone:'p09',deco:'colorstroke'},{id:'l46',name:'흰 바탕 로열블루 · 메이플스토리 Bold',font:'f427',tone:'p14',deco:'twotone'},
+    {id:'l47',name:'퍼플 팝 · 즐거운이야기',font:'f82',tone:'p19',deco:'glow'},{id:'l48',name:'크림 베이지 · 이사만루 Bold',font:'f463',tone:'p24',deco:'sticker'},
+    {id:'l49',name:'아이스 블루 · KBO 다이아고딕 Bold',font:'f1146',tone:'p29',deco:'pill'},{id:'l50',name:'일렉트릭 블루 · 카페24 써라운드',font:'f669',tone:'p07',deco:'boxline'},
+    {id:'l51',name:'골드 프리미엄 · HS산토끼 2.0',font:'f1381',tone:'p12',deco:'ribbon'},{id:'l52',name:'체리 레드 바탕 · 빙그레 싸만코 Bold',font:'f461',tone:'p17',deco:'plate'},
+    {id:'l53',name:'민트 바탕 · 태나다',font:'f1042',tone:'p22',deco:'ring'},{id:'l54',name:'와인 로즈 · 창원단감아삭 Bold',font:'f731',tone:'p27',deco:'under'},
+    {id:'l55',name:'그린 세일 바탕 · 을지로체',font:'f321',tone:'p32',deco:'longshadow'},{id:'l56',name:'민트 크림 · 을지로10년후',font:'f499',tone:'p10',deco:'colorstroke'},
+    {id:'l57',name:'노랑 바탕 검정 · 강원교육튼튼',font:'f805',tone:'p15',deco:'twotone'},{id:'l58',name:'핑크 바탕 · 학교안심 포스터',font:'f1710',tone:'p20',deco:'glow'},
+    {id:'l59',name:'차콜 코랄 · 티머니 둥근바람 EB',font:'f458',tone:'p25',deco:'grad'},{id:'l60',name:'블랙 화이트 · 영도체 Heavy',font:'f876',tone:'p30',deco:'tilt'},
+    // 룩 확장:끝
+  ];
+  let titleDeco='';
+  const toneKeys=p=>p.mode==='continuous'?[layoutKey(p.id,p.frame)]:[layoutKey(p.id,p.hook),layoutKey(p.id,p.body)];
+  // 지금 템플릿에 걸린 색톤 id — 따로 기억하지 않고 저장된 색값에서 읽어 낸다(같은 사실을 두 군데 적지 않는다).
+  const currentTone=()=>{const p=rows[current],paint=p&&fixedColors.get(toneKeys(p)[0]);if(!paint)return '';
+    const same=(a,b)=>String(a||'').toLowerCase()===String(b||'').toLowerCase();return TONES.find(t=>same(t.bg,paint.top)&&same(t.c1,paint.title1)&&same(t.c2,paint.title2))?.id||'';};
+  function applyTone(id){
+    const p=rows[current],tone=TONES.find(t=>t.id===id);if(!p)return;
+    for(const key of toneKeys(p)){if(tone)fixedColors.set(key,{top:tone.bg,bottom:tone.bg,title1:tone.c1,title2:tone.c2});else fixedColors.delete(key);}
+    for(const k of [...colorOverrides.keys()])if(k.startsWith(p.id+':'))colorOverrides.delete(k);   // 손으로 고른 색이 남아 있으면 색톤을 가린다
+    preview.classList.remove('is-pristine');renderEdit();syncFixedPanel();
+  }
+  // 훅 제목 글자에 꾸밈을 건다. ★글자 맞춤(fitText) 전에 불러야 한다 — 박스 여백·외곽선이 폭에 들어간다.
+  function applyTitleDeco(el,bind,frame){
+    const deco=DECOS.find(d=>d.id===titleDeco);if(!deco||!['hook1','hook2'].includes(bind))return;
+    const rule=[deco.css,bind==='hook2'?deco.accent:''].filter(Boolean).join(';');if(!rule)return;
+    const paint=fixedColorsFor(rows[current].id,frame),bg=(paint.top||frame.title_bg||'#000000').slice(0,7),accent=(colorOverrides.get(colorKey('accent'))||paint.title2||'#00F9ED').slice(0,7);
+    const ink=document.createElement('span');ink.className='title-deco-ink';ink.append(...el.childNodes);el.append(ink);
+    const own=bind==='hook2'?accent:(colorOverrides.get(colorKey('white'))||paint.title1||'#FFFFFF').slice(0,7);
+    ink.style.cssText=rule;ink.style.setProperty('--deco-edge',readableInk(own));ink.style.setProperty('--deco-shade',`color-mix(in srgb,${bg} 45%,#000)`);ink.style.setProperty('--deco-on-accent',readableInk(accent));ink.style.setProperty('--deco-on-bg',readableInk(bg));
+  }
+  {
+    const fontPane=document.querySelector('.font-template-pane'),panes={};
+    for(const name of ['look','tone','deco']){const el=document.createElement('div');el.className='font-template-pane look-pane';el.hidden=true;fontPane.after(el);panes[name]=el;}
+    const sample=(tone,deco,family)=>{const d=DECOS.find(x=>x.id===deco)||{},on=c=>readableInk(c);
+      return `<span class="lk-prev" style="background:${tone.bg};font-family:'${family}',sans-serif"><i style="color:${tone.c1};--deco-shade:color-mix(in srgb,${tone.bg} 45%,#000);--deco-edge:${on(tone.c1)};${d.css||''}">제목 첫줄</i><i style="color:${tone.c2};--deco-shade:color-mix(in srgb,${tone.bg} 45%,#000);--deco-edge:${on(tone.c2)};--deco-on-accent:${on(tone.c2)};--deco-on-bg:${on(tone.bg)};${[d.css,d.accent].filter(Boolean).join(';')}">제목 둘째줄</i></span>`;};
+    const familyOf=id=>(FONT_SETS.find(f=>f.id===id)||DEFAULT_FONTS).title;
+    const draw=()=>{
+      const tone=TONES.find(t=>t.id===currentTone())||{bg:'#1b1b1b',c1:'#FFFFFF',c2:'#FFE24A'},family=familyOf(fontSet);
+      panes.look.innerHTML='<div class="font-set-grid">'+LOOKS.map(l=>`<button type="button" class="font-set-card look-card${l.font===fontSet&&l.tone===currentTone()&&l.deco===titleDeco?' selected':''}" data-look="${l.id}">${sample(TONES.find(t=>t.id===l.tone),l.deco,familyOf(l.font))}<b>${l.name}</b></button>`).join('')+'</div>';
+      panes.tone.innerHTML='<div class="font-set-grid">'+[{id:'',name:'템플릿 원래 색',bg:'#1b1b1b',c1:'#FFFFFF',c2:'#9aa7b0'},...TONES].map(t=>`<button type="button" class="font-set-card look-card${t.id===currentTone()?' selected':''}" data-tone="${t.id}">${sample(t,titleDeco,family)}<b>${t.name}</b></button>`).join('')+'</div>';
+      panes.deco.innerHTML='<div class="font-set-grid">'+[{id:'',name:'꾸밈 없음'},...DECOS].map(d=>`<button type="button" class="font-set-card look-card${d.id===titleDeco?' selected':''}" data-deco="${d.id}">${sample(tone,d.id,family)}<b>${d.name}</b></button>`).join('')+'</div>';
+    };
+    window.addEventListener('scene-style-lefttab',event=>{for(const [name,el] of Object.entries(panes))el.hidden=event.detail!==name;if(panes[event.detail])draw();});
+    window.addEventListener('scene-style-fontset',()=>{if(Object.values(panes).some(el=>!el.hidden))draw();});
+    const setDeco=id=>{titleDeco=DECOS.some(d=>d.id===id)?id:'';fittedText.clear();rememberLocal({titleDeco});};
+    panes.tone.addEventListener('click',event=>{const c=event.target.closest('[data-tone]');if(!c)return;applyTone(c.dataset.tone);draw();});
+    panes.deco.addEventListener('click',event=>{const c=event.target.closest('[data-deco]');if(!c)return;setDeco(c.dataset.deco);renderEdit();draw();});
+    panes.look.addEventListener('click',event=>{const c=event.target.closest('[data-look]'),look=c&&LOOKS.find(l=>l.id===c.dataset.look);if(!look)return;
+      fontSet=look.font;rememberLocal({fontSet});setDeco(look.deco);applyTone(look.tone);draw();});   // applyTone이 마지막에 다시 그린다
+    const css=document.createElement('style');
+    css.textContent='.layout-a .tool-tabs.left-pane-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}.left-pane-tabs button{padding-left:2px;padding-right:2px;white-space:nowrap}.look-card{padding:8px}.lk-prev{display:grid;gap:2px;justify-items:center;width:100%;padding:10px 4px;border-radius:8px;border:1px solid #ffffff1f;font-size:17px;line-height:1.25;overflow:hidden;white-space:nowrap}.lk-prev i{font-style:normal}.lk-prev i:last-child{font-size:19px}.title-deco-ink{display:inline-block}';
+    document.head.append(css);
+  }
+  // ── 이 장면을 썸네일 후보로(2026-09-22 사장님): 구버전 6단계 화면의 [🖼 이 장면을 썸네일로]를 새 편집기로 옮겼다.
+  //   서버는 그대로 POST /api/produce/thumb/pin {job_id,beat_idx} — 7단계 썸네일 후보 맨 앞에 그 장면 화면이 꽂힌다.
+  //   보내는 것은 '꾸민 화면'이 아니라 그 장면의 원본 화면이다(구버전과 같다 — 썸네일은 7단계에서 따로 꾸민다).
+  //   이동은 부모(제작소)가 한다: scene-style-goto-thumb → 저장하고 닫은 뒤 7단계로. 샘플 작업대·LAB에는 실제 영상이 없어 안내만 한다.
+  {
+    const nav=root.querySelector('.scene-navigator');
+    if(nav&&!labMode){
+      const bar=document.createElement('div');bar.className='scene-thumb-pin';
+      bar.innerHTML='<button type="button" data-thumb-pin>🖼 이 장면을 썸네일 후보로</button><button type="button" data-thumb-go hidden>썸네일 단계로 이동 ›</button><small data-thumb-msg role="status"></small>';
+      nav.after(bar);
+      const pin=bar.querySelector('[data-thumb-pin]'),go=bar.querySelector('[data-thumb-go]'),msg=bar.querySelector('[data-thumb-msg]');
+      const say=(text,ok)=>{msg.textContent=text;msg.dataset.ok=ok?'1':'0';};
+      pin.addEventListener('click',async()=>{
+        const jobId=sceneContext?.jobId,scene=sceneContext?.scenes?.[sceneIndex];
+        if(!jobId||!scene){say('실제 영상을 열었을 때 쓸 수 있어요(지금은 샘플 화면)',false);return;}
+        pin.disabled=true;say('보내는 중…',true);
+        try{
+          const response=await fetch('/api/produce/thumb/pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:jobId,beat_idx:scene.beat_idx})});
+          const data=await response.json().catch(()=>({}));
+          if(!response.ok||!data.ok)throw new Error(data.error||'보내지 못했어요');
+          say(`✓ ${sceneIndex+1}번째 장면을 썸네일 후보 맨 앞에 넣었어요`,true);go.hidden=false;
+          window.parent?.postMessage({type:'scene-style-thumb-pinned',jobId,name:data.name},location.origin);
+        }catch(error){say('✕ '+error.message+' — 다시 눌러 주세요',false);}
+        finally{pin.disabled=false;}
+      });
+      go.addEventListener('click',()=>{window.parent?.postMessage({type:'scene-style-goto-thumb',jobId:sceneContext?.jobId},location.origin);});
+      const css=document.createElement('style');
+      css.textContent='.scene-thumb-pin{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:10px}.scene-thumb-pin button{padding:9px 14px;border-radius:10px;border:1px solid #294451;background:#0f1c25;color:#dce8ec;font-weight:700;cursor:pointer}.scene-thumb-pin button:hover{border-color:#3fe0b5}.scene-thumb-pin button:disabled{opacity:.55;cursor:wait}.scene-thumb-pin [data-thumb-go]{border-color:#3fe0b5;background:#0f2a26;color:#d9fff4}.scene-thumb-pin small{flex-basis:100%;text-align:center;font-size:12px;color:#ff9b9b;min-height:16px}.scene-thumb-pin small[data-ok="1"]{color:#7ee3c4}';
+      document.head.append(css);
+    }
   }
   const BODY_CAPTION_MOTIONS={
     // 09-19 사장님 '느낌이 다 비슷하다' → 이동 거리·시간·튕김을 모션마다 확실히 다르게(예전: 14px·0.3초로 거의 같았다)
@@ -611,7 +801,8 @@
     const el=document.createElement('div');el.className='precision-text '+role;el.dataset.editBind=bind;
     const left=measuredBounds?Math.max(0,ln.x0/frame.width*100-1.6):Math.max(1.5,(ln.x0||0)/frame.width*100);
     const right=measuredBounds?Math.max(0,(frame.width-1-ln.x1)/frame.width*100-1.6):Math.max(1.5,(frame.width-1-(ln.x1??frame.width-1))/frame.width*100);
-    const fontPx=ln.font_size?ln.font_size*scale:ln.h*scale*1.05;
+    const fontMetric=fontSetMetric(bind);
+    const fontPx=(ln.font_size?ln.font_size*scale:ln.h*scale*1.05)*fontMetric.scale;
     // 기본 외곽선/그림자는 제거하고 색 대비 부족 시에만 아래에서 얇게 보정한다.
     const stroke=0,shadowY=0;
     const pickedFont=fontSetFamily(bind);
@@ -624,7 +815,7 @@
     const topOffset=(bind==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(bind)+(bind==='caption'?0:moved.y);
     const verticalNudge=bind==='channel'?.7:-.35;
     const baseHeight=ln.h/frame.height*100+.9,displayHeight=baseHeight*Math.max(1,manualScale);
-    const displayTop=ln.y0/frame.height*100+verticalNudge+topOffset-(displayHeight-baseHeight)/2;
+    const displayTop=ln.y0/frame.height*100+verticalNudge+topOffset-(displayHeight-baseHeight)/2+fontMetric.dy*scaledFont/(frame.height*scale)*100;
     const shiftX=bind==='caption'?0:moved.x;
     Object.assign(el.style,{left:(left+shiftX)+'%',right:(right-shiftX)+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
     const fixedColorKey=bind==='hook1'?'title1':(bind==='hook2'||bind==='bodyTitle')?'title2':null;
@@ -639,6 +830,7 @@
     }else el.textContent=text||' ';
     contrastOutline(el,ln,frame,bind);
     if(frame.reference_style){el.style.webkitTextStroke=ln.stroke?`${ln.stroke*scale}px #080808`:'0px';el.style.textShadow=ln.shadow_y?`0 ${ln.shadow_y*scale}px ${2*scale}px #000000AA`:'none';}
+    applyTitleDeco(el,bind,frame);   // 09-22 장면폰트: 꾸밈은 맞춤 전에 — 박스 여백·외곽선이 폭에 들어간다
     if(manualLines>1){el.textContent=text;el.style.whiteSpace='pre-wrap';el.style.display='block';el.style.lineHeight='1.2';el.style.textWrap='wrap';}
     else if(ln.max_lines>1||WRAP3.includes(bind)){el.style.whiteSpace='normal';el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.18';el.style.display='-webkit-box';el.style.webkitBoxOrient='vertical';el.style.webkitLineClamp='3';}   // 09-19 사장님: 본문 제목·자막은 3줄까지
     const chosen=colorOverrides.get(colorKey(bind==='hook2'?'accent':'white'));
@@ -1154,7 +1346,20 @@
     const b=event.target.closest('[data-caption-look]');if(!b)return;
     const settings={...captionSettings(),...(captionLayouts.get(captionKey())||{})};delete settings.bgUser;delete settings.colorUser;
     if(b.dataset.captionLook==='auto')delete settings.look;else settings.look=b.dataset.captionLook==='none'?'none':Number(b.dataset.captionLook);
-    captionLayouts.set(captionKey(),settings);markDirty('caption');renderEdit();syncCaptionLookButtons();
+    captionLayouts.set(captionKey(),settings);
+    // 09-22 사장님: 자막박스 '모양'은 모든 장면 공통, 장면별로 다른 것은 '위치 이동'뿐.
+    //   다른 장면에는 모양(look)만 옮긴다 — 그 장면의 위치·폭·높이는 건드리지 않는다. 모양을 바꾸면 손으로 고른 박스색·글자색도 같이 푼다(위와 같게).
+    for(let i=0;i<sceneTotal();i++){
+      const key=`${rows[current].id}:${mode}:${i}:caption`;if(key===captionKey())continue;
+      const other={...(captionLayouts.get(key)||{})};delete other.bgUser;delete other.colorUser;
+      // 서버(scene_style.py)는 자막 배치마다 placement를 필수로 본다 — 모양만 넣으면 저장이 거절된다.
+      //   기본값 규칙은 captionSettings와 같다(끌어 옮긴 장면='free', 아니면 'title'). 그 줄은 장면 세션이 고치는 구간 옆이라 건드리지 않고 여기 한 번 더 적었다.
+      const basePlacement=captionDrags.has(key)?'free':'title';other.placement=other.placement||basePlacement;
+      if('look' in settings)other.look=settings.look;else delete other.look;
+      const onlyDefault=Object.keys(other).length===1&&other.placement===basePlacement;   // 남은 게 기본 배치뿐이면 기록을 지운다
+      if(onlyDefault)captionLayouts.delete(key);else captionLayouts.set(key,other);
+    }
+    markDirty('caption');renderEdit();syncCaptionLookButtons();
   });
   maskDetails.addEventListener('toggle',syncCaptionLookButtons);
   function applyCaptionMoveScope(){
@@ -1235,12 +1440,12 @@
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
       }
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,titleDeco,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
@@ -1249,7 +1454,7 @@
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
         modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
