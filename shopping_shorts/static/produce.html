@@ -3924,8 +3924,7 @@ async function loadBuffer(){
     } catch(e){ /* 못 가져와도 화면은 뜬다 — 글만 빈다 */ }
   }
   /* 올라갈 영상을 보여준다 — 완성본 미리보기와 같은 주소를 쓴다(0순위-B). */
-  var vbox = document.getElementById('bufVideo');
-  if (vbox && MIX_JOB){
+  if (MIX_JOB){
     /* ★poster를 반드시 준다 — 없으면 preload="metadata"에서 멈춘 브라우저가 **검은 칸**을
        보여준다(실측 2026-08-30 사장님 화면. 내 브라우저는 readyState 4까지 가서 첫 프레임이
        그려져 멀쩡해 보였다 — 브라우저마다 갈린다). 주소는 이 화면이 이미 쓰는 것과 같다. */
@@ -4137,6 +4136,7 @@ function bufRenderSource(){
     : '이 작업에서 <b>완성한 영상 그대로</b> 올라갑니다. 파일을 따로 받아 올리실 필요 없습니다 — '
       + '<b>정한 시각이 되면 Buffer가 우리 서버에서 직접 가져갑니다.</b>';
   if (!box) return;
+  if (BUF.uploadingMB){ box.innerHTML = '<div class="hint">⏳ 올리는 중… (' + BUF.uploadingMB + 'MB)</div>'; return; }
   var up = '<button type="button" class="btn-prev" style="min-height:44px;padding:8px 14px" '
          + 'onclick="document.getElementById(\'bufEditedFile\').click()">✂️ 캡컷에서 고친 영상 올리기</button>';
   if (!ed){ box.innerHTML = up + '<div class="hint" style="margin-top:6px">캡컷에서 손본 뒤 MP4로 내보낸 파일을 올리면 그 영상이 대신 올라갑니다.</div>'; return; }
@@ -4160,12 +4160,12 @@ function bufPickSource(v){ BUF.source = (v === 'edited') ? 'edited' : 'final'; b
 async function bufUploadEdited(inp){
   var f = inp.files && inp.files[0]; inp.value = '';
   if (!f) return;
-  var box = document.getElementById('bufEdited');
-  if (box) box.innerHTML = '<div class="hint">⏳ 올리는 중… (' + (f.size / 1048576).toFixed(1) + 'MB)</div>';
+  BUF.uploadingMB = (f.size / 1048576).toFixed(1); bufRenderSource();
   var fd = new FormData(); fd.append('file', f);
   var d = null;
   try { d = await (await fetch('/api/mix/edited/' + encodeURIComponent(MIX_JOB), {method: 'POST', body: fd})).json(); }
   catch(e){ d = null; }
+  BUF.uploadingMB = null;
   if (!d || !d.ok){
     alert((d && d.error) || '올리지 못했습니다. 잠시 뒤 다시 해 주세요.');
     bufRenderSource(); return;
