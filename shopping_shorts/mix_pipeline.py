@@ -3948,10 +3948,15 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
     base = _cb.load_base(work)
     if base is None:
         return plan, _resolve_sources(job, work), None
+    # ★늘림 판정의 길이는 렌더와 같은 자(final_clip_pairs가 쓰는 _beat_effective_dur)로 잰다 —
+    #   target_seconds는 계획값이라 실제 TTS 길이와 어긋날 수 있다(둘이 다르면 지워놓고 안 쓰거나, 모자란다).
+    from shopping_shorts import video_assemble as _va
     tts_durs = {}
     for b in plan.get("beats") or []:
         try:
-            tts_durs[int(b["beat_idx"])] = float(b.get("target_seconds") or 0)
+            _tp = b.get("tts_path")
+            tts_durs[int(b["beat_idx"])] = (float(_va._beat_effective_dur(b, _tp)) if _tp and Path(_tp).exists()
+                                            else float(b.get("target_seconds") or 0))
         except (TypeError, ValueError):
             pass
     plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs)

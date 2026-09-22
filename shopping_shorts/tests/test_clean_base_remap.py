@@ -121,3 +121,18 @@ def test_time_in_clean(base):
     assert cb.time_in_clean(base, 1, pos=0.0) == 2.0
     assert cb.time_in_clean(base, 1, pos=0.5) == pytest.approx(3.5)
     assert cb.time_in_clean(base, 7) is None
+
+
+def test_extend_extra_is_appended_after_clean_cuts(tmp_path, base):
+    """늘림 조각(cbx)을 지워 두었으면 청소 컷 뒤에 붙여 쓰고, 다시 늘림을 요청하지 않는다."""
+    p = _plan()
+    (tmp_path / "cbx0.mp4").write_bytes(b"x" * 2048)
+    cb.add_extra(tmp_path, base, vid="cbx0", path=str(tmp_path / "cbx0.mp4"),
+                 beat_idx=0, material_key=cb.beat_material_key(p["beats"][0]), seconds=1.2)
+    base2 = cb.load_base(tmp_path)
+    plan2, uncovered, extend = cb.remap_plan(p, base2, tts_durs={0: 3.0})
+    assert uncovered == [] and extend == []
+    assert plan2["beats"][0]["scene_override"] == [
+        {"video_id": "clean", "seg_id": "clean-0", "start": 0.0, "end": 2.0},
+        {"video_id": "cbx0", "seg_id": "cbx0", "start": 0.0, "end": 1.2}]
+    assert cb.coverage(p, base2) == {0: "covered", 1: "covered"}

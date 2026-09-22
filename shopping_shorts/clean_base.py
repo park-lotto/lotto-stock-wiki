@@ -80,8 +80,12 @@ def _key_list(k):
     return [list(x) for x in k]
 
 
-def _extra_for(base, beat_idx, key):
+def _extra_for(base, beat_idx, key, prefix="cb"):
+    """이 비트·재료 키의 증분 조각. prefix="cb"=바뀐 장면 조각(cb{bi}_{k}) · "cbx"=늘림 조각(cbx{bi})."""
     for vid, ex in (base.get("extras") or {}).items():
+        is_x = vid.startswith("cbx")
+        if (prefix == "cbx") != is_x:
+            continue
         if int(ex.get("beat_idx", -1)) == int(beat_idx) and ex.get("key") == _key_list(key):
             if Path(ex.get("path", "")).exists():
                 return vid, ex
@@ -137,9 +141,14 @@ def remap_plan(plan, base, *, tts_durs=None):
                  "start": float(c["fin"]), "end": float(c["fin"]) + float(c["dur"])} for c in cuts]
             have = sum(float(c["dur"]) for c in cuts)
             need = float((tts_durs or {}).get(bi) or b.get("target_seconds") or 0.0)
+            # 이미 늘림 조각(cbx{bi})을 지워 두었으면 청소 컷 뒤에 **붙여 쓴다** — 지워놓고 안 쓰면 돈만 나간다
+            xvid, xex = _extra_for(base, bi, key, prefix="cbx")
+            if xvid:
+                b["scene_override"].append({"video_id": xvid, "seg_id": xvid, "start": 0.0, "end": float(xex["seconds"])})
+                have += float(xex["seconds"])
             if have > 0 and need > have * (1.0 + EXTEND_MIN):
                 last = cuts[-1]
-                s = float(last["src"]) + float(last["dur"])
+                s = float(last["src"]) + float(last["dur"]) + (float(xex["seconds"]) if xvid else 0.0)
                 extend.append({"beat_idx": bi, "video_id": last["video_id"], "start": round(s, 3),
                                "end": round(s + (need - have) + EXTEND_PAD, 3), "need": round(need - have, 3)})
         else:

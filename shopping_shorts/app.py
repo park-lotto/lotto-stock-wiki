@@ -9306,7 +9306,11 @@ def api_mix_capcut(job_id: str, base: str = ""):
     #     - 대신 캡컷에서 컷을 원본 범위 밖으로 **늘리는** 편집은 못 한다(조각 뒤가 없다)
     #   자르기가 실패하면 원본으로 두지 않고 **막는다** — 자막 남은 결과물을 조용히 내보내는
     #   것이 더 나쁘다(사장님이 캡컷에서야 알게 된다).
-    if job.get("subtitle_removal") and not (job.get("clean_sources") or {}):
+    # ★정본(_cbase)이면 아래 '완성본을 현재 타임라인으로 자르기'를 타지 않는다 — 청소본의 시간축은
+    #   청소 시점 편성이라, 앞 비트가 길어지면 뒤 비트가 청소본 끝을 넘어 빈 조각이 된다(LAB 실측
+    #   2026-09-22: src_cc5 띠 0.00). 정본 경로는 plan(재배치 사본)의 재료가 이미 청소본 좌표이므로
+    #   렌더와 같은 일반 경로(plan_beat_clips_for로 소스에서 자르기)가 정확하다.
+    if job.get("subtitle_removal") and not (job.get("clean_sources") or {}) and _cbase is None:
         # ★청소본은 **지금 편성의 서명 파일**로 찾는다(mix_pipeline.clean_final_path_for_plan, 0순위-B).
         #   2026-09-17 고객 제보(job 4efcc4c06d41): 렌더 완료·청소본 파일이 있는데도 "자막 없는 완성본이
         #   없어요"로 막혔다. 편집을 바꾸면 _save_render_inputs가 clean_video_path를 비우고, 완성본
