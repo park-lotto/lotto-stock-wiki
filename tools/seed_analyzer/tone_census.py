@@ -263,8 +263,8 @@ def main():
         rows = run_corpus(a.corpus, a.seed)
     else:
         rows = run_live(a.n, [x.strip() for x in a.jobs.split(",") if x.strip()], a.seconds)
-        if a.out:
-            json.dump(rows, open(a.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    if a.out and not a.report:
+        json.dump(rows, open(a.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     report(rows, a.html or None)
 
 
