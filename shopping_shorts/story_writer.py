@@ -25,16 +25,22 @@ from shopping_shorts import script_generate as _sg
 # ── 신호어 세트 — 코드가 칸 순서대로 박는다 ────────────────────────────────
 # ★모델에게 고르게 하면 가장 흔한 하나로 쏠린다(실측 2026-09-22: 2편 모두
 #   "이게 진짜 말도 안 되는 게"). 세트마다 한 자리는 비워 기계 티를 없앤다.
+# ★위치가 고정된 프리셋(2026-09-22 히트작 전문 5편·채널 5곳 정독 — 전부 같은 연결):
+#     공개 "이건 바로 X" → [1] 이게 말도 안 되는게 (기존 X와 달리) …해 준다는 거
+#                      → [2] 심지어 …까지 …한다는 거  → [3] 근데 진짜 충격적인 포인트는 …다고 → 마무리 …라는데
+#   공개 뒤 첫 신호어까지 중앙값 3어절, 첫 자리는 "이게 말도 안 되는게"가 50편 중 31편. "심지어"는 두 번째 자리 말이다
+#   (사장님 화면 확인: 대비 앞에 심지어가 붙어 어색했다). 프리셋은 **낱말만** 다르고 위치·세기 순서는 같다.
 YT_SETS = {
-    "A": ["심지어", "이게 말도 안 되는게", "", "근데 진짜 미친 포인트는"],
-    "B": ["", "게다가", "이게 미친 포인트인게", "진짜 충격적인 포인트는"],
-    "C": ["이게 말도 안 되는게", "", "대박인 건", "근데 진짜 충격적인 포인트는"],
-    "D": ["심지어", "거기다", "진짜 말도 안 되는게", ""],
-    "E": ["", "충격적인 건", "이게 미친 포인트인게", "진짜 미친 포인트는 따로 있는데"],
-    "F": ["게다가", "이게 말도 안 되는게", "", "진짜 대박인 건"],
-    "G": ["", "이게 말도 안 되는게", "거기다", "진짜 미친 포인트는"],
-    "H": ["심지어", "", "충격적인 건", "근데 진짜 미친 포인트는"],
+    "A": ["이게 말도 안 되는게", "심지어", "근데 진짜 충격적인 포인트는"],
+    "B": ["이게 말도 안 되는 게", "게다가", "진짜 충격적인 포인트는"],
+    "C": ["진짜 말도 안 되는게", "심지어", "근데 진짜 미친 포인트는"],
+    "D": ["이게 말도 안 되는게", "거기다", "진짜 미친 포인트는"],
+    "E": ["", "심지어", "근데 진짜 충격적인 포인트는"],
+    "F": ["이게 미친 포인트인게", "게다가", "충격적인 건"],
+    "G": ["이게 말도 안 되는게", "심지어", "더 대박인 건"],
+    "H": ["진짜 말도 안 되는게", "거기다", "근데 진짜 충격적인 포인트는"],
 }
+_ALL_SIGNAL_WORDS = sorted({w for v in YT_SETS.values() for w in v if w} | {"심지어", "게다가", "거기다"})
 # 인스타는 낱말이 다르다(실측: 심지어 73·게다가 39·대박인 건 21·거기다 7·무엇보다 6).
 # 썰의 "진짜 미친 포인트는"·"이게 말도 안 되는게"는 인스타에 거의 없다.
 IG_SETS = {
@@ -264,10 +270,18 @@ def _to_lines(o, ig, key, nth, feats=None):
         all_sigs = list(sigs)          # 중복 제거는 세트 전체로 본다(대비가 첫 신호어를 가져가도)
         rows = [("훅", o.get("hook"), -1), ("미끼", o.get("bait"), -1), ("공개", o.get("reveal"), -1)]
         if (o.get("contrast") or "").strip():
-            # ★대비는 신호어 없이 "기존 X와 달리 Y해 준다는 거"로 절을 닫고, 그 다음 고조 첫 칸이 "심지어"로 연다
-            #   (사장님 09-22 화면 확인: "대비 처음에 심지어가 붙었다 — ~달리 다음에 심지어로 붙어야").
+            # ★위치[1] 신호어는 대비에 붙는다("이게 말도 안 되는게 기존 X와 달리 Y해 준다는 거") — 대비가 없으면 고조1에.
             rows.append(("대비", _LEAD_CONJ.sub("", o["contrast"].strip()), -1))
         tail = [("반전", o.get("twist"), -1), ("마무리", o.get("closing"), -1)]
+        # 슬롯 = 대비(있으면) → 고조들 → 반전. 프리셋 낱말을 이 순서로 앞에서부터 하나씩 준다(위치 고정).
+        # 위치[3](가장 센 말)은 **반전 전용**. 대비·고조는 위치[1]·[2]를 순서대로 받고, 남으면 빈칸.
+        slot_words = list(sigs[:2])
+        last_word = sigs[2] if len(sigs) > 2 else ""
+        if (o.get("contrast") or "").strip() and slot_words:
+            w = slot_words.pop(0)
+            if w:
+                rows[-1] = ("대비", w + " " + rows[-1][1], -1)
+        sigs = slot_words + [""] * 8
     for i, e in enumerate(escs):
         n = e.get("feat")
         gi = (n - 1) if isinstance(n, int) and 1 <= n <= len(feats or []) else _group_of(e.get("from_pain"), feats)
@@ -283,6 +297,14 @@ def _to_lines(o, ig, key, nth, feats=None):
                 t = _LEAD_CONJ.sub("", t)      # "게다가 근데 이건…" — 신호어 뒤 접속사 겹침(실측 7줄 중 1)
                 t, sig = sig + " " + t, ""
             rows.append(("고조%d" % (i + 1), t, gi))
+    if not ig:
+        left = [last_word] if last_word else []
+        if left and (tail[0][1] or "").strip():
+            tw = tail[0][1].strip()
+            for w in sorted(_ALL_SIGNAL_WORDS, key=len, reverse=True):   # 모델이 이미 어떤 신호어로 열었으면 떼고 붙인다
+                if tw.startswith(w + " "):
+                    tw = tw[len(w):].strip()
+            tail[0] = ("반전", left[0] + " " + _LEAD_CONJ.sub("", tw), -1)
     rows += tail
     return _drop_repeat_signal(
         [{"role": b, "text": re.sub(r"\s+", " ", t).strip(), "group": g}
@@ -416,7 +438,7 @@ def _drop_repeat_signal(lines, sigs):
     """모델이 직접 쓴 줄(반전·소감 등)이 **코드가 박은 신호어로 또 시작하면** 떼어 낸다 — 한 편에 "심지어"가 두 번 난다."""
     used = [s for s in sigs if s]
     for L in lines:
-        if L.get("group", -1) != -1 or L["role"].startswith("고조") or L["role"] == "대비":   # 대비도 코드가 신호어를 박는다
+        if L.get("group", -1) != -1 or L["role"].startswith("고조") or L["role"] in ("대비", "반전"):   # 코드가 신호어를 박는 줄
             continue
         for s in used:
             if L["text"].startswith(s + " "):
