@@ -19,7 +19,9 @@
   밀도  초당 약 1.1발(이븐쇼핑 실측). 넘치면 **휙부터** 고르게 뺀다(둥·띠링·뽁은 남긴다).
 
 회원마다 팩 하나를 고정 배정한다(20종, 두 팩 사이 7칸 중 최소 4칸 다름) — 회원끼리 소리가 달라진다.
-켜는 조건: 관리자 설정 sfx_pack_enabled=1 **그리고** 썰쇼핑 계열 채널 틀을 쓴 영상.
+켜는 조건: 관리자 설정 sfx_pack_enabled=1 **그리고** 2단계에서 **썰 대본**(오용형·제품정체형·발명품형 틀)을 고른 영상.
+  ★채널 틀로 판정하지 않는다(2026-09-22 사장님 "썰대본을 골랐을경우만"). 라이브 최근 400건 실측:
+    썰 틀 262건 중 썰 대본은 28건뿐 — 틀 기준이면 234건에 잘못 켜지고 틀 없는 썰 대본 5건은 빠졌다.
 """
 import os
 import re
@@ -77,27 +79,31 @@ def pack_for(customer_id, override=None):
     return packs[zlib.crc32(str(customer_id or 0).encode()) % len(packs)]
 
 
-def is_sul_deco(deco):
-    """이 영상이 썰쇼핑 계열 채널 틀을 쓰는가.
+def script_family(store, job):
+    """이 job의 대본이 고른 틀(스파인)의 갈래 목록. 모르면 [].
 
-    장면꾸미기 틀은 두 화면 모두 유튜브 썰쇼핑 계열이다(app.py 프리셋 목록 주석:
-    "현재 장면꾸미기 채널 틀은 전부 유튜브 썰쇼핑 계열"). 새 편집기=deco.scene_style,
-    옛 피팅룸=deco.template.frame. 틀에 copy_family가 따로 박혀 있고 유튜브 계열이 아니면 뺀다
-    (인스타 틀이 추가될 때를 대비 — 그때 이 값만 보면 된다).
+    job → 제작 작업(produce_works.job_id) → state.script_style_id(=2단계에서 고른 스파인 id,
+    app.py record_script_usage(spine_id=dr["style_id"])와 같은 값) → 스파인 fit_categories.
     """
-    if not isinstance(deco, dict):
-        return False
-    if deco.get("scene_style"):
-        return True
-    frame = (deco.get("template") or {}).get("frame") if isinstance(deco.get("template"), dict) else None
-    if not isinstance(frame, dict) or not frame:
-        return False
     try:
-        from shopping_shorts import deco_frame
-        p = deco_frame.PRESETS.get(frame.get("preset") or deco_frame.DEFAULTS["preset"]) or {}
-        return p.get("copy_family", "youtube_reveal") == "youtube_reveal"
-    except Exception:      # noqa: BLE001 — 판정 실패는 '끔'으로(조용히 켜지지 않게)
-        return False
+        st = store.get_work_state_by_job((job or {}).get("job_id"))
+    except Exception:      # noqa: BLE001
+        return []
+    sid = (st or {}).get("script_style_id")
+    if sid is None or not str(sid).strip().isdigit():
+        return []
+    try:
+        sp = next((x for x in store.list_spines() if int(x.get("id") or -1) == int(sid)), None)
+    except Exception:      # noqa: BLE001
+        return []
+    return list((sp or {}).get("fit_categories") or [])
+
+
+def is_sul_script(store, job):
+    """썰 대본(오용형·제품정체형·발명품형)을 골랐나 — 판정은 script_genre.is_context 한 벌."""
+    from shopping_shorts import script_genre
+    fam = script_family(store, job)
+    return script_genre.is_context("", [{"fit_categories": fam}], script_genre.YOUTUBE_SUL_FAMILY)
 
 
 def resolve(store, job):
@@ -113,7 +119,7 @@ def resolve(store, job):
             return None
     except Exception:      # noqa: BLE001
         return None
-    if not is_sul_deco(deco):
+    if not is_sul_script(store, job):
         return None
     got = pack_for(job.get("customer_id", 0), override=choice)
     return {"name": got[0], "dir": got[1]} if got else None

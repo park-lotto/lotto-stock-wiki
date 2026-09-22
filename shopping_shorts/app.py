@@ -66,6 +66,7 @@ from shopping_shorts.product_identify import fetch_lens_lines, identify_product_
 from shopping_shorts.search_links import build_search_links, lens_search_url
 from shopping_shorts import coupang_partners
 from shopping_shorts import mix_pipeline
+from shopping_shorts import script_genre
 from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
                                           _source_video_id, resynth_tts_job, resynth_one_beat,
                                           run_clean_sources, _resolve_sources)
@@ -22708,21 +22709,21 @@ def _llm_facts_for_job(job, store):
 # 썰쇼핑 대본 재료를 붙이는 카테고리(2026-08-19).
 #   여기 없는 카테고리는 썰 틀을 안 쓰므로 추출을 돌리지 않는다 — Gemini 호출 1회를 아낀다.
 #   이름은 categorize.KEYWORDS의 것과 같아야 한다(0순위-B: 이름이 어긋나면 조용히 죽는다).
-SUL_CATEGORIES = ("오용형",)
+SUL_CATEGORIES = script_genre.SUL_CATEGORIES   # 정의처는 script_genre 하나(0순위-B)
 
 # 은폐형(spine "유튜브 「이건 바로 OO」"). **썰(오용형)과 갈래를 나눈다** — 2026-08-21 실측으로 분리.
 #   예전엔 SUL_CATEGORIES에 같이 있어 `sul_material_problem`(="원래 용도를 뒤집는가")을
 #   탔다. 은폐형은 뒤집는 이야기가 아니라 **정체를 숨겼다 밝히는** 갈래라 `misuse_genre=false`고,
 #   그래서 사장님 구명 팔찌 소재에서 "이 영상은 오용형이 아닙니다"로 **통째로 막혔다.**
 #   발명품형에서 같은 문제를 고쳤는데 여기만 남아 있었다.
-CONCEAL_CATEGORIES = ("제품정체형",)
+CONCEAL_CATEGORIES = script_genre.CONCEAL_CATEGORIES   # 정의처는 script_genre 하나(0순위-B)
 
 # 발명품형(2026-08-20 신설, spine "유튜브 「OO 개발자도 무릎 탁」"). **썰쇼핑과 갈래를 나눈다.**
 #   재료는 같은 `sul_facts`에서 오지만 **자격 검사가 다르다** — 썰(오용형)은
 #   "원래 용도를 뒤집는가"를 묻는데, 발명품형은 뒤집는 이야기가 아니라
 #   "왜 태어났고 뭐가 대단한가"다. 같은 검사에 걸면 `misuse_genre=false`라서
 #   **영영 조립이 안 된다**(스파인만 있고 죽어 있는 상태가 된다).
-INVENTION_CATEGORIES = ("발명품형",)
+INVENTION_CATEGORIES = script_genre.INVENTION_CATEGORIES   # 정의처는 script_genre 하나(0순위-B)
 
 # 인스타 조립 틀을 붙이는 카테고리(2026-08-19). 위와 같은 규약 — 스파인의 fit_categories다.
 #   ★썰(유튜브)과 **재료 출처가 다르다**: 썰은 쿠팡+유튜브 자막, 인스타는 **릴 전사만** 본다
@@ -22757,25 +22758,8 @@ _FACTS_MAX_SOURCES = script_generate.SOURCE_MAX
 
 
 def _is_context(category, spines, names):
-    """이 생성이 `names` 틀인가 — 항목 카테고리와 스파인 fit_categories를 **둘 다** 본다.
-
-    ★2026-08-19 라이브 실측으로 고침(처음엔 위키 항목 category만 봤다 = **영영 안 켜짐**).
-      `오용형`·`제품정체형`은 **스파인의 fit_categories**다(id 56·55). 위키 항목의
-      category는 홈템·기타·레시피 같은 소재 분류라, 라이브 113건 중 오용형은 **0건**이었다.
-      categorize.py는 이 이름을 항목 카테고리로도 쓸 수 있으므로 둘 다 본다.
-
-    ★판정을 여기 한 벌만 둔다 — 썰·인스타가 **같은 판정**을 쓴다(0순위-B).
-      갈래마다 복사하면 한쪽만 고쳐져 "저기선 되는데 여기선 안 된다"가 난다.
-    """
-    if (category or "").strip() in names:
-        return True
-    for sp in (spines or []):
-        if not isinstance(sp, dict):
-            continue
-        for f in (sp.get("fit_categories") or []):
-            if str(f).strip() in names:
-                return True
-    return False
+    """이 생성이 `names` 틀인가 — 판정은 script_genre.is_context 한 벌(효과음팩도 같은 것을 쓴다)."""
+    return script_genre.is_context(category, spines, names)
 
 
 def _is_sul_context(category, spines=None):

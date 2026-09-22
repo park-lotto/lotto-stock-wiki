@@ -29,6 +29,12 @@ class _Store:
     def get_scene_asset(self, *a, **k):
         return None
 
+    def get_work_state_by_job(self, job_id):      # 검증용: 발명품형 대본을 고른 것으로
+        return {"script_style_id": 70}
+
+    def list_spines(self, status=None):
+        return [{"id": 70, "fit_categories": ["발명품형"]}]
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -55,7 +61,7 @@ def main():
     base = out / "base.mp4"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", f"color=c=0x303030:s=1080x1920:r=30:d={total:.3f}",
                     "-i", str(narr), "-shortest", "-c:v", "libx264", "-preset", "veryfast", "-c:a", "aac", str(base)], check=True)
-    job = {"customer_id": a.cid, "deco": {"scene_style": {"presetId": "check"}}}
+    job = {"job_id": "render_check", "customer_id": a.cid, "deco": {}}
     sfx_paths = mix_pipeline._resolve_sfx_paths(_Store(), plan, a.cid, job=job)
     assert sfx_paths.get("_pack"), "팩이 안 잡혔다"
     work = out / "work"; work.mkdir(exist_ok=True)
