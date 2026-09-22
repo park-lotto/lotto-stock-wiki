@@ -145,6 +145,51 @@ def run_live(n, jobs, seconds):
     return rows
 
 
+def run_corpus(n, seed_no=7, src="/tmp/hits_cls_all.json", platforms=("instagram", "youtube")):
+    """히트작 코퍼스에서 씨앗을 무작위로 뽑아 **말투만** 잰다(재료 컷이 없어 화면 매칭은 못 잰다).
+    사장님(09-22): "사용자가 어떤 히트작을 고를지 모르니 테스트를 충분히". 특징 목록은 씨앗 전사에서
+    analyze.py(제품·장점)로 만든다 — 씨앗당 호출 2회(분석 1 + 쓰기 1)."""
+    import random
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from analyze import analyze
+    from shopping_shorts import story_writer as sw
+    if os.environ.get("SW_PATH"):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("sw_new", os.environ["SW_PATH"])
+        sw = importlib.util.module_from_spec(spec); spec.loader.exec_module(sw)
+        print("story_writer =", os.environ["SW_PATH"])
+    rows_all = [r for r in json.load(open(src, encoding="utf-8"))
+                if len(r.get("text") or "") >= 120 and r.get("platform") in platforms
+                and len(_FOREIGN.findall(r["text"])) < 3]
+    random.seed(seed_no)
+    per = max(1, n // len(platforms))
+    picked = []
+    for pl in platforms:
+        pool = [r for r in rows_all if r["platform"] == pl]
+        picked += random.sample(pool, min(per, len(pool)))
+    rows = []
+    for r in picked:
+        seed_text = r["text"].strip()
+        t0 = time.time()
+        a = analyze(seed_text) or {}
+        feats = [{"name": b, "claim": b, "from_cuts": [], "pain": ""} for b in (a.get("benefits") or [])[:5]]
+        if not feats:
+            feats = [{"name": a.get("product") or "제품", "claim": "", "from_cuts": [], "pain": ""}]
+        plat = sw.seed_platform(seed_text)
+        note = {}
+        lines = sw.write(a.get("product") or "", seed_text[:1500], feats, platform=plat, key=r.get("id") or "", nth=0, note=note, seconds=25)
+        ls = [L["text"] for L in lines]
+        row = {"job_id": "%s:%s" % (r["platform"][:2], (r.get("id") or "")[:10]), "seed_vid": r.get("id"),
+               "seed_platform": plat, "seed_text": seed_text[:1500], "seed": measure(_seed_sentences(seed_text)),
+               "why": "" if ls else ("빈 대본: %s" % (note.get("reason") or "")), "secs": round(time.time() - t0, 1),
+               "corpus_platform": r["platform"], "corpus_tone": r.get("tone"), "user": r.get("user"),
+               "drafts": ([{"platform": plat, "lines": ls, "m": measure(ls), "no_cut": None,
+                            "total_sec": round(sum(L.get("sec") or 0 for L in lines) if lines and isinstance(lines[0], dict) and "sec" in lines[0] else 0, 1)}] if ls else [])}
+        rows.append(row)
+        print("  %s 씨앗=%s(%s/%s) %d줄 %.0f초 %s" % (row["job_id"], plat, r["platform"][:2], r.get("tone"), len(ls), row["secs"], row["why"]), flush=True)
+    return rows
+
+
 def report(rows, html=None):
     print("\n%-13s %-4s | %-22s %-5s | %-4s %-22s %-5s %-4s | 뒤섞임 설명문 권유 신호중복 따옴표 청자반말" % (
         "job", "씨앗", "씨앗 어미(존/반/연/기)", "의태", "결과", "결과 어미(존/반/연/기)", "의태", "어절/줄"))
@@ -209,9 +254,13 @@ def main():
     ap.add_argument("--out", default="")
     ap.add_argument("--report", default="")
     ap.add_argument("--html", default="")
+    ap.add_argument("--corpus", type=int, default=0, help="히트작 코퍼스에서 무작위 N편(인스타·유튜브 반반)")
+    ap.add_argument("--seed", type=int, default=7)
     a = ap.parse_args()
     if a.report:
         rows = json.load(open(a.report, encoding="utf-8"))
+    elif a.corpus:
+        rows = run_corpus(a.corpus, a.seed)
     else:
         rows = run_live(a.n, [x.strip() for x in a.jobs.split(",") if x.strip()], a.seconds)
         if a.out:
