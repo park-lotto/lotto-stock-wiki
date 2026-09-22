@@ -2874,19 +2874,20 @@ def api_extract_script(request: Request, shortcode: str):
             video_path = _download_item_video(item, work_dir)
         except (requests.RequestException, RuntimeError) as e:
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-            return JSONResponse(status_code=502, content={"ok": False, "error": f"영상 다운로드 실패(URL 만료 가능) — 재수집 필요: {msg}"})
+            return _extract_fail(502, f"영상 다운로드 실패(URL 만료 가능) — 재수집 필요: {msg}", cid, code, "download", e)
         except Exception as e:
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-            return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+            return _extract_fail(500, msg, cid, code, "download", e)
 
         try:
             result = extract_auto(video_path, code, caption=item.get("caption", ""))
         except Exception as e:
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-            return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+            return _extract_fail(500, msg, cid, code, "extract", e)
 
         if not result.get("full_text") and not result.get("segments"):
-            return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패(Gemini 키 소진 또는 영상 인식 실패) — 잠시 후 재시도"})
+            return _extract_fail(502, "대본 추출 실패(Gemini 키 소진 또는 영상 인식 실패) — 잠시 후 재시도",
+                                 cid, code, "empty", None)
 
         store.save_script(code, result, category=item.get("category"), method=current_method())
         ok = True
@@ -2895,6 +2896,16 @@ def api_extract_script(request: Request, shortcode: str):
         if not ok:
             refund_credit(cid, "script")   # 실패·미달 → 크레딧 되돌림(전역 하드캡이 재시도 남용을 캡)
             _refund_points(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
+
+
+def _extract_fail(status, msg, cid, code, stage, exc):
+    """대본 추출 실패 응답 + **서버 로그 한 줄**(2026-09-22).
+
+    ★예전엔 이유를 고객 화면에만 보내고 로그엔 안 남겼다 — 배승훈님 500 두 건(16:16·16:27)의
+      원인을 나중에 알 수 없었다. 누가(cid)·무엇(code)·어느 단계(stage)·무슨 오류인지 남긴다."""
+    print(f"[extract_fail] status={status} cid={cid} code={code} stage={stage} "
+          f"exc={type(exc).__name__ if exc else '-'} msg={str(msg)[:300]}", file=sys.stderr)
+    return JSONResponse(status_code=status, content={"ok": False, "error": msg})
 
 
 def _backfill_extract_structure(db_path, shortcode, full_text):
