@@ -92,9 +92,11 @@ YT_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 유튜브 썰�
 "이건 바로 {제품명}." 로 끝낸다. 뒤에 설명을 이어 붙이지 마라.
 실측(썰채널 30편): 공개 줄은 거의 전부 제품명만 말하고 바로 다음 칸으로 넘어간다.
 
-■ contrast — 기존 것의 한계를 걸어 대비를 만든다
-"온도를 유지만 시켜 주던 기존 컵홀더와는 달리" · "007 가방 크기 급의 거추장스러운 버너와 달리"
-댈 게 없으면 빈칸으로 둬라.
+■ contrast — 기존 것의 한계 → 이게 뭘 해 주는지까지 **한 줄로 끝까지** 말한다
+"~와는 달리"에서 끊지 마라 (히트작 실측: 달리 뒤에 바로 다음 칸이 온 편 0, 전부 "~해 준다는 거"로 절을 닫았다).
+  X 온도를 유지만 시켜 주던 기존 컵홀더와는 달리
+  O 온도를 유지만 시켜 주던 기존 컵홀더와는 달리 버튼 한 번에 영하 3도까지 떨어뜨려 준다는 거
+신호어는 우리가 앞에 붙인다. 댈 게 없으면 빈칸으로 둬라 (실측 492편 중 4편만 쓴 드문 칸이다).
 
 ■ escalations — 재료의 불편이 **진짜 괴로운 것만** 넣어라
 칸 수를 채우려 하지 마라. 1개여도 2개여도 된다.
@@ -250,6 +252,7 @@ def _to_lines(o, ig, key, nth, feats=None):
     if ig:
         escs = o.get("beats") or []
         _, sigs = _pick(IG_SETS, key, nth)
+        all_sigs = list(sigs)
         rows = [("훅", o.get("opening"), -1), ("장면", o.get("scene"), -1)]
         if (o.get("ask") or "").strip():
             rows.append(("물어봄", o["ask"], -1))
@@ -258,9 +261,14 @@ def _to_lines(o, ig, key, nth, feats=None):
     else:
         escs = o.get("escalations") or []
         _, sigs = _pick(YT_SETS, key, nth)
+        all_sigs = list(sigs)          # 중복 제거는 세트 전체로 본다(대비가 첫 신호어를 가져가도)
         rows = [("훅", o.get("hook"), -1), ("미끼", o.get("bait"), -1), ("공개", o.get("reveal"), -1)]
         if (o.get("contrast") or "").strip():
-            rows.append(("대비", o["contrast"], -1))
+            # ★대비는 고조의 첫 칸처럼 신호어를 받는다(히트작: "이게 말도 안 되는게 기존 X와 달리 Y해 준다는 거 → 근데 진짜…").
+            #   사장님 09-22: "대비 다음에 바로 심지어로 가면 이상하다" — 대비가 첫 신호어를 쓰고 고조는 그 다음 신호어부터.
+            sig0 = sigs[0] if sigs else ""
+            rows.append(("대비", (sig0 + " " + _LEAD_CONJ.sub("", o["contrast"].strip())) if sig0 else o["contrast"], -1))
+            sigs = list(sigs[1:])
         tail = [("반전", o.get("twist"), -1), ("마무리", o.get("closing"), -1)]
     for i, e in enumerate(escs):
         n = e.get("feat")
@@ -280,7 +288,7 @@ def _to_lines(o, ig, key, nth, feats=None):
     rows += tail
     return _drop_repeat_signal(
         [{"role": b, "text": re.sub(r"\s+", " ", t).strip(), "group": g}
-         for b, t, g in rows if (t or "").strip()], sigs)
+         for b, t, g in rows if (t or "").strip()], all_sigs)
 
 
 # ── 재료에서 특징 + 불편(pain) 뽑기 (모델 1회) ─────────────────────────────
@@ -410,7 +418,7 @@ def _drop_repeat_signal(lines, sigs):
     """모델이 직접 쓴 줄(반전·소감 등)이 **코드가 박은 신호어로 또 시작하면** 떼어 낸다 — 한 편에 "심지어"가 두 번 난다."""
     used = [s for s in sigs if s]
     for L in lines:
-        if L.get("group", -1) != -1 or L["role"].startswith("고조"):
+        if L.get("group", -1) != -1 or L["role"].startswith("고조") or L["role"] == "대비":   # 대비도 코드가 신호어를 박는다
             continue
         for s in used:
             if L["text"].startswith(s + " "):
