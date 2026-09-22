@@ -830,8 +830,9 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
             first["end"] = max(float(first.get("end") or 0.0), min(src_total, float(first.get("start") or 0.0) + float(tts_dur) + 0.5))
             segs = [first]
             beat_src_durs = {s["video_id"]: src_durs[s["video_id"]] for s in segs}
-            _max_shot = None
+            _max_shot = 5.0
         else:
+            segs = segs[:4]
             try:
                 _max_shot = float(_cr.get("max_shot") or 4.0)
             except (TypeError, ValueError):

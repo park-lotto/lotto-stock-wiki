@@ -133,6 +133,7 @@ YT_SCHEMA = {
             "detail": {"type": "array", "items": {"type": "string"}},     # 풀코스: 없앤 뒤 장면 풀이 3~4줄
         }, "required": ["moment", "what_happens", "erased", "from_pain", "feat"]}},
         "twist": {"type": "string"},
+        "twist_feat": {"type": "integer"},      # 반전이 근거로 삼은 재료 번호 — 그 특징의 컷이 붙는다(2026-09-22)
         "finale": {"type": "array", "items": {"type": "string"}},       # 풀코스: 마지막 셀링 2~3줄(반전 대신)
         "closing": {"type": "string"},
     },
@@ -177,7 +178,7 @@ from_pain에는 근거로 삼은 특징을 적어라. 댈 게 없으면 그 칸�
   erased        그걸 통째로 없앤 방식, 강한 동사로 끊기 "자리를 아예 하나로 합쳐서 없애 버렸다는 거"
   ★what_happens가 "~을/를"로 끝나면 erased는 그 목적어를 받는 서술어로 이어져야 한다.
 
-■ twist는 앞 고조와 **다른 축**이어야 한다 (위생·보관·휴대 같은 다른 걱정거리)
+■ twist는 앞 고조와 **다른 축**이어야 한다 (위생·보관·휴대 같은 다른 걱정거리). 근거로 삼은 재료 번호를 twist_feat에 적어라 — 그 번호의 화면이 붙는다.
 ■ closing은 권유가 아니다 — "~해 보세요" 금지. 남의 말로 닫아라("…난리라는데").
 
 ■ 표현 재료 (골라 쓰는 것이다. 안 맞으면 쓰지 마라)
@@ -297,8 +298,29 @@ def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, n
                   "칸 하나를 얇게 쓰지 마라. 남긴 칸은 깊게 파라." % (int(seconds * _CPS), int(seconds)))
     prompt = "%s\n\n[제품] %s\n\n[씨앗 — 이 제품으로 터진 영상의 말]\n%s\n\n[재료]\n%s" % (
         brief, product or "", (seed_text or "").strip(), _feats_block(feats))
-    out = _sg._call_json(prompt, IG_SCHEMA if ig else YT_SCHEMA, note=note) or {}
+    schema = IG_SCHEMA if ig else (_short_schema() if preset == "short" else YT_SCHEMA)
+    out = _sg._call_json(prompt, schema, note=note) or {}
     return _to_lines(out, ig, key, nth, feats, preset=preset)
+
+
+# 한입썰 칸별 최대 글자(공백 포함) — 썰 히트작 49편 실측 75% 지점을 조금 넘는 값. 지시문은 모델이 넘기지만
+#   스키마 maxLength는 구조라 넘길 수 없다(2026-09-22 실측: 같은 SHORT_BLOCK 지시로 한 씨앗은 227자, 다른 씨앗은 47초·380자).
+_SHORT_MAX = {"hook": 26, "bait": 62, "reveal": 22, "contrast": 0, "moment": 40, "what_happens": 46, "erased": 40,
+              "twist": 60, "closing": 22}
+
+
+def _short_schema():
+    import copy
+    sc = copy.deepcopy(YT_SCHEMA)
+    pr = sc["properties"]
+    for k in ("hook", "bait", "reveal", "twist", "closing"):
+        pr[k]["maxLength"] = _SHORT_MAX[k]
+    pr["contrast"]["maxLength"] = 1                       # 한입썰은 대비를 고조1 안에 녹인다(빈칸)
+    esc = pr["escalations"]["items"]["properties"]
+    for k in ("moment", "what_happens", "erased"):
+        esc[k]["maxLength"] = _SHORT_MAX[k]
+    pr["escalations"]["maxItems"] = 2
+    return sc
 
 
 def _group_of(from_pain, feats):
@@ -342,7 +364,9 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
         if (o.get("contrast") or "").strip():
             # ★위치[1] 신호어는 대비에 붙는다("이게 말도 안 되는게 기존 X와 달리 Y해 준다는 거") — 대비가 없으면 고조1에.
             rows.append(("대비", _LEAD_CONJ.sub("", o["contrast"].strip()), -1))
-        tail = [("반전", o.get("twist"), -1), ("마무리", o.get("closing"), -1)]
+        _tf = o.get("twist_feat")
+        _tg = (_tf - 1) if isinstance(_tf, int) and 1 <= _tf <= len(feats or []) else -1
+        tail = [("반전", o.get("twist"), _tg), ("마무리", o.get("closing"), -1)]
         # 슬롯 = 대비(있으면) → 고조들 → 반전. 프리셋 낱말을 이 순서로 앞에서부터 하나씩 준다(위치 고정).
         # 위치[3](가장 센 말)은 **반전 전용**. 대비·고조는 위치[1]·[2]를 순서대로 받고, 남으면 빈칸.
         slot_words = list(sigs[:2])
@@ -372,14 +396,14 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
                     rows.append(("고조%d" % (i + 1), sig, gi)); sig = ""     # [1]은 한 줄 단독
                 else:
                     t, sig = sig + " " + t, ""
-            rows.append(("고조%d" % (i + 1), t, gi))
+            rows.append(("고조%d" % (i + 1), t, gi, k))          # k = moment/what_happens/erased(썰) · before/after(인스타)
         if not ig and preset == "full":
             for t in (e.get("detail") or [])[:4]:                          # 장면 풀이 3~4줄
                 if (t or "").strip():
                     rows.append(("고조%d" % (i + 1), t.strip(), gi))
     if not ig and preset == "full" and any((t or "").strip() for t in (o.get("finale") or [])):
         fin = [t.strip() for t in (o.get("finale") or []) if (t or "").strip()][:3]
-        tail = ([("반전", last_word, -1)] if last_word else []) + [("반전", t, -1) for t in fin] + [("마무리", o.get("closing"), -1)]
+        tail = ([("반전", last_word, _tg)] if last_word else []) + [("반전", t, _tg) for t in fin] + [("마무리", o.get("closing"), -1)]
         last_word = ""
     if not ig:
         left = [last_word] if last_word else []
@@ -388,11 +412,11 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
             for w in sorted(_ALL_SIGNAL_WORDS, key=len, reverse=True):   # 모델이 이미 어떤 신호어로 열었으면 떼고 붙인다
                 if tw.startswith(w + " "):
                     tw = tw[len(w):].strip()
-            tail[0] = ("반전", left[0] + " " + _LEAD_CONJ.sub("", tw), -1)
+            tail[0] = ("반전", left[0] + " " + _LEAD_CONJ.sub("", tw), tail[0][2])
     rows += tail
     return _drop_repeat_signal(
-        [{"role": b, "text": re.sub(r"\s+", " ", t).strip(), "group": g}
-         for b, t, g in rows if (t or "").strip()], all_sigs)
+        [{"role": r[0], "text": re.sub(r"\s+", " ", r[1]).strip(), "group": r[2], "sub": (r[3] if len(r) > 3 else "")}
+         for r in rows if (r[1] or "").strip()], all_sigs)
 
 
 # ── 재료에서 특징 + 불편(pain) 뽑기 (모델 1회) ─────────────────────────────
@@ -599,7 +623,24 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short"):
         if LENGTH_PRESETS[preset]["cap_by_footage"]:
             limit = min(limit, footage * 0.65)
         lines, n["dropped_escalations"] = _fit_length(lines, limit)
+        # ★AI 매칭(2026-09-22 사장님 "매칭은 AI가 해봐"): 줄 전체 + 컷 목록을 한 번에 주고 줄마다 고르게 한다(호출 1회).
+        #   빈 줄이 남으면 그 줄만 코드 매칭(assign_cuts)이 채운다. AI가 아예 실패하면 전부 코드 매칭.
+        from shopping_shorts import ai_match as _am
+        _an = {}
+        ai_bs = _am.match(lines, seg_index, backbone_vid, note=_an)
         bs, report = ba.assign_cuts(lines, groups_out, seg_index, backbone_vid)
+        if ai_bs:
+            _used = {c for b in ai_bs for c in (b.get("segs") or [])}
+            for i, b in enumerate(ai_bs):
+                if b.get("segs"):
+                    bs[i] = b
+                else:                                          # AI가 비운 줄 = 코드 매칭 결과에서 안 겹치는 컷만
+                    keep = [c for c in (bs[i].get("segs") or []) if c not in _used]
+                    bs[i] = {"role": bs[i].get("role"), "seg": keep[0] if keep else "", "segs": keep}
+                    _used.update(keep)
+            n["matcher"] = "ai"
+        else:
+            n["matcher"] = "code(%s)" % (_an.get("reason") or "")
         n["no_cut_lines"] = _share_cuts(lines, bs, seg_index)     # 끝내 빈 줄 = 재료가 대본보다 짧다
         meta = {"product": product, "spine": {"id": (sp or {}).get("id"), "name": name},
                 "groups": groups_out, "report": report, "note": n}
