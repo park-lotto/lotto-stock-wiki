@@ -12706,7 +12706,7 @@ a{text-decoration:none;color:inherit}
 <div class=hero>
 <div class=eyebrow>요금 · 이용권</div>
 <h1 class=display>필요한 만큼만,<br>부담 없이 시작하세요</h1>
-<p>먼저 무료로 만들어보고, 마음에 들면 이용권으로 계속. 결제·문의는 카톡으로 간편하게 안내해 드립니다.</p>
+<p>먼저 무료로 레퍼런스 랭킹을 둘러보고, 마음에 들면 이용권으로 시작하세요. 결제는 카드·계좌이체로 바로, 문의는 카톡으로 안내해 드립니다.</p>
 <div class=row>
 <a class="btn pri" href="/login">무료로 시작하기 →</a>
 <a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
@@ -12716,9 +12716,7 @@ a{text-decoration:none;color:inherit}
 <div class=price>0<small>원</small></div>
 <div class=pd>가입하면 바로 시작 · 카드 없이</div>
 <ul>
-<li><span class=c>✓</span> 가입 후 일정 기간 전 기능 체험</li>
-<li><span class=c>✓</span> 레퍼런스 랭킹 열람</li>
-<li><span class=c>✓</span> 쇼츠 제작 체험</li></ul>
+<li><span class=c>✓</span> 레퍼런스 랭킹 열람</li></ul>
 <a class="btn pri" href="/login">무료로 시작</a></div>
 <div class="plan pro">
 <div class=rec>추천</div>
@@ -12726,8 +12724,8 @@ a{text-decoration:none;color:inherit}
 <div class=price>__PRO_PRICE__<small></small></div>
 <div class=pd>이용기간 __PRO_PERIOD__ · 카드결제 또는 계좌이체</div>
 <ul>
-<li><span class=c>✓</span> 전 기능 무제한</li>
-<li><span class=c>✓</span> 쇼츠 무제한 제작</li>
+<li><span class=c>✓</span> 전 기능 이용</li>
+<li><span class=c>✓</span> 쇼츠 하루 10개 제작</li>
 <li><span class=c>✓</span> 렌즈·대본·보이스 전부</li>
 <li><span class=c>✓</span> 우선 문의·운영 노하우</li></ul>
 <a class="btn kko" href="__CARD_HREF__">__CARD_LABEL__</a></div></div>
@@ -12740,26 +12738,21 @@ a{text-decoration:none;color:inherit}
 <div class=i><b>✍️ 대본 추출·리메이크</b><span>내 상품 이야기로 다시 씀</span></div>
 <div class=i><b>🎬 제작소</b><span>장면·자막 원클릭 조립</span></div>
 <div class=i><b>🎙️ AI 보이스</b><span>자연스러운 나레이션 자동</span></div>
-<div class=i><b>♾️ 무제한 제작</b><span>많이 찍어낼수록 유리</span></div></div></div>
-<div class=sec>
-<h2>먼저 써본 분들</h2>
-<div class=lead>(후기 자리 — 실제 후기로 교체 예정)</div>
-<div class=revs>
-<div class=rev><p>"편집 하나도 몰랐는데 하루에 몇 개씩 만들어요. 이게 10분이면 된다는 게 신기합니다."</p><div class=who>— 준비 중</div></div>
-<div class=rev><p>"뭘 만들지 고민이 제일 힘들었는데, 잘 팔리는 걸 짚어주니 그냥 딸깍만 하면 돼요."</p><div class=who>— 준비 중</div></div></div></div>
+<div class=i><b>🎬 하루 10개 제작</b><span>많이 찍어낼수록 유리</span></div></div></div>
 <div class=sec>
 <h2>자주 묻는 질문</h2>
 <div class=faq>
-<div class=qa><div class=q>결제는 어떻게 하나요?</div><div class=a>카톡으로 문의하시면 안내해 드립니다. 확인 후 바로 이용권이 열립니다.</div></div>
-<div class=qa><div class=q>무료 체험만 써도 되나요?</div><div class=a>네. 체험 기간엔 전 기능을 그대로 쓰실 수 있고, 이후엔 레퍼런스 랭킹은 계속 보실 수 있어요.</div></div>
-<div class=qa><div class=q>환불되나요?</div><div class=a>환불 정책은 확정 후 안내드립니다(준비 중).</div></div></div></div>
+<div class=qa><div class=q>결제는 어떻게 하나요?</div><div class=a>[카드로 결제하기]로 바로 카드결제하시거나, 결제 안내에서 계좌이체하실 수 있습니다. 결제 확인 후 바로 이용권이 열립니다.</div></div>
+<div class=qa><div class=q>무료 체험만 써도 되나요?</div><div class=a>네. 무료 회원은 레퍼런스 랭킹을 보실 수 있어요. 대본·장면·보이스·영상 제작은 이용권에서 쓰실 수 있습니다.</div></div>
+<div class=qa><div class=q>환불되나요?</div><div class=a>이용권은 결제 확인 즉시 열려 모든 기능(대본·보이스·영상 제작 등)을 바로 쓸 수 있는 디지털 콘텐츠라, <b>이용권이 열린 뒤에는 환불되지 않습니다.</b> 이용권이 열리기 전에는 전액 환불됩니다. 자세한 기준은 <a href="/refund" style="color:inherit">환불정책</a>을 확인해 주세요.</div></div>
+<div class=qa><div class=q>전자상거래법상 7일 안에는 환불되지 않나요?</div><div class=a>전자상거래법 제17조제2항제5호에 따라, 디지털 콘텐츠는 <b>제공이 시작된 뒤에는 7일 이내라도 청약철회가 제한</b>됩니다. 숏템메이커 이용권은 결제 확인과 동시에 제공이 시작되므로 7일 이내라도 환불되지 않습니다. 이 내용은 결제 전 요금·결제 페이지와 1기 신청서의 동의 항목에서 미리 안내하고 동의를 받으며, 결제 전에 무료 회원으로 레퍼런스 랭킹을 먼저 써보실 수 있습니다.</div></div></div></div>
 <div class=band>
-<h2>일단 무료로 하나 만들어보세요</h2>
+<h2>무료로 레퍼런스 랭킹부터 둘러보세요</h2>
 <p>구글 계정이면 3초 · 카드 없이 시작. 궁금한 건 카톡으로.</p>
 <div class=row>
 <a class="btn pri" href="/login">무료로 시작하기 →</a>
 <a class="btn kko" href="__PAY_HREF__" target="_blank" rel="noopener">__PAY_LABEL__</a></div></div>
-<div class=foot>© __NAME__ · 요금·이용권 안내__LEGAL__</div>
+<div class=foot>© __NAME__ · 요금·이용권 안내__LEGAL____BIZFOOT__</div>
 </div></body></html>"""
 
 # ── 내 계정(유저 자기 설정) — 로그인 전용. /api/me로 플랜·한도·연락처를 채운다. ──
@@ -13181,6 +13174,7 @@ h1{font-size:20px;margin:0 0 4px;text-align:center}.sub{color:#8aa0a0;font-size:
 <h1>💳 결제 안내</h1><div class=sub>__NAME__ 이용권 · 계좌입금</div>
 __BODY__
 <a class=home href="/">← 돌아가기</a>
+__BIZFOOT__
 </div>
 <script>function cp(t){navigator.clipboard&&navigator.clipboard.writeText(t);var e=event.target;var o=e.textContent;e.textContent='복사됨';setTimeout(function(){e.textContent=o;},1200);}</script>
 </body></html>""")
@@ -13358,7 +13352,7 @@ def _toss_page(title, body):
             "margin-top:18px}.test{display:inline-block;background:#e0a33d;color:#111;font-size:12px;"
             "font-weight:700;padding:3px 8px;border-radius:8px;margin-bottom:10px}.err{color:#ff8a8a}"
             "code{color:#6ff0d6}</style>"
-            f"</head><body><div class=box>{body}</div></body></html>")
+            f"</head><body><div class=box>{body}{_biz_foot()}</div></body></html>")
 
 
 _LANDING_HITS_CACHE = {"at": 0.0, "data": None}
@@ -13437,7 +13431,8 @@ def _toss_checkout(request: Request):
 <label class=p style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px">
   <input id=pa type=checkbox style="margin-top:3px">
   <span><a href="/refund" target="_blank" style="color:#6ff0d6">환불정책</a>과
-  <a href="/terms" target="_blank" style="color:#6ff0d6">이용약관</a>을 확인했고 동의합니다.</span></label>
+  <a href="/terms" target="_blank" style="color:#6ff0d6">이용약관</a>을 확인했고 동의합니다.<br>
+  <b style="color:#ffcf6f">결제 확인 즉시 이용권이 열리는 디지털 콘텐츠로, 이용권이 열린 뒤에는 7일 이내라도 환불되지 않음</b>을 확인했습니다.</span></label>
 <button id=go>카드로 결제하기</button>
 <div class="p err" id=msg></div>
 <script src="https://js.tosspayments.com/v2/standard"></script>
@@ -13593,7 +13588,7 @@ def _toss_fail(code: str = "", message: str = "", orderId: str = ""):
 @app.get("/pay", response_class=HTMLResponse)
 def _deposit_page():
     """계좌입금 안내(공개). 사장님이 admin에 은행·계좌·예금주 넣으면 표시."""
-    return _DEPOSIT_TMPL.replace("__BODY__", _deposit_body())
+    return _DEPOSIT_TMPL.replace("__BODY__", _deposit_body()).replace("__BIZFOOT__", _biz_foot())
 
 
 # ── 법적 고지 문서(공개): 이용약관 · 개인정보처리방침 · 환불정책 ──
@@ -13699,7 +13694,7 @@ _TERMS_BODY = f"""
 <p>이용계약은 이용자가 구글 계정 등으로 가입하고 회사가 이를 승인함으로써 성립합니다. 회사는 운영상·기술상 필요에 따라 가입 승인을 보류하거나 이용을 제한할 수 있습니다.</p>
 <h2>제3조 (이용권과 결제)</h2>
 <ul>
-<li>이용권은 계좌입금 등 회사가 안내하는 방법으로 결제하며, 입금 확인 후 활성화됩니다.</li>
+<li>이용권은 신용카드(토스페이먼츠) 또는 계좌이체로 결제하며, 결제 확인 후 활성화됩니다.</li>
 <li>정식(Pro) 이용권의 이용기간은 결제(이용권 활성화)일로부터 <b>{_PRO_PERIOD}</b>입니다.</li>
 <li>이용권별 제공 기능·제작 횟수는 서비스 내 안내에 따릅니다.</li>
 <li>환불에 관한 사항은 별도의 <a href="/refund" style="color:#6ff0d6">환불정책</a>을 따릅니다.</li>
@@ -13727,7 +13722,8 @@ _PRIVACY_BODY = f"""
 <h2>1. 수집하는 개인정보 항목</h2>
 <ul>
 <li>구글 계정 로그인 시: 이메일 주소, 이름(프로필), 계정 식별자</li>
-<li>이용·결제 과정에서: 연락처(전화번호), 입금자명 등 결제 확인에 필요한 정보</li>
+<li>회원가입 시: 성별, 연령대, 연락처(전화번호)</li>
+<li>결제 시: 결제자 성함, 연락처, 이메일, 입금자명 등 결제 확인에 필요한 정보 (카드번호 등 카드 정보는 토스페이먼츠가 처리하며 회사는 보관하지 않습니다)</li>
 <li>서비스 이용 과정에서 자동 생성: 접속 기록, 이용 내역, 기기·브라우저 정보</li>
 </ul>
 <h2>2. 개인정보의 이용 목적</h2>
@@ -13742,6 +13738,7 @@ _PRIVACY_BODY = f"""
 <p>회사는 이용자의 개인정보를 동의 없이 외부에 제공하지 않습니다. 다만 서비스 제공을 위해 아래와 같이 일부 처리를 위탁할 수 있습니다.</p>
 <ul>
 <li>구글(Google): 계정 로그인 인증</li>
+<li>토스페이먼츠(주): 신용카드 결제 처리</li>
 <li>AI·클라우드 인프라 제공사: 대본·음성·영상 생성 처리</li>
 </ul>
 <h2>5. 브라우저 확장프로그램 (로또 · 원클릭 담기)</h2>
@@ -13768,13 +13765,19 @@ _REFUND_BODY = f"""
 
 <h2>1. 전액 환불</h2>
 <ul>
-<li>결제 후 <b>정식(Pro) 계정으로 전환되기 전</b>: 전액 환불</li>
+<li>결제 후 <b>이용권이 열리기(정식 Pro 계정 전환) 전</b>: 전액 환불 (예: 계좌이체 입금 후 이용권 개통 전)</li>
 </ul>
 
 <h2>2. 청약철회의 제한 (사용 개시 후)</h2>
 <p><b>정식(Pro) 계정으로 전환된 시점</b>부터는 디지털 콘텐츠의 제공이
 개시된 것으로 보아, 「전자상거래 등에서의 소비자보호에 관한 법률」 제17조제2항에 따라
 청약철회가 제한됩니다.</p>
+<ul>
+<li>이용권은 결제 확인 즉시 열려 대본·보이스·영상 제작 등 모든 기능을 바로 쓸 수 있는 디지털 콘텐츠입니다.
+카드결제는 결제와 동시에 이용권이 열리므로, <b>결제 후 7일 이내라도 이용권이 열린 뒤에는 환불되지 않습니다.</b></li>
+<li>AI 대본·음성·영상 생성은 이용하는 즉시 외부 AI·클라우드 처리 비용이 발생하는 서비스 특성상, 제공이 시작된 뒤에는 되돌릴 수 없습니다.</li>
+<li>회사는 이 내용을 결제 전 요금 페이지·결제 페이지와 1기 신청서의 동의 항목에서 미리 알리고 동의를 받습니다.</li>
+</ul>
 <p style="color:#8aa0a0;font-size:13px">
 ※ 회사는 가입 전 <b>무료 멤버 등록</b>을 통해 레퍼런스랭킹 등 주요 기능을 미리 체험할 수 있도록
 제공하고 있습니다. 구매 전 충분히 확인하신 후 결제해 주시기 바랍니다.</p>
@@ -13792,6 +13795,7 @@ _REFUND_BODY = f"""
 <ul>
 <li>환불은 아래 사업자정보의 문의처로 요청해 주세요.</li>
 <li>계좌입금 결제분은 입금하신 계좌로, 요청 확인 후 영업일 기준 3일 이내 환불합니다.</li>
+<li>카드 결제분은 결제 취소로 환불하며, 카드사 사정에 따라 영업일 기준 3~7일이 걸릴 수 있습니다.</li>
 </ul>
 
 <p style="color:#8aa0a0;font-size:12.5px;margin-top:14px">※ 본 정책은 관련 법령의 소비자 보호
