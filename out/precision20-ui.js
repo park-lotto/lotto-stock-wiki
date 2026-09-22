@@ -1195,6 +1195,19 @@
     Object.assign(text.style,{left:(x+2)+'%',right:'auto',width:Math.max(1,w-4)+'%',top:y+'%',height:h+'%',transform:'none',display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'pre-wrap',lineHeight:'1.15',color:settings.color});
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
     if(capLook?.text)Object.assign(text.style,capLook.text);
+    oneLineCaption(text,fontScales.get(scaleKey('caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다
+  }
+  // ★09-22 사장님: 자막이 살짝 커져 두 줄로 꺾이면 "두 포인트 줄이니까 한 줄에 들어간다" → 자막은 한 줄 규격이므로
+  //   손으로 키운 크기든 기본이든 **꺾이기 직전까지만** 4%씩 줄인다(바닥 70%). 바닥까지 줄여도 안 들어가면 원래 크기로 두고
+  //   줄바꿈을 허용한다(긴 문장은 두 줄이 낫다). 사용자가 직접 줄바꿈(Enter)한 자막은 건드리지 않는다. 렌더러도 같은 코드라 MP4가 화면과 같다.
+  function oneLineCaption(el,manual){
+    const txt=el.textContent||'';if(!txt.trim()||txt.includes(String.fromCharCode(10)))return;
+    const start=parseFloat(el.style.fontSize)||parseFloat(getComputedStyle(el).fontSize);let size=start;
+    const floor=start/Math.max(.1,manual||1)*.7;   // 바닥 = 기본 크기(100%)의 70% — 손으로 키운 몫은 전부 되돌릴 수 있다
+    const over=()=>{el.style.whiteSpace='nowrap';const r=document.createRange();r.selectNodeContents(el);const w=Math.max(el.scrollWidth,r.getBoundingClientRect().width);el.style.whiteSpace='pre-wrap';return w>el.clientWidth+1;};
+    while(over()&&size>floor){size=Math.round(size*.96*10)/10;el.style.fontSize=size+'px';}
+    if(over()){el.style.fontSize=start+'px';delete el.dataset.oneLineFit;}
+    else{el.style.whiteSpace='nowrap';el.dataset.oneLineFit=String(Math.round(size/start*100));}
   }
   function showFrame(next){
     kind=mode==='continuous'?'hook':next;
@@ -1378,7 +1391,10 @@
   captionPlacement?.append(maskDetails);
   // 자막박스 모양 고르기(2026-09-18) — 기본(템플릿) / 없음 / 10종. 고르면 직접 고른 박스색은 풀린다.
   const lookRow=document.createElement('div');lookRow.className='caption-looks';
-  lookRow.innerHTML='<span>자막박스 모양</span>'+[['auto','기본'],['none','박스 없음'],...CAPTION_LOOK_NAMES.map((n,i)=>[String(i),n])].map(([v,n])=>`<button type="button" data-caption-look="${v}">${n}</button>`).join('');
+  // 09-22 사장님: 모양은 모든 장면 공통이 기본이지만 "그 장면에 포인트를 주고 싶을 때"가 있다 → [모든 장면|이 장면만] 스위치.
+  let lookScope='all';
+  lookRow.innerHTML='<span>자막박스 모양</span><span class="caption-look-scope" style="grid-column:1/-1;display:flex;gap:6px;margin:2px 0 4px"><button type="button" data-caption-look-scope="all" class="active">모든 장면</button><button type="button" data-caption-look-scope="one">이 장면만</button><small style="opacity:.75;align-self:center">모양을 고르면 이 범위에 적용</small></span>'+[['auto','기본'],['none','박스 없음'],...CAPTION_LOOK_NAMES.map((n,i)=>[String(i),n])].map(([v,n])=>`<button type="button" data-caption-look="${v}">${n}</button>`).join('');
+  lookRow.addEventListener('click',event=>{const b=event.target.closest('[data-caption-look-scope]');if(!b)return;lookScope=b.dataset.captionLookScope;lookRow.querySelectorAll('[data-caption-look-scope]').forEach(x=>x.classList.toggle('active',x===b));});
   maskDetails.querySelector('div').prepend(lookRow);
   // 09-19 사장님 '버튼이 다 검정이라 뭐가 뭔지 모르겠다' — 버튼에 그 모양을 그대로 입혀 눈으로 고른다.
   lookRow.querySelectorAll('[data-caption-look]').forEach(button=>{
@@ -1397,7 +1413,7 @@
     captionLayouts.set(captionKey(),settings);
     // 09-22 사장님: 자막박스 '모양'은 모든 장면 공통, 장면별로 다른 것은 '위치 이동'뿐.
     //   다른 장면에는 모양(look)만 옮긴다 — 그 장면의 위치·폭·높이는 건드리지 않는다. 모양을 바꾸면 손으로 고른 박스색·글자색도 같이 푼다(위와 같게).
-    for(let i=0;i<sceneTotal();i++){
+    for(let i=0;lookScope==='all'&&i<sceneTotal();i++){   // '이 장면만'이면 다른 장면은 그대로
       const key=`${rows[current].id}:${mode}:${i}:caption`;if(key===captionKey())continue;
       const other={...(captionLayouts.get(key)||{})};delete other.bgUser;delete other.colorUser;
       // 서버(scene_style.py)는 자막 배치마다 placement를 필수로 본다 — 모양만 넣으면 저장이 거절된다.
