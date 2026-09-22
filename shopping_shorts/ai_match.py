@@ -28,7 +28,11 @@ BRIEF = """너는 숏폼 편집자다. 대본 줄마다 **그 말과 같은 그�
 - 줄마다 컷 길이 합이 대사 초 이상이 되게 1~4개. 짧은 줄(3초 이하)은 1개.
 - 컷 목록에 없는 번호를 만들지 마라. 맞는 컷이 없으면 cuts를 비워라(코드가 채운다).
 - 씨앗 영상(표시됨)의 컷은 쓰지 마라.
+- ★줄의 **주인공**을 찍어라: "A가 아니라 B" · "A와 달리 B"에서 화면은 **B(제품이 하는 일)**다. 부정된 A(버리는 청소포, 기존 걸레)는
+  그 줄이 불편 자체를 말할 때만 쓴다. 결과·반전·마무리 줄에 A를 넣지 마라(2026-09-22 사장님: "물티슈 버리는 게 아니라 제품을 계속 쓴다는 건데").
 - why는 한 줄(10자 안팎)."""
+
+MODEL = "gemini-3.5-flash"     # 매칭은 뜻을 읽는 일이라 한 단계 위 모델(호출 1회). 실패하면 _call_json이 기본 모델로 가지 않는다 — note에 남는다.
 
 
 def _cut_block(seg_index, backbone_vid, order):
@@ -41,13 +45,13 @@ def _cut_block(seg_index, backbone_vid, order):
     return "\n".join(rows)
 
 
-def match(lines, seg_index, backbone_vid, note=None):
+def match(lines, seg_index, backbone_vid, note=None, model=None):
     """lines: [{role, text, sub}] → [{"role","seg","segs"}] (assign_cuts와 같은 모양). 실패면 []."""
     from shopping_shorts.backbone_assemble import _secs, MIN_CUT_SECS
     order = sorted(seg_index, key=lambda s: (seg_index[s].get("vid") or "", s))
     lb = "\n".join("  %d. [%s] (%.1f초) %s" % (i + 1, L.get("role") or "", _secs(L["text"]), L["text"]) for i, L in enumerate(lines))
     prompt = "%s\n\n[대본]\n%s\n\n[컷 목록] 번호 | 영상 | 길이 | [역할] 화면\n%s" % (BRIEF, lb, _cut_block(seg_index, backbone_vid, order))
-    out = _sg._call_json(prompt, SCHEMA, note=note) or {}
+    out = _sg._call_json(prompt, SCHEMA, note=note, model=model or MODEL) or {}
     picks = {}
     for p in out.get("picks") or []:
         try:

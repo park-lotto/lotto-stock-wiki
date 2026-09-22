@@ -55,7 +55,7 @@ def _style_extra():
         return ""
 
 
-def _call_json(prompt, schema, note=None):
+def _call_json(prompt, schema, note=None, model=None):
     """key_vault 캐스케이드 키풀로 JSON 1콜. 소진키는 마킹하고 다음 키로.
     무키·전부실패면 {} (호출부는 반드시 빈 dict 허용 — fail-open).
 
@@ -84,7 +84,7 @@ def _call_json(prompt, schema, note=None):
         pool.remove(key)      # 한 키는 한 번만 시도(종전 for문과 같은 계약)
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
-                model=_MODEL, contents=prompt,
+                model=(model or _MODEL), contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json", response_schema=schema),
             )
