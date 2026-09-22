@@ -1168,6 +1168,10 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
         if gi is not None and 0 <= gi < len(groups_out["groups"]):
             gc = list(groups_out["groups"][gi].get("cuts") or [])
             sids = [c for c in gc if c not in reserved] + [c for c in gc if c in reserved]
+            # ★고조 칸 안에서도 갈린다(2026-09-22 사장님 "일반 걸레로 하는 장면이 많은데 왜 안 됐지"): 순간·지옥 줄(불편)은
+            #   문제/before 컷을 **먼저**, 없애버림 줄만 특징 컷. 종전엔 세 줄이 전부 특징(요철 클로즈업) 컷을 받았다.
+            if str(L.get("sub") or "") in ("moment", "what_happens", "before"):
+                sids = [s for s in all_sub if _is_problem(s) and s not in used] + sids
         else:
             sids = _structural_pool(L.get("role"))
         picked, have = _fill(sids, need)

@@ -373,3 +373,18 @@ def test_공개_훅에는_문제컷이_안_붙고_미끼에는_문제컷이_먼�
     roles = {b["role"]: [seg_index[s]["role"] for s in b["segs"]] for b in bs}
     assert "문제" not in roles["공개"] and "문제" not in roles["훅"]
     assert roles["미끼"][0] == "문제"
+
+
+def test_고조_불편줄은_문제컷_없애버림줄은_특징컷():
+    from shopping_shorts import backbone_assemble as ba
+    seg_index = {
+        "p1": {"vid": "sub", "secs": 2.0, "desc": "일반 걸레로 닦지만 잘 안 닦임", "role": "문제"},
+        "f1": {"vid": "sub", "secs": 2.0, "desc": "요철 구조 클로즈업", "role": "실증"},
+        "f2": {"vid": "sub", "secs": 2.0, "desc": "스펀지로 먼지를 싹 닦아냄", "role": "실증"},
+    }
+    lines = [{"role": "고조1", "text": "일반 걸레로 닦다 보면 먼지가 밀리기만 해서", "group": 0, "sub": "moment"},
+             {"role": "고조1", "text": "요철 구조로 먼지를 통째로 없애 버렸다는 거", "group": 0, "sub": "erased"}]
+    groups_out = {"order": [0], "groups": [{"name": "요철", "claim": "", "cuts": ["f1", "f2"]}]}
+    bs, _ = ba.assign_cuts(lines, groups_out, seg_index, backbone_vid="org")
+    assert bs[0]["segs"][0] == "p1"
+    assert bs[1]["segs"][0] in ("f1", "f2")

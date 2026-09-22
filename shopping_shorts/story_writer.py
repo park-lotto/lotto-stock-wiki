@@ -393,7 +393,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
                     rows.append(("고조%d" % (i + 1), sig, gi)); sig = ""     # [1]은 한 줄 단독
                 else:
                     t, sig = sig + " " + t, ""
-            rows.append(("고조%d" % (i + 1), t, gi))
+            rows.append(("고조%d" % (i + 1), t, gi, k))          # k = moment/what_happens/erased(썰) · before/after(인스타)
         if not ig and preset == "full":
             for t in (e.get("detail") or [])[:4]:                          # 장면 풀이 3~4줄
                 if (t or "").strip():
@@ -412,8 +412,8 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
             tail[0] = ("반전", left[0] + " " + _LEAD_CONJ.sub("", tw), -1)
     rows += tail
     return _drop_repeat_signal(
-        [{"role": b, "text": re.sub(r"\s+", " ", t).strip(), "group": g}
-         for b, t, g in rows if (t or "").strip()], all_sigs)
+        [{"role": r[0], "text": re.sub(r"\s+", " ", r[1]).strip(), "group": r[2], "sub": (r[3] if len(r) > 3 else "")}
+         for r in rows if (r[1] or "").strip()], all_sigs)
 
 
 # ── 재료에서 특징 + 불편(pain) 뽑기 (모델 1회) ─────────────────────────────
