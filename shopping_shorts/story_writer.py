@@ -89,6 +89,21 @@ FULL_BLOCK = """
   짐이란 짐은 이거 하나로 다 줄여 버렸다고
 """
 
+IG_FULL_BLOCK = """
+■ 풀코스 — 상황극을 끝까지 끌고 간다 (인스타 히트작 실측: 300자 넘는 편은 3%뿐이고 전부 이 꼴 — 336자·108만 조회)
+칸을 얇게 늘리지 말고 **사건을 이어 붙인다**:
+  beats     before/after **3쌍** — 쌍마다 다른 자리(주방→욕실→손목·기관지처럼 축을 바꿔라)
+  reaction  주변 사람 반응 **2줄** — 그걸 본 시어머니·남편·친정엄마가 뭐라고 했나, 그래서 하나 더 주문했다 같은 후속 사건
+  feeling·cta는 그대로
+예시(모양만):
+  얼마 전에 구축 아파트로 이사를 오게 됐는데 시어머니가 집에 놀러 오셔서는 주방이며 욕실이며 어쩜 이렇게 깨끗하냐고 청소 업체 불렀냐고 하시는 거예요
+  회사 청소 업체 사장님이 추천해 준 3만 원짜리 스팀 청소기인데 그냥 이걸로 한 번 쫙 청소해 줬더니 입주 청소비 100만 원은 아낀 것 같다고
+  독한 세제도 필요 없고 물로만 99.9% 살균 청소가 돼서 좋다고 말씀드렸더니 표정이 싹 굳으시면서
+  매번 독한 세제 풀어서 박박 닦느냐고 손목도 아프고 기관지도 안 좋았었는데 왜 이런 게 있다고 말을 안 해줬냐 하시더라고요
+  죄송하다고 하고 하나 바로 주문해 드렸는데 한 번 써보시고는 주방 찌든 기름때부터 화장실 줄눈 곰팡이까지 순식간에 녹아내린다고 엄청 좋아하시는 거 있죠
+  그래서 친정 엄마 것도 하나 주문했는데 댓글에 나도 남겨주세요
+"""
+
 # ── 유튜브 썰 ────────────────────────────────────────────────────────────
 YT_SCHEMA = {
     "type": "object",
@@ -181,6 +196,7 @@ IG_SCHEMA = {
             "feat": {"type": "integer"},
         }, "required": ["before", "after", "from_pain", "feat"]}},
         "feeling": {"type": "string"},
+        "reaction": {"type": "array", "items": {"type": "string"}},   # 풀코스: 주변 사람 반응 2줄(시어머니·친정엄마·남편)
         "cta": {"type": "string"},
     },
     "required": ["opening", "scene", "ask", "reveal", "beats", "feeling", "cta"],
@@ -215,7 +231,7 @@ ask 칸이 이 자리다. 인물(친구·언니·엄마·지인)은 이야기를
 ■ cta — 권하지 않는다 (인스타 641편 실측: "써보세요/해보세요"로 닫은 편 1%)
   이 중 하나로 닫아라:  댓글에 '낱말' 남겨주세요  ·  나도 남겨주시면 정보 보내드릴게요  ·  (소감 한 줄로 끝)
   X 여러분도 꼭 한번 써보세요
-  O 명당자리 미리 준비해 두실 분 댓글에 나도 남겨주세요
+  O (이 제품·이 이야기에 맞는 말) + 댓글에 '낱말' 남겨주세요   ※ 예문을 베끼지 마라 — 실측: 예문이 2/3편에 그대로 복사됐다
 
 """ + _EXPR + """
 
@@ -253,8 +269,8 @@ def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, n
     """
     ig = (platform == "ig")
     brief = IG_BRIEF if ig else YT_BRIEF
-    if preset == "full" and not ig:
-        brief += FULL_BLOCK
+    if preset == "full":
+        brief += IG_FULL_BLOCK if ig else FULL_BLOCK
     if style:
         brief += ("\n\n■ 이번 대본의 스타일: %s\n스토리라인: %s\n첫 줄 각도: %s\n%s"
                   % (style.get("name") or "", style.get("flow") or "",
@@ -302,6 +318,8 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
             rows.append(("물어봄", o["ask"], -1))
         rows.append(("공개", o.get("reveal"), -1))
         tail = [("소감", o.get("feeling"), -1), ("CTA", o.get("cta"), -1)]
+        if preset == "full":
+            tail = [("반응", t.strip(), -1) for t in (o.get("reaction") or [])[:2] if (t or "").strip()] + tail
     else:
         escs = o.get("escalations") or []
         _, sigs = _pick(YT_SETS, key, nth)
