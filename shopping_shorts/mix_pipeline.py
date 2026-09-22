@@ -3027,6 +3027,17 @@ def final_pair_for_source(plan, vid, pos=0.5, tts_paths=None, src_durs=None):
     return None, None
 
 
+def clean_base_on(store, customer_id=0):
+    """청소본 정본 경로 스위치(2026-09-22). 설정 키 clean_base_enabled — 판정 규칙은
+    app._setting_gate 하나를 그대로 쓴다(0순위-B: 같은 규칙을 두 번 적지 않는다).
+    기본 끔 → 종전 경로(완성본 서명 재사용/재청소). 워커에서도 부르므로 app을 늦게 import 한다."""
+    try:
+        from shopping_shorts.app import _setting_gate
+        return bool(_setting_gate(store, "clean_base_enabled", customer_id))
+    except Exception:      # noqa: BLE001 — 판정 실패는 '끔'
+        return False
+
+
 def _clean_strategy(job):
     """자막제거를 **어떤 단위로** 할지 정하는 유일한 자리 (2026-08-27).
 
