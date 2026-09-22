@@ -231,6 +231,17 @@ python -m pytest shopping_shorts/tests/test_gap_cuts.py shopping_shorts/tests/te
 
 ⚠️ 콘솔이 cp949라 한글 출력이 깨져 보인다 — `PYTHONIOENCODING=utf-8`을 붙이면 읽힌다.
 
+### ⚠️ 기록은 **main 폴더에도** 둬야 찾힌다 (2026-09-22 발견)
+`find_work.py`는 `BASE/handoff` · `BASE/wiki/log.d`만 본다(`tools/find_work.py:40`).
+**트랙 폴더에만 쓰면 병합 전까지 다음 세션에게 안 보인다** — 0순위-A2가 막으려던
+"파일은 있는데 찾을 방법이 없다"가 그대로 재현된다.
+→ 이 트랙도 처음엔 안 찾혔다. 트랙 폴더에 쓴 뒤 **main 폴더로 복사**했다:
+```
+cp .tracks/<트랙>/handoff/<트랙>.md handoff/
+cp .tracks/<트랙>/wiki/log.d/<트랙>.md wiki/log.d/
+```
+기록은 문서라 흡수 위험이 없다(코드가 아니다). 확인: `py tools/find_work.py <주제어>`
+
 ---
 
 ## ⏭ 다음 할 일
