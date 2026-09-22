@@ -54,3 +54,14 @@ def test_스위치_admin은_관리자_job에만_표식을_단다():
     assert mp._apply_cut_rhythm(plan2, _Store("admin"), {"customer_id": 57}) == 0
     assert "cut_rhythm" not in plan2["beats"][0]
     assert mp._apply_cut_rhythm(plan2, _Store(""), {"customer_id": 0}) == 0
+
+
+def test_편성단계_조각줄이기_홀드는_primary만_나머지는_2개():
+    plan = {"beats": [
+        {"beat_idx": 0, "narration": "훅", "primary": _seg("v1", 0, 1), "alternates": [_seg("v2", 0, 1), _seg("v3", 0, 1)]},
+        {"beat_idx": 1, "narration": "…없애 버렸다는 거", "primary": _seg("v1", 2, 3), "alternates": [_seg("v2", 2, 3)]},
+        {"beat_idx": 2, "narration": "바쁜 아침에 덜어내다가", "primary": _seg("v1", 4, 5), "alternates": [_seg("v2", 4, 5), _seg("v3", 4, 5), _seg("v4", 4, 5)]},
+    ]}
+    assert mp._trim_for_cut_rhythm(plan) == 3
+    assert [len(b["alternates"]) for b in plan["beats"]] == [0, 0, 1]
+    assert [b["cut_rhythm"]["hold"] for b in plan["beats"]] == [True, True, False]

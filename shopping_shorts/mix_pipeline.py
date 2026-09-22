@@ -1653,6 +1653,14 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         print("[mix] 3단계 상속: %s" % ("비트 %d개(출처 %d줄)" % (
             len(plan["beats"]), sum(1 for b in plan["beats"] if b.get("inherited")))
             if plan else "이을 수 없어 옛 경로로"), file=sys.stderr)
+        # ★컷 리듬(2026-09-22 사장님 "아직도 엄청 짧게 끊어진다 / 중복 장면"): 스위치가 켜진 계정은 **편성 단계에서**
+        #   조각 수를 줄인다 — 홀드 줄(훅·핵심 결과 줄)은 지목 컷 1개, 나머지는 2개까지. 채우기(_fill_beat_screen_time)가
+        #   붙인 4~7개 조각이 1초씩 돌아가며 나오던 것(실측 job 3abb02f8fd8f: 비트당 조각 중앙 4, 컷 34개/37초)의 뿌리.
+        #   모자란 화면은 렌더가 지목 컷을 원본에서 이어 튼다(원본은 연속 촬영). 미리보기(scene_play.js)와
+        #   렌더가 같은 조각 목록을 보므로 둘이 같이 조용해진다.
+        if plan and _cut_rhythm_on(store, {"customer_id": customer_id}):
+            _n = _trim_for_cut_rhythm(plan)
+            print("[mix] 컷 리듬: 비트 %d개 조각을 줄임(홀드 1·나머지 2)" % _n, file=sys.stderr)
     if plan is not None:
         pass
     elif scene_first:
@@ -2954,6 +2962,20 @@ def _cut_rhythm_on(store, job):
     if v and v not in ("0", "off", "false"):
         return str(cid) in {x.strip() for x in v.split(",")} or cid == 0
     return False
+
+
+def _trim_for_cut_rhythm(plan):
+    """편성 단계 조각 줄이기 — 홀드 줄은 primary만, 나머지는 primary + alternates 1개. 표식(cut_rhythm)도 같이 단다."""
+    n = 0
+    beats = (plan or {}).get("beats") or []
+    for i, b in enumerate(beats):
+        narr = (b.get("narration") or "").strip()
+        hold = (i == 0) or bool(_HOLD_END.search(narr))
+        alts = list(b.get("alternates") or [])
+        b["alternates"] = [] if hold else alts[:1]
+        b["cut_rhythm"] = {"max_shot": 4.0, "hold": hold}
+        n += 1
+    return n
 
 
 def _apply_cut_rhythm(plan, store, job):
