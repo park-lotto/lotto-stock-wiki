@@ -186,3 +186,21 @@ def test_two_sounds_per_scene():
 
 def test_quiet_slots_raised_to_audible_floor():
     assert min(sfx_pack.LEVEL_TARGET_DB.values()) >= sfx_pack._AUDIBLE_FLOOR_DB
+
+
+def test_settings_toggle_and_preserve(tmp_path, monkeypatch):
+    """3단계 스위치: sfx_pack만 합쳐 저장 · 꾸미기 통째 저장이 이 값을 지우지 않는다."""
+    from shopping_shorts import app as A
+    from shopping_shorts.store import Store
+    db = tmp_path / "t.db"; st = Store(str(db))
+    st.create_mix_job("jx", ["u"], 25, "free", customer_id=7)
+    st.update_mix_job("jx", deco={"bgm": {"volume": 15}})
+    monkeypatch.setattr(A, "DB_PATH", str(db))
+    assert A.api_produce_mix_settings({"job_id": "jx", "sfx_pack": "off"})["ok"]
+    d = Store(str(db)).get_mix_job("jx")["deco"]
+    assert d["sfx_pack"] == "off" and d["bgm"] == {"volume": 15}          # 다른 꾸미기 보존
+    A.api_produce_mix_settings({"job_id": "jx", "deco": {"bgm": {"volume": 30}}})   # sfx_pack 모르는 통째 저장
+    d = Store(str(db)).get_mix_job("jx")["deco"]
+    assert d["sfx_pack"] == "off" and d["bgm"] == {"volume": 30}          # 끈 값 유지
+    A.api_produce_mix_settings({"job_id": "jx", "sfx_pack": "auto"})
+    assert Store(str(db)).get_mix_job("jx")["deco"]["sfx_pack"] == "auto"
