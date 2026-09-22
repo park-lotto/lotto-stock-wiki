@@ -62,6 +62,32 @@ with sync_playwright() as p:
     need(sub == CANDIDATE['subline'], f"① 보조 제목도 후보의 것 (실제: {sub!r})")
     need(len(calls) == 1, f'② 진입 자동 + 편집기 대기가 겹쳐도 AI 후보 호출 1회 (실제 {len(calls)}회)')
     pg.screenshot(path=str(out / 'editor_after_wait.png'))
+
+    # ③ 같은 작업을 닫았다 다시 열기 — 임시저장본(localStorage draft)이 새 제목 후보를 덮지 않아야 한다(2026-09-22 사장님: "안 나옴").
+    #    닫기 전에 채널명 칸만 사용자가 고친다 → 다시 열면 채널명은 고친 값, 훅 제목은 **새 후보 B**여야 한다.
+    fr = next((x for x in pg.frames if 'scene-style-ui-showcase' in x.url), None)
+    need(fr is not None, '③ 편집기 팝업(iframe)이 열려 있다')
+    if fr:
+        fr.wait_for_function("window.sceneStyle&&window.sceneStyle.context()", timeout=20000)
+        h1_first = fr.evaluate("document.querySelector('[data-field-key=\"hook1\"] input, input[data-bind=\"hook1\"], #hook1')?.value ?? null")
+        fr.evaluate("""()=>{const i=[...document.querySelectorAll('input')].find(e=>e.value==='숏템메이커');if(i){i.value='내채널';i.dispatchEvent(new Event('input',{bubbles:true}));}}""")
+        pg.wait_for_timeout(300)
+        pg.evaluate("document.querySelector('dialog[open] button').click()"); pg.wait_for_timeout(1500)   # 저장하고 닫기 → 임시저장
+        draft = pg.evaluate(f"localStorage.getItem('scene-style-draft:{JOB}')")
+        need(bool(draft), '③ 닫으면 임시저장본이 브라우저에 남는다')
+        # 다음 열기엔 후보가 B로 바뀐다(대본을 고쳐 다시 뽑은 상황) — 서버 캐시·페이지 캐시를 비운다
+        CANDIDATE.update({'text': '소파 틈새 먼지' + chr(10) + '한 번에 끝내는 법', 'subline': '청소 시간이 절반으로'})
+        module._HEADCOPY_CACHE.clear()
+        pg.evaluate("window._hcCopies=[];HC_COPY_LOADED_HASH=null;STATE.headcopy=null")
+        ctx_requests.clear()
+        pg.evaluate("(()=>{openSceneStyleEditor();return 1})()")
+        pg.wait_for_timeout(int(float(__import__('os').environ.get('HC_DELAY','3'))*1000)+4000)
+        fr2 = next((x for x in pg.frames if 'scene-style-ui-showcase' in x.url), None)
+        vals = fr2.evaluate("""()=>{const ctx=window.sceneStyle.context();return {hook1:ctx.text.hook1,hook2:ctx.text.hook2,channel:ctx.text.channel,
+            inputs:[...document.querySelectorAll('input')].map(e=>e.value).filter(v=>['내채널','숏템메이커','소파 틈새 먼지','먼지 뭉침을'].includes(v))}}""")
+        need(vals['hook1'] == '소파 틈새 먼지', f"③ 다시 열면 훅 제목 = 새 후보 B (실제 hook1: {vals['hook1']!r}) — 고치기 전엔 옛 후보 A가 그대로 남았다")
+        need(vals['channel'] == '내채널' and '내채널' in vals['inputs'], f"③ 사용자가 고친 채널명은 그대로 남는다 (실제: {vals['channel']!r}, inputs {vals['inputs']})")
+        pg.screenshot(path=str(out / 'editor_reopened.png'))
     b.close()
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')
 sys.exit(1 if fails else 0)
