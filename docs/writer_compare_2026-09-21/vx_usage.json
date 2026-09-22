@@ -1,0 +1,130 @@
+[
+ {
+  "model": "gemini-3.1-flash-lite",
+  "run": 1,
+  "sec": 3.4,
+  "in": 5521,
+  "out": 174,
+  "think": 0
+ },
+ {
+  "model": "gemini-3.1-flash-lite",
+  "run": 2,
+  "sec": 2.0,
+  "in": 5521,
+  "out": 188,
+  "think": 0
+ },
+ {
+  "model": "gemini-3.5-flash-lite",
+  "run": 1,
+  "sec": 1.7,
+  "in": 5521,
+  "out": 195,
+  "think": 0
+ },
+ {
+  "model": "gemini-3.5-flash-lite",
+  "run": 2,
+  "sec": 1.7,
+  "in": 5521,
+  "out": 184,
+  "think": 0
+ },
+ {
+  "model": "gemini-3.5-flash",
+  "run": 1,
+  "sec": 20.7,
+  "in": 5521,
+  "out": 246,
+  "think": 4599
+ },
+ {
+  "model": "gemini-3.5-flash",
+  "run": 2,
+  "sec": 20.0,
+  "in": 5521,
+  "out": 255,
+  "think": 4361
+ },
+ {
+  "model": "gemini-3.6-flash",
+  "run": 1,
+  "sec": 28.7,
+  "in": 5521,
+  "out": 193,
+  "think": 5635
+ },
+ {
+  "model": "gemini-3.6-flash",
+  "run": 2,
+  "sec": 20.7,
+  "in": 5521,
+  "out": 194,
+  "think": 3909
+ },
+ {
+  "model": "gemini-3.7-flash",
+  "run": 1,
+  "sec": 10.7,
+  "in": 5521,
+  "out": 180,
+  "think": 1399
+ },
+ {
+  "model": "gemini-3.8-flash",
+  "run": 1,
+  "sec": 33.2,
+  "in": 5521,
+  "out": 221,
+  "think": 3774
+ },
+ {
+  "model": "gemini-3.1-pro-preview",
+  "run": 1,
+  "sec": 28.3,
+  "in": 5521,
+  "out": 188,
+  "think": 2811
+ },
+ {
+  "model": "gemini-2.5-pro",
+  "run": 1,
+  "sec": 33.6,
+  "in": 5521,
+  "out": 166,
+  "think": 3521
+ },
+ {
+  "model": "gemini-2.5-pro",
+  "run": 2,
+  "sec": 31.9,
+  "in": 5521,
+  "out": 181,
+  "think": 3268
+ },
+ {
+  "model": "gemini-3.1-pro-preview",
+  "run": 2,
+  "sec": 70.5,
+  "in": 5521,
+  "out": 188,
+  "think": 3710
+ },
+ {
+  "model": "gemini-3.8-flash",
+  "run": 2,
+  "sec": 47.7,
+  "in": 5521,
+  "out": 233,
+  "think": 6794
+ },
+ {
+  "model": "gemini-3.7-flash",
+  "run": 2,
+  "sec": 11.2,
+  "in": 5521,
+  "out": 184,
+  "think": 1370
+ }
+]
