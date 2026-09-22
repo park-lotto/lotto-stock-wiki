@@ -159,3 +159,24 @@ class Test훅_시작점은_멱등이다:
         sig1 = mp._plan_signature(plan)
         va._apply_hook_inpoint(plan, srcs, tmp_path)
         assert mp._plan_signature(plan) == sig1, "서명이 바뀌면 자막제거가 또 돈다"
+
+
+def test_clean_base_path_never_recleans_on_caption_lines(tmp_path, monkeypatch):
+    """★정본(2026-09-22): 줄을 나눠도 렌더는 VMake를 안 탄다. 이 테스트가 뒤집히면 재과금이 돌아온다."""
+    import pytest
+    from shopping_shorts import mix_pipeline as mp
+    from shopping_shorts import clean_base as cb
+    plan = {"beats": [{"beat_idx": 0, "target_seconds": 2.0, "narration": "가 나 다",
+                       "primary": {"video_id": "s0", "seg_id": "s0-0", "start": 1.0, "end": 3.0}, "alternates": []}]}
+    job = {"edit_plan": plan, "urls": ["u"], "subtitle_removal": 1, "customer_id": 0, "clean_status": "ready"}
+    (tmp_path / "s0").mkdir(); (tmp_path / "s0" / "v.mp4").write_bytes(b"v" * 4096)
+    (tmp_path / "final_clean_a.mp4").write_bytes(b"c" * 4096)
+    cb.save_base(tmp_path, sig="a", path=str(tmp_path / "final_clean_a.mp4"), plan=plan,
+                 cuts=[{"video_id": "s0", "beat_idx": 0, "src": 1.0, "fin": 0.0, "dur": 2.0}])
+    plan["beats"][0]["caption_lines"] = ["가", "나", "다"]
+    plan["beats"][0]["scene_zoom"] = 1.2
+    monkeypatch.setattr(mp, "clean_base_on", lambda s, c: True)
+    monkeypatch.setattr(mp, "_vmake_clean", lambda *a, **k: pytest.fail("재청소가 났다"))
+    monkeypatch.setattr(mp, "incremental_clean", lambda *a, **k: pytest.fail("증분 청소가 났다"))
+    plan_used, paths, base = mp.render_inputs_for(object(), job, "j", tmp_path, ["k"], 0)
+    assert base is not None and list(paths) == ["clean"]

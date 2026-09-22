@@ -7414,6 +7414,39 @@ def api_produce_mix_clean_clips(job_id: str):
             "plan_used": r.get("plan_used"), "count": len(clips)}
 
 
+@app.get("/api/produce/mix/clean_base_preview/{job_id}")
+def api_produce_mix_clean_base_preview(job_id: str):
+    """최종렌더 전에 화면이 묻는다: 이번 렌더가 자막제거를 다시 타나? (2026-09-22)
+    정본이 있으면 바뀐 장면·큰 늘림만 초수로 알려준다. 판정은 clean_base.remap_plan 하나."""
+    from shopping_shorts import clean_base as _cb
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id:
+        return {"ok": False, "enabled": False}
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan") or not job.get("subtitle_removal"):
+        return {"ok": True, "enabled": False, "uncovered": [], "extend": [], "est_credits": None}
+    cid = job.get("customer_id") or 0
+    work = _MIX_WORK_DIR / job_id
+    if not mix_pipeline.clean_base_on(store, cid):
+        return {"ok": True, "enabled": False, "uncovered": [], "extend": [], "est_credits": None}
+    base = _cb.load_base(work)
+    if base is None:
+        return {"ok": True, "enabled": True, "base": False, "uncovered": [], "extend": [], "est_credits": None}
+    plan = job["edit_plan"]
+    beats = {int(b["beat_idx"]): b for b in plan.get("beats") or []}
+    _plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs={
+        int(b["beat_idx"]): float(b.get("target_seconds") or 0) for b in plan.get("beats") or []})
+    unc = []
+    for bi in uncovered:
+        secs = sum(float(m["end"]) - float(m["start"]) for m in mix_pipeline._beat_materials(beats[bi]))
+        unc.append({"beat_idx": bi, "seconds": round(secs, 2)})
+    ext = [{"beat_idx": e["beat_idx"], "need": e["need"]} for e in extend]
+    total = sum(u["seconds"] for u in unc) + sum(float(e["end"]) - float(e["start"]) for e in extend)
+    est = mix_pipeline.clean_credit_estimate(total, tier=mix_pipeline.clean_tier_of(job)) if total > 0 else 0
+    return {"ok": True, "enabled": True, "base": True, "uncovered": unc, "extend": ext, "est_credits": est}
+
+
 @app.get("/api/produce/mix/clean_thumb/{job_id}")
 def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
                                 si: int = 0, pos: float = 0.5, ci: int = -1):
@@ -9190,14 +9223,15 @@ def api_mix_export(job_id: str, part: str = ""):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
-    plan = job["edit_plan"]
     work = _MIX_WORK_DIR / job_id
     work.mkdir(parents=True, exist_ok=True)
-    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    # ★정본(2026-09-22)이면 재배치된 사본·청소본이 입력이다 — 렌더와 같은 함수(render_inputs_for)
     try:
-        source_video_paths = _resolve_sources(job, work)
+        plan, source_video_paths, _cbase = mix_pipeline.render_inputs_for(
+            Store(DB_PATH), job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
     except Exception:
-        source_video_paths = {}   # 소스 전멸이어도 srt/script/seo는 준다(설계 §6, 500 금지)
+        plan, source_video_paths = job["edit_plan"], {}   # 소스 전멸이어도 srt/script/seo는 준다(설계 §6, 500 금지)
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
     timeline = _beat_timeline(plan, tts_paths)
     parts = {"sources": ["sources"], "srt": ["srt"], "script": ["script"]}.get(
         part, export_bundle.ALL_PARTS)
@@ -9243,13 +9277,14 @@ def api_mix_capcut(job_id: str, base: str = ""):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
-    plan = job["edit_plan"]
     work = _MIX_WORK_DIR / job_id
-    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    # ★정본(2026-09-22)이면 재배치된 사본·청소본이 입력이다 — 렌더와 같은 함수(render_inputs_for)
     try:
-        source_video_paths = _resolve_sources(job, work)
+        plan, source_video_paths, _cbase = mix_pipeline.render_inputs_for(
+            Store(DB_PATH), job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
     except Exception:
-        source_video_paths = {}
+        plan, source_video_paths, _cbase = job["edit_plan"], {}, None
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
     # 자막 제거본이 타임라인 소스를 대신하더라도 캡컷 보관함에는 편집에 쓰인 긴 원본을 함께 보낸다.
     # 원본 집합 판정은 capcut_draft.used_video_ids 한 곳만 사용해 타임라인 소스 판정과 어긋나지 않게 한다.
     _original_source_video_paths = dict(source_video_paths)
@@ -9272,7 +9307,11 @@ def api_mix_capcut(job_id: str, base: str = ""):
     #     - 대신 캡컷에서 컷을 원본 범위 밖으로 **늘리는** 편집은 못 한다(조각 뒤가 없다)
     #   자르기가 실패하면 원본으로 두지 않고 **막는다** — 자막 남은 결과물을 조용히 내보내는
     #   것이 더 나쁘다(사장님이 캡컷에서야 알게 된다).
-    if job.get("subtitle_removal") and not (job.get("clean_sources") or {}):
+    # ★정본(_cbase)이면 아래 '완성본을 현재 타임라인으로 자르기'를 타지 않는다 — 청소본의 시간축은
+    #   청소 시점 편성이라, 앞 비트가 길어지면 뒤 비트가 청소본 끝을 넘어 빈 조각이 된다(LAB 실측
+    #   2026-09-22: src_cc5 띠 0.00). 정본 경로는 plan(재배치 사본)의 재료가 이미 청소본 좌표이므로
+    #   렌더와 같은 일반 경로(plan_beat_clips_for로 소스에서 자르기)가 정확하다.
+    if job.get("subtitle_removal") and not (job.get("clean_sources") or {}) and _cbase is None:
         # ★청소본은 **지금 편성의 서명 파일**로 찾는다(mix_pipeline.clean_final_path_for_plan, 0순위-B).
         #   2026-09-17 고객 제보(job 4efcc4c06d41): 렌더 완료·청소본 파일이 있는데도 "자막 없는 완성본이
         #   없어요"로 막혔다. 편집을 바꾸면 _save_render_inputs가 clean_video_path를 비우고, 완성본
@@ -15046,7 +15085,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 2단계 '본 것만 쓰기' — ""/"0" 끔 · "admin" 관리자만 · "11,42" 고객 허용 목록 · "1" 전체
                        "script_grounded_enabled",
                        # 3단계 '붙어 온 장면 그대로'(Gemini 0회·추측 층 없음) — 값 규약은 위와 같다
-                       "edl_inherit_enabled"}
+                       "edl_inherit_enabled",
+                       # 자막제거 정본(2026-09-22) — 4단계 청소본을 정본으로, 꾸미기 뒤 재청소 없음. 값 규약 같음
+                       "clean_base_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -21250,11 +21291,16 @@ def _final_cuts(job, work):
       (_clean_frame_src/_beatframe_file)이 **같은 컷 목록**을 봐야 한다. 각자 세면
       "3번 칸"이 서로 다른 그림을 가리킨다.
     실패하면 [] — 호출부는 비트 단위로 물러선다(조용히 깨지지 않게)."""
-    plan = (job or {}).get("edit_plan") or {}
+    # ★정본(2026-09-22)이면 재배치된 사본·청소본으로 컷을 편다 — 렌더와 같은 입력(render_inputs_for)
+    try:
+        plan, _srcs, _b = mix_pipeline.render_inputs_for(
+            Store(DB_PATH), job, Path(work).name, work, [], (job or {}).get("customer_id") or 0, allow_clean=False)
+    except Exception:      # noqa: BLE001
+        plan, _srcs = (job or {}).get("edit_plan") or {}, None
     tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
     try:
         durs = {v: (frame_extract._probe_duration(pth) or 0.0)
-                for v, pth in _resolve_sources(job, work).items()}
+                for v, pth in (_srcs if _srcs is not None else _resolve_sources(job, work)).items()}
     except Exception:      # noqa: BLE001
         durs = {}
     try:
@@ -21324,6 +21370,24 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
     #   poster·beatframe이 모두 이 꼬리표로 파일명을 만들므로 여기 한 곳만 고친다(0순위-B).
     _stem = Path(cvp).stem
     _ctag = "_clean_" + re.sub(r"[^0-9a-zA-Z]", "", _stem[len("final_clean_"):] if _stem.startswith("final_clean_") else _stem)
+    # ★정본(2026-09-22): 재배치된 사본의 컷은 재료가 곧 청소본 좌표("clean", start)다 — 그 시각에서 뜬다.
+    #   증분 조각(cb…)이면 그 조각 파일에서 뜬다. 판정·좌표는 render_inputs_for 하나.
+    _b = mix_pipeline.clean_base_for(job, work)
+    if _b is not None:
+        try:
+            _p2, _paths, _ = mix_pipeline.render_inputs_for(
+                Store(DB_PATH), job, Path(work).name, work, [], job.get("customer_id") or 0, allow_clean=False)
+            _t2 = {b["beat_idx"]: b["tts_path"] for b in (_p2.get("beats") or []) if b.get("tts_path")}
+            _d2 = {v: (frame_extract._probe_duration(pth) or 0.0) for v, pth in _paths.items()}
+            _cl = _cuts_of_beat(mix_pipeline.final_clip_pairs(_p2, _t2, _d2), beat_idx)
+            if _cl:
+                _c = _cl[cut] if (cut is not None and 0 <= cut < len(_cl)) else _cl[0]
+                _f = _paths.get(_c["video_id"]) or cvp
+                _dur = _d2.get(_c["video_id"]) or (frame_extract._probe_duration(_f) or 0.0)
+                _sec = float(_c["src"]) + float(_c["dur"]) * 0.5
+                return {}, _f, (min(0.98, max(0.02, _sec / _dur)) if _dur > 0 else 0.5), "_cb_%s" % _b["sig"], True
+        except Exception as e:      # noqa: BLE001 — 정본 좌표 실패는 아래 종전 계산으로
+            print(f"[beatframe] 정본 좌표 실패(종전 계산 사용): {e!r}", file=sys.stderr)
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}

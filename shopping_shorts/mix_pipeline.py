@@ -3027,6 +3027,17 @@ def final_pair_for_source(plan, vid, pos=0.5, tts_paths=None, src_durs=None):
     return None, None
 
 
+def clean_base_on(store, customer_id=0):
+    """청소본 정본 경로 스위치(2026-09-22). 설정 키 clean_base_enabled — 판정 규칙은
+    app._setting_gate 하나를 그대로 쓴다(0순위-B: 같은 규칙을 두 번 적지 않는다).
+    기본 끔 → 종전 경로(완성본 서명 재사용/재청소). 워커에서도 부르므로 app을 늦게 import 한다."""
+    try:
+        from shopping_shorts.app import _setting_gate
+        return bool(_setting_gate(store, "clean_base_enabled", customer_id))
+    except Exception:      # noqa: BLE001 — 판정 실패는 '끔'
+        return False
+
+
 def _clean_strategy(job):
     """자막제거를 **어떤 단위로** 할지 정하는 유일한 자리 (2026-08-27).
 
@@ -3261,11 +3272,30 @@ def clean_final_path_for_plan(job, work):
     try:
         if (job or {}).get("clean_sources"):
             return None     # 소스별 청소본 경로 — 호출부가 그 맵을 그대로 쓴다
+        # ★정본(2026-09-22): 스위치가 켜져 있고 clean_base.json이 있으면 그 파일이 곧 정본이다.
+        #   편성 서명이 바뀌어도(줄·확대·컷) 청소본은 유효하다 — 렌더가 그 위에서 조립하므로.
+        _b = clean_base_for(job, work)
+        if _b is not None:
+            return Path(_b["path"])
         sig = _clean_sig(job)          # 등급까지 반영한 서명(0순위-B: _clean_sig 한 곳)
         f = Path(work) / ("final_clean_%s.mp4" % sig)
         if f.exists() and f.stat().st_size > 1024:
             return f
         return None
+    except Exception:      # noqa: BLE001
+        return None
+
+
+def clean_base_for(job, work):
+    """이 job의 청소본 정본(dict) — 스위치가 켜져 있고 파일이 살아 있을 때만. 아니면 None.
+    화면(app.py)·비교·프레임이 전부 이 한 함수로 "정본이 있나"를 판정한다(0순위-B)."""
+    try:
+        from shopping_shorts import clean_base as _cb
+        if not (job or {}).get("subtitle_removal"):
+            return None
+        if not clean_base_on(Store(config.DB_PATH), (job or {}).get("customer_id") or 0):
+            return None
+        return _cb.load_base(work)
     except Exception:      # noqa: BLE001
         return None
 
@@ -3287,6 +3317,8 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
         if out.exists() and out.stat().st_size > 1024:
             print(f"[clean] 완성본 재사용(편성 그대로, 과금 0): {out.name}", file=sys.stderr)
             _save_clean_plan_snapshot(work, sig, job.get("edit_plan"))
+            # 정본이 없거나 **다른 등급/서명의 파일**이면 이 파일로 정본을 다시 쓴다(등급 변경 = 새 정본)
+            _save_clean_base(job, work, sig, str(out), only_if_new=True)
             return str(out)
         charged = _charge_clean(store, customer_id, 1)
         try:
@@ -3297,8 +3329,85 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
                 _refund_clean(store, customer_id, charged)
             raise
         _save_clean_plan_snapshot(work, sig, job.get("edit_plan"))
+        # ★청소본 정본(2026-09-22): 이 파일과 그 시점 컷 지도를 job의 정본으로 남긴다.
+        #   이후 렌더·프레임·캡컷은 clean_base.remap_plan 으로 이 파일을 소스 삼아 조립한다.
+        _save_clean_base(job, work, sig, str(res))
         return res
     return _clean
+
+
+def _cut_piece(src, ss, dur, dst):
+    """원본 소스에서 [ss, ss+dur) 한 조각을 규격 그대로 잘라낸다(증분 청소 입력)."""
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{ss:.3f}", "-i", str(src),
+                    "-t", f"{dur:.3f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+                    "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", str(dst)], check=True)
+    return str(dst)
+
+
+def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, uncovered, extend):
+    """정본에 없는 재료(바뀐 장면·큰 늘림)만 원본에서 잘라 **1콜**로 지우고 extras에 붙인다(2026-09-22).
+
+    ★돈이 나가는 함수다 — 콜 1회 선차감(_charge_clean), 실패 시 전액 환불 후 예외.
+    ★조각 vid: 바뀐 비트 cb{beat}_{k} · 늘림 cbx{beat}. 재료 키를 함께 저장해 같은 재료로
+      다시 오면 clean_base.coverage 가 covered 로 본다(재과금 0)."""
+    from shopping_shorts import clean_base as _cb
+    work = Path(work)
+    srcs = _resolve_sources(job, work)
+    beats = {int(b["beat_idx"]): b for b in (plan or {}).get("beats") or []}
+    items, meta = [], {}
+    for bi in uncovered:
+        b = beats.get(int(bi))
+        if not b:
+            continue
+        key = _cb.beat_material_key(b)
+        for k, m in enumerate(_beat_materials(b)):
+            src = srcs.get(m.get("video_id"))
+            if not src:
+                continue
+            s, e = float(m["start"]), float(m["end"])
+            vid = "cb%d_%d" % (int(bi), k)
+            dst = _cut_piece(src, s, e - s, work / f"{vid}.mp4")
+            items.append((vid, dst)); meta[vid] = (int(bi), key, e - s)
+    for ex in extend or []:
+        src = srcs.get(ex["video_id"])
+        b = beats.get(int(ex["beat_idx"]))
+        if not src or not b:
+            continue
+        vid = "cbx%d" % int(ex["beat_idx"])
+        s, e = float(ex["start"]), float(ex["end"])
+        dst = _cut_piece(src, s, e - s, work / f"{vid}.mp4")
+        items.append((vid, dst)); meta[vid] = (int(ex["beat_idx"]), _cb.beat_material_key(b), e - s)
+    if not items:
+        return base
+    charged = _charge_clean(store, customer_id, 1)
+    try:
+        print("[clean-base] 증분 청소 %d조각 1콜: %s" % (len(items), [v for v, _ in items]), file=sys.stderr)
+        paths, _regions = _clean_joined(items, keys, str(work), tag="cb")
+    except Exception:
+        if charged:
+            _refund_clean(store, customer_id, charged)
+        raise
+    for vid, p in paths.items():
+        bi, key, sec = meta[vid]
+        base = _cb.add_extra(work, base, vid=vid, path=p, beat_idx=bi, material_key=key, seconds=sec)
+    return base
+
+
+def _save_clean_base(job, work, sig, path, only_if_new=False):
+    """청소본 정본 저장(clean_base.save_base) — 실패해도 청소는 성공이다(종전 경로로 남을 뿐).
+    only_if_new: 정본이 없거나 서명이 다를 때만(재사용 분기)."""
+    try:
+        from shopping_shorts import clean_base as _cb
+        if only_if_new:
+            _old = _cb.load_base(work)
+            if _old is not None and _old.get("sig") == sig:
+                return
+        _plan = job.get("edit_plan") or {}
+        _tts = {b["beat_idx"]: b["tts_path"] for b in _plan.get("beats") or [] if b.get("tts_path")}
+        _cb.save_base(work, sig=sig, path=path,
+                      plan=_plan, cuts=final_clip_pairs(_plan, _tts, _src_durs_for(job, work)))
+    except Exception as _e:      # noqa: BLE001
+        print("[clean-base] 정본 저장 실패(무해, 종전 경로): %s" % _e, file=sys.stderr)
 
 
 def _clean_plan_snapshot_path(work, sig):
@@ -3357,6 +3466,16 @@ def clean_compare_clips(job, work):
         fresh = clean_final_path_for_plan(job, work)
         if fresh is not None:
             plan, out["clean_path"], out["plan_used"] = (job.get("edit_plan") or {}), str(fresh), "current"
+            # ★정본이면 청소본의 시간축은 **청소 시점 편성**이다 — 그 스냅샷으로 좌우 컷을 편다.
+            _b = clean_base_for(job, work)
+            if _b is not None and Path(_b["path"]) == Path(str(fresh)):
+                _sp = _clean_plan_snapshot_path(work, _b["sig"])
+                if _sp.exists():
+                    try:
+                        plan = json.loads(_sp.read_text(encoding="utf-8"))
+                        out["plan_used"] = "snapshot"
+                    except Exception:      # noqa: BLE001
+                        pass
         else:
             out["stale"] = True
             cands = [f for f in work.glob("final_clean_*.mp4") if f.stat().st_size > 1024]
@@ -3696,7 +3815,9 @@ def run_preview(job_id, db_path, work_root):
                           script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
-        source_video_paths = _resolve_sources(job, work)
+        # ★정본이 있으면 미리보기도 청소본 위에서(돈 0 — allow_clean=False라 바뀐 비트는 원본 그대로 보인다)
+        plan_used, source_video_paths, _base = render_inputs_for(
+            store, job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
         out_path = work / "preview.mp4"
         # headcopy·caption_style은 **넘기지 않는다**(스펙 §9: 꾸미기 제외 / caption_style 기본값만).
         # headcopy는 store.py 주석대로 "영상제작 5단계 꾸미기 헤드카피"라 deco={}로 꾸미기를
@@ -3705,7 +3826,7 @@ def run_preview(job_id, db_path, work_root):
         # ★미리보기는 veryfast로 인코딩(6분→~1.5분) — 확인용이라 화질 조금 낮아도 무방.
         # 최종 렌더(run_render)는 이 컨텍스트 밖이라 medium 고화질 그대로.
         with preview_preset():
-            assemble(plan, tts_paths, source_video_paths, str(out_path),
+            assemble(plan_used, tts_paths, source_video_paths, str(out_path),
                      clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
                      deco={},                             # ← 꾸미기 없음(4단계 소관)
                      cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
@@ -3810,6 +3931,47 @@ def _faststart(path):
             pass
 
 
+def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_clean=True):
+    """렌더 계열(최종·미리보기·캡컷·ZIP·프레임)의 **입력을 정하는 유일한 자리**(2026-09-22).
+
+    반환 (plan_used, source_video_paths, base):
+      정본 경로(스위치 켬 + clean_base.json 있음):
+        plan_used = 청소본 좌표로 재배치한 파생 사본, source_video_paths = {"clean": 청소본, cb…: 증분 조각}
+        base = 정본 dict. VMake는 증분(바뀐 장면·큰 늘림)일 때만, allow_clean=True 일 때만 탄다.
+      아니면: (job["edit_plan"], _resolve_sources(job, work), None) — 종전 그대로.
+    ★plan_used 는 DB에 저장하지 않는다."""
+    from shopping_shorts import clean_base as _cb
+    plan = job.get("edit_plan") or {}
+    work = Path(work)
+    if not (job.get("subtitle_removal") and clean_base_on(store, customer_id)):
+        return plan, _resolve_sources(job, work), None
+    base = _cb.load_base(work)
+    if base is None:
+        return plan, _resolve_sources(job, work), None
+    # ★늘림 판정의 길이는 렌더와 같은 자(final_clip_pairs가 쓰는 _beat_effective_dur)로 잰다 —
+    #   target_seconds는 계획값이라 실제 TTS 길이와 어긋날 수 있다(둘이 다르면 지워놓고 안 쓰거나, 모자란다).
+    from shopping_shorts import video_assemble as _va
+    tts_durs = {}
+    for b in plan.get("beats") or []:
+        try:
+            _tp = b.get("tts_path")
+            tts_durs[int(b["beat_idx"])] = (float(_va._beat_effective_dur(b, _tp)) if _tp and Path(_tp).exists()
+                                            else float(b.get("target_seconds") or 0))
+        except (TypeError, ValueError):
+            pass
+    plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs)
+    if (uncovered or extend) and allow_clean:
+        base = incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, uncovered, extend)
+        plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs)
+    if uncovered:
+        # 증분을 못 했거나(allow_clean=False) 실패 — 원본 재료가 남는 비트가 있다. 원본 소스도 같이 넘긴다.
+        print("[clean-base] 원본 재료 잔존 비트 %s (자막 남을 수 있음)" % uncovered, file=sys.stderr)
+        paths = dict(_resolve_sources(job, work)); paths.update(_cb.source_paths(base))
+        return plan2, paths, base
+    print("[clean-base] 정본 조립(VMake 0회): %s" % Path(base["path"]).name, file=sys.stderr)
+    return plan2, _cb.source_paths(base), base
+
+
 @_owned_job
 def run_render(job_id, db_path, work_root):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
@@ -3831,13 +3993,20 @@ def run_render(job_id, db_path, work_root):
                           script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
-        source_video_paths = _resolve_sources(job, work)
         out_path = work / "final.mp4"
+
+        # ★청소본 정본(2026-09-22): 스위치가 켜져 있고 4단계 정본이 있으면 청소본을 소스로 조립한다
+        #   (VMake 0회, 바뀐 장면만 증분). 아니면 종전 그대로 원본 소스 + 아래 청소 분기.
+        keys = _vmake_keys(store, job.get("customer_id") or 0) if job.get("subtitle_removal") else []
+        plan_used, source_video_paths, _base = render_inputs_for(
+            store, job, job_id, work, keys, job.get("customer_id") or 0)
+        if _base is not None:
+            store.update_mix_job(job_id, clean_status="ready", clean_error=None)
 
         # 자막제거: 소스 원본을 미리(2단계) 또는 여기서(버튼 미사용 시) 청소해 그 소스로 조립한다.
         # mix_raw 위 clean_fn(구방식)은 폐기 — 소스단위여야 TTS/컷과 무관하게 캐시가 성립한다.
         final_clean_fn = None
-        if job.get("subtitle_removal"):
+        if job.get("subtitle_removal") and _base is None:
             # ★2단계 버튼을 안 거치고 바로 렌더로 오는 경로도 VMake를 탄다 — 여기도 과금해야
             #   구멍이 안 남는다(2단계에서 이미 청소됐으면 todo가 비어 자동으로 0원).
             customer_id = job.get("customer_id") or 0
@@ -3874,9 +4043,10 @@ def run_render(job_id, db_path, work_root):
         #   ★장면 시각은 미리보기 장면 목록(app._final_cuts)과 **같은 입력**으로 잰다:
         #     청소 전 원본 소스 길이 + 칸별 TTS. 청소본 길이로 재면 컷이 미세하게 갈릴 수 있다.
         try:
+            # ★정본 경로면 재배치된 사본·청소본 길이로 센다 — 가림막 컷 좌표는 조립과 같은 재료를 봐야 한다
             _sm_durs = {v: (_probe_duration(str(p_)) or 0.0)
-                        for v, p_ in _resolve_sources(job, work).items()}
-            _sm = _scene_mask_layers(job.get("deco", {}).get("template"), plan, tts_paths, _sm_durs)
+                        for v, p_ in source_video_paths.items()}
+            _sm = _scene_mask_layers(job.get("deco", {}).get("template"), plan_used, tts_paths, _sm_durs)
         except Exception as e:      # noqa: BLE001 — 장면 가림막 때문에 렌더 전체를 잃지 않는다
             print(f"[scene_mask] 준비 실패 — 생략: {e!r}", file=sys.stderr)
             _sm = []
@@ -3887,7 +4057,7 @@ def run_render(job_id, db_path, work_root):
         # ffprobe 호출(_beat_timeline)을 피한다 — 수동 layers만 쓰는 기존 deco를 위해 필수.
         caption_style = job.get("caption_style")
         if (deco.get("motion") or {}).get("pack_id"):
-            timeline = _beat_timeline(plan, tts_paths)
+            timeline = _beat_timeline(plan_used, tts_paths)
             deco, caption_style = _apply_motion_pack(deco, caption_style, timeline, load_packs(MOTION_ASSETS_DIR))
         # 모션 레이어(전환·스티커): asset_id → 실경로·기본배치 해석
         motion = deco.get("motion") or {}
@@ -3898,7 +4068,7 @@ def run_render(job_id, db_path, work_root):
         # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
         cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
         sfx_paths = _resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job)
-        assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
+        assemble(plan_used, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)
         # 🖼 썸네일을 영상 맨 앞에 붙이기(2026-08-18 사장님 요청, 9단계 체크박스).
