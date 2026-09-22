@@ -133,6 +133,7 @@ YT_SCHEMA = {
             "detail": {"type": "array", "items": {"type": "string"}},     # 풀코스: 없앤 뒤 장면 풀이 3~4줄
         }, "required": ["moment", "what_happens", "erased", "from_pain", "feat"]}},
         "twist": {"type": "string"},
+        "twist_feat": {"type": "integer"},      # 반전이 근거로 삼은 재료 번호 — 그 특징의 컷이 붙는다(2026-09-22)
         "finale": {"type": "array", "items": {"type": "string"}},       # 풀코스: 마지막 셀링 2~3줄(반전 대신)
         "closing": {"type": "string"},
     },
@@ -177,7 +178,7 @@ from_pain에는 근거로 삼은 특징을 적어라. 댈 게 없으면 그 칸�
   erased        그걸 통째로 없앤 방식, 강한 동사로 끊기 "자리를 아예 하나로 합쳐서 없애 버렸다는 거"
   ★what_happens가 "~을/를"로 끝나면 erased는 그 목적어를 받는 서술어로 이어져야 한다.
 
-■ twist는 앞 고조와 **다른 축**이어야 한다 (위생·보관·휴대 같은 다른 걱정거리)
+■ twist는 앞 고조와 **다른 축**이어야 한다 (위생·보관·휴대 같은 다른 걱정거리). 근거로 삼은 재료 번호를 twist_feat에 적어라 — 그 번호의 화면이 붙는다.
 ■ closing은 권유가 아니다 — "~해 보세요" 금지. 남의 말로 닫아라("…난리라는데").
 
 ■ 표현 재료 (골라 쓰는 것이다. 안 맞으면 쓰지 마라)
@@ -363,7 +364,9 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
         if (o.get("contrast") or "").strip():
             # ★위치[1] 신호어는 대비에 붙는다("이게 말도 안 되는게 기존 X와 달리 Y해 준다는 거") — 대비가 없으면 고조1에.
             rows.append(("대비", _LEAD_CONJ.sub("", o["contrast"].strip()), -1))
-        tail = [("반전", o.get("twist"), -1), ("마무리", o.get("closing"), -1)]
+        _tf = o.get("twist_feat")
+        _tg = (_tf - 1) if isinstance(_tf, int) and 1 <= _tf <= len(feats or []) else -1
+        tail = [("반전", o.get("twist"), _tg), ("마무리", o.get("closing"), -1)]
         # 슬롯 = 대비(있으면) → 고조들 → 반전. 프리셋 낱말을 이 순서로 앞에서부터 하나씩 준다(위치 고정).
         # 위치[3](가장 센 말)은 **반전 전용**. 대비·고조는 위치[1]·[2]를 순서대로 받고, 남으면 빈칸.
         slot_words = list(sigs[:2])
@@ -400,7 +403,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
                     rows.append(("고조%d" % (i + 1), t.strip(), gi))
     if not ig and preset == "full" and any((t or "").strip() for t in (o.get("finale") or [])):
         fin = [t.strip() for t in (o.get("finale") or []) if (t or "").strip()][:3]
-        tail = ([("반전", last_word, -1)] if last_word else []) + [("반전", t, -1) for t in fin] + [("마무리", o.get("closing"), -1)]
+        tail = ([("반전", last_word, _tg)] if last_word else []) + [("반전", t, _tg) for t in fin] + [("마무리", o.get("closing"), -1)]
         last_word = ""
     if not ig:
         left = [last_word] if last_word else []
@@ -409,7 +412,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
             for w in sorted(_ALL_SIGNAL_WORDS, key=len, reverse=True):   # 모델이 이미 어떤 신호어로 열었으면 떼고 붙인다
                 if tw.startswith(w + " "):
                     tw = tw[len(w):].strip()
-            tail[0] = ("반전", left[0] + " " + _LEAD_CONJ.sub("", tw), -1)
+            tail[0] = ("반전", left[0] + " " + _LEAD_CONJ.sub("", tw), tail[0][2])
     rows += tail
     return _drop_repeat_signal(
         [{"role": r[0], "text": re.sub(r"\s+", " ", r[1]).strip(), "group": r[2], "sub": (r[3] if len(r) > 3 else "")}

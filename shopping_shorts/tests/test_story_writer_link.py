@@ -179,3 +179,12 @@ def test_signal_positions_fixed_contrast_first_then_escalations_then_twist():
     assert by["고조1"].startswith(preset[1])
     assert by["반전"].startswith(preset[2])
     assert all(p[1] in ("심지어", "게다가", "거기다") for p in sw.YT_SETS.values())   # 두 번째 자리는 늘 '심지어' 급
+
+
+def test_반전은_twist_feat_번호의_특징_컷을_받는다():
+    o = {"hook": "h", "bait": "b", "reveal": "r", "contrast": "", "closing": "c",
+         "twist": "물에 씻어 반영구적으로 쓴다는 거", "twist_feat": 2,
+         "escalations": [{"moment": "m", "what_happens": "w", "erased": "e", "from_pain": "", "feat": 1}]}
+    lines = sw._to_lines(o, False, "k", 0, feats=[{"name": "요철"}, {"name": "물세척 재사용"}])
+    twist = next(L for L in lines if L["role"] == "반전")
+    assert twist["group"] == 1
