@@ -19725,6 +19725,11 @@ def api_scene_style_asset(asset_path: str):
     allowed |= asset_path.startswith("shopping_shorts/static/fonts/") and candidate.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}
     if ".." in Path(asset_path).parts or "\\" in asset_path or not allowed or not candidate.is_relative_to(ROOT) or not candidate.is_file():
         return JSONResponse(status_code=404, content={"error": "파일 없음"})
+    # 글꼴은 내용이 바뀌면 파일명이 바뀐다(fonts/w2/ 변환본) — 1년 캐시. 실측(2026-09-22): 편집기가
+    # 글꼴 50개를 매번 서버에 다시 물어봐서 느렸다("서버는 왜 이렇게 느리지, 로컬은 잘 되는데").
+    # html/js/css는 그대로 no-cache(?v= 번호로 갱신).
+    if candidate.suffix.lower() in {".woff2", ".woff", ".ttf", ".otf"}:
+        return FileResponse(candidate, headers={"Cache-Control": "public, max-age=31536000, immutable"})
     return FileResponse(candidate, headers={"Cache-Control": "no-cache"})
 
 
@@ -19745,6 +19750,9 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     except Exception:
         return JSONResponse(status_code=409, content={"error": "음성 파일을 확인할 수 없습니다. 미리보기를 다시 만들어 주세요"})
     snapshot = (job.get("deco") or {}).get("scene_style")
+    # ★장면 사진을 지금 뒤에서 한꺼번에 뽑아 둔다. 실측(2026-09-22 라이브 저널): 편집기가 장면을
+    #   넘길 때마다 beatframe을 한 장씩 ffmpeg로 뽑아 1~2.5초 간격으로 줄줄이 왔다("사진이 제일 늦다").
+    _prewarm_beatframes(job, job_id, [t["beat_idx"] for t in timeline])
     headcopy = dict(job.get("headcopy") or {})
     if headcopy_text:
         headcopy["text"] = headcopy_text[:2000]
@@ -21523,6 +21531,34 @@ def _beatframe_file(job, job_id: str, i: int, cut=None):
                             clean_final=_cfin, final_ratio=_crat, seg_spec=_spec,
                             clean_fresh=_cfresh)
     return out if out.exists() else None
+
+
+_PREWARM_LOCK = threading.Lock()
+_PREWARM_BUSY: set = set()          # 지금 뽑는 중인 job_id — 같은 job을 두 번 돌리지 않는다
+
+
+def _prewarm_beatframes(job, job_id: str, beat_idxs, workers: int = 4):
+    """장면 사진(beatframe)을 뒤에서 병렬로 미리 만든다. 이미 있는 파일은 _beatframe_file이
+    그냥 돌려주므로 두 번째부터는 비용 0. 실패해도 조용히 넘어간다(요청 때 다시 뽑는다)."""
+    idxs = [int(i) for i in beat_idxs]
+    if not idxs:
+        return
+    with _PREWARM_LOCK:
+        if job_id in _PREWARM_BUSY:
+            return
+        _PREWARM_BUSY.add(job_id)
+
+    def _run():
+        try:
+            with ThreadPoolExecutor(max_workers=workers) as ex:
+                list(ex.map(lambda i: _beatframe_file(job, job_id, i), idxs))
+        except Exception:
+            pass
+        finally:
+            with _PREWARM_LOCK:
+                _PREWARM_BUSY.discard(job_id)
+
+    threading.Thread(target=_run, name=f"beatframe-prewarm-{job_id}", daemon=True).start()
 
 
 @app.get("/api/produce/mix/beatframe/{job_id}/{i}")
