@@ -9386,7 +9386,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
     _store = Store(DB_PATH)
     try:
         _sfx_events = video_assemble.sfx_events_for(
-            timeline, mix_pipeline._resolve_sfx_paths(_store, plan, _cust))
+            timeline, mix_pipeline._resolve_sfx_paths(_store, plan, _cust, job=job))
     except Exception:      # noqa: BLE001
         _sfx_events = []
     try:

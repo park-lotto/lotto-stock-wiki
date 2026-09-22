@@ -2853,6 +2853,14 @@ def sfx_events_for(timeline, sfx_paths):
     """
     sfx_paths = sfx_paths or {}
     events = []
+    pack = sfx_paths.get("_pack") if isinstance(sfx_paths, dict) else None
+    if pack:
+        # ★썰채널 효과음팩(2026-09-22) — 자막 줄 교체 기준(sfx_pack 모듈 docstring).
+        #   _resolve_sfx_paths가 팩이 있을 때 sfx_paths엔 사람이 고른(manual) 것만 남겼다.
+        #   그 비트는 사람 것을 쓰고, 팩은 그 비트를 건너뛴다.
+        from shopping_shorts import sfx_pack
+        manual = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"])}
+        events += sfx_pack.events(timeline, pack, manual_beats=manual)
     for b in timeline or []:
         sfx = b.get("sfx")
         path = sfx_paths.get(b["beat_idx"])
