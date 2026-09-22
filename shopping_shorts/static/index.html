@@ -4263,11 +4263,25 @@ function lensOpenAll(shortcode, idx){
     //   "0/5개만 열렸다"고 떴다(2026-09-14 실클릭 실측). 창을 받아 opener만 끊는다.
     try { const w=window.open(u, '_blank'); if(w){ try{ w.opener=null; }catch(_){} opened++; } } catch(e){}
   });
-  st.openNote = (opened >= targets.length)
-    ? ''
-    : `탭 ${opened}/${targets.length}개만 열렸습니다 — 주소창 오른쪽의 «팝업 차단» 아이콘을 눌러 `
-      + `이 사이트를 «항상 허용»으로 바꾸면 다섯 곳이 한 번에 열립니다`;
+  // ★크롬은 한 번 클릭에 새 탭을 **하나만** 허용한다(2026-09-22 실제 크롬 실측: 기본 설정 1/5, 허용 후 5/5).
+  //   예전엔 11.5px 주황 글씨 한 줄이라 고객이 못 보고 "샤오홍슈만 열린다"고 문의했다(배승훈님 등).
+  st.openNote = (opened >= targets.length) ? null : {opened, total: targets.length};
   renderLens(shortcode);
+}
+
+// 「5곳 새 탭 열기」가 팝업 차단에 막혔을 때의 안내 — 크롬 화면 모양을 흉내 낸 3단계 그림.
+function _lensPopupHelp(n){
+  const pill=(t,bg,fg)=>`<span style="display:inline-block;padding:3px 9px;border-radius:999px;background:${bg};color:${fg};font-weight:700;white-space:nowrap">${t}</span>`;
+  const arrow='<span style="color:#e0a33d;font-weight:800;padding:0 4px">→</span>';
+  return `<div style="border:2px solid #e0a33d;background:rgba(224,163,61,.12);border-radius:12px;padding:12px 14px;margin:8px 0">
+    <div style="font-size:15px;font-weight:800;color:#f0b24a;margin-bottom:8px">⚠️ 탭이 ${n.opened}/${n.total}개만 열렸어요 — 크롬이 나머지를 막았습니다</div>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:13px;line-height:2">
+      <span>① 주소창 오른쪽 끝</span>${pill('🚫 팝업 차단됨','#3a3f4b','#fff')}<span>아이콘 누르기</span>${arrow}
+      <span>②</span>${pill('◉ 항상 허용','#1a73e8','#fff')}<span>선택 →</span>${pill('완료','#e8eaed','#1f1f1f')}${arrow}
+      <span>③ <b>↗ 5곳 새 탭 열기</b>를 다시 누르기</span>
+    </div>
+    <div style="font-size:12px;color:var(--sub);margin-top:6px">한 번만 허용해 두면 다음부터는 다섯 곳이 한 번에 열립니다.</div>
+  </div>`;
 }
 
 function _lensSearchUrl(platform, kw){
@@ -4511,7 +4525,7 @@ function renderLens(shortcode, mountId){
       <div style="font-size:12px;color:var(--sub);margin:-2px 0 4px">${(st.lang||'auto')==='auto'
         ?'나라별 자동 = 샤오홍슈·도우인은 중국어, 틱톡·인스타·핀터레스트는 영어로 검색'
         :`지금은 다섯 곳 모두 <b>${_langName[st.lang]||''}</b>로 검색${st.lang==='ru'?' (인스타는 러시아어 결과가 없어 영어로 엽니다)':''}`}</div>
-      ${st.openNote?`<div style="font-size:11.5px;color:#e0a33d;padding:4px 0">⚠️ ${esc(st.openNote)}</div>`:''}
+      ${st.openNote?_lensPopupHelp(st.openNote):''}
       ${st.kwSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.kwSearchKw||'')} 검색 중… (10~30초)</div>`:''}
       ${st.cnSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.cnSearchKw||'')} 검색 중… (10~30초)</div>`:''}
       ${(!st.kwSearching&&st.kwCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.kwCost>0?('이번 검색 $'+st.kwCost.toFixed(3)):'무료 검색'}</div>`:''}
