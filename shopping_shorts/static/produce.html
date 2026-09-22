@@ -4791,7 +4791,14 @@ function currentCopyFamily(){
   if(f&&f.copy_family_override) return (meta&&meta.copy_family)||'youtube_reveal';
   return (STATE&&STATE.script_copy_family)||(meta&&meta.copy_family)||'youtube_reveal';
 }
+// ★진행 중인 후보 생성은 한 번만 — 6단계 진입(자동)과 편집기 열기(대기)가 겹쳐도 fetch 1회(2026-09-22 저널: 200ms 간격 중복 2회).
+let HC_COPY_PENDING=null;
 async function loadHeadcopySuggest(force){
+  if(HC_COPY_PENDING&&!force) return HC_COPY_PENDING;
+  HC_COPY_PENDING=_loadHeadcopySuggestInner(force).finally(()=>{HC_COPY_PENDING=null;});
+  return HC_COPY_PENDING;
+}
+async function _loadHeadcopySuggestInner(force){
   const box=document.getElementById('hcCopyCards'), msg=document.getElementById('hcCopyMsg');
   if(!box) return;
   const script=(STATE.script||'').trim();
@@ -19251,6 +19258,6 @@ async function checkTtsKey(){
 }
 try{ checkTtsKey(); }catch(e){}
 </script>
-<script src="/scene-style-produce.js?v=5"></script>
+<script src="/scene-style-produce.js?v=6"></script>
 </body>
 </html>

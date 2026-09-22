@@ -124,6 +124,13 @@
       //   여기서 그 1번을 대비책으로 쓴다 — 옛 꾸미기(produce.html frPick)가 이미 쓰는
       //   `hcText.value || _hcFirstCopy()`와 **같은 규칙**이다(0순위-B: 같은 판단을 두 벌로 두지 않는다).
       //   안 쓰면 서버가 첫 나레이션을 제목에 넣어 "아니 텀블러이 / 있다고?"가 나온다(실측).
+      // ★후보가 아직 안 왔으면 기다린다(2026-09-22 라이브 저널: 컨텍스트 17:15:28 제목 빈칸 → 후보 17:15:32 도착.
+      //   회색 버튼을 후보보다 먼저 누르면 서버가 대본 첫 문장을 제목에 넣어 12/10자·23/22자로 넘쳤다).
+      //   loadHeadcopySuggest는 진행 중이면 같은 약속을 돌려주므로 중복 호출이 아니다.
+      if(!(STATE.headcopy?.text)&&!((typeof _hcFirstCopy==='function'&&_hcFirstCopy()))&&typeof loadHeadcopySuggest==='function'){
+        status().textContent='대본으로 제목 후보를 뽑는 중…';
+        try{await loadHeadcopySuggest(false);}catch(e){}
+      }
       const fallbackCopy=(typeof _hcFirstCopy==='function'&&_hcFirstCopy())||'';
       const fallbackSubline=(typeof _hcPickedSubline==='function'&&_hcPickedSubline())
                           ||(typeof _hcFirstSubline==='function'&&_hcFirstSubline())||'';
