@@ -15955,6 +15955,19 @@ async function renderFinal(){
   }catch(e){ clearInterval(_rfTimer); _finalRenderRestore('❌ 장면 편집 저장 실패 — 렌더하지 않았어요'); return; }
   // 썸네일 인트로 체크는 렌더 요청과 **같이** 보낸다 — 따로 저장하는 경로를 만들면
   // '체크했는데 안 붙었다'가 난다(저장 실패를 아무도 모른다).
+  // ★자막제거 정본(2026-09-22): 스위치가 켜진 계정만. 바뀐 장면이 있을 때만 초수·크레딧을 알리고 확인받는다.
+  //   나머지 장면은 4단계에서 지운 결과를 그대로 쓰므로 추가 과금이 없다. 실패하면 조용히 통과(렌더는 막지 않는다).
+  try{
+    const cbp=await (await fetch('/api/produce/mix/clean_base_preview/'+encodeURIComponent(MIX_JOB))).json();
+    if(cbp && cbp.enabled && cbp.base){
+      const n=(cbp.uncovered||[]).length + (cbp.extend||[]).length;
+      if(n>0){
+        const secs=(cbp.uncovered||[]).reduce((a,u)=>a+(u.seconds||0),0)+(cbp.extend||[]).reduce((a,e)=>a+(e.need||0),0);
+        const msg='바뀐 장면 '+n+'개('+secs.toFixed(1)+'초)만 자막제거를 다시 합니다'+(cbp.est_credits!=null?(' — 약 '+cbp.est_credits+'크레딧'):'')+'.\n나머지 장면은 지운 결과를 그대로 씁니다(추가 과금 없음).\n\n계속할까요?';
+        if(!confirm(msg)){ clearInterval(_rfTimer); _finalRenderRestore('렌더를 취소했어요'); return; }
+      }
+    }
+  }catch(_){}
   const _intro = !!(document.getElementById('thumbIntro')||{}).checked;
   const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB, thumb_intro:_intro})});
   const d=await r.json().catch(()=>({ok:false}));

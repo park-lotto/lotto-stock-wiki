@@ -7413,6 +7413,39 @@ def api_produce_mix_clean_clips(job_id: str):
             "plan_used": r.get("plan_used"), "count": len(clips)}
 
 
+@app.get("/api/produce/mix/clean_base_preview/{job_id}")
+def api_produce_mix_clean_base_preview(job_id: str):
+    """최종렌더 전에 화면이 묻는다: 이번 렌더가 자막제거를 다시 타나? (2026-09-22)
+    정본이 있으면 바뀐 장면·큰 늘림만 초수로 알려준다. 판정은 clean_base.remap_plan 하나."""
+    from shopping_shorts import clean_base as _cb
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id:
+        return {"ok": False, "enabled": False}
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan") or not job.get("subtitle_removal"):
+        return {"ok": True, "enabled": False, "uncovered": [], "extend": [], "est_credits": None}
+    cid = job.get("customer_id") or 0
+    work = _MIX_WORK_DIR / job_id
+    if not mix_pipeline.clean_base_on(store, cid):
+        return {"ok": True, "enabled": False, "uncovered": [], "extend": [], "est_credits": None}
+    base = _cb.load_base(work)
+    if base is None:
+        return {"ok": True, "enabled": True, "base": False, "uncovered": [], "extend": [], "est_credits": None}
+    plan = job["edit_plan"]
+    beats = {int(b["beat_idx"]): b for b in plan.get("beats") or []}
+    _plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs={
+        int(b["beat_idx"]): float(b.get("target_seconds") or 0) for b in plan.get("beats") or []})
+    unc = []
+    for bi in uncovered:
+        secs = sum(float(m["end"]) - float(m["start"]) for m in mix_pipeline._beat_materials(beats[bi]))
+        unc.append({"beat_idx": bi, "seconds": round(secs, 2)})
+    ext = [{"beat_idx": e["beat_idx"], "need": e["need"]} for e in extend]
+    total = sum(u["seconds"] for u in unc) + sum(float(e["end"]) - float(e["start"]) for e in extend)
+    est = mix_pipeline.clean_credit_estimate(total, tier=mix_pipeline.clean_tier_of(job)) if total > 0 else 0
+    return {"ok": True, "enabled": True, "base": True, "uncovered": unc, "extend": ext, "est_credits": est}
+
+
 @app.get("/api/produce/mix/clean_thumb/{job_id}")
 def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
                                 si: int = 0, pos: float = 0.5, ci: int = -1):
