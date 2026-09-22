@@ -49,7 +49,7 @@ def _tl():
 
 def test_packs_ship_complete():
     packs = sfx_pack.list_packs()
-    assert len(packs) == 20
+    assert len(packs) == 21
     for _, d in packs:
         for s in sfx_pack.SLOTS:
             assert os.path.getsize(os.path.join(d, s + ".wav")) > 1000
@@ -58,9 +58,9 @@ def test_packs_ship_complete():
 def test_pack_assignment_is_stable_and_overridable():
     a = sfx_pack.pack_for(123)
     assert a == sfx_pack.pack_for(123)
-    names = {sfx_pack.pack_for(c)[0] for c in range(200)}
-    assert len(names) >= 15                     # 회원끼리 고르게 흩어진다
-    assert sfx_pack.pack_for(123, override=5)[0] == "팩05"
+    # 사장님 확정(2026-09-22): 전 회원이 사장님 팩 하나
+    assert {sfx_pack.pack_for(c)[0] for c in range(200)} == {"팩21_사장님"}
+    assert sfx_pack.pack_for(123, override=5)[0] == "팩05"        # 수동 지정은 전체 목록에서
 
 
 def test_gate_is_the_chosen_script_not_the_frame():
@@ -143,7 +143,7 @@ def test_render_seam_uses_pack(tmp_path):
     assert "_pack" in paths and not [k for k in paths if k != "_pack"]   # 자동 매칭분은 팩이 대신
     ev = va.sfx_events_for(_tl(), paths)
     assert len(ev) >= 6 and all(os.path.isfile(e[0]) for e in ev)
-    assert all(len(e) == 3 and e[2] > 1.0 for e in ev)      # 팩 보정배가 실린다
+    assert all(len(e) == 3 and e[2] > 0 for e in ev)        # 팩 보정배가 실린다(크기는 test_every_pack_file_lands_on_slot_target)
     # 스위치 꺼짐이면 종전 동작 그대로
     old = mix_pipeline._resolve_sfx_paths(_Store(on="", assets=store.assets), plan, 3, job=job)
     assert "_pack" not in old and old[0] == "auto.wav"

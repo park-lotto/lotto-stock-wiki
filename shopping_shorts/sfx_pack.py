@@ -147,19 +147,27 @@ def list_packs():
     return out
 
 
+# 지금 쓰는 팩 — 2026-09-22 사장님 확정("이런 구성으로 가자"): 사장님이 고른 소리(바탕화면 '새 폴더 (2)')로
+#   만든 팩 하나를 전 회원에게. 팩01~20(이븐쇼핑 대조로 고른 조합)은 지우지 않고 보관 — 회원마다 다르게
+#   하고 싶으면 이 목록에 이름을 넣으면 그 안에서 회원별로 돌린다.
+ACTIVE_PACKS = ("팩21_사장님",)
+
+
 def pack_for(customer_id, override=None):
-    """회원 → 팩 (이름, 폴더). override(1부터)가 있으면 그 팩. 팩이 없으면 None.
-    crc32라 파이썬 hash()처럼 프로세스마다 바뀌지 않는다 — 미리보기와 최종본이 같은 팩을 쓴다."""
-    packs = list_packs()
-    if not packs:
-        return None
+    """회원 → 팩 (이름, 폴더). override(1부터, 전체 목록 기준)가 있으면 그 팩. 팩이 없으면 None.
+    기본은 ACTIVE_PACKS 안에서 고른다(없으면 전체). crc32라 프로세스마다 안 바뀐다 — 미리보기=최종본."""
+    allp = list_packs()
+    active = [x for x in allp if x[0] in ACTIVE_PACKS]
     try:
         if override is not None and str(override).strip() not in ("", "auto"):
             i = int(override) - 1
-            if 0 <= i < len(packs):
-                return packs[i]
+            if 0 <= i < len(allp):
+                return allp[i]
     except (TypeError, ValueError):
         pass
+    packs = active or allp
+    if not packs:
+        return None
     return packs[zlib.crc32(str(customer_id or 0).encode()) % len(packs)]
 
 
