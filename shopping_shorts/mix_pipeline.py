@@ -1830,15 +1830,20 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
     # 틈을 렌더가 프리즈/슬로우로 때워왔다(두더지잡기의 뿌리). 실 tts_dur보다 화면이 짧은
     # 비트만 같은 소스 우선 B롤로 더 채운다 → 렌더가 정지 대신 실영상으로 채운다.
-    _refill_beats_to_tts(plan["beats"], source_scripts, work / "tts")
+    _rhythm = _cut_rhythm_on(store, {"customer_id": customer_id})
+    if _rhythm:
+        print("[mix] 컷 리듬: 재채우기·콘폼 건너뜀 — 줄=칸=지목컷, 화면은 원본을 이어 튼다", file=sys.stderr)
+    else:
+        _refill_beats_to_tts(plan["beats"], source_scripts, work / "tts")
 
     # 4.5) 싱크 콘폼(2026-07-20) — 대사가 영상 예산을 넘는 비트만 압축 리라이트 + 그 비트 재TTS.
     # 저장(아래) 전에 돌므로 preview·final 렌더 모두 자동 적용. 실패해도 job을 죽이지 않는다.
     try:
         # ★customer_id를 반드시 넘긴다(2026-09-02). 안 넘기면 cid 0으로 떨어져
         #   **회원의 재합성이 사장님 키로** 나간다 — 막으려던 누수가 이 경로로 되살아난다.
-        _conform_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
-                       customer_id=customer_id)
+        if not _rhythm:
+            _conform_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
+                           customer_id=customer_id)
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
