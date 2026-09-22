@@ -225,6 +225,9 @@ def _group_of(from_pain, feats):
     return -1
 
 
+_LEAD_CONJ = re.compile(r"^(근데|그런데|그리고|또|그래서|또한)\s+")
+
+
 def _to_lines(o, ig, key, nth, feats=None):
     """모델 출력 → [{role, text, group}]. group = 그 줄이 말하는 특징 번호(-1 = 구조 줄).
     ★신호어는 칸의 **첫 줄 앞에 붙인다** — 따로 한 줄로 두면 3글자짜리 줄에 컷이 배정된다."""
@@ -248,11 +251,15 @@ def _to_lines(o, ig, key, nth, feats=None):
         n = e.get("feat")
         gi = (n - 1) if isinstance(n, int) and 1 <= n <= len(feats or []) else _group_of(e.get("from_pain"), feats)
         sig = sigs[i] if i < len(sigs) else ""
+        # ★인스타는 신호어를 **after 줄**에 붙인다(2026-09-22 실측: 히트작 641편의 신호어 146개 중 과거 불편
+        #   "전에는~" 앞에 온 것 0개. before 줄에 붙이면 "게다가 전에는 …했거든요"가 돼 10편 중 4편이 어색했다).
+        sig_key = "after" if ig else esc_keys[0]
         for k in esc_keys:
             t = (e.get(k) or "").strip()
             if not t:
                 continue
-            if sig:
+            if sig and (k == sig_key or not (e.get(sig_key) or "").strip()):
+                t = _LEAD_CONJ.sub("", t)      # "게다가 근데 이건…" — 신호어 뒤 접속사 겹침(실측 7줄 중 1)
                 t, sig = sig + " " + t, ""
             rows.append(("고조%d" % (i + 1), t, gi))
     rows += tail

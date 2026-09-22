@@ -142,3 +142,22 @@ def test_seed_platform_splits_glued_sentences():
     """자막을 이어 붙여 문장 사이 띄어쓰기가 없는 전사(실측 homeditor_)도 존댓말로 본다."""
     glued = "여러분 대파 절대 안 돼요저도 매번 그랬거든요기사 식당 이모님 말씀이래요냉동 보관하면 향이 다 날아가요그래서 이렇게 하더라고요"
     assert sw.seed_platform(glued) == "ig"
+
+
+def test_insta_signal_goes_on_after_line_not_before():
+    """히트작 641편 실측: 신호어 뒤에 과거 불편이 온 적 0. before 줄에 붙이면 "게다가 전에는…"이 된다."""
+    o = {"opening": "와", "scene": "친구 집", "reveal": "이거", "feeling": "좋아요", "cta": "댓글",
+         "beats": [{"before": "전에는 매번 쏟았거든요", "after": "이제는 한 방울도 안 흘러요", "from_pain": "", "feat": 1},
+                   {"before": "전에는 손이 아팠어요", "after": "지금은 한 손으로 돼요", "from_pain": "", "feat": 1}]}
+    lines = sw._to_lines(o, True, "k", 0, feats=[{"name": "x"}])
+    texts = [L["text"] for L in lines if L["role"].startswith("고조")]
+    assert not any(t.split()[0] in sw.IG_SETS["A"] + sw.IG_SETS["B"] and "전에는" in t for t in texts)
+    assert any(t.startswith(sig) for t in texts for sig in sum(sw.IG_SETS.values(), []) if sig)
+
+
+def test_signal_strips_leading_conjunction():
+    o = {"hook": "h", "bait": "b", "reveal": "r", "twist": "t", "closing": "c",
+         "escalations": [{"moment": "근데 이건 물이 안 새", "what_happens": "x", "erased": "y", "from_pain": "", "feat": 1}]}
+    lines = sw._to_lines(o, False, "k", 0, feats=[{"name": "x"}])
+    first = [L["text"] for L in lines if L["role"] == "고조1"][0]
+    assert "근데 이건" not in first or not any(first.startswith(s) for s in sum(sw.YT_SETS.values(), []) if s)
