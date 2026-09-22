@@ -89,10 +89,19 @@ def test_adopt_validates_with_customer_key(monkeypatch, tmp_path):
 
 
 def test_wave_animates_while_playing_and_stops_on_end():
+    """재생 중 파형이 반응해야 한다(2026-09-04 사장님 "재생될 때는 그래프가 움직이게").
+
+    ★2026-09-22: 음성이 있는 줄은 **진짜 파형**(.wf)으로 바뀌었다. 진짜 파형은 모양이
+    소리 그 자체라 흔들면 거짓이 되므로, 흔드는 대신 색이 들고 진행선이 지나간다.
+    옛 장식 파형(.wave)은 음성이 아직 없는 줄에 그대로 남아 있다 — 둘 다 검사한다."""
+    # 진짜 파형: 재생 중 색 + 진행선
+    assert ".wf.playing .wf-bars i{background:var(--accent)}" in HTML
+    assert ".wf.playing .wf-play{display:block}" in HTML
+    # 옛 장식 파형(음성 없는 줄)은 그대로 흔들린다
     assert "@keyframes wavePulse" in HTML
     assert ".ttsRow.playing .wave i{background:var(--accent);transform-origin:bottom;animation:wavePulse" in HTML
     assert "prefers-reduced-motion" in HTML
-    fn = HTML[HTML.index("function vpPlayBeat(i){"):HTML.index("function vpMarkPlaying(i){")]
+    fn = HTML[HTML.index("function vpPlayBeat(i){"):HTML.index("function _vpPlayTrimmed(a, i){")]
     assert "a.onended=()=>{ if(!VP_ALL) vpMarkPlaying(-1); }" in fn
 
 

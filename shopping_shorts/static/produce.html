@@ -1634,6 +1634,58 @@
   .ttsRow.playing .wave i:nth-child(5n){animation-delay:-.65s}
   @media (prefers-reduced-motion:reduce){ .ttsRow.playing .wave i{animation:none} }
   @media (max-width:900px){ .wave{display:none} }
+  /* ── 실제 파형 띠(2026-09-22 사장님 "필름처럼 볼수있게") ────────────────
+     위 .wave는 글자에서 만든 **장식**이다. 이건 서버가 ffmpeg로 뽑은 진짜 음량이라
+     조용한 구간이 눈에 보이고, 양끝 손잡이를 끌어 그 자리를 자른다.
+     자른 값은 head_trim/tail_trim으로 저장돼 렌더·자막·캡컷이 이미 읽는다. */
+  .wf{position:relative;height:56px;margin:6px 0 2px;border-radius:8px;
+      background:var(--inset);border:1px solid var(--line);overflow:hidden;
+      cursor:default;user-select:none;touch-action:none}
+  .wf.busy{opacity:.5}
+  .wf-bars{position:absolute;inset:0;display:flex;align-items:center;gap:1px;padding:0 2px}
+  .wf-bars i{flex:1;min-width:1px;background:#5b657f;border-radius:1px;
+             transition:background .15s}
+  /* ★재생 중엔 파형에 색이 든다(2026-09-04 사장님 "재생될 때는 그래프가 움직이게").
+     옛 장식 파형은 막대를 흔들었지만, 진짜 파형은 **모양이 소리 그 자체**라 흔들면
+     거짓이 된다 — 대신 색이 차오르고 진행선이 지나간다(움직임은 유지, 정보는 안 왜곡). */
+  .wf.playing .wf-bars i{background:var(--accent)}
+  /* 앞뒤 조용한 구간 — 자를 후보를 옅게 칠해 "여기가 빈 곳"을 먼저 보여준다 */
+  .wf-sil{position:absolute;top:0;bottom:0;background:rgba(255,255,255,.045);
+          pointer-events:none}
+  /* 잘려나갈 부분 — 어둡게 덮는다(지운 게 아니라 안 쓰는 것) */
+  .wf-cut{position:absolute;top:0;bottom:0;background:rgba(8,10,16,.72);
+          pointer-events:none;backdrop-filter:grayscale(1)}
+  /* 양끝 손잡이 */
+  .wf-h{position:absolute;top:0;bottom:0;width:11px;cursor:ew-resize;z-index:3;
+        display:flex;align-items:center;justify-content:center}
+  .wf-h::before{content:'';width:3px;height:100%;background:var(--accent2,#ff5fa2);
+                border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+  .wf-h:hover::before,.wf-h.drag::before{width:5px;background:#ff8ec0}
+  .wf-h.head{margin-left:-5px}
+  .wf-h.tail{margin-left:-6px}
+  /* 재생 진행선 */
+  .wf-play{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.9;
+           pointer-events:none;z-index:4;display:none}
+  .wf.playing .wf-play{display:block}
+  /* 우하단 자른 길이 표시 */
+  .wf-tag{position:absolute;right:6px;bottom:4px;font-size:11px;color:var(--sub);
+          background:rgba(8,10,16,.66);border-radius:4px;padding:1px 5px;z-index:5;
+          font-variant-numeric:tabular-nums;pointer-events:none}
+  /* 문장 **중간**의 쉼 — 누르면 잘리고 다시 누르면 되살아난다(2026-09-22).
+     실측: 이 환경의 음성은 앞뒤 무음이 0이고 자를 것이 전부 여기 있다(12구간 2.59초). */
+  .wf-gap{position:absolute;top:0;bottom:0;z-index:2;cursor:pointer;
+          background:repeating-linear-gradient(45deg,rgba(255,196,0,.20) 0 4px,
+                     rgba(255,196,0,.06) 4px 8px);
+          border-left:1px solid rgba(255,196,0,.5);border-right:1px solid rgba(255,196,0,.5)}
+  .wf-gap:hover{background:repeating-linear-gradient(45deg,rgba(255,196,0,.34) 0 4px,
+                rgba(255,196,0,.12) 4px 8px)}
+  .wf-gap.cut{background:rgba(8,10,16,.8);border-color:rgba(120,130,150,.45)}
+  .wf-gap.cut::after{content:'✂';position:absolute;left:50%;top:50%;
+                     transform:translate(-50%,-50%);font-size:10px;color:#8b93a8}
+  .wf-gap.narrow::after{content:''}
+  .wf-hint{position:absolute;left:8px;bottom:4px;font-size:11px;color:#6b7391;
+           z-index:5;pointer-events:none}
+  @media (max-width:900px){ .wf{height:46px} }
   /* 바닥 요약 줄 */
   .plSum{margin-top:12px;padding:11px 4px 2px;border-top:1px solid var(--line);
          font-size:12.5px;color:var(--sub);display:flex;gap:18px;flex-wrap:wrap;
@@ -14916,6 +14968,280 @@ function _waveHTML(i, b){
   return '<span class="wave" aria-hidden="true">'
        + bars.map(h=>'<i style="height:'+h+'%"></i>').join('') + '</span>';
 }
+
+// ─── 실제 파형 + 무음 자르기 ──────────────────────────────── WAVEFORM-START
+// 2026-09-22 사장님: "음성구간을 넣어서 무음구간을 자동으로 없애주거나 수동으로 / 필름처럼".
+// 위 _waveHTML은 글자에서 만든 장식이고, 여기는 서버가 ffmpeg로 뽑은 **진짜 음량**이다.
+// 자른 값은 기존 head_trim/tail_trim에 그대로 저장된다 — 렌더(video_assemble)·자막·
+// 캡컷(capcut_draft)이 이미 그 필드를 읽으므로 그쪽은 한 줄도 안 고쳤다(0순위-B).
+const WF = {};        // beat_idx → {peaks,dur,head_sil,tail_sil,head_trim,tail_trim}
+
+function _wfHTML(i){
+  // 껍데기만 먼저 그린다. 파형 데이터는 _wfLoad가 비동기로 채운다(줄이 20개여도 화면이 안 멈춘다).
+  return '<div class="wf" id="wf'+i+'" data-idx="'+i+'">'
+       +   '<div class="wf-bars" id="wfBars'+i+'"></div>'
+       +   '<div class="wf-sil head" id="wfSilH'+i+'" style="left:0;width:0"></div>'
+       +   '<div class="wf-sil tail" id="wfSilT'+i+'" style="right:0;width:0"></div>'
+       +   '<div class="wf-cut head" id="wfCutH'+i+'" style="left:0;width:0"></div>'
+       +   '<div class="wf-cut tail" id="wfCutT'+i+'" style="right:0;width:0"></div>'
+       +   '<div class="wf-gaps" id="wfGaps'+i+'"></div>'
+       +   '<div class="wf-h head" id="wfHH'+i+'" style="left:0" title="끌어서 앞을 자릅니다"></div>'
+       +   '<div class="wf-h tail" id="wfHT'+i+'" style="right:0" title="끌어서 뒤를 자릅니다"></div>'
+       +   '<div class="wf-play" id="wfP'+i+'" style="left:0"></div>'
+       +   '<span class="wf-tag" id="wfTag'+i+'"></span>'
+       + '</div>';
+}
+
+async function _wfLoad(i){
+  if(!MIX_JOB) return;
+  try{
+    const r = await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/wave/'+i);
+    const d = await r.json();
+    if(!d || !d.ok) return;
+    WF[i] = d;
+    _wfPaint(i);
+  }catch(e){ /* 파형이 없어도 자르기 버튼은 살아 있다 — 조용히 넘어간다 */ }
+}
+
+function _wfPaint(i){
+  const d = WF[i]; if(!d) return;
+  const bars = document.getElementById('wfBars'+i);
+  if(bars && d.peaks && d.peaks.length && !bars.dataset.done){
+    // 막대 높이는 sqrt로 펴준다 — 선형이면 작은 소리가 바닥에 붙어 안 보인다.
+    bars.innerHTML = d.peaks.map(p=>{
+      const h = Math.max(6, Math.round(Math.sqrt(p)*100));
+      return '<i style="height:'+h+'%"></i>';
+    }).join('');
+    bars.dataset.done = '1';
+  }
+  const dur = +d.dur || 0; if(dur <= 0) return;
+  const pct = s => Math.max(0, Math.min(100, (s/dur)*100));
+  const set = (id, prop, v) => { const el=document.getElementById(id); if(el) el.style[prop]=v+'%'; };
+  // 조용한 구간(자를 후보) — 이미 자른 만큼은 빼고 남은 무음만 옅게 칠한다.
+  set('wfSilH'+i, 'width', pct(Math.max(0, (+d.head_sil||0) - (+d.head_trim||0))));
+  set('wfSilT'+i, 'width', pct(Math.max(0, (+d.tail_sil||0) - (+d.tail_trim||0))));
+  set('wfCutH'+i, 'width', pct(+d.head_trim||0));
+  set('wfCutT'+i, 'width', pct(+d.tail_trim||0));
+  set('wfHH'+i, 'left', pct(+d.head_trim||0));
+  set('wfHT'+i, 'right', pct(+d.tail_trim||0));
+  // 문장 중간의 쉼 — 노란 빗금이 '자를 수 있는 곳', 어둡고 ✂가 붙으면 '자르기로 한 곳'.
+  const gbox = document.getElementById('wfGaps'+i);
+  if(gbox){
+    const cuts = d.gap_cuts || [];
+    const isCut = g => cuts.some(c => Math.abs((+c.start)-(+g.start)) < 0.02
+                                   && Math.abs((+c.end)-(+g.end)) < 0.02);
+    // 후보(gaps)와 이미 자른 것(gap_cuts)을 합쳐 보여준다 — 자른 뒤에도 그 자리가 보여야
+    // 되살릴 수 있다(자르면 목록에서 사라지면 되돌릴 방법이 없다).
+    const all = (d.gaps||[]).slice();
+    cuts.forEach(c => { if(!all.some(g => Math.abs((+g.start)-(+c.start)) < 0.02)) all.push(c); });
+    gbox.innerHTML = all.map(g => {
+      const L = pct(+g.start), W = Math.max(0.6, pct(+g.end) - pct(+g.start));
+      const on = isCut(g);
+      const t = on ? ('되살리기 (+'+(+g.drop).toFixed(2)+'초)') : ('여기 쉼 자르기 (−'+(+g.drop).toFixed(2)+'초)');
+      return '<div class="wf-gap'+(on?' cut':'')+(W<2.2?' narrow':'')+'" title="'+t+'"'
+           + ' data-s="'+g.start+'" data-e="'+g.end+'" data-d="'+(g.drop||0)+'"'
+           + ' style="left:'+L+'%;width:'+W+'%"></div>';
+    }).join('');
+  }
+  const gcut = (d.gap_cuts||[]).reduce((s,c)=>s+(+c.drop||0), 0);
+  const cut = (+d.head_trim||0) + (+d.tail_trim||0) + gcut;
+  const tag = document.getElementById('wfTag'+i);
+  if(tag) tag.textContent = cut > 0.004 ? ('−'+cut.toFixed(2)+'s') : '';
+}
+
+// 쉼 구간 클릭 — 자르기/되살리기를 오간다. 저장은 서버가 하고, 결과를 되받아 다시 그린다.
+async function _wfGapClick(i, el){
+  if(!MIX_JOB || !el) return;
+  const d = WF[i]; if(!d) return;
+  const gap = {start:+el.dataset.s, end:+el.dataset.e, drop:+el.dataset.d};
+  const on = el.classList.contains('cut');
+  const box = document.getElementById('wf'+i); if(box) box.classList.add('busy');
+  try{
+    const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/gap',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx:i, action:(on?'remove':'add'), gap})})).json();
+    if(r && r.ok){
+      d.gap_cuts = r.gap_cuts || [];
+      _wfPaint(i); _wfSyncSummary();
+      const msg = document.getElementById('wfMsg'+i);
+      if(msg) msg.textContent = r.dropped > 0.004
+        ? ('문장 중간에서 '+(+r.dropped).toFixed(2)+'초를 자릅니다')
+        : '중간 쉼을 그대로 둡니다';
+    }
+  }catch(e){ }
+  if(box) box.classList.remove('busy');
+}
+
+// 드래그 — 손잡이를 끌면 화면이 바로 따라오고, 놓을 때 한 번만 저장한다.
+// (끄는 동안 저장하면 호출이 수십 번 날아가고 자동저장과 부딪힌다)
+function _wfDragStart(ev, i, edge){
+  const d = WF[i]; if(!d || !(+d.dur > 0)) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const box = document.getElementById('wf'+i); if(!box) return;
+  const rect = box.getBoundingClientRect();
+  const handle = document.getElementById(edge==='head' ? ('wfHH'+i) : ('wfHT'+i));
+  if(handle) handle.classList.add('drag');
+  const dur = +d.dur, floor = +d.floor || 0.4;
+  const other = edge==='head' ? (+d.tail_trim||0) : (+d.head_trim||0);
+  const maxCut = Math.max(0, dur - floor - other);   // 하한 가드와 같은 규칙(서버가 최종 판정)
+  let val = edge==='head' ? (+d.head_trim||0) : (+d.tail_trim||0);
+  const move = e => {
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const ratio = Math.max(0, Math.min(1, x / Math.max(1, rect.width)));
+    val = edge==='head' ? (ratio*dur) : (dur - ratio*dur);
+    val = Math.max(0, Math.min(maxCut, val));
+    if(edge==='head') d.head_trim = val; else d.tail_trim = val;
+    _wfPaint(i);
+  };
+  const up = async () => {
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+    document.removeEventListener('touchmove', move);
+    document.removeEventListener('touchend', up);
+    if(handle) handle.classList.remove('drag');
+    const box2 = document.getElementById('wf'+i); if(box2) box2.classList.add('busy');
+    try{
+      const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/trim',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({beat_idx:i, edge, mode:'set', value:+val.toFixed(3)})})).json();
+      if(r && r.ok){    // 서버가 가드로 깎았을 수 있다 — 저장된 값을 그대로 되받아 그린다
+        d.head_trim = +r.head_trim||0; d.tail_trim = +r.tail_trim||0;
+        _wfPaint(i); _wfSyncSummary();
+      }
+    }catch(e){ }
+    if(box2) box2.classList.remove('busy');
+  };
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
+  document.addEventListener('touchmove', move, {passive:false});
+  document.addEventListener('touchend', up);
+}
+
+// 한 칸 자동 자르기 — 앞·뒤를 순서대로. 같은 판단(_apply_beat_trim)이 서버에서 돈다.
+async function wfTrimOne(i){ await _wfEdge(i, 'auto'); }
+async function wfResetOne(i){ await _wfEdge(i, 'reset'); }
+async function _wfEdge(i, mode){
+  if(!MIX_JOB) return;
+  const msg = document.getElementById('wfMsg'+i);
+  const box = document.getElementById('wf'+i);
+  if(box) box.classList.add('busy');
+  if(msg) msg.textContent = mode==='reset' ? '되돌리는 중…' : '조용한 부분 찾는 중…';
+  try{
+    const J = encodeURIComponent(MIX_JOB);
+    for(const edge of ['head','tail']){          // 앞뒤 끝
+      await fetch('/api/produce/mix/'+J+'/trim',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({beat_idx:i, edge, mode})});
+    }
+    await fetch('/api/produce/mix/'+J+'/gap',{   // 문장 중간(여기에 대부분이 있다)
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx:i, action:(mode==='reset'?'none':'all')})});
+    await _wfLoad(i);
+    const d = WF[i] || {};
+    const cut = (+d.head_trim||0) + (+d.tail_trim||0)
+              + (d.gap_cuts||[]).reduce((s,c)=>s+(+c.drop||0), 0);
+    if(msg) msg.textContent = mode==='reset' ? '되돌렸어요'
+      : (cut > 0.004 ? (cut.toFixed(2)+'초를 잘랐어요') : '자를 조용한 부분이 없어요');
+    _wfSyncSummary();
+  }catch(e){ if(msg) msg.textContent = '실패: '+(e.message||e); }
+  if(box) box.classList.remove('busy');
+}
+
+// 전 칸 한 번에 — 호출 1회(자동저장과 부딪히지 않게 서버가 편집안을 한 번 읽고 한 번 쓴다)
+// ★앞뒤 끝과 문장 중간을 **함께** 처리한다(2026-09-22 실측 근거).
+//   이 환경의 음성은 pace_mode가 앞뒤를 이미 걷어내 끝 무음이 0이고, 자를 것은 전부
+//   문장 중간에 있다(job 409f894230c6 실측: 앞뒤 0.00초 / 중간 12구간 2.59초).
+//   그래서 끝만 자르는 버튼은 사장님 눈에 "눌러도 아무 일도 안 일어나는 버튼"이 된다.
+async function wfTrimAll(mode){
+  if(!MIX_JOB) return;
+  const btn = document.getElementById('wfAllBtn');
+  const msg = document.getElementById('wfAllMsg');
+  if(btn) btn.disabled = true;
+  if(msg) msg.textContent = mode==='reset' ? '되돌리는 중…' : '조용한 부분 찾는 중…';
+  try{
+    const J = encodeURIComponent(MIX_JOB);
+    const post = (url, body) => fetch(url, {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).then(r=>r.json());
+    const [edge, gap] = await Promise.all([
+      post('/api/produce/mix/'+J+'/trim_all', {mode}),      // 앞뒤 끝
+      post('/api/produce/mix/'+J+'/gap_all',  {mode}),      // 문장 중간
+    ]);
+    const bad = (!edge || !edge.ok) ? edge : ((!gap || !gap.ok) ? gap : null);
+    if(bad){ if(msg) msg.textContent = '실패' + (bad.error?(' — '+bad.error):''); }
+    else if(msg){
+      const secs = (+(gap.dropped||0));
+      msg.textContent = mode==='reset'
+        ? '전부 되돌렸어요'
+        : (secs > 0.004 || edge.saved_seconds > 0.004
+            ? ('빈 곳 ' + (secs + (+edge.saved_seconds||0)).toFixed(1) + '초를 잘랐어요')
+            : '자를 조용한 부분이 없었어요');
+    }
+    // 파형을 전부 다시 읽는다(서버가 정한 값이 진짜다 — 화면에서 짐작하지 않는다)
+    await Promise.all(Object.keys(WF).map(k => _wfLoad(+k)));
+    _wfSyncSummary();
+  }catch(e){ if(msg) msg.textContent = '실패: ' + (e.message||e); }
+  if(btn) btn.disabled = false;
+}
+
+// 줄을 다시 그린 뒤 — 파형을 읽어오고 손잡이 끌기를 건다.
+// ★onclick 속성이 아니라 여기서 addEventListener로 거는 이유: 드래그는 mousedown→mousemove→
+//   mouseup 세 단계라 속성 하나로 표현이 안 되고, 따옴표 중첩 사고(2026-09-04 내클론음성
+//   버튼)를 애초에 안 만든다.
+function _wfInit(beats){
+  for(const k in WF) delete WF[k];        // 다시 그릴 때 옛 값이 남으면 엉뚱한 파형이 보인다
+  (beats||[]).forEach((b, i) => {
+    if(!b.tts_preview_url) return;
+    const hh = document.getElementById('wfHH'+i), ht = document.getElementById('wfHT'+i);
+    if(hh){
+      hh.addEventListener('mousedown', e => _wfDragStart(e, i, 'head'));
+      hh.addEventListener('touchstart', e => _wfDragStart(e, i, 'head'), {passive:false});
+    }
+    if(ht){
+      ht.addEventListener('mousedown', e => _wfDragStart(e, i, 'tail'));
+      ht.addEventListener('touchstart', e => _wfDragStart(e, i, 'tail'), {passive:false});
+    }
+    // 쉼 구간은 다시 그릴 때마다 새로 만들어지므로 **부모에 한 번만** 걸어 위임한다
+    // (구간마다 걸면 _wfPaint가 innerHTML로 갈아끼울 때 핸들러가 날아간다).
+    const gb = document.getElementById('wfGaps'+i);
+    if(gb) gb.addEventListener('click', e => {
+      const t = e.target.closest('.wf-gap');
+      if(t){ e.stopPropagation(); _wfGapClick(i, t); }
+    });
+    _wfLoad(i);                            // 비동기 — 줄이 20개여도 화면이 안 멈춘다
+  });
+}
+
+// 바닥 요약 줄의 '총 N초'를 자른 만큼 반영한다(파형에서 자르면 총 길이가 준다).
+function _wfSyncSummary(){
+  const el = document.getElementById('wfTotal'); if(!el) return;
+  let cut = 0;
+  for(const k in WF){
+    const d = WF[k];
+    cut += (+d.head_trim||0) + (+d.tail_trim||0);
+    cut += (d.gap_cuts||[]).reduce((s,c)=>s+(+c.drop||0), 0);   // 중간 쉼도 함께 센다
+  }
+  el.textContent = cut > 0.004 ? ('잘라낸 무음 −' + cut.toFixed(1) + '초') : '';
+}
+
+// 재생 진행선 + .playing — vpPlayBeat이 부른다.
+function _wfPlayTick(i, audio){
+  const box = document.getElementById('wf'+i), line = document.getElementById('wfP'+i);
+  const d = WF[i];
+  if(!box || !line || !d || !(+d.dur > 0)) return;
+  box.classList.add('playing');
+  const dur = +d.dur;
+  const stop = () => { box.classList.remove('playing'); line.style.left='0%'; };
+  const tick = () => {
+    if(audio.paused || audio.ended){ stop(); return; }
+    line.style.left = Math.max(0, Math.min(100, (audio.currentTime/dur)*100)) + '%';
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  audio.addEventListener('ended', stop, {once:true});
+  audio.addEventListener('pause', stop, {once:true});
+}
+// ─── WAVEFORM-END
+
 async function renderTtsBeats(){
   if(vpIsEditing()) return;      // ★고치는 중엔 갈아끼우지 않는다(입력이 날아간다)
   const el=document.getElementById('ttsBeats');
@@ -14952,7 +15278,7 @@ async function renderTtsBeats(){
         <div class="ttsRowMain" onclick="vpPlayBeat(${i})" title="이 장면부터 들어봅니다">
           <span class="ttsNo">${i+1}<i title="${badgeTip}" class="${synced?'ok':'warn'}"></i></span>
           <div id="vpSay${i}" class="ttsSay"><span class="vpNarr">${esc(b.narration||'')}</span></div>
-          ${_waveHTML(i, b)}
+          ${b.tts_preview_url?'':_waveHTML(i, b)}
         <span class="ttsDur">${dur}</span>
           ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio>
           <button class="btn-prev ttsBtn" onclick="event.stopPropagation();vpPlayBeat(${i})" title="이 장면 듣기">▶</button>
@@ -14960,6 +15286,20 @@ async function renderTtsBeats(){
           <button class="btn-prev ttsBtn" onclick="event.stopPropagation();vpMore(${i})" title="자막 맞춤·톤 바꾸기">⋯</button>`
           :'<span class="hint">음성 없음</span>'}
         </div>
+        ${b.tts_preview_url?`
+        <!-- 실제 파형 — 조용한 구간이 보이고, 양끝을 끌어 자른다(2026-09-22) -->
+        <div class="wfWrap" onclick="event.stopPropagation()">
+          ${_wfHTML(i)}
+          <div style="display:flex;gap:6px;align-items:center;margin:2px 0 4px">
+            <button class="btn-prev" style="padding:3px 9px;font-size:11.5px"
+                    onclick="event.stopPropagation();wfTrimOne(${i})"
+                    title="이 문장의 앞뒤 조용한 부분을 잘라냅니다">✂ 빈 곳 자르기</button>
+            <button class="btn-prev" style="padding:3px 9px;font-size:11.5px"
+                    onclick="event.stopPropagation();wfResetOne(${i})"
+                    title="자른 것을 되돌립니다">↩︎ 되돌리기</button>
+            <span class="hint" style="font-size:11px" id="wfMsg${i}">양끝 분홍 손잡이를 끌어 직접 자를 수도 있어요</span>
+          </div>
+        </div>`:''}
         ${b.tts_preview_url?`
         <div id="vpMore${i}" class="ttsMore" style="display:none">
           <!-- ★'자막 당기기/밀기'·'발음 이상해요'는 뺐다(2026-09-04 사장님 "삭제"). 자막 위치는
@@ -14993,6 +15333,17 @@ async function renderTtsBeats(){
           <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
         </div>
       </div>
+      <!-- ★무음 일괄 자르기(2026-09-22 사장님 "무음구간을 자동으로 없애주거나 수동으로").
+           칸마다 부르지 않고 **한 번의 호출**로 전 칸을 처리한다 — 호출이 20번 날아가면
+           그 사이 장면 실험실 자동저장이 끼어 방금 저장한 값을 덮을 수 있다(2026-09-09 실사고). -->
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-2px 0 12px">
+        <button id="wfAllBtn" class="btn-prev" style="padding:8px 14px;font-size:13px"
+                onclick="wfTrimAll('auto')" title="모든 문장의 앞뒤 조용한 부분을 한 번에 잘라냅니다">✂ 무음 전부 자르기</button>
+        <button class="btn-prev" style="padding:8px 12px;font-size:13px"
+                onclick="wfTrimAll('reset')" title="자른 것을 전부 되돌립니다">↩︎ 전부 되돌리기</button>
+        <span id="wfAllMsg" class="hint" style="font-size:12px"></span>
+        <span id="wfTotal" class="hint" style="font-size:12px;color:var(--accent2)"></span>
+      </div>
       <!-- ★전체 듣기 진행 표시(2026-08-30 사장님 "단락별·전체 들어보는 걸 편하게").
            종전엔 8장면을 이어 듣는 동안 화면에 아무 표시가 없어, 지금 몇 번째인지·
            얼마나 남았는지 알 수 없었다(줄 강조만 있고 위쪽 버튼은 그대로였다).
@@ -15019,6 +15370,7 @@ async function renderTtsBeats(){
         <span>자막 자동맞춤 ${beats.filter(x=>Array.isArray(x.cap_durs)&&x.cap_durs.length).length}/${beats.length}</span>
       </div>`;
     _updateVoiceLen(beats.length, vidLen);
+    _wfInit(beats);          // 파형 읽어오기 + 손잡이 끌기 연결
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
 }
 function _beatAudios(n){ const a=[]; for(let i=0;i<n;i++){ const el=document.getElementById('beatAudio'+i); if(el) a.push(el);} return a; }
@@ -15094,7 +15446,50 @@ function vpPlayBeat(i){
   // 한 장면만 들을 땐 끝나면 강조(.playing = 파형 움직임)를 내린다. 전체 듣기는 playAllBeats가
   // 이 뒤에 onended를 자기 것으로 덮어쓰므로 여기 핸들러는 단독 재생에만 산다.
   a.onended=()=>{ if(!VP_ALL) vpMarkPlaying(-1); };
-  a.currentTime=0; a.play().catch(()=>{});
+  // ★자른 구간을 빼고 들려준다(2026-09-22). 종전엔 늘 0에서 끝까지 틀어서, 파형에서
+  //   앞뒤를 잘라도 이 단계에서는 안 잘린 소리가 나 "잘랐는데 그대로네"가 됐다.
+  //   최종 영상은 head_trim만큼 -ss로 건너뛰고 tail_trim 전에 끊는다(video_assemble:2147)
+  //   — 여기도 같은 규칙을 써야 들은 것과 나올 것이 같다(0순위-B).
+  _vpPlayTrimmed(a, i);
+}
+
+// 트림을 반영해 재생한다 — 시작점은 head_trim, 끝은 dur−tail_trim. 파형 진행선도 같이 움직인다.
+// 파형을 아직 안 읽었으면(WF 비어 있음) 비트에 저장된 값으로, 그것도 없으면 통째로 튼다.
+function _vpPlayTrimmed(a, i){
+  const d = WF[i] || VP_BEATS[i] || {};
+  const head = Math.max(0, +d.head_trim || 0);
+  const tail = Math.max(0, +d.tail_trim || 0);
+  // 자르기로 한 중간 쉼은 **건너뛰며** 들려준다 — 최종 영상에 없을 소리를 미리 들려주면
+  // "들은 것과 나온 것이 다르다"가 된다. keep(0.06초)은 실제 잘라내기와 같은 값으로 남긴다.
+  const gaps = ((WF[i]||{}).gap_cuts || []).slice().sort((x,y)=>(+x.start)-(+y.start));
+  const KEEP = 0.06;
+  const start = () => {
+    try{ a.currentTime = head; }catch(_){ }
+    if(a._trimWatch) a.removeEventListener('timeupdate', a._trimWatch);   // 감시자는 하나만
+    a._trimWatch = () => {
+      const dur = (+((WF[i]||{}).dur)) || a.duration || 0;
+      if(tail > 0 && dur > 0 && a.currentTime >= (dur - tail)){
+        a.pause();
+        a.removeEventListener('timeupdate', a._trimWatch);
+        a._trimWatch = null;
+        if(typeof a.onended === 'function') a.onended();
+        return;
+      }
+      for(const g of gaps){                 // 쉼 구간에 들어서면 그 끝으로 뛴다
+        const s = (+g.start) + KEEP, e = (+g.end);
+        if(a.currentTime >= s && a.currentTime < e - 0.01){
+          try{ a.currentTime = e; }catch(_){ }
+          break;
+        }
+      }
+    };
+    a.addEventListener('timeupdate', a._trimWatch);
+    if(typeof _wfPlayTick === 'function') _wfPlayTick(i, a);
+    a.play().catch(()=>{});
+  };
+  // currentTime은 메타데이터(길이)를 읽기 전엔 못 쓴다 — 아직이면 준비된 뒤에 건다.
+  if(a.readyState >= 1) start();
+  else a.addEventListener('loadedmetadata', start, {once:true});
 }
 // ── 고치기: 되돌리기·톤 재생성·부드러운 다음-단계 게이트 (당기기/밀기 버튼은 2026-09-04 삭제, 함수만 남음) ──
 // 재생 중인 줄 강조 — 켜고 끄는 곳이 여기 하나뿐이다(한 줄 재생·전체 재생이 공유).

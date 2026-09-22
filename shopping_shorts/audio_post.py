@@ -5,6 +5,7 @@ ElevenLabs speed는 0.7~1.2만 지원해, 그 이상(1.3~1.5) 속도는 여기�
 import os
 import re as _re
 import subprocess
+import sys
 import tempfile
 
 # ★ffmpeg 한 호출의 상한(초). 2026-08-06 실사고: 4.1초짜리 비트 mp3 하나를 처리하다
@@ -16,6 +17,22 @@ import tempfile
 #   못 받는 건 소리가 조금 덜 다듬어질 뿐이지만, 멈추면 제작 자체가 안 끝난다.
 #   30초: 정상 처리는 1초 안에 끝난다(실측) — 정상 작업을 자를 위험이 없는 여유값.
 FFMPEG_TIMEOUT_SEC = int(os.getenv("FFMPEG_TIMEOUT_SEC", "30") or 30)
+
+# ⚠️★한글 경로에서 무음 감지가 통째로 죽던 버그(2026-09-22 실측 발견).
+#   ffmpeg/ffprobe는 stderr를 **UTF-8**로 내는데 text=True만 주면 파이썬이 로캘
+#   (윈도우=cp949)로 디코드하다 리더 스레드에서 UnicodeDecodeError로 죽는다.
+#   이 파일의 except는 전부 "실패하면 []/0.0"이라 예외가 조용히 삼켜지고,
+#   호출부는 **"무음이 없다"**로 잘못 받았다.
+#   실측(job 409f894230c6, 경로에 '로또의 주식' 포함):
+#       detect_edge_silence → 0.0  /  detect_silences → []   (5개 비트 전부)
+#       ffmpeg를 직접 돌리면 → beat_0에 0.31초 무음이 분명히 있다
+#   즉 '무음이 없어서 0'이 아니라 **재지도 못하고 0**이었다. 자동 자르기가 한 번도
+#   동작한 적 없었다는 뜻이다.
+#   ★같은 함정을 video_assemble.py:546(_FF_TEXT)이 2026-07-16에 이미 고쳤는데
+#     이 파일은 그 수정을 못 받았다 — 같은 판단이 두 벌로 갈린 전형(0순위-B).
+#     여기서 상수로 뽑아 이 파일 안의 세 곳이 한 규칙을 쓰게 한다
+#     (video_assemble을 import하면 순환이 된다: 그쪽이 audio_post를 쓴다).
+_FF_TEXT = {"capture_output": True, "text": True, "encoding": "utf-8", "errors": "replace"}
 
 # 레벨별 silenceremove 파라미터. stop_duration=자를 최소 무음길이(초), stop_threshold=무음 판정 dB.
 # 강할수록 짧은 무음까지 자르고(작은 duration), 판정 임계도 관대(높은 dB).
@@ -118,8 +135,8 @@ def detect_silences(in_path, threshold, min_dur):
         r = subprocess.run(
             ["ffmpeg", "-i", str(in_path), "-af",
              f"silencedetect=noise={threshold}:d={min_dur}", "-f", "null", "-"],
-            stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True,
-            timeout=FFMPEG_TIMEOUT_SEC)
+            stdin=subprocess.DEVNULL, check=True,
+            timeout=FFMPEG_TIMEOUT_SEC, **_FF_TEXT)
     except Exception:
         return []
     spans, start = [], None
@@ -229,8 +246,8 @@ def _audio_dur(path):
         r = subprocess.run(
             ["ffprobe", "-v", "error", "-show_entries", "format=duration",
              "-of", "csv=p=0", str(path)],
-            stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True,
-            timeout=FFMPEG_TIMEOUT_SEC)   # 멈추면 0.0 = 호출부가 판정 생략(기존 동작)
+            stdin=subprocess.DEVNULL, check=True,
+            timeout=FFMPEG_TIMEOUT_SEC, **_FF_TEXT)   # 멈추면 0.0 = 호출부가 판정 생략(기존 동작)
         return float((r.stdout or "0").strip() or 0.0)
     except Exception:
         return 0.0
@@ -260,6 +277,139 @@ def trim_tail_silence(in_path, out_path, pad=0.08, threshold="-40dB"):
     if in_dur > 0.5 and out_dur < 0.3:
         os.remove(tmp)
         return str(in_path)
+    os.replace(tmp, str(out_path))
+    return str(out_path)
+
+
+# 파형 막대 개수. 화면 폭이 어떻든 이 개수로 그린다(CSS flex가 늘린다).
+# 120 = 20초 문장에서 막대 하나가 0.17초 — 숨 쉬는 구간이 눈에 보이는 해상도.
+_WAVE_BARS = 120
+
+
+def extract_peaks(path, bars=_WAVE_BARS):
+    """mp3 → 막대별 음량 피크 [0.0~1.0] 리스트. 실패·ffmpeg 없음 → [].
+
+    ★왜 서버에서 뽑나(2026-09-22): 브라우저 decodeAudioData로 그리면 장면 8~20개의
+    mp3를 전부 받아 디코딩해야 해 패널이 느려지고, 무엇보다 **자동 자르기 판정(ffmpeg
+    silencedetect)과 화면에 보이는 파형이 서로 다른 엔진**이 된다 — 같은 판단을 두 벌로
+    적으면 반드시 어긋난다(0순위-B). 여기서 뽑으면 둘 다 ffmpeg 한 엔진이다.
+
+    구현: s16le raw PCM(8kHz 모노)로 디코딩해 구간별 최대 절대값을 취한다. 8kHz면
+    20초 문장이 160KB라 메모리 부담이 없고, 음량 포락선을 그리는 데는 충분하다
+    (주파수 분석이 아니라 '얼마나 큰가'만 보면 되므로 샘플레이트가 낮아도 된다)."""
+    try:
+        r = subprocess.run(
+            ["ffmpeg", "-i", str(path), "-ac", "1", "-ar", "8000",
+             "-f", "s16le", "-acodec", "pcm_s16le", "-"],
+            stdin=subprocess.DEVNULL, capture_output=True, check=True,
+            timeout=FFMPEG_TIMEOUT_SEC)
+    except Exception:
+        return []
+    raw = r.stdout or b""
+    n = len(raw) // 2
+    if n <= 0:
+        return []
+    import array
+    samples = array.array("h")
+    samples.frombytes(raw[:n * 2])
+    if sys.byteorder == "big":
+        samples.byteswap()      # s16le 고정 출력이므로 빅엔디안 기계에서만 뒤집는다
+    step = n / float(bars)
+    peaks = []
+    for k in range(bars):
+        lo = int(k * step)
+        hi = int((k + 1) * step)
+        if hi <= lo:
+            hi = lo + 1
+        chunk = samples[lo:min(hi, n)]
+        peak = max((abs(v) for v in chunk), default=0)
+        peaks.append(round(min(1.0, peak / 32768.0), 4))
+    return peaks
+
+
+# 문장 중간 무음을 찾을 때 쓰는 판정값. _PACE_THRESHOLD(-30dB)와 같은 기준을 쓴다 —
+# 화면에 보여주는 구간과 속도감 모드가 자르는 구간이 다르면 사장님이 보는 것과 결과가 어긋난다.
+_GAP_THRESHOLD = _PACE_THRESHOLD
+_GAP_MIN_DUR = 0.10       # 이보다 짧은 쉼은 리듬이라 후보로 안 올린다
+_GAP_KEEP = 0.06          # 구간을 지울 때 남길 숨(완전히 붙이면 기관총처럼 들린다)
+
+
+def find_gaps(path, threshold=None, min_dur=None, keep=_GAP_KEEP):
+    """문장 **중간**의 조용한 구간 [{start,end,drop}, ...] — 앞뒤 끝 무음은 뺀다.
+
+    앞뒤는 head_trim/tail_trim이 이미 맡고 있어(0순위-B) 여기서 또 세면 두 벌이 된다.
+    drop = 실제로 지울 길이(구간 길이에서 숨 keep을 뺀 것). keep을 남기는 이유는
+    _PACE_TAIL_PAD와 같다 — 완전히 붙이면 말이 기관총처럼 들린다.
+
+    실패·ffmpeg 없음 → []."""
+    total = _audio_dur(path)
+    if total <= 0:
+        return []
+    spans = detect_silences(path, threshold or _GAP_THRESHOLD,
+                            _GAP_MIN_DUR if min_dur is None else min_dur)
+    gaps = []
+    for start, end in spans:
+        if start <= 0.05 or end >= (total - 0.05):
+            continue                      # 끝에 닿으면 엣지 트림의 몫이다
+        drop = round((end - start) - keep, 3)
+        if drop <= 0.02:
+            continue                      # 지워봐야 티가 안 난다
+        gaps.append({"start": round(start, 3), "end": round(end, 3), "drop": drop})
+    return gaps
+
+
+def cut_gaps(in_path, out_path, gaps, keep=_GAP_KEEP):
+    """gaps 구간을 잘라낸 mp3를 만든다. gaps가 비면 아무것도 안 하고 None.
+
+    ★왜 파일을 새로 만드나: 렌더는 `-ss`로 **앞만** 건너뛸 수 있어 중간은 뺄 수 없다.
+    잘라낸 파일을 미리 만들어 넘기면 렌더·자막·캡컷이 **기존 경로를 그대로** 쓴다
+    — 세 곳에 같은 잘라내기 논리를 심지 않는다(0순위-B).
+
+    각 구간은 keep만큼 숨을 남기고 지운다. 조각 경계엔 아주 짧은 페이드를 걸어
+    클릭음을 막는다(_PACE_FADE와 같은 이유)."""
+    if not gaps:
+        return None
+    total = _audio_dur(in_path)
+    if total <= 0:
+        return None
+    # 남길 조각 = 전체에서 (구간 시작+keep ~ 구간 끝)을 뺀 나머지
+    keeps, cur = [], 0.0
+    for g in sorted(gaps, key=lambda x: x["start"]):
+        s, e = float(g["start"]) + keep, float(g["end"])
+        if s <= cur or e <= cur or s >= total:
+            continue
+        if s > cur:
+            keeps.append((cur, min(s, total)))
+        cur = min(e, total)
+    if cur < total:
+        keeps.append((cur, total))
+    keeps = [(a, b) for a, b in keeps if (b - a) > 0.01]
+    if len(keeps) <= 1:
+        return None                       # 자를 게 없거나 통째로 남는다
+    parts = []
+    for k, (a, b) in enumerate(keeps):
+        parts.append(f"[0:a]atrim=start={a:.3f}:end={b:.3f},asetpts=PTS-STARTPTS,"
+                     f"afade=t=in:st=0:d={_PACE_FADE},"
+                     f"afade=t=out:st={max(0.0, (b-a)-_PACE_FADE):.3f}:d={_PACE_FADE}[p{k}]")
+    fc = ";".join(parts) + ";" + "".join(f"[p{k}]" for k in range(len(keeps))) \
+         + f"concat=n={len(keeps)}:v=0:a=1[out]"
+    fd, tmp = tempfile.mkstemp(suffix=".mp3",
+                               dir=os.path.dirname(os.path.abspath(str(out_path))))
+    os.close(fd)
+    try:
+        subprocess.run(["ffmpeg", "-y", "-i", str(in_path), "-filter_complex", fc,
+                        "-map", "[out]", "-q:a", "4", tmp],
+                       stdin=subprocess.DEVNULL, check=True,
+                       timeout=FFMPEG_TIMEOUT_SEC, **_FF_TEXT)
+    except Exception:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        return None                       # 실패해도 원본은 무사 — 호출부가 원본을 쓴다
+    out_dur = _audio_dur(tmp)
+    # 보호: 말이 있던 비트가 0.3초 밑으로 잘렸다면 판정이 틀린 것 → 버리고 원본 유지.
+    if total > 0.5 and out_dur < 0.3:
+        os.remove(tmp)
+        return None
     os.replace(tmp, str(out_path))
     return str(out_path)
 
@@ -294,8 +444,8 @@ def detect_edge_silence(path, edge):
         proc = subprocess.run(
             ["ffmpeg", "-i", str(path), "-af", "silencedetect=noise=-40dB:d=0.2",
              "-f", "null", "-"],
-            capture_output=True, text=True, check=True,
-            timeout=FFMPEG_TIMEOUT_SEC)   # 멈추면 아래 except가 0.0 반환(기존 동작)
+            stdin=subprocess.DEVNULL, check=True,
+            timeout=FFMPEG_TIMEOUT_SEC, **_FF_TEXT)   # 멈추면 아래 except가 0.0 반환(기존 동작)
         head, tail = _parse_silence_edges(proc.stderr or "", total)
         return head if edge == "head" else tail
     except Exception:

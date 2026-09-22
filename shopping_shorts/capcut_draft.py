@@ -801,10 +801,25 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
         except Exception:
             video_durs[real] = 0.0
     # TTS: 비트별 복사
+    # ★중간 무음(gap_cuts)이 걸린 비트는 **잘라낸 사본**을 내보낸다(2026-09-22).
+    #   타임라인 길이는 잘린 기준으로 계산되므로, 원본 mp3를 그대로 주면 캡컷에서만
+    #   쉼이 남아 영상과 어긋난다. 렌더와 같은 함수(cut_gaps)를 써서 결과가 같게 한다(0순위-B).
+    _gap_by_idx = {b.get("beat_idx"): (b.get("gap_cuts") or [])
+                   for b in (plan or {}).get("beats") or []}
     for idx, real in tts_paths.items():
         if real and Path(real).exists():
             name = f"beat_{int(idx):02d}.mp3"
-            shutil.copy(real, proj / name)
+            dst = proj / name
+            gaps = _gap_by_idx.get(idx) or []
+            made = None
+            if gaps:
+                try:
+                    from shopping_shorts.audio_post import cut_gaps
+                    made = cut_gaps(str(real), str(dst), gaps)
+                except Exception:
+                    made = None          # 실패하면 아래에서 원본을 그대로 복사한다
+            if not made:
+                shutil.copy(real, dst)
             asset_paths[real] = f"{base_abs}/{project}/{name}"
 
     # ★꾸미기 틀 PNG를 draft 폴더로 복사하고 **캡컷이 볼 절대경로**를 심는다

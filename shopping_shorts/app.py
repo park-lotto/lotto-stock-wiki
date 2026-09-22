@@ -89,7 +89,7 @@ from shopping_shorts import capcut_draft
 from shopping_shorts.youtube_client import enrich_youtube
 from shopping_shorts.youtube_client import channels_from_video_urls as yt_channels_from_videos
 from shopping_shorts.video_assemble import _beat_timeline
-from shopping_shorts.audio_post import detect_edge_silence
+from shopping_shorts.audio_post import detect_edge_silence, extract_peaks, find_gaps
 from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRIM_FLOOR
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
@@ -20563,11 +20563,47 @@ def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
     return {"ok": True}
 
 
+# 자동 자르기가 무음에서 남길 여백(초). 말의 첫 음절·끝 음절이 잘리는 걸 막는다.
+# trim_tail_silence의 pad와 같은 값 — 같은 목적이면 같은 수치를 쓴다(0순위-B).
+_TRIM_SAFETY_PAD = 0.08
+
+
+def _apply_beat_trim(hit, edge, mode, step=0.3, value=None):
+    """비트 하나의 head_trim/tail_trim을 정하고 하한 가드까지 건다 — **판단처는 여기 한 곳**.
+    /trim(한 칸)과 /trim_all(전 칸)이 같은 함수를 써야 "저기선 이렇게 여기선 이렇게"가 안 난다(0순위-B).
+
+    mode: auto=무음 자동감지(여백 _TRIM_SAFETY_PAD 남김) / set=절대값(파형 드래그) /
+          nudge=step 누적 / reset=0.
+    반환: 이번에 정해진 그 엣지의 트림값(초)."""
+    key = "tail_trim" if edge == "tail" else "head_trim"
+    tts = hit.get("tts_path")
+    if mode == "reset":
+        hit[key] = 0.0
+    elif mode == "auto":
+        # ★무음 전체를 자르지 않고 여백을 남긴다. silencedetect가 재는 무음의 끝은 소리가
+        #   커지기 시작하는 지점이라, 전부 자르면 첫 음절 앞의 자연스러운 들숨이 사라져
+        #   말이 튀어나오는 것처럼 들린다(_PACE_TAIL_PAD와 같은 이유).
+        sil = float(detect_edge_silence(tts, edge)) if tts else 0.0
+        hit[key] = round(max(0.0, sil - _TRIM_SAFETY_PAD), 3)
+    elif mode == "set":
+        hit[key] = max(0.0, round(float(value or 0.0), 3))
+    else:  # nudge
+        hit[key] = round(float(hit.get(key, 0.0)) + float(step), 3)
+    # 하한 가드: head+tail이 probe−floor를 넘으면 이번 엣지를 되돌려 막는다.
+    probe = _probe_duration(tts) if tts else 0.0
+    if probe > 0:
+        head, tail = hit.get("head_trim", 0.0), hit.get("tail_trim", 0.0)
+        if _effective_dur(probe, head, tail) <= _TRIM_FLOOR and (head + tail) > (probe - _TRIM_FLOOR):
+            hit[key] = max(0.0, round(probe - _TRIM_FLOOR - (head + tail - hit.get(key, 0.0)), 3))
+    return hit[key]
+
+
 @app.post("/api/produce/mix/{job_id}/trim")
 def api_produce_mix_trim(job_id: str, body: dict):
     """비트의 앞/뒤 조용한 부분을 자른다(비파괴 — head_trim/tail_trim만 저장).
-    mode=auto: silencedetect로 그 엣지 무음 길이 산출. nudge: step 누적. reset: 0.
-    렌더 중이면 409(regen 규율). 하한 가드: 트림 합이 (probe−_TRIM_FLOOR)를 못 넘는다."""
+    mode=auto: silencedetect로 그 엣지 무음 길이 산출. set: 절대값(파형 드래그).
+    nudge: step 누적. reset: 0.
+    렌더 중이면 409(regen 규율). 하한 가드는 _apply_beat_trim이 건다."""
     store = Store(DB_PATH)
     job = store.get_mix_job(job_id)
     if not job:
@@ -20586,25 +20622,156 @@ def api_produce_mix_trim(job_id: str, body: dict):
     hit = next((b for b in beats if b.get("beat_idx") == bi), None)
     if hit is None:
         return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
-    key = "tail_trim" if edge == "tail" else "head_trim"
-    mode = body.get("mode", "nudge")
-    tts = hit.get("tts_path")
-    if mode == "reset":
-        hit[key] = 0.0
-    elif mode == "auto":
-        hit[key] = float(detect_edge_silence(tts, edge)) if tts else 0.0
-    else:  # nudge
-        step = float(body.get("step", 0.3))
-        hit[key] = round(float(hit.get(key, 0.0)) + step, 3)
-    # 하한 가드: head+tail이 probe−floor를 넘으면 이번 엣지를 되돌려 막는다.
-    probe = _probe_duration(tts) if tts else 0.0
-    if probe > 0:
-        head, tail = hit.get("head_trim", 0.0), hit.get("tail_trim", 0.0)
-        if _effective_dur(probe, head, tail) <= _TRIM_FLOOR and (head + tail) > (probe - _TRIM_FLOOR):
-            hit[key] = max(0.0, round(probe - _TRIM_FLOOR - (head + tail - hit.get(key, 0.0)), 3))
+    trimmed = _apply_beat_trim(hit, edge, body.get("mode", "nudge"),
+                               step=float(body.get("step", 0.3)), value=body.get("value"))
     _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "head_trim": hit.get("head_trim", 0.0),
-            "tail_trim": hit.get("tail_trim", 0.0), "trimmed": hit.get(key, 0.0)}
+            "tail_trim": hit.get("tail_trim", 0.0), "trimmed": trimmed}
+
+
+@app.post("/api/produce/mix/{job_id}/trim_all")
+def api_produce_mix_trim_all(job_id: str, body: dict = None):
+    """전 비트의 앞·뒤 무음을 **한 번의 호출로** 자른다(mode=auto) 또는 전부 되돌린다(reset).
+
+    ★왜 한 번에 묶나: 칸마다 /trim을 부르면 호출이 20번 날아가고, 그 사이 장면 실험실
+    자동저장이 끼어들어 방금 저장한 값을 옛 편집안으로 덮을 수 있다(2026-09-09 실사고와
+    같은 모양). 여기서 편집안을 한 번 읽고 한 번 쓴다."""
+    body = body or {}
+    mode = body.get("mode", "auto")
+    if mode not in ("auto", "reset"):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "mode는 auto/reset"})
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 자를 수 없어요"})
+    plan = job.get("edit_plan") or {}
+    changed, total = 0, 0.0
+    for hit in (plan.get("beats") or []):
+        if not hit.get("tts_path"):
+            continue
+        before = float(hit.get("head_trim", 0.0)) + float(hit.get("tail_trim", 0.0))
+        for edge in ("head", "tail"):
+            _apply_beat_trim(hit, edge, mode)
+        after = float(hit.get("head_trim", 0.0)) + float(hit.get("tail_trim", 0.0))
+        if abs(after - before) > 1e-3:
+            changed += 1
+        total += after
+    _save_render_inputs(store, job_id, edit_plan=plan)
+    return {"ok": True, "changed": changed, "saved_seconds": round(total, 2)}
+
+
+@app.get("/api/produce/mix/{job_id}/wave/{beat_idx}")
+def api_produce_mix_wave(job_id: str, beat_idx: int):
+    """비트 하나의 파형 막대 + 앞뒤 무음 길이 + 현재 트림값.
+
+    화면이 그리는 파형과 자동 자르기 판정이 **같은 ffmpeg 한 엔진**에서 나온다(0순위-B).
+    peaks가 []면 화면은 파형 없이 트림 버튼만 보여준다(기능은 죽지 않는다)."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    beats = (job.get("edit_plan") or {}).get("beats") or []
+    hit = next((b for b in beats if b.get("beat_idx") == beat_idx), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    tts = hit.get("tts_path")
+    if not tts or not os.path.exists(str(tts)):
+        return {"ok": True, "peaks": [], "dur": 0.0, "head_sil": 0.0, "tail_sil": 0.0,
+                "gaps": [], "gap_cuts": [],
+                "head_trim": float(hit.get("head_trim", 0.0)),
+                "tail_trim": float(hit.get("tail_trim", 0.0))}
+    return {"ok": True,
+            "peaks": extract_peaks(tts),
+            "dur": round(float(_probe_duration(tts) or 0.0), 3),
+            "head_sil": round(float(detect_edge_silence(tts, "head")), 3),
+            "tail_sil": round(float(detect_edge_silence(tts, "tail")), 3),
+            # gaps = 문장 **중간**의 쉼(자를 후보). gap_cuts = 그중 실제로 자르기로 한 것.
+            "gaps": find_gaps(tts),
+            "gap_cuts": hit.get("gap_cuts") or [],
+            "head_trim": float(hit.get("head_trim", 0.0)),
+            "tail_trim": float(hit.get("tail_trim", 0.0)),
+            "floor": _TRIM_FLOOR, "pad": _TRIM_SAFETY_PAD}
+
+
+def _gaps_equal(a, b):
+    """두 구간이 같은 것인가 — 0.02초 안이면 같다고 본다(부동소수 오차 흡수)."""
+    return (abs(float(a.get("start", 0)) - float(b.get("start", 0))) < 0.02
+            and abs(float(a.get("end", 0)) - float(b.get("end", 0))) < 0.02)
+
+
+@app.post("/api/produce/mix/{job_id}/gap")
+def api_produce_mix_gap(job_id: str, body: dict):
+    """문장 중간의 쉼을 자르거나(add) 되살린다(remove). all/none으로 그 칸 전체도 가능.
+
+    저장만 한다(비파괴) — 실제 잘라내기는 렌더·캡컷이 gap_cuts를 보고 그때 한다.
+    원본 mp3는 끝까지 그대로라, 되돌리면 소리가 완전히 복구된다."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 자를 수 없어요"})
+    plan = job.get("edit_plan") or {}
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in (plan.get("beats") or []) if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    action = body.get("action")
+    cuts = list(hit.get("gap_cuts") or [])
+    if action == "none":
+        cuts = []
+    elif action == "all":
+        tts = hit.get("tts_path")
+        cuts = find_gaps(tts) if tts else []
+    elif action in ("add", "remove"):
+        g = body.get("gap") or {}
+        if "start" not in g or "end" not in g:
+            return JSONResponse(status_code=422, content={"ok": False, "error": "gap 필요"})
+        cuts = [c for c in cuts if not _gaps_equal(c, g)]
+        if action == "add":
+            cuts.append({"start": round(float(g["start"]), 3),
+                         "end": round(float(g["end"]), 3),
+                         "drop": round(float(g.get("drop") or 0.0), 3)})
+    else:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "action은 add/remove/all/none"})
+    hit["gap_cuts"] = sorted(cuts, key=lambda c: float(c.get("start", 0)))
+    _save_render_inputs(store, job_id, edit_plan=plan)
+    return {"ok": True, "gap_cuts": hit["gap_cuts"],
+            "dropped": round(sum(float(c.get("drop") or 0.0) for c in hit["gap_cuts"]), 3)}
+
+
+@app.post("/api/produce/mix/{job_id}/gap_all")
+def api_produce_mix_gap_all(job_id: str, body: dict = None):
+    """전 비트의 중간 쉼을 한 번에 자르거나(auto) 전부 되살린다(reset). 호출 1회."""
+    body = body or {}
+    mode = body.get("mode", "auto")
+    if mode not in ("auto", "reset"):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "mode는 auto/reset"})
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 자를 수 없어요"})
+    plan = job.get("edit_plan") or {}
+    changed, dropped = 0, 0.0
+    for hit in (plan.get("beats") or []):
+        tts = hit.get("tts_path")
+        if not tts:
+            continue
+        before = len(hit.get("gap_cuts") or [])
+        hit["gap_cuts"] = [] if mode == "reset" else find_gaps(tts)
+        if len(hit["gap_cuts"]) != before:
+            changed += 1
+        dropped += sum(float(c.get("drop") or 0.0) for c in hit["gap_cuts"])
+    _save_render_inputs(store, job_id, edit_plan=plan)
+    return {"ok": True, "changed": changed, "dropped": round(dropped, 2)}
 
 
 # ── 편집안(edit_plan) 쓰기 잠금 ──────────────────────────────────────────

@@ -574,7 +574,13 @@ def _effective_dur(probe, head_trim=0.0, tail_trim=0.0, floor=_TRIM_FLOOR):
 
 
 def _beat_effective_dur(beat, tts_path):
-    """비트 dict의 head_trim/tail_trim을 반영한 실질 길이(단일 출처)."""
+    """비트 dict의 head_trim/tail_trim을 반영한 실질 길이(단일 출처).
+
+    ★gap_cuts(중간 무음)는 여기서 빼지 않는다 — 렌더는 _apply_gap_cuts가 **이미 잘라둔**
+      mp3를 받으므로 probe에 그 결과가 들어 있다. 여기서 또 빼면 두 번 빼진다.
+      (길이를 정하는 판단은 "파일을 잰다" 한 가지뿐이어야 한다, 0순위-B)
+      잘린 파일을 못 만든 경우(ffmpeg 실패)엔 원본이 그대로 오고, probe도 원본 길이라
+      영상이 원본에 맞는다 — 어긋나지 않는다."""
     return _effective_dur(_probe_duration(tts_path),
                           beat.get("head_trim", 0.0), beat.get("tail_trim", 0.0))
 
@@ -1727,31 +1733,80 @@ def _caption_durations(segs, dur, real_durs=None):
     return floored
 
 
+def _shrink_caps_for_gaps(lead, durs, gaps):
+    """중간 무음을 잘라낸 만큼 자막 구절을 앞당긴다(gap_cuts 반영).
+
+    ★왜: 중간을 잘라내면 그 뒤의 말이 전부 왼쪽으로 당겨지는데 cap_durs는 자르기 전
+    기준이라, 그대로 두면 **잘라낸 총량만큼 자막이 뒤로 밀린다**(뒤 구절일수록 더 어긋난다 —
+    2026-08-06 pace_mode에서 겪은 것과 같은 누적 오차).
+    무음은 구절과 구절 **사이**에 있으므로, 잘린 시각이 걸친 구절의 길이에서 그만큼 뺀다.
+    리드인보다 앞이면 리드인에서 갚는다."""
+    if not durs or not gaps:
+        return lead, durs
+    durs = list(durs)
+    for g in sorted(gaps, key=lambda x: float(x.get("start", 0))):
+        drop = float(g.get("drop") or 0.0)
+        if drop <= 0:
+            continue
+        at = float(g.get("start") or 0.0)
+        if at <= lead:                     # 말 시작 전 — 리드인이 흡수
+            take = min(lead, drop)
+            lead -= take
+            drop -= take
+        acc = lead
+        for i, d in enumerate(durs):       # 그 시각이 걸친 구절부터 깎는다
+            if drop <= 0:
+                break
+            if at < acc + d:
+                take = min(d, drop)
+                durs[i] = d - take
+                drop -= take
+            acc += d
+        if drop > 0:                       # 남으면 뒤 구절에서 마저 뺀다
+            for i in range(len(durs) - 1, -1, -1):
+                if drop <= 0:
+                    break
+                take = min(durs[i], drop)
+                durs[i] -= take
+                drop -= take
+    return lead, durs
+
+
 def _adjust_caps_for_trim(beat):
-    """(lead_in, durs) — 저장된 cap_lead/cap_durs에 head_trim을 반영해 돌려준다.
+    """(lead_in, durs) — 저장된 cap_lead/cap_durs에 head_trim과 gap_cuts를 반영해 돌려준다.
 
     ★왜(2026-08-06): cap_durs·cap_lead는 **합성 시점에 한 번** 계산되고 그 뒤 무효화가
     없다(mix_pipeline). 그런데 사장님이 제작소에서 앞을 트림하면 오디오만 왼쪽으로
     당겨지고 자막 모양은 옛날 그대로 남아 또 어긋났다. 트림한 만큼 리드인에서 갚고,
     리드인으로 모자라면 첫 구절을 파고들어 깎는다(음수 시작 금지).
+    ★2026-09-22: 중간 무음 잘라내기(gap_cuts)도 같은 이유로 여기서 함께 반영한다 —
+    자막 타이밍을 고치는 곳은 이 함수 하나여야 한다(0순위-B).
     """
     durs = beat.get("cap_durs")
     lead = float(beat.get("cap_lead") or 0.0)
     trim = float(beat.get("head_trim") or 0.0)
-    if not durs or trim <= 0:
+    gaps = beat.get("gap_cuts") or []
+    if not durs or (trim <= 0 and not gaps):
         return lead, (list(durs) if durs else durs)
     durs = list(durs)
-    if trim <= lead:
-        return lead - trim, durs
-    # 리드인을 다 쓰고도 남으면 앞 구절부터 순서대로 깎아 없앤다.
-    rest = trim - lead
-    for i, d in enumerate(durs):
-        if rest <= 0:
-            break
-        take = min(d, rest)
-        durs[i] = d - take
-        rest -= take
-    return 0.0, durs
+    # ★앞트림과 중간컷은 **둘 다** 걸릴 수 있다 — 한쪽만 반영하고 return하면 다른 쪽이
+    #   통째로 죽는다(0순위-B의 "조건부로 정한 값을 아래에서 덮어쓰기"와 같은 모양).
+    if trim > 0:
+        if trim <= lead:
+            lead = lead - trim
+        else:
+            # 리드인을 다 쓰고도 남으면 앞 구절부터 순서대로 깎아 없앤다.
+            rest = trim - lead
+            lead = 0.0
+            for i, d in enumerate(durs):
+                if rest <= 0:
+                    break
+                take = min(d, rest)
+                durs[i] = d - take
+                rest -= take
+    if gaps:
+        lead, durs = _shrink_caps_for_gaps(lead, durs, gaps)
+    return lead, durs
 
 
 def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0,
@@ -3159,6 +3214,33 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     return str(out_path)
 
 
+def _apply_gap_cuts(edit_plan, tts_paths, work):
+    """beat["gap_cuts"]가 있는 비트만 그 구간을 잘라낸 mp3를 만들어 경로를 갈아끼운다.
+
+    gap_cuts는 화면에서 고른 [{start,end,drop}, ...]이다(없으면 아무 일도 안 한다 =
+    지금까지와 완전히 같은 동작). 실패하면 원본 경로를 그대로 둔다 — 소리를 못 다듬는 건
+    영상이 조금 늘어질 뿐이지만, 여기서 죽으면 렌더 자체가 안 끝난다.
+
+    ⚠️원본 파일은 건드리지 않는다. 잘린 사본은 work 폴더에 만들어 렌더가 끝나면 함께 지워진다
+      — 고객이 화면에서 '되돌리기'를 누르면 원본이 그대로 다시 쓰여야 한다."""
+    from .audio_post import cut_gaps
+    out = dict(tts_paths or {})
+    for beat in (edit_plan or {}).get("beats") or []:
+        gaps = beat.get("gap_cuts") or []
+        idx = beat.get("beat_idx")
+        src = out.get(idx)
+        if not gaps or not src or not os.path.exists(str(src)):
+            continue
+        try:
+            dst = Path(work) / f"gapcut_{idx}.mp3"
+            made = cut_gaps(str(src), str(dst), gaps)
+            if made:
+                out[idx] = made
+        except Exception:
+            pass      # 원본 유지 — 다듬기 실패가 렌더를 죽이면 안 된다
+    return out
+
+
 def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None, sfx_paths=None, burn_captions=True):
     """EDL → 최종 mp4. 1)믹스(자막X) 2)clean_fn(있으면 자막제거) 3)우리 자막.
     clean_fn(mix_raw_path)->clean_path 를 주면 그 사이에 VMake 자막제거가 끼워진다
@@ -3178,6 +3260,11 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
     #   ⚠️out_path는 work **밖**이라 안전하다(work는 out_path의 형제 폴더).
     #     실패해도 삼킨다 — 청소가 렌더를 죽이면 안 된다.
     try:
+        # ★문장 **중간** 무음 잘라내기(2026-09-22). 앞뒤 끝은 head_trim/tail_trim이 맡지만
+        #   중간 쉼은 `-ss`로 표현이 안 된다 — 잘라낸 mp3를 미리 만들어 여기서 갈아끼운다.
+        #   tts_paths 하나만 바꾸면 _render_mix·_beat_timeline·_burn_captions 셋이 전부
+        #   따라온다(셋에 같은 잘라내기 논리를 심지 않는다, 0순위-B).
+        tts_paths = _apply_gap_cuts(edit_plan, tts_paths, work)
         mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
         base_video = clean_fn(mix_raw) if clean_fn else mix_raw
         if not burn_captions:
