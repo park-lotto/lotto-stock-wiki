@@ -12294,6 +12294,7 @@ def _with_pay(html: str) -> str:
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
                 .replace("__PRO_NAME__", _toss_esc(name))
                 .replace("__PRO_PRICE__", f"{amount:,}원")
+                .replace("__PRO_PERIOD__", _PRO_PERIOD)
                 .replace("__CARD_HREF__", card_href).replace("__CARD_LABEL__", card_label)
                 .replace("__DEADLINE_ISO__", dl_iso).replace("__DEADLINE_LABEL__", dl_label)
                 .replace("__NEXT_START_LABEL__", nx_label).replace("__NEXT_PRICE__", f"{next_price:,}원")
@@ -12720,7 +12721,7 @@ a{text-decoration:none;color:inherit}
 <div class=rec>추천</div>
 <div class="pt pro-t">__PRO_NAME__</div>
 <div class=price>__PRO_PRICE__<small></small></div>
-<div class=pd>카드결제 또는 계좌이체</div>
+<div class=pd>이용기간 __PRO_PERIOD__ · 카드결제 또는 계좌이체</div>
 <ul>
 <li><span class=c>✓</span> 전 기능 무제한</li>
 <li><span class=c>✓</span> 쇼츠 무제한 제작</li>
@@ -13306,6 +13307,11 @@ def _toss_keys():
             os.environ.get("TOSS_SECRET_KEY", "").strip())
 
 
+# 이용권 이용기간(2026-09-22 토스 심사 "서비스 제공기간을 상품 페이지에 명확히" — 사장님 12개월 확정).
+#   화면 표기는 전부 이 값 하나에서 읽는다(대문·요금·결제·약관).
+_PRO_PERIOD = "12개월"
+
+
 def _toss_order_name_amount():
     st = Store(DB_PATH)
     name = (st.get_setting("toss_order_name", "") or "숏템메이커 1기 참가비").strip()
@@ -13412,6 +13418,7 @@ def _toss_checkout(request: Request):
     form_url = (Store(DB_PATH).get_setting("apply_form_url", "") or _APPLY_FORM_URL).strip()
     body = f"""{badge}<h1>💳 {_toss_esc(name)}</h1>
 <div class=amt>{amount:,}원</div>
+<div class=p style="margin:-4px 0 12px">이용기간: 결제(이용권 활성화)일로부터 {_PRO_PERIOD}</div>
 <div style="border:1px solid #6ff0d6;border-radius:12px;padding:14px;margin:6px 0 16px;background:#0c1a17">
   <div style="font-weight:800;font-size:16px">① 신청서 작성 <span style="color:#ff8a8a">(필수)</span></div>
   <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 1기 신청서를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
@@ -13690,7 +13697,8 @@ _TERMS_BODY = f"""
 <h2>제3조 (이용권과 결제)</h2>
 <ul>
 <li>이용권은 계좌입금 등 회사가 안내하는 방법으로 결제하며, 입금 확인 후 활성화됩니다.</li>
-<li>이용권별 제공 기능·기간·제작 횟수는 서비스 내 안내에 따릅니다.</li>
+<li>정식(Pro) 이용권의 이용기간은 결제(이용권 활성화)일로부터 <b>{_PRO_PERIOD}</b>입니다.</li>
+<li>이용권별 제공 기능·제작 횟수는 서비스 내 안내에 따릅니다.</li>
 <li>환불에 관한 사항은 별도의 <a href="/refund" style="color:#6ff0d6">환불정책</a>을 따릅니다.</li>
 </ul>
 <h2>제4조 (이용자의 의무)</h2>
