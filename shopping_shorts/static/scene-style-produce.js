@@ -14,7 +14,41 @@
   const currentMixJob=()=>String(typeof MIX_JOB==='undefined'?'':(MIX_JOB||'')).trim();
   const status=()=>document.getElementById('sceneStyleStatus');
   const draftKey=id=>'scene-style-draft:'+id;
+  // 저장본 비교 — 키 순서·undefined에 흔들리지 않게 정렬해 문자열로 견준다
+  const stable=v=>JSON.stringify(v,(k,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,key)=>{if(x[key]!==undefined)o[key]=x[key];return o},{}):x);
+  const sameSnapshot=(a,b)=>stable(a||null)===stable(b||null);
   let serverText=null;   // 이번에 열 때 서버가 준 제목 글 — 임시저장 복원 때 '고친 칸' 판정 기준
+  // ★인라인 모드(2026-09-23 사장님: "구버전에서 신버전으로 바꾸는 작업, 라이브 방송 뒤 바로 교체되게 기본 세팅 먼저").
+  //   관리자 스위치 scene_style_inline_enabled(기본 끔)가 켜지면 6단계 패널 안에 새 편집기를 바로 띄우고 구버전 UI를 숨긴다.
+  //   팝업(dialog)과 **같은 iframe·같은 메시지 흐름**을 쓴다 — 갈라 두면 둘이 어긋난다(0순위-B). 끄면 종전 화면 그대로.
+  let inlineMode=false,inlineShell=null,inlineOpen=false;
+  const editorOpen=()=>inlineMode?inlineOpen:!!dialog?.open;
+  const stepPanel=()=>document.querySelector('.panel[data-step="3"]');
+  function ensureInlineShell(){
+    const panel=stepPanel();if(!panel||inlineShell)return inlineShell;
+    if(!document.getElementById('sceneStyleInlineStyle')){const style=document.createElement('style');style.id='sceneStyleInlineStyle';
+      style.textContent='.panel[data-step="3"].scene-style-inline-active>:not(h3):not(#sceneStyleInline){display:none!important}';document.head.append(style);}
+    inlineShell=document.createElement('section');inlineShell.id='sceneStyleInline';inlineShell.style.cssText='margin-top:10px';
+    const note=document.createElement('div');note.id='sceneStyleInlineStatus';note.setAttribute('role','status');note.style.cssText='margin:0 0 8px;color:#bdeee5;font-size:13px';
+    frame=document.createElement('iframe');frame.title='문구와 효과 편집기';frame.style.cssText='width:100%;height:calc(100vh - 200px);min-height:720px;border:1px solid #35505b;border-radius:12px;background:#071118';
+    inlineShell.append(note,frame);panel.append(inlineShell);return inlineShell;
+  }
+  async function initInline(){
+    try{const r=await fetch('/api/produce/scene-style/flags',{cache:'no-store'});const d=await r.json();inlineMode=!!(r.ok&&d&&d.inline);}catch(_){inlineMode=false;}
+    if(!inlineMode)return;
+    const panel=stepPanel();if(!panel)return;
+    ensureInlineShell();
+    // 6단계 패널이 보이면 자동으로 열고, 떠나면 임시저장(+적용한 job은 서버 저장) — 사용자가 누를 버튼이 없다
+    const sync=()=>{const visible=panel.classList.contains('show');
+      if(visible&&MIX_JOB&&(!inlineOpen||jobId!==MIX_JOB))openSceneStyleEditor();
+      else if(!visible&&inlineOpen)leaveInline();};
+    new MutationObserver(sync).observe(panel,{attributes:true,attributeFilter:['class']});sync();
+  }
+  async function leaveInline(){
+    try{const api=frame?.contentWindow?.sceneStyle;if(api?.context()?.jobId===jobId&&applied())await saveSnapshot(stashDraft());else stashDraft();}catch(error){status().textContent=error.message;}
+    inlineOpen=false;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initInline);else initInline();
   const timelineKey=context=>JSON.stringify(context.scenes.map(s=>[s.beat_idx,s.start,s.end,s.caption]));
   function showCanaryFallback(message){
     const panel=document.querySelector('.panel[data-step="3"]');
@@ -64,7 +98,7 @@
   }
   function stashDraft(){
     const api=frame?.contentWindow?.sceneStyle;
-    if(!dialog?.open||api?.context()?.jobId!==jobId)return null;
+    if(!editorOpen()||api?.context()?.jobId!==jobId)return null;
     const snapshot=api.snapshot();
     // baseText = 이 편집기를 열 때 서버가 준 제목 글(임시저장 병합 전). 복원할 때 여기서 달라진 칸만 '사용자가 고친 것'으로 본다.
     try{localStorage.setItem(draftKey(jobId),JSON.stringify({snapshot,timeline:timelineKey(packet.context),baseText:serverText||{}}));}catch(error){status().textContent='임시 저장 공간이 부족합니다. 저장하고 닫기를 눌러 주세요.';}
@@ -99,7 +133,7 @@
       // 닫기·ESC는 **적용한 적 있는 job만** 저장한다(위 applied() 주석과 같은 이유).
       if(api?.context()?.jobId===jobId&&applied())await saveSnapshot(stashDraft());
       else stashDraft();
-      dialog.close();
+      if(dialog?.open)dialog.close();
     }catch(error){status().textContent=error.message;frame.contentWindow.postMessage({type:'scene-style-saved',ok:false,error:error.message},location.origin);}
   }
   function remapSnapshot(snapshot,previous,next,changedBeat){
@@ -156,12 +190,22 @@
           //   열 때의 서버 글(baseText)과 다른 칸만 사용자 편집으로 본다. baseText가 없는 옛 임시저장본은 글을 되살리지 않는다.
           if(draft.snapshot){
             const base=draft.baseText,all=draft.snapshot.text||{};
-            draft.snapshot.text=base?Object.fromEntries(Object.entries(all).filter(([k,v])=>base[k]!==v)):{};
+            const edited=base?Object.fromEntries(Object.entries(all).filter(([k,v])=>base[k]!==v)):{};
+            // ★서버에 올릴 땐 **완전한 글**(서버 저장본 글 + 고친 칸)로 만든다 — 고친 칸만 담긴 조각을 올리면 서버가
+            //   "설정이 바뀌었다"고 보고 완성본을 무효화한다(2026-09-22 21:05 실측: 열기만 했는데 렌더가 사라짐, 3단계 재다운로드).
+            draft.snapshot.text={...((packet.snapshot&&packet.snapshot.text)||serverText||{}),...edited};
           }
+          const serverSnap=packet.snapshot;
           packet.snapshot=draft.snapshot;if(draft.snapshot)packet.context.text={...packet.context.text,...draft.snapshot.text};
-          if(applied())await saveSnapshot(draft.snapshot);
+          // ★서버 저장본과 실제로 다를 때만 올린다 — 같은데 올리면 저장 시각만 바뀌고 완성본이 무효화된다.
+          if(applied()&&!sameSnapshot(draft.snapshot,serverSnap))await saveSnapshot(draft.snapshot);
         }
       }catch(error){status().textContent='남겨둔 편집을 복원했습니다. 서버 저장은 다시 시도해 주세요.';}
+      if(inlineMode){
+        ensureInlineShell();const panel=stepPanel();panel.classList.add('scene-style-inline-active');
+        const note=document.getElementById('sceneStyleInlineStatus');if(note)note.textContent='';
+        frame.src='/api/produce/scene-style/assets/out/scene-style-ui-showcase.html?embedded=1';inlineOpen=true;status().textContent='';return;
+      }
       if(!dialog){
         dialog=document.createElement('dialog');Object.assign(dialog.style,{width:'98vw',maxWidth:'none',height:'96vh',maxHeight:'none',padding:'0',border:'1px solid #35505b',background:'#08151d',color:'white'});
         const bar=document.createElement('div');bar.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 18px';
@@ -178,7 +222,7 @@
     if(event.data?.type==='scene-style-ready')frame.contentWindow.postMessage({type:'scene-style-context',...packet},location.origin);
     // 09-22 편집기의 [이 장면을 썸네일 후보로]: 7단계를 이미 열어 봤으면 후보 목록을 바로 다시 그리고, [썸네일 단계로 이동]은 저장하고 닫은 뒤 7단계로 보낸다.
     if(event.data?.type==='scene-style-thumb-pinned'){if(typeof THUMB_STATE!=='undefined'&&THUMB_STATE.job===MIX_JOB&&typeof loadThumbFrames==='function')loadThumbFrames();return;}
-    if(event.data?.type==='scene-style-goto-thumb'){await saveAndClose();if(!dialog.open&&typeof stepGo==='function')stepGo('thumb');return;}
+    if(event.data?.type==='scene-style-goto-thumb'){await saveAndClose();if(!dialog?.open&&typeof stepGo==='function')stepGo('thumb');return;}
     if(event.data?.type==='scene-style-lines'){
       try{
         if(event.data.jobId!==jobId||jobId!==MIX_JOB)throw Error('편집 중인 영상이 바뀌었습니다. 다시 열어 주세요.');

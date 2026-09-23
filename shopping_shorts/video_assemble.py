@@ -821,10 +821,18 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     _cr = beat.get("cut_rhythm") or {}
     if _cr and not _bb.is_point_beat(beat):
         if _cr.get("hold") and segs:
-            segs = segs[:1]
+            # ★홀드 = "첫 조각을 **이어 튼다**"인데 조각의 end에서 잘려 정지가 됐다(2026-09-22 실측 job 956a6843cdd5:
+            #   3번 비트 7.1초에 s4 9.9~11.0 한 조각 → 나머지 6초를 10.9초 프레임 정지+슬로모+켄번즈 확대로 채움.
+            #   0·6번 비트도 같은 꼴. 미리보기(표식 전)는 정상, 최종 렌더(표식 후)만 멈춤). 이어 틀려면 조각 end를
+            #   소스 끝까지 열어야 한다 — 단 비트 길이만큼만(딴 장면까지 헤매지 않게).
+            first = dict(segs[0])
+            src_total = float(src_durs.get(first.get("video_id"), 0.0) or 0.0)
+            first["end"] = max(float(first.get("end") or 0.0), min(src_total, float(first.get("start") or 0.0) + float(tts_dur) + 0.5))
+            segs = [first]
             beat_src_durs = {s["video_id"]: src_durs[s["video_id"]] for s in segs}
-            _max_shot = None
+            _max_shot = 5.0
         else:
+            segs = segs[:4]
             try:
                 _max_shot = float(_cr.get("max_shot") or 4.0)
             except (TypeError, ValueError):
@@ -883,7 +891,7 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
                 plan, segs, runout, plan[-1].get("playback_speed", 1.0))
         return plan
     _phrase_plan = None
-    if beat.get("phrase_sync"):          # 구절맞춤 켬 = 구절이 ✋보다 우선(화면과 같은 규칙)
+    if beat.get("phrase_sync") and not _cr:   # 구절맞춤 켬 = 구절이 ✋보다 우선(화면과 같은 규칙). 컷 리듬 칸은 홀드가 우선
         _phrase_plan = _plan_phrase_clips(beat, segs, tts_dur)
     if _phrase_plan:
         plan = _phrase_plan

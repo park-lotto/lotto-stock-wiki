@@ -1138,14 +1138,27 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
     whole_all = [s for s in all_sub if _looks_whole(s) and not _is_person(s) and seg_index[s]["secs"] >= MIN_CUT_SECS]
     reserved = whole_all[:max(0, n_struct * MIN_CUTS_PER_LINE)]   # 줄당 2컷 규칙만큼(실측: 5컷은 3줄에서 동났다, job bb5c64454fd7)
 
-    def _structural_pool():
+    def _is_problem(s):
+        """1단계 태그 역할이 '문제/before' = 불편·기존 방식 장면. 공개("이건 바로 X")·훅·마무리에 붙으면 딴 그림이다
+        (2026-09-22 사장님 화면: 공개 줄에 '일회용 청소포 뽑는 모습'). 설명문 낱말(_looks_whole)이 하나도 안 걸리는
+        재료에선 종전 순서가 '남은 아무 컷'으로 떨어져 문제 컷이 갔다 — 태그로 가른다."""
+        return str(seg_index[s].get("role") or "") in ("문제", "before")
+
+    def _structural_pool(line_role=""):
         """특징 줄이 다 가져간 **뒤**에 부른다. ① 특징 묶음에서 남은 컷(=제품 컷) ② 묶음 밖 '전체' 컷
         ③ 묶음 밖 나머지 ④ 사람·댓글 컷은 맨 뒤. 실측(job bba6caa3ee81): 묶음 밖 컷은 곧 찌꺼기
-        (남의 채널 CTA 자막·얼굴)라 정체·떼돈 줄이 전부 그걸 받았다."""
+        (남의 채널 CTA 자막·얼굴)라 정체·떼돈 줄이 전부 그걸 받았다.
+        ★역할로 가른다(2026-09-22): 미끼(불편·기존 방식 자리)는 문제/before 컷을 **먼저**, 그 밖의 구조 줄(훅·공개·마무리)은
+          문제/before 컷을 **맨 뒤**(사람 컷 바로 앞)로. 히트작 훅·공개는 제품이 보이는 컷이다."""
         left = [s for s in all_sub if s in in_group and s not in used and s not in reserved]
         rest = [s for s in free if not _is_person(s) and s not in reserved]
-        return (list(reserved) + [s for s in rest if _looks_whole(s)] + left + [s for s in rest if not _looks_whole(s)]
-                + [s for s in free if _is_person(s)])
+        prob = [s for s in rest + left if _is_problem(s)]
+        rest = [s for s in rest if not _is_problem(s)]
+        left = [s for s in left if not _is_problem(s)]
+        base = (list(reserved) + [s for s in rest if _looks_whole(s)] + left + [s for s in rest if not _looks_whole(s)])
+        if str(line_role or "").startswith("미끼"):
+            return prob + base + [s for s in free if _is_person(s)]
+        return base + prob + [s for s in free if _is_person(s)]
     beat_sources, report = [None] * len(lines), [None] * len(lines)
     feature_first = sorted(range(len(lines)), key=lambda i: 0 if 0 <= (lines[i].get("group") if lines[i].get("group") is not None else -1) < len(groups_out["groups"]) else 1)
     for li in feature_first:
@@ -1155,8 +1168,12 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
         if gi is not None and 0 <= gi < len(groups_out["groups"]):
             gc = list(groups_out["groups"][gi].get("cuts") or [])
             sids = [c for c in gc if c not in reserved] + [c for c in gc if c in reserved]
+            # ★고조 칸 안에서도 갈린다(2026-09-22 사장님 "일반 걸레로 하는 장면이 많은데 왜 안 됐지"): 순간·지옥 줄(불편)은
+            #   문제/before 컷을 **먼저**, 없애버림 줄만 특징 컷. 종전엔 세 줄이 전부 특징(요철 클로즈업) 컷을 받았다.
+            if str(L.get("sub") or "") in ("moment", "what_happens", "before"):
+                sids = [s for s in all_sub if _is_problem(s) and s not in used] + sids
         else:
-            sids = _structural_pool()
+            sids = _structural_pool(L.get("role"))
         picked, have = _fill(sids, need)
         # ★모자라면 서브에서 보충 — 짧은 컷(<MIN_CUT_SECS)을 거르고 나면 그룹 컷만으론 부족할 때가 있다
         #   (실측 1회차: 펜촉 줄 화면 2.6s < 대사 4.9s). 안 채우면 3단계 채우기가 대본 안 보고 메운다.

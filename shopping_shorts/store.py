@@ -151,6 +151,16 @@ def _ensure_screen_time(plan, store, job_id):
         if not beats:
             return plan
         job = store.get_mix_job(job_id) or {}
+        # ★줄=칸=지목컷 불변식(2026-09-22 사장님 "안 되는 거 막지 말고 될 수밖에 없는 걸"): 2단계 이야기 작가가 만든
+        #   계획(generator=inherit)은 만들 때 이미 8줄=8칸=지목 컷 8개로 맞다. 그런데 이 관문이 저장마다 ②창작 되돌림
+        #   ③순서 재배분 ④화면 채우기를 다시 돌려 훅+미끼가 한 칸에 뭉치고(실측 job e8984a5c99fb) 조각이 4~7개로
+        #   되살아났다. 컷 리듬 스위치가 켜진 계정은 관문을 **지나지 않는다** — 고객 경로는 종전 그대로.
+        try:
+            from shopping_shorts.mix_pipeline import _cut_rhythm_on as _cr_on
+            if (plan or {}).get("generator") == "inherit" and _cr_on(store, job):
+                return plan
+        except Exception:      # noqa: BLE001 — 판정 실패는 종전 관문 그대로
+            pass
         extract = job.get("extract") or {}
         if not extract:
             return plan

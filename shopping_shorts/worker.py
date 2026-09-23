@@ -36,7 +36,8 @@ TASKS = {
     "mix":      lambda a: mix_pipeline.run_mix_job(a["job_id"], DB_PATH, _MIX_WORK_DIR),
     "retype":   lambda a: mix_pipeline.retype_mix_job(a["job_id"], a["video_type"],
                                                       DB_PATH, _MIX_WORK_DIR),
-    "render":   lambda a: mix_pipeline.run_render(a["job_id"], DB_PATH, _MIX_WORK_DIR),
+    "render":   lambda a: mix_pipeline.run_render(a["job_id"], DB_PATH, _MIX_WORK_DIR,
+                                                  skip_clean=bool(a.get("skip_clean"))),
     "preview":  lambda a: mix_pipeline.run_preview(a["job_id"], DB_PATH, _MIX_WORK_DIR),
     "clean":    lambda a: mix_pipeline.run_clean_sources(a["job_id"], DB_PATH, _MIX_WORK_DIR),
     # AI 장면 생성(Veo, 2026-09-23) — 관리자 스위치 ai_scene_enabled 뒤. 실패는 beat.ai_scene.state로 남는다.

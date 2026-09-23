@@ -29,6 +29,12 @@ def test_hold는_첫_조각_하나로_문장_전체를_이어_튼다():
     assert len(plan) == 1 and plan[0]["video_id"] == "v1"
     assert abs(sum(c["out_dur"] for c in plan) - 4.5) < 0.05
     assert plan[0]["src_dur"] >= 4.0        # 조각(1.5초)을 넘어 원본을 실프레임으로 이어 튼다
+    # 긴 대사도 첫 조각의 소스 하나로 비트 끝까지 이어 튼다(main 30d0c5ed2, job 956a 정지 재현·tools/check_cut_rhythm_hold.py).
+    #   회사 09-22 트랙(370508332)의 "5초 홀드 + 두 번째 컷"은 조각이 하나뿐이면 5초 뒤 정지가 재발해 병합 때 접었다(09-23).
+    long = va.plan_beat_clips_for(beat, tts_dur=9.0, src_durs={"v1": 30.0, "v2": 30.0, "v3": 30.0})
+    assert all(c["video_id"] == "v1" for c in long)
+    assert abs(sum(c["out_dur"] for c in long) - 9.0) < 0.05
+    assert sum(c.get("src_dur", 0) for c in long) > 8.5      # 실프레임으로 채운다(정지·늘리기 없음)
 
 
 def test_hold_아니면_상한_4초로_컷이_줄어든다():
@@ -62,6 +68,7 @@ def test_편성단계_조각줄이기_홀드는_primary만_나머지는_2개():
         {"beat_idx": 1, "narration": "…없애 버렸다는 거", "primary": _seg("v1", 2, 3), "alternates": [_seg("v2", 2, 3)]},
         {"beat_idx": 2, "narration": "바쁜 아침에 덜어내다가", "primary": _seg("v1", 4, 5), "alternates": [_seg("v2", 4, 5), _seg("v3", 4, 5), _seg("v4", 4, 5)]},
     ]}
+    plan["beats"][2]["target_seconds"] = 9.0          # 9초 줄 → 4컷(예비 3개, 상한 4)
     assert mp._trim_for_cut_rhythm(plan) == 3
-    assert [len(b["alternates"]) for b in plan["beats"]] == [0, 0, 1]
+    assert [len(b["alternates"]) for b in plan["beats"]] == [0, 0, 3]
     assert [b["cut_rhythm"]["hold"] for b in plan["beats"]] == [True, True, False]

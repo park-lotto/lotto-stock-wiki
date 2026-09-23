@@ -96,3 +96,32 @@ def test_run_render_passes_clean_fn_none_with_base(tmp_path, monkeypatch):
     assert store.job.get("status") == "done", store.job.get("error")
     # DB에 저장된 편성표는 파생 사본이 아니다
     assert all("clean_base" not in (u.get("edit_plan") or {}) for u in store.updates)
+
+
+def test_run_render_skip_clean_never_calls_vendor(tmp_path, monkeypatch):
+    """사장님 '자막제거 없이 그냥 렌더': 바뀐 장면이 있어도 증분 청소·VMake 0, 원본 재료로 조립, done."""
+    work = tmp_path / "j"
+    job = _setup(work)
+    job["edit_plan"]["beats"][0]["scene_override"] = [{"video_id": "s0", "seg_id": "s0-9", "start": 20.0, "end": 22.0}]
+    store = _Store(job)
+    monkeypatch.setattr(mp, "Store", lambda db: store)
+    monkeypatch.setattr(mp, "_job_customer_id", lambda db, jid: 0)
+    monkeypatch.setattr(mp, "_synthesize_beats", lambda *a, **k: None)
+    monkeypatch.setattr(mp.pron_corrections, "load", lambda s: {})
+    monkeypatch.setattr(mp, "_vmake_keys", lambda s, c: ["k"])
+    monkeypatch.setattr(mp, "_vmake_clean", lambda *a, **k: pytest.fail("VMake가 불렸다"))
+    monkeypatch.setattr(mp, "incremental_clean", lambda *a, **k: pytest.fail("증분 청소가 불렸다"))
+    for name in ("resolve_deco_media", "_resolve_cutaway_paths", "_resolve_sfx_paths"):
+        monkeypatch.setattr(mp, name, lambda *a, **k: {})
+    monkeypatch.setattr(mp, "_template_layer", lambda *a, **k: None)
+    monkeypatch.setattr(mp, "_scene_mask_layers", lambda *a, **k: [])
+    monkeypatch.setattr(mp, "ensure_faststart", lambda p: None)
+    got = {}
+    def _assemble(plan, tts, paths, out, clean_fn=None, **kw):
+        got["clean_fn"] = clean_fn; got["paths"] = paths; got["plan"] = plan
+        Path(out).write_bytes(b"f" * 4096); return out
+    monkeypatch.setattr(mp, "assemble", _assemble)
+    mp.run_render("j", "db", tmp_path, skip_clean=True)
+    assert got["clean_fn"] is None and "s0" in got["paths"] and "clean" in got["paths"]
+    assert got["plan"]["beats"][0]["scene_override"][0]["video_id"] == "s0"
+    assert store.job.get("status") == "done", store.job.get("error")

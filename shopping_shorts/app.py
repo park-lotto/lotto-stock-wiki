@@ -2874,19 +2874,20 @@ def api_extract_script(request: Request, shortcode: str):
             video_path = _download_item_video(item, work_dir)
         except (requests.RequestException, RuntimeError) as e:
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-            return JSONResponse(status_code=502, content={"ok": False, "error": f"영상 다운로드 실패(URL 만료 가능) — 재수집 필요: {msg}"})
+            return _extract_fail(502, f"영상 다운로드 실패(URL 만료 가능) — 재수집 필요: {msg}", cid, code, "download", e)
         except Exception as e:
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-            return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+            return _extract_fail(500, msg, cid, code, "download", e)
 
         try:
             result = extract_auto(video_path, code, caption=item.get("caption", ""))
         except Exception as e:
             msg = re.sub(r"(token=|Bearer\s+)[^\s&\"']+", r"\1***", str(e))
-            return JSONResponse(status_code=500, content={"ok": False, "error": msg})
+            return _extract_fail(500, msg, cid, code, "extract", e)
 
         if not result.get("full_text") and not result.get("segments"):
-            return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패(Gemini 키 소진 또는 영상 인식 실패) — 잠시 후 재시도"})
+            return _extract_fail(502, "대본 추출 실패(Gemini 키 소진 또는 영상 인식 실패) — 잠시 후 재시도",
+                                 cid, code, "empty", None)
 
         store.save_script(code, result, category=item.get("category"), method=current_method())
         ok = True
@@ -2895,6 +2896,16 @@ def api_extract_script(request: Request, shortcode: str):
         if not ok:
             refund_credit(cid, "script")   # 실패·미달 → 크레딧 되돌림(전역 하드캡이 재시도 남용을 캡)
             _refund_points(cid, pricing.OP_SCRIPT, keyroute.SVC_GEMINI)
+
+
+def _extract_fail(status, msg, cid, code, stage, exc):
+    """대본 추출 실패 응답 + **서버 로그 한 줄**(2026-09-22).
+
+    ★예전엔 이유를 고객 화면에만 보내고 로그엔 안 남겼다 — 배승훈님 500 두 건(16:16·16:27)의
+      원인을 나중에 알 수 없었다. 누가(cid)·무엇(code)·어느 단계(stage)·무슨 오류인지 남긴다."""
+    print(f"[extract_fail] status={status} cid={cid} code={code} stage={stage} "
+          f"exc={type(exc).__name__ if exc else '-'} msg={str(msg)[:300]}", file=sys.stderr)
+    return JSONResponse(status_code=status, content={"ok": False, "error": msg})
 
 
 def _backfill_extract_structure(db_path, shortcode, full_text):
@@ -7184,7 +7195,11 @@ def api_mix_render(request: Request, background_tasks: BackgroundTasks, body: di
     #   다시 받아 "전후 영상이 둘 다 있다 · 영상이 달라졌다"가 됐다(고객 박세현 제보).
     #   비워두면 완성본 카드·다운로드·QR이 전부 자동으로 사라진다 — 막는 판단이 한 곳이다.
     store.update_mix_job(job_id, status="rendering", error=None, video_path="")
-    Store(DB_PATH).enqueue("render", {"job_id": job_id})
+    # ★자막제거 없이 렌더(2026-09-22 사장님): 바뀐 장면을 다시 지우지 않고 그냥 만든다 — 그 장면엔 원본 자막이 남을 수 있다.
+    _args = {"job_id": job_id}
+    if body.get("skip_clean"):
+        _args["skip_clean"] = True
+    Store(DB_PATH).enqueue("render", _args)
     return {"ok": True, "status": "rendering"}
 
 
@@ -15092,7 +15107,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 자막제거 정본(2026-09-22) — 4단계 청소본을 정본으로, 꾸미기 뒤 재청소 없음. 값 규약 같음
                        "clean_base_enabled",
                        # AI 장면 생성(Veo, 2026-09-23) — 기본 admin(사장님만). 고객은 사장님 판정 뒤 "1"
-                       "ai_scene_enabled"}
+                       "ai_scene_enabled",
+                       # 장면꾸미기 새 편집기를 6단계 화면에 바로(2026-09-23, 사장님: 유튜브 라이브 뒤 구버전→신버전 교체) — ""끔 · "admin" · "1" 전체
+                       "scene_style_inline_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -19841,6 +19858,14 @@ def _scene_style_lab_owned_job(store, request, job_id):
     if not job or int(job.get("customer_id") or 0) != _cid(request):
         return None
     return job
+
+
+@app.get("/api/produce/scene-style/flags")
+def api_scene_style_flags(request: Request):
+    """6단계 장면꾸미기 화면 모드. inline=True면 제작소가 새 편집기(scene-style-ui-showcase)를 회색 버튼 팝업 대신
+    6단계 패널 안에 바로 띄우고 구버전 UI(완성 스타일·직접 다듬기)를 숨긴다. 관리자 스위치 scene_style_inline_enabled
+    (2026-09-23 사장님: 라이브 방송 뒤 바로 교체할 수 있게 스위치만 올리면 되도록 기본 세팅). 기본 끔 = 종전 화면 그대로."""
+    return {"ok": True, "inline": bool(_setting_gate(Store(DB_PATH), "scene_style_inline_enabled", _cid(request)))}
 
 
 @app.get("/api/admin/scene-style-lab/jobs")

@@ -1830,15 +1830,20 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
     # 틈을 렌더가 프리즈/슬로우로 때워왔다(두더지잡기의 뿌리). 실 tts_dur보다 화면이 짧은
     # 비트만 같은 소스 우선 B롤로 더 채운다 → 렌더가 정지 대신 실영상으로 채운다.
-    _refill_beats_to_tts(plan["beats"], source_scripts, work / "tts")
+    _rhythm = _cut_rhythm_on(store, {"customer_id": customer_id})
+    if _rhythm:
+        print("[mix] 컷 리듬: 재채우기·콘폼 건너뜀 — 줄=칸=지목컷, 화면은 원본을 이어 튼다", file=sys.stderr)
+    else:
+        _refill_beats_to_tts(plan["beats"], source_scripts, work / "tts")
 
     # 4.5) 싱크 콘폼(2026-07-20) — 대사가 영상 예산을 넘는 비트만 압축 리라이트 + 그 비트 재TTS.
     # 저장(아래) 전에 돌므로 preview·final 렌더 모두 자동 적용. 실패해도 job을 죽이지 않는다.
     try:
         # ★customer_id를 반드시 넘긴다(2026-09-02). 안 넘기면 cid 0으로 떨어져
         #   **회원의 재합성이 사장님 키로** 나간다 — 막으려던 누수가 이 경로로 되살아난다.
-        _conform_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
-                       customer_id=customer_id)
+        if not _rhythm:
+            _conform_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
+                           customer_id=customer_id)
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
@@ -2970,10 +2975,19 @@ def _trim_for_cut_rhythm(plan):
     beats = (plan or {}).get("beats") or []
     for i, b in enumerate(beats):
         narr = (b.get("narration") or "").strip()
-        hold = (i == 0) or bool(_HOLD_END.search(narr))
+        role = str(b.get("role") or "")
+        # 미끼는 히트작에서 빠른 몽타주 자리(이븐쇼핑 0.6~1.5초 5컷) — "…났다는 거"로 끝나도 홀드하지 않는다
+        hold = (i == 0) or (bool(_HOLD_END.search(narr)) and not role.startswith("미끼"))
         alts = list(b.get("alternates") or [])
-        b["alternates"] = [] if hold else alts[:1]
-        b["cut_rhythm"] = {"max_shot": 4.0, "hold": hold}
+        # 컷 수는 줄 길이로(히트작 11편 컷 중앙 1.9초 → 약 2.5초에 한 컷): 3초 이하 1컷 · 6초 2컷 · 9초 3컷 · 최대 4컷.
+        #   홀드 줄은 5초 홀드 뒤 한 컷만 더. (2026-09-22 사장님 "9초 줄인데 2개만 쓴 건가" — 2개 고정이 무뎠다)
+        try:
+            secs = float(b.get("target_seconds") or 0.0)
+        except (TypeError, ValueError):
+            secs = 0.0
+        want = 1 if hold and secs <= 5.0 else (2 if hold else max(1, min(4, int(round(secs / 2.5)))))
+        b["alternates"] = alts[:max(0, want - 1)]
+        b["cut_rhythm"] = {"max_shot": (5.0 if hold else max(2.0, min(4.0, secs / want if want else 4.0))), "hold": hold}
         n += 1
     return n
 
@@ -2988,7 +3002,8 @@ def _apply_cut_rhythm(plan, store, job):
     beats = (plan or {}).get("beats") or []
     for i, b in enumerate(beats):
         narr = (b.get("narration") or "").strip()
-        hold = (i == 0) or bool(_HOLD_END.search(narr))
+        role = str(b.get("role") or "")
+        hold = (i == 0) or (bool(_HOLD_END.search(narr)) and not role.startswith("미끼"))
         b["cut_rhythm"] = {"max_shot": 4.0, "hold": hold}
         n += 1
     print(f"[cut_rhythm] 비트 {n}개에 표식 — hold {sum(1 for b in beats if (b.get('cut_rhythm') or {}).get('hold'))}개", file=sys.stderr)
@@ -4036,7 +4051,7 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
 
 
 @_owned_job
-def run_render(job_id, db_path, work_root):
+def run_render(job_id, db_path, work_root, skip_clean=False):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
     store = Store(db_path)
@@ -4061,15 +4076,19 @@ def run_render(job_id, db_path, work_root):
         # ★청소본 정본(2026-09-22): 스위치가 켜져 있고 4단계 정본이 있으면 청소본을 소스로 조립한다
         #   (VMake 0회, 바뀐 장면만 증분). 아니면 종전 그대로 원본 소스 + 아래 청소 분기.
         keys = _vmake_keys(store, job.get("customer_id") or 0) if job.get("subtitle_removal") else []
+        # skip_clean(2026-09-22): 사장님이 "자막제거 없이 그냥 렌더"를 고른 경우 — 바뀐 장면은 원본 재료 그대로,
+        #   업체 호출 0. 정본이 없는 job이면 아래 청소 분기도 건너뛴다(원본 자막이 남는 것을 알고 고른 것).
+        if skip_clean:
+            print("[render] skip_clean — 자막제거 없이 렌더", file=sys.stderr)
         plan_used, source_video_paths, _base = render_inputs_for(
-            store, job, job_id, work, keys, job.get("customer_id") or 0)
+            store, job, job_id, work, keys, job.get("customer_id") or 0, allow_clean=not skip_clean)
         if _base is not None:
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
 
         # 자막제거: 소스 원본을 미리(2단계) 또는 여기서(버튼 미사용 시) 청소해 그 소스로 조립한다.
         # mix_raw 위 clean_fn(구방식)은 폐기 — 소스단위여야 TTS/컷과 무관하게 캐시가 성립한다.
         final_clean_fn = None
-        if job.get("subtitle_removal") and _base is None:
+        if job.get("subtitle_removal") and _base is None and not skip_clean:
             # ★2단계 버튼을 안 거치고 바로 렌더로 오는 경로도 VMake를 탄다 — 여기도 과금해야
             #   구멍이 안 남는다(2단계에서 이미 청소됐으면 todo가 비어 자동으로 0원).
             customer_id = job.get("customer_id") or 0
