@@ -4,7 +4,7 @@
 임시 DB에 썰 대본(발명품형) job과 사회증거형 job을 만들고, 로그인 게이트만 끈 실제 앱을 띄워
 헤드리스 크롬으로 produce.html 3단계를 연다.
   ① 썰 job → 스위치가 보이고 켜져 있다   ② 누르면 DB deco.sfx_pack='off'로 저장
-  ③ 새로고침해도 꺼진 채 유지             ④ 사회증거형 job → 스위치가 안 보인다
+  ③ 새로고침해도 꺼진 채 유지             ④ 사회증거형 job → 스위치는 보이되 꺼져 있고, 켜면 저장된다
 사용: py tools/sfx_bench/ui_check.py [--shot 폴더]
 """
 import argparse, os, sys, tempfile, threading, time
@@ -25,6 +25,8 @@ soc = st.add_spine("사회증거형", fit_categories=["기타", "사회증거형
 st.set_setting("sfx_pack_enabled", "1")
 for jid, sp in (("jsul0001", sul), ("jsoc0001", soc)):
     st.create_mix_job(jid, ["https://x/1"], 25, "free", customer_id=0, script_structure={"script_style_id": sp})
+    roles = ["훅", "미끼", "공개", "고조1", "반전", "마무리"] if jid == "jsul0001" else ["situation", "notice", "ask", "method", "result"]
+    st.update_mix_job(jid, edit_plan={"beats": [{"beat_idx": i, "role": r, "narration": "줄"} for i, r in enumerate(roles)]})
 A.DB_PATH = str(db); A._AUTH_ON = False
 import uvicorn                                    # noqa: E402
 PORT = 8793
@@ -53,7 +55,10 @@ with sync_playwright() as p:
     check(pg.is_checked("#sfxPackToggle"), "처음엔 켜져 있다")
     pg.screenshot(path=str(Path(a.shot) / "sfx_toggle_on.png"), clip=pg.locator("#sfxPackBar").bounding_box() or None)
     print("② 눌러서 끄기")
+    Store(str(db)).update_mix_job("jsul0001", preview_status="ready")     # 이미 완성본이 있는 상태로
     pg.click("#sfxPackToggle"); time.sleep(1.2)
+    check(not Store(str(db)).get_mix_job("jsul0001").get("preview_status"),
+          "스위치를 바꾸면 기존 미리보기도 버려진다(완성본 만들기가 새로 만든다)")
     check(Store(str(db)).get_mix_job("jsul0001")["deco"].get("sfx_pack") == "off", "DB에 deco.sfx_pack='off' 저장")
     check("껐어요" in pg.inner_text("#sfxPackInfo"), "안내 문구가 '껐어요'로 바뀜")
     print("③ 새로고침 후")
@@ -62,10 +67,14 @@ with sync_playwright() as p:
     pg.screenshot(path=str(Path(a.shot) / "sfx_toggle_off.png"), clip=pg.locator("#sfxPackBar").bounding_box() or None)
     pg.click("#sfxPackToggle"); time.sleep(1.2)
     check(Store(str(db)).get_mix_job("jsul0001")["deco"].get("sfx_pack") == "auto", "다시 켜면 'auto' 저장")
-    print("④ 사회증거형 job")
+    print("④ 사회증거형 job — 보이되 기본 꺼짐, 켜면 들어간다")
     open_job("jsoc0001")
     vis2 = pg.evaluate("() => { const b=document.getElementById('sfxPackBar'); return getComputedStyle(b).display!=='none'; }")
-    check(not vis2, "스위치가 안 보인다")
+    check(vis2, "스위치가 보인다")
+    check(not pg.is_checked("#sfxPackToggle"), "기본은 꺼짐")
+    check("체크하면" in pg.inner_text("#sfxPackInfo"), "안내 문구가 켜보라고 안내")
+    pg.click("#sfxPackToggle"); time.sleep(1.2)
+    check(Store(str(db)).get_mix_job("jsoc0001")["deco"].get("sfx_pack") == "auto", "켜면 저장된다")
     check(not errs, f"페이지 오류 없음 {errs[:2]}")
     b.close()
 print("결과:", "통과" if ok else "실패")

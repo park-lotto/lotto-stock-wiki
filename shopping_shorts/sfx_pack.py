@@ -13,7 +13,8 @@
   그 뒤 **칸(장면)마다 2발**, 첫 자막 줄과 가운데 줄에 — 소리는 **그 칸의 역할**이 정한다(ROLE_GROUPS → GROUP_SOUNDS).
 
 회원마다 팩 하나를 고정 배정한다(20종, 두 팩 사이 7칸 중 최소 4칸 다름) — 회원끼리 소리가 달라진다.
-켜는 조건: 관리자 설정 sfx_pack_enabled("1"=전 회원 · "admin"=사장님 계정만) **그리고** 2단계에서 **썰 대본**(오용형·제품정체형·발명품형 틀)을 고른 영상.
+켜는 조건: 관리자 설정 sfx_pack_enabled("1"=전 회원 · "admin"=사장님 계정만) + 영상별 스위치(deco.sfx_pack).
+  스위치를 손댄 적 없으면 **기본값**만 대본으로 정한다(썰 구조=켜짐 / 아니면 꺼짐) — 사람이 켜면 어떤 대본이든 들어간다.
   ★채널 틀로 판정하지 않는다(2026-09-22 사장님 "썰대본을 골랐을경우만"). 라이브 최근 400건 실측:
     썰 틀 262건 중 썰 대본은 28건뿐 — 틀 기준이면 234건에 잘못 켜지고 틀 없는 썰 대본 5건은 빠졌다.
 """
@@ -195,11 +196,35 @@ def script_family(store, job):
     return list((sp or {}).get("fit_categories") or [])
 
 
+ROLE_MATCH_MIN = 0.8      # 칸 역할이 이만큼 썰 구조면 썰 대본으로 본다
+
+
+def looks_sul_by_roles(job):
+    """칸 역할이 썰 구조인가 — 틀 번호가 없는 대본(직접 쓰기·씨앗 기반)을 위한 판정.
+
+    ★2026-09-23 사장님 제보("대본 새로 뽑았는데 스위치가 없다"): 2단계 틀 목록으로 고르지 않은 대본은
+      script_style_id가 없어 갈래를 모른다. 그런데 그런 job도 칸 역할은 훅·미끼·공개·고조·반전·마무리
+      (=썰 틀 그대로)였다. 효과음이 어차피 이 역할을 보고 들어가니 판정도 같은 근거를 쓴다.
+      라이브 300건 실측: 썰 갈래 27건은 전부 역할 일치 80%+ · 갈래 없는 80%+ 15건은 확인해 보니 전부
+      썰 대본("천재가 만들어 떼돈"…) · 나머지 254건은 80% 미만(인스타·후기 등)이라 갈리는 선이 뚜렷하다.
+    """
+    beats = ((job or {}).get("edit_plan") or {}).get("beats") or []
+    if len(beats) < 4:
+        return False
+    roles = [re.sub(r"\d+$", "", str(b.get("role") or "").strip().lower()) for b in beats[1:]]
+    if not roles:
+        return False
+    known = {r for rs in ROLE_GROUPS.values() for r in rs}
+    return sum(r in known for r in roles) / len(roles) >= ROLE_MATCH_MIN
+
+
 def is_sul_script(store, job):
-    """썰 대본(오용형·제품정체형·발명품형)을 골랐나 — 판정은 script_genre.is_context 한 벌."""
+    """썰 대본인가 — ①고른 틀의 갈래(오용형·제품정체형·발명품형) 또는 ②칸 역할이 썰 구조."""
     from shopping_shorts import script_genre
     fam = script_family(store, job)
-    return script_genre.is_context("", [{"fit_categories": fam}], script_genre.YOUTUBE_SUL_FAMILY)
+    if script_genre.is_context("", [{"fit_categories": fam}], script_genre.YOUTUBE_SUL_FAMILY):
+        return True
+    return looks_sul_by_roles(job)
 
 
 def resolve(store, job):
@@ -207,7 +232,7 @@ def resolve(store, job):
     if not job:
         return None
     deco = job.get("deco") or {}
-    choice = deco.get("sfx_pack") if isinstance(deco, dict) else None
+    choice = str(deco.get("sfx_pack") or "") if isinstance(deco, dict) else ""
     if choice == "off":
         return None
     # 관리자 스위치 — ""=끔 · "admin"=사장님(cid 0) 영상에서만(시험용) · "1"=전 회원.
@@ -220,7 +245,10 @@ def resolve(store, job):
         return None
     if mode == "admin" and int(job.get("customer_id") or 0) != 0:
         return None
-    if not is_sul_script(store, job):
+    # ★스위치가 최종 결정이다(2026-09-23 사장님 "하고 싶은 사람은 체크하고 완성본 만들면 되잖아").
+    #   사람이 켠 적 없으면(choice 비어 있음) **기본값만** 대본으로 정한다 — 썰 구조면 켜짐, 아니면 꺼짐.
+    #   판정이 애매한 대본(틀 번호 없음 등)도 화면에서 켜면 그대로 들어간다.
+    if not choice and not is_sul_script(store, job):
         return None
     got = pack_for(job.get("customer_id", 0), override=choice)
     return {"name": got[0], "dir": got[1]} if got else None

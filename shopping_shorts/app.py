@@ -19818,10 +19818,12 @@ def api_produce_mix_settings(body: dict):
         #   저장할 때 이 값을 모르고 보내면 조용히 지워져 "껐는데 다시 켜짐"이 된다 → 없으면 기존 값 유지.
         if isinstance(fields["deco"], dict) and "sfx_pack" not in fields["deco"]                 and (job.get("deco") or {}).get("sfx_pack"):
             fields["deco"]["sfx_pack"] = job["deco"]["sfx_pack"]
+    sfx_switched = False
     if "sfx_pack" in body:
         # 3단계 [🔊 썰 효과음 자동 넣기] 스위치(2026-09-22). 기존 꾸미기 값에 이 칸만 합친다.
-        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}),
-                          "sfx_pack": "off" if body.get("sfx_pack") in ("off", False, 0, "0") else "auto"}
+        _new = "off" if body.get("sfx_pack") in ("off", False, 0, "0") else "auto"
+        sfx_switched = _new != str((job.get("deco") or {}).get("sfx_pack") or "")
+        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), "sfx_pack": _new}
     if "scene_style" in body:
         from .scene_style import validate_snapshot
         try:
@@ -19835,6 +19837,12 @@ def api_produce_mix_settings(body: dict):
         fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
         _save_render_inputs(store, job_id, **fields)
+    if sfx_switched:
+        # ★효과음을 켜고 끄면 **이미 만든 미리보기(완성본 만들기 탭)도 버린다**(2026-09-23 사장님 제보
+        #   "완성본 만들기를 다시 눌러도 렌더가 다시 안 된다"). _save_render_inputs는 video_path만 끊고
+        #   preview_status는 그대로라, 3단계는 "이미 있다"며 새로 만들지 않았다. 파일은 안 지운다 —
+        #   run_preview가 덮어쓰고, 상태가 비었으면 화면·API가 옛 파일을 안 쓴다(api_mix_preview_video).
+        store.update_mix_job(job_id, preview_status="", preview_error=None)
     return {"ok": True}
 
 
@@ -19850,9 +19858,10 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
     _mode = str(store.get_setting("sfx_pack_enabled", "") or "").strip().lower()
     switch_on = _mode in ("1", "on") or (_mode == "admin" and int(job.get("customer_id") or 0) == 0)
     sul = sfx_pack.is_sul_script(store, job)
-    on = ((job.get("deco") or {}).get("sfx_pack") or "auto") != "off"
-    got = sfx_pack.pack_for(job.get("customer_id", 0)) if (switch_on and sul) else None
-    return {"ok": True, "eligible": bool(switch_on and sul), "on": on,
+    choice = str((job.get("deco") or {}).get("sfx_pack") or "")
+    on = (choice != "off") if choice else sul      # 손댄 적 없으면 기본값 = 썰 대본인가
+    got = sfx_pack.pack_for(job.get("customer_id", 0)) if switch_on else None
+    return {"ok": True, "eligible": bool(switch_on), "sul": sul, "on": on,
             "pack": got[0] if got else None, "family": sfx_pack.script_family(store, job)}
 
 

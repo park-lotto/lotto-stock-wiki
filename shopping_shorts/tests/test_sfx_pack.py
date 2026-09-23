@@ -82,6 +82,30 @@ def test_style_id_saved_on_job_survives_deleted_work():
     assert sfx_pack.resolve(_Store(style=70), job12) is None             # job 번호가 우선(사회증거형=끔)
 
 
+def test_roles_alone_can_say_sul():
+    """틀 번호가 없는 대본도 칸 역할이 썰 구조면 켜진다(2026-09-23 라이브 job 93ea9d2639e6)."""
+    sul_plan = {"beats": [{"role": r} for r in ["훅", "미끼", "공개", "고조1", "고조1", "반전", "마무리"]]}
+    other = {"beats": [{"role": r} for r in ["situation", "notice", "ask", "method", "result", "regret"]]}
+    assert sfx_pack.looks_sul_by_roles({"edit_plan": sul_plan})
+    assert not sfx_pack.looks_sul_by_roles({"edit_plan": other})
+    assert not sfx_pack.looks_sul_by_roles({"edit_plan": {"beats": [{"role": "훅"}]}})     # 너무 짧음
+    job = {"job_id": "jr", "customer_id": 0, "deco": {}, "edit_plan": sul_plan}
+    assert sfx_pack.resolve(_Store(style=None), job)          # 제작 기록·틀 없어도 켜짐
+
+
+def test_switch_decides_even_for_other_scripts():
+    """2026-09-23 사장님: 대본 종류와 무관하게 **체크하면 들어간다**. 기본값만 대본으로 정한다."""
+    other = {"beats": [{"role": r} for r in ["situation", "notice", "ask", "method", "result"]]}
+    job = {"job_id": "jo", "customer_id": 7, "deco": {}, "edit_plan": other}
+    assert sfx_pack.resolve(_Store(style=12), job) is None                       # 기본값 = 꺼짐
+    on_job = {**job, "deco": {"sfx_pack": "auto"}}
+    assert sfx_pack.resolve(_Store(style=12), on_job)                            # 사람이 켜면 들어간다
+    sul_job = {"job_id": "js", "customer_id": 7, "deco": {},
+               "edit_plan": {"beats": [{"role": r} for r in ["훅", "미끼", "공개", "고조1", "반전", "마무리"]]}}
+    assert sfx_pack.resolve(_Store(style=None), sul_job)                         # 썰 구조면 기본 켜짐
+    assert sfx_pack.resolve(_Store(style=None), {**sul_job, "deco": {"sfx_pack": "off"}}) is None
+
+
 def test_admin_only_mode():
     """2026-09-23 사장님 "관리자만 켜봐": sfx_pack_enabled='admin'이면 사장님(cid 0) 영상에서만."""
     admin_job = {"job_id": "j1", "customer_id": 0, "deco": {}}
@@ -212,5 +236,11 @@ def test_settings_toggle_and_preserve(tmp_path, monkeypatch):
     A.api_produce_mix_settings({"job_id": "jx", "deco": {"bgm": {"volume": 30}}})   # sfx_pack 모르는 통째 저장
     d = Store(str(db)).get_mix_job("jx")["deco"]
     assert d["sfx_pack"] == "off" and d["bgm"] == {"volume": 30}          # 끈 값 유지
+    # ★스위치를 바꾸면 이미 만든 미리보기도 버린다 — 안 그러면 [완성본 만들기]가 옛 영상을 그대로 보여준다
+    Store(str(db)).update_mix_job("jx", preview_status="ready")
     A.api_produce_mix_settings({"job_id": "jx", "sfx_pack": "auto"})
-    assert Store(str(db)).get_mix_job("jx")["deco"]["sfx_pack"] == "auto"
+    got = Store(str(db)).get_mix_job("jx")
+    assert got["deco"]["sfx_pack"] == "auto" and not got.get("preview_status")
+    Store(str(db)).update_mix_job("jx", preview_status="ready")
+    A.api_produce_mix_settings({"job_id": "jx", "sfx_pack": "auto"})          # 같은 값이면 그대로 둔다
+    assert Store(str(db)).get_mix_job("jx").get("preview_status") == "ready"
