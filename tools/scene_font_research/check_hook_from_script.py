@@ -18,6 +18,7 @@ import uvicorn
 
 PORT, BASE = 8781, 'http://127.0.0.1:8781'
 TITLE = '제조사도 예상 못한 미친 활용법'
+TITLE26 = '미국 천재가 만들어 떼돈 번 기발한 제품의 정체'   # 사장님 실물(job 81db354d273e) — 26자라 옛 22자 상한에선 '정체'가 버려졌다
 LONG = '젓가락질 못하는 서양인들 위해 나왔다길래 그냥 그런가 보다 했는데 전 세계 SNS에서 난리라는데'
 AI = '가루 묻나요?\n이제 끝났죠'
 fails = []
@@ -33,7 +34,7 @@ def make(job, first):
                        'role': 'hook' if i == 0 else 'body', 'primary': {'video_id': 's0', 'start': i, 'end': i + 1}}
                       for i, c in enumerate([first, '이건 바로 핑거 찹스틱.'])]}
     store.create_mix_job(job, [], 2, 'free'); store.update_mix_job(job, edit_plan=plan)
-make('hook-qa', TITLE); make('hook-long', LONG)
+make('hook-qa', TITLE); make('hook-long', LONG); make('hook-26', TITLE26)
 server = uvicorn.Server(uvicorn.Config(module.app, host='127.0.0.1', port=PORT, log_level='warning'))
 threading.Thread(target=server.run, daemon=True).start(); time.sleep(1.5)
 
@@ -49,8 +50,11 @@ h2 = hook('hook-qa', headcopy_text='내가 정한 제목\n두 번째 줄', ai_co
 need(h2 == '내가 정한 제목 두 번째 줄', f"② 사장님이 정한 제목이 이긴다 ('{h2}')")
 h3 = hook('hook-long', ai_copy=AI)
 need(h3 == '가루 묻나요? 이제 끝났죠', f"③ 대본 첫 줄이 길면 AI 후보로 물러난다 ('{h3}')")
+h26 = hook('hook-26', ai_copy='손에 묻지 않는 깔끔한' + chr(10) + '과자 먹기')
+need(h26.replace(' ', '') == TITLE26.replace(' ', ''),
+     f"④ 26자 대본 제목도 낱말 하나 안 버리고 들어온다 '{h26}' — 고치기 전엔 22자 상한에 걸려 AI 후보('손에 묻지 않는 깔끔한 과자 먹기')가 들어왔다")
 h4 = hook('hook-long')
-need(h4 and h4 != '가루 묻나요? 이제 끝났죠', f"④ AI 후보가 없으면 대본을 쓴다(빈 제목 금지) ('{h4}')")
+need(h4 and h4 != '가루 묻나요? 이제 끝났죠', f"⑥ AI 후보가 없으면 대본을 쓴다(빈 제목 금지) ('{h4}')")
 # 5) 진짜 화면: 6단계에서 회색 버튼을 눌러 편집기가 **무엇을 제목으로 그렸나**(사장님이 보는 것).
 #    ★진짜 결함은 다리(scene-style-produce.js)가 AI 후보를 headcopy_text 자리에 넣던 것이라, API만 재면 못 잡는다.
 from playwright.sync_api import sync_playwright
