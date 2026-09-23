@@ -1553,6 +1553,9 @@
     show(index){showScene(index);return this.geometry()},
     geometry:()=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
     effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
+    // 다른 장면의 효과를 직접 읽고 쓴다(쇼핑 안내 세트가 마지막 장면 여러 개에 한 번에 넣는다, 2026-09-23)
+    effectAt(i,value){const k=String(i);if(value!==undefined)effects[k]=value;return effects[k]||{}},
+    sceneCount:()=>sceneTotal(),
     copyEffectsToAll(){const value=structuredClone(effects[String(sceneIndex)]||{});for(let i=0;i<sceneTotal();i++)effects[String(i)]=structuredClone(value);},
     branding(value){if(value!==undefined){branding=value;if(!labMode)try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
     context:()=>sceneContext,

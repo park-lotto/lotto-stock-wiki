@@ -2,7 +2,8 @@
  const api=window.sceneStyle,catalog=window.SCENE_DECORATION_CATALOG;if(!api||!catalog)return;
  const panel=document.querySelector('.scene-effects-panel'),preview=document.querySelector('#a-live-preview');
  const box=document.createElement('section');box.className='scene-decoration-panel';
- box.innerHTML=`<details open><summary>가림막</summary><div class="dec-choices"><button data-add-mask="blur">흐림</button><button data-add-mask="fade">그라데이션</button></div></details>
+ box.innerHTML=`<details open class="dec-shopset"><summary>🛍 쇼핑 안내 세트</summary><p>아래쪽 가리키는 화살표 + 「영상 속 제품 클릭!」을 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).</p><div class="dec-choices"><button type="button" data-shopset="last3">마지막 3장면에 넣기</button><button type="button" data-shopset="here">이 장면만</button><button type="button" data-shopset="clear">세트 빼기</button></div><small data-shopset-status></small></details>
+ <details open><summary>가림막</summary><div class="dec-choices"><button data-add-mask="blur">흐림</button><button data-add-mask="fade">그라데이션</button></div></details>
  <details open><summary>스티커 · 도형 · 배지</summary><div class="dec-kit"><button data-dec-kit="sticker" class="active">😀 스티커</button><button data-dec-kit="shape">🎨 도형</button><button data-dec-kit="badge">🏷 배지</button></div><div data-kit="sticker"><div class="dec-categories"></div><div class="dec-stickers"></div></div><div data-kit="shape" hidden><p>움직이는 도형 · 눌러서 영상 위에 추가</p><div class="dec-shapes"></div></div><div data-kit="badge" hidden><p>문구와 색, 모양을 바꿀 수 있어요</p><div class="dec-my-badges" hidden></div><div class="dec-badges"></div></div></details>
  <div class="dec-items"></div><div class="dec-edit" hidden><p>화면에서 끌어 이동 · ↘ 손잡이로 크기 · ⟳ 손잡이로 회전</p><label data-badge-text>배지 문구<input data-dec="text" type="text" maxlength="24"></label><label data-badge-style>배지 모양<select data-dec="badgeStyle"><option value="pill">그라데이션 알약</option><option value="ticket">티켓</option><option value="glass">유리 배지</option><option value="burst">포인트 배지</option></select></label><button type="button" data-save-badge hidden>⭐ 이 배지를 내 버튼으로 저장</button><label data-motion-control>움직임<select data-dec="motion"><option value="none">없음</option><option value="point">가리키기</option><option value="pulse">두근두근</option><option value="spin">회전</option><option value="float">둥실둥실</option><option value="reveal">쓱 나타나기</option></select></label><label>크기<input data-dec="size" type="range" min="5" max="90" step="1"></label><label data-mask-height>높이<input data-dec="h" type="range" min="2" max="35" step="1"></label><label>회전<input data-dec="rot" type="range" min="-180" max="180" step="1"></label><label>투명도<input data-dec="op" type="range" min="10" max="100" step="1"></label><label data-mask-color>색상<input data-dec="color" type="color"></label><button data-dec-delete>선택한 항목 삭제</button></div>`;
  panel.append(box);
@@ -130,6 +131,32 @@
      }
    });
  }
+ // 🛍 쇼핑 안내 세트(2026-09-23 사장님 "화살표랑 문구를 일일이 배치하기 힘드니 세트 버튼 — 23·24·25 세 장면에"):
+ //   유튜브 쇼핑 스티커가 기본으로 뜨는 왼쪽 아래를 가리키는 굵은 화살표 + 「영상 속 제품 클릭!」 배지.
+ //   set 표식으로 묶어서 다시 누르면 옛 세트를 지우고 새로 놓는다(쌓이지 않게). 놓은 뒤엔 보통 항목처럼 끌어 고친다.
+ const SHOPSET='shopcta';
+ function shopSetItems(){
+   const label='영상 속 제품 클릭!',color=catalog.thumbnailBadges.find(x=>x.label===label)?.color||'#FF2D5E';
+   const base={shape:'round',fx:'solid',op:100,soft:30,set:SHOPSET};
+   return [
+     {...base,kind:'graphic',graphic:'arrow_bold',l:1,t:43,w:30,h:16.875,color:'#FF3B30',rot:90,motion:'point'},
+     {...base,kind:'badge',text:label,l:3,t:79,w:48,h:6,color,badgeStyle:'pill',rot:0,motion:'none'},
+   ];
+ }
+ function shopSet(scope){
+   const cur=api.geometry().sceneIndex,total=api.sceneCount?.()||0;
+   const targets=scope==='last3'?[total-3,total-2,total-1].filter(i=>i>=1):scope==='clear'?Array.from({length:total},(_,i)=>i):[cur];   // 마지막 3장에 1장(훅)은 안 넣는다 · 빼기는 전 장면
+   let done=0,full=[];
+   for(const i of targets){
+     const keep=(api.effectAt(i).masks||[]).filter(m=>m.set!==SHOPSET);
+     if(scope!=='clear'&&keep.length+2>12){full.push(i+1);continue;}
+     api.effectAt(i,{...api.effectAt(i),masks:scope==='clear'?keep:[...keep,...shopSetItems()]});done++;
+   }
+   selected=-1;controls();draw();
+   const nums=targets.map(i=>i+1).join('·');
+   box.querySelector('[data-shopset-status]').textContent=(scope==='clear'?'모든 장면에서 세트를 뺐어요':`${nums}장에 넣었어요`)+(full.length?` (${full.join('·')}장은 항목이 12개라 못 넣음)`:'');
+   return done;
+ }
  box.addEventListener('click',event=>{
    const b=event.target.closest('button');if(!b)return;
    if(b.hasAttribute('data-dec-kit')){box.querySelectorAll('[data-kit]').forEach(el=>el.hidden=el.dataset.kit!==b.dataset.decKit);box.querySelectorAll('[data-dec-kit]').forEach(el=>el.classList.toggle('active',el===b));return;}
@@ -141,6 +168,7 @@
      const ok=saveMyBadges([def,...myBadges().filter(x=>x.text!==text)]);picker();
      b.textContent=ok?'✓ 내 배지에 저장했습니다':'저장하지 못했습니다(브라우저 저장 공간)';setTimeout(()=>{b.textContent='⭐ 이 배지를 내 버튼으로 저장'},1600);return;
    }
+   if(b.hasAttribute('data-shopset')){shopSet(b.dataset.shopset);return;}
    const list=structuredClone(masks());
    if(b.hasAttribute('data-dec-select'))selected=Number(b.dataset.decSelect);
    else if(b.hasAttribute('data-dec-remove')){const removed=Number(b.dataset.decRemove);list.splice(removed,1);selected=removed===selected?-1:selected>removed?selected-1:selected;commit(list);}
