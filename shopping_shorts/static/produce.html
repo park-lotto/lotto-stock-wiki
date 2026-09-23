@@ -18544,7 +18544,11 @@ function s2RenderStyles(){
     .map(x=>x.st);
   const cards=_sorted.map((st,idx)=>{
     const on=S2.picked.indexOf(st.id)>=0;
-    const nth=on?(' · '+String.fromCharCode(65+S2.picked.indexOf(st.id))+'안'):'';
+    // ★A칸을 씨앗 자동안(또는 픽업)이 이미 차지한다 — 고른 첫 카드는 **B안**이다(2026-09-23 사장님
+    //   "한 개는 씨앗으로 자동 가고 한 개는 어떤 게 선택되는 건가"). 자리를 안 밀면 화면은 A안이라
+    //   적어놓고 결과는 B안으로 나와 어느 카드가 만들어졌는지 알 수 없었다.
+    const _slotOff=((typeof _s2SeedAuto==='function' && _s2SeedAuto()) || (S2.usePickup!==false))?1:0;
+    const nth=on?(' · '+String.fromCharCode(65+_slotOff+S2.picked.indexOf(st.id))+'안'):'';
     // ★배지는 **소재 이름 그대로** 보여준다(2026-08-21 사장님: "체크 표시가 아니고
     //   레시피·홈템 이런 식으로 해줘야 사용자도 선택하기 편하지").
     //   ✅/⚠ 기호는 "쓸 수 있나 없나"만 말할 뿐, **뭐에 쓰는 건지**를 안 알려줬다.
@@ -18654,7 +18658,7 @@ function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
 // ★씨앗 자동 안(2026-09-20)을 화면에 쓸지 — **판단은 여기 한 곳**(0순위-B).
 //   2026-09-21 사장님 "예전 버전. 픽업 한 개 의무 아닌 걸로": 사장님 계정도 예전(📌 픽업 끄고 켜기 ·
 //   끄면 스타일 2개)으로 되돌린다. 켜려면 이 함수만 true(또는 window.IS_ADMIN)로 바꾼다.
-function _s2SeedAuto(){ return false; }
+function _s2SeedAuto(){ return !!window.STORY_WRITER_ON; }
 // ★안은 최대 2개다(종전 그대로). 픽업도 한 안을 차지하므로 **함께 세어** 상한을 건다 —
 //   따로 세면 픽업+스타일 2개 = 3안이 되어 종전 규칙이 조용히 깨진다.
 // 사장님 계정: 자동 1안은 늘 들어간다 / 고객: 예전 규칙(픽업도 한 안). ★한 줄 유지 — test_s2_an_count_label_js가 이 줄을 뽑아 돌린다
@@ -19329,7 +19333,14 @@ function s2Confirm(i){
 }
 // 관리자(사장님 cid0) 판별 — 비유튜브 재료의 "정보 채우기" 버튼 노출 조건(index.html과 동일 플래그명).
 window.IS_ADMIN=false;
-fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{ if(d && d.customer_id===0){ window.IS_ADMIN=true;
+window.STORY_WRITER_ON=false;   // 서버 스위치(story_writer_enabled) — /api/me가 정본
+fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{ if(d && d.story_writer){ window.STORY_WRITER_ON=true;
+  // ★예전에 저장해 둔 작업에 스타일이 2개 고른 채로 남아 있을 수 있다 — 씨앗 자동안이 A칸을 쓰므로
+  //   둘째는 어차피 안 만들어진다. 조용히 두면 있지도 않은 'C안' 뱃지가 뜨므로 한 개로 줄이고 알린다.
+  try{ if(typeof S2!=='undefined' && Array.isArray(S2.picked) && S2.picked.length>1){ S2.picked.length=1;
+        toast('씨앗 자동안이 A안이라 스타일은 한 개만 쓰입니다'); } }catch(e){}
+  try{ s2RenderStyles(); }catch(e){} }
+  if(d && d.customer_id===0){ window.IS_ADMIN=true;
   const b=document.getElementById('openVoiceTune'); if(b) b.style.display='';
   try{ showLenPresetIfAdmin(); }catch(e){} } }).catch(()=>{});
 </script>
