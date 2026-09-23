@@ -72,9 +72,10 @@ def match(lines, seg_index, backbone_vid, note=None, model=None):
     for i, L in enumerate(lines):
         need = _secs(L["text"])
         chosen, have = [], 0.0
+        descs = set()          # 태깅이 한 샷을 둘로 가른 것(설명이 같음)은 한 줄에 한 번만 — "중복 장면"의 뿌리(show8: s3 11.8/13.9, s7 19.0/21.1)
         for c in picks.get(i, []):
-            if c in seg_index and c not in used and seg_index[c]["vid"] != backbone_vid and seg_index[c]["secs"] >= MIN_CUT_SECS:
-                chosen.append(c); used.add(c); have += seg_index[c]["secs"]
+            if c in seg_index and c not in used and seg_index[c]["vid"] != backbone_vid and seg_index[c]["secs"] >= MIN_CUT_SECS                     and (seg_index[c].get("desc") or c) not in descs:
+                chosen.append(c); used.add(c); have += seg_index[c]["secs"]; descs.add(seg_index[c].get("desc") or c)
         # ③ 모자라면 고른 컷과 같은 영상의 **다음 컷**으로 채운다(원본은 연속 촬영 — 결이 안 튄다)
         if chosen and have < need:
             vid = seg_index[chosen[-1]]["vid"]
@@ -82,9 +83,9 @@ def match(lines, seg_index, backbone_vid, note=None, model=None):
             k = lst.index(chosen[-1]) + 1 if chosen[-1] in lst else len(lst)
             while have < need and k < len(lst):
                 s = lst[k]; k += 1
-                if s in used or seg_index[s]["secs"] < MIN_CUT_SECS:
+                if s in used or seg_index[s]["secs"] < MIN_CUT_SECS or (seg_index[s].get("desc") or s) in descs:
                     continue
-                chosen.append(s); used.add(s); have += seg_index[s]["secs"]
+                chosen.append(s); used.add(s); have += seg_index[s]["secs"]; descs.add(seg_index[s].get("desc") or s)
         out_bs.append({"role": L.get("role") or "", "seg": chosen[0] if chosen else "", "segs": chosen,
                        "why": next((p.get("why") for p in (out.get("picks") or []) if p.get("line") == i + 1), "")})
     return out_bs

@@ -146,10 +146,17 @@ YT_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 유튜브 썰�
 보는 사람에게 말을 걸지 마라. "~있지?" "~해봐" "다들 알지?" 같은 대화체는 이 채널 말투가 아니다.
 줄 끝은 **이 중에서** 고른다 (실측 빈도순):
   본문   ~는 거 · ~는데 · ~다는데 · ~라는데 · ~버림 · ~였음 · ~이라고 · ~있다고 · ~거임
-  훅     명사로 끝낸다 — "~의 활용법" · "~의 정체" · "~천재의 발명품" · "~아이디어" · "~제품" · "~이유"
   X 셔츠 단추 사이로 속살 삐져나와서 끙끙 앓았던 적 다들 있지?
-  O 셔츠 단추 사이로 속살이 삐져나오던 직장인들 환장하게 만든 발명품
   O 방아쇠 한번 당겨서 투명 핀으로 싹 고정해 없애 버렸다는 거
+
+■ 훅(첫 줄) = 썰 히트작 제목 그대로의 꼴 — **[놀란 사람]도 [감탄] [천재의 발명품/활용법/정체]** (히트작 25편 첫 줄 실측)
+  전 세계 주부들 환장한 미국 천재의 발명품 / 일본 천재가 만들어 떼돈 번 제품의 정체 / 개발자도 전혀 몰랐던 미친 사용법
+  제조사도 감탄한 뜻밖의 활용법 / 비 맞던 육아맘들 구원한 일본 천재의 발명품 / 수영 어깨를 뒤집은 미국 천재의 발명품
+  치과 무서운 사람들 기립박수 치게 만든 제품 / 명품 디자이너도 감탄한 미친 활용법 / 역발상으로 돈방석 앉은 육아천재의 발명품
+  이케아도 놀라버린 조명 활용법 / 다이소 가면 무조건 사야 되는 필수템 / 한국 천재가 만들어 돈방석 앉은 제품
+  → 첫 줄엔 반드시 **누가 놀랐나(권위자·대상)** 와 **얼마나 컸나(떼돈·돈방석·환장·구원·기립박수)** 가 들어간다.
+  X 과자 먹다 손 더러워지는 이유   ← 불편만 말하고 놀란 사람도 크기도 없다. 이런 첫 줄은 쓰지 마라.
+  O 게이머들 환장하게 만든 미국 천재의 발명품
 
 ■ 설명문을 쓰지 마라
 "A는 B 기능이 있어 편리합니다" 같은 문장은 한 줄도 쓰지 마라.
@@ -492,11 +499,31 @@ def extract_feats(sources, product="", note=None):
 MIN_LINES = 5      # 훅·공개·고조 1칸(2줄+)·마무리 — 이보다 짧으면 모델이 칸을 비운 것이다
 
 
+def _hook_angle(sp):
+    """스타일 카드의 「제목 후킹」 틀(templates.title)이 있으면 첫 줄은 **그 틀의 빈칸만 채운다**(화면 카드와 같은 원천, 0순위-B).
+    없으면 스타일 이름의 각도로 연다. — 2026-09-23 사장님: 훅이 썰 채널보다 약하다(실측 '과자 먹다 손 더러워지는 이유')."""
+    t = ((sp.get("templates") or {}).get("title") or [""])[0] if isinstance(sp.get("templates"), dict) else ""
+    if t and t.strip():
+        return "첫 줄(hook)은 이 제목 틀의 빈칸만 이 제품에 맞게 채워서 쓴다: 「%s」" % t.strip()
+    return "스타일 이름 「%s」이 말하는 각도로 첫 줄을 연다" % (sp.get("name") or "")
+
+
+def _seed_style(seed_text):
+    """자동 1안(씨앗 결) — 씨앗 영상의 **첫 줄 꼴**을 훅 몰드로 준다(2026-09-23 사장님 "씨앗의 대본 스타일도 참고가 되게").
+    히트작 첫 줄은 그 채널의 제목 꼴이다 — 씨앗이 히트작이면 그 꼴이 곧 정답이다."""
+    import re as _re
+    first = _re.split(r"[.!?" + chr(10) + "]", (seed_text or "").strip())[0].strip()[:60]
+    if len(first) < 6:
+        return None
+    return {"name": "씨앗 결 이야기", "flow": "", "extra": "",
+            "hook_angle": "첫 줄(hook)은 씨앗 영상의 첫 줄과 **같은 꼴**로 쓴다(낱말은 이 제품 것으로): 「%s」" % first}
+
+
 def _style_of(sp):
     """고객이 고른 스타일(스파인) → write()의 style. 빈칸 틀은 안 넘긴다 — 이름·흐름만."""
     return {"name": sp.get("name") or "",
             "flow": " → ".join(str(r) for r in (sp.get("beat_roles") or [])),
-            "hook_angle": "스타일 이름 「%s」이 말하는 각도로 첫 줄을 연다" % (sp.get("name") or ""),
+            "hook_angle": _hook_angle(sp),
             "extra": ""}
 
 
@@ -610,7 +637,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short"):
         name = (sp or {}).get("name") or "씨앗 결 이야기"
         n = {}
         lines = write(product, seed_text[:1500], feats, platform=plat,
-                      style=_style_of(sp) if sp else None, key=job_id or product, nth=nth, note=n,
+                      style=_style_of(sp) if sp else _seed_style(seed_text), key=job_id or product, nth=nth, note=n,
                       seconds=seconds, preset=preset)
         if len(lines) < MIN_LINES:
             whys.append("%s: 대본이 %d줄뿐(%s)" % (name, len(lines), n.get("reason") or "칸 빔"))

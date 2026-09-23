@@ -37,11 +37,13 @@ def test_hold는_첫_조각_하나로_문장_전체를_이어_튼다():
     assert sum(c.get("src_dur", 0) for c in long) > 8.5      # 실프레임으로 채운다(정지·늘리기 없음)
 
 
-def test_hold_아니면_상한_4초로_컷이_줄어든다():
+def test_hold_아니면_조각을_한번씩_비례로_쓴다():
     beat = _beat(1, _seg("v1", 0.0, 3.0), [_seg("v2", 0.0, 3.0), _seg("v3", 0.0, 3.0)],
                  cut_rhythm={"max_shot": 4.0, "hold": False})
     plan = va.plan_beat_clips_for(beat, tts_dur=6.0, src_durs={"v1": 30.0, "v2": 30.0, "v3": 30.0})
-    assert len(plan) <= 2 and all(c["out_dur"] <= 4.0 + 1e-6 for c in plan)
+    # 리듬 칸(홀드 아님) = 고른 조각을 한 번씩·순서대로, 시간은 비례로. 같은 조각으로 되돌아오지 않는다(중복 장면의 뿌리).
+    assert [c["video_id"] for c in plan] == ["v1", "v2", "v3"]
+    assert all(abs(c["out_dur"] - 2.0) < 1e-6 for c in plan)
 
 
 class _Store:
@@ -65,10 +67,34 @@ def test_스위치_admin은_관리자_job에만_표식을_단다():
 def test_편성단계_조각줄이기_홀드는_primary만_나머지는_2개():
     plan = {"beats": [
         {"beat_idx": 0, "narration": "훅", "primary": _seg("v1", 0, 1), "alternates": [_seg("v2", 0, 1), _seg("v3", 0, 1)]},
-        {"beat_idx": 1, "narration": "…없애 버렸다는 거", "primary": _seg("v1", 2, 3), "alternates": [_seg("v2", 2, 3)]},
+        {"beat_idx": 1, "role": "고조1", "narration": "…없애 버렸다는 거", "primary": _seg("v1", 2, 3), "alternates": [_seg("v2", 2, 3)]},
         {"beat_idx": 2, "narration": "바쁜 아침에 덜어내다가", "primary": _seg("v1", 4, 5), "alternates": [_seg("v2", 4, 5), _seg("v3", 4, 5), _seg("v4", 4, 5)]},
     ]}
     plan["beats"][2]["target_seconds"] = 9.0          # 9초 줄 → 4컷(예비 3개, 상한 4)
     assert mp._trim_for_cut_rhythm(plan) == 3
     assert [len(b["alternates"]) for b in plan["beats"]] == [0, 0, 3]
     assert [b["cut_rhythm"]["hold"] for b in plan["beats"]] == [True, True, False]
+
+
+def test_홀드는_훅_고조1결과줄_반전만():
+    plan = {"beats": [
+        {"beat_idx": 0, "role": "훅", "narration": "훅", "primary": _seg("v1", 0, 1)},
+        {"beat_idx": 1, "role": "고조1", "narration": "요철로 먼지를 없애 버렸다는 거", "primary": _seg("v1", 2, 3)},
+        {"beat_idx": 2, "role": "고조2", "narration": "청소포 낭비까지 없애 버렸다는 거", "primary": _seg("v1", 4, 5)},
+        {"beat_idx": 3, "role": "반전", "narration": "물에 씻어 계속 쓴다는 거", "primary": _seg("v1", 6, 7)},
+    ]}
+    mp._trim_for_cut_rhythm(plan)
+    assert [b["cut_rhythm"]["hold"] for b in plan["beats"]] == [True, True, False, True]
+
+
+def test_줄안_컷은_낱말경계에_붙는다():
+    narr = "일반 걸레로 닦다 보면 먼지가 밀리기만 해서 다시 닦아야 했던 그 지옥을"
+    plan = [{"video_id": "v1", "start": 0, "src_dur": 2.0, "out_dur": 2.0}, {"video_id": "v2", "start": 0, "src_dur": 2.0, "out_dur": 2.0},
+            {"video_id": "v3", "start": 0, "src_dur": 2.0, "out_dur": 2.0}]
+    va._snap_cuts_to_words(plan, narr, 6.0)
+    wb = va._word_boundaries(narr, 6.0)
+    t = 0.0
+    for c in plan[:-1]:
+        t += c["out_dur"]
+        assert min(abs(w - t) for w in wb) < 0.02          # 경계가 낱말 사이에 정확히 붙었다
+    assert abs(sum(c["out_dur"] for c in plan) - 6.0) < 1e-6

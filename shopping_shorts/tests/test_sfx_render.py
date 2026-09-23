@@ -103,7 +103,7 @@ def test_bgm_plus_sfx_amix_inputs_three(monkeypatch, tmp_path):
     assert "amix=inputs=2:duration=first:dropout_transition=2[nb]" in cmd   # 나레이션 + bgm (종전 그대로)
     assert "amix=inputs=2:duration=first:normalize=0" in cmd                 # + 효과음(나누지 않음)
     assert "amix=inputs=3" not in cmd
-    assert "alimiter=limit=0.95:level=0" in cmd                             # 더해 넘치는 순간만 누름
+    assert "alimiter=limit=0.89:level=0" in cmd                             # 더해 넘치는 순간만 누름
     assert "adelay=" in cmd                 # 효과음이 오프셋으로 지연
     assert "-c:a aac" in cmd                # 재믹스 → aac 인코드
 

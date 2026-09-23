@@ -19777,6 +19777,14 @@ def api_produce_mix_settings(body: dict):
                 fields["deco"]["scene_style"] = validate_snapshot(fields["deco"]["scene_style"])
             except (ValueError, TypeError) as exc:
                 return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
+        # ★효과음 켜기/끄기(deco.sfx_pack)는 3단계 스위치가 따로 정한다. 다른 화면이 꾸미기를 **통째로**
+        #   저장할 때 이 값을 모르고 보내면 조용히 지워져 "껐는데 다시 켜짐"이 된다 → 없으면 기존 값 유지.
+        if isinstance(fields["deco"], dict) and "sfx_pack" not in fields["deco"]                 and (job.get("deco") or {}).get("sfx_pack"):
+            fields["deco"]["sfx_pack"] = job["deco"]["sfx_pack"]
+    if "sfx_pack" in body:
+        # 3단계 [🔊 썰 효과음 자동 넣기] 스위치(2026-09-22). 기존 꾸미기 값에 이 칸만 합친다.
+        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}),
+                          "sfx_pack": "off" if body.get("sfx_pack") in ("off", False, 0, "0") else "auto"}
     if "scene_style" in body:
         from .scene_style import validate_snapshot
         try:
@@ -19791,6 +19799,24 @@ def api_produce_mix_settings(body: dict):
     if fields:
         _save_render_inputs(store, job_id, **fields)
     return {"ok": True}
+
+
+@app.get("/api/produce/mix/sfx_pack/{job_id}")
+def api_produce_mix_sfx_pack(job_id: str, request: Request):
+    """3단계 효과음 스위치 상태 — {eligible: 이 영상에 효과음팩이 들어갈 수 있나(썰 대본+관리자 스위치), on, pack}.
+    판정은 sfx_pack 한 곳(렌더와 같은 함수)을 그대로 쓴다 — 화면과 렌더가 다르게 판단하지 않게(0순위-B)."""
+    from shopping_shorts import sfx_pack
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "영상 없음"})
+    _mode = str(store.get_setting("sfx_pack_enabled", "") or "").strip().lower()
+    switch_on = _mode in ("1", "on") or (_mode == "admin" and int(job.get("customer_id") or 0) == 0)
+    sul = sfx_pack.is_sul_script(store, job)
+    on = ((job.get("deco") or {}).get("sfx_pack") or "auto") != "off"
+    got = sfx_pack.pack_for(job.get("customer_id", 0)) if (switch_on and sul) else None
+    return {"ok": True, "eligible": bool(switch_on and sul), "on": on,
+            "pack": got[0] if got else None, "family": sfx_pack.script_family(store, job)}
 
 
 @app.get("/api/produce/scene-style/assets/{asset_path:path}")

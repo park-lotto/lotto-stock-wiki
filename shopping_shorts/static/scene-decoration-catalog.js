@@ -148,6 +148,12 @@ const THUMB_SHAPE_LIST = [
 ];
 
 const THUMB_BADGE_LIST = [
+  // ★후킹 5개(2026-09-23 사장님 "영상 속 제품 클릭! / 해당 제품 바로 보러가기 / 영상 속 제품 할인받기 같은 걸 맨 위에") — 구매 유도 문구가 먼저
+  {label: '영상 속 제품 클릭!',     color: '#FF2D5E'},
+  {label: '해당 제품 바로 보러가기', color: '#1F7CFF'},
+  {label: '영상 속 제품 할인받기',   color: '#FF8A00'},
+  {label: '프로필 링크에서 구매',    color: '#7B2FF7'},
+  {label: '지금 클릭하면 특가',      color: '#1FA84E'},
   {label: '진짜 봐야할 것', color: '#FF2D2D'},
   {label: '충격',          color: '#FF2D2D'},
   {label: '실화',          color: '#FF2D2D'},

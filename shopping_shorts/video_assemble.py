@@ -900,10 +900,14 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
         #   2.2초 쪼개기·0.8초 하한으로 뒤 장면을 버리던 규칙을 이 칸엔 안 쓴다 — 칸 총초는
         #   음성 그대로, 장면 길이 비율로 나눈다. 화면 scene_play.js planClips와 같은 규칙.
         _all_in = beat.get("phrase_sync") is False
+        # ★컷 리듬 칸(홀드 아님)은 고른 조각을 **한 번씩·순서대로**(1장=1컷 규칙과 같음). 라운드로빈은 한 바퀴 돌고
+        #   같은 조각으로 되돌아와 "같은 장면이 또 나오는" 중복을 만든다(실측 show9: s3 11.8~14.1 → 세 컷 뒤 14.0~16.4).
+        #   히트작 79편엔 한 줄 안에서 같은 샷으로 되돌아오는 컷이 없다.
+        _rr = bool(_cr) and not _cr.get("hold") and not _all_in
         plan = _plan_beat_clips(segs, tts_dur, min_clip=(0.0 if _all_in else _MIN_CLIP),
                                 src_durs=beat_src_durs,
-                                max_shot=(None if _all_in else _max_shot),
-                                one_per_seg=(_all_in or _one))
+                                max_shot=(None if (_all_in or _rr) else _max_shot),
+                                one_per_seg=(_all_in or _one or _rr))
     # ✋ 손으로 정한 컷 길이가 있으면 먼저 반영한다(칸 총합은 안 바뀐다).
     #   단 구절맞춤 계획엔 덧입히지 않는다 — 구절 경계가 곧 정답이다.
     _fixed = {} if _phrase_plan else (beat.get("fixed_lens") or {})
@@ -913,10 +917,46 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     #   여운은 일부러 붙이는 무성 꼬리라 재배분 대상이 아니다. 플래그 없으면 그대로.
     if beat.get("stretch_fill"):
         _spread_stretch(plan)
+    if _cr and not _cr.get("hold") and len(plan) > 1:
+        _snap_cuts_to_words(plan, beat.get("narration") or "", tts_dur)
     _apply_sync_speed(plan)
     if runout > 0:
         _extend_last_clip_for_runout(
             plan, segs, runout, plan[-1].get("playback_speed", 1.0))
+    return plan
+
+
+def _word_boundaries(narration, tts_dur):
+    """대사 안 띄어쓰기 자리의 시각(초) — 글자 수 비례 추정(ASR 없이). 히트작 컷은 낱말 사이에 온다(낱말 한가운데 2%)."""
+    text = (narration or "").strip()
+    n = len(text.replace(" ", ""))
+    if n <= 1 or tts_dur <= 0:
+        return []
+    out, seen = [], 0
+    for ch in text:
+        if ch == " ":
+            out.append(tts_dur * seen / n)
+        else:
+            seen += 1
+    return out
+
+
+def _snap_cuts_to_words(plan, narration, tts_dur, tol=0.45):
+    """컷 경계(누적 out_dur)를 가장 가까운 낱말 경계로 옮긴다(±tol초 안에서만). 총길이는 그대로, 컷 하나가 0.8초 밑으로 줄면 안 옮긴다."""
+    wb = _word_boundaries(narration, tts_dur)
+    if not wb:
+        return plan
+    t = 0.0
+    for i in range(len(plan) - 1):
+        t += float(plan[i].get("out_dur") or 0.0)
+        near = min(wb, key=lambda w: abs(w - t))
+        d = near - t
+        if abs(d) <= tol and float(plan[i]["out_dur"]) + d >= 0.8 and float(plan[i + 1]["out_dur"]) - d >= 0.8:
+            plan[i]["out_dur"] = round(float(plan[i]["out_dur"]) + d, 3)
+            plan[i]["src_dur"] = round(float(plan[i].get("src_dur") or plan[i]["out_dur"]) + d, 3)
+            plan[i + 1]["out_dur"] = round(float(plan[i + 1]["out_dur"]) - d, 3)
+            plan[i + 1]["src_dur"] = round(max(0.1, float(plan[i + 1].get("src_dur") or plan[i + 1]["out_dur"]) - d), 3)
+            t = near
     return plan
 
 
@@ -3213,7 +3253,8 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         #      영상은 나레이션이 그대로 나가므로 **효과음을 켜는 순간 목소리만 작아졌다**(라이브 사장님
         #      영상 bbbd6f20fe39 팩 있음/없음 두 판 대조로 확인).
         #   그래서 나레이션(+BGM)은 **종전 그대로** 섞고, 효과음은 normalize=0으로 더한다.
-        #   더해서 넘칠 수 있는 순간만 alimiter(level=0 — 자동 음량 올림 끔)로 누른다.
+        #   더해서 넘칠 수 있는 순간만 alimiter(level=0 — 자동 음량 올림 끔)로 누른다. 천장은 -1dB(0.89):
+        #   0.95로 두니 AAC 압축 뒤 최고점이 +0.4dB로 튀었다(2026-09-22 실측).
         if len(sfx_labels) > 1:
             fc.append("".join(f"[{lb}]" for lb in sfx_labels)
                       + f"amix=inputs={len(sfx_labels)}:duration=longest:normalize=0[sfxbus]")
@@ -3227,14 +3268,27 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         base = "nb"
         amap = "[nb]"
     if has_sfx:
-        fc.append(f"[{base}][{sfx_bus}]amix=inputs=2:duration=first:normalize=0,"
-                  f"alimiter=limit=0.95:level=0[a]")
+        # ★효과음이 울리는 짧은 순간만 나레이션을 비켜 준다(덕킹, 2026-09-22 실측).
+        #   라이브 영상에서 둥이 이븐쇼핑보다 3.3dB 작았다 — 그 순간 목소리가 이미 0.0dBFS라 천장에
+        #   눌린 것(파일을 키워도 소용없음). 효과음 줄을 둘로 나눠 하나는 나레이션 압축 신호로,
+        #   하나는 그대로 섞는다. 신호 쪽은 apad로 늘려 효과음이 먼저 끝나도 나레이션이 잘리지 않게.
+        fc.append(f"[{sfx_bus}]asplit=2[sfxkey][sfxmix]")
+        fc.append("[sfxkey]apad[sfxkeyp]")
+        fc.append(f"[{base}][sfxkeyp]sidechaincompress=threshold={_SFX_DUCK_THRESHOLD}:ratio={_SFX_DUCK_RATIO}"
+                  f":attack=2:release=150[nbduck]")
+        fc.append("[nbduck][sfxmix]amix=inputs=2:duration=first:normalize=0,"
+                  "alimiter=limit=0.89:level=0[a]")
         amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
     cmd += ["-r", "30", "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(out_path)]
     _run_ffmpeg(cmd, cwd=str(work))
     return str(out_path)
+
+
+# 효과음 덕킹 세기 — 실렌더로 맞춘 값(tools/sfx_bench/check_pair.py). 효과음이 이 크기를 넘으면 나레이션을 누른다.
+_SFX_DUCK_THRESHOLD = 0.2      # -14dBFS: 둥·오프너·뽁 같은 큰 소리만 비켜 준다(휙·틱은 안 건드림)
+_SFX_DUCK_RATIO = 4
 
 
 def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None, sfx_paths=None, burn_captions=True):
