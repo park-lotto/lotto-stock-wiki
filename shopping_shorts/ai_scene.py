@@ -30,7 +30,8 @@ STYLES = ("natural", "impact")
 PERSON_WORDS = ("아기", "아이", "사람", "여성", "남성", "얼굴", "손", "엄마", "아빠", "모델", "인물", "여자", "남자")
 FORBID = ("no text, no subtitles, no captions, no logos, no brand names, no watermark, "
           "no baby, no human face, no new people, no second copy of the product, "
-          "no change of the product's shape, color or design, no cartoon style, no cut, no dissolve")
+          "no change of the product's shape, color or design, no cartoon style, no cut, no dissolve, "
+          "no speed lines, no comic effect lines, no drawn lines or strokes, no motion streaks, no overlays")
 
 
 def pick_seconds(dur):
@@ -152,12 +153,14 @@ def motion_request(narration, subject_hint="", style="natural", call=None, frame
         "Describe ONLY what is visible in the frame. Do not invent product features, colors, parts or mechanisms that are not visible.\n"
         f"Product / subject hint (Korean): {subject_hint or '(unknown)'}\n"
         f"Narration line (Korean) this shot must match: {narration}\n"
-        f"Style: {'high-impact hook (fast push-in, one bold action, slight camera shake)' if style == 'impact' else 'natural subtle motion (breathing, gentle hand, slow push-in)'}\n"
+        f"Style: {'energetic hook (quick dolly-in toward the subject, one bold physical action; still real handheld phone footage - no drawn, animated or graphic effects)' if style == 'impact' else 'natural subtle motion (breathing, gentle hand, slow push-in)'}\n"
         "Return JSON: subject_desc_en (one sentence describing the subject exactly as it appears, colors, materials), "
         "motion_steps_en (exactly 3 short sentences: what happens in the first third, middle third, last third; "
         "only movements that could physically happen to what is visible in this frame — camera moves, gentle hand contact, "
         "soft parts swaying, light changes; the product must keep its exact shape, color, material and design; it must not "
-        "transform, flip inside out, change color or reveal hidden parts; no new people; no text), "
+        "transform, flip inside out, change color or reveal hidden parts; NO person, face or body may appear or enter - "
+        "prefer camera moves and self-motion of soft parts; if a hand is needed, it is only a hand already visible at the frame edge, "
+        "never an arm, body or face; no text), "
         "forbid_extra (0-3 short English phrases to forbid, e.g. 'no washing machine')."
     )
     res = {}
@@ -190,7 +193,7 @@ def build_prompt(motion, sec, style="natural"):
     steps = motion["motion_steps_en"]
     cam = ("Handheld phone video, vertical 9:16, natural lighting as in the input image, slight handheld sway."
            if style != "impact" else
-           "Handheld phone video, vertical 9:16, natural lighting as in the input image, punchy fast push-in, slight shake.")
+           "Handheld phone video, vertical 9:16, natural lighting as in the input image, quick dolly-in, real handheld movement only.")
     forbid = FORBID + "".join(", " + f for f in motion.get("forbid_extra") or [])
     return (
         f"INPUT IMAGE = FRAME 0: {motion['subject_desc_en']} Keep this subject exactly the same in shape, color, material and design.\n\n"
@@ -198,7 +201,9 @@ def build_prompt(motion, sec, style="natural"):
         f"0.0-{a}s  {steps[0]}\n"
         f"{a}-{b}s  {steps[1]}\n"
         f"{b}-{sec}.0s  {steps[2]}\n\n"
-        f"CAMERA AND LIGHT: {cam}\n\n"
+        f"CAMERA AND LIGHT: {cam}\n"
+        f"REALISM: photorealistic live-action smartphone footage. Nothing is drawn, painted or animated on top of the image. "
+        f"No person, face or body enters the frame at any moment.\n\n"
         f"NEGATIVE: {forbid}."
     )
 

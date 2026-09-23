@@ -1,6 +1,6 @@
 # AI 장면 생성(Veo) — 없는 장면을 소스 프레임 베이스로 4~8초 (2026-09-23)
 
-**트랙** `AI장면생성` · **스위치** `ai_scene_enabled`(값 없음=관리자만 · "1"=전체) · **상태** 코드·테스트·로컬 실호출 완료, **서버 인증 대기**
+**트랙** `AI장면생성` · **스위치** `ai_scene_enabled`(값 없음=관리자만 · "1"=전체) · **상태** 라이브 배포·실측 완료(관리자만), 프롬프트 2차 보정 배포 중
 설계 `docs/superpowers/specs/2026-09-22-AI장면생성-Veo-design.md` · 플랜 `docs/superpowers/plans/2026-09-23-AI장면생성-Veo.md`
 
 ## 사장님 결정
@@ -20,13 +20,22 @@
 2차: 58초, 자산 152. 속도선→손이 머리 누름→안정, 형태·색 유지. 남은 것: 원본 컷 베이스면 첫 0.5초 자막·가짜 글자(청소본 베이스면 감소).
 스파이크 7편(09-22): `Desktop\AI장면_*.mp4` — 상황을 초 단위로 적어야 지시대로 나옴(E2·D2).
 
-## ★막힌 것 — 서버 Vertex 인증
+## 라이브 실측 (2026-09-23 13:25~, main 53251f73d)
+- 서버 인증 = 이 PC ADC 복사(`/home/ubuntu/keys/gcp-adc.json`, env GOOGLE_APPLICATION_CREDENTIALS·GCP_PROJECT·GOOGLE_CLOUD_QUOTA_PROJECT). SA 키는 조직 정책으로 불가(아래).
+- 큐 `ai_scene`(bte60cb14b7d beat0 impact) → 46초 → 자산 151, beat.cutaway={asset_id:151, match_type:ai}.
+- 렌더(skip_clean) 88초 → `final.mp4` 첫 2.4초에 AI 장면 들어감(프레임 타일로 확인). 캡컷 초안 `cutaway_00.mp4` 0.0~2.42초 오버레이, md5 = 자산 파일.
+- ★결함: 임팩트 스타일에서 Veo가 **만화 집중선**을 그림(NEGATIVE만 넣어도 재발). "high-impact/punchy" 문구가 원인 →
+  "quick dolly-in, real handheld movement only" + REALISM 줄로 바꾸니 사라짐. 대신 "손이 흔든다"에서 **없던 사람 얼굴**이 등장(1회) →
+  동작 지시에 "사람·얼굴·몸 등장 금지, 손은 프레임 가장자리에 이미 보이는 손만" 추가 → 2회 연속 정상. (바탕화면 `AI장면_훅_임팩트_수정후.mp4`)
+
+## 서버 Vertex 인증 — SA 키 불가(기록)
 서비스 계정 `shorts-veo@project-74eaf695-8229-44a1-876.iam.gserviceaccount.com` 생성·`roles/aiplatform.user` 부여 완료.
 **키 발급은 조직 정책(`iam.disableServiceAccountKeyCreation`, org 753122311363)으로 거부.** 정책 해제 권한(orgpolicy.policies.create) 없음.
 선택지: ① 이 PC ADC 파일(`~/.config/gcloud/application_default_credentials.json`)을 서버로 복사(사장님 계정 토큰) ② 사장님이 콘솔에서 조직 정책 해제 후 키 발급.
 서버엔 google-genai 2.7.0 있음. env: `GOOGLE_APPLICATION_CREDENTIALS`·`GCP_PROJECT`·`GCP_LOCATION`(`/etc/shopping-shorts.env`).
 
 ## ⏭ 다음
-- [ ] 사장님 선택 → 서버 인증 배치 → `finish` → DEPLOY_NOW → 사장님 job에서 버튼 직접 → 생성 → 렌더 → 캡컷 확인(0순위-A1)
+- [x] 서버 인증 배치 → finish → DEPLOY_NOW → 큐로 생성 → 렌더 → 캡컷 확인(위 실측)
+- [ ] 사장님이 화면 버튼으로 직접 시험(관리자만 켜짐) · 여러 job에서 결함 유형 모으기(집중선·사람 등장·글자)
 - [ ] 텍스트 잔존 대응(원본 베이스일 때): 4단계 뒤 사용 권장 안내 or 컷어웨이 자막제거
 - [ ] 고객 전체는 사장님 판정 뒤 `ai_scene_enabled=1`
