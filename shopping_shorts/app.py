@@ -9856,7 +9856,41 @@ def api_thumb_pin(body: dict):
     # 후보가 중복으로 쌓이지 않는다(편성이 바뀌면 캐시명이 달라져 새 핀이 된다).
     stem = re.sub(r"[^0-9a-zA-Z.\-]", "_", src.stem)[:60]
     name = f"pin_{stem}.jpg"
-    shutil.copyfile(str(src), str(out_dir / name))
+    # ★꾸민 화면 그대로(2026-09-23 사장님 "훅 장면을 쓰고 싶은 건데" — 원본 프레임만 가서 제목·띠가 없었다):
+    #   styled=true(새 편집기 기본)이고 이 job에 장면꾸미기 저장본이 있으면 그 장면의 레이어 PNG를 렌더해 프레임 위에 얹는다.
+    #   렌더러·컨텍스트는 완성본과 같은 함수(render_layer_one → render_scene_style.js) — 썸네일과 영상이 어긋나지 않는다.
+    #   실패하면 종전대로 원본 프레임(썸네일 후보가 막히면 안 된다).
+    styled_note = None
+    _ss = (job.get("deco") or {}).get("scene_style")
+    if body.get("styled") and _ss:
+        try:
+            from shopping_shorts import scene_style as _scene_style
+            from PIL import Image as _Image
+            plan = job.get("edit_plan") or {}
+            tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
+            timeline = video_assemble._beat_timeline(plan, tts)
+            ctx = _scene_style.context_for(timeline, job.get("headcopy") or {}, _ss, job_id)
+            try:
+                s_idx = int(body.get("scene_index"))
+            except (TypeError, ValueError):
+                s_idx = -1
+            if not (0 <= s_idx < len(ctx["scenes"])) or int(ctx["scenes"][s_idx]["beat_idx"]) != i:
+                s_idx = next((k for k, sc in enumerate(ctx["scenes"]) if int(sc["beat_idx"]) == i), -1)
+            if s_idx >= 0:
+                layer = _scene_style.render_layer_one(timeline, _ss, _MIX_WORK_DIR / job_id / "thumb_style", s_idx,
+                                                      job.get("headcopy") or {}, job_id)
+                base = _Image.open(src).convert("RGBA")
+                over = _Image.open(layer).convert("RGBA")
+                if over.size != base.size:
+                    over = over.resize(base.size)
+                _Image.alpha_composite(base, over).convert("RGB").save(str(out_dir / name), quality=92)
+                styled_note = f"scene {s_idx}"
+        except Exception as _e:      # noqa: BLE001 — 꾸미기 합성 실패는 원본 프레임으로 대신
+            import traceback as _tb5
+            _tb5.print_exc(file=sys.stderr)
+            styled_note = None
+    if styled_note is None:
+        shutil.copyfile(str(src), str(out_dir / name))
 
     beats = ((job.get("edit_plan") or {}).get("beats") or [])
     label = f"장면 {i + 1}"
@@ -9866,7 +9900,7 @@ def api_thumb_pin(body: dict):
                     "ts": round(float((beats[i] or {}).get("start") or 0), 2)})
     thumb["pins"] = pins
     _save_render_inputs(store, job_id, thumbnail=thumb)
-    return {"ok": True, "name": name, "label": label, "pins": pins,
+    return {"ok": True, "name": name, "label": label, "pins": pins, "styled": bool(styled_note),
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
 

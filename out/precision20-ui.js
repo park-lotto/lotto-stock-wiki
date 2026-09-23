@@ -477,7 +477,7 @@
         if(!jobId||!scene){say('실제 영상을 열었을 때 쓸 수 있어요(지금은 샘플 화면)',false);return;}
         pin.disabled=true;say('보내는 중…',true);
         try{
-          const response=await fetch('/api/produce/thumb/pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:jobId,beat_idx:scene.beat_idx})});
+          const response=await fetch('/api/produce/thumb/pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:jobId,beat_idx:scene.beat_idx,scene_index:sceneIndex,styled:true})});   // 09-23: 꾸민 화면 그대로 보낸다
           const data=await response.json().catch(()=>({}));
           if(!response.ok||!data.ok)throw new Error(data.error||'보내지 못했어요');
           say(`✓ ${sceneIndex+1}번째 장면을 썸네일 후보 맨 앞에 넣었어요`,true);go.hidden=false;
