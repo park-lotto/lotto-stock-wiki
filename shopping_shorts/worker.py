@@ -39,6 +39,9 @@ TASKS = {
     "render":   lambda a: mix_pipeline.run_render(a["job_id"], DB_PATH, _MIX_WORK_DIR),
     "preview":  lambda a: mix_pipeline.run_preview(a["job_id"], DB_PATH, _MIX_WORK_DIR),
     "clean":    lambda a: mix_pipeline.run_clean_sources(a["job_id"], DB_PATH, _MIX_WORK_DIR),
+    # AI 장면 생성(Veo, 2026-09-23) — 관리자 스위치 ai_scene_enabled 뒤. 실패는 beat.ai_scene.state로 남는다.
+    "ai_scene": lambda a: __import__("shopping_shorts.ai_scene", fromlist=["run_ai_scene"]).run_ai_scene(
+        a["job_id"], int(a["beat_idx"]), a.get("style") or "natural", DB_PATH, _MIX_WORK_DIR),
     "overseas": lambda a: overseas_hot_jobs._run(),
     # 담기 시 사전분석 예열(2026-07-30) — 제작소 1단계 로딩 제거용. 실패해도 무해하다
     # (run_prewarm이 예외를 안 던지고 상태 문자열만 돌려준다).
