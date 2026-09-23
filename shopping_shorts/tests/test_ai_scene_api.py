@@ -63,6 +63,25 @@ def test_bad_beat_and_style_fallback(monkeypatch):
     assert _body(r)["style"] == "natural"
 
 
+def test_scene_lab_html_has_button_and_flag():
+    """3단계 카드는 실험실(iframe)이 그린다 — produce.html에만 넣으면 사장님 화면엔 안 보인다(2026-09-23 실측)."""
+    from pathlib import Path
+    html = Path(A.__file__).parent.joinpath("static", "scene_lab.html").read_text(encoding="utf-8")
+    assert "aiSceneControl(i)" in html and "DATA.ai_scene_enabled" in html
+    assert "startAiScene(" in html and "removeAiScene(" in html and "pollAiScene(" in html and "임팩트" in html
+
+
+def test_scene_lab_data_carries_flag(monkeypatch):
+    st = _Store(_job(), setting="")
+    monkeypatch.setattr(A, "Store", lambda db: st)
+    monkeypatch.setattr(A, "_is_admin", lambda cid: cid == 0)
+    st.job["extract"] = {"v": {"segments": []}}
+    st.job["edit_plan"]["structure"] = "x"
+    monkeypatch.setattr(A._edit_plan, "_build_inventory", lambda vals: ({}, None))
+    r = A.api_mix_scene_lab_data("j", _Req())
+    assert isinstance(r, dict) and r["data"]["ai_scene_enabled"] is True
+
+
 def test_produce_html_has_button_and_polling():
     from pathlib import Path
     html = Path(A.__file__).parent.joinpath("static", "produce.html").read_text(encoding="utf-8")

@@ -28,6 +28,9 @@
   "quick dolly-in, real handheld movement only" + REALISM 줄로 바꾸니 사라짐. 대신 "손이 흔든다"에서 **없던 사람 얼굴**이 등장(1회) →
   동작 지시에 "사람·얼굴·몸 등장 금지, 손은 프레임 가장자리에 이미 보이는 손만" 추가 → 2회 연속 정상. (바탕화면 `AI장면_훅_임팩트_수정후.mp4`)
 
+- 보정 배포 후(main 5f5490e8e, 워커 13:53 재시작) 라이브 재생성 → 자산 152, 렌더 85초 → 완성본 첫 2.4초 반영. 집중선·사람 없음.
+  대신 0.5~1.5초에 **손이 든 흰 물체**(없던 소품)가 생김 — Veo 확률 결함. 보정 후 3회 중 1회. 사장님 시험 때 결함 유형 계속 모을 것.
+
 ## 서버 Vertex 인증 — SA 키 불가(기록)
 서비스 계정 `shorts-veo@project-74eaf695-8229-44a1-876.iam.gserviceaccount.com` 생성·`roles/aiplatform.user` 부여 완료.
 **키 발급은 조직 정책(`iam.disableServiceAccountKeyCreation`, org 753122311363)으로 거부.** 정책 해제 권한(orgpolicy.policies.create) 없음.
