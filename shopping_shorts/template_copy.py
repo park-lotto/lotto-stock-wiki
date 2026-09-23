@@ -33,6 +33,11 @@ EVEN_SHOPPING = TemplateCopyContract(
 )
 
 
+# 대본 제목 줄로 인정하는 최대 길이. 이보다 길면 제목이 아니라 나레이션 문장으로 본다
+# (실측: 제목 17~26자 / 나레이션 첫 문장 50자 안팎).
+TITLE_KEEP_MAX = 30
+
+
 def _one_line(value: object) -> str:
     return " ".join(str(value or "").split())
 
@@ -116,6 +121,13 @@ def split_hook(value: object, contract: "TemplateCopyContract | None" = None) ->
     #    한 낱말을 더 담아 상한을 살짝 넘는 쪽이, 낱말을 잘라 '놀라운 생활 아이디어'를
     #    '놀라운 생활'로 만드는 것보다 낫다(2026-09-22 실측: 견본 13개가 상한을 넘는다).
     room = max1 + max2 + 1
+    # ★제목 길이(TITLE_KEEP_MAX)까지는 **낱말을 하나도 버리지 않는다**(2026-09-23 사장님
+    #   "대본에 있는 제목 훅이 안 들어온다"). 실측: 대본 제목 '미국 천재가 만들어 떼돈 번
+    #   기발한 제품의 정체'(26자)가 22자 상한에 걸려 '정체'가 통째로 버려졌고, 그래서
+    #   잘린 제목 대신 AI 후보가 들어가 사장님이 쓴 제목이 화면에 영영 안 나왔다.
+    #   편집기·렌더는 줄마다 글자를 자동으로 줄여 담으므로(fittedText), 조금 길어도 들어간다.
+    if len(text) <= TITLE_KEEP_MAX:
+        room = len(text)
     head = [words[0]]
     for word in words[1:]:
         if line_len(head + [word]) > room + len(word) - 1:
