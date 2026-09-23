@@ -15014,6 +15014,11 @@ def _api_me(request: Request):
             # 1단계에서 담을 수 있는 재료 영상 상한 — 화면이 숫자를 다시 적지 않도록
             # 서버가 내려준다. 정본은 script_generate.SOURCE_MAX 한 곳뿐(0순위-B).
             "source_max": script_generate.SOURCE_MAX,
+            # ★이야기 작가 스위치(2026-09-23). 켜지면 서버가 **씨앗 자동 1안을 늘 먼저 만든다**
+            #   (story_writer.make_drafts의 첫 plan). 화면이 이걸 모르면 고른 스타일 2개로 2안을
+            #   기대하는데 실제로는 씨앗+첫 스타일이 나와 두 번째 고른 것이 조용히 버려진다
+            #   (2026-09-23 사장님 캡처). 자리 계산은 서버 한 곳을 보고 화면이 따라간다(0순위-B).
+            "story_writer": _setting_gate(st, "story_writer_enabled", cid),
             # 관리자가 아니어도 열어준 기능들(2026-08-31). 화면은 이 값만 보고 켠다.
             "features": {f: _feature_allowed(st, cid, f) for f in _FEATURE_KEYS},
             "email": email, "name": name, "member_days": member_days,
