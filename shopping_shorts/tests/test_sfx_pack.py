@@ -236,5 +236,11 @@ def test_settings_toggle_and_preserve(tmp_path, monkeypatch):
     A.api_produce_mix_settings({"job_id": "jx", "deco": {"bgm": {"volume": 30}}})   # sfx_pack 모르는 통째 저장
     d = Store(str(db)).get_mix_job("jx")["deco"]
     assert d["sfx_pack"] == "off" and d["bgm"] == {"volume": 30}          # 끈 값 유지
+    # ★스위치를 바꾸면 이미 만든 미리보기도 버린다 — 안 그러면 [완성본 만들기]가 옛 영상을 그대로 보여준다
+    Store(str(db)).update_mix_job("jx", preview_status="ready")
     A.api_produce_mix_settings({"job_id": "jx", "sfx_pack": "auto"})
-    assert Store(str(db)).get_mix_job("jx")["deco"]["sfx_pack"] == "auto"
+    got = Store(str(db)).get_mix_job("jx")
+    assert got["deco"]["sfx_pack"] == "auto" and not got.get("preview_status")
+    Store(str(db)).update_mix_job("jx", preview_status="ready")
+    A.api_produce_mix_settings({"job_id": "jx", "sfx_pack": "auto"})          # 같은 값이면 그대로 둔다
+    assert Store(str(db)).get_mix_job("jx").get("preview_status") == "ready"

@@ -55,7 +55,10 @@ with sync_playwright() as p:
     check(pg.is_checked("#sfxPackToggle"), "처음엔 켜져 있다")
     pg.screenshot(path=str(Path(a.shot) / "sfx_toggle_on.png"), clip=pg.locator("#sfxPackBar").bounding_box() or None)
     print("② 눌러서 끄기")
+    Store(str(db)).update_mix_job("jsul0001", preview_status="ready")     # 이미 완성본이 있는 상태로
     pg.click("#sfxPackToggle"); time.sleep(1.2)
+    check(not Store(str(db)).get_mix_job("jsul0001").get("preview_status"),
+          "스위치를 바꾸면 기존 미리보기도 버려진다(완성본 만들기가 새로 만든다)")
     check(Store(str(db)).get_mix_job("jsul0001")["deco"].get("sfx_pack") == "off", "DB에 deco.sfx_pack='off' 저장")
     check("껐어요" in pg.inner_text("#sfxPackInfo"), "안내 문구가 '껐어요'로 바뀜")
     print("③ 새로고침 후")
