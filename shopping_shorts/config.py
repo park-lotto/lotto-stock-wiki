@@ -334,6 +334,12 @@ TYPECAST_API_KEY = os.environ.get("TYPECAST_API_KEY", "")
 #   다시 쓰려면 서버 env에 TYPECAST_ENABLED=1만 넣으면 종전 동작으로 돌아온다.
 TYPECAST_ENABLED = os.environ.get("TYPECAST_ENABLED", "0") not in ("0", "false", "False", "")
 
+# ── AI 장면 생성(Vertex Veo, 2026-09-23) ──────────────────────────────────
+# 인증은 google-genai가 GOOGLE_APPLICATION_CREDENTIALS(서비스 계정 키) 또는 gcloud ADC로 읽는다.
+# 서버: /etc/shopping-shorts.env 에 GOOGLE_APPLICATION_CREDENTIALS·GCP_PROJECT·GCP_LOCATION.
+GCP_PROJECT = os.environ.get("GCP_PROJECT", "project-74eaf695-8229-44a1-876")
+GCP_LOCATION = os.environ.get("GCP_LOCATION", "us-central1")
+
 # ASR 라운드트립 검증(튜닝 작업대) — Whisper로 TTS를 재전사해 오독 탐지. GROQ 우선.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 

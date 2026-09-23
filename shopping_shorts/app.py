@@ -5246,7 +5246,7 @@ def api_mix_status(job_id: str, request: Request):
 
 
 @app.get("/api/mix/result/{job_id}")
-def api_mix_result(job_id: str):
+def api_mix_result(job_id: str, request: Request = None):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "아직 결과 없음"})
@@ -5274,6 +5274,8 @@ def api_mix_result(job_id: str):
         # 검수판(Task4) — scene_match.py가 채운 미채택 제안(threshold 미달)을 그대로 넘긴다.
         # {beat_idx, asset_id, score}[]. 자동배치(cutaway)는 이미 beats[].cutaway에 있다.
         "asset_suggestions": plan.get("asset_suggestions") or [],
+        # AI 장면 생성 버튼을 그릴지(2026-09-23) — 스위치 ai_scene_enabled. 기본값 없으면 "admin"으로 본다.
+        "ai_scene_enabled": _ai_scene_on(_cid(request) if request is not None else 0),
         # 쿠팡 연결(2026-07-28) — 이미 고른 상품이 있으면 그대로, 없으면 검색 링크만.
         # affiliate_target(팔 제품 이름)이 뜨는 그 자리에서 바로 상품을 확정한다.
         "product": job.get("product"),
@@ -15104,6 +15106,8 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "edl_inherit_enabled",
                        # 자막제거 정본(2026-09-22) — 4단계 청소본을 정본으로, 꾸미기 뒤 재청소 없음. 값 규약 같음
                        "clean_base_enabled",
+                       # AI 장면 생성(Veo, 2026-09-23) — 기본 admin(사장님만). 고객은 사장님 판정 뒤 "1"
+                       "ai_scene_enabled",
                        # 장면꾸미기 새 편집기를 6단계 화면에 바로(2026-09-23, 사장님: 유튜브 라이브 뒤 구버전→신버전 교체) — ""끔 · "admin" · "1" 전체
                        "scene_style_inline_enabled"}
 
@@ -20730,6 +20734,50 @@ async def api_produce_mix_overlay(job_id: str = Form(...), file: UploadFile = Fi
     name = "overlay" + ext
     (d / name).write_bytes(await file.read())
     return {"ok": True, "file": name}
+
+
+def _ai_scene_on(customer_id):
+    """AI 장면 생성 스위치 — 값이 비어 있으면 'admin'(사장님만)으로 본다(기본 끔이 아니라 기본 관리자)."""
+    store = Store(DB_PATH)
+    try:
+        v = (store.get_setting("ai_scene_enabled", "") or "").strip()
+    except Exception:      # noqa: BLE001
+        v = ""
+    if not v:
+        return bool(_is_admin(customer_id))
+    return _setting_gate(store, "ai_scene_enabled", customer_id)
+
+
+@app.post("/api/produce/mix/{job_id}/ai_scene")
+def api_produce_mix_ai_scene(job_id: str, request: Request, body: dict):
+    """AI 장면 생성(Veo) 예약(2026-09-23). body {beat_idx, style: natural|impact}.
+    스위치(ai_scene_enabled) 뒤 · 렌더 중 409 · 같은 비트 진행 중 409 · 워커 태스크 ai_scene 큐잉.
+    결과는 /api/mix/result 의 beats[].ai_scene(state running|done|failed)로 본다."""
+    if not _ai_scene_on(_cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "AI 장면 생성은 아직 관리자만 쓸 수 있어요"})
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    beats = (job["edit_plan"].get("beats") or [])
+    if not any(int(b.get("beat_idx", -1)) == bi for b in beats):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    style = body.get("style") if body.get("style") in ("natural", "impact") else "natural"
+    if job.get("status") == "rendering":
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 만들 수 없어요 — 끝난 뒤 다시 눌러 주세요"})
+    if store.task_is_alive("ai_scene", {"job_id": job_id, "beat_idx": bi}):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "이 장면은 지금 만드는 중이에요"})
+    # 화면이 바로 ⏳를 그리도록 상태를 먼저 남긴다(워커가 running으로 다시 덮는다)
+    for b in beats:
+        if int(b.get("beat_idx", -1)) == bi:
+            b["ai_scene"] = {"state": "queued", "style": style, "error": None}
+    _save_render_inputs(store, job_id, edit_plan=job["edit_plan"])
+    qid = store.enqueue("ai_scene", {"job_id": job_id, "beat_idx": bi, "style": style})
+    return {"ok": True, "qid": qid, "beat_idx": bi, "style": style}
 
 
 @app.post("/api/produce/mix/{job_id}/cutaway")
