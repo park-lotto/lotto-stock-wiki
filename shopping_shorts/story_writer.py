@@ -508,6 +508,17 @@ def _hook_angle(sp):
     return "스타일 이름 「%s」이 말하는 각도로 첫 줄을 연다" % (sp.get("name") or "")
 
 
+def _seed_style(seed_text):
+    """자동 1안(씨앗 결) — 씨앗 영상의 **첫 줄 꼴**을 훅 몰드로 준다(2026-09-23 사장님 "씨앗의 대본 스타일도 참고가 되게").
+    히트작 첫 줄은 그 채널의 제목 꼴이다 — 씨앗이 히트작이면 그 꼴이 곧 정답이다."""
+    import re as _re
+    first = _re.split(r"[.!?" + chr(10) + "]", (seed_text or "").strip())[0].strip()[:60]
+    if len(first) < 6:
+        return None
+    return {"name": "씨앗 결 이야기", "flow": "", "extra": "",
+            "hook_angle": "첫 줄(hook)은 씨앗 영상의 첫 줄과 **같은 꼴**로 쓴다(낱말은 이 제품 것으로): 「%s」" % first}
+
+
 def _style_of(sp):
     """고객이 고른 스타일(스파인) → write()의 style. 빈칸 틀은 안 넘긴다 — 이름·흐름만."""
     return {"name": sp.get("name") or "",
@@ -626,7 +637,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short"):
         name = (sp or {}).get("name") or "씨앗 결 이야기"
         n = {}
         lines = write(product, seed_text[:1500], feats, platform=plat,
-                      style=_style_of(sp) if sp else None, key=job_id or product, nth=nth, note=n,
+                      style=_style_of(sp) if sp else _seed_style(seed_text), key=job_id or product, nth=nth, note=n,
                       seconds=seconds, preset=preset)
         if len(lines) < MIN_LINES:
             whys.append("%s: 대본이 %d줄뿐(%s)" % (name, len(lines), n.get("reason") or "칸 빔"))
