@@ -2946,7 +2946,7 @@ def plan_using_beat_clips(plan, clips, timeline, prefix="cc", *, preserve_capcut
 
 
 # ── 컷 리듬(2026-09-22) — 관리자 스위치 cut_rhythm_enabled("admin"=관리자만 / "1"=전체 / ""=끔) ─────────
-_HOLD_END = re.compile(r"(는 거|버림|버렸다고|버렸다는데|준다는데)[.!?…]*$")   # 핵심 결과 줄 = 한 컷으로 길게
+_HOLD_END = re.compile(r"(는 거|버림|버렸다고|버렸다는데|버린다는데|준다는데)[.!?…]*$")   # 핵심 결과 줄 = 한 컷으로 길게
 
 
 def _cut_rhythm_on(store, job):
@@ -2977,7 +2977,9 @@ def _trim_for_cut_rhythm(plan):
         narr = (b.get("narration") or "").strip()
         role = str(b.get("role") or "")
         # 미끼는 히트작에서 빠른 몽타주 자리(이븐쇼핑 0.6~1.5초 5컷) — "…났다는 거"로 끝나도 홀드하지 않는다
-        hold = (i == 0) or (bool(_HOLD_END.search(narr)) and not role.startswith("미끼"))
+        # 히트작 79편 실측(docs/cut_rhythm_2026-09-22.md): 3초+ 홀드는 편당 2개, 최장(7초)은 영상 1/3 지점 첫 고조의 시연 줄.
+        #   → 홀드 = 훅 · 고조1의 결과 줄("…없애 버렸다는 거") · 반전. 고조2 이후 결과 줄은 보통 컷(홀드가 셋을 넘으면 늘어진다).
+        hold = (i == 0) or (bool(_HOLD_END.search(narr)) and role in ("고조1", "반전"))
         alts = list(b.get("alternates") or [])
         # 컷 수는 줄 길이로(히트작 11편 컷 중앙 1.9초 → 약 2.5초에 한 컷): 3초 이하 1컷 · 6초 2컷 · 9초 3컷 · 최대 4컷.
         #   홀드 줄은 5초 홀드 뒤 한 컷만 더. (2026-09-22 사장님 "9초 줄인데 2개만 쓴 건가" — 2개 고정이 무뎠다)
