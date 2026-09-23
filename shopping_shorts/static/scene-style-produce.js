@@ -173,8 +173,13 @@
       const fallbackCopy=(typeof _hcFirstCopy==='function'&&_hcFirstCopy())||'';
       const fallbackSubline=(typeof _hcPickedSubline==='function'&&_hcPickedSubline())
                           ||(typeof _hcFirstSubline==='function'&&_hcFirstSubline())||'';
+      // ★2026-09-23 사장님 "대본에 있는 제목 훅이 안 들어온다": 사장님이 직접 정한 제목만
+      //   headcopy_text로 보내고, AI 후보는 ai_copy(대비책)로 보낸다. 서버가 **대본 첫 줄**을
+      //   먼저 쓰고, 그 줄이 두 줄에 안 담길 때만 AI 후보로 물러난다(hook_from_script 한 곳).
+      //   전엔 여기서 AI 후보를 제목 자리에 바로 넣어 대본 제목이 영영 안 들어왔다.
       const params=new URLSearchParams({
-        headcopy_text:STATE.headcopy?.text||fallbackCopy||'',
+        headcopy_text:STATE.headcopy?.text||'',
+        ai_copy:fallbackCopy||'',
         headcopy_subline:STATE.headcopy?.subline||fallbackSubline
                         ||document.getElementById('frTitle')?.value||'',
         copy_family:STATE.headcopy?.copy_family||STATE.script_copy_family||''

@@ -19886,7 +19886,7 @@ def api_scene_style_asset(asset_path: str):
 
 @app.get("/api/produce/scene-style/context/{job_id}")
 def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = "",
-                            headcopy_subline: str = "", copy_family: str = ""):
+                            headcopy_subline: str = "", copy_family: str = "", ai_copy: str = ""):
     from .scene_style import context_for
     # ★새 편집기는 관리자 또는 스위치(scene_style_inline_enabled)가 열어 준 고객만(2026-09-23 사장님: 라이브 뒤 켠다)
     if not (_is_admin(_cid(request)) or _setting_gate(Store(DB_PATH), "scene_style_inline_enabled", _cid(request))):
@@ -19912,6 +19912,8 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
         headcopy["text"] = headcopy_text[:2000]
     if headcopy_subline:
         headcopy["subline"] = headcopy_subline[:200]
+    if ai_copy:
+        headcopy["ai_copy"] = ai_copy[:2000]   # 대본 제목 줄이 안 담길 때만 쓰는 대비책
     if copy_family:
         headcopy["copy_family"] = headcopy_gen.normalize_family(copy_family)
     context = context_for(timeline, headcopy, snapshot, job_id)
