@@ -47,8 +47,8 @@ def test_build_prompt_has_frame0_steps_and_negative():
     assert "CONTINUOUS SINGLE SHOT" in p and "6.0 seconds" in p
     assert "0.0-2.0s  A hand sets it on a towel." in p and "4.0-6.0s  Slow push-in" in p
     assert "NEGATIVE: no text" in p and "no washing machine" in p
-    assert "fast push-in" not in p
-    assert "punchy fast push-in" in ai.build_prompt(motion, 4, "impact")
+    assert "quick dolly-in" not in p and "REALISM: photorealistic" in p and "no speed lines" in p
+    assert "quick dolly-in" in ai.build_prompt(motion, 4, "impact")
 
 
 def test_motion_request_uses_model_json_or_defaults():
@@ -106,7 +106,7 @@ def test_run_ai_scene_success_saves_asset_and_cutaway(tmp_path, monkeypatch):
     asset, cid = store.assets[0]
     assert asset["asset_type"] == "clip" and asset["render_mode"] == "cutaway" and asset["source_kind"] == "veo"
     assert asset["source_ref"] == "j:1:impact" and Path(asset["media_path"]).exists()
-    assert seen["png"].endswith("ai_scene_base_1.png") and "punchy fast push-in" in seen["prompt"]
+    assert seen["png"].endswith("ai_scene_base_1.png") and "quick dolly-in" in seen["prompt"]
     assert (work / "ai_scene_prompt_1.txt").exists()
 
 
