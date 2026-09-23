@@ -10285,7 +10285,7 @@ function _renderMixReviewBody(d, failStatus){
     return;
   }
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
-  MIX_AI_SCENE_ON = !!d.ai_scene_enabled;
+  globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
   try{ _syncSceneLab(true); }catch(_){ }   // ② 장면실험실 iframe(정의는 loadMixReview 위)
   if(typeof window!=='undefined') window._mixBeats = d.beats || [];   // 조각 전체 보기(paletteStats)가 읽는다 — 실제 쓴 컷 집계용
   const el=document.getElementById('mixReview');
@@ -13071,14 +13071,15 @@ async function cloneCandidate(idx){
 // 최소 블록. 공용 프리뷰(mixPreview/hcPreview 등) 미건드림 — 이 컨테이너(scene-cutaway)
 // 안에서만 갱신한다.
 let MIX_REVIEW_SUGGESTIONS = [];
-let MIX_AI_SCENE_ON = false;   // /api/mix/result 의 ai_scene_enabled(2026-09-23, 기본 관리자만)
+globalThis.MIX_AI_SCENE_ON = false;   // /api/mix/result 의 ai_scene_enabled(2026-09-23, 기본 관리자만)
 const _AI_SCENE_POLL = {};      // beat_idx → interval id
 
 // ★AI 장면 생성(Veo, 2026-09-23 사장님): "없는 장면"을 그 칸 재료 프레임 베이스로 4~8초 만든다.
 //   모든 칸에 버튼(사장님 결정), 훅 칸엔 ⚡임팩트 추가. 스위치 켜진 계정(기본 관리자)만 보인다.
 //   상태는 beat.ai_scene.state(queued|running|done|failed) — 2초 폴링으로 그 칸만 다시 그린다.
 function renderAiSceneBtn(beat, idx){
-  if(!MIX_AI_SCENE_ON) return '';
+  // ★슬라이스 하네스(test_produce_refresh_persistence 등)는 이 함수 구간만 잘라 돌린다 — 전역은 typeof로 지킨다
+  if(typeof MIX_AI_SCENE_ON==='undefined' || !MIX_AI_SCENE_ON) return '';
   const st = (beat.ai_scene||{}).state;
   if(st==='queued'||st==='running'){
     return `<div class="hint" style="margin-top:6px">⏳ AI 장면 만드는 중… (보통 1~2분)</div>`;
@@ -13109,13 +13110,14 @@ async function _refreshBeatBox(idx){
   const d = await (await fetch('/api/mix/result/'+encodeURIComponent(MIX_JOB))).json();
   const beat = (d.beats||[]).find(b=>b.beat_idx===idx);
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
-  MIX_AI_SCENE_ON = !!d.ai_scene_enabled;
+  globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
   const box = document.getElementById('sceneCutaway'+idx);
   if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
   return beat;
 }
 
 function pollAiScene(idx){
+  if(typeof _AI_SCENE_POLL==='undefined') globalThis._AI_SCENE_POLL={};
   if(_AI_SCENE_POLL[idx]) clearInterval(_AI_SCENE_POLL[idx]);
   let n = 0;
   _AI_SCENE_POLL[idx] = setInterval(async()=>{
@@ -13162,7 +13164,7 @@ async function toggleCutaway(idx, assetId){
   const d = await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   if(!d.ok) return;
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
-  MIX_AI_SCENE_ON = !!d.ai_scene_enabled;
+  globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
   const beat = (d.beats||[])[idx];
   if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
 }
