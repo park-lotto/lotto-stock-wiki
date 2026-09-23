@@ -191,7 +191,12 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     scenes = _absorb_tiny_gaps(scenes)
     copy = dict(headcopy) if isinstance(headcopy, dict) else {}
     if not (copy.get("text") or "").strip():
-        copy["text"] = (timeline[0].get("narration") if timeline else "") or ""
+        # ★제목이 비면 **대본의 제목 줄(첫 문장)**을 쓴다. AI 후보(ai_copy)는 그 줄이
+        #   두 줄 상한에 안 담겨 낱말이 버려질 때만 쓴다 — 판단은 hook_from_script 한 곳.
+        #   (2026-09-23 사장님 "대본에 있는 제목 훅이 안 들어온다")
+        from .template_copy import hook_from_script
+        copy["text"], copy["hook_source"] = hook_from_script(
+            (timeline[0].get("narration") if timeline else "") or "", copy.get("ai_copy") or "")
     text = {"channel": "숏템메이커", **scene_text(copy)}
     text.update({k:v for k,v in (snapshot or {}).get("text",{}).items() if k != "caption"})
     return {"jobId":job_id,"text":text,"scenes":scenes}

@@ -142,6 +142,30 @@ def split_hook(value: object, contract: "TemplateCopyContract | None" = None) ->
     return " ".join(head[:best]), " ".join(head[best:])
 
 
+def hook_from_script(script_line: object, ai_copy: object = "",
+                     contract: "TemplateCopyContract | None" = None) -> tuple[str, str]:
+    """훅 제목을 **대본의 제목 줄**로 정한다. 반환 (문구, 출처) — 출처는 'script' | 'ai' | ''.
+
+    ★2026-09-23 사장님: "아직도 대본에 있는 제목 훅이 안 들어온다 뭐야 제발좀."
+      실측(job 5638893ae8b7): 저장된 제목이 비어 있어(headcopy_json=None) 다리가 AI 후보
+      1번('가루 묻나요? / 이제 끝났죠')을 넣었고, 대본 첫 줄 '제조사도 예상 못한 미친 활용법'은
+      자막으로만 나갔다. 대본 첫 줄이 곧 사장님이 쓴 제목이다 — 그걸 먼저 쓴다.
+
+    AI 후보로 물러나는 경우는 **하나뿐**: 대본 줄이 두 줄 상한에 안 담겨 낱말이 버려질 때.
+      (split_hook은 22자를 넘는 낱말을 통째로 버린다. 제목이 잘려 말이 안 되면 제목 구실을 못 한다.)
+    """
+    contract = contract or EVEN_SHOPPING
+    line = _one_line(script_line)
+    fallback = _one_line(ai_copy)
+    if not line:
+        return fallback, ("ai" if fallback else "")
+    hook1, hook2 = split_hook(line, contract)
+    kept = len(f"{hook1} {hook2}".split())
+    if kept < len(line.split()) and fallback:
+        return fallback, "ai"      # 대본 줄이 잘린다 — 잘린 제목보다 AI 후보가 낫다
+    return line, "script"
+
+
 def scene_text(headcopy: object) -> dict[str, str]:
     """저장된 제목 세트를 장면꾸미기 슬롯으로 한 번만 변환한다."""
     source = headcopy if isinstance(headcopy, dict) else {}
