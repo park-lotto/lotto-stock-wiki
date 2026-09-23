@@ -71,8 +71,12 @@ def _cut_is_clean(before: list[str], after: list[str]) -> bool:
     if not before or not after:
         return False
     last = before[-1]
-    # 한 글자 낱말이 줄 끝/줄 앞에 혼자 떨어지면 읽기 나쁘다(2026-09-21 '무릎 탁 / 친 천재적인').
-    if len(last) <= 1 or len(after[0]) <= 1:
+    # 한 글자 낱말이 **줄 앞에** 혼자 떨어지면 읽기 나쁘다(2026-09-21 '무릎 탁 / 친 천재적인').
+    if len(after[0]) <= 1:
+        return False
+    # 줄 끝의 한 글자는 앞 낱말과 한 덩어리로 읽히면 괜찮다('떼돈 번' / …). 첫 줄이 그 한 글자뿐일 때만 막는다.
+    #   (2026-09-23 사장님 "기발한 제품의 정체를 두 번째에 나누면 안 되나" — '떼돈 번'에서 끊는 자리가 막혀 있었다)
+    if len(last) <= 1 and len(before) < 2:
         return False
     if len(last) > 1 and _CUT_BAD_END.search(last):
         return False
@@ -148,7 +152,11 @@ def split_hook(value: object, contract: "TemplateCopyContract | None" = None) ->
         over = max(0, line_len(before) - max1) + max(0, line_len(after) - max2)
         # 첫 줄이 상한 안에 들어오면 길이 균형 대신 **앞쪽 자리**를 선호한다.
         gap = line_len(before) if line_len(before) <= max1 else abs(line_len(before) - line_len(after))
-        return (clean, good, over, gap)
+        # ★넘침을 어미보다 먼저 본다(2026-09-23 사장님 "기발한 제품의 정체를 두 번째에 나누면 안 되나").
+        #   전엔 어미가 앞서서 '…떼돈 번 기발한'(19자) / '제품의 정체'(6자)를 골랐다 — 어미('기발한')는 좋지만
+        #   첫 줄이 8자나 넘쳐 글자가 작아지고, 강조 자리인 둘째 줄이 6자로 토막났다.
+        #   넘침을 먼저 보면 '…떼돈 번'(15자) / '기발한 제품의 정체'(10자) — 이븐쇼핑 견본(11/10)과 같은 꼴이 된다.
+        return (clean, over, good, gap)
 
     best = min(range(1, len(head)), key=score)
     return " ".join(head[:best]), " ".join(head[best:])
