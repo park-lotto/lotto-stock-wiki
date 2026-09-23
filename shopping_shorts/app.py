@@ -19813,9 +19813,10 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
     _mode = str(store.get_setting("sfx_pack_enabled", "") or "").strip().lower()
     switch_on = _mode in ("1", "on") or (_mode == "admin" and int(job.get("customer_id") or 0) == 0)
     sul = sfx_pack.is_sul_script(store, job)
-    on = ((job.get("deco") or {}).get("sfx_pack") or "auto") != "off"
-    got = sfx_pack.pack_for(job.get("customer_id", 0)) if (switch_on and sul) else None
-    return {"ok": True, "eligible": bool(switch_on and sul), "on": on,
+    choice = str((job.get("deco") or {}).get("sfx_pack") or "")
+    on = (choice != "off") if choice else sul      # 손댄 적 없으면 기본값 = 썰 대본인가
+    got = sfx_pack.pack_for(job.get("customer_id", 0)) if switch_on else None
+    return {"ok": True, "eligible": bool(switch_on), "sul": sul, "on": on,
             "pack": got[0] if got else None, "family": sfx_pack.script_family(store, job)}
 
 

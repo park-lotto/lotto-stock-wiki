@@ -12745,7 +12745,8 @@ async function sfxPackRefresh(force){
     document.getElementById('sfxPackToggle').checked=!!d.on;
     document.getElementById('sfxPackInfo').textContent = d.on
       ? '완성본 만들기를 누르면 장면마다 효과음이 자동으로 들어가요'
-      : '꺼져 있어요 — 이 영상에는 효과음이 안 들어가요';
+      : (d.sul ? '꺼져 있어요 — 이 영상에는 효과음이 안 들어가요'
+               : '체크하면 이 영상에도 효과음을 넣어 드려요 (썰 대본 스타일에 맞춘 소리예요)');
     bar.style.display='flex';
   }catch(e){ bar.style.display='none'; }
 }

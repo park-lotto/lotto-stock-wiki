@@ -13,7 +13,8 @@
   그 뒤 **칸(장면)마다 2발**, 첫 자막 줄과 가운데 줄에 — 소리는 **그 칸의 역할**이 정한다(ROLE_GROUPS → GROUP_SOUNDS).
 
 회원마다 팩 하나를 고정 배정한다(20종, 두 팩 사이 7칸 중 최소 4칸 다름) — 회원끼리 소리가 달라진다.
-켜는 조건: 관리자 설정 sfx_pack_enabled("1"=전 회원 · "admin"=사장님 계정만) **그리고** 2단계에서 **썰 대본**(오용형·제품정체형·발명품형 틀)을 고른 영상.
+켜는 조건: 관리자 설정 sfx_pack_enabled("1"=전 회원 · "admin"=사장님 계정만) + 영상별 스위치(deco.sfx_pack).
+  스위치를 손댄 적 없으면 **기본값**만 대본으로 정한다(썰 구조=켜짐 / 아니면 꺼짐) — 사람이 켜면 어떤 대본이든 들어간다.
   ★채널 틀로 판정하지 않는다(2026-09-22 사장님 "썰대본을 골랐을경우만"). 라이브 최근 400건 실측:
     썰 틀 262건 중 썰 대본은 28건뿐 — 틀 기준이면 234건에 잘못 켜지고 틀 없는 썰 대본 5건은 빠졌다.
 """
@@ -231,7 +232,7 @@ def resolve(store, job):
     if not job:
         return None
     deco = job.get("deco") or {}
-    choice = deco.get("sfx_pack") if isinstance(deco, dict) else None
+    choice = str(deco.get("sfx_pack") or "") if isinstance(deco, dict) else ""
     if choice == "off":
         return None
     # 관리자 스위치 — ""=끔 · "admin"=사장님(cid 0) 영상에서만(시험용) · "1"=전 회원.
@@ -244,7 +245,10 @@ def resolve(store, job):
         return None
     if mode == "admin" and int(job.get("customer_id") or 0) != 0:
         return None
-    if not is_sul_script(store, job):
+    # ★스위치가 최종 결정이다(2026-09-23 사장님 "하고 싶은 사람은 체크하고 완성본 만들면 되잖아").
+    #   사람이 켠 적 없으면(choice 비어 있음) **기본값만** 대본으로 정한다 — 썰 구조면 켜짐, 아니면 꺼짐.
+    #   판정이 애매한 대본(틀 번호 없음 등)도 화면에서 켜면 그대로 들어간다.
+    if not choice and not is_sul_script(store, job):
         return None
     got = pack_for(job.get("customer_id", 0), override=choice)
     return {"name": got[0], "dir": got[1]} if got else None

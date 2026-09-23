@@ -93,6 +93,19 @@ def test_roles_alone_can_say_sul():
     assert sfx_pack.resolve(_Store(style=None), job)          # 제작 기록·틀 없어도 켜짐
 
 
+def test_switch_decides_even_for_other_scripts():
+    """2026-09-23 사장님: 대본 종류와 무관하게 **체크하면 들어간다**. 기본값만 대본으로 정한다."""
+    other = {"beats": [{"role": r} for r in ["situation", "notice", "ask", "method", "result"]]}
+    job = {"job_id": "jo", "customer_id": 7, "deco": {}, "edit_plan": other}
+    assert sfx_pack.resolve(_Store(style=12), job) is None                       # 기본값 = 꺼짐
+    on_job = {**job, "deco": {"sfx_pack": "auto"}}
+    assert sfx_pack.resolve(_Store(style=12), on_job)                            # 사람이 켜면 들어간다
+    sul_job = {"job_id": "js", "customer_id": 7, "deco": {},
+               "edit_plan": {"beats": [{"role": r} for r in ["훅", "미끼", "공개", "고조1", "반전", "마무리"]]}}
+    assert sfx_pack.resolve(_Store(style=None), sul_job)                         # 썰 구조면 기본 켜짐
+    assert sfx_pack.resolve(_Store(style=None), {**sul_job, "deco": {"sfx_pack": "off"}}) is None
+
+
 def test_admin_only_mode():
     """2026-09-23 사장님 "관리자만 켜봐": sfx_pack_enabled='admin'이면 사장님(cid 0) 영상에서만."""
     admin_job = {"job_id": "j1", "customer_id": 0, "deco": {}}
