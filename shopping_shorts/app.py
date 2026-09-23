@@ -15099,7 +15099,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 3단계 '붙어 온 장면 그대로'(Gemini 0회·추측 층 없음) — 값 규약은 위와 같다
                        "edl_inherit_enabled",
                        # 자막제거 정본(2026-09-22) — 4단계 청소본을 정본으로, 꾸미기 뒤 재청소 없음. 값 규약 같음
-                       "clean_base_enabled"}
+                       "clean_base_enabled",
+                       # 장면꾸미기 새 편집기를 6단계 화면에 바로(2026-09-23, 사장님: 유튜브 라이브 뒤 구버전→신버전 교체) — ""끔 · "admin" · "1" 전체
+                       "scene_style_inline_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -19848,6 +19850,14 @@ def _scene_style_lab_owned_job(store, request, job_id):
     if not job or int(job.get("customer_id") or 0) != _cid(request):
         return None
     return job
+
+
+@app.get("/api/produce/scene-style/flags")
+def api_scene_style_flags(request: Request):
+    """6단계 장면꾸미기 화면 모드. inline=True면 제작소가 새 편집기(scene-style-ui-showcase)를 회색 버튼 팝업 대신
+    6단계 패널 안에 바로 띄우고 구버전 UI(완성 스타일·직접 다듬기)를 숨긴다. 관리자 스위치 scene_style_inline_enabled
+    (2026-09-23 사장님: 라이브 방송 뒤 바로 교체할 수 있게 스위치만 올리면 되도록 기본 세팅). 기본 끔 = 종전 화면 그대로."""
+    return {"ok": True, "inline": bool(_setting_gate(Store(DB_PATH), "scene_style_inline_enabled", _cid(request)))}
 
 
 @app.get("/api/admin/scene-style-lab/jobs")
