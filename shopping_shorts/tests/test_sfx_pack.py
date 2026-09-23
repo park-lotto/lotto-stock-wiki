@@ -82,6 +82,16 @@ def test_style_id_saved_on_job_survives_deleted_work():
     assert sfx_pack.resolve(_Store(style=70), job12) is None             # job 번호가 우선(사회증거형=끔)
 
 
+def test_admin_only_mode():
+    """2026-09-23 사장님 "관리자만 켜봐": sfx_pack_enabled='admin'이면 사장님(cid 0) 영상에서만."""
+    admin_job = {"job_id": "j1", "customer_id": 0, "deco": {}}
+    cust_job = {"job_id": "j1", "customer_id": 42, "deco": {}}
+    assert sfx_pack.resolve(_Store(on="admin"), admin_job)              # 사장님 = 켜짐
+    assert sfx_pack.resolve(_Store(on="admin"), cust_job) is None       # 고객 = 그대로 꺼짐
+    assert sfx_pack.resolve(_Store(on="1"), cust_job)                   # 전체 모드면 고객도 켜짐
+    assert sfx_pack.resolve(_Store(on="admin2"), admin_job) is None     # 모르는 값 = 끔
+
+
 def test_resolve_needs_admin_switch():
     job = {"job_id": "j1", "customer_id": 7, "deco": {}}
     assert sfx_pack.resolve(_Store(on=""), job) is None                  # 스위치 꺼짐 = 라이브 무변화

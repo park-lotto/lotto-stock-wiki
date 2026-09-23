@@ -19789,7 +19789,8 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
     job = store.get_mix_job(job_id)
     if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
         return JSONResponse(status_code=404, content={"ok": False, "error": "영상 없음"})
-    switch_on = str(store.get_setting("sfx_pack_enabled", "") or "") == "1"
+    _mode = str(store.get_setting("sfx_pack_enabled", "") or "").strip().lower()
+    switch_on = _mode in ("1", "on") or (_mode == "admin" and int(job.get("customer_id") or 0) == 0)
     sul = sfx_pack.is_sul_script(store, job)
     on = ((job.get("deco") or {}).get("sfx_pack") or "auto") != "off"
     got = sfx_pack.pack_for(job.get("customer_id", 0)) if (switch_on and sul) else None
