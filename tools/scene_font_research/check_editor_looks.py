@@ -27,7 +27,7 @@ with sync_playwright() as p:
     pg.on('pageerror', lambda e: errs.append(str(e))); pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
     pg.goto(URL, wait_until='networkidle')
     tabs = pg.evaluate("[...document.querySelectorAll('[data-left-tab]')].map(b=>[b.dataset.leftTab,b.textContent,Math.round(b.getBoundingClientRect().width),b.scrollWidth>b.clientWidth+1])")
-    print('탭', tabs); need([t[0] for t in tabs] == ['look', 'scene', 'font', 'tone', 'deco'], '탭 5개 순서'); need(not any(t[3] for t in tabs), '탭 글자 잘림')
+    print('탭', tabs); need([t[0] for t in tabs] == ['mine', 'look', 'scene', 'font', 'tone', 'deco'], '탭 6개 순서(내 프리셋 맨 앞)'); need(not any(t[3] for t in tabs), '탭 글자 잘림')
     tops = pg.evaluate("[...document.querySelectorAll('[data-left-tab]')].map(b=>Math.round(b.getBoundingClientRect().top))"); print('탭 세로 위치', tops); need(len(set(tops)) == 1, f'탭이 한 줄이 아님 {tops}')
     need(pg.evaluate("!document.querySelector('.preset-grid,[data-preset]')?.closest('[hidden]')"), '처음에 장면 템플릿이 안 보임')
     snap = pg.evaluate('window.sceneStyle.snapshot()'); snap['text'].update({'hook1': T1, 'hook2': T2}); pg.evaluate('s=>window.sceneStyle.load(window.sceneStyle.context(),s)', snap)
