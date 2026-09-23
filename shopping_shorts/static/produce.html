@@ -9978,7 +9978,10 @@ async function loadCoupangForSeo(){
 // 제품을 못 잡은 영상에서 "쿠팡 상품 연결하기"를 눌렀을 때 — 폼을 펼친다.
 function coupangOpen(){ COUPANG.opened=true; renderCoupangSlot({
   affiliate_target:COUPANG.target, coupang_search_url:COUPANG.search_url,
-  partners_link_page:COUPANG.partners_page, product:COUPANG.product}); }
+  partners_link_page:COUPANG.partners_page, product:COUPANG.product,
+  // ★제안 번호도 넘긴다(2026-09-23) — 빠뜨리면 renderCoupangSlot이 0으로 덮어
+  //   제품 못 잡은 영상에서 "내 마지막 번호+1"이 사라졌다(사장님 캡처).
+  suggest_number:COUPANG.suggestNo}); }
 function coupangInner(){
   const p=COUPANG.editing?null:COUPANG.product;
   const head=`<div style="font-size:13px;color:var(--sub);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -10069,6 +10072,7 @@ async function saveInpockNumber(){
     const d = await r.json().catch(()=>({ok:false}));
     if(!r.ok || !d.ok){ toast(d.error || '번호 저장 실패'); return; }
     COUPANG.product = d.product; COUPANG.dm_set = d.dm_set || null;
+    if(d.suggest_number) COUPANG.suggestNo = d.suggest_number;
     redrawCoupang();
     toast(v ? v + '번으로 저장했어요' : '번호를 비웠어요');
   }catch(e){ toast(ErrorHelp.text('network')); }
@@ -10253,6 +10257,7 @@ async function coupangSave(opts){
     const d=await r.json().catch(()=>({ok:false,error:'응답 파싱 실패'}));
     if(!r.ok||!d.ok){ if(msg) msg.textContent=d.error||'저장 실패'; return; }
     COUPANG.product=d.product; COUPANG.dm_set=d.dm_set||null;
+    if(d.suggest_number) COUPANG.suggestNo=d.suggest_number;   // 서버가 매번 새로 계산해 준다
     COUPANG.editing=false; redrawCoupang();
   }catch(e){ if(msg) msg.textContent=ErrorHelp.text('network'); }
 }
@@ -12745,7 +12750,8 @@ async function sfxPackRefresh(force){
     document.getElementById('sfxPackToggle').checked=!!d.on;
     document.getElementById('sfxPackInfo').textContent = d.on
       ? '완성본 만들기를 누르면 장면마다 효과음이 자동으로 들어가요'
-      : '꺼져 있어요 — 이 영상에는 효과음이 안 들어가요';
+      : (d.sul ? '꺼져 있어요 — 이 영상에는 효과음이 안 들어가요'
+               : '체크하면 이 영상에도 효과음을 넣어 드려요 (썰 대본 스타일에 맞춘 소리예요)');
     bar.style.display='flex';
   }catch(e){ bar.style.display='none'; }
 }
@@ -19383,6 +19389,6 @@ async function checkTtsKey(){
 }
 try{ checkTtsKey(); }catch(e){}
 </script>
-<script src="/scene-style-produce.js?v=9"></script>
+<script src="/scene-style-produce.js?v=10"></script>
 </body>
 </html>

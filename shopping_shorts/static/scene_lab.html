@@ -2717,6 +2717,72 @@ function sfxControl(i){
               onchange="setSfxPos(${i}, this.value)">${posOpts}</select>` : '');
 }
 
+// ── AI 장면 만들기(Veo, 2026-09-23) — 스위치 DATA.ai_scene_enabled(관리자만 기본). 상태는 DATA.beats[i].ai_scene.
+//   produce.html 카드에도 같은 버튼이 있지만 3단계 화면은 이 실험실이 그리므로 여기가 사장님이 보는 자리다.
+const _AI_POLL = {};
+function aiSceneControl(i){
+  if (!SL.server || !DATA.ai_scene_enabled) return '';
+  const b = DATA.beats[i] || {};
+  const st = (b.ai_scene || {}).state;
+  if (st === 'queued' || st === 'running') return `<span class="hint" title="Veo가 만드는 중">⏳ AI 장면 만드는 중…</span>`;
+  const isHook = (b.role || '') === '훅';
+  const has = b.cutaway && b.cutaway.match_type === 'ai';
+  return `<button title="이 칸의 제품 프레임을 베이스로 자연스러운 동작만 넣은 4~8초 장면을 만들어 이 칸 위에 덮습니다(약 300원)"
+      onclick="startAiScene(${i},'natural')">✨ AI 장면</button>`
+    + (isHook ? `<button title="훅용 — 빠른 줌인과 한 가지 큰 동작" onclick="startAiScene(${i},'impact')">⚡ 임팩트</button>` : '')
+    + (has ? `<span class="hint" title="완성본·캡컷에서 이 칸은 AI 장면이 덮습니다">🎬 AI ${(b.ai_scene||{}).style==='impact'?'임팩트':'자연'} ${(b.ai_scene||{}).sec||''}초</span>`
+           + `<button class="danger" title="AI 장면을 떼고 담은 장면으로 돌립니다" onclick="removeAiScene(${i})">✕ AI 빼기</button>` : '')
+    + (st === 'failed' ? `<span class="hint" style="color:#f66">⚠ ${esc((b.ai_scene||{}).error || '실패')}</span>` : '');
+}
+async function startAiScene(i, style){
+  try{
+    const r = await fetch('/api/produce/mix/' + SL.job + '/ai_scene', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: i, style: style || 'natural'})});
+    const d = await r.json().catch(()=>({ok:false}));
+    if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    DATA.beats[i].ai_scene = {state:'queued', style: d.style || style};
+    renderBand();
+    pollAiScene(i);
+  }catch(e){
+    const h = document.getElementById('tbhint');
+    if (h) h.textContent = '⚠ AI 장면을 시작하지 못했어요: ' + (e.message || e);
+  }
+}
+function pollAiScene(i){
+  if (_AI_POLL[i]) clearInterval(_AI_POLL[i]);
+  let n = 0;
+  _AI_POLL[i] = setInterval(async () => {
+    n++;
+    let d = null;
+    try{ d = await (await fetch('/api/mix/result/' + SL.job + '?t=' + Date.now(), {cache:'no-store'})).json(); }catch(_){ }
+    const beats = (d && (d.edit_plan || d.plan || {}).beats) || (d && d.beats) || [];
+    const b = beats.find(x => x.beat_idx === i) || beats[i];
+    if (b){
+      DATA.beats[i].ai_scene = b.ai_scene || null;
+      DATA.beats[i].cutaway = b.cutaway || null;
+      renderBand();
+    }
+    const st = (b && b.ai_scene || {}).state;
+    if (st === 'done' || st === 'failed' || n > 240){ clearInterval(_AI_POLL[i]); delete _AI_POLL[i]; }
+  }, 3000);
+}
+async function removeAiScene(i){
+  try{
+    const r = await fetch('/api/produce/mix/' + SL.job + '/cutaway', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: i, asset_id: null})});
+    const d = await r.json().catch(()=>({ok:false}));
+    if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    DATA.beats[i].cutaway = null;
+    if (DATA.beats[i].ai_scene) DATA.beats[i].ai_scene.state = 'removed';
+    renderBand();
+  }catch(e){
+    const h = document.getElementById('tbhint');
+    if (h) h.textContent = '⚠ AI 장면을 빼지 못했어요: ' + (e.message || e);
+  }
+}
+
 async function _sfxPost(i, body){
   if (!SL.server) return;
   try{
@@ -3033,6 +3099,7 @@ function renderBand(){
             ${pickCount(i) ? `<button class="danger" title="체크한 장면만 이 칸에서 뺍니다"
                onclick="dropPicked(${i})">🗑 고른 것 빼기 (${pickCount(i)})</button>` : ''}
             ${sfxControl(i)}
+            ${aiSceneControl(i)}
             <button title="이 칸에 담은 장면을 모두 뺍니다" onclick="clearBeat(${i})">비우기</button>
             <button id="fill-${i}" title="${AUTOADD[i] ? '방금 담은 장면만 도로 뺍니다'
               : '이 칸의 대사를 AI가 읽고, 그 말이 실제로 보이는 화면을 골라 담습니다'}"

@@ -11,7 +11,9 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
     await page.addStyleTag({content:'.scene-decoration{outline:none!important}.scene-decoration-toolbar,.precision-source-cleanup{display:none!important}'});
     await page.evaluate(async()=>{await document.fonts.ready;window.sceneStyle.refresh();window.sceneStyleExporting=true});
     const layers=[];
+    const only=Array.isArray(request.only)?new Set(request.only.map(Number)):null;   // 썸네일 핀: 한 장면만(2026-09-23)
     for(let index=0;index<request.context.scenes.length;index++){
+      if(only&&!only.has(index)){layers.push(null);continue;}
       const g=await page.evaluate(i=>window.sceneStyle.show(i),index);
       await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
       const file=`scene-style-layer-${index}.png`;
@@ -24,7 +26,7 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
       const scene=request.context.scenes[index],first=Math.round(scene.start*30),end=Math.round(scene.end*30);
       let animation=null;
       const hookCount=duration>first/30*1000&&g.kind==='hook'?Math.ceil(duration/1000*30)-first+1:0,enterCount=enter?Math.ceil(enter/1000*30)+1:0;
-      if(moving||hookCount||enterCount){
+      if(!request.still&&(moving||hookCount||enterCount)){   // still=정지 한 장만(썸네일 핀)
         const count=moving?end-first:Math.min(end-first,Math.max(hookCount,enterCount));
         const pattern=`scene-style-motion-${index}-%04d.png`;
         for(let f=0;f<count;f++){

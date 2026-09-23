@@ -119,17 +119,45 @@
     leftTabs.className='tool-tabs left-pane-tabs';
     // 2026-09-22 사장님 확정: [추천|장면|폰트|색톤|꾸밈]. 추천·색톤·꾸밈 창은 아래 '장면폰트 룩' 블록이 만든다(scene-style-lefttab 이벤트로 연결).
     //   처음 열리는 탭은 '장면' 그대로 — 템플릿 카드가 처음부터 보여야 하는 검사 도구·기존 사용 흐름을 안 깨려고.
-    leftTabs.innerHTML='<button type="button" data-left-tab="look">추천</button><button type="button" class="active" data-left-tab="scene">장면</button><button type="button" data-left-tab="font">폰트</button><button type="button" data-left-tab="tone">색톤</button><button type="button" data-left-tab="deco">꾸밈</button>';
+    leftTabs.innerHTML='<button type="button" data-left-tab="mine">내 프리셋</button><button type="button" data-left-tab="look">추천</button><button type="button" class="active" data-left-tab="scene">장면</button><button type="button" data-left-tab="font">폰트</button><button type="button" data-left-tab="tone">색톤</button><button type="button" data-left-tab="deco">꾸밈</button>';
     const fontPane=document.createElement('div');fontPane.className='font-template-pane';fontPane.hidden=true;
     const drawFontSets=()=>{fontPane.innerHTML='<div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
     window.addEventListener('scene-style-fontset',()=>{if(!fontPane.hidden)drawFontSets();});   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
     fontPane.addEventListener('click',event=>{const c=event.target.closest('[data-font-set]');if(!c)return;fontSet=c.dataset.fontSet;fittedText.clear();drawFontSets();renderEdit();rememberLocal({fontSet});});   /* 저장 버튼을 안 눌러도 기억 — 새로고침하면 풀리던 문제 */
-    head.hidden=true;head.before(leftTabs);grid.after(fontPane);
+    // 2026-09-23 사장님: "마지막에 저장한 템플릿은 기억해 첫 시작에 보이게 하고, 프리셋 몇 개 저장해 쓰게 탭 하나 맨 앞에".
+    //   저장 = localStorage 'scene_style_my_presets' [{id,name,at,snap}] — 취향(템플릿·글꼴·색톤·꾸밈·칸 배치·모션)만 되살린다(작업별 글자 크기·자막 위치는 안 옮긴다, 09-22 규칙과 같다).
+    //   적용·저장하면 'scene_style_preset'(첫 시작 복원 키)도 그걸로 바꿔 다음에 열 때 그 템플릿으로 시작한다.
+    const minePane=document.createElement('div');minePane.className='font-template-pane my-preset-pane';minePane.hidden=true;
+    const MY_KEY='scene_style_my_presets';
+    const readMine=()=>{try{const v=JSON.parse(localStorage.getItem(MY_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return []}};
+    const writeMine=list=>{try{localStorage.setItem(MY_KEY,JSON.stringify(list))}catch{}};
+    const mineHooks={apply:snap=>applyTaste(snap,true),current:()=>window.sceneStyle?.snapshot?.()};   // applyTaste는 아래 함수 선언(호이스팅) — 클릭 시점엔 있다
+    const drawMine=()=>{
+      const list=readMine(),cur=mineHooks.current?.(),curId=cur?.presetId;
+      const tplName=id=>{const r=[...storyRows,...fixedRows].find(p=>p.id===id);return r?(r.name||r.title||r.label||r.id):(id||'템플릿 없음')};
+      minePane.innerHTML='<button type="button" class="my-preset-save" data-my-save>＋ 지금 설정을 내 프리셋으로 저장</button>'+
+        (list.length?'<div class="my-preset-list">'+list.map(it=>`<div class="my-preset-card${it.snap?.presetId===curId&&it.snap?.fontSet===(cur?.fontSet||'')?' selected':''}" data-my-id="${it.id}"><b>${String(it.name||'').replace(/[<>&]/g,'')}</b><small>${tplName(it.snap?.presetId||'')} · ${it.at?new Date(it.at).toLocaleDateString('ko-KR'):''}</small><span class="my-preset-btns"><button type="button" data-my-apply>적용</button><button type="button" data-my-rename>이름</button><button type="button" data-my-del>삭제</button></span></div>`).join('')+'</div>'
+        :'<div class="font-template-empty"><b>저장한 프리셋이 없습니다</b>장면·폰트·색톤·꾸밈을 맞춘 뒤 위 버튼을 누르면 여기에 쌓입니다.<br>다음에 열 때 마지막에 저장·적용한 프리셋으로 시작합니다.</div>');
+    };
+    minePane.addEventListener('click',event=>{
+      if(event.target.closest('[data-my-save]')){
+        const snap=mineHooks.current?.();if(!snap){alert('먼저 템플릿을 고르세요');return}
+        const list=readMine();const name=(prompt('프리셋 이름',`프리셋 ${list.length+1}`)||'').trim();if(!name)return;
+        list.unshift({id:Date.now().toString(36),name,at:Date.now(),snap});writeMine(list.slice(0,20));
+        try{localStorage.setItem('scene_style_preset',JSON.stringify(snap))}catch{}
+        drawMine();return;
+      }
+      const card=event.target.closest('[data-my-id]');if(!card)return;const list=readMine();const it=list.find(x=>x.id===card.dataset.myId);if(!it)return;
+      if(event.target.closest('[data-my-apply]')){mineHooks.apply?.(it.snap);try{localStorage.setItem('scene_style_preset',JSON.stringify(it.snap))}catch{}drawMine();}
+      else if(event.target.closest('[data-my-rename]')){const name=(prompt('새 이름',it.name)||'').trim();if(name){it.name=name;writeMine(list);drawMine();}}
+      else if(event.target.closest('[data-my-del]')){if(confirm(`'${it.name}' 프리셋을 지울까요?`)){writeMine(list.filter(x=>x!==it));drawMine();}}
+    });
+    head.hidden=true;head.before(leftTabs);grid.after(fontPane);fontPane.after(minePane);
     const sceneParts=[modeBar,grid];
     leftTabs.addEventListener('click',event=>{
       const b=event.target.closest('[data-left-tab]');if(!b)return;
       leftTabs.querySelectorAll('[data-left-tab]').forEach(x=>x.classList.toggle('active',x===b));
-      const tab=b.dataset.leftTab;sceneParts.forEach(el=>el.hidden=tab!=='scene');fontPane.hidden=tab!=='font';if(tab==='font')drawFontSets();
+      const tab=b.dataset.leftTab;sceneParts.forEach(el=>el.hidden=tab!=='scene');fontPane.hidden=tab!=='font';if(tab==='font')drawFontSets();minePane.hidden=tab!=='mine';if(tab==='mine')drawMine();
       window.dispatchEvent(new CustomEvent('scene-style-lefttab',{detail:tab}));
     });
     const css=document.createElement('style');
@@ -457,7 +485,7 @@
     panes.look.addEventListener('click',event=>{const c=event.target.closest('[data-look]'),look=c&&LOOKS.find(l=>l.id===c.dataset.look);if(!look)return;
       fontSet=look.font;rememberLocal({fontSet});setDeco(look.deco);applyTone(look.tone);draw();});   // applyTone이 마지막에 다시 그린다
     const css=document.createElement('style');
-    css.textContent='.layout-a .tool-tabs.left-pane-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}.left-pane-tabs button{padding-left:2px;padding-right:2px;white-space:nowrap}.look-card{padding:8px}.lk-prev{display:grid;gap:2px;justify-items:center;width:100%;padding:10px 4px;border-radius:8px;border:1px solid #ffffff1f;font-size:17px;line-height:1.25;overflow:hidden;white-space:nowrap}.lk-prev i{font-style:normal}.lk-prev i:last-child{font-size:19px}.title-deco-ink{display:inline-block}';
+    css.textContent='.layout-a .tool-tabs.left-pane-tabs{grid-template-columns:repeat(6,minmax(0,1fr))}.my-preset-save{width:100%;padding:12px;border-radius:12px;border:1px dashed #43e2b4;background:#0f2a24;color:#63edc6;font:800 14px system-ui,sans-serif;cursor:pointer;margin-bottom:10px}.my-preset-list{display:grid;gap:8px}.my-preset-card{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:10px 12px;border:1px solid #294451;border-radius:12px;background:#1b1b1b;color:#fff}.my-preset-card.selected{border-color:#43e2b4;box-shadow:0 0 0 2px #43e2b455}.my-preset-card b{font-size:15px}.my-preset-card small{grid-column:1;color:#8fa3ad;font-size:12px}.my-preset-btns{grid-column:2;grid-row:1/3;display:flex;gap:4px}.my-preset-btns button{padding:8px 10px;border-radius:8px;border:1px solid #35505b;background:#0b1a22;color:#dfe9ee;font-size:13px;cursor:pointer}.my-preset-btns [data-my-apply]{background:#43e2b4;color:#062019;font-weight:800}.left-pane-tabs button{padding-left:2px;padding-right:2px;white-space:nowrap}.look-card{padding:8px}.lk-prev{display:grid;gap:2px;justify-items:center;width:100%;padding:10px 4px;border-radius:8px;border:1px solid #ffffff1f;font-size:17px;line-height:1.25;overflow:hidden;white-space:nowrap}.lk-prev i{font-style:normal}.lk-prev i:last-child{font-size:19px}.title-deco-ink{display:inline-block}';
     document.head.append(css);
   }
   // ── 이 장면을 썸네일 후보로(2026-09-22 사장님): 구버전 6단계 화면의 [🖼 이 장면을 썸네일로]를 새 편집기로 옮겼다.
@@ -477,7 +505,7 @@
         if(!jobId||!scene){say('실제 영상을 열었을 때 쓸 수 있어요(지금은 샘플 화면)',false);return;}
         pin.disabled=true;say('보내는 중…',true);
         try{
-          const response=await fetch('/api/produce/thumb/pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:jobId,beat_idx:scene.beat_idx})});
+          const response=await fetch('/api/produce/thumb/pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:jobId,beat_idx:scene.beat_idx,scene_index:sceneIndex,styled:true})});   // 09-23: 꾸민 화면 그대로 보낸다
           const data=await response.json().catch(()=>({}));
           if(!response.ok||!data.ok)throw new Error(data.error||'보내지 못했어요');
           say(`✓ ${sceneIndex+1}번째 장면을 썸네일 후보 맨 앞에 넣었어요`,true);go.hidden=false;
@@ -1506,7 +1534,14 @@
   if(!qaMode&&!labMode){
     try{
       const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');
+      if(saved)applyTaste(saved,false);
+    }catch(error){console.warn('저장 설정 복원 실패',error);}
+  }
+  // 취향만 되살리기(첫 시작 복원 + 내 프리셋 '적용' 공용). force=true면 주소창 preset/mode 지정을 무시하고 그 템플릿으로 바꾼다.
+  function applyTaste(saved,force){
+    try{
       if(saved){
+        if(force){colorOverrides.clear();fixedLayouts.clear();fixedColors.clear();}
         branding=Object.keys(saved.branding||{}).length?saved.branding:rememberedBranding();
         if(saved.presetId==='t11'&&saved.text?.channel==='이븐쇼핑')saved.text.channel='숏템메이커';
         // ★장면별 자막 위치·문구(captionTexts/captionDrags/captionPositions/captionLayouts)는 브라우저 기억에서 되살리지 않는다(2026-09-22).
@@ -1517,7 +1552,7 @@
         //   '현재 설정 저장'으로 남긴 프리셋의 본문 제목 170%가 새 작업 3개(956a·5682·d29a)에 똑같이 붙어 렌더 본문 제목이 116px(기본 68px)로 나왔다.
         //   이 값들은 그 작업의 문장 길이에 맞춘 미세조정이라 작업마다 다르다 — 취향(글꼴·색·꾸밈·칸 배치·색톤)만 되살린다. 작업별 값은 서버 저장본이 갖고 온다.
         for(const [name,map] of Object.entries({colors:colorOverrides,fixedLayouts,fixedColors}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
-        if(!query.has('preset')&&!query.has('mode')){
+        if(force||(!query.has('preset')&&!query.has('mode'))){
           modeBar.querySelector(`[data-template-mode="${saved.mode==='continuous'?'continuous':'story'}"]`).click();
           const index=rows.findIndex(p=>p.id===saved.presetId);if(index>=0)selectPreset(index);
         }

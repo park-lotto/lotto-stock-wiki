@@ -6141,7 +6141,7 @@ def _lab_captions(plan):
 
 
 @app.get("/api/mix/scene_lab/{job_id}")
-def api_mix_scene_lab_data(job_id: str):
+def api_mix_scene_lab_data(job_id: str, request: Request = None):
     """실험실 페이지용 데이터 한 방 — fetch.py가 SSH로 만들던 data.json과 같은 모양."""
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("extract"):
@@ -6195,6 +6195,9 @@ def api_mix_scene_lab_data(job_id: str):
     return {"ok": True, "data": {
         "job_id": job_id,
         "category": category,
+        # AI 장면 만들기 버튼(2026-09-23) — 3단계 카드는 실험실(iframe)이 그리므로 스위치를 여기로도 내린다.
+        #   (produce.html 카드에만 넣었더니 사장님 화면엔 안 보였다 — 실측 14:32)
+        "ai_scene_enabled": _ai_scene_on(_cid(request) if request is not None else 0),
         "scene_lab_at": scene_lab_at,
         # 열린 탭이 오래 들고 있던 전체 편성으로 최신 편성을 덮지 못하게 하는 판본 번호.
         "scene_lab_revision": scene_lab_revision,
@@ -9858,7 +9861,41 @@ def api_thumb_pin(body: dict):
     # 후보가 중복으로 쌓이지 않는다(편성이 바뀌면 캐시명이 달라져 새 핀이 된다).
     stem = re.sub(r"[^0-9a-zA-Z.\-]", "_", src.stem)[:60]
     name = f"pin_{stem}.jpg"
-    shutil.copyfile(str(src), str(out_dir / name))
+    # ★꾸민 화면 그대로(2026-09-23 사장님 "훅 장면을 쓰고 싶은 건데" — 원본 프레임만 가서 제목·띠가 없었다):
+    #   styled=true(새 편집기 기본)이고 이 job에 장면꾸미기 저장본이 있으면 그 장면의 레이어 PNG를 렌더해 프레임 위에 얹는다.
+    #   렌더러·컨텍스트는 완성본과 같은 함수(render_layer_one → render_scene_style.js) — 썸네일과 영상이 어긋나지 않는다.
+    #   실패하면 종전대로 원본 프레임(썸네일 후보가 막히면 안 된다).
+    styled_note = None
+    _ss = (job.get("deco") or {}).get("scene_style")
+    if body.get("styled") and _ss:
+        try:
+            from shopping_shorts import scene_style as _scene_style
+            from PIL import Image as _Image
+            plan = job.get("edit_plan") or {}
+            tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
+            timeline = video_assemble._beat_timeline(plan, tts)
+            ctx = _scene_style.context_for(timeline, job.get("headcopy") or {}, _ss, job_id)
+            try:
+                s_idx = int(body.get("scene_index"))
+            except (TypeError, ValueError):
+                s_idx = -1
+            if not (0 <= s_idx < len(ctx["scenes"])) or int(ctx["scenes"][s_idx]["beat_idx"]) != i:
+                s_idx = next((k for k, sc in enumerate(ctx["scenes"]) if int(sc["beat_idx"]) == i), -1)
+            if s_idx >= 0:
+                layer = _scene_style.render_layer_one(timeline, _ss, _MIX_WORK_DIR / job_id / "thumb_style", s_idx,
+                                                      job.get("headcopy") or {}, job_id)
+                base = _Image.open(src).convert("RGBA")
+                over = _Image.open(layer).convert("RGBA")
+                if over.size != base.size:
+                    over = over.resize(base.size)
+                _Image.alpha_composite(base, over).convert("RGB").save(str(out_dir / name), quality=92)
+                styled_note = f"scene {s_idx}"
+        except Exception as _e:      # noqa: BLE001 — 꾸미기 합성 실패는 원본 프레임으로 대신
+            import traceback as _tb5
+            _tb5.print_exc(file=sys.stderr)
+            styled_note = None
+    if styled_note is None:
+        shutil.copyfile(str(src), str(out_dir / name))
 
     beats = ((job.get("edit_plan") or {}).get("beats") or [])
     label = f"장면 {i + 1}"
@@ -9868,7 +9905,7 @@ def api_thumb_pin(body: dict):
                     "ts": round(float((beats[i] or {}).get("start") or 0), 2)})
     thumb["pins"] = pins
     _save_render_inputs(store, job_id, thumbnail=thumb)
-    return {"ok": True, "name": name, "label": label, "pins": pins,
+    return {"ok": True, "name": name, "label": label, "pins": pins, "styled": bool(styled_note),
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
 
@@ -19781,10 +19818,12 @@ def api_produce_mix_settings(body: dict):
         #   저장할 때 이 값을 모르고 보내면 조용히 지워져 "껐는데 다시 켜짐"이 된다 → 없으면 기존 값 유지.
         if isinstance(fields["deco"], dict) and "sfx_pack" not in fields["deco"]                 and (job.get("deco") or {}).get("sfx_pack"):
             fields["deco"]["sfx_pack"] = job["deco"]["sfx_pack"]
+    sfx_switched = False
     if "sfx_pack" in body:
         # 3단계 [🔊 썰 효과음 자동 넣기] 스위치(2026-09-22). 기존 꾸미기 값에 이 칸만 합친다.
-        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}),
-                          "sfx_pack": "off" if body.get("sfx_pack") in ("off", False, 0, "0") else "auto"}
+        _new = "off" if body.get("sfx_pack") in ("off", False, 0, "0") else "auto"
+        sfx_switched = _new != str((job.get("deco") or {}).get("sfx_pack") or "")
+        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), "sfx_pack": _new}
     if "scene_style" in body:
         from .scene_style import validate_snapshot
         try:
@@ -19798,6 +19837,12 @@ def api_produce_mix_settings(body: dict):
         fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
         _save_render_inputs(store, job_id, **fields)
+    if sfx_switched:
+        # ★효과음을 켜고 끄면 **이미 만든 미리보기(완성본 만들기 탭)도 버린다**(2026-09-23 사장님 제보
+        #   "완성본 만들기를 다시 눌러도 렌더가 다시 안 된다"). _save_render_inputs는 video_path만 끊고
+        #   preview_status는 그대로라, 3단계는 "이미 있다"며 새로 만들지 않았다. 파일은 안 지운다 —
+        #   run_preview가 덮어쓰고, 상태가 비었으면 화면·API가 옛 파일을 안 쓴다(api_mix_preview_video).
+        store.update_mix_job(job_id, preview_status="", preview_error=None)
     return {"ok": True}
 
 
@@ -19813,9 +19858,10 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
     _mode = str(store.get_setting("sfx_pack_enabled", "") or "").strip().lower()
     switch_on = _mode in ("1", "on") or (_mode == "admin" and int(job.get("customer_id") or 0) == 0)
     sul = sfx_pack.is_sul_script(store, job)
-    on = ((job.get("deco") or {}).get("sfx_pack") or "auto") != "off"
-    got = sfx_pack.pack_for(job.get("customer_id", 0)) if (switch_on and sul) else None
-    return {"ok": True, "eligible": bool(switch_on and sul), "on": on,
+    choice = str((job.get("deco") or {}).get("sfx_pack") or "")
+    on = (choice != "off") if choice else sul      # 손댄 적 없으면 기본값 = 썰 대본인가
+    got = sfx_pack.pack_for(job.get("customer_id", 0)) if switch_on else None
+    return {"ok": True, "eligible": bool(switch_on), "sul": sul, "on": on,
             "pack": got[0] if got else None, "family": sfx_pack.script_family(store, job)}
 
 
@@ -19842,6 +19888,9 @@ def api_scene_style_asset(asset_path: str):
 def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = "",
                             headcopy_subline: str = "", copy_family: str = ""):
     from .scene_style import context_for
+    # ★새 편집기는 관리자 또는 스위치(scene_style_inline_enabled)가 열어 준 고객만(2026-09-23 사장님: 라이브 뒤 켠다)
+    if not (_is_admin(_cid(request)) or _setting_gate(Store(DB_PATH), "scene_style_inline_enabled", _cid(request))):
+        return JSONResponse(status_code=403, content={"error": "아직 열리지 않은 기능입니다"})
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
         return JSONResponse(status_code=404, content={"error": "영상 없음"})
@@ -19891,7 +19940,11 @@ def api_scene_style_flags(request: Request):
     """6단계 장면꾸미기 화면 모드. inline=True면 제작소가 새 편집기(scene-style-ui-showcase)를 회색 버튼 팝업 대신
     6단계 패널 안에 바로 띄우고 구버전 UI(완성 스타일·직접 다듬기)를 숨긴다. 관리자 스위치 scene_style_inline_enabled
     (2026-09-23 사장님: 라이브 방송 뒤 바로 교체할 수 있게 스위치만 올리면 되도록 기본 세팅). 기본 끔 = 종전 화면 그대로."""
-    return {"ok": True, "inline": bool(_setting_gate(Store(DB_PATH), "scene_style_inline_enabled", _cid(request)))}
+    cid = _cid(request)
+    on = bool(_setting_gate(Store(DB_PATH), "scene_style_inline_enabled", cid))
+    # ★allowed = 새 편집기를 열 수 있는가(2026-09-23 사장님 "모든 고객이 못 쓰게 막으라니까, 라이브하고 나서 켠다고").
+    #   스위치가 꺼져 있으면 **관리자만** — 고객은 회색 버튼도 숨기고 API도 막는다. 켜면 inline과 함께 열린다.
+    return {"ok": True, "inline": on, "allowed": bool(on or _is_admin(cid))}
 
 
 @app.get("/api/admin/scene-style-lab/jobs")

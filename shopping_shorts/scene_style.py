@@ -243,6 +243,32 @@ def render_layers(timeline, snapshot, output, headcopy=None, job_id=None):
     return json.loads((output / "scene-style-layers.json").read_text(encoding="utf-8"))
 
 
+def render_layer_one(timeline, snapshot, output, index, headcopy=None, job_id=None):
+    """장면 하나(index)의 꾸미기 레이어 PNG만 만든다 — 썸네일 후보(2026-09-23 사장님 "훅 장면을 쓰고 싶은 건데").
+    render_layers와 같은 렌더러·같은 context — only=[index]·still로 한 장만 찍어 몇 초면 끝난다. 반환: PNG 경로."""
+    snapshot = validate_snapshot(snapshot)
+    context = context_for(timeline, headcopy, snapshot, job_id)
+    if not context["scenes"] or not (0 <= int(index) < len(context["scenes"])):
+        raise ValueError("장면 번호가 범위 밖입니다")
+    output = Path(output).resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    request = output / "scene-style-request.json"
+    request.write_text(json.dumps({"snapshot": snapshot, "context": context, "output": str(output),
+                                   "only": [int(index)], "still": True}, ensure_ascii=False), encoding="utf-8")
+    node_env = os.environ.copy()
+    if sys.platform.startswith("linux"):
+        node_env.setdefault("SCENE_STYLE_NO_SANDBOX", "1")
+    run = subprocess.run(["node", str(ROOT / "tools/render_scene_style.js"), str(request)],
+                         capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120, env=node_env)
+    if run.returncode:
+        raise RuntimeError("장면꾸미기 레이어 생성 실패: " + run.stderr[-1500:])
+    layers = json.loads((output / "scene-style-layers.json").read_text(encoding="utf-8"))
+    layer = layers[int(index)] if int(index) < len(layers) else None
+    if not layer or not layer.get("file"):
+        raise RuntimeError("레이어 파일이 없습니다")
+    return output / layer["file"]
+
+
 def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
     from . import video_assemble as va
     snapshot=validate_snapshot(snapshot)

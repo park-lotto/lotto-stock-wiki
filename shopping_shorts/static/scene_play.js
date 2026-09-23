@@ -658,7 +658,16 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   (처음엔 ✋수동 우선으로 했더니, 실험하다 남은 ✋ 두 개가 구절맞춤을 조용히 꺼서
   //    "마지막 구절 카드가 활성이 안 된다"로 보였다. 이제 ✋를 새로 만지는 순간
   //    setFix가 그 칸의 구절맞춤을 눈에 보이게 끈다 — 숨은 상태가 없다.)
-  if (beatIdx != null && phraseSyncOn(beatIdx) && typeof capsOf === 'function') {
+  // ★컷 리듬 칸(서버가 cut_rhythm 표식을 단 칸)은 **서버 렌더와 같은 규칙**으로 그린다(2026-09-23 사장님
+  //   "미끼에 엄청 몰렸다": 화면은 자막 구절마다 컷을 그려 12조각인데 렌더는 3~4컷 — 화면이 거짓말을 했다).
+  //   홀드 칸 = 첫 조각 한 컷 · 나머지 = 조각 한 번씩 비례(아래 onePerSeg 경로). 서버 plan_beat_clips_for의 _cr 분기와 짝.
+  const crBeat = (syncBeat && syncBeat.cut_rhythm) || null;
+  const rhythmOne = !!crBeat && beatIdx != null && typeof lists !== 'undefined' && lists[beatIdx] === segIds;
+  if (rhythmOne && crBeat.hold && segments.length){
+    const seg = segments[0];
+    return finish([{seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: Math.round(ttsDur * 100) / 100}]);
+  }
+  if (!rhythmOne && beatIdx != null && phraseSyncOn(beatIdx) && typeof capsOf === 'function') {
     const caps = capsOf(beatIdx) || [];
     if (caps.length >= 1 && ttsDur > 0.1) {
       // 경계: [0, caps[1].start, …, caps[n-1].start, ttsDur] — 리드인·꼬리는 양끝 컷 몫.
@@ -738,7 +747,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   종전엔 2.2초 쪼개기+0.8초 하한으로 뒤 장면이 '안 나옴'이 됐고, 경계를 끌면 컷이 다시
   //   짜여 먹혔다 안 먹혔다 했다. 서버 plan_beat_clips_for의 phrase_sync False 분기와 짝이다.
   const allIn = beatIdx != null && !phraseSyncOn(beatIdx);
-  if (onePerSeg || allIn){
+  if (onePerSeg || allIn || rhythmOne){
     // 1장=1컷 · 비례 배분(라이브 _plan_beat_clips one_per_seg와 같은 규칙).
     // 나레이션 시간을 담은 장면들에 **길이 비례**로 나눈다 — 남으면 줄이고 모자라면 늘린다.
     // 담은 게 전부·순서대로·한 번씩 나오고, 긴 장면은 길게 짧은 장면은 짧게 비율이 유지된다.
