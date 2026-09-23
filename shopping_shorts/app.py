@@ -19846,6 +19846,9 @@ def api_scene_style_asset(asset_path: str):
 def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = "",
                             headcopy_subline: str = "", copy_family: str = ""):
     from .scene_style import context_for
+    # ★새 편집기는 관리자 또는 스위치(scene_style_inline_enabled)가 열어 준 고객만(2026-09-23 사장님: 라이브 뒤 켠다)
+    if not (_is_admin(_cid(request)) or _setting_gate(Store(DB_PATH), "scene_style_inline_enabled", _cid(request))):
+        return JSONResponse(status_code=403, content={"error": "아직 열리지 않은 기능입니다"})
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
         return JSONResponse(status_code=404, content={"error": "영상 없음"})
@@ -19895,7 +19898,11 @@ def api_scene_style_flags(request: Request):
     """6단계 장면꾸미기 화면 모드. inline=True면 제작소가 새 편집기(scene-style-ui-showcase)를 회색 버튼 팝업 대신
     6단계 패널 안에 바로 띄우고 구버전 UI(완성 스타일·직접 다듬기)를 숨긴다. 관리자 스위치 scene_style_inline_enabled
     (2026-09-23 사장님: 라이브 방송 뒤 바로 교체할 수 있게 스위치만 올리면 되도록 기본 세팅). 기본 끔 = 종전 화면 그대로."""
-    return {"ok": True, "inline": bool(_setting_gate(Store(DB_PATH), "scene_style_inline_enabled", _cid(request)))}
+    cid = _cid(request)
+    on = bool(_setting_gate(Store(DB_PATH), "scene_style_inline_enabled", cid))
+    # ★allowed = 새 편집기를 열 수 있는가(2026-09-23 사장님 "모든 고객이 못 쓰게 막으라니까, 라이브하고 나서 켠다고").
+    #   스위치가 꺼져 있으면 **관리자만** — 고객은 회색 버튼도 숨기고 API도 막는다. 켜면 inline과 함께 열린다.
+    return {"ok": True, "inline": on, "allowed": bool(on or _is_admin(cid))}
 
 
 @app.get("/api/admin/scene-style-lab/jobs")

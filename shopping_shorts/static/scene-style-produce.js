@@ -33,8 +33,10 @@
     frame=document.createElement('iframe');frame.title='문구와 효과 편집기';frame.style.cssText='width:100%;height:calc(100vh - 200px);min-height:720px;border:1px solid #35505b;border-radius:12px;background:#071118';
     inlineShell.append(note,frame);panel.append(inlineShell);return inlineShell;
   }
+  let allowed=false;   // 새 편집기를 열 수 있는가 — 관리자 또는 스위치(2026-09-23 사장님: 라이브 뒤 켠다. 그전엔 고객에게 안 보인다)
   async function initInline(){
-    try{const r=await fetch('/api/produce/scene-style/flags',{cache:'no-store'});const d=await r.json();inlineMode=!!(r.ok&&d&&d.inline);}catch(_){inlineMode=false;}
+    try{const r=await fetch('/api/produce/scene-style/flags',{cache:'no-store'});const d=await r.json();inlineMode=!!(r.ok&&d&&d.inline);allowed=!!(r.ok&&d&&d.allowed);}catch(_){inlineMode=false;allowed=false;}
+    if(!allowed){const btn=document.querySelector('.panel[data-step="3"] button.btn[onclick="openSceneStyleEditor()"]');if(btn)btn.hidden=true;const st=status();if(st)st.textContent='';}
     if(!inlineMode)return;
     const panel=stepPanel();if(!panel)return;
     ensureInlineShell();
@@ -151,6 +153,7 @@
     result.effects={};sources.forEach((source,i)=>{if(snapshot.effects?.[source])result.effects[i]=snapshot.effects[source]});return result;
   }
   window.openSceneStyleEditor=async()=>{
+    if(!allowed){status().textContent='';return;}   // 고객에겐 아직 안 연다(관리자·스위치만)
     if(!MIX_JOB){status().textContent='영상의 음성·장면을 먼저 준비해 주세요.';return;}
     jobId=MIX_JOB;status().textContent='실제 제목과 자막을 불러오는 중…';
     try{
