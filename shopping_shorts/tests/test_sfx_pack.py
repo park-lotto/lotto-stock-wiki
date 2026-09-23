@@ -82,6 +82,17 @@ def test_style_id_saved_on_job_survives_deleted_work():
     assert sfx_pack.resolve(_Store(style=70), job12) is None             # job 번호가 우선(사회증거형=끔)
 
 
+def test_roles_alone_can_say_sul():
+    """틀 번호가 없는 대본도 칸 역할이 썰 구조면 켜진다(2026-09-23 라이브 job 93ea9d2639e6)."""
+    sul_plan = {"beats": [{"role": r} for r in ["훅", "미끼", "공개", "고조1", "고조1", "반전", "마무리"]]}
+    other = {"beats": [{"role": r} for r in ["situation", "notice", "ask", "method", "result", "regret"]]}
+    assert sfx_pack.looks_sul_by_roles({"edit_plan": sul_plan})
+    assert not sfx_pack.looks_sul_by_roles({"edit_plan": other})
+    assert not sfx_pack.looks_sul_by_roles({"edit_plan": {"beats": [{"role": "훅"}]}})     # 너무 짧음
+    job = {"job_id": "jr", "customer_id": 0, "deco": {}, "edit_plan": sul_plan}
+    assert sfx_pack.resolve(_Store(style=None), job)          # 제작 기록·틀 없어도 켜짐
+
+
 def test_admin_only_mode():
     """2026-09-23 사장님 "관리자만 켜봐": sfx_pack_enabled='admin'이면 사장님(cid 0) 영상에서만."""
     admin_job = {"job_id": "j1", "customer_id": 0, "deco": {}}
