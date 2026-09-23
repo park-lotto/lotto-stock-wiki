@@ -3253,7 +3253,8 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         #      영상은 나레이션이 그대로 나가므로 **효과음을 켜는 순간 목소리만 작아졌다**(라이브 사장님
         #      영상 bbbd6f20fe39 팩 있음/없음 두 판 대조로 확인).
         #   그래서 나레이션(+BGM)은 **종전 그대로** 섞고, 효과음은 normalize=0으로 더한다.
-        #   더해서 넘칠 수 있는 순간만 alimiter(level=0 — 자동 음량 올림 끔)로 누른다.
+        #   더해서 넘칠 수 있는 순간만 alimiter(level=0 — 자동 음량 올림 끔)로 누른다. 천장은 -1dB(0.89):
+        #   0.95로 두니 AAC 압축 뒤 최고점이 +0.4dB로 튀었다(2026-09-22 실측).
         if len(sfx_labels) > 1:
             fc.append("".join(f"[{lb}]" for lb in sfx_labels)
                       + f"amix=inputs={len(sfx_labels)}:duration=longest:normalize=0[sfxbus]")
@@ -3267,14 +3268,27 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         base = "nb"
         amap = "[nb]"
     if has_sfx:
-        fc.append(f"[{base}][{sfx_bus}]amix=inputs=2:duration=first:normalize=0,"
-                  f"alimiter=limit=0.95:level=0[a]")
+        # ★효과음이 울리는 짧은 순간만 나레이션을 비켜 준다(덕킹, 2026-09-22 실측).
+        #   라이브 영상에서 둥이 이븐쇼핑보다 3.3dB 작았다 — 그 순간 목소리가 이미 0.0dBFS라 천장에
+        #   눌린 것(파일을 키워도 소용없음). 효과음 줄을 둘로 나눠 하나는 나레이션 압축 신호로,
+        #   하나는 그대로 섞는다. 신호 쪽은 apad로 늘려 효과음이 먼저 끝나도 나레이션이 잘리지 않게.
+        fc.append(f"[{sfx_bus}]asplit=2[sfxkey][sfxmix]")
+        fc.append("[sfxkey]apad[sfxkeyp]")
+        fc.append(f"[{base}][sfxkeyp]sidechaincompress=threshold={_SFX_DUCK_THRESHOLD}:ratio={_SFX_DUCK_RATIO}"
+                  f":attack=2:release=150[nbduck]")
+        fc.append("[nbduck][sfxmix]amix=inputs=2:duration=first:normalize=0,"
+                  "alimiter=limit=0.89:level=0[a]")
         amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
     cmd += ["-r", "30", "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(out_path)]
     _run_ffmpeg(cmd, cwd=str(work))
     return str(out_path)
+
+
+# 효과음 덕킹 세기 — 실렌더로 맞춘 값(tools/sfx_bench/check_pair.py). 효과음이 이 크기를 넘으면 나레이션을 누른다.
+_SFX_DUCK_THRESHOLD = 0.2      # -14dBFS: 둥·오프너·뽁 같은 큰 소리만 비켜 준다(휙·틱은 안 건드림)
+_SFX_DUCK_RATIO = 4
 
 
 def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None, sfx_paths=None, burn_captions=True):
