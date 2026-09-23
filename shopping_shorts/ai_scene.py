@@ -102,6 +102,17 @@ def base_frame_path(job, work, beat, extract, *, product_only=True, product_word
         if t is not None:
             return extract_frame(base["path"], t, out)
     vid, t = pick_base_material(beat, extract, product_only=product_only, product_words=product_words)
+    # ★제품만 컷이 청소본 어딘가에 있으면 청소본에서 뜬다 — 원본은 자막·워터마크가 남아 Veo가 가짜 글자·로고를
+    #   본뜬다(2026-09-23 실측 'beeitem' 로고·헛글자). 조각 판정은 clean_base.piece_map 하나(0순위-B).
+    if base is not None and product_only:
+        for seg in product_only_segments(extract, product_words):
+            if seg["video_id"] != vid or not (float(seg["start"]) <= t <= float(seg["end"])):
+                continue
+            pieces = cb.piece_map(base, {"video_id": vid, "start": seg["start"], "end": seg["end"]})
+            if pieces:
+                mid = pieces[0]["start"] + (pieces[0]["end"] - pieces[0]["start"]) / 2.0
+                return extract_frame(base["path"], mid, out)
+            break
     srcs = resolve_sources(job, work) if resolve_sources else {}
     src = srcs.get(vid)
     if not src:
@@ -128,19 +139,26 @@ _MOTION_SCHEMA = {
 }
 
 
-def motion_request(narration, subject_hint="", style="natural", call=None):
-    """대사 한 줄 → (영어) 피사체 묘사 + 초 단위 동작 3단계. Gemini JSON 호출; 실패하면 기본값."""
+def motion_request(narration, subject_hint="", style="natural", call=None, frame_path=None):
+    """대사 한 줄 + **베이스 프레임 이미지** → (영어) 피사체 묘사 + 초 단위 동작 3단계. Gemini JSON 호출; 실패하면 기본값.
+
+    ★이미지를 반드시 같이 준다(2026-09-23 실측): 텍스트만 주면 "뒤집으면 핑크가 되는 리버시블 인형"처럼
+      제품에 없는 기능을 지어내고 Veo가 그대로 만든다(훅 실측 — 노란 인형이 핑크로 뒤집힘)."""
     if call is None:
-        from shopping_shorts.edit_plan import _vault_call as call
+        from shopping_shorts.edit_plan import _vault_call, _vault_call_image
+        call = (lambda p, s: _vault_call_image(p, s, frame_path)) if frame_path else _vault_call
     prompt = (
-        "You write shot directions for a 4-8 second product video clip that starts from a given still frame.\n"
+        "You write shot directions for a 4-8 second product video clip that starts from the attached still frame (FRAME 0).\n"
+        "Describe ONLY what is visible in the frame. Do not invent product features, colors, parts or mechanisms that are not visible.\n"
         f"Product / subject hint (Korean): {subject_hint or '(unknown)'}\n"
         f"Narration line (Korean) this shot must match: {narration}\n"
         f"Style: {'high-impact hook (fast push-in, one bold action, slight camera shake)' if style == 'impact' else 'natural subtle motion (breathing, gentle hand, slow push-in)'}\n"
         "Return JSON: subject_desc_en (one sentence describing the subject exactly as it appears, colors, materials), "
         "motion_steps_en (exactly 3 short sentences: what happens in the first third, middle third, last third; "
-        "only movements that could physically happen in this frame; keep the product's shape/color unchanged; "
-        "no new people; no text), forbid_extra (0-3 short English phrases to forbid, e.g. 'no washing machine')."
+        "only movements that could physically happen to what is visible in this frame — camera moves, gentle hand contact, "
+        "soft parts swaying, light changes; the product must keep its exact shape, color, material and design; it must not "
+        "transform, flip inside out, change color or reveal hidden parts; no new people; no text), "
+        "forbid_extra (0-3 short English phrases to forbid, e.g. 'no washing machine')."
     )
     try:
         res = call(prompt, _MOTION_SCHEMA) or {}
@@ -255,7 +273,7 @@ def run_ai_scene(job_id, beat_idx, style, db_path, work_root, *, gen=None, call=
         except Exception:      # noqa: BLE001
             dur = float(beat.get("target_seconds") or 4)
         sec = pick_seconds(dur)
-        motion = motion_request(beat.get("narration") or "", product or "", style, call=call)
+        motion = motion_request(beat.get("narration") or "", product or "", style, call=call, frame_path=png)
         prompt = build_prompt(motion, sec, style)
         ts = time.strftime("%Y%m%d_%H%M%S")
         from shopping_shorts.app import _SCENE_ASSETS_DIR

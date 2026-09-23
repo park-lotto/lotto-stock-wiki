@@ -125,3 +125,25 @@ def test_run_ai_scene_refuses_while_rendering(tmp_path, monkeypatch):
     _patch_common(monkeypatch, tmp_path, store)
     assert ai.run_ai_scene("j", 0, "natural", "db", tmp_path, gen=lambda *a: pytest.fail("생성이 돌았다")) is None
     assert job["edit_plan"]["beats"][0]["ai_scene"]["state"] == "failed"
+
+
+def test_base_frame_prefers_clean_base_when_product_cut_is_in_it(tmp_path, monkeypatch):
+    """제품만 컷(s2 6.77~8.07)이 청소본 컷 지도에 있으면 청소본 파일에서 그 자리를 뜬다(자막·워터마크 없음)."""
+    from shopping_shorts import clean_base as cb
+    work = tmp_path / "j"; work.mkdir()
+    (work / "final_clean_x.mp4").write_bytes(b"c" * 4096)
+    cb.save_base(work, sig="x", path=str(work / "final_clean_x.mp4"), plan={"beats": []},
+                 cuts=[{"video_id": "s2", "beat_idx": 3, "src": 6.8, "fin": 10.0, "dur": 1.2}])
+    seen = {}
+    monkeypatch.setattr(ai, "extract_frame", lambda src, t, out: (seen.update(src=str(src), t=t), str(out))[1])
+    ai.base_frame_path({"urls": []}, work, dict(BEAT, beat_idx=3), EXTRACT, product_only=True,
+                       resolve_sources=lambda job, w: {"s2": "raw_s2.mp4"})
+    assert seen["src"].endswith("final_clean_x.mp4") and abs(seen["t"] - 10.6) < 0.01   # 겹침 6.8~8.0 → 청소본 10.0~11.2 가운데
+
+
+def test_motion_request_passes_frame_to_image_call(monkeypatch):
+    got = {}
+    monkeypatch.setattr("shopping_shorts.edit_plan._vault_call_image",
+                        lambda p, s, f: (got.update(frame=f, prompt=p), {"subject_desc_en": "x", "motion_steps_en": ["1", "2", "3"]})[1])
+    ai.motion_request("a", "b", "natural", frame_path="base.png")
+    assert got["frame"] == "base.png" and "Describe ONLY what is visible" in got["prompt"] and "flip inside out" in got["prompt"]
