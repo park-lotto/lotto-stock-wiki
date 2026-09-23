@@ -6141,7 +6141,7 @@ def _lab_captions(plan):
 
 
 @app.get("/api/mix/scene_lab/{job_id}")
-def api_mix_scene_lab_data(job_id: str):
+def api_mix_scene_lab_data(job_id: str, request: Request = None):
     """실험실 페이지용 데이터 한 방 — fetch.py가 SSH로 만들던 data.json과 같은 모양."""
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("extract"):
@@ -6195,6 +6195,9 @@ def api_mix_scene_lab_data(job_id: str):
     return {"ok": True, "data": {
         "job_id": job_id,
         "category": category,
+        # AI 장면 만들기 버튼(2026-09-23) — 3단계 카드는 실험실(iframe)이 그리므로 스위치를 여기로도 내린다.
+        #   (produce.html 카드에만 넣었더니 사장님 화면엔 안 보였다 — 실측 14:32)
+        "ai_scene_enabled": _ai_scene_on(_cid(request) if request is not None else 0),
         "scene_lab_at": scene_lab_at,
         # 열린 탭이 오래 들고 있던 전체 편성으로 최신 편성을 덮지 못하게 하는 판본 번호.
         "scene_lab_revision": scene_lab_revision,
