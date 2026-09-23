@@ -160,10 +160,15 @@ def motion_request(narration, subject_hint="", style="natural", call=None, frame
         "transform, flip inside out, change color or reveal hidden parts; no new people; no text), "
         "forbid_extra (0-3 short English phrases to forbid, e.g. 'no washing machine')."
     )
-    try:
-        res = call(prompt, _MOTION_SCHEMA) or {}
-    except Exception:      # noqa: BLE001 — 지시 생성 실패는 기본 동작으로
-        res = {}
+    res = {}
+    for attempt in range(3):          # 네트워크 끊김(RemoteProtocolError 실측 2026-09-23)은 한두 번 더 시도
+        try:
+            res = call(prompt, _MOTION_SCHEMA) or {}
+        except Exception:      # noqa: BLE001 — 지시 생성 실패는 기본 동작으로
+            res = {}
+        if res.get("motion_steps_en"):
+            break
+        time.sleep(2)
     steps = [str(x).strip() for x in (res.get("motion_steps_en") or []) if str(x).strip()][:3]
     if len(steps) < 3:
         steps = (["The camera holds on the subject with a slight natural handheld sway.",
