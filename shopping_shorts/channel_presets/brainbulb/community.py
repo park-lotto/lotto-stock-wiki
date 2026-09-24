@@ -121,7 +121,7 @@ def read_images(post, workdir, reader, *, log=print):
         raise RuntimeError("community: 읽을 이미지가 없습니다")
     log(f"[brainbulb.community] 캡처 {len(paths)}장 · 댓글 {len(post['comments'])}개")
     raw = reader(build_read_request(post), paths)
-    from .prompt import parse_any
+    from shopping_shorts.channelkit.prompt import parse_any
     text = (parse_any(raw).get("text") or "").strip()
     if len(text) < 100:
         raise RuntimeError(f"community: 읽어낸 글이 너무 짧습니다({len(text)}자)")

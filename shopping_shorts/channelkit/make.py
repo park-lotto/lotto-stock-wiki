@@ -62,7 +62,7 @@ def main(argv=None):
     os.makedirs(a.workdir, exist_ok=True)
     with open(os.path.join(a.workdir, "source.txt"), "w", encoding="utf-8") as fh:
         fh.write(text)
-    from . import images as _images
+    from shopping_shorts.channel_presets.brainbulb import images as _images
     imagegen = None if a.no_images else _images.evolink_imagegen(quality=a.quality)
     r = pipeline.run_all(a.workdir, source_text=text,
                          llm=providers.script_llm(a.model, which=a.script_llm),

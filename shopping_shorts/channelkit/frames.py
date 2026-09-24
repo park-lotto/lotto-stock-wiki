@@ -39,7 +39,7 @@ def _cover(im, w, h, focus=None, face_top=0.42):
 def _face_focus(src):
     """사진 속 가장 큰 얼굴의 중심 → (cx, cy). 얼굴이 없거나 못 재면 None(가운데 자르기)."""
     try:
-        from . import photos
+        from shopping_shorts.channel_presets.brainbulb import photos   # 얼굴 검출은 뇌전구 사진 모듈에 있다(2026-09-25 이동)
         box = photos.face_box(src)
     except Exception:  # noqa: BLE001 — 검출이 안 되면 예전처럼 가운데로 자른다
         return None

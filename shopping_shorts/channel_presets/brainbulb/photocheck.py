@@ -19,7 +19,7 @@
 import json
 import os
 
-from . import spec
+from shopping_shorts.channelkit import spec
 
 
 def metrics(path):
@@ -139,7 +139,7 @@ def build_review_request(path, subtitle, want="", topic=""):
 
 def parse_review(raw):
     """모델 응답 → dict. 못 읽으면 '통과'로 둔다 — 검수가 편을 멈추면 안 된다."""
-    from .prompt import parse_any
+    from shopping_shorts.channelkit.prompt import parse_any
     try:
         d = parse_any(raw)
     except Exception:  # noqa: BLE001

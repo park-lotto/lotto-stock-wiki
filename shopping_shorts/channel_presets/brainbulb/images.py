@@ -12,7 +12,7 @@ import time
 
 import requests
 
-from . import spec, prompt as _prompt
+from shopping_shorts.channelkit import spec, prompt as _prompt
 
 
 def build_prompt_request(script, source_text):

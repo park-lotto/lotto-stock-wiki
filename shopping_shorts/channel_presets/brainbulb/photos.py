@@ -25,7 +25,7 @@ import urllib.request
 
 import requests
 
-from . import spec
+from shopping_shorts.channelkit import spec
 
 _UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124"}
 

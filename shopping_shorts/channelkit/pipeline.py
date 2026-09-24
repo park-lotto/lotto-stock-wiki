@@ -13,7 +13,7 @@ import os
 import tempfile
 import time
 
-from . import spec, registry, prompt, lint, layout, voice, timing, ass_gen, sfx, render, review, measure, images as _images, frames as _frames, photocheck as _photocheck
+from . import spec, registry, prompt, lint, layout, voice, timing, ass_gen, sfx, render, review, measure
 
 def steps():
     """현재 채널의 단계 순서 — spec.STEPS. (전엔 여기 상수였다. 채널마다 다르므로 spec으로 옮김 2026-09-25)"""
@@ -145,70 +145,6 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
                 _fail_stay(job, step)
                 save(wd, job)
                 return _resp("failed", step, "lint", fail={"where": "lint", "why": f"반려 {len(rej)}건", "fix": lint.feedback(issues), "retry_ok": True})
-
-        elif step == "prompts":
-            if llm is None or imagegen is None:
-                d["prompts"] = {"skipped": True, "why": "llm 또는 imagegen 없음 — 사진 없이(검은 슬롯) 진행"}
-            else:
-                s = dict(d["script"]["script"]); s["groups"] = d["layout"]["groups"]
-                d["prompts"] = _images.make_prompts(s, d["setup"]["source_text"], llm, log=log)
-            _invalidate_after(job, "prompts")
-
-        elif step == "images":
-            if d["prompts"].get("skipped") or imagegen is None:
-                d["images"] = {"files": {}, "skipped": True}
-            else:
-                files = _images.generate_all(d["prompts"]["prompts"], wd, imagegen,
-                                             sources=d["prompts"].get("sources"), log=log)
-                # ★만든 그림을 **실제로 보고** 판정한다 — 프롬프트 낱말 차단은 계속 샌다
-                #   (실측 2026-09-13: computer screen을 막으니 digital sign으로, 그걸 막으니 또 다른
-                #    표현으로 나왔다. 검수는 «종합주가지수 -2,886.83 신한투자증권»을 읽어내 반려했다).
-                #   볼케이노도 같은 구조다 — review_policy={"provider":"client"}.
-                if reviewer is not None:
-                    topic = ((d["script"]["script"].get("title") or {}).get("h1") or "")
-                    searched = _images.searched_map(files)   # 「검색 진짜 됐나」 — 기록만 한다
-                    subs = _subtitles_by_slot(d["script"]["script"])
-                    # ★그 자리에 **무엇을 넣으려 했는지**도 함께 보낸다 — 이게 없으면 검수가
-                    #   사진만 보고 "사람이 말하고 있으니 말이 되네" 하고 넘긴다
-                    #   (실측 2026-09-14: 검색어 「1980년대 어음 용지」 자리에 한복 할머니
-                    #    인터뷰 캡처가 왔는데 matches_subtitle=true 로 통과했다).
-                    wants = {}
-                    for k, s in (d["prompts"].get("sources") or {}).items():
-                        q = (s or {}).get("query") or ""
-                        wants[str(k)] = f"검색: {q}" if q else "생성 이미지"
-                    # ★반려 → 사유를 붙여 다시 만들기를 **최대 PHOTO_RETRY_MAX 회** 반복한다
-                    #   (2026-09-16 사장님 지시). 종전엔 한 번 다시 만들고 그 결과가
-                    #   좋든 나쁘든 그냥 다음 단계로 갔다 — 재생성분이 또 틀려도 아무도 안 봤다.
-                    rounds = []
-                    chk = _photocheck.check(files, subs, reviewer=reviewer, log=log, wants=wants,
-                                            topic=topic, searched=searched)
-                    for n in range(spec.PHOTO_RETRY_MAX):
-                        if not chk["retry"]:
-                            break
-                        reasons = {r["slot"]: _photocheck.fail_reason(r["review"])
-                                   for r in chk["reviewed"] if r.get("review", {}).get("failed")}
-                        rounds.append({"round": n + 1, "retry": list(chk["retry"]),
-                                       "reasons": reasons})
-                        log(f"[brainbulb.images] 재시도 {n + 1}/{spec.PHOTO_RETRY_MAX} — 슬롯 {chk['retry']}")
-                        files = _images.regenerate(chk["retry"], d["prompts"]["prompts"], wd,
-                                                   imagegen, files, log=log, reasons=reasons)
-                        chk = _photocheck.check({k: files[k] for k in chk["retry"] if k in files},
-                                                subs, reviewer=reviewer, log=log, wants=wants,
-                                                topic=topic, searched=searched)
-                    chk["rounds"] = rounds
-                    chk["unresolved"] = list(chk["retry"])   # 끝까지 못 고친 슬롯 — 기록에 남긴다
-                    if chk["unresolved"]:
-                        log(f"[brainbulb.images] ★{spec.PHOTO_RETRY_MAX}회에도 못 고친 슬롯: {chk['unresolved']}"
-                            f" — 그대로 쓴다(편을 멈추지 않는다)")
-                    d["photo_check"] = chk
-                d["images"] = {"files": files}
-            _invalidate_after(job, "images")
-
-        elif step == "frames":
-            s = dict(d["script"]["script"]); s["groups"] = d["layout"]["groups"]
-            d["frames"] = _frames.build(wd, d["timing"], s, d["images"]["files"], meme_dir=meme_dir, log=log,
-                                        card_img=d["script"]["script"].get("card_img"))
-            _invalidate_after(job, "frames")
 
         elif step == "voice":
             if tts is None:
