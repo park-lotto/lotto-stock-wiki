@@ -91,7 +91,7 @@
 /* 2026-09-18 사장님: 분류(추천·쇼핑·리뷰·정보) 버튼 삭제 / 템플릿 없음 카드 */
 .layout-a .chips{display:none!important}
 .none-card .none-thumb{display:flex;align-items:center;justify-content:center;aspect-ratio:9/8;border:1px dashed #35505b;border-radius:8px;background:#0b1b24;color:#8fa3ad;font-size:13px;font-weight:900;text-align:center;line-height:1.5}
-.no-template .scene-text-panel>.text-group:not([data-group^="plain"]){display:none!important}   /* 원본 모드 전용 카드(헤드카피·자막)는 남긴다 — 2026-09-24 */
+.no-template .scene-text-panel>.text-group{display:none!important}
 .no-template-note{border:1px dashed #294451;border-radius:12px;background:#0b1a22;padding:16px;margin:0 0 10px;color:#8fa3ad}
 .no-template-note[hidden]{display:none!important}
 .no-template-note b{display:block;color:#e8f3f0;font-size:14px;margin-bottom:6px}
