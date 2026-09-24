@@ -1673,7 +1673,18 @@
     let note=panel.querySelector(':scope > .no-template-note');
     if(!note){
       note=document.createElement('div');note.className='no-template-note';
-      note.innerHTML='<b>원본 영상 그대로 나갑니다</b><p>제목·자막을 얹지 않습니다. 넣으시려면 왼쪽 <b>장면</b> 탭에서 템플릿을 고르세요.</p><button type="button" data-goto-template>템플릿 고르러 가기</button>';
+      // ★원본 모드에서도 **꾸미기는 된다**(2026-09-24 실측: 효과 탭의 다섯 묶음이 그대로 살아 있다 —
+      //   워터마크·광고 / 화면 확대·강조 / 쇼핑 안내 세트 / 가림막 / 스티커·도형·배지).
+      //   기본으로 열리는 문구 탭만 비어서 "아무것도 없다"로 보였을 뿐이라, 여기서 효과 탭으로 이어 준다.
+      note.innerHTML='<b>원본 영상 그대로 나갑니다</b>'
+        +'<p>제목은 얹지 않습니다. 자막은 앞 단계에서 이미 영상에 들어가 있습니다.</p>'
+        +'<p class="np-can"><b>이 상태에서도 꾸밀 수 있어요</b>워터마크·광고 · 화면 확대·강조 · 쇼핑 안내 세트 · 가림막 · 스티커·도형·배지</p>'
+        +'<button type="button" data-goto-fx>효과 탭에서 꾸미기</button>'
+        +'<button type="button" class="np-sub" data-goto-template>제목까지 넣으려면 템플릿 고르기</button>';
+      note.querySelector('[data-goto-fx]').addEventListener('click',()=>{
+        const tab=[...document.querySelectorAll('.edit-pane .tool-tabs button')].find(b=>b.textContent.includes('효과'));
+        if(tab)tab.click();
+      });
       note.querySelector('[data-goto-template]').addEventListener('click',()=>{
         document.querySelector('[data-left-tab="scene"]')?.click();
         document.querySelector('.preset-grid [data-p20="0"]')?.scrollIntoView({block:'nearest'});
