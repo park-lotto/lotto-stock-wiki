@@ -68,7 +68,6 @@ def validate_snapshot(value):
         if not isinstance(caption,dict) or caption.get("placement") not in ("title","free"):
             raise ValueError("자막 배치 형식이 올바르지 않습니다")
         number(caption.get("w",100),20,100);number(caption.get("h",7),4,25)
-        number(caption.get("boxClear",0),0,90)   # 자막박스 투명도 %(2026-09-24)
         for key in ("background","color"):
             if key in caption and (not isinstance(caption[key],str) or len(caption[key])>500):
                 raise ValueError("자막 색상 형식이 올바르지 않습니다")
