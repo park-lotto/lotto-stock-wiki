@@ -120,6 +120,29 @@
     if(!Object.keys(v).length)for(const value of captionLayouts.values()){v=pick(value);if(Object.keys(v).length)break;}
     return Object.keys(v).length?v:null;
   };
+  // 내 프리셋의 '자리' — 제목·채널명 자리(템플릿:화면:칸 키, 장면 번호 무관)와 지금 장면의 자막 자리 하나(2026-09-25).
+  const presetPositions=()=>{
+    const pre=rows[current].id+':',pick=m=>Object.fromEntries([...m].filter(([k])=>k.startsWith(pre)&&!k.includes(':caption')));
+    const ck=captionKey(),lay=captionLayouts.get(ck)||{};
+    return {textDrags:pick(textDrags),textOffsets:pick(textOffsets),
+      caption:{drag:captionDrags.get(ck)||null,offset:textOffsets.get(scaleKey('caption'))||0,placement:lay.placement||null,w:lay.w??null}};
+  };
+  // 적용: 이 템플릿의 자리를 프리셋 자리로 바꾸고, 자막 자리는 **모든 장면**에 같게('이 위치를 다른 장면에도 적용'과 같은 방식).
+  //   pos가 없으면(자리를 안 담던 옛 프리셋) 템플릿 기본 자리로 되돌린다 — 지금 작업 자리가 남는 게 사장님이 짚은 문제다.
+  const applyPresetPositions=pos=>{
+    const pid=rows[current].id,pre=pid+':',cap=pos?.caption||null;
+    for(const m of [textDrags,textOffsets])for(const k of [...m.keys()])if(k.startsWith(pre)&&!k.includes(':caption'))m.delete(k);
+    for(const [k,v] of Object.entries(pos?.textDrags||{}))if(k.startsWith(pre))textDrags.set(k,v);
+    for(const [k,v] of Object.entries(pos?.textOffsets||{}))if(k.startsWith(pre))textOffsets.set(k,v);
+    for(let i=0;i<sceneTotal();i++){
+      const key=`${pid}:${mode}:${i}:caption`,offKey=`${pid}:${mode==='continuous'?'frame':sceneKind(i)}:caption:${i}`;
+      if(cap?.drag)captionDrags.set(key,{...cap.drag});else captionDrags.delete(key);
+      if(cap?.offset)textOffsets.set(offKey,cap.offset);else textOffsets.delete(offKey);
+      const lay={...(captionLayouts.get(key)||{})},basePlacement=captionDrags.has(key)||pid===PLAIN_ID?'free':'title';
+      lay.placement=cap?.placement||basePlacement;if(cap&&cap.w!=null)lay.w=cap.w;else if(!cap)delete lay.w;
+      if(Object.keys(lay).length===1&&lay.placement===basePlacement)captionLayouts.delete(key);else captionLayouts.set(key,lay);
+    }
+  };
   // 프리셋에서 되살릴 때 — 모든 장면에 같은 모양을 입힌다(자리는 그 장면 것을 그대로 둔다).
   const applyCaptionLook=style=>{
     if(!style)return;
@@ -178,6 +201,9 @@
         // ★자막박스 '모양'은 담는다(2026-09-24 사장님) — 흰 띠를 좋아하면 모든 작업에서 흰 띠여야 한다.
         //   문장 길이와 무관한 취향이라 옮겨도 안전하다. 장면마다 다른 자리·크기(drag·offset·scale)는 그대로 뺀다.
         snap.captionLook=captionLookStyle();
+        // ★자리도 담는다(2026-09-25 사장님 "프리셋을 누르면 스타일은 바뀌는데 자리는 지금 자리로 된다").
+        //   '내 프리셋 적용'은 고객이 직접 누르는 것이라 자리까지 따라와야 한다. 새 작업 자동 복원(09-22 규칙)은 여전히 자리를 안 옮긴다.
+        snap.positions=presetPositions();
         for(const k of ['captionTexts','captionDrags','captionPositions','captionLayouts','fontScales','textOffsets','textDrags'])delete snap[k];
         const list=readMine();const name=(prompt('프리셋 이름',`프리셋 ${list.length+1}`)||'').trim();if(!name)return;
         list.unshift({id:Date.now().toString(36),name,at:Date.now(),snap});writeMine(list.slice(0,20));
@@ -1662,6 +1688,7 @@
         }
         hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';restoreFontSets(saved);titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
       }
+      if(force&&saved){applyPresetPositions(saved.positions);markDirty('caption');}   // 자리 없는 옛 프리셋이면 템플릿 기본 자리로
       if(force&&saved&&saved.captionLook)applyCaptionLook(saved.captionLook);
       if(keepScene!=null)showScene(Math.max(0,Math.min(keepScene,sceneTotal()-1)));
     }catch(error){console.warn('저장 설정 복원 실패',error);}
