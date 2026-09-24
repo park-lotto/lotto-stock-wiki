@@ -43,9 +43,14 @@
   }
   let allowed=false;   // 새 편집기를 열 수 있는가 — 관리자 또는 스위치(2026-09-23 사장님: 라이브 뒤 켠다. 그전엔 고객에게 안 보인다)
   async function initInline(){
-    try{const r=await fetch('/api/produce/scene-style/flags',{cache:'no-store'});const d=await r.json();inlineMode=false;/* [긴급 2026-09-25] 라이브에서 6단계가 빈 패널로 남는 사고 — 원인 규명 전까지 인라인 모드 강제 끔(d.inline 무시) */allowed=!!(r.ok&&d&&d.allowed);}catch(_){inlineMode=false;allowed=false;}
+    try{const r=await fetch('/api/produce/scene-style/flags',{cache:'no-store'});const d=await r.json();inlineMode=!!(r.ok&&d&&d.inline);allowed=!!(r.ok&&d&&d.allowed);}catch(_){inlineMode=false;allowed=false;}
     if(!allowed){const btn=document.querySelector('.panel[data-step="3"] button.btn[onclick="openSceneStyleEditor()"]');if(btn)btn.hidden=true;const st=status();if(st)st.textContent='';}
     if(!inlineMode)return;
+    // ★인라인 모드가 켜지면 관리자 시험 모드(canary)는 물러난다(2026-09-25 사고).
+    //   둘 다 '내 칸만 남기고 패널을 전부 숨김' 규칙이라 같이 켜지면 서로의 칸을 숨겨 6단계가 제목만 남았다
+    //   (canary가 켜진 사장님 브라우저에서만 — localStorage scene-style-canary-enabled). 인라인이 정식 화면이므로 이긴다.
+    canaryRequest++;canaryJobId='';
+    {const p=stepPanel(),cs=document.getElementById('sceneStyleCanary');p?.classList.remove('scene-style-canary-active');if(cs)cs.hidden=true;}
     const panel=stepPanel();if(!panel)return;
     ensureInlineShell();
     // 6단계 패널이 보이면 자동으로 열고, 떠나면 임시저장(+적용한 job은 서버 저장) — 사용자가 누를 버튼이 없다
@@ -71,7 +76,7 @@
     if(lab)lab.style.display='none';
   }
   window.syncSceneStyleCanary=async()=>{
-    if(!canaryEnabled)return false;
+    if(!canaryEnabled||inlineMode)return false;   // 인라인 모드가 켜져 있으면 canary는 안 켠다(위 initInline 주석)
     const panel=document.querySelector('.panel[data-step="3"]');
     const shell=document.getElementById('sceneStyleCanary');
     const note=document.getElementById('sceneStyleCanaryStatus');
@@ -86,7 +91,7 @@
       const response=await fetch('/api/admin/scene-style-lab/jobs',{cache:'no-store'});
       const data=await response.json();
       if(!response.ok)throw Error(data.error||'관리자 LAB 권한을 확인하지 못했습니다.');
-      if(request!==canaryRequest||requested!==currentMixJob())return false;
+      if(request!==canaryRequest||requested!==currentMixJob()||inlineMode)return false;
       const exact=(data.jobs||[]).find(row=>String(row.job_id)===requested);
       if(!exact)throw Error('현재 작업이 관리자 LAB 목록에 없습니다. 다른 작업으로 대신 열지 않습니다.');
       canaryJobId=requested;
