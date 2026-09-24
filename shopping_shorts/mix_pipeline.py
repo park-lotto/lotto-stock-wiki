@@ -4067,6 +4067,26 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
 
 
 @_owned_job
+def _render_stamp(job):
+    """렌더 결과물이 '지금 설정'으로 만든 것인지 가리는 도장.
+
+    **고객이 6단계에서 만지는 설정만** 넣는다 — 꾸미기(deco)·제목(headcopy)·자막 스타일·자막제거.
+    ★`edit_plan`은 넣지 않는다: 렌더가 도는 동안 파이프라인이 **스스로** 편성을 여섯 군데서 고쳐 쓴다
+      (tts 경로·clip_anchor 등). 넣으면 정상 렌더도 매번 도장이 달라져 완성본이 통째로 버려진다
+      (2026-09-24 test_run_render_happy_path가 잡았다). 편성 변경은 저장 시점에 이미 완성본을 끊는다.
+    SEO·썸네일 글자처럼 영상이 안 바뀌는 것도 넣지 않는다(멀쩡한 완성본을 버리지 않게).
+    """
+    import json as _json
+    def _norm(v):
+        try:
+            return _json.dumps(v, ensure_ascii=False, sort_keys=True)
+        except Exception:      # noqa: BLE001 — 도장 실패가 렌더를 죽이면 안 된다
+            return str(v)
+    job = job or {}
+    return "|".join(_norm(job.get(k)) for k in
+                    ("deco", "headcopy", "caption_style", "subtitle_removal"))
+
+
 def run_render(job_id, db_path, work_root, skip_clean=False):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
@@ -4079,6 +4099,11 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
     work.mkdir(parents=True, exist_ok=True)
     try:
         store.update_mix_job(job_id, status="rendering")
+        # ★렌더가 도는 **동안** 꾸미기를 바꾸면, 다 만든 옛 영상이 완성본 자리에 박혀 버린다
+        #   (2026-09-24 실측 job c52bb437d2c4: 저장된 꾸미기 제목은 '다들 쓰는 채칼'인데 완성본은
+        #    '왜 이제 알았지' — 꾸미기 저장이 완성본을 끊었지만, 그 뒤 끝난 렌더가 video_path를 다시 박았다).
+        #   시작 시점의 재료에 도장을 찍어 두고, 끝날 때 달라졌으면 그 결과를 **버린다**.
+        _stamp = _render_stamp(job)
         plan = job["edit_plan"]
         # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
         #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
@@ -4217,6 +4242,12 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
             edited_video.mark_stale(Path(out_path).parent)
         except Exception:
             traceback.print_exc(file=sys.stderr)
+        _now = store.get_mix_job(job_id) or {}
+        if _render_stamp(_now) != _stamp:
+            # 도는 사이에 설정이 바뀌었다 — 이 결과물은 옛 설정이라 완성본으로 박지 않는다.
+            #   고객이 "꾸민 대로 렌더가 안 된다"고 보는 자리다. 다시 만들 수 있게 되돌려 둔다.
+            store.update_mix_job(job_id, status="ready_for_review", video_path=None)
+            return
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
