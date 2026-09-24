@@ -186,13 +186,42 @@ def hook_from_script(script_line: object, ai_copy: object = "",
     return line, "script"
 
 
+# 이븐쇼핑이 흰 띠(보조제목)에 쓰는 방식 — 실물 조사 2026-09-24.
+#   큰제목 "건망증 환자를 살려낸 일본 천재의 발명품" → 띠 "건망증 환자를 살려낸 천재의 발명품?"
+#   ①같은 내용을 **한 줄로** 줄이고 ②나라 같은 곁가지 수식어를 덜어내고 ③**물음표**로 바꿔 궁금증을 남긴다.
+#   (이븐쇼핑 영상 9편 대본 실측: 첫 문장 = 화면 큰제목 그대로, 띠는 그 문장의 물음표판)
+_TRIM_WORDS = ("일본", "한국", "미국", "중국", "독일", "대만", "유럽", "일본의", "한국의", "미국의")
+
+
+def support_from_hook(hook1: object, hook2: object,
+                      contract: "TemplateCopyContract | None" = None) -> str:
+    """큰제목에서 흰 띠 문구를 만든다 — 줄여서 물음표로. 큰제목과 **같은 글이 되지 않게** 한다."""
+    contract = contract or EVEN_SHOPPING
+    words = _one_line(f"{hook1} {hook2}").split()
+    if not words:
+        return ""
+    limit = contract.support_max - 1          # 물음표 한 칸을 남겨 둔다
+    if len(" ".join(words)) > limit:
+        words = [w for w in words if w not in _TRIM_WORDS] or words
+    if len(" ".join(words)) > limit:
+        # ★그래도 길면 **뒷줄(정체를 밝히는 자리)만** 쓴다. 앞에서 낱말을 덜어내면
+        #   '만들어 떼돈 번 기발한 제품의 정체?'처럼 주어가 날아가 말이 깨진다(2026-09-24 실측).
+        tail = _one_line(hook2) or " ".join(words[-2:])
+        words = tail.split()
+    line = " ".join(words)
+    return line if line.endswith(("?", "!", ".")) else line + "?"
+
+
 def scene_text(headcopy: object) -> dict[str, str]:
     """저장된 제목 세트를 장면꾸미기 슬롯으로 한 번만 변환한다."""
     source = headcopy if isinstance(headcopy, dict) else {}
     hook1, hook2 = split_hook(source.get("text"))
     # 2026-09-21 사장님: 보조 문구가 없으면 비워 둔다 — 제목을 그대로 복사해 훅에 같은 글이 두 번 나왔다.
     support = _one_line(source.get("subline"))
-    body_title = _one_line(source.get("body_title")) or support or _one_line(f"{hook1} {hook2}")   # 본문 제목은 비면 제목을 쓴다
+    # 비면 큰제목을 **줄여 물음표로** 바꿔 채운다(이븐쇼핑 방식). 그대로 복사하면 훅에 같은 글이 두 번 나와
+    #   화면에서 아예 빠진다(precision20-ui.js가 같은 글이면 안 그린다, 2026-09-21) — 사장님 "보조제목이 안 들어감"의 원인.
+    body_title = (_one_line(source.get("body_title")) or support
+                  or support_from_hook(hook1, hook2))
     return {
         "hook1": hook1,
         "hook2": hook2,
