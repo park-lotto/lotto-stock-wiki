@@ -114,6 +114,14 @@ def validate_snapshot(value):
         raise ValueError("제목 효과가 올바르지 않습니다")
     if value.get("hookBandMotion") not in (None, "", "rise", "grow"):
         raise ValueError("흰 띠 효과 값이 올바르지 않습니다")
+    per_frame = value.get("fontSets")
+    if per_frame is not None:
+        # 틀(훅/본문)별 글꼴 — 2026-09-24 사장님 "프리셋은 한 개, 훅·본문 스타일은 따로".
+        if not isinstance(per_frame, dict) or len(per_frame) > 4:
+            return None
+        for frame, fid in per_frame.items():
+            if frame not in ("hook", "body", "frame") or not re.fullmatch(r"[a-z0-9_-]{0,32}", str(fid or "")):
+                return None
     if not re.fullmatch(r"[a-z0-9_-]{0,32}", str(value.get("fontSet") or "")):   # precision20-ui.js FONT_SETS의 id
         raise ValueError("폰트 템플릿 값이 올바르지 않습니다")
     if not re.fullmatch(r"[a-z0-9_-]{0,32}", str(value.get("titleDeco") or "")):   # precision20-ui.js DECOS의 id(훅 제목 꾸밈)
@@ -136,7 +144,7 @@ def validate_snapshot(value):
                 number(item.get(key,default),lo,hi)
             if not re.fullmatch(r"#[0-9a-fA-F]{6}",item.get("color","#ffffff")):
                 raise ValueError("표시 색상이 올바르지 않습니다")
-    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "fontSet", "titleDeco", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "fontSet", "fontSets", "titleDeco", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 

@@ -123,7 +123,7 @@
     const fontPane=document.createElement('div');fontPane.className='font-template-pane';fontPane.hidden=true;
     const drawFontSets=()=>{fontPane.innerHTML='<div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
     window.addEventListener('scene-style-fontset',()=>{if(!fontPane.hidden)drawFontSets();});   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
-    fontPane.addEventListener('click',event=>{const c=event.target.closest('[data-font-set]');if(!c)return;fontSet=c.dataset.fontSet;fittedText.clear();drawFontSets();renderEdit();rememberLocal({fontSet});});   /* 저장 버튼을 안 눌러도 기억 — 새로고침하면 풀리던 문제 */
+    fontPane.addEventListener('click',event=>{const c=event.target.closest('[data-font-set]');if(!c)return;pickFontSet(c.dataset.fontSet);drawFontSets();renderEdit();rememberLocal({fontSet,fontSets:{...fontSets}});});   /* 저장 버튼을 안 눌러도 기억 — 새로고침하면 풀리던 문제 */
     // 2026-09-23 사장님: "마지막에 저장한 템플릿은 기억해 첫 시작에 보이게 하고, 프리셋 몇 개 저장해 쓰게 탭 하나 맨 앞에".
     //   저장 = localStorage 'scene_style_my_presets' [{id,name,at,snap}] — 취향(템플릿·글꼴·색톤·꾸밈·칸 배치·모션)만 되살린다(작업별 글자 크기·자막 위치는 안 옮긴다, 09-22 규칙과 같다).
     //   적용·저장하면 'scene_style_preset'(첫 시작 복원 키)도 그걸로 바꿔 다음에 열 때 그 템플릿으로 시작한다.
@@ -202,6 +202,15 @@
   const frameFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame:p[sceneKind(index)];
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
   const frameKind=()=>mode==='continuous'?'frame':kind;
+  // ★글꼴 세트는 **틀(훅/본문)별로** 따로 고를 수 있다(2026-09-24 사장님:
+  //   "본문에서 꾸미기 저장하고 훅으로 와서 글꼴 다르게 하면 둘이 스타일 다르게 저장되게. 프리셋은 한 개").
+  //   규칙: 한 쪽만 골랐으면 **다른 쪽도 그걸 따른다**(종전처럼 통일). 다른 쪽에서 따로 고르는 순간 둘이 갈라진다.
+  //   고른 것만 기록하므로(fontSets에 그 틀의 칸이 생김) '아직 안 고름'과 '기본으로 고름'이 구분된다.
+  const fontSets={};
+  const effFontSet=()=>{const fk=frameKind();if(fontSets[fk]!=null)return fontSets[fk];
+    const picked=Object.keys(fontSets);return picked.length===1?fontSets[picked[0]]:'';};
+  const syncFontSet=()=>{const next=effFontSet();if(next!==fontSet){fontSet=next;fittedText.clear();}return fontSet;};
+  const pickFontSet=id=>{fontSets[frameKind()]=id;fontSet=effFontSet();fittedText.clear();};
   const scaleKey=bind=>`${rows[current].id}:${frameKind()}:${bind}${bind==='caption'?':'+sceneIndex:''}`;
   const BODY_CAPTION_SCALE=1.3;   // 09-19 사장님: 본문 자막 기본 130%(자막 칸 위치·높이는 그대로)
   const textScale=bind=>fontScales.get(scaleKey(bind))||(bind==='caption'&&mode==='story'&&sceneIndex>0?BODY_CAPTION_SCALE:1);
@@ -486,7 +495,7 @@
     panes.tone.addEventListener('click',event=>{const c=event.target.closest('[data-tone]');if(!c)return;applyTone(c.dataset.tone);draw();});
     panes.deco.addEventListener('click',event=>{const c=event.target.closest('[data-deco]');if(!c)return;setDeco(c.dataset.deco);renderEdit();draw();});
     panes.look.addEventListener('click',event=>{const c=event.target.closest('[data-look]'),look=c&&LOOKS.find(l=>l.id===c.dataset.look);if(!look)return;
-      fontSet=look.font;rememberLocal({fontSet});setDeco(look.deco);applyTone(look.tone);draw();});   // applyTone이 마지막에 다시 그린다
+      pickFontSet(look.font);rememberLocal({fontSet,fontSets:{...fontSets}});setDeco(look.deco);applyTone(look.tone);draw();});   // applyTone이 마지막에 다시 그린다
     const css=document.createElement('style');
     css.textContent='.layout-a .tool-tabs.left-pane-tabs{grid-template-columns:repeat(6,minmax(0,1fr))}.my-preset-save{width:100%;padding:12px;border-radius:12px;border:1px dashed #43e2b4;background:#0f2a24;color:#63edc6;font:800 14px system-ui,sans-serif;cursor:pointer;margin-bottom:10px}.my-preset-list{display:grid;gap:8px}.my-preset-card{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:10px 12px;border:1px solid #294451;border-radius:12px;background:#1b1b1b;color:#fff}.my-preset-card.selected{border-color:#43e2b4;box-shadow:0 0 0 2px #43e2b455}.my-preset-card b{font-size:15px}.my-preset-card small{grid-column:1;color:#8fa3ad;font-size:12px}.my-preset-btns{grid-column:2;grid-row:1/3;display:flex;gap:4px}.my-preset-btns button{padding:8px 10px;border-radius:8px;border:1px solid #35505b;background:#0b1a22;color:#dfe9ee;font-size:13px;cursor:pointer}.my-preset-btns [data-my-apply]{background:#43e2b4;color:#062019;font-weight:800}.left-pane-tabs button{padding-left:2px;padding-right:2px;white-space:nowrap}.look-card{padding:8px}.lk-prev{display:grid;gap:2px;justify-items:center;width:100%;padding:10px 4px;border-radius:8px;border:1px solid #ffffff1f;font-size:17px;line-height:1.25;overflow:hidden;white-space:nowrap}.lk-prev i{font-style:normal}.lk-prev i:last-child{font-size:19px}.title-deco-ink{display:inline-block}';
     document.head.append(css);
@@ -1266,12 +1275,14 @@
     preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     preview.classList.toggle('is-continuous',mode==='continuous');
     const seg=root.querySelector('.layout-a .seg');if(seg)seg.hidden=mode==='continuous';
+    syncFontSet();window.dispatchEvent(new Event('scene-style-fontset'));   // 훅↔본문을 오갈 때 그 틀의 글꼴로
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
     syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);requestAnimationFrame(()=>runCaptionEnter());
   }
   function showScene(nextIndex){
     sceneIndex=Math.max(0,Math.min(sceneTotal()-1,nextIndex));
     kind=mode==='continuous'?'hook':sceneKind(sceneIndex);
+    syncFontSet();window.dispatchEvent(new Event('scene-style-fontset'));   // 장면이 훅↔본문을 넘어갈 때도
     if(mode==='continuous'){
       markDirty('caption');
       inputs.caption.value=sceneIndex>0?(rows[current].sample.caption||'이런 방법이 있었네요'):'';
@@ -1541,6 +1552,14 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   // 취향만 되살리기(첫 시작 복원 + 내 프리셋 '적용' 공용). force=true면 주소창 preset/mode 지정을 무시하고 그 템플릿으로 바꾼다.
+  // 옛 저장본은 글꼴이 한 값(fontSet)뿐이다 — 그건 '아직 틀별로 안 갈랐다'는 뜻이라 한 칸만 채워 양쪽이 같이 따라가게 둔다.
+  function restoreFontSets(saved){
+    for(const k of Object.keys(fontSets))delete fontSets[k];
+    const per=saved&&saved.fontSets;
+    if(per&&typeof per==='object'&&Object.keys(per).length){for(const [k,v] of Object.entries(per))if(typeof v==='string')fontSets[k]=v;}
+    else if(saved&&typeof saved.fontSet==='string'&&saved.fontSet)fontSets.hook=saved.fontSet;
+    fontSet=effFontSet();fittedText.clear();
+  }
   function applyTaste(saved,force){
     try{
       // 적용은 **보던 장면에 머문다** — 템플릿을 다시 고르면 0번으로 돌아가므로 여기서 되돌린다(2026-09-23 고객 제보).
@@ -1571,13 +1590,13 @@
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';restoreFontSets(saved);titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
       }
       if(keepScene!=null)showScene(Math.max(0,Math.min(keepScene,sceneTotal()-1)));
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,titleDeco,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,fontSets:{...fontSets},titleDeco,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
@@ -1586,7 +1605,7 @@
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';restoreFontSets(saved);titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
         modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
