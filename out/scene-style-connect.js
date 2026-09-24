@@ -109,5 +109,13 @@
       else save.click();
     }
   });
-  if(embedded)window.parent.postMessage({type:'scene-style-ready'},location.origin);
+  // ★'원본 영상 그대로'로 바뀌면 부모(제작소)에게 알린다 — 그때는 새 편집기가 글자를 안 그리고
+  //   렌더도 옛 경로(ffmpeg가 자막·헤드카피를 태운다)를 타므로, 제작소가 **옛 헤드카피·자막 칸**을 다시 보여 준다.
+  //   (2026-09-24 사장님: "원본그대로 영상도 자막이나 문구등 원래 수정할 수 있는 거 아니었어?")
+  if(embedded){
+    const tell=()=>window.parent.postMessage({type:'scene-style-template',plain:document.body.classList.contains('no-template')},location.origin);
+    window.addEventListener('scene-style-template',tell);
+    window.parent.postMessage({type:'scene-style-ready'},location.origin);
+    setTimeout(tell,0);
+  }
 })();
