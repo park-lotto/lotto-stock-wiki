@@ -59,7 +59,7 @@ def effects(d):
     ]
 
 
-def build(src, out, seg, starts):
+def build(src, out, seg, starts, still_at=None):
     src = Path(src).resolve()        # cwd를 tmp로 바꾸므로 입력은 절대경로여야 한다
     fx = effects(seg)
     parts, labels = [], []
@@ -69,6 +69,13 @@ def build(src, out, seg, starts):
     #   옵션 구분자로 읽어 drawtext가 통째로 깨졌다. tmp로 복사하고 cwd를 tmp로 둔다.
     shutil.copy(FONT, tmp / "f.ttf")
     font = "f.ttf"
+    stillpng = None
+    if still_at is not None:
+        stillpng = tmp / "still.png"
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{still_at:.2f}", "-i", str(src),
+                        "-frames:v", "1", str(stillpng)], check=True, stdin=subprocess.DEVNULL)
+        # 시간 흐름이 있어야 뜻이 있는 효과는 정지 사진에선 뺀다
+        fx = [e for e in fx if e[0] not in ("슬로모션", "멈춤")]
     for i, (name, desc, f) in enumerate(fx):
         st = starts[i % len(starts)]
         p = tmp / f"p{i:02d}.mp4"
@@ -79,9 +86,12 @@ def build(src, out, seg, starts):
               f"drawtext=fontfile={font}:text='{desc}':"
               f"fontsize=40:fontcolor=white:borderw=4:bordercolor=black@0.85:x=(w-tw)/2:y=h-165,"
               f"format=yuv420p")
-        cmd = ["ffmpeg", "-y", "-v", "error", "-ss", f"{st:.2f}", "-i", str(src),
-               "-vf", vf, "-t", f"{seg:.2f}", "-r", str(FPS), "-an",
-               "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", str(p)]
+        if stillpng is not None:
+            cmd = ["ffmpeg", "-y", "-v", "error", "-loop", "1", "-i", "still.png"]
+        else:
+            cmd = ["ffmpeg", "-y", "-v", "error", "-ss", f"{st:.2f}", "-i", str(src)]
+        cmd += ["-vf", vf, "-t", f"{seg:.2f}", "-r", str(FPS), "-an",
+                "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", str(p)]
         r = subprocess.run(cmd, capture_output=True, stdin=subprocess.DEVNULL, cwd=str(tmp))
         if r.returncode != 0 or not p.exists():
             print(f"  [실패] {label}: {r.stderr.decode('utf-8','replace')[:160]}")
@@ -102,9 +112,11 @@ def main():
     ap.add_argument("-o", "--out", required=True)
     ap.add_argument("--seg", type=float, default=2.0)
     ap.add_argument("--starts", default="1.5,6.0,10.5,15.0,19.0")
+    ap.add_argument("--still", type=float, default=None,
+                    help="이 시각의 정지 사진 한 장으로 만든다 — 효과만 보이게(원본 움직임 배제)")
     a = ap.parse_args()
     starts = [float(x) for x in a.starts.split(",")]
-    labels = build(a.src, a.out, a.seg, starts)
+    labels = build(a.src, a.out, a.seg, starts, still_at=a.still)
     print(f"\n{len(labels)}개 효과 · {a.out}")
     return 0
 
