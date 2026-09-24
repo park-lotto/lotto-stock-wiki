@@ -89,7 +89,7 @@
   const captionSettings=()=>{
     const frame=frameFor(rows[current]),source=captionSource(frame),saved=captionLayouts.get(captionKey())||{};
     // 원본(plain)은 띠가 없으니 자막이 제목칸으로 끌려가면 안 된다 — 제 자리(영상 아래쪽)에 둔다.
-    return {placement:captionDrags.has(captionKey())||rows[current]?.id===PLAIN_ID?'free':'title',w:100,h:source.height,background:source.background,color:source.ln?.color||'#111111',...saved};
+    return {placement:captionDrags.has(captionKey())||rows[current]?.id===PLAIN_ID?'free':'title',w:100,h:source.height,background:source.background,color:source.ln?.color||'#111111',boxClear:0,...saved};
   };
   const titleHeight=frame=>titleSetting(frame)+channelDelta(frame);   // 화면에서의 제목칸 끝 — 자막칸·영상 시작이 모두 여기서 나온다
   const titleSetting=frame=>{   // '상단 제목칸' 슬라이더 값(채널명 칸 밀림 제외) — 저장·표시는 이 값으로
@@ -113,7 +113,7 @@
   //   이렇게 해야 오른쪽 제목·자막 카드가 신버전 그대로 살아나고, 저장·렌더도 같은 길을 탄다(2026-09-24 사장님).
   const PLAIN_ID='plain';
   // 자막박스 '모양'만 뽑아낸다 — 지금 장면에 없으면 다른 장면에서 찾는다(훅에서 저장해도 담기게).
-  const CAPTION_LOOK_KEYS=['look','w','h','background','color','bgUser','colorUser'];
+  const CAPTION_LOOK_KEYS=['look','w','h','background','color','bgUser','colorUser','boxClear'];
   const captionLookStyle=()=>{
     const pick=src=>{const out={};for(const k of CAPTION_LOOK_KEYS)if(src&&src[k]!==undefined)out[k]=src[k];return out};
     let v=pick(captionLayouts.get(captionKey()));
@@ -321,7 +321,7 @@
     const captionCount=captionField.querySelector('[data-count]');if(captionCount)captionCount.hidden=true;
     const sceneLabel=document.createElement('span');sceneLabel.className='caption-scene-index';sceneLabel.dataset.captionSceneIndex='';captionField.querySelector('label').appendChild(sceneLabel);
     const controls=document.createElement('div');controls.className='caption-position';
-    controls.innerHTML='<button type="button" data-caption-placement="title">제목 아래</button><button type="button" data-caption-placement="free">자유 이동</button><label>자막박스 너비<input type="range" data-caption-layout="w" min="20" max="100" step="1"></label><label>자막박스 높이<input type="range" data-caption-layout="h" min="4" max="25" step="1"></label><label>자막박스 색<input type="color" data-caption-layout="background"></label><label>자막 색<input type="color" data-caption-layout="color"></label>';
+    controls.innerHTML='<button type="button" data-caption-placement="title">제목 아래</button><button type="button" data-caption-placement="free">자유 이동</button><label>자막박스 너비<input type="range" data-caption-layout="w" min="20" max="100" step="1"></label><label>자막박스 높이<input type="range" data-caption-layout="h" min="4" max="25" step="1"></label><label>자막박스 색<input type="color" data-caption-layout="background"></label><label>자막박스 투명도<input type="range" data-caption-layout="boxClear" min="0" max="90" step="5"></label><label>자막 색<input type="color" data-caption-layout="color"></label>';
     const guide=document.createElement('p');guide.className='caption-guide';guide.textContent='대본의 줄바꿈 1개가 장면 1개로 자동 배치됩니다.';
     captionField.append(controls,guide);
   }
@@ -1291,6 +1291,7 @@
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
     const capLook=captionLook(frame);
     if(capLook){const {left,width,...look}=capLook.box;Object.assign(patch.style,settings.placement==='title'?capLook.box:look);if(!settings.colorUser)settings.color=capLook.color;}   // 옮긴 자막은 옮긴 자리·폭 유지
+    if(settings.boxClear>0)patch.style.opacity=String(1-Math.min(90,settings.boxClear)/100);   // 자막박스 투명도(2026-09-24 고객) — 박스만 옅게, 글자는 별도 요소라 그대로
     const original=source.ln||{font_size:frame.height*.032,font_family:frame.font_family||'Pretendard',font_weight:900};
     // 고정형 자막 기본 크기 = 템플릿 값의 82%(2026-09-18 사장님 "자막쪽이 너무 크다"). 이븐쇼핑 본문과 같은 3.6%였지만
     //   굵은 흰 글씨·제목과의 크기 차이가 작아 커 보였다. −/+ 조절(textScale)은 이 위에 그대로 곱해진다.
@@ -1483,8 +1484,14 @@
   });
   captionField?.addEventListener('input',event=>{
     const input=event.target.closest('[data-caption-layout]');if(!input)return;
-    const settings=captionSettings();settings[input.dataset.captionLayout]=input.type==='range'?Number(input.value):input.value;if(input.dataset.captionLayout==='background'){settings.bgUser=true;delete settings.look;}if(input.dataset.captionLayout==='color')settings.colorUser=true;
-    captionLayouts.set(captionKey(),settings);markDirty('caption');renderEdit();
+    const name=input.dataset.captionLayout,val=input.type==='range'?Number(input.value):input.value;
+    const put=o=>{o[name]=val;if(name==='background'){o.bgUser=true;delete o.look;}if(name==='color')o.colorUser=true;};
+    const settings=captionSettings();put(settings);
+    captionLayouts.set(captionKey(),settings);
+    // 2026-09-24 고객(데이워커님): '모든 장면'을 골라 놔도 크기·색은 이 장면에만 들어갔다 — 스위치가 모양 버튼에만 걸려 있었다.
+    //   같은 패널 안의 너비·높이·박스색·글자색·투명도도 같은 스위치를 따른다(바꾼 그 값 하나만 옮긴다 — 다른 장면의 자리는 그대로).
+    if(lookScope==='all')spreadCaption(put);
+    markDirty('caption');renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-caption-position]');if(!button)return;
@@ -1506,7 +1513,7 @@
   const lookRow=document.createElement('div');lookRow.className='caption-looks';
   // 09-22 사장님: 모양은 모든 장면 공통이 기본이지만 "그 장면에 포인트를 주고 싶을 때"가 있다 → [모든 장면|이 장면만] 스위치.
   let lookScope='all';
-  lookRow.innerHTML='<span>자막박스 모양</span><span class="caption-look-scope" style="grid-column:1/-1;display:flex;gap:6px;margin:2px 0 4px"><button type="button" data-caption-look-scope="all" class="active">모든 장면</button><button type="button" data-caption-look-scope="one">이 장면만</button><small style="opacity:.75;align-self:center">모양을 고르면 이 범위에 적용</small></span>'+[['auto','기본'],['none','박스 없음'],...CAPTION_LOOK_NAMES.map((n,i)=>[String(i),n])].map(([v,n])=>`<button type="button" data-caption-look="${v}">${n}</button>`).join('');
+  lookRow.innerHTML='<span>자막박스 모양</span><span class="caption-look-scope" style="grid-column:1/-1;display:flex;gap:6px;margin:2px 0 4px"><button type="button" data-caption-look-scope="all" class="active">모든 장면</button><button type="button" data-caption-look-scope="one">이 장면만</button><small style="opacity:.75;align-self:center">모양·크기·색·투명도를 바꾸면 이 범위에 적용</small></span>'+[['auto','기본'],['none','박스 없음'],...CAPTION_LOOK_NAMES.map((n,i)=>[String(i),n])].map(([v,n])=>`<button type="button" data-caption-look="${v}">${n}</button>`).join('');
   lookRow.addEventListener('click',event=>{const b=event.target.closest('[data-caption-look-scope]');if(!b)return;lookScope=b.dataset.captionLookScope;lookRow.querySelectorAll('[data-caption-look-scope]').forEach(x=>x.classList.toggle('active',x===b));});
   maskDetails.querySelector('div').prepend(lookRow);
   // 09-19 사장님 '버튼이 다 검정이라 뭐가 뭔지 모르겠다' — 버튼에 그 모양을 그대로 입혀 눈으로 고른다.
@@ -1526,18 +1533,22 @@
     captionLayouts.set(captionKey(),settings);
     // 09-22 사장님: 자막박스 '모양'은 모든 장면 공통, 장면별로 다른 것은 '위치 이동'뿐.
     //   다른 장면에는 모양(look)만 옮긴다 — 그 장면의 위치·폭·높이는 건드리지 않는다. 모양을 바꾸면 손으로 고른 박스색·글자색도 같이 푼다(위와 같게).
-    for(let i=0;lookScope==='all'&&i<sceneTotal();i++){   // '이 장면만'이면 다른 장면은 그대로
+    if(lookScope==='all')spreadCaption(other=>{delete other.bgUser;delete other.colorUser;if('look' in settings)other.look=settings.look;else delete other.look;});   // '이 장면만'이면 다른 장면은 그대로
+    markDirty('caption');renderEdit();syncCaptionLookButtons();
+  });
+  // 지금 장면 말고 나머지 장면의 자막 설정에 change(other)를 적용한다 — 모양 버튼·크기/색 칸이 같이 쓴다.
+  function spreadCaption(change){
+    for(let i=0;i<sceneTotal();i++){
       const key=`${rows[current].id}:${mode}:${i}:caption`;if(key===captionKey())continue;
-      const other={...(captionLayouts.get(key)||{})};delete other.bgUser;delete other.colorUser;
+      const other={...(captionLayouts.get(key)||{})};
       // 서버(scene_style.py)는 자막 배치마다 placement를 필수로 본다 — 모양만 넣으면 저장이 거절된다.
       //   기본값 규칙은 captionSettings와 같다(끌어 옮긴 장면='free', 아니면 'title'). 그 줄은 장면 세션이 고치는 구간 옆이라 건드리지 않고 여기 한 번 더 적었다.
       const basePlacement=captionDrags.has(key)?'free':'title';other.placement=other.placement||basePlacement;
-      if('look' in settings)other.look=settings.look;else delete other.look;
+      change(other);
       const onlyDefault=Object.keys(other).length===1&&other.placement===basePlacement;   // 남은 게 기본 배치뿐이면 기록을 지운다
       if(onlyDefault)captionLayouts.delete(key);else captionLayouts.set(key,other);
     }
-    markDirty('caption');renderEdit();syncCaptionLookButtons();
-  });
+  }
   maskDetails.addEventListener('toggle',syncCaptionLookButtons);
   function applyCaptionMoveScope(){
     moveScope.hidden=false;
