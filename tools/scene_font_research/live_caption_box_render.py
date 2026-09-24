@@ -45,10 +45,14 @@ def variant(clear):
     app.DB_PATH = str(db); app._MIX_WORK_DIR = work_root
     r = app.api_mix_capcut(job_id, base='C:/Users/x/CapCut Drafts')
     cc = r if isinstance(r, dict) else json.loads(r.body)
-    pngs = sorted((work_root / job_id / 'capcut_scene_style').glob('*.png'))
+    # 캡컷 초안은 장면 레이어를 scene-style-0000.png 식으로 **새 이름으로 복사**해 담는다(capcut_draft.assemble_draft_folder).
+    #   그래서 초안이 실제로 가리키는 복사본(capcut/<프로젝트>/…/scene-style-*.png)을 잰다.
     draft = next((v for k, v in (cc.get('texts') or {}).items() if k.endswith('draft_content.json')), '')
-    return {'video': j2.get('video_path'), 'status': j2.get('status'), 'capcut_ok': cc.get('ok'), 'pngs': pngs,
-            'draft_refs': sum(1 for p in pngs if p.name in draft), 'mode': mode, 'pid': pid}
+    names = sorted({a['name'] for a in (cc.get('assets') or []) if 'scene-style-' in a['name']})
+    pngs = sorted(p for p in (work_root / job_id / 'capcut').rglob('scene-style-*.png'))
+    refs = sum(1 for p in pngs if p.name in draft)
+    return {'video': j2.get('video_path'), 'status': j2.get('status'), 'capcut_ok': cc.get('ok'), 'pngs': pngs, 'assets': len(names),
+            'draft_refs': refs, 'mode': mode, 'pid': pid}
 def frame(video, t, out):
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-ss', str(t), '-i', str(video), '-frames:v', '1', str(out)], check=True)
     return Image.open(out).convert('RGB')
@@ -61,7 +65,8 @@ a, b = R[0], R[60]
 print('작업', job_id, a['pid'], a['mode'])
 need(a['status'] == 'done' and b['status'] == 'done' and a['video'] and b['video'], f'① 두 렌더 모두 완료 ({a["status"]}/{b["status"]})')
 if a['video'] and b['video']:
-    dur = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', a['video']], capture_output=True, text=True).stdout or 0)
+    dur = float((subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', a['video']], capture_output=True, text=True).stdout or '0').split()[0])
+    print(f'    완성 영상 길이 {dur:.1f}초', flush=True)
     rows = []
     for t in [round(dur * k / 10, 2) for k in (2, 4, 6, 8)]:
         fa = frame(a['video'], t, base / f'a_{t}.png'); fb = frame(b['video'], t, base / f'b_{t}.png'); W, H = fa.size
@@ -71,7 +76,8 @@ if a['video'] and b['video']:
         rows.append((t, len(spots), ra, rb)); print(f'    {t}초: 0%에서 분홍 {len(spots)}곳 R {ra} → 60% R {rb}', flush=True)
     good = [r for r in rows if r[1] > 150]
     need(len(good) >= 3 and all(r[2] > 200 and r[3] < 170 for r in good), f'② 완성 영상: 자막박스가 0%엔 진한 분홍, 60%엔 옅어짐 {rows}')
-need(a['capcut_ok'] and b['capcut_ok'] and a['pngs'] and a['draft_refs'] == len(a['pngs']), f'③ 캡컷 내보내기 성공·장면 레이어 {len(a["pngs"])}장 전부 draft에 연결({a["draft_refs"]})')
+need(a['capcut_ok'] and b['capcut_ok'] and a['pngs'] and a['draft_refs'] == len(a['pngs']) and a['assets'] == len(a['pngs']),
+     f'③ 캡컷 내보내기 성공 · 초안의 장면 레이어 {len(a["pngs"])}장 전부 draft_content에 연결({a["draft_refs"]}) · 내려받기 목록 {a["assets"]}장')
 pa = [png_pink_alpha(p) for p in a['pngs']]; pb = [png_pink_alpha(p) for p in b['pngs']]
 hit = [(x, y) for x, y in zip(pa, pb) if x[1] > 150]
 print('    캡컷 레이어 (알파 중앙값, 점 수) 0%→60%:', list(zip(pa, pb))[:6], flush=True)
