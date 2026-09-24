@@ -3089,7 +3089,8 @@ function renderBand(){
                : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
           <span class="tbtools" onclick="event.stopPropagation()">
             ${speedControl(i)}
-            <label title="컷 경계를 자막 구절 경계에 1:1로 맞춥니다(구절 수만큼 컷·길이도 구절대로). ✋수동 길이가 있으면 수동이 우선"><input type="checkbox" ${phraseSyncOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>
+            ${(DATA.beats[i] && DATA.beats[i].cut_rhythm) ? `<label title="잘되는 썰 채널 79편에서 잰 컷 리듬으로 배치합니다 — 훅과 핵심 결과 줄은 한 컷으로 길게 끌고(편당 2번), 나머지 줄은 담은 장면을 한 번씩 순서대로 씁니다. 컷은 2초 안팎, 0.5초짜리 파편과 같은 장면 되풀이가 없습니다. 끄면 자막 구절대로 나뉩니다(구절 맞춤)"><input type="checkbox" ${cutRhythmOn(i) ? 'checked' : ''} onchange="toggleCutRhythm(${i}, this.checked)"> 컷 리듬</label>` : ''}
+            <label title="컷 경계를 자막 구절 경계에 1:1로 맞춥니다(구절 수만큼 컷·길이도 구절대로). 켜면 컷 리듬보다 우선합니다. ✋수동 길이가 있으면 수동이 우선"><input type="checkbox" ${phraseSyncOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>
             ${frozen ? '' : `<label title="담은 장면이 모자랄 때 어떻게 채울지 고릅니다 — 끄면 [뒷부분 채우기]: 담은 구간 뒤에 이어지는 원본을 1배속으로 더 틉니다(새 화면이 나옵니다). 켜면 [전체 늘리기]: 담은 장면 전부를 고르게 늘려 채웁니다(최대 1.15배, 티가 덜 납니다)"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 전체 늘리기</label>`}
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
                  대본수정 만들고"). 그 자리에 대본수정을 둔다 — 3단계에서 자막을 보다가

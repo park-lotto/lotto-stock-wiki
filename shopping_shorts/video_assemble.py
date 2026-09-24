@@ -818,7 +818,9 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     #   라운드로빈이라 컷이 2배 많고 절반 길이였다. 표식은 mix_pipeline._apply_cut_rhythm이 비트마다 단다.
     #   hold = 핵심 줄(…없애 버렸다는 거 / 훅): 첫 조각 하나만 두고 상한 없이 이어 튼다(원본은 연속 촬영이라
     #   조각 경계를 넘어가도 컷이 아니다). 나머지 줄은 상한 4초(문장 하나에 컷 하나가 기본).
-    _cr = beat.get("cut_rhythm") or {}
+    # ★구절 맞춤을 켜면 구절이 이긴다(2026-09-24 사장님 "끈 상태로 시작 후 켜면 구절맞춤이 이기게").
+    #   표식이 있어도 무시 — 홀드·조각 한 번씩·낱말 경계 맞추기가 함께 꺼진다(판단 한 곳).
+    _cr = {} if beat.get("phrase_sync") else (beat.get("cut_rhythm") or {})
     if _cr and not _bb.is_point_beat(beat):
         if _cr.get("hold") and segs:
             # ★홀드 = "첫 조각을 **이어 튼다**"인데 조각의 end에서 잘려 정지가 됐다(2026-09-22 실측 job 956a6843cdd5:
@@ -891,7 +893,7 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
                 plan, segs, runout, plan[-1].get("playback_speed", 1.0))
         return plan
     _phrase_plan = None
-    if beat.get("phrase_sync") and not _cr:   # 구절맞춤 켬 = 구절이 ✋보다 우선(화면과 같은 규칙). 컷 리듬 칸은 홀드가 우선
+    if beat.get("phrase_sync"):   # 구절맞춤 켬 = 구절이 ✋·컷 리듬보다 우선(화면과 같은 규칙)
         _phrase_plan = _plan_phrase_clips(beat, segs, tts_dur)
     if _phrase_plan:
         plan = _phrase_plan
