@@ -161,6 +161,14 @@ def plan_shorts(segs, n_shorts=5, api_key=None, model=None):
     from shopping_shorts.video_analysis import _MODEL
 
     keys = [api_key] if api_key else list(SHORTS_GEMINI_KEYS)
+    if not api_key:
+        # 쓸 수 없는 키(계정 사망·선불 소진·월 한도·할당량 0)는 앞에서 뺀다(2026-09-25).
+        #   이 루프는 잠금을 안 보고 처음부터 도므로 그대로 두면 죽은 키를 먼저 두드린다.
+        try:
+            from pipeline.atoms import key_vault
+            keys = key_vault.without_dead(keys) or keys
+        except Exception as e:                     # noqa: BLE001 — 거르기 실패면 원래 목록으로 돈다
+            print(f"[longform] 죽은 키 거르기 실패(무해): {e!r}", file=sys.stderr)
     if not keys:
         raise RuntimeError("longform_shorts: SHORTS_GEMINI_KEY가 설정되지 않았습니다")
     prompt = _PROMPT.format(n=n_shorts, off=int(COLD_OPEN_MIN_OFFSET)) + _transcript_block(segs)

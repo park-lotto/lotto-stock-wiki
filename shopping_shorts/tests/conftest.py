@@ -38,3 +38,22 @@ def _reset_gemini_key_cursor():
     _cg._rr_cursor["i"] = 0
     _cg._key_last_used.clear()
     yield
+
+
+@pytest.fixture(autouse=True)
+def _isolate_key_vault_state(tmp_path, monkeypatch):
+    """key_vault 상태파일(영구 사망·사용불가 정지)을 테스트마다 빈 임시 파일로 가른다(2026-09-25).
+
+    usage_meter 깔때기가 모든 제미니 실패를 key_vault.note_failure로 보내고, 쇼츠 풀
+    (comment_gen._dead_fingerprints)도 key_vault 표시를 합쳐 본다. 격리하지 않으면 앞 테스트가
+    **진짜 상태파일**(pipeline/atoms/.gemini_key_state.json)에 남긴 사망 표시가 뒤 테스트의 풀에서
+    키를 빼 순서에 따라 흔들린다(실측: 단독 통과·묶으면 test_round_robin_cycles 등 5건 실패).
+    텔레그램 경보도 막는다 — 새 정지가 _tg_alert로 실제 메시지를 보낼 수 있다.
+    자기 경로를 따로 쓰는 테스트는 제 fixture에서 다시 monkeypatch하므로 그대로 된다."""
+    from pipeline.atoms import key_vault as _kv
+    monkeypatch.setattr(_kv, "_STATE_PATH", tmp_path / "_kv_state.json")
+    monkeypatch.setattr(_kv, "_LOCK_PATH", tmp_path / "_kv_state.lock")
+    monkeypatch.setattr(_kv, "_tg_alert", lambda *_a, **_k: None)
+    _kv._SUS_CACHE["t"] = 0.0
+    yield
+    _kv._SUS_CACHE["t"] = 0.0

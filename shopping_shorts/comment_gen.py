@@ -11,6 +11,7 @@ import os
 import sys
 import threading
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from datetime import datetime, timezone
@@ -96,10 +97,23 @@ def _key_fingerprint(key):
 
 
 def _dead_fingerprints(state=None):
-    """되살릴 수 없는 키(401/403 계정 사망)의 지문 집합."""
+    """지금 쓰면 안 되는 키의 지문 집합 — 이 파일의 사망 표시 + key_vault의 영구 사망·사용불가 정지.
+
+    ★key_vault 쪽을 합치는 이유(2026-09-25 실측):
+      ①이 상태파일은 UTC 날짜가 바뀌면 _load_state가 통째로 새로 시작해 dead_keys까지
+        사라진다 — '영구 제외'가 실제론 매일 한국 오전 9시에 풀렸다. key_vault 상태파일은
+        날짜로 버리지 않으므로(09-01) 오래 가는 표시는 거기 둔다.
+      ②402 선불 소진·월 지출 한도·할당량 0 키의 정지(key_vault.note_failure)는 모든 호출이
+        지나가는 usage_meter 깔때기가 key_vault에 남긴다. 쇼츠 풀도 같은 표시를 봐야
+        두 풀이 같은 키를 두고 다르게 판단하지 않는다(0순위-B).
+    """
     st = state if state is not None else _load_state()
     raw = st.get("dead_keys") or {}
-    return set(raw) if isinstance(raw, dict) else set(raw)
+    own = set(raw) if isinstance(raw, dict) else set(raw)
+    try:
+        return own | key_vault.dead_fingerprints()
+    except Exception:                      # noqa: BLE001 — 상태파일이 깨져도 로테이션은 돈다
+        return own
 
 
 def _mark_key_dead(idx, detail=None):
@@ -128,6 +142,12 @@ def _mark_key_dead(idx, detail=None):
             _save_state(state)
             print(f"comment_gen: 키 영구 제외 — idx={idx} …{(key or '')[-6:]} ({detail or '401/403'})",
                   file=sys.stderr)
+    # ★이 파일의 dead_keys는 UTC 날짜가 바뀌면 _load_state가 버린다(2026-09-25 실측) —
+    #   '영구'가 매일 한국 오전 9시에 풀렸다. 날짜로 안 버리는 key_vault에도 남긴다.
+    try:
+        key_vault.mark_dead(key, detail=detail, quiet=True)
+    except Exception as e:                 # noqa: BLE001 — 표시 실패가 본작업을 막으면 안 된다
+        print(f"comment_gen: key_vault 사망표시 실패(무해) {e!r}", file=sys.stderr)
     try:                                   # 관측판: 사망 확정 이벤트
         from shopping_shorts import api_health
         api_health.record("gemini", api_health.OUT_AUTH, pool="shorts",
@@ -145,6 +165,13 @@ def _mark_key_exhausted(idx, retry_after=None, exc=None):
     """
     if exc is not None and key_vault.is_account_disabled_error(exc):
         _mark_key_dead(idx, detail=str(exc)[:120])
+        return
+    if exc is not None and key_vault.unusable_reason(exc):
+        # 선불 소진·월 한도·할당량 0 — 30분 잠금으론 또 얻어맞는다. 정지는 key_vault 한 곳에서.
+        try:
+            key_vault.note_failure(SHORTS_GEMINI_KEYS[int(idx)], exc)
+        except (IndexError, TypeError, ValueError) as e:
+            print(f"comment_gen: 정지할 키 idx={idx} 못 찾음(무해) {e!r}", file=sys.stderr)
         return
     try:
         ttl = float(retry_after) if retry_after else _EXHAUST_TTL_S
@@ -235,6 +262,19 @@ def _probe_key_alive(key, timeout=15):
       프로브 자체를 무겁게 만들면(영상 업로드) 그 비용이 더 크다.
 
     비용: 최소 프롬프트 1회. RPD를 1 먹지만 '전 키 잠김'일 때만·쿨다운을 두고 돈다."""
+    # 429(진짜 소진)·401·네트워크 오류 → 되살리지 않는다.
+    # 보수적으로 간다: 잘못 되살리면 죽은 키를 계속 때린다.
+    return _probe_key_result(key, timeout)[0]
+
+
+def _probe_key_result(key, timeout=15):
+    """_probe_key_alive와 같은 호출인데 **왜 실패했는지**까지 준다 → (살았나, HTTP코드, 응답본문).
+
+    ★회원 키 등록 확인(app._probe_user_key)이 쓴다(2026-09-25). 종전엔 True/False만 받아
+      구글이 붐빈 503·일반 429까지 '키가 틀렸다(bad)'로 찍었다 — 회원 603의 새 키가 등록
+      3초 만에 bad가 됐는데, 같은 시각 다른 키 61개도 성공 0이던 과부하 시간대였다.
+      bad는 풀에서 빠지므로(store.get_pooled_keys) 멀쩡한 키를 버리게 된다.
+    코드 0 = 응답을 못 받음(네트워크·타임아웃)."""
     body = json.dumps({"contents": [{"parts": [{"text": "hi"}]}],
                        "generationConfig": {"maxOutputTokens": 1}}).encode()
     url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
@@ -243,11 +283,15 @@ def _probe_key_alive(key, timeout=15):
                                  headers={"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.status == 200
-    except Exception:                                         # noqa: BLE001
-        # 429(진짜 소진)·401·네트워크 오류 → 되살리지 않는다.
-        # 보수적으로 간다: 잘못 되살리면 죽은 키를 계속 때린다.
-        return False
+            return r.status == 200, int(r.status), ""
+    except urllib.error.HTTPError as e:
+        try:
+            text = e.read().decode("utf-8", "replace")[:2000]
+        except Exception:                                     # noqa: BLE001
+            text = ""
+        return False, int(e.code or 0), text
+    except Exception as e:                                    # noqa: BLE001
+        return False, 0, f"{type(e).__name__}: {e}"[:300]
 
 
 def _recheck_exhausted_keys():

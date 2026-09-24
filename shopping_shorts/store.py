@@ -7835,9 +7835,14 @@ class Store:
           저기는 "내 일은 내 키로", 여기는 "풀 전체". 섞지 마라.
         ★복호 실패 행은 _decrypt_rows가 로그를 남기고 건너뛴다.
         """
+        # ★꺼둔(off)·죽은(bad) 키는 풀에 다시 담지 않는다 — 제외형이라 기본값 'unknown'은 남는다.
+        #   2026-09-01 4a1ab252f에 넣었는데 41분 뒤 'auto: session changes'(83be8aa62)가 조용히
+        #   지웠다. 그 뒤 bad 3행(회원 315·57·603)이 매일 다시 불렸다(2026-09-25 실측).
+        #   test_pooled_keys_status.py가 이 줄을 지킨다 — 지워지면 게이트에서 막힌다.
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, key_enc FROM customer_keys WHERE service=? ORDER BY id",
+                "SELECT id, key_enc FROM customer_keys WHERE service=? "
+                "AND COALESCE(status,'') NOT IN ('off','bad') ORDER BY id",
                 (service,)).fetchall()
         return [plain for _kid, plain in self._decrypt_rows(rows, "pool", service)]
 
