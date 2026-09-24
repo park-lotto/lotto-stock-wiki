@@ -357,3 +357,11 @@ VERTEX_MODEL_MAP = {
 # ── 단계 순서 (전엔 channelkit/pipeline.py 상수. 채널마다 다르므로 여기로 2026-09-25) ─────
 STEPS = ["setup", "script", "layout", "lint", "prompts", "images", "voice", "timing", "subtitle", "sfx", "frames", "render", "review"]
 STEP_HANDLERS = {}     # Task 5에서 prompts·images·frames가 여기로 온다
+
+# ── 켜는 린터 규칙 — channelkit/lint.py ALL_RULES 의 id. 순서 = 반려 사유 나열 순서 ─────
+LINT_RULES = [
+    "title_punct", "comma", "enum", "nonwhite_run", "formal", "ending_declared", "speaker_voice",
+    "ending_mix", "h2_abstract", "card", "words", "layout", "punch", "last_standalone", "copy",
+    "cut_count", "slot_count", "slot_seq", "card_img", "example_copy", "first_open", "last_closed",
+    "line1_end", "meme_ratio",
+]

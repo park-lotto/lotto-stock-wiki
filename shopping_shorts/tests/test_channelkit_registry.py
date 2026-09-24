@@ -84,3 +84,20 @@ def test_run_step_channel_kwarg_switches(tmp_path):
                   FONTS_DIR=registry.use(registry.DEFAULT).FONTS_DIR, STYLE_FONT=registry.current().STYLE_FONT)
     pipeline.run_step(str(tmp_path), "setup", source_text="x", channel="kwch")
     assert registry.name() == "kwch"
+
+
+def test_lint_rules_chosen_by_channel():
+    from shopping_shorts.channelkit import lint
+    registry.use(registry.DEFAULT)
+    assert [r.id for r in lint.rules()] == list(registry.current().LINT_RULES)
+    assert len(lint.rules()) == 24
+
+    bb = registry.current()
+    _fake_channel("lintch", LINT_RULES=["title_punct", "comma"],
+                  **{k: getattr(bb, k) for k in dir(bb) if k.isupper() and k != "LINT_RULES"})
+    registry.use("lintch")
+    assert [r.id for r in lint.rules()] == ["title_punct", "comma"]
+    issues, _ = lint.lint({"title": {"h1": "제목?", "h2": "둘째"}, "groups": []}, do_layout=False)
+    assert {i.rule for i in issues} <= {"title_punct", "comma"}
+    assert "title_punct" in {i.rule for i in issues}
+    assert "- " in lint.prompt_block() and lint.prompt_block().count("\n") == 1

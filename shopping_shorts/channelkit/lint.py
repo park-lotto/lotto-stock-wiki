@@ -444,7 +444,7 @@ def r_example_copy(s, ctx):
     return out
 
 
-RULES = [
+_RULE_LIST = [
     Rule("title_punct", REJECT, "제목(h1·h2)에는 구두점을 쓰지 마라 (따옴표·물음표·마침표 포함).", r_title_punct),
     Rule("comma", REJECT, "자막 본문에 쉼표(,)를 쓰지 마라.", r_comma),
     Rule("enum", REJECT, f"색은 {'/'.join(spec.COLORS)}, 역할은 {'/'.join(spec.ROLES)}만. 컷마다 img(슬롯 번호) 또는 meme(감정) 중 하나. 밈 감정은 다음 문자열 그대로: {' · '.join(spec.EMOTIONS)}.", r_enum),
@@ -471,10 +471,20 @@ RULES = [
     Rule("meme_ratio", WARN, "밈 컷은 전체의 14~18% (4~5컷). 첫 밈은 6~8번째 컷, 마지막 컷은 밈.", r_meme_ratio),
 ]
 
+ALL_RULES = {r.id: r for r in _RULE_LIST}     # 규칙 창고. 어떤 걸 켤지는 채널 spec.LINT_RULES
+
+
+def rules():
+    """현재 채널이 켠 규칙, spec.LINT_RULES 순서대로. 모르는 id는 즉시 KeyError(조용히 빠지지 않게)."""
+    return [ALL_RULES[i] for i in spec.LINT_RULES]
+
+
+RULES = _RULE_LIST      # 옛 이름 — 전체 목록이 필요한 곳(문서·테스트)만. 판정은 rules()를 쓴다
+
 
 def prompt_block():
     """규칙표 → 프롬프트 지시문. 판정과 같은 객체에서 나오므로 어긋날 수 없다."""
-    return "\n".join(f"- {r.prompt}" for r in RULES)
+    return "\n".join(f"- {r.prompt}" for r in rules())
 
 
 def lint(script, *, source_text="", do_layout=True, fonts_dir=None, min_cuts=None):
@@ -486,7 +496,7 @@ def lint(script, *, source_text="", do_layout=True, fonts_dir=None, min_cuts=Non
         s["groups"] = gl
         ctx["layout_fails"] = fails
     issues = []
-    for r in RULES:
+    for r in rules():
         if r.needs_layout and not do_layout:
             continue
         issues += r.check(s, ctx)
