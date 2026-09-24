@@ -2161,7 +2161,7 @@
       <span id="sceneStyleStatus" class="hint"></span>
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
-      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
+      <div id="legacyDecoWrap" data-legacy-deco style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
         <!-- 좌: 큰 피팅 미러 (다듬기 스크롤 시 따라오도록 sticky) — T8: 좌측 슬롯 규약(.previewSlot) 공유 -->
         <!-- ★폭은 여기 한 곳(--pvw)에서만 정한다(0순위-B). 미리보기만 줄였더니 아래 장면넘김
              안내문("◀ ▶ 로 장면을…")이 한 줄로 안 접혀 칸 폭을 혼자 440px로 벌렸고,
@@ -19400,6 +19400,6 @@ async function checkTtsKey(){
 }
 try{ checkTtsKey(); }catch(e){}
 </script>
-<script src="/scene-style-produce.js?v=11"></script>
+<script src="/scene-style-produce.js?v=12"></script>
 </body>
 </html>
