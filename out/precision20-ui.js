@@ -72,7 +72,9 @@
     const start=frame.video_from?.y||0;
     const surface=ln&&(frame.surfaces||[]).find(s=>s.y<=ln.y0+ln.h/2&&s.y+s.height>=ln.y0+ln.h/2&&s.y>start*.45);
     const band=frame===rows[current]?.body&&frame.white_box?{y:frame.white_box.y0,height:frame.white_box.y1-frame.white_box.y0,background:frame.white_box.background}:surface;
-    const cut=ln&&ln.y0<start?(band?.y??ln.y0):start;
+    // 원본(plain)은 영상이 0에서 시작하므로 '자막 줄이 영상 위쪽에 있나' 판정이 통째로 무너진다
+    //   (start=0이라 cut이 0이 되어 자막이 화면 맨 위로 붙었다, 2026-09-24 실측). 제 줄 자리를 그대로 쓴다.
+    const cut=rows[current]?.id===PLAIN_ID?(ln?.y0??start):(ln&&ln.y0<start?(band?.y??ln.y0):start);
     // 고정형 자막칸 높이는 위시언니(6.5%) 하나로 통일(2026-09-18 사장님 "딱 이 사이즈로 다들 해줘야 비례가 맞지").
     //   실측: 20종 중 14종이 원본 측정값 상한 17.9%라 제목보다 자막칸이 두꺼웠다. 사용자가 저장한 높이는 그대로 우선.
     const measured=Math.max(5,Math.min(18,(band?.height||ln?.h||frame.height*.07)/frame.height*100));
@@ -83,7 +85,8 @@
   const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body');
   const captionSettings=()=>{
     const frame=frameFor(rows[current]),source=captionSource(frame),saved=captionLayouts.get(captionKey())||{};
-    return {placement:captionDrags.has(captionKey())?'free':'title',w:100,h:source.height,background:source.background,color:source.ln?.color||'#111111',...saved};
+    // 원본(plain)은 띠가 없으니 자막이 제목칸으로 끌려가면 안 된다 — 제 자리(영상 아래쪽)에 둔다.
+    return {placement:captionDrags.has(captionKey())||rows[current]?.id===PLAIN_ID?'free':'title',w:100,h:source.height,background:source.background,color:source.ln?.color||'#111111',...saved};
   };
   const titleHeight=frame=>titleSetting(frame)+channelDelta(frame);   // 화면에서의 제목칸 끝 — 자막칸·영상 시작이 모두 여기서 나온다
   const titleSetting=frame=>{   // '상단 제목칸' 슬라이더 값(채널명 칸 밀림 제외) — 저장·표시는 이 값으로
@@ -93,7 +96,7 @@
     return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
   };
   const mediaBounds=(frame,presetId)=>{
-    if(!frame||noTemplate)return {top:0,height:100};   // 템플릿 없음 = 영상이 화면 전체
+    if(!frame||noTemplate||(presetId||rows[current]?.id)===PLAIN_ID)return {top:0,height:100};   // 템플릿 없음·원본 = 영상이 화면 전체
     const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'?captionSettings().h:0);
     const bottom=fixedLayoutFor(presetId||rows[current].id,frame).bottom;
     return {top,height:Math.max(10,100-top-bottom)};
@@ -103,9 +106,15 @@
   const storyHasCaptionSlot=frame=>frame?.caption_slot?frame.caption_slot.mode==='reserved':!!frame?.white_box||(frame?.cleanup_regions||[]).some(r=>r.role==='source-footer');
   const presetHasCaptionSlot=p=>p.mode==='continuous'?p.frame?.caption_slot?.mode==='reserved':storyHasCaptionSlot(p.body);
   const captionBadge=p=>presetHasCaptionSlot(p)?'<span class="caption-kind reserved">자막칸</span>':'<span class="caption-kind overlay">영상 위</span>';
+  // ★'원본 영상 그대로'는 **틀 없는 진짜 템플릿**(id 'plain')이다 — 목록에는 안 보이고 왼쪽 '템플릿 없음' 카드가 고른다.
+  //   이렇게 해야 오른쪽 제목·자막 카드가 신버전 그대로 살아나고, 저장·렌더도 같은 길을 탄다(2026-09-24 사장님).
+  const PLAIN_ID='plain';
+  const isPlain=p=>(p||rows[current])?.id===PLAIN_ID;
+  const plainIndex=()=>storyRows.findIndex(p=>p.id===PLAIN_ID);
+  const gridRows=()=>rows.filter(p=>p.id!==PLAIN_ID);
   const renderGrid=()=>{
-    const count=root.querySelector('.layout-a .pane-head .count');if(count)count.textContent=`${storyRows.length+fixedRows.length}개`;
-    grid.innerHTML='<button class="preset-card none-card" data-none><span class="check">✓</span><div class="none-thumb">원본 영상<br>그대로</div><b>템플릿 없음</b><small>제목·자막 꾸미기 없이</small></button>'+rows.map((p,i)=>mode==='continuous'
+    const count=root.querySelector('.layout-a .pane-head .count');if(count)count.textContent=`${storyRows.filter(p=>p.id!==PLAIN_ID).length+fixedRows.length}개`;
+    grid.innerHTML='<button class="preset-card none-card" data-none><span class="check">✓</span><div class="none-thumb">원본 영상<br>그대로</div><b>템플릿 없음</b><small>제목·자막 꾸미기 없이</small></button>'+rows.map((p,i)=>p.id===PLAIN_ID?'':mode==='continuous'
       ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="fixed-thumb" style="background-image:url('${fixedThumb(p)}')"></div><b>${esc(p.name)}</b><small>${esc(fontLabel(p))} · 고정형</small></button>`
       : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${esc(fontLabel(p))} · 훅+본문</small></button>`).join('');
   };
@@ -237,7 +246,9 @@
   // 09-19 사장님: 썰쇼핑형 본문도 이븐쇼핑 비율로 통일(원본은 제목 시작 13~21%, 영상 시작 29~39%로 제각각이었다).
   //   cut=자막 칸 시작(%), capH=자막 칸 높이(%), title=cut 대비 제목 위치·높이. 여기 한 곳에서만 정한다.
   const STORY_BODY={cut:21,capH:10,titleTop:.52,titleH:.30,font:.76};
-  const isStoryBody=frame=>mode==='story'&&frame===rows[current]?.body;
+  // ★원본(plain)은 띠가 없는 틀이라 본문 전용 배치(제목칸·자막칸 재배치)를 타면 안 된다 —
+  //   타면 자막이 위로 끌려 올라오고 영상이 아래로 밀린다(2026-09-24 실측).
+  const isStoryBody=frame=>mode==='story'&&frame===rows[current]?.body&&rows[current]?.id!==PLAIN_ID;
   const WRAP3=['bodyTitle','caption'],CHANNEL_MAX=.045;   // 본문 제목·자막 3줄 허용 / 채널명 글자 크기 상한(화면 높이 대비)
   const FIXED_TITLE={band:26,first:.33,pad:.06,line:.25,gap:.045,fontOfLine:.76};   // band=제목칸 높이(%), pad=자막 칸 앞 여백
   // 본문 제목은 자막 칸 시작(cut) 기준 같은 자리에 둔다
@@ -1033,7 +1044,7 @@
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
     applyChannelSlot(frame,p);   // 09-19: 고정형에서도 채널명 칸이 먹게
-    if(mode==='story'){
+    if(mode==='story'&&p.id!==PLAIN_ID){
       applyStoryLayout(frame,p);
       const storyBottom=fixedLayoutFor(p.id,frame).bottom;
       if(storyBottom>0)addPatch(100-storyBottom,storyBottom,fixedColorsFor(p.id,frame).bottom,0,100,'bottom-band');
@@ -1235,7 +1246,10 @@
     const settings=captionSettings(),source=captionSource(frame),drag=captionDrags.get(captionKey())||{x:0,y:0};
     const w=settings.placement==='title'?100:settings.w,h=settings.h;
     const x=settings.placement==='title'?0:Math.max(0,Math.min(100-w,(100-w)/2+drag.x));
-    const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,titleHeight(frame)+drag.y+textOffset('caption')));
+    // ★원본(plain)은 제목칸이 없다 — 자막 기준선을 titleHeight(=0)로 잡으면 화면 맨 위로 붙는다(2026-09-24 실측).
+    //   그 틀에서는 자막 줄이 정해 둔 제 자리(영상 아래쪽)를 기준으로 삼고, 끌어 옮긴 양만 더한다.
+    const capBase=rows[current]?.id===PLAIN_ID?(source.ln?source.ln.y0/frame.height*100:80):titleHeight(frame);
+    const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,capBase+drag.y+textOffset('caption')));
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
     const capLook=captionLook(frame);
     if(capLook){const {left,width,...look}=capLook.box;Object.assign(patch.style,settings.placement==='title'?capLook.box:look);if(!settings.colorUser)settings.color=capLook.color;}   // 옮긴 자막은 옮긴 자리·폭 유지
@@ -1302,6 +1316,10 @@
     if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set(frameKeys('frame',p)));
     else {dirtyFields.set(`${p.id}:hook`,new Set(frameKeys('hook',p)));dirtyFields.set(`${p.id}:body`,new Set(frameKeys('body',p)));}
     grid.querySelectorAll('[data-p20]').forEach((x,i)=>x.classList.toggle('selected',i===index));
+    // 원본(plain)일 때는 왼쪽 '템플릿 없음' 카드에 체크가 간다
+    grid.querySelector('[data-none]')?.classList.toggle('selected',rows[index]?.id===PLAIN_ID);
+    document.body.classList.toggle('plain-template',rows[index]?.id===PLAIN_ID);
+    window.dispatchEvent(new Event('scene-style-template'));
     inputs.channel.value=p.sample.channel||'숏템메이커';inputs.hook1.value=p.sample.hook1;inputs.hook2.value=p.sample.hook2;inputs.bodyTitle.value=p.sample.bodyTitle;inputs.caption.value=p.sample.caption||(mode==='continuous'&&sceneIndex>0?'이런 방법이 있었네요':'');
     for(const bind of ['hook1','hook2','bodyTitle','caption'])inputs[bind].placeholder='';
     root.querySelectorAll('[data-preview-channel]').forEach(x=>x.textContent=inputs.channel.value);
@@ -1318,7 +1336,7 @@
     if(sceneContext?.text)for(const [key,text] of Object.entries(sceneContext.text))if(inputs[key])inputs[key].value=text;
     preview.classList.remove('is-pristine');showFrame(kind);
   }
-  grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
+  grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){const i=plainIndex();if(i>=0&&mode==='story')selectPreset(i);else setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
   modeBar.addEventListener('click',event=>{
     const button=event.target.closest('[data-template-mode]');if(!button)return;
     mode=button.dataset.templateMode;rows=mode==='continuous'?fixedRows:storyRows;if(!rows.length)return;
@@ -1696,61 +1714,9 @@
     const want=!document.body.classList.contains('no-template');
     if(note.hidden!==want)note.hidden=want;
   }
-  // ★원본 모드에서 쓰는 두 카드(헤드카피·자막) — 신버전 카드와 같은 모양으로 오른쪽 문구/텍스트 안에 넣는다.
-  //   (2026-09-24 사장님: "원본영상그대로를 누르면 오른쪽 문구 텍스트에 헤드카피랑 자막 탭을 넣고,
-  //    그거 펼치면 신버전처럼 정돈되게 기능 넣고")
-  //   값은 부모(제작소)의 옛 칸으로 보낸다 — 원본 모드의 렌더가 그 값을 태우는 경로이기 때문이다.
-  const PLAIN_CARDS=[
-    {key:'plainHead',title:'헤드카피',rows:[
-      {id:'hcText',label:'제목 문구',type:'textarea',hint:'두 줄까지'},
-      {id:'hcSize',label:'글자 크기',type:'range',min:28,max:120,step:1},
-      {id:'hcY',label:'세로 위치',type:'range',min:0,max:100,step:.5},
-      {id:'hcColor',label:'글자 색',type:'color'},
-    ]},
-    {key:'plainCaption',title:'자막',rows:[
-      {id:'capColor',label:'글자 색',type:'color'},
-      {id:'capOutline',label:'외곽선',type:'check'},
-      {id:'capBox',label:'배경 박스',type:'check'},
-    ]},
-  ];
-  const plainSend=(id,value)=>{try{parent.postMessage({type:'scene-style-legacy',id,value},location.origin)}catch{}};
-  function plainCards(panel){
-    const on=document.body.classList.contains('no-template');
-    for(const card of PLAIN_CARDS){
-      let box=panel.querySelector(`:scope > .text-group[data-group="${card.key}"]`);
-      if(!box){
-        box=document.createElement('details');box.className='text-group';box.dataset.group=card.key;
-        box.innerHTML=`<summary><b>${card.title}</b><small></small></summary><div class="text-group-body plain-rows"></div>`;
-        const body=box.querySelector('.plain-rows');
-        for(const r of card.rows){
-          const row=document.createElement('label');row.className='plain-row';
-          const input=r.type==='textarea'?document.createElement('textarea')
-            :r.type==='check'?Object.assign(document.createElement('input'),{type:'checkbox'})
-            :r.type==='color'?Object.assign(document.createElement('input'),{type:'color'})
-            :Object.assign(document.createElement('input'),{type:'range',min:r.min,max:r.max,step:r.step});
-          input.dataset.plainId=r.id;if(r.type==='textarea')input.rows=2;
-          row.innerHTML=`<span>${r.label}</span>`;row.append(input);
-          if(r.hint)row.insertAdjacentHTML('beforeend',`<i>${r.hint}</i>`);
-          body.append(row);
-          const send=()=>plainSend(r.id,r.type==='check'?input.checked:input.value);
-          input.addEventListener(r.type==='check'?'change':'input',send);
-        }
-        panel.prepend(box);
-      }
-      if(box.hidden!==!on)box.hidden=!on;
-    }
-  }
-  // 부모가 옛 칸의 현재 값을 보내 주면 카드에 채운다(열 때 빈칸으로 보이지 않게)
-  addEventListener('message',event=>{
-    if(event.data?.type!=='scene-style-legacy-values')return;
-    for(const [id,value] of Object.entries(event.data.values||{})){
-      const el=document.querySelector(`[data-plain-id="${id}"]`);if(!el)continue;
-      if(el.type==='checkbox')el.checked=!!value;else el.value=value;
-    }
-  });
   function build(){
     const panel=document.querySelector('.layout-a .scene-text-panel');if(!panel)return;
-    noTemplateNote(panel);plainCards(panel);
+    noTemplateNote(panel);
     for(const g of GROUPS){
       let box=panel.querySelector(`:scope > .text-group[data-group="${g.key}"]`);
       const nodes=g.pick(panel);if(!box&&!nodes.length)continue;
@@ -1763,9 +1729,8 @@
     refresh();
   }
   function refresh(){
-    const panel=document.querySelector('.layout-a .scene-text-panel');if(panel){noTemplateNote(panel);plainCards(panel);}
+    const panel=document.querySelector('.layout-a .scene-text-panel');if(panel)noTemplateNote(panel);
     document.querySelectorAll('.layout-a .scene-text-panel > .text-group').forEach(box=>{
-      if(box.dataset.group&&box.dataset.group.startsWith('plain'))return;   // 원본 모드 카드는 plainCards가 직접 켜고 끈다
       const body=box.querySelector('.text-group-body');
       // 안의 칸이 전부 숨겨진 단락(예: 훅 화면의 자막)은 카드째 숨긴다
       // 값이 바뀔 때만 쓴다 — 이 함수가 감시 대상 안을 고치므로, 같은 값을 다시 쓰면 감시→갱신이 끝없이 돈다.
