@@ -86,10 +86,17 @@
   //   "원본 영상 그대로를 선택하면 자막이 보이질 않습니다 / 장면마다 자막을 옮길 수 있었는데").
   //   템플릿에서는 훅 자막이 제목·띠와 겹쳐 종전처럼 본문에서만 보인다.
   const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body'||rows[current]?.id===PLAIN_ID);
+  // ★자막 기본 배치는 **이 함수 하나**로 정한다(2026-09-25 Opus 검토 — 네 곳에 따로 적혀 원본 예외가 두 곳에서 빠졌다:
+  //   원본에서 슬라이더를 만지면 다른 장면 자막이 'title' 배치가 돼 화면 맨 위(y=0)로 튀었다. 렌더·캡컷도 같은 코드라 영상에도 나온다).
+  //   끌어 옮긴 장면 또는 원본(plain, 제목칸이 없는 틀) = 'free'(제 자리), 아니면 'title'(제목칸 아래).
+  const basePlacementFor=key=>captionDrags.has(key)||rows[current]?.id===PLAIN_ID?'free':'title';
   const captionSettings=()=>{
     const frame=frameFor(rows[current]),source=captionSource(frame),saved=captionLayouts.get(captionKey())||{};
     // 원본(plain)은 띠가 없으니 자막이 제목칸으로 끌려가면 안 된다 — 제 자리(영상 아래쪽)에 둔다.
-    return {placement:captionDrags.has(captionKey())||rows[current]?.id===PLAIN_ID?'free':'title',w:100,h:source.height,background:source.background,color:source.ln?.color||'#111111',boxClear:0,...saved};
+    const out={placement:basePlacementFor(captionKey()),w:100,h:source.height,background:source.background,color:source.ln?.color||'#111111',boxClear:0,...saved};
+    // 원본(plain)엔 제목칸이 없어 'title' 배치는 뜻이 없다 — 이미 그렇게 저장된 작업(09-25 01시대 버그)도 제 자리로 읽는다(렌더러도 이 함수).
+    if(rows[current]?.id===PLAIN_ID&&out.placement==='title')out.placement='free';
+    return out;
   };
   const titleHeight=frame=>titleSetting(frame)+channelDelta(frame);   // 화면에서의 제목칸 끝 — 자막칸·영상 시작이 모두 여기서 나온다
   const titleSetting=frame=>{   // '상단 제목칸' 슬라이더 값(채널명 칸 밀림 제외) — 저장·표시는 이 값으로
@@ -120,25 +127,31 @@
     if(!Object.keys(v).length)for(const value of captionLayouts.values()){v=pick(value);if(Object.keys(v).length)break;}
     return Object.keys(v).length?v:null;
   };
+  // 이 모드의 화면 종류인가 — 원본(plain)은 썰쇼핑형(hook·body)과 고정형(frame)이 같은 'plain:' 앞머리를 쓴다(Opus 검토 6)
+  const kindOk=k=>{const kind=k.split(':')[1];return mode==='continuous'?kind==='frame':kind!=='frame';};
   // 내 프리셋의 '자리' — 제목·채널명 자리(템플릿:화면:칸 키, 장면 번호 무관)와 지금 장면의 자막 자리 하나(2026-09-25).
   const presetPositions=()=>{
-    const pre=rows[current].id+':',pick=m=>Object.fromEntries([...m].filter(([k])=>k.startsWith(pre)&&!k.includes(':caption')));
-    const ck=captionKey(),lay=captionLayouts.get(ck)||{};
+    const pre=rows[current].id+':',pick=m=>Object.fromEntries([...m].filter(([k])=>k.startsWith(pre)&&!k.includes(':caption')&&kindOk(k)));
+    // 지금 장면에 자막 기록이 없으면(훅 장면처럼 자막이 숨은 장면) 이 모드에서 끌어 옮긴 다른 장면의 기록을 쓴다 — captionLookStyle과 같은 대비책(Opus 검토 3)
+    let ck=captionKey();
+    if(!captionDrags.has(ck)){const other=[...captionDrags.keys()].find(k=>k.startsWith(`${rows[current].id}:${mode}:`));if(other)ck=other;}
+    const lay=captionLayouts.get(ck)||{},ci=Number(ck.split(':')[2]);
+    const offKey=`${rows[current].id}:${mode==='continuous'?'frame':sceneKind(ci)}:caption:${ci}`;
     return {textDrags:pick(textDrags),textOffsets:pick(textOffsets),
-      caption:{drag:captionDrags.get(ck)||null,offset:textOffsets.get(scaleKey('caption'))||0,placement:lay.placement||null,w:lay.w??null}};
+      caption:{drag:captionDrags.get(ck)||null,offset:textOffsets.get(offKey)||0,placement:lay.placement||null,w:lay.w??null}};
   };
   // 적용: 이 템플릿의 자리를 프리셋 자리로 바꾸고, 자막 자리는 **모든 장면**에 같게('이 위치를 다른 장면에도 적용'과 같은 방식).
   //   pos가 없으면(자리를 안 담던 옛 프리셋) 템플릿 기본 자리로 되돌린다 — 지금 작업 자리가 남는 게 사장님이 짚은 문제다.
   const applyPresetPositions=pos=>{
     const pid=rows[current].id,pre=pid+':',cap=pos?.caption||null;
-    for(const m of [textDrags,textOffsets])for(const k of [...m.keys()])if(k.startsWith(pre)&&!k.includes(':caption'))m.delete(k);
-    for(const [k,v] of Object.entries(pos?.textDrags||{}))if(k.startsWith(pre))textDrags.set(k,v);
-    for(const [k,v] of Object.entries(pos?.textOffsets||{}))if(k.startsWith(pre))textOffsets.set(k,v);
+    for(const m of [textDrags,textOffsets])for(const k of [...m.keys()])if(k.startsWith(pre)&&!k.includes(':caption')&&kindOk(k))m.delete(k);
+    for(const [k,v] of Object.entries(pos?.textDrags||{}))if(k.startsWith(pre)&&kindOk(k))textDrags.set(k,v);
+    for(const [k,v] of Object.entries(pos?.textOffsets||{}))if(k.startsWith(pre)&&kindOk(k))textOffsets.set(k,v);
     for(let i=0;i<sceneTotal();i++){
       const key=`${pid}:${mode}:${i}:caption`,offKey=`${pid}:${mode==='continuous'?'frame':sceneKind(i)}:caption:${i}`;
       if(cap?.drag)captionDrags.set(key,{...cap.drag});else captionDrags.delete(key);
       if(cap?.offset)textOffsets.set(offKey,cap.offset);else textOffsets.delete(offKey);
-      const lay={...(captionLayouts.get(key)||{})},basePlacement=captionDrags.has(key)||pid===PLAIN_ID?'free':'title';
+      const lay={...(captionLayouts.get(key)||{})},basePlacement=basePlacementFor(key);
       lay.placement=cap?.placement||basePlacement;if(cap&&cap.w!=null)lay.w=cap.w;else if(!cap)delete lay.w;
       if(Object.keys(lay).length===1&&lay.placement===basePlacement)captionLayouts.delete(key);else captionLayouts.set(key,lay);
     }
@@ -150,7 +163,7 @@
       const key=`${rows[current].id}:${mode}:${i}:caption`;
       const cur={...(captionLayouts.get(key)||{})};
       for(const k of CAPTION_LOOK_KEYS)if(style[k]!==undefined)cur[k]=style[k];
-      cur.placement=cur.placement||(captionDrags.has(key)?'free':'title');
+      cur.placement=cur.placement||basePlacementFor(key);
       captionLayouts.set(key,cur);
     }
   };
@@ -1506,7 +1519,9 @@
   });
   captionField?.addEventListener('click',event=>{
     const button=event.target.closest('[data-caption-placement]');if(!button)return;
-    const settings=captionSettings();captionLayouts.set(captionKey(),{...settings,placement:button.dataset.captionPlacement});
+    // 원본(plain)에는 제목칸이 없다 — '위치 초기화'(title)는 자막을 맨 위로 보냈다. 원본에선 제 자리(free + 끌기·보정 지움)가 초기 위치다.
+    const want=button.dataset.captionPlacement==='title'&&rows[current]?.id===PLAIN_ID?'free':button.dataset.captionPlacement;
+    const settings=captionSettings();captionLayouts.set(captionKey(),{...settings,placement:want});
     if(button.dataset.captionPlacement==='title'){captionDrags.delete(captionKey());textOffsets.delete(scaleKey('caption'));}
     applyCaptionMoveScope();
     markDirty('caption');updateCaptionButtons();renderEdit();
@@ -1572,7 +1587,7 @@
       const other={...(captionLayouts.get(key)||{})};
       // 서버(scene_style.py)는 자막 배치마다 placement를 필수로 본다 — 모양만 넣으면 저장이 거절된다.
       //   기본값 규칙은 captionSettings와 같다(끌어 옮긴 장면='free', 아니면 'title'). 그 줄은 장면 세션이 고치는 구간 옆이라 건드리지 않고 여기 한 번 더 적었다.
-      const basePlacement=captionDrags.has(key)?'free':'title';other.placement=other.placement||basePlacement;
+      const basePlacement=basePlacementFor(key);other.placement=other.placement||basePlacement;
       change(other);
       const onlyDefault=Object.keys(other).length===1&&other.placement===basePlacement;   // 남은 게 기본 배치뿐이면 기록을 지운다
       if(onlyDefault)captionLayouts.delete(key);else captionLayouts.set(key,other);
