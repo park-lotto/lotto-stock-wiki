@@ -98,12 +98,29 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
     channel: 채널 이름(channel_presets/<이름>). None이면 현재 등록된 채널(기본 brainbulb).
     채널 전용 단계: spec.STEP_HANDLERS[step] = fn(job, d, wd, kw) -> None | resp dict.
       d는 job["data"]. 정상이면 d[step]에 산출물을 넣고 None, 멈출 땐 need_input/failed 응답 dict."""
+    job = load(wd)
+    # 채널: 인자 > job에 기록된 채널 > 현재 등록값. 재개할 때 channel=을 또 안 넘겨도 같은 채널로 돈다.
     if channel:
         registry.use(channel)
-    job = load(wd)
+    elif job.get("channel"):
+        registry.use(job["channel"])
+    job["channel"] = registry.name()
     d = job["data"]
+    handlers = getattr(spec, "STEP_HANDLERS", None) or {}
     try:
-        if step == "setup":
+        # ★채널 핸들러가 기본 단계보다 먼저 — 같은 이름(setup·render 등)을 채널이 덮어쓸 수 있다
+        if step in handlers:
+            kw = {"source_text": source_text, "llm": llm, "tts": tts, "imagegen": imagegen, "sfx_dir": sfx_dir,
+                  "meme_dir": meme_dir, "bg_image": bg_image, "fonts_dir": fonts_dir, "log": log,
+                  "min_cuts": min_cuts, "reviewer": reviewer}
+            r = handlers[step](job, d, wd, kw)
+            if r is not None:                 # 핸들러가 need_input/failed 응답을 돌려주면 그대로
+                if r.get("status") == "failed":
+                    _fail_stay(job, step)
+                save(wd, job)
+                return r
+            _invalidate_after(job, step)
+        elif step == "setup":
             if not source_text:
                 return _resp("need_input", step, "setup", need=["source_text"])
             fp = measure.font_probe(fonts_dir)
@@ -191,17 +208,6 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
                 bad = [c for c in rep["checks"] if not c["ok"]]
                 return _resp("failed", step, None, fail={"where": "review", "why": ", ".join(c["name"] for c in bad),
                                                           "fix": "해당 단계 산출물을 고치고 그 단계부터 다시", "retry_ok": True, "detail": bad})
-        elif step in (getattr(spec, "STEP_HANDLERS", None) or {}):
-            kw = {"source_text": source_text, "llm": llm, "tts": tts, "imagegen": imagegen, "sfx_dir": sfx_dir,
-                  "meme_dir": meme_dir, "bg_image": bg_image, "fonts_dir": fonts_dir, "log": log,
-                  "min_cuts": min_cuts, "reviewer": reviewer}
-            r = spec.STEP_HANDLERS[step](job, d, wd, kw)
-            if r is not None:                 # 핸들러가 need_input/failed 응답을 돌려주면 그대로
-                if r.get("status") == "failed":
-                    _fail_stay(job, step)
-                    save(wd, job)
-                return r
-            _invalidate_after(job, step)
         else:
             raise ValueError(f"모르는 단계: {step}")
     except Exception as e:  # noqa: BLE001 — 원인·처방을 응답에 담아 올린다(실패 문구 원인 뭉개기 금지)
@@ -231,7 +237,7 @@ def next_step(wd):
     job = load(wd)
     done = job.get("step_done")
     if done is None:
-        return "setup"
+        return steps()[0]
     i = steps().index(done)
     return steps()[i + 1] if i + 1 < len(steps()) else None
 
@@ -239,7 +245,7 @@ def next_step(wd):
 def run_all(wd, **kw):
     """setup부터 review까지 관통. 멈추면 그 응답을 그대로 돌려준다(볼케이노 need_input/failed와 같은 모양)."""
     with Lock(wd):
-        step = next_step(wd) or "setup"
+        step = next_step(wd) or steps()[0]
         while step:
             r = run_step(wd, step, **kw)
             if r["status"] != "ok":

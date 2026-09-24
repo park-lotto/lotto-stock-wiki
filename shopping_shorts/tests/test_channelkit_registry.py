@@ -101,3 +101,53 @@ def test_lint_rules_chosen_by_channel():
     assert {i.rule for i in issues} <= {"title_punct", "comma"}
     assert "title_punct" in {i.rule for i in issues}
     assert "- " in lint.prompt_block() and lint.prompt_block().count("\n") == 1
+
+
+def _plain_channel(name, steps, handlers):
+    bb = registry.use(registry.DEFAULT)
+    return _fake_channel(name, STEPS=steps, STEP_HANDLERS=handlers, LINT_RULES=[],
+                         FONTS_DIR=bb.FONTS_DIR, STYLE_FONT=bb.STYLE_FONT)
+
+
+def test_handler_overrides_builtin_and_first_step_from_spec(tmp_path):
+    from shopping_shorts.channelkit import pipeline
+    seen = []
+
+    def seed(job, d, wd, kw):
+        seen.append("seed"); d["seed"] = {"x": 1}
+
+    def setup(job, d, wd, kw):            # 기본 setup(폰트 검사)을 덮어쓴다
+        seen.append("setup"); d["setup"] = {"mine": True}
+
+    _plain_channel("ovch", ["seed", "setup"], {"seed": seed, "setup": setup})
+    registry.use("ovch")
+    wd = str(tmp_path)
+    assert pipeline.next_step(wd) == "seed"
+    r = pipeline.run_all(wd)
+    assert r["status"] == "ok" and seen == ["seed", "setup"]
+    assert pipeline.load(wd)["data"]["setup"] == {"mine": True}
+
+
+def test_job_remembers_channel_on_resume(tmp_path):
+    from shopping_shorts.channelkit import pipeline
+
+    def a(job, d, wd, kw):
+        d["a"] = 1
+
+    def b(job, d, wd, kw):
+        d["b"] = registry.name()
+
+    _plain_channel("memch", ["a", "b"], {"a": a, "b": b})
+    wd = str(tmp_path)
+    pipeline.run_step(wd, "a", channel="memch")
+    registry.use(registry.DEFAULT)                 # 다른 채널로 바뀐 뒤 재개
+    r = pipeline.run_step(wd, "b")
+    assert r["status"] == "ok"
+    assert pipeline.load(wd)["channel"] == "memch" and pipeline.load(wd)["data"]["b"] == "memch"
+
+
+def test_register_channel_rule():
+    from shopping_shorts.channelkit import lint
+    rule = lint.Rule("zz_test_rule", lint.WARN, "테스트", lambda s, ctx: [])
+    lint.register(rule)
+    assert lint.ALL_RULES["zz_test_rule"] is rule

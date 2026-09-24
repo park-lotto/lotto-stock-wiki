@@ -474,6 +474,12 @@ _RULE_LIST = [
 ALL_RULES = {r.id: r for r in _RULE_LIST}     # 규칙 창고. 어떤 걸 켤지는 채널 spec.LINT_RULES
 
 
+def register(rule):
+    """채널 전용 규칙을 창고에 넣는다(channel_presets/<이름>/rules.py가 import 시 부른다). 같은 id 재등록은 덮어씀."""
+    ALL_RULES[rule.id] = rule
+    return rule
+
+
 def rules():
     """현재 채널이 켠 규칙, spec.LINT_RULES 순서대로. 모르는 id는 즉시 KeyError(조용히 빠지지 않게)."""
     return [ALL_RULES[i] for i in spec.LINT_RULES]
