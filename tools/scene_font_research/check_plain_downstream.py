@@ -24,11 +24,11 @@ timeline = [{'beat_idx': i, 't0': i, 'dur': 1, 'narration': c, 'caption_lines': 
 TEXT = {'channel': '숏템메이커', 'hook1': '주부들도 감탄한', 'hook2': '천재 아이디어', 'bodyTitle': '주부들도 감탄한 천재 아이디어?'}
 for mode, fk in (('story', 'hook'), ('continuous', 'frame')):
     try:
-        scene_style.validate_snapshot({'version': 1, 'mode': mode, 'presetId': 'plain', 'sceneIndex': 0, 'frameKind': fk, 'text': TEXT})
+        scene_style.validate_snapshot({'version': 1, 'mode': mode, 'plainCaption': 2, 'presetId': 'plain', 'sceneIndex': 0, 'frameKind': fk, 'text': TEXT})
         need(True, f'① 서버 검증 통과 ({mode})')
     except Exception as exc:
         need(False, f'① 서버 검증 실패 ({mode}): {exc}')
-snap = scene_style.validate_snapshot({'version': 1, 'mode': 'story', 'presetId': 'plain', 'sceneIndex': 0, 'frameKind': 'hook', 'text': TEXT})
+snap = scene_style.validate_snapshot({'version': 1, 'mode': 'story', 'plainCaption': 2, 'presetId': 'plain', 'sceneIndex': 0, 'frameKind': 'hook', 'text': TEXT})
 def ink(png, a0, a1):
     im = Image.open(png).convert('RGBA'); w, h = im.size; al = im.split()[3]
     return sum(1 for y in range(int(h * a0), int(h * a1), 3) for x in range(int(w * .1), int(w * .9), 6) if al.getpixel((x, y)) > 40)

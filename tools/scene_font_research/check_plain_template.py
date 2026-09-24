@@ -82,7 +82,7 @@ tts = out / 'v.wav'; va._run_ffmpeg(['ffmpeg', '-y', '-f', 'lavfi', '-i', 'sine=
 timeline = [{'beat_idx': i, 't0': i, 'dur': 1, 'narration': c, 'caption_lines': [c], 'tts_path': str(tts), 'target_seconds': 1,
              'role': 'hook' if i == 0 else 'body', 'primary': {'video_id': 's0', 'start': i, 'end': i + 1}}
             for i, c in enumerate(['주부들도 감탄한 천재 아이디어', '이건 바로 핑거 찹스틱'])]
-snap = scene_style.validate_snapshot({'version': 1, 'mode': 'story', 'presetId': 'plain', 'sceneIndex': 0, 'frameKind': 'hook',
+snap = scene_style.validate_snapshot({'version': 1, 'mode': 'story', 'plainCaption': 2, 'presetId': 'plain', 'sceneIndex': 0, 'frameKind': 'hook',
     'text': CTX['text']})
 scene_style.render_layers(timeline, snap, out / 'layers', {'text': '주부들도 감탄한\n천재 아이디어'}, 'plainqa')
 pngs = sorted((out / 'layers').rglob('*.png'))

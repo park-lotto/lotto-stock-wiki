@@ -119,6 +119,11 @@
   // ★'원본 영상 그대로'는 **틀 없는 진짜 템플릿**(id 'plain')이다 — 목록에는 안 보이고 왼쪽 '템플릿 없음' 카드가 고른다.
   //   이렇게 해야 오른쪽 제목·자막 카드가 신버전 그대로 살아나고, 저장·렌더도 같은 길을 탄다(2026-09-24 사장님).
   const PLAIN_ID='plain';
+  // ★원본 자막 새 방식(2026-09-25: 제목 바로 아래·박스 없음) 이전에 저장된 원본 작업은 **예전 그대로**(아래 81%·예전 박스) 그린다
+  //   (사장님 B안: 고객이 보고 저장한 화면과 영상이 같아야 한다). 새로 저장하는 원본 스냅샷엔 plainCaption:2 표시가 붙는다.
+  //   표시 없는 원본 스냅샷을 load하면 plainLegacy=true. 원본 카드를 다시 누르거나 내 프리셋을 적용하면 새 방식.
+  let plainLegacy=false;
+  const PLAIN_LEGACY_CAP_Y=1560/1920*100;   // 예전 원본 자막 줄 y0(81.25%)
   // 자막박스 '모양'만 뽑아낸다 — 지금 장면에 없으면 다른 장면에서 찾는다(훅에서 저장해도 담기게).
   const CAPTION_LOOK_KEYS=['look','w','h','background','color','bgUser','colorUser','boxClear'];
   const captionLookStyle=()=>{
@@ -1313,7 +1318,7 @@
     if(saved.look==='none')return CAPTION_NONE;
     // ★원본(plain) = 인스타식: 기본은 박스 없이 흰 글자+검은 테두리(2026-09-25 사장님 "검정박스 없애고 제목 아래 이 정도 위치").
     //   고객이 모양을 고르거나(look) 박스색을 직접 고르면(bgUser) 그걸 따른다.
-    if(rows[current]?.id===PLAIN_ID&&saved.look===undefined&&!saved.bgUser)return CAPTION_NONE;
+    if(rows[current]?.id===PLAIN_ID&&!plainLegacy&&saved.look===undefined&&!saved.bgUser)return CAPTION_NONE;
     const accent0=(fixedColorsFor(rows[current].id,frame).title2||'#00F9ED').slice(0,7);
     if(Number.isInteger(saved.look)&&CAPTION_LOOKS[saved.look])return CAPTION_LOOKS[saved.look](accent0);   // 사용자가 고른 모양(썰쇼핑형 본문에도 적용)
     if(mode!=='continuous'||saved.bgUser)return null;
@@ -1328,7 +1333,7 @@
     const x=settings.placement==='title'?0:Math.max(0,Math.min(100-w,(100-w)/2+drag.x));
     // ★원본(plain)은 제목칸이 없다 — 자막 기준선을 titleHeight(=0)로 잡으면 화면 맨 위로 붙는다(2026-09-24 실측).
     //   그 틀에서는 자막 줄이 정해 둔 제 자리(영상 아래쪽)를 기준으로 삼고, 끌어 옮긴 양만 더한다.
-    const capBase=rows[current]?.id===PLAIN_ID?(source.ln?source.ln.y0/frame.height*100:80):titleHeight(frame);
+    const capBase=rows[current]?.id===PLAIN_ID?(plainLegacy?PLAIN_LEGACY_CAP_Y:source.ln?source.ln.y0/frame.height*100:80):titleHeight(frame);
     const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,capBase+drag.y+textOffset('caption')));
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
     const capLook=captionLook(frame);
@@ -1417,7 +1422,7 @@
     if(sceneContext?.text)for(const [key,text] of Object.entries(sceneContext.text))if(inputs[key])inputs[key].value=text;
     preview.classList.remove('is-pristine');showFrame(kind);
   }
-  grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){const i=rows.findIndex(p=>p.id===PLAIN_ID);if(i>=0)selectPreset(i);else setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
+  grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){plainLegacy=false;const i=rows.findIndex(p=>p.id===PLAIN_ID);if(i>=0)selectPreset(i);else setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
   modeBar.addEventListener('click',event=>{
     const button=event.target.closest('[data-template-mode]');if(!button)return;
     mode=button.dataset.templateMode;rows=mode==='continuous'?fixedRows:storyRows;if(!rows.length)return;
@@ -1675,6 +1680,7 @@
     try{
       // 적용은 **보던 장면에 머문다** — 템플릿을 다시 고르면 0번으로 돌아가므로 여기서 되돌린다(2026-09-23 고객 제보).
       const keepScene=force?sceneIndex:null;
+      if(force)plainLegacy=false;   // 내 프리셋 적용은 고객이 고른 새 설정 — 원본이면 새 방식으로
       if(saved){
         if(force){colorOverrides.clear();fixedLayouts.clear();fixedColors.clear();}
         branding=Object.keys(saved.branding||{}).length?saved.branding:rememberedBranding();
@@ -1709,9 +1715,10 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,fontSets:{...fontSets},titleDeco,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,fontSets:{...fontSets},titleDeco,hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
+      plainLegacy=!!(saved&&saved.presetId===PLAIN_ID&&saved.plainCaption!==2);   // 표시 없는 옛 원본 = 예전 그대로
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
       if(saved){
         for(const [name,map] of Object.entries({fontScales,textOffsets,textDrags,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts})){
