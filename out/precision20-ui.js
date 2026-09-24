@@ -109,6 +109,25 @@
   // ★'원본 영상 그대로'는 **틀 없는 진짜 템플릿**(id 'plain')이다 — 목록에는 안 보이고 왼쪽 '템플릿 없음' 카드가 고른다.
   //   이렇게 해야 오른쪽 제목·자막 카드가 신버전 그대로 살아나고, 저장·렌더도 같은 길을 탄다(2026-09-24 사장님).
   const PLAIN_ID='plain';
+  // 자막박스 '모양'만 뽑아낸다 — 지금 장면에 없으면 다른 장면에서 찾는다(훅에서 저장해도 담기게).
+  const CAPTION_LOOK_KEYS=['look','w','h','background','color','bgUser','colorUser'];
+  const captionLookStyle=()=>{
+    const pick=src=>{const out={};for(const k of CAPTION_LOOK_KEYS)if(src&&src[k]!==undefined)out[k]=src[k];return out};
+    let v=pick(captionLayouts.get(captionKey()));
+    if(!Object.keys(v).length)for(const value of captionLayouts.values()){v=pick(value);if(Object.keys(v).length)break;}
+    return Object.keys(v).length?v:null;
+  };
+  // 프리셋에서 되살릴 때 — 모든 장면에 같은 모양을 입힌다(자리는 그 장면 것을 그대로 둔다).
+  const applyCaptionLook=style=>{
+    if(!style)return;
+    for(let i=0;i<sceneTotal();i++){
+      const key=`${rows[current].id}:${mode}:${i}:caption`;
+      const cur={...(captionLayouts.get(key)||{})};
+      for(const k of CAPTION_LOOK_KEYS)if(style[k]!==undefined)cur[k]=style[k];
+      cur.placement=cur.placement||(captionDrags.has(key)?'free':'title');
+      captionLayouts.set(key,cur);
+    }
+  };
   const isPlain=p=>(p||rows[current])?.id===PLAIN_ID;
   const plainIndex=()=>storyRows.findIndex(p=>p.id===PLAIN_ID);
   const gridRows=()=>rows.filter(p=>p.id!==PLAIN_ID);
@@ -153,6 +172,9 @@
         const snap=mineHooks.current?.();if(!snap){alert('먼저 템플릿을 고르세요');return}
         // 취향만 담는다 — 보던 장면번호·그때의 문구·장면별 자막 손질은 뺀다(딴 작업으로 새어 나간다)
         delete snap.sceneIndex; delete snap.frameKind; delete snap.text;
+        // ★자막박스 '모양'은 담는다(2026-09-24 사장님) — 흰 띠를 좋아하면 모든 작업에서 흰 띠여야 한다.
+        //   문장 길이와 무관한 취향이라 옮겨도 안전하다. 장면마다 다른 자리·크기(drag·offset·scale)는 그대로 뺀다.
+        snap.captionLook=captionLookStyle();
         for(const k of ['captionTexts','captionDrags','captionPositions','captionLayouts','fontScales','textOffsets','textDrags'])delete snap[k];
         const list=readMine();const name=(prompt('프리셋 이름',`프리셋 ${list.length+1}`)||'').trim();if(!name)return;
         list.unshift({id:Date.now().toString(36),name,at:Date.now(),snap});writeMine(list.slice(0,20));
@@ -1610,6 +1632,7 @@
         }
         hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';restoreFontSets(saved);titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
       }
+      if(force&&saved&&saved.captionLook)applyCaptionLook(saved.captionLook);
       if(keepScene!=null)showScene(Math.max(0,Math.min(keepScene,sceneTotal()-1)));
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
