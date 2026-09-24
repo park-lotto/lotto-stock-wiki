@@ -284,7 +284,7 @@
     return {...line,y0,y1:y0+h,h,font_size:baseCut*STORY_BODY.titleH*STORY_BODY.font};
   };
   const fixedDrawLine=(line,frame)=>{
-    if(mode!=='continuous'||line.bind==='caption')return line;
+    if(mode!=='continuous'||line.bind==='caption'||rows[current]?.id===PLAIN_ID)return line;   // 원본은 제 자리 그대로
     const T=fixedLayoutFor(rows[current].id,frame).top/100*frame.height;
     const order=['hook1','hook2','bodyTitle'].indexOf(line.bind);
     if(order<0||!T){   // 채널명 등 제목이 아닌 줄은 예전처럼 칸 높이에 맞춰 비례 이동
@@ -978,8 +978,10 @@
     badge.hidden=!!frame.design_label;
     const dirty=currentDirty();
     const bg=frame.title_bg||frame.top_band?.color||'#111111';
-    const fixedLayout=mode==='continuous'?fixedLayoutFor(p.id,frame):null;
-    const fixedPaint=mode==='continuous'?fixedColorsFor(p.id,frame):null;
+    // ★원본(plain)은 띠가 없는 틀이다 — 고정형 기본 띠(위/아래 색 띠)를 물려받으면
+    //   '원본 영상 그대로'인데 템플릿처럼 보인다(2026-09-24 고객 화면 실측).
+    const fixedLayout=mode==='continuous'&&p.id!==PLAIN_ID?fixedLayoutFor(p.id,frame):null;
+    const fixedPaint=mode==='continuous'&&p.id!==PLAIN_ID?fixedColorsFor(p.id,frame):null;
     if(mode==='story'&&!frame.design_label){
       addPatch(0,captionSource(frame).cut/frame.height*100,bg);
       if(frame.top_band)addPatch(frame.top_band.y0/frame.height*100,(frame.top_band.y1-frame.top_band.y0+1)/frame.height*100,frame.top_band.color);
