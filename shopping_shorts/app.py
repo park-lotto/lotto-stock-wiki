@@ -3417,6 +3417,12 @@ def _gen_fail_message(reasons, asm_why=""):
     if "api_error" in kinds:
         det = next((r.get("detail") for r in (reasons or [])
                     if r.get("kind") == "api_error" and r.get("detail")), "")
+        # ★503(과부하)·월 한도는 사용자 문장으로 옮긴다 — 장면근거 안의 fallback_reason과 같은
+        #   함수(script_fallback.humanize_reason, 0순위-B). 원문 "ServerError: 503 UNAVAILABLE. {…}"이
+        #   그대로 화면에 떴다(2026-09-25).
+        from shopping_shorts.script_fallback import humanize_reason as _hr
+        if det and _hr(det) != det:
+            return _hr(det)
         # ★키 문제가 아니다. '잠시 후 재시도'라고 말하지 않는다 — 기다려도 안 풀린다.
         return "AI 응답 오류입니다(키 문제가 아닙니다)%s" % ((" — %s" % det) if det else "")
     if "근거부족" in kinds:
@@ -3755,10 +3761,11 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     if not drafts:
         # 생성기 내부 폴백까지 예외적으로 빈손이어도 영상 재료가 있는 요청은 막지 않는다.
         # 실패한 AI 본문이 아니라 위에서 확정한 동일 재료의 원본 발화·장면만 사용한다.
-        drafts = [script_generate._grounded_fallback(
+        # ★_grounded_fallback은 리스트(0~1개)를 돌려준다(2026-09-25) — 한국어 관측이 없으면 0개.
+        drafts = script_generate._grounded_fallback(
             _pick_src, _pick_facts,
             script_generate._sources_product(_pick_src) or my_topic or subject,
-            reasons=_material_rejected)]
+            reasons=_material_rejected)
     _pickup_rejected = []
     if _seed_hook:
         _ok, _bad = pickup_script.filter_drafts(drafts, _seed_hook, _seed_cta)
@@ -23862,6 +23869,16 @@ def _materials_for_generate(item, body, store, cid, spines=None):
             # 사용자가 고른 카드와 같은 그룹 하나만 남겨 다른 제품 자료를 섞지 않는다.
             _topic_product = (_selected_group_topic(
                 item, _selected, _job, (_job or {}).get("_topic_resolution") or {}) or None)
+        _resolution = (_job or {}).get("_topic_resolution") or {}
+        if _topic_product is None and not _frozen and not _list_style:
+            # ★이 작업이 직전 생성에서 이미 확정한 주제(화면 "고정 주제 X")가 정본이다(2026-09-25
+            #   work 4bd606509402 사고). 판정 AI(Gemini)가 503으로 죽고, 고른 씨앗은 화면 재료에서
+            #   빠져(useFootage=false) job에 없어 선택 카드로도 못 붙였다 → 422가 6번 연속.
+            #   임의 합의가 아니다 — **이 작업이 이미 확정해 화면에 보여준 값**을, 지금 재료의 그룹
+            #   하나와 정확히 맞을 때만 다시 쓴다(재료를 다 바꿨으면 맞는 그룹이 없어 그대로 막힌다).
+            _prev_topic = str(_saved_mat.get("topic_product") or "").strip()
+            if _prev_topic and _topic_group_for_name(_prev_topic, _resolution, _job):
+                _topic_product = _prev_topic
         if _topic_product is None:
             if _frozen:
                 raise ValueError("전체 생성 때 확정한 제품 주제와 현재 자료가 다릅니다")
@@ -23870,8 +23887,17 @@ def _materials_for_generate(item, body, store, cid, spines=None):
                 # 강제하지 않고 편별 슬롯/장면 계약으로 넘긴다.
                 _topic_product = ""
             else:
-                if ((_job or {}).get("_topic_resolution") or {}).get("method") == "unresolved":
-                    raise ValueError("영상 자료 판정 응답을 검증하지 못했습니다. 잠시 후 다시 생성해 주세요")
+                _n_names = len(_resolution.get("groups") or [])
+                if _resolution.get("error") == "judge_unavailable":
+                    # ★진짜 원인을 말한다. 종전 "영상 자료 판정 응답을 검증하지 못했습니다"는
+                    #   무엇이 왜 안 됐는지 안 보여 사장님이 6번을 다시 눌렀다(2026-09-25).
+                    raise ValueError(
+                        "AI 서버 과부하(503)로 제품군 판정을 못 했습니다 — 1~2분 뒤 '다시 만들기'를 "
+                        "눌러 주세요. (재료 제품명이 %d가지로 갈려 AI 판정이 필요한 작업입니다)" % _n_names)
+                if _resolution.get("method") == "unresolved":
+                    raise ValueError(
+                        "AI의 제품군 판정 결과를 검증하지 못했습니다(재료 제품명 %d가지) — "
+                        "잠시 후 다시 생성해 주세요" % _n_names)
                 raise ValueError("담긴 영상에 서로 다른 제품이 같은 수로 섞여 주제를 확정할 수 없습니다")
     _explicit_topic = bool(str(
         _topic_body.get("my_topic") or _topic_body.get("subject") or "").strip())
