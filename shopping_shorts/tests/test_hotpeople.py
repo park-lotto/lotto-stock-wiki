@@ -150,3 +150,13 @@ def test_check_and_repick_replaces_only_bad(tmp_path):
     ok = iter(['{"bad": []}'])
     new, v = footage.check_and_repick(groups, cands, [0, 1, 2], [], lambda p, imgs: next(ok), "x", str(tmp_path), log=lambda *_: None)
     assert new == [0, 1, 2] and v["bad"] == []
+
+
+def test_call_falls_through_on_wrong_shape(monkeypatch):
+    """2026-09-25: 에러 없이 온 엉뚱한 답을 받아들여 대체 모델로 안 넘어갔다."""
+    from shopping_shorts.channel_presets.hotpeople import footage
+    monkeypatch.setattr("time.sleep", lambda *_: None)
+    bad = lambda p, i: '{"answer": "몰라"}'
+    good = lambda p, i: '{"picks": [1]}'
+    assert footage._call([bad, good], "q", [], lambda *_: None, "picks") == {"picks": [1]}
+    assert footage._call([bad], "q", [], lambda *_: None, "picks") is None

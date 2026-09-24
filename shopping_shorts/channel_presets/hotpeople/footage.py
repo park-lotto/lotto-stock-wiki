@@ -139,7 +139,7 @@ def pick(groups, cands, sheet_paths, reader, person, log=print):
     picks = []
     if reader is not None and cands:
         # 503(과부하)은 잠깐 뒤 풀린다 — 2026-09-25 실측 첫 시도 503. 재시도·대체 모델은 _call 한 곳에서
-        picks = list(((_call(reader, _pick_prompt(groups, len(cands), person), sheet_paths, log) or {}).get("picks")) or [])
+        picks = list(((_call(reader, _pick_prompt(groups, len(cands), person), sheet_paths, log, "picks") or {}).get("picks")) or [])
     used, out, fixed = set(), [], 0
     for i in range(len(groups)):
         p = picks[i] if i < len(picks) else None
@@ -201,8 +201,12 @@ def collect(script, wd, reader=None, log=print):
             "n_cands": len(cands), "cuts": cuts, "sheets": sp, "fixed": fixed, "verify": verify}
 
 
-def _call(readers, prompt, images, log):
-    """모델 여러 개를 순서대로, 503이면 잠깐 쉬고 재시도. → 파싱된 dict 또는 None."""
+def _call(readers, prompt, images, log, key):
+    """모델 여러 개를 순서대로, 503이면 잠깐 쉬고 재시도. 답에 `key`가 없으면 **실패로 치고** 다음으로.
+    → 파싱된 dict 또는 None.
+
+    ★2026-09-25 실측: 에러 없이 돌아온 답을 모양 확인 없이 받아 `picks`가 비었고, 대체 모델로 안 넘어가
+      26/26개를 못 골랐다(대체 모델은 멀쩡히 응답하던 때)."""
     import time
     from shopping_shorts.channelkit.prompt import parse_any
     for ri, rd in enumerate(readers if isinstance(readers, (list, tuple)) else [readers]):
@@ -210,7 +214,11 @@ def _call(readers, prompt, images, log):
             if wait:
                 time.sleep(wait)
             try:
-                return parse_any(rd(prompt, images)) or {}
+                raw = rd(prompt, images)
+                r = parse_any(raw) or {}
+                if isinstance(r, dict) and key in r:
+                    return r
+                log(f"[footage] 모델{ri} 답에 «{key}» 없음 — 다시: {str(raw)[:160]!r}")
             except Exception as e:  # noqa: BLE001
                 log(f"[footage] 모델{ri} 실패({wait}s 뒤 재시도): {repr(e)[:160]}")
     return None
@@ -243,7 +251,7 @@ def check_and_repick(groups, cands, idx, sheet_paths, reader, person, wd, log=pr
               "장면이 **자막 내용과 안 맞는** 칸만 골라라 — 예: 경기·결승·메달 얘기인데 시장·요리·일상 장면, "
               "어린 시절 얘기인데 성인 경기 장면은 괜찮다(비슷하면 통과). 확실히 틀린 것만.\n"
               "출력 JSON: {\"bad\": [번호, …]}")
-    r = _call(reader, prompt, [chk], log)
+    r = _call(reader, prompt, [chk], log, "bad")
     bad = [b for b in ((r or {}).get("bad") or []) if isinstance(b, int) and 0 <= b < len(idx)]
     if not bad:
         log("[footage] 장면 검사: 틀린 칸 없음")
@@ -254,7 +262,7 @@ def check_and_repick(groups, cands, idx, sheet_paths, reader, person, wd, log=pr
     prompt2 = (f"숏폼 편집자다. 주인공 {person}. 아래 자막들에 맞는 장면을 시트에서 다시 골라라.\n"
                f"쓸 수 있는 번호: {free}\n같은 번호 두 번 금지. 자막 내용(경기·메달·훈련 등)에 맞는 장면으로.\n"
                f"[자막]\n{subs}\n출력 JSON: {{\"picks\": {{\"자막번호\": 장면번호, …}}}}")
-    r2 = _call(reader, prompt2, sheet_paths, log) or {}
+    r2 = _call(reader, prompt2, sheet_paths, log, "picks") or {}
     new, n = list(idx), 0
     for b in bad:
         k = (r2.get("picks") or {}).get(str(b))
