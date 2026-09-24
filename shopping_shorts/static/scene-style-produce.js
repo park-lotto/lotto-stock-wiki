@@ -32,7 +32,10 @@
       // ★원본 모드(plain)에서는 옛 헤드카피·자막 칸을 다시 보여 준다 — 그 모드는 새 편집기가 글자를 안 그리고
       //   렌더가 옛 경로를 타서, 이 칸들이 실제로 결과물에 반영되는 자리다(2026-09-24).
       style.textContent='.panel[data-step="3"].scene-style-inline-active>:not(h3):not(#sceneStyleInline){display:none!important}'
-        +'.panel[data-step="3"].scene-style-inline-active.scene-style-plain>#legacyDecoWrap{display:flex!important}';document.head.append(style);}
+        +'.panel[data-step="3"].scene-style-inline-active.scene-style-plain>#legacyDecoWrap{display:flex!important}'
+        // 원본 모드에서 실제로 결과물에 들어가는 것만 남긴다 — 자막·헤드카피·효과.
+        //   '템플릿'은 새 편집기 왼쪽 장면 탭이 하는 일이라 두 군데서 고르면 어긋난다(2026-09-24 사장님).
+        +'.panel[data-step="3"].scene-style-plain #decoTabs [data-decotab="tpl"]{display:none!important}';document.head.append(style);}
     inlineShell=document.createElement('section');inlineShell.id='sceneStyleInline';inlineShell.style.cssText='margin-top:10px';
     const note=document.createElement('div');note.id='sceneStyleInlineStatus';note.setAttribute('role','status');note.style.cssText='margin:0 0 8px;color:#bdeee5;font-size:13px';
     frame=document.createElement('iframe');frame.title='문구와 효과 편집기';frame.style.cssText='width:100%;height:calc(100vh - 200px);min-height:720px;border:1px solid #35505b;border-radius:12px;background:#071118';
@@ -234,7 +237,11 @@
     if(event.data?.type==='scene-style-template'){
       const panel=stepPanel();if(panel)panel.classList.toggle('scene-style-plain',!!event.data.plain);
       // 헤드카피 칸은 옛 '문구' 탭 안에 있다 — 원본 모드로 들어오면 그 탭을 열어 준다(안 열면 빈 화면으로 보인다).
-      if(event.data.plain)panel?.querySelector('#decoTabs [data-decotab="copy"]')?.click();
+      if(event.data.plain){
+        // 템플릿 탭이 켜진 채로 들어오면 숨긴 탭의 내용만 보인다 — 헤드카피로 옮겨 준다.
+        const on=panel?.querySelector('#decoTabs .tab.on');
+        if(!on||on.dataset.decotab==='tpl')panel?.querySelector('#decoTabs [data-decotab="copy"]')?.click();
+      }
       return;
     }
     if(!frame||event.source!==frame.contentWindow||event.origin!==location.origin)return;

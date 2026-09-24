@@ -61,12 +61,21 @@ with sync_playwright() as p:
               try{if(w.matches(r.selectorText))hits.push(r.selectorText.slice(0,80)+' => '+r.style.display+(r.style.getPropertyPriority('display')?'!':''))}catch(e){}}}
           out.래퍼에걸린규칙=hits;
           return out}"""))
-        need(c['헤드카피칸'], f'② 원본 그대로: 옛 헤드카피 칸이 바로 돌아온다 {c} — 고치기 전엔 숨은 채였다')
-        pg.click('#decoTabs [data-decotab="style"]'); pg.wait_for_timeout(600)
+        need(c['헤드카피칸'] or c['자막글꼴칸'], f'② 원본 그대로: 옛 칸이 바로 보인다 {c} — 고치기 전엔 통째로 숨어 있었다')
+        pg.click('#decoTabs [data-decotab="copy"]'); pg.wait_for_timeout(600)
         c2 = pg.evaluate(PROBE)
-        need(c2['자막글꼴칸'], f'② 스타일 탭을 누르면 자막 칸도 나온다 {c2} (탭이라 한 번에 하나씩 보인다)')
+        need(c2['헤드카피칸'], f'② 헤드카피 탭 → 제목 칸 {c2}')
+        pg.click('#decoTabs [data-decotab="style"]'); pg.wait_for_timeout(600)
+        c3 = pg.evaluate(PROBE)
+        need(c3['자막글꼴칸'], f'③ 자막 탭 → 자막 칸 {c3} (탭이라 한 번에 하나씩 보인다)')
         fr.click('[data-p20="0"]'); pg.wait_for_timeout(1200)
-        d = pg.evaluate(PROBE); need(not d['헤드카피칸'], f'③ 템플릿 다시 고르면 도로 숨는다 {d}')
+        # ★원본 모드에 남는 탭은 실제로 결과물에 들어가는 셋뿐 — 자막·헤드카피·효과. 템플릿은 새 편집기 몫이라 숨긴다.
+        fr.click('[data-none]'); pg.wait_for_timeout(1000)
+        tabs = pg.evaluate("""()=>[...document.querySelectorAll('#decoTabs [data-decotab]')]
+            .filter(b=>b.offsetParent!==null).map(b=>b.dataset.decotab)""")
+        need(sorted(tabs) == ['copy','fx','style'], f'④ 원본 모드 탭은 자막·헤드카피·효과 셋 {tabs} (템플릿은 숨김)')
+        fr.click('[data-p20="0"]'); pg.wait_for_timeout(1200)
+        d = pg.evaluate(PROBE); need(not d['헤드카피칸'], f'⑤ 템플릿 다시 고르면 도로 숨는다 {d}')
         pg.screenshot(path=str(out/'plain_legacy.png'))
     b.close()
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건')
