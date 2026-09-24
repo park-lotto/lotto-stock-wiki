@@ -82,7 +82,10 @@
   };
   // 고정형은 훅이 없다 — '훅 말자막 숨김'(이븐쇼핑 큰 제목용)이 첫 장면 자막까지 지우지 않게 항상 보인다(2026-09-18 실측: LAB 1/23 자막 없음).
   const captionVisible=()=>mode==='continuous'||sceneContext?.scenes?.[sceneIndex]?.caption_visible!==false;
-  const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body');
+  // ★원본(plain)은 제목 띠가 없어 훅 장면에도 자막을 그대로 보여 준다(2026-09-24 고객 제보:
+  //   "원본 영상 그대로를 선택하면 자막이 보이질 않습니다 / 장면마다 자막을 옮길 수 있었는데").
+  //   템플릿에서는 훅 자막이 제목·띠와 겹쳐 종전처럼 본문에서만 보인다.
+  const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body'||rows[current]?.id===PLAIN_ID);
   const captionSettings=()=>{
     const frame=frameFor(rows[current]),source=captionSource(frame),saved=captionLayouts.get(captionKey())||{};
     // 원본(plain)은 띠가 없으니 자막이 제목칸으로 끌려가면 안 된다 — 제 자리(영상 아래쪽)에 둔다.
@@ -827,6 +830,8 @@
     const lineCount=frame?.lines?.length||0;
     return p.id==='s0101'
       ? (frameKind==='hook'?['channel','hook1','hook2',...(((p.hook?.lines?.length||0)>2||p.hook?.white_box?.text)?['bodyTitle']:[])]:['channel','bodyTitle','caption'])
+      : p.id===PLAIN_ID
+        ? (frameKind==='hook'?['hook1','hook2','caption']:['bodyTitle','caption'])   // 원본은 훅에도 자막 칸을 낸다
       : frameKind==='hook'
         ? [...(hasChannel?['channel']:[]),...(lineCount?['hook1']:[]),...(lineCount>1?['hook2']:[]),...(lineCount>2||frame?.white_box?.text?['bodyTitle']:[])]
         : [...(hasChannel?['channel']:[]),...(lineCount?['bodyTitle']:[]),...(lineCount>1||frame?.white_box?.text?['caption']:[])];
@@ -1367,7 +1372,7 @@
     if(sceneContext?.text)for(const [key,text] of Object.entries(sceneContext.text))if(inputs[key])inputs[key].value=text;
     preview.classList.remove('is-pristine');showFrame(kind);
   }
-  grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){const i=plainIndex();if(i>=0&&mode==='story')selectPreset(i);else setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
+  grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){const i=rows.findIndex(p=>p.id===PLAIN_ID);if(i>=0)selectPreset(i);else setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
   modeBar.addEventListener('click',event=>{
     const button=event.target.closest('[data-template-mode]');if(!button)return;
     mode=button.dataset.templateMode;rows=mode==='continuous'?fixedRows:storyRows;if(!rows.length)return;
