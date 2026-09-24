@@ -16,14 +16,16 @@ import subprocess
 import sys
 from pathlib import Path
 
-W, H, FPS = 720, 1280, 30   # 샘플은 눈으로 고르는 용도 — 720p면 충분하고 렌더가 빠르다
+W, H, FPS = 1080, 1920, 30
 FONT = Path(__file__).resolve().parents[1] / "shopping_shorts" / "assets" / "NanumGothic.ttf"
 
 # 켄번즈는 zoompan이 프레임 번호(on)로 도는 필터다. 지금 렌더도 이 방식을 쓴다.
 def _zp(z_expr, d):
-    """zoompan 한 줄. 확대 전에 여유를 두고 키워야 크롭 여백이 남는다(현재 렌더와 같은 수법)."""
-    return (f"scale={int(W*1.35)}:{int(H*1.35)},"
-            f"zoompan=z='{z_expr}':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={W}x{H}:fps={FPS}")
+    """zoompan 한 줄.
+
+    ★미리 키우지 않는다(2026-09-24): 1.35배로 먼저 늘리고 다시 zoompan이 확대하면 두 번
+      리샘플링돼 흐려진다. 원본 해상도 그대로 넣고 zoompan이 한 번만 자르게 한다."""
+    return f"zoompan=z='{z_expr}':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={W}x{H}:fps={FPS}"
 
 
 def effects(d):
@@ -32,27 +34,30 @@ def effects(d):
     return [
         ("없음", "지금 대부분의 칸 (정지)", "null"),
         ("켄번즈", "지금 훅·반전 칸에만 (1.10배 서서히)", _zp(f"min(1+{0.10/n:.6f}*on,1.10)", d)),
-        ("천천히 밀기", "1.18배까지 — 켄번즈보다 눈에 보이게", _zp(f"min(1+{0.18/n:.6f}*on,1.18)", d)),
-        ("천천히 빠지기", "1.22배에서 원래대로 (마무리·정리)", _zp(f"max(1.22-{0.22/n:.6f}*on,1.0)", d)),
-        ("급속 줌인", "0.25초 만에 1.3배로 훅 들어가 멈춤", _zp("min(1+0.04*on,1.30)", d)),
-        ("펀치 줌", "확 커졌다 바로 돌아옴 (강조 한 방)", _zp("if(lt(on,7),1+0.035*on,max(1.0,1.245-0.02*(on-7)))", d)),
-        ("클로즈업→공개", "1.5배에서 쭉 빠지며 전체가 드러남", _zp(f"max(1.5-{0.5/n:.6f}*on,1.0)", d)),
-        ("손떨림", "들고 찍은 느낌 (긴장·다급함)",
-         f"scale={int(W*1.12)}:{int(H*1.12)},crop={W}:{H}:"
-         f"'(iw-ow)/2+14*sin(3.4*t*6.283)':'(ih-oh)/2+11*sin(2.1*t*6.283+1)'"),
-        ("살짝 기울임", "1.2도 — 불안·긴장 (과하면 멀미)",
-         f"scale={int(W*1.12)}:{int(H*1.12)},rotate=0.021:c=none,crop={W}:{H}"),
-        ("밝기 펌프", "0.3초에 확 밝아졌다 돌아옴 (발견·공개)",
-         "eq=brightness='0.22*exp(-pow(t-0.3,2)/0.012)':eval=frame"),
-        ("비네팅", "가장자리를 어둡게 — 가운데로 시선", "vignette=PI/4.2"),
+        ("천천히 밀기", "1.16배까지 — 켄번즈보다 눈에 보이게", _zp(f"min(1+{0.16/n:.6f}*on,1.16)", d)),
+        ("천천히 빠지기", "1.18배에서 원래대로 (마무리·정리)", _zp(f"max(1.18-{0.18/n:.6f}*on,1.0)", d)),
+        # ★빠른 효과는 끝난 뒤 그대로 얼지 않게 이어서 아주 천천히 민다(2026-09-24 실측:
+        #   0.3초에 끝나고 4.7초가 완전 정지라 고장난 것처럼 보였다).
+        ("급속 줌인", "0.4초에 1.22배로 들어가고 이어서 천천히",
+         _zp(f"min(1.22+{0.06/n:.6f}*on, if(lt(on,12), 1+0.0183*on, 99))", d)),
+        ("펀치 줌", "확 커졌다 돌아온 뒤 천천히 이어짐 (강조 한 방)",
+         _zp(f"if(lt(on,6), 1+0.025*on, max(1.0+{0.05/n:.6f}*on, 1.15-0.012*(on-6)))", d)),
+        ("클로즈업→공개", "1.35배에서 쭉 빠지며 전체가 드러남", _zp(f"max(1.35-{0.35/n:.6f}*on,1.0)", d)),
+        # ★흔들림은 확 줄였다(2026-09-24 실측: 프레임간 변화가 다른 효과의 10배였다).
+        ("손떨림", "들고 찍은 느낌 — 약하게 (긴장)",
+         f"scale={int(W*1.05)}:{int(H*1.05)},crop={W}:{H}:"
+         f"'(iw-ow)/2+7*sin(1.7*t*6.283)':'(ih-oh)/2+5*sin(1.1*t*6.283+1)'"),
+        ("살짝 기울임", "0.8도 — 불안·긴장",
+         f"scale={int(W*1.08)}:{int(H*1.08)},rotate=0.014:c=none,crop={W}:{H}"),
+        ("밝기 펌프", "0.4초에 밝아졌다 돌아옴 (발견·공개)",
+         "eq=brightness='0.16*exp(-pow(t-0.4,2)/0.02)':eval=frame"),
+        ("비네팅", "가장자리를 어둡게 — 가운데로 시선", "vignette=PI/5"),
         ("위에서 떨어짐", "화면이 위에서 내려와 튕김 (등장·가격)",
-         f"scale={int(W*1.06)}:{int(H*1.06)},crop={W}:{H}:'(iw-ow)/2':"
-         f"'clip((ih-oh)/2 - 420*max(0,1-t/0.42)*cos(min(t,0.42)*7.5), 0, ih-oh)'"),
+         f"scale={int(W*1.05)}:{int(H*1.05)},crop={W}:{H}:'(iw-ow)/2':"
+         f"'clip((ih-oh)/2 - 520*max(0,1-t/0.5)*cos(min(t,0.5)*7.0), 0, ih-oh)'"),
         ("옆에서 들어옴", "화면이 오른쪽에서 밀려 들어옴 (전환)",
-         f"scale={int(W*1.06)}:{int(H*1.06)},crop={W}:{H}:"
-         f"'clip((iw-ow)/2 + 520*max(0,1-t/0.38), 0, iw-ow)':'(ih-oh)/2'"),
-        # ★'가운데서 열기'는 뺐다(2026-09-24 실측): crop의 폭엔 t를 못 쓰고, drawbox의 w는
-        #   t를 줘도 프레임마다 다시 안 재서 화면이 통째로 검게 나왔다. 대신 실제로 되는 슬로모션을 둔다.
+         f"scale={int(W*1.05)}:{int(H*1.05)},crop={W}:{H}:"
+         f"'clip((iw-ow)/2 + 640*max(0,1-t/0.45), 0, iw-ow)':'(ih-oh)/2'"),
         ("슬로모션", "0.7배속으로 천천히 — 중요한 순간 늘리기", "setpts=1.43*PTS"),
         ("멈춤", "1.2초 뒤 탁 멈춤 (반전 직전)",
          f"trim=0:1.2,setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration={max(0.1,d-1.2):.2f}"),
@@ -82,9 +87,9 @@ def build(src, out, seg, starts, still_at=None):
         label = f"{i+1}. {name}"
         vf = (f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},{f},"
               f"drawtext=fontfile={font}:text='{label}':"
-              f"fontsize=62:fontcolor=white:borderw=5:bordercolor=black@0.85:x=(w-tw)/2:y=h-250,"
+              f"fontsize=54:fontcolor=white:borderw=5:bordercolor=black@0.85:x=(w-tw)/2:y=h-250,"
               f"drawtext=fontfile={font}:text='{desc}':"
-              f"fontsize=40:fontcolor=white:borderw=4:bordercolor=black@0.85:x=(w-tw)/2:y=h-165,"
+              f"fontsize=36:fontcolor=white:borderw=4:bordercolor=black@0.85:x=(w-tw)/2:y=h-165,"
               f"format=yuv420p")
         if stillpng is not None:
             cmd = ["ffmpeg", "-y", "-v", "error", "-loop", "1", "-i", "still.png"]
@@ -110,7 +115,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("src")
     ap.add_argument("-o", "--out", required=True)
-    ap.add_argument("--seg", type=float, default=2.0)
+    ap.add_argument("--seg", type=float, default=3.0)
     ap.add_argument("--starts", default="1.5,6.0,10.5,15.0,19.0")
     ap.add_argument("--still", type=float, default=None,
                     help="이 시각의 정지 사진 한 장으로 만든다 — 효과만 보이게(원본 움직임 배제)")
