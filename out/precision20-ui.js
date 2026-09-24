@@ -142,6 +142,9 @@
     minePane.addEventListener('click',event=>{
       if(event.target.closest('[data-my-save]')){
         const snap=mineHooks.current?.();if(!snap){alert('먼저 템플릿을 고르세요');return}
+        // 취향만 담는다 — 보던 장면번호·그때의 문구·장면별 자막 손질은 뺀다(딴 작업으로 새어 나간다)
+        delete snap.sceneIndex; delete snap.frameKind; delete snap.text;
+        for(const k of ['captionTexts','captionDrags','captionPositions','captionLayouts','fontScales','textOffsets','textDrags'])delete snap[k];
         const list=readMine();const name=(prompt('프리셋 이름',`프리셋 ${list.length+1}`)||'').trim();if(!name)return;
         list.unshift({id:Date.now().toString(36),name,at:Date.now(),snap});writeMine(list.slice(0,20));
         try{localStorage.setItem('scene_style_preset',JSON.stringify(snap))}catch{}
@@ -1540,6 +1543,8 @@
   // 취향만 되살리기(첫 시작 복원 + 내 프리셋 '적용' 공용). force=true면 주소창 preset/mode 지정을 무시하고 그 템플릿으로 바꾼다.
   function applyTaste(saved,force){
     try{
+      // 적용은 **보던 장면에 머문다** — 템플릿을 다시 고르면 0번으로 돌아가므로 여기서 되돌린다(2026-09-23 고객 제보).
+      const keepScene=force?sceneIndex:null;
       if(saved){
         if(force){colorOverrides.clear();fixedLayouts.clear();fixedColors.clear();}
         branding=Object.keys(saved.branding||{}).length?saved.branding:rememberedBranding();
@@ -1556,13 +1561,19 @@
           modeBar.querySelector(`[data-template-mode="${saved.mode==='continuous'?'continuous':'story'}"]`).click();
           const index=rows.findIndex(p=>p.id===saved.presetId);if(index>=0)selectPreset(index);
         }
-        if(rows[current].id===saved.presetId){
+        // ★'내 프리셋 적용'(force)은 **취향만** 옮긴다 — 보던 장면과 그때의 문구는 안 옮긴다(2026-09-23 고객 제보).
+        //   홍광수님: "33장면 중 5번에서 저장했더니 적용을 누르면 계속 5번 장면부터 나옵니다."
+        //   실측 재현: 20번 장면에서 적용 → 5번으로 튐(프리셋이 sceneIndex=5를 들고 있었다).
+        //   문구(text)도 같이 들어와 **다른 작업의 제목**이 지금 작업 제목을 덮어쓴다 —
+        //   첫 시작 복원 때는 뒤이어 load()가 이 작업의 진짜 문구로 덮어써서 안 보였지만, 적용 버튼은 혼자 돌아 그대로 남는다.
+        if(!force&&rows[current].id===saved.presetId){
           const savedScene=saved.sceneIndex??(saved.frameKind==='body'?1:0);
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
         hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';fontSet=saved.fontSet||'';titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
       }
+      if(keepScene!=null)showScene(Math.max(0,Math.min(keepScene,sceneTotal()-1)));
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={

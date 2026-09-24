@@ -39,6 +39,27 @@ with sync_playwright() as p:
     need(s5['preset'] == saved_preset and s5['fontSet'] == fs, f"③ 새로고침해도 적용한 프리셋으로 시작 ({s5['preset']}, {s5['fontSet']})")
     pg.click('[data-left-tab="mine"]'); pg.click('[data-my-del]'); pg.wait_for_timeout(300); s6 = pg.evaluate(STATE)
     need(s6['cards'] == 0, f"④ 삭제 → 카드 {s6['cards']}")
+    # ⑤ 2026-09-23 고객(홍광수) 제보: "33장면 중 5번에서 저장했더니 적용을 누르면 계속 5번 장면부터 나옵니다."
+    #    프리셋은 **취향만** 옮겨야 한다 — 보던 장면·그때의 문구·장면별 자막 손질은 안 옮긴다.
+    ctx = {"jobId": "mine33", "text": {"channel": "숏템메이커", "hook1": "이케아도 놀랄", "hook2": "한국 천재 발명품",
+           "bodyTitle": "이케아도 놀랄 한국 천재 발명품"},
+           "scenes": [{"start": i*2, "end": i*2+2, "caption": f"{i}번 자막", "caption_visible": True,
+                       "beat_idx": i, "kind": "hook" if i == 0 else "body"} for i in range(33)]}
+    pg.goto(URL, wait_until='networkidle')
+    pg.evaluate('([c])=>window.sceneStyle.load(c,null)', [ctx]); pg.wait_for_timeout(500)
+    pg.click('[data-left-tab="scene"]'); pg.click('[data-p20="0"]'); pg.wait_for_timeout(300)
+    pg.evaluate("()=>{window.sceneStyle.show(5);return 1}"); pg.wait_for_timeout(300)
+    pg.click('[data-left-tab="font"]'); pg.evaluate("()=>{document.querySelectorAll('[data-font-set]')[2].click();return 1}")
+    pg.click('[data-left-tab="mine"]'); pg.click('[data-my-save]'); pg.wait_for_timeout(500)
+    snap = pg.evaluate("()=>JSON.parse(localStorage.getItem('scene_style_my_presets'))[0].snap")
+    need(snap.get('sceneIndex') is None and snap.get('text') is None,
+         f"⑤ 프리셋에 장면번호·문구를 담지 않는다 (sceneIndex {snap.get('sceneIndex')}, text {'있음' if snap.get('text') else '없음'}) — 고치기 전엔 sceneIndex=5·그 작업 제목이 들어갔다")
+    pg.evaluate("()=>{window.sceneStyle.show(20);return 1}"); pg.wait_for_timeout(200)
+    pg.click('[data-left-tab="mine"]'); pg.click('[data-my-apply]'); pg.wait_for_timeout(700)
+    now = pg.evaluate("()=>window.sceneStyle.snapshot().sceneIndex")
+    need(now == 20, f"⑤ 적용해도 보던 장면(20번)에 머문다 (실제 {now}) — 고치기 전엔 저장할 때의 5번으로 튀었다")
+    title = pg.evaluate("()=>window.sceneStyle.context().text.hook1")
+    need(title == '이케아도 놀랄', f"⑤ 적용이 이 작업 제목을 안 건드린다 ('{title}')")
     b.close()
 srv.shutdown()
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')
