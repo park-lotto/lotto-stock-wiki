@@ -894,7 +894,7 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
         return plan
     _phrase_plan = None
     if beat.get("phrase_sync"):   # 구절맞춤 켬 = 구절이 ✋·컷 리듬보다 우선(화면과 같은 규칙)
-        _phrase_plan = _plan_phrase_clips(beat, segs, tts_dur)
+        _phrase_plan = _plan_phrase_clips(beat, segs, tts_dur, src_durs)
     if _phrase_plan:
         plan = _phrase_plan
     else:
@@ -1111,7 +1111,12 @@ def ensure_clip_anchor(beat, owners=None):
     return beat["clip_anchor"]
 
 
-def _plan_phrase_clips(beat, segs, tts_dur):
+# 조각이 모자랄 때 '릴 뒤 실프레임'을 끌어 쓰는 최소 모자람(초). 이보다 작으면 종전대로
+# 조각 안에서만 읽는다 — 0.1초 안팎을 넘겨 다음 장면이 살짝 비치던 제보(2026-09-17)를 막는다.
+_REACH_MIN = 0.35
+
+
+def _plan_phrase_clips(beat, segs, tts_dur, src_durs=None):
     """구절 맞춤 계획 — 컷 k = k번째 재료, 길이 = k번째 자막 구절 표시시간.
 
     경계는 화면 자막과 같은 함수로 만든다(_caption_segments/_caption_durations/
@@ -1197,6 +1202,18 @@ def _plan_phrase_clips(beat, segs, tts_dur):
             #   모자란 만큼은 out_dur만 유지해 _speed_and_freeze(완만 슬로모→정지)가 채운다.
             #   화면(scene_play.js planClips)도 같은 규칙 — 짝으로 움직인다(0순위-B).
             src_d = d if _end is None else max(0.1, min(d, float(_end) - st))
+            # ★모자란 만큼을 **정지로 때우지 않는다**(2026-09-24 사장님 "일단 다른 장면으로 채워").
+            #   실측(고객 강병주님 job 86e6cd5bb254 0번 칸): 말 3.8초 / 재료 1.83초 → 약 2초가
+            #   슬로모→정지+확대로 채워져 "애니메이션 효과 오류"로 보였다. 릴(s6)은 15.2초라
+            #   조각 뒤에 진짜 프레임이 남아 있었다.
+            #   조각 끝을 넘지 않던 규칙은 2026-09-17 이윤정님 "중간에 다른 화면이 짧게"(0.08초 노출)
+            #   때문이었다 — 그건 **아주 조금** 넘을 때의 티다. 그래서 모자람이 _REACH_MIN 이상일 때만
+            #   릴 뒤를 이어 쓰고, 잔챙이 모자람은 종전대로 둔다(그 제보가 재발하지 않게).
+            _short = d - src_d
+            if _short > _REACH_MIN:
+                _reel = float((src_durs or {}).get(segs[idx]["video_id"], 0.0) or 0.0)
+                if _reel > 0:
+                    src_d = max(src_d, min(d, _reel - st))
             plan.append({"video_id": segs[idx]["video_id"], "start": st,
                          "src_dur": src_d, "out_dur": d})
             pos[idx] = st + d
