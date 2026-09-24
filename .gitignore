@@ -201,3 +201,5 @@ tiktok_session.json
 
 # channelkit 동일성 기준선(로컬 실측) — 커밋 금지
 /out/channelkit_parity/
+# hotpeople 제작 산출물(다운로드 영상·mp4) — 커밋 금지 (2026-09-25)
+/out/hotpeople/
