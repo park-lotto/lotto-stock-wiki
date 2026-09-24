@@ -36,7 +36,7 @@ def _cookies_arg(url):
         # 조용히 죽는다(2026-08-31 실측: 09:32 추출본이 10:15에 봇확인 재발, 같은
         # 브라우저에서 새로 읽으면 즉시 성공). 설정돼 있으면 매번 최신 쿠키를 쓴다.
         if config.YTDLP_COOKIES_BROWSER_YOUTUBE:
-            return ["--cookies-from-browser", config.YTDLP_COOKIES_BROWSER_YOUTUBE] + extra
+            return ["--cookies-from-browser", _youtube_browser_cookie_source()] + extra
         path = config.YTDLP_COOKIES_YOUTUBE
     elif "tiktok.com" in u:
         path = config.YTDLP_COOKIES_TIKTOK
@@ -52,6 +52,50 @@ def _cookies_arg(url):
         return []
     cookies = ["--cookies", _cookie_scratch_copy(path)] if _cookie_file_usable(path) else []
     return cookies + extra
+
+
+_YT_BROWSER_LOCK = threading.Lock()
+_YT_BROWSER_SEQ = 0
+
+
+def _firefox_profile_paths(prefix):
+    """파이어폭스 profiles.ini에서 이름이 prefix로 시작하는 프로필의 절대경로(이름순)."""
+    root = Path(os.environ.get("APPDATA", "")) / "Mozilla" / "Firefox"
+    ini = root / "profiles.ini"
+    if not ini.exists():
+        return []
+    found, name = {}, None
+    for line in ini.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if line.startswith("["):
+            name = None
+        elif line.startswith("Name="):
+            name = line[5:]
+        elif line.startswith("Path=") and name and name.startswith(prefix):
+            p = Path(line[5:])
+            found[name] = str(p if p.is_absolute() else root / p)
+    return [found[k] for k in sorted(found)]
+
+
+def _youtube_browser_cookie_source():
+    """--cookies-from-browser 값. `firefox:yt*`처럼 *로 끝나면 그 이름으로 시작하는
+    프로필(버릴 구글 계정 하나씩)을 호출마다 번갈아 고른다(2026-09-24 Webshare 해지 →
+    PC 중계 전환). 한 계정에 하루 100~180건이 몰리지 않게 나누고, _download_ytdlp가
+    시도마다 이 함수를 다시 부르므로 봇확인에 걸린 계정은 재시도 때 다음 계정으로 넘어간다.
+    *가 없으면 설정값 그대로(종전 동작)."""
+    global _YT_BROWSER_SEQ
+    spec = config.YTDLP_COOKIES_BROWSER_YOUTUBE
+    if not spec.endswith("*"):
+        return spec
+    browser, _, prefix = spec[:-1].partition(":")
+    profiles = _firefox_profile_paths(prefix) if browser == "firefox" else []
+    if not profiles:
+        return browser
+    with _YT_BROWSER_LOCK:
+        _YT_BROWSER_SEQ += 1
+        pick = profiles[_YT_BROWSER_SEQ % len(profiles)]
+    print(f"[media] 유튜브 쿠키 계정: {Path(pick).name}", file=sys.stderr)
+    return f"{browser}:{pick}"
 
 
 _COOKIE_SCRATCH_PREFIX = "ytdlp_cookies_"
