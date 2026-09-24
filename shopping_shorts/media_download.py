@@ -707,6 +707,14 @@ def _is_direct_video(u):
                                 "cdninstagram.com"))
 
 
+def _is_pinterest_host(host):
+    """핀터레스트 주소인가 — 앱 공유 링크(pin.it)와 나라별 주소까지(2026-09-24 고객 "담기가 안 된다")."""
+    from shopping_shorts.app import _GRAB_DOMAINS   # 지연 import(순환 회피) — 목록은 한 곳에만 둔다
+    doms = next((d for n, d in _GRAB_DOMAINS if n == "pinterest"), ("pinterest.com",))
+    host = (host or "").lower()
+    return any(host == d or host.endswith("." + d) for d in doms)
+
+
 def _download_pinterest(url, dest_dir):
     """핀터레스트 핀 페이지 URL → mp4 다운로드 (2026-08-29, 렌즈 핀터레스트 노출과 짝).
 
@@ -983,7 +991,9 @@ def _download_any_raw(url, dest_dir):
         return _download_instagram(url, dest_dir)
     # 핀터레스트 핀 페이지 — yt-dlp를 안 거치고 JSON-LD의 mp4 직링크로 받는다.
     # (pinimg CDN 직링크가 이미 넘어온 경우는 .mp4라 아래 _is_direct_video로 간다)
-    if host == "pinterest.com" or host.endswith(".pinterest.com"):
+    # ★담기와 **같은 주소 목록**을 본다(0순위-B: 같은 판단을 두 벌로 두지 않는다).
+    #   종전엔 여기도 pinterest.com만 봐서, 담기를 고쳐도 내려받기에서 다시 막혔다.
+    if _is_pinterest_host(host):
         return _download_pinterest(url, dest_dir)
     # 직접 mp4(예: 샤오홍슈 url_720p) — 담긴 샤오홍슈 url은 rednote.com/search_result 검색결과
     # '페이지'라 yt-dlp로 못 받는다. 프론트가 이미 확보한 직접 mp4(play_url)를 넘기면 이 경로로
