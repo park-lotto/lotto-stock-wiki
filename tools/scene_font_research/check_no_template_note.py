@@ -28,11 +28,16 @@ with sync_playwright() as p:
     a=pg.evaluate(PROBE); need(a['문구칸']>0 and not a['안내보임'], f"① 템플릿 고른 상태: 문구칸 {a['문구칸']}개·안내 숨음")
     pg.click('[data-none]'); pg.wait_for_timeout(700)
     c=pg.evaluate(PROBE); need(c['문구칸']==0 and c['안내보임'], f"② 원본 그대로: 문구칸 0 + 안내 보임 (실제 {c}) — 고치기 전엔 안내 없이 텅 비었다")
+    # ★원본 모드에서도 쓸 수 있는 꾸미기로 이어 주나 — 효과 탭 다섯 묶음이 실제로 열려야 한다
+    pg.click('[data-goto-fx]'); pg.wait_for_timeout(700)
+    fx = pg.evaluate("()=>[...document.querySelectorAll('.edit-pane details')].filter(e=>e.offsetParent!==null).map(e=>{const s=e.querySelector('summary');return (s?s.textContent:'').trim().slice(0,18)})")
+    need(len(fx) >= 4, f"③ '효과 탭에서 꾸미기' → 쓸 수 있는 꾸미기가 열린다 {fx}")
+    pg.evaluate("()=>{const t=[...document.querySelectorAll('.edit-pane .tool-tabs button')].find(b=>b.textContent.includes('문구'));if(t)t.click();return 1}"); pg.wait_for_timeout(300)
     pg.click('[data-left-tab="font"]'); pg.wait_for_timeout(300)
     pg.click('[data-goto-template]'); pg.wait_for_timeout(500)
-    d=pg.evaluate(PROBE); need(d['장면탭활성'], f"③ '템플릿 고르러 가기' → 장면 탭 열림 (실제 {d['장면탭활성']})")
+    d=pg.evaluate(PROBE); need(d['장면탭활성'], f"④ '템플릿 고르러 가기' → 장면 탭 열림 (실제 {d['장면탭활성']})")
     pg.click('[data-p20="0"]'); pg.wait_for_timeout(700)
-    e=pg.evaluate(PROBE); need(e['문구칸']>0 and not e['안내보임'], f"④ 템플릿 다시 고르면 안내 사라지고 문구칸 {e['문구칸']}개")
+    e=pg.evaluate(PROBE); need(e['문구칸']>0 and not e['안내보임'], f"⑤ 템플릿 다시 고르면 안내 사라지고 문구칸 {e['문구칸']}개")
     pg.screenshot(path=str(pathlib.Path(sys.argv[1]).resolve()/'note.png')) if len(sys.argv)>1 else None
     b.close()
 srv.shutdown()
