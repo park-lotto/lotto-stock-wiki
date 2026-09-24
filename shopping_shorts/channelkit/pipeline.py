@@ -13,9 +13,11 @@ import os
 import tempfile
 import time
 
-from . import spec, prompt, lint, layout, voice, timing, ass_gen, sfx, render, review, measure, images as _images, frames as _frames, photocheck as _photocheck
+from . import spec, registry, prompt, lint, layout, voice, timing, ass_gen, sfx, render, review, measure, images as _images, frames as _frames, photocheck as _photocheck
 
-STEPS = ["setup", "script", "layout", "lint", "prompts", "images", "voice", "timing", "subtitle", "sfx", "frames", "render", "review"]
+def steps():
+    """현재 채널의 단계 순서 — spec.STEPS. (전엔 여기 상수였다. 채널마다 다르므로 spec으로 옮김 2026-09-25)"""
+    return list(spec.STEPS)
 
 
 def _job_path(wd):
@@ -40,8 +42,8 @@ def save(wd, job):
 
 def _invalidate_after(job, step):
     """step 이후 단계 산출물을 버린다 — 입력이 바뀌면 뒤가 무효."""
-    i = STEPS.index(step)
-    for s in STEPS[i + 1:]:
+    i = steps().index(step)
+    for s in steps()[i + 1:]:
         job["data"].pop(s, None)
     job["step_done"] = step
 
@@ -49,8 +51,8 @@ def _invalidate_after(job, step):
 def _fail_stay(job, step):
     """단계가 실패(반려·검수 불합격)하면 **전진하지 않는다** — step_done은 직전 단계로.
     아스트라 3R: 반려를 돌려주기 전에 step_done=lint로 저장해 재개 시 voice로 넘어가던 버그."""
-    i = STEPS.index(step)
-    job["step_done"] = STEPS[i - 1] if i > 0 else None
+    i = steps().index(step)
+    job["step_done"] = steps()[i - 1] if i > 0 else None
 
 
 def _resp(status, step, next_step=None, **kw):
@@ -91,8 +93,13 @@ def _subtitles_by_slot(script):
     return {k: " / ".join(v) for k, v in out.items()}
 
 
-def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, sfx_dir=None, meme_dir=None, bg_image=None, fonts_dir=None, log=print, min_cuts=None, reviewer=None):
-    """한 단계만 실행. → 응답 dict {status: ok|need_input|failed, step, next_step, fail?, need?}"""
+def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, sfx_dir=None, meme_dir=None, bg_image=None, fonts_dir=None, log=print, min_cuts=None, reviewer=None, channel=None):
+    """한 단계만 실행. → 응답 dict {status: ok|need_input|failed, step, next_step, fail?, need?}
+    channel: 채널 이름(channel_presets/<이름>). None이면 현재 등록된 채널(기본 brainbulb).
+    채널 전용 단계: spec.STEP_HANDLERS[step] = fn(job, d, wd, kw) -> None | resp dict.
+      d는 job["data"]. 정상이면 d[step]에 산출물을 넣고 None, 멈출 땐 need_input/failed 응답 dict."""
+    if channel:
+        registry.use(channel)
     job = load(wd)
     d = job["data"]
     try:
@@ -248,6 +255,17 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
                 bad = [c for c in rep["checks"] if not c["ok"]]
                 return _resp("failed", step, None, fail={"where": "review", "why": ", ".join(c["name"] for c in bad),
                                                           "fix": "해당 단계 산출물을 고치고 그 단계부터 다시", "retry_ok": True, "detail": bad})
+        elif step in (getattr(spec, "STEP_HANDLERS", None) or {}):
+            kw = {"source_text": source_text, "llm": llm, "tts": tts, "imagegen": imagegen, "sfx_dir": sfx_dir,
+                  "meme_dir": meme_dir, "bg_image": bg_image, "fonts_dir": fonts_dir, "log": log,
+                  "min_cuts": min_cuts, "reviewer": reviewer}
+            r = spec.STEP_HANDLERS[step](job, d, wd, kw)
+            if r is not None:                 # 핸들러가 need_input/failed 응답을 돌려주면 그대로
+                if r.get("status") == "failed":
+                    _fail_stay(job, step)
+                    save(wd, job)
+                return r
+            _invalidate_after(job, step)
         else:
             raise ValueError(f"모르는 단계: {step}")
     except Exception as e:  # noqa: BLE001 — 원인·처방을 응답에 담아 올린다(실패 문구 원인 뭉개기 금지)
@@ -257,8 +275,8 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
         return _resp("failed", step, step, fail={"where": step, "why": repr(e)[:300], "fix": "로그의 where부터 확인", "retry_ok": True})
     job["history"].append({"step": step, "ok": True, "at": time.time()})
     save(wd, job)
-    i = STEPS.index(step)
-    nxt = STEPS[i + 1] if i + 1 < len(STEPS) else None
+    i = steps().index(step)
+    nxt = steps()[i + 1] if i + 1 < len(steps()) else None
     return _resp("ok", step, nxt)
 
 
@@ -266,8 +284,8 @@ def reset_to(wd, step):
     """이 단계부터 다시 돌리게 되돌린다(뒤 산출물 무효화). 예: 트림 필터를 바꾼 뒤 voice부터."""
     job = load(wd)
     _fail_stay(job, step)
-    i = STEPS.index(step)
-    for s in STEPS[i:]:
+    i = steps().index(step)
+    for s in steps()[i:]:
         job["data"].pop(s, None)
     save(wd, job)
     return job
@@ -278,8 +296,8 @@ def next_step(wd):
     done = job.get("step_done")
     if done is None:
         return "setup"
-    i = STEPS.index(done)
-    return STEPS[i + 1] if i + 1 < len(STEPS) else None
+    i = steps().index(done)
+    return steps()[i + 1] if i + 1 < len(steps()) else None
 
 
 def run_all(wd, **kw):

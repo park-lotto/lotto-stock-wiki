@@ -54,3 +54,33 @@ def test_fonts_dir_moved_with_channel():
     import os
     assert os.path.isfile(os.path.join(spec.FONTS_DIR, "SBAggroB.ttf"))
     assert "channel_presets" in spec.FONTS_DIR.replace("\\", "/")
+
+
+def test_steps_come_from_channel_spec(tmp_path):
+    from shopping_shorts.channelkit import pipeline
+    registry.use(registry.DEFAULT)
+    assert pipeline.steps()[0] == "setup" and "review" in pipeline.steps()
+
+    calls = []
+
+    def _echo(job, d, wd, kw):
+        calls.append(kw.get("source_text"))
+        d["echo"] = {"n": len(calls)}
+        return None                       # None = 정상 진행
+
+    _fake_channel("stepch", STEPS=["setup", "echo"], STEP_HANDLERS={"echo": _echo},
+                  FONTS_DIR=registry.use(registry.DEFAULT).FONTS_DIR, STYLE_FONT=registry.current().STYLE_FONT)
+    registry.use("stepch")
+    r = pipeline.run_step(str(tmp_path), "setup", source_text="소재")
+    assert r["status"] == "ok" and r["next_step"] == "echo"
+    r = pipeline.run_step(str(tmp_path), "echo", source_text="소재")
+    assert r["status"] == "ok" and r["next_step"] is None
+    assert pipeline.load(str(tmp_path))["data"]["echo"] == {"n": 1}
+
+
+def test_run_step_channel_kwarg_switches(tmp_path):
+    from shopping_shorts.channelkit import pipeline
+    _fake_channel("kwch", STEPS=["setup"], STEP_HANDLERS={},
+                  FONTS_DIR=registry.use(registry.DEFAULT).FONTS_DIR, STYLE_FONT=registry.current().STYLE_FONT)
+    pipeline.run_step(str(tmp_path), "setup", source_text="x", channel="kwch")
+    assert registry.name() == "kwch"

@@ -36,7 +36,7 @@ _ROOT = Path(__file__).resolve().parent.parent / "out" / "brainbulb"
 _RUNNING: dict[str, float] = {}
 _LOCK = threading.Lock()
 
-# 화면에 보일 단계 이름. pipeline.STEPS(13개)와 **같은 축**이다.
+# 화면에 보일 단계 이름. pipeline.steps()(13개)와 **같은 축**이다.
 # ★단계 번호를 문구에 손으로 쓰지 않는다(produce.html:3528 실사고 — 9단계 개편 때 16곳이
 #   전부 거짓말이 됐다). 화면은 이 목록만 보고 그린다.
 STEP_LABELS = {
@@ -108,11 +108,11 @@ def _state(job_id: str) -> dict:
     job = pipeline.load(str(wd))
     d = job.get("data") or {}
     done = job.get("step_done")
-    done_i = pipeline.STEPS.index(done) if done in pipeline.STEPS else -1
+    done_i = pipeline.steps().index(done) if done in pipeline.steps() else -1
     nxt = pipeline.next_step(str(wd))
 
     steps = []
-    for i, s in enumerate(pipeline.STEPS):
+    for i, s in enumerate(pipeline.steps()):
         if i <= done_i:
             # ★"지나왔다"가 아니라 **산출물이 있나**로 본다(produce.html:4035 실사고 —
             #   빈 산출물에 초록 체크가 켜졌다).
@@ -284,7 +284,7 @@ def register(app, require_admin):
             return denied
         job_id = body.get("job_id") or ""
         step = body.get("step") or ""
-        if step not in pipeline.STEPS:
+        if step not in pipeline.steps():
             return JSONResponse({"error": f"모르는 단계: {step}"}, status_code=422)
         wd = _workdir(job_id)
         if not (wd / "source.txt").exists():
@@ -321,4 +321,4 @@ def register(app, require_admin):
             return denied
         return {"steps": [{"key": s, "label": STEP_LABELS.get(s, s),
                            "short": STEP_SHORT.get(s, STEP_LABELS.get(s, s))}
-                          for s in pipeline.STEPS]}
+                          for s in pipeline.steps()]}

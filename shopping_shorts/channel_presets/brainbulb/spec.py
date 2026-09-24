@@ -353,3 +353,7 @@ VERTEX_MODEL_MAP = {
     "gemini-2.0-flash": "gemini-2.5-flash",
     "gemini-2.5-flash-lite": "gemini-2.5-flash",
 }
+
+# ── 단계 순서 (전엔 channelkit/pipeline.py 상수. 채널마다 다르므로 여기로 2026-09-25) ─────
+STEPS = ["setup", "script", "layout", "lint", "prompts", "images", "voice", "timing", "subtitle", "sfx", "frames", "render", "review"]
+STEP_HANDLERS = {}     # Task 5에서 prompts·images·frames가 여기로 온다
