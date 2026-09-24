@@ -126,13 +126,15 @@ def test_pick_retries_then_fails_loud(monkeypatch):
         calls.append(1)
         if len(calls) < 3:
             raise RuntimeError("503 UNAVAILABLE")
+        if sheets:
+            return '{"desc": {"0": "a", "1": "b", "2": "c"}}'
         return '{"picks": [2, 0, 1]}'
-    idx, fixed = footage.pick([{}, {}, {}], [0, 1, 2], [], flaky, "x", log=lambda *_: None)
-    assert idx == [2, 0, 1] and fixed == 0 and len(calls) == 3
+    idx, fixed = footage.pick([{}, {}, {}], [0, 1, 2], ["s.png"], flaky, "x", log=lambda *_: None)
+    assert idx == [2, 0, 1] and fixed == 0 and len(calls) == 4      # 503 두 번 → 설명 → 짝짓기
 
     def dead(prompt, sheets):
         raise RuntimeError("503")
-    idx, fixed = footage.pick([{}, {}, {}], [0, 1, 2], [], [dead, dead], "x", log=lambda *_: None)
+    idx, fixed = footage.pick([{}, {}, {}], [0, 1, 2], ["s.png"], [dead, dead], "x", log=lambda *_: None)
     assert fixed == 3                                   # 전부 메움 → collect가 이걸 보고 멈춘다
 
 
@@ -160,3 +162,17 @@ def test_call_falls_through_on_wrong_shape(monkeypatch):
     good = lambda p, i: '{"picks": [1]}'
     assert footage._call([bad, good], "q", [], lambda *_: None, "picks") == {"picks": [1]}
     assert footage._call([bad], "q", [], lambda *_: None, "picks") is None
+
+
+def test_pick_uses_describe_then_text_match_and_coerces_strings(tmp_path):
+    from shopping_shorts.channel_presets.hotpeople import footage
+    seen = []
+
+    def reader(prompt, imgs):
+        seen.append(len(imgs))
+        if "desc" in prompt and imgs:
+            return '{"desc": {"0": "market stalls [TEXT]", "1": "woman badminton player on podium with gold medal", "2": "girl child with racket"}}'
+        return '{"picks": ["1", "2"]}'                  # 문자열 번호도 받는다
+    idx, fixed = footage.pick([{"text": "금메달"}, {"text": "어린 시절"}], [{}, {}, {}], ["s0.png"], reader, "x", log=lambda *_: None)
+    assert idx == [1, 2] and fixed == 0
+    assert seen == [1, 0]                                # 그림 1장씩 설명 → 글만으로 짝짓기

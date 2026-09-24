@@ -125,21 +125,56 @@ def sheets(cands, out_dir):
     return paths
 
 
-def _pick_prompt(groups, n_cands, person):
+def _as_int(v):
+    """모델이 번호를 "108"(문자열)로 주기도 한다(3.1-flash-lite 실측) — 정수로."""
+    try:
+        return int(str(v).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def describe(cands, sheet_paths, reader, log=print):
+    """시트 한 장씩 → {번호: 짧은 장면 설명}. 그림 보는 일은 이것만 시킨다.
+
+    ★왜 나눴나(2026-09-25 실측): 120칸 시트 4장 + 자막 26개를 한 번에 주면 두 모델 모두
+      picks 를 10,11,12,…처럼 **순서대로 찍었다** — 대조를 안 한다. 한 장(30칸)씩 '무엇이 보이나'만
+      묻고, 자막과의 짝짓기는 글 대조로 따로 한다."""
+    per = SHEET_COLS * SHEET_ROWS
+    desc = {}
+    for si, sp in enumerate(sheet_paths):
+        lo, hi = si * per, min(len(cands), (si + 1) * per) - 1
+        prompt = (f"그림은 번호(노란 숫자 {lo}~{hi}) 붙은 영상 장면 썸네일이다. 각 번호마다 **보이는 것**을 영어 10단어 이내로 적어라: "
+                  "누가(여자 배드민턴 선수/코치/관중/아이…) · 무엇을(경기 중 스매시/시상대/우는/인터뷰/훈련/걷는…) · 어디(경기장/시장/부엌/거리…). "
+                  "화면에 문장 자막이 박혀 있으면 끝에 [TEXT]. 로고·검은 화면이면 [JUNK].\n"
+                  f"출력 JSON: {{\"desc\": {{\"{lo}\": \"...\", …, \"{hi}\": \"...\"}}}}")
+        r = _call(reader, prompt, [sp], log, "desc") or {}
+        for k, v in (r.get("desc") or {}).items():
+            n = _as_int(k)
+            if n is not None and lo <= n <= hi:
+                desc[n] = str(v)
+    log(f"[footage] 장면 설명 {len(desc)}/{len(cands)}개")
+    return desc
+
+
+def _match_prompt(groups, desc, person):
     subs = "\n".join(f"{i}. 자막 «{g.get('text')}» / 원하는 화면: {g.get('scene', '')}" for i, g in enumerate(groups))
-    return (f"숏폼 편집자다. 주인공은 {person}. 아래 시트의 번호 붙은 장면 0~{n_cands - 1} 중에서 자막마다 가장 맞는 장면 번호를 골라라.\n"
-            "규칙: 같은 번호를 두 번 쓰지 마라. 주인공이 실제로 나오는 장면을 우선. 글자가 화면 대부분인 장면·로고·검은 화면은 피하라.\n"
-            "★화면 아래에 자막(한글·영어 문장)이 박힌 장면은 가능한 한 피하라 — 우리 자막과 겹친다. 요리·먹방 등 주제와 무관한 장면은 쓰지 마라.\n"
-            "맞는 게 없으면 분위기가 맞는 장면을 골라라(비워두지 마라).\n"
-            f"[자막]\n{subs}\n\n출력 JSON: {{\"picks\": [자막0의 번호, 자막1의 번호, …]}} (자막 수 {len(groups)}개와 길이가 같아야 한다)")
+    scenes_ = "\n".join(f"{k}: {v}" for k, v in sorted(desc.items()))
+    return (f"숏폼 편집자다. 주인공 {person}. [자막]마다 [장면 목록]에서 **내용이 가장 맞는** 장면 번호를 골라라.\n"
+            "규칙: 같은 번호 두 번 금지. 경기·결승·메달 자막엔 경기장/시상대 장면, 어린 시절·가족 자막엔 그에 맞는 장면. "
+            "[TEXT]·[JUNK] 장면은 다른 게 정말 없을 때만. 시장·부엌 등 주제와 무관한 장면은 쓰지 마라. 번호를 순서대로 찍지 마라.\n"
+            f"[장면 목록]\n{scenes_}\n\n[자막]\n{subs}\n\n"
+            f"출력 JSON: {{\"picks\": [자막0의 장면번호, 자막1의 장면번호, …]}} (정확히 {len(groups)}개)")
 
 
 def pick(groups, cands, sheet_paths, reader, person, log=print):
-    """→ 자막마다 장면 index 리스트. 모델 답이 틀리면(범위 밖·중복·개수) 남는 장면으로 순서대로 메운다."""
+    """→ (자막마다 장면 index, 보정 수). 설명(그림) → 짝짓기(글). 모델 답이 틀리면 남는 장면으로 순서대로 메운다."""
     picks = []
     if reader is not None and cands:
         # 503(과부하)은 잠깐 뒤 풀린다 — 2026-09-25 실측 첫 시도 503. 재시도·대체 모델은 _call 한 곳에서
-        picks = list(((_call(reader, _pick_prompt(groups, len(cands), person), sheet_paths, log, "picks") or {}).get("picks")) or [])
+        desc = describe(cands, sheet_paths, reader, log=log)
+        if desc:
+            r = _call(reader, _match_prompt(groups, desc, person), [], log, "picks") or {}
+            picks = [_as_int(p) for p in (r.get("picks") or [])]
     used, out, fixed = set(), [], 0
     for i in range(len(groups)):
         p = picks[i] if i < len(picks) else None
@@ -152,6 +187,8 @@ def pick(groups, cands, sheet_paths, reader, person, log=print):
         out.append(p)
     if fixed:
         log(f"[footage] 모델 답 {fixed}/{len(groups)}개를 순서대로 메움")
+    seq = sum(1 for a_, b_ in zip(out, out[1:]) if b_ == a_ + 1)
+    log(f"[footage] 연속 번호 비율 {seq}/{max(1, len(out) - 1)} — 높으면 대조 안 하고 순서대로 찍은 것")
     return out, fixed
 
 
@@ -265,8 +302,8 @@ def check_and_repick(groups, cands, idx, sheet_paths, reader, person, wd, log=pr
     r2 = _call(reader, prompt2, sheet_paths, log, "picks") or {}
     new, n = list(idx), 0
     for b in bad:
-        k = (r2.get("picks") or {}).get(str(b))
-        if isinstance(k, int) and k in free:
+        k = _as_int((r2.get("picks") or {}).get(str(b)))
+        if k is not None and k in free:
             new[b] = k; free.remove(k); n += 1
     log(f"[footage] 장면 검사: 틀린 칸 {bad} → 다시 고름 {n}개")
     return new, {"bad": bad, "repicked": n}
