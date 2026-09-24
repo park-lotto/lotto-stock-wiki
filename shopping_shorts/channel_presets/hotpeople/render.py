@@ -110,7 +110,8 @@ def _ff(argv, what):
 
 
 def cut_clip(bg_png, sub_png, src, start, sec, out_mp4):
-    f = (f"[1:v]scale={spec.SLOT_W}:{spec.SLOT_H}:force_original_aspect_ratio=increase,crop={spec.SLOT_W}:{spec.SLOT_H},"
+    keep = 1 - spec.POLICY_SOURCE_CROP_BOTTOM
+    f = (f"[1:v]crop=iw:ih*{keep:.3f}:0:0,scale={spec.SLOT_W}:{spec.SLOT_H}:force_original_aspect_ratio=increase,crop={spec.SLOT_W}:{spec.SLOT_H},"
          f"setsar=1,fps={spec.FPS},tpad=stop_mode=clone:stop_duration=4[v];"
          f"[0:v][v]overlay={spec.SLOT_X}:{spec.SLOT_Y}[b];[b][2:v]overlay=0:0,format=yuv420p[o]")
     _ff(["ffmpeg", "-v", "error", "-y", "-loop", "1", "-framerate", str(spec.FPS), "-i", bg_png,

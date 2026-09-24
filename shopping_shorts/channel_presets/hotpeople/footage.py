@@ -138,21 +138,8 @@ def pick(groups, cands, sheet_paths, reader, person, log=print):
     """→ 자막마다 장면 index 리스트. 모델 답이 틀리면(범위 밖·중복·개수) 남는 장면으로 순서대로 메운다."""
     picks = []
     if reader is not None and cands:
-        import time
-        from shopping_shorts.channelkit.prompt import parse_any
-        readers = reader if isinstance(reader, (list, tuple)) else [reader]
-        for ri, rd in enumerate(readers):
-            for wait in (0, 10, 30):                 # 503(과부하)은 잠깐 뒤 풀린다 — 2026-09-25 실측 첫 시도 503
-                if wait:
-                    time.sleep(wait)
-                try:
-                    raw = rd(_pick_prompt(groups, len(cands), person), sheet_paths)
-                    picks = list((parse_any(raw) or {}).get("picks") or [])
-                    break
-                except Exception as e:  # noqa: BLE001
-                    log(f"[footage] 장면 선택 모델{ri} 실패({wait}s 뒤 재시도): {repr(e)[:160]}")
-            if picks:
-                break
+        # 503(과부하)은 잠깐 뒤 풀린다 — 2026-09-25 실측 첫 시도 503. 재시도·대체 모델은 _call 한 곳에서
+        picks = list(((_call(reader, _pick_prompt(groups, len(cands), person), sheet_paths, log) or {}).get("picks")) or [])
     used, out, fixed = set(), [], 0
     for i in range(len(groups)):
         p = picks[i] if i < len(picks) else None
@@ -204,8 +191,74 @@ def collect(script, wd, reader=None, log=print):
     if reader is not None and fixed > len(groups) * 0.3:
         # ★조용히 순서대로 메운 영상을 "완료"로 내보내지 마라(2026-09-25: 503으로 27/27 순서 메움 → 요리 장면이 섞였다)
         raise RuntimeError(f"footage: 장면 선택 모델이 {fixed}/{len(groups)}개를 못 골랐다 — 잠시 뒤 footage부터 다시")
+    verify = {"bad": [], "repicked": 0}
+    if reader is not None:
+        idx, verify = check_and_repick(groups, cands, idx, sp, reader, script.get("person", ""), wd, log=log)
     url = {v["id"]: v["url"] for v in videos}
     cuts = [{"scene": k, "src": cands[k]["path"], "start": cands[k]["start"], "end": cands[k]["end"],
              "vid": cands[k]["vid"], "url": url.get(cands[k]["vid"]), "thumb": cands[k]["thumb"]} for k in idx]
     return {"videos": [{k: v[k] for k in ("id", "title", "url", "query", "duration")} for v in videos],
-            "n_cands": len(cands), "cuts": cuts, "sheets": sp, "fixed": fixed}
+            "n_cands": len(cands), "cuts": cuts, "sheets": sp, "fixed": fixed, "verify": verify}
+
+
+def _call(readers, prompt, images, log):
+    """모델 여러 개를 순서대로, 503이면 잠깐 쉬고 재시도. → 파싱된 dict 또는 None."""
+    import time
+    from shopping_shorts.channelkit.prompt import parse_any
+    for ri, rd in enumerate(readers if isinstance(readers, (list, tuple)) else [readers]):
+        for wait in (0, 10, 30):
+            if wait:
+                time.sleep(wait)
+            try:
+                return parse_any(rd(prompt, images)) or {}
+            except Exception as e:  # noqa: BLE001
+                log(f"[footage] 모델{ri} 실패({wait}s 뒤 재시도): {repr(e)[:160]}")
+    return None
+
+
+def picked_sheet(groups, cands, idx, out_png):
+    """고른 장면을 자막 번호·자막 글과 함께 한 장에 — 검사용."""
+    font = ImageFont.truetype(spec.LOGO_NAME_FONT, 18)
+    big = ImageFont.truetype(spec.LOGO_NAME_FONT, 26)
+    tw, th = THUMB_W, THUMB_H + 48
+    sh = Image.new("RGB", (SHEET_COLS * (tw + 6), ((len(idx) + SHEET_COLS - 1) // SHEET_COLS) * (th + 6)), "white")
+    d = ImageDraw.Draw(sh)
+    for i, k in enumerate(idx):
+        x, y = (i % SHEET_COLS) * (tw + 6), (i // SHEET_COLS) * (th + 6)
+        sh.paste(Image.open(cands[k]["thumb"]).convert("RGB"), (x, y))
+        d.rectangle([x, y, x + 40, y + 32], fill="black"); d.text((x + 5, y + 2), str(i), font=big, fill="yellow")
+        d.text((x + 2, y + THUMB_H + 2), (groups[i].get("text") or "")[:26], font=font, fill="black")
+    sh.save(out_png)
+    return out_png
+
+
+def check_and_repick(groups, cands, idx, sheet_paths, reader, person, wd, log=print):
+    """고른 뒤 **자막 내용과 맞는지** 한 번 더 본다 → 틀린 자막만 남은 장면에서 다시 고른다.
+
+    ★왜: 2026-09-25 안세영 편 — "허빙자오를 2-0으로 꺾고 금메달"에 **본인 브이로그의 시장 장면**이 골렸다.
+      첫 선택은 "주인공이 나오나"만 보고 자막 내용(결승·금메달)을 안 봤다.
+    """
+    chk = picked_sheet(groups, cands, idx, os.path.join(wd, "footage", "picked.png"))
+    prompt = (f"숏폼 검수자다. 주인공 {person}. 그림의 각 칸 = 자막 번호(노란 숫자)와 그 자막 글(칸 아래).\n"
+              "장면이 **자막 내용과 안 맞는** 칸만 골라라 — 예: 경기·결승·메달 얘기인데 시장·요리·일상 장면, "
+              "어린 시절 얘기인데 성인 경기 장면은 괜찮다(비슷하면 통과). 확실히 틀린 것만.\n"
+              "출력 JSON: {\"bad\": [번호, …]}")
+    r = _call(reader, prompt, [chk], log)
+    bad = [b for b in ((r or {}).get("bad") or []) if isinstance(b, int) and 0 <= b < len(idx)]
+    if not bad:
+        log("[footage] 장면 검사: 틀린 칸 없음")
+        return idx, {"bad": [], "repicked": 0}
+    used = set(idx)
+    free = [k for k in range(len(cands)) if k not in used]
+    subs = "\n".join(f"{b}. 자막 «{groups[b].get('text')}» / 원하는 화면: {groups[b].get('scene', '')}" for b in bad)
+    prompt2 = (f"숏폼 편집자다. 주인공 {person}. 아래 자막들에 맞는 장면을 시트에서 다시 골라라.\n"
+               f"쓸 수 있는 번호: {free}\n같은 번호 두 번 금지. 자막 내용(경기·메달·훈련 등)에 맞는 장면으로.\n"
+               f"[자막]\n{subs}\n출력 JSON: {{\"picks\": {{\"자막번호\": 장면번호, …}}}}")
+    r2 = _call(reader, prompt2, sheet_paths, log) or {}
+    new, n = list(idx), 0
+    for b in bad:
+        k = (r2.get("picks") or {}).get(str(b))
+        if isinstance(k, int) and k in free:
+            new[b] = k; free.remove(k); n += 1
+    log(f"[footage] 장면 검사: 틀린 칸 {bad} → 다시 고름 {n}개")
+    return new, {"bad": bad, "repicked": n}

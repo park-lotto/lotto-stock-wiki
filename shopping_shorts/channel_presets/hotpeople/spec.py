@@ -68,6 +68,7 @@ POLICY_FOOTAGE_MAX_SEC = 1500       # 25분 넘는 영상은 안 받는다
 POLICY_FOOTAGE_HEAD_SEC = 480       # 앞 8분만 받는다(다운로드 시간)
 POLICY_SCENE_THRESH = 0.3
 POLICY_SCENE_MIN_SEC = 1.0
+POLICY_SOURCE_CROP_BOTTOM = 0.18    # 소스 아래 18%를 버리고 채운다 — 국내 하이라이트 영상은 자막이 아래에 박혀 있다(2026-09-25 첫 편 26컷 중 다수)
 SCRIPT_CLAUDE_MODEL = "opus"        # channelkit.providers.claude_llm 기본 모델 이름표
 
 # ── 엔진 연결 ──────────────────────────────────────────────────────────────

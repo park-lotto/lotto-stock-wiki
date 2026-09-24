@@ -134,3 +134,19 @@ def test_pick_retries_then_fails_loud(monkeypatch):
         raise RuntimeError("503")
     idx, fixed = footage.pick([{}, {}, {}], [0, 1, 2], [], [dead, dead], "x", log=lambda *_: None)
     assert fixed == 3                                   # 전부 메움 → collect가 이걸 보고 멈춘다
+
+
+def test_check_and_repick_replaces_only_bad(tmp_path):
+    from shopping_shorts.channel_presets.hotpeople import footage
+    th = tmp_path / "t.jpg"
+    Image.new("RGB", (240, 176), (90, 120, 90)).save(th)
+    (tmp_path / "footage").mkdir()
+    cands = [{"thumb": str(th)} for _ in range(6)]
+    groups = [{"text": f"자막{i}"} for i in range(3)]
+    answers = iter(['{"bad": [1]}', '{"picks": {"1": 4}}'])
+    new, v = footage.check_and_repick(groups, cands, [0, 1, 2], [], lambda p, imgs: next(answers), "x",
+                                      str(tmp_path), log=lambda *_: None)
+    assert new == [0, 4, 2] and v == {"bad": [1], "repicked": 1}
+    ok = iter(['{"bad": []}'])
+    new, v = footage.check_and_repick(groups, cands, [0, 1, 2], [], lambda p, imgs: next(ok), "x", str(tmp_path), log=lambda *_: None)
+    assert new == [0, 1, 2] and v["bad"] == []
