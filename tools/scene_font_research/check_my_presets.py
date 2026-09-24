@@ -60,6 +60,24 @@ with sync_playwright() as p:
     need(now == 20, f"⑤ 적용해도 보던 장면(20번)에 머문다 (실제 {now}) — 고치기 전엔 저장할 때의 5번으로 튀었다")
     title = pg.evaluate("()=>window.sceneStyle.context().text.hook1")
     need(title == '이케아도 놀랄', f"⑤ 적용이 이 작업 제목을 안 건드린다 ('{title}')")
+    # ⑥ 2026-09-24 사장님: 자막박스 '모양'은 다음 작업에도 따라와야 한다(흰 띠를 좋아하면 늘 흰 띠).
+    #    자리·크기(끌어 옮김·글자 배율)는 그대로 안 따라온다 — 문장 길이가 작업마다 달라서.
+    pg.evaluate("()=>{window.sceneStyle.show(2);return 1}"); pg.wait_for_timeout(300)
+    opened = pg.evaluate("()=>{const d=[...document.querySelectorAll('details')].find(x=>x.querySelector('[data-caption-look]'));if(d)d.open=true;return !!d}")
+    pg.evaluate("()=>{const b=[...document.querySelectorAll('[data-caption-look]')].find(x=>x.dataset.captionLook==='3');if(b)b.click();return 1}")
+    pg.wait_for_timeout(500)
+    pg.click('[data-left-tab="mine"]'); pg.click('[data-my-save]'); pg.wait_for_timeout(500)
+    snap2 = pg.evaluate("()=>JSON.parse(localStorage.getItem('scene_style_my_presets'))[0].snap")
+    need(snap2.get('captionLook') and snap2['captionLook'].get('look') == 3,
+         f"⑥ 프리셋에 자막박스 모양이 담긴다 ({snap2.get('captionLook')}) — 고치기 전엔 통째로 빠졌다")
+    need(not snap2.get('captionLayouts') and not snap2.get('fontScales'),
+         "⑥ 장면별 자리·크기는 여전히 안 담긴다")
+    pg.evaluate("()=>{const b=[...document.querySelectorAll('[data-caption-look]')].find(x=>x.dataset.captionLook==='auto');if(b)b.click();return 1}")
+    pg.wait_for_timeout(400)
+    pg.click('[data-left-tab="mine"]'); pg.click('[data-my-apply]'); pg.wait_for_timeout(700)
+    back = pg.evaluate("()=>window.sceneStyle.snapshot().captionLayouts")
+    looks = sorted({v.get('look') for v in (back or {}).values() if v.get('look') is not None})
+    need(looks == [3], f"⑥ 적용하면 모든 장면이 그 모양으로 돌아온다 (실제 {looks})")
     b.close()
 srv.shutdown()
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')

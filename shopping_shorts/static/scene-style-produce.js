@@ -132,6 +132,12 @@
       if(id!==MIX_JOB||id!==jobId)throw Error('편집 중인 영상이 바뀌었습니다. 다시 열어 주세요.');
       const response=await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:id,scene_style:copy})});
       const result=await response.json();if(!response.ok||!result.ok)throw Error(result.error||'영상 설정을 저장하지 못했습니다.');
+      // ★설정이 바뀌어 **이미 만든 완성본이 버려졌으면** 그 자리에서 알린다(2026-09-24 고객 조율가님:
+      //   "템플릿 씌우고 썸네일 지정해 다음으로 넘어가면 전체영상 다 적용이 안 되었어요").
+      //   실제로는 다시 만들어야 하는 상태인데 화면이 아무 말이 없어 '적용 안 됨'으로 보였다.
+      if(result.render_invalidated&&id===MIX_JOB&&id===jobId){
+        setTimeout(()=>{status().textContent='설정이 바뀌어 기존 완성본은 지워졌습니다 — [완성본 만들기]를 한 번 더 눌러 주세요.';status().style.color='#ffd479';},60);
+      }
       if(id===MIX_JOB&&id===jobId){STATE.deco={...(STATE.deco||{}),scene_style:copy};packet.snapshot=copy;appliedOnServer=true;saveWork();status().textContent=copy?'문구·효과 적용됨 · 최종 영상에 반영됩니다.':'템플릿 없음 · 원본 영상 그대로 나갑니다.';}
       try{const draft=JSON.parse(localStorage.getItem(draftKey(id))||'null');if(draft&&JSON.stringify(draft.snapshot)===JSON.stringify(copy))localStorage.removeItem(draftKey(id));}catch(_){}
     });
