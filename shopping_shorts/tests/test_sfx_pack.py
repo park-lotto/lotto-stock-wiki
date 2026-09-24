@@ -30,8 +30,8 @@ class _Store:
         return list(_SPINES)
 
 
-def _tl():
-    """제목 칸 + 본문 3칸 + 마무리 칸. 칸 안 자막은 caption_lines로 고정(2줄씩)."""
+def _tl(lines=2):
+    """제목 칸 + 본문 3칸 + 마무리 칸. 칸 안 자막은 caption_lines로 고정(기본 2줄, lines=3이면 3줄)."""
     rows = [
         ("title", "천재가 왜 게으른지 알수있는 제품", ["천재가 왜 게으른지", "알수있는 제품"], 1.6),
         ("bait", "지금 해외 SNS에서 수억 조회수가 터지며", ["지금 해외 SNS에서", "수억 조회수가 터지며"], 2.4),
@@ -40,8 +40,13 @@ def _tl():
         ("benefit", "도마 접시 안 사고 이걸로 다 해결한다고", ["도마 접시 안 사고", "이걸로 다 해결한다고"], 2.4),
     ]
     tl, t0 = [], 0.0
-    for i, (role, n, lines, d) in enumerate(rows):
-        tl.append({"beat_idx": i, "t0": t0, "dur": d, "narration": n, "caption_lines": lines, "role": role,
+    for i, (role, n, caps, d) in enumerate(rows):
+        if lines >= 3 and i > 0:      # 제목 칸은 그대로(오프너 1발뿐 — 이븐쇼핑 12/12)
+            extra = "그래서 다들 따라 산다고"
+            caps = list(caps) + [extra]
+            n = n + " " + extra          # ★대사에 없는 자막 줄은 caption_schedule이 버린다
+            d = d + 1.4
+        tl.append({"beat_idx": i, "t0": t0, "dur": d, "narration": n, "caption_lines": caps, "role": role,
                    "cap_durs": None, "cap_lead": 0.0, "cap_offset": 0.0})
         t0 += d
     return tl
@@ -207,15 +212,45 @@ def test_every_pack_file_lands_on_slot_target():
             assert abs(got - sfx_pack.LEVEL_TARGET_DB[slot]) < 0.05, (d, slot, got)
 
 
-def test_two_sounds_per_scene():
-    """2026-09-22 사장님 "장면당 2개": 칸마다 첫 줄 + 가운데 줄."""
-    tl = _tl()
+def test_one_sound_per_caption_line():
+    """2026-09-24: 자막 한 줄이 바뀔 때마다 1발(이븐쇼핑 기준점 = 자막 교체).
+
+    ★칸마다 자막을 **3줄**로 둔다 — 2줄짜리로 재면 옛 규칙('첫 줄+가운데 줄')과 결과가 같아
+    아무것도 구분하지 못한다(2026-09-24 실제로 그래서 옛 시험이 통과했다).
+    """
+    tl = _tl(lines=3)
     ev = [e for e in sfx_pack.plan_events(tl) if e[0] != "opener"]
     for b in tl[2:]:
         sched = va.caption_schedule(b)
-        inside = [e for e in ev if b["t0"] <= e[1] < b["t0"] + b["dur"]]
-        want = sorted({round(sched[0][1], 6), round(sched[len(sched) // 2][1], 6)})
-        assert sorted(round(e[1], 6) for e in inside) == want, (b["role"], inside)
+        assert len(sched) >= 3, "시험 재료가 규칙을 구분하지 못한다"
+        inside = sorted(round(e[1], 6) for e in ev if b["t0"] <= e[1] < b["t0"] + b["dur"])
+        assert inside == sorted(round(x[1], 6) for x in sched), (b["role"], inside)
+
+
+def test_long_caption_line_gets_mid_hit():
+    """2.2초를 넘는 자막 줄은 한가운데에 한 발 더 — 긴 칸에서 생기던 5초 구멍을 막는다."""
+    tl = _tl(lines=3)
+    b = tl[2]
+    sched = va.caption_schedule(b)
+    long_i = max(range(len(sched)), key=lambda k: sched[k][2] - sched[k][1])
+    s0, e0 = sched[long_i][1], sched[long_i][2]
+    b["dur"] = b["dur"] + 4.0                     # 그 줄을 늘려 4초 넘게 만든다
+    b["cap_durs"] = [(e0 - s0 + 4.0) if k == long_i else (sched[k][2] - sched[k][1])
+                     for k in range(len(sched))]
+    sched2 = va.caption_schedule(b)
+    s1, e1 = sched2[long_i][1], sched2[long_i][2]
+    assert e1 - s1 > sfx_pack.MAX_SILENCE, (s1, e1)
+    ev = [e[1] for e in sfx_pack.plan_events(tl)]
+    mid = (s1 + e1) / 2.0
+    assert any(abs(t - mid) < 0.05 for t in ev), (mid, ev)
+
+
+def test_no_long_silent_gap():
+    """이븐쇼핑 4편 실측 최장 무음 1.7~2.5초 — 우리도 그 안에 든다(옛 '장면당 2발'은 3.36초였다)."""
+    tl = _tl(lines=3)
+    ts = sorted(e[1] for e in sfx_pack.plan_events(tl))
+    gaps = [ts[i + 1] - ts[i] for i in range(len(ts) - 1)]
+    assert max(gaps) <= 2.5, max(gaps)
 
 
 def test_quiet_slots_raised_to_audible_floor():

@@ -196,6 +196,8 @@ def script_family(store, job):
     return list((sp or {}).get("fit_categories") or [])
 
 
+TITLE_CARD = 1.5           # 영상 앞 제목 카드 — 이 구간엔 오프너 1발만(이븐쇼핑 12/12)
+MAX_SILENCE = 2.2          # 이 초를 넘는 자막 줄은 한가운데에 한 발 더(이븐쇼핑 최장 무음 1.7~2.5초)
 ROLE_MATCH_MIN = 0.8      # 칸 역할이 이만큼 썰 구조면 썰 대본으로 본다
 
 
@@ -257,7 +259,7 @@ def resolve(store, job):
 def plan_events(timeline, manual_beats=()):
     """[(소리, 절대초, 자막)] — 파일 경로 없이 '무엇을 언제'만. 테스트·검증이 이걸 본다.
 
-    영상 시작 = 오프너 · 첫 칸→둘째 칸 넘김 = 휙+틱 · 칸마다 첫 줄·가운데 줄에 2발(첫 줄은 칸 역할의 소리).
+    영상 시작 = 오프너 · 첫 칸→둘째 칸 넘김 = 휙+틱 · 그 뒤 자막 줄이 바뀔 때마다 1발(칸 첫 줄은 칸 역할의 소리).
     시각은 렌더 자막 함수(caption_schedule)에서 그대로 받는다. manual_beats(사람이 고른 칸)는 건너뛴다.
     """
     from shopping_shorts.video_assemble import caption_schedule
@@ -272,24 +274,33 @@ def plan_events(timeline, manual_beats=()):
         ev += [("whoosh", max(0.0, t - WHOOSH_LEAD), ""), ("tick", t + TICK_LAG, "")]
     used = {}           # 순서별로 **영상 전체에서 이어 센다** — 칸마다 새로 세면 앞 몇 칸만 쓰인다(실측: 둥 19%)
     for bi, b in enumerate(tl):
-        if bi == 0 or b["beat_idx"] in manual:
-            continue    # 제목 칸 안은 오프너만(실측 12/12)
-        # ★장면(칸)마다 2발 — 첫 자막 줄 + 가운데 자막 줄(2026-09-22 사장님 "장면당 2개").
-        #   (구절마다 넣으면 문장당 3.0개로 많았고, 1개로 줄이니 초당 0.30발로 이븐쇼핑 0.54보다 드물었다.)
+        if b["beat_idx"] in manual:
+            continue
+        # 제목 카드(영상 앞 1.5초) 안은 오프너만 — 이븐쇼핑 12/12. 첫 칸이 그보다 길면
+        # 나머지 자막 줄은 여느 칸과 똑같이 운다(2026-09-24: 첫 칸 5.3초짜리 대본에서 5.2초 무음이 났다).
+        # ★자막 한 줄이 바뀔 때마다 1발 — 이븐쇼핑의 기준점이 컷이 아니라 자막 교체다(분석 §0-2).
+        #   2026-09-24: '장면당 2발'은 칸이 길수록 구멍이 났다(실측 f3a57a316f6c 최장 3.36초 무음,
+        #   이븐쇼핑 4편은 1.7~2.5초). 줄마다 울리면 최장 1.97초·초당 0.72로 이븐쇼핑 간격에 든다.
         sched = caption_schedule(b)
         if not sched:
             continue
         first, ring = sounds_for_role(b.get("role"))
-        picks = sorted({0, len(sched) // 2})
+        picks = list(range(len(sched)))
         for k in picks:
+            seg, start, end = sched[k]
+            if float(start) < TITLE_CARD:
+                continue
             if bi == 1 and k == 0:
-                continue    # 둘째 칸 첫 줄은 첫 넘김 휙+틱이 맡았다
-            seg, start, _end = sched[k]
-            if k == 0 and first:
+                pass        # 둘째 칸 첫 줄은 첫 넘김 휙+틱이 맡았다 — 줄 한가운데는 아래에서 본다
+            elif k == 0 and first:
                 ev.append((first, start, seg))
             else:
                 n = used.get(ring, 0); used[ring] = n + 1
                 ev.append((ring[n % len(ring)], start, seg))
+            # ★한 줄이 길면 그 줄 한가운데에 한 발 더 — 이븐쇼핑은 무음이 2.5초를 넘지 않는다(4편 실측).
+            if float(end) - float(start) > MAX_SILENCE:
+                n = used.get(ring, 0); used[ring] = n + 1
+                ev.append((ring[n % len(ring)], (float(start) + float(end)) / 2.0, seg))
     ev = [e for e in ev if e[1] < total]
     ev.sort(key=lambda e: e[1])
     return ev
