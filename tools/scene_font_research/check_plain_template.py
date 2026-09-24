@@ -49,6 +49,21 @@ with sync_playwright() as p:
     need(body.get('bodyTitle') is not None and body['bodyTitle'] < 30, f'④ 본문: 제목 {body.get("bodyTitle")}%')
     need(body.get('caption') is not None and body['caption'] > 70,
          f'④ 본문: 자막이 화면 아래쪽 {body.get("caption")}% — 고치기 전엔 0%(맨 위)로 붙었다')
+    # ⑥ 2026-09-24 고객 제보: "썰쇼핑형·전장면 고정형 **둘 다** 원본 영상 그대로를 고르면 자막이 안 보인다.
+    #    예전엔 장면마다 자막을 위로 옮겨 상품을 가리지 않게 썼다." → 원본은 훅 장면에도 자막이 나와야 한다.
+    pg.evaluate("()=>{window.sceneStyle.show(0);return 1}"); pg.wait_for_timeout(700)
+    h2 = pg.evaluate(SPOT)
+    need(h2.get('caption') is not None and h2['caption'] > 70,
+         f"⑥ 썰쇼핑형 원본: **훅 장면에도** 자막이 보인다 ({h2.get('caption')}%) — 고치기 전엔 아예 없었다")
+    CAPFIELD = "()=>!!document.querySelector('[data-field-key=\"caption\"]:not([hidden])')"
+    need(pg.evaluate(CAPFIELD), '⑥ 자막 칸(문구·위치 옮기기)이 열려 있다')
+    pg.evaluate("()=>{document.querySelector('[data-template-mode=\"continuous\"]').click();return 1}"); pg.wait_for_timeout(1200)
+    pg.click('[data-none]'); pg.wait_for_timeout(1200)
+    cid = pg.evaluate("()=>window.sceneStyle.snapshot()?.presetId")
+    need(cid == 'plain', f"⑥ 전장면 고정형에서도 원본 카드가 먹는다 (presetId {cid}) — 고치기 전엔 아무것도 안 그리는 모드로 빠졌다")
+    pg.evaluate("()=>{window.sceneStyle.show(1);return 1}"); pg.wait_for_timeout(800)
+    c2 = pg.evaluate(SPOT)
+    need(c2.get('caption') is not None and c2['caption'] > 70, f"⑥ 전장면 고정형 원본에도 자막이 보인다 ({c2.get('caption')}%)")
     need(not errs, f'페이지 오류 없음 {errs[:2]}')
     b.close()
 srv.shutdown()
