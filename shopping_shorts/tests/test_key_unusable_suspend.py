@@ -63,7 +63,6 @@ def vault(tmp_path, monkeypatch):
     (PREPAY, kv.UNUSABLE_PREPAY),
     (SPEND_CAP, kv.UNUSABLE_SPEND_CAP),
     (LIMIT_ZERO, kv.UNUSABLE_NO_QUOTA),
-    (LIMIT_ZERO_SENTENCE, kv.UNUSABLE_NO_QUOTA),
     ("403 PERMISSION_DENIED. Your project has been denied access.", kv.UNUSABLE_AUTH),
     ("400 INVALID_ARGUMENT. API key not valid. API_KEY_INVALID", kv.UNUSABLE_AUTH),
 ])
@@ -74,6 +73,8 @@ def test_기다려도_안_풀리는_실패는_이유를_낸다(msg, want):
 @pytest.mark.parametrize("msg", [OVERLOAD_503, GENERIC_429, DAILY_20,
                                  "429 Quota exceeded ... limit: 05 per minute",
                                  LIMIT_ZERO.replace("'quota_limit_value': '0'", "'quota_limit_value': '15'"),
+                                 # ★문장형 'limit: 0, model: X'는 모델 하나의 한도 — 키 전체를 빼면 풀이 빈다
+                                 LIMIT_ZERO_SENTENCE,
                                  "504 DEADLINE_EXCEEDED", ""])
 def test_시간이_풀어주는_실패는_건드리지_않는다(msg):
     """★여기서 참을 내면 멀쩡한 키를 하루 뺀다. 503(구글 과부하)·일반 429·일일 한도(limit: 20)는 아니다."""
@@ -192,3 +193,40 @@ def test_쇼츠_풀_자체_사망처리도_다음날까지_남는다(vault, tmp_
     assert cg._live_key_indices() == [0]
     monkeypatch.setattr(cg, "_today_str", lambda: "2099-01-01")
     assert cg._live_key_indices() == [0]
+
+
+# ── ⑤ 사망도 영구가 아니다 (2026-09-25 반박 검토: 회원 57 …nIWJaw는 403 엿새 뒤 되살아났다) ──
+def test_사망표시는_3일_뒤_다시_시험받는다(vault, monkeypatch):
+    vault.note_failure("K1", Exception("403 PERMISSION_DENIED. Your project has been denied access."))
+    assert "K1" not in vault.get_live_keys("general")
+    later = time.time() + vault._DEAD_RETEST_S + 60
+    monkeypatch.setattr(time, "time", lambda: later)
+    assert "K1" in vault.get_live_keys("general")            # 재시험 기간이 지나면 한 번 불린다
+    vault.note_failure("K1", Exception("403 PERMISSION_DENIED"))   # 또 죽으면
+    assert "K1" not in vault.get_live_keys("general")        # 시각을 새로 박아 다시 3일
+
+
+def test_옛_사망기록은_키를_빼지_않는다(vault):
+    """서버 상태파일엔 09-03 '영구 사망'이 남아 있다 — 그 키는 09-08부터 매일 성공 중이다."""
+    import json
+    old = time.time() - 22 * 24 * 3600
+    vault._STATE_PATH.write_text(json.dumps({"exhausted": {}, "dead_keys": {
+        vault._key_fingerprint("K1"): old, vault._key_fingerprint("K2"): 0}}), encoding="utf-8")
+    assert vault.get_live_keys("general") == ["K0", "K1", "K2"]
+    assert vault.unusable_info_for({vault._key_fingerprint("K1")}) == {}
+
+
+def test_성공하면_사망표시도_지운다(vault):
+    vault.note_failure("K2", Exception("401 UNAUTHENTICATED"))
+    assert "K2" not in vault.get_live_keys("general")
+    vault._SUS_CACHE["t"] = 0.0
+    vault.note_success("K2")                                  # 확인 버튼·재시험에서 살아 있음이 드러남
+    assert "K2" in vault.get_live_keys("general")
+    assert vault._key_fingerprint("K2") not in vault._dead_map(vault._load_state())
+
+
+def test_같은_실패가_두_번_들어와도_한_번만_쓴다(vault):
+    assert vault.suspend("K0", vault.UNUSABLE_PREPAY) is True
+    before = vault._STATE_PATH.stat().st_mtime_ns
+    assert vault.suspend("K0", vault.UNUSABLE_PREPAY) is False   # 깔때기+호출부 이중 호출
+    assert vault._STATE_PATH.stat().st_mtime_ns == before

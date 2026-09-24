@@ -396,17 +396,24 @@ def _shorts_pool_snapshot():
         locked = comment_gen._live_exhausted()          # {idx: 만료ts} — 만료분 자동 제외
         state = comment_gen._load_state()
         burned = sorted(state.get("revived_once") or [])
+        # ★사망·사용불가 정지도 표시한다(2026-09-25) — 실제 로테이션(comment_gen._live_key_indices)은
+        #   이 지문들을 빼는데 화면은 'live'로 세서 live 수·예산이 부풀려졌다(반박 검토에서 발견).
+        #   같은 함수를 봐야 화면과 실제가 어긋나지 않는다(0순위-B).
+        dead_fps = comment_gen._dead_fingerprints(state)
+        dead_idx = {i for i, k in enumerate(keys)
+                    if dead_fps and comment_gen._key_fingerprint(k) in dead_fps}
         now = time.time()
         out.update({
             "total": len(keys), "owner": n_owner, "member": max(0, len(keys) - n_owner),
             "locked": [{"idx": i, "left_s": max(0, int(t - now)),
                         "tail": key_tail(keys[i]) if i < len(keys) else None}
                        for i, t in sorted(locked.items())],
-            "live": len(keys) - len([i for i in locked if i < len(keys)]),
+            "live": len([i for i in range(len(keys)) if i not in locked and i not in dead_idx]),
+            "stopped": len(dead_idx),
             "revived_once": burned,
             "keys": [{"idx": i, "tail": key_tail(k),
                       "owner": "owner" if i < n_owner else "member",
-                      "state": ("locked" if i in locked else "live")}
+                      "state": ("stopped" if i in dead_idx else "locked" if i in locked else "live")}
                      for i, k in enumerate(keys)],
         })
     except Exception as e:                # noqa: BLE001

@@ -246,13 +246,39 @@ def dead_fingerprints(state=None) -> set:
       comment_gen._live_key_indices·되살림 프로브)이 전부 저절로 정지 키를 뺀다.
       빼는 규칙을 소비처마다 또 적지 않는다(0순위-B)."""
     st = state if state is not None else _load_state()
-    raw = st.get("dead_keys") or {}
-    dead = set(raw) if isinstance(raw, (dict, list, set)) else set()
-    return dead | suspended_fingerprints(st)
+    return set(_active_dead(st)) | suspended_fingerprints(st)
+
+
+# ★사망 표시도 **3일 뒤 다시 시험**한다(2026-09-25, 검토에서 드러난 실측).
+#   403 "Your project has been denied access"는 '대부분 영구, 일부는 회복'이었다 — 회원 57 키
+#   …nIWJaw는 09-02~07 403 뒤 09-08부터 하루 45~122번 성공(누적 1,242번). 그런데 이 파일엔
+#   09-03 '영구 사망'이 그대로 남아 있었고, 쇼츠 풀이 이 표시를 합쳐 보게 되자 멀쩡한 키가
+#   영원히 빠질 뻔했다(배포 전 반박 검토로 잡음). 만료가 지나면 한 번 불려 보고,
+#   또 401/403이면 다시 3일(mark_dead가 시각을 새로 박는다), 성공하면 revive가 지운다.
+_DEAD_RETEST_S = float(os.environ.get("GEMINI_KEY_DEAD_RETEST", str(3 * 24 * 3600)))
+
+
+def _dead_map(state) -> dict:
+    raw = (state or {}).get("dead_keys") or {}
+    if isinstance(raw, dict):
+        out = {}
+        for f, t in raw.items():
+            try:
+                out[f] = float(t or 0)
+            except (TypeError, ValueError):
+                out[f] = 0.0
+        return out
+    return {f: 0.0 for f in (raw or [])}          # 옛 list 형식 — 시각이 없으니 만료로 본다
+
+
+def _active_dead(state) -> dict:
+    """아직 다시 시험할 때가 안 된 사망 표시만 {지문: 시각}."""
+    cut = time.time() - _DEAD_RETEST_S
+    return {f: t for f, t in _dead_map(state).items() if t > cut}
 
 
 def mark_dead(key: str, detail=None, quiet=False) -> None:
-    """키를 **영구 제외**한다 — 401/403은 시간이 지나도 절대 안 풀린다.
+    """키를 **사망**으로 뺀다 — 401/403. (2026-09-25부터 3일 뒤 재시험 — 위 _DEAD_RETEST_S 참고)
 
     ★왜 TTL 잠금과 갈랐나(2026-09-03 실측): 죽은 키 …nIWJaw가 09-01 22:10부터
       사흘째 403 PERMISSION_DENIED("Your project has been denied access")를 내는데도
@@ -267,16 +293,14 @@ def mark_dead(key: str, detail=None, quiet=False) -> None:
     newly = False
     with _FileLock(_LOCK_PATH):
         state = _load_state()
-        raw = state.get("dead_keys")
-        dead = dict(raw) if isinstance(raw, dict) else {f: 0 for f in (raw or [])}
-        if fp not in dead:
+        dead = _dead_map(state)
+        # 없거나 만료(다시 시험 중 또 죽음)면 시각을 새로 박는다 — 3일 뒤 또 한 번 시험받는다.
+        if dead.get(fp, 0.0) <= time.time() - _DEAD_RETEST_S:
             dead[fp] = time.time()
             state["dead_keys"] = dead
-            tmp_path = _STATE_PATH.with_suffix(".json.tmp")
-            with open(tmp_path, "w", encoding="utf-8") as f:
-                json.dump(state, f)
-            os.replace(tmp_path, _STATE_PATH)
+            _write_state(state)
             newly = True
+    _SUS_CACHE["t"] = 0.0
     if newly and not quiet:      # 관측·경보는 락 밖에서(mark_exhausted와 같은 이유)
         # quiet=True: 쇼츠 풀(comment_gen)이 이미 기록한 사망을 여기 옮겨 적을 때 — 두 번 세지 않는다
         print(f"key_vault: 키 영구 제외 — …{key[-6:]} ({detail or '401/403'})", file=sys.stderr)
@@ -599,15 +623,17 @@ def is_account_disabled_error(exc: Exception) -> bool:
 UNUSABLE_AUTH = "auth"            # 401/403·무효 키 — 영구(mark_dead)
 UNUSABLE_PREPAY = "prepay"        # 402 선불 크레딧 소진 — 충전하면 살아난다
 UNUSABLE_SPEND_CAP = "spend_cap"  # 월 지출 한도 도달 — 한도 올리거나 다음 달
-UNUSABLE_NO_QUOTA = "no_quota"    # 할당량 0(limit: 0) — 그 프로젝트에 쓸 수 있는 몫이 없다
+UNUSABLE_NO_QUOTA = "no_quota"    # 할당량 0(프로젝트·지역 단위) — 그 프로젝트에 쓸 수 있는 몫이 없다
 
 _SUSPEND_TTL_S = float(os.environ.get("GEMINI_KEY_SUSPEND_TTL", str(24 * 3600)))
-# ★할당량 0은 두 모양으로 온다. 실제 서버 원문(2026-09-25, 키 10개·7일 9,097건)은 **세부 항목**에만
-#   'quota_limit_value': '0' 이 있고 문장에는 'limit: 0'이 없다("Quota exceeded for quota metric
-#   'Generate Content API requests per minute' and limit '...per minute for a region'").
-#   처음엔 'limit: 0'만 봐서 이 9,097건을 하나도 못 잡았다 — 서버 원문 재생 검증에서 드러났다.
-_LIMIT_ZERO_RE = re.compile(
-    r"limit:\s*0(?![0-9.])|quota_limit_value['\"]?\s*:\s*['\"]?0(?![0-9.])")
+# ★할당량 0은 **세부 항목의 quota_limit_value '0'**으로만 판정한다(2026-09-25 서버 원문 실측).
+#   실제 원문(키 10개·7일 9,097건)은 문장에 'limit: 0'이 없고("Quota exceeded for quota metric
+#   'Generate Content API requests per minute' and limit '...per minute for a region'") 세부에만
+#   'quota_limit_value': '0'이 있다 — 처음엔 'limit: 0'만 봐서 하나도 못 잡았다(원문 재생으로 발견).
+#   ⚠️문장형 '..., limit: 0, model: X'는 **모델 하나**의 한도다(무료 등급이 없는 모델 등).
+#     그걸로 키 전체를 빼면 그 모델 호출 몇 번에 풀이 통째로 비는다 — 반박 검토에서 재현,
+#     서버 09-11 이후 19만 건 중 문장형은 0건이라 잃는 것도 없다. 그래서 뺐다.
+_LIMIT_ZERO_RE = re.compile(r"quota_limit_value['\"]?\s*:\s*['\"]?0(?![0-9.])")
 
 
 def unusable_reason(exc) -> str | None:
@@ -672,8 +698,7 @@ def unusable_info_for(fingerprints) -> dict:
         return {}
     st = _load_state()
     out = {}
-    raw_dead = st.get("dead_keys") or {}
-    dead = raw_dead if isinstance(raw_dead, dict) else {f: 0 for f in raw_dead}
+    dead = _active_dead(st)                 # 재시험 기간이 지난 옛 사망 표시는 안 보여 준다
     for fp in fps & set(dead):
         out[fp] = {"reason": UNUSABLE_AUTH, "since": dead.get(fp) or None}
     for fp, ent in _suspended_map(st).items():
@@ -698,6 +723,14 @@ def suspend(key: str, reason: str, detail=None, ttl=None) -> bool:
         state = _load_state()
         sus = _suspended_map(state)
         prev = sus.get(fp)
+        # ★같은 실패가 깔때기와 호출부(comment_gen._mark_key_exhausted 등)에서 두 번 들어온다 —
+        #   60초 안에 같은 이유로 이미 박혔으면 파일 쓰기·기록을 또 하지 않는다(검토에서 발견).
+        try:
+            if prev and prev.get("reason") == reason and now - float(prev.get("last", 0)) < 60 \
+                    and float(prev.get("until", 0)) > now:
+                return False
+        except (TypeError, ValueError):
+            pass
         newly = prev is None
         ent = dict(prev or {})
         ent.setdefault("since", now)
@@ -705,6 +738,7 @@ def suspend(key: str, reason: str, detail=None, ttl=None) -> bool:
         sus[fp] = ent
         state["suspended"] = sus
         _write_state(state)
+    _SUS_CACHE["t"] = 0.0
     # 관측·경보는 락 밖에서(mark_exhausted와 같은 이유)
     try:
         from shopping_shorts import api_health
@@ -720,20 +754,30 @@ def suspend(key: str, reason: str, detail=None, ttl=None) -> bool:
 
 
 def unsuspend(key: str) -> bool:
-    """키가 다시 성공했으면 정지 표시를 지운다. 반환: 지웠으면 True."""
+    """키가 다시 성공했다 — 정지 **와 사망** 표시를 지운다. 반환: 지운 게 있으면 True.
+
+    ★성공은 가장 강한 증거다(2026-09-25). 403 뒤 되살아난 키(회원 57 …nIWJaw)가 성공해도
+      사망 표시가 안 지워져 영영 빠질 뻔했다 — 회원이 [전체 확인]으로 살아 있음을 보여도 그랬다."""
     if not key:
         return False
     fp = _key_fingerprint(key)
     with _FileLock(_LOCK_PATH):
         state = _load_state()
         sus = _suspended_map(state)
-        if fp not in sus:
+        dead = _dead_map(state)
+        if fp not in sus and fp not in dead:
             return False
         sus.pop(fp, None)
+        dead.pop(fp, None)
         state["suspended"] = sus
+        state["dead_keys"] = dead
         _write_state(state)
-    print(f"key_vault: 정지 키 되살아남 — …{key[-6:]}", file=sys.stderr)
+    _SUS_CACHE["t"] = 0.0
+    print(f"key_vault: 멈췄던 키 되살아남 — …{key[-6:]}", file=sys.stderr)
     return True
+
+
+revive = unsuspend        # 읽는 사람을 위한 별칭 — 사망까지 지운다는 뜻이 이름에 드러나게
 
 
 _REASON_KO = {
@@ -752,8 +796,11 @@ def _suspended_any_cached() -> frozenset:
     now = time.time()
     if now - _SUS_CACHE["t"] > _SUS_CACHE_S:
         try:
-            _SUS_CACHE["fps"] = frozenset(_suspended_map(_load_state()))
-        except Exception:           # noqa: BLE001
+            st = _load_state()
+            # 정지 + 사망(만료분 포함) — 성공하면 어느 쪽이든 지운다
+            _SUS_CACHE["fps"] = frozenset(_suspended_map(st)) | frozenset(_dead_map(st))
+        except Exception as e:      # noqa: BLE001 — 캐시를 못 채우면 이번엔 해제만 늦어진다
+            print(f"key_vault: 정지 목록 읽기 실패(무해) {e!r}", file=sys.stderr)
             _SUS_CACHE["fps"] = frozenset()
         _SUS_CACHE["t"] = now
     return _SUS_CACHE["fps"]
@@ -761,25 +808,24 @@ def _suspended_any_cached() -> frozenset:
 
 def note_failure(key: str, exc) -> str | None:
     """호출 하나가 실패했다 — 쓸 수 없는 키면 빼고 그 이유를, 아니면 None.
-    ★usage_meter 깔때기에서만 부른다(모든 제미니 호출이 거기를 지난다)."""
+    ★usage_meter 깔때기에서만 부른다(모든 제미니 호출이 거기를 지난다).
+    ★사망은 quiet — 깔때기가 이미 api_health.record_failure로 OUT_AUTH를 남겼다(두 번 세지 않는다)."""
     if not key or exc is None:
         return None
     reason = unusable_reason(exc)
     if reason == UNUSABLE_AUTH:
-        mark_dead(key, detail=str(exc)[:120])
+        mark_dead(key, detail=str(exc)[:120], quiet=True)
     elif reason:
         suspend(key, reason, detail=str(exc)[:200])
-        _SUS_CACHE["t"] = 0.0
     return reason
 
 
 def note_success(key: str) -> None:
-    """호출 하나가 성공했다 — 정지돼 있던 키면(만료 후 재시험 통과) 표시를 지운다."""
+    """호출 하나가 성공했다 — 정지·사망 표시가 있던 키면(재시험 통과·충전·되살아남) 지운다."""
     if not key:
         return
     if _key_fingerprint(key) in _suspended_any_cached():
-        if unsuspend(key):
-            _SUS_CACHE["t"] = 0.0
+        unsuspend(key)
 
 
 def _tg_alert(text: str) -> None:

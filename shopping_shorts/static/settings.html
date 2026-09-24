@@ -500,6 +500,8 @@ var STATUS = {
   /* ★키는 멀쩡한데 이번 달 무료분을 다 쓴 상태. '정상'으로 두면 검색이 0건인데
      이유를 모른다(라이브 실측 2026-08-17). '틀렸다'도 거짓이라 따로 표시한다. */
   empty:   { cls: "bad",     text: "● 이번 달 무료분을 다 썼습니다" },
+  /* ★제미니 선불 소진·월 한도·할당량 0(2026-09-25) — '틀린 키'가 아니라 충전·한도 상향으로 살아나는 키. */
+  paused:  { cls: "bad",     text: "● 멈춤" },
   unknown: { cls: "unknown", text: "● 확인 전" }
 };
 
@@ -680,6 +682,8 @@ function renderKeys(){
       var st = STATUS[k.status] || STATUS.unknown;
       var why = (s.id === "gemini") ? geminiWhy(k.id) : null;
       if (why) st = { cls: "bad", text: "● 멈춤 — " + why.title };
+      /* 'paused'인데 서버가 이유를 안 줬다 = 재시험·확인에서 살아났다 → 정상으로 보인다 */
+      else if (s.id === "gemini" && k.status === "paused" && GEMINI_HEALTH) st = STATUS.ok;
       return '<div class="keyRow">' +
         '<span class="keyLabel">' + esc(k.label) + '</span>' +
         '<span class="keyStat ' + st.cls + '">' + esc(st.text) + '</span>' +
@@ -785,22 +789,31 @@ function addResultText(svc, res){
   var bad   = res.filter(function(r){ return r.status === "bad"; }).length;
   var empty = res.filter(function(r){ return r.status === "empty"; }).length;
   var good  = res.filter(function(r){ return r.ok; }).length;
+  /* ★제미니 선불 소진·월 한도·할당량 0 = 'paused'(2026-09-25) — 틀린 키가 아니라 멈춘 키.
+     구글 붐빔 = 'unknown' — 확인 보류. 둘 다 '틀림'으로 세지도, 그 사유를 틀림 사유로 보여주지도 않는다. */
+  var paused = res.filter(function(r){ return r.status === "paused"; }).length;
+  var busy   = res.filter(function(r){ return r.status === "unknown"; }).length;
+  function reasonOf(st){ return (res.filter(function(r){ return r.status === st && r.reason; })[0] || {}).reason || ""; }
 
   if (bad && !good) {
     /* ★서버가 준 사유를 그대로 보여준다(2026-08-24 실사고).
        종전엔 "다시 확인해 주세요"만 띄워 무엇이 틀렸는지 알 길이 없었다 —
        실제로 고객이 키 대신 '키 ID'를 넣었는데, ElevenLabs가 정확히 알려준 그 말을
        우리가 버리고 있었다(서버에서 직접 호출해보고서야 원인을 알았다). */
-    var why = (res.filter(function(r){ return r.reason; })[0] || {}).reason || "";
+    var why = reasonOf("bad");
     return "❌ 키가 맞지 않습니다.\n\n" +
            (why ? why + "\n\n" : (name + " 키를 다시 확인해서 붙여넣어 주세요.\n")) +
-           "저장은 됐지만 이 상태로는 쓸 수 없습니다 — 틀린 키는 [삭제]해 주세요.";
+           "저장은 됐지만 이 상태로는 쓸 수 없습니다 — 틀린 키는 [삭제]해 주세요." +
+           ((paused || busy) ? "\n\n(그 밖에 멈춤 " + paused + "개 · 확인 보류 " + busy + "개)" : "");
+  }
+  if (paused && !good) {
+    return "⚠️ " + name + " 키가 지금 멈춰 있어요.\n\n" + (reasonOf("paused") || "") +
+           (busy ? "\n\n(확인 보류 " + busy + "개)" : "");
   }
   /* ★구글이 붐벼 확인을 못 끝낸 키(unknown)는 '통과'도 '틀림'도 아니다(2026-09-25).
      종전엔 이 경우가 아래 "✅ 테스트 통과"로 떨어졌다. */
-  var busy = res.filter(function(r){ return r.status === "unknown"; }).length;
-  if (busy && !good && !bad) {
-    var bwhy = (res.filter(function(r){ return r.reason; })[0] || {}).reason || "";
+  if (busy && !good) {
+    var bwhy = reasonOf("unknown");
     return "⏳ " + name + " 키 확인을 끝내지 못했어요.\n\n" + (bwhy || "지금은 확인을 끝내지 못했어요. 잠시 뒤 [전체 확인]을 다시 눌러 주세요.");
   }
   if (empty && !good) {
@@ -811,10 +824,12 @@ function addResultText(svc, res){
   var body = (s.freeOp && PRICES[s.freeOp] != null)
     ? "이제 이 작업은 포인트가 안 깎입니다 (" + num(PRICES[s.freeOp]) + "P → 0P)."
     : "이제 이 작업은 사장님 키 대신 내 키로 돕니다.";
-  if (bad || empty) {
+  if (bad || empty || paused || busy) {
     body += "\n\n다만 " + res.length + "개 중 " + good + "개만 정상입니다" +
             (empty ? " (" + empty + "개는 무료분 소진)" : "") +
-            (bad ? " (" + bad + "개는 키가 틀림)" : "") + ".";
+            (bad ? " (" + bad + "개는 키가 틀림)" : "") +
+            (paused ? " (" + paused + "개는 멈춤)" : "") +
+            (busy ? " (" + busy + "개는 구글 붐빔으로 확인 보류)" : "") + ".";
   }
   return head + body;
 }
@@ -842,7 +857,8 @@ async function verifyKeys(svc, quiet){
     /* ★구글이 붐벼 확인을 못 끝낸 키(unknown)를 '틀린 키'로 세지 않는다(2026-09-25) —
        멀쩡한 키를 지우라고 안내하게 된다. */
     var busy = res.filter(function(r){ return r.status === "unknown"; }).length;
-    var badN = res.length - good - busy;
+    var pausedN = res.filter(function(r){ return r.status === "paused"; }).length;   // 선불·한도 — 충전하면 산다
+    var badN = res.length - good - busy - pausedN;
     if (!res.length) {
       svcMsg(svc, "확인할 키가 없습니다.", "err");
     } else if (good === res.length) {
@@ -850,6 +866,7 @@ async function verifyKeys(svc, quiet){
     } else {
       svcMsg(svc, "⚠️ " + res.length + "개 중 " + good + "개 정상" +
         (badN ? " · " + badN + "개는 쓸 수 없는 키(삭제하고 새 키로 교체해 주세요)" : "") +
+        (pausedN ? " · " + pausedN + "개는 멈춤(키 아래 해결 방법을 봐 주세요)" : "") +
         (busy ? " · " + busy + "개는 구글이 붐벼 확인 보류(잠시 뒤 다시 확인해 주세요)" : "") + ".", "err");
     }
     /* 사용자가 [전체 확인]을 직접 눌렀을 때도 결과를 확실히 알린다. */

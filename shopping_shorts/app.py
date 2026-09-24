@@ -4524,7 +4524,10 @@ def _probe_user_key(service: str, key: str):
             key_vault.note_failure(key, exc)       # 공용 풀에서도 즉시 뺀다
             _KEY_FAIL.reason = gemini_keyhealth.explain(reason)
             print(f"[keycheck] gemini 실패 code={code} → {reason} | {body[:160]}", file=sys.stderr)
-            return False
+            # ★선불 소진·월 한도·할당량 0은 '틀린 키'가 아니다 — 충전·한도 상향으로 살아난다.
+            #   'bad'로 박으면 공용 풀에서 빠져 24시간 재시험도 못 받는다(반박 검토에서 발견).
+            #   'paused'는 풀에 남기고(store 필터는 off·bad만 뺀다) 제외는 key_vault 정지가 맡는다.
+            return False if reason == key_vault.UNUSABLE_AUTH else "paused"
         _KEY_FAIL.reason = gemini_keyhealth.BUSY_TEXT
         print(f"[keycheck] gemini 판정 보류 code={code} | {body[:160]}", file=sys.stderr)
         return None
@@ -4595,7 +4598,7 @@ def _probe_user_key(service: str, key: str):
 
 
 def _key_status(service: str, key: str) -> str:
-    """화면에 박을 상태 문자열: ok / empty / bad. **여기서만 정한다**(0순위-B).
+    """화면에 박을 상태 문자열: ok / empty / bad / paused(제미니 선불·한도 — 살아날 수 있음) / unknown(확인 보류). **여기서만 정한다**(0순위-B).
 
     ★왜 empty가 필요한가 (2026-08-17 라이브 실측):
       SerpApi 키가 이번 달 250회를 다 쓴 상태(plan_searches_left=0)여도
@@ -4612,6 +4615,8 @@ def _key_status(service: str, key: str) -> str:
         _KEY_FAIL.reason = _hint
         return "bad"
     _alive = _probe_user_key(service, key)
+    if _alive == "paused":
+        return "paused"
     if _alive is None:
         # 확인을 못 끝냈다(구글 붐빔 등) — 키 잘못이 아니다. 'unknown'은 공용 풀에 남는다
         # (store.get_pooled_keys는 off·bad만 뺀다). bad로 찍으면 멀쩡한 키를 버린다.
@@ -4781,6 +4786,9 @@ def api_verify_keys(request: Request, body: dict):
         # ok는 "쓸 수 있는가" — 무료분이 바닥난 키(empty)는 검색이 0건이라 False다.
         results.append({"id": key_id, "label": labels.get(key_id, ""),
                         "ok": status == "ok", "status": status, "reason": reason})
+    if service == keyroute.SVC_GEMINI:
+        # 확인으로 살아난 키(bad→ok)를 이 프로세스 풀에 바로 합류시킨다 — 안 하면 재기동 전까지 빠져 있다.
+        _resync_pools(store)
     out = {"ok": True, "results": results, "keys": store.list_customer_keys(cid)}
     if service == keyroute.SVC_GEMINI:
         # 확인으로 정지가 풀리거나(충전) 새로 멈춘 키를 화면이 바로 그리게 한다(2026-09-25)
@@ -12087,6 +12095,11 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    #   충전하려면 들어올 수 있어야 하는데 충전 화면이 유료 뒤에 있는 꼴이 된다.
                    #   ⚠️ GET만이다. 키 등록(POST /api/settings/keys)은 그대로 막힌다.
                    "/settings", "/api/settings/points", "/api/settings/keys",
+                   # ★제미니 키 건강(2026-09-25) — 사이드바가 모든 페이지에서 조용히 부른다. 안 넣으면
+                   #   체험·만료 회원이 이 호출에서 402를 받고, 직전에 화면을 눌렀으면 fetch 가로채기가
+                   #   '잠긴 기능' 결제 팝업을 띄운다(08-21 '안 눌렀는데 체험 끝 팝업'과 같은 모양, 반박 검토에서 발견).
+                   #   자기 키 상태만 읽는 GET이라 과금 요소가 없다.
+                   "/api/settings/gemini_health",
                    # ★2026-08-20 체험판: 즐겨찾기 목록·모음집 화면.
                    "/collection", "/api/mix/basket",
                    # ★볼채널등록(2026-09-02) — 사이드바 free:true와 짝. 여기 안 넣으면

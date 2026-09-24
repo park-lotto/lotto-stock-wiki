@@ -48,7 +48,7 @@ def test_정지된_키와_bad_키가_이유와_함께_나온다(env):
     h = gk.member_key_health(env, 100)
     why = {k["id"]: k["reason"] for k in h["keys"]}
     assert why[k_pre] == kv.UNUSABLE_PREPAY
-    assert why[k_bad] == "bad"
+    assert why[k_bad] == "recheck"          # 이유 기록 없는 bad — 옛 확인이 붐빔을 bad로 찍었을 수 있다
     assert h["has_dead"] is True
     assert h["n_bad"] == 2 and h["n_usable"] == 1
     assert h["few_keys"] is True
@@ -100,13 +100,37 @@ def test_등록확인_구글붐빔은_판정보류(app_mod, monkeypatch):
     assert kv._key_fingerprint("AIzaBUSY-ffffffffffffffff") not in kv.suspension_info()
 
 
-def test_등록확인_선불소진은_bad이고_풀에서도_빠진다(app_mod, monkeypatch):
+def test_등록확인_선불소진은_paused이고_로테이션에서만_빠진다(app_mod, env, monkeypatch):
+    """★'bad'로 박으면 공용 풀 합류에서 빠져 24시간 재시험도 못 받는다(반박 검토) — 'paused'는 풀에 남는다."""
     from shopping_shorts import comment_gen
     monkeypatch.setattr(comment_gen, "_probe_key_result", lambda k, timeout=15: (
         False, 402, '{"error": {"code": 402, "message": "Your prepayment credits are depleted."}}'))
-    assert app_mod._key_status(keyroute.SVC_GEMINI, "AIzaDEAD-gggggggggggggggg") == "bad"
-    assert kv.without_dead(["AIzaDEAD-gggggggggggggggg"]) == []
+    assert app_mod._key_status(keyroute.SVC_GEMINI, "AIzaDEAD-gggggggggggggggg") == "paused"
+    assert kv.without_dead(["AIzaDEAD-gggggggggggggggg"]) == []     # 로테이션에선 빠진다
     assert "충전" in (app_mod._take_key_failure() or "")
+    kid = _add(env, 500, "AIzaDEAD-gggggggggggggggg", "paused")
+    assert "AIzaDEAD-gggggggggggggggg" in env.get_pooled_keys(keyroute.SVC_GEMINI)   # 풀 합류엔 남는다
+
+
+def test_등록확인_무효키는_bad(app_mod, monkeypatch):
+    from shopping_shorts import comment_gen
+    monkeypatch.setattr(comment_gen, "_probe_key_result", lambda k, timeout=15: (
+        False, 400, '{"error": {"code": 400, "message": "API key not valid. Please pass a valid API key.", "status": "INVALID_ARGUMENT", "details": [{"reason": "API_KEY_INVALID"}]}}'))
+    assert app_mod._key_status(keyroute.SVC_GEMINI, "AIzaBADV-iiiiiiiiiiiiiiii") == "bad"
+
+
+def test_헤드라인_확인필요만이면_멈췄다고_안_한다(env):
+    from shopping_shorts import gemini_keyhealth as gk
+    _add(env, 600, "AIzaOLDBAD-jjjjjjjjjjjjjjj", "bad")
+    h = gk.member_key_health(env, 600)
+    assert "확인해 주세요" in h["headline"] and "멈췄" not in h["headline"]
+
+
+def test_살아난_paused_키는_쓸_수_있는_키로_센다(env):
+    from shopping_shorts import gemini_keyhealth as gk
+    _add(env, 700, "AIzaREVIVED-kkkkkkkkkkkkkk", "paused")     # 정지 기록 없음 = 재시험·확인에서 살아남
+    h = gk.member_key_health(env, 700)
+    assert h["n_bad"] == 0 and h["has_dead"] is False and h["n_usable"] == 1
 
 
 def test_등록확인_살아있으면_ok(app_mod, monkeypatch):
