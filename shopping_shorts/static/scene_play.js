@@ -600,6 +600,13 @@ function slowUndo(i){
   (typeof render === 'function' && render());
   if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
 }
+// 컷 리듬 ↔ 구절 맞춤은 **정반대 한 쌍**이다(같은 것을 다르게 정하므로 둘 다 켤 수 없다).
+//   컷 리듬 켬 = 구절 맞춤 끔. 상태는 PHRASE_SYNC 한 곳에만 둔다 — 두 벌로 두면 어긋난다(0순위-B).
+function cutRhythmOn(i){
+  const b = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[i] || {};
+  return !!(b.cut_rhythm) && !phraseSyncOn(i);
+}
+function toggleCutRhythm(i, on){ togglePhraseSync(i, !on); }
 function togglePhraseSync(i, on){
   if (on){ delete CUTS[i]; delete SLOW[i]; } else freezeCuts(i);
   if (on) delete PHRASE_SYNC[i]; else PHRASE_SYNC[i] = false;
@@ -641,8 +648,17 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     delete CUTS[beatIdx]; delete SLOW[beatIdx];
   }
   if (!segments.length) return clips;
+  // ★컷 리듬 칸(서버가 cut_rhythm 표식을 단 칸)은 **서버 렌더와 같은 규칙**으로 그린다(2026-09-23 사장님
+  //   "미끼에 엄청 몰렸다": 화면은 자막 구절마다 컷을 그려 12조각인데 렌더는 3~4컷 — 화면이 거짓말을 했다).
+  //   홀드 칸 = 첫 조각 한 컷 · 나머지 = 조각 한 번씩 비례(아래 onePerSeg 경로). 서버 plan_beat_clips_for의 _cr 분기와 짝.
+  const crBeat = (syncBeat && syncBeat.cut_rhythm) || null;
+  //   ★구절 맞춤을 켠 칸은 컷 리듬을 비켜준다(2026-09-24 사장님 "켜면 구절맞춤이 이기게") — 서버 plan_beat_clips_for와 같은 규칙.
+  const rhythmOne = !!crBeat && beatIdx != null && !phraseSyncOn(beatIdx)
+                    && typeof lists !== 'undefined' && lists[beatIdx] === segIds;
+  // ★리듬 칸은 **얼린 컷보다 먼저** 본다(2026-09-24). 아래 얼리기가 먼저 돌면 장면마다 한 컷을 얼려
+  //   frozenClips가 그걸 돌려주고 리듬 규칙은 한 번도 안 쓰인다 — 화면만 옛 배치로 남는다.
   // ★구절 맞춤을 끈 칸은 얼린 컷 그대로(위 CUTS 규칙). 얼린 게 없으면(옛 저장본) 지금 떠서 얼린다.
-  if (beatIdx != null && !phraseSyncOn(beatIdx) && typeof lists !== 'undefined' && lists[beatIdx] === segIds){
+  if (beatIdx != null && !rhythmOne && !phraseSyncOn(beatIdx) && typeof lists !== 'undefined' && lists[beatIdx] === segIds){
     // 옛 저장본(끔인데 얼린 컷 없음) = **장면마다 한 컷, 자기 길이대로**. 구절 화면으로 뜨면
     //   구절 맞춤을 안 쓰는 고객 화면이 통째로 바뀐다(고객 제보 2026-09-14). 넘치면 syncCuts가
     //   뒤에서 줄이고, 모자라면 안내가 뜬다.
@@ -658,11 +674,6 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   (처음엔 ✋수동 우선으로 했더니, 실험하다 남은 ✋ 두 개가 구절맞춤을 조용히 꺼서
   //    "마지막 구절 카드가 활성이 안 된다"로 보였다. 이제 ✋를 새로 만지는 순간
   //    setFix가 그 칸의 구절맞춤을 눈에 보이게 끈다 — 숨은 상태가 없다.)
-  // ★컷 리듬 칸(서버가 cut_rhythm 표식을 단 칸)은 **서버 렌더와 같은 규칙**으로 그린다(2026-09-23 사장님
-  //   "미끼에 엄청 몰렸다": 화면은 자막 구절마다 컷을 그려 12조각인데 렌더는 3~4컷 — 화면이 거짓말을 했다).
-  //   홀드 칸 = 첫 조각 한 컷 · 나머지 = 조각 한 번씩 비례(아래 onePerSeg 경로). 서버 plan_beat_clips_for의 _cr 분기와 짝.
-  const crBeat = (syncBeat && syncBeat.cut_rhythm) || null;
-  const rhythmOne = !!crBeat && beatIdx != null && typeof lists !== 'undefined' && lists[beatIdx] === segIds;
   if (rhythmOne && crBeat.hold && segments.length){
     const seg = segments[0];
     return finish([{seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: Math.round(ttsDur * 100) / 100}]);

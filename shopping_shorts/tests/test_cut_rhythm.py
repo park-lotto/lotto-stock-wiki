@@ -53,7 +53,8 @@ class _Store:
 
 def test_스위치_admin은_관리자_job에만_표식을_단다():
     plan = {"beats": [{"beat_idx": 0, "narration": "출산맘들 환장하게 만든 발명품"},
-                      {"beat_idx": 1, "narration": "손에 묻히던 기존 방식과는 달리 두피에만 쏙 스며들게 해 준다는 거"},
+                      {"beat_idx": 1, "role": "고조1",
+                       "narration": "손에 묻히던 기존 방식과는 달리 두피에만 쏙 스며들게 해 준다는 거"},
                       {"beat_idx": 2, "narration": "바쁜 아침에 앰플을 덜어내다가"}]}
     assert mp._apply_cut_rhythm(plan, _Store("admin"), {"customer_id": 0}) == 3
     cr = [b["cut_rhythm"]["hold"] for b in plan["beats"]]

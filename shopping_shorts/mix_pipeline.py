@@ -2969,6 +2969,16 @@ def _cut_rhythm_on(store, job):
     return False
 
 
+def _hold_beat(i, beat):
+    """이 칸을 한 컷으로 길게 끌 것인가 — **판정은 여기 한 곳**(편성·렌더 공용, 0순위-B).
+    히트작 79편(docs/cut_rhythm_2026-09-22.md): 3초+ 홀드는 편당 2개, 훅과 첫 고조의 결과 줄.
+    미끼는 빠른 몽타주 자리라 "…났다는 거"로 끝나도 홀드하지 않는다.
+    ★전엔 편성(_trim)과 렌더(_apply)에 서로 다른 식이 적혀 있어 화면이 그린 홀드와 렌더가 달랐다(2026-09-24)."""
+    narr = (beat.get("narration") or "").strip()
+    role = str(beat.get("role") or "")
+    return (i == 0) or (bool(_HOLD_END.search(narr)) and role in ("고조1", "반전"))
+
+
 def _trim_for_cut_rhythm(plan):
     """편성 단계 조각 줄이기 — 홀드 줄은 primary만, 나머지는 primary + alternates 1개. 표식(cut_rhythm)도 같이 단다."""
     n = 0
@@ -2979,7 +2989,11 @@ def _trim_for_cut_rhythm(plan):
         # 미끼는 히트작에서 빠른 몽타주 자리(이븐쇼핑 0.6~1.5초 5컷) — "…났다는 거"로 끝나도 홀드하지 않는다
         # 히트작 79편 실측(docs/cut_rhythm_2026-09-22.md): 3초+ 홀드는 편당 2개, 최장(7초)은 영상 1/3 지점 첫 고조의 시연 줄.
         #   → 홀드 = 훅 · 고조1의 결과 줄("…없애 버렸다는 거") · 반전. 고조2 이후 결과 줄은 보통 컷(홀드가 셋을 넘으면 늘어진다).
-        hold = (i == 0) or (bool(_HOLD_END.search(narr)) and role in ("고조1", "반전"))
+        hold = _hold_beat(i, b)
+        # ★컷 리듬으로 배치한 칸은 **구절 맞춤을 끈 상태로 시작한다**(2026-09-24 사장님).
+        #   둘은 같은 것을 다르게 정한다 — 구절 맞춤은 자막 구절마다 컷(6~12개), 컷 리듬은 담은 조각 수(3~4개).
+        #   켜 둔 채로 두면 화면에서 토글이 안 먹는 것처럼 보인다. 사람이 나중에 켜면 그때는 구절이 이긴다.
+        b["phrase_sync"] = False
         alts = list(b.get("alternates") or [])
         # 컷 수는 줄 길이로(히트작 11편 컷 중앙 1.9초 → 약 2.5초에 한 컷): 3초 이하 1컷 · 6초 2컷 · 9초 3컷 · 최대 4컷.
         #   홀드 줄은 5초 홀드 뒤 한 컷만 더. (2026-09-22 사장님 "9초 줄인데 2개만 쓴 건가" — 2개 고정이 무뎠다)
@@ -3003,10 +3017,10 @@ def _apply_cut_rhythm(plan, store, job):
     n = 0
     beats = (plan or {}).get("beats") or []
     for i, b in enumerate(beats):
-        narr = (b.get("narration") or "").strip()
-        role = str(b.get("role") or "")
-        hold = (i == 0) or (bool(_HOLD_END.search(narr)) and not role.startswith("미끼"))
-        b["cut_rhythm"] = {"max_shot": 4.0, "hold": hold}
+        # ★편성 단계(_trim_for_cut_rhythm)가 이미 단 표식은 그대로 둔다 — 그게 화면이 보고 그린 값이다.
+        #   전엔 여기서 무조건 덮어써(옛 홀드 식·상한 4초) 화면과 렌더의 컷이 달랐다(2026-09-24).
+        if not (b.get("cut_rhythm") or {}):
+            b["cut_rhythm"] = {"max_shot": 4.0, "hold": _hold_beat(i, b)}
         n += 1
     print(f"[cut_rhythm] 비트 {n}개에 표식 — hold {sum(1 for b in beats if (b.get('cut_rhythm') or {}).get('hold'))}개", file=sys.stderr)
     return n

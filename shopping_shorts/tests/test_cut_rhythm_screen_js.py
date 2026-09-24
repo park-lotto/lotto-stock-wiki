@@ -14,7 +14,7 @@ const DATA={segments:{a:{video_id:'v',start:0,end:6},b:{video_id:'v',start:6,end
 const CUTS={}, SLOW={}, STRETCH={}; let onePerSeg=false;
 const lists=[['a'],['a','b','c'],['a','b','c']];
 function trimPieces(id){ const s=DATA.segments[id]; return s?[{video_id:s.video_id,start:s.start,end:s.end}]:[]; }
-function phraseSyncOn(){ return true; }
+function phraseSyncOn(i){ return i === 2; }   // 리듬 칸(0·1)은 구절 맞춤 끔이 기본, 2번 칸만 켬
 function capsOf(){ return [{start:0},{start:1},{start:2},{start:3},{start:4},{start:5}]; }
 function frozenClips(){ return null; }
 """
