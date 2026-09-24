@@ -1,4 +1,4 @@
-"""'원본 영상 그대로'를 고르면 옛 헤드카피·자막 칸이 돌아오나 — 진짜 앱(격리 DB)으로 잰다 (2026-09-24 사장님
+"""'원본 영상 그대로'에서 **새 편집기 오른쪽 문구/텍스트 안에** 헤드카피·자막 카드가 뜨고, 고치면 옛 칸에 들어가나 — 진짜 앱(격리 DB)으로 잰다 (2026-09-24 사장님
  "원본그대로 영상도 자막이나 문구 등 원래 수정할 수 있는 거 아니었어?").
 
 근거: 렌더는 `deco.scene_style`이 없으면 옛 경로(`_burn_captions`가 자막·헤드카피를 태운다)를 탄다
@@ -34,8 +34,13 @@ store.set_setting('scene_style_inline_enabled', '1')          # 지금 라이브
 threading.Thread(target=uvicorn.Server(uvicorn.Config(module.app, host='127.0.0.1', port=PORT, log_level='warning')).run, daemon=True).start()
 time.sleep(1.5)
 
-PROBE = """()=>{const vis=id=>{const e=document.getElementById(id);return !!(e&&e.offsetParent!==null)};
-  return {헤드카피칸:vis('hcText'), 자막글꼴칸:vis('capFont'), 원본표시:document.querySelector('.panel[data-step="3"]')?.classList.contains('scene-style-plain')}}"""
+PROBE = """()=>{const vis=e=>!!(e&&e.offsetParent!==null);
+  return {옛화면보임:vis(document.getElementById('hcText')),
+          원본표시:document.querySelector('.panel[data-step="3"]')?.classList.contains('scene-style-plain')}}"""
+CARDS = """()=>{const vis=e=>!!(e&&e.offsetParent!==null);
+  const g=k=>document.querySelector('.scene-text-panel > .text-group[data-group="'+k+'"]');
+  return {헤드카피카드:vis(g('plainHead')), 자막카드:vis(g('plainCaption')),
+          카드제목:[...document.querySelectorAll('.scene-text-panel > .text-group')].filter(vis).map(e=>e.querySelector('summary b').textContent)}}"""
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_context(viewport={'width':1500,'height':1000}).new_page()
     pg.goto(f'{BASE}/produce.html', wait_until='domcontentloaded'); pg.wait_for_timeout(2500)
@@ -44,39 +49,24 @@ with sync_playwright() as p:
     need(fr is not None, '새 편집기가 6단계에 떴다')
     if fr:
         fr.wait_for_function("window.sceneStyle&&window.sceneStyle.context()", timeout=25000)
-        a = pg.evaluate(PROBE); need(not a['헤드카피칸'] and not a['자막글꼴칸'], f'① 템플릿 고른 상태: 옛 칸 숨음 {a}')
-        fr.click('[data-none]'); pg.wait_for_timeout(1200)
-        c = pg.evaluate(PROBE)
-        print('   진단:', pg.evaluate("""()=>{const w=document.querySelector('.panel[data-step=\"3\"] [data-legacy-deco]');
-          const t=document.getElementById('hcText'); const out={래퍼:w?getComputedStyle(w).display:'없음'};
-          let e=t; const chain=[]; while(e&&e!==document.body){const st=getComputedStyle(e); if(st.display==='none')chain.push((e.id||e.tagName)+':none'); e=e.parentElement;}
-          out.숨긴조상=chain.slice(0,4);
-          out.패널수=document.querySelectorAll('.panel[data-step=\"3\"]').length;
-          out.래퍼부모클래스=w?(w.parentElement.className||'(없음)'):'없음';
-          out.래퍼가직계=w?(w.parentElement.matches('.panel[data-step=\"3\"]')):null;
-          out.인라인스타일=w?w.getAttribute('style').slice(0,40):null;
-          const hits=[];
-          for(const sh of document.styleSheets){let rs;try{rs=sh.cssRules}catch(e){continue}
-            for(const r of rs){if(!r.selectorText||!r.style||!r.style.display)continue;
-              try{if(w.matches(r.selectorText))hits.push(r.selectorText.slice(0,80)+' => '+r.style.display+(r.style.getPropertyPriority('display')?'!':''))}catch(e){}}}
-          out.래퍼에걸린규칙=hits;
-          return out}"""))
-        need(c['헤드카피칸'] or c['자막글꼴칸'], f'② 원본 그대로: 옛 칸이 바로 보인다 {c} — 고치기 전엔 통째로 숨어 있었다')
-        pg.click('#decoTabs [data-decotab="copy"]'); pg.wait_for_timeout(600)
-        c2 = pg.evaluate(PROBE)
-        need(c2['헤드카피칸'], f'② 헤드카피 탭 → 제목 칸 {c2}')
-        pg.click('#decoTabs [data-decotab="style"]'); pg.wait_for_timeout(600)
-        c3 = pg.evaluate(PROBE)
-        need(c3['자막글꼴칸'], f'③ 자막 탭 → 자막 칸 {c3} (탭이라 한 번에 하나씩 보인다)')
-        fr.click('[data-p20="0"]'); pg.wait_for_timeout(1200)
-        # ★원본 모드에 남는 탭은 실제로 결과물에 들어가는 셋뿐 — 자막·헤드카피·효과. 템플릿은 새 편집기 몫이라 숨긴다.
-        fr.click('[data-none]'); pg.wait_for_timeout(1000)
-        tabs = pg.evaluate("""()=>[...document.querySelectorAll('#decoTabs [data-decotab]')]
-            .filter(b=>b.offsetParent!==null).map(b=>b.dataset.decotab)""")
-        need(sorted(tabs) == ['copy','fx','style'], f'④ 원본 모드 탭은 자막·헤드카피·효과 셋 {tabs} (템플릿은 숨김)')
-        fr.click('[data-p20="0"]'); pg.wait_for_timeout(1200)
-        d = pg.evaluate(PROBE); need(not d['헤드카피칸'], f'⑤ 템플릿 다시 고르면 도로 숨는다 {d}')
-        pg.screenshot(path=str(out/'plain_legacy.png'))
+        a = fr.evaluate(CARDS)
+        need(not a['헤드카피카드'] and not a['자막카드'], f'① 템플릿 고른 상태: 헤드카피·자막 카드 없음 {a["카드제목"]}')
+        fr.click('[data-none]'); pg.wait_for_timeout(1500)
+        c = fr.evaluate(CARDS)
+        need(c['헤드카피카드'] and c['자막카드'], f'② 원본 그대로: 오른쪽에 헤드카피·자막 카드가 뜬다 {c["카드제목"]}')
+        out_probe = pg.evaluate(PROBE)
+        need(not out_probe['옛화면보임'], f'③ 옛 구버전 화면은 안 보인다 {out_probe} — 값만 뒤에서 쓴다')
+        fr.evaluate("""()=>{const t=document.querySelector('[data-plain-id="hcText"]');
+          t.value='원본에서 쓴 제목';t.dispatchEvent(new Event('input',{bubbles:true}));return 1}""")
+        pg.wait_for_timeout(800)
+        val = pg.evaluate("()=>document.getElementById('hcText').value")
+        need(val == '원본에서 쓴 제목', f'④ 카드에 쓰면 옛 헤드카피 칸에 들어간다 (실제 "{val}")')
+        fr.evaluate("""()=>{const t=document.querySelector('[data-plain-id="capOutline"]');
+          t.checked=false;t.dispatchEvent(new Event('change',{bubbles:true}));return 1}""")
+        pg.wait_for_timeout(600)
+        need(pg.evaluate("()=>document.getElementById('capOutline').checked") is False, '④ 자막 외곽선 끄기도 옛 칸에 들어간다')
+        fr.click('[data-p20="0"]'); pg.wait_for_timeout(1500)
+        d = fr.evaluate(CARDS); need(not d['헤드카피카드'], f'⑤ 템플릿 다시 고르면 카드가 사라진다 {d["카드제목"]}')
+        pg.screenshot(path=str(out/'plain_cards.png'))
     b.close()
-print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건')
-sys.exit(1 if fails else 0)
+
