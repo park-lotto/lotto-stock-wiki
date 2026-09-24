@@ -31,7 +31,7 @@ def main(argv=None):
         ap.error("--seed '인물명 | 주제'")
     r = pipeline.run_all(a.workdir, channel="hotpeople", source_text=seed,
                          llm=providers.script_llm(which=a.script_llm),
-                         reviewer=None if a.no_pick else providers.gemini_reader())
+                         reviewer=None if a.no_pick else [providers.gemini_reader(), providers.gemini_reader("gemini-2.5-flash")])
     if r["status"] != "ok":
         print("[make] 멈춤:", json.dumps({k: v for k, v in r.items() if k != "job"}, ensure_ascii=False, indent=1)[:2000])
         return 1

@@ -129,6 +129,7 @@ def _pick_prompt(groups, n_cands, person):
     subs = "\n".join(f"{i}. 자막 «{g.get('text')}» / 원하는 화면: {g.get('scene', '')}" for i, g in enumerate(groups))
     return (f"숏폼 편집자다. 주인공은 {person}. 아래 시트의 번호 붙은 장면 0~{n_cands - 1} 중에서 자막마다 가장 맞는 장면 번호를 골라라.\n"
             "규칙: 같은 번호를 두 번 쓰지 마라. 주인공이 실제로 나오는 장면을 우선. 글자가 화면 대부분인 장면·로고·검은 화면은 피하라.\n"
+            "★화면 아래에 자막(한글·영어 문장)이 박힌 장면은 가능한 한 피하라 — 우리 자막과 겹친다. 요리·먹방 등 주제와 무관한 장면은 쓰지 마라.\n"
             "맞는 게 없으면 분위기가 맞는 장면을 골라라(비워두지 마라).\n"
             f"[자막]\n{subs}\n\n출력 JSON: {{\"picks\": [자막0의 번호, 자막1의 번호, …]}} (자막 수 {len(groups)}개와 길이가 같아야 한다)")
 
@@ -137,12 +138,21 @@ def pick(groups, cands, sheet_paths, reader, person, log=print):
     """→ 자막마다 장면 index 리스트. 모델 답이 틀리면(범위 밖·중복·개수) 남는 장면으로 순서대로 메운다."""
     picks = []
     if reader is not None and cands:
-        try:
-            from shopping_shorts.channelkit.prompt import parse_any
-            raw = reader(_pick_prompt(groups, len(cands), person), sheet_paths)
-            picks = list((parse_any(raw) or {}).get("picks") or [])
-        except Exception as e:  # noqa: BLE001
-            log(f"[footage] 장면 선택 모델 실패 — 순서대로 메움: {repr(e)[:200]}")
+        import time
+        from shopping_shorts.channelkit.prompt import parse_any
+        readers = reader if isinstance(reader, (list, tuple)) else [reader]
+        for ri, rd in enumerate(readers):
+            for wait in (0, 10, 30):                 # 503(과부하)은 잠깐 뒤 풀린다 — 2026-09-25 실측 첫 시도 503
+                if wait:
+                    time.sleep(wait)
+                try:
+                    raw = rd(_pick_prompt(groups, len(cands), person), sheet_paths)
+                    picks = list((parse_any(raw) or {}).get("picks") or [])
+                    break
+                except Exception as e:  # noqa: BLE001
+                    log(f"[footage] 장면 선택 모델{ri} 실패({wait}s 뒤 재시도): {repr(e)[:160]}")
+            if picks:
+                break
     used, out, fixed = set(), [], 0
     for i in range(len(groups)):
         p = picks[i] if i < len(picks) else None
@@ -162,9 +172,18 @@ def collect(script, wd, reader=None, log=print):
     """→ {"videos":[…], "cands":[…], "cuts":[{…}], "sheets":[…], "fixed":n}. 컷 = 자막 순서."""
     vdir, tdir = os.path.join(wd, "footage", "videos"), os.path.join(wd, "footage", "thumbs")
     seen, videos = set(), []
+    # 재개: 이미 받아 둔 영상을 먼저 쓴다(검색 결과 순서가 바뀌어도 다시 받지 않게)
+    for f in sorted(os.listdir(vdir)) if os.path.isdir(vdir) else []:
+        if f.endswith(".mp4") and len(videos) < spec.POLICY_FOOTAGE_MAX_VIDEOS:
+            vid = f[:-4]
+            seen.add(vid)
+            videos.append({"id": vid, "title": "", "duration": 0, "query": "(받아 둔 것)",
+                           "url": f"https://www.youtube.com/watch?v={vid}", "path": os.path.join(vdir, f)})
     for q in (script.get("queries") or [])[:spec.POLICY_FOOTAGE_QUERIES]:
-        for it in search(q, spec.POLICY_FOOTAGE_PER_QUERY, log=log):
-            if it["id"] in seen:
+        if len(videos) >= spec.POLICY_FOOTAGE_MAX_VIDEOS:
+            break
+        for it in search(q, spec.POLICY_FOOTAGE_PER_QUERY + 1, log=log):
+            if it["id"] in seen or len(videos) >= spec.POLICY_FOOTAGE_MAX_VIDEOS:
                 continue
             seen.add(it["id"])
             p = download(it, vdir, log=log)
@@ -182,6 +201,9 @@ def collect(script, wd, reader=None, log=print):
     sp = sheets(cands, os.path.join(wd, "footage"))
     groups = script.get("groups") or []
     idx, fixed = pick(groups, cands, sp, reader, script.get("person", ""), log=log)
+    if reader is not None and fixed > len(groups) * 0.3:
+        # ★조용히 순서대로 메운 영상을 "완료"로 내보내지 마라(2026-09-25: 503으로 27/27 순서 메움 → 요리 장면이 섞였다)
+        raise RuntimeError(f"footage: 장면 선택 모델이 {fixed}/{len(groups)}개를 못 골랐다 — 잠시 뒤 footage부터 다시")
     url = {v["id"]: v["url"] for v in videos}
     cuts = [{"scene": k, "src": cands[k]["path"], "start": cands[k]["start"], "end": cands[k]["end"],
              "vid": cands[k]["vid"], "url": url.get(cands[k]["vid"]), "thumb": cands[k]["thumb"]} for k in idx]

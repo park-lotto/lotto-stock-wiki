@@ -145,6 +145,34 @@ def r_queries(s, ctx):
     return [Issue("hp_queries", REJECT, "queries", str(len(q)), f"영상 검색어 3~{spec.POLICY_FOOTAGE_QUERIES}개(인물 인터뷰·경기·무대 등 실제 영상이 나올 말)")]
 
 
+@lru_cache(maxsize=4)
+def _cmap(path):
+    from fontTools.ttLib import TTFont
+    return set(TTFont(path)["cmap"].getBestCmap())
+
+
+def missing_glyphs(text, path=None):
+    """글꼴에 없는 글자 → 렌더하면 □(두부). 2026-09-25 실측: 주아체에 가운뎃점(·) 없음."""
+    try:
+        cm = _cmap(path or spec.SUB_FONT)
+    except ImportError:          # fontTools 없는 파이썬 — PIL로 두부 모양과 대조
+        f = _font(path or spec.SUB_FONT, 40)
+        tofu = f.getmask("￿").getbbox()
+        return sorted({c for c in text if not c.isspace() and f.getmask(c).getbbox() == tofu})
+    return sorted({c for c in text if not c.isspace() and ord(c) not in cm})
+
+
+def r_glyphs(s, ctx):
+    out = []
+    t = s.get("title") or {}
+    for w, text, font in [("title", f"{t.get('h1', '')}{t.get('h2', '')}", spec.HEAD_FONT)] + [
+            (f"groups[{i}]", "".join(g.get("lines") or []), spec.SUB_FONT) for i, g in enumerate(_groups(s))]:
+        miss = missing_glyphs(text, font)
+        if miss:
+            out.append(Issue("hp_glyphs", REJECT, w, "".join(miss), "글꼴에 없는 글자 — 화면에 □로 나온다. 다른 글자로(·→, 또는 띄어쓰기)"))
+    return out
+
+
 _NEWS_END = re.compile(r"(했다|였다|이었다|이다|한다|된다|었다|았다)[.!]?$")
 
 
@@ -167,6 +195,7 @@ RULES = [
     Rule("hp_numbers", REJECT, "숫자(연도·금액·순위·기록)는 조사 원문에 있는 것만, 원문 표기 그대로. 없으면 숫자를 빼라.", r_numbers_sourced),
     Rule("hp_headline", REJECT, "헤드라인 h1·h2 각 8~10자, 한 줄(emph 1|2)을 red 또는 yellow로 강조. \"~한 남자/여자/아이돌\" 형.", r_headline),
     Rule("hp_queries", REJECT, f"queries: 유튜브에서 그 인물의 실제 영상(인터뷰·경기·무대·뉴스)이 나올 검색어 3~{spec.POLICY_FOOTAGE_QUERIES}개. 영어 이름 포함.", r_queries),
+    Rule("hp_glyphs", REJECT, "가운뎃점(·)·특수기호·이모지 쓰지 마라 — 글꼴에 없어 □로 나온다. 쉼표·따옴표·마침표·말줄임(...)은 된다.", r_glyphs),
     Rule("hp_ending", WARN, "끝맺음은 반말 명사형 ~음/~함/~임/~됨/~짐, 또는 명사로 끊기(\"그렇게 5년.\"). 인용은 따옴표.", r_ending),
 ]
 for _r in RULES:

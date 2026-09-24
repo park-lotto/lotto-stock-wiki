@@ -107,3 +107,30 @@ def test_end_to_end_render_with_fake_footage(tmp_path):
     assert by["크기 1080x1920"]["ok"] and by["소리 트랙"]["ok"]
     assert by["슬롯이 빈 컷 0"]["ok"] and by["자막 없는 컷 0"]["ok"] and by["자막 화면 밖 0"]["ok"]
     assert not by["길이 45~75초"]["ok"]                                  # 3컷이라 짧다 — 검사가 실제로 잡는다
+
+
+def test_glyph_rule_catches_middle_dot():
+    """2026-09-25 실측: 주아체에 가운뎃점이 없어 '단식·단체전'이 □로 렌더됐다."""
+    s = _script()
+    s["groups"][5]["lines"] = ["단식·단체전", "금메달을 따냄"]; s["groups"][5]["text"] = "단식·단체전 금메달을 따냄"
+    assert "hp_glyphs" in _rules(s)
+    assert "hp_glyphs" not in _rules(_script())
+
+
+def test_pick_retries_then_fails_loud(monkeypatch):
+    from shopping_shorts.channel_presets.hotpeople import footage
+    monkeypatch.setattr("time.sleep", lambda *_: None)
+    calls = []
+
+    def flaky(prompt, sheets):
+        calls.append(1)
+        if len(calls) < 3:
+            raise RuntimeError("503 UNAVAILABLE")
+        return '{"picks": [2, 0, 1]}'
+    idx, fixed = footage.pick([{}, {}, {}], [0, 1, 2], [], flaky, "x", log=lambda *_: None)
+    assert idx == [2, 0, 1] and fixed == 0 and len(calls) == 3
+
+    def dead(prompt, sheets):
+        raise RuntimeError("503")
+    idx, fixed = footage.pick([{}, {}, {}], [0, 1, 2], [], [dead, dead], "x", log=lambda *_: None)
+    assert fixed == 3                                   # 전부 메움 → collect가 이걸 보고 멈춘다

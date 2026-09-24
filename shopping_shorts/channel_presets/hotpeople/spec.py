@@ -63,6 +63,7 @@ POLICY_BGM_LUFS = -24.0             # 미측정 — 나레가 없으니 배경�
 POLICY_MAX_REWRITES = 4
 POLICY_FOOTAGE_QUERIES = 6          # 검색어 수(한 편)
 POLICY_FOOTAGE_PER_QUERY = 2        # 검색어당 받을 영상 수
+POLICY_FOOTAGE_MAX_VIDEOS = 8       # 한 편에 받을 영상 상한 — 9편에서 장면 후보가 충분했다(2026-09-25 사장님: 그만 받아도 충분)
 POLICY_FOOTAGE_MAX_SEC = 1500       # 25분 넘는 영상은 안 받는다
 POLICY_FOOTAGE_HEAD_SEC = 480       # 앞 8분만 받는다(다운로드 시간)
 POLICY_SCENE_THRESH = 0.3
