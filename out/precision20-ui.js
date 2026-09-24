@@ -132,6 +132,14 @@
     if(!Object.keys(v).length)for(const value of captionLayouts.values()){v=pick(value);if(Object.keys(v).length)break;}
     return Object.keys(v).length?v:null;
   };
+  // ★템플릿(썰쇼핑)인데 제목 세 칸이 전부 비었으면 자동 제목(서버 context.autoText = 대본 첫 줄)으로 채운다(2026-09-25 사장님 "썰쇼핑 돌려놓고").
+  //   원본(인스타식)에서 제목을 지운 작업을 템플릿으로 바꾸면 빈 제목 띠가 나왔다. 원본은 빈칸 그대로 둔다. 서버 context_for도 같은 규칙.
+  function fillAutoTitles(){
+    if(rows[current]?.id===PLAIN_ID||!sceneContext?.autoText)return;
+    const keys=['hook1','hook2','bodyTitle'];
+    if(keys.some(k=>String(inputs[k]?.value||'').trim()))return;
+    for(const k of keys)if(inputs[k]&&sceneContext.autoText[k]!=null){inputs[k].value=sceneContext.autoText[k];updateCount(inputs[k]);}
+  }
   // 이 모드의 화면 종류인가 — 원본(plain)은 썰쇼핑형(hook·body)과 고정형(frame)이 같은 'plain:' 앞머리를 쓴다(Opus 검토 6)
   const kindOk=k=>{const kind=k.split(':')[1];return mode==='continuous'?kind==='frame':kind!=='frame';};
   // 내 프리셋의 '자리' — 제목·채널명 자리(템플릿:화면:칸 키, 장면 번호 무관)와 지금 장면의 자막 자리 하나(2026-09-25).
@@ -1420,6 +1428,7 @@
     const accentInput=colorRow?.querySelector('[data-color-role="accent"]'),topInput=colorRow?.querySelector('[data-color-role="background"]');
     if(accentInput)accentInput.value=accent;if(topInput)topInput.value=top;
     if(sceneContext?.text)for(const [key,text] of Object.entries(sceneContext.text))if(inputs[key])inputs[key].value=text;
+    fillAutoTitles();
     preview.classList.remove('is-pristine');showFrame(kind);
   }
   grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){plainLegacy=false;const i=rows.findIndex(p=>p.id===PLAIN_ID);if(i>=0)selectPreset(i);else setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
@@ -1732,6 +1741,7 @@
         for(const [key,value] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption')inputs[key].value=value;
       }
       if(context?.text)for(const [key,value] of Object.entries(context.text))if(inputs[key])inputs[key].value=value;
+      fillAutoTitles();
       if(context?.scenes?.length)showScene(Number.isInteger(saved?.sceneIndex)?saved.sceneIndex:0);
       fittedText.clear();renderEdit();
     },

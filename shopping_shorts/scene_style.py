@@ -209,8 +209,16 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
         copy["text"], copy["hook_source"] = hook_from_script(
             (timeline[0].get("narration") if timeline else "") or "", copy.get("ai_copy") or "")
     text = {"channel": "숏템메이커", **scene_text(copy)}
-    text.update({k:v for k,v in (snapshot or {}).get("text",{}).items() if k != "caption"})
-    return {"jobId":job_id,"text":text,"scenes":scenes}
+    auto_text = {k: text.get(k, "") for k in ("hook1", "hook2", "bodyTitle")}   # 편집기가 원본→템플릿으로 바꿀 때 빈 제목을 채우는 데 쓴다
+    saved_text = {k:v for k,v in (snapshot or {}).get("text",{}).items() if k != "caption"}
+    # ★템플릿(썰쇼핑)에서 제목 세 칸이 **전부 빈칸**으로 저장됐으면 자동 제목(대본 첫 줄)을 그대로 둔다(2026-09-25 사장님 "썰쇼핑 돌려놓고").
+    #   빈칸이 저장본을 이기면 제목 띠가 텅 빈 채로 나왔다(실측 job cafa17d6856b: hook1·hook2·bodyTitle 모두 ""). 일부만 비운 건 사용자 뜻이라 존중.
+    #   원본(plain, 인스타식)은 제목 없이 자막만 쓰는 게 정상이라 그대로 둔다.
+    if (snapshot or {}).get("presetId") != "plain" and all(not str(saved_text.get(k) or "").strip() for k in ("hook1", "hook2", "bodyTitle")):
+        for k in ("hook1", "hook2", "bodyTitle"):
+            saved_text.pop(k, None)
+    text.update(saved_text)
+    return {"jobId":job_id,"text":text,"autoText":auto_text,"scenes":scenes}
 
 
 def _layer_render_timeout(context):
