@@ -19799,6 +19799,7 @@ def api_produce_mix_settings(body: dict):
     job = store.get_mix_job(job_id) if job_id else None
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    before_video = bool(job.get("video_path"))   # 설정 변경으로 완성본이 버려졌는지 알려주려고 기억해 둔다
     fields = {}
     if "subtitle_removal" in body:
         fields["subtitle_removal"] = bool(body.get("subtitle_removal"))
@@ -19848,7 +19849,11 @@ def api_produce_mix_settings(body: dict):
         #   preview_status는 그대로라, 3단계는 "이미 있다"며 새로 만들지 않았다. 파일은 안 지운다 —
         #   run_preview가 덮어쓰고, 상태가 비었으면 화면·API가 옛 파일을 안 쓴다(api_mix_preview_video).
         store.update_mix_job(job_id, preview_status="", preview_error=None)
-    return {"ok": True}
+    # ★설정이 바뀌어 완성본이 무효가 됐으면 화면이 알 수 있게 알려준다(2026-09-24 고객 조율가님:
+    #   "템플릿 씌우고 썸네일 지정해 다음으로 넘어가면 전체영상 다 적용이 안 되었어요").
+    #   실제로는 다시 렌더해야 하는 상태인데 화면이 아무 말이 없어 '적용이 안 됐다'로 보였다.
+    after = store.get_mix_job(job_id) or {}
+    return {"ok": True, "render_invalidated": not after.get("video_path") and bool(before_video)}
 
 
 @app.get("/api/produce/mix/sfx_pack/{job_id}")

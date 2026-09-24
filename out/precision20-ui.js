@@ -991,8 +991,17 @@
       (frame.boxes||[]).forEach(b=>{const box=addPatch(b.y/frame.height*100,b.height/frame.height*100,b.background,b.x/frame.width*100,b.width/frame.width*100);if(b.border)box.style.border=`${b.border_width||1}px solid ${b.border}`;});
     }
     const designScale=preview.clientHeight/frame.height;
+    // ★글자가 없으면 그 글자의 띠도 그리지 않는다(2026-09-24 고객 임수정님: "자막 들어갈 흰 칸은 있는데
+    //   글씨만 없어서 빈 띠로 보여요 / 글씨가 없을 땐 흰 칸도 안 나오게 해 주시면 좋겠습니다").
+    //   실측: 달래샵·무슨템은 띠가 **별도 면(surface)**이라, 09-21 중복 규칙이 글자를 건너뛰어도 띠만 남았다.
+    const bandLine=(frame.lines||[]).find(l=>l.bind==='bodyTitle');
+    const hookBandText=String(value('bodyTitle')||'').trim();
+    const hookBandSame=hookBandText.replace(/\s+/g,'')===String((value('hook1')||'')+(value('hook2')||'')).replace(/\s+/g,'');
+    const hookBandEmpty=kind==='hook'&&(!hookBandText||hookBandSame);
+    const inBand=(y,h)=>bandLine&&y<bandLine.y1+6&&y+h>bandLine.y0-6;
     (frame.surfaces||[]).forEach(s=>{
       if(s.bind==='caption')return;
+      if(hookBandEmpty&&inBand(s.y,s.height))return;   // 글자 없는 띠는 안 그린다
       const offset=s.bind==='caption'?captionOffset()+textOffset('caption'):0;
       const surface=addPatch(s.y/frame.height*100+offset,s.height/frame.height*100,s.background,s.x/frame.width*100+(s.bind==='caption'?captionX():0),s.width/frame.width*100);
       surface.classList.add('body-material');
@@ -1051,7 +1060,7 @@
       addText(value(key),drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
     });
     const wb=frame.white_box;
-    if(wb&&kind==='hook'){
+    if(wb&&kind==='hook'&&!hookBandEmpty){
       // 원본 설명띠의 글자/흔적을 먼저 완전히 덮고 편집 가능한 텍스트만 다시 올린다.
       const movedCaption=kind==='body'&&(fixedLayouts.get(layoutKey(p.id,frame))?.bottom||0)>0;
       const savedCap=fixedLayoutFor(p.id,frame).caption;   // 09-19: '자막 칸' 슬라이더가 훅 흰 띠에도 먹게
