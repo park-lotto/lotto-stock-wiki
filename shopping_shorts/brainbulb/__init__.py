@@ -1,11 +1,29 @@
-"""brainbulb — 뇌전구(볼케이노) 규격 숏폼을 서버 없이 로컬에서 만드는 파이프라인.
+"""호환 shim — 옛 경로 `shopping_shorts.brainbulb.<모듈>`을 `shopping_shorts.channelkit`으로 넘긴다.
 
-설계 논쟁 기록: docs/superpowers/specs/2026-09-12-brainbulb-design.md (페이블·아스트라)
-규격 근거: channel/volcano/뇌전구_역분석_8편_2026-09-12.md (8편 실측)
-
-원칙 (볼케이노에서 가져온 것):
-  - 디자인은 상수다 (spec.py). 채널 추가 = spec 교체.
-  - 규칙은 판정으로만 존재한다 (lint.py). 판정은 데이터를 고치지 않는다 — 반려와 사유만.
-  - 단계 배열 하나가 상태기계다 (pipeline.py). 화면·호출자는 next_step만 따른다.
-  - 검증은 실제 산출물과 대조한다 (tests/fixtures/brainbulb/*).
+brainbulb는 2026-09-25에 채널 엔진(channelkit) + 채널 spec (channels/brainbulb)으로 쪼개졌다.
+brainbulb_api.py·static/brainbulb.html·옛 테스트가 이 경로를 쓴다. 새 코드는 channelkit을 직접 import.
 """
+import importlib
+import sys
+
+_KIT = "shopping_shorts.channelkit"
+_NAMES = ["pipeline", "spec", "lint", "layout", "ass_gen", "render", "review", "frames", "measure",
+          "timing", "voice", "sfx", "prompt", "providers", "make",
+          "images", "photos", "photocheck", "community"]
+
+
+def __getattr__(name):
+    if name in _NAMES:
+        mod = importlib.import_module(f"{_KIT}.{name}")
+        sys.modules[f"{__name__}.{name}"] = mod
+        return mod
+    raise AttributeError(name)
+
+
+# `from shopping_shorts.brainbulb import X` 는 위 __getattr__로 되지만
+# `import shopping_shorts.brainbulb.providers` (서브모듈 import 문법)은 sys.modules에 미리 있어야 한다.
+for _n in _NAMES:
+    try:
+        sys.modules[f"{__name__}.{_n}"] = importlib.import_module(f"{_KIT}.{_n}")
+    except ImportError:
+        pass
