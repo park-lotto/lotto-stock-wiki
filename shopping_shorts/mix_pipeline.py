@@ -4026,6 +4026,14 @@ def _faststart(path):
 
 
 def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_clean=True):
+    """_render_inputs_for + 대본 첫 줄 표식(script_families.mark_plan, 2026-09-25).
+    렌더·미리보기·캡컷이 모두 여기를 지나므로 표식도 여기서 한 번 붙인다."""
+    from shopping_shorts import script_families as _sf
+    plan_used, paths, base = _render_inputs_for(store, job, job_id, work, keys, customer_id, allow_clean=allow_clean)
+    return _sf.mark_plan(store, job, plan_used), paths, base
+
+
+def _render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_clean=True):
     """렌더 계열(최종·미리보기·캡컷·ZIP·프레임)의 **입력을 정하는 유일한 자리**(2026-09-22).
 
     반환 (plan_used, source_video_paths, base):

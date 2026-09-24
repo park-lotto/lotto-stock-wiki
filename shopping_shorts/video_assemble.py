@@ -2875,6 +2875,10 @@ def _beat_timeline(edit_plan, tts_paths):
             "head_trim": beat.get("head_trim", 0.0),
         })
         t0 += dur
+    # ★대본 첫 줄이 제목이 아닌 대본(인스타 갈래)은 표식을 넘긴다 — scene_style.context_for가 첫 장면부터 본문으로 둔다.
+    #   표식은 script_families.mark_plan이 붙인다(없으면 종전: 첫 비트=훅 제목).
+    if timeline and edit_plan.get("title_line") is False:
+        timeline[0]["title_line"] = False
     return timeline
 
 

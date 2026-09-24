@@ -182,10 +182,14 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     from .template_copy import scene_text
     scenes = []
     hide_hook_captions = (snapshot or {}).get("hookCaptionMode") == "hidden"
+    # ★인스타 대본은 첫 줄부터 말하는 대본이다 — 첫 비트를 훅 제목으로 쓰면 그 문장이 자막으로 안 나온다
+    #   (2026-09-25 사장님 "인스타틀은 처음 장면부터 대본이 나와야"). 표식은 script_families.mark_plan →
+    #   video_assemble._beat_timeline이 넘긴다. 편집기·렌더·캡컷·썸네일이 모두 이 함수라 넷이 같이 바뀐다.
+    first_is_title = not (timeline and timeline[0].get("title_line") is False)
     for index, beat in enumerate(timeline):
         start, end = float(beat["t0"]), float(beat["t0"] + beat["dur"])
         cursor = start
-        kind = "hook" if index == 0 else "body"
+        kind = "hook" if index == 0 and first_is_title else "body"
         caption_visible = not (kind == "hook" and hide_hook_captions)
         for caption, t0, t1 in caption_schedule(beat):
             a, b = max(cursor, start, float(t0)), min(end, float(t1))

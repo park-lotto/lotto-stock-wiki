@@ -9871,7 +9871,8 @@ def api_thumb_pin(body: dict):
         try:
             from shopping_shorts import scene_style as _scene_style
             from PIL import Image as _Image
-            plan = job.get("edit_plan") or {}
+            from shopping_shorts.script_families import mark_plan as _mark_plan
+            plan = _mark_plan(Store(DB_PATH), job, job.get("edit_plan") or {})   # 렌더와 같은 첫 줄 표식
             tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
             timeline = video_assemble._beat_timeline(plan, tts)
             ctx = _scene_style.context_for(timeline, job.get("headcopy") or {}, _ss, job_id)
@@ -19910,7 +19911,8 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
         return JSONResponse(status_code=404, content={"error": "영상 없음"})
-    plan = job.get("edit_plan") or {}
+    from .script_families import mark_plan as _mark_plan
+    plan = _mark_plan(Store(DB_PATH), job, job.get("edit_plan") or {})   # 인스타 대본 = 첫 장면부터 본문(렌더와 같은 표식)
     beats = plan.get("beats") or []
     tts = {b["beat_idx"]: b["tts_path"] for b in beats if b.get("tts_path")}
     if not beats or len(tts) != len(beats):
@@ -22905,11 +22907,9 @@ INVENTION_CATEGORIES = script_genre.INVENTION_CATEGORIES   # 정의처는 script
 #   실측 2026-08-20: spine 52·53·54가 정확히 그 상태였다(문장 18/18·30/31·21/22개가
 #   슬롯 이름 불일치로 건너뛰어짐). 조립되면 훅에 사족을 붙일 자리가 물리적으로 없다.
 #   ⚠️사람이 고르는 소재 이름(홈템·레시피·기타)과 **다른 이름**을 쓴다(spine 57의 교훈).
-INSTA_CATEGORIES = ("다이소형", "금지경고형", "사회증거형",
-                    "지인증언형", "권유지시형", "물건발견형", "정체의문형", "무지후회형",
-                    # ★나열형(2026-08-21) — 한 제품을 파는 게 아니라 여러 제품을 훑는다.
-                    #   재료를 합치지 않고 **편별로** 쓰는 유일한 갈래다.
-                    "나열형")
+#   재료를 합치지 않고 **편별로** 쓰는 유일한 갈래가 나열형이다.
+#   ★값은 script_families.py 한 곳에 있다(장면꾸미기·렌더도 같이 쓴다, 2026-09-25).
+from .script_families import INSTA_CATEGORIES
 
 
 # 재료로 볼 영상 수 상한 — 값을 정하는 곳은 `script_generate.SOURCE_MAX` **한 곳**뿐이다.
