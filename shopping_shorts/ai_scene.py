@@ -154,7 +154,10 @@ def motion_request(narration, subject_hint="", style="natural", call=None, frame
         f"Product / subject hint (Korean): {subject_hint or '(unknown)'}\n"
         f"Narration line (Korean) this shot must match: {narration}\n"
         f"Style: {'energetic hook (quick dolly-in toward the subject, one bold physical action; still real handheld phone footage - no drawn, animated or graphic effects)' if style == 'impact' else 'natural subtle motion (breathing, gentle hand, slow push-in)'}\n"
-        "Return JSON: subject_desc_en (one sentence describing the subject exactly as it appears, colors, materials), "
+        + ("HOOK ORDER: the FIRST of the three sentences must already contain the single boldest moment. "
+           "Do not build up to it and do not save it for the end; the viewer only sees the opening.\n"
+           if style == "impact" else "")
+        + "Return JSON: subject_desc_en (one sentence describing the subject exactly as it appears, colors, materials), "
         "motion_steps_en (exactly 3 short sentences: what happens in the first third, middle third, last third; "
         "only movements that could physically happen to what is visible in this frame — camera moves, gentle hand contact, "
         "soft parts swaying, light changes; the product must keep its exact shape, color, material and design; it must not "
@@ -178,18 +181,30 @@ def motion_request(narration, subject_hint="", style="natural", call=None, frame
                   "A slow gentle push-in toward the subject; soft parts move subtly.",
                   "The push-in continues; the subject stays centered and unchanged."]
                  if style != "impact" else
-                 ["A quick push-in toward the subject with a slight handheld shake.",
-                  "One bold, clear action on the subject happens in the center of the frame.",
-                  "The camera settles; the subject is centered, sharp and unchanged."])
+                 # ★훅은 보이는 구간이 짧다(실측 2.42초) — 큰 순간을 첫 문장에 둔다(2026-09-24).
+                 ["A fast push-in slams toward the subject and the boldest moment lands at once.",
+                  "The motion carries through and starts to settle in the centre of the frame.",
+                  "The camera holds steady; the subject is centred, sharp and unchanged."])
     return {"subject_desc_en": str(res.get("subject_desc_en") or subject_hint or "the product in the input image").strip(),
             "motion_steps_en": steps,
             "forbid_extra": [str(x).strip() for x in (res.get("forbid_extra") or []) if str(x).strip()][:3]}
 
 
-def build_prompt(motion, sec, style="natural"):
-    """스파이크에서 확인된 형식: 첫 프레임 묘사 + 초 단위 사건 + 재질·조명 + 금지 목록."""
+def build_prompt(motion, sec, style="natural", visible=None):
+    """스파이크에서 확인된 형식: 첫 프레임 묘사 + 초 단위 사건 + 재질·조명 + 금지 목록.
+
+    ★visible = 화면에 실제로 나오는 길이(칸 길이). Veo는 4·6·8초만 만드는데 훅 칸은 그보다
+      짧다(실측 2026-09-23: 훅 2.42초인데 4초를 만들어 뒤 1.58초를 버렸다). 종전엔 4초를
+      3등분해 **큰 동작을 1.3~2.7초에** 뒀고, 그래서 제일 중요한 순간이 반쯤 잘린 채 끝났다.
+      이제 3단계를 **보이는 구간 안에서** 나누고, 안 보이는 뒤쪽은 '가만히 있는다'로 채운다.
+    """
     sec = int(sec)
-    a, b = round(sec / 3.0, 1), round(sec * 2 / 3.0, 1)
+    try:
+        vis = float(visible) if visible else float(sec)
+    except (TypeError, ValueError):
+        vis = float(sec)
+    vis = max(1.2, min(vis, float(sec)))     # 너무 짧으면 Veo가 3단계를 못 나눈다
+    a, b = round(vis / 3.0, 1), round(vis * 2 / 3.0, 1)
     steps = motion["motion_steps_en"]
     cam = ("Handheld phone video, vertical 9:16, natural lighting as in the input image, slight handheld sway."
            if style != "impact" else
@@ -198,9 +213,15 @@ def build_prompt(motion, sec, style="natural"):
     return (
         f"INPUT IMAGE = FRAME 0: {motion['subject_desc_en']} Keep this subject exactly the same in shape, color, material and design.\n\n"
         f"CONTINUOUS SINGLE SHOT, ONE TAKE, NO CUT, NO DISSOLVE, {sec}.0 seconds.\n"
-        f"0.0-{a}s  {steps[0]}\n"
+        + (f"ONLY THE FIRST {vis:.1f} SECONDS ARE USED. Everything that matters happens before {vis:.1f}s.\n"
+           if vis < sec - 0.05 else "")
+        + (f"HOOK TIMING: the boldest moment lands within the first {a}s. Do not save it for later.\n"
+           if style == "impact" else "")
+        + f"0.0-{a}s  {steps[0]}\n"
         f"{a}-{b}s  {steps[1]}\n"
-        f"{b}-{sec}.0s  {steps[2]}\n\n"
+        f"{b}-{vis:.1f}s  {steps[2]}\n"
+        + (f"{vis:.1f}-{sec}.0s  The shot simply holds; nothing new happens.\n" if vis < sec - 0.05 else "")
+        + "\n"
         f"CAMERA AND LIGHT: {cam}\n"
         f"REALISM: photorealistic live-action smartphone footage. Nothing is drawn, painted or animated on top of the image. "
         f"No person, face or body enters the frame at any moment.\n\n"
@@ -284,7 +305,7 @@ def run_ai_scene(job_id, beat_idx, style, db_path, work_root, *, gen=None, call=
             dur = float(beat.get("target_seconds") or 4)
         sec = pick_seconds(dur)
         motion = motion_request(beat.get("narration") or "", product or "", style, call=call, frame_path=png)
-        prompt = build_prompt(motion, sec, style)
+        prompt = build_prompt(motion, sec, style, visible=dur)
         ts = time.strftime("%Y%m%d_%H%M%S")
         from shopping_shorts.app import _SCENE_ASSETS_DIR
         _SCENE_ASSETS_DIR.mkdir(parents=True, exist_ok=True)

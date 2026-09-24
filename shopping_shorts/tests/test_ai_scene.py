@@ -51,6 +51,41 @@ def test_build_prompt_has_frame0_steps_and_negative():
     assert "quick dolly-in" in ai.build_prompt(motion, 4, "impact")
 
 
+def test_visible_window_front_loads_and_parks_the_tail():
+    """훅 칸은 2.42초만 보이는데 Veo는 4초를 만든다 — 3단계를 보이는 구간 안에 넣고 뒤는 멈춰 둔다."""
+    motion = {"subject_desc_en": "A plush toy.", "motion_steps_en": ["첫", "둘", "셋"]}
+    p = ai.build_prompt(motion, 4, "impact", visible=2.42)
+    assert "ONLY THE FIRST 2.4 SECONDS ARE USED" in p
+    assert "HOOK TIMING: the boldest moment lands within the first 0.8s" in p
+    assert "0.0-0.8s  첫" in p and "0.8-1.6s  둘" in p and "1.6-2.4s  셋" in p
+    assert "2.4-4.0s  The shot simply holds" in p
+    assert "2.7-4.0s" not in p                       # 옛 3등분(0-1.3/1.3-2.7/2.7-4)이 남아 있으면 안 된다
+
+
+def test_visible_equal_or_missing_keeps_full_length():
+    motion = {"subject_desc_en": "A plush toy.", "motion_steps_en": ["첫", "둘", "셋"]}
+    for kw in ({}, {"visible": 4.0}, {"visible": 9.9}):
+        p = ai.build_prompt(motion, 4, "natural", **kw)
+        assert "ONLY THE FIRST" not in p and "simply holds" not in p
+        assert "0.0-1.3s  첫" in p and "2.7-4.0s  셋" in p
+    # 아주 짧은 칸도 3단계를 나눌 최소 폭은 준다
+    assert "0.0-0.4s" in ai.build_prompt(motion, 4, "impact", visible=0.3)
+
+
+def test_impact_instruction_orders_bold_moment_first(monkeypatch):
+    got = {}
+    monkeypatch.setattr("shopping_shorts.edit_plan._vault_call_image",
+                        lambda p, s, f: (got.update(prompt=p), {"subject_desc_en": "x", "motion_steps_en": ["1", "2", "3"]})[1])
+    ai.motion_request("a", "b", "impact", frame_path="base.png")
+    assert "HOOK ORDER: the FIRST of the three sentences" in got["prompt"]
+    assert got["prompt"].count("Return JSON:") == 1
+    ai.motion_request("a", "b", "natural", frame_path="base.png")
+    assert "HOOK ORDER" not in got["prompt"]
+    # 지시 생성이 실패했을 때 쓰는 기본 문구도 큰 동작이 첫 문장이어야 한다
+    dflt = ai.motion_request("x", "y", "impact", call=lambda p, s: None)
+    assert "boldest moment lands at once" in dflt["motion_steps_en"][0]
+
+
 def test_motion_request_uses_model_json_or_defaults():
     got = ai.motion_request("아기 재우기 힘들면", "문어 인형", "natural",
                             call=lambda prompt, schema: {"subject_desc_en": "Yellow plush octopus.",
