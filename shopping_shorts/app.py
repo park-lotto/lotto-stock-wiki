@@ -24325,6 +24325,16 @@ except Exception:                                  # noqa: BLE001 — 이 기능
     traceback.print_exc()
 
 
+# 뇌전구 제작소 API(2026-09-15). 같은 이유로 brainbulb_api.py에 모아두고 여기선 붙이기만 한다.
+# ★관리자 전용(사장님 지시) — 편당 EvoLink·Typecast·Claude 요금이 나가므로 게이트를 건다.
+#   미들웨어(_verify_session)는 로그인만 보므로 관리자 판정은 _require_admin으로 따로 넘긴다.
+try:
+    from shopping_shorts import brainbulb_api as _bb_api
+    _bb_api.register(app, _require_admin)
+except Exception:                                  # noqa: BLE001 — 이 기능이 앱 기동을 막지 않는다
+    traceback.print_exc()
+
+
 # 클린 URL — /library, /mix 등 확장자(.html) 없이 접근. (index는 루트 '/'로 자동)
 # 기존 /xxx.html 경로도 아래 StaticFiles 마운트로 계속 동작(백워드 호환).
 # no-cache: UI 배포 후 브라우저가 옛 HTML을 캐시로 재사용해 "고쳤는데 안 바뀜"이
@@ -24395,6 +24405,22 @@ def _produce_page(request: Request):
 
 app.add_api_route("/produce", _produce_page, include_in_schema=False)
 app.add_api_route("/produce.html", _produce_page, include_in_schema=False)
+
+
+# ── 뇌전구 제작소(2026-09-15) — 관리자 전용 ──────────────────────────────────
+# 볼케이노 서버 없이 우리 코드로만 뇌전구 규격 숏폼을 만든다(shopping_shorts/brainbulb/).
+# 지금은 13단계가 어디까지 갔는지 **과정을 보기 위한** 화면이다(사장님: "원클릭으로 갈 건데
+# 지금은 과정을 보려고"). API는 brainbulb_api.py, 단계 엔진은 brainbulb/pipeline.py.
+# ★/brainbulb.html도 함께 등록해야 StaticFiles 마운트로 게이트가 뚫리지 않는다(2026-07-22 실사고).
+def _brainbulb_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "brainbulb.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/brainbulb", _brainbulb_page, include_in_schema=False)
+app.add_api_route("/brainbulb.html", _brainbulb_page, include_in_schema=False)
 
 
 # ── 역대 히트작(채널 아카이브, 2026-08-03) — 관리자 전용 ─────────────────────

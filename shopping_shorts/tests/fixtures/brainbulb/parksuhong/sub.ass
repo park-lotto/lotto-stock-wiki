@@ -1,0 +1,59 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+YCbCr Matrix: TV.709
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: HL1,SB 어그로 Bold,123,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: HL2,SB 어그로 Bold,134,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: CARD,에스코어 드림 6 Bold,54,&H00000000,&H00000000,&H00FDFDFD,&H00FDFDFD,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: WHITE,에스코어 드림 7 ExtraBold,102,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: PINK,에스코어 드림 6 Bold,102,&H00FEDEFE,&H00FEDEFE,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: YELLOW,에스코어 드림 6 Bold,99,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: RED,여기어때 잘난체 OTF,73,&H000000FF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: ORANGE,에스코어 드림 6 Bold,102,&H000D6CF7,&H000D6CF7,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:02.60,CARD,,0,0,0,,{\p1\pos(0,469)\c&H3B3B3B&\bord0\shad0}m 0 0 l 1080 0 l 1080 273 l 0 273{\p0}
+Dialogue: 1,0:00:00.00,0:00:02.60,CARD,,0,0,0,,{\p1\pos(0,565)\c&HFDFDFD&\bord0\shad0}m 0 0 l 1080 0 l 1080 137 l 0 137{\p0}
+Dialogue: 2,0:00:00.00,0:00:02.60,CARD,,0,0,0,,{\an5\pos(546,633)\fs46\c&H000000&\bord0\shad0}비행기 한 시간 세운 박수홍이 2주 만에 나타난 곳
+Dialogue: 3,0:00:00.00,0:00:34.19,HL1,,0,0,0,,{\an8\pos(530,215)\fs113}비행기 멈춰 세운 박수홍
+Dialogue: 3,0:00:00.00,0:00:34.19,HL2,,0,0,0,,{\an8\pos(530,330)\fs117}2주 만에 나타난 홈쇼핑
+Dialogue: 4,0:00:02.60,0:00:03.52,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}방송인 박수홍
+Dialogue: 4,0:00:03.52,0:00:04.42,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}2주 만에 돌아왔다
+Dialogue: 4,0:00:04.42,0:00:05.48,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}돌아온 곳은 홈쇼핑
+Dialogue: 4,0:00:05.48,0:00:06.70,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}생방송에 직접 나왔다
+Dialogue: 4,0:00:06.70,0:00:07.51,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}물건을 팔았다
+Dialogue: 4,0:00:07.51,0:00:08.55,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}벌써 나온다고
+Dialogue: 4,0:00:08.55,0:00:09.94,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}시작은 지난달 23일
+Dialogue: 4,0:00:09.94,0:00:10.93,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}괌 가는 비행기였다
+Dialogue: 4,0:00:10.93,0:00:11.85,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}어린 딸이 울었다
+Dialogue: 4,0:00:11.85,0:00:13.08,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}박수홍은
+Dialogue: 4,0:00:11.85,0:00:13.08,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}내리겠다 했다
+Dialogue: 4,0:00:13.08,0:00:14.16,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}짐까지 다시 빼냈다
+Dialogue: 4,0:00:14.16,0:00:15.47,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}그런데 아이가
+Dialogue: 4,0:00:14.16,0:00:15.47,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}진정했다
+Dialogue: 4,0:00:15.47,0:00:16.42,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}다시 타겠다고 했다
+Dialogue: 4,0:00:16.42,0:00:17.42,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}이게 무슨 소리야
+Dialogue: 4,0:00:17.42,0:00:18.60,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}보안 절차가 또 돌았다
+Dialogue: 4,0:00:18.60,0:00:19.92,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}출발이 1시간
+Dialogue: 4,0:00:18.60,0:00:19.92,YELLOW,,0,0,0,,{\an8\pos(636,1363)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}늦어졌다
+Dialogue: 4,0:00:19.92,0:00:21.09,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}승객들이 다 기다렸다
+Dialogue: 4,0:00:21.09,0:00:22.12,ORANGE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}민폐 논란이 터졌다
+Dialogue: 4,0:00:22.12,0:00:23.07,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}사과문을 올렸다
+Dialogue: 4,0:00:23.07,0:00:24.13,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}고개 숙여 사과드린다
+Dialogue: 4,0:00:24.13,0:00:25.73,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}부부가 SNS를
+Dialogue: 4,0:00:24.13,0:00:25.73,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}끊었다
+Dialogue: 4,0:00:25.73,0:00:26.86,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}유튜브도 한 번 걸렀다
+Dialogue: 4,0:00:26.86,0:00:27.96,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}그렇게 2주가 지났다
+Dialogue: 4,0:00:27.96,0:00:29.51,PINK,,0,0,0,,{\an8\pos(636,1269)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}벌써 잊힌 줄 알았나
+Dialogue: 4,0:00:29.51,0:00:30.67,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}7일 홈쇼핑 생방송
+Dialogue: 4,0:00:30.67,0:00:31.80,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}화면에 다시 나타났다
+Dialogue: 4,0:00:31.80,0:00:32.81,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}침묵은 딱 2주였다
+Dialogue: 4,0:00:32.81,0:00:34.19,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}사과보다
+Dialogue: 4,0:00:32.81,0:00:34.19,RED,,0,0,0,,{\an8\pos(636,1373)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}복귀가 빨랐다

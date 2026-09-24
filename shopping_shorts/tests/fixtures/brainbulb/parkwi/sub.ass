@@ -1,0 +1,59 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+YCbCr Matrix: TV.709
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: HL1,SB 어그로 Bold,123,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: HL2,SB 어그로 Bold,134,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: CARD,에스코어 드림 6 Bold,54,&H00000000,&H00000000,&H00FDFDFD,&H00FDFDFD,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: WHITE,에스코어 드림 7 ExtraBold,102,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: PINK,에스코어 드림 6 Bold,102,&H00FEDEFE,&H00FEDEFE,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: YELLOW,에스코어 드림 6 Bold,99,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: RED,여기어때 잘난체 OTF,73,&H000000FF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: ORANGE,에스코어 드림 6 Bold,102,&H000D6CF7,&H000D6CF7,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:02.62,CARD,,0,0,0,,{\p1\pos(0,469)\c&H3B3B3B&\bord0\shad0}m 0 0 l 1080 0 l 1080 273 l 0 273{\p0}
+Dialogue: 1,0:00:00.00,0:00:02.62,CARD,,0,0,0,,{\p1\pos(0,565)\c&HFDFDFD&\bord0\shad0}m 0 0 l 1080 0 l 1080 137 l 0 137{\p0}
+Dialogue: 2,0:00:00.00,0:00:02.62,CARD,,0,0,0,,{\an5\pos(546,633)\fs46\c&H000000&\bord0\shad0}케냐 봉사 갔다가 봉사 받고 왔다는 백만 유튜버
+Dialogue: 3,0:00:00.00,0:00:35.17,HL1,,0,0,0,,{\an8\pos(530,215)\fs123}케냐 봉사 갔다가
+Dialogue: 3,0:00:00.00,0:00:35.17,HL2,,0,0,0,,{\an8\pos(530,330)\fs108}구독자 6만명 날린 유튜버
+Dialogue: 4,0:00:02.62,0:00:03.63,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}백만 유튜버 박위
+Dialogue: 4,0:00:03.63,0:00:04.60,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}3주째 말이 없다
+Dialogue: 4,0:00:04.61,0:00:05.78,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}시작은 KTX였다
+Dialogue: 4,0:00:05.78,0:00:06.75,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}내리다 넘어졌다
+Dialogue: 4,0:00:06.75,0:00:07.87,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}공익요원 발에 걸렸다
+Dialogue: 4,0:00:07.87,0:00:09.04,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}그 CCTV를 올렸다
+Dialogue: 4,0:00:09.04,0:00:10.13,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}구독자 백만 채널에
+Dialogue: 4,0:00:10.13,0:00:11.42,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}이건 좀 과한데
+Dialogue: 4,0:00:11.42,0:00:12.55,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}이미 사과받은 뒤였다
+Dialogue: 4,0:00:12.55,0:00:13.89,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}영상 지우고
+Dialogue: 4,0:00:12.55,0:00:13.89,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}사과했지만
+Dialogue: 4,0:00:13.89,0:00:15.06,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}구독자 6만명 이탈
+Dialogue: 4,0:00:15.06,0:00:16.24,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}그리고 옛 영상이 떴다
+Dialogue: 4,0:00:16.24,0:00:17.50,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}작년 10월 케냐 봉사
+Dialogue: 4,0:00:17.50,0:00:18.57,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}아내 송지은과 함께
+Dialogue: 4,0:00:18.57,0:00:19.67,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}슬럼가 아이들을
+Dialogue: 4,0:00:18.57,0:00:19.67,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}만났다
+Dialogue: 4,0:00:19.67,0:00:20.79,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}울퉁불퉁 골목길
+Dialogue: 4,0:00:20.79,0:00:21.75,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}휠체어는 못 간다
+Dialogue: 4,0:00:21.75,0:00:22.69,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}계단마다 사람들이
+Dialogue: 4,0:00:22.69,0:00:23.85,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}휠체어째 들어올렸다
+Dialogue: 4,0:00:23.85,0:00:25.08,PINK,,0,0,0,,{\an8\pos(636,1269)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}봉사를 받으러 갔네
+Dialogue: 4,0:00:25.08,0:00:26.23,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}댓글 반응이 뒤집혔다
+Dialogue: 4,0:00:26.23,0:00:27.46,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}자기만족 봉사네
+Dialogue: 4,0:00:27.46,0:00:28.88,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}처음엔 응원
+Dialogue: 4,0:00:27.46,0:00:28.88,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}일색이었다
+Dialogue: 4,0:00:28.88,0:00:30.32,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}그냥 돈으로 도와주지
+Dialogue: 4,0:00:30.32,0:00:31.63,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}지금은 다
+Dialogue: 4,0:00:30.32,0:00:31.63,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}불편해 보인다
+Dialogue: 4,0:00:31.63,0:00:32.88,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}94만명까지 줄었다
+Dialogue: 4,0:00:32.88,0:00:34.00,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}박위는 아직 조용하다
+Dialogue: 4,0:00:34.00,0:00:35.17,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}이제 침묵이
+Dialogue: 4,0:00:34.00,0:00:35.17,RED,,0,0,0,,{\an8\pos(636,1373)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}더 위험하다
