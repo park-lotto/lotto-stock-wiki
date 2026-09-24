@@ -1696,9 +1696,61 @@
     const want=!document.body.classList.contains('no-template');
     if(note.hidden!==want)note.hidden=want;
   }
+  // ★원본 모드에서 쓰는 두 카드(헤드카피·자막) — 신버전 카드와 같은 모양으로 오른쪽 문구/텍스트 안에 넣는다.
+  //   (2026-09-24 사장님: "원본영상그대로를 누르면 오른쪽 문구 텍스트에 헤드카피랑 자막 탭을 넣고,
+  //    그거 펼치면 신버전처럼 정돈되게 기능 넣고")
+  //   값은 부모(제작소)의 옛 칸으로 보낸다 — 원본 모드의 렌더가 그 값을 태우는 경로이기 때문이다.
+  const PLAIN_CARDS=[
+    {key:'plainHead',title:'헤드카피',rows:[
+      {id:'hcText',label:'제목 문구',type:'textarea',hint:'두 줄까지'},
+      {id:'hcSize',label:'글자 크기',type:'range',min:28,max:120,step:1},
+      {id:'hcY',label:'세로 위치',type:'range',min:0,max:100,step:.5},
+      {id:'hcColor',label:'글자 색',type:'color'},
+    ]},
+    {key:'plainCaption',title:'자막',rows:[
+      {id:'capColor',label:'글자 색',type:'color'},
+      {id:'capOutline',label:'외곽선',type:'check'},
+      {id:'capBox',label:'배경 박스',type:'check'},
+    ]},
+  ];
+  const plainSend=(id,value)=>{try{parent.postMessage({type:'scene-style-legacy',id,value},location.origin)}catch{}};
+  function plainCards(panel){
+    const on=document.body.classList.contains('no-template');
+    for(const card of PLAIN_CARDS){
+      let box=panel.querySelector(`:scope > .text-group[data-group="${card.key}"]`);
+      if(!box){
+        box=document.createElement('details');box.className='text-group';box.dataset.group=card.key;
+        box.innerHTML=`<summary><b>${card.title}</b><small></small></summary><div class="text-group-body plain-rows"></div>`;
+        const body=box.querySelector('.plain-rows');
+        for(const r of card.rows){
+          const row=document.createElement('label');row.className='plain-row';
+          const input=r.type==='textarea'?document.createElement('textarea')
+            :r.type==='check'?Object.assign(document.createElement('input'),{type:'checkbox'})
+            :r.type==='color'?Object.assign(document.createElement('input'),{type:'color'})
+            :Object.assign(document.createElement('input'),{type:'range',min:r.min,max:r.max,step:r.step});
+          input.dataset.plainId=r.id;if(r.type==='textarea')input.rows=2;
+          row.innerHTML=`<span>${r.label}</span>`;row.append(input);
+          if(r.hint)row.insertAdjacentHTML('beforeend',`<i>${r.hint}</i>`);
+          body.append(row);
+          const send=()=>plainSend(r.id,r.type==='check'?input.checked:input.value);
+          input.addEventListener(r.type==='check'?'change':'input',send);
+        }
+        panel.prepend(box);
+      }
+      if(box.hidden!==!on)box.hidden=!on;
+    }
+  }
+  // 부모가 옛 칸의 현재 값을 보내 주면 카드에 채운다(열 때 빈칸으로 보이지 않게)
+  addEventListener('message',event=>{
+    if(event.data?.type!=='scene-style-legacy-values')return;
+    for(const [id,value] of Object.entries(event.data.values||{})){
+      const el=document.querySelector(`[data-plain-id="${id}"]`);if(!el)continue;
+      if(el.type==='checkbox')el.checked=!!value;else el.value=value;
+    }
+  });
   function build(){
     const panel=document.querySelector('.layout-a .scene-text-panel');if(!panel)return;
-    noTemplateNote(panel);
+    noTemplateNote(panel);plainCards(panel);
     for(const g of GROUPS){
       let box=panel.querySelector(`:scope > .text-group[data-group="${g.key}"]`);
       const nodes=g.pick(panel);if(!box&&!nodes.length)continue;
@@ -1711,8 +1763,9 @@
     refresh();
   }
   function refresh(){
-    const panel=document.querySelector('.layout-a .scene-text-panel');if(panel)noTemplateNote(panel);
+    const panel=document.querySelector('.layout-a .scene-text-panel');if(panel){noTemplateNote(panel);plainCards(panel);}
     document.querySelectorAll('.layout-a .scene-text-panel > .text-group').forEach(box=>{
+      if(box.dataset.group&&box.dataset.group.startsWith('plain'))return;   // 원본 모드 카드는 plainCards가 직접 켜고 끈다
       const body=box.querySelector('.text-group-body');
       // 안의 칸이 전부 숨겨진 단락(예: 훅 화면의 자막)은 카드째 숨긴다
       // 값이 바뀔 때만 쓴다 — 이 함수가 감시 대상 안을 고치므로, 같은 값을 다시 쓰면 감시→갱신이 끝없이 돈다.
