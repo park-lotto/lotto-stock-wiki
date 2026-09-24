@@ -43,7 +43,7 @@
   }
   let allowed=false;   // 새 편집기를 열 수 있는가 — 관리자 또는 스위치(2026-09-23 사장님: 라이브 뒤 켠다. 그전엔 고객에게 안 보인다)
   async function initInline(){
-    try{const r=await fetch('/api/produce/scene-style/flags',{cache:'no-store'});const d=await r.json();inlineMode=!!(r.ok&&d&&d.inline);allowed=!!(r.ok&&d&&d.allowed);}catch(_){inlineMode=false;allowed=false;}
+    try{const r=await fetch('/api/produce/scene-style/flags',{cache:'no-store'});const d=await r.json();inlineMode=false;/* [긴급 2026-09-25] 라이브에서 6단계가 빈 패널로 남는 사고 — 원인 규명 전까지 인라인 모드 강제 끔(d.inline 무시) */allowed=!!(r.ok&&d&&d.allowed);}catch(_){inlineMode=false;allowed=false;}
     if(!allowed){const btn=document.querySelector('.panel[data-step="3"] button.btn[onclick="openSceneStyleEditor()"]');if(btn)btn.hidden=true;const st=status();if(st)st.textContent='';}
     if(!inlineMode)return;
     const panel=stepPanel();if(!panel)return;
