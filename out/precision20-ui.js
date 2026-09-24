@@ -1272,6 +1272,9 @@
     //   늘 들어가 있어서, 옛 조건(background 있음)으로는 한 번 끌면 디자인이 회색 띠로 바뀌었다(2026-09-18 사장님 제보·재현).
     const saved=captionLayouts.get(captionKey())||{};
     if(saved.look==='none')return CAPTION_NONE;
+    // ★원본(plain) = 인스타식: 기본은 박스 없이 흰 글자+검은 테두리(2026-09-25 사장님 "검정박스 없애고 제목 아래 이 정도 위치").
+    //   고객이 모양을 고르거나(look) 박스색을 직접 고르면(bgUser) 그걸 따른다.
+    if(rows[current]?.id===PLAIN_ID&&saved.look===undefined&&!saved.bgUser)return CAPTION_NONE;
     const accent0=(fixedColorsFor(rows[current].id,frame).title2||'#00F9ED').slice(0,7);
     if(Number.isInteger(saved.look)&&CAPTION_LOOKS[saved.look])return CAPTION_LOOKS[saved.look](accent0);   // 사용자가 고른 모양(썰쇼핑형 본문에도 적용)
     if(mode!=='continuous'||saved.bgUser)return null;

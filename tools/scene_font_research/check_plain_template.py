@@ -47,13 +47,17 @@ with sync_playwright() as p:
     pg.evaluate("()=>{window.sceneStyle.show(1);return 1}"); pg.wait_for_timeout(700)
     body = pg.evaluate(SPOT)
     need(body.get('bodyTitle') is not None and body['bodyTitle'] < 30, f'④ 본문: 제목 {body.get("bodyTitle")}%')
-    need(body.get('caption') is not None and body['caption'] > 70,
-         f'④ 본문: 자막이 화면 아래쪽 {body.get("caption")}% — 고치기 전엔 0%(맨 위)로 붙었다')
+    # 2026-09-25 사장님: 원본(인스타식) 자막은 **제목 바로 아래 · 박스 없이**. (종전 기준은 화면 아래 81%·검정 박스)
+    need(body.get('caption') is not None and 18 <= body['caption'] <= 30,
+         f'④ 본문: 자막이 제목 바로 아래 {body.get("caption")}% (종전 81%)')
+    BOX = "()=>{const e=document.querySelector('#a-live-preview .precision-patch[data-edit-bind=caption]');if(!e)return null;const c=getComputedStyle(e);return c.backgroundColor+'|'+c.backgroundImage}"
+    bx = pg.evaluate(BOX)
+    need(bx is not None and bx.startswith('rgba(0, 0, 0, 0)') and bx.endswith('none'), f'④ 본문: 자막 박스 없음(투명) {bx} — 종전 검정 박스')
     # ⑥ 2026-09-24 고객 제보: "썰쇼핑형·전장면 고정형 **둘 다** 원본 영상 그대로를 고르면 자막이 안 보인다.
     #    예전엔 장면마다 자막을 위로 옮겨 상품을 가리지 않게 썼다." → 원본은 훅 장면에도 자막이 나와야 한다.
     pg.evaluate("()=>{window.sceneStyle.show(0);return 1}"); pg.wait_for_timeout(700)
     h2 = pg.evaluate(SPOT)
-    need(h2.get('caption') is not None and h2['caption'] > 70,
+    need(h2.get('caption') is not None and 18 <= h2['caption'] <= 30 and h2['caption'] > (h2.get('hook2') or 0),
          f"⑥ 썰쇼핑형 원본: **훅 장면에도** 자막이 보인다 ({h2.get('caption')}%) — 고치기 전엔 아예 없었다")
     CAPFIELD = "()=>!!document.querySelector('[data-field-key=\"caption\"]:not([hidden])')"
     need(pg.evaluate(CAPFIELD), '⑥ 자막 칸(문구·위치 옮기기)이 열려 있다')
@@ -63,7 +67,9 @@ with sync_playwright() as p:
     need(cid == 'plain', f"⑥ 전장면 고정형에서도 원본 카드가 먹는다 (presetId {cid}) — 고치기 전엔 아무것도 안 그리는 모드로 빠졌다")
     pg.evaluate("()=>{window.sceneStyle.show(1);return 1}"); pg.wait_for_timeout(800)
     c2 = pg.evaluate(SPOT)
-    need(c2.get('caption') is not None and c2['caption'] > 70, f"⑥ 전장면 고정형 원본에도 자막이 보인다 ({c2.get('caption')}%)")
+    need(c2.get('caption') is not None and 18 <= c2['caption'] <= 30, f"⑥ 전장면 고정형 원본에도 자막이 제목 아래에 보인다 ({c2.get('caption')}%)")
+    bx2 = pg.evaluate(BOX)
+    need(bx2 is not None and bx2.startswith('rgba(0, 0, 0, 0)'), f'⑥ 전장면 고정형 원본도 박스 없음 {bx2}')
     need(not errs, f'페이지 오류 없음 {errs[:2]}')
     b.close()
 srv.shutdown()
@@ -86,6 +92,9 @@ def ink(png, a0, a1):
     return sum(1 for y in range(int(h * a0), int(h * a1), 3) for x in range(int(w * .1), int(w * .9), 6) if al.getpixel((x, y)) > 40)
 if len(pngs) >= 2:
     need(ink(pngs[0], .05, .25) > 300, f'⑤ 훅 레이어 위쪽에 제목이 찍힌다 ({ink(pngs[0], .05, .25)}점)')
-    need(ink(pngs[1], .75, .92) > 300, f'⑤ 본문 레이어 아래쪽에 자막이 찍힌다 ({ink(pngs[1], .75, .92)}점)')
+    need(ink(pngs[1], .19, .30) > 300 and ink(pngs[1], .75, .92) < 30, f'⑤ 본문 레이어: 자막이 제목 아래에 찍히고({ink(pngs[1], .19, .30)}점) 아래쪽은 비었다({ink(pngs[1], .75, .92)}점)')
+    im = Image.open(pngs[1]).convert('RGBA'); W, H = im.size
+    edge = sum(1 for y in range(int(H * .19), int(H * .30), 3) for x in (int(W * .02), int(W * .98)) if im.getpixel((x, y))[3] > 40)
+    need(edge == 0, f'⑤ 렌더 레이어에 자막 박스(가장자리까지 칠한 띠)가 없다 (가장자리 칠 {edge}점)')
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건')
 sys.exit(1 if fails else 0)
