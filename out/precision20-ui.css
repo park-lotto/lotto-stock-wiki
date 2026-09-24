@@ -92,6 +92,11 @@
 .layout-a .chips{display:none!important}
 .none-card .none-thumb{display:flex;align-items:center;justify-content:center;aspect-ratio:9/8;border:1px dashed #35505b;border-radius:8px;background:#0b1b24;color:#8fa3ad;font-size:13px;font-weight:900;text-align:center;line-height:1.5}
 .no-template .scene-text-panel>.text-group{display:none!important}
+.no-template-note{border:1px dashed #294451;border-radius:12px;background:#0b1a22;padding:16px;margin:0 0 10px;color:#8fa3ad}
+.no-template-note[hidden]{display:none!important}
+.no-template-note b{display:block;color:#e8f3f0;font-size:14px;margin-bottom:6px}
+.no-template-note p{margin:0 0 12px;font-size:13px;line-height:1.5}
+.no-template-note button{width:100%;padding:11px;border-radius:10px;border:1px solid #43e2b4;background:#0f2a24;color:#63edc6;font:800 13px system-ui,sans-serif;cursor:pointer}
 /* 자막박스 모양 고르기(2026-09-18) */
 .caption-looks{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px}.caption-looks>span{grid-column:1/-1;color:#8fa3ad;font-size:11px;font-weight:900}
 .caption-looks button{height:30px;border:1px solid #294451;border-radius:6px;background:#0d202b;color:#9eb0b9;font-size:10px;font-weight:900;cursor:pointer;white-space:nowrap}

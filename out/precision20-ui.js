@@ -921,7 +921,7 @@
     return el;
   }
   function setNoTemplate(){
-    noTemplate=true;document.body.classList.add('no-template');
+    noTemplate=true;document.body.classList.add('no-template');window.dispatchEvent(new Event('scene-style-template'));
     grid.querySelectorAll('[data-p20]').forEach(x=>x.classList.remove('selected'));grid.querySelector('[data-none]')?.classList.add('selected');
     renderEdit();
   }
@@ -1293,7 +1293,7 @@
     syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);requestAnimationFrame(()=>runCaptionEnter());   // 09-19: [다음]으로 넘길 때도 본문 모션이 돈다(전엔 showFrame에만 있었다)
   }
   function selectPreset(index){
-    noTemplate=false;document.body.classList.remove('no-template');grid.querySelector('[data-none]')?.classList.remove('selected');
+    noTemplate=false;document.body.classList.remove('no-template');window.dispatchEvent(new Event('scene-style-template'));grid.querySelector('[data-none]')?.classList.remove('selected');
     current=index;const p=rows[index];
     if(mode==='continuous')kind='hook';else sceneIndex=kind==='hook'?0:Math.max(1,sceneIndex);
     preview.classList.remove('template-shortem');
@@ -1667,8 +1667,27 @@
     if(key==='caption')return val('textarea');
     return '';
   }
+  // ★'원본 영상 그대로'를 고르면 문구 칸이 전부 숨어 오른쪽이 텅 빈다(2026-09-24 사장님 제보).
+  //   설계대로이긴 하나(넣을 글자가 없다) 빈 화면은 고장으로 보인다 — 무슨 상태인지와 나가는 길을 적어 둔다.
+  function noTemplateNote(panel){
+    let note=panel.querySelector(':scope > .no-template-note');
+    if(!note){
+      note=document.createElement('div');note.className='no-template-note';
+      note.innerHTML='<b>원본 영상 그대로 나갑니다</b><p>제목·자막을 얹지 않습니다. 넣으시려면 왼쪽 <b>장면</b> 탭에서 템플릿을 고르세요.</p><button type="button" data-goto-template>템플릿 고르러 가기</button>';
+      note.querySelector('[data-goto-template]').addEventListener('click',()=>{
+        document.querySelector('[data-left-tab="scene"]')?.click();
+        document.querySelector('.preset-grid [data-p20="0"]')?.scrollIntoView({block:'nearest'});
+      });
+      panel.prepend(note);
+    }
+    // ★값이 바뀔 때만 건드린다 — 이 패널은 MutationObserver가 보고 있어서, 같은 값을 다시 써도
+    //   감시→refresh→다시 쓰기가 끝없이 돌아 **탭이 죽는다**(2026-09-24 실측: 편집기 페이지 CRASH).
+    const want=!document.body.classList.contains('no-template');
+    if(note.hidden!==want)note.hidden=want;
+  }
   function build(){
     const panel=document.querySelector('.layout-a .scene-text-panel');if(!panel)return;
+    noTemplateNote(panel);
     for(const g of GROUPS){
       let box=panel.querySelector(`:scope > .text-group[data-group="${g.key}"]`);
       const nodes=g.pick(panel);if(!box&&!nodes.length)continue;
@@ -1681,6 +1700,7 @@
     refresh();
   }
   function refresh(){
+    const panel=document.querySelector('.layout-a .scene-text-panel');if(panel)noTemplateNote(panel);
     document.querySelectorAll('.layout-a .scene-text-panel > .text-group').forEach(box=>{
       const body=box.querySelector('.text-group-body');
       // 안의 칸이 전부 숨겨진 단락(예: 훅 화면의 자막)은 카드째 숨긴다
@@ -1691,7 +1711,8 @@
   }
   const start=()=>{build();const panel=document.querySelector('.layout-a .scene-text-panel');if(!panel)return;
     new MutationObserver(()=>{if([...panel.children].some(c=>!c.classList.contains('text-group')&&!c.classList.contains('ai-card')&&GROUPS.some(g=>g.pick(panel).includes(c))))build();else refresh();}).observe(panel,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','class']});
-    panel.addEventListener('input',refresh);};
+    panel.addEventListener('input',refresh);
+    window.addEventListener('scene-style-template',()=>noTemplateNote(panel));};
   if(document.readyState==='complete')setTimeout(start,0);else addEventListener('load',()=>setTimeout(start,0));
 })();
 
