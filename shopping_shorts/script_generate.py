@@ -124,7 +124,7 @@ _BREATH_SCHEMA = {
 _BREATH_MIN_CHARS = 13
 
 
-def ai_breath_lines(narration):
+def ai_breath_lines(narration, max_chars=None):
     """자막 호흡 줄 — Gemini가 문장을 '숨 쉬는 자리'에서만 끊는다(글자 불변, 줄만 나눔).
 
     폴백 칸 전용(2026-08-29 사장님 "자연스러운 호흡으로 끊는 게 기본"): caption_lines가
@@ -149,7 +149,7 @@ def ai_breath_lines(narration):
         "규칙:\n"
         "- 사람이 말하다 숨을 쉬는 자연스러운 호흡 단위(의미 덩어리)로만 끊는다.\n"
         "- 글자를 추가·삭제·수정하지 마라. 원문 어절 그대로, 줄만 나눈다.\n"
-        "- 한 줄은 공백 제외 4~14자. 명사구나 '조사 앞' 한가운데를 끊지 마라.\n"
+        "- 한 줄은 공백 제외 4~" + str(int(max_chars or 14)) + "자. 명사구나 '조사 앞' 한가운데를 끊지 마라.\n"
         "  (좋은 예: '인테리어 고수들만 안다는' | '비밀 테이블이 있어요')\n"
         '- JSON {"lines": ["줄1", "줄2", ...]} 로만 답하라.\n'
         "원문: " + text

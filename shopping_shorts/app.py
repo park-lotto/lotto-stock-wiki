@@ -6192,7 +6192,7 @@ def _lab_captions(plan):
         #   owner_n = 이 값이 맞는 조각 수. 화면에서 조각을 넣고 빼 수가 달라지면 화면은 옛 식으로
         #   그리고(저장 시 서버도 같은 식으로 다시 얼린다), 저장 응답의 새 값으로 다시 맞춘다.
         _n_seg = len(video_assemble._beat_material(b)) if b.get("phrase_sync") else 0
-        _own = video_assemble.phrase_owners(b, _n_seg, segs) if _n_seg else []
+        _own = video_assemble.phrase_owners(b, _n_seg, segs, durs=durs) if _n_seg else []   # R4 컷 하한 묶음
         for k, (seg, dd) in enumerate(zip(segs, durs)):
             row = {"text": seg, "start": round(t, 3), "end": round(t + dd, 3)}
             if k < len(_own):
@@ -15214,6 +15214,10 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "script_grounded_enabled",
                        # 3단계 '붙어 온 장면 그대로'(Gemini 0회·추측 층 없음) — 값 규약은 위와 같다
                        "edl_inherit_enabled",
+                       # 구절 맞춤 컷 하한(2026-09-26) — ""끔 · "1.5" 전체 · "admin:1.5" 관리자만 · "11,42:1.2"
+                       "phrase_min_cut",
+                       # 자막 한 줄 글자 상한(2026-09-26, 공백 제외) — ""끔 · "admin:10" 관리자만 · "10" 전체. 단순 분할 규칙으로 간다
+                       "caption_max_chars",
                        # 자막제거 정본(2026-09-22) — 4단계 청소본을 정본으로, 꾸미기 뒤 재청소 없음. 값 규약 같음
                        "clean_base_enabled",
                        # AI 장면 생성(Veo, 2026-09-23) — 기본 admin(사장님만). 고객은 사장님 판정 뒤 "1"
