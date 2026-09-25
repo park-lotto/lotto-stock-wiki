@@ -8841,6 +8841,12 @@ function jump(o){
   //     맨몸으로 부르면 ReferenceError로 죽는다(실측: test_step_navigation_persists_
   //     and_gate_holds가 이걸로 실패했다. 메모리 reference_슬라이스하네스_window금지).
   if(cur === 2 && p > cur && typeof vpGateNext === 'function' && !vpGateNext()) return;
+  // ★6단계(장면꾸미기)를 **앞으로** 떠날 때 적용 안 한 템플릿이 있으면 "이 템플릿으로 진행할까요?"(2026-09-26 사장님).
+  //   판단은 scene-style-produce.js sceneStyleLeaveGate 한 곳 — 창을 띄우면 false, 고르면 proceed로 여기 다시 온다.
+  //   앞뒤 판정은 오브 순서로(패널 번호는 매칭=7이라 순서가 아니다).
+  //   ★typeof를 **맨 앞에** — jump만 잘라 돌리는 테스트 하네스엔 PANEL_BY_KEY가 없어 먼저 읽으면 ReferenceError(게이트 실측).
+  if(typeof sceneStyleLeaveGate === 'function' && cur === PANEL_BY_KEY.deco && PANEL_TO_ORB[p] > PANEL_TO_ORB[cur]
+     && !sceneStyleLeaveGate(() => jump(o))) return;
   cur=p;
   // ★사용자가 스스로 옮긴 단계다 — 서버 기준선도 같이 옮겨 "게이트 강등"과 구분한다(2026-08-07).
   //   이게 없으면 앞 단계로 돌아간 이동이 강등으로 오인돼 서버에 저장되지 않는다.
@@ -19405,6 +19411,6 @@ async function checkTtsKey(){
 }
 try{ checkTtsKey(); }catch(e){}
 </script>
-<script src="/scene-style-produce.js?v=17"></script>
+<script src="/scene-style-produce.js?v=18"></script>
 </body>
 </html>

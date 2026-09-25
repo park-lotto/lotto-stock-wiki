@@ -80,7 +80,11 @@ try:
             fr = next((x for x in pg2.frames if 'scene-style-ui-showcase' in x.url), None); need(fr is not None, '② 회색 버튼 경로로 편집기 팝업이 열린다')
             if fr:
                 fr.wait_for_function('window.sceneStyle&&window.sceneStyle.context()&&window.sceneStyle.context().jobId', timeout=30000)
+                pin_bodies = []; pg2.on('request', lambda r: pin_bodies.append(r.post_data) if '/api/produce/thumb/pin' in r.url else None)
                 fr.evaluate('window.sceneStyle.show(1)'); fr.click('[data-thumb-pin]'); fr.wait_for_function("document.querySelector('[data-thumb-msg]').textContent.startsWith('✓')", timeout=60000)
+                _pb = json.loads(pin_bodies[-1]) if pin_bodies else {}
+                need('scene_style' in _pb and isinstance(_pb.get('scene_style'), dict) and _pb['scene_style'].get('presetId'),
+                     f"③ 편집기 핀 요청에 지금 화면 설정이 실린다(저장 전이라도 그걸로 찍게) presetId={(_pb.get('scene_style') or {}).get('presetId')} — 고치기 전엔 없음")
                 need(len((Store(module.DB_PATH).get_mix_job(JOB).get('thumbnail') or {}).get('pins') or []) == 2, '② 제작소 안에서 보낸 핀도 DB에 들어갔다(합계 2)')
                 before = pg2.evaluate("document.querySelector('dialog[open]')!==null"); fr.click('[data-thumb-go]'); pg2.wait_for_timeout(2500)
                 after = pg2.evaluate("document.querySelector('dialog[open]')!==null"); need(before and not after, f'② [썸네일 단계로 이동] → 편집기 팝업이 닫힌다 (열림 {before}→{after})')
@@ -89,6 +93,22 @@ try:
                 if st['locked']: need(bool(st['lockMsg']), f"② 7단계가 잠긴 job — 제작소 잠금 규칙대로 이동을 막고 안내한다: {st['lockMsg']}")
                 else: need(st['cur'] == st['thumbPanel'], f"② 제작소가 7단계(썸네일) 패널로 이동했다 cur={st['cur']}")
                 pg2.screenshot(path=str(out / 'after_goto_thumb.png'))
+                # ④ 같은 장면을 한 번 더 보내면 7단계 후보 그림이 **실제로 새 그림으로 바뀐다**
+                #   (2026-09-25 고객 job 92976b481a86: 핀 6번, 브라우저 그림 수신 2번 — 같은 파일명이라 목록이 '그대로'로 보였다)
+                first_src = "document.querySelector('#thumbFrames img')?.getAttribute('src')"
+                pg2.evaluate('loadThumbFrames()'); pg2.wait_for_timeout(3000); src1 = pg2.evaluate(first_src)
+                pg2.evaluate('openSceneStyleEditor()'); pg2.wait_for_timeout(4000)
+                fr = next((x for x in pg2.frames if 'scene-style-ui-showcase' in x.url), None)
+                fr.wait_for_function('window.sceneStyle&&window.sceneStyle.context()&&window.sceneStyle.context().jobId', timeout=30000)
+                fr.evaluate('window.sceneStyle.show(1)'); fr.evaluate("document.querySelector('[data-thumb-msg]').textContent=''")
+                fr.click('[data-thumb-pin]'); fr.wait_for_function("document.querySelector('[data-thumb-msg]').textContent.startsWith('✓')", timeout=60000)
+                pg2.evaluate('loadThumbFrames()'); pg2.wait_for_timeout(3000)
+                src2 = pg2.evaluate(first_src); cur_url = pg2.evaluate('THUMB_STATE.frame_url')
+                need(bool(src1) and bool(src2) and src1 != src2 and cur_url == src2,
+                     f"④ 다시 보내면 7단계 맨 앞 후보 그림 주소가 바뀌고 그게 선택된다 {src1} → {src2} (선택 {cur_url}) — 고치기 전엔 같은 주소")
+                loaded = pg2.evaluate("(()=>{const i=document.querySelector('#thumbFrames img');return !!(i&&i.complete&&i.naturalWidth>0)})()")
+                need(loaded, '④ 그 후보 그림이 실제로 화면에 그려졌다(naturalWidth>0)')
+                pg2.screenshot(path=str(out / 'after_repin_thumb.png'))
         need(not errs, f'페이지 오류 {errs[:4]}'); b.close()
 finally:
     server.should_exit = True; time.sleep(1)
