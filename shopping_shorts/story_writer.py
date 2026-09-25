@@ -131,7 +131,10 @@ YT_SCHEMA = {
             "from_pain": {"type": "string"},
             "feat": {"type": "integer"},
             "detail": {"type": "array", "items": {"type": "string"}},     # 풀코스: 없앤 뒤 장면 풀이 3~4줄
-        }, "required": ["moment", "what_happens", "erased", "from_pain", "feat"]}},
+        }, "required": ["moment", "what_happens", "erased", "from_pain", "feat"]},
+            # ★고조는 **2칸 무조건**(2026-09-26 사장님 "고조2는 무조건 들어가야 된다"). 히트작 실측 프리셋도
+            #   고조1 80자·고조2 39자 둘이다. 모델이 1칸만 쓰고 끝내던 것을 구조(minItems)로 막는다.
+            "minItems": 2},
         "twist": {"type": "string"},
         "twist_feat": {"type": "integer"},      # 반전이 근거로 삼은 재료 번호 — 그 특징의 컷이 붙는다(2026-09-22)
         "finale": {"type": "array", "items": {"type": "string"}},       # 풀코스: 마지막 셀링 2~3줄(반전 대신)
@@ -314,7 +317,33 @@ def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, n
         brief, product or "", (seed_text or "").strip(), _feats_block(feats))
     schema = IG_SCHEMA if ig else (_short_schema() if preset == "short" else YT_SCHEMA)
     out = _sg._call_json(prompt, schema, note=note) or {}
+    if not ig and _n_escalations(out) < MIN_ESCALATIONS:
+        # ★고조2 무조건(2026-09-26 사장님). 스키마 minItems로도 모델이 빈 문자열 칸을 채워 올 수 있어
+        #   내용이 있는 고조 칸을 세고, 모자라면 **무엇이 모자란지 말해 1회 다시** 쓴다. 그래도 모자라면 반려([]) —
+        #   호출부(make_drafts)가 why에 남겨 화면이 이유를 보인다(조용히 얇은 대본을 내보내지 않는다).
+        if note is not None:
+            note["escalation_retry"] = _n_escalations(out)
+        out = _sg._call_json(prompt + ESCALATION_RETRY_BLOCK % _n_escalations(out), schema, note=note) or {}
+        if _n_escalations(out) < MIN_ESCALATIONS:
+            if note is not None:
+                note["reason"] = "고조2 없음(%d칸)" % _n_escalations(out)
+            return []
     return _to_lines(out, ig, key, nth, feats, preset=preset)
+
+
+MIN_ESCALATIONS = 2      # 썰: 고조1(불편→없앰) + 고조2(심지어) — 히트작 프리셋과 같은 수
+ESCALATION_RETRY_BLOCK = ("\n\n■ 다시 써라 — 고조 칸이 %d개뿐이다. **고조 칸은 정확히 2개**여야 한다. 두 번째 고조는 "
+                          "첫 번째와 **다른 특징·다른 장면**(재료의 다른 번호)으로 쓰고, moment·what_happens·erased를 다 채워라. "
+                          "다른 칸은 그대로 두어도 된다.")
+
+
+def _n_escalations(out):
+    """내용이 채워진 고조 칸 수 — moment·what_happens·erased 중 하나라도 글이 있으면 1칸으로 센다."""
+    n = 0
+    for e in (out or {}).get("escalations") or []:
+        if isinstance(e, dict) and any((e.get(k) or "").strip() for k in ("moment", "what_happens", "erased")):
+            n += 1
+    return n
 
 
 # 한입썰 칸별 최대 글자(공백 포함) — 썰 히트작 49편 실측 75% 지점을 조금 넘는 값. 지시문은 모델이 넘기지만
@@ -544,7 +573,7 @@ def _fit_length(lines, limit_secs):
     lines, dropped = list(lines), 0
     while sum(ba._secs(L["text"]) for L in lines) > limit_secs:
         escs = sorted({L["role"] for L in lines if L["role"].startswith("고조")}, key=lambda r: int(r[2:]))
-        if len(escs) <= 1:
+        if len(escs) <= MIN_ESCALATIONS:      # ★고조2는 길이 때문에도 안 뺀다(2026-09-26 사장님 "무조건")
             break
         lines = [L for L in lines if L["role"] != escs[-1]]
         dropped += 1

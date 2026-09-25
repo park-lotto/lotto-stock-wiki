@@ -15,7 +15,7 @@ def _job():
     return {"backbone_main": 0, "extract": {
         "s0": {"video_id": "s0", "full_text": seed, "source_brief": {"product": "두피 액체빗"},
                "segments": [_seg("SEED", i) for i in range(6)]},
-        "s1": {"video_id": "s1", "full_text": "", "segments": [_seg("MAT", i) for i in range(12)]},
+        "s1": {"video_id": "s1", "full_text": "", "segments": [_seg("MAT", i) for i in range(20)]},   # 고조2 필수로 줄이 늘어 컷도 넉넉히(2026-09-26)
     }}
 
 
@@ -26,7 +26,10 @@ FEATS = [{"name": "앰플 도포", "claim": "빗 뒷면에 앰플을 채워 바�
 YT_OUT = {"hook": "이걸 아직도 손으로 바른다고", "bait": "요새 이거 하나로 난리인데", "reveal": "이건 바로 두피 액체빗.",
           "contrast": "", "twist": "근데 가방에도 쏙 들어가서", "closing": "쓰는 사람마다 난리라는데",
           "escalations": [{"moment": "겨우 짜서 바르려는 순간", "what_happens": "손가락 사이로 다 흘러내리던 그 짜증을",
-                           "erased": "빗 안에 넣어서 없애 버렸다는 거", "from_pain": "앰플 도포"}]}
+                           "erased": "빗 안에 넣어서 없애 버렸다는 거", "from_pain": "앰플 도포"},
+                          # 고조2 무조건(2026-09-26) — 가짜 출력도 히트작 프리셋처럼 2칸
+                          {"moment": "큰 병을 가방에 넣으려던 순간", "what_happens": "자리만 차지하던 그 짐을",
+                           "erased": "빗 하나로 없애 버렸다는 거", "from_pain": "휴대"}]}
 
 
 def _fake(monkeypatch, out=YT_OUT, feats=FEATS):
@@ -121,7 +124,8 @@ def test_too_long_script_drops_whole_escalations_from_the_end():
     L = lambda r, n: {"role": r, "text": "가" * n, "group": -1}
     lines = [L("훅", 20), L("고조1", 40), L("고조1", 40), L("고조2", 40), L("고조2", 40), L("고조3", 40), L("마무리", 20)]
     out, dropped = sw._fit_length(lines, 25)
-    assert dropped == 2 and [x["role"] for x in out] == ["훅", "고조1", "고조1", "마무리"]   # 최소 1칸은 남는다
+    # ★고조2는 길이 때문에도 안 뺀다(2026-09-26 사장님 "고조2는 무조건") — 최소 2칸이 남는다
+    assert dropped == 1 and [x["role"] for x in out] == ["훅", "고조1", "고조1", "고조2", "고조2", "마무리"]
     assert sw._fit_length(lines, 999) == (lines, 0)
 
 
@@ -218,3 +222,29 @@ def test_explicit_seed_wins_over_longest_job_text(monkeypatch):
     sw.make_drafts([], job, job_id="j3")
     assert seen[0]["seed"].startswith("여러분 다이소"), "명시 씨앗 없음 → job의 가장 긴 한국어 글(종전)"
     assert seen[0]["platform"] == "ig", "존댓말 글이 씨앗이면 인스타 결 — 이게 ea29 사고의 모양이다"
+
+
+def test_second_escalation_is_mandatory_retry_once_then_reject(monkeypatch):
+    """2026-09-26 사장님 "고조2는 무조건 들어가야 된다". 1칸이면 무엇이 모자란지 말해 1회 다시, 그래도 1칸이면 반려."""
+    one = dict(YT_OUT, escalations=YT_OUT["escalations"][:1])
+    prompts = []
+
+    def call(prompt, schema, note=None, model=None, vertex=True):
+        prompts.append(prompt)
+        if schema is sw.FEATS_SCHEMA:
+            return {"feats": FEATS}
+        return one if len(prompts) == 1 else YT_OUT          # 첫 답 1칸 → 다시 → 2칸
+    monkeypatch.setattr(sw._sg, "_call_json", call)
+    note = {}
+    lines = sw.write("두피 액체빗", "씨앗 " * 30, FEATS, platform="yt", key="k", note=note)
+    roles = [L["role"] for L in lines]
+    assert "고조2" in roles and note.get("escalation_retry") == 1
+    assert "고조 칸이 1개뿐" in prompts[1] and "정확히 2개" in prompts[1]
+    # 스키마도 구조로 막는다
+    assert sw.YT_SCHEMA["properties"]["escalations"]["minItems"] == 2
+    assert sw._short_schema()["properties"]["escalations"]["minItems"] == 2
+    # 끝내 1칸이면 반려 — 얇은 대본을 조용히 내보내지 않는다
+    monkeypatch.setattr(sw._sg, "_call_json", lambda *a, **k: one)
+    note2 = {}
+    assert sw.write("두피 액체빗", "씨앗 " * 30, FEATS, platform="yt", key="k", note=note2) == []
+    assert note2.get("reason", "").startswith("고조2 없음")
