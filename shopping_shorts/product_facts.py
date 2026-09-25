@@ -217,6 +217,13 @@ def _gemini(parts_or_text, *, model="gemini-3-flash-preview", log=print):
         log("[product_facts] genai 임포트 실패: %s" % e)
         return {}
     keys = list(comment_gen.SHORTS_GEMINI_KEYS or [])
+    # 쓸 수 없는 키(계정 사망·선불 소진·월 한도·할당량 0)는 앞에서 뺀다(2026-09-25) —
+    #   이 루프는 잠금을 안 보고 앞 8개만 도므로 죽은 키가 앞에 있으면 그대로 몇 칸을 버린다.
+    try:
+        from pipeline.atoms import key_vault
+        keys = key_vault.without_dead(keys) or keys
+    except Exception as e:                     # noqa: BLE001 — 거르기 실패면 원래 목록으로 돈다
+        log("[product_facts] 죽은 키 거르기 실패(무해): %r" % (e,))
     if not keys:
         log("[product_facts] 제미니 키 0개 — 건너뜀")
         return {}

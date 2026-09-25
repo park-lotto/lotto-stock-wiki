@@ -226,7 +226,8 @@ function poolCards(snap,agg,budget){
     if(p.pool==='shorts'){
       const cls=!p.total?'mid':(p.live===0?'hot':(p.live/p.total<0.3?'mid':'good'));
       html+=card('제미니 쇼핑쇼츠 풀',`${p.live??'?'}/${p.total??'?'}`,
-        `사장님 ${p.owner??'?'} + 회원 ${p.member??'?'} · 잠김 ${(p.locked||[]).length}`,cls);
+        `사장님 ${p.owner??'?'} + 회원 ${p.member??'?'} · 잠김 ${(p.locked||[]).length}` +
+        (p.stopped ? ` · 멈춤 ${p.stopped}` : ''),cls);
     }else{
       const g=(p.groups||{}).general||{};
       const cls=!g.total?'mid':(g.live===0?'hot':(g.live/g.total<0.3?'mid':'good'));
@@ -507,8 +508,9 @@ function renderKeys(snap,agg){
         const t=today['shorts|'+k.tail]||{};
         const lock=(p.locked||[]).find(l=>l.idx===k.idx);
         rows.push({pool:'쇼핑쇼츠',idx:k.idx,tail:k.tail,owner:k.owner==='owner'?'사장님':'회원',
-          state:lock?`잠김(${dur(lock.left_s)} 남음)`:'live',
-          cls:lock?'keystate-locked':'keystate-live',ok:t.ok||0,rpm:t.rpm||0,rpd:t.rpd||0,dead:t.dead||0});
+          // ★멈춤 = 사망·사용불가 정지(2026-09-25) — 실제 로테이션이 빼는 키를 'live'로 보이지 않게
+          state:k.state==='stopped'?'멈춤(쓸 수 없음)':lock?`잠김(${dur(lock.left_s)} 남음)`:'live',
+          cls:k.state==='stopped'?'keystate-dead':lock?'keystate-locked':'keystate-live',ok:t.ok||0,rpm:t.rpm||0,rpd:t.rpd||0,dead:t.dead||0});
       }
     } else {
       for(const [g,d] of Object.entries(p.groups||{})){

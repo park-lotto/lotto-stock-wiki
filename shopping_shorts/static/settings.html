@@ -500,10 +500,20 @@ var STATUS = {
   /* ★키는 멀쩡한데 이번 달 무료분을 다 쓴 상태. '정상'으로 두면 검색이 0건인데
      이유를 모른다(라이브 실측 2026-08-17). '틀렸다'도 거짓이라 따로 표시한다. */
   empty:   { cls: "bad",     text: "● 이번 달 무료분을 다 썼습니다" },
+  /* ★제미니 선불 소진·월 한도·할당량 0(2026-09-25) — '틀린 키'가 아니라 충전·한도 상향으로 살아나는 키. */
+  paused:  { cls: "bad",     text: "● 멈춤" },
   unknown: { cls: "unknown", text: "● 확인 전" }
 };
 
 var PRICES = {};      // 포인트 탭에서 받은 단가(키 카드의 "1편당 N P가 0P로"에 쓴다)
+/* ★제미니 키 건강(2026-09-25) — 서버(/api/settings/keys의 gemini_health)가 판정·문구를 준다.
+   선불 소진·월 한도·할당량 0·무효 키가 '● 정상'으로 떠 있던 사고를 막는다. 화면은 옮기기만 한다. */
+var GEMINI_HEALTH = null;
+function geminiWhy(id){
+  var ks = (GEMINI_HEALTH && GEMINI_HEALTH.keys) || [];
+  for (var i = 0; i < ks.length; i++) if (Number(ks[i].id) === Number(id) && ks[i].reason) return ks[i];
+  return null;
+}
 var KEYS_ENABLED = true;
 /* ★서버가 알려주는 사실 — 화면이 혼자 판단하지 않는다(0순위-B).
    PERSONAL: 이 세션의 등록 키가 실제로 조회되는가(관리자 cid 0이면 false)
@@ -628,6 +638,7 @@ async function loadKeys(){
     PERSONAL = (d.personal !== false);
     WIRED = d.wired || [];
     POOLED = d.pooled || [];
+    GEMINI_HEALTH = d.gemini_health || null;
     KEYS = d.keys || [];
     renderKeys();
   } catch (e) {
@@ -645,7 +656,12 @@ function renderKeys(){
     /* ★2026-09-01: 포인트 제도를 없앴다. 이제 갈래는 둘뿐이다 —
        내 키가 없으면 **못 쓰는** 서비스(mustOwn)와, 회사 풀로 무료인 서비스
        (제미니·유튜브. 키 1개 내면 풀 전체를 쓰는 거래). 중간은 없다. */
-    var badge = mine.length
+    /* ★멈춘 키가 있으면 초록 '✓ N개 등록됨'을 띄우지 않는다(2026-09-25) — 3개 전부 멈췄는데
+       초록 배지가 떠서 괜찮은 줄 알게 됐다(로컬 화면 확인에서 발견). */
+    var gh = (s.id === "gemini" && GEMINI_HEALTH && GEMINI_HEALTH.n_bad) ? GEMINI_HEALTH : null;
+    var badge = gh
+      ? '<span class="svcBadge off">⚠️ ' + mine.length + '개 중 ' + Number(gh.n_bad) + '개 멈춤</span>'
+      : mine.length
       ? '<span class="svcBadge on">✓ ' + mine.length + '개 등록됨</span>'
       : (s.mustOwn ? '<span class="svcBadge off">내 키 필요</span>'
                    : '<span class="svcBadge off">무료로 사용중</span>');
@@ -664,11 +680,16 @@ function renderKeys(){
 
     var rows = mine.map(function(k){
       var st = STATUS[k.status] || STATUS.unknown;
+      var why = (s.id === "gemini") ? geminiWhy(k.id) : null;
+      if (why) st = { cls: "bad", text: "● 멈춤 — " + why.title };
+      /* 'paused'인데 서버가 이유를 안 줬다 = 재시험·확인에서 살아났다 → 정상으로 보인다 */
+      else if (s.id === "gemini" && k.status === "paused" && GEMINI_HEALTH) st = STATUS.ok;
       return '<div class="keyRow">' +
         '<span class="keyLabel">' + esc(k.label) + '</span>' +
-        '<span class="keyStat ' + st.cls + '">' + st.text + '</span>' +
+        '<span class="keyStat ' + st.cls + '">' + esc(st.text) + '</span>' +
         '<button class="keyDel" onclick="delKey(' + Number(k.id) + ')">삭제</button>' +
-      '</div>';
+      '</div>' +
+      (why ? '<div class="warnBox" style="display:block;margin:4px 0 10px">' + esc(why.fix) + '</div>' : '');
     }).join("");
 
     /* enabled=false면 등록란을 아예 감춘다(눌러도 503만 나므로).
@@ -703,7 +724,17 @@ function renderKeys(){
         ? '<div class="warnBox" style="display:block;margin:8px 0">준비 중입니다 — 지금 등록하시면 저장은 되지만 <b>아직 실제 작업에는 쓰이지 않습니다.</b> 그동안은 포인트로 그대로 쓰실 수 있습니다.</div>'
         : '') +
       (isPooled
-        ? '<div class="svcDesc" style="color:var(--accent);font-weight:700">키 <b>1개만</b> 등록하시면 이 기능을 <b>포인트 없이</b> 쓰실 수 있어요 — 등록하신 키는 공용 키 묶음에 함께 들어가고, 대신 묶음 전체를 쓰시게 됩니다.</div>'
+        ? '<div class="svcDesc" style="color:var(--accent);font-weight:700">키를 등록하시면 이 기능을 <b>포인트 없이</b> 쓰실 수 있어요 — 등록하신 키는 공용 키 묶음에 함께 들어가고, 대신 묶음 전체를 쓰시게 됩니다.</div>'
+        : '') +
+      /* ★2026-09-25 사장님 "자주 죽는 걸 방지해서 몇 개 충분히 등록 당부". 종전 문구는 '1개만'이었다.
+         당부 문구는 서버(gemini_keyhealth.SPARE_KEY_TIP)가 준다 — 사이드바 팝업과 같은 글이다. */
+      ((s.id === "gemini" && GEMINI_HEALTH && GEMINI_HEALTH.tip)
+        ? '<div class="warnBox" style="display:block;margin:8px 0;' +
+            (GEMINI_HEALTH.few_keys || GEMINI_HEALTH.has_dead ? '' : 'opacity:.85;') + '">🔑 ' +
+            (GEMINI_HEALTH.n_total
+              ? '지금 쓸 수 있는 키 <b>' + Number(GEMINI_HEALTH.n_usable || 0) + '개</b> (권장 ' + Number(GEMINI_HEALTH.recommended || 3) + '개). '
+              : '') +
+            esc(GEMINI_HEALTH.tip) + '</div>'
         : '') +
       /* note는 우리가 SERVICES에 직접 적은 문구뿐이라 <b> 태그를 그대로 살린다.
          ★사용자 입력을 여기 넣지 마라 — 넣는 순간 XSS 구멍이 된다. */
@@ -758,16 +789,32 @@ function addResultText(svc, res){
   var bad   = res.filter(function(r){ return r.status === "bad"; }).length;
   var empty = res.filter(function(r){ return r.status === "empty"; }).length;
   var good  = res.filter(function(r){ return r.ok; }).length;
+  /* ★제미니 선불 소진·월 한도·할당량 0 = 'paused'(2026-09-25) — 틀린 키가 아니라 멈춘 키.
+     구글 붐빔 = 'unknown' — 확인 보류. 둘 다 '틀림'으로 세지도, 그 사유를 틀림 사유로 보여주지도 않는다. */
+  var paused = res.filter(function(r){ return r.status === "paused"; }).length;
+  var busy   = res.filter(function(r){ return r.status === "unknown"; }).length;
+  function reasonOf(st){ return (res.filter(function(r){ return r.status === st && r.reason; })[0] || {}).reason || ""; }
 
   if (bad && !good) {
     /* ★서버가 준 사유를 그대로 보여준다(2026-08-24 실사고).
        종전엔 "다시 확인해 주세요"만 띄워 무엇이 틀렸는지 알 길이 없었다 —
        실제로 고객이 키 대신 '키 ID'를 넣었는데, ElevenLabs가 정확히 알려준 그 말을
        우리가 버리고 있었다(서버에서 직접 호출해보고서야 원인을 알았다). */
-    var why = (res.filter(function(r){ return r.reason; })[0] || {}).reason || "";
+    var why = reasonOf("bad");
     return "❌ 키가 맞지 않습니다.\n\n" +
            (why ? why + "\n\n" : (name + " 키를 다시 확인해서 붙여넣어 주세요.\n")) +
-           "저장은 됐지만 이 상태로는 쓸 수 없습니다 — 틀린 키는 [삭제]해 주세요.";
+           "저장은 됐지만 이 상태로는 쓸 수 없습니다 — 틀린 키는 [삭제]해 주세요." +
+           ((paused || busy) ? "\n\n(그 밖에 멈춤 " + paused + "개 · 확인 보류 " + busy + "개)" : "");
+  }
+  if (paused && !good) {
+    return "⚠️ " + name + " 키가 지금 멈춰 있어요.\n\n" + (reasonOf("paused") || "") +
+           (busy ? "\n\n(확인 보류 " + busy + "개)" : "");
+  }
+  /* ★구글이 붐벼 확인을 못 끝낸 키(unknown)는 '통과'도 '틀림'도 아니다(2026-09-25).
+     종전엔 이 경우가 아래 "✅ 테스트 통과"로 떨어졌다. */
+  if (busy && !good) {
+    var bwhy = reasonOf("unknown");
+    return "⏳ " + name + " 키 확인을 끝내지 못했어요.\n\n" + (bwhy || "지금은 확인을 끝내지 못했어요. 잠시 뒤 [전체 확인]을 다시 눌러 주세요.");
   }
   if (empty && !good) {
     return "⚠️ 키는 맞는데 이번 달 무료분을 다 썼습니다.\n\n" +
@@ -777,10 +824,12 @@ function addResultText(svc, res){
   var body = (s.freeOp && PRICES[s.freeOp] != null)
     ? "이제 이 작업은 포인트가 안 깎입니다 (" + num(PRICES[s.freeOp]) + "P → 0P)."
     : "이제 이 작업은 사장님 키 대신 내 키로 돕니다.";
-  if (bad || empty) {
+  if (bad || empty || paused || busy) {
     body += "\n\n다만 " + res.length + "개 중 " + good + "개만 정상입니다" +
             (empty ? " (" + empty + "개는 무료분 소진)" : "") +
-            (bad ? " (" + bad + "개는 키가 틀림)" : "") + ".";
+            (bad ? " (" + bad + "개는 키가 틀림)" : "") +
+            (paused ? " (" + paused + "개는 멈춤)" : "") +
+            (busy ? " (" + busy + "개는 구글 붐빔으로 확인 보류)" : "") + ".";
   }
   return head + body;
 }
@@ -801,15 +850,24 @@ async function verifyKeys(svc, quiet){
   try {
     var d = await postJSON("/api/settings/keys/verify", { service: svc });
     KEYS = d.keys || KEYS;
+    if (d.gemini_health !== undefined) GEMINI_HEALTH = d.gemini_health;   // 확인으로 살아난 키를 바로 반영
     renderKeys();
     var res = d.results || [];
     var good = res.filter(function(r){ return r.ok; }).length;
+    /* ★구글이 붐벼 확인을 못 끝낸 키(unknown)를 '틀린 키'로 세지 않는다(2026-09-25) —
+       멀쩡한 키를 지우라고 안내하게 된다. */
+    var busy = res.filter(function(r){ return r.status === "unknown"; }).length;
+    var pausedN = res.filter(function(r){ return r.status === "paused"; }).length;   // 선불·한도 — 충전하면 산다
+    var badN = res.length - good - busy - pausedN;
     if (!res.length) {
       svcMsg(svc, "확인할 키가 없습니다.", "err");
     } else if (good === res.length) {
       svcMsg(svc, "✓ " + good + "개 모두 정상입니다.", "ok");
     } else {
-      svcMsg(svc, "⚠️ " + res.length + "개 중 " + good + "개만 정상입니다. 틀린 키는 삭제하고 다시 등록해 주세요.", "err");
+      svcMsg(svc, "⚠️ " + res.length + "개 중 " + good + "개 정상" +
+        (badN ? " · " + badN + "개는 쓸 수 없는 키(삭제하고 새 키로 교체해 주세요)" : "") +
+        (pausedN ? " · " + pausedN + "개는 멈춤(키 아래 해결 방법을 봐 주세요)" : "") +
+        (busy ? " · " + busy + "개는 구글이 붐벼 확인 보류(잠시 뒤 다시 확인해 주세요)" : "") + ".", "err");
     }
     /* 사용자가 [전체 확인]을 직접 눌렀을 때도 결과를 확실히 알린다. */
     if (!quiet) notice(addResultText(svc, res));
@@ -947,6 +1005,6 @@ loadAccount();
 loadPoints();
 loadKeys();
 </script>
-<script src="/sidebar.js?v=2"></script>
+<script src="/sidebar.js?v=4"></script>
 </body>
 </html>
