@@ -188,3 +188,33 @@ def test_반전은_twist_feat_번호의_특징_컷을_받는다():
     lines = sw._to_lines(o, False, "k", 0, feats=[{"name": "요철"}, {"name": "물세척 재사용"}])
     twist = next(L for L in lines if L["role"] == "반전")
     assert twist["group"] == 1
+
+
+def test_explicit_seed_wins_over_longest_job_text(monkeypatch):
+    """2026-09-26 사장님 "씨앗은 썰쇼핑인데 왜 다이소가 나오나"(work ea29430903d3).
+    고른 씨앗(유튜브 썰·반말)은 job에 없고, job엔 인스타 존댓말(다이소)만 있다 →
+    종전엔 인스타 글이 씨앗이 돼 존댓말 다이소 대본이 나왔다. 명시 씨앗이 오면 그것이 결·훅 꼴·제품을 정한다."""
+    _fake(monkeypatch)
+    seen = []
+    real_write = sw.write
+
+    def spy(product, seed_text, feats, platform="yt", **kw):
+        seen.append({"product": product, "seed": seed_text, "platform": platform})
+        return real_write(product, seed_text, feats, platform=platform, **kw)
+    monkeypatch.setattr(sw, "write", spy)
+    insta = "여러분 다이소에서 이거 절대 사서 가족 모두가 만지는 리모컨 닦아도 끝이 없죠 여기에 넣고 드라이어를 쏘기만 하면 되더라고요 " * 2
+    job = {"backbone_main": None, "extract": {
+        "s5": {"video_id": "s5", "full_text": insta, "source_brief": {"product": "다이소 수축 보호 필름"},
+               "segments": [_seg("MAT", i) for i in range(12)]}}}
+    ssul = "개발자도 예상 못한 한국 주부의 활용법 최근 딱 봤을 때는 평범한 필름지처럼 보이는 이 제품을 이용한 한국의 한 천재 주부의 활용법이 난리라는데 이건 바로 열수축 필름."
+    drafts, why = sw.make_drafts([], job, job_id="j2", seed_text=ssul, seed_product="열수축 보호 필름")
+    assert why == "" and len(drafts) == 1
+    assert seen[0]["seed"].startswith("개발자도 예상 못한"), "씨앗은 고른 영상의 원문이어야 한다"
+    assert seen[0]["platform"] == "yt", "썰(반말) 씨앗이면 결은 yt — 인스타 존댓말로 쓰면 안 된다"
+    assert seen[0]["product"] == "열수축 보호 필름"
+    assert drafts[0]["seed_from"] == "explicit"
+    # 명시 씨앗이 없으면 종전 규칙(job에서 가장 긴 한국어 글)이 그대로 — 회귀 0
+    seen.clear()
+    sw.make_drafts([], job, job_id="j3")
+    assert seen[0]["seed"].startswith("여러분 다이소"), "명시 씨앗 없음 → job의 가장 긴 한국어 글(종전)"
+    assert seen[0]["platform"] == "ig", "존댓말 글이 씨앗이면 인스타 결 — 이게 ea29 사고의 모양이다"

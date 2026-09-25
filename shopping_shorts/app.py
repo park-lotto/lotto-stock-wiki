@@ -3640,9 +3640,14 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                 if _story_on:
                     try:
                         from shopping_shorts import story_writer as _sw
+                        # ★고른 씨앗을 명시로 넘긴다(2026-09-26). it.full_text = 2단계에서 고른 씨앗의 원문
+                        #   (위키 항목이면 그 대본, 없으면 화면이 보낸 base_script). 씨앗은 화면 재료에서 빼서
+                        #   job에 없으므로, 안 넘기면 이야기 작가가 job의 다른 영상을 씨앗으로 삼는다(ea29 사고).
                         _bb_drafts, _bb_why = _sw.make_drafts(
                             _picked, _job, body.get("target_seconds") or 25, job_id=_jid,
-                            preset=str(body.get("length_preset") or "short"))
+                            preset=str(body.get("length_preset") or "short"),
+                            seed_text=(it.get("full_text") or ""),
+                            seed_product=script_generate._sources_product(_src) or "")
                     except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
                         _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
                 if not _bb_drafts and _bb_on:
