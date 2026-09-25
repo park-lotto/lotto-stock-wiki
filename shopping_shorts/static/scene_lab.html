@@ -2658,6 +2658,52 @@ function bandDrop(i, segId, ev){
   if (k < 0) return;
   dragDrop(i, k, ev);           // 같은 칸 안에서 자리 바꾸기(기존 로직)
 }
+// ★구절 맞춤 칸의 카드를 **카드마다 독립 조각(film_)**으로 쪼갠다(2026-09-26 사장님 "1.4초 구간만 X를 눌러
+//   그 장면만 수정하려 하면 둘 다 없어진다"). 같은 조각이 카드 여러 장에 쓰이면 X·📦가 조각 단위라 전부 같이 움직였다.
+//   쪼갠 조각의 구간 = 지금 그 카드가 실제로 트는 구간(planClips 그대로) — 화면 흐름은 한 프레임도 안 바뀐다.
+//   쪼개면 조각 수 = 구절 수라 서버·화면 모두 1:1로 배정된다(phrase_owners R1). 바뀐 게 없으면 false.
+//   ⚠️ 짧은 구절 묶음(R4 phrase_min_cut) 칸은 쪼개지 않는다 — 저장 때 얼린 짝(ensure_clip_anchor)이 묶음을 몰라
+//   배정이 어긋날 수 있다. 2026-09-26 라이브 2,251칸 중 R4 칸 0개(설정 꺼짐). 켤 때 묶음 단위로 쪼개도록 고칠 것.
+function splitBeatCards(i){
+  if (!phraseSyncOn(i)) return false;
+  if (((DATA.beats || [])[i] || {}).phrase_min_cut) return false;
+  const ids = lists[i] || [];
+  const clips = planClips(ids, beatDur(i), STRETCH[i], i);
+  const caps = capsOf(i) || [];
+  if (!clips.length || clips.length !== caps.length) return false;
+  const uses = {}; clips.forEach(c => { uses[c.seg_id] = (uses[c.seg_id] || 0) + 1; });
+  if (!clips.some(c => uses[c.seg_id] > 1)) return false;
+  const pieces = [];
+  clips.forEach(c => {
+    const a = +c.start, b = a + +(c.src_dur || c.dur);
+    pieces.push(uses[c.seg_id] <= 1 ? {id: c.seg_id} : {vid: c.video_id, a, b});
+  });
+  const owner = pieces.map((_, k) => k);
+  const used = new Set(clips.map(c => c.seg_id));
+  const next = pieces.map(p => p.id || _makeFilmSeg(p.vid, p.a, Math.min(p.b, ((DATA.src_duration || {})[p.vid] || p.b))));
+  ids.forEach(id => { if (!used.has(id) && !next.includes(id)) next.push(id); });   // 담겼지만 안 나오던 조각은 뒤에 그대로
+  lists[i] = next;
+  caps.forEach((c, k) => { c.owner = owner[k]; c.owner_n = next.length; });        // 서버가 다시 줄 때까지 화면 배정도 1:1
+  return true;
+}
+// 카드 썸네일 = 그 카드가 **실제로 트는 구간**의 그림(2026-09-26 사장님 "두 번째 카드는 이어지는 장면이 보여야").
+//   조각 하나가 카드 여러 장을 이어서 덮으면 조각 썸네일은 전부 같은 그림(첫 장면)이라 뒤 카드가 뭘 트는지 안 보였다.
+//   구간이 조각과 다르면 그 구간의 film_ 아이디로 요청한다 — 서버 seg_thumb가 아이디에서 구간을 풀어 그린다
+//   (_film_seg_from_id). 목록·저장은 안 건드린다.
+function cardThumbId(c){
+  const seg = (DATA.segments || {})[c.seg_id] || {};
+  const a = +c.start, b = a + +(c.src_dur || c.dur);
+  if (seg.start != null && Math.abs(a - +seg.start) < 0.05 && b <= +seg.end + 0.05) return c.seg_id;
+  return _extraId(c.video_id, a, b);
+}
+// 카드 한 장만 뺀다 — 같은 조각이 여러 카드면 먼저 쪼갠 뒤 그 카드의 조각만(위 splitBeatCards).
+function dropCardAt(i, ci, segId){
+  if (splitBeatCards(i)){
+    const c = planClips(lists[i] || [], beatDur(i), STRETCH[i], i)[ci];
+    if (c) segId = c.seg_id;
+  }
+  dropCutFromBand(i, segId);
+}
 function dropCutFromBand(i, segId){
   const l = lists[i] || [];
   // ★같은 조각이 여러 컷으로 되풀이될 수 있다(늘려 채움 · 라운드로빈이 여러 바퀴).
@@ -3013,16 +3059,16 @@ function renderBand(){
              ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
              ondrop="bandDrop(${i}, '${c.seg_id}', event)"
              onclick="bandCutClick(${i}, '${c.seg_id}', event)"
-             ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')"
+             ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCardAt(${i}, ${ci}, '${c.seg_id}')"
              title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · ✕ 버튼이나 두 번 클릭 = 빼기">
-             <img src="${SL.thumb(c.seg_id)}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '🔒' : ''}${c.dur.toFixed(1)}</span
+             <img src="${SL.thumb(cardThumbId(c))}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '🔒' : ''}${c.dur.toFixed(1)}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
                     ondblclick="event.stopPropagation()"><button type="button" class="rollbtn boxbtn" title="이 컷 길이(${c.dur.toFixed(2)}초)로 잠긴 오렌지박스를 소스 필름에 띄웁니다 — 영상을 갈아 열어도 유지, Esc로 끄기"
              onclick="event.stopPropagation();clearTimeout(clickTimer);tlReplaceToggle(${i},${ci})">📦 박스</button
              ><button type="button" class="delx" title="이 조각을 이 칸에서 뺍니다"
-             onclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')">✕</button></div>`).join('')
+             onclick="event.stopPropagation();clearTimeout(clickTimer);dropCardAt(${i}, ${ci}, '${c.seg_id}')">✕</button></div>`).join('')
       : `<div class="tbempty">장면을 담아주세요</div>`;
     // ★담겼지만 화면엔 안 나오는 조각을 흐리게 이어 붙인다(2026-08-23).
     //   planClips는 자막 길이를 채우면 거기서 멈춘다 — 남은 id는 컷이 하나도 안 생겨
