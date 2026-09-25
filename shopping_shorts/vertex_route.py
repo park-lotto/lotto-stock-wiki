@@ -17,7 +17,9 @@
 import sys
 import time
 
-OPS = ("script_extract", "frame_script", "ai_match")
+OPS = ("script_extract", "frame_script", "ai_match", "script_generate")
+# script_generate = script_generate._call_json 깔때기(이야기 작가·백본·옛 생성기·판정 전부) — 2026-09-26 사장님
+#   "태깅은 무료로, 대본작성과 장면매칭이 얼마나 잘되는지 해보자" → 설정 vertex_ops=script_generate,ai_match
 LOCATION = "global"                 # ★us-central1은 3.6-flash 404(2026-09-25 실측) — 글로벌만
 DEFAULT_MODEL = "gemini-3.6-flash"
 INLINE_MAX_BYTES = 40 * 1024 * 1024  # 실측 32.4MB OK. 그 위는 미검증 → 키풀(파일 업로드) 경로로

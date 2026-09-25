@@ -55,7 +55,7 @@ def _style_extra():
         return ""
 
 
-def _call_json(prompt, schema, note=None, model=None):
+def _call_json(prompt, schema, note=None, model=None, vertex=True):
     """key_vault 캐스케이드 키풀로 JSON 1콜. 소진키는 마킹하고 다음 키로.
     무키·전부실패면 {} (호출부는 반드시 빈 dict 허용 — fail-open).
 
@@ -65,6 +65,23 @@ def _call_json(prompt, schema, note=None, model=None):
       늘 "키 소진 또는 응답 오류"가 떴다(실측 2026-08-22: 키가 멀쩡한데도 그 문구).
       note를 안 주면 종전과 완전히 동일하다(회귀 0).
     """
+    # ★Vertex 먼저(2026-09-26 사장님 "대본작성과 장면매칭" — 스위치 켠 계정만). 이 함수는 이야기 작가·
+    #   백본·옛 생성기·판정이 전부 지나는 깔때기라 여기 한 번이면 대본생성 전체가 간다(0순위-B).
+    #   실패·빈 결과면 아래 종전 키풀 그대로. vertex=False = 호출부가 이미 자기 Vertex 시도를 한 경우(ai_match).
+    if vertex:
+        from shopping_shorts import vertex_route
+
+        def _vx(cl, m):
+            resp = cl.models.generate_content(
+                model=m, contents=prompt,
+                config=types.GenerateContentConfig(response_mime_type="application/json",
+                                                   response_schema=schema))
+            return json.loads(resp.text)
+        _ok, _got = vertex_route.try_call("script_generate", _vx, what="대본생성")
+        if _ok:
+            if note is not None:
+                note["auth"] = "vertex"
+            return _got
     keys = keyroute.gemini_keys(_GEN_GROUP)
     if note is not None:
         note["keys"] = len(keys)
