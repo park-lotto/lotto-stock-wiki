@@ -63,5 +63,29 @@ b2 = bands(pin_file(d2['name']))
 need(d2.get('styled') and b2['top_blue'] < 0.2 and b2['top_lum'] < 150 and b2['mid_blue'] > 0.9, f"② styled → 위쪽은 제목 띠(어둡고 파랑 아님), 아래는 원본(파랑) ({b2}, {took:.1f}초) — 고치기 전엔 위도 파랑")
 shutil.copyfile(pin_file(d2['name']), out / 'pin_styled.jpg')
 need(len(d2.get('pins') or []) >= 1 and d2['pins'][0]['name'] == d2['name'], '② 후보 목록 맨 앞에 들어간다')
+
+# ── 2026-09-25 고객 job 92976b481a86: 핀 6번 중 그림 수신 2번 + 핀이 저장보다 먼저 나감 ──
+# ④ 저장 전(서버 저장본 없음)이라도 편집기가 보낸 **지금 화면 설정**으로 찍는다 — 고치기 전엔 원본(파랑)
+store.update_mix_job(JOB, deco={})
+d4 = post({'job_id': JOB, 'beat_idx': 0, 'scene_index': 1, 'styled': True, 'scene_style': snap})
+b4 = bands(pin_file(d4['name']))
+need(d4.get('styled') and b4['top_blue'] < 0.2 and b4['mid_blue'] > 0.9, f"④ 저장 전 화면 설정으로 찍힘 ({b4}) — 고치기 전엔 위도 파랑")
+# ⑤ 화면에서 '템플릿 없음'(null)을 골랐으면 저장본(t11)이 있어도 원본 — 고치기 전엔 저장본 띠가 찍힘
+store.update_mix_job(JOB, deco={'scene_style': snap})
+d5 = post({'job_id': JOB, 'beat_idx': 0, 'scene_index': 1, 'styled': True, 'scene_style': None})
+b5 = bands(pin_file(d5['name']))
+need(not d5.get('styled') and b5['top_blue'] > 0.9, f"⑤ 화면이 템플릿 없음이면 원본 ({b5})")
+# ⑥ 같은 장면을 다시 보내면 7단계가 받는 주소가 바뀐다(같은 파일명 덮어쓰기라 주소가 같으면 화면이 옛 그림을 쓴다)
+def pin_urls():
+    th = (Store(module.DB_PATH).get_mix_job(JOB).get('thumbnail') or {})
+    return [f['url'] for f in module._with_pins(JOB, th, []) if f.get('pin')]
+u_before = pin_urls(); time.sleep(0.05)
+post({'job_id': JOB, 'beat_idx': 0, 'scene_index': 1, 'styled': True, 'scene_style': snap})
+u_after = pin_urls()
+need(len(u_before) == 1 and len(u_after) == 1 and u_before != u_after, f"⑥ 다시 보내면 핀 주소가 바뀐다 ({u_before} → {u_after}) — 고치기 전엔 같은 주소")
+try:
+    r = urllib.request.urlopen(BASE + u_after[0]); need(r.status == 200 and len(r.read()) > 1000, '⑥ ?v 붙은 주소로 그림이 실제로 내려온다')
+except Exception as e:
+    need(False, f'⑥ ?v 붙은 주소 요청 실패 {e}')
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')
 sys.exit(1 if fails else 0)

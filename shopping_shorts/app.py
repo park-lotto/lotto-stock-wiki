@@ -9621,7 +9621,10 @@ def _with_pins(job_id, thumb, grid_frames):
         name = str(p.get("name") or "")
         if not name or d is None or not (d / name).is_file():
             continue                      # 파일이 사라진 핀은 조용히 건너뛴다(깨진 이미지 방지)
-        out.append({"url": f"/api/produce/thumb/file/{job_id}/{name}",
+        # ★?v=수정시각 — 같은 장면을 다시 보내면 **같은 파일명에 덮어쓴다**. 주소가 그대로면 7단계가
+        #   "목록 그대로"로 보고 다시 안 그리고 브라우저도 옛 그림을 쓴다(2026-09-25 실측: 핀 6번, 그림 수신 2번).
+        _v = (d / name).stat().st_mtime_ns
+        out.append({"url": f"/api/produce/thumb/file/{job_id}/{name}?v={_v}",
                     "ts": p.get("ts") or 0, "pin": name,
                     "label": p.get("label") or "장면"})
     return out + list(grid_frames or [])
@@ -9930,6 +9933,15 @@ def api_thumb_pin(body: dict):
     #   실패하면 종전대로 원본 프레임(썸네일 후보가 막히면 안 된다).
     styled_note = None
     _ss = (job.get("deco") or {}).get("scene_style")
+    # ★편집기가 **지금 화면의 설정**을 같이 보내면 그걸로 찍는다(2026-09-25 고객 job 92976b481a86:
+    #   핀 6번 중 매번 핀이 저장보다 3초 먼저 나가 **직전 저장본**으로 찍혔다 — 방금 바꾼 꾸미기가 안 들어감).
+    #   저장은 하지 않는다(저장은 [이 영상에 적용]/닫기의 몫 — 렌더 무효화 등 부작용이 있다). null = 템플릿 없음.
+    if body.get("styled") and "scene_style" in body:
+        try:
+            from shopping_shorts import scene_style as _scene_style_v
+            _ss = None if body.get("scene_style") is None else _scene_style_v.validate_snapshot(body["scene_style"])
+        except ValueError:
+            pass                          # 형식이 틀리면 저장본으로(썸네일 후보가 막히면 안 된다)
     if body.get("styled") and _ss:
         try:
             from shopping_shorts import scene_style as _scene_style
