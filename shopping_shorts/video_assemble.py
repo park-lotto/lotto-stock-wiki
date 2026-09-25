@@ -669,6 +669,10 @@ def _piece_end_limit(c, segs, src_total):
                 continue
             a, b = float(s.get("start", 0.0)), float(s.get("end", 0.0) or 0.0)
             if b > a and a - 1e-3 <= st < b:
+                # ★계획이 이미 조각 끝을 넘어 읽기로 한 컷(구절 이어 틀기, 2026-09-26)이면 상한은 원본 끝이다 —
+                #   여기서 조각 끝으로 다시 자르면 이어 틀기가 슬로모·정지로 되돌아간다(화면 finish()와 같은 규칙).
+                if st + float(c.get("src_dur", 0.0) or 0.0) > b + 1e-3:
+                    return float(src_total) if src_total > 0 else 0.0
                 return min(float(src_total), b) if src_total > 0 else 0.0
     except Exception as e:  # noqa: BLE001 — 상한 계산 실패는 종전 동작(소스 끝)으로
         print(f"[assemble] 조각 끝 상한 계산 실패(무해, 소스 끝 사용): {e!r}", file=sys.stderr)
@@ -1227,39 +1231,34 @@ def _plan_phrase_clips(beat, segs, tts_dur, src_durs=None):
             idx = _owners[k] if k < len(_owners) else _even_owner(k, len(durs), len(segs))
             _end = segs[idx].get("end")
             st = pos[idx]
-            # 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시(같은 내용 반복).
-            # ★단 **같은 조각이 바로 앞 구절에 이어 덮는 중**이면 되감지 않는다(2026-09-21).
-            #   줄을 나누기 전엔 그 조각이 한 컷으로 '완만 슬로모→끝 프레임 정지'였는데, 나눈 뒤
-            #   되감으면 말 중간에 같은 장면이 처음부터 다시 나온다(박세현님 칸3 s0 두 번 = 09-11
-            #   고객이 오류로 본 "같은 장면이 두 번"과 같은 그림). 끝 프레임에서 버틴다.
-            if _end is not None and float(_end) - st < min(d, _MIN_CLIP) - 1e-3:
-                if k > 0 and idx == _prev_idx:
+            _reel = float((src_durs or {}).get(segs[idx]["video_id"], 0.0) or 0.0)
+            # ★같은 조각에 구절이 **이어 붙으면 앞 컷이 끝난 곳부터 그대로 이어 튼다**(2026-09-26 사장님
+            #   "구절이 나눠져도 쭉 이어지게 / 0.8초 태깅이어도 2초 구절이면 쭉 이어서"). 담은 장면 끝을 넘으면
+            #   원본 릴을 계속 읽는다 — 가져온 영상이 잘 만든 편집본이라 뒤 장면도 그 흐름이다.
+            #   종전(09-21)엔 끝 프레임 0.1초 앞으로 되감아 버텨서, 완성본은 뒤로 튀고(칸5 0.77초 되감김)
+            #   미리보기는 0.1초를 늘려 멈춰 보였다(job 565557ed746c). 떨어져서 다시 쓰는 조각은 종전대로 처음부터.
+            #   ★화면(scene_play.js planClips 구절 분기)과 **같은 규칙**이다(0순위-B, check_phrase_continue.py가 대조).
+            _consec = k > 0 and idx == _prev_idx and _reel > 0
+            if (not _consec and _end is not None
+                    and float(_end) - st < min(d, _MIN_CLIP) - 1e-3):
+                if k > 0 and idx == _prev_idx:      # 릴 길이를 모르면 종전대로 끝에서 버틴다(읽을 곳이 없다)
                     st = max(float(segs[idx]["start"]), min(st, float(_end) - 0.1))
                 else:
                     st = float(segs[idx]["start"])
             _prev_idx = idx
-            # ★조각 끝을 넘지 않는다(2026-09-17 이윤정님 "미리보기에서 중간에 다른 화면이 짧게").
-            #   구절 길이 d가 조각 남은 길이보다 길면 종전엔 src_dur=d로 그대로 넘겨 조각 뒤의
-            #   **다음 장면**이 새어 나왔다(실측 job 1939bd7f3c50: s1 조각 5.92~7.29 뒤 7.29부터가
-            #   딴 장면인데 구절 1.45초 > 조각 1.37초 → 0.08초 노출). 소스는 조각 안에서만 읽고
-            #   모자란 만큼은 out_dur만 유지해 _speed_and_freeze(완만 슬로모→정지)가 채운다.
-            #   화면(scene_play.js planClips)도 같은 규칙 — 짝으로 움직인다(0순위-B).
-            src_d = d if _end is None else max(0.1, min(d, float(_end) - st))
-            # ★모자란 만큼을 **정지로 때우지 않는다**(2026-09-24 사장님 "일단 다른 장면으로 채워").
-            #   실측(고객 강병주님 job 86e6cd5bb254 0번 칸): 말 3.8초 / 재료 1.83초 → 약 2초가
-            #   슬로모→정지+확대로 채워져 "애니메이션 효과 오류"로 보였다. 릴(s6)은 15.2초라
-            #   조각 뒤에 진짜 프레임이 남아 있었다.
-            #   조각 끝을 넘지 않던 규칙은 2026-09-17 이윤정님 "중간에 다른 화면이 짧게"(0.08초 노출)
-            #   때문이었다 — 그건 **아주 조금** 넘을 때의 티다. 그래서 모자람이 _REACH_MIN 이상일 때만
-            #   릴 뒤를 이어 쓰고, 잔챙이 모자람은 종전대로 둔다(그 제보가 재발하지 않게).
-            _short = d - src_d
-            if _short > _REACH_MIN:
-                _reel = float((src_durs or {}).get(segs[idx]["video_id"], 0.0) or 0.0)
-                if _reel > 0:
-                    src_d = max(src_d, min(d, _reel - st))
+            src_d = d
+            if _end is not None:
+                _over = st + d - float(_end)
+                if st < float(_end) and 0 < _over <= _REACH_MIN:
+                    # 살짝만 넘치면 다음 장면을 몇 프레임 비추지 않고 조각 안에서 살짝 느리게(09-17 이윤정님 '튐')
+                    src_d = float(_end) - st
+                elif _over > 0 and _reel <= 0:
+                    src_d = max(0.1, min(d, float(_end) - st))   # 릴 길이 모름 = 조각 밖을 못 읽는다(종전)
+            if _reel > 0 and st + src_d > _reel:
+                src_d = max(0.1, _reel - st)          # 원본이 끝났다 — 남은 만큼 _speed_and_freeze가 채운다
             plan.append({"video_id": segs[idx]["video_id"], "start": st,
                          "src_dur": src_d, "out_dur": d})
-            pos[idx] = st + d
+            pos[idx] = st + src_d                     # 실제로 보여준 곳 다음부터 — 겹침·건너뜀 없이 이어진다
         return plan
     except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
         return None
