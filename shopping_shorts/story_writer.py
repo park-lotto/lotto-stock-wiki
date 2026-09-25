@@ -291,13 +291,22 @@ def _pick(sets, key, nth=0):
     return names[i], sets[names[i]]
 
 
-def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, note=None, seconds=0, preset="short"):
+def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, note=None, seconds=0, preset="short",
+          hook_slots=None):
     """대본 한 편 → [{beat, text}]. 실패하면 [](호출부가 옛 경로로 간다).
 
     platform: "yt"(유튜브 썰) | "ig"(인스타)
     style:    {"name","hook_angle","flow","extra"} — 고객이 고른 스타일(없으면 기본 흐름)
+    hook_slots(썰, 2026-09-26): 씨앗의 홀린 요인(권위자·대상·나라…). 주면 첫 줄은 **꼴 은행**(story_hook)에서 회전해
+              고른 꼴로 쓰고, 씨앗 첫 줄을 베끼면 다른 꼴로 1회 재작성 → 그래도면 결정적 채움. None이면 종전 그대로.
     """
     ig = (platform == "ig")
+    hook_mold = None
+    if not ig and hook_slots is not None:
+        from shopping_shorts import story_hook
+        hook_mold, _ = story_hook.pick(hook_slots, key, nth, seed_text)
+        if hook_mold and style:
+            style = dict(style, hook_angle="")       # 꼴은 은행이 정한다 — 씨앗 첫 줄 꼴(_seed_style)은 쓰지 않는다
     brief = IG_BRIEF if ig else YT_BRIEF
     if preset == "full":
         brief += IG_FULL_BLOCK if ig else FULL_BLOCK
@@ -313,6 +322,9 @@ def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, n
         from shopping_shorts.script_gate import SPEECH_CHARS_PER_SEC as _CPS
         brief += ("\n\n■ 분량: 전체 **%d자 안팎**(읽으면 약 %d초). 넘치면 고조 **칸 수를 줄여라** — "
                   "칸 하나를 얇게 쓰지 마라. 남긴 칸은 깊게 파라." % (int(seconds * _CPS), int(seconds)))
+    if hook_mold:
+        from shopping_shorts import story_hook
+        brief += "\n\n■ " + story_hook.instruction(hook_mold, hook_slots)
     prompt = "%s\n\n[제품] %s\n\n[씨앗 — 이 제품으로 터진 영상의 말]\n%s\n\n[재료]\n%s" % (
         brief, product or "", (seed_text or "").strip(), _feats_block(feats))
     schema = IG_SCHEMA if ig else (_short_schema() if preset == "short" else YT_SCHEMA)
@@ -328,7 +340,33 @@ def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, n
             if note is not None:
                 note["reason"] = "고조2 없음(%d칸)" % _n_escalations(out)
             return []
-    return _to_lines(out, ig, key, nth, feats, preset=preset)
+    lines = _to_lines(out, ig, key, nth, feats, preset=preset)
+    if not ig and lines and hook_slots is not None:
+        lines = _guard_hook(lines, prompt, schema, hook_slots, key, nth, seed_text, feats, preset, note)
+    return lines
+
+
+def _guard_hook(lines, prompt, schema, hook_slots, key, nth, seed_text, feats, preset, note):
+    """첫 줄이 씨앗 첫 줄을 베꼈으면 → 다른 꼴로 1회 재작성 → 그래도면 결정적 채움(story_hook.resolve).
+    ★판정·채움은 story_hook 한 곳. 여기는 순서만 정한다. 재작성 결과는 고조2 규칙도 다시 본다."""
+    from shopping_shorts import story_hook
+    if not story_hook.copied(lines[0].get("text"), seed_text):
+        return lines
+    mold2, _ = story_hook.pick(hook_slots, key, nth + 1, seed_text)
+    if mold2:
+        if note is not None:
+            note["hook_retry"] = lines[0].get("text")
+        out2 = _sg._call_json(prompt + "\n\n■ 첫 줄을 다시 써라 — 씨앗 영상의 첫 문장과 너무 비슷하다. "
+                              + story_hook.instruction(mold2, hook_slots), schema, note=note) or {}
+        if _n_escalations(out2) >= MIN_ESCALATIONS:
+            lines2 = _to_lines(out2, False, key, nth, feats, preset=preset)
+            if lines2 and not story_hook.copied(lines2[0].get("text"), seed_text):
+                return lines2
+    fixed, why = story_hook.resolve(lines[0].get("text"), hook_slots, key, nth, seed_text)
+    if note is not None:
+        note["hook_fix"] = why
+    lines[0] = dict(lines[0], text=fixed)
+    return lines
 
 
 MIN_ESCALATIONS = 2      # 썰: 고조1(불편→없앰) + 고조2(심지어) — 히트작 프리셋과 같은 수
@@ -477,8 +515,12 @@ FEATS_SCHEMA = {
         "claim": {"type": "string"},
         "pain": {"type": "string"},
         "from_cuts": {"type": "array", "items": {"type": "string"}},
-    }, "required": ["name", "claim", "pain", "from_cuts"]}}},
-    "required": ["feats"],
+    }, "required": ["name", "claim", "pain", "from_cuts"]}},
+        # ★홀린 요인(2026-09-26, 노바 2단계) — 첫 줄 꼴의 빈칸 재료. 이름은 스파인 문형 슬롯과 같다(story_hook.SLOT_KEYS).
+        "hook": {"type": "object", "properties": {
+            "권위자": {"type": "string"}, "대상": {"type": "string"}, "나라": {"type": "string"},
+            "제품군": {"type": "string"}, "불편함": {"type": "string"}, "장소": {"type": "string"}, "계기": {"type": "string"}}}},
+    "required": ["feats", "hook"],
 }
 
 FEATS_BRIEF = """아래는 같은 제품을 찍은 영상들의 장면 태깅이다.
@@ -501,7 +543,16 @@ pain을 적는 법:
     O 테이프로 붙이면 나중에 누렇게 떠서 떼어낼 때 자국이 남는다
 - 기능을 뒤집어 쓰지 마라.  X 고정이 안 된다  /  X 도포가 균일하지 않다
 
-★claim(이 제품이 하는 일)은 화면에 보이는 것만 쓴다. pain은 화면 밖에서 와도 된다."""
+★claim(이 제품이 하는 일)은 화면에 보이는 것만 쓴다. pain은 화면 밖에서 와도 된다.
+
+■ hook — 첫 줄 빈칸 재료(**홀린 요인**). 씨앗·재료에 **실제로 나온 것만**, 각 20자 이내, 없으면 빈 문자열:
+  권위자  이 제품을 보고 놀랄 만한 전문가·회사·직군 (예: 개발자, 제조사, 안경사, 호텔 직원)
+  대상    이 제품으로 구원받는 사람들 — 복수형 (예: 게이머들, 육아맘들, 자취생들)
+  나라    씨앗·재료에 나온 나라만 (예: 한국, 미국, 일본). ★없으면 빈칸 — 지어내지 마라
+  제품군  제품 종류 짧게 (예: 열수축 필름, 손가락 젓가락)
+  불편함  이 제품이 없앤 불편 한 토막, 명사형 (예: 리모컨 손때, 과자 가루 손)
+  장소    구매처·쓰는 곳 (예: 다이소, 이케아, 호텔)
+  계기    시작된 계기 (예: 육아 불편, 게이머의 짜증)"""
 
 
 def source_block(sources):
@@ -526,9 +577,27 @@ def source_block(sources):
     return "\n".join(out)
 
 
-def extract_feats(sources, product="", note=None):
+def extract_feats(sources, product="", note=None, seed_text=""):
+    """특징 3~4개 + 첫 줄 빈칸 재료(hook 슬롯, note["hook_slots"]). 호출 1회 — 슬롯을 따로 부르지 않는다."""
     prompt = "%s\n\n[제품] %s\n\n%s" % (FEATS_BRIEF, product or "(미상)", source_block(sources))
-    return (_sg._call_json(prompt, FEATS_SCHEMA, note=note) or {}).get("feats") or []
+    if (seed_text or "").strip():
+        prompt += "\n\n[씨앗 영상의 말 — hook 빈칸 재료는 여기서 먼저 찾아라]\n" + seed_text.strip()[:1200]
+    out = _sg._call_json(prompt, FEATS_SCHEMA, note=note) or {}
+    if note is not None:
+        from shopping_shorts import story_hook
+        note["hook_slots"] = story_hook.clean_slots(out.get("hook"))
+    return out.get("feats") or []
+
+
+def _rotate(items, key, nth=0):
+    """고조에 넣는 특징 순서를 회원·작업 키로 돌린다(2026-09-26) — 같은 씨앗·같은 재료라도 안마다·회원마다
+    고조1이 다른 특징으로 시작해 본문이 같아지는 것을 막는다(실측: 같은 작업 A안·B안 미끼·고조가 거의 같은 문장)."""
+    import zlib
+    items = list(items or [])
+    if len(items) < 2:
+        return items
+    k = (zlib.crc32(str(key).encode("utf-8")) + int(nth)) % len(items)
+    return items[k:] + items[:k]
 
 
 # ── 라이브 연결: 대본 먼저 → 컷은 뒤에 (관리자 스위치 story_writer_enabled) ──────
@@ -676,13 +745,16 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         product = ((seed_src.get("source_brief") or {}).get("product") or "").strip()
     seg_index = ba._seg_index(vis)
     note = {}
-    feats = extract_feats(vis, product, note=note)
-    if not feats:
+    feats_all = extract_feats(vis, product, note=note, seed_text=seed_text)
+    if not feats_all:
         return [], "특징을 못 뽑음(%s)" % (note.get("reason") or "빈 응답")
-    groups_out = {"product": product, "order": list(range(len(feats))), "alt_use": False,
-                  "groups": [{"name": f.get("name") or "", "claim": f.get("claim") or "",
-                              "cuts": [c for c in (f.get("from_cuts") or []) if c in seg_index]}
-                             for f in feats]}
+    hook_slots = note.get("hook_slots") or {}
+
+    def _groups_out(fs):
+        return {"product": product, "order": list(range(len(fs))), "alt_use": False,
+                "groups": [{"name": f.get("name") or "", "claim": f.get("claim") or "",
+                            "cuts": [c for c in (f.get("from_cuts") or []) if c in seg_index]}
+                           for f in fs]}
     preset = preset if preset in LENGTH_PRESETS else "short"
     if preset != "short":
         seconds = LENGTH_PRESETS[preset]["seconds"]
@@ -694,9 +766,12 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
     for nth, (sp, plat) in enumerate(plans):
         name = (sp or {}).get("name") or "씨앗 결 이야기"
         n = {}
+        # ★안마다 특징 순서를 돌린다(본문 다양화) — 컷 배정(groups_out)도 같은 순서로 만든다(줄의 group 번호가 이 목록을 가리킨다)
+        feats = _rotate(feats_all, job_id or product, nth)
+        groups_out = _groups_out(feats)
         lines = write(product, seed_text[:1500], feats, platform=plat,
                       style=_style_of(sp) if sp else _seed_style(seed_text), key=job_id or product, nth=nth, note=n,
-                      seconds=seconds, preset=preset)
+                      seconds=seconds, preset=preset, hook_slots=(hook_slots if plat == "yt" else None))
         if len(lines) < MIN_LINES:
             whys.append("%s: 대본이 %d줄뿐(%s)" % (name, len(lines), n.get("reason") or "칸 빔"))
             continue
@@ -735,6 +810,10 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         d["auto_pick"] = sp is None
         d["platform"] = plat
         d["seed_from"] = seed_from          # 점검용: 씨앗이 고른 영상(explicit)인가 job 대체(job:vid)인가
+        # ★작가 메모를 안에 남긴다(2026-09-26) — to_draft는 meta.note를 버려서 훅 판정·고조 재작성이 작동했는지
+        #   감사(tools/story_hook_audit.py)가 볼 수 없었다("판정 작동: 없음"으로 보임).
+        d["writer_note"] = {k: n.get(k) for k in ("hook_fix", "hook_retry", "escalation_retry", "matcher",
+                                                  "no_cut_lines", "dropped_escalations") if n.get(k)}
         d["line_groups"] = [L.get("group", -1) for L in lines]     # 점검용: 줄이 어느 재료에 걸렸나
         d["feat_names"] = [f.get("name") or "" for f in feats]
         drafts.append(d)
