@@ -32,7 +32,7 @@ YT_OUT = {"hook": "이걸 아직도 손으로 바른다고", "bait": "요새 이
 def _fake(monkeypatch, out=YT_OUT, feats=FEATS):
     calls = []
 
-    def call(prompt, schema, note=None, model=None):
+    def call(prompt, schema, note=None, model=None, vertex=True):   # vertex= : _call_json 스위치 인자(2026-09-26)
         calls.append(schema)
         return {"feats": feats} if schema is sw.FEATS_SCHEMA else out
     monkeypatch.setattr(sw._sg, "_call_json", call)
