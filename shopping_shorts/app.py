@@ -3417,6 +3417,12 @@ def _gen_fail_message(reasons, asm_why=""):
     if "api_error" in kinds:
         det = next((r.get("detail") for r in (reasons or [])
                     if r.get("kind") == "api_error" and r.get("detail")), "")
+        # ★503(과부하)·월 한도는 사용자 문장으로 옮긴다 — 장면근거 안의 fallback_reason과 같은
+        #   함수(script_fallback.humanize_reason, 0순위-B). 원문 "ServerError: 503 UNAVAILABLE. {…}"이
+        #   그대로 화면에 떴다(2026-09-25).
+        from shopping_shorts.script_fallback import humanize_reason as _hr
+        if det and _hr(det) != det:
+            return _hr(det)
         # ★키 문제가 아니다. '잠시 후 재시도'라고 말하지 않는다 — 기다려도 안 풀린다.
         return "AI 응답 오류입니다(키 문제가 아닙니다)%s" % ((" — %s" % det) if det else "")
     if "근거부족" in kinds:
@@ -3755,10 +3761,11 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     if not drafts:
         # 생성기 내부 폴백까지 예외적으로 빈손이어도 영상 재료가 있는 요청은 막지 않는다.
         # 실패한 AI 본문이 아니라 위에서 확정한 동일 재료의 원본 발화·장면만 사용한다.
-        drafts = [script_generate._grounded_fallback(
+        # ★_grounded_fallback은 리스트(0~1개)를 돌려준다(2026-09-25) — 한국어 관측이 없으면 0개.
+        drafts = script_generate._grounded_fallback(
             _pick_src, _pick_facts,
             script_generate._sources_product(_pick_src) or my_topic or subject,
-            reasons=_material_rejected)]
+            reasons=_material_rejected)
     _pickup_rejected = []
     if _seed_hook:
         _ok, _bad = pickup_script.filter_drafts(drafts, _seed_hook, _seed_cta)
@@ -4483,7 +4490,7 @@ def _key_format_hint(service: str, key: str) -> str:
     return ""
 
 
-def _probe_user_key(service: str, key: str) -> bool:
+def _probe_user_key(service: str, key: str):
     """등록된 키가 실제로 도는가. 판정만 하고 예외를 밖으로 안 흘린다.
 
     ★gemini는 comment_gen._probe_key_alive(REST)를 그대로 쓴다 — SDK models.list는
@@ -4508,8 +4515,29 @@ def _probe_user_key(service: str, key: str) -> bool:
             _remember_key_failure(service, 0, "파트너스 API가 키를 거부했습니다(서명 불일치 또는 미승인 계정)")
         return ok
     if service == keyroute.SVC_GEMINI:
-        from shopping_shorts.comment_gen import _probe_key_alive
-        return _probe_key_alive(key)
+        # ★세 갈래로 본다(2026-09-25). 종전엔 True/False라 구글이 붐빈 503·일반 429도 'bad'가
+        #   됐고, bad는 공용 풀에서 빠진다 — 회원 603의 새 키가 과부하 시간대에 등록 3초 만에 bad.
+        #   쓸 수 없는 키(선불 소진·월 한도·할당량 0·무효)만 bad, 붐빔은 None(판정 보류).
+        from shopping_shorts.comment_gen import _probe_key_result
+        from pipeline.atoms import key_vault
+        from shopping_shorts import gemini_keyhealth
+        alive, code, body = _probe_key_result(key)
+        if alive:
+            key_vault.note_success(key)            # 정지돼 있던 키면(충전·교체) 표시를 지운다
+            return True
+        exc = Exception(f"{code} {body}")
+        reason = key_vault.unusable_reason(exc)
+        if reason:
+            key_vault.note_failure(key, exc)       # 공용 풀에서도 즉시 뺀다
+            _KEY_FAIL.reason = gemini_keyhealth.explain(reason)
+            print(f"[keycheck] gemini 실패 code={code} → {reason} | {body[:160]}", file=sys.stderr)
+            # ★선불 소진·월 한도·할당량 0은 '틀린 키'가 아니다 — 충전·한도 상향으로 살아난다.
+            #   'bad'로 박으면 공용 풀에서 빠져 24시간 재시험도 못 받는다(반박 검토에서 발견).
+            #   'paused'는 풀에 남기고(store 필터는 off·bad만 뺀다) 제외는 key_vault 정지가 맡는다.
+            return False if reason == key_vault.UNUSABLE_AUTH else "paused"
+        _KEY_FAIL.reason = gemini_keyhealth.BUSY_TEXT
+        print(f"[keycheck] gemini 판정 보류 code={code} | {body[:160]}", file=sys.stderr)
+        return None
     if service == keyroute.SVC_VMAKE:
         # 형식은 _key_format_hint가 이미 걸렀다. 여기선 서명이 맞는지만 본다.
         from shopping_shorts.vmake_client import _split_key
@@ -4577,7 +4605,7 @@ def _probe_user_key(service: str, key: str) -> bool:
 
 
 def _key_status(service: str, key: str) -> str:
-    """화면에 박을 상태 문자열: ok / empty / bad. **여기서만 정한다**(0순위-B).
+    """화면에 박을 상태 문자열: ok / empty / bad / paused(제미니 선불·한도 — 살아날 수 있음) / unknown(확인 보류). **여기서만 정한다**(0순위-B).
 
     ★왜 empty가 필요한가 (2026-08-17 라이브 실측):
       SerpApi 키가 이번 달 250회를 다 쓴 상태(plan_searches_left=0)여도
@@ -4593,7 +4621,14 @@ def _key_status(service: str, key: str) -> str:
     if _hint:
         _KEY_FAIL.reason = _hint
         return "bad"
-    if not _probe_user_key(service, key):
+    _alive = _probe_user_key(service, key)
+    if _alive == "paused":
+        return "paused"
+    if _alive is None:
+        # 확인을 못 끝냈다(구글 붐빔 등) — 키 잘못이 아니다. 'unknown'은 공용 풀에 남는다
+        # (store.get_pooled_keys는 off·bad만 뺀다). bad로 찍으면 멀쩡한 키를 버린다.
+        return "unknown"
+    if not _alive:
         return "bad"
     if service == keyroute.SVC_SERPAPI:
         try:
@@ -4640,7 +4675,28 @@ def api_list_keys(request: Request):
             "wired": list(keyroute.WIRED),
             # pooled = 회원 키가 **공용 풀에 합류**하는 서비스(2026-08-24). 화면 문구가
             # 달라진다 — "내 키로 돈다"가 아니라 "풀에 넣고 무료로 쓴다"이기 때문이다.
-            "pooled": list(keyroute.POOLED)}
+            "pooled": list(keyroute.POOLED),
+            # ★제미니 키 건강(2026-09-25) — 선불 소진·월 한도·할당량 0·무효 키가 '● 정상'으로
+            #   떠 있었다. 판정은 key_vault, 문구는 gemini_keyhealth 한 곳에서 온다(0순위-B).
+            "gemini_health": _gemini_health(store, cid)}
+
+
+def _gemini_health(store, cid):
+    """회원 제미니 키 건강 — 실패해도 설정 화면을 죽이지 않는다."""
+    try:
+        from shopping_shorts import gemini_keyhealth
+        return gemini_keyhealth.member_key_health(store, cid)
+    except Exception as e:                  # noqa: BLE001
+        print(f"[keyhealth] 조회 실패(무시): {e!r}", file=sys.stderr)
+        return None
+
+
+@app.get("/api/settings/gemini_health")
+def api_gemini_health(request: Request):
+    """제미니 키 건강만 가볍게 — 메인 화면 안내 배너가 쓴다(키 목록 전체를 받을 필요가 없다)."""
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    return {"ok": True, "health": _gemini_health(store, cid)}
 
 
 # ★합류 규칙 본체는 shopping_shorts/keypool.py 한 곳이다(2026-08-31).
@@ -4737,7 +4793,14 @@ def api_verify_keys(request: Request, body: dict):
         # ok는 "쓸 수 있는가" — 무료분이 바닥난 키(empty)는 검색이 0건이라 False다.
         results.append({"id": key_id, "label": labels.get(key_id, ""),
                         "ok": status == "ok", "status": status, "reason": reason})
-    return {"ok": True, "results": results, "keys": store.list_customer_keys(cid)}
+    if service == keyroute.SVC_GEMINI:
+        # 확인으로 살아난 키(bad→ok)를 이 프로세스 풀에 바로 합류시킨다 — 안 하면 재기동 전까지 빠져 있다.
+        _resync_pools(store)
+    out = {"ok": True, "results": results, "keys": store.list_customer_keys(cid)}
+    if service == keyroute.SVC_GEMINI:
+        # 확인으로 정지가 풀리거나(충전) 새로 멈춘 키를 화면이 바로 그리게 한다(2026-09-25)
+        out["gemini_health"] = _gemini_health(store, cid)
+    return out
 
 
 @app.get("/api/settings/points")
@@ -12039,6 +12102,11 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    #   충전하려면 들어올 수 있어야 하는데 충전 화면이 유료 뒤에 있는 꼴이 된다.
                    #   ⚠️ GET만이다. 키 등록(POST /api/settings/keys)은 그대로 막힌다.
                    "/settings", "/api/settings/points", "/api/settings/keys",
+                   # ★제미니 키 건강(2026-09-25) — 사이드바가 모든 페이지에서 조용히 부른다. 안 넣으면
+                   #   체험·만료 회원이 이 호출에서 402를 받고, 직전에 화면을 눌렀으면 fetch 가로채기가
+                   #   '잠긴 기능' 결제 팝업을 띄운다(08-21 '안 눌렀는데 체험 끝 팝업'과 같은 모양, 반박 검토에서 발견).
+                   #   자기 키 상태만 읽는 GET이라 과금 요소가 없다.
+                   "/api/settings/gemini_health",
                    # ★2026-08-20 체험판: 즐겨찾기 목록·모음집 화면.
                    "/collection", "/api/mix/basket",
                    # ★볼채널등록(2026-09-02) — 사이드바 free:true와 짝. 여기 안 넣으면
@@ -23862,6 +23930,16 @@ def _materials_for_generate(item, body, store, cid, spines=None):
             # 사용자가 고른 카드와 같은 그룹 하나만 남겨 다른 제품 자료를 섞지 않는다.
             _topic_product = (_selected_group_topic(
                 item, _selected, _job, (_job or {}).get("_topic_resolution") or {}) or None)
+        _resolution = (_job or {}).get("_topic_resolution") or {}
+        if _topic_product is None and not _frozen and not _list_style:
+            # ★이 작업이 직전 생성에서 이미 확정한 주제(화면 "고정 주제 X")가 정본이다(2026-09-25
+            #   work 4bd606509402 사고). 판정 AI(Gemini)가 503으로 죽고, 고른 씨앗은 화면 재료에서
+            #   빠져(useFootage=false) job에 없어 선택 카드로도 못 붙였다 → 422가 6번 연속.
+            #   임의 합의가 아니다 — **이 작업이 이미 확정해 화면에 보여준 값**을, 지금 재료의 그룹
+            #   하나와 정확히 맞을 때만 다시 쓴다(재료를 다 바꿨으면 맞는 그룹이 없어 그대로 막힌다).
+            _prev_topic = str(_saved_mat.get("topic_product") or "").strip()
+            if _prev_topic and _topic_group_for_name(_prev_topic, _resolution, _job):
+                _topic_product = _prev_topic
         if _topic_product is None:
             if _frozen:
                 raise ValueError("전체 생성 때 확정한 제품 주제와 현재 자료가 다릅니다")
@@ -23870,8 +23948,17 @@ def _materials_for_generate(item, body, store, cid, spines=None):
                 # 강제하지 않고 편별 슬롯/장면 계약으로 넘긴다.
                 _topic_product = ""
             else:
-                if ((_job or {}).get("_topic_resolution") or {}).get("method") == "unresolved":
-                    raise ValueError("영상 자료 판정 응답을 검증하지 못했습니다. 잠시 후 다시 생성해 주세요")
+                _n_names = len(_resolution.get("groups") or [])
+                if _resolution.get("error") == "judge_unavailable":
+                    # ★진짜 원인을 말한다. 종전 "영상 자료 판정 응답을 검증하지 못했습니다"는
+                    #   무엇이 왜 안 됐는지 안 보여 사장님이 6번을 다시 눌렀다(2026-09-25).
+                    raise ValueError(
+                        "AI 서버 과부하(503)로 제품군 판정을 못 했습니다 — 1~2분 뒤 '다시 만들기'를 "
+                        "눌러 주세요. (재료 제품명이 %d가지로 갈려 AI 판정이 필요한 작업입니다)" % _n_names)
+                if _resolution.get("method") == "unresolved":
+                    raise ValueError(
+                        "AI의 제품군 판정 결과를 검증하지 못했습니다(재료 제품명 %d가지) — "
+                        "잠시 후 다시 생성해 주세요" % _n_names)
                 raise ValueError("담긴 영상에 서로 다른 제품이 같은 수로 섞여 주제를 확정할 수 없습니다")
     _explicit_topic = bool(str(
         _topic_body.get("my_topic") or _topic_body.get("subject") or "").strip())

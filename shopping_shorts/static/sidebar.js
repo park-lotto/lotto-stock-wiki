@@ -399,8 +399,8 @@
     var m = document.createElement("div");
     m.id = "ss-pw-modal";
     m.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;font-family:'Malgun Gothic',system-ui,sans-serif";
-    m.innerHTML = '<div style="background:#16161c;border:1px solid #2a2a30;border-radius:16px;padding:28px 26px;max-width:340px;text-align:center;color:#e8e8ea">' +
-      '<div style="font-size:40px">🔒</div>' +
+    m.innerHTML = '<div style="background:#16161c;border:1px solid #2a2a30;border-radius:16px;padding:28px 26px;max-width:340px;max-height:90vh;overflow-y:auto;box-sizing:border-box;margin:12px;text-align:center;color:#e8e8ea">' +
+      '<div style="font-size:40px">' + escHtml(opts.icon || "🔒") + '</div>' +
       '<div style="font-size:18px;font-weight:800;margin:10px 0 6px">' + escHtml(opts.title || "무료 체험이 끝났어요") + '</div>' +
       '<div style="font-size:14px;color:#b8b8c0;line-height:1.6">' +
         // 줄바꿈(\n)은 <br>로 — escHtml 먼저 하고 바꾼다(순서 반대면 태그가 escape된다).
@@ -570,7 +570,8 @@
       if (d.level === "ranking_only") _pwLockSidebar();
       else if (typeof d.days_left === "number" && d.days_left >= 0 && d.plan !== "pro") _pwBanner(d.days_left);
       _payPrompt(d);     // 미결제 회원에게 결제 안내 팝업(하루 1회)
-    }).catch(function () {});
+      window.__ssMeDone = true;   // 제미니 키 안내가 이 뒤에 뜬다(결제 팝업과 서로 지우지 않게)
+    }).catch(function () { window.__ssMeDone = true; });
   }
 
   // ── 결제 안내 팝업 (2026-08-23, 사장님 요청) ──────────────────────
@@ -596,6 +597,67 @@
       });
     }, 900);   // 화면이 다 그려진 뒤에 띄운다(로딩 중 겹쳐 보이지 않게)
   }
+  // ── 제미니 키 안내 (2026-09-25, 사장님 "회원안내까지 / 몇 개 충분히 등록 당부") ──────
+  // 공용 풀에 선불 소진·월 한도·할당량 0·무효 키가 섞여 계속 불렸는데 회원 화면엔 '● 정상'이었다.
+  // ★판정·문구는 서버가 준다(/api/settings/gemini_health ← key_vault 판정 + gemini_keyhealth 문구).
+  //   화면이 이유를 스스로 정하면 두 벌이 된다(0순위-B).
+  //   - has_dead  → 교체·확인 안내 팝업, 하루 1회
+  //   - few_keys  → 예비 키 당부 팝업, 3일에 1회(키를 아예 안 낸 회원에겐 서버가 false를 준다)
+  //   - 설정 화면에선 안 띄운다 — 거기엔 키마다 이유·해결법이 이미 펼쳐져 있다.
+  // ★반박 검토(2026-09-25)로 고친 것:
+  //   ① 본문이 길어 휴대폰에서 [나중에]가 화면 밖으로 잘렸다 → 키별 제목 + 짧은 당부만, 해결법은 설정 화면
+  //   ② /api/me(결제 안내)보다 먼저 떠서 결제 팝업이 이걸 지우면 그날은 못 봤다 → 결제 쪽이 끝난 뒤에 띄운다
+  //   ③ 띄우기 전에 '오늘 봤음'을 적었다 → 실제로 띄운 뒤에만 적는다. 결제 팝업이 계속 떠 있으면 이번엔 건너뛴다
+  var _GKH_DEAD_KEY = "ss_gkh_dead_day", _GKH_FEW_KEY = "ss_gkh_few_ts";
+  function initGeminiKeyHealth() {
+    if (typeof window === "undefined" || !window.localStorage) return;
+    if (/^\/settings/.test(location.pathname || "")) return;
+    var _f = window.fetch || (typeof fetch === "function" ? fetch : null);
+    if (!_f) return;
+    var waited = 0;
+    (function afterMe() {                      // 결제 안내(_payPrompt, /api/me 뒤 0.9초)가 먼저
+      if (!window.__ssMeDone && waited < 8000) { waited += 250; setTimeout(afterMe, 250); return; }
+      setTimeout(run, 1400);
+    })();
+    function run() {
+      _f("/api/settings/gemini_health").then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          var h = d && d.health;
+          if (!h || !h.keys) return;
+          var opts = null, mark = null;
+          if (h.has_dead) {
+            var today = new Date().toISOString().slice(0, 10);
+            try { if (localStorage.getItem(_GKH_DEAD_KEY) === today) return; } catch (e) {}
+            var dead = h.keys.filter(function (k) { return k.reason; });
+            var lines = dead.map(function (k) { return "• " + (k.label || "키") + " — " + (k.title || ""); }).join("\n");
+            opts = { icon: "⚠️", title: h.headline || ("등록하신 제미니 키 " + dead.length + "개가 멈췄어요"),
+                     body: lines + "\n\n해결 방법은 설정 화면에서 키마다 볼 수 있어요.\n\n" + (h.tip_short || ""),
+                     hideContact: true, link: "/settings#keys", linkText: "🔑 키 확인하러 가기", closeLabel: "나중에" };
+            mark = function () { try { localStorage.setItem(_GKH_DEAD_KEY, today); } catch (e) {} };
+          } else if (h.few_keys) {
+            var last = 0;
+            try { last = parseInt(localStorage.getItem(_GKH_FEW_KEY) || "0", 10) || 0; } catch (e) {}
+            if (Date.now() - last < 3 * 86400000) return;
+            opts = { icon: "🔑", title: "제미니 키, 예비로 2~3개 등록해 두세요",
+                     body: "지금 쓸 수 있는 키 " + (h.n_usable || 0) + "개\n\n" + (h.tip_short || ""),
+                     hideContact: true, link: "/settings#keys", linkText: "🔑 키 추가하러 가기", closeLabel: "나중에" };
+            mark = function () { try { localStorage.setItem(_GKH_FEW_KEY, String(Date.now())); } catch (e) {} };
+          }
+          if (!opts) return;
+          var tries = 0;
+          (function show() {
+            var ex = document.getElementById("ss-pw-modal");
+            if (ex && ex.style.display !== "none") {
+              if (tries++ < 60) { setTimeout(show, 2000); return; }
+              return;                           // 결제 팝업을 읽는 중이면 덮지 않는다 — 다음 방문에 다시
+            }
+            _pwModal(opts);
+            mark();
+          })();
+        }).catch(function () {});
+    }
+  }
+
   // 유료 API가 402(등급부족)를 주면 만료 안내 모달 — 페이지 내 어떤 유료버튼이든 공통 처리.
   //
   // ★모달은 **사장님이 뭔가를 눌러서 난 402**에만 뜬다(2026-08-21 근본 수정).
@@ -871,12 +933,14 @@
     document.addEventListener("DOMContentLoaded", mountWorks);
     document.addEventListener("DOMContentLoaded", initPaywall);
     document.addEventListener("DOMContentLoaded", initSignupAlert);
+    document.addEventListener("DOMContentLoaded", initGeminiKeyHealth);
   } else {
     mount();
     __ssPaintTheme();
     mountWorks();
     initPaywall();
     initSignupAlert();
+    initGeminiKeyHealth();
   }
 })();
 
