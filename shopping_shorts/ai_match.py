@@ -51,7 +51,23 @@ def match(lines, seg_index, backbone_vid, note=None, model=None):
     order = sorted(seg_index, key=lambda s: (seg_index[s].get("vid") or "", s))
     lb = "\n".join("  %d. [%s] (%.1f초) %s" % (i + 1, L.get("role") or "", _secs(L["text"]), L["text"]) for i, L in enumerate(lines))
     prompt = "%s\n\n[대본]\n%s\n\n[컷 목록] 번호 | 영상 | 길이 | [역할] 화면\n%s" % (BRIEF, lb, _cut_block(seg_index, backbone_vid, order))
-    out = _sg._call_json(prompt, SCHEMA, note=note, model=model or MODEL) or {}
+    # ★Vertex 먼저(2026-09-25, 스위치 켠 계정만) — 실패하면 종전 키풀(_call_json) 그대로.
+    from shopping_shorts import vertex_route
+
+    def _vertex(cl, m):
+        import json
+        from google.genai import types
+        resp = cl.models.generate_content(
+            model=m, contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json",
+                                               response_schema=SCHEMA))
+        return json.loads(resp.text)
+    _ok, out = vertex_route.try_call("ai_match", _vertex, what="장면매칭")
+    if _ok:
+        if note is not None:
+            note["matcher_auth"] = "vertex"
+    else:
+        out = _sg._call_json(prompt, SCHEMA, note=note, model=model or MODEL) or {}
     picks = {}
     for p in out.get("picks") or []:
         try:

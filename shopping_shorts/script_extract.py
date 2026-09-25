@@ -20,6 +20,7 @@ from shopping_shorts import comment_gen
 from shopping_shorts import scene_cut
 from shopping_shorts import shot_roles as _shot_roles
 from shopping_shorts import tag_qa
+from shopping_shorts import vertex_route
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
 from shopping_shorts.video_analysis import _MODEL, _wait_until_active
 
@@ -709,24 +710,42 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     attempt = 0
     _walk_guard = 0
     _walk_cap = max_retries + len(SHORTS_GEMINI_KEYS) + 2
+    # ★Vertex 먼저(2026-09-25, 스위치 켠 계정만 — vertex_route.on). 딱 1회 시도하고 실패하면
+    #   아래 종전 키풀 경로로 **그대로** 이어간다(attempt·키 표시를 건드리지 않는다).
+    #   Vertex엔 Files API가 없어 영상을 인라인 바이트로 보낸다(실측 32MB·19초 OK).
+    _vx_pending = vertex_route.on("script_extract")
+    _vx_t0 = 0.0
     while attempt < max_retries and _walk_guard < _walk_cap:
         _walk_guard += 1
-        key, idx = comment_gen._current_key_and_idx()
-        if key is None:
-            # 조용한 빈 결과 금지(2026-08-07) — 호출부가 '음성 없는 영상'으로 오해했다.
-            print("script_extract: 키 풀 전체 소진 — 호출 못 함(영상 문제 아님)",
-                  file=sys.stderr)
-            raise KeyPoolExhausted(
-                "Gemini 키 풀이 전부 소진 표시 상태라 대본 추출을 시작하지 못했습니다")
-        client = comment_gen._client_for_key(key)
+        _use_vertex, _vpart = False, None
+        if _vx_pending:
+            _vx_pending = False
+            _vpart = vertex_route.video_part(video_path)
+            if _vpart is not None:
+                _use_vertex, key, idx = True, None, None
+                client, model = vertex_route.client(), vertex_route.model()
+                _vx_t0 = time.monotonic()
+        if not _use_vertex:
+            key, idx = comment_gen._current_key_and_idx()
+            if key is None:
+                # 조용한 빈 결과 금지(2026-08-07) — 호출부가 '음성 없는 영상'으로 오해했다.
+                print("script_extract: 키 풀 전체 소진 — 호출 못 함(영상 문제 아님)",
+                      file=sys.stderr)
+                raise KeyPoolExhausted(
+                    "Gemini 키 풀이 전부 소진 표시 상태라 대본 추출을 시작하지 못했습니다")
+            client = comment_gen._client_for_key(key)
         file_obj = None
         try:
-            with open(video_path, "rb") as fh:
-                file_obj = client.files.upload(file=fh, config=types.UploadFileConfig(mime_type="video/mp4"))
-            file_obj = _wait_until_active(client, file_obj)
+            if _use_vertex:
+                _contents = [_vpart, prompt]
+            else:
+                with open(video_path, "rb") as fh:
+                    file_obj = client.files.upload(file=fh, config=types.UploadFileConfig(mime_type="video/mp4"))
+                file_obj = _wait_until_active(client, file_obj)
+                _contents = [file_obj, prompt]
             resp = client.models.generate_content(
                 model=model,
-                contents=[file_obj, prompt],
+                contents=_contents,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=_RESPONSE_SCHEMA,
@@ -765,9 +784,18 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 continue
             if qa_first is not None:             # 재시도분이 더 나쁘면 첫 결과로 되돌린다
                 result = _pick_better_extract(qa_first, result, duration)
+            if _use_vertex:
+                print("vertex_route.대본추출: %s OK(%.1fs, 구간 %d)" % (
+                    model, time.monotonic() - _vx_t0, len(segments)), file=sys.stderr)
             return _attach_qa(result, duration, qa_retried, video_path)
         except Exception as e:
             m = str(e)
+            if _use_vertex:
+                # ★Vertex 실패는 키풀과 무관 — 표시·대기·attempt 없이 종전 경로로 넘어간다.
+                print("vertex_route.대본추출: %s 실패(%.1fs) → 키풀 폴백 — %r" % (
+                    model, time.monotonic() - _vx_t0, e), file=sys.stderr)
+                model = _MODEL
+                continue
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue  # ★죽은 키 우회는 attempt를 안 올린다 — 살아있는 키까지 걸어간다
