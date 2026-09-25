@@ -609,23 +609,43 @@ def seed_platform(seed_text):
     return "ig" if pol >= 3 and pol / max(1, len(ws)) >= 0.03 else "yt"
 
 
-def make_drafts(spines, job, seconds=25, job_id="", preset="short"):
+def _norm_text(t):
+    return re.sub(r"\s+", "", str(t or ""))
+
+
+def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product=""):
     """(drafts, why) — app._backbone_drafts와 같은 계약(비면 why에 이유, 조용한 폴백 금지).
 
     자동 1안(씨앗 결 그대로) + 고른 스타일 1안. 모델 호출 = 특징 1회 + 안마다 1회.
     ★화면은 씨앗 영상을 안 쓴다(backbone_assemble.assemble과 같은 규칙, 2026-09-21 사장님).
+
+    seed_text/seed_product (2026-09-26): **사용자가 2단계에서 고른 씨앗**의 원문·제품. 씨앗은 화면 재료에서
+      빼기(useFootage=false) 때문에 job에 없어서, 종전엔 "job 안에서 가장 긴 한국어 글"이 씨앗 노릇을 했다 —
+      실사고 work ea29430903d3: 고른 씨앗은 유튜브 썰(반말)인데 인스타 s5(존댓말 "여러분 다이소에서…")가 씨앗이
+      되어 "씨앗 결 이야기"가 다이소 존댓말로 나왔다. 명시값이 오면 그것이 씨앗이고, 없으면 종전 규칙.
     """
     from shopping_shorts import backbone_assemble as ba
     srcs = ba.sources_from_extract((job or {}).get("extract") or {})
     if not srcs:
         return [], "재료 분석(extract)이 아직 없음"
-    seed_src = ba.seed_source(srcs, (job or {}).get("backbone_main"))
-    seed_text = ((seed_src or {}).get("full_text_ko") or (seed_src or {}).get("full_text") or "").strip()
-    if len(seed_text) < 60:
-        return [], "씨앗 영상의 말이 너무 짧음(%d자)" % len(seed_text)
-    vis = ba._drop_seed(srcs, seed_src)
+    seed_text = (seed_text or "").strip()
+    if len(seed_text) >= 60:
+        seed_src = None
+        seed_from = "explicit"
+        # 고른 씨앗과 같은 글의 영상이 job에도 담겨 있으면 그건 화면에서 뺀다(씨앗 화면 금지 규칙 그대로)
+        key = _norm_text(seed_text)
+        vis = [s for s in srcs
+               if _norm_text(s.get("full_text_ko") or s.get("full_text")) != key]
+        product = (seed_product or "").strip()
+    else:
+        seed_src = ba.seed_source(srcs, (job or {}).get("backbone_main"))
+        seed_text = ((seed_src or {}).get("full_text_ko") or (seed_src or {}).get("full_text") or "").strip()
+        if len(seed_text) < 60:
+            return [], "씨앗 영상의 말이 너무 짧음(%d자)" % len(seed_text)
+        seed_from = "job:%s" % (seed_src.get("video_id") or "")
+        vis = ba._drop_seed(srcs, seed_src)
+        product = ((seed_src.get("source_brief") or {}).get("product") or "").strip()
     seg_index = ba._seg_index(vis)
-    product = ((seed_src.get("source_brief") or {}).get("product") or "").strip()
     note = {}
     feats = extract_feats(vis, product, note=note)
     if not feats:
@@ -640,7 +660,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short"):
     plans = [(None, seed_platform(seed_text))]
     for sp in (spines or [])[:1]:
         plans.append((sp, "yt" if sp.get("no_cta") else "ig"))
-    backbone_vid = seed_src.get("video_id")
+    backbone_vid = (seed_src or {}).get("video_id")
     drafts, whys = [], []
     for nth, (sp, plat) in enumerate(plans):
         name = (sp or {}).get("name") or "씨앗 결 이야기"
@@ -685,6 +705,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short"):
         d["length_preset"] = preset
         d["auto_pick"] = sp is None
         d["platform"] = plat
+        d["seed_from"] = seed_from          # 점검용: 씨앗이 고른 영상(explicit)인가 job 대체(job:vid)인가
         d["line_groups"] = [L.get("group", -1) for L in lines]     # 점검용: 줄이 어느 재료에 걸렸나
         d["feat_names"] = [f.get("name") or "" for f in feats]
         drafts.append(d)
