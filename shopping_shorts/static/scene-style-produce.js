@@ -157,6 +157,46 @@
       if(dialog?.open)dialog.close();
     }catch(error){status().textContent=error.message;frame.contentWindow.postMessage({type:'scene-style-saved',ok:false,error:error.message},location.origin);}
   }
+  // ── 6단계를 떠날 때 "이 템플릿으로 진행할까요?"(2026-09-26 사장님) ──────────────────
+  //   [이 영상에 적용]을 안 누르고 다음으로 가면 설정이 서버에 안 남아 **썸네일·영상에 템플릿이 안 들어갔다**
+  //   (고객 조율가님 job 7cfa8bd7a23e: 템플릿을 꾸며 두고 적용 없이 넘어가 scene_style=None, 썸네일 후보 17번 전부 원본).
+  //   그냥 자동 저장하면 09-16 사고(열어만 보고 닫았는데 기본 t11이 영상에 들어감)가 되살아나므로 **묻는다**.
+  //   묻는 조건: 이 작업을 이번에 편집기로 열었고 · 서버에 적용한 적 없고 · 지금 템플릿이 골라져 있다(null=템플릿 없음은 안 묻는다).
+  //   produce.html jump()가 부른다 — 다음 버튼·단계 칩·[썸네일 단계로 이동]이 전부 jump를 지나므로 한 곳에서 막힌다.
+  let leaveBypass=false;
+  function pendingTemplate(){
+    // '적용했나'는 applied() 하나로 본다 — 열 때 서버 저장본으로 정해지고 적용하면 켜진다. STATE.deco를 따로 보면
+    //   작업을 바꿨을 때 앞 작업 값이 남아 묻지 않고 지나갔다(검사 ⑥에서 실측).
+    const id=currentMixJob();if(!id||id!==jobId||applied())return null;
+    const api=frame?.contentWindow?.sceneStyle;
+    if(editorOpen()&&api?.context()?.jobId===id){try{return api.snapshot()||null;}catch(_){return null;}}
+    try{return JSON.parse(localStorage.getItem(draftKey(id))||'null')?.snapshot||null;}catch(_){return null;}
+  }
+  window.sceneStyleLeaveGate=proceed=>{
+    if(leaveBypass){leaveBypass=false;return true;}
+    const snap=pendingTemplate();if(!snap)return true;
+    if(document.getElementById('sceneStyleLeaveAsk'))return false;
+    const wrap=document.createElement('div');wrap.id='sceneStyleLeaveAsk';wrap.setAttribute('role','dialog');wrap.setAttribute('aria-modal','true');
+    wrap.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:16px';
+    wrap.innerHTML='<div style="background:#0f1c25;border:1px solid #35505b;border-radius:14px;max-width:420px;width:100%;padding:22px 20px;color:#e8f1f3;font-family:inherit;box-shadow:0 12px 40px rgba(0,0,0,.5)">'
+      +'<div style="font-size:17px;font-weight:800;margin-bottom:8px">이 템플릿으로 진행할까요?</div>'
+      +'<div style="font-size:13px;line-height:1.6;color:#bcd0d6;margin-bottom:16px">장면꾸미기에서 고른 템플릿이 아직 <b>영상에 적용되지 않았어요</b>.<br>진행하면 지금 화면 그대로 썸네일과 최종 영상에 들어갑니다.</div>'
+      +'<button type="button" data-leave="apply" style="width:100%;padding:12px;border:0;border-radius:10px;background:#3fe0b5;color:#04221a;font-weight:800;font-size:15px;cursor:pointer;margin-bottom:8px">✔ 이 템플릿으로 진행</button>'
+      +'<div style="display:flex;gap:8px"><button type="button" data-leave="skip" style="flex:1;padding:10px;border:1px solid #35505b;border-radius:10px;background:transparent;color:#dce8ec;font-weight:700;cursor:pointer">템플릿 없이 진행</button>'
+      +'<button type="button" data-leave="stay" style="flex:1;padding:10px;border:1px solid #35505b;border-radius:10px;background:transparent;color:#dce8ec;font-weight:700;cursor:pointer">계속 꾸미기</button></div>'
+      +'<div data-leave-msg style="font-size:12px;color:#ffb4a8;margin-top:8px;min-height:16px"></div></div>';
+    document.body.append(wrap);
+    const close=()=>wrap.remove(),msg=wrap.querySelector('[data-leave-msg]');
+    wrap.addEventListener('click',async event=>{
+      const act=event.target?.closest?.('[data-leave]')?.dataset.leave;if(!act)return;
+      if(act==='stay'){close();return;}
+      if(act==='skip'){close();leaveBypass=true;proceed();return;}
+      wrap.querySelectorAll('button').forEach(b=>b.disabled=true);msg.style.color='#bcd0d6';msg.textContent='적용하는 중…';
+      try{await saveSnapshot(snap);close();proceed();}
+      catch(error){wrap.querySelectorAll('button').forEach(b=>b.disabled=false);msg.style.color='#ffb4a8';msg.textContent='✕ '+(error.message||'적용하지 못했어요')+' — 다시 눌러 주세요';}
+    });
+    return false;
+  };
   function remapSnapshot(snapshot,previous,next,changedBeat){
     const result=structuredClone(snapshot),sources=next.scenes.map(scene=>{
       const choices=previous.scenes.map((s,i)=>({s,i})).filter(x=>x.s.beat_idx===scene.beat_idx);
