@@ -991,6 +991,38 @@ def _even_owner(k, n_phrase, n_seg):
     return k if n_phrase <= n_seg else (k * n_seg) // n_phrase
 
 
+def phrase_cut_groups(durs, min_cut):
+    """구절 k가 몇 번째 **컷 묶음**인가 — 자막 경계는 그대로 두고 화면 컷만 min_cut초 이상으로 묶는다.
+
+    2026-09-26 사장님: "자막 경계가 먼저 분명한 게 우선이고, 그 뒤에 장면 컷이 너무 짧다면
+    그 컷 뒤에까지(같은 조각을) 더 보여주는 방식". 히트작 79편 900컷 실측(cut_study80.json)은
+    컷 중앙 1.47초·1.0초 미만 31%·0.5초 미만 3.7% — 우리 구절(8자·3어절)은 0.5~1.2초라
+    구절=컷 1:1이면 필연적으로 히트작보다 잘다.
+
+    규칙(이것 하나뿐): 앞에서부터 구절을 모아 min_cut초를 넘기면 다음 구절부터 새 묶음.
+    남은 구절 전부를 합쳐도 min_cut에 못 미치면 새 묶음을 열지 않고 앞 묶음에 붙인다(짧은 꼬리 컷 방지).
+    min_cut이 0이면 구절 하나 = 묶음 하나(종전과 같다 — 옛 job 회귀 0)."""
+    n = len(durs or [])
+    try:
+        mc = float(min_cut or 0.0)
+    except (TypeError, ValueError):
+        mc = 0.0
+    if n == 0 or mc <= 0:
+        return list(range(n))
+    rest = [0.0] * (n + 1)
+    for k in range(n - 1, -1, -1):
+        rest[k] = rest[k + 1] + float(durs[k] or 0.0)
+    groups, g, run = [], 0, 0.0
+    for k in range(n):
+        d = float(durs[k] or 0.0)
+        if k > 0 and run >= mc - 1e-6 and rest[k] >= mc - 1e-6:
+            g += 1
+            run = 0.0
+        groups.append(g)
+        run += d
+    return groups
+
+
 def _valid_clip_anchor(beat, n_seg):
     a = beat.get("clip_anchor")
     if not isinstance(a, dict):
@@ -1002,32 +1034,43 @@ def _valid_clip_anchor(beat, n_seg):
     return offs
 
 
-def phrase_owners(beat, n_seg, cap_segs=None):
+def phrase_owners(beat, n_seg, cap_segs=None, durs=None):
     """구절 k를 몇 번째 조각이 덮는가 — **판단처는 여기 한 곳**(렌더·화면 공용).
 
     R1 구절 수 == 조각 수 → 순서대로 1:1.
     R2 수가 다르고 얼린 짝이 유효 → 구절 시작 글자 위치 이하에서 가장 뒤의 조각.
        (줄을 나누면 새 줄은 같은 조각 몫 / 서로 다른 조각의 줄을 합치면 뒤 조각은 '안 나옴')
-    R3 얼린 짝이 없으면 종전 식 — 옛 job은 예전과 똑같이 나온다."""
+    R3 얼린 짝이 없으면 종전 식 — 옛 job은 예전과 똑같이 나온다.
+    R4 (2026-09-26) 칸에 phrase_min_cut 표식이 있고 구절 길이(durs, 초)를 받으면 **컷 묶음** 단위로 정한다:
+       짧은 구절들을 phrase_cut_groups로 묶어 한 묶음 = 한 조각. 얼린 짝(R2)이 있으면 묶음의 첫 구절
+       짝을 묶음 전체가 따르고, 없으면 묶음 번호에 종전 식(R1/R3)을 적용한다 — 담은 순서대로, 건너뛰지 않는다.
+       표식이 없거나 durs가 없으면 R1~R3 그대로(옛 job·다른 호출부 회귀 0)."""
     if cap_segs is None:
         cap_segs = _caption_segments(beat.get("narration") or "", beat.get("caption_lines"))
     n = len(cap_segs)
     if n_seg <= 0 or n <= 0:
         return []
-    if n == n_seg:
-        return list(range(n))
-    offs = _valid_clip_anchor(beat, n_seg)
-    if offs is None:
-        return [_even_owner(k, n, n_seg) for k in range(n)]
-    starts, _total = _phrase_key_starts(cap_segs)
-    owners = []
-    for st in starts:
-        c = 0
-        for j, a in enumerate(offs):
-            if a <= st:
-                c = j
-        owners.append(c)
-    return owners
+    offs = _valid_clip_anchor(beat, n_seg) if n != n_seg else None
+    base = None
+    if offs is not None:
+        starts, _total = _phrase_key_starts(cap_segs)
+        base = []
+        for st in starts:
+            c = 0
+            for j, a in enumerate(offs):
+                if a <= st:
+                    c = j
+            base.append(c)
+    mc = beat.get("phrase_min_cut") or 0
+    if durs is not None and len(durs) == n and mc:
+        groups = phrase_cut_groups(durs, mc)
+        n_grp = groups[-1] + 1
+        if base is not None:
+            return [base[groups.index(g)] for g in groups]
+        return [_even_owner(g, n_grp, n_seg) for g in groups]
+    if base is not None:
+        return base
+    return [_even_owner(k, n, n_seg) for k in range(n)]
 
 
 def carry_caption_lines(old_narration, old_lines, new_narration, min_keep=0.5):
@@ -1157,7 +1200,7 @@ def _plan_phrase_clips(beat, segs, tts_dur, src_durs=None):
         plan = []
         pos = [float(g["start"]) for g in segs]
         ri = 0
-        _owners = phrase_owners(beat, len(segs), cap_segs)
+        _owners = phrase_owners(beat, len(segs), cap_segs, durs=durs)   # R4: 짧은 구절 묶음(phrase_min_cut)
         _prev_idx = -1
         for k in range(len(durs)):
             end_b = bounds[-1] if k == len(durs) - 1 else bounds[k + 1]
@@ -1483,6 +1526,62 @@ def cap_preset_key(txt):
     """
     drop = set(_CAP_TRIM_TAIL)
     return "".join(ch for ch in (txt or "") if ch not in drop and not ch.isspace())
+
+
+_SIMPLE_NO_END = ("이", "그", "저", "안", "못", "더", "잘", "꼭", "딱", "다", "또", "왜", "참", "좀", "한", "두", "세", "네", "첫")
+_SIMPLE_JOIN_SUFFIX = ("는데", "서", "고", "면", "니까", "지만", "라서", "다가", "더니", "든", "도")
+
+
+def simple_caption_split(text, max_chars):
+    """자막 줄 나누기 — **단순 규칙**(2026-09-26 사장님 "억지 강화 규칙 말고 자연스럽게 될 수 있는 규칙").
+
+    규칙은 다섯 줄이 전부다. 어절 단위로만 자르고, 글자는 바꾸지 않는다.
+      1. 한 줄 ≤ max_chars(공백 제외). 템플릿 자막 칸이 한 줄이라 이 수가 곧 칸 폭이다.
+      2. 문장 부호(. ? ! …) 뒤에서는 끊는다.
+      3. 창 안에서는 가장 뒤의 자연 경계(쉼표 뒤 · 연결어미 는데/서/고/면/니까/지만/라서/다가/더니 뒤)에서 끊고,
+         없으면 창 안 마지막 어절 뒤에서 끊는다.
+      4. 한 글자 관형사·부사(이 그 저 안 못 더 잘 꼭 딱 …) 뒤에서는 끊지 않는다 — 다음 어절과 같이 넘긴다.
+      5. 마지막 줄이 한 어절이면 앞 줄에서 한 어절을 가져온다(앞 줄이 세 어절 이상일 때).
+    한 어절이 max_chars를 넘으면 그 어절은 혼자 한 줄(글자를 쪼개지 않는다)."""
+    words = (text or "").split()
+    try:
+        mx = int(max_chars or 0)
+    except (TypeError, ValueError):
+        mx = 0
+    if not words:
+        return []
+    if mx <= 0:
+        return [" ".join(words)]
+    flat = lambda ws: len("".join(ws))                       # noqa: E731
+    lines, cur = [], []
+    for w in words:
+        if cur and flat(cur + [w]) > mx:
+            # 창이 찼다 — 창 안 가장 뒤의 자연 경계에서 끊는다(없으면 여기서)
+            cut = len(cur)
+            for j in range(len(cur), 0, -1):
+                bare = _strip_punct(cur[j - 1])
+                if cur[j - 1].endswith((",", "、")) or bare.endswith(_SIMPLE_JOIN_SUFFIX):
+                    cut = j
+                    break
+            # 한 글자 관형사·부사 뒤에서는 안 끊는다 — 한 어절 앞으로 물린다(맨 앞이면 그냥 끊는다)
+            while cut > 1 and _strip_punct(cur[cut - 1]) in _SIMPLE_NO_END:
+                cut -= 1
+            lines.append(" ".join(cur[:cut]))
+            cur = cur[cut:] + [w]
+        else:
+            cur.append(w)
+        if cur and cur[-1].endswith((".", "?", "!", "…")):
+            lines.append(" ".join(cur))
+            cur = []
+    if cur:
+        lines.append(" ".join(cur))
+    # 5. 고아 어절
+    if len(lines) >= 2 and len(lines[-1].split()) == 1 and len(lines[-2].split()) >= 3             and not lines[-2].endswith((".", "?", "!", "…")):
+        prev = lines[-2].split()
+        if flat([prev[-1]] + lines[-1].split()) <= mx:
+            lines[-2] = " ".join(prev[:-1])
+            lines[-1] = prev[-1] + " " + lines[-1]
+    return [x for x in lines if x.strip()]
 
 
 def _wrap_long(segs, manual=False):
