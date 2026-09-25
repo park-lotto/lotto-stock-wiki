@@ -176,3 +176,18 @@ def test_pick_uses_describe_then_text_match_and_coerces_strings(tmp_path):
     idx, fixed = footage.pick([{"text": "금메달"}, {"text": "어린 시절"}], [{}, {}, {}], ["s0.png"], reader, "x", log=lambda *_: None)
     assert idx == [1, 2] and fixed == 0
     assert seen == [1, 0]                                # 그림 1장씩 설명 → 글만으로 짝짓기
+
+
+def test_bgm_start_offset_and_loudness(tmp_path, monkeypatch):
+    """원본 실측: 곡을 정해진 지점부터 속도 그대로, -12 LUFS 안팎."""
+    from shopping_shorts.channel_presets.hotpeople import render, spec
+    d = tmp_path / "bgm"; d.mkdir()
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "sine=frequency=440:duration=30", str(d / "hero.m4a")], check=True)
+    monkeypatch.setattr(spec, "POLICY_BGM_DIR", str(d))
+    assert render.pick_bgm("안세영") == (str(d / "hero.m4a"), 7.1)       # 있는 곡만 고른다
+    (tmp_path / "render").mkdir()
+    out, name = render._bgm(10.0, str(tmp_path), "안세영")
+    assert name == "hero.m4a@7.1s"
+    r = subprocess.run(["ffmpeg", "-i", out, "-af", "loudnorm=print_format=summary", "-f", "null", "-"], capture_output=True, text=True)
+    lufs = float([l for l in r.stderr.splitlines() if "Input Integrated" in l][0].split()[2])
+    assert -14.5 < lufs < -9.5                                            # 원본 중앙 -12.1

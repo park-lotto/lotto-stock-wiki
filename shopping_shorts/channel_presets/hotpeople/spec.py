@@ -58,8 +58,18 @@ POLICY_CHANNEL_NAME = os.environ.get("HOTPEOPLE_CHANNEL_NAME", "뜨거운 이야
 POLICY_CHANNEL_HANDLE = os.environ.get("HOTPEOPLE_CHANNEL_HANDLE", "@hot_story")
 POLICY_LOGO_RGB = (230, 90, 30)
 POLICY_HEADLINE_HIDE_AFTER = None   # 원본 4/10편은 9~23초 뒤 헤드라인을 숨긴다. None = 끝까지 유지
-POLICY_BGM_DIR = os.environ.get("HOTPEOPLE_BGM_DIR", "")
-POLICY_BGM_LUFS = -24.0             # 미측정 — 나레가 없으니 배경음이 전부. 원본 재기 전 잠정값
+# ── 배경음악 (원본 10편 Shazam 인식 + 교차상관, 2026-09-25) ──────────────────
+# 원본은 편마다 곡 하나를 **정해진 지점부터 속도 그대로** 끝까지 깐다(영상 1s·40s에서 오프셋 차이 동일 7.12s).
+# 곡 파일은 POLICY_BGM_DIR 에 아래 이름으로 둔다(저작권 음원 — 커밋 금지, out/hotpeople/bgm 은 gitignore).
+POLICY_BGM_DIR = os.environ.get("HOTPEOPLE_BGM_DIR", "") or os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(_HERE))), "out", "hotpeople", "bgm")
+BGM_TRACKS = [                      # (파일, 곡 속 시작초, 원본 사용 편수)
+    ("hero.m4a", 7.1, 3),           # Bonnie Tyler - Holding Out For a Hero  (dvJ 7.12 · z1f 7.34 · 3Ek 7.03, 상관 0.8)
+    ("unstoppable.m4a", 10.4, 3),   # Sia - Unstoppable                      (Cmn 10.32 · aKub 10.47 · kbx 10.32)
+    ("final_countdown.m4a", 34.0, 2),  # Europe - The Final Countdown        (eehz 37.95 · s1Z 29.86 — 편마다 다름)
+    ("kcm_habit.m4a", 94.5, 1),     # KCM - 버릇처럼 셋을 센다(후렴)           (X4G 94.46)
+]
+BGM_LUFS = -12.0                    # 원본 10편 통합음량 중앙 -12.1 (범위 -9.1 ~ -15.2). 나레가 없어 음악이 크다
 POLICY_MAX_REWRITES = 4
 POLICY_FOOTAGE_QUERIES = 6          # 검색어 수(한 편)
 POLICY_FOOTAGE_PER_QUERY = 2        # 검색어당 받을 영상 수

@@ -120,16 +120,26 @@ def cut_clip(bg_png, sub_png, src, start, sec, out_mp4):
          "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-an", out_mp4], "cut")
 
 
-def _bgm(total, wd):
+def pick_bgm(seed_text):
+    """원본 사용 비율(3:3:2:1)대로, 씨앗 글자로 정해지는 곡 하나 → (경로, 시작초) 또는 None."""
     d = spec.POLICY_BGM_DIR
-    files = sorted(os.path.join(d, x) for x in os.listdir(d) if x.lower().endswith((".mp3", ".wav", ".m4a"))) if d and os.path.isdir(d) else []
+    have = [(f, st, w) for f, st, w in spec.BGM_TRACKS if d and os.path.isfile(os.path.join(d, f))]
+    if not have:
+        return None
+    rnd = random.Random(seed_text or "")
+    f, st, _ = rnd.choices(have, weights=[w for _, _, w in have])[0]
+    return os.path.join(d, f), st
+
+
+def _bgm(total, wd, seed_text=""):
     out = os.path.join(wd, "render", "bgm.wav")
-    if files:
-        src = random.Random(total).choice(files)
-        _ff(["ffmpeg", "-v", "error", "-y", "-stream_loop", "-1", "-i", src, "-t", f"{total:.2f}",
-             "-af", f"loudnorm=I={spec.POLICY_BGM_LUFS}:TP=-2,afade=t=out:st={max(0, total - 1.5):.2f}:d=1.5",
+    got = pick_bgm(seed_text)
+    if got:
+        src, start = got
+        _ff(["ffmpeg", "-v", "error", "-y", "-ss", f"{start:.2f}", "-i", src, "-t", f"{total:.2f}",
+             "-af", f"loudnorm=I={spec.BGM_LUFS}:TP=-1:LRA=11,afade=t=out:st={max(0, total - 1.5):.2f}:d=1.5",
              "-ar", "48000", "-ac", "2", out], "bgm")
-        return out, src
+        return out, f"{os.path.basename(src)}@{start}s"
     _ff(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-t", f"{total:.2f}", out], "silence")
     return out, None
 
@@ -152,7 +162,7 @@ def build(wd, script, footage, log=print):
         fh.writelines(f"file '{os.path.basename(p)}'\n" for p in parts)
     silent = os.path.join(rd, "video.mp4")
     _ff(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", silent], "concat")
-    audio, bgm_src = _bgm(total, wd)
+    audio, bgm_src = _bgm(total, wd, script.get("person", ""))
     os.makedirs(os.path.join(wd, "out"), exist_ok=True)
     mp4 = os.path.join(wd, "out", "final.mp4")
     _ff(["ffmpeg", "-v", "error", "-y", "-i", silent, "-i", audio, "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
