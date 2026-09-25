@@ -33,10 +33,14 @@ def _plan():
     ]}
 
 
-def test_컷리듬_단_칸은_구절맞춤이_꺼진_채로_시작한다():
+def test_컷리듬_단_칸도_구절맞춤이_켜진_채로_시작한다():
+    # 2026-09-25 사장님 "3단계에서 컷리듬 말고 구절맞춤이 기본값" — 09-24의 '끈 채로 시작'을 뒤집었다.
+    # ★None(표식 없음)이 아니라 True여야 한다 — 렌더(video_assemble:823 `_cr = {} if phrase_sync`)는
+    #   표식이 없으면 컷 리듬을 쓰고 화면(scene_play.js)은 없으면 켬으로 보므로 둘이 어긋난다.
     plan = _plan()
     mp._trim_for_cut_rhythm(plan)
-    assert [b["phrase_sync"] for b in plan["beats"]] == [False, False, False]
+    assert [b["phrase_sync"] for b in plan["beats"]] == [True, True, True]
+    assert all(b.get("cut_rhythm") for b in plan["beats"]), "표식은 남아야 끄면 컷 리듬으로 갈 수 있다"
     assert [b["cut_rhythm"]["hold"] for b in plan["beats"]] == [True, False, True], "미끼는 홀드가 아니다"
 
 
