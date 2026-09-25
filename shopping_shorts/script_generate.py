@@ -1380,14 +1380,20 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
 
 
 def _grounded_fallback(sources, facts_block="", product="", style=None, reasons=None):
-    """생성 출구들이 공유하는 마지막 한 안. 실패한 AI 본문은 받지 않는다."""
+    """생성 출구들이 공유하는 마지막 한 안 — **리스트**로 돌려준다(0개 또는 1개).
+
+    실패한 AI 본문은 받지 않는다. ★쓸 수 있는 한국어 관측이 없으면 빈 리스트(2026-09-25):
+    외국어 전사·두 줄짜리 껍데기를 대본으로 내보내던 것을 막는다 — 호출부는 그대로 `return`하면
+    0개가 되고 API가 reasons로 이유(503 과부하 등)를 말한다.
+    """
     from shopping_shorts import script_fallback
     reason = next((r.get("detail") or r.get("kind") or r.get("reason")
                    for r in (reasons or []) if isinstance(r, dict)
                    and (r.get("detail") or r.get("kind") or r.get("reason"))), "")
-    return script_fallback.build_grounded_fallback(
+    draft = script_fallback.build_grounded_fallback(
         _sources_product(sources) or product or "영상 속 제품",
         claim_evidence(sources, facts_block), style or {}, reason)
+    return [draft] if draft else []
 
 
 def generate_by_styles(sources, styles, target_seconds=30, bank_context="", facts_block="",
@@ -1430,8 +1436,8 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
     # 확률적이라 모두 실패할 수 있다. 그때 실패한 AI 문장을 내보내거나 502로 막지 않고,
     # 원본 발화·장면 관측만 읽는 결정적 폴백 한 안을 반환한다.
     if sources:
-        return [_grounded_fallback(sources, facts_block, product,
-                                   style_rows[0] if style_rows else {}, reasons)]
+        return _grounded_fallback(sources, facts_block, product,
+                                  style_rows[0] if style_rows else {}, reasons)
     return []
 
 
@@ -1582,8 +1588,8 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
     material_text = _materials_text(sources)
     full_text = "\n\n".join((s.get("full_text") or "").strip() for s in sources)
     if not full_text:
-        return ([_grounded_fallback(all_sources, facts_block, locked_product,
-                                    reasons=rejection_reasons)] if all_sources else [])
+        return (_grounded_fallback(all_sources, facts_block, locked_product,
+                                   reasons=rejection_reasons) if all_sources else [])
 
     normalized_mode = {"A": "remake", "B": "transplant"}.get(mode, mode)
     guard_product = ((my_topic or "").strip() if normalized_mode == "transplant"
@@ -1646,8 +1652,8 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
         row.get("role") for row in ((structure or {}).get("beats") or [])
         if isinstance(row, dict) and row.get("role")
     ]}
-    return [_grounded_fallback(all_sources, facts_block, guard_product,
-                               fallback_style, rejection_reasons)]
+    return _grounded_fallback(all_sources, facts_block, guard_product,
+                              fallback_style, rejection_reasons)
 
 
 _REFINE_SCHEMA = {
