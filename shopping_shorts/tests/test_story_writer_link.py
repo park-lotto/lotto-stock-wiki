@@ -248,3 +248,38 @@ def test_second_escalation_is_mandatory_retry_once_then_reject(monkeypatch):
     note2 = {}
     assert sw.write("두피 액체빗", "씨앗 " * 30, FEATS, platform="yt", key="k", note=note2) == []
     assert note2.get("reason", "").startswith("고조2 없음")
+
+
+def test_hook_copy_triggers_retry_then_deterministic_and_feats_rotate(monkeypatch):
+    """2026-09-26 사장님 "이렇게까지 고치고 라이브까지": 훅이 씨앗 첫 줄을 베끼면 다른 꼴로 1회 다시 →
+    그래도 베끼면 결정적 채움. 안마다 특징 순서가 돌아 본문이 같아지지 않는다."""
+    seed = ("개발자도 예상 못한 한국 주부의 활용법 최근 딱 봤을 때는 평범한 필름지처럼 보이는 이 제품을 이용한 "
+            "한국의 한 천재 주부의 활용법이 각종 SNS에서 수천만 조회수로 바이럴 폭발함에 논란이라는데")
+    copy_out = dict(YT_OUT, hook="개발자도 예상 못한 한국 주부의 미친 활용법")     # 모델이 계속 베낀다
+    prompts = []
+
+    def call(prompt, schema, note=None, model=None, vertex=True):
+        prompts.append(prompt)
+        if schema is sw.FEATS_SCHEMA:
+            return {"feats": FEATS, "hook": {"권위자": "개발자", "대상": "주부들", "나라": "한국", "제품군": "열수축 필름"}}
+        return copy_out
+    monkeypatch.setattr(sw._sg, "_call_json", call)
+    job = {"backbone_main": None, "extract": {
+        "s1": {"video_id": "s1", "full_text": "", "segments": [_seg("MAT", i) for i in range(20)]}}}
+    drafts, why = sw.make_drafts([{"id": 9, "name": "유튜브 「OO의 정체」", "no_cta": True,
+                                   "templates": {"title": ["{나라} 천재가 만들어 떼돈 번 제품의 정체"]}}],
+                                 job, job_id="j9", seed_text=seed, seed_product="열수축 보호 필름")
+    assert why == "" and len(drafts) == 2
+    from shopping_shorts import story_hook
+    for d in drafts:
+        hook = d["beats"][0]["text"]
+        assert not story_hook.copied(hook, seed), hook
+        assert "{" not in hook
+        note = d["writer_note"]
+        assert note.get("hook_retry") and note.get("hook_fix") == "copied→deterministic"
+    # 재작성 프롬프트는 다른 꼴을 지시하고 씨앗 문장은 안 보여준다
+    retry = [p for p in prompts if "첫 줄을 다시 써라" in p]
+    assert retry and all("개발자도 예상 못한 한국 주부의 활용법" not in p.split("[씨앗")[0] for p in retry)
+    # 본문 회전: 두 안의 특징 순서가 다르다
+    assert drafts[0]["feat_names"] != drafts[1]["feat_names"]
+    assert sorted(drafts[0]["feat_names"]) == sorted(drafts[1]["feat_names"])
