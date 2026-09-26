@@ -1246,6 +1246,10 @@ def _plan_phrase_clips(beat, segs, tts_dur, src_durs=None):
                 else:
                     st = float(segs[idx]["start"])
             _prev_idx = idx
+            # ★원본이 이미 끝났으면(담은 장면이 영상 맨 끝 — 2026-09-26 사장님 "장면을 빼니까 검정") 영상 밖을
+            #   읽지 않고 **마지막 프레임에서 버틴다**(09-21 정지와 같은 그림). 안 막으면 미리보기·썸네일이 검정.
+            if _reel > 0 and st > _reel - 0.1:
+                st = max(float(segs[idx]["start"]), _reel - 0.1)
             src_d = d
             if _end is not None:
                 _over = st + d - float(_end)

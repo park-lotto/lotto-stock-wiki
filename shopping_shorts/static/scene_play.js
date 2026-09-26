@@ -752,6 +752,8 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         if (!consec && seg.end != null && seg.end - st < Math.min(d, MIN_CLIP) - EPS)
           st = (k > 0 && idx === prevIdx) ? Math.max(seg.start, Math.min(st, seg.end - 0.1)) : seg.start;
         prevIdx = idx;
+        // ★원본이 이미 끝났으면 영상 밖(검정)을 읽지 않고 마지막 프레임에서 버틴다(서버와 같은 규칙, 2026-09-26 "장면 빼니 검정")
+        if (reel > 0 && st > reel - 0.1) st = Math.max(seg.start, reel - 0.1);
         const clip = { seg_id: seg.seg_id, video_id: seg.video_id, start: st, dur: Math.round(d * 100) / 100 };
         // ★조각 끝을 넘지 않는다(2026-09-17 이윤정님 "미리보기에서 중간에 다른 화면이 짧게").
         //   구절이 조각보다 길면 종전엔 dur만큼 그대로 틀어 조각 뒤 **다음 장면**이 새어 나왔다
