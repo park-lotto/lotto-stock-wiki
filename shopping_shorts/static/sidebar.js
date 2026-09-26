@@ -1110,12 +1110,13 @@
       '<div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #1e2a24"><b style="font-size:15px">🛒 쿠팡에 이 제품이 있나요?</b><span style="font-size:11px;color:#8fa39a">— 있으면 그 자리에서 내 추적 링크까지</span><span style="flex:1"></span><button onclick="window.ssCoupangFind.close()" style="background:none;border:none;color:#8fa39a;font-size:18px;cursor:pointer">✕</button></div>' +
       '<div style="padding:12px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="cfQuery" value="' + _cfEsc(keyword || "") + '" placeholder="제품명(예: 의류 태깅건)" style="flex:1;min-width:200px;padding:9px 10px;border-radius:9px;border:1px solid #1e2a24;background:#0c1210;color:#e6efe9;font-size:13px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();window.ssCoupangFind.search();}">' +
       '<button onclick="window.ssCoupangFind.search()" style="padding:9px 16px;border-radius:9px;border:none;background:linear-gradient(180deg,#37e0bd,#2bd4b0);color:#04120e;font-weight:800;cursor:pointer">찾기</button>' +
-      (opts.shortcode ? '<button id="cfDeep" onclick="window.ssCoupangFind.deep()" title="영상 대본을 추출해 제품을 정확히 특정합니다(시간이 조금 걸립니다)" style="padding:9px 12px;border-radius:9px;border:1px solid #b8860b;background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-weight:700;cursor:pointer">🎬 영상 보고 정확히</button>' : '') +
+      (opts.shortcode ? '<button id="cfDeep" onclick="window.ssCoupangFind.deep()" title="영상 대본을 추출해(20~60초, 한 번 하면 캐시) 대본·캡션 근거로 제품을 다시 특정합니다" style="padding:9px 12px;border-radius:9px;border:1px solid #b8860b;background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-weight:700;cursor:pointer">🎬 대본으로 다시 찾기</button>' : '') +
       '<a id="cfOut" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#37e0bd">쿠팡에서 직접 ↗</a><span id="cfMsg" style="font-size:12px;color:#8fa39a;width:100%"></span><div id="cfChips" style="width:100%"></div></div>' +
       '<div id="cfResults" style="padding:0 14px 14px"></div></div>';
     wrap.addEventListener("click", function (e) { if (e.target === wrap) _cfClose(); });
     document.body.appendChild(wrap);
     if (keyword) _cfSearch(keyword);
+    else if (opts.deep && _cfState.sc) _cfDeep();     /* 🎬 쿠팡 대본검색(2026-09-26): 대본부터 뽑고 판독 */
     else if (opts.noProduct) {
       /* ★이미 "살 물건 없음"으로 판정된 카드(2026-09-05) — 같은 판독을 또 돌려
          기다리게 하지 않는다. 이유를 바로 보여주고 직접 칠 수 있게 둔다. */
@@ -1126,7 +1127,7 @@
     else { var q = _cfEl("cfQuery"); if (q) q.focus(); }
   }
   /* 숏템파워검색처럼 사람이 안 친다(2026-09-04 사장님) — 썸네일 → 제품명 → 첫 후보로 검색 → 링크. */
-  /* 🎬 영상 보고 정확히 — 대본을 추출(기존 /api/extract_script, 캐시되면 무료)한 뒤 근거 우선 판독을 다시 돈다. */
+  /* 🎬 대본으로 다시 찾기(옛 이름 '영상 보고 정확히') — 대본을 추출(기존 /api/extract_script, 캐시되면 무료)한 뒤 근거 우선 판독을 다시 돈다. */
   function _cfDeep() {
     if (!_cfState.sc) return;
     var b = _cfEl("cfDeep"); if (b) { b.disabled = true; b.textContent = "🎬 대본 추출 중…"; }
@@ -1134,11 +1135,11 @@
     fetch("/api/extract_script?shortcode=" + encodeURIComponent(_cfState.sc), { method: "POST" })
       .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
       .then(function (d) {
-        if (b) { b.disabled = false; b.textContent = "🎬 영상 보고 정확히"; }
+        if (b) { b.disabled = false; b.textContent = "🎬 대본으로 다시 찾기"; }
         if (!d || !d.ok) { _cfRender("대본 추출 실패: " + ((d && d.error) || "") + " — 제품명을 직접 넣어 찾아보세요", "#ff8080"); return; }
         _cfIdentify();
       })
-      .catch(function () { if (b) { b.disabled = false; b.textContent = "🎬 영상 보고 정확히"; } _cfRender("네트워크 오류", "#ff8080"); });
+      .catch(function () { if (b) { b.disabled = false; b.textContent = "🎬 대본으로 다시 찾기"; } _cfRender("네트워크 오류", "#ff8080"); });
   }
   function _cfIdentify() {
     _cfRender("🔎 영상 근거(대본·캡션·썸네일)에서 제품을 알아내는 중… (3~8초)");
@@ -1270,14 +1271,9 @@
           if (!btn) return;
           var name = pm[sc];
           if (!name) {
-            /* ★살 물건이 없는 영상(맛집·장소·방법 알려주기 등) — 회색으로 내려
-               헛클릭을 막는다(2026-09-05 실측: 10건 중 4건이 이런 영상이었다).
-               ⚠️버튼을 없애지는 않는다 — 판독이 틀렸을 때 사장님이 직접 찾을 길은 남긴다. */
-            btn.textContent = "🛒 살 물건 없음";
-            btn.setAttribute("data-noproduct", "1");
-            btn.style.opacity = "0.45";
-            btn.style.filter = "grayscale(1)";
-            btn.title = "이 영상엔 팔 만한 물건이 안 보입니다(장소·방법 소개 등). 눌러서 직접 찾아볼 수는 있습니다.";
+            /* ★"살 물건 없음" 회색 처리는 뺐다(2026-09-26 사장님). 썸네일·캡션만 본 판정이라
+               말로만 소개하는 제품(소스·재료)을 자주 놓쳤다 — 버튼은 그대로 두고, 누르면
+               근거 판독을 다시 돌린다. 대본이 필요한 건 🎬 쿠팡 대본검색이 맡는다. */
             return;
           }
           btn.textContent = "🛒 " + (name.length > 10 ? name.slice(0, 10) + "…" : name) + " 쿠팡검색"; btn.setAttribute("data-product", name); btn.title = "알아낸 제품: " + name + " — 누르면 쿠팡 검색과 내 추적 링크까지";
@@ -1290,6 +1286,8 @@
   window.ssCoupangFind.link = _cfLink;
   window.ssCoupangFind.close = _cfClose;
   window.ssCoupangFind.deep = _cfDeep;
+  /* 카드의 🎬 쿠팡 대본검색 — 같은 창을 열되 대본 추출을 먼저 돈다(판정 없이 바로) */
+  window.ssCoupangFind.script = function (opts) { _cfOpen('', Object.assign({}, opts || {}, { deep: true })); };
 
   window.ssOpenBugReport = function () {
     css();

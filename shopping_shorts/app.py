@@ -2308,6 +2308,7 @@ def api_discover_add(request: Request, username: str, name: str = ""):
     if denied:
         return denied
     Store(DB_PATH).add_discovered(username.strip().lstrip("@"), name)
+    service.enrich_discovered_profile_async(username.strip().lstrip("@"))   # 판매채널 링크(2026-09-26)
     return {"ok": True, "username": username}
 
 
@@ -2450,6 +2451,7 @@ def api_discover_add_by_url(request: Request, url: str = "", username: str = "")
         return HTMLResponse(_chadd_html("✔ 이미 등록된 채널", f"@{uname} — 레퍼런스 추적 중입니다."))
     was_blocked = key in store.removed_usernames()
     store.add_discovered(uname, name=disp)   # add_discovered가 차단도 해제한다
+    service.enrich_discovered_profile_async(uname)   # 판매채널 링크(2026-09-26)
     tail = " (차단 해제됨)" if was_blocked else ""
     return HTMLResponse(_chadd_html("✅ 채널 등록 완료" + tail,
                                     f"@{uname}{'·' + disp if disp else ''} — 다음 수집(09/15/21시)부터 랭킹에 잡힙니다."))
@@ -2724,6 +2726,7 @@ def api_reference_register(request: Request, url: str):
     if key in known:
         return {"ok": True, "username": username, "already": True}
     store.add_discovered(username)
+    service.enrich_discovered_profile_async(username)   # 판매채널 링크(2026-09-26)
     return {"ok": True, "username": username, "already": False}
 
 
@@ -5543,7 +5546,7 @@ def api_coupang_identify(body: dict):
     if not product:
         return {"ok": False, "product": "", "queries": [], "basis": used,
                 "has_script": "대본" in used,
-                "error": ("근거로는 제품을 특정하지 못했습니다 — 🎬 영상 보고 정확히(대본 추출) 또는 제품명을 직접 넣어 보세요"
+                "error": ("근거로는 제품을 특정하지 못했습니다 — 🎬 대본으로 다시 찾기(대본 추출) 또는 제품명을 직접 넣어 보세요"
                           if "대본" not in used else "대본에서도 제품을 특정하지 못했습니다 — 제품명을 직접 넣어 찾아보세요")}
     # 판독 때 같이 나온 주제어·재질을 붙여 준다 — 유의어 모드가 물건 종류를 안 헷갈리게(2026-09-04 '택총→전술 조끼')
     ctx = ""
@@ -18661,6 +18664,13 @@ def _ig_followers_of(store, uname, _allow_fetch=True):
         # ★반환은 **dict**다 {username소문자: {followers, posts, full_name}} —
         #   리스트로 알고 순회하면 문자열이 나와 .get()에서 터진다(계약 확인함).
         prof = fetch_profiles([key]) or {}
+        # 같은 응답에 있는 프로필 링크를 판매채널로 저장(2026-09-26) — 추가 요청 0, 등록 채널만 갱신된다
+        try:
+            _lk = ((prof.get(key) or {}).get("link") or "").strip()
+            if _lk:
+                store.set_discovered_inpock(key, _lk)
+        except Exception:      # noqa: BLE001
+            pass
         n = int((prof.get(key) or {}).get("followers") or 0)
         if n:
             return n
