@@ -671,6 +671,32 @@ def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO,
     return (capped, out_dur - capped)
 
 
+def cut_frames(cum_start, dur, fps=30):
+    """칸 안 컷 하나의 프레임 수 = **칸 안 누적 시각의 프레임 경계 차이** → (프레임 수, 새 누적 시각).
+
+    ★왜 (2026-09-27, job a90253dd235b 1번 칸 4번째 컷이 완성본에서 4프레임 늦게 시작)
+      컷 조각을 `-t 초`로 자르면 30fps는 프레임 경계로 **올림**된다(1.013초 → 31프레임 = 1.033초).
+      칸 안에서 조각을 이어 붙이면 그 올림이 컷마다 쌓여 뒤 컷일수록 늦게 시작한다.
+      누적 시각을 프레임으로 반올림한 경계 차이로 정하면 쌓이지 않는다(어느 컷이든 ±1/60초).
+    완성본(_render_mix)과 편집 화면 합본(app._pvproxy_build)이 **이 함수 하나**로 잰다(0순위-B)."""
+    f0 = int(round(float(cum_start) * fps))
+    new_cum = float(cum_start) + max(0.0, float(dur))
+    return max(1, int(round(new_cum * fps)) - f0), new_cum
+
+
+def cut_frame_list(durs, total_frames=None, fps=30):
+    """칸 안 컷 길이들(초) → 컷별 프레임 수 목록. total_frames(칸 프레임 수)가 있으면
+    **마지막 컷이 나머지를 흡수**해 합이 칸 프레임 수와 정확히 같다(칸 길이는 칸 단위 누적 경계가 정한다).
+    각 컷의 시작 프레임 = 칸 안 누적 시각(초)의 반올림 프레임."""
+    out, cum = [], 0.0
+    for d in durs:
+        n, cum = cut_frames(cum, d, fps)
+        out.append(n)
+    if out and total_frames is not None:
+        out[-1] = max(1, int(total_frames) - sum(out[:-1]))
+    return out
+
+
 def _piece_end_limit(c, segs, src_total):
     """컷 c가 속한 조각(같은 video_id, seg.start ≤ c.start < seg.end)의 끝. 못 찾으면 소스 끝.
 
@@ -2268,7 +2294,7 @@ def _caption_vf(narration, dur, has_font, work, idx):
     return ",".join([base] + draws)
 
 
-def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
+def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path, frames=None):
     """움직이는 클립(sub) 뒤에 freeze초 정지 구간을 붙이되, '죽은 정지'가 아니라 완만한
     켄번즈 줌을 전체(play+freeze)에 얹어 정지 구간에도 화면이 살아있게 한다(2026-07-19,
     P1 후속). 사장님 육안 피드백 — tpad clone 단독 홀드는 마지막 프레임이 픽셀까지 동일해
@@ -2279,11 +2305,15 @@ def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
     정상 길이로 나온다(실측 2026-07-19). zoompan은 출력 프레임번호 'on'으로 확대하므로
     tpad가 만든 정지 프레임에서도 줌이 계속 진행돼 움직임이 유지된다."""
     total = play_out + freeze
+    # frames(컷 프레임 수, cut_frames)가 오면 초(-t, 프레임 경계로 올림)가 아니라 프레임 수로 끊는다.
+    #   정지 몫은 한 프레임 넉넉히 늘려 두고 -frames:v 가 자른다(반올림으로 1프레임 모자라지 않게).
+    _stop = (max(freeze, int(frames) / 30.0 - play_out) + 2.0 / 30) if frames else freeze
+    _len = ["-frames:v", str(int(frames))] if frames else ["-t", f"{total:.3f}"]
     _run_ffmpeg([
         "ffmpeg", "-y", "-i", str(sub_path),
-        "-vf", (f"tpad=stop_mode=clone:stop_duration={freeze:.3f},"
+        "-vf", (f"tpad=stop_mode=clone:stop_duration={_stop:.3f},"
                 f"{_kenburns_vf(total, zoom_end=_FREEZE_ZOOM)}"),
-        "-r", "30", "-an", "-t", f"{total:.3f}",
+        "-r", "30", "-an", *_len,
         "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(out_path),
     ])
     return out_path
@@ -2421,11 +2451,24 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         #   컷이 1개면 겹칠 데가 없으니 0.
         # ★여유는 overlap 전부가 아니라 **overlap*(n-1)/n**이다(실측으로 잡은 오류).
         #   컷 n개를 각각 pad만큼 늘려 겹치면 총합 = n*(base+pad) - overlap*(n-1).
-        #   이게 원래 n*base와 같으려면 pad = overlap*(n-1)/n.
-        #   overlap을 통째로 얹으면 비트가 0.3초쯤 길어져 **뒤 자막이 전부 밀린다**.
+        #   (2026-09-27부터 여유는 아래 프레임 계산이 정한다 — 마지막 컷 뺀 컷마다 겹침 O프레임.)
         _n = len(plan)
-        _pad = (_trans_sec() * (_n - 1) / _n) if _n > 1 else 0.0
+        # ★컷 프레임 수 = 칸 안 누적 시각의 프레임 경계 차이(cut_frame_list — 편집 화면 합본과 같은 자, 2026-09-27).
+        #   컷마다 -t 초로 자르면 프레임 경계로 올림돼 칸 안에서 쌓였다(job a90253dd235b 1번 칸 4번째 컷 +4프레임).
+        #   마지막 컷이 칸 프레임 수(_nfr)의 나머지를 흡수한다 → 칸 합계가 칸 단위 누적 경계와 정확히 같다.
+        _cfr = cut_frame_list([float(c["out_dur"]) for c in plan], _nfr)
+        # 전환(xfade)은 **프레임 단위**로 겹친다. 마지막 컷을 뺀 컷마다 겹침 O프레임을 얹으면
+        #   겹친 뒤 합계 = sum(_cfr) = _nfr 그대로이고, 다음 컷은 편집 화면 컷 경계에서 들어오기 시작한다.
+        #   겹칠 여유가 없는 컷이 있으면(_xfade_concat의 포기 조건과 같다) 이 칸은 처음부터 하드컷으로 간다
+        #   — 여유를 얹어 놓고 하드컷으로 돌아가면 칸이 O프레임씩 길어져 뒤가 잘린다.
+        _ofr = int(round(_trans_sec() * 30)) if _n > 1 else 0
+        if _ofr > 0 and any((nf + (_ofr if j < _n - 1 else 0)) / 30.0 <= _ofr / 30.0 + 0.05
+                            for j, nf in enumerate(_cfr)):
+            _ofr = 0
+        _pad = _ofr / 30.0
         for j, c in enumerate(plan):
+            _nf = _cfr[j] + (_ofr if j < _n - 1 else 0)     # 이 컷 조각의 프레임 수(겹침 몫 포함)
+            _c_pad = _pad if j < _n - 1 else 0.0
             src = source_video_paths[c["video_id"]]
             sub = work / f"beat_{idx}_{j}.mp4"
             # 슬로우 상한(1.15배)+정지프레임(2026-07-19): 무제한 슬로우크롤 제거.
@@ -2434,7 +2477,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             # 전환 여유를 이 컷에 얹는다. 소스에 실프레임이 남아 있으면 그것으로(자연스럽다),
             # 없으면 out_dur만 늘려 슬로모/freeze 기계가 흡수한다.
             _c_src, _c_out = c["src_dur"], c["out_dur"]
-            if _pad > 1e-3:
+            if _c_pad > 1e-3:
                 _sd = _src_dur(c["video_id"])
                 # ★여유도 **담은 조각 안**에서만 꺼낸다(2026-09-17 이윤정님 "미리보기에서 다른
                 #   화면이 짧게"). 종전엔 소스 파일 끝(_sd)까지를 '남은 실프레임'으로 보고 조각 뒤
@@ -2442,8 +2485,8 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 #   조각 밖이면 out만 늘려 슬로모/freeze가 채운다 — 총 길이는 그대로다.
                 _lim = _piece_end_limit(c, segs, _sd)
                 _room = max(0.0, _lim - (c["start"] + _c_src)) if _lim > 0 else 0.0
-                _c_src = _c_src + min(_pad, _room)
-                _c_out = _c_out + _pad
+                _c_src = _c_src + min(_c_pad, _room)
+                _c_out = _c_out + _c_pad
             _beat_speed = c.get("playback_speed")
             try:
                 _beat_speed = float(_beat_speed)
@@ -2461,6 +2504,12 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             # 느리게(factor>1)뿐 아니라 빠르게(factor<1)도 같은 식으로 처리한다.
             vf_full = (f"{clip_vf},setpts={factor:.6f}*PTS"
                        if abs(factor - 1.0) > 1e-6 else clip_vf)
+            # 끝을 프레임 수(-frames:v)로 자르므로, 반올림으로 1~2프레임 모자랄 때를 대비해 마지막 프레임을
+            #   조금 넉넉히 세워 둔다(넘치는 몫은 -frames:v 가 버린다 — 길이는 늘 _nf).
+            vf_full = (f"{vf_full},tpad=stop_mode=clone:stop_duration="
+                       f"{0.1 + max(0.0, _nf / 30.0 - play_out - freeze):.3f}")
+            # 움직이는 몫의 프레임 수: 정지가 없으면 컷 전체, 있으면 play_out 만큼(나머지는 정지 패스가 채운다).
+            _nf_play = _nf if freeze <= 1e-3 else min(_nf, max(1, int(round(play_out * 30))))
             # start를 소스 안으로 당긴다(타트랙 병합, 2026-07-19). 약한 매칭이 소스 밖을 잡으면
             #   -ss가 끝을 넘어 0프레임이 나와 concat이 죽는다. [start, start+src_dur]가 소스
             #   안에 들어오게 당기되, 소스가 src_dur보다 짧으면 0에서 있는 만큼 읽는다.
@@ -2483,7 +2532,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             _run_ffmpeg([
                 "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{_c_src:.3f}",
                 "-i", str(src),
-                *_vf_args, "-r", "30", "-an", "-t", f"{play_out:.3f}",
+                *_vf_args, "-r", "30", "-an", "-frames:v", str(_nf_play),   # 초(-t)는 프레임 경계로 올림돼 칸 안에서 쌓인다
                 "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
             ])
             # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
@@ -2494,7 +2543,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             #   순서면 한 체인에서 정상 동작(_extend_with_frozen_motion 주석 참조).
             if freeze > 1e-3:
                 frozen = work / f"beat_{idx}_{j}f.mp4"
-                _extend_with_frozen_motion(sub, play_out, freeze, frozen)
+                _extend_with_frozen_motion(sub, play_out, freeze, frozen, frames=_nf)
                 sub_paths.append(frozen)
             else:
                 sub_paths.append(sub)
@@ -2511,10 +2560,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         #     그래서 컷을 미리 overlap만큼 길게 뽑아둔다(아래 out_dur 보정).
         #   실패하거나 여유가 없으면 조용히 하드컷으로 돌아간다 — 렌더를 죽이지 않는다.
         faded = None
-        _tsec = _trans_sec()
-        if _tsec > 1e-3 and len(sub_paths) > 1:
+        # 겹침은 위에서 프레임으로 정한 몫(_ofr)만 쓴다 — 컷이 빠졌으면(소스 손상) 겹침 몫이 안 맞으니 하드컷.
+        if _ofr > 0 and len(sub_paths) == _n and len(sub_paths) > 1:
             faded = _xfade_concat(sub_paths, work / f"beat_{idx}_x.mp4",
-                                  _tsec, _trans_kind())
+                                  _ofr / 30.0, _trans_kind())
         if faded is not None:
             beat_video = faded
         else:

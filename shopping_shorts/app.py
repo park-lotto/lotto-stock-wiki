@@ -6652,7 +6652,9 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             raw = json.dumps([str(c.get("video_id") or ""), _q(c.get("start")),
                               _q(c.get("dur")), _q(c.get("src_dur")), *([1] if c.get("fit") else []),
                               str(srcs.get(c.get("video_id")) or ""),
-                              *([c["_vf"]] if c.get("_vf") else ["pad0"])], sort_keys=True)   # 구도가 바뀌면 다른 조각
+                              *([c["_vf"]] if c.get("_vf") else ["pad0"]),   # 구도가 바뀌면 다른 조각
+                              # 프레임 수(칸 안 누적 경계)가 다르면 다른 조각 — 옛 -t 조각(올림)을 재사용하지 않게 늘 싣는다
+                              "nf%d" % int(c.get("_nf") or 0)], sort_keys=True)
             return hashlib.sha1(raw.encode()).hexdigest()[:20]
 
         def enc(a):
@@ -6678,12 +6680,17 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 slow = min(dur / take, 1.15) if take > 0 else 1.0
                 if c.get("fit") and take > 0:
                     slow = dur / take          # [속도 맞추기] — 렌더(playback_speed)와 같이 상한 없이 끝까지 움직인다
-                vf = f"setpts=(PTS-STARTPTS)*{slow:.5f}," + vf + f",tpad=stop_mode=clone:stop_duration={dur:.3f}"
+                # 정지 몫은 컷 프레임 수(_nf — 칸 끝 나머지를 흡수한 마지막 컷은 dur보다 길 수 있다)까지 넉넉히
+                _stop = max(dur, int(c.get("_nf") or 0) / 30.0)
+                vf = f"setpts=(PTS-STARTPTS)*{slow:.5f}," + vf + f",tpad=stop_mode=clone:stop_duration={_stop:.3f}"
                 cmd = ["ffmpeg", "-y", "-v", "error", "-threads", "1",
                        "-ss", f"{float(c['start']):.3f}", "-t", f"{take:.3f}", "-i", str(src)]
             else:   # 소재가 없으면 검은 화면으로 자리만 채운다 — 빼면 뒤 컷이 음성보다 앞선다
                 cmd = ["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=black:s={PW}x{PH}:r=30"]
-            cmd += ["-an", "-vf", vf, "-t", f"{dur:.3f}", "-c:v", "libx264",
+            # ★길이는 프레임 수(_nf, video_assemble.cut_frame_list)로 — 초(-t)는 프레임 경계로 올림돼 칸 안에서 쌓였다
+            #   (2026-09-27, 완성본 _render_mix와 같은 자). tpad가 뒤를 넉넉히 채워 두므로 모자랄 일은 없다.
+            _len = ["-frames:v", str(int(c["_nf"]))] if c.get("_nf") else ["-t", f"{dur:.3f}"]
+            cmd += ["-an", "-vf", vf, *_len, "-c:v", "libx264",
                     "-preset", "ultrafast", "-crf", "30", "-pix_fmt", "yuv420p", str(out)]
             r = subprocess.run(cmd, capture_output=True, timeout=120)
             if r.returncode != 0 or not out.exists():
@@ -6693,6 +6700,30 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             except OSError:
                 pass
             return out
+
+        # ── 컷 프레임 수 = 칸 안 누적 시각의 프레임 경계 차이(완성본 _render_mix와 **같은 함수**, 2026-09-27) ──
+        #   칸 프레임 수(_nfr)는 칸 음성 길이 누적의 프레임 경계 차이 — 아래 칸 묶기와 같은 계산을 먼저 해 둔다.
+        #   마지막 컷이 칸의 나머지 프레임을 흡수한다(칸 끝 정지 몫도 그 컷이 진다).
+        beat_nfr = {}
+        if beat_lens and tts:
+            _k, _cum = 0, 0.0
+            for bi, n in enumerate(beat_lens):
+                mc = cuts[_k:_k + n]; _k += n
+                if not mc:
+                    continue
+                ap = tts.get(bi)
+                tot = None
+                if ap:
+                    _f0 = int(round(_cum * 30)); _cum += _dur(ap)
+                    tot = max(1, int(round(_cum * 30)) - _f0)
+                    beat_nfr[bi] = tot
+                for c, nf in zip(mc, video_assemble.cut_frame_list(
+                        [max(0.04, float(c.get("dur") or 0)) for c in mc], tot)):
+                    c["_nf"] = nf
+        else:
+            for c, nf in zip(cuts, video_assemble.cut_frame_list(
+                    [max(0.04, float(c.get("dur") or 0)) for c in cuts])):
+                c["_nf"] = nf
 
         with ThreadPoolExecutor(4) as ex:
             parts = list(ex.map(enc, enumerate(cuts)))
@@ -6722,8 +6753,7 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                     want = _dur(ap)
                     # 칸마다 -t 음성길이로 자르면 30fps가 프레임 경계로 올림돼 칸당 최대 0.033초씩 길어지고
                     # 쌓인다(실측 10칸 +0.2초 — 완성본보다 뒤로 갈수록 늦었다). 누적 경계로 정하면 안 쌓인다.
-                    _f0 = int(round(_cum * 30)); _cum += want
-                    _nfr = max(1, int(round(_cum * 30)) - _f0)
+                    _nfr = beat_nfr.get(bi) or max(1, int(round(want * 30)))   # 위 컷 프레임 계산과 같은 값
                     want = _nfr / 30.0
                 # ★칸도 곳간에 둔다 — 장면 하나를 바꿔도 **그 칸만** 다시 만든다.
                 #   칸 만들기가 굽기의 44%였다(실측 2026-09-21: 칸영상 2.17초 + 칸음성 1.16초).
@@ -6736,10 +6766,10 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                     try: bl.touch(); bpad.touch()
                     except OSError: pass
                     segs.append(bl)
-                    co, cacc = [], 0.0
-                    for one in mine:
-                        co.append(round(cacc, 3))
-                        cacc += _dur(one) or float(mine_cuts[len(co) - 1].get("dur") or 0)
+                    co, cacc = [], 0
+                    for c in mine_cuts:        # 컷 경계 = 구운 프레임 수 그대로(재지 않아도 정확하다)
+                        co.append(round(cacc / 30.0, 3))
+                        cacc += int(c.get("_nf") or 0)
                     cuts_off.append(co)
                     if ap: auds.append(bpad)
                     continue
@@ -6749,10 +6779,10 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 #   컷으로 되감아도 그만큼 밀린다 — 실측 2026-09-21: 키프레임을 안 박았을 때
                 #   +0.36~0.43초 밀렸다(칸 시작에만 있었던 탓). 컷마다 박으면 컷으로 되감는
                 #   우리 동작이 **항상 정확히** 앉는다.
-                kf, acc = [], 0.0
+                kf, acc = [], 0
                 for c in mine_cuts:
-                    kf.append("%.3f" % acc)
-                    acc += float(c.get("dur") or 0)
+                    kf.append("%.4f" % (acc / 30.0))
+                    acc += int(c.get("_nf") or 0)
                 kfx = ["-force_key_frames", ",".join(kf)] if kf else []
                 if want > 0:
                     r2 = subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
@@ -6775,10 +6805,10 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 # ★칸 **안**의 컷 경계도 실제로 잰다 — 여기가 짐작으로 남아 있으면
                 #   화면이 "칸 끝"이라며 합본보다 먼저 멈춰 세우고, 합본은 그 자리에서
                 #   영영 안 끝난다(실측: 화면 5.52 vs 합본 5.60 → 전체 재생이 칸0에 멈춤).
-                co, cacc = [], 0.0
-                for one in mine:
-                    co.append(round(cacc, 3))
-                    cacc += _dur(one) or float(mine_cuts[len(co) - 1].get("dur") or 0)
+                co, cacc = [], 0
+                for c in mine_cuts:            # 컷 경계 = 구운 프레임 수 그대로(cut_frame_list — 완성본과 같은 자)
+                    co.append(round(cacc / 30.0, 3))
+                    cacc += int(c.get("_nf") or 0)
                 cuts_off.append(co)
                 # ★칸 음성을 **그 칸 영상 길이에 정확히** 맞춘다(뒤에 무음을 채운다).
                 #   영상은 프레임 단위(1/30초)로만 끊겨 칸마다 최대 0.033초씩 길어진다.
