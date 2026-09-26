@@ -107,3 +107,14 @@ def test_crash_after_clean_looking_report_still_alerts(tmp_path):
     (tmp_path / "b").mkdir()
     rc, calls = _go(tmp_path / "b", _report([_JOB_OK], _sum(10, 0)), rc=124)
     assert rc == 2 and calls[0][0] == "raise"
+
+
+def test_script_run_from_tools_dir_can_import_alert_channel(tmp_path):
+    """systemd 처럼 `python3 tools/daily_video_audit.py` 로 띄워도(sys.path[0]=tools/) 쪽지 통로가 import 돼야 한다.
+    2026-09-27: 라이브 첫 실행이 27분 점검 뒤 `from shopping_shorts import ops_alert` 에서 죽었다(경보·해제 둘 다 안 나감)."""
+    import subprocess, sys as _sys
+    repo = Path(__file__).resolve().parents[1]
+    r = subprocess.run([_sys.executable, str(repo / "tools" / "daily_video_audit.py"), "--import-check"],
+                       cwd=str(tmp_path), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+    assert r.returncode == 0, r.stderr[-800:]
+    assert "IMPORT_OK" in r.stdout, r.stdout
