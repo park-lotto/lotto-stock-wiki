@@ -271,15 +271,149 @@ def test_hook_copy_triggers_retry_then_deterministic_and_feats_rotate(monkeypatc
                                  job, job_id="j9", seed_text=seed, seed_product="열수축 보호 필름")
     assert why == "" and len(drafts) == 2
     from shopping_shorts import story_hook
-    for d in drafts:
-        hook = d["beats"][0]["text"]
-        assert not story_hook.copied(hook, seed), hook
-        assert "{" not in hook
-        note = d["writer_note"]
-        assert note.get("hook_retry") and note.get("hook_fix") == "copied→deterministic"
+    # 자동 1안(씨앗 결): 은행 꼴 — 베끼면 다른 꼴로 1회 다시 → 결정적 채움
+    auto = drafts[0]
+    assert not story_hook.copied(auto["beats"][0]["text"], seed) and "{" not in auto["beats"][0]["text"]
+    assert auto["writer_note"].get("hook_retry") and auto["writer_note"].get("hook_fix") == "copied→deterministic"
+    # ★고른 스타일(A안, 2026-09-26 사장님): 첫 줄은 **스타일 제목 틀**이 이긴다 — 은행이 덮어쓰지 않는다
+    assert drafts[1]["beats"][0]["text"] == "한국 천재가 만들어 떼돈 번 제품의 정체"
     # 재작성 프롬프트는 다른 꼴을 지시하고 씨앗 문장은 안 보여준다
     retry = [p for p in prompts if "첫 줄을 다시 써라" in p]
     assert retry and all("개발자도 예상 못한 한국 주부의 활용법" not in p.split("[씨앗")[0] for p in retry)
-    # 본문 회전: 두 안의 특징 순서가 다르다
-    assert drafts[0]["feat_names"] != drafts[1]["feat_names"]
+    # 특징 순서: 반전 특징(맨 뒤, 새 특징 1위)은 고정, 나머지만 돈다(본문 다양화는 유지)
     assert sorted(drafts[0]["feat_names"]) == sorted(drafts[1]["feat_names"])
+    assert drafts[0]["feat_names"][-1] == drafts[1]["feat_names"][-1]
+
+
+# ── 차별점(2026-09-26 사장님 "대본이 씨앗이랑 거의 똑같다 — 차별 포인트는 기능·특징·장점") ─────────
+def _idx(**vids):
+    """seg_id → vid 표(pick_diff_feats가 영상 수를 센다)."""
+    return {sid: {"vid": v} for v, sids in vids.items() for sid in sids}
+
+
+def test_pick_diff_feats_prefers_new_by_video_count():
+    idx = _idx(s1=["a1", "a2"], s2=["b1"], s3=["c1"], s4=["d1"])
+    cands = [
+        {"name": "유리컵 재사용", "seed_quote": "그대로 물컵으로 다시 쓸 수 있는", "from_cuts": ["a1", "b1", "c1"]},
+        {"name": "단단한 유리", "seed_quote": "단단한 유리컵에 담아버려", "from_cuts": ["a2"]},
+        {"name": "6개입", "seed_quote": "", "from_cuts": ["a1", "b1", "c1", "d1"]},      # 새것·영상 4개 → 반전
+        {"name": "1인분 칼로리", "seed_quote": "", "from_cuts": ["a2"]},                  # 새것·영상 1개
+        {"name": "홈카페 컵", "seed_quote": "", "from_cuts": ["c1", "d1"]},               # 새것·영상 2개
+    ]
+    picked, tw = sw.pick_diff_feats(cands, idx)
+    names = [f["name"] for f in picked]
+    assert names[-1] == "6개입" and tw == len(picked) - 1                 # 반전 = 새 특징 1위(영상 수)
+    assert sum(1 for f in picked if f["new"]) >= sw.DIFF_MIN_NEW
+    assert sum(1 for f in picked if not f["new"]) <= 1                     # 씨앗 특징은 고조1용 최대 1개
+    assert names[0] == "유리컵 재사용" and "홈카페 컵" in names             # 씨앗 특징 중 영상 많은 것 / 새것 2위
+
+
+def test_diff_rule_and_violations():
+    feats = [{"name": "재사용", "new": False, "videos": 3}, {"name": "홈카페", "new": True, "videos": 2},
+             {"name": "6개입", "new": True, "videos": 4}]
+    seed = "유리컵으로 떼돈 번 천재의 발명품. 근데 진짜 충격적인 포인트는 마스카포네까지 제대로 넣어 컵 때문에 샀다가 맛 때문에 또 사게 된다고."
+    pts = ["다 먹고 물컵으로 재사용", "식기세척기 사용 가능", "마스카포네 맛 때문에 재구매"]
+    rule = sw._diff_rule(feats, 3, seed, pts)
+    assert "고조1에서만" in rule and "새 특징(재료 2번)" in rule and "재료 3번" in rule and "물컵으로 재사용" in rule
+    ok = {"escalations": [{"feat": 1}, {"feat": 2, "moment": "아침마다 커피 담을 컵이 없어서"}],
+          "twist": "6개가 한 번에 들어 있어서 식구 수대로 나눠 먹는다고", "twist_feat": 3}
+    assert sw._diff_violations(ok, feats, 3, seed, pts, "티라미수") == []
+    bad = {"escalations": [{"feat": 2}, {"feat": 1}],
+           "twist": "마스카포네까지 제대로 넣어 맛 때문에 또 사게 된다고", "twist_feat": 1}
+    v = sw._diff_violations(bad, feats, 3, seed, pts, "티라미수")
+    assert any("고조2" in x for x in v) and any("twist_feat=3" in x for x in v) and any("씨앗이 이미 말한 내용" in x for x in v)
+    assert sw._diff_rule([{"name": "a"}], 0, seed) == ""                  # 표시 없는 재료(옛 경로) = 종전 그대로
+
+
+def test_diff_one_new_feature_no_repeat():
+    """새 특징이 1개면 반전 전용 — 고조2는 고조1과 다른 씨앗 특징(09-26 실측: 같은 특징을 두 번 말했다)."""
+    feats = [{"name": "재사용", "new": False, "videos": 3}, {"name": "유리", "new": False, "videos": 3},
+             {"name": "1인분", "new": True, "videos": 2}]
+    rule = sw._diff_rule(feats, 3, "", [])
+    assert "반전 전용" in rule and "서로 다른 특징" in rule and "고조2부터는" not in rule
+    same = {"escalations": [{"feat": 1}, {"feat": 1}], "twist": "하나씩 꺼내 먹는다고", "twist_feat": 3}
+    assert any("같은 1번" in x for x in sw._diff_violations(same, feats, 3, "", [], ""))
+    grab = {"escalations": [{"feat": 1}, {"feat": 3}], "twist": "하나씩 꺼내 먹는다고", "twist_feat": 3}
+    assert any("반전 전용" in x for x in sw._diff_violations(grab, feats, 3, "", [], ""))
+    fine = {"escalations": [{"feat": 1}, {"feat": 2}], "twist": "하나씩 꺼내 먹는다고", "twist_feat": 3}
+    assert sw._diff_violations(fine, feats, 3, "", [], "") == []
+
+
+def test_seed_content_hits_ignore_product_words():
+    pts = ["최대 40시간 배터리", "비싼 스포츠 이어폰 자리 빼앗음", "방수 기능"]
+    assert sw._seed_word_hits("가격대까지 비싼 스포츠 브랜드 제품을 압도해 버렸고", pts, "무선 이어폰") == ["비싼", "스포츠"]
+    assert sw._seed_word_hits("귀걸이처럼 예쁜 이어폰이라고", pts, "무선 이어폰") == []      # 제품명 낱말은 안 센다
+
+
+def test_diff_retry_once_and_twist_filled(monkeypatch):
+    feats = [{"name": "재사용", "new": False, "videos": 3, "from_cuts": ["MAT-1"]},
+             {"name": "6개입", "new": True, "videos": 4, "from_cuts": ["MAT-2"]}]
+    seed = ("유리컵으로 떼돈 번 천재의 발명품. "
+            "근데 진짜 충격적인 포인트는 마스카포네까지 제대로 넣어 컵 때문에 샀다가 맛 때문에 또 사게 된다고.")
+    copied = dict(YT_OUT, twist="마스카포네까지 제대로 넣어 컵 때문에 샀다가 맛 때문에 또 사게 된다고")
+    fixed = dict(YT_OUT, twist="6개가 한 번에 들어 있어서 식구 수대로 나눠 먹는다고")
+    outs, prompts = [copied, fixed], []
+
+    def call(prompt, schema, note=None, model=None, vertex=True):
+        prompts.append(prompt)
+        return outs.pop(0)
+    monkeypatch.setattr(sw._sg, "_call_json", call)
+    note = {}
+    lines = sw.write("티라미수", seed, feats, platform="yt", key="k", note=note, twist_n=2)
+    assert len(prompts) == 2 and "다시 써라" in prompts[1] and note.get("diff_retry")
+    tw = [L for L in lines if L["role"] == "반전"][0]
+    assert "식구 수대로" in tw["text"] and tw["group"] == 1               # twist_feat 안 적어도 지정 특징(2번=idx1)
+
+
+def test_style_hook_line_and_land_enforced():
+    sp = {"name": "유튜브 「OO의 정체」", "templates": {
+        "title": ["{나라} 천재가 만들어 떼돈 번 제품의 정체", "{대상}이 더 많이 쓰는 {제품군}의 정체"],
+        "land": ["이러니 떼돈을 벌었다고", "완벽하다고"]}}
+    # 나라가 없으면 채울 수 있는 둘째 틀
+    assert sw.style_hook_line(sp, {"대상": "러너들", "제품군": "오픈형 이어폰"}) == "러너들이 더 많이 쓰는 오픈형 이어폰의 정체"
+    # 아무 틀도 못 채우면 None — 모델이 틀의 빈칸을 채운다(빈칸을 빼면 "예상 못한 미친 활용법"처럼 약해진다)
+    assert sw.style_hook_line(sp, {}) is None
+    st = sw._style_of(sp, {"나라": "일본"}, "", "k", 0)
+    lines = [{"role": "훅", "text": "개발자도 예상 못한 뜻밖의 활용법"}, {"role": "마무리", "text": "벌써 품절 난리라는데"}]
+    out = sw._enforce_style(lines, st)
+    assert out[0]["text"] == "일본 천재가 만들어 떼돈 번 제품의 정체" and out[-1]["text"] == "이러니 떼돈을 벌었다고"
+    # 채울 재료가 없으면 강제하지 않는다 — 스타일 이름 각도로 모델이 쓴 첫 줄 그대로
+    st0 = sw._style_of(sp, {}, "", "k", 0)
+    assert "스타일 이름" in st0["hook_angle"] and "{" not in st0["hook_angle"]
+    keep = sw._enforce_style([{"role": "훅", "text": "러너들 구원한 이어폰의 정체"}], st0)
+    assert keep[0]["text"] == "러너들 구원한 이어폰의 정체"
+
+
+def test_twist_lead_not_doubled():
+    """모델이 반전을 자기 신호어로 열어도 두 번 붙지 않는다(09-26 실측 두 꼴)."""
+    for tw in ("진짜 충격적인 건 물에 쓱 헹구면 끝이라는 거", "충격은 마스카포네가 꽉 차서 또 산다는 거", "진짜 충격인 건 물로 싹 씻긴다는 거",
+               "근데 진짜 미친 포인트는 서랍에 쏙 들어간다는 거"):
+        for key in ("a", "b", "c", "d", "e", "f", "g", "h"):
+            lines = sw._to_lines(dict(YT_OUT, twist=tw), False, key, 0, FEATS)
+            t = [L["text"] for L in lines if L["role"] == "반전"][0]
+            assert t.count("충격") + t.count("미친 포인트") <= 1, t
+
+
+def test_style_hook_no_repeated_word():
+    """빈칸 값이 틀 고정 낱말과 겹치면 뺀다 — "미국 천재도 감탄한 천재 아이디어" 금지(09-26 실측)."""
+    sp = {"templates": {"title": ["{권위자}도 감탄한 천재 아이디어"]}}
+    assert sw.style_hook_line(sp, {"권위자": "미국 천재"}) == "미국도 감탄한 천재 아이디어"
+    assert sw.style_hook_line(sp, {"권위자": "천재"}) is None                  # 빼면 비어 → 그 틀은 안 쓴다
+    assert sw.style_hook_line(sp, {"권위자": "제조사"}) == "제조사도 감탄한 천재 아이디어"
+
+
+def test_seed_points_catch_missed_quote():
+    """모델이 인용을 빠뜨려도 씨앗 셀링포인트 목록과 낱말이 겹치면 '씨앗이 이미 말함'(09-26 실측 두 건)."""
+    idx = _idx(s1=["a"], s2=["b"])
+    pts = ["휘어지는 본체와 특수 실리콘 패드로 귀에 밀착", "압박감 줄임", "최대 40시간 배터리", "식기세척기 사용 가능"]
+    cands = [{"name": "간편한 세척", "claim": "다 먹은 후 헹궈 바로 씀", "seed_quote": "", "seed_point": 0,
+              "from_cuts": ["a"], "_seed_points": pts},
+             {"name": "편안한 착용감", "claim": "특수 실리콘 패드가 귀에 밀착돼 압박감이 없다", "seed_quote": "", "seed_point": 0,
+              "from_cuts": ["a"], "_seed_points": pts},
+             {"name": "패션 아이템", "claim": "피어싱처럼 귀에 달아 스타일을 더한다", "seed_quote": "", "seed_point": 0,
+              "from_cuts": ["b"], "_seed_points": pts},
+             {"name": "방수", "claim": "땀에 젖어도 멀쩡", "seed_quote": "", "seed_point": 3, "from_cuts": ["b"], "_seed_points": pts}]
+    picked, _ = sw.pick_diff_feats(cands, idx)
+    new = {f["name"]: f["new"] for f in picked}
+    assert new.get("패션 아이템") is True
+    assert all(not f["new"] for f in picked if f["name"] in ("간편한 세척", "편안한 착용감", "방수"))
