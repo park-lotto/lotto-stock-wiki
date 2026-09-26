@@ -2788,11 +2788,17 @@ function aiSceneControl(i){
            + `<button class="danger" title="AI 장면을 떼고 담은 장면으로 돌립니다" onclick="removeAiScene(${i})">✕ AI 빼기</button>` : '')
     + (st === 'failed' ? `<span class="hint" style="color:#f66">⚠ ${esc((b.ai_scene||{}).error || '실패')}</span>` : '');
 }
+// ★서버 라우트(/ai_scene·/cutaway·/sfx)는 **진짜 칸 번호(beat_idx)**로 칸을 찾는다. 화면 위치 i를 보내면
+//   칸을 지운 작업(번호 빠짐)에서 뒤 칸의 AI 장면(~300원)·효과음이 엉뚱한 칸에 붙거나 422가 난다(2026-09-27).
+function beatIdOf(i){
+  const b = (DATA.beats || [])[i] || {};
+  return b.beat_idx == null ? i : b.beat_idx;     // 번호 없는 로컬 실험실 데이터만 위치로
+}
 async function startAiScene(i, style){
   try{
     const r = await fetch('/api/produce/mix/' + SL.job + '/ai_scene', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: i, style: style || 'natural'})});
+      body: JSON.stringify({beat_idx: beatIdOf(i), style: style || 'natural'})});
     const d = await r.json().catch(()=>({ok:false}));
     if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
     DATA.beats[i].ai_scene = {state:'queued', style: d.style || style};
@@ -2811,7 +2817,8 @@ function pollAiScene(i){
     let d = null;
     try{ d = await (await fetch('/api/mix/result/' + SL.job + '?t=' + Date.now(), {cache:'no-store'})).json(); }catch(_){ }
     const beats = (d && (d.edit_plan || d.plan || {}).beats) || (d && d.beats) || [];
-    const b = beats.find(x => x.beat_idx === i) || beats[i];
+    const _id = beatIdOf(i);
+    const b = beats.find(x => x.beat_idx === _id);
     if (b){
       DATA.beats[i].ai_scene = b.ai_scene || null;
       DATA.beats[i].cutaway = b.cutaway || null;
@@ -2825,7 +2832,7 @@ async function removeAiScene(i){
   try{
     const r = await fetch('/api/produce/mix/' + SL.job + '/cutaway', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: i, asset_id: null})});
+      body: JSON.stringify({beat_idx: beatIdOf(i), asset_id: null})});
     const d = await r.json().catch(()=>({ok:false}));
     if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
     DATA.beats[i].cutaway = null;
@@ -2842,7 +2849,7 @@ async function _sfxPost(i, body){
   try{
     const r = await fetch('/api/produce/mix/' + SL.job + '/sfx', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(Object.assign({beat_idx: i}, body))});
+      body: JSON.stringify(Object.assign({beat_idx: beatIdOf(i)}, body))});
     const d = await r.json().catch(()=>({ok:false}));
     if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
     // 서버가 확정한 값으로 화면을 맞춘다 — 낙관적 갱신은 실패 시 화면과 서버가 어긋난다.
