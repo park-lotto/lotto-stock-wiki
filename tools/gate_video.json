@@ -27,6 +27,7 @@
     "shopping_shorts/video_assemble.py",
     "shopping_shorts/mix_pipeline.py",
     "shopping_shorts/clean_base.py",
+    "shopping_shorts/frame_match.py",
     "shopping_shorts/screen_clips.py",
     "shopping_shorts/screen_clips_runner.js",
     "shopping_shorts/capcut_draft.py",

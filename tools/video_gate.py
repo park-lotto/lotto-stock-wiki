@@ -35,6 +35,10 @@ HERE = Path(__file__).resolve().parent
 CONFIG_REL = "tools/gate_video.json"
 TOOL_RELS = ("tools/editor_vs_final_video.py", "tools/evf_run.py")
 PATCH_RELS = {                       # 서버 PATCH_DIR 안의 자리 ← 저장소 경로
+    # ★도구(editor_vs_final_video.py)가 PATCH_DIR 에서 얹는 모듈 목록과 **짝**이다 — 한쪽에만 있으면 도구가 import 에서
+    #   죽어 관문이 실패한다(2026-09-27 실사고: frame_match.py 를 새로 만들고 여기 안 넣어 첫 finish 가 막혔다).
+    #   test_video_gate::test_patch_rels_cover_tool_loader 가 두 목록을 대조한다.
+    "frame_match.py": "shopping_shorts/frame_match.py",
     "screen_clips.py": "shopping_shorts/screen_clips.py",
     "video_assemble.py": "shopping_shorts/video_assemble.py",
     "clean_base.py": "shopping_shorts/clean_base.py",

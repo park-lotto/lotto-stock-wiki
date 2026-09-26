@@ -353,3 +353,20 @@ def test_gate_warns_loudly_when_merge_changes_the_gate_tool(tmp_path):
     ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)))
     res, out = _run(_stage(tmp_path, "tools/editor_vs_final_video.py"), ssh)
     assert "영상 관문 자체를 바꾼다" in out and "tools/editor_vs_final_video.py" in out
+
+
+def test_patch_rels_cover_tool_loader():
+    """도구가 PATCH_DIR 에서 얹는 모듈(for _n in (...))은 전부 관문이 서버에 올리는 목록(PATCH_RELS)에 있어야 한다.
+    2026-09-27: frame_match.py 가 도구 목록엔 있고 업로드 목록엔 없어 첫 finish 가 ImportError 로 막혔다."""
+    import re
+    src = (Path(__file__).resolve().parent / "editor_vs_final_video.py").read_text(encoding="utf-8")
+    m = re.search(r"for _n in \(([^)]*)\):", src)
+    assert m, "도구의 PATCH_DIR 모듈 목록(for _n in (...))을 못 찾았다"
+    names = re.findall(r'"([A-Za-z_]+)"', m.group(1))
+    assert names, m.group(1)
+    missing = [n for n in names if ("%s.py" % n) not in vg.PATCH_RELS]
+    assert not missing, "도구는 얹는데 관문이 안 올리는 모듈: %s" % missing
+    for n in names:
+        rel = vg.PATCH_RELS["%s.py" % n]
+        assert (Path(__file__).resolve().parents[1] / rel).exists(), rel
+        assert rel in vg.load_config().get("watch_files", []), "감시 목록(gate_video.json)에도 있어야 한다: %s" % rel
