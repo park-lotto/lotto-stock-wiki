@@ -93,3 +93,34 @@ def test_ig_keyword_english_keeps_up_to_4_words():
     assert got["Super Mario phone case"] == "Super Mario phone case"
     assert got["Mario phone case with stand"] == "Mario phone case stand"
     assert len(got["Super Mario 3D stand phone case"].split()) <= 4
+
+
+# ── 핀터레스트 검색어 줄이기 — 2026-09-26 앱 크롤러(pinterest_crawl, 영상탭)로 센 건수 ──
+# 사장님 "베이스어스 이어폰이 정확한데 핀터는 길어서 안 나온다".
+@pytest.mark.skipif(NODE is None, reason="node 없음")
+def test_pinterest_keyword_trim_measured_cases():
+    driver = _slice() + r"""
+    const cases=['Baseus open ear headphones','earbuds that don\'t fall out while running',
+                 'comfortable open ear headphones for running','affordable sports earbuds review',
+                 'running earbuds','super mario phone case','Super Mario phone case',
+                 'Godox kids digital camera','Dyson cordless hair dryer','Baseus オープンイヤー型イヤホン'];
+    console.log(JSON.stringify(cases.map(c=>[c,_pinKw(c)])));
+    console.log(_lensSearchUrl('pinterest','Baseus open ear headphones'));
+    """
+    out = run_js_proc(driver, capture_output=True, text=True,
+                      encoding="utf-8", stdin=subprocess.DEVNULL)
+    assert out.returncode == 0, out.stderr
+    lines = out.stdout.strip().splitlines()
+    got = dict(json.loads(lines[0]))
+    assert got["Baseus open ear headphones"] == "Baseus headphones"          # 3건 → 22건
+    assert got["earbuds that don't fall out while running"] == "earbuds"     # 1건 → 25건
+    assert got["comfortable open ear headphones for running"] == "open ear headphones"  # 0 → 25
+    assert got["affordable sports earbuds review"] == "affordable sports earbuds"
+    assert got["running earbuds"] == "running earbuds"                       # 짧은 건 그대로(25)
+    # 브랜드 없는 4단어는 뒤 3단어 — 'super case'(뜻 망가짐)가 되면 안 된다
+    assert got["super mario phone case"] == "mario phone case"
+    assert got["Super Mario phone case"] == "Super Mario case"               # 두 단어 브랜드 유지
+    assert got["Godox kids digital camera"] == "Godox camera"               # 0건 → 25건
+    assert got["Dyson cordless hair dryer"] == "Dyson dryer"                # 7건 → 25건
+    assert got["Baseus オープンイヤー型イヤホン"] == "Baseus オープンイヤー型イヤホン"   # 영어 아닌 건 안 건드림
+    assert lines[1] == "https://www.pinterest.com/search/videos/?q=Baseus%20headphones"
