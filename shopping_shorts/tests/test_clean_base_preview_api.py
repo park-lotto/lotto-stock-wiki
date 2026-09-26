@@ -21,6 +21,9 @@ def _setup(tmp_path, monkeypatch, setting="1"):
         def get_mix_job(self, j): return job
         def get_setting(self, k, d=None): return setting
     monkeypatch.setattr(A, "Store", lambda db: _S())
+    # 안내 초 = 증분 청소가 보낼 초(원본 파일을 찾는 조각만, 2026-09-27) — 이 가짜 job 엔 urls 가 없어 원본 지도를 직접 준다
+    from shopping_shorts import mix_pipeline as _mp
+    monkeypatch.setattr(_mp, "_resolve_sources", lambda j, w: {"s0": str(work / "s0.mp4"), "s1": str(work / "s1.mp4")})
     return job
 
 

@@ -33,7 +33,7 @@ from PIL import Image, ImageDraw
 import os, importlib.util
 if os.getenv("PATCH_DIR"):          # 배포 전 대조: 고친 모듈을 먼저 얹는다
     import shopping_shorts
-    for _n in ("screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
+    for _n in ("frame_match", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
         _f = Path(os.getenv("PATCH_DIR")) / ("%s.py" % _n)
         if _f.exists():
             _sp = importlib.util.spec_from_file_location("shopping_shorts." + _n, str(_f))
@@ -47,13 +47,11 @@ if os.getenv("PATCH_DIR"):          # 배포 전 대조: 고친 모듈을 먼저
         exec(compile(_src[_i:_j], str(_fa), "exec"), _app.__dict__)
 OUT = Path("/tmp/evf"); OUT.mkdir(exist_ok=True)
 
-FPS, W, H = 30, 90, 160
-Y0, Y1 = int(H * 0.10), int(H * 0.70)     # 가운데 띠만 — 위 채널명·아래 자막 띠 제외
-BLK = 5                                    # 5x5 칸 평균 = 흐림 + 축소(18x19)
-SCENE_T = 0.55                             # 이 거리 이상 = 다른 장면. 측정(2026-09-27, 30작업 706컷): 같은 장면 최대 0.416(보통 컷)·
-                                           #   0.452(정지 컷 — 켄번즈) / 사보타주(첫 컷 +2초·컷 순서 뒤집기) 최소 0.63
+# 프레임 특징·거리·후보 고르기 = 청소본 밀림 보정(clean_base.calibrate)과 **같은 함수**(0순위-B)
+from shopping_shorts import frame_match as fm
+from shopping_shorts.frame_match import FPS, W, H, Y0, Y1, SCENE_T, frames as _frames, feats as _feats
+#   SCENE_T 측정(2026-09-27, 30작업 706컷): 같은 장면 최대 0.416(보통 컷)·0.452(정지 컷 — 켄번즈) / 사보타주 최소 0.63
 SHIFT_WIN = 18                             # 찾는 범위 ±18프레임 = ±0.6초
-SHIFT_TOL = 0.02                           # 최소 거리에서 이만큼 안이면 같은 후보로 보고 0에 가까운 쪽
 SHIFT_T = 0.15                             # 밀림 보고 기준(초)
 CUT_T = 0.40                               # ①에서 이 이상 튀는 프레임 사이 = 눈에 보이는 컷 경계(경계 대조 대상)
 
@@ -66,38 +64,23 @@ def _dur(p):
         return 0.0
 
 
-def _frames(p):
-    """영상 전체 → (N,H,W,3) uint8, 프레임 i = i/FPS 초."""
-    r = subprocess.run(["ffmpeg", "-v", "error", "-i", str(p), "-an", "-vf", "fps=%d,scale=%d:%d" % (FPS, W, H),
-                        "-pix_fmt", "rgb24", "-f", "rawvideo", "-"], capture_output=True, timeout=600)
-    a = np.frombuffer(r.stdout, np.uint8)
-    n = a.size // (H * W * 3)
-    return a[: n * H * W * 3].reshape(n, H, W, 3)
-
-
-def _feats(fr):
-    """가운데 띠 회색조 → 5x5 평균 → z 정규화. (N, h, w) float32."""
-    g = fr[:, Y0:Y1].astype(np.float32).mean(axis=3)
-    h, w = (g.shape[1] // BLK) * BLK, (g.shape[2] // BLK) * BLK
-    g = g[:, :h, :w].reshape(len(g), h // BLK, BLK, w // BLK, BLK).mean(axis=(2, 4))
-    m = g.mean(axis=(1, 2), keepdims=True); s = g.std(axis=(1, 2), keepdims=True)
-    return (g - m) / (s + 8.0)             # +8: 거의 단색(검정) 화면에서 잡음이 부풀지 않게
-
-
 def _gray_full(fr):
     return fr.astype(np.float32).mean(axis=-1)
 
 
-def _match(fe, ff, ge, gf, ie, jf):
-    """①의 프레임 ie 와 ②의 기대 프레임 jf 주변을 비교 → (거리, 밀림초, 고른 ②프레임, 옛 거리)."""
+def _match(fe, ff, ge, gf, ie, jf, span=None):
+    """①의 프레임 ie 와 ②의 기대 프레임 jf 주변을 비교 → (거리, 밀림초, 고른 ②프레임, 옛 거리).
+    span=(첫, 끝) ②프레임 — 정지 컷이면 찾는 범위를 **그 컷 구간 안**으로 좁힌다(2026-09-27).
+      정지 컷은 앞 컷과 같은 원본을 읽으면 앞 컷 끝 프레임과 그림이 같다. 완성본 정지 몫엔 켄번즈가 얹혀
+      제 구간보다 앞 컷 끝이 더 닮아 보여 −0.533초 같은 가짜 밀림이 났다(컷 경계가 밀린 게 아니다 — 경계는 따로 잰다)."""
     lo, hi = max(0, jf - SHIFT_WIN), min(len(ff) - 1, jf + SHIFT_WIN)
+    if span is not None and span[0] <= jf <= span[1]:
+        lo, hi = max(lo, int(span[0])), min(hi, int(span[1]))
     if hi < lo or ie >= len(fe):
         return 9.9, 0.0, max(0, min(jf, len(ff) - 1)), 255.0, [], 0
     js = np.arange(lo, hi + 1)
-    d = np.abs(ff[js] - fe[ie]).mean(axis=(1, 2))
-    dmin = float(d.min())
-    ok = js[d <= dmin + SHIFT_TOL]
-    jb = int(ok[np.argmin(np.abs(ok - jf))])
+    d = fm.dist(ff, js, fe[ie])
+    jb, dmin, _ok = fm.pick(js, d, jf)
     # 옛 판정(전체 화면 회색 평균 차, ±4프레임 최소) — 비교용 기록만
     ol = np.arange(max(0, jf - 4), min(len(gf) - 1, jf + 4) + 1)
     old = float(np.abs(gf[ol] - ge[ie]).mean(axis=(1, 2)).min()) if len(ol) else 255.0
@@ -216,8 +199,11 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
             q = m_off / max(1e-3, (e1 - e0))
             ie = int(round((e0 + m_off) * FPS))
             jf = int(round((f_t + td * q) * FPS))
-            d, s, jb, old, curve, c0 = _match(fe, ff, ge, gf, ie, jf)
             hold = bool(ci < len(holds[k]) and holds[k][ci]) if k < len(holds) else False
+            _sc = max(1e-3, (e1 - e0))      # 정지 컷: ②에서 이 컷이 차지하는 프레임(칸 비율) 안에서만 찾는다
+            span = ((int(np.ceil((f_t + td * bounds[ci] / _sc) * FPS)),
+                     int(np.floor((f_t + td * bounds[ci + 1] / _sc) * FPS)) - 1) if hold else None)
+            d, s, jb, old, curve, c0 = _match(fe, ff, ge, gf, ie, jf, span)
             worst = max(worst, d); shifts.append((s, hold)); per.append(("%d%s" % (ci, "h" if hold else ""), round(d, 2), round(s, 3)))
             samples.append({"job": jid, "beat": int(b["beat_idx"]), "cut": ci, "hold": hold, "d": round(d, 3), "shift": round(s, 3),
                             "old": round(old, 1), "c0": c0, "curve": curve})

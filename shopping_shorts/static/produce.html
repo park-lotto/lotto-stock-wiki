@@ -16230,7 +16230,10 @@ async function renderFinal(){
     if(cbp && cbp.enabled && cbp.base){
       const n=(cbp.uncovered||[]).length + (cbp.extend||[]).length;
       if(n>0){
-        const secs=(cbp.uncovered||[]).reduce((a,u)=>a+(u.seconds||0),0)+(cbp.extend||[]).reduce((a,e)=>a+(e.need||0),0);
+        // ★초·크레딧은 서버가 준 값 그대로(2026-09-27) — 서버가 실제로 보낼 초(여유 포함)로 계산한다.
+        //   종전엔 여기서 늘림을 e.need(모자란 초)로 더해 서버 크레딧(구간 전체 초)과 초수가 서로 달랐다.
+        const secs=(typeof cbp.seconds==='number')?cbp.seconds
+          :((cbp.uncovered||[]).reduce((a,u)=>a+(u.seconds||0),0)+(cbp.extend||[]).reduce((a,e)=>a+(e.seconds||0),0));
         // ★안내는 정확하게(2026-09-22 사장님): 무엇 때문에, 어디만, 얼마가 나가는지.
         //   자막제거(4단계) 뒤에 장면을 새로 넣으면 그 조각은 아직 안 지워진 상태다 — 그 조각만 다시 지운다.
         //   이미 지운 조각을 옮기거나 빼거나 잘라 쓴 것은 그대로 재사용한다(과금 0).

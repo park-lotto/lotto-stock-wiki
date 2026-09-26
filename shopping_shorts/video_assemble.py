@@ -684,6 +684,25 @@ def cut_frames(cum_start, dur, fps=30):
     return max(1, int(round(new_cum * fps)) - f0), new_cum
 
 
+def cut_setpts(factor):
+    """컷 조각 시간축 필터 — 첫 프레임을 0초에 앉힌 뒤 배율을 곱한다. 완성본(_render_mix)·편집 화면 합본(app enc) 공용.
+
+    ★왜 PTS-STARTPTS (2026-09-27 서버 재현): `-ss`가 원본 프레임 사이에 떨어지면 첫 프레임 시각이 0이 아니다.
+      종전 완성본은 `setpts={factor}*PTS`(배율 1이면 setpts 없음)라 그 어긋남이 남거나 배율만큼 커져
+      `-r 30` 변환이 첫 프레임을 한 번 더 찍었다(25fps·0.51초 → 13,13,14… / 30fps·0.52초·1.11배 → 16,17,17,18…).
+      편집 화면 합본은 처음부터 `(PTS-STARTPTS)*slow`라 중복이 없었다 → 두 경로가 1프레임 갈렸다."""
+    return "setpts=(PTS-STARTPTS)*%.6f" % float(factor)
+
+
+def motion_frames(nf, play_out, freeze, fps=30):
+    """컷 조각 nf프레임 중 **움직이는 몫** — 정지가 없으면 전부, 있으면 play_out초의 반올림 프레임(나머지는 정지).
+    완성본(_render_mix 1차 조각 -frames:v)과 편집 화면 합본(app enc trim)이 이 함수 하나로 잰다(0순위-B)."""
+    nf = int(nf)
+    if freeze <= 1e-3:
+        return nf
+    return min(nf, max(1, int(round(float(play_out) * fps))))
+
+
 def cut_frame_list(durs, total_frames=None, fps=30):
     """칸 안 컷 길이들(초) → 컷별 프레임 수 목록. total_frames(칸 프레임 수)가 있으면
     **마지막 컷이 나머지를 흡수**해 합이 칸 프레임 수와 정확히 같다(칸 길이는 칸 단위 누적 경계가 정한다).
@@ -2307,7 +2326,10 @@ def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path, frames=None
     total = play_out + freeze
     # frames(컷 프레임 수, cut_frames)가 오면 초(-t, 프레임 경계로 올림)가 아니라 프레임 수로 끊는다.
     #   정지 몫은 한 프레임 넉넉히 늘려 두고 -frames:v 가 자른다(반올림으로 1프레임 모자라지 않게).
-    _stop = (max(freeze, int(frames) / 30.0 - play_out) + 2.0 / 30) if frames else freeze
+    #   ★움직이는 조각이 play_out 보다 짧게 나올 수 있다(원본 영상이 파일 길이보다 먼저 끝남 — 2026-09-27 서버 job
+    #     a90253dd235b 0번 칸: -t 1.003 중 0.83초만 읽힘). play_out 기준으로 늘리면 칸이 모자라 뒤 칸이 전부 당겨졌다 →
+    #     컷 프레임 수 전체만큼 늘려 두고 -frames:v 가 자른다(편집 화면 합본 enc 의 tpad 와 같은 방식).
+    _stop = (int(frames) / 30.0 + 2.0 / 30) if frames else freeze
     _len = ["-frames:v", str(int(frames))] if frames else ["-t", f"{total:.3f}"]
     _run_ffmpeg([
         "ffmpeg", "-y", "-i", str(sub_path),
@@ -2502,14 +2524,15 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             clip_vf = _base_zoom_vf(beat) if freeze > 1e-3 else vf
             factor = play_out / _c_src if _c_src > 1e-6 else 1.0
             # 느리게(factor>1)뿐 아니라 빠르게(factor<1)도 같은 식으로 처리한다.
-            vf_full = (f"{clip_vf},setpts={factor:.6f}*PTS"
-                       if abs(factor - 1.0) > 1e-6 else clip_vf)
-            # 끝을 프레임 수(-frames:v)로 자르므로, 반올림으로 1~2프레임 모자랄 때를 대비해 마지막 프레임을
-            #   조금 넉넉히 세워 둔다(넘치는 몫은 -frames:v 가 버린다 — 길이는 늘 _nf).
-            vf_full = (f"{vf_full},tpad=stop_mode=clone:stop_duration="
-                       f"{0.1 + max(0.0, _nf / 30.0 - play_out - freeze):.3f}")
+            #   ★30fps 변환도 필터 안(fps=30)에서 — 편집 화면 합본(app enc)과 같은 자리·같은 반올림.
+            #     출력 -r 30 에 맡기면 느리게 늘린 컷에서 원본 프레임이 두 번 나오는 자리가 1프레임 갈렸다(합성 영상 실측).
+            vf_full = f"{clip_vf},{cut_setpts(factor)},fps=30"
+            # 끝을 프레임 수(-frames:v)로 자르므로 마지막 프레임을 넉넉히 세워 둔다(넘치는 몫은 -frames:v 가 버린다 — 길이는 늘 _nf).
+            #   ★계획(play_out)이 아니라 컷 프레임 수 전체만큼 — 원본 영상이 파일 길이보다 먼저 끝나면 읽힌 프레임이 계획보다
+            #     적다(2026-09-27 서버 실측). 종전엔 첫 프레임 중복이 우연히 1프레임을 메워 가려져 있었다. 편집 화면 합본과 같은 방식.
+            vf_full = f"{vf_full},tpad=stop_mode=clone:stop_duration={0.1 + _nf / 30.0:.3f}"
             # 움직이는 몫의 프레임 수: 정지가 없으면 컷 전체, 있으면 play_out 만큼(나머지는 정지 패스가 채운다).
-            _nf_play = _nf if freeze <= 1e-3 else min(_nf, max(1, int(round(play_out * 30))))
+            _nf_play = motion_frames(_nf, play_out, freeze)
             # start를 소스 안으로 당긴다(타트랙 병합, 2026-07-19). 약한 매칭이 소스 밖을 잡으면
             #   -ss가 끝을 넘어 0프레임이 나와 concat이 죽는다. [start, start+src_dur]가 소스
             #   안에 들어오게 당기되, 소스가 src_dur보다 짧으면 0에서 있는 만큼 읽는다.
