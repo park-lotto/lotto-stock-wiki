@@ -238,7 +238,7 @@ def test_등급안내_캐시는_편성이_바뀌면_무효(tmp_path, monkeypatch
     job = _base_job(work)
     probes = _tiers_env(monkeypatch, job)
     job["edit_plan"]["beats"][0]["scene_override"] = [{"video_id": "s0", "seg_id": "s0-1", "start": 20.0, "end": 22.0}]
-    j = mp.clean_base_judge(mp.Store("db"), job, work, calibrate=False)          # 버튼·렌더 쪽 판정(캐시에 남는다)
+    j = mp.clean_base_judge(mp.Store("db"), job, work)          # 버튼·렌더 쪽 판정(캐시에 남는다)
     assert j["uncovered"] == [0] and len(probes) == 1
     assert mp.clean_tiers_ready(job, work)["basic"] is False            # 캐시된 판정(바뀐 장면 못 덮음)
     del job["edit_plan"]["beats"][0]["scene_override"]                 # 장면 되돌림 → 편성 달라짐
@@ -251,7 +251,7 @@ def test_등급안내_캐시는_정본이_바뀌면_무효(tmp_path, monkeypatch
     job = _base_job(work)
     _tiers_env(monkeypatch, job)
     job["edit_plan"]["beats"][0]["scene_override"] = [{"video_id": "s0", "seg_id": "s0-1", "start": 20.0, "end": 22.0}]
-    mp.clean_base_judge(mp.Store("db"), job, work, calibrate=False)
+    mp.clean_base_judge(mp.Store("db"), job, work)
     assert mp.clean_tiers_ready(job, work)["basic"] is False
     base = cb.load_base(work)                                           # 증분 조각이 붙어 정본 파일이 다시 써진다
     (work / "cb0_0_clean.mp4").write_bytes(b"q" * 2048)

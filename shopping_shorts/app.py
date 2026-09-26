@@ -7787,7 +7787,7 @@ def api_produce_mix_clean_base_preview(job_id: str):
     work = _MIX_WORK_DIR / job_id
     if not mix_pipeline.clean_base_on(store, cid):
         return {"ok": True, "enabled": False, "uncovered": [], "extend": [], "est_credits": None}
-    judged = mix_pipeline.clean_base_judge(store, job, work, calibrate=False)
+    judged = mix_pipeline.clean_base_judge(store, job, work)       # 렌더와 같은 판정(보정된 정본 — 정본당 1회 보정)
     if judged is None:          # 스위치는 위에서 봤다 → 정본이 없다
         return {"ok": True, "enabled": True, "base": False, "uncovered": [], "extend": [], "est_credits": None}
     unc, ext, total = _clean_incr_secs(job, work, judged)
@@ -7799,32 +7799,24 @@ def api_produce_mix_clean_base_preview(job_id: str):
 def _clean_incr_secs(job, work, judged):
     """증분 청소(mix_pipeline.incremental_clean)가 업체에 **실제로 보낼 초** → (바뀐 칸 목록, 늘림 목록, 합계 초).
 
-    ★incremental_clean 의 조각 목록과 같은 식이다(0순위-B의 짝 — 그 함수를 고치면 여기도 고쳐야 한다.
-      test_clean_notice_seconds 가 업체 호출 직전 값과 대조해 어긋나면 빨강):
-      - 바뀐 칸: 렌더 컷 재생이 못 덮은 구간(_clean_need)이 있으면 그 구간 + 조각마다 뒤 여유 EXTEND_PAD, 없으면 칸 재료 전체.
-      - 늘림: 구간(start~end) 그대로(여유는 clean_base 가 end 에 이미 얹었다).
-      - 원본 파일을 못 찾는 조각은 incremental_clean 도 건너뛴다 → 초에서 뺀다."""
-    from shopping_shorts import clean_base as _cb
-    srcs = mix_pipeline._resolve_sources(job, work) or {}
-    beats = {int(b["beat_idx"]): b for b in (job.get("edit_plan") or {}).get("beats") or []}
-    need = (judged.get("plan2") or {}).get("_clean_need") or {}
+    ★조각 목록은 mix_pipeline.incremental_pieces 한 곳(incremental_clean 이 실제로 자르는 목록과 같은 함수 — 0순위-B).
+      여기는 칸별로 더하기만 한다. test_clean_notice_seconds 가 업체 호출 직전 값과 대조한다."""
+    plan = job.get("edit_plan") or {}
+    beats = {int(b["beat_idx"]) for b in plan.get("beats") or []}
+    pieces = mix_pipeline.incremental_pieces(job, work, plan, judged.get("uncovered") or [], judged.get("extend") or [],
+                                             need=(judged.get("plan2") or {}).get("_clean_need") or {})
     unc, ext, total = [], [], 0.0
     for bi in judged.get("uncovered") or []:
-        b = beats.get(int(bi))
-        if not b:
+        if int(bi) not in beats:
             continue
-        spans = need.get(str(bi))
-        pad = _cb.EXTEND_PAD if spans else 0.0
-        secs = sum(float(m["end"]) + pad - float(m["start"])
-                   for m in (spans or mix_pipeline._beat_materials(b)) if srcs.get(m.get("video_id")))
+        secs = sum(p["end"] - p["start"] for p in pieces if p["kind"] == "cb" and p["beat_idx"] == int(bi))
         unc.append({"beat_idx": int(bi), "seconds": round(secs, 2)})
         total += secs
-    for e in judged.get("extend") or []:
-        if not srcs.get(e.get("video_id")) or not beats.get(int(e["beat_idx"])):
-            continue
-        secs = float(e["end"]) - float(e["start"])
-        ext.append({"beat_idx": int(e["beat_idx"]), "need": e.get("need"), "seconds": round(secs, 2)})
-        total += secs
+    for p in pieces:
+        if p["kind"] == "cbx":
+            secs = p["end"] - p["start"]
+            ext.append({"beat_idx": p["beat_idx"], "need": p["need"], "seconds": round(secs, 2)})
+            total += secs
     return unc, ext, total
 
 
@@ -8168,7 +8160,7 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
 
 @app.post("/api/mix/scene_lab/{job_id}/renumber")
 def api_mix_scene_lab_renumber(job_id: str):
-    """겹친 문장 번호(beat_idx)를 0..n-1로 다시 매긴다 — 막기만 하면 고객이 갇힌다.
+    """겹친 문장 번호(beat_idx)를 정리한다(store.dedupe_beat_idx) — 막기만 하면 고객이 갇힌다.
 
     ★평소엔 번호를 다시 매기지 않는다(삭제 API 주석 참고): mp3 파일 이름이
       beat_{beat_idx}_{key}.mp3라(mix_pipeline._tts_path) 번호를 당기면 남은 칸이
@@ -8185,18 +8177,12 @@ def api_mix_scene_lab_renumber(job_id: str):
                             content={"ok": False, "error": "생성·렌더 중에는 정리할 수 없어요"})
     plan = job["edit_plan"]
     beats = plan.get("beats") or []
-    idxs = [b.get("beat_idx") for b in beats]
-    if len(set(idxs)) == len(idxs):
+    # ★판단은 store.dedupe_beat_idx 한 곳(0순위-B) — 저장 출구도 같은 함수로 정리한다.
+    #   겹친 뒤 칸만 새 번호·그 칸 음성만 버림·빠진 번호 유지·화면 편성 payload도 같은 매핑.
+    from shopping_shorts.store import dedupe_beat_idx
+    changed = dedupe_beat_idx(plan)
+    if not changed:
         return {"ok": True, "changed": 0, "note": "번호가 겹치지 않아 그대로 둡니다"}
-    changed = 0
-    for i, b in enumerate(beats):
-        if b.get("beat_idx") != i:
-            b["beat_idx"] = i
-            # 번호가 바뀐 칸의 옛 음성은 버린다 — 이름이 번호로 묶여 남의 소리가 된다.
-            b.pop("tts_path", None)
-            b.pop("tts_ver", None)
-            changed += 1
-    plan["beats"] = beats
     _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True, "changed": changed, "beats": len(beats),
             "note": "번호를 정리했어요 — 음성 만들기를 다시 눌러주세요"}
@@ -9606,13 +9592,16 @@ def api_mix_export(job_id: str, part: str = ""):
         return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
     work = _MIX_WORK_DIR / job_id
     work.mkdir(parents=True, exist_ok=True)
+    # ★칸 번호가 겹친 편성은 내보내지 않는다 — 음성 표에서 한 칸 음성이 빠진다(판정·경보 mix_pipeline 한 곳)
+    if mix_pipeline._beat_dup_blocked(Store(DB_PATH), job_id, job["edit_plan"], "내보내기"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": mix_pipeline.BEAT_DUP_MSG})
     # ★정본(2026-09-22)이면 재배치된 사본·청소본이 입력이다 — 렌더와 같은 함수(render_inputs_for)
     try:
         plan, source_video_paths, _cbase = mix_pipeline.render_inputs_for(
             Store(DB_PATH), job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
     except Exception:
         plan, source_video_paths = job["edit_plan"], {}   # 소스 전멸이어도 srt/script/seo는 준다(설계 §6, 500 금지)
-    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    tts_paths = mix_pipeline.tts_paths_of(plan)
     timeline = _beat_timeline(plan, tts_paths)
     parts = {"sources": ["sources"], "srt": ["srt"], "script": ["script"]}.get(
         part, export_bundle.ALL_PARTS)
@@ -9659,13 +9648,16 @@ def api_mix_capcut(job_id: str, base: str = ""):
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
     work = _MIX_WORK_DIR / job_id
+    # ★칸 번호가 겹친 편성은 캡컷으로 보내지 않는다 — 음성 표에서 한 칸 음성이 빠진다(판정·경보 mix_pipeline 한 곳)
+    if mix_pipeline._beat_dup_blocked(Store(DB_PATH), job_id, job["edit_plan"], "캡컷 내보내기"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": mix_pipeline.BEAT_DUP_MSG})
     # ★정본(2026-09-22)이면 재배치된 사본·청소본이 입력이다 — 렌더와 같은 함수(render_inputs_for)
     try:
         plan, source_video_paths, _cbase = mix_pipeline.render_inputs_for(
             Store(DB_PATH), job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
     except Exception:
         plan, source_video_paths, _cbase = job["edit_plan"], {}, None
-    tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan.get("beats", []) if b.get("tts_path")}
+    tts_paths = mix_pipeline.tts_paths_of(plan)
     # 자막 제거본이 타임라인 소스를 대신하더라도 캡컷 보관함에는 편집에 쓰인 긴 원본을 함께 보낸다.
     # 원본 집합 판정은 capcut_draft.used_video_ids 한 곳만 사용해 타임라인 소스 판정과 어긋나지 않게 한다.
     _original_source_video_paths = dict(source_video_paths)
@@ -18414,11 +18406,12 @@ def _clean_credit_est(job, job_id):
     try:
         # ★버튼도 정본이 있으면 증분이다(run_clean_sources, 2026-09-27) — 같은 판정(clean_base_judge)·같은 분기로 안내한다.
         #   정본이 이미 다 덮으면 0, 등급·고른 장면이 맞으면 바뀐 부분만(_clean_incr_secs), 아니면 아래 전체 청소 안내.
+        # ★작업 열기(works_get) 경로라 판정을 **새로 돌리지 않는다** — 캐시(같은 편성·정본으로 버튼·렌더·확인창이 이미
+        #   판정한 결과)만 읽는다. 판정은 청소본 보정(정본당 1회, 수 초 + clean_base.json 쓰기)·소스 ffprobe 를 부른다
+        #   (clean_tiers_ready 와 같은 원칙: 상태·목록 경로는 무거운 일 금지). 캐시가 없으면 아래 종전 안내(전체 길이).
         _w = _MIX_WORK_DIR / job_id
         if job.get("subtitle_removal") and mix_pipeline._clean_strategy(job) == "final":
-            _j = mix_pipeline._judge_cache_peek(job, _w)       # 같은 편성·정본으로 이미 판정했으면 그 결과(0.9초 절약)
-            if _j is None:
-                _j = mix_pipeline.clean_base_judge(Store(DB_PATH), job, _w, calibrate=False)
+            _j = mix_pipeline._judge_cache_peek(job, _w)
             if _j is not None:
                 if mix_pipeline.clean_base_ready_for(None, job, _w, judged=_j):
                     return 0

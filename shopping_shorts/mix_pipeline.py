@@ -3193,6 +3193,49 @@ def final_clip_pairs(plan, tts_paths, src_durs):
     return out
 
 
+BEAT_DUP_MSG = "칸 번호가 겹쳐 있어요 — 편성을 한 번 저장하면 자동 정리됩니다"
+
+
+class BeatIdxDuplicateError(RuntimeError):
+    """편성의 칸 번호(beat_idx)가 겹쳤다 — {beat_idx: 음성} 표를 만들면 겹친 칸 음성이 하나만 남는다."""
+
+
+def _beat_idx_duplicates(plan):
+    """겹친 칸 번호 목록 — 판단은 store.beat_idx_duplicates 한 곳(0순위-B). 여기서 규칙을 다시 적지 않는다."""
+    from shopping_shorts.store import beat_idx_duplicates
+    return beat_idx_duplicates(plan)
+
+
+def tts_paths_of(plan):
+    """{beat_idx: tts_path} — 렌더·청소·컷 지도가 쓰는 음성 표를 만드는 **유일한 자리**(2026-09-27).
+
+    ★칸 번호가 겹치면 BeatIdxDuplicateError — 표로 모으면 마지막 칸 음성만 남아 "CTA 음성 반복 + 한 칸 음성 누락"이
+      출력에 실제로 났다(옛 job 5개, 파형 확인). 조용히 표를 만들지 않는다."""
+    dup = _beat_idx_duplicates(plan)
+    if dup:
+        raise BeatIdxDuplicateError("%s (겹친 번호 %s)" % (BEAT_DUP_MSG, dup))
+    return {b["beat_idx"]: b["tts_path"] for b in (plan or {}).get("beats") or [] if b.get("tts_path")}
+
+
+def _beat_dup_blocked(store, job_id, plan, where):
+    """칸 번호가 겹친 편성이면 관리자 경보를 올리고 True — 호출부가 그 단계를 failed 로 끝낸다(렌더·과금 전에)."""
+    dup = _beat_idx_duplicates(plan)
+    if not dup:
+        return False
+    print("[beat_idx] 겹친 칸 번호 %s — %s 중단 job=%s" % (dup, where, job_id), file=sys.stderr)
+    try:
+        from shopping_shorts import ops_alert
+        ops_alert.raise_alert(
+            "beat_idx_dup:%s" % job_id,
+            "칸 번호가 겹친 편성이라 %s을(를) 막았습니다 (job %s)" % (where, job_id),
+            "겹친 beat_idx %s — 그대로 두면 음성 표에서 한 칸 음성이 빠지고 다른 칸 음성이 반복된다" % (dup,),
+            store=store, signature="%s:%s" % (job_id, dup),
+            todo="편성을 한 번 저장하면 자동 정리된다(store.dedupe_beat_idx). 안 되면 tools/fix_beat_idx_dups.py")
+    except Exception as _ae:      # noqa: BLE001 — 알림 실패가 차단을 막지 않는다(사유는 남긴다)
+        print(f"[ops_alert] beat_idx_dup 알림 실패(무해): {_ae!r}", file=sys.stderr)
+    return True
+
+
 def final_time_of_beat(plan, beat_idx, tts_paths=None, src_durs=None):
     """완성본에서 **그 칸의 첫 컷** 한가운데 시각(초). 없으면 None.
 
@@ -3336,7 +3379,7 @@ def cut_selected(c, sel):
 def clean_pick_cuts(job, work):
     """지금 편성의 컷 목록(완성본 순서) + 키·선택 여부. 화면의 장면 고르기와 청소가 **같은 목록**을 본다."""
     plan = (job or {}).get("edit_plan") or {}
-    tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
+    tts = tts_paths_of(plan)
     cuts = final_clip_pairs(plan, tts, _src_durs_for(job, work))
     sel = clean_selection_of(job)
     return [dict(c, ci=i, key=cut_key(c), sel=cut_selected(c, sel)) for i, c in enumerate(cuts)]
@@ -3807,7 +3850,7 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
             if _sel:
                 # 고른 장면만 — 컷 지도는 정본이 쓰는 것과 같은 함수(final_clip_pairs)로 편다
                 _plan = job.get("edit_plan") or {}
-                _tts = {b["beat_idx"]: b["tts_path"] for b in _plan.get("beats") or [] if b.get("tts_path")}
+                _tts = tts_paths_of(_plan)
                 res = _clean_partial(str(mix_raw), final_clip_pairs(_plan, _tts, _src_durs_for(job, work)),
                                      _sel, keys, str(out), tier, work)
             else:
@@ -3832,6 +3875,43 @@ def _cut_piece(src, ss, dur, dst):
     return str(dst)
 
 
+def incremental_pieces(job, work, plan, uncovered, extend, need=None):
+    """증분 청소가 업체에 **보낼 조각 목록의 유일한 자리**(0순위-B, 2026-09-27) — incremental_clean(실제로 보냄)과
+    app._clean_incr_secs(안내 초·크레딧)가 둘 다 이걸 부른다. 과금 없음·파일 안 만듦.
+
+    반환 [{"vid", "kind": "cb"|"cbx", "beat_idx", "src_vid", "src", "start", "end", "need"}] (원본 초, end-start = 보낼 초).
+      - 바뀐 칸(uncovered) cb{bi}_{k}: need(렌더 컷 재생이 못 덮은 원본 구간)가 있으면 **그 구간만** + 조각마다 뒤 여유
+        EXTEND_PAD. 재료 전체를 지우면 컷 계획이 재료 밖(홀드로 이어 튼 뒤쪽·릴 뒤 실프레임)을 읽을 때 또 못 덮는다.
+        need 가 없으면 칸 재료 전체(여유 없음).
+      - 늘림(extend) cbx{bi}: 구간 그대로(여유는 clean_base 가 end 에 이미 얹었다).
+      - 원본 파일을 못 찾는 조각·편성에 없는 칸은 뺀다(보낼 수 없다)."""
+    from shopping_shorts import clean_base as _cb
+    srcs = _resolve_sources(job, Path(work))
+    beats = {int(b["beat_idx"]): b for b in (plan or {}).get("beats") or []}
+    out = []
+    for bi in uncovered or []:
+        b = beats.get(int(bi))
+        if not b:
+            continue
+        spans = (need or {}).get(str(bi))
+        pad = _cb.EXTEND_PAD if spans else 0.0
+        for k, m in enumerate(spans if spans else _beat_materials(b)):
+            src = srcs.get(m.get("video_id"))
+            if not src:
+                continue
+            out.append({"vid": "cb%d_%d" % (int(bi), k), "kind": "cb", "beat_idx": int(bi),
+                        "src_vid": m.get("video_id"), "src": src,
+                        "start": float(m["start"]), "end": float(m["end"]) + pad, "need": None})
+    for ex in extend or []:
+        src = srcs.get(ex.get("video_id"))
+        if not src or not beats.get(int(ex["beat_idx"])):
+            continue
+        out.append({"vid": "cbx%d" % int(ex["beat_idx"]), "kind": "cbx", "beat_idx": int(ex["beat_idx"]),
+                    "src_vid": ex["video_id"], "src": src,
+                    "start": float(ex["start"]), "end": float(ex["end"]), "need": ex.get("need")})
+    return out
+
+
 def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, uncovered, extend, need=None):
     """정본에 없는 재료(바뀐 장면·큰 늘림)만 원본에서 잘라 **1콜**로 지우고 extras에 붙인다(2026-09-22).
 
@@ -3840,35 +3920,14 @@ def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, u
       다시 오면 clean_base.coverage 가 covered 로 본다(재과금 0)."""
     from shopping_shorts import clean_base as _cb
     work = Path(work)
-    srcs = _resolve_sources(job, work)
     beats = {int(b["beat_idx"]): b for b in (plan or {}).get("beats") or []}
     items, meta = [], {}
-    for bi in uncovered:
-        b = beats.get(int(bi))
-        if not b:
-            continue
-        key = _cb.beat_material_key(b)
-        # ★need(렌더 컷 재생이 못 덮은 원본 구간)가 있으면 **그 구간만** 지운다 — 화면이 실제로 쓰는 곳이다.
-        #   재료 전체를 지우면 컷 계획이 재료 밖(홀드로 이어 튼 뒤쪽·릴 뒤 실프레임)을 읽을 때 또 못 덮는다.
-        spans = (need or {}).get(str(bi))
-        spans = spans if spans else _beat_materials(b)
-        for k, m in enumerate(spans):
-            src = srcs.get(m.get("video_id"))
-            if not src:
-                continue
-            s, e = float(m["start"]), float(m["end"]) + (_cb.EXTEND_PAD if (need or {}).get(str(bi)) else 0.0)
-            vid = "cb%d_%d" % (int(bi), k)
-            dst = _cut_piece(src, s, e - s, work / f"{vid}.mp4")
-            items.append((vid, dst)); meta[vid] = (int(bi), key, e - s, m.get("video_id"), s)
-    for ex in extend or []:
-        src = srcs.get(ex["video_id"])
-        b = beats.get(int(ex["beat_idx"]))
-        if not src or not b:
-            continue
-        vid = "cbx%d" % int(ex["beat_idx"])
-        s, e = float(ex["start"]), float(ex["end"])
-        dst = _cut_piece(src, s, e - s, work / f"{vid}.mp4")
-        items.append((vid, dst)); meta[vid] = (int(ex["beat_idx"]), _cb.beat_material_key(b), e - s, ex["video_id"], s)
+    # ★조각 목록은 incremental_pieces 한 곳(안내 초 app._clean_incr_secs 도 같은 함수 — 0순위-B)
+    for pc in incremental_pieces(job, work, plan, uncovered, extend, need=need):
+        vid, s, e = pc["vid"], pc["start"], pc["end"]
+        dst = _cut_piece(pc["src"], s, e - s, work / f"{vid}.mp4")
+        items.append((vid, dst))
+        meta[vid] = (pc["beat_idx"], _cb.beat_material_key(beats[pc["beat_idx"]]), e - s, pc["src_vid"], s)
     if not items:
         return base
     charged = _charge_clean(store, customer_id, 1)
@@ -3897,7 +3956,7 @@ def _save_clean_base(job, work, sig, path, only_if_new=False):
             if _old is not None and _old.get("sig") == sig:
                 return
         _plan = job.get("edit_plan") or {}
-        _tts = {b["beat_idx"]: b["tts_path"] for b in _plan.get("beats") or [] if b.get("tts_path")}
+        _tts = tts_paths_of(_plan)
         _sel = clean_selection_of(job)
         _cuts = [dict(c, cleaned=cut_selected(c, _sel))
                  for c in final_clip_pairs(_plan, _tts, _src_durs_for(job, work))]
@@ -3994,8 +4053,7 @@ def clean_compare_clips(job, work):
                     break
         if plan is None:
             return out
-        tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or [])
-               if b.get("tts_path")}
+        tts = tts_paths_of(plan)
         # 스냅샷이면 청소 그때 고른 장면, 아니면 지금 job의 선택(지금 서명 파일 = 지금 선택으로 만든 것)
         _sel = plan.get("_clean_sel") if "_clean_sel" in plan else clean_selection_of(job)
         clips = []
@@ -4124,7 +4182,7 @@ def assemble_clean_video(job_id, db_path, work_root, clean_fn=None):
             _base = None
         if _base is not None:
             try:
-                tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+                tts_paths = tts_paths_of(plan)
                 out_path = Path(work_root) / job_id / "clean_preview.mp4"
                 out_path.parent.mkdir(parents=True, exist_ok=True)
                 assemble(plan_used, tts_paths, _src, str(out_path), clean_fn=None, deco={},
@@ -4144,7 +4202,7 @@ def assemble_clean_video(job_id, db_path, work_root, clean_fn=None):
         if not clean_map:
             return None
     try:
-        tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+        tts_paths = tts_paths_of(plan)
         out_path = Path(work_root) / job_id / "clean_preview.mp4"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         # burn_captions=False — 이 조립본은 '자막 없는 clean 배경'(썸네일용)이다. 우리 나레이션
@@ -4201,6 +4259,9 @@ def run_clean_sources(job_id, db_path, work_root):
     job = store.get_mix_job(job_id)
     if not job:
         return
+    if _beat_dup_blocked(store, job_id, job.get("edit_plan") or {}, "자막제거"):
+        store.update_mix_job(job_id, clean_status="failed", clean_error=BEAT_DUP_MSG)   # 과금 전에 막는다
+        return
     final_fn = None
     try:
         work = Path(work_root) / job_id
@@ -4256,7 +4317,7 @@ def run_clean_sources(job_id, db_path, work_root):
         _judged = None
         if _clean_strategy(job) == "final":
             try:
-                _judged = clean_base_judge(store, job, work, calibrate=False)
+                _judged = clean_base_judge(store, job, work)
             except Exception as e:      # noqa: BLE001 — 판정 실패는 종전 경로(전체 청소)
                 print("[clean-base] 버튼 정본 판정 실패(전체 청소): %r" % (e,), file=sys.stderr)
         if _judged is not None and clean_base_ready_for(store, job, work, judged=_judged):
@@ -4399,6 +4460,9 @@ def run_preview(job_id, db_path, work_root):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return
+    if _beat_dup_blocked(store, job_id, job["edit_plan"], "미리보기"):
+        store.update_mix_job(job_id, preview_status="failed", preview_error=BEAT_DUP_MSG)
+        return
     try:
         # ★mkdir을 try 안에 둔다 — 밖에서 터지면 preview_status가 갱신되지 않아 화면이 무한 ⏳가 된다
         # (라우트가 이미 'rendering'을 써둔 상태라 failed로 내려주는 건 여기밖에 없다).
@@ -4417,7 +4481,7 @@ def run_preview(job_id, db_path, work_root):
         # ★지문은 **DB에 막 저장한 편성**으로 지금 뜬다 — 조립이 메모리의 plan 을 만져도(check_mutation 감시)
         #   DB와 같은 값으로 비교되게. 끝에서 뜨면 그 차이로 멀쩡한 미리보기가 영원히 "낡음"이 된다.
         _psig = plan_signature(plan)
-        tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+        tts_paths = tts_paths_of(plan)
         # ★정본이 있으면 미리보기도 청소본 위에서(돈 0 — allow_clean=False라 바뀐 비트는 원본 그대로 보인다)
         from shopping_shorts import screen_clips as _sc
         _scr_mark = _sc.begin(job_id)
@@ -4553,7 +4617,7 @@ def clean_tts_durs(plan):
     return out
 
 
-_JUDGE_CACHE = {}          # 판정 키 → clean_base_judge(calibrate=False) 결과(프로세스 안, 안내 전용)
+_JUDGE_CACHE = {}          # 판정 키 → clean_base_judge 결과(프로세스 안, 안내 전용 — 버튼·렌더는 읽지 않는다)
 _JUDGE_CACHE_MAX = 512
 
 
@@ -4575,14 +4639,17 @@ def _judge_cache_peek(job, work):
     return _JUDGE_CACHE.get(k) if k is not None else None
 
 
-def clean_base_judge(store, job, work, *, calibrate=True):
+def clean_base_judge(store, job, work, *, calibrate=None):
     """정본 판정의 **유일한 자리** — 렌더(render_inputs_for)·자막제거 버튼(run_clean_sources)·
-    등급 안내(clean_tiers_ready)가 전부 이것을 부른다(0순위-B, 2026-09-27).
+    최종렌더 확인창(app clean_base_preview)이 전부 이것을 부른다(0순위-B, 2026-09-27).
+    등급 안내(clean_tiers_ready)는 판정을 새로 돌리지 않고 여기서 남긴 캐시만 읽는다.
 
     반환 None(스위치 꺼짐·정본 없음) 또는
       {"base", "plan2", "uncovered", "extend", "tts_durs", "src_durs"} — remap_plan(렌더 컷 재생) 결과.
-    calibrate=False: 옛 청소본 밀림 측정을 건너뛴다. 덮음 판정(uncovered/extend)은 **원본 좌표**로만 하고
-      밀림(off)은 청소본 쪽 시각만 옮기므로(clean_base._cut_geom) 결과가 같다 — 안내·버튼용 가벼운 호출."""
+    ★판정은 **항상 보정된 정본**으로 한다(clean_base.calibrate). 보정 v3부터 밀림(off·off_end)·다음 컷 시작 자르기·
+      속도 불일치(v4)가 덮음 범위 자체를 바꾼다 — 보정 없이 판정하면 버튼·안내는 "덮임", 렌더는 "안 덮임(증분 과금)"이
+      갈린다. 보정은 정본당 1회(calibrated=CAL_VERSION 표식) — 청소본 한 번 풀기(수 초), 그 뒤엔 즉시 반환.
+    calibrate: 받기만 하고 무시한다(옛 호출부 호환 — calibrate=False 로 불러도 보정한다)."""
     from shopping_shorts import clean_base as _cb
     work = Path(work)
     if not ((job or {}).get("subtitle_removal") and clean_base_on(store, (job or {}).get("customer_id") or 0)):
@@ -4590,11 +4657,10 @@ def clean_base_judge(store, job, work, *, calibrate=True):
     base = _cb.load_base(work)
     if base is None:
         return None
-    if calibrate:
-        try:    # 옛 청소본 밀림 1회 측정(2026-09-27) — 소스를 못 찾아도 렌더 입력 준비는 계속한다
-            base = _cb.calibrate(work, base, _resolve_sources(job, work))
-        except Exception as _e:      # noqa: BLE001
-            print("[clean-base] 밀림 보정 건너뜀: %s" % _e, file=sys.stderr)
+    try:    # 옛 청소본 밀림 1회 측정(2026-09-27) — 소스를 못 찾아도 판정은 계속한다
+        base = _cb.calibrate(work, base, _resolve_sources(job, work))
+    except Exception as _e:      # noqa: BLE001
+        print("[clean-base] 밀림 보정 건너뜀: %s" % _e, file=sys.stderr)
     plan = (job or {}).get("edit_plan") or {}
     # ★늘림 판정의 길이는 렌더와 같은 자(final_clip_pairs가 쓰는 _beat_effective_dur)로 잰다 —
     #   target_seconds는 계획값이라 실제 TTS 길이와 어긋날 수 있다(둘이 다르면 지워놓고 안 쓰거나, 모자란다).
@@ -4604,13 +4670,13 @@ def clean_base_judge(store, job, work, *, calibrate=True):
     plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs, src_durs=src_durs)
     out = {"base": base, "plan2": plan2, "uncovered": uncovered, "extend": extend,
            "tts_durs": tts_durs, "src_durs": src_durs}
-    if not calibrate:
-        # 안내(clean_tiers_ready)가 다시 판정하지 않고 읽는다 — 버튼·렌더는 이 캐시를 **읽지 않는다**(늘 새로 판정)
-        _k = _judge_cache_key(job, work)
-        if _k is not None:
-            if len(_JUDGE_CACHE) >= _JUDGE_CACHE_MAX:
-                _JUDGE_CACHE.clear()
-            _JUDGE_CACHE[_k] = out
+    # 안내(clean_tiers_ready)가 다시 판정하지 않고 읽는다 — 버튼·렌더는 이 캐시를 **읽지 않는다**(늘 새로 판정).
+    # ★키는 보정이 정본을 다시 쓴 **뒤** 파일 시각으로 만든다 — 보정 전 키로 남기면 안내가 영영 못 찾는다.
+    _k = _judge_cache_key(job, work)
+    if _k is not None:
+        if len(_JUDGE_CACHE) >= _JUDGE_CACHE_MAX:
+            _JUDGE_CACHE.clear()
+        _JUDGE_CACHE[_k] = out
     return out
 
 
@@ -4633,7 +4699,7 @@ def clean_base_ready_for(store, job, work, tier=None, judged=None):
           + 정본이 고른 장면만 지운 것이면 지금 고른 장면과 같을 것(더 고른 장면은 안 지워져 있다).
     ★렌더(render_inputs_for)는 등급을 안 보고 정본을 쓴다 — 거기를 조이면 렌더 과금이 늘어나므로 두지 않는다."""
     try:
-        j = judged if judged is not None else clean_base_judge(store, job, work, calibrate=False)
+        j = judged if judged is not None else clean_base_judge(store, job, work)
         if j is None or j["uncovered"] or j["extend"]:
             return False
         return clean_base_fits(j["base"], job, tier)
@@ -4737,6 +4803,10 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return
+    if _beat_dup_blocked(store, job_id, job["edit_plan"], "최종 렌더"):
+        # ★음성 합성·자막제거(과금)·조립 전에 막는다 — 겹친 번호로 만들면 한 칸 음성이 빠진 영상이 나간다
+        store.update_mix_job(job_id, status="failed", error=BEAT_DUP_MSG)
+        return
     work = Path(work_root) / job_id
     work.mkdir(parents=True, exist_ok=True)
     try:
@@ -4759,7 +4829,7 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
         # ★도장은 TTS 보장 저장 **뒤에** 찍는다 — 그 저장이 tts_path 를 채워 편성 지문을 바꾸기 때문
         #   (앞에서 찍으면 정상 렌더도 스스로 도장을 깬다). 편성 외 설정은 시작 시점 job 값 그대로.
         _stamp = _render_stamp(job)
-        tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+        tts_paths = tts_paths_of(plan)
         out_path = work / "final.mp4"
 
         # ★청소본 정본(2026-09-22): 스위치가 켜져 있고 4단계 정본이 있으면 청소본을 소스로 조립한다

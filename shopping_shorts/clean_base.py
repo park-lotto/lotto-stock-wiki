@@ -14,6 +14,7 @@ mix_pipeline.incremental_clean 이 원본에서 잘라 1콜로 지워 extras 에
 자막 줄 나누기 67·확대 25·등급 20·장면 교체 13 — 그림이 바뀌면 완성본을 통째로 다시 지우던 구조.
 """
 import copy
+import os
 import json
 from pathlib import Path
 
@@ -92,15 +93,26 @@ def save_base(work, *, sig, path, plan, cuts, sel=None):
 FRAME_EXACT_SINCE = 1790435500      # 2026-09-27 00:11:40 KST — _render_mix 누적 프레임 경계 배포 시각
 
 
-CAL_VERSION = 3     # 1 = 앞뒤 0.4초 고정 창 → 2 = 앞 컷 값 기준 + 넓혀 재탐색 + 이어받기(62ed6 9번 칸 +0.37초 잔여)
+CAL_VERSION = 4     # 1 = 앞뒤 0.4초 고정 창 → 2 = 앞 컷 값 기준 + 넓혀 재탐색 + 이어받기(62ed6 9번 칸 +0.37초 잔여)
                     # → 3 = 도구와 같은 특징(frame_match)·원본을 완성본 구도로 자름·컷 앞/끝 세 지점씩(off·off_end)·
                     #       못 재면 앞 컷과의 경계(튀는 프레임)로 시작만 · 다음 컷 시작에서 자르기(_cut_geom)
+                    # → 4 = 속도 불일치 컷(cal_speed_mismatch) 표시 — 그 컷은 덮지 않은 것으로(_speed_bad)
 CAL_WIN = 18                    # 찾는 범위 ±18프레임(±0.6초) — 기대 밀림(prior) 중심
 CAL_AGREE = 1                   # 세 지점 **모두** 최소(후보)가 확정 밀림의 ±1프레임 안에 있어야 한다(하나라도 딴 데면 못 잼)
 CAL_SPREAD = 3                  # …그중 둘 이상은 '최소 후보' 폭이 3프레임 이하로 뾰족해야 한다(정지 화면은 어디든 닮아 못 박는다)
 CAL_MIN = 0.2                   # 이보다 짧은 컷은 재지 않는다(이어받기)
 CAL_END_MIN = 0.95              # 이 이상 긴 컷만 끝 밀림(off_end)도 잰다 — 앞·끝 지점이 겹치지 않게
 _OLD_SLOWMO = 1.15              # 옛 조립: 원본을 이 배율까지 느리게 재생, 남는 시간은 마지막 프레임 정지
+SPEED_MISPLACE = 4              # 속도 불일치: 좌표(_cut_geom)대로 읽으면 컷 끝(또는 시작)에서 장면이 이만큼(프레임, 0.13초) 이상 어긋난다
+SPEED_EVID = 3                  # …그리고 실제로 3프레임 이상 어긋난 지점이 SPEED_EVID 개 이상(한 점 튐으로 판정하지 않는다)
+SPEED_WIN = 12                  # 속도 검사: 좌표가 말하는 자리 ±12프레임에서 찾는다
+SPEED_MIN_PTS = 4               # …뾰족한(정지 화면 아닌) 지점이 이만큼 이상, 원본 0.4초 이상에 걸쳐 있어야 판정한다
+SPEED_DMAX = 0.33               # …닮음 거리 이 이하 지점만(같은 장면 최대 0.45 근처 = 겨우 닮은 점은 증거로 안 쓴다)
+SPEED_RESID = 1.0               # …직선(일정한 속도 차)에서 벗어난 정도 가운데값이 이 프레임 이하일 때만(흩어짐 = 잡음)
+# ★속도 불일치 컷을 **재청소(과금) 대상**으로 칠지 — 기본 꺼짐(표식·경보만). 14일 실측 108컷/69 job = +118.7초(≈362크레딧)가
+#   고객에게 추가 과금되는 일이라 사장님 승인 뒤 켠다(`CLEAN_SPEED_RECLEAN=1`). 꺼져 있어도 표식(cal_speed_mismatch)은 남고
+#   매일 영상 점검(daily_video_audit)이 그 컷의 어긋남을 잡는다. 판정은 `_speed_bad` 한 곳.
+SPEED_RECLEAN = os.environ.get("CLEAN_SPEED_RECLEAN", "0").strip() == "1"
 
 
 def _ceil_frames(x):
@@ -137,11 +149,13 @@ def _src_vf(fm):
         return "scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d" % (fm.W, fm.H, fm.W, fm.H)
 
 
-def _group_shift(ff, rf, j0, kp, us, k0):
+def _group_shift(ff, rf, j0, kp, us, k0, why=None):
     """원본 컷 안 지점들(us, 초) 을 청소본 특징 ff 의 k0 ±CAL_WIN 프레임에서 찾아 **한 밀림**(프레임)으로 모이면 그 값, 아니면 None.
 
     뾰족한(최소 후보 폭 ≤ CAL_SPREAD — 정지 화면 아님) 지점이 둘 이상이고, 그 가운데값 밀림에서 **모든 지점**의
-    최소(후보)가 ±CAL_AGREE 안에 있어야 한다. 한 지점이라도 다른 장면·다른 밀림이면 못 잰 것."""
+    최소(후보)가 ±CAL_AGREE 안에 있어야 한다. 한 지점이라도 다른 장면·다른 밀림이면 못 잰 것.
+    why(list)를 주면 못 잰 사유를 하나 붙인다: "nomatch"(같은 장면 없음) · "static"(정지 화면) ·
+      "speed"(지점 전부 뾰족한데 **뒤 지점일수록 밀림이 한쪽으로 커진다** — 옛 파일이 다른 배속으로 구워짐) · "disagree"."""
     import math
     import numpy as np
     from shopping_shorts import frame_match as fm
@@ -155,21 +169,32 @@ def _group_shift(ff, rf, j0, kp, us, k0):
         d = fm.dist(ff, j0 + int(math.ceil(i * kp - 1e-6)) + ks, rf[i])
         m = np.isfinite(d)
         if not m.any():
-            return None
+            return _why(why, "nomatch")
         kb_p, dmin_p, ok_p = fm.pick(ks[m], d[m], k0)
         if dmin_p >= fm.SCENE_T:
-            return None                 # 이 지점과 같은 장면이 근처에 없다
+            return _why(why, "nomatch")     # 이 지점과 같은 장면이 근처에 없다
         pts.append((kb_p, ok_p))
     if len(pts) < 2:
-        return None
+        return _why(why, "nomatch")
     sharp = [kb_p for kb_p, ok_p in pts if ok_p.max() - ok_p.min() <= CAL_SPREAD]
     if len(sharp) < 2:
-        return None                     # 정지 화면이라 어디든 닮았다 — 밀림을 못 박는다
+        return _why(why, "static")          # 정지 화면이라 어디든 닮았다 — 밀림을 못 박는다
     kb = int(round(float(np.median(sharp))))
     for _kb_p, ok_p in pts:
         if np.abs(ok_p - kb).min() > CAL_AGREE:
-            return None                 # 이 지점은 그 밀림에서 최소가 아니다(다른 밀림)
+            # 이 지점은 그 밀림에서 최소가 아니다(다른 밀림). 지점 전부 뾰족하고 밀림이 원본 시간 순으로 한쪽으로만
+            # 커지면(2프레임 이상) 흩어진 게 아니라 **속도가 다른 것**이다.
+            kbs = [p[0] for p in pts]
+            dif = np.diff(kbs)
+            mono = len(pts) == len(us) >= 3 and len(sharp) == len(pts) and (np.all(dif > 0) or np.all(dif < 0))
+            return _why(why, "speed" if mono and abs(kbs[-1] - kbs[0]) >= 2 else "disagree")
     return kb
+
+
+def _why(why, reason):
+    if why is not None:
+        why.append(reason)
+    return None
 
 
 def _cut_src(c, src_paths):
@@ -192,7 +217,7 @@ def _cut_src(c, src_paths):
     return (rf, kp, sd) if len(rf) else None
 
 
-def _measure_cut(c, cs_, ff, prior):
+def _measure_cut(c, cs_, ff, prior, why=None):
     """컷 하나의 (시작 밀림 off, 끝 밀림 off_end|None) 초 — 시작을 확신 못 하면 None. cs_ = _cut_src 결과.
 
     시작: 원본 컷 앞쪽 세 지점(긴 컷 0.2·0.3·0.4초 / 짧은 컷 sdur의 15·35·55%)을 prior ±0.6초에서 찾는다.
@@ -207,7 +232,7 @@ def _measure_cut(c, cs_, ff, prior):
     j0 = int(round(fin * fm.FPS))
     long_ = sd >= CAL_END_MIN
     us = (0.2, 0.3, 0.4) if long_ else tuple(q * sd for q in (0.15, 0.35, 0.55))
-    kb = _group_shift(ff, rf, j0, kp, us, int(round(prior * fm.FPS)))
+    kb = _group_shift(ff, rf, j0, kp, us, int(round(prior * fm.FPS)), why=why)
     if kb is None:
         return None
     off = (j0 + kb) / fm.FPS - fin
@@ -247,6 +272,56 @@ def _boundary_start(ff, mot, j_lo, j_exp, cs_):
     return sc[0][2]
 
 
+def _speed_drift(c, cs_, ff, nxt):
+    """좌표(_cut_geom)대로 읽으면 컷 안에서 장면이 **가장 크게 어긋나는 양**(프레임, ≥0) — 속도 차가 증거로 보일 때만.
+    어긋남이 증거로 안 보이면 0.0, 잴 지점이 모자라면 None.
+
+    원본 컷을 0.1초마다 한 장씩, 좌표가 말하는 청소본 자리 ±SPEED_WIN 에서 가장 닮은 프레임을 찾는다.
+    뾰족하고(정지 화면 아님) 잘 닮은(≤SPEED_DMAX) 지점이 SPEED_MIN_PTS 이상 원본 0.4초 넘게 모이면
+    한 직선(일정한 속도 차 — 기울기는 쌍별 기울기 가운데값, 한 점 튐에 안 끌린다)으로 맞춰 컷 양 끝 어긋남을 본다.
+    ★직선에서 흩어지면(가운데 잔차 > SPEED_RESID) 속도 차가 아니다 → 0.0.
+    ★실제로 SPEED_EVID(3)프레임 이상 어긋난 지점이 SPEED_EVID 개 미만이면 0.0 — 컷 안 한 번 튐(프레임 몇 장 빠짐)이
+      직선에 1~2프레임씩 나눠 보이는 것까지 돈 내고 다시 지우지 않는다(실측 018382 3번 컷: 앞 +1·뒤 −2).
+    ★렌더가 읽을 좌표 그대로(다음 컷 시작에서 자른 구간 안만) 잰다 — 판정 대상이 곧 렌더가 쓰는 것."""
+    import numpy as np
+    from shopping_shorts import frame_match as fm
+    if not cs_:
+        return None
+    rf, _kp, _sd = cs_
+    cs, ce, t0, k = _cut_geom(c, nxt)
+    n = min(len(rf), int((ce - cs) * fm.FPS))
+    ks = np.arange(-SPEED_WIN, SPEED_WIN + 1)
+    pts = []
+    for i in range(0, n, 3):
+        jp = int(round((t0 + i / fm.FPS * k) * fm.FPS))
+        d = fm.dist(ff, jp + ks, rf[i])
+        m = np.isfinite(d)
+        if not m.any():
+            continue
+        kb, dmin, ok = fm.pick(ks[m], d[m], 0)
+        if dmin > SPEED_DMAX or ok.max() - ok.min() > CAL_SPREAD:
+            continue
+        pts.append((i / fm.FPS, kb))
+    if len(pts) < SPEED_MIN_PTS or pts[-1][0] - pts[0][0] < 0.4 - 1e-6:
+        return None
+    u = np.array([p[0] for p in pts]); v = np.array([p[1] for p in pts], float)
+    iu, ju = np.triu_indices(len(u), 1)
+    du = u[ju] - u[iu]
+    b = float(np.median((v[ju] - v[iu])[du > 1e-9] / du[du > 1e-9]))
+    a = float(np.median(v - b * u))
+    if float(np.median(np.abs(v - (a + b * u)))) > SPEED_RESID:
+        return 0.0                      # 직선이 아니다 — 속도 차가 아니라 잡음·딴 장면
+    if int(np.sum(np.abs(v) >= SPEED_EVID)) < SPEED_EVID:
+        return 0.0
+    return float(max(abs(a + b * u[0]), abs(a + b * u[-1])))
+
+
+def _speed_bad(c):
+    """속도 불일치로 **청소본 좌표를 못 믿는** 지운 컷 — 지워진 조각으로 치지 않는다(렌더가 그 칸만 증분 청소).
+    ★안 지운 컷(cleaned:false — 부분 청소 정본에서 원래 안 지우는 컷)은 표식만 남기고 과금 대상이 아니다."""
+    return SPEED_RECLEAN and bool(c.get("cal_speed_mismatch")) and c.get("cleaned") is not False
+
+
 def calibrate(work, base, src_paths):
     """옛 청소본(frame_exact 없음)의 컷마다 **실제 밀림(off)**을 한 번 재서 정본에 남긴다(2026-09-27).
 
@@ -259,6 +334,11 @@ def calibrate(work, base, src_paths):
       off_end 없음(구간 길이 = dur) — 그래도 _cut_geom 이 다음 컷 시작에서 잘라 다음 조각을 읽지 않는다.
     ★탐색 중심·이어받기 = 앞 컷 실측 + 이론 증가분(old_frame_lag). 못 잰 컷은 cal_unsure=True(정본의 cal_unsure = 개수).
     ★부분 청소 정본의 안 지운 컷(cleaned:false)도 같은 조립본에서 왔다 — 똑같이 잰다.
+    ★v4: 속도 불일치 컷 = 컷 안에서 내용이 좌표보다 점점 빠르거나 느리게 흐르는 컷(옛 조립이 다른 배속으로 구움 —
+      _speed_drift ≥ SPEED_MISPLACE 프레임 = cal_speed_by "drift", 또는 시작 세 지점이 "speed" 사유로 못 모였는데
+      드리프트를 잴 지점이 모자람 = "start").
+      cal_speed_mismatch=True — _regions·piece_map·coverage 가 그 컷을 **덮지 않은 것**으로 본다(맞는 장면 우선:
+      딴 속도로 내보내느니 그 칸만 돈 내고 지운다). 정본의 cal_speed = 그런 컷 수.
     ★한 번 재면 calibrated=CAL_VERSION. 옛 버전 표시는 다시 잰다."""
     if not base or base.get("frame_exact") or base.get("calibrated") == CAL_VERSION:
         return base
@@ -273,14 +353,16 @@ def calibrate(work, base, src_paths):
         cuts = sorted(base.get("cuts") or [], key=lambda x: float(x.get("fin") or 0))
         theo = old_frame_lag(cuts)
         last, unsure, j_prev = None, 0, -10 ** 6
+        srcs, whys = [], []
         for c, th in zip(cuts, theo):
-            for k in ("off", "off_end", "cal_unsure", "cal_by"):
+            for k in ("off", "off_end", "cal_unsure", "cal_by", "cal_speed_mismatch", "cal_speed_by"):
                 c.pop(k, None)
             prior = th if last is None else last[0] + (th - last[1])
             fin = float(c["fin"])
+            cs_, why = None, []
             try:
                 cs_ = _cut_src(c, src_paths)
-                got = _measure_cut(c, cs_, ff, prior)
+                got = _measure_cut(c, cs_, ff, prior, why=why)
                 if got is None:         # 세 지점으로 못 쟀다 → 앞 컷과의 경계로 시작만 잰다
                     jb = _boundary_start(ff, mot, j_prev, int(round((fin + prior) * fm.FPS)), cs_)
                     if jb is not None:
@@ -300,8 +382,24 @@ def calibrate(work, base, src_paths):
             j_prev = int(round((fin + off) * fm.FPS))
             if abs(off) >= 0.5 / fm.FPS or "off_end" in c:
                 c["off"] = round(off, 3)
+            srcs.append(cs_); whys.append(why)
+        # 속도 검사 — 모든 컷 밀림이 정해진 뒤(다음 컷 시작에서 자른 좌표 = 렌더가 읽는 좌표로 잰다)
+        nx = _next_starts({"cuts": cuts})
+        n_speed = 0
+        for c, cs_, why, nxt in zip(cuts, srcs, whys, nx):
+            try:
+                dr = _speed_drift(c, cs_, ff, nxt)
+            except Exception:      # noqa: BLE001
+                dr = None
+            by = "drift" if (dr is not None and dr >= SPEED_MISPLACE) else (
+                "start" if (dr is None and "speed" in why) else None)
+            if by:
+                c["cal_speed_mismatch"] = True
+                c["cal_speed_by"] = by
+                n_speed += 1
         base["calibrated"] = CAL_VERSION
         base["cal_unsure"] = unsure
+        base["cal_speed"] = n_speed
         _write(work, base)
     except Exception as e:      # noqa: BLE001 — 보정 실패는 종전과 같다(0)
         import sys
@@ -380,6 +478,8 @@ def piece_map(base, material, cleaned_only=False):
             continue
         if cleaned_only and c.get("cleaned") is False:
             continue            # 고른 장면만 지운 정본 — 안 지운 컷을 '지운 조각'으로 빌려 쓰지 않는다
+        if _speed_bad(c):
+            continue            # 속도 불일치 컷 — 좌표를 못 믿는다(_regions 와 같은 판단)
         cs, ce, fin, k = _cut_geom(c, nx[i])
         lo, hi = max(s, cs), min(e, ce)
         if hi - lo >= MIN_PIECE:
@@ -461,6 +561,8 @@ def _regions(base):
     for i, c in enumerate(base.get("cuts") or []):
         if c.get("cleaned") is False:
             continue            # 고른 장면만 지운 정본(장면 골라 지우기) — 안 지운 컷은 지운 조각이 아니다
+        if _speed_bad(c):
+            continue            # 속도 불일치 — 좌표를 못 믿는다(그 구간은 증분 청소 대상이 된다)
         cs, ce, fin, k = _cut_geom(c, nx[i])     # ★다음 컷 시작에서 자른다 — 다음 조각으로 못 넘어간다
         out.append((CLEAN_VID, "%s-%d" % (CLEAN_VID, i), str(c.get("video_id")), cs, ce, fin, k))
     for vid, ex in (base.get("extras") or {}).items():
@@ -591,7 +693,7 @@ def coverage(plan, base):
         has_ex = bool(_extras_all(base, bi, key, len(_beat_materials(b))))
         if saved is None:
             out[bi] = "covered" if (has_ex or _pieces_for_beat(base, b)) else "new"
-        elif saved == _key_list(key) and _cuts_of(base, bi):
+        elif saved == _key_list(key) and _cuts_of(base, bi) and not any(_speed_bad(c) for c in _cuts_of(base, bi)):
             out[bi] = "covered"
         elif has_ex:
             out[bi] = "covered"
@@ -768,7 +870,8 @@ def _remap_legacy(plan, base, tts_durs=None):
             continue
         cuts = _cuts_of(base, bi)
         exs = _extras_all(base, bi, key, len(_beat_materials(b)))
-        if base.get("beat_keys", {}).get(str(bi)) == _key_list(key) and cuts:
+        if (base.get("beat_keys", {}).get(str(bi)) == _key_list(key) and cuts
+                and not any(_speed_bad(c) for c in cuts)):
             b["scene_override"] = [
                 {"video_id": CLEAN_VID, "seg_id": "%s-%d" % (CLEAN_VID, all_cuts.index(c)),
                  "start": _clean_span(base, c)[0], "end": _clean_span(base, c)[1]} for c in cuts]

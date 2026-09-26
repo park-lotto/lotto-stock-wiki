@@ -89,9 +89,29 @@ def test_button_credit_incremental_when_base_fits(tmp_path, monkeypatch):
     job, work, store = _setup(tmp_path, monkeypatch)
     _fake_need(monkeypatch)
     monkeypatch.setattr(mp, "_clean_strategy", lambda j: "final")
-    sent = _sent_seconds(monkeypatch, job, work, store)
-    mp._JUDGE_CACHE.clear()
+    sent = _sent_seconds(monkeypatch, job, work, store)          # 렌더 판정이 캐시에 남는다(같은 편성·정본)
     assert A._clean_credit_est(job, "jobx") == mp.clean_credit_estimate(sent, "basic")
+
+
+def test_button_credit_reads_cache_only(tmp_path, monkeypatch):
+    """작업 열기(works_get) 경로의 버튼 크레딧은 판정을 **새로 돌리지 않는다** — 청소본 보정·소스 ffprobe 0회.
+    캐시가 없으면 종전 안내(미리보기 전체 길이). ★사보타주: 캐시 없을 때 clean_base_judge 를 직접 부르면 빨강."""
+    job, work, store = _setup(tmp_path, monkeypatch)
+    _fake_need(monkeypatch)
+    monkeypatch.setattr(mp, "_clean_strategy", lambda j: "final")
+    prev = work / "preview.mp4"; prev.write_bytes(b"p" * 2048)
+    job["preview_path"] = str(prev)
+    monkeypatch.setattr(mp, "_probe_seconds", lambda p: 30.4)
+    heavy = []
+    monkeypatch.setattr(cb, "calibrate", lambda *a, **k: heavy.append("calibrate") or a[1])
+    monkeypatch.setattr(mp, "_src_durs_for", lambda *a, **k: heavy.append("src_durs") or {})
+    _judge = mp.clean_base_judge
+    monkeypatch.setattr(mp, "clean_base_judge", lambda *a, **k: heavy.append("judge") or _judge(*a, **k))
+    mp._JUDGE_CACHE.clear()
+    assert A._clean_credit_est(job, "jobx") == mp.clean_credit_estimate(30.4, "basic")
+    mp.clean_tiers_ready(job, work)
+    mp.clean_redo_state(job, work)
+    assert heavy == []
 
 
 def test_button_credit_full_when_base_tier_differs(tmp_path, monkeypatch):
