@@ -154,8 +154,10 @@
     #trimbar .hint{font-size:11.5px;color:var(--sub)}
     /* 엔진이 만드는 <video>는 크기를 CSS에 맡긴다 — 이 규칙이 없으면 화면이 안 잡힌다.
        ★비율의 정의처는 scene_play.js PV_AR 한 곳 — var 폴백은 그 값과 같아야 한다. */
+    /* ★cover = 완성본과 같은 구도(9:16 꽉 채워 자르기). contain이면 원본 전체+검은 여백이라 완성본과 보이는 범위가
+       달랐다(08-15~, 2026-09-27 사장님 A안). 합본 미리보기도 같은 자르기(video_assemble.frame_vf)로 굽는다. */
     #player video{width:100%;height:100%;border-radius:10px;background:#000;display:block;
-                  aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;position:absolute;inset:0}
+                  aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:cover;position:absolute;inset:0}
     #player .x:hover{color:var(--txt)}
     #subbox b{color:var(--accent)}
     .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}

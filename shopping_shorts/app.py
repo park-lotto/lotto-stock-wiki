@@ -6575,6 +6575,15 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
     """
     import subprocess
     from concurrent.futures import ThreadPoolExecutor
+    # ★컷마다 **그 칸의 구도**(완성본과 같은 frame_vf)를 붙인다 — 칸 번호는 beat_lens 순서(화면 DATA.beats 순서)
+    try:
+        _pb = ((Store(DB_PATH).get_mix_job(job_id) or {}).get("edit_plan") or {}).get("beats") or []
+        _owner = [bi for bi, n in enumerate(beat_lens or []) for _ in range(int(n))]
+        for _k, _c in enumerate(cuts or []):
+            _b = _pb[_owner[_k]] if _k < len(_owner) and _owner[_k] < len(_pb) else None
+            _c["_vf"] = video_assemble.frame_vf(_b, 720, 1280)
+    except Exception as _e:      # noqa: BLE001 — 구도를 못 정하면 가운데 꽉 채우기(frame_vf 기본과 같은 모양)
+        print("[pvproxy] %s 구도 계산 실패(가운데 채우기): %s" % (job_id, _e), file=sys.stderr)
     d = _pvproxy_dir(job_id)
     tmp = d / f"_tmp_{sig}"
     try:
@@ -6642,7 +6651,8 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 return math.floor(float(x or 0) * 100 + 0.5) / 100
             raw = json.dumps([str(c.get("video_id") or ""), _q(c.get("start")),
                               _q(c.get("dur")), _q(c.get("src_dur")), *([1] if c.get("fit") else []),
-                              str(srcs.get(c.get("video_id")) or "")], sort_keys=True)
+                              str(srcs.get(c.get("video_id")) or ""),
+                              *([c["_vf"]] if c.get("_vf") else ["pad0"])], sort_keys=True)   # 구도가 바뀌면 다른 조각
             return hashlib.sha1(raw.encode()).hexdigest()[:20]
 
         def enc(a):
@@ -6658,8 +6668,9 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             out = tmp / f"{k:04d}.ts"
             src = srcs.get(c.get("video_id"))
             PW, PH = 720, 1280       # 소재 원본과 같은 크기 — 줄이지 않으므로 화질 손실도 없고 더 빠르다
-            vf = (f"scale={PW}:{PH}:force_original_aspect_ratio=decrease,"
-                  f"pad={PW}:{PH}:(ow-iw)/2:(oh-ih)/2,fps=30,setsar=1")
+            # ★구도 = 완성본과 같은 함수(video_assemble.frame_vf) — 꽉 채워 자르기·기본 확대·지정 확대(2026-09-27 A안).
+            #   종전(decrease+pad)은 원본 전체+검은 여백이라 완성본(자르기)과 보이는 범위가 달랐다.
+            vf = (c.get("_vf") or f"scale={PW}:{PH}:force_original_aspect_ratio=increase,crop={PW}:{PH}") + ",fps=30,setsar=1"
             if src:
                 take = float(c.get("src_dur") or 0) or dur
                 take = min(take, dur)

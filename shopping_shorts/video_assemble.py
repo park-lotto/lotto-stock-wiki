@@ -380,14 +380,15 @@ def highlight_fc(beat, base_vf, grow=True, cut=None):
     return "".join(parts)
 
 
-def _crop_xy(zoom, pan_x, pan_y, base_w, base_h):
+def _crop_xy(zoom, pan_x, pan_y, base_w, base_h, out_w=None, out_h=None):
     """확대된 화면(base_w×base_h)에서 잘라낼 위치. 중앙에서 pan 만큼 옮긴다.
     유도: 화면 폭 대비 pan 만큼 그림이 움직였으므로 잘라내는 창은 반대로 -pan 이동.
     ★검산 완료 — pan이 한계(±(Z-1)/2)일 때 crop이 정확히 0 또는 max에 닿는다."""
-    max_x = max(0, base_w - _OUT_W)
-    max_y = max(0, base_h - _OUT_H)
-    x = max_x / 2.0 - _OUT_W * pan_x
-    y = max_y / 2.0 - _OUT_H * pan_y
+    ow, oh = (out_w or _OUT_W), (out_h or _OUT_H)
+    max_x = max(0, base_w - ow)
+    max_y = max(0, base_h - oh)
+    x = max_x / 2.0 - ow * pan_x
+    y = max_y / 2.0 - oh * pan_y
     return int(round(max(0, min(max_x, x)))), int(round(max(0, min(max_y, y))))
 
 
@@ -395,15 +396,23 @@ def _base_zoom_vf(beat=None):
     """일반 비트 기본 크롭+줌(정적, 저비용) — 원본과 프레임 구도만 살짝 달라지게.
     ★beat에 사장님이 6단계에서 맞춘 확대가 있으면 **그 구도 그대로** 잘라낸다
       (2026-08-30 "장면 바꾸기에서 수정한 대로 나오게"). 없으면 종전과 완전히 같다."""
+    return frame_vf(beat, _OUT_W, _OUT_H)
+
+
+def frame_vf(beat, out_w, out_h):
+    """칸 화면 구도(자르기·확대) ffmpeg 필터 — 완성본(1080×1920)과 편집 화면 미리보기(720×1280)가 **같은 규칙**을 쓴다.
+
+    ★2026-09-27 사장님 A안: 편집 화면은 08-15부터 원본 전체+검은 여백(contain), 완성본은 07-12부터 꽉 채워 자르기(cover)로
+      따로 정해 한 번도 맞은 적이 없었다(가로 원본에서 크게 갈림). 구도는 이 함수 하나가 정한다."""
     zoom, pan_x, pan_y = scene_zoom_of(beat)
     if zoom <= 1.0001:
-        w, h = int(_OUT_W * _BASE_ZOOM), int(_OUT_H * _BASE_ZOOM)
-        return f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
+        w, h = int(out_w * _BASE_ZOOM), int(out_h * _BASE_ZOOM)
+        return f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={out_w}:{out_h}"
     # 사장님 지정 확대 — 기본 줌은 얹지 않는다(지정한 배율이 곧 최종 구도다)
-    w, h = int(_OUT_W * zoom), int(_OUT_H * zoom)
-    x, y = _crop_xy(zoom, pan_x, pan_y, w, h)
+    w, h = int(out_w * zoom), int(out_h * zoom)
+    x, y = _crop_xy(zoom, pan_x, pan_y, w, h, out_w, out_h)
     return (f"scale={w}:{h}:force_original_aspect_ratio=increase,"
-            f"crop={_OUT_W}:{_OUT_H}:{x}:{y}")
+            f"crop={out_w}:{out_h}:{x}:{y}")
 # 하단 자막 바(원본 소각 자막을 덮는다) + 한 줄 자막 스타일.
 _BAR_H = 450
 _CAP_FONTSIZE = 78      # 짧은 1줄 구절이라 여유 있음 → 키움

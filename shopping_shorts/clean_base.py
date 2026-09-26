@@ -69,7 +69,6 @@ def save_base(work, *, sig, path, plan, cuts, sel=None):
 
 
 FRAME_EXACT_SINCE = 1790435500      # 2026-09-27 00:11:40 KST — _render_mix 누적 프레임 경계 배포 시각
-CAL_WIN = 0.4                       # 옛 청소본 밀림 탐색 범위(초, 앞뒤)
 
 
 def _gray_frames(path, t0, dur, w=48, h=85):
@@ -83,40 +82,51 @@ def _gray_frames(path, t0, dur, w=48, h=85):
     return buf[: n * w * h].reshape(n, h, w).astype(np.int16) if n else None
 
 
+CAL_VERSION = 2     # 1 = 앞뒤 0.4초 고정 창(뒤 칸 0.43초+ 밀림을 못 잡음) → 2 = 앞 컷 값 기준 + 넓혀 재탐색 + 이어받기
+
+
 def calibrate(work, base, src_paths):
     """옛 청소본(frame_exact 없음)의 컷마다 **실제 밀림(off)**을 한 번 재서 정본에 남긴다(2026-09-27).
 
     왜: 청소본은 조립본(mix_raw)을 지운 것인데, 옛 조립본은 칸마다 프레임 올림이 쌓여 뒤 칸일수록 장면이
-      컷 지도(fin, 음성 길이 누적)보다 늦게 들어 있었다(실측 7bbb 3번 칸 +0.132초). 재생이 fin 으로 읽으면
-      화면보다 그만큼 앞 장면이 나온다. 청소를 다시 하지 않고(돈 0) 원본 프레임과 청소본 프레임을 맞춰 잰다.
-    ★실패·확신 없음은 0(종전과 같음). 한 번 재면 calibrated 로 표시해 다시 안 잰다."""
-    if not base or base.get("frame_exact") or base.get("calibrated"):
+      컷 지도(fin, 음성 길이 누적)보다 늦게 들어 있었다(실측 7bbb 3번 칸 +0.132초, 62ed6 뒤 칸 +0.43초+).
+      재생이 fin 으로 읽으면 화면보다 앞 장면이 나온다. 청소를 다시 하지 않고(돈 0) 원본↔청소본 프레임을 맞춰 잰다.
+    ★밀림은 뒤로 갈수록 커진다 — 앞 컷에서 잰 값을 중심으로 좁게 찾고, 못 찾으면 넓혀 찾고, 그래도 못 찾으면
+      앞 컷 값을 이어받는다(0으로 두면 그 컷만 딴 장면이 된다 — v1 실사고 62ed6 9번 칸).
+    ★한 번 재면 calibrated=CAL_VERSION. 옛 버전 표시는 다시 잰다."""
+    if not base or base.get("frame_exact") or base.get("calibrated") == CAL_VERSION:
         return base
     try:
         import numpy as np
         clean = base["path"]
-        for c in base.get("cuts") or []:
+        guess = 0.0
+        for c in sorted(base.get("cuts") or [], key=lambda x: float(x.get("fin") or 0)):
+            c.pop("off", None)
             src = (src_paths or {}).get(c.get("video_id"))
-            if not src:
-                continue
             dur = float(c.get("dur") or 0)
-            if dur < 0.2:
+            if not src or dur < 0.2:
+                if guess:
+                    c["off"] = round(guess, 3)
                 continue
             take = min(0.4, dur * 0.4)
             ref = _gray_frames(src, float(c["src"]) + take, 0.05)
-            seq_t0 = float(c["fin"]) + take - CAL_WIN
-            seq = _gray_frames(clean, seq_t0, 2 * CAL_WIN + 0.05)
-            if ref is None or seq is None or not len(ref):
-                continue
-            d = np.abs(seq - ref[0]).mean(axis=(1, 2))
-            i = int(d.argmin())
-            # 확신: 가장 닮은 프레임이 충분히 닮고(< 25), 나머지 평균보다 뚜렷이 낮을 때만
-            if d[i] < 25 and d[i] < 0.7 * float(np.median(d)):
-                off = max(-CAL_WIN, seq_t0 + max(0, i) / 30.0 - (float(c["fin"]) + take))
-                if max(0.0, seq_t0) != seq_t0:          # 파일 앞에서 잘린 경우 시작 보정
-                    off = i / 30.0 - (float(c["fin"]) + take)
-                c["off"] = round(off, 3) if abs(off) >= 0.02 else 0.0
-        base["calibrated"] = True
+            found = None
+            for win in (0.25, 1.0):
+                t_exp = float(c["fin"]) + take + guess
+                seq_t0 = max(0.0, t_exp - win)
+                seq = _gray_frames(clean, seq_t0, 2 * win + 0.05)
+                if ref is None or seq is None or not len(ref) or not len(seq):
+                    break
+                d = np.abs(seq - ref[0]).mean(axis=(1, 2))
+                i = int(d.argmin())
+                if d[i] < 25 and d[i] < 0.7 * float(np.median(d)):
+                    found = seq_t0 + i / 30.0 - (float(c["fin"]) + take)
+                    break
+            if found is not None:
+                guess = found
+            if abs(guess) >= 0.02:
+                c["off"] = round(guess, 3)
+        base["calibrated"] = CAL_VERSION
         _write(work, base)
     except Exception as e:      # noqa: BLE001 — 보정 실패는 종전과 같다(0)
         import sys
