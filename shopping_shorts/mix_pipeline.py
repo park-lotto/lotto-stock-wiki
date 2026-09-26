@@ -3545,16 +3545,24 @@ def clean_tiers_ready(job, work):
       등급으로 되돌리면 재청소 없이 그 파일을 그대로 쓴다(과금 0).
     ★판정은 파일 존재로 한다 — DB 상태는 렌더 도중에도 바뀌지만 파일은 결과 그 자체다.
     ★정본이 이 등급으로 지금 편성을 다 덮으면 그것도 '있다'(clean_base_ready_for — 버튼 경로와 같은 판정).
+    ★여기서는 판정을 **새로 돌리지 않는다**(2026-09-27 서버 실측: 작업 열기 한 번에 job당 0.88초 — TTS·소스
+      ffprobe + 화면 컷 준비. 이 함수는 작업 열기 라우트에서 clean_redo_state 까지 두 번 불린다).
+      같은 편성·같은 정본으로 이 프로세스가 이미 판정해 둔 결과(버튼·렌더·안내의 clean_base_judge)가 있으면
+      그걸 쓰고, 없으면 "정본이 이 등급·고른 장면 것인가"(clean_base_fits)만 본다 — 장면이 바뀌었으면
+      버튼이 그 부분만 증분으로 지운다(run_clean_sources), 통째 재청소는 아니다.
     """
     from shopping_shorts.vmake_client import TIER_BASIC, TIER_PRO
     out = {TIER_BASIC: False, TIER_PRO: False}
     try:
         for tier in (TIER_BASIC, TIER_PRO):
             out[tier] = _clean_final_found(job, work, tier) is not None
-        if not all(out.values()) and clean_base_for(job, work) is not None:
+        base = clean_base_for(job, work) if not all(out.values()) else None
+        if base is not None:
+            judged = _judge_cache_peek(job, work)
             for tier in (TIER_BASIC, TIER_PRO):
                 if not out[tier]:
-                    out[tier] = clean_base_ready_for(Store(config.DB_PATH), job, work, tier=tier)
+                    out[tier] = (clean_base_ready_for(None, job, work, tier=tier, judged=judged)
+                                 if judged is not None else clean_base_fits(base, job, tier))
     except Exception:      # noqa: BLE001 — 안내용이다. 못 알아내도 기능을 막지 않는다
         pass
     return out
@@ -4204,12 +4212,33 @@ def run_clean_sources(job_id, db_path, work_root):
         #     _render_mix(조립) → clean_fn(청소) → 자막 3토막이라 가운데에 꽂기만 하면 된다.
         #   ★clean_sources는 일부러 비워 둔다 — 그래야 3단계(run_render)가 already=False로
         #     같은 완성본 경로를 타고, 편성이 그대로면 final_clean_{sig}.mp4를 재사용해 과금 0.
-        if _clean_strategy(job) == "final" and clean_base_ready_for(store, job, work):
+        _judged = None
+        if _clean_strategy(job) == "final":
+            try:
+                _judged = clean_base_judge(store, job, work, calibrate=False)
+            except Exception as e:      # noqa: BLE001 — 판정 실패는 종전 경로(전체 청소)
+                print("[clean-base] 버튼 정본 판정 실패(전체 청소): %r" % (e,), file=sys.stderr)
+        if _judged is not None and clean_base_ready_for(store, job, work, judged=_judged):
             # ★정본이 이 편성·등급을 이미 다 덮는다 — 렌더(render_inputs_for)가 VMake 0회로 조립하는 바로
             #   그 조건이다(clean_base_judge 한 곳). 종전엔 이 버튼만 파일명 서명으로 판정해, 서명이 바뀌면
             #   (09-20 speed 항목·자막 줄·확대) 정본이 멀쩡한데도 완성본을 통째로 다시 지우고 과금했다.
-            print("[clean] 정본 재사용(버튼, 과금 0): %s" % Path(clean_base_for(job, work)["path"]).name,
+            print("[clean] 정본 재사용(버튼, 과금 0): %s" % Path(_judged["base"]["path"]).name,
                   file=sys.stderr)
+            store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+            _clear_stale_failure(store, job_id)
+            return
+        _found = _clean_final_found(job, work) if _judged is not None else None
+        if (_judged is not None and clean_base_fits(_judged["base"], job)
+                and (_found is None or Path(_found[1]) == Path(_judged["base"]["path"]))):
+            # ★정본은 이 등급·고른 장면 것인데 **바뀐 장면·큰 늘림**만 못 덮는다 — 렌더와 **같은 함수**
+            #   (render_inputs_for → incremental_clean)로 그 부분만 지워 정본 extras에 붙인다(2026-09-27).
+            #   종전엔 여기서 완성본을 통째로 다시 지웠다(실측 46 job 1,318초 — 렌더는 같은 상황에서 증분만).
+            #   결과 자리는 렌더가 읽는 정본(clean_base.json extras) 하나다 — 다음 렌더는 과금 0.
+            #   ★지금 편성의 청소본 파일이 정본과 **다른 파일**로 따로 있으면 종전대로 그 파일 재사용(과금 0)이 낫다
+            #     (_final_clean_fn 의 재사용 분기가 그 파일로 정본을 바꾼다) — 그래서 그때는 여기 안 온다.
+            print("[clean] 정본 증분(버튼): 바뀐 비트 %s · 늘림 %d" % (
+                _judged["uncovered"], len(_judged["extend"] or [])), file=sys.stderr)
+            render_inputs_for(store, job, job_id, work, keys, customer_id, allow_clean=True)
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
             _clear_stale_failure(store, job_id)
             return
@@ -4452,6 +4481,28 @@ def clean_tts_durs(plan):
     return out
 
 
+_JUDGE_CACHE = {}          # 판정 키 → clean_base_judge(calibrate=False) 결과(프로세스 안, 안내 전용)
+_JUDGE_CACHE_MAX = 512
+
+
+def _judge_cache_key(job, work):
+    """판정 입력이 같은가 — 편성 전체·정본 파일(clean_base.json 시각·크기)·스위치 입력. 못 만들면 None(캐시 안 씀).
+    ★편성이 한 글자라도 바뀌거나 정본에 증분 조각이 붙으면(파일이 다시 써짐) 키가 달라져 옛 판정을 안 쓴다."""
+    try:
+        from shopping_shorts import clean_base as _cb
+        st = (Path(work) / _cb.BASE_FILE).stat()
+        raw = json.dumps((job or {}).get("edit_plan") or {}, ensure_ascii=False, sort_keys=True, default=str)
+        return (str(Path(work)), hashlib.sha1(raw.encode("utf-8")).hexdigest(), st.st_mtime_ns, st.st_size,
+                bool((job or {}).get("subtitle_removal")), int((job or {}).get("customer_id") or 0))
+    except Exception:      # noqa: BLE001
+        return None
+
+
+def _judge_cache_peek(job, work):
+    k = _judge_cache_key(job, work)
+    return _JUDGE_CACHE.get(k) if k is not None else None
+
+
 def clean_base_judge(store, job, work, *, calibrate=True):
     """정본 판정의 **유일한 자리** — 렌더(render_inputs_for)·자막제거 버튼(run_clean_sources)·
     등급 안내(clean_tiers_ready)가 전부 이것을 부른다(0순위-B, 2026-09-27).
@@ -4479,8 +4530,27 @@ def clean_base_judge(store, job, work, *, calibrate=True):
     # ★렌더 컷 재생(2026-09-26): 원본으로 그렸을 컷 계획을 청소본 좌표로 옮긴다 — src_durs가 그 계획의 재료다
     src_durs = _src_durs_for(job, work)
     plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs, src_durs=src_durs)
-    return {"base": base, "plan2": plan2, "uncovered": uncovered, "extend": extend,
-            "tts_durs": tts_durs, "src_durs": src_durs}
+    out = {"base": base, "plan2": plan2, "uncovered": uncovered, "extend": extend,
+           "tts_durs": tts_durs, "src_durs": src_durs}
+    if not calibrate:
+        # 안내(clean_tiers_ready)가 다시 판정하지 않고 읽는다 — 버튼·렌더는 이 캐시를 **읽지 않는다**(늘 새로 판정)
+        _k = _judge_cache_key(job, work)
+        if _k is not None:
+            if len(_JUDGE_CACHE) >= _JUDGE_CACHE_MAX:
+                _JUDGE_CACHE.clear()
+            _JUDGE_CACHE[_k] = out
+    return out
+
+
+def clean_base_fits(base, job, tier=None):
+    """정본이 **이 등급·이 고른 장면**으로 만든 것인가(덮음은 안 본다) — clean_base_ready_for 와 버튼 증분 공용.
+    등급이 다르거나(고급을 고르고 눌렀는데 기본 정본) 고른 장면이 다르면 정본 위에 덧대면 안 된다 → 전체 청소."""
+    if not base or _sig_tier(base.get("sig")) != (tier or clean_tier_of(job)):
+        return False
+    if base.get("partial"):
+        if sorted(base.get("sel") or []) != sorted(clean_selection_of(job) or []):
+            return False
+    return True
 
 
 def clean_base_ready_for(store, job, work, tier=None, judged=None):
@@ -4494,13 +4564,7 @@ def clean_base_ready_for(store, job, work, tier=None, judged=None):
         j = judged if judged is not None else clean_base_judge(store, job, work, calibrate=False)
         if j is None or j["uncovered"] or j["extend"]:
             return False
-        base = j["base"]
-        if _sig_tier(base.get("sig")) != (tier or clean_tier_of(job)):
-            return False
-        if base.get("partial"):
-            if sorted(base.get("sel") or []) != sorted(clean_selection_of(job) or []):
-                return False
-        return True
+        return clean_base_fits(j["base"], job, tier)
     except Exception as e:      # noqa: BLE001 — 판정 실패는 '아니오'(종전 경로로 청소)
         print("[clean-base] 정본 재사용 판정 실패(종전 경로): %r" % (e,), file=sys.stderr)
         return False
