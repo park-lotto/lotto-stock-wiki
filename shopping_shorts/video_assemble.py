@@ -951,6 +951,8 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     # ★완성본 컷 = 편집 화면 컷(2026-09-26 근본해결): 화면 코드(scene_play.js)를 서버에서 돌린 결과가 있으면
     #   그대로 쓴다 — 아래 계산은 화면 계산을 못 한 때(데이터 없음·node 실패)만 쓰는 예비다. screen_clips 참조.
     #   청소본 재생 칸(clean_replay)은 이미 화면 컷을 청소본 좌표로 옮긴 것이라 제외.
+    #   ★lookup이 None이면 예비 계산으로 가되 조용하지 않다 — 화면 데이터가 있는 job이면 screen_clips가
+    #     FALLBACK 경보(stderr + screen_clips.FALLBACKS)를 남긴다(2026-09-27).
     if not beat.get("clean_replay"):
         from shopping_shorts import screen_clips as _sc
         _scr = _sc.lookup(beat, tts_dur, src_durs)
@@ -968,7 +970,7 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
     # ★컷 리듬(2026-09-22 사장님 "짧은 건 너무 정신없다 / 내 거 먼저"): 관리자 스위치 cut_rhythm_enabled 뒤.
     #   히트작 11편 실측(docs/cut_rhythm_2026-09-22.md): 컷 중앙 1.9초·3초+ 홀드 편당 2~4개·최장 5초 — 우리는 2.2초
-    #   라운드로빈이라 컷이 2배 많고 절반 길이였다. 표식은 mix_pipeline._apply_cut_rhythm이 비트마다 단다.
+    #   라운드로빈이라 컷이 2배 많고 절반 길이였다. 표식은 편성 단계(mix_pipeline._trim_for_cut_rhythm)가 단다.
     #   hold = 핵심 줄(…없애 버렸다는 거 / 훅): 첫 조각 하나만 두고 상한 없이 이어 튼다(원본은 연속 촬영이라
     #   조각 경계를 넘어가도 컷이 아니다). 나머지 줄은 상한 4초(문장 하나에 컷 하나가 기본).
     # ★구절 맞춤을 켜면 구절이 이긴다(2026-09-24 사장님 "끈 상태로 시작 후 켜면 구절맞춤이 이기게").
@@ -2326,9 +2328,8 @@ def _apply_hook_inpoint(edit_plan, source_video_paths, work):
             return
         if (beats[0] or {}).get("scene_override"):
             return   # ★실험실 편성이 있으면 사람 선택이 이긴다 — 훅 시작점 자동이동 안 함
-        from shopping_shorts import screen_clips as _scr
-        if _scr.has(beats[0]):
-            return   # ★화면 컷이 있으면 화면이 이긴다(2026-09-26) — 편집 화면은 이 자동 이동을 모른다(시작점이 달라진다)
+        # (화면 컷 가드 screen_clips.has는 뺐다(2026-09-27) — 렌더 전용이었다. 편성 단계에선 프로세스 캐시 상태에 따라
+        #  이동 여부가 갈렸다(같은 job도 앞서 warm됐으면 건너뛰고 아니면 옮김). 여기서 옮긴 값은 DB에 저장돼 화면이 본다.)
         prim = (beats[0] or {}).get("primary")
         if not prim or prim.get("video_id") not in source_video_paths:
             return
@@ -2354,7 +2355,9 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
     -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다.
     반중복탐지 회피(항상 자동): 훅·반전 비트는 켄번즈 줌, 나머지는 기본 크롭+줌."""
-    _apply_hook_inpoint(edit_plan, source_video_paths, work)  # 훅 시작점 자동/오버라이드(P1)
+    # ★렌더는 편성표를 고쳐 쓰지 않는다(2026-09-27) — 여기서 부르던 _apply_hook_inpoint(훅 시작점 자동 이동)를 없앴다.
+    #   편집 화면은 이 이동을 모르고(화면 컷이 있는 칸은 이미 건너뛰었다 = 죽은 경로), 옛 job에선 화면과 완성본의 훅이 갈렸다.
+    #   훅 시작점은 편성 단계(mix_pipeline.run_clean_sources)에서 한 번 정해 DB에 저장한다 — 화면이 그 값을 본다.
     important = _important_beat_indices(edit_plan["beats"])
     beat_clips = []
     # ★칸 길이를 **누적 시각 기준 프레임**으로 정한다(2026-09-26). 칸마다 -t 음성길이로 자르면 30fps 영상은

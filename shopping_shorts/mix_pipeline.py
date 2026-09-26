@@ -3062,8 +3062,9 @@ def _apply_caption_max_chars(plan, store, job):
 
 def _apply_phrase_min_cut(plan, store, job):
     """비트마다 phrase_min_cut 표식(초) — video_assemble.phrase_owners(R4)가 읽어 짧은 구절을 한 컷으로 묶는다.
-    편성 끝(_plan_and_tts)과 렌더 앞 두 군데서 부르되 판정은 여기 한 곳. 이미 있는 표식은 안 덮는다 —
-    그게 3단계 화면이 보고 그린 값이다(cut_rhythm과 같은 규약). 표식이 없는 옛 job은 렌더가 단다."""
+    편성 단계(_plan_and_tts)에서만 부른다. 이미 있는 표식은 안 덮는다 — 그게 3단계 화면이 보고 그린 값이다.
+    ★렌더 앞에서 부르던 것은 없앴다(2026-09-27) — warm 뒤 칸을 고치면 화면 컷 캐시 키가 달라져 최종 렌더만
+      예비 계산으로 떨어졌다. 표식이 없는 옛 job은 화면도 표식 없이 그렸으니 렌더도 없이 간다(화면이 이긴다)."""
     mc = _phrase_min_cut(store, job)
     if mc <= 0:
         return 0
@@ -3120,7 +3121,10 @@ def _trim_for_cut_rhythm(plan):
 def _apply_cut_rhythm(plan, store, job):
     """비트마다 cut_rhythm 표식 — video_assemble.plan_beat_clips_for가 읽는다. 표식만 달고 계획은 안 바꾼다.
     hold: 훅(첫 비트) + 핵심 결과 줄(_HOLD_END). 나머지: 상한 4초.
-    구절 맞춤·수동 컷을 켠 칸은 그 경로가 우선이라 표식이 있어도 안 쓴다(plan_beat_clips_for의 분기 순서)."""
+    구절 맞춤·수동 컷을 켠 칸은 그 경로가 우선이라 표식이 있어도 안 쓴다(plan_beat_clips_for의 분기 순서).
+    ★2026-09-27: 운영 코드에서 부르는 곳이 없다 — 렌더(run_render)에서 부르던 것을 없앴다(warm 뒤 칸을 고치면
+      화면 컷 캐시가 빗나간다). 편성 단계 표식은 _trim_for_cut_rhythm이 단다. 다시 렌더 경로에 붙이지 마라
+      (tests/test_screen_clips_guard.py가 잡는다)."""
     if not _cut_rhythm_on(store, job):
         return 0
     n = 0
@@ -4106,9 +4110,9 @@ def run_clean_sources(job_id, db_path, work_root):
                                   skip_existing=True, global_pron=_gpron,
                                   customer_id=job.get("customer_id", 0),
                                   script_endings=job_script_endings(job))
-                # ★훅 시작점도 여기서 확정한다 — 조립(_render_mix)이 첫 장면 start를
-                #   피크 시점으로 **in-place로 옮긴다**(video_assemble._apply_hook_inpoint).
-                #   그게 청소 뒤에 일어나면 서명이 또 바뀌어 렌더에서 재청소된다.
+                # ★훅 시작점은 **여기서만** 정한다(video_assemble._apply_hook_inpoint → DB 저장 → 화면이 그 값을 본다).
+                #   2026-09-27부터 조립(_render_mix)은 옮기지 않는다(렌더는 편성표를 고쳐 쓰지 않는다).
+                #   (옛 사연: 조립이 옮기던 시절 그게 청소 뒤에 일어나 서명이 바뀌어 렌더에서 재청소됐다.)
                 #   실측 job 579c86e58b4f: clean 때 b0=('s3',0.0,1.8) → render 때 0.1.
                 #   그 소수점 한 자리 때문에 VMake가 두 번 돌았다.
                 #   렌더가 쓰는 함수를 그대로 부른다(0순위-B — 따로 계산하면 또 갈린다).
@@ -4241,8 +4245,11 @@ def run_preview(job_id, db_path, work_root):
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         # ★정본이 있으면 미리보기도 청소본 위에서(돈 0 — allow_clean=False라 바뀐 비트는 원본 그대로 보인다)
+        from shopping_shorts import screen_clips as _sc
+        _scr_mark = _sc.begin(job_id)
         plan_used, source_video_paths, _base = render_inputs_for(
             store, job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
+        _scr_before = _sc.snapshot(plan_used)   # warm 직후 — assemble 직전과 대조(렌더는 편성표를 고쳐 쓰지 않는다)
         out_path = work / "preview.mp4"
         # headcopy·caption_style은 **넘기지 않는다**(스펙 §9: 꾸미기 제외 / caption_style 기본값만).
         # headcopy는 store.py 주석대로 "영상제작 5단계 꾸미기 헤드카피"라 deco={}로 꾸미기를
@@ -4250,12 +4257,14 @@ def run_preview(job_id, db_path, work_root):
         # 굽힌다(라이브 관측: caption_style=None인 job으로 렌더해 자막 정상 확인).
         # ★미리보기는 veryfast로 인코딩(6분→~1.5분) — 확인용이라 화질 조금 낮아도 무방.
         # 최종 렌더(run_render)는 이 컨텍스트 밖이라 medium 고화질 그대로.
+        _sc.check_mutation(job_id, _scr_before, plan_used)
         with preview_preset():
             assemble(plan_used, tts_paths, source_video_paths, str(out_path),
                      clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
                      deco={},                             # ← 꾸미기 없음(4단계 소관)
                      cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
                      sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job))
+        _sc.summarize(job_id, _scr_mark)
         # ★moov를 앞으로(2026-08-31). 안 하면 브라우저가 목차를 얻으려고 파일 전체를
         #   받아야 첫 프레임이 떠서 **정지된 것처럼 보인다**(고객 제보의 뿌리 — 미리보기가
         #   12MB면 눈에 띄게 멈춘다). 종전엔 완성본에만 걸려 있었다. 이미 앞이면 무해·즉시.
@@ -4472,8 +4481,11 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
         #   업체 호출 0. 정본이 없는 job이면 아래 청소 분기도 건너뛴다(원본 자막이 남는 것을 알고 고른 것).
         if skip_clean:
             print("[render] skip_clean — 자막제거 없이 렌더", file=sys.stderr)
+        from shopping_shorts import screen_clips as _sc
+        _scr_mark = _sc.begin(job_id)       # 이 렌더의 화면 컷 경보(FALLBACK·BEAT_MUTATED)를 셀 시작점
         plan_used, source_video_paths, _base = render_inputs_for(
             store, job, job_id, work, keys, job.get("customer_id") or 0, allow_clean=not skip_clean)
+        _scr_before = _sc.snapshot(plan_used)   # warm 직후 — assemble 직전에 칸이 바뀌었나 대조한다
         if _base is not None:
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
 
@@ -4542,11 +4554,15 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
         # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
         cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
         sfx_paths = _resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job)
-        _apply_cut_rhythm(plan_used, store, job)
-        _apply_phrase_min_cut(plan_used, store, job)
+        # ★렌더는 편성표를 고쳐 쓰지 않는다(2026-09-27). 여기서 cut_rhythm·phrase_min_cut 표식을 달던 두 줄을 없앴다 —
+        #   warm(render_inputs_for 안)이 칸 키로 화면 컷을 캐시한 **뒤에** 표식을 더하면 키가 달라져 lookup이 빗나가고
+        #   최종 렌더만 서버 예비 계산으로 떨어졌다(미리보기·캡컷·ZIP엔 이 호출이 없었다). 표식은 편성 단계
+        #   (_trim_for_cut_rhythm·_plan_and_tts의 _apply_phrase_min_cut)가 단다 — 표식 없는 칸은 화면도 없이 그렸다(화면이 이긴다).
+        _sc.check_mutation(job_id, _scr_before, plan_used)
         assemble(plan_used, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)
+        _sc.summarize(job_id, _scr_mark)
         # 🖼 썸네일을 영상 맨 앞에 붙이기(2026-08-18 사장님 요청, 9단계 체크박스).
         #   켠 경우에만 돈다. 실패해도 렌더 자체는 살린다 — 인트로 때문에 완성 영상을
         #   통째로 잃는 게 더 나쁘다(실패는 로그로만 남기고 원본 final.mp4를 그대로 쓴다).
