@@ -35,8 +35,9 @@ def test_changed_beat_cleaned_in_one_call_and_added_to_extras(tmp_path, monkeypa
     plan["beats"][0]["scene_override"] = [{"video_id": "s1", "seg_id": "s1-9", "start": 10.0, "end": 12.5}]
     calls, charged = [], []
     monkeypatch.setattr(mp, "_cut_piece", _fake_cut)
-    def _joined(items, keys, work, tag=""):
-        calls.append([v for v, _ in items])
+    tiers = []
+    def _joined(items, keys, work, tag="", tier=None):
+        calls.append([v for v, _ in items]); tiers.append(tier)
         out = {}
         for v, _ in items:
             p = Path(work) / f"{v}_clean.mp4"; p.write_bytes(b"q" * 2048); out[v] = str(p)
@@ -45,6 +46,7 @@ def test_changed_beat_cleaned_in_one_call_and_added_to_extras(tmp_path, monkeypa
     monkeypatch.setattr(mp, "_charge_clean", lambda s, c, n: charged.append(n) or 0)
     base2 = mp.incremental_clean(_Store(), job, "j", tmp_path, ["k"], 0, base, plan, uncovered=[0], extend=[])
     assert calls == [["cb0_0"]] and charged == [1]
+    assert tiers == ["basic"]      # ★등급을 넘긴다 — 빠지면 고급 job의 바뀐 장면만 기본으로 지워진다(2026-09-26)
     assert base2["extras"]["cb0_0"]["seconds"] == pytest.approx(2.5)
     assert cb.coverage(plan, cb.load_base(tmp_path)) == {0: "covered", 1: "covered"}
 
@@ -53,7 +55,7 @@ def test_extend_request_cleans_tail_piece(tmp_path, monkeypatch):
     job, base = _job_and_base(tmp_path)
     plan = job["edit_plan"]
     monkeypatch.setattr(mp, "_cut_piece", _fake_cut)
-    def _joined(items, keys, work, tag=""):
+    def _joined(items, keys, work, tag="", tier=None):
         out = {}
         for v, _ in items:
             p = Path(work) / f"{v}_clean.mp4"; p.write_bytes(b"q" * 2048); out[v] = str(p)

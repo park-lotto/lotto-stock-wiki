@@ -725,6 +725,133 @@ def _beat_material(beat):
     return [s for s in ([beat.get("primary")] + list(beat.get("alternates") or [])) if s]
 
 
+_CUT_MIN = 0.3      # 화면 scene_play.js CUT_MIN 과 같은 값
+
+
+def _r2(x):
+    """화면 _r2(Math.round(x*100)/100)와 같은 반올림 — 파이썬 round는 .5를 짝수로 보내 0.01초씩 갈린다."""
+    return math.floor(float(x) * 100 + 0.5) / 100
+
+
+def synced_manual_cuts(beat, tts_dur=None):
+    """구절 맞춤을 끈 칸의 손 컷을 **화면과 똑같이** 정리한 결과 [{video_id, seg_id, start, dur[, sdur, pspeed]}].
+
+    ★화면(scene_play.js syncCuts → frozenClips)의 서버판이다 — 두 곳 규칙이 다르면 미리보기와 완성본이 갈린다
+      (2026-09-26 강규봉님 job 7bbb1329aff0 2번 칸: 재료 목록은 film_s0_9.03_13.23 인데 저장된 손 컷은 옛 조각
+       dwrozf-2/-3(s0 4.9초) → 화면은 컷을 버리고 s0 9.03초를, 렌더는 s0 4.9초를 틀었다).
+      ③ 목록에 없는 조각의 컷은 버리고 그 시간을 가까운 풀린 컷에 준다 ④ 목록에 있는데 컷이 없는 조각은
+      빈 시간을 채우거나 마지막 풀린 컷을 반으로 나눠 넣는다 · 순서는 목록 순서 ⑤ 음성보다 길면 뒤에서부터 줄인다.
+      시작점은 저장된 start가 아니라 **조각의 시작**(같은 조각이 여러 컷이면 이어서 튼다) — frozenClips 와 같다.
+    ★청소본 재생 칸(clean_replay)은 이미 렌더 컷 그대로 옮긴 것이라 다시 정리하지 않는다."""
+    b = beat or {}
+    if b.get("phrase_sync") is not False:
+        return []
+    raw = []
+    for c in b.get("manual_cuts") or []:
+        try:
+            d = float(c["dur"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if d > 0 and (c.get("seg_id") or c.get("video_id")):
+            raw.append(dict(c, dur=d))
+    if not raw:
+        return []
+    if b.get("clean_replay"):
+        return [c for c in raw if c.get("video_id") and c.get("start") is not None]
+    # ★컷 리듬 칸(cut_rhythm 표식)은 화면이 손 컷을 **안 쓴다** — planClips의 rhythmOne이 얼린 컷(frozenClips)보다
+    #   먼저 걸려 홀드면 첫 조각 한 컷, 아니면 조각 한 번씩 길이 비례로 그린다(scene_play.js "리듬 칸은 얼린 컷보다
+    #   먼저 본다", 2026-09-24). 서버가 손 컷을 쓰면 강규봉님 8번 칸처럼 화면(조각 끝에서 멈춤)과 렌더(다음 장면)가 갈린다.
+    if b.get("cut_rhythm"):
+        return []
+    mats = [m for m in _beat_material(b) if m]
+    first, want = {}, []
+    for m in mats:
+        sid = m.get("seg_id")
+        if sid and sid not in first:
+            first[sid] = m
+            want.append(sid)
+    if not want:        # 조각 이름 없는 옛 편성 — 저장된 컷 그대로(종전)
+        return [c for c in raw if c.get("video_id") and c.get("start") is not None]
+    try:
+        tts = float(tts_dur) if tts_dur else float(b.get("target_seconds") or 0) or sum(c["dur"] for c in raw)
+    except (TypeError, ValueError):
+        tts = sum(c["dur"] for c in raw)
+    cuts = [{"seg_id": c.get("seg_id"), "dur": _r2(c["dur"]), "lock": bool(c.get("lock"))} for c in raw]
+    k = 0
+    while k < len(cuts):                                   # ③
+        if cuts[k]["seg_id"] in first:
+            k += 1
+            continue
+        d = cuts.pop(k)["dur"]
+        nb = None
+        for st in range(len(cuts)):
+            a, bb = k - 1 - st, k + st
+            if a >= 0 and not cuts[a]["lock"]:
+                nb = cuts[a]
+            elif bb < len(cuts) and not cuts[bb]["lock"]:
+                nb = cuts[bb]
+            if nb:
+                break
+        if nb:
+            nb["dur"] = _r2(nb["dur"] + d)
+    for sid in want:                                       # ④
+        if any(c["seg_id"] == sid for c in cuts):
+            continue
+        gap = tts - sum(c["dur"] for c in cuts)
+        free = [c for c in cuts if not c["lock"]]
+        last = free[-1] if free else None
+        if not cuts:
+            d = tts
+        elif gap >= _CUT_MIN - 0.005:
+            d = _r2(gap)
+        elif last and last["dur"] / 2 >= _CUT_MIN:
+            d = _r2(last["dur"] / 2)
+            last["dur"] = _r2(last["dur"] - d)
+        else:
+            d = _r2(max(gap, _CUT_MIN))
+        cuts.append({"seg_id": sid, "dur": d, "lock": False})
+    cuts.sort(key=lambda c: want.index(c["seg_id"]))       # 목록 순서(안정 정렬 — 같은 조각 무리 유지)
+    over = sum(c["dur"] for c in cuts) - tts               # ⑤
+    for c in reversed(cuts):
+        if over <= 0.005:
+            break
+        if c["lock"]:
+            continue
+        cut = min(over, c["dur"] - _CUT_MIN)
+        if cut > 0:
+            c["dur"] = _r2(c["dur"] - cut)
+            over -= cut
+    out, seen = [], {}
+    for c in cuts:                                         # frozenClips: 시작 = 조각 시작, 되풀이는 이어서
+        m = first[c["seg_id"]]
+        try:
+            st = float(m.get("start") or 0.0)
+        except (TypeError, ValueError):
+            st = 0.0
+        at = seen.get(c["seg_id"], st)
+        seen[c["seg_id"]] = at + c["dur"]
+        out.append({"video_id": m.get("video_id"), "seg_id": c["seg_id"], "start": at, "dur": c["dur"]})
+    return out
+
+
+def manual_cut_spans(beat, tts_dur=None):
+    """구절 맞춤을 끈 칸이 화면에 실제로 보여주는 원본 구간 목록 — synced_manual_cuts(화면과 같은 정리) 기준.
+
+    ★청소본 계열(mix_pipeline._beat_materials → 청소 구간·서명·정본 재배치·증분 청소)이 이걸 본다
+      (2026-09-26 강규봉님 job 7bbb1329aff0: 손 컷을 모르고 scene_override만 봐서 옛 컷으로 조립)."""
+    out = []
+    for c in synced_manual_cuts(beat, tts_dur):
+        try:
+            s, d = float(c["start"]), float(c["dur"])
+            sd = float(c.get("sdur") or d)     # sdur = 원본에서 읽는 길이(청소본 재생 칸). 없으면 dur
+        except (KeyError, TypeError, ValueError):
+            continue
+        if c.get("video_id") and d > 0:
+            out.append({"video_id": c["video_id"], "seg_id": c.get("seg_id") or "",
+                        "start": s, "end": s + (sd if sd > 0 else d)})
+    return out
+
+
 def _apply_fixed_lens(plan, fixed, tts_dur, min_clip=0.6, eps=1e-3):
     """✋ 손으로 정한 컷 길이를 반영한다(2026-08-24). **총합은 tts_dur 그대로.**
 
@@ -877,7 +1004,11 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     #   이기고(아래 fixed_lens), 그땐 이 분기를 타지 않는다.
     # ★구절 맞춤을 끈 칸 = 화면이 정한 컷 그대로(2026-09-14 사장님). 나누기·✋·늘려채우기 없음.
     #   빈 시간은 화면이 렌더를 막는다. 그래도 들어오면(다른 입구) 마지막 컷을 늘려 멈추게 둔다.
-    _mc = [c for c in (beat.get("manual_cuts") or []) if c.get("video_id") in beat_src_durs]
+    # ★컷의 영상이 재료(scene_override)에 없어도 소스로 디코드되면 쓴다 — 화면(미리보기)은 컷만 보고 그린다.
+    #   재료 목록으로만 거르면 그 컷이 조용히 빠져 결과물만 다른 장면이 된다.
+    # ★손 컷은 화면과 똑같이 정리한 것(synced_manual_cuts)을 쓴다 — 저장된 컷을 그대로 쓰면 화면이 버린 컷을
+    #   렌더만 튼다(강규봉님 2번 칸). 정리 뒤 컷의 영상은 전부 재료 안이다.
+    _mc = [c for c in synced_manual_cuts(beat, tts_dur) if c.get("video_id") in beat_src_durs]
     if beat.get("phrase_sync") is False and _mc:
         try:
             _slow = max(1.0, float(beat.get("slow") or 1))
@@ -886,13 +1017,23 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
         plan = []
         for c in _mc:
             d = float(c["dur"])
-            plan.append({"video_id": c["video_id"], "start": float(c["start"]),
-                         "src_dur": d, "out_dur": d * _slow, "seg_id": c.get("seg_id")})
+            # sdur: 청소본 재배치가 느리게 구워진 조각을 가리킬 때 — 읽는 길이만 다르고 화면 길이는 그대로
+            try:
+                sd = float(c.get("sdur") or d)
+            except (TypeError, ValueError):
+                sd = d
+            _p = {"video_id": c["video_id"], "start": float(c["start"]),
+                  "src_dur": sd if sd > 0 else d, "out_dur": d * _slow, "seg_id": c.get("seg_id")}
+            # 읽는 길이가 화면보다 길거나 원 계획이 배속이었으면 → 읽는 길이 전부를 화면 길이에 담는다.
+            # 짧으면 그대로 두어 느리게·정지 기계가 원 계획과 똑같이 채운다.
+            if c.get("pspeed") or _p["src_dur"] > _p["out_dur"] + 1e-3:
+                _p["playback_speed"] = _p["src_dur"] / _p["out_dur"]
+            plan.append(_p)
         gap = tts_dur - sum(c["out_dur"] for c in plan)
         if gap > 1e-3 and plan:
             plan[-1]["out_dur"] += gap
         _apply_sync_speed(plan)
-        if runout > 0:
+        if runout > 0 and not beat.get("clean_replay"):   # 청소본 재생 칸은 원 계획에 여운이 이미 들어 있다
             _extend_last_clip_for_runout(
                 plan, segs, runout, plan[-1].get("playback_speed", 1.0))
         return plan

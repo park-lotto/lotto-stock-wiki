@@ -7538,10 +7538,96 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
         return _blocked
     if job.get("clean_status") == "cleaning" and not _render_is_stale(job):
         return {"ok": True, "status": "cleaning"}       # 더블클릭 — VMake를 두 번 안 돌린다
+    # ★장면 골라 지우기(2026-09-26): body.cuts = 지울 컷 키 목록(없거나 null = 전체).
+    #   키 해석은 mix_pipeline.cut_selected 한 곳. 지금 편성의 컷과 하나도 안 맞으면 거절한다
+    #   (돈이 나가기 전에 — 아무것도 안 지우고 과금되거나 조용히 전체를 지우면 안 된다).
+    if "cuts" in body:
+        _pick = _clean_cuts_from_body(job, job_id, body.get("cuts"))
+        if isinstance(_pick, JSONResponse):
+            return _pick
+        store.update_mix_job(job_id, clean_cuts=_pick)
     # 'cleaning'을 여기서 동기 기록(응답 전) — run 안에서 쓰면 이중예약된다(preview 라우트 주석 참조)
     store.update_mix_job(job_id, clean_status="cleaning", clean_error=None)
     Store(DB_PATH).enqueue("clean", {"job_id": job_id})
     return {"ok": True, "status": "cleaning"}
+
+
+def _clean_cuts_from_body(job, job_id, raw):
+    """화면이 보낸 컷 키 목록 → 저장할 값(None=전체) 또는 거절 응답.
+
+    ★지금 편성의 컷을 전부 골랐으면 None(전체)으로 저장한다 — 그래야 청소본 이름이 옛 '전체' 파일과
+      같아 이미 지운 결과를 그대로 쓴다(재과금 0).
+    ★고른 것 중 지금 편성에 없는 키는 버린다. 남는 게 없으면 거절(아무것도 안 지우는 과금 방지).
+    """
+    if raw is None:
+        return None
+    if not isinstance(raw, list):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "장면 선택 값이 올바르지 않습니다"})
+    if mix_pipeline._clean_strategy(job) != "final":
+        return None          # 옛 소스별 청소 경로 — 장면 고르기를 지원하지 않는다(전체)
+    cuts = mix_pipeline.clean_pick_cuts(dict(job, clean_cuts=None), _MIX_WORK_DIR / job_id)
+    keys = [str(k) for k in raw]
+    hit = [c for c in cuts if mix_pipeline.cut_selected(c, keys)]
+    if not hit:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "지울 장면을 하나 이상 골라 주세요 (고른 장면이 지금 영상에 없어요 — 새로고침 해 주세요)"})
+    if len(hit) == len(cuts):
+        return None
+    return [c["key"] for c in hit]
+
+
+@app.get("/api/produce/mix/clean_pick/{job_id}")
+def api_produce_mix_clean_pick(job_id: str):
+    """자막제거 **장면 고르기** 목록(2026-09-26 사장님 "몇 장면만 지우면 되는 경우 — 초당 과금").
+
+    지금 편성의 컷을 완성본 순서대로 준다(청소가 쓰는 목록과 같은 함수 — mix_pipeline.clean_pick_cuts).
+    sel = 지금 저장된 선택(없으면 전부 True). partial_ok=False면 이 작업은 장면 고르기를 못 쓴다(옛 경로).
+    단가는 mix_pipeline.clean_credit_estimate 한 곳 — 화면은 초만 더해 그 식으로 계산하지 않고 rate를 받는다.
+    """
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id:
+        return JSONResponse(status_code=400, content={"ok": False})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
+    partial_ok = mix_pipeline._clean_strategy(job) == "final"
+    try:
+        cuts = mix_pipeline.clean_pick_cuts(job, _MIX_WORK_DIR / job_id)
+    except Exception as e:      # noqa: BLE001 — 목록을 못 만들면 화면은 '전체 지우기'만 보인다
+        print("[clean_pick] 컷 목록 실패: %r" % (e,), file=sys.stderr)
+        cuts = []
+    tier = mix_pipeline.clean_tier_of(job)
+    return {"ok": True, "partial_ok": bool(partial_ok and cuts), "tier": tier,
+            "all": mix_pipeline.clean_selection_of(job) is None,
+            "rate": {"basic": mix_pipeline.clean_credit_estimate(1, "basic"),
+                     "pro": mix_pipeline.clean_credit_estimate(1, "pro")},
+            "cuts": [{"ci": c["ci"], "beat_idx": c.get("beat_idx"), "key": c["key"],
+                      "dur": round(float(c["dur"]), 3), "sel": bool(c["sel"])} for c in cuts]}
+
+
+@app.get("/api/produce/mix/clean_pick_thumb/{job_id}")
+def api_produce_mix_clean_pick_thumb(job_id: str, ci: int = 0):
+    """장면 고르기 카드의 그림 — 그 컷 한가운데를 **원본 소스**에서 뜬다(지우기 전 자막이 보여야 고른다).
+    ★좌표는 clean_pick_cuts(렌더와 같은 컷 계획)의 src — 3단계에서 보는 그 장면이다. 비용 0(ffmpeg 1장)."""
+    safe = os.path.basename(job_id)
+    if not safe or safe != job_id:
+        return JSONResponse(status_code=400, content={"ok": False})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False})
+    work = _MIX_WORK_DIR / job_id
+    try:
+        cuts = mix_pipeline.clean_pick_cuts(job, work)
+        c = cuts[int(ci)]
+        src = _resolve_sources(job, work)[c["video_id"]]
+    except Exception:      # noqa: BLE001
+        return JSONResponse(status_code=404, content={"ok": False, "error": "장면 없음"})
+    at = float(c["src"]) + float(c["dur"]) * 0.5
+    name = re.sub(r"[^0-9a-zA-Z@.\-]", "_", "%s_%s@%.2f.jpg" % (ci, c["video_id"], at))
+    frame = frame_extract.extract_frame_at(src, work / "clean_pick", at, filename=name)
+    if not frame:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+    return FileResponse(str(frame), media_type="image/jpeg")
 
 
 @app.get("/api/produce/mix/clean_clips/{job_id}")
@@ -7566,7 +7652,9 @@ def api_produce_mix_clean_clips(job_id: str):
         return {"ok": True, "clips": [], "stale": bool(_redo.get("stale")), "ready": False}
     r = mix_pipeline.clean_compare_clips(job, _MIX_WORK_DIR / job_id)
     clips = [{"ci": c["ci"], "si": c["si"], "beat_idx": c["beat_idx"],
-              "dur": round(float(c["dur"]), 3)} for c in (r.get("clips") or [])]
+              "dur": round(float(c["dur"]), 3),
+              # 고른 장면만 지웠으면 안 고른 컷은 False — 화면이 "이 장면은 안 지웠어요"라고 말한다
+              "cleaned": bool(c.get("cleaned", True))} for c in (r.get("clips") or [])]
     return {"ok": True, "ready": True, "clips": clips, "stale": bool(r.get("stale")),
             "plan_used": r.get("plan_used"), "count": len(clips)}
 
@@ -7592,11 +7680,14 @@ def api_produce_mix_clean_base_preview(job_id: str):
         return {"ok": True, "enabled": True, "base": False, "uncovered": [], "extend": [], "est_credits": None}
     plan = job["edit_plan"]
     beats = {int(b["beat_idx"]): b for b in plan.get("beats") or []}
-    _plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs={
-        int(b["beat_idx"]): float(b.get("target_seconds") or 0) for b in plan.get("beats") or []})
+    # ★렌더와 같은 판정(렌더 컷 재생)으로 묻는다 — 칸 길이·소스 길이까지 render_inputs_for와 같은 자
+    _plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=mix_pipeline.clean_tts_durs(plan),
+                                               src_durs=mix_pipeline._src_durs_for(job, work))
+    _need = _plan2.get("_clean_need") or {}
     unc = []
     for bi in uncovered:
-        secs = sum(float(m["end"]) - float(m["start"]) for m in mix_pipeline._beat_materials(beats[bi]))
+        spans = _need.get(str(bi)) or mix_pipeline._beat_materials(beats[bi])
+        secs = sum(float(m["end"]) - float(m["start"]) for m in spans)
         unc.append({"beat_idx": bi, "seconds": round(secs, 2)})
     ext = [{"beat_idx": e["beat_idx"], "need": e["need"]} for e in extend]
     total = sum(u["seconds"] for u in unc) + sum(float(e["end"]) - float(e["start"]) for e in extend)
@@ -10018,7 +10109,6 @@ def api_thumb_pin(body: dict):
     if body.get("styled") and _ss:
         try:
             from shopping_shorts import scene_style as _scene_style
-            from PIL import Image as _Image
             plan = job.get("edit_plan") or {}
             tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
             timeline = video_assemble._beat_timeline(plan, tts)
@@ -10030,13 +10120,10 @@ def api_thumb_pin(body: dict):
             if not (0 <= s_idx < len(ctx["scenes"])) or int(ctx["scenes"][s_idx]["beat_idx"]) != i:
                 s_idx = next((k for k, sc in enumerate(ctx["scenes"]) if int(sc["beat_idx"]) == i), -1)
             if s_idx >= 0:
-                layer = _scene_style.render_layer_one(timeline, _ss, _MIX_WORK_DIR / job_id / "thumb_style", s_idx,
-                                                      job.get("headcopy") or {}, job_id)
-                base = _Image.open(src).convert("RGBA")
-                over = _Image.open(layer).convert("RGBA")
-                if over.size != base.size:
-                    over = over.resize(base.size)
-                _Image.alpha_composite(base, over).convert("RGB").save(str(out_dir / name), quality=92)
+                # ★완성본과 같은 구도로(2026-09-26 사장님 "비율이 안 맞는다"): 원본을 레이어의 영상 칸에 맞춰 앉힌다.
+                #   예전엔 원본 9:16 전체 위에 레이어만 얹어 제목 띠가 원본 윗부분(얼굴)을 덮었다.
+                _scene_style.compose_still(src, timeline, _ss, _MIX_WORK_DIR / job_id / "thumb_style", s_idx,
+                                           out_dir / name, job.get("headcopy") or {}, job_id)
                 styled_note = f"scene {s_idx}"
         except Exception as _e:      # noqa: BLE001 — 꾸미기 합성 실패는 원본 프레임으로 대신
             import traceback as _tb5
@@ -18182,6 +18269,11 @@ def _clean_credit_est(job, job_id):
       같은 식이라야 "안내는 120인데 실제는 다른 값"이 안 난다.
     """
     try:
+        # ★장면을 골랐으면 **고른 초**만 나간다(2026-09-26) — 전체 길이로 안내하면 과장이다.
+        if mix_pipeline.clean_selection_of(job):
+            _cuts = mix_pipeline.clean_pick_cuts(job, _MIX_WORK_DIR / job_id)
+            return mix_pipeline.clean_credit_estimate(
+                sum(float(c["dur"]) for c in _cuts if c["sel"]), mix_pipeline.clean_tier_of(job))
         p = job.get("preview_path")
         if not p or not Path(p).exists():
             return None
