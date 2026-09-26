@@ -36,7 +36,28 @@ def beat_material_key(beat):
     return tuple(out)
 
 
+_ROOT = Path(__file__).resolve().parent.parent     # 저장소 루트 — 정본 파일 상대경로의 기준
+
+
+def _abs_path(p):
+    """정본·조각 경로를 절대경로로. 상대경로는 **저장소 루트** 기준(서비스 cwd = 루트일 때 쓰인 것).
+    ★왜(2026-09-27 실측): 정본 392개 중 200개가 'shopping_shorts/data/...' 상대경로라 cwd 가 루트가 아닌
+      도구·스크립트에선 load_base 가 '정본 없음'으로 오독했다."""
+    q = Path(str(p))
+    return str(q if q.is_absolute() else (_ROOT / q))
+
+
+def _norm_paths(base):
+    if base.get("path"):
+        base["path"] = _abs_path(base["path"])
+    for ex in (base.get("extras") or {}).values():
+        if isinstance(ex, dict) and ex.get("path"):
+            ex["path"] = _abs_path(ex["path"])
+    return base
+
+
 def _write(work, base):
+    _norm_paths(base)                  # 저장은 늘 절대경로
     Path(work).mkdir(parents=True, exist_ok=True)
     (Path(work) / BASE_FILE).write_text(json.dumps(base, ensure_ascii=False), encoding="utf-8")
 
@@ -71,18 +92,159 @@ def save_base(work, *, sig, path, plan, cuts, sel=None):
 FRAME_EXACT_SINCE = 1790435500      # 2026-09-27 00:11:40 KST — _render_mix 누적 프레임 경계 배포 시각
 
 
-def _gray_frames(path, t0, dur, w=48, h=85):
-    import subprocess
+CAL_VERSION = 3     # 1 = 앞뒤 0.4초 고정 창 → 2 = 앞 컷 값 기준 + 넓혀 재탐색 + 이어받기(62ed6 9번 칸 +0.37초 잔여)
+                    # → 3 = 도구와 같은 특징(frame_match)·원본을 완성본 구도로 자름·컷 앞/끝 세 지점씩(off·off_end)·
+                    #       못 재면 앞 컷과의 경계(튀는 프레임)로 시작만 · 다음 컷 시작에서 자르기(_cut_geom)
+CAL_WIN = 18                    # 찾는 범위 ±18프레임(±0.6초) — 기대 밀림(prior) 중심
+CAL_AGREE = 1                   # 세 지점 **모두** 최소(후보)가 확정 밀림의 ±1프레임 안에 있어야 한다(하나라도 딴 데면 못 잼)
+CAL_SPREAD = 3                  # …그중 둘 이상은 '최소 후보' 폭이 3프레임 이하로 뾰족해야 한다(정지 화면은 어디든 닮아 못 박는다)
+CAL_MIN = 0.2                   # 이보다 짧은 컷은 재지 않는다(이어받기)
+CAL_END_MIN = 0.95              # 이 이상 긴 컷만 끝 밀림(off_end)도 잰다 — 앞·끝 지점이 겹치지 않게
+_OLD_SLOWMO = 1.15              # 옛 조립: 원본을 이 배율까지 느리게 재생, 남는 시간은 마지막 프레임 정지
+
+
+def _ceil_frames(x):
+    import math
+    return math.ceil(float(x) * 30 - 1e-6) / 30.0
+
+
+def old_frame_lag(cuts):
+    """이론값(초): 옛 조립본에서 컷 시작이 컷 지도(fin)보다 늦은 양 — 컷 지도 fin 순서의 cuts 와 같은 길이 목록.
+
+    옛 조립은 컷 조각·칸을 `-t 초`로 잘라 30fps 프레임 경계로 **올림**됐다(칸마다 ceil(tts*30)/30 - tts,
+    칸 안 컷마다 ceil(dur*30)/30 - dur). 그게 뒤 칸일수록 쌓였다. 실측 우선 — 이건 탐색 시작점·이어받기 보정만."""
+    lag, within, beat_sum, prev, out = 0.0, 0.0, 0.0, object(), []
+    for c in cuts:
+        bi = c.get("beat_idx")
+        if bi != prev:
+            if beat_sum > 0:
+                lag += _ceil_frames(beat_sum) - beat_sum
+            prev, within, beat_sum = bi, 0.0, 0.0
+        out.append(lag + within)
+        d = float(c.get("dur") or 0.0)
+        within += _ceil_frames(d) - d
+        beat_sum += d
+    return out
+
+
+def _src_vf(fm):
+    """원본을 청소본과 같은 화면으로 — 옛 조립도 칸마다 꽉 채워 자르기(frame_vf, 기본 확대)를 걸었다.
+    ★안 맞추면 가로 원본은 청소본(9:16로 잘린 것)과 가장 닮은 자리도 거리 0.3~0.45라 세 지점이 흩어진다(62ed6 실측)."""
+    try:
+        from shopping_shorts.video_assemble import frame_vf
+        return frame_vf(None, fm.W, fm.H)
+    except Exception:      # noqa: BLE001
+        return "scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d" % (fm.W, fm.H, fm.W, fm.H)
+
+
+def _group_shift(ff, rf, j0, kp, us, k0):
+    """원본 컷 안 지점들(us, 초) 을 청소본 특징 ff 의 k0 ±CAL_WIN 프레임에서 찾아 **한 밀림**(프레임)으로 모이면 그 값, 아니면 None.
+
+    뾰족한(최소 후보 폭 ≤ CAL_SPREAD — 정지 화면 아님) 지점이 둘 이상이고, 그 가운데값 밀림에서 **모든 지점**의
+    최소(후보)가 ±CAL_AGREE 안에 있어야 한다. 한 지점이라도 다른 장면·다른 밀림이면 못 잰 것."""
+    import math
     import numpy as np
-    r = subprocess.run(["ffmpeg", "-v", "error", "-ss", "%.3f" % max(0.0, t0), "-i", str(path), "-t", "%.3f" % dur,
-                        "-vf", "scale=%d:%d,format=gray,fps=30" % (w, h), "-f", "rawvideo", "-"],
-                       capture_output=True, timeout=60)
-    buf = np.frombuffer(r.stdout, dtype=np.uint8)
-    n = buf.size // (w * h)
-    return buf[: n * w * h].reshape(n, h, w).astype(np.int16) if n else None
+    from shopping_shorts import frame_match as fm
+    ks = np.arange(k0 - CAL_WIN, k0 + CAL_WIN + 1)
+    pts = []
+    for u in us:
+        i = int(round(u * fm.FPS))
+        if not 0 <= i < len(rf):
+            continue
+        # 느리게(setpts) 30fps 출력: 청소본 j 프레임 = 원본 floor(j/kp) → 원본 i 가 처음 보이는 j = ceil(i*kp)
+        d = fm.dist(ff, j0 + int(math.ceil(i * kp - 1e-6)) + ks, rf[i])
+        m = np.isfinite(d)
+        if not m.any():
+            return None
+        kb_p, dmin_p, ok_p = fm.pick(ks[m], d[m], k0)
+        if dmin_p >= fm.SCENE_T:
+            return None                 # 이 지점과 같은 장면이 근처에 없다
+        pts.append((kb_p, ok_p))
+    if len(pts) < 2:
+        return None
+    sharp = [kb_p for kb_p, ok_p in pts if ok_p.max() - ok_p.min() <= CAL_SPREAD]
+    if len(sharp) < 2:
+        return None                     # 정지 화면이라 어디든 닮았다 — 밀림을 못 박는다
+    kb = int(round(float(np.median(sharp))))
+    for _kb_p, ok_p in pts:
+        if np.abs(ok_p - kb).min() > CAL_AGREE:
+            return None                 # 이 지점은 그 밀림에서 최소가 아니다(다른 밀림)
+    return kb
 
 
-CAL_VERSION = 2     # 1 = 앞뒤 0.4초 고정 창(뒤 칸 0.43초+ 밀림을 못 잡음) → 2 = 앞 컷 값 기준 + 넓혀 재탐색 + 이어받기
+def _cut_src(c, src_paths):
+    """원본 컷 구간 특징 → (rf, kp, sd) 또는 None. kp = 옛 조립 재생 배율(1.15배까지 느리게, 그 뒤 정지)."""
+    from shopping_shorts import frame_match as fm
+    src = (src_paths or {}).get(c.get("video_id"))
+    dur = float(c.get("dur") or 0.0)
+    sd = _f(c.get("sdur") or dur, dur)
+    sd = sd if sd > 1e-6 else dur
+    if not src or dur < CAL_MIN or sd < CAL_MIN:
+        return None
+    kp = dur / sd if dur <= sd * _OLD_SLOWMO + 1e-6 else _OLD_SLOWMO
+    s0 = float(c["src"])
+    rf = fm.feats(fm.frames(src, s0, sd + 0.1, timeout=60, pre_vf=_src_vf(fm)))
+    if len(rf) < int(round(sd * fm.FPS)) - 1:
+        # 원본이 컷 끝보다 짧다 — 옛 조립은 시작을 원본 안으로 당겨 읽었다(start = min(start, 원본길이 - sdur))
+        fd = fm.duration(src)
+        if fd > 0 and s0 + sd > fd:
+            rf = fm.feats(fm.frames(src, max(0.0, fd - sd), sd + 0.1, timeout=60, pre_vf=_src_vf(fm)))
+    return (rf, kp, sd) if len(rf) else None
+
+
+def _measure_cut(c, cs_, ff, prior):
+    """컷 하나의 (시작 밀림 off, 끝 밀림 off_end|None) 초 — 시작을 확신 못 하면 None. cs_ = _cut_src 결과.
+
+    시작: 원본 컷 앞쪽 세 지점(긴 컷 0.2·0.3·0.4초 / 짧은 컷 sdur의 15·35·55%)을 prior ±0.6초에서 찾는다.
+    끝:   원본 컷 끝-0.4·-0.3·-0.2초 세 지점(sdur ≥ CAL_END_MIN 일 때만)을 시작 밀림 ±0.6초에서 찾는다.
+    off_end = 원본 컷 끝이 청소본에서 보일 자리 - (fin + dur). _cut_geom 이 구간 길이 = dur + off_end - off 로 읽는다.
+    옛 조립 컷 안 시간 = 원본 u초 → 청소본 fin + off + u*kp (정지 몫은 구간 밖)."""
+    from shopping_shorts import frame_match as fm
+    if not cs_:
+        return None
+    rf, kp, sd = cs_
+    fin, dur = float(c["fin"]), float(c["dur"])
+    j0 = int(round(fin * fm.FPS))
+    long_ = sd >= CAL_END_MIN
+    us = (0.2, 0.3, 0.4) if long_ else tuple(q * sd for q in (0.15, 0.35, 0.55))
+    kb = _group_shift(ff, rf, j0, kp, us, int(round(prior * fm.FPS)))
+    if kb is None:
+        return None
+    off = (j0 + kb) / fm.FPS - fin
+    off_end = None
+    if long_:
+        ke = _group_shift(ff, rf, j0, kp, (sd - 0.4, sd - 0.3, sd - 0.2), kb)
+        if ke is not None:
+            off_end = (j0 + ke) / fm.FPS + sd * kp - fin - dur
+    return off, off_end
+
+
+CUT_T = 0.40            # 청소본 이웃 프레임 특징 거리가 이 이상 = 눈에 보이는 컷 경계(영상 비교 도구와 같은 값)
+CAL_BWIN = 6            # 경계로 잴 땐 기대 시작 ±6프레임만 — 같은 원본이 이어지는 컷은 앞 컷 안에도 닮은 경계가 있다
+                        #   (±0.6초로 찾다 62ed6 23번 컷이 -0.09초(이웃 0.47초)로 잡힌 실측)
+
+
+def _boundary_start(ff, mot, j_lo, j_exp, cs_):
+    """앞 컷 시작(j_lo) 뒤, 기대 시작(j_exp) ±CAL_BWIN 프레임 안의 **컷 경계**(특징이 튀는 프레임) 중 원본 컷 첫머리와 닮은 것 →
+    이 컷의 청소본 시작 프레임. 정지 화면 컷도 앞 컷과의 경계는 보인다(세 지점으로 못 재는 컷을 여기서 잰다)."""
+    import math
+    import numpy as np
+    from shopping_shorts import frame_match as fm
+    if not cs_:
+        return None
+    rf, kp, _sd = cs_
+    i0 = min(2, len(rf) - 1)            # 경계 첫 프레임은 섞일 수 있어 2프레임 안쪽을 본다
+    di = int(math.ceil(i0 * kp - 1e-6))
+    lo, hi = max(j_lo + 3, j_exp - CAL_BWIN, 1), min(len(ff) - 1 - di, j_exp + CAL_BWIN)
+    js = [j for j in range(lo, hi + 1) if mot[j] >= CUT_T]
+    if not js:
+        return None
+    sc = sorted((float(np.abs(ff[j + di] - rf[i0]).mean()), abs(j - j_exp), j) for j in js)
+    if sc[0][0] >= fm.SCENE_T:
+        return None
+    if len(sc) > 1 and sc[1][0] < sc[0][0] + 0.1 and abs(sc[1][2] - sc[0][2]) > 1:
+        return None                     # 비슷하게 닮은 경계가 둘 — 못 고른다
+    return sc[0][2]
 
 
 def calibrate(work, base, src_paths):
@@ -91,42 +253,55 @@ def calibrate(work, base, src_paths):
     왜: 청소본은 조립본(mix_raw)을 지운 것인데, 옛 조립본은 칸마다 프레임 올림이 쌓여 뒤 칸일수록 장면이
       컷 지도(fin, 음성 길이 누적)보다 늦게 들어 있었다(실측 7bbb 3번 칸 +0.132초, 62ed6 뒤 칸 +0.43초+).
       재생이 fin 으로 읽으면 화면보다 앞 장면이 나온다. 청소를 다시 하지 않고(돈 0) 원본↔청소본 프레임을 맞춰 잰다.
-    ★밀림은 뒤로 갈수록 커진다 — 앞 컷에서 잰 값을 중심으로 좁게 찾고, 못 찾으면 넓혀 찾고, 그래도 못 찾으면
-      앞 컷 값을 이어받는다(0으로 두면 그 컷만 딴 장면이 된다 — v1 실사고 62ed6 9번 칸).
+    v3(2026-09-27): v2(회색 절대차·프레임 1장)는 62ed6 9번 칸에서 -0.33초를 남겼다 → 영상 비교 도구와 **같은 특징**
+      (frame_match — 가운데 띠·5x5·z정규화)으로 청소본을 통째 한 번 풀고, 컷 안 세 지점이 같은 밀림에서 최소일 때만 확정.
+    ★컷마다 시작(off)과 끝(off_end) 둘 다 잰다 — 옛 조각은 끝도 밀리고 길이도 지도와 달랐다(a90253dd235b). 끝을 못 재면
+      off_end 없음(구간 길이 = dur) — 그래도 _cut_geom 이 다음 컷 시작에서 잘라 다음 조각을 읽지 않는다.
+    ★탐색 중심·이어받기 = 앞 컷 실측 + 이론 증가분(old_frame_lag). 못 잰 컷은 cal_unsure=True(정본의 cal_unsure = 개수).
+    ★부분 청소 정본의 안 지운 컷(cleaned:false)도 같은 조립본에서 왔다 — 똑같이 잰다.
     ★한 번 재면 calibrated=CAL_VERSION. 옛 버전 표시는 다시 잰다."""
     if not base or base.get("frame_exact") or base.get("calibrated") == CAL_VERSION:
         return base
     try:
+        from shopping_shorts import frame_match as fm
+        ff = fm.feats(fm.frames(base["path"]))
+        if not len(ff):
+            raise RuntimeError("청소본 프레임 0장")
         import numpy as np
-        clean = base["path"]
-        guess = 0.0
-        for c in sorted(base.get("cuts") or [], key=lambda x: float(x.get("fin") or 0)):
-            c.pop("off", None)
-            src = (src_paths or {}).get(c.get("video_id"))
-            dur = float(c.get("dur") or 0)
-            if not src or dur < 0.2:
-                if guess:
-                    c["off"] = round(guess, 3)
-                continue
-            take = min(0.4, dur * 0.4)
-            ref = _gray_frames(src, float(c["src"]) + take, 0.05)
-            found = None
-            for win in (0.25, 1.0):
-                t_exp = float(c["fin"]) + take + guess
-                seq_t0 = max(0.0, t_exp - win)
-                seq = _gray_frames(clean, seq_t0, 2 * win + 0.05)
-                if ref is None or seq is None or not len(ref) or not len(seq):
-                    break
-                d = np.abs(seq - ref[0]).mean(axis=(1, 2))
-                i = int(d.argmin())
-                if d[i] < 25 and d[i] < 0.7 * float(np.median(d)):
-                    found = seq_t0 + i / 30.0 - (float(c["fin"]) + take)
-                    break
-            if found is not None:
-                guess = found
-            if abs(guess) >= 0.02:
-                c["off"] = round(guess, 3)
+        mot = np.zeros(len(ff), np.float32)
+        mot[1:] = np.abs(ff[1:] - ff[:-1]).mean(axis=(1, 2))
+        cuts = sorted(base.get("cuts") or [], key=lambda x: float(x.get("fin") or 0))
+        theo = old_frame_lag(cuts)
+        last, unsure, j_prev = None, 0, -10 ** 6
+        for c, th in zip(cuts, theo):
+            for k in ("off", "off_end", "cal_unsure", "cal_by"):
+                c.pop(k, None)
+            prior = th if last is None else last[0] + (th - last[1])
+            fin = float(c["fin"])
+            try:
+                cs_ = _cut_src(c, src_paths)
+                got = _measure_cut(c, cs_, ff, prior)
+                if got is None:         # 세 지점으로 못 쟀다 → 앞 컷과의 경계로 시작만 잰다
+                    jb = _boundary_start(ff, mot, j_prev, int(round((fin + prior) * fm.FPS)), cs_)
+                    if jb is not None:
+                        got = (jb / fm.FPS - fin, None)
+                        c["cal_by"] = "cut"
+            except Exception:      # noqa: BLE001 — 원본 하나가 깨져도 나머지 컷은 잰다
+                got = None
+            if got is None:
+                off = prior
+                c["cal_unsure"] = True
+                unsure += 1
+            else:
+                off, off_end = got
+                last = (off, th)
+                if off_end is not None:
+                    c["off_end"] = round(off_end, 3)
+            j_prev = int(round((fin + off) * fm.FPS))
+            if abs(off) >= 0.5 / fm.FPS or "off_end" in c:
+                c["off"] = round(off, 3)
         base["calibrated"] = CAL_VERSION
+        base["cal_unsure"] = unsure
         _write(work, base)
     except Exception as e:      # noqa: BLE001 — 보정 실패는 종전과 같다(0)
         import sys
@@ -140,7 +315,7 @@ def load_base(work):
     if not p.exists():
         return None
     try:
-        base = json.loads(p.read_text(encoding="utf-8"))
+        base = _norm_paths(json.loads(p.read_text(encoding="utf-8")))
         f = Path(base["path"])
         if not (f.exists() and f.stat().st_size > 1024):
             return None
@@ -199,12 +374,13 @@ def piece_map(base, material, cleaned_only=False):
         return []
     out = []
     cuts = base.get("cuts") or []
+    nx = _next_starts(base)
     for i, c in enumerate(cuts):
         if str(c.get("video_id")) != vid:
             continue
         if cleaned_only and c.get("cleaned") is False:
             continue            # 고른 장면만 지운 정본 — 안 지운 컷을 '지운 조각'으로 빌려 쓰지 않는다
-        cs, ce, fin, k = _cut_geom(c)
+        cs, ce, fin, k = _cut_geom(c, nx[i])
         lo, hi = max(s, cs), min(e, ce)
         if hi - lo >= MIN_PIECE:
             out.append((lo, {"video_id": CLEAN_VID, "seg_id": "%s-%d" % (CLEAN_VID, i),
@@ -213,23 +389,64 @@ def piece_map(base, material, cleaned_only=False):
     return [x[1] for x in out]
 
 
-def _cut_geom(c):
-    """청소본 컷 하나 → (원본 시작, 원본 끝, 청소본 시작, 원본1초당 청소본 초).
+def _f(v, dflt=0.0):
+    try:
+        return float(v) if v is not None else dflt
+    except (TypeError, ValueError):
+        return dflt
+
+
+def _cut_geom(c, nxt=None):
+    """청소본 컷 하나 → (원본 시작, 원본 끝, 청소본 시작, 원본1초당 청소본 초). **청소본 컷 좌표의 유일한 자리.**
 
     ★원본 끝은 sdur(원본에서 실제로 읽은 길이)로 잰다. dur는 완성본 길이라 느리게·정지로 늘어난 컷이면
-      원본의 **안 지운 구간**까지 덮었다고 오판한다(2026-09-26). sdur 없는 옛 정본은 dur 그대로(종전)."""
+      원본의 **안 지운 구간**까지 덮었다고 오판한다(2026-09-26). sdur 없는 옛 정본은 dur 그대로(종전).
+    ★옛 청소본(calibrate 가 잰 것): 청소본 시작 = fin + off, 청소본 구간 길이 = dur + off_end - off
+      (off_end 없으면 dur — 종전). 옛 조립본은 조각 **끝**도 밀리고 길이도 지도와 달랐다(2026-09-27 a90253dd235b).
+    ★nxt = fin 순서상 다음 컷의 청소본 시작. 이 컷 구간이 거기를 넘으면 **거기서 자른다**(원본 끝도 그만큼 당긴다) —
+      무엇을 못 재도 다음 조각 장면을 읽지 않는다(3→4칸 경계에서 다음 칸 장면이 6프레임 먼저 나온 사고)."""
     cs = float(c["src"]); dur = float(c["dur"])
-    try:
-        sd = float(c.get("sdur") or dur)
-    except (TypeError, ValueError):
-        sd = dur
+    sd = _f(c.get("sdur") or dur, dur)
     sd = sd if sd > 1e-6 else dur
-    # off = 옛 청소본의 실제 밀림(calibrate가 잰다) — 파일 안 장면이 컷 지도(fin)보다 늦게 들어 있다
-    try:
-        off = float(c.get("off") or 0.0)
-    except (TypeError, ValueError):
-        off = 0.0
-    return cs, cs + sd, float(c["fin"]) + off, (dur / sd if sd > 1e-6 else 1.0)
+    off = _f(c.get("off"))                 # 옛 청소본 밀림(calibrate) — 파일 안 장면이 컷 지도(fin)보다 늦게 들어 있다
+    span = dur
+    if c.get("off_end") is not None:
+        span = dur + _f(c.get("off_end")) - off
+        if span <= 1e-3:
+            span = dur
+    k = span / sd if sd > 1e-6 else 1.0
+    t0 = float(c["fin"]) + off
+    ce = cs + sd
+    if nxt is not None and t0 + span > nxt + 1e-4:
+        ce = cs + max(0.0, nxt - t0) / k
+    return cs, ce, t0, k
+
+
+def _next_starts(base):
+    """컷 번호 → fin 순서상 다음 컷의 청소본 시작(fin+off). 마지막 컷은 None."""
+    cuts = base.get("cuts") or []
+    order = sorted(range(len(cuts)), key=lambda i: _f(cuts[i].get("fin")))
+    out = [None] * len(cuts)
+    for a, b in zip(order, order[1:]):
+        if _f(cuts[b].get("fin")) > _f(cuts[a].get("fin")) + 1e-6:
+            out[a] = _f(cuts[b].get("fin")) + _f(cuts[b].get("off"))
+    return out
+
+
+def _geom_in(base, c):
+    """base 안 컷 c 의 좌표(다음 컷 시작에서 자르기 포함)."""
+    cuts = base.get("cuts") or []
+    nx = _next_starts(base)
+    for i, x in enumerate(cuts):
+        if x is c:
+            return _cut_geom(c, nx[i])
+    return _cut_geom(c)
+
+
+def _clean_span(base, c):
+    """base 안 컷 c 가 청소본에서 차지하는 (시작, 끝) 초."""
+    cs, ce, t0, k = _geom_in(base, c)
+    return t0, t0 + (ce - cs) * k
 
 
 SPAN_TOL = 0.12         # 이만큼 이하 틈은 이어 붙인다(프레임 반올림) — 그보다 크면 못 덮은 것
@@ -240,10 +457,11 @@ def _regions(base):
 
     청소본 컷 + 원본 위치를 아는 증분 조각(src_vid 가 붙은 cb*·cbx*). 옛 증분 조각은 위치를 몰라 뺀다."""
     out = []
+    nx = _next_starts(base)
     for i, c in enumerate(base.get("cuts") or []):
         if c.get("cleaned") is False:
             continue            # 고른 장면만 지운 정본(장면 골라 지우기) — 안 지운 컷은 지운 조각이 아니다
-        cs, ce, fin, k = _cut_geom(c)
+        cs, ce, fin, k = _cut_geom(c, nx[i])     # ★다음 컷 시작에서 자른다 — 다음 조각으로 못 넘어간다
         out.append((CLEAN_VID, "%s-%d" % (CLEAN_VID, i), str(c.get("video_id")), cs, ce, fin, k))
     for vid, ex in (base.get("extras") or {}).items():
         if ex.get("src_vid") is None or not Path(ex.get("path", "")).exists():
@@ -553,7 +771,7 @@ def _remap_legacy(plan, base, tts_durs=None):
         if base.get("beat_keys", {}).get(str(bi)) == _key_list(key) and cuts:
             b["scene_override"] = [
                 {"video_id": CLEAN_VID, "seg_id": "%s-%d" % (CLEAN_VID, all_cuts.index(c)),
-                 "start": _cut_geom(c)[2], "end": _cut_geom(c)[2] + float(c["dur"])} for c in cuts]
+                 "start": _clean_span(base, c)[0], "end": _clean_span(base, c)[1]} for c in cuts]
             have = sum(float(c["dur"]) for c in cuts)
             need = float((tts_durs or {}).get(bi) or b.get("target_seconds") or 0.0)
             # 이미 늘림 조각(cbx{bi})을 지워 두었으면 청소 컷 뒤에 **붙여 쓴다** — 지워놓고 안 쓰면 돈만 나간다
@@ -564,7 +782,7 @@ def _remap_legacy(plan, base, tts_durs=None):
             if have > 0 and need > have * (1.0 + EXTEND_MIN):
                 last = cuts[-1]
                 # 원본 끝 = src + sdur(원본에서 읽은 길이). dur(완성본 길이)로 재면 느리게 구운 컷일 때 뒤로 밀린다
-                s = _cut_geom(last)[1] + (float(xex["seconds"]) if xvid else 0.0)
+                s = _geom_in(base, last)[1] + (float(xex["seconds"]) if xvid else 0.0)
                 extend.append({"beat_idx": bi, "video_id": last["video_id"], "start": round(s, 3),
                                "end": round(s + (need - have) + EXTEND_PAD, 3), "need": round(need - have, 3)})
         elif exs:
@@ -588,6 +806,6 @@ def time_in_clean(base, beat_idx, pos=0.5):
     cuts = _cuts_of(base, beat_idx)
     if not cuts:
         return None
-    t0 = _cut_geom(cuts[0])[2]
-    t1 = _cut_geom(cuts[-1])[2] + float(cuts[-1]["dur"])
+    t0 = _clean_span(base, cuts[0])[0]
+    t1 = _clean_span(base, cuts[-1])[1]
     return t0 + (t1 - t0) * max(0.0, min(1.0, float(pos)))
