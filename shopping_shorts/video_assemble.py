@@ -2348,6 +2348,11 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
     _apply_hook_inpoint(edit_plan, source_video_paths, work)  # 훅 시작점 자동/오버라이드(P1)
     important = _important_beat_indices(edit_plan["beats"])
     beat_clips = []
+    # ★칸 길이를 **누적 시각 기준 프레임**으로 정한다(2026-09-26). 칸마다 -t 음성길이로 자르면 30fps 영상은
+    #   프레임 경계로 올림돼 칸당 0.03~0.06초씩 길어지고, concat은 그 긴 길이로 다음 칸을 잇는다 →
+    #   뒤 칸일수록 목소리·장면이 자막(_beat_timeline: 음성 길이 누적)보다 늦었다(실측 8칸 +0.29초).
+    #   누적 시각을 프레임으로 반올림한 경계 차이로 칸 프레임 수를 정하면 오차가 쌓이지 않는다(어느 칸이든 ±1/60초).
+    _cum_t = 0.0
     # 소스 실제 길이 캐시(2026-07-19). 약한 매칭이 소스 밖 구간(예: 60초 릴에 155초)을 잡으면
     # -ss가 끝을 넘어 0프레임 서브클립 → concat "no stream" → 미리보기 전체가 죽었다. 소스별 길이를
     # 한 번만 재서(ffprobe) start를 소스 안으로 당긴다.
@@ -2379,6 +2384,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                  if s and s.get("video_id") in source_video_paths}
         # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
+        _f0 = int(round(_cum_t * 30))
+        _cum_t += tts_dur + runout
+        _nfr = max(1, int(round(_cum_t * 30)) - _f0)
+        _beat_len = _nfr / 30.0                     # 이 칸이 완성본에서 차지할 정확한 길이(프레임 경계)
         plan = plan_beat_clips_for(beat, tts_dur, _srcd, runout=runout)
         if not plan:
             continue
@@ -2523,7 +2532,8 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 "-map", "[vout]", "-map", "2:a:0",
                 # 여운(runout): 마지막 비트만 대사 뒤 화면이 더 산다 — 오디오는 tts 길이에서
                 # 자연 종료(무성 여운). 컷어웨이 창(win)은 tts_dur 기준 그대로(여운을 덮지 않음).
-                "-t", f"{tts_dur + runout:.3f}",
+                # 길이는 누적 프레임 경계(_beat_len) — 영상 프레임 수와 소리 길이를 딱 맞춘다(소리는 무음으로 채움).
+                "-frames:v", str(_nfr), "-af", "apad", "-t", f"{_beat_len:.4f}",
                 "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
             ])
         else:
@@ -2531,7 +2541,8 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             _run_ffmpeg([
                 "ffmpeg", "-y", "-i", str(beat_video),
                 "-ss", f"{_head_trim:.3f}", "-i", str(tts),
-                "-map", "0:v:0", "-map", "1:a:0", "-t", f"{tts_dur + runout:.3f}",
+                "-map", "0:v:0", "-map", "1:a:0",
+                "-frames:v", str(_nfr), "-af", "apad", "-t", f"{_beat_len:.4f}",
                 "-c:v", "copy", "-c:a", "aac", str(clip),
             ])
         beat_clips.append(clip)
