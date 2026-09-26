@@ -114,12 +114,14 @@ needs_ffmpeg = pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg 없
 
 def _mk(path, n, color_expr):
     """30fps n프레임 영상 — 프레임마다 밝기가 달라 밀림을 잡을 수 있다."""
-    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "color=c=gray:s=64x128:r=30:d=%.3f" % (n / 30.0),
-                    "-f", "lavfi", "-i", "sine=f=440:r=48000:d=%.3f" % (n / 30.0),
-                    # ★실제 조립본처럼 시각을 들쭉날쭉하게(시작 0.021초·29.955fps) — 시각 기준으로 자르면
-                    #   프레임이 복제돼 뒤가 밀린다(2026-09-26 LAB 실측). 이 모양이어야 그 결함을 잡는다.
-                    "-vf", "geq=lum='%s':cb=128:cr=128,setpts=0.021/TB+N/(29.955*TB)" % color_expr,
-                    "-fps_mode", "passthrough", "-frames:v", str(n),
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "color=c=gray:s=64x128:r=30:d=%.3f" % (n / 30.0 + 1),
+                    "-f", "lavfi", "-i", "sine=f=440:r=48000:d=%.3f" % (n / 30.0 + 1),
+                    # ★실제 조립본(concat -c copy)처럼 **이음매에 시각 빈틈**을 둔다 — 70번 프레임 앞(안 고른 구간)에 한 칸 비고
+                    #   시작도 0.021초(2026-09-26 LAB 실측: 344번 앞 0.0697초 빈틈). 시각 기준으로 자르면 그 빈틈을
+                    #   복제 프레임이 메워 뒤가 1프레임 밀린다. 이 모양이어야 그 결함을 잡는다.
+                    "-vf", "geq=lum='%s':cb=128:cr=128,setpts=(N+gte(N\,70))/30/TB+0.021/TB" % color_expr,
+                    "-fps_mode", "passthrough", "-enc_time_base", "1:15360", "-video_track_timescale", "15360",
+                    "-frames:v", str(n),
                     "-c:v", "libx264", "-preset", "ultrafast", "-crf", "0", "-pix_fmt", "yuv420p",
                     "-c:a", "aac", "-shortest", str(path)], check=True)
 
