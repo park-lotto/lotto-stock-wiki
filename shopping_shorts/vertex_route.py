@@ -225,6 +225,28 @@ def is_member(cid=None):
     return bool(member_info(current_cid() if cid is None else cid))
 
 
+VEO_NEEDS_MEMBER = "AI 장면 생성은 내 구글 Vertex를 등록해야 쓸 수 있어요 — 설정 › API 키에서 등록해 주세요"
+
+
+def veo_client(cid):
+    """Veo(AI 장면생성)용 Vertex 클라이언트 — ★영상 생성은 텍스트보다 10~50배 비싸다.
+    회원 자격증명이 있으면 **그 프로젝트**, 사장님(관리자)이면 사장님 프로젝트, 그 외는 None
+    (사장님 크레딧으로 회원 영상을 대신 만들지 않는다 — 2026-09-26 사장님 확정 설계)."""
+    info = member_info(cid)
+    if info:
+        return _member_client(cid, info)
+    if _is_admin(cid):
+        return client(cid)
+    return None
+
+
+def veo_allowed(cid):
+    """(허용, 막을 때 문구) — 화면 버튼·API·워커가 같은 판정을 쓴다(0순위-B)."""
+    if member_info(cid) or _is_admin(cid):
+        return True, ""
+    return False, VEO_NEEDS_MEMBER
+
+
 def verify_sa(info, model_name=None):
     """등록 전 실제 호출 1회 — (ok, 사람이 읽을 문구). 구글 오류를 원인별로 옮긴다."""
     from google import genai
@@ -236,20 +258,33 @@ def verify_sa(info, model_name=None):
         cl = genai.Client(vertexai=True, project=info["project_id"], location=LOCATION, credentials=creds,
                           http_options=types.HttpOptions(timeout=60_000))
         r = cl.models.generate_content(model=model_name or DEFAULT_MODEL, contents="한 단어로: 하늘 색?")
-        return bool((r.text or "").strip()), "확인 완료 — 이 계정으로 대본·장면매칭이 돌아갑니다"
+        if not (r.text or "").strip():
+            return False, "확인 실패 — 응답이 비었습니다"
     except Exception as e:      # noqa: BLE001
-        m = str(e)
-        if "SERVICE_DISABLED" in m or "has not been used" in m or "is disabled" in m:
-            return False, "Vertex AI API가 꺼져 있습니다 — 구글 클라우드 콘솔에서 'Vertex AI API 사용'을 눌러 주세요"
-        if "PERMISSION_DENIED" in m or "403" in m:
-            return False, "권한이 없습니다 — 서비스계정 역할에 'Vertex AI 사용자(Vertex AI User)'를 추가해 주세요"
-        if "BILLING" in m.upper() or "billing" in m:
-            return False, "결제 계정이 연결돼 있지 않습니다 — 무료 체험($300)을 시작하거나 결제를 연결해 주세요"
-        if "invalid_grant" in m or "401" in m:
-            return False, "키가 폐기됐거나 잘못됐습니다 — 새 키를 내려받아 주세요"
-        if "404" in m:
-            return False, "모델을 찾지 못했습니다(%s) — 관리자에게 알려 주세요" % (model_name or DEFAULT_MODEL)
-        return False, "확인 실패 — %s" % m[:160]
+        return False, _explain(e, model_name)
+    # Veo 권한 확인 — 영상은 만들지 않고(과금 방지) 모델 조회만 한다. 조회가 막혀도 대본은 되므로 등록은 받는다.
+    try:
+        cl.models.get(model="veo-3.1-lite-generate-001")
+        return True, "확인 완료 — 대본·장면매칭과 AI 장면생성을 이 계정으로 씁니다"
+    except Exception as e:      # noqa: BLE001
+        return True, ("확인 완료(대본·장면매칭) — AI 장면생성 모델 조회는 실패했습니다: %s"
+                      % _explain(e, "veo-3.1-lite-generate-001"))
+
+
+def _explain(e, model_name=None):
+    """구글 오류 → 회원이 할 일 한 줄. 판정은 여기 한 곳(등록 확인·Veo 조회가 같이 쓴다)."""
+    m = str(e)
+    if "SERVICE_DISABLED" in m or "has not been used" in m or "is disabled" in m:
+        return "Vertex AI API가 꺼져 있습니다 — 구글 클라우드 콘솔에서 'Vertex AI API 사용'을 눌러 주세요"
+    if "PERMISSION_DENIED" in m or "403" in m:
+        return "권한이 없습니다 — 서비스계정 역할에 'Vertex AI 사용자(Vertex AI User)'를 추가해 주세요"
+    if "BILLING" in m.upper():
+        return "결제 계정이 연결돼 있지 않습니다 — 무료 체험($300)을 시작하거나 결제를 연결해 주세요"
+    if "invalid_grant" in m or "401" in m:
+        return "키가 폐기됐거나 잘못됐습니다 — 새 키를 내려받아 주세요"
+    if "404" in m:
+        return "모델을 찾지 못했습니다(%s) — 관리자에게 알려 주세요" % (model_name or DEFAULT_MODEL)
+    return "확인 실패 — %s" % m[:160]
 
 
 def video_part(path):
