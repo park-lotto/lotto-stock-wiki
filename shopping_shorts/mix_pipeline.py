@@ -3335,13 +3335,33 @@ def clean_pick_cuts(job, work):
 def _probe_fps_frames(path):
     """(fps 문자열 '30/1', fps 실수, 프레임 수). 프레임은 패킷을 세서 잰다(끝까지 디코드하지 않는다)."""
     r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_packets",
-                        "-show_entries", "stream=r_frame_rate,nb_read_packets", "-of", "json", str(path)],
+                        "-show_entries", "stream=r_frame_rate,avg_frame_rate,nb_read_packets,duration:format=duration",
+                        "-of", "json", str(path)],
                        capture_output=True, text=True, check=True)
-    st = (json.loads(r.stdout).get("streams") or [{}])[0]
-    fs = st.get("r_frame_rate") or "30/1"
-    n, d = (fs.split("/") + ["1"])[:2]
-    fps = float(n) / float(d or 1)
-    return fs, fps, int(st.get("nb_read_packets") or 0)
+    j = json.loads(r.stdout)
+    st = (j.get("streams") or [{}])[0]
+    nb = int(st.get("nb_read_packets") or 0)
+
+    def _rate(x):
+        try:
+            n, d = (str(x).split("/") + ["1"])[:2]
+            return float(n) / float(d or 1)
+        except (TypeError, ValueError, ZeroDivisionError):
+            return 0.0
+    # ★기록상 r_frame_rate를 믿지 않는다(2026-09-26 이정민님 job a90253dd235b): 이어 붙인 조립본은 r_frame_rate가
+    #   240/1로 적혀 있었고(실제 30), 되붙이기가 setpts=N/240 으로 705프레임을 2.97초에 몰아 청소본이 깨졌다 →
+    #   최종 렌더 7연속 실패. 실제 프레임 수 ÷ 실제 길이로 재고, 표준 속도(24·25·30·60 등)에 가까우면 그 값으로.
+    try:
+        dur = float(st.get("duration") or (j.get("format") or {}).get("duration") or 0)
+    except (TypeError, ValueError):
+        dur = 0.0
+    fps = nb / dur if (nb > 0 and dur > 0.1) else (_rate(st.get("avg_frame_rate")) or _rate(st.get("r_frame_rate")) or 30.0)
+    _std = min(((abs(fps - v), f) for v, f in ((23.976, "24000/1001"), (24.0, "24/1"), (25.0, "25/1"),
+                (29.97, "30000/1001"), (30.0, "30/1"), (50.0, "50/1"), (59.94, "60000/1001"), (60.0, "60/1"))))
+    if _std[0] < 0.35:                      # 가장 가까운 표준 속도
+        return _std[1], _rate(_std[1]), nb
+    fps = max(1.0, min(120.0, fps))
+    return "%d/1000" % int(round(fps * 1000)), fps, nb
 
 
 def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work):
@@ -3422,6 +3442,10 @@ def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work):
     got = _probe_fps_frames(out)[2]
     if got != nb:
         raise RuntimeError("고른 장면 되붙이기 프레임 불일치(%d != %d)" % (got, nb))
+    # ★영상 길이가 조립본 길이와 같아야 한다 — 프레임 수만 같고 시각이 몰리면(240fps 사고) 렌더가 빈 조각을 만든다
+    _vd = _probe_wh_dur(out)[2]
+    if _d and _vd and abs(_vd - _d) > 0.5:
+        raise RuntimeError("고른 장면 되붙이기 길이 불일치(%.2f초 != %.2f초)" % (_vd, _d))
     return str(out)
 
 

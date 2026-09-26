@@ -574,7 +574,12 @@ def _probe_duration(path):
     cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration",
            "-of", "default=noprint_wrappers=1:nokey=1", str(path)]
     out = subprocess.run(cmd, stdin=subprocess.DEVNULL, check=True, **_FF_TEXT)
-    dur = float(out.stdout.strip())
+    try:
+        dur = float(out.stdout.strip())
+    except ValueError:
+        # ★'N/A'(프레임 0개 등 깨진 파일)는 길이 0 — 예외로 렌더 전체를 죽이지 않는다. 호출부의
+        #   "0.05초 이하면 그 조각만 버린다" 안전장치가 받는다(2026-09-26 이정민님 7연속 렌더 실패).
+        return 0.0
     if key is not None:
         if len(_PROBE_CACHE) >= _PROBE_CACHE_MAX:
             _PROBE_CACHE.clear()
