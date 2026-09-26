@@ -7759,8 +7759,9 @@ class Store:
     # ── 사용자별 API 키(2026-08-17, BYOK) ──
     # 평문은 이 클래스 밖으로 나가는 경로가 get_customer_keys_plain 하나뿐이다.
     # 화면용 list_customer_keys는 key_enc를 아예 안 실어 보낸다.
-    def add_customer_key(self, customer_id, service, plain):
-        """키 1개 저장. 이미 있는 키면 False(중복 거절)."""
+    def add_customer_key(self, customer_id, service, plain, label=None):
+        """키 1개 저장. 이미 있는 키면 False(중복 거절).
+        label: 화면 표시 문구를 직접 줄 때(vertex_sa처럼 JSON이라 앞뒤 가리기가 의미 없는 경우)."""
         from shopping_shorts import keycrypt
         import time
         try:
@@ -7770,7 +7771,7 @@ class Store:
                     "(customer_id, service, key_enc, key_hash, label, created_at) "
                     "VALUES(?,?,?,?,?,?)",
                     (int(customer_id), service, keycrypt.encrypt(plain),
-                     keycrypt.fingerprint(plain), keycrypt.mask(plain), int(time.time())),
+                     keycrypt.fingerprint(plain), label or keycrypt.mask(plain), int(time.time())),
                 )
             return True
         except sqlite3.IntegrityError as e:
