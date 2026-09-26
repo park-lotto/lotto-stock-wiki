@@ -3611,7 +3611,8 @@ async function traceByUrl(urlArg){
     // (caption만으론 cn_search_candidates가 빈 리스트 — 프레임 필수라 서버가 처리).
     const tcn=(d.cn_candidates||[]).filter(c=>c&&c.zh);
     LENS_STATE['__trace__']={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
-                             sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false, ytLoading:false, keyword:'', caption:tcap, cnCands:tcn};
+                             sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false, ytLoading:false, keyword:'', caption:tcap, cnCands:tcn,
+                             srcUrl:url, srcCode:(d.script_code||'')};   // ★대본 분석 후 찾기가 이 주소·코드로 추출한다(가짜 ID '__trace__'는 서버에 없다)
     renderLens('__trace__');
   }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
@@ -3644,7 +3645,7 @@ async function openUrlCard(urlArg){
   try{ saved=new Set((await (await fetch('/api/mix/basket')).json()).shortcodes||[]); }catch(e){}
   LENS_STATE['__single__']={items:[it], on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
     sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:false, hideOfftopic:false,
-    ytLoading:false, keyword:'', caption:'', cnCands:[]};
+    ytLoading:false, keyword:'', caption:'', cnCands:[], srcUrl:(it.url||url), srcCode:(d.script_code||it.shortcode||'')};
   // 머리줄을 먼저 넣고, 렌즈 렌더러는 그 아래 전용 칸에 그린다.
   // ★한 칸에 같이 넣지 않는다 — 렌즈 뭉치(#lensRoot)는 통짜 블록이라 형제로 두면
   //   부모가 grid일 때 칸이 갈린다(2026-08-18 사장님 캡처: 좌우로 쪼개져 보였다).
@@ -3717,13 +3718,16 @@ async function fetchLensCnKeywords(shortcode, caption, blob, append){
     if(caption) fd.append('source_caption', caption);
     // ★원본 주소를 함께 보낸다(2026-08-22) — 서버가 이 주소로 DB에서 캡션·대본을 찾아
     //   검색어 소재를 채운다. 카드가 들고 있는 캡션은 거의 항상 비어 있다(실측 300건 중 1건).
-    try{ const _src=findItem(shortcode); if(_src && _src.url) fd.append('source_url', _src.url); }catch(e){}
+    try{ const _src=findItem(shortcode); const _u=(_src && _src.url) || (st0 && st0.srcUrl) || ''; if(_u) fd.append('source_url', _u); }catch(e){}
     // ★코드도 그대로 보낸다(2026-09-08 사장님 "이건 돌돌이 휴대용인데 택배칼이 나온다").
     //   서버는 여태 주소에서 코드를 되뽑았는데, 유튜브 카드 주소는 watch?v=<id>라
     //   경로만 보던 정규식이 한 건도 못 잡았다 — 대본이 DB에 "휴대용 돌돌이"로 멀쩡히
     //   있는데도 검색어는 썸네일 1장만 보고 지어졌다. 담기/렌즈 코드(lens_…·grab_…)는
     //   아예 주소에 없어서 되뽑기로는 영원히 못 찾는다. 아는 값을 그냥 넘긴다.
-    if(shortcode && shortcode!=='__single__') fd.append('source_shortcode', shortcode);
+    // ★가짜 ID('__trace__'/'__single__')는 보내지 않는다 — 서버 _lens_script_code는 shortcode가 오면 그걸 우선해
+    //   대본을 그 이름으로 찾다 못 읽었다(2026-09-26). 주소 카드는 서버가 준 진짜 코드(srcCode)를 보낸다.
+    const _realSc = (shortcode==='__trace__'||shortcode==='__single__') ? ((st0&&st0.srcCode)||'') : shortcode;
+    if(_realSc) fd.append('source_shortcode', _realSc);
     // 🔄 다른 검색어: 이미 보여준 후보를 넘겨 '겹치지 않는 다른 각도'로 받는다(2026-08-14).
     if(append && st0) fd.append('exclude', (st0.cnCands||[]).map(c=>[c.ko,c.zh].filter(Boolean).join('\n')).join('\n'));
     const d=await (await fetch('/api/lens/cn/keywords',{method:'POST',body:fd})).json();
@@ -3871,7 +3875,13 @@ async function lensExtractThenSearch(shortcode){
   const st=LENS_STATE[shortcode]; if(!st || st.reExtracting) return;
   st.reExtracting=true; _lensRerender(shortcode);
   try{
-    const r=await fetch('/api/extract_script?shortcode='+encodeURIComponent(shortcode),{method:'POST'});
+    // ★주소로 가져온 카드('__trace__'·'__single__')는 랭킹 스냅샷에 없어 /api/extract_script가 404다
+    //   (2026-09-26 사장님 "왕혜원 영상 결과 없음" — 서버 로그 404 7회). 주소로 직접 추출하는 API로 간다.
+    //   저장 코드는 서버가 준 script_code(_lens_script_code) — 검색어 생성이 같은 열쇠로 대본을 읽는다.
+    const _fake = shortcode==='__trace__' || shortcode==='__single__';
+    const r = (_fake && st.srcUrl)
+      ? await fetch('/api/produce/extract_from_url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:st.srcUrl, shortcode:(st.srcCode||undefined)})})
+      : await fetch('/api/extract_script?shortcode='+encodeURIComponent(shortcode),{method:'POST'});
     const d=await r.json().catch(()=>({}));
     if(!r.ok || !d.ok){
       const st1=LENS_STATE[shortcode];

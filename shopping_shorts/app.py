@@ -11527,7 +11527,10 @@ def api_lens_trace_url(request: Request, body: dict):
             store.bump_lens(month, _n)
         ok = True
         return {"ok": True, "items": items, "count": len(items), "source_url": url,
-                "caption": caption, "cn_candidates": cn_cands}
+                "caption": caption, "cn_candidates": cn_cands,
+                # ★주소 카드의 대본 코드(2026-09-26): 화면이 '대본 분석 후 찾기'를 이 코드로 추출·조회한다.
+                #   가짜 ID('__trace__')로 조회하면 서버에 없어 404·썸네일 검색어가 됐다. 판정은 _lens_script_code 한 곳.
+                "script_code": _lens_script_code(url, "")}
     finally:
         if not ok:
             refund_credit(cid, "lens")
@@ -19297,7 +19300,7 @@ def api_lens_single(request: Request, url: str = ""):
             item["play_url"] = play
     except Exception:
         pass
-    return {"ok": True, "item": item}
+    return {"ok": True, "item": item, "script_code": _lens_script_code(url, "")}   # 대본 코드(2026-09-26, 주소 추적 응답과 같은 규약)
 
 
 @app.get("/api/basket/analysis_status")
