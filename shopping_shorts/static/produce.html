@@ -13148,6 +13148,18 @@ function renderAiSceneBtn(beat, idx){
   return h;
 }
 
+// ★화면 위치 i ↔ 진짜 칸 번호(beat_idx) 변환은 여기 한 곳(2026-09-27).
+//   편집안 화면은 위치 i로 그린다(DOM id sceneCutaway${i}·sceneSfx${i}). 그런데 서버 라우트
+//   (/ai_scene·/cutaway·/sfx)는 edit_plan.beats[].beat_idx로 칸을 찾는다 — 칸을 지운 작업은 번호가
+//   빠져(0,2,3…) 위치를 그대로 보내면 뒤 칸의 AI 장면(약 300원)·짤·효과음 빼기가 엉뚱한 칸에 붙거나 422였다.
+//   서버로 보내는 값은 반드시 이 함수를 탄다. 목록은 마지막으로 받은 편집안(globalThis._mixBeats).
+//   번호 없는 옛 데이터만 위치로(scene_lab.html beatIdOf와 같은 규칙).
+function mixBeatIdAt(i){
+  const bs = (typeof globalThis!=='undefined' && globalThis._mixBeats) || [];
+  const b = bs[i] || {};
+  return b.beat_idx == null ? i : b.beat_idx;
+}
+
 async function startAiScene(idx, style){
   if(!MIX_JOB) return;
   const box = document.getElementById('sceneCutaway'+idx);
@@ -13155,7 +13167,7 @@ async function startAiScene(idx, style){
   try{
     const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/ai_scene',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx, style: style})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx), style: style})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   pollAiScene(idx);
@@ -13163,7 +13175,8 @@ async function startAiScene(idx, style){
 
 async function _refreshBeatBox(idx){
   const d = await (await fetch('/api/mix/result/'+encodeURIComponent(MIX_JOB))).json();
-  const beat = (d.beats||[]).find(b=>b.beat_idx===idx);
+  if(d.beats) globalThis._mixBeats = d.beats;
+  const beat = (d.beats||[])[idx];   // idx = 화면 위치(toggleCutaway·removeSfx와 같은 식)
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
   const box = document.getElementById('sceneCutaway'+idx);
@@ -13212,7 +13225,7 @@ async function toggleCutaway(idx, assetId){
   try{
     const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cutaway',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx, asset_id: assetId})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx), asset_id: assetId})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   // 그 비트 행만 다시 그린다 — 편집안 전체(loadMixReview)를 다시 그리지 않는다.
@@ -13220,6 +13233,7 @@ async function toggleCutaway(idx, assetId){
   if(!d.ok) return;
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
+  if(d.beats) globalThis._mixBeats = d.beats;
   const beat = (d.beats||[])[idx];
   if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
 }
@@ -13246,11 +13260,12 @@ async function removeSfx(idx){
   try{
     const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/sfx',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx)})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   const d = await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   if(!d.ok) return;
+  if(d.beats) globalThis._mixBeats = d.beats;
   const beat = (d.beats||[])[idx];
   if(beat && box) box.innerHTML = renderSceneSfx(beat, idx);
 }
