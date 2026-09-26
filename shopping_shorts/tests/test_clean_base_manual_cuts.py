@@ -21,6 +21,10 @@ DATA = Path(__file__).parent / "fixtures" / "clean_base_job7bbb_manual.json"
 def job7bbb(tmp_path):
     d = json.loads(DATA.read_text(encoding="utf-8"))
     base = d["base"]
+    # 손 컷 규칙을 시험한다 — 실데이터는 10칸 모두 컷 리듬 칸이라(화면이 손 컷을 안 씀) 표식을 뗀 사본을 쓴다.
+    #   컷 리듬 칸 규칙은 test_rhythm_beats_ignore_manual_cuts_like_editor 가 원본 그대로 시험한다.
+    for bb in d["edit_plan"]["beats"]:
+        bb.pop("cut_rhythm", None)
     (tmp_path / "final_clean_x.mp4").write_bytes(b"c" * 4096)
     base["path"] = str(tmp_path / "final_clean_x.mp4")
     (tmp_path / cb.BASE_FILE).write_text(json.dumps(base), encoding="utf-8")
@@ -37,24 +41,25 @@ def _src_of(base, piece):
 def test_manual_cut_outside_clean_is_changed_not_old_layout(job7bbb):
     """고객 컷이 청소본에 없는 구간을 품은 칸은 '바뀐 장면'이다 — 옛 컷으로 조용히 채우면 안 된다.
     1번(s2 5.07~7.70 미청소)·3번(s1 6.08~7.17)·6번(s1 15.10~16.33). 종전 코드는 전부 covered로 보고 옛 컷을 썼다.
-    4번(s0 3.72~6.99)은 4번 옛 컷(2.37~5.64)+2번 컷(4.9~7.3)이 이어 덮으므로 covered가 맞다."""
+    4번(s0 3.72~6.99)은 4번 옛 컷(2.37~5.64)+2번 컷(4.9~7.3)이 이어 덮으므로 covered가 맞다.
+    2번(화면 = 재료 film_s0 9.03초~)·7번(화면 = s2 13.09초 한 컷 3.48초, 청소본엔 2.04초까지)도 화면 기준 미청소."""
     plan, base = job7bbb
     cov = cb.coverage(plan, base)
-    assert sorted(k for k, v in cov.items() if v != "covered") == [1, 3, 6], cov
+    assert sorted(k for k, v in cov.items() if v != "covered") == [1, 2, 3, 6, 7], cov
     _plan2, uncovered, _ = cb.remap_plan(plan, base)
-    assert uncovered == [1, 3, 6]
+    assert uncovered == [1, 2, 3, 6, 7]
 
 
 def test_covered_manual_beats_replay_exact_customer_cuts(job7bbb):
-    """덮이는 칸(0·2·4·5·7·8)은 청소본 조각이 **고객 컷의 원본 구간 그대로**여야 한다(순서·길이까지)."""
+    """덮이는 칸(0·4·5·8)은 청소본 조각이 **고객 컷의 원본 구간 그대로**여야 한다(순서·길이까지)."""
     plan, base = job7bbb
     plan2, _unc, _ = cb.remap_plan(plan, base)
     orig = {b["beat_idx"]: b for b in plan["beats"]}
     for b in plan2["beats"]:
         bi = b["beat_idx"]
-        if bi not in (0, 2, 4, 5, 7, 8):
+        if bi not in (0, 4, 5, 8):
             continue
-        want = orig[bi]["manual_cuts"]
+        want = va.synced_manual_cuts(orig[bi], None)         # 화면과 같은 정리(syncCuts) 기준
         got = b["manual_cuts"]
         assert all(c["video_id"] == "clean" for c in got), bi
         assert abs(sum(c["dur"] for c in got) - sum(c["dur"] for c in want)) < 0.15, bi
@@ -140,8 +145,8 @@ def test_replay_reproduces_editor_cuts_for_every_covered_beat(job7bbb):
     d = json.loads(DATA.read_text(encoding="utf-8"))
     tts = {int(k): v for k, v in d["tts_durs"].items()}
     plan2, unc, _ = cb.remap_plan(plan, base, tts_durs=tts, src_durs=d["src_durs"])
-    assert unc == [1, 3, 6]
-    assert set(plan2["_clean_need"]) == {"1", "3", "6"}
+    assert unc == [1, 2, 3, 6, 7]
+    assert set(plan2["_clean_need"]) == {"1", "2", "3", "6", "7"}
     orig = {b["beat_idx"]: b for b in plan["beats"]}
     checked = 0
     for b in plan2["beats"]:
@@ -154,7 +159,7 @@ def test_replay_reproduces_editor_cuts_for_every_covered_beat(job7bbb):
         for (wv, ws, wl), (gv, gs, gl) in zip(want, got):
             assert wv == gv and abs(ws - gs) < 0.15 and abs(wl - gl) < 0.2, (bi, want, got)
         checked += 1
-    assert checked == 7          # 0·2·4·5·7·8·9
+    assert checked == 5          # 0·4·5·8·9
 
 
 def test_replay_uses_located_extras_after_incremental(job7bbb, tmp_path):
@@ -246,3 +251,17 @@ def test_partial_base_skip_beat_is_not_recleaned(job7bbb):
         for c in b.get("manual_cuts") or []:
             if c["video_id"] == "clean":
                 assert base["cuts"][int(c["seg_id"].rsplit("-", 1)[1])]["cleaned"] is not False
+
+
+def test_rhythm_beats_ignore_manual_cuts_like_editor():
+    """컷 리듬 칸은 화면(planClips rhythmOne)이 손 컷을 안 쓰고 조각 한 번씩 비례로 그린다 — 서버도 같게.
+    강규봉님 8번 칸(리듬 max 2.9): 재료 mpc8q3-1(s2 0.6~2.533) 한 조각을 4.54초 — 원본 뒤를 이어 읽는다
+    (화면도 2026-09-26부터 같은 규칙: 멈추지 않고 실제 장면)."""
+    d = json.loads(DATA.read_text(encoding="utf-8"))
+    tts = {int(k): v for k, v in d["tts_durs"].items()}
+    for b in d["edit_plan"]["beats"]:
+        assert b.get("cut_rhythm") and va.synced_manual_cuts(b, tts[b["beat_idx"]]) == []
+    b8 = d["edit_plan"]["beats"][8]
+    (c,) = va.plan_beat_clips_for(b8, tts[8], d["src_durs"])
+    assert c["video_id"] == "s2" and abs(c["start"] - 0.6) < 1e-6
+    assert abs(c["src_dur"] - tts[8]) < 0.02 and abs(c["out_dur"] - tts[8]) < 0.02   # 멈춤 없이 1배속

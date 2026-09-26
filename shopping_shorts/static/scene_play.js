@@ -805,8 +805,13 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         if (k === usable.length - 1) take = Math.max(0, ttsDur - filled);
         if (take <= EPS) return;
         const clip = {seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take};
-        // 구절 맞춤 끈 칸도 같은 규칙 — 조각보다 길게 틀지 않는다(느리게 채운다).
-        if (seg.end - seg.start < take - EPS) clip.src_dur = +(seg.end - seg.start).toFixed(3);
+        // ★조각보다 길게 틀어야 하면 **원본 뒤 실제 장면을 이어서** 읽는다 — 서버 _plan_beat_clips one_per_seg의
+        //   src_cap(원본 끝까지 1배속)과 같은 규칙(2026-09-26 강규봉님 8번 칸: 화면은 조각 끝에서 멈추고 렌더는
+        //   이어 읽어 미리보기≠완성본). 사장님 정책 "멈추지 말고 진짜 영상으로"(07-20)도 이쪽이다.
+        //   원본이 모자라면 거기까지만 읽고 나머지는 느리게·정지(finish가 원본 끝으로 자른다).
+        const reel = +(((typeof DATA === 'object' && DATA && DATA.src_duration) || {})[seg.video_id]) || 0;
+        const room = reel > 0 ? reel - seg.start : (seg.end - seg.start);
+        if (room > EPS && room < take - EPS) clip.src_dur = +room.toFixed(3);
         clips.push(clip);
         filled += take;
       });
