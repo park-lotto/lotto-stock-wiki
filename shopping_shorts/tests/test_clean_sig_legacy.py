@@ -119,7 +119,10 @@ def _button(monkeypatch, tmp_path, job):
     calls = []
     monkeypatch.setattr(mp, "_charge_clean", lambda *a, **k: calls.append("charge") or 1)
     monkeypatch.setattr(mp, "_refund_clean", lambda *a, **k: None)
-    monkeypatch.setattr(mp, "assemble_clean_video", lambda *a, **k: calls.append("assemble") or None)
+    # "assemble" = clean_fn 있는 조립(= 완성본 통째 유료 청소) / "reassemble" = clean_fn 없는 재조립(과금 0,
+    #   정본 경로에서 clean_video_path 를 지금 편성으로 채우는 것 — 2026-09-27)
+    monkeypatch.setattr(mp, "assemble_clean_video",
+                        lambda *a, **k: calls.append("assemble" if k.get("clean_fn") else "reassemble") or None)
     mp.run_clean_sources("j", "db", str(tmp_path))
     return store, calls
 
@@ -128,7 +131,7 @@ def test_버튼_정본이_덮으면_과금_0(tmp_path, monkeypatch):
     job = _base_job(tmp_path / "j")
     assert mp._clean_final_found(job, tmp_path / "j") is None       # 서명 파일로는 못 찾는 상태
     store, calls = _button(monkeypatch, tmp_path, job)
-    assert calls == [] and job["clean_status"] == "ready"
+    assert calls == ["reassemble"] and job["clean_status"] == "ready"
     assert mp.clean_tiers_ready(job, tmp_path / "j")["basic"] is True
 
 
@@ -168,14 +171,14 @@ def test_버튼_장면이_바뀌면_정본만으로_안_끝낸다(tmp_path, monk
     monkeypatch.setattr(mp, "_final_clean_fn", lambda *a, **k: finals.append(1) or _orig(*a, **k))
     store, calls = _button(monkeypatch, tmp_path, job)
     assert finals == [] and "assemble" not in calls       # 완성본 통째 재청소 없음
-    assert calls == ["charge"]                             # 증분 1콜
+    assert calls == ["charge", "reassemble"]               # 증분 1콜 + 과금 0 재조립
     assert job["clean_status"] == "ready"
     # 과금 초 = 바뀐 장면 조각만(20~22초 재료 = 2초 + 렌더 컷 재생 여유). 완성본 전체(정본 2초 편성)가 아니다.
     assert len(sent) == 1 and 2.0 <= sent[0] <= 2.0 + cb.EXTEND_PAD + 1e-6
     # 결과는 렌더가 읽는 자리(정본 extras)에 있다 → 다음 렌더·버튼은 과금 0
     assert "cb0_0" in (cb.load_base(tmp_path / "j").get("extras") or {})
     store2, calls2 = _button(monkeypatch, tmp_path, job)
-    assert calls2 == []
+    assert calls2 == ["reassemble"]
 
 
 def test_버튼_증분_실패면_failed(tmp_path, monkeypatch):

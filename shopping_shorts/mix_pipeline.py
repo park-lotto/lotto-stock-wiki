@@ -604,7 +604,11 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
         return
     _t0 = datetime.now(timezone.utc)
     workers = max(1, min(config.TTS_MAX_WORKERS, total))
-    with ThreadPoolExecutor(max_workers=workers) as ex:
+    # ★keyctx.pool — 칸 스레드도 이 job의 주인을 안다(2026-09-27). 맨 ThreadPoolExecutor는
+    #   contextvar를 안 넘겨, 워커 진입점(@_owned_job)이 주인을 열어도 칸마다 부르는
+    #   _ensure_breath_lines(제미나이 호흡 끊기 → vertex_route.current_cid)는 cid 0으로 돌았다.
+    from shopping_shorts import keyctx as _kc
+    with _kc.pool(max_workers=workers) as ex:
         futures = [ex.submit(_one, i) for i in range(total)]
         for f in futures:
             f.result()  # 예외를 여기서 소비 — 숨기지 않고 그대로 전파(run_mix_job이 failed 처리)
@@ -1160,7 +1164,6 @@ def _owned_job(fn):
     return wrap
 
 
-@_owned_job
 def humanize_tts_error(err, has_own_key=None):
     """TTS 실패 원문을 고객이 읽고 **뭘 해야 하는지 아는** 한 줄로 바꾼다(2026-09-07).
 
@@ -1200,6 +1203,7 @@ def humanize_tts_error(err, has_own_key=None):
     return f"{tip}\n\n[원문] {raw}"
 
 
+@_owned_job
 def run_mix_job(job_id, db_path, work_root):
     """다운로드→추출→EDL→TTS. 완료 시 status='ready_for_review'."""
     # 이 job 안에서 나가는 모든 Gemini 콜에 job_id·customer_id를 붙인다(2026-08-16).
@@ -1337,7 +1341,9 @@ def run_mix_job(job_id, db_path, work_root):
                 # cached는 위에서 이미 조회했다(segments가 못써도 category 컬럼은 실려온다).
                 r["category"] = (cached or {}).get("category")
                 return vid, r
-            with ThreadPoolExecutor(max_workers=max(1, len(video_paths))) as ex:
+            # ★keyctx.pool — 추출 스레드도 이 job의 주인을 안다(맨 ThreadPoolExecutor는 contextvar를 안 넘긴다).
+            from shopping_shorts import keyctx as _kc
+            with _kc.pool(max_workers=max(1, len(video_paths))) as ex:
                 extracts = dict(ex.map(_extract, video_paths.items()))
             store.update_mix_job(job_id, extract=extracts)
 
@@ -4104,6 +4110,32 @@ def assemble_clean_video(job_id, db_path, work_root, clean_fn=None):
     clean_map = job.get("clean_sources") or {}
     if not plan:
         return None
+    if clean_fn is None:
+        # ★정본(2026-09-27): 청소본 정본이 있으면 **렌더와 같은 입력**(render_inputs_for)으로 조립한다 —
+        #   정본 + 증분 조각(extras)을 지금 편성 좌표로 재배치한 것. 종전엔 정본 경로에서 이 조립본을 안 만들어
+        #   clean_video_path 가 비거나 옛 편성 그대로였고, 썸네일 배경이 정본 **파일 자체**(청소 당시 편성)를 써
+        #   바뀐 장면 칸이 옛 그림이었다. allow_clean=False — 여기선 절대 업체를 안 부른다(과금 0).
+        try:
+            _cid = job.get("customer_id") or 0
+            plan_used, _src, _base = render_inputs_for(store, job, job_id, Path(work_root) / job_id, [],
+                                                       _cid, allow_clean=False)
+        except Exception:      # noqa: BLE001 — 정본 판정 실패는 종전 경로로
+            traceback.print_exc(file=sys.stderr)
+            _base = None
+        if _base is not None:
+            try:
+                tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+                out_path = Path(work_root) / job_id / "clean_preview.mp4"
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                assemble(plan_used, tts_paths, _src, str(out_path), clean_fn=None, deco={},
+                         cutaway_paths=_resolve_cutaway_paths(store, plan, _cid),
+                         sfx_paths=_resolve_sfx_paths(store, plan, _cid, job=job),
+                         burn_captions=False)
+                store.update_mix_job(job_id, clean_video_path=str(out_path))
+                return str(out_path)
+            except Exception:
+                traceback.print_exc(file=sys.stderr)
+                return None
     if not clean_map:
         # 청소된 소스가 없다 — clean_fn(완성본 1편 청소)이 있으면 **원본**으로 조립해 그걸 청소한다.
         if clean_fn is None:
@@ -4149,6 +4181,15 @@ def _clear_stale_failure(store, job_id, job=None):
     if not ((job.get("edit_plan") or {}).get("beats")):
         return          # 편성도 없으면 되돌릴 자리가 없다 — 그대로 둔다
     store.update_mix_job(job_id, status="ready_for_review", error=None)
+
+
+def _reassemble_clean_quiet(job_id, db_path, work_root):
+    """버튼이 정본 기준으로 끝났을 때 clean_video_path 를 '지금 편성의 청소 조립본'으로 채운다(과금 0).
+    실패해도 clean_status 는 안 되돌린다 — 청소(유료)는 이미 끝났고, 썸네일은 자가치유로 다시 만든다."""
+    try:
+        assemble_clean_video(job_id, db_path, work_root)
+    except Exception:      # noqa: BLE001
+        traceback.print_exc(file=sys.stderr)
 
 
 @_owned_job
@@ -4226,6 +4267,7 @@ def run_clean_sources(job_id, db_path, work_root):
                   file=sys.stderr)
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
             _clear_stale_failure(store, job_id)
+            _reassemble_clean_quiet(job_id, db_path, work_root)   # 썸네일 배경 = 지금 편성의 청소 조립본(과금 0)
             return
         _found = _clean_final_found(job, work) if _judged is not None else None
         if (_judged is not None and clean_base_fits(_judged["base"], job)
@@ -4241,6 +4283,7 @@ def run_clean_sources(job_id, db_path, work_root):
             render_inputs_for(store, job, job_id, work, keys, customer_id, allow_clean=True)
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
             _clear_stale_failure(store, job_id)
+            _reassemble_clean_quiet(job_id, db_path, work_root)   # 정본+방금 지운 조각으로 재조립(과금 0)
             return
         if _clean_strategy(job) == "final":
             final_fn = _final_clean_fn(store, job, job_id, work, keys, customer_id)
@@ -4283,7 +4326,6 @@ def run_clean_sources(job_id, db_path, work_root):
     _clear_stale_failure(store, job_id)
 
 
-@_owned_job
 # ── 편성 지문(2026-09-02) ───────────────────────────────────────────────────
 # 왜: 미리보기를 만든 뒤 편성(대본·컷)이 바뀌어도 **미리보기 파일은 그대로 남는다**.
 # 고객은 낡은 미리보기와 새 최종을 나란히 받아 "영상이 두 개다 / 장면이 바뀌었다"로 본다
@@ -4335,6 +4377,7 @@ def preview_sig_path(work_root, job_id):
     return Path(work_root) / job_id / "preview.sig"
 
 
+@_owned_job
 def run_preview(job_id, db_path, work_root):
     """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
 
@@ -4654,7 +4697,6 @@ def _intro_choice(thumb):
     return True, (thumb.get("selected") or (results[-1] if results else None)), thumb.get("intro_sec")
 
 
-@_owned_job
 def _render_stamp(job):
     """렌더 결과물이 '지금 설정'으로 만든 것인지 가리는 도장.
 
@@ -4686,6 +4728,7 @@ def _render_stamp(job):
     return "|".join(parts)
 
 
+@_owned_job
 def run_render(job_id, db_path, work_root, skip_clean=False):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
@@ -4879,6 +4922,19 @@ def _speed_base_path(out):
     return out.with_name(f"{out.stem}_speed_base{out.suffix}")
 
 
+def _bump_tts_ver(beats):
+    """음성을 다시 구운 칸의 tts_ver 를 올린다 — **올리는 곳은 여기 한 곳**(0순위-B, 2026-09-27).
+
+    mp3는 대본 해시 이름이라 성우·톤만 바꿔 다시 구우면 **같은 경로를 덮어쓴다** — 겉으론 구분이 안 된다.
+    그래서 화면(재합성 완료 폴링·scene_play.pvxCuts 의 합본 key)은 이 번호로 "음성이 바뀌었다"를 안다.
+    칸 하나 재합성(resynth_one_beat)만 올리고 전체 재합성(resynth_tts_job)은 안 올려, 전체를 다시 들어도
+    편집 화면이 옛 합본을 그대로 틀었다."""
+    for b in beats or []:
+        if isinstance(b, dict):
+            b["tts_ver"] = (b.get("tts_ver") or 0) + 1
+
+
+@_owned_job
 def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root, *, speed_only=False):
     """비트 하나만 voice_override로 재합성해 같은 mp3에 덮어쓰고 자막을 재동기한다.
     최종 렌더는 재합성 없이 이 mp3(beat['tts_path'])를 재사용하므로 교정이 그대로 남는다."""
@@ -4978,12 +5034,13 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root, *, sp
             traceback.print_exc(file=sys.stderr)
         # 완료 신호: 단조 증가 버전. 프론트가 이 값 변화를 폴링해 '재합성 끝'을 안다
         # (mp3는 같은 경로/URL이라 겉으론 구분이 안 되므로 — 고정 4초 추측을 이 신호로 대체).
-        beat["tts_ver"] = (beat.get("tts_ver") or 0) + 1
+        _bump_tts_ver([beat])
         store.update_mix_job(job_id, edit_plan=plan)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
 
 
+@_owned_job
 def resynth_tts_job(job_id, db_path, work_root):
     """기존 edit_plan은 그대로 두고, job의 voice 설정으로 비트별 TTS만 다시 생성한다
     (영상제작 4단계 '이 대본으로 다시 듣기'·프리셋 변경). 재다운로드·재매칭 없음."""
@@ -4999,6 +5056,7 @@ def resynth_tts_job(job_id, db_path, work_root):
                           global_pron=pron_corrections.load(store),
                           customer_id=job.get("customer_id", 0),
                           script_endings=job_script_endings(job))
+        _bump_tts_ver(plan["beats"])      # 전 칸을 다시 구웠다(skip_existing 아님) — 화면이 새 음성을 묻게
         store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
