@@ -20966,7 +20966,12 @@ def _ai_scene_on(customer_id):
         v = ""
     if not v:
         return bool(_is_admin(customer_id))
-    return _setting_gate(store, "ai_scene_enabled", customer_id)
+    if not _setting_gate(store, "ai_scene_enabled", customer_id):
+        return False
+    # ★스위치가 열려도 **자기 Vertex를 등록한 회원만**(2026-09-26 사장님 "AI 생성은 반드시 회원용이 있어야").
+    #   관리자는 사장님 프로젝트. 판정은 vertex_route.veo_allowed 한 곳 — 버튼·API·워커가 같은 답을 낸다.
+    from shopping_shorts import vertex_route as _vr
+    return bool(_vr.veo_allowed(customer_id)[0])
 
 
 @app.post("/api/produce/mix/{job_id}/ai_scene")
