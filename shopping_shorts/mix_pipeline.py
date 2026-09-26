@@ -4389,6 +4389,10 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
     base = _cb.load_base(work)
     if base is None:
         return plan, _resolve_sources(job, work), None
+    try:        # 옛 청소본 밀림 1회 측정(2026-09-27) — 소스를 못 찾아도 렌더 입력 준비는 계속한다
+        base = _cb.calibrate(work, base, _resolve_sources(job, work))
+    except Exception as _e:      # noqa: BLE001
+        print("[clean-base] 밀림 보정 건너뜀: %s" % _e, file=sys.stderr)
     # ★늘림 판정의 길이는 렌더와 같은 자(final_clip_pairs가 쓰는 _beat_effective_dur)로 잰다 —
     #   target_seconds는 계획값이라 실제 TTS 길이와 어긋날 수 있다(둘이 다르면 지워놓고 안 쓰거나, 모자란다).
     tts_durs = clean_tts_durs(plan)
