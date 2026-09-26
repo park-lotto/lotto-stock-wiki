@@ -34,7 +34,9 @@ def test_final_clean_fn_saves_base(tmp_path, monkeypatch):
     mix_raw = tmp_path / "mix_raw.mp4"; mix_raw.write_bytes(b"y" * 4096)
     out = fn(str(mix_raw))
     base = cb.load_base(tmp_path)
-    assert base is not None and base["path"] == out and base["cuts"] == fake_cuts
+    # 전체 지우기면 모든 컷이 cleaned=True(장면 골라 지우기 2026-09-26의 표식) — 고른 장면 정보는 없다
+    assert base is not None and base["path"] == out and base["cuts"] == [dict(c, cleaned=True) for c in fake_cuts]
+    assert "partial" not in base and "skip_beats" not in base
     assert base["beat_keys"] == {"0": [["s0", 1.0, 3.0]]}
 
 

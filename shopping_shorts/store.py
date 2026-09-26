@@ -1374,6 +1374,8 @@ class Store:
                 ("clean_video_path", "TEXT"),
                 ("clean_tier", "TEXT"),    # 자막제거 등급 'basic'|'pro'(Smart Pro). 2026-09-16.
                                            # ★NULL = 기본 — 옛 job은 손대지 않아도 지금까지와 같다.
+                ("clean_cuts_json", "TEXT"),  # 자막제거할 장면(컷 키 목록). 2026-09-26.
+                                              # ★NULL = 전체 — 옛 job은 지금까지와 같다.
                 ("given_script", "TEXT"),  # 영상제작 2단계 given_script 모드(2026-07-13)
                 ("headcopy_json", "TEXT"),  # 영상제작 5단계 꾸미기 헤드카피(2026-07-13)
                 ("caption_style_json", "TEXT"),  # 영상제작 5단계 자막 스타일(2026-07-14)
@@ -5270,7 +5272,7 @@ class Store:
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
                 "scene_first, backbone_main, clean_regions_json, product_json, "
-                "mix_charged, cta_cut_sec, clean_tier "
+                "mix_charged, cta_cut_sec, clean_tier, clean_cuts_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -5307,6 +5309,8 @@ class Store:
             "cta_cut_sec": row[37],
             # 자막제거 등급. None = 기본(옛 job 포함). 해석은 mix_pipeline.clean_tier_of 한 곳.
             "clean_tier": row[38],
+            # 자막제거할 장면(컷 키). None = 전체. 해석은 mix_pipeline.clean_selection_of 한 곳.
+            "clean_cuts": json.loads(row[39]) if row[39] else None,
         }
 
     def list_recent_mix_jobs(self, customer_id=LEGACY_CUSTOMER_ID, limit=50):
@@ -5371,6 +5375,10 @@ class Store:
         if "clean_tier" in fields:
             cols.append("clean_tier=?")
             vals.append(fields["clean_tier"] or None)
+        if "clean_cuts" in fields:
+            cols.append("clean_cuts_json=?")
+            vals.append(json.dumps(fields["clean_cuts"], ensure_ascii=False)
+                        if fields["clean_cuts"] else None)
         if "thumbnail" in fields:
             cols.append("thumbnail_json=?")
             vals.append(json.dumps(fields["thumbnail"], ensure_ascii=False)
