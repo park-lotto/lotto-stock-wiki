@@ -939,6 +939,14 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     runout:   마지막 비트 여운(초). 0이면 안 붙인다.
     """
     from shopping_shorts import backbone as _bb, config as _cfg
+    # ★완성본 컷 = 편집 화면 컷(2026-09-26 근본해결): 화면 코드(scene_play.js)를 서버에서 돌린 결과가 있으면
+    #   그대로 쓴다 — 아래 계산은 화면 계산을 못 한 때(데이터 없음·node 실패)만 쓰는 예비다. screen_clips 참조.
+    #   청소본 재생 칸(clean_replay)은 이미 화면 컷을 청소본 좌표로 옮긴 것이라 제외.
+    if not beat.get("clean_replay"):
+        from shopping_shorts import screen_clips as _sc
+        _scr = _sc.lookup(beat, tts_dur, src_durs)
+        if _scr:
+            return _scr
     # 순서 구간 리스트 = _beat_material(기본: [primary]+alternates / 실험실 편성이 있으면
     # scene_override). 소스에 실재하고 + 디코드 가능한 것만.
     segs = [s for s in _beat_material(beat)
@@ -2309,6 +2317,9 @@ def _apply_hook_inpoint(edit_plan, source_video_paths, work):
             return
         if (beats[0] or {}).get("scene_override"):
             return   # ★실험실 편성이 있으면 사람 선택이 이긴다 — 훅 시작점 자동이동 안 함
+        from shopping_shorts import screen_clips as _scr
+        if _scr.has(beats[0]):
+            return   # ★화면 컷이 있으면 화면이 이긴다(2026-09-26) — 편집 화면은 이 자동 이동을 모른다(시작점이 달라진다)
         prim = (beats[0] or {}).get("primary")
         if not prim or prim.get("video_id") not in source_video_paths:
             return
