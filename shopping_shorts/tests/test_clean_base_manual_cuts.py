@@ -157,16 +157,6 @@ def test_replay_reproduces_editor_cuts_for_every_covered_beat(job7bbb):
     assert checked == 7          # 0·2·4·5·7·8·9
 
 
-def test_replay_need_spans_are_exactly_what_editor_shows(job7bbb):
-    """못 덮은 1번 칸: 증분 청소할 구간 = 고객 컷(s2 2.533~7.70) — 재료 전체(s2 2.533~8.967)가 아니다."""
-    plan, base = job7bbb
-    d = json.loads(DATA.read_text(encoding="utf-8"))
-    tts = {int(k): v for k, v in d["tts_durs"].items()}
-    plan2, _unc, _ = cb.remap_plan(plan, base, tts_durs=tts, src_durs=d["src_durs"])
-    (m,) = plan2["_clean_need"]["1"]
-    assert m["video_id"] == "s2" and abs(m["start"] - 2.533) < 0.01 and abs(m["end"] - 7.703) < 0.02
-
-
 def test_replay_uses_located_extras_after_incremental(job7bbb, tmp_path):
     """증분 청소가 원본 위치를 남기면 다음 재배치가 그 조각으로 덮는다(1번 칸 → covered, 재과금 0)."""
     plan, base = job7bbb
@@ -209,3 +199,50 @@ def test_big_tail_gap_still_recleans(tmp_path):
                         cuts=[{"video_id": "s0", "beat_idx": 0, "src": 0.0, "fin": 0.0, "dur": 1.5, "sdur": 1.5}])
     plan2, unc, _ = cb.remap_plan(plan, base, tts_durs={0: 2.0}, src_durs={"s0": 10.0})
     assert unc == [0] and plan2["_clean_need"]["0"][0]["end"] == 2.0
+
+
+def test_reclean_only_uncleaned_gap(job7bbb):
+    """1번 칸 고객 컷 s2 2.533~7.703 중 청소본에 있는 건 2.533~5.073 — 다시 지울 건 **5.073~7.703만**(컷 전체 아님)."""
+    plan, base = job7bbb
+    d = json.loads(DATA.read_text(encoding="utf-8"))
+    tts = {int(k): v for k, v in d["tts_durs"].items()}
+    plan2, _unc, _ = cb.remap_plan(plan, base, tts_durs=tts, src_durs=d["src_durs"])
+    (m,) = plan2["_clean_need"]["1"]
+    assert m["video_id"] == "s2" and abs(m["start"] - 5.073) < 0.01 and abs(m["end"] - 7.703) < 0.02
+
+
+def test_gap_extra_stitches_with_clean_pieces(job7bbb, tmp_path):
+    """빈 부분만 지운 조각(src 5.073~)을 붙이면 청소본 조각 + 새 조각이 이어져 1번 칸이 덮인다."""
+    plan, base = job7bbb
+    d = json.loads(DATA.read_text(encoding="utf-8"))
+    tts = {int(k): v for k, v in d["tts_durs"].items()}
+    p = tmp_path / "cb1_0.mp4"
+    p.write_bytes(b"x" * 10)
+    base = cb.add_extra(tmp_path, base, vid="cb1_0", path=str(p), beat_idx=1,
+                        material_key=cb.beat_material_key(plan["beats"][1]), seconds=2.83,
+                        src_vid="s2", src_start=5.073)
+    plan2, unc, _ = cb.remap_plan(plan, base, tts_durs=tts, src_durs=d["src_durs"])
+    assert 1 not in unc
+    b1 = next(b for b in plan2["beats"] if b["beat_idx"] == 1)
+    assert [c["video_id"] for c in b1["manual_cuts"]] == ["clean", "cb1_0"]
+    assert abs(sum(c["dur"] for c in b1["manual_cuts"]) - 5.17) < 0.02
+
+
+def test_partial_base_skip_beat_is_not_recleaned(job7bbb):
+    """장면 골라 지우기 정본: 안 고른 칸(skip_beats)·안 지운 컷(cleaned False)은 청소 대상이 아니고 조각으로도 안 쓴다."""
+    plan, base = job7bbb
+    d = json.loads(DATA.read_text(encoding="utf-8"))
+    tts = {int(k): v for k, v in d["tts_durs"].items()}
+    base = dict(base, partial=True, skip_beats=[1, 3, 6])
+    base["cuts"] = [dict(c, cleaned=(c["beat_idx"] not in (1, 3, 6))) for c in base["cuts"]]
+    plan2, unc, _ = cb.remap_plan(plan, base, tts_durs=tts, src_durs=d["src_durs"])
+    assert not ({1, 3, 6} & set(unc)) and not ({"1", "3", "6"} & set(plan2["_clean_need"]))
+    orig = {b["beat_idx"]: b for b in plan["beats"]}
+    for bi in (1, 3, 6):
+        b = next(x for x in plan2["beats"] if x["beat_idx"] == bi)
+        assert b.get("manual_cuts") == orig[bi].get("manual_cuts")      # 원본 그대로
+    # 안 지운 컷(1번 칸 옛 컷 s2 2.533~)을 8번 칸이 빌려 쓰지 않는다
+    for b in plan2["beats"]:
+        for c in b.get("manual_cuts") or []:
+            if c["video_id"] == "clean":
+                assert base["cuts"][int(c["seg_id"].rsplit("-", 1)[1])]["cleaned"] is not False
