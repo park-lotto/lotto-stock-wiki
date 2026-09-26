@@ -116,7 +116,7 @@ def test_버튼은_렌더와_같은_판정으로_증분(short_a, monkeypatch, tm
     def _cut(src, ss, dur, dst):
         Path(dst).write_bytes(b"p" * 2048); sent.append((round(float(ss), 3), round(float(dur), 3))); return str(dst)
 
-    def _joined(items, keys, w, tag="", tier=None):
+    def _joined(items, keys, w, tag="", tier=None, **kw):
         out = {}
         for v, _ in items:
             q = Path(w) / f"{v}_clean.mp4"; q.write_bytes(b"q" * 2048); out[v] = str(q)

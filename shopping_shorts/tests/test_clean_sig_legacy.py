@@ -62,7 +62,7 @@ def test_옛식은_찾기전용_새로_만들땐_현재식(tmp_path, monkeypatch
     monkeypatch.setattr(mp, "_charge_clean", lambda *a, **k: 1)
     monkeypatch.setattr(mp, "_save_clean_base", lambda *a, **k: None)
     got = {}
-    def _vc(src, keys, out, tier=None):
+    def _vc(src, keys, out, tier=None, **kw):        # resume_key 등 — 옆 트랙이 인자를 늘려도 가짜는 받는다
         got["out"] = out; Path(out).write_bytes(b"x" * 2048); return out
     monkeypatch.setattr(mp, "_vmake_clean", _vc)
     mp._final_clean_fn(None, job, "j", tmp_path, ["k"], 0)(str(tmp_path / "mix_raw.mp4"))
@@ -150,7 +150,7 @@ def _incr_fakes(monkeypatch, sent):
     def _cut(src, ss, dur, dst):
         _P(dst).write_bytes(b"p" * 2048); sent.append(round(float(dur), 3)); return str(dst)
 
-    def _joined(items, keys, work, tag="", tier=None):
+    def _joined(items, keys, work, tag="", tier=None, **kw):
         out = {}
         for v, _ in items:
             q = _P(work) / f"{v}_clean.mp4"; q.write_bytes(b"q" * 2048); out[v] = str(q)
