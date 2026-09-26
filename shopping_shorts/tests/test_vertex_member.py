@@ -145,3 +145,21 @@ def test_run_ai_scene_refuses_without_member_vertex(monkeypatch, tmp_path):
     assert not called, "등록 안 한 회원인데 Veo를 불렀다"
     st = states["plan"]["beats"][0]["ai_scene"]
     assert st["state"] == "failed" and "Vertex를 등록" in st["error"]
+
+
+def test_ai_scene_button_only_for_registered_members_when_switch_open(monkeypatch):
+    """스위치 ai_scene_enabled=1(전체)이어도 버튼·API는 자기 Vertex 등록 회원(+관리자)에게만."""
+    import shopping_shorts.app as app_mod
+
+    class St:
+        def __init__(self, *_a):
+            pass
+
+        def get_setting(self, k, d=""):
+            return "1" if k == "ai_scene_enabled" else d
+    monkeypatch.setattr(app_mod, "Store", St)
+    monkeypatch.setattr(vr, "member_info", lambda cid: SA if str(cid) == "205" else None)
+    monkeypatch.setattr(vr, "_is_admin", lambda cid: str(cid) == "0")
+    assert app_mod._ai_scene_on(205) is True
+    assert app_mod._ai_scene_on(204) is False
+    assert app_mod._ai_scene_on(0) is True
