@@ -528,6 +528,10 @@ def _group_of(from_pain, feats):
 
 
 _LEAD_CONJ = re.compile(r"^(근데|그런데|그리고|또|그래서|또한)\s+")
+# ★모델이 반전을 자기 신호어로 연 **형태**(2026-09-26 실측 "근데 진짜 충격적인 포인트는 진짜 충격적인 건 …" /
+#   라이브 "… 포인트는 충격은 마스카포네가 …"). 목록(_ALL_SIGNAL_WORDS)엔 앞에 "진짜"가 붙은 꼴이 없어 안 떼어졌다.
+_TWIST_LEAD = re.compile(r"^(?:(?:근데|그런데|그리고)\s+)?(?:(?:진짜|정말|더|제일|가장)\s+)*"
+                         r"(?:(?:충격적인|충격인|미친|대박인|놀라운|신기한)\s*(?:건|게|거|점은|포인트는|포인트인\s*게|포인트)|충격은|대박은)[,\s]+")
 _RANK_ONE = re.compile(r"말도 안 되는|미친 포인트인게")   # 위치[1] 낱말(한 줄 단독으로 둘 수 있는 것)
 
 
@@ -602,6 +606,8 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
             for w in sorted(_ALL_SIGNAL_WORDS, key=len, reverse=True):   # 모델이 이미 어떤 신호어로 열었으면 떼고 붙인다
                 if tw.startswith(w + " "):
                     tw = tw[len(w):].strip()
+            for _ in range(2):                                           # 목록에 없는 꼴도(형태로) 뗀다 — 두 겹까지
+                tw = _TWIST_LEAD.sub("", _LEAD_CONJ.sub("", tw)).strip()
             tail[0] = ("반전", left[0] + " " + _LEAD_CONJ.sub("", tw), tail[0][2])
     rows += tail
     return _drop_repeat_signal(
@@ -816,6 +822,22 @@ def _seed_style(seed_text):
             "hook_angle": "첫 줄(hook)은 씨앗 첫 줄의 **꼴**을 빌린다 — 「%s」의 OO 자리를 이 제품의 사람·물건으로 바꿔 새 문장을 쓴다. 씨앗 문장을 그대로 쓰지 마라." % shape}
 
 
+def _fill_nodup(mold, slots):
+    """틀 빈칸을 채우되, 빈칸 값의 낱말이 **틀의 고정 낱말과 겹치면 뺀다**(2026-09-26 실측: 권위자="미국 천재" +
+    "{권위자}도 감탄한 천재 아이디어" → "미국 천재도 감탄한 천재 아이디어"). 빼고 나서 빈칸이 비면 None(그 틀은 안 쓴다)."""
+    from shopping_shorts import story_hook
+    need = story_hook.slots_of(mold)
+    fixed = set(re.findall(r"[가-힣A-Za-z0-9]+", re.sub(r"\{[^}]*\}", " ", mold)))
+    vals = {}
+    for k in need:
+        v = (slots or {}).get(k) or ""
+        toks = [w for w in v.split() if re.sub(r"[^가-힣A-Za-z0-9]", "", w) not in fixed]
+        if not toks:
+            return None
+        vals[k] = " ".join(toks)
+    return story_hook.fill(mold, vals)
+
+
 def style_hook_line(sp, slots, seed_text="", key="", nth=0):
     """고른 스타일의 제목 틀(templates.title) 중 **빈칸을 채울 수 있는 것**을 골라 완성 문장으로. 없으면 첫 틀에서
     못 채운 빈칸 낱말만 빼고 쓴다(2026-09-26 사장님 A안: 「OO의 정체」를 골랐는데 은행 꼴 "개발자도 예상 못한…"이 나왔다 —
@@ -825,7 +847,11 @@ def style_hook_line(sp, slots, seed_text="", key="", nth=0):
     if not titles:
         return None
     from shopping_shorts import story_hook
-    cands = story_hook.candidates(slots or {}, seed_text, molds=titles)
+    cands = []
+    for t in titles:
+        f = _fill_nodup(t, slots or {})
+        if f and not (seed_text and story_hook.copied(f, seed_text)):
+            cands.append((t, f))
     if cands:
         import zlib
         return cands[(zlib.crc32(str(key).encode("utf-8")) + int(nth)) % len(cands)][1]
@@ -1088,6 +1114,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
                                                   "no_cut_lines", "dropped_escalations", "diff_retry", "diff_left",
                                                   "locked_lines", "twist_n", "n_new") if n.get(k)}
         d["feats_meta"] = n.get("feats") or []    # 점검용: 특징별 새것 여부·영상 수·근거 컷(tools/script_diff 대조)
+        d["seed_points"] = note.get("seed_points") or []   # 점검용: 씨앗이 이미 말한 셀링포인트(차별점 잣대)
         d["line_groups"] = [L.get("group", -1) for L in lines]     # 점검용: 줄이 어느 재료에 걸렸나
         d["feat_names"] = [f.get("name") or "" for f in feats]
         drafts.append(d)

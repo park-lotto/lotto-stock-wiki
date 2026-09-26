@@ -384,6 +384,24 @@ def test_style_hook_line_and_land_enforced():
     assert keep[0]["text"] == "러너들 구원한 이어폰의 정체"
 
 
+def test_twist_lead_not_doubled():
+    """모델이 반전을 자기 신호어로 열어도 두 번 붙지 않는다(09-26 실측 두 꼴)."""
+    for tw in ("진짜 충격적인 건 물에 쓱 헹구면 끝이라는 거", "충격은 마스카포네가 꽉 차서 또 산다는 거", "진짜 충격인 건 물로 싹 씻긴다는 거",
+               "근데 진짜 미친 포인트는 서랍에 쏙 들어간다는 거"):
+        for key in ("a", "b", "c", "d", "e", "f", "g", "h"):
+            lines = sw._to_lines(dict(YT_OUT, twist=tw), False, key, 0, FEATS)
+            t = [L["text"] for L in lines if L["role"] == "반전"][0]
+            assert t.count("충격") + t.count("미친 포인트") <= 1, t
+
+
+def test_style_hook_no_repeated_word():
+    """빈칸 값이 틀 고정 낱말과 겹치면 뺀다 — "미국 천재도 감탄한 천재 아이디어" 금지(09-26 실측)."""
+    sp = {"templates": {"title": ["{권위자}도 감탄한 천재 아이디어"]}}
+    assert sw.style_hook_line(sp, {"권위자": "미국 천재"}) == "미국도 감탄한 천재 아이디어"
+    assert sw.style_hook_line(sp, {"권위자": "천재"}) is None                  # 빼면 비어 → 그 틀은 안 쓴다
+    assert sw.style_hook_line(sp, {"권위자": "제조사"}) == "제조사도 감탄한 천재 아이디어"
+
+
 def test_seed_points_catch_missed_quote():
     """모델이 인용을 빠뜨려도 씨앗 셀링포인트 목록과 낱말이 겹치면 '씨앗이 이미 말함'(09-26 실측 두 건)."""
     idx = _idx(s1=["a"], s2=["b"])
