@@ -24,6 +24,7 @@ ap.add_argument("--job", required=True); ap.add_argument("--db", required=True)
 ap.add_argument("--keyfile", required=True); ap.add_argument("--pick", required=True)
 ap.add_argument("--out", required=True); ap.add_argument("--tier", default="basic")
 ap.add_argument("--skip-clean", action="store_true", help="이미 청소한 정본으로 그림·렌더·캡컷만(재과금 0)")
+ap.add_argument("--recover-file", default="", help="업체가 이미 만든 결과 파일(다운로드만 실패했을 때) — 업체 재호출·재과금 0")
 a = ap.parse_args()
 
 from shopping_shorts import config as cfg                 # noqa: E402
@@ -50,6 +51,12 @@ def _counted(src, k, dst, tier=None):
 
 
 mp._vmake_clean = _counted
+if a.recover_file:
+    def _recovered(src, k, dst, tier=None):
+        print("[REAL] 업체 재호출 없음 — 이미 만든 결과 사용: %s (보낸 파일 %.2f초)" % (a.recover_file, mp._probe_seconds(src)), flush=True)
+        shutil.copyfile(a.recover_file, dst)
+        return str(dst)
+    mp._vmake_clean = _recovered
 _orig_partial = mp._clean_partial
 
 
