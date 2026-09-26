@@ -40,7 +40,7 @@ def _on(monkeypatch):
 def test_rotation_tries_vertex_first_and_skips_keys_on_success(monkeypatch):
     from shopping_shorts import frame_script, comment_gen
     vcl = _client(name="vertex")
-    monkeypatch.setattr(vr, "client", lambda: vcl)
+    monkeypatch.setattr(vr, "client", lambda *a, **k: vcl)
     monkeypatch.setattr(comment_gen, "_current_key_and_idx",
                         lambda: pytest.fail("Vertex 성공인데 키풀을 건드렸다"))
     seen = []
@@ -50,7 +50,7 @@ def test_rotation_tries_vertex_first_and_skips_keys_on_success(monkeypatch):
 
 def test_rotation_falls_back_to_keys_when_vertex_fails(monkeypatch):
     from shopping_shorts import frame_script, comment_gen
-    monkeypatch.setattr(vr, "client", lambda: _client(name="vertex"))
+    monkeypatch.setattr(vr, "client", lambda *a, **k: _client(name="vertex"))
     monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: ("k1", 0))
     monkeypatch.setattr(comment_gen, "_client_for_key", lambda k: _client(name="key:" + k))
     def make_call(cl, m):
@@ -70,7 +70,7 @@ def test_tag_frames_uses_vertex_then_keys_share_same_parser(monkeypatch, tmp_pat
     tags = {"tags": [{"seg_no": 1, "scene_desc": "손에 제품", "label": "x"},
                      {"seg_no": 2, "scene_desc": "집게질", "label": "y"}]}
     vcl = _client(answer=tags, name="vertex")
-    monkeypatch.setattr(vr, "client", lambda: vcl)
+    monkeypatch.setattr(vr, "client", lambda *a, **k: vcl)
     monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: ("k1", 0))
     kcl = _client(answer=tags, name="key")
     monkeypatch.setattr(comment_gen, "_client_for_key", lambda k: kcl)
@@ -80,7 +80,7 @@ def test_tag_frames_uses_vertex_then_keys_share_same_parser(monkeypatch, tmp_pat
     assert vcl.calls[0]["model"] == "gemini-3.6-flash"
     # Vertex가 죽으면 같은 해석기로 키풀 결과를 쓴다
     vbad = _client(error=RuntimeError("503 UNAVAILABLE"), name="vertex")
-    monkeypatch.setattr(vr, "client", lambda: vbad)
+    monkeypatch.setattr(vr, "client", lambda *a, **k: vbad)
     out2 = frame_script._gemini_tag_frames([[str(img)], [str(img)]], "cap", segs)
     assert [t.get("scene_desc") for t in out2] == ["손에 제품", "집게질"]
     assert len(kcl.calls) == 1
@@ -92,14 +92,14 @@ def test_ai_match_vertex_first_then_call_json(monkeypatch):
     seg_index = {"v1-0": {"vid": "v1", "secs": 2.0, "desc": "손에 끼움", "role": "method"}}
     lines = [{"role": "method", "text": "손에 끼우고 집기만 하면 끝."}]
     vcl = _client(answer={"picks": [{"line": 1, "cuts": ["v1-0"], "why": "동작"}]}, name="vertex")
-    monkeypatch.setattr(vr, "client", lambda: vcl)
+    monkeypatch.setattr(vr, "client", lambda *a, **k: vcl)
     monkeypatch.setattr(sg, "_call_json", lambda *a, **k: pytest.fail("Vertex 성공인데 키풀을 불렀다"))
     note = {}
     out = ai_match.match(lines, seg_index, "seed", note=note)
     assert out and out[0]["segs"] == ["v1-0"] and note.get("matcher_auth") == "vertex"
     assert vcl.calls[0]["model"] == "gemini-3.6-flash"
     # 실패 → 종전 _call_json
-    monkeypatch.setattr(vr, "client", lambda: _client(error=RuntimeError("429"), name="vertex"))
+    monkeypatch.setattr(vr, "client", lambda *a, **k: _client(error=RuntimeError("429"), name="vertex"))
     monkeypatch.setattr(sg, "_call_json", lambda *a, **k: {"picks": [{"line": 1, "cuts": ["v1-0"], "why": "k"}]})
     out2 = ai_match.match(lines, seg_index, "seed", note={})
     assert out2 and out2[0]["segs"] == ["v1-0"]
@@ -128,7 +128,7 @@ def test_extract_uses_vertex_inline_video_first(monkeypatch, tmp_path):
     vid.write_bytes(b"\x00" * 100)
     answer = {"segments": [{"start": 0, "end": 2, "text": "안녕"}], "full_text": "안녕"}
     vcl = _client(answer=answer, name="vertex")
-    monkeypatch.setattr(vr, "client", lambda: vcl)
+    monkeypatch.setattr(vr, "client", lambda *a, **k: vcl)
     monkeypatch.setattr(vr, "video_part", lambda p: _t.SimpleNamespace(kind="inline", path=p))
     monkeypatch.setattr(comment_gen, "_current_key_and_idx",
                         lambda: pytest.fail("Vertex 성공인데 키풀을 건드렸다"))
@@ -144,7 +144,7 @@ def test_extract_falls_back_to_key_upload_when_vertex_fails(monkeypatch, tmp_pat
     from shopping_shorts import comment_gen
     vid = tmp_path / "v.mp4"
     vid.write_bytes(b"\x00" * 100)
-    monkeypatch.setattr(vr, "client", lambda: _client(error=RuntimeError("503 UNAVAILABLE"), name="vertex"))
+    monkeypatch.setattr(vr, "client", lambda *a, **k: _client(error=RuntimeError("503 UNAVAILABLE"), name="vertex"))
     monkeypatch.setattr(vr, "video_part", lambda p: _t.SimpleNamespace(kind="inline"))
     answer = {"segments": [{"start": 0, "end": 2, "text": "키풀"}], "full_text": "키풀"}
     kcl = _client(answer=answer, name="key")

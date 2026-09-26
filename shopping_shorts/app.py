@@ -4854,6 +4854,67 @@ def api_get_lens_borrow(request: Request):
     return {"ok": True, **keyroute.borrow_status(Store(DB_PATH))}
 
 
+# ── 회원 자기 Vertex 등록(2026-09-26 사장님 "필요한 사람은 등록하게 / AI 장면생성도") ─────────────
+#   서비스계정 JSON(역할 Vertex AI User) 하나로 대본·장면매칭(3.6)과 AI 장면생성(Veo)을 회원 비용으로 돈다.
+#   저장은 기존 BYOK(customer_keys, Fernet) service="vertex_sa", 회원당 1개. 판단은 vertex_route 한 곳.
+#   ★등록 전에 실제 호출 1회로 확인한다 — 저장만 하고 "등록 완료"를 띄우면 쓸 때 가서야 실패한다(08-28 실사고 모양).
+def _vertex_status(store, cid):
+    import time as _t
+    from shopping_shorts import vertex_route
+    rows = store.list_customer_keys(cid, vertex_route.SVC)
+    if not rows:
+        return {"registered": False}
+    r = rows[-1]
+    days = int((_t.time() - int(r.get("created_at") or 0)) // 86400)
+    return {"registered": True, "id": r["id"], "label": r.get("label"), "status": r.get("status"),
+            "checked_at": r.get("checked_at"), "created_at": r.get("created_at"),
+            "days_since": days, "trial_days_left": max(0, 90 - days)}
+
+
+@app.get("/api/settings/vertex")
+def api_vertex_get(request: Request):
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    return {"ok": True, "enabled": keycrypt.enabled(), **_vertex_status(store, cid)}
+
+
+@app.post("/api/settings/vertex")
+def api_vertex_register(request: Request, body: dict):
+    from shopping_shorts import vertex_route
+    if not keycrypt.enabled():
+        return JSONResponse(status_code=503, content={
+            "ok": False, "error": "키 저장이 설정되지 않았습니다 (관리자 문의)"})
+    info, err = vertex_route.validate_sa(body.get("json") or "")
+    if err:
+        return JSONResponse(status_code=422, content={"ok": False, "error": err})
+    ok, msg = vertex_route.verify_sa(info)
+    if not ok:
+        return JSONResponse(status_code=422, content={"ok": False, "error": msg})
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    for r in store.list_customer_keys(cid, vertex_route.SVC):      # 회원당 1개 — 새 키가 옛 키를 갈아끼운다
+        store.delete_customer_key(cid, r["id"])
+    import json as _json
+    store.add_customer_key(cid, vertex_route.SVC, _json.dumps(info, ensure_ascii=False),
+                           label=vertex_route.sa_label(info))
+    rows = store.list_customer_keys(cid, vertex_route.SVC)
+    if rows:
+        store.set_customer_key_status(rows[-1]["id"], "ok")
+    vertex_route.forget_member(cid)
+    return {"ok": True, "message": msg, **_vertex_status(store, cid)}
+
+
+@app.post("/api/settings/vertex/delete")
+def api_vertex_delete(request: Request):
+    from shopping_shorts import vertex_route
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    for r in store.list_customer_keys(cid, vertex_route.SVC):
+        store.delete_customer_key(cid, r["id"])
+    vertex_route.forget_member(cid)
+    return {"ok": True, **_vertex_status(store, cid)}
+
+
 @app.post("/api/settings/lens_borrow")
 def api_set_lens_borrow(request: Request, body: dict):
     """빌림 스위치 on/off (2026-09-08 사장님 "고객꺼 나눠서 좀 쓸 수 있게").
