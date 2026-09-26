@@ -7545,6 +7545,11 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
         return _blocked
     if job.get("clean_status") == "cleaning" and not _render_is_stale(job):
         return {"ok": True, "status": "cleaning"}       # 더블클릭 — VMake를 두 번 안 돌린다
+    # ★큐에 같은 작업의 청소가 아직 대기·진행 중이면 또 넣지 않는다(2026-09-27 점검).
+    #   위 가드는 10분(_PREVIEW_STALE_SEC)이 지나면 열리는데, 큐가 밀려 10분 넘게 기다린 청소가 30일에 38건 —
+    #   그때 다시 누르면 같은 청소가 두 번 돌아 업체에 두 번 보낸다(재과금). 판정은 queue_has_pending 한 곳.
+    if store.queue_has_pending("clean", "job_id", job_id):
+        return {"ok": True, "status": "cleaning", "queued": True}
     # ★장면 골라 지우기(2026-09-26): body.cuts = 지울 컷 키 목록(없거나 null = 전체).
     #   키 해석은 mix_pipeline.cut_selected 한 곳. 지금 편성의 컷과 하나도 안 맞으면 거절한다
     #   (돈이 나가기 전에 — 아무것도 안 지우고 과금되거나 조용히 전체를 지우면 안 된다).

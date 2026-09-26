@@ -310,8 +310,13 @@ def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER
         result = client.run_task(task_name=task, image_path=video_path, params=params)
     # 성공: dict에 output_urls. 실패: {"error":..., "skill_status":"failed", "detail":...}
     if isinstance(result, dict) and result.get("error"):
-        _pending_drop(out_path, key)              # 업체가 실패로 끝냈다 — 이어받을 결과가 없다
         detail = result.get("detail") or result.get("error")
+        if result.get("error") == "poll_aborted":
+            # ★진행 조회가 끊긴 것이지 업체가 실패한 게 아니다(SDK _poll_aborted_payload). 작업은 업체에서 계속
+            #   돌고 크레딧은 이미 나갔다 — 장부를 **남겨** 다시 누르면 작업 번호로 이어받는다(2026-09-27).
+            raise RuntimeError("AI 자막 제거 진행 조회가 중단되었습니다 — 다시 누르면 추가 비용 없이 "
+                               "이어받습니다 (task_id=%s): %s" % (result.get("task_id"), detail))
+        _pending_drop(out_path, key)              # 업체가 실패로 끝냈다 — 이어받을 결과가 없다
         raise RuntimeError(f"AI 자막 제거 실패: {detail}")
     urls = (result or {}).get("output_urls") or []
     if not urls:
