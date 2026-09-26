@@ -3847,7 +3847,14 @@ def _save_clean_plan_snapshot(work, sig, plan, sel=None):
 
 
 def _src_durs_for(job, work):
-    """소스별 길이(초). 컷 계획(plan_beat_clips_for)이 필요로 한다."""
+    """소스별 길이(초). 컷 계획(plan_beat_clips_for)이 필요로 한다.
+    ★컷 계획 직전에 불리는 자리라 화면 컷도 여기서 준비한다(screen_clips.warm) — final_clip_pairs(완성본 컷 지도,
+      골라 지우기 프레임·비교 사진)가 렌더와 같은 화면 컷을 쓰게."""
+    try:
+        from shopping_shorts import screen_clips as _sc
+        _sc.warm(job)
+    except Exception:      # noqa: BLE001
+        pass
     try:
         return {v: (_probe_duration(p) or 0.0)
                 for v, p in _resolve_sources(job, Path(work)).items()}
@@ -4373,6 +4380,8 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
       아니면: (job["edit_plan"], _resolve_sources(job, work), None) — 종전 그대로.
     ★plan_used 는 DB에 저장하지 않는다."""
     from shopping_shorts import clean_base as _cb
+    from shopping_shorts import screen_clips as _sc
+    _sc.warm(job)       # ★완성본 컷 = 편집 화면 컷 — 렌더·캡컷·ZIP·청소본이 전부 여기를 지난다
     plan = job.get("edit_plan") or {}
     work = Path(work)
     if not (job.get("subtitle_removal") and clean_base_on(store, customer_id)):
