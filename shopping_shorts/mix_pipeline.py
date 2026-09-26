@@ -2734,6 +2734,13 @@ def _beat_materials(b):
     ★같은 판단을 여러 곳에 적으면 어긋난다(0순위-B) — _used_spans·_plan_signature·
       _final_time_of_source가 전부 이 함수를 쓴다.
     """
+    # ★손으로 정한 컷이 있는 칸(구절 맞춤 끔)은 렌더가 **그 컷만** 그린다 — 청소 구간·서명·정본 재배치·
+    #   증분 청소가 전부 여기를 보므로, 여기서 scene_override만 주면 청소본이 옛 컷으로 꼬인다
+    #   (2026-09-26 강규봉님 job 7bbb1329aff0). 판정은 video_assemble.manual_cut_spans 한 곳.
+    from shopping_shorts.video_assemble import manual_cut_spans
+    mc = manual_cut_spans(b)
+    if mc:
+        return mc
     over = b.get("scene_override")
     if over:
         return [dict(x) for x in over if x]
@@ -3162,10 +3169,16 @@ def final_clip_pairs(plan, tts_paths, src_durs):
         for cclip in clips:
             d = float(cclip.get("out_dur") or 0.0)
             if d > 0:
+                # sdur = 원본에서 실제로 읽은 길이. dur(완성본 길이)은 느리게·정지로 늘어날 수 있어
+                # 청소본 정본이 "원본 어디까지 지웠나"를 dur로 재면 안 지운 구간까지 덮었다고 본다.
+                try:
+                    sd = float(cclip.get("src_dur") or d)
+                except (TypeError, ValueError):
+                    sd = d
                 out.append({"video_id": cclip.get("video_id"),
                             "beat_idx": b.get("beat_idx"),
                             "src": float(cclip.get("start") or 0.0),
-                            "fin": t, "dur": d})
+                            "fin": t, "dur": d, "sdur": sd})
             t += d
     return out
 
@@ -3543,7 +3556,7 @@ def _cut_piece(src, ss, dur, dst):
     return str(dst)
 
 
-def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, uncovered, extend):
+def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, uncovered, extend, need=None):
     """정본에 없는 재료(바뀐 장면·큰 늘림)만 원본에서 잘라 **1콜**로 지우고 extras에 붙인다(2026-09-22).
 
     ★돈이 나가는 함수다 — 콜 1회 선차감(_charge_clean), 실패 시 전액 환불 후 예외.
@@ -3559,14 +3572,18 @@ def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, u
         if not b:
             continue
         key = _cb.beat_material_key(b)
-        for k, m in enumerate(_beat_materials(b)):
+        # ★need(렌더 컷 재생이 못 덮은 원본 구간)가 있으면 **그 구간만** 지운다 — 화면이 실제로 쓰는 곳이다.
+        #   재료 전체를 지우면 컷 계획이 재료 밖(홀드로 이어 튼 뒤쪽·릴 뒤 실프레임)을 읽을 때 또 못 덮는다.
+        spans = (need or {}).get(str(bi))
+        spans = spans if spans else _beat_materials(b)
+        for k, m in enumerate(spans):
             src = srcs.get(m.get("video_id"))
             if not src:
                 continue
-            s, e = float(m["start"]), float(m["end"])
+            s, e = float(m["start"]), float(m["end"]) + (_cb.EXTEND_PAD if (need or {}).get(str(bi)) else 0.0)
             vid = "cb%d_%d" % (int(bi), k)
             dst = _cut_piece(src, s, e - s, work / f"{vid}.mp4")
-            items.append((vid, dst)); meta[vid] = (int(bi), key, e - s)
+            items.append((vid, dst)); meta[vid] = (int(bi), key, e - s, m.get("video_id"), s)
     for ex in extend or []:
         src = srcs.get(ex["video_id"])
         b = beats.get(int(ex["beat_idx"]))
@@ -3575,7 +3592,7 @@ def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, u
         vid = "cbx%d" % int(ex["beat_idx"])
         s, e = float(ex["start"]), float(ex["end"])
         dst = _cut_piece(src, s, e - s, work / f"{vid}.mp4")
-        items.append((vid, dst)); meta[vid] = (int(ex["beat_idx"]), _cb.beat_material_key(b), e - s)
+        items.append((vid, dst)); meta[vid] = (int(ex["beat_idx"]), _cb.beat_material_key(b), e - s, ex["video_id"], s)
     if not items:
         return base
     charged = _charge_clean(store, customer_id, 1)
@@ -3587,8 +3604,9 @@ def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, u
             _refund_clean(store, customer_id, charged)
         raise
     for vid, p in paths.items():
-        bi, key, sec = meta[vid]
-        base = _cb.add_extra(work, base, vid=vid, path=p, beat_idx=bi, material_key=key, seconds=sec)
+        bi, key, sec, src_vid, src_start = meta[vid]
+        base = _cb.add_extra(work, base, vid=vid, path=p, beat_idx=bi, material_key=key, seconds=sec,
+                             src_vid=src_vid, src_start=src_start)
     return base
 
 
@@ -4130,6 +4148,20 @@ def _faststart(path):
             pass
 
 
+def clean_tts_durs(plan):
+    """청소본 재배치가 쓰는 칸 길이 — 렌더와 같은 자(_beat_effective_dur). 음성 없으면 계획값."""
+    from shopping_shorts import video_assemble as _va
+    out = {}
+    for b in (plan or {}).get("beats") or []:
+        try:
+            _tp = b.get("tts_path")
+            out[int(b["beat_idx"])] = (float(_va._beat_effective_dur(b, _tp)) if _tp and Path(_tp).exists()
+                                       else float(b.get("target_seconds") or 0))
+        except (TypeError, ValueError):
+            pass
+    return out
+
+
 def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_clean=True):
     """렌더 계열(최종·미리보기·캡컷·ZIP·프레임)의 **입력을 정하는 유일한 자리**(2026-09-22).
 
@@ -4149,19 +4181,14 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
         return plan, _resolve_sources(job, work), None
     # ★늘림 판정의 길이는 렌더와 같은 자(final_clip_pairs가 쓰는 _beat_effective_dur)로 잰다 —
     #   target_seconds는 계획값이라 실제 TTS 길이와 어긋날 수 있다(둘이 다르면 지워놓고 안 쓰거나, 모자란다).
-    from shopping_shorts import video_assemble as _va
-    tts_durs = {}
-    for b in plan.get("beats") or []:
-        try:
-            _tp = b.get("tts_path")
-            tts_durs[int(b["beat_idx"])] = (float(_va._beat_effective_dur(b, _tp)) if _tp and Path(_tp).exists()
-                                            else float(b.get("target_seconds") or 0))
-        except (TypeError, ValueError):
-            pass
-    plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs)
+    tts_durs = clean_tts_durs(plan)
+    # ★렌더 컷 재생(2026-09-26): 원본으로 그렸을 컷 계획을 청소본 좌표로 옮긴다 — src_durs가 그 계획의 재료다
+    src_durs = _src_durs_for(job, work)
+    plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs, src_durs=src_durs)
     if (uncovered or extend) and allow_clean:
-        base = incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, uncovered, extend)
-        plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs)
+        base = incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, uncovered, extend,
+                                 need=plan2.get("_clean_need"))
+        plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs, src_durs=src_durs)
     if uncovered:
         # 증분을 못 했거나(allow_clean=False) 실패 — 원본 재료가 남는 비트가 있다. 원본 소스도 같이 넘긴다.
         print("[clean-base] 원본 재료 잔존 비트 %s (자막 남을 수 있음)" % uncovered, file=sys.stderr)
