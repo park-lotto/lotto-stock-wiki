@@ -403,6 +403,31 @@
       지금은 키 등록을 받을 수 없습니다. 잠시 후 다시 시도하시거나 관리자에게 문의해 주세요.
       그동안에도 포인트로 모든 기능을 그대로 쓰실 수 있습니다.
     </div>
+    <!-- ★내 구글 Vertex 연결(2026-09-26) — 서비스계정 JSON 하나로 대본·장면매칭(3.6)과 AI 장면생성(Veo)을
+         내 구글 비용으로. 저장·확인·판정은 서버(/api/settings/vertex, vertex_route) 한 곳 — 여기는 보여주기만. -->
+    <div class="svcCard" id="vertexCard" style="margin:0 0 14px;display:none">
+      <h3 style="margin:0 0 6px;font-size:16px">🚀 내 구글 Vertex 연결 <span style="font-size:12px;opacity:.7">(선택)</span></h3>
+      <p style="margin:0 0 10px;font-size:13px;line-height:1.7;opacity:.9">
+        연결하면 <b>대본 쓰기와 장면 매칭</b>이 내 구글 Vertex(Gemini 3.6)로 돌아가
+        <b>대본 품질이 올라가고 오류가 거의 없어집니다.</b><br/>
+        기존 무료 제미나이는 사람이 몰리는 시간(특히 밤)에 <b>오류가 자주 생겨</b> 대본이 안 나오거나
+        한 안만 나오는 일이 있었어요. 연결하면 그 부분이 내 계정으로 따로 돌아가 이런 일이 사라집니다.<br/>
+        <b>AI 장면 생성</b>도 이 연결로 쓸 수 있어요. 비용은 <b>내 구글 계정</b>에서 나갑니다 —
+        처음 가입하면 <b>무료 체험 $300(90일)</b>이 들어와요.<br/>
+        <span style="opacity:.75">안 하셔도 지금처럼 무료 제미나이로 그대로 쓰실 수 있습니다.</span>
+      </p>
+      <div id="vertexState" style="margin:0 0 10px;font-size:14px"></div>
+      <div id="vertexForm">
+        <textarea id="vertexJson" rows="5" spellcheck="false"
+          placeholder='서비스계정 키 파일(.json)을 메모장으로 열어 전체를 붙여넣으세요 — {"type": "service_account", ...}'
+          style="width:100%;box-sizing:border-box;font-family:Consolas,monospace;font-size:12px;border-radius:10px;padding:10px;background:rgba(0,0,0,.25);color:inherit;border:1px solid var(--line)"></textarea>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap">
+          <button class="btn btn-mint" id="vertexBtn" onclick="vertexRegister()">확인하고 연결</button>
+          <a href="/api_manual.html#vertex" target="_blank" rel="noopener" style="font-size:13px">발급 방법 보기 →</a>
+        </div>
+      </div>
+      <div class="msg err" id="vertexErr"></div>
+    </div>
     <div id="svcCards"></div>
     <div class="msg err" id="keysErr"></div>
   </section>
@@ -445,9 +470,11 @@ var SERVICES = [
      전엔 키가 없으면 사장님 키로 나가고 포인트만 깎였다 — 회원들은 그 사실을
      몰랐고(아무도 설명 못 들음), 포인트가 남은 회원만 조용히 통과했다.
      실측: 최근 30일 제작 46명 중 16명이 음성 키 없이 86건을 만들었다. */
+  /* ★Vmake는 값이 둘(API Key·Secret Access Key) — 2026-09-26 사장님 "쌍점 없애고 두 칸으로".
+       서버는 종전 그대로 'API키:시크릿키' 한 줄로 받는다(vmake_client._split_key). 합치는 건 화면이 한다. */
   { id: "vmake",      icon: "🎬", name: "자막 지우기 (VMake)",
     desc: "이 키가 있어야 자막 지우기를 쓸 수 있습니다", multi: false,
-    ph: "키 붙여넣기", mustOwn: true },
+    pair: ["API Key 붙여넣기", "Secret Access Key 붙여넣기"], mustOwn: true },
   { id: "elevenlabs", icon: "🔊", name: "목소리 (ElevenLabs)",
     desc: "영상에 넣을 목소리를 만듭니다 — 목소리 키(이것 또는 타입캐스트)가 "
         + "있어야 영상을 만들 수 있습니다",
@@ -630,6 +657,62 @@ async function loadPoints(){
 /* ── 🔑 내 키 등록 ──────────────────────────────────── */
 var KEYS = [];   // [{id,service,label,status,...}]
 
+/* ── 🚀 내 구글 Vertex 연결(2026-09-26) ─────────────────── */
+var VERTEX = null, VERTEX_DEL_ARMED = false;
+async function loadVertex(){
+  clearErr("vertexErr");
+  try {
+    VERTEX = await getJSON("/api/settings/vertex");
+    renderVertex();
+  } catch (e) {
+    el("vertexCard").style.display = "";
+    showErr("vertexErr", "연결 상태를 불러오지 못했습니다: " + e.message);
+  }
+}
+function renderVertex(){
+  var v = VERTEX || {};
+  el("vertexCard").style.display = (v.enabled === false) ? "none" : "";
+  if (!v.registered) {
+    el("vertexState").innerHTML = '<span style="opacity:.8">아직 연결 안 됨</span>';
+    el("vertexForm").style.display = "";
+    return;
+  }
+  var bad = (v.status === "bad");
+  el("vertexState").innerHTML =
+    (bad ? '⚠️ <b>연결이 멈췄어요</b> — 아래에 새 키를 붙여넣어 다시 연결해 주세요'
+         : '✅ <b>연결됨</b>') +
+    ' · <span style="opacity:.8">' + esc(v.label || "") + '</span><br/>' +
+    '<span style="font-size:12px;opacity:.75">연결 ' + esc(v.days_since) + '일째 · 무료 체험을 이 계정으로 시작하셨다면 남은 기간 약 ' +
+    esc(v.trial_days_left) + '일(추정)</span> ' +
+    '<button class="btn" style="margin-left:8px;padding:4px 10px;font-size:12px" id="vertexDelBtn" onclick="vertexDelete()">연결 해제</button>';
+  el("vertexForm").style.display = bad ? "" : "none";
+}
+async function vertexRegister(){
+  clearErr("vertexErr");
+  var raw = (el("vertexJson").value || "").trim();
+  if (!raw) { showErr("vertexErr", "서비스계정 JSON을 붙여넣어 주세요"); return; }
+  var btn = el("vertexBtn");
+  btn.disabled = true; btn.textContent = "구글에 확인 중…(10초 안팎)";
+  try {
+    VERTEX = await postJSON("/api/settings/vertex", { json: raw });
+    el("vertexJson").value = "";
+    renderVertex();
+    notice(VERTEX.message || "연결됐어요");
+  } catch (e) {
+    showErr("vertexErr", e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "확인하고 연결";
+  }
+}
+async function vertexDelete(){
+  /* 두 번 눌러 해제 — 브라우저 확인창은 쓰지 않는다 */
+  var b = el("vertexDelBtn");
+  if (!VERTEX_DEL_ARMED) { VERTEX_DEL_ARMED = true; b.textContent = "한 번 더 누르면 해제"; setTimeout(function(){ VERTEX_DEL_ARMED = false; if (el("vertexDelBtn")) el("vertexDelBtn").textContent = "연결 해제"; }, 4000); return; }
+  VERTEX_DEL_ARMED = false;
+  try { VERTEX = await postJSON("/api/settings/vertex/delete", {}); renderVertex(); }
+  catch (e) { showErr("vertexErr", e.message); }
+}
+
 async function loadKeys(){
   clearErr("keysErr");
   try {
@@ -697,7 +780,11 @@ function renderKeys(){
          조회조차 안 해서 절대 안 쓰인다. 등록칸을 주면 화면이 거짓말을 한다. */
     var form = "";
     if (KEYS_ENABLED && PERSONAL) {
-      var input = s.multi
+      var input = s.pair
+        ? '<div style="display:flex;flex-direction:column;gap:6px;flex:1">' +
+            '<input type="password" id="in_' + s.id + '_a" placeholder="' + esc(s.pair[0]) + '" autocomplete="off"/>' +
+            '<input type="password" id="in_' + s.id + '_b" placeholder="' + esc(s.pair[1]) + '" autocomplete="off"/></div>'
+        : s.multi
         ? '<textarea id="in_' + s.id + '" placeholder="' + esc(s.ph) + '"></textarea>'
         : '<input type="password" id="in_' + s.id + '" placeholder="' + esc(s.ph) + '" autocomplete="off"/>';
       form = '<div class="keyForm">' + input +
@@ -754,16 +841,35 @@ function svcMsg(svc, text, kind){
   box.className = "msg on " + (kind || "ok");
 }
 
+/* 두 칸짜리(Vmake) — 서버가 받는 한 줄 'API키:시크릿키'로 합친다. 칸 안의 공백·쌍점은 떼어낸다
+   (예전 안내대로 한 칸에 'A:B'를 붙여넣은 경우도 알아서 갈라 준다). */
+function pairValue(svc){
+  var a = el("in_" + svc + "_a"), b = el("in_" + svc + "_b");
+  if (!a || !b) return null;
+  var va = (a.value || "").replace(/\s+/g, ""), vb = (b.value || "").replace(/\s+/g, "");
+  if (va.indexOf(":") >= 0 && !vb) { var p = va.split(":"); va = p[0]; vb = p.slice(1).join(""); }
+  va = va.replace(/:/g, ""); vb = vb.replace(/:/g, "");
+  return { a: a, b: b, va: va, vb: vb };
+}
+
 async function addKey(svc){
-  var input = el("in_" + svc);
-  if (!input) return;
-  var raw = (input.value || "").trim();
+  var pr = pairValue(svc);
+  var input = pr ? null : el("in_" + svc);
+  if (!pr && !input) return;
+  var raw;
+  if (pr) {
+    if (!pr.va || !pr.vb) { svcMsg(svc, "⚠️ API Key와 Secret Access Key를 두 칸에 하나씩 넣어 주세요.", "err"); return; }
+    if (pr.va === pr.vb) { svcMsg(svc, "⚠️ 두 칸에 같은 값이 들어갔어요 — 윗칸은 API Key, 아랫칸은 Secret Access Key입니다.", "err"); return; }
+    raw = pr.va + ":" + pr.vb;
+  } else {
+    raw = (input.value || "").trim();
+  }
   if (!raw) { svcMsg(svc, "⚠️ 키를 붙여넣어 주세요.", "err"); return; }
   svcMsg(svc, "저장하는 중…", "ok");
   try {
     var d = await postJSON("/api/settings/keys", { service: svc, key: raw });
     KEYS = d.keys || KEYS;
-    input.value = "";
+    if (pr) { pr.a.value = ""; pr.b.value = ""; } else { input.value = ""; }
     renderKeys();
     svcMsg(svc, "저장했습니다 (" + d.added + "개). 확인하는 중…", "ok");
     /* ★저장 즉시 verify — 사장님 확정. "등록은 됐는데 되는지 모름"을 없앤다. */
@@ -1004,6 +1110,7 @@ async function loadAccount(){
 loadAccount();
 loadPoints();
 loadKeys();
+loadVertex();
 </script>
 <script src="/sidebar.js?v=4"></script>
 </body>

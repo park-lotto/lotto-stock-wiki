@@ -191,6 +191,7 @@
     <a href="#vmake"><span class="ico">🎬</span><span class="tt"><b>⑤ Vmake</b><span>영상에 박힌 자막 지우기</span></span><span class="go">›</span></a>
     <a href="#youtube"><span class="ico">📺</span><span class="tt"><b>⑥ 유튜브</b><span>유튜브 영상 정보 가져오기</span></span><span class="go">›</span></a>
     <a href="#buffer"><span class="ico">📅</span><span class="tt"><b>⑦ Buffer</b><span>완성한 영상을 SNS에 예약해 올리기</span></span><span class="go">›</span></a>
+    <a href="#vertex"><span class="ico">🚀</span><span class="tt"><b>⑧ 구글 Vertex (선택)</b><span>대본·장면매칭 한도 없이 · AI 장면 생성</span></span><span class="go">›</span></a>
   </div>
 
   <!-- ══════════════ ① 제미나이 ══════════════ -->
@@ -651,7 +652,7 @@
     <div class="tags">
       <span class="tag">자막 지우기</span>
       <span class="tag pay">Plus 월 14,000원 · Pro 월 44,000원</span>
-      <span class="tag">키를 둘 합쳐 넣습니다</span>
+      <span class="tag">키 두 개를 칸에 따로</span>
       <span class="tag pay">고급 지우기는 Pro(44,000원)만</span>
     </div>
   </div>
@@ -808,29 +809,11 @@
   </div>
 
   <div class="card">
-    <div class="card-head"><div class="num">2</div><h3>★ 두 개를 받습니다<br>가운데에 : 을 넣어 합치기</h3></div>
-    <div class="pic">
-      <svg viewBox="0 0 560 150" role="img" aria-label="App Key와 Secret 두 값을 콜론으로 이어 붙여 한 줄로 만드는 그림">
-        <rect x="14" y="16" width="230" height="54" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
-        <text x="30" y="38" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="currentColor" opacity=".5">API Key (앞의 칸)</text>
-        <text x="30" y="58" font-family="'Consolas',monospace" font-size="13" fill="currentColor" opacity=".8">1a2b3c4d…9f8e7</text>
-        <rect x="14" y="80" width="230" height="54" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
-        <text x="30" y="102" font-family="'IBM Plex Sans KR',sans-serif" font-size="13" fill="currentColor" opacity=".5">Secret Access Key (👁 눌러야 보임)</text>
-        <text x="30" y="122" font-family="'Consolas',monospace" font-size="13" fill="currentColor" opacity=".8">5c6d7e8f…3b2a1</text>
-
-        <path d="M262 75h38" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".3"/>
-        <path d="M292 68l10 7-10 7" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
-
-        <rect x="320" y="48" width="226" height="54" rx="10" fill="var(--accent-soft)" stroke="#E23A5E" stroke-width="2.5"/>
-        <text x="336" y="80" font-family="'Consolas',monospace" font-size="13" fill="currentColor">1a2b3c4d…</text>
-        <text x="434" y="82" font-family="'Consolas',monospace" font-size="22" fill="#E23A5E" font-weight="700">:</text>
-        <text x="448" y="80" font-family="'Consolas',monospace" font-size="13" fill="currentColor">5c6d7e8f…</text>
-        <text x="320" y="126" font-family="'IBM Plex Sans KR',sans-serif" font-size="14" fill="#E23A5E" font-weight="600">이렇게 한 줄로 붙여넣기</text>
-      </svg>
-    </div>
-    <p class="say">Vmake만 값이 <b>두 개(API Key, Secret Access Key)</b>입니다. 숏템메이커 칸에는 <b>가운데에 쌍점 <code>:</code> 을 찍어 한 줄로</b> 넣어 주세요.<br><b>둘 다 32자리로 생김새가 똑같습니다</b> — <b>같은 줄</b>에서 <b>왼쪽 칸 먼저, 오른쪽 칸 나중</b>으로, 옆의 <b>복사 버튼</b>을 눌러 옮기세요(눈으로 보고 옮기면 틀리기 쉽습니다).</p>
-    <span class="keybox">API&nbsp;Key<b>:</b>Secret&nbsp;Access&nbsp;Key</span>
-    <div class="warnbox"><span class="ic">⚠</span><span><b>띄어쓰기 없이</b> 붙여야 합니다. <b>순서가 바뀌거나 짝이 안 맞으면</b> 저장할 때 바로 <b>“키가 틀렸습니다”</b>가 뜹니다.<br>Vmake에서 <b>키를 새로 만드셨다면 여기에도 다시 등록</b>해 주세요 — 옛 키는 더 이상 안 됩니다.</span></div>
+    <div class="card-head"><div class="num">2</div><h3>★ 두 개를 받습니다<br>칸에 따로 넣기</h3></div>
+    <p class="say">Vmake만 값이 <b>두 개(API Key, Secret Access Key)</b>입니다. 숏템메이커 설정의 자막 지우기 칸도 <b>두 칸</b>이에요 —
+      <b>윗칸에 API Key</b>, <b>아랫칸에 Secret Access Key</b>를 하나씩 붙여넣고 「저장」을 누르세요. 따로 이어 붙이거나 기호를 넣을 필요 없습니다.<br>
+      <b>둘 다 32자리로 생김새가 똑같습니다</b> — Vmake 화면에서 <b>같은 줄의 왼쪽 값 → 윗칸, 오른쪽 값 → 아랫칸</b> 순서로, 옆의 <b>복사 버튼</b>을 눌러 옮기세요(눈으로 보고 옮기면 틀리기 쉽습니다).</p>
+    <div class="warnbox"><span class="ic">⚠</span><span><b>두 칸이 바뀌거나 짝이 안 맞으면</b> 저장할 때 바로 <b>“키가 틀렸습니다”</b>가 뜹니다.<br>Vmake에서 <b>키를 새로 만드셨다면 여기에도 다시 등록</b>해 주세요 — 옛 키는 더 이상 안 됩니다.</span></div>
   </div>
 
   <div class="card">
@@ -1059,6 +1042,64 @@
       붙여넣고 <b>저장</b>을 누르세요.<br>
       그러면 <b>10단계 「SNS 예약」</b>에 내 채널 목록이 뜹니다.</p>
   </div>
+  <a class="top" href="#top">↑ 맨 위로</a>
+
+  <div class="svc" id="vertex">
+    <h2 class="svc-t">⑧ 구글 Vertex <span style="font-size:.6em;opacity:.7">(선택)</span></h2>
+    <div class="tags">
+      <span class="tag">대본 쓰기 · 장면 매칭 · AI 장면 생성</span>
+      <span class="tag free">무료 체험 $300 · 90일</span>
+      <span class="tag">내 구글 계정 비용</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">★</div><h3>연결하면<br>무엇이 좋아지나</h3></div>
+    <p class="say"><b>대본 쓰기와 장면 매칭</b>이 내 구글 Vertex(Gemini 3.6)로 돌아가 <b>대본 품질이 올라가고 오류가 거의 없어집니다.</b>
+      기존 무료 제미나이(①)는 사람이 몰리는 시간(특히 밤)에 <b>오류가 자주 생겨</b> 대본이 안 나오거나 한 안만 나오는 일이 있었어요.
+      <b>AI 장면 생성</b>도 이 연결로 씁니다. 연결하지 않으셔도 무료 제미나이로 그대로 쓰실 수 있습니다.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">!</div><h3>AI 스튜디오 키와<br>다릅니다</h3></div>
+    <p class="say">위 ① 제미나이의 <b>AI 스튜디오 키</b>로는 무료 체험 $300이 <b>안 먹습니다</b>. 여기서는
+      <b>구글 클라우드 콘솔</b>의 <b>서비스 계정 키(.json 파일)</b>를 받습니다.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">1</div><h3>구글 클라우드<br>무료 체험 시작</h3></div>
+    <p class="say">쓰시던 구글 계정으로 들어가 <b>「무료로 시작하기」</b>를 누르세요. 본인 확인용으로 카드를 등록하지만
+      <b>직접 「유료 전환」을 누르기 전엔 청구되지 않습니다.</b> 가입하면 $300 크레딧이 들어와요(90일).</p>
+    <a class="go-btn" href="https://console.cloud.google.com/freetrial" target="_blank" rel="noopener">구글 클라우드 열기 →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">2</div><h3>Vertex AI API<br>사용 설정</h3></div>
+    <p class="say">상단에서 프로젝트를 고른 뒤(없으면 「새 프로젝트」), 아래 버튼 화면에서 <b>「사용」</b>을 누르세요.</p>
+    <a class="go-btn" href="https://console.cloud.google.com/apis/library/aiplatform.googleapis.com" target="_blank" rel="noopener">Vertex AI API 열기 →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">3</div><h3>서비스 계정<br>만들기</h3></div>
+    <p class="say"><b>IAM 및 관리자 › 서비스 계정 › 「서비스 계정 만들기」</b> → 이름은 아무거나(예: shorts) →
+      역할에서 <b>「Vertex AI 사용자」</b>(Vertex AI User) 하나만 고르고 완료.<br/>
+      <span style="opacity:.75">★다른 역할(소유자·편집자)은 주지 마세요 — 필요한 건 이것 하나입니다.</span></p>
+    <a class="go-btn" href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener">서비스 계정 열기 →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">4</div><h3>키(.json)<br>내려받기</h3></div>
+    <p class="say">만든 서비스 계정을 누르고 <b>「키」 탭 › 「키 추가」 › 「새 키 만들기」 › JSON</b> → 파일이 내려받아집니다.
+      이 파일은 비밀번호와 같아요 — 다른 곳에 올리지 마세요.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="num">5</div><h3>설정에<br>붙여넣기</h3></div>
+    <p class="say">내려받은 파일을 <b>메모장</b>으로 열어 <b>전체를 복사</b> → <b>설정 › API 키 › 🚀 내 구글 Vertex 연결</b>에 붙여넣고
+      <b>「확인하고 연결」</b>. 저희가 구글에 한 번 확인한 뒤 연결합니다. 막히면 화면에 원인과 할 일이 나와요.</p>
+    <a class="go-btn" href="/settings#keys">설정으로 →</a>
+  </div>
+
   <a class="top" href="#top">↑ 맨 위로</a>
 
   <!-- ══════════════ 안 될 때 ══════════════ -->
