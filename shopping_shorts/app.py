@@ -6698,6 +6698,7 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
         segs, auds, cuts_off = parts, [], []
         if beat_lens and tts:
             segs, k = [], 0
+            _cum = 0.0      # ★칸 길이 = 누적 시각의 프레임 경계 차이(완성본 _render_mix와 같은 규칙, 2026-09-27)
             for bi, n in enumerate(beat_lens):
                 mine = parts[k:k + n]
                 mine_cuts = cuts[k:k + n]          # 경계를 계산하려면 컷 길이가 필요하다
@@ -6708,6 +6709,11 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 want = 0.0
                 if ap:
                     want = _dur(ap)
+                    # 칸마다 -t 음성길이로 자르면 30fps가 프레임 경계로 올림돼 칸당 최대 0.033초씩 길어지고
+                    # 쌓인다(실측 10칸 +0.2초 — 완성본보다 뒤로 갈수록 늦었다). 누적 경계로 정하면 안 쌓인다.
+                    _f0 = int(round(_cum * 30)); _cum += want
+                    _nfr = max(1, int(round(_cum * 30)) - _f0)
+                    want = _nfr / 30.0
                 # ★칸도 곳간에 둔다 — 장면 하나를 바꿔도 **그 칸만** 다시 만든다.
                 #   칸 만들기가 굽기의 44%였다(실측 2026-09-21: 칸영상 2.17초 + 칸음성 1.16초).
                 #   컷만 재사용해선 7.1초에서 안 줄었던 이유가 이것이다.
@@ -6741,7 +6747,8 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                     r2 = subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
                                          "-i", str(blst),
                                          "-vf", "tpad=stop_mode=clone:stop_duration=%.3f" % want,
-                                         "-t", "%.3f" % want, "-c:v", "libx264", "-preset", "ultrafast",
+                                         "-r", "30", "-frames:v", str(_nfr),   # 초(-t)가 아니라 프레임 수로 — 1프레임 넘침 방지
+                                         "-c:v", "libx264", "-preset", "ultrafast",
                                          "-crf", "30", "-pix_fmt", "yuv420p"] + kfx +
                                         ["-g", "30", "-keyint_min", "1", "-sc_threshold", "0", str(bl)],
                                         capture_output=True, timeout=120)
