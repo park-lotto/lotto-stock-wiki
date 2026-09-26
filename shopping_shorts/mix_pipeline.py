@@ -1986,7 +1986,7 @@ def _probe_seconds(path):
         return None
 
 
-def _vmake_clean(video_path, keys, out_path, tier=None):
+def _vmake_clean(video_path, keys, out_path, tier=None, resume_key=None):
     """VMake 청소 1회 — **크레딧이 떨어진 키는 건너뛰고 다음 키로** 이어서 시도한다.
 
     ★키를 넘기는 판단은 여기 한 곳에서만 한다(0순위-B). 호출부 셋(_clean_one·
@@ -2018,6 +2018,9 @@ def _vmake_clean(video_path, keys, out_path, tier=None):
         for i, k in enumerate(ks):
             while True:
                 try:
+                    # resume_key: 같은 작업을 다시 맡길 때 과금 없이 이어받는 이름표(vmake_client 장부)
+                    if resume_key:
+                        return remove_subtitles(src, k, out_path=out_path, tier=tier, resume_key=resume_key)
                     return remove_subtitles(src, k, out_path=out_path, tier=tier)
                 except Exception as e:              # noqa: BLE001 — 다음 키로 넘길지·재인코딩할지 가른다
                     last = e
@@ -2674,7 +2677,7 @@ def _join_batches(items, work):
     return batches
 
 
-def _clean_joined(items, keys, work, tag="", tier=None):
+def _clean_joined(items, keys, work, tag="", tier=None, resume_key=None):
     """소스 여러 편을 붙여 **VMake 1콜**로 청소 → {vid: 클린경로}, {vid: region}.
 
     붙이기·청소·자르기 중 어디서 실패하든 예외를 올린다 — 호출부가 옛 방식으로 되돌린다.
@@ -2686,7 +2689,8 @@ def _clean_joined(items, keys, work, tag="", tier=None):
     last = None
     for attempt in range(_CLEAN_RETRY + 1):
         try:
-            cleaned = _vmake_clean(joined, keys, out, tier=tier)
+            cleaned = (_vmake_clean(joined, keys, out, tier=tier, resume_key=resume_key) if resume_key
+                       else _vmake_clean(joined, keys, out, tier=tier))
             break
         except Exception as e:                      # noqa: BLE001 — 재시도 후 상위로
             last = e
@@ -3402,7 +3406,9 @@ def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work):
         raise RuntimeError("고른 장면 잘라내기 프레임 불일치(%d != %d)" % (got, total))
     print("[clean] 고른 장면만 청소: 구간 %d개 %d프레임(%.1f초) / 전체 %d프레임"
           % (len(ranges), total, total / fps, nb), file=sys.stderr)
-    cleaned = _vmake_clean(str(part), keys, str(work / "partial_clean.mp4"), tier=tier)
+    # 이름표 = 결과 파일 이름(final_clean_{편성서명}{등급}{고른장면}.mp4) — 같은 작업을 다시 누르면 과금 없이 이어받는다
+    cleaned = _vmake_clean(str(part), keys, str(work / "partial_clean.mp4"), tier=tier,
+                           resume_key="part:" + Path(out).name)
     # 되붙이기 — 원본 틈(g)과 청소 조각(p)을 프레임 번호로 잘라 순서대로 이어 붙인다.
     segs, cur, off = [], 0, 0
     for a, b in ranges:
@@ -3729,7 +3735,7 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
                 res = _clean_partial(str(mix_raw), final_clip_pairs(_plan, _tts, _src_durs_for(job, work)),
                                      _sel, keys, str(out), tier, work)
             else:
-                res = _vmake_clean(str(mix_raw), keys, str(out), tier=tier)
+                res = _vmake_clean(str(mix_raw), keys, str(out), tier=tier, resume_key="final:" + out.name)
         except Exception:
             if charged:
                 _refund_clean(store, customer_id, charged)
@@ -3793,7 +3799,11 @@ def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, u
     try:
         print("[clean-base] 증분 청소 %d조각 1콜: %s" % (len(items), [v for v, _ in items]), file=sys.stderr)
         # ★등급을 넘긴다 — 안 넘기면 고급으로 지운 job의 바뀐 장면만 기본으로 지워진다(2026-09-26 발견)
-        paths, _regions = _clean_joined(items, keys, str(work), tag="cb", tier=clean_tier_of(job))
+        # 이름표 = 조각마다 (이름·원본 영상·구간) — 같은 조각을 다시 맡기면 과금 없이 이어받는다
+        _rk = "inc:" + hashlib.sha1(json.dumps(sorted(
+            (v, [str(x) for x in meta[v][1]], round(meta[v][2], 3)) for v, _ in items),
+            ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
+        paths, _regions = _clean_joined(items, keys, str(work), tag="cb", tier=clean_tier_of(job), resume_key=_rk)
     except Exception:
         if charged:
             _refund_clean(store, customer_id, charged)
