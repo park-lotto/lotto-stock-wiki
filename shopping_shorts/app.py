@@ -5270,10 +5270,9 @@ def api_mix_status(job_id: str, request: Request):
     #   "자막 제거에 실패했어요"를 띄웠으나 결과는 성공이었다(자막 3개 전부 제거됨).
     #   → 워커가 살아 있으면(=하트비트가 뛰면) 시간이 얼마나 걸리든 '진행 중'으로 본다.
     #   죽은 작업은 reap_stale(2분)이 큐에서 failed로 바꾸므로 여기 걸리지 않는다.
-    if clean_status == "cleaning" and _render_is_stale(job) \
-            and not store.task_is_alive("clean", {"job_id": job_id}):
+    if _clean_interrupted(store, job):
         clean_status = "failed"
-        clean_error = clean_error or "서버 재시작 등으로 중단되었습니다. 다시 시도해 주세요."
+        clean_error = clean_error or _CLEAN_DEAD_MSG
     preview_status, preview_error = job.get("preview_status"), job.get("preview_error")
     # clean과 같은 이유로 하트비트를 함께 본다(위 주석 참조) — 오래 걸리는 정상 렌더를
     # 실패로 표시하지 않기 위해. 같은 판단을 두 곳에 다르게 적지 않는다(0순위-B).
@@ -7397,7 +7396,9 @@ def clean_failure_kind(clean_error):
     if _vmake_no_credit(e):
         return "no_credit"
     # 배포·재시작으로 BackgroundTask가 죽은 경우 — 이건 진짜로 다시 시도하면 된다.
-    if "서버 재시작" in e or "중단되었습니다" in e:
+    # ★큐 청소기(store.reap_stale→_DEAD_MSG "작업 도중 중단됐습니다")와 워커 문구("워커가 중단됐습니다")도
+    #   같은 갈래다 — 종전엔 "중단되었습니다"만 봐서 그 둘이 unknown으로 떨어져 엉뚱한 안내가 떴다(2026-09-27).
+    if "서버 재시작" in e or "중단되었습니다" in e or "중단됐" in e or "워커가 중단" in e:
         return "interrupted"
     # ★업체(VMake) 게이트웨이 장애 — 영상 탓이 아니다(2026-09-17 실측, job 1556910737b6).
     #   30029 = '前置开放平台事件处理失败'(앞단 개방플랫폼 이벤트 처리 실패). 같은 응답 안에
@@ -7411,6 +7412,28 @@ def clean_failure_kind(clean_error):
     if "10101" in e or "결과가 비었습니다" in e:
         return "unsupported"
     return "unknown"
+
+
+_CLEAN_DEAD_MSG = "서버가 재시작되어 자막 지우기가 중단됐어요 — 다시 누르면 추가 비용 없이 이어받아요."
+
+
+def _clean_interrupted(store, job) -> bool:
+    """'지우는 중'인데 워커에서 **죽었나** — 화면 상태와 다시 누르기 가드가 같이 쓰는 한 곳(0순위-B).
+
+    ★왜(2026-09-27 사장님 "워커 죽으면 10분 대기 필수인가"): 종전엔 updated_at 10분 경과(_render_is_stale)를
+      먼저 봐서, 워커가 죽어도 10분은 '지우는 중'에 갇혔다. 큐엔 하트비트가 있다 — 그걸 먼저 본다.
+      · 하트비트가 뛴다(또는 순번 대기) → 살아 있다(시간이 얼마나 걸리든)
+      · 큐 기록이 있는데 안 뛴다(done/failed/죽은 running) → 죽었다(즉시)
+      · 큐 기록이 없다(옛 job·enqueue 실패) → 종전 10분 규칙
+    """
+    if (job or {}).get("clean_status") != "cleaning":
+        return False
+    args = {"job_id": job.get("job_id")}
+    if store.task_is_alive("clean", args):
+        return False
+    if store.queue_status("clean", args) is not None:
+        return True
+    return _render_is_stale(job)
 
 
 def _render_is_stale(job) -> bool:
@@ -7543,8 +7566,13 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
     _blocked = _need_own_key_or_402(job.get("customer_id"), keyroute.SVC_VMAKE)
     if _blocked:
         return _blocked
-    if job.get("clean_status") == "cleaning" and not _render_is_stale(job):
-        return {"ok": True, "status": "cleaning"}       # 더블클릭 — VMake를 두 번 안 돌린다
+    if job.get("clean_status") == "cleaning" and not _clean_interrupted(store, job):
+        return {"ok": True, "status": "cleaning"}       # 더블클릭 — 업체를 두 번 안 돌린다
+    # ★큐에 같은 작업의 청소가 아직 대기·진행 중이면 또 넣지 않는다(2026-09-27 점검).
+    #   위 가드는 10분(_PREVIEW_STALE_SEC)이 지나면 열리는데, 큐가 밀려 10분 넘게 기다린 청소가 30일에 38건 —
+    #   그때 다시 누르면 같은 청소가 두 번 돌아 업체에 두 번 보낸다(재과금). 판정은 queue_has_pending 한 곳.
+    if store.queue_has_pending("clean", "job_id", job_id):
+        return {"ok": True, "status": "cleaning", "queued": True}
     # ★장면 골라 지우기(2026-09-26): body.cuts = 지울 컷 키 목록(없거나 null = 전체).
     #   키 해석은 mix_pipeline.cut_selected 한 곳. 지금 편성의 컷과 하나도 안 맞으면 거절한다
     #   (돈이 나가기 전에 — 아무것도 안 지우고 과금되거나 조용히 전체를 지우면 안 된다).

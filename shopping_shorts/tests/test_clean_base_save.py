@@ -21,7 +21,7 @@ def _job():
 def _patch(monkeypatch, fake_cuts):
     monkeypatch.setattr(mp, "_charge_clean", lambda *a, **k: 0)
     monkeypatch.setattr(mp, "_vmake_clean",
-                        lambda src, keys, out, tier=None: (Path(out).write_bytes(b"x" * 4096), out)[1])
+                        lambda src, keys, out, tier=None, **k: (Path(out).write_bytes(b"x" * 4096), out)[1])
     monkeypatch.setattr(mp, "final_clip_pairs", lambda plan, tts, durs: fake_cuts)
     monkeypatch.setattr(mp, "_src_durs_for", lambda job, work: {"s0": 30.0})
 
