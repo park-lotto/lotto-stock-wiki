@@ -101,3 +101,47 @@ def test_verify_sa_translates_google_errors(monkeypatch):
         monkeypatch.setattr(genai, "Client", C)
         ok, msg = vr.verify_sa(SA)
         assert ok is False and want in msg, (err, msg)
+
+
+def test_veo_uses_member_project_admin_owner_and_blocks_others(monkeypatch):
+    """Veo는 비싸다 — 회원은 자기 프로젝트, 관리자는 사장님 프로젝트, 나머지는 **안 만든다**(사장님 크레딧 대납 금지)."""
+    monkeypatch.setattr(vr, "member_info", lambda cid: SA if str(cid) == "205" else None)
+    monkeypatch.setattr(vr, "_member_client", lambda cid, info: ("MEMBER", cid, info["project_id"]))
+    monkeypatch.setattr(vr, "client", lambda cid=None: ("OWNER", cid))
+    assert vr.veo_client(205) == ("MEMBER", 205, "member-proj-1")
+    assert vr.veo_client(0) == ("OWNER", 0)
+    assert vr.veo_client(204) is None
+    assert vr.veo_allowed(205) == (True, "") and vr.veo_allowed(0) == (True, "")
+    ok, why = vr.veo_allowed(204)
+    assert ok is False and "Vertex를 등록" in why
+
+
+def test_run_ai_scene_refuses_without_member_vertex(monkeypatch, tmp_path):
+    """워커도 같은 판정 — 등록 안 한 회원 작업이면 Veo를 안 부르고 실패 상태에 이유를 남긴다."""
+    from shopping_shorts import ai_scene
+    states = {}
+    job = {"customer_id": 204, "status": "done", "extract": {},
+           "edit_plan": {"beats": [{"beat_idx": 0, "narration": "리모컨", "target_seconds": 4}]}}
+
+    class St:
+        def __init__(self, *_a):
+            pass
+
+        def get_mix_job(self, _j):
+            return job
+
+        def update_mix_job(self, _j, edit_plan=None):
+            states["plan"] = edit_plan
+    import shopping_shorts.store as store_mod
+    monkeypatch.setattr(store_mod, "Store", St)
+    monkeypatch.setattr(ai_scene, "base_frame_path", lambda *a, **k: str(tmp_path / "b.png"))
+    monkeypatch.setattr(ai_scene, "motion_request", lambda *a, **k: "move")
+    called = []
+    monkeypatch.setattr(ai_scene, "generate", lambda *a, **k: called.append(1))
+    monkeypatch.setattr(vr, "member_info", lambda cid: None)
+    import shopping_shorts.app as app_mod
+    monkeypatch.setattr(app_mod, "_SCENE_ASSETS_DIR", tmp_path)
+    assert ai_scene.run_ai_scene("j1", 0, "natural", "db", str(tmp_path)) is None
+    assert not called, "등록 안 한 회원인데 Veo를 불렀다"
+    st = states["plan"]["beats"][0]["ai_scene"]
+    assert st["state"] == "failed" and "Vertex를 등록" in st["error"]

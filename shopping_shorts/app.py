@@ -20976,6 +20976,11 @@ def api_produce_mix_ai_scene(job_id: str, request: Request, body: dict):
     결과는 /api/mix/result 의 beats[].ai_scene(state running|done|failed)로 본다."""
     if not _ai_scene_on(_cid(request)):
         return JSONResponse(status_code=403, content={"ok": False, "error": "AI 장면 생성은 아직 관리자만 쓸 수 있어요"})
+    # ★스위치가 열려도 누구 비용으로 만들지는 따로 본다(2026-09-26) — 회원은 자기 Vertex가 있어야 한다.
+    from shopping_shorts import vertex_route as _vr
+    _ok_veo, _why_veo = _vr.veo_allowed(_cid(request))
+    if not _ok_veo:
+        return JSONResponse(status_code=403, content={"ok": False, "error": _why_veo, "need": "vertex"})
     store = Store(DB_PATH)
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
