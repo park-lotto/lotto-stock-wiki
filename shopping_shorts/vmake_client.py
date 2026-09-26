@@ -322,6 +322,13 @@ def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER
     if not urls:
         _pending_drop(out_path, key)
         raise RuntimeError(f"AI 자막 제거 결과가 비었습니다: {result}")
+    # ★결과를 받자마자, **내려받기 전에** 작업 번호를 장부에 쓴다(2026-09-27 실측 사고).
+    #   업체가 동기 시간 안에 끝내면(짧은 장면 = 골라 지우기가 딱 그 경우) SDK는 on_async_submitted를
+    #   **안 부르고** 결과를 바로 돌려준다(api.py: status==9일 때만 콜백). 그러면 장부가 비어 내려받기가
+    #   끊긴 뒤 다시 누르면 새로 보내 **재과금**됐다(03:40·03:54 추적: put 0회, B2 MISS). 비동기면 콜백이
+    #   이미 썼으니 같은 번호를 다시 쓰는 것뿐(무해).
+    if key and (result or {}).get("task_id"):
+        _pending_put(out_path, key, result["task_id"], want_sec)
     try:
         got = _download(urls[0], out_path)
     except Exception as e:                        # noqa: BLE001

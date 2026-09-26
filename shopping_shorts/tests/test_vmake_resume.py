@@ -131,6 +131,26 @@ def test_resumed_result_with_wrong_length_is_discarded(env, monkeypatch):
     assert ("run", "SKM0005") in log                                  # 엉뚱한 결과를 쓰지 않고 새로 맡겼다
 
 
+def test_sync_completed_task_without_callback_still_resumes_free(env):
+    """★실측 사고(2026-09-27 03:40·03:54): 짧은 영상은 업체가 동기로 끝내 SDK가 제출 콜백을 안 부른다.
+    콜백만 믿으면 장부가 비어 재클릭이 재과금된다 — 결과를 받은 직후 장부를 써야 한다."""
+    cl, log, fail, src, tmp = env
+    orig = cl.run_task
+
+    def run_sync(task_name, image_path, params=None, on_async_submitted=None):
+        cl.log.append(("run", task_name))
+        return {"output_urls": ["https://r/first.mp4"], "task_id": "t_sync"}     # 콜백 없이 바로 결과
+    cl.run_task = run_sync
+    fail.update({"https://r/first.mp4", "https://r/poll.mp4"})
+    with pytest.raises(RuntimeError):
+        _call(src, tmp)
+    assert vc._pending_get(tmp / "out.mp4", "final:final_clean_abc.mp4|pro|SKM0005")["task_id"] == "t_sync"
+    fail.clear(); log.clear()
+    assert _call(src, tmp).endswith("out.mp4")
+    assert ("run", "SKM0005") not in log and ("poll", "t_sync") in log            # ★재업로드·재과금 0
+    cl.run_task = orig
+
+
 def test_no_resume_key_keeps_old_call_shape(env):
     """이름표가 없으면 종전 호출 모양 그대로(on_async_submitted 안 넘김) — 장부도 안 쓴다."""
     cl, log, fail, src, tmp = env
