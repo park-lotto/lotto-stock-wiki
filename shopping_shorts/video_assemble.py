@@ -1258,10 +1258,19 @@ def _plan_phrase_clips(beat, segs, tts_dur, src_durs=None):
                     src_d = float(_end) - st
                 elif _over > 0 and _reel <= 0:
                     src_d = max(0.1, min(d, float(_end) - st))   # 릴 길이 모름 = 조각 밖을 못 읽는다(종전)
+                elif _over > 0 and not _consec and str(segs[idx].get("seg_id") or "").startswith("film_"):
+                    # ★사람이 정한 구간(필름 담기·📦·자르기 = film_)은 **그 구간만** 튼다(2026-09-26 사장님
+                    #   "꼬다리를 잘라내고 속도를 조정"). 이어 틀면 잘라낸 꼬다리가 되살아났다(칸2 카드4 실측).
+                    #   모자란 만큼은 종전대로 느리게+정지, 고객이 [속도 맞추기]를 누르면 fit_segs로 정확히 늘린다.
+                    src_d = max(0.1, min(d, float(_end) - st))
             if _reel > 0 and st + src_d > _reel:
                 src_d = max(0.1, _reel - st)          # 원본이 끝났다 — 남은 만큼 _speed_and_freeze가 채운다
-            plan.append({"video_id": segs[idx]["video_id"], "start": st,
-                         "src_dur": src_d, "out_dur": d})
+            _c = {"video_id": segs[idx]["video_id"], "start": st, "src_dur": src_d, "out_dur": d}
+            # ★[속도 맞추기](고객이 누른 조각, beat["fit_segs"]) — 모자란 만큼을 정지 없이 **정확히** 늘린다.
+            #   playback_speed가 있으면 _speed_and_freeze가 1.15배 상한 대신 그 배속으로 끝까지 움직인다.
+            if segs[idx].get("seg_id") in (beat.get("fit_segs") or []) and src_d < d - 1e-3:
+                _c["playback_speed"] = src_d / d
+            plan.append(_c)
             pos[idx] = st + src_d                     # 실제로 보여준 곳 다음부터 — 겹침·건너뜀 없이 이어진다
         return plan
     except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
