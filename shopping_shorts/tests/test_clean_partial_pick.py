@@ -170,3 +170,23 @@ def test_body_cuts_all_means_none_and_none_matching_rejected(tmp_path, monkeypat
     assert getattr(r, "status_code", None) == 422
     r = A._clean_cuts_from_body(job, "j", [])
     assert getattr(r, "status_code", None) == 422
+
+
+def test_fps_from_real_frames_not_header(tmp_path, monkeypatch):
+    """조립본 머리의 r_frame_rate가 240/1로 적혀 있어도(실제 30) 실제 프레임÷길이로 30을 쓴다(2026-09-26 이정민님)."""
+    import json as _json, subprocess as _sp
+    from shopping_shorts import mix_pipeline as _mp
+    fake = {"streams": [{"r_frame_rate": "240/1", "avg_frame_rate": "705/24", "nb_read_packets": "705", "duration": "23.5"}],
+            "format": {"duration": "23.575"}}
+    monkeypatch.setattr(_mp.subprocess, "run", lambda *a, **k: _sp.CompletedProcess(a, 0, _json.dumps(fake), ""))
+    fs, fps, nb = _mp._probe_fps_frames("x.mp4")
+    assert fs == "30/1" and abs(fps - 30.0) < 1e-9 and nb == 705
+
+
+def test_probe_duration_na_is_zero(tmp_path):
+    """길이를 못 재는 파일(ffprobe 'N/A')은 0 — 렌더가 예외로 죽지 않고 그 조각만 버린다."""
+    from shopping_shorts import video_assemble as _va
+    f = tmp_path / "empty.mp4"
+    import subprocess as _sp
+    _sp.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono", "-t", "0.01", "-vn", str(f)], check=True)
+    assert _va._probe_duration(str(f)) >= 0.0
