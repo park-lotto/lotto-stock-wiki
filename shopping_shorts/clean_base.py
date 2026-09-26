@@ -151,6 +151,8 @@ def _regions(base):
     청소본 컷 + 원본 위치를 아는 증분 조각(src_vid 가 붙은 cb*·cbx*). 옛 증분 조각은 위치를 몰라 뺀다."""
     out = []
     for i, c in enumerate(base.get("cuts") or []):
+        if c.get("cleaned") is False:
+            continue            # 고른 장면만 지운 정본(장면 골라 지우기) — 안 지운 컷은 지운 조각이 아니다
         cs, ce, fin, k = _cut_geom(c)
         out.append((CLEAN_VID, "%s-%d" % (CLEAN_VID, i), str(c.get("video_id")), cs, ce, fin, k))
     for vid, ex in (base.get("extras") or {}).items():
@@ -286,6 +288,25 @@ def coverage(plan, base):
 _REPLAY_DROP = ("slow", "sync_speed", "stretch_fill", "fixed_lens", "clip_anchor", "cut_rhythm")
 
 
+def uncleaned_gaps(base, material):
+    """재료 구간 중 **안 지워진 부분만** [(시작, 끝), …] — 증분 청소는 이것만 보낸다(초당 과금).
+    ★컷 하나가 일부만 비었다고 컷 전체를 다시 지우면 이미 지운 부분에 또 돈이 나간다(2026-09-26 사장님)."""
+    try:
+        vid = str(material.get("video_id")); s = float(material.get("start")); e = float(material.get("end"))
+    except (TypeError, ValueError):
+        return []
+    iv = sorted((max(s, r[3]), min(e, r[4])) for r in _regions(base)
+                if r[2] == vid and min(e, r[4]) > max(s, r[3]))
+    gaps, cur = [], s
+    for a, b in iv:
+        if a - cur > SPAN_TOL:
+            gaps.append((cur, a))
+        cur = max(cur, b)
+    if e - cur > SPAN_TOL:
+        gaps.append((cur, e))
+    return gaps
+
+
 def replay_clips(base, clips):
     """렌더 컷 계획(원본 좌표, plan_beat_clips_for 결과) → 지워진 조각 좌표의 수동 컷.
 
@@ -307,7 +328,8 @@ def replay_clips(base, clips):
             got = span_map(base, m, allow_tail=min(TAIL_MAX, TAIL_FRAC * sd))
             short = bool(got)
         if not got:
-            miss.append({"video_id": c.get("video_id"), "start": round(s, 3), "end": round(s + sd, 3)})
+            for gs, ge in uncleaned_gaps(base, m) or [(s, s + sd)]:
+                miss.append({"video_id": c.get("video_id"), "start": round(gs, 3), "end": round(ge, 3)})
             continue
         tot = sum(p["_src"] for p in got) or 1.0
         for p in got:
@@ -361,11 +383,15 @@ def _remap_replay(plan, base, tts_durs, src_durs):
             _leg["_unc"] = set(unc2)
         return _leg[bi], bi in _leg["_unc"]
 
+    partial = bool(base.get("partial"))
+    skip = {int(x) for x in base.get("skip_beats") or []}
     for b in plan2.get("beats") or []:
         bi = int(b["beat_idx"])
         td = float((tts_durs or {}).get(bi) or 0.0)
         if td <= 0:
             continue                      # 렌더도 음성 없는 칸은 건너뛴다
+        if partial and (bi in skip or str(bi) not in (base.get("beat_keys") or {})):
+            continue                      # 고객이 안 고른 칸(장면 골라 지우기) — 원본 그대로, 청소 안 함(과금 0)
         runout = _va._LAST_RUNOUT if bi == runout_idx else 0.0
         try:
             clips = _va.plan_beat_clips_for(orig[bi], td, src_durs, runout=runout)

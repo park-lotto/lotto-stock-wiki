@@ -4189,10 +4189,14 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
         base = incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, uncovered, extend,
                                  need=plan2.get("_clean_need"))
         plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs, src_durs=src_durs)
-    if uncovered:
-        # 증분을 못 했거나(allow_clean=False) 실패 — 원본 재료가 남는 비트가 있다. 원본 소스도 같이 넘긴다.
-        print("[clean-base] 원본 재료 잔존 비트 %s (자막 남을 수 있음)" % uncovered, file=sys.stderr)
-        paths = dict(_resolve_sources(job, work)); paths.update(_cb.source_paths(base))
+    # 원본 영상을 가리키는 칸이 남았나 — 증분 못 한 칸·고객이 안 고른 칸(장면 골라 지우기). 판정은 조립 재료 그대로.
+    _cpaths = _cb.source_paths(base)
+    _left = sorted({int(b["beat_idx"]) for b in plan2.get("beats") or []
+                    for m in (_beat_materials(b) or []) if m.get("video_id") not in _cpaths})
+    if uncovered or _left:
+        # 원본 재료가 남는 비트가 있다. 원본 소스도 같이 넘긴다(안 넘기면 렌더가 소스를 못 찾는다).
+        print("[clean-base] 원본 재료 잔존 비트 %s (자막 남을 수 있음)" % (uncovered or _left), file=sys.stderr)
+        paths = dict(_resolve_sources(job, work)); paths.update(_cpaths)
         return plan2, paths, base
     print("[clean-base] 정본 조립(VMake 0회): %s" % Path(base["path"]).name, file=sys.stderr)
     return plan2, _cb.source_paths(base), base
