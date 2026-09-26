@@ -49,31 +49,39 @@ SCENES = [
     dict(img="31_settings_vertex_pasted.png", crop=(300, 278, 1065, 660), step="5", title="숏템메이커에 붙여넣기",
          blur=[], hl=[(321, 490, 1043, 585), (321, 594, 450, 636)],
          cap=["파일을 메모장으로 열어 전체 복사", "마이페이지 › 내 키 등록 › 🚀 내 구글 Vertex 연결 → 「확인하고 연결」"]),
+    # ── 카드가 실제로 결제되지 않게(2026-09-27 사장님) — 이 두 캡처는 배율 1.0(가로 2000px)으로 찍혔다 ──
+    dict(img="41_billing_account_overview.png", k=1.0, crop=(0, 0, 1700, 780), step="💳", title="카드가 결제되지 않게",
+         blur=[(160, 10, 312, 34), (1646, 54, 1686, 94), (330, 590, 690, 650)], hl=[(1598, 6, 1692, 40), (386, 140, 530, 167)],
+         cap=["맨 위 파란 「업그레이드」는 누르지 마세요", "「무료 체험판 계정」이면 카드는 청구되지 않아요 — 90일 끝나면 스스로 멈춰요"]),
+    dict(img="42_billing_manage.png", k=1.0, crop=(272, 130, 1270, 430), step="💳", title="이미 업그레이드했다면",
+         blur=[(292, 222, 470, 244), (442, 390, 670, 414)], hl=[(700, 140, 822, 167)],
+         cap=["결제 › 계정 관리 › 「결제 계정 폐쇄」", "그때까지 쓴 만큼만 청구되고 멈춰요 — 예산 알림만으로는 안 막혀요"]),
 ]
 
 
-def px(r):
-    return tuple(int(round(v * K)) for v in r)
+def px(r, k=K):
+    return tuple(int(round(v * k)) for v in r)
 
 
 def main():
     out = []
     for i, s in enumerate(SCENES):
         im = Image.open(SRC / s["img"]).convert("RGB")
+        k = s.get("k", K)
         for b in s["blur"]:
-            box = px(b)
+            box = px(b, k)
             region = im.crop(box).filter(ImageFilter.GaussianBlur(14))
             # 흐림만으로는 긴 글자가 읽힐 수 있다 — 한 번 더 모자이크로 뭉갠다
             w, h = region.size
             region = region.resize((max(1, w // 14), max(1, h // 14))).resize((w, h), Image.NEAREST)
             im.paste(region, box[:2])
-        c = px(s["crop"])
+        c = px(s["crop"], k)
         crop = im.crop(c)
         name = f"scene_{i:02d}.png"
         crop.save(OUT / name)
         hls = []
         for h in s["hl"]:
-            x0, y0, x1, y1 = px(h)
+            x0, y0, x1, y1 = px(h, k)
             hls.append([x0 - c[0], y0 - c[1], x1 - x0, y1 - y0])
         out.append({"file": name, "w": crop.width, "h": crop.height, "step": s["step"], "title": s["title"],
                     "cap": s["cap"], "hl": hls})

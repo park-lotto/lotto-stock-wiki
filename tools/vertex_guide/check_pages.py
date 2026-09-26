@@ -12,6 +12,8 @@ from shopping_shorts import app as module
 import uvicorn
 from playwright.sync_api import sync_playwright
 module.DB_PATH = str(work / 'qa.db'); module.keycrypt.enabled = lambda: True
+import subprocess
+DUR = float(subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',str(ROOT/'shopping_shorts/static/landing/vertex_guide.mp4')],capture_output=True,text=True).stdout)
 PORT = 8798; BASE = f'http://127.0.0.1:{PORT}'
 fails = []
 def need(ok, msg):
@@ -38,7 +40,7 @@ with sync_playwright() as p:
     pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
     pg.goto(f'{BASE}/api_manual.html#vertex', wait_until='networkidle'); pg.wait_for_timeout(800)
     txt = pg.inner_text('body')
-    for s in ('Agent Platform API', 'Agent Platform 사용자', '2단계 인증', '「개인」', '마이페이지 › 🔑 내 키 등록'):
+    for s in ('Agent Platform API', 'Agent Platform 사용자', '2단계 인증', '「개인」', '마이페이지 › 🔑 내 키 등록', '결제 계정 폐쇄', '무료 체험판 계정'):
         need(s in txt, f'① 새 문구 있음: {s}')
     need('Vertex AI API 열기' not in txt, '① 옛 버튼 문구(Vertex AI API 열기) 없음')
     v = pg.locator('video[src="/landing/vertex_guide.mp4"]')
@@ -46,8 +48,13 @@ with sync_playwright() as p:
     v.scroll_into_view_if_needed()
     t = pg.evaluate("""async()=>{const v=document.querySelector('video[src="/landing/vertex_guide.mp4"]');v.muted=true;
         await v.play();await new Promise(r=>setTimeout(r,2500));return {t:v.currentTime,d:v.duration,w:v.videoWidth,err:v.error&&v.error.code}}""")
-    need(t['t'] > 1 and t['w'] == 1920 and abs(t['d'] - 78.7) < 1 and not t['err'], f'① 영상이 실제로 재생된다 {t}')
+    need(t['t'] > 1 and t['w'] == 1920 and abs(t['d'] - DUR) < 1 and not t['err'], f'① 영상이 실제로 재생된다 {t}')
     pg.screenshot(path=str(out / 'manual_vertex.png'))
+    # ⑤ 되감기 — 앞으로 갔다가 뒤로(2026-09-27 사장님 "뒤로 이동이 안 먹힌다"): 요청한 위치로 실제로 가는지
+    sk = pg.evaluate("""async()=>{const v=document.querySelector('video[src="/landing/vertex_guide.mp4"]');
+        const go=t=>new Promise(r=>{v.addEventListener('seeked',()=>r(v.currentTime),{once:true});v.currentTime=t;});
+        const a=await go(60); const b=await go(5); return {fwd:a,back:b,seekable:v.seekable.length?v.seekable.end(0):0}}""")
+    need(abs(sk['fwd'] - 60) < 1 and abs(sk['back'] - 5) < 1 and sk['seekable'] > DUR - 1, f'⑤ 앞·뒤로 이동된다 {sk}')
     need(not errs, f'④ 설명서 콘솔 오류 {errs[:3]}')
     errs.clear()
     pg2 = ctx.new_page(); pg2.on('pageerror', lambda e: errs.append(str(e)))
