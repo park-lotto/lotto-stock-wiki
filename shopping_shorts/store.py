@@ -220,6 +220,105 @@ def _ensure_screen_time(plan, store, job_id):
         return plan
 
 
+# ── 칸 번호(beat_idx) 겹침 — 판단은 여기 한 곳(0순위-B) ─────────────────────────
+# beat_idx는 "고유하되 **연속일 필요 없는** 칸 ID"다. 칸 삭제(app beat/delete)는 일부러
+# 다시 매기지 않는다 — mp3 이름(beat_{idx}_{hash}.mp3)·tts_paths·청소본 beat_keys가 전부
+# 번호로 짝을 찾기 때문이다. 그러니 **빠진 번호는 정상**이고 건드리면 과금이 난다
+# (TTS 재합성·청소본 coverage 깨짐). 고칠 것은 **겹친 번호뿐**이다:
+#   렌더가 tts_paths = {beat_idx: tts_path}로 모으므로 겹치면 마지막 칸 음성만 남아
+#   "CTA 음성 반복 + 한 칸 음성 누락"이 된다(09-06 이전 _rebuild_beats_by_lines가
+#   번호를 복제한 job 5개, 파형으로 확인).
+
+def beat_idx_duplicates(plan):
+    """겹친 beat_idx 목록(작은 번호부터). 겹침이 없으면 []. **순수 함수** — plan을 안 바꾼다.
+    렌더 안전망(mix_pipeline)이 부르는 판정 — 겹침 기준을 따로 적지 말고 이걸 불러라."""
+    seen, dup = set(), set()
+    for b in (plan or {}).get("beats") or []:
+        if not isinstance(b, dict):
+            continue
+        k = b.get("beat_idx")
+        if k in seen:
+            dup.add(k)
+        seen.add(k)
+    return sorted(dup, key=lambda x: (not isinstance(x, int), str(x) if not isinstance(x, int) else x))
+
+
+def dedupe_beat_idx(plan):
+    """겹친 beat_idx만 새 번호로 바꾼다(제자리 수정). 반환: 번호가 바뀐 칸 수(겹침 없으면 0).
+
+    규칙:
+      - 같은 번호의 **첫 칸은 그대로**, 뒤에 나온 겹친 칸만 (지금 최대 번호+1)부터 칸 순서대로
+        새 번호를 받는다. 겹치지 않은 칸·빠진 번호는 한 칸도 안 건드린다(과금 파급 최소).
+        (실측 5 job 중 4개는 겹침이 꼬리라 결과가 0..n-1과 같다.)
+      - 번호가 바뀐 칸의 tts_path·tts_ver를 버린다 — 파일명에 옛 번호가 들어 있어
+        다음 음성 단계가 새 번호로 다시 만들게 한다(옛 mp3를 물고 가면 그게 "위 대사 반복").
+      - plan["scene_lab"]["beats"](화면 편성 payload)의 번호도 **같은 매핑**으로 바꾼다.
+        겹친 번호는 "몇 번째로 나온 그 번호"(출현 순서)로 짝짓는다 — 화면 payload도 칸
+        순서대로 저장되기 때문이다. 옛 칸에 없던 번호(payload가 이미 0..n-1인 job)는 그대로 둔다.
+    """
+    beats = (plan or {}).get("beats")
+    if not isinstance(beats, list) or not beat_idx_duplicates(plan):
+        return 0
+    ints = [b.get("beat_idx") for b in beats if isinstance(b, dict) and isinstance(b.get("beat_idx"), int)]
+    nxt = (max(ints) + 1) if ints else 0
+    occ, mapping, changed = {}, {}, 0
+    for b in beats:
+        if not isinstance(b, dict):
+            continue
+        v = b.get("beat_idx")
+        k = occ.get(v, 0)
+        occ[v] = k + 1
+        if k == 0 and v is not None:
+            continue                       # 그 번호의 첫 칸 — 그대로
+        mapping[(v, k)] = nxt
+        b["beat_idx"] = nxt
+        nxt += 1
+        b.pop("tts_path", None)
+        b.pop("tts_ver", None)
+        changed += 1
+    lab = plan.get("scene_lab")
+    if changed and isinstance(lab, dict) and isinstance(lab.get("beats"), list):
+        locc = {}
+        for eb in lab["beats"]:
+            if not isinstance(eb, dict):
+                continue
+            v = eb.get("beat_idx")
+            k = locc.get(v, 0)
+            locc[v] = k + 1
+            if (v, k) in mapping:
+                eb["beat_idx"] = mapping[(v, k)]
+    return changed
+
+
+def _dedupe_on_save(plan, job_id):
+    """저장 출구에서 겹침 정리 + 알림. 실패해도 저장은 막지 않는다(fail-open)."""
+    try:
+        before = beat_idx_duplicates(plan)
+        n = dedupe_beat_idx(plan)
+    except Exception as e:      # noqa: BLE001
+        print(f"[beat_idx] 겹침 정리 실패 job={job_id}: {e!r}", file=sys.stderr)
+        return 0
+    if not n:
+        return 0
+    print(f"[beat_idx] 겹침 정리 job={job_id} 칸 {n}개 (겹친 번호 {before})", file=sys.stderr)
+    try:
+        import traceback
+        from shopping_shorts import ops_alert as _oa
+        who = " <- ".join(f"{Path(f.filename).name}:{f.lineno}:{f.name}"
+                          for f in reversed(traceback.extract_stack(limit=8)[:-1]))
+        _oa.raise_alert(
+            f"beat_idx_dup:{job_id}",
+            f"칸 번호 겹침을 저장 직전에 정리함 — job {job_id} 칸 {n}개 (겹친 번호 {before})",
+            f"겹친 번호 {before} → 뒤 칸 {n}개에 새 번호, 그 칸 음성은 버림(다음 음성 단계에서 재합성)\n"
+            f"저장한 경로: {who}",
+            grade=_oa.GRADE_OPS, signature=f"{before}|{n}",
+            auto="번호를 정리하고 그 칸 음성을 버렸다 — 다음 렌더가 새로 만든다",
+            todo="저장한 경로(상세)가 번호를 복제하는지 확인")
+    except Exception:      # noqa: BLE001 — 알림 실패가 저장을 막지 않는다
+        pass
+    return n
+
+
 def style_spine_rank(sp):
     """대본 스타일 추천 순서 — **이 함수 하나가 정본이다**(0순위-B).
 
@@ -5409,6 +5508,9 @@ class Store:
         #     '화면 길이 ≥ 대사 길이'를 만족한다. 실패해도 저장은 막지 않는다(fail-open).
         if fields.get("edit_plan"):
             fields = dict(fields, edit_plan=_ensure_screen_time(fields["edit_plan"], self, job_id))
+            # ★칸 번호 겹침도 같은 단일 출구에서 정리한다(2026-09-27) — 어떤 경로가 번호를
+            #   복제해도 저장된 편성엔 겹침이 없다. 빠진 번호는 안 건드린다(dedupe_beat_idx).
+            _dedupe_on_save(fields["edit_plan"], job_id)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")
