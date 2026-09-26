@@ -72,6 +72,7 @@ def test_download_retries_then_succeeds(env, monkeypatch):
     monkeypatch.setattr(urllib.request, "urlretrieve", flaky)
     assert _call(src, tmp).endswith("out.mp4")
     assert [x for x in log if x[0] == "run"] == [("run", "SKM0005")] and n["k"] == 2
+    assert not [x for x in log if x[0] == "poll"]          # 재조회 없이 그냥 다시 받아서 끝났다
     assert not (tmp / "out.mp4.part").exists()
 
 
