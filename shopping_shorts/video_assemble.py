@@ -725,6 +725,31 @@ def _beat_material(beat):
     return [s for s in ([beat.get("primary")] + list(beat.get("alternates") or [])) if s]
 
 
+def manual_cut_spans(beat):
+    """구절 맞춤을 끈 칸에 손으로 정한 컷(manual_cuts)이 있으면 **그 컷들이 화면이다** — 원본 구간 목록.
+
+    ★아래 plan_beat_clips_for의 수동 분기(phrase_sync is False + manual_cuts)와 같은 조건이다.
+      청소본 계열(mix_pipeline._beat_materials → 청소 구간·서명·정본 재배치·증분 청소)이 이걸 모르고
+      scene_override만 보다가, 컷을 바꾼 칸을 **청소본 만들 때의 옛 컷**으로 조립했다
+      (2026-09-26 강규봉님 job 7bbb1329aff0: 10칸 중 1·5·7·8번이 미리보기와 다른 장면)."""
+    if (beat or {}).get("phrase_sync") is not False:
+        return []
+    out = []
+    for c in beat.get("manual_cuts") or []:
+        try:
+            s, d = float(c["start"]), float(c["dur"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        try:
+            sd = float(c.get("sdur") or d)     # sdur = 원본에서 읽는 길이(청소본 재배치가 붙인다). 없으면 dur
+        except (TypeError, ValueError):
+            sd = d
+        if c.get("video_id") and d > 0:
+            out.append({"video_id": c["video_id"], "seg_id": c.get("seg_id") or "",
+                        "start": s, "end": s + (sd if sd > 0 else d)})
+    return out
+
+
 def _apply_fixed_lens(plan, fixed, tts_dur, min_clip=0.6, eps=1e-3):
     """✋ 손으로 정한 컷 길이를 반영한다(2026-08-24). **총합은 tts_dur 그대로.**
 
@@ -877,7 +902,12 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     #   이기고(아래 fixed_lens), 그땐 이 분기를 타지 않는다.
     # ★구절 맞춤을 끈 칸 = 화면이 정한 컷 그대로(2026-09-14 사장님). 나누기·✋·늘려채우기 없음.
     #   빈 시간은 화면이 렌더를 막는다. 그래도 들어오면(다른 입구) 마지막 컷을 늘려 멈추게 둔다.
-    _mc = [c for c in (beat.get("manual_cuts") or []) if c.get("video_id") in beat_src_durs]
+    # ★컷의 영상이 재료(scene_override)에 없어도 소스로 디코드되면 쓴다 — 화면(미리보기)은 컷만 보고 그린다.
+    #   재료 목록으로만 거르면 그 컷이 조용히 빠져 결과물만 다른 장면이 된다.
+    _mc = [c for c in (beat.get("manual_cuts") or [])
+           if (src_durs or {}).get(c.get("video_id"), 0.0) > 0.05]
+    for _c in _mc:
+        beat_src_durs.setdefault(_c["video_id"], src_durs[_c["video_id"]])
     if beat.get("phrase_sync") is False and _mc:
         try:
             _slow = max(1.0, float(beat.get("slow") or 1))
@@ -886,13 +916,23 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
         plan = []
         for c in _mc:
             d = float(c["dur"])
-            plan.append({"video_id": c["video_id"], "start": float(c["start"]),
-                         "src_dur": d, "out_dur": d * _slow, "seg_id": c.get("seg_id")})
+            # sdur: 청소본 재배치가 느리게 구워진 조각을 가리킬 때 — 읽는 길이만 다르고 화면 길이는 그대로
+            try:
+                sd = float(c.get("sdur") or d)
+            except (TypeError, ValueError):
+                sd = d
+            _p = {"video_id": c["video_id"], "start": float(c["start"]),
+                  "src_dur": sd if sd > 0 else d, "out_dur": d * _slow, "seg_id": c.get("seg_id")}
+            # 읽는 길이가 화면보다 길거나 원 계획이 배속이었으면 → 읽는 길이 전부를 화면 길이에 담는다.
+            # 짧으면 그대로 두어 느리게·정지 기계가 원 계획과 똑같이 채운다.
+            if c.get("pspeed") or _p["src_dur"] > _p["out_dur"] + 1e-3:
+                _p["playback_speed"] = _p["src_dur"] / _p["out_dur"]
+            plan.append(_p)
         gap = tts_dur - sum(c["out_dur"] for c in plan)
         if gap > 1e-3 and plan:
             plan[-1]["out_dur"] += gap
         _apply_sync_speed(plan)
-        if runout > 0:
+        if runout > 0 and not beat.get("clean_replay"):   # 청소본 재생 칸은 원 계획에 여운이 이미 들어 있다
             _extend_last_clip_for_runout(
                 plan, segs, runout, plan[-1].get("playback_speed", 1.0))
         return plan
@@ -2217,8 +2257,9 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         #   예전엔 이 블록이 여기에만 있어서 캡컷·ZIP 내보내기가 각자 `primary` 하나만
         #   보고 있었다(실측: 조각 19개인 job이 캡컷엔 7개). 이제 셋이 같은 함수를 부른다.
         #   손상/빈 소스 제외·포인트비트 홀드·1장1컷·늘려채우기·여운이 전부 그 안에 있다.
+        # 손으로 정한 컷의 영상도 넣는다 — 재료에 없는 영상을 가리켜도 화면은 그 컷을 그린다
         _srcd = {s.get("video_id"): _src_dur(s.get("video_id"))
-                 for s in _beat_material(beat)
+                 for s in list(_beat_material(beat)) + manual_cut_spans(beat)
                  if s and s.get("video_id") in source_video_paths}
         # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0

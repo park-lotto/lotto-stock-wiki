@@ -7592,11 +7592,14 @@ def api_produce_mix_clean_base_preview(job_id: str):
         return {"ok": True, "enabled": True, "base": False, "uncovered": [], "extend": [], "est_credits": None}
     plan = job["edit_plan"]
     beats = {int(b["beat_idx"]): b for b in plan.get("beats") or []}
-    _plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs={
-        int(b["beat_idx"]): float(b.get("target_seconds") or 0) for b in plan.get("beats") or []})
+    # ★렌더와 같은 판정(렌더 컷 재생)으로 묻는다 — 칸 길이·소스 길이까지 render_inputs_for와 같은 자
+    _plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=mix_pipeline.clean_tts_durs(plan),
+                                               src_durs=mix_pipeline._src_durs_for(job, work))
+    _need = _plan2.get("_clean_need") or {}
     unc = []
     for bi in uncovered:
-        secs = sum(float(m["end"]) - float(m["start"]) for m in mix_pipeline._beat_materials(beats[bi]))
+        spans = _need.get(str(bi)) or mix_pipeline._beat_materials(beats[bi])
+        secs = sum(float(m["end"]) - float(m["start"]) for m in spans)
         unc.append({"beat_idx": bi, "seconds": round(secs, 2)})
     ext = [{"beat_idx": e["beat_idx"], "need": e["need"]} for e in extend]
     total = sum(u["seconds"] for u in unc) + sum(float(e["end"]) - float(e["start"]) for e in extend)
