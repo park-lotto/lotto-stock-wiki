@@ -6524,18 +6524,15 @@ def _pvproxy_prewarm(job_id: str) -> None:
                 return
             blens.append(len(mine))
             for c in mine:
-                # ★화면과 같은 자리로 맞춘다(scene_play.js:707 Math.round(d*100)/100).
-                #   안 맞추면 곳간 키가 전부 달라져 한 조각도 재사용이 안 된다.
-                cuts.append({"video_id": str(c.get("video_id") or ""),
-                             "start": round(float(c.get("start") or 0), 3),
-                             "dur": math.floor(float(c.get("out_dur") or 0) * 100 + 0.5) / 100,
-                             # ★src_dur 도 같은 자리로 맞춘다 — 여기를 놓치면 키가 전부 어긋나
-                             #   곳간이 차 있어도 **한 조각도 재사용되지 않는다**
-                             #   (실측 2026-09-21: 1.67 vs 1.669 로 37조각이 전부 헛것이 됐다).
-                             "src_dur": math.floor(float(c.get("src_dur") or 0) * 100 + 0.5) / 100})
+                # ★컷 모양·반올림 자리는 화면 요청과 **같은 함수**(_pvproxy_norm_cut, 2026-09-27).
+                #   종전 2자리 내림·fit 없음이라 같은 편성도 서명이 달랐다. 조각 곳간 키(_cut_key)는
+                #   따로 0.01초로 뭉뚱그리므로 여기 자리를 3자리로 바꿔도 조각 재사용은 그대로다.
+                cuts.append(_pvproxy_norm_cut({"video_id": c.get("video_id"), "start": c.get("start"),
+                                               "dur": c.get("out_dur"), "src_dur": c.get("src_dur"),
+                                               "fit": c.get("fit")}))
         if not cuts or sum(blens) != len(cuts):
             return
-        sig = hashlib.sha1(json.dumps([cuts, blens, "v4cut"], sort_keys=True).encode()).hexdigest()[:16]
+        sig = _pvproxy_sig(cuts, blens, _pvproxy_beat_meta(beats))
         if (d / ("%s.mp4" % sig)).exists():
             return                          # 이미 있다
         with _PVPROXY_LOCK:
@@ -6758,7 +6755,10 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 # ★칸도 곳간에 둔다 — 장면 하나를 바꿔도 **그 칸만** 다시 만든다.
                 #   칸 만들기가 굽기의 44%였다(실측 2026-09-21: 칸영상 2.17초 + 칸음성 1.16초).
                 #   컷만 재사용해선 7.1초에서 안 줄었던 이유가 이것이다.
-                bkey = _hash([_cut_key(c) for c in mine_cuts] + [str(ap or ""), "%.3f" % want])
+                # ★음성 지문도 싣는다(2026-09-27) — 성우·톤만 바꾸면 경로가 같고 길이도 같은 프레임 수일 수 있어
+                #   옛 칸 음성(b_*.m4a)을 그대로 집어 왔다. 서명만 고치면 새 합본에 옛 목소리가 다시 들어간다.
+                bkey = _hash([_cut_key(c) for c in mine_cuts] + [str(ap or ""), "%.3f" % want,
+                                                                  _pvproxy_tts_stamp(ap) if ap else ""])
                 bl = cache / ("b_%s.ts" % bkey)
                 bpad = cache / ("b_%s.m4a" % bkey)
                 if bl.exists() and bl.stat().st_size > 0 and ((not ap) or
@@ -6882,21 +6882,67 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 _PVPROXY_BUSY.pop(job_id, None)
 
 
+# ── 합본 서명 — **여기 한 곳**(화면 요청 api_mix_preview_proxy · 미리굽기 _pvproxy_prewarm 이 같이 쓴다) ──
+#   ★왜 (2026-09-27): 서명이 두 벌이었다 — 화면 요청은 3자리 반올림+fit, 미리굽기는 2자리 내림·fit 없음이라
+#     같은 편성을 서로 못 알아봤다(0순위-B). 그리고 **둘 다 음성이 없었다** — 합본에는 칸 음성을 굽는데
+#     성우·톤을 바꾸면 같은 mp3 경로를 덮어쓰고 tts_ver 만 올린다(mix_pipeline.resynth_one_beat).
+#     컷이 그대로면 서명도 그대로라 **옛 목소리가 구워진 합본**을 ready 로 줬다(실측: 바꾼 뒤에도 -21.5dB 그대로).
+#     그래서 칸마다 음성 파일의 지문(mtime_ns·크기)·tts_ver·voice_override·구도(frame_vf)를 서명에 싣는다.
+#   ※자리: _pvproxy_build 바로 뒤·첫 @app 앞 — tools/editor_vs_final_video.py 가 이 구간(build~@app)을 떼어
+#     서버 app 에 얹어 돌리므로, build 가 쓰는 _pvproxy_tts_stamp 가 이 구간 안에 있어야 NameError 가 안 난다.
+def _pvproxy_norm_cut(c: dict) -> dict:
+    """합본 컷 모양 — scene_play.js pvxCut 과 같은 자리(start·dur·src_dur 3자리, fit 은 있을 때만)."""
+    return {"video_id": str(c.get("video_id") or ""), "start": round(float(c.get("start") or 0), 3),
+            "dur": round(float(c.get("dur") or 0), 3),
+            "src_dur": round(float(c.get("src_dur") or 0), 3),
+            **({"fit": 1} if c.get("fit") else {})}
+
+
+def _pvproxy_tts_stamp(path) -> str:
+    """음성 파일 지문 — 같은 경로를 덮어써도(성우·톤 변경) 바뀐다. 없으면 빈 문자열."""
+    try:
+        st = Path(path).stat()
+        return "%d:%d" % (st.st_mtime_ns, st.st_size)
+    except (OSError, TypeError, ValueError):
+        return ""
+
+
+def _pvproxy_beat_meta(beats: list) -> list:
+    """칸마다 [음성 경로, 음성 지문, tts_ver, voice_override, 구도] — 칸 순서(edit_plan beats 순서) 그대로."""
+    out = []
+    for b in beats or []:
+        tp = str((b or {}).get("tts_path") or "")
+        try:
+            vf = video_assemble.frame_vf(b, 720, 1280)     # _pvproxy_build 가 컷에 붙이는 구도와 같은 호출
+        except Exception:                                   # noqa: BLE001
+            vf = ""
+        try:
+            vo = json.dumps((b or {}).get("voice_override") or {}, sort_keys=True, ensure_ascii=False)
+        except (TypeError, ValueError):
+            vo = str((b or {}).get("voice_override"))
+        out.append([tp, _pvproxy_tts_stamp(tp) if tp else "", int((b or {}).get("tts_ver") or 0), vo, vf])
+    return out
+
+
+def _pvproxy_sig(cuts: list, blens: list, tts_meta: list) -> str:
+    """합본 파일 이름(서명). 컷·칸 구성·칸 음성/구도 중 하나라도 다르면 다른 합본이다."""
+    import hashlib
+    raw = json.dumps([[_pvproxy_norm_cut(c) for c in (cuts or [])], [int(x) for x in (blens or [])],
+                      tts_meta or [], "v5av"], sort_keys=True, ensure_ascii=False)
+    return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+
+
 @app.post("/api/mix/preview_proxy/{job_id}")
 def api_mix_preview_proxy(job_id: str, body: dict):
     """body = {"cuts": [{"video_id","start","dur","src_dur"?}, ...]}
     돌려주는 것 = {"sig", "state": "ready"|"building"} · ready면 url로 튼다."""
-    import hashlib
     cuts = body.get("cuts") or []
     if not isinstance(cuts, list) or not cuts or len(cuts) > 600:
         return JSONResponse(status_code=422, content={"ok": False, "error": "컷 목록 필요"})
     try:
-        norm = [{"video_id": str(c.get("video_id") or ""), "start": round(float(c.get("start") or 0), 3),
-                 "dur": round(float(c.get("dur") or 0), 3),
-                 "src_dur": round(float(c.get("src_dur") or 0), 3),
-                 # [속도 맞추기] 컷 — 있을 때만 싣는다(없는 컷의 sig가 안 바뀌어 기존 합본을 그대로 쓴다)
-                 **({"fit": 1} if c.get("fit") else {})} for c in cuts]
-    except (TypeError, ValueError):
+        # 컷 모양은 미리굽기와 같은 함수 — [속도 맞추기](fit)는 있을 때만 싣는다
+        norm = [_pvproxy_norm_cut(c) for c in cuts]
+    except (TypeError, ValueError, AttributeError):
         return JSONResponse(status_code=422, content={"ok": False, "error": "컷 형식 오류"})
     # 칸마다 컷이 몇 개인지 — 칸 경계를 음성 길이에 맞추려면 서버가 알아야 한다.
     blens = body.get("beat_lens") or []
@@ -6906,8 +6952,12 @@ def api_mix_preview_proxy(job_id: str, body: dict):
         blens = []
     if sum(blens) != len(norm):
         blens = []                       # 안 맞으면 안 쓴다(예전처럼 영상만 굽는다)
-    # ★sig 에 v2 를 넣는다 — 안 그러면 음성 없는 **옛 합본**을 ready 로 보고 그대로 쓴다.
-    sig = hashlib.sha1(json.dumps([norm, blens, "v4cut"], sort_keys=True).encode()).hexdigest()[:16]
+    # ★서명 = 미리굽기와 같은 함수(_pvproxy_sig) — 칸 음성 지문·구도까지 싣는다. 그래서 job 을 먼저 읽는다
+    #   (성우·톤만 바꿔도 다른 합본 — 옛 목소리 합본을 ready 로 주지 않는다, 2026-09-27).
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    sig = _pvproxy_sig(norm, blens, _pvproxy_beat_meta((job.get("edit_plan") or {}).get("beats") or []))
     if (_pvproxy_dir(job_id) / f"{sig}.mp4").exists():
         res = {"ok": True, "sig": sig, "state": "ready",
                "url": f"/api/mix/preview_proxy/{job_id}/{sig}.mp4"}
@@ -6916,9 +6966,6 @@ def api_mix_preview_proxy(job_id: str, body: dict):
         except Exception:
             pass
         return res
-    job = Store(DB_PATH).get_mix_job(job_id)
-    if not job:
-        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     with _PVPROXY_LOCK:
         if _PVPROXY_BUSY.get(job_id) == sig:
             return {"ok": True, "sig": sig, "state": "building"}

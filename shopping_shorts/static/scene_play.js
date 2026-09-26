@@ -1119,7 +1119,11 @@ function pvxCuts(){
     beats.push(JSON.stringify(cl));
     cuts.push(...cl);
   });
-  return {beats, cuts, key: beats.join('|')};
+  // ★key 에 칸 음성 버전(tts_ver)을 싣는다(2026-09-27) — 성우·톤만 바꾸면 컷은 그대로라 key 가 안 바뀌어
+  //   다시 묻지도 않고 옛 목소리 합본을 계속 틀었다. 서버 서명(app._pvproxy_sig)도 칸 음성 지문을 싣는다.
+  //   beats(칸별 컷 JSON)는 그대로 둔다 — pvxAttach 가 칸 목록을 글자 그대로 대조한다.
+  const vers = (DATA && DATA.beats || []).map(b => (b && b.tts_ver) || 0).join(',');
+  return {beats, cuts, key: beats.join('|') + '#tts:' + vers};
 }
 function pvxClock(c){ return c && c._px; }
 // ★언제 만드나(2026-09-14 사장님 "처음 배치시 빠르게 / 장면 교체했을 땐 버튼을 눌러서").
