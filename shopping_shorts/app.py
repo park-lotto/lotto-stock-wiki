@@ -24987,6 +24987,7 @@ def _last_run_thumb(store, shortcode):
 # NotModifiedResponse로 바뀐 뒤라 늦는다(NotModifiedResponse는 원본 응답 헤더 중
 # cache-control만 골라 옮기므로, 원본에 미리 있어야 304에도 살아남는다).
 _NOCACHE_STATIC_EXTS = (".js", ".css", ".html")
+_RANGE_STATIC_EXTS = (".mp4", ".webm", ".mov", ".m4v", ".mp3", ".m4a", ".wav", ".ogg")   # 되감기에 Range가 필요한 정적 미디어
 
 
 class _NoCacheStaticFiles(StaticFiles):
@@ -24995,6 +24996,14 @@ class _NoCacheStaticFiles(StaticFiles):
         from starlette.staticfiles import NotModifiedResponse
 
         request_headers = Headers(scope=scope)
+        # ★정적 영상·음성도 Range(부분 요청)로 — 2026-09-27 사장님 "영상 플레이하고 뒤로 이동이 안 먹힌다"(/landing/vertex_guide.mp4).
+        #   서버 starlette 0.36.3 FileResponse는 Range를 무시하고 200 전체를 줘서 브라우저가 되감기를 못 한다.
+        #   API 쪽은 08-15에 _range_media_response로 고쳤는데 이 정적 마운트만 빠져 있었다 — 같은 함수를 쓴다(0순위-B).
+        if status_code == 200 and str(full_path).lower().endswith(_RANGE_STATIC_EXTS):
+            import mimetypes
+            from starlette.requests import Request as _Req
+            mt = mimetypes.guess_type(str(full_path))[0] or "application/octet-stream"
+            return _range_media_response(full_path, _Req(scope), mt)
         response = FileResponse(full_path, status_code=status_code, stat_result=stat_result)
         if str(full_path).endswith(_NOCACHE_STATIC_EXTS):
             response.headers["Cache-Control"] = "no-cache, must-revalidate"
