@@ -13869,8 +13869,7 @@ async function startCleanPreview(){
   // ★골라서 지우기인데 하나도 안 골랐으면 돈이 나가기 전에 멈춘다(서버도 한 번 더 막는다).
   const _cuts = cleanPickPayload();
   if(_cuts && !_cuts.length){
-    const s=document.getElementById('cleanPickSum');
-    if(s) s.innerHTML='<b style="color:var(--fire,#ff9a5a)">⚠️ 지울 장면을 하나 이상 골라 주세요.</b>';
+    paintCleanPick();   // 안내는 그리는 함수 한 곳이 쓴다(한 자리를 두 함수가 덮어쓰지 않게)
     return;
   }
   clearInterval(CLEAN_POLL); CLEAN_POLL=null;
@@ -14180,7 +14179,7 @@ function paintCleanPick(){
     grid.innerHTML = P.cuts.map((c,i)=>{
       const on=P.sel.has(c.key);
       return '<button type="button" class="pick-card'+(on?' on':'')+'" data-key="'+esc(c.key)+'" onclick="toggleCleanPick(this.dataset.key)">'
-        +'<img loading="lazy" src="/api/produce/mix/clean_pick_thumb/'+encodeURIComponent(P.job)+'?ci='+c.ci+'" alt="">'
+        +'<img src="/api/produce/mix/clean_pick_thumb/'+encodeURIComponent(P.job)+'?ci='+c.ci+'" alt="">'
         +'<span class="pk-num">장면 '+(i+1)+'</span><span class="pk-chk">'+(on?'✓':'')+'</span>'
         +'<span class="pk-sec">'+Number(c.dur).toFixed(1)+'초</span></button>';
     }).join('');
