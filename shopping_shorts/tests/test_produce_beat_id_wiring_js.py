@@ -96,3 +96,47 @@ def test_refresh_beat_box_redraws_by_position():
     r = _run()
     assert r["refreshedIdx"] == 2
     assert r["refreshedBox"] and "자산 #22" in r["refreshedBox"]
+
+
+# ── 트림·대사 줄이기(TRIM 구간) — 같은 변환 함수를 타는지 ─────────────────
+_TRIM_START = "// ── [끝/앞 조용한 부분 자르기] 트림(2026-07-22) ─── TRIM-START"
+_TRIM_END = "// ─── TRIM-END"
+
+
+def _trim_slice():
+    src = PRODUCE_HTML.read_text(encoding="utf-8")
+    a = src.index("function mixBeatIdAt(")
+    conv = src[a:src.index("\n}\n", a) + 3]        # 변환 함수는 원본에서 그대로 떼어 붙인다
+    t = src.index(_TRIM_START)
+    return conv + src[t:src.index(_TRIM_END, t)]
+
+
+_TRIM_DRIVER = r"""
+(async function(){
+  global.window = global;
+  global.esc = (s)=>String(s==null?'':s);
+  global.ErrorHelp = {html: ()=>'NET'};
+  global.MIX_JOB = 'JID';
+  global.loadMixReview = ()=>{};
+  global.document = { getElementById: ()=>({ innerHTML: '' }) };
+  globalThis._mixBeats = [{beat_idx:0}, {beat_idx:2}, {beat_idx:3}];
+  const posts = {};
+  global.fetch = async (url, opts)=>{
+    posts[url.split('/').pop()] = JSON.parse(opts.body);
+    return {json: async()=>({ok:true, changed:true, tail_trim:0.3})};
+  };
+  const html = renderTrimControls({}, 1);
+  await doShorten(1);
+  await doTrim(1, 'tail', 'nudge');
+  console.log(JSON.stringify({html, posts}));
+})().catch(e=>{ console.error(e && e.stack || e); process.exit(1); });
+"""
+
+
+def test_trim_and_shorten_send_beat_idx():
+    out = run_js(_trim_slice() + _TRIM_DRIVER)
+    r = json.loads(out.splitlines()[-1])
+    assert "doTrim(1,'tail','auto')" in r["html"]       # 화면(onclick)은 위치 그대로
+    assert r["posts"]["shorten"]["beat_idx"] == 2
+    assert r["posts"]["trim"]["beat_idx"] == 2
+    assert r["posts"]["trim"]["edge"] == "tail" and r["posts"]["trim"]["mode"] == "nudge"

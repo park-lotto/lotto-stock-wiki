@@ -183,7 +183,11 @@ _DRIVER = r"""
 def test_scene_lab_sends_real_beat_idx(tmp_path):
     src = LAB_HTML.read_text(encoding="utf-8")
     js = tmp_path / "t.js"
-    js.write_text(src[src.index(_START):src.index(_END)] + _DRIVER, encoding="utf-8")
+    # beatIdOf는 위치→번호 규칙을 scene_play.js beatKeyAt 한 곳에 맡긴다(2026-09-27) — 원본에서 떼어 붙인다.
+    sp = (LAB_HTML.parent / "scene_play.js").read_text(encoding="utf-8")
+    k = sp.index("function beatKeyAt(")
+    conv = sp[k:sp.index(chr(10) + "}" + chr(10), k) + 3]
+    js.write_text(conv + src[src.index(_START):src.index(_END)] + _DRIVER, encoding="utf-8")
     out = subprocess.run([NODE, str(js)], capture_output=True, text=True, encoding="utf-8",
                          errors="replace", stdin=subprocess.DEVNULL, timeout=30)
     assert out.returncode == 0, out.stderr

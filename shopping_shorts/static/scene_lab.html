@@ -2791,8 +2791,7 @@ function aiSceneControl(i){
 // ★서버 라우트(/ai_scene·/cutaway·/sfx)는 **진짜 칸 번호(beat_idx)**로 칸을 찾는다. 화면 위치 i를 보내면
 //   칸을 지운 작업(번호 빠짐)에서 뒤 칸의 AI 장면(~300원)·효과음이 엉뚱한 칸에 붙거나 422가 난다(2026-09-27).
 function beatIdOf(i){
-  const b = (DATA.beats || [])[i] || {};
-  return b.beat_idx == null ? i : b.beat_idx;     // 번호 없는 로컬 실험실 데이터만 위치로
+  return beatKeyAt(i);     // 위치→번호 규칙은 scene_play.js beatKeyAt 한 곳(번호 없는 로컬 데이터만 위치로)
 }
 async function startAiScene(i, style){
   try{
@@ -2985,7 +2984,7 @@ async function setBeatSpeed(i, raw, ev){
   if (!beat || SPEED_BUSY[i] || !isFinite(wanted)) return;
   const before = beatSyncSpeed(i);
   if (Math.abs(before - wanted) < 0.01) return;
-  const beatId = beat.beat_idx == null ? i : beat.beat_idx;
+  const beatId = beatKeyAt(i);
   const ver0 = beat.tts_ver || 0;
   beat.sync_speed = wanted; SPEED_BUSY[i] = true; renderBand();
   nsay(`🎚 ${i+1}번 칸 ${wanted.toFixed(1)}배 — 음성·장면을 함께 맞추는 중…`);
@@ -4038,8 +4037,7 @@ async function saveNarr(i){
 // 재생성 완료는 tts_ver(단조 증가)로 안다 — mp3는 같은 경로라 겉으로 구분이 안 된다
 // (mix_pipeline.resynth_one_beat이 끝에서 이 값을 올린다).
 async function waitNarrRegen(i, ver0){
-  const beatId = (((DATA || {}).beats || [])[i] || {}).beat_idx;
-  const wantedId = beatId == null ? i : beatId;
+  const wantedId = beatKeyAt(i);
   for (let n = 0; n < 40; n++){                 // 최대 ~40초
     await new Promise(r => setTimeout(r, 1000));
     try{
@@ -4118,7 +4116,7 @@ function estSec(t){
 // 대본을 고쳐(NARR) 아직 음성을 안 뽑았으면 옛 구절이라 시간이 안 맞는다 → 그때는 안 그린다.
 function capSegs(i){
   if (narrChanged(i)) return [];                       // 고친 대본 ≠ 서버 구절
-  const rows = (DATA.captions || {})[String(i)] || (DATA.captions || {})[i] || [];
+  const rows = capsOf(i);                              // 키=번호 — capsOf가 위치→번호로 바꿔 읽는다
   const out = [];
   for (const r of rows){
     const s = +r.start, e = +r.end;

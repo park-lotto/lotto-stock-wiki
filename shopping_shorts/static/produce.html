@@ -13326,7 +13326,7 @@ async function doSwap(idx, segId){
   try{
     const r = await (await fetch('/api/mix/adjust',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({job_id: MIX_JOB, beat_idx: idx, seg_id: segId})})).json();
+      body: JSON.stringify({job_id: MIX_JOB, beat_idx: mixBeatIdAt(idx), seg_id: segId})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   loadMixReview();   // 화면이 바뀜=옛 미리보기 무효 → 전체 재로드가 프리뷰까지 정리(2360 규율)
@@ -13357,7 +13357,7 @@ async function doShorten(idx){
   try{
     r=await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/shorten',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({beat_idx:idx})})).json();
+      body:JSON.stringify({beat_idx:mixBeatIdAt(idx)})})).json();
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   if(!r.ok){ if(box) box.innerHTML='<span class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</span>'; return; }
   if(!r.changed){ if(box) box.innerHTML='<span class="hint" style="color:var(--sub)">'+esc(r.note||'더 줄일 여지가 없어요')+'</span>'; return; }
@@ -13371,7 +13371,7 @@ async function doTrim(idx, edge, mode){
   try{
     r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/trim',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx, edge, mode, step: 0.3})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx), edge, mode, step: 0.3})})).json();
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   if(mode==='auto' && edge==='tail' && !r.tail_trim){

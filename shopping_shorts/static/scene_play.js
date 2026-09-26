@@ -6,7 +6,8 @@ const SL = {
   src:   vid => SL.server ? `/api/mix/src/${SL.job}/${encodeURIComponent(vid)}` : `src/${vid}.mp4`,
   // ★버전을 URL에 붙인다(2026-08-18 사장님 "대본 고치고 다시 뽑아도 옛 음성이 나온다").
   //   mp3 경로가 늘 같아서 브라우저 캐시가 옛 파일을 계속 준다 — 재생성해도 소리가 안 바뀐다.
-  tts:   (i, ver) => SL.server ? `/api/mix/tts/${SL.job}/${i}?v=${ver||0}` : `tts/beat_${i}.mp3`,
+  //   i = 화면 위치. 서버 주소는 번호로 찾으므로 beatKeyAt(i)로 바꿔 보낸다(로컬 파일명은 종전대로).
+  tts:   (i, ver) => SL.server ? `/api/mix/tts/${SL.job}/${beatKeyAt(i)}?v=${ver||0}` : `tts/beat_${i}.mp3`,
   applyUrl: () => SL.server ? `/api/mix/scene_lab/${SL.job}/apply` : '/apply',
 };
 const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   // 상한을 넘긴 컷 = 소재가 모자라 늘린 것
@@ -229,7 +230,17 @@ function audioUsable(){
   const a = audio();
   return !!(a && a.src && !a.error && a.duration > 0);
 }
-function capsOf(i){ return (DATA.captions || {})[String(i)] || []; }
+// ★화면 위치 i → 진짜 칸 번호(beat_idx) 변환은 여기 한 곳(2026-09-27).
+//   화면(lists·STRETCH·planClips…)은 위치 i로 돈다. 그런데 서버가 주는 DATA.captions·DATA.tts_dur의
+//   키와 음성 주소(/api/mix/tts/{job}/{n})는 **번호**다(app.py _lab_captions·api_mix_tts).
+//   칸을 지운 작업(번호 0,1,3…)에서 위치로 읽으면 뒤 칸마다 옆 칸의 자막·길이·음성이 나왔다
+//   (라이브 30일 done 13 job·40칸 실측). 번호를 읽는 곳은 전부 이 함수를 탄다.
+//   번호 없는 옛/로컬 데이터만 위치로(scene_lab.html beatIdOf도 이 함수를 부른다).
+function beatKeyAt(i){
+  const b = ((DATA && DATA.beats) || [])[i];
+  return (b && b.beat_idx != null) ? b.beat_idx : i;
+}
+function capsOf(i){ return (DATA.captions || {})[String(beatKeyAt(i))] || []; }
 // 구간 [a,b)에 걸치는 자막 구절들 — 자르지 않고 구절 통째로 돌려준다.
 function capsIn(i, a, b){
   return capsOf(i).filter(c => c.start < b - 1e-3 && c.end > a + 1e-3);
@@ -922,7 +933,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
 //   음성보다 길었다. 서버는 이미 실제 길이(tts_dur)를 주고 있었는데 안 쓰고 있었다.
 //   라이브 렌더도 실제 음성 길이(_beat_effective_dur)를 쓰므로 이래야 렌더와 맞는다.
 function beatDur(i){
-  const d = ((DATA && DATA.tts_dur) || {})[String(i)];
+  const d = ((DATA && DATA.tts_dur) || {})[String(beatKeyAt(i))];   // 키 = 번호(beatKeyAt 주석)
   if (d && d > 0.05) return d;
   const b = (DATA && DATA.beats && DATA.beats[i]) || {};
   return b.target_seconds || 3;
@@ -946,7 +957,8 @@ function ttsWarn(msg){
 function ttsVer(i){
   // 서버가 재생성할 때마다 올리는 값(mix_pipeline.resynth_one_beat). 이게 키와 URL에
   // 같이 들어가야 "고쳤는데 옛 소리"가 안 난다.
-  const b = ((DATA && DATA.beats) || []).find(x => (x.beat_idx != null ? x.beat_idx : -1) === i);
+  // i = 화면 위치(seatTts·playTts 호출자 전부 lists 위치를 넘긴다) → 그 자리의 칸을 그대로 본다.
+  const b = ((DATA && DATA.beats) || [])[i];
   return (b && b.tts_ver) || 0;
 }
 function seatTts(i, slot){
