@@ -138,7 +138,7 @@ def test_partial_splice_keeps_every_frame_in_place(tmp_path, monkeypatch):
     _mk(raw, 90, "mod(N*2,200)+20")            # 프레임 번호가 곧 밝기(20,22,24,…)
     sent = []
 
-    def _fake_vmake(src, keys, out, tier=None):
+    def _fake_vmake(src, keys, out, tier=None, **k):
         # '지움' = 화면을 새까맣게. 받은 길이·등급을 기록한다.
         sent.append((mp._probe_fps_frames(src)[2], tier))
         subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(src), "-vf", "geq=lum=0:cb=128:cr=128",

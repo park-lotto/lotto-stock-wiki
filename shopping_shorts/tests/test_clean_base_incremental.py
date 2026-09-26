@@ -36,7 +36,7 @@ def test_changed_beat_cleaned_in_one_call_and_added_to_extras(tmp_path, monkeypa
     calls, charged = [], []
     monkeypatch.setattr(mp, "_cut_piece", _fake_cut)
     tiers = []
-    def _joined(items, keys, work, tag="", tier=None):
+    def _joined(items, keys, work, tag="", tier=None, **k):
         calls.append([v for v, _ in items]); tiers.append(tier)
         out = {}
         for v, _ in items:
@@ -55,7 +55,7 @@ def test_extend_request_cleans_tail_piece(tmp_path, monkeypatch):
     job, base = _job_and_base(tmp_path)
     plan = job["edit_plan"]
     monkeypatch.setattr(mp, "_cut_piece", _fake_cut)
-    def _joined(items, keys, work, tag="", tier=None):
+    def _joined(items, keys, work, tag="", tier=None, **k):
         out = {}
         for v, _ in items:
             p = Path(work) / f"{v}_clean.mp4"; p.write_bytes(b"q" * 2048); out[v] = str(p)
