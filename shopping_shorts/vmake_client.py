@@ -160,13 +160,29 @@ def _pending_get(out_path, key):
     return ent
 
 
-def _pending_put(out_path, key, task_id, seconds):
-    if not key or not task_id:
+def _pending_put(out_path, key, task_id, seconds, consumed=False):
+    """작업 번호를 적는다. consumed=True면 **번호 없이** '돈 나감' 표식만 남긴다(과금 직후·제출 전).
+    번호가 오면 같은 키를 덮어쓴다."""
+    if not key or not (task_id or consumed):
         return
     d = {k: v for k, v in _pending_all(out_path).items()
          if time.time() - float((v or {}).get("ts") or 0) <= _PENDING_TTL}
-    d[key] = {"task_id": str(task_id), "ts": time.time(), "seconds": seconds}
+    d[key] = {"task_id": (str(task_id) if task_id else None), "ts": time.time(), "seconds": seconds,
+              "consumed": True}
     _pending_write(out_path, d)
+
+
+def _orphan_charge_alert(key, ent):
+    """번호 없는 과금 표식이 남은 채 다시 왔다 = 지난 시도가 과금 직후·번호 받기 전에 죽었다(업체 SDK 틈).
+    막을 수는 없고 **모르고 넘어가지 않게** 관리자에게 올린다(2026-09-27 사장님). 경보 실패는 무해."""
+    try:
+        from shopping_shorts import ops_alert
+        ops_alert.raise_alert(
+            "vmake_orphan_charge", "자막제거 과금됐는데 결과 없음(이전 시도 중단) — 업체 사용내역 확인",
+            "key=%s ts=%s seconds=%s — 이번 클릭은 새로 보냈다(2번째 과금 가능)" % (key, ent.get("ts"), ent.get("seconds")),
+            grade=ops_alert.GRADE_OPS, signature=key)
+    except Exception as e:                        # noqa: BLE001
+        print("[vmake] 번호 없는 과금 경보 실패(무해): %r" % (e,), flush=True)
 
 
 def _pending_drop(out_path, key):
@@ -294,6 +310,12 @@ def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER
     key = ("%s|%s|%s" % (resume_key, tier, task)) if resume_key else None
     want_sec = _seconds(video_path) if key else None
     ent = _pending_get(out_path, key)
+    if ent and not ent.get("task_id"):
+        # 돈은 나갔는데 번호가 없다 — 이어받을 길이 없으니 새로 보내되, 관리자에게 알린다
+        print("[vmake] 지난 시도가 과금 직후 끊겼다(번호 없음) → 경보 후 새로 맡긴다", flush=True)
+        _orphan_charge_alert(key, ent)
+        _pending_drop(out_path, key)
+        ent = None
     if ent:
         print("[vmake] 이미 맡긴 작업이 있다 — 업로드·과금 없이 이어받는다: task_id=%s" % ent["task_id"], flush=True)
         try:
@@ -304,6 +326,14 @@ def remove_subtitles(video_path, api_key, out_path, poll_timeout=1200, tier=TIER
             print("[vmake] 이어받기 실패 → 새로 맡긴다: %r" % (e,), flush=True)
             _pending_drop(out_path, key)
     if key:
+        # ★과금(consume) 직후·제출 전에 '돈 나감' 표식을 먼저 적는다 — 그 사이에 죽으면 다음 클릭이 안다
+        _orig_consume = client._consume_permission
+
+        def _consume_marked(url, task_name):
+            r = _orig_consume(url, task_name)
+            _pending_put(out_path, key, None, want_sec, consumed=True)
+            return r
+        client._consume_permission = _consume_marked
         result = client.run_task(task_name=task, image_path=video_path, params=params,
                                  on_async_submitted=lambda tid: _pending_put(out_path, key, tid, want_sec))
     else:

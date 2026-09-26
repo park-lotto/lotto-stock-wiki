@@ -22,6 +22,9 @@ class _Client:
 
     def fetch_config(self, version=None): pass
 
+    def _consume_permission(self, url, task):
+        return {"context": "c"}
+
     def run_task(self, task_name, image_path, params=None, on_async_submitted=None):
         self.log.append("run")
         if on_async_submitted: on_async_submitted("t_1")
@@ -137,11 +140,86 @@ def test_clean_api_does_not_enqueue_twice_when_pending(monkeypatch):
         def get_mix_job(self, j): return job
         def update_mix_job(self, *a, **k): pass
         def queue_has_pending(self, task, key, value): return (task, key, value) == ("clean", "job_id", "j")
+        def task_is_alive(self, *a): return False
+        def queue_status(self, *a): return None
         def enqueue(self, *a, **k): enq.append(a)
     monkeypatch.setattr(A, "Store", _S)
     monkeypatch.setattr(A, "_need_own_key_or_402", lambda *a, **k: None)
     r = A.api_produce_mix_clean(None, {"job_id": "j"})
     assert r.get("status") == "cleaning" and enq == []
+
+
+def test_charge_without_task_id_alerts_admin_then_resubmits(env, monkeypatch):
+    """⑤ 업체 SDK 틈: 과금(consume) 직후·작업번호 전에 죽음 → 다음 클릭이 '번호 없는 과금'을 알아채고 경보한다."""
+    cl, log, src, tmp = env
+    alerts = []
+    from shopping_shorts import ops_alert
+    monkeypatch.setattr(ops_alert, "raise_alert", lambda kind, title, detail="", **k: alerts.append((kind, k.get("signature"))))
+
+    class _Boom(Exception):
+        pass
+
+    def run_crash(task_name, image_path, params=None, on_async_submitted=None):
+        cl._consume_permission("u", task_name)                     # 과금은 됐다
+        raise _Boom("제출 직전 워커 사망")                            # 번호를 못 받았다
+    cl._consume_permission = lambda url, task: {"context": "c"}
+    cl.run_task = run_crash
+    with pytest.raises(_Boom):
+        vc.remove_subtitles(str(src), "ak:sk", str(tmp / "o.mp4"), resume_key="final:x")
+    ent = vc._pending_get(tmp / "o.mp4", "final:x|basic|SKM0003")
+    assert ent and ent.get("task_id") is None and ent.get("consumed")
+    # 다시 누름 — 새로 보내되(결과는 받아야 하니) 관리자 경보 1건
+    def run_ok(task_name, image_path, params=None, on_async_submitted=None):
+        log.append("run"); return {"output_urls": ["https://r/a.mp4"], "task_id": "t_2"}
+    cl.run_task = run_ok
+    vc.remove_subtitles(str(src), "ak:sk", str(tmp / "o.mp4"), resume_key="final:x")
+    assert alerts == [("vmake_orphan_charge", "final:x|basic|SKM0003")] and "run" in log
+    assert vc._pending_get(tmp / "o.mp4", "final:x|basic|SKM0003") is None
+
+
+def test_failure_kind_maps_reaper_and_worker_messages_to_interrupted():
+    from shopping_shorts.app import clean_failure_kind
+    assert clean_failure_kind("작업 도중 중단됐습니다 — 다시 시도해 주세요") == "interrupted"
+    assert clean_failure_kind("워커가 중단됐습니다") == "interrupted"
+
+
+def test_dead_worker_is_detected_immediately_by_queue_not_10min(monkeypatch):
+    """⑥ 워커 죽음: 큐 기록이 있고 하트비트가 없으면 10분 안 기다리고 바로 '중단'(재클릭 가능)."""
+    from shopping_shorts import app as A
+    from datetime import datetime, timezone
+    fresh = datetime.now(timezone.utc).isoformat()
+
+    class _S:
+        def __init__(self, alive, qs): self.alive, self.qs = alive, qs
+        def task_is_alive(self, task, args): return self.alive
+        def queue_status(self, task, args): return self.qs
+    job = {"job_id": "j", "clean_status": "cleaning", "updated_at": fresh}      # 방금 갱신 = 10분 안 지남
+    assert A._clean_interrupted(_S(True, {"state": "running"}), job) is False   # 하트비트 뛴다 → 진행 중
+    assert A._clean_interrupted(_S(False, {"state": "failed"}), job) is True    # 큐가 죽었다 → 즉시 중단
+    assert A._clean_interrupted(_S(False, {"state": "running"}), job) is True   # 죽은 running(하트비트 끊김)
+    assert A._clean_interrupted(_S(False, None), job) is False                 # 큐 기록 없음 → 종전 10분 규칙
+    assert A._clean_interrupted(_S(False, None), dict(job, clean_status="ready")) is False
+
+
+def test_clean_api_allows_reclick_when_worker_dead(monkeypatch):
+    from shopping_shorts import app as A
+    from datetime import datetime, timezone
+    job = {"job_id": "j", "edit_plan": {"beats": [{"beat_idx": 0}]}, "customer_id": 7,
+           "clean_status": "cleaning", "updated_at": datetime.now(timezone.utc).isoformat()}
+    enq = []
+
+    class _S:
+        def __init__(self, *a): pass
+        def get_mix_job(self, j): return job
+        def update_mix_job(self, *a, **k): pass
+        def queue_has_pending(self, *a): return False
+        def task_is_alive(self, *a): return False
+        def queue_status(self, *a): return {"state": "failed"}
+        def enqueue(self, *a, **k): enq.append(a); return 1
+    monkeypatch.setattr(A, "Store", _S)
+    monkeypatch.setattr(A, "_need_own_key_or_402", lambda *a, **k: None)
+    r = A.api_produce_mix_clean(None, {"job_id": "j"})
+    assert r.get("ok") and enq                                     # 10분 안 지났어도 다시 넣는다
 
 
 def test_legacy_source_clean_passes_resume_key(tmp_path, monkeypatch):

@@ -22,6 +22,9 @@ class _Client:
     def fetch_config(self, version=None):
         pass
 
+    def _consume_permission(self, url, task):
+        return {"context": "c"}
+
     def run_task(self, task_name, image_path, params=None, on_async_submitted=None):
         self.log.append(("run", task_name))
         if on_async_submitted:
