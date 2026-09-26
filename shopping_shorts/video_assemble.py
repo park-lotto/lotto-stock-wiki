@@ -758,6 +758,11 @@ def synced_manual_cuts(beat, tts_dur=None):
         return []
     if b.get("clean_replay"):
         return [c for c in raw if c.get("video_id") and c.get("start") is not None]
+    # ★컷 리듬 칸(cut_rhythm 표식)은 화면이 손 컷을 **안 쓴다** — planClips의 rhythmOne이 얼린 컷(frozenClips)보다
+    #   먼저 걸려 홀드면 첫 조각 한 컷, 아니면 조각 한 번씩 길이 비례로 그린다(scene_play.js "리듬 칸은 얼린 컷보다
+    #   먼저 본다", 2026-09-24). 서버가 손 컷을 쓰면 강규봉님 8번 칸처럼 화면(조각 끝에서 멈춤)과 렌더(다음 장면)가 갈린다.
+    if b.get("cut_rhythm"):
+        return []
     mats = [m for m in _beat_material(b) if m]
     first, want = {}, []
     for m in mats:
