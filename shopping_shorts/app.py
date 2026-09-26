@@ -10018,7 +10018,6 @@ def api_thumb_pin(body: dict):
     if body.get("styled") and _ss:
         try:
             from shopping_shorts import scene_style as _scene_style
-            from PIL import Image as _Image
             plan = job.get("edit_plan") or {}
             tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
             timeline = video_assemble._beat_timeline(plan, tts)
@@ -10030,13 +10029,10 @@ def api_thumb_pin(body: dict):
             if not (0 <= s_idx < len(ctx["scenes"])) or int(ctx["scenes"][s_idx]["beat_idx"]) != i:
                 s_idx = next((k for k, sc in enumerate(ctx["scenes"]) if int(sc["beat_idx"]) == i), -1)
             if s_idx >= 0:
-                layer = _scene_style.render_layer_one(timeline, _ss, _MIX_WORK_DIR / job_id / "thumb_style", s_idx,
-                                                      job.get("headcopy") or {}, job_id)
-                base = _Image.open(src).convert("RGBA")
-                over = _Image.open(layer).convert("RGBA")
-                if over.size != base.size:
-                    over = over.resize(base.size)
-                _Image.alpha_composite(base, over).convert("RGB").save(str(out_dir / name), quality=92)
+                # ★완성본과 같은 구도로(2026-09-26 사장님 "비율이 안 맞는다"): 원본을 레이어의 영상 칸에 맞춰 앉힌다.
+                #   예전엔 원본 9:16 전체 위에 레이어만 얹어 제목 띠가 원본 윗부분(얼굴)을 덮었다.
+                _scene_style.compose_still(src, timeline, _ss, _MIX_WORK_DIR / job_id / "thumb_style", s_idx,
+                                           out_dir / name, job.get("headcopy") or {}, job_id)
                 styled_note = f"scene {s_idx}"
         except Exception as _e:      # noqa: BLE001 — 꾸미기 합성 실패는 원본 프레임으로 대신
             import traceback as _tb5

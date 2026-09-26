@@ -293,6 +293,48 @@ def render_layer_one(timeline, snapshot, output, index, headcopy=None, job_id=No
     return output / layer["file"]
 
 
+def media_geometry(layer, effect):
+    """장면 레이어의 영상 칸(media) 안에 원본을 어떻게 앉히는지 — 렌더(compose)와 썸네일 후보(compose_still)가 같이 쓴다.
+    반환 (width, height, top, zw, zh, crop_x, crop_y): 원본을 width×height에 꽉 채워(cover) 가운데 자르고,
+    zw×zh로 확대한 뒤 (crop_x, crop_y)에서 width×height를 잘라 top 높이에 둔다(나머지는 검정)."""
+    from . import video_assemble as va
+    top=round(layer["media"]["top"]*va._OUT_H/100/2)*2
+    height=min(va._OUT_H-top,max(2,round(layer["media"]["height"]*va._OUT_H/100/2)*2))
+    zoom,_,_=va.scene_zoom_of({"scene_zoom":(effect or {}).get("zoom",1)})
+    width=va._OUT_W
+    zw,zh=round(width*zoom/2)*2,round(height*zoom/2)*2
+    crop_x=round((zw-width)*(1-(effect or {}).get("panX",0))/2)
+    crop_y=round((zh-height)*(1-(effect or {}).get("panY",0))/2)
+    return width,height,top,zw,zh,crop_x,crop_y
+
+
+def compose_still(frame_path, timeline, snapshot, work, index, out_path, headcopy=None, job_id=None):
+    """장면 하나를 **완성본과 같은 구도**의 정지 그림(1080×1920)으로 만든다 — 썸네일 후보(2026-09-26 사장님 "썸네일로 보냈는데 비율이 안 맞는다").
+    ★여태 핀은 원본 프레임 전체(9:16) 위에 레이어를 그냥 얹어, 영상 칸(media)에 맞춰 줄이지 않았다 —
+      제목 띠가 원본 윗부분(얼굴)을 덮고 아랫부분만 보였다. 여기선 compose의 ffmpeg 필터와 같은 기하(media_geometry)로 앉힌다."""
+    from PIL import Image
+    from . import video_assemble as va
+    snapshot=validate_snapshot(snapshot)
+    layer_png=render_layer_one(timeline,snapshot,work,index,headcopy,job_id)
+    layers=json.loads((Path(work).resolve()/"scene-style-layers.json").read_text(encoding="utf-8"))
+    layer=layers[int(index)]
+    effect=(snapshot.get("effects") or {}).get(str(index)) or {}
+    width,height,top,zw,zh,crop_x,crop_y=media_geometry(layer,effect)
+    src=Image.open(frame_path).convert("RGB")
+    s=max(width/src.width,height/src.height)                    # scale=W:H:force_original_aspect_ratio=increase
+    cw,ch=max(width,round(src.width*s)),max(height,round(src.height*s))
+    img=src.resize((cw,ch),Image.LANCZOS)
+    img=img.crop(((cw-width)//2,(ch-height)//2,(cw-width)//2+width,(ch-height)//2+height))   # crop=W:H (가운데)
+    img=img.resize((zw,zh),Image.LANCZOS).crop((crop_x,crop_y,crop_x+width,crop_y+height))
+    canvas=Image.new("RGBA",(width,va._OUT_H),(0,0,0,255))    # pad=W:OUT_H:0:top:black
+    canvas.paste(img,(0,top))
+    over=Image.open(layer_png).convert("RGBA")
+    if over.size!=canvas.size:
+        over=over.resize(canvas.size)
+    Image.alpha_composite(canvas,over).convert("RGB").save(str(out_path),quality=92)
+    return out_path
+
+
 def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
     from . import video_assemble as va
     snapshot=validate_snapshot(snapshot)
@@ -304,14 +346,8 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
         first_frame, last_frame = round(scene["start"]*30), round(scene["end"]*30)
         if last_frame <= first_frame:
             continue
-        top=round(layer["media"]["top"]*va._OUT_H/100/2)*2
-        height=min(va._OUT_H-top,max(2,round(layer["media"]["height"]*va._OUT_H/100/2)*2))
         effect=(snapshot.get("effects") or {}).get(str(index)) or {}
-        zoom,_,_=va.scene_zoom_of({"scene_zoom":effect.get("zoom",1)})
-        width=va._OUT_W
-        zw,zh=round(width*zoom/2)*2,round(height*zoom/2)*2
-        crop_x=round((zw-width)*(1-effect.get("panX",0))/2)
-        crop_y=round((zh-height)*(1-effect.get("panY",0))/2)
+        width,height,top,zw,zh,crop_x,crop_y=media_geometry(layer,effect)
         vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},scale={zw}:{zh},crop={width}:{height}:{crop_x}:{crop_y},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
         hl=va.highlight_fc({"scene_hl":effect.get("highlight")},vf,grow=False)
         prefix=f"[1:v]tpad=stop_mode=clone:stop_duration={(last_frame-first_frame)/30}[ink];" if layer.get("animation") else "[1:v]null[ink];"
