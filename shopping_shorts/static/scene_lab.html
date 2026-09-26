@@ -2696,6 +2696,14 @@ function cardThumbId(c){
   if (seg.start != null && Math.abs(a - +seg.start) < 0.05 && b <= +seg.end + 0.05) return c.seg_id;
   return _extraId(c.video_id, a, b);
 }
+// [속도 맞추기] 켜고 끄기 — 칸 데이터(fit_segs)에 적고 다시 그린다. 저장은 _editPayload가 싣는다(다른 토글과 같은 길).
+function fitToggle(i, segId, on){
+  const b = DATA.beats[i]; if (!b) return;
+  const cur = (b.fit_segs || []).filter(x => x !== segId);
+  if (on) cur.push(segId);
+  if (cur.length) b.fit_segs = cur; else delete b.fit_segs;
+  render();
+}
 // 카드 한 장만 뺀다 — 같은 조각이 여러 카드면 먼저 쪼갠 뒤 그 카드의 조각만(위 splitBeatCards).
 function dropCardAt(i, ci, segId){
   if (splitBeatCards(i)){
@@ -3050,6 +3058,19 @@ function renderBand(){
       : (frozen && SLOW[i] > 1)
         ? `<div class="cutgap slow" onclick="event.stopPropagation()">✅ 전체를 살짝 느리게(${(1 / SLOW[i]).toFixed(2)}배속) 해서 빈 곳을 채웠어요 <button class="act" onclick="slowUndo(${i})">되돌리기</button>${
             SLOW[i] > MAX_SLOWMO ? ` <span class="slowwarn">너무 느려요 — 앞 조각들에서 조금씩 장면을 길게 해주세요</span>` : ''}</div>` : '';
+    // ★[속도 맞추기](2026-09-26 사장님 "꼬다리를 잘라내면 남는 0.3초를 자동으로 속도 맞출까요? 이런 확인").
+    //   사람이 정한 구간(film_)이 구절보다 짧으면 종전엔 말없이 1.15배+정지였다. 카드마다 알리고, 누르면 그 조각만 정확히 늘린다.
+    const _fitSegs = (DATA.beats[i] || {}).fit_segs || [];
+    const fitHtml = !phraseSyncOn(i) ? '' : clips.map((c, ci) => {
+      const src = +(c.src_dur || c.dur), gap = +c.dur - src;
+      if (!String(c.seg_id || '').startsWith('film_') || gap < 0.05) return '';
+      const ratio = (+c.dur / src).toFixed(2);
+      return _fitSegs.includes(c.seg_id)
+        ? `<div class="cutgap slow" onclick="event.stopPropagation()">✅ ${ci + 1}번째 카드: 속도 맞춤 ${ratio}배로 채웠어요 <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', false)">되돌리기</button>${
+            +ratio > 1.5 ? ` <span class="slowwarn">많이 느려요 — 다른 장면으로 바꾸는 걸 추천해요</span>` : ''}</div>`
+        : `<div class="cutgap" onclick="event.stopPropagation()">⏱ ${ci + 1}번째 카드: ${gap.toFixed(1)}초가 비어요(끝이 멈춰요) <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', true)">속도 맞추기 ${ratio}배</button>${
+            +ratio > 1.5 ? ` <span class="slowwarn">많이 느려져요 — 박스로 다른 장면을 고르는 걸 추천해요</span>` : ''}</div>`;
+    }).join('');
     const cuts = clips.length
       ? clips.map((c, ci) => `<div class="tbcut ${phraseSyncOn(i) ? 'inuse' : ''} ${c.dur > LONG_CUT ? 'long' : ''} ${isPicked(i, c.seg_id) ? 'picked' : ''}"
              data-sid="${c.seg_id}"
@@ -3152,7 +3173,7 @@ function renderBand(){
               : '이 칸의 대사를 AI가 읽고, 그 말이 실제로 보이는 화면을 골라 담습니다'}"
               onclick="autoFill(${i})">${AUTOADD[i] ? `↩ 담은 ${AUTOADD[i].length}장 빼기` : '✨ 채우기'}</button>
           </span></div>
-        ${gapHtml}
+        ${gapHtml}${fitHtml}
         <div class="tl-host" data-i="${i}"></div><!-- 모든 칸에 타임라인(2026-08-29 사장님 "옆에도 다") -->
         <div class="tbcuts">${cuts}${unusedCuts}</div>
         <!-- ★썸네일 아래 대본 — ✏대본수정을 누르면 여기가 편집칸이 된다(2026-08-17 사장님
@@ -4162,6 +4183,7 @@ function _editPayload(){
   return {
     beats: DATA.beats.map((b, i) => ({beat_idx: b.beat_idx,
       list: (lists[i] || []).slice(), stretch: !!STRETCH[i],
+      fit: (b.fit_segs || []).filter(x => (lists[i] || []).includes(x)),   // [속도 맞추기] 누른 조각
       phrase: phraseSyncOn(i),      // 구절 맞춤 — 렌더도 같은 경계로(video_assemble)
       // 끈 칸 = 화면에 보이는 컷 그대로 렌더(2026-09-14). 켠 칸은 안 보낸다.
       cuts: phraseSyncOn(i) ? null : (CUTS[i] || []).map(c => c.lock

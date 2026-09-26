@@ -6638,7 +6638,7 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             def _q(x):      # 0.01초로 맞춘다(화면의 Math.round(d*100)/100 과 같은 자리)
                 return math.floor(float(x or 0) * 100 + 0.5) / 100
             raw = json.dumps([str(c.get("video_id") or ""), _q(c.get("start")),
-                              _q(c.get("dur")), _q(c.get("src_dur")),
+                              _q(c.get("dur")), _q(c.get("src_dur")), *([1] if c.get("fit") else []),
                               str(srcs.get(c.get("video_id")) or "")], sort_keys=True)
             return hashlib.sha1(raw.encode()).hexdigest()[:20]
 
@@ -6662,6 +6662,8 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 take = min(take, dur)
                 # 늘리기: 화면과 같은 배율 상한(MAX_SLOWMO 1.15) — 넘는 몫은 마지막 프레임 정지
                 slow = min(dur / take, 1.15) if take > 0 else 1.0
+                if c.get("fit") and take > 0:
+                    slow = dur / take          # [속도 맞추기] — 렌더(playback_speed)와 같이 상한 없이 끝까지 움직인다
                 vf = f"setpts=(PTS-STARTPTS)*{slow:.5f}," + vf + f",tpad=stop_mode=clone:stop_duration={dur:.3f}"
                 cmd = ["ffmpeg", "-y", "-v", "error", "-threads", "1",
                        "-ss", f"{float(c['start']):.3f}", "-t", f"{take:.3f}", "-i", str(src)]
@@ -6840,7 +6842,9 @@ def api_mix_preview_proxy(job_id: str, body: dict):
     try:
         norm = [{"video_id": str(c.get("video_id") or ""), "start": round(float(c.get("start") or 0), 3),
                  "dur": round(float(c.get("dur") or 0), 3),
-                 "src_dur": round(float(c.get("src_dur") or 0), 3)} for c in cuts]
+                 "src_dur": round(float(c.get("src_dur") or 0), 3),
+                 # [속도 맞추기] 컷 — 있을 때만 싣는다(없는 컷의 sig가 안 바뀌어 기존 합본을 그대로 쓴다)
+                 **({"fit": 1} if c.get("fit") else {})} for c in cuts]
     except (TypeError, ValueError):
         return JSONResponse(status_code=422, content={"ok": False, "error": "컷 형식 오류"})
     # 칸마다 컷이 몇 개인지 — 칸 경계를 음성 길이에 맞추려면 서버가 알아야 한다.
