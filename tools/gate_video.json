@@ -1,0 +1,45 @@
+{
+  "_설명": "영상 관문(track.py finish)·매일 점검(daily_video_audit.py) 기준값. null = 보고만(판정에 안 씀). 밀림은 수리 중인 잔여 결함(옛 청소본 밀림·정지 컷 켄번즈·컷 단위 올림)이라 지금은 보고만 — 수리 끝나면 숫자로 조인다.",
+  "gate": {
+    "jobs": 6,
+    "timeout_sec": 1500,
+    "poll_sec": 20,
+    "min_free_gb": 20,
+    "min_jobs_compared": 3,
+    "max_scene": 0,
+    "max_error_skips": 0,
+    "max_shift_center": null,
+    "max_shift_boundary": null,
+    "max_shift_hold": null
+  },
+  "audit": {
+    "jobs": 10,
+    "hours": 24,
+    "timeout_sec": 3000,
+    "min_free_gb": 20,
+    "max_scene": 0,
+    "max_error_skips": 0,
+    "max_shift_ratio": 0.3,
+    "cooldown_sec": 3600
+  },
+  "benign_skips": ["음성 없음"],
+  "watch_files": [
+    "shopping_shorts/video_assemble.py",
+    "shopping_shorts/mix_pipeline.py",
+    "shopping_shorts/clean_base.py",
+    "shopping_shorts/screen_clips.py",
+    "shopping_shorts/screen_clips_runner.js",
+    "shopping_shorts/capcut_draft.py",
+    "shopping_shorts/export_bundle.py",
+    "shopping_shorts/static/scene_play.js",
+    "tools/editor_vs_final_video.py",
+    "tools/evf_run.py"
+  ],
+  "not_measured": [
+    "shopping_shorts/capcut_draft.py",
+    "shopping_shorts/export_bundle.py"
+  ],
+  "app_file": "shopping_shorts/app.py",
+  "app_name_keys": ["pvproxy", "preview_proxy", "render", "clean", "capcut", "assemble", "export"],
+  "app_route_keys": ["/api/mix/render", "/api/mix/preview_proxy", "/api/mix/export", "/api/mix/capcut", "/api/produce/mix/preview", "/api/produce/mix/clean"]
+}
