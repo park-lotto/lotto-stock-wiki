@@ -14034,7 +14034,7 @@ function cleanFailHtml(kind){
       + 'style="display:inline-block;text-decoration:none">🔑 키·충전 안내 보기</a>';
   }
   if(kind === 'interrupted'){
-    // ★이미 처리된 결과는 다시 눌러도 추가 비용 없이 이어받는다(2026-09-27 vmake_client 이어받기 장부) —
+    // ★이미 처리된 결과는 다시 눌러도 추가 비용 없이 이어받는다(2026-09-27 이어받기 장부 — 서버 청소 모듈) —
     //   고객이 "두 번 나가나" 겁내서 안 누르면 결과를 못 받는다.
     return '<div class="cp-fail"><b>작업이 중간에 멈췄어요.</b> 서버 업데이트 등으로 끊긴 경우입니다. '
       + '다시 시도하시면 됩니다. <b>이미 처리된 결과가 있으면 추가 비용 없이 이어받아요.</b></div>' + redo;
