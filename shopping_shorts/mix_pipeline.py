@@ -4291,17 +4291,43 @@ def run_clean_sources(job_id, db_path, work_root):
 # 그래서 **무엇으로 만들었는지**를 지문으로 남기고, 달라졌으면 화면이 말하게 한다.
 # ★지문 만드는 곳은 여기 한 곳이다(0순위-B) — 만들 때와 비교할 때가 어긋나면 소용없다.
 def plan_signature(plan):
-    """편성 지문 — 화면에 보이는 것이 달라지는 값만 넣는다(문장·컷·길이)."""
+    """편성 지문 — 칸 내용 **전체**(장면·손 컷·확대·자막 줄·구절 맞춤·cutaway…) + 칸 순서 + 음성 파일.
+
+    ★2026-09-27: 종전엔 narration·seg_ids·cutaway·seconds 만 넣었는데 seg_ids·seconds 를 채우는 코드가
+      없어(실측 3,032칸 전부 0) 사실상 대사·cutaway 만 봤다 → 장면·손 컷·확대·자막 줄·음성을 바꿔도
+      미리보기가 "낡음"으로 안 잡혔다. 칸 키는 화면 컷 캐시가 쓰는 screen_clips.beat_key 를 그대로 빌린다
+      (휘발 필드·`_` 접두 제외 — 판단 한 곳, 0순위-B).
+    ★음성: tts_path 는 내용 해시 이름이지만 같은 이름으로 다시 합성될 수 있어 파일의 (mtime_ns, 크기)를 같이
+      넣는다 — video_assemble._probe_duration 캐시 키와 같은 방식. 파일이 없으면 None.
+    ★과금 서명(_plan_signature/_clean_sig)과는 별개다 — 이건 미리보기·완성본 도장 전용(돈과 무관).
+    """
     import hashlib
     import json as _json
+    from shopping_shorts.screen_clips import beat_key
+
+    def _canon(v):
+        # 3 과 3.0 을 같게 — 화면(JS)이 저장하면 3.0 이 3 으로 돌아와 멀쩡한 미리보기가 "낡음"이 된다
+        if isinstance(v, float) and v.is_integer():
+            return int(v)
+        if isinstance(v, dict):
+            return {k: _canon(x) for k, x in v.items()}
+        if isinstance(v, (list, tuple)):
+            return [_canon(x) for x in v]
+        return v
     beats = ((plan or {}).get("beats") or [])
-    body = [{
-        "n": (b or {}).get("narration") or "",
-        "s": (b or {}).get("seg_ids") or [],
-        "c": (b or {}).get("cutaway") or "",
-        "d": round(float((b or {}).get("seconds") or 0), 2),
-    } for b in beats]
-    raw = _json.dumps(body, ensure_ascii=False, sort_keys=True)
+    body = []
+    for b in beats:
+        b = _canon(b) if isinstance(b, dict) else {}
+        tp = b.get("tts_path")
+        st = None
+        if tp:
+            try:
+                _st = os.stat(tp)
+                st = [_st.st_mtime_ns, _st.st_size]
+            except (OSError, TypeError, ValueError):
+                st = None
+        body.append([beat_key(b), st])
+    raw = _json.dumps(body, ensure_ascii=False)
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
 
@@ -4345,6 +4371,9 @@ def run_preview(job_id, db_path, work_root):
                           global_pron=_gpron, customer_id=job.get("customer_id", 0),
                           script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan)
+        # ★지문은 **DB에 막 저장한 편성**으로 지금 뜬다 — 조립이 메모리의 plan 을 만져도(check_mutation 감시)
+        #   DB와 같은 값으로 비교되게. 끝에서 뜨면 그 차이로 멀쩡한 미리보기가 영원히 "낡음"이 된다.
+        _psig = plan_signature(plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         # ★정본이 있으면 미리보기도 청소본 위에서(돈 0 — allow_clean=False라 바뀐 비트는 원본 그대로 보인다)
         from shopping_shorts import screen_clips as _sc
@@ -4377,7 +4406,7 @@ def run_preview(job_id, db_path, work_root):
         # 이 미리보기가 **무슨 편성으로** 만들어졌는지 남긴다 — 나중에 편성이 바뀌면
         # 화면이 "낡았다"고 말할 수 있다(못 써도 미리보기 자체는 정상이라 조용히 넘어간다).
         try:
-            preview_sig_path(work_root, job_id).write_text(plan_signature(plan), encoding="utf-8")
+            preview_sig_path(work_root, job_id).write_text(_psig, encoding="utf-8")
         except Exception:
             print("[preview] 편성 지문 기록 실패(무시)", file=sys.stderr)
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
@@ -4609,15 +4638,33 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
     return plan2, _cpaths, base
 
 
+def _intro_choice(thumb):
+    """완성본 앞에 붙는 썸네일 인트로 선택 — (켜짐, 고른 파일, 길이). 꺼져 있으면 (False, None, None).
+    ★app._save_render_inputs 의 같은 이름 판단과 같은 규칙(selected 우선, 없으면 마지막 결과)에 길이를 더했다."""
+    import json as _json
+    if isinstance(thumb, str):
+        try:
+            thumb = _json.loads(thumb) if thumb.strip() else {}
+        except Exception:      # noqa: BLE001
+            thumb = {}
+    thumb = thumb if isinstance(thumb, dict) else {}
+    if not thumb.get("intro"):
+        return False, None, None
+    results = list(thumb.get("results") or [])
+    return True, (thumb.get("selected") or (results[-1] if results else None)), thumb.get("intro_sec")
+
+
 @_owned_job
 def _render_stamp(job):
     """렌더 결과물이 '지금 설정'으로 만든 것인지 가리는 도장.
 
-    **고객이 6단계에서 만지는 설정만** 넣는다 — 꾸미기(deco)·제목(headcopy)·자막 스타일·자막제거.
-    ★`edit_plan`은 넣지 않는다: 렌더가 도는 동안 파이프라인이 **스스로** 편성을 여섯 군데서 고쳐 쓴다
-      (tts 경로·clip_anchor 등). 넣으면 정상 렌더도 매번 도장이 달라져 완성본이 통째로 버려진다
-      (2026-09-24 test_run_render_happy_path가 잡았다). 편성 변경은 저장 시점에 이미 완성본을 끊는다.
-    SEO·썸네일 글자처럼 영상이 안 바뀌는 것도 넣지 않는다(멀쩡한 완성본을 버리지 않게).
+    꾸미기(deco)·제목(headcopy)·자막 스타일·자막제거 + 자막제거 등급(clean_tier)·고른 장면(clean_cuts)
+    + 썸네일 인트로 선택 + **편성 지문(plan_signature)**.
+    ★2026-09-27: 종전엔 edit_plan 을 뺐다 — 렌더가 편성을 스스로 고쳐 써서 정상 렌더도 도장이 깨졌기 때문
+      (2026-09-24 test_run_render_happy_path). 이제 렌더는 편성표를 고쳐 쓰지 않는다(screen_clips.check_mutation
+      감시). 단 run_render 초입의 TTS 보장이 tts_path 를 채워 저장하므로 **도장은 그 저장 뒤에** 찍는다(run_render).
+    ★등급·고른 장면은 clean_tier_of·clean_selection_of(판정 한 곳)로 정규화해 넣는다(None=basic, 빈 목록=전체).
+    SEO·썸네일 글자처럼 영상이 안 바뀌는 것은 넣지 않는다(멀쩡한 완성본을 버리지 않게).
     """
     import json as _json
     def _norm(v):
@@ -4625,9 +4672,18 @@ def _render_stamp(job):
             return _json.dumps(v, ensure_ascii=False, sort_keys=True)
         except Exception:      # noqa: BLE001 — 도장 실패가 렌더를 죽이면 안 된다
             return str(v)
+    def _safe(fn):
+        try:
+            return fn()
+        except Exception as e:      # noqa: BLE001 — 도장 실패가 렌더를 죽이면 안 된다
+            return "ERR:%s" % type(e).__name__
     job = job or {}
-    return "|".join(_norm(job.get(k)) for k in
-                    ("deco", "headcopy", "caption_style", "subtitle_removal"))
+    parts = [_norm(job.get(k)) for k in ("deco", "headcopy", "caption_style", "subtitle_removal")]
+    parts.append(_norm(_safe(lambda: clean_tier_of(job))))
+    parts.append(_norm(_safe(lambda: clean_selection_of(job))))
+    parts.append(_norm(_safe(lambda: list(_intro_choice(job.get("thumbnail"))))))
+    parts.append(_safe(lambda: plan_signature(job.get("edit_plan") or {})))
+    return "|".join(parts)
 
 
 def run_render(job_id, db_path, work_root, skip_clean=False):
@@ -4646,14 +4702,20 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
         #   (2026-09-24 실측 job c52bb437d2c4: 저장된 꾸미기 제목은 '다들 쓰는 채칼'인데 완성본은
         #    '왜 이제 알았지' — 꾸미기 저장이 완성본을 끊었지만, 그 뒤 끝난 렌더가 video_path를 다시 박았다).
         #   시작 시점의 재료에 도장을 찍어 두고, 끝날 때 달라졌으면 그 결과를 **버린다**.
-        _stamp = _render_stamp(job)
-        plan = job["edit_plan"]
+        # ★렌더 작업본(plan)은 DB 저장본과 떼어 둔다(실 Store 는 원래 직렬화라 같은 뜻) — 조립이 메모리의
+        #   plan 을 만져도(check_mutation 이 경보만 낸다, 막지 않는다) 끝의 도장 비교가 그것을 "설정 변경"으로
+        #   오인하지 않게. 이 함수 안의 job 은 작업본을 가리키게 다시 묶는다(종전과 같은 객체 관계).
+        plan = copy.deepcopy(job["edit_plan"])
+        job = dict(job, edit_plan=plan)
         # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
         #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
                           global_pron=_gpron, customer_id=job.get("customer_id", 0),
                           script_endings=job_script_endings(job))
-        store.update_mix_job(job_id, edit_plan=plan)
+        store.update_mix_job(job_id, edit_plan=copy.deepcopy(plan))
+        # ★도장은 TTS 보장 저장 **뒤에** 찍는다 — 그 저장이 tts_path 를 채워 편성 지문을 바꾸기 때문
+        #   (앞에서 찍으면 정상 렌더도 스스로 도장을 깬다). 편성 외 설정은 시작 시점 job 값 그대로.
+        _stamp = _render_stamp(job)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         out_path = work / "final.mp4"
 
