@@ -669,6 +669,10 @@ def _piece_end_limit(c, segs, src_total):
                 continue
             a, b = float(s.get("start", 0.0)), float(s.get("end", 0.0) or 0.0)
             if b > a and a - 1e-3 <= st < b:
+                # ★계획이 이미 조각 끝을 넘어 읽기로 한 컷(구절 이어 틀기, 2026-09-26)이면 상한은 원본 끝이다 —
+                #   여기서 조각 끝으로 다시 자르면 이어 틀기가 슬로모·정지로 되돌아간다(화면 finish()와 같은 규칙).
+                if st + float(c.get("src_dur", 0.0) or 0.0) > b + 1e-3:
+                    return float(src_total) if src_total > 0 else 0.0
                 return min(float(src_total), b) if src_total > 0 else 0.0
     except Exception as e:  # noqa: BLE001 — 상한 계산 실패는 종전 동작(소스 끝)으로
         print(f"[assemble] 조각 끝 상한 계산 실패(무해, 소스 끝 사용): {e!r}", file=sys.stderr)
@@ -991,6 +995,38 @@ def _even_owner(k, n_phrase, n_seg):
     return k if n_phrase <= n_seg else (k * n_seg) // n_phrase
 
 
+def phrase_cut_groups(durs, min_cut):
+    """구절 k가 몇 번째 **컷 묶음**인가 — 자막 경계는 그대로 두고 화면 컷만 min_cut초 이상으로 묶는다.
+
+    2026-09-26 사장님: "자막 경계가 먼저 분명한 게 우선이고, 그 뒤에 장면 컷이 너무 짧다면
+    그 컷 뒤에까지(같은 조각을) 더 보여주는 방식". 히트작 79편 900컷 실측(cut_study80.json)은
+    컷 중앙 1.47초·1.0초 미만 31%·0.5초 미만 3.7% — 우리 구절(8자·3어절)은 0.5~1.2초라
+    구절=컷 1:1이면 필연적으로 히트작보다 잘다.
+
+    규칙(이것 하나뿐): 앞에서부터 구절을 모아 min_cut초를 넘기면 다음 구절부터 새 묶음.
+    남은 구절 전부를 합쳐도 min_cut에 못 미치면 새 묶음을 열지 않고 앞 묶음에 붙인다(짧은 꼬리 컷 방지).
+    min_cut이 0이면 구절 하나 = 묶음 하나(종전과 같다 — 옛 job 회귀 0)."""
+    n = len(durs or [])
+    try:
+        mc = float(min_cut or 0.0)
+    except (TypeError, ValueError):
+        mc = 0.0
+    if n == 0 or mc <= 0:
+        return list(range(n))
+    rest = [0.0] * (n + 1)
+    for k in range(n - 1, -1, -1):
+        rest[k] = rest[k + 1] + float(durs[k] or 0.0)
+    groups, g, run = [], 0, 0.0
+    for k in range(n):
+        d = float(durs[k] or 0.0)
+        if k > 0 and run >= mc - 1e-6 and rest[k] >= mc - 1e-6:
+            g += 1
+            run = 0.0
+        groups.append(g)
+        run += d
+    return groups
+
+
 def _valid_clip_anchor(beat, n_seg):
     a = beat.get("clip_anchor")
     if not isinstance(a, dict):
@@ -1002,32 +1038,43 @@ def _valid_clip_anchor(beat, n_seg):
     return offs
 
 
-def phrase_owners(beat, n_seg, cap_segs=None):
+def phrase_owners(beat, n_seg, cap_segs=None, durs=None):
     """구절 k를 몇 번째 조각이 덮는가 — **판단처는 여기 한 곳**(렌더·화면 공용).
 
     R1 구절 수 == 조각 수 → 순서대로 1:1.
     R2 수가 다르고 얼린 짝이 유효 → 구절 시작 글자 위치 이하에서 가장 뒤의 조각.
        (줄을 나누면 새 줄은 같은 조각 몫 / 서로 다른 조각의 줄을 합치면 뒤 조각은 '안 나옴')
-    R3 얼린 짝이 없으면 종전 식 — 옛 job은 예전과 똑같이 나온다."""
+    R3 얼린 짝이 없으면 종전 식 — 옛 job은 예전과 똑같이 나온다.
+    R4 (2026-09-26) 칸에 phrase_min_cut 표식이 있고 구절 길이(durs, 초)를 받으면 **컷 묶음** 단위로 정한다:
+       짧은 구절들을 phrase_cut_groups로 묶어 한 묶음 = 한 조각. 얼린 짝(R2)이 있으면 묶음의 첫 구절
+       짝을 묶음 전체가 따르고, 없으면 묶음 번호에 종전 식(R1/R3)을 적용한다 — 담은 순서대로, 건너뛰지 않는다.
+       표식이 없거나 durs가 없으면 R1~R3 그대로(옛 job·다른 호출부 회귀 0)."""
     if cap_segs is None:
         cap_segs = _caption_segments(beat.get("narration") or "", beat.get("caption_lines"))
     n = len(cap_segs)
     if n_seg <= 0 or n <= 0:
         return []
-    if n == n_seg:
-        return list(range(n))
-    offs = _valid_clip_anchor(beat, n_seg)
-    if offs is None:
-        return [_even_owner(k, n, n_seg) for k in range(n)]
-    starts, _total = _phrase_key_starts(cap_segs)
-    owners = []
-    for st in starts:
-        c = 0
-        for j, a in enumerate(offs):
-            if a <= st:
-                c = j
-        owners.append(c)
-    return owners
+    offs = _valid_clip_anchor(beat, n_seg) if n != n_seg else None
+    base = None
+    if offs is not None:
+        starts, _total = _phrase_key_starts(cap_segs)
+        base = []
+        for st in starts:
+            c = 0
+            for j, a in enumerate(offs):
+                if a <= st:
+                    c = j
+            base.append(c)
+    mc = beat.get("phrase_min_cut") or 0
+    if durs is not None and len(durs) == n and mc:
+        groups = phrase_cut_groups(durs, mc)
+        n_grp = groups[-1] + 1
+        if base is not None:
+            return [base[groups.index(g)] for g in groups]
+        return [_even_owner(g, n_grp, n_seg) for g in groups]
+    if base is not None:
+        return base
+    return [_even_owner(k, n, n_seg) for k in range(n)]
 
 
 def carry_caption_lines(old_narration, old_lines, new_narration, min_keep=0.5):
@@ -1157,7 +1204,7 @@ def _plan_phrase_clips(beat, segs, tts_dur, src_durs=None):
         plan = []
         pos = [float(g["start"]) for g in segs]
         ri = 0
-        _owners = phrase_owners(beat, len(segs), cap_segs)
+        _owners = phrase_owners(beat, len(segs), cap_segs, durs=durs)   # R4: 짧은 구절 묶음(phrase_min_cut)
         _prev_idx = -1
         for k in range(len(durs)):
             end_b = bounds[-1] if k == len(durs) - 1 else bounds[k + 1]
@@ -1184,39 +1231,47 @@ def _plan_phrase_clips(beat, segs, tts_dur, src_durs=None):
             idx = _owners[k] if k < len(_owners) else _even_owner(k, len(durs), len(segs))
             _end = segs[idx].get("end")
             st = pos[idx]
-            # 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시(같은 내용 반복).
-            # ★단 **같은 조각이 바로 앞 구절에 이어 덮는 중**이면 되감지 않는다(2026-09-21).
-            #   줄을 나누기 전엔 그 조각이 한 컷으로 '완만 슬로모→끝 프레임 정지'였는데, 나눈 뒤
-            #   되감으면 말 중간에 같은 장면이 처음부터 다시 나온다(박세현님 칸3 s0 두 번 = 09-11
-            #   고객이 오류로 본 "같은 장면이 두 번"과 같은 그림). 끝 프레임에서 버틴다.
-            if _end is not None and float(_end) - st < min(d, _MIN_CLIP) - 1e-3:
-                if k > 0 and idx == _prev_idx:
+            _reel = float((src_durs or {}).get(segs[idx]["video_id"], 0.0) or 0.0)
+            # ★같은 조각에 구절이 **이어 붙으면 앞 컷이 끝난 곳부터 그대로 이어 튼다**(2026-09-26 사장님
+            #   "구절이 나눠져도 쭉 이어지게 / 0.8초 태깅이어도 2초 구절이면 쭉 이어서"). 담은 장면 끝을 넘으면
+            #   원본 릴을 계속 읽는다 — 가져온 영상이 잘 만든 편집본이라 뒤 장면도 그 흐름이다.
+            #   종전(09-21)엔 끝 프레임 0.1초 앞으로 되감아 버텨서, 완성본은 뒤로 튀고(칸5 0.77초 되감김)
+            #   미리보기는 0.1초를 늘려 멈춰 보였다(job 565557ed746c). 떨어져서 다시 쓰는 조각은 종전대로 처음부터.
+            #   ★화면(scene_play.js planClips 구절 분기)과 **같은 규칙**이다(0순위-B, check_phrase_continue.py가 대조).
+            _consec = k > 0 and idx == _prev_idx and _reel > 0
+            if (not _consec and _end is not None
+                    and float(_end) - st < min(d, _MIN_CLIP) - 1e-3):
+                if k > 0 and idx == _prev_idx:      # 릴 길이를 모르면 종전대로 끝에서 버틴다(읽을 곳이 없다)
                     st = max(float(segs[idx]["start"]), min(st, float(_end) - 0.1))
                 else:
                     st = float(segs[idx]["start"])
             _prev_idx = idx
-            # ★조각 끝을 넘지 않는다(2026-09-17 이윤정님 "미리보기에서 중간에 다른 화면이 짧게").
-            #   구절 길이 d가 조각 남은 길이보다 길면 종전엔 src_dur=d로 그대로 넘겨 조각 뒤의
-            #   **다음 장면**이 새어 나왔다(실측 job 1939bd7f3c50: s1 조각 5.92~7.29 뒤 7.29부터가
-            #   딴 장면인데 구절 1.45초 > 조각 1.37초 → 0.08초 노출). 소스는 조각 안에서만 읽고
-            #   모자란 만큼은 out_dur만 유지해 _speed_and_freeze(완만 슬로모→정지)가 채운다.
-            #   화면(scene_play.js planClips)도 같은 규칙 — 짝으로 움직인다(0순위-B).
-            src_d = d if _end is None else max(0.1, min(d, float(_end) - st))
-            # ★모자란 만큼을 **정지로 때우지 않는다**(2026-09-24 사장님 "일단 다른 장면으로 채워").
-            #   실측(고객 강병주님 job 86e6cd5bb254 0번 칸): 말 3.8초 / 재료 1.83초 → 약 2초가
-            #   슬로모→정지+확대로 채워져 "애니메이션 효과 오류"로 보였다. 릴(s6)은 15.2초라
-            #   조각 뒤에 진짜 프레임이 남아 있었다.
-            #   조각 끝을 넘지 않던 규칙은 2026-09-17 이윤정님 "중간에 다른 화면이 짧게"(0.08초 노출)
-            #   때문이었다 — 그건 **아주 조금** 넘을 때의 티다. 그래서 모자람이 _REACH_MIN 이상일 때만
-            #   릴 뒤를 이어 쓰고, 잔챙이 모자람은 종전대로 둔다(그 제보가 재발하지 않게).
-            _short = d - src_d
-            if _short > _REACH_MIN:
-                _reel = float((src_durs or {}).get(segs[idx]["video_id"], 0.0) or 0.0)
-                if _reel > 0:
-                    src_d = max(src_d, min(d, _reel - st))
-            plan.append({"video_id": segs[idx]["video_id"], "start": st,
-                         "src_dur": src_d, "out_dur": d})
-            pos[idx] = st + d
+            # ★원본이 이미 끝났으면(담은 장면이 영상 맨 끝 — 2026-09-26 사장님 "장면을 빼니까 검정") 영상 밖을
+            #   읽지 않고 **마지막 프레임에서 버틴다**(09-21 정지와 같은 그림). 안 막으면 미리보기·썸네일이 검정.
+            if _reel > 0 and st > _reel - 0.1:
+                st = max(float(segs[idx]["start"]), _reel - 0.1)
+            src_d = d
+            if _end is not None:
+                _over = st + d - float(_end)
+                if st < float(_end) and 0 < _over <= _REACH_MIN:
+                    # 살짝만 넘치면 다음 장면을 몇 프레임 비추지 않고 조각 안에서 살짝 느리게(09-17 이윤정님 '튐')
+                    src_d = float(_end) - st
+                elif _over > 0 and _reel <= 0:
+                    src_d = max(0.1, min(d, float(_end) - st))   # 릴 길이 모름 = 조각 밖을 못 읽는다(종전)
+                elif _over > 0 and not _consec and str(segs[idx].get("seg_id") or "").startswith("film_"):
+                    # ★사람이 정한 구간(필름 담기·📦·자르기 = film_)은 **그 구간만** 튼다(2026-09-26 사장님
+                    #   "꼬다리를 잘라내고 속도를 조정"). 이어 틀면 잘라낸 꼬다리가 되살아났다(칸2 카드4 실측).
+                    #   모자란 만큼은 종전대로 느리게+정지, 고객이 [속도 맞추기]를 누르면 fit_segs로 정확히 늘린다.
+                    src_d = max(0.1, min(d, float(_end) - st))
+            if _reel > 0 and st + src_d > _reel:
+                src_d = max(0.1, _reel - st)          # 원본이 끝났다 — 남은 만큼 _speed_and_freeze가 채운다
+            _c = {"video_id": segs[idx]["video_id"], "start": st, "src_dur": src_d, "out_dur": d}
+            # ★[속도 맞추기](고객이 누른 조각, beat["fit_segs"]) — 모자란 만큼을 정지 없이 **정확히** 늘린다.
+            #   playback_speed가 있으면 _speed_and_freeze가 1.15배 상한 대신 그 배속으로 끝까지 움직인다.
+            if segs[idx].get("seg_id") in (beat.get("fit_segs") or []) and src_d < d - 1e-3:
+                _c["playback_speed"] = src_d / d
+            plan.append(_c)
+            pos[idx] = st + src_d                     # 실제로 보여준 곳 다음부터 — 겹침·건너뜀 없이 이어진다
         return plan
     except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
         return None
@@ -1483,6 +1538,62 @@ def cap_preset_key(txt):
     """
     drop = set(_CAP_TRIM_TAIL)
     return "".join(ch for ch in (txt or "") if ch not in drop and not ch.isspace())
+
+
+_SIMPLE_NO_END = ("이", "그", "저", "안", "못", "더", "잘", "꼭", "딱", "다", "또", "왜", "참", "좀", "한", "두", "세", "네", "첫")
+_SIMPLE_JOIN_SUFFIX = ("는데", "서", "고", "면", "니까", "지만", "라서", "다가", "더니", "든", "도")
+
+
+def simple_caption_split(text, max_chars):
+    """자막 줄 나누기 — **단순 규칙**(2026-09-26 사장님 "억지 강화 규칙 말고 자연스럽게 될 수 있는 규칙").
+
+    규칙은 다섯 줄이 전부다. 어절 단위로만 자르고, 글자는 바꾸지 않는다.
+      1. 한 줄 ≤ max_chars(공백 제외). 템플릿 자막 칸이 한 줄이라 이 수가 곧 칸 폭이다.
+      2. 문장 부호(. ? ! …) 뒤에서는 끊는다.
+      3. 창 안에서는 가장 뒤의 자연 경계(쉼표 뒤 · 연결어미 는데/서/고/면/니까/지만/라서/다가/더니 뒤)에서 끊고,
+         없으면 창 안 마지막 어절 뒤에서 끊는다.
+      4. 한 글자 관형사·부사(이 그 저 안 못 더 잘 꼭 딱 …) 뒤에서는 끊지 않는다 — 다음 어절과 같이 넘긴다.
+      5. 마지막 줄이 한 어절이면 앞 줄에서 한 어절을 가져온다(앞 줄이 세 어절 이상일 때).
+    한 어절이 max_chars를 넘으면 그 어절은 혼자 한 줄(글자를 쪼개지 않는다)."""
+    words = (text or "").split()
+    try:
+        mx = int(max_chars or 0)
+    except (TypeError, ValueError):
+        mx = 0
+    if not words:
+        return []
+    if mx <= 0:
+        return [" ".join(words)]
+    flat = lambda ws: len("".join(ws))                       # noqa: E731
+    lines, cur = [], []
+    for w in words:
+        if cur and flat(cur + [w]) > mx:
+            # 창이 찼다 — 창 안 가장 뒤의 자연 경계에서 끊는다(없으면 여기서)
+            cut = len(cur)
+            for j in range(len(cur), 0, -1):
+                bare = _strip_punct(cur[j - 1])
+                if cur[j - 1].endswith((",", "、")) or bare.endswith(_SIMPLE_JOIN_SUFFIX):
+                    cut = j
+                    break
+            # 한 글자 관형사·부사 뒤에서는 안 끊는다 — 한 어절 앞으로 물린다(맨 앞이면 그냥 끊는다)
+            while cut > 1 and _strip_punct(cur[cut - 1]) in _SIMPLE_NO_END:
+                cut -= 1
+            lines.append(" ".join(cur[:cut]))
+            cur = cur[cut:] + [w]
+        else:
+            cur.append(w)
+        if cur and cur[-1].endswith((".", "?", "!", "…")):
+            lines.append(" ".join(cur))
+            cur = []
+    if cur:
+        lines.append(" ".join(cur))
+    # 5. 고아 어절
+    if len(lines) >= 2 and len(lines[-1].split()) == 1 and len(lines[-2].split()) >= 3             and not lines[-2].endswith((".", "?", "!", "…")):
+        prev = lines[-2].split()
+        if flat([prev[-1]] + lines[-1].split()) <= mx:
+            lines[-2] = " ".join(prev[:-1])
+            lines[-1] = prev[-1] + " " + lines[-1]
+    return [x for x in lines if x.strip()]
 
 
 def _wrap_long(segs, manual=False):

@@ -5927,6 +5927,12 @@ def apply_scene_lab(plan, seg_map, edits):
             beat["stretch_fill"] = True
         else:
             beat.pop("stretch_fill", None)
+        # [속도 맞추기](2026-09-26) — 고객이 누른 조각만. 이 칸 목록에 있는 id만 남긴다(뺀 조각의 찌꺼기 방지).
+        _fit = [x for x in (eb.get("fit") or []) if isinstance(x, str) and x in (eb.get("list") or [])]
+        if _fit:
+            beat["fit_segs"] = _fit
+        else:
+            beat.pop("fit_segs", None)
         # 구절 맞춤(2026-08-29 사장님 "개수+길이까지 1:1") — 켠 칸만 표식을 남긴다.
         # 표식이 없으면 렌더는 종전 배분 그대로다(옛 job 회귀 0).
         if eb.get("phrase"):

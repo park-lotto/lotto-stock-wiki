@@ -162,6 +162,12 @@
               border:1px solid #8a4b12;background:linear-gradient(90deg,#3a2210,#2a1808);
               color:#ffb570;font-size:11px;cursor:pointer;white-space:nowrap}
   .btns .cp-btn:hover{background:linear-gradient(90deg,#4a2c14,#35200a)}
+  /* 🎬 쿠팡 대본검색(2026-09-26 사장님) — 썸네일·캡션 판독으로 못 잡는 "말로만 소개하는 제품"(소스·재료)을
+     대본을 뽑아 찾는다. 유료(대본 추출 0.1P)라 쿠팡검색과 색을 같이 쓰되 점선으로 갈라 '한 단계 더'로 읽히게. */
+  .btns .cp-script-btn{grid-column:1/-1;margin-top:0;padding:7px 4px;border-radius:7px;
+              border:1px dashed #b8651e;background:linear-gradient(90deg,#2e1a0c,#211206);
+              color:#ffc48a;font-size:11px;cursor:pointer;white-space:nowrap}
+  .btns .cp-script-btn:hover{background:linear-gradient(90deg,#3d2410,#2c1908)}
   /* 대본 모달 */
   /* 화면을 막지 않는 이동식(플로팅) 창 — 컨테이너는 클릭 통과, 박스만 잡힘 */
   .modal-bg{display:none;position:fixed;inset:0;z-index:100;pointer-events:none}
@@ -2590,6 +2596,7 @@ function render(opts){
             <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 즐겨찾기</button>
             <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 숏템파워검색</button>
             <button class="cp-btn" data-sc="${i.shortcode}" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind('', {shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}'), hint:this.getAttribute('data-product')||'', noProduct:this.getAttribute('data-noproduct')==='1'})">🛒 쿠팡검색</button>
+            <button class="cp-script-btn" title="영상 대본을 추출해(20~60초, 한 번 하면 캐시) 말로 소개한 제품까지 찾아 쿠팡 링크를 만듭니다" onclick="window.ssCoupangFind.script({shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}')})">🎬 쿠팡 대본검색</button>
             ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${i.shortcode}')">🏠 숏템내부검색</button>`:''}
           </div>
           ${_catMoveHTML(i)}

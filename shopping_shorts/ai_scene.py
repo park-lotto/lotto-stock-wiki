@@ -288,6 +288,16 @@ def run_ai_scene(job_id, beat_idx, style, db_path, work_root, *, gen=None, call=
     beat = next((b for b in job["edit_plan"]["beats"] if int(b.get("beat_idx", -1)) == int(beat_idx)), None)
     if beat is None:
         return None
+    # ★누구 비용으로 만들지 **먼저** 본다(2026-09-26) — 작업 주인이 자기 Vertex를 등록했으면 그 프로젝트, 관리자면
+    #   사장님 프로젝트, 그 외는 만들지 않는다(사장님 크레딧으로 회원 영상을 대신 태우지 않는다). 프레임 추출·Gemini
+    #   동작 호출을 하고 나서 거절하면 헛돈이다. 판정은 vertex_route 한 곳(API와 같은 veo_allowed).
+    vcl = None
+    if gen is None:
+        from shopping_shorts import vertex_route
+        vcl = vertex_route.veo_client(job.get("customer_id") or 0)
+        if vcl is None:
+            _set_state(store, job_id, beat_idx, state="failed", error=vertex_route.VEO_NEEDS_MEMBER)
+            return None
     work = Path(work_root) / job_id
     work.mkdir(parents=True, exist_ok=True)
     _set_state(store, job_id, beat_idx, state="running", style=style, error=None, started_at=time.strftime("%Y-%m-%dT%H:%M:%S"))
@@ -310,7 +320,10 @@ def run_ai_scene(job_id, beat_idx, style, db_path, work_root, *, gen=None, call=
         from shopping_shorts.app import _SCENE_ASSETS_DIR
         _SCENE_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
         out = _SCENE_ASSETS_DIR / f"veo_{job_id}_{int(beat_idx)}_{ts}.mp4"
-        (gen or generate)(png, prompt, sec, out)
+        if gen is None:
+            generate(png, prompt, sec, out, client=vcl)
+        else:
+            gen(png, prompt, sec, out)
         poster = _SCENE_ASSETS_DIR / f"veo_{job_id}_{int(beat_idx)}_{ts}_poster.jpg"
         try:
             poster = scene_assets.make_poster(out, poster)

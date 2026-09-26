@@ -656,11 +656,33 @@ def _ensure_breath_lines(beat):
     ⚠️같은 판단 두 곳 금지(0순위-B) — 재합성 경로 전부가 이 함수 하나를 거친다."""
     if beat.get("caption_lines"):
         return
+    mx = 0
+    try:
+        mx = int(beat.get("caption_max_chars") or 0)
+    except (TypeError, ValueError):
+        mx = 0
+    lines = None
     try:
         from shopping_shorts import script_generate
-        beat["caption_lines"] = script_generate.ai_breath_lines(beat.get("narration"))
+        lines = (script_generate.ai_breath_lines(beat.get("narration"), max_chars=mx) if mx
+                 else script_generate.ai_breath_lines(beat.get("narration")))   # 표식 없으면 종전 호출 그대로
     except Exception:      # noqa: BLE001 — 호흡 끊기 실패로 합성을 죽이지 않는다
         traceback.print_exc(file=sys.stderr)
+    # ★글자 상한 칸(2026-09-26): AI가 넘긴 줄은 단순 규칙으로 다시 나누고, AI가 못 하면 원문을 단순 규칙으로.
+    #   표식 없는 칸은 종전 그대로(None = 규칙 폴백 _caption_segments).
+    if mx > 0:
+        try:
+            from shopping_shorts.video_assemble import simple_caption_split, cap_preset_key
+            src = lines if lines else [beat.get("narration") or ""]
+            out = []
+            for ln in src:
+                out.extend(simple_caption_split(ln, mx) if len(str(ln).replace(" ", "")) > mx else [str(ln)])
+            out = [x for x in out if x.strip()]
+            if out and cap_preset_key("".join(out)) == cap_preset_key(beat.get("narration") or ""):
+                lines = out
+        except Exception:      # noqa: BLE001
+            traceback.print_exc(file=sys.stderr)
+    beat["caption_lines"] = lines
 
 
 def invalidate_caption_meta(beat):
@@ -1820,6 +1842,9 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         if sfx_assets:
             plan = match_sfx(plan, sfx_assets)
 
+    # ★관리자 실험 표식(2026-09-26)은 TTS **전**에 단다 — 합성 관문(_ensure_breath_lines)이 자막 줄을 만들 때 읽는다.
+    _apply_caption_max_chars(plan, store, {"customer_id": customer_id})
+    _apply_phrase_min_cut(plan, store, {"customer_id": customer_id})
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
     _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
@@ -1867,6 +1892,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     #   객체(in-place 변경 반영)이므로 후보목록을 다시 저장해 카드가 '실제 말할 문장'을 보이게 한다.
     if _rec_cands:
         store.set_mix_candidates(job_id, _rec_cands)
+    # ★구절 맞춤 컷 하한 표식은 **저장 전에** 단다 — 3단계 화면(_lab_captions)과 렌더가 같은 값을 본다.
+    _apply_phrase_min_cut(plan, store, {"customer_id": customer_id})
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
 
 
@@ -2949,24 +2976,96 @@ def plan_using_beat_clips(plan, clips, timeline, prefix="cc", *, preserve_capcut
 _HOLD_END = re.compile(r"(는 거|버림|버렸다고|버렸다는데|버린다는데|준다는데)[.!?…]*$")   # 핵심 결과 줄 = 한 컷으로 길게
 
 
-def _cut_rhythm_on(store, job):
-    """app._setting_gate와 같은 판정(여기서 app을 못 부른다 — import 순환)."""
-    try:
-        v = (store.get_setting("cut_rhythm_enabled", "") or "").strip().lower()
-    except Exception:      # noqa: BLE001
-        return False
-    cid = job.get("customer_id", 0)
+def _setting_allows(v, cid):
+    """스위치 값 규약 — ""/"0"/"off"=끔 · "1"=전체 · "admin"=관리자만 · "11,42"=허용 목록(관리자 포함).
+    app._setting_gate와 같은 판정(여기서 app을 못 부른다 — import 순환). 판정은 여기 한 곳(0순위-B)."""
+    v = (v or "").strip().lower()
     try:
         cid = int(cid or 0)
     except (TypeError, ValueError):
         cid = 0
+    if not v or v in ("0", "off", "false"):
+        return False
     if v == "1":
         return True
     if v == "admin":
         return cid == 0
-    if v and v not in ("0", "off", "false"):
-        return str(cid) in {x.strip() for x in v.split(",")} or cid == 0
-    return False
+    return str(cid) in {x.strip() for x in v.split(",")} or cid == 0
+
+
+def _cut_rhythm_on(store, job):
+    try:
+        v = store.get_setting("cut_rhythm_enabled", "")
+    except Exception:      # noqa: BLE001
+        return False
+    return _setting_allows(v, job.get("customer_id", 0))
+
+
+# ── 구절 맞춤 컷 하한(2026-09-26 사장님 "자막 경계가 우선, 컷이 너무 짧으면 그 컷 뒤에까지 보여주기") ──
+#   설정 phrase_min_cut: ""=끔 · "1.5"=전체 1.5초 · "admin:1.5"=관리자만 · "11,42:1.2"=허용 목록(초 생략 시 1.5).
+#   히트작 79편 900컷 실측: 컷 중앙 1.47초 · 1.0초 미만 31% · 0.5초 미만 3.7%(docs/cut_rhythm_2026-09-22.md).
+_PHRASE_MIN_CUT_DEFAULT = 1.5
+
+
+def _gated_number(store, job, key, default):
+    """'누구에게 · 얼마' 설정 규약 한 곳: ""=끔 · "1.5"=전체 · "admin:1.5"=관리자만 · "11,42:1.2"=허용 목록(값 생략 시 default).
+    돌려주는 값: 이 job에 적용할 숫자, 0이면 끔."""
+    try:
+        v = (store.get_setting(key, "") or "").strip()
+    except Exception:      # noqa: BLE001
+        return 0.0
+    if not v:
+        return 0.0
+    who, _, num = v.partition(":")
+    if not num:
+        try:
+            num, who = str(float(who)), "1"          # "1.5" = 전체
+        except ValueError:
+            num = ""                                 # "admin" = 관리자만, 기본값
+    try:
+        val = float(num) if num else float(default)
+    except ValueError:
+        val = float(default)
+    return val if (val > 0 and _setting_allows(who, job.get("customer_id", 0))) else 0.0
+
+
+def _phrase_min_cut(store, job):
+    """이 job에 적용할 컷 하한(초). 0이면 끔."""
+    return _gated_number(store, job, "phrase_min_cut", _PHRASE_MIN_CUT_DEFAULT)
+
+
+# ── 자막 한 줄 글자 상한(2026-09-26 사장님 "너무 길게 나뉘면 템플릿 한 개에 자막이 넘친다 / 규칙을 심플하게") ──
+#   설정 caption_max_chars: ""=끔(종전 AI 4~14자 + 규칙 폴백) · "admin:10"=관리자만 10자 · "10"=전체.
+#   켜진 칸은 AI 호흡 줄에 상한을 주고, 넘는 줄·AI 실패는 video_assemble.simple_caption_split(규칙 5줄)로 나눈다.
+_CAPTION_MAX_CHARS_DEFAULT = 10
+
+
+def _apply_caption_max_chars(plan, store, job):
+    """비트마다 caption_max_chars 표식 — _ensure_breath_lines가 읽는다. TTS 합성 **전**에 달아야 한다."""
+    mx = int(_gated_number(store, job, "caption_max_chars", _CAPTION_MAX_CHARS_DEFAULT))
+    if mx <= 0:
+        return 0
+    n = 0
+    for b in (plan or {}).get("beats") or []:
+        if not b.get("caption_max_chars"):
+            b["caption_max_chars"] = mx
+            n += 1
+    return n
+
+
+def _apply_phrase_min_cut(plan, store, job):
+    """비트마다 phrase_min_cut 표식(초) — video_assemble.phrase_owners(R4)가 읽어 짧은 구절을 한 컷으로 묶는다.
+    편성 끝(_plan_and_tts)과 렌더 앞 두 군데서 부르되 판정은 여기 한 곳. 이미 있는 표식은 안 덮는다 —
+    그게 3단계 화면이 보고 그린 값이다(cut_rhythm과 같은 규약). 표식이 없는 옛 job은 렌더가 단다."""
+    mc = _phrase_min_cut(store, job)
+    if mc <= 0:
+        return 0
+    n = 0
+    for b in (plan or {}).get("beats") or []:
+        if not b.get("phrase_min_cut"):
+            b["phrase_min_cut"] = mc
+            n += 1
+    return n
 
 
 def _hold_beat(i, beat):
@@ -2990,10 +3089,13 @@ def _trim_for_cut_rhythm(plan):
         # 히트작 79편 실측(docs/cut_rhythm_2026-09-22.md): 3초+ 홀드는 편당 2개, 최장(7초)은 영상 1/3 지점 첫 고조의 시연 줄.
         #   → 홀드 = 훅 · 고조1의 결과 줄("…없애 버렸다는 거") · 반전. 고조2 이후 결과 줄은 보통 컷(홀드가 셋을 넘으면 늘어진다).
         hold = _hold_beat(i, b)
-        # ★컷 리듬으로 배치한 칸은 **구절 맞춤을 끈 상태로 시작한다**(2026-09-24 사장님).
+        # ★컷 리듬으로 배치한 칸도 **구절 맞춤을 켠 상태로 시작한다**(2026-09-25 사장님 "3단계에서
+        #   컷리듬 말고 구절맞춤이 기본값"). 09-24엔 끈 채로 시작했는데 뒤집었다.
         #   둘은 같은 것을 다르게 정한다 — 구절 맞춤은 자막 구절마다 컷(6~12개), 컷 리듬은 담은 조각 수(3~4개).
-        #   켜 둔 채로 두면 화면에서 토글이 안 먹는 것처럼 보인다. 사람이 나중에 켜면 그때는 구절이 이긴다.
-        b["phrase_sync"] = False
+        #   켜진 동안은 구절이 이긴다(video_assemble `_cr = {} if phrase_sync` / 화면 rhythmOne에 !phraseSyncOn).
+        #   사람이 3단계에서 구절 맞춤을 끄면(=컷 리듬 켜기) 그때 아래 cut_rhythm 표식이 쓰인다.
+        #   ★None으로 두면 안 된다 — 렌더는 표식 없음을 컷 리듬으로, 화면은 켬으로 읽어 둘이 어긋난다.
+        b["phrase_sync"] = True
         alts = list(b.get("alternates") or [])
         # 컷 수는 줄 길이로(히트작 11편 컷 중앙 1.9초 → 약 2.5초에 한 컷): 3초 이하 1컷 · 6초 2컷 · 9초 3컷 · 최대 4컷.
         #   홀드 줄은 5초 홀드 뒤 한 컷만 더. (2026-09-22 사장님 "9초 줄인데 2개만 쓴 건가" — 2개 고정이 무뎠다)
@@ -3289,6 +3391,9 @@ def _plan_signature(plan):
                     parts.append("o=%s" % ",".join(str(x) for x in _own))
             except Exception:      # noqa: BLE001 — 서명 계산이 렌더를 막으면 안 된다
                 pass
+            # ★컷 하한 표식(2026-09-26)도 컷 배정을 바꾼다 — 없던 job과 청소본을 나눠 쓰면 안 된다
+            if b.get("phrase_min_cut"):
+                parts.append("m=%s" % b["phrase_min_cut"])
         _z, _px, _py = _va.scene_zoom_of(b)
         if _z > 1.0001:                        # 지정 없으면 아무것도 안 붙인다
             parts.append("z=%.4f,%.5f,%.5f" % (_z, _px, _py))   # → 옛 작업 서명 불변
@@ -4192,6 +4297,7 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
         cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
         sfx_paths = _resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job)
         _apply_cut_rhythm(plan_used, store, job)
+        _apply_phrase_min_cut(plan_used, store, job)
         assemble(plan_used, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)

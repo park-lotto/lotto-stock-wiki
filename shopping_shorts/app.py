@@ -2308,6 +2308,7 @@ def api_discover_add(request: Request, username: str, name: str = ""):
     if denied:
         return denied
     Store(DB_PATH).add_discovered(username.strip().lstrip("@"), name)
+    service.enrich_discovered_profile_async(username.strip().lstrip("@"))   # 판매채널 링크(2026-09-26)
     return {"ok": True, "username": username}
 
 
@@ -2450,6 +2451,7 @@ def api_discover_add_by_url(request: Request, url: str = "", username: str = "")
         return HTMLResponse(_chadd_html("✔ 이미 등록된 채널", f"@{uname} — 레퍼런스 추적 중입니다."))
     was_blocked = key in store.removed_usernames()
     store.add_discovered(uname, name=disp)   # add_discovered가 차단도 해제한다
+    service.enrich_discovered_profile_async(uname)   # 판매채널 링크(2026-09-26)
     tail = " (차단 해제됨)" if was_blocked else ""
     return HTMLResponse(_chadd_html("✅ 채널 등록 완료" + tail,
                                     f"@{uname}{'·' + disp if disp else ''} — 다음 수집(09/15/21시)부터 랭킹에 잡힙니다."))
@@ -2724,6 +2726,7 @@ def api_reference_register(request: Request, url: str):
     if key in known:
         return {"ok": True, "username": username, "already": True}
     store.add_discovered(username)
+    service.enrich_discovered_profile_async(username)   # 판매채널 링크(2026-09-26)
     return {"ok": True, "username": username, "already": False}
 
 
@@ -3640,9 +3643,14 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                 if _story_on:
                     try:
                         from shopping_shorts import story_writer as _sw
+                        # ★고른 씨앗을 명시로 넘긴다(2026-09-26). it.full_text = 2단계에서 고른 씨앗의 원문
+                        #   (위키 항목이면 그 대본, 없으면 화면이 보낸 base_script). 씨앗은 화면 재료에서 빼서
+                        #   job에 없으므로, 안 넘기면 이야기 작가가 job의 다른 영상을 씨앗으로 삼는다(ea29 사고).
                         _bb_drafts, _bb_why = _sw.make_drafts(
                             _picked, _job, body.get("target_seconds") or 25, job_id=_jid,
-                            preset=str(body.get("length_preset") or "short"))
+                            preset=str(body.get("length_preset") or "short"),
+                            seed_text=(it.get("full_text") or ""),
+                            seed_product=script_generate._sources_product(_src) or "")
                     except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
                         _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
                 if not _bb_drafts and _bb_on:
@@ -4849,6 +4857,67 @@ def api_get_lens_borrow(request: Request):
     return {"ok": True, **keyroute.borrow_status(Store(DB_PATH))}
 
 
+# ── 회원 자기 Vertex 등록(2026-09-26 사장님 "필요한 사람은 등록하게 / AI 장면생성도") ─────────────
+#   서비스계정 JSON(역할 Vertex AI User) 하나로 대본·장면매칭(3.6)과 AI 장면생성(Veo)을 회원 비용으로 돈다.
+#   저장은 기존 BYOK(customer_keys, Fernet) service="vertex_sa", 회원당 1개. 판단은 vertex_route 한 곳.
+#   ★등록 전에 실제 호출 1회로 확인한다 — 저장만 하고 "등록 완료"를 띄우면 쓸 때 가서야 실패한다(08-28 실사고 모양).
+def _vertex_status(store, cid):
+    import time as _t
+    from shopping_shorts import vertex_route
+    rows = store.list_customer_keys(cid, vertex_route.SVC)
+    if not rows:
+        return {"registered": False}
+    r = rows[-1]
+    days = int((_t.time() - int(r.get("created_at") or 0)) // 86400)
+    return {"registered": True, "id": r["id"], "label": r.get("label"), "status": r.get("status"),
+            "checked_at": r.get("checked_at"), "created_at": r.get("created_at"),
+            "days_since": days, "trial_days_left": max(0, 90 - days)}
+
+
+@app.get("/api/settings/vertex")
+def api_vertex_get(request: Request):
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    return {"ok": True, "enabled": keycrypt.enabled(), **_vertex_status(store, cid)}
+
+
+@app.post("/api/settings/vertex")
+def api_vertex_register(request: Request, body: dict):
+    from shopping_shorts import vertex_route
+    if not keycrypt.enabled():
+        return JSONResponse(status_code=503, content={
+            "ok": False, "error": "키 저장이 설정되지 않았습니다 (관리자 문의)"})
+    info, err = vertex_route.validate_sa(body.get("json") or "")
+    if err:
+        return JSONResponse(status_code=422, content={"ok": False, "error": err})
+    ok, msg = vertex_route.verify_sa(info)
+    if not ok:
+        return JSONResponse(status_code=422, content={"ok": False, "error": msg})
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    for r in store.list_customer_keys(cid, vertex_route.SVC):      # 회원당 1개 — 새 키가 옛 키를 갈아끼운다
+        store.delete_customer_key(cid, r["id"])
+    import json as _json
+    store.add_customer_key(cid, vertex_route.SVC, _json.dumps(info, ensure_ascii=False),
+                           label=vertex_route.sa_label(info))
+    rows = store.list_customer_keys(cid, vertex_route.SVC)
+    if rows:
+        store.set_customer_key_status(rows[-1]["id"], "ok")
+    vertex_route.forget_member(cid)
+    return {"ok": True, "message": msg, **_vertex_status(store, cid)}
+
+
+@app.post("/api/settings/vertex/delete")
+def api_vertex_delete(request: Request):
+    from shopping_shorts import vertex_route
+    store = Store(DB_PATH)
+    cid = keyroute.as_cid(_cid(request))
+    for r in store.list_customer_keys(cid, vertex_route.SVC):
+        store.delete_customer_key(cid, r["id"])
+    vertex_route.forget_member(cid)
+    return {"ok": True, **_vertex_status(store, cid)}
+
+
 @app.post("/api/settings/lens_borrow")
 def api_set_lens_borrow(request: Request, body: dict):
     """빌림 스위치 on/off (2026-09-08 사장님 "고객꺼 나눠서 좀 쓸 수 있게").
@@ -5477,7 +5546,7 @@ def api_coupang_identify(body: dict):
     if not product:
         return {"ok": False, "product": "", "queries": [], "basis": used,
                 "has_script": "대본" in used,
-                "error": ("근거로는 제품을 특정하지 못했습니다 — 🎬 영상 보고 정확히(대본 추출) 또는 제품명을 직접 넣어 보세요"
+                "error": ("근거로는 제품을 특정하지 못했습니다 — 🎬 대본으로 다시 찾기(대본 추출) 또는 제품명을 직접 넣어 보세요"
                           if "대본" not in used else "대본에서도 제품을 특정하지 못했습니다 — 제품명을 직접 넣어 찾아보세요")}
     # 판독 때 같이 나온 주제어·재질을 붙여 준다 — 유의어 모드가 물건 종류를 안 헷갈리게(2026-09-04 '택총→전술 조끼')
     ctx = ""
@@ -6192,7 +6261,7 @@ def _lab_captions(plan):
         #   owner_n = 이 값이 맞는 조각 수. 화면에서 조각을 넣고 빼 수가 달라지면 화면은 옛 식으로
         #   그리고(저장 시 서버도 같은 식으로 다시 얼린다), 저장 응답의 새 값으로 다시 맞춘다.
         _n_seg = len(video_assemble._beat_material(b)) if b.get("phrase_sync") else 0
-        _own = video_assemble.phrase_owners(b, _n_seg, segs) if _n_seg else []
+        _own = video_assemble.phrase_owners(b, _n_seg, segs, durs=durs) if _n_seg else []   # R4 컷 하한 묶음
         for k, (seg, dd) in enumerate(zip(segs, durs)):
             row = {"text": seg, "start": round(t, 3), "end": round(t + dd, 3)}
             if k < len(_own):
@@ -6572,7 +6641,7 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             def _q(x):      # 0.01초로 맞춘다(화면의 Math.round(d*100)/100 과 같은 자리)
                 return math.floor(float(x or 0) * 100 + 0.5) / 100
             raw = json.dumps([str(c.get("video_id") or ""), _q(c.get("start")),
-                              _q(c.get("dur")), _q(c.get("src_dur")),
+                              _q(c.get("dur")), _q(c.get("src_dur")), *([1] if c.get("fit") else []),
                               str(srcs.get(c.get("video_id")) or "")], sort_keys=True)
             return hashlib.sha1(raw.encode()).hexdigest()[:20]
 
@@ -6596,6 +6665,8 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 take = min(take, dur)
                 # 늘리기: 화면과 같은 배율 상한(MAX_SLOWMO 1.15) — 넘는 몫은 마지막 프레임 정지
                 slow = min(dur / take, 1.15) if take > 0 else 1.0
+                if c.get("fit") and take > 0:
+                    slow = dur / take          # [속도 맞추기] — 렌더(playback_speed)와 같이 상한 없이 끝까지 움직인다
                 vf = f"setpts=(PTS-STARTPTS)*{slow:.5f}," + vf + f",tpad=stop_mode=clone:stop_duration={dur:.3f}"
                 cmd = ["ffmpeg", "-y", "-v", "error", "-threads", "1",
                        "-ss", f"{float(c['start']):.3f}", "-t", f"{take:.3f}", "-i", str(src)]
@@ -6774,7 +6845,9 @@ def api_mix_preview_proxy(job_id: str, body: dict):
     try:
         norm = [{"video_id": str(c.get("video_id") or ""), "start": round(float(c.get("start") or 0), 3),
                  "dur": round(float(c.get("dur") or 0), 3),
-                 "src_dur": round(float(c.get("src_dur") or 0), 3)} for c in cuts]
+                 "src_dur": round(float(c.get("src_dur") or 0), 3),
+                 # [속도 맞추기] 컷 — 있을 때만 싣는다(없는 컷의 sig가 안 바뀌어 기존 합본을 그대로 쓴다)
+                 **({"fit": 1} if c.get("fit") else {})} for c in cuts]
     except (TypeError, ValueError):
         return JSONResponse(status_code=422, content={"ok": False, "error": "컷 형식 오류"})
     # 칸마다 컷이 몇 개인지 — 칸 경계를 음성 길이에 맞추려면 서버가 알아야 한다.
@@ -15226,6 +15299,10 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "script_grounded_enabled",
                        # 3단계 '붙어 온 장면 그대로'(Gemini 0회·추측 층 없음) — 값 규약은 위와 같다
                        "edl_inherit_enabled",
+                       # 구절 맞춤 컷 하한(2026-09-26) — ""끔 · "1.5" 전체 · "admin:1.5" 관리자만 · "11,42:1.2"
+                       "phrase_min_cut",
+                       # 자막 한 줄 글자 상한(2026-09-26, 공백 제외) — ""끔 · "admin:10" 관리자만 · "10" 전체. 단순 분할 규칙으로 간다
+                       "caption_max_chars",
                        # 자막제거 정본(2026-09-22) — 4단계 청소본을 정본으로, 꾸미기 뒤 재청소 없음. 값 규약 같음
                        "clean_base_enabled",
                        # AI 장면 생성(Veo, 2026-09-23) — 기본 admin(사장님만). 고객은 사장님 판정 뒤 "1"
@@ -18587,6 +18664,13 @@ def _ig_followers_of(store, uname, _allow_fetch=True):
         # ★반환은 **dict**다 {username소문자: {followers, posts, full_name}} —
         #   리스트로 알고 순회하면 문자열이 나와 .get()에서 터진다(계약 확인함).
         prof = fetch_profiles([key]) or {}
+        # 같은 응답에 있는 프로필 링크를 판매채널로 저장(2026-09-26) — 추가 요청 0, 등록 채널만 갱신된다
+        try:
+            _lk = ((prof.get(key) or {}).get("link") or "").strip()
+            if _lk:
+                store.set_discovered_inpock(key, _lk)
+        except Exception:      # noqa: BLE001
+            pass
         n = int((prof.get(key) or {}).get("followers") or 0)
         if n:
             return n
@@ -20896,7 +20980,12 @@ def _ai_scene_on(customer_id):
         v = ""
     if not v:
         return bool(_is_admin(customer_id))
-    return _setting_gate(store, "ai_scene_enabled", customer_id)
+    if not _setting_gate(store, "ai_scene_enabled", customer_id):
+        return False
+    # ★스위치가 열려도 **자기 Vertex를 등록한 회원만**(2026-09-26 사장님 "AI 생성은 반드시 회원용이 있어야").
+    #   관리자는 사장님 프로젝트. 판정은 vertex_route.veo_allowed 한 곳 — 버튼·API·워커가 같은 답을 낸다.
+    from shopping_shorts import vertex_route as _vr
+    return bool(_vr.veo_allowed(customer_id)[0])
 
 
 @app.post("/api/produce/mix/{job_id}/ai_scene")
@@ -20906,6 +20995,11 @@ def api_produce_mix_ai_scene(job_id: str, request: Request, body: dict):
     결과는 /api/mix/result 의 beats[].ai_scene(state running|done|failed)로 본다."""
     if not _ai_scene_on(_cid(request)):
         return JSONResponse(status_code=403, content={"ok": False, "error": "AI 장면 생성은 아직 관리자만 쓸 수 있어요"})
+    # ★스위치가 열려도 누구 비용으로 만들지는 따로 본다(2026-09-26) — 회원은 자기 Vertex가 있어야 한다.
+    from shopping_shorts import vertex_route as _vr
+    _ok_veo, _why_veo = _vr.veo_allowed(_cid(request))
+    if not _ok_veo:
+        return JSONResponse(status_code=403, content={"ok": False, "error": _why_veo, "need": "vertex"})
     store = Store(DB_PATH)
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):

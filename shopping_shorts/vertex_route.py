@@ -17,7 +17,9 @@
 import sys
 import time
 
-OPS = ("script_extract", "frame_script", "ai_match")
+OPS = ("script_extract", "frame_script", "ai_match", "script_generate")
+# script_generate = script_generate._call_json 깔때기(이야기 작가·백본·옛 생성기·판정 전부) — 2026-09-26 사장님
+#   "태깅은 무료로, 대본작성과 장면매칭이 얼마나 잘되는지 해보자" → 설정 vertex_ops=script_generate,ai_match
 LOCATION = "global"                 # ★us-central1은 3.6-flash 404(2026-09-25 실측) — 글로벌만
 DEFAULT_MODEL = "gemini-3.6-flash"
 INLINE_MAX_BYTES = 40 * 1024 * 1024  # 실측 32.4MB OK. 그 위는 미검증 → 키풀(파일 업로드) 경로로
@@ -49,6 +51,7 @@ def _read_settings():
 def reset_cache():
     _settings_cache.update(t=0.0, vals=None)
     _client_cache.clear()
+    _member_cache.clear()
 
 
 def _is_admin(cid):
@@ -85,12 +88,96 @@ def current_cid():
         return None
 
 
+# ── 회원 자기 Vertex(2026-09-26 사장님 "필요한 사람은 등록하게") ─────────────────────────
+# 서비스계정 JSON 하나로 텍스트(3.6)와 Veo(AI 장면생성)를 같이 쓴다 — Express 키는 일부 Gemini만 돼 Veo가 안 된다.
+# 저장소는 기존 BYOK(customer_keys + keycrypt Fernet) 그대로, service="vertex_sa". 회원당 1개.
+SVC = "vertex_sa"
+MEMBER_OPS = ("script_generate", "ai_match")      # 등록한 회원은 이 op가 자동으로 자기 Vertex로 간다
+_MEMBER_TTL = 30.0
+_member_cache = {}                                 # cid → (t, info|None)
+
+
+def validate_sa(text):
+    """(info, 에러문구) — 붙여넣은 서비스계정 JSON 검사. 구글 호출 없이 모양만 본다."""
+    import json
+    raw = (text or "").strip()
+    if not raw:
+        return None, "서비스계정 JSON을 붙여넣어 주세요"
+    if len(raw) > 20000:
+        return None, "JSON이 너무 큽니다 — 서비스계정 키 파일(.json) 내용만 붙여넣어 주세요"
+    try:
+        info = json.loads(raw)
+    except ValueError:
+        return None, "JSON 형식이 아닙니다 — 내려받은 키 파일을 메모장으로 열어 전체를 복사해 주세요"
+    if not isinstance(info, dict) or info.get("type") != "service_account":
+        return None, "서비스계정 키가 아닙니다(type이 service_account여야 합니다)"
+    for k in ("project_id", "client_email", "private_key"):
+        if not str(info.get(k) or "").strip():
+            return None, "키 파일에 %s가 없습니다 — 다시 내려받아 주세요" % k
+    if "BEGIN PRIVATE KEY" not in info["private_key"]:
+        return None, "private_key 모양이 이상합니다 — 파일 전체를 그대로 붙여넣어 주세요"
+    return info, ""
+
+
+def sa_label(info):
+    """화면 표시용 — 프로젝트 ID + 가린 이메일. 비밀값(private_key)은 절대 싣지 않는다."""
+    em = str(info.get("client_email") or "")
+    name = em.split("@")[0]
+    return "%s · %s…@%s" % (info.get("project_id") or "?", name[:4], (em.split("@") + [""])[1][:24])
+
+
+def member_info(cid):
+    """회원이 등록한 서비스계정(dict) 또는 None. 끈(off)·죽은(bad) 것은 None. 30초 캐시."""
+    try:
+        cid_i = int(cid)
+    except (TypeError, ValueError):
+        return None
+    now = time.monotonic()
+    hit = _member_cache.get(cid_i)
+    if hit and now - hit[0] < _MEMBER_TTL:
+        return hit[1]
+    info = None
+    try:
+        import json
+        from shopping_shorts import config
+        from shopping_shorts.store import Store
+        st = Store(config.DB_PATH)
+        bad = {r["id"] for r in st.list_customer_keys(cid_i, SVC) if r.get("status") == "bad"}
+        for kid, plain in st.get_customer_keys_with_id(cid_i, SVC):
+            if kid in bad:
+                continue
+            try:
+                info = json.loads(plain)
+                break
+            except ValueError:
+                continue
+    except Exception as e:      # noqa: BLE001 — 못 읽으면 '등록 안 함'(종전 경로)
+        print("vertex_route: 회원 %s 자격증명 읽기 실패 — %r" % (cid, e), file=sys.stderr)
+        info = None
+    _member_cache[cid_i] = (now, info)
+    return info
+
+
+def forget_member(cid):
+    """등록·삭제 직후 캐시를 비운다(30초 기다리지 않게)."""
+    try:
+        _member_cache.pop(int(cid), None)
+    except (TypeError, ValueError):
+        pass
+    for k in [k for k in _client_cache if k.startswith("m:%s:" % cid)]:
+        _client_cache.pop(k, None)
+
+
 def on(op, cid=None):
-    """이 op를 Vertex로 보낼까. 설정이 없거나 못 읽으면 False(종전 그대로)."""
+    """이 op를 Vertex로 보낼까. ①회원이 자기 Vertex를 등록했으면 MEMBER_OPS는 자동 ON(자기 비용)
+    ②아니면 사장님 프로젝트 스위치(vertex_enabled·vertex_ops). 설정을 못 읽으면 False(종전 그대로)."""
     if op not in OPS:
         return False
+    cid = current_cid() if cid is None else cid
+    if op in MEMBER_OPS and member_info(cid):
+        return True
     vals = _read_settings()
-    if not gate_allows(vals.get(SETTING_ENABLED, ""), current_cid() if cid is None else cid):
+    if not gate_allows(vals.get(SETTING_ENABLED, ""), cid):
         return False
     ops = [x.strip() for x in (vals.get(SETTING_OPS) or "").split(",") if x.strip()]
     return (not ops) or (op in ops)
@@ -100,8 +187,30 @@ def model():
     return _read_settings().get(SETTING_MODEL) or DEFAULT_MODEL
 
 
-def client():
-    """Vertex 클라이언트(계측 래핑, 캐시). 자격증명은 GOOGLE_APPLICATION_CREDENTIALS(ADC)."""
+def _member_client(cid, info):
+    import hashlib
+    fp = hashlib.sha256(str(info.get("private_key_id") or info.get("client_email")).encode()).hexdigest()[:10]
+    ck = "m:%s:%s" % (cid, fp)
+    if ck not in _client_cache:
+        from google import genai
+        from google.genai import types
+        from google.oauth2 import service_account
+        from shopping_shorts import usage_meter
+        creds = service_account.Credentials.from_service_account_info(
+            info, scopes=["https://www.googleapis.com/auth/cloud-platform"])
+        cl = genai.Client(vertexai=True, project=info["project_id"], location=LOCATION, credentials=creds,
+                          http_options=types.HttpOptions(timeout=180_000))
+        _client_cache[ck] = usage_meter.wrap(cl, auth="vertex", pool="vertex-member", key="member:%s" % cid)
+    return _client_cache[ck]
+
+
+def client(cid=None):
+    """Vertex 클라이언트(계측 래핑, 캐시). ★회원이 자기 서비스계정을 등록했으면 **그 프로젝트**(회원 비용),
+    아니면 사장님 프로젝트(GOOGLE_APPLICATION_CREDENTIALS). 판단은 여기 한 곳(0순위-B)."""
+    cid = current_cid() if cid is None else cid
+    info = member_info(cid)
+    if info:
+        return _member_client(cid, info)
     if "cl" not in _client_cache:
         from google import genai
         from google.genai import types
@@ -110,6 +219,72 @@ def client():
                           http_options=types.HttpOptions(timeout=180_000))
         _client_cache["cl"] = usage_meter.wrap(cl, auth="vertex", pool="vertex", key="vertex")
     return _client_cache["cl"]
+
+
+def is_member(cid=None):
+    return bool(member_info(current_cid() if cid is None else cid))
+
+
+VEO_NEEDS_MEMBER = "AI 장면 생성은 내 구글 Vertex를 등록해야 쓸 수 있어요 — 설정 › API 키에서 등록해 주세요"
+
+
+def veo_client(cid):
+    """Veo(AI 장면생성)용 Vertex 클라이언트 — ★영상 생성은 텍스트보다 10~50배 비싸다.
+    회원 자격증명이 있으면 **그 프로젝트**, 사장님(관리자)이면 사장님 프로젝트, 그 외는 None
+    (사장님 크레딧으로 회원 영상을 대신 만들지 않는다 — 2026-09-26 사장님 확정 설계)."""
+    info = member_info(cid)
+    if info:
+        return _member_client(cid, info)
+    if _is_admin(cid):
+        return client(cid)
+    return None
+
+
+def veo_allowed(cid):
+    """(허용, 막을 때 문구) — 화면 버튼·API·워커가 같은 판정을 쓴다(0순위-B)."""
+    if member_info(cid) or _is_admin(cid):
+        return True, ""
+    return False, VEO_NEEDS_MEMBER
+
+
+def verify_sa(info, model_name=None):
+    """등록 전 실제 호출 1회 — (ok, 사람이 읽을 문구). 구글 오류를 원인별로 옮긴다."""
+    from google import genai
+    from google.genai import types
+    from google.oauth2 import service_account
+    try:
+        creds = service_account.Credentials.from_service_account_info(
+            info, scopes=["https://www.googleapis.com/auth/cloud-platform"])
+        cl = genai.Client(vertexai=True, project=info["project_id"], location=LOCATION, credentials=creds,
+                          http_options=types.HttpOptions(timeout=60_000))
+        r = cl.models.generate_content(model=model_name or DEFAULT_MODEL, contents="한 단어로: 하늘 색?")
+        if not (r.text or "").strip():
+            return False, "확인 실패 — 응답이 비었습니다"
+    except Exception as e:      # noqa: BLE001
+        return False, _explain(e, model_name)
+    # Veo 권한 확인 — 영상은 만들지 않고(과금 방지) 모델 조회만 한다. 조회가 막혀도 대본은 되므로 등록은 받는다.
+    try:
+        cl.models.get(model="veo-3.1-lite-generate-001")
+        return True, "확인 완료 — 대본·장면매칭과 AI 장면생성을 이 계정으로 씁니다"
+    except Exception as e:      # noqa: BLE001
+        return True, ("확인 완료(대본·장면매칭) — AI 장면생성 모델 조회는 실패했습니다: %s"
+                      % _explain(e, "veo-3.1-lite-generate-001"))
+
+
+def _explain(e, model_name=None):
+    """구글 오류 → 회원이 할 일 한 줄. 판정은 여기 한 곳(등록 확인·Veo 조회가 같이 쓴다)."""
+    m = str(e)
+    if "SERVICE_DISABLED" in m or "has not been used" in m or "is disabled" in m:
+        return "Vertex AI API가 꺼져 있습니다 — 구글 클라우드 콘솔에서 'Vertex AI API 사용'을 눌러 주세요"
+    if "PERMISSION_DENIED" in m or "403" in m:
+        return "권한이 없습니다 — 서비스계정 역할에 'Vertex AI 사용자(Vertex AI User)'를 추가해 주세요"
+    if "BILLING" in m.upper():
+        return "결제 계정이 연결돼 있지 않습니다 — 무료 체험($300)을 시작하거나 결제를 연결해 주세요"
+    if "invalid_grant" in m or "401" in m:
+        return "키가 폐기됐거나 잘못됐습니다 — 새 키를 내려받아 주세요"
+    if "404" in m:
+        return "모델을 찾지 못했습니다(%s) — 관리자에게 알려 주세요" % (model_name or DEFAULT_MODEL)
+    return "확인 실패 — %s" % m[:160]
 
 
 def video_part(path):
@@ -130,12 +305,13 @@ def video_part(path):
 def try_call(op, fn, what=""):
     """(시도했나, 결과). 스위치가 꺼졌으면 (False, None). 켜졌으면 fn(client, model) 1회 —
     예외·빈 결과는 stderr에 남기고 (False, None) → 호출부는 종전 키풀 경로로 이어간다."""
-    if not on(op):
+    cid = current_cid()
+    if not on(op, cid=cid):
         return False, None
     m = model()
     t0 = time.monotonic()
     try:
-        got = fn(client(), m)
+        got = fn(client(cid), m)
     except Exception as e:      # noqa: BLE001 — Vertex 실패가 본작업을 막으면 안 된다(키풀 폴백)
         print("vertex_route.%s: %s 실패(%.1fs) → 키풀 폴백 — %r" % (
             what or op, m, time.monotonic() - t0, e), file=sys.stderr)

@@ -10,6 +10,8 @@ const SL = {
   applyUrl: () => SL.server ? `/api/mix/scene_lab/${SL.job}/apply` : '/apply',
 };
 const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   // 상한을 넘긴 컷 = 소재가 모자라 늘린 것
+// 조각 끝을 이만큼 이하로 넘으면 다음 장면 대신 살짝 느리게 — 서버 video_assemble._REACH_MIN과 같은 값(짝)
+const REACH_MIN = 0.35;
 // ★수동(✋)으로 정할 수 있는 최소 컷 길이. 자동 배분의 MIN_CLIP(0.8초)과 **별개**다 —
 //   2026-09-06 사장님 "1초미만이 수동으로는 들어올수있게". 0.3초 아래는 10프레임 미만이라
 //   사람 눈에 안 잡히므로 그것만 막는다.
@@ -631,7 +633,11 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       let wanted = natural * syncSpeed;
       const seg = ((typeof DATA === 'object' && DATA && DATA.segments) || {})[c.seg_id];
       const sourceTotal = Number((((typeof DATA === 'object' && DATA) || {}).src_duration || {})[c.video_id] || 0);
-      const end = seg && Number.isFinite(Number(seg.end)) ? Number(seg.end) : sourceTotal;
+      let end = seg && Number.isFinite(Number(seg.end)) ? Number(seg.end) : sourceTotal;
+      // ★계획이 이미 조각 끝을 넘어 읽기로 한 컷(구절 이어 틀기, 2026-09-26)이면 상한은 원본 끝 —
+      //   종전엔 늘 조각 끝으로 잘라 09-24 '릴 뒤 이어 쓰기'가 화면에선 한 번도 안 돌았다(멈춤의 뿌리).
+      //   서버 video_assemble._piece_end_limit와 같은 규칙.
+      if (sourceTotal > 0 && Number(c.start || 0) + natural > end + EPS) end = sourceTotal;
       if (end > Number(c.start || 0)) wanted = Math.min(wanted, end - Number(c.start || 0));
       c.src_dur = Math.max(EPS, wanted);
       c.speed = c.dur > EPS ? c.src_dur / c.dur : 1;
@@ -738,17 +744,38 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         // ★단 같은 조각이 **바로 앞 구절에 이어** 덮는 중이면 되감지 않고 끝 프레임에서 버틴다
         //   (2026-09-21 — 줄을 나누기 전의 '한 컷 슬로모→정지'와 같은 그림. 서버와 같은 규칙).
         let st = pos[idx];
-        if (seg.end != null && seg.end - st < Math.min(d, MIN_CLIP) - EPS)
+        // ★같은 조각에 구절이 이어 붙으면 **앞 컷이 끝난 곳부터 그대로 이어 튼다**(2026-09-26 사장님
+        //   "구절이 나눠져도 쭉 이어지게"). 담은 장면 끝을 넘으면 원본을 계속 읽는다. 종전엔 끝 0.1초 앞으로
+        //   되감아 0.1초를 늘려 틀어 멈춘 듯 보였다. 서버 _plan_phrase_clips와 **같은 규칙**(check_phrase_continue.py).
+        const reel = +(((typeof DATA === 'object' && DATA && DATA.src_duration) || {})[seg.video_id]) || 0;
+        const consec = k > 0 && idx === prevIdx && reel > 0;
+        if (!consec && seg.end != null && seg.end - st < Math.min(d, MIN_CLIP) - EPS)
           st = (k > 0 && idx === prevIdx) ? Math.max(seg.start, Math.min(st, seg.end - 0.1)) : seg.start;
         prevIdx = idx;
+        // ★원본이 이미 끝났으면 영상 밖(검정)을 읽지 않고 마지막 프레임에서 버틴다(서버와 같은 규칙, 2026-09-26 "장면 빼니 검정")
+        if (reel > 0 && st > reel - 0.1) st = Math.max(seg.start, reel - 0.1);
         const clip = { seg_id: seg.seg_id, video_id: seg.video_id, start: st, dur: Math.round(d * 100) / 100 };
         // ★조각 끝을 넘지 않는다(2026-09-17 이윤정님 "미리보기에서 중간에 다른 화면이 짧게").
         //   구절이 조각보다 길면 종전엔 dur만큼 그대로 틀어 조각 뒤 **다음 장면**이 새어 나왔다
         //   (소스를 하나씩 누르면 그 조각만 틀어 멀쩡했다). src_dur을 남기면 applyRate가 그
         //   비율만큼 느리게 틀어 조각 안에서 끝난다 — 서버 _plan_phrase_clips와 같은 규칙.
-        if (seg.end != null && seg.end - st < d - EPS) clip.src_dur = Math.max(0.1, +(seg.end - st).toFixed(3));
+        let src = d;
+        if (seg.end != null) {
+          const over = st + d - seg.end;
+          // typeof: planClips만 떼어 돌리는 테스트 하네스엔 이 상수가 없다(메모리 '슬라이스하네스')
+          const reachMin = (typeof REACH_MIN === 'number') ? REACH_MIN : 0.35;
+          if (st < seg.end && over > 0 && over <= reachMin) src = seg.end - st;   // 살짝 넘침 → 조각 안에서 살짝 느리게(09-17 '튐')
+          else if (over > 0 && !(reel > 0)) src = Math.max(0.1, Math.min(d, seg.end - st));   // 릴 길이 모름 = 종전
+          // 사람이 정한 구간(film_)은 그 구간만 — 잘라낸 꼬다리가 되살아나지 않게(서버 _plan_phrase_clips와 같은 규칙)
+          else if (over > 0 && !consec && String(seg.seg_id || '').startsWith('film_')) src = Math.max(0.1, Math.min(d, seg.end - st));
+        }
+        if (reel > 0 && st + src > reel) src = Math.max(0.1, reel - st);          // 원본 끝
+        if (src < d - EPS) clip.src_dur = +src.toFixed(3);
+        // [속도 맞추기] 누른 조각 — 1.15배 상한 없이 정확히 늘린다(서버 playback_speed와 짝)
+        const fitSegs = (((typeof DATA === 'object' && DATA && DATA.beats) || [])[beatIdx] || {}).fit_segs || [];
+        if (src < d - EPS && fitSegs.includes(seg.seg_id)) clip.fit = true;
         clips.push(clip);
-        pos[idx] = st + d;
+        pos[idx] = st + src;                                                      // 보여준 곳 다음부터 이어서
       }
       return finish(clips);
     }
@@ -1061,7 +1088,7 @@ function applyRate(v, c){
   let rate = 1;
   if (src > 0 && c.dur > EPS){
     rate = src / c.dur;
-    if (rate < 1) rate = Math.max(1 / MAX_SLOWMO, rate);   // 느리게 상한은 기존 유지
+    if (rate < 1 && !c.fit) rate = Math.max(1 / MAX_SLOWMO, rate);   // 느리게 상한은 기존 유지([속도 맞추기] 컷만 예외)
   }
   try { if (Math.abs(v.playbackRate - rate) > 1e-3) v.playbackRate = rate; } catch (e) {}
   return rate;
@@ -1072,12 +1099,18 @@ function applyRate(v, c){
 //   하나를 이어 튼다. 컷 계산은 planClips 한 곳 그대로이고, 칸마다 목록이 합본과 **글자
 //   그대로 같을 때만** 합본을 쓴다 — 하나라도 다르면 그 칸은 종전 방식(fail-open).
 const PVX = { key: '', beats: [], offs: [], vid: null, url: '', pending: '', lastKey: '', timer: 0 };
+// 합본에 보내는 컷 모양 — **여기 한 곳**(pvxCuts·pvxAttach가 같이 쓴다. 둘이 다르면 합본을 못 쓴다).
+//   fit([속도 맞추기])은 있을 때만 싣는다 — 없는 컷은 모양이 종전과 같아 이미 구운 합본을 그대로 쓴다.
+function pvxCut(c){
+  const o = {video_id: c.video_id, start: +(+c.start).toFixed(3), dur: +(+c.dur).toFixed(3),
+             src_dur: +(+(c.src_dur || 0)).toFixed(3)};
+  if (c.fit) o.fit = 1;
+  return o;
+}
 function pvxCuts(){
   const beats = [], cuts = [];
   (DATA && DATA.beats || []).forEach((b, i) => {
-    const cl = planClips(lists[i] || [], beatDur(i), STRETCH[i], i)
-      .map(c => ({video_id: c.video_id, start: +(+c.start).toFixed(3), dur: +(+c.dur).toFixed(3),
-                  src_dur: +(+(c.src_dur || 0)).toFixed(3)}));
+    const cl = planClips(lists[i] || [], beatDur(i), STRETCH[i], i).map(pvxCut);
     beats.push(JSON.stringify(cl));
     cuts.push(...cl);
   });
@@ -1198,8 +1231,7 @@ if (typeof window !== 'undefined' && typeof setInterval === 'function' && !windo
 // 칸 i의 컷에 합본 좌표를 단다. 목록이 합본과 다르면 아무것도 안 달고 false.
 function pvxAttach(i, clips){
   if (!PVX.vid || !PVX.key || PVX.vid.readyState < 1) return false;
-  const mine = JSON.stringify(clips.map(c => ({video_id: c.video_id, start: +(+c.start).toFixed(3),
-               dur: +(+c.dur).toFixed(3), src_dur: +(+(c.src_dur || 0)).toFixed(3)})));
+  const mine = JSON.stringify(clips.map(pvxCut));
   if (PVX.beats[i] !== mine) return false;
   // ★컷이 합본 어디서 시작하는지 — **서버가 잰 값**을 쓴다(짐작 금지).
   //   컷 길이를 더해 짐작하면 합본과 어긋난다(구워진 영상은 프레임 단위로만 끊긴다).

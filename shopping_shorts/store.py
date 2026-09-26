@@ -1172,6 +1172,13 @@ class Store:
                 c.execute("ALTER TABLE discovered_channels ADD COLUMN category TEXT")
             except sqlite3.OperationalError:
                 pass  # 이미 존재
+            # 판매채널(프로필 외부 링크, 2026-09-26) — 엑셀 채널의 '인포크링크' 칸과 같은 뜻.
+            #   발굴·등록 채널은 엑셀에 없어 카드에 🛒판매채널이 안 떴다. 프로필을 한 번 열 때
+            #   같은 응답에 있는 링크를 여기 넣어 두면 collect union 메타(discovered_channels())가 싣는다.
+            try:
+                c.execute("ALTER TABLE discovered_channels ADD COLUMN inpock TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
             # "영상 안 올라오는" 죽은 채널 — 엑셀 원본은 안 건드리고 여기에 넣어
             # collect()가 추적에서 제외한다(소프트 삭제, 복구 가능, 2026-07-12).
             # 사람이 지정한 영상 카테고리(2026-09-14 사장님 "지정되면 그쪽 카테고리로
@@ -1916,29 +1923,42 @@ class Store:
         return json.loads(row[0]), row[1]
 
     # ── 발굴/정리 채널 관리(2026-07-12) ──
-    def add_discovered(self, username, name="", category=""):
+    def add_discovered(self, username, name="", category="", inpock=""):
         """발굴 채널을 벤치마크 목록에 추가(중복 시 이름 갱신). 제외목록에 있었다면 해제.
 
         category: 발굴 태그에서 유추한 카테고리(2026-07-30). 이미 값이 있으면 덮지 않는다
-        — 먼저 붙은 판정이 대개 그 채널을 찾아낸 태그라 더 정확하고, 사람이 고친 값도 지켜야 한다."""
+        — 먼저 붙은 판정이 대개 그 채널을 찾아낸 태그라 더 정확하고, 사람이 고친 값도 지켜야 한다.
+        inpock: 프로필 외부 링크(2026-09-26). 빈값으로는 있는 값을 지우지 않는다."""
         with self._conn() as c:
             c.execute(
-                "INSERT INTO discovered_channels(username, name, added_at, category) "
-                "VALUES(?,?,datetime('now'),?) ON CONFLICT(username) DO UPDATE SET "
-                "name=excluded.name, category=COALESCE(NULLIF(category,''), excluded.category)",
-                (username, name or username, category or ""),
+                "INSERT INTO discovered_channels(username, name, added_at, category, inpock) "
+                "VALUES(?,?,datetime('now'),?,?) ON CONFLICT(username) DO UPDATE SET "
+                "name=excluded.name, category=COALESCE(NULLIF(category,''), excluded.category), "
+                "inpock=COALESCE(NULLIF(excluded.inpock,''), inpock)",
+                (username, name or username, category or "", inpock or ""),
             )
             c.execute("DELETE FROM removed_channels WHERE username=?", (username,))
 
+    def set_discovered_inpock(self, username, inpock):
+        """발굴 채널의 판매채널 링크만 갱신(등록돼 있는 채널만). 갱신된 행 수를 돌려준다."""
+        key = (username or "").strip().lstrip("@")
+        if not key or not (inpock or "").strip():
+            return 0
+        with self._conn() as c:
+            cur = c.execute("UPDATE discovered_channels SET inpock=? WHERE lower(username)=lower(?)",
+                            (inpock.strip()[:500], key))
+            return cur.rowcount
+
     def discovered_channels(self):
         """추가된 발굴 채널 [{name, username, followers, inpock, added_at}] (collect union용 메타 형태).
-        added_at은 관리페이지 표시용 — collect union 소비자는 이 키를 무시한다(추가 키라 무해)."""
+        added_at은 관리페이지 표시용 — collect union 소비자는 이 키를 무시한다(추가 키라 무해).
+        inpock(2026-09-26): 프로필 외부 링크 → 카드의 🛒판매채널(엑셀 채널과 같은 칸)."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT username, name, added_at, COALESCE(category,'') "
+                "SELECT username, name, added_at, COALESCE(category,''), COALESCE(inpock,'') "
                 "FROM discovered_channels ORDER BY added_at DESC"
             ).fetchall()
-        return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": "",
+        return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": r[4] or "",
                  "added_at": r[2] or "", "category": r[3]} for r in rows]
 
     # ── 채널 릴스 전체 아카이브(2026-08-03) ───────────────────────────────
@@ -7759,8 +7779,9 @@ class Store:
     # ── 사용자별 API 키(2026-08-17, BYOK) ──
     # 평문은 이 클래스 밖으로 나가는 경로가 get_customer_keys_plain 하나뿐이다.
     # 화면용 list_customer_keys는 key_enc를 아예 안 실어 보낸다.
-    def add_customer_key(self, customer_id, service, plain):
-        """키 1개 저장. 이미 있는 키면 False(중복 거절)."""
+    def add_customer_key(self, customer_id, service, plain, label=None):
+        """키 1개 저장. 이미 있는 키면 False(중복 거절).
+        label: 화면 표시 문구를 직접 줄 때(vertex_sa처럼 JSON이라 앞뒤 가리기가 의미 없는 경우)."""
         from shopping_shorts import keycrypt
         import time
         try:
@@ -7770,7 +7791,7 @@ class Store:
                     "(customer_id, service, key_enc, key_hash, label, created_at) "
                     "VALUES(?,?,?,?,?,?)",
                     (int(customer_id), service, keycrypt.encrypt(plain),
-                     keycrypt.fingerprint(plain), keycrypt.mask(plain), int(time.time())),
+                     keycrypt.fingerprint(plain), label or keycrypt.mask(plain), int(time.time())),
                 )
             return True
         except sqlite3.IntegrityError as e:

@@ -67,7 +67,7 @@ def match(lines, seg_index, backbone_vid, note=None, model=None):
         if note is not None:
             note["matcher_auth"] = "vertex"
     else:
-        out = _sg._call_json(prompt, SCHEMA, note=note, model=model or MODEL) or {}
+        out = _sg._call_json(prompt, SCHEMA, note=note, model=model or MODEL, vertex=False) or {}
     picks = {}
     for p in out.get("picks") or []:
         try:

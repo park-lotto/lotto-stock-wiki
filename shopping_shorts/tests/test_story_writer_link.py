@@ -15,7 +15,7 @@ def _job():
     return {"backbone_main": 0, "extract": {
         "s0": {"video_id": "s0", "full_text": seed, "source_brief": {"product": "두피 액체빗"},
                "segments": [_seg("SEED", i) for i in range(6)]},
-        "s1": {"video_id": "s1", "full_text": "", "segments": [_seg("MAT", i) for i in range(12)]},
+        "s1": {"video_id": "s1", "full_text": "", "segments": [_seg("MAT", i) for i in range(20)]},   # 고조2 필수로 줄이 늘어 컷도 넉넉히(2026-09-26)
     }}
 
 
@@ -26,13 +26,16 @@ FEATS = [{"name": "앰플 도포", "claim": "빗 뒷면에 앰플을 채워 바�
 YT_OUT = {"hook": "이걸 아직도 손으로 바른다고", "bait": "요새 이거 하나로 난리인데", "reveal": "이건 바로 두피 액체빗.",
           "contrast": "", "twist": "근데 가방에도 쏙 들어가서", "closing": "쓰는 사람마다 난리라는데",
           "escalations": [{"moment": "겨우 짜서 바르려는 순간", "what_happens": "손가락 사이로 다 흘러내리던 그 짜증을",
-                           "erased": "빗 안에 넣어서 없애 버렸다는 거", "from_pain": "앰플 도포"}]}
+                           "erased": "빗 안에 넣어서 없애 버렸다는 거", "from_pain": "앰플 도포"},
+                          # 고조2 무조건(2026-09-26) — 가짜 출력도 히트작 프리셋처럼 2칸
+                          {"moment": "큰 병을 가방에 넣으려던 순간", "what_happens": "자리만 차지하던 그 짐을",
+                           "erased": "빗 하나로 없애 버렸다는 거", "from_pain": "휴대"}]}
 
 
 def _fake(monkeypatch, out=YT_OUT, feats=FEATS):
     calls = []
 
-    def call(prompt, schema, note=None, model=None):
+    def call(prompt, schema, note=None, model=None, vertex=True):   # vertex= : _call_json 스위치 인자(2026-09-26)
         calls.append(schema)
         return {"feats": feats} if schema is sw.FEATS_SCHEMA else out
     monkeypatch.setattr(sw._sg, "_call_json", call)
@@ -121,7 +124,8 @@ def test_too_long_script_drops_whole_escalations_from_the_end():
     L = lambda r, n: {"role": r, "text": "가" * n, "group": -1}
     lines = [L("훅", 20), L("고조1", 40), L("고조1", 40), L("고조2", 40), L("고조2", 40), L("고조3", 40), L("마무리", 20)]
     out, dropped = sw._fit_length(lines, 25)
-    assert dropped == 2 and [x["role"] for x in out] == ["훅", "고조1", "고조1", "마무리"]   # 최소 1칸은 남는다
+    # ★고조2는 길이 때문에도 안 뺀다(2026-09-26 사장님 "고조2는 무조건") — 최소 2칸이 남는다
+    assert dropped == 1 and [x["role"] for x in out] == ["훅", "고조1", "고조1", "고조2", "고조2", "마무리"]
     assert sw._fit_length(lines, 999) == (lines, 0)
 
 
@@ -188,3 +192,94 @@ def test_반전은_twist_feat_번호의_특징_컷을_받는다():
     lines = sw._to_lines(o, False, "k", 0, feats=[{"name": "요철"}, {"name": "물세척 재사용"}])
     twist = next(L for L in lines if L["role"] == "반전")
     assert twist["group"] == 1
+
+
+def test_explicit_seed_wins_over_longest_job_text(monkeypatch):
+    """2026-09-26 사장님 "씨앗은 썰쇼핑인데 왜 다이소가 나오나"(work ea29430903d3).
+    고른 씨앗(유튜브 썰·반말)은 job에 없고, job엔 인스타 존댓말(다이소)만 있다 →
+    종전엔 인스타 글이 씨앗이 돼 존댓말 다이소 대본이 나왔다. 명시 씨앗이 오면 그것이 결·훅 꼴·제품을 정한다."""
+    _fake(monkeypatch)
+    seen = []
+    real_write = sw.write
+
+    def spy(product, seed_text, feats, platform="yt", **kw):
+        seen.append({"product": product, "seed": seed_text, "platform": platform})
+        return real_write(product, seed_text, feats, platform=platform, **kw)
+    monkeypatch.setattr(sw, "write", spy)
+    insta = "여러분 다이소에서 이거 절대 사서 가족 모두가 만지는 리모컨 닦아도 끝이 없죠 여기에 넣고 드라이어를 쏘기만 하면 되더라고요 " * 2
+    job = {"backbone_main": None, "extract": {
+        "s5": {"video_id": "s5", "full_text": insta, "source_brief": {"product": "다이소 수축 보호 필름"},
+               "segments": [_seg("MAT", i) for i in range(12)]}}}
+    ssul = "개발자도 예상 못한 한국 주부의 활용법 최근 딱 봤을 때는 평범한 필름지처럼 보이는 이 제품을 이용한 한국의 한 천재 주부의 활용법이 난리라는데 이건 바로 열수축 필름."
+    drafts, why = sw.make_drafts([], job, job_id="j2", seed_text=ssul, seed_product="열수축 보호 필름")
+    assert why == "" and len(drafts) == 1
+    assert seen[0]["seed"].startswith("개발자도 예상 못한"), "씨앗은 고른 영상의 원문이어야 한다"
+    assert seen[0]["platform"] == "yt", "썰(반말) 씨앗이면 결은 yt — 인스타 존댓말로 쓰면 안 된다"
+    assert seen[0]["product"] == "열수축 보호 필름"
+    assert drafts[0]["seed_from"] == "explicit"
+    # 명시 씨앗이 없으면 종전 규칙(job에서 가장 긴 한국어 글)이 그대로 — 회귀 0
+    seen.clear()
+    sw.make_drafts([], job, job_id="j3")
+    assert seen[0]["seed"].startswith("여러분 다이소"), "명시 씨앗 없음 → job의 가장 긴 한국어 글(종전)"
+    assert seen[0]["platform"] == "ig", "존댓말 글이 씨앗이면 인스타 결 — 이게 ea29 사고의 모양이다"
+
+
+def test_second_escalation_is_mandatory_retry_once_then_reject(monkeypatch):
+    """2026-09-26 사장님 "고조2는 무조건 들어가야 된다". 1칸이면 무엇이 모자란지 말해 1회 다시, 그래도 1칸이면 반려."""
+    one = dict(YT_OUT, escalations=YT_OUT["escalations"][:1])
+    prompts = []
+
+    def call(prompt, schema, note=None, model=None, vertex=True):
+        prompts.append(prompt)
+        if schema is sw.FEATS_SCHEMA:
+            return {"feats": FEATS}
+        return one if len(prompts) == 1 else YT_OUT          # 첫 답 1칸 → 다시 → 2칸
+    monkeypatch.setattr(sw._sg, "_call_json", call)
+    note = {}
+    lines = sw.write("두피 액체빗", "씨앗 " * 30, FEATS, platform="yt", key="k", note=note)
+    roles = [L["role"] for L in lines]
+    assert "고조2" in roles and note.get("escalation_retry") == 1
+    assert "고조 칸이 1개뿐" in prompts[1] and "정확히 2개" in prompts[1]
+    # 스키마도 구조로 막는다
+    assert sw.YT_SCHEMA["properties"]["escalations"]["minItems"] == 2
+    assert sw._short_schema()["properties"]["escalations"]["minItems"] == 2
+    # 끝내 1칸이면 반려 — 얇은 대본을 조용히 내보내지 않는다
+    monkeypatch.setattr(sw._sg, "_call_json", lambda *a, **k: one)
+    note2 = {}
+    assert sw.write("두피 액체빗", "씨앗 " * 30, FEATS, platform="yt", key="k", note=note2) == []
+    assert note2.get("reason", "").startswith("고조2 없음")
+
+
+def test_hook_copy_triggers_retry_then_deterministic_and_feats_rotate(monkeypatch):
+    """2026-09-26 사장님 "이렇게까지 고치고 라이브까지": 훅이 씨앗 첫 줄을 베끼면 다른 꼴로 1회 다시 →
+    그래도 베끼면 결정적 채움. 안마다 특징 순서가 돌아 본문이 같아지지 않는다."""
+    seed = ("개발자도 예상 못한 한국 주부의 활용법 최근 딱 봤을 때는 평범한 필름지처럼 보이는 이 제품을 이용한 "
+            "한국의 한 천재 주부의 활용법이 각종 SNS에서 수천만 조회수로 바이럴 폭발함에 논란이라는데")
+    copy_out = dict(YT_OUT, hook="개발자도 예상 못한 한국 주부의 미친 활용법")     # 모델이 계속 베낀다
+    prompts = []
+
+    def call(prompt, schema, note=None, model=None, vertex=True):
+        prompts.append(prompt)
+        if schema is sw.FEATS_SCHEMA:
+            return {"feats": FEATS, "hook": {"권위자": "개발자", "대상": "주부들", "나라": "한국", "제품군": "열수축 필름"}}
+        return copy_out
+    monkeypatch.setattr(sw._sg, "_call_json", call)
+    job = {"backbone_main": None, "extract": {
+        "s1": {"video_id": "s1", "full_text": "", "segments": [_seg("MAT", i) for i in range(20)]}}}
+    drafts, why = sw.make_drafts([{"id": 9, "name": "유튜브 「OO의 정체」", "no_cta": True,
+                                   "templates": {"title": ["{나라} 천재가 만들어 떼돈 번 제품의 정체"]}}],
+                                 job, job_id="j9", seed_text=seed, seed_product="열수축 보호 필름")
+    assert why == "" and len(drafts) == 2
+    from shopping_shorts import story_hook
+    for d in drafts:
+        hook = d["beats"][0]["text"]
+        assert not story_hook.copied(hook, seed), hook
+        assert "{" not in hook
+        note = d["writer_note"]
+        assert note.get("hook_retry") and note.get("hook_fix") == "copied→deterministic"
+    # 재작성 프롬프트는 다른 꼴을 지시하고 씨앗 문장은 안 보여준다
+    retry = [p for p in prompts if "첫 줄을 다시 써라" in p]
+    assert retry and all("개발자도 예상 못한 한국 주부의 활용법" not in p.split("[씨앗")[0] for p in retry)
+    # 본문 회전: 두 안의 특징 순서가 다르다
+    assert drafts[0]["feat_names"] != drafts[1]["feat_names"]
+    assert sorted(drafts[0]["feat_names"]) == sorted(drafts[1]["feat_names"])

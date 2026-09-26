@@ -10,8 +10,9 @@ from shopping_shorts import vertex_route as vr
 
 
 @pytest.fixture(autouse=True)
-def _clean():
+def _clean(monkeypatch):
     vr.reset_cache()
+    monkeypatch.setattr(vr, "member_info", lambda cid: None)   # 회원 자격증명 없음이 기본
     yield
     vr.reset_cache()
 
@@ -58,7 +59,7 @@ def test_try_call_off_returns_not_tried(monkeypatch):
 def test_try_call_uses_vertex_client_and_model_then_falls_back_on_error(monkeypatch):
     _settings(monkeypatch, enabled="1", model="gemini-3.6-flash")
     fake = _t.SimpleNamespace(name="vertex-client")
-    monkeypatch.setattr(vr, "client", lambda: fake)
+    monkeypatch.setattr(vr, "client", lambda *a, **k: fake)
     seen = {}
     def fn(cl, m):
         seen.update(cl=cl, m=m)
