@@ -198,8 +198,14 @@ def _run_evf(ids, work, timeout):
 
 
 def _set_repo(path):
+    """저장소 폴더를 정하고 **그 폴더를 import 경로에 넣는다**.
+    ★2026-09-27 실사고: systemd 가 `python3 tools/daily_video_audit.py` 로 띄우면 sys.path[0]은 tools/ 라
+      `from shopping_shorts import ops_alert` 가 ModuleNotFoundError — 쪽지(경보·해제)가 **조용히 안 나갔다**.
+      점검 27분이 돌고 마지막 줄에서 죽었다. 경보 통로가 안 열리면 점검은 없는 것과 같다."""
     global REPO
     REPO = Path(path).resolve()
+    if str(REPO) not in sys.path:
+        sys.path.insert(0, str(REPO))
 
 
 def main(argv=None):
@@ -212,8 +218,14 @@ def main(argv=None):
     ap.add_argument("--tmp-root", default="/tmp")
     ap.add_argument("--dry-run", action="store_true", help="쪽지를 올리지 않고 무엇을 올릴지만 찍는다")
     ap.add_argument("--repo", default=str(REPO), help="저장소 폴더(시험 실행 때 도구를 /tmp 에 두고 라이브 저장소를 가리킬 때)")
+    ap.add_argument("--import-check", action="store_true",
+                    help="쪽지 통로(shopping_shorts.ops_alert)가 import 되는지만 확인하고 끝난다 — systemd 설치 뒤 1회")
     args = ap.parse_args(argv)
     _set_repo(args.repo)
+    if args.import_check:
+        from shopping_shorts import ops_alert                     # noqa: F401 — 실패하면 예외로 죽는다(조용히 통과 금지)
+        print("IMPORT_OK %s" % REPO)
+        return 0
     os.chdir(str(REPO))                                  # 비교 도구는 저장소 상대경로(DB·mix_jobs)를 쓴다
     return run_audit(jobs=args.jobs, hours=args.hours, out_root=args.out_root, tmp_root=args.tmp_root,
                      alerter=_Alerter(args.dry_run), cfg=cfg)
