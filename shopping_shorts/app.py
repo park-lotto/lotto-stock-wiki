@@ -19300,7 +19300,7 @@ def api_lens_single(request: Request, url: str = ""):
             item["play_url"] = play
     except Exception:
         pass
-    return {"ok": True, "item": item, "script_code": _lens_script_code(url, "")}   # 대본 코드(2026-09-26, trace_url과 같은 규약)
+    return {"ok": True, "item": item, "script_code": _lens_script_code(url, "")}   # 대본 코드(2026-09-26, 주소 추적 응답과 같은 규약)
 
 
 @app.get("/api/basket/analysis_status")
