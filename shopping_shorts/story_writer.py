@@ -975,10 +975,138 @@ def _norm_text(t):
     return re.sub(r"\s+", "", str(t or ""))
 
 
+# ── 한 번 호출 작가(2026-09-27 사장님 "노바 작가처럼 — 영상 태깅을 보고, 스타일 틀을 지키고, 기능·특징·장점을 써라.
+#    웹에서 하나씩 물으면 되는데 API로 하면 왜 안 되나" / "지어내고 어그로가 있어도 상관없어, 최대한 후킹").
+#    종전 길(특징 뽑기 → 코드가 고르기 → 고정 칸 양식 → 순서 돌리기 → 규칙 글)은 고른 스타일의 칸을 버렸고(「OO의 정체」를
+#    골라도 미끼·화제 칸이 없음) A·B 안이 같은 특징 배치로 똑같이 나왔다. 같은 재료로 한 번 호출 시험(work 348b6b0e2e3d,
+#    스타일 70·74 — tools/script_diff/nova_style_proto.py)에서 칸 순서 그대로·없는 컷 번호 0.
+#    → 판단은 모델 한 번, 코드는 **검사만** 하고 걸리면 이유를 붙여 한 번 다시 쓰게 한다.
+STYLED_SCHEMA = {"type": "object", "properties": {
+    "seed_points": {"type": "array", "items": {"type": "string"}},
+    "lines": {"type": "array", "items": {"type": "object", "properties": {
+        "role": {"type": "string"}, "text": {"type": "string"},
+        "cuts": {"type": "array", "items": {"type": "string"}}}, "required": ["role", "text", "cuts"]}}},
+    "required": ["seed_points", "lines"]}
+
+_VOICE = {
+    "yt": "남 얘기 전하는 썰(반말). 보는 사람에게 말을 걸지 마라. 줄 끝: ~는데 · ~는 거 · ~다는데 · ~다고 · ~버림 · ~였음",
+    "ig": "겪은 일을 이야기하는 존댓말 1인칭. 줄 끝: ~더라고요 · ~거든요 · ~어요. 유튜브 썰 어미(~다는데·~는 거임)는 쓰지 마라",
+}
+
+STYLED_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 이 제품으로 **팔릴 수밖에 없는 대본**을 써라.
+
+[씨앗 대본]은 이 제품으로 이미 터진 영상의 말이다. [재료]는 같은 제품을 찍은 다른 영상들의 장면 태깅이다.
+
+■ 틀 — %(frame_rule)s
+■ 차별점 = 기능·특징·장점 — 씨앗이 이미 자랑한 셀링포인트는 **%(open_rule)s 말고는** 쓰지 마라.
+  나머지 칸은 [재료]를 보고 **사람들이 좋아할 만한** 기능·특징·장점(씨앗에 없는 것)으로 채운다.
+■ 후킹이 전부다 — 과장·어그로·지어낸 상황·인물·반응 다 좋다. 세게, 구체적으로, 끝까지 보게 써라.
+  단 줄마다 화면에 붙일 컷은 있어야 한다(말과 영 딴판인 화면이 되지 않게).
+■ 말투 — %(voice)s
+■ 분량 — 전체 약 %(chars)d자(읽으면 약 %(secs)d초).
+■ 줄마다 cuts에 그 말에 어울리는 컷 번호를 [재료]에서 1~2개 적어라(목록에 있는 번호만). 컷은 줄끼리 되도록 겹치지 않게.
+■ seed_points에는 씨앗이 자랑한 셀링포인트를 짧게 적어라."""
+
+
+def frame_of(sp):
+    """스타일(스파인) → 틀. sp가 None이면 씨앗 결(씨앗 대본의 흐름이 곧 틀).
+    돌려주는 것: {name, roles(칸 순서 — 씨앗 결이면 None), block(프롬프트에 싣는 틀 글)}"""
+    if not sp:
+        return {"name": "씨앗 결 이야기", "roles": None,
+                "block": "(고른 스타일 없음) [씨앗 대본]의 흐름 — 무엇을 먼저 말하고 어디서 놀라게 하고 어떻게 끝내는지 — 을 칸으로 삼아라."}
+    tpl = sp.get("templates") if isinstance(sp.get("templates"), dict) else {}
+    roles = [str(r) for r in (sp.get("beat_roles") or []) if str(r).strip()] or [k for k in tpl if tpl.get(k)]
+    rows = []
+    for r in roles:
+        ex = [x for x in (tpl.get(r) or []) if isinstance(x, str) and x.strip()][:2]
+        rows.append("  %s: %s" % (r, " / ".join("「%s」" % x for x in ex) if ex else "(예시 없음)"))
+    return {"name": sp.get("name") or "", "roles": roles,
+            "block": "%s\n%s" % (sp.get("name") or "", "\n".join(rows))}
+
+
+def _collapse(roles):
+    out = []
+    for r in roles:
+        if not out or out[-1] != r:
+            out.append(r)
+    return out
+
+
+def styled_problems(out, frame, seg_index, seed_text="", product="", seconds=25, avoid_text=""):
+    """한 번 호출 결과의 검사(코드는 고치지 않고 **무엇이 틀렸나**만 말한다 → 다시 쓰기 지시로 쓴다)."""
+    from shopping_shorts import script_gate
+    lines = [L for L in (out or {}).get("lines") or [] if (L.get("text") or "").strip()]
+    probs = []
+    if len(lines) < MIN_LINES:
+        return ["대본이 %d줄뿐이다 — 칸을 다 채워라" % len(lines)]
+    roles = frame.get("roles")
+    if roles:
+        got = _collapse([str(L.get("role") or "") for L in lines])
+        if got != roles:
+            probs.append("칸 순서가 틀이 아니다 — 나온 순서 %s / 틀 %s. 틀의 칸을 빠짐없이 순서대로" % (" → ".join(got), " → ".join(roles)))
+    n_open = 2 if roles else 1
+    open_roles = set(roles[:2]) if roles else set()
+    pts = [str(p) for p in (out or {}).get("seed_points") or [] if str(p).strip()]
+    for i, L in enumerate(lines):
+        if (roles and str(L.get("role")) in open_roles) or (not roles and i < n_open):
+            continue
+        hits = _seed_word_hits(L.get("text"), pts, product)
+        if len(hits) >= 2:
+            probs.append("%d번 줄이 씨앗이 이미 말한 셀링포인트(%s)를 되풀이한다 — 씨앗에 없는 기능·특징·장점으로" % (i + 1, "·".join(hits)))
+    bad = [i + 1 for i, L in enumerate(lines) if not [c for c in (L.get("cuts") or []) if c in seg_index]]
+    if len(bad) * 3 > len(lines):
+        probs.append("%s번 줄에 [재료]에 있는 컷 번호가 없다" % ",".join(map(str, bad)))
+    secs = script_gate.est_seconds(" ".join(L["text"] for L in lines))
+    if secs > seconds * 1.5:
+        probs.append("너무 길다(약 %d초) — %d초 안팎으로 줄여라" % (secs, seconds))
+    if avoid_text and _gram_share(" ".join(L["text"] for L in lines), avoid_text) > AB_MAX_SHARE:
+        probs.append("[다른 안]과 문장이 너무 겹친다 — 다른 특징·다른 말로")
+    return probs
+
+
+AB_MAX_SHARE = 0.4      # 두 안의 4글자 조각 겹침 상한(0.4 = 조각 열에 넷이 같다). 실측 근거는 tools/script_diff/check_styled.py
+
+
+def write_styled(product, seed_text, frame, vis, seg_index, platform="yt", seconds=25, note=None, avoid_text=""):
+    """틀 + 씨앗 + 재료 태깅 → 한 번 호출로 줄(role·text·cuts). 검사에 걸리면 이유를 붙여 **한 번** 다시 쓴다
+    (문제가 덜한 쪽을 쓴다). note: auth·retry·problems(남은 문제)."""
+    from shopping_shorts import script_gate
+    note = note if note is not None else {}
+    chars = int(seconds * script_gate.SPEECH_CHARS_PER_SEC)
+    frame_rule = ("[스타일 틀]의 **칸 순서 그대로**, 칸마다 예시 문장의 꼴(말 뼈대)을 빌려 이 제품에 맞게 새로 쓴다. "
+                  "칸 하나에 1~2줄, role에는 칸 이름을 그대로 적는다. 칸을 빼거나 순서를 바꾸지 마라. {빈칸}은 이 제품 내용으로 채운다."
+                  if frame.get("roles") else
+                  "[씨앗 대본]의 흐름을 그대로 따라 쓴다(문장은 새로). role에는 그 줄이 하는 일(훅·미끼·공개·고조·반전·마무리 등)을 적는다.")
+    brief = STYLED_BRIEF % {"frame_rule": frame_rule, "open_rule": "앞 두 칸" if frame.get("roles") else "첫 줄",
+                            "voice": _VOICE.get(platform, _VOICE["yt"]), "chars": chars, "secs": int(seconds)}
+    prompt = "%s\n\n[제품] %s\n\n[씨앗 대본]\n%s\n\n[스타일 틀]\n%s\n\n[재료]\n%s" % (
+        brief, product or "(미상)", (seed_text or "").strip()[:1500], frame["block"], source_block(vis))
+    if avoid_text:
+        prompt += "\n\n[다른 안 — 이것과 다른 특징·다른 문장으로 써라]\n" + avoid_text[:600]
+    out = _sg._call_json(prompt, STYLED_SCHEMA, note=note) or {}
+    probs = styled_problems(out, frame, seg_index, seed_text, product, seconds, avoid_text)
+    if probs:
+        n2 = {}
+        out2 = _sg._call_json(prompt + "\n\n■ 다시 써라 — 앞 원고의 문제:\n- " + "\n- ".join(probs), STYLED_SCHEMA, note=n2) or {}
+        p2 = styled_problems(out2, frame, seg_index, seed_text, product, seconds, avoid_text)
+        note["retry"] = probs
+        if out2.get("lines") and len(p2) <= len(probs):
+            out, probs = out2, p2
+    note["problems"] = probs
+    note["seed_points"] = [str(p) for p in out.get("seed_points") or [] if str(p).strip()]
+    lines = []
+    for L in out.get("lines") or []:
+        t = (L.get("text") or "").strip()
+        if t:
+            lines.append({"role": str(L.get("role") or ""), "text": t,
+                          "cuts": [c for c in (L.get("cuts") or []) if c in seg_index]})
+    return lines
+
+
 def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product=""):
     """(drafts, why) — app._backbone_drafts와 같은 계약(비면 why에 이유, 조용한 폴백 금지).
 
-    자동 1안(씨앗 결 그대로) + 고른 스타일 1안. 모델 호출 = 특징 1회 + 안마다 1회.
+    자동 1안(씨앗 결 그대로) + 고른 스타일 1안. 모델 호출 = 안마다 1회(검사에 걸리면 +1회, write_styled).
     ★화면은 씨앗 영상을 안 쓴다(backbone_assemble.assemble과 같은 규칙, 2026-09-21 사장님).
 
     seed_text/seed_product (2026-09-26): **사용자가 2단계에서 고른 씨앗**의 원문·제품. 씨앗은 화면 재료에서
@@ -1008,114 +1136,38 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         vis = ba._drop_seed(srcs, seed_src)
         product = ((seed_src.get("source_brief") or {}).get("product") or "").strip()
     seg_index = ba._seg_index(vis)
-    note = {}
-    feats_cands = extract_feats(vis, product, note=note, seed_text=seed_text)
-    if not feats_cands:
-        return [], "특징을 못 뽑음(%s)" % (note.get("reason") or "빈 응답")
-    hook_slots = note.get("hook_slots") or {}
-    # 차별점: 새 특징 우선(영상 수 순)·반전 = 새 특징 1위 — pick_diff_feats 주석
-    feats_all, _twist_i = pick_diff_feats(feats_cands, seg_index)
-    _n_new = sum(1 for f in feats_all if f.get("new"))
-
-    def _groups_out(fs):
-        return {"product": product, "order": list(range(len(fs))), "alt_use": False,
-                "groups": [{"name": f.get("name") or "", "claim": f.get("claim") or "",
-                            "cuts": [c for c in (f.get("from_cuts") or []) if c in seg_index]}
-                           for f in fs]}
+    if not seg_index:
+        return [], "재료 컷이 없음(씨앗 말고 담긴 영상이 없다)"
     preset = preset if preset in LENGTH_PRESETS else "short"
     if preset != "short":
         seconds = LENGTH_PRESETS[preset]["seconds"]
+    # ★안마다 한 번 호출(write_styled). 자동 1안 = 씨앗 결(씨앗 흐름이 틀), 2안 = 고른 스타일의 칸 틀.
+    #   두 번째 안은 첫 안을 [다른 안]으로 받아 다른 특징·다른 말로 쓴다(A·B 똑같음 방지 — 검사 AB_MAX_SHARE).
     plans = [(None, seed_platform(seed_text))]
     for sp in (spines or [])[:1]:
         plans.append((sp, "yt" if sp.get("no_cta") else "ig"))
-    backbone_vid = (seed_src or {}).get("video_id")
-    drafts, whys = [], []
-    for nth, (sp, plat) in enumerate(plans):
-        name = (sp or {}).get("name") or "씨앗 결 이야기"
+    drafts, whys, prev_text = [], [], ""
+    for sp, plat in plans:
+        frame = frame_of(sp)
+        name = frame["name"]
         n = {}
-        # ★안마다 특징 순서를 돌린다(본문 다양화) — 컷 배정(groups_out)도 같은 순서로 만든다(줄의 group 번호가 이 목록을 가리킨다)
-        #   반전 특징(맨 뒤)은 돌리지 않는다 — 반전 = 새 특징 1위가 안마다 흔들리면 근거가 사라진다.
-        if _twist_i >= 0:
-            feats = _rotate(feats_all[:-1], job_id or product, nth) + [feats_all[-1]]
-        else:
-            feats = _rotate(feats_all, job_id or product, nth)
-        twist_n = len(feats) if _twist_i >= 0 else 0
-        groups_out = _groups_out(feats)
-        # ★고른 스타일이 있으면 첫 줄·마무리는 스타일이 정한다 — 첫 줄 꼴 은행은 자동 1안(씨앗 결)에만(2026-09-26 A안).
-        #   종전엔 은행이 스타일 첫 줄 지시를 지웠다(write의 hook_angle="") → 「OO의 정체」를 골라도 "개발자도 예상 못한…".
-        _style = _style_of(sp, hook_slots, seed_text, job_id or product, nth) if sp else _seed_style(seed_text)
-        lines = write(product, seed_text[:1500], feats, platform=plat,
-                      style=_style, key=job_id or product, nth=nth, note=n,
-                      seconds=seconds, preset=preset, hook_slots=(hook_slots if (plat == "yt" and not sp) else None),
-                      twist_n=twist_n, seed_points=note.get("seed_points") or [])
-        if sp and plat == "yt":
-            lines = _enforce_style(lines, _style)
-        n["feats"] = [{"name": f.get("name"), "new": f.get("new"), "videos": f.get("videos"),
-                       "cuts": [c for c in (f.get("from_cuts") or []) if c in seg_index]} for f in feats]
-        n["twist_n"] = twist_n
-        n["n_new"] = _n_new
+        lines = write_styled(product, seed_text, frame, vis, seg_index, platform=plat, seconds=seconds,
+                             note=n, avoid_text=prev_text)
         if len(lines) < MIN_LINES:
-            whys.append("%s: 대본이 %d줄뿐(%s)" % (name, len(lines), n.get("reason") or "칸 빔"))
+            whys.append("%s: 대본이 %d줄뿐(%s)" % (name, len(lines), n.get("reason") or "; ".join(n.get("problems") or []) or "빈 응답"))
             continue
-        # 한도 = 목표의 1.5배와 '쓸 수 있는 재료 화면 길이의 65%' 중 짧은 쪽 — 화면이 없는 말은 길어 봐야 빈 줄이 된다.
-        #   65%의 근거(★job 13d4cab55fba 1건·재료 48.8초뿐이다 — 재료를 넓혀 다시 재라): 대본 31.8초 이하 4편은
-        #   빈 줄 0, 33.3초 이상 5편은 빈 줄 1~4. 컷이 덩어리라(2초 대사에 4.8초 컷) 길이 합만큼은 못 쓴다.
-        footage = sum(v["secs"] for v in seg_index.values() if v["secs"] >= ba.MIN_CUT_SECS)
-        limit = float(seconds) * (1.25 if preset == "short" else 1.5)
-        if LENGTH_PRESETS[preset]["cap_by_footage"]:
-            limit = min(limit, footage * 0.65)
-        lines, n["dropped_escalations"] = _fit_length(lines, limit)
-        # ★AI 매칭(2026-09-22 사장님 "매칭은 AI가 해봐"): 줄 전체 + 컷 목록을 한 번에 주고 줄마다 고르게 한다(호출 1회).
-        #   빈 줄이 남으면 그 줄만 코드 매칭(assign_cuts)이 채운다. AI가 아예 실패하면 전부 코드 매칭.
-        from shopping_shorts import ai_match as _am
-        _an = {}
-        ai_bs = _am.match(lines, seg_index, backbone_vid, note=_an)
-        bs, report = ba.assign_cuts(lines, groups_out, seg_index, backbone_vid)
-        code_bs = [dict(b) for b in bs]                        # 코드 매칭 원본(근거 컷) — 아래 장면 고정이 쓴다
-        if ai_bs:
-            _used = {c for b in ai_bs for c in (b.get("segs") or [])}
-            for i, b in enumerate(ai_bs):
-                if b.get("segs"):
-                    bs[i] = b
-                else:                                          # AI가 비운 줄 = 코드 매칭 결과에서 안 겹치는 컷만
-                    keep = [c for c in (bs[i].get("segs") or []) if c not in _used]
-                    bs[i] = {"role": bs[i].get("role"), "seg": keep[0] if keep else "", "segs": keep}
-                    _used.update(keep)
-            n["matcher"] = "ai"
-        else:
-            n["matcher"] = "code(%s)" % (_an.get("reason") or "")
-        # ★장면 고정(2026-09-26 사장님 "다른 소스에 나온 고조·반전 장면을 정말 쓰는지, 쓸 수밖에 없는 구조"):
-        #   특징 번호가 붙은 줄(고조·반전)은 **그 특징의 근거 컷(from_cuts) 안에서만**. AI는 특징↔근거 컷을 모르고 골랐고,
-        #   코드 매칭도 근거 컷이 모자라면 딴 컷을 채웠다(실측 비교: 근거 안 0/7·3/7) → **매칭 방식과 관계없이** 여기서 고정한다.
-        #   근거 컷이 줄보다 적으면 같은 근거 컷을 이어 쓴다(구절 이어 틀기로 그 장면이 이어진다). 훅·미끼·공개·마무리는 그대로.
-        _locked = 0
-        for i, L in enumerate(lines):
-            gi = L.get("group", -1)
-            if not (isinstance(gi, int) and 0 <= gi < len(groups_out["groups"])):
-                continue
-            allowed = groups_out["groups"][gi]["cuts"]
-            if allowed and not set(bs[i].get("segs") or []) <= set(allowed):
-                keep = [c for c in (code_bs[i].get("segs") or []) if c in allowed] or allowed[:1]
-                bs[i] = {"role": bs[i].get("role"), "seg": keep[0], "segs": keep}
-                _locked += 1
-        n["locked_lines"] = _locked
-        n["no_cut_lines"] = _share_cuts(lines, bs, seg_index)     # 끝내 빈 줄 = 재료가 대본보다 짧다
-        meta = {"product": product, "spine": {"id": (sp or {}).get("id"), "name": name},
-                "groups": groups_out, "report": report, "note": n}
+        bs = [{"role": L["role"], "seg": (L["cuts"] or [""])[0], "segs": list(L["cuts"])} for L in lines]
+        no_cut = _share_cuts(lines, bs, seg_index)     # 컷을 못 적은 줄만 남는 컷을 빌린다
+        meta = {"product": product, "spine": {"id": (sp or {}).get("id"), "name": name}, "note": n}
         d = ba.to_draft("\n".join(L["text"] for L in lines), bs, meta)
         d["made_by"] = "이야기작가"
         d["length_preset"] = preset
         d["auto_pick"] = sp is None
         d["platform"] = plat
         d["seed_from"] = seed_from          # 점검용: 씨앗이 고른 영상(explicit)인가 job 대체(job:vid)인가
-        # ★작가 메모를 안에 남긴다(2026-09-26) — to_draft는 meta.note를 버려서 훅 판정·고조 재작성이 작동했는지
-        #   감사(tools/story_hook_audit.py)가 볼 수 없었다("판정 작동: 없음"으로 보임).
-        d["writer_note"] = {k: n.get(k) for k in ("hook_fix", "hook_retry", "escalation_retry", "matcher",
-                                                  "no_cut_lines", "dropped_escalations", "diff_retry", "diff_left",
-                                                  "locked_lines", "twist_n", "n_new") if n.get(k)}
-        d["feats_meta"] = n.get("feats") or []    # 점검용: 특징별 새것 여부·영상 수·근거 컷(tools/script_diff 대조)
-        d["seed_points"] = note.get("seed_points") or []   # 점검용: 씨앗이 이미 말한 셀링포인트(차별점 잣대)
-        d["line_groups"] = [L.get("group", -1) for L in lines]     # 점검용: 줄이 어느 재료에 걸렸나
-        d["feat_names"] = [f.get("name") or "" for f in feats]
+        d["writer_note"] = {k: v for k, v in (("writer", "한번호출"), ("auth", n.get("auth")), ("retry", n.get("retry")),
+                                               ("problems", n.get("problems")), ("no_cut_lines", no_cut)) if v}
+        d["seed_points"] = n.get("seed_points") or []   # 점검용: 씨앗이 이미 말한 셀링포인트(차별점 잣대)
         drafts.append(d)
+        prev_text = prev_text or d.get("script") or ""
     return drafts, "; ".join(whys)

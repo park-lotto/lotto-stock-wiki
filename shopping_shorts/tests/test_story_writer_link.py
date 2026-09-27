@@ -42,20 +42,6 @@ def _fake(monkeypatch, out=YT_OUT, feats=FEATS):
     return calls
 
 
-def test_lines_get_feature_cuts_and_no_seed_cuts(monkeypatch):
-    calls = _fake(monkeypatch)
-    drafts, why = sw.make_drafts([], _job(), job_id="j1")
-    assert why == "" and len(drafts) == 1 and len(calls) == 3      # 특징 1회 + 자동 1안 1회 + AI 매칭 1회
-    d = drafts[0]
-    assert d["auto_pick"] is True and d["made_by"] == "이야기작가" and d["platform"] == "yt"
-    esc = [b for b in d["beats"] if b["role"] == "고조1"]
-    assert len(esc) == 3
-    assert esc[0]["src_seg"] in ("MAT-3", "MAT-4")                  # 근거 특징의 컷(없는 번호 NOPE-9는 걸러진다)
-    used = [s for b in d["beats"] for s in b["src_segs"]]
-    assert used and not any(s.startswith("SEED") for s in used)     # 화면은 씨앗 영상을 안 쓴다
-    assert all(b["src_segs"] for b in d["beats"])                   # 컷 없는 줄 없음
-
-
 def test_signal_word_is_not_its_own_line(monkeypatch):
     _fake(monkeypatch)
     for key in ("a", "b", "c", "d", "e", "f", "g", "h"):            # 세트가 달라도
@@ -63,27 +49,6 @@ def test_signal_word_is_not_its_own_line(monkeypatch):
         sigs = {s for v in sw.YT_SETS.values() for s in v if s}
         assert not any(L["text"] in sigs for L in lines)
         assert sum(1 for L in lines if L["role"] == "고조1") == 3
-
-
-def test_picked_style_adds_second_draft(monkeypatch):
-    calls = _fake(monkeypatch)
-    sp = {"id": 61, "name": "고른 스타일", "no_cta": True, "beat_roles": ["훅", "고조"]}
-    drafts, _ = sw.make_drafts([sp, {"id": 62, "name": "둘째"}], _job(), job_id="j1")
-    assert [d["style_name"] for d in drafts] == ["씨앗 결 이야기", "고른 스타일"]
-    assert [d["auto_pick"] for d in drafts] == [True, False] and len(calls) == 5     # 특징 1 + (쓰기 1 + AI 매칭 1) × 2안
-
-
-def test_reasons_are_reported(monkeypatch):
-    _fake(monkeypatch, feats=[])
-    assert sw.make_drafts([], _job()) == ([], "특징을 못 뽑음(빈 응답)")
-    _fake(monkeypatch, out={})
-    drafts, why = sw.make_drafts([], _job())
-    assert drafts == [] and "0줄" in why
-    short = _job()
-    short["extract"]["s0"]["full_text"] = "짧다"
-    drafts, why = sw.make_drafts([], short)
-    assert drafts == [] and "짧음" in why
-    assert sw.make_drafts([], {"extract": {}})[1]
 
 
 def test_empty_line_borrows_spare_cut_only():
@@ -194,36 +159,6 @@ def test_반전은_twist_feat_번호의_특징_컷을_받는다():
     assert twist["group"] == 1
 
 
-def test_explicit_seed_wins_over_longest_job_text(monkeypatch):
-    """2026-09-26 사장님 "씨앗은 썰쇼핑인데 왜 다이소가 나오나"(work ea29430903d3).
-    고른 씨앗(유튜브 썰·반말)은 job에 없고, job엔 인스타 존댓말(다이소)만 있다 →
-    종전엔 인스타 글이 씨앗이 돼 존댓말 다이소 대본이 나왔다. 명시 씨앗이 오면 그것이 결·훅 꼴·제품을 정한다."""
-    _fake(monkeypatch)
-    seen = []
-    real_write = sw.write
-
-    def spy(product, seed_text, feats, platform="yt", **kw):
-        seen.append({"product": product, "seed": seed_text, "platform": platform})
-        return real_write(product, seed_text, feats, platform=platform, **kw)
-    monkeypatch.setattr(sw, "write", spy)
-    insta = "여러분 다이소에서 이거 절대 사서 가족 모두가 만지는 리모컨 닦아도 끝이 없죠 여기에 넣고 드라이어를 쏘기만 하면 되더라고요 " * 2
-    job = {"backbone_main": None, "extract": {
-        "s5": {"video_id": "s5", "full_text": insta, "source_brief": {"product": "다이소 수축 보호 필름"},
-               "segments": [_seg("MAT", i) for i in range(12)]}}}
-    ssul = "개발자도 예상 못한 한국 주부의 활용법 최근 딱 봤을 때는 평범한 필름지처럼 보이는 이 제품을 이용한 한국의 한 천재 주부의 활용법이 난리라는데 이건 바로 열수축 필름."
-    drafts, why = sw.make_drafts([], job, job_id="j2", seed_text=ssul, seed_product="열수축 보호 필름")
-    assert why == "" and len(drafts) == 1
-    assert seen[0]["seed"].startswith("개발자도 예상 못한"), "씨앗은 고른 영상의 원문이어야 한다"
-    assert seen[0]["platform"] == "yt", "썰(반말) 씨앗이면 결은 yt — 인스타 존댓말로 쓰면 안 된다"
-    assert seen[0]["product"] == "열수축 보호 필름"
-    assert drafts[0]["seed_from"] == "explicit"
-    # 명시 씨앗이 없으면 종전 규칙(job에서 가장 긴 한국어 글)이 그대로 — 회귀 0
-    seen.clear()
-    sw.make_drafts([], job, job_id="j3")
-    assert seen[0]["seed"].startswith("여러분 다이소"), "명시 씨앗 없음 → job의 가장 긴 한국어 글(종전)"
-    assert seen[0]["platform"] == "ig", "존댓말 글이 씨앗이면 인스타 결 — 이게 ea29 사고의 모양이다"
-
-
 def test_second_escalation_is_mandatory_retry_once_then_reject(monkeypatch):
     """2026-09-26 사장님 "고조2는 무조건 들어가야 된다". 1칸이면 무엇이 모자란지 말해 1회 다시, 그래도 1칸이면 반려."""
     one = dict(YT_OUT, escalations=YT_OUT["escalations"][:1])
@@ -248,41 +183,6 @@ def test_second_escalation_is_mandatory_retry_once_then_reject(monkeypatch):
     note2 = {}
     assert sw.write("두피 액체빗", "씨앗 " * 30, FEATS, platform="yt", key="k", note=note2) == []
     assert note2.get("reason", "").startswith("고조2 없음")
-
-
-def test_hook_copy_triggers_retry_then_deterministic_and_feats_rotate(monkeypatch):
-    """2026-09-26 사장님 "이렇게까지 고치고 라이브까지": 훅이 씨앗 첫 줄을 베끼면 다른 꼴로 1회 다시 →
-    그래도 베끼면 결정적 채움. 안마다 특징 순서가 돌아 본문이 같아지지 않는다."""
-    seed = ("개발자도 예상 못한 한국 주부의 활용법 최근 딱 봤을 때는 평범한 필름지처럼 보이는 이 제품을 이용한 "
-            "한국의 한 천재 주부의 활용법이 각종 SNS에서 수천만 조회수로 바이럴 폭발함에 논란이라는데")
-    copy_out = dict(YT_OUT, hook="개발자도 예상 못한 한국 주부의 미친 활용법")     # 모델이 계속 베낀다
-    prompts = []
-
-    def call(prompt, schema, note=None, model=None, vertex=True):
-        prompts.append(prompt)
-        if schema is sw.FEATS_SCHEMA:
-            return {"feats": FEATS, "hook": {"권위자": "개발자", "대상": "주부들", "나라": "한국", "제품군": "열수축 필름"}}
-        return copy_out
-    monkeypatch.setattr(sw._sg, "_call_json", call)
-    job = {"backbone_main": None, "extract": {
-        "s1": {"video_id": "s1", "full_text": "", "segments": [_seg("MAT", i) for i in range(20)]}}}
-    drafts, why = sw.make_drafts([{"id": 9, "name": "유튜브 「OO의 정체」", "no_cta": True,
-                                   "templates": {"title": ["{나라} 천재가 만들어 떼돈 번 제품의 정체"]}}],
-                                 job, job_id="j9", seed_text=seed, seed_product="열수축 보호 필름")
-    assert why == "" and len(drafts) == 2
-    from shopping_shorts import story_hook
-    # 자동 1안(씨앗 결): 은행 꼴 — 베끼면 다른 꼴로 1회 다시 → 결정적 채움
-    auto = drafts[0]
-    assert not story_hook.copied(auto["beats"][0]["text"], seed) and "{" not in auto["beats"][0]["text"]
-    assert auto["writer_note"].get("hook_retry") and auto["writer_note"].get("hook_fix") == "copied→deterministic"
-    # ★고른 스타일(A안, 2026-09-26 사장님): 첫 줄은 **스타일 제목 틀**이 이긴다 — 은행이 덮어쓰지 않는다
-    assert drafts[1]["beats"][0]["text"] == "한국 천재가 만들어 떼돈 번 제품의 정체"
-    # 재작성 프롬프트는 다른 꼴을 지시하고 씨앗 문장은 안 보여준다
-    retry = [p for p in prompts if "첫 줄을 다시 써라" in p]
-    assert retry and all("개발자도 예상 못한 한국 주부의 활용법" not in p.split("[씨앗")[0] for p in retry)
-    # 특징 순서: 반전 특징(맨 뒤, 새 특징 1위)은 고정, 나머지만 돈다(본문 다양화는 유지)
-    assert sorted(drafts[0]["feat_names"]) == sorted(drafts[1]["feat_names"])
-    assert drafts[0]["feat_names"][-1] == drafts[1]["feat_names"][-1]
 
 
 # ── 차별점(2026-09-26 사장님 "대본이 씨앗이랑 거의 똑같다 — 차별 포인트는 기능·특징·장점") ─────────
@@ -417,3 +317,100 @@ def test_seed_points_catch_missed_quote():
     new = {f["name"]: f["new"] for f in picked}
     assert new.get("패션 아이템") is True
     assert all(not f["new"] for f in picked if f["name"] in ("간편한 세척", "편안한 착용감", "방수"))
+
+
+# ── 한 번 호출 작가(write_styled, 2026-09-27) ─────────────────────────────────────────────
+SEED = "개발자도 예상 못한 한국 주부의 활용법 평범한 필름지처럼 보이는 이 제품으로 리모컨을 감싸 드라이어를 쏘면 딱 달라붙는다는데 이건 바로 열수축 필름."
+SPINE = {"id": 74, "name": "유튜브 「OO의 정체」", "no_cta": True, "beat_roles": ["title", "bait", "reveal", "twist"],
+         "templates": {"title": ["{나라} 천재가 만든 이 제품의 정체"], "bait": ["요즘 난리라는데"]}}
+
+
+def _styled_job():
+    return {"backbone_main": None, "extract": {
+        "s1": {"video_id": "s1", "full_text": "", "segments": [_seg("MAT", i) for i in range(10)]}}}
+
+
+def _lines(roles, cut="MAT-1"):
+    return [{"role": r, "text": "%s 칸에 들어갈 충분히 긴 한 줄 대사인데" % r, "cuts": [cut, "NOPE-9"]} for r in roles]
+
+
+def _fake_styled(monkeypatch, outs):
+    """outs: 호출 순서대로 돌려줄 응답들(모자라면 마지막 것을 되풀이). 받은 프롬프트를 모은다."""
+    prompts = []
+
+    def call(prompt, schema, note=None, model=None, vertex=True):
+        assert schema is sw.STYLED_SCHEMA, "안마다 한 번 호출 — 특징 뽑기 같은 다른 호출은 없어야 한다"
+        prompts.append(prompt)
+        if note is not None:
+            note["auth"] = "vertex"
+        return outs[min(len(prompts) - 1, len(outs) - 1)]
+    monkeypatch.setattr(sw._sg, "_call_json", call)
+    return prompts
+
+
+def test_one_call_per_draft_keeps_style_roles_and_valid_cuts(monkeypatch):
+    seed_out = {"seed_points": ["리모컨 감싸기"], "lines": _lines(["훅", "미끼", "공개", "고조", "마무리"], "MAT-2")}
+    style_out = {"seed_points": ["리모컨 감싸기"], "lines": _lines(["title", "bait", "reveal", "reveal", "twist"], "MAT-5")}
+    prompts = _fake_styled(monkeypatch, [seed_out, style_out])
+    drafts, why = sw.make_drafts([SPINE], _styled_job(), job_id="j1", seed_text=SEED, seed_product="열수축 필름")
+    assert why == "" and len(drafts) == 2 and len(prompts) == 2
+    a, b = drafts
+    assert a["auto_pick"] and a["style_name"] == "씨앗 결 이야기"
+    assert [x["role"] for x in b["beats"]] == ["title", "bait", "reveal", "reveal", "twist"], "고른 스타일의 칸이 그대로"
+    assert all(x["src_segs"] == ["MAT-5"] for x in b["beats"]), "없는 컷 번호(NOPE-9)는 버리고 적은 컷을 쓴다"
+    assert "[스타일 틀]" in prompts[1] and "title:" in prompts[1] and "「{나라} 천재가" in prompts[1]
+    assert "[다른 안" in prompts[1] and "[다른 안" not in prompts[0], "둘째 안은 첫 안과 다르게 쓰라는 지시를 받는다"
+    assert b["writer_note"]["auth"] == "vertex"
+
+
+def test_wrong_role_order_retries_once_with_reason(monkeypatch):
+    bad = {"seed_points": [], "lines": _lines(["title", "reveal", "bait", "twist", "twist"])}
+    good = {"seed_points": [], "lines": _lines(["title", "bait", "reveal", "twist", "twist"])}
+    prompts = _fake_styled(monkeypatch, [bad, good])
+    n = {}
+    lines = sw.write_styled("열수축 필름", SEED, sw.frame_of(SPINE), [], {"MAT-1": {"secs": 3}}, note=n)
+    assert len(prompts) == 2 and "칸 순서가 틀이 아니다" in prompts[1]
+    assert [L["role"] for L in lines][:3] == ["title", "bait", "reveal"] and n["problems"] == []
+
+
+def test_seed_repetition_only_after_opening_roles():
+    frame = sw.frame_of(SPINE)
+    out = {"seed_points": ["리모컨 드라이어 밀착"],
+           "lines": [{"role": "title", "text": "리모컨에 드라이어 쏘면 밀착되는 필름", "cuts": ["MAT-1"]},
+                     {"role": "bait", "text": "요즘 난리라는데 한 번 보면 안다는 거", "cuts": ["MAT-1"]},
+                     {"role": "reveal", "text": "이건 바로 열수축 필름인데 그냥 필름이 아님", "cuts": ["MAT-1"]},
+                     {"role": "twist", "text": "리모컨에 드라이어만 쏘면 끝이라는 거", "cuts": ["MAT-1"]},
+                     {"role": "twist", "text": "가위 없이 손으로 찢어지는 게 진짜 미친 거", "cuts": ["MAT-1"]}]}
+    probs = sw.styled_problems(out, frame, {"MAT-1": {}}, SEED, "열수축 필름")
+    assert len(probs) == 1 and probs[0].startswith("4번 줄"), "제목 칸은 씨앗 셀링포인트를 써도 되고 본문 되풀이만 잡는다"
+
+
+def test_ab_overlap_is_a_problem():
+    frame = sw.frame_of(SPINE)
+    out = {"seed_points": [], "lines": _lines(["title", "bait", "reveal", "twist", "twist"])}
+    same = " ".join(L["text"] for L in out["lines"])
+    assert any("[다른 안]" in p for p in sw.styled_problems(out, frame, {"MAT-1": {}}, avoid_text=same))
+    assert not any("[다른 안]" in p for p in sw.styled_problems(out, frame, {"MAT-1": {}}, avoid_text="전혀 다른 문장들로만 된 원고"))
+
+
+def test_reasons_are_reported_not_silent(monkeypatch):
+    _fake_styled(monkeypatch, [{}])
+    drafts, why = sw.make_drafts([], _styled_job(), seed_text=SEED)
+    assert drafts == [] and "씨앗 결 이야기" in why
+    assert sw.make_drafts([], {"extract": {}})[1]
+
+
+def test_explicit_seed_sets_voice_and_product(monkeypatch):
+    """ea29 사고(09-26) 회귀: 고른 씨앗(썰·반말)이 결을 정한다 — job의 인스타 존댓말 글이 씨앗이 되면 안 된다."""
+    out = {"seed_points": [], "lines": _lines(["훅", "미끼", "공개", "고조", "마무리"])}
+    prompts = _fake_styled(monkeypatch, [out])
+    insta = "여러분 다이소에서 이거 절대 사서 가족 모두가 만지는 리모컨 닦아도 끝이 없죠 여기에 넣고 드라이어를 쏘기만 하면 되더라고요 " * 2
+    job = {"backbone_main": None, "extract": {
+        "s5": {"video_id": "s5", "full_text": insta, "source_brief": {"product": "다이소 수축 보호 필름"},
+               "segments": [_seg("MAT", i) for i in range(12)]}}}
+    drafts, why = sw.make_drafts([], job, job_id="j2", seed_text=SEED, seed_product="열수축 보호 필름")
+    assert why == "" and drafts[0]["platform"] == "yt" and drafts[0]["seed_from"] == "explicit"
+    assert "[제품] 열수축 보호 필름" in prompts[0] and "개발자도 예상 못한" in prompts[0] and sw._VOICE["yt"] in prompts[0]
+    prompts.clear()
+    drafts, _ = sw.make_drafts([], job, job_id="j3")
+    assert drafts[0]["platform"] == "ig" and sw._VOICE["ig"] in prompts[0], "명시 씨앗 없음 → job의 가장 긴 한국어 글(종전)"
