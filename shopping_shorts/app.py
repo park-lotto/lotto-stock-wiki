@@ -6629,6 +6629,10 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
         for _k, _c in enumerate(cuts or []):
             _b = _pb[_owner[_k]] if _k < len(_owner) and _owner[_k] < len(_pb) else None
             _c["_vf"] = video_assemble.frame_vf(_b, 720, 1280)
+            try:        # 칸 통합 속도 — 배속 여부는 screen_clips.plays_at_speed 한 곳(완성본 lookup 과 같은 판단)
+                _c["_sync"] = float((_b or {}).get("sync_speed") or 1.0)
+            except (TypeError, ValueError):
+                _c["_sync"] = 1.0
     except Exception as _e:      # noqa: BLE001 — 구도를 못 정하면 가운데 꽉 채우기(frame_vf 기본과 같은 모양)
         print("[pvproxy] %s 구도 계산 실패(가운데 채우기): %s" % (job_id, _e), file=sys.stderr)
     d = _pvproxy_dir(job_id)
@@ -6686,12 +6690,18 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             배율 = _speed_and_freeze(늘리기 상한·[속도 맞추기])의 재생 길이 / 읽는 길이(2026-09-27 — 종전엔 늘리기 상한 숫자를
             여기 따로 적어 두 벌이었다). 움직이는 프레임 수 = motion_frames(정지가 있을 때만, 없으면 None)."""
             dur = max(0.04, float(c["dur"]))
-            take = min(float(c.get("src_dur") or 0) or dur, dur)
+            take = float(c.get("src_dur") or 0) or dur
             if take <= 0:
                 return take, 1.0, None
-            # [속도 맞추기](fit) = 렌더의 playback_speed(읽는 길이/출력 길이)와 같은 배속 — 정지 없이 끝까지 움직인다
+            # 배속 컷(속도 맞추기·칸 통합 속도·읽는 길이 > 화면 길이) = 읽는 길이 전부를 화면 길이에 일정 배속으로 — 완성본 lookup 의
+            #   playback_speed 와 같은 판단(screen_clips.plays_at_speed 한 곳, 2026-09-27). 종전엔 읽는 길이를 화면 길이로 잘라
+            #   1배속으로 틀어 1.4배 칸의 컷 끝 장면이 완성본과 7프레임 갈렸다(68b48b12c7f5 칸5).
+            from shopping_shorts import screen_clips as _scm
+            _spd = _scm.plays_at_speed(c.get("fit"), c.get("_sync", 1.0), take, dur)
+            if not _spd:
+                take = min(take, dur)
             play, freeze = video_assemble._speed_and_freeze(
-                take, dur, preferred_speed=(take / dur) if c.get("fit") else None)
+                take, dur, preferred_speed=(take / dur) if _spd else None)
             nf = int(c.get("_nf") or 0)
             mv = video_assemble.motion_frames(nf, play, freeze) if (nf and freeze > 1e-3) else None
             return take, play / take, mv
@@ -6719,6 +6729,8 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                               "nf%d" % int(c.get("_nf") or 0),
                               # 읽는 창 정확히 끊기(trim=end, 2026-09-27) — 옛 조각(다음 원본 1프레임 더 읽음)을 재사용하지 않게
                               "rdx1",
+                              # 배속 판단(plays_at_speed)이 바뀌면 다른 조각 — 옛 조각(읽는 길이를 화면 길이로 자른 1배속)을 재사용하지 않게
+                              "sp%.4f" % (c.get("_sync") or 1.0),
                               # 정지 컷은 움직이는 프레임 수를 잘라 굽는다(2026-09-27) — 옛 조각(자르기 없음)을 재사용하지 않게
                               *(["mv%d" % _mv] if (_mv := _cut_motion(c)[2]) else [])], sort_keys=True)
             return hashlib.sha1(raw.encode()).hexdigest()[:20]
