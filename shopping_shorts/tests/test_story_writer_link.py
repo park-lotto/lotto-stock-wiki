@@ -236,16 +236,3 @@ def test_brackets_copied_from_frame_are_stripped(monkeypatch):
     monkeypatch.setattr(sw._sg, "_call_json", lambda *a, **k: out)
     lines = sw.write_styled("필름", SEED, sw.frame_of(None), [], {"MAT-1": {"secs": 3}}, seconds=16)
     assert all(not L["text"].startswith("「") and not L["text"].endswith("」") for L in lines)
-
-
-def test_research_first_hit_and_appeal_points_are_kept(monkeypatch):
-    """2026-09-27 사장님: 왜 터졌는지 먼저 조사 → 좋아할 특징(자체 지식) → 대본. 한 호출, 답 칸 순서로."""
-    monkeypatch.setattr(sw, "_BANK", {})
-    assert sw.STYLED_SCHEMA["propertyOrdering"][:2] == ["hit_points", "appeal_points"]
-    assert sw.STYLED_SCHEMA["propertyOrdering"][-1] == "lines"
-    out = {"hit_points": ["첫 줄의 의외성"], "appeal_points": ["손으로 찢어짐"], "seed_points": [],
-           "lines": _lines(["훅", "미끼", "공개", "고조", "마무리"])}
-    prompts = _fake_styled(monkeypatch, [out])
-    drafts, _ = sw.make_drafts([], _styled_job(), job_id="j1", seed_text=SEED, seed_product="열수축 필름")
-    assert "hit_points" in prompts[0] and "[제품 사실" not in prompts[0]
-    assert drafts[0]["hit_points"] == ["첫 줄의 의외성"] and drafts[0]["appeal_points"] == ["손으로 찢어짐"]

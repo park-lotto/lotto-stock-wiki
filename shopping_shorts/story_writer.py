@@ -149,18 +149,12 @@ def _norm_text(t):
 #    골라도 미끼·화제 칸이 없음) A·B 안이 같은 특징 배치로 똑같이 나왔다. 같은 재료로 한 번 호출 시험(work 348b6b0e2e3d,
 #    스타일 70·74 — tools/script_diff/nova_style_proto.py)에서 칸 순서 그대로·없는 컷 번호 0.
 #    → 판단은 모델 한 번, 코드는 **검사만** 하고 걸리면 이유를 붙여 한 번 다시 쓰게 한다.
-# ★조사 먼저(2026-09-27 사장님 "왜 이 대본이 터졌는지 포인트를 먼저 조사해" / "웹·쿠팡 다 빼고 자체 지식으로"):
-#   노바 작가 순서 그대로 — ①씨앗이 터진 이유 ②사람들이 좋아할 특징(재료 + 모델 자체 지식) ③대본. **같은 호출 안에서**
-#   필드 순서대로 쓰게 해 조사가 대본보다 먼저 나온다(답 모양의 순서 = 생각의 순서). 호출 수는 그대로.
 STYLED_SCHEMA = {"type": "object", "properties": {
-    "hit_points": {"type": "array", "items": {"type": "string"}},
-    "appeal_points": {"type": "array", "items": {"type": "string"}},
     "seed_points": {"type": "array", "items": {"type": "string"}},
     "lines": {"type": "array", "items": {"type": "object", "properties": {
         "role": {"type": "string"}, "text": {"type": "string"},
         "cuts": {"type": "array", "items": {"type": "string"}}}, "required": ["role", "text", "cuts"]}}},
-    "required": ["hit_points", "appeal_points", "seed_points", "lines"],
-    "propertyOrdering": ["hit_points", "appeal_points", "seed_points", "lines"]}
+    "required": ["seed_points", "lines"]}
 
 _VOICE = {
     "yt": "남 얘기 전하는 썰(반말). 보는 사람에게 말을 걸지 마라. 줄 끝: ~는데 · ~는 거 · ~다는데 · ~다고 · ~버림 · ~였음",
@@ -171,22 +165,17 @@ STYLED_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 이 제품
 
 [씨앗 대본]은 이 제품으로 이미 터진 영상의 말이다. [재료]는 같은 제품을 찍은 다른 영상들의 장면 태깅이다.
 
-■ 먼저 조사하고 쓴다 (답의 앞 칸부터 채워라)
-  hit_points     씨앗 대본이 **왜 터졌나** — 사람들을 붙잡은 포인트 3개(첫 줄의 무엇이, 어떤 궁금증·감정·반전이).
-                 이 포인트를 새 대본에도 살려라(문장은 새로).
-  appeal_points  이 제품에서 **사람들이 신기해하고 좋아할 만한** 기능·특징·장점 3~5개("이게 된다고?" 싶은 것 먼저). [재료] 태깅과 네가 이 제품(또는 같은 종류
-                 제품)에 대해 아는 것에서 뽑는다. 씨앗이 이미 말한 것은 빼라.
-  seed_points    씨앗이 이미 자랑한 셀링포인트(짧게).
 ■ 틀 — %(frame_rule)s
 ■ 차별점 = 기능·특징·장점 — 씨앗이 이미 자랑한 셀링포인트는 **%(open_rule)s 말고는** 쓰지 마라.
-  나머지 칸은 appeal_points로 채운다.
+  나머지 칸은 [재료]를 보고 **사람들이 좋아할 만한** 기능·특징·장점(씨앗에 없는 것)으로 채운다.
 ■ 후킹이 전부다 — 과장·어그로·지어낸 상황·인물·반응 다 좋다. 세게, 구체적으로, 끝까지 보게 써라.
   단 **실존 인물 이름은 쓰지 마라**(연예인·셰프·유튜버·기업 대표 등) — 사람은 이 제품을 쓸 법한 직업·집단의 보통명사로.
-  단 줄마다 화면에 붙일 컷은 있어야 한다(말과 영 딴판인 화면이 되지 않게).
 %(copy_rule)s
+  단 줄마다 화면에 붙일 컷은 있어야 한다(말과 영 딴판인 화면이 되지 않게).
 ■ 말투 — %(voice)s
 ■ 분량 — 전체 약 %(chars)d자(읽으면 약 %(secs)d초).
-■ 줄마다 cuts에 그 말에 어울리는 컷 번호를 [재료]에서 1~2개 적어라(목록에 있는 번호만). 컷은 줄끼리 되도록 겹치지 않게."""
+■ 줄마다 cuts에 그 말에 어울리는 컷 번호를 [재료]에서 1~2개 적어라(목록에 있는 번호만). 컷은 줄끼리 되도록 겹치지 않게.
+■ seed_points에는 씨앗이 자랑한 셀링포인트를 짧게 적어라."""
 
 
 # ── 공통 문구 자산(2026-09-27 사장님 "미끼·마지막 부분 등 공통적으로 들어가는 부분을 많이 만들어놓고 랜덤으로 선택을
@@ -391,8 +380,6 @@ def write_styled(product, seed_text, frame, vis, seg_index, platform="yt", secon
     note["pinned"] = frame.get("pinned") or {}
     note["problems"] = probs
     note["seed_points"] = [str(p) for p in out.get("seed_points") or [] if str(p).strip()]
-    note["hit_points"] = [str(p) for p in out.get("hit_points") or [] if str(p).strip()]
-    note["appeal_points"] = [str(p) for p in out.get("appeal_points") or [] if str(p).strip()]
     lines = []
     for L in out.get("lines") or []:
         # 틀 글의 「」를 줄에 그대로 옮겨 오는 일이 있다(2026-09-27 실측 25작업 중 4작업) — 읽는 글에 괄호는 없다
@@ -468,9 +455,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         d["writer_note"] = {k: v for k, v in (("writer", "한번호출"), ("auth", n.get("auth")), ("retry", n.get("retry")),
                                                ("problems", n.get("problems")), ("no_cut_lines", no_cut),
                                                ("pinned", n.get("pinned")), ("pinned_fixed", n.get("pinned_fixed"))) if v}
-        d["seed_points"] = n.get("seed_points") or []
-        d["hit_points"] = n.get("hit_points") or []          # 씨앗이 터진 이유(모델 조사) — 점검·화면용
-        d["appeal_points"] = n.get("appeal_points") or []    # 사람들이 좋아할 특징(재료+자체 지식)   # 점검용: 씨앗이 이미 말한 셀링포인트(차별점 잣대)
+        d["seed_points"] = n.get("seed_points") or []   # 점검용: 씨앗이 이미 말한 셀링포인트(차별점 잣대)
         drafts.append(d)
         prev_text = prev_text or d.get("script") or ""
     return drafts, "; ".join(whys)
