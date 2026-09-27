@@ -606,3 +606,116 @@ def test_render_plan_seconds_equal_actual_frames(tmp_path):
                                 "stream=nb_read_frames", "-of", "csv=p=0", str(tmp_path / "render" / f"cut_{c['i']:02d}.mp4")],
                                capture_output=True, text=True).stdout.strip())
         assert abs(c["sec"] * spec.FPS - n) < 1e-6, (c, n)
+
+
+# ── 2026-09-28 우상혁 v2 원인 셋: 복제 프레임 가짜 컷 · 크롭 창 장면 자르기 · 한 장 태깅 ─────────────────────────
+def test_split_spans_merges_burst_and_insets():
+    from shopping_shorts.channel_presets.hotpeople import footage, spec
+    ins = spec.CLIP_INSET_SEC
+    sp = footage.split_spans([5.0, 10.0, 10.2, 10.4, 15.0], 0.0, 20.0)       # 10.0~10.4 = 0.2초 간격 덩어리
+    assert sp == [(ins, 5 - ins), (5 + ins, 10 - ins), (10.4 + ins, 15 - ins), (15 + ins, 20 - ins)], sp
+    assert footage.split_spans([], 336.03 - ins, 347.78 + ins) == [(336.03, 347.78)]     # 변화 없으면 그대로(반올림 흔들림 없음)
+
+
+def _pan25(path, d=12):
+    """25fps 빠른 가로 이동 — fps=30 복제 변환이면 0.2초마다 장면 점수가 튄다(우상혁 v2 6qVV9l0yHnM 재현)."""
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", f"testsrc2=s=1280x720:r=25:d={d}",
+                    "-vf", "scroll=h=0.05", "-pix_fmt", "yuv420p", path], check=True)
+
+
+def test_25fps_pan_renders_without_false_cuts(tmp_path):
+    """★원인(컷 26 > 자막 23): 렌더의 fps=30 이 25fps 소스에서 다섯 장마다 한 장을 복제 → 움직이는 화면에서 검수 자가
+    0.2초마다 컷으로 셌다(화면도 끊김). 렌더와 장면 자르기가 같은 사슬(render.clip_vf, 프레임 섞기)이어야 한다."""
+    from shopping_shorts.channel_presets.hotpeople import footage, render, review
+    src = str(tmp_path / "pan.mp4")
+    _pan25(src)
+    assert [t for t in footage.scene_changes(src) if t > 0.2] == []           # 장면 자르기도 가짜 변화를 안 본다(첫 장 제외)
+    s = _script(3)
+    fo = {"cuts": [{"src": src, "start": 0.5 + i * 3.5, "url": "t"} for i in range(3)]}
+    r = render.build(str(tmp_path), s, fo, log=lambda *_: None)
+    cuts = review.slot_cuts(r["mp4"])
+    assert review.inner_cuts(r["mp4"], [c["sec"] for c in r["cuts"]], cuts=cuts) == [], cuts
+    assert len(cuts) + 1 <= len(r["cuts"])
+
+
+def _edge_flip(path):
+    """오른쪽 끝(x 1050~1280)만 3초에 검정→흰색. 가운데 크롭(소스 x 236~1043)엔 안 보이고, 오른쪽으로 옮긴 크롭 창엔 보인다."""
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=black:s=1280x720:r=30:d=6",
+                    "-vf", "drawbox=x=1050:y=0:w=230:h=590:color=white:t=fill:enable='gte(t,3)'",
+                    "-pix_fmt", "yuv420p", path], check=True)
+
+
+def test_scene_split_uses_shifted_crop_window(tmp_path, monkeypatch):
+    """★원인: 장면 자르기는 가운데 크롭, 렌더는 얼굴 크롭 → 크롭 창에만 보이는 변화가 자막 안으로 샜다(v2 컷5 x=111).
+    후보 태깅이 얼굴 크롭 창으로 다시 자르고, 렌더도 같은 함수(render.crop_x)로 창을 정한다."""
+    from shopping_shorts.channel_presets.hotpeople import footage, render, spec
+    src = str(tmp_path / "edge.mp4")
+    _edge_flip(src)
+    xh = render.crop_x(src, 0.95, spec.SCENE_DETECT_W, spec.SCENE_DETECT_H)
+    assert footage.scene_changes(src) == []
+    assert [round(t, 1) for t in footage.scene_changes(src, xh)] == [3.0]
+    assert abs(render.crop_x(src, 0.95) - 2 * xh) <= 2                        # 렌더 창 = 장면 자르기 창(크기만 두 배)
+    th = tmp_path / "t.jpg"
+    Image.new("RGB", (240, 176)).save(th)
+    monkeypatch.setattr(footage.vision, "faces", lambda img: [{"x": 0.93, "y": 0.2, "w": 0.04, "h": 0.3, "conf": 0.9}])
+    monkeypatch.setattr(footage.vision, "look", lambda slot: {"face": False, "face_h": None, "cx_off": None, "box": None,
+                                                              "emb": None, "sub_like": 0})
+    c = {"vid": "v", "path": src, "start": 0.1, "end": 5.9, "thumb": str(th)}
+    out = footage.tag_candidates([c], None, min_len=1.3, log=lambda *_: None)
+    assert out and out[0]["coarse"] == [0.1, 5.9] and (out[0]["start"], out[0]["end"]) == (0.1, 2.9)
+    assert out[0]["face_cx"] == 0.95 and out[0]["crop_x"] == render.crop_x(src, 0.95)
+
+
+def test_tag_candidates_drops_too_short_after_resplit(tmp_path, monkeypatch):
+    from shopping_shorts.channel_presets.hotpeople import footage
+    src = str(tmp_path / "edge.mp4")
+    _edge_flip(src)
+    th = tmp_path / "t.jpg"
+    Image.new("RGB", (240, 176)).save(th)
+    monkeypatch.setattr(footage.vision, "faces", lambda img: [{"x": 0.93, "y": 0.2, "w": 0.04, "h": 0.3, "conf": 0.9}])
+    monkeypatch.setattr(footage.vision, "look", lambda slot: {"face": False, "face_h": None, "cx_off": None, "box": None,
+                                                              "emb": None, "sub_like": 0})
+    c = {"vid": "v", "path": src, "start": 2.0, "end": 4.2, "thumb": str(th)}       # 3초 변화로 0.9·1.1초 조각
+    assert footage.tag_candidates([c], None, min_len=1.3, log=lambda *_: None) == []
+
+
+def test_tag_times_cover_render_window():
+    from shopping_shorts.channel_presets.hotpeople import footage, spec
+    assert footage.tag_times(10.0, 30.0) == [10.3, round(10 + spec.SUB_SEC_MAX / 2, 2), round(10 + spec.SUB_SEC_MAX - 0.3, 2)]
+    ts = footage.tag_times(10.0, 11.4)
+    assert ts[0] >= 10.0 and ts[-1] <= 11.4 and len(ts) == 3
+
+
+def test_combine_tags_any_frame_subtitle_and_other_person():
+    """★원인: 태깅은 한 장(시작+0.8), 관문은 컷 가운데 — 자막·로어서드가 그 사이에 떴다(v2 컷1·7)."""
+    from shopping_shorts.channel_presets.hotpeople import footage
+    from shopping_shorts.channelkit import vision
+    a = np.r_[1.0, np.zeros(127)].astype(np.float32)
+    other = np.r_[0.0, 1.0, np.zeros(126)].astype(np.float32)
+
+    def lk(h=None, emb=None, sub=0):
+        return {"face": h is not None, "face_h": h, "cx_off": 0.0 if h else None,
+                "box": {"h": h} if h else None, "emb": emb, "sub_like": sub}
+    t = footage.combine_tags([(1.0, lk(0.5, a)), (1.5, lk()), (2.0, lk(0.3, a, sub=1))], a)
+    assert t["subtitle_like"] and t["sub_t"] == [2.0] and t["who"] == vision.WHO_MAIN and t["face_h"] == 0.5
+    t = footage.combine_tags([(1.0, lk(0.6, a)), (1.5, lk(0.25, other))], a)
+    assert t["who"] == vision.WHO_OTHER                                        # 큰 얼굴이 주인공이어도 다른 장에 다른 사람
+    assert footage.combine_tags([(1.0, lk()), (2.0, lk())], a)["who"] == vision.WHO_NONE
+
+
+def test_render_build_takes_window_from_face_cx(tmp_path):
+    """렌더 경로(render.build)가 태깅과 같은 함수(render.crop_x)로 창을 정한다 — 얼굴(흰 네모)이 슬롯 가운데로."""
+    from shopping_shorts.channel_presets.hotpeople import render, spec
+    src = str(tmp_path / "sq.mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=black:s=1280x720:r=30:d=12",
+                    "-vf", "drawbox=x=770:y=240:w=60:h=60:color=white:t=fill", "-pix_fmt", "yuv420p", src], check=True)
+    cover = render.cover_frame(src, 1.0)
+    cx = _white_cx(cover) / cover.shape[1]
+    s = _script(3)
+    fo = {"cuts": [{"src": src, "start": 1.0 + i * 3, "url": "t", "face_cx": cx} for i in range(3)]}
+    r = render.build(str(tmp_path), s, fo, log=lambda *_: None)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", "1.0", "-i", r["mp4"], "-frames:v", "1", "-vf",
+                          f"crop={spec.SLOT_W}:{spec.SLOT_H}:{spec.SLOT_X}:{spec.SLOT_Y}", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                         capture_output=True).stdout
+    slot = np.frombuffer(raw, np.uint8).reshape(spec.SLOT_H, spec.SLOT_W)
+    assert abs(_white_cx(slot) - spec.SLOT_W / 2) < 6 and r["cuts"][0]["crop_x"] == render.crop_x(src, cx)

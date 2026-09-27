@@ -75,21 +75,48 @@ def download(item, vdir, log=print):
     return None
 
 
-def scenes(path, vid, thumbs_dir):
-    """장면 자르기 → [{vid,path,start,end,thumb}]. 너무 짧거나 어두운 장면·첫 3% 제외.
+def scene_changes(path, x=None, a=None, b=None):
+    """소스의 장면 변화 시각(초, 소스 기준). ★렌더와 같은 픽셀 사슬(render.clip_vf: 크롭 창 x + 프레임률 섞기)을
+    절반 크기로 돌린다 — 검수 자(scene>0.3)보다 낮은 문턱. x = render.crop_x(path, face_cx, 절반 크기), None 이면 가운데."""
+    from . import render
+    vf = (f"{render.clip_vf(spec.SCENE_DETECT_W, spec.SCENE_DETECT_H, x)},"
+          f"select='gt(scene,{spec.SCENE_DETECT_THRESH})',metadata=print:file=-")
+    win = (["-ss", f"{a:.3f}", "-t", f"{b - a:.3f}"] if a is not None else [])
+    r = _run(["ffmpeg", "-v", "error"] + win + ["-i", path, "-vf", vf, "-an", "-f", "null", "-"], timeout=900)
+    if r.returncode != 0:
+        raise RuntimeError(f"footage.scene_changes: {os.path.basename(path)} — {r.stderr[-200:]}")
+    off = a or 0.0
+    return sorted({round(off + float(l.split("pts_time:")[1]), 3) for l in r.stdout.splitlines() if "pts_time:" in l})
 
-    ★칼카피 1: 장면 경계는 **렌더와 같은 슬롯 크롭**(render.slot_vf)에서 재는 자(scene>0.3)보다 낮은 문턱으로 찾는다.
-      start/end 는 앞뒤 CLIP_INSET_SEC 를 뺀 **쓸 수 있는 구간**이다 — 렌더는 이 안에서만 자른다."""
+
+def split_spans(changes, lo, hi):
+    """★장면 변화 → 쓸 수 있는 구간 [(a,b)] — 유일한 판단(처음 자르기·크롭 뒤 다시 자르기 둘 다).
+    SCENE_BURST_GAP 초 안에 이어지는 변화는 한 덩어리(깜빡임·플래시·빠른 편집)로 보고 그 덩어리 전체를 뺀다.
+    앞뒤 CLIP_INSET_SEC 는 안 쓴다."""
+    ch = sorted(c for c in changes if lo < c < hi)
+    clusters = []
+    for c in ch:
+        if clusters and c - clusters[-1][1] < spec.SCENE_BURST_GAP:
+            clusters[-1][1] = c
+        else:
+            clusters.append([c, c])
+    edges = [(lo, lo)] + [tuple(k) for k in clusters] + [(hi, hi)]
+    out = []
+    for (_, e0), (s1, _) in zip(edges, edges[1:]):
+        a, b = e0 + spec.CLIP_INSET_SEC, s1 - spec.CLIP_INSET_SEC
+        if b > a:
+            out.append((math.ceil(round(a * 100, 6)) / 100, math.floor(round(b * 100, 6)) / 100))   # 경계 밖 프레임이 안 들어오게
+    return out
+
+
+def scenes(path, vid, thumbs_dir):
+    """장면 자르기 → [{vid,path,start,end,thumb,t}]. 너무 짧거나 어두운 장면·첫 3% 제외. (가운데 크롭으로 한 번 —
+    얼굴 크롭이 정해지면 tag_candidates 가 그 크롭으로 다시 자른다.) start/end = 쓸 수 있는 구간."""
     from . import render
     _, _, dur = _dims(path)
-    vf = f"{render.slot_vf(spec.SCENE_DETECT_W, spec.SCENE_DETECT_H)},select='gt(scene,{spec.SCENE_DETECT_THRESH})',metadata=print:file=-"
-    r = _run(["ffmpeg", "-v", "error", "-i", path, "-vf", vf, "-an", "-f", "null", "-"], timeout=900)
-    cuts = sorted({round(float(l.split("pts_time:")[1]), 3) for l in r.stdout.splitlines() if "pts_time:" in l})
-    bounds = [0.0] + [c for c in cuts if 0 < c < dur] + [dur]
     os.makedirs(thumbs_dir, exist_ok=True)
     out = []
-    for a, b in zip(bounds, bounds[1:]):
-        a, b = a + spec.CLIP_INSET_SEC, b - spec.CLIP_INSET_SEC
+    for a, b in split_spans(scene_changes(path), 0.0, dur):
         if b - a < spec.POLICY_SCENE_MIN_SEC or a < dur * 0.03:
             continue
         t = a + min(0.8, (b - a) / 2)
@@ -100,13 +127,9 @@ def scenes(path, vid, thumbs_dir):
         if not os.path.exists(th):
             continue
         im = Image.open(th).convert("L")
-        px = list(im.getdata())
-        mean = sum(px) / len(px)
-        if mean < 22:                       # 거의 검정(암전·자막 카드)
+        if float(np.asarray(im).mean()) < 22:           # 거의 검정(암전·자막 카드)
             continue
-        # start 는 올림, end 는 내림 — 반올림으로 경계 밖 프레임이 들어오지 않게
-        out.append({"vid": vid, "path": path, "start": math.ceil(a * 100) / 100, "end": math.floor(b * 100) / 100, "thumb": th,
-                    "t": round(t, 2)})
+        out.append({"vid": vid, "path": path, "start": a, "end": b, "thumb": th, "t": round(t, 2)})
     return out
 
 
@@ -430,24 +453,71 @@ def gather_sources(script, wd, log=print):
     return [meta[k] for k in keep], ruler, table
 
 
-def tag_candidates(cands, anchor, log=print):
-    """★후보마다 렌더와 같은 그림(cover_frame → face_crop_x → slot_from_cover)을 만들어 자(vision)로 잰다.
-    c 에 crop_x·who·face_h·cx_off·subtitle_like 를 넣고 썸네일을 그 슬롯 그림으로 다시 쓴다(시트 = 렌더 화면)."""
+def tag_times(start, end):
+    """태깅 프레임 시각 — 렌더가 쓰는 창(앞에서 최대 SUB_SEC_MAX초)의 시작+0.3 · 가운데 · 끝−0.3.
+    관문은 렌더된 컷의 가운데(시작+0.65~1.55초)를 보므로 그 앞뒤를 덮는다."""
+    L = min(end - start, spec.SUB_SEC_MAX)
+    e = spec.TAG_EDGE_SEC
+    return sorted({round(start + min(e, L / 2), 2), round(start + L / 2, 2), round(start + max(L - e, L / 2), 2)})
+
+
+def combine_tags(frames, anchor):
+    """★여러 프레임 → 후보 하나의 표식 — 유일한 판단. frames = [(t, vision.look 결과)].
+    박힌 자막 = 한 장이라도 있으면. 누구 = 가장 큰 얼굴 프레임의 판정, **단 한 장이라도 '다른사람'이면 다른사람**
+    (관문은 그 창 안 아무 한 장을 본다 — 큰 얼굴이 주인공이어도 다른 장에 다른 사람이 크게 나오면 ⑩에 걸린다).
+    → {who, face_h, cx_off, subtitle_like, sub_t, who_t: [(t, who)]}"""
+    whos = [(t, vision.who(lk["box"], lk["emb"], anchor)) for t, lk in frames]
+    faced = [(lk["face_h"], t, lk, w) for (t, lk), (_, w) in zip(frames, whos) if lk["face"]]
+    if faced:
+        _, _, lk, w = max(faced, key=lambda q: q[0])
+    else:
+        lk, w = {"face_h": None, "cx_off": None}, vision.WHO_NONE
+    other_t = [t for t, x in whos if x == vision.WHO_OTHER]
+    sub_t = [t for t, lk_ in frames if lk_["sub_like"]]
+    return {"who": vision.WHO_OTHER if other_t else w, "face_h": lk["face_h"], "cx_off": lk["cx_off"],
+            "subtitle_like": bool(sub_t), "sub_t": sub_t, "who_t": whos}
+
+
+def tag_candidates(cands, anchor, min_len=0.0, log=print):
+    """★후보마다 ① 쓸 창 세 프레임의 덮개 그림에서 가장 큰 얼굴 → face_cx ② **그 크롭 창으로** 장면을 다시 자른다
+    (render.clip_vf·render.crop_x — 렌더와 같은 그림; 가운데 크롭에선 안 보이던 변화가 창을 옮기면 들어온다)
+    ③ 다시 자른 창의 세 프레임을 자(vision)로 재서 combine_tags. 다시 자른 조각 중 min_len 이상인 가장 앞 조각을 쓰고, 없으면 버린다.
+    썸네일은 가운데 프레임 슬롯 그림(시트 = 렌더 화면). → 남은 후보 목록."""
     from collections import Counter
     from . import render
+    out, dropped = [], 0
     for i, c in enumerate(cands):
-        cover = render.cover_frame(c["path"], c.get("t", c["start"]))
-        big = vision.biggest(vision.faces(cover))
-        x = render.face_crop_x(cover.shape[1], spec.SLOT_W, (big["x"] + big["w"] / 2) if big else None)
-        slot = render.slot_from_cover(cover, x)
-        lk = vision.look(slot)
-        c.update(crop_x=x, who=vision.who(lk["box"], lk["emb"], anchor), face_h=lk["face_h"], cx_off=lk["cx_off"],
-                 subtitle_like=bool(lk["sub_like"]))
-        Image.fromarray(np.ascontiguousarray(slot[:, :, ::-1])).resize((THUMB_W, THUMB_H)).save(c["thumb"])
+        covers = [(t, render.cover_frame(c["path"], t)) for t in tag_times(c["start"], c["end"])]
+        bigs = [f for _, cv in covers for f in [vision.biggest(vision.faces(cv))] if f]
+        big = max(bigs, key=lambda f: f["h"]) if bigs else None
+        c["face_cx"] = round(big["x"] + big["w"] / 2, 4) if big else None
+        xh = render.crop_x(c["path"], c["face_cx"], spec.SCENE_DETECT_W, spec.SCENE_DETECT_H)
+        lo, hi = c["start"] - spec.CLIP_INSET_SEC, c["end"] + spec.CLIP_INSET_SEC
+        spans = split_spans(scene_changes(c["path"], xh, lo, hi), lo, hi)
+        need = max(min_len, spec.POLICY_SCENE_MIN_SEC)
+        # 쓸 만한 조각 중 **가장 앞**(모델이 본 썸네일·설명이 앞쪽 프레임이다)
+        best = next((ab for ab in spans if ab[1] - ab[0] >= need), None)
+        if not best:
+            dropped += 1
+            log(f"[footage] 후보 버림 {c['vid']} {c['start']}~{c['end']}: 크롭 창으로 다시 자르니 {spans} — 자막 최소 {need}초 미만")
+            continue
+        if best != (c["start"], c["end"]):
+            c["coarse"] = [c["start"], c["end"]]
+            c["start"], c["end"] = best
+        x = render.crop_x(c["path"], c["face_cx"])
+        ts = tag_times(c["start"], c["end"])
+        slots = [render.slot_from_cover(render.cover_frame(c["path"], t), x) for t in ts]
+        frames = [(t, vision.look(sl)) for t, sl in zip(ts, slots)]
+        mid = slots[len(slots) // 2]
+        tg = combine_tags(frames, anchor)
+        c.update(crop_x=x, **tg)
+        Image.fromarray(np.ascontiguousarray(mid[:, :, ::-1])).resize((THUMB_W, THUMB_H)).save(c["thumb"])
+        out.append(c)
         if i % 20 == 19:
             log(f"[footage] 후보 태깅 {i + 1}/{len(cands)}")
-    log(f"[footage] 후보 태깅: {dict(Counter(c['who'] for c in cands))} · 박힌 자막 {sum(c['subtitle_like'] for c in cands)}")
-    return cands
+    log(f"[footage] 후보 태깅: {dict(Counter(c['who'] for c in out))} · 박힌 자막 {sum(c['subtitle_like'] for c in out)} · "
+        f"크롭 창 다시 자르기로 버림 {dropped} · 창이 줄어든 후보 {sum(1 for c in out if 'coarse' in c)}")
+    return out
 
 
 def collect(script, wd, reader=None, log=print):
@@ -462,7 +532,7 @@ def collect(script, wd, reader=None, log=print):
     cands = [c for c in cands if c["end"] - c["start"] >= shortest]     # 어떤 자막도 못 채우는 장면은 시트에서 뺀다
     cands = _even(cands, SHEET_COLS * SHEET_ROWS * MAX_SHEETS)
     log(f"[footage] 영상 {len(videos)}편 · 장면 후보 {len(cands)}개")
-    tag_candidates(cands, ruler["anchor"], log=log)
+    cands = tag_candidates(cands, ruler["anchor"], min_len=shortest, log=log)
     sp = sheets(cands, os.path.join(wd, "footage"))
     idx, fixed = pick(groups, cands, sp, reader, script.get("person", ""), log=log)
     if reader is not None and fixed > len(groups) * 0.3:
@@ -475,7 +545,8 @@ def collect(script, wd, reader=None, log=print):
     # 컷 = 자막 1:1, 각 컷은 한 장면 [start, start+자막초] 안(render.build 가 넘으면 멈춘다)
     cuts = [{"scene": k, "src": cands[k]["path"], "start": cands[k]["start"], "end": cands[k]["end"],
              "vid": cands[k]["vid"], "url": url.get(cands[k]["vid"]), "thumb": cands[k]["thumb"],
-             "crop_x": cands[k]["crop_x"], "who": cands[k]["who"], "subtitle_like": cands[k]["subtitle_like"]} for k in idx]
+             "crop_x": cands[k]["crop_x"], "face_cx": cands[k]["face_cx"], "who": cands[k]["who"],
+             "subtitle_like": cands[k]["subtitle_like"], "sub_t": cands[k]["sub_t"], "who_t": cands[k]["who_t"]} for k in idx]
     return {"videos": [{k: v.get(k) for k in ("id", "title", "url", "query", "duration", "main_ratio")} for v in videos],
             "sources": table, "anchor": os.path.join(wd, "footage", "anchor.npy"), "anchor_from": ruler["anchor_from"],
             "n_cands": len(cands), "cuts": cuts, "sheets": sp, "fixed": fixed, "verify": verify}

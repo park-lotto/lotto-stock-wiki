@@ -124,6 +124,28 @@ def slot_vf(w=None, h=None, x=None):
     return f"{cover_vf(w, h)},crop={w}:{h}" + (f":{int(x)}" if x is not None else "")
 
 
+def clip_vf(w=None, h=None, x=None):
+    """★소스 → 슬롯 영상의 **픽셀 사슬 전부**(크롭 + 프레임률 변환). 렌더(cut_clip)와 장면 자르기(footage.scene_changes)가
+    이것 하나를 쓴다 — 검수 자(review.slot_cuts)가 보는 그림과 장면 자르기가 보는 그림이 같아야 한다.
+    ★프레임률은 framerate(섞기)로 바꾼다. 우상혁 v2 실측: 25fps 소스를 fps=30(복제)으로 바꾸면 다섯 장에 한 장이 복제되고,
+      움직이는 화면에서 복제 다음 장마다 장면 점수가 0.34~0.39로 튀어(0.2초 간격) 검수가 '자막 안 컷' 6개·컷 26개로 셌다.
+      화면도 0.2초마다 끊겨 보인다. 섞기로 바꾸면 같은 구간 최대 0.244·0.12(컷 아님)."""
+    return f"{slot_vf(w, h, x)},setsar=1,framerate=fps={spec.FPS}"
+
+
+_COVER_W = {}
+
+
+def crop_x(src, face_cx, w=None, h=None):
+    """★자르기 창 x — 장면 자르기(절반 크기)·태깅(원래 크기)·렌더(원래 크기)가 전부 이것으로 정한다.
+    덮개 폭은 그 소스·그 크기의 실제 덮개 그림에서 잰다(ffmpeg 반올림을 다시 계산하지 않는다)."""
+    w, h = w or spec.SLOT_W, h or spec.SLOT_H
+    key = (os.path.abspath(src), w, h)
+    if key not in _COVER_W:
+        _COVER_W[key] = cover_frame(src, 0.0, w, h).shape[1]
+    return face_crop_x(_COVER_W[key], w, face_cx)
+
+
 def face_crop_x(cover_w, slot_w, face_cx):
     """★칼카피 규칙 9 — 인물 중심 크롭의 **유일한** 판단. 덮개 그림(폭 cover_w)에서 슬롯(폭 slot_w)을 자를 x.
     얼굴 중심(face_cx, 덮개 폭 대비 0~1)이 슬롯 가운데 오게 옮기고 덮개 밖으로 안 나가게 가둔다. 얼굴 없으면 가운데.
@@ -166,8 +188,8 @@ def cut_clip(bg_png, sub_png, src, start, sec, out_mp4, crop_x=None):
     # setpts=PTS-STARTPTS: -ss 뒤 영상 첫 pts가 0이 아니면 overlay 첫 프레임이 빈 흰 슬롯이 된다
     # (v3 1차 실측: cut_05·cut_10 첫 프레임 평균 248(흰 바탕) → 자막 경계 12곳에서 컷이 두 번 잡혀 컷 수 37)
     # crop_x: footage 태깅이 face_crop_x 로 정한 값(없으면 가운데)
-    f = (f"[1:v]setpts=PTS-STARTPTS,{slot_vf(x=crop_x)},"
-         f"setsar=1,fps={spec.FPS},tpad=stop_mode=clone:stop_duration=4[v];"
+    f = (f"[1:v]setpts=PTS-STARTPTS,{clip_vf(x=crop_x)},"
+         f"tpad=stop_mode=clone:stop_duration=4[v];"
          f"[0:v][v]overlay={spec.SLOT_X}:{spec.SLOT_Y}[b];[b][2:v]overlay=0:0,format=yuv420p[o]")
     _ff(["ffmpeg", "-v", "error", "-y", "-loop", "1", "-framerate", str(spec.FPS), "-i", bg_png,
          "-ss", f"{start:.2f}", "-i", src, "-loop", "1", "-framerate", str(spec.FPS), "-i", sub_png,
@@ -234,10 +256,11 @@ def build(wd, script, footage, log=print):
         sp = subtitle(g, os.path.join(rd, f"sub_{i:02d}.png"))
         mp = os.path.join(rd, f"cut_{i:02d}.mp4")
         sec = clip_frames(sec) / spec.FPS                 # 계획 = 실제 프레임(검수가 이 경계로 잰다)
-        cut_clip(bg, sp, c["src"], c["start"], sec, mp, crop_x=c.get("crop_x"))
+        x = crop_x(c["src"], c["face_cx"]) if "face_cx" in c else c.get("crop_x")   # 태깅과 같은 함수로 다시 정한다
+        cut_clip(bg, sp, c["src"], c["start"], sec, mp, crop_x=x)
         parts.append(mp); total += sec
         plan.append({"i": i, "sec": sec, "src": os.path.basename(c["src"]), "start": c["start"], "url": c.get("url"),
-                     "crop_x": c.get("crop_x")})
+                     "crop_x": x})
     lst = os.path.join(rd, "concat.txt")
     with open(lst, "w", encoding="utf-8") as fh:
         fh.writelines(f"file '{os.path.basename(p)}'\n" for p in parts)
