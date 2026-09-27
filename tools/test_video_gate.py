@@ -484,3 +484,12 @@ def test_ghost_threshold_null_reports_only():
 def test_gate_config_ghost_thresholds():
     assert CFG["gate"]["max_ghost_screen_only"] == 0 and CFG["audit"]["max_ghost_screen_only"] == 0
     assert CFG["gate"]["max_ghost"] is None and CFG["audit"]["max_ghost"] is None   # 소재 품질 — 보고만
+
+
+def test_gate_reports_clean_missing_jobs_not_as_failure(tmp_path):
+    """청소 미생성 job 은 실패가 아니라 **따로 보고**된다(숨기지 않음) — 요약 파서가 새 항목을 읽는다."""
+    cc = "== 컷 12 · 캡컷 불일치 0 · 내보내기 불일치 0 · 청소 미생성 2 job" + chr(10)
+    res, out = _run(_stage(tmp_path), _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), cc_report=cc))
+    assert res.ok, out
+    assert "청소 미생성 2 job" in out
+    assert vg.capcut_summary(cc)["clean_missing"] == 2

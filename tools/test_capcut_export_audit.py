@@ -167,7 +167,7 @@ def test_route_subs_present_in_app():
 
 
 def test_parse_summary():
-    assert aud.parse_summary("x\n== 컷 214 · 캡컷 불일치 3 · 내보내기 불일치 0\n") == {"cuts": 214, "capcut": 3, "export": 0}
+    assert aud.parse_summary("x\n== 컷 214 · 캡컷 불일치 3 · 내보내기 불일치 0\n") == {"cuts": 214, "capcut": 3, "export": 0, "clean_missing": 0}
     assert aud.parse_summary("== 칸 3 · 다른 장면 0") is None
 
 
@@ -282,3 +282,43 @@ def test_source_piece_extends_to_cover_reads_past_region(tmp_path, monkeypatch):
     assert lay["s0"]["pieces"][0]["len"] >= 2.2 - 1e-6, lay["s0"]["pieces"][0]["len"]
     lay0, _ = mp._source_layout_from_base(base, tmp_path / "c0")
     assert abs(lay0["s0"]["pieces"][0]["len"] - (2.0 + 2 / 30)) < 1e-6          # 여유 2프레임만
+
+
+# ── 청소 미생성 job(아직 완성본을 안 만든 준비 상태) — 청소 차원 비교 제외(관문 8차 56컷 오탐) ─────────────
+
+def test_clean_dimension_skipped_when_clean_output_not_made(env, tmp_path):
+    """미렌더 job: 렌더는 '만들면 전체 청소(final)', 내보내기는 '아직 없으니 원본' — 설계상 다르다. 청소 차원은 세지 않는다."""
+    from shopping_shorts import mix_pipeline as mp
+    R, draft, tl, plan = _three(_PLAN)
+    E = _export(env, tmp_path, plan, tl)
+    job = {"subtitle_removal": 1, "clean_video_path": None}
+    env.setattr(mp, "clean_final_path_for_plan", lambda job, work: None)
+    made = aud.clean_made(job, tmp_path, "final", None, {}, mp)
+    assert made is False
+    be, n = aud.compare(R, E, "export", render_clean="final" if made else None, skip_clean=not made)
+    assert (be, n) == ([], 3)
+    assert aud.compare(R, E, "export", render_clean="final", skip_clean=True) == ([], 3)   # 렌더 쪽이 'final'이어도 청소 차원 제외
+    # 청소 완성본이 **있는데** ZIP 이 원본이면 여전히 불일치
+    f = tmp_path / "final_clean_x.mp4"
+    f.write_bytes(b"x")
+    env.setattr(mp, "clean_final_path_for_plan", lambda job, work: f)
+    made2 = aud.clean_made(job, tmp_path, "final", None, {}, mp)
+    assert made2 is True
+    be2, _ = aud.compare(R, E, "export", render_clean="final", skip_clean=not made2)
+    assert len(be2) == 3 and all(b["why"] == ["clean"] for b in be2)
+
+
+def test_skip_clean_keeps_other_dimensions(env, tmp_path):
+    """청소 차원을 빼도 컷 자리·구간은 그대로 잰다."""
+    R, draft, tl, plan = _three(_PLAN)
+    E = _export(env, tmp_path, plan, tl)
+    E2 = copy.deepcopy(E)
+    E2[1]["start"] += 0.3
+    be, _ = aud.compare(R, E2, "export", render_clean="final", skip_clean=True)
+    assert [b["why"] for b in be] == [["start"]]
+
+
+def test_summary_parses_clean_missing():
+    assert aud.parse_summary("== 컷 399 · 캡컷 불일치 0 · 내보내기 불일치 0 · 청소 미생성 2 job\n") == {
+        "cuts": 399, "capcut": 0, "export": 0, "clean_missing": 2}
+    assert aud.parse_summary("== 컷 5 · 캡컷 불일치 1 · 내보내기 불일치 0\n")["clean_missing"] == 0     # 옛 형식도 읽는다

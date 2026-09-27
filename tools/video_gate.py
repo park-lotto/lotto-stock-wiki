@@ -290,7 +290,8 @@ def judge_capcut(report_text, cfg, crash="", benign_skips=("편집안 없음",))
     if s is None:
         fails.append("캡컷·내보내기 대조 요약 줄(== 컷 …)을 못 읽었다 — 도구가 죽었거나 형식이 바뀌었다")
         return False, fails, notes
-    notes.append("캡컷·내보내기 대조: 컷 %d · 캡컷 불일치 %d · 내보내기 불일치 %d" % (s["cuts"], s["capcut"], s["export"]))
+    notes.append("캡컷·내보내기 대조: 컷 %d · 캡컷 불일치 %d · 내보내기 불일치 %d · 청소 미생성 %d job(청소 비교 제외)" % (
+        s["cuts"], s["capcut"], s["export"], s.get("clean_missing", 0)))
     if s["cuts"] <= 0:
         fails.append("캡컷·내보내기 대조: 비교한 컷이 0 — 아무것도 안 쟀다")
     lc, le = int(cfg.get("max_capcut_mismatch") or 0), int(cfg.get("max_export_mismatch") or 0)
