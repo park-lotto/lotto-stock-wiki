@@ -1,5 +1,7 @@
 """매일 영상 점검(daily_video_audit.py) 테스트 — 어긋나면 쪽지, 깨끗하면 닫기, 못 돌리면 조용히 넘기지 않기."""
 import sqlite3
+
+import pytest
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -147,7 +149,7 @@ def test_capcut_audit_runs_on_same_jobs_and_is_kept(tmp_path):
     assert "== 컷 10" in (day / "capcut_report.txt").read_text(encoding="utf-8")
     import json
     assert json.loads((day / "summary.json").read_text(encoding="utf-8"))["capcut_summary"] == {
-        "cuts": 10, "capcut": 0, "export": 0}
+        "cuts": 10, "capcut": 0, "export": 0, "clean_missing": 0}
     assert not list((tmp_path / "tmp").glob("capcut_audit_*")), "대조 임시 폴더도 지운다"
 
 
@@ -178,3 +180,28 @@ def test_ghost_raises_customer_alert_and_is_in_summary(tmp_path):
     assert kind == "raise" and "잔상 3프레임(화면에만 1)" in title and grade == "고객영향", (title, grade)
     sj = _json.loads((tmp_path / "audit" / "2026-09-27" / "summary.json").read_text(encoding="utf-8"))
     assert sj["ghost"] == {"frames": 3, "cuts": 3, "screen_only": 1, "short": 0}
+
+
+def test_daily_summary_keeps_clean_missing(tmp_path):
+    cc = "62ed6bf66eb9 칸3 컷R10/C10/E10 | 캡컷 불일치 0 {} | 내보내기 불일치 0 {}" + chr(10) + "== 컷 10 · 캡컷 불일치 0 · 내보내기 불일치 0 · 청소 미생성 1 job" + chr(10)
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, 2)), cc=_fake_cc(report=cc))
+    import json
+    s = json.loads((tmp_path / "audit" / "2026-09-27" / "summary.json").read_text(encoding="utf-8"))
+    assert s["capcut_summary"]["clean_missing"] == 1
+
+
+@pytest.mark.parametrize("fn", ["_run_evf", "_run_cea"])
+def test_daily_audit_scene_cache_under_work(tmp_path, monkeypatch, fn):
+    """매일 점검의 비교 실행은 장면 전환 캐시를 자기 작업 폴더에 — 소재 옆(고객 폴더)에 쓰지 않는다."""
+    import daily_video_audit as dva
+    seen = {}
+
+    class _P:
+        returncode, stdout, stderr = 0, "", ""
+
+    def fake_run(cmd, **kw):
+        seen.update(kw.get("env") or {})
+        return _P()
+    monkeypatch.setattr(dva.subprocess, "run", fake_run)
+    getattr(dva, fn)(["abc"], tmp_path / "w", 10)
+    assert seen.get("SEG_SNAP_CACHE_DIR") == str(tmp_path / "w" / "snapcache"), seen.get("SEG_SNAP_CACHE_DIR")

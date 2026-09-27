@@ -3493,7 +3493,12 @@ def _plan_on_source_files(plan, layout, regs, raw_ids):
     out = copy.deepcopy(plan or {})
     rvs = {r[0] for r in regs}
     moved = unmoved = 0
+    from shopping_shorts import screen_clips as _scm
     for b in out.get("beats") or []:
+        # ★원본 재료 칸을 `<vid>_raw` 로 바꾸면 칸 내용 키가 달라져 화면 컷(screen_clips)을 못 찾고 파이썬 예비 계산으로 떨어졌다 —
+        #   캡컷·ZIP 만 화면(=렌더)과 다른 컷(잔상 가드·배속 없음)이 됐다(2026-09-27 dacd163229e5 칸2 컷0: 렌더 시작 0.066·1.15배 느리게
+        #   vs 캡컷 0.0·1배속). 바꾸기 **전** 키와 이름 대응을 달아 두면 lookup 이 같은 화면 컷을 이름만 바꿔 쓴다('_' 키는 칸 키에서 빠진다).
+        _k0, _vmap = _scm.beat_key(b), {}
         for key in ("manual_cuts", "scene_override"):
             for c in b.get(key) or []:
                 v = c.get("video_id")
@@ -3511,9 +3516,13 @@ def _plan_on_source_files(plan, layout, regs, raw_ids):
                     moved += 1
                 elif v in raw_ids and v in layout:
                     c["video_id"] = "%s_raw" % v
+                    _vmap[v] = c["video_id"]
         for p in [b.get("primary")] + list(b.get("alternates") or []):
             if p and p.get("video_id") in raw_ids and p.get("video_id") in layout:
-                p["video_id"] = "%s_raw" % p["video_id"]
+                _vmap[p["video_id"]] = "%s_raw" % p["video_id"]
+                p["video_id"] = _vmap[p["video_id"]]
+        if _vmap and _k0:
+            b["_screen_key"], b["_screen_vid"] = _k0, _vmap
     return out, moved, unmoved
 
 
@@ -4379,20 +4388,22 @@ def map_scene_score(clean_path, srcs, cuts):
     같은 자(frame_match — 보정·영상 비교 도구와 같은 닮음)로 잰다. 파일을 보는 판정이라 계산끼리 비교하지 않는다(0순위-C)."""
     import numpy as np
     from shopping_shorts import frame_match as fm
-    cf = fm.feats(fm.frames(clean_path))
+    _cfr = fm.frames(clean_path)
+    cf, cf2 = fm.feats(_cfr), fm.feats_low(_cfr)
     cache, ok = {}, 0
     for c in cuts or []:
         v = c.get("video_id")
         if not srcs.get(v):
             continue
         if v not in cache:
-            cache[v] = fm.feats(fm.frames(srcs[v]))
-        F = cache[v]
+            _fr = fm.frames(srcs[v])
+            cache[v] = (fm.feats(_fr), fm.feats_low(_fr))
+        F, F2 = cache[v]
         j = int(round((float(c["fin"]) + float(c["dur"]) / 2) * fm.FPS))
         if not (0 <= j < len(cf)) or not len(F):
             continue
         k = int(round((float(c["src"]) + min(float(c.get("sdur") or c["dur"]), float(c["dur"])) / 2) * fm.FPS))
-        d = fm.dist(F, np.arange(k - 3, k + 4), cf[j])
+        d = fm.dist_any(F, F2, np.arange(k - 3, k + 4), cf[j], cf2[j])     # 글자 띠를 지운 청소본도 같은 장면으로(두 띠)
         ok += bool(np.isfinite(d).any() and float(np.min(d)) < fm.SCENE_T)
     return ok
 

@@ -22,6 +22,8 @@ sys.path.insert(0, ".")                      # 도구와 같다 — 저장소 �
 def main():
     out = Path(os.environ.get("EVF_OUT") or "/tmp/evf")
     out.mkdir(parents=True, exist_ok=True)
+    # 장면 전환 캐시(seg_snap)는 결과 폴더 아래 — 도구는 읽기 전용(소재 옆 = 고객 폴더에 쓰지 않는다). 부르는 쪽이 주면 그걸 쓴다
+    os.environ.setdefault("SEG_SNAP_CACHE_DIR", str(out / "snapcache"))
     done = out / "done.txt"
     if done.exists():
         done.unlink()

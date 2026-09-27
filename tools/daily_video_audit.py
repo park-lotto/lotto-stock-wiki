@@ -229,7 +229,7 @@ def _cc_issue_lines(report_text):
 
 def _run_cea(ids, work, timeout):
     """캡컷·내보내기 대조(tools/capcut_export_audit.py)를 **지금 라이브 코드**로 — 결과는 work/ (report.txt·done.txt·crash.txt)."""
-    env = dict(os.environ, CC_OUT=str(work))
+    env = dict(os.environ, CC_OUT=str(work), SEG_SNAP_CACHE_DIR=str(Path(work) / "snapcache"))   # 점검은 고객 폴더에 안 쓴다
     env.pop("PATCH_DIR", None)
     try:
         p = subprocess.run([sys.executable, str(HERE / "capcut_export_audit.py"), *ids], cwd=str(REPO), env=env,
@@ -240,7 +240,7 @@ def _run_cea(ids, work, timeout):
 
 
 def _run_evf(ids, work, timeout):
-    env = dict(os.environ, EVF_OUT=str(work))
+    env = dict(os.environ, EVF_OUT=str(work), SEG_SNAP_CACHE_DIR=str(Path(work) / "snapcache"))  # 점검은 고객 폴더에 안 쓴다
     env.pop("PATCH_DIR", None)                         # 매일 점검은 **지금 라이브 코드**를 잰다
     try:
         p = subprocess.run([sys.executable, str(HERE / "evf_run.py"), *ids], cwd=str(REPO), env=env,

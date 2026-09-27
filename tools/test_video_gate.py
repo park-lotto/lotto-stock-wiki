@@ -3,6 +3,7 @@
 핵심: ① '다른 장면'이 있으면 **반드시** 실패 ② 요약을 못 읽으면 통과가 아니라 실패
 ③ 서버에 못 붙거나 디스크가 모자라면 조용히 넘기지 않고 실패 ④ 영상 관문이 실패하면 main 에 아무것도 안 나간다.
 """
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -484,3 +485,34 @@ def test_ghost_threshold_null_reports_only():
 def test_gate_config_ghost_thresholds():
     assert CFG["gate"]["max_ghost_screen_only"] == 0 and CFG["audit"]["max_ghost_screen_only"] == 0
     assert CFG["gate"]["max_ghost"] is None and CFG["audit"]["max_ghost"] is None   # 소재 품질 — 보고만
+
+
+def test_gate_reports_clean_missing_jobs_not_as_failure(tmp_path):
+    """청소 미생성 job 은 실패가 아니라 **따로 보고**된다(숨기지 않음) — 요약 파서가 새 항목을 읽는다."""
+    cc = "== 컷 12 · 캡컷 불일치 0 · 내보내기 불일치 0 · 청소 미생성 2 job" + chr(10)
+    res, out = _run(_stage(tmp_path), _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), cc_report=cc))
+    assert res.ok, out
+    assert "청소 미생성 2 job" in out
+    assert vg.capcut_summary(cc)["clean_missing"] == 2
+
+
+def test_gate_tools_write_scene_cache_to_gate_dir(tmp_path):
+    """관문의 영상 비교·캡컷 대조 명령은 장면 전환 캐시를 관문 임시 폴더에 둔다 — 소재 옆(고객 폴더)에 쓰지 않는다(9차 관문 실측)."""
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)))
+    res, out = _run(_stage(tmp_path), ssh)
+    evf = [c for c in ssh.cmds if "evf_run.py" in c]
+    cc = [c for c in ssh.cmds if "capcut_export_audit.py" in c]
+    assert evf and cc, ssh.cmds
+    for c in evf + cc:
+        m = re.search(r"SEG_SNAP_CACHE_DIR=(\S+)", c)
+        assert m and m.group(1).startswith("/tmp/gate_"), c
+
+
+def test_tools_default_scene_cache_under_own_out():
+    """비교 도구를 따로 돌려도(관문·점검 밖) 캐시는 자기 결과 폴더 아래 — 기본값이 코드에 있다."""
+    src_evf = (Path(__file__).resolve().parent / "evf_run.py").read_text(encoding="utf-8")
+    src_cc = (Path(__file__).resolve().parent / "capcut_export_audit.py").read_text(encoding="utf-8")
+    src_tool = (Path(__file__).resolve().parent / "editor_vs_final_video.py").read_text(encoding="utf-8")
+    assert 'setdefault("SEG_SNAP_CACHE_DIR", str(out / "snapcache"))' in src_evf
+    assert 'setdefault("SEG_SNAP_CACHE_DIR", str(OUT / "snapcache"))' in src_cc
+    assert 'setdefault("SEG_SNAP_CACHE_DIR"' in src_tool

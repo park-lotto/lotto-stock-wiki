@@ -92,7 +92,7 @@ def _gray_full(fr):
     return fr.astype(np.float32).mean(axis=-1)
 
 
-def _match(fe, ff, ge, gf, ie, jf, span=None):
+def _match(fe, ff, ge, gf, ie, jf, span=None, fe2=None, ff2=None):
     """①의 프레임 ie 와 ②의 기대 프레임 jf 주변을 비교 → (거리, 밀림초, 고른 ②프레임, 옛 거리).
     span=(첫, 끝) ②프레임 — 정지 컷이면 찾는 범위를 **그 컷 구간 안**으로 좁힌다(2026-09-27).
       정지 컷은 앞 컷과 같은 원본을 읽으면 앞 컷 끝 프레임과 그림이 같다. 완성본 정지 몫엔 켄번즈가 얹혀
@@ -103,7 +103,8 @@ def _match(fe, ff, ge, gf, ie, jf, span=None):
     if hi < lo or ie >= len(fe):
         return 9.9, 0.0, max(0, min(jf, len(ff) - 1)), 255.0, [], 0
     js = np.arange(lo, hi + 1)
-    d = fm.dist(ff, js, fe[ie])
+    # 거리 = 두 띠(가운데·아래) 중 가까운 쪽(frame_match.dist_any) — 청소본이 원본 위 글자 띠를 지워 채운 칸의 가짜 '다른 장면' 방지
+    d = fm.dist_any(ff, ff2, js, fe[ie], fe2[ie]) if (fe2 is not None and ff2 is not None) else fm.dist(ff, js, fe[ie])
     jb, dmin, _ok = fm.pick(js, d, jf)
     # 옛 판정(전체 화면 회색 평균 차, ±4프레임 최소) — 비교용 기록만
     ol = np.arange(max(0, jf - 4), min(len(gf) - 1, jf + 4) + 1)
@@ -277,6 +278,7 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
     t2 = time.time()
     rE, rF = _frames(E), _frames(F)
     fe, ff = _feats(rE), _feats(rF)
+    fe2, ff2 = fm.feats_low(rE), fm.feats_low(rF)
     ge, gf = _gray_full(rE), _gray_full(rF)
     me, mf = _motion(fe), _motion(ff)
     clean_beats = {int(x.get("beat_idx")) for x in (plan_used.get("beats") or []) if x.get("clean_replay")} if _b else set()
@@ -302,7 +304,7 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
             _sc = max(1e-3, (e1 - e0))      # 정지 컷: ②에서 이 컷이 차지하는 프레임(칸 비율) 안에서만 찾는다
             span = ((int(np.ceil((f_t + td * bounds[ci] / _sc) * FPS)),
                      int(np.floor((f_t + td * bounds[ci + 1] / _sc) * FPS)) - 1) if hold else None)
-            d, s, jb, old, curve, c0 = _match(fe, ff, ge, gf, ie, jf, span)
+            d, s, jb, old, curve, c0 = _match(fe, ff, ge, gf, ie, jf, span, fe2, ff2)
             worst = max(worst, d); shifts.append((s, hold)); per.append(("%d%s" % (ci, "h" if hold else ""), round(d, 2), round(s, 3)))
             samples.append({"job": jid, "beat": int(b["beat_idx"]), "cut": ci, "hold": hold, "d": round(d, 3), "shift": round(s, 3),
                             "old": round(old, 1), "c0": c0, "curve": curve})

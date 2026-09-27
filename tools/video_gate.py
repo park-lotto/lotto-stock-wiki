@@ -290,7 +290,8 @@ def judge_capcut(report_text, cfg, crash="", benign_skips=("편집안 없음",))
     if s is None:
         fails.append("캡컷·내보내기 대조 요약 줄(== 컷 …)을 못 읽었다 — 도구가 죽었거나 형식이 바뀌었다")
         return False, fails, notes
-    notes.append("캡컷·내보내기 대조: 컷 %d · 캡컷 불일치 %d · 내보내기 불일치 %d" % (s["cuts"], s["capcut"], s["export"]))
+    notes.append("캡컷·내보내기 대조: 컷 %d · 캡컷 불일치 %d · 내보내기 불일치 %d · 청소 미생성 %d job(청소 비교 제외)" % (
+        s["cuts"], s["capcut"], s["export"], s.get("clean_missing", 0)))
     if s["cuts"] <= 0:
         fails.append("캡컷·내보내기 대조: 비교한 컷이 0 — 아무것도 안 쟀다")
     lc, le = int(cfg.get("max_capcut_mismatch") or 0), int(cfg.get("max_export_mismatch") or 0)
@@ -327,8 +328,8 @@ def run_capcut_audit(sh, d, ids, g, *, say, sleep=time.sleep):
         return False, ["캡컷·내보내기 대조: 비교할 작업이 없다(영상 비교 report 에 작업 줄 0)"], []
     ids = [i for i in ids if re.fullmatch(r"[0-9A-Za-z_-]{4,64}", i)]
     rc, out = sh("cd %s && set -a && . /etc/shopping-shorts.env && set +a && "
-                 "{ PATCH_DIR=%s CC_OUT=%s/cc setsid nohup python3 %s/_tool/%s %s > %s/cc_run.log 2>&1 < /dev/null & echo PID=$!; }"
-                 % (REMOTE_REPO, d, d, d, CC_TOOL, " ".join(ids), d))
+                 "{ PATCH_DIR=%s CC_OUT=%s/cc SEG_SNAP_CACHE_DIR=%s/snapcache setsid nohup python3 %s/_tool/%s %s > %s/cc_run.log 2>&1 < /dev/null & echo PID=$!; }"
+                 % (REMOTE_REPO, d, d, d, d, CC_TOOL, " ".join(ids), d))
     m = re.search(r"PID=(\d+)", out)
     if rc != 0 or not m:
         return False, ["캡컷·내보내기 대조를 못 띄웠다: %s" % out.strip()[:300]], []
@@ -508,8 +509,9 @@ def run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sle
         # ★& 는 중괄호 안의 한 명령에만 — `a && b && c &` 로 쓰면 && 사슬 전체가 배경 셸이 되고 그 셸이 ssh 출력을
         #   붙잡아 ssh 가 안 끝난다(2026-09-27 시험 실행에서 120초 시간 초과로 실측).
         rc, out = sh("cd %s && set -a && . /etc/shopping-shorts.env && set +a && "
-                     "{ PATCH_DIR=%s EVF_OUT=%s/out setsid nohup python3 %s/_tool/evf_run.py %d > %s/run.log 2>&1 < /dev/null & echo PID=$!; }"
-                     % (REMOTE_REPO, d, d, d, n, d))
+                     # ★SEG_SNAP_CACHE_DIR: 장면 전환 캐시(seg_snap)를 관문 임시 폴더에 — 소재 옆(고객 폴더)에 쓰지 않는다(2026-09-27 9차 관문 실측)
+                     "{ PATCH_DIR=%s EVF_OUT=%s/out SEG_SNAP_CACHE_DIR=%s/snapcache setsid nohup python3 %s/_tool/evf_run.py %d > %s/run.log 2>&1 < /dev/null & echo PID=$!; }"
+                     % (REMOTE_REPO, d, d, d, d, n, d))
         m = re.search(r"PID=(\d+)", out)
         if rc != 0 or not m:
             say("❌ 영상 관문: 비교를 못 띄웠다\n%s" % out.strip()[:400])

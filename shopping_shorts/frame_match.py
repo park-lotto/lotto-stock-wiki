@@ -46,6 +46,32 @@ def frames(path, t0=None, dur=None, timeout=600, pre_vf=None):
     return a[: n * H * W * 3].reshape(n, H, W, 3)
 
 
+# ★아래 띠(2026-09-27 fab5e5d4662a): 원본 **위쪽**에 글자 띠(검정 바탕 문구, 화면 10~21%)가 박힌 영상은 청소본에서 그 띠가
+#   지워지고 채워진다(자막제거가 한 일) → 가운데 띠(10~70%) 비교만으로는 같은 장면·같은 프레임인데 0.65~0.77로 '다른 장면'.
+#   같은 프레임을 25~95%로 재면 0.00~0.03이었다. 그래서 **두 띠 중 가까운 쪽**을 거리로 쓴다(dist_any) — 위 글자 띠는 아래 띠가,
+#   아래 자막 띠는 가운데 띠가 비켜 간다. 진짜 다른 장면은 두 띠가 45% 겹쳐 둘 다 멀다.
+Y2A, Y2B = int(H * 0.25), int(H * 0.95)
+
+
+def _band_feats(fr, y0, y1):
+    g = fr[:, y0:y1].astype(np.float32).mean(axis=3)
+    h, w = (g.shape[1] // BLK) * BLK, (g.shape[2] // BLK) * BLK
+    g = g[:, :h, :w].reshape(len(g), h // BLK, BLK, w // BLK, BLK).mean(axis=(2, 4))
+    m = g.mean(axis=(1, 2), keepdims=True)
+    s = g.std(axis=(1, 2), keepdims=True)
+    return (g - m) / (s + 8.0)
+
+
+def feats_low(fr):
+    """아래 띠(25~95%) 특징 — dist_any 의 두 번째 자."""
+    return _band_feats(fr, Y2A, Y2B)
+
+
+def dist_any(ff, ff2, js, ref, ref2):
+    """두 띠(가운데·아래) 거리 중 작은 쪽 — 글자 띠가 지워진 청소본도 같은 장면으로 본다(위 주석)."""
+    return np.minimum(dist(ff, js, ref), dist(ff2, js, ref2))
+
+
 def feats(fr):
     """가운데 띠 회색조 → 5x5 평균 → z 정규화. (N, h, w) float32."""
     g = fr[:, Y0:Y1].astype(np.float32).mean(axis=3)

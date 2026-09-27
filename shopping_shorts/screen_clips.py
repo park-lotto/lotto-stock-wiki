@@ -278,17 +278,30 @@ def has(beat):
     """이 칸의 화면 컷이 준비돼 있나."""
     if not _enabled():
         return False
-    k = beat_key(beat)
+    k = (beat or {}).get("_screen_key") or beat_key(beat)
     with _LOCK:
         r = _CACHE.get(k) if k else None
     return bool(r and r.get("c"))
+
+
+def plays_at_speed(fit, sync, sd, out):
+    """이 컷을 **읽는 길이 전부를 화면 길이에 맞춰 일정 배속으로** 트나(True) — 아니면 느리게(1.15배 상한)+정지(False).
+    완성본(lookup → playback_speed)과 편집 화면 합본(app._pvproxy_build _cut_motion)이 **이 함수 하나**로 정한다(2026-09-27).
+    ★왜: 합본은 [속도 맞추기]만 배속으로 틀고 칸 통합 속도(sync_speed)·읽는 길이가 긴 컷은 읽는 길이를 화면 길이로 잘라 1배속으로 틀었다
+      — 1.4배 칸에서 완성본은 원본 1.358초를, 미리보기는 0.97초만 보여 컷 끝 장면이 7프레임 갈렸다(68b48b12c7f5 칸5, 서버 실측)."""
+    try:
+        return bool(fit) or abs(float(sync or 1.0) - 1.0) > 1e-6 or float(sd) > float(out) + 1e-3
+    except (TypeError, ValueError):
+        return bool(fit)
 
 
 def lookup(beat, tts_dur, src_durs):
     """화면 컷 → 렌더 조각 계획 [{video_id,start,src_dur,out_dur[,playback_speed]}]. 없거나 못 쓰면 None."""
     if not _enabled():
         return None
-    k = beat_key(beat)
+    # 캡컷·ZIP 이 원본 재료 이름을 `<vid>_raw` 로 바꾼 사본은 바꾸기 전 키(_screen_key)·이름 대응(_screen_vid)을 단다(mix_pipeline._plan_on_source_files)
+    k = (beat or {}).get("_screen_key") or beat_key(beat)
+    vmap = (beat or {}).get("_screen_vid") or {}
     with _LOCK:
         r = _CACHE.get(k) if k else None
     if not k:
@@ -309,7 +322,7 @@ def lookup(beat, tts_dur, src_durs):
         sync = 1.0
     plan = []
     for c in cuts:
-        vid = c.get("v")
+        vid = vmap.get(c.get("v"), c.get("v"))
         total = float((src_durs or {}).get(vid, 0.0) or 0.0)
         if total <= 0.05:
             return _miss(beat, "src_unreadable %s" % vid)   # 소스를 못 읽는다 — 종전 계산이 손상 소스를 거른다
@@ -324,7 +337,7 @@ def lookup(beat, tts_dur, src_durs):
         p = {"video_id": vid, "start": start, "src_dur": sd, "out_dur": out, "screen": True}
         # 배속: 화면이 속도 맞추기(fit)로 끝까지 움직였거나 통합 속도를 줬거나 읽는 길이가 더 길면 — 그 비율 그대로.
         #   그 밖(읽는 길이 < 화면 길이)은 느리게(1.15배 상한)+정지 — 화면 미리보기 합본(pvproxy)과 같은 기계.
-        if c.get("fit") or abs(sync - 1.0) > 1e-6 or sd > out + 1e-3:
+        if plays_at_speed(c.get("fit"), sync, sd, out):
             p["playback_speed"] = sd / out
         plan.append(p)
     return plan or _miss(beat, "screen_zero_len")
