@@ -212,7 +212,7 @@ def _stage(tmp_path, changed_rel="shopping_shorts/video_assemble.py"):
     _git(r, "config", "user.name", "t")
     files = {"shopping_shorts/video_assemble.py": "A = 1\n", "shopping_shorts/app.py": "B = 1\n",
              "tools/editor_vs_final_video.py": "# tool\n", "tools/evf_run.py": "# run\n",
-             "tools/capcut_export_audit.py": "# cc\n", "README.md": "r\n"}
+             "tools/capcut_export_audit.py": "# cc\n", "tools/final_audio_audit.py": "# au\n", "README.md": "r\n"}
     for rel, body in files.items():
         (r / rel).parent.mkdir(parents=True, exist_ok=True)
         (r / rel).write_bytes(body.encode("utf-8"))
@@ -227,13 +227,23 @@ def _stage(tmp_path, changed_rel="shopping_shorts/video_assemble.py"):
 
 
 _CC_OK = "abc 칸3 컷R10/C10/E10 | 캡컷 불일치 0 {} | 내보내기 불일치 0 {}\n== 컷 10 · 캡컷 불일치 0 · 내보내기 불일치 0\n"
+_AU_LINE = '== 칸 %d · 나레이션 0.15초+ 오차 %d · 효과음 누락 0 · BGM 이상 0 · 음성-자막 0.15초+ 0 · 나레이션 못찾음 0 · 효과음 타점0.10+ 0 · 길이 이상 0 · 렌더뒤음성바뀜 0 · 건너뜀 0 · 패킷 잉여 0.05초+ %d편 · 일정 지연 %d편 · 검출불일치 0칸   (…)'
+
+
+def _au(cells=10, narr=0, surplus=0, delay=0):
+    return "62ed6bf66eb9 칸10 패킷잉여0.026 …\n" + _AU_LINE % (cells, narr, surplus, delay) + "\n"
+
+
+_AU_OK = _au()
 
 
 class _FakeSSH:
     def __init__(self, report="", free=57, reachable=True, crash="", poll="EVF_DONE rc=0\n---\n5\nGONE\n",
-                 cc_report=_CC_OK, cc_crash="", cc_poll="CEA_DONE rc=0\n---\nGONE\n"):
+                 cc_report=_CC_OK, cc_crash="", cc_poll="CEA_DONE rc=0\n---\nGONE\n",
+                 au_report=_AU_OK, au_crash="", au_poll="AUDIO_DONE rc=0\n---\nGONE\n"):
         self.report, self.free, self.reachable, self.crash, self.poll = report, free, reachable, crash, poll
         self.cc_report, self.cc_crash, self.cc_poll = cc_report, cc_crash, cc_poll
+        self.au_report, self.au_crash, self.au_poll = au_report, au_crash, au_poll
         self.cmds = []
 
     def __call__(self, cmd, stdin=None, timeout=120):
@@ -242,6 +252,14 @@ class _FakeSSH:
             return 255, "ssh: connect to host timed out"
         if "capcut_export_audit.py" in cmd:
             return 0, "PID=4343\n"
+        if "final_audio_audit.py" in cmd:
+            return 0, "PID=4444\n"
+        if cmd.startswith("cat ") and "/audio/done.txt" in cmd:
+            return 0, self.au_poll
+        if cmd.startswith("cat ") and "/audio/report.txt" in cmd:
+            return 0, self.au_report
+        if cmd.startswith("cat ") and "/audio/crash.txt" in cmd:
+            return 0, self.au_crash
         if cmd.startswith("cat ") and "/cc/done.txt" in cmd:
             return 0, self.cc_poll
         if cmd.startswith("cat ") and "/cc/report.txt" in cmd:
@@ -516,3 +534,65 @@ def test_tools_default_scene_cache_under_own_out():
     assert 'setdefault("SEG_SNAP_CACHE_DIR", str(out / "snapcache"))' in src_evf
     assert 'setdefault("SEG_SNAP_CACHE_DIR", str(OUT / "snapcache"))' in src_cc
     assert 'setdefault("SEG_SNAP_CACHE_DIR"' in src_tool
+
+
+
+# ── ⑥ 소리 대조(2026-09-27) — 영상 비교가 구운 임시 완성본을 재사용(렌더 2번 금지) ─────────────────
+
+def test_gate_runs_audio_audit_on_compared_jobs_reusing_finals(tmp_path):
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)))
+    res, out = _run(_stage(tmp_path), ssh)
+    assert res.ok, out
+    evf = [c for c in ssh.cmds if "evf_run.py" in c]
+    assert evf and "EVF_KEEP_FINAL=/tmp/gate_" in evf[0], "영상 비교가 구운 완성본을 남겨야 소리 대조가 재사용한다"
+    au = [c for c in ssh.cmds if "final_audio_audit.py" in c]
+    assert au and "62ed6bf66eb9" in au[0] and "AUDIO_FINAL_DIR=/tmp/gate_" in au[0] and "PATCH_DIR=" in au[0], au
+    assert "소리 대조: 칸 10 · 나레이션 0.15초+ 0 · 패킷 잉여 0.05초+ 0편 · 일정 지연 0편" in out
+    assert ssh.cmds[-1].startswith("rm -rf /tmp/gate_"), "임시 완성본(finals)도 폴더째 지운다"
+
+
+@pytest.mark.parametrize("au,why", [
+    (_au(narr=2), "나레이션 0.15초+ 오차 2"),
+    (_au(surplus=1), "패킷 잉여 0.05초+ 1"),
+    (_au(delay=3), "일정 지연 3"),
+    (_au(cells=0), "잰 칸이 0"),
+    (_AU_LINE.split(" · 일정 지연")[0] % (10, 0, 0) + "\n", "요약 줄"),        # 옛 판본(일정 지연 항목 없음)
+    ("j1 건너뜀 KeyError: x\n" + _AU_OK, "오류로 건너뛴"),
+])
+def test_gate_fails_on_audio_mismatch(tmp_path, au, why):
+    """★사보타주 기준: 목소리가 화면과 어긋났는데(또는 못 쟀는데) 통과하면 소리 관문은 존재 이유가 없다."""
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), au_report=au)
+    res, out = _run(_stage(tmp_path), ssh)
+    assert not res.ok and why in out, out
+    assert ssh.cmds[-1].startswith("rm -rf /tmp/gate_")
+
+
+def test_gate_fails_when_audio_audit_crashes_or_dies(tmp_path):
+    res, out = _run(_stage(tmp_path), _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), au_crash="Traceback x"))
+    assert not res.ok and "소리 대조 도구가 예외로 끝났다" in out
+    (tmp_path / "b").mkdir()
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), au_poll="---\nGONE\n")
+    res, out = _run(_stage(tmp_path / "b"), ssh)
+    assert not res.ok and "소리 대조가 끝 표식 없이 죽었다" in out and any(c.startswith("kill -- -4444") for c in ssh.cmds)
+
+
+def test_audio_tool_is_uploaded_and_watched():
+    assert "tools/final_audio_audit.py" in vg.TOOL_RELS
+    assert "tools/final_audio_audit.py" in CFG["watch_files"]
+    for k in ("max_audio_narr", "max_audio_surplus", "max_audio_delay"):
+        assert CFG["gate"][k] == 0 and CFG["audit"][k] == 0, k
+
+
+def test_gate_passes_vcut_mismatch_as_report_only(tmp_path):
+    """영상 컷 검출이 계획 프레임과 갈리는 칸(칸 안 장면 전환 오검출 — finish 12차 6c1a 칸2)은 판정이 아니라 보고만."""
+    au = _AU_OK.replace("검출불일치 0칸", "검출불일치 3칸")
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), au_report=au)
+    res, out = _run(_stage(tmp_path), ssh)
+    assert res.ok, out
+    assert "검출불일치 3칸(보고만" in out
+
+
+def test_gate_fails_when_audio_summary_lacks_vcut_item(tmp_path):
+    au = _AU_OK.replace(" · 검출불일치 0칸", "")
+    res, out = _run(_stage(tmp_path), _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), au_report=au))
+    assert not res.ok and "요약 줄" in out

@@ -729,6 +729,21 @@ def cut_frame_list(durs, total_frames=None, fps=30):
     return out
 
 
+def _piece_start_of(c, segs):
+    """컷 c가 속한 조각(같은 video_id, seg.start ≤ c.start < seg.end)의 시작. 못 찾으면 None — 시작 당기기의 하한(조각 앞 = 딴 장면)."""
+    try:
+        st = float(c.get("start", 0.0))
+        for s in segs or []:
+            if s.get("video_id") != c.get("video_id"):
+                continue
+            a, b = float(s.get("start", 0.0)), float(s.get("end", 0.0) or 0.0)
+            if b > a and a - 1e-3 <= st < b:
+                return a
+    except Exception as e:  # noqa: BLE001 — 하한을 못 정하면 종전(소스 안으로만)
+        print(f"[assemble] 조각 시작 계산 실패(무해, 종전 당기기): {e!r}", file=sys.stderr)
+    return None
+
+
 def _piece_end_limit(c, segs, src_total):
     """컷 c가 속한 조각(같은 video_id, seg.start ≤ c.start < seg.end)의 끝. 못 찾으면 소스 끝.
 
@@ -2601,14 +2616,22 @@ def render_cut_plan(edit_plan, tts_paths, source_video_paths, *, beat_durs=None,
                 _beat_speed = 1.0
             if not math.isfinite(_beat_speed) or abs(_beat_speed - 1.0) <= 1e-6:
                 _beat_speed = None
-            # 슬로우 상한(1.15배)+정지프레임(2026-07-19): play_out+freeze == out_dur.
-            play_out, freeze = _speed_and_freeze(_c_src, _c_out, preferred_speed=_beat_speed)
-            _nf_play = motion_frames(_nf, play_out, freeze)
             # start를 소스 안으로 당긴다(2026-07-19) — 소스 밖을 잡으면 -ss가 0프레임을 낸다.
+            #   ★단 **담은 조각의 시작 앞으로는 안 당긴다**(2026-09-27, 11cfc4a4b75c 8칸): 청소본 끝에 붙은 조각은 파일이 모자라
+            #   0.084초 앞 = **앞 컷의 청소 조각**을 읽었다(딴 장면). 캡컷·ZIP 은 소스별 파일에서 같은 컷을 다른 이웃으로 당겨
+            #   start·read 가 갈렸다. 조각 시작에서 멈추고 모자란 몫은 느리게·정지로 — 읽는 길이·정지는 아래 같은 기계가 정한다.
             sdur = _src_dur(c["video_id"])
             start = c["start"]
             if sdur > 0:
-                start = max(0.0, min(start, sdur - min(_c_src, sdur)))
+                pulled = max(0.0, min(start, sdur - min(_c_src, sdur)))
+                floor = _piece_start_of(c, segs)
+                if floor is not None and pulled < floor - 1e-4 <= start and floor < sdur - 0.05:
+                    pulled = floor
+                    _c_src = max(1e-3, min(_c_src, sdur - pulled))
+                start = pulled
+            # 슬로우 상한(1.15배)+정지프레임(2026-07-19): play_out+freeze == out_dur.
+            play_out, freeze = _speed_and_freeze(_c_src, _c_out, preferred_speed=_beat_speed)
+            _nf_play = motion_frames(_nf, play_out, freeze)
             move = min(_cfr[j], _nf_play)
             clips.append({"j": j, "clip": c, "video_id": c["video_id"], "cfr": _cfr[j], "nf": _nf, "f_start": fr,
                           "c_src": _c_src, "c_out": _c_out, "play_out": play_out, "freeze": freeze,
@@ -3648,8 +3671,13 @@ def _pre_compose_under_text(in_video, deco, work):
     return str(out), deco
 
 
-def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None, skip_text=False):
+def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None, skip_text=False,
+                   narr_wav=None, audio_wav_out=None):
     """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
+    narr_wav(2026-09-27): 나레이션 무손실 한 줄(_render_mix 가 만든 narration.wav). 주면 소리의 바탕을 in_video 의 AAC 대신
+      이 wav 로 삼는다 → 효과음·BGM 을 섞든 안 섞든 **완성본 소리는 AAC 1세대**(종전: 섞는 경우 mix_raw AAC 를 풀어 다시 AAC = 2세대).
+    audio_wav_out: 주면 완성본 소리(섞은 뒤)를 무손실 wav 로도 남긴다 — 인트로 붙이기(prepend_still audio_wav)가 이것으로
+      소리를 **한 번만** 인코딩한다.
     비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
     타임라인 기준으로 배치한다(_caption_drawtexts에 t0 오프셋 전달). drawtext 값 안의
     between(t,a,b) 콤마를 나중에 split할 필요가 없다(필터 요소 단위로 리스트 반환).
@@ -3755,11 +3783,20 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
                    if float(s.get("dur") or 0) > 0 and (
                        (s.get("_abspath") and os.path.exists(s["_abspath"]))
                        or (s.get("blur_mask") and os.path.exists(s["blur_mask"])))]
+    narr_wav = str(narr_wav) if (narr_wav and os.path.exists(str(narr_wav))) else None
     if not has_bgm and not has_overlay and not has_motion and not has_sfx and not scene_masks:
         base_vf = vf
-        _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
-                     "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
-                    cwd=str(work))
+        if narr_wav:        # 소리 = 나레이션 한 줄(무손실) → AAC 1회
+            _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-i", narr_wav, "-vf", base_vf, "-r", "30",
+                         "-map", "0:v:0", "-map", "1:a:0",
+                         "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-c:a", "aac", "-pix_fmt", "yuv420p", str(out_path)],
+                        cwd=str(work))
+            if audio_wav_out:
+                shutil.copyfile(narr_wav, str(audio_wav_out))
+        else:
+            _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
+                         "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
+                        cwd=str(work))
         return str(out_path)
     inputs = ["-i", str(in_video)]
     fc = [f"[0:v]{vf}[v0]"]
@@ -3824,6 +3861,10 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     # 비트 위로 흘러넘치되 영상 끝에서만 잘린다(v1 알려진 한계, 스펙 §4.3).
     amap = None
     mix_labels = ["0:a"]                              # 나레이션(항상 있음, 첫 입력)
+    if narr_wav:                                      # 나레이션 무손실 한 줄이 있으면 그것이 바탕(AAC 1세대)
+        inputs += ["-i", narr_wav]
+        mix_labels = [f"{idx}:a"]
+        idx += 1
     if has_bgm:                                       # 배경음악(나레이션 위 낮은 볼륨)
         inputs += ["-i", bgm_path]
         vol = max(0.0, min(1.0, (bgm.get("volume", 15)) / 100.0))
@@ -3874,9 +3915,17 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         fc.append("[nbduck][sfxmix]amix=inputs=2:duration=first:normalize=0,"
                   "alimiter=limit=0.89:level=0[a]")
         amap = "[a]"
+    a_enc, a_wav = amap, amap
+    if amap and audio_wav_out:          # 섞은 소리를 둘로 — 하나는 AAC(완성본), 하나는 무손실 wav(인트로 붙이기용)
+        fc.append(f"{amap}asplit=2[aenc][awav]")
+        a_enc, a_wav = "[aenc]", "[awav]"
+    elif not amap and narr_wav:         # 섞을 게 없으면 나레이션 한 줄 그대로
+        a_enc = a_wav = mix_labels[0]
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
-    cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
+    cmd += (["-map", a_enc, "-c:a", "aac"] if a_enc else ["-map", "0:a", "-c:a", "copy"])
     cmd += ["-r", "30", "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(out_path)]
+    if audio_wav_out and a_wav:
+        cmd += ["-map", a_wav, "-c:a", "pcm_s16le", str(audio_wav_out)]
     _run_ffmpeg(cmd, cwd=str(work))
     return str(out_path)
 
@@ -3886,7 +3935,8 @@ _SFX_DUCK_THRESHOLD = 0.2      # -14dBFS: 둥·오프너·뽁 같은 큰 소리�
 _SFX_DUCK_RATIO = 4
 
 
-def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None, sfx_paths=None, burn_captions=True):
+def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, headcopy=None, caption_style=None, deco=None, cutaway_paths=None, sfx_paths=None, burn_captions=True,
+             audio_wav_out=None):
     """EDL → 최종 mp4. 1)믹스(자막X) 2)clean_fn(있으면 자막제거) 3)우리 자막.
     clean_fn(mix_raw_path)->clean_path 를 주면 그 사이에 VMake 자막제거가 끼워진다
     (없으면 생략). 자막제거는 우리 자막을 굽기 전 깨끗한 믹스에 돌려야 우리 자막이
@@ -3907,12 +3957,18 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
     try:
         mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
         base_video = clean_fn(mix_raw) if clean_fn else mix_raw
+        # ★소리는 나레이션 무손실 한 줄(narration_track)에서 **한 번만** AAC 로 — 효과음·BGM 섞기·자막제거본·장면꾸미기 모두(2026-09-27).
+        #   audio_wav_out 을 주면 완성본 소리(섞은 뒤)를 무손실로도 남긴다 — 호출부가 인트로를 붙일 때(prepend_still audio_wav) 쓴다.
+        _narr = work / "narration.wav"
+        _narr = str(_narr) if _narr.exists() else None
         if not burn_captions:
             # '자막 없는 clean 배경'용(썸네일 배경 등, 2026-07-22) — 우리 나레이션 자막·꾸미기를
             # 굽는 _burn_captions 패스를 통째로 건너뛴다. base_video(믹스[+원본자막제거])를 그대로
             # 확정하므로 ①썸네일에 나레이션 자막이 안 박히고 ②캡션 인코딩 패스가 없어 더 빠르다.
             import shutil
             shutil.copyfile(base_video, out_path)
+            if audio_wav_out and _narr:
+                shutil.copyfile(_narr, str(audio_wav_out))
             return out_path
         # 🖼 이미지 틀은 **자막·글자보다 아래**여야 한다(2026-08-31 사장님: "그림위로
         #   올라가는게 해드카피만있고 자막 제목등 다 안된다").
@@ -3926,11 +3982,13 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
             audio_deco = {k: v for k, v in deco.items() if k not in ("template", "extra_texts", "watermark", "overlay", "motion")}
             with_audio = work / "scene-style-audio.mp4"
             _burn_captions(base_video, edit_plan, tts_paths, with_audio, work,
-                           deco=audio_deco, sfx_paths=sfx_paths, skip_text=True)
+                           deco=audio_deco, sfx_paths=sfx_paths, skip_text=True,
+                           narr_wav=_narr, audio_wav_out=audio_wav_out)
             return compose(with_audio, _beat_timeline(edit_plan, tts_paths),
                            deco["scene_style"], out_path, work, headcopy)
         base_video, deco = _pre_compose_under_text(base_video, deco, work)
-        return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)
+        return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths,
+                              narr_wav=_narr, audio_wav_out=audio_wav_out)
     finally:
         try:
             import shutil as _sh
@@ -3957,16 +4015,24 @@ def _probe_audio_params(path):
         return 44100, 2
 
 
-def prepend_still(video_path, image_path, seconds=1.2):
+def prepend_still(video_path, image_path, seconds=1.2, audio_wav=None):
     """영상 맨 앞에 정지 이미지(썸네일) 구간을 붙인다. 성공하면 video_path를 덮어쓴다.
 
     왜 이렇게: 비트 클립을 잇는 기존 방식과 **같은 규격**(1080x1920 libx264/aac 30fps)으로
     인트로를 만들어 concat -c copy로 붙인다. 전체 재인코딩은 2GB 서버에서 수십 초가 걸려
     배포 재시작에 걸려 죽던 원인이다(2026-07-12 주석과 같은 이유).
+
+    audio_wav(2026-09-27): 완성본 소리의 **무손실 원본**(assemble(audio_wav_out=...)이 남긴 wav)을 주면
+      영상만 이어 붙이고(-c:v copy) 소리는 [인트로 프레임 수 × 표본/프레임 만큼 무음 + 그 wav] 한 줄로 **한 번만** AAC로 얹는다.
+      ★종전(아래)은 무음 인트로를 따로 AAC로 굽고 concat -c copy로 이어, AAC 채움 표본이 한 벌 더 쌓였다
+        (라이브 b307f471dd78: 패킷 잉여 0.051초 — 인트로 없는 렌더는 0.022~0.037). 칸 소리 잇기(narration_track 이전)와 같은 병이다.
+      인트로 길이는 **프레임 수**(round(seconds×30))로 정한다 — 영상 인트로와 소리 무음이 같은 자다.
     """
     video_path, image_path = Path(video_path), Path(image_path)
     if not video_path.exists() or not image_path.exists():
         return False
+    if audio_wav and Path(audio_wav).exists():
+        return _prepend_still_one_audio(video_path, image_path, seconds, Path(audio_wav))
     sr, ch = _probe_audio_params(video_path)
     work = video_path.parent
     intro = work / "thumb_intro.mp4"
@@ -3986,4 +4052,48 @@ def prepend_still(video_path, image_path, seconds=1.2):
     _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
                  "-c", "copy", str(merged)])
     merged.replace(video_path)      # 같은 폴더 = 원자적 교체
+    return True
+
+
+def _wav_params(path):
+    """(표본율, 채널 배치 이름) — 무손실 wav 헤더에서."""
+    import wave as _wave
+    with _wave.open(str(path), "rb") as w:
+        return w.getframerate(), ("stereo" if w.getnchannels() >= 2 else "mono")
+
+
+def _prepend_still_one_audio(video_path, image_path, seconds, audio_wav):
+    """prepend_still 의 소리 1회 인코딩 경로 — 영상은 이어 붙이기만, 소리는 [무음 N표본 + 무손실 wav] 를 한 번 AAC."""
+    work = video_path.parent
+    nfr = max(1, int(round(float(seconds) * 30)))
+    sr, layout = _wav_params(audio_wav)
+    n_sil = int(round(nfr * sr / 30.0))
+    intro = work / "thumb_intro_v.mp4"
+    _run_ffmpeg([
+        "ffmpeg", "-y", "-loop", "1", "-framerate", "30", "-i", str(image_path),
+        "-vf", (f"scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,"
+                f"crop={_OUT_W}:{_OUT_H}"),
+        "-frames:v", str(nfr), "-r", "30", "-an",
+        "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(intro)])
+    main_v = work / "thumb_main_v.mp4"
+    _run_ffmpeg(["ffmpeg", "-y", "-i", str(video_path), "-map", "0:v:0", "-an", "-c:v", "copy", str(main_v)])
+    lst = work / "concat_intro.txt"
+    lst.write_text(f"file '{intro.as_posix()}'\nfile '{main_v.as_posix()}'\n", encoding="utf-8")
+    merged = work / "final_with_intro.mp4"
+    try:
+        _run_ffmpeg([
+            "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+            "-f", "lavfi", "-i", f"anullsrc=r={sr}:cl={layout}", "-i", str(audio_wav),
+            "-filter_complex",
+            f"[1:a]atrim=end_sample={n_sil},asetpts=N/SR/TB[sil];"
+            f"[2:a]aformat=sample_rates={sr}:channel_layouts={layout},asetpts=N/SR/TB[body];"
+            f"[sil][body]concat=n=2:v=0:a=1[a]",
+            "-map", "0:v:0", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", str(merged)])
+        merged.replace(video_path)      # 같은 폴더 = 원자적 교체
+    finally:
+        for f in (intro, main_v, lst):
+            try:
+                f.unlink()
+            except OSError:
+                pass
     return True

@@ -188,3 +188,91 @@ def test_render_concat_drift_caught(mats, tmp_path):
     assert worst2 < 0.03, r2["rows"]
     assert r2["surplus"] is not None and r2["surplus"] < fa.SURPLUS_T, r2["surplus"]
     assert fa.judge(r2)["surplus_bad"] == 0
+
+
+# ── 일정 지연(2026-09-27) — 칸마다 같은 크기로 밀리는 결함은 '가장 큰 칸'(0.15)·패킷 잉여(0.05)로 안 잡힌다 ──
+
+def test_constant_delay_after_intro_caught(mats):
+    """종전 인트로 경로처럼 인트로 뒤 목소리 전체가 +0.06초 늦으면 일정 지연 1편(중앙값·인트로 뒤 첫 칸 둘 다)."""
+    late = _final(mats, "late", intro=1.26)                   # 실제 목소리는 1.26초부터
+    r = fa.audit(_ctx(mats, late, intro=1.2))                 # 편성은 인트로 1.2초
+    j = fa.judge(r)
+    assert j["delay_bad"] == 1, (j["delay_med"], j["delay_first"])
+    assert abs(j["delay_med"] - 0.06) < 0.01 and abs(j["delay_first"] - 0.06) < 0.01, (j["delay_med"], j["delay_first"])
+    assert not j["narr_bad"], "0.15 기준으로는 안 잡힌다 — 그래서 일정 지연 항목이 필요하다"
+
+
+def test_constant_delay_zero_when_aligned(mats):
+    r = fa.audit(_ctx(mats, _final(mats, "intro_ok", intro=1.2), intro=1.2))
+    j = fa.judge(r)
+    assert j["delay_bad"] == 0 and abs(j["delay_med"]) < 0.01 and abs(j["delay_first"]) < 0.01, (j["delay_med"], j["delay_first"])
+
+
+def test_parse_summary_reads_gate_items_and_rejects_old_format():
+    line = ("== 칸 82 · 나레이션 0.15초+ 오차 3 · 효과음 누락 1 · BGM 이상 0 · 음성-자막 0.15초+ 2 · 나레이션 못찾음 0"
+            " · 효과음 타점0.10+ 0 · 길이 이상 0 · 렌더뒤음성바뀜 0 · 건너뜀 1 · 패킷 잉여 0.05초+ 2편 · 일정 지연 4편 · 검출불일치 0칸   (…)")
+    assert fa.parse_summary("x\n" + line + "\n") == {"cells": 82, "narr": 3, "sfx_miss": 1, "bgm": 0, "lost": 0,
+                                                      "skip": 1, "surplus": 2, "delay": 4, "vcut_mis": 0}
+    old = line.split(" · 일정 지연")[0]                        # 일정 지연 항목이 없는 옛 판본 → 판정 불가
+    assert fa.parse_summary(old) is None
+    assert fa.parse_summary("요약 없음") is None
+
+
+
+# ── 판정 기준 = 계획 프레임(2026-09-27 finish 12차 오탐: 6c1a 칸2 검출 컷 +0.200, 계획 프레임 0.000) ──
+
+def _video_with_cut(mats, name, cut_at, voice_shift=0.0):
+    """칸 2개(1.5초·1.8초) 영상+소리. 그림은 cut_at 초에서 한 번 바뀐다(빨강→파랑). 둘째 칸 목소리는 voice_shift 초 늦다.
+    소리는 BGM·효과음 없이 나레이션만(렌더처럼 AAC 한 번)."""
+    a = mats["arr"]
+    n1, n2 = len(a["b1"]), len(a["b2"])
+    gap = int(round(voice_shift * R))
+    total = n1 + n2 + gap
+    narr = np.zeros(total)
+    narr[:n1] += a["b1"]
+    narr[n1 + gap:n1 + gap + n2] += a["b2"]
+    wv = mats["dir"] / (name + ".wav")
+    _wav(wv, 0.5 * narr)
+    dur = total / R
+    out = mats["dir"] / (name + ".mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y",
+                    "-f", "lavfi", "-i", "color=c=red:s=64x112:r=30:d=%.4f" % cut_at,
+                    "-f", "lavfi", "-i", "color=c=blue:s=64x112:r=30:d=%.4f" % (dur - cut_at),
+                    "-i", str(wv), "-filter_complex", "[0:v][1:v]concat=n=2:v=1:a=0[v]",
+                    "-map", "[v]", "-map", "2:a", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", str(out)],
+                   check=True, stdin=subprocess.DEVNULL)
+    return out
+
+
+def _ctx2(mats, final):
+    return {"final": str(final), "intro": 0.0,
+            "beats": [{"idx": 0, "tts": str(mats["b1"]), "head_trim": 0.0, "dur": 1.5, "t0": 0.0},
+                      {"idx": 1, "tts": str(mats["b2"]), "head_trim": 0.0, "dur": 1.8, "t0": 1.5}],
+            "sfx": [], "bgm": None}
+
+
+def test_scene_change_inside_beat_is_not_a_narration_error(mats):
+    """칸 경계엔 그림이 안 바뀌고 칸 안 +0.2초에서 바뀌면 검출 컷은 +0.2로 잡힌다 — 그건 목소리 결함이 아니다(판정 0, 검출불일치 1)."""
+    r = fa.audit(_ctx2(mats, _video_with_cut(mats, "incut", 1.5 + 0.2)))
+    j = fa.judge(r)
+    row = r["rows"][1]
+    assert abs(row["err_vcut"] + 0.2) < 0.04, row          # 검출 기준이면 −0.2(목소리가 '앞선' 것처럼 보인다)
+    assert abs(row["err_v"]) < 0.02, row                   # 계획 프레임 기준 0
+    assert not j["narr_bad"], [(x["beat"], x["err_v"]) for x in j["narr_bad"]]
+    assert [x["beat"] for x in j["vcut_mis"]] == [1], [(x["beat"], x.get("vcut_off")) for x in r["rows"]]
+
+
+def test_voice_really_late_is_caught_against_plan_frame(mats):
+    """그림은 칸 경계에서 바뀌고 목소리가 실제로 +0.2초 늦으면 판정 1(계획 프레임 기준), 검출불일치 0."""
+    r = fa.audit(_ctx2(mats, _video_with_cut(mats, "late2", 1.5, voice_shift=0.2)))
+    j = fa.judge(r)
+    assert [x["beat"] for x in j["narr_bad"]] == [1], [(x["beat"], x["err_v"]) for x in r["rows"]]
+    assert abs(j["narr_bad"][0]["err_v"] - 0.2) < 0.02
+    assert not j["vcut_mis"], [(x["beat"], x.get("vcut_off")) for x in r["rows"]]
+
+
+def test_parse_summary_reads_vcut_mismatch():
+    line = ("== 칸 8 · 나레이션 0.15초+ 오차 0 · 효과음 누락 0 · BGM 이상 0 · 음성-자막 0.15초+ 0 · 나레이션 못찾음 0"
+            " · 효과음 타점0.10+ 0 · 길이 이상 0 · 렌더뒤음성바뀜 0 · 건너뜀 0 · 패킷 잉여 0.05초+ 0편 · 일정 지연 0편 · 검출불일치 2칸   (…)")
+    assert fa.parse_summary(line)["vcut_mis"] == 2
+    assert fa.parse_summary(line.split(" · 검출불일치")[0]) is None      # 새 항목이 없는 옛 판본 → 판정 불가

@@ -173,7 +173,8 @@ def _beat_source_clips(plan, timeline, source_video_paths, out_dir, src_durs=Non
         from shopping_shorts.video_assemble import render_cut_plan
         roles = {b["beat_idx"]: b.get("role") for b in timeline}
         bd = {b["beat_idx"]: float(b.get("dur") or 0.0) for b in timeline if float(b.get("dur") or 0.0) > 0}
-        for bp in render_cut_plan(plan, {}, source_video_paths, beat_durs=bd, src_durs=durs):
+        # 정본 job: 렌더 컷 계획을 소스별 파일 좌표로 옮긴 것(export_sources_for → plan["_cut_plan"]) 그대로(캡컷과 같은 값)
+        for bp in (plan.get("_cut_plan") or render_cut_plan(plan, {}, source_video_paths, beat_durs=bd, src_durs=durs)):
             done.add(bp["idx"])
             role = safe_name(roles.get(bp["idx"]) or "", default="scene")
             for cp in bp["clips"]:

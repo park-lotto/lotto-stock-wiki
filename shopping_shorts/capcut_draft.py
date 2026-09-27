@@ -393,7 +393,10 @@ def capcut_segments(plan, timeline, source_video_paths, tts_paths=None, video_du
                 for vid, real in (source_video_paths or {}).items() if real}
         bd = {tl["beat_idx"]: float(tl.get("dur") or 0.0) for tl in timeline or []
               if float(tl.get("dur") or 0.0) > 0}
-        cplan = render_cut_plan(plan, tts_paths or {}, source_video_paths or {}, beat_durs=bd, src_durs=srcd)
+        # 정본 job: 렌더 컷 계획을 소스별 파일 좌표로 옮긴 것(mix_pipeline.export_sources_for → plan["_cut_plan"]) 그대로 —
+        #   다시 계산하면 소스별 파일 길이로 당기기·정지가 달라진다(11cfc4a4b75c)
+        cplan = (plan or {}).get("_cut_plan") or render_cut_plan(plan, tts_paths or {}, source_video_paths or {},
+                                                                 beat_durs=bd, src_durs=srcd)
     except Exception as e:      # noqa: BLE001 — 계획 실패가 내보내기를 죽이면 안 된다(대신 경보)
         print("[capcut] 완성본 컷 계획 실패 — 종전 조각 계획으로 대체: %r" % (e,), file=sys.stderr)
         return None

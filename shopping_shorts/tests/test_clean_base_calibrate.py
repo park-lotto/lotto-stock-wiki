@@ -70,7 +70,7 @@ def fake(tmp_path):
 def test_v3_measures_each_cut_offset_within_one_frame(fake):
     work, base = fake
     out = cb.calibrate(work, base, {"v": str(work / "src.mp4")})
-    assert out["calibrated"] == cb.CAL_VERSION == 4
+    assert out["calibrated"] == cb.CAL_VERSION == 5
     got = [c.get("off", 0.0) for c in out["cuts"]]
     want = [lag / FPS for (_s, _sd, _d, lag, _c) in CUTS]
     for g, w in zip(got, want):

@@ -15,7 +15,12 @@
     "max_export_mismatch": 0,
     "max_ghost": null,
     "max_ghost_screen_only": 0,
-    "capcut_timeout_sec": 900
+    "capcut_timeout_sec": 900,
+    "max_audio_narr": 0,
+    "max_audio_surplus": 0,
+    "max_audio_delay": 0,
+    "max_audio_lost": 0,
+    "audio_timeout_sec": 600
   },
   "audit": {
     "jobs": 10,
@@ -30,7 +35,15 @@
     "max_export_mismatch": 0,
     "max_ghost": null,
     "max_ghost_screen_only": 0,
-    "capcut_timeout_sec": 1800
+    "capcut_timeout_sec": 1800,
+    "audio_jobs": 10,
+    "audio_timeout_sec": 1200,
+    "max_audio_narr": 0,
+    "max_audio_surplus": 0,
+    "max_audio_delay": 0,
+    "max_audio_lost": 0,
+    "max_audio_sfx_miss": null,
+    "max_audio_bgm": null
   },
   "benign_skips": [
     "음성 없음"
@@ -48,7 +61,8 @@
     "shopping_shorts/static/scene_play.js",
     "tools/editor_vs_final_video.py",
     "tools/evf_run.py",
-    "tools/capcut_export_audit.py"
+    "tools/capcut_export_audit.py",
+    "tools/final_audio_audit.py"
   ],
   "not_measured": [],
   "app_file": "shopping_shorts/app.py",

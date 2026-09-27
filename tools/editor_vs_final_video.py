@@ -233,6 +233,13 @@ def check(jid):
     try:
         return _check(jid, app, mp, va, sc, st, job, w, plan, wd)
     finally:
+        _keep = os.getenv("EVF_KEEP_FINAL")       # 관문·매일 점검: 소리 대조(final_audio_audit)가 **같은 완성본**을 잰다 — 렌더 2번 금지
+        if _keep and (wd / "final_preview.mp4").exists():
+            try:
+                Path(_keep).mkdir(parents=True, exist_ok=True)
+                shutil.move(str(wd / "final_preview.mp4"), str(Path(_keep) / ("%s.mp4" % jid)))
+            except OSError as _e:
+                print("[evf] %s 완성본 넘기기 실패: %s" % (jid, _e), file=sys.stderr)
         if not os.getenv("EVF_KEEP"):             # 원인 조사 때만 EVF_KEEP=1 로 남긴다(끝나면 손으로 지워라)
             shutil.rmtree(wd, ignore_errors=True)     # ★영상(①·②) 즉시 삭제 — 사진·보고서만 남긴다
 

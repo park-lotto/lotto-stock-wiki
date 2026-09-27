@@ -3463,6 +3463,41 @@ def _source_layout_from_base(base, clip_dir, cut_plan=None):
     return out, regs
 
 
+def _map_cut_plan_to_sources(cut_plan, layout, regs, raw_ids):
+    """렌더 컷 계획(render_cut_plan — 통짜 청소본·원본 좌표) → 소스별 파일 좌표로 **자리만** 옮긴 사본. 읽는 길이·배속·정지·
+    타임라인 자리는 그대로(소스별 파일은 청소본 조각을 같은 빠르기로 옮긴 것이라 파일 초 = 청소본 초). 못 옮기는 컷이 하나라도
+    있으면 None(호출부가 종전 계산) + stderr."""
+    try:
+        rvs = {r[0] for r in regs}
+        out = []
+        for bp in cut_plan or []:
+            clips = []
+            for cp in bp["clips"]:
+                c, rv = cp["clip"], cp["video_id"]
+                if rv in rvs:
+                    vid, orig, r = clean_origin(regs, rv, c.get("start") or 0.0, c.get("seg_id"))
+                    if vid is None or vid not in layout:
+                        raise ValueError("청소본 조각 못 찾음 %s %.3f" % (rv, float(c.get("start") or 0.0)))
+                    p = _piece_of(layout[vid]["pieces"], orig, r[1], r[6])
+                    if p is None or p.get("off") is None:
+                        raise ValueError("소스별 파일 조각 못 찾음 %s %.3f" % (vid, orig))
+                    def _to_file(t):
+                        o = r[3] + (float(t) - r[5]) / (r[6] or 1.0)
+                        return round(p["off"] + (o - p["cs"]) * p["k"], 4)
+                    nc = dict(c, video_id=vid, start=_to_file(c.get("start") or 0.0))
+                    clips.append(dict(cp, clip=nc, video_id=vid, start=_to_file(cp["start"])))
+                elif rv in raw_ids and rv in layout:
+                    nv = "%s_raw" % rv
+                    clips.append(dict(cp, clip=dict(c, video_id=nv), video_id=nv))
+                else:
+                    clips.append(dict(cp))
+            out.append(dict(bp, clips=clips))
+        return out
+    except Exception as e:      # noqa: BLE001 — 못 옮기면 종전 계산(경보)
+        print("[export] 렌더 컷을 소스별 파일로 못 옮김 — 캡컷·ZIP 이 컷을 다시 계산한다: %r" % (e,), file=sys.stderr)
+        return None
+
+
 def _piece_of(pieces, orig, sid=None, k=None):
     """원본 시각이 든 소스별 파일 조각. 경계에 선 시각은 **뒤 조각**(그 조각의 첫 프레임) — 정확히 든 조각을 먼저, 없으면 ±0.05초.
     ★같은 원본 구간이 빠르기(k)가 다른 조각으로 둘 이상 담길 수 있다(느리게 구운 컷) — 그 컷의 조각(sid)을 먼저, 없으면
@@ -3610,9 +3645,16 @@ def export_sources_for(store, job, job_id, work, customer_id=0, *, for_capcut=Fa
     cdir = Path(clip_dir) if clip_dir else work
     if route == "base" and base is not None:
         from shopping_shorts.video_assemble import render_cut_plan as _rcp
-        layout, regs = _source_layout_from_base(base, cdir, _rcp(plan, tts, paths))
+        _render_cuts = _rcp(plan, tts, paths)
+        layout, regs = _source_layout_from_base(base, cdir, _render_cuts)
         raw_ids = {v for v in paths if v not in {r[0] for r in regs}}
         plan, moved, unmoved = _plan_on_source_files(plan, layout, regs, raw_ids)
+        # ★캡컷·ZIP 컷 = 렌더 컷 계획 **그대로**(청소본 좌표 → 소스별 파일 좌표로 자리만 옮김, 2026-09-27 11cfc4a4b75c).
+        #   종전엔 옮긴 편성(plan)으로 render_cut_plan 을 **다시** 돌려 소스별 파일 길이로 시작 당기기·읽는 길이·정지를 새로 정해
+        #   렌더(통짜 청소본)와 갈렸다(7칸 read·freeze / 8칸 start). 판단은 렌더 계획 한 곳 — 캡컷·ZIP 은 옮겨 적기만.
+        _mapped = _map_cut_plan_to_sources(_render_cuts, layout, regs, raw_ids)
+        if _mapped is not None:
+            plan["_cut_plan"] = _mapped
         newp = {vid: L["path"] for vid, L in layout.items()}
         still = {m.get("video_id") for b in plan.get("beats") or [] for m in (_beat_materials(b) or []) if m}
         for v, p in paths.items():                 # 옮기지 못한 조각(옛 증분 조각)·원본 재료 칸은 그대로
@@ -5716,9 +5758,13 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
         #   최종 렌더만 서버 예비 계산으로 떨어졌다(미리보기·캡컷·ZIP엔 이 호출이 없었다). 표식은 편성 단계
         #   (_trim_for_cut_rhythm·_plan_and_tts의 _apply_phrase_min_cut)가 단다 — 표식 없는 칸은 화면도 없이 그렸다(화면이 이긴다).
         _sc.check_mutation(job_id, _scr_before, plan_used)
+        # ★인트로를 붙일 거면 완성본 소리의 무손실 원본을 남겨 둔다 — prepend_still 이 그것으로 소리를 **한 번만** 인코딩한다
+        #   (2026-09-27: 무음 인트로를 따로 AAC로 굽고 이어 붙이면 채움 표본이 한 벌 더 쌓였다 — 라이브 패킷 잉여 0.051초).
+        _audio_wav = (work / "final_audio.wav") if (_intro_on and _intro_png is not None) else None
         assemble(plan_used, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
-                 deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)
+                 deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths,
+                 **({"audio_wav_out": str(_audio_wav)} if _audio_wav else {}))   # 인트로 없으면 종전 호출 그대로
         _sc.summarize(job_id, _scr_mark)
         # 🖼 썸네일을 영상 맨 앞에 붙이기(2026-08-18 사장님 요청, 9단계 체크박스).
         #   켠 경우에만 돈다. 실패해도 렌더 자체는 살린다 — 인트로 때문에 완성 영상을
@@ -5731,10 +5777,17 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
         if _intro_on:
             try:
                 if _intro_png is not None:
-                    if prepend_still(str(out_path), str(_intro_png), seconds=_intro_sec):
+                    if prepend_still(str(out_path), str(_intro_png), seconds=_intro_sec,
+                                     audio_wav=str(_audio_wav) if _audio_wav else None):
                         _intro_shift = _intro_sec
             except Exception:
                 traceback.print_exc(file=sys.stderr)
+            finally:
+                if _audio_wav is not None:
+                    try:
+                        _audio_wav.unlink()
+                    except OSError:
+                        pass
         # ✂ CTA 잘라내기(2026-09-05 사장님 "유튜브 올릴 땐 뒷부분만 잘라내고 싶다").
         #   완성본에서 CTA 비트가 시작하는 시각을 지금 구해 DB에 박아둔다. 렌더가 끝나면
         #   이 값을 다시 구하기가 어렵다 — 비트별 절대시각은 어디에도 저장되지 않고,
