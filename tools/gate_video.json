@@ -20,7 +20,9 @@
     "max_audio_surplus": 0,
     "max_audio_delay": 0,
     "max_audio_lost": 0,
-    "audio_timeout_sec": 600
+    "audio_timeout_sec": 600,
+    "max_clean_left": 0,
+    "clean_left_timeout_sec": 600
   },
   "audit": {
     "jobs": 10,
@@ -37,6 +39,9 @@
     "max_ghost_screen_only": 0,
     "capcut_timeout_sec": 1800,
     "audio_jobs": 10,
+    "max_clean_left": 0,
+    "clean_left_jobs": 30,
+    "clean_left_timeout_sec": 1200,
     "audio_timeout_sec": 1200,
     "max_audio_narr": 0,
     "max_audio_surplus": 0,

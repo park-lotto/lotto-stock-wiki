@@ -33,8 +33,10 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 CONFIG_REL = "tools/gate_video.json"
-TOOL_RELS = ("tools/editor_vs_final_video.py", "tools/evf_run.py", "tools/capcut_export_audit.py", "tools/final_audio_audit.py")
+TOOL_RELS = ("tools/editor_vs_final_video.py", "tools/evf_run.py", "tools/capcut_export_audit.py", "tools/final_audio_audit.py",
+             "tools/clean_left_audit.py")
 AUDIO_TOOL = "final_audio_audit.py"     # ⑥ 소리 대조(편성표 vs 완성본 소리) — 영상 비교가 구운 임시 완성본을 그대로 잰다
+CL_TOOL = "clean_left_audit.py"         # ⑦ 자막 남음(청소본이 있어야 할 칸인데 원본 재료) — 영상 비교는 원본을 틀어 장면이 같게 나와 못 본다
 CC_TOOL = "capcut_export_audit.py"      # ⑤ 캡컷·내보내기 대조(완성본 컷 계획 vs 캡컷 초안 vs ZIP 조각) — 영상 비교 뒤 같은 작업에
 PATCH_RELS = {                       # 서버 PATCH_DIR 안의 자리 ← 저장소 경로
     # ★도구(editor_vs_final_video.py)가 PATCH_DIR 에서 얹는 모듈 목록과 **짝**이다 — 한쪽에만 있으면 도구가 import 에서
@@ -355,6 +357,70 @@ def judge_audio(report_text, cfg, crash="", benign_skips=("음성 없음",)):
     return not fails, fails, notes
 
 
+def _cla():
+    """자막 남음 대조 도구 모듈(요약 형식의 주인) — 파일로 싣는다(순수 함수 parse_summary 만 쓴다)."""
+    import importlib.util
+    _sp = importlib.util.spec_from_file_location("clean_left_audit", str(HERE / "clean_left_audit.py"))
+    m = importlib.util.module_from_spec(_sp)
+    _sp.loader.exec_module(m)
+    return m
+
+
+def clean_left_summary(report_text):
+    """자막 남음 대조 report → {"jobs","left","pending","unknown","na","stale"} 또는 None."""
+    return _cla().parse_summary(report_text)
+
+
+def judge_clean_left(report_text, cfg, crash="", label="자막 남음"):
+    """자막 남음 대조(clean_left_audit) report → (통과?, 실패 사유, 보고 줄). 요약 형식은 도구 한 곳(parse_summary).
+    기준: 자막 남음 ≤ max_clean_left(없으면 0 — 느슨해지지 않게). 증분 대기(청소 뒤 편성 변경 — 렌더 때 동의창)·원인 미상은 보고만."""
+    fails, notes = [], []
+    s = clean_left_summary(report_text)
+    if s is None:
+        fails.append("자막 남음 대조 요약 줄(== 작업 … 자막 남음 N칸)을 못 읽었다 — 도구가 죽었거나 형식이 바뀌었다")
+        return False, fails, notes
+    notes.append("%s 대조: 작업 %d · 자막 남음 %d칸 · 증분 대기 %d칸 · 원인 미상 %d칸 · 대상 아님 %d작업%s" % (
+        label, s["jobs"], s["left"], s["pending"], s["unknown"], s["na"],
+        (" · 재구성 불가 %d작업" % s["stale"]) if s.get("stale") else ""))
+    lim = int(cfg.get("max_clean_left") or 0)
+    if s["left"] > lim:
+        bad = [l_.split(" | ")[0] + " " + l_.split(" | ")[1] for l_ in (report_text or "").splitlines()
+               if " | 자막 남음 [" in l_ and " | 자막 남음 []" not in l_]
+        fails.append("%s %d칸 (기준 %d) — 청소본이 있어야 할 칸이 원본 재료(자막 있음)로 나간다: %s"
+                     % (label, s["left"], lim, "; ".join(bad)[:600]))
+    skips = [l_ for l_ in (report_text or "").splitlines() if " 건너뜀 " in l_]
+    if len(skips) > int(cfg.get("max_error_skips") or 0):
+        fails.append("%s 대조 오류로 건너뛴 작업 %d개: %s" % (label, len(skips), "; ".join(skips)[:400]))
+    if crash.strip():
+        fails.append("%s 대조 도구가 예외로 끝났다(crash.txt)" % label)
+    return (not fails), fails, notes
+
+
+def run_clean_left_audit(sh, d, ids, g, *, say, sleep=time.sleep):
+    """⑦ 영상 비교가 본 그 작업들로 자막 남음 대조(병합본 모듈 PATCH_DIR) → (통과?, 실패 사유, 보고 줄)."""
+    if not ids:
+        return False, ["자막 남음 대조: 비교할 작업이 없다(영상 비교 report 에 작업 줄 0)"], []
+    ids = [i for i in ids if re.fullmatch(r"[0-9A-Za-z_-]{4,64}", i)]
+    rc, out = sh("cd %s && set -a && . /etc/shopping-shorts.env && set +a && "
+                 "{ PATCH_DIR=%s CL_OUT=%s/cl SEG_SNAP_CACHE_DIR=%s/snapcache setsid nohup python3 %s/_tool/%s %s > %s/cl_run.log 2>&1 < /dev/null & echo PID=$!; }"
+                 % (REMOTE_REPO, d, d, d, d, CL_TOOL, " ".join(ids), d))
+    m = re.search(r"PID=(\d+)", out)
+    if rc != 0 or not m:
+        return False, ["자막 남음 대조를 못 띄웠다: %s" % out.strip()[:300]], []
+    pid = int(m.group(1))
+    say("  자막 남음 대조 시작 — 작업 %d개. pid %d" % (len(ids), pid))
+    done, timed_out = _wait_done(sh, "%s/cl/done.txt" % d, pid, int(g.get("clean_left_timeout_sec", 600)),
+                                 int(g.get("poll_sec", 20)), sleep)
+    if not done:
+        sh("kill -- -%d 2>/dev/null; kill %d 2>/dev/null; true" % (pid, pid))
+        _, tail = sh("tail -30 %s/cl_run.log 2>/dev/null; cat %s/cl/crash.txt 2>/dev/null" % (d, d))
+        return False, ["자막 남음 대조가 %s\n%s" % ("시간 초과" if timed_out else "끝 표식 없이 죽었다", tail.strip()[-1500:])], []
+    _, report = sh("cat %s/cl/report.txt 2>/dev/null" % d)
+    _, crash = sh("cat %s/cl/crash.txt 2>/dev/null" % d)
+    say("\n--- 자막 남음 대조 report (서버 %s/cl/report.txt) ---\n%s\n--- report 끝 ---" % (d, report.rstrip()))
+    return judge_clean_left(report, g, crash)
+
+
 def run_audio_audit(sh, d, ids, g, *, say, sleep=time.sleep):
     """⑥ 영상 비교가 구운 임시 완성본(d/finals/<job>.mp4)으로 소리 대조 → (통과?, 실패 사유, 보고 줄). 렌더 없음."""
     ids = [i for i in (ids or []) if re.fullmatch(r"[0-9A-Za-z_-]{4,64}", i)]
@@ -638,6 +704,12 @@ def run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sle
         ok = ok and au_ok
         fails += au_fails
         notes += au_notes
+        # ⑦ 자막 남음 — 같은 작업. 영상 비교는 원본을 틀어 장면이 같게 나오므로 "청소본이 있어야 할 칸인데 원본"을 따로 센다.
+        cl_ok, cl_fails, cl_notes = run_clean_left_audit(sh, d, [j["job"] for j in parsed.get("jobs", [])], g,
+                                                         say=say, sleep=sleep)
+        ok = ok and cl_ok
+        fails += cl_fails
+        notes += cl_notes
         say("판정 근거: %s" % (parsed.get("summary_line") or "(요약 줄 없음)"))
         for f_ in fails:
             say("  ✗ " + f_)

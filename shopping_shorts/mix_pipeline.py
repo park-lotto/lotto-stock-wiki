@@ -5401,6 +5401,106 @@ def clean_charge_plan(store, job, work, *, mode="render", skip_clean=False):
     return out
 
 
+def _same_clips(a, b, tol=0.02):
+    """렌더 컷 계획 두 개(plan_beat_clips_for 결과)가 같은 원본 구간을 읽는가 — 영상·시작·읽는 길이 ±tol초."""
+    if len(a or []) != len(b or []):
+        return False
+    for x, y in zip(a, b):
+        if str(x.get("video_id")) != str(y.get("video_id")):
+            return False
+        if abs(float(x["start"]) - float(y["start"])) > tol:
+            return False
+        if abs(float(x.get("src_dur") or x["out_dur"]) - float(y.get("src_dur") or y["out_dur"])) > tol:
+            return False
+    return True
+
+
+def clean_left_beats(store, job, work, judged=None):
+    """자막제거를 켠 job에서 **원본 재료(자막 있음)로 나갈 칸** 분류 — 유일한 자리(2026-09-28).
+    관문(tools/clean_left_audit.py → video_gate)·매일 점검(실물 완성본)이 이것만 부른다.
+
+    반환 None(자막제거 끔·정본 없음 — 이 판정의 대상 아님) 또는
+      {"left": [칸]    — 청소본이 있어야 할 칸인데 원본으로 나간다 = **결함**(자막 남음)
+                         · 판정은 안 덮였다(uncovered)는데 청소 뒤 편성의 렌더 컷 계획이 그대로(스냅샷과 같다)
+                         · 또는 덮인 칸인데 원본 조각이 고객이 안 고른 컷 자리(clean_base.left_by_choice)가 아니다
+       "pending": [칸] — 청소 뒤 편성이 바뀌어(렌더 컷 계획이 스냅샷과 다름) 또는 음성이 길어져(extend) **증분 대기** —
+                         렌더하면 동의창을 거쳐 지워질 칸이라 결함이 아니다(자막제거 없이 렌더하면 남는다)
+       "chosen": [칸]  — 고객이 안 지우기로 고른 칸(부분 정본 skip) 또는 안 고른 컷을 원본으로 튼 칸
+       "unknown": [칸] — 안 덮였는데 스냅샷 편성이 없어 원인을 못 가린다
+       "tier_upgrade": bool — 렌더가 정본 대신 요청 등급 전체를 지운다(이때 left·pending 은 렌더에서 사라진다)}
+    judged: clean_base_judge 결과를 이미 가졌으면 넘긴다(두 번 풀지 않게)."""
+    from shopping_shorts import clean_base as _cb
+    from shopping_shorts import video_assemble as _va
+    work = Path(work)
+    j = judged if judged is not None else clean_base_judge(store, job, work)
+    if j is None:
+        return None
+    base, plan2 = j["base"], j["plan2"] or {}
+    tts_durs, src_durs = j.get("tts_durs") or {}, j.get("src_durs") or {}
+    out = {"left": [], "pending": [], "chosen": [], "unknown": [], "tier_upgrade": bool(j.get("tier_upgrade"))}
+    snap = None
+    try:
+        sp = _clean_plan_snapshot_path(work, base.get("sig")) if base.get("sig") else None
+        if sp and sp.exists():
+            snap = json.loads(sp.read_text(encoding="utf-8"))
+    except Exception as e:      # noqa: BLE001 — 스냅샷을 못 읽으면 원인 미상(unknown)으로 센다
+        print("[clean-left] 스냅샷 편성 읽기 실패: %r" % (e,), file=sys.stderr)
+        snap = None
+    cur = {int(b["beat_idx"]): b for b in ((job or {}).get("edit_plan") or {}).get("beats") or []}
+    old = {int(b["beat_idx"]): b for b in (snap or {}).get("beats") or [] if b.get("beat_idx") is not None}
+    live = [bi for bi, d in tts_durs.items() if (d or 0) > 0]
+    runout_idx = max(live) if live else None
+
+    def _clips(b, td, bi):
+        try:
+            return _va.plan_beat_clips_for(b, td, src_durs, runout=_va._LAST_RUNOUT if bi == runout_idx else 0.0)
+        except Exception:      # noqa: BLE001
+            return None
+
+    def _snap_td(b, bi):
+        tp = b.get("tts_path")
+        try:
+            return float(_va._beat_effective_dur(b, tp)) if tp and Path(tp).exists() else float(tts_durs.get(bi) or 0)
+        except Exception:      # noqa: BLE001
+            return float(tts_durs.get(bi) or 0)
+
+    partial = bool(base.get("partial"))
+    skip = {int(x) for x in base.get("skip_beats") or []}
+    unc = {int(x) for x in j.get("uncovered") or []}
+    ext = {int(e["beat_idx"]) for e in j.get("extend") or [] if e.get("beat_idx") is not None}
+    cpaths = _cb.source_paths(base)
+    for b2 in plan2.get("beats") or []:
+        bi = int(b2["beat_idx"])
+        td = float(tts_durs.get(bi) or 0)
+        if td <= 0:
+            continue
+        if partial and (bi in skip or str(bi) not in (base.get("beat_keys") or {})):
+            out["chosen"].append(bi)
+            continue
+        if bi in unc:
+            if bi not in old or bi not in cur:
+                out["unknown" if snap is None else "pending"].append(bi)   # 스냅샷에 없던 칸 = 청소 뒤 새로 생김
+                continue
+            a, c = _clips(old[bi], _snap_td(old[bi], bi), bi), _clips(cur[bi], td, bi)
+            if a is None or c is None:
+                out["unknown"].append(bi)
+            elif _same_clips(a, c):
+                out["left"].append(bi)          # 편성은 그대로인데 못 덮었다 = 판정·청소본 결함
+            else:
+                out["pending"].append(bi)
+            continue
+        raw = [m for m in (_beat_materials(b2) or []) if m and m.get("video_id") not in cpaths]
+        if raw:
+            if all(_cb.left_by_choice(base, m) for m in raw):
+                out["chosen"].append(bi)
+            else:
+                out["left"].append(bi)
+            continue
+        if bi in ext:
+            out["pending"].append(bi)
+    return out
+
+
 def clean_charge_message(plan):
     """확인창·409 안내 문구 — 무엇 때문에, 얼마(초·크레딧)가 나가는지. 판정은 clean_charge_plan."""
     secs, cr = plan.get("seconds"), plan.get("credits")
