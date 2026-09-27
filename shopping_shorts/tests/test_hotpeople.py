@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """뜨거운사람들 채널(channel_presets/hotpeople) — 규칙 판정·자막 시간·렌더 좌표·끝까지 mp4."""
+import json
 import os
 import subprocess
 
@@ -7,7 +8,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from shopping_shorts.channelkit import registry, lint
+from shopping_shorts.channelkit import registry, lint, pipeline  # noqa: F401 — pipeline 은 채널 전환 전에 import(엔진 기본 spec 을 import 때 읽는다, make.py 와 같은 순서)
 
 
 @pytest.fixture(autouse=True)
@@ -153,10 +154,11 @@ def test_check_and_repick_replaces_only_bad(tmp_path):
     (tmp_path / "footage").mkdir()
     cands = [{"thumb": str(th)} for _ in range(6)]
     groups = [{"text": f"자막{i}"} for i in range(3)]
-    answers = iter(['{"bad": [1]}', '{"picks": {"1": 4}}'])
+    # 세 번째 답 = 다시 고른 뒤 최종 검사(2026-09-28 우상혁 v001: 다시 고르고 검사 안 해 토크쇼가 나갔다)
+    answers = iter(['{"bad": [1]}', '{"picks": {"1": 4}}', '{"bad": []}'])
     new, v = footage.check_and_repick(groups, cands, [0, 1, 2], [], lambda p, imgs: next(answers), "x",
                                       str(tmp_path), log=lambda *_: None)
-    assert new == [0, 4, 2] and v == {"bad": [1], "repicked": 1}
+    assert new == [0, 4, 2] and v == {"bad": [1], "repicked": 1, "bad_final": []}
     ok = iter(['{"bad": []}'])
     new, v = footage.check_and_repick(groups, cands, [0, 1, 2], [], lambda p, imgs: next(ok), "x", str(tmp_path), log=lambda *_: None)
     assert new == [0, 1, 2] and v["bad"] == []
@@ -365,3 +367,223 @@ def test_cut_clip_first_frame_has_video(tmp_path):
                          capture_output=True).stdout
     a = np.frombuffer(raw, np.uint8).reshape(-1, spec.SLOT_H, spec.SLOT_W).astype(int)
     assert abs(a[0].mean() - a[1].mean()) < 5, (a[0].mean(), a[1].mean())     # 첫 프레임 = 둘째 프레임(빈 슬롯 아님)
+
+
+# ── 내용 관문·소스 자·인물 중심 크롭 (2026-09-28 우상혁 v001 사고: verify 23/23 틀림에도 렌더) ─────────────────
+def _rows(n=20, **over):
+    """관문을 통과하는 완성본 측정값(얼굴 70%·자막꼴 0·다른 사람 0)."""
+    rows = [{"i": i, "face": i % 10 < 7, "face_h": 0.3 if i % 10 < 7 else None, "cx_off": 0.02 if i % 10 < 7 else None,
+             "who": "주인공" if i % 10 < 7 else "얼굴없음", "sub_like": 0} for i in range(n)]
+    for i, kv in over.items():
+        rows[int(i[1:])].update(kv)
+    return rows
+
+
+def _blocked(checks):
+    return [c["name"][:1] for c in checks if not c["ok"] and c.get("block", True)]
+
+
+def test_content_gate_passes_clean_and_blocks_each_limit():
+    from shopping_shorts.channel_presets.hotpeople import review
+    subj = ["main"] * 20
+    assert _blocked(review.content_gate(_rows(), subj, [])) == []
+    # ⑦ 얼굴 보이는 컷 < 55%
+    few = [dict(r, face=r["i"] < 10, who="얼굴없음" if r["i"] >= 10 else r["who"]) for r in _rows()]
+    assert _blocked(review.content_gate(few, subj, [])) == ["⑦"]
+    # ⑧ 자막꼴 박힌 글자 2컷
+    assert _blocked(review.content_gate(_rows(c1={"sub_like": 1}, c8={"sub_like": 2}), subj, [])) == ["⑧"]
+    assert _blocked(review.content_gate(_rows(c1={"sub_like": 1}), subj, [])) == []          # 1컷은 허용(원본 3/9편)
+    # ⑩ 주인공 자막에 다른 사람 — 다른 인물 자막(other)이면 괜찮다(원본도 조연·상대를 넣는다)
+    assert _blocked(review.content_gate(_rows(c3={"who": "다른사람"}), subj, [])) == ["⑩"]
+    assert _blocked(review.content_gate(_rows(c3={"who": "다른사람"}), ["main"] * 3 + ["other"] + ["main"] * 16, [])) == []
+    # 장면 검사: 최종 틀림 30% 넘음 / 검사 안 함(None) 둘 다 막는다
+    assert _blocked(review.content_gate(_rows(), subj, list(range(7)))) == ["장"]
+    assert _blocked(review.content_gate(_rows(), subj, None)) == ["장"]
+
+
+def test_v001_like_review_is_blocked_and_final_not_written(tmp_path):
+    """★사보타주 대상: v001 모양(토크쇼 2컷=다른 사람, 장면 검사 23/23 틀림) → out/final.mp4 없음 + FAILED.json 사유."""
+    from shopping_shorts.channel_presets.hotpeople import review
+    wd = str(tmp_path)
+    os.makedirs(os.path.join(wd, "out")); os.makedirs(os.path.join(wd, "render"))
+    stale = os.path.join(wd, "out", "final.mp4")
+    open(stale, "wb").write(b"old")                                  # 지난 완성본이 남아 있어도 지운다
+    un = os.path.join(wd, "render", "unchecked.mp4")
+    open(un, "wb").write(b"new")
+    checks = [{"name": "크기 1080x1920", "ok": True}] + review.content_gate(
+        _rows(24, c1={"who": "다른사람"}, c2={"who": "다른사람"}), ["main"] * 24, list(range(1, 24)))
+    rep = {"ok": all(c["ok"] for c in checks if c.get("block", True)), "checks": checks, "sheet": None}
+    assert rep["ok"] is False
+    assert review.finalize(rep, wd, un) is None
+    assert not os.path.exists(stale) and os.path.exists(un)
+    fail = json.load(open(os.path.join(wd, "out", "FAILED.json"), encoding="utf-8"))
+    assert [w[:1] for w in fail["why"]] == ["⑩", "장"]
+    # 통과하면 그때만 옮긴다
+    ok = {"ok": True, "checks": [], "sheet": None}
+    assert review.finalize(ok, wd, un) == stale and open(stale, "rb").read() == b"new"
+    assert not os.path.exists(os.path.join(wd, "out", "FAILED.json"))
+
+
+def test_review_step_without_anchor_fails_and_writes_no_final(tmp_path):
+    """파이프라인 review 단계: 주인공 임베딩이 없으면(=내용 관문을 못 돌면) 막는다 — 조용히 통과 금지."""
+    from shopping_shorts.channel_presets.hotpeople import render, steps
+    src = str(tmp_path / "src.mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=1280x720:rate=30", "-t", "12", src], check=True)
+    s = _script(3)
+    fo = {"cuts": [{"src": src, "start": 1.0 + i * 3, "url": "test"} for i in range(3)], "anchor": None,
+          "verify": {"bad": [], "repicked": 0, "bad_final": []}}
+    d = {"script": {"script": s}, "footage": fo}
+    d["render"] = render.build(str(tmp_path), s, fo, log=lambda *_: None)
+    assert not os.path.exists(tmp_path / "out" / "final.mp4")            # 렌더는 out/ 에 안 쓴다
+    r = steps.review({}, d, str(tmp_path), {"log": lambda *_: None})
+    assert r["status"] == "failed" and "내용 관문 실행" in r["fail"]["why"]
+    assert not os.path.exists(tmp_path / "out" / "final.mp4") and os.path.exists(tmp_path / "out" / "FAILED.json")
+
+
+def test_title_block_catches_v001_sources():
+    from shopping_shorts.channel_presets.hotpeople import footage
+    assert footage.title_blocked("Day 3 Highlights | World Indoor Championships Belgrade 22")
+    assert footage.title_blocked("Day 2 Highlights | World Indoor Championships Belgrade 22")
+    assert footage.title_blocked("Men's High Jump Final | Tokyo Reflections with the BackStraight Boys (& Girl)")
+    assert footage.title_blocked("우상혁 명장면 모음") and footage.title_blocked("스포츠 토크쇼 3회")
+    assert footage.title_blocked("Woo Sang-hyeok clears 2.35m to finish 4th in men's high jump final") is None
+
+
+def test_source_queries_add_korean():
+    from shopping_shorts.channel_presets.hotpeople import footage
+    q = footage.source_queries({"person": "우상혁", "queries": ["Woo Sang-hyeok high jump", "우상혁 인터뷰"]})
+    assert q[:4] == ["우상혁 경기", "Woo Sang-hyeok high jump", "우상혁 인터뷰", "우상혁 하이라이트"]
+    assert q.count("우상혁 인터뷰") == 1 and "우상혁 다큐" in q
+
+
+def test_judge_sources_drops_low_ratio_and_caps():
+    from shopping_shorts.channel_presets.hotpeople import footage, spec
+    lo = spec.POLICY_SOURCE_MIN_MAIN_RATIO
+    wide = spec.POLICY_SOURCE_WIDE_JUDGED_MAX
+    per = {"a": {"main_ratio": lo + 0.3, "judged_ratio": 0.5},
+           "b": {"main_ratio": lo / 2, "judged_ratio": 0.35},        # 큰 얼굴은 많은데 주인공이 아니다(Day2 종합·토크쇼)
+           "c": {"main_ratio": 0.0, "judged_ratio": wide / 2},       # 넓은 경기 중계(파리 결승 0.00) — 증거 없음, 둔다
+           "d": {"main_ratio": lo + 0.1, "judged_ratio": 0.4}}
+    keep, why = footage.judge_sources(per, cap=2)
+    assert keep == ["a", "c"] and "다른 사람 영상" in why["b"] and "상한" in why["d"]     # 상한은 받은 순서로
+
+
+def test_gather_sources_fetches_more_then_fails_loud(tmp_path, monkeypatch):
+    """소스 자(비율은 가짜): 낮은 소스는 버리고 다음 검색어로 더 받는다 · 제목 차단은 안 받는다 · 모자라면 에러."""
+    from shopping_shorts.channel_presets.hotpeople import footage, spec
+    monkeypatch.setattr(spec, "POLICY_FOOTAGE_MAX_VIDEOS", 3)
+    monkeypatch.setattr(spec, "POLICY_SOURCE_MIN_USABLE", 2)
+    lo = spec.POLICY_SOURCE_MIN_MAIN_RATIO
+    ratio = {"g1": 0.0, "g2": lo * 0.5, "w1": lo + 0.4, "w2": lo + 0.3, "w3": lo + 0.2, "w4": lo + 0.5}
+    results = {"우상혁 경기": [("g1", "Men's final"), ("g2", "Athletics day")], "Q1": [("t1", "Day 2 Highlights | Worlds")],
+               "우상혁 인터뷰": [("w1", "우상혁 인터뷰"), ("w2", "우상혁 경기")], "우상혁 하이라이트": [("w3", "a"), ("w4", "b")],
+               "우상혁 다큐": [("w5", "c")]}
+    got = []
+    monkeypatch.setattr(footage, "search", lambda q, n, log=print: [{"id": i, "title": t, "duration": 100,
+                                                                     "url": f"u/{i}"} for i, t in results.get(q, [])])
+
+    def dl(it, vdir, log=print):
+        got.append(it["id"])
+        p = os.path.join(vdir, it["id"] + ".mp4")
+        open(p, "wb").write(b"x")
+        return p
+    monkeypatch.setattr(footage, "download", dl)
+    monkeypatch.setattr(footage, "source_ruler", lambda vids, wd=None, log=print: {
+        "anchor": np.ones(128, np.float32), "anchor_from": ["w1", 0], "support": 3,
+        "per": {v["id"]: {"main_ratio": ratio[v["id"]], "frames": 10, "face_h": 0.3} for v in vids}})
+    vids, ruler, table = footage.gather_sources({"person": "우상혁", "queries": ["Q1"]}, str(tmp_path), log=lambda *_: None)
+    assert [v["id"] for v in vids] == ["w1", "w2", "w3"]          # 받은 순서, 상한 3
+    assert "t1" not in got and got == ["g1", "g2", "w1", "w2", "w3", "w4"]     # 제목 차단은 안 받았다 · 상한 차면 멈춤
+    st = {r["id"]: r["status"] for r in table}
+    assert st["g1"].startswith("버림") and st["t1"].startswith("제목 차단") and st["w4"].startswith("버림(상한")
+    # 주인공 소스가 모자라면 에러(조용히 적은 소스로 렌더하지 않는다)
+    wd2 = str(tmp_path / "b")
+    results2 = {"우상혁 경기": [("g1", "x"), ("g2", "y")], "우상혁 인터뷰": [("w1", "z")]}
+    monkeypatch.setattr(footage, "search", lambda q, n, log=print: [{"id": i, "title": t, "duration": 100,
+                                                                     "url": f"u/{i}"} for i, t in results2.get(q, [])])
+    with pytest.raises(RuntimeError, match="주인공이 나오는 소스 1편"):
+        footage.gather_sources({"person": "우상혁", "queries": []}, wd2, log=lambda *_: None)
+
+
+def test_face_crop_x_math():
+    from shopping_shorts.channel_presets.hotpeople import render
+    assert render.face_crop_x(1714, 1080, None) == 317                 # 얼굴 없음 = 가운데(ffmpeg 기본과 같다)
+    assert render.face_crop_x(1714, 1080, 0.5) == 317
+    assert render.face_crop_x(1714, 1080, 0.4) == round(0.4 * 1714 - 540)
+    assert render.face_crop_x(1714, 1080, 0.95) == 634 and render.face_crop_x(1714, 1080, 0.02) == 0   # 덮개 밖으로 안 나감
+    assert render.face_crop_x(1080, 1080, 0.9) == 0                    # 여유 없으면 그대로
+
+
+def _white_cx(bgr_or_gray):
+    a = np.asarray(bgr_or_gray)
+    if a.ndim == 3:
+        a = a.max(axis=2)
+    ys, xs = np.nonzero(a > 200)
+    return xs.mean()
+
+
+def test_face_crop_same_in_tag_frame_and_render(tmp_path):
+    """★0순위-A1a: 태깅 그림(cover_frame→face_crop_x→slot_from_cover)과 렌더(cut_clip crop_x)가 같은 자리를 자른다.
+    흰 네모(얼굴 대신)를 원본 x=800에 두면 가운데 크롭에선 슬롯 x≈754, 인물 중심 크롭에선 ≈540(가운데)."""
+    from shopping_shorts.channel_presets.hotpeople import render, spec
+    src = str(tmp_path / "sq.mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=black:s=1280x720:r=30:d=4",
+                    "-vf", "drawbox=x=770:y=240:w=60:h=60:color=white:t=fill", "-pix_fmt", "yuv420p", src], check=True)
+    cover = render.cover_frame(src, 1.0)
+    cx = _white_cx(cover) / cover.shape[1]
+    x = render.face_crop_x(cover.shape[1], spec.SLOT_W, cx)
+    assert abs(_white_cx(render.slot_from_cover(cover, x)) - spec.SLOT_W / 2) < 4
+    assert abs(_white_cx(render.slot_from_cover(cover, render.face_crop_x(cover.shape[1], spec.SLOT_W, None))) - 754) < 6
+    bg = render.background(_script()["title"], str(tmp_path / "bg.png"))
+    sub = render.subtitle(_script()["groups"][2], str(tmp_path / "s.png"))
+    for crop_x, want in ((x, spec.SLOT_W / 2), (None, 754)):
+        out = str(tmp_path / f"c_{crop_x}.mp4")
+        render.cut_clip(bg, sub, src, 1.0, 1.5, out, crop_x=crop_x)
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", "0.5", "-i", out, "-frames:v", "1", "-vf",
+                              f"crop={spec.SLOT_W}:{spec.SLOT_H}:{spec.SLOT_X}:{spec.SLOT_Y}", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                             capture_output=True).stdout
+        slot = np.frombuffer(raw, np.uint8).reshape(spec.SLOT_H, spec.SLOT_W)
+        assert abs(_white_cx(slot) - want) < 6, (crop_x, _white_cx(slot))
+
+
+def test_fits_blocks_other_person_and_hardsub_on_main_caption():
+    from shopping_shorts.channel_presets.hotpeople import footage
+    main, other, scene = {"text": "금메달을 따냄"}, {"text": "코치가 말함", "subject": "other"}, {"text": "경기장", "subject": "scene"}
+    c = {"start": 0.0, "end": 9.0}
+    assert not footage.fits(dict(c, who="다른사람"), main) and footage.fits(dict(c, who="다른사람"), other)
+    assert not footage.fits(dict(c, who="주인공", subtitle_like=True), main)
+    assert footage.fits(dict(c, who="주인공", subtitle_like=True), scene)
+    assert footage.fits(dict(c, who="판정불가(작음)"), main) and footage.fits(dict(c, who="얼굴없음"), main)
+    # 모델이 주인공 자막에 다른 사람 장면을 골라도 버리고 메운다
+    cands = [dict(c, who="다른사람"), dict(c, who="주인공")]
+    idx, fixed = footage.pick([main], cands, [], lambda p, i: '{"picks": [0]}', "x", log=lambda *_: None)
+    assert idx == [1] and fixed == 1
+
+
+def test_match_prompt_carries_vision_tags():
+    from shopping_shorts.channel_presets.hotpeople import footage
+    cands = [{"start": 0, "end": 5, "who": "다른사람"}, {"start": 0, "end": 5, "who": "주인공", "subtitle_like": True}]
+    p = footage._match_prompt([{"text": "금메달"}, {"text": "코치", "subject": "other"}], {0: "a", 1: "b"}, "x", cands)
+    assert "0 (5.0초) [다른 사람]: a" in p and "1 (5.0초) [주인공 얼굴 큼][박힌 자막]: b" in p
+    assert "0. [주인공 장면 필수]" in p and "1. [다른 인물 가능]" in p
+
+
+def test_verify_picks_raises_when_model_silent(tmp_path, monkeypatch):
+    """검사 모델이 답을 못 주면 멈춘다(예전엔 None 을 '틀린 칸 없음'으로 읽고 렌더로 넘어갔다)."""
+    from shopping_shorts.channel_presets.hotpeople import footage
+    monkeypatch.setattr("time.sleep", lambda *_: None)
+    th = tmp_path / "t.jpg"
+    Image.new("RGB", (240, 176), (90, 120, 90)).save(th)
+    (tmp_path / "footage").mkdir()
+    cands = [{"thumb": str(th)} for _ in range(3)]
+
+    def dead(p, i):
+        raise RuntimeError("503")
+    with pytest.raises(RuntimeError, match="장면 검사"):
+        footage.check_and_repick([{"text": "a"}] * 3, cands, [0, 1, 2], [], dead, "x", str(tmp_path), log=lambda *_: None)
+
+
+def test_subject_defaults_to_main():
+    from shopping_shorts.channel_presets.hotpeople import rules
+    assert rules.subject({}) == "main" and rules.subject({"subject": "OTHER"}) == "other"
+    assert rules.subject({"subject": "누구"}) == "main" and rules.subject({"subject": "scene"}) == "scene"
