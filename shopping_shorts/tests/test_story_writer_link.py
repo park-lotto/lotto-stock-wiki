@@ -330,8 +330,8 @@ def _styled_job():
         "s1": {"video_id": "s1", "full_text": "", "segments": [_seg("MAT", i) for i in range(10)]}}}
 
 
-def _lines(roles, cut="MAT-1"):
-    return [{"role": r, "text": "%s 칸에 들어갈 충분히 긴 한 줄 대사인데" % r, "cuts": [cut, "NOPE-9"]} for r in roles]
+def _lines(roles, cut="MAT-1", word=""):
+    return [{"role": r, "text": word + "%s 칸에 들어갈 충분히 긴 한 줄 대사인데 분량을 맞추려고 조금 더 길게 이어서 말하는 거" % r, "cuts": [cut, "NOPE-9"]} for r in roles]
 
 
 def _fake_styled(monkeypatch, outs):
@@ -350,7 +350,7 @@ def _fake_styled(monkeypatch, outs):
 
 def test_one_call_per_draft_keeps_style_roles_and_valid_cuts(monkeypatch):
     seed_out = {"seed_points": ["리모컨 감싸기"], "lines": _lines(["훅", "미끼", "공개", "고조", "마무리"], "MAT-2")}
-    style_out = {"seed_points": ["리모컨 감싸기"], "lines": _lines(["title", "bait", "reveal", "reveal", "twist"], "MAT-5")}
+    style_out = {"seed_points": ["리모컨 감싸기"], "lines": [dict(L, text="둘째 안 %d번은 완전히 다른 특징과 다른 문장으로 가위 없이 손으로 찢어지고 접착 자국도 안 남는다는데" % i) for i, L in enumerate(_lines(["title", "bait", "reveal", "reveal", "twist"], "MAT-5"))]}
     prompts = _fake_styled(monkeypatch, [seed_out, style_out])
     drafts, why = sw.make_drafts([SPINE], _styled_job(), job_id="j1", seed_text=SEED, seed_product="열수축 필름")
     assert why == "" and len(drafts) == 2 and len(prompts) == 2
@@ -381,7 +381,7 @@ def test_seed_repetition_only_after_opening_roles():
                      {"role": "reveal", "text": "이건 바로 열수축 필름인데 그냥 필름이 아님", "cuts": ["MAT-1"]},
                      {"role": "twist", "text": "리모컨에 드라이어만 쏘면 끝이라는 거", "cuts": ["MAT-1"]},
                      {"role": "twist", "text": "가위 없이 손으로 찢어지는 게 진짜 미친 거", "cuts": ["MAT-1"]}]}
-    probs = sw.styled_problems(out, frame, {"MAT-1": {}}, SEED, "열수축 필름")
+    probs = sw.styled_problems(out, frame, {"MAT-1": {}}, SEED, "열수축 필름", seconds=10)
     assert len(probs) == 1 and probs[0].startswith("4번 줄"), "제목 칸은 씨앗 셀링포인트를 써도 되고 본문 되풀이만 잡는다"
 
 
@@ -414,3 +414,12 @@ def test_explicit_seed_sets_voice_and_product(monkeypatch):
     prompts.clear()
     drafts, _ = sw.make_drafts([], job, job_id="j3")
     assert drafts[0]["platform"] == "ig" and sw._VOICE["ig"] in prompts[0], "명시 씨앗 없음 → job의 가장 긴 한국어 글(종전)"
+
+
+def test_short_seed_flow_is_not_dropped_but_length_is_checked():
+    """씨앗 흐름이 4칸이어도 분량이 맞으면 버리지 않는다(옛 MIN_LINES=5가 b2b1480b3fd8 씨앗 결 안을 통째로 버렸다)."""
+    frame = sw.frame_of(None)
+    four = {"seed_points": [], "lines": _lines(["훅", "공개", "고조", "마무리"])}
+    assert sw.styled_problems(four, frame, {"MAT-1": {}}, seconds=16) == []
+    assert any("너무 짧다" in p for p in sw.styled_problems(four, frame, {"MAT-1": {}}, seconds=40))
+    assert any("줄뿐" in p for p in sw.styled_problems({"lines": _lines(["훅", "끝"])}, frame, {"MAT-1": {}}))

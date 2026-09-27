@@ -1037,7 +1037,7 @@ def styled_problems(out, frame, seg_index, seed_text="", product="", seconds=25,
     from shopping_shorts import script_gate
     lines = [L for L in (out or {}).get("lines") or [] if (L.get("text") or "").strip()]
     probs = []
-    if len(lines) < MIN_LINES:
+    if len(lines) < MIN_STYLED_LINES:
         return ["대본이 %d줄뿐이다 — 칸을 다 채워라" % len(lines)]
     roles = frame.get("roles")
     if roles:
@@ -1059,11 +1059,16 @@ def styled_problems(out, frame, seg_index, seed_text="", product="", seconds=25,
     secs = script_gate.est_seconds(" ".join(L["text"] for L in lines))
     if secs > seconds * 1.5:
         probs.append("너무 길다(약 %d초) — %d초 안팎으로 줄여라" % (secs, seconds))
+    elif secs < seconds * 0.6:
+        probs.append("너무 짧다(약 %d초) — %d초 안팎으로 늘려라" % (secs, seconds))
     if avoid_text and _gram_share(" ".join(L["text"] for L in lines), avoid_text) > AB_MAX_SHARE:
         probs.append("[다른 안]과 문장이 너무 겹친다 — 다른 특징·다른 말로")
     return probs
 
 
+# 줄 수 하한은 '비었나'만 본다 — 길이는 초(분량 검사)로 잰다. 옛 MIN_LINES(5)는 고정 칸 양식용이라 씨앗 흐름이 4칸인
+#   씨앗(b2b1480b3fd8 식기세척기, 4줄·분량은 맞음)을 통째로 버렸다(2026-09-27 check_styled 실측).
+MIN_STYLED_LINES = 3
 AB_MAX_SHARE = 0.4      # 두 안의 4글자 조각 겹침 상한(0.4 = 조각 열에 넷이 같다). 실측 근거는 tools/script_diff/check_styled.py
 
 
@@ -1153,7 +1158,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         n = {}
         lines = write_styled(product, seed_text, frame, vis, seg_index, platform=plat, seconds=seconds,
                              note=n, avoid_text=prev_text)
-        if len(lines) < MIN_LINES:
+        if len(lines) < MIN_STYLED_LINES:
             whys.append("%s: 대본이 %d줄뿐(%s)" % (name, len(lines), n.get("reason") or "; ".join(n.get("problems") or []) or "빈 응답"))
             continue
         bs = [{"role": L["role"], "seg": (L["cuts"] or [""])[0], "segs": list(L["cuts"])} for L in lines]
