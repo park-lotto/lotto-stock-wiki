@@ -476,12 +476,26 @@ def test_screen_only_ghost_fails_gate(frames, only):
     assert not ok, "매일 점검 기준도 화면에만 잔상 0"
 
 
-def test_ghost_in_both_is_report_only():
-    """완성본에도 같은 잔상(소재 안 장면 전환·빠른 움직임 오탐)은 미리보기≠완성본이 아니다 — 보고만(max_ghost null)."""
+def test_ghost_in_both_fails_gate():
+    """화면·완성본 둘 다에 있는 잔상도 실패(max_ghost 0, 2026-09-28) — 도구가 원본 장면 전환이 있을 때만 세므로
+    빠른 움직임 오탐은 이 수에 안 들어온다('== 움직임 의심' 줄은 판정 밖)."""
     p = vg.parse_report(_report([_JOB_OK], _sum(10, 0, ghost=4, ghost_only=0)))
     ok, fails, notes = vg.judge(p, GATE)
+    assert not ok and any("잔상 4프레임" in f for f in fails), fails
+
+
+def test_ghost_threshold_null_still_report_only():
+    p = vg.parse_report(_report([_JOB_OK], _sum(10, 0, ghost=4, ghost_only=0)))
+    ok, fails, notes = vg.judge(p, dict(GATE, max_ghost=None))
     assert ok, fails
     assert any("잔상 4프레임" in n and "보고만" in n for n in notes), notes
+
+
+def test_motion_line_does_not_affect_judge():
+    text = _report([_JOB_OK], _sum(10, 0)) + "== 움직임 의심 5프레임(컷 2)" + chr(10)
+    p = vg.parse_report(text)
+    ok, fails, _ = vg.judge(p, GATE)
+    assert ok, fails
 
 
 def test_missing_ghost_line_fails_when_threshold_set():
@@ -502,7 +516,7 @@ def test_ghost_threshold_null_reports_only():
 
 def test_gate_config_ghost_thresholds():
     assert CFG["gate"]["max_ghost_screen_only"] == 0 and CFG["audit"]["max_ghost_screen_only"] == 0
-    assert CFG["gate"]["max_ghost"] is None and CFG["audit"]["max_ghost"] is None   # 소재 품질 — 보고만
+    assert CFG["gate"]["max_ghost"] == 0 and CFG["audit"]["max_ghost"] == 0       # 전환 있는 잔상만 세므로 0
 
 
 def test_gate_reports_clean_missing_jobs_not_as_failure(tmp_path):
