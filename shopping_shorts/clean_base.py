@@ -648,6 +648,41 @@ def _regions(base):
     return out
 
 
+def _kept_iv(base, vid):
+    """고객이 안 지우기로 고른 컷(cleaned:false)의 원본 구간 [(시작, 끝)] — 이 영상(vid)만, 시작순."""
+    return sorted((_f(c.get("src")), _f(c.get("src")) + (_f(c.get("sdur")) or _f(c.get("dur"))))
+                  for c in base.get("cuts") or []
+                  if c.get("cleaned") is False and str(c.get("video_id")) == str(vid))
+
+
+def left_by_choice(base, material):
+    """재료 구간 중 청소본에 없는 부분이 **전부 고객이 안 지우기로 고른 컷**(cleaned:false) 자리인가 — 장면 골라 지우기 정본 전용.
+
+    ★왜(2026-09-28 job 52a1ef1723a8): 고객이 한 칸 안에서 컷 일부만 골라 지웠다(32컷 중 14컷 안 고름, 모든 칸에 고른 컷이
+      하나 이상 → skip_beats 없음). 렌더 컷 재생은 칸 단위 skip 만 알아 안 고른 컷을 '못 덮은 구간'으로 쳐 10칸 중 7칸이
+      uncovered → 렌더가 고객이 **안 지우기로 고른** 장면을 증분 청소(과금) 대상으로 안내했다.
+    판단: 청소본에 없는 틈(uncleaned_gaps)이 안 고른 컷의 원본 구간(src ~ src+sdur) 합집합 안에 다 들어가면 True.
+      편성을 바꿔 새로 읽게 된 원본(어느 컷에도 없던 구간)은 False — 종전대로 '바뀐 장면'(증분 청소·동의창)."""
+    if not base.get("partial"):
+        return False
+    try:
+        vid = str(material.get("video_id"))
+    except AttributeError:
+        return False
+    gaps = uncleaned_gaps(base, material)
+    if not gaps:
+        return False
+    kept = _kept_iv(base, vid)
+    for gs, ge in gaps:
+        pos = gs
+        for a, b in kept:
+            if a <= pos + SPAN_TOL and b > pos:
+                pos = max(pos, b)
+        if ge - pos > SPAN_TOL:
+            return False
+    return True
+
+
 TAIL_MAX = 0.30         # 컷 **끝**이 이만큼 이하로 안 지워졌으면 재청소(과금) 대신 조금 느리게 읽어 메운다
 TAIL_FRAC = 0.15        # …단 그 컷 길이의 이 비율 이하일 때만(느려지는 게 눈에 띄지 않게)
 
@@ -665,10 +700,14 @@ def span_map(base, material, allow_tail=0.0):
         return None
     regs = [r for r in _regions(base) if r[2] == vid]
     out, pos = [], s
-    while e - pos > SPAN_TOL:
+    # ★이음 허용치는 컷 길이의 절반까지만(2026-09-28 cecc7b884bb0 7번 칸): 0.1초짜리 컷은 SPAN_TOL(0.12)보다 짧아
+    #   루프가 한 번도 안 돌아 None — 틈 계산(uncleaned_gaps)은 "빈 곳 없음"인데 재생은 "못 덮음"이라 그 칸이 증분 청소로 갔다.
+    #   SPAN_TOL보다 긴 컷은 종전 그대로(허용치 SPAN_TOL), 그보다 짧은 컷만 절반 허용치로 한 조각을 찾는다.
+    tol = SPAN_TOL if e - s > SPAN_TOL else max(e - s, 0.0) / 2
+    while e - pos > SPAN_TOL or (not out and e - pos > 1e-3):
         best = None
         for r in regs:
-            if r[3] <= pos + SPAN_TOL and r[4] > pos + SPAN_TOL and (best is None or r[4] > best[4]):
+            if r[3] <= pos + tol and r[4] > pos + tol and (best is None or r[4] > best[4]):
                 best = r
         if best is None:
             if out and e - pos <= allow_tail:
@@ -798,6 +837,46 @@ def uncleaned_gaps(base, material):
     return gaps
 
 
+def _span_with_kept(base, material, seg_id=None):
+    """left_by_choice 가 참인 재료 구간 → 지운 부분은 청소본 조각(span_map), 안 고른 컷 자리는 **원본 조각**으로 이어 붙인 목록.
+    원본 조각 = {"video_id": 원본 vid, "seg_id", "start", "end", "_src"}(원본 좌표, 1배속). 못 이으면 None."""
+    vid = str(material.get("video_id")); s = float(material.get("start")); e = float(material.get("end"))
+    # ★컷 대부분이 안 고른 컷 자리면 **통째로 원본** — 청소본(조립본)에서도 그 자리는 원본 프레임이었다. 옆 컷의 지운 끝이
+    #   살짝 걸쳤다고(52a1 칸4 0.19초) 쪼개면 자막이 잠깐 사라졌다 나타나고 컷 수가 편집 화면과 달라진다.
+    kept_len = sum(max(0.0, min(e, b) - max(s, a)) for a, b in _kept_iv(base, vid))
+    if e - s > 1e-3 and kept_len >= 0.5 * (e - s):
+        return [{"video_id": vid, "seg_id": seg_id or "", "start": round(s, 4), "end": round(e, 4),
+                 "_src": round(e - s, 4)}]
+    segs, pos = [], s                      # [("clean"|"orig", 시작, 끝)] 원본 좌표
+    for gs, ge in uncleaned_gaps(base, material) + [(e, e)]:
+        if gs - pos > 1e-3:
+            segs.append(["clean", pos, gs])
+        if ge - gs > 1e-3:
+            segs.append(["orig", gs, ge])
+        pos = max(pos, ge)
+    # SPAN_TOL 이하 지운 자투리(프레임 반올림으로 옆 컷 끝이 걸친 것 — 52a1 칸2 0.007초)는 옆 원본 조각에 붙인다:
+    #   따로 두면 0.03초짜리 컷이 끼어 컷 수가 편집 화면과 달라진다
+    merged = []
+    for k, a, b in segs:
+        if k == "clean" and b - a <= SPAN_TOL and len(segs) > 1:
+            k = "orig"
+        if merged and merged[-1][0] == k == "orig":
+            merged[-1][2] = b
+        else:
+            merged.append([k, a, b])
+    out = []
+    for k, a, b in merged:
+        if k == "clean":
+            sub = span_map(base, {"video_id": vid, "start": a, "end": b})
+            if not sub:
+                return None
+            out.extend(sub)
+        else:
+            out.append({"video_id": vid, "seg_id": seg_id or "", "start": round(a, 4), "end": round(b, 4),
+                        "_src": round(b - a, 4)})
+    return out or None
+
+
 def replay_clips(base, clips):
     """렌더 컷 계획(원본 좌표, plan_beat_clips_for 결과) → 지워진 조각 좌표의 수동 컷.
 
@@ -814,6 +893,10 @@ def replay_clips(base, clips):
         m = {"video_id": c.get("video_id"), "start": s, "end": s + sd}
         got = span_map(base, m)
         short = False
+        if not got and left_by_choice(base, m):
+            # 고객이 안 지우기로 고른 컷 자리 — 그 부분은 원본 그대로 튼다(과금 0), 지운 부분은 청소본 조각.
+            #   렌더는 원본 소스를 같이 받는다(render_inputs_for _left — 칸 재료에 원본 vid 가 남으므로)
+            got = _span_with_kept(base, m, c.get("seg_id"))
         if not got:
             # 끝 자투리(≤0.3초·≤15%)만 안 지워졌으면 재청소 대신 지운 데까지만 읽고 살짝 느리게 채운다
             got = span_map(base, m, allow_tail=min(TAIL_MAX, TAIL_FRAC * sd))
