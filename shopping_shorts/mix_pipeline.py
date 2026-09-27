@@ -4510,6 +4510,25 @@ def _src_durs_for(job, work):
         return {}
 
 
+def compare_frame_times(c, pos, fps=30):
+    """전/후 비교의 **찍을 시각**을 프레임 번호로 정한다 → (원본 초, 청소본 초). 주인 함수(0순위-C).
+
+    ★왜(2026-09-27 사장님 "양쪽 다 프레임 번호로 집도록 바꾸면 0프레임으로"): 종전엔 양쪽을 소수점 초(fin+dur*pos)로
+      찍어 청소본 쪽이 프레임 경계 사이에 떨어졌고, 새 방식 청소본에서도 27컷 중 11컷이 ±1~2프레임 어긋나 보였다.
+      청소본은 우리가 30fps로 만들어(video_assemble.cut_frames: 컷 시작 프레임 = round(누적초×30)) 프레임 시각이
+      정확히 n/30이다. 컷 시작 프레임 f0에 **같은 프레임 수 k**를 더해 청소본은 (f0+k)/30, 원본은 src + k/30 을 찍는다
+      — 조립이 원본에서 그 조각을 뜰 때와 같은 자(1/30초 격자)라 두 그림이 같은 순간이다.
+    c: {src, fin, dur} (fin은 정본이면 보정 off가 이미 들어간 값), pos: 0~1.
+    """
+    from shopping_shorts.video_assemble import cut_frames
+    fin, dur, src = float(c["fin"]), float(c["dur"]), float(c["src"])
+    nf, _ = cut_frames(fin, dur, fps)
+    f0 = int(round(fin * fps))
+    k = min(nf - 1, max(0, int(nf * float(pos))))
+    # +0.0005: 정확히 n/30에 seek하면 부동소수 오차로 앞 프레임이 잡힐 수 있다 — 격자 안쪽으로 살짝 밀어 둔다
+    return src + k / float(fps) + 0.0005, (f0 + k) / float(fps) + 0.0005
+
+
 def clean_compare_clips(job, work):
     """자막제거 전/후 비교의 **정본** — 어느 청소본을, 어느 편성으로 펼지 한 곳에서 정한다
     (2026-09-03, 0순위-B).

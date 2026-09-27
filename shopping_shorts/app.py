@@ -5358,9 +5358,10 @@ def api_mix_status(job_id: str, request: Request):
             # 진행 표시용(2026-08-19): 자막제거는 소스 1편당 수 분씩 걸려 전체 25분도 정상이다.
             # 그동안 화면에 아무 변화가 없어 "멈췄나"로 읽혔다(사장님 제보의 절반이 이것).
             # 끝난 소스 수 / 전체를 내려보내 "2/5 완료"로 움직이는 걸 보이게 한다.
-            "clean_done": (len(job.get("clean_sources") or {})
-                           or (len(job.get("urls") or []) if clean_status == "ready" else 0)),
-            "clean_total": len(job.get("urls") or []),
+            "clean_done": _clean_progress(job, clean_status)[0],
+            "clean_total": _clean_progress(job, clean_status)[1],
+            # 완성본 1편 경로는 '편'이 없다 — 범위(고른 장면 N개/전체)를 화면이 보여준다(2026-09-27)
+            "clean_scope": _clean_progress(job, clean_status)[2],
             # 지워진 자막 위치(2026-07-25): 5단계 꾸미기가 자막 자동정렬·'원본 자막 있던 자리' 마커에 쓴다.
             # 좌표(%)뿐이라 안전 — 소스 경로 등 내부정보는 안 실린다.
             "clean_regions": job.get("clean_regions"),
@@ -7667,6 +7668,22 @@ def clean_failure_kind(clean_error):
 _CLEAN_DEAD_MSG = "서버가 재시작되어 자막 지우기가 중단됐어요 — 다시 누르면 추가 비용 없이 이어받아요."
 
 
+def _clean_progress(job, clean_status):
+    """자막제거 진행 표시 (done, total, scope) — **한 곳**(0순위-B).
+
+    ★왜(2026-09-27 사장님 화면 "영상 5편 중 0편 완료"): 옛 소스별 청소의 카운터(clean_sources 수 / 소스 수)가
+      완성본 1편 청소 경로에선 clean_sources가 늘 비어 **영원히 0편**으로 떴다. 완성본 경로는 업체 호출이 1회라
+      '편'을 셀 게 없다 — 범위(고른 장면 N개 / 전체 장면)를 보여준다. scope: {"mode": "picked"|"all"|"sources", "n"}.
+    """
+    total_src = len(job.get("urls") or [])
+    if mix_pipeline._clean_strategy(job) == "final":
+        sel = mix_pipeline.clean_selection_of(job)
+        scope = {"mode": "picked", "n": len(sel)} if sel else {"mode": "all", "n": 0}
+        return (1 if clean_status == "ready" else 0), 1, scope
+    done = len(job.get("clean_sources") or {}) or (total_src if clean_status == "ready" else 0)
+    return done, total_src, {"mode": "sources", "n": total_src}
+
+
 def _clean_interrupted(store, job) -> bool:
     """'지우는 중'인데 워커에서 **죽었나** — 화면 상태와 다시 누르기 가드가 같이 쓰는 한 곳(0순위-B).
 
@@ -8043,8 +8060,8 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
             else:
                 _hit = next((c for c in _clips if c.get("video_id") == vid), None)
         if _hit is not None:
-            _src_sec = _hit["src"] + _hit["dur"] * pos
-            _final_sec = _hit["fin"] + _hit["dur"] * pos
+            # ★양쪽을 **같은 프레임 번호**로 찍는다(2026-09-27) — 판단은 mix_pipeline.compare_frame_times 한 곳
+            _src_sec, _final_sec = mix_pipeline.compare_frame_times(_hit, pos)
             vid = _hit.get("video_id") or vid
         elif _clips is None and not _cc.get("stale"):
             # 컷 계획을 못 세운 경우(소스 길이 등) — 종전 비트 기준 근사로 물러선다.
