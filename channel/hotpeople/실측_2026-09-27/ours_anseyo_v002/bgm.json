@@ -1,0 +1,9 @@
+{
+ "ours_anseyo": {
+  "bpm": 69.8,
+  "onset_per_min": 173.3,
+  "cut_beat_sync": "5/41",
+  "sync_pct": 12,
+  "hit_in_first_1s": true
+ }
+}

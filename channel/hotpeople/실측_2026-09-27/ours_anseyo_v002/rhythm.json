@@ -1,0 +1,15 @@
+{
+ "ours_anseyo": {
+  "dur": 57.46,
+  "cuts": 42,
+  "first_cut": 2.2,
+  "cut_std": 1.04,
+  "cut_eq_sub": "29/41",
+  "cut_eq_sub_pct": 71,
+  "longest_still": 2.5,
+  "event_gap_med": 1.3,
+  "hook_n": 22,
+  "rehook_gap_med": 2.2,
+  "rehook_gap_max": 6.7
+ }
+}
