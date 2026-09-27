@@ -7910,8 +7910,8 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
             else:
                 _hit = next((c for c in _clips if c.get("video_id") == vid), None)
         if _hit is not None:
-            _src_sec = _hit["src"] + _hit["dur"] * pos
-            _final_sec = _hit["fin"] + _hit["dur"] * pos
+            # ★양쪽을 **같은 프레임 번호**로 찍는다(2026-09-27) — 판단은 mix_pipeline.compare_frame_times 한 곳
+            _src_sec, _final_sec = mix_pipeline.compare_frame_times(_hit, pos)
             vid = _hit.get("video_id") or vid
         elif _clips is None and not _cc.get("stale"):
             # 컷 계획을 못 세운 경우(소스 길이 등) — 종전 비트 기준 근사로 물러선다.

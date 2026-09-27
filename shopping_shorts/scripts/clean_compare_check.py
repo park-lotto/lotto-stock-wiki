@@ -81,18 +81,26 @@ def dist(x, y):
     return sum(abs(p - q) for p, q in zip(zx, zy)) / n if n else 0.0
 
 
-bad = 0
+bad = 0; nalign = 0
 print("컷 | 소스 | BEFORE↔AFTER 거리 | 청소본 최적자리 차이 | 판정   (plan_used=%s, stale=%s)" % (r.get("plan_used"), r.get("stale")))
 for c in clips:
     if c.get("cleaned") is False:
         continue
-    mid_s = c["src"] + c["dur"] * 0.5; mid_f = c["fin"] + c["dur"] * 0.5
+    if hasattr(mp, "compare_frame_times"):      # 화면과 같은 프레임 번호(주인 함수) — 없으면 옛 소수점 초
+        mid_s, mid_f = mp.compare_frame_times(c, 0.5)
+    else:
+        mid_s = c["src"] + c["dur"] * 0.5; mid_f = c["fin"] + c["dur"] * 0.5
     sf = one(srcs[c["video_id"]], mid_s); af = one(clean, mid_f)
     d0 = dist(sf, af)
-    t0 = max(0.0, mid_f - 1.0); fr = strip(clean, t0, mid_f + 1.0)
+    # ★탐색 격자를 청소본 프레임 격자(n/30)에 맞춘다 — 안 맞추면 ±1프레임이 측정 잡음으로 찍힌다(2026-09-27)
+    t0 = max(0.0, round((mid_f - 1.0) * 30) / 30.0 + 0.0005); fr = strip(clean, t0, mid_f + 1.0)
     best = min(((dist(sf, f), t0 + k / 30.0) for k, f in enumerate(fr)), default=(d0, mid_f))
+    # 지도 자리가 곧 최적 자리인가(거리 차 0.05 이내) — 좌표가 맞으면 True. 이게 '밀림 0'의 판정이다.
+    aligned = (d0 - best[0]) <= 0.05
+    nalign += (not aligned)
     # 다른 장면 판정: 지도 자리의 가운데 띠 정규화 거리가 SCENE_T 이상(최적자리는 참고로만 찍는다)
     wrong = d0 >= a.scene_t
     bad += wrong
     print("%2d | %s@%5.2f | %5.2f | %+.2f초(거리 %.2f) | %s" % (c["ci"], c["video_id"], mid_s, d0, best[1] - mid_f, best[0], "★다른 장면" if wrong else "OK"))
-print("== 다른 장면으로 보이는 컷: %d / %d" % (bad, len([c for c in clips if c.get("cleaned") is not False])))
+n_all = len([c for c in clips if c.get("cleaned") is not False])
+print("== 다른 장면으로 보이는 컷: %d / %d | 지도 자리가 최적 자리가 아닌 컷(밀림): %d / %d" % (bad, n_all, nalign, n_all))

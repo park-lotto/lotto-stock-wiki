@@ -3173,8 +3173,14 @@ def final_clip_pairs(plan, tts_paths, src_durs):
       → 좌우에 딴 그림이 계속 떴다.
     """
     from shopping_shorts import video_assemble as _va
-    out, t = [], 0.0
-    for b in (plan or {}).get("beats") or []:
+    # ★fin/dur는 **렌더와 같은 프레임 배치**(2026-09-27 사장님 "0프레임"): 칸 = _va.beat_frames(누적 음성 초 → 시작 프레임·
+    #   프레임 수), 칸 안 컷 = _va.cut_frame_list(마지막 컷이 나머지 흡수). 종전엔 소수점 초 누적이라 파일과 ±1~2프레임 어긋났다.
+    #   러닝아웃(_LAST_RUNOUT)은 렌더처럼 TTS 있는 마지막 칸에만.
+    fps = 30
+    beats = (plan or {}).get("beats") or []
+    _runout_idx = max((b.get("beat_idx") for b in beats if (tts_paths or {}).get(b.get("beat_idx"))), default=None)
+    out, cum = [], 0.0
+    for b in beats:
         tts = (tts_paths or {}).get(b.get("beat_idx"))
         try:
             tts_dur = _va._beat_effective_dur(b, tts) if tts else float(
@@ -3183,18 +3189,19 @@ def final_clip_pairs(plan, tts_paths, src_durs):
             tts_dur = float(b.get("target_seconds") or 0) or 0.0
         if tts_dur <= 0:
             continue
+        runout = getattr(_va, "_LAST_RUNOUT", 0.0) if (tts and b.get("beat_idx") == _runout_idx) else 0.0
+        f0, nfr, cum = _va.beat_frames(cum, tts_dur, runout, fps)
         try:
-            clips = _va.plan_beat_clips_for(b, tts_dur, src_durs or {})
-        except Exception:      # noqa: BLE001 — 계획을 못 세우면 이 비트는 건너뛴다
+            clips = _va.plan_beat_clips_for(b, tts_dur, src_durs or {}, runout=runout)
+        except Exception:      # noqa: BLE001 — 계획을 못 세우면 이 비트는 건너뛴다(칸 자리는 차지한다)
             clips = []
         if not clips:
-            t += tts_dur
             continue
-        for cclip in clips:
+        cfr = _va.cut_frame_list([float(c.get("out_dur") or 0.0) for c in clips], nfr, fps)
+        fpos = f0
+        for cclip, nf in zip(clips, cfr):
             d = float(cclip.get("out_dur") or 0.0)
             if d > 0:
-                # sdur = 원본에서 실제로 읽은 길이. dur(완성본 길이)은 느리게·정지로 늘어날 수 있어
-                # 청소본 정본이 "원본 어디까지 지웠나"를 dur로 재면 안 지운 구간까지 덮었다고 본다.
                 try:
                     sd = float(cclip.get("src_dur") or d)
                 except (TypeError, ValueError):
@@ -3202,8 +3209,8 @@ def final_clip_pairs(plan, tts_paths, src_durs):
                 out.append({"video_id": cclip.get("video_id"),
                             "beat_idx": b.get("beat_idx"),
                             "src": float(cclip.get("start") or 0.0),
-                            "fin": t, "dur": d, "sdur": sd})
-            t += d
+                            "fin": fpos / float(fps), "dur": nf / float(fps), "sdur": sd})
+            fpos += nf
     return out
 
 
@@ -4028,6 +4035,25 @@ def _src_durs_for(job, work):
                 for v, p in _resolve_sources(job, Path(work)).items()}
     except Exception:      # noqa: BLE001
         return {}
+
+
+def compare_frame_times(c, pos, fps=30):
+    """전/후 비교의 **찍을 시각**을 프레임 번호로 정한다 → (원본 초, 청소본 초). 주인 함수(0순위-C).
+
+    ★왜(2026-09-27 사장님 "양쪽 다 프레임 번호로 집도록 바꾸면 0프레임으로"): 종전엔 양쪽을 소수점 초(fin+dur*pos)로
+      찍어 청소본 쪽이 프레임 경계 사이에 떨어졌고, 새 방식 청소본에서도 27컷 중 11컷이 ±1~2프레임 어긋나 보였다.
+      청소본은 우리가 30fps로 만들어(video_assemble.cut_frames: 컷 시작 프레임 = round(누적초×30)) 프레임 시각이
+      정확히 n/30이다. 컷 시작 프레임 f0에 **같은 프레임 수 k**를 더해 청소본은 (f0+k)/30, 원본은 src + k/30 을 찍는다
+      — 조립이 원본에서 그 조각을 뜰 때와 같은 자(1/30초 격자)라 두 그림이 같은 순간이다.
+    c: {src, fin, dur} (fin은 정본이면 보정 off가 이미 들어간 값), pos: 0~1.
+    """
+    from shopping_shorts.video_assemble import cut_frames
+    fin, dur, src = float(c["fin"]), float(c["dur"]), float(c["src"])
+    nf, _ = cut_frames(fin, dur, fps)
+    f0 = int(round(fin * fps))
+    k = min(nf - 1, max(0, int(nf * float(pos))))
+    # +0.0005: 정확히 n/30에 seek하면 부동소수 오차로 앞 프레임이 잡힐 수 있다 — 격자 안쪽으로 살짝 밀어 둔다
+    return src + k / float(fps) + 0.0005, (f0 + k) / float(fps) + 0.0005
 
 
 def clean_compare_clips(job, work):

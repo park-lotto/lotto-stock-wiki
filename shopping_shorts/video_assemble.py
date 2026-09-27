@@ -674,6 +674,18 @@ def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO,
     return (capped, out_dur - capped)
 
 
+def beat_frames(cum_t, tts_dur, runout=0.0, fps=30):
+    """칸 하나가 완성본에서 차지하는 (시작 프레임, 프레임 수, 새 누적 초). **렌더(_render_mix)와 컷 지도(final_clip_pairs)가
+    이 함수 하나로 잰다**(0순위-B, 2026-09-27 사장님 "0프레임").
+
+    ★왜: 지도는 컷 길이를 소수점 초로 더해 fin이 51.90프레임처럼 프레임 사이에 떨어졌고, 파일은 여기 규칙(누적 음성 초의
+      반올림 프레임 경계)으로 만들어져 컷마다 ±1~2프레임 달랐다(0fbe619c02ce 26컷 실측). 판단이 둘이면 반드시 어긋난다.
+    """
+    f0 = int(round(float(cum_t) * fps))
+    new_cum = float(cum_t) + float(tts_dur) + float(runout or 0.0)
+    return f0, max(1, int(round(new_cum * fps)) - f0), new_cum
+
+
 def cut_frames(cum_start, dur, fps=30):
     """칸 안 컷 하나의 프레임 수 = **칸 안 누적 시각의 프레임 경계 차이** → (프레임 수, 새 누적 시각).
 
@@ -2451,9 +2463,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                  if s and s.get("video_id") in source_video_paths}
         # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
-        _f0 = int(round(_cum_t * 30))
-        _cum_t += tts_dur + runout
-        _nfr = max(1, int(round(_cum_t * 30)) - _f0)
+        _f0, _nfr, _cum_t = beat_frames(_cum_t, tts_dur, runout)      # 칸 프레임 배치 — 지도(final_clip_pairs)와 같은 함수
         _beat_len = _nfr / 30.0                     # 이 칸이 완성본에서 차지할 정확한 길이(프레임 경계)
         plan = plan_beat_clips_for(beat, tts_dur, _srcd, runout=runout)
         if not plan:
