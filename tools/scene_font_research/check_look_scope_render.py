@@ -39,7 +39,7 @@ with sync_playwright() as p:
     pg.goto('http://127.0.0.1:8773/out/scene-style-ui-showcase.html?preset=t11', wait_until='networkidle')
     pg.evaluate('([c])=>window.sceneStyle.load(c,null)', [ctx]); pg.evaluate(f'()=>window.sceneStyle.show({A})'); pg.wait_for_timeout(400)
     click = lambda sel: pg.evaluate(f"document.querySelector('{sel}').click()")
-    click('[data-caption-look-scope="one"]'); click('[data-caption-look="1"]'); pg.wait_for_timeout(300)   # 검정 유리, 이 장면만
+    click('[data-edit-scope="one"]'); click('[data-caption-look="1"]'); pg.wait_for_timeout(300)   # 검정 유리, 이 장면만
     snap = pg.evaluate('window.sceneStyle.snapshot()'); b.close()
 kA, kB = f't11:story:{A}:caption', f't11:story:{B}:caption'
 need((snap.get('captionLayouts') or {}).get(kA, {}).get('look') == 1 and 'look' not in (snap.get('captionLayouts') or {}).get(kB, {}), f'편집기 저장값: {A}번만 검정 유리, {B}번 기본 ({(snap.get("captionLayouts") or {}).get(kA)} / {(snap.get("captionLayouts") or {}).get(kB)})')
