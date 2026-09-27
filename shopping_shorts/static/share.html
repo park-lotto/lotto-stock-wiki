@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>공유 받기 · 숏템메이커</title>
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411">
+<script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<style>
+  /* fav_channels.html과 같은 토큰 — 담긴 곳과 한 벌로 보여야 한다. */
+:root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;--accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--gold:#f0c453;--inset:#0c1412;--sel-fg:#6ff0d6;color-scheme:dark;}
+:root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;--accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--gold:#b8860b;--inset:#eef7f3;--sel-fg:#0a7d66;color-scheme:light;}
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;margin:0;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+  .box{width:100%;max-width:420px;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:28px 20px 20px;text-align:center}
+  .ico{font-size:40px;line-height:1}
+  .ttl{font-size:19px;font-weight:800;margin:12px 0 6px}
+  .msg{font-size:14px;color:var(--sub);line-height:1.6;word-break:break-all}
+  .ch{margin:16px 0 4px;font-size:16px;font-weight:700;color:var(--sel-fg);word-break:break-all}
+  .link{margin-top:14px;font-size:11.5px;color:var(--sub);background:var(--inset);border-radius:8px;
+    padding:8px 10px;word-break:break-all;text-align:left}
+  .btns{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+  .btns a,.btns button{display:block;border-radius:10px;padding:13px;font-size:15px;font-weight:700;
+    text-decoration:none;font-family:inherit;cursor:pointer;border:1px solid var(--line);
+    background:var(--inset);color:var(--txt)}
+  .btns a.go{background:var(--accent2);border-color:var(--accent2);color:#fff}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;
+    margin:0 auto;animation:r .8s linear infinite}
+  @keyframes r{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="box">
+  <div id="ico"><div class="spin"></div></div>
+  <div class="ttl" id="ttl">채널 찾는 중…</div>
+  <div class="msg" id="msg">공유한 영상의 채널을 확인하고 있어요 (몇 초 걸려요)</div>
+  <div class="ch" id="ch"></div>
+  <div class="btns" id="btns" style="display:none">
+    <a class="go" href="/fav_channels">⭐ 나만의 채널등록 보기</a>
+    <button onclick="closeMe()">닫기</button>
+  </div>
+  <div class="link" id="link" style="display:none"></div>
+</div>
+<script>
+// 폰 [공유] → 숏템메이커 → 여기(manifest share_target). 앱마다 주소를 넣는 칸이
+// 달라서(url/text/title) 셋을 그대로 서버에 넘긴다 — 주소 고르기는 서버 한 곳이 한다.
+const q=new URLSearchParams(location.search);
+const PLAT={instagram:"인스타",tiktok:"틱톡",youtube:"유튜브",threads:"쓰레드",xiaohongshu:"샤오홍슈",douyin:"도우인"};
+function $(id){return document.getElementById(id);}
+function show(ico,ttl,msg,ch,link){
+  $('ico').innerHTML='<div class="ico"></div>'; $('ico').firstChild.textContent=ico;
+  $('ttl').textContent=ttl; $('msg').textContent=msg||''; $('ch').textContent=ch||'';
+  $('btns').style.display='flex';
+  if(link){ $('link').style.display='block'; $('link').textContent=link; }
+}
+function closeMe(){
+  // 공유로 열린 창은 닫히고, 직접 연 탭이면 목록으로 보낸다.
+  window.close(); setTimeout(function(){ location.href='/fav_channels'; },300);
+}
+async function run(){
+  let d;
+  try{
+    const r=await fetch('/api/fav_channel/share',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({url:q.get('url')||'',text:q.get('text')||'',title:q.get('title')||''})});
+    d=await r.json();
+  }catch(e){ return show('⚠','통신 오류','잠시 뒤 다시 공유해 주세요'); }
+  const ch=d.channel_id?((PLAT[d.platform]||d.platform||'')+' · @'+d.channel_id+(d.name?' · '+d.name:'')):'';
+  if(d.status==='added')   return show('✅','나만의 채널에 담았어요','',ch);
+  if(d.status==='exists')  return show('✔','이미 담긴 채널이에요','',ch);
+  if(d.status==='full')    return show('⚠','자리가 다 찼어요','나만의 채널은 최대 '+(d.cap||50)+'개예요. 안 보는 채널을 빼고 다시 공유해 주세요.',ch);
+  if(d.status==='login')   return show('⛔','로그인이 필요해요','숏템메이커에 로그인한 뒤 다시 공유해 주세요');
+  if(d.status==='nolink')  return show('❌','주소가 없어요','영상이나 채널 화면에서 [공유]를 눌러주세요', '', q.get('text')||q.get('title')||'');
+  return show('❌','채널을 못 찾았어요','인스타·틱톡·유튜브 영상이나 채널 화면에서 공유해 주세요','',d.link||'');
+}
+run();
+</script>
+</body>
+</html>

@@ -1806,7 +1806,11 @@ def api_mix_basket_download(request: Request, sc: str):
 #    비용이 늘어난다. 여기는 순수 북마크: 담아도 수집량은 1건도 늘지 않는다.
 
 _FAV_CH_PATTERNS = [
-    ("instagram",   r"instagram\.com/(?:reels?/[^/?#]+/?\?[^#]*|)?(?!p/|reel/|reels/|explore/|stories/)([A-Za-z0-9._]+)"),
+    # ★프로필 주소(instagram.com/아이디)만 채널로 읽는다. 예전 식은 앞에
+    #   `(?:reels?/[^/?#]+/?\?[^#]*|)?`가 붙어 있어 인스타 앱 공유 주소
+    #   `reel/코드/?igsh=…MWx0…R4`의 **맨 끝 글자('4')를 채널 아이디로** 잡았다
+    #   (2026-09-27 폰 공유 실측). 게시물 주소는 여기서 None → yt-dlp가 채널을 찾는다.
+    ("instagram",   r"instagram\.com/(?!p/|reels?/|tv/|explore/|stories/|share/)([A-Za-z0-9._]+)"),
     ("tiktok",      r"tiktok\.com/@([\w.\-]+)"),
     ("youtube",     r"youtube\.com/(?:@([\w.\-가-힣]+)|channel/([\w\-]+)|c/([\w\-가-힣]+))"),
     ("threads",     r"threads\.(?:net|com)/@([\w.\-]+)"),
@@ -1834,6 +1838,9 @@ def _fav_channel_platform(url: str) -> str:
     for plat in ("instagram", "tiktok", "youtube", "threads"):
         if plat + ".com" in h:
             return plat
+    # 유튜브 앱의 [공유]는 youtu.be 짧은 주소를 준다(폰 공유 입구, 2026-09-27).
+    if "youtu.be/" in h:
+        return "youtube"
     if "xiaohongshu.com" in h or "rednote.com" in h:
         return "xiaohongshu"
     if "douyin.com" in h:
@@ -2321,9 +2328,19 @@ def _resolve_uploader(url: str, username: str = ""):
     if not uname and url:
         try:
             import subprocess, sys, json
-            r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
-                               capture_output=True, text=True, timeout=60)
-            d = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
+            # ★빈 결과면 한 번 더 — 로그인 없이 읽는 인스타는 가끔 한 번씩 튕긴다
+            #   (2026-09-27 실측: 같은 릴스 8회 중 1회만 실패, 바로 다시 하면 성공).
+            #   실패 이유는 로그에 남긴다 — 조용히 삼키면 "못 찾음"의 원인을 못 가린다.
+            d = {}
+            for attempt in (1, 2):
+                r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
+                                   capture_output=True, text=True, timeout=60,
+                                   encoding="utf-8", errors="replace")
+                d = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
+                if d:
+                    break
+                print(f"_resolve_uploader 실패({attempt}/2) {url[:80]}: "
+                      f"{(r.stderr or '').strip()[-200:]}", file=sys.stderr)
             uname = (d.get("uploader_id") or "").strip().lstrip("@")
             # 인스타는 uploader_id가 숫자 pk로 오기도 한다 → channel(핸들)을 우선
             ch = (d.get("channel") or "").strip().lstrip("@")
@@ -2338,6 +2355,44 @@ def _resolve_uploader(url: str, username: str = ""):
     return uname, disp
 
 
+_SHARED_URL_RE = re.compile(r"https?://[^\s<>\"']+")
+
+
+def _shared_link(url: str = "", text: str = "", title: str = "") -> str:
+    """폰 [공유]로 들어온 값에서 주소 하나를 고른다(2026-09-27 모바일공유).
+    ★앱마다 넣는 칸이 다르다 — 인스타·유튜브 앱은 url 칸을 비우고 text에
+    "…https://…" 식으로 문장과 함께 넣는다. 그래서 세 칸을 차례로 훑어 첫 주소를 쓴다."""
+    for s in (url, text, title):
+        m = _SHARED_URL_RE.search(s or "")
+        if m:
+            return m.group(0).rstrip(").,!?")
+    return ""
+
+
+def _fav_channel_register(cid, url: str, username: str = "", thumb: str = "") -> dict:
+    """⭐나만의 채널 담기 — 주소(영상이든 프로필이든) → 채널을 찾아 cid의 목록에 넣는다.
+    ★판단의 주인은 여기 하나다(0순위-C). PC 확장 버튼(/api/fav_channel/grab)과
+    폰 공유(/api/fav_channel/share)가 둘 다 이걸 부른다 — 입구마다 따로 적으면
+    한쪽만 고쳐지는 날이 온다(0순위-B).
+    돌려주는 status: added / exists / full / notfound"""
+    plat = _fav_channel_platform(url)
+    chid = (username or "").strip().lstrip("@")
+    disp = ""
+    if not chid:
+        plat2, chid = _fav_channel_from_url(url)     # 프로필 URL이면 여기서 끝난다
+        plat = plat or plat2 or ""
+    if not chid and plat:                            # 모르는 사이트면 yt-dlp를 돌리지 않는다
+        chid, disp = _resolve_uploader(url)          # 게시물 URL → yt-dlp로 채널 해석
+    if not plat or not chid or chid.isdigit():
+        return {"status": "notfound", "platform": plat, "channel_id": ""}
+    store = Store(DB_PATH)
+    added = store.fav_channel_add(plat, chid, name=(disp or chid), url=url,
+                                  last_video_thumb=thumb, customer_id=cid)
+    status = "full" if added is None else ("added" if added else "exists")
+    return {"status": status, "platform": plat, "channel_id": chid, "name": disp,
+            "cap": store.FAV_CHANNEL_CAP}
+
+
 @app.get("/api/fav_channel/grab", response_class=HTMLResponse)
 def api_fav_channel_grab(request: Request, url: str = "", username: str = "",
                          thumb: str = ""):
@@ -2350,30 +2405,37 @@ def api_fav_channel_grab(request: Request, url: str = "", username: str = "",
     if cid is None:      # ★cid==0(관리자)은 정상 로그인이다 — not cid로 판정 금지
         return HTMLResponse(_chadd_html("⛔ 로그인 필요",
                                         "shoppingshorts.duckdns.org에 로그인 후 다시 눌러주세요."))
-    plat = _fav_channel_platform(url)
-    chid = (username or "").strip().lstrip("@")
-    disp = ""
-    if not chid:
-        plat2, chid = _fav_channel_from_url(url)     # 프로필 URL이면 여기서 끝난다
-        plat = plat or plat2 or ""
-    if not chid:
-        chid, disp = _resolve_uploader(url)          # 게시물 URL → yt-dlp로 채널 해석
-    if not plat or not chid or chid.isdigit():
+    r = _fav_channel_register(cid, url, username, thumb)
+    chid, disp = r["channel_id"], r.get("name") or ""
+    if r["status"] == "notfound":
         return HTMLResponse(_chadd_html("❌ 채널을 못 찾았어요",
                                         "영상 또는 채널(프로필) 화면에서 다시 눌러주세요."))
-    store = Store(DB_PATH)
-    added = store.fav_channel_add(plat, chid, name=(disp or chid), url=url,
-                                  last_video_thumb=thumb, customer_id=cid)
-    if added is None:
+    if r["status"] == "full":
         return HTMLResponse(_chadd_html("⚠ 자리가 다 찼어요",
-                                        f"나만의 채널은 최대 {store.FAV_CHANNEL_CAP}개입니다. "
+                                        f"나만의 채널은 최대 {r['cap']}개입니다. "
                                         "즐겨찾기에서 안 보는 채널을 빼주세요."))
-    if not added:
+    if r["status"] == "exists":
         return HTMLResponse(_chadd_html("✔ 이미 담긴 채널",
                                         f"@{chid} — 왼쪽 ⭐나만의 채널등록에서 볼 수 있어요."))
     return HTMLResponse(_chadd_html("✅ 나만의 채널에 담았어요",
                                     f"@{chid}{'·' + disp if disp else ''} — "
                                     "왼쪽 ⭐나만의 채널등록에서 확인하세요."))
+
+
+@app.post("/api/fav_channel/share")
+def api_fav_channel_share(request: Request, body: dict):
+    """📱폰 [공유] → 숏템메이커(2026-09-27 사장님 요청). /share 화면이 부른다.
+    body: {url, text, title} — 안드로이드 공유가 준 그대로. 담는 판단은
+    _fav_channel_register 한 곳(PC 확장 버튼과 같은 답)."""
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:      # ★cid==0(관리자)은 정상 로그인이다 — not cid로 판정 금지
+        return {"ok": False, "status": "login", "error": "로그인이 필요해요"}
+    link = _shared_link(body.get("url") or "", body.get("text") or "", body.get("title") or "")
+    if not link:
+        return {"ok": False, "status": "nolink", "error": "공유된 내용에 주소가 없어요"}
+    r = _fav_channel_register(cid, link)
+    r.update(ok=r["status"] in ("added", "exists"), link=link)
+    return r
 
 
 @app.get("/api/discover/add_by_url", response_class=HTMLResponse)
@@ -12541,7 +12603,7 @@ _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    #   안 열린다(저 세트는 method=="GET"에서만 본다). 개인 북마크라
                    #   과금 요소가 없어 등급과 무관하게 연다 — 로그인 여부는 핸들러가 본다.
                    "/api/fav_channel/add", "/api/fav_channel/remove",
-                   "/api/fav_channel/refresh",
+                   "/api/fav_channel/refresh", "/api/fav_channel/share",   # 폰 공유(2026-09-27)
 
                    "/api/mix/basket/toggle",
                    "/api/lens/search", "/api/lens/trace_url",
@@ -12580,6 +12642,7 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    #   체험 사용자가 메뉴는 보이는데 눌러도 페이월만 본다(sidebar.js 주석).
                    #   목록·갱신·빼기는 개인 북마크라 과금 요소가 없다.
                    "/fav_channels", "/api/fav_channel/list", "/api/fav_channel/grab",
+                   "/share",   # 폰 [공유] 받는 화면(2026-09-27) — 볼채널등록과 같은 급
                    # ★2026-08-20 체험판: 제작소는 HTML만 연다(소개 페이지가 뜬다).
                    #   /api/produce/* 는 열지 않는다 — 과금 기능은 계속 막힌다.
                    "/produce", "/produce.html",
@@ -24925,7 +24988,8 @@ except Exception:                                  # noqa: BLE001 — 이 기능
 # ★"produce"는 여기서 뺐다(2026-08-20) — 등급에 따라 다른 파일을 서빙해야 해서
 #   아래 _produce_page 명시 라우트로 옮겼다(voice_tune·refs와 같은 패턴).
 for _pg in ("discover", "find", "library", "mix", "outreach", "collection",
-            "fav_channels", "scene_library", "pattern_bank", "longform", "settings"):
+            "fav_channels", "scene_library", "pattern_bank", "longform", "settings",
+            "share"):   # share = 폰 [공유] 받는 화면(manifest share_target, 2026-09-27)
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",
