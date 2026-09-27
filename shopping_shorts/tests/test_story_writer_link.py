@@ -287,3 +287,17 @@ def test_v4_frame_shows_origin_hit_not_blank_templates(monkeypatch):
     assert "{" not in b, "빈칸 문장틀이 프롬프트에 없다"
     assert "역발상으로 돈방석 앉은 육아천재의 발명품" in b, "같은 유형·같은 말투(yt) 원문"
     assert "와 이거 진짜" not in b and "개발자도 예상 못한" not in b, "다른 말투·다른 유형 원문은 안 쓴다"
+
+
+def test_signal_words_stay_in_their_home_roles():
+    """2026-09-28 v4 10작업: '이건 바로'가 화제 칸에, '이게 말도 안 되는게'가 해결 칸에 들어가 흐름이 꼬였다."""
+    f = {"roles": ["title", "fame", "reveal", "benefit", "solve", "twist"], "pinned": {}, "gojo": {}}
+    lines = [{"role": "fame", "text": "이건 바로 닭가슴살 슬라이서였음", "cuts": ["a"]},
+             {"role": "solve", "text": "이게 말도 안 되는게 열만 쐬면 붙음", "cuts": ["a"]},
+             {"role": "twist", "text": "근데 진짜 충격적인 포인트는 방수", "cuts": ["a"]},
+             {"role": "reveal", "text": "이건 바로 필름", "cuts": ["a"]}]
+    probs = [p for p in sw.styled_problems({"lines": lines}, f, {"a": {}}, seconds=4) if "칸에서만" in p]
+    assert probs == ["1번 줄(fame 칸)이 「이건 바로」로 시작한다 — 이 말은 reveal 칸에서만 쓴다",
+                     "2번 줄(solve 칸)이 「이게 말도 안 되는게」로 시작한다 — 이 말은 benefit 칸에서만 쓴다"]
+    free = {"roles": ["훅", "미끼", "고조"], "pinned": {}, "gojo": {}}     # 제자리 칸이 없는 틀이면 자유
+    assert not [p for p in sw.styled_problems({"lines": lines[:3]}, free, {"a": {}}, seconds=4) if "칸에서만" in p]

@@ -422,6 +422,15 @@ def styled_problems(out, frame, seg_index, seed_text="", product="", seconds=25,
         mine = [L for L in lines if str(L.get("role")) == r]
         if mine and _pin_share(ph, mine[0].get("text")) < PIN_SHARE:
             probs.append("%s 칸은「%s」을 글자 그대로 써야 한다" % (r, ph))
+    # 신호어 제자리(2026-09-28 v4 10작업: "이건 바로"가 화제 칸에, "이게 말도 안 되는게"가 해결 칸에 들어가 흐름이 꼬였다)
+    roles_set = set(roles or [])
+    for i, L in enumerate(lines):
+        t = (L.get("text") or "").strip()
+        for head, label, home in SIGNAL_HOME:
+            if head.match(t) and (home & roles_set) and str(L.get("role")) not in home:
+                probs.append("%d번 줄(%s 칸)이 「%s」로 시작한다 — 이 말은 %s 칸에서만 쓴다"
+                             % (i + 1, L.get("role"), label, "·".join(sorted(home & roles_set))))
+                break
     for r, n in (frame.get("gojo") or {}).items():
         k = sum(1 for L in lines if str(L.get("role")) == r)
         if k and k < n:
@@ -468,6 +477,12 @@ COPY_RULE = {
     True: "■ 뼈대의 관용구 머리말(최근 딱 봤을 때는·이게 말도 안 되는게·이건 바로·심지어·근데 진짜 충격적인 포인트는)은\n"
           "  히트작 시그널이다 — 그 머리말로 문장을 열고, 머리말 뒤는 [재료]를 보고 이 제품 이야기로 새로 쓴다.",
 }
+# 신호어마다 제자리 칸 — 그 칸이 틀에 있을 때만 검사한다(없는 스타일은 자유)
+SIGNAL_HOME = [
+    (re.compile(r"^이건\s*바로"), "이건 바로", {"reveal", "공개"}),
+    (re.compile(r"^이게\s*(?:진짜 )?말도\s*안\s*되는\s*[게거]"), "이게 말도 안 되는게", {"limit", "benefit", "good", "power", "고조1"}),
+    (re.compile(r"^(?:근데\s*)?진짜\s*충격적인\s*포인트는"), "근데 진짜 충격적인 포인트는", {"twist", "반전"}),
+]
 PIN_SHARE = 0.8        # 고정 문장의 글자(빈칸 뺀 것) 4글자 조각 중 줄에 있어야 하는 비율
 # 실존 인물 표지 — 목록은 한정적이다(모델이 자주 넣는 이름 위주). 지시문이 1차, 이건 새는 것만 잡는다.
 REAL_PERSON = re.compile(r"백종원|이연복|최현석|안성재|에드워드 ?리|고든 ?램지|유재석|강호동|아이유|손흥민|일론 ?머스크|스티브 ?잡스|이재용|정주영")

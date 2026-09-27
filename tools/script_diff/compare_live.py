@@ -8,7 +8,7 @@
 import sys, os, json, time, pathlib, argparse
 ROOT = pathlib.Path(os.environ.get("PC_ROOT") or pathlib.Path(__file__).resolve().parents[2]); sys.path.insert(0, str(ROOT))
 ap = argparse.ArgumentParser(); ap.add_argument("dump"); ap.add_argument("out")
-ap.add_argument("--yt-only", action="store_true"); ap.add_argument("--limit", type=int, default=0)
+ap.add_argument("--yt-only", action="store_true"); ap.add_argument("--ig-only", action="store_true"); ap.add_argument("--limit", type=int, default=0)
 args = ap.parse_args()
 os.chdir(ROOT)
 from shopping_shorts import story_writer as sw
@@ -18,6 +18,8 @@ res = []
 for w in D["works"]:
     spines = [D["spines"][str(i)] for i in w["style_ids"] if D["spines"].get(str(i))][:1]
     if args.yt_only and not (spines and spines[0].get("no_cta")):
+        continue
+    if args.ig_only and not (spines and not spines[0].get("no_cta")):
         continue
     t0 = time.time()
     try:
