@@ -21,6 +21,12 @@ FFMPEG = "ffmpeg"
 FFPROBE = "ffprobe"
 
 
+def _exact(vf: str, pix: str) -> str:
+    """픽셀 포맷을 먼저 바꾼 뒤 필터를 건다. yuv420에서 crop하면 홀수 y·높이가 짝수로 한 줄 깎여
+    프레임 크기가 어긋난다(2026-09-28 실측: 홀수 높이 띠에서 프레임이 밀려 읽힘)."""
+    return f"format={pix},{vf}"
+
+
 def _run(cmd: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, capture_output=True)
 
@@ -64,10 +70,13 @@ def info(path: str) -> dict:
     }
 
 
-def frames(path: str, vf: str, w: int, h: int, pix: str = "rgb24") -> Iterator[np.ndarray]:
-    """-vf 결과 프레임을 차례로 준다(rgb24 → (h,w,3), gray → (h,w)). vf의 출력 크기가 w×h여야 한다."""
+def frames(path: str, vf: str, w: int, h: int, pix: str = "rgb24",
+           ss: float | None = None, dur: float | None = None) -> Iterator[np.ndarray]:
+    """-vf 결과 프레임을 차례로 준다(rgb24 → (h,w,3), gray → (h,w)). vf의 출력 크기가 w×h여야 한다.
+    ss/dur를 주면 그 구간만(입력 앞 -ss = 정확 탐색)."""
     ch = 3 if pix == "rgb24" else 1
-    proc = subprocess.Popen([FFMPEG, "-hide_banner", "-loglevel", "error", "-i", path, "-an", "-vf", vf,
+    cut = (["-ss", f"{max(0.0, ss):.3f}"] if ss is not None else []) + (["-t", f"{dur:.3f}"] if dur is not None else [])
+    proc = subprocess.Popen([FFMPEG, "-hide_banner", "-loglevel", "error", *cut, "-i", path, "-an", "-vf", _exact(vf, pix),
                              "-f", "rawvideo", "-pix_fmt", pix, "-"], stdout=subprocess.PIPE)
     size = w * h * ch
     try:
@@ -85,7 +94,7 @@ def frames(path: str, vf: str, w: int, h: int, pix: str = "rgb24") -> Iterator[n
 def grab(path: str, t: float, vf: str, w: int, h: int, pix: str = "rgb24") -> np.ndarray | None:
     """t초 프레임 한 장(-ss 입력 앞 = 정확 탐색). 못 뽑으면 None."""
     r = _run([FFMPEG, "-hide_banner", "-loglevel", "error", "-ss", f"{max(0.0, t):.3f}", "-i", path,
-              "-frames:v", "1", "-an", "-vf", vf, "-f", "rawvideo", "-pix_fmt", pix, "-"])
+              "-frames:v", "1", "-an", "-vf", _exact(vf, pix), "-f", "rawvideo", "-pix_fmt", pix, "-"])
     ch = 3 if pix == "rgb24" else 1
     if len(r.stdout) < w * h * ch:
         return None

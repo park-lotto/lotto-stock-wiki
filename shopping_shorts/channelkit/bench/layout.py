@@ -19,7 +19,7 @@ from . import probe
 from .constants import (LAYOUT_FPS, LAYOUT_W, WINDOW_PX_STD, WINDOW_ROW_FRAC, WINDOW_COL_FRAC, WINDOW_MIN_PX,
                         SEG_GAP, DYN_ROW_CHG, ROW_CHG_DIFF, INK_ROW_PX, BAND_PRESENCE, LOGO_XVID_STD, LOGO_MIN_H,
                         VARIANT_TOL_PX, BG_DARK_LUM, CAPTION_INSET, INK_DARK, INK_BRIGHT, INK_OUTLINE_DARK,
-                        INK_OUTLINE_R, FILL_BG_DIFF)
+                        INK_OUTLINE_R, FILL_BG_DIFF, INSIDE_PRESENCE)
 
 
 # ── 공용 판정(다른 모듈도 이것을 부른다 — 잉크 정의는 여기 하나) ─────────────────
@@ -144,9 +144,9 @@ def _caption(win, H, rowchg, ink_rows, outside_pol, n) -> dict:
         runs = [r for r in runs if any(y in dyn_rows for y in range(r[0], r[1]))]
         if runs:
             return {"pos": pos, "band": [int(min(r[0] for r in runs)), int(max(r[1] for r in runs))], "ink": outside_pol}
-    # 창 안(하드섭): 밝은 글자 + 외곽선이 표본의 BAND_PRESENCE 이상에서 보이는 행
+    # 창 안(하드섭): 밝은 글자 + 외곽선이 표본의 INSIDE_PRESENCE 이상에서 보이는 행
     inside = pres["bright"][wy0:wy1]
-    runs = segs(inside >= BAND_PRESENCE * 6, min_len=10, gap=SEG_GAP * 4)
+    runs = segs(inside >= INSIDE_PRESENCE, min_len=10, gap=SEG_GAP * 4)
     if runs:
         s, e = max(runs, key=lambda r: inside[r[0]:r[1]].sum())
         return {"pos": "inside", "band": [int(s + wy0), int(e + wy0)], "ink": "bright"}
