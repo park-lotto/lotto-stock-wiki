@@ -28,7 +28,7 @@ const Intro: React.FC = () => {
   return (
     <AbsoluteFill style={{background: BG, color: 'white', fontFamily: FONT, justifyContent: 'center', alignItems: 'center'}}>
       <div style={{fontSize: 44, color: MINT, fontWeight: 700, opacity: o}}>숏템메이커 · 설정 가이드</div>
-      <div style={{fontSize: 96, fontWeight: 900, marginTop: 18, transform: `scale(${s})`}}>🚀 내 구글 Vertex 연결</div>
+      <div style={{fontSize: 96, fontWeight: 900, marginTop: 18, transform: `scale(${s})`}}>🚀 구글 버텍스 API</div>
       <div style={{fontSize: 46, marginTop: 28, opacity: o}}>키(.json) 받는 법 — 5단계</div>
     </AbsoluteFill>
   );
@@ -42,7 +42,7 @@ const Outro: React.FC = () => {
     <AbsoluteFill style={{background: BG, color: 'white', fontFamily: FONT, justifyContent: 'center', alignItems: 'center'}}>
       <div style={{fontSize: 92, fontWeight: 900, transform: `scale(${s})`}}>✅ 연결 끝!</div>
       <div style={{fontSize: 44, marginTop: 30, lineHeight: 1.5, textAlign: 'center'}}>
-        대본 쓰기·장면 매칭이 내 구글 Vertex로 돌아가요<br />막히면 화면에 원인과 할 일이 나와요
+        대본 쓰기·장면 매칭이 내 구글 버텍스로 돌아가요<br />막히면 화면에 원인과 할 일이 나와요
       </div>
     </AbsoluteFill>
   );

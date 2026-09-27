@@ -77,10 +77,13 @@ def test_key_input_is_password_type():
     assert 'type="password"' in txt
 
 
-def test_says_optional():
-    """★60대 배려 — 등록을 안 해도 된다는 걸 알려야 한다."""
+def test_says_only_needed_keys():
+    """★60대 배려 — 무엇을 해야 하는지 알려야 한다.
+    2026-09-27 사장님: "안 하셔도 무료 제미나이로 그대로" 문구 삭제·포인트 제도 정리 — 자막 지우기·목소리·SNS 예약은
+    내 키가 있어야 쓰므로 "안 해도 된다"는 더 이상 사실이 아니다. 필요한 키만 등록하라고 알린다."""
     txt = _HTML.read_text(encoding="utf-8")
-    assert "안 하셔도" in txt or "않으셔도" in txt
+    assert "쓰실 기능의 키만 등록하시면 됩니다" in txt
+    assert "내 키 필요" in txt
 
 
 def test_route_registered():
@@ -131,9 +134,11 @@ def test_sidebar_settings_is_free():
 def test_calls_real_backend_endpoints():
     """Task 8 백엔드를 실제로 부르는지 — 목업으로 끝내지 않았는지."""
     txt = _HTML.read_text(encoding="utf-8")
-    for ep in ("/api/settings/points", "/api/settings/keys",
+    for ep in ("/api/settings/keys",
                "/api/settings/keys/delete", "/api/settings/keys/verify"):
         assert ep in txt, f"{ep} 호출이 없다"
+    # 2026-09-27 사장님: 포인트 제도는 렌즈·렌더 하루 10회만 남기고 마이페이지 포인트 탭을 뺐다 — 다시 부르면 안 된다
+    assert "/api/settings/points" not in txt
 
 
 def test_handles_master_key_disabled():
@@ -156,10 +161,12 @@ def test_watch_link_is_constant_not_hash_href():
     assert "GUIDE_VIDEO" in txt, "가이드 영상 URL 상수가 없다"
 
 
-def test_has_refund_notice():
-    """하단 고지 — 환불 원칙이 적혀 있어야 한다."""
+def test_no_points_tab():
+    """2026-09-27 사장님: 포인트 제도(충전·단가·환불 고지)는 안 쓴다 — 포인트 탭·충전 버튼이 다시 생기면 안 된다.
+    (예전 test_has_refund_notice는 포인트 환불 고지를 요구했다 — 제도가 없어져 뒤집었다)"""
     txt = _HTML.read_text(encoding="utf-8")
-    assert "환불" in txt
+    assert 'id="tabPoints"' not in txt and 'id="panePoints"' not in txt
+    assert "askCharge()" not in txt
 
 
 def test_includes_sidebar():
