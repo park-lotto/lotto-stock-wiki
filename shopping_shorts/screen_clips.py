@@ -278,7 +278,7 @@ def has(beat):
     """이 칸의 화면 컷이 준비돼 있나."""
     if not _enabled():
         return False
-    k = beat_key(beat)
+    k = (beat or {}).get("_screen_key") or beat_key(beat)
     with _LOCK:
         r = _CACHE.get(k) if k else None
     return bool(r and r.get("c"))
@@ -299,7 +299,9 @@ def lookup(beat, tts_dur, src_durs):
     """화면 컷 → 렌더 조각 계획 [{video_id,start,src_dur,out_dur[,playback_speed]}]. 없거나 못 쓰면 None."""
     if not _enabled():
         return None
-    k = beat_key(beat)
+    # 캡컷·ZIP 이 원본 재료 이름을 `<vid>_raw` 로 바꾼 사본은 바꾸기 전 키(_screen_key)·이름 대응(_screen_vid)을 단다(mix_pipeline._plan_on_source_files)
+    k = (beat or {}).get("_screen_key") or beat_key(beat)
+    vmap = (beat or {}).get("_screen_vid") or {}
     with _LOCK:
         r = _CACHE.get(k) if k else None
     if not k:
@@ -320,7 +322,7 @@ def lookup(beat, tts_dur, src_durs):
         sync = 1.0
     plan = []
     for c in cuts:
-        vid = c.get("v")
+        vid = vmap.get(c.get("v"), c.get("v"))
         total = float((src_durs or {}).get(vid, 0.0) or 0.0)
         if total <= 0.05:
             return _miss(beat, "src_unreadable %s" % vid)   # 소스를 못 읽는다 — 종전 계산이 손상 소스를 거른다

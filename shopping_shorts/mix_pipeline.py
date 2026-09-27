@@ -3493,7 +3493,12 @@ def _plan_on_source_files(plan, layout, regs, raw_ids):
     out = copy.deepcopy(plan or {})
     rvs = {r[0] for r in regs}
     moved = unmoved = 0
+    from shopping_shorts import screen_clips as _scm
     for b in out.get("beats") or []:
+        # ★원본 재료 칸을 `<vid>_raw` 로 바꾸면 칸 내용 키가 달라져 화면 컷(screen_clips)을 못 찾고 파이썬 예비 계산으로 떨어졌다 —
+        #   캡컷·ZIP 만 화면(=렌더)과 다른 컷(잔상 가드·배속 없음)이 됐다(2026-09-27 dacd163229e5 칸2 컷0: 렌더 시작 0.066·1.15배 느리게
+        #   vs 캡컷 0.0·1배속). 바꾸기 **전** 키와 이름 대응을 달아 두면 lookup 이 같은 화면 컷을 이름만 바꿔 쓴다('_' 키는 칸 키에서 빠진다).
+        _k0, _vmap = _scm.beat_key(b), {}
         for key in ("manual_cuts", "scene_override"):
             for c in b.get(key) or []:
                 v = c.get("video_id")
@@ -3511,9 +3516,13 @@ def _plan_on_source_files(plan, layout, regs, raw_ids):
                     moved += 1
                 elif v in raw_ids and v in layout:
                     c["video_id"] = "%s_raw" % v
+                    _vmap[v] = c["video_id"]
         for p in [b.get("primary")] + list(b.get("alternates") or []):
             if p and p.get("video_id") in raw_ids and p.get("video_id") in layout:
-                p["video_id"] = "%s_raw" % p["video_id"]
+                _vmap[p["video_id"]] = "%s_raw" % p["video_id"]
+                p["video_id"] = _vmap[p["video_id"]]
+        if _vmap and _k0:
+            b["_screen_key"], b["_screen_vid"] = _k0, _vmap
     return out, moved, unmoved
 
 

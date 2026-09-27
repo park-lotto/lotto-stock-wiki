@@ -47,6 +47,8 @@ from pathlib import Path
 sys.path.insert(0, ".")
 
 OUT = Path(os.getenv("CC_OUT", "/tmp/capcut_audit"))
+# 장면 전환 캐시(seg_snap — 화면 데이터가 부른다)는 결과 폴더 아래 — 도구는 소재 옆(고객 폴더)에 쓰지 않는다(2026-09-27 9차 관문 실측)
+os.environ.setdefault("SEG_SNAP_CACHE_DIR", str(OUT / "snapcache"))
 DB = "shopping_shorts/data/reference.db"
 TOL = 0.05          # 초 — 완성본은 30fps 프레임 경계(±1/60초), 캡컷은 마이크로초라 1프레임+여유
 SPEED_TOL = 0.01

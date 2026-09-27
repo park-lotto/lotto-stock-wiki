@@ -1,5 +1,7 @@
 """매일 영상 점검(daily_video_audit.py) 테스트 — 어긋나면 쪽지, 깨끗하면 닫기, 못 돌리면 조용히 넘기지 않기."""
 import sqlite3
+
+import pytest
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -186,3 +188,20 @@ def test_daily_summary_keeps_clean_missing(tmp_path):
     import json
     s = json.loads((tmp_path / "audit" / "2026-09-27" / "summary.json").read_text(encoding="utf-8"))
     assert s["capcut_summary"]["clean_missing"] == 1
+
+
+@pytest.mark.parametrize("fn", ["_run_evf", "_run_cea"])
+def test_daily_audit_scene_cache_under_work(tmp_path, monkeypatch, fn):
+    """매일 점검의 비교 실행은 장면 전환 캐시를 자기 작업 폴더에 — 소재 옆(고객 폴더)에 쓰지 않는다."""
+    import daily_video_audit as dva
+    seen = {}
+
+    class _P:
+        returncode, stdout, stderr = 0, "", ""
+
+    def fake_run(cmd, **kw):
+        seen.update(kw.get("env") or {})
+        return _P()
+    monkeypatch.setattr(dva.subprocess, "run", fake_run)
+    getattr(dva, fn)(["abc"], tmp_path / "w", 10)
+    assert seen.get("SEG_SNAP_CACHE_DIR") == str(tmp_path / "w" / "snapcache"), seen.get("SEG_SNAP_CACHE_DIR")
