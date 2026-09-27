@@ -109,18 +109,56 @@ def _ff(argv, what):
         raise RuntimeError(f"render.{what}: ffmpeg {r.returncode} — {r.stderr[-400:]}")
 
 
-def slot_vf(w=None, h=None):
-    """소스 → 슬롯 크롭 필터(아래 자막 18% 버리고 슬롯 비율로 가운데). ★렌더와 footage 장면 자르기가 같이 쓴다 —
-    장면을 다른 그림(전체 화면)으로 자르면 크롭 뒤에만 보이는 컷이 자막 안으로 샌다(v002 cut_03 실측)."""
+def cover_vf(w=None, h=None):
+    """소스 → 덮개 그림(아래 자막 18% 버리고 슬롯을 덮을 만큼 키움, 아직 안 자름). 가로가 슬롯보다 넓다."""
     w, h = w or spec.SLOT_W, h or spec.SLOT_H
     keep = 1 - spec.POLICY_SOURCE_CROP_BOTTOM
-    return f"crop=iw:ih*{keep:.3f}:0:0,scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h}"
+    return f"crop=iw:ih*{keep:.3f}:0:0,scale={w}:{h}:force_original_aspect_ratio=increase"
 
 
-def cut_clip(bg_png, sub_png, src, start, sec, out_mp4):
+def slot_vf(w=None, h=None, x=None):
+    """소스 → 슬롯 크롭 필터 = cover_vf + 슬롯 크기로 자르기. x=None 이면 가운데, 숫자면 그 x(★face_crop_x 가 정한 값만).
+    ★렌더·footage 장면 자르기·후보 썸네일·태깅 프레임이 전부 이것을 쓴다 —
+    장면을 다른 그림(전체 화면)으로 자르면 크롭 뒤에만 보이는 컷이 자막 안으로 샌다(v002 cut_03 실측)."""
+    w, h = w or spec.SLOT_W, h or spec.SLOT_H
+    return f"{cover_vf(w, h)},crop={w}:{h}" + (f":{int(x)}" if x is not None else "")
+
+
+def face_crop_x(cover_w, slot_w, face_cx):
+    """★칼카피 규칙 9 — 인물 중심 크롭의 **유일한** 판단. 덮개 그림(폭 cover_w)에서 슬롯(폭 slot_w)을 자를 x.
+    얼굴 중심(face_cx, 덮개 폭 대비 0~1)이 슬롯 가운데 오게 옮기고 덮개 밖으로 안 나가게 가둔다. 얼굴 없으면 가운데.
+    원본 9편 얼굴 중심 편차 중앙 0.052(최대 0.13) vs v3 0.15(가운데 크롭) — 기준표 §19."""
+    room = max(0, int(cover_w) - int(slot_w))
+    if face_cx is None:
+        return room // 2                       # ffmpeg crop 기본 x=(iw-ow)/2 와 같다
+    return int(min(max(round(face_cx * cover_w - slot_w / 2), 0), room))
+
+
+def cover_frame(src, t, w=None, h=None):
+    """소스 t초 덮개 그림 한 장(BGR). 태깅이 쓰는 그림 = 렌더가 자르는 그림(같은 cover_vf)."""
+    import numpy as np
+    w, h = w or spec.SLOT_W, h or spec.SLOT_H
+    r = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.3f}", "-i", src, "-frames:v", "1", "-vf", cover_vf(w, h),
+                        "-f", "image2pipe", "-vcodec", "png", "-"], capture_output=True, timeout=120)
+    if r.returncode != 0 or not r.stdout:
+        raise RuntimeError(f"render.cover_frame: {os.path.basename(src)} {t:.2f}s 프레임 실패 — {r.stderr[-200:]!r}")
+    import cv2
+    return cv2.imdecode(np.frombuffer(r.stdout, np.uint8), cv2.IMREAD_COLOR)
+
+
+def slot_from_cover(cover, x, w=None, h=None):
+    """덮개 그림 → 슬롯(ffmpeg crop=w:h:x 와 같은 자리: y 는 가운데)."""
+    w, h = w or spec.SLOT_W, h or spec.SLOT_H
+    H = cover.shape[0]
+    y = max(0, (H - h) // 2)
+    return cover[y:y + h, x:x + w]
+
+
+def cut_clip(bg_png, sub_png, src, start, sec, out_mp4, crop_x=None):
     # setpts=PTS-STARTPTS: -ss 뒤 영상 첫 pts가 0이 아니면 overlay 첫 프레임이 빈 흰 슬롯이 된다
     # (v3 1차 실측: cut_05·cut_10 첫 프레임 평균 248(흰 바탕) → 자막 경계 12곳에서 컷이 두 번 잡혀 컷 수 37)
-    f = (f"[1:v]setpts=PTS-STARTPTS,{slot_vf()},"
+    # crop_x: footage 태깅이 face_crop_x 로 정한 값(없으면 가운데)
+    f = (f"[1:v]setpts=PTS-STARTPTS,{slot_vf(x=crop_x)},"
          f"setsar=1,fps={spec.FPS},tpad=stop_mode=clone:stop_duration=4[v];"
          f"[0:v][v]overlay={spec.SLOT_X}:{spec.SLOT_Y}[b];[b][2:v]overlay=0:0,format=yuv420p[o]")
     _ff(["ffmpeg", "-v", "error", "-y", "-loop", "1", "-framerate", str(spec.FPS), "-i", bg_png,
@@ -187,17 +225,18 @@ def build(wd, script, footage, log=print):
             raise RuntimeError(f"render: 자막 {i} {sec}s > 장면 {c['start']}~{c['end']} — footage가 짧은 장면을 골랐다(footage부터)")
         sp = subtitle(g, os.path.join(rd, f"sub_{i:02d}.png"))
         mp = os.path.join(rd, f"cut_{i:02d}.mp4")
-        cut_clip(bg, sp, c["src"], c["start"], sec, mp)
+        cut_clip(bg, sp, c["src"], c["start"], sec, mp, crop_x=c.get("crop_x"))
         parts.append(mp); total += sec
-        plan.append({"i": i, "sec": sec, "src": os.path.basename(c["src"]), "start": c["start"], "url": c.get("url")})
+        plan.append({"i": i, "sec": sec, "src": os.path.basename(c["src"]), "start": c["start"], "url": c.get("url"),
+                     "crop_x": c.get("crop_x")})
     lst = os.path.join(rd, "concat.txt")
     with open(lst, "w", encoding="utf-8") as fh:
         fh.writelines(f"file '{os.path.basename(p)}'\n" for p in parts)
     silent = os.path.join(rd, "video.mp4")
     _ff(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", silent], "concat")
     audio, bgm_src = _bgm(total, wd, script.get("person", ""))
-    os.makedirs(os.path.join(wd, "out"), exist_ok=True)
-    mp4 = os.path.join(wd, "out", "final.mp4")
+    # ★out/final.mp4 는 여기서 안 쓴다 — 내용 관문(review.finalize)을 통과해야만 out/ 으로 나간다(우상혁 v001 사고)
+    mp4 = os.path.join(rd, "unchecked.mp4")
     _ff(["ffmpeg", "-v", "error", "-y", "-i", silent, "-i", audio, "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
          "-shortest", "-movflags", "+faststart", mp4], "mux")
     log(f"[hotpeople.render] {mp4} ({total:.1f}s, 컷 {len(parts)}, BGM {'있음' if bgm_src else '없음(무음)'})")

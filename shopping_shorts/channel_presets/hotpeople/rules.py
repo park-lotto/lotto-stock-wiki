@@ -74,6 +74,13 @@ def layout_lines(text, red=()):
     return best[1] if best else [t]
 
 
+def subject(g):
+    """★자막 주제 판단의 유일한 자리 → "main"|"other"|"scene". 대본이 안 적었거나 모르는 값이면 **main**(가장 엄격 —
+    주인공 자막엔 다른 사람·박힌 자막 장면을 못 쓴다). 쓰는 곳: footage.fits(고르기) · review.content_gate(관문)."""
+    s = str(g.get("subject") or "").strip().lower()
+    return s if s in spec.SUBJECTS else "main"
+
+
 def normalize(script):
     """대본 모델 출력 → 엔진 모양. text가 원본이고 lines는 layout_lines가 만든다(모델이 준 lines는 버린다)."""
     for g in script.get("groups") or []:

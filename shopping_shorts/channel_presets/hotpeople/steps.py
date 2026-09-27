@@ -25,6 +25,8 @@ def setup(job, d, wd, kw):
         return _need("setup", "source_text (씨앗: '인물명 | 주제')")
     miss = [p for p in (spec.SUB_FONT, spec.LOGO_NAME_FONT) if not os.path.isfile(p)]
     miss += [b for b in ("ffmpeg", "ffprobe", "yt-dlp") if not shutil.which(b)]
+    from shopping_shorts.channelkit import vision
+    miss += vision.models_missing()                 # 소스 자·후보 태깅·내용 관문이 쓰는 얼굴/글자 모델
     if miss:
         return _fail("setup", f"없는 것: {miss}", "글꼴은 shopping_shorts/static/fonts, 도구는 PATH에")
     d["setup"] = {"seed": seed}
@@ -58,16 +60,20 @@ def footage(job, d, wd, kw):
 
 def render(job, d, wd, kw):
     from . import render as R
+    from . import review as V
+    V.clear_out(wd)                                 # 지난 완성본이 새 결과 옆에 남지 않게(out/ 은 review 가 맡는다)
     d["render"] = R.build(wd, d["script"]["script"], d["footage"], log=kw["log"])
 
 
 def review(job, d, wd, kw):
     from . import review as V
-    rep = V.run(d["render"]["mp4"], d["render"], wd)
+    rep = V.run(d["render"]["mp4"], d["render"], wd, script=d["script"]["script"], footage=d["footage"])
+    rep["final"] = V.finalize(rep, wd, d["render"]["mp4"])     # ★통과해야만 out/final.mp4, 막히면 out/FAILED.json
     d["review"] = rep
     if not rep["ok"]:
-        bad = [c for c in rep["checks"] if not c["ok"]]
-        return _fail("review", ", ".join(c["name"] for c in bad), f"검수 시트 {rep.get('sheet')} 보고 해당 단계부터")
+        bad = [c for c in rep["checks"] if not c["ok"] and c.get("block", True)]
+        return _fail("review", ", ".join(f"{c['name']} (값 {c.get('got')})" for c in bad)[:1500],
+                     f"out/FAILED.json · 검수 시트 {rep.get('sheet')} 보고 해당 단계부터 — final.mp4 는 만들지 않았다")
 
 
 HANDLERS = {"setup": setup, "research": research, "script": script, "footage": footage, "render": render, "review": review}

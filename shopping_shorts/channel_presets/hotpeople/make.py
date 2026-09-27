@@ -36,7 +36,7 @@ def main(argv=None):
         print("[make] 멈춤:", json.dumps({k: v for k, v in r.items() if k != "job"}, ensure_ascii=False, indent=1)[:2000])
         return 1
     d = pipeline.load(a.workdir)["data"]
-    print(f"[make] 완료 → {d['render']['mp4']} ({d['review']['duration']}s, 컷 {len(d['render']['cuts'])}, "
+    print(f"[make] 완료 → {d['review']['final']} ({d['review']['duration']}s, 컷 {len(d['render']['cuts'])}, "
           f"대본 시도 {d['script']['attempts']}회, 장면 모델 보정 {d['footage']['fixed']}) · 검수 시트 {d['review']['sheet']}")
     return 0
 

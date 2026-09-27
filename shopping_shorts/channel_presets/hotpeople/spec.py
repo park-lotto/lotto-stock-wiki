@@ -102,6 +102,35 @@ POLICY_SCENE_MIN_SEC = 1.0
 POLICY_SOURCE_CROP_BOTTOM = 0.18    # 소스 아래 18%를 버리고 채운다 — 국내 하이라이트 영상은 자막이 아래에 박혀 있다(2026-09-25 첫 편 26컷 중 다수)
 SCRIPT_CLAUDE_MODEL = "opus"        # channelkit.providers.claude_llm 기본 모델 이름표
 
+# ── 소스 자 (우상혁 v001 사고 2026-09-28: 소스에 주인공이 거의 없었다 — 종합 하이라이트 2편이 24컷 중 15컷) ──────
+# 주인공 = 소스 전체 얼굴에서 **여러 영상에 공통으로** 가장 많이 짝지어지는 얼굴(channelkit.vision.protagonist_embedding).
+# 비율 = 표본 프레임 중 주인공 얼굴(높이 ≥ 20%, cos ≥ 0.363)이 보인 프레임 비율. 실측 표는 handoff/숏템엔진.md(2026-09-28 게이트).
+POLICY_SOURCE_SAMPLE_SEC = 2.0      # 받은 앞부분(최대 480초)에서 2초에 한 장
+POLICY_SOURCE_SAMPLE_W, POLICY_SOURCE_SAMPLE_H = 540, 395   # 슬롯 절반 덮개 그림(render.cover_vf)에서 잰다
+# 실측(2026-09-28, 표본 2초·주인공 = 소스 공통 얼굴, 주인공 비율 / 판정 가능 얼굴 프레임 비율):
+#   우상혁 v001 8편 — 버려야 할 것: Day2 종합 0.000/0.35 · 토크쇼 0.004/0.93 · Day3 종합 0.010/0.20
+#                    주인공 영상: Nanjing 결선 0.046 · 도쿄 2.35m 0.116·0.059 · 도하 0.031 · 모나코 0.033
+#   안세영 v3 9편 — 근접 영상 0.025~0.543 · **경기 중계(넓은 화면)** 파리 결승 0.000/0.00 · 세계선수권 결승 0.008/0.02
+#   → 주인공 비율만으로 자르면 파리 결승(금메달 자막의 핵심 소스)이 버려진다. 그래서 "큰 얼굴이 나오는데 주인공이 아니다"일 때만 버린다.
+POLICY_SOURCE_MIN_MAIN_RATIO = 0.02  # 주인공 비율 하한 — 버린 것 최대 0.010 · 주인공 영상 최소 0.025 사이
+POLICY_SOURCE_WIDE_JUDGED_MAX = 0.05  # 판정 가능 얼굴이 이 비율 미만이면 "넓은 화면 소스"(증거 없음) — 비율과 무관하게 둔다
+                                      #   (파리 결승 0.00 · 세계선수권 결승 0.02 / 버린 것 최소 0.20)
+POLICY_SOURCE_MIN_USABLE = 4        # 쓸 소스가 이보다 적으면 멈춘다(에러). 상한은 POLICY_FOOTAGE_MAX_VIDEOS
+POLICY_SOURCE_MAX_DOWNLOADS = 20    # 한 편에 시험 삼아 받을 영상 수 상한(버린 것 포함)
+POLICY_SOURCE_KO_QUERIES = ("경기", "인터뷰", "하이라이트", "다큐")   # 인물명 + 이것 — v001은 영어 검색어 3개뿐이었다
+# 제목으로 먼저 거른다: 토크쇼·리액션·팟캐스트·"Day N Highlights"(대회 종합)·모음집. v001 b_EPLebN4xU(토크쇼)·yIQy0DmGGtI/4Q54vezV2Gw(Day 2/3)
+POLICY_SOURCE_TITLE_BLOCK = (r"(?i)(talk\s*show|reaction|\breacts?\b|podcast|reflections|compilation|"
+                             r"day\s*\d+\s*highlights|토크쇼|리액션|반응|팟캐스트|모음|몰아보기)")
+
+# ── 내용 관문 (칼카피 규칙 7~10, 기준표 §19 — 넘으면 out/final.mp4 를 안 만들고 out/FAILED.json 으로 멈춘다) ──────
+GATE_FACE_VISIBLE_MIN = 0.55        # ⑦ 얼굴 보이는 컷 비율. 원본 9편 중앙 84%(54~100) · v3 77%
+GATE_SUBTITLE_LIKE_MAX = 1          # ⑧ 자막꼴 박힌 글자 컷 수. 원본 중앙 0(9편 중 3편에 1컷) · v3 3컷 [1,8,24]
+GATE_OTHER_ON_MAIN_MAX = 0          # ⑩ 주인공 자막(subject=main)에 "다른사람" 컷. 원본 0 · v3 [19,23,25]
+GATE_VERIFY_BAD_MAX = 0.30          # 장면 검사(제미니) **다시 고른 뒤** 틀림 비율. v001 23/23 → 100%
+FACE_CENTER_MAX = 0.13              # ⑨ 얼굴 중심 편차 중앙(보고만, 막지 않음). 원본 0.052(최대 0.13) · v3 0.15
+# 자막 주제(대본 groups[].subject) — main=주인공이 하는/겪는 일(기본값), other=코치·가족·상대 등 다른 인물, scene=장소·전광판·기사
+SUBJECTS = ("main", "other", "scene")
+
 # ── 엔진 연결 ──────────────────────────────────────────────────────────────
 STEPS = ["setup", "research", "script", "footage", "render", "review"]
 from . import rules as _rules      # noqa: E402 — 채널 규칙을 lint 창고에 등록
