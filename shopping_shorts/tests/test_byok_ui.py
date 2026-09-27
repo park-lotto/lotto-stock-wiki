@@ -77,10 +77,13 @@ def test_key_input_is_password_type():
     assert 'type="password"' in txt
 
 
-def test_says_optional():
-    """★60대 배려 — 등록을 안 해도 된다는 걸 알려야 한다."""
+def test_says_only_needed_keys():
+    """★60대 배려 — 무엇을 해야 하는지 알려야 한다.
+    2026-09-27 사장님: "안 하셔도 무료 제미나이로 그대로" 문구 삭제·포인트 제도 정리 — 자막 지우기·목소리·SNS 예약은
+    내 키가 있어야 쓰므로 "안 해도 된다"는 더 이상 사실이 아니다. 필요한 키만 등록하라고 알린다."""
     txt = _HTML.read_text(encoding="utf-8")
-    assert "안 하셔도" in txt or "않으셔도" in txt
+    assert "쓰실 기능의 키만 등록하시면 됩니다" in txt
+    assert "내 키 필요" in txt
 
 
 def test_route_registered():

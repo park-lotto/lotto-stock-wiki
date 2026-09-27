@@ -43,6 +43,7 @@ with sync_playwright() as p:
     for s in ('Agent Platform API', 'Agent Platform 사용자', '2단계 인증', '「개인」', '마이페이지 › 🔑 내 키 등록', '결제 계정 폐쇄', '무료 체험판 계정'):
         need(s in txt, f'① 새 문구 있음: {s}')
     need('Vertex AI API 열기' not in txt, '① 옛 버튼 문구(Vertex AI API 열기) 없음')
+    need('⑧ 구글 버텍스 API' in txt and '사람이 몰리는' not in txt and '그대로 쓰실 수 있습니다' not in txt, '⑦ 설명서 ⑧ 제목·문구')
     v = pg.locator('video[src="/landing/vertex_guide.mp4"]')
     need(v.count() == 1, '① 영상 태그 1개')
     v.scroll_into_view_if_needed()
@@ -67,6 +68,10 @@ with sync_playwright() as p:
     np_ = newp.value; np_.wait_for_load_state()
     need(np_.url.endswith('/landing/vertex_guide.mp4'), f'③ 누르면 영상이 새 탭으로 열린다 ({np_.url})')
     pg2.locator('#vertexCard').screenshot(path=str(out / 'settings_vertex_card.png'))
+    # ⑦ 2026-09-27 사장님 문구: 제목 「구글 버텍스 API」, (선택)·'사람이 몰리는'·'안 하셔도 지금처럼' 없음
+    vt = pg2.inner_text('#vertexCard')
+    need('구글 버텍스 API' in vt and '(선택)' not in vt and '사람이 몰리는' not in vt and '안 하셔도' not in vt and '오류와 버그' in vt,
+         f'⑦ 버텍스 카드 문구({vt.splitlines()[0] if vt else ""})')
     need(not errs, f'④ 설정 콘솔 오류 {errs[:3]}')
     b.close()
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')
