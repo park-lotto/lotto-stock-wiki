@@ -212,7 +212,8 @@ def _stage(tmp_path, changed_rel="shopping_shorts/video_assemble.py"):
     _git(r, "config", "user.name", "t")
     files = {"shopping_shorts/video_assemble.py": "A = 1\n", "shopping_shorts/app.py": "B = 1\n",
              "tools/editor_vs_final_video.py": "# tool\n", "tools/evf_run.py": "# run\n",
-             "tools/capcut_export_audit.py": "# cc\n", "tools/final_audio_audit.py": "# au\n", "README.md": "r\n"}
+             "tools/capcut_export_audit.py": "# cc\n", "tools/final_audio_audit.py": "# au\n",
+             "tools/clean_left_audit.py": "# cl\n", "README.md": "r\n"}
     for rel, body in files.items():
         (r / rel).parent.mkdir(parents=True, exist_ok=True)
         (r / rel).write_bytes(body.encode("utf-8"))
@@ -235,15 +236,23 @@ def _au(cells=10, narr=0, surplus=0, delay=0):
 
 
 _AU_OK = _au()
+_CL_OK = ("62ed6bf66eb9 | 자막 남음 [] | 증분 대기 [] | 원인 미상 [] | 고른 원본 [] | 3s\n"
+          "== 작업 1 · 자막 남음 0칸 · 증분 대기 0칸 · 원인 미상 0칸 · 대상 아님 0작업\n")
+_CL_BAD = ("52a1ef1723a8 | 자막 남음 [1, 2, 4, 6, 7, 8, 9] | 증분 대기 [] | 원인 미상 [] | 고른 원본 [] | 3s\n"
+           "== 작업 1 · 자막 남음 7칸 · 증분 대기 0칸 · 원인 미상 0칸 · 대상 아님 0작업\n")
+_CL_PENDING = ("3c885b9e3643 | 자막 남음 [] | 증분 대기 [5, 7] | 원인 미상 [] | 고른 원본 [] | 3s\n"
+               "== 작업 1 · 자막 남음 0칸 · 증분 대기 2칸 · 원인 미상 0칸 · 대상 아님 0작업\n")
 
 
 class _FakeSSH:
     def __init__(self, report="", free=57, reachable=True, crash="", poll="EVF_DONE rc=0\n---\n5\nGONE\n",
                  cc_report=_CC_OK, cc_crash="", cc_poll="CEA_DONE rc=0\n---\nGONE\n",
-                 au_report=_AU_OK, au_crash="", au_poll="AUDIO_DONE rc=0\n---\nGONE\n"):
+                 au_report=_AU_OK, au_crash="", au_poll="AUDIO_DONE rc=0\n---\nGONE\n",
+                 cl_report=_CL_OK, cl_crash="", cl_poll="CLA_DONE rc=0\n---\nGONE\n"):
         self.report, self.free, self.reachable, self.crash, self.poll = report, free, reachable, crash, poll
         self.cc_report, self.cc_crash, self.cc_poll = cc_report, cc_crash, cc_poll
         self.au_report, self.au_crash, self.au_poll = au_report, au_crash, au_poll
+        self.cl_report, self.cl_crash, self.cl_poll = cl_report, cl_crash, cl_poll
         self.cmds = []
 
     def __call__(self, cmd, stdin=None, timeout=120):
@@ -254,6 +263,14 @@ class _FakeSSH:
             return 0, "PID=4343\n"
         if "final_audio_audit.py" in cmd:
             return 0, "PID=4444\n"
+        if "clean_left_audit.py" in cmd:
+            return 0, "PID=4545\n"
+        if cmd.startswith("cat ") and "/cl/done.txt" in cmd:
+            return 0, self.cl_poll
+        if cmd.startswith("cat ") and "/cl/report.txt" in cmd:
+            return 0, self.cl_report
+        if cmd.startswith("cat ") and "/cl/crash.txt" in cmd:
+            return 0, self.cl_crash
         if cmd.startswith("cat ") and "/audio/done.txt" in cmd:
             return 0, self.au_poll
         if cmd.startswith("cat ") and "/audio/report.txt" in cmd:
@@ -476,12 +493,26 @@ def test_screen_only_ghost_fails_gate(frames, only):
     assert not ok, "매일 점검 기준도 화면에만 잔상 0"
 
 
-def test_ghost_in_both_is_report_only():
-    """완성본에도 같은 잔상(소재 안 장면 전환·빠른 움직임 오탐)은 미리보기≠완성본이 아니다 — 보고만(max_ghost null)."""
+def test_ghost_in_both_fails_gate():
+    """화면·완성본 둘 다에 있는 잔상도 실패(max_ghost 0, 2026-09-28) — 도구가 원본 장면 전환이 있을 때만 세므로
+    빠른 움직임 오탐은 이 수에 안 들어온다('== 움직임 의심' 줄은 판정 밖)."""
     p = vg.parse_report(_report([_JOB_OK], _sum(10, 0, ghost=4, ghost_only=0)))
     ok, fails, notes = vg.judge(p, GATE)
+    assert not ok and any("잔상 4프레임" in f for f in fails), fails
+
+
+def test_ghost_threshold_null_still_report_only():
+    p = vg.parse_report(_report([_JOB_OK], _sum(10, 0, ghost=4, ghost_only=0)))
+    ok, fails, notes = vg.judge(p, dict(GATE, max_ghost=None))
     assert ok, fails
     assert any("잔상 4프레임" in n and "보고만" in n for n in notes), notes
+
+
+def test_motion_line_does_not_affect_judge():
+    text = _report([_JOB_OK], _sum(10, 0)) + "== 움직임 의심 5프레임(컷 2)" + chr(10)
+    p = vg.parse_report(text)
+    ok, fails, _ = vg.judge(p, GATE)
+    assert ok, fails
 
 
 def test_missing_ghost_line_fails_when_threshold_set():
@@ -502,7 +533,7 @@ def test_ghost_threshold_null_reports_only():
 
 def test_gate_config_ghost_thresholds():
     assert CFG["gate"]["max_ghost_screen_only"] == 0 and CFG["audit"]["max_ghost_screen_only"] == 0
-    assert CFG["gate"]["max_ghost"] is None and CFG["audit"]["max_ghost"] is None   # 소재 품질 — 보고만
+    assert CFG["gate"]["max_ghost"] == 0 and CFG["audit"]["max_ghost"] == 0       # 전환 있는 잔상만 세므로 0
 
 
 def test_gate_reports_clean_missing_jobs_not_as_failure(tmp_path):
@@ -596,3 +627,53 @@ def test_gate_fails_when_audio_summary_lacks_vcut_item(tmp_path):
     au = _AU_OK.replace(" · 검출불일치 0칸", "")
     res, out = _run(_stage(tmp_path), _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), au_report=au))
     assert not res.ok and "요약 줄" in out
+
+
+# ── ⑦ 자막 남음(2026-09-28) — 영상 비교는 원본을 틀어 장면이 같게 나와 "청소본이 있어야 할 칸인데 원본"을 못 본다 ──
+
+def test_clean_left_summary_parses_both_modes():
+    assert vg.clean_left_summary(_CL_BAD) == {"jobs": 1, "left": 7, "pending": 0, "unknown": 0, "na": 0, "stale": 0}
+    s = vg.clean_left_summary("== 작업 9 · 자막 남음 2칸 · 증분 대기 0칸 · 원인 미상 1칸 · 대상 아님 3작업 · 재구성 불가 4작업\n")
+    assert s == {"jobs": 9, "left": 2, "pending": 0, "unknown": 1, "na": 3, "stale": 4}
+    assert vg.clean_left_summary("== 칸 10 · 다른 장면 0\n") is None
+
+
+def test_judge_clean_left_fails_on_left_passes_on_pending():
+    ok, fails, notes = vg.judge_clean_left(_CL_BAD, {})
+    assert not ok and "자막 남음 7칸" in fails[0] and "52a1ef1723a8" in fails[0]
+    ok, fails, notes = vg.judge_clean_left(_CL_PENDING, {})
+    assert ok and not fails and "증분 대기 2칸" in notes[0], "편성 변경으로 대기 중인 칸은 결함이 아니다(렌더 때 동의창)"
+    ok, fails, _ = vg.judge_clean_left("x\n", {})
+    assert not ok and "요약 줄" in fails[0]
+    ok, fails, _ = vg.judge_clean_left(_CL_OK, {}, crash="Traceback")
+    assert not ok and "crash" in fails[-1]
+    ok, fails, _ = vg.judge_clean_left("abc 건너뜀 KeyError: x\n" + _CL_OK, {})
+    assert not ok and "건너뛴 작업 1개" in fails[0]
+
+
+def test_gate_fails_on_clean_left_even_when_scene_matches(tmp_path):
+    """★사보타주 기준(52a1): 영상 비교는 다른 장면 0인데 자막 남음 7칸 → 관문 실패."""
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0, 2)), cl_report=_CL_BAD)
+    res, out = _run(_stage(tmp_path), ssh)
+    assert not res.ok and "자막 남음 7칸" in out, out
+    assert any("clean_left_audit.py 62ed6bf66eb9" in c for c in ssh.cmds), "영상 비교와 같은 작업으로 돈다"
+    assert ssh.cmds[-1].startswith("rm -rf /tmp/gate_")
+
+
+def test_gate_passes_with_pending_only(tmp_path):
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0, 2)), cl_report=_CL_PENDING)
+    res, out = _run(_stage(tmp_path), ssh)
+    assert res.ok, out
+    assert "증분 대기 2칸" in out
+
+
+def test_gate_fails_when_clean_left_tool_dies(tmp_path):
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0, 2)), cl_poll="---\nGONE\n")
+    res, out = _run(_stage(tmp_path), ssh)
+    assert not res.ok and "자막 남음 대조가 끝 표식 없이 죽었다" in out
+
+
+def test_clean_left_tool_is_bundled_and_patch_modules_uploaded():
+    import clean_left_audit as cla
+    assert "tools/clean_left_audit.py" in vg.TOOL_RELS
+    assert set("%s.py" % n for n in cla.PATCH_MODULES) <= set(vg.PATCH_RELS), "도구가 얹는 모듈은 관문이 올려야 한다"
