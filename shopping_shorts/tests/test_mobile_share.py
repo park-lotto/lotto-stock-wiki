@@ -44,3 +44,24 @@ def test_instagram_profile_url_is_a_channel(url, want):
 def test_youtu_be_is_youtube():
     assert appmod._fav_channel_platform("https://youtu.be/OYPzJh5oE24?si=x") == "youtube"
     assert appmod._fav_channel_platform("https://news.naver.com/x") == ""
+
+
+def test_youtube_uploader_uses_official_api(monkeypatch):
+    """서버 IP의 yt-dlp는 유튜브가 막는다(2026-09-28 폰 공유 실패) → 공식 API로 핸들을 얻는다.
+    핸들은 yt-dlp가 주던 모양(@ 뗀 customUrl)과 같아야 이미 담긴 채널과 중복되지 않는다."""
+    from shopping_shorts import youtube_client as yc
+    calls = []
+
+    def fake_first_ok(url, params):
+        calls.append(url)
+        if url == yc._VIDEOS_URL:
+            return {"items": [{"snippet": {"channelId": "UCabc", "channelTitle": "숏포츠"}}]}, False
+        return {"items": [{"snippet": {"customUrl": "@숏포츠-j7j"}}]}, False
+
+    monkeypatch.setattr(yc, "_first_ok", fake_first_ok)
+    assert yc.uploader_of_video("https://youtube.com/shorts/oVllezUV5Hs?si=x") == ("숏포츠-j7j", "숏포츠")
+    assert calls == [yc._VIDEOS_URL, yc._CHANNELS_URL]
+    # _resolve_uploader도 유튜브면 이 길을 탄다(yt-dlp를 부르지 않는다)
+    import subprocess
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: (_ for _ in ()).throw(AssertionError("yt-dlp 호출됨")))
+    assert appmod._resolve_uploader("https://youtu.be/oVllezUV5Hs") == ("숏포츠-j7j", "숏포츠")

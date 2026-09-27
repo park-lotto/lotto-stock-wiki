@@ -2325,6 +2325,16 @@ def _resolve_uploader(url: str, username: str = ""):
     ★여기 한 곳에서만 정한다 — 📌채널수집과 ⭐볼채널등록이 같은 답을 써야 한다
     (0순위-B: 같은 판단을 두 군데 적으면 언젠가 어긋난다)."""
     uname, disp = (username or "").strip().lstrip("@"), ""
+    # ★유튜브는 공식 API가 먼저다 — 서버 IP의 yt-dlp는 유튜브가 막는다(2026-09-28 폰 공유 실측).
+    #   API가 못 주면(쿼터 소진 등) 아래 yt-dlp로 내려가되 그 사실을 로그에 남긴다.
+    if not uname and url and _fav_channel_platform(url) == "youtube":
+        try:
+            from shopping_shorts.youtube_client import uploader_of_video
+            uname, disp = uploader_of_video(url)
+        except Exception as e:  # noqa: BLE001
+            print(f"_resolve_uploader 유튜브 API 실패 {url[:80]}: {e!r}", file=sys.stderr)
+        if not uname:
+            print(f"_resolve_uploader 유튜브 API 빈 결과 → yt-dlp로 {url[:80]}", file=sys.stderr)
     if not uname and url:
         try:
             import subprocess, sys, json
