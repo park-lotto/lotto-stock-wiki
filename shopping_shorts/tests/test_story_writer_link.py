@@ -53,7 +53,7 @@ def test_seed_content_hits_ignore_product_words():
 # ── 한 번 호출 작가(write_styled, 2026-09-27) ─────────────────────────────────────────────
 SEED = "개발자도 예상 못한 한국 주부의 활용법 평범한 필름지처럼 보이는 이 제품으로 리모컨을 감싸 드라이어를 쏘면 딱 달라붙는다는데 이건 바로 열수축 필름."
 SPINE = {"id": 74, "name": "유튜브 「OO의 정체」", "no_cta": True, "beat_roles": ["title", "bait", "reveal", "twist"],
-         "templates": {"title": ["{나라} 천재가 만든 이 제품의 정체"]}}   # 제목만 — 공식 고정(유튜브 전 칸)은 따로 시험
+         "templates": {}}   # 예시 없음 — 공식 고정(유튜브 전 칸·제목 순번·고조 머리말)은 아래 따로 시험
 
 
 def _styled_job():
@@ -89,7 +89,7 @@ def test_one_call_per_draft_keeps_style_roles_and_valid_cuts(monkeypatch):
     assert a["auto_pick"] and a["style_name"] == "씨앗 결 이야기"
     assert [x["role"] for x in b["beats"]] == ["title", "bait", "reveal", "reveal", "twist"], "고른 스타일의 칸이 그대로"
     assert all(x["src_segs"] == ["MAT-5"] for x in b["beats"]), "없는 컷 번호(NOPE-9)는 버리고 적은 컷을 쓴다"
-    assert "[스타일 틀]" in prompts[1] and "title:" in prompts[1] and "「{나라} 천재가" in prompts[1]
+    assert "[스타일 틀]" in prompts[1] and "title:" in prompts[1]
     assert "[다른 안" in prompts[1] and "[다른 안" not in prompts[0], "둘째 안은 첫 안과 다르게 쓰라는 지시를 받는다"
     assert b["writer_note"]["auth"] == "vertex"
 
@@ -196,11 +196,12 @@ YT_SP = {"id": 70, "name": "유튜브 「OO의 정체」", "no_cta": True, "beat
 def test_common_lines_rotate_over_examples_and_bank(monkeypatch):
     """사장님: 공통 칸은 자산(예시+변형)에서 작업마다 순번으로 — 모델에게 맡기면 첫 번째만 쓴다."""
     monkeypatch.setattr(sw, "_BANK", {"이러니 떼돈을 벌었다고": ["이러니 돈방석에 앉았다고", "이러니 대박이 났다고"]})
+    monkeypatch.setattr(sw, "_SPICY", {})
     assert sw.common_pool(YT_SP, "land") == ["이러니 떼돈을 벌었다고", "이러니 돈방석에 앉았다고", "이러니 대박이 났다고", "완벽하다고"]
     picks = [sw.common_lines(YT_SP, "job%d" % i)["land"] for i in range(40)]
     assert len(set(picks)) == 4, "40작업이면 후보 4개가 다 나와야 한다"
     assert sw.common_lines(YT_SP, "job7") == sw.common_lines(YT_SP, "job7"), "같은 작업은 늘 같은 문장"
-    assert set(sw.common_lines(YT_SP, "x")) == {"bait", "reveal", "land"}, "유튜브는 제목 빼고 전 칸이 공식(2026-09-27)"
+    assert set(sw.common_lines(YT_SP, "x")) == {"title", "bait", "reveal", "land"}, "유튜브는 전 칸이 공식, 제목도 순번(2026-09-27)"
 
 
 def test_pinned_line_is_enforced_and_real_names_flagged(monkeypatch):
@@ -236,3 +237,21 @@ def test_brackets_copied_from_frame_are_stripped(monkeypatch):
     monkeypatch.setattr(sw._sg, "_call_json", lambda *a, **k: out)
     lines = sw.write_styled("필름", SEED, sw.frame_of(None), [], {"MAT-1": {"secs": 3}}, seconds=16)
     assert all(not L["text"].startswith("「") and not L["text"].endswith("」") for L in lines)
+
+
+def test_youtube_gojo_rows_pin_only_head_and_need_lines(monkeypatch):
+    """2026-09-27 사장님: 자극은 오바 말고, 고조 3줄 흐름을 살려라 — 고조 칸은 머리말만 고정하고 줄 수를 검사한다."""
+    monkeypatch.setattr(sw, "_BANK", {"이러니 떼돈을 벌었다고": []})
+    monkeypatch.setattr(sw, "_SPICY", {"이러니 떼돈을 벌었다고": ["이러니 시장이 초토화됐다고", "이러니 통장이 두둑해졌다고"]})
+    sp = {"id": 70, "name": "유튜브 「OO의 정체」", "no_cta": True, "beat_roles": ["title", "limit", "solve", "more", "land"],
+          "templates": {"title": ["{대상}이 쓰는 {제품}의 정체"], "limit": ["이게 말도 안 되는게 {효능}는데"],
+                        "solve": ["{불편함}을 한 방에 삭제해 버린다는 거"], "more": ["심지어 {효능2}다는데"], "land": ["이러니 떼돈을 벌었다고"]}}
+    assert sw.common_pool(sp, "land") == ["이러니 떼돈을 벌었다고", "이러니 통장이 두둑해졌다고"], "과한 자극(초토화)은 뺀다"
+    f = sw.frame_of(sp, "k")
+    assert f["pinned"]["limit"] == "이게 말도 안 되는게" and f["pin_kind"]["limit"] == ("head", 2)
+    assert f["pinned"]["more"] == "심지어" and f["pin_kind"]["more"] == ("head", 3)
+    assert "title" in f["pinned"], "제목도 순번"
+    one = {"seed_points": [], "lines": [{"role": "more", "text": "심지어 한 줄뿐인 고조", "cuts": ["MAT-1"]}]}
+    probs = sw.styled_problems(dict(one, lines=one["lines"] * 1 + [{"role": "land", "text": "이러니 떼돈을 벌었다고", "cuts": ["MAT-1"]}] * 2),
+                               f, {"MAT-1": {}}, seconds=3)
+    assert any("고조 3줄" in p for p in probs)

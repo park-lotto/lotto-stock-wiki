@@ -185,6 +185,25 @@ STYLED_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 이 제품
 #    2026-09-27 실측) → **코드가 작업마다 고른다**(작업 번호 해시 = 순번). 모델은 {빈칸}만 채운다.
 COMMON_ROLES = {"yt": ["bait", "fame", "land"], "ig": ["hook", "proof", "notice", "cta", "regret"]}
 _BANK = None
+_SPICY = {}
+# ★자극 확장은 빈칸 없는 칸에만, 과한 말은 뺀다(2026-09-27 사장님 "자극적인 게 너무 오바해서 쓴 게 심하네").
+#   10작업 비교 실측: 빈칸 있는 자극 문장에 효능을 채우면 "전 기능 초토화시키는 40시간 몬스터 재생력"처럼 문장이 깨졌다.
+OVER_TOP = re.compile(r"초토화|멘붕|씹어먹|몬스터|기절|박살|경악|마비|미쳐버|전율|소름|사기급|괴물|난리법석|개박살|싹쓸이")
+# ★고조 칸은 3줄 흐름(2026-09-27 사장님 "고조 3줄 흐름이 없으니 안 좋네") — 옛 대본의 강점: ①그 순간 ②그때의 불편(~하던 그 지옥을)
+#   ③제품이 없애 버림. 공식은 **머리말만** 고정하고(이게 말도 안 되는게·심지어·게다가) 그 아래 3줄은 모델이 재료로 쓴다.
+#   GOJO_OPEN(기존 한계 등)은 ①②만 쓰고 바로 다음 칸(해결)이 ③을 맡는다.
+GOJO3 = {"more", "escalation", "escalate", "benefit", "good", "power", "extra"}
+GOJO_OPEN = {"limit", "pain", "vs"}
+_HEADS = ["이게 진짜 말도 안 되는게", "이게 말도 안 되는게", "이게 미친 포인트인게", "그나마 중수들은", "진짜 말도 안 되는게",
+          "심지어", "게다가", "거기다", "무엇보다", "더 대박인 건"]
+
+
+def _head_of(t):
+    t = (t or "").strip()
+    for h in sorted(_HEADS, key=len, reverse=True):
+        if t.startswith(h):
+            return h
+    return ""
 
 
 def _bank():
@@ -206,7 +225,8 @@ def _bank():
             for xs in ((json.load(open(p2, encoding="utf-8")) or {}).get("roles") or {}).values():
                 for x in xs:
                     _BANK.setdefault(x["src"], [])
-                    _BANK[x["src"]] = list(_BANK[x["src"]]) + list(x.get("variants") or []) + list(x.get("spicy") or [])
+                    _BANK[x["src"]] = list(_BANK[x["src"]]) + list(x.get("variants") or [])
+                    _SPICY[x["src"]] = list(x.get("spicy") or [])
         except (OSError, ValueError, KeyError) as e:
             import sys
             print("story_yt_formula 못 읽음(%r) — 공식 확장 없이 씀" % e, file=sys.stderr)
@@ -218,7 +238,9 @@ def common_pool(sp, role):
     tpl = sp.get("templates") if isinstance(sp.get("templates"), dict) else {}
     out, seen = [], set()
     for ex in [x.strip() for x in (tpl.get(role) or []) if isinstance(x, str) and x.strip()]:
-        for v in [ex] + list(_bank().get(ex) or []):
+        # 자극 확장은 빈칸 없는 원문에만, 과한 말(OVER_TOP)은 빼고 — 거르는 곳은 여기 한 곳
+        spicy = [v for v in (_SPICY.get(ex) or []) if not OVER_TOP.search(v)] if ("{" not in ex and _bank() is not None) else []
+        for v in [ex] + list(_bank().get(ex) or []) + spicy:
             k = re.sub(r"\s+", "", v)
             if k not in seen:
                 seen.add(k)
@@ -235,13 +257,29 @@ def common_lines(sp, key):
     roles = [str(r) for r in sp.get("beat_roles") or []]
     # 유튜브 썰 스타일은 제목 빼고 **전 칸이 터지는 공식**이다(2026-09-27 사장님) — 공식 문장을 고정하고 모델은 {빈칸}만 채운다.
     #   제목은 스타일마다 달라 모델이 제목 틀로 쓴다. 인스타는 제품과 무관한 칸만(COMMON_ROLES).
-    pin_roles = [r for r in roles if r != "title"] if plat == "yt" else COMMON_ROLES[plat]
+    #   제목도 스타일의 제목 틀 중 순번으로(10작업 비교: 같은 제목이 두 작업에 나옴, 2026-09-27). 고조 칸은 머리말만(GOJO3/GOJO_OPEN).
+    pin_roles = roles if plat == "yt" else COMMON_ROLES[plat]
     got = {}
     for r in pin_roles:
         pool = common_pool(sp, r) if r in roles else []
         if pool:
-            got[r] = pool[zlib.crc32(("%s|%s" % (key, r)).encode("utf-8")) % len(pool)]
+            ph = pool[zlib.crc32(("%s|%s" % (key, r)).encode("utf-8")) % len(pool)]
+            if plat == "yt" and (r in GOJO3 or r in GOJO_OPEN):
+                ph = _head_of(ph)
+                if not ph:
+                    continue
+            got[r] = ph
     return got
+
+
+def pin_kind(role, sp):
+    """고정 문장의 종류 — ('line', 1) 그 문장 그대로 / ('head', n) 머리말로 시작하는 n줄 고조."""
+    if sp and sp.get("no_cta"):
+        if role in GOJO3:
+            return ("head", 3)
+        if role in GOJO_OPEN:
+            return ("head", 2)
+    return ("line", 1)
 
 
 def _pin_share(phrase, text):
@@ -265,6 +303,13 @@ def frame_of(sp, key=""):
     pinned = common_lines(sp, key)
     rows = []
     for r in roles:
+        if r in pinned and pin_kind(r, sp)[0] == "head":
+            n = pin_kind(r, sp)[1]
+            rows.append("  %s: 【고조 %d줄】 첫 줄은 「%s」로 시작 — ①그 순간(언제·무엇을 하다가) ②그때 벌어지던 불편(~하던 그 지옥을·"
+                        "그 짜증을)%s. 한 줄에 하나씩, 이 칸 이름으로 %d줄" % (
+                            r, n, pinned[r], " ③이 제품이 그걸 없애 버린 것(~로 싹 없애 버렸다는 거)" if n == 3 else
+                            " — ③없애 버림은 다음 칸이 맡는다", n))
+            continue
         if r in pinned:
             rows.append("  %s: 【고정】「%s」 — 이 문장 그대로 쓴다%s" % (
                 r, pinned[r], "({빈칸}만 이 제품으로 채워서)" if "{" in pinned[r] else ""))
@@ -272,6 +317,7 @@ def frame_of(sp, key=""):
         ex = [x for x in (tpl.get(r) or []) if isinstance(x, str) and x.strip()][:2]
         rows.append("  %s: %s" % (r, " / ".join("「%s」" % x for x in ex) if ex else "(예시 없음)"))
     return {"name": sp.get("name") or "", "roles": roles, "pinned": pinned,
+            "pin_kind": {r: pin_kind(r, sp) for r in pinned},
             "block": "%s\n%s" % (sp.get("name") or "", "\n".join(rows)),
             # 베낌 검사는 화면에 보여준 2개만이 아니라 그 칸의 예시 전부와 댄다
             "examples": {r: [x for x in (tpl.get(r) or []) if isinstance(x, str) and x.strip()] for r in roles},
@@ -305,9 +351,16 @@ def styled_problems(out, frame, seg_index, seed_text="", product="", seconds=25,
     n_open = 2 if roles else 1
     exs = {} if frame.get("keep_idioms") else (frame.get("examples") or {})
     pinned = frame.get("pinned") or {}
+    kinds = frame.get("pin_kind") or {}
     for r, ph in pinned.items():
         mine = [L for L in lines if str(L.get("role")) == r]
-        if mine and _pin_share(ph, mine[0].get("text")) < PIN_SHARE:
+        kind, n = kinds.get(r, ("line", 1))
+        if kind == "head":
+            if mine and not (mine[0].get("text") or "").strip().startswith(ph):
+                probs.append("%s 칸 첫 줄은「%s」로 시작해야 한다" % (r, ph))
+            if len(mine) < n:
+                probs.append("%s 칸은 고조 %d줄(순간 → 불편%s)인데 %d줄뿐이다" % (r, n, " → 없애 버림" if n == 3 else "", len(mine)))
+        elif mine and _pin_share(ph, mine[0].get("text")) < PIN_SHARE:
             probs.append("%s 칸은 고정 문장「%s」을 그대로 써야 한다%s" % (r, ph, "({빈칸}만 채워서)" if "{" in ph else ""))
     for i, L in enumerate(lines):
         if REAL_PERSON.search(L.get("text") or ""):
@@ -384,7 +437,7 @@ def write_styled(product, seed_text, frame, vis, seg_index, platform="yt", secon
             out, probs = out2, p2
     # 빈칸 없는 고정 문장은 코드가 끼운다(모델이 끝내 안 따랐어도 결과는 고정 문장) — 검사가 아니라 결정
     for r, ph in (frame.get("pinned") or {}).items():
-        if "{" in ph:
+        if "{" in ph or (frame.get("pin_kind") or {}).get(r, ("line",))[0] == "head":
             continue
         for L in out.get("lines") or []:
             if str(L.get("role")) == r:
