@@ -197,3 +197,71 @@ def test_sfx_timing_unchanged_after_burn(mats, monkeypatch, tmp_path):
         assert v > 0.3 and abs(off / 16000) <= 0.02, (t, off / 16000, v)
     errs, _ = _starts_err(out, mats)
     assert max(abs(e) for e in errs) <= 0.02, errs
+
+
+# ── 인트로(썸네일 앞붙이기) × 효과음 4경우 — 완성본 소리는 AAC 1회(2026-09-27 라이브 b307f471dd78 잉여 0.051초) ──
+INTRO_SEC = 1.2
+
+
+def _still(tmp):
+    p = tmp / "thumb.png"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=black:s=180x320", "-frames:v", "1", str(p)],
+                   check=True, stdin=subprocess.DEVNULL)
+    return str(p)
+
+
+def _full_render(mats, monkeypatch, tmp, intro, sfx_on, one_audio=True):
+    """run_render 와 같은 순서: assemble(audio_wav_out) → prepend_still(audio_wav)."""
+    _patch(monkeypatch)
+    plan = _plan()
+    sp = None
+    if sfx_on:
+        sfx_x = _sweep(2500, 5000, 0.3) * np.exp(-np.arange(int(0.3 * R)) / R / 0.08)
+        sfx = _mp3(tmp, "sfx", sfx_x)
+        for i in (2, 6, 9):
+            plan["beats"][i]["sfx"] = {"asset_id": 1, "match_type": "role", "position": "first"}
+        sp = {i: sfx for i in (2, 6, 9)}
+    out = tmp / "final.mp4"
+    aw = tmp / "final_audio.wav" if intro else None
+    with va.preview_preset():
+        va.assemble(plan, dict(mats["tts"]), dict(mats["srcs"]), str(out), deco={}, sfx_paths=sp,
+                    audio_wav_out=str(aw) if aw else None)
+        if intro:
+            assert va.prepend_still(str(out), _still(tmp), seconds=INTRO_SEC,
+                                    audio_wav=str(aw) if one_audio else None)
+    return str(out)
+
+
+def _one_encode_surplus(mats, intro, sr=48000):
+    """소리 한 줄을 AAC로 한 번 인코딩했을 때의 패킷 잉여(초) — 앞 채움 1024 + 끝을 1024 배수로 채운 몫."""
+    _f, tot = _frame_starts(mats)
+    n = (int(round(intro * 30)) + tot) * (sr // 30)
+    return (1024 + ((-n) % 1024)) / sr
+
+
+def _check(out, mats, intro):
+    sur = _packet_surplus(out)
+    sig = _decode(out)
+    f0s, tot = _frame_starts(mats)
+    ifr = int(round(intro * 30))
+    errs = []
+    for i in (0, len(DURS) - 1):
+        t = _decode(mats["tts"][i])
+        off, v = _ncc_at(sig, t, int(round((ifr + f0s[i]) / 30 * 16000)), int(0.5 * 16000))
+        assert v > 0.5, (i, v)
+        errs.append(off / 16000)
+    return sur, errs
+
+
+@pytest.mark.parametrize("intro,sfx_on", [(0.0, False), (0.0, True), (INTRO_SEC, False), (INTRO_SEC, True)])
+def test_final_audio_one_encode(mats, monkeypatch, tmp_path, intro, sfx_on):
+    out = _full_render(mats, monkeypatch, tmp_path, intro, sfx_on)
+    sur, (e_first, e_last) = _check(out, mats, intro)
+    pred = _one_encode_surplus(mats, intro)
+    print("\n[인트로 %.1f 효과음 %s] 패킷 잉여 %+.4f (AAC 1회 예측 %+.4f) · 첫 칸 %+.3f · 마지막 칸 %+.3f" % (
+        intro, sfx_on, sur, pred, e_first, e_last))
+    # ★패킷 잉여만으로는 인트로 재인코딩을 못 가른다(로컬 실측: 종전 인트로 경로도 잉여 +0.041 = 1회 예측과 같음).
+    #   AAC 1회 잉여 = (앞 채움 1024 + 끝 채움 (-N mod 1024))/표본율 → 0.021~0.043초 사이에서 칸 수·인트로에 따라 달라진다.
+    #   종전 인트로 경로가 망가뜨린 건 **시각**이다 — 인트로 뒤 목소리 전체가 +0.059~0.064초 늦었다. 그래서 시각으로 판정한다.
+    assert sur < 0.05                                          # 관문 기준(final_audio_audit.SURPLUS_T)
+    assert abs(e_first) <= 0.02 and abs(e_last) <= 0.02, (e_first, e_last)

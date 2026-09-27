@@ -325,7 +325,7 @@ def test_run_render_intro_attaches_chosen_file(rjob, monkeypatch, thumbs):
     from shopping_shorts import ops_alert
     calls, pre = [], []
     monkeypatch.setattr(ops_alert, "raise_alert", lambda kind, *a, **k: calls.append(kind) or True)
-    monkeypatch.setattr(mp, "prepend_still", lambda v, img, seconds=None: pre.append((Path(img).name, seconds)) or True)
+    monkeypatch.setattr(mp, "prepend_still", lambda v, img, seconds=None, audio_wav=None: pre.append((Path(img).name, seconds)) or True)
     mp.run_render("J1", db, work)
     assert store.get_mix_job("J1")["status"] == "done"
     assert pre == [("thumb_1.png", 1.2)] and not calls

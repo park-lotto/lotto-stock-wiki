@@ -5697,9 +5697,13 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
         #   최종 렌더만 서버 예비 계산으로 떨어졌다(미리보기·캡컷·ZIP엔 이 호출이 없었다). 표식은 편성 단계
         #   (_trim_for_cut_rhythm·_plan_and_tts의 _apply_phrase_min_cut)가 단다 — 표식 없는 칸은 화면도 없이 그렸다(화면이 이긴다).
         _sc.check_mutation(job_id, _scr_before, plan_used)
+        # ★인트로를 붙일 거면 완성본 소리의 무손실 원본을 남겨 둔다 — prepend_still 이 그것으로 소리를 **한 번만** 인코딩한다
+        #   (2026-09-27: 무음 인트로를 따로 AAC로 굽고 이어 붙이면 채움 표본이 한 벌 더 쌓였다 — 라이브 패킷 잉여 0.051초).
+        _audio_wav = (work / "final_audio.wav") if (_intro_on and _intro_png is not None) else None
         assemble(plan_used, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
-                 deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)
+                 deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths,
+                 **({"audio_wav_out": str(_audio_wav)} if _audio_wav else {}))   # 인트로 없으면 종전 호출 그대로
         _sc.summarize(job_id, _scr_mark)
         # 🖼 썸네일을 영상 맨 앞에 붙이기(2026-08-18 사장님 요청, 9단계 체크박스).
         #   켠 경우에만 돈다. 실패해도 렌더 자체는 살린다 — 인트로 때문에 완성 영상을
@@ -5712,10 +5716,17 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
         if _intro_on:
             try:
                 if _intro_png is not None:
-                    if prepend_still(str(out_path), str(_intro_png), seconds=_intro_sec):
+                    if prepend_still(str(out_path), str(_intro_png), seconds=_intro_sec,
+                                     audio_wav=str(_audio_wav) if _audio_wav else None):
                         _intro_shift = _intro_sec
             except Exception:
                 traceback.print_exc(file=sys.stderr)
+            finally:
+                if _audio_wav is not None:
+                    try:
+                        _audio_wav.unlink()
+                    except OSError:
+                        pass
         # ✂ CTA 잘라내기(2026-09-05 사장님 "유튜브 올릴 땐 뒷부분만 잘라내고 싶다").
         #   완성본에서 CTA 비트가 시작하는 시각을 지금 구해 DB에 박아둔다. 렌더가 끝나면
         #   이 값을 다시 구하기가 어렵다 — 비트별 절대시각은 어디에도 저장되지 않고,
