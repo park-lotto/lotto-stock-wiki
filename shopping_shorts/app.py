@@ -2337,7 +2337,7 @@ def _resolve_uploader(url: str, username: str = ""):
             print(f"_resolve_uploader 유튜브 API 빈 결과 → yt-dlp로 {url[:80]}", file=sys.stderr)
     if not uname and url:
         try:
-            import subprocess, sys, json
+            import subprocess, json   # ★sys는 모듈 것 — 여기서 import하면 위 print(file=sys.stderr)가 UnboundLocalError(2026-09-28 실측)
             # ★빈 결과면 한 번 더 — 로그인 없이 읽는 인스타는 가끔 한 번씩 튕긴다
             #   (2026-09-27 실측: 같은 릴스 8회 중 1회만 실패, 바로 다시 하면 성공).
             #   실패 이유는 로그에 남긴다 — 조용히 삼키면 "못 찾음"의 원인을 못 가린다.
@@ -2375,14 +2375,37 @@ def _shared_link(url: str = "", text: str = "", title: str = "") -> str:
     for s in (url, text, title):
         m = _SHARED_URL_RE.search(s or "")
         if m:
-            return m.group(0).rstrip(").,!?")
+            return _clean_shared_url(m.group(0).rstrip(").,!?"))
     return ""
+
+
+# 앱 [공유]가 붙이는 추적 꼬리 — 영상 담기의 키가 주소 해시라(_grab_video `sc`) 이걸 안 떼면
+# 같은 영상이 PC 담기(브라우저 주소)와 폰 공유(…?si=xx)로 **두 번** 담긴다.
+_SHARE_DROP_PARAMS = {"si", "igsh", "igshid", "_r", "_t", "feature", "pp", "share_id",
+                      "is_from_webapp", "sender_device", "web_id", "xsec_source", "app_platform"}
+
+
+def _clean_shared_url(u: str) -> str:
+    """공유 주소 → PC 브라우저가 보던 모양(추적 꼬리 제거·호스트 통일)."""
+    try:
+        sp = urllib.parse.urlsplit(u)
+    except Exception:
+        return u
+    host = (sp.netloc or "").lower()
+    if host in ("youtube.com", "m.youtube.com"):
+        host = "www.youtube.com"
+    elif host in ("instagram.com", "m.instagram.com"):
+        host = "www.instagram.com"
+    q = [(k, v) for k, v in urllib.parse.parse_qsl(sp.query, keep_blank_values=True)
+         if k not in _SHARE_DROP_PARAMS and not k.startswith("utm_")]
+    return urllib.parse.urlunsplit((sp.scheme or "https", host, sp.path,
+                                    urllib.parse.urlencode(q), ""))
 
 
 def _fav_channel_register(cid, url: str, username: str = "", thumb: str = "") -> dict:
     """⭐나만의 채널 담기 — 주소(영상이든 프로필이든) → 채널을 찾아 cid의 목록에 넣는다.
     ★판단의 주인은 여기 하나다(0순위-C). PC 확장 버튼(/api/fav_channel/grab)과
-    폰 공유(/api/fav_channel/share)가 둘 다 이걸 부른다 — 입구마다 따로 적으면
+    폰 공유(/api/share dest=channel)가 둘 다 이걸 부른다 — 입구마다 따로 적으면
     한쪽만 고쳐지는 날이 온다(0순위-B).
     돌려주는 status: added / exists / full / notfound"""
     plat = _fav_channel_platform(url)
@@ -2432,19 +2455,32 @@ def api_fav_channel_grab(request: Request, url: str = "", username: str = "",
                                     "왼쪽 ⭐나만의 채널등록에서 확인하세요."))
 
 
-@app.post("/api/fav_channel/share")
-def api_fav_channel_share(request: Request, body: dict):
-    """📱폰 [공유] → 숏템메이커(2026-09-27 사장님 요청). /share 화면이 부른다.
-    body: {url, text, title} — 안드로이드 공유가 준 그대로. 담는 판단은
-    _fav_channel_register 한 곳(PC 확장 버튼과 같은 답)."""
+@app.post("/api/share")
+def api_share(request: Request, background_tasks: BackgroundTasks, body: dict):
+    """📱폰 [공유] → 숏템메이커(2026-09-28 사장님 "채널이랑 영상 나눠서, 붙여넣기 없이").
+    /share 화면이 부른다. body: {url, text, title, dest}
+      dest ""        → 담지 않고 고른 주소만 돌려준다(화면이 미리 보여준다)
+      dest "video"   → ⭐영상 즐겨찾기 — _grab_video (PC 📥담기와 같은 판단)
+      dest "channel" → ⭐나만의 채널등록 — _fav_channel_register (PC ⭐버튼과 같은 판단)
+    주소 고르기는 _shared_link 한 곳."""
     cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
     if cid is None:      # ★cid==0(관리자)은 정상 로그인이다 — not cid로 판정 금지
         return {"ok": False, "status": "login", "error": "로그인이 필요해요"}
     link = _shared_link(body.get("url") or "", body.get("text") or "", body.get("title") or "")
     if not link:
         return {"ok": False, "status": "nolink", "error": "공유된 내용에 주소가 없어요"}
-    r = _fav_channel_register(cid, link)
-    r.update(ok=r["status"] in ("added", "exists"), link=link)
+    dest = (body.get("dest") or "").strip()
+    if dest == "video":
+        # 제목칸에 주소가 들어오면 제목이 아니다(앱마다 제목칸 쓰임이 다르다)
+        t = (body.get("title") or "").strip()
+        r = _grab_video(cid, link, title=("" if _SHARED_URL_RE.search(t) else t),
+                        background_tasks=background_tasks)
+    elif dest == "channel":
+        r = _fav_channel_register(cid, link)
+    else:
+        return {"ok": True, "status": "preview", "link": link,
+                "platform": _grab_platform(link) or _fav_channel_platform(link)}
+    r.update(ok=r["status"] in ("added", "exists"), link=link, dest=dest)
     return r
 
 
@@ -12613,7 +12649,8 @@ _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    #   안 열린다(저 세트는 method=="GET"에서만 본다). 개인 북마크라
                    #   과금 요소가 없어 등급과 무관하게 연다 — 로그인 여부는 핸들러가 본다.
                    "/api/fav_channel/add", "/api/fav_channel/remove",
-                   "/api/fav_channel/refresh", "/api/fav_channel/share",   # 폰 공유(2026-09-27)
+                   "/api/fav_channel/refresh",
+                   "/api/share",   # 폰 공유(2026-09-28) — 영상 담기의 등급 검사는 _grab_video 안에서
 
                    "/api/mix/basket/toggle",
                    "/api/lens/search", "/api/lens/trace_url",
@@ -18007,27 +18044,18 @@ def _enrich_grab(url, sc, cid):
         overwrite=stale)
 
 
-@app.get("/api/grab", include_in_schema=False)
-def api_grab(request: Request, background_tasks: BackgroundTasks,
-             url: str = "", thumbnail: str = "", title: str = "", video_url: str = ""):
-    """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
-    미들웨어가 customer_id를 안 채우므로 여기서 검증). 영상 즐겨찾기(mix_basket)에 멱등 추가하고
-    백그라운드로 메타(썸네일·조회수 등)를 보강한다(팝업은 즉시 반환)."""
-    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
-    if cid is None:
-        return _grab_popup_html(False, "로그인이 필요해요",
-                                "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+def _grab_video(cid, url, thumbnail="", title="", video_url="", background_tasks=None) -> dict:
+    """⭐영상 즐겨찾기 담기 — 판단의 주인(0순위-C). PC 📥담기(/api/grab 팝업)와
+    폰 공유(/api/share)가 둘 다 이걸 부른다(2026-09-28 뽑아냄 — 본문은 예전 api_grab 그대로).
+    돌려주는 status: pending / paid / badlink / added / exists"""
     # 유료게이트: /api/grab은 _AUTH_ALLOW라 미들웨어 게이트를 우회한다 → 여기서 직접 등급 확인.
     # 담기(+백그라운드 메타 크롤 비용)는 full 전용. pending(승인대기)·ranking_only 모두 차단.
     lvl = access_level(cid)
     if lvl != "full":
-        title = "승인 대기중이에요" if lvl == "pending" else "유료 기능이에요"
-        msg = ("운영자 승인 후 담기를 쓸 수 있어요" if lvl == "pending"
-               else "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
-        return _grab_popup_html(False, title, msg)
+        return {"status": "pending" if lvl == "pending" else "paid"}
     platform = _grab_platform(url)
     if not platform:
-        return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
+        return {"status": "badlink"}
     sc = "grab_" + platform + "_" + hashlib.sha1(url.encode("utf-8", "ignore")).hexdigest()[:12]
     # ★영상 파일 직접 주소(2026-08-17) — 담기 스크립트가 보내면 함께 보관한다.
     #   도우인은 yt-dlp가 쿠키를 요구해 페이지 URL로는 못 받는다(서버·PC 양쪽 재현).
@@ -18048,8 +18076,30 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
     background_tasks.add_task(_enrich_grab, url, sc, cid)   # 썸네일·조회수 등 보강
     _enqueue_prewarm(Store(DB_PATH), sc, url, caption=(title or "")[:200], customer_id=cid,
                      video_url=vurl)
-    return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if added else "이미 담겨 있어요",
-                            f"{platform} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
+    return {"status": "added" if added else "exists", "platform": platform, "shortcode": sc}
+
+
+@app.get("/api/grab", include_in_schema=False)
+def api_grab(request: Request, background_tasks: BackgroundTasks,
+             url: str = "", thumbnail: str = "", title: str = "", video_url: str = ""):
+    """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
+    미들웨어가 customer_id를 안 채우므로 여기서 검증). 영상 즐겨찾기(mix_basket)에 멱등 추가하고
+    백그라운드로 메타(썸네일·조회수 등)를 보강한다(팝업은 즉시 반환). 판단은 _grab_video."""
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:
+        return _grab_popup_html(False, "로그인이 필요해요",
+                                "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+    r = _grab_video(cid, url, thumbnail, title, video_url, background_tasks)
+    st = r["status"]
+    if st == "pending":
+        return _grab_popup_html(False, "승인 대기중이에요", "운영자 승인 후 담기를 쓸 수 있어요")
+    if st == "paid":
+        return _grab_popup_html(False, "유료 기능이에요",
+                                "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
+    if st == "badlink":
+        return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
+    return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if st == "added" else "이미 담겨 있어요",
+                            f"{r['platform']} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
 
 
 # 북마클릿 본문(플랫폼 페이지에서 실행) — 따옴표 충돌을 피해 base64로 실어 페이지에서 atob.
