@@ -123,7 +123,8 @@ def test_버튼은_렌더와_같은_판정으로_증분(short_a, monkeypatch, tm
         return out, {}
     monkeypatch.setattr(mp, "_cut_piece", _cut)
     monkeypatch.setattr(mp, "_clean_joined", _joined)
-    mp.run_clean_sources("j", "db", str(work.parent))
+    from shopping_shorts.tests._clean_consent import consent
+    mp.run_clean_sources("j", "db", str(work.parent), **consent(store, job, work, "button"))
     assert calls == ["charge", "reassemble"], calls            # 증분 1콜 + 과금 0 재조립
     # 보낸 구간 = 렌더 판정이 말하는 모자란 곳(A 원본 0.9초 이후)만 — 칸 전체(0~1.2초)가 아니다
     assert len(sent) == 1 and sent[0][0] >= 0.85 and sent[0][1] <= 0.3 + cb.SPAN_TOL + cb.EXTEND_PAD + 1e-6, sent

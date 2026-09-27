@@ -203,8 +203,15 @@ async function retype(video_type){
   POLL=setInterval(poll,2500); poll();
 }
 async function render(){
-  const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:JOB})});
-  const d=await r.json().catch(()=>({ok:false}));
+  // ★돈이 나가는 자막제거는 서버가 확인을 강제한다(2026-09-27) — 409 안내로 묻고 [확인]이면 그 초를 실어 다시 보낸다.
+  let body={job_id:JOB}, r=null, d={ok:false};
+  for(let t=0; t<3; t++){
+    r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    d=await r.json().catch(()=>({ok:false}));
+    if(!(r.status===409 && d && d.need_clean_confirm)) break;
+    if(!confirm(d.message+'\n\n계속할까요?')) return;
+    body={job_id:JOB, confirm_clean:true, confirm_secs:d.seconds};
+  }
   if(!r.ok || !d.ok){ console.warn('render 시작 실패', d.error); alert('렌더 시작 실패'+(d.error?(': '+d.error):'')); return; }
   document.getElementById('review').innerHTML='';
   POLL=setInterval(poll,3000); poll();

@@ -1,5 +1,5 @@
 {
-  "_설명": "영상 관문(track.py finish)·매일 점검(daily_video_audit.py) 기준값. null = 보고만(판정에 안 씀). 밀림은 수리 중인 잔여 결함(옛 청소본 밀림·정지 컷 켄번즈·컷 단위 올림)이라 지금은 보고만 — 수리 끝나면 숫자로 조인다.",
+  "_설명": "영상 관문(track.py finish)·매일 점검(daily_video_audit.py) 기준값. null = 보고만(판정에 안 씀). 밀림은 수리 중인 잔여 결함(옛 청소본 밀림·정지 컷 켄번즈·컷 단위 올림)이라 지금은 보고만 — 수리 끝나면 숫자로 조인다. 캡컷·내보내기 대조(tools/capcut_export_audit.py)는 영상 비교 뒤 같은 작업에 돌고 max_capcut_mismatch·max_export_mismatch 로 판정(2026-09-27, 둘 다 0). 잔상(컷 가장자리 딴 장면 1~3프레임, editor_vs_final_video 의 == 잔상 줄)은 max_ghost_screen_only=0 으로 판정(미리보기≠완성본). max_ghost(완성본에도 있는 것 = 소재 안 장면 전환·빠른 움직임 오탐)는 소재 품질 문제라 보고만(null — 조각 생성 시 장면 탐지는 별도 카드, 2026-09-27).",
   "gate": {
     "jobs": 6,
     "timeout_sec": 1500,
@@ -10,7 +10,12 @@
     "max_error_skips": 0,
     "max_shift_center": null,
     "max_shift_boundary": null,
-    "max_shift_hold": null
+    "max_shift_hold": null,
+    "max_capcut_mismatch": 0,
+    "max_export_mismatch": 0,
+    "max_ghost": null,
+    "max_ghost_screen_only": 0,
+    "capcut_timeout_sec": 900
   },
   "audit": {
     "jobs": 10,
@@ -20,27 +25,49 @@
     "max_scene": 0,
     "max_error_skips": 0,
     "max_shift_ratio": 0.3,
-    "cooldown_sec": 3600
+    "cooldown_sec": 3600,
+    "max_capcut_mismatch": 0,
+    "max_export_mismatch": 0,
+    "max_ghost": null,
+    "max_ghost_screen_only": 0,
+    "capcut_timeout_sec": 1800
   },
-  "benign_skips": ["음성 없음"],
+  "benign_skips": [
+    "음성 없음"
+  ],
   "watch_files": [
     "shopping_shorts/video_assemble.py",
     "shopping_shorts/mix_pipeline.py",
     "shopping_shorts/clean_base.py",
     "shopping_shorts/frame_match.py",
+    "shopping_shorts/seg_snap.py",
     "shopping_shorts/screen_clips.py",
     "shopping_shorts/screen_clips_runner.js",
     "shopping_shorts/capcut_draft.py",
     "shopping_shorts/export_bundle.py",
     "shopping_shorts/static/scene_play.js",
     "tools/editor_vs_final_video.py",
-    "tools/evf_run.py"
+    "tools/evf_run.py",
+    "tools/capcut_export_audit.py"
   ],
-  "not_measured": [
-    "shopping_shorts/capcut_draft.py",
-    "shopping_shorts/export_bundle.py"
-  ],
+  "not_measured": [],
   "app_file": "shopping_shorts/app.py",
-  "app_name_keys": ["pvproxy", "preview_proxy", "render", "clean", "capcut", "assemble", "export"],
-  "app_route_keys": ["/api/mix/render", "/api/mix/preview_proxy", "/api/mix/export", "/api/mix/capcut", "/api/produce/mix/preview", "/api/produce/mix/clean"]
+  "app_name_keys": [
+    "pvproxy",
+    "preview_proxy",
+    "render",
+    "clean",
+    "capcut",
+    "assemble",
+    "export",
+    "snap_segs"
+  ],
+  "app_route_keys": [
+    "/api/mix/render",
+    "/api/mix/preview_proxy",
+    "/api/mix/export",
+    "/api/mix/capcut",
+    "/api/produce/mix/preview",
+    "/api/produce/mix/clean"
+  ]
 }

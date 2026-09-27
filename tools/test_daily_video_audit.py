@@ -1,5 +1,7 @@
 """매일 영상 점검(daily_video_audit.py) 테스트 — 어긋나면 쪽지, 깨끗하면 닫기, 못 돌리면 조용히 넘기지 않기."""
 import sqlite3
+
+import pytest
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -46,11 +48,27 @@ def _fake_runner(report, crash="", rc=0):
     return run
 
 
-def _go(tmp_path, report="", free=57, rows=None, **kw):
+_CC_OK = "62ed6bf66eb9 칸3 컷R10/C10/E10 | 캡컷 불일치 0 {} | 내보내기 불일치 0 {}\n== 컷 10 · 캡컷 불일치 0 · 내보내기 불일치 0\n"
+
+
+def _fake_cc(report=_CC_OK, crash="", rc=0, seen=None):
+    def run(ids, work, timeout):
+        if seen is not None:
+            seen.append(list(ids))
+        work.mkdir(parents=True, exist_ok=True)
+        (work / "report.txt").write_text(report, encoding="utf-8")
+        if crash:
+            (work / "crash.txt").write_text(crash, encoding="utf-8")
+        return rc, "cclog"
+    return run
+
+
+def _go(tmp_path, report="", free=57, rows=None, cc=None, **kw):
     al = dva._Alerter(dry_run=True, printer=lambda s: None)
     db = _db(tmp_path, rows if rows is not None else [("62ed6bf66eb9", "ready", _iso(1))])
     rc = dva.run_audit(jobs=10, hours=24, out_root=tmp_path / "audit", tmp_root=tmp_path / "tmp", alerter=al, cfg=CFG,
-                       printer=lambda s: None, runner=_fake_runner(report, **kw), free_gb=free, db_path=db, now=NOW)
+                       printer=lambda s: None, runner=_fake_runner(report, **kw), free_gb=free, db_path=db, now=NOW,
+                       cc_runner=cc or _fake_cc())
     return rc, al.calls
 
 
@@ -118,3 +136,72 @@ def test_script_run_from_tools_dir_can_import_alert_channel(tmp_path):
                        cwd=str(tmp_path), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
     assert r.returncode == 0, r.stderr[-800:]
     assert "IMPORT_OK" in r.stdout, r.stdout
+
+
+# ── ⑤ 캡컷·내보내기 대조(2026-09-27) ─────────────────────────────────
+
+def test_capcut_audit_runs_on_same_jobs_and_is_kept(tmp_path):
+    seen = []
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, 2)), cc=_fake_cc(seen=seen))
+    assert rc == 0 and calls == [("resolve",)]
+    assert seen == [["62ed6bf66eb9"]], "영상 비교와 같은 작업으로 돈다"
+    day = tmp_path / "audit" / "2026-09-27"
+    assert "== 컷 10" in (day / "capcut_report.txt").read_text(encoding="utf-8")
+    import json
+    assert json.loads((day / "summary.json").read_text(encoding="utf-8"))["capcut_summary"] == {
+        "cuts": 10, "capcut": 0, "export": 0, "clean_missing": 0}
+    assert not list((tmp_path / "tmp").glob("capcut_audit_*")), "대조 임시 폴더도 지운다"
+
+
+def test_capcut_mismatch_raises_customer_alert(tmp_path):
+    """★사보타주 기준: 영상 비교는 깨끗해도 ZIP 이 완성본과 다르면 쪽지가 나가야 한다."""
+    bad = "62ed6bf66eb9 칸3 컷R10/C10/E10 | 캡컷 불일치 0 {} | 내보내기 불일치 4 {'clean': 4}\n== 컷 10 · 캡컷 불일치 0 · 내보내기 불일치 4\n"
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, 2)), cc=_fake_cc(report=bad))
+    assert rc == 1
+    kind, title, detail, grade, sig = calls[0]
+    assert kind == "raise" and "ZIP≠완성본 4컷" in title and grade == "고객영향"
+    assert "[캡컷·ZIP] 62ed6bf66eb9" in detail and "내보내기 불일치 4컷" in detail
+
+
+def test_capcut_audit_crash_or_missing_summary_alerts(tmp_path):
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, 2)), cc=_fake_cc(report="", crash="Traceback\nX"))
+    assert rc == 2 and calls[0][0] == "raise" and "캡컷·ZIP 대조를 끝까지 못 돌림" in calls[0][1]
+    (tmp_path / "b").mkdir()
+    rc, calls = _go(tmp_path / "b", _report([_JOB_OK], _sum(10, 0, 2)), cc=_fake_cc(report="x\n", rc=0))
+    assert rc == 2 and calls[0][0] == "raise"
+
+
+def test_ghost_raises_customer_alert_and_is_in_summary(tmp_path):
+    """잔상(컷 가장자리 딴 장면)은 고객이 보는 결함 — 쪽지 제목·summary.json 에 실린다(2026-09-27)."""
+    import json as _json
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, ghost=3, ghost_only=1)))
+    assert rc == 1
+    kind, title, detail, grade, sig = calls[0]
+    assert kind == "raise" and "잔상 3프레임(화면에만 1)" in title and grade == "고객영향", (title, grade)
+    sj = _json.loads((tmp_path / "audit" / "2026-09-27" / "summary.json").read_text(encoding="utf-8"))
+    assert sj["ghost"] == {"frames": 3, "cuts": 3, "screen_only": 1, "short": 0}
+
+
+def test_daily_summary_keeps_clean_missing(tmp_path):
+    cc = "62ed6bf66eb9 칸3 컷R10/C10/E10 | 캡컷 불일치 0 {} | 내보내기 불일치 0 {}" + chr(10) + "== 컷 10 · 캡컷 불일치 0 · 내보내기 불일치 0 · 청소 미생성 1 job" + chr(10)
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, 2)), cc=_fake_cc(report=cc))
+    import json
+    s = json.loads((tmp_path / "audit" / "2026-09-27" / "summary.json").read_text(encoding="utf-8"))
+    assert s["capcut_summary"]["clean_missing"] == 1
+
+
+@pytest.mark.parametrize("fn", ["_run_evf", "_run_cea"])
+def test_daily_audit_scene_cache_under_work(tmp_path, monkeypatch, fn):
+    """매일 점검의 비교 실행은 장면 전환 캐시를 자기 작업 폴더에 — 소재 옆(고객 폴더)에 쓰지 않는다."""
+    import daily_video_audit as dva
+    seen = {}
+
+    class _P:
+        returncode, stdout, stderr = 0, "", ""
+
+    def fake_run(cmd, **kw):
+        seen.update(kw.get("env") or {})
+        return _P()
+    monkeypatch.setattr(dva.subprocess, "run", fake_run)
+    getattr(dva, fn)(["abc"], tmp_path / "w", 10)
+    assert seen.get("SEG_SNAP_CACHE_DIR") == str(tmp_path / "w" / "snapcache"), seen.get("SEG_SNAP_CACHE_DIR")

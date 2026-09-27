@@ -4121,8 +4121,10 @@ function capSegs(i){
   for (const r of rows){
     const s = +r.start, e = +r.end;
     if (!(e > s)) continue;
+    // sec = 말 길이(서버 caption_rows 의 sec). end 는 렌더처럼 칸 끝까지 머물러 마지막 구절은 end-start 가 더 길다.
+    const sec = (r.sec != null) ? +r.sec : (e - s);
     out.push({text: String(r.text || '').trim(),
-              sec: Math.round((e - s) * 100) / 100, start: s, end: e});
+              sec: Math.round(sec * 100) / 100, start: s, end: e});
   }
   return out;
 }

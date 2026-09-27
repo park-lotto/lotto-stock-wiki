@@ -674,18 +674,6 @@ def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO,
     return (capped, out_dur - capped)
 
 
-def beat_frames(cum_t, tts_dur, runout=0.0, fps=30):
-    """칸 하나가 완성본에서 차지하는 (시작 프레임, 프레임 수, 새 누적 초). **렌더(_render_mix)와 컷 지도(final_clip_pairs)가
-    이 함수 하나로 잰다**(0순위-B, 2026-09-27 사장님 "0프레임").
-
-    ★왜: 지도는 컷 길이를 소수점 초로 더해 fin이 51.90프레임처럼 프레임 사이에 떨어졌고, 파일은 여기 규칙(누적 음성 초의
-      반올림 프레임 경계)으로 만들어져 컷마다 ±1~2프레임 달랐다(0fbe619c02ce 26컷 실측). 판단이 둘이면 반드시 어긋난다.
-    """
-    f0 = int(round(float(cum_t) * fps))
-    new_cum = float(cum_t) + float(tts_dur) + float(runout or 0.0)
-    return f0, max(1, int(round(new_cum * fps)) - f0), new_cum
-
-
 def cut_frames(cum_start, dur, fps=30):
     """칸 안 컷 하나의 프레임 수 = **칸 안 누적 시각의 프레임 경계 차이** → (프레임 수, 새 누적 시각).
 
@@ -707,6 +695,16 @@ def cut_setpts(factor):
       `-r 30` 변환이 첫 프레임을 한 번 더 찍었다(25fps·0.51초 → 13,13,14… / 30fps·0.52초·1.11배 → 16,17,17,18…).
       편집 화면 합본은 처음부터 `(PTS-STARTPTS)*slow`라 중복이 없었다 → 두 경로가 1프레임 갈렸다."""
     return "setpts=(PTS-STARTPTS)*%.6f" % float(factor)
+
+
+def cut_read_trim(take):
+    """컷 조각 읽는 창의 끝을 **정확히** 끊는 필터 — `-ss S -t take -i` 바로 뒤, 다른 필터보다 먼저. 완성본(_render_mix)·편집 화면 합본(app enc) 공용.
+
+    ★왜 (2026-09-27 서버 재현, job 62ed6bf66eb9 1번 칸): 입력 `-t`는 -ss 시각이 아니라 **처음 남은 프레임**부터 센다.
+      -ss 가 원본 프레임 사이면 창이 최대 1프레임 뒤로 밀려 창 밖 다음 원본 프레임(pts 0.787333 > take 0.787)을 읽었다.
+      조각 끝이 장면 전환에 붙어 있으면 그 1장이 다음 장면이고 느리게 늘리면 2~3프레임 딴 장면이 된다.
+      이 자리의 시각은 -ss 기준(첫 프레임 0.0207)이라 trim=end=take 가 창 밖 1장만 버린다. 켄번즈(zoompan)는 시각을 새로 매기므로 반드시 맨 앞."""
+    return "trim=end=%.6f" % float(take)
 
 
 def motion_frames(nf, play_out, freeze, fps=30):
@@ -984,7 +982,7 @@ def _spread_stretch(plan, eps=1e-3):
     return plan
 
 
-def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
+def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0, screen=True):
     """비트 하나의 **화면 조각 계획**을 정한다 — 렌더·캡컷·ZIP이 **모두 이 함수를 쓴다**.
 
     반환: [{"video_id","start","src_dur","out_dur"}, ...] (없으면 [])
@@ -1013,7 +1011,8 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     #   청소본 재생 칸(clean_replay)은 이미 화면 컷을 청소본 좌표로 옮긴 것이라 제외.
     #   ★lookup이 None이면 예비 계산으로 가되 조용하지 않다 — 화면 데이터가 있는 job이면 screen_clips가
     #     FALLBACK 경보(stderr + screen_clips.FALLBACKS)를 남긴다(2026-09-27).
-    if not beat.get("clean_replay"):
+    # screen=False: 화면 컷 없이 서버 계산만 — 화면 컷을 준비하지 않았던 옛 조립을 **재현**할 때만(청소본 정본 지도 유도)
+    if not beat.get("clean_replay") and screen:
         from shopping_shorts import screen_clips as _sc
         _scr = _sc.lookup(beat, tts_dur, src_durs)
         if _scr:
@@ -2199,11 +2198,15 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
     (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다.
     real_durs가 주어지면 _caption_durations에 그대로 전달해 ASR 실측 타이밍을 쓴다.
     cap_lines가 있으면(AI가 끊어준 호흡 줄) 그 경계를 그대로 쓴다 — 규칙 폴백은 안전망."""
-    segs = _caption_segments(narration, preset=cap_lines)
-    if not segs:
+    # ★구절·시각은 caption_schedule 한 곳이 정한다(2026-09-27, 0순위-C) — 3단계 화면(_lab_captions)·
+    #   4단계 음성 미리보기(api_mix_result cap_sched)·캡컷·장면꾸미기(context_for)가 전부 같은 함수를 부른다.
+    #   종전엔 여기서 같은 계산(구절 나누기·길이 배분·리드인·오프셋)을 따로 적어 두 벌이었다.
+    sched = caption_schedule({"narration": narration, "caption_lines": cap_lines, "dur": dur,
+                              "cap_durs": real_durs, "cap_lead": lead_in, "t0": t0,
+                              "cap_offset": cap_offset}, tail=tail)
+    if not sched:
         return []
     style = style or {}
-    durs = _caption_durations(segs, dur, real_durs=real_durs)
     size = max(10, _ui_px(style.get("size"), _CAP_FONTSIZE))
     ypct = style.get("y_pct")
     if ypct is None:
@@ -2238,13 +2241,8 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
             f"drawbox=x=0:y=ih-{_BAR_H}:w=iw:h={_BAR_H}:color=black@0.82:t=fill:"
             f"enable='between(t,{_bs:.2f},{t0 + dur + tail + cap_offset:.2f})'"
         )
-    # lead_in = 비트 시작~첫 발화까지의 무음(ASR 실측). 0이면 종전과 동일하게 비트 머리에서 시작.
-    # 예전엔 항상 0이라, 말이 늦게 시작하는 비트에서 자막이 먼저 떴다(2026-08-06 수정).
-    t = max(0.0, float(lead_in or 0.0))
-    for i, (seg, d) in enumerate(zip(segs, durs)):
-        start = max(0.0, t + t0 + cap_offset)
-        t += d
-        end = (dur + tail if i == len(segs) - 1 else t) + t0 + cap_offset
+    # lead_in = 비트 시작~첫 발화까지의 무음(ASR 실측) — caption_schedule 이 반영한다(2026-08-06 수정).
+    for i, (seg, start, end) in enumerate(sched):
         # 화면에 지금 보이는 자막 한 줄만 옮길 때의 좌표. JSON 객체 키는 문자열이므로
         # 문자열/정수 키를 모두 받는다. 없으면 비트 전체 좌표(xpct/ypct)를 그대로 쓴다.
         seg_xy = (cap_xy_segs or {}).get(str(i)) if isinstance(cap_xy_segs, dict) else None
@@ -2285,13 +2283,32 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
     return parts
 
 
-def caption_schedule(beat, tail=0.0):
-    """비트 하나의 자막 구절 시간표 [(구절, 시작초, 끝초)] — **_caption_drawtexts와 같은 규칙**(0순위-B).
+# 장면꾸미기 칸 앞 틈 흡수(초) — 칸 시작~첫 말 사이 틈이 이보다 짧으면 첫 자막을 칸 시작부터 띄운다.
+#   (2026-09-22 사장님 "본문 첫 자막이 없음" — 빈 띠 장면을 없앤 규칙. 2026-09-27 이 판단을 caption_schedule 한 곳으로)
+_LEAD_ABSORB = 0.35
+
+
+def caption_lead_absorb(deco):
+    """이 job 의 칸 앞 틈 흡수분 — 장면꾸미기(deco.scene_style)면 _LEAD_ABSORB, 아니면 0(drawtext 는 말 시작부터).
+    ★판단은 여기 한 곳: 렌더(장면꾸미기 context_for)·3단계 화면(_lab_captions)·음성 미리보기(cap_rows)가 이 값을
+      caption_schedule(absorb_lead=)로 넘긴다."""
+    return _LEAD_ABSORB if (deco or {}).get("scene_style") else 0.0
+
+
+def caption_schedule(beat, tail=0.0, with_durs=False, absorb_lead=0.0):
+    """비트 하나의 자막 구절 시간표 [(구절, 시작초, 끝초)] — **자막 시각의 유일한 주인**(0순위-C, 2026-09-27).
+
+    부르는 곳: 렌더 drawtext(_caption_drawtexts) · 장면꾸미기(scene_style.context_for) · 캡컷 ·
+    3단계 편집 화면(app._lab_captions → DATA.captions) · 4단계 음성 미리보기(app.api_mix_result cap_sched).
+    beat 키: narration·caption_lines·dur(칸 실길이)·cap_durs·cap_lead(트림 반영된 값)·t0·cap_offset.
 
     캡컷 내보내기가 쓴다(2026-09-03 사장님 실측: 캡컷엔 비트 문장이 통째로 한 줄이라 화면 밖으로
     넘쳤다 — 렌더는 짧은 구절로 쪼개 순차 표시한다). 구절 나누기·길이 배분·리드인·오프셋을
     렌더의 같은 함수·같은 키(caption_lines/cap_durs/cap_lead/cap_offset)로 계산한다.
     tail: 마지막 구절 여운(렌더는 마지막 비트에만 0.5).
+    with_durs=True 면 (구절, 시작, 끝, 말 길이) — 말 길이는 컷 묶음(phrase_owners R4)·필름 구간 길이가 쓴다.
+    absorb_lead: 칸 시작~첫 구절 시작 틈이 이 값보다 **짧으면** 첫 구절을 칸 시작부터 띄운다
+                 (caption_lead_absorb(deco) — 장면꾸미기 0.35 / 그 외 0). 이 값 이상인 틈은 그대로 둔다(진짜 무음).
     """
     segs = _caption_segments((beat.get("narration") or ""), preset=beat.get("caption_lines"))
     if not segs:
@@ -2304,10 +2321,37 @@ def caption_schedule(beat, tail=0.0):
     out = []
     for i, (seg, d) in enumerate(zip(segs, durs)):
         start = max(0.0, t + t0 + off)
+        if i == 0 and absorb_lead and 0.0 < start - t0 < float(absorb_lead):
+            start = t0                      # 칸 앞 짧은 틈 → 첫 자막이 칸 시작부터(장면꾸미기)
         t += d
         end = (dur + tail if i == len(segs) - 1 else t) + t0 + off
-        out.append((seg, start, max(start, end)))
+        out.append((seg, start, max(start, end), d) if with_durs else (seg, start, max(start, end)))
     return out
+
+
+def caption_rows(beat, tts_dur=None, absorb_lead=0.0):
+    """편성표 칸 하나 → 화면(3단계 DATA.captions·4단계 음성 미리보기)이 쓰는 자막 구절 목록.
+
+    [{"text","start","end"}] — 칸 기준 초, **caption_schedule 결과 그대로**(렌더와 같은 입력:
+    칸 길이 = _effective_dur(음성 길이, head/tail_trim), 리드인·구절 길이 = _adjust_caps_for_trim).
+    start/end 는 **말하는 시각**(cap_offset 0)이다 — 3단계 컷 경계(구절 맞춤)가 이 값을 쓰기 때문.
+    화면 표시는 여기에 cap_offset(행의 "off")을 더한다 — 렌더는 caption_schedule 이 더한다(같은 값).
+    tts_dur 가 없으면(음성 전) 계획 길이(target_seconds, 없으면 3.0초)로 잡는다(종전 _lab_captions 와 같다).
+    absorb_lead = caption_lead_absorb(job.deco) — 장면꾸미기 job 은 칸 앞 짧은 틈을 첫 자막에 붙인다(완성본과 같게)."""
+    lead, rd = _adjust_caps_for_trim(beat)
+    if tts_dur:
+        dur = _effective_dur(float(tts_dur), beat.get("head_trim", 0.0) or 0.0, beat.get("tail_trim", 0.0) or 0.0)
+    else:
+        dur = float(beat.get("target_seconds") or 3.0)
+    off = float(beat.get("cap_offset") or 0.0)
+    sched = caption_schedule({"narration": beat.get("narration") or "", "caption_lines": beat.get("caption_lines"),
+                              "dur": dur, "cap_durs": rd, "cap_lead": lead, "t0": 0.0, "cap_offset": off},
+                             with_durs=True, absorb_lead=absorb_lead)
+    # sec = 말 길이(마지막 구절도 말이 끝나는 곳까지) — end 는 렌더처럼 칸 끝까지 자막이 머문다.
+    # 흡수 판단은 cap_offset 까지 더한 **보이는 시각**으로 해야 렌더와 같다 → offset 넣어 계산하고 행에선 다시 뺀다
+    #   (행 start/end = 말 시각, 화면이 off 를 더해 보인다 — 구절 맞춤 컷 경계는 말 시각을 쓴다).
+    return [{"text": s, "start": round(a - off, 3), "end": round(e - off, 3), "sec": round(d, 3), "off": off}
+            for s, a, e, d in sched], dur
 
 
 def _caption_vf(narration, dur, has_font, work, idx):
@@ -2417,107 +2461,135 @@ def _apply_hook_inpoint(edit_plan, source_video_paths, work):
         pass
 
 
-def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
-    """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
-    자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
-    -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다.
-    반중복탐지 회피(항상 자동): 훅·반전 비트는 켄번즈 줌, 나머지는 기본 크롭+줌."""
-    # ★렌더는 편성표를 고쳐 쓰지 않는다(2026-09-27) — 여기서 부르던 _apply_hook_inpoint(훅 시작점 자동 이동)를 없앴다.
-    #   편집 화면은 이 이동을 모르고(화면 컷이 있는 칸은 이미 건너뛰었다 = 죽은 경로), 옛 job에선 화면과 완성본의 훅이 갈렸다.
-    #   훅 시작점은 편성 단계(mix_pipeline.run_clean_sources)에서 한 번 정해 DB에 저장한다 — 화면이 그 값을 본다.
-    important = _important_beat_indices(edit_plan["beats"])
-    beat_clips = []
-    # ★칸 길이를 **누적 시각 기준 프레임**으로 정한다(2026-09-26). 칸마다 -t 음성길이로 자르면 30fps 영상은
-    #   프레임 경계로 올림돼 칸당 0.03~0.06초씩 길어지고, concat은 그 긴 길이로 다음 칸을 잇는다 →
-    #   뒤 칸일수록 목소리·장면이 자막(_beat_timeline: 음성 길이 누적)보다 늦었다(실측 8칸 +0.29초).
-    #   누적 시각을 프레임으로 반올림한 경계 차이로 칸 프레임 수를 정하면 오차가 쌓이지 않는다(어느 칸이든 ±1/60초).
-    _cum_t = 0.0
-    # 소스 실제 길이 캐시(2026-07-19). 약한 매칭이 소스 밖 구간(예: 60초 릴에 155초)을 잡으면
-    # -ss가 끝을 넘어 0프레임 서브클립 → concat "no stream" → 미리보기 전체가 죽었다. 소스별 길이를
-    # 한 번만 재서(ffprobe) start를 소스 안으로 당긴다.
-    _src_dur_cache = {}
-    def _src_dur(vid):
-        if vid not in _src_dur_cache:
+CUT_MAP_SUFFIX = ".cuts.json"        # 조립본(mix_raw.mp4) 옆 컷 지도 — 청소본 정본이 **그 파일을 만든 계획**을 그대로 쓴다
+
+
+def cut_map_of(cut_plan):
+    """완성본 컷 계획(render_cut_plan) → 컷 지도 [{video_id, beat_idx, src, fin, dur, sdur}] — **완성본 컷 지도의 유일한 자리**.
+    src = 렌더가 실제로 읽기 시작한 원본 시각(당긴 시작), fin·dur = 완성본 프레임 자리(f_start·cfr / 30), sdur = 계획한 읽는 길이.
+    청소본 정본(clean_base.save_base)·고른 장면 청소(_clean_partial)·비교 화면(final_clip_pairs)이 이 모양을 쓴다."""
+    out = []
+    for bp in cut_plan or []:
+        for cp in bp["clips"]:
+            c = cp["clip"]
+            d = cp["cfr"] / 30.0
             try:
-                _src_dur_cache[vid] = _probe_duration(source_video_paths[vid])
-            except Exception:
-                _src_dur_cache[vid] = 0.0
-        return _src_dur_cache[vid]
-    # 여운 대상 = TTS가 있는 마지막 비트(2026-07-20 T4). 그 비트만 대사 끝+_LAST_RUNOUT초를
-    # 화면에 더 싣는다(-t 연장 포함). 세그먼트 전멸로 스킵되면 여운도 조용히 사라진다(치명 아님).
-    _runout_idx = max((b["beat_idx"] for b in edit_plan["beats"]
-                       if tts_paths.get(b["beat_idx"])), default=None)
+                sd = float(c.get("src_dur") or d)
+            except (TypeError, ValueError):
+                sd = d
+            out.append({"video_id": c.get("video_id"), "beat_idx": bp["idx"], "src": float(cp["start"]),
+                        "fin": cp["f_start"] / 30.0, "dur": d, "sdur": sd})
+    return out
+
+
+def write_cut_map(video_path, cut_plan):
+    """조립본 옆에 그 파일을 만든 컷 지도를 남긴다(생성 규칙 표식, 0순위-C). 실패해도 조립은 산다(경보만)."""
+    try:
+        import json as _json
+        p = Path(str(video_path)).with_suffix(CUT_MAP_SUFFIX)
+        p.write_text(_json.dumps({"rule": "render_cut_plan/v1", "cuts": cut_map_of(cut_plan)}, ensure_ascii=False),
+                     encoding="utf-8")
+        return p
+    except Exception as e:      # noqa: BLE001
+        print("[cut-map] 컷 지도 기록 실패(%s): %r" % (video_path, e), file=sys.stderr)
+        return None
+
+
+def read_cut_map(video_path):
+    """조립본 옆 컷 지도. 없거나 영상보다 오래된 것이면 None(다른 조립의 지도를 믿지 않는다)."""
+    try:
+        import json as _json
+        v = Path(str(video_path))
+        p = v.with_suffix(CUT_MAP_SUFFIX)
+        if not p.exists() or (v.exists() and p.stat().st_mtime + 1e-6 < v.stat().st_mtime - 5):
+            return None
+        d = _json.loads(p.read_text(encoding="utf-8"))
+        return d.get("cuts") if d.get("rule") == "render_cut_plan/v1" else None
+    except Exception as e:      # noqa: BLE001
+        print("[cut-map] 컷 지도 읽기 실패(%s): %r" % (video_path, e), file=sys.stderr)
+        return None
+
+
+def render_cut_plan(edit_plan, tts_paths, source_video_paths, *, beat_durs=None, src_durs=None, probe=None, screen=True):
+    """완성본 컷 계획의 **유일한 입구**(2026-09-27) — 렌더(_render_mix)·캡컷 초안(capcut_draft)·내보내기 ZIP(export_bundle)이
+    같은 결과를 받는다(CLAUDE.md 0순위-B·C). 영상은 만들지 않는다.
+
+    ★왜: 컷 조각(plan_beat_clips_for)은 셋이 같은 함수를 불렀지만 그 **앞뒤**(소스 길이 표·여운·컷 프레임 반올림·
+      전환 여유·느리게+정지·시작 당기기)는 렌더에만 있었다. 캡컷은 정지 컷을 한 배속으로 늘렸고(서버 9컷),
+      소스 길이 표가 셋이 따로였다(렌더=칸 재료만 / 캡컷=복사한 영상만 / ZIP=전부). 이제 그 판단 전부가 여기 있다.
+
+    반환: [{"beat","idx","tts","tts_dur","head_trim","runout","f0","nfr","segs","ofr",
+            "clips":[{"j","clip"(plan_beat_clips_for 조각),"cfr"(화면 프레임),"nf"(겹침 몫 포함 조각 프레임),
+                      "f_start"(완성본 시작 프레임),"c_src","c_out"(여유 포함),"play_out","freeze","start"(당긴 시작),
+                      "nf_play","speed"(움직이는 배속),"move_fr","hold_fr"(화면 안 움직임/정지 프레임)}]}]
+      음성 없는 칸·조각이 없는 칸은 빠진다(렌더가 건너뛰는 칸과 같다 — 조각 없는 칸도 시각은 흘러간다).
+    beat_durs: {beat_idx: 칸 길이} — 호출부가 이미 잰 _beat_timeline 의 dur(같은 _beat_effective_dur)를 줄 때.
+               주면 이 표에 있는 칸만 센다.
+    src_durs:  {video_id: 소스 길이} — 이미 잰 값(0 이하·없는 키는 probe 로 잰다). 어느 쪽이든 칸마다 쓰는 표는
+               **칸 재료 영상만**이다.
+    """
+    probe = probe or _probe_duration
+    _cache = {}
+
+    def _src_dur(vid):
+        if vid not in _cache:
+            try:
+                v = float((src_durs or {}).get(vid) or 0.0)
+            except (TypeError, ValueError):
+                v = 0.0
+            if v <= 0:
+                try:
+                    v = probe(source_video_paths[vid])
+                except Exception:      # noqa: BLE001 — 못 재면 0(렌더가 그 조각을 뺀다)
+                    v = 0.0
+            _cache[vid] = v
+        return _cache[vid]
+
+    def _has(idx):
+        return (idx in beat_durs) if beat_durs is not None else bool((tts_paths or {}).get(idx))
+
+    out = []
+    # ★칸 길이를 **누적 시각 기준 프레임**으로 정한다(2026-09-26). 칸마다 -t 음성길이로 자르면 30fps 영상은
+    #   프레임 경계로 올림돼 뒤 칸일수록 늦었다(실측 8칸 +0.29초). 누적 시각의 반올림 프레임 경계 차이로 정한다.
+    _cum_t = 0.0
+    # 여운 대상 = TTS가 있는 마지막 비트(2026-07-20 T4).
+    _runout_idx = max((b["beat_idx"] for b in edit_plan["beats"] if _has(b["beat_idx"])), default=None)
     for beat in edit_plan["beats"]:
         idx = beat["beat_idx"]
-        tts = tts_paths.get(idx)
-        if not tts:
+        if not _has(idx):
             continue
-        tts_dur = _beat_effective_dur(beat, tts)
-        _head_trim = beat.get("head_trim", 0.0)
-        # ★화면 조각 계획은 **공용 함수 하나**가 정한다(2026-08-23, 0순위-B).
-        #   예전엔 이 블록이 여기에만 있어서 캡컷·ZIP 내보내기가 각자 `primary` 하나만
-        #   보고 있었다(실측: 조각 19개인 job이 캡컷엔 7개). 이제 셋이 같은 함수를 부른다.
-        #   손상/빈 소스 제외·포인트비트 홀드·1장1컷·늘려채우기·여운이 전부 그 안에 있다.
+        tts = (tts_paths or {}).get(idx)
+        tts_dur = float(beat_durs[idx]) if beat_durs is not None else _beat_effective_dur(beat, tts)
+        # 소스 길이 표 = 칸 재료 영상만(손상/빈 소스 제외는 plan_beat_clips_for 안에서).
         _srcd = {s.get("video_id"): _src_dur(s.get("video_id"))
                  for s in _beat_material(beat)
                  if s and s.get("video_id") in source_video_paths}
-        # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
-        _f0, _nfr, _cum_t = beat_frames(_cum_t, tts_dur, runout)      # 칸 프레임 배치 — 지도(final_clip_pairs)와 같은 함수
-        _beat_len = _nfr / 30.0                     # 이 칸이 완성본에서 차지할 정확한 길이(프레임 경계)
-        plan = plan_beat_clips_for(beat, tts_dur, _srcd, runout=runout)
+        _f0 = int(round(_cum_t * 30))
+        _cum_t += tts_dur + runout
+        _nfr = max(1, int(round(_cum_t * 30)) - _f0)
+        plan = plan_beat_clips_for(beat, tts_dur, _srcd, runout=runout, screen=screen)
         if not plan:
             continue
         segs = [s for s in _beat_material(beat) if s and _srcd.get(s.get("video_id"), 0.0) > 0.05]
-        # ★사장님이 6단계에서 구도를 맞춘 장면은 **켄번즈를 얹지 않는다**(2026-08-30).
-        #   켄번즈는 중앙 기준으로 서서히 확대하는 연출이라, 지정한 구도를 밀어낸다 —
-        #   "이 자리를 보여달라"는 지시가 연출보다 우선이다.
-        _z, _, _ = scene_zoom_of(beat)
-        if _z > 1.0001:
-            vf = _base_zoom_vf(beat)
-        else:
-            vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf(beat)
-        # 비트당 다중 클립: 각 구간을 [start, start+src_dur]만큼만 잘라(유출 0) 이어붙이고,
-        # 부족분은 마지막 클립을 슬로모(setpts)로 늘려 대사 길이에 맞춘다.
-        sub_paths = []
-        # ★전환용 여유(2026-08-23): xfade는 두 컷을 overlap만큼 **겹치므로** 그냥 겹치면
-        #   비트가 overlap*(n-1)만큼 짧아지고, 그러면 뒤 칸 자막이 통째로 밀린다(t0 누적).
-        #   그래서 각 컷을 미리 overlap만큼 **길게** 만들어 둔다 → 겹친 뒤 원래 길이가 된다.
-        #   컷이 1개면 겹칠 데가 없으니 0.
-        # ★여유는 overlap 전부가 아니라 **overlap*(n-1)/n**이다(실측으로 잡은 오류).
-        #   컷 n개를 각각 pad만큼 늘려 겹치면 총합 = n*(base+pad) - overlap*(n-1).
-        #   (2026-09-27부터 여유는 아래 프레임 계산이 정한다 — 마지막 컷 뺀 컷마다 겹침 O프레임.)
         _n = len(plan)
-        # ★컷 프레임 수 = 칸 안 누적 시각의 프레임 경계 차이(cut_frame_list — 편집 화면 합본과 같은 자, 2026-09-27).
-        #   컷마다 -t 초로 자르면 프레임 경계로 올림돼 칸 안에서 쌓였다(job a90253dd235b 1번 칸 4번째 컷 +4프레임).
-        #   마지막 컷이 칸 프레임 수(_nfr)의 나머지를 흡수한다 → 칸 합계가 칸 단위 누적 경계와 정확히 같다.
+        # ★컷 프레임 수 = 칸 안 누적 시각의 프레임 경계 차이(cut_frame_list — 편집 화면 합본과 같은 자).
         _cfr = cut_frame_list([float(c["out_dur"]) for c in plan], _nfr)
-        # 전환(xfade)은 **프레임 단위**로 겹친다. 마지막 컷을 뺀 컷마다 겹침 O프레임을 얹으면
-        #   겹친 뒤 합계 = sum(_cfr) = _nfr 그대로이고, 다음 컷은 편집 화면 컷 경계에서 들어오기 시작한다.
-        #   겹칠 여유가 없는 컷이 있으면(_xfade_concat의 포기 조건과 같다) 이 칸은 처음부터 하드컷으로 간다
-        #   — 여유를 얹어 놓고 하드컷으로 돌아가면 칸이 O프레임씩 길어져 뒤가 잘린다.
+        # 전환(xfade)은 프레임 단위로 겹친다 — 마지막 컷을 뺀 컷마다 겹침 O프레임. 여유 없는 컷이 있으면 칸 전체 하드컷.
         _ofr = int(round(_trans_sec() * 30)) if _n > 1 else 0
         if _ofr > 0 and any((nf + (_ofr if j < _n - 1 else 0)) / 30.0 <= _ofr / 30.0 + 0.05
                             for j, nf in enumerate(_cfr)):
             _ofr = 0
         _pad = _ofr / 30.0
+        clips = []
+        fr = _f0
         for j, c in enumerate(plan):
-            _nf = _cfr[j] + (_ofr if j < _n - 1 else 0)     # 이 컷 조각의 프레임 수(겹침 몫 포함)
+            _nf = _cfr[j] + (_ofr if j < _n - 1 else 0)
             _c_pad = _pad if j < _n - 1 else 0.0
-            src = source_video_paths[c["video_id"]]
-            sub = work / f"beat_{idx}_{j}.mp4"
-            # 슬로우 상한(1.15배)+정지프레임(2026-07-19): 무제한 슬로우크롤 제거.
-            # 재생은 최대 _MAX_SLOWMO배까지만 늘리고, 남는 시간은 마지막 프레임 정지(freeze).
-            # play_out+freeze == out_dur → 총 길이·오디오/자막 싱크 불변.
-            # 전환 여유를 이 컷에 얹는다. 소스에 실프레임이 남아 있으면 그것으로(자연스럽다),
-            # 없으면 out_dur만 늘려 슬로모/freeze 기계가 흡수한다.
             _c_src, _c_out = c["src_dur"], c["out_dur"]
             if _c_pad > 1e-3:
+                # ★여유도 **담은 조각 안**에서만 꺼낸다(2026-09-17) — 조각 뒤 다음 장면을 끌어오지 않게.
                 _sd = _src_dur(c["video_id"])
-                # ★여유도 **담은 조각 안**에서만 꺼낸다(2026-09-17 이윤정님 "미리보기에서 다른
-                #   화면이 짧게"). 종전엔 소스 파일 끝(_sd)까지를 '남은 실프레임'으로 보고 조각 뒤
-                #   **다음 장면**을 3프레임 끌어왔다(실측 job 1939bd7f3c50 s1 조각 7.29 뒤 사무실).
-                #   조각 밖이면 out만 늘려 슬로모/freeze가 채운다 — 총 길이는 그대로다.
                 _lim = _piece_end_limit(c, segs, _sd)
                 _room = max(0.0, _lim - (c["start"] + _c_src)) if _lim > 0 else 0.0
                 _c_src = _c_src + min(_c_pad, _room)
@@ -2529,8 +2601,130 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 _beat_speed = 1.0
             if not math.isfinite(_beat_speed) or abs(_beat_speed - 1.0) <= 1e-6:
                 _beat_speed = None
-            play_out, freeze = _speed_and_freeze(
-                _c_src, _c_out, preferred_speed=_beat_speed)
+            # 슬로우 상한(1.15배)+정지프레임(2026-07-19): play_out+freeze == out_dur.
+            play_out, freeze = _speed_and_freeze(_c_src, _c_out, preferred_speed=_beat_speed)
+            _nf_play = motion_frames(_nf, play_out, freeze)
+            # start를 소스 안으로 당긴다(2026-07-19) — 소스 밖을 잡으면 -ss가 0프레임을 낸다.
+            sdur = _src_dur(c["video_id"])
+            start = c["start"]
+            if sdur > 0:
+                start = max(0.0, min(start, sdur - min(_c_src, sdur)))
+            move = min(_cfr[j], _nf_play)
+            clips.append({"j": j, "clip": c, "video_id": c["video_id"], "cfr": _cfr[j], "nf": _nf, "f_start": fr,
+                          "c_src": _c_src, "c_out": _c_out, "play_out": play_out, "freeze": freeze,
+                          "start": start, "nf_play": _nf_play,
+                          "speed": (_c_src / play_out) if play_out > 1e-6 else 1.0,
+                          "move_fr": move, "hold_fr": _cfr[j] - move})
+            fr += _cfr[j]
+        out.append({"beat": beat, "idx": idx, "tts": tts, "tts_dur": tts_dur, "head_trim": beat.get("head_trim", 0.0),
+                    "runout": runout, "f0": _f0, "nfr": _nfr, "segs": segs, "ofr": _ofr, "clips": clips})
+    return out
+
+
+NARR_SR = 48000          # 나레이션 한 줄의 표본율 — 30fps 한 프레임 = 1600표본(정수)이라 칸 경계가 표본 단위로 딱 떨어진다
+
+
+def _audio_channels(path):
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "stream=channels",
+                            "-of", "csv=p=0", str(path)], stdin=subprocess.DEVNULL, **_FF_TEXT)
+        return int((r.stdout or "1").strip().split()[0])
+    except Exception:      # noqa: BLE001 — 못 재면 모노로 본다
+        return 1
+
+
+def _video_frames(path):
+    """영상 스트림의 실제 프레임(패킷) 수 — 소리 길이를 영상에 맞출 때 쓴다. 못 세면 None."""
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_packets",
+                            "-show_entries", "stream=nb_read_packets", "-of", "csv=p=0", str(path)],
+                           stdin=subprocess.DEVNULL, **_FF_TEXT)
+        return int((r.stdout or "").strip().split()[0])
+    except Exception:      # noqa: BLE001
+        return None
+
+
+def narration_track(edit_plan, tts_paths, beat_frames, out_wav, sample_rate=NARR_SR):
+    """완성본 나레이션 **한 줄**을 만든다 — 칸 소리 배치의 유일한 주인(2026-09-27, CLAUDE.md 0순위-C).
+
+    beat_frames: [(beat_idx, 프레임 수), ...] — **완성본에 실제로 들어간 칸만, 들어간 순서대로**. 프레임 수는
+      렌더 컷 계획의 칸 길이(render_cut_plan 의 nfr = 누적 시각 반올림 프레임, 자막·영상과 같은 자)다.
+    칸마다: mp3 를 head_trim 부터 읽고(종전 `-ss head_trim -i tts` 와 같은 자리) → 뒤를 무음으로 채우고 →
+      **프레임 수 × (표본율/30) 표본에서 정확히 자른다**(tail_trim·배속은 종전처럼 이미 mp3 길이/칸 길이에 들어 있다 —
+      배속은 합성 때 mp3 에 굽고, tail_trim 은 칸 길이 = _beat_effective_dur 에서 빠진다).
+    → 총 표본 수 = 총 프레임 수 × 1600 (48kHz) 정확히. 반환: out_wav 경로.
+
+    ★왜: 종전엔 칸마다 소리를 AAC 로 따로 굽고(`-c:a aac`) concat -c copy 로 이었다. AAC 는 칸마다 앞뒤 채움 표본을
+      달고 나오는데 concat 은 타임스탬프로만 이어, **표본 수가 타임스탬프보다 칸당 20~40ms씩 많은** 파일이 나왔다
+      (서버 실측 수리 뒤 4편 +0.14~0.21초, 이어 재생하면 마지막 칸 목소리가 그림보다 +0.13~0.20초 늦음. 수리 전엔
+      장면꾸미기 합성의 -shortest 가 끝 0.17~0.37초 말소리를 잘랐다). 소리는 한 줄로 만들어 **한 번만** 인코딩한다."""
+    by = {b["beat_idx"]: b for b in (edit_plan or {}).get("beats") or []}
+    spf = sample_rate // 30
+    assert spf * 30 == sample_rate, "표본율은 30의 배수여야 칸 경계가 표본에 떨어진다"
+    items = [(i, int(n), tts_paths.get(i)) for i, n in beat_frames if int(n) > 0]
+    if not items:
+        raise RuntimeError("narration_track: 칸이 없습니다")
+    layout = "stereo" if any(p and _audio_channels(p) >= 2 for _, _, p in items) else "mono"
+    ins, fc = [], []
+    for k, (i, n, p) in enumerate(items):
+        ns = n * spf
+        if p and os.path.exists(p):
+            head = max(0.0, float((by.get(i) or {}).get("head_trim", 0.0) or 0.0))
+            ins += ["-i", str(p)]
+            src = len(ins) // 2 - 1
+            fc.append(f"[{src}:a]aresample={sample_rate},aformat=sample_fmts=fltp:sample_rates={sample_rate}"
+                      f":channel_layouts={layout},atrim=start={head:.4f},asetpts=PTS-STARTPTS,"
+                      f"apad=whole_len={ns},atrim=end_sample={ns},asetpts=N/SR/TB[n{k}]")
+        else:       # 음성 파일이 없는 칸(렌더는 음성 없는 칸을 애초에 안 넣는다 — 방어): 그 칸 길이만큼 무음
+            fc.append(f"anullsrc=r={sample_rate}:cl={layout},atrim=end_sample={ns},asetpts=N/SR/TB[n{k}]")
+    fc.append("".join(f"[n{k}]" for k in range(len(items))) + f"concat=n={len(items)}:v=0:a=1[a]")
+    _run_ffmpeg(["ffmpeg", "-y", *ins, "-filter_complex", ";".join(fc), "-map", "[a]",
+                 "-c:a", "pcm_s16le", "-ar", str(sample_rate), str(out_wav)])
+    return str(out_wav)
+
+
+def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
+    """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
+    자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
+    -vf는 우리 자막 vf가 아니라 규격 통일용 base(scale/crop)만 쓴다.
+    반중복탐지 회피(항상 자동): 훅·반전 비트는 켄번즈 줌, 나머지는 기본 크롭+줌."""
+    # ★렌더는 편성표를 고쳐 쓰지 않는다(2026-09-27) — 여기서 부르던 _apply_hook_inpoint(훅 시작점 자동 이동)를 없앴다.
+    #   편집 화면은 이 이동을 모르고(화면 컷이 있는 칸은 이미 건너뛰었다 = 죽은 경로), 옛 job에선 화면과 완성본의 훅이 갈렸다.
+    #   훅 시작점은 편성 단계(mix_pipeline.run_clean_sources)에서 한 번 정해 DB에 저장한다 — 화면이 그 값을 본다.
+    important = _important_beat_indices(edit_plan["beats"])
+    beat_clips = []
+    beat_frames = []        # [(beat_idx, 프레임 수)] — 완성본에 들어간 칸 순서대로. narration_track 이 이 자로 소리를 놓는다
+    # ★칸 길이를 **누적 시각 기준 프레임**으로 정한다(2026-09-26). 칸마다 -t 음성길이로 자르면 30fps 영상은
+    #   프레임 경계로 올림돼 칸당 0.03~0.06초씩 길어지고, concat은 그 긴 길이로 다음 칸을 잇는다 →
+    #   뒤 칸일수록 목소리·장면이 자막(_beat_timeline: 음성 길이 누적)보다 늦었다(실측 8칸 +0.29초).
+    #   누적 시각을 프레임으로 반올림한 경계 차이로 칸 프레임 수를 정하면 오차가 쌓이지 않는다(어느 칸이든 ±1/60초).
+    # ★컷 계획(칸 길이·소스 길이 표·여운·컷 프레임·전환 여유·배속/정지·시작 당기기)은 render_cut_plan 한 곳이 정한다
+    #   (2026-09-27) — 캡컷 초안(capcut_draft)·내보내기 ZIP(export_bundle)이 **같은 함수**를 받는다. 여기엔 굽기만 남긴다.
+    _cplan = render_cut_plan(edit_plan, tts_paths, source_video_paths)
+    _map_path = Path(work) / "mix_raw.mp4"
+    try:
+        _map_path.with_suffix(CUT_MAP_SUFFIX).unlink()     # 옛 조립의 지도를 남기지 않는다(아래에서 이 조립 것으로 다시 쓴다)
+    except OSError:
+        pass
+    for bp in _cplan:
+        beat, idx = bp["beat"], bp["idx"]
+        tts_dur = bp["tts_dur"]
+        _nfr = bp["nfr"]                            # 이 칸이 완성본에서 차지할 정확한 길이(프레임) — 소리도 이 자(narration_track)
+        _n, _ofr = len(bp["clips"]), bp["ofr"]
+        # ★사장님이 6단계에서 구도를 맞춘 장면은 **켄번즈를 얹지 않는다**(2026-08-30).
+        #   켄번즈는 중앙 기준으로 서서히 확대하는 연출이라, 지정한 구도를 밀어낸다 —
+        #   "이 자리를 보여달라"는 지시가 연출보다 우선이다.
+        _z, _, _ = scene_zoom_of(beat)
+        if _z > 1.0001:
+            vf = _base_zoom_vf(beat)
+        else:
+            vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf(beat)
+        sub_paths = []
+        for cp in bp["clips"]:
+            j, c = cp["j"], cp["clip"]
+            _nf, _c_src = cp["nf"], cp["c_src"]                 # 컷 조각 프레임 수(겹침 몫 포함)·읽는 길이(여유 포함)
+            play_out, freeze, start, _nf_play = cp["play_out"], cp["freeze"], cp["start"], cp["nf_play"]
+            src = source_video_paths[c["video_id"]]
             # freeze 클립은 움직이는 부분을 정적 베이스줌으로 두고, 켄번즈 모션은 freeze
             # 패스에서 전체(play+freeze)에 한 번만 건다(정지 구간도 살아있게, 2026-07-19).
             # 안 그러면 pass1 줌 + freeze 켄번즈가 겹쳐 줌이 두 번 쌓인다.
@@ -2538,21 +2732,10 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             factor = play_out / _c_src if _c_src > 1e-6 else 1.0
             # 느리게(factor>1)뿐 아니라 빠르게(factor<1)도 같은 식으로 처리한다.
             #   ★30fps 변환도 필터 안(fps=30)에서 — 편집 화면 합본(app enc)과 같은 자리·같은 반올림.
-            #     출력 -r 30 에 맡기면 느리게 늘린 컷에서 원본 프레임이 두 번 나오는 자리가 1프레임 갈렸다(합성 영상 실측).
-            vf_full = f"{clip_vf},{cut_setpts(factor)},fps=30"
+            #   ★읽는 창 끝은 cut_read_trim(편집 화면 합본과 같은 함수) — 입력 -t 는 창 밖 1프레임을 더 읽는다(2026-09-27).
+            vf_full = f"{cut_read_trim(_c_src)},{clip_vf},{cut_setpts(factor)},fps=30"
             # 끝을 프레임 수(-frames:v)로 자르므로 마지막 프레임을 넉넉히 세워 둔다(넘치는 몫은 -frames:v 가 버린다 — 길이는 늘 _nf).
-            #   ★계획(play_out)이 아니라 컷 프레임 수 전체만큼 — 원본 영상이 파일 길이보다 먼저 끝나면 읽힌 프레임이 계획보다
-            #     적다(2026-09-27 서버 실측). 종전엔 첫 프레임 중복이 우연히 1프레임을 메워 가려져 있었다. 편집 화면 합본과 같은 방식.
             vf_full = f"{vf_full},tpad=stop_mode=clone:stop_duration={0.1 + _nf / 30.0:.3f}"
-            # 움직이는 몫의 프레임 수: 정지가 없으면 컷 전체, 있으면 play_out 만큼(나머지는 정지 패스가 채운다).
-            _nf_play = motion_frames(_nf, play_out, freeze)
-            # start를 소스 안으로 당긴다(타트랙 병합, 2026-07-19). 약한 매칭이 소스 밖을 잡으면
-            #   -ss가 끝을 넘어 0프레임이 나와 concat이 죽는다. [start, start+src_dur]가 소스
-            #   안에 들어오게 당기되, 소스가 src_dur보다 짧으면 0에서 있는 만큼 읽는다.
-            sdur = _src_dur(c["video_id"])
-            start = c["start"]
-            if sdur > 0:
-                start = max(0.0, min(start, sdur - min(_c_src, sdur)))
             # 1단계 — 움직임: 입력을 [start, start+src_dur]만 읽어(-ss+입력측 -t) 유출 차단.
             #   입력 제한이 핵심(P1) — 상한 배율이 out_dur/src_dur보다 작으면 setpts가 다음
             #   구간까지 끌어와 유출된다(다색 소스 실측). 잘라두면 이 구간만 play_out으로 늘어난다.
@@ -2624,34 +2807,51 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 "ffmpeg", "-y",
                 "-i", str(beat_video),   # 0: 내 다중클립 비트영상(이미 vf 적용)
                 "-i", str(cutaway),      # 1: 컷어웨이 자산(오디오 버림 = b-roll)
-                "-ss", f"{_head_trim:.3f}", "-i", str(tts),          # 2: 나레이션(앞트림 반영)
                 "-filter_complex", fc, "-r", "30",
-                "-map", "[vout]", "-map", "2:a:0",
-                # 여운(runout): 마지막 비트만 대사 뒤 화면이 더 산다 — 오디오는 tts 길이에서
-                # 자연 종료(무성 여운). 컷어웨이 창(win)은 tts_dur 기준 그대로(여운을 덮지 않음).
-                # 길이는 누적 프레임 경계(_beat_len) — 영상 프레임 수와 소리 길이를 딱 맞춘다(소리는 무음으로 채움).
-                "-frames:v", str(_nfr), "-af", "apad", "-t", f"{_beat_len:.4f}",
-                "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-c:a", "aac", "-pix_fmt", "yuv420p", str(clip),
+                "-map", "[vout]", "-an",
+                # ★소리는 칸 클립에 넣지 않는다(2026-09-27) — 나레이션은 narration_track 이 한 줄로 만들어 아래에서 한 번만 얹는다.
+                #   컷어웨이 창(win)은 tts_dur 기준 그대로(여운을 덮지 않음). 길이는 누적 프레임 경계(_nfr).
+                "-frames:v", str(_nfr),
+                "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(clip),
             ])
         else:
-            # 비트 나레이션(tts) 오디오를 얹고 길이를 tts_dur(+마지막 비트는 여운)로 맞춘다.
+            # 칸 영상만(소리 없음) — 길이는 누적 프레임 경계(_nfr).
             _run_ffmpeg([
                 "ffmpeg", "-y", "-i", str(beat_video),
-                "-ss", f"{_head_trim:.3f}", "-i", str(tts),
-                "-map", "0:v:0", "-map", "1:a:0",
-                "-frames:v", str(_nfr), "-af", "apad", "-t", f"{_beat_len:.4f}",
-                "-c:v", "copy", "-c:a", "aac", str(clip),
+                "-map", "0:v:0", "-an", "-frames:v", str(_nfr),
+                "-c:v", "copy", str(clip),
             ])
         beat_clips.append(clip)
+        # 소리 길이 = 이 칸 영상의 **실제** 프레임 수(보통 _nfr). 다르면 영상이 모자란 것 — 소리를 영상에 맞추고 알린다
+        #   (소리를 계획대로 두면 그 뒤 칸 전부 목소리가 그림보다 앞선다).
+        _got = _video_frames(clip)
+        if _got is not None and _got != _nfr:
+            print(f"[narration] 칸 {idx}: 영상 {_got}프레임 ≠ 계획 {_nfr}프레임 — 소리를 영상에 맞춘다", file=sys.stderr)
+        beat_frames.append((idx, _got if _got else _nfr))
     if not beat_clips:
         raise RuntimeError("video_assemble: 렌더할 비트가 없습니다")
     concat_txt = work / "concat_mix.txt"
     concat_txt.write_text("".join(f"file '{c.as_posix()}'\n" for c in beat_clips), encoding="utf-8")
-    # 비트 클립들은 이미 동일 설정(1080x1920 libx264/aac 30fps)이므로 -c copy로 붙인다
+    # 비트 클립들은 이미 동일 설정(1080x1920 libx264 30fps)이므로 -c copy로 붙인다
     # (재인코딩 concat은 2GB 서버에서 수십 초 → 배포 재시작에 걸려 죽던 원인, 2026-07-12).
-    mix_raw = work / "mix_raw.mp4"
+    mix_video = work / "mix_video.mp4"
     _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_txt),
-                 "-c", "copy", str(mix_raw)])
+                 "-c", "copy", str(mix_video)])
+    # ★나레이션 한 줄(표본 수 = 총 프레임 × 1600)을 **한 번만** AAC로 얹는다. 효과음·BGM 단계(_burn_captions)·자막제거
+    #   (clean_fn)·장면꾸미기(compose)는 종전처럼 mix_raw.mp4 의 소리를 받는다 — 입력 모양(영상+AAC 한 줄)은 그대로다.
+    #   인코딩 횟수도 종전과 같다(종전: 칸 클립마다 1회 → 이제: 한 줄 1회 / 효과음·BGM이 있으면 뒤에서 1회 더 — 종전과 같음).
+    narr = narration_track(edit_plan, tts_paths, beat_frames, work / "narration.wav")
+    mix_raw = work / "mix_raw.mp4"
+    _run_ffmpeg(["ffmpeg", "-y", "-i", str(mix_video), "-i", str(narr),
+                 "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", str(mix_raw)])
+    # ★이 조립본을 만든 컷 지도를 옆에 남긴다(mix_raw.cuts.json) — 청소본 정본은 청소가 끝난 **몇 분 뒤** 지도를 새로 계산하지 않고
+    #   이걸 읽는다(2026-09-27 ec038d16ee0f: 청소 3분 사이 고객이 장면을 바꿨고, 뒤늦게 계산한 지도가 새 편성의 컷이라
+    #   청소본 파일(옛 편성)과 어긋나 완성본 7/12칸이 다른 장면이었다).
+    #   칸이 하나라도 빠졌거나(소스 손상) 칸 프레임이 계획과 다르면 지도가 파일과 안 맞으므로 남기지 않는다(읽는 쪽이 경보 후 재계산).
+    if len(beat_frames) == len(_cplan) and all(n == bp["nfr"] for (_i, n), bp in zip(beat_frames, _cplan)):
+        write_cut_map(mix_raw, _cplan)
+    else:
+        print("[cut-map] 조립이 계획과 달라(칸 %d/%d) 컷 지도를 남기지 않는다" % (len(beat_frames), len(_cplan)), file=sys.stderr)
     return str(mix_raw)
 
 

@@ -3,6 +3,7 @@
 핵심: ① '다른 장면'이 있으면 **반드시** 실패 ② 요약을 못 읽으면 통과가 아니라 실패
 ③ 서버에 못 붙거나 디스크가 모자라면 조용히 넘기지 않고 실패 ④ 영상 관문이 실패하면 main 에 아무것도 안 나간다.
 """
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -30,8 +31,17 @@ def _report(jobs, summary):
     return _HEAD + "".join(jobs) + summary + "\n"
 
 
-def _sum(cells, scene, sc=0, sb=0, sh=0):
-    return "== 칸 %d · 다른 장면 %d · 0.15초 이상 밀림(가운데) %d · 경계 밀림 %d · 정지컷만 밀림 %d" % (cells, scene, sc, sb, sh)
+def _sum(cells, scene, sc=0, sb=0, sh=0, ghost=0, ghost_only=0):
+    """요약 줄 + 잔상 줄(도구가 늘 함께 낸다 — 2026-09-27). ghost=None 이면 잔상 줄을 안 넣는다(옛 도구 흉내)."""
+    line = "== 칸 %d · 다른 장면 %d · 0.15초 이상 밀림(가운데) %d · 경계 밀림 %d · 정지컷만 밀림 %d" % (cells, scene, sc, sb, sh)
+    if ghost is None:
+        return line
+    return line + chr(10) + _ghost_line(ghost, ghost_only)
+
+
+def _ghost_line(frames, only=0, cuts=None, short=0):
+    return "== 잔상 %d프레임(컷 %d · 화면에만 %d프레임) · 짧은컷(3프레임 이하) %d" % (
+        frames, frames if cuts is None else cuts, only, short)
 
 
 GATE = dict(CFG["gate"], min_jobs_compared=1)
@@ -111,6 +121,10 @@ def test_needs_gate_for_watched_files():
     run, reasons, unmeasured = vg.needs_video_gate(["shopping_shorts/video_assemble.py", "README.md"], CFG)
     assert run and "video_assemble" in reasons[0] and not unmeasured
     run, _, unmeasured = vg.needs_video_gate(["shopping_shorts/capcut_draft.py"], CFG)
+    assert run and unmeasured == [], "캡컷은 이제 캡컷·내보내기 대조가 잰다(2026-09-27)"
+    # not_measured 가 있으면(설정) 여전히 경고 목록으로 돌려준다 — 판정 함수는 그대로
+    run, _, unmeasured = vg.needs_video_gate(["shopping_shorts/capcut_draft.py"],
+                                             dict(CFG, not_measured=["shopping_shorts/capcut_draft.py"]))
     assert run and unmeasured == ["shopping_shorts/capcut_draft.py"]
 
 
@@ -197,7 +211,8 @@ def _stage(tmp_path, changed_rel="shopping_shorts/video_assemble.py"):
     _git(r, "config", "user.email", "t@t.t")
     _git(r, "config", "user.name", "t")
     files = {"shopping_shorts/video_assemble.py": "A = 1\n", "shopping_shorts/app.py": "B = 1\n",
-             "tools/editor_vs_final_video.py": "# tool\n", "tools/evf_run.py": "# run\n", "README.md": "r\n"}
+             "tools/editor_vs_final_video.py": "# tool\n", "tools/evf_run.py": "# run\n",
+             "tools/capcut_export_audit.py": "# cc\n", "README.md": "r\n"}
     for rel, body in files.items():
         (r / rel).parent.mkdir(parents=True, exist_ok=True)
         (r / rel).write_bytes(body.encode("utf-8"))
@@ -211,15 +226,28 @@ def _stage(tmp_path, changed_rel="shopping_shorts/video_assemble.py"):
     return r
 
 
+_CC_OK = "abc 칸3 컷R10/C10/E10 | 캡컷 불일치 0 {} | 내보내기 불일치 0 {}\n== 컷 10 · 캡컷 불일치 0 · 내보내기 불일치 0\n"
+
+
 class _FakeSSH:
-    def __init__(self, report="", free=57, reachable=True, crash="", poll="EVF_DONE rc=0\n---\n5\nGONE\n"):
+    def __init__(self, report="", free=57, reachable=True, crash="", poll="EVF_DONE rc=0\n---\n5\nGONE\n",
+                 cc_report=_CC_OK, cc_crash="", cc_poll="CEA_DONE rc=0\n---\nGONE\n"):
         self.report, self.free, self.reachable, self.crash, self.poll = report, free, reachable, crash, poll
+        self.cc_report, self.cc_crash, self.cc_poll = cc_report, cc_crash, cc_poll
         self.cmds = []
 
     def __call__(self, cmd, stdin=None, timeout=120):
         self.cmds.append(cmd)
         if not self.reachable:
             return 255, "ssh: connect to host timed out"
+        if "capcut_export_audit.py" in cmd:
+            return 0, "PID=4343\n"
+        if cmd.startswith("cat ") and "/cc/done.txt" in cmd:
+            return 0, self.cc_poll
+        if cmd.startswith("cat ") and "/cc/report.txt" in cmd:
+            return 0, self.cc_report
+        if cmd.startswith("cat ") and "/cc/crash.txt" in cmd:
+            return 0, self.cc_crash
         if cmd.startswith("df "):
             return 0, " %dG\n" % self.free
         if "tar xzf" in cmd:
@@ -306,7 +334,7 @@ def test_gate_uploads_merged_modules_and_main_tool(tmp_path):
     with tarfile.open(fileobj=io.BytesIO(blobs[0])) as tf:
         names = set(tf.getnames())
         assert tf.extractfile("video_assemble.py").read() == b"CHANGED = 2\n", "병합본 모듈을 올려야 한다"
-    assert {"app.py", "_tool/editor_vs_final_video.py", "_tool/evf_run.py"} <= names
+    assert {"app.py", "_tool/editor_vs_final_video.py", "_tool/evf_run.py", "_tool/capcut_export_audit.py"} <= names
 
 
 # ── finish 연결 ─────────────────────────────────────────────────
@@ -370,3 +398,121 @@ def test_patch_rels_cover_tool_loader():
         rel = vg.PATCH_RELS["%s.py" % n]
         assert (Path(__file__).resolve().parents[1] / rel).exists(), rel
         assert rel in vg.load_config().get("watch_files", []), "감시 목록(gate_video.json)에도 있어야 한다: %s" % rel
+
+
+# ── ⑤ 캡컷·내보내기 대조(2026-09-27) ─────────────────────────────────
+
+def test_gate_runs_capcut_audit_on_compared_jobs(tmp_path):
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)))
+    res, out = _run(_stage(tmp_path), ssh)
+    assert res.ok, out
+    launch = [c for c in ssh.cmds if "capcut_export_audit.py" in c]
+    assert launch and "62ed6bf66eb9" in launch[0] and "PATCH_DIR=" in launch[0], "영상 비교가 본 작업으로 병합본 모듈을 재야 한다"
+    assert "캡컷·내보내기 대조: 컷 10 · 캡컷 불일치 0 · 내보내기 불일치 0" in out
+
+
+@pytest.mark.parametrize("cc,why", [
+    ("== 컷 10 · 캡컷 불일치 3 · 내보내기 불일치 0\n", "캡컷 불일치 3컷"),
+    ("== 컷 10 · 캡컷 불일치 0 · 내보내기 불일치 27\n", "내보내기 불일치 27컷"),
+    ("x\n", "요약 줄"),
+    ("== 컷 0 · 캡컷 불일치 0 · 내보내기 불일치 0\n", "비교한 컷이 0"),
+    ("j1 건너뜀 KeyError: x\n== 컷 10 · 캡컷 불일치 0 · 내보내기 불일치 0\n", "오류로 건너뛴"),
+])
+def test_gate_fails_on_capcut_mismatch(tmp_path, cc, why):
+    """★사보타주 기준: 캡컷·ZIP 이 완성본과 다른데 통과하면 관문은 존재 이유가 없다."""
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), cc_report=cc)
+    res, out = _run(_stage(tmp_path), ssh)
+    assert not res.ok and why in out, out
+    assert ssh.cmds[-1].startswith("rm -rf /tmp/gate_")
+
+
+def test_gate_fails_when_capcut_audit_crashes_or_dies(tmp_path):
+    res, out = _run(_stage(tmp_path), _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), cc_crash="Traceback x"))
+    assert not res.ok and "예외로 끝났다" in out
+    (tmp_path / "b").mkdir()
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), cc_poll="---\nGONE\n")
+    res, out = _run(_stage(tmp_path / "b"), ssh)
+    assert not res.ok and "끝 표식 없이 죽었다" in out and any(c.startswith("kill -- -4343") for c in ssh.cmds)
+
+
+def test_capcut_files_are_measured_now():
+    """캡컷·내보내기 파일은 이제 재는 대상이다(not_measured 에서 빠짐) — 대조 도구도 감시 목록에."""
+    assert not set(CFG.get("not_measured") or []) & {"shopping_shorts/capcut_draft.py", "shopping_shorts/export_bundle.py"}
+    assert "tools/capcut_export_audit.py" in CFG["watch_files"]
+    assert CFG["gate"]["max_capcut_mismatch"] == 0 and CFG["gate"]["max_export_mismatch"] == 0
+
+
+# ── 잔상(컷 가장자리 딴 장면 1~3프레임, 2026-09-27) ─────────────────────────────
+def test_ghost_line_parsed():
+    p = vg.parse_report(_report([_JOB_OK], _sum(10, 0, ghost=5, ghost_only=2)))
+    assert p["ghost"] == {"frames": 5, "cuts": 5, "screen_only": 2, "short": 0}
+
+
+@pytest.mark.parametrize("frames,only", [(3, 3), (1, 1), (5, 2)])
+def test_screen_only_ghost_fails_gate(frames, only):
+    """★사보타주 기준: 미리보기에만 있는 잔상(미리보기≠완성본)이 1프레임이라도 있으면 관문 실패 — 기준 0."""
+    p = vg.parse_report(_report([_JOB_OK], _sum(10, 0, ghost=frames, ghost_only=only)))
+    ok, fails, _ = vg.judge(p, GATE)
+    assert not ok and any("화면에만 있는 잔상 %d프레임" % only in f for f in fails), fails
+    ok, fails, _ = vg.judge(p, dict(CFG["audit"], min_jobs_compared=1))
+    assert not ok, "매일 점검 기준도 화면에만 잔상 0"
+
+
+def test_ghost_in_both_is_report_only():
+    """완성본에도 같은 잔상(소재 안 장면 전환·빠른 움직임 오탐)은 미리보기≠완성본이 아니다 — 보고만(max_ghost null)."""
+    p = vg.parse_report(_report([_JOB_OK], _sum(10, 0, ghost=4, ghost_only=0)))
+    ok, fails, notes = vg.judge(p, GATE)
+    assert ok, fails
+    assert any("잔상 4프레임" in n and "보고만" in n for n in notes), notes
+
+
+def test_missing_ghost_line_fails_when_threshold_set():
+    """잔상 줄이 없으면(옛 도구·형식 바뀜) 조용히 통과하지 않는다."""
+    p = vg.parse_report(_report([_JOB_OK], _sum(10, 0, ghost=None)))
+    ok, fails, _ = vg.judge(p, GATE)
+    assert not ok and any("잔상 줄" in f for f in fails), fails
+    p2 = vg.parse_report(_report([_JOB_OK], _sum(10, 0, ghost=None) + "\n== 잔상 모양이 바뀜"))
+    assert not vg.judge(p2, GATE)[0]
+
+
+def test_ghost_threshold_null_reports_only():
+    p = vg.parse_report(_report([_JOB_OK], _sum(10, 0, ghost=4)))
+    ok, fails, notes = vg.judge(p, dict(GATE, max_ghost=None, max_ghost_screen_only=None))
+    assert ok, fails
+    assert any("잔상 4프레임" in n and "보고만" in n for n in notes), notes
+
+
+def test_gate_config_ghost_thresholds():
+    assert CFG["gate"]["max_ghost_screen_only"] == 0 and CFG["audit"]["max_ghost_screen_only"] == 0
+    assert CFG["gate"]["max_ghost"] is None and CFG["audit"]["max_ghost"] is None   # 소재 품질 — 보고만
+
+
+def test_gate_reports_clean_missing_jobs_not_as_failure(tmp_path):
+    """청소 미생성 job 은 실패가 아니라 **따로 보고**된다(숨기지 않음) — 요약 파서가 새 항목을 읽는다."""
+    cc = "== 컷 12 · 캡컷 불일치 0 · 내보내기 불일치 0 · 청소 미생성 2 job" + chr(10)
+    res, out = _run(_stage(tmp_path), _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), cc_report=cc))
+    assert res.ok, out
+    assert "청소 미생성 2 job" in out
+    assert vg.capcut_summary(cc)["clean_missing"] == 2
+
+
+def test_gate_tools_write_scene_cache_to_gate_dir(tmp_path):
+    """관문의 영상 비교·캡컷 대조 명령은 장면 전환 캐시를 관문 임시 폴더에 둔다 — 소재 옆(고객 폴더)에 쓰지 않는다(9차 관문 실측)."""
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)))
+    res, out = _run(_stage(tmp_path), ssh)
+    evf = [c for c in ssh.cmds if "evf_run.py" in c]
+    cc = [c for c in ssh.cmds if "capcut_export_audit.py" in c]
+    assert evf and cc, ssh.cmds
+    for c in evf + cc:
+        m = re.search(r"SEG_SNAP_CACHE_DIR=(\S+)", c)
+        assert m and m.group(1).startswith("/tmp/gate_"), c
+
+
+def test_tools_default_scene_cache_under_own_out():
+    """비교 도구를 따로 돌려도(관문·점검 밖) 캐시는 자기 결과 폴더 아래 — 기본값이 코드에 있다."""
+    src_evf = (Path(__file__).resolve().parent / "evf_run.py").read_text(encoding="utf-8")
+    src_cc = (Path(__file__).resolve().parent / "capcut_export_audit.py").read_text(encoding="utf-8")
+    src_tool = (Path(__file__).resolve().parent / "editor_vs_final_video.py").read_text(encoding="utf-8")
+    assert 'setdefault("SEG_SNAP_CACHE_DIR", str(out / "snapcache"))' in src_evf
+    assert 'setdefault("SEG_SNAP_CACHE_DIR", str(OUT / "snapcache"))' in src_cc
+    assert 'setdefault("SEG_SNAP_CACHE_DIR"' in src_tool

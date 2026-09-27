@@ -110,8 +110,9 @@ class _Alerter:
 
 
 def run_audit(*, jobs, hours, out_root, tmp_root, alerter, cfg, printer=print, runner=None, free_gb=None, db_path=None,
-              now=None):
-    """→ 종료코드. runner(ids, work_dir, timeout) 는 비교 실행기(기본 = evf_run.py 서브프로세스)."""
+              now=None, cc_runner=None):
+    """→ 종료코드. runner(ids, work_dir, timeout) 는 비교 실행기(기본 = evf_run.py 서브프로세스),
+    cc_runner(ids, work_dir, timeout) 는 캡컷·내보내기 대조 실행기(기본 = capcut_export_audit.py 서브프로세스 — 같은 작업)."""
     a = cfg["audit"]
     now = now or datetime.now(KST)
     day = now.strftime("%Y-%m-%d")
@@ -150,6 +151,19 @@ def run_audit(*, jobs, hours, out_root, tmp_root, alerter, cfg, printer=print, r
             (out / "run.log").write_text(log[-20000:], encoding="utf-8")
     finally:
         shutil.rmtree(work, ignore_errors=True)
+    # ⑤ 캡컷·내보내기 대조 — 같은 작업으로 캡컷 초안·ZIP 이 완성본과 같은 소스·청소·컷인가(2026-09-27)
+    work_cc = Path(tmp_root) / ("capcut_audit_%s" % now.strftime("%Y%m%d_%H%M%S"))
+    try:
+        cc_rc, cc_log = (cc_runner or _run_cea)(ids, work_cc, int(a.get("capcut_timeout_sec", 1800)))
+        cc_rep = (work_cc / "report.txt").read_text(encoding="utf-8") if (work_cc / "report.txt").exists() else ""
+        cc_crash = (work_cc / "crash.txt").read_text(encoding="utf-8") if (work_cc / "crash.txt").exists() else ""
+        (out / "capcut_report.txt").write_text(cc_rep, encoding="utf-8")
+        if (work_cc / "cuts.jsonl").exists():
+            shutil.copy2(work_cc / "cuts.jsonl", out / "capcut_cuts.jsonl")
+        if cc_log:
+            (out / "capcut_run.log").write_text(cc_log[-20000:], encoding="utf-8")
+    finally:
+        shutil.rmtree(work_cc, ignore_errors=True)
     head1 = _git_head(REPO)
 
     parsed = video_gate.parse_report(rep)
@@ -157,13 +171,20 @@ def run_audit(*, jobs, hours, out_root, tmp_root, alerter, cfg, printer=print, r
     if rc_run != 0 or crash.strip():
         ok = False
         fails.append("비교 실행 비정상(rc=%s)%s" % (rc_run, (" — " + crash.strip().splitlines()[-1][:200]) if crash.strip() else ""))
+    cc_ok, cc_fails, cc_notes = video_gate.judge_capcut(cc_rep, a, cc_crash if cc_rc == 0 else (cc_crash or "rc=%s" % cc_rc))
+    ok = ok and cc_ok
+    fails += cc_fails
+    notes += cc_notes
     if head0 != head1:
         notes.append("점검 중 배포됨(%s→%s) — 앞 작업과 뒤 작업이 다른 코드로 재였을 수 있다" % (head0, head1))
 
     summary = {"day": day, "jobs": ids, "ok": ok, "fails": fails, "notes": notes, "summary": parsed.get("summary"),
-               "summary_line": parsed.get("summary_line"), "sec": round(time.time() - t0), "git": [head0, head1]}
+               "summary_line": parsed.get("summary_line"), "sec": round(time.time() - t0), "git": [head0, head1],
+               "capcut_summary": video_gate.capcut_summary(cc_rep),
+               "ghost": parsed.get("ghost"), "ghost_line": parsed.get("ghost_line")}   # 잔상(컷 가장자리 딴 장면, 2026-09-27)
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
     printer("판정 근거: %s" % (parsed.get("summary_line") or "(요약 줄 없음)"))
+    printer("잔상: %s" % (parsed.get("ghost_line") or "(잔상 줄 없음)"))
     for f_ in fails:
         printer("  ✗ " + f_)
     for n_ in notes:
@@ -179,15 +200,47 @@ def run_audit(*, jobs, hours, out_root, tmp_root, alerter, cfg, printer=print, r
     title = ("[영상점검 %s] 편집화면≠완성본 — 다른 장면 %d칸 · 밀림 %d칸 / %d칸 (%d작업)"
              % (stamp, scene, int(s.get("shift_center") or 0), int(s.get("cells") or 0), len(parsed.get("jobs", [])))
              if ran else "[영상점검 %s] 비교를 끝까지 못 돌림" % stamp)
-    detail = "\n".join(fails + notes + ["— 작업별 —"] + _issue_lines(rep))
-    alerter.raise_(title, detail, grade="고객영향" if scene > 0 else "운영주의",
-                   signature="%s:%s" % (day, parsed.get("summary_line") or "|".join(fails)[:120]),
+    _g = parsed.get("ghost") or {}
+    if _g.get("frames"):
+        title += " · 잔상 %d프레임(화면에만 %d)" % (int(_g["frames"]), int(_g.get("screen_only") or 0))
+    ccs = video_gate.capcut_summary(cc_rep) or {}
+    cc_bad = int(ccs.get("capcut") or 0) + int(ccs.get("export") or 0)
+    if cc_bad:
+        title += " · 캡컷≠완성본 %d컷 · ZIP≠완성본 %d컷" % (int(ccs.get("capcut") or 0), int(ccs.get("export") or 0))
+    elif not cc_ok:
+        title += " · 캡컷·ZIP 대조를 끝까지 못 돌림"
+        ran = False
+    detail = "\n".join(fails + notes + ["— 작업별 —"] + _issue_lines(rep) + _cc_issue_lines(cc_rep))
+    alerter.raise_(title, detail, grade="고객영향" if (scene > 0 or cc_bad or _g.get("screen_only")) else "운영주의",
+                   signature="%s:%s|cc%s" % (day, parsed.get("summary_line") or "|".join(fails)[:120],
+                                             [ccs.get(k) for k in ("cuts", "capcut", "export")]),
                    cooldown_sec=int(a.get("cooldown_sec", 3600)), todo=todo)
     return 1 if ran else 2
 
 
+def _cc_issue_lines(report_text):
+    """캡컷·내보내기 대조 report 에서 불일치·건너뜀이 있는 작업 줄만."""
+    out = []
+    for line in (report_text or "").splitlines():
+        if " 건너뜀" in line or ("| 캡컷 불일치 " in line and ("캡컷 불일치 0 " not in line or "내보내기 불일치 0 " not in line)):
+            out.append("[캡컷·ZIP] " + line[:300])
+    return out
+
+
+def _run_cea(ids, work, timeout):
+    """캡컷·내보내기 대조(tools/capcut_export_audit.py)를 **지금 라이브 코드**로 — 결과는 work/ (report.txt·done.txt·crash.txt)."""
+    env = dict(os.environ, CC_OUT=str(work), SEG_SNAP_CACHE_DIR=str(Path(work) / "snapcache"))   # 점검은 고객 폴더에 안 쓴다
+    env.pop("PATCH_DIR", None)
+    try:
+        p = subprocess.run([sys.executable, str(HERE / "capcut_export_audit.py"), *ids], cwd=str(REPO), env=env,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+        return p.returncode, (p.stdout or "") + (p.stderr or "")
+    except subprocess.TimeoutExpired as e:
+        return 124, "시간 초과 %ds: %s" % (timeout, (e.stdout or "")[-2000:] if isinstance(e.stdout, str) else "")
+
+
 def _run_evf(ids, work, timeout):
-    env = dict(os.environ, EVF_OUT=str(work))
+    env = dict(os.environ, EVF_OUT=str(work), SEG_SNAP_CACHE_DIR=str(Path(work) / "snapcache"))  # 점검은 고객 폴더에 안 쓴다
     env.pop("PATCH_DIR", None)                         # 매일 점검은 **지금 라이브 코드**를 잰다
     try:
         p = subprocess.run([sys.executable, str(HERE / "evf_run.py"), *ids], cwd=str(REPO), env=env,
