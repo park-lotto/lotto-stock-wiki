@@ -1,0 +1,1 @@
+- 2026-09-27 서버 krx_codes.json 빈 표 사고: git 원복 + refresh 방어(빈 결과면 안 덮음) 배포 3505ee533, stockbrain 재시작. KRX 403은 미해결(표 09-09 고정).
