@@ -197,11 +197,13 @@ def test_probe_vmake_verifies_signature_without_spending(monkeypatch):
 
 def test_probe_gemini_uses_rest_probe(monkeypatch):
     """★SDK models.list를 쓰면 살아있는 키도 전부 죽음으로 보인다(2026-08-07).
-    comment_gen._probe_key_alive(REST)를 거치는지 확인한다."""
+    comment_gen의 REST 프로브를 거치는지 확인한다.
+    ★2026-09-25: 등록 확인이 (살았나, 코드, 본문)을 받는 _probe_key_result로 바뀌었다 —
+      붐빔(503)을 'bad'로 찍지 않으려면 실패 이유가 필요하다. 같은 REST 호출이다."""
     from shopping_shorts import comment_gen
     seen = []
-    monkeypatch.setattr(comment_gen, "_probe_key_alive",
-                        lambda k, **kw: (seen.append(k), True)[1])
+    monkeypatch.setattr(comment_gen, "_probe_key_result",
+                        lambda k, *a, **kw: (seen.append(k), (True, 200, ""))[1])
     assert appmod._probe_user_key(keyroute.SVC_GEMINI, "k1") is True
     assert seen == ["k1"]
 

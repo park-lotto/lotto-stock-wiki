@@ -196,3 +196,10 @@ tiktok_session.json
 # 효과팩 수집 원본(대용량, 2026-09-13)
 /research/effect_packs/raw/
 /research/effect_packs/library/
+
+# 옛 테스트·제작 결과 영상(2026-09-27 사장님 — 트랙마다 사본이 쌓여 git에서 뺌).
+#   원본 백업: C:\Users\CH\Videos\git에서뺀영상_0927 (md5 목록 _목록_md5.txt)
+/out/이븐쇼핑_백본5건/*.mp4
+/out/페이드확인/*.mp4
+/productions/s3_kakao_claude/04_output.mp4
+/productions/s5_kakao_claude/04_output.mp4

@@ -200,6 +200,8 @@
 
   g.tlReplaceToggle = function (i, k) {
     if (REPLACE && REPLACE.i === i && REPLACE.k === k) { REPLACE = null; render(); return; }
+    // ★같은 조각이 카드 여러 장이면 먼저 카드마다 쪼갠다 — 안 그러면 교체가 조각 단위라 다른 카드까지 바뀐다(2026-09-26).
+    if (typeof splitBeatCards === 'function') splitBeatCards(i);
     const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
     const c = clips[k];
     if (!c) return;

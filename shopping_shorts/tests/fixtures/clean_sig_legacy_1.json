@@ -1,0 +1,308 @@
+{
+ "sig": "587049bcc39788fa",
+ "tier": "basic",
+ "clean_cuts": null,
+ "kind": "legacy",
+ "file_mtime": 1789568853.9864752,
+ "plan": {
+  "beats": [
+   {
+    "beat_idx": 0,
+    "target_seconds": 2.4,
+    "phrase_sync": true,
+    "caption_lines": [
+     "대파 냉동실에",
+     "절대 그냥 넣지 마세요."
+    ],
+    "narration": "대파 냉동실에 절대 그냥 넣지 마세요.",
+    "primary": {
+     "video_id": "s1",
+     "start": 10.177,
+     "end": 14.715,
+     "seg_id": "grab_tiktok_26e468293ba6-2"
+    },
+    "alternates": [
+     {
+      "video_id": "s9",
+      "start": 4.333,
+      "end": 5.7,
+      "seg_id": "Dc-rzbHT2KI-5"
+     },
+     {
+      "video_id": "s9",
+      "start": 8.933,
+      "end": 11.067,
+      "seg_id": "Dc-rzbHT2KI-9"
+     },
+     {
+      "video_id": "s9",
+      "start": 14.933,
+      "end": 15.13,
+      "seg_id": "Dc-rzbHT2KI-14"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s1",
+      "start": 16.07,
+      "end": 16.99,
+      "seg_id": "film_s1_16.07_16.99"
+     },
+     {
+      "video_id": "s7",
+      "start": 18.867,
+      "end": 23.567,
+      "seg_id": "grab_xiaohongshu_5412e8a2d653-4"
+     }
+    ]
+   },
+   {
+    "beat_idx": 1,
+    "target_seconds": 3.7,
+    "phrase_sync": true,
+    "caption_lines": [
+     "얼렸다가 흐물거리는 식감 때문에",
+     "결국 다 버려본 적 있으시죠?"
+    ],
+    "narration": "얼렸다가 흐물거리는 식감 때문에 결국 다 버려본 적 있으시죠?",
+    "primary": {
+     "video_id": "s9",
+     "start": 6.667,
+     "end": 8.033,
+     "seg_id": "Dc-rzbHT2KI-7"
+    },
+    "alternates": [
+     {
+      "video_id": "s2",
+      "start": 12.914,
+      "end": 15.82,
+      "seg_id": "grab_tiktok_cd7618270128-5"
+     },
+     {
+      "video_id": "s9",
+      "start": 23.133,
+      "end": 25.3,
+      "seg_id": "Dc-rzbHT2KI-21"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 2.567,
+      "end": 3.967,
+      "seg_id": "grab_tiktok_397baa0007e1-2"
+     },
+     {
+      "video_id": "s4",
+      "start": 5.0,
+      "end": 6.133,
+      "seg_id": "grab_tiktok_397baa0007e1-4"
+     }
+    ]
+   },
+   {
+    "beat_idx": 2,
+    "target_seconds": 2.9,
+    "phrase_sync": true,
+    "caption_lines": [
+     "비닐팩에 대파 넣고",
+     "이거 한스푼 넣어서",
+     "흔들어주세요."
+    ],
+    "narration": "비닐팩에 대파 넣고 이거 한스푼 넣어서 흔들어주세요.",
+    "primary": {
+     "video_id": "s8",
+     "start": 13.033,
+     "end": 15.967,
+     "seg_id": "grab_xiaohongshu_1a34fa64b27a-8"
+    },
+    "alternates": [
+     {
+      "video_id": "s5",
+      "start": 33.233,
+      "end": 38.233,
+      "seg_id": "grab_tiktok_18744dd23121-13"
+     },
+     {
+      "video_id": "s5",
+      "start": 48.167,
+      "end": 50.505011,
+      "seg_id": "grab_tiktok_18744dd23121-17"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s5",
+      "start": 48.167,
+      "end": 50.505011,
+      "seg_id": "grab_tiktok_18744dd23121-17"
+     },
+     {
+      "video_id": "s6",
+      "start": 24.817,
+      "end": 30.033,
+      "seg_id": "grab_xiaohongshu_a15befeb0641-6"
+     },
+     {
+      "video_id": "s8",
+      "start": 16.867,
+      "end": 17.8,
+      "seg_id": "grab_xiaohongshu_1a34fa64b27a-10"
+     }
+    ]
+   },
+   {
+    "beat_idx": 3,
+    "target_seconds": 3.1,
+    "phrase_sync": true,
+    "caption_lines": [
+     "와, 한 달 뒤에도",
+     "서로 안 붙고",
+     "사르르 떨어지는 거 있죠."
+    ],
+    "narration": "와, 한 달 뒤에도 서로 안 붙고 사르르 떨어지는 거 있죠.",
+    "primary": {
+     "video_id": "s6",
+     "start": 53.856,
+     "end": 58.933333,
+     "seg_id": "grab_xiaohongshu_a15befeb0641-12"
+    },
+    "alternates": [
+     {
+      "video_id": "s2",
+      "start": 8.242,
+      "end": 12.0,
+      "seg_id": "grab_tiktok_cd7618270128-3"
+     },
+     {
+      "video_id": "s2",
+      "start": 4.484,
+      "end": 6.53,
+      "seg_id": "grab_tiktok_cd7618270128-2"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s6",
+      "start": 53.856,
+      "end": 58.933333,
+      "seg_id": "grab_xiaohongshu_a15befeb0641-12"
+     },
+     {
+      "video_id": "s2",
+      "start": 8.242,
+      "end": 12.0,
+      "seg_id": "grab_tiktok_cd7618270128-3"
+     },
+     {
+      "video_id": "s2",
+      "start": 4.484,
+      "end": 8.242,
+      "seg_id": "grab_tiktok_cd7618270128-2"
+     }
+    ]
+   },
+   {
+    "beat_idx": 4,
+    "target_seconds": 3.5,
+    "phrase_sync": true,
+    "caption_lines": [
+     "더 대박인 건",
+     "알싸한 파향까지",
+     "그대로 보존되더라고요"
+    ],
+    "narration": "더 대박인 건 알싸한 파향까지 그대로 보존되더라고요.",
+    "primary": {
+     "video_id": "s8",
+     "start": 21.2,
+     "end": 24.767,
+     "seg_id": "grab_xiaohongshu_1a34fa64b27a-12"
+    },
+    "alternates": [
+     {
+      "video_id": "s9",
+      "start": 21.5,
+      "end": 23.133,
+      "seg_id": "Dc-rzbHT2KI-20"
+     },
+     {
+      "video_id": "s9",
+      "start": 20.567,
+      "end": 21.5,
+      "seg_id": "Dc-rzbHT2KI-19"
+     },
+     {
+      "video_id": "s9",
+      "start": 19.633,
+      "end": 20.567,
+      "seg_id": "Dc-rzbHT2KI-18"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s8",
+      "start": 21.2,
+      "end": 24.767,
+      "seg_id": "grab_xiaohongshu_1a34fa64b27a-12"
+     },
+     {
+      "video_id": "s2",
+      "start": 8.242,
+      "end": 12.0,
+      "seg_id": "grab_tiktok_cd7618270128-3"
+     },
+     {
+      "video_id": "s3",
+      "start": 14.3,
+      "end": 19.3,
+      "seg_id": "grab_tiktok_714903a0db8f-4"
+     }
+    ]
+   },
+   {
+    "beat_idx": 5,
+    "target_seconds": 2.3,
+    "phrase_sync": true,
+    "caption_lines": [
+     "궁금하면 댓글에",
+     "'대파' 남겨주세요~"
+    ],
+    "narration": "궁금하면 댓글에 '대파' 남겨주세요~",
+    "primary": {
+     "video_id": "s6",
+     "start": 36.333,
+     "end": 42.633,
+     "seg_id": "grab_xiaohongshu_a15befeb0641-8"
+    },
+    "alternates": [
+     {
+      "video_id": "s2",
+      "start": 12.914,
+      "end": 15.82,
+      "seg_id": "grab_tiktok_cd7618270128-5"
+     },
+     {
+      "video_id": "s2",
+      "start": 2.865,
+      "end": 3.46,
+      "seg_id": "grab_tiktok_cd7618270128-1"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s2",
+      "start": 2.865,
+      "end": 4.484,
+      "seg_id": "grab_tiktok_cd7618270128-1"
+     },
+     {
+      "video_id": "s8",
+      "start": 21.2,
+      "end": 24.767,
+      "seg_id": "grab_xiaohongshu_1a34fa64b27a-12"
+     }
+    ]
+   }
+  ]
+ }
+}

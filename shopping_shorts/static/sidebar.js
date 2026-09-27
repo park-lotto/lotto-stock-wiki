@@ -399,8 +399,8 @@
     var m = document.createElement("div");
     m.id = "ss-pw-modal";
     m.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;font-family:'Malgun Gothic',system-ui,sans-serif";
-    m.innerHTML = '<div style="background:#16161c;border:1px solid #2a2a30;border-radius:16px;padding:28px 26px;max-width:340px;text-align:center;color:#e8e8ea">' +
-      '<div style="font-size:40px">🔒</div>' +
+    m.innerHTML = '<div style="background:#16161c;border:1px solid #2a2a30;border-radius:16px;padding:28px 26px;max-width:340px;max-height:90vh;overflow-y:auto;box-sizing:border-box;margin:12px;text-align:center;color:#e8e8ea">' +
+      '<div style="font-size:40px">' + escHtml(opts.icon || "🔒") + '</div>' +
       '<div style="font-size:18px;font-weight:800;margin:10px 0 6px">' + escHtml(opts.title || "무료 체험이 끝났어요") + '</div>' +
       '<div style="font-size:14px;color:#b8b8c0;line-height:1.6">' +
         // 줄바꿈(\n)은 <br>로 — escHtml 먼저 하고 바꾼다(순서 반대면 태그가 escape된다).
@@ -570,7 +570,8 @@
       if (d.level === "ranking_only") _pwLockSidebar();
       else if (typeof d.days_left === "number" && d.days_left >= 0 && d.plan !== "pro") _pwBanner(d.days_left);
       _payPrompt(d);     // 미결제 회원에게 결제 안내 팝업(하루 1회)
-    }).catch(function () {});
+      window.__ssMeDone = true;   // 제미니 키 안내가 이 뒤에 뜬다(결제 팝업과 서로 지우지 않게)
+    }).catch(function () { window.__ssMeDone = true; });
   }
 
   // ── 결제 안내 팝업 (2026-08-23, 사장님 요청) ──────────────────────
@@ -596,6 +597,67 @@
       });
     }, 900);   // 화면이 다 그려진 뒤에 띄운다(로딩 중 겹쳐 보이지 않게)
   }
+  // ── 제미니 키 안내 (2026-09-25, 사장님 "회원안내까지 / 몇 개 충분히 등록 당부") ──────
+  // 공용 풀에 선불 소진·월 한도·할당량 0·무효 키가 섞여 계속 불렸는데 회원 화면엔 '● 정상'이었다.
+  // ★판정·문구는 서버가 준다(/api/settings/gemini_health ← key_vault 판정 + gemini_keyhealth 문구).
+  //   화면이 이유를 스스로 정하면 두 벌이 된다(0순위-B).
+  //   - has_dead  → 교체·확인 안내 팝업, 하루 1회
+  //   - few_keys  → 예비 키 당부 팝업, 3일에 1회(키를 아예 안 낸 회원에겐 서버가 false를 준다)
+  //   - 설정 화면에선 안 띄운다 — 거기엔 키마다 이유·해결법이 이미 펼쳐져 있다.
+  // ★반박 검토(2026-09-25)로 고친 것:
+  //   ① 본문이 길어 휴대폰에서 [나중에]가 화면 밖으로 잘렸다 → 키별 제목 + 짧은 당부만, 해결법은 설정 화면
+  //   ② /api/me(결제 안내)보다 먼저 떠서 결제 팝업이 이걸 지우면 그날은 못 봤다 → 결제 쪽이 끝난 뒤에 띄운다
+  //   ③ 띄우기 전에 '오늘 봤음'을 적었다 → 실제로 띄운 뒤에만 적는다. 결제 팝업이 계속 떠 있으면 이번엔 건너뛴다
+  var _GKH_DEAD_KEY = "ss_gkh_dead_day", _GKH_FEW_KEY = "ss_gkh_few_ts";
+  function initGeminiKeyHealth() {
+    if (typeof window === "undefined" || !window.localStorage) return;
+    if (/^\/settings/.test(location.pathname || "")) return;
+    var _f = window.fetch || (typeof fetch === "function" ? fetch : null);
+    if (!_f) return;
+    var waited = 0;
+    (function afterMe() {                      // 결제 안내(_payPrompt, /api/me 뒤 0.9초)가 먼저
+      if (!window.__ssMeDone && waited < 8000) { waited += 250; setTimeout(afterMe, 250); return; }
+      setTimeout(run, 1400);
+    })();
+    function run() {
+      _f("/api/settings/gemini_health").then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          var h = d && d.health;
+          if (!h || !h.keys) return;
+          var opts = null, mark = null;
+          if (h.has_dead) {
+            var today = new Date().toISOString().slice(0, 10);
+            try { if (localStorage.getItem(_GKH_DEAD_KEY) === today) return; } catch (e) {}
+            var dead = h.keys.filter(function (k) { return k.reason; });
+            var lines = dead.map(function (k) { return "• " + (k.label || "키") + " — " + (k.title || ""); }).join("\n");
+            opts = { icon: "⚠️", title: h.headline || ("등록하신 제미니 키 " + dead.length + "개가 멈췄어요"),
+                     body: lines + "\n\n해결 방법은 설정 화면에서 키마다 볼 수 있어요.\n\n" + (h.tip_short || ""),
+                     hideContact: true, link: "/settings#keys", linkText: "🔑 키 확인하러 가기", closeLabel: "나중에" };
+            mark = function () { try { localStorage.setItem(_GKH_DEAD_KEY, today); } catch (e) {} };
+          } else if (h.few_keys) {
+            var last = 0;
+            try { last = parseInt(localStorage.getItem(_GKH_FEW_KEY) || "0", 10) || 0; } catch (e) {}
+            if (Date.now() - last < 3 * 86400000) return;
+            opts = { icon: "🔑", title: "제미니 키, 예비로 2~3개 등록해 두세요",
+                     body: "지금 쓸 수 있는 키 " + (h.n_usable || 0) + "개\n\n" + (h.tip_short || ""),
+                     hideContact: true, link: "/settings#keys", linkText: "🔑 키 추가하러 가기", closeLabel: "나중에" };
+            mark = function () { try { localStorage.setItem(_GKH_FEW_KEY, String(Date.now())); } catch (e) {} };
+          }
+          if (!opts) return;
+          var tries = 0;
+          (function show() {
+            var ex = document.getElementById("ss-pw-modal");
+            if (ex && ex.style.display !== "none") {
+              if (tries++ < 60) { setTimeout(show, 2000); return; }
+              return;                           // 결제 팝업을 읽는 중이면 덮지 않는다 — 다음 방문에 다시
+            }
+            _pwModal(opts);
+            mark();
+          })();
+        }).catch(function () {});
+    }
+  }
+
   // 유료 API가 402(등급부족)를 주면 만료 안내 모달 — 페이지 내 어떤 유료버튼이든 공통 처리.
   //
   // ★모달은 **사장님이 뭔가를 눌러서 난 402**에만 뜬다(2026-08-21 근본 수정).
@@ -871,12 +933,14 @@
     document.addEventListener("DOMContentLoaded", mountWorks);
     document.addEventListener("DOMContentLoaded", initPaywall);
     document.addEventListener("DOMContentLoaded", initSignupAlert);
+    document.addEventListener("DOMContentLoaded", initGeminiKeyHealth);
   } else {
     mount();
     __ssPaintTheme();
     mountWorks();
     initPaywall();
     initSignupAlert();
+    initGeminiKeyHealth();
   }
 })();
 
@@ -1046,12 +1110,13 @@
       '<div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #1e2a24"><b style="font-size:15px">🛒 쿠팡에 이 제품이 있나요?</b><span style="font-size:11px;color:#8fa39a">— 있으면 그 자리에서 내 추적 링크까지</span><span style="flex:1"></span><button onclick="window.ssCoupangFind.close()" style="background:none;border:none;color:#8fa39a;font-size:18px;cursor:pointer">✕</button></div>' +
       '<div style="padding:12px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="cfQuery" value="' + _cfEsc(keyword || "") + '" placeholder="제품명(예: 의류 태깅건)" style="flex:1;min-width:200px;padding:9px 10px;border-radius:9px;border:1px solid #1e2a24;background:#0c1210;color:#e6efe9;font-size:13px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();window.ssCoupangFind.search();}">' +
       '<button onclick="window.ssCoupangFind.search()" style="padding:9px 16px;border-radius:9px;border:none;background:linear-gradient(180deg,#37e0bd,#2bd4b0);color:#04120e;font-weight:800;cursor:pointer">찾기</button>' +
-      (opts.shortcode ? '<button id="cfDeep" onclick="window.ssCoupangFind.deep()" title="영상 대본을 추출해 제품을 정확히 특정합니다(시간이 조금 걸립니다)" style="padding:9px 12px;border-radius:9px;border:1px solid #b8860b;background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-weight:700;cursor:pointer">🎬 영상 보고 정확히</button>' : '') +
+      (opts.shortcode ? '<button id="cfDeep" onclick="window.ssCoupangFind.deep()" title="영상 대본을 추출해(20~60초, 한 번 하면 캐시) 대본·캡션 근거로 제품을 다시 특정합니다" style="padding:9px 12px;border-radius:9px;border:1px solid #b8860b;background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-weight:700;cursor:pointer">🎬 대본으로 다시 찾기</button>' : '') +
       '<a id="cfOut" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#37e0bd">쿠팡에서 직접 ↗</a><span id="cfMsg" style="font-size:12px;color:#8fa39a;width:100%"></span><div id="cfChips" style="width:100%"></div></div>' +
       '<div id="cfResults" style="padding:0 14px 14px"></div></div>';
     wrap.addEventListener("click", function (e) { if (e.target === wrap) _cfClose(); });
     document.body.appendChild(wrap);
     if (keyword) _cfSearch(keyword);
+    else if (opts.deep && _cfState.sc) _cfDeep();     /* 🎬 쿠팡 대본검색(2026-09-26): 대본부터 뽑고 판독 */
     else if (opts.noProduct) {
       /* ★이미 "살 물건 없음"으로 판정된 카드(2026-09-05) — 같은 판독을 또 돌려
          기다리게 하지 않는다. 이유를 바로 보여주고 직접 칠 수 있게 둔다. */
@@ -1062,7 +1127,7 @@
     else { var q = _cfEl("cfQuery"); if (q) q.focus(); }
   }
   /* 숏템파워검색처럼 사람이 안 친다(2026-09-04 사장님) — 썸네일 → 제품명 → 첫 후보로 검색 → 링크. */
-  /* 🎬 영상 보고 정확히 — 대본을 추출(기존 /api/extract_script, 캐시되면 무료)한 뒤 근거 우선 판독을 다시 돈다. */
+  /* 🎬 대본으로 다시 찾기(옛 이름 '영상 보고 정확히') — 대본을 추출(기존 /api/extract_script, 캐시되면 무료)한 뒤 근거 우선 판독을 다시 돈다. */
   function _cfDeep() {
     if (!_cfState.sc) return;
     var b = _cfEl("cfDeep"); if (b) { b.disabled = true; b.textContent = "🎬 대본 추출 중…"; }
@@ -1070,11 +1135,11 @@
     fetch("/api/extract_script?shortcode=" + encodeURIComponent(_cfState.sc), { method: "POST" })
       .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
       .then(function (d) {
-        if (b) { b.disabled = false; b.textContent = "🎬 영상 보고 정확히"; }
+        if (b) { b.disabled = false; b.textContent = "🎬 대본으로 다시 찾기"; }
         if (!d || !d.ok) { _cfRender("대본 추출 실패: " + ((d && d.error) || "") + " — 제품명을 직접 넣어 찾아보세요", "#ff8080"); return; }
         _cfIdentify();
       })
-      .catch(function () { if (b) { b.disabled = false; b.textContent = "🎬 영상 보고 정확히"; } _cfRender("네트워크 오류", "#ff8080"); });
+      .catch(function () { if (b) { b.disabled = false; b.textContent = "🎬 대본으로 다시 찾기"; } _cfRender("네트워크 오류", "#ff8080"); });
   }
   function _cfIdentify() {
     _cfRender("🔎 영상 근거(대본·캡션·썸네일)에서 제품을 알아내는 중… (3~8초)");
@@ -1206,14 +1271,9 @@
           if (!btn) return;
           var name = pm[sc];
           if (!name) {
-            /* ★살 물건이 없는 영상(맛집·장소·방법 알려주기 등) — 회색으로 내려
-               헛클릭을 막는다(2026-09-05 실측: 10건 중 4건이 이런 영상이었다).
-               ⚠️버튼을 없애지는 않는다 — 판독이 틀렸을 때 사장님이 직접 찾을 길은 남긴다. */
-            btn.textContent = "🛒 살 물건 없음";
-            btn.setAttribute("data-noproduct", "1");
-            btn.style.opacity = "0.45";
-            btn.style.filter = "grayscale(1)";
-            btn.title = "이 영상엔 팔 만한 물건이 안 보입니다(장소·방법 소개 등). 눌러서 직접 찾아볼 수는 있습니다.";
+            /* ★"살 물건 없음" 회색 처리는 뺐다(2026-09-26 사장님). 썸네일·캡션만 본 판정이라
+               말로만 소개하는 제품(소스·재료)을 자주 놓쳤다 — 버튼은 그대로 두고, 누르면
+               근거 판독을 다시 돌린다. 대본이 필요한 건 🎬 쿠팡 대본검색이 맡는다. */
             return;
           }
           btn.textContent = "🛒 " + (name.length > 10 ? name.slice(0, 10) + "…" : name) + " 쿠팡검색"; btn.setAttribute("data-product", name); btn.title = "알아낸 제품: " + name + " — 누르면 쿠팡 검색과 내 추적 링크까지";
@@ -1226,6 +1286,8 @@
   window.ssCoupangFind.link = _cfLink;
   window.ssCoupangFind.close = _cfClose;
   window.ssCoupangFind.deep = _cfDeep;
+  /* 카드의 🎬 쿠팡 대본검색 — 같은 창을 열되 대본 추출을 먼저 돈다(판정 없이 바로) */
+  window.ssCoupangFind.script = function (opts) { _cfOpen('', Object.assign({}, opts || {}, { deep: true })); };
 
   window.ssOpenBugReport = function () {
     css();

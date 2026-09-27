@@ -275,6 +275,15 @@ class _MeteredModels:
                     model=str(model), dur_ms=int((time.monotonic() - t0) * 1000))
             except Exception as ee:    # noqa: BLE001 — 관측이 본작업을 죽이면 안 된다
                 log.warning("usage_meter: 실패 관측 기록 실패(무시) %r", ee)
+            # ★쓸 수 없는 키(선불 소진·월 한도·할당량 0·계정 사망)는 여기서 뺀다(2026-09-25).
+            #   호출부 30여 곳의 재시도 규칙이 제각각이라 거기서 잠그게 하면 반드시 빠지는 곳이
+            #   생긴다(실측: 402 키가 잠금 0번으로 수천 번 불렸다). 판정은 key_vault 한 곳.
+            if self._key:
+                try:
+                    from pipeline.atoms import key_vault as _kv
+                    _kv.note_failure(self._key, exc)
+                except Exception as ee:    # noqa: BLE001 — 표시 실패가 본작업을 죽이면 안 된다
+                    log.warning("usage_meter: 키 정지 표시 실패(무시) %r", ee)
             raise                      # 원래 예외 그대로 — 호출부 동작 불변
         try:
             um = getattr(resp, "usage_metadata", None)
@@ -294,6 +303,12 @@ class _MeteredModels:
                 model=str(model), dur_ms=int((time.monotonic() - t0) * 1000))
         except Exception as ee:        # noqa: BLE001 — 관측이 본작업을 죽이면 안 된다
             log.warning("usage_meter: 성공 관측 기록 실패(무시) %r", ee)
+        if self._key:                  # 정지됐던 키가 다시 됐으면(충전·한도 상향) 표시를 지운다
+            try:
+                from pipeline.atoms import key_vault as _kv
+                _kv.note_success(self._key)
+            except Exception as ee:    # noqa: BLE001
+                log.warning("usage_meter: 키 정지 해제 실패(무시) %r", ee)
         return resp
 
     def __getattr__(self, name):       # count_tokens 등은 그대로 통과

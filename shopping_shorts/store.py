@@ -220,6 +220,105 @@ def _ensure_screen_time(plan, store, job_id):
         return plan
 
 
+# ── 칸 번호(beat_idx) 겹침 — 판단은 여기 한 곳(0순위-B) ─────────────────────────
+# beat_idx는 "고유하되 **연속일 필요 없는** 칸 ID"다. 칸 삭제(app beat/delete)는 일부러
+# 다시 매기지 않는다 — mp3 이름(beat_{idx}_{hash}.mp3)·tts_paths·청소본 beat_keys가 전부
+# 번호로 짝을 찾기 때문이다. 그러니 **빠진 번호는 정상**이고 건드리면 과금이 난다
+# (TTS 재합성·청소본 coverage 깨짐). 고칠 것은 **겹친 번호뿐**이다:
+#   렌더가 tts_paths = {beat_idx: tts_path}로 모으므로 겹치면 마지막 칸 음성만 남아
+#   "CTA 음성 반복 + 한 칸 음성 누락"이 된다(09-06 이전 _rebuild_beats_by_lines가
+#   번호를 복제한 job 5개, 파형으로 확인).
+
+def beat_idx_duplicates(plan):
+    """겹친 beat_idx 목록(작은 번호부터). 겹침이 없으면 []. **순수 함수** — plan을 안 바꾼다.
+    렌더 안전망(mix_pipeline)이 부르는 판정 — 겹침 기준을 따로 적지 말고 이걸 불러라."""
+    seen, dup = set(), set()
+    for b in (plan or {}).get("beats") or []:
+        if not isinstance(b, dict):
+            continue
+        k = b.get("beat_idx")
+        if k in seen:
+            dup.add(k)
+        seen.add(k)
+    return sorted(dup, key=lambda x: (not isinstance(x, int), str(x) if not isinstance(x, int) else x))
+
+
+def dedupe_beat_idx(plan):
+    """겹친 beat_idx만 새 번호로 바꾼다(제자리 수정). 반환: 번호가 바뀐 칸 수(겹침 없으면 0).
+
+    규칙:
+      - 같은 번호의 **첫 칸은 그대로**, 뒤에 나온 겹친 칸만 (지금 최대 번호+1)부터 칸 순서대로
+        새 번호를 받는다. 겹치지 않은 칸·빠진 번호는 한 칸도 안 건드린다(과금 파급 최소).
+        (실측 5 job 중 4개는 겹침이 꼬리라 결과가 0..n-1과 같다.)
+      - 번호가 바뀐 칸의 tts_path·tts_ver를 버린다 — 파일명에 옛 번호가 들어 있어
+        다음 음성 단계가 새 번호로 다시 만들게 한다(옛 mp3를 물고 가면 그게 "위 대사 반복").
+      - plan["scene_lab"]["beats"](화면 편성 payload)의 번호도 **같은 매핑**으로 바꾼다.
+        겹친 번호는 "몇 번째로 나온 그 번호"(출현 순서)로 짝짓는다 — 화면 payload도 칸
+        순서대로 저장되기 때문이다. 옛 칸에 없던 번호(payload가 이미 0..n-1인 job)는 그대로 둔다.
+    """
+    beats = (plan or {}).get("beats")
+    if not isinstance(beats, list) or not beat_idx_duplicates(plan):
+        return 0
+    ints = [b.get("beat_idx") for b in beats if isinstance(b, dict) and isinstance(b.get("beat_idx"), int)]
+    nxt = (max(ints) + 1) if ints else 0
+    occ, mapping, changed = {}, {}, 0
+    for b in beats:
+        if not isinstance(b, dict):
+            continue
+        v = b.get("beat_idx")
+        k = occ.get(v, 0)
+        occ[v] = k + 1
+        if k == 0 and v is not None:
+            continue                       # 그 번호의 첫 칸 — 그대로
+        mapping[(v, k)] = nxt
+        b["beat_idx"] = nxt
+        nxt += 1
+        b.pop("tts_path", None)
+        b.pop("tts_ver", None)
+        changed += 1
+    lab = plan.get("scene_lab")
+    if changed and isinstance(lab, dict) and isinstance(lab.get("beats"), list):
+        locc = {}
+        for eb in lab["beats"]:
+            if not isinstance(eb, dict):
+                continue
+            v = eb.get("beat_idx")
+            k = locc.get(v, 0)
+            locc[v] = k + 1
+            if (v, k) in mapping:
+                eb["beat_idx"] = mapping[(v, k)]
+    return changed
+
+
+def _dedupe_on_save(plan, job_id):
+    """저장 출구에서 겹침 정리 + 알림. 실패해도 저장은 막지 않는다(fail-open)."""
+    try:
+        before = beat_idx_duplicates(plan)
+        n = dedupe_beat_idx(plan)
+    except Exception as e:      # noqa: BLE001
+        print(f"[beat_idx] 겹침 정리 실패 job={job_id}: {e!r}", file=sys.stderr)
+        return 0
+    if not n:
+        return 0
+    print(f"[beat_idx] 겹침 정리 job={job_id} 칸 {n}개 (겹친 번호 {before})", file=sys.stderr)
+    try:
+        import traceback
+        from shopping_shorts import ops_alert as _oa
+        who = " <- ".join(f"{Path(f.filename).name}:{f.lineno}:{f.name}"
+                          for f in reversed(traceback.extract_stack(limit=8)[:-1]))
+        _oa.raise_alert(
+            f"beat_idx_dup:{job_id}",
+            f"칸 번호 겹침을 저장 직전에 정리함 — job {job_id} 칸 {n}개 (겹친 번호 {before})",
+            f"겹친 번호 {before} → 뒤 칸 {n}개에 새 번호, 그 칸 음성은 버림(다음 음성 단계에서 재합성)\n"
+            f"저장한 경로: {who}",
+            grade=_oa.GRADE_OPS, signature=f"{before}|{n}",
+            auto="번호를 정리하고 그 칸 음성을 버렸다 — 다음 렌더가 새로 만든다",
+            todo="저장한 경로(상세)가 번호를 복제하는지 확인")
+    except Exception:      # noqa: BLE001 — 알림 실패가 저장을 막지 않는다
+        pass
+    return n
+
+
 def style_spine_rank(sp):
     """대본 스타일 추천 순서 — **이 함수 하나가 정본이다**(0순위-B).
 
@@ -1172,6 +1271,13 @@ class Store:
                 c.execute("ALTER TABLE discovered_channels ADD COLUMN category TEXT")
             except sqlite3.OperationalError:
                 pass  # 이미 존재
+            # 판매채널(프로필 외부 링크, 2026-09-26) — 엑셀 채널의 '인포크링크' 칸과 같은 뜻.
+            #   발굴·등록 채널은 엑셀에 없어 카드에 🛒판매채널이 안 떴다. 프로필을 한 번 열 때
+            #   같은 응답에 있는 링크를 여기 넣어 두면 collect union 메타(discovered_channels())가 싣는다.
+            try:
+                c.execute("ALTER TABLE discovered_channels ADD COLUMN inpock TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
             # "영상 안 올라오는" 죽은 채널 — 엑셀 원본은 안 건드리고 여기에 넣어
             # collect()가 추적에서 제외한다(소프트 삭제, 복구 가능, 2026-07-12).
             # 사람이 지정한 영상 카테고리(2026-09-14 사장님 "지정되면 그쪽 카테고리로
@@ -1367,6 +1473,8 @@ class Store:
                 ("clean_video_path", "TEXT"),
                 ("clean_tier", "TEXT"),    # 자막제거 등급 'basic'|'pro'(Smart Pro). 2026-09-16.
                                            # ★NULL = 기본 — 옛 job은 손대지 않아도 지금까지와 같다.
+                ("clean_cuts_json", "TEXT"),  # 자막제거할 장면(컷 키 목록). 2026-09-26.
+                                              # ★NULL = 전체 — 옛 job은 지금까지와 같다.
                 ("given_script", "TEXT"),  # 영상제작 2단계 given_script 모드(2026-07-13)
                 ("headcopy_json", "TEXT"),  # 영상제작 5단계 꾸미기 헤드카피(2026-07-13)
                 ("caption_style_json", "TEXT"),  # 영상제작 5단계 자막 스타일(2026-07-14)
@@ -1916,29 +2024,42 @@ class Store:
         return json.loads(row[0]), row[1]
 
     # ── 발굴/정리 채널 관리(2026-07-12) ──
-    def add_discovered(self, username, name="", category=""):
+    def add_discovered(self, username, name="", category="", inpock=""):
         """발굴 채널을 벤치마크 목록에 추가(중복 시 이름 갱신). 제외목록에 있었다면 해제.
 
         category: 발굴 태그에서 유추한 카테고리(2026-07-30). 이미 값이 있으면 덮지 않는다
-        — 먼저 붙은 판정이 대개 그 채널을 찾아낸 태그라 더 정확하고, 사람이 고친 값도 지켜야 한다."""
+        — 먼저 붙은 판정이 대개 그 채널을 찾아낸 태그라 더 정확하고, 사람이 고친 값도 지켜야 한다.
+        inpock: 프로필 외부 링크(2026-09-26). 빈값으로는 있는 값을 지우지 않는다."""
         with self._conn() as c:
             c.execute(
-                "INSERT INTO discovered_channels(username, name, added_at, category) "
-                "VALUES(?,?,datetime('now'),?) ON CONFLICT(username) DO UPDATE SET "
-                "name=excluded.name, category=COALESCE(NULLIF(category,''), excluded.category)",
-                (username, name or username, category or ""),
+                "INSERT INTO discovered_channels(username, name, added_at, category, inpock) "
+                "VALUES(?,?,datetime('now'),?,?) ON CONFLICT(username) DO UPDATE SET "
+                "name=excluded.name, category=COALESCE(NULLIF(category,''), excluded.category), "
+                "inpock=COALESCE(NULLIF(excluded.inpock,''), inpock)",
+                (username, name or username, category or "", inpock or ""),
             )
             c.execute("DELETE FROM removed_channels WHERE username=?", (username,))
 
+    def set_discovered_inpock(self, username, inpock):
+        """발굴 채널의 판매채널 링크만 갱신(등록돼 있는 채널만). 갱신된 행 수를 돌려준다."""
+        key = (username or "").strip().lstrip("@")
+        if not key or not (inpock or "").strip():
+            return 0
+        with self._conn() as c:
+            cur = c.execute("UPDATE discovered_channels SET inpock=? WHERE lower(username)=lower(?)",
+                            (inpock.strip()[:500], key))
+            return cur.rowcount
+
     def discovered_channels(self):
         """추가된 발굴 채널 [{name, username, followers, inpock, added_at}] (collect union용 메타 형태).
-        added_at은 관리페이지 표시용 — collect union 소비자는 이 키를 무시한다(추가 키라 무해)."""
+        added_at은 관리페이지 표시용 — collect union 소비자는 이 키를 무시한다(추가 키라 무해).
+        inpock(2026-09-26): 프로필 외부 링크 → 카드의 🛒판매채널(엑셀 채널과 같은 칸)."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT username, name, added_at, COALESCE(category,'') "
+                "SELECT username, name, added_at, COALESCE(category,''), COALESCE(inpock,'') "
                 "FROM discovered_channels ORDER BY added_at DESC"
             ).fetchall()
-        return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": "",
+        return [{"name": r[1] or r[0], "username": r[0], "followers": 0, "inpock": r[4] or "",
                  "added_at": r[2] or "", "category": r[3]} for r in rows]
 
     # ── 채널 릴스 전체 아카이브(2026-08-03) ───────────────────────────────
@@ -5250,7 +5371,7 @@ class Store:
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
                 "scene_first, backbone_main, clean_regions_json, product_json, "
-                "mix_charged, cta_cut_sec, clean_tier "
+                "mix_charged, cta_cut_sec, clean_tier, clean_cuts_json "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -5287,6 +5408,8 @@ class Store:
             "cta_cut_sec": row[37],
             # 자막제거 등급. None = 기본(옛 job 포함). 해석은 mix_pipeline.clean_tier_of 한 곳.
             "clean_tier": row[38],
+            # 자막제거할 장면(컷 키). None = 전체. 해석은 mix_pipeline.clean_selection_of 한 곳.
+            "clean_cuts": json.loads(row[39]) if row[39] else None,
         }
 
     def list_recent_mix_jobs(self, customer_id=LEGACY_CUSTOMER_ID, limit=50):
@@ -5351,6 +5474,10 @@ class Store:
         if "clean_tier" in fields:
             cols.append("clean_tier=?")
             vals.append(fields["clean_tier"] or None)
+        if "clean_cuts" in fields:
+            cols.append("clean_cuts_json=?")
+            vals.append(json.dumps(fields["clean_cuts"], ensure_ascii=False)
+                        if fields["clean_cuts"] else None)
         if "thumbnail" in fields:
             cols.append("thumbnail_json=?")
             vals.append(json.dumps(fields["thumbnail"], ensure_ascii=False)
@@ -5381,6 +5508,9 @@ class Store:
         #     '화면 길이 ≥ 대사 길이'를 만족한다. 실패해도 저장은 막지 않는다(fail-open).
         if fields.get("edit_plan"):
             fields = dict(fields, edit_plan=_ensure_screen_time(fields["edit_plan"], self, job_id))
+            # ★칸 번호 겹침도 같은 단일 출구에서 정리한다(2026-09-27) — 어떤 경로가 번호를
+            #   복제해도 저장된 편성엔 겹침이 없다. 빠진 번호는 안 건드린다(dedupe_beat_idx).
+            _dedupe_on_save(fields["edit_plan"], job_id)
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")
@@ -7759,8 +7889,9 @@ class Store:
     # ── 사용자별 API 키(2026-08-17, BYOK) ──
     # 평문은 이 클래스 밖으로 나가는 경로가 get_customer_keys_plain 하나뿐이다.
     # 화면용 list_customer_keys는 key_enc를 아예 안 실어 보낸다.
-    def add_customer_key(self, customer_id, service, plain):
-        """키 1개 저장. 이미 있는 키면 False(중복 거절)."""
+    def add_customer_key(self, customer_id, service, plain, label=None):
+        """키 1개 저장. 이미 있는 키면 False(중복 거절).
+        label: 화면 표시 문구를 직접 줄 때(vertex_sa처럼 JSON이라 앞뒤 가리기가 의미 없는 경우)."""
         from shopping_shorts import keycrypt
         import time
         try:
@@ -7770,7 +7901,7 @@ class Store:
                     "(customer_id, service, key_enc, key_hash, label, created_at) "
                     "VALUES(?,?,?,?,?,?)",
                     (int(customer_id), service, keycrypt.encrypt(plain),
-                     keycrypt.fingerprint(plain), keycrypt.mask(plain), int(time.time())),
+                     keycrypt.fingerprint(plain), label or keycrypt.mask(plain), int(time.time())),
                 )
             return True
         except sqlite3.IntegrityError as e:
@@ -7835,9 +7966,14 @@ class Store:
           저기는 "내 일은 내 키로", 여기는 "풀 전체". 섞지 마라.
         ★복호 실패 행은 _decrypt_rows가 로그를 남기고 건너뛴다.
         """
+        # ★꺼둔(off)·죽은(bad) 키는 풀에 다시 담지 않는다 — 제외형이라 기본값 'unknown'은 남는다.
+        #   2026-09-01 4a1ab252f에 넣었는데 41분 뒤 'auto: session changes'(83be8aa62)가 조용히
+        #   지웠다. 그 뒤 bad 3행(회원 315·57·603)이 매일 다시 불렸다(2026-09-25 실측).
+        #   test_pooled_keys_status.py가 이 줄을 지킨다 — 지워지면 게이트에서 막힌다.
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, key_enc FROM customer_keys WHERE service=? ORDER BY id",
+                "SELECT id, key_enc FROM customer_keys WHERE service=? "
+                "AND COALESCE(status,'') NOT IN ('off','bad') ORDER BY id",
                 (service,)).fetchall()
         return [plain for _kid, plain in self._decrypt_rows(rows, "pool", service)]
 

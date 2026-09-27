@@ -378,7 +378,11 @@ def _call_with_key_rotation(make_call, *, what=""):
       힌디어 영상의 text_ko가 통째로 비었고(429), 브리프도 같은 이유로 자주 비었다.
       _current_key_and_idx는 라운드로빈이라 부를 때마다 다음 키를 준다."""
     import sys as _sys
-    from shopping_shorts import comment_gen
+    from shopping_shorts import comment_gen, vertex_route
+    # ★Vertex 먼저(2026-09-25, 스위치 켠 계정만) — 실패·빈 결과면 아래 종전 키 회전 그대로.
+    _ok, _got = vertex_route.try_call("frame_script", make_call, what=what or "call")
+    if _ok:
+        return _got
     for model in TAG_MODELS:
         for attempt in range(2):
             key, _ = comment_gen._current_key_and_idx()
@@ -565,41 +569,53 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
             f"\n캡션(참고):{caption or '(없음)'}")
         parts = [prompt] + parts_img
         got = None
+
+        def _once(client, model, _b0=b0, _b1=b1, _parts=parts):
+            """한 묶음을 한 모델로 한 번 — 응답을 이번 묶음 기준 태그 목록으로. 쓸 태그가 없으면 None.
+            ★Vertex 경로와 키풀 경로가 **같은 해석**을 쓴다(0순위-B) — 여기 한 곳만 고친다."""
+            resp = client.models.generate_content(
+                model=model, contents=_parts,
+                config=types.GenerateContentConfig(response_mime_type="application/json"))
+            data = loads_lenient(resp.text)
+            raw = data.get("tags") if isinstance(data, dict) else data
+            # seg_no는 띠에 찍힌 전체 번호(#1부터) → 이번 묶음 기준으로 되돌린다. 묶음 밖 번호는 버려진다.
+            # ★모델이 묶음 **상대 번호**(1..k)로 답하면 되돌린 번호가 전부 범위 밖이 되어 12구간이 조용히 비었다
+            #   (2026-09-05 리뷰 M3). 원번호가 전부 1..k 안이고 되돌린 것이 전부 범위 밖이면 상대 번호로 본다.
+            nos = [t.get("seg_no") for t in (raw or []) if isinstance(t, dict) and t.get("seg_no") is not None]
+            try:
+                nos_i = [int(x) for x in nos]
+            except (TypeError, ValueError):
+                nos_i = []
+            relative = bool(nos_i) and _b0 > 0 and all(1 <= x <= (_b1 - _b0) for x in nos_i)
+            if relative:
+                print(f"frame_script._gemini_tag_frames: 묶음 {_b0+1}~{_b1} 응답이 상대 번호 — 그대로 해석",
+                      file=__import__('sys').stderr)
+            fixed = []
+            for t in (raw or []):
+                if isinstance(t, dict) and t.get("seg_no") is not None and not relative:
+                    try:
+                        t = dict(t, seg_no=int(t["seg_no"]) - _b0)
+                    except (TypeError, ValueError):
+                        pass
+                fixed.append(t)
+            tags = normalize_tags(fixed, _b1 - _b0)
+            return tags if any(tags) else None
+
+        # ★Vertex 먼저(2026-09-25, 스위치 켠 계정만) — 실패·빈 결과면 아래 종전 키 회전 그대로.
+        from shopping_shorts import vertex_route
+        _ok, _got = vertex_route.try_call("frame_script", _once, what=f"tag_frames {b0+1}~{b1}")
+        if _ok:
+            got = _got
         # ★묶음마다 키를 새로 고른다(2026-09-05) — _current_key_and_idx는 라운드로빈이라 부를 때마다 다음 키.
         #   종전엔 함수 시작에 한 번만 골라 한 영상의 모든 묶음이 같은 키를 때렸다(분당 한도·503 스파이크에 취약,
         #   실측 s3 133~280초 흔들림). 503/429면 같은 모델을 다른 키로 한 번 더 시도한 뒤 다음 모델로.
-        for model in TAG_MODELS:
+        for model in (() if got else TAG_MODELS):
             for attempt in range(2):
                 _k2, _ = comment_gen._current_key_and_idx()
                 client = comment_gen._client_for_key(_k2 or key)
                 try:
-                    resp = client.models.generate_content(
-                        model=model, contents=parts,
-                        config=types.GenerateContentConfig(response_mime_type="application/json"))
-                    data = loads_lenient(resp.text)
-                    raw = data.get("tags") if isinstance(data, dict) else data
-                    # seg_no는 띠에 찍힌 전체 번호(#1부터) → 이번 묶음 기준으로 되돌린다. 묶음 밖 번호는 버려진다.
-                    # ★모델이 묶음 **상대 번호**(1..k)로 답하면 되돌린 번호가 전부 범위 밖이 되어 12구간이 조용히 비었다
-                    #   (2026-09-05 리뷰 M3). 원번호가 전부 1..k 안이고 되돌린 것이 전부 범위 밖이면 상대 번호로 본다.
-                    nos = [t.get("seg_no") for t in (raw or []) if isinstance(t, dict) and t.get("seg_no") is not None]
-                    try:
-                        nos_i = [int(x) for x in nos]
-                    except (TypeError, ValueError):
-                        nos_i = []
-                    relative = bool(nos_i) and b0 > 0 and all(1 <= x <= (b1 - b0) for x in nos_i)
-                    if relative:
-                        print(f"frame_script._gemini_tag_frames: 묶음 {b0+1}~{b1} 응답이 상대 번호 — 그대로 해석",
-                              file=__import__('sys').stderr)
-                    fixed = []
-                    for t in (raw or []):
-                        if isinstance(t, dict) and t.get("seg_no") is not None and not relative:
-                            try:
-                                t = dict(t, seg_no=int(t["seg_no"]) - b0)
-                            except (TypeError, ValueError):
-                                pass
-                        fixed.append(t)
-                    tags = normalize_tags(fixed, b1 - b0)
-                    if any(tags):
+                    tags = _once(client, model)
+                    if tags:
                         got = tags
                     else:
                         print(f"frame_script._gemini_tag_frames: {model} 응답에 쓸 태그 없음 → 다음 모델",

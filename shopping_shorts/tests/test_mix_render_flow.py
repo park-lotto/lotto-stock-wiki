@@ -66,7 +66,7 @@ def test_render_on_uses_clean_sources(monkeypatch, tmp_path):
         open(out, "w").write("v"); return out
     monkeypatch.setattr(mp, "assemble", fake_assemble)
 
-    mp.run_render("j", str(tmp_path / "db"), str(tmp_path))
+    mp.run_render("j", str(tmp_path / "db"), str(tmp_path), confirm_clean=True, confirm_secs=None)   # 소스별 청소 초는 못 잼 → 확인만
     assert removed == ["orig.mp4"]
     assert seen["clean_fn"] is None
     assert list(seen["sources"].values())[0].endswith("clean_src_s0.mp4")
@@ -82,7 +82,7 @@ def test_render_on_no_key_fails(monkeypatch, tmp_path):
     monkeypatch.setattr(mp, "_vmake_keys", lambda store, customer_id=0: [])
     monkeypatch.setattr(mp, "assemble", lambda *a, **k: open(k.get("out") or a[3], "w").write("v"))
 
-    mp.run_render("j", str(tmp_path / "db"), str(tmp_path))
+    mp.run_render("j", str(tmp_path / "db"), str(tmp_path), confirm_clean=True, confirm_secs=None)
     assert _statuses(store)[-1] == "failed"
     # 새 문구: 벤더명(VMake) 없이 "설정이 완료되지 않았습니다"로 사유 전달
     assert any("설정" in (u.get("error") or "") for u in store.updates)

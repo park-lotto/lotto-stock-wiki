@@ -34,6 +34,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import merge_gate
+import video_gate as _video_gate
 
 BRANCH_PREFIX = "track/"
 MAIN_BRANCH = "main"
@@ -336,7 +337,7 @@ def _close_stage(repo, stage):
     run(["git", "worktree", "remove", "--force", str(stage)], repo)
 
 
-def finish(name, repo=BASE, gate=merge_gate, attempts=3):
+def finish(name, repo=BASE, gate=merge_gate, attempts=3, video_gate=None):
     merge_gate.make_output_safe()
     validate_name(name)
     wt = _preflight(name, repo)
@@ -348,7 +349,7 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3):
             run(["git", "fetch", "origin"], repo)
             stage = _open_stage(repo, name)
             try:
-                result = _merge_and_gate(name, repo, stage, br, gate, wt)
+                result = _merge_and_gate(name, repo, stage, br, gate, wt, video_gate)
             finally:
                 _close_stage(repo, stage)
 
@@ -369,7 +370,7 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3):
     )
 
 
-def _merge_and_gate(name, repo, stage, br, gate, wt):
+def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
     print("기준선 수집 중 (병합 전 origin/main)...")
     before = gate.snapshot(stage)
     for w in gate.baseline_warnings(before):
@@ -407,6 +408,17 @@ def _merge_and_gate(name, repo, stage, br, gate, wt):
         raise TrackError("\n".join(msg))
 
     print(f"✅ 게이트 통과 (기존 실패 {len(before['failed'])}건은 그대로)")
+
+    # ★영상 관문(2026-09-27): 제작 라인(미리보기 굽기·렌더·청소·컷 계산)을 건드린 병합은
+    #   서버에서 '편집 화면 vs 완성본' 영상 비교를 통과해야 커밋된다. 해당 변경이 없으면 한 줄 찍고 건너뛴다.
+    #   실패하면 여기서 버린다 — 아직 커밋 전이라 라이브는 무사하다(stage는 finally에서 통째로 삭제).
+    vg = (video_gate or _video_gate.run_video_gate)(stage, br)
+    if not vg.ok:
+        raise TrackError(
+            "❌ 영상 관문 실패 — 병합을 버렸다. 라이브는 무사하다.\n"
+            "(위 report·판정 근거 참고. 기준값: tools/gate_video.json — main 의 값을 쓴다)\n"
+            f"트랙 폴더는 그대로 있다: {wt}\n고친 뒤 다시: py tools/track.py finish {name}"
+        )
 
     # stage는 detached HEAD라 post-commit의 인자 없는 `git push`는 조용히 실패한다.
     # 그래서 push는 아래에서 우리가 명시적으로 한다 — 즉 **게이트 통과 후에만** 나간다.

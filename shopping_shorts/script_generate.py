@@ -55,7 +55,7 @@ def _style_extra():
         return ""
 
 
-def _call_json(prompt, schema, note=None, model=None):
+def _call_json(prompt, schema, note=None, model=None, vertex=True):
     """key_vault 캐스케이드 키풀로 JSON 1콜. 소진키는 마킹하고 다음 키로.
     무키·전부실패면 {} (호출부는 반드시 빈 dict 허용 — fail-open).
 
@@ -65,6 +65,23 @@ def _call_json(prompt, schema, note=None, model=None):
       늘 "키 소진 또는 응답 오류"가 떴다(실측 2026-08-22: 키가 멀쩡한데도 그 문구).
       note를 안 주면 종전과 완전히 동일하다(회귀 0).
     """
+    # ★Vertex 먼저(2026-09-26 사장님 "대본작성과 장면매칭" — 스위치 켠 계정만). 이 함수는 이야기 작가·
+    #   백본·옛 생성기·판정이 전부 지나는 깔때기라 여기 한 번이면 대본생성 전체가 간다(0순위-B).
+    #   실패·빈 결과면 아래 종전 키풀 그대로. vertex=False = 호출부가 이미 자기 Vertex 시도를 한 경우(ai_match).
+    if vertex:
+        from shopping_shorts import vertex_route
+
+        def _vx(cl, m):
+            resp = cl.models.generate_content(
+                model=m, contents=prompt,
+                config=types.GenerateContentConfig(response_mime_type="application/json",
+                                                   response_schema=schema))
+            return json.loads(resp.text)
+        _ok, _got = vertex_route.try_call("script_generate", _vx, what="대본생성")
+        if _ok:
+            if note is not None:
+                note["auth"] = "vertex"
+            return _got
     keys = keyroute.gemini_keys(_GEN_GROUP)
     if note is not None:
         note["keys"] = len(keys)
@@ -124,7 +141,7 @@ _BREATH_SCHEMA = {
 _BREATH_MIN_CHARS = 13
 
 
-def ai_breath_lines(narration):
+def ai_breath_lines(narration, max_chars=None):
     """자막 호흡 줄 — Gemini가 문장을 '숨 쉬는 자리'에서만 끊는다(글자 불변, 줄만 나눔).
 
     폴백 칸 전용(2026-08-29 사장님 "자연스러운 호흡으로 끊는 게 기본"): caption_lines가
@@ -149,7 +166,7 @@ def ai_breath_lines(narration):
         "규칙:\n"
         "- 사람이 말하다 숨을 쉬는 자연스러운 호흡 단위(의미 덩어리)로만 끊는다.\n"
         "- 글자를 추가·삭제·수정하지 마라. 원문 어절 그대로, 줄만 나눈다.\n"
-        "- 한 줄은 공백 제외 4~14자. 명사구나 '조사 앞' 한가운데를 끊지 마라.\n"
+        "- 한 줄은 공백 제외 4~" + str(int(max_chars or 14)) + "자. 명사구나 '조사 앞' 한가운데를 끊지 마라.\n"
         "  (좋은 예: '인테리어 고수들만 안다는' | '비밀 테이블이 있어요')\n"
         '- JSON {"lines": ["줄1", "줄2", ...]} 로만 답하라.\n'
         "원문: " + text
@@ -1380,14 +1397,20 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
 
 
 def _grounded_fallback(sources, facts_block="", product="", style=None, reasons=None):
-    """생성 출구들이 공유하는 마지막 한 안. 실패한 AI 본문은 받지 않는다."""
+    """생성 출구들이 공유하는 마지막 한 안 — **리스트**로 돌려준다(0개 또는 1개).
+
+    실패한 AI 본문은 받지 않는다. ★쓸 수 있는 한국어 관측이 없으면 빈 리스트(2026-09-25):
+    외국어 전사·두 줄짜리 껍데기를 대본으로 내보내던 것을 막는다 — 호출부는 그대로 `return`하면
+    0개가 되고 API가 reasons로 이유(503 과부하 등)를 말한다.
+    """
     from shopping_shorts import script_fallback
     reason = next((r.get("detail") or r.get("kind") or r.get("reason")
                    for r in (reasons or []) if isinstance(r, dict)
                    and (r.get("detail") or r.get("kind") or r.get("reason"))), "")
-    return script_fallback.build_grounded_fallback(
+    draft = script_fallback.build_grounded_fallback(
         _sources_product(sources) or product or "영상 속 제품",
         claim_evidence(sources, facts_block), style or {}, reason)
+    return [draft] if draft else []
 
 
 def generate_by_styles(sources, styles, target_seconds=30, bank_context="", facts_block="",
@@ -1430,8 +1453,8 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
     # 확률적이라 모두 실패할 수 있다. 그때 실패한 AI 문장을 내보내거나 502로 막지 않고,
     # 원본 발화·장면 관측만 읽는 결정적 폴백 한 안을 반환한다.
     if sources:
-        return [_grounded_fallback(sources, facts_block, product,
-                                   style_rows[0] if style_rows else {}, reasons)]
+        return _grounded_fallback(sources, facts_block, product,
+                                  style_rows[0] if style_rows else {}, reasons)
     return []
 
 
@@ -1582,8 +1605,8 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
     material_text = _materials_text(sources)
     full_text = "\n\n".join((s.get("full_text") or "").strip() for s in sources)
     if not full_text:
-        return ([_grounded_fallback(all_sources, facts_block, locked_product,
-                                    reasons=rejection_reasons)] if all_sources else [])
+        return (_grounded_fallback(all_sources, facts_block, locked_product,
+                                   reasons=rejection_reasons) if all_sources else [])
 
     normalized_mode = {"A": "remake", "B": "transplant"}.get(mode, mode)
     guard_product = ((my_topic or "").strip() if normalized_mode == "transplant"
@@ -1646,8 +1669,8 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
         row.get("role") for row in ((structure or {}).get("beats") or [])
         if isinstance(row, dict) and row.get("role")
     ]}
-    return [_grounded_fallback(all_sources, facts_block, guard_product,
-                               fallback_style, rejection_reasons)]
+    return _grounded_fallback(all_sources, facts_block, guard_product,
+                              fallback_style, rejection_reasons)
 
 
 _REFINE_SCHEMA = {

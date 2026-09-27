@@ -36,10 +36,16 @@ TASKS = {
     "mix":      lambda a: mix_pipeline.run_mix_job(a["job_id"], DB_PATH, _MIX_WORK_DIR),
     "retype":   lambda a: mix_pipeline.retype_mix_job(a["job_id"], a["video_type"],
                                                       DB_PATH, _MIX_WORK_DIR),
+    # ★confirm_clean·confirm_secs = 고객이 확인창에서 본 자막제거 초(라우트가 검사해 큐에 싣는다). 워커가 실행 직전
+    #   같은 판정(mix_pipeline.clean_charge_plan)으로 다시 재서, 그 사이 편성이 바뀌어 늘었으면 과금 없이 멈춘다.
     "render":   lambda a: mix_pipeline.run_render(a["job_id"], DB_PATH, _MIX_WORK_DIR,
-                                                  skip_clean=bool(a.get("skip_clean"))),
+                                                  skip_clean=bool(a.get("skip_clean")),
+                                                  confirm_clean=a.get("confirm_clean"),
+                                                  confirm_secs=a.get("confirm_secs")),
     "preview":  lambda a: mix_pipeline.run_preview(a["job_id"], DB_PATH, _MIX_WORK_DIR),
-    "clean":    lambda a: mix_pipeline.run_clean_sources(a["job_id"], DB_PATH, _MIX_WORK_DIR),
+    "clean":    lambda a: mix_pipeline.run_clean_sources(a["job_id"], DB_PATH, _MIX_WORK_DIR,
+                                                         confirm_clean=a.get("confirm_clean"),
+                                                         confirm_secs=a.get("confirm_secs")),
     # AI 장면 생성(Veo, 2026-09-23) — 관리자 스위치 ai_scene_enabled 뒤. 실패는 beat.ai_scene.state로 남는다.
     "ai_scene": lambda a: __import__("shopping_shorts.ai_scene", fromlist=["run_ai_scene"]).run_ai_scene(
         a["job_id"], int(a["beat_idx"]), a.get("style") or "natural", DB_PATH, _MIX_WORK_DIR),

@@ -24,23 +24,23 @@ timeline = [{'beat_idx': i, 't0': i, 'dur': 1, 'narration': c, 'caption_lines': 
 TEXT = {'channel': '숏템메이커', 'hook1': '주부들도 감탄한', 'hook2': '천재 아이디어', 'bodyTitle': '주부들도 감탄한 천재 아이디어?'}
 for mode, fk in (('story', 'hook'), ('continuous', 'frame')):
     try:
-        scene_style.validate_snapshot({'version': 1, 'mode': mode, 'presetId': 'plain', 'sceneIndex': 0, 'frameKind': fk, 'text': TEXT})
+        scene_style.validate_snapshot({'version': 1, 'mode': mode, 'plainCaption': 2, 'presetId': 'plain', 'sceneIndex': 0, 'frameKind': fk, 'text': TEXT})
         need(True, f'① 서버 검증 통과 ({mode})')
     except Exception as exc:
         need(False, f'① 서버 검증 실패 ({mode}): {exc}')
-snap = scene_style.validate_snapshot({'version': 1, 'mode': 'story', 'presetId': 'plain', 'sceneIndex': 0, 'frameKind': 'hook', 'text': TEXT})
+snap = scene_style.validate_snapshot({'version': 1, 'mode': 'story', 'plainCaption': 2, 'presetId': 'plain', 'sceneIndex': 0, 'frameKind': 'hook', 'text': TEXT})
 def ink(png, a0, a1):
     im = Image.open(png).convert('RGBA'); w, h = im.size; al = im.split()[3]
     return sum(1 for y in range(int(h * a0), int(h * a1), 3) for x in range(int(w * .1), int(w * .9), 6) if al.getpixel((x, y)) > 40)
-# ② 렌더·캡컷이 쓰는 레이어
+# ② 렌더·캡컷이 쓰는 레이어 — 자막은 제목 바로 아래(19~30%, 2026-09-25 사장님 인스타식)
 scene_style.render_layers(timeline, snap, out / 'layers', {'text': '주부들도 감탄한\n천재 아이디어'}, 'dsqa')
 pngs = sorted((out / 'layers').rglob('*.png'))
 need(len(pngs) >= 2, f'② 렌더·캡컷용 레이어 {len(pngs)}장')
 if len(pngs) >= 2:
-    need(ink(pngs[0], .05, .25) > 300 and ink(pngs[0], .75, .92) > 300,
-         f'② 훅 레이어에 제목·자막이 모두 찍힌다 (제목 {ink(pngs[0], .05, .25)} / 자막 {ink(pngs[0], .75, .92)})')
-    need(ink(pngs[1], .05, .25) > 300 and ink(pngs[1], .75, .92) > 300,
-         f'② 본문 레이어도 마찬가지 (제목 {ink(pngs[1], .05, .25)} / 자막 {ink(pngs[1], .75, .92)})')
+    need(ink(pngs[0], .05, .25) > 300 and ink(pngs[0], .19, .30) > 300,
+         f'② 훅 레이어에 제목·자막이 모두 찍힌다 (제목 {ink(pngs[0], .05, .25)} / 자막 {ink(pngs[0], .19, .30)})')
+    need(ink(pngs[1], .05, .25) > 300 and ink(pngs[1], .19, .30) > 300,
+         f'② 본문 레이어도 마찬가지 (제목 {ink(pngs[1], .05, .25)} / 자막 {ink(pngs[1], .19, .30)})')
 # ③ 썸네일이 쓰는 한 장
 one = pathlib.Path(scene_style.render_layer_one(timeline, snap, out / 'thumb_style', 0,
                    {'text': '주부들도 감탄한' + chr(10) + '천재 아이디어'}, 'dsqa'))   # 폴더를 주고 PNG 경로를 돌려받는다
