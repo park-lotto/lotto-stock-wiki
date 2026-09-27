@@ -159,6 +159,71 @@ def branch_name(name):
     return f"{BRANCH_PREFIX}{name}"
 
 
+# ── 디스크 병목 막기(2026-09-27 사장님 "세션들이 작업할 때 병목 안 생기게") ─────────────
+# 실측: 트랙 1개 1.8GB × 51개 = C 드라이브 63GB → 여유 9GB에서 finish가 임시 병합 폴더를 만들다
+#   중간에 끊기고(_merge-* 잔해 1.8GB씩), npm 업데이트까지 깨졌다(코덱스 사고).
+# ① 트랙은 코드가 안 읽는 무거운 폴더를 디스크에 풀지 않는다(sparse). raw/ 481MB·productions/ 132MB.
+#    raw/는 크롤봇이 **main 폴더에만** 쓰는 원본이라 트랙 쪽 사본은 어차피 낡았다(CLAUDE.md).
+#    ★게이트 임시 폴더(stage)는 그대로 전체 — 기준선·병합 뒤 둘 다 같은 조건이어야 비교가 정직하다.
+# ② 오래 안 쓴 트랙은 '주차'(브랜치 보존·원격 백업 뒤 폴더만 제거) — 되살리기 1분.
+# ③ 디스크 경보·거절: 여유가 모자라면 시작 전에 말하고, finish는 임시 폴더를 만들다 끊기기 전에 멈춘다.
+# ④ finish 락을 잡은 순간 남은 _merge-* 잔해는 전부 죽은 것 — 치운다.
+SPARSE_EXCLUDE = ("/raw/", "/productions/")
+DISK_WARN_GB = 15
+DISK_REFUSE_GB = 3          # stage(전체 체크아웃 ~1.8GB) + pytest 임시를 못 담는 수준
+IDLE_PARK_DAYS = 7
+
+
+def disk_free_gb(path=BASE):
+    try:
+        return shutil.disk_usage(str(path)).free / 1024 ** 3
+    except OSError:
+        return None
+
+
+def _disk_guard(repo, action):
+    """여유가 모자라면 경고(+주차 후보 안내), 아주 모자라면 finish를 거절한다."""
+    free = disk_free_gb(repo)
+    if free is None:
+        return
+    if action == "finish" and free < DISK_REFUSE_GB:
+        raise TrackError(
+            f"디스크 여유 {free:.1f}GB — 병합용 임시 폴더(약 1.8GB)를 만들다 중간에 끊겨 잔해가 남는다.\n"
+            f"먼저 공간을 비워라: py tools/track.py park-idle  (오래 안 쓴 트랙 폴더만 치움, 브랜치 보존)")
+    if free < DISK_WARN_GB:
+        print(f"⚠️ 디스크 여유 {free:.1f}GB (<{DISK_WARN_GB}GB). 오래 안 쓴 트랙 폴더를 치우면 트랙당 1~2GB가 돌아온다:")
+        print("   py tools/track.py park-idle        (브랜치·원격 백업 보존, 미커밋 있으면 건너뜀)")
+
+
+def _apply_sparse(wt):
+    """트랙 폴더에 무거운 폴더를 풀지 않는다. 실패하면 전체 체크아웃 그대로 두고 **말한다**(조용히 넘기지 않음)."""
+    patterns = ["/*"] + ["!" + p for p in SPARSE_EXCLUDE]
+    rc, out = run(["git", "sparse-checkout", "set", "--no-cone"] + patterns, wt)
+    if rc != 0:
+        print(f"⚠️ 가벼운 트랙(sparse) 설정 실패 — 전체 폴더로 계속한다:\n{out.strip()[:200]}")
+        return False
+    print(f"   가벼운 트랙: {', '.join(SPARSE_EXCLUDE)} 는 풀지 않음(필요하면: git sparse-checkout disable)")
+    return True
+
+
+def _clean_dead_stages(repo, keep=None):
+    """finish 락을 쥔 뒤에만 부른다 — 락이 있으니 지금 살아 있는 stage는 없다(있다면 keep 하나)."""
+    root = tracks_dir(repo)
+    if not root.exists():
+        return []
+    removed = []
+    for d in root.iterdir():
+        if d.is_dir() and d.name.startswith(STAGE_PREFIX) and d.name != keep:
+            run(["git", "worktree", "remove", "--force", str(d)], repo)
+            if d.exists():
+                shutil.rmtree(d, ignore_errors=True)
+            removed.append(d.name)
+    if removed:
+        run(["git", "worktree", "prune"], repo)
+        print(f"🧹 끊긴 병합 임시 폴더 {len(removed)}개 정리: {', '.join(removed)}")
+    return removed
+
+
 def tracks_dir(repo=BASE):
     return Path(repo).resolve() / TRACKS_DIR
 
@@ -256,9 +321,10 @@ def upstream_of(wt):
     return out.strip() if rc == 0 else None
 
 
-def start(name, repo=BASE):
+def start(name, repo=BASE, full=False):
     merge_gate.make_output_safe()
     validate_name(name)
+    _disk_guard(repo, "start")
     wt = worktree_path(name, repo)
     if wt.exists():
         raise TrackError(
@@ -282,6 +348,8 @@ def start(name, repo=BASE):
 
     _detach_upstream_from_main(wt, branch_name(name))
     _copy_local_secrets(repo, wt)
+    if not full:
+        _apply_sparse(wt)
 
     print(f"✅ 트랙 '{name}' 시작")
     print(f"   폴더:    {wt}")
@@ -345,6 +413,9 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3, video_gate=None):
 
     # ★전역 락: 한 번에 하나의 finish만 게이트를 돈다(동시 pytest는 CPU 포화라 더 느림).
     with _finish_gate_lock():
+        # 락을 쥐었으니 남아 있는 _merge-* 는 전부 끊긴 finish의 잔해다(2026-09-27 실측 4개·개당 ~1.8GB)
+        _clean_dead_stages(repo)
+        _disk_guard(repo, "finish")
         for attempt in range(1, attempts + 1):
             run(["git", "fetch", "origin"], repo)
             stage = _open_stage(repo, name)
@@ -510,6 +581,75 @@ def close(name, repo=BASE):
     return 0
 
 
+# ── park: 폴더만 치우고 브랜치는 보존 ─────────────────────────────
+
+def _last_touch_days(repo, name):
+    """트랙이 마지막으로 쓰인 지 며칠 — 브랜치 마지막 커밋과 그 worktree의 git index 수정 시각 중 **늦은 쪽**.
+    (커밋이 오래됐어도 지금 누가 그 폴더에서 편집 중이면 index가 갱신돼 '최근'으로 잡힌다)"""
+    now = time.time()
+    rc, out = run(["git", "log", "-1", "--format=%ct", branch_name(name)], repo)
+    t = int(out.strip()) if rc == 0 and out.strip().isdigit() else 0
+    rc, gitdir = run(["git", "rev-parse", "--git-dir"], worktree_path(name, repo))
+    if rc == 0 and gitdir.strip():
+        g = Path(gitdir.strip())
+        g = g if g.is_absolute() else worktree_path(name, repo) / g
+        for f in (g / "index", g / "HEAD"):
+            if f.exists():
+                t = max(t, int(f.stat().st_mtime))
+    return (now - t) / 86400 if t else None
+
+
+def park(name, repo=BASE):
+    """트랙 폴더만 치운다 — 브랜치(커밋)는 로컬·원격에 **그대로**. 되살리기: git worktree add <폴더> track/<이름>.
+    안전장치: ①원격 백업이 로컬과 같은 커밋인지 확인 ②미커밋 파일이 있으면 거절 ③강제 제거 안 함."""
+    merge_gate.make_output_safe()
+    validate_name(name)
+    wt = worktree_path(name, repo)
+    br = branch_name(name)
+    if not wt.exists():
+        raise TrackError(f"트랙 폴더가 없다: {wt}")
+    if not branch_exists(repo, br):
+        raise TrackError(f"브랜치가 없다: {br} — 폴더를 치우면 작업이 사라진다. 손대지 않는다.")
+    run(["git", "push", "origin", f"{br}:{br}"], repo)
+    _, loc = run(["git", "rev-parse", br], repo)
+    _, rem = run(["git", "ls-remote", "origin", f"refs/heads/{br}"], repo)
+    if not loc.strip() or rem.split("\t")[0].strip() != loc.strip():
+        raise TrackError(f"원격 백업이 로컬과 다르다({br}) — 폴더를 안 치운다.")
+    _, st = run(["git", "status", "--porcelain"], wt)
+    dirty = [p for p in parse_status(st) if not is_ignorable(p)]
+    if dirty:
+        raise TrackError(f"미커밋 파일 {len(dirty)}개 — 커밋하거나 버린 뒤 다시: {', '.join(dirty[:3])}")
+    rc, out = run(["git", "worktree", "remove", str(wt)], repo)
+    if rc != 0:
+        raise TrackError(f"폴더를 못 치웠다(열린 창·터미널이 있나?):\n{out.strip()[:200]}")
+    print(f"🅿️ 트랙 '{name}' 주차 — 브랜치 {br} 보존. 되살리기: git worktree add \"{wt}\" {br}")
+    return 0
+
+
+def park_idle(repo=BASE, days=IDLE_PARK_DAYS):
+    """days일 넘게 안 쓴 트랙을 전부 주차한다. 하나가 거절돼도 나머지는 계속(이유는 전부 출력)."""
+    merge_gate.make_output_safe()
+    before = disk_free_gb(repo)
+    parked, skipped = [], []
+    for br in track_branches(repo):
+        name = br[len(BRANCH_PREFIX):]
+        if not worktree_path(name, repo).exists():
+            continue
+        age = _last_touch_days(repo, name)
+        if age is None or age < days:
+            continue
+        try:
+            park(name, repo=repo)
+            parked.append(name)
+        except TrackError as e:
+            skipped.append(name)
+            print(f"   건너뜀 {name}: {str(e).splitlines()[0]}")
+    after = disk_free_gb(repo)
+    print(f"\n주차 {len(parked)}개 · 건너뜀 {len(skipped)}개"
+          + (f" · 디스크 여유 {before:.1f}GB → {after:.1f}GB" if before is not None and after is not None else ""))
+    return 0
+
+
 # ── list ─────────────────────────────────────────────────────────
 
 def track_branches(repo=BASE):
@@ -562,6 +702,11 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="cmd", required=True)
     p_start = sub.add_parser("start", help="트랙 폴더+브랜치 생성")
     p_start.add_argument("name")
+    p_start.add_argument("--full", action="store_true", help="raw/·productions/까지 전부 풀기(기본은 가벼운 트랙)")
+    p_park = sub.add_parser("park", help="트랙 폴더만 치움 — 브랜치·원격 백업 보존")
+    p_park.add_argument("name")
+    p_idle = sub.add_parser("park-idle", help=f"{IDLE_PARK_DAYS}일 넘게 안 쓴 트랙 폴더를 전부 치움(브랜치 보존)")
+    p_idle.add_argument("--days", type=float, default=IDLE_PARK_DAYS)
     p_finish = sub.add_parser("finish", help="게이트 통과 시 main에 병합 (폴더는 남는다)")
     p_finish.add_argument("name")
     p_close = sub.add_parser("close", help="트랙을 접는다 — 폴더·브랜치 삭제")
@@ -571,7 +716,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.cmd == "start":
-            return start(args.name)
+            return start(args.name, full=args.full)
+        if args.cmd == "park":
+            return park(args.name)
+        if args.cmd == "park-idle":
+            return park_idle(days=args.days)
         if args.cmd == "finish":
             return finish(args.name)
         if args.cmd == "close":
