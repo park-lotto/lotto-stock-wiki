@@ -319,7 +319,7 @@ def _faa():
 
 
 def audio_summary(report_text):
-    """소리 대조 report → {"cells","narr","sfx_miss","bgm","lost","skip","surplus","delay"} 또는 None."""
+    """소리 대조 report → {"cells","narr","sfx_miss","bgm","lost","skip","surplus","delay","vcut_mis"} 또는 None."""
     return _faa().parse_summary(report_text)
 
 
@@ -333,7 +333,8 @@ def judge_audio(report_text, cfg, crash="", benign_skips=("음성 없음",)):
         fails.append("소리 대조 요약 줄(== 칸 … 일정 지연 N편)을 못 읽었다 — 도구가 죽었거나 옛 판본이다")
         return False, fails, notes
     notes.append("소리 대조: 칸 %d · 나레이션 0.15초+ %d · 패킷 잉여 0.05초+ %d편 · 일정 지연 %d편 · 효과음 누락 %d · BGM 이상 %d"
-                 % (s["cells"], s["narr"], s["surplus"], s["delay"], s["sfx_miss"], s["bgm"]))
+                 " · 검출불일치 %d칸(보고만 — 영상 컷 검출이 계획 프레임과 0.1초+ 갈림, 화면 위치는 영상 비교가 잰다)"
+                 % (s["cells"], s["narr"], s["surplus"], s["delay"], s["sfx_miss"], s["bgm"], s["vcut_mis"]))
     if s["cells"] <= 0:
         fails.append("소리 대조: 잰 칸이 0 — 아무것도 안 쟀다")
     for key, sk, label in (("max_audio_narr", "narr", "나레이션 0.15초+ 오차"), ("max_audio_surplus", "surplus", "패킷 잉여 0.05초+"),

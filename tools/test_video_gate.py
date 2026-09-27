@@ -227,7 +227,7 @@ def _stage(tmp_path, changed_rel="shopping_shorts/video_assemble.py"):
 
 
 _CC_OK = "abc 칸3 컷R10/C10/E10 | 캡컷 불일치 0 {} | 내보내기 불일치 0 {}\n== 컷 10 · 캡컷 불일치 0 · 내보내기 불일치 0\n"
-_AU_LINE = '== 칸 %d · 나레이션 0.15초+ 오차 %d · 효과음 누락 0 · BGM 이상 0 · 음성-자막 0.15초+ 0 · 나레이션 못찾음 0 · 효과음 타점0.10+ 0 · 길이 이상 0 · 렌더뒤음성바뀜 0 · 건너뜀 0 · 패킷 잉여 0.05초+ %d편 · 일정 지연 %d편   (…)'
+_AU_LINE = '== 칸 %d · 나레이션 0.15초+ 오차 %d · 효과음 누락 0 · BGM 이상 0 · 음성-자막 0.15초+ 0 · 나레이션 못찾음 0 · 효과음 타점0.10+ 0 · 길이 이상 0 · 렌더뒤음성바뀜 0 · 건너뜀 0 · 패킷 잉여 0.05초+ %d편 · 일정 지연 %d편 · 검출불일치 0칸   (…)'
 
 
 def _au(cells=10, narr=0, surplus=0, delay=0):
@@ -581,3 +581,18 @@ def test_audio_tool_is_uploaded_and_watched():
     assert "tools/final_audio_audit.py" in CFG["watch_files"]
     for k in ("max_audio_narr", "max_audio_surplus", "max_audio_delay"):
         assert CFG["gate"][k] == 0 and CFG["audit"][k] == 0, k
+
+
+def test_gate_passes_vcut_mismatch_as_report_only(tmp_path):
+    """영상 컷 검출이 계획 프레임과 갈리는 칸(칸 안 장면 전환 오검출 — finish 12차 6c1a 칸2)은 판정이 아니라 보고만."""
+    au = _AU_OK.replace("검출불일치 0칸", "검출불일치 3칸")
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), au_report=au)
+    res, out = _run(_stage(tmp_path), ssh)
+    assert res.ok, out
+    assert "검출불일치 3칸(보고만" in out
+
+
+def test_gate_fails_when_audio_summary_lacks_vcut_item(tmp_path):
+    au = _AU_OK.replace(" · 검출불일치 0칸", "")
+    res, out = _run(_stage(tmp_path), _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), au_report=au))
+    assert not res.ok and "요약 줄" in out

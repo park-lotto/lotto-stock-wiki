@@ -54,6 +54,7 @@ SURPLUS_T = 0.05           # 소리 패킷 표본 잉여(nb_frames×1024/표본�
 #   정상(나레이션 한 줄을 한 번 AAC 로)은 AAC 앞뒤 채움 1회분 +0.02~0.03초. 칸별 AAC → concat 은 칸당 20~40ms 쌓여 +0.14초 이상.
 STALE_SLACK = 1.0          # mp3 수정 시각이 완성본보다 이만큼 뒤면 '렌더 뒤 음성 바뀜'
 
+VCUT_T = 0.10             # 검출 컷이 계획 프레임과 이만큼 넘게 갈리면 '검출불일치'(판정 아님 — 칸 안 장면 전환 오검출이 대부분)
 OFFSET_T = 0.03           # 일정 지연 보고 기준(초) — 전 칸 음성-영상(계획 프레임) 오차 **중앙값** 또는 인트로 뒤 첫 칸 오차가 이 이상.
 #   왜(2026-09-27): 종전 인트로 경로는 인트로 뒤 목소리 **전체**를 +0.059~0.064초 늦췄는데, 패킷 잉여(0.05)로도
 #   나레이션 기준(0.15)으로도 안 잡혔다. 칸마다 같은 크기로 밀리는 결함은 '가장 큰 칸'이 아니라 '가운데 값'으로 잡는다.
@@ -295,9 +296,13 @@ def audit(ctx, want_video=True):
                 r["vid"] = round(av + x["cut"] / 30.0, 3) if x["cut"] is not None else None
                 r["vid_spikes"] = x["spikes"]
                 r["plan_t"] = round(av + r["plan_f"] / 30.0, 3)
-                ref = r["vid"] if r["vid"] is not None else r["plan_t"]
-                r["ref_kind"] = "영상컷" if r["vid"] is not None else "계획프레임"
-                r["err_v"] = round(r["nar"] - ref, 3) if r["nar"] is not None else None
+                # ★판정 기준 = 렌더가 칸을 놓은 계획 프레임(render_cut_plan 의 누적 반올림 _f0 = round((인트로+t0)×30))
+                #   (2026-09-27 finish 12차 오탐: 6c1a 칸2 검출 컷 +0.200 — 칸 안 장면 전환을 칸 시작으로 집었다. 같은 칸 계획 프레임 0.000).
+                #   검출 컷은 참고 열(err_vcut)만 — 계획과 0.1초 넘게 갈리면 '검출불일치'로 따로 센다(판정 아님, 화면 위치는 영상 비교가 잰다).
+                r["ref_kind"] = "계획프레임"
+                r["err_v"] = round(r["nar"] - r["plan_t"], 3) if r["nar"] is not None else None
+                r["err_vcut"] = round(r["nar"] - r["vid"], 3) if (r["nar"] is not None and r["vid"] is not None) else None
+                r["vcut_off"] = round(r["vid"] - r["plan_t"], 3) if r["vid"] is not None else None
                 r["vid_minus_cap"] = round(r["vid"] - r["cap"], 3) if r["vid"] is not None else None
             vinfo = {"frames": int(len(fr))}
         except Exception as e:      # noqa: BLE001
@@ -400,13 +405,14 @@ def judge(r):
     rows = r["rows"]
     live = [x for x in rows if not x["stale"]]
     # 판정 = 음성 vs 영상(칸 첫 그림) — 고객이 느끼는 어긋남. 자막 vs 음성은 따로 센다(cap_bad).
-    narr_bad = [x for x in live if x.get("err_v") is not None and abs(x["err_v"]) >= SHIFT_T]
+    narr_bad = [x for x in live if x.get("err_v") is not None and abs(x["err_v"]) >= SHIFT_T]     # err_v = 음성 − 계획 프레임
+    vcut_mis = [x for x in rows if x.get("vcut_off") is not None and abs(x["vcut_off"]) > VCUT_T]
     cap_bad = [x for x in live if x["err"] is not None and abs(x["err"]) >= SHIFT_T]
     narr_lost = [x for x in live if x["err"] is None]
     sfx_chk = [x for x in r["sfx"] if not x.get("skip") and not x.get("missing_file")]
     sfx_miss = [x for x in sfx_chk if x["err"] is None]
     sfx_off = [x for x in sfx_chk if x["err"] is not None and abs(x["err"]) >= SFX_SHIFT_T]
-    return {"n": len(rows), "narr_bad": narr_bad, "cap_bad": cap_bad, "narr_lost": narr_lost, "stale": [x for x in rows if x["stale"]],
+    return {"n": len(rows), "narr_bad": narr_bad, "vcut_mis": vcut_mis, "cap_bad": cap_bad, "narr_lost": narr_lost, "stale": [x for x in rows if x["stale"]],
             "sfx_n": len(sfx_chk), "sfx_miss": sfx_miss, "sfx_off": sfx_off,
             "sfx_nofile": [x for x in r["sfx"] if x.get("missing_file")],
             "bgm_bad": 1 if (r["bgm"] or {}).get("bad") else 0,
@@ -515,19 +521,19 @@ def line(jid, ctx, r, j, sec):
     else:
         bg = "BGM 없음(잔여 %sdB)%s" % (b.get("resid_db"), " ★파일 사라짐" if m.get("bgm_file_missing") else "")
     return ("%s 칸%d 패킷잉여%s 일정지연(중앙%s·인트로뒤%s) 인트로%.1f(실측%.1f) 길이%.2f(기대%.2f,%+.3f) | 마지막칸 음성-영상 %s 음성-자막 %s 영상-자막 %s (pts참고 %s, 수리전예측 %s) "
-            "| 음성-영상 최대 %s | 음성-영상0.15+ %s | 음성-자막0.15+ %d칸 | 끝잘림 %s초(꼬리 %sdB) | 못찾음 %s | 렌더뒤음성바뀜 %s"
+            "| 음성-영상 최대 %s | 음성-영상0.15+ %s | 검출불일치 %s | 음성-자막0.15+ %d칸 | 끝잘림 %s초(꼬리 %sdB) | 못찾음 %s | 렌더뒤음성바뀜 %s"
             " | 효과음 %d발(팩 %s) 누락 %d 타점0.10+ %d | %s | %.0fs") % (
         jid, j["n"], r.get("surplus"), j.get("delay_med"), j.get("delay_first"), ctx["intro"], r.get("intro_used", ctx["intro"]), r["len"]["got"], r["len"]["exp"], r["len"]["diff"],
         last.get("err_v"), last.get("err"), last.get("vid_minus_cap"), last.get("err_pts"), last.get("pred_prefix"),
         "%s칸 %+.3f(%s)" % (mx["beat"], mx["err_v"], mx["ref_kind"]) if mx else "-",
-        [(x["beat"], x["err_v"]) for x in j["narr_bad"]], len(j["cap_bad"]), r.get("tail_cut"), r.get("tail_db"),
+        [(x["beat"], x["err_v"]) for x in j["narr_bad"]], [(x["beat"], x["vcut_off"]) for x in j["vcut_mis"]], len(j["cap_bad"]), r.get("tail_cut"), r.get("tail_db"),
         [(x["beat"], x["ncc"]) for x in j["narr_lost"]], [x["beat"] for x in j["stale"]],
         j["sfx_n"], m.get("pack") or "-", len(j["sfx_miss"]), len(j["sfx_off"]), bg, sec)
 
 
 _SUM_KEYS = (("cells", r"== 칸 (\d+)"), ("narr", r"나레이션 [\d.]+초\+ 오차 (\d+)"), ("sfx_miss", r"효과음 누락 (\d+)"),
              ("bgm", r"BGM 이상 (\d+)"), ("lost", r"나레이션 못찾음 (\d+)"), ("skip", r"건너뜀 (\d+)"),
-             ("surplus", r"패킷 잉여 [\d.]+초\+ (\d+)편"), ("delay", r"일정 지연 (\d+)편"))
+             ("surplus", r"패킷 잉여 [\d.]+초\+ (\d+)편"), ("delay", r"일정 지연 (\d+)편"), ("vcut_mis", r"검출불일치 (\d+)칸"))
 
 
 def parse_summary(text):
@@ -580,7 +586,7 @@ def _main():
     print("판정: 나레이션 ±%.1fs(못 찾으면 ±%.1fs) NCC>=%.2f · 오차 %.2fs+ 보고 / 효과음 잔여 NCC>=%.2f · 타점 %.2fs+ / "
           "BGM 기대 dB(=20log10 볼륨) ±%.0fdB·상관>=%.2f / 길이 %.2fs+" % (WIN, WIDE, NARR_MIN, SHIFT_T, SFX_MIN, SFX_SHIFT_T,
                                                                     BGM_DB_T, BGM_MIN_R, LEN_T), file=rep, flush=True)
-    tot = dict(n=0, nb=0, sm=0, bg=0, ln=0, lost=0, skip=0, stale=0, soff=0, sp=0, cd=0)
+    tot = dict(n=0, nb=0, sm=0, bg=0, ln=0, lost=0, skip=0, stale=0, soff=0, sp=0, cd=0, vm=0)
     for jid in ids:
         t0 = time.time()
         try:
@@ -595,12 +601,14 @@ def _main():
         smp.write(json.dumps({"job": jid, "meta": ctx.get("meta"), "intro": ctx["intro"], **r}, ensure_ascii=False) + "\n")
         tot["cb"] = tot.get("cb", 0) + len(j["cap_bad"])
         tot["n"] += j["n"]; tot["nb"] += len(j["narr_bad"]); tot["lost"] += len(j["narr_lost"]); tot["stale"] += len(j["stale"])
-        tot["sm"] += len(j["sfx_miss"]); tot["soff"] += len(j["sfx_off"]); tot["bg"] += j["bgm_bad"]; tot["ln"] += j["len_bad"]; tot["sp"] += j["surplus_bad"]; tot["cd"] += j["delay_bad"]
+        tot["sm"] += len(j["sfx_miss"]); tot["soff"] += len(j["sfx_off"]); tot["bg"] += j["bgm_bad"]; tot["ln"] += j["len_bad"]; tot["sp"] += j["surplus_bad"]; tot["cd"] += j["delay_bad"]; tot["vm"] += len(j["vcut_mis"])
     print("== 칸 %d · 나레이션 %.2f초+ 오차 %d · 효과음 누락 %d · BGM 이상 %d · 음성-자막 %.2f초+ %d · 나레이션 못찾음 %d"
-          " · 효과음 타점%.2f+ %d · 길이 이상 %d · 렌더뒤음성바뀜 %d · 건너뜀 %d · 패킷 잉여 %.2f초+ %d편 · 일정 지연 %d편"
-          "   (나레이션 오차 = 음성 vs 영상 칸 첫 그림 · 일정 지연 = 음성-계획프레임 중앙값/인트로 뒤 첫 칸 %.2f초+)" % (
+          " · 효과음 타점%.2f+ %d · 길이 이상 %d · 렌더뒤음성바뀜 %d · 건너뜀 %d · 패킷 잉여 %.2f초+ %d편 · 일정 지연 %d편 · 검출불일치 %d칸"
+          "   (나레이션 오차 = 음성 vs 계획 프레임(렌더가 칸을 놓은 자리) · 일정 지연 = 그 중앙값/인트로 뒤 첫 칸 %.2f초+"
+          " · 검출불일치 = 영상 컷 검출이 계획 프레임과 %.2f초 넘게 갈린 칸 — 판정 아님)" % (
               tot["n"], SHIFT_T, tot["nb"], tot["sm"], tot["bg"], SHIFT_T, tot.get("cb", 0), tot["lost"], SFX_SHIFT_T,
-              tot["soff"], tot["ln"], tot["stale"], tot["skip"], SURPLUS_T, tot["sp"], tot["cd"], OFFSET_T), file=rep, flush=True)
+              tot["soff"], tot["ln"], tot["stale"], tot["skip"], SURPLUS_T, tot["sp"], tot["cd"], tot["vm"], OFFSET_T, VCUT_T),
+          file=rep, flush=True)
     rep.close(); smp.close()
     print((OUT / "report.txt").read_text(encoding="utf-8"))
 
