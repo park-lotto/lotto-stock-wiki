@@ -129,13 +129,7 @@ def scenes(path, vid, thumbs_dir):
         im = Image.open(th).convert("L")
         if float(np.asarray(im).mean()) < 22:           # 거의 검정(암전·자막 카드)
             continue
-<<<<<<< HEAD
         out.append({"vid": vid, "path": path, "start": a, "end": b, "thumb": th, "t": round(t, 2)})
-=======
-        # start 는 올림, end 는 내림 — 반올림으로 경계 밖 프레임이 들어오지 않게
-        out.append({"vid": vid, "path": path, "start": math.ceil(a * 100) / 100, "end": math.floor(b * 100) / 100, "thumb": th,
-                    "t": round(t, 2)})
->>>>>>> 3eed4f089ea3d76cfb60872628efb619285cc16f
     return out
 
 
@@ -208,25 +202,17 @@ def need_sec(g):
 def fits(c, g):
     """★장면 c 를 자막 g 에 써도 되나 — **유일한 판단 자리**(pick 의 모델 답 검사·메우기, check_and_repick 이 다 이것).
     ① 칼카피 1: 장면 경계 안에서 자막 시간을 다 채우나(길이 정보 없는 후보 = 테스트 더미는 통과).
-<<<<<<< HEAD
     ② 규칙 10: 주인공 자막(rules.subject == main)엔 "다른사람" 얼굴 장면 금지.
     ③ 규칙 8: 자막꼴 박힌 글자 장면은 **모든 자막에** 금지 — 관문은 편 전체 ≤1컷이다. 주인공 자막만 막았더니
        우상혁 v2에서 scene 자막(컷14)에 박힌 자막 후보가 골려 관문에 걸렸다(고르기와 관문이 다른 규칙). 태깅 안 된 후보는 통과."""
-=======
-    ② 규칙 8·10: 주인공 자막(rules.subject == main)엔 "다른사람" 얼굴·자막꼴 박힌 글자 장면 금지. 태깅 안 된 후보는 통과."""
->>>>>>> 3eed4f089ea3d76cfb60872628efb619285cc16f
     from . import rules
     if not isinstance(c, dict):
         return True
     if "end" in c and "start" in c and c["end"] - c["start"] < need_sec(g):
         return False
-<<<<<<< HEAD
     if c.get("subtitle_like"):
         return False
     if rules.subject(g) == "main" and c.get("who") == vision.WHO_OTHER:
-=======
-    if rules.subject(g) == "main" and (c.get("who") == vision.WHO_OTHER or c.get("subtitle_like")):
->>>>>>> 3eed4f089ea3d76cfb60872628efb619285cc16f
         return False
     return True
 
@@ -256,11 +242,7 @@ def _match_prompt(groups, desc, person, cands=None):
     return (f"숏폼 편집자다. 주인공 {person}. [자막]마다 [장면 목록]에서 **내용이 가장 맞는** 장면 번호를 골라라.\n"
             "규칙: 같은 번호 두 번 금지. 장면 길이(초)가 자막이 요구하는 초보다 짧으면 쓰지 마라. 경기·결승·메달 자막엔 경기장/시상대 장면, 어린 시절·가족 자막엔 그에 맞는 장면. "
             "[TEXT]·[JUNK] 장면은 다른 게 정말 없을 때만. 시장·부엌 등 주제와 무관한 장면은 쓰지 마라. 번호를 순서대로 찍지 마라.\n"
-<<<<<<< HEAD
             "장면 표식은 얼굴 인식기가 잰 것이다: [박힌 자막] 장면은 어느 자막에도, [다른 사람] 장면은 [주인공 장면 필수] 자막에 **절대** 쓰지 마라(골라도 버려진다). "
-=======
-            "장면 표식은 얼굴 인식기가 잰 것이다: [주인공 장면 필수] 자막엔 [다른 사람]·[박힌 자막] 장면을 **절대** 쓰지 마라(골라도 버려진다). "
->>>>>>> 3eed4f089ea3d76cfb60872628efb619285cc16f
             "[주인공 얼굴 큼] 장면을 우선하라. [얼굴 작음]·[얼굴 없음]은 경기장·풍경처럼 넓은 화면에만.\n"
             f"[장면 목록]\n{scenes_}\n\n[자막]\n{subs}\n\n"
             f"출력 JSON: {{\"picks\": [자막0의 장면번호, 자막1의 장면번호, …]}} (정확히 {len(groups)}개)")
@@ -471,7 +453,6 @@ def gather_sources(script, wd, log=print):
     return [meta[k] for k in keep], ruler, table
 
 
-<<<<<<< HEAD
 def tag_times(start, end):
     """태깅 프레임 시각 — 렌더가 쓰는 창(앞에서 최대 SUB_SEC_MAX초)의 시작+0.3 · 가운데 · 끝−0.3.
     관문은 렌더된 컷의 가운데(시작+0.65~1.55초)를 보므로 그 앞뒤를 덮는다."""
@@ -537,26 +518,6 @@ def tag_candidates(cands, anchor, min_len=0.0, log=print):
     log(f"[footage] 후보 태깅: {dict(Counter(c['who'] for c in out))} · 박힌 자막 {sum(c['subtitle_like'] for c in out)} · "
         f"크롭 창 다시 자르기로 버림 {dropped} · 창이 줄어든 후보 {sum(1 for c in out if 'coarse' in c)}")
     return out
-=======
-def tag_candidates(cands, anchor, log=print):
-    """★후보마다 렌더와 같은 그림(cover_frame → face_crop_x → slot_from_cover)을 만들어 자(vision)로 잰다.
-    c 에 crop_x·who·face_h·cx_off·subtitle_like 를 넣고 썸네일을 그 슬롯 그림으로 다시 쓴다(시트 = 렌더 화면)."""
-    from collections import Counter
-    from . import render
-    for i, c in enumerate(cands):
-        cover = render.cover_frame(c["path"], c.get("t", c["start"]))
-        big = vision.biggest(vision.faces(cover))
-        x = render.face_crop_x(cover.shape[1], spec.SLOT_W, (big["x"] + big["w"] / 2) if big else None)
-        slot = render.slot_from_cover(cover, x)
-        lk = vision.look(slot)
-        c.update(crop_x=x, who=vision.who(lk["box"], lk["emb"], anchor), face_h=lk["face_h"], cx_off=lk["cx_off"],
-                 subtitle_like=bool(lk["sub_like"]))
-        Image.fromarray(np.ascontiguousarray(slot[:, :, ::-1])).resize((THUMB_W, THUMB_H)).save(c["thumb"])
-        if i % 20 == 19:
-            log(f"[footage] 후보 태깅 {i + 1}/{len(cands)}")
-    log(f"[footage] 후보 태깅: {dict(Counter(c['who'] for c in cands))} · 박힌 자막 {sum(c['subtitle_like'] for c in cands)}")
-    return cands
->>>>>>> 3eed4f089ea3d76cfb60872628efb619285cc16f
 
 
 def collect(script, wd, reader=None, log=print):
@@ -571,11 +532,7 @@ def collect(script, wd, reader=None, log=print):
     cands = [c for c in cands if c["end"] - c["start"] >= shortest]     # 어떤 자막도 못 채우는 장면은 시트에서 뺀다
     cands = _even(cands, SHEET_COLS * SHEET_ROWS * MAX_SHEETS)
     log(f"[footage] 영상 {len(videos)}편 · 장면 후보 {len(cands)}개")
-<<<<<<< HEAD
     cands = tag_candidates(cands, ruler["anchor"], min_len=shortest, log=log)
-=======
-    tag_candidates(cands, ruler["anchor"], log=log)
->>>>>>> 3eed4f089ea3d76cfb60872628efb619285cc16f
     sp = sheets(cands, os.path.join(wd, "footage"))
     idx, fixed = pick(groups, cands, sp, reader, script.get("person", ""), log=log)
     if reader is not None and fixed > len(groups) * 0.3:
@@ -588,12 +545,8 @@ def collect(script, wd, reader=None, log=print):
     # 컷 = 자막 1:1, 각 컷은 한 장면 [start, start+자막초] 안(render.build 가 넘으면 멈춘다)
     cuts = [{"scene": k, "src": cands[k]["path"], "start": cands[k]["start"], "end": cands[k]["end"],
              "vid": cands[k]["vid"], "url": url.get(cands[k]["vid"]), "thumb": cands[k]["thumb"],
-<<<<<<< HEAD
              "crop_x": cands[k]["crop_x"], "face_cx": cands[k]["face_cx"], "who": cands[k]["who"],
              "subtitle_like": cands[k]["subtitle_like"], "sub_t": cands[k]["sub_t"], "who_t": cands[k]["who_t"]} for k in idx]
-=======
-             "crop_x": cands[k]["crop_x"], "who": cands[k]["who"], "subtitle_like": cands[k]["subtitle_like"]} for k in idx]
->>>>>>> 3eed4f089ea3d76cfb60872628efb619285cc16f
     return {"videos": [{k: v.get(k) for k in ("id", "title", "url", "query", "duration", "main_ratio")} for v in videos],
             "sources": table, "anchor": os.path.join(wd, "footage", "anchor.npy"), "anchor_from": ruler["anchor_from"],
             "n_cands": len(cands), "cuts": cuts, "sheets": sp, "fixed": fixed, "verify": verify}
@@ -670,11 +623,7 @@ def check_and_repick(groups, cands, idx, sheet_paths, reader, person, wd, log=pr
     tags = "\n".join(f"{k}: {cand_tags(cands[k])}" for k in free if cand_tags(cands[k]))
     prompt2 = (f"숏폼 편집자다. 주인공 {person}. 아래 자막들에 맞는 장면을 시트에서 다시 골라라.\n"
                f"쓸 수 있는 번호: {free}\n같은 번호 두 번 금지. 자막 내용(경기·메달·훈련 등)에 맞는 장면으로.\n"
-<<<<<<< HEAD
                + (f"얼굴 인식기 표식([박힌 자막]은 모든 자막에, [다른 사람]은 주인공 자막에 금지):\n{tags}\n" if tags else "") +
-=======
-               + (f"얼굴 인식기 표식(주인공 자막엔 [다른 사람]·[박힌 자막] 금지):\n{tags}\n" if tags else "") +
->>>>>>> 3eed4f089ea3d76cfb60872628efb619285cc16f
                f"[자막]\n{subs}\n출력 JSON: {{\"picks\": {{\"자막번호\": 장면번호, …}}}}")
     r2 = _call(reader, prompt2, sheet_paths, log, "picks") or {}
     new, n = list(idx), 0

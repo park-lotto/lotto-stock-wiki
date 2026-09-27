@@ -552,12 +552,8 @@ def test_fits_blocks_other_person_and_hardsub_on_main_caption():
     c = {"start": 0.0, "end": 9.0}
     assert not footage.fits(dict(c, who="다른사람"), main) and footage.fits(dict(c, who="다른사람"), other)
     assert not footage.fits(dict(c, who="주인공", subtitle_like=True), main)
-<<<<<<< HEAD
     assert not footage.fits(dict(c, who="주인공", subtitle_like=True), scene)    # 박힌 자막은 어느 자막에도(관문 ≤1컷과 같은 규칙)
     assert footage.fits(dict(c, who="다른사람"), scene)
-=======
-    assert footage.fits(dict(c, who="주인공", subtitle_like=True), scene)
->>>>>>> 3eed4f089ea3d76cfb60872628efb619285cc16f
     assert footage.fits(dict(c, who="판정불가(작음)"), main) and footage.fits(dict(c, who="얼굴없음"), main)
     # 모델이 주인공 자막에 다른 사람 장면을 골라도 버리고 메운다
     cands = [dict(c, who="다른사람"), dict(c, who="주인공")]
@@ -592,7 +588,6 @@ def test_subject_defaults_to_main():
     from shopping_shorts.channel_presets.hotpeople import rules
     assert rules.subject({}) == "main" and rules.subject({"subject": "OTHER"}) == "other"
     assert rules.subject({"subject": "누구"}) == "main" and rules.subject({"subject": "scene"}) == "scene"
-<<<<<<< HEAD
 
 
 def test_render_plan_seconds_equal_actual_frames(tmp_path):
@@ -724,5 +719,3 @@ def test_render_build_takes_window_from_face_cx(tmp_path):
                          capture_output=True).stdout
     slot = np.frombuffer(raw, np.uint8).reshape(spec.SLOT_H, spec.SLOT_W)
     assert abs(_white_cx(slot) - spec.SLOT_W / 2) < 6 and r["cuts"][0]["crop_x"] == render.crop_x(src, cx)
-=======
->>>>>>> 3eed4f089ea3d76cfb60872628efb619285cc16f
