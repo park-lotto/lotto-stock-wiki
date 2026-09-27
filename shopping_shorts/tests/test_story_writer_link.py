@@ -226,3 +226,13 @@ def test_pinned_line_is_enforced_and_real_names_flagged(monkeypatch):
     n = {}
     lines = sw.write_styled("열수축 필름", SEED, frame, [], {"MAT-1": {"secs": 3}}, seconds=5, note=n)
     assert lines[-1]["text"] == land and n["pinned_fixed"] == 1, "빈칸 없는 고정 문장은 코드가 끼운다"
+
+
+def test_brackets_copied_from_frame_are_stripped(monkeypatch):
+    """틀 글의 「」가 줄에 옮겨 오면 읽는 글에 괄호가 남는다(2026-09-27 실측 25작업 중 4작업)."""
+    monkeypatch.setattr(sw, "_BANK", {})
+    out = {"seed_points": [], "lines": [{"role": r, "text": "「%s 칸의 충분히 긴 대사인데 분량을 맞추려고 길게 말하는 거」" % r,
+                                         "cuts": ["MAT-1"]} for r in ["훅", "공개", "고조", "마무리"]]}
+    monkeypatch.setattr(sw._sg, "_call_json", lambda *a, **k: out)
+    lines = sw.write_styled("필름", SEED, sw.frame_of(None), [], {"MAT-1": {"secs": 3}}, seconds=16)
+    assert all(not L["text"].startswith("「") and not L["text"].endswith("」") for L in lines)

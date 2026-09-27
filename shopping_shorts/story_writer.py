@@ -169,7 +169,7 @@ STYLED_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 이 제품
 ■ 차별점 = 기능·특징·장점 — 씨앗이 이미 자랑한 셀링포인트는 **%(open_rule)s 말고는** 쓰지 마라.
   나머지 칸은 [재료]를 보고 **사람들이 좋아할 만한** 기능·특징·장점(씨앗에 없는 것)으로 채운다.
 ■ 후킹이 전부다 — 과장·어그로·지어낸 상황·인물·반응 다 좋다. 세게, 구체적으로, 끝까지 보게 써라.
-  단 **실존 인물 이름은 쓰지 마라**(연예인·셰프·유튜버·기업 대표 등) — 사람은 '요리사·주부·러너'처럼 보통명사로.
+  단 **실존 인물 이름은 쓰지 마라**(연예인·셰프·유튜버·기업 대표 등) — 사람은 이 제품을 쓸 법한 직업·집단의 보통명사로.
 %(copy_rule)s
   단 줄마다 화면에 붙일 컷은 있어야 한다(말과 영 딴판인 화면이 되지 않게).
 ■ 말투 — %(voice)s
@@ -382,7 +382,8 @@ def write_styled(product, seed_text, frame, vis, seg_index, platform="yt", secon
     note["seed_points"] = [str(p) for p in out.get("seed_points") or [] if str(p).strip()]
     lines = []
     for L in out.get("lines") or []:
-        t = (L.get("text") or "").strip()
+        # 틀 글의 「」를 줄에 그대로 옮겨 오는 일이 있다(2026-09-27 실측 25작업 중 4작업) — 읽는 글에 괄호는 없다
+        t = re.sub(r"^[「『\"']+|[」』\"']+$", "", (L.get("text") or "").strip()).strip()
         if t:
             lines.append({"role": str(L.get("role") or ""), "text": t,
                           "cuts": [c for c in (L.get("cuts") or []) if c in seg_index]})

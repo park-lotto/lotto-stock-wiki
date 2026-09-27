@@ -91,6 +91,9 @@ def main():
                         drop("말투 다름"); continue
                     if not (0.6 <= len(v) / max(1, len(x)) <= 1.6 or abs(len(v) - len(x)) <= 8):   # 짧은 원문(「완벽하다고」)은 글자 수로
                         drop("길이"); continue
+                    ws = v.split()
+                    if any(len(ws[j]) >= 2 and ws[j + 1].startswith(ws[j]) for j in range(len(ws) - 1)):
+                        drop("낱말 반복"); continue          # 실측: "진작 진작에 이렇게 나왔어야 한다는데"
                     if REAL.search(v):
                         drop("실존 인물"); continue
                     have.append(v); seen.add(k); stat["kept"] += 1
