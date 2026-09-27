@@ -20,8 +20,6 @@ ap = argparse.ArgumentParser(); ap.add_argument("dump"); ap.add_argument("--limi
 ap.add_argument("--quiet", action="store_true")
 # 2026-09-27 사장님 "무료 제미나이랑 버텍스 차이가 있는 것 같은데 객관적으로" — 같은 작업·같은 지시로 무료 키풀만 태운다
 ap.add_argument("--free", action="store_true", help="Vertex를 끄고 무료 키풀(대본생성 모델)로만")
-# 2026-09-27: 앱처럼 제품 사실(쿠팡 수집분·제미니 지식·웹검색 wow)을 같이 준다 — app의 같은 함수를 부른다(캐시 공유)
-ap.add_argument("--facts", action="store_true")
 args = ap.parse_args()
 os.chdir(ROOT)
 from shopping_shorts import story_writer as sw
@@ -44,17 +42,9 @@ all_lines = {}          # 정규화 글 → 나온 작업들
 tot = {"tpl_copy": 0, "cross_same": 0, "drafts": 0, "order_bad": 0, "seed_rep": 0, "no_cut": 0, "ab_over": 0, "fail_work": 0, "not_vertex": 0}
 for w in works:
     spines = [D["spines"][str(i)] for i in w["style_ids"] if D["spines"].get(str(i))]
-    facts = ""
-    if args.facts:
-        from shopping_shorts import app as A
-        from shopping_shorts.store import Store as _S
-        _st = _S(A.DB_PATH)
-        facts = "\n\n".join(x for x in (A._facts_block_for_job(w["job_id"], _st, w["product"]),
-                                         A._wow_block_for([{"product": w["product"]}], _st)) if x)
-        print("   제품 사실 %d자: %s" % (len(facts), facts[:160].replace("\n", " / ")))
     try:
         drafts, why = sw.make_drafts(spines[:1], w["job"], 25, job_id=w["job_id"], preset="short",
-                                     seed_text=w["seed_text"], seed_product=w["product"], facts=facts)
+                                     seed_text=w["seed_text"], seed_product=w["product"])
     except Exception as e:      # noqa: BLE001
         drafts, why = [], "예외 %r" % e
     print("\n" + "=" * 72 + "\n작업 %s (%s) 스타일 %s — why=%r" % (
