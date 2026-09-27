@@ -17,6 +17,7 @@
 
 시험대 원본: tools/seed_analyzer/ · 한 번 호출 시험: tools/script_diff/nova_style_proto.py · 결과물 검사: tools/script_diff/check_styled.py
 """
+import json
 import re
 
 from shopping_shorts import script_generate as _sg
@@ -298,6 +299,61 @@ SEED_FRAME = {
 }
 
 
+# ★v4(2026-09-28 사장님 "전체적인 문장틀을 주는 건 괜찮은데 빈칸을 주면서 단어를 바꾸라고 하는 게 제일 큰 문제"):
+#   빈칸 문장틀은 보여 주지 않는다. 칸은 **하는 일**로 설명하고, 본보기는 같은 유형·같은 말투의 **히트작 원문 한 편**(원문형 스파인,
+#   09-20 확정 — 원문 한 편을 통째로 보여주고 제품 이야기만 바꿔 쓰게 하면 소재 12종 36편 중 34편 통과)을 완성 문장 그대로.
+ROLE_DESC = {
+    "title": "화면 제목 — 스타일 이름의 꼴로 이 제품 제목을 새로 짓는다", "hook": "첫 줄 — 멈춰 보게 만드는 한마디",
+    "bait": "미끼 — 이게 뭔지 궁금하게, 어디서 난리 났는지", "fame": "화제 — 누가 어떻게 대박 났는지·입소문",
+    "reveal": "공개 — 이건 바로 (제품)", "limit": "기존 한계 — 예전엔 어떤 순간에 어떻게 괴로웠나",
+    "solve": "해결 — 이 제품이 그 괴로움을 없애 버린 것", "more": "심지어 — 또 하나의 장점", "twist": "재반전 — 가장 센 한 방",
+    "land": "마무리 — 짧은 한마디", "origin": "원래 용도 — 원래는 무엇에 쓰던 물건인지", "notice": "눈치챔 — 사람들이 알아챈 숨은 쓸모",
+    "cases": "초보 활용 — 흔한 쓰임", "escalation": "고수 활용·심지어 — 더 센 쓰임", "story": "도입 썰 — 어떻게 뜨게 됐나",
+    "benefit": "장점 — 가장 놀라운 기능", "price": "가격 — 값 대비 놀라움", "deal": "가성비", "howto": "사용법",
+    "vs": "예전과 비교", "proof": "증거 — 주변 반응·후기", "power": "위력", "easy": "쉬움", "extra": "덤",
+    "react": "반응 — 보고 놀란 순간", "what": "정체", "good": "좋은 점", "pain": "불편", "how": "원리",
+    "escalate": "더 나아가", "problem": "불편 — 예전의 고생", "mechanism": "원리 — 알고 보니 왜 되는지",
+    "ease": "쉬움 — 쓰는 법이 간단함", "result": "결과 — 써 보니 달라진 장면", "cta": "댓글 유도",
+    "situation": "상황", "ask": "물어봄", "method": "방법", "regret": "후회 — 진작 알았으면", "mistake": "실수",
+    "authority": "권위 — 전문가의 말", "reason": "이유", "context": "맥락", "spec": "사양", "bonus": "덤",
+    "targets": "대상", "spread": "입소문", "scale": "규모",
+}
+_ORIGINS = None
+
+
+def _origin_pool():
+    """원문형 스파인(히트작 원문) 목록 [(유형들, 플랫폼, cells)]. DB가 없으면 빈 목록(테스트·로컬)."""
+    global _ORIGINS
+    if _ORIGINS is None:
+        _ORIGINS = []
+        try:
+            from shopping_shorts import config, backbone_assemble as ba
+            from shopping_shorts.store import Store
+            if config.DB_PATH.exists():
+                st = Store(config.DB_PATH)
+                for status in ("approved", "pending"):
+                    for o in st.list_spines(status=status) or []:
+                        org = ba.spine_origin(o)
+                        if not org:
+                            continue
+                        cells = [c for c in org.get("cells") or [] if (c.get("text") or "").strip()]
+                        typs = o.get("fit_categories") or json.loads(o.get("fit_categories_json") or "[]")
+                        _ORIGINS.append((list(typs), seed_platform(" ".join(c["text"] for c in cells)), cells))
+        except Exception as e:      # noqa: BLE001 — 본보기가 없어도 대본은 칸 설명으로 쓴다
+            import sys
+            print("원문형 스파인 못 읽음(%r) — 본보기 없이 씀" % e, file=sys.stderr)
+    return _ORIGINS
+
+
+def origin_example(sp, key, platform):
+    """고른 스타일과 **같은 유형·같은 말투**의 히트작 원문 한 편(cells) — 작업마다 순번. 없으면 []."""
+    import zlib
+    typs = sp.get("fit_categories") or json.loads(sp.get("fit_categories_json") or "[]") if sp else []
+    typ = (typs or [""])[0]
+    pool = [c for t, plat, c in _origin_pool() if typ in t and plat == platform]
+    return pool[zlib.crc32(("%s|origin" % key).encode("utf-8")) % len(pool)] if pool else []
+
+
 def frame_of(sp, key="", platform="yt"):
     """스타일(스파인) → 틀. sp가 None이면 씨앗 결(씨앗 대본의 흐름이 곧 틀).
     돌려주는 것: {name, roles(칸 순서 — 씨앗 결이면 None), block(프롬프트에 싣는 틀 글), pinned(공통 칸 고정 문장)}"""
@@ -308,14 +364,13 @@ def frame_of(sp, key="", platform="yt"):
     tpl = sp.get("templates") if isinstance(sp.get("templates"), dict) else {}
     roles = [str(r) for r in (sp.get("beat_roles") or []) if str(r).strip()] or [k for k in tpl if tpl.get(k)]
     pinned = common_lines(sp, key)
-    skel = skeleton_lines(sp, key)
     yt = bool(sp.get("no_cta"))
     rows = []
     for r in roles:
         if r in pinned:
             rows.append("  %s: 【그대로】「%s」 — 이 문장은 글자 그대로 쓴다" % (r, pinned[r]))
             continue
-        line = ("  %s: 뼈대 「%s」" % (r, skel[r])) if r in skel else ("  %s: (예시 없음)" % r)
+        line = "  %s: %s" % (r, ROLE_DESC.get(r, r))
         if yt and r in GOJO3:
             line += " — 【고조 3줄】 ①그 순간(언제·무엇을 하다가) ②그때 벌어지던 불편 ③이 제품이 그걸 없애 버린 것. 이 칸 이름으로 3줄"
         elif yt and r in GOJO_OPEN:
@@ -323,7 +378,7 @@ def frame_of(sp, key="", platform="yt"):
         rows.append(line)
     return {"name": sp.get("name") or "", "roles": roles, "pinned": pinned,
             "gojo": {r: (3 if r in GOJO3 else 2) for r in roles if yt and (r in GOJO3 or r in GOJO_OPEN)},
-            "block": "%s\n%s" % (sp.get("name") or "", "\n".join(rows)),
+            "block": "%s\n%s%s" % (sp.get("name") or "", "\n".join(rows), _origin_block(origin_example(sp, key, "yt" if yt else "ig"))),
             # 베낌 검사는 화면에 보여준 2개만이 아니라 그 칸의 예시 전부와 댄다
             "examples": {r: [x for x in (tpl.get(r) or []) if isinstance(x, str) and x.strip()] for r in roles},
             # ★유튜브 썰 스타일은 예시가 히트작 관용구(시그널)다 — 그대로 쓰는 게 맞다(베낌 검사 제외).
@@ -331,6 +386,13 @@ def frame_of(sp, key="", platform="yt"):
             #   재료를 4.8배 늘려도 +3개뿐(포화) — handoff/장면분량.md "조사 결과". 사장님 09-22 "시그널에는 같은 단어를 쓰는게
             #   맞아, 사람들이 익숙하고 좋아하는 지점"(tools/seed_analyzer/signal_sets.py). 변형은 인스타 스타일만(09-27).
             "keep_idioms": bool(sp.get("no_cta"))}
+
+
+def _origin_block(cells):
+    if not cells:
+        return ""
+    return ("\n\n[본보기 — 이 스타일 유형으로 실제 터진 원문 한 편. 말투·문장 흐름·끝말만 본보기로 삼고, 내용·제품·인물은 가져오지 마라]\n"
+            + "\n".join("  %s" % c["text"] for c in cells))
 
 
 def _collapse(roles):
@@ -419,9 +481,9 @@ def write_styled(product, seed_text, frame, vis, seg_index, platform="yt", secon
     note = note if note is not None else {}
     chars = int(seconds * script_gate.SPEECH_CHARS_PER_SEC)
     # ★빈칸 채우기가 아니다(09-21 검증 tools/simple_writer/brief_style.txt: 3.6 Flash 20/20) — 뼈대는 말투·칸 순서의 본보기다.
-    frame_rule = ("**빈칸 채우기가 아니다.** [스타일 틀]의 **칸 순서와 말투**를 그대로 따르되, 칸마다 뼈대 문장을 본보기로 삼아 "
-                  "[재료]를 보고 이 제품 이야기로 **새로 쓴다**. 【그대로】 줄만 글자 그대로 쓴다. 칸 하나에 1~2줄(고조 칸은 표시된 줄 수), "
-                  "role에는 칸 이름을 그대로 적는다. 칸을 빼거나 순서를 바꾸지 마라."
+    frame_rule = ("[스타일 틀]의 **칸 순서**대로, 칸마다 적힌 **하는 일**을 [재료]를 보고 이 제품 이야기로 **새로 쓴다**. "
+                  "문장의 말투·흐름·끝말은 [본보기] 히트작 원문을 따른다(내용은 가져오지 마라). 【그대로】 줄만 글자 그대로 쓴다. "
+                  "칸 하나에 1~2줄(고조 칸은 표시된 줄 수), role에는 칸 이름을 그대로 적는다. 칸을 빼거나 순서를 바꾸지 마라."
                   if frame.get("roles") else
                   "[씨앗 대본]의 흐름을 그대로 따라 쓴다(문장은 새로). role에는 그 줄이 하는 일(훅·미끼·공개·고조·반전·마무리 등)을 적는다.")
     brief = STYLED_BRIEF % {"frame_rule": frame_rule, "copy_rule": COPY_RULE[bool(frame.get("keep_idioms"))], "open_rule": "앞 두 칸" if frame.get("roles") else "첫 줄",

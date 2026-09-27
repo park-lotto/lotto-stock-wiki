@@ -34,7 +34,8 @@ for w in D["works"]:
                 "old": [{"name": d.get("style_name"), "beats": beats(d)} for d in w.get("old_drafts") or []],
                 "new": [{"name": d.get("style_name"), "beats": beats(d), "pinned": (d.get("writer_note") or {}).get("pinned") or {},
                          "retry": bool((d.get("writer_note") or {}).get("retry")), "problems": (d.get("writer_note") or {}).get("problems"),
-                         "auth": (d.get("writer_note") or {}).get("auth"), "chars": d.get("chars"), "sec": d.get("sec")}
+                         "auth": (d.get("writer_note") or {}).get("auth"), "chars": d.get("chars"), "sec": d.get("sec"),
+                         "seed_points": d.get("seed_points") or []}
                         for d in drafts]})
     print("%s %s %.1fs %s" % (w["work_id"], w["product"][:20], secs, why or "ok"), file=sys.stderr)
     if args.limit and len(res) >= args.limit:

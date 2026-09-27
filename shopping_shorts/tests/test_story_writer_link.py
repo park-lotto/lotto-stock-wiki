@@ -223,7 +223,7 @@ def test_pinned_line_is_enforced_and_real_names_flagged(monkeypatch):
     monkeypatch.setattr(sw, "_BANK", {})
     frame = sw.frame_of(YT_SP, "k")
     land = frame["pinned"]["land"]
-    assert "【그대로】" in frame["block"] and "뼈대 「" in frame["block"]
+    assert "【그대로】" in frame["block"] and "{" not in frame["block"].replace("【그대로】", ""), "빈칸 문장틀은 보여 주지 않는다(v4)"
     assert set(frame["pinned"]) == {"land"}, "빈칸 있는 제목·미끼·공개는 고정하지 않는다"
     out = {"seed_points": [], "lines": [
         {"role": "title", "text": "백종원도 감탄한 필름의 정체", "cuts": ["MAT-1"]},
@@ -273,3 +273,17 @@ def test_youtube_gojo_rows_are_written_not_pinned(monkeypatch):
              {"role": "land", "text": f["pinned"]["land"], "cuts": ["MAT-1"]}]
     probs = sw.styled_problems({"seed_points": [], "lines": lines}, f, {"MAT-1": {}}, seconds=5)
     assert any(p.startswith("more 칸은 고조 3줄") for p in probs) and any(p.startswith("limit 칸은 고조 2줄") for p in probs)
+
+
+def test_v4_frame_shows_origin_hit_not_blank_templates(monkeypatch):
+    """2026-09-28 사장님: 전체 문장틀은 좋지만 빈칸 주고 단어 바꾸라는 게 제일 큰 문제 — 칸은 하는 일로, 본보기는 같은 유형 히트작 원문."""
+    monkeypatch.setattr(sw, "_BANK", {})
+    monkeypatch.setattr(sw, "_ORIGINS", [(["제품정체형"], "yt", [{"role": "훅", "text": "역발상으로 돈방석 앉은 육아천재의 발명품"}]),
+                                         (["제품정체형"], "ig", [{"role": "훅", "text": "와 이거 진짜 대박이더라고요"}]),
+                                         (["오용형"], "yt", [{"role": "훅", "text": "개발자도 예상 못한 활용법"}])])
+    sp = {"id": 74, "name": "유튜브 「OO의 정체」", "no_cta": True, "fit_categories": ["제품정체형"],
+          "beat_roles": ["title", "bait", "reveal"], "templates": {"title": ["{대상}이 쓰는 {제품}의 정체"], "bait": ["요새 {제품군} 하나로 난리라는데"]}}
+    b = sw.frame_of(sp, "k", "yt")["block"]
+    assert "{" not in b, "빈칸 문장틀이 프롬프트에 없다"
+    assert "역발상으로 돈방석 앉은 육아천재의 발명품" in b, "같은 유형·같은 말투(yt) 원문"
+    assert "와 이거 진짜" not in b and "개발자도 예상 못한" not in b, "다른 말투·다른 유형 원문은 안 쓴다"
