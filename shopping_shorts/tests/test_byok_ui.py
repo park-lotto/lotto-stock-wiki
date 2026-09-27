@@ -131,9 +131,11 @@ def test_sidebar_settings_is_free():
 def test_calls_real_backend_endpoints():
     """Task 8 백엔드를 실제로 부르는지 — 목업으로 끝내지 않았는지."""
     txt = _HTML.read_text(encoding="utf-8")
-    for ep in ("/api/settings/points", "/api/settings/keys",
+    for ep in ("/api/settings/keys",
                "/api/settings/keys/delete", "/api/settings/keys/verify"):
         assert ep in txt, f"{ep} 호출이 없다"
+    # 2026-09-27 사장님: 포인트 제도는 렌즈·렌더 하루 10회만 남기고 마이페이지 포인트 탭을 뺐다 — 다시 부르면 안 된다
+    assert "/api/settings/points" not in txt
 
 
 def test_handles_master_key_disabled():
@@ -156,10 +158,12 @@ def test_watch_link_is_constant_not_hash_href():
     assert "GUIDE_VIDEO" in txt, "가이드 영상 URL 상수가 없다"
 
 
-def test_has_refund_notice():
-    """하단 고지 — 환불 원칙이 적혀 있어야 한다."""
+def test_no_points_tab():
+    """2026-09-27 사장님: 포인트 제도(충전·단가·환불 고지)는 안 쓴다 — 포인트 탭·충전 버튼이 다시 생기면 안 된다.
+    (예전 test_has_refund_notice는 포인트 환불 고지를 요구했다 — 제도가 없어져 뒤집었다)"""
     txt = _HTML.read_text(encoding="utf-8")
-    assert "환불" in txt
+    assert 'id="tabPoints"' not in txt and 'id="panePoints"' not in txt
+    assert "askCharge()" not in txt
 
 
 def test_includes_sidebar():
