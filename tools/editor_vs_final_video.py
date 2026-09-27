@@ -116,6 +116,24 @@ def _boundary(fe, ff, me, mf, ie_b, jf_b):
     return (best[2] - exp) / FPS, float(me[ieb])
 
 
+def _save_boundary_strip(path, rE, rF, ie_b, jf_b, ne=4, nf=8):
+    """경계 눈 확인용 띠: 위 줄 = 편집 화면 ie_b-ne..ie_b+ne, 아래 줄 = 완성본 jf_b-nf..jf_b+nf(가운데 정렬). 프레임 번호를 적는다."""
+    ei = [i for i in range(ie_b - ne, ie_b + ne + 1) if 0 <= i < len(rE)]
+    fj = [j for j in range(jf_b - nf, jf_b + nf + 1) if 0 <= j < len(rF)]
+    n = max(len(ei), len(fj), 1)
+    im = Image.new("RGB", (W * n, 2 * H + 28), "black")
+    dr = ImageDraw.Draw(im)
+    xe = (n - len(ei)) // 2 * W
+    for k, i in enumerate(ei):
+        im.paste(Image.fromarray(rE[i]), (xe + k * W, 0))
+        dr.text((xe + k * W + 3, 2), "E%d%s" % (i, "*" if i == ie_b else ""), fill=(255, 255, 0) if i == ie_b else (200, 200, 200))
+    xf = (n - len(fj)) // 2 * W
+    for k, j in enumerate(fj):
+        im.paste(Image.fromarray(rF[j]), (xf + k * W, H + 14))
+        dr.text((xf + k * W + 3, H + 16), "F%d%s" % (j, "*" if j == jf_b else ""), fill=(255, 255, 0) if j == jf_b else (200, 200, 200))
+    im.save(path, quality=80)
+
+
 def check(jid):
     from shopping_shorts import app, mix_pipeline as mp, video_assemble as va, screen_clips as sc, clean_base as cb
     from shopping_shorts.store import Store
@@ -216,6 +234,13 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
             bs, spike = _boundary(fe, ff, me, mf, ie_b, jf_b)
             samples.append({"job": jid, "beat": int(b["beat_idx"]), "cut": ci, "kind": "boundary",
                             "bshift": None if bs is None else round(bs, 3), "spike": round(spike, 3)})
+            if bs is not None and bs >= 9.0:
+                # ★"②에 그 경계 없음"(9.9)은 도구의 한계인지 진짜 컷 누락인지 숫자로는 못 가른다 — 눈으로 볼 띠를 남긴다
+                #   (2026-09-27 30 job 대조에서 7곳이 이 표기로 남아 원인 미확인). 위 = 화면 경계 ±4프레임, 아래 = 완성본 예상 자리 ±8프레임.
+                try:
+                    _save_boundary_strip(OUT / ("bnd_%s_b%d_c%d.jpg" % (jid, int(b["beat_idx"]), ci)), rE, rF, ie_b, jf_b)
+                except Exception as _e:      # noqa: BLE001 — 사진은 보조. 판정을 막지 않는다
+                    print("[evf] 경계 띠 저장 실패 %s b%d c%d: %s" % (jid, int(b["beat_idx"]), ci, _e), file=sys.stderr)
             if bs is not None:
                 bsh.append((ci, round(bs, 3)))
         _nh = [x for x, h in shifts if not h]; _h = [x for x, h in shifts if h]
