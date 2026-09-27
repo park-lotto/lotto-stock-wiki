@@ -42,8 +42,12 @@ def test_proxy_carries_audio():
 
 
 def test_beat_audio_is_padded_to_video():
-    """칸 음성을 그 칸 영상 길이에 맞춰야 누적 밀림이 0이 된다(실측 6칸에 0.131초)."""
-    assert '"-af", "apad"' in _build_body(), "칸 길이를 안 맞춘다(뒤로 갈수록 자막이 밀린다)"
+    """칸 소리는 그 칸 영상 프레임 수에 맞춰 **한 줄로** 놓는다 — 완성본과 같은 video_assemble.narration_track(2026-09-27).
+    칸마다 AAC 를 따로 굽는 옛 방식(-af apad … -c:a aac + concat)은 칸당 채움 표본이 쌓여 목소리가 늦었다.
+    실제 호출은 test_pvproxy_narration.py 가 스파이로 잰다 — 여기는 옛 방식이 되살아나지 않았는지만 본다."""
+    b = _build_body()
+    assert "video_assemble.narration_track(" in b, "미리보기가 완성본과 다른 소리 배치를 쓴다(0순위-B)"
+    assert '"apad"' not in b and "alist.txt" not in b, "칸별 AAC 굽기가 되살아났다(칸마다 목소리가 늦어진다)"
 
 
 def test_cut_boundaries_get_keyframes():

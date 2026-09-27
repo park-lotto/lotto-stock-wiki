@@ -165,13 +165,35 @@ def _beat_source_clips(plan, timeline, source_video_paths, out_dir, src_durs=Non
     out_dir.mkdir(parents=True, exist_ok=True)
     beats_by_idx = {b["beat_idx"]: b for b in plan.get("beats", [])}
     clips = []
+    # ★조각 = 완성본 컷 계획(video_assemble.render_cut_plan)의 컷 그대로 — 당긴 시작·읽는 길이까지 렌더와 같은 값(2026-09-27).
+    #   계획에 없는 칸만 아래 종전 조각 계획(_beat_clips, primary 폴백)으로 간다.
+    durs = src_durs or _durs_of(source_video_paths)
+    done = set()
+    try:
+        from shopping_shorts.video_assemble import render_cut_plan
+        roles = {b["beat_idx"]: b.get("role") for b in timeline}
+        bd = {b["beat_idx"]: float(b.get("dur") or 0.0) for b in timeline if float(b.get("dur") or 0.0) > 0}
+        for bp in render_cut_plan(plan, {}, source_video_paths, beat_durs=bd, src_durs=durs):
+            done.add(bp["idx"])
+            role = safe_name(roles.get(bp["idx"]) or "", default="scene")
+            for cp in bp["clips"]:
+                src = source_video_paths.get(cp["video_id"])
+                sd = float(cp["clip"].get("src_dur") or 0.0)
+                if not src or not sd:
+                    continue
+                out = out_dir / f"beat_{bp['idx']:02d}_{cp['j']}_{role}.mp4"
+                if _cut_clip(src, cp["start"], float(cp["start"]) + sd, out):
+                    clips.append(out)
+    except Exception as e:      # noqa: BLE001 — 계획 실패가 ZIP 전체를 막으면 안 된다(대신 경보)
+        print("ZIP 완성본 컷 계획 실패(종전 조각 계획으로 대체): %s" % str(e)[:160], file=sys.stderr)
     for b in timeline:
+        if b["beat_idx"] in done:
+            continue
         beat = beats_by_idx.get(b["beat_idx"])
         if not beat:
             continue
         role = safe_name(b.get("role") or "", default="scene")
-        for ci, c in enumerate(_beat_clips(beat, b.get("dur", 0.0),
-                                           src_durs or _durs_of(source_video_paths))):
+        for ci, c in enumerate(_beat_clips(beat, b.get("dur", 0.0), durs)):
             src = source_video_paths.get(c.get("video_id"))
             st, sd = c.get("start"), c.get("src_dur")
             if not src or st is None or not sd:

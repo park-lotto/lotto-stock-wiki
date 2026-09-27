@@ -123,7 +123,8 @@ def _button(monkeypatch, tmp_path, job):
     #   정본 경로에서 clean_video_path 를 지금 편성으로 채우는 것 — 2026-09-27)
     monkeypatch.setattr(mp, "assemble_clean_video",
                         lambda *a, **k: calls.append("assemble" if k.get("clean_fn") else "reassemble") or None)
-    mp.run_clean_sources("j", "db", str(tmp_path))
+    from shopping_shorts.tests._clean_consent import consent
+    mp.run_clean_sources("j", "db", str(tmp_path), **consent(store, job, tmp_path / "j", "button"))
     return store, calls
 
 

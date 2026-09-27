@@ -144,7 +144,8 @@ def test_정본_증분_뒤_clean_video_path는_extras_조각으로_조립(tmp_pa
         Path(out).write_bytes(b"m" * 2048)
         return out
     monkeypatch.setattr(mp, "assemble", _asm)
-    mp.run_clean_sources("j", "db", str(tmp_path))
+    from shopping_shorts.tests._clean_consent import consent
+    mp.run_clean_sources("j", "db", str(tmp_path), **consent(store, job, work, "button"))
 
     extras = cb.load_base(work).get("extras") or {}
     assert "cb0_0" in extras                                  # 증분 조각이 정본에 붙었다
