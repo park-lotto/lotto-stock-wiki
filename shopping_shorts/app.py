@@ -5060,6 +5060,11 @@ def _save_render_inputs(store, job_id, **fields):
             if (mix_pipeline.intro_signature(before.get("thumbnail"), job_id)
                     != mix_pipeline.intro_signature(value, job_id)):
                 render_changed = True
+        elif key == "deco":
+            # ★장면꾸미기 저장값의 화면 전용 값(보고 있던 장면·틀)은 비교에서 뺀다 — 판단은 scene_style.deco_render_view 한 곳.
+            from .scene_style import deco_render_view
+            if deco_render_view(before.get("deco")) != deco_render_view(value):
+                render_changed = True
         elif before.get(key) != value:
             render_changed = True
 

@@ -5602,7 +5602,8 @@ def _render_stamp(job):
         except Exception as e:      # noqa: BLE001 — 도장 실패가 렌더를 죽이면 안 된다
             return "ERR:%s" % type(e).__name__
     job = job or {}
-    parts = [_norm(job.get(k)) for k in ("deco", "headcopy", "caption_style", "subtitle_removal")]
+    from .scene_style import deco_render_view   # 장면꾸미기 화면 전용 값(sceneIndex·frameKind)은 도장에서 뺀다(2026-09-28)
+    parts = [_norm(deco_render_view(job.get("deco")))] + [_norm(job.get(k)) for k in ("headcopy", "caption_style", "subtitle_removal")]
     parts.append(_norm(_safe(lambda: clean_tier_of(job))))
     parts.append(_norm(_safe(lambda: clean_selection_of(job))))
     parts.append(_norm(_safe(lambda: intro_signature(job.get("thumbnail"), job.get("job_id")))))
