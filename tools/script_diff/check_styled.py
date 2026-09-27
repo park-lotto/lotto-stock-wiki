@@ -66,7 +66,7 @@ for w in works:
                and len(sw._seed_word_hits(b.get("text"), pts, w["product"])) >= 2]
         tot["seed_rep"] += len(rep)
         nocut = sum(1 for b in beats if not b.get("src_segs"))
-        exs = frame.get("examples") or {}
+        exs = {} if frame.get("keep_idioms") else (frame.get("examples") or {})   # 유튜브 관용구는 베낌 아님(생성기와 같은 잣대)
         copy = [i + 1 for i, b in enumerate(beats)
                 if any(sw._gram_share(b.get("text"), x) >= sw.TEMPLATE_COPY_SHARE for x in exs.get(b.get("role"), []))]
         tot["tpl_copy"] += len(copy)

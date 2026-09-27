@@ -173,3 +173,15 @@ def test_template_copy_is_a_problem_but_skeleton_variant_is_not():
     varied = run(["이거 모르고 애 안았다간 허리 나가요", "주변 육아 아빠들이 다 이거 쓰길래 저도 궁금해서 봤거든요",
                   "아이 들어 올려서 착 얹으면 끝이라 편하더라고요", "목마 궁금한 분은 댓글에 아빠 남겨주세요"])
     assert varied == []
+
+
+def test_youtube_idioms_are_kept_not_flagged():
+    """유튜브 썰 스타일(no_cta)의 예시는 히트작 관용구 — 그대로 써도 문제가 아니다(인스타만 변형 검사)."""
+    yt = {"id": 74, "name": "유튜브 「OO의 정체」", "no_cta": True, "beat_roles": ["reveal", "land"],
+          "templates": {"reveal": ["이건 바로 {제품}"], "land": ["이러니 떼돈을 벌었다고"]}}
+    out = {"seed_points": [], "lines": [{"role": "reveal", "text": "이건 바로 열수축 필름", "cuts": ["MAT-1"]},
+                                        {"role": "land", "text": "이러니 떼돈을 벌었다고", "cuts": ["MAT-1"]},
+                                        {"role": "land", "text": "이러니 떼돈을 벌었다고", "cuts": ["MAT-1"]}]}
+    assert not any("틀 예시" in p for p in sw.styled_problems(out, sw.frame_of(yt), {"MAT-1": {}}, seconds=3))
+    ig = dict(yt, no_cta=False)
+    assert any("틀 예시" in p for p in sw.styled_problems(out, sw.frame_of(ig), {"MAT-1": {}}, seconds=3))

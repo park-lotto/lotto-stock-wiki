@@ -169,8 +169,7 @@ STYLED_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 이 제품
 ■ 차별점 = 기능·특징·장점 — 씨앗이 이미 자랑한 셀링포인트는 **%(open_rule)s 말고는** 쓰지 마라.
   나머지 칸은 [재료]를 보고 **사람들이 좋아할 만한** 기능·특징·장점(씨앗에 없는 것)으로 채운다.
 ■ 후킹이 전부다 — 과장·어그로·지어낸 상황·인물·반응 다 좋다. 세게, 구체적으로, 끝까지 보게 써라.
-■ 예시 문장은 **뼈대(말 순서·끝말)만** 빌리고 낱말은 이 제품·이 상황의 말로 바꿔라. 예시를 그대로 옮기면
-  이 스타일을 고른 모든 영상이 같은 말로 시작하고 끝난다(훅·미끼·마무리처럼 제품과 무관한 칸도 마찬가지).
+%(copy_rule)s
   단 줄마다 화면에 붙일 컷은 있어야 한다(말과 영 딴판인 화면이 되지 않게).
 ■ 말투 — %(voice)s
 ■ 분량 — 전체 약 %(chars)d자(읽으면 약 %(secs)d초).
@@ -193,7 +192,12 @@ def frame_of(sp):
     return {"name": sp.get("name") or "", "roles": roles,
             "block": "%s\n%s" % (sp.get("name") or "", "\n".join(rows)),
             # 베낌 검사는 화면에 보여준 2개만이 아니라 그 칸의 예시 전부와 댄다
-            "examples": {r: [x for x in (tpl.get(r) or []) if isinstance(x, str) and x.strip()] for r in roles}}
+            "examples": {r: [x for x in (tpl.get(r) or []) if isinstance(x, str) and x.strip()] for r in roles},
+            # ★유튜브 썰 스타일은 예시가 히트작 관용구(시그널)다 — 그대로 쓰는 게 맞다(베낌 검사 제외).
+            #   근거: 이븐쇼핑 22편 `천재` 22/22·`최근` 21/22·`말도 안 되는` 21/22·`이건 바로` 17/22, 관용구는 261→1242편으로
+            #   재료를 4.8배 늘려도 +3개뿐(포화) — handoff/장면분량.md "조사 결과". 사장님 09-22 "시그널에는 같은 단어를 쓰는게
+            #   맞아, 사람들이 익숙하고 좋아하는 지점"(tools/seed_analyzer/signal_sets.py). 변형은 인스타 스타일만(09-27).
+            "keep_idioms": bool(sp.get("no_cta"))}
 
 
 def _collapse(roles):
@@ -217,7 +221,7 @@ def styled_problems(out, frame, seg_index, seed_text="", product="", seconds=25,
         if got != roles:
             probs.append("칸 순서가 틀이 아니다 — 나온 순서 %s / 틀 %s. 틀의 칸을 빠짐없이 순서대로" % (" → ".join(got), " → ".join(roles)))
     n_open = 2 if roles else 1
-    exs = frame.get("examples") or {}
+    exs = {} if frame.get("keep_idioms") else (frame.get("examples") or {})
     for i, L in enumerate(lines):
         for x in exs.get(str(L.get("role")), []):
             if _gram_share(L.get("text"), x) >= TEMPLATE_COPY_SHARE:
@@ -250,6 +254,12 @@ MIN_STYLED_LINES = 3
 # 줄이 틀 예시 문장을 옮겼나 — 줄의 4글자 조각 중 예시에도 있는 비율. 2026-09-27 사장님 "뼈대는 같아도 변형하면
 #   다른 내용처럼 보인다"(사회증거형 6작업이 "주변에서 하나둘 다 이거 쓰길래 저만 모르나 싶었어요"를 거의 그대로 씀).
 TEMPLATE_COPY_SHARE = 0.6
+COPY_RULE = {
+    False: "■ 예시 문장은 **뼈대(말 순서·끝말)만** 빌리고 낱말은 이 제품·이 상황의 말로 바꿔라. 예시를 그대로 옮기면\n"
+           "  이 스타일을 고른 모든 영상이 같은 말로 시작하고 끝난다(훅·미끼·마무리처럼 제품과 무관한 칸도 마찬가지).",
+    True: "■ 예시의 관용구(최근 딱 봤을 때는·말도 안 되는·이건 바로·충격적인 포인트는·이러니 떼돈을 벌었다고 같은 말)는\n"
+          "  히트작 시그널이다 — 그대로 살리고 {빈칸}만 이 제품으로 채워라. 마무리 칸은 예시 중 하나를 그대로 써라.",
+}
 AB_MAX_SHARE = 0.4      # 두 안의 4글자 조각 겹침 상한(0.4 = 조각 열에 넷이 같다). 실측 근거는 tools/script_diff/check_styled.py
 
 
@@ -263,7 +273,7 @@ def write_styled(product, seed_text, frame, vis, seg_index, platform="yt", secon
                   "칸 하나에 1~2줄, role에는 칸 이름을 그대로 적는다. 칸을 빼거나 순서를 바꾸지 마라. {빈칸}은 이 제품 내용으로 채운다."
                   if frame.get("roles") else
                   "[씨앗 대본]의 흐름을 그대로 따라 쓴다(문장은 새로). role에는 그 줄이 하는 일(훅·미끼·공개·고조·반전·마무리 등)을 적는다.")
-    brief = STYLED_BRIEF % {"frame_rule": frame_rule, "open_rule": "앞 두 칸" if frame.get("roles") else "첫 줄",
+    brief = STYLED_BRIEF % {"frame_rule": frame_rule, "copy_rule": COPY_RULE[bool(frame.get("keep_idioms"))], "open_rule": "앞 두 칸" if frame.get("roles") else "첫 줄",
                             "voice": _VOICE.get(platform, _VOICE["yt"]), "chars": chars, "secs": int(seconds)}
     prompt = "%s\n\n[제품] %s\n\n[씨앗 대본]\n%s\n\n[스타일 틀]\n%s\n\n[재료]\n%s" % (
         brief, product or "(미상)", (seed_text or "").strip()[:1500], frame["block"], source_block(vis))
