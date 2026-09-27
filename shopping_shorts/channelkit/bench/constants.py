@@ -12,7 +12,7 @@ LAYOUT_W = 540            # 레이아웃 표본 가로 해상도(세로는 원�
 WINDOW_PX_STD = 12        # 영상창 화소 = 시간 표준편차 > 12 (shop body_layout·노빠꾸 layout 공통)
 WINDOW_ROW_FRAC = 0.85    # 그런 화소가 행의 85% 이상 = 창 행. film의 "이웃 표본 변화 >0.2"는
                           # 창 아래 자막 띠(교체 주기 ~2s → 변화율 0.2~0.3)까지 창에 붙여 쓰지 않는다
-                          # (2026-09-28 뜨거운사람들 10편 실측: 0.2 → 자막 행 1281~1433 섞임, 0.85 → 깨끗)
+                          # (2026-09-28 첫 기준선 표본 10편 실측: 0.2 → 창 아래 자막 행까지 섞임, 0.85 → 깨끗)
 WINDOW_COL_FRAC = 0.5     # 창 행 안에서 열 판정(shop·노빠꾸 공통)
 WINDOW_MIN_PX = 100       # 창 최소 높이/폭(노빠꾸 min_len 100)
 SEG_GAP = 6               # 1D 구간 잇기 틈(노빠꾸 gap 6)
@@ -35,12 +35,14 @@ INK_OUTLINE_DARK = 60     # 밝은 글자 옆 외곽선 = lum ≤ 60 (film capti
 INK_OUTLINE_R = 2         # 외곽선 반경 px (5×5 팽창)
 
 # ── captions.py ────────────────────────────────────────────────────────────
-CAP_FPS = 10              # 자막 교체 표본 fps (hotpeople cuts.py — 232자막 기준선)
+CAP_FPS = 10              # 자막 교체 표본 fps (옛 cuts.py — baselines 첫 기준선 232자막)
 CAP_SCALE_W, CAP_SCALE_H = 540, 100   # 띠를 이 크기로 줄여 차분(기준선 cuts.py와 같은 면적 정규화)
 CAP_DIFF = 0.01           # 잉크 XOR 평균 > 0.01 = 바뀜
 CAP_MERGE_S = 0.4         # 0.4s 안의 바뀜은 하나로(등장 중 흔들림)
 LINE_ROW_FRAC = 0.003     # 줄 행 = 행 잉크 비율 > 0.3% (lines.py)
-LINE_MIN_H = 20           # 줄 = 21행 이상(lines.py `y-s>20`)
+LINE_MIN_H = 21           # 줄 = 21행 이상(lines.py `y-s>20`)
+CAP_BAND_PAD = 40         # 자막 띠(표본 5% 이상 행)의 위아래 여유 — 드문 3줄·높은 줄도 잡는다(한 줄 잉크 높이 ~58의 2/3)
+INSIDE_PRESENCE = 0.3     # 창 안 자막 = 밝은 외곽선 글자가 표본의 30% 이상에서 보이는 행(영상 속 우연한 밝은 모서리 제외)
 FILL_LUM = 200            # 형광펜(글자 뒤 채움) 화소: 밝고(lum>200)
 FILL_CHROMA = 50          #   채도 있고(max−min>50)
 FILL_BG_DIFF = 40         #   배경색과 다르다(최대 채널차>40) — 노랑 고정값 대신 극성·배경 기준
@@ -50,12 +52,18 @@ GLYPH_FIRST_LINE_MIN = 10 # 첫 줄 = 잉크 행 10행 이상 덩어리(티끌 �
 GLYPH_ROW_PX = 3          # 글꼴 줄 행 = 행 잉크 화소 > 3
 GLYPH_OUTLINE_DIFF = 40   # 3px 고리 평균이 배경·잉크 둘 다와 40 이상 다르면 외곽선
 GLYPH_PER_VIDEO = 6       # 편당 모양 표본 자막 수(glyph_style 기본)
+GLYPH_SHADOW_DROP = 70    # 그림자 화소 = 잉크 아닌데 배경보다 70 이상 어둡다/밝다(glyph_style 248→180 과 같은 폭)
+GLYPH_SHADOW_FRAC = 0.3   # 옮긴 잉크 자리의 30% 이상이 그림자 화소면 그 오프셋이 그림자
+ANIM_FRAMES = 9           # 등장 효과 = 자막 시작 뒤 0~8 프레임(glyph_style)
+ANIM_W_FRAC = 0.05        # 폭 5% 변화 = 확대/축소
+ANIM_CX_PX = 5            # 중심 5px 이동 = 이동
+ANIM_AREA = 0.5           # 첫 면적 < 끝 면적의 50% = 페이드/타자기
 
 # ── cuts.py ────────────────────────────────────────────────────────────────
-SCENE_T = 0.3             # ffmpeg select=gt(scene,T), 영상창 crop. 뜨거운사람들 기준선(컷 22)이 0.3
+SCENE_T = 0.3             # ffmpeg select=gt(scene,T), 영상창 crop. baselines 첫 기준선(컷 중앙 22)이 0.3
                           # 볼케이노 scene_cuts는 T를 서버가 주므로 고정값이 없다(설계 §1)
 CUT_MERGE_S = 0.2         # 0.2s 안의 중복 검출은 하나로(film scene_cuts)
-CUT_MIN_T = 0.2           # 첫 0.2s 안 검출은 컷이 아니라 시작(hotpeople cuts.py `c>0.2`)
+CUT_MIN_T = 0.2           # 첫 0.2s 안 검출은 컷이 아니라 시작(옛 cuts.py `c>0.2`)
 CUT_VERIFY_CORR = 0.6     # 컷 앞뒤 64×64 z정규화 상관 < 0.6 이어야 진짜 컷(cut_verify CORR_MAX)
 CUT_VERIFY_TOP = 0.65     # 상관은 창 위쪽 65%만(창 안 자막 띠 제외, cut_verify)
 CUT_SUB_TOL = 0.2         # 컷 = 자막 교체 일치 ±0.2s (rhythm_stats)

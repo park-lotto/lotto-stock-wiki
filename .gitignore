@@ -203,3 +203,5 @@ tiktok_session.json
 /out/channelkit_parity/
 # hotpeople 제작 산출물(다운로드 영상·mp4) — 커밋 금지 (2026-09-25)
 /out/hotpeople/
+# channelkit bench 표본 mp4 캐시(재다운로드 가능, 2026-09-28)
+/out/bench_cache/
