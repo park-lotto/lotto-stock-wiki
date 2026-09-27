@@ -225,7 +225,7 @@ def is_member(cid=None):
     return bool(member_info(current_cid() if cid is None else cid))
 
 
-VEO_NEEDS_MEMBER = "AI 장면 생성은 내 구글 Vertex를 등록해야 쓸 수 있어요 — 설정 › API 키에서 등록해 주세요"
+VEO_NEEDS_MEMBER = "AI 장면 생성은 구글 버텍스 API를 등록해야 쓸 수 있어요 — 마이페이지 › 🔑 내 키 등록에서 등록해 주세요"
 
 
 def veo_client(cid):
