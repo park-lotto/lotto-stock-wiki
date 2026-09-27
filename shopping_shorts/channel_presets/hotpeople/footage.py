@@ -179,13 +179,17 @@ def need_sec(g):
 def fits(c, g):
     """★장면 c 를 자막 g 에 써도 되나 — **유일한 판단 자리**(pick 의 모델 답 검사·메우기, check_and_repick 이 다 이것).
     ① 칼카피 1: 장면 경계 안에서 자막 시간을 다 채우나(길이 정보 없는 후보 = 테스트 더미는 통과).
-    ② 규칙 8·10: 주인공 자막(rules.subject == main)엔 "다른사람" 얼굴·자막꼴 박힌 글자 장면 금지. 태깅 안 된 후보는 통과."""
+    ② 규칙 10: 주인공 자막(rules.subject == main)엔 "다른사람" 얼굴 장면 금지.
+    ③ 규칙 8: 자막꼴 박힌 글자 장면은 **모든 자막에** 금지 — 관문은 편 전체 ≤1컷이다. 주인공 자막만 막았더니
+       우상혁 v2에서 scene 자막(컷14)에 박힌 자막 후보가 골려 관문에 걸렸다(고르기와 관문이 다른 규칙). 태깅 안 된 후보는 통과."""
     from . import rules
     if not isinstance(c, dict):
         return True
     if "end" in c and "start" in c and c["end"] - c["start"] < need_sec(g):
         return False
-    if rules.subject(g) == "main" and (c.get("who") == vision.WHO_OTHER or c.get("subtitle_like")):
+    if c.get("subtitle_like"):
+        return False
+    if rules.subject(g) == "main" and c.get("who") == vision.WHO_OTHER:
         return False
     return True
 
@@ -215,7 +219,7 @@ def _match_prompt(groups, desc, person, cands=None):
     return (f"숏폼 편집자다. 주인공 {person}. [자막]마다 [장면 목록]에서 **내용이 가장 맞는** 장면 번호를 골라라.\n"
             "규칙: 같은 번호 두 번 금지. 장면 길이(초)가 자막이 요구하는 초보다 짧으면 쓰지 마라. 경기·결승·메달 자막엔 경기장/시상대 장면, 어린 시절·가족 자막엔 그에 맞는 장면. "
             "[TEXT]·[JUNK] 장면은 다른 게 정말 없을 때만. 시장·부엌 등 주제와 무관한 장면은 쓰지 마라. 번호를 순서대로 찍지 마라.\n"
-            "장면 표식은 얼굴 인식기가 잰 것이다: [주인공 장면 필수] 자막엔 [다른 사람]·[박힌 자막] 장면을 **절대** 쓰지 마라(골라도 버려진다). "
+            "장면 표식은 얼굴 인식기가 잰 것이다: [박힌 자막] 장면은 어느 자막에도, [다른 사람] 장면은 [주인공 장면 필수] 자막에 **절대** 쓰지 마라(골라도 버려진다). "
             "[주인공 얼굴 큼] 장면을 우선하라. [얼굴 작음]·[얼굴 없음]은 경기장·풍경처럼 넓은 화면에만.\n"
             f"[장면 목록]\n{scenes_}\n\n[자막]\n{subs}\n\n"
             f"출력 JSON: {{\"picks\": [자막0의 장면번호, 자막1의 장면번호, …]}} (정확히 {len(groups)}개)")
@@ -548,7 +552,7 @@ def check_and_repick(groups, cands, idx, sheet_paths, reader, person, wd, log=pr
     tags = "\n".join(f"{k}: {cand_tags(cands[k])}" for k in free if cand_tags(cands[k]))
     prompt2 = (f"숏폼 편집자다. 주인공 {person}. 아래 자막들에 맞는 장면을 시트에서 다시 골라라.\n"
                f"쓸 수 있는 번호: {free}\n같은 번호 두 번 금지. 자막 내용(경기·메달·훈련 등)에 맞는 장면으로.\n"
-               + (f"얼굴 인식기 표식(주인공 자막엔 [다른 사람]·[박힌 자막] 금지):\n{tags}\n" if tags else "") +
+               + (f"얼굴 인식기 표식([박힌 자막]은 모든 자막에, [다른 사람]은 주인공 자막에 금지):\n{tags}\n" if tags else "") +
                f"[자막]\n{subs}\n출력 JSON: {{\"picks\": {{\"자막번호\": 장면번호, …}}}}")
     r2 = _call(reader, prompt2, sheet_paths, log, "picks") or {}
     new, n = list(idx), 0

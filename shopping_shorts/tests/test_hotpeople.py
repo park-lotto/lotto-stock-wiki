@@ -552,7 +552,8 @@ def test_fits_blocks_other_person_and_hardsub_on_main_caption():
     c = {"start": 0.0, "end": 9.0}
     assert not footage.fits(dict(c, who="다른사람"), main) and footage.fits(dict(c, who="다른사람"), other)
     assert not footage.fits(dict(c, who="주인공", subtitle_like=True), main)
-    assert footage.fits(dict(c, who="주인공", subtitle_like=True), scene)
+    assert not footage.fits(dict(c, who="주인공", subtitle_like=True), scene)    # 박힌 자막은 어느 자막에도(관문 ≤1컷과 같은 규칙)
+    assert footage.fits(dict(c, who="다른사람"), scene)
     assert footage.fits(dict(c, who="판정불가(작음)"), main) and footage.fits(dict(c, who="얼굴없음"), main)
     # 모델이 주인공 자막에 다른 사람 장면을 골라도 버리고 메운다
     cands = [dict(c, who="다른사람"), dict(c, who="주인공")]
@@ -587,3 +588,21 @@ def test_subject_defaults_to_main():
     from shopping_shorts.channel_presets.hotpeople import rules
     assert rules.subject({}) == "main" and rules.subject({"subject": "OTHER"}) == "other"
     assert rules.subject({"subject": "누구"}) == "main" and rules.subject({"subject": "scene"}) == "scene"
+
+
+def test_render_plan_seconds_equal_actual_frames(tmp_path):
+    """컷 길이는 프레임 단위 한 곳(render.clip_frames)에서 — 계획 경계 = 실제 경계.
+    우상혁 v2 실측: -t 반올림이 쌓여 실제 경계가 계획보다 최대 0.117초 늦었고 검수가 진짜 경계 3개를 '자막 안 컷'으로 셌다."""
+    from shopping_shorts.channel_presets.hotpeople import render, spec
+    src = str(tmp_path / "src.mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=1280x720:rate=30", "-t", "12", src], check=True)
+    s = _script(3)
+    for g, t in zip(s["groups"], ("가" * 15, "가" * 13, "가" * 16)):         # 2.25·2.17·2.28초 = 67.5·65.1·68.4 프레임
+        g["text"] = t
+    fo = {"cuts": [{"src": src, "start": 1.0 + i * 3, "url": "test"} for i in range(3)]}
+    r = render.build(str(tmp_path), s, fo, log=lambda *_: None)
+    for c in r["cuts"]:
+        n = int(subprocess.run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries",
+                                "stream=nb_read_frames", "-of", "csv=p=0", str(tmp_path / "render" / f"cut_{c['i']:02d}.mp4")],
+                               capture_output=True, text=True).stdout.strip())
+        assert abs(c["sec"] * spec.FPS - n) < 1e-6, (c, n)

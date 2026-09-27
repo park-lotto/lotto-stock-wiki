@@ -154,6 +154,14 @@ def slot_from_cover(cover, x, w=None, h=None):
     return cover[y:y + h, x:x + w]
 
 
+def clip_frames(sec):
+    """★자막 한 컷의 프레임 수 — 유일한 판단. 내림(장면 끝을 넘지 않게, footage.fits 는 sub_seconds 로 검사했다).
+    예전엔 -t sec 로 ffmpeg 가 반올림 → 컷마다 +0~0.017초가 쌓여 우상혁 v2에서 실제 경계가 계획보다 0.117초 늦었고,
+    review.inner_cuts(계획 경계 기준)가 진짜 경계 3개를 "자막 안 컷"으로 셌다."""
+    import math
+    return max(1, math.floor(sec * spec.FPS + 1e-6))
+
+
 def cut_clip(bg_png, sub_png, src, start, sec, out_mp4, crop_x=None):
     # setpts=PTS-STARTPTS: -ss 뒤 영상 첫 pts가 0이 아니면 overlay 첫 프레임이 빈 흰 슬롯이 된다
     # (v3 1차 실측: cut_05·cut_10 첫 프레임 평균 248(흰 바탕) → 자막 경계 12곳에서 컷이 두 번 잡혀 컷 수 37)
@@ -163,7 +171,7 @@ def cut_clip(bg_png, sub_png, src, start, sec, out_mp4, crop_x=None):
          f"[0:v][v]overlay={spec.SLOT_X}:{spec.SLOT_Y}[b];[b][2:v]overlay=0:0,format=yuv420p[o]")
     _ff(["ffmpeg", "-v", "error", "-y", "-loop", "1", "-framerate", str(spec.FPS), "-i", bg_png,
          "-ss", f"{start:.2f}", "-i", src, "-loop", "1", "-framerate", str(spec.FPS), "-i", sub_png,
-         "-filter_complex", f, "-map", "[o]", "-t", f"{sec:.2f}", "-r", str(spec.FPS),
+         "-filter_complex", f, "-map", "[o]", "-frames:v", str(clip_frames(sec)), "-r", str(spec.FPS),
          "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-an", out_mp4], "cut")
 
 
@@ -225,6 +233,7 @@ def build(wd, script, footage, log=print):
             raise RuntimeError(f"render: 자막 {i} {sec}s > 장면 {c['start']}~{c['end']} — footage가 짧은 장면을 골랐다(footage부터)")
         sp = subtitle(g, os.path.join(rd, f"sub_{i:02d}.png"))
         mp = os.path.join(rd, f"cut_{i:02d}.mp4")
+        sec = clip_frames(sec) / spec.FPS                 # 계획 = 실제 프레임(검수가 이 경계로 잰다)
         cut_clip(bg, sp, c["src"], c["start"], sec, mp, crop_x=c.get("crop_x"))
         parts.append(mp); total += sec
         plan.append({"i": i, "sec": sec, "src": os.path.basename(c["src"]), "start": c["start"], "url": c.get("url"),
