@@ -729,6 +729,21 @@ def cut_frame_list(durs, total_frames=None, fps=30):
     return out
 
 
+def _piece_start_of(c, segs):
+    """컷 c가 속한 조각(같은 video_id, seg.start ≤ c.start < seg.end)의 시작. 못 찾으면 None — 시작 당기기의 하한(조각 앞 = 딴 장면)."""
+    try:
+        st = float(c.get("start", 0.0))
+        for s in segs or []:
+            if s.get("video_id") != c.get("video_id"):
+                continue
+            a, b = float(s.get("start", 0.0)), float(s.get("end", 0.0) or 0.0)
+            if b > a and a - 1e-3 <= st < b:
+                return a
+    except Exception as e:  # noqa: BLE001 — 하한을 못 정하면 종전(소스 안으로만)
+        print(f"[assemble] 조각 시작 계산 실패(무해, 종전 당기기): {e!r}", file=sys.stderr)
+    return None
+
+
 def _piece_end_limit(c, segs, src_total):
     """컷 c가 속한 조각(같은 video_id, seg.start ≤ c.start < seg.end)의 끝. 못 찾으면 소스 끝.
 
@@ -2601,14 +2616,22 @@ def render_cut_plan(edit_plan, tts_paths, source_video_paths, *, beat_durs=None,
                 _beat_speed = 1.0
             if not math.isfinite(_beat_speed) or abs(_beat_speed - 1.0) <= 1e-6:
                 _beat_speed = None
-            # 슬로우 상한(1.15배)+정지프레임(2026-07-19): play_out+freeze == out_dur.
-            play_out, freeze = _speed_and_freeze(_c_src, _c_out, preferred_speed=_beat_speed)
-            _nf_play = motion_frames(_nf, play_out, freeze)
             # start를 소스 안으로 당긴다(2026-07-19) — 소스 밖을 잡으면 -ss가 0프레임을 낸다.
+            #   ★단 **담은 조각의 시작 앞으로는 안 당긴다**(2026-09-27, 11cfc4a4b75c 8칸): 청소본 끝에 붙은 조각은 파일이 모자라
+            #   0.084초 앞 = **앞 컷의 청소 조각**을 읽었다(딴 장면). 캡컷·ZIP 은 소스별 파일에서 같은 컷을 다른 이웃으로 당겨
+            #   start·read 가 갈렸다. 조각 시작에서 멈추고 모자란 몫은 느리게·정지로 — 읽는 길이·정지는 아래 같은 기계가 정한다.
             sdur = _src_dur(c["video_id"])
             start = c["start"]
             if sdur > 0:
-                start = max(0.0, min(start, sdur - min(_c_src, sdur)))
+                pulled = max(0.0, min(start, sdur - min(_c_src, sdur)))
+                floor = _piece_start_of(c, segs)
+                if floor is not None and pulled < floor - 1e-4 <= start and floor < sdur - 0.05:
+                    pulled = floor
+                    _c_src = max(1e-3, min(_c_src, sdur - pulled))
+                start = pulled
+            # 슬로우 상한(1.15배)+정지프레임(2026-07-19): play_out+freeze == out_dur.
+            play_out, freeze = _speed_and_freeze(_c_src, _c_out, preferred_speed=_beat_speed)
+            _nf_play = motion_frames(_nf, play_out, freeze)
             move = min(_cfr[j], _nf_play)
             clips.append({"j": j, "clip": c, "video_id": c["video_id"], "cfr": _cfr[j], "nf": _nf, "f_start": fr,
                           "c_src": _c_src, "c_out": _c_out, "play_out": play_out, "freeze": freeze,
