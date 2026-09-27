@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""[적용 범위: 모든 장면 | 이 장면만] 스위치 하나가 자막·제목·채널명의 글자크기·↑↓를 정하고, 그 결과가
+"""(check_edit_scope.py의 ④⑤만) 편집기 없이 snapshot.json·rects.json을 읽어 진짜 렌더러·캡컷을 돌린다 — 서버에서 라이브 검증용.
+  py tools/scene_font_research/check_edit_scope_render.py <출력폴더(snapshot.json·rects.json이 있는 곳)>
+
+원본 설명: [적용 범위: 모든 장면 | 이 장면만] 스위치 하나가 자막·제목·채널명의 글자크기·↑↓를 정하고, 그 결과가
 편집기 → 저장값 → 서버 검증 → 진짜 렌더러 PNG → 캡컷 초안까지 그대로 가는지 (2026-09-28 사장님
 "자막 제목 채널명 등등 이 장면만 등록이나 전체 등록이나 해야 한다 / 렌더랑 캡컷까지 라이브하고 검증까지").
 
@@ -12,12 +15,11 @@
 """
 import sys, json, hashlib, pathlib, shutil
 ROOT = pathlib.Path(__file__).resolve().parents[2]; sys.path.insert(0, str(ROOT))
-out = pathlib.Path(sys.argv[1]).resolve(); shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
+out = pathlib.Path(sys.argv[1]).resolve(); assert (out / 'snapshot.json').exists(), 'snapshot.json 없음'
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 8773
 # 라이브 편집기로 돌리려면: SCENE_QA_URL=https://shoppingshorts.duckdns.org/api/produce/scene-style/assets/out/scene-style-ui-showcase.html
 import os
 BASE = os.environ.get('SCENE_QA_URL') or f'http://127.0.0.1:{PORT}/out/scene-style-ui-showcase.html'
-from playwright.sync_api import sync_playwright
 from PIL import Image, ImageChops
 from shopping_shorts import video_assemble as va, scene_style, capcut_draft
 
@@ -41,60 +43,9 @@ ctx = scene_style.context_for(timeline, headcopy, None, 'qa-scope')
 body_idx = [i for i, s in enumerate(ctx['scenes']) if s['kind'] == 'body']
 need(len(body_idx) >= 3, f'본문 장면이 3개 이상 ({len(ctx["scenes"])}장면, 본문 {body_idx})')
 A, B, C = body_idx[0], body_idx[1], body_idx[2]
-
-rects = {}
-with sync_playwright() as p:
-    b = p.chromium.launch(); pg = b.new_context(viewport={'width': 1500, 'height': 1000}).new_page()
-    errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-    pg.goto(BASE + '?preset=t11', wait_until='networkidle')
-    pg.evaluate('([c])=>window.sceneStyle.load(c,null)', [ctx]); pg.wait_for_timeout(400)
-    show = lambda i: (pg.evaluate(f'window.sceneStyle.show({i})'), pg.wait_for_timeout(250))
-    click = lambda sel: pg.evaluate(f"(()=>{{const e=document.querySelector('{sel}');if(!e)return false;e.click();return true}})()")
-    scope = lambda v: click(f'[data-edit-scope="{v}"]')
-    step = lambda field, kind, val: click(f'[data-field-key="{field}"] [data-{kind}="{val}"]')
-    snap = lambda: pg.evaluate('window.sceneStyle.snapshot()')
-    output = lambda field: pg.evaluate(f"document.querySelector('[data-field-key=\"{field}\"] .font-stepper output')?.textContent")
-    def measure(bind):
-        return pg.evaluate(f"""(()=>{{const pv=document.querySelector('#a-live-preview')||document.querySelector('.precision-edit-layer').parentElement;
-          const e=pv.querySelector('.precision-text[data-edit-bind="{bind}"]');if(!e)return null;const r=e.getBoundingClientRect(),q=pv.getBoundingClientRect();
-          return {{fs:parseFloat(getComputedStyle(e).fontSize),x:(r.left-q.left)/q.width,y:(r.top-q.top)/q.height,w:r.width/q.width,h:r.height/q.height}}}})()""")
-
-    # ① 스위치가 있고, '모든 장면'에서 자막 글자를 키우면 본문 전 장면의 자막 키에 같은 값이 들어간다
-    show(A); has = scope('all')
-    need(has, '문구/텍스트 패널에 [적용 범위] 스위치([data-edit-scope])가 있다')
-    step('caption', 'font-step', '0.1'); step('caption', 'font-step', '0.1'); pg.wait_for_timeout(200)
-    fs = snap().get('fontScales') or {}
-    vals = [fs.get(f't11:body:caption:{i}') for i in body_idx]
-    need(all(v is not None and abs(v - 1.5) < .01 for v in vals), f'모든 장면: 본문 자막 크기 키가 전 장면에 1.5 ({vals})')
-
-    # ② '이 장면만'으로 C의 제목을 키운 뒤(110%) '모든 장면'으로 다시 키우면 — 보이는 값+10%=120%가 공통 키가 되고 C의 장면별 키는 지워진다(전체가 이긴다)
-    show(C); scope('one'); step('bodyTitle', 'font-step', '0.1'); pg.wait_for_timeout(150)
-    fs = snap().get('fontScales') or {}
-    need(abs((fs.get(f't11:body:bodyTitle:{C}') or 0) - 1.1) < .01 and 't11:body:bodyTitle' not in fs, f'이 장면만: 제목 크기가 C의 장면별 키에만 ({ {k: v for k, v in fs.items() if "bodyTitle" in k} })')
-    scope('all'); step('bodyTitle', 'font-step', '0.1'); pg.wait_for_timeout(150)
-    fs = snap().get('fontScales') or {}
-    need(abs((fs.get('t11:body:bodyTitle') or 0) - 1.2) < .01 and f't11:body:bodyTitle:{C}' not in fs, f'모든 장면: 제목 크기가 공통 키 1.2(보이던 1.1+0.1), C의 장면별 키는 지워짐 ({ {k: v for k, v in fs.items() if "bodyTitle" in k} })')
-
-    # ③ '이 장면만'으로 B의 제목을 3번 키우고 채널명을 2번 내린다 → B의 장면별 키만 생기고 공통 키는 그대로
-    show(B); scope('one')
-    for _ in range(3): step('bodyTitle', 'font-step', '0.1')
-    for _ in range(2): step('channel', 'position-step', '1')
-    pg.wait_for_timeout(200)
-    s = snap(); fs = s.get('fontScales') or {}; to = s.get('textOffsets') or {}
-    need(abs((fs.get(f't11:body:bodyTitle:{B}') or 0) - 1.5) < .01 and abs((fs.get('t11:body:bodyTitle') or 0) - 1.2) < .01, f'이 장면만: B 제목 1.5(장면별) / 공통 1.2 유지 ({ {k: v for k, v in fs.items() if "bodyTitle" in k} })')
-    need(abs((to.get(f't11:body:channel:{B}') or 0) - 1.0) < .01 and 't11:body:channel' not in to, f'이 장면만: B 채널명 ↓ 1.0(장면별), 공통 키 없음 ({ {k: v for k, v in to.items() if "channel" in k} })')
-    need(output('bodyTitle') == '150%', f'B의 제목 스텝퍼 표시 150% ({output("bodyTitle")})')
-    mB = measure('bodyTitle'); cB = measure('channel')
-    show(A); mA = measure('bodyTitle'); cA = measure('channel')
-    need(output('bodyTitle') == '120%', f'A의 제목 스텝퍼 표시 120% ({output("bodyTitle")})')
-    need(mA and mB and mB['fs'] > mA['fs'] * 1.2, f'편집기 화면: B 제목 글자 {mB and round(mB["fs"], 1)}px > A {mA and round(mA["fs"], 1)}px')
-    need(cA and cB and cB['y'] > cA['y'] + 0.005, f'편집기 화면: B 채널명이 A보다 아래 (y {cB and round(cB["y"], 3)} > {cA and round(cA["y"], 3)})')
-    rects = {'title': mB, 'titleA': mA, 'channel': cB, 'channelA': cA}
-    final = snap(); b.close()
-    # 서버에서 진짜 렌더러로 다시 돌릴 수 있게 남긴다(check_edit_scope_render.py <출력폴더> 가 읽는다)
-    (out / 'snapshot.json').write_text(json.dumps(final, ensure_ascii=False), encoding='utf-8')
-    (out / 'rects.json').write_text(json.dumps({'rects': rects, 'A': A, 'B': B, 'C': C}, ensure_ascii=False), encoding='utf-8')
-    need(not errs, f'페이지 오류 없음 ({errs[:2]})')
+meta = json.loads((out / 'rects.json').read_text(encoding='utf-8')); rects = meta['rects']
+assert (meta['A'], meta['B'], meta['C']) == (A, B, C), '장면 번호가 편집기 때와 다르다'
+final = json.loads((out / 'snapshot.json').read_text(encoding='utf-8'))
 
 # ④ 서버 검증 → 진짜 렌더러 PNG: 제목·채널명 영역이 B만 다르고 A=C
 snap = scene_style.validate_snapshot(final)
