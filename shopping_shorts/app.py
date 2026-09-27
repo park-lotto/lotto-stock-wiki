@@ -3562,7 +3562,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # [바꾸기] 부분 재생성(/api/script/beat/regen)도 **같은 함수**를 쓴다.
         try:
             _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
-                it, body, store, _cid(request), spines=_picked)
+                it, body, store, _cid(request), spines=_picked,
+                # 이야기 작가가 켜진 계정은 쿠팡·웹검색을 부르지 않는다(작가는 자체 지식으로 특징을 뽑는다)
+                outside=not _setting_gate(store, "story_writer_enabled", _cid(request)))
         except ValueError as e:
             return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
         # 재료가 한 편도 없으면 여기서 멈춘다 — 이 상태로 생성하면 모델이 통째로 지어낸다.
@@ -24290,7 +24292,7 @@ def _wow_block_for(sources, store):
     return wow_facts.wow_prompt_block(wows)
 
 
-def _materials_for_generate(item, body, store, cid, spines=None):
+def _materials_for_generate(item, body, store, cid, spines=None, outside=True):
     """대본 생성에 넣을 **재료 한 벌** → (sources, facts_block, job, job_id, scene_block)
 
     ★왜 함수로 뽑았나(2026-08-17): 원래 이 조립이 `/api/wiki/generate` 안에 통째로
@@ -24399,7 +24401,9 @@ def _materials_for_generate(item, body, store, cid, spines=None):
     # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
     #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
     #   여기서 긁지 않는다 — 수집은 /api/product/facts/collect가 미리 해둔다(2~3분).
-    _facts_block = _facts_block_for_job(_jid, store, _topic_product)
+    # outside=False(이야기 작가, 2026-09-27 사장님 "웹·쿠팡 다 빼고 자체 지식으로"): 쿠팡 수집분은 서버 403이라
+    #   820작업 중 0개, 웹검색 wow는 897회 중 1회 성공(빈 결과는 캐시 안 해 매번 다시 부름) — 안 부른다.
+    _facts_block = _facts_block_for_job(_jid, store, _topic_product) if outside else ""
     # ★1단계 장면 태깅을 대본에도 준다(2026-08-17). label=이 장면이 무엇인가,
     #   use_point=이 장면을 어디에 어떻게 써먹나. 지금까지는 화면 붙일 때(edit_plan)만
     #   쓰고 대본 생성엔 안 실렸다 — 재료를 반만 쓰고 있었다.
@@ -24417,7 +24421,7 @@ def _materials_for_generate(item, body, store, cid, spines=None):
     #   ★캐시가 본체다: 실측에서 키 4개가 연속 429였고, 이 단계는 job마다 부르면 그만큼
     #     느려진다. 같은 제품군은 다시 안 때린다.
     #   ★못 찾으면 빈 문자열 — 대본은 종전대로 나온다(회귀 0).
-    _wow_block = _wow_block_for(_src, store)
+    _wow_block = _wow_block_for(_src, store) if outside else ""
     if _wow_block:
         _facts_block = (_facts_block + chr(10)*2 + _wow_block) if _facts_block else _wow_block
     # ★`_scene_block`도 돌려준다 — 호출부가 응답의 `materials.scene_points`(화면에 "장면 N개"로
