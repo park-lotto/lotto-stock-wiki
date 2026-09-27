@@ -13894,6 +13894,15 @@ async function startCleanPreview(){
   CLEAN_VIEW={si:0, pos:0.5, job:myJob};   // 새로 돌리면 확인 지점도 처음(영상1·가운데)으로
   if(btn) btn.disabled=true;
   const _sc=document.getElementById('cleanShowcase'); if(_sc) _sc.style.display='none';  // 실결과 뜨는 동안 데모 숨김
+  // ★지우는 동안 자리표시 그림은 **3단계 편성의 컷**(골라서면 고른 첫 컷)이다(2026-09-27 사장님 화면).
+  //   종전엔 clean_thumb 기본값(첫 소스 파일 한가운데)이라, 편성에 한 컷도 안 쓰인 소스의 엉뚱한 장면이 떴다
+  //   (d60da49daae0: s0은 사용 0컷인데 그 11.4초 프레임이 '원본'으로). 좌표는 장면 카드와 같은 API(clean_pick_thumb).
+  const _phCi = (CLEAN_PICK && CLEAN_PICK.cuts && CLEAN_PICK.cuts.length)
+    ? ((CLEAN_PICK.mode==='some' && _cuts && _cuts.length) ? (CLEAN_PICK.cuts.find(c=>c.key===_cuts[0])||CLEAN_PICK.cuts[0]).ci : 0)
+    : null;
+  const _phUrl = (_phCi !== null)
+    ? '/api/produce/mix/clean_pick_thumb/'+encodeURIComponent(myJob)+'?ci='+_phCi+'&t='+Date.now()
+    : '/api/produce/mix/clean_thumb/'+encodeURIComponent(myJob)+'?kind=original&t='+Date.now();
   // ★진행 중에도 **완료 후와 같은 2칸 틀**로 그린다(2026-08-18 사장님 "공간활용").
   //   예전엔 가운데 작은 썸네일 한 칸(170px)뿐이라 양옆 968px이 통째로 비었고, 끝나는
   //   순간 1칸→2칸으로 화면이 확 바뀌어 어디를 봐야 할지 튀었다. 왼쪽=원본 그대로,
@@ -13901,9 +13910,9 @@ async function startCleanPreview(){
   //   틀(.cp-compare/.cp-cell/.cp-frame)을 완료 화면과 공유하므로 크기 기준이 한 곳이다.
   box.innerHTML='<div class="cp-run rise">'
     +'<div class="cp-compare">'
-    +  '<div class="cp-cell"><div class="cp-frame"><img src="/api/produce/mix/clean_thumb/'+encodeURIComponent(myJob)+'?kind=original&t='+Date.now()+'" onerror="this.style.display=\'none\'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
+    +  '<div class="cp-cell"><div class="cp-frame"><img src="'+_phUrl+'" onerror="this.style.display=\'none\'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
     +  '<div class="cp-arrow">→<span>AI</span></div>'
-    +  '<div class="cp-cell"><div class="cp-frame cp-scan"><img src="/api/produce/mix/clean_thumb/'+encodeURIComponent(myJob)+'?kind=original&t='+Date.now()+'" onerror="this.style.display=\'none\'"></div><div class="cp-cap">지금 지우는 중…</div></div>'
+    +  '<div class="cp-cell"><div class="cp-frame cp-scan"><img src="'+_phUrl+'" onerror="this.style.display=\'none\'"></div><div class="cp-cap">지금 지우는 중…</div></div>'
     +'</div>'
     +'<div class="cp-bar"></div>'
     +'<div class="cp-run-lbl"><span class="cp-dot"></span>AI가 자막 영역을 자연스럽게 복원하는 중…</div>'
@@ -13933,6 +13942,10 @@ function updateCleanProgress(d){
   // ★"20~30분도 정상" 같은 시간 약속을 화면에 적지 않는다(2026-08-25 사장님 "문구 지우고").
   //   실제 시간은 소스 길이·처리 업체 혼잡도에 따라 크게 달라져서, 적어두면 그 자체가 거짓말이 된다.
   //   진행 상황(몇 편 끝났나)만 보여주고 시간은 말하지 않는다.
+  // ★완성본 1편 경로(2026-09-27): '편'을 셀 게 없어 "5편 중 0편"으로 멈춘 듯 보였다 → 범위를 말한다(서버 clean_scope).
+  const sc = d.clean_scope || null;
+  if(sc && sc.mode === 'picked'){ el.textContent = `고른 장면 ${sc.n}개를 지우는 중 — 다른 단계 먼저 진행해도 돼요.`; return; }
+  if(sc && sc.mode === 'all'){ el.textContent = '전체 장면을 지우는 중 — 다른 단계 먼저 진행해도 돼요.'; return; }
   el.textContent = total
     ? `영상 ${total}편 중 ${done}편 완료 — 다른 단계 먼저 진행해도 돼요.`
     : '다른 단계 먼저 진행해도 돼요.';
