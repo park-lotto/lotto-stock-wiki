@@ -169,6 +169,9 @@ def test_render_concat_drift_caught(mats, tmp_path):
     print("[concat] 디코드 %.3fs · 칸길이합 %.3fs · 남는 표본 %+.3fs · 마지막칸 음성-영상 %+.3f · 칸별 %s" % (
         r["len"]["got"], sum(lens), surplus, r["rows"][-1]["err_v"], [x["err_v"] for x in r["rows"]]))
     assert abs(surplus - r["rows"][-1]["err_v"]) < 0.05
+    # 관문 조건: 패킷 잉여(ffprobe 만으로) — 칸별 AAC concat 은 기준(0.05초)을 넘고 판정도 '이상'
+    assert r["surplus"] is not None and r["surplus"] >= fa.SURPLUS_T, r["surplus"]
+    assert fa.judge(r)["surplus_bad"] == 1
     # 수정안: 나레이션 한 줄(칸마다 apad+atrim 표본 정확히) → 한 번만 AAC
     ins, fc = [], []
     for i, L in enumerate(lens):
@@ -183,3 +186,5 @@ def test_render_concat_drift_caught(mats, tmp_path):
     r2 = fa.audit({"final": str(fixed), "intro": 0.0, "beats": beats, "sfx": [], "bgm": None})
     worst2 = max(abs(x["err"] or 0) for x in r2["rows"])
     assert worst2 < 0.03, r2["rows"]
+    assert r2["surplus"] is not None and r2["surplus"] < fa.SURPLUS_T, r2["surplus"]
+    assert fa.judge(r2)["surplus_bad"] == 0

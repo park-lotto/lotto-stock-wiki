@@ -31,20 +31,44 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 import os, importlib.util
+# 조각 경계 붙이기(seg_snap)의 장면 전환 캐시는 원래 소재 옆(고객 작업 폴더)에 쓴다 — 도구는 고객 폴더를 안 바꾸므로 /tmp 로 돌린다
+os.environ.setdefault("SEG_SNAP_CACHE_DIR", "/tmp/evf_snapcache")
 if os.getenv("PATCH_DIR"):          # 배포 전 대조: 고친 모듈을 먼저 얹는다
     import shopping_shorts
-    for _n in ("frame_match", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
+    # 폰트 후보 목록(video_assemble._FONT_CANDIDATES)은 **import 때** 파일 옆 assets 로 정해진다 — PATCH_DIR 에서 얹으면
+    #   못 찾아 자막 없이 구워진다(2026-09-27 실측 '폰트 미해결'). 저장소 폰트를 첫 후보(환경 변수)로 준다.
+    _bf = Path("shopping_shorts/assets/NanumGothic.ttf").resolve()
+    if _bf.exists():
+        os.environ.setdefault("SHORTS_CAPTION_FONT", str(_bf))
+    for _n in ("frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
         _f = Path(os.getenv("PATCH_DIR")) / ("%s.py" % _n)
         if _f.exists():
             _sp = importlib.util.spec_from_file_location("shopping_shorts." + _n, str(_f))
             _m = importlib.util.module_from_spec(_sp); sys.modules["shopping_shorts." + _n] = _m
             _sp.loader.exec_module(_m); setattr(shopping_shorts, _n, _m)
+            # ★파일 위치 기준 경로는 저장소로 되돌린다(2026-09-27 실측) — PATCH_DIR 에서 얹으면 video_assemble 의 폰트 폴더
+            #   (_FONT_DIR = 파일 옆 static/fonts)를 못 찾아 완성본이 '폰트 미해결 — 자막·BGM 전부 스킵'으로 구워졌고,
+            #   clean_base._ROOT(파일의 두 단계 위)가 /tmp 를 가리켰다. 비교 결과가 수리 전(자막 있음)과 조건이 달라졌다.
+            _repo_pkg = Path("shopping_shorts").resolve()
+            for _attr, _val in (("_FONT_DIR", _repo_pkg / "static" / "fonts"),
+                                ("_BUNDLED_FONT", str(_repo_pkg / "assets" / "NanumGothic.ttf")),
+                                ("_ROOT", _repo_pkg.parent)):
+                if hasattr(_m, _attr):
+                    setattr(_m, _attr, _val)
     _fa = Path(os.getenv("PATCH_DIR")) / "app.py"
     if _fa.exists():                 # app 은 통째로 못 얹는다(정적 파일 경로) — 미리보기 굽기 함수만 바꿔 끼운다
         from shopping_shorts import app as _app
         _src = _fa.read_text(encoding="utf-8")
         _i = _src.index("def _pvproxy_build("); _j = _src.index(chr(10) + "@app.", _i)
         exec(compile(_src[_i:_j], str(_fa), "exec"), _app.__dict__)
+        # 조각 경계 붙이기(2026-09-27) — 화면에 조각을 내려주는 입구와 그 보조 함수도 바꿔 끼운다(데코레이터 뒤 몸통만)
+        #   입구가 부르는 _lab_captions 도 같이(인자 모양이 바뀌면 옛 것과 섞여 TypeError — 서버 실측 2026-09-27)
+        for _a, _b in (("def _lab_scenecuts(", chr(10) + "def _with_film_segs("),
+                       ("def _lab_captions(", chr(10) + "@app."),
+                       ("def api_mix_scene_lab_data(", chr(10) + "@app.")):
+            if _a in _src:
+                _i = _src.index(_a); _j = _src.index(_b, _i)
+                exec(compile(_src[_i:_j], str(_fa), "exec"), _app.__dict__)
 OUT = Path("/tmp/evf"); OUT.mkdir(exist_ok=True)
 
 # 프레임 특징·거리·후보 고르기 = 청소본 밀림 보정(clean_base.calibrate)과 **같은 함수**(0순위-B)
@@ -114,6 +138,63 @@ def _boundary(fe, ff, me, mf, ie_b, jf_b):
     if best[0] >= SCENE_T:
         return 9.9, float(me[ieb])            # 튀는 자리는 있으나 앞뒤 장면이 다르다
     return (best[2] - exp) / FPS, float(me[ieb])
+
+
+GHOST_MAX = 3                              # 컷 가장자리에서 찾는 잔상 길이(프레임) — 실측 1~3프레임(2026-09-27 다섯 job)
+GHOST_JUMP = 3.0                           # 이음매 튐이 몸통 안 튐(중앙값)의 이 배수 이상이어야 잔상(움직임 오탐 거르기)
+SHORT_CUT = 3                             # 이 프레임 수 이하 컷 = '짧은 컷'(가운데·잔상 검사를 못 한다 — 따로 센다)
+
+
+def _edge_ghosts(fe, a, b, T=None):
+    """①의 컷 [a, b](프레임, 양끝 포함) 머리·꼬리에 낀 **딴 장면 1~3프레임**(잔상) → (머리 N, 꼬리 N).
+
+    왜 (2026-09-27): 가운데 검사는 0.2초 미만 구간을 건너뛰고, 경계 검사는 '②에 그 경계 없음(9.9)'으로만 남겨
+      편집 화면 미리보기 컷 끝의 딴 장면 1~3프레임(원본의 다음 장면·입력 -t 1프레임 더 읽기)을 못 셌다.
+    잔상 = 컷 안쪽 기준 프레임(꼬리면 b-GHOST_MAX, 머리면 a+GHOST_MAX)과도 다르고 **옆 컷**(b+1 / a-1)과도 다른 가장자리 연속 구간.
+      옆 컷과 닮으면 경계가 1~2프레임 밀린 것(경계 밀림이 따로 잰다)이지 잔상이 아니다. 컷이 짧으면(≤ 2*GHOST_MAX+1) 안 본다."""
+    T = SCENE_T if T is None else T
+    n = b - a + 1
+    if n <= 2 * GHOST_MAX + 1 or a < 0 or b >= len(fe):
+        return 0, 0
+
+    def _d(i, j):
+        return float(np.abs(fe[i] - fe[j]).mean())
+
+    def _run(edge, step, other):
+        ref = edge - step * GHOST_MAX           # 안쪽 기준(같은 컷 몸통)
+        for r in range(GHOST_MAX, 0, -1):
+            ks = [edge - step * q for q in range(r)]
+            if all(_d(k, ref) >= T for k in ks) and (other is None or all(_d(k, other) >= T for k in ks)) \
+                    and _d(edge - step * r, ref) < T:
+                spike, med = _ghost_jump(fe, a, b, "tail" if step > 0 else "head", r)
+                # ★몸통↔잔상 이음매가 **뚝 끊겨야** 잔상이다 — 빠른 움직임(휙 돌리기·흔들림)은 몸통 안에서도 프레임마다 크게
+                #   변해 기준 프레임과 멀어진다(서버 실측 2026-09-27: 이 판정 없이 돌리면 움직임 오탐이 눈으로 확인한 9곳 중 8곳).
+                return r if (spike >= CUT_T and spike >= GHOST_JUMP * med) else 0
+        return 0
+
+    tail = _run(b, 1, b + 1 if b + 1 < len(fe) else None)
+    head = _run(a, -1, a - 1 if a - 1 >= 0 else None)
+    return head, tail
+
+
+def _ghost_jump(fe, a, b, side, r, span=6):
+    """잔상 후보(가장자리 r프레임)의 이음매 튐 → (이음매 튐, 몸통 안 프레임 간 튐 중앙값). 튐 = 이웃 프레임 특징 평균 |차|."""
+    def _m(i):
+        return float(np.abs(fe[i] - fe[i - 1]).mean()) if 1 <= i < len(fe) else 0.0
+    if side == "tail":
+        j = b - r + 1                            # 첫 잔상 프레임(몸통 → 잔상으로 넘어가는 자리)
+        body = [_m(i) for i in range(max(a + 1, j - span), j)]
+    else:
+        j = a + r                                # 첫 몸통 프레임(잔상 → 몸통으로 넘어가는 자리)
+        body = [_m(i) for i in range(j + 1, min(b, j + span) + 1)]
+    return _m(j), (float(np.median(body)) if body else 0.0)
+
+
+def _ghost_in_final(fe, ff, k, jf, T=None, win=2):
+    """①의 잔상 프레임 k 와 닮은 프레임이 ②의 같은 자리(jf±win)에도 있나 — 있으면 계획(원본 좌표) 쪽, 없으면 화면만."""
+    T = SCENE_T if T is None else T
+    js = np.arange(max(0, jf - win), min(len(ff) - 1, jf + win) + 1)
+    return bool(len(js)) and float(fm.dist(ff, js, fe[k]).min()) < T
 
 
 def _save_boundary_strip(path, rE, rF, ie_b, jf_b, ne=4, nf=8):
@@ -243,10 +324,34 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
                     print("[evf] 경계 띠 저장 실패 %s b%d c%d: %s" % (jid, int(b["beat_idx"]), ci, _e), file=sys.stderr)
             if bs is not None:
                 bsh.append((ci, round(bs, 3)))
+        # ★컷 가장자리 잔상(딴 장면 1~3프레임) — 짧은 컷·경계 9.9 로 묻히던 것을 프레임 단위로 센다(2026-09-27)
+        ghosts, shorts = [], 0
+        for ci in range(len(co)):
+            a_ = int(round((e0 + co[ci]) * FPS))
+            b_ = int(round((e0 + (co[ci + 1] if ci + 1 < len(co) else (e1 - e0))) * FPS)) - 1
+            if b_ - a_ + 1 <= SHORT_CUT:
+                shorts += 1
+                samples.append({"job": jid, "beat": int(b["beat_idx"]), "cut": ci, "kind": "short", "frames": b_ - a_ + 1})
+                continue
+            hn, tn = _edge_ghosts(fe, a_, b_)
+            for side, cnt, ks in (("머리", hn, range(a_, a_ + hn)), ("꼬리", tn, range(b_ - tn + 1, b_ + 1))):
+                if not cnt:
+                    continue
+                only = sum(1 for k in ks if not _ghost_in_final(
+                    fe, ff, k, int(round((f_t + td * (k / FPS - e0) / max(1e-3, (e1 - e0))) * FPS))))
+                ghosts.append((ci, side, cnt, only))
+                samples.append({"job": jid, "beat": int(b["beat_idx"]), "cut": ci, "kind": "ghost", "side": side,
+                                "frames": cnt, "screen_only": only, "at": list(ks)})
+                try:        # 눈 확인용 띠(경계 띠와 같은 모양 — 위 = 화면 잔상 자리 ±4, 아래 = 완성본 같은 자리 ±8)
+                    k0 = ks[0]
+                    _save_boundary_strip(OUT / ("ghost_%s_b%d_c%d_%s.jpg" % (jid, int(b["beat_idx"]), ci, "h" if side == "머리" else "t")),
+                                         rE, rF, k0, int(round((f_t + td * (k0 / FPS - e0) / max(1e-3, (e1 - e0))) * FPS)))
+                except Exception as _e:      # noqa: BLE001 — 사진은 보조
+                    print("[evf] 잔상 띠 저장 실패 %s b%d c%d: %s" % (jid, int(b["beat_idx"]), ci, _e), file=sys.stderr)
         _nh = [x for x, h in shifts if not h]; _h = [x for x, h in shifts if h]
         rows.append((int(b["beat_idx"]), round(worst, 2), max(_nh, key=abs) if _nh else 0.0,
                      round((e1 - e0) - td, 3), per, max(bsh, key=lambda x: abs(x[1])) if bsh else None,
-                     int(b["beat_idx"]) in clean_beats, max(_h, key=abs) if _h else 0.0))
+                     int(b["beat_idx"]) in clean_beats, max(_h, key=abs) if _h else 0.0, ghosts, shorts))
         f_t += td
     # 눈 확인용 사진: 컷마다 위 = 편집 화면(컷 한가운데), 아래 = 완성본에서 가장 닮은 프레임. 빨강=다른 장면, 노랑=밀림
     try:
@@ -281,6 +386,7 @@ def main():
     print("표기: 칸번호(*=청소본 칸) · 가운데 [(컷(h=정지컷), 거리, 밀림초)] · 경계 (컷, 밀림초 — 9.9=②에 그 경계 없음)"
           " · 정지컷밀림 = 정지 컷에서만 난 밀림(완성본 켄번즈 확대 vs 화면 그냥 정지 — 따로 센다)", file=rep, flush=True)
     bad_scene = bad_shift = bad_bound = bad_hold = tot = 0
+    ghost_fr = ghost_only = ghost_cuts = short_cuts = 0
     for jid in ids:
         t0 = time.time()
         try:
@@ -295,14 +401,23 @@ def main():
         bd = [x for x in r["rows"] if x[5] and abs(x[5][1]) >= SHIFT_T and x[1] < SCENE_T]
         hs = [x for x in r["rows"] if abs(x[7]) >= SHIFT_T and abs(x[2]) < SHIFT_T and x[1] < SCENE_T]
         tot += len(r["rows"]); bad_scene += len(bs); bad_shift += len(sh); bad_bound += len(bd); bad_hold += len(hs)
+        gh = [(nm(x), g) for x in r["rows"] for g in x[8]]
+        ghost_cuts += len(gh); ghost_fr += sum(g[2] for _, g in gh); ghost_only += sum(g[3] for _, g in gh)
+        short_cuts += sum(x[9] for x in r["rows"])
         print("%s 칸%d(청소본 %d) 화면%.2fs 완성본%.2fs 음성%.2fs | 다른장면 %s | 밀림%.2f+ %s | 경계밀림 %s | 정지컷밀림 %s | 최대거리 %.2f | %.0fs(굽기%.0f 렌더%.0f 비교%.0f)" % (
             jid, len(r["rows"]), sum(1 for x in r["rows"] if x[6]), r["E"], r["F"], r["tts"],
             [(nm(x), x[1], x[4]) for x in bs], SHIFT_T, [(nm(x), round(x[2], 3), x[4]) for x in sh],
-            [(nm(x), x[5]) for x in bd], [(nm(x), round(x[7], 3), x[4]) for x in hs], max([x[1] for x in r["rows"]] or [0]), time.time() - t0, *r["sec"]),
+            [(nm(x), x[5]) for x in bd], [(nm(x), round(x[7], 3), x[4]) for x in hs], max([x[1] for x in r["rows"]] or [0]), time.time() - t0, *r["sec"])
+            # 잔상 = (칸, (컷, 머리|꼬리, 프레임 수, 그중 화면에만 있는 수)) · 짧은컷 = 3프레임 이하 컷 수 — 줄 끝에 붙인다(관문 정규식은 줄 앞만 본다)
+            + " | 잔상 %s | 짧은컷 %d" % (gh, sum(x[9] for x in r["rows"])),
             file=rep, flush=True)
     print("== 칸 %d · 다른 장면 %d · %.2f초 이상 밀림(가운데) %d · 경계 밀림 %d · 정지컷만 밀림 %d" % (
           tot, bad_scene, SHIFT_T, bad_shift, bad_bound, bad_hold),
           file=rep, flush=True)
+    # ★잔상은 **따로 한 줄**(2026-09-27) — 위 '== 칸' 줄은 tools/video_gate.py _SUMMARY 가 줄 끝($)까지 맞춰 읽는다.
+    #   거기 덧붙이면 관문이 '요약 줄을 못 읽었다'로 실패한다. 판정에 넣으려면 video_gate 에 이 줄 파서를 같이 넣어라.
+    print("== 잔상 %d프레임(컷 %d · 화면에만 %d프레임) · 짧은컷(%d프레임 이하) %d" % (
+          ghost_fr, ghost_cuts, ghost_only, SHORT_CUT, short_cuts), file=rep, flush=True)
 
 
 if __name__ == "__main__":

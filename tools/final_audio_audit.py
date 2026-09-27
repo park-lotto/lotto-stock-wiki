@@ -50,6 +50,8 @@ SFX_MIN_VOL = 0.05         # 볼륨×보정이 이 아래면 들리지 않아야
 BGM_DB_T = 3.0             # BGM 실측 비율이 기대에서 이만큼(dB) 벗어나면 이상
 BGM_MIN_R = 0.05           # 잔여와 BGM 파형 상관이 이 아래면 'BGM 없음'
 LEN_T = 0.10               # 길이 차 보고 기준(초)
+SURPLUS_T = 0.05           # 소리 패킷 표본 잉여(nb_frames×1024/표본율 − 스트림 길이) 보고 기준(초) — 관문 조건.
+#   정상(나레이션 한 줄을 한 번 AAC 로)은 AAC 앞뒤 채움 1회분 +0.02~0.03초. 칸별 AAC → concat 은 칸당 20~40ms 쌓여 +0.14초 이상.
 STALE_SLACK = 1.0          # mp3 수정 시각이 완성본보다 이만큼 뒤면 '렌더 뒤 음성 바뀜'
 
 OUT = Path(os.getenv("AUDIO_OUT") or "/tmp/audio_audit")
@@ -77,6 +79,21 @@ def load_audio(path, ss=0.0, t=None, sr=SR, honor_pts=False):
     if r.returncode != 0:
         raise RuntimeError("ffmpeg 읽기 실패 %s: %s" % (path, r.stderr.decode("utf-8", "replace")[-300:]))
     return np.frombuffer(r.stdout, dtype=np.float32).astype(np.float64)
+
+
+def packet_surplus(path):
+    """소리 패킷에 든 표본 길이 − 스트림(타임스탬프) 길이(초). 표본이 타임스탬프보다 많으면 +.
+    ffprobe 하나로 잰다(디코드 없음). AAC 한 줄이면 앞뒤 채움 1회분(+0.02~0.03초)만 남는다. 못 재면 None."""
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries",
+                            "stream=sample_rate,duration,nb_frames,codec_name", "-of", "csv=p=0", str(path)],
+                           stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+        f = r.stdout.decode("utf-8", "replace").strip().split(",")
+        codec, sr, dur, nf = f[0], int(f[1]), float(f[2]), int(f[3])
+        spf = 1024 if codec == "aac" else None      # AAC 프레임 = 1024표본. 다른 코덱은 판정하지 않는다
+        return round(nf * spf / sr - dur, 3) if spf else None
+    except Exception:      # noqa: BLE001
+        return None
 
 
 def stream_info(path):
@@ -338,7 +355,7 @@ def audit(ctx, want_video=True):
             rms_all = float(np.sqrt(np.mean(t_all * t_all))) or 1e-9
             tail = t_all[-cut_n:]
             tail_db = round(_db(float(np.sqrt(np.mean(tail * tail)))) - _db(rms_all), 1)
-    return {"av0": round(av, 3), "intro_cfg": intro_cfg, "intro_used": intro_raw, "tail_db": tail_db, "a0": a0, "pts_gaps": gaps, "video": vinfo, "rows": rows, "sfx": sfx_rows, "bgm": bgm_out,
+    return {"surplus": packet_surplus(ctx["final"]), "av0": round(av, 3), "intro_cfg": intro_cfg, "intro_used": intro_raw, "tail_db": tail_db, "a0": a0, "pts_gaps": gaps, "video": vinfo, "rows": rows, "sfx": sfx_rows, "bgm": bgm_out,
             "g_n_db": round(_db(g_n), 1) if g_n > 0 else None, "tail_cut": tail_cut,
             "len": {"got": round(dur_got, 3), "exp": round(len_exp, 3), "diff": round(dur_got - len_exp, 3),
                     "got_pts": None if len_pts is None else round(len_pts, 3)}}
@@ -377,7 +394,8 @@ def judge(r):
             "sfx_n": len(sfx_chk), "sfx_miss": sfx_miss, "sfx_off": sfx_off,
             "sfx_nofile": [x for x in r["sfx"] if x.get("missing_file")],
             "bgm_bad": 1 if (r["bgm"] or {}).get("bad") else 0,
-            "len_bad": 1 if abs(r["len"]["diff"]) >= LEN_T else 0}
+            "len_bad": 1 if abs(r["len"]["diff"]) >= LEN_T else 0,
+            "surplus_bad": 1 if (r.get("surplus") is not None and r["surplus"] >= SURPLUS_T) else 0}
 
 
 # ── 기대값 만들기(서버 — 렌더가 쓰는 함수 그대로) ──────────────────────────────
@@ -459,10 +477,10 @@ def line(jid, ctx, r, j, sec):
         bg = "BGM 기대 %sdB 실측 %s(상관 %s)%s" % (b.get("exp_db"), b.get("rel_db"), b.get("r"), " ★이상" if b.get("bad") else "")
     else:
         bg = "BGM 없음(잔여 %sdB)%s" % (b.get("resid_db"), " ★파일 사라짐" if m.get("bgm_file_missing") else "")
-    return ("%s 칸%d 인트로%.1f(실측%.1f) 길이%.2f(기대%.2f,%+.3f) | 마지막칸 음성-영상 %s 음성-자막 %s 영상-자막 %s (pts참고 %s, 수리전예측 %s) "
+    return ("%s 칸%d 패킷잉여%s 인트로%.1f(실측%.1f) 길이%.2f(기대%.2f,%+.3f) | 마지막칸 음성-영상 %s 음성-자막 %s 영상-자막 %s (pts참고 %s, 수리전예측 %s) "
             "| 음성-영상 최대 %s | 음성-영상0.15+ %s | 음성-자막0.15+ %d칸 | 끝잘림 %s초(꼬리 %sdB) | 못찾음 %s | 렌더뒤음성바뀜 %s"
             " | 효과음 %d발(팩 %s) 누락 %d 타점0.10+ %d | %s | %.0fs") % (
-        jid, j["n"], ctx["intro"], r.get("intro_used", ctx["intro"]), r["len"]["got"], r["len"]["exp"], r["len"]["diff"],
+        jid, j["n"], r.get("surplus"), ctx["intro"], r.get("intro_used", ctx["intro"]), r["len"]["got"], r["len"]["exp"], r["len"]["diff"],
         last.get("err_v"), last.get("err"), last.get("vid_minus_cap"), last.get("err_pts"), last.get("pred_prefix"),
         "%s칸 %+.3f(%s)" % (mx["beat"], mx["err_v"], mx["ref_kind"]) if mx else "-",
         [(x["beat"], x["err_v"]) for x in j["narr_bad"]], len(j["cap_bad"]), r.get("tail_cut"), r.get("tail_db"),
@@ -487,7 +505,7 @@ def main():
     print("판정: 나레이션 ±%.1fs(못 찾으면 ±%.1fs) NCC>=%.2f · 오차 %.2fs+ 보고 / 효과음 잔여 NCC>=%.2f · 타점 %.2fs+ / "
           "BGM 기대 dB(=20log10 볼륨) ±%.0fdB·상관>=%.2f / 길이 %.2fs+" % (WIN, WIDE, NARR_MIN, SHIFT_T, SFX_MIN, SFX_SHIFT_T,
                                                                     BGM_DB_T, BGM_MIN_R, LEN_T), file=rep, flush=True)
-    tot = dict(n=0, nb=0, sm=0, bg=0, ln=0, lost=0, skip=0, stale=0, soff=0)
+    tot = dict(n=0, nb=0, sm=0, bg=0, ln=0, lost=0, skip=0, stale=0, soff=0, sp=0)
     for jid in ids:
         t0 = time.time()
         try:
@@ -502,11 +520,12 @@ def main():
         smp.write(json.dumps({"job": jid, "meta": ctx.get("meta"), "intro": ctx["intro"], **r}, ensure_ascii=False) + "\n")
         tot["cb"] = tot.get("cb", 0) + len(j["cap_bad"])
         tot["n"] += j["n"]; tot["nb"] += len(j["narr_bad"]); tot["lost"] += len(j["narr_lost"]); tot["stale"] += len(j["stale"])
-        tot["sm"] += len(j["sfx_miss"]); tot["soff"] += len(j["sfx_off"]); tot["bg"] += j["bgm_bad"]; tot["ln"] += j["len_bad"]
+        tot["sm"] += len(j["sfx_miss"]); tot["soff"] += len(j["sfx_off"]); tot["bg"] += j["bgm_bad"]; tot["ln"] += j["len_bad"]; tot["sp"] += j["surplus_bad"]
     print("== 칸 %d · 나레이션 %.2f초+ 오차 %d · 효과음 누락 %d · BGM 이상 %d · 음성-자막 %.2f초+ %d · 나레이션 못찾음 %d"
-          " · 효과음 타점%.2f+ %d · 길이 이상 %d · 렌더뒤음성바뀜 %d · 건너뜀 %d   (나레이션 오차 = 음성 vs 영상 칸 첫 그림)" % (
+          " · 효과음 타점%.2f+ %d · 길이 이상 %d · 렌더뒤음성바뀜 %d · 건너뜀 %d · 패킷 잉여 %.2f초+ %d편"
+          "   (나레이션 오차 = 음성 vs 영상 칸 첫 그림)" % (
               tot["n"], SHIFT_T, tot["nb"], tot["sm"], tot["bg"], SHIFT_T, tot.get("cb", 0), tot["lost"], SFX_SHIFT_T,
-              tot["soff"], tot["ln"], tot["stale"], tot["skip"]), file=rep, flush=True)
+              tot["soff"], tot["ln"], tot["stale"], tot["skip"], SURPLUS_T, tot["sp"]), file=rep, flush=True)
     rep.close(); smp.close()
     print((OUT / "report.txt").read_text(encoding="utf-8"))
 

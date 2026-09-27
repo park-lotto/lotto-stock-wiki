@@ -64,4 +64,5 @@ def test_intro_length_change_invalidates_final():
 def test_intro_choice_is_mix_pipeline_one():
     import inspect
     src = inspect.getsource(A._save_render_inputs)
-    assert "mix_pipeline._intro_choice(" in src and "def _intro_choice" not in src
+    # 2026-09-27: 비교 값은 intro_signature(= _intro_choice 결과 + 고른 이름 + 파일 크기·시각) — 판단은 여전히 _intro_choice 한 곳
+    assert "mix_pipeline.intro_signature(" in src and "def _intro_choice" not in src

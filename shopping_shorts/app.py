@@ -4994,7 +4994,8 @@ def _save_render_inputs(store, job_id, **fields):
         elif key == "thumbnail":
             # ★인트로 선택 판단은 mix_pipeline._intro_choice 한 곳(완성본 도장 _render_stamp 와 같은 함수, 2026-09-27).
             #   종전엔 여기 따로 적어(길이 intro_sec 없음) 인트로 길이만 바꾸면 옛 완성본이 그대로 남았다.
-            if mix_pipeline._intro_choice(before.get("thumbnail")) != mix_pipeline._intro_choice(value):
+            if (mix_pipeline.intro_signature(before.get("thumbnail"), job_id)
+                    != mix_pipeline.intro_signature(value, job_id)):
                 render_changed = True
         elif before.get(key) != value:
             render_changed = True
@@ -5324,6 +5325,9 @@ def api_mix_status(job_id: str, request: Request):
             "error_detail": error_detail,   # 관리자에게만 채워진다(일반 사용자는 None)
             "queue_ahead": queue_ahead,     # None=대기 아님 / 0=다음 차례 / N=내 앞 N개
             "weak_sources": weak,
+            # 썸네일 인트로를 켰는데 붙일 그림이 없으면 고객 안내(판단 = mix_pipeline._intro_choice, 2026-09-27).
+            "intro_notice": (mix_pipeline.intro_notice(job.get("thumbnail"), job_id)
+                             if status in ("rendering", "done") else None),
             # 1단계 미리보기(2026-07-17): 폴러를 둘로 만들지 않으려고 기존 응답에 얹는다(스펙 §6.3).
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
             "preview_status": preview_status,
@@ -5381,10 +5385,17 @@ def api_mix_result(job_id: str, request: Request = None):
     flags = {f["beat_idx"] for f in plan.get("plagiarism_flags", [])}
     beats = []
     for b in plan["beats"]:
+        # ★4단계 음성 미리보기 자막 시각 = video_assemble.caption_rows(→ caption_schedule, 렌더와 같은 함수, 2026-09-27).
+        #   화면(produce.html _vpDriveCaption)은 이 cap_rows 를 그대로 쓰고 cap_offset 만 더한다(버튼으로 바로 움직이게).
+        _tp = b.get("tts_path")
+        _td = (video_assemble._probe_duration(_tp) or 0.0) if (_tp and Path(_tp).exists()) else 0.0
         beats.append({**b, "plagiarism_flag": b["beat_idx"] in flags,
                       "tts_preview_url": f"/api/mix/tts/{job_id}/{b['beat_idx']}",
                       "cap_segments": video_assemble._caption_segments(
-                          b.get("narration", ""), preset=b.get("caption_lines"))})
+                          b.get("narration", ""), preset=b.get("caption_lines")),
+                      "cap_rows": (video_assemble.caption_rows(
+                          b, _td, absorb_lead=video_assemble.caption_lead_absorb(job.get("deco")))[0]
+                          if _td else None)})
     # 옛 job(recipe_secret 등)도 새 key로 정규화해 라벨·드롭다운이 어긋나지 않게(fail-open).
     detected = _edit_plan._normalize_video_type(plan.get("detected_type"))
     return {
@@ -6062,6 +6073,18 @@ def _film_seg_from_id(seg_id: str, job: dict):
     return {"video_id": real, "start": a, "end": b, "seg_id": seg_id}
 
 
+def _lab_scenecuts(job, work):
+    """소재마다 장면 전환 시각 목록 {video_id: [초(0.001 내림), ...]} — 화면(scene_play.js guardReadWindow)이 컷 읽는 창을
+    전환 안쪽으로 줄이는 재료(2026-09-27). 검출·캐시는 seg_snap 한 곳. 소재를 못 찾거나 못 재면 그 소재는 빈 목록(가드 안 함)."""
+    try:
+        from shopping_shorts import seg_snap
+        srcs = {k: v for k, v in (_resolve_sources(job, work) or {}).items() if v and Path(v).exists()}
+        return seg_snap.scenecuts_map(srcs)
+    except Exception as e:      # noqa: BLE001 — 전환 목록이 없어도 화면은 열린다(가드만 안 걸린다). 대신 알린다
+        print("[seg_snap] 전환 목록 실패(가드 없음): %r" % (e,), file=sys.stderr)
+        return {}
+
+
 def _with_film_segs(seg_map, plan, job):
     """추출 인벤토리(seg_map)에 **사람이 필름에서 오려낸 조각**을 되살려 합친 사본을 준다.
 
@@ -6232,37 +6255,36 @@ def _lab_phash_ensure(work, seg_id, jpg_path):
         return ""
 
 
-def _lab_captions(plan):
-    """비트별 자막 구절 [{text,start,end}] + tts 실길이 — fetch.py [3/5]와 같은 계산.
-    ★라이브 렌더와 같은 함수(_caption_segments/_caption_durations/_adjust_caps_for_trim)를
-    호출해 결과만 싣는다. JS로 다시 나누면 두 벌이 되어 반드시 어긋난다(0순위-B)."""
+def _lab_captions(plan, deco):
+    """비트별 자막 구절 [{text,start,end,sec,off}] + tts 실길이.
+    deco = job 의 꾸미기(필수) — 장면꾸미기면 칸 앞 짧은 틈을 첫 자막에 붙인다(video_assemble.caption_lead_absorb,
+    완성본과 같은 판단). 필수로 둔 이유: 빠뜨리면 조용히 0이 되어 화면과 완성본이 다시 갈린다.
+    ★라이브 렌더와 같은 함수(video_assemble.caption_rows → caption_schedule)를 호출해 결과만 싣는다.
+    JS로 다시 나누면 두 벌이 되어 반드시 어긋난다(0순위-B)."""
     caps, tts_dur = {}, {}
+    _absorb = video_assemble.caption_lead_absorb(deco)
     for b in plan.get("beats") or []:
         i = b["beat_idx"]
-        segs = video_assemble._caption_segments(b.get("narration") or "",
-                                                b.get("caption_lines"))
         dur = 0.0
         tp = b.get("tts_path")
         if tp and Path(tp).exists():
             dur = video_assemble._probe_duration(tp) or 0.0
         tts_dur[str(i)] = round(dur, 3) if dur else None
-        lead, rd = video_assemble._adjust_caps_for_trim(b)
-        durs = video_assemble._caption_durations(
-            segs, dur or (b.get("target_seconds") or 3.0), real_durs=rd)
-        t = float(lead or 0.0)
-        rows = []
+        # ★구절·시각 = video_assemble.caption_rows(→ caption_schedule, 렌더와 같은 함수·같은 입력, 2026-09-27).
+        #   종전엔 여기서 칸 길이를 트림 전 음성 길이로 잡고 마지막 구절 끝을 따로 계산해 렌더와 두 벌이었다.
+        #   행마다 "off"(cap_offset)를 싣는다 — 화면(scene_play.js capAt)이 표시할 때 더한다.
+        rows, _cdur = video_assemble.caption_rows(b, dur or None, absorb_lead=_absorb)
+        segs = [r["text"] for r in rows]
+        durs = [r["sec"] for r in rows]          # 말 길이 — 렌더 _plan_phrase_clips 가 phrase_owners 에 주는 값과 같다
         # ★구절마다 **몇 번째 조각이 덮는지**를 같이 싣는다(2026-09-21). 짝을 정하는 곳은
         #   video_assemble.phrase_owners 하나 — 화면(scene_play.js)은 받은 값을 그대로 쓴다.
         #   owner_n = 이 값이 맞는 조각 수. 화면에서 조각을 넣고 빼 수가 달라지면 화면은 옛 식으로
         #   그리고(저장 시 서버도 같은 식으로 다시 얼린다), 저장 응답의 새 값으로 다시 맞춘다.
         _n_seg = len(video_assemble._beat_material(b)) if b.get("phrase_sync") else 0
         _own = video_assemble.phrase_owners(b, _n_seg, segs, durs=durs) if _n_seg else []   # R4 컷 하한 묶음
-        for k, (seg, dd) in enumerate(zip(segs, durs)):
-            row = {"text": seg, "start": round(t, 3), "end": round(t + dd, 3)}
+        for k, row in enumerate(rows):
             if k < len(_own):
                 row["owner"], row["owner_n"] = _own[k], _n_seg
-            rows.append(row)
-            t += dd
         caps[str(i)] = rows
     return caps, tts_dur
 
@@ -6300,7 +6322,7 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         _b = (_s or {}).get("source_brief") or {}
         if _v and _b:
             src_brief[_v] = _b
-    caps, tts_dur = _lab_captions(plan)
+    caps, tts_dur = _lab_captions(plan, job.get("deco"))
     # 편성이 서버에 얹힌 시각 — 기존 응답 계약과 이력 표시용. 충돌 판정은 아래 내용 지문이 한다.
     scene_lab_at = (plan.get("scene_lab") or {}).get("at")
     scene_lab_revision = _scene_lab_revision(plan)
@@ -6344,6 +6366,9 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         } for sid, v in seg_map.items()},
         "phash": _lab_phash_load(work),      # 썸네일 캐시가 채워지는 대로 /phash로 늦채움
         "src_duration": src_duration,
+        # 장면 전환 시각(2026-09-27) — scene_play.js guardReadWindow 가 컷 읽는 창을 전환 안쪽으로 줄인다.
+        #   화면·서버 러너(screen_clips — 이 함수를 그대로 부른다)가 같은 목록을 받는다.
+        "scenecuts": _lab_scenecuts(job, work),
         "captions": caps,
         "tts_dur": tts_dur,
     }}
@@ -6567,6 +6592,7 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
     import subprocess
     from concurrent.futures import ThreadPoolExecutor
     # ★컷마다 **그 칸의 구도**(완성본과 같은 frame_vf)를 붙인다 — 칸 번호는 beat_lens 순서(화면 DATA.beats 순서)
+    _pb = []        # 칸 순서 = beat_lens 순서의 편성 칸(구도·head_trim/tail_trim 을 여기서 읽는다)
     try:
         _pb = ((Store(DB_PATH).get_mix_job(job_id) or {}).get("edit_plan") or {}).get("beats") or []
         _owner = [bi for bi, n in enumerate(beat_lens or []) for _ in range(int(n))]
@@ -6661,6 +6687,8 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                               *([c["_vf"]] if c.get("_vf") else ["pad0"]),   # 구도가 바뀌면 다른 조각
                               # 프레임 수(칸 안 누적 경계)가 다르면 다른 조각 — 옛 -t 조각(올림)을 재사용하지 않게 늘 싣는다
                               "nf%d" % int(c.get("_nf") or 0),
+                              # 읽는 창 정확히 끊기(trim=end, 2026-09-27) — 옛 조각(다음 원본 1프레임 더 읽음)을 재사용하지 않게
+                              "rdx1",
                               # 정지 컷은 움직이는 프레임 수를 잘라 굽는다(2026-09-27) — 옛 조각(자르기 없음)을 재사용하지 않게
                               *(["mv%d" % _mv] if (_mv := _cut_motion(c)[2]) else [])], sort_keys=True)
             return hashlib.sha1(raw.encode()).hexdigest()[:20]
@@ -6687,7 +6715,9 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 _stop = max(dur, int(c.get("_nf") or 0) / 30.0)
                 # 움직이는 몫은 완성본 1차 조각과 같은 프레임 수까지(motion_frames) — 나머지는 마지막 프레임 정지
                 _trim = f",trim=end_frame={_mv}" if _mv else ""
-                vf = (video_assemble.cut_setpts(slow) + "," + vf + _trim
+                # ★읽는 창 끝 = video_assemble.cut_read_trim(완성본 _render_mix 와 같은 함수, 2026-09-27 — job 62ed6bf66eb9
+                #   컷 끝 다음 장면 2프레임). 입력 `-t`는 창 밖 원본 1프레임을 더 읽는다 — 이유는 그 함수 설명에.
+                vf = (video_assemble.cut_read_trim(take) + "," + video_assemble.cut_setpts(slow) + "," + vf + _trim
                       + f",tpad=stop_mode=clone:stop_duration={_stop:.3f}")
                 cmd = ["ffmpeg", "-y", "-v", "error", "-threads", "1",
                        "-ss", f"{float(c['start']):.3f}", "-t", f"{take:.3f}", "-i", str(src)]
@@ -6710,6 +6740,15 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
         # ── 컷 프레임 수 = 칸 안 누적 시각의 프레임 경계 차이(완성본 _render_mix와 **같은 함수**, 2026-09-27) ──
         #   칸 프레임 수(_nfr)는 칸 음성 길이 누적의 프레임 경계 차이 — 아래 칸 묶기와 같은 계산을 먼저 해 둔다.
         #   마지막 컷이 칸의 나머지 프레임을 흡수한다(칸 끝 정지 몫도 그 컷이 진다).
+        def _trims(bi):
+            _b = _pb[bi] if 0 <= bi < len(_pb) and isinstance(_pb[bi], dict) else {}
+            return float(_b.get("head_trim", 0.0) or 0.0), float(_b.get("tail_trim", 0.0) or 0.0)
+
+        def _beat_len(bi, ap):
+            """칸 길이(초) = 완성본과 같은 식(video_assemble._effective_dur — head_trim/tail_trim 을 뺀 음성 길이, 2026-09-27).
+            종전엔 mp3 전체 길이라 앞뒤를 다듬은 칸은 미리보기 칸이 완성본보다 길었다."""
+            return video_assemble._effective_dur(_dur(ap), *_trims(bi))
+
         beat_nfr = {}
         if beat_lens and tts:
             _k, _cum = 0, 0.0
@@ -6720,7 +6759,7 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 ap = tts.get(bi)
                 tot = None
                 if ap:
-                    _f0 = int(round(_cum * 30)); _cum += _dur(ap)
+                    _f0 = int(round(_cum * 30)); _cum += _beat_len(bi, ap)
                     tot = max(1, int(round(_cum * 30)) - _f0)
                     beat_nfr[bi] = tot
                 for c, nf in zip(mc, video_assemble.cut_frame_list(
@@ -6743,7 +6782,8 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
         # -- 칸 단위로 묶어 **그 칸 음성 길이에 정확히** 맞춘다 --------------------
         #   안 맞추면 칸마다 조금씩 밀려 뒤로 갈수록 쌓인다(실측 6칸에 0.425초).
         #   모자라는 몫은 그 칸 마지막 프레임을 세워 메운다 - 컷 단위로 이미 쓰는 기법이다.
-        segs, auds, cuts_off = parts, [], []
+        segs, cuts_off = parts, []
+        nar_frames = []     # [(칸 순서, 그 칸 영상의 실제 프레임 수)] — 소리는 video_assemble.narration_track 한 곳이 놓는다
         if beat_lens and tts:
             segs, k = [], 0
             _cum = 0.0      # ★칸 길이 = 누적 시각의 프레임 경계 차이(완성본 _render_mix와 같은 규칙, 2026-09-27)
@@ -6756,7 +6796,7 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 ap = tts.get(bi)
                 want = 0.0
                 if ap:
-                    want = _dur(ap)
+                    want = _beat_len(bi, ap)
                     # 칸마다 -t 음성길이로 자르면 30fps가 프레임 경계로 올림돼 칸당 최대 0.033초씩 길어지고
                     # 쌓인다(실측 10칸 +0.2초 — 완성본보다 뒤로 갈수록 늦었다). 누적 경계로 정하면 안 쌓인다.
                     _nfr = beat_nfr.get(bi) or max(1, int(round(want * 30)))   # 위 컷 프레임 계산과 같은 값
@@ -6769,18 +6809,16 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 bkey = _hash([_cut_key(c) for c in mine_cuts] + [str(ap or ""), "%.3f" % want,
                                                                   _pvproxy_tts_stamp(ap) if ap else ""])
                 bl = cache / ("b_%s.ts" % bkey)
-                bpad = cache / ("b_%s.m4a" % bkey)
-                if bl.exists() and bl.stat().st_size > 0 and ((not ap) or
-                        (bpad.exists() and bpad.stat().st_size > 0)):
-                    try: bl.touch(); bpad.touch()
+                if bl.exists() and bl.stat().st_size > 0:
+                    try: bl.touch()
                     except OSError: pass
                     segs.append(bl)
+                    nar_frames.append((bi, video_assemble._video_frames(bl) or (_nfr if ap else 0)))
                     co, cacc = [], 0
                     for c in mine_cuts:        # 컷 경계 = 구운 프레임 수 그대로(재지 않아도 정확하다)
                         co.append(round(cacc / 30.0, 3))
                         cacc += int(c.get("_nf") or 0)
                     cuts_off.append(co)
-                    if ap: auds.append(bpad)
                     continue
                 blst = _clist(mine, "b%03d.txt" % bi)
                 # ★컷 경계마다 **되감을 수 있는 지점(키프레임)**을 박는다.
@@ -6819,29 +6857,21 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                     co.append(round(cacc / 30.0, 3))
                     cacc += int(c.get("_nf") or 0)
                 cuts_off.append(co)
-                # ★칸 음성을 **그 칸 영상 길이에 정확히** 맞춘다(뒤에 무음을 채운다).
-                #   영상은 프레임 단위(1/30초)로만 끊겨 칸마다 최대 0.033초씩 길어진다.
-                #   그대로 두면 칸이 넘어갈 때마다 쌓여 뒤로 갈수록 자막이 밀린다
-                #   (실측 6칸에 0.131초). 칸마다 같은 길이로 맞추면 누적이 0이 된다.
-                if ap:
-                    vlen = _dur(bl) or want
-                    pad = bpad
-                    r3 = subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(ap),
-                                         "-af", "apad", "-t", "%.3f" % vlen,
-                                         "-c:a", "aac", "-b:a", "96k", str(pad)],
-                                        capture_output=True, timeout=120)
-                    auds.append(pad if (r3.returncode == 0 and pad.exists()) else ap)
+                # ★소리는 칸마다 따로 굽지 않는다(2026-09-27) — 칸별 AAC 를 concat 하면 칸마다 채움 표본이 붙어 목소리가
+                #   그림보다 칸당 20~40ms씩 늦어졌다(소리 에이전트 서버 실측). 완성본과 같은 narration_track 이 한 줄로 놓는다.
+                nar_frames.append((bi, video_assemble._video_frames(bl) or (_nfr if ap else 0)))
 
         lst = _clist(segs, "list.txt")
         final_tmp = d / ("_%s.mp4" % sig)
         # ★음성을 같이 넣는다 - 이게 시계를 하나로 만드는 한 줄이다.
         #   음성이 별도 트랙이면 되감을 때마다 맞춰야 하고, mp3 는 요청한 자리에 못 앉아
         #   늘 밀린다(실측 +0.16초, 13개 컷 전부). 한 파일이면 맞출 일 자체가 없다.
-        if auds and len(auds) == len(segs):
-            alst = _clist(auds, "alist.txt")
+        if nar_frames and len(nar_frames) == len(segs):
+            # 나레이션 한 줄 = 완성본(_render_mix)과 **같은 함수**(표본 수 = 총 프레임 × 1600, head_trim 부터 읽기) → AAC 한 번
+            _plan = {"beats": [{"beat_idx": bi, "head_trim": _trims(bi)[0]} for bi, _ in nar_frames]}
+            narr = video_assemble.narration_track(_plan, dict(tts), nar_frames, tmp / "narr.wav")
             cmd2 = ["ffmpeg", "-y", "-v", "error",
-                    "-f", "concat", "-safe", "0", "-i", str(lst),
-                    "-f", "concat", "-safe", "0", "-i", str(alst),
+                    "-f", "concat", "-safe", "0", "-i", str(lst), "-i", str(narr),
                     "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "96k",
                     "-movflags", "+faststart", str(final_tmp)]
         else:
@@ -7053,7 +7083,7 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
     if need is None:
         # 화면이 안 보내면 편집안의 그 비트 길이로 대신한다(기준을 두 벌로 두지 않는다).
         # 음성이 아직 없으면 tts 실길이가 None이다 — 그때는 계획 길이로 대신한다.
-        _caps, _tts = _lab_captions(job["edit_plan"])
+        _caps, _tts = _lab_captions(job["edit_plan"], job.get("deco"))
         need = (_tts or {}).get(str(bi)) or beats[bi].get("target_seconds")
     # ★칸의 역할(훅·CTA·결과…)을 함께 넘긴다(2026-08-17 사장님 "훅부터 기준이 뭘로 한 건지").
     #   대사만으로는 감정·상황을 말하는 훅에 아무 화면이나 붙는다 — 역할을 알아야
@@ -7157,7 +7187,7 @@ def _scene_lab_apply_locked(store, job_id, job, plan, payload):
         print(f"[scene_swaps] 기록 실패(무해): {_e!r}", file=sys.stderr)
     return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0),
             "swapped": _swapped, "revision": _scene_lab_revision(plan),
-            "captions": _lab_captions(plan)[0]}      # 새 짝(owner) — 화면이 서버와 다시 맞춘다
+            "captions": _lab_captions(plan, job.get("deco"))[0]}      # 새 짝(owner) — 화면이 서버와 다시 맞춘다
 
 
 @app.get("/api/mix/scene_lab/{job_id}/history")
@@ -9214,10 +9244,11 @@ def _cta_cut_for_job(job):
         return None, "자를 지점을 계산하지 못했어요"
     if not cut:
         return None, "이 대본엔 CTA 칸이 없어요 — 잘라낼 뒷부분이 없습니다"
-    # ⚠️ 폴백 경로는 인트로(prepend_still) 보정이 안 들어간다 — 인트로를 켰다면 그만큼 민다.
-    _thumb = job.get("thumbnail") or {}
-    if _thumb.get("intro"):
-        cut += float(_thumb.get("intro_sec") or 1.2)
+    # ⚠️ 폴백 경로는 인트로(prepend_still) 보정이 안 들어간다 — 인트로가 **실제로 붙었으면** 그만큼 민다.
+    #   판단은 mix_pipeline._intro_choice 한 곳(2026-09-27) — 켰어도 붙일 그림이 없으면 렌더가 안 붙였다(안 민다).
+    _on, _png, _isec = mix_pipeline._intro_choice(job.get("thumbnail"), job.get("job_id"))
+    if _on and _png is not None:
+        cut += float(_isec)
     return float(cut), ""
 
 
@@ -9623,16 +9654,26 @@ def api_mix_export(job_id: str, part: str = ""):
     # ★칸 번호가 겹친 편성은 내보내지 않는다 — 음성 표에서 한 칸 음성이 빠진다(판정·경보 mix_pipeline 한 곳)
     if mix_pipeline._beat_dup_blocked(Store(DB_PATH), job_id, job["edit_plan"], "내보내기"):
         return JSONResponse(status_code=409, content={"ok": False, "error": mix_pipeline.BEAT_DUP_MSG})
-    # ★정본(2026-09-22)이면 재배치된 사본·청소본이 입력이다 — 렌더와 같은 함수(render_inputs_for)
-    try:
-        plan, source_video_paths, _cbase = mix_pipeline.render_inputs_for(
-            Store(DB_PATH), job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
-    except Exception:
-        plan, source_video_paths = job["edit_plan"], {}   # 소스 전멸이어도 srt/script/seo는 준다(설계 §6, 500 금지)
-    tts_paths = mix_pipeline.tts_paths_of(plan)
-    timeline = _beat_timeline(plan, tts_paths)
     parts = {"sources": ["sources"], "srt": ["srt"], "script": ["script"]}.get(
         part, export_bundle.ALL_PARTS)
+    # ★재료 = 완성본이 쓴 소스·청소 그대로(mix_pipeline.export_sources_for — 캡컷과 같은 함수, 2026-09-27).
+    #   종전엔 여기에 청소 분기가 없어 정본 없는 자막제거 job 에서 **원본(자막 박힌) 조각**을 담았다(서버 4 job 104컷).
+    #   청소 완성본이 있어야 하는데 없거나 조각을 못 자르면 sources 만 뺀다 — 자막 남은 조각을 조용히 담지 않는다.
+    #   (srt/script/seo 는 소스 없이도 준다 — 설계 §6, 500 금지)
+    try:
+        _ex = mix_pipeline.export_sources_for(Store(DB_PATH), job, job_id, work, job.get("customer_id") or 0)
+    except Exception as e:      # noqa: BLE001 — 조각 자르기 실패
+        import traceback as _tbe
+        _tbe.print_exc(file=sys.stderr)
+        _ex = {"plan": job["edit_plan"], "source_video_paths": {}, "error": "자막 없는 조각을 만들지 못했습니다: %s" % e}
+        _ex["tts_paths"] = mix_pipeline.tts_paths_of(_ex["plan"])
+        _ex["timeline"] = _beat_timeline(_ex["plan"], _ex["tts_paths"])
+    plan, source_video_paths = _ex["plan"], _ex["source_video_paths"]
+    tts_paths, timeline = _ex["tts_paths"], _ex["timeline"]
+    if _ex.get("error") and "sources" in parts:
+        if part == "sources":
+            return JSONResponse(status_code=409, content={"ok": False, "error": _ex["error"]})
+        parts = [p for p in parts if p != "sources"]
     final = job.get("video_path") if (job.get("video_path")
                                       and Path(job["video_path"]).exists()) else None
     out = work / f"export_{part or 'all'}.zip"
@@ -9679,74 +9720,28 @@ def api_mix_capcut(job_id: str, base: str = ""):
     # ★칸 번호가 겹친 편성은 캡컷으로 보내지 않는다 — 음성 표에서 한 칸 음성이 빠진다(판정·경보 mix_pipeline 한 곳)
     if mix_pipeline._beat_dup_blocked(Store(DB_PATH), job_id, job["edit_plan"], "캡컷 내보내기"):
         return JSONResponse(status_code=409, content={"ok": False, "error": mix_pipeline.BEAT_DUP_MSG})
-    # ★정본(2026-09-22)이면 재배치된 사본·청소본이 입력이다 — 렌더와 같은 함수(render_inputs_for)
+    # ★재료 = 완성본이 쓴 소스·청소 그대로(mix_pipeline.export_sources_for — ZIP 과 같은 함수, 2026-09-27).
+    #   정본 → 청소본 좌표 재생 / 정본 없고 완성본 1편 청소 → 청소된 완성본을 칸별로 자른 조각(칸 안 컷 경계는
+    #   완성본 컷 계획 그대로, 구운 배속은 역변환해 캡컷 속도칸에 남긴다) / 소스별 청소본 / 자막제거 끔 → 원본.
+    #   청소 종류 판단은 렌더와 같은 clean_route 한 곳이다(종전엔 이 라우트가 clean_sources 를 조건 없이 덮고
+    #   완성본 조각 조건을 따로 적었다 — 0순위-B).
+    #   자르기가 실패하거나 청소 완성본이 있어야 하는데 없으면 **막는다** — 자막 남은 결과물을 조용히 내보내지 않는다.
     try:
-        plan, source_video_paths, _cbase = mix_pipeline.render_inputs_for(
-            Store(DB_PATH), job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
-    except Exception:
-        plan, source_video_paths, _cbase = job["edit_plan"], {}, None
-    tts_paths = mix_pipeline.tts_paths_of(plan)
-    # 자막 제거본이 타임라인 소스를 대신하더라도 캡컷 보관함에는 편집에 쓰인 긴 원본을 함께 보낸다.
-    # 원본 집합 판정은 capcut_draft.used_video_ids 한 곳만 사용해 타임라인 소스 판정과 어긋나지 않게 한다.
-    _original_source_video_paths = dict(source_video_paths)
-    _original_library_sources = {}
-    if job.get("subtitle_removal"):
-        _used_original_ids = capcut_draft.used_video_ids(plan)
-        _original_library_sources = {
-            vid: path for vid, path in _original_source_video_paths.items()
-            if vid in _used_original_ids
-        }
-    # ★자막제거(2단계)를 했으면 캡컷도 '자막 없는' 청소본을 써야 한다 — 안 그러면 원본 자막이
-    # 그대로 살아난다(2026-07-21 사장님 제보). clean_sources={video_id: 청소본}을 원본 위에 덮는다.
-    for _vid, _cp in (job.get("clean_sources") or {}).items():
-        if _cp and Path(_cp).exists():
-            source_video_paths[_vid] = _cp
-    timeline = _beat_timeline(plan, tts_paths)
-    # ★소스별 청소본이 없다 = 완성본 1편만 청소한 경로다(2026-08-27 사장님 B안 확정).
-    #   그대로 두면 원본이 나가 **자막이 살아난다**. 완성본을 컷별로 잘라 그 조각을 쓴다.
-    #     - VMake를 다시 안 부른다 → 추가 과금 0, 대기 0
-    #     - 대신 캡컷에서 컷을 원본 범위 밖으로 **늘리는** 편집은 못 한다(조각 뒤가 없다)
-    #   자르기가 실패하면 원본으로 두지 않고 **막는다** — 자막 남은 결과물을 조용히 내보내는
-    #   것이 더 나쁘다(사장님이 캡컷에서야 알게 된다).
-    # ★정본(_cbase)이면 아래 '완성본을 현재 타임라인으로 자르기'를 타지 않는다 — 청소본의 시간축은
-    #   청소 시점 편성이라, 앞 비트가 길어지면 뒤 비트가 청소본 끝을 넘어 빈 조각이 된다(LAB 실측
-    #   2026-09-22: src_cc5 띠 0.00). 정본 경로는 plan(재배치 사본)의 재료가 이미 청소본 좌표이므로
-    #   렌더와 같은 일반 경로(plan_beat_clips_for로 소스에서 자르기)가 정확하다.
-    if job.get("subtitle_removal") and not (job.get("clean_sources") or {}) and _cbase is None:
-        # ★청소본은 **지금 편성의 서명 파일**로 찾는다(mix_pipeline.clean_final_path_for_plan, 0순위-B).
-        #   2026-09-17 고객 제보(job 4efcc4c06d41): 렌더 완료·청소본 파일이 있는데도 "자막 없는 완성본이
-        #   없어요"로 막혔다. 편집을 바꾸면 _save_render_inputs가 clean_video_path를 비우고, 완성본
-        #   렌더 때 만든 청소본(_final_clean_fn)은 그 칸을 다시 안 채우기 때문이다. 칸은 옛 호환용으로만 본다.
-        _cf = mix_pipeline.clean_final_path_for_plan(job, work) or job.get("clean_video_path")
-        if _cf and Path(_cf).exists():
-            try:
-                _clips = mix_pipeline.split_final_into_beat_clips(_cf, timeline, work)
-            except Exception as e:      # noqa: BLE001
-                import traceback as _tb
-                _tb.print_exc(file=sys.stderr)
-                return JSONResponse(status_code=500, content={
-                    "ok": False, "error": "자막 없는 조각을 만들지 못했습니다: %s" % e})
-            if _clips:
-                # 완성본 조각에는 MIX 배속이 이미 구워져 있다. CapCut에서도 0.8x/1.4x가
-                # 보이게 하려면 조각을 먼저 역변환하고, 초안 speed material에 원값을 남긴다.
-                # 역변환 없이 speed만 기록하면 이중 배속이므로 두 단계는 반드시 한 묶음이다.
-                _clips = mix_pipeline.normalize_baked_clips_for_capcut(
-                    plan, _clips, timeline, work)
-                source_video_paths = dict(_clips)
-                # ★조각 안의 **컷 경계**를 같이 넘긴다(2026-09-21 이윤정님 제보: 캡컷에 칸 한 덩이로
-                #   가서 본인이 자른 장면 컷이 사라졌다). 경계는 렌더와 같은 계획에서 온다(0순위-B).
-                #   못 구하면 종전처럼 칸 한 덩이로 나간다 — 내보내기 자체는 막지 않는다.
-                try:
-                    _cuts = mix_pipeline.final_clip_pairs(
-                        plan, tts_paths, mix_pipeline._src_durs_for(job, work))
-                except Exception:      # noqa: BLE001
-                    _cuts = None
-                plan = mix_pipeline.plan_using_beat_clips(
-                    plan, _clips, timeline, preserve_capcut_speed=True, cuts=_cuts)
-                timeline = _beat_timeline(plan, tts_paths)
-        elif job.get("clean_status") == "ready":
-            return JSONResponse(status_code=409, content={
-                "ok": False, "error": "자막 없는 완성본이 아직 없어요 — 3단계 완성본 만들기를 먼저 해주세요"})
+        _ex = mix_pipeline.export_sources_for(Store(DB_PATH), job, job_id, work, job.get("customer_id") or 0,
+                                              for_capcut=True)
+    except Exception as e:      # noqa: BLE001
+        import traceback as _tb
+        _tb.print_exc(file=sys.stderr)
+        return JSONResponse(status_code=500, content={
+            "ok": False, "error": "자막 없는 조각을 만들지 못했습니다: %s" % e})
+    if _ex.get("error"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": _ex["error"]})
+    plan, source_video_paths = _ex["plan"], _ex["source_video_paths"]
+    tts_paths, timeline = _ex["tts_paths"], _ex["timeline"]
+    # 자막 제거본이 타임라인 소스를 대신하더라도 캡컷 보관함에는 편집에 쓰인 긴 원본(자막 있음)을 함께 보낸다.
+    #   고르는 곳은 export_sources_for 한 곳(library_originals — 정본 job 도 원본 소스별로. 종전엔 정본 job 에서
+    #   조립 소스가 통짜 청소본이라 긴 원본이 하나도 안 갔다).
+    _original_library_sources = dict(_ex.get("library_originals") or {})
     out_root = work / "capcut"
     out_root.mkdir(parents=True, exist_ok=True)
     # ★완성본도 함께 보낸다(2026-08-23 사장님 "완성본 조각들이 그대로 옮겨지고").
@@ -21727,7 +21722,7 @@ def _caplines_locked(store, job_id, body):
     _save_render_inputs(store, job_id, edit_plan=plan)
     # ★칸 타임라인(2026-08-29)이 이 응답으로 화면을 바로 갱신한다 — 새 시간표는
     #   GET과 같은 함수(_lab_captions)로 만든다. 여기서 따로 계산하면 두 벌이 된다(0순위-B).
-    _caps, _td = _lab_captions(plan)
+    _caps, _td = _lab_captions(plan, (store.get_mix_job(job_id) or {}).get("deco"))
     _bi = str(hit.get("beat_idx"))
     return {"ok": True, "lines": lines, "timed": hit.get("cap_durs") is not None,
             "cap_src": hit.get("cap_src"),

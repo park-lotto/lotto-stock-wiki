@@ -15408,25 +15408,25 @@ function _vpShowFrame(b){
   const f=document.getElementById('vpFrame');
   if(f && typeof MIX_JOB!=='undefined' && MIX_JOB){ f.style.display='block'; f.src=_beatFrameUrl(b); }
 }
-function _vpCapDurs(b){
+// ★자막 시각은 서버 cap_rows(= video_assemble.caption_rows → caption_schedule, 렌더와 같은 함수)를 그대로 쓴다(2026-09-27).
+//   종전엔 여기서 글자수 비례를 다시 계산해(하한 없음·칸 길이도 달랐다) 렌더와 두 벌이었다.
+//   화면이 더하는 것은 두 가지뿐: cap_offset(버튼으로 바로 움직이니까) · head_trim(음성 파일은 자르지 않은 원본을 튼다).
+//   cap_rows가 없으면(음성 전 옛 응답) 구절 순서만 균등으로 보여 주고 콘솔에 표식을 남긴다.
+function _vpCapRows(b, audDur){
+  if(Array.isArray(b.cap_rows) && b.cap_rows.length) return b.cap_rows;
   const segs=b.cap_segments||[]; if(!segs.length) return [];
-  if(Array.isArray(b.cap_durs) && b.cap_durs.length===segs.length) return b.cap_durs.slice();
-  const w=segs.map(s=>Math.max(1,(s||'').replace(/\s/g,'').length)); const tw=w.reduce((a,c)=>a+c,0);
-  return w.map(x=>x/tw);   // 표시용 근사(합=1, 오디오 길이에 맞춰 스케일) — 최종 렌더는 서버 cap_durs가 정확히 함
+  console.warn('[vpCap] cap_rows 없음 — 균등 표시(렌더 시각 아님)', b.beat_idx);
+  const d=(audDur||1)/segs.length;
+  return segs.map((t,k)=>({text:t,start:k*d,end:(k+1)*d}));
 }
-// 오디오 currentTime에 맞춰 그 비트 자막 구절을 순차 표시(cap_offset 반영). 자막 구절 자체는 항상 서버 cap_segments — 여기서 재구현하지 않는다.
+// 오디오 currentTime에 맞춰 그 비트 자막 구절을 순차 표시(cap_offset 반영). 구절·시각은 항상 서버 값 — 여기서 재구현하지 않는다.
 function _vpDriveCaption(aud, b){
   const cap=document.getElementById('vpCap'); if(!cap) return;
-  const segs=b.cap_segments||[]; const rel=_vpCapDurs(b);
-  const off=(+b.cap_offset||0);
   const upd=()=>{
-    const dur=aud.duration||rel.reduce((a,c)=>a+c,0)||1;
-    const durs=rel.map(r=> (Array.isArray(b.cap_durs)&&b.cap_durs.length)? r : r*dur);
-    // cap_lead = 말 시작 전 무음(서버 ASR 실측). 렌더러와 같은 기준점을 써야 미리보기와
-    // 최종 영상이 일치한다 — 예전엔 둘 다 0에서 시작해 자막이 먼저 떴다(2026-08-06).
-    const lead=(Array.isArray(b.cap_durs)&&b.cap_durs.length)?(+b.cap_lead||0):0;
-    let t=aud.currentTime-off, acc=lead, cur=(t<lead)?'':(segs[0]||'');
-    for(let k=0;k<segs.length;k++){ if(t>=acc){ cur=segs[k]; } acc+=durs[k]; }
+    const rows=_vpCapRows(b, aud.duration);
+    const t=aud.currentTime-(+b.cap_offset||0)-(+b.head_trim||0);
+    let cur='';
+    for(const r of rows){ if(t>=r.start-1e-3 && t<r.end){ cur=r.text; break; } }
     cap.textContent=cur;
   };
   aud.ontimeupdate=upd; upd();
@@ -16280,12 +16280,12 @@ async function pollFinal(){
     const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
     const st=document.getElementById('finalStatus');
     if(d.status!=='done' && d.status!=='failed'){
-      if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>'+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'')+'</span>'; }
+      if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>'+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'')+'</span>'+(d.intro_notice?'<div class="hint" style="margin-top:4px">ℹ '+esc(d.intro_notice)+'</div>':''); }
       const rf=document.getElementById('rfStage'); if(rf) rf.textContent=(MIX_LABEL[d.status]||d.status);   // 박스 안 단계 라벨도 동적 갱신
     }
     if(d.status==='done'){ clearInterval(MIX_POLL); clearInterval(_rfTimer);
       document.getElementById('finalVideo').innerHTML=`<video controls autoplay muted src="/api/mix/video/${esc(MIX_JOB)}" style="border-radius:12px;margin-top:10px"></video>`;
-      _finalRenderRestore('✅ 렌더 완료 — 완성 영상이 재생됩니다');
+      _finalRenderRestore('✅ 렌더 완료 — 완성 영상이 재생됩니다'+(d.intro_notice?(' · ℹ '+d.intro_notice):''));
       renderExport({rendered:true});     // 렌더 완료 → 완성 MP4 다운로드 버튼까지
       refreshFinalThumb();               // 썸네일 카드·버튼 라벨도 이때 맞춘다(렌더 전엔 없었다)
       // QR을 누르고 기다린 경우엔 곧바로 띄운다 — 다시 찾아 누르게 하지 않는다.

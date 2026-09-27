@@ -151,11 +151,16 @@ def validate_snapshot(value):
     return {key: val for key, val in value.items() if key in allowed}
 
 
-_TINY_GAP = 0.35   # 이보다 짧은 '자막 없는 틈'은 장면으로 세지 않는다(초)
+from .video_assemble import _LEAD_ABSORB as _TINY_GAP   # 이보다 짧은 '자막 없는 틈'은 장면으로 세지 않는다(초) — 값은 video_assemble 한 곳
 
 
 def _absorb_tiny_gaps(scenes):
-    """자막이 비는 아주 짧은 틈(음성이 비트 시작보다 살짝 늦는 cap_lead 등)을 이웃 자막 장면에 붙인다.
+    """자막이 비는 아주 짧은 **뒤** 틈을 앞 자막 장면에 붙인다.
+
+    ★칸 **앞** 틈(cap_lead)은 여기서 판단하지 않는다(2026-09-27) — 자막 시각의 주인 caption_schedule 이
+      absorb_lead(caption_lead_absorb)로 첫 자막을 칸 시작부터 띄워 오므로, 앞 틈 장면은 애초에 생기지 않는다.
+      종전엔 여기서만 앞 틈을 흡수해 3단계 화면·음성 미리보기(말 시작부터)와 완성본(칸 시작부터)이 갈렸다.
+    (아래는 종전 설명 — 앞 틈 부분은 caption_schedule 로 옮겨 갔다)
 
     2026-09-22 사장님 "본문 첫 자막이 없음": job d29a2bd26032 본문 첫 비트가 3.58~3.74(0.16초) 빈 장면 → 편집기에
     '5/35 장면'으로 빈 띠가 뜨고, 렌더에도 5프레임 빈 띠가 들어갔다. 훅 맨 앞 0.21초도 같은 꼴.
@@ -168,20 +173,14 @@ def _absorb_tiny_gaps(scenes):
         if out and out[-1]["beat_idx"] == sc["beat_idx"] and out[-1]["caption"]:
             out[-1]["end"] = sc["end"]           # 뒤 틈 → 앞 자막이 끝까지
             continue
-        out.append(dict(sc, _lead=True))         # 앞 틈 → 다음 자막이 오면 거기에 붙인다
-    result = []
-    for sc in out:
-        if result and result[-1].get("_lead") and result[-1]["beat_idx"] == sc["beat_idx"] and sc["caption"]:
-            sc = dict(sc, start=result[-1]["start"]); result.pop()
-        result.append(sc)
-    for sc in result:
-        sc.pop("_lead", None)
-    return result
+        out.append(dict(sc))                     # 앞 틈은 caption_schedule 이 이미 흡수했다 — 남았다면 그대로(진짜 틈)
+    return out
 
 
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
-    from .video_assemble import caption_schedule
+    from .video_assemble import caption_schedule, caption_lead_absorb
     from .template_copy import scene_text
+    _absorb = caption_lead_absorb({"scene_style": snapshot or True})   # 장면꾸미기 = 칸 앞 짧은 틈을 첫 자막에
     scenes = []
     hide_hook_captions = (snapshot or {}).get("hookCaptionMode") == "hidden"
     for index, beat in enumerate(timeline):
@@ -189,7 +188,7 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
         cursor = start
         kind = "hook" if index == 0 else "body"
         caption_visible = not (kind == "hook" and hide_hook_captions)
-        for caption, t0, t1 in caption_schedule(beat):
+        for caption, t0, t1 in caption_schedule(beat, absorb_lead=_absorb):
             a, b = max(cursor, start, float(t0)), min(end, float(t1))
             if b <= a:
                 continue

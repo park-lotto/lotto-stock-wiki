@@ -33,12 +33,14 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 CONFIG_REL = "tools/gate_video.json"
-TOOL_RELS = ("tools/editor_vs_final_video.py", "tools/evf_run.py")
+TOOL_RELS = ("tools/editor_vs_final_video.py", "tools/evf_run.py", "tools/capcut_export_audit.py")
+CC_TOOL = "capcut_export_audit.py"      # ⑤ 캡컷·내보내기 대조(완성본 컷 계획 vs 캡컷 초안 vs ZIP 조각) — 영상 비교 뒤 같은 작업에
 PATCH_RELS = {                       # 서버 PATCH_DIR 안의 자리 ← 저장소 경로
     # ★도구(editor_vs_final_video.py)가 PATCH_DIR 에서 얹는 모듈 목록과 **짝**이다 — 한쪽에만 있으면 도구가 import 에서
     #   죽어 관문이 실패한다(2026-09-27 실사고: frame_match.py 를 새로 만들고 여기 안 넣어 첫 finish 가 막혔다).
     #   test_video_gate::test_patch_rels_cover_tool_loader 가 두 목록을 대조한다.
     "frame_match.py": "shopping_shorts/frame_match.py",
+    "seg_snap.py": "shopping_shorts/seg_snap.py",          # 조각 경계 붙이기(2026-09-27) — app 입구가 부른다
     "screen_clips.py": "shopping_shorts/screen_clips.py",
     "video_assemble.py": "shopping_shorts/video_assemble.py",
     "clean_base.py": "shopping_shorts/clean_base.py",
@@ -48,6 +50,9 @@ PATCH_RELS = {                       # 서버 PATCH_DIR 안의 자리 ← 저장
     # 패치된 screen_clips 가 '러너 없음'으로 죽지 않고, 러너·화면 코드 변경도 실제로 재진다.
     "screen_clips_runner.js": "shopping_shorts/screen_clips_runner.js",
     "static/scene_play.js": "shopping_shorts/static/scene_play.js",
+    # 캡컷·내보내기 대조 도구(capcut_export_audit.PATCH_MODULES)가 얹는 모듈 — test_capcut_export_audit 가 대조한다.
+    "export_bundle.py": "shopping_shorts/export_bundle.py",
+    "capcut_draft.py": "shopping_shorts/capcut_draft.py",
 }
 REMOTE_REPO = "/home/ubuntu/lotto-stock-wiki"
 HOST = "ubuntu@shoppingshorts.duckdns.org"          # IP는 바뀐다 — 도메인으로 간다(tools/mirror_live_job.py 와 같다)
@@ -175,12 +180,21 @@ _SUMMARY = re.compile(r"^== 칸 (\d+) · 다른 장면 (\d+) · [\d.]+초 이상
 _JOB = re.compile(r"^(\S+) 칸(\d+)\(청소본 (\d+)\) ")
 _SKIP = re.compile(r"^(\S+) 건너뜀 ?(.*)$")
 _JOB_SCENE = re.compile(r"\| 다른장면 (\[.*?\]) \| 밀림")
+# 잔상 줄(2026-09-27) — editor_vs_final_video 가 '== 칸' 줄과 **따로** 낸다(그 줄은 위 _SUMMARY 가 줄 끝까지 맞춰 읽는다)
+_GHOST = re.compile(r"^== 잔상 (\d+)프레임\(컷 (\d+) · 화면에만 (\d+)프레임\) · 짧은컷\((\d+)프레임 이하\) (\d+)\s*$")
 
 
 def parse_report(text):
     """editor_vs_final_video report.txt → dict. 요약 줄이 없거나 모양이 다르면 summary=None(=판정 불가 → 실패)."""
-    r = {"summary": None, "summary_line": "", "jobs": [], "skips": [], "scene_jobs": []}
+    r = {"summary": None, "summary_line": "", "jobs": [], "skips": [], "scene_jobs": [], "ghost": None, "ghost_line": ""}
     for line in (text or "").splitlines():
+        if line.startswith("== 잔상"):
+            r["ghost_line"] = line
+            mg = _GHOST.match(line)
+            if mg:
+                fr, cu, so, _sc, sh = (int(x) for x in mg.groups())
+                r["ghost"] = {"frames": fr, "cuts": cu, "screen_only": so, "short": sh}
+            continue
         if line.startswith("== 칸"):
             r["summary_line"] = line
             m = _SUMMARY.match(line)
@@ -230,6 +244,20 @@ def judge(parsed, cfg, benign_skips=("음성 없음",)):
             notes.append("%s %d칸 — 보고만(기준 없음)" % (label, s[key]))
         elif s[key] > int(lim):
             fails.append("%s %d칸 (기준 %d)" % (label, s[key], int(lim)))
+    # ★잔상(컷 가장자리 딴 장면 1~3프레임, 2026-09-27) — 기준 키가 있으면 판정, 줄을 못 읽으면 실패(조용히 통과 금지)
+    g = parsed.get("ghost")
+    for key, gk, label in (("max_ghost", "frames", "잔상"), ("max_ghost_screen_only", "screen_only", "화면에만 있는 잔상")):
+        lim = cfg.get(key)
+        if lim is None:
+            if g is not None:
+                notes.append("%s %d프레임 — 보고만(기준 없음)" % (label, g[gk]))
+            continue
+        if g is None:
+            fails.append("잔상 줄(== 잔상 …)을 못 읽었다 — 도구가 옛 판본이거나 형식이 바뀌었다: %r"
+                         % parsed.get("ghost_line", "")[:200])
+            break
+        if g[gk] > int(lim):
+            fails.append("%s %d프레임 (기준 %d)" % (label, g[gk], int(lim)))
     ratio_lim = cfg.get("max_shift_ratio")
     if ratio_lim is not None and s["cells"] > 0:
         ratio = s["shift_center"] / s["cells"]
@@ -238,6 +266,85 @@ def judge(parsed, cfg, benign_skips=("음성 없음",)):
         else:
             notes.append("밀림(가운데) 칸 비율 %.0f%% (기준 %.0f%% 이하)" % (ratio * 100, float(ratio_lim) * 100))
     return not fails, fails, notes
+
+
+def _cea():
+    """캡컷·내보내기 대조 도구 모듈(요약 형식의 주인) — tools/ 가 import 경로에 없어도 파일로 싣는다."""
+    import importlib.util
+    _sp = importlib.util.spec_from_file_location("capcut_export_audit", str(HERE / "capcut_export_audit.py"))
+    m = importlib.util.module_from_spec(_sp)
+    _sp.loader.exec_module(m)
+    return m
+
+
+def capcut_summary(report_text):
+    """캡컷·내보내기 대조 report → {"cuts","capcut","export"} 또는 None."""
+    return _cea().parse_summary(report_text)
+
+
+def judge_capcut(report_text, cfg, crash="", benign_skips=("편집안 없음",)):
+    """캡컷·내보내기 대조(capcut_export_audit) report → (통과?, 실패 사유, 보고만 하는 줄). 요약 형식은 도구 한 곳(parse_summary).
+    기준: 캡컷 불일치 ≤ max_capcut_mismatch · 내보내기 불일치 ≤ max_export_mismatch (없으면 0 — 느슨해지지 않게)."""
+    fails, notes = [], []
+    s = capcut_summary(report_text)
+    if s is None:
+        fails.append("캡컷·내보내기 대조 요약 줄(== 컷 …)을 못 읽었다 — 도구가 죽었거나 형식이 바뀌었다")
+        return False, fails, notes
+    notes.append("캡컷·내보내기 대조: 컷 %d · 캡컷 불일치 %d · 내보내기 불일치 %d" % (s["cuts"], s["capcut"], s["export"]))
+    if s["cuts"] <= 0:
+        fails.append("캡컷·내보내기 대조: 비교한 컷이 0 — 아무것도 안 쟀다")
+    lc, le = int(cfg.get("max_capcut_mismatch") or 0), int(cfg.get("max_export_mismatch") or 0)
+    if s["capcut"] > lc:
+        fails.append("캡컷 불일치 %d컷 (기준 %d) — 캡컷 초안이 완성본과 다른 소스·컷·배속" % (s["capcut"], lc))
+    if s["export"] > le:
+        fails.append("내보내기 불일치 %d컷 (기준 %d) — ZIP 조각이 완성본과 다른 소스·구간·청소" % (s["export"], le))
+    skips = [ln for ln in (report_text or "").splitlines() if re.match(r"^\S+ 건너뜀", ln)
+             and not any(b in ln for b in benign_skips)]
+    if len(skips) > int(cfg.get("max_error_skips") or 0):
+        fails.append("캡컷·내보내기 대조: 오류로 건너뛴 작업 %d개: %s" % (len(skips), "; ".join(x[:120] for x in skips)))
+    if (crash or "").strip():
+        fails.append("캡컷·내보내기 대조 도구가 예외로 끝났다(crash.txt)")
+    return not fails, fails, notes
+
+
+def _wait_done(sh, d_done, pid, timeout, poll, sleep):
+    """서버 배경 작업을 끝 표식(done.txt 의 '..._DONE')까지 기다린다 → (끝났나, 시간초과인가).
+    끝 표식 없이 프로세스가 사라지면 (False, False) — report 가 멀쩡해 보여도 믿지 않는다."""
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        sleep(poll)
+        _rc, out = sh("cat %s 2>/dev/null; echo ---; kill -0 %d 2>/dev/null && echo ALIVE || echo GONE" % (d_done, pid))
+        if "_DONE" in out:
+            return True, False
+        if "GONE" in out:
+            return False, False
+    return False, True
+
+
+def run_capcut_audit(sh, d, ids, g, *, say, sleep=time.sleep):
+    """⑤ 영상 비교가 본 그 작업들로 캡컷·내보내기 대조를 돌린다(병합본 모듈 PATCH_DIR) → (통과?, 실패 사유, 보고 줄)."""
+    if not ids:
+        return False, ["캡컷·내보내기 대조: 비교할 작업이 없다(영상 비교 report 에 작업 줄 0)"], []
+    ids = [i for i in ids if re.fullmatch(r"[0-9A-Za-z_-]{4,64}", i)]
+    rc, out = sh("cd %s && set -a && . /etc/shopping-shorts.env && set +a && "
+                 "{ PATCH_DIR=%s CC_OUT=%s/cc setsid nohup python3 %s/_tool/%s %s > %s/cc_run.log 2>&1 < /dev/null & echo PID=$!; }"
+                 % (REMOTE_REPO, d, d, d, CC_TOOL, " ".join(ids), d))
+    m = re.search(r"PID=(\d+)", out)
+    if rc != 0 or not m:
+        return False, ["캡컷·내보내기 대조를 못 띄웠다: %s" % out.strip()[:300]], []
+    pid = int(m.group(1))
+    say("  캡컷·내보내기 대조 시작 — 작업 %d개. pid %d" % (len(ids), pid))
+    done, timed_out = _wait_done(sh, "%s/cc/done.txt" % d, pid, int(g.get("capcut_timeout_sec", 900)),
+                                 int(g.get("poll_sec", 20)), sleep)
+    if not done:
+        sh("kill -- -%d 2>/dev/null; kill %d 2>/dev/null; true" % (pid, pid))
+        _, tail = sh("tail -30 %s/cc_run.log 2>/dev/null; cat %s/cc/crash.txt 2>/dev/null" % (d, d))
+        return False, ["캡컷·내보내기 대조가 %s\n%s" % ("시간 초과" if timed_out else "끝 표식 없이 죽었다",
+                                                   tail.strip()[-1500:])], []
+    _, report = sh("cat %s/cc/report.txt 2>/dev/null" % d)
+    _, crash = sh("cat %s/cc/crash.txt 2>/dev/null" % d)
+    say("\n--- 캡컷·내보내기 대조 report (서버 %s/cc/report.txt) ---\n%s\n--- report 끝 ---" % (d, report.rstrip()))
+    return judge_capcut(report, g, crash)
 
 
 # ── 서버 실행 ────────────────────────────────────────────────────
@@ -445,6 +552,12 @@ def run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sle
         if crash.strip():
             ok = False
             fails.append("도구가 예외로 끝났다(crash.txt)")
+        # ⑤ 캡컷·내보내기 대조 — 영상 비교가 본 그 작업들(병합본 모듈). 캡컷 초안·ZIP 이 완성본과 같은 소스·청소·컷인가.
+        cc_ok, cc_fails, cc_notes = run_capcut_audit(sh, d, [j["job"] for j in parsed.get("jobs", [])], g,
+                                                     say=say, sleep=sleep)
+        ok = ok and cc_ok
+        fails += cc_fails
+        notes += cc_notes
         say("판정 근거: %s" % (parsed.get("summary_line") or "(요약 줄 없음)"))
         for f_ in fails:
             say("  ✗ " + f_)

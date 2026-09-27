@@ -9,15 +9,15 @@
      app 을 통째로 import 하지 않고 app.py 에서 그 함수 소스만 떼어 실행한다(서버에서 app import = 무거움·부작용 위험).
      + 화면 JS normalizeData(scene_lab.html)의 "끝·시작을 음성 길이로 자르기"만 여기서 재현(표시 보정 3줄).
   ② 완성본 자막 — job 이 어느 길로 굽는지에 따라:
-     (a) 장면꾸미기(deco.scene_style) 켠 job  = scene_style.context_for(timeline) 의 장면 목록
+     (a) 장면꾸미기(deco.scene_style) 켠 job  = scene_style.context_for(timeline) 의 장면 목록(칸 앞 짧은 틈은 caption_schedule 이 첫 자막에 붙인다)
          + 스냅샷 captionTexts 덮어쓰기(키 `${presetId}:${mode}:${장면번호}:caption`, out/precision20-ui.js captionKey)
-         + caption_visible(hookCaptionMode=hidden 이면 훅 자막 숨김).  compose()가 브라우저로 그리는 입력 그대로.
+         + 글자를 그리는 조건(precision20-ui.js hasEditableCaption: 본문·연속형·원본 틀만, 훅 숨김 설정).  compose()가 브라우저로 그리는 입력 그대로.
      (b) 그 외(drawtext) job = video_assemble._caption_drawtexts 를 _burn_captions 와 **같은 인자**로 불러
          만든 ffmpeg 필터 문자열을 파싱(enable='between(t,a,b)' + textfile 글자).  렌더가 굽는 필터 그 자체.
      ★렌더 작업 폴더(asm_*)는 렌더 끝에 지워져(video_assemble.assemble finally) 자막 파일이 서버에 안 남는다 —
        그래서 같은 입력으로 다시 만든다. 완성본 픽셀과 다를 수 있으니 job 마다 프레임 한 장(capeye_<job>.jpg)을 남긴다.
   ③ 캡컷 자막 시간표 = video_assemble.caption_schedule(beat) — ②(b)와 "같은 규칙"이라고 적혀 있는 별도 구현. 같이 대조.
-  ④ 인트로 = 편성표 thumbnail.intro 선택 ↔ 작업 폴더 thumb_intro.mp4(실제로 붙인 조각) 길이·시각 ↔ final.mp4 길이
+  ④ 인트로 = mix_pipeline._intro_choice(thumb, job_id)(렌더가 쓰는 그 판단) ↔ 작업 폴더 thumb_intro.mp4(실제로 붙인 조각) 길이·시각 ↔ final.mp4 길이
      − 칸 길이 합 ↔ 완성본 첫 프레임과 썸네일 PNG 닮음.
   ⑤ 썸네일 = 고른 파일 존재·크기·수정 시각(완성본보다 새 것이면 완성본 인트로는 옛 그림).
 
@@ -59,6 +59,31 @@ def _repo_root() -> Path:
 
 ROOT = _repo_root()
 sys.path.insert(0, str(ROOT))
+PATCH_DIR = os.getenv("PATCH_DIR")     # 배포 전 대조: 고친 모듈(video_assemble·scene_style·mix_pipeline·app.py)을 먼저 얹는다
+
+
+def _apply_patch_dir():
+    """PATCH_DIR 의 모듈을 shopping_shorts.<이름> 으로 먼저 올린다(import 전에) — 서버 파일은 안 바꾼다."""
+    if not PATCH_DIR:
+        return
+    import types
+    import shopping_shorts
+    for n in ("video_assemble", "scene_style", "mix_pipeline"):
+        f = Path(PATCH_DIR) / ("%s.py" % n)
+        if f.exists():
+            # ★__file__ 은 저장소 자리로 둔다 — 모듈이 자기 위치 기준으로 폰트(fonts/)·틀(out/)을 찾는다
+            #   (패치 폴더 자리로 두면 폰트가 전부 기본폰트로 떨어지고 장면꾸미기 틀 파일을 못 찾는다 — 실측).
+            real = ROOT / "shopping_shorts" / ("%s.py" % n)
+            m = types.ModuleType("shopping_shorts." + n)
+            m.__file__, m.__package__ = str(real), "shopping_shorts"
+            sys.modules["shopping_shorts." + n] = m
+            exec(compile(f.read_text(encoding="utf-8"), str(real), "exec"), m.__dict__)
+            setattr(shopping_shorts, n, m)
+
+
+def app_py():
+    f = Path(PATCH_DIR) / "app.py" if PATCH_DIR else None
+    return f if (f and f.exists()) else ROOT / "shopping_shorts" / "app.py"
 OUT = Path(os.getenv("CAP_OUT") or "/tmp/caption_audit")
 TOL = float(os.getenv("CAP_TOL") or 0.15)
 INTRO_TOL = 0.35          # 인트로 길이 판정 여유(초) — 칸마다 프레임 올림이 쌓이는 만큼(핸드오프 09-27 새벽: 8칸 +0.29)
@@ -67,15 +92,42 @@ THUMB_SIM_T = 18.0        # 첫 프레임 ↔ 썸네일 PNG 회색 평균차(0~2
 
 # ───────────────────────── 실제 코드 불러오기 ─────────────────────────
 
-def load_func(path, name, glb):
-    """파일에서 최상위 함수 하나의 소스만 떼어 glb 이름공간에서 실행해 돌려준다(모듈 import 없이 진짜 코드를 쓴다)."""
+def load_func(path, name, glb, ns=None):
+    """파일에서 최상위 함수 하나의 소스만 떼어 이름공간에서 실행해 돌려준다(모듈 import 없이 진짜 코드를 쓴다).
+    ns 를 주면 그 dict 에 넣는다(함수끼리 서로 부르는 경우)."""
     src = Path(path).read_text(encoding="utf-8")
     for node in ast.parse(src).body:
         if isinstance(node, ast.FunctionDef) and node.name == name:
-            ns = dict(glb)
+            ns = dict(glb) if ns is None else ns
             exec(compile(ast.get_source_segment(src, node), str(path), "exec"), ns)
             return ns[name]
     raise LookupError("%s 에 %s 없음" % (path, name))
+
+
+def app_funcs():
+    """mix_pipeline._intro_choice 가 부르는 app 함수(_thumb_dir·_selected_thumb_path).
+    app 을 import 하지 않고(서버에서 무겁다) 그 두 함수 소스만 떼어 가벼운 대리 모듈로 올린다 — 이미 import 돼 있으면 그대로."""
+    if "shopping_shorts.app" in sys.modules:
+        return sys.modules["shopping_shorts.app"]
+    import types
+    m = types.ModuleType("shopping_shorts.app")
+    m.__dict__.update({"os": os, "Path": Path, "_THUMB_DIR": ROOT / "shopping_shorts" / "data" / "thumbs"})
+    for n in ("_thumb_dir", "_selected_thumb_path"):
+        load_func(app_py(), n, {}, ns=m.__dict__)
+    sys.modules["shopping_shorts.app"] = m
+    return m
+
+
+_MP = None
+
+
+def mp():
+    global _MP
+    if _MP is None:
+        app_funcs()
+        from shopping_shorts import mix_pipeline as _m
+        _MP = _m
+    return _MP
 
 
 _VA = None
@@ -96,13 +148,8 @@ def lab_captions_fn():
     """app._lab_captions — DATA.captions 를 만드는 서버 함수(3단계 편집 화면이 그대로 그린다)."""
     global _LAB
     if _LAB is None:
-        _LAB = load_func(ROOT / "shopping_shorts" / "app.py", "_lab_captions",
-                         {"video_assemble": va(), "Path": Path})
+        _LAB = load_func(app_py(), "_lab_captions", {"video_assemble": va(), "Path": Path})
     return _LAB
-
-
-def intro_choice_fn():
-    return load_func(ROOT / "shopping_shorts" / "mix_pipeline.py", "_intro_choice", {"json": json})
 
 
 # ───────────────────────── 정규화·대조 (순수 함수 — 테스트 대상) ─────────────────────────
@@ -241,10 +288,21 @@ def recent_done(con, n):
 
 # ───────────────────────── 세 쪽 자막 만들기 ─────────────────────────
 
-def editor_captions(plan):
-    """{beat_idx: rows(칸 기준 초)} — 3단계 편집 화면이 받는 DATA.captions + 화면 표시 보정."""
-    caps, tts_dur = lab_captions_fn()(plan)
-    return {int(k): clamp_like_screen(v, tts_dur.get(k)) for k, v in caps.items()}, tts_dur
+def editor_captions(plan, deco):
+    """{beat_idx: rows(칸 기준 초)} — 3단계 편집 화면이 받는 DATA.captions + 화면 표시 보정.
+    deco = job 꾸미기(장면꾸미기면 칸 앞 짧은 틈을 첫 자막에 — _lab_captions 가 caption_lead_absorb 로 판단)."""
+    fn = lab_captions_fn()
+    try:
+        caps, tts_dur = fn(plan, deco)
+    except TypeError:                     # 옛 코드(2026-09-27 이전, _lab_captions(plan)) — 비교 실행용
+        caps, tts_dur = fn(plan)
+    out = {}
+    for k, v in caps.items():
+        rows = clamp_like_screen(v, tts_dur.get(k))
+        # 화면이 **보여 주는** 시각 = 행 시각 + off(cap_offset) — scene_play.js capAt 과 같다
+        out[int(k)] = [dict(r, start=float(r["start"]) + float(r.get("off") or 0),
+                            end=float(r["end"]) + float(r.get("off") or 0)) for r in rows]
+    return out, tts_dur
 
 
 def timeline_of(plan):
@@ -278,20 +336,29 @@ def render_captions_scene_style(job, timeline):
     snap = scene_style.validate_snapshot((job.get("deco") or {}).get("scene_style"))
     ctx = scene_style.context_for(timeline, job.get("headcopy"), snap, job.get("job_id"))
     scenes = ctx["scenes"]
+    rscenes, rsnap = scenes, snap          # compose 가 찍는 장면 = context_for 장면 그대로
     by, hidden, overrides = {}, 0, 0
-    for i, sc in enumerate(scenes):
-        text, over, _k = scene_caption_text(snap, i, sc)
+    hidden_beats, shown_beats = set(), set()
+    for i, sc in enumerate(rscenes):
+        text, over, _k = scene_caption_text(rsnap, i, sc)
         overrides += int(over)
-        visible = snap.get("mode") == "continuous" or sc.get("caption_visible") is not False
+        # 렌더러가 자막 글자를 실제로 그리는 조건 = precision20-ui.js hasEditableCaption:
+        #   captionVisible()(연속형 or caption_visible!==false) && (연속형 || 본문 장면 || 원본(plain) 틀)
+        #   ★훅 장면(이야기형)은 자막 대신 제목을 그린다 — 2026-09-27 로컬 레이어 렌더로 확인(훅 3장 모두 자막 글자 없음)
+        cont = snap.get("mode") == "continuous"
+        visible = (cont or sc.get("caption_visible") is not False) and             (cont or sc.get("kind") == "body" or snap.get("presetId") == "plain")
         if not visible:
             hidden += 1
+            hidden_beats.add(sc["beat_idx"])
             continue
+        shown_beats.add(sc["beat_idx"])
         if not norm_text(text):
             continue                              # 자막 없는 틈 장면
         by.setdefault(sc["beat_idx"], []).append({"text": text, "start": sc["start"], "end": sc["end"],
                                                   "override": over})
     narr = {b["beat_idx"]: b.get("narration") or "" for b in timeline}
     return by, {"scenes": len(scenes), "hidden": hidden, "overrides": overrides,
+                "hidden_beats": sorted(hidden_beats - shown_beats),   # 틀이 자막 글자를 아예 안 그리는 칸(이야기형 훅 등)
                 "check": caption_text_overrides(snap, scenes, narr),
                 "preset": snap.get("presetId"), "mode": snap.get("mode")}
 
@@ -337,10 +404,6 @@ def img_diff(a, b):
     return sum(abs(x - y) for x, y in zip(pa, pb)) / len(pa)
 
 
-def thumb_dir(job_id):
-    return ROOT / "shopping_shorts" / "data" / "thumbs" / job_id
-
-
 def intro_and_thumb(job, content_dur, work_tmp):
     """인트로·썸네일 점검. 반환 (intro dict, thumb dict)."""
     jid = job["job_id"]
@@ -351,16 +414,17 @@ def intro_and_thumb(job, content_dur, work_tmp):
             th = json.loads(th)
         except ValueError:
             th = {}
-    on, chosen, sec_raw = intro_choice_fn()(th)
-    # 렌더가 실제로 붙이는 규칙(mix_pipeline.run_render + _thumb_intro_png): 고른 파일 → 없으면 마지막 결과, 길이 기본 1.2
+    # 렌더가 실제로 붙이는 판단 = mix_pipeline._intro_choice(켜짐, 붙일 파일, 길이) — 그 함수를 그대로 부른다
+    try:
+        on, png, sec = mp()._intro_choice(th, jid)
+    except TypeError:
+        # 옛 코드(2026-09-27 이전, _intro_choice(thumb) → 고른 '이름') — 비교 실행용. 붙이는 규칙은 옛 _thumb_intro_png
+        on, _name, sec = mp()._intro_choice(th)
+        png = mp()._thumb_intro_png(dict(job, thumbnail=th), th) if on else None
+        sec = float(sec or 1.2) if on else None
     sel = th.get("selected")
-    png = None
-    if sel and (thumb_dir(jid) / sel).exists():
-        png = thumb_dir(jid) / sel
-    elif th.get("results"):
-        last = thumb_dir(jid) / th["results"][-1]
-        png = last if last.exists() else None
-    sec = float(th.get("intro_sec") or 1.2)
+    chosen = sel
+    sec = float(sec or 0.0)
     fdur = ffprobe_dur(final) if final.exists() else None
     fmt = final.stat().st_mtime if final.exists() else None
     clip = final.parent / "thumb_intro.mp4"
@@ -392,7 +456,7 @@ def intro_and_thumb(job, content_dur, work_tmp):
         intro["bad"].append("인트로 끔인데 이번 완성본에 인트로 조각이 붙음")
     thumb = {"selected": sel, "exists": None, "size": None, "newer_than_final_s": None, "bad": []}
     if sel:
-        p = thumb_dir(jid) / sel
+        p = Path(app_funcs()._thumb_dir(jid)) / sel
         thumb["exists"] = p.exists()
         if p.exists():
             st = p.stat()
@@ -449,7 +513,7 @@ def audit_job(job, out_dir, frame=True):
     work = Path(out_dir) / "_work" / jid
     try:
         timeline = timeline_of(plan)
-        editor, _tts = editor_captions(plan)
+        editor, _tts = editor_captions(plan, job.get("deco"))
         ss = bool((job.get("deco") or {}).get("scene_style"))
         if ss:
             render_abs, ss_info = render_captions_scene_style(job, timeline)
@@ -459,8 +523,11 @@ def audit_job(job, out_dir, frame=True):
         drawtext_abs = render_captions_drawtext(job, timeline, work / "dt") if ss else render_abs
         beats, n_text, n_time, n_count, capcut_bad, font_fb = [], 0, 0, 0, 0, 0
         req_font = os.path.basename(((job.get("caption_style") or {}).get("font")) or "")
+        skip = set((ss_info or {}).get("hidden_beats") or [])
         for b in timeline:
             bi, t0 = b["beat_idx"], b["t0"]
+            if bi in skip:
+                continue                # 틀 설계상 자막 글자를 안 그리는 칸 — 대조 대상 아님(줄에 '틀숨김'으로 보고)
             e = editor.get(bi) or []
             r = to_rel(render_abs.get(bi) or [], t0)
             c = compare_beat(e, r)
@@ -503,7 +570,8 @@ def line_of(r):
             (" !" + "/".join(r["intro"]["bad"]) if r["intro"]["bad"] else ""),
             ("!" + "/".join(r["thumb"]["bad"]) if r["thumb"]["bad"] else ("ok" if r["thumb"]["selected"] else "-"))))
     if ss:
-        s += " · 장면%d 숨김%d 손자막%d 고아%d 밀림의심%d" % (ss["scenes"], ss["hidden"], ss["overrides"],
+        s += " · 장면%d 숨김%d(틀숨김 칸 %s) 손자막%d 고아%d 밀림의심%d" % (ss["scenes"], ss["hidden"],
+                                                   ",".join(map(str, ss.get("hidden_beats") or [])) or "-", ss["overrides"],
                                                    len(chk.get("orphan") or []), len(chk.get("moved") or []))
     le = r["intro"].get("len_excess")
     if le is not None and abs(le) > INTRO_TOL:
@@ -517,6 +585,7 @@ def line_of(r):
 
 
 def main(argv):
+    _apply_patch_dir()
     OUT.mkdir(parents=True, exist_ok=True)
     args = argv[1:]
     n = int(args[0]) if args and args[0].isdigit() else 10

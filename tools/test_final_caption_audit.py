@@ -117,7 +117,7 @@ def fake_plan(tmp_path, monkeypatch):
 def _audit(plan, tmp_path, tamper=None):
     job = {"job_id": "t", "edit_plan": plan, "caption_style": {}, "deco": {}, "headcopy": None}
     tl = fa.timeline_of(plan)
-    ed, _ = fa.editor_captions(plan)
+    ed, _ = fa.editor_captions(plan, job.get("deco"))
     ren = fa.render_captions_drawtext(job, tl, tmp_path / "w")
     if tamper:
         tamper(ren)
@@ -133,10 +133,24 @@ def test_integration_real_functions_match(fake_plan, tmp_path):
     assert [c["n_render"] for c in res] == [2, 2]
 
 
-def test_integration_cap_offset_caught(fake_plan, tmp_path):
-    fake_plan["beats"][1]["cap_offset"] = 0.3        # 4단계 '자막 +0.3초' — 렌더만 반영, 3단계 화면(_lab_captions)은 무시
+def test_integration_cap_offset_same_on_screen(fake_plan, tmp_path):
+    """4단계 '자막 +0.3초'(cap_offset) — 2026-09-27부터 3단계 화면도 같은 값을 더해 보여 준다(_lab_captions 행의 off)."""
+    fake_plan["beats"][1]["cap_offset"] = 0.3
     res = _audit(fake_plan, tmp_path)
-    assert not res[0]["time_bad"]
+    assert all(not c["time_bad"] for c in res), res
+
+
+def test_editor_ignoring_offset_is_caught(fake_plan, tmp_path, monkeypatch):
+    """화면이 off 를 안 더하면(2026-09-27 이전) 잡힌다 — 대조가 살아 있는지."""
+    fake_plan["beats"][1]["cap_offset"] = 0.3
+    real = fa.editor_captions
+
+    def no_off(plan, deco):
+        caps, td = real(plan, deco)
+        return {k: [dict(r, start=r["start"] - float(r.get("off") or 0), end=r["end"] - float(r.get("off") or 0))
+                    for r in rows] for k, rows in caps.items()}, td
+    monkeypatch.setattr(fa, "editor_captions", no_off)
+    res = _audit(fake_plan, tmp_path)
     assert len(res[1]["time_bad"]) >= 1 and res[1]["time_bad"][0]["d_start"] == pytest.approx(0.3, abs=0.01)
 
 
@@ -182,7 +196,7 @@ def test_override_orphan_and_moved():
 
 # ⑤ 인트로 — 켰는데 붙일 그림이 없으면 잡는다 / 고른 그림이 있고 끈 경우는 조용
 def test_intro_on_without_png_caught(tmp_path, monkeypatch):
-    monkeypatch.setattr(fa, "thumb_dir", lambda jid: tmp_path / "thumbs" / jid)
+    monkeypatch.setattr(fa.app_funcs(), "_THUMB_DIR", tmp_path / "thumbs")
     job = {"job_id": "j1", "video_path": str(tmp_path / "none.mp4"), "thumbnail": {"intro": True, "results": []}}
     intro, thumb = fa.intro_and_thumb(job, 10.0, tmp_path)
     assert intro["on"] and intro["png"] is None and intro["bad"]

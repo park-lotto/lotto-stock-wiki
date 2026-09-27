@@ -245,9 +245,11 @@ function capsOf(i){ return (DATA.captions || {})[String(beatKeyAt(i))] || []; }
 function capsIn(i, a, b){
   return capsOf(i).filter(c => c.start < b - 1e-3 && c.end > a + 1e-3);
 }
+// 재생 자막 표시 — 행의 start/end 는 말 시각, off(cap_offset)는 렌더처럼 **표시할 때만** 더한다(2026-09-27).
+//   start/end 자체에 더하면 구절 맞춤 컷 경계(planClips)까지 움직인다 — 렌더도 컷엔 offset 을 안 쓴다.
 function capAt(i, t){
   const cs = capsOf(i);
-  return cs.find(c => t >= c.start - 1e-3 && t < c.end) || null;
+  return cs.find(c => { const o = +c.off || 0; return t >= c.start + o - 1e-3 && t < c.end + o; }) || null;
 }
 
 
@@ -637,6 +639,28 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   const syncBeat = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[beatIdx] || {};
   const syncRaw = Number(syncBeat.sync_speed || 1);
   const syncSpeed = isFinite(syncRaw) && syncRaw >= 0.5 && syncRaw <= 2 ? syncRaw : 1;
+  // ★컷 읽는 창 가드(2026-09-27) — 창 [start, start+sdur] 의 머리·꼬리 0.1초(30fps 3프레임) 안에 원본 장면 전환이 있으면
+  //   창을 전환 안쪽으로 줄인다(머리: start 를 전환으로 / 꼬리: sdur 을 전환까지). 컷 가장자리 딴 장면 1~3프레임(서버 6 job 23프레임)의 뿌리.
+  //   전환 목록 = 서버 DATA.scenecuts[video_id](seg_snap 검출, 새 장면 첫 프레임 pts 의 0.001초 내림). 없으면 그대로(옛 데이터 안전).
+  //   ★planClips 의 finish(모든 경로가 지나는 곳) 한 곳에서만 부른다 — 서버 러너가 같은 JS 를 돌려 미리보기·완성본·캡컷이 같은 창을 받는다.
+  const READ_GUARD = 0.1 + 1e-6;
+  function guardReadWindow(vid, start, sdur){
+    const s = Number(start), d = Number(sdur);
+    const cuts = ((((typeof DATA === 'object' && DATA) || {}).scenecuts) || {})[vid];
+    if (!Array.isArray(cuts) || !cuts.length || !(d > 0) || !isFinite(s)) return {start: s, sdur: d};
+    const e = s + d;
+    let ns = s, ne = e;
+    for (const x of cuts){
+      const c = Number(x);
+      if (!isFinite(c)) continue;
+      if (c > s + 1e-6 && c <= s + READ_GUARD && c > ns) ns = c;     // 머리: 앞 장면 프레임을 읽지 않는다
+      if (c < e - 1e-6 && c >= e - READ_GUARD && c < ne) ne = c;     // 꼬리: 다음 장면 첫 프레임부터는 안 읽는다
+    }
+    if (ns === s && ne === e) return {start: s, sdur: d};
+    if (ne - ns < 0.1) return {start: s, sdur: d};                   // 창이 너무 짧아지면 안 건드린다
+    // 길이는 0.001초 **내림** — 올림하면 창 끝이 전환 프레임을 다시 넘을 수 있다
+    return {start: ns, sdur: Math.floor((ne - ns) * 1000 + 1e-6) / 1000};
+  }
   const finish = base => {
     if (!base.length) return base;
     base.forEach(c => {
@@ -651,6 +675,10 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       if (sourceTotal > 0 && Number(c.start || 0) + natural > end + EPS) end = sourceTotal;
       if (end > Number(c.start || 0)) wanted = Math.min(wanted, end - Number(c.start || 0));
       c.src_dur = Math.max(EPS, wanted);
+      // ★실제로 읽는 창의 머리·꼬리에 걸친 장면 전환을 뺀다(guardReadWindow — 컷을 확정하는 이 자리 한 곳에서만).
+      //   줄어든 몫은 컷 길이 dur 그대로 두고 기존 느리게·정지 규칙이 채운다.
+      const g = guardReadWindow(c.video_id, Number(c.start || 0), c.src_dur);
+      c.start = g.start; c.src_dur = g.sdur;
       c.speed = c.dur > EPS ? c.src_dur / c.dur : 1;
     });
     return base;
