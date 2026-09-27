@@ -1,0 +1,72 @@
+{
+ "3EkwnSzxMGg": {
+  "bpm": 152.0,
+  "onset_per_min": 130.3,
+  "cut_beat_sync": "17/29",
+  "sync_pct": 59,
+  "hit_in_first_1s": true
+ },
+ "7PFWxq0Y1bU": {
+  "bpm": 136.0,
+  "onset_per_min": 320.7,
+  "cut_beat_sync": "7/27",
+  "sync_pct": 26,
+  "hit_in_first_1s": true
+ },
+ "CmnmcIvwTPo": {
+  "bpm": 117.5,
+  "onset_per_min": 225.1,
+  "cut_beat_sync": "6/21",
+  "sync_pct": 29,
+  "hit_in_first_1s": true
+ },
+ "X4GIghUr_B4": {
+  "bpm": 69.8,
+  "onset_per_min": 74.5,
+  "cut_beat_sync": "4/21",
+  "sync_pct": 19,
+  "hit_in_first_1s": true
+ },
+ "aKubG1MrQ_k": {
+  "bpm": 86.1,
+  "onset_per_min": 229.0,
+  "cut_beat_sync": "6/21",
+  "sync_pct": 29,
+  "hit_in_first_1s": true
+ },
+ "dvJg0By8Luw": {
+  "bpm": 152.0,
+  "onset_per_min": 235.4,
+  "cut_beat_sync": "9/21",
+  "sync_pct": 43,
+  "hit_in_first_1s": true
+ },
+ "eehzg4pzwC4": {
+  "bpm": 117.5,
+  "onset_per_min": 144.4,
+  "cut_beat_sync": "4/16",
+  "sync_pct": 25,
+  "hit_in_first_1s": true
+ },
+ "kbxDhWBibcc": {
+  "bpm": 117.5,
+  "onset_per_min": 225.3,
+  "cut_beat_sync": "6/18",
+  "sync_pct": 33,
+  "hit_in_first_1s": true
+ },
+ "s1Z5z_TrnPA": {
+  "bpm": 117.5,
+  "onset_per_min": 177.2,
+  "cut_beat_sync": "7/28",
+  "sync_pct": 25,
+  "hit_in_first_1s": true
+ },
+ "z1fgI__kSPw": {
+  "bpm": 152.0,
+  "onset_per_min": 202.4,
+  "cut_beat_sync": "15/33",
+  "sync_pct": 45,
+  "hit_in_first_1s": true
+ }
+}
