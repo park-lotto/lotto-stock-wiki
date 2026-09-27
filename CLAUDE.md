@@ -375,7 +375,15 @@ py tools/track.py start <트랙명>     # 내 폴더 .tracks/<트랙명> + track
 py tools/track.py finish <트랙명>    # 게이트 통과해야만 main 병합 → 라이브 (폴더는 남는다)
 py tools/track.py list              # 열린 트랙 + 얼마나 밀렸는지
 py tools/track.py close <트랙명>     # 트랙을 아주 접는다 — 폴더·브랜치 삭제
+py tools/track.py park <트랙명>      # 폴더만 치움 — 브랜치·원격 백업 보존(되살리기: git worktree add .tracks/<이름> track/<이름>)
+py tools/track.py park-idle         # 7일 넘게 안 쓴 트랙 폴더를 전부 치움(미커밋 있으면 건너뜀)
 ```
+
+**디스크 병목 방지(2026-09-27 사장님)** — C가 꽉 차면 finish가 임시 폴더를 만들다 끊기고 다른 프로그램(코덱스 업데이트)까지 깨진다.
+- 새 트랙은 **가벼운 트랙**: `raw/`·`productions/`를 풀지 않는다(1.8GB → 약 0.7GB). 필요하면 `start --full` 또는 그 폴더에서 `git sparse-checkout disable`.
+- `start`·`finish`가 디스크 여유를 본다: 15GB 미만이면 경고, 3GB 미만이면 finish 거절(임시 폴더 1.8GB를 못 담는다).
+- `finish`는 락을 쥔 뒤 남은 `_merge-*` 잔해를 치운다.
+- 완성 영상·재료·백업은 외장 `D:\숏템\`(규칙: `D:\숏템\_저장규칙.txt`). 만드는 동안은 C, 다 만들면 D.
 
 **`finish`는 폴더를 안 지운다.** 태스크가 끝난 거지 트랙이 끝난 게 아니다 — 병합 후 트랙 폴더는
 자동으로 최신 main에 맞춰지고 **바로 다음 작업을 얹으면 된다**. 설계가 "태스크 단위로 자주 병합"을
