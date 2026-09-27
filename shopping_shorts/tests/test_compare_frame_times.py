@@ -28,6 +28,18 @@ def test_clean_thumb_uses_frame_times(monkeypatch):
     monkeypatch.setattr(A.mix_pipeline, "clean_compare_clips", lambda job, work: {
         "clips": [{"ci": 0, "si": 0, "video_id": "s0", "beat_idx": 0, "src": 1.0, "fin": 0.0, "dur": 1.0, "cleaned": True}],
         "clean_path": None, "stale": False, "plan_used": "current"})
-    monkeypatch.setattr(A.mix_pipeline, "compare_frame_times", lambda c, pos: (_ for _ in ()).throw(_Boom()))
+    monkeypatch.setattr(A.mix_pipeline, "compare_frame_times", lambda c, pos, **k: (_ for _ in ()).throw(_Boom()))
     with pytest.raises(_Boom):
         A.api_produce_mix_clean_thumb("j1", kind="original", si=0, pos=0.5, ci=0)
+
+
+def test_sample_moves_away_from_source_shot_cut():
+    """8c63 장면25 실측 모양: 가운데(원본 17.264)가 샷 전환(17.30) 1프레임 앞 → 전환에서 2.5프레임 이상 떨어진 곳으로."""
+    c = {"src": 16.763, "fin": 30.266, "dur": 1.01}
+    s0, f0 = mp.compare_frame_times(c, 0.5)
+    assert abs((s0 - 0.0005) - 17.3) < 2.5 / 30                      # 옮기기 전엔 전환에 붙어 있다
+    s1, f1 = mp.compare_frame_times(c, 0.5, shot_cuts=[17.3])
+    assert abs((s1 - 0.0005) - 17.3) >= 2.5 / 30 - 1e-9              # 옮긴 뒤엔 떨어져 있다
+    assert abs(((s1 - s0) - (f1 - f0))) < 1e-9                        # 원본·청소본은 같은 만큼 옮긴다(짝 유지)
+    assert 16.763 <= s1 - 0.0005 < 16.763 + 1.01                       # 컷 안에 머문다
+    assert mp.compare_frame_times(c, 0.5, shot_cuts=[5.0]) == (s0, f0)   # 먼 전환은 영향 없음

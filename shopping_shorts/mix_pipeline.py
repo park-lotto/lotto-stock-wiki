@@ -4552,7 +4552,10 @@ def _src_durs_for(job, work):
         return {}
 
 
-def compare_frame_times(c, pos, fps=30):
+SHOT_AVOID_FRAMES = 2.5     # 비교 그림은 원본 샷 전환에서 이만큼(프레임) 떨어진 곳을 찍는다
+
+
+def compare_frame_times(c, pos, fps=30, shot_cuts=None):
     """전/후 비교의 **찍을 시각**을 프레임 번호로 정한다 → (원본 초, 청소본 초). 주인 함수(0순위-C).
 
     ★왜(2026-09-27 사장님 "양쪽 다 프레임 번호로 집도록 바꾸면 0프레임으로"): 종전엔 양쪽을 소수점 초(fin+dur*pos)로
@@ -4561,12 +4564,32 @@ def compare_frame_times(c, pos, fps=30):
       정확히 n/30이다. 컷 시작 프레임 f0에 **같은 프레임 수 k**를 더해 청소본은 (f0+k)/30, 원본은 src + k/30 을 찍는다
       — 조립이 원본에서 그 조각을 뜰 때와 같은 자(1/30초 격자)라 두 그림이 같은 순간이다.
     c: {src, fin, dur} (fin은 정본이면 보정 off가 이미 들어간 값), pos: 0~1.
+    shot_cuts: 원본의 샷 전환 시각(초) 목록(seg_snap.scene_cuts). 주면 찍을 자리가 전환 ±SHOT_AVOID_FRAMES 안이면
+      같은 컷 안에서 가장 가까운 '전환에서 먼' 프레임으로 옮긴다.
+      ★왜(2026-09-28 사장님 화면 8c63 장면25): 원본 컷 안에 샷 전환(프레임 518→519)이 있고 청소본이 1프레임 앞서
+        있으면, 가운데를 찍는 순간 원본은 전환 직전·청소본은 직후를 찍어 **전혀 다른 장면**으로 보였다(영상은 정상).
+        청소본 ±1프레임은 남을 수 있으니 비교 그림이 전환 순간을 피하는 게 맞다.
     """
     from shopping_shorts.video_assemble import cut_frames
     fin, dur, src = float(c["fin"]), float(c["dur"]), float(c["src"])
     nf, _ = cut_frames(fin, dur, fps)
     f0 = int(round(fin * fps))
     k = min(nf - 1, max(0, int(nf * float(pos))))
+    if shot_cuts:
+        _cuts = [float(x) for x in shot_cuts]
+
+        def _near(kk):
+            t = src + kk / float(fps)
+            return any(abs(t - x) < SHOT_AVOID_FRAMES / float(fps) for x in _cuts)
+        if _near(k):
+            for step in range(1, nf):
+                for kk in (k - step, k + step):
+                    if 0 <= kk < nf and not _near(kk):
+                        k = kk
+                        break
+                else:
+                    continue
+                break
     # +0.0005: 정확히 n/30에 seek하면 부동소수 오차로 앞 프레임이 잡힐 수 있다 — 격자 안쪽으로 살짝 밀어 둔다
     return src + k / float(fps) + 0.0005, (f0 + k) / float(fps) + 0.0005
 
