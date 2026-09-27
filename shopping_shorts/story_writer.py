@@ -275,12 +275,36 @@ def _pin_share(phrase, text):
     return sum(1 for g in grams if g in ct) / len(grams) if grams else 1.0
 
 
-def frame_of(sp, key=""):
+# ★씨앗 결(A안) 틀 — 옛 작가가 쓰던 히트작 실측 틀을 되살린다(2026-09-28 사장님 "씨앗 결 이야기는 왜 이렇게 짧고 부실해?").
+#   새 작가가 A안에 "씨앗 흐름을 칸으로" 한 줄만 줘서 10작업이 5~6줄·173~260자·고조 0~1줄로 나왔다(옛 A안 8~11줄·272~341자·고조 6줄).
+#   칸 크기 = 썰 히트작 49편 실측(옛 SHORT_BLOCK) · 고조는 2칸, 칸마다 순간 → 지옥 → 없애 버렸다는 거.
+SEED_FRAME = {
+    "yt": {"roles": ["훅", "미끼", "공개", "고조1", "고조2", "반전", "마무리"], "gojo": {"고조1": 3, "고조2": 3},
+           "rows": ["훅: 씨앗 첫 줄의 꼴을 빌려 새로(약 16자)",
+                    "미끼: 누가·어디서 난리 났는지 궁금하게(약 53자)",
+                    "공개: 이건 바로 (제품) (약 11자)",
+                    "고조1: 【3줄】 ①\"이게 말도 안 되는게\" + 그 순간(기존 것과 달리·무엇을 하다가) ②그때 벌어지던 지옥(~하던 그 지옥을) "
+                    "③제품이 그걸 없애 버린 것(~로 싹 없애 버렸다는 거) — 합쳐 약 80자",
+                    "고조2: 【3줄】 ①\"심지어\" + 또 다른 순간 ②그때의 불편 ③없애 버린 것 — 합쳐 약 39~60자",
+                    "반전: \"근데 진짜 충격적인 포인트는\" + 재료에서 가장 센 특징(약 48자)",
+                    "마무리: 짧게 한마디(약 12자)"]},
+    "ig": {"roles": ["훅", "상황", "고조1", "고조2", "소감", "댓글유도"], "gojo": {"고조1": 2, "고조2": 2},
+           "rows": ["훅: 겪은 일로 여는 첫마디(감탄 가능)",
+                    "상황: 누구에게서·어디서 알게 됐나(친구·언니·남편 같은 인물, 간접화법)",
+                    "고조1: 【2줄】 ①이걸 모를 때 어떻게 하고 있었나(그 장면과 짜증) ②쓰고 나서 어떻게 달라졌나(기능 말고 장면으로)",
+                    "고조2: 【2줄】 ①또 다른 불편했던 장면 ②달라진 장면",
+                    "소감: 생활의 장면으로 한 줄",
+                    "댓글유도: 이 제품에 맞는 말 + 댓글에 '낱말' 남겨주세요"]},
+}
+
+
+def frame_of(sp, key="", platform="yt"):
     """스타일(스파인) → 틀. sp가 None이면 씨앗 결(씨앗 대본의 흐름이 곧 틀).
     돌려주는 것: {name, roles(칸 순서 — 씨앗 결이면 None), block(프롬프트에 싣는 틀 글), pinned(공통 칸 고정 문장)}"""
     if not sp:
-        return {"name": "씨앗 결 이야기", "roles": None,
-                "block": "(고른 스타일 없음) [씨앗 대본]의 흐름 — 무엇을 먼저 말하고 어디서 놀라게 하고 어떻게 끝내는지 — 을 칸으로 삼아라."}
+        f = SEED_FRAME.get(platform) or SEED_FRAME["yt"]
+        return {"name": "씨앗 결 이야기", "roles": list(f["roles"]), "gojo": dict(f["gojo"]), "pinned": {},
+                "block": "씨앗 결 이야기 — [씨앗 대본]의 말투를 따르되 아래 칸 순서·크기로 쓴다\n" + "\n".join("  " + r for r in f["rows"])}
     tpl = sp.get("templates") if isinstance(sp.get("templates"), dict) else {}
     roles = [str(r) for r in (sp.get("beat_roles") or []) if str(r).strip()] or [k for k in tpl if tpl.get(k)]
     pinned = common_lines(sp, key)
@@ -483,7 +507,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         plans.append((sp, "yt" if sp.get("no_cta") else "ig"))
     drafts, whys, prev_text = [], [], ""
     for sp, plat in plans:
-        frame = frame_of(sp, job_id or product)
+        frame = frame_of(sp, job_id or product, platform=plat)
         name = frame["name"]
         n = {}
         lines = write_styled(product, seed_text, frame, vis, seg_index, platform=plat, seconds=seconds,

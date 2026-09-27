@@ -80,7 +80,8 @@ def _fake_styled(monkeypatch, outs):
 
 
 def test_one_call_per_draft_keeps_style_roles_and_valid_cuts(monkeypatch):
-    seed_out = {"seed_points": ["리모컨 감싸기"], "lines": _lines(["훅", "미끼", "공개", "고조", "마무리"], "MAT-2")}
+    seed_out = {"seed_points": ["리모컨 감싸기"], "lines": [dict(L, text="씨앗 안 %d번 줄은 이렇게 적당한 길이로 말함" % i)
+                                                          for i, L in enumerate(_lines(SEED_YT_ROLES, "MAT-2"))]}
     style_out = {"seed_points": ["리모컨 감싸기"], "lines": [dict(L, text="둘째 안 %d번은 완전히 다른 특징과 다른 문장으로 가위 없이 손으로 찢어지고 접착 자국도 안 남는다는데" % i) for i, L in enumerate(_lines(["title", "bait", "reveal", "reveal", "twist"], "MAT-5"))]}
     prompts = _fake_styled(monkeypatch, [seed_out, style_out])
     drafts, why = sw.make_drafts([SPINE], _styled_job(), job_id="j1", seed_text=SEED, seed_product="열수축 필름")
@@ -147,9 +148,22 @@ def test_explicit_seed_sets_voice_and_product(monkeypatch):
     assert drafts[0]["platform"] == "ig" and sw._VOICE["ig"] in prompts[0], "명시 씨앗 없음 → job의 가장 긴 한국어 글(종전)"
 
 
+SEED_YT_ROLES = ["훅", "미끼", "공개", "고조1", "고조1", "고조1", "고조2", "고조2", "고조2", "반전", "마무리"]
+
+
+def test_seed_frame_restores_hit_structure():
+    """2026-09-28 사장님 "씨앗 결 이야기는 왜 이렇게 짧고 부실해?" — A안에도 옛 작가의 히트작 틀(고조 2칸·칸마다 3줄)."""
+    f = sw.frame_of(None, "k", "yt")
+    assert f["roles"] == ["훅", "미끼", "공개", "고조1", "고조2", "반전", "마무리"] and f["gojo"] == {"고조1": 3, "고조2": 3}
+    thin = {"seed_points": [], "lines": _lines(["훅", "미끼", "공개", "고조1", "고조2", "반전", "마무리"])}
+    probs = sw.styled_problems(thin, f, {"MAT-1": {}}, seconds=25)
+    assert any(p.startswith("고조1 칸은 고조 3줄") for p in probs) and any(p.startswith("고조2 칸은 고조 3줄") for p in probs)
+    assert sw.frame_of(None, "k", "ig")["roles"][-1] == "댓글유도"
+
+
 def test_short_seed_flow_is_not_dropped_but_length_is_checked():
-    """씨앗 흐름이 4칸이어도 분량이 맞으면 버리지 않는다(옛 MIN_LINES=5가 b2b1480b3fd8 씨앗 결 안을 통째로 버렸다)."""
-    frame = sw.frame_of(None)
+    """칸이 4개여도 분량이 맞으면 버리지 않는다(옛 MIN_LINES=5가 b2b1480b3fd8 씨앗 결 안을 통째로 버렸다)."""
+    frame = sw.frame_of({"id": 1, "name": "네 칸", "beat_roles": ["훅", "공개", "고조", "마무리"], "templates": {}})
     four = {"seed_points": [], "lines": _lines(["훅", "공개", "고조", "마무리"])}
     assert sw.styled_problems(four, frame, {"MAT-1": {}}, seconds=16) == []
     assert any("너무 짧다" in p for p in sw.styled_problems(four, frame, {"MAT-1": {}}, seconds=40))
