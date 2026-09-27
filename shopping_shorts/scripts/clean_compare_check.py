@@ -87,7 +87,12 @@ for c in clips:
     if c.get("cleaned") is False:
         continue
     if hasattr(mp, "compare_frame_times"):      # 화면과 같은 프레임 번호(주인 함수) — 없으면 옛 소수점 초
-        mid_s, mid_f = mp.compare_frame_times(c, 0.5)
+        try:
+            from shopping_shorts import seg_snap as _ss
+            _shots = _ss.scene_cuts(srcs[c["video_id"]])
+        except Exception:      # noqa: BLE001
+            _shots = None
+        mid_s, mid_f = mp.compare_frame_times(c, 0.5, shot_cuts=_shots)   # 화면과 같은 자리(샷 전환 피함)
     else:
         mid_s = c["src"] + c["dur"] * 0.5; mid_f = c["fin"] + c["dur"] * 0.5
     sf = one(srcs[c["video_id"]], mid_s); af = one(clean, mid_f)
