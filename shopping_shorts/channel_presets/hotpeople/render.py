@@ -109,9 +109,16 @@ def _ff(argv, what):
         raise RuntimeError(f"render.{what}: ffmpeg {r.returncode} — {r.stderr[-400:]}")
 
 
-def cut_clip(bg_png, sub_png, src, start, sec, out_mp4):
+def slot_vf(w=None, h=None):
+    """소스 → 슬롯 크롭 필터(아래 자막 18% 버리고 슬롯 비율로 가운데). ★렌더와 footage 장면 자르기가 같이 쓴다 —
+    장면을 다른 그림(전체 화면)으로 자르면 크롭 뒤에만 보이는 컷이 자막 안으로 샌다(v002 cut_03 실측)."""
+    w, h = w or spec.SLOT_W, h or spec.SLOT_H
     keep = 1 - spec.POLICY_SOURCE_CROP_BOTTOM
-    f = (f"[1:v]crop=iw:ih*{keep:.3f}:0:0,scale={spec.SLOT_W}:{spec.SLOT_H}:force_original_aspect_ratio=increase,crop={spec.SLOT_W}:{spec.SLOT_H},"
+    return f"crop=iw:ih*{keep:.3f}:0:0,scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h}"
+
+
+def cut_clip(bg_png, sub_png, src, start, sec, out_mp4):
+    f = (f"[1:v]{slot_vf()},"
          f"setsar=1,fps={spec.FPS},tpad=stop_mode=clone:stop_duration=4[v];"
          f"[0:v][v]overlay={spec.SLOT_X}:{spec.SLOT_Y}[b];[b][2:v]overlay=0:0,format=yuv420p[o]")
     _ff(["ffmpeg", "-v", "error", "-y", "-loop", "1", "-framerate", str(spec.FPS), "-i", bg_png,
@@ -131,14 +138,35 @@ def pick_bgm(seed_text):
     return os.path.join(d, f), st
 
 
+def _lufs(argv_in):
+    """ffmpeg 입력 인자 → 통합 음량(LUFS). audio.py 와 같은 자(ebur128 마지막 I:)."""
+    import re
+    r = subprocess.run(["ffmpeg", "-nostats"] + argv_in + ["-af", "ebur128", "-f", "null", "-"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
+    got = re.findall(r"^\s*I:\s*(-?[\d.]+) LUFS", r.stderr, re.M)
+    if not got:
+        raise RuntimeError(f"render.bgm: 음량 측정 실패 — {r.stderr[-300:]}")
+    return float(got[-1])
+
+
+def bgm_gain_db(src, start, total):
+    """★칼카피 6 — BGM 음량은 **고정 이득 하나**(편 전체 같은 dB)로 BGM_LUFS에 맞춘다.
+    원본 7편을 같은 곡·같은 시작점 원곡과 0.25초 단위로 대조하면 이득이 첫 0.25초 뒤로 평평(±0.3dB) —
+    페이드인도 음량 자동조절도 없다. 원본 "첫 3초가 2.3 LU 조용"은 **곡 자체의 그 구간 모양**이다.
+    예전 loudnorm(동적)은 첫 1.5초를 +1.8~+4.2dB 끌어올리고 본편에서 이득을 흔들었다(std 0.7~1.9dB) → v002 오프닝 +2.2 LU."""
+    return round(spec.BGM_LUFS - _lufs(["-ss", f"{start:.2f}", "-t", f"{total:.2f}", "-i", src]), 2)
+
+
 def _bgm(total, wd, seed_text=""):
     out = os.path.join(wd, "render", "bgm.wav")
     got = pick_bgm(seed_text)
     if got:
         src, start = got
+        g = bgm_gain_db(src, start, total)
+        # 32비트 실수 wav — 원본도 트루피크가 0을 넘는다(10/10, +0.1~+1.5). 16비트로 쓰면 그 위가 잘린다
         _ff(["ffmpeg", "-v", "error", "-y", "-ss", f"{start:.2f}", "-i", src, "-t", f"{total:.2f}",
-             "-af", f"loudnorm=I={spec.BGM_LUFS}:TP=-1:LRA=11,afade=t=out:st={max(0, total - 1.5):.2f}:d=1.5",
-             "-ar", "48000", "-ac", "2", out], "bgm")
+             "-af", f"volume={g}dB,afade=t=out:st={max(0, total - 1.5):.2f}:d=1.5",
+             "-ar", "48000", "-ac", "2", "-c:a", "pcm_f32le", out], "bgm")
         return out, f"{os.path.basename(src)}@{start}s"
     _ff(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-t", f"{total:.2f}", out], "silence")
     return out, None
@@ -152,6 +180,9 @@ def build(wd, script, footage, log=print):
     parts, plan, total = [], [], 0.0
     for i, (g, c) in enumerate(zip(script["groups"], footage["cuts"])):
         sec = rules.sub_seconds(g.get("text") or " ".join(g.get("lines") or []))
+        if c.get("end") is not None and c["start"] + sec > c["end"] + 0.01:
+            # ★칼카피 1: 자막 하나 = 장면 하나. 장면이 모자라면 소스의 다음 장면이 자막 안으로 들어온다 — 조용히 넘기지 않는다
+            raise RuntimeError(f"render: 자막 {i} {sec}s > 장면 {c['start']}~{c['end']} — footage가 짧은 장면을 골랐다(footage부터)")
         sp = subtitle(g, os.path.join(rd, f"sub_{i:02d}.png"))
         mp = os.path.join(rd, f"cut_{i:02d}.mp4")
         cut_clip(bg, sp, c["src"], c["start"], sec, mp)

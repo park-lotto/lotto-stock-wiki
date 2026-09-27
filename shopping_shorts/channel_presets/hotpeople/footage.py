@@ -5,6 +5,7 @@
 ★세로 영상(쇼츠)은 버린다 — 슬롯이 가로 1080×790이라 잘라 넣으면 절반이 날아간다.
 """
 import json
+import math
 import os
 import subprocess
 
@@ -70,15 +71,20 @@ def download(item, vdir, log=print):
 
 
 def scenes(path, vid, thumbs_dir):
-    """장면 자르기 → [{vid,path,start,end,thumb}]. 너무 짧거나 어두운 장면·첫 3% 제외."""
+    """장면 자르기 → [{vid,path,start,end,thumb}]. 너무 짧거나 어두운 장면·첫 3% 제외.
+
+    ★칼카피 1: 장면 경계는 **렌더와 같은 슬롯 크롭**(render.slot_vf)에서 재는 자(scene>0.3)보다 낮은 문턱으로 찾는다.
+      start/end 는 앞뒤 CLIP_INSET_SEC 를 뺀 **쓸 수 있는 구간**이다 — 렌더는 이 안에서만 자른다."""
+    from . import render
     _, _, dur = _dims(path)
-    r = _run(["ffmpeg", "-v", "error", "-i", path, "-vf", f"select='gt(scene,{spec.POLICY_SCENE_THRESH})',metadata=print:file=-",
-              "-an", "-f", "null", "-"], timeout=900)
-    cuts = sorted({round(float(l.split("pts_time:")[1]), 2) for l in r.stdout.splitlines() if "pts_time:" in l})
+    vf = f"{render.slot_vf(spec.SCENE_DETECT_W, spec.SCENE_DETECT_H)},select='gt(scene,{spec.SCENE_DETECT_THRESH})',metadata=print:file=-"
+    r = _run(["ffmpeg", "-v", "error", "-i", path, "-vf", vf, "-an", "-f", "null", "-"], timeout=900)
+    cuts = sorted({round(float(l.split("pts_time:")[1]), 3) for l in r.stdout.splitlines() if "pts_time:" in l})
     bounds = [0.0] + [c for c in cuts if 0 < c < dur] + [dur]
     os.makedirs(thumbs_dir, exist_ok=True)
     out = []
     for a, b in zip(bounds, bounds[1:]):
+        a, b = a + spec.CLIP_INSET_SEC, b - spec.CLIP_INSET_SEC
         if b - a < spec.POLICY_SCENE_MIN_SEC or a < dur * 0.03:
             continue
         t = a + min(0.8, (b - a) / 2)
@@ -92,7 +98,8 @@ def scenes(path, vid, thumbs_dir):
         mean = sum(px) / len(px)
         if mean < 22:                       # 거의 검정(암전·자막 카드)
             continue
-        out.append({"vid": vid, "path": path, "start": round(a, 2), "end": round(b, 2), "thumb": th})
+        # start 는 올림, end 는 내림 — 반올림으로 경계 밖 프레임이 들어오지 않게
+        out.append({"vid": vid, "path": path, "start": math.ceil(a * 100) / 100, "end": math.floor(b * 100) / 100, "thumb": th})
     return out
 
 
@@ -156,11 +163,29 @@ def describe(cands, sheet_paths, reader, log=print):
     return desc
 
 
-def _match_prompt(groups, desc, person):
-    subs = "\n".join(f"{i}. 자막 «{g.get('text')}» / 원하는 화면: {g.get('scene', '')}" for i, g in enumerate(groups))
-    scenes_ = "\n".join(f"{k}: {v}" for k, v in sorted(desc.items()))
+def need_sec(g):
+    """자막 하나가 화면에 떠 있는 시간 = 그 자막이 쓸 장면의 최소 길이. 판단은 rules.sub_seconds 하나."""
+    from . import rules
+    return rules.sub_seconds(g.get("text") or " ".join(g.get("lines") or []))
+
+
+def fits(c, g):
+    """★칼카피 1 — 장면 c 가 자막 g 를 **장면 경계 안에서** 다 채우나. 길이 정보 없는 후보(테스트 더미)는 통과."""
+    if not isinstance(c, dict) or "end" not in c or "start" not in c:
+        return True
+    return c["end"] - c["start"] >= need_sec(g)
+
+
+def _match_prompt(groups, desc, person, cands=None):
+    subs = "\n".join(f"{i}. 자막 «{g.get('text')}» ({need_sec(g)}초 이상 장면) / 원하는 화면: {g.get('scene', '')}"
+                     for i, g in enumerate(groups))
+
+    def ln(k):
+        c = cands[k] if cands and 0 <= k < len(cands) else None
+        return f" ({c['end'] - c['start']:.1f}초)" if isinstance(c, dict) and "end" in c else ""
+    scenes_ = "\n".join(f"{k}{ln(k)}: {v}" for k, v in sorted(desc.items()))
     return (f"숏폼 편집자다. 주인공 {person}. [자막]마다 [장면 목록]에서 **내용이 가장 맞는** 장면 번호를 골라라.\n"
-            "규칙: 같은 번호 두 번 금지. 경기·결승·메달 자막엔 경기장/시상대 장면, 어린 시절·가족 자막엔 그에 맞는 장면. "
+            "규칙: 같은 번호 두 번 금지. 장면 길이(초)가 자막이 요구하는 초보다 짧으면 쓰지 마라. 경기·결승·메달 자막엔 경기장/시상대 장면, 어린 시절·가족 자막엔 그에 맞는 장면. "
             "[TEXT]·[JUNK] 장면은 다른 게 정말 없을 때만. 시장·부엌 등 주제와 무관한 장면은 쓰지 마라. 번호를 순서대로 찍지 마라.\n"
             f"[장면 목록]\n{scenes_}\n\n[자막]\n{subs}\n\n"
             f"출력 JSON: {{\"picks\": [자막0의 장면번호, 자막1의 장면번호, …]}} (정확히 {len(groups)}개)")
@@ -173,16 +198,16 @@ def pick(groups, cands, sheet_paths, reader, person, log=print):
         # 503(과부하)은 잠깐 뒤 풀린다 — 2026-09-25 실측 첫 시도 503. 재시도·대체 모델은 _call 한 곳에서
         desc = describe(cands, sheet_paths, reader, log=log)
         if desc:
-            r = _call(reader, _match_prompt(groups, desc, person), [], log, "picks") or {}
+            r = _call(reader, _match_prompt(groups, desc, person, cands), [], log, "picks") or {}
             picks = [_as_int(p) for p in (r.get("picks") or [])]
     used, out, fixed = set(), [], 0
     for i in range(len(groups)):
         p = picks[i] if i < len(picks) else None
-        if not isinstance(p, int) or not 0 <= p < len(cands) or p in used:
-            p = next((k for k in range(len(cands)) if k not in used), None)
+        if not isinstance(p, int) or not 0 <= p < len(cands) or p in used or not fits(cands[p], groups[i]):
+            p = next((k for k in range(len(cands)) if k not in used and fits(cands[k], groups[i])), None)
             fixed += 1
-            if p is None:                   # 장면이 자막보다 적다 — 재사용
-                p = i % max(1, len(cands))
+            if p is None:                   # 맞는 길이의 장면이 없다 — 재사용하지 않고 멈춘다(자막 안 컷이 생긴다)
+                raise RuntimeError(f"footage: 자막 {i}({need_sec(groups[i])}초)에 맞는 길이의 남은 장면이 없다 — 영상을 더 받아라")
         used.add(p)
         out.append(p)
     if fixed:
@@ -220,10 +245,12 @@ def collect(script, wd, reader=None, log=print):
     cands = []
     for v in videos:
         cands += scenes(v["path"], v["id"], tdir)
+    groups = script.get("groups") or []
+    shortest = min((need_sec(g) for g in groups), default=spec.SUB_SEC_MIN)
+    cands = [c for c in cands if c["end"] - c["start"] >= shortest]     # 어떤 자막도 못 채우는 장면은 시트에서 뺀다
     cands = _even(cands, SHEET_COLS * SHEET_ROWS * MAX_SHEETS)
     log(f"[footage] 영상 {len(videos)}편 · 장면 후보 {len(cands)}개")
     sp = sheets(cands, os.path.join(wd, "footage"))
-    groups = script.get("groups") or []
     idx, fixed = pick(groups, cands, sp, reader, script.get("person", ""), log=log)
     if reader is not None and fixed > len(groups) * 0.3:
         # ★조용히 순서대로 메운 영상을 "완료"로 내보내지 마라(2026-09-25: 503으로 27/27 순서 메움 → 요리 장면이 섞였다)
@@ -232,6 +259,7 @@ def collect(script, wd, reader=None, log=print):
     if reader is not None:
         idx, verify = check_and_repick(groups, cands, idx, sp, reader, script.get("person", ""), wd, log=log)
     url = {v["id"]: v["url"] for v in videos}
+    # 컷 = 자막 1:1, 각 컷은 한 장면 [start, start+자막초] 안(render.build 가 넘으면 멈춘다)
     cuts = [{"scene": k, "src": cands[k]["path"], "start": cands[k]["start"], "end": cands[k]["end"],
              "vid": cands[k]["vid"], "url": url.get(cands[k]["vid"]), "thumb": cands[k]["thumb"]} for k in idx]
     return {"videos": [{k: v[k] for k in ("id", "title", "url", "query", "duration")} for v in videos],
@@ -295,7 +323,8 @@ def check_and_repick(groups, cands, idx, sheet_paths, reader, person, wd, log=pr
         return idx, {"bad": [], "repicked": 0}
     used = set(idx)
     free = [k for k in range(len(cands)) if k not in used]
-    subs = "\n".join(f"{b}. 자막 «{groups[b].get('text')}» / 원하는 화면: {groups[b].get('scene', '')}" for b in bad)
+    subs = "\n".join(f"{b}. 자막 «{groups[b].get('text')}» ({need_sec(groups[b])}초 이상 장면) / 원하는 화면: {groups[b].get('scene', '')}"
+                     for b in bad)
     prompt2 = (f"숏폼 편집자다. 주인공 {person}. 아래 자막들에 맞는 장면을 시트에서 다시 골라라.\n"
                f"쓸 수 있는 번호: {free}\n같은 번호 두 번 금지. 자막 내용(경기·메달·훈련 등)에 맞는 장면으로.\n"
                f"[자막]\n{subs}\n출력 JSON: {{\"picks\": {{\"자막번호\": 장면번호, …}}}}")
@@ -303,7 +332,7 @@ def check_and_repick(groups, cands, idx, sheet_paths, reader, person, wd, log=pr
     new, n = list(idx), 0
     for b in bad:
         k = _as_int((r2.get("picks") or {}).get(str(b)))
-        if k is not None and k in free:
+        if k is not None and k in free and fits(cands[k], groups[b]):
             new[b] = k; free.remove(k); n += 1
     log(f"[footage] 장면 검사: 틀린 칸 {bad} → 다시 고름 {n}개")
     return new, {"bad": bad, "repicked": n}

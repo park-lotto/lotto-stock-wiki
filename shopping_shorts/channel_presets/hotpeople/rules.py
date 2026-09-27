@@ -9,6 +9,7 @@
    "queries": ["검색어", …]}
 근거 수치: channel/hotpeople/역분석_2026-09-25.md
 """
+import math
 import re
 from functools import lru_cache
 
@@ -49,21 +50,104 @@ def r_count(s, ctx):
     return [Issue("hp_count", REJECT, "groups", str(n), f"자막은 {spec.SUB_COUNT_MIN}~{spec.SUB_COUNT_MAX}개(원본 24~28)")]
 
 
+def _text(g):
+    return (g.get("text") or " ".join(g.get("lines") or [])).strip()
+
+
+def layout_lines(text, red=()):
+    """★칼카피 5 — 자막 줄바꿈의 **유일한** 판단. 폭 SUB_MAX_INK_W 안이면 한 줄, 넘으면 두 줄 폭이 가장 고른 띄어쓰기에서.
+    빨강 단어는 쪼개지 않는다(쪼개면 hp_red가 반려). 나눌 곳이 없으면 한 줄 그대로 돌려준다(hp_lines가 너무 길다고 반려).
+
+    왜 엔진이 정하나: 09-25엔 대본 모델이 lines를 직접 썼고 규칙문이 "대부분 두 줄, 14자 안쪽"이라
+    v002가 7자마다 끊었다(1줄 4%·폭 중앙 411 vs 원본 24%·517)."""
+    t = " ".join((text or "").split())
+    if ink_width(t) <= spec.SUB_MAX_INK_W:
+        return [t]
+    ws, best = t.split(" "), None
+    for k in range(1, len(ws)):
+        a, b = " ".join(ws[:k]), " ".join(ws[k:])
+        if any(w and w in t and w not in a and w not in b for w in (red or ())):
+            continue
+        m = max(ink_width(a), ink_width(b))
+        if best is None or m < best[0]:
+            best = (m, [a, b])
+    return best[1] if best else [t]
+
+
+def normalize(script):
+    """대본 모델 출력 → 엔진 모양. text가 원본이고 lines는 layout_lines가 만든다(모델이 준 lines는 버린다)."""
+    for g in script.get("groups") or []:
+        g["text"] = _text(g)
+        g["lines"] = layout_lines(g["text"], g.get("red") or ())
+    return script
+
+
 def r_lines(s, ctx):
     out = []
     for i, g in enumerate(_groups(s)):
         lines = g.get("lines") or []
         if not 1 <= len(lines) <= 2:
-            out.append(Issue("hp_lines", REJECT, f"groups[{i}]", str(lines), "자막 한 개는 1~2줄(원본 232개 중 231개)"))
+            out.append(Issue("hp_lines", REJECT, f"groups[{i}]", str(lines), "자막 한 개는 1~2줄(원본 232개 중 231개) — 글을 줄여라"))
             continue
         for ln in lines:
             w = ink_width(ln)
             if w > spec.SUB_MAX_INK_W:
                 out.append(Issue("hp_lines", REJECT, f"groups[{i}]", ln,
-                                 f"줄이 너무 길다 {w}px > {spec.SUB_MAX_INK_W}px — 줄을 나누거나 줄여라(대략 14자 안쪽)"))
+                                 f"자막이 너무 길다 — 두 줄로 나눠도 한 줄이 {w}px > {spec.SUB_MAX_INK_W}px. 글을 줄여라(자막 하나 대략 22자 안쪽)"))
+        if lines != layout_lines(" ".join(lines), g.get("red") or ()):
+            out.append(Issue("hp_lines", REJECT, f"groups[{i}]", str(lines),
+                             f"줄바꿈은 엔진(layout_lines)이 정한다 — {spec.SUB_MAX_INK_W}px 안이면 한 줄"))
         if " ".join(lines).replace(" ", "") != (g.get("text") or " ".join(lines)).replace(" ", ""):
             out.append(Issue("hp_lines", REJECT, f"groups[{i}]", g.get("text", ""), "text와 lines 글자가 다르다"))
     return out
+
+
+_QUOTE = re.compile(r'["“”\'‘’]')         # tools/hotpeople/measure/script_stats.py 와 같은 자
+_DIGIT = re.compile(r"\d")
+
+
+def r_digits(s, ctx):
+    """★칼카피 2 — 숫자 든 자막 비율. 원본 18%(42/232), v002 73%."""
+    gs = _groups(s)
+    if not gs:
+        return []
+    bad = [i for i, g in enumerate(gs) if _DIGIT.search(_text(g))]
+    r, keep = len(bad) / len(gs), int(len(gs) * spec.DIGIT_SUB_TARGET)
+    why = (f"숫자 든 자막 {len(bad)}/{len(gs)} = {r:.0%} (원본 18%) — {keep}개 이하로. 숫자는 결정적인 곳(첫 우승·순위·걸린 해)만, "
+           "나머지는 숫자 없이 말로(\"그해 겨울\"·\"몇 달 뒤\"·\"결승에서\")")
+    if r > spec.DIGIT_SUB_MAX:
+        return [Issue("hp_digits", REJECT, "groups", str(bad), why)]
+    if r > spec.DIGIT_SUB_TARGET:
+        return [Issue("hp_digits", WARN, "groups", str(bad), why)]
+    return []
+
+
+def r_quotes(s, ctx):
+    """★칼카피 3 — 따옴표 인용 자막 비율. 원본 16%, v002 4%."""
+    gs = _groups(s)
+    if not gs:
+        return []
+    got = [i for i, g in enumerate(gs) if _QUOTE.search(_text(g))]
+    need = math.ceil(len(gs) * spec.QUOTE_SUB_MIN - 1e-9)
+    if len(got) >= need:
+        return []
+    return [Issue("hp_quotes", REJECT, "groups", str(got),
+                  f"따옴표 인용 자막 {len(got)}개 — {need}개 이상(원본 16%). 주변의 말·본인 말·기사 제목을 \"…\"로. "
+                  "말 내용은 조사 원문 사실에서만(지어낸 사실 금지). 이름 공개 \"○○○\"는 인용이 아니다 — 말을 인용하라")]
+
+
+def r_hook(s, ctx):
+    """훅 — 첫 자막은 사실 서술(~있음/~벌어짐/~터짐). 56편 전수 조회 중앙 11배(§16). 인용 훅은 대체안(경고)."""
+    gs = _groups(s)
+    if not gs:
+        return []
+    t = _text(gs[0]).rstrip(" .!…,")
+    if t.endswith(spec.HOOK_FACT_ENDINGS):
+        return []
+    if _QUOTE.search(t):
+        return [Issue("hp_hook", WARN, "groups[0]", t, "첫 자막은 사실 서술 훅이 11배 강하다(인용 훅은 대체안) — \"~한 선수가 있음\" 꼴로")]
+    return [Issue("hp_hook", REJECT, "groups[0]", t,
+                  f"첫 자막은 사실 서술 훅으로 끝내라 — {'/'.join(spec.HOOK_FACT_ENDINGS)} (예: \"~한 남자가 있음\" · \"~사건이 터짐\")")]
 
 
 def r_first_mark(s, ctx):
@@ -187,8 +271,11 @@ def r_ending(s, ctx):
 
 RULES = [
     Rule("hp_count", REJECT, f"자막(groups)은 {spec.SUB_COUNT_MIN}~{spec.SUB_COUNT_MAX}개. 한 개 = 한 컷 ≈ 2초.", r_count),
-    Rule("hp_lines", REJECT, "자막 한 개는 lines 1~2줄, 한 줄은 대략 14자 안쪽. 대부분 두 줄로 나눈다. text = lines를 공백으로 이은 것.", r_lines),
-    Rule("hp_first_mark", REJECT, "첫 자막은 반드시 형광펜(mark:true) — 충격적인 인용이나 반전 사실.", r_first_mark),
+    Rule("hp_lines", REJECT, "자막 글(text)만 써라 — 줄바꿈은 엔진이 폭으로 정한다(한 줄 대략 11자, 넘으면 두 줄). 자막 하나 12~22자.", r_lines),
+    Rule("hp_hook", REJECT, f"첫 자막 = 사실 서술 훅, 끝은 {'/'.join(spec.HOOK_FACT_ENDINGS)} (\"~한 선수가 있음\" · \"~사건이 터짐\"). 이름은 아직 안 밝힘.", r_hook),
+    Rule("hp_first_mark", REJECT, "첫 자막은 반드시 형광펜(mark:true).", r_first_mark),
+    Rule("hp_digits", REJECT, f"숫자 든 자막은 전체의 {spec.DIGIT_SUB_TARGET:.0%} 이하(26개면 6개까지) — 원본 18%. 숫자 나열 금지.", r_digits),
+    Rule("hp_quotes", REJECT, f"따옴표 인용 자막 {spec.QUOTE_SUB_MIN:.0%} 이상(26개면 3개 이상) — 주변의 말·본인 말을 \"…\"로.", r_quotes),
     Rule("hp_mark_max", REJECT, f"형광펜(mark)은 편당 {spec.MARK_MAX}개 이하 — 첫 자막 + 결정적 인용 1~2개.", r_mark_max),
     Rule("hp_red", REJECT, "빨간 글자(red)는 핵심 단어 1~2개만, 자막 줄에 적힌 그대로.", r_red),
     Rule("hp_name", REJECT, f"주인공 이름은 {spec.NAME_REVEAL_BY}번째 자막 안에 공개(예: 그의 이름 \"○○○\"). person 칸에 이름.", r_name_early),

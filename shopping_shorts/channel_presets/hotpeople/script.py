@@ -5,24 +5,26 @@
 원본 문장을 그대로 쓰지 않게 인물·내용이 다른 가짜 예시를 쓴다.
 """
 from shopping_shorts.channelkit import lint
-from . import spec
+from . import rules, spec
 from shopping_shorts.channelkit.prompt import parse_any
 
 _STRUCTURE = f"""[구조 — 원본 채널 6편 공통]
-#1      훅(형광펜): 충격적인 인용이나 반전 사실 한 줄. 이름은 아직 안 밝힘
+#1      훅(형광펜): 사실 서술 한 줄 "~한 선수가 있음" / "~사건이 터짐" (56편 전수: 인용 훅보다 조회 11배). 이름은 아직 안 밝힘
 #2~#4   이름 공개: "그의 이름 \\"○○○\\"" 또는 "○○ 창업주 \\"○○○\\"" 식
-#5~#11  시련: 무시·조롱·가난·실패 — 연도·숫자로 구체적으로
+#5~#11  시련: 무시·조롱·가난·실패 — 장면으로 구체적으로, 주변의 말은 따옴표 인용으로
 #12~#13 전환: 예) "{spec.PIVOT_LINE}" (그대로 써도 됨)
-#14~#22 상승: 행동 → 결과, 숫자(순위·기록·금액·기간)
+#14~#22 상승: 행동 → 결과. 결정적인 숫자(첫 우승·순위) 한두 개만
 끝      마무리 셋 중 하나: ① 걸린 시간 "N년" ② "~ ○○○ 이야기임." ③ 형광펜 인용 펀치
-말투: 반말 명사형(~음/~함/~임/~됨/~짐), 명사로 끊기, "~까지"로 다음 자막에 넘기기. 따옴표 인용 가능.
-숫자: 거의 매 자막에 하나. 단, 아래 [조사 원문]에 있는 숫자만(원문 표기 그대로)."""
+말투: 반말 명사형(~음/~함/~임/~됨/~짐), 명사로 끊기, "~까지"로 다음 자막에 넘기기.
+인용: 따옴표 인용 자막 {spec.QUOTE_SUB_MIN:.0%} 이상(원본 16%) — 코치·기자·본인의 말. 말 내용은 조사 원문 사실에서만.
+숫자: 숫자 든 자막은 {spec.DIGIT_SUB_TARGET:.0%} 이하(원본 18% — 숫자 나열 채널이 아니다). 쓸 땐 [조사 원문]에 있는 숫자만(원문 표기 그대로).
+줄바꿈: text 한 줄로만 써라. 화면 줄바꿈은 엔진이 폭으로 정한다(자막 하나 12~22자)."""
 
 _SCHEMA = """[출력 — JSON 객체 하나만]
 {"person": "주인공 이름",
  "title": {"h1": "헤드라인 윗줄", "h2": "아랫줄", "emph": 1 또는 2, "emph_color": "red" 또는 "yellow"},
  "groups": [
-   {"lines": ["윗줄", "아랫줄"], "text": "윗줄 아랫줄", "mark": true, "red": [],
+   {"text": "자막 글 한 줄(줄바꿈 없이)", "mark": true, "red": [],
     "scene": "이 자막에 맞는 화면(영어, 구체적으로: who/what/where)", "query": "그 화면이 나올 유튜브 검색어"}
  ],
  "queries": ["인물 영어이름 interview", "…"]}"""
@@ -30,9 +32,10 @@ _SCHEMA = """[출력 — JSON 객체 하나만]
 _EXAMPLE = """[예시 — 모양만. 이 인물·문장을 쓰지 마라]
 {"person": "김가상", "title": {"h1": "공장 막내에서", "h2": "세계 1위가 된 남자", "emph": 2, "emph_color": "red"},
  "groups": [
-  {"lines": ["\\"넌 평생 기계나 닦아라\\""], "text": "\\"넌 평생 기계나 닦아라\\"", "mark": true, "red": [], "scene": "old factory floor, young worker cleaning machine", "query": "Kim Gasang factory documentary"},
-  {"lines": ["공장 막내 시절", "그의 이름 \\"김가상\\""], "text": "공장 막내 시절 그의 이름 \\"김가상\\"", "mark": false, "red": [], "scene": "portrait of Kim Gasang young", "query": "Kim Gasang interview"},
-  {"lines": ["하지만 그는 달랐음."], "text": "하지만 그는 달랐음.", "mark": false, "red": [], "scene": "Kim Gasang training alone at night", "query": "Kim Gasang training"}
+  {"text": "기계 닦던 공장 막내가 세계 1위에 오른 사건이 벌어짐", "mark": true, "red": [], "scene": "old factory floor, young worker cleaning machine", "query": "Kim Gasang factory documentary"},
+  {"text": "공장 막내 시절 그의 이름 \\"김가상\\"", "mark": false, "red": [], "scene": "portrait of Kim Gasang young", "query": "Kim Gasang interview"},
+  {"text": "\\"넌 평생 기계나 닦아라\\"", "mark": false, "red": [], "scene": "foreman scolding young worker in factory", "query": "Kim Gasang documentary"},
+  {"text": "하지만 그는 달랐음.", "mark": false, "red": [], "scene": "Kim Gasang training alone at night", "query": "Kim Gasang training"}
  ],
  "queries": ["Kim Gasang interview", "Kim Gasang final match", "김가상 다큐"]}"""
 
@@ -60,9 +63,7 @@ def generate(research, call, *, max_rewrites=None, log=print):
             last = ({"title": {}, "groups": []}, issues, attempt + 1)
             fb = "\n\n[재작성 지시] 방금 출력이 JSON이 아니었다. JSON 객체 하나만 출력하라."
             continue
-        for g in script.get("groups") or []:
-            if not g.get("text"):
-                g["text"] = " ".join(g.get("lines") or [])
+        rules.normalize(script)             # 줄바꿈은 엔진(rules.layout_lines) 한 곳에서
         issues, _ = lint.lint(script, source_text=research["text"], do_layout=False)
         rej = lint.rejects(issues)
         log(f"[hotpeople.script] 시도 {attempt + 1}: 자막 {len(script.get('groups') or [])}개, 반려 {len(rej)}")

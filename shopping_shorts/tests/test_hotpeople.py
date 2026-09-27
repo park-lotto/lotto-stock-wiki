@@ -20,13 +20,21 @@ def _hp():
 SRC = "안세영은 2023년 세계 선수권 대회에서 금메달을 획득했다. 2024년 하계 올림픽 금메달. 무릎 부상."
 
 
+def _g(text, mark=False, red=()):
+    from shopping_shorts.channel_presets.hotpeople import rules
+    return {"lines": rules.layout_lines(text, red), "text": text, "mark": mark, "red": list(red)}
+
+
 def _script(n=24):
-    gs = [{"lines": ["\"몸이 망가져도", "멈추지 않았음\""], "text": "\"몸이 망가져도 멈추지 않았음\"", "mark": True, "red": []},
-          {"lines": ["배드민턴 선수", "그의 이름 \"안세영\""], "text": "배드민턴 선수 그의 이름 \"안세영\"", "mark": False, "red": ["안세영"]}]
-    gs += [{"lines": ["2023년 세계 선수권", "금메달을 따냄"], "text": "2023년 세계 선수권 금메달을 따냄", "mark": False, "red": []}
-           for _ in range(n - 2)]
+    """원본 비율을 지키는 깨끗한 대본: 사실 훅 · 숫자 자막 ≤25% · 인용 ≥10% · 줄바꿈은 layout_lines."""
+    gs = [_g("무릎이 부서져도 멈추지 않은 선수가 있음", mark=True),
+          _g("배드민턴 선수 그의 이름 \"안세영\"", red=("안세영",))]
+    body = ([_g("\"넌 아직 너무 어려\"")] * 2 + [_g("2023년 세계 선수권 금메달을 따냄")] * 5
+            + [_g("그렇게 매일 코트로 나감")] * n)
+    gs += body[:max(0, n - 2)]
     return {"person": "안세영", "title": {"h1": "무릎이 부서져도", "h2": "금메달 딴 선수", "emph": 2, "emph_color": "red"},
-            "groups": gs, "queries": ["An Se-young final", "An Se-young interview", "안세영 금메달"]}
+            "groups": [dict(g, lines=list(g["lines"])) for g in gs],
+            "queries": ["An Se-young final", "An Se-young interview", "안세영 금메달"]}
 
 
 def _rules(script, src=SRC):
@@ -191,3 +199,151 @@ def test_bgm_start_offset_and_loudness(tmp_path, monkeypatch):
     r = subprocess.run(["ffmpeg", "-i", out, "-af", "loudnorm=print_format=summary", "-f", "null", "-"], capture_output=True, text=True)
     lufs = float([l for l in r.stderr.splitlines() if "Input Integrated" in l][0].split()[2])
     assert -14.5 < lufs < -9.5                                            # 원본 중앙 -12.1
+
+
+# ── 칼카피 6규칙 (2026-09-28) — 각 테스트는 옛 동작(v002)에서 실패해야 한다 ─────────────────
+
+def _levels(script):
+    issues, _ = lint.lint(script, source_text=SRC, do_layout=False)
+    return {(i.rule, i.level) for i in issues}
+
+
+def test_layout_one_line_until_740_and_engine_owns_breaks():
+    """칼카피 5: 폭 740px 안이면 한 줄(원본 1줄 24%). v002는 7자마다 끊었다."""
+    from shopping_shorts.channel_presets.hotpeople import rules, spec
+    from shopping_shorts.channel_presets.hotpeople import script as S
+    assert rules.layout_lines("광주에서 자란 소녀") == ["광주에서 자란 소녀"]
+    long_ = rules.layout_lines("1996년 이후 끊긴 28년 만의 올림픽 금메달")
+    assert len(long_) == 2 and all(rules.ink_width(x) <= spec.SUB_MAX_INK_W for x in long_)
+    lr = rules.layout_lines("그의 이름 대한민국 배드민턴 영웅 안세영", red=("배드민턴 영웅",))
+    assert any("배드민턴 영웅" in x for x in lr)                       # 빨강 단어는 안 쪼갠다
+    s = _script()
+    s["groups"][5] = {"lines": ["광주에서", "자란 소녀"], "text": "광주에서 자란 소녀", "mark": False, "red": []}
+    assert "hp_lines" in _rules(s)                                   # v002식 조기 줄바꿈 → 반려
+    fixed = rules.normalize(s)
+    assert fixed["groups"][5]["lines"] == ["광주에서 자란 소녀"] and "hp_lines" not in _rules(fixed)
+    assert S.rules is rules                                           # 대본 생성은 같은 함수로 정규화
+
+
+def test_digit_ratio():
+    """칼카피 2: 숫자 자막 원본 18%, v002 73%(19/26) → 반려. 25%까지 통과, 25~30% 경고."""
+    s = _script(26)
+    assert not {r for r, _ in _levels(s)} & {"hp_digits"}
+    for g in s["groups"][10:24]:
+        g.update(_g("2023년 세계 선수권 금메달을 따냄"))
+    assert ("hp_digits", "reject") in _levels(s)                      # 19/26
+    s = _script(26)
+    s["groups"][10].update(_g("2023년 세계 선수권 금메달을 따냄"))
+    s["groups"][11].update(_g("2023년 세계 선수권 금메달을 따냄"))    # 7/26 = 27%
+    lv = _levels(s)
+    assert ("hp_digits", "warn") in lv and ("hp_digits", "reject") not in lv
+
+
+def test_quote_ratio():
+    """칼카피 3: 인용 원본 16%, v002 1/26 → 반려. 26개면 3개 이상."""
+    s = _script(26)
+    assert "hp_quotes" not in _rules(s)
+    s["groups"][2].update(_g("주변은 그녀가 너무 어리다고 봄"))
+    s["groups"][3].update(_g("주변은 그녀가 너무 어리다고 봄"))
+    assert "hp_quotes" in _rules(s)                                   # 이름 인용 포함 2개만 남음
+
+
+def test_hook_fact_statement():
+    """훅: 56편 전수 사실 서술 훅이 11배. v002 첫 자막 «첫 아시안게임 1경기 탈락» → 반려. 인용은 경고(대체안)."""
+    s = _script()
+    s["groups"][0].update(_g("첫 아시안게임 1경기 탈락", mark=True))
+    assert "hp_hook" in _rules(s)
+    s["groups"][0].update(_g("\"몸이 망가져도 멈추지 않았음\"", mark=True))
+    assert ("hp_hook", "warn") in _levels(s) and "hp_hook" not in _rules(s)
+    s["groups"][0].update(_g("한국 배드민턴 역사상 가장 충격적인 사건이 터짐.", mark=True))
+    assert not {r for r, _ in _levels(s)} & {"hp_hook"}
+
+
+def _stroke_px(png):
+    a = np.array(Image.open(png).convert("RGBA"))
+    ink = (a[:, :, 3] > 128) & (a[:, :, :3].max(axis=2) < 90)
+    runs = []
+    for m in (ink, ink.T):
+        for row in m:
+            n = 0
+            for v in row:
+                if v:
+                    n += 1
+                elif n:
+                    runs.append(n)
+                    n = 0
+    return float(np.median([r for r in runs if r < 30]))
+
+
+def test_subtitle_stroke_matches_original(tmp_path):
+    """칼카피 4: 원본 획 8px(8~9, glyph_style.py). v002(외곽선 1px)는 11px."""
+    from shopping_shorts.channel_presets.hotpeople import render
+    w = _stroke_px(render.subtitle(_g("그렇게 매일 코트로 나감"), str(tmp_path / "s.png")))
+    assert 7 <= w <= 9.5, w
+
+
+def test_footage_pick_respects_scene_length():
+    """칼카피 1: 자막보다 짧은 장면은 못 고른다 — v002는 1.2초 장면에 2.2초 자막을 붙여 다음 장면이 자막 안으로 들어왔다."""
+    from shopping_shorts.channel_presets.hotpeople import footage
+    g = [{"text": "그렇게 매일 코트로 나감"}]                         # 2.1초
+    short, long_ = {"start": 10.0, "end": 11.2}, {"start": 20.0, "end": 25.0}
+    idx, fixed = footage.pick(g, [short, long_], [], lambda p, i: '{"picks": [0]}', "x", log=lambda *_: None)
+    assert idx == [1] and fixed == 1
+    with pytest.raises(RuntimeError):
+        footage.pick(g, [short], [], None, "x", log=lambda *_: None)
+
+
+def test_scenes_cut_on_slot_crop_with_inset(tmp_path):
+    """장면 경계는 슬롯 크롭 기준 + 앞뒤 0.1초 빼기(v002 경계 1프레임 번쩍임 4.33/4.37)."""
+    from shopping_shorts.channel_presets.hotpeople import footage, spec
+    src = str(tmp_path / "two.mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=1280x720:rate=30:d=5",
+                    "-f", "lavfi", "-i", "testsrc2=size=1280x720:rate=30:d=5,negate,hue=h=120",
+                    "-f", "lavfi", "-i", "testsrc2=size=1280x720:rate=30:d=5",
+                    "-filter_complex", "[0:v][1:v][2:v]concat=n=3:v=1[o]", "-map", "[o]", src], check=True)
+    sc = footage.scenes(src, "v", str(tmp_path / "th"))
+    mid = [c for c in sc if 4 < c["start"] < 9]                      # 가운데 장면 5~10초 → 쓸 구간 5.1~9.9
+    assert len(mid) == 1, sc
+    assert abs(mid[0]["start"] - (5.0 + spec.CLIP_INSET_SEC)) <= 0.05 and abs(mid[0]["end"] - (10.0 - spec.CLIP_INSET_SEC)) <= 0.05, sc
+
+
+def test_render_refuses_clip_past_scene_end(tmp_path):
+    from shopping_shorts.channel_presets.hotpeople import render
+    s = _script(3)
+    fo = {"cuts": [{"src": "x.mp4", "start": 1.0, "end": 2.0, "url": "t"}] * 3}
+    with pytest.raises(RuntimeError, match="장면"):
+        render.build(str(tmp_path), s, fo, log=lambda *_: None)
+
+
+def test_review_catches_cut_inside_subtitle(tmp_path):
+    """결과물 검사: 자막 경계 밖 컷을 잡는다. (v002 final.mp4 실측: 13개 잡음)"""
+    from shopping_shorts.channel_presets.hotpeople import review
+    mp4 = str(tmp_path / "v.mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=s=1080x1920:r=30:d=1",
+                    "-f", "lavfi", "-i", "testsrc2=s=1080x1920:r=30:d=1,negate",
+                    "-filter_complex", "[0:v][1:v]concat=n=2:v=1[o]", "-map", "[o]", mp4], check=True)
+    assert review.inner_cuts(mp4, [2.0]) == [1.0]
+    assert review.inner_cuts(mp4, [1.0, 1.0]) == []
+
+
+def test_bgm_constant_gain_keeps_song_shape(tmp_path, monkeypatch):
+    """칼카피 6: 원본은 곡 이득이 평평(페이드·자동조절 없음). 곡의 첫 3초가 6dB 조용하면 결과도 6dB 조용해야 한다.
+    옛 동적 loudnorm은 앞을 끌어올려 v002 오프닝이 +2.2 LU 컸다."""
+    import re
+    import statistics as st
+    from shopping_shorts.channel_presets.hotpeople import render, spec
+    d = tmp_path / "bgm"
+    d.mkdir()
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anoisesrc=d=40:c=pink:a=0.3",
+                    "-af", "volume='if(lt(t,10),0.5,1)':eval=frame", str(d / "hero.m4a")], check=True)
+    monkeypatch.setattr(spec, "POLICY_BGM_DIR", str(d))
+    (tmp_path / "render").mkdir()
+    out, _ = render._bgm(25.0, str(tmp_path), "x")             # 곡 7.1초부터 → 첫 2.9초가 −6dB
+    r = subprocess.run(["ffmpeg", "-nostats", "-i", out, "-af", "ebur128=framelog=info", "-f", "null", "-"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace").stderr
+    M = [(float(t), float(m)) for t, m in re.findall(r"t:\s*([\d.]+)\s+.*?M:\s*(-?[\d.]+)", r)]
+    open_ = st.median(m for t, m in M if 0.5 <= t <= 2.5)
+    rest = st.median(m for t, m in M if 4 <= t <= 23)
+    assert -7.0 < open_ - rest < -5.0, (open_, rest)
+    integ = float(re.findall(r"^\s*I:\s*(-?[\d.]+) LUFS", r, re.M)[-1])
+    assert abs(integ - spec.BGM_LUFS) < 1.0

@@ -20,6 +20,20 @@ def _frame(mp4, t):
     return np.frombuffer(raw, np.uint8).reshape(spec.CANVAS_H, spec.CANVAS_W, 3)
 
 
+def inner_cuts(mp4, secs, tol=0.1):
+    """★칼카피 1 결과물 검사 — 완성 mp4 슬롯에서 컷(scene>0.3, tools/hotpeople/measure/cuts.py 와 같은 자)을 찾아
+    자막 경계에서 tol 초 넘게 떨어진 컷(= 자막 안에서 화면이 바뀐 것)의 시각 목록."""
+    vf = f"crop={spec.SLOT_W}:{spec.SLOT_H}:{spec.SLOT_X}:{spec.SLOT_Y},select='gt(scene,0.3)',metadata=print:file=-"
+    r = subprocess.run(["ffmpeg", "-v", "error", "-i", mp4, "-vf", vf, "-f", "null", "-"], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace").stdout
+    cuts = [float(l.split("pts_time:")[1]) for l in r.splitlines() if "pts_time:" in l]
+    bounds, t = [], 0.0
+    for s in secs:
+        t += s
+        bounds.append(t)
+    return [round(c, 2) for c in cuts if c > 0.2 and min(abs(c - b) for b in bounds) > tol]
+
+
 def run(mp4, render, wd):
     checks, frames = [], []
     pr = json.loads(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration:stream=codec_type,width,height",
@@ -50,6 +64,8 @@ def run(mp4, render, wd):
     checks.append({"name": "슬롯이 빈 컷 0", "ok": not blank, "got": blank})
     checks.append({"name": "자막 없는 컷 0", "ok": not noink, "got": noink})
     checks.append({"name": "자막 화면 밖 0", "ok": not overflow, "got": overflow})
+    inner = inner_cuts(mp4, [c["sec"] for c in render["cuts"]])
+    checks.append({"name": f"자막 안 컷 {spec.SUB_INNER_CUTS_MAX} 이하", "ok": len(inner) <= spec.SUB_INNER_CUTS_MAX, "got": inner})
     sheet = None
     if frames:
         th = [Image.fromarray(f).resize((216, 384)) for f in frames]
