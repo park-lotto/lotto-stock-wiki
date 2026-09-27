@@ -18,9 +18,14 @@ import sys, os, json, pathlib, argparse
 ROOT = pathlib.Path(os.environ.get("PC_ROOT") or pathlib.Path(__file__).resolve().parents[2]); sys.path.insert(0, str(ROOT))
 ap = argparse.ArgumentParser(); ap.add_argument("dump"); ap.add_argument("--limit", type=int, default=0)
 ap.add_argument("--quiet", action="store_true")
+# 2026-09-27 사장님 "무료 제미나이랑 버텍스 차이가 있는 것 같은데 객관적으로" — 같은 작업·같은 지시로 무료 키풀만 태운다
+ap.add_argument("--free", action="store_true", help="Vertex를 끄고 무료 키풀(대본생성 모델)로만")
 args = ap.parse_args()
 os.chdir(ROOT)
 from shopping_shorts import story_writer as sw
+if args.free:
+    from shopping_shorts import vertex_route as _vr
+    _vr.try_call = lambda *a, **k: (False, None)
 
 
 def collapse(xs):
@@ -69,7 +74,7 @@ for w in works:
             all_lines.setdefault(sw._norm_text(b.get("text")).strip(".!?~"), set()).add(w["work_id"])
         tot["no_cut"] += nocut
         wn = d.get("writer_note") or {}
-        if wn.get("auth") != "vertex":
+        if wn.get("auth") != "vertex" and not args.free:
             tot["not_vertex"] += 1
         texts.append(d.get("script") or "")
         print("── %s  %d자·%.1f초  인증=%s  칸순서=%s  틀베낌줄=%s  씨앗되풀이줄=%s  컷없는줄=%d  다시쓰기=%s  남은문제=%s" % (
