@@ -9,6 +9,8 @@
   · 컷: 없는 번호를 적은 줄 수 / 끝내 컷 없는 줄 수
   · 씨앗 되풀이: 앞 두 칸(씨앗 결은 첫 줄) 뒤 줄에 씨앗 셀링포인트 낱말 2개↑ (생성기 검사와 같은 함수)
   · A·B 겹침: 두 안의 4글자 조각 겹침(_gram_share, 상한 AB_MAX_SHARE)
+  · 틀 예시 베낌: 줄이 고른 스타일의 예시 문장을 거의 그대로 옮겼나(TEMPLATE_COPY_SHARE 이상) — 작업이 달라도 같은 말이 되는 뿌리
+  · 작업 사이 같은 줄: 다른 제품인데 글자가 같은 줄(회원 100명이 돌려쓰면 똑같아지는가)
   · 인증(Vertex인가)·다시쓰기 여부·남은 문제
 끝에 합계 줄: 전 작업에서 하나라도 어긋나면 FAIL.
 """
@@ -31,7 +33,8 @@ def collapse(xs):
 
 D = json.load(open(args.dump, encoding="utf-8"))
 works = D["works"][:args.limit] if args.limit else D["works"]
-tot = {"drafts": 0, "order_bad": 0, "seed_rep": 0, "no_cut": 0, "ab_over": 0, "fail_work": 0, "not_vertex": 0}
+all_lines = {}          # 정규화 글 → 나온 작업들
+tot = {"tpl_copy": 0, "cross_same": 0, "drafts": 0, "order_bad": 0, "seed_rep": 0, "no_cut": 0, "ab_over": 0, "fail_work": 0, "not_vertex": 0}
 for w in works:
     spines = [D["spines"][str(i)] for i in w["style_ids"] if D["spines"].get(str(i))]
     try:
@@ -58,14 +61,20 @@ for w in works:
                and len(sw._seed_word_hits(b.get("text"), pts, w["product"])) >= 2]
         tot["seed_rep"] += len(rep)
         nocut = sum(1 for b in beats if not b.get("src_segs"))
+        exs = frame.get("examples") or {}
+        copy = [i + 1 for i, b in enumerate(beats)
+                if any(sw._gram_share(b.get("text"), x) >= sw.TEMPLATE_COPY_SHARE for x in exs.get(b.get("role"), []))]
+        tot["tpl_copy"] += len(copy)
+        for b in beats:
+            all_lines.setdefault(sw._norm_text(b.get("text")).strip(".!?~"), set()).add(w["work_id"])
         tot["no_cut"] += nocut
         wn = d.get("writer_note") or {}
         if wn.get("auth") != "vertex":
             tot["not_vertex"] += 1
         texts.append(d.get("script") or "")
-        print("── %s  %d자·%.1f초  인증=%s  칸순서=%s  씨앗되풀이줄=%s  컷없는줄=%d  다시쓰기=%s  남은문제=%s" % (
+        print("── %s  %d자·%.1f초  인증=%s  칸순서=%s  틀베낌줄=%s  씨앗되풀이줄=%s  컷없는줄=%d  다시쓰기=%s  남은문제=%s" % (
             d.get("style_name"), d.get("chars") or 0, d.get("sec") or 0, wn.get("auth"),
-            "OK" if order_ok else "틀림(%s)" % " → ".join(got), rep or "-", nocut,
+            "OK" if order_ok else "틀림(%s)" % " → ".join(got), copy or "-", rep or "-", nocut,
             "예" if wn.get("retry") else "아니오", wn.get("problems") or "-"))
         if not args.quiet:
             for b in beats:
@@ -77,5 +86,9 @@ for w in works:
         print("   A·B 겹침 %.2f (상한 %.2f) %s" % (share, sw.AB_MAX_SHARE, "넘음" if over else "OK"))
     print("   씨앗(앞 120자): %s" % w["seed_text"][:120].replace("\n", " "))
 
-bad = tot["order_bad"] + tot["seed_rep"] + tot["ab_over"] + tot["fail_work"] + tot["not_vertex"]
+same = {t: ws for t, ws in all_lines.items() if len(ws) > 1}
+tot["cross_same"] = len(same)
+for t, ws in sorted(same.items(), key=lambda x: -len(x[1]))[:10]:
+    print("   작업 %d개에 같은 줄: %s" % (len(ws), t))
+bad = tot["tpl_copy"] + tot["cross_same"] + tot["order_bad"] + tot["seed_rep"] + tot["ab_over"] + tot["fail_work"] + tot["not_vertex"]
 print("\n합계 %s → %s" % (tot, "PASS" if bad == 0 else "FAIL"))
