@@ -661,6 +661,43 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     // 길이는 0.001초 **내림** — 올림하면 창 끝이 전환 프레임을 다시 넘을 수 있다
     return {start: ns, sdur: Math.floor((ne - ns) * 1000 + 1e-6) / 1000};
   }
+  // ★모자란 읽는 창 채우기(2026-09-27 사장님 "장면 끝에 소재가 살짝 모자라 멈추는 것 — 뒤를 더 보여주거나 창을 살짝
+  //   앞으로 옮겨도 장면이 안 바뀌면 그렇게. 최선은 딴 장면이 잠깐 들어가는 걸 막는 것").
+  //   창 [start, start+sdur] 이 필요 길이 need(컷 길이 × 칸 배속)보다 짧으면 ① 꼬리를 뒤로(다음 장면 전환·원본 끝·청소 구간 끝·
+  //   같은 소재 뒤 컷 시작 앞까지) ② 그래도 모자라면 머리를 앞으로(앞 장면 전환·청소 구간 시작·앞 컷 끝까지). 남는 몫만 종전
+  //   느리게(1.15배)→정지. 장면 전환 목록(DATA.scenecuts)이 없는 소재는 **안 늘린다**(장면이 이어지는지 모르면 딴 장면이 샐 수 있다).
+  //   청소본 칸: DATA.clean_spans[vid](지운 원본 구간)가 있으면 그 **안에서만** — 밖이면 원본 자막이 보이거나 증분 청소(과금)가 난다.
+  //   lo/hi = 같은 칸 같은 소재 다른 컷과 겹치지 않을 한계(같은 그림 반복 금지).
+  function fillShortWindow(vid, start, sdur, need, lo, hi){
+    const D = (typeof DATA === 'object' && DATA) || {};
+    const s = Number(start), d = Number(sdur), e = s + d;
+    const cuts = (D.scenecuts || {})[vid];
+    if (!Array.isArray(cuts) || !(need > d + EPS) || !isFinite(s)) return {start: s, sdur: d};
+    let lim0 = Math.max(0, Number(lo) || 0), lim1 = Number(hi);
+    if (!isFinite(lim1)) lim1 = Infinity;
+    const reel = Number((D.src_duration || {})[vid] || 0);
+    if (reel > 0) lim1 = Math.min(lim1, reel);
+    if ((D.clean_spans || {}).__error__) return {start: s, sdur: d};   // 청소 구간을 못 읽었다 — 안 늘린다(과금 방지)
+    const spans = (D.clean_spans || {})[vid];
+    if (Array.isArray(spans) && spans.length){
+      const sp = spans.find(x => Number(x[0]) <= s + 1e-3 && Number(x[1]) >= e - 1e-3);
+      if (!sp) return {start: s, sdur: d};                          // 청소 구간 밖 창 — 움직이지 않는다
+      lim0 = Math.max(lim0, Number(sp[0])); lim1 = Math.min(lim1, Number(sp[1]));
+    }
+    for (const x of cuts){
+      const c = Number(x);
+      if (!isFinite(c)) continue;
+      if (c >= e - 1e-3 && c < lim1) lim1 = c;                        // 꼬리: 다음 장면 첫 프레임 앞까지
+      if (c <= s + 1e-3 && c > lim0) lim0 = c;                        // 머리: 이 장면 첫 프레임까지
+    }
+    let ne = Math.max(e, Math.min(s + need, lim1));
+    let ns = s;
+    const rest = need - (ne - s);
+    if (rest > EPS) ns = Math.min(s, Math.max(s - rest, lim0));
+    if (ne - e < 1e-3 && s - ns < 1e-3) return {start: s, sdur: d};
+    ns = Math.ceil(ns * 1000 - 1e-6) / 1000;                         // 0.001초 — 머리는 올림, 길이는 내림(전환 프레임을 안 넘게)
+    return {start: ns, sdur: Math.floor((ne - ns) * 1000 + 1e-6) / 1000};
+  }
   const finish = base => {
     if (!base.length) return base;
     base.forEach(c => {
@@ -675,6 +712,29 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       if (sourceTotal > 0 && Number(c.start || 0) + natural > end + EPS) end = sourceTotal;
       if (end > Number(c.start || 0)) wanted = Math.min(wanted, end - Number(c.start || 0));
       c.src_dur = Math.max(EPS, wanted);
+    });
+    // ★순서 고정(2026-09-27): ① 모자란 창 채우기(fillShortWindow) → ② 잔상 가드(guardReadWindow)가 마지막에 한 번 더 본다.
+    //   채우기는 전환 앞까지만 늘리지만, 원래 창 안에 걸친 전환은 가드만 뺀다.
+    const noFill = !!spread || (beatIdx != null && typeof SLOW === 'object' && SLOW && SLOW[beatIdx] > 1);
+    base.forEach((c, k) => {
+      if (noFill || c.fit) return;                                   // 사람이 고른 느리게·늘려 채우기·[속도 맞추기]는 그대로
+      if (typeof TRIMS === 'object' && TRIMS && TRIMS[c.seg_id]) return;   // 잘라 낸 구멍이 되살아나지 않게
+      if (String(c.seg_id || '').startsWith('film_')) return;       // 사람이 필름에서 정한 구간은 그 구간만(꼬다리 부활 금지)
+      const need = Number(c.dur || 0) * syncSpeed;
+      if (!(c.src_dur < need - EPS)) return;
+      // 같은 칸의 같은 소재 다른 컷과 겹치지 않게(같은 그림 반복 금지) — 앞 컷 끝·뒤 컷 시작이 한계
+      let lo = 0, hi = Infinity;
+      const s0 = Number(c.start || 0);
+      base.forEach((o, j) => {
+        if (j === k || o.video_id !== c.video_id) return;
+        const os = Number(o.start || 0), oe = os + Number(o.src_dur || 0);
+        if (os >= s0 + EPS) hi = Math.min(hi, os);
+        else if (oe <= s0 + c.src_dur + EPS) lo = Math.max(lo, oe);
+      });
+      const g = fillShortWindow(c.video_id, s0, c.src_dur, need, lo, hi);
+      c.start = g.start; c.src_dur = g.sdur;
+    });
+    base.forEach(c => {
       // ★실제로 읽는 창의 머리·꼬리에 걸친 장면 전환을 뺀다(guardReadWindow — 컷을 확정하는 이 자리 한 곳에서만).
       //   줄어든 몫은 컷 길이 dur 그대로 두고 기존 느리게·정지 규칙이 채운다.
       const g = guardReadWindow(c.video_id, Number(c.start || 0), c.src_dur);

@@ -6085,6 +6085,34 @@ def _lab_scenecuts(job, work):
         return {}
 
 
+def _lab_clean_spans(job, work):
+    """청소본(정본)이 지운 원본 구간 {video_id: [[시작, 끝], ...]}(원본 좌표, 붙은 구간은 합침) — 화면(scene_play.js
+    fillShortWindow)이 모자란 창을 늘릴 때 **이 안에서만** 움직이게 하는 한계(2026-09-27). 밖으로 나가면 원본 자막이 보이거나
+    증분 청소(과금)가 난다. 판단은 clean_base._regions 한 곳 — 정본이 없으면 {}(제한 없음)."""
+    try:
+        from shopping_shorts import clean_base as _cb
+        base = _cb.load_base(work)
+        if not base:
+            return {}
+        by = {}
+        for r in _cb._regions(base):
+            by.setdefault(str(r[2]), []).append((float(r[3]), float(r[4])))
+        out = {}
+        for vid, iv in by.items():
+            iv.sort()
+            merged = []
+            for a_, b_ in iv:
+                if merged and a_ <= merged[-1][1] + 0.02:      # 이어진 컷(프레임 반올림 틈)은 한 구간
+                    merged[-1][1] = max(merged[-1][1], b_)
+                else:
+                    merged.append([a_, b_])
+            out[vid] = [[round(a_, 3), round(b_, 3)] for a_, b_ in merged]
+        return out
+    except Exception as e:      # noqa: BLE001 — 못 읽으면 붙이지 않는다(아래 fail-safe 참고)
+        print("[clean_spans] 청소 구간 계산 실패: %r" % (e,), file=sys.stderr)
+        return {"__error__": 1}
+
+
 def _with_film_segs(seg_map, plan, job):
     """추출 인벤토리(seg_map)에 **사람이 필름에서 오려낸 조각**을 되살려 합친 사본을 준다.
 
@@ -6369,6 +6397,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         # 장면 전환 시각(2026-09-27) — scene_play.js guardReadWindow 가 컷 읽는 창을 전환 안쪽으로 줄인다.
         #   화면·서버 러너(screen_clips — 이 함수를 그대로 부른다)가 같은 목록을 받는다.
         "scenecuts": _lab_scenecuts(job, work),
+        # 청소본이 지운 원본 구간(2026-09-27) — fillShortWindow 가 청소본 칸의 창을 이 안에서만 늘린다(과금·원본 자막 방지).
+        "clean_spans": _lab_clean_spans(job, work),
         "captions": caps,
         "tts_dur": tts_dur,
     }}

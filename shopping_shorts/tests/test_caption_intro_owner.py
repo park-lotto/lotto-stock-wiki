@@ -136,7 +136,7 @@ def _vp(plan, deco):
         beats.append({**b, "cap_segments": va._caption_segments(b["narration"], preset=b.get("caption_lines")),
                       "cap_rows": rows, "_dur": d})
     js = _js_funcs() + r"""
-const beats = JSON.parse(process.argv[1]); const out = {};
+const beats = __BEATS__; const out = {};
 for (const b of beats){
   const cap = {textContent: ''}; global.document = {getElementById: () => cap};
   const aud = {currentTime: 0, duration: b._dur}; _vpDriveCaption(aud, b);
@@ -149,8 +149,9 @@ for (const b of beats){
 }
 console.log(JSON.stringify(out));
 """
-    r = subprocess.run(["node", "-e", js, json.dumps(beats, ensure_ascii=False)], capture_output=True,
-                       text=True, encoding="utf-8", timeout=60)
+    # ★`node -e` 금지(test_no_node_dash_e: 윈도우 명령줄 32,767자 상한) — 입력은 소스에 박고 하네스로 실행
+    from shopping_shorts.tests.js_harness import run_js_proc
+    r = run_js_proc(js.replace("__BEATS__", json.dumps(beats, ensure_ascii=False)), timeout=60)
     assert r.returncode == 0, r.stderr[-800:]
     return {int(k): v for k, v in json.loads(r.stdout.strip().splitlines()[-1]).items()}
 
