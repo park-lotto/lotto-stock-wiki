@@ -339,10 +339,11 @@ COPY_RULE = {
 PIN_SHARE = 0.8        # 고정 문장의 글자(빈칸 뺀 것) 4글자 조각 중 줄에 있어야 하는 비율
 # 실존 인물 표지 — 목록은 한정적이다(모델이 자주 넣는 이름 위주). 지시문이 1차, 이건 새는 것만 잡는다.
 REAL_PERSON = re.compile(r"백종원|이연복|최현석|안성재|에드워드 ?리|고든 ?램지|유재석|강호동|아이유|손흥민|일론 ?머스크|스티브 ?잡스|이재용|정주영")
+FACTS_MAX = 2500       # 제품 사실 글자 상한(프롬프트가 태깅보다 사실에 끌려가지 않게)
 AB_MAX_SHARE = 0.4      # 두 안의 4글자 조각 겹침 상한(0.4 = 조각 열에 넷이 같다). 실측 근거는 tools/script_diff/check_styled.py
 
 
-def write_styled(product, seed_text, frame, vis, seg_index, platform="yt", seconds=25, note=None, avoid_text=""):
+def write_styled(product, seed_text, frame, vis, seg_index, platform="yt", seconds=25, note=None, avoid_text="", facts=""):
     """틀 + 씨앗 + 재료 태깅 → 한 번 호출로 줄(role·text·cuts). 검사에 걸리면 이유를 붙여 **한 번** 다시 쓴다
     (문제가 덜한 쪽을 쓴다). note: auth·retry·problems(남은 문제)."""
     from shopping_shorts import script_gate
@@ -356,6 +357,9 @@ def write_styled(product, seed_text, frame, vis, seg_index, platform="yt", secon
                             "voice": _VOICE.get(platform, _VOICE["yt"]), "chars": chars, "secs": int(seconds)}
     prompt = "%s\n\n[제품] %s\n\n[씨앗 대본]\n%s\n\n[스타일 틀]\n%s\n\n[재료]\n%s" % (
         brief, product or "(미상)", (seed_text or "").strip()[:1500], frame["block"], source_block(vis))
+    if (facts or "").strip():
+        # 제품 사실 = 쿠팡 수집분·제미니 지식·웹검색(app._materials_for_generate). 화면에 없어도 기능·특징·장점 재료로 쓴다.
+        prompt += "\n\n[제품 사실 — 화면 밖 정보. 기능·특징·장점 재료로 써도 된다]\n" + facts.strip()[:FACTS_MAX]
     if avoid_text:
         prompt += "\n\n[다른 안 — 이것과 다른 특징·다른 문장으로 써라]\n" + avoid_text[:600]
     out = _sg._call_json(prompt, STYLED_SCHEMA, note=note) or {}
@@ -390,7 +394,7 @@ def write_styled(product, seed_text, frame, vis, seg_index, platform="yt", secon
     return lines
 
 
-def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product=""):
+def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product="", facts=""):
     """(drafts, why) — app._backbone_drafts와 같은 계약(비면 why에 이유, 조용한 폴백 금지).
 
     자동 1안(씨앗 결 그대로) + 고른 스타일 1안. 모델 호출 = 안마다 1회(검사에 걸리면 +1회, write_styled).
@@ -439,7 +443,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         name = frame["name"]
         n = {}
         lines = write_styled(product, seed_text, frame, vis, seg_index, platform=plat, seconds=seconds,
-                             note=n, avoid_text=prev_text)
+                             note=n, avoid_text=prev_text, facts=facts)
         if len(lines) < MIN_STYLED_LINES:
             whys.append("%s: 대본이 %d줄뿐(%s)" % (name, len(lines), n.get("reason") or "; ".join(n.get("problems") or []) or "빈 응답"))
             continue

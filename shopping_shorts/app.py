@@ -3650,7 +3650,11 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                             _picked, _job, body.get("target_seconds") or 25, job_id=_jid,
                             preset=str(body.get("length_preset") or "short"),
                             seed_text=(it.get("full_text") or ""),
-                            seed_product=script_generate._sources_product(_src) or "")
+                            seed_product=script_generate._sources_product(_src) or "",
+                            # ★제품 사실(쿠팡 수집분·제미니 지식·웹검색 wow)을 작가에게 준다(2026-09-27) —
+                            #   _materials_for_generate가 모아 놓고 옛 경로만 쓰고 있었다(웹검색 호출이 버려짐).
+                            #   장면 요점(_scene_block)은 작가가 태깅으로 이미 보므로 뺀다.
+                            facts=(_facts_block or "").replace(_scene_block or "\0", "").strip())
                     except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
                         _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
                 if not _bb_drafts and _bb_on:

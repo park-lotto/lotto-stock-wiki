@@ -236,3 +236,16 @@ def test_brackets_copied_from_frame_are_stripped(monkeypatch):
     monkeypatch.setattr(sw._sg, "_call_json", lambda *a, **k: out)
     lines = sw.write_styled("필름", SEED, sw.frame_of(None), [], {"MAT-1": {"secs": 3}}, seconds=16)
     assert all(not L["text"].startswith("「") and not L["text"].endswith("」") for L in lines)
+
+
+def test_product_facts_reach_the_writer(monkeypatch):
+    """_materials_for_generate가 모은 제품 사실이 작가 프롬프트에 실린다(전엔 옛 경로만 썼다)."""
+    monkeypatch.setattr(sw, "_BANK", {})
+    out = {"seed_points": [], "lines": _lines(["훅", "미끼", "공개", "고조", "마무리"])}
+    prompts = _fake_styled(monkeypatch, [out])
+    sw.make_drafts([], _styled_job(), job_id="j1", seed_text=SEED, seed_product="열수축 필름",
+                   facts="[웹] 열수축 필름은 원래 전선 절연용으로 쓰였다")
+    assert "[제품 사실" in prompts[0] and "전선 절연용" in prompts[0]
+    prompts.clear()
+    sw.make_drafts([], _styled_job(), job_id="j1", seed_text=SEED, seed_product="열수축 필름")
+    assert "[제품 사실" not in prompts[0]
