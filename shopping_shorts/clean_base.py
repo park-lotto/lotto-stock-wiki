@@ -93,10 +93,15 @@ def save_base(work, *, sig, path, plan, cuts, sel=None):
 FRAME_EXACT_SINCE = 1790435500      # 2026-09-27 00:11:40 KST — _render_mix 누적 프레임 경계 배포 시각
 
 
-CAL_VERSION = 4     # 1 = 앞뒤 0.4초 고정 창 → 2 = 앞 컷 값 기준 + 넓혀 재탐색 + 이어받기(62ed6 9번 칸 +0.37초 잔여)
+CAL_VERSION = 5     # 1 = 앞뒤 0.4초 고정 창 → 2 = 앞 컷 값 기준 + 넓혀 재탐색 + 이어받기(62ed6 9번 칸 +0.37초 잔여)
                     # → 3 = 도구와 같은 특징(frame_match)·원본을 완성본 구도로 자름·컷 앞/끝 세 지점씩(off·off_end)·
                     #       못 재면 앞 컷과의 경계(튀는 프레임)로 시작만 · 다음 컷 시작에서 자르기(_cut_geom)
                     # → 4 = 속도 불일치 컷(cal_speed_mismatch) 표시 — 그 컷은 덮지 않은 것으로(_speed_bad)
+                    # → 5 = frame_exact 정본도 **잰다**(2026-09-27) — frame_exact 표식은 칸 경계 수리(00:12) 시각으로만 붙어,
+                    #       칸 안 컷 경계 수리(cut_frame_list, 05:11) 전 청소본은 칸 안에서 컷마다 1프레임씩 밀려 있었다
+                    #       (39e55470ebb0 02:06 청소본: 칸 안 +1→+3, 뒤 칸 −3프레임 — 보정을 건너뛰어 완성본이 화면보다 3프레임 앞섬).
+                    #       단 이 정본은 EXACT_MIN 이상 어긋난 컷만 좌표를 고친다(맞는 파일을 잡음으로 흔들지 않게).
+EXACT_MIN = 1.5 / 30.0          # frame_exact 정본: 이 이상(2프레임) 어긋난 컷만 off/off_end 를 남긴다
 CAL_WIN = 18                    # 찾는 범위 ±18프레임(±0.6초) — 기대 밀림(prior) 중심
 CAL_AGREE = 1                   # 세 지점 **모두** 최소(후보)가 확정 밀림의 ±1프레임 안에 있어야 한다(하나라도 딴 데면 못 잼)
 CAL_SPREAD = 3                  # …그중 둘 이상은 '최소 후보' 폭이 3프레임 이하로 뾰족해야 한다(정지 화면은 어디든 닮아 못 박는다)
@@ -316,6 +321,33 @@ def _speed_drift(c, cs_, ff, nxt):
     return float(max(abs(a + b * u[0]), abs(a + b * u[-1])))
 
 
+def _geom_resid(c, cs_, ff, nxt):
+    """좌표(_cut_geom)대로 읽을 때 컷 **전 구간**에서 장면이 2프레임 이상 어긋난 지점 수 → (어긋난 수, 잰 지점 수) 또는 None.
+    원본 0.1초마다 한 장을 좌표가 말하는 청소본 자리 ±10프레임에서 찾는다(뾰족하고 잘 닮은 지점만 — _speed_drift 와 같은 기준).
+    frame_exact 정본에서 새로 잰 좌표가 **실제로 더 맞을 때만** 쓰는 판정(v5) — 세 지점 측정이 빗나가 멀쩡한 컷을 흔들지 않게."""
+    import numpy as np
+    from shopping_shorts import frame_match as fm
+    if not cs_:
+        return None
+    rf = cs_[0]
+    cs, ce, t0, k = _cut_geom(c, nxt)
+    n = min(len(rf), int((ce - cs) * fm.FPS))
+    ks = np.arange(-10, 11)
+    bad = tot = 0
+    for i in range(0, n, 3):
+        jp = int(round((t0 + i / fm.FPS * k) * fm.FPS))
+        d = fm.dist(ff, jp + ks, rf[i])
+        m = np.isfinite(d)
+        if not m.any():
+            continue
+        kb, dmin, ok = fm.pick(ks[m], d[m], 0)
+        if dmin > SPEED_DMAX or ok.max() - ok.min() > CAL_SPREAD:
+            continue
+        tot += 1
+        bad += abs(int(kb)) >= 2
+    return (bad, tot) if tot else None
+
+
 def _speed_bad(c):
     """속도 불일치로 **청소본 좌표를 못 믿는** 지운 컷 — 지워진 조각으로 치지 않는다(렌더가 그 칸만 증분 청소).
     ★안 지운 컷(cleaned:false — 부분 청소 정본에서 원래 안 지우는 컷)은 표식만 남기고 과금 대상이 아니다."""
@@ -340,8 +372,9 @@ def calibrate(work, base, src_paths):
       cal_speed_mismatch=True — _regions·piece_map·coverage 가 그 컷을 **덮지 않은 것**으로 본다(맞는 장면 우선:
       딴 속도로 내보내느니 그 칸만 돈 내고 지운다). 정본의 cal_speed = 그런 컷 수.
     ★한 번 재면 calibrated=CAL_VERSION. 옛 버전 표시는 다시 잰다."""
-    if not base or base.get("frame_exact") or base.get("calibrated") == CAL_VERSION:
+    if not base or base.get("calibrated") == CAL_VERSION:
         return base
+    exact = bool(base.get("frame_exact"))       # v5: frame_exact 도 잰다 — 2프레임 이상 어긋난 컷만 고친다
     try:
         from shopping_shorts import frame_match as fm
         ff = fm.feats(fm.frames(base["path"]))
@@ -379,10 +412,36 @@ def calibrate(work, base, src_paths):
                 last = (off, th)
                 if off_end is not None:
                     c["off_end"] = round(off_end, 3)
+            if exact and got is not None:
+                # 맞게 만든 파일(frame_exact)은 잡음(±1프레임)으로 흔들지 않는다 — 2프레임 이상만 고친다
+                if c.get("off_end") is not None and abs(float(c["off_end"])) < EXACT_MIN and abs(off) < EXACT_MIN:
+                    c.pop("off_end", None)
+                if abs(off) < EXACT_MIN and "off_end" not in c:
+                    off = 0.0
+            elif exact:
+                off = 0.0                       # 못 잰 컷 — 맞게 만든 파일이니 지도 그대로(이어받기 추정으로 옮기지 않는다)
+                c.pop("cal_unsure", None); unsure -= 1
             j_prev = int(round((fin + off) * fm.FPS))
             if abs(off) >= 0.5 / fm.FPS or "off_end" in c:
                 c["off"] = round(off, 3)
             srcs.append(cs_); whys.append(why)
+        if exact:
+            # frame_exact 정본: 새 좌표가 **전 구간 대조에서 실제로 더 맞는** 컷만 남긴다(v5). 세 지점 측정이 빗나가면
+            #   멀쩡한 컷을 오히려 흔든다(68b48b12c7f5 실측: 고치지 않으면 어긋난 지점 소수 → 세 지점 값 그대로 쓰면 38).
+            nx0 = _next_starts({"cuts": cuts})
+            for c, cs_, nxt in zip(cuts, srcs, nx0):
+                if c.get("off") is None and c.get("off_end") is None:
+                    continue
+                plain = {k_: v_ for k_, v_ in c.items() if k_ not in ("off", "off_end")}
+                try:
+                    after, before = _geom_resid(c, cs_, ff, nxt), _geom_resid(plain, cs_, ff, nxt)
+                except Exception:      # noqa: BLE001
+                    after = before = None
+                if after is None or before is None or after[0] >= before[0]:
+                    c.pop("off", None); c.pop("off_end", None)
+                    c.pop("cal_by", None)
+                else:
+                    c["cal_by"] = (c.get("cal_by") or "points") + "+verified"
         # 속도 검사 — 모든 컷 밀림이 정해진 뒤(다음 컷 시작에서 자른 좌표 = 렌더가 읽는 좌표로 잰다)
         nx = _next_starts({"cuts": cuts})
         n_speed = 0
