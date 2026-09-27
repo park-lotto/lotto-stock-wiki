@@ -45,10 +45,14 @@ def test_환경변수로_되돌릴_수_있다(monkeypatch):
         importlib.reload(va)
 
 
-def test_정지구간_줌은_같이_꺼지지_않는다():
-    """대사가 소스보다 길어 마지막 프레임을 정지로 늘릴 때의 줌은 **반중복과 목적이 다르다**.
-    "뚝 멈춰 어색하다"는 사장님 육안 피드백(2026-07-19)으로 넣은 것이라 살아 있어야 한다.
-    (반중복 확대를 끄면서 이것까지 죽여 test_freeze_motion이 깨졌던 것을 고정한다)"""
-    assert va._FREEZE_ZOOM > 1.0
-    vf = va._kenburns_vf(2.0, zoom_end=va._FREEZE_ZOOM)
-    assert "zoompan" in vf and "*on" in vf
+def test_정지구간_확대도_없다_미리보기와_같은_정지(monkeypatch):
+    """정지 구간 켄번즈도 뺐다(2026-09-27 사장님 결정). 편집 화면 미리보기는 정지 컷을 그냥 정지로 보여주므로
+    완성본도 같아야 한다(30 job 대조 "정지컷만 밀림" 17칸의 유일한 원인). 정지 구간 ffmpeg 필터에 zoompan 이 없어야 한다."""
+    assert va._FREEZE_ZOOM == 1.0
+    assert "zoompan" not in va._kenburns_vf(2.0, zoom_end=va._FREEZE_ZOOM)
+    calls = []
+    monkeypatch.setattr(va, "_run_ffmpeg", lambda cmd, *a, **k: calls.append(cmd))
+    va._extend_with_frozen_motion("in.mp4", play_out=1.0, freeze=1.0, out_path="out.mp4", frames=60)
+    vf = calls[0][calls[0].index("-vf") + 1]
+    assert "tpad=stop_mode=clone" in vf and "zoompan" not in vf, vf
+    assert calls[0][calls[0].index("-frames:v") + 1] == "60"
