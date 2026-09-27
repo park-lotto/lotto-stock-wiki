@@ -4379,20 +4379,22 @@ def map_scene_score(clean_path, srcs, cuts):
     같은 자(frame_match — 보정·영상 비교 도구와 같은 닮음)로 잰다. 파일을 보는 판정이라 계산끼리 비교하지 않는다(0순위-C)."""
     import numpy as np
     from shopping_shorts import frame_match as fm
-    cf = fm.feats(fm.frames(clean_path))
+    _cfr = fm.frames(clean_path)
+    cf, cf2 = fm.feats(_cfr), fm.feats_low(_cfr)
     cache, ok = {}, 0
     for c in cuts or []:
         v = c.get("video_id")
         if not srcs.get(v):
             continue
         if v not in cache:
-            cache[v] = fm.feats(fm.frames(srcs[v]))
-        F = cache[v]
+            _fr = fm.frames(srcs[v])
+            cache[v] = (fm.feats(_fr), fm.feats_low(_fr))
+        F, F2 = cache[v]
         j = int(round((float(c["fin"]) + float(c["dur"]) / 2) * fm.FPS))
         if not (0 <= j < len(cf)) or not len(F):
             continue
         k = int(round((float(c["src"]) + min(float(c.get("sdur") or c["dur"]), float(c["dur"])) / 2) * fm.FPS))
-        d = fm.dist(F, np.arange(k - 3, k + 4), cf[j])
+        d = fm.dist_any(F, F2, np.arange(k - 3, k + 4), cf[j], cf2[j])     # 글자 띠를 지운 청소본도 같은 장면으로(두 띠)
         ok += bool(np.isfinite(d).any() and float(np.min(d)) < fm.SCENE_T)
     return ok
 
