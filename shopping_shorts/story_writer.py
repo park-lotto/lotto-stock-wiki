@@ -169,6 +169,7 @@ STYLED_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 이 제품
 ■ 차별점 = 기능·특징·장점 — 씨앗이 이미 자랑한 셀링포인트는 **%(open_rule)s 말고는** 쓰지 마라.
   나머지 칸은 [재료]를 보고 **사람들이 좋아할 만한** 기능·특징·장점(씨앗에 없는 것)으로 채운다.
 ■ 후킹이 전부다 — 과장·어그로·지어낸 상황·인물·반응 다 좋다. 세게, 구체적으로, 끝까지 보게 써라.
+  단 **실존 인물 이름은 쓰지 마라**(연예인·셰프·유튜버·기업 대표 등) — 사람은 '요리사·주부·러너'처럼 보통명사로.
 %(copy_rule)s
   단 줄마다 화면에 붙일 컷은 있어야 한다(말과 영 딴판인 화면이 되지 않게).
 ■ 말투 — %(voice)s
@@ -177,19 +178,85 @@ STYLED_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 이 제품
 ■ seed_points에는 씨앗이 자랑한 셀링포인트를 짧게 적어라."""
 
 
-def frame_of(sp):
+# ── 공통 문구 자산(2026-09-27 사장님 "미끼·마지막 부분 등 공통적으로 들어가는 부분을 많이 만들어놓고 랜덤으로 선택을
+#    못한다면 순번대로 / 공통부분을 많이 자산으로 만들어놓는 게 자산 / 조금씩 변형도 / 어떤 게 들어가든 상관없는 지점").
+#    제품과 무관한 칸만. 원본 = 스타일의 그 칸 예시, 자산 = 예시마다 변형(shopping_shorts/story_common_bank.json,
+#    만든 도구 tools/spine_presets/make_common_bank.py). 모델에게 고르게 하면 첫 번째만 쓴다(12작업 중 5개 같은 마무리,
+#    2026-09-27 실측) → **코드가 작업마다 고른다**(작업 번호 해시 = 순번). 모델은 {빈칸}만 채운다.
+COMMON_ROLES = {"yt": ["bait", "fame", "land"], "ig": ["hook", "proof", "notice", "cta", "regret"]}
+_BANK = None
+
+
+def _bank():
+    global _BANK
+    if _BANK is None:
+        import json, os
+        p = os.path.join(os.path.dirname(__file__), "story_common_bank.json")
+        try:
+            _BANK = (json.load(open(p, encoding="utf-8")) or {}).get("variants") or {}
+        except (OSError, ValueError) as e:     # 자산이 없으면 스타일 예시만으로 돈다 — 조용히 넘기지 않고 남긴다
+            import sys
+            print("story_common_bank 못 읽음(%r) — 스타일 예시만 씀" % e, file=sys.stderr)
+            _BANK = {}
+    return _BANK
+
+
+def common_pool(sp, role):
+    """그 스타일·칸의 공통 문구 후보 = 스타일 예시 + 예시마다의 변형(자산). 순서 고정(순번의 기준)."""
+    tpl = sp.get("templates") if isinstance(sp.get("templates"), dict) else {}
+    out, seen = [], set()
+    for ex in [x.strip() for x in (tpl.get(role) or []) if isinstance(x, str) and x.strip()]:
+        for v in [ex] + list(_bank().get(ex) or []):
+            k = re.sub(r"\s+", "", v)
+            if k not in seen:
+                seen.add(k)
+                out.append(v)
+    return out
+
+
+def common_lines(sp, key):
+    """이 작업에서 쓸 공통 문구 {칸: 문장} — 작업 번호로 후보를 순번 선택(같은 작업은 늘 같은 문장, 작업마다 다름)."""
+    import zlib
+    if not sp:
+        return {}
+    plat = "yt" if sp.get("no_cta") else "ig"
+    roles = set(str(r) for r in sp.get("beat_roles") or [])
+    got = {}
+    for r in COMMON_ROLES[plat]:
+        pool = common_pool(sp, r) if r in roles else []
+        if pool:
+            got[r] = pool[zlib.crc32(("%s|%s" % (key, r)).encode("utf-8")) % len(pool)]
+    return got
+
+
+def _pin_share(phrase, text):
+    """고정 문장의 글자(빈칸 사이 토막마다, 4글자 조각) 중 줄에 있는 비율 — 빈칸 경계를 넘는 조각은 세지 않는다."""
+    ct = re.sub(r"[^가-힣A-Za-z0-9]", "", text or "")
+    grams = set()
+    for part in re.split(r"\{[^}]*\}", phrase or ""):
+        c = re.sub(r"[^가-힣A-Za-z0-9]", "", part)
+        grams |= {c[i:i + 4] for i in range(max(0, len(c) - 3))} or ({c} if c else set())
+    return sum(1 for g in grams if g in ct) / len(grams) if grams else 1.0
+
+
+def frame_of(sp, key=""):
     """스타일(스파인) → 틀. sp가 None이면 씨앗 결(씨앗 대본의 흐름이 곧 틀).
-    돌려주는 것: {name, roles(칸 순서 — 씨앗 결이면 None), block(프롬프트에 싣는 틀 글)}"""
+    돌려주는 것: {name, roles(칸 순서 — 씨앗 결이면 None), block(프롬프트에 싣는 틀 글), pinned(공통 칸 고정 문장)}"""
     if not sp:
         return {"name": "씨앗 결 이야기", "roles": None,
                 "block": "(고른 스타일 없음) [씨앗 대본]의 흐름 — 무엇을 먼저 말하고 어디서 놀라게 하고 어떻게 끝내는지 — 을 칸으로 삼아라."}
     tpl = sp.get("templates") if isinstance(sp.get("templates"), dict) else {}
     roles = [str(r) for r in (sp.get("beat_roles") or []) if str(r).strip()] or [k for k in tpl if tpl.get(k)]
+    pinned = common_lines(sp, key)
     rows = []
     for r in roles:
+        if r in pinned:
+            rows.append("  %s: 【고정】「%s」 — 이 문장 그대로 쓴다%s" % (
+                r, pinned[r], "({빈칸}만 이 제품으로 채워서)" if "{" in pinned[r] else ""))
+            continue
         ex = [x for x in (tpl.get(r) or []) if isinstance(x, str) and x.strip()][:2]
         rows.append("  %s: %s" % (r, " / ".join("「%s」" % x for x in ex) if ex else "(예시 없음)"))
-    return {"name": sp.get("name") or "", "roles": roles,
+    return {"name": sp.get("name") or "", "roles": roles, "pinned": pinned,
             "block": "%s\n%s" % (sp.get("name") or "", "\n".join(rows)),
             # 베낌 검사는 화면에 보여준 2개만이 아니라 그 칸의 예시 전부와 댄다
             "examples": {r: [x for x in (tpl.get(r) or []) if isinstance(x, str) and x.strip()] for r in roles},
@@ -222,7 +289,16 @@ def styled_problems(out, frame, seg_index, seed_text="", product="", seconds=25,
             probs.append("칸 순서가 틀이 아니다 — 나온 순서 %s / 틀 %s. 틀의 칸을 빠짐없이 순서대로" % (" → ".join(got), " → ".join(roles)))
     n_open = 2 if roles else 1
     exs = {} if frame.get("keep_idioms") else (frame.get("examples") or {})
+    pinned = frame.get("pinned") or {}
+    for r, ph in pinned.items():
+        mine = [L for L in lines if str(L.get("role")) == r]
+        if mine and _pin_share(ph, mine[0].get("text")) < PIN_SHARE:
+            probs.append("%s 칸은 고정 문장「%s」을 그대로 써야 한다%s" % (r, ph, "({빈칸}만 채워서)" if "{" in ph else ""))
     for i, L in enumerate(lines):
+        if REAL_PERSON.search(L.get("text") or ""):
+            probs.append("%d번 줄에 실존 인물 이름이 있다 — 보통명사(요리사·주부 등)로" % (i + 1))
+        if str(L.get("role")) in pinned:
+            continue                      # 고정 문장 칸은 예시를 쓰는 게 맞다
         for x in exs.get(str(L.get("role")), []):
             if _gram_share(L.get("text"), x) >= TEMPLATE_COPY_SHARE:
                 probs.append("%d번 줄이 틀 예시「%s」를 거의 그대로 옮겼다 — 뼈대만 두고 말을 바꿔라" % (i + 1, x))
@@ -260,6 +336,9 @@ COPY_RULE = {
     True: "■ 예시의 관용구(최근 딱 봤을 때는·말도 안 되는·이건 바로·충격적인 포인트는·이러니 떼돈을 벌었다고 같은 말)는\n"
           "  히트작 시그널이다 — 그대로 살리고 {빈칸}만 이 제품으로 채워라. 마무리 칸은 예시 중 하나를 그대로 써라.",
 }
+PIN_SHARE = 0.8        # 고정 문장의 글자(빈칸 뺀 것) 4글자 조각 중 줄에 있어야 하는 비율
+# 실존 인물 표지 — 목록은 한정적이다(모델이 자주 넣는 이름 위주). 지시문이 1차, 이건 새는 것만 잡는다.
+REAL_PERSON = re.compile(r"백종원|이연복|최현석|안성재|에드워드 ?리|고든 ?램지|유재석|강호동|아이유|손흥민|일론 ?머스크|스티브 ?잡스|이재용|정주영")
 AB_MAX_SHARE = 0.4      # 두 안의 4글자 조각 겹침 상한(0.4 = 조각 열에 넷이 같다). 실측 근거는 tools/script_diff/check_styled.py
 
 
@@ -288,6 +367,17 @@ def write_styled(product, seed_text, frame, vis, seg_index, platform="yt", secon
         note["retry"] = probs
         if out2.get("lines") and len(p2) <= len(probs):
             out, probs = out2, p2
+    # 빈칸 없는 고정 문장은 코드가 끼운다(모델이 끝내 안 따랐어도 결과는 고정 문장) — 검사가 아니라 결정
+    for r, ph in (frame.get("pinned") or {}).items():
+        if "{" in ph:
+            continue
+        for L in out.get("lines") or []:
+            if str(L.get("role")) == r:
+                if _pin_share(ph, L.get("text")) < PIN_SHARE:
+                    L["text"] = ph
+                    note["pinned_fixed"] = (note.get("pinned_fixed") or 0) + 1
+                break
+    note["pinned"] = frame.get("pinned") or {}
     note["problems"] = probs
     note["seed_points"] = [str(p) for p in out.get("seed_points") or [] if str(p).strip()]
     lines = []
@@ -344,7 +434,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         plans.append((sp, "yt" if sp.get("no_cta") else "ig"))
     drafts, whys, prev_text = [], [], ""
     for sp, plat in plans:
-        frame = frame_of(sp)
+        frame = frame_of(sp, job_id or product)
         name = frame["name"]
         n = {}
         lines = write_styled(product, seed_text, frame, vis, seg_index, platform=plat, seconds=seconds,
@@ -362,7 +452,8 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         d["platform"] = plat
         d["seed_from"] = seed_from          # 점검용: 씨앗이 고른 영상(explicit)인가 job 대체(job:vid)인가
         d["writer_note"] = {k: v for k, v in (("writer", "한번호출"), ("auth", n.get("auth")), ("retry", n.get("retry")),
-                                               ("problems", n.get("problems")), ("no_cut_lines", no_cut)) if v}
+                                               ("problems", n.get("problems")), ("no_cut_lines", no_cut),
+                                               ("pinned", n.get("pinned")), ("pinned_fixed", n.get("pinned_fixed"))) if v}
         d["seed_points"] = n.get("seed_points") or []   # 점검용: 씨앗이 이미 말한 셀링포인트(차별점 잣대)
         drafts.append(d)
         prev_text = prev_text or d.get("script") or ""

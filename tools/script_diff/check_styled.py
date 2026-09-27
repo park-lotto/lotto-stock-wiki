@@ -67,8 +67,9 @@ for w in works:
         tot["seed_rep"] += len(rep)
         nocut = sum(1 for b in beats if not b.get("src_segs"))
         exs = {} if frame.get("keep_idioms") else (frame.get("examples") or {})   # 유튜브 관용구는 베낌 아님(생성기와 같은 잣대)
-        copy = [i + 1 for i, b in enumerate(beats)
-                if any(sw._gram_share(b.get("text"), x) >= sw.TEMPLATE_COPY_SHARE for x in exs.get(b.get("role"), []))]
+        pins = frame_pins = (d.get("writer_note") or {}).get("pinned") or {}
+        copy = [i + 1 for i, b in enumerate(beats) if b.get("role") not in pins and
+                any(sw._gram_share(b.get("text"), x) >= sw.TEMPLATE_COPY_SHARE for x in exs.get(b.get("role"), []))]
         tot["tpl_copy"] += len(copy)
         for b in beats:
             all_lines.setdefault(sw._norm_text(b.get("text")).strip(".!?~"), set()).add(w["work_id"])

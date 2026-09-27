@@ -53,7 +53,7 @@ def test_seed_content_hits_ignore_product_words():
 # ── 한 번 호출 작가(write_styled, 2026-09-27) ─────────────────────────────────────────────
 SEED = "개발자도 예상 못한 한국 주부의 활용법 평범한 필름지처럼 보이는 이 제품으로 리모컨을 감싸 드라이어를 쏘면 딱 달라붙는다는데 이건 바로 열수축 필름."
 SPINE = {"id": 74, "name": "유튜브 「OO의 정체」", "no_cta": True, "beat_roles": ["title", "bait", "reveal", "twist"],
-         "templates": {"title": ["{나라} 천재가 만든 이 제품의 정체"], "bait": ["요즘 난리라는데"]}}
+         "templates": {"title": ["{나라} 천재가 만든 이 제품의 정체"], "reveal": ["이건 바로 {제품}"]}}
 
 
 def _styled_job():
@@ -157,21 +157,21 @@ def test_short_seed_flow_is_not_dropped_but_length_is_checked():
 
 
 def test_template_copy_is_a_problem_but_skeleton_variant_is_not():
-    """2026-09-27 사장님: 뼈대는 같아도 말을 바꾸면 다른 내용처럼 보인다 — 예시 문장 통째 옮김만 잡는다."""
-    sp = {"id": 59, "name": "사회증거형", "beat_roles": ["hook", "proof", "cta"],
-          "templates": {"hook": ["이거 모르면 진짜 손해예요"], "proof": ["주변에서 하나둘 다 이거 쓰길래 저만 모르나 싶었어요"],
-                        "cta": ["궁금하면 댓글에 '나도' 남겨주세요"]}}
+    """2026-09-27 사장님: 뼈대는 같아도 말을 바꾸면 다른 내용처럼 보인다 — 예시 문장 통째 옮김만 잡는다(공통 칸이 아닌 칸)."""
+    sp = {"id": 59, "name": "사회증거형", "beat_roles": ["problem", "ease", "result"],
+          "templates": {"problem": ["예전엔 이것 때문에 매번 난리법석이었거든요"], "ease": ["그냥 놓기만 하면 되니까 너무 편하더라고요"],
+                        "result": ["진짜 금방 끝나는 거 있죠"]}}
     frame = sw.frame_of(sp)
 
     def run(texts):
         out = {"seed_points": [], "lines": [{"role": r, "text": t, "cuts": ["MAT-1"]}
-                                            for r, t in zip(["hook", "proof", "proof", "cta"], texts)]}
+                                            for r, t in zip(["problem", "ease", "ease", "result"], texts)]}
         return [p for p in sw.styled_problems(out, frame, {"MAT-1": {}}, seconds=8) if "틀 예시" in p]
-    copied = run(["이거 모르면 진짜 손해예요", "주변에서 하나둘 다 이거 쓰길래 저만 모르나 싶었거든요",
-                  "아이 들어 올려서 착 얹으면 끝이라 편하더라고요", "궁금하면 댓글에 '나도' 남겨주세요"])
+    copied = run(["예전엔 이것 때문에 매번 난리법석이었거든요", "그냥 놓기만 하면 되니까 너무 편하더라고요",
+                  "아이 들어 올려서 착 얹으면 끝이라 편하더라고요", "진짜 금방 끝나는 거 있죠"])
     assert len(copied) == 3 and copied[0].startswith("1번") and copied[1].startswith("2번")
-    varied = run(["이거 모르고 애 안았다간 허리 나가요", "주변 육아 아빠들이 다 이거 쓰길래 저도 궁금해서 봤거든요",
-                  "아이 들어 올려서 착 얹으면 끝이라 편하더라고요", "목마 궁금한 분은 댓글에 아빠 남겨주세요"])
+    varied = run(["예전엔 애 안고 청소하다 허리가 나갔거든요", "어깨에 척 올리면 끝이라 손이 자유롭더라고요",
+                  "아이 들어 올려서 착 얹으면 끝이라 편하더라고요", "빨래 개는 동안 애가 웃고 있는 거 있죠"])
     assert varied == []
 
 
@@ -185,3 +185,44 @@ def test_youtube_idioms_are_kept_not_flagged():
     assert not any("틀 예시" in p for p in sw.styled_problems(out, sw.frame_of(yt), {"MAT-1": {}}, seconds=3))
     ig = dict(yt, no_cta=False)
     assert any("틀 예시" in p for p in sw.styled_problems(out, sw.frame_of(ig), {"MAT-1": {}}, seconds=3))
+
+
+# ── 공통 문구 자산(2026-09-27) ────────────────────────────────────────────────
+YT_SP = {"id": 70, "name": "유튜브 「OO의 정체」", "no_cta": True, "beat_roles": ["title", "bait", "reveal", "land"],
+         "templates": {"title": ["{대상}이 더 많이 쓰는 {제품}의 정체"], "bait": ["요새 이 {제품군} 하나로 SNS가 뒤집어졌다는데"],
+                       "reveal": ["이건 바로 {제품}"], "land": ["이러니 떼돈을 벌었다고", "완벽하다고"]}}
+
+
+def test_common_lines_rotate_over_examples_and_bank(monkeypatch):
+    """사장님: 공통 칸은 자산(예시+변형)에서 작업마다 순번으로 — 모델에게 맡기면 첫 번째만 쓴다."""
+    monkeypatch.setattr(sw, "_BANK", {"이러니 떼돈을 벌었다고": ["이러니 돈방석에 앉았다고", "이러니 대박이 났다고"]})
+    assert sw.common_pool(YT_SP, "land") == ["이러니 떼돈을 벌었다고", "이러니 돈방석에 앉았다고", "이러니 대박이 났다고", "완벽하다고"]
+    picks = [sw.common_lines(YT_SP, "job%d" % i)["land"] for i in range(40)]
+    assert len(set(picks)) == 4, "40작업이면 후보 4개가 다 나와야 한다"
+    assert sw.common_lines(YT_SP, "job7") == sw.common_lines(YT_SP, "job7"), "같은 작업은 늘 같은 문장"
+    assert set(sw.common_lines(YT_SP, "x")) == {"bait", "land"}, "제품과 관련된 칸(title·reveal)은 고정하지 않는다"
+
+
+def test_pinned_line_is_enforced_and_real_names_flagged(monkeypatch):
+    monkeypatch.setattr(sw, "_BANK", {})
+    frame = sw.frame_of(YT_SP, "k")
+    land = frame["pinned"]["land"]
+    assert "【고정】" in frame["block"]
+    out = {"seed_points": [], "lines": [
+        {"role": "title", "text": "백종원도 감탄한 필름의 정체", "cuts": ["MAT-1"]},
+        {"role": "bait", "text": "요새 이 필름 하나로 SNS가 뒤집어졌다는데", "cuts": ["MAT-1"]},
+        {"role": "reveal", "text": "이건 바로 열수축 필름", "cuts": ["MAT-1"]},
+        {"role": "land", "text": "다들 난리 난 이유가 있다니까", "cuts": ["MAT-1"]}]}
+    probs = sw.styled_problems(out, frame, {"MAT-1": {}}, seconds=5)
+    assert any("실존 인물" in p for p in probs)
+    assert any(p.startswith("land 칸은 고정 문장") for p in probs)
+    assert not any(p.startswith("bait 칸은") for p in probs), "빈칸만 채운 고정 문장은 통과"
+    prompts = []
+
+    def call(prompt, schema, note=None, model=None, vertex=True):
+        prompts.append(prompt)
+        return {"seed_points": [], "lines": [dict(L) for L in out["lines"]]}
+    monkeypatch.setattr(sw._sg, "_call_json", call)
+    n = {}
+    lines = sw.write_styled("열수축 필름", SEED, frame, [], {"MAT-1": {"secs": 3}}, seconds=5, note=n)
+    assert lines[-1]["text"] == land and n["pinned_fixed"] == 1, "빈칸 없는 고정 문장은 코드가 끼운다"
