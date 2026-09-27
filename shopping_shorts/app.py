@@ -19,6 +19,7 @@ import socket
 import tempfile
 import time
 import urllib.parse
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -5469,6 +5470,16 @@ def api_mix_product(body: dict):
     # 등록완료 체크는 저장할 때마다 초기화하지 않는다 — 링크만 고쳤는데 "인포크에
     # 이미 올렸다"는 사실이 지워지면 사장님이 중복 등록하게 된다.
     prev = job.get("product") or {}
+    # ★상품 이미지(2026-09-27) — 인포크에 올릴 그림. 검색 카드에서 고른 이미지는 **같은 상품번호일 때만** 믿는다.
+    _given = body.get("image") if str(body.get("image_pid") or "") == str(product.get("product_id")) else ""
+    if not _given and str(prev.get("product_id") or "") == str(product.get("product_id")):
+        _given = prev.get("image") or ""
+    # 키는 검색과 같은 규칙(_coupang_search_creds) — 회원 키 없으면 사장님 키로 **이미지만** 찾는다(링크는 안 가져온다)
+    from shopping_shorts import keyctx as _kc3
+    _iak, _isk, _ish = _coupang_search_creds(_kc3.owner_cid())
+    product["image"] = coupang_partners.product_image(
+        product.get("product_id"), product.get("name"), _given, _iak, _isk,
+        customer_id=(None if _ish else _kc3.owner_cid()))
     product["inpock_registered"] = bool(
         body.get("inpock_registered", prev.get("inpock_registered", False)))
     # ── 인포크 번호는 **사람이 넣는다** (2026-08-28 사장님 "수정버튼만 만들어주고
@@ -5917,6 +5928,45 @@ def api_coupang_relay_status():
     st["mode"] = config.COUPANG_SEARCH_MODE
     st["configured"] = bool(config.COUPANG_RELAY_TOKEN)
     return st
+
+
+@app.get("/api/mix/product/{job_id}/image")
+def api_mix_product_image(job_id: str):
+    """인포크에 올릴 상품 이미지를 **파일로** 내려준다(2026-09-27 김형관님).
+    고객이 쿠팡 상품 페이지를 열면 봇 차단(Akamai Access Denied)에 걸려 이미지를 못 구했다.
+    이미지 서버(coupangcdn.com)는 막히지 않아 서버가 대신 받아 준다. 대상은 그 호스트뿐(SSRF 방지).
+    저장된 이미지가 없으면(이 기능 전 작업) 여기서 한 번 찾아 저장한다 — 판단은 coupang_partners.product_image."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("product"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "확정된 상품이 없어요"})
+    product = dict(job["product"])
+    img = product.get("image") or ""
+    if not coupang_partners.is_product_image_url(img):
+        from shopping_shorts import keyctx as _kc4
+        _iak, _isk, _ish = _coupang_search_creds(_kc4.owner_cid())   # 검색과 같은 규칙(회원 키 없으면 사장님 키로 이미지만)
+        img = coupang_partners.product_image(product.get("product_id"), product.get("name"), "",
+                                             _iak, _isk, customer_id=(None if _ish else _kc4.owner_cid()))
+        if img:
+            product["image"] = img
+            store.set_mix_product(job_id, product)
+    if not img:
+        return JSONResponse(status_code=404, content={
+            "ok": False, "error": "상품 이미지를 찾지 못했어요 — 쿠팡 검색에서 상품을 다시 골라 주세요"})
+    try:
+        req = urllib.request.Request(img, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://www.coupang.com/"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = r.read(8 * 1024 * 1024)
+            ctype = r.headers.get("Content-Type") or "image/jpeg"
+    except Exception as e:                                  # noqa: BLE001
+        print(f"[product_image] 받기 실패 job={job_id} err={e!r}", file=sys.stderr)
+        return JSONResponse(status_code=502, content={"ok": False, "error": "쿠팡 이미지 서버에서 받지 못했어요 — 잠시 뒤 다시"})
+    ext = ".png" if "png" in ctype else (".webp" if "webp" in ctype else ".jpg")
+    stem = str(product.get("inpock_number") or product.get("product_id") or "product")
+    fname = f"coupang_{stem}{ext}"
+    return Response(content=data, media_type=ctype,
+                    headers={"Content-Disposition": f'attachment; filename="{fname}"',
+                             "Cache-Control": "no-store"})
 
 
 @app.get("/api/mix/product/{job_id}")

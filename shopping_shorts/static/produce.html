@@ -10093,6 +10093,13 @@ function coupangDmSet(){
       <button class="btn-next" style="padding:5px 11px;font-size:11px"
               onclick="saveInpockNumber()">번호 저장</button>
     </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+      <span class="hint" style="min-width:74px">상품 이미지</span>
+      ${p.image?`<img src="${esc(p.image)}" alt="" style="width:64px;height:64px;object-fit:contain;background:#fff;border-radius:6px">`:''}
+      <a class="btn-prev" style="padding:5px 11px;font-size:11px;text-decoration:none"
+         href="/api/mix/product/${encodeURIComponent(MIX_JOB||'')}/image" download
+         title="인포크에 올릴 상품 이미지를 파일로 받습니다(쿠팡 상품 페이지를 열 필요 없음)">⬇ 이미지 저장</a>
+    </div>
     ${row('등록 이름', d.listing_name)}
     ${row('DM 타이틀', d.dm_title)}
     ${row('버튼 이름', d.dm_button)}
@@ -10262,6 +10269,8 @@ function coupangPick(i){
   if(url) url.value=it.url;
   if(name) name.value=it.name;
   if(pu && it.partner_url) pu.value=it.partner_url;   // API 검색 카드엔 내 추적 링크가 이미 붙어 있다(2026-09-04)
+  // ★고른 카드의 이미지(2026-09-27) — 서버는 같은 상품번호일 때만 믿는다(image_pid)
+  COUPANG.pickImage={image:it.image||'', pid:String(it.product_id||'')};
   coupangSave();
 }
 // 🔗 파트너스에서 링크 만들기 — 상품 URL을 클립보드에 담고 파트너스 링크 생성화면을 연다.
@@ -10297,6 +10306,7 @@ async function coupangSave(opts){
     body.name=((document.getElementById('cpName')||{}).value||'').trim();
     body.partner_url=((document.getElementById('cpPartner')||{}).value||'').trim();
     body.keyword=COUPANG.target;
+    if(COUPANG.pickImage){ body.image=COUPANG.pickImage.image; body.image_pid=COUPANG.pickImage.pid; }
     // 파트너스 링크만 있어도 저장 가능 — 그게 최종 링크라 원본 상품 URL이 없어도 된다.
     if(!body.url && body.partner_url) body.url=body.partner_url;
     if(!body.url){ if(msg) msg.textContent='상품 URL을 넣으세요'; return; }
