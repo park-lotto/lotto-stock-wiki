@@ -183,7 +183,7 @@
  <div class="wrap">
   <div class="head">
     <h2>👤 마이페이지</h2>
-    <div class="desc">내 이용권과 포인트를 확인하고, 원하시면 내 API 키를 등록해 포인트를 아낄 수 있습니다.</div>
+    <div class="desc">내 이용권과 하루 이용 한도를 확인하고, 필요한 API 키를 등록할 수 있습니다.</div>
   </div>
 
   <div class="tabs">
@@ -191,7 +191,6 @@
          제일 먼저 뜨게"). 처음 오신 분에겐 이 탭이 기본으로 열린다(아래 FIRST_KEY). -->
     <button class="tab on" id="tabSetup" onclick="showTab('setup')">📖 설치와 준비</button>
     <button class="tab" id="tabAccount" onclick="showTab('account')">👤 내 계정</button>
-    <button class="tab" id="tabPoints" onclick="showTab('points')">💎 포인트</button>
     <button class="tab" id="tabKeys" onclick="showTab('keys')">🔑 내 키 등록</button>
   </div>
 
@@ -207,7 +206,7 @@
          마이페이지 안에서 스크롤이 두 겹이 된다. 여기서는 **무엇을 해야 하는지만** 보이고,
          실제 내용은 각 카드가 /setup 의 해당 대목으로 데려간다(내용은 여전히 한 곳). -->
     <div class="setupIntro">
-      가입과 동시에 <b>체험이 시작되고 포인트 50P</b>가 들어가 있습니다.
+      가입하시면 바로 <b>체험이 시작</b>됩니다.
       아래 <b>①②</b>만 해두시면 바로 영상을 만드실 수 있어요. ③④는 원하실 때 하시면 됩니다.
     </div>
 
@@ -229,7 +228,7 @@
       <a class="scard" href="/setup#api" target="_blank" rel="noopener">
         <div class="scardTop"><span class="scardNo">③</span><span class="scardTag opt">선택</span></div>
         <div class="scardTitle">🔑 API 키 발급</div>
-        <div class="scardDesc">등록하면 그 작업은 포인트가 안 깎입니다. 안 하셔도 포인트로 그대로 쓰실 수 있어요.</div>
+        <div class="scardDesc">쓰실 기능의 키만 받으시면 됩니다. 자막 지우기·목소리·SNS 예약은 내 키가 있어야 쓸 수 있어요.</div>
         <div class="scardGo">어떤 키가 있는지 보기 →</div>
       </a>
 
@@ -247,12 +246,6 @@
         <div class="scardGo">안내 보기 →</div>
       </a>
 
-      <a class="scard" href="/setup#points" target="_blank" rel="noopener">
-        <div class="scardTop"><span class="scardNo">⑥</span><span class="scardTag">참고</span></div>
-        <div class="scardTitle">💎 포인트가 얼마나 드나</div>
-        <div class="scardDesc">영상 1편 3P · 자막 지우기 5P · 목소리 1P. 실패하면 자동 환불됩니다.</div>
-        <div class="scardGo">단가표 보기 →</div>
-      </a>
     </div>
 
     <div class="setupFoot">
@@ -330,67 +323,11 @@
     </form>
   </section>
 
-  <!-- ═══════ 💎 포인트 ═══════ -->
-  <section class="pane" id="panePoints">
-    <div class="balCard">
-      <div class="lbl">남은 포인트</div>
-      <div class="balRow">
-        <div class="balNum"><span id="balNum">–</span><span class="unit">P</span></div>
-        <button class="btn btn-mint" onclick="askCharge()">＋ 충전</button>
-      </div>
-      <div class="balSub" id="balSub">불러오는 중…</div>
-    </div>
-
-    <div class="secTitle">무엇에 얼마가 드나요</div>
-    <div class="secDesc">저희가 외부에 내는 실제 요금만큼만 받습니다.</div>
-
-    <div class="priceBig">
-      <div class="priceHead">
-        <div class="priceName">🎬 자막 지우기</div>
-        <div class="priceCost"><span id="pVmake">–</span> P</div>
-      </div>
-      <div class="priceWhy">VMake AI에 영상 1편당 요금 발생</div>
-      <button class="freeBadge" onclick="showTab('keys')">🔑 내 VMake 키 등록하면 0 P</button>
-    </div>
-
-    <div class="priceBig">
-      <div class="priceHead">
-        <div class="priceName">🎞️ 영상 제작 (1편 완성)</div>
-        <div class="priceCost"><span id="pMix">–</span> P</div>
-      </div>
-      <div class="priceWhy">대본 + 목소리 + 합성까지 한 번에</div>
-      <!-- ★"구글·목소리 키 등록하면 0P"는 사실이 아니었다(2026-08-17). 그 키들은
-           저장만 되고 실제 호출엔 안 쓰여서, 면제만 해주면 회사 키로 돌면서 돈은
-           안 받는 구멍이 된다. 배선이 끝나면 그때 이 문구를 되살린다. -->
-    </div>
-
-    <div class="secTitle">그 밖에</div>
-    <div class="secDesc">작은 작업들입니다.</div>
-    <div class="misc">
-      <div class="miscRow"><span>🔊 목소리 만들기</span><span class="miscCost"><span id="pTts">–</span> P</span></div>
-      <div class="miscRow"><span>🔎 렌즈로 찾기</span><span class="miscCost"><span id="pLens">–</span> P</span></div>
-      <div class="miscRow"><span>📝 대본 뽑기</span><span class="miscCost"><span id="pScript">–</span> P</span></div>
-    </div>
-
-    <div class="freeLine">✓ 영상 찾기 · 즐겨찾기 · 내보내기는 무료</div>
-    <div class="weBear">수집·태깅처럼 저희가 알아서 도는 작업은 회사가 부담합니다.</div>
-
-    <div class="msg err" id="pointsErr"></div>
-
-    <div class="notice">
-      <ul>
-        <li>포인트는 충전해서 사용하며, 원칙적으로 환불되지 않습니다</li>
-        <li>서비스 오류로 잘못 차감된 포인트는 확인 후 복구해 드립니다</li>
-        <li>포인트 차감 정책은 변경될 수 있습니다</li>
-      </ul>
-    </div>
-  </section>
-
   <!-- ═══════ 🔑 내 키 등록 ═══════ -->
   <section class="pane" id="paneKeys">
     <div class="hint">
-      💡 등록하면 그 작업은 포인트가 안 깎입니다.<br/>
-      <b>안 하셔도 포인트로 그냥 쓰실 수 있어요.</b>
+      💡 쓰실 기능의 키만 등록하시면 됩니다.<br/>
+      <b>「내 키 필요」로 표시된 기능</b>(자막 지우기·목소리·SNS 예약)은 키를 등록해야 쓸 수 있어요.
     </div>
     <!-- ★관리자(cid 0) 세션 안내. keyroute가 이 세션의 등록 키를 조회조차 안 하므로
          등록칸을 감추고 이유를 밝힌다 — 저장되는 척하면 안 된다(2026-08-17 실사고). -->
@@ -401,20 +338,17 @@
     </div>
     <div class="warnBox" id="keysDisabled" style="display:none">
       지금은 키 등록을 받을 수 없습니다. 잠시 후 다시 시도하시거나 관리자에게 문의해 주세요.
-      그동안에도 포인트로 모든 기능을 그대로 쓰실 수 있습니다.
     </div>
     <!-- ★내 구글 Vertex 연결(2026-09-26) — 서비스계정 JSON 하나로 대본·장면매칭(3.6)과 AI 장면생성(Veo)을
          내 구글 비용으로. 저장·확인·판정은 서버(/api/settings/vertex, vertex_route) 한 곳 — 여기는 보여주기만. -->
     <div class="svcCard" id="vertexCard" style="margin:0 0 14px;display:none">
-      <h3 style="margin:0 0 6px;font-size:16px">🚀 내 구글 Vertex 연결 <span style="font-size:12px;opacity:.7">(선택)</span></h3>
+      <h3 style="margin:0 0 6px;font-size:16px">🚀 구글 버텍스 API</h3>
       <p style="margin:0 0 10px;font-size:13px;line-height:1.7;opacity:.9">
-        연결하면 <b>대본 쓰기와 장면 매칭</b>이 내 구글 Vertex(Gemini 3.6)로 돌아가
-        <b>대본 품질이 올라가고 오류가 거의 없어집니다.</b><br/>
-        기존 무료 제미나이는 사람이 몰리는 시간(특히 밤)에 <b>오류가 자주 생겨</b> 대본이 안 나오거나
-        한 안만 나오는 일이 있었어요. 연결하면 그 부분이 내 계정으로 따로 돌아가 이런 일이 사라집니다.<br/>
-        <b>AI 장면 생성</b>도 이 연결로 쓸 수 있어요. 비용은 <b>내 구글 계정</b>에서 나갑니다 —
-        처음 가입하면 <b>무료 체험 $300(90일)</b>이 들어와요.<br/>
-        <span style="opacity:.75">안 하셔도 지금처럼 무료 제미나이로 그대로 쓰실 수 있습니다.</span>
+        <b>대본 쓰기와 장면 매칭</b>을 내 구글 버텍스(Gemini 3.6)로 돌립니다.<br/>
+        무료 제미나이는 <b>오류와 버그가 자주 생겨</b> 대본이 안 나오거나 한 안만 나오는 일이 있습니다.
+        버텍스로 돌리면 <b>대본 품질이 올라가고 오류가 거의 없어집니다.</b><br/>
+        <b>AI 장면 생성</b>도 이 API로 씁니다. 비용은 <b>내 구글 계정</b>에서 나가며,
+        처음 가입하면 <b>무료 체험 $300(90일)</b>이 들어옵니다.
       </p>
       <div id="vertexState" style="margin:0 0 10px;font-size:14px"></div>
       <div id="vertexForm">
@@ -536,7 +470,7 @@ var STATUS = {
   unknown: { cls: "unknown", text: "● 확인 전" }
 };
 
-var PRICES = {};      // 포인트 탭에서 받은 단가(키 카드의 "1편당 N P가 0P로"에 쓴다)
+var PRICES = {};      // 옛 포인트 단가 자리 — 2026-09-27 포인트 탭 삭제로 늘 비어 있다(키 카드의 "NP→0P" 문구가 안 뜬다)
 /* ★제미니 키 건강(2026-09-25) — 서버(/api/settings/keys의 gemini_health)가 판정·문구를 준다.
    선불 소진·월 한도·할당량 0·무효 키가 '● 정상'으로 떠 있던 사고를 막는다. 화면은 옮기기만 한다. */
 var GEMINI_HEALTH = null;
@@ -559,7 +493,6 @@ function el(id){ return document.getElementById(id); }
 /* ── 알림 모달 (alert 대체) ─────────────────────────── */
 function notice(text){ el("noticeText").textContent = text; el("noticeBg").classList.add("on"); }
 function closeNotice(){ el("noticeBg").classList.remove("on"); }
-function askCharge(){ notice("충전은 준비 중입니다. 관리자에게 문의해 주세요."); }
 function askGuide(svc){
   var url = GUIDE_VIDEO[svc];
   if (url) { window.open(url, "_blank", "noopener"); return; }
@@ -572,7 +505,6 @@ function askGuide(svc){
 var TABS = [
   { key: "setup",   pane: "paneSetup",   tab: "tabSetup"   },
   { key: "account", pane: "paneAccount", tab: "tabAccount" },
-  { key: "points",  pane: "panePoints",  tab: "tabPoints"  },
   { key: "keys",    pane: "paneKeys",    tab: "tabKeys"    }
 ];
 function showTab(which){
@@ -632,31 +564,6 @@ function postJSON(url, body){
 function num(v){ return (v == null) ? "–" : Number(v).toLocaleString("ko-KR"); }
 // 하루 한도 표시 — null은 '무제한'이다(관리자). num()의 "–"와 뜻이 달라 따로 쓴다.
 function lim(v){ return (v == null) ? "무제한" : Number(v).toLocaleString("ko-KR"); }
-
-async function loadPoints(){
-  clearErr("pointsErr");
-  try {
-    var d = await getJSON("/api/settings/points");
-    PRICES = d.prices || {};
-    el("balNum").textContent = num(d.balance);
-    /* "자막 지우기 N편 분량" — 0으로 나누지 않는다. 단가가 0이거나 없으면 문구를 감춘다. */
-    var vp = Number(PRICES.vmake);
-    if (vp > 0 && d.balance != null) {
-      el("balSub").textContent = "자막 지우기 " + Math.floor(Number(d.balance) / vp).toLocaleString("ko-KR") + "편 분량";
-    } else {
-      el("balSub").textContent = "";
-    }
-    el("pVmake").textContent  = num(PRICES.vmake);
-    el("pMix").textContent    = num(PRICES.mix);
-    el("pTts").textContent    = num(PRICES.tts);
-    el("pLens").textContent   = num(PRICES.lens);
-    el("pScript").textContent = num(PRICES.script);
-    renderKeys(null);   // 단가가 들어왔으니 키 카드의 "N P가 0P로" 문구를 갱신
-  } catch (e) {
-    el("balSub").textContent = "";
-    showErr("pointsErr", "포인트를 불러오지 못했습니다: " + e.message);
-  }
-}
 
 /* ── 🔑 내 키 등록 ──────────────────────────────────── */
 var KEYS = [];   // [{id,service,label,status,...}]
@@ -812,7 +719,7 @@ function renderKeys(){
       /* ★아직 배선 안 된 서비스는 사실대로 말한다. "등록하면 0P"만 띄우면
          등록해도 아무 일이 안 일어나는데 된 줄 안다(2026-08-17 실사고). */
       (WIRED.indexOf(s.id) < 0
-        ? '<div class="warnBox" style="display:block;margin:8px 0">준비 중입니다 — 지금 등록하시면 저장은 되지만 <b>아직 실제 작업에는 쓰이지 않습니다.</b> 그동안은 포인트로 그대로 쓰실 수 있습니다.</div>'
+        ? '<div class="warnBox" style="display:block;margin:8px 0">준비 중입니다 — 지금 등록하시면 저장은 되지만 <b>아직 실제 작업에는 쓰이지 않습니다.</b></div>'
         : '') +
       /* ★2026-09-26 사장님: API 키 화면에 "공용 키 묶음" 설명(SPARE_KEY_TIP)을 쓰지 않는다 — 상자 삭제.
          멈춘 키 안내(geminiWhy)·배지는 그대로 둔다. */
@@ -919,12 +826,11 @@ function addResultText(svc, res){
   }
   if (empty && !good) {
     return "⚠️ 키는 맞는데 이번 달 무료분을 다 썼습니다.\n\n" +
-           "다음 달에 다시 채워지고, 그때까지는 포인트로 그냥 쓰실 수 있습니다.";
+           "다음 달에 다시 채워집니다.";
   }
   var head = "✅ 테스트 통과 — " + name + " 키가 정상 작동합니다.\n\n";
-  var body = (s.freeOp && PRICES[s.freeOp] != null)
-    ? "이제 이 작업은 포인트가 안 깎입니다 (" + num(PRICES[s.freeOp]) + "P → 0P)."
-    : "이제 이 작업은 사장님 키 대신 내 키로 돕니다.";
+  // ★포인트 제도 정리(2026-09-27 사장님: 렌즈·렌더 하루 10회만 남김) — 포인트 문구를 쓰지 않는다.
+  var body = "이제 이 작업은 내 키로 돕니다.";
   if (bad || empty || paused || busy) {
     body += "\n\n다만 " + res.length + "개 중 " + good + "개만 정상입니다" +
             (empty ? " (" + empty + "개는 무료분 소진)" : "") +
@@ -1103,7 +1009,6 @@ async function loadAccount(){
 }
 
 loadAccount();
-loadPoints();
 loadKeys();
 loadVertex();
 </script>
