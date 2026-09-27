@@ -113,7 +113,7 @@ def test_veo_uses_member_project_admin_owner_and_blocks_others(monkeypatch):
     assert vr.veo_client(204) is None
     assert vr.veo_allowed(205) == (True, "") and vr.veo_allowed(0) == (True, "")
     ok, why = vr.veo_allowed(204)
-    assert ok is False and "Vertex를 등록" in why
+    assert ok is False and "버텍스 API를 등록" in why
 
 
 def test_run_ai_scene_refuses_without_member_vertex(monkeypatch, tmp_path):
@@ -144,7 +144,7 @@ def test_run_ai_scene_refuses_without_member_vertex(monkeypatch, tmp_path):
     assert ai_scene.run_ai_scene("j1", 0, "natural", "db", str(tmp_path)) is None
     assert not called, "등록 안 한 회원인데 Veo를 불렀다"
     st = states["plan"]["beats"][0]["ai_scene"]
-    assert st["state"] == "failed" and "Vertex를 등록" in st["error"]
+    assert st["state"] == "failed" and "버텍스 API를 등록" in st["error"]
 
 
 def test_ai_scene_button_only_for_registered_members_when_switch_open(monkeypatch):

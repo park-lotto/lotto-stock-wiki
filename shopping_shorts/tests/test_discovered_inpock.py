@@ -55,8 +55,9 @@ def test_판독_프롬프트는_글이_힌트를_이긴다():
 def test_화면_계약_대본검색_버튼과_회색제거():
     idx = (ROOT / "static" / "index.html").read_text(encoding="utf-8")
     sb = (ROOT / "static" / "sidebar.js").read_text(encoding="utf-8")
-    assert "ssCoupangFind.script(" in idx and "쿠팡 대본검색" in idx
-    assert ".btns .cp-script-btn{grid-column:1/-1" in idx
+    # 카드의 🎬 쿠팡 대본검색은 뺐다(2026-09-27 사장님) — 쿠팡검색 결과를 본 뒤 창 안 「대본으로 다시 찾기」로 간다
+    assert "cp-script-btn" not in idx and "쿠팡 대본검색" not in idx
+    assert "window.ssCoupangFind.deep()" in sb, "창 안 대본 버튼은 남아야 한다"
     assert "window.ssCoupangFind.script = function" in sb
     assert "opts.deep && _cfState.sc) _cfDeep()" in sb
     assert 'btn.setAttribute("data-noproduct", "1")' not in sb, "회색 '살 물건 없음' 처리는 뺐다"

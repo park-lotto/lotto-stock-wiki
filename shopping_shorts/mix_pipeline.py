@@ -4552,6 +4552,14 @@ def clean_compare_clips(job, work):
         tts = tts_paths_of(plan)
         # 스냅샷이면 청소 그때 고른 장면, 아니면 지금 job의 선택(지금 서명 파일 = 지금 선택으로 만든 것)
         _sel = plan.get("_clean_sel") if "_clean_sel" in plan else clean_selection_of(job)
+        # ★정본이 있고 그 파일을 비교하는 중이면 좌표는 정본 지도(보정 off 포함)로 — clean_base.cut_span_in_clean 한 곳
+        _base = None
+        try:
+            _bb = clean_base_for(job, work)
+            if _bb is not None and out["clean_path"] and Path(_bb["path"]) == Path(out["clean_path"]):
+                _base = _bb
+        except Exception:      # noqa: BLE001 — 정본을 못 읽으면 종전 좌표(fin)로
+            _base = None
         clips = []
         for i, c in enumerate(final_clip_pairs(plan, tts, _src_durs_for(job, work))):
             vid = c.get("video_id") or ""
@@ -4559,8 +4567,17 @@ def clean_compare_clips(job, work):
                 si = int(str(vid)[1:]) if str(vid).startswith("s") else None
             except ValueError:
                 si = None
+            fin, dur = c["fin"], c["dur"]
+            if _base is not None:
+                from shopping_shorts import clean_base as _cbm
+                _bc = (_base.get("cuts") or [])
+                # 같은 컷인지 확인(번호·소스·원본 시각) — 지도가 다른 편성이면 종전 좌표를 둔다
+                if i < len(_bc) and str(_bc[i].get("video_id")) == str(vid) and abs(float(_bc[i].get("src") or 0) - float(c["src"])) < _SEL_TOL:
+                    _sp = _cbm.cut_span_in_clean(_base, i)
+                    if _sp:
+                        fin, dur = _sp[0], max(0.05, _sp[1] - _sp[0])
             clips.append({"ci": i, "si": si, "video_id": vid, "beat_idx": c.get("beat_idx"),
-                          "src": c["src"], "fin": c["fin"], "dur": c["dur"],
+                          "src": c["src"], "fin": fin, "dur": dur,
                           # 고른 장면만 지웠으면 안 고른 컷은 원본 그대로다 — 화면이 그 사실을 말한다
                           "cleaned": cut_selected(c, _sel)})
         out["clips"] = clips

@@ -549,6 +549,19 @@ def _clean_span(base, c):
     return t0, t0 + (ce - cs) * k
 
 
+def cut_span_in_clean(base, i):
+    """정본 컷 i 가 청소본에서 차지하는 (시작, 끝) 초 — **화면(전/후 비교)도 이걸로 좌표를 잡는다**.
+
+    ★왜(2026-09-27 사장님 화면): 옛 청소본은 칸마다 프레임 올림이 누적돼 지도(fin)보다 최대 0.33초 늦게 들어 있다.
+      렌더는 calibrate 가 잰 off 로 맞추는데(_cut_geom), 비교 화면은 fin 을 그대로 써서 샷 전환에 걸린 컷이
+      '다른 장면'으로 보였다(8c63b0691924 컷2: +0.13초). 판단은 여기 한 곳 — 화면은 계산하지 않고 부른다.
+    없는 번호면 None."""
+    cuts = base.get("cuts") or []
+    if not (0 <= int(i) < len(cuts)):
+        return None
+    return _clean_span(base, cuts[int(i)])
+
+
 SPAN_TOL = 0.12         # 이만큼 이하 틈은 이어 붙인다(프레임 반올림) — 그보다 크면 못 덮은 것
 
 
