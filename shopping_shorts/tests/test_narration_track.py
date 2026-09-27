@@ -105,7 +105,7 @@ def _plan():
 
 
 def _patch(monkeypatch, mod=va):
-    def _one(beat, tts_dur, srcd, runout=0.0):
+    def _one(beat, tts_dur, srcd, runout=0.0, **_kw):   # render_cut_plan 이 넘기는 추가 인자(screen=) 수용
         vid = beat["primary"]["video_id"]
         return [{"video_id": vid, "seg_id": vid + "-0", "start": 0.2, "src_dur": tts_dur, "out_dur": tts_dur}]
     monkeypatch.setattr(mod, "plan_beat_clips_for", _one)

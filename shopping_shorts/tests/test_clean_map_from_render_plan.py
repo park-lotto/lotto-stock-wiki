@@ -133,34 +133,57 @@ def test_clean_assembly_warms_screen_cuts_first(tmp_path, env):
 
 # ── 이미 틀리게 만든 정본을 판정 입구가 스스로 바로잡는다(스냅샷 편성에서 유도) ─────────────────────────
 
+def _mkv(path, dur, hue=0):
+    import subprocess
+    vf = "hue=h=%d" % hue if hue else "null"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "testsrc2=s=160x284:r=30:d=%s" % dur,
+                    "-vf", vf, "-c:v", "libx264", "-pix_fmt", "yuv420p", str(path)],
+                   check=True, capture_output=True, stdin=subprocess.DEVNULL)
+
+
 def _healing_env(tmp_path, env):
-    """work/<s0,s1>/src.mp4 + 음성 파일(길이는 가짜 probe) + 청소 당시 편성 스냅샷(final_clean_SIG.plan.json)."""
+    """실제 영상: 원본 s0(testsrc2)·s1(색 돌린 testsrc2) + 청소 당시 편성(스냅샷)의 컷 지도대로 이어 붙인 '청소본'.
+    그 뒤 편성이 바뀌어(1칸) 틀린 지도(지금 편성으로 계산)가 정본에 저장된 상황."""
+    import subprocess
     work = tmp_path / "w"
-    durs = {}
-    for v, d in _DURS.items():
+    real_probe = mp._probe_duration          # 원래 probe(env 고정물이 va._probe_duration 을 이미 바꿨다)
+    for v, d, h in (("s0", 30, 0), ("s1", 40, 120)):
         (work / v).mkdir(parents=True)
-        f = work / v / "src.mp4"
-        f.write_bytes(b"x")
-        durs[str(f)] = d
-    tts = {}
+        _mkv(work / v / "src.mp4", d, h)
+    tts, durs = {}, {}
     for i, d in enumerate((3.0, 2.5, 2.2)):
         f = tmp_path / ("b%d.mp3" % i)
         f.write_bytes(b"x")
         durs[str(f)] = d
         tts[i] = str(f)
-    env.setattr(va, "_probe_duration", lambda p: durs.get(str(p), 0.0))
+    env.setattr(va, "_probe_duration", lambda p: durs[str(p)] if str(p) in durs else real_probe(p))
     plan_old = _plan()
     for b in plan_old["beats"]:
         b["tts_path"] = tts[b["beat_idx"]]
     (work / "final_clean_SIG.plan.json").write_text(json.dumps(dict(plan_old, _clean_sel=None)), encoding="utf-8")
-    plan_new = copy.deepcopy(plan_old)                 # 청소 도중 1칸 장면을 바꿨다
+    plan_new = copy.deepcopy(plan_old)                 # 청소 도중 2칸 장면을 바꿨다
     plan_new["beats"][1]["primary"] = {"video_id": "s1", "seg_id": "s1-z", "start": 33.0, "end": 36.0}
     plan_new["beats"][1].pop("alternates")
+    plan_new["beats"][2]["primary"] = {"video_id": "s0", "seg_id": "s0-y", "start": 24.0, "end": 27.0}
+    plan_new["beats"][2]["alternates"] = [{"video_id": "s1", "seg_id": "s1-y", "start": 2.0, "end": 4.0}]
     job = {"job_id": "j", "subtitle_removal": 1, "edit_plan": plan_new, "urls": ["a", "b"], "customer_id": 0}
     srcs = mp._resolve_sources(job, work)
     right = va.cut_map_of(va.render_cut_plan(plan_old, tts, srcs, screen=False))
     wrong = va.cut_map_of(va.render_cut_plan(plan_new, tts, srcs, screen=False))
-    base = {"sig": "SIG", "path": str(work / "final_clean_SIG.mp4"), "extras": {}, "frame_exact": True,
+    parts = []
+    for i, c in enumerate(right):                      # 청소본 = 스냅샷 지도대로 원본 조각을 1배속으로 이어 붙임
+        q = tmp_path / ("p%02d.mp4" % i)
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", "%.3f" % c["src"], "-i", srcs[c["video_id"]],
+                        "-frames:v", str(int(round(c["dur"] * 30))), "-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                        str(q)], check=True, capture_output=True, stdin=subprocess.DEVNULL)
+        parts.append(q)
+    lst = tmp_path / "l.txt"
+    lst.write_text("".join("file '%s'" % q.as_posix() + chr(10) for q in parts), encoding="utf-8")
+    clean = work / "final_clean_SIG.mp4"
+    r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", str(clean)],
+                       capture_output=True, stdin=subprocess.DEVNULL)
+    assert r.returncode == 0, r.stderr.decode("utf-8", "replace")[-600:]
+    base = {"sig": "SIG", "path": str(clean), "extras": {}, "frame_exact": True,
             "cuts": [dict(c, cleaned=True) for c in wrong], "beat_keys": {}}
     return work, job, base, right, wrong, tts, srcs
 
@@ -172,13 +195,15 @@ def test_heal_rederives_map_from_snapshot(tmp_path, env):
     key = lambda cs: [(c["video_id"], c["beat_idx"], round(c["src"], 3), round(c["fin"], 4)) for c in cs]  # noqa: E731
     assert key(healed["cuts"]) == key(right) and healed["cut_map"] == "snapshot"
     assert json.loads((work / "clean_base.json").read_text(encoding="utf-8"))["cut_map"] == "snapshot"
-    # 맞는 정본은 건드리지 않는다
+    assert healed["healed"]["scene_ok_new"] > healed["healed"]["scene_ok_old"]
+    # 맞는 정본은 지도를 안 바꾼다(한 번 확인했다는 표시만)
     ok = dict(base, cuts=[dict(c, cleaned=True) for c in right])
-    assert mp.heal_base_map(job, work, ok) is ok
+    kept = mp.heal_base_map(job, work, ok)
+    assert kept["cut_map"] == "verified" and kept["cuts"] == ok["cuts"]
 
 
 def test_healed_base_covers_only_unchanged_beats_with_same_scene(tmp_path, env):
-    """바로잡은 뒤: 바뀐 칸(1)은 uncovered(증분 청소 = 바뀐 장면만 과금), 안 바뀐 칸은 **같은 원본 장면**을 청소본에서 튼다.
+    """바로잡은 뒤: 바뀐 칸(1·2)은 uncovered(증분 청소 = 바뀐 장면만 과금), 안 바뀐 칸은 **같은 원본 장면**을 청소본에서 튼다.
     틀린 지도 그대로면 1칸도 '덮였다'고 보고 엉뚱한 청소본 자리를 틀었다(다른 장면)."""
     from shopping_shorts import clean_base as cb
     work, job, base, right, wrong, tts, srcs = _healing_env(tmp_path, env)
@@ -186,15 +211,15 @@ def test_healed_base_covers_only_unchanged_beats_with_same_scene(tmp_path, env):
     tts_durs = {i: va._probe_duration(tts[i]) for i in tts}
     src_durs = {v: va._probe_duration(p) for v, p in srcs.items()}
     _p, unc_wrong, _ = cb.remap_plan(plan_new, base, tts_durs=tts_durs, src_durs=src_durs)
-    assert 1 not in unc_wrong                           # 사고 모양: 틀린 지도는 바뀐 칸도 덮였다고 본다
+    assert 1 not in unc_wrong and 2 not in unc_wrong    # 사고 모양: 틀린 지도는 바뀐 칸도 덮였다고 본다
     healed = mp.heal_base_map(job, work, base)
     plan2, unc, _ = cb.remap_plan(plan_new, healed, tts_durs=tts_durs, src_durs=src_durs)
-    assert unc == [1]
+    assert unc == [1, 2]
     regs = cb._regions(healed)
     want = {bp["idx"]: [(cp["video_id"], round(cp["start"], 2)) for cp in bp["clips"]]
             for bp in va.render_cut_plan(plan_new, tts, srcs, screen=False)}
     for b in plan2["beats"]:
-        if b["beat_idx"] == 1:
+        if b["beat_idx"] in (1, 2):
             continue
         got = [(mp.clean_origin(regs, c["video_id"], c["start"], c.get("seg_id"))[0],
                 round(mp.clean_origin(regs, c["video_id"], c["start"], c.get("seg_id"))[1], 2)) for c in b["manual_cuts"]]
@@ -208,3 +233,16 @@ def test_save_base_without_assembled_map_uses_snapshot_not_current_plan(tmp_path
     saved = json.loads((work / "clean_base.json").read_text(encoding="utf-8"))
     assert saved["cut_map"] == "snapshot"
     assert [(c["video_id"], round(c["src"], 3)) for c in saved["cuts"]] == [(c["video_id"], round(c["src"], 3)) for c in right]
+
+
+def test_judge_entry_heals_before_judging(tmp_path, env):
+    """판정 입구(clean_base_judge)가 바로잡은 정본으로 판정한다 — 렌더·버튼·안내가 전부 이 입구를 지난다."""
+    from shopping_shorts import clean_base as cb
+    work, job, base, right, wrong, tts, srcs = _healing_env(tmp_path, env)
+    env.setattr(mp, "clean_base_on", lambda *a, **k: True)
+    env.setattr(cb, "load_base", lambda w: copy.deepcopy(base))
+    env.setattr(cb, "calibrate", lambda w, b, s: b)
+    env.setattr(mp, "clean_tts_durs", lambda plan: {i: va._probe_duration(tts[i]) for i in tts})
+    env.setattr(mp, "_src_durs_for", lambda job, work: {v: va._probe_duration(p) for v, p in srcs.items()})
+    out = mp.clean_base_judge(None, job, work)
+    assert out["base"].get("cut_map") == "snapshot" and out["uncovered"] == [1, 2]

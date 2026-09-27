@@ -7470,16 +7470,43 @@ def api_mix_render(request: Request, background_tasks: BackgroundTasks, body: di
     #   그대로였다. 그 사이에 [완성 영상(MP4)]을 누른 고객은 **옛 영상**을 받았고, 끝난 뒤
     #   다시 받아 "전후 영상이 둘 다 있다 · 영상이 달라졌다"가 됐다(고객 박세현 제보).
     #   비워두면 완성본 카드·다운로드·QR이 전부 자동으로 사라진다 — 막는 판단이 한 곳이다.
+    # ★돈이 나가는 자막제거는 고객 동의가 **서버에서** 있어야 한다(2026-09-27). 판정은 mix_pipeline.clean_charge_plan
+    #   한 곳(확인창 clean_base_preview·워커와 같은 함수). 과금 초 > 0 인데 confirm_clean·confirm_secs(확인창이 보여준 초)가
+    #   없거나 판정과 다르면 409 + 안내 — 상태도 안 바꾸고 청소·과금도 없다. skip_clean 은 과금 0 이라 그대로 진행.
+    _consent = _clean_consent_or_409(store, job, _MIX_WORK_DIR / job_id, body, mode="render",
+                                     skip_clean=bool(body.get("skip_clean")))
+    if isinstance(_consent, JSONResponse):
+        return _consent
     store.update_mix_job(job_id, status="rendering", error=None, video_path="")
     # ★자막제거 없이 렌더(2026-09-22 사장님): 바뀐 장면을 다시 지우지 않고 그냥 만든다 — 그 장면엔 원본 자막이 남을 수 있다.
     _args = {"job_id": job_id}
     if body.get("skip_clean"):
         _args["skip_clean"] = True
+    else:
+        _args.update(_consent)       # confirm_clean·confirm_secs — 워커가 실행 직전 같은 판정으로 다시 잰다
     Store(DB_PATH).enqueue("render", _args)
     return {"ok": True, "status": "rendering"}
 
 
 _PREVIEW_STALE_SEC = 600   # 10분 — 이보다 오래 'rendering'이면 죽은 렌더의 잔해로 본다.
+
+
+def _clean_consent_or_409(store, job, work, body, *, mode, skip_clean=False):
+    """최종 렌더·자막제거 버튼 라우트의 **고객 동의 관문**(2026-09-27) — 통과하면 큐에 실을 {confirm_clean, confirm_secs},
+    막으면 409 JSONResponse(초·크레딧·사유·문구). 판정은 mix_pipeline.clean_charge_plan / clean_consent_error 한 곳.
+    ★판정을 못 하면(예외) 금액을 모르는 것으로 보고 확인을 받는다 — 조용히 통과시키지 않는다."""
+    try:
+        plan = mix_pipeline.clean_charge_plan(store, job, work, mode=mode, skip_clean=skip_clean)
+    except Exception as e:      # noqa: BLE001 — 못 재면 '모름'으로 확인받는다(사유는 남긴다)
+        print("[clean-consent] 판정 실패(확인 받음): %r" % (e,), file=sys.stderr)
+        plan = {"mode": mode, "kind": "full", "reason": None, "seconds": None, "credits": None,
+                "tier": mix_pipeline.clean_tier_of(job), "changed": 0, "extend": 0}
+    err = mix_pipeline.clean_consent_error(plan, body.get("confirm_clean"), body.get("confirm_secs"))
+    if err:
+        return JSONResponse(status_code=409, content=dict(err, ok=False, error=err["message"]))
+    if plan.get("kind") in ("incremental", "full", "sources") and plan.get("seconds") != 0:
+        return {"confirm_clean": True, "confirm_secs": body.get("confirm_secs")}
+    return {}
 
 
 def clean_failure_kind(clean_error):
@@ -7707,14 +7734,22 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
     # ★장면 골라 지우기(2026-09-26): body.cuts = 지울 컷 키 목록(없거나 null = 전체).
     #   키 해석은 mix_pipeline.cut_selected 한 곳. 지금 편성의 컷과 하나도 안 맞으면 거절한다
     #   (돈이 나가기 전에 — 아무것도 안 지우고 과금되거나 조용히 전체를 지우면 안 된다).
+    _pick = None
     if "cuts" in body:
         _pick = _clean_cuts_from_body(job, job_id, body.get("cuts"))
         if isinstance(_pick, JSONResponse):
             return _pick
+    # ★돈이 나가기 전 고객 동의(2026-09-27) — 렌더와 같은 관문(_clean_consent_or_409 → mix_pipeline.clean_charge_plan).
+    #   고른 장면(cuts)은 아직 저장 전이라 이번 요청 값으로 잰다 — 409면 저장하지 않는다(확인 뒤 다시 보낸다).
+    _judge_job = dict(job, clean_cuts=_pick) if "cuts" in body else job
+    _consent = _clean_consent_or_409(store, _judge_job, _MIX_WORK_DIR / job_id, body, mode="button")
+    if isinstance(_consent, JSONResponse):
+        return _consent
+    if "cuts" in body:
         store.update_mix_job(job_id, clean_cuts=_pick)
     # 'cleaning'을 여기서 동기 기록(응답 전) — run 안에서 쓰면 이중예약된다(preview 라우트 주석 참조)
     store.update_mix_job(job_id, clean_status="cleaning", clean_error=None)
-    Store(DB_PATH).enqueue("clean", {"job_id": job_id})
+    Store(DB_PATH).enqueue("clean", dict({"job_id": job_id}, **_consent))
     return {"ok": True, "status": "cleaning"}
 
 
@@ -7832,8 +7867,9 @@ def api_produce_mix_clean_base_preview(job_id: str):
     ★판정은 mix_pipeline.clean_base_judge 한 곳(렌더 render_inputs_for·자막제거 버튼과 같은 함수, 2026-09-27).
     ★초수는 렌더가 실제로 업체에 보낼 초(_clean_incr_secs = incremental_clean 과 같은 식 — 늘림 여유 EXTEND_PAD 포함).
       종전엔 remap_plan을 여기서 따로 부르고 여유를 빼 안내가 실제보다 짧았다(실측 안내 152.6초 vs 실제 204.6초).
-    ★렌더는 정본의 등급·고른 장면(clean_base_fits)을 보지 않고 증분만 한다(render_inputs_for) — 그래서 여기도 fits로
-      전체 청소 초를 안내하지 않는다. 버튼 경로의 안내(_clean_credit_est)는 버튼 규칙대로 fits를 본다."""
+    ★렌더는 정본의 고른 장면은 보지 않고 증분만 한다. 등급은 **상향일 때만**(mix_pipeline.clean_tier_upgrade) 전체를
+      요청 등급으로 다시 지운다 — 그때는 tier_upgrade=True 와 전체 초·요청 등급 크레딧을 준다(화면이 확인받는다).
+      버튼 경로의 안내(_clean_credit_est)는 버튼 규칙대로 fits를 본다."""
     safe = os.path.basename(job_id)
     if not safe or safe != job_id:
         return {"ok": False, "enabled": False}
@@ -7848,6 +7884,16 @@ def api_produce_mix_clean_base_preview(job_id: str):
     judged = mix_pipeline.clean_base_judge(store, job, work)       # 렌더와 같은 판정(보정된 정본 — 정본당 1회 보정)
     if judged is None:          # 스위치는 위에서 봤다 → 정본이 없다
         return {"ok": True, "enabled": True, "base": False, "uncovered": [], "extend": [], "est_credits": None}
+    if judged.get("tier_upgrade"):
+        # ★정본보다 높은 등급(기본 → 고급) — 렌더는 요청 등급으로 **전체**를 다시 지운다(render_inputs_for).
+        #   초는 그 전체 청소가 실제로 보낼 초(mix_pipeline.full_clean_seconds — 버튼 크레딧과 같은 함수). 못 재면 None.
+        tier = mix_pipeline.clean_tier_of(job)
+        secs = mix_pipeline.full_clean_seconds(job, work, tier)
+        est = (mix_pipeline.clean_credit_estimate(secs, tier=tier) if secs else 0) if secs is not None else None
+        return {"ok": True, "enabled": True, "base": True, "tier_upgrade": True, "tier": tier,
+                "base_tier": mix_pipeline._sig_tier(judged["base"].get("sig")),
+                "uncovered": [], "extend": [], "seconds": (round(secs, 2) if secs is not None else None),
+                "est_credits": est}
     unc, ext, total = _clean_incr_secs(job, work, judged)
     est = mix_pipeline.clean_credit_estimate(total, tier=mix_pipeline.clean_tier_of(job)) if total > 0 else 0
     return {"ok": True, "enabled": True, "base": True, "uncovered": unc, "extend": ext,
@@ -7856,26 +7902,8 @@ def api_produce_mix_clean_base_preview(job_id: str):
 
 def _clean_incr_secs(job, work, judged):
     """증분 청소(mix_pipeline.incremental_clean)가 업체에 **실제로 보낼 초** → (바뀐 칸 목록, 늘림 목록, 합계 초).
-
-    ★조각 목록은 mix_pipeline.incremental_pieces 한 곳(incremental_clean 이 실제로 자르는 목록과 같은 함수 — 0순위-B).
-      여기는 칸별로 더하기만 한다. test_clean_notice_seconds 가 업체 호출 직전 값과 대조한다."""
-    plan = job.get("edit_plan") or {}
-    beats = {int(b["beat_idx"]) for b in plan.get("beats") or []}
-    pieces = mix_pipeline.incremental_pieces(job, work, plan, judged.get("uncovered") or [], judged.get("extend") or [],
-                                             need=(judged.get("plan2") or {}).get("_clean_need") or {})
-    unc, ext, total = [], [], 0.0
-    for bi in judged.get("uncovered") or []:
-        if int(bi) not in beats:
-            continue
-        secs = sum(p["end"] - p["start"] for p in pieces if p["kind"] == "cb" and p["beat_idx"] == int(bi))
-        unc.append({"beat_idx": int(bi), "seconds": round(secs, 2)})
-        total += secs
-    for p in pieces:
-        if p["kind"] == "cbx":
-            secs = p["end"] - p["start"]
-            ext.append({"beat_idx": p["beat_idx"], "need": p["need"], "seconds": round(secs, 2)})
-            total += secs
-    return unc, ext, total
+    ★계산은 mix_pipeline.incremental_seconds 한 곳(서버 동의 관문 clean_charge_plan 도 같은 함수 — 0순위-B)."""
+    return mix_pipeline.incremental_seconds(job, work, judged)
 
 
 @app.get("/api/produce/mix/clean_thumb/{job_id}")
@@ -18443,16 +18471,13 @@ def _clean_credit_est(job, job_id):
                         and (_found is None or Path(_found[1]) == Path(_j["base"]["path"]))):
                     _t = _clean_incr_secs(job, _w, _j)[2]
                     return mix_pipeline.clean_credit_estimate(_t, mix_pipeline.clean_tier_of(job)) if _t > 0 else 0
-        # ★장면을 골랐으면 **고른 초**만 나간다(2026-09-26) — 전체 길이로 안내하면 과장이다.
-        if mix_pipeline.clean_selection_of(job):
-            _cuts = mix_pipeline.clean_pick_cuts(job, _MIX_WORK_DIR / job_id)
-            return mix_pipeline.clean_credit_estimate(
-                sum(float(c["dur"]) for c in _cuts if c["sel"]), mix_pipeline.clean_tier_of(job))
-        p = job.get("preview_path")
-        if not p or not Path(p).exists():
+        # ★전체 청소 초는 mix_pipeline.full_clean_seconds 한 곳(렌더 확인창의 등급 상향 안내와 같은 함수):
+        #   같은 편성·등급 청소본이 이미 있으면 0(_final_clean_fn 이 재사용), 고른 장면이면 고른 초, 아니면 미리보기 길이.
+        _tier = mix_pipeline.clean_tier_of(job)
+        _secs = mix_pipeline.full_clean_seconds(job, _MIX_WORK_DIR / job_id, _tier)
+        if _secs is None:
             return None
-        return mix_pipeline.clean_credit_estimate(
-            mix_pipeline._probe_seconds(p), mix_pipeline.clean_tier_of(job))
+        return mix_pipeline.clean_credit_estimate(_secs, _tier) if _secs > 0 else 0
     except Exception:          # noqa: BLE001 — 안내용이다. 실패해도 화면을 막지 않는다
         return None
 
