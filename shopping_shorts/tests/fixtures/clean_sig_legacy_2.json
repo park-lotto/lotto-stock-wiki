@@ -1,0 +1,367 @@
+{
+ "sig": "fa5ce30855df8032p",
+ "tier": "pro",
+ "clean_cuts": null,
+ "kind": "legacy",
+ "file_mtime": 1789882834.7435992,
+ "plan": {
+  "beats": [
+   {
+    "beat_idx": 0,
+    "target_seconds": 2.9,
+    "phrase_sync": true,
+    "caption_lines": [
+     "요즘 캠핑 가서",
+     "이거 모르면 손해거든요"
+    ],
+    "narration": "요즘 캠핑 가서 이거 모르면 손해거든요.",
+    "primary": {
+     "video_id": "s4",
+     "start": 4.5,
+     "end": 6.367,
+     "seg_id": "FROSk63cAP0-3"
+    },
+    "alternates": [
+     {
+      "video_id": "s4",
+      "start": 15.8,
+      "end": 16.667,
+      "seg_id": "FROSk63cAP0-9"
+     },
+     {
+      "video_id": "s4",
+      "start": 3.4,
+      "end": 4.5,
+      "seg_id": "FROSk63cAP0-2"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 4.5,
+      "end": 6.367,
+      "seg_id": "FROSk63cAP0-3"
+     },
+     {
+      "video_id": "s4",
+      "start": 15.8,
+      "end": 16.667,
+      "seg_id": "FROSk63cAP0-9"
+     },
+     {
+      "video_id": "s4",
+      "start": 3.4,
+      "end": 4.5,
+      "seg_id": "FROSk63cAP0-2"
+     }
+    ]
+   },
+   {
+    "beat_idx": 1,
+    "target_seconds": 4.3,
+    "phrase_sync": true,
+    "caption_lines": [
+     "주변에서 하나둘 다 이걸 쓰길래",
+     "저만 모르나 싶어서",
+     "부랴부랴 찾아봤거든요."
+    ],
+    "narration": "주변에서 하나둘 다 이걸 쓰길래 저만 모르나 싶어서 부랴부랴 찾아봤거든요.",
+    "primary": {
+     "video_id": "s4",
+     "start": 15.033,
+     "end": 15.8,
+     "seg_id": "FROSk63cAP0-8"
+    },
+    "alternates": [
+     {
+      "video_id": "s4",
+      "start": 14.233,
+      "end": 15.033,
+      "seg_id": "FROSk63cAP0-7"
+     },
+     {
+      "video_id": "s4",
+      "start": 2.233,
+      "end": 3.4,
+      "seg_id": "FROSk63cAP0-1"
+     },
+     {
+      "video_id": "s3",
+      "start": 1.467,
+      "end": 4.23,
+      "seg_id": "grab_tiktok_ed46fefeb95c-1"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 15.033,
+      "end": 15.8,
+      "seg_id": "FROSk63cAP0-8"
+     },
+     {
+      "video_id": "s4",
+      "start": 14.233,
+      "end": 15.033,
+      "seg_id": "FROSk63cAP0-7"
+     },
+     {
+      "video_id": "s4",
+      "start": 2.233,
+      "end": 3.4,
+      "seg_id": "FROSk63cAP0-1"
+     },
+     {
+      "video_id": "s3",
+      "start": 1.467,
+      "end": 7.267,
+      "seg_id": "grab_tiktok_ed46fefeb95c-1"
+     }
+    ]
+   },
+   {
+    "beat_idx": 2,
+    "target_seconds": 3.8,
+    "phrase_sync": true,
+    "caption_lines": [
+     "예전엔 캠핑장에서",
+     "커피 내려 마시려면",
+     "장비 챙기느라",
+     "스트레스였거든요."
+    ],
+    "narration": "예전엔 캠핑장에서 커피 내려 마시려면 장비 챙기느라 스트레스였거든요.",
+    "primary": {
+     "video_id": "s4",
+     "start": 16.667,
+     "end": 20.1,
+     "seg_id": "FROSk63cAP0-10"
+    },
+    "alternates": [
+     {
+      "video_id": "s2",
+      "start": 3.333,
+      "end": 4.933,
+      "seg_id": "grab_tiktok_2a44a4d30ed9-1"
+     },
+     {
+      "video_id": "s1",
+      "start": 4.466,
+      "end": 4.53,
+      "seg_id": "grab_tiktok_c6603ebc06f3-1"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 16.667,
+      "end": 20.1,
+      "seg_id": "FROSk63cAP0-10"
+     },
+     {
+      "video_id": "s2",
+      "start": 3.333,
+      "end": 4.933,
+      "seg_id": "grab_tiktok_2a44a4d30ed9-1"
+     },
+     {
+      "video_id": "s1",
+      "start": 4.466,
+      "end": 8.933,
+      "seg_id": "grab_tiktok_c6603ebc06f3-1"
+     }
+    ]
+   },
+   {
+    "beat_idx": 3,
+    "target_seconds": 2.6,
+    "phrase_sync": true,
+    "caption_lines": [
+     "알고 보니",
+     "가스 압력 방식 하나가",
+     "핵심이었네요."
+    ],
+    "narration": "알고 보니 가스 압력 방식 하나가 핵심이었네요.",
+    "primary": {
+     "video_id": "s4",
+     "start": 8.733,
+     "end": 12.6,
+     "seg_id": "FROSk63cAP0-5"
+    },
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 8.733,
+      "end": 12.6,
+      "seg_id": "FROSk63cAP0-5"
+     }
+    ]
+   },
+   {
+    "beat_idx": 4,
+    "target_seconds": 2.6,
+    "phrase_sync": true,
+    "caption_lines": [
+     "물 붓고 버튼만",
+     "누르면 끝이라",
+     "편하더라고요"
+    ],
+    "narration": "물 붓고 버튼만 누르면 끝이라 편하더라고요.",
+    "primary": {
+     "video_id": "s4",
+     "start": 6.367,
+     "end": 8.733,
+     "seg_id": "FROSk63cAP0-4"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "start": 6.34,
+      "end": 7.17,
+      "seg_id": "grab_tiktok_df1a0e25270c-7"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 6.367,
+      "end": 8.733,
+      "seg_id": "FROSk63cAP0-4"
+     },
+     {
+      "video_id": "s0",
+      "start": 6.34,
+      "end": 8.642,
+      "seg_id": "grab_tiktok_df1a0e25270c-7"
+     }
+    ]
+   },
+   {
+    "beat_idx": 5,
+    "target_seconds": 3.2,
+    "phrase_sync": true,
+    "caption_lines": [
+     "진한 크레마가 쫙 올라와서",
+     "카페 맛이 나타나 놀랐어요."
+    ],
+    "narration": "진한 크레마가 쫙 올라와서 카페 맛이 나타나 놀랐어요.",
+    "primary": {
+     "video_id": "s4",
+     "start": 12.6,
+     "end": 14.233,
+     "seg_id": "FROSk63cAP0-6"
+    },
+    "alternates": [
+     {
+      "video_id": "s2",
+      "start": 6.933,
+      "end": 8.867,
+      "seg_id": "grab_tiktok_2a44a4d30ed9-4"
+     },
+     {
+      "video_id": "s3",
+      "start": 8.567,
+      "end": 9.0,
+      "seg_id": "grab_tiktok_ed46fefeb95c-3"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 12.6,
+      "end": 14.233,
+      "seg_id": "FROSk63cAP0-6"
+     },
+     {
+      "video_id": "s2",
+      "start": 6.933,
+      "end": 8.867,
+      "seg_id": "grab_tiktok_2a44a4d30ed9-4"
+     },
+     {
+      "video_id": "s3",
+      "start": 8.567,
+      "end": 11.7,
+      "seg_id": "grab_tiktok_ed46fefeb95c-3"
+     }
+    ]
+   },
+   {
+    "beat_idx": 6,
+    "target_seconds": 2.9,
+    "phrase_sync": true,
+    "caption_lines": [
+     "심지어 가격도 괜찮더라구요.",
+     "하나 있으니 든든해요."
+    ],
+    "narration": "심지어 가격도 괜찮더라구요. 하나 있으니 든든해요.",
+    "primary": {
+     "video_id": "s4",
+     "start": 20.1,
+     "end": 22.268005,
+     "seg_id": "FROSk63cAP0-11"
+    },
+    "alternates": [
+     {
+      "video_id": "s1",
+      "start": 8.933,
+      "end": 10.9,
+      "seg_id": "grab_tiktok_c6603ebc06f3-2"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 20.1,
+      "end": 22.268005,
+      "seg_id": "FROSk63cAP0-11"
+     },
+     {
+      "video_id": "s1",
+      "start": 8.933,
+      "end": 10.9,
+      "seg_id": "grab_tiktok_c6603ebc06f3-2"
+     }
+    ]
+   },
+   {
+    "beat_idx": 7,
+    "target_seconds": 3.2,
+    "phrase_sync": true,
+    "caption_lines": [
+     "더 궁금하면",
+     "댓글에 '나도' 남겨주시면",
+     "정보 보내드릴게요."
+    ],
+    "narration": "더 궁금하면 댓글에 '나도' 남겨주시면 정보 보내드릴게요.",
+    "primary": {
+     "video_id": "s4",
+     "start": 16.667,
+     "end": 20.1,
+     "seg_id": "FROSk63cAP0-10"
+    },
+    "alternates": [
+     {
+      "video_id": "s2",
+      "start": 9.967,
+      "end": 10.83,
+      "seg_id": "grab_tiktok_2a44a4d30ed9-6"
+     }
+    ],
+    "scene_override": [
+     {
+      "video_id": "s4",
+      "start": 16.667,
+      "end": 20.1,
+      "seg_id": "FROSk63cAP0-10"
+     },
+     {
+      "video_id": "s2",
+      "start": 9.967,
+      "end": 12.367,
+      "seg_id": "grab_tiktok_2a44a4d30ed9-6"
+     }
+    ]
+   }
+  ]
+ }
+}

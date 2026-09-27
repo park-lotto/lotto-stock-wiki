@@ -1,0 +1,15 @@
+[Unit]
+Description=Shopping Shorts 매일 영상 점검(편집 화면 미리보기 vs 완성본 — tools/daily_video_audit.py)
+After=network.target shopping-shorts.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+# 최근 24시간 미리보기 준비 작업 최신 10개(작업당 26~72초 → 5~12분). 값은 tools/gate_video.json 의 audit 절.
+ExecStart=/usr/bin/python3 tools/daily_video_audit.py
+Nice=10
+TimeoutStartSec=3600
+# 1 = 어긋남 발견(쪽지 이미 올림) · 3 = 대상 없음 — 둘 다 점검 자체는 정상 종료다. 2(못 돌림)만 실패로 남긴다.
+SuccessExitStatus=0 1 3

@@ -604,7 +604,11 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
         return
     _t0 = datetime.now(timezone.utc)
     workers = max(1, min(config.TTS_MAX_WORKERS, total))
-    with ThreadPoolExecutor(max_workers=workers) as ex:
+    # ★keyctx.pool — 칸 스레드도 이 job의 주인을 안다(2026-09-27). 맨 ThreadPoolExecutor는
+    #   contextvar를 안 넘겨, 워커 진입점(@_owned_job)이 주인을 열어도 칸마다 부르는
+    #   _ensure_breath_lines(제미나이 호흡 끊기 → vertex_route.current_cid)는 cid 0으로 돌았다.
+    from shopping_shorts import keyctx as _kc
+    with _kc.pool(max_workers=workers) as ex:
         futures = [ex.submit(_one, i) for i in range(total)]
         for f in futures:
             f.result()  # 예외를 여기서 소비 — 숨기지 않고 그대로 전파(run_mix_job이 failed 처리)
@@ -1160,7 +1164,6 @@ def _owned_job(fn):
     return wrap
 
 
-@_owned_job
 def humanize_tts_error(err, has_own_key=None):
     """TTS 실패 원문을 고객이 읽고 **뭘 해야 하는지 아는** 한 줄로 바꾼다(2026-09-07).
 
@@ -1200,6 +1203,7 @@ def humanize_tts_error(err, has_own_key=None):
     return f"{tip}\n\n[원문] {raw}"
 
 
+@_owned_job
 def run_mix_job(job_id, db_path, work_root):
     """다운로드→추출→EDL→TTS. 완료 시 status='ready_for_review'."""
     # 이 job 안에서 나가는 모든 Gemini 콜에 job_id·customer_id를 붙인다(2026-08-16).
@@ -1337,7 +1341,9 @@ def run_mix_job(job_id, db_path, work_root):
                 # cached는 위에서 이미 조회했다(segments가 못써도 category 컬럼은 실려온다).
                 r["category"] = (cached or {}).get("category")
                 return vid, r
-            with ThreadPoolExecutor(max_workers=max(1, len(video_paths))) as ex:
+            # ★keyctx.pool — 추출 스레드도 이 job의 주인을 안다(맨 ThreadPoolExecutor는 contextvar를 안 넘긴다).
+            from shopping_shorts import keyctx as _kc
+            with _kc.pool(max_workers=max(1, len(video_paths))) as ex:
                 extracts = dict(ex.map(_extract, video_paths.items()))
             store.update_mix_job(job_id, extract=extracts)
 
@@ -3076,8 +3082,9 @@ def _apply_caption_max_chars(plan, store, job):
 
 def _apply_phrase_min_cut(plan, store, job):
     """비트마다 phrase_min_cut 표식(초) — video_assemble.phrase_owners(R4)가 읽어 짧은 구절을 한 컷으로 묶는다.
-    편성 끝(_plan_and_tts)과 렌더 앞 두 군데서 부르되 판정은 여기 한 곳. 이미 있는 표식은 안 덮는다 —
-    그게 3단계 화면이 보고 그린 값이다(cut_rhythm과 같은 규약). 표식이 없는 옛 job은 렌더가 단다."""
+    편성 단계(_plan_and_tts)에서만 부른다. 이미 있는 표식은 안 덮는다 — 그게 3단계 화면이 보고 그린 값이다.
+    ★렌더 앞에서 부르던 것은 없앴다(2026-09-27) — warm 뒤 칸을 고치면 화면 컷 캐시 키가 달라져 최종 렌더만
+      예비 계산으로 떨어졌다. 표식이 없는 옛 job은 화면도 표식 없이 그렸으니 렌더도 없이 간다(화면이 이긴다)."""
     mc = _phrase_min_cut(store, job)
     if mc <= 0:
         return 0
@@ -3134,7 +3141,10 @@ def _trim_for_cut_rhythm(plan):
 def _apply_cut_rhythm(plan, store, job):
     """비트마다 cut_rhythm 표식 — video_assemble.plan_beat_clips_for가 읽는다. 표식만 달고 계획은 안 바꾼다.
     hold: 훅(첫 비트) + 핵심 결과 줄(_HOLD_END). 나머지: 상한 4초.
-    구절 맞춤·수동 컷을 켠 칸은 그 경로가 우선이라 표식이 있어도 안 쓴다(plan_beat_clips_for의 분기 순서)."""
+    구절 맞춤·수동 컷을 켠 칸은 그 경로가 우선이라 표식이 있어도 안 쓴다(plan_beat_clips_for의 분기 순서).
+    ★2026-09-27: 운영 코드에서 부르는 곳이 없다 — 렌더(run_render)에서 부르던 것을 없앴다(warm 뒤 칸을 고치면
+      화면 컷 캐시가 빗나간다). 편성 단계 표식은 _trim_for_cut_rhythm이 단다. 다시 렌더 경로에 붙이지 마라
+      (tests/test_screen_clips_guard.py가 잡는다)."""
     if not _cut_rhythm_on(store, job):
         return 0
     n = 0
@@ -3195,6 +3205,49 @@ def final_clip_pairs(plan, tts_paths, src_durs):
                             "fin": t, "dur": d, "sdur": sd})
             t += d
     return out
+
+
+BEAT_DUP_MSG = "칸 번호가 겹쳐 있어요 — 편성을 한 번 저장하면 자동 정리됩니다"
+
+
+class BeatIdxDuplicateError(RuntimeError):
+    """편성의 칸 번호(beat_idx)가 겹쳤다 — {beat_idx: 음성} 표를 만들면 겹친 칸 음성이 하나만 남는다."""
+
+
+def _beat_idx_duplicates(plan):
+    """겹친 칸 번호 목록 — 판단은 store.beat_idx_duplicates 한 곳(0순위-B). 여기서 규칙을 다시 적지 않는다."""
+    from shopping_shorts.store import beat_idx_duplicates
+    return beat_idx_duplicates(plan)
+
+
+def tts_paths_of(plan):
+    """{beat_idx: tts_path} — 렌더·청소·컷 지도가 쓰는 음성 표를 만드는 **유일한 자리**(2026-09-27).
+
+    ★칸 번호가 겹치면 BeatIdxDuplicateError — 표로 모으면 마지막 칸 음성만 남아 "CTA 음성 반복 + 한 칸 음성 누락"이
+      출력에 실제로 났다(옛 job 5개, 파형 확인). 조용히 표를 만들지 않는다."""
+    dup = _beat_idx_duplicates(plan)
+    if dup:
+        raise BeatIdxDuplicateError("%s (겹친 번호 %s)" % (BEAT_DUP_MSG, dup))
+    return {b["beat_idx"]: b["tts_path"] for b in (plan or {}).get("beats") or [] if b.get("tts_path")}
+
+
+def _beat_dup_blocked(store, job_id, plan, where):
+    """칸 번호가 겹친 편성이면 관리자 경보를 올리고 True — 호출부가 그 단계를 failed 로 끝낸다(렌더·과금 전에)."""
+    dup = _beat_idx_duplicates(plan)
+    if not dup:
+        return False
+    print("[beat_idx] 겹친 칸 번호 %s — %s 중단 job=%s" % (dup, where, job_id), file=sys.stderr)
+    try:
+        from shopping_shorts import ops_alert
+        ops_alert.raise_alert(
+            "beat_idx_dup:%s" % job_id,
+            "칸 번호가 겹친 편성이라 %s을(를) 막았습니다 (job %s)" % (where, job_id),
+            "겹친 beat_idx %s — 그대로 두면 음성 표에서 한 칸 음성이 빠지고 다른 칸 음성이 반복된다" % (dup,),
+            store=store, signature="%s:%s" % (job_id, dup),
+            todo="편성을 한 번 저장하면 자동 정리된다(store.dedupe_beat_idx). 안 되면 tools/fix_beat_idx_dups.py")
+    except Exception as _ae:      # noqa: BLE001 — 알림 실패가 차단을 막지 않는다(사유는 남긴다)
+        print(f"[ops_alert] beat_idx_dup 알림 실패(무해): {_ae!r}", file=sys.stderr)
+    return True
 
 
 def final_time_of_beat(plan, beat_idx, tts_paths=None, src_durs=None):
@@ -3340,7 +3393,7 @@ def cut_selected(c, sel):
 def clean_pick_cuts(job, work):
     """지금 편성의 컷 목록(완성본 순서) + 키·선택 여부. 화면의 장면 고르기와 청소가 **같은 목록**을 본다."""
     plan = (job or {}).get("edit_plan") or {}
-    tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
+    tts = tts_paths_of(plan)
     cuts = final_clip_pairs(plan, tts, _src_durs_for(job, work))
     sel = clean_selection_of(job)
     return [dict(c, ci=i, key=cut_key(c), sel=cut_selected(c, sel)) for i, c in enumerate(cuts)]
@@ -3486,20 +3539,74 @@ def _clean_sig(job):
     return _clean_sig_for(job, clean_tier_of(job))
 
 
-def _clean_sig_for(job, tier):
+def _clean_sig_for(job, tier, with_speed=True):
     """등급·고른 장면까지 반영한 청소본 서명. clean_tiers_ready도 이것으로 파일명을 만든다(0순위-B).
 
     ★고른 장면은 's'+해시를 붙인다 — 안 붙이면 3장면만 지운 파일을 '전체 지운 것'으로 재사용하거나
       그 반대가 된다(등급을 서명에 넣은 것과 같은 이유). 전체(None)면 안 붙인다 → 옛 파일 이름 그대로.
+    with_speed=False: 2026-09-20 이전 식(속도 항목 없음) — _clean_sig_candidates 만 쓴다.
     """
     from shopping_shorts.vmake_client import TIER_PRO
-    sig = _plan_signature((job or {}).get("edit_plan") or {})
+    sig = _plan_signature((job or {}).get("edit_plan") or {}, with_speed=with_speed)
     if tier == TIER_PRO:
         sig += "p"
     sel = clean_selection_of(job)
     if sel:
         sig += "s" + hashlib.sha1("\n".join(sorted(sel)).encode("utf-8")).hexdigest()[:8]
     return sig
+
+
+def _speed_all_default(plan):
+    """모든 칸의 sync_speed가 없거나 1.0인가 — 09-20 이전 식 서명이 같은 그림을 뜻하는 조건."""
+    for b in (plan or {}).get("beats") or []:
+        v = b.get("sync_speed")
+        if v is None:
+            continue
+        try:
+            if abs(float(v) - 1.0) > 1e-9:
+                return False
+        except (TypeError, ValueError):
+            return False
+    return True
+
+
+def _clean_sig_candidates(job, tier=None):
+    """이 편성·등급의 청소본 파일명 서명 후보 — **찾는 순서**대로 [현재 식, 09-20 이전 식].
+
+    ★왜(2026-09-27 실측): a8ba0ef6b(09-20)가 _plan_signature에 `speed=` 항목을 조건 없이 넣어
+      그 전 청소본 462개의 이름이 통째로 어긋났다. 그림이 같은데 파일을 못 찾아 재청소·재과금
+      (14건 353초). 속도는 그 커밋에서 처음 생긴 값이라, 모든 칸이 속도 1.0(또는 없음)이면
+      옛 식 서명의 파일은 **같은 그림**이다 → 그 파일을 찾아 쓴다(과금 0).
+    ★새로 만들 때는 첫 번째(현재 식) 이름으로만 쓴다. 옛 식은 찾기 전용이다.
+    ★서명 식에 항목을 더할 땐 '지정 없으면 안 붙인다'를 지켜라 — 회귀 가드
+      tests/test_clean_sig_legacy.py 가 옛 편성 스냅샷의 실제 파일명으로 이걸 잰다."""
+    if tier is None:
+        tier = clean_tier_of(job)
+    out = [_clean_sig_for(job, tier)]
+    if _speed_all_default((job or {}).get("edit_plan") or {}):
+        leg = _clean_sig_for(job, tier, with_speed=False)
+        if leg not in out:
+            out.append(leg)
+    return out
+
+
+def _clean_final_found(job, work, tier=None):
+    """후보 서명 순서대로 **처음 존재하는** 청소본 → (sig, Path). 없으면 None.
+    청소본 파일을 찾는 곳은 전부 이 함수를 지난다(0순위-B)."""
+    for sig in _clean_sig_candidates(job, tier):
+        f = Path(work) / ("final_clean_%s.mp4" % sig)
+        try:
+            if f.exists() and f.stat().st_size > 1024:
+                return sig, f
+        except OSError:
+            continue
+    return None
+
+
+def _sig_tier(sig):
+    """청소본 서명 → 등급. _clean_sig_for가 편성 서명(16자) 바로 뒤에 'p'를 붙인다."""
+    from shopping_shorts.vmake_client import TIER_BASIC, TIER_PRO
+    return TIER_PRO if str(sig or "")[16:17] == "p" else TIER_BASIC
 
 
 def clean_tiers_ready(job, work):
@@ -3509,14 +3616,25 @@ def clean_tiers_ready(job, work):
       마음에 안 들면 되돌리고 다시 프로로"). 등급마다 파일이 따로 남으므로, 전에 만든
       등급으로 되돌리면 재청소 없이 그 파일을 그대로 쓴다(과금 0).
     ★판정은 파일 존재로 한다 — DB 상태는 렌더 도중에도 바뀌지만 파일은 결과 그 자체다.
+    ★정본이 이 등급으로 지금 편성을 다 덮으면 그것도 '있다'(clean_base_ready_for — 버튼 경로와 같은 판정).
+    ★여기서는 판정을 **새로 돌리지 않는다**(2026-09-27 서버 실측: 작업 열기 한 번에 job당 0.88초 — TTS·소스
+      ffprobe + 화면 컷 준비. 이 함수는 작업 열기 라우트에서 clean_redo_state 까지 두 번 불린다).
+      같은 편성·같은 정본으로 이 프로세스가 이미 판정해 둔 결과(버튼·렌더·안내의 clean_base_judge)가 있으면
+      그걸 쓰고, 없으면 "정본이 이 등급·고른 장면 것인가"(clean_base_fits)만 본다 — 장면이 바뀌었으면
+      버튼이 그 부분만 증분으로 지운다(run_clean_sources), 통째 재청소는 아니다.
     """
     from shopping_shorts.vmake_client import TIER_BASIC, TIER_PRO
     out = {TIER_BASIC: False, TIER_PRO: False}
     try:
         for tier in (TIER_BASIC, TIER_PRO):
-            sig = _clean_sig_for(job, tier)
-            f = Path(work) / ("final_clean_%s.mp4" % sig)
-            out[tier] = f.exists() and f.stat().st_size > 1024
+            out[tier] = _clean_final_found(job, work, tier) is not None
+        base = clean_base_for(job, work) if not all(out.values()) else None
+        if base is not None:
+            judged = _judge_cache_peek(job, work)
+            for tier in (TIER_BASIC, TIER_PRO):
+                if not out[tier]:
+                    out[tier] = (clean_base_ready_for(None, job, work, tier=tier, judged=judged)
+                                 if judged is not None else clean_base_fits(base, job, tier))
     except Exception:      # noqa: BLE001 — 안내용이다. 못 알아내도 기능을 막지 않는다
         pass
     return out
@@ -3572,7 +3690,7 @@ def clean_redo_state(job, work):
     return out
 
 
-def _plan_signature(plan):
+def _plan_signature(plan, with_speed=True):
     """편집안 → 완성본 **그림**을 결정하는 것만 뽑은 서명(sha1 앞 16자).
 
     들어가는 것: 비트 순서 · 각 비트의 재료(video_id·start·end) · 컷 길이(target_seconds)
@@ -3584,6 +3702,10 @@ def _plan_signature(plan):
     ★확대(2026-08-30)도 같은 이유로 반드시 들어가야 한다 — 빼면 배율만 바꿨을 때
       서명이 그대로라 **옛 청소본(확대 전 화면)이 재사용된다**. 실제로 "최종렌더만
       다시 하면 되나"라는 질문에서 이 구멍을 찾았다.
+    with_speed=False: 2026-09-20(a8ba0ef6b) 이전 식 — `speed=` 항목이 없던 서명.
+      청소본 **찾기 전용**(_clean_sig_candidates). 함수를 복제하지 않고 인자로만 가른다.
+    ★항목을 더할 땐 '지정 없으면 안 붙인다'를 지켜라 — 조건 없이 붙이면 모든 옛 청소본의 이름이
+      어긋나 재청소·재과금이 난다(09-20 speed 항목이 그랬다: 462개). 가드: test_clean_sig_legacy.py
     """
     import hashlib
     from . import video_assemble as _va       # 확대 해석은 저기 한 곳(0순위-B)
@@ -3593,7 +3715,8 @@ def _plan_signature(plan):
         for m in _beat_materials(b):
             parts.append("%s:%s:%s" % (m.get("video_id"), m.get("start"), m.get("end")))
         parts.append("t=%s" % b.get("target_seconds"))
-        parts.append("speed=%s" % b.get("sync_speed", 1.0))
+        if with_speed:
+            parts.append("speed=%s" % b.get("sync_speed", 1.0))
         # ★자막 줄 나누기(caption_lines)는 "자막"이지만 **컷 경계**를 정한다(_plan_phrase_clips:
         #   구절 수 = 컷 수, 조각 배정 1,1,2,2). 빼면 줄만 바꿔도 서명이 그대로라 옛 컷으로 만든
         #   청소본이 재사용된다(2026-09-11 실사고: 고객이 4줄로 바꾼 뒤 완성본을 다시 만들어도
@@ -3698,11 +3821,9 @@ def clean_final_path_for_plan(job, work):
         _b = clean_base_for(job, work)
         if _b is not None:
             return Path(_b["path"])
-        sig = _clean_sig(job)          # 등급까지 반영한 서명(0순위-B: _clean_sig 한 곳)
-        f = Path(work) / ("final_clean_%s.mp4" % sig)
-        if f.exists() and f.stat().st_size > 1024:
-            return f
-        return None
+        # 등급까지 반영한 서명 후보(현재 식 → 09-20 이전 식) 중 처음 있는 파일(0순위-B: _clean_final_found 한 곳)
+        _found = _clean_final_found(job, work)
+        return _found[1] if _found else None
     except Exception:      # noqa: BLE001
         return None
 
@@ -3733,14 +3854,18 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
     """
     def _clean(mix_raw):
         tier = clean_tier_of(job)
-        sig = _clean_sig(job)          # 등급이 다르면 다른 파일 — 옛 기본 결과를 재사용하지 않는다
-        out = Path(work) / f"final_clean_{sig}.mp4"
-        if out.exists() and out.stat().st_size > 1024:
+        # 등급이 다르면 다른 파일 — 옛 기본 결과를 재사용하지 않는다. 옛 식(09-20 이전) 이름도 함께 찾는다.
+        _found = _clean_final_found(job, work, tier)
+        if _found:
+            sig, out = _found           # ★찾은 **파일의** 서명 — 정본 sig·스냅샷이 파일 이름과 짝이 된다
             print(f"[clean] 완성본 재사용(편성 그대로, 과금 0): {out.name}", file=sys.stderr)
             _save_clean_plan_snapshot(work, sig, job.get("edit_plan"), clean_selection_of(job))
             # 정본이 없거나 **다른 등급/서명의 파일**이면 이 파일로 정본을 다시 쓴다(등급 변경 = 새 정본)
+            #   sig를 파일 이름의 것으로 넘기므로, 정본이 이미 이 파일이면 지도·보정·증분 조각을 다시 쓰지 않는다.
             _save_clean_base(job, work, sig, str(out), only_if_new=True)
             return str(out)
+        sig = _clean_sig(job)          # 새로 만들 땐 현재 식 이름으로만 쓴다
+        out = Path(work) / f"final_clean_{sig}.mp4"
         charged = _charge_clean(store, customer_id, 1)
         try:
             print(f"[clean] 완성본 1편만 청소 시작 sig={sig} tier={tier}", file=sys.stderr)
@@ -3748,7 +3873,7 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
             if _sel:
                 # 고른 장면만 — 컷 지도는 정본이 쓰는 것과 같은 함수(final_clip_pairs)로 편다
                 _plan = job.get("edit_plan") or {}
-                _tts = {b["beat_idx"]: b["tts_path"] for b in _plan.get("beats") or [] if b.get("tts_path")}
+                _tts = tts_paths_of(_plan)
                 res = _clean_partial(str(mix_raw), final_clip_pairs(_plan, _tts, _src_durs_for(job, work)),
                                      _sel, keys, str(out), tier, work)
             else:
@@ -3773,6 +3898,43 @@ def _cut_piece(src, ss, dur, dst):
     return str(dst)
 
 
+def incremental_pieces(job, work, plan, uncovered, extend, need=None):
+    """증분 청소가 업체에 **보낼 조각 목록의 유일한 자리**(0순위-B, 2026-09-27) — incremental_clean(실제로 보냄)과
+    app._clean_incr_secs(안내 초·크레딧)가 둘 다 이걸 부른다. 과금 없음·파일 안 만듦.
+
+    반환 [{"vid", "kind": "cb"|"cbx", "beat_idx", "src_vid", "src", "start", "end", "need"}] (원본 초, end-start = 보낼 초).
+      - 바뀐 칸(uncovered) cb{bi}_{k}: need(렌더 컷 재생이 못 덮은 원본 구간)가 있으면 **그 구간만** + 조각마다 뒤 여유
+        EXTEND_PAD. 재료 전체를 지우면 컷 계획이 재료 밖(홀드로 이어 튼 뒤쪽·릴 뒤 실프레임)을 읽을 때 또 못 덮는다.
+        need 가 없으면 칸 재료 전체(여유 없음).
+      - 늘림(extend) cbx{bi}: 구간 그대로(여유는 clean_base 가 end 에 이미 얹었다).
+      - 원본 파일을 못 찾는 조각·편성에 없는 칸은 뺀다(보낼 수 없다)."""
+    from shopping_shorts import clean_base as _cb
+    srcs = _resolve_sources(job, Path(work))
+    beats = {int(b["beat_idx"]): b for b in (plan or {}).get("beats") or []}
+    out = []
+    for bi in uncovered or []:
+        b = beats.get(int(bi))
+        if not b:
+            continue
+        spans = (need or {}).get(str(bi))
+        pad = _cb.EXTEND_PAD if spans else 0.0
+        for k, m in enumerate(spans if spans else _beat_materials(b)):
+            src = srcs.get(m.get("video_id"))
+            if not src:
+                continue
+            out.append({"vid": "cb%d_%d" % (int(bi), k), "kind": "cb", "beat_idx": int(bi),
+                        "src_vid": m.get("video_id"), "src": src,
+                        "start": float(m["start"]), "end": float(m["end"]) + pad, "need": None})
+    for ex in extend or []:
+        src = srcs.get(ex.get("video_id"))
+        if not src or not beats.get(int(ex["beat_idx"])):
+            continue
+        out.append({"vid": "cbx%d" % int(ex["beat_idx"]), "kind": "cbx", "beat_idx": int(ex["beat_idx"]),
+                    "src_vid": ex["video_id"], "src": src,
+                    "start": float(ex["start"]), "end": float(ex["end"]), "need": ex.get("need")})
+    return out
+
+
 def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, uncovered, extend, need=None):
     """정본에 없는 재료(바뀐 장면·큰 늘림)만 원본에서 잘라 **1콜**로 지우고 extras에 붙인다(2026-09-22).
 
@@ -3781,35 +3943,14 @@ def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, u
       다시 오면 clean_base.coverage 가 covered 로 본다(재과금 0)."""
     from shopping_shorts import clean_base as _cb
     work = Path(work)
-    srcs = _resolve_sources(job, work)
     beats = {int(b["beat_idx"]): b for b in (plan or {}).get("beats") or []}
     items, meta = [], {}
-    for bi in uncovered:
-        b = beats.get(int(bi))
-        if not b:
-            continue
-        key = _cb.beat_material_key(b)
-        # ★need(렌더 컷 재생이 못 덮은 원본 구간)가 있으면 **그 구간만** 지운다 — 화면이 실제로 쓰는 곳이다.
-        #   재료 전체를 지우면 컷 계획이 재료 밖(홀드로 이어 튼 뒤쪽·릴 뒤 실프레임)을 읽을 때 또 못 덮는다.
-        spans = (need or {}).get(str(bi))
-        spans = spans if spans else _beat_materials(b)
-        for k, m in enumerate(spans):
-            src = srcs.get(m.get("video_id"))
-            if not src:
-                continue
-            s, e = float(m["start"]), float(m["end"]) + (_cb.EXTEND_PAD if (need or {}).get(str(bi)) else 0.0)
-            vid = "cb%d_%d" % (int(bi), k)
-            dst = _cut_piece(src, s, e - s, work / f"{vid}.mp4")
-            items.append((vid, dst)); meta[vid] = (int(bi), key, e - s, m.get("video_id"), s)
-    for ex in extend or []:
-        src = srcs.get(ex["video_id"])
-        b = beats.get(int(ex["beat_idx"]))
-        if not src or not b:
-            continue
-        vid = "cbx%d" % int(ex["beat_idx"])
-        s, e = float(ex["start"]), float(ex["end"])
-        dst = _cut_piece(src, s, e - s, work / f"{vid}.mp4")
-        items.append((vid, dst)); meta[vid] = (int(ex["beat_idx"]), _cb.beat_material_key(b), e - s, ex["video_id"], s)
+    # ★조각 목록은 incremental_pieces 한 곳(안내 초 app._clean_incr_secs 도 같은 함수 — 0순위-B)
+    for pc in incremental_pieces(job, work, plan, uncovered, extend, need=need):
+        vid, s, e = pc["vid"], pc["start"], pc["end"]
+        dst = _cut_piece(pc["src"], s, e - s, work / f"{vid}.mp4")
+        items.append((vid, dst))
+        meta[vid] = (pc["beat_idx"], _cb.beat_material_key(beats[pc["beat_idx"]]), e - s, pc["src_vid"], s)
     if not items:
         return base
     charged = _charge_clean(store, customer_id, 1)
@@ -3842,7 +3983,7 @@ def _save_clean_base(job, work, sig, path, only_if_new=False):
             if _old is not None and _old.get("sig") == sig:
                 return
         _plan = job.get("edit_plan") or {}
-        _tts = {b["beat_idx"]: b["tts_path"] for b in _plan.get("beats") or [] if b.get("tts_path")}
+        _tts = tts_paths_of(_plan)
         _sel = clean_selection_of(job)
         _cuts = [dict(c, cleaned=cut_selected(c, _sel))
                  for c in final_clip_pairs(_plan, _tts, _src_durs_for(job, work))]
@@ -3939,8 +4080,7 @@ def clean_compare_clips(job, work):
                     break
         if plan is None:
             return out
-        tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or [])
-               if b.get("tts_path")}
+        tts = tts_paths_of(plan)
         # 스냅샷이면 청소 그때 고른 장면, 아니면 지금 job의 선택(지금 서명 파일 = 지금 선택으로 만든 것)
         _sel = plan.get("_clean_sel") if "_clean_sel" in plan else clean_selection_of(job)
         clips = []
@@ -4055,6 +4195,32 @@ def assemble_clean_video(job_id, db_path, work_root, clean_fn=None):
     clean_map = job.get("clean_sources") or {}
     if not plan:
         return None
+    if clean_fn is None:
+        # ★정본(2026-09-27): 청소본 정본이 있으면 **렌더와 같은 입력**(render_inputs_for)으로 조립한다 —
+        #   정본 + 증분 조각(extras)을 지금 편성 좌표로 재배치한 것. 종전엔 정본 경로에서 이 조립본을 안 만들어
+        #   clean_video_path 가 비거나 옛 편성 그대로였고, 썸네일 배경이 정본 **파일 자체**(청소 당시 편성)를 써
+        #   바뀐 장면 칸이 옛 그림이었다. allow_clean=False — 여기선 절대 업체를 안 부른다(과금 0).
+        try:
+            _cid = job.get("customer_id") or 0
+            plan_used, _src, _base = render_inputs_for(store, job, job_id, Path(work_root) / job_id, [],
+                                                       _cid, allow_clean=False)
+        except Exception:      # noqa: BLE001 — 정본 판정 실패는 종전 경로로
+            traceback.print_exc(file=sys.stderr)
+            _base = None
+        if _base is not None:
+            try:
+                tts_paths = tts_paths_of(plan)
+                out_path = Path(work_root) / job_id / "clean_preview.mp4"
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                assemble(plan_used, tts_paths, _src, str(out_path), clean_fn=None, deco={},
+                         cutaway_paths=_resolve_cutaway_paths(store, plan, _cid),
+                         sfx_paths=_resolve_sfx_paths(store, plan, _cid, job=job),
+                         burn_captions=False)
+                store.update_mix_job(job_id, clean_video_path=str(out_path))
+                return str(out_path)
+            except Exception:
+                traceback.print_exc(file=sys.stderr)
+                return None
     if not clean_map:
         # 청소된 소스가 없다 — clean_fn(완성본 1편 청소)이 있으면 **원본**으로 조립해 그걸 청소한다.
         if clean_fn is None:
@@ -4063,7 +4229,7 @@ def assemble_clean_video(job_id, db_path, work_root, clean_fn=None):
         if not clean_map:
             return None
     try:
-        tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+        tts_paths = tts_paths_of(plan)
         out_path = Path(work_root) / job_id / "clean_preview.mp4"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         # burn_captions=False — 이 조립본은 '자막 없는 clean 배경'(썸네일용)이다. 우리 나레이션
@@ -4102,6 +4268,15 @@ def _clear_stale_failure(store, job_id, job=None):
     store.update_mix_job(job_id, status="ready_for_review", error=None)
 
 
+def _reassemble_clean_quiet(job_id, db_path, work_root):
+    """버튼이 정본 기준으로 끝났을 때 clean_video_path 를 '지금 편성의 청소 조립본'으로 채운다(과금 0).
+    실패해도 clean_status 는 안 되돌린다 — 청소(유료)는 이미 끝났고, 썸네일은 자가치유로 다시 만든다."""
+    try:
+        assemble_clean_video(job_id, db_path, work_root)
+    except Exception:      # noqa: BLE001
+        traceback.print_exc(file=sys.stderr)
+
+
 @_owned_job
 def run_clean_sources(job_id, db_path, work_root):
     """2단계: 각 소스 원본을 VMake로 자막제거해 clean_sources에 캐시.
@@ -4110,6 +4285,9 @@ def run_clean_sources(job_id, db_path, work_root):
     _gpron = pron_corrections.load(store)
     job = store.get_mix_job(job_id)
     if not job:
+        return
+    if _beat_dup_blocked(store, job_id, job.get("edit_plan") or {}, "자막제거"):
+        store.update_mix_job(job_id, clean_status="failed", clean_error=BEAT_DUP_MSG)   # 과금 전에 막는다
         return
     final_fn = None
     try:
@@ -4133,9 +4311,9 @@ def run_clean_sources(job_id, db_path, work_root):
                                   skip_existing=True, global_pron=_gpron,
                                   customer_id=job.get("customer_id", 0),
                                   script_endings=job_script_endings(job))
-                # ★훅 시작점도 여기서 확정한다 — 조립(_render_mix)이 첫 장면 start를
-                #   피크 시점으로 **in-place로 옮긴다**(video_assemble._apply_hook_inpoint).
-                #   그게 청소 뒤에 일어나면 서명이 또 바뀌어 렌더에서 재청소된다.
+                # ★훅 시작점은 **여기서만** 정한다(video_assemble._apply_hook_inpoint → DB 저장 → 화면이 그 값을 본다).
+                #   2026-09-27부터 조립(_render_mix)은 옮기지 않는다(렌더는 편성표를 고쳐 쓰지 않는다).
+                #   (옛 사연: 조립이 옮기던 시절 그게 청소 뒤에 일어나 서명이 바뀌어 렌더에서 재청소됐다.)
                 #   실측 job 579c86e58b4f: clean 때 b0=('s3',0.0,1.8) → render 때 0.1.
                 #   그 소수점 한 자리 때문에 VMake가 두 번 돌았다.
                 #   렌더가 쓰는 함수를 그대로 부른다(0순위-B — 따로 계산하면 또 갈린다).
@@ -4163,6 +4341,38 @@ def run_clean_sources(job_id, db_path, work_root):
         #     _render_mix(조립) → clean_fn(청소) → 자막 3토막이라 가운데에 꽂기만 하면 된다.
         #   ★clean_sources는 일부러 비워 둔다 — 그래야 3단계(run_render)가 already=False로
         #     같은 완성본 경로를 타고, 편성이 그대로면 final_clean_{sig}.mp4를 재사용해 과금 0.
+        _judged = None
+        if _clean_strategy(job) == "final":
+            try:
+                _judged = clean_base_judge(store, job, work)
+            except Exception as e:      # noqa: BLE001 — 판정 실패는 종전 경로(전체 청소)
+                print("[clean-base] 버튼 정본 판정 실패(전체 청소): %r" % (e,), file=sys.stderr)
+        if _judged is not None and clean_base_ready_for(store, job, work, judged=_judged):
+            # ★정본이 이 편성·등급을 이미 다 덮는다 — 렌더(render_inputs_for)가 VMake 0회로 조립하는 바로
+            #   그 조건이다(clean_base_judge 한 곳). 종전엔 이 버튼만 파일명 서명으로 판정해, 서명이 바뀌면
+            #   (09-20 speed 항목·자막 줄·확대) 정본이 멀쩡한데도 완성본을 통째로 다시 지우고 과금했다.
+            print("[clean] 정본 재사용(버튼, 과금 0): %s" % Path(_judged["base"]["path"]).name,
+                  file=sys.stderr)
+            store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+            _clear_stale_failure(store, job_id)
+            _reassemble_clean_quiet(job_id, db_path, work_root)   # 썸네일 배경 = 지금 편성의 청소 조립본(과금 0)
+            return
+        _found = _clean_final_found(job, work) if _judged is not None else None
+        if (_judged is not None and clean_base_fits(_judged["base"], job)
+                and (_found is None or Path(_found[1]) == Path(_judged["base"]["path"]))):
+            # ★정본은 이 등급·고른 장면 것인데 **바뀐 장면·큰 늘림**만 못 덮는다 — 렌더와 **같은 함수**
+            #   (render_inputs_for → incremental_clean)로 그 부분만 지워 정본 extras에 붙인다(2026-09-27).
+            #   종전엔 여기서 완성본을 통째로 다시 지웠다(실측 46 job 1,318초 — 렌더는 같은 상황에서 증분만).
+            #   결과 자리는 렌더가 읽는 정본(clean_base.json extras) 하나다 — 다음 렌더는 과금 0.
+            #   ★지금 편성의 청소본 파일이 정본과 **다른 파일**로 따로 있으면 종전대로 그 파일 재사용(과금 0)이 낫다
+            #     (_final_clean_fn 의 재사용 분기가 그 파일로 정본을 바꾼다) — 그래서 그때는 여기 안 온다.
+            print("[clean] 정본 증분(버튼): 바뀐 비트 %s · 늘림 %d" % (
+                _judged["uncovered"], len(_judged["extend"] or [])), file=sys.stderr)
+            render_inputs_for(store, job, job_id, work, keys, customer_id, allow_clean=True)
+            store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+            _clear_stale_failure(store, job_id)
+            _reassemble_clean_quiet(job_id, db_path, work_root)   # 정본+방금 지운 조각으로 재조립(과금 0)
+            return
         if _clean_strategy(job) == "final":
             final_fn = _final_clean_fn(store, job, job_id, work, keys, customer_id)
         else:
@@ -4204,7 +4414,6 @@ def run_clean_sources(job_id, db_path, work_root):
     _clear_stale_failure(store, job_id)
 
 
-@_owned_job
 # ── 편성 지문(2026-09-02) ───────────────────────────────────────────────────
 # 왜: 미리보기를 만든 뒤 편성(대본·컷)이 바뀌어도 **미리보기 파일은 그대로 남는다**.
 # 고객은 낡은 미리보기와 새 최종을 나란히 받아 "영상이 두 개다 / 장면이 바뀌었다"로 본다
@@ -4212,17 +4421,43 @@ def run_clean_sources(job_id, db_path, work_root):
 # 그래서 **무엇으로 만들었는지**를 지문으로 남기고, 달라졌으면 화면이 말하게 한다.
 # ★지문 만드는 곳은 여기 한 곳이다(0순위-B) — 만들 때와 비교할 때가 어긋나면 소용없다.
 def plan_signature(plan):
-    """편성 지문 — 화면에 보이는 것이 달라지는 값만 넣는다(문장·컷·길이)."""
+    """편성 지문 — 칸 내용 **전체**(장면·손 컷·확대·자막 줄·구절 맞춤·cutaway…) + 칸 순서 + 음성 파일.
+
+    ★2026-09-27: 종전엔 narration·seg_ids·cutaway·seconds 만 넣었는데 seg_ids·seconds 를 채우는 코드가
+      없어(실측 3,032칸 전부 0) 사실상 대사·cutaway 만 봤다 → 장면·손 컷·확대·자막 줄·음성을 바꿔도
+      미리보기가 "낡음"으로 안 잡혔다. 칸 키는 화면 컷 캐시가 쓰는 screen_clips.beat_key 를 그대로 빌린다
+      (휘발 필드·`_` 접두 제외 — 판단 한 곳, 0순위-B).
+    ★음성: tts_path 는 내용 해시 이름이지만 같은 이름으로 다시 합성될 수 있어 파일의 (mtime_ns, 크기)를 같이
+      넣는다 — video_assemble._probe_duration 캐시 키와 같은 방식. 파일이 없으면 None.
+    ★과금 서명(_plan_signature/_clean_sig)과는 별개다 — 이건 미리보기·완성본 도장 전용(돈과 무관).
+    """
     import hashlib
     import json as _json
+    from shopping_shorts.screen_clips import beat_key
+
+    def _canon(v):
+        # 3 과 3.0 을 같게 — 화면(JS)이 저장하면 3.0 이 3 으로 돌아와 멀쩡한 미리보기가 "낡음"이 된다
+        if isinstance(v, float) and v.is_integer():
+            return int(v)
+        if isinstance(v, dict):
+            return {k: _canon(x) for k, x in v.items()}
+        if isinstance(v, (list, tuple)):
+            return [_canon(x) for x in v]
+        return v
     beats = ((plan or {}).get("beats") or [])
-    body = [{
-        "n": (b or {}).get("narration") or "",
-        "s": (b or {}).get("seg_ids") or [],
-        "c": (b or {}).get("cutaway") or "",
-        "d": round(float((b or {}).get("seconds") or 0), 2),
-    } for b in beats]
-    raw = _json.dumps(body, ensure_ascii=False, sort_keys=True)
+    body = []
+    for b in beats:
+        b = _canon(b) if isinstance(b, dict) else {}
+        tp = b.get("tts_path")
+        st = None
+        if tp:
+            try:
+                _st = os.stat(tp)
+                st = [_st.st_mtime_ns, _st.st_size]
+            except (OSError, TypeError, ValueError):
+                st = None
+        body.append([beat_key(b), st])
+    raw = _json.dumps(body, ensure_ascii=False)
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
 
@@ -4230,6 +4465,7 @@ def preview_sig_path(work_root, job_id):
     return Path(work_root) / job_id / "preview.sig"
 
 
+@_owned_job
 def run_preview(job_id, db_path, work_root):
     """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
 
@@ -4251,6 +4487,9 @@ def run_preview(job_id, db_path, work_root):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return
+    if _beat_dup_blocked(store, job_id, job["edit_plan"], "미리보기"):
+        store.update_mix_job(job_id, preview_status="failed", preview_error=BEAT_DUP_MSG)
+        return
     try:
         # ★mkdir을 try 안에 둔다 — 밖에서 터지면 preview_status가 갱신되지 않아 화면이 무한 ⏳가 된다
         # (라우트가 이미 'rendering'을 써둔 상태라 failed로 내려주는 건 여기밖에 없다).
@@ -4266,10 +4505,16 @@ def run_preview(job_id, db_path, work_root):
                           global_pron=_gpron, customer_id=job.get("customer_id", 0),
                           script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan)
-        tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+        # ★지문은 **DB에 막 저장한 편성**으로 지금 뜬다 — 조립이 메모리의 plan 을 만져도(check_mutation 감시)
+        #   DB와 같은 값으로 비교되게. 끝에서 뜨면 그 차이로 멀쩡한 미리보기가 영원히 "낡음"이 된다.
+        _psig = plan_signature(plan)
+        tts_paths = tts_paths_of(plan)
         # ★정본이 있으면 미리보기도 청소본 위에서(돈 0 — allow_clean=False라 바뀐 비트는 원본 그대로 보인다)
+        from shopping_shorts import screen_clips as _sc
+        _scr_mark = _sc.begin(job_id)
         plan_used, source_video_paths, _base = render_inputs_for(
             store, job, job_id, work, [], job.get("customer_id") or 0, allow_clean=False)
+        _scr_before = _sc.snapshot(plan_used)   # warm 직후 — assemble 직전과 대조(렌더는 편성표를 고쳐 쓰지 않는다)
         out_path = work / "preview.mp4"
         # headcopy·caption_style은 **넘기지 않는다**(스펙 §9: 꾸미기 제외 / caption_style 기본값만).
         # headcopy는 store.py 주석대로 "영상제작 5단계 꾸미기 헤드카피"라 deco={}로 꾸미기를
@@ -4277,12 +4522,14 @@ def run_preview(job_id, db_path, work_root):
         # 굽힌다(라이브 관측: caption_style=None인 job으로 렌더해 자막 정상 확인).
         # ★미리보기는 veryfast로 인코딩(6분→~1.5분) — 확인용이라 화질 조금 낮아도 무방.
         # 최종 렌더(run_render)는 이 컨텍스트 밖이라 medium 고화질 그대로.
+        _sc.check_mutation(job_id, _scr_before, plan_used)
         with preview_preset():
             assemble(plan_used, tts_paths, source_video_paths, str(out_path),
                      clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
                      deco={},                             # ← 꾸미기 없음(4단계 소관)
                      cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
                      sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job))
+        _sc.summarize(job_id, _scr_mark)
         # ★moov를 앞으로(2026-08-31). 안 하면 브라우저가 목차를 얻으려고 파일 전체를
         #   받아야 첫 프레임이 떠서 **정지된 것처럼 보인다**(고객 제보의 뿌리 — 미리보기가
         #   12MB면 눈에 띄게 멈춘다). 종전엔 완성본에만 걸려 있었다. 이미 앞이면 무해·즉시.
@@ -4293,7 +4540,7 @@ def run_preview(job_id, db_path, work_root):
         # 이 미리보기가 **무슨 편성으로** 만들어졌는지 남긴다 — 나중에 편성이 바뀌면
         # 화면이 "낡았다"고 말할 수 있다(못 써도 미리보기 자체는 정상이라 조용히 넘어간다).
         try:
-            preview_sig_path(work_root, job_id).write_text(plan_signature(plan), encoding="utf-8")
+            preview_sig_path(work_root, job_id).write_text(_psig, encoding="utf-8")
         except Exception:
             print("[preview] 편성 지문 기록 실패(무시)", file=sys.stderr)
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
@@ -4397,6 +4644,97 @@ def clean_tts_durs(plan):
     return out
 
 
+_JUDGE_CACHE = {}          # 판정 키 → clean_base_judge 결과(프로세스 안, 안내 전용 — 버튼·렌더는 읽지 않는다)
+_JUDGE_CACHE_MAX = 512
+
+
+def _judge_cache_key(job, work):
+    """판정 입력이 같은가 — 편성 전체·정본 파일(clean_base.json 시각·크기)·스위치 입력. 못 만들면 None(캐시 안 씀).
+    ★편성이 한 글자라도 바뀌거나 정본에 증분 조각이 붙으면(파일이 다시 써짐) 키가 달라져 옛 판정을 안 쓴다."""
+    try:
+        from shopping_shorts import clean_base as _cb
+        st = (Path(work) / _cb.BASE_FILE).stat()
+        raw = json.dumps((job or {}).get("edit_plan") or {}, ensure_ascii=False, sort_keys=True, default=str)
+        return (str(Path(work)), hashlib.sha1(raw.encode("utf-8")).hexdigest(), st.st_mtime_ns, st.st_size,
+                bool((job or {}).get("subtitle_removal")), int((job or {}).get("customer_id") or 0))
+    except Exception:      # noqa: BLE001
+        return None
+
+
+def _judge_cache_peek(job, work):
+    k = _judge_cache_key(job, work)
+    return _JUDGE_CACHE.get(k) if k is not None else None
+
+
+def clean_base_judge(store, job, work, *, calibrate=None):
+    """정본 판정의 **유일한 자리** — 렌더(render_inputs_for)·자막제거 버튼(run_clean_sources)·
+    최종렌더 확인창(app clean_base_preview)이 전부 이것을 부른다(0순위-B, 2026-09-27).
+    등급 안내(clean_tiers_ready)는 판정을 새로 돌리지 않고 여기서 남긴 캐시만 읽는다.
+
+    반환 None(스위치 꺼짐·정본 없음) 또는
+      {"base", "plan2", "uncovered", "extend", "tts_durs", "src_durs"} — remap_plan(렌더 컷 재생) 결과.
+    ★판정은 **항상 보정된 정본**으로 한다(clean_base.calibrate). 보정 v3부터 밀림(off·off_end)·다음 컷 시작 자르기·
+      속도 불일치(v4)가 덮음 범위 자체를 바꾼다 — 보정 없이 판정하면 버튼·안내는 "덮임", 렌더는 "안 덮임(증분 과금)"이
+      갈린다. 보정은 정본당 1회(calibrated=CAL_VERSION 표식) — 청소본 한 번 풀기(수 초), 그 뒤엔 즉시 반환.
+    calibrate: 받기만 하고 무시한다(옛 호출부 호환 — calibrate=False 로 불러도 보정한다)."""
+    from shopping_shorts import clean_base as _cb
+    work = Path(work)
+    if not ((job or {}).get("subtitle_removal") and clean_base_on(store, (job or {}).get("customer_id") or 0)):
+        return None
+    base = _cb.load_base(work)
+    if base is None:
+        return None
+    try:    # 옛 청소본 밀림 1회 측정(2026-09-27) — 소스를 못 찾아도 판정은 계속한다
+        base = _cb.calibrate(work, base, _resolve_sources(job, work))
+    except Exception as _e:      # noqa: BLE001
+        print("[clean-base] 밀림 보정 건너뜀: %s" % _e, file=sys.stderr)
+    plan = (job or {}).get("edit_plan") or {}
+    # ★늘림 판정의 길이는 렌더와 같은 자(final_clip_pairs가 쓰는 _beat_effective_dur)로 잰다 —
+    #   target_seconds는 계획값이라 실제 TTS 길이와 어긋날 수 있다(둘이 다르면 지워놓고 안 쓰거나, 모자란다).
+    tts_durs = clean_tts_durs(plan)
+    # ★렌더 컷 재생(2026-09-26): 원본으로 그렸을 컷 계획을 청소본 좌표로 옮긴다 — src_durs가 그 계획의 재료다
+    src_durs = _src_durs_for(job, work)
+    plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs, src_durs=src_durs)
+    out = {"base": base, "plan2": plan2, "uncovered": uncovered, "extend": extend,
+           "tts_durs": tts_durs, "src_durs": src_durs}
+    # 안내(clean_tiers_ready)가 다시 판정하지 않고 읽는다 — 버튼·렌더는 이 캐시를 **읽지 않는다**(늘 새로 판정).
+    # ★키는 보정이 정본을 다시 쓴 **뒤** 파일 시각으로 만든다 — 보정 전 키로 남기면 안내가 영영 못 찾는다.
+    _k = _judge_cache_key(job, work)
+    if _k is not None:
+        if len(_JUDGE_CACHE) >= _JUDGE_CACHE_MAX:
+            _JUDGE_CACHE.clear()
+        _JUDGE_CACHE[_k] = out
+    return out
+
+
+def clean_base_fits(base, job, tier=None):
+    """정본이 **이 등급·이 고른 장면**으로 만든 것인가(덮음은 안 본다) — clean_base_ready_for 와 버튼 증분 공용.
+    등급이 다르거나(고급을 고르고 눌렀는데 기본 정본) 고른 장면이 다르면 정본 위에 덧대면 안 된다 → 전체 청소."""
+    if not base or _sig_tier(base.get("sig")) != (tier or clean_tier_of(job)):
+        return False
+    if base.get("partial"):
+        if sorted(base.get("sel") or []) != sorted(clean_selection_of(job) or []):
+            return False
+    return True
+
+
+def clean_base_ready_for(store, job, work, tier=None, judged=None):
+    """정본만으로 이 job의 자막제거가 **이미 끝난 것과 같은가**(추가 청소·과금 0) — 버튼·등급 안내 공용.
+
+    조건: clean_base_judge가 uncovered·extend 없음(렌더가 VMake 0회로 조립하는 바로 그 조건)
+          + 정본이 **이 등급**으로 만든 것(고급을 고르고 누른 버튼이 기본 정본으로 끝나면 안 된다)
+          + 정본이 고른 장면만 지운 것이면 지금 고른 장면과 같을 것(더 고른 장면은 안 지워져 있다).
+    ★렌더(render_inputs_for)는 등급을 안 보고 정본을 쓴다 — 거기를 조이면 렌더 과금이 늘어나므로 두지 않는다."""
+    try:
+        j = judged if judged is not None else clean_base_judge(store, job, work)
+        if j is None or j["uncovered"] or j["extend"]:
+            return False
+        return clean_base_fits(j["base"], job, tier)
+    except Exception as e:      # noqa: BLE001 — 판정 실패는 '아니오'(종전 경로로 청소)
+        print("[clean-base] 정본 재사용 판정 실패(종전 경로): %r" % (e,), file=sys.stderr)
+        return False
+
+
 def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_clean=True):
     """렌더 계열(최종·미리보기·캡컷·ZIP·프레임)의 **입력을 정하는 유일한 자리**(2026-09-22).
 
@@ -4411,21 +4749,13 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
     _sc.warm(job)       # ★완성본 컷 = 편집 화면 컷 — 렌더·캡컷·ZIP·청소본이 전부 여기를 지난다
     plan = job.get("edit_plan") or {}
     work = Path(work)
-    if not (job.get("subtitle_removal") and clean_base_on(store, customer_id)):
+    # ★정본 판정은 clean_base_judge 한 곳(자막제거 버튼·등급 안내도 같은 함수 — 0순위-B).
+    #   스위치는 호출부가 준 customer_id 로 본다(종전과 같다).
+    _j = clean_base_judge(store, dict(job, customer_id=customer_id), work)
+    if _j is None:
         return plan, _resolve_sources(job, work), None
-    base = _cb.load_base(work)
-    if base is None:
-        return plan, _resolve_sources(job, work), None
-    try:        # 옛 청소본 밀림 1회 측정(2026-09-27) — 소스를 못 찾아도 렌더 입력 준비는 계속한다
-        base = _cb.calibrate(work, base, _resolve_sources(job, work))
-    except Exception as _e:      # noqa: BLE001
-        print("[clean-base] 밀림 보정 건너뜀: %s" % _e, file=sys.stderr)
-    # ★늘림 판정의 길이는 렌더와 같은 자(final_clip_pairs가 쓰는 _beat_effective_dur)로 잰다 —
-    #   target_seconds는 계획값이라 실제 TTS 길이와 어긋날 수 있다(둘이 다르면 지워놓고 안 쓰거나, 모자란다).
-    tts_durs = clean_tts_durs(plan)
-    # ★렌더 컷 재생(2026-09-26): 원본으로 그렸을 컷 계획을 청소본 좌표로 옮긴다 — src_durs가 그 계획의 재료다
-    src_durs = _src_durs_for(job, work)
-    plan2, uncovered, extend = _cb.remap_plan(plan, base, tts_durs=tts_durs, src_durs=src_durs)
+    base, plan2, uncovered, extend = _j["base"], _j["plan2"], _j["uncovered"], _j["extend"]
+    tts_durs, src_durs = _j["tts_durs"], _j["src_durs"]
     if (uncovered or extend) and allow_clean:
         base = incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, uncovered, extend,
                                  need=plan2.get("_clean_need"))
@@ -4444,15 +4774,32 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
     return plan2, _cpaths, base
 
 
-@_owned_job
+def _intro_choice(thumb):
+    """완성본 앞에 붙는 썸네일 인트로 선택 — (켜짐, 고른 파일, 길이). 꺼져 있으면 (False, None, None).
+    ★app._save_render_inputs 의 같은 이름 판단과 같은 규칙(selected 우선, 없으면 마지막 결과)에 길이를 더했다."""
+    import json as _json
+    if isinstance(thumb, str):
+        try:
+            thumb = _json.loads(thumb) if thumb.strip() else {}
+        except Exception:      # noqa: BLE001
+            thumb = {}
+    thumb = thumb if isinstance(thumb, dict) else {}
+    if not thumb.get("intro"):
+        return False, None, None
+    results = list(thumb.get("results") or [])
+    return True, (thumb.get("selected") or (results[-1] if results else None)), thumb.get("intro_sec")
+
+
 def _render_stamp(job):
     """렌더 결과물이 '지금 설정'으로 만든 것인지 가리는 도장.
 
-    **고객이 6단계에서 만지는 설정만** 넣는다 — 꾸미기(deco)·제목(headcopy)·자막 스타일·자막제거.
-    ★`edit_plan`은 넣지 않는다: 렌더가 도는 동안 파이프라인이 **스스로** 편성을 여섯 군데서 고쳐 쓴다
-      (tts 경로·clip_anchor 등). 넣으면 정상 렌더도 매번 도장이 달라져 완성본이 통째로 버려진다
-      (2026-09-24 test_run_render_happy_path가 잡았다). 편성 변경은 저장 시점에 이미 완성본을 끊는다.
-    SEO·썸네일 글자처럼 영상이 안 바뀌는 것도 넣지 않는다(멀쩡한 완성본을 버리지 않게).
+    꾸미기(deco)·제목(headcopy)·자막 스타일·자막제거 + 자막제거 등급(clean_tier)·고른 장면(clean_cuts)
+    + 썸네일 인트로 선택 + **편성 지문(plan_signature)**.
+    ★2026-09-27: 종전엔 edit_plan 을 뺐다 — 렌더가 편성을 스스로 고쳐 써서 정상 렌더도 도장이 깨졌기 때문
+      (2026-09-24 test_run_render_happy_path). 이제 렌더는 편성표를 고쳐 쓰지 않는다(screen_clips.check_mutation
+      감시). 단 run_render 초입의 TTS 보장이 tts_path 를 채워 저장하므로 **도장은 그 저장 뒤에** 찍는다(run_render).
+    ★등급·고른 장면은 clean_tier_of·clean_selection_of(판정 한 곳)로 정규화해 넣는다(None=basic, 빈 목록=전체).
+    SEO·썸네일 글자처럼 영상이 안 바뀌는 것은 넣지 않는다(멀쩡한 완성본을 버리지 않게).
     """
     import json as _json
     def _norm(v):
@@ -4460,11 +4807,21 @@ def _render_stamp(job):
             return _json.dumps(v, ensure_ascii=False, sort_keys=True)
         except Exception:      # noqa: BLE001 — 도장 실패가 렌더를 죽이면 안 된다
             return str(v)
+    def _safe(fn):
+        try:
+            return fn()
+        except Exception as e:      # noqa: BLE001 — 도장 실패가 렌더를 죽이면 안 된다
+            return "ERR:%s" % type(e).__name__
     job = job or {}
-    return "|".join(_norm(job.get(k)) for k in
-                    ("deco", "headcopy", "caption_style", "subtitle_removal"))
+    parts = [_norm(job.get(k)) for k in ("deco", "headcopy", "caption_style", "subtitle_removal")]
+    parts.append(_norm(_safe(lambda: clean_tier_of(job))))
+    parts.append(_norm(_safe(lambda: clean_selection_of(job))))
+    parts.append(_norm(_safe(lambda: list(_intro_choice(job.get("thumbnail"))))))
+    parts.append(_safe(lambda: plan_signature(job.get("edit_plan") or {})))
+    return "|".join(parts)
 
 
+@_owned_job
 def run_render(job_id, db_path, work_root, skip_clean=False):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
@@ -4472,6 +4829,10 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
     _gpron = pron_corrections.load(store)
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
+        return
+    if _beat_dup_blocked(store, job_id, job["edit_plan"], "최종 렌더"):
+        # ★음성 합성·자막제거(과금)·조립 전에 막는다 — 겹친 번호로 만들면 한 칸 음성이 빠진 영상이 나간다
+        store.update_mix_job(job_id, status="failed", error=BEAT_DUP_MSG)
         return
     work = Path(work_root) / job_id
     work.mkdir(parents=True, exist_ok=True)
@@ -4481,15 +4842,21 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
         #   (2026-09-24 실측 job c52bb437d2c4: 저장된 꾸미기 제목은 '다들 쓰는 채칼'인데 완성본은
         #    '왜 이제 알았지' — 꾸미기 저장이 완성본을 끊었지만, 그 뒤 끝난 렌더가 video_path를 다시 박았다).
         #   시작 시점의 재료에 도장을 찍어 두고, 끝날 때 달라졌으면 그 결과를 **버린다**.
-        _stamp = _render_stamp(job)
-        plan = job["edit_plan"]
+        # ★렌더 작업본(plan)은 DB 저장본과 떼어 둔다(실 Store 는 원래 직렬화라 같은 뜻) — 조립이 메모리의
+        #   plan 을 만져도(check_mutation 이 경보만 낸다, 막지 않는다) 끝의 도장 비교가 그것을 "설정 변경"으로
+        #   오인하지 않게. 이 함수 안의 job 은 작업본을 가리키게 다시 묶는다(종전과 같은 객체 관계).
+        plan = copy.deepcopy(job["edit_plan"])
+        job = dict(job, edit_plan=plan)
         # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
         #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
                           global_pron=_gpron, customer_id=job.get("customer_id", 0),
                           script_endings=job_script_endings(job))
-        store.update_mix_job(job_id, edit_plan=plan)
-        tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
+        store.update_mix_job(job_id, edit_plan=copy.deepcopy(plan))
+        # ★도장은 TTS 보장 저장 **뒤에** 찍는다 — 그 저장이 tts_path 를 채워 편성 지문을 바꾸기 때문
+        #   (앞에서 찍으면 정상 렌더도 스스로 도장을 깬다). 편성 외 설정은 시작 시점 job 값 그대로.
+        _stamp = _render_stamp(job)
+        tts_paths = tts_paths_of(plan)
         out_path = work / "final.mp4"
 
         # ★청소본 정본(2026-09-22): 스위치가 켜져 있고 4단계 정본이 있으면 청소본을 소스로 조립한다
@@ -4499,8 +4866,11 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
         #   업체 호출 0. 정본이 없는 job이면 아래 청소 분기도 건너뛴다(원본 자막이 남는 것을 알고 고른 것).
         if skip_clean:
             print("[render] skip_clean — 자막제거 없이 렌더", file=sys.stderr)
+        from shopping_shorts import screen_clips as _sc
+        _scr_mark = _sc.begin(job_id)       # 이 렌더의 화면 컷 경보(FALLBACK·BEAT_MUTATED)를 셀 시작점
         plan_used, source_video_paths, _base = render_inputs_for(
             store, job, job_id, work, keys, job.get("customer_id") or 0, allow_clean=not skip_clean)
+        _scr_before = _sc.snapshot(plan_used)   # warm 직후 — assemble 직전에 칸이 바뀌었나 대조한다
         if _base is not None:
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
 
@@ -4569,11 +4939,15 @@ def run_render(job_id, db_path, work_root, skip_clean=False):
         # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
         cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
         sfx_paths = _resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job)
-        _apply_cut_rhythm(plan_used, store, job)
-        _apply_phrase_min_cut(plan_used, store, job)
+        # ★렌더는 편성표를 고쳐 쓰지 않는다(2026-09-27). 여기서 cut_rhythm·phrase_min_cut 표식을 달던 두 줄을 없앴다 —
+        #   warm(render_inputs_for 안)이 칸 키로 화면 컷을 캐시한 **뒤에** 표식을 더하면 키가 달라져 lookup이 빗나가고
+        #   최종 렌더만 서버 예비 계산으로 떨어졌다(미리보기·캡컷·ZIP엔 이 호출이 없었다). 표식은 편성 단계
+        #   (_trim_for_cut_rhythm·_plan_and_tts의 _apply_phrase_min_cut)가 단다 — 표식 없는 칸은 화면도 없이 그렸다(화면이 이긴다).
+        _sc.check_mutation(job_id, _scr_before, plan_used)
         assemble(plan_used, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)
+        _sc.summarize(job_id, _scr_mark)
         # 🖼 썸네일을 영상 맨 앞에 붙이기(2026-08-18 사장님 요청, 9단계 체크박스).
         #   켠 경우에만 돈다. 실패해도 렌더 자체는 살린다 — 인트로 때문에 완성 영상을
         #   통째로 잃는 게 더 나쁘다(실패는 로그로만 남기고 원본 final.mp4를 그대로 쓴다).
@@ -4645,6 +5019,19 @@ def _speed_base_path(out):
     return out.with_name(f"{out.stem}_speed_base{out.suffix}")
 
 
+def _bump_tts_ver(beats):
+    """음성을 다시 구운 칸의 tts_ver 를 올린다 — **올리는 곳은 여기 한 곳**(0순위-B, 2026-09-27).
+
+    mp3는 대본 해시 이름이라 성우·톤만 바꿔 다시 구우면 **같은 경로를 덮어쓴다** — 겉으론 구분이 안 된다.
+    그래서 화면(재합성 완료 폴링·scene_play.pvxCuts 의 합본 key)은 이 번호로 "음성이 바뀌었다"를 안다.
+    칸 하나 재합성(resynth_one_beat)만 올리고 전체 재합성(resynth_tts_job)은 안 올려, 전체를 다시 들어도
+    편집 화면이 옛 합본을 그대로 틀었다."""
+    for b in beats or []:
+        if isinstance(b, dict):
+            b["tts_ver"] = (b.get("tts_ver") or 0) + 1
+
+
+@_owned_job
 def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root, *, speed_only=False):
     """비트 하나만 voice_override로 재합성해 같은 mp3에 덮어쓰고 자막을 재동기한다.
     최종 렌더는 재합성 없이 이 mp3(beat['tts_path'])를 재사용하므로 교정이 그대로 남는다."""
@@ -4744,12 +5131,13 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root, *, sp
             traceback.print_exc(file=sys.stderr)
         # 완료 신호: 단조 증가 버전. 프론트가 이 값 변화를 폴링해 '재합성 끝'을 안다
         # (mp3는 같은 경로/URL이라 겉으론 구분이 안 되므로 — 고정 4초 추측을 이 신호로 대체).
-        beat["tts_ver"] = (beat.get("tts_ver") or 0) + 1
+        _bump_tts_ver([beat])
         store.update_mix_job(job_id, edit_plan=plan)
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
 
 
+@_owned_job
 def resynth_tts_job(job_id, db_path, work_root):
     """기존 edit_plan은 그대로 두고, job의 voice 설정으로 비트별 TTS만 다시 생성한다
     (영상제작 4단계 '이 대본으로 다시 듣기'·프리셋 변경). 재다운로드·재매칭 없음."""
@@ -4765,6 +5153,7 @@ def resynth_tts_job(job_id, db_path, work_root):
                           global_pron=pron_corrections.load(store),
                           customer_id=job.get("customer_id", 0),
                           script_endings=job_script_endings(job))
+        _bump_tts_ver(plan["beats"])      # 전 칸을 다시 구웠다(skip_existing 아님) — 화면이 새 음성을 묻게
         store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)

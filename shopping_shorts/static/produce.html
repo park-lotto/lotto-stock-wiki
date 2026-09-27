@@ -154,8 +154,10 @@
     #trimbar .hint{font-size:11.5px;color:var(--sub)}
     /* 엔진이 만드는 <video>는 크기를 CSS에 맡긴다 — 이 규칙이 없으면 화면이 안 잡힌다.
        ★비율의 정의처는 scene_play.js PV_AR 한 곳 — var 폴백은 그 값과 같아야 한다. */
+    /* ★cover = 완성본과 같은 구도(9:16 꽉 채워 자르기). contain이면 원본 전체+검은 여백이라 완성본과 보이는 범위가
+       달랐다(08-15~, 2026-09-27 사장님 A안). 합본 미리보기도 같은 자르기(video_assemble.frame_vf)로 굽는다. */
     #player video{width:100%;height:100%;border-radius:10px;background:#000;display:block;
-                  aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;position:absolute;inset:0}
+                  aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:cover;position:absolute;inset:0}
     #player .x:hover{color:var(--txt)}
     #subbox b{color:var(--accent)}
     .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
@@ -13146,6 +13148,18 @@ function renderAiSceneBtn(beat, idx){
   return h;
 }
 
+// ★화면 위치 i ↔ 진짜 칸 번호(beat_idx) 변환은 여기 한 곳(2026-09-27).
+//   편집안 화면은 위치 i로 그린다(DOM id sceneCutaway${i}·sceneSfx${i}). 그런데 서버 라우트
+//   (/ai_scene·/cutaway·/sfx)는 edit_plan.beats[].beat_idx로 칸을 찾는다 — 칸을 지운 작업은 번호가
+//   빠져(0,2,3…) 위치를 그대로 보내면 뒤 칸의 AI 장면(약 300원)·짤·효과음 빼기가 엉뚱한 칸에 붙거나 422였다.
+//   서버로 보내는 값은 반드시 이 함수를 탄다. 목록은 마지막으로 받은 편집안(globalThis._mixBeats).
+//   번호 없는 옛 데이터만 위치로(scene_lab.html beatIdOf와 같은 규칙).
+function mixBeatIdAt(i){
+  const bs = (typeof globalThis!=='undefined' && globalThis._mixBeats) || [];
+  const b = bs[i] || {};
+  return b.beat_idx == null ? i : b.beat_idx;
+}
+
 async function startAiScene(idx, style){
   if(!MIX_JOB) return;
   const box = document.getElementById('sceneCutaway'+idx);
@@ -13153,7 +13167,7 @@ async function startAiScene(idx, style){
   try{
     const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/ai_scene',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx, style: style})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx), style: style})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   pollAiScene(idx);
@@ -13161,7 +13175,8 @@ async function startAiScene(idx, style){
 
 async function _refreshBeatBox(idx){
   const d = await (await fetch('/api/mix/result/'+encodeURIComponent(MIX_JOB))).json();
-  const beat = (d.beats||[]).find(b=>b.beat_idx===idx);
+  if(d.beats) globalThis._mixBeats = d.beats;
+  const beat = (d.beats||[])[idx];   // idx = 화면 위치(toggleCutaway·removeSfx와 같은 식)
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
   const box = document.getElementById('sceneCutaway'+idx);
@@ -13210,7 +13225,7 @@ async function toggleCutaway(idx, assetId){
   try{
     const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cutaway',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx, asset_id: assetId})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx), asset_id: assetId})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   // 그 비트 행만 다시 그린다 — 편집안 전체(loadMixReview)를 다시 그리지 않는다.
@@ -13218,6 +13233,7 @@ async function toggleCutaway(idx, assetId){
   if(!d.ok) return;
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
+  if(d.beats) globalThis._mixBeats = d.beats;
   const beat = (d.beats||[])[idx];
   if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
 }
@@ -13244,11 +13260,12 @@ async function removeSfx(idx){
   try{
     const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/sfx',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx)})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   const d = await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   if(!d.ok) return;
+  if(d.beats) globalThis._mixBeats = d.beats;
   const beat = (d.beats||[])[idx];
   if(beat && box) box.innerHTML = renderSceneSfx(beat, idx);
 }
@@ -13309,7 +13326,7 @@ async function doSwap(idx, segId){
   try{
     const r = await (await fetch('/api/mix/adjust',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({job_id: MIX_JOB, beat_idx: idx, seg_id: segId})})).json();
+      body: JSON.stringify({job_id: MIX_JOB, beat_idx: mixBeatIdAt(idx), seg_id: segId})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   loadMixReview();   // 화면이 바뀜=옛 미리보기 무효 → 전체 재로드가 프리뷰까지 정리(2360 규율)
@@ -13340,7 +13357,7 @@ async function doShorten(idx){
   try{
     r=await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/shorten',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({beat_idx:idx})})).json();
+      body:JSON.stringify({beat_idx:mixBeatIdAt(idx)})})).json();
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   if(!r.ok){ if(box) box.innerHTML='<span class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</span>'; return; }
   if(!r.changed){ if(box) box.innerHTML='<span class="hint" style="color:var(--sub)">'+esc(r.note||'더 줄일 여지가 없어요')+'</span>'; return; }
@@ -13354,7 +13371,7 @@ async function doTrim(idx, edge, mode){
   try{
     r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/trim',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx, edge, mode, step: 0.3})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx), edge, mode, step: 0.3})})).json();
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   if(mode==='auto' && edge==='tail' && !r.tail_trim){
@@ -16230,7 +16247,10 @@ async function renderFinal(){
     if(cbp && cbp.enabled && cbp.base){
       const n=(cbp.uncovered||[]).length + (cbp.extend||[]).length;
       if(n>0){
-        const secs=(cbp.uncovered||[]).reduce((a,u)=>a+(u.seconds||0),0)+(cbp.extend||[]).reduce((a,e)=>a+(e.need||0),0);
+        // ★초·크레딧은 서버가 준 값 그대로(2026-09-27) — 서버가 실제로 보낼 초(여유 포함)로 계산한다.
+        //   종전엔 여기서 늘림을 e.need(모자란 초)로 더해 서버 크레딧(구간 전체 초)과 초수가 서로 달랐다.
+        const secs=(typeof cbp.seconds==='number')?cbp.seconds
+          :((cbp.uncovered||[]).reduce((a,u)=>a+(u.seconds||0),0)+(cbp.extend||[]).reduce((a,e)=>a+(e.seconds||0),0));
         // ★안내는 정확하게(2026-09-22 사장님): 무엇 때문에, 어디만, 얼마가 나가는지.
         //   자막제거(4단계) 뒤에 장면을 새로 넣으면 그 조각은 아직 안 지워진 상태다 — 그 조각만 다시 지운다.
         //   이미 지운 조각을 옮기거나 빼거나 잘라 쓴 것은 그대로 재사용한다(과금 0).

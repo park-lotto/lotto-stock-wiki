@@ -1,0 +1,372 @@
+"""영상 관문(video_gate.py) + finish 연결 테스트.
+
+핵심: ① '다른 장면'이 있으면 **반드시** 실패 ② 요약을 못 읽으면 통과가 아니라 실패
+③ 서버에 못 붙거나 디스크가 모자라면 조용히 넘기지 않고 실패 ④ 영상 관문이 실패하면 main 에 아무것도 안 나간다.
+"""
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import track
+import video_gate as vg
+from test_track import repo, _Gate, _git, _head, _make_track_commit, _origin_head  # noqa: F401 (fixture)
+
+CFG = vg.load_config()
+
+# 서버 실측 report(2026-09-27 /tmp/evf/report.txt) 모양 그대로
+_HEAD = ("판정: 가운데 띠(10~70%) 5x5 z거리 >= 0.55 = 다른 장면 / 밀림 >= 0.15s (찾는 범위 ±0.6s)\n"
+         "표기: 칸번호(*=청소본 칸) · ...\n")
+_JOB_OK = ("62ed6bf66eb9 칸10(청소본 10) 화면40.03s 완성본40.02s 음성40.01s | 다른장면 [] | 밀림0.15+ "
+           "[('0*', 0.2, [('0', 0.01, 0.0)])] | 경계밀림 [] | 정지컷밀림 [] | 최대거리 0.33 | 54s(굽기12 렌더38 비교4)\n")
+_JOB_BAD = ("7bbb00000001 칸8(청소본 0) 화면30.00s 완성본30.00s 음성30.00s | 다른장면 [('3', 0.91, [('0', 0.91, 0.0)])] "
+            "| 밀림0.15+ [] | 경계밀림 [] | 정지컷밀림 [] | 최대거리 0.91 | 40s(굽기10 렌더26 비교4)\n")
+
+
+def _report(jobs, summary):
+    return _HEAD + "".join(jobs) + summary + "\n"
+
+
+def _sum(cells, scene, sc=0, sb=0, sh=0):
+    return "== 칸 %d · 다른 장면 %d · 0.15초 이상 밀림(가운데) %d · 경계 밀림 %d · 정지컷만 밀림 %d" % (cells, scene, sc, sb, sh)
+
+
+GATE = dict(CFG["gate"], min_jobs_compared=1)
+
+
+# ── 요약 판정 ────────────────────────────────────────────────────
+
+def test_clean_report_passes():
+    p = vg.parse_report(_report([_JOB_OK], _sum(10, 0, 2, 3, 2)))
+    assert p["summary"] == {"cells": 10, "scene": 0, "shift_center": 2, "shift_boundary": 3, "shift_hold": 2}
+    ok, fails, notes = vg.judge(p, GATE)
+    assert ok, fails
+    assert any("보고만" in n for n in notes), "밀림은 기준 null 이면 보고만 해야 한다"
+
+
+def test_scene_mismatch_fails():
+    """★사보타주 기준: '다른 장면 3'인데 통과하면 관문은 존재 이유가 없다."""
+    p = vg.parse_report(_report([_JOB_OK, _JOB_BAD], _sum(18, 3)))
+    ok, fails, _ = vg.judge(p, GATE)
+    assert not ok
+    assert any("다른 장면 3칸" in f for f in fails), fails
+
+
+def test_summary_zero_but_job_line_has_scene_fails():
+    """요약만 믿지 않는다 — 작업 줄에 다른 장면이 있으면 요약이 0이어도 실패."""
+    p = vg.parse_report(_report([_JOB_BAD], _sum(8, 0)))
+    ok, fails, _ = vg.judge(p, GATE)
+    assert not ok and any("작업 줄" in f for f in fails), fails
+
+
+@pytest.mark.parametrize("text", [
+    "",                                                       # 도구가 아무것도 못 썼다
+    _HEAD + _JOB_OK,                                          # 요약 줄 없이 죽었다
+    _HEAD + _JOB_OK + "== 칸 10 · 다른장면 3 · 모양이 바뀜\n",   # 요약 형식이 바뀌었다
+])
+def test_unreadable_summary_fails(text):
+    ok, fails, _ = vg.judge(vg.parse_report(text), GATE)
+    assert not ok and fails
+
+
+def test_nothing_compared_fails():
+    rep = _HEAD + "aaaa11112222 건너뜀 TypeError: boom\nbbbb11112222 건너뜀 TypeError: boom\n" + _sum(0, 0) + "\n"
+    ok, fails, _ = vg.judge(vg.parse_report(rep), CFG["gate"])
+    assert not ok
+    assert any("0 —" in f for f in fails) and any("오류로 건너뛴" in f for f in fails)
+
+
+def test_benign_skip_does_not_fail_but_error_skip_does():
+    ok, _, _ = vg.judge(vg.parse_report(_report([_JOB_OK, "cccc11112222 건너뜀 음성 없음\n"], _sum(10, 0))), GATE)
+    assert ok
+    ok, fails, _ = vg.judge(vg.parse_report(_report([_JOB_OK, "cccc11112222 건너뜀 완성본 렌더 실패\n"], _sum(10, 0))), GATE)
+    assert not ok and "완성본 렌더 실패" in fails[0]
+
+
+def test_min_jobs_compared():
+    ok, fails, _ = vg.judge(vg.parse_report(_report([_JOB_OK], _sum(10, 0))), dict(GATE, min_jobs_compared=3))
+    assert not ok and "최소 3개" in fails[0]
+
+
+def test_shift_threshold_tightens_when_set():
+    p = vg.parse_report(_report([_JOB_OK], _sum(10, 0, 2, 3, 2)))
+    ok, fails, _ = vg.judge(p, dict(GATE, max_shift_center=0))
+    assert not ok and "밀림(가운데) 2칸" in fails[0]
+
+
+def test_audit_shift_ratio():
+    audit = dict(CFG["audit"])
+    ok, _, _ = vg.judge(vg.parse_report(_report([_JOB_OK], _sum(10, 0, 2))), audit)
+    assert ok
+    ok, fails, _ = vg.judge(vg.parse_report(_report([_JOB_OK], _sum(10, 0, 5))), audit)
+    assert not ok and "비율" in fails[0]
+
+
+# ── 실행 여부 ────────────────────────────────────────────────────
+
+def test_needs_gate_for_watched_files():
+    run, reasons, unmeasured = vg.needs_video_gate(["shopping_shorts/video_assemble.py", "README.md"], CFG)
+    assert run and "video_assemble" in reasons[0] and not unmeasured
+    run, _, unmeasured = vg.needs_video_gate(["shopping_shorts/capcut_draft.py"], CFG)
+    assert run and unmeasured == ["shopping_shorts/capcut_draft.py"]
+
+
+def test_no_gate_for_unrelated_files():
+    run, _, _ = vg.needs_video_gate(["tools/track.py", "shopping_shorts/static/produce.html", "wiki/x.md"], CFG)
+    assert not run
+
+
+def test_app_without_decider_runs():
+    run, reasons, _ = vg.needs_video_gate(["shopping_shorts/app.py"], CFG)
+    assert run and "판정 함수 없음" in reasons[0]
+
+
+_APP_OLD = '''import os
+
+X = 1
+
+
+def _pvproxy_build(job_id):
+    return 1
+
+
+@app.post("/api/mix/render")
+def api_render(body):
+    return 2
+
+
+@app.get("/api/admin/customers")
+def api_customers():
+    return 3
+'''
+
+
+def _udiff(tmp_path, old, new):
+    a, b = tmp_path / "a.py", tmp_path / "b.py"
+    a.write_bytes(old.encode("utf-8"))
+    b.write_bytes(new.encode("utf-8"))
+    p = subprocess.run(["git", "diff", "--no-index", "-U0", str(a), str(b)], capture_output=True)
+    return p.stdout.decode("utf-8")
+
+
+@pytest.mark.parametrize("old,new,expect,why", [
+    ("    return 1", "    return 11", True, "_pvproxy_build"),
+    ("    return 2", "    return 22", True, "api_render"),                 # 이름엔 render 가 있고 라우트도 /api/mix/render
+    ("    return 3", "    return 33", False, "api_customers"),             # 제작 라인 밖
+    ("X = 1", "X = 2", True, "모듈 수준"),                                   # 못 정함 → 실행
+    ("    return 3", "    return 3  # 주석만", False, None),                 # 주석이 붙어도 코드 줄이 바뀌면…
+])
+def test_app_function_level_decision(tmp_path, old, new, expect, why):
+    new_src = _APP_OLD.replace(old, new, 1)
+    run, reason = vg.app_touches_video(_APP_OLD, new_src, _udiff(tmp_path, _APP_OLD, new_src), CFG)
+    if why == "api_customers" or why is None:
+        assert run is False, reason
+    else:
+        assert run is expect and why in reason, reason
+
+
+def test_app_comment_only_change_is_ignored(tmp_path):
+    new_src = _APP_OLD.replace("X = 1\n", "X = 1\n# 설명 주석\n", 1)
+    run, reason = vg.app_touches_video(_APP_OLD, new_src, _udiff(tmp_path, _APP_OLD, new_src), CFG)
+    assert run is False and "주석" in reason
+
+
+def test_app_route_path_counts_even_if_name_is_plain(tmp_path):
+    old = _APP_OLD + '\n\n@app.get("/api/mix/capcut/{job_id}")\ndef download_it(job_id):\n    return 4\n'
+    new = old.replace("return 4", "return 44")
+    run, reason = vg.app_touches_video(old, new, _udiff(tmp_path, old, new), CFG)
+    assert run and "download_it" in reason
+
+
+def test_app_deleted_video_function_runs(tmp_path):
+    new = _APP_OLD.replace("def _pvproxy_build(job_id):\n    return 1\n\n\n", "", 1)
+    run, reason = vg.app_touches_video(_APP_OLD, new, _udiff(tmp_path, _APP_OLD, new), CFG)
+    assert run and "_pvproxy_build" in reason
+
+
+# ── 서버 실행(가짜 ssh) ──────────────────────────────────────────
+
+def _stage(tmp_path, changed_rel="shopping_shorts/video_assemble.py"):
+    """origin/main 에 detached + track/x 를 --no-commit 병합한 '병합 임시 폴더'와 같은 상태."""
+    r = tmp_path / "stage"
+    r.mkdir()
+    _git(r, "init", "-b", "main")
+    _git(r, "config", "user.email", "t@t.t")
+    _git(r, "config", "user.name", "t")
+    files = {"shopping_shorts/video_assemble.py": "A = 1\n", "shopping_shorts/app.py": "B = 1\n",
+             "tools/editor_vs_final_video.py": "# tool\n", "tools/evf_run.py": "# run\n", "README.md": "r\n"}
+    for rel, body in files.items():
+        (r / rel).parent.mkdir(parents=True, exist_ok=True)
+        (r / rel).write_bytes(body.encode("utf-8"))
+    _git(r, "add", "-A")
+    _git(r, "commit", "-m", "base")
+    _git(r, "checkout", "-b", "track/x")
+    (r / changed_rel).write_bytes(b"CHANGED = 2\n")
+    _git(r, "commit", "-am", "work")
+    _git(r, "checkout", "--detach", "main")
+    _git(r, "merge", "--no-ff", "--no-commit", "track/x")
+    return r
+
+
+class _FakeSSH:
+    def __init__(self, report="", free=57, reachable=True, crash="", poll="EVF_DONE rc=0\n---\n5\nGONE\n"):
+        self.report, self.free, self.reachable, self.crash, self.poll = report, free, reachable, crash, poll
+        self.cmds = []
+
+    def __call__(self, cmd, stdin=None, timeout=120):
+        self.cmds.append(cmd)
+        if not self.reachable:
+            return 255, "ssh: connect to host timed out"
+        if cmd.startswith("df "):
+            return 0, " %dG\n" % self.free
+        if "tar xzf" in cmd:
+            return 0, "UP_OK\n"
+        if "evf_run.py" in cmd:
+            return 0, "PID=4242\n"
+        if cmd.startswith("cat ") and "done.txt" in cmd:
+            return 0, self.poll
+        if "report.txt" in cmd and cmd.startswith("cat "):
+            return 0, self.report
+        if "crash.txt" in cmd and cmd.startswith("cat "):
+            return 0, self.crash
+        return 0, ""
+
+
+def _run(stage, ssh, **kw):
+    out = []
+    res = vg.run_video_gate(stage, "track/x", printer=out.append, sh=ssh, cfg=kw.pop("cfg", dict(CFG, gate=GATE)),
+                            env=kw.pop("env", {}), sleep=lambda s: None)
+    return res, "\n".join(out)
+
+
+def test_gate_skips_without_touching_server(tmp_path):
+    ssh = _FakeSSH()
+    res, out = _run(_stage(tmp_path, "README.md"), ssh)
+    assert res.ok and not res.ran and "건너뜀" in out
+    assert ssh.cmds == [], "해당 변경이 없으면 서버에 붙지도 않는다"
+
+
+def test_gate_passes_clean_report_and_cleans_up(tmp_path):
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0, 2)))
+    res, out = _run(_stage(tmp_path), ssh)
+    assert res.ok and res.ran, out
+    assert "판정 근거: == 칸 10" in out and "62ed6bf66eb9" in out, "report 전문과 근거 줄이 출력에 남아야 한다"
+    assert ssh.cmds[-1].startswith("rm -rf /tmp/gate_"), "성공해도 서버 폴더를 지운다"
+
+
+def test_gate_fails_on_scene_mismatch_and_cleans_up(tmp_path):
+    ssh = _FakeSSH(report=_report([_JOB_OK, _JOB_BAD], _sum(18, 3)))
+    res, out = _run(_stage(tmp_path), ssh)
+    assert not res.ok and "다른 장면 3칸" in out
+    assert ssh.cmds[-1].startswith("rm -rf /tmp/gate_")
+
+
+def test_gate_fails_when_server_unreachable(tmp_path):
+    res, out = _run(_stage(tmp_path), _FakeSSH(reachable=False))
+    assert not res.ok and "못 붙었다" in out
+
+
+def test_gate_fails_on_low_disk(tmp_path):
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), free=12)
+    res, out = _run(_stage(tmp_path), ssh)
+    assert not res.ok and "12GB" in out
+    assert not any("evf_run.py" in c for c in ssh.cmds), "디스크 모자라면 비교를 띄우지 않는다"
+
+
+def test_gate_fails_on_tool_crash(tmp_path):
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), crash="Traceback ... ImportError")
+    res, out = _run(_stage(tmp_path), ssh)
+    assert not res.ok and "crash" in out
+
+
+def test_gate_skip_switch_is_loud(tmp_path):
+    ssh = _FakeSSH()
+    res, out = _run(_stage(tmp_path), ssh, env={"VIDEO_GATE_SKIP": "사장님 지시 09-27 긴급"})
+    assert res.ok and not res.ran
+    assert "영상 관문 건너뜀 (사유: 사장님 지시 09-27 긴급)" in out and "!!!!" in out
+    assert ssh.cmds == []
+
+
+def test_gate_uploads_merged_modules_and_main_tool(tmp_path):
+    stage = _stage(tmp_path)
+    blobs = []
+
+    class _Cap(_FakeSSH):
+        def __call__(self, cmd, stdin=None, timeout=120):
+            if stdin:
+                blobs.append(stdin)
+            return super().__call__(cmd, stdin, timeout)
+
+    _run(stage, _Cap(report=_report([_JOB_OK], _sum(10, 0))))
+    import io
+    import tarfile
+    with tarfile.open(fileobj=io.BytesIO(blobs[0])) as tf:
+        names = set(tf.getnames())
+        assert tf.extractfile("video_assemble.py").read() == b"CHANGED = 2\n", "병합본 모듈을 올려야 한다"
+    assert {"app.py", "_tool/editor_vs_final_video.py", "_tool/evf_run.py"} <= names
+
+
+# ── finish 연결 ─────────────────────────────────────────────────
+
+def test_finish_pushes_nothing_when_video_gate_fails(repo):
+    _make_track_commit(repo, "영상")
+    before_origin = _origin_head(repo)
+    fail = lambda stage, br: vg.GateResult(False, True, "x")          # noqa: E731
+    with pytest.raises(track.TrackError, match="영상 관문 실패"):
+        track.finish("영상", repo=repo, gate=_Gate(), video_gate=fail)
+    assert _origin_head(repo) == before_origin, "★영상 관문 실패인데 main 으로 나갔다"
+    assert not (track.tracks_dir(repo) / "_merge-영상").exists()
+
+
+def test_finish_calls_video_gate_before_commit(repo):
+    _make_track_commit(repo, "영상")
+    seen = []
+
+    def spy(stage, br):
+        rc, _ = track.run(["git", "rev-parse", "--verify", "--quiet", "MERGE_HEAD"], stage)
+        seen.append((rc, br))
+        return vg.GateResult(True, False, "")
+
+    assert track.finish("영상", repo=repo, gate=_Gate(), video_gate=spy) == 0
+    assert seen == [(0, "track/영상")], "영상 관문은 병합 중(커밋 전) 상태에서 불려야 한다"
+
+
+def test_gate_fails_when_compare_dies_without_done_mark(tmp_path):
+    """비교 프로세스가 끝 표식(done.txt) 없이 사라지면 — report 가 멀쩡해 보여도 — 실패."""
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), poll="---\n3\nGONE\n")
+    res, out = _run(_stage(tmp_path), ssh)
+    assert not res.ok and "끝 표식 없이 죽었다" in out
+    assert any(c.startswith("kill -- -4242") for c in ssh.cmds)
+
+
+def test_gate_fails_on_timeout(tmp_path):
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)), poll="---\n3\nALIVE\n")
+    cfg = dict(CFG, gate=dict(GATE, timeout_sec=1))
+    res, out = _run(_stage(tmp_path), ssh, cfg=cfg)
+    assert not res.ok and "시간 초과" in out
+
+
+def test_gate_warns_loudly_when_merge_changes_the_gate_tool(tmp_path):
+    ssh = _FakeSSH(report=_report([_JOB_OK], _sum(10, 0)))
+    res, out = _run(_stage(tmp_path, "tools/editor_vs_final_video.py"), ssh)
+    assert "영상 관문 자체를 바꾼다" in out and "tools/editor_vs_final_video.py" in out
+
+
+def test_patch_rels_cover_tool_loader():
+    """도구가 PATCH_DIR 에서 얹는 모듈(for _n in (...))은 전부 관문이 서버에 올리는 목록(PATCH_RELS)에 있어야 한다.
+    2026-09-27: frame_match.py 가 도구 목록엔 있고 업로드 목록엔 없어 첫 finish 가 ImportError 로 막혔다."""
+    import re
+    src = (Path(__file__).resolve().parent / "editor_vs_final_video.py").read_text(encoding="utf-8")
+    m = re.search(r"for _n in \(([^)]*)\):", src)
+    assert m, "도구의 PATCH_DIR 모듈 목록(for _n in (...))을 못 찾았다"
+    names = re.findall(r'"([A-Za-z_]+)"', m.group(1))
+    assert names, m.group(1)
+    missing = [n for n in names if ("%s.py" % n) not in vg.PATCH_RELS]
+    assert not missing, "도구는 얹는데 관문이 안 올리는 모듈: %s" % missing
+    for n in names:
+        rel = vg.PATCH_RELS["%s.py" % n]
+        assert (Path(__file__).resolve().parents[1] / rel).exists(), rel
+        assert rel in vg.load_config().get("watch_files", []), "감시 목록(gate_video.json)에도 있어야 한다: %s" % rel

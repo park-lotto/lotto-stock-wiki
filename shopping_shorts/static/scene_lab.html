@@ -615,7 +615,7 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
         flex:0 0 auto;width:auto;max-width:100%;aspect-ratio:var(--shorts-pv-ar,9/16);
         margin:0 auto;cursor:pointer}   /* 화면 클릭 = 정지/재생(2026-08-15) */
 #player .phead{cursor:default}   /* 오른쪽 칼럼에 고정됐다 — 더는 끌어 옮길 필요가 없다 */
-#player video{width:100%;height:100%;border-radius:6px;background:#000;display:block;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;position:absolute;inset:0}
+#player video{width:100%;height:100%;border-radius:6px;background:#000;display:block;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:cover;position:absolute;inset:0}
 .phead{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:6px}
 .phead .x{cursor:pointer;color:var(--dim)}
 .phead .x:hover{color:var(--bad)}
@@ -2788,11 +2788,16 @@ function aiSceneControl(i){
            + `<button class="danger" title="AI 장면을 떼고 담은 장면으로 돌립니다" onclick="removeAiScene(${i})">✕ AI 빼기</button>` : '')
     + (st === 'failed' ? `<span class="hint" style="color:#f66">⚠ ${esc((b.ai_scene||{}).error || '실패')}</span>` : '');
 }
+// ★서버 라우트(/ai_scene·/cutaway·/sfx)는 **진짜 칸 번호(beat_idx)**로 칸을 찾는다. 화면 위치 i를 보내면
+//   칸을 지운 작업(번호 빠짐)에서 뒤 칸의 AI 장면(~300원)·효과음이 엉뚱한 칸에 붙거나 422가 난다(2026-09-27).
+function beatIdOf(i){
+  return beatKeyAt(i);     // 위치→번호 규칙은 scene_play.js beatKeyAt 한 곳(번호 없는 로컬 데이터만 위치로)
+}
 async function startAiScene(i, style){
   try{
     const r = await fetch('/api/produce/mix/' + SL.job + '/ai_scene', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: i, style: style || 'natural'})});
+      body: JSON.stringify({beat_idx: beatIdOf(i), style: style || 'natural'})});
     const d = await r.json().catch(()=>({ok:false}));
     if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
     DATA.beats[i].ai_scene = {state:'queued', style: d.style || style};
@@ -2811,7 +2816,8 @@ function pollAiScene(i){
     let d = null;
     try{ d = await (await fetch('/api/mix/result/' + SL.job + '?t=' + Date.now(), {cache:'no-store'})).json(); }catch(_){ }
     const beats = (d && (d.edit_plan || d.plan || {}).beats) || (d && d.beats) || [];
-    const b = beats.find(x => x.beat_idx === i) || beats[i];
+    const _id = beatIdOf(i);
+    const b = beats.find(x => x.beat_idx === _id);
     if (b){
       DATA.beats[i].ai_scene = b.ai_scene || null;
       DATA.beats[i].cutaway = b.cutaway || null;
@@ -2825,7 +2831,7 @@ async function removeAiScene(i){
   try{
     const r = await fetch('/api/produce/mix/' + SL.job + '/cutaway', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: i, asset_id: null})});
+      body: JSON.stringify({beat_idx: beatIdOf(i), asset_id: null})});
     const d = await r.json().catch(()=>({ok:false}));
     if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
     DATA.beats[i].cutaway = null;
@@ -2842,7 +2848,7 @@ async function _sfxPost(i, body){
   try{
     const r = await fetch('/api/produce/mix/' + SL.job + '/sfx', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(Object.assign({beat_idx: i}, body))});
+      body: JSON.stringify(Object.assign({beat_idx: beatIdOf(i)}, body))});
     const d = await r.json().catch(()=>({ok:false}));
     if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
     // 서버가 확정한 값으로 화면을 맞춘다 — 낙관적 갱신은 실패 시 화면과 서버가 어긋난다.
@@ -2978,7 +2984,7 @@ async function setBeatSpeed(i, raw, ev){
   if (!beat || SPEED_BUSY[i] || !isFinite(wanted)) return;
   const before = beatSyncSpeed(i);
   if (Math.abs(before - wanted) < 0.01) return;
-  const beatId = beat.beat_idx == null ? i : beat.beat_idx;
+  const beatId = beatKeyAt(i);
   const ver0 = beat.tts_ver || 0;
   beat.sync_speed = wanted; SPEED_BUSY[i] = true; renderBand();
   nsay(`🎚 ${i+1}번 칸 ${wanted.toFixed(1)}배 — 음성·장면을 함께 맞추는 중…`);
@@ -4031,8 +4037,7 @@ async function saveNarr(i){
 // 재생성 완료는 tts_ver(단조 증가)로 안다 — mp3는 같은 경로라 겉으로 구분이 안 된다
 // (mix_pipeline.resynth_one_beat이 끝에서 이 값을 올린다).
 async function waitNarrRegen(i, ver0){
-  const beatId = (((DATA || {}).beats || [])[i] || {}).beat_idx;
-  const wantedId = beatId == null ? i : beatId;
+  const wantedId = beatKeyAt(i);
   for (let n = 0; n < 40; n++){                 // 최대 ~40초
     await new Promise(r => setTimeout(r, 1000));
     try{
@@ -4111,7 +4116,7 @@ function estSec(t){
 // 대본을 고쳐(NARR) 아직 음성을 안 뽑았으면 옛 구절이라 시간이 안 맞는다 → 그때는 안 그린다.
 function capSegs(i){
   if (narrChanged(i)) return [];                       // 고친 대본 ≠ 서버 구절
-  const rows = (DATA.captions || {})[String(i)] || (DATA.captions || {})[i] || [];
+  const rows = capsOf(i);                              // 키=번호 — capsOf가 위치→번호로 바꿔 읽는다
   const out = [];
   for (const r of rows){
     const s = +r.start, e = +r.end;
