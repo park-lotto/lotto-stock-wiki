@@ -63,12 +63,29 @@ def _fake_cc(report=_CC_OK, crash="", rc=0, seen=None):
     return run
 
 
-def _go(tmp_path, report="", free=57, rows=None, cc=None, **kw):
+_AU_LINE = ("== 칸 %d · 나레이션 0.15초+ 오차 %d · 효과음 누락 0 · BGM 이상 0 · 음성-자막 0.15초+ 0 · 나레이션 못찾음 0"
+            " · 효과음 타점0.10+ 0 · 길이 이상 0 · 렌더뒤음성바뀜 0 · 건너뜀 0 · 패킷 잉여 0.05초+ %d편 · 일정 지연 %d편   (…)")
+_AU_OK = "j 칸10 …\n" + _AU_LINE % (10, 0, 0, 0) + "\n"
+
+
+def _fake_au(report=_AU_OK, crash="", rc=0, seen=None):
+    def run(n, work, timeout):
+        if seen is not None:
+            seen.append(n)
+        work.mkdir(parents=True, exist_ok=True)
+        (work / "report.txt").write_text(report, encoding="utf-8")
+        if crash:
+            (work / "crash.txt").write_text(crash, encoding="utf-8")
+        return rc, "aulog"
+    return run
+
+
+def _go(tmp_path, report="", free=57, rows=None, cc=None, au=None, **kw):
     al = dva._Alerter(dry_run=True, printer=lambda s: None)
     db = _db(tmp_path, rows if rows is not None else [("62ed6bf66eb9", "ready", _iso(1))])
     rc = dva.run_audit(jobs=10, hours=24, out_root=tmp_path / "audit", tmp_root=tmp_path / "tmp", alerter=al, cfg=CFG,
                        printer=lambda s: None, runner=_fake_runner(report, **kw), free_gb=free, db_path=db, now=NOW,
-                       cc_runner=cc or _fake_cc())
+                       cc_runner=cc or _fake_cc(), audio_runner=au or _fake_au())
     return rc, al.calls
 
 
@@ -205,3 +222,35 @@ def test_daily_audit_scene_cache_under_work(tmp_path, monkeypatch, fn):
     monkeypatch.setattr(dva.subprocess, "run", fake_run)
     getattr(dva, fn)(["abc"], tmp_path / "w", 10)
     assert seen.get("SEG_SNAP_CACHE_DIR") == str(tmp_path / "w" / "snapcache"), seen.get("SEG_SNAP_CACHE_DIR")
+
+
+
+# ── ⑥ 소리 대조(2026-09-27) — 고객이 받은 실제 완성본(효과음·인트로 포함) ─────────────────
+
+def test_audio_audit_runs_and_is_kept(tmp_path):
+    seen = []
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, 2)), au=_fake_au(seen=seen))
+    assert rc == 0 and calls == [("resolve",)]
+    assert seen == [CFG["audit"]["audio_jobs"]]
+    day = tmp_path / "audit" / "2026-09-27"
+    assert "일정 지연 0편" in (day / "audio_report.txt").read_text(encoding="utf-8")
+    import json
+    assert json.loads((day / "summary.json").read_text(encoding="utf-8"))["audio_summary"]["delay"] == 0
+    assert not list((tmp_path / "tmp").glob("audio_audit_*")), "소리 대조 임시 폴더도 지운다"
+
+
+@pytest.mark.parametrize("n,s,d", [(2, 0, 0), (0, 1, 0), (0, 0, 3)])
+def test_audio_mismatch_raises_customer_alert(tmp_path, n, s, d):
+    """★사보타주 기준: 영상·캡컷은 깨끗해도 목소리가 화면과 어긋나면(나레이션·잉여·일정 지연) 쪽지가 나가야 한다."""
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, 2)), au=_fake_au(report=_AU_LINE % (10, n, s, d) + "\n"))
+    assert rc == 1
+    raised = [c for c in calls if c[0] == "raise"]
+    assert raised and "소리≠화면" in raised[0][1] and raised[0][3] == "고객영향", calls
+
+
+def test_audio_audit_crash_or_missing_summary_alerts(tmp_path):
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, 2)), au=_fake_au(report="x\n"))
+    assert rc == 2 and any("소리 대조를 끝까지 못 돌림" in c[1] for c in calls if c[0] == "raise"), calls
+    (tmp_path / "b").mkdir()
+    rc, calls = _go(tmp_path / "b", _report([_JOB_OK], _sum(10, 0, 2)), au=_fake_au(crash="Traceback", rc=1))
+    assert rc == 2, calls

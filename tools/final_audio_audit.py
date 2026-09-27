@@ -54,7 +54,23 @@ SURPLUS_T = 0.05           # 소리 패킷 표본 잉여(nb_frames×1024/표본�
 #   정상(나레이션 한 줄을 한 번 AAC 로)은 AAC 앞뒤 채움 1회분 +0.02~0.03초. 칸별 AAC → concat 은 칸당 20~40ms 쌓여 +0.14초 이상.
 STALE_SLACK = 1.0          # mp3 수정 시각이 완성본보다 이만큼 뒤면 '렌더 뒤 음성 바뀜'
 
+OFFSET_T = 0.03           # 일정 지연 보고 기준(초) — 전 칸 음성-영상(계획 프레임) 오차 **중앙값** 또는 인트로 뒤 첫 칸 오차가 이 이상.
+#   왜(2026-09-27): 종전 인트로 경로는 인트로 뒤 목소리 **전체**를 +0.059~0.064초 늦췄는데, 패킷 잉여(0.05)로도
+#   나레이션 기준(0.15)으로도 안 잡혔다. 칸마다 같은 크기로 밀리는 결함은 '가장 큰 칸'이 아니라 '가운데 값'으로 잡는다.
+#   기준은 계획 프레임(렌더가 칸을 놓는 자리)이다 — 영상 컷 검출은 1프레임(0.033초) 흔들려(ff3b 실측 +1프레임) 0.03 판정에 못 쓴다.
 OUT = Path(os.getenv("AUDIO_OUT") or "/tmp/audio_audit")
+FINAL_DIR = os.getenv("AUDIO_FINAL_DIR") or ""   # 관문: 영상 비교가 이미 구운 임시 완성본(<dir>/<job>.mp4)을 잰다(렌더 2번 금지)
+
+if os.getenv("PATCH_DIR"):          # 관문: 병합본 모듈을 먼저 얹는다(editor_vs_final_video 와 같은 목록·순서)
+    import importlib.util as _ilu
+    sys.path.insert(0, ".")
+    import shopping_shorts as _ss
+    for _n in ("frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
+        _f = Path(os.getenv("PATCH_DIR")) / ("%s.py" % _n)
+        if _f.exists():
+            _sp = _ilu.spec_from_file_location("shopping_shorts." + _n, str(_f))
+            _m = _ilu.module_from_spec(_sp); sys.modules["shopping_shorts." + _n] = _m
+            _sp.loader.exec_module(_m); setattr(_ss, _n, _m)
 
 
 # ── 소리 읽기(임시 파일 없음 — 파이프) ───────────────────────────────────────
@@ -395,7 +411,20 @@ def judge(r):
             "sfx_nofile": [x for x in r["sfx"] if x.get("missing_file")],
             "bgm_bad": 1 if (r["bgm"] or {}).get("bad") else 0,
             "len_bad": 1 if abs(r["len"]["diff"]) >= LEN_T else 0,
-            "surplus_bad": 1 if (r.get("surplus") is not None and r["surplus"] >= SURPLUS_T) else 0}
+            "surplus_bad": 1 if (r.get("surplus") is not None and r["surplus"] >= SURPLUS_T) else 0,
+            **_const_delay(r, live)}
+
+
+def _const_delay(r, live):
+    """일정 지연 — (a) 전 칸 음성-계획프레임 오차 중앙값 (b) 인트로 뒤 첫 칸 오차. 둘 중 하나라도 OFFSET_T 이상이면 1."""
+    errs = [x["nar"] - x["plan_t"] for x in live if x.get("nar") is not None and x.get("plan_t") is not None]
+    med = float(np.median(errs)) if errs else None
+    first = None
+    if (r.get("intro_used") or 0) > 0 and live and live[0].get("nar") is not None and live[0].get("plan_t") is not None:
+        first = live[0]["nar"] - live[0]["plan_t"]
+    bad = (med is not None and abs(med) >= OFFSET_T) or (first is not None and abs(first) >= OFFSET_T)
+    return {"delay_med": None if med is None else round(med, 3), "delay_first": None if first is None else round(first, 3),
+            "delay_bad": 1 if bad else 0}
 
 
 # ── 기대값 만들기(서버 — 렌더가 쓰는 함수 그대로) ──────────────────────────────
@@ -429,7 +458,11 @@ def expected(store, jid, root="shopping_shorts/data/mix_jobs"):
     if not job or not job.get("edit_plan"):
         return None, "작업 없음"
     w = Path(root) / jid
-    final = pick_final(job, w)
+    if FINAL_DIR:
+        final = Path(FINAL_DIR) / ("%s.mp4" % jid)
+        final = final if final.exists() else None
+    else:
+        final = pick_final(job, w)
     if not final:
         return None, "완성본 없음"
     plan = job["edit_plan"]
@@ -459,6 +492,10 @@ def expected(store, jid, root="shopping_shorts/data/mix_jobs"):
           if bgm.get("_abspath") and os.path.exists(bgm["_abspath"]) else None)
     on, _sel, isec = mp._intro_choice(job.get("thumbnail"))
     intro = float(isec or 1.2) if on else 0.0
+    if FINAL_DIR:
+        # ★관문의 임시 완성본 = editor_vs_final_video 의 mp.assemble(..., deco={}) — 효과음·BGM·인트로를 안 얹는다.
+        #   기대값도 그대로 맞춘다(안 맞추면 '효과음 누락'·'인트로 없음'이 늘 뜬다). 나레이션·잉여·일정 지연만 잰다.
+        sfx, bg, intro = [], None, 0.0
     meta = {"final": str(final), "final_name": final.name, "pack": (sfx_paths.get("_pack") or {}).get("name"),
             "bgm_cfg": {k: bgm.get(k) for k in ("file", "volume")} if bgm else None,
             "bgm_file_missing": bool(bgm.get("file") and not bg), "status": job.get("status"),
@@ -477,10 +514,10 @@ def line(jid, ctx, r, j, sec):
         bg = "BGM 기대 %sdB 실측 %s(상관 %s)%s" % (b.get("exp_db"), b.get("rel_db"), b.get("r"), " ★이상" if b.get("bad") else "")
     else:
         bg = "BGM 없음(잔여 %sdB)%s" % (b.get("resid_db"), " ★파일 사라짐" if m.get("bgm_file_missing") else "")
-    return ("%s 칸%d 패킷잉여%s 인트로%.1f(실측%.1f) 길이%.2f(기대%.2f,%+.3f) | 마지막칸 음성-영상 %s 음성-자막 %s 영상-자막 %s (pts참고 %s, 수리전예측 %s) "
+    return ("%s 칸%d 패킷잉여%s 일정지연(중앙%s·인트로뒤%s) 인트로%.1f(실측%.1f) 길이%.2f(기대%.2f,%+.3f) | 마지막칸 음성-영상 %s 음성-자막 %s 영상-자막 %s (pts참고 %s, 수리전예측 %s) "
             "| 음성-영상 최대 %s | 음성-영상0.15+ %s | 음성-자막0.15+ %d칸 | 끝잘림 %s초(꼬리 %sdB) | 못찾음 %s | 렌더뒤음성바뀜 %s"
             " | 효과음 %d발(팩 %s) 누락 %d 타점0.10+ %d | %s | %.0fs") % (
-        jid, j["n"], r.get("surplus"), ctx["intro"], r.get("intro_used", ctx["intro"]), r["len"]["got"], r["len"]["exp"], r["len"]["diff"],
+        jid, j["n"], r.get("surplus"), j.get("delay_med"), j.get("delay_first"), ctx["intro"], r.get("intro_used", ctx["intro"]), r["len"]["got"], r["len"]["exp"], r["len"]["diff"],
         last.get("err_v"), last.get("err"), last.get("vid_minus_cap"), last.get("err_pts"), last.get("pred_prefix"),
         "%s칸 %+.3f(%s)" % (mx["beat"], mx["err_v"], mx["ref_kind"]) if mx else "-",
         [(x["beat"], x["err_v"]) for x in j["narr_bad"]], len(j["cap_bad"]), r.get("tail_cut"), r.get("tail_db"),
@@ -488,7 +525,45 @@ def line(jid, ctx, r, j, sec):
         j["sfx_n"], m.get("pack") or "-", len(j["sfx_miss"]), len(j["sfx_off"]), bg, sec)
 
 
+_SUM_KEYS = (("cells", r"== 칸 (\d+)"), ("narr", r"나레이션 [\d.]+초\+ 오차 (\d+)"), ("sfx_miss", r"효과음 누락 (\d+)"),
+             ("bgm", r"BGM 이상 (\d+)"), ("lost", r"나레이션 못찾음 (\d+)"), ("skip", r"건너뜀 (\d+)"),
+             ("surplus", r"패킷 잉여 [\d.]+초\+ (\d+)편"), ("delay", r"일정 지연 (\d+)편"))
+
+
+def parse_summary(text):
+    """report.txt 의 '== 칸 …' 요약 줄 → dict(cells·narr·sfx_miss·bgm·lost·skip·surplus·delay). 줄이 없거나 항목이 빠지면 None
+    (관문·매일 점검은 None 을 '판정 불가 = 실패'로 본다 — 도구가 옛 판본이거나 죽은 것)."""
+    import re as _re
+    line = next((ln for ln in (text or "").splitlines() if ln.startswith("== 칸")), None)
+    if not line:
+        return None
+    out = {}
+    for k, pat in _SUM_KEYS:
+        m = _re.search(pat, line)
+        if not m:
+            return None
+        out[k] = int(m.group(1))
+    return out
+
+
 def main():
+    """done.txt 에 'AUDIO_DONE rc=N' — 폴링하는 쪽(관문)이 '끝났다'와 '죽었다'를 가른다. 예외는 crash.txt."""
+    OUT.mkdir(parents=True, exist_ok=True)
+    done = OUT / "done.txt"
+    if done.exists():
+        done.unlink()
+    rc = 1
+    try:
+        _main()
+        rc = 0
+    except BaseException:                         # noqa: BLE001 — 죽은 이유를 판정 쪽이 볼 수 있게
+        import traceback
+        (OUT / "crash.txt").write_text(traceback.format_exc(), encoding="utf-8")
+    done.write_text("AUDIO_DONE rc=%d\n" % rc, encoding="utf-8")
+    return rc
+
+
+def _main():
     args = sys.argv[1:]
     n = int(args[0]) if args and args[0].isdigit() else 10
     ids = [a for a in args if not a.isdigit()]
@@ -505,7 +580,7 @@ def main():
     print("판정: 나레이션 ±%.1fs(못 찾으면 ±%.1fs) NCC>=%.2f · 오차 %.2fs+ 보고 / 효과음 잔여 NCC>=%.2f · 타점 %.2fs+ / "
           "BGM 기대 dB(=20log10 볼륨) ±%.0fdB·상관>=%.2f / 길이 %.2fs+" % (WIN, WIDE, NARR_MIN, SHIFT_T, SFX_MIN, SFX_SHIFT_T,
                                                                     BGM_DB_T, BGM_MIN_R, LEN_T), file=rep, flush=True)
-    tot = dict(n=0, nb=0, sm=0, bg=0, ln=0, lost=0, skip=0, stale=0, soff=0, sp=0)
+    tot = dict(n=0, nb=0, sm=0, bg=0, ln=0, lost=0, skip=0, stale=0, soff=0, sp=0, cd=0)
     for jid in ids:
         t0 = time.time()
         try:
@@ -520,16 +595,16 @@ def main():
         smp.write(json.dumps({"job": jid, "meta": ctx.get("meta"), "intro": ctx["intro"], **r}, ensure_ascii=False) + "\n")
         tot["cb"] = tot.get("cb", 0) + len(j["cap_bad"])
         tot["n"] += j["n"]; tot["nb"] += len(j["narr_bad"]); tot["lost"] += len(j["narr_lost"]); tot["stale"] += len(j["stale"])
-        tot["sm"] += len(j["sfx_miss"]); tot["soff"] += len(j["sfx_off"]); tot["bg"] += j["bgm_bad"]; tot["ln"] += j["len_bad"]; tot["sp"] += j["surplus_bad"]
+        tot["sm"] += len(j["sfx_miss"]); tot["soff"] += len(j["sfx_off"]); tot["bg"] += j["bgm_bad"]; tot["ln"] += j["len_bad"]; tot["sp"] += j["surplus_bad"]; tot["cd"] += j["delay_bad"]
     print("== 칸 %d · 나레이션 %.2f초+ 오차 %d · 효과음 누락 %d · BGM 이상 %d · 음성-자막 %.2f초+ %d · 나레이션 못찾음 %d"
-          " · 효과음 타점%.2f+ %d · 길이 이상 %d · 렌더뒤음성바뀜 %d · 건너뜀 %d · 패킷 잉여 %.2f초+ %d편"
-          "   (나레이션 오차 = 음성 vs 영상 칸 첫 그림)" % (
+          " · 효과음 타점%.2f+ %d · 길이 이상 %d · 렌더뒤음성바뀜 %d · 건너뜀 %d · 패킷 잉여 %.2f초+ %d편 · 일정 지연 %d편"
+          "   (나레이션 오차 = 음성 vs 영상 칸 첫 그림 · 일정 지연 = 음성-계획프레임 중앙값/인트로 뒤 첫 칸 %.2f초+)" % (
               tot["n"], SHIFT_T, tot["nb"], tot["sm"], tot["bg"], SHIFT_T, tot.get("cb", 0), tot["lost"], SFX_SHIFT_T,
-              tot["soff"], tot["ln"], tot["stale"], tot["skip"], SURPLUS_T, tot["sp"]), file=rep, flush=True)
+              tot["soff"], tot["ln"], tot["stale"], tot["skip"], SURPLUS_T, tot["sp"], tot["cd"], OFFSET_T), file=rep, flush=True)
     rep.close(); smp.close()
     print((OUT / "report.txt").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
     sys.path.insert(0, ".")
-    main()
+    sys.exit(main())

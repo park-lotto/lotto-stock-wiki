@@ -33,7 +33,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 CONFIG_REL = "tools/gate_video.json"
-TOOL_RELS = ("tools/editor_vs_final_video.py", "tools/evf_run.py", "tools/capcut_export_audit.py")
+TOOL_RELS = ("tools/editor_vs_final_video.py", "tools/evf_run.py", "tools/capcut_export_audit.py", "tools/final_audio_audit.py")
+AUDIO_TOOL = "final_audio_audit.py"     # ⑥ 소리 대조(편성표 vs 완성본 소리) — 영상 비교가 구운 임시 완성본을 그대로 잰다
 CC_TOOL = "capcut_export_audit.py"      # ⑤ 캡컷·내보내기 대조(완성본 컷 계획 vs 캡컷 초안 vs ZIP 조각) — 영상 비교 뒤 같은 작업에
 PATCH_RELS = {                       # 서버 PATCH_DIR 안의 자리 ← 저장소 경로
     # ★도구(editor_vs_final_video.py)가 PATCH_DIR 에서 얹는 모듈 목록과 **짝**이다 — 한쪽에만 있으면 도구가 import 에서
@@ -308,6 +309,76 @@ def judge_capcut(report_text, cfg, crash="", benign_skips=("편집안 없음",))
     return not fails, fails, notes
 
 
+def _faa():
+    """소리 대조 도구 모듈(요약 형식의 주인) — 파일로 싣는다(PATCH_DIR 없이 — 순수 함수 parse_summary 만 쓴다)."""
+    import importlib.util
+    _sp = importlib.util.spec_from_file_location("final_audio_audit", str(HERE / "final_audio_audit.py"))
+    m = importlib.util.module_from_spec(_sp)
+    _sp.loader.exec_module(m)
+    return m
+
+
+def audio_summary(report_text):
+    """소리 대조 report → {"cells","narr","sfx_miss","bgm","lost","skip","surplus","delay"} 또는 None."""
+    return _faa().parse_summary(report_text)
+
+
+def judge_audio(report_text, cfg, crash="", benign_skips=("음성 없음",)):
+    """소리 대조(final_audio_audit) report → (통과?, 실패 사유, 보고 줄). 요약 형식은 도구 한 곳(parse_summary).
+    기준(없으면 0 — 느슨해지지 않게): 나레이션 0.15초+ ≤ max_audio_narr · 패킷 잉여 0.05초+ ≤ max_audio_surplus ·
+    일정 지연 ≤ max_audio_delay. 효과음 누락·BGM 이상은 키가 있을 때만 판정(관문 임시 완성본엔 효과음·BGM 이 없다)."""
+    fails, notes = [], []
+    s = audio_summary(report_text)
+    if s is None:
+        fails.append("소리 대조 요약 줄(== 칸 … 일정 지연 N편)을 못 읽었다 — 도구가 죽었거나 옛 판본이다")
+        return False, fails, notes
+    notes.append("소리 대조: 칸 %d · 나레이션 0.15초+ %d · 패킷 잉여 0.05초+ %d편 · 일정 지연 %d편 · 효과음 누락 %d · BGM 이상 %d"
+                 % (s["cells"], s["narr"], s["surplus"], s["delay"], s["sfx_miss"], s["bgm"]))
+    if s["cells"] <= 0:
+        fails.append("소리 대조: 잰 칸이 0 — 아무것도 안 쟀다")
+    for key, sk, label in (("max_audio_narr", "narr", "나레이션 0.15초+ 오차"), ("max_audio_surplus", "surplus", "패킷 잉여 0.05초+"),
+                           ("max_audio_delay", "delay", "일정 지연"), ("max_audio_lost", "lost", "나레이션 못찾음")):
+        lim = int(cfg.get(key) or 0)
+        if s[sk] > lim:
+            fails.append("%s %d (기준 %d) — 목소리가 화면·자막과 어긋난다" % (label, s[sk], lim))
+    for key, sk, label in (("max_audio_sfx_miss", "sfx_miss", "효과음 누락"), ("max_audio_bgm", "bgm", "BGM 이상")):
+        lim = cfg.get(key)
+        if lim is not None and s[sk] > int(lim):
+            fails.append("%s %d (기준 %d)" % (label, s[sk], int(lim)))
+    skips = [ln for ln in (report_text or "").splitlines() if re.match(r"^\S+ 건너뜀", ln)
+             and not any(b in ln for b in benign_skips)]
+    if len(skips) > int(cfg.get("max_error_skips") or 0):
+        fails.append("소리 대조: 오류로 건너뛴 작업 %d개: %s" % (len(skips), "; ".join(x[:120] for x in skips)))
+    if (crash or "").strip():
+        fails.append("소리 대조 도구가 예외로 끝났다(crash.txt)")
+    return not fails, fails, notes
+
+
+def run_audio_audit(sh, d, ids, g, *, say, sleep=time.sleep):
+    """⑥ 영상 비교가 구운 임시 완성본(d/finals/<job>.mp4)으로 소리 대조 → (통과?, 실패 사유, 보고 줄). 렌더 없음."""
+    ids = [i for i in (ids or []) if re.fullmatch(r"[0-9A-Za-z_-]{4,64}", i)]
+    if not ids:
+        return False, ["소리 대조: 잴 작업이 없다(영상 비교 report 에 작업 줄 0)"], []
+    rc, out = sh("cd %s && set -a && . /etc/shopping-shorts.env && set +a && "
+                 "{ PATCH_DIR=%s AUDIO_FINAL_DIR=%s/finals AUDIO_OUT=%s/audio setsid nohup python3 %s/_tool/%s %s > %s/audio_run.log 2>&1 < /dev/null & echo PID=$!; }"
+                 % (REMOTE_REPO, d, d, d, d, AUDIO_TOOL, " ".join(ids), d))
+    m = re.search(r"PID=(\d+)", out)
+    if rc != 0 or not m:
+        return False, ["소리 대조를 못 띄웠다: %s" % out.strip()[:300]], []
+    pid = int(m.group(1))
+    say("  소리 대조 시작 — 작업 %d개(영상 비교의 임시 완성본 재사용). pid %d" % (len(ids), pid))
+    done, timed_out = _wait_done(sh, "%s/audio/done.txt" % d, pid, int(g.get("audio_timeout_sec", 600)),
+                                 int(g.get("poll_sec", 20)), sleep)
+    if not done:
+        sh("kill -- -%d 2>/dev/null; kill %d 2>/dev/null; true" % (pid, pid))
+        _, tail = sh("tail -30 %s/audio_run.log 2>/dev/null; cat %s/audio/crash.txt 2>/dev/null" % (d, d))
+        return False, ["소리 대조가 %s\n%s" % ("시간 초과" if timed_out else "끝 표식 없이 죽었다", tail.strip()[-1500:])], []
+    _, report = sh("cat %s/audio/report.txt 2>/dev/null" % d)
+    _, crash = sh("cat %s/audio/crash.txt 2>/dev/null" % d)
+    say("\n--- 소리 대조 report (서버 %s/audio/report.txt) ---\n%s\n--- report 끝 ---" % (d, report.rstrip()))
+    return judge_audio(report, g, crash)
+
+
 def _wait_done(sh, d_done, pid, timeout, poll, sleep):
     """서버 배경 작업을 끝 표식(done.txt 의 '..._DONE')까지 기다린다 → (끝났나, 시간초과인가).
     끝 표식 없이 프로세스가 사라지면 (False, False) — report 가 멀쩡해 보여도 믿지 않는다."""
@@ -510,8 +581,9 @@ def run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sle
         #   붙잡아 ssh 가 안 끝난다(2026-09-27 시험 실행에서 120초 시간 초과로 실측).
         rc, out = sh("cd %s && set -a && . /etc/shopping-shorts.env && set +a && "
                      # ★SEG_SNAP_CACHE_DIR: 장면 전환 캐시(seg_snap)를 관문 임시 폴더에 — 소재 옆(고객 폴더)에 쓰지 않는다(2026-09-27 9차 관문 실측)
-                     "{ PATCH_DIR=%s EVF_OUT=%s/out SEG_SNAP_CACHE_DIR=%s/snapcache setsid nohup python3 %s/_tool/evf_run.py %d > %s/run.log 2>&1 < /dev/null & echo PID=$!; }"
-                     % (REMOTE_REPO, d, d, d, d, n, d))
+                     # ★EVF_KEEP_FINAL: 비교가 구운 임시 완성본을 d/finals 에 남긴다 — ⑥ 소리 대조가 그것을 잰다(렌더 2번 금지)
+                     "{ PATCH_DIR=%s EVF_OUT=%s/out EVF_KEEP_FINAL=%s/finals SEG_SNAP_CACHE_DIR=%s/snapcache setsid nohup python3 %s/_tool/evf_run.py %d > %s/run.log 2>&1 < /dev/null & echo PID=$!; }"
+                     % (REMOTE_REPO, d, d, d, d, d, n, d))
         m = re.search(r"PID=(\d+)", out)
         if rc != 0 or not m:
             say("❌ 영상 관문: 비교를 못 띄웠다\n%s" % out.strip()[:400])
@@ -560,6 +632,11 @@ def run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sle
         ok = ok and cc_ok
         fails += cc_fails
         notes += cc_notes
+        # ⑥ 소리 대조 — 같은 작업·같은 임시 완성본. 목소리가 화면 칸과 맞나(나레이션 0.15+ · 패킷 잉여 · 일정 지연).
+        au_ok, au_fails, au_notes = run_audio_audit(sh, d, [j["job"] for j in parsed.get("jobs", [])], g, say=say, sleep=sleep)
+        ok = ok and au_ok
+        fails += au_fails
+        notes += au_notes
         say("판정 근거: %s" % (parsed.get("summary_line") or "(요약 줄 없음)"))
         for f_ in fails:
             say("  ✗ " + f_)

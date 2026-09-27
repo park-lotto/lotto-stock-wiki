@@ -110,7 +110,7 @@ class _Alerter:
 
 
 def run_audit(*, jobs, hours, out_root, tmp_root, alerter, cfg, printer=print, runner=None, free_gb=None, db_path=None,
-              now=None, cc_runner=None):
+              now=None, cc_runner=None, audio_runner=None):
     """→ 종료코드. runner(ids, work_dir, timeout) 는 비교 실행기(기본 = evf_run.py 서브프로세스),
     cc_runner(ids, work_dir, timeout) 는 캡컷·내보내기 대조 실행기(기본 = capcut_export_audit.py 서브프로세스 — 같은 작업)."""
     a = cfg["audit"]
@@ -164,6 +164,20 @@ def run_audit(*, jobs, hours, out_root, tmp_root, alerter, cfg, printer=print, r
             (out / "capcut_run.log").write_text(cc_log[-20000:], encoding="utf-8")
     finally:
         shutil.rmtree(work_cc, ignore_errors=True)
+    # ⑥ 소리 대조 — 고객이 실제로 받은 완성본(효과음·BGM·인트로 포함, 최근 완료 audio_jobs 편)을 편성표와 대조(2026-09-27).
+    #   관문은 임시 완성본(효과음·인트로 없음)만 재므로 인트로·효과음 경로는 여기서만 잰다. 렌더 없음·읽기 전용.
+    work_au = Path(tmp_root) / ("audio_audit_%s" % now.strftime("%Y%m%d_%H%M%S"))
+    try:
+        au_rc, au_log = (audio_runner or _run_faa)(int(a.get("audio_jobs", 10)), work_au, int(a.get("audio_timeout_sec", 1200)))
+        au_rep = (work_au / "report.txt").read_text(encoding="utf-8") if (work_au / "report.txt").exists() else ""
+        au_crash = (work_au / "crash.txt").read_text(encoding="utf-8") if (work_au / "crash.txt").exists() else ""
+        (out / "audio_report.txt").write_text(au_rep, encoding="utf-8")
+        if (work_au / "samples.jsonl").exists():
+            shutil.copy2(work_au / "samples.jsonl", out / "audio_samples.jsonl")
+        if au_log:
+            (out / "audio_run.log").write_text(au_log[-20000:], encoding="utf-8")
+    finally:
+        shutil.rmtree(work_au, ignore_errors=True)
     head1 = _git_head(REPO)
 
     parsed = video_gate.parse_report(rep)
@@ -175,12 +189,17 @@ def run_audit(*, jobs, hours, out_root, tmp_root, alerter, cfg, printer=print, r
     ok = ok and cc_ok
     fails += cc_fails
     notes += cc_notes
+    au_ok, au_fails, au_notes = video_gate.judge_audio(au_rep, a, au_crash if au_rc == 0 else (au_crash or "rc=%s" % au_rc))
+    ok = ok and au_ok
+    fails += au_fails
+    notes += au_notes
     if head0 != head1:
         notes.append("점검 중 배포됨(%s→%s) — 앞 작업과 뒤 작업이 다른 코드로 재였을 수 있다" % (head0, head1))
 
     summary = {"day": day, "jobs": ids, "ok": ok, "fails": fails, "notes": notes, "summary": parsed.get("summary"),
                "summary_line": parsed.get("summary_line"), "sec": round(time.time() - t0), "git": [head0, head1],
                "capcut_summary": video_gate.capcut_summary(cc_rep),
+               "audio_summary": video_gate.audio_summary(au_rep),
                "ghost": parsed.get("ghost"), "ghost_line": parsed.get("ghost_line")}   # 잔상(컷 가장자리 딴 장면, 2026-09-27)
     (out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
     printer("판정 근거: %s" % (parsed.get("summary_line") or "(요약 줄 없음)"))
@@ -210,8 +229,16 @@ def run_audit(*, jobs, hours, out_root, tmp_root, alerter, cfg, printer=print, r
     elif not cc_ok:
         title += " · 캡컷·ZIP 대조를 끝까지 못 돌림"
         ran = False
+    aus = video_gate.audio_summary(au_rep) or {}
+    au_bad = int(aus.get("narr") or 0) + int(aus.get("surplus") or 0) + int(aus.get("delay") or 0)
+    if au_bad:
+        title += " · 소리≠화면(나레이션 %d칸 · 잉여 %d편 · 일정 지연 %d편)" % (
+            int(aus.get("narr") or 0), int(aus.get("surplus") or 0), int(aus.get("delay") or 0))
+    elif not au_ok:
+        title += " · 소리 대조를 끝까지 못 돌림"
+        ran = False
     detail = "\n".join(fails + notes + ["— 작업별 —"] + _issue_lines(rep) + _cc_issue_lines(cc_rep))
-    alerter.raise_(title, detail, grade="고객영향" if (scene > 0 or cc_bad or _g.get("screen_only")) else "운영주의",
+    alerter.raise_(title, detail, grade="고객영향" if (scene > 0 or cc_bad or au_bad or _g.get("screen_only")) else "운영주의",
                    signature="%s:%s|cc%s" % (day, parsed.get("summary_line") or "|".join(fails)[:120],
                                              [ccs.get(k) for k in ("cuts", "capcut", "export")]),
                    cooldown_sec=int(a.get("cooldown_sec", 3600)), todo=todo)
@@ -237,6 +264,19 @@ def _run_cea(ids, work, timeout):
         return p.returncode, (p.stdout or "") + (p.stderr or "")
     except subprocess.TimeoutExpired as e:
         return 124, "시간 초과 %ds: %s" % (timeout, (e.stdout or "")[-2000:] if isinstance(e.stdout, str) else "")
+
+
+def _run_faa(n, work, timeout):
+    """소리 대조(tools/final_audio_audit.py)를 **지금 라이브 코드**로, 최근 완료 n편 — 결과는 work/ (report.txt·done.txt·crash.txt).
+    읽기 전용(DB mode=ro, 임시 파일 없음)이라 고객 폴더에 안 쓴다."""
+    env = dict(os.environ, AUDIO_OUT=str(work))
+    env.pop("AUDIO_FINAL_DIR", None)            # 매일 점검은 고객이 받은 실제 완성본을 잰다
+    try:
+        p = subprocess.run([sys.executable, str(HERE / "final_audio_audit.py"), str(int(n))], cwd=str(REPO), env=env,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+        return p.returncode, (p.stdout or "") + (p.stderr or "")
+    except subprocess.TimeoutExpired as e:
+        return 124, "시간 초과(%ds): %s" % (timeout, e)
 
 
 def _run_evf(ids, work, timeout):
