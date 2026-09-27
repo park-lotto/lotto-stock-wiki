@@ -201,14 +201,16 @@ def test_common_lines_rotate_over_examples_and_bank(monkeypatch):
     picks = [sw.common_lines(YT_SP, "job%d" % i)["land"] for i in range(40)]
     assert len(set(picks)) == 4, "40작업이면 후보 4개가 다 나와야 한다"
     assert sw.common_lines(YT_SP, "job7") == sw.common_lines(YT_SP, "job7"), "같은 작업은 늘 같은 문장"
-    assert set(sw.common_lines(YT_SP, "x")) == {"title", "bait", "reveal", "land"}, "유튜브는 전 칸이 공식, 제목도 순번(2026-09-27)"
+    assert set(sw.skeleton_lines(YT_SP, "x")) == {"title", "bait", "reveal", "land"}, "뼈대는 전 칸 순번(보여 주기만)"
+    assert set(sw.common_lines(YT_SP, "x")) == {"land"}, "글자 그대로는 빈칸 없는 칸만 — 빈칸 끼우기 금지(2026-09-27)"
 
 
 def test_pinned_line_is_enforced_and_real_names_flagged(monkeypatch):
     monkeypatch.setattr(sw, "_BANK", {})
     frame = sw.frame_of(YT_SP, "k")
     land = frame["pinned"]["land"]
-    assert "【고정】" in frame["block"]
+    assert "【그대로】" in frame["block"] and "뼈대 「" in frame["block"]
+    assert set(frame["pinned"]) == {"land"}, "빈칸 있는 제목·미끼·공개는 고정하지 않는다"
     out = {"seed_points": [], "lines": [
         {"role": "title", "text": "백종원도 감탄한 필름의 정체", "cuts": ["MAT-1"]},
         {"role": "bait", "text": "요새 이 필름 하나로 SNS가 뒤집어졌다는데", "cuts": ["MAT-1"]},
@@ -216,8 +218,8 @@ def test_pinned_line_is_enforced_and_real_names_flagged(monkeypatch):
         {"role": "land", "text": "다들 난리 난 이유가 있다니까", "cuts": ["MAT-1"]}]}
     probs = sw.styled_problems(out, frame, {"MAT-1": {}}, seconds=5)
     assert any("실존 인물" in p for p in probs)
-    assert any(p.startswith("land 칸은 고정 문장") for p in probs)
-    assert not any(p.startswith("bait 칸은") for p in probs), "빈칸만 채운 고정 문장은 통과"
+    assert any(p.startswith("land 칸은") for p in probs)
+    assert not any(p.startswith("bait 칸은") for p in probs), "빈칸 있는 칸은 고정 검사 대상 아님"
     prompts = []
 
     def call(prompt, schema, note=None, model=None, vertex=True):
@@ -239,8 +241,8 @@ def test_brackets_copied_from_frame_are_stripped(monkeypatch):
     assert all(not L["text"].startswith("「") and not L["text"].endswith("」") for L in lines)
 
 
-def test_youtube_gojo_rows_pin_only_head_and_need_lines(monkeypatch):
-    """2026-09-27 사장님: 자극은 오바 말고, 고조 3줄 흐름을 살려라 — 고조 칸은 머리말만 고정하고 줄 수를 검사한다."""
+def test_youtube_gojo_rows_are_written_not_pinned(monkeypatch):
+    """2026-09-27 사장님: 자극은 오바 말고, 고조 3줄 흐름 / 빈칸 끼우기 금지 — 고조 칸은 고정 없이 줄 수만 검사한다."""
     monkeypatch.setattr(sw, "_BANK", {"이러니 떼돈을 벌었다고": []})
     monkeypatch.setattr(sw, "_SPICY", {"이러니 떼돈을 벌었다고": ["이러니 시장이 초토화됐다고", "이러니 통장이 두둑해졌다고"]})
     sp = {"id": 70, "name": "유튜브 「OO의 정체」", "no_cta": True, "beat_roles": ["title", "limit", "solve", "more", "land"],
@@ -248,10 +250,12 @@ def test_youtube_gojo_rows_pin_only_head_and_need_lines(monkeypatch):
                         "solve": ["{불편함}을 한 방에 삭제해 버린다는 거"], "more": ["심지어 {효능2}다는데"], "land": ["이러니 떼돈을 벌었다고"]}}
     assert sw.common_pool(sp, "land") == ["이러니 떼돈을 벌었다고", "이러니 통장이 두둑해졌다고"], "과한 자극(초토화)은 뺀다"
     f = sw.frame_of(sp, "k")
-    assert f["pinned"]["limit"] == "이게 말도 안 되는게" and f["pin_kind"]["limit"] == ("head", 2)
-    assert f["pinned"]["more"] == "심지어" and f["pin_kind"]["more"] == ("head", 3)
-    assert "title" in f["pinned"], "제목도 순번"
-    one = {"seed_points": [], "lines": [{"role": "more", "text": "심지어 한 줄뿐인 고조", "cuts": ["MAT-1"]}]}
-    probs = sw.styled_problems(dict(one, lines=one["lines"] * 1 + [{"role": "land", "text": "이러니 떼돈을 벌었다고", "cuts": ["MAT-1"]}] * 2),
-                               f, {"MAT-1": {}}, seconds=3)
-    assert any("고조 3줄" in p for p in probs)
+    assert set(f["pinned"]) == {"land"} and f["gojo"] == {"limit": 2, "more": 3}
+    assert "고조 3줄" in f["block"] and "빈칸 채우기" not in f["block"]
+    lines = [{"role": "title", "text": "러너들이 쓰는 이어폰의 정체", "cuts": ["MAT-1"]},
+             {"role": "limit", "text": "이게 말도 안 되는게 뛰다가", "cuts": ["MAT-1"]},
+             {"role": "solve", "text": "그 통증을 싹 날려 버렸다는 거", "cuts": ["MAT-1"]},
+             {"role": "more", "text": "심지어 한 줄뿐인 고조", "cuts": ["MAT-1"]},
+             {"role": "land", "text": f["pinned"]["land"], "cuts": ["MAT-1"]}]
+    probs = sw.styled_problems({"seed_points": [], "lines": lines}, f, {"MAT-1": {}}, seconds=5)
+    assert any(p.startswith("more 칸은 고조 3줄") for p in probs) and any(p.startswith("limit 칸은 고조 2줄") for p in probs)
