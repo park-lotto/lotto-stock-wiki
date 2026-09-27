@@ -138,20 +138,80 @@ def _db(x):
 
 
 # ── 한 편 대조(기대값 ctx 는 순수 데이터 — 테스트가 합성 소리로 직접 부른다) ──────────
-def audit(ctx):
+def video_gray(path, w=36, h=64):
+    """완성본 영상을 작은 회색조 프레임으로(표시 순서 그대로, 프레임 복제·버림 없음) → (N,h,w)."""
+    r = subprocess.run(["ffmpeg", "-v", "error", "-nostdin", "-i", str(path), "-an", "-vf", "scale=%d:%d,format=gray" % (w, h),
+                        "-fps_mode", "passthrough", "-f", "rawvideo", "-"],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL)
+    if r.returncode != 0:
+        raise RuntimeError("영상 읽기 실패: %s" % r.stderr.decode("utf-8", "replace")[-200:])
+    a = np.frombuffer(r.stdout, dtype=np.uint8)
+    return a[: (len(a) // (w * h)) * w * h].reshape(-1, h, w).astype(np.float32)
+
+
+CUT_LO, CUT_HI = -0.2, 0.6      # 칸 경계 컷을 찾는 창(계획 프레임 기준 초)
+
+
+def video_cuts(frames, plan_frames, fps=30):
+    """칸 경계마다 화면에서 **실제로 그림이 바뀌는 프레임**을 찾는다.
+    화면 가운데 띠(세로 20~70%)의 앞 프레임 대비 차이. 창 안 최대 튐이 전체 중앙값의 4배·8 이상일 때만 컷으로 인정.
+    → [{plan, cut(프레임|None), mag, spikes:[(오프셋초, 크기)]}]. ★계획 프레임의 튐(자막·틀 교체)과 그림 컷이
+      둘 다 보일 수 있어 튐 목록을 함께 남긴다."""
+    if len(frames) < 3:
+        return [{"plan": p, "cut": None, "mag": 0.0, "spikes": []} for p in plan_frames]
+    h = frames.shape[1]
+    band = frames[:, int(h * 0.2):int(h * 0.7), :]
+    d = np.zeros(len(band), np.float32)
+    d[1:] = np.abs(band[1:] - band[:-1]).mean(axis=(1, 2))
+    thr = max(8.0, 4.0 * float(np.median(d[1:])))
+    out = []
+    for p in plan_frames:
+        lo, hi = max(1, p + int(CUT_LO * fps)), min(len(d) - 1, p + int(CUT_HI * fps))
+        if hi < lo:
+            out.append({"plan": p, "cut": None, "mag": 0.0, "spikes": []})
+            continue
+        seg = d[lo:hi + 1]
+        spikes = [(round((lo + i - p) / fps, 3), round(float(v), 1)) for i, v in enumerate(seg) if v >= thr]
+        mx = float(seg.max())
+        # 가장 **이른** 큰 튐(창 최대의 60% 이상) — 칸 안의 두 번째 컷(대개 0.5초+ 뒤)을 칸 시작으로 잡지 않게
+        big = [i for i, v in enumerate(seg) if v >= thr and v >= 0.6 * mx]
+        k = big[0] if big else int(np.argmax(seg))
+        out.append({"plan": p, "cut": (lo + k) if seg[k] >= thr else None, "mag": round(float(seg[k]), 1), "spikes": spikes})
+    return out
+
+
+def audit(ctx, want_video=True):
     """ctx = {final, intro, beats:[{idx, tts, head_trim, dur, t0, stale}], sfx:[{path, t, vol, beat}],
               bgm:{path, vol}|None}
-    → {rows, sfx, bgm, len, ...}. 판정만 하고 파일은 쓰지 않는다."""
-    sig = load_audio(ctx["final"], honor_pts=True)
+    → {rows, sfx, bgm, len, ...}. 판정만 하고 파일은 쓰지 않는다.
+
+    ★기준 소리 = **디코드한 표본을 이어 재생한 것 하나**(ffmpeg -i final -vn, 플레이어처럼). pts대로 놓은 값은 참고 열(err_pts).
+    ★세 축(전부 '표시 시각' = 영상 첫 pts(예: 0.021) 포함):
+       자막  cap = v0 + 인트로 + t0            (_beat_timeline 실수 누적 — 자막·틀·효과음이 이 자로 구워진다: 코드 기준)
+       영상  vid = v0 + (실측 컷 프레임)/30      (완성본에서 그림이 바뀌는 프레임, 못 찾으면 None)
+       음성  nar = 디코드 표본에서 찾은 칸 시작
+       판정 = |nar - vid| (영상 컷을 못 찾은 칸은 |nar - 계획 프레임|) >= 0.15초."""
+    sig = load_audio(ctx["final"], honor_pts=False)
     v0, a0, gaps = stream_info(ctx["final"])
-    # 영상 기준 보정: 소리를 pts 0 부터 놓았으니, 칸 내용 시각 T 는 소리 축에서 (영상 첫 pts + T) 자리다
     av = float(v0 or 0.0)
-    intro = float(ctx.get("intro") or 0.0) + av
-    total_exp = intro + sum(float(b["dur"]) for b in ctx["beats"])     # (소리 축 — 영상 첫 pts 포함, 효과음 끝 판정용)
-    len_exp = float(ctx.get("intro") or 0.0) + sum(float(b["dur"]) for b in ctx["beats"])
+    intro_raw = float(ctx.get("intro") or 0.0)
+    intro_cfg = intro_raw
+    # 인트로 실측: 설정은 켜져 있어도 prepend_still 이 실패하면 안 붙는다(run_render 는 실패를 로그로만 남긴다).
+    #   첫 칸 음성을 0초~(인트로+0.5초) 전체에서 찾아, 설정의 절반보다 앞에서 나오면 '인트로 없음'으로 본다.
+    if intro_raw > 0 and ctx["beats"]:
+        b0 = ctx["beats"][0]
+        tm0 = load_audio(b0["tts"], ss=float(b0.get("head_trim") or 0.0), t=float(b0["dur"]))
+        c0 = int(round((intro_raw + av) * SR))
+        o0, v0n, _g0 = ncc_search(sig, tm0, c0, int((intro_raw + 0.5) * SR))
+        if v0n >= NARR_MIN and (c0 + o0) / SR - av < intro_raw / 2:
+            intro_raw = 0.0
+    intro = intro_raw + av
+    total_exp = intro + sum(float(b["dur"]) for b in ctx["beats"])
+    len_exp = intro_raw + sum(float(b["dur"]) for b in ctx["beats"])
     res = sig.copy()
     rows, gains, tms = [], [], []
     w, ww = int(WIN * SR), int(WIDE * SR)
+    pred = 0.0          # 수리 전 렌더(칸마다 -t 음성길이 → 영상 프레임 올림)가 만들었을 누적 밀림 — 비교용 예측
     for b in ctx["beats"]:
         tm = load_audio(b["tts"], ss=float(b.get("head_trim") or 0.0), t=float(b["dur"]))
         tms.append(tm)
@@ -167,22 +227,54 @@ def audit(ctx):
         if found:
             _place(res, tm, c + off, g)
             gains.append(g)
-        rows.append({"beat": b["idx"], "exp": round(exp, 3), "err": round(off / SR, 3) if found else None,
-                     "ncc": round(v, 3), "gain": round(g, 4), "wide": wide, "stale": bool(b.get("stale"))})
+        plan_f = int(round((intro_raw + float(b["t0"])) * 30))      # 수리 뒤 렌더의 칸 첫 프레임(_render_mix 누적 반올림)
+        rows.append({"beat": b["idx"], "cap": round(exp, 3), "nar": round((c + off) / SR, 3) if found else None,
+                     "err": round(off / SR, 3) if found else None, "ncc": round(v, 3), "gain": round(g, 4),
+                     "wide": wide, "stale": bool(b.get("stale")), "plan_f": plan_f, "pred_prefix": round(pred, 3),
+                     "dur": round(float(b["dur"]), 3)})
+        d3 = round(float(b["dur"]), 3)
+        pred += math.ceil(d3 * 30 - 1e-6) / 30.0 - float(b["dur"])
     g_n = float(np.median(gains)) if gains else 0.0
-    # ①' 같은 칸을 **표본 이어 붙이기** 디코드에서도 잰다. 서버 실측(2026-09-27 10편): 칸 소리를 AAC 클립으로 따로 굽고
-    #   concat -c copy 로 이으면(video_assemble._render_mix) 타임스탬프와 표본 수가 서로 다른 쪽으로 어긋난 파일이 나온다 —
-    #   어떤 편은 pts 대로 놓으면 밀리고, 어떤 편은 표본대로 이으면 밀린다. 플레이어·업로드 재인코딩이 어느 쪽을
-    #   따르는지는 확인 못 했다 → 둘 중 하나라도 기준을 넘으면 어긋남으로 센다(err_seq).
-    sig_seq = load_audio(ctx["final"], honor_pts=False)
-    for row, b, tm in zip(rows, ctx["beats"], tms):
-        c = int(round((intro + float(b["t0"])) * SR))
-        off, v, _g = ncc_search(sig_seq, tm, c, w)
-        if v < NARR_MIN:
-            off2, v2, _g2 = ncc_search(sig_seq, tm, c, ww)
-            if v2 >= NARR_MIN:
-                off, v = off2, v2
-        row["err_seq"] = round(off / SR, 3) if v >= NARR_MIN else None
+    # 참고 열: pts대로 놓은 소리에서 같은 칸
+    len_pts = None
+    try:
+        sig_pts = load_audio(ctx["final"], honor_pts=True)
+        for row, b, tm in zip(rows, ctx["beats"], tms):
+            c = int(round((intro + float(b["t0"])) * SR))
+            off, v, _g = ncc_search(sig_pts, tm, c, w)
+            if v < NARR_MIN:
+                off2, v2, _g2 = ncc_search(sig_pts, tm, c, ww)
+                if v2 >= NARR_MIN:
+                    off, v = off2, v2
+            row["err_pts"] = round(off / SR, 3) if v >= NARR_MIN else None
+        len_pts = len(sig_pts) / SR
+    except Exception:      # noqa: BLE001 — 참고 열
+        pass
+    # 영상 축: 칸 경계의 실제 그림 컷
+    vinfo = None
+    if want_video:
+        try:
+            fr = video_gray(ctx["final"])
+            vc = video_cuts(fr, [r["plan_f"] for r in rows])
+            for n_, (r, x) in enumerate(zip(rows, vc)):
+                if n_ == 0 and intro_raw <= 0:
+                    x = dict(x, cut=None)        # 인트로 없는 첫 칸엔 칸 경계(컷)가 없다
+                r["vid"] = round(av + x["cut"] / 30.0, 3) if x["cut"] is not None else None
+                r["vid_spikes"] = x["spikes"]
+                r["plan_t"] = round(av + r["plan_f"] / 30.0, 3)
+                ref = r["vid"] if r["vid"] is not None else r["plan_t"]
+                r["ref_kind"] = "영상컷" if r["vid"] is not None else "계획프레임"
+                r["err_v"] = round(r["nar"] - ref, 3) if r["nar"] is not None else None
+                r["vid_minus_cap"] = round(r["vid"] - r["cap"], 3) if r["vid"] is not None else None
+            vinfo = {"frames": int(len(fr))}
+        except Exception as e:      # noqa: BLE001
+            vinfo = {"why": str(e)[:120]}
+    for r in rows:
+        if "err_v" not in r:          # 영상 축을 못 쟀으면 계획 프레임 기준
+            r["plan_t"] = round(av + r["plan_f"] / 30.0, 3)
+            r["err_v"] = round(r["nar"] - r["plan_t"], 3) if r["nar"] is not None else None
+            r.setdefault("vid", None)
+            r.setdefault("ref_kind", "계획프레임")
     # ② 효과음 — 잔여에서 찾는다
     sfx_rows = []
     for ev in ctx.get("sfx") or []:
@@ -201,11 +293,11 @@ def audit(ctx):
         sfx_rows.append({**_ev_pub(ev), "exp": round(t_exp, 3), "err": round(off / SR, 3) if ok else None,
                          "ncc": round(v, 3), "rel_db": round(_db(abs(g)) - _db(g_n), 1) if (ok and g_n > 0) else None})
     # ③ BGM — 잔여에서 효과음 자리(±0.6초)를 빼고 BGM 파형 상관·이득
-    bgm_out = None
     bg = ctx.get("bgm")
     mask = np.ones(len(res), bool)
     for ev in ctx.get("sfx") or []:
-        a = int((intro + float(ev["t"]) - 0.6) * SR); mask[max(0, a):max(0, a + int(1.2 * SR))] = False
+        a = int((intro + float(ev["t"]) - 0.6) * SR)
+        mask[max(0, a):max(0, a + int(1.2 * SR))] = False
     mask[:int(intro * SR)] = False
     if bg and bg.get("path"):
         try:
@@ -213,11 +305,11 @@ def audit(ctx):
             n_body = max(0, len(sig) - int(round(intro * SR)))
             reps = int(math.ceil(n_body / max(1, len(one)))) if len(one) else 0
             tile = np.tile(one, max(1, reps))[:n_body]
-            # 시작 자리 미세 정렬(±0.3초) — 앞 6초 조각으로 찾는다(렌더는 인트로 뒤 0초에서 aloop 시작)
             probe = tile[:int(6 * SR)]
             off, _v, _g = ncc_search(res, probe, int(round(intro * SR)), int(0.3 * SR))
             st = int(round(intro * SR)) + off
-            track = np.zeros(len(res)); s1 = min(len(res), st + len(tile))
+            track = np.zeros(len(res))
+            s1 = min(len(res), st + len(tile))
             track[max(0, st):s1] = tile[max(0, -st):s1 - st]
             m = mask & (track != 0)
             den = float(np.dot(track[m], track[m]))
@@ -235,9 +327,21 @@ def audit(ctx):
         rel = (_db(float(np.sqrt(np.mean(rm * rm)))) - _db(g_n * _narr_rms(ctx, g_n))) if (len(rm) and g_n > 0) else None
         bgm_out = {"expect": False, "resid_db": None if rel is None else round(rel, 1), "bad": False}
     dur_got = len(sig) / SR
-    return {"av0": round(av, 3), "a0": a0, "pts_gaps": gaps, "rows": rows, "sfx": sfx_rows, "bgm": bgm_out, "g_n_db": round(_db(g_n), 1) if g_n > 0 else None,
+    last = rows[-1] if rows else None
+    # 끝 잘림: 마지막 칸 음성이 소리 끝을 넘어가면 그만큼 잘렸다(칸 길이엔 끝 무음 여백이 조금 들어 있다)
+    tail_cut = round((last["nar"] + last["dur"]) - dur_got, 3) if (last and last["nar"] is not None) else None
+    tail_db = None      # 잘린 꼬리의 음량(칸 전체 대비 dB) — -30dB 아래면 여백(무음)만 잘린 것, 위면 말이 잘린 것
+    if tail_cut and tail_cut > 0.02 and tms:
+        t_all = tms[-1]
+        cut_n = min(len(t_all), int(tail_cut * SR))
+        if cut_n > 0:
+            rms_all = float(np.sqrt(np.mean(t_all * t_all))) or 1e-9
+            tail = t_all[-cut_n:]
+            tail_db = round(_db(float(np.sqrt(np.mean(tail * tail)))) - _db(rms_all), 1)
+    return {"av0": round(av, 3), "intro_cfg": intro_cfg, "intro_used": intro_raw, "tail_db": tail_db, "a0": a0, "pts_gaps": gaps, "video": vinfo, "rows": rows, "sfx": sfx_rows, "bgm": bgm_out,
+            "g_n_db": round(_db(g_n), 1) if g_n > 0 else None, "tail_cut": tail_cut,
             "len": {"got": round(dur_got, 3), "exp": round(len_exp, 3), "diff": round(dur_got - len_exp, 3),
-                    "got_seq": round(len(sig_seq) / SR, 3)}}
+                    "got_pts": None if len_pts is None else round(len_pts, 3)}}
 
 
 def _ev_pub(ev):
@@ -262,12 +366,14 @@ def judge(r):
     """한 편 결과 → 셈(요약 줄 재료)."""
     rows = r["rows"]
     live = [x for x in rows if not x["stale"]]
-    narr_bad = [x for x in live if x["err"] is not None and max(abs(x["err"]), abs(x.get("err_seq") or 0.0)) >= SHIFT_T]
+    # 판정 = 음성 vs 영상(칸 첫 그림) — 고객이 느끼는 어긋남. 자막 vs 음성은 따로 센다(cap_bad).
+    narr_bad = [x for x in live if x.get("err_v") is not None and abs(x["err_v"]) >= SHIFT_T]
+    cap_bad = [x for x in live if x["err"] is not None and abs(x["err"]) >= SHIFT_T]
     narr_lost = [x for x in live if x["err"] is None]
     sfx_chk = [x for x in r["sfx"] if not x.get("skip") and not x.get("missing_file")]
     sfx_miss = [x for x in sfx_chk if x["err"] is None]
     sfx_off = [x for x in sfx_chk if x["err"] is not None and abs(x["err"]) >= SFX_SHIFT_T]
-    return {"n": len(rows), "narr_bad": narr_bad, "narr_lost": narr_lost, "stale": [x for x in rows if x["stale"]],
+    return {"n": len(rows), "narr_bad": narr_bad, "cap_bad": cap_bad, "narr_lost": narr_lost, "stale": [x for x in rows if x["stale"]],
             "sfx_n": len(sfx_chk), "sfx_miss": sfx_miss, "sfx_off": sfx_off,
             "sfx_nofile": [x for x in r["sfx"] if x.get("missing_file")],
             "bgm_bad": 1 if (r["bgm"] or {}).get("bad") else 0,
@@ -345,21 +451,23 @@ def expected(store, jid, root="shopping_shorts/data/mix_jobs"):
 
 def line(jid, ctx, r, j, sec):
     m = ctx.get("meta") or {}
-    mx = max((x for x in r["rows"] if x["err"] is not None and not x["stale"]),
-             key=lambda x: max(abs(x["err"]), abs(x.get("err_seq") or 0.0)), default=None)
+    lv = [x for x in r["rows"] if x.get("err_v") is not None and not x["stale"]]
+    mx = max(lv, key=lambda x: abs(x["err_v"]), default=None)
+    last = r["rows"][-1] if r["rows"] else {}
     b = r["bgm"] or {}
     if b.get("expect"):
         bg = "BGM 기대 %sdB 실측 %s(상관 %s)%s" % (b.get("exp_db"), b.get("rel_db"), b.get("r"), " ★이상" if b.get("bad") else "")
     else:
         bg = "BGM 없음(잔여 %sdB)%s" % (b.get("resid_db"), " ★파일 사라짐" if m.get("bgm_file_missing") else "")
-    return ("%s 칸%d %s 인트로%.1f 길이%.2f(기대%.2f,%+.3f) 나레이션이득%sdB | 최대오차 %s | 0.15+(칸,pts,이음) %s | 못찾음 %s | 렌더뒤음성바뀜 %s"
-            " | 효과음 %d발(팩 %s) 누락 %s 타점0.10+ %s 파일없음 %d | %s | %.0fs") % (
-        jid, j["n"], m.get("final_name"), ctx["intro"], r["len"]["got"], r["len"]["exp"], r["len"]["diff"], r["g_n_db"],
-        "%s칸 pts%+.3f/이음%+.3f" % (mx["beat"], mx["err"], mx.get("err_seq") or 0.0) if mx else "-",
-        [(x["beat"], x["err"], x.get("err_seq"), "창밖" if x["wide"] else "") for x in j["narr_bad"]],
+    return ("%s 칸%d 인트로%.1f(실측%.1f) 길이%.2f(기대%.2f,%+.3f) | 마지막칸 음성-영상 %s 음성-자막 %s 영상-자막 %s (pts참고 %s, 수리전예측 %s) "
+            "| 음성-영상 최대 %s | 음성-영상0.15+ %s | 음성-자막0.15+ %d칸 | 끝잘림 %s초(꼬리 %sdB) | 못찾음 %s | 렌더뒤음성바뀜 %s"
+            " | 효과음 %d발(팩 %s) 누락 %d 타점0.10+ %d | %s | %.0fs") % (
+        jid, j["n"], ctx["intro"], r.get("intro_used", ctx["intro"]), r["len"]["got"], r["len"]["exp"], r["len"]["diff"],
+        last.get("err_v"), last.get("err"), last.get("vid_minus_cap"), last.get("err_pts"), last.get("pred_prefix"),
+        "%s칸 %+.3f(%s)" % (mx["beat"], mx["err_v"], mx["ref_kind"]) if mx else "-",
+        [(x["beat"], x["err_v"]) for x in j["narr_bad"]], len(j["cap_bad"]), r.get("tail_cut"), r.get("tail_db"),
         [(x["beat"], x["ncc"]) for x in j["narr_lost"]], [x["beat"] for x in j["stale"]],
-        j["sfx_n"], m.get("pack") or "-", [(x["beat"], x["t"], x["file"], x["ncc"]) for x in j["sfx_miss"]],
-        [(x["beat"], x["t"], x["err"]) for x in j["sfx_off"]], len(j["sfx_nofile"]), bg, sec)
+        j["sfx_n"], m.get("pack") or "-", len(j["sfx_miss"]), len(j["sfx_off"]), bg, sec)
 
 
 def main():
@@ -392,12 +500,13 @@ def main():
         j = judge(r)
         print(line(jid, ctx, r, j, time.time() - t0), file=rep, flush=True)
         smp.write(json.dumps({"job": jid, "meta": ctx.get("meta"), "intro": ctx["intro"], **r}, ensure_ascii=False) + "\n")
+        tot["cb"] = tot.get("cb", 0) + len(j["cap_bad"])
         tot["n"] += j["n"]; tot["nb"] += len(j["narr_bad"]); tot["lost"] += len(j["narr_lost"]); tot["stale"] += len(j["stale"])
         tot["sm"] += len(j["sfx_miss"]); tot["soff"] += len(j["sfx_off"]); tot["bg"] += j["bgm_bad"]; tot["ln"] += j["len_bad"]
-    print("== 칸 %d · 나레이션 %.2f초+ 오차 %d · 효과음 누락 %d · BGM 이상 %d · 나레이션 못찾음 %d · 효과음 타점%.2f+ %d"
-          " · 길이 이상 %d · 렌더뒤음성바뀜 %d · 건너뜀 %d" % (
-              tot["n"], SHIFT_T, tot["nb"], tot["sm"], tot["bg"], tot["lost"], SFX_SHIFT_T, tot["soff"], tot["ln"],
-              tot["stale"], tot["skip"]), file=rep, flush=True)
+    print("== 칸 %d · 나레이션 %.2f초+ 오차 %d · 효과음 누락 %d · BGM 이상 %d · 음성-자막 %.2f초+ %d · 나레이션 못찾음 %d"
+          " · 효과음 타점%.2f+ %d · 길이 이상 %d · 렌더뒤음성바뀜 %d · 건너뜀 %d   (나레이션 오차 = 음성 vs 영상 칸 첫 그림)" % (
+              tot["n"], SHIFT_T, tot["nb"], tot["sm"], tot["bg"], SHIFT_T, tot.get("cb", 0), tot["lost"], SFX_SHIFT_T,
+              tot["soff"], tot["ln"], tot["stale"], tot["skip"]), file=rep, flush=True)
     rep.close(); smp.close()
     print((OUT / "report.txt").read_text(encoding="utf-8"))
 

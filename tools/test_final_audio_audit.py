@@ -147,7 +147,7 @@ def test_render_concat_drift_caught(mats, tmp_path):
                                             str(tmp_path / ("b%d.mp3" % i))]))
         f0 = int(round(cum * 30)); cum += dd; nfr = max(1, int(round(cum * 30)) - f0); bl = nfr / 30.0; lens.append(bl)
         v = tmp_path / ("v%d.mp4" % i); c = tmp_path / ("c%d.mp4" % i)
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=gray:s=64x112:r=30:d=%.3f" % (bl + 0.2),
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=0x%02x%02x%02x:s=64x112:r=30:d=%.3f" % ((i * 97) % 256, (40 + i * 53) % 256, (200 - i * 31) % 256, bl + 0.2),
                         "-frames:v", str(nfr), "-c:v", "libx264", "-pix_fmt", "yuv420p", str(v)], check=True, stdin=subprocess.DEVNULL)
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(v), "-ss", "0.000", "-i", str(tmp_path / ("b%d.mp3" % i)),
                         "-map", "0:v:0", "-map", "1:a:0", "-frames:v", str(nfr), "-af", "apad", "-t", "%.4f" % bl,
@@ -160,8 +160,15 @@ def test_render_concat_drift_caught(mats, tmp_path):
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", str(raw)],
                    check=True, stdin=subprocess.DEVNULL)
     r = fa.audit({"final": str(raw), "intro": 0.0, "beats": beats, "sfx": [], "bgm": None})
-    worst = max(max(abs(x["err"] or 0), abs(x.get("err_seq") or 0)) for x in r["rows"])
+    # 칸마다 색이 달라 영상 컷이 잡혀야 한다 → 기준이 '영상 칸 첫 그림'
+    assert all(x["vid"] is not None for x in r["rows"][1:]), r["rows"]
+    worst = max(abs(x["err_v"] or 0) for x in r["rows"])
     assert worst >= 0.08, r["rows"]
+    # 표본이 남아돈다: 디코드 길이 - 칸 길이 합(프레임 경계) 이 마지막 칸 밀림과 같은 크기
+    surplus = r["len"]["got"] - sum(lens)
+    print("[concat] 디코드 %.3fs · 칸길이합 %.3fs · 남는 표본 %+.3fs · 마지막칸 음성-영상 %+.3f · 칸별 %s" % (
+        r["len"]["got"], sum(lens), surplus, r["rows"][-1]["err_v"], [x["err_v"] for x in r["rows"]]))
+    assert abs(surplus - r["rows"][-1]["err_v"]) < 0.05
     # 수정안: 나레이션 한 줄(칸마다 apad+atrim 표본 정확히) → 한 번만 AAC
     ins, fc = [], []
     for i, L in enumerate(lens):
@@ -174,5 +181,5 @@ def test_render_concat_drift_caught(mats, tmp_path):
     fixed = tmp_path / "fixed.m4a"
     _enc(narr, fixed, ("-c:a", "aac"))
     r2 = fa.audit({"final": str(fixed), "intro": 0.0, "beats": beats, "sfx": [], "bgm": None})
-    worst2 = max(max(abs(x["err"] or 0), abs(x.get("err_seq") or 0)) for x in r2["rows"])
+    worst2 = max(abs(x["err"] or 0) for x in r2["rows"])
     assert worst2 < 0.03, r2["rows"]
