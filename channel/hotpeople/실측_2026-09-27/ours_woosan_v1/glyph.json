@@ -1,0 +1,17 @@
+{
+ "ours_woosan": {
+  "line_h": 59.0,
+  "stroke": 8.0,
+  "outline": 1,
+  "shadow": 0,
+  "n": 6,
+  "anim": {
+   "없음": 6
+  },
+  "ring_rgb": [
+   240,
+   224,
+   152
+  ]
+ }
+}

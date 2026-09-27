@@ -45,4 +45,4 @@ if out:
           f"첫 컷 중앙 {st.median([x['first_cut'] for x in v])}s · 컷 std 중앙 {st.median([x['cut_std'] for x in v])} · "
           f"최장 무변화 중앙 {st.median([x['longest_still'] for x in v])}s (최대 {max(x['longest_still'] for x in v)}) · "
           f"변화 간격 중앙 {st.median([x['event_gap_med'] for x in v])}s · "
-          f"재후킹 간격 중앙 {st.median([x['rehook_gap_med'] for x in v if x['rehook_gap_med']])}s (편당 강조 자막 {st.median([x['hook_n'] for x in v])}개)")
+          f"재후킹 간격 중앙 {st.median([x["rehook_gap_med"] for x in v if x["rehook_gap_med"]] or [0])}s (편당 강조 자막 {st.median([x['hook_n'] for x in v])}개)")
