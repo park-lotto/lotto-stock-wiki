@@ -294,7 +294,7 @@ def test_footage_pick_respects_scene_length():
 
 
 def test_scenes_cut_on_slot_crop_with_inset(tmp_path):
-    """장면 경계는 슬롯 크롭 기준 + 앞뒤 0.1초 빼기(v002 경계 1프레임 번쩍임 4.33/4.37)."""
+    """장면 경계는 슬롯 크롭(render.slot_vf) 기준 + 앞뒤 CLIP_INSET_SEC 여유."""
     from shopping_shorts.channel_presets.hotpeople import footage, spec
     src = str(tmp_path / "two.mp4")
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=1280x720:rate=30:d=5",
@@ -347,3 +347,21 @@ def test_bgm_constant_gain_keeps_song_shape(tmp_path, monkeypatch):
     assert -7.0 < open_ - rest < -5.0, (open_, rest)
     integ = float(re.findall(r"^\s*I:\s*(-?[\d.]+) LUFS", r, re.M)[-1])
     assert abs(integ - spec.BGM_LUFS) < 1.0
+
+
+def test_cut_clip_first_frame_has_video(tmp_path):
+    """칼카피 1: 컷 첫 프레임에 영상이 있어야 한다. v3 1차 렌더 실측 — -ss 뒤 영상 pts가 0이 아니라
+    첫 프레임이 빈 흰 슬롯(평균 248)이었고, 자막 경계마다 컷이 두 번(경계+1프레임) 잡혀 컷 수가 37로 불었다."""
+    from shopping_shorts.channel_presets.hotpeople import render, spec
+    src = str(tmp_path / "src.mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=1280x720:rate=25", "-t", "12",
+                    "-g", "250", src], check=True)
+    bg = render.background(_script()["title"], str(tmp_path / "bg.png"))
+    sub = render.subtitle(_script()["groups"][2], str(tmp_path / "s.png"))
+    out = str(tmp_path / "c.mp4")
+    render.cut_clip(bg, sub, src, 5.37, 2.0, out)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", out, "-frames:v", "2", "-vf",
+                          f"crop={spec.SLOT_W}:{spec.SLOT_H}:{spec.SLOT_X}:{spec.SLOT_Y}", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                         capture_output=True).stdout
+    a = np.frombuffer(raw, np.uint8).reshape(-1, spec.SLOT_H, spec.SLOT_W).astype(int)
+    assert abs(a[0].mean() - a[1].mean()) < 5, (a[0].mean(), a[1].mean())     # 첫 프레임 = 둘째 프레임(빈 슬롯 아님)

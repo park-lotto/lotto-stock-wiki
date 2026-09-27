@@ -118,7 +118,9 @@ def slot_vf(w=None, h=None):
 
 
 def cut_clip(bg_png, sub_png, src, start, sec, out_mp4):
-    f = (f"[1:v]{slot_vf()},"
+    # setpts=PTS-STARTPTS: -ss 뒤 영상 첫 pts가 0이 아니면 overlay 첫 프레임이 빈 흰 슬롯이 된다
+    # (v3 1차 실측: cut_05·cut_10 첫 프레임 평균 248(흰 바탕) → 자막 경계 12곳에서 컷이 두 번 잡혀 컷 수 37)
+    f = (f"[1:v]setpts=PTS-STARTPTS,{slot_vf()},"
          f"setsar=1,fps={spec.FPS},tpad=stop_mode=clone:stop_duration=4[v];"
          f"[0:v][v]overlay={spec.SLOT_X}:{spec.SLOT_Y}[b];[b][2:v]overlay=0:0,format=yuv420p[o]")
     _ff(["ffmpeg", "-v", "error", "-y", "-loop", "1", "-framerate", str(spec.FPS), "-i", bg_png,

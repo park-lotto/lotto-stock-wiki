@@ -20,18 +20,22 @@ def _frame(mp4, t):
     return np.frombuffer(raw, np.uint8).reshape(spec.CANVAS_H, spec.CANVAS_W, 3)
 
 
-def inner_cuts(mp4, secs, tol=0.1):
-    """★칼카피 1 결과물 검사 — 완성 mp4 슬롯에서 컷(scene>0.3, tools/hotpeople/measure/cuts.py 와 같은 자)을 찾아
-    자막 경계에서 tol 초 넘게 떨어진 컷(= 자막 안에서 화면이 바뀐 것)의 시각 목록."""
+def slot_cuts(mp4):
+    """완성 mp4 슬롯의 컷 시각(scene>0.3, 0.2초 이후) — tools/hotpeople/measure/cuts.py 와 같은 자."""
     vf = f"crop={spec.SLOT_W}:{spec.SLOT_H}:{spec.SLOT_X}:{spec.SLOT_Y},select='gt(scene,0.3)',metadata=print:file=-"
     r = subprocess.run(["ffmpeg", "-v", "error", "-i", mp4, "-vf", vf, "-f", "null", "-"], capture_output=True, text=True,
                        encoding="utf-8", errors="replace").stdout
-    cuts = [float(l.split("pts_time:")[1]) for l in r.splitlines() if "pts_time:" in l]
+    return [float(l.split("pts_time:")[1]) for l in r.splitlines() if "pts_time:" in l and float(l.split("pts_time:")[1]) > 0.2]
+
+
+def inner_cuts(mp4, secs, tol=0.1, cuts=None):
+    """★칼카피 1 결과물 검사 — 자막 경계에서 tol 초 넘게 떨어진 컷(= 자막 안에서 화면이 바뀐 것)의 시각 목록."""
+    cuts = slot_cuts(mp4) if cuts is None else cuts
     bounds, t = [], 0.0
     for s in secs:
         t += s
         bounds.append(t)
-    return [round(c, 2) for c in cuts if c > 0.2 and min(abs(c - b) for b in bounds) > tol]
+    return [round(c, 2) for c in cuts if min(abs(c - b) for b in bounds) > tol]
 
 
 def run(mp4, render, wd):
@@ -64,7 +68,10 @@ def run(mp4, render, wd):
     checks.append({"name": "슬롯이 빈 컷 0", "ok": not blank, "got": blank})
     checks.append({"name": "자막 없는 컷 0", "ok": not noink, "got": noink})
     checks.append({"name": "자막 화면 밖 0", "ok": not overflow, "got": overflow})
-    inner = inner_cuts(mp4, [c["sec"] for c in render["cuts"]])
+    cuts = slot_cuts(mp4)
+    inner = inner_cuts(mp4, [c["sec"] for c in render["cuts"]], cuts=cuts)
+    # 자막 하나 = 컷 하나라 컷 수는 자막 수를 못 넘는다 — 넘으면 경계 근처 이중 컷(빈 첫 프레임 등, v3 1차 37컷)
+    checks.append({"name": "컷 수 ≤ 자막 수", "ok": len(cuts) + 1 <= len(render["cuts"]), "got": len(cuts) + 1})
     checks.append({"name": f"자막 안 컷 {spec.SUB_INNER_CUTS_MAX} 이하", "ok": len(inner) <= spec.SUB_INNER_CUTS_MAX, "got": inner})
     sheet = None
     if frames:
