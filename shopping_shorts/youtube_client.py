@@ -329,6 +329,30 @@ def channels_from_video_urls(urls):
     return out
 
 
+def uploader_of_video(url):
+    """유튜브 영상 URL → (채널 핸들 또는 UC아이디, 채널명). 못 찾으면 ("", "").
+
+    ★서버에서 yt-dlp는 유튜브에 막힌다(2026-09-28 실측: 데이터센터 IP라 "로봇 아님을
+    확인하려면 로그인" 거절, 폰 공유 첫 시도가 이걸로 실패). 공식 API는 안 막힌다.
+    videos.list(1) + channels.list(1) = 2 units. 핸들은 yt-dlp가 주던 것과 같은 모양
+    (@ 뗀 customUrl)이라 이미 담긴 채널과 중복되지 않는다."""
+    vid = video_id_from_url(url)
+    if not vid:
+        return "", ""
+    vd, _ = _first_ok(_VIDEOS_URL, {"part": "snippet", "id": vid})
+    items = (vd or {}).get("items") or []
+    if not items:
+        return "", ""
+    sn = items[0].get("snippet") or {}
+    cid, title = sn.get("channelId") or "", sn.get("channelTitle") or ""
+    if not cid:
+        return "", ""
+    cd, _ = _first_ok(_CHANNELS_URL, {"part": "snippet", "id": cid})
+    citems = (cd or {}).get("items") or []
+    handle = ((citems[0].get("snippet") or {}).get("customUrl") or "") if citems else ""
+    return (handle.lstrip("@") or cid), title
+
+
 def enrich_youtube(url):
     """유튜브 URL → 채널·지표·인기댓글·캡션 통합 dict. 유튜브 아니면 None,
     쿼터소진(전 키 403) 시 {"status": "quota"}.

@@ -151,6 +151,34 @@ def validate_snapshot(value):
     return {key: val for key, val in value.items() if key in allowed}
 
 
+# ★화면 전용 값(2026-09-28 사장님 job 8c63b0691924 실사고): 편집기 저장값에는 '보고 있던 장면(sceneIndex)·틀(frameKind)'이 담긴다.
+#   렌더는 장면마다 show(i)를 다시 부르므로 이 둘은 그림에 영향이 없다. 그런데 서버가 저장값을 통째로 비교해
+#   렌더가 끝난 뒤 편집기를 열어 다른 장면을 구경하고 [닫기]만 눌러도 "설정이 바뀌었다"며 완성본을 버렸다.
+#   '설정이 바뀌었나'는 전부 이 함수를 거친다 — app._save_render_inputs(무효화) · mix_pipeline._render_stamp(도장) ·
+#   편집기 scene-style-produce.js sameSnapshot(올릴지 말지)가 같은 키 목록을 본다.
+VIEW_ONLY_KEYS = ("sceneIndex", "frameKind")
+#   text.caption 도 화면 전용이다 — 편집기 syncCaption()이 장면을 넘길 때마다 그 장면 자막 글로 덮어쓴다(precision20-ui.js).
+#   장면별 자막 편집은 captionTexts 에 따로 담기므로 비교에서 text.caption 을 빼도 진짜 편집은 잡힌다(check_reopen_keeps_render ③ 실측).
+VIEW_ONLY_TEXT_KEYS = ("caption",)
+
+
+def render_view(snapshot):
+    """렌더에 영향 있는 부분만 남긴 저장값 — 비교·도장 전용(저장은 원본 그대로)."""
+    if not isinstance(snapshot, dict):
+        return snapshot
+    view = {k: v for k, v in snapshot.items() if k not in VIEW_ONLY_KEYS}
+    if isinstance(view.get("text"), dict):
+        view["text"] = {k: v for k, v in view["text"].items() if k not in VIEW_ONLY_TEXT_KEYS}
+    return view
+
+
+def deco_render_view(deco):
+    """deco 전체에서 scene_style만 render_view로 정규화한 사본."""
+    if isinstance(deco, dict) and isinstance(deco.get("scene_style"), dict):
+        return {**deco, "scene_style": render_view(deco["scene_style"])}
+    return deco
+
+
 from .video_assemble import _LEAD_ABSORB as _TINY_GAP   # 이보다 짧은 '자막 없는 틈'은 장면으로 세지 않는다(초) — 값은 video_assemble 한 곳
 
 

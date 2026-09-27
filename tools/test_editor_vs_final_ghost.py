@@ -89,3 +89,31 @@ def test_fast_motion_not_ghost():
     d3 = float(np.abs(fe[29] - fe[26]).mean()); d2 = float(np.abs(fe[28] - fe[26]).mean())
     assert d3 >= evf.SCENE_T > d2, (d3, d2)          # 합성이 거리 규칙을 실제로 건드리는지(안 건드리면 이 테스트는 아무것도 안 잰다)
     assert evf._edge_ghosts(fe, 0, 29) == (0, 0)
+
+
+# ── '둘 다' 잔상은 원본 장면 전환이 있을 때만(2026-09-28) — 없으면 움직임 의심 ─────────────
+def test_tail_ghost_backed_by_scene_cut():
+    """6c1a 칸1 컷2 꼴: 읽기 12.700~14.170, 전환 14.066 → 꼬리 3프레임은 진짜 잔상."""
+    cut = {"v": "s1", "s": 12.7, "d": 1.47, "sd": 1.47}
+    assert evf._ghost_backed_by_cut(cut, "꼬리", 3, [12.7, 14.066])
+
+
+def test_fast_motion_without_cut_is_motion_suspect():
+    """68b4 칸1 컷0 꼴: 읽기 51.878~53.46 인데 그 근처에 전환 없음(손이 휙) → 잔상 아님."""
+    cut = {"v": "s0", "s": 51.878, "d": 1.13, "sd": 1.582}
+    assert not evf._ghost_backed_by_cut(cut, "꼬리", 2, [])
+    assert not evf._ghost_backed_by_cut(cut, "꼬리", 2, [40.0, 54.8])
+
+
+def test_head_ghost_backed_by_scene_cut():
+    cut = {"v": "s0", "s": 17.0, "d": 0.89, "sd": 0.89}
+    assert evf._ghost_backed_by_cut(cut, "머리", 3, [17.1])
+    assert not evf._ghost_backed_by_cut(cut, "머리", 3, [17.4])
+
+
+def test_scene_cut_after_read_end_is_not_ghost():
+    """62ed 칸5 컷2 꼴: 읽기 16.433~17.303, 전환 17.333(읽기 끝 0.03초 뒤) → 읽은 프레임엔 다음 샷이 없다 = 움직임 의심.
+    반 프레임(0.0167) 안쪽 전환만 가장자리로 친다 — 경계를 0.05로 두면 이 오탐을 잔상으로 센다."""
+    cut = {"v": "s0", "s": 16.433, "d": 0.87, "sd": 0.87}
+    assert not evf._ghost_backed_by_cut(cut, "꼬리", 3, [17.333])
+    assert evf._ghost_backed_by_cut(cut, "꼬리", 3, [17.31])

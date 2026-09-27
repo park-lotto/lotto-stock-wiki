@@ -643,7 +643,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   창을 전환 안쪽으로 줄인다(머리: start 를 전환으로 / 꼬리: sdur 을 전환까지). 컷 가장자리 딴 장면 1~3프레임(서버 6 job 23프레임)의 뿌리.
   //   전환 목록 = 서버 DATA.scenecuts[video_id](seg_snap 검출, 새 장면 첫 프레임 pts 의 0.001초 내림). 없으면 그대로(옛 데이터 안전).
   //   ★planClips 의 finish(모든 경로가 지나는 곳) 한 곳에서만 부른다 — 서버 러너가 같은 JS 를 돌려 미리보기·완성본·캡컷이 같은 창을 받는다.
-  const READ_GUARD = 0.1 + 1e-6;
+  // 한도 = 3프레임 + 반 프레임(반올림 여유 1/60) — 초로 0.1 딱 자르면 끝−전환 0.1033초(3프레임 + 3ms)가 빠져
+  //   3프레임 딴 장면이 화면·완성본 둘 다에 번쩍였다(2026-09-28 6c1a2da94688 칸1 컷2: 읽기 12.700~14.170, 전환 14.0667).
+  const READ_GUARD = 3 / 30 + 1 / 60 + 1e-6;
   function guardReadWindow(vid, start, sdur){
     const s = Number(start), d = Number(sdur);
     const cuts = ((((typeof DATA === 'object' && DATA) || {}).scenecuts) || {})[vid];

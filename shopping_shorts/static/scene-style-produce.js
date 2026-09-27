@@ -16,7 +16,9 @@
   const draftKey=id=>'scene-style-draft:'+id;
   // 저장본 비교 — 키 순서·undefined에 흔들리지 않게 정렬해 문자열로 견준다
   const stable=v=>JSON.stringify(v,(k,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,key)=>{if(x[key]!==undefined)o[key]=x[key];return o},{}):x);
-  const sameSnapshot=(a,b)=>stable(a||null)===stable(b||null);
+  // 화면 전용 값(보고 있던 장면·틀)은 빼고 견준다 — 서버 scene_style.render_view와 같은 목록(2026-09-28)
+  const renderView=s=>{if(!s||typeof s!=='object')return null;const {sceneIndex,frameKind,...rest}=s;if(rest.text&&typeof rest.text==='object'){const {caption,...t}=rest.text;rest.text=t;}return rest;};   // text.caption = 보고 있는 장면의 자막 글(장면별 편집은 captionTexts)
+  const sameSnapshot=(a,b)=>stable(renderView(a))===stable(renderView(b));
   let serverText=null;   // 이번에 열 때 서버가 준 제목 글 — 임시저장 복원 때 '고친 칸' 판정 기준
   // ★인라인 모드(2026-09-23 사장님: "구버전에서 신버전으로 바꾸는 작업, 라이브 방송 뒤 바로 교체되게 기본 세팅 먼저").
   //   관리자 스위치 scene_style_inline_enabled(기본 끔)가 켜지면 6단계 패널 안에 새 편집기를 바로 띄우고 구버전 UI를 숨긴다.
@@ -136,7 +138,7 @@
   //   덮어써서, 두 번째로 열었다 닫을 때 "적용한 적 있다"로 잘못 읽히는 구멍이 있다.
   const applied=()=>appliedOnServer;
   addEventListener('pagehide',()=>{
-    const snapshot=stashDraft();if(!snapshot||!applied())return;
+    const snapshot=stashDraft();if(!snapshot||!applied()||sameSnapshot(snapshot,packet.snapshot))return;   // 서버 저장본과 같으면 안 올린다(올리면 완성본이 무효화되던 자리)
     fetch('/api/produce/mix/settings',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:jobId,scene_style:snapshot})}).catch(()=>{});
   });
   function saveSnapshot(snapshot){
@@ -160,7 +162,8 @@
     try{
       const api=frame?.contentWindow?.sceneStyle;
       // 닫기·ESC는 **적용한 적 있는 job만** 저장한다(위 applied() 주석과 같은 이유).
-      if(api?.context()?.jobId===jobId&&applied())await saveSnapshot(stashDraft());
+      // ★서버 저장본과 같으면(다른 장면을 구경만 했으면) 올리지 않는다 — 2026-09-28 사장님 job 8c63b0691924: 렌더 뒤 [닫기]만 눌렀는데 완성본이 사라졌다.
+      if(api?.context()?.jobId===jobId&&applied()){const s=stashDraft();if(!sameSnapshot(s,packet.snapshot))await saveSnapshot(s);}
       else stashDraft();
       if(dialog?.open)dialog.close();
     }catch(error){status().textContent=error.message;frame.contentWindow.postMessage({type:'scene-style-saved',ok:false,error:error.message},location.origin);}

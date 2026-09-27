@@ -80,12 +80,28 @@ def _fake_au(report=_AU_OK, crash="", rc=0, seen=None):
     return run
 
 
-def _go(tmp_path, report="", free=57, rows=None, cc=None, au=None, **kw):
+_CL_OK = "62ed6bf66eb9 | 자막 남음 [] | 증분 대기 [] | 원인 미상 [] | 고른 원본 [] | 1s\n" \
+         "== 작업 1 · 자막 남음 0칸 · 증분 대기 0칸 · 원인 미상 0칸 · 대상 아님 0작업 · 재구성 불가 0작업\n"
+
+
+def _fake_cl(report=_CL_OK, crash="", rc=0, seen=None):
+    def run(n, work, timeout):
+        if seen is not None:
+            seen.append(n)
+        work.mkdir(parents=True, exist_ok=True)
+        (work / "report.txt").write_text(report, encoding="utf-8")
+        if crash:
+            (work / "crash.txt").write_text(crash, encoding="utf-8")
+        return rc, "cllog"
+    return run
+
+
+def _go(tmp_path, report="", free=57, rows=None, cc=None, au=None, cl=None, **kw):
     al = dva._Alerter(dry_run=True, printer=lambda s: None)
     db = _db(tmp_path, rows if rows is not None else [("62ed6bf66eb9", "ready", _iso(1))])
     rc = dva.run_audit(jobs=10, hours=24, out_root=tmp_path / "audit", tmp_root=tmp_path / "tmp", alerter=al, cfg=CFG,
                        printer=lambda s: None, runner=_fake_runner(report, **kw), free_gb=free, db_path=db, now=NOW,
-                       cc_runner=cc or _fake_cc(), audio_runner=au or _fake_au())
+                       cc_runner=cc or _fake_cc(), audio_runner=au or _fake_au(), cl_runner=cl or _fake_cl())
     return rc, al.calls
 
 
@@ -254,3 +270,49 @@ def test_audio_audit_crash_or_missing_summary_alerts(tmp_path):
     (tmp_path / "b").mkdir()
     rc, calls = _go(tmp_path / "b", _report([_JOB_OK], _sum(10, 0, 2)), au=_fake_au(crash="Traceback", rc=1))
     assert rc == 2, calls
+
+
+# ── ⑦ 자막 남음(실물, 2026-09-28) — 고객이 받은 완성본에서 청소본이 있어야 할 칸인데 원본으로 나간 칸 ─────────
+
+def test_clean_left_runs_and_is_kept(tmp_path):
+    seen = []
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, 2)), cl=_fake_cl(seen=seen))
+    assert rc == 0 and calls == [("resolve",)]
+    assert seen == [CFG["audit"]["clean_left_jobs"]]
+    day = tmp_path / "audit" / "2026-09-27"
+    assert "자막 남음 0칸" in (day / "clean_left_report.txt").read_text(encoding="utf-8")
+    import json
+    assert json.loads((day / "summary.json").read_text(encoding="utf-8"))["clean_left_summary"]["left"] == 0
+    assert not list((tmp_path / "tmp").glob("clean_left_*")), "임시 폴더도 지운다"
+
+
+def test_clean_left_in_delivered_final_raises_customer_alert(tmp_path):
+    """★사보타주 기준: 영상·캡컷·소리 전부 깨끗해도 받은 완성본에 자막 남은 칸이 있으면 고객영향 쪽지."""
+    bad = ("52a1ef1723a8 | 자막 남음 [2, 4] | 증분 대기 [] | 원인 미상 [] | 고른 원본 [1] | 1s\n"
+           "== 작업 1 · 자막 남음 2칸 · 증분 대기 0칸 · 원인 미상 0칸 · 대상 아님 0작업 · 재구성 불가 0작업\n")
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, 2)), cl=_fake_cl(report=bad))
+    assert rc == 1
+    kind, title, detail, grade, sig = calls[0]
+    assert kind == "raise" and "자막 남은 완성본 2칸" in title and grade == "고객영향", (title, grade)
+    assert "[자막 남음] 52a1ef1723a8" in detail and "자막 남음(실물) 2칸" in detail
+
+
+def test_clean_left_crash_or_missing_summary_alerts(tmp_path):
+    rc, calls = _go(tmp_path, _report([_JOB_OK], _sum(10, 0, 2)), cl=_fake_cl(report="x\n"))
+    assert rc == 2 and any("자막 남음 대조를 끝까지 못 돌림" in c[1] for c in calls if c[0] == "raise"), calls
+
+
+def test_run_cla_uses_delivered_mode_and_work_cache(tmp_path, monkeypatch):
+    seen = {}
+
+    class _P:
+        returncode, stdout, stderr = 0, "", ""
+
+    def fake_run(cmd, **kw):
+        seen["cmd"] = cmd
+        seen.update(kw.get("env") or {})
+        return _P()
+    monkeypatch.setattr(dva.subprocess, "run", fake_run)
+    dva._run_cla(30, tmp_path / "w", 10)
+    assert "--delivered" in seen["cmd"] and seen["cmd"][-1] == "30"
+    assert seen.get("SEG_SNAP_CACHE_DIR") == str(tmp_path / "w" / "snapcache") and "PATCH_DIR" not in seen

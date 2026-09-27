@@ -2325,9 +2325,19 @@ def _resolve_uploader(url: str, username: str = ""):
     ★여기 한 곳에서만 정한다 — 📌채널수집과 ⭐볼채널등록이 같은 답을 써야 한다
     (0순위-B: 같은 판단을 두 군데 적으면 언젠가 어긋난다)."""
     uname, disp = (username or "").strip().lstrip("@"), ""
+    # ★유튜브는 공식 API가 먼저다 — 서버 IP의 yt-dlp는 유튜브가 막는다(2026-09-28 폰 공유 실측).
+    #   API가 못 주면(쿼터 소진 등) 아래 yt-dlp로 내려가되 그 사실을 로그에 남긴다.
+    if not uname and url and _fav_channel_platform(url) == "youtube":
+        try:
+            from shopping_shorts.youtube_client import uploader_of_video
+            uname, disp = uploader_of_video(url)
+        except Exception as e:  # noqa: BLE001
+            print(f"_resolve_uploader 유튜브 API 실패 {url[:80]}: {e!r}", file=sys.stderr)
+        if not uname:
+            print(f"_resolve_uploader 유튜브 API 빈 결과 → yt-dlp로 {url[:80]}", file=sys.stderr)
     if not uname and url:
         try:
-            import subprocess, sys, json
+            import subprocess, json   # ★sys는 모듈 것 — 여기서 import하면 위 print(file=sys.stderr)가 UnboundLocalError(2026-09-28 실측)
             # ★빈 결과면 한 번 더 — 로그인 없이 읽는 인스타는 가끔 한 번씩 튕긴다
             #   (2026-09-27 실측: 같은 릴스 8회 중 1회만 실패, 바로 다시 하면 성공).
             #   실패 이유는 로그에 남긴다 — 조용히 삼키면 "못 찾음"의 원인을 못 가린다.
@@ -2365,14 +2375,37 @@ def _shared_link(url: str = "", text: str = "", title: str = "") -> str:
     for s in (url, text, title):
         m = _SHARED_URL_RE.search(s or "")
         if m:
-            return m.group(0).rstrip(").,!?")
+            return _clean_shared_url(m.group(0).rstrip(").,!?"))
     return ""
+
+
+# 앱 [공유]가 붙이는 추적 꼬리 — 영상 담기의 키가 주소 해시라(_grab_video `sc`) 이걸 안 떼면
+# 같은 영상이 PC 담기(브라우저 주소)와 폰 공유(…?si=xx)로 **두 번** 담긴다.
+_SHARE_DROP_PARAMS = {"si", "igsh", "igshid", "_r", "_t", "feature", "pp", "share_id",
+                      "is_from_webapp", "sender_device", "web_id", "xsec_source", "app_platform"}
+
+
+def _clean_shared_url(u: str) -> str:
+    """공유 주소 → PC 브라우저가 보던 모양(추적 꼬리 제거·호스트 통일)."""
+    try:
+        sp = urllib.parse.urlsplit(u)
+    except Exception:
+        return u
+    host = (sp.netloc or "").lower()
+    if host in ("youtube.com", "m.youtube.com"):
+        host = "www.youtube.com"
+    elif host in ("instagram.com", "m.instagram.com"):
+        host = "www.instagram.com"
+    q = [(k, v) for k, v in urllib.parse.parse_qsl(sp.query, keep_blank_values=True)
+         if k not in _SHARE_DROP_PARAMS and not k.startswith("utm_")]
+    return urllib.parse.urlunsplit((sp.scheme or "https", host, sp.path,
+                                    urllib.parse.urlencode(q), ""))
 
 
 def _fav_channel_register(cid, url: str, username: str = "", thumb: str = "") -> dict:
     """⭐나만의 채널 담기 — 주소(영상이든 프로필이든) → 채널을 찾아 cid의 목록에 넣는다.
     ★판단의 주인은 여기 하나다(0순위-C). PC 확장 버튼(/api/fav_channel/grab)과
-    폰 공유(/api/fav_channel/share)가 둘 다 이걸 부른다 — 입구마다 따로 적으면
+    폰 공유(/api/share dest=channel)가 둘 다 이걸 부른다 — 입구마다 따로 적으면
     한쪽만 고쳐지는 날이 온다(0순위-B).
     돌려주는 status: added / exists / full / notfound"""
     plat = _fav_channel_platform(url)
@@ -2422,19 +2455,32 @@ def api_fav_channel_grab(request: Request, url: str = "", username: str = "",
                                     "왼쪽 ⭐나만의 채널등록에서 확인하세요."))
 
 
-@app.post("/api/fav_channel/share")
-def api_fav_channel_share(request: Request, body: dict):
-    """📱폰 [공유] → 숏템메이커(2026-09-27 사장님 요청). /share 화면이 부른다.
-    body: {url, text, title} — 안드로이드 공유가 준 그대로. 담는 판단은
-    _fav_channel_register 한 곳(PC 확장 버튼과 같은 답)."""
+@app.post("/api/share")
+def api_share(request: Request, background_tasks: BackgroundTasks, body: dict):
+    """📱폰 [공유] → 숏템메이커(2026-09-28 사장님 "채널이랑 영상 나눠서, 붙여넣기 없이").
+    /share 화면이 부른다. body: {url, text, title, dest}
+      dest ""        → 담지 않고 고른 주소만 돌려준다(화면이 미리 보여준다)
+      dest "video"   → ⭐영상 즐겨찾기 — _grab_video (PC 📥담기와 같은 판단)
+      dest "channel" → ⭐나만의 채널등록 — _fav_channel_register (PC ⭐버튼과 같은 판단)
+    주소 고르기는 _shared_link 한 곳."""
     cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
     if cid is None:      # ★cid==0(관리자)은 정상 로그인이다 — not cid로 판정 금지
         return {"ok": False, "status": "login", "error": "로그인이 필요해요"}
     link = _shared_link(body.get("url") or "", body.get("text") or "", body.get("title") or "")
     if not link:
         return {"ok": False, "status": "nolink", "error": "공유된 내용에 주소가 없어요"}
-    r = _fav_channel_register(cid, link)
-    r.update(ok=r["status"] in ("added", "exists"), link=link)
+    dest = (body.get("dest") or "").strip()
+    if dest == "video":
+        # 제목칸에 주소가 들어오면 제목이 아니다(앱마다 제목칸 쓰임이 다르다)
+        t = (body.get("title") or "").strip()
+        r = _grab_video(cid, link, title=("" if _SHARED_URL_RE.search(t) else t),
+                        background_tasks=background_tasks)
+    elif dest == "channel":
+        r = _fav_channel_register(cid, link)
+    else:
+        return {"ok": True, "status": "preview", "link": link,
+                "platform": _grab_platform(link) or _fav_channel_platform(link)}
+    r.update(ok=r["status"] in ("added", "exists"), link=link, dest=dest)
     return r
 
 
@@ -3625,7 +3671,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # [바꾸기] 부분 재생성(/api/script/beat/regen)도 **같은 함수**를 쓴다.
         try:
             _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
-                it, body, store, _cid(request), spines=_picked)
+                it, body, store, _cid(request), spines=_picked,
+                # 이야기 작가가 켜진 계정은 쿠팡·웹검색을 부르지 않는다(작가는 자체 지식으로 특징을 뽑는다)
+                outside=not _setting_gate(store, "story_writer_enabled", _cid(request)))
         except ValueError as e:
             return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
         # 재료가 한 편도 없으면 여기서 멈춘다 — 이 상태로 생성하면 모델이 통째로 지어낸다.
@@ -5059,6 +5107,11 @@ def _save_render_inputs(store, job_id, **fields):
             #   종전엔 여기 따로 적어(길이 intro_sec 없음) 인트로 길이만 바꾸면 옛 완성본이 그대로 남았다.
             if (mix_pipeline.intro_signature(before.get("thumbnail"), job_id)
                     != mix_pipeline.intro_signature(value, job_id)):
+                render_changed = True
+        elif key == "deco":
+            # ★장면꾸미기 저장값의 화면 전용 값(보고 있던 장면·틀)은 비교에서 뺀다 — 판단은 scene_style.deco_render_view 한 곳.
+            from .scene_style import deco_render_view
+            if deco_render_view(before.get("deco")) != deco_render_view(value):
                 render_changed = True
         elif before.get(key) != value:
             render_changed = True
@@ -12610,7 +12663,8 @@ _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    #   안 열린다(저 세트는 method=="GET"에서만 본다). 개인 북마크라
                    #   과금 요소가 없어 등급과 무관하게 연다 — 로그인 여부는 핸들러가 본다.
                    "/api/fav_channel/add", "/api/fav_channel/remove",
-                   "/api/fav_channel/refresh", "/api/fav_channel/share",   # 폰 공유(2026-09-27)
+                   "/api/fav_channel/refresh",
+                   "/api/share",   # 폰 공유(2026-09-28) — 영상 담기의 등급 검사는 _grab_video 안에서
 
                    "/api/mix/basket/toggle",
                    "/api/lens/search", "/api/lens/trace_url",
@@ -18004,27 +18058,18 @@ def _enrich_grab(url, sc, cid):
         overwrite=stale)
 
 
-@app.get("/api/grab", include_in_schema=False)
-def api_grab(request: Request, background_tasks: BackgroundTasks,
-             url: str = "", thumbnail: str = "", title: str = "", video_url: str = ""):
-    """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
-    미들웨어가 customer_id를 안 채우므로 여기서 검증). 영상 즐겨찾기(mix_basket)에 멱등 추가하고
-    백그라운드로 메타(썸네일·조회수 등)를 보강한다(팝업은 즉시 반환)."""
-    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
-    if cid is None:
-        return _grab_popup_html(False, "로그인이 필요해요",
-                                "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+def _grab_video(cid, url, thumbnail="", title="", video_url="", background_tasks=None) -> dict:
+    """⭐영상 즐겨찾기 담기 — 판단의 주인(0순위-C). PC 📥담기(/api/grab 팝업)와
+    폰 공유(/api/share)가 둘 다 이걸 부른다(2026-09-28 뽑아냄 — 본문은 예전 api_grab 그대로).
+    돌려주는 status: pending / paid / badlink / added / exists"""
     # 유료게이트: /api/grab은 _AUTH_ALLOW라 미들웨어 게이트를 우회한다 → 여기서 직접 등급 확인.
     # 담기(+백그라운드 메타 크롤 비용)는 full 전용. pending(승인대기)·ranking_only 모두 차단.
     lvl = access_level(cid)
     if lvl != "full":
-        title = "승인 대기중이에요" if lvl == "pending" else "유료 기능이에요"
-        msg = ("운영자 승인 후 담기를 쓸 수 있어요" if lvl == "pending"
-               else "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
-        return _grab_popup_html(False, title, msg)
+        return {"status": "pending" if lvl == "pending" else "paid"}
     platform = _grab_platform(url)
     if not platform:
-        return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
+        return {"status": "badlink"}
     sc = "grab_" + platform + "_" + hashlib.sha1(url.encode("utf-8", "ignore")).hexdigest()[:12]
     # ★영상 파일 직접 주소(2026-08-17) — 담기 스크립트가 보내면 함께 보관한다.
     #   도우인은 yt-dlp가 쿠키를 요구해 페이지 URL로는 못 받는다(서버·PC 양쪽 재현).
@@ -18045,8 +18090,30 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
     background_tasks.add_task(_enrich_grab, url, sc, cid)   # 썸네일·조회수 등 보강
     _enqueue_prewarm(Store(DB_PATH), sc, url, caption=(title or "")[:200], customer_id=cid,
                      video_url=vurl)
-    return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if added else "이미 담겨 있어요",
-                            f"{platform} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
+    return {"status": "added" if added else "exists", "platform": platform, "shortcode": sc}
+
+
+@app.get("/api/grab", include_in_schema=False)
+def api_grab(request: Request, background_tasks: BackgroundTasks,
+             url: str = "", thumbnail: str = "", title: str = "", video_url: str = ""):
+    """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
+    미들웨어가 customer_id를 안 채우므로 여기서 검증). 영상 즐겨찾기(mix_basket)에 멱등 추가하고
+    백그라운드로 메타(썸네일·조회수 등)를 보강한다(팝업은 즉시 반환). 판단은 _grab_video."""
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:
+        return _grab_popup_html(False, "로그인이 필요해요",
+                                "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+    r = _grab_video(cid, url, thumbnail, title, video_url, background_tasks)
+    st = r["status"]
+    if st == "pending":
+        return _grab_popup_html(False, "승인 대기중이에요", "운영자 승인 후 담기를 쓸 수 있어요")
+    if st == "paid":
+        return _grab_popup_html(False, "유료 기능이에요",
+                                "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
+    if st == "badlink":
+        return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
+    return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if st == "added" else "이미 담겨 있어요",
+                            f"{r['platform']} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
 
 
 # 북마클릿 본문(플랫폼 페이지에서 실행) — 따옴표 충돌을 피해 base64로 실어 페이지에서 atob.
@@ -24439,7 +24506,7 @@ def _wow_block_for(sources, store):
     return wow_facts.wow_prompt_block(wows)
 
 
-def _materials_for_generate(item, body, store, cid, spines=None):
+def _materials_for_generate(item, body, store, cid, spines=None, outside=True):
     """대본 생성에 넣을 **재료 한 벌** → (sources, facts_block, job, job_id, scene_block)
 
     ★왜 함수로 뽑았나(2026-08-17): 원래 이 조립이 `/api/wiki/generate` 안에 통째로
@@ -24548,7 +24615,9 @@ def _materials_for_generate(item, body, store, cid, spines=None):
     # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
     #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
     #   여기서 긁지 않는다 — 수집은 /api/product/facts/collect가 미리 해둔다(2~3분).
-    _facts_block = _facts_block_for_job(_jid, store, _topic_product)
+    # outside=False(이야기 작가, 2026-09-27 사장님 "웹·쿠팡 다 빼고 자체 지식으로"): 쿠팡 수집분은 서버 403이라
+    #   820작업 중 0개, 웹검색 wow는 897회 중 1회 성공(빈 결과는 캐시 안 해 매번 다시 부름) — 안 부른다.
+    _facts_block = _facts_block_for_job(_jid, store, _topic_product) if outside else ""
     # ★1단계 장면 태깅을 대본에도 준다(2026-08-17). label=이 장면이 무엇인가,
     #   use_point=이 장면을 어디에 어떻게 써먹나. 지금까지는 화면 붙일 때(edit_plan)만
     #   쓰고 대본 생성엔 안 실렸다 — 재료를 반만 쓰고 있었다.
@@ -24566,7 +24635,7 @@ def _materials_for_generate(item, body, store, cid, spines=None):
     #   ★캐시가 본체다: 실측에서 키 4개가 연속 429였고, 이 단계는 job마다 부르면 그만큼
     #     느려진다. 같은 제품군은 다시 안 때린다.
     #   ★못 찾으면 빈 문자열 — 대본은 종전대로 나온다(회귀 0).
-    _wow_block = _wow_block_for(_src, store)
+    _wow_block = _wow_block_for(_src, store) if outside else ""
     if _wow_block:
         _facts_block = (_facts_block + chr(10)*2 + _wow_block) if _facts_block else _wow_block
     # ★`_scene_block`도 돌려준다 — 호출부가 응답의 `materials.scene_points`(화면에 "장면 N개"로
