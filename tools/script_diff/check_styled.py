@@ -51,7 +51,7 @@ for w in works:
         _st = _S(A.DB_PATH)
         facts = "\n\n".join(x for x in (A._facts_block_for_job(w["job_id"], _st, w["product"]),
                                          A._wow_block_for([{"product": w["product"]}], _st)) if x)
-        print("   제품 사실 %d자" % len(facts))
+        print("   제품 사실 %d자: %s" % (len(facts), facts[:160].replace("\n", " / ")))
     try:
         drafts, why = sw.make_drafts(spines[:1], w["job"], 25, job_id=w["job_id"], preset="short",
                                      seed_text=w["seed_text"], seed_product=w["product"], facts=facts)
@@ -92,6 +92,9 @@ for w in works:
             d.get("style_name"), d.get("chars") or 0, d.get("sec") or 0, wn.get("auth"),
             "OK" if order_ok else "틀림(%s)" % " → ".join(got), copy or "-", rep or "-", nocut,
             "예" if wn.get("retry") else "아니오", wn.get("problems") or "-"))
+        if d.get("hit_points") or d.get("appeal_points"):
+            print("   터진 포인트: %s" % " / ".join(d.get("hit_points") or []))
+            print("   신기·좋아할 특징: %s" % " / ".join(d.get("appeal_points") or []))
         if not args.quiet:
             for b in beats:
                 print("   %-8s | %s   %s" % (b.get("role"), b.get("text"), b.get("src_segs")))
