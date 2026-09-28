@@ -4279,6 +4279,8 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
                                   render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
                                   mix_charged=_charged.get("charged", 0),
                                   scene_first=scene_first)
+    if _tier_from_body(body) is not None:
+        Store(DB_PATH).update_mix_job(job_id, clean_tier=_tier_from_body(body))
     _store.attach_mix_claim(_fp, job_id)
     Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}
@@ -4436,6 +4438,8 @@ def api_mix_candidate_clone(request: Request, body: dict):
                                   mix_charged=_charged.get("charged", 0),
                          scene_first=bool(src.get("scene_first")),
                          backbone_main=src.get("backbone_main"))
+    if src.get("clean_tier"):
+        store.update_mix_job(new_id, clean_tier=src.get("clean_tier"))   # 등급도 물려준다(2026-09-28)
     _clone_mix_work_sources(job_id, new_id, len(urls))
     # 후보 목록을 그대로 물려준다 — 복제본에서도 A/B/C를 비교·전환할 수 있다(또 복제도 가능).
     store.set_mix_candidates(new_id, cands)
@@ -7966,15 +7970,33 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
     # ★돈이 나가기 전 고객 동의(2026-09-27) — 렌더와 같은 관문(_clean_consent_or_409 → mix_pipeline.clean_charge_plan).
     #   고른 장면(cuts)은 아직 저장 전이라 이번 요청 값으로 잰다 — 409면 저장하지 않는다(확인 뒤 다시 보낸다).
     _judge_job = dict(job, clean_cuts=_pick) if "cuts" in body else job
+    # ★화면에 보이는 등급으로 판정·저장한다(2026-09-28) — 화면=고급인데 job=기본으로 과금되던 것
+    _tier = _tier_from_body(body)
+    if _tier is not None:
+        _judge_job = dict(_judge_job, clean_tier=_tier)
     _consent = _clean_consent_or_409(store, _judge_job, _MIX_WORK_DIR / job_id, body, mode="button")
     if isinstance(_consent, JSONResponse):
         return _consent
     if "cuts" in body:
         store.update_mix_job(job_id, clean_cuts=_pick)
+    if _tier is not None and _tier != (job.get("clean_tier") or "basic"):
+        store.update_mix_job(job_id, clean_tier=_tier)
     # 'cleaning'을 여기서 동기 기록(응답 전) — run 안에서 쓰면 이중예약된다(preview 라우트 주석 참조)
     store.update_mix_job(job_id, clean_status="cleaning", clean_error=None)
     Store(DB_PATH).enqueue("clean", dict({"job_id": job_id}, **_consent))
     return {"ok": True, "status": "cleaning"}
+
+
+def _tier_from_body(body):
+    """요청 body의 자막제거 등급 → 'basic'|'pro' 또는 None(보내지 않음). 해석은 여기 한 곳(0순위-B).
+
+    ★왜(2026-09-28 사장님 "고급으로 눌렀는데" — job 7c7434ef581e 실측): 화면은 고급인데 새 job엔 등급이 비어
+      기본으로 과금·처리됐다. 새 job 만들 때도, 자막제거 시작 때도 **화면에 보이는 등급을 같이 받아** 저장한다.
+      (07-30 subtitle_removal이 새 job에 안 넘어가던 사고와 같은 모양 — 그때 등급만 빠졌다.)"""
+    if not isinstance(body, dict) or "clean_tier" not in body:
+        return None
+    from .vmake_client import TIER_BASIC, TIER_PRO
+    return TIER_PRO if body.get("clean_tier") == TIER_PRO else TIER_BASIC
 
 
 def _clean_cuts_from_body(job, job_id, raw):
@@ -20493,6 +20515,9 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
                                   render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
                                   mix_charged=_charged.get("charged", 0),
                                   backbone_main=backbone_main)
+    # 등급도 새 job에 물려준다(2026-09-28, subtitle_removal과 같은 이유)
+    if _tier_from_body(body) is not None:
+        Store(DB_PATH).update_mix_job(job_id, clean_tier=_tier_from_body(body))
     _store.attach_mix_claim(_fp, job_id)     # 진 쪽이 이걸 읽어 같은 job을 쓴다
     Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}
@@ -20511,10 +20536,8 @@ def api_produce_mix_settings(body: dict):
     if "subtitle_removal" in body:
         fields["subtitle_removal"] = bool(body.get("subtitle_removal"))
     if "clean_tier" in body:
-        # 자막제거 등급. 아는 값만 받는다 — 모르는 값이 들어오면 기본으로 떨어뜨린다
-        # (등급 이름의 정의처는 vmake_client, 해석은 mix_pipeline.clean_tier_of).
-        from .vmake_client import TIER_BASIC, TIER_PRO
-        fields["clean_tier"] = TIER_PRO if body.get("clean_tier") == TIER_PRO else TIER_BASIC
+        # 자막제거 등급. 아는 값만 받는다 — 해석은 _tier_from_body 한 곳(0순위-B)
+        fields["clean_tier"] = _tier_from_body(body)
     if "headcopy" in body:
         fields["headcopy"] = body.get("headcopy")  # dict or None
     if "caption_style" in body:

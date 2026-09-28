@@ -12385,8 +12385,9 @@ async function startProduceMix(){
     //     → onchange가 안 떠서 onSubToggle()의 /api/produce/mix/settings가 **한 번도 안 불림**
     //     → 화면은 "켜짐", job은 0. 렌더가 job을 읽으므로 원본 자막이 그대로 남는다.
     //   2462줄의 복원 경로 주석(꺼진 줄 알았는데 몰래 과금)과 같은 계열의 반대 방향 사고다.
+    // ★등급도 새 job에 싣는다(2026-09-28 사장님 "고급으로 눌렀는데" — 화면은 고급, 새 job은 비어 기본으로 과금)
     const _mixBody={script:STATE.script, urls, target_seconds:25, scene_first:true,
-                    subtitle_removal: !!STATE.subtitleRemoval};
+                    subtitle_removal: !!STATE.subtitleRemoval, clean_tier: (STATE.cleanTier==='pro'?'pro':'basic')};
     if(_bbIdx>=0) _mixBody.backbone_main=_bbIdx;   // ⭐메인 지정 시에만(없으면 서버 자동 선정)
     // ★비트별 출처 장면을 함께 보낸다(2026-08-18). 2단계가 남긴 src_seg — 3단계가
     //   그 장면을 1순위로 붙인다. 없으면 키 자체를 안 보낸다 = 종전 그대로(회귀 0).
@@ -13931,7 +13932,8 @@ async function startCleanPreview(){
   try{
     // ★돈이 나가는 청소는 서버가 고객 확인을 강제한다(2026-09-27) — 409 + 안내(초·크레딧·사유)가 오면 그 문구로 묻고,
     //   [확인]이면 서버가 보여준 초(confirm_secs)를 실어 다시 보낸다. [취소]면 아무것도 안 지우고 과금도 없다.
-    let _cbody={job_id:myJob, cuts:_cuts}, d={ok:false};
+    // ★화면에 보이는 등급을 함께 보낸다 — 서버는 이 값으로 판정·저장한다(화면≠과금 방지, 2026-09-28)
+    let _cbody={job_id:myJob, cuts:_cuts, clean_tier:(STATE.cleanTier==='pro'?'pro':'basic')}, d={ok:false};
     for(let _try=0; _try<3; _try++){
       const _r=await fetch('/api/produce/mix/clean',{method:'POST',
         headers:{'Content-Type':'application/json'}, body:JSON.stringify(_cbody)});
@@ -14123,7 +14125,8 @@ function refreshSub(){
   //   '몰래 켜짐'도 아니다.
   if(MIX_JOB){
     fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({job_id:MIX_JOB, subtitle_removal: !!STATE.subtitleRemoval})}).catch(()=>{});
+      body:JSON.stringify({job_id:MIX_JOB, subtitle_removal: !!STATE.subtitleRemoval,
+                           clean_tier:(STATE.cleanTier==='pro'?'pro':'basic')})}).catch(()=>{});
   }
   // 실결과가 이미 떠 있으면 데모 숨김, 아니면 데모(쇼케이스) 노출 — 페이지가 비지 않게.
   const sc=document.getElementById('cleanShowcase'), cp=document.getElementById('cleanPreview');
