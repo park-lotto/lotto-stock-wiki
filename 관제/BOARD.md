@@ -1,10 +1,10 @@
 # 관제 보드 (자동 생성 — 손으로 고치지 마라. `py tools/control.py board`)
 
-갱신: 2026-09-28 23:41 · 카드 17장
+갱신: 2026-09-28 23:41 · 카드 18장
 
 상태 흐름: 등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료  (예외: 승인대기 · 회귀)
 
-## 등록 (16)
+## 등록 (17)
 
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
@@ -24,6 +24,7 @@
 | [015](cards/015-음성_지문·서명_한_함수_—_plan_sig.md) | 음성 지문·서명 한 함수 — plan_signature/_pvproxy_tts_stamp/timing_signature (#20) | - | - | shopping_shorts/mix_pipeline.py:plan_signature | 성우 바꾸면 청소본·합본·꾸미기 세 산출물이 동시에 낡음 처리(실측 job) | 2026-09-28 23:41 등록 |
 | [016](cards/016-화면_길이_예산_모델을_화면_계획_결과로_(.md) | 화면 길이 예산 모델을 화면 계획 결과로 (#29) | - | - | shopping_shorts/mix_pipeline.py:beat_screen_budget | 콘폼(재TTS) 발생 건수 전/후 실측, 못 채운 칸 0 | 2026-09-28 23:41 등록 |
 | [017](cards/017-파이썬_예비_컷_계획_축소_—_화면_데이터_.md) | 파이썬 예비 컷 계획 축소 — 화면 데이터 없는 옛 job 전용 + 경보 (#1) | - | - | shopping_shorts/static/scene_play.js:planClips | FALLBACK 경보 건수 7일 0 · ownership 예외(video_assemble 예비 계획) 삭제 | 2026-09-28 23:41 등록 |
+| [018](cards/018-캡컷_이동(pan)·기본_확대_반영_+_꾸미.md) | 캡컷 이동(pan)·기본 확대 반영 + 꾸미기 프레임 구도를 frame_vf 로 (#5) | - | - | shopping_shorts/video_assemble.py:frame_vf | 확대·이동 준 칸의 캡컷 위치 = 완성본(좌표계 실측) · 꾸미기 배경 프레임 구도 = 완성본 | 2026-09-28 23:41 등록 |
 
 ## 분배 (1)
 
