@@ -3677,12 +3677,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         except ValueError as e:
             return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
         # 재료가 한 편도 없으면 여기서 멈춘다 — 이 상태로 생성하면 모델이 통째로 지어낸다.
-        # (씨앗의 대본 원문이 아직 안 뽑힌 영상은 1단계 분석이 끝나야 재료가 생긴다.)
-        if not [x for x in (_src or []) if (x.get("full_text") or "").strip()]:
-            return JSONResponse(status_code=422, content={
-                "ok": False,
-                "error": "재료(대본 원문)가 아직 없어요 — 1단계에서 담긴 영상의 대본 분석이 "
-                         "끝난 뒤 다시 눌러주세요. 급하면 '직접 쓰기'로 대본을 넣어도 됩니다."})
+        # ★무음 영상은 원문이 없어도 장면 설명·제품명이 재료다(_generate_material_ready, 2026-09-28).
+        if not _generate_material_ready(_src):
+            return JSONResponse(status_code=422, content={"ok": False, "error": _NO_MATERIAL_MSG})
         # ★재료 분량을 알고 나서 은행을 다시 짠다(2026-08-18). 위(2351)에서는 재료를 아직
         #   몰라 예산을 못 건다 — 그대로 두면 은행이 재료를 압도한 채 프롬프트에 실린다
         #   (실측 사고: 재료 750자 vs 은행 2,822자 → 대본이 은행 소재로 끌려감).
@@ -3848,11 +3845,8 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
             it, body, store, _cid(request))
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
-    if not [x for x in (_pick_src or []) if (x.get("full_text") or "").strip()]:
-        return JSONResponse(status_code=422, content={
-            "ok": False,
-            "error": "재료(대본 원문)가 아직 없어요 — 1단계에서 담긴 영상의 대본 분석이 "
-                     "끝난 뒤 다시 눌러주세요. 급하면 '직접 쓰기'로 대본을 넣어도 됩니다."})
+    if not _generate_material_ready(_pick_src):   # 스타일 경로와 같은 판정(0순위-B)
+        return JSONResponse(status_code=422, content={"ok": False, "error": _NO_MATERIAL_MSG})
     # ★은행 예산을 여기서도 건다(2026-09-07). 스타일 경로(위)에는 재료 글자수로 은행을
     #   잘라내는 코드가 있는데 **이 픽업 경로에는 없었다** — 같은 판단이 한쪽에만 적힌
     #   0순위-B다. 실측 work 01e725b98569: 재료 233자인데 은행 1,832자 + 스타일 예시
@@ -24321,6 +24315,35 @@ def _topic_product_for_generate(item, body, job, store):
     if isinstance(brief, dict) and (brief.get("product") or "").strip():
         return brief["product"].strip()
     return ""
+
+
+def _generate_material_ready(sources):
+    """대본 생성에 쓸 재료가 **한 편이라도** 있는가 — 판정은 여기 한 곳에서만(0순위-B).
+
+    ★왜 생겼나(2026-09-28 차순엽 회원 제보): 말이 없는 시연 영상(유튜브 리필 디스펜서·
+      샤오홍슈 세제 소분)은 1단계 분석이 **정상 완료**돼도 full_text가 ''다(extract_method=frames,
+      세그 23개 전부 text=""). 그런데 생성 관문 두 곳(스타일·픽업)이 full_text만 보고 422를 내며
+      "분석이 끝난 뒤 다시 눌러주세요"라고 안내했다 — 기다려도 영영 안 풀리는 안내였고
+      한 회원이 저녁에만 10번을 다시 눌렀다(라이브 로그 실측). 재료 조립(_sources_for_generate)은
+      09-09에 "말 없는 소재도 담는다"로 바뀌었는데 바로 뒤 관문은 그대로여서 어긋난 것.
+
+    재료로 치는 것: 대본 원문 / 장면 설명(segments[].scene_desc) / 1단계가 뽑은 제품명.
+    """
+    for x in (sources or []):
+        if not isinstance(x, dict):
+            continue
+        if (x.get("full_text") or "").strip():
+            return True
+        if (x.get("product") or "").strip():
+            return True
+        for s in (x.get("segments") or []):
+            if isinstance(s, dict) and (s.get("scene_desc") or s.get("text") or "").strip():
+                return True
+    return False
+
+
+_NO_MATERIAL_MSG = ("재료가 아직 없어요 — 1단계에서 담긴 영상의 분석이 끝난 뒤 다시 눌러주세요. "
+                    "급하면 '직접 쓰기'로 대본을 넣어도 됩니다.")
 
 
 def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES,
