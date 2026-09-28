@@ -222,7 +222,7 @@ def test_js_render_decline_then_skip_clean():
     assert len(out["sent"]) == 1 and out["restored"] == "렌더를 취소했어요"
 
 
-BUTTON_START = "    let _cbody={job_id:myJob, cuts:_cuts}, d={ok:false};\n"
+BUTTON_START = "    let _cbody={job_id:myJob, cuts:_cuts"   # 뒤에 화면 등급이 붙는다(2026-09-28)
 BUTTON_END = "    if(CLEAN_GEN!==myGen) return;\n    if(!d.ok){"
 
 
@@ -230,7 +230,7 @@ def test_js_button_confirm_sends_consent():
     src = HTML.read_text(encoding="utf-8").replace("\r\n", "\n")
     block = _block(src, BUTTON_START, BUTTON_END)
     js = """
-const sent=[]; global.confirm=()=>true; const myJob='jobx', _cuts=null, myGen=1; global.CLEAN_GEN=1;
+const sent=[]; global.confirm=()=>true; global.STATE={cleanTier:'pro'}; const myJob='jobx', _cuts=null, myGen=1; global.CLEAN_GEN=1;
 const box={innerHTML:''}, btn=null;
 global.fetch=async (url,opt)=>{ const b=JSON.parse(opt.body); sent.push(b);
   if(!b.confirm_clean) return {status:409, json:async()=>({ok:false,need_clean_confirm:true,seconds:7.5,message:'m'})};
@@ -239,3 +239,4 @@ global.fetch=async (url,opt)=>{ const b=JSON.parse(opt.body); sent.push(b);
 """ % block
     out = _node(js)
     assert len(out["sent"]) == 2 and out["sent"][1]["confirm_clean"] is True and out["sent"][1]["confirm_secs"] == 7.5
+    assert out["sent"][0]["clean_tier"] == "pro" and out["sent"][1]["clean_tier"] == "pro"   # 화면 등급이 동의 재요청에도 실린다
