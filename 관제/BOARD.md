@@ -35,7 +35,7 @@
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
 | [023](cards/023-저장_층(C_D)_관제_—_외장_D_숏템_을.md) | 저장 층(C/D) 관제 — 외장 D:\숏템 을 지도(관제/storage.json)로 나누고 tools/storage.py 가 status/plan/apply | 관제 | - | tools/storage.py:plan | C 여유가 경고선 15GB 위로 올라오고 유지 · 옮긴 것마다 D 에 bundle/파일이 있고 C 에 두 벌 없음 · 다른 세션 경로 깨짐 0 | 2026-09-29 00:09 등록 · 분배 → 관제 |
-| [024](cards/024-장면꾸미기_글자_두께·그림자_설정([폰트]_.md) | 장면꾸미기 글자 두께·그림자 설정([폰트] 탭, 영상 전체) | 장면폰트 | **필요** | out/precision20-ui.js:TEXT_WEIGHTS/TEXT_SHADOWS CSS(글자층 data-tw/data-ts) | tools/scene_font_research/check_text_look.py 전부 통과 + 라이브 실제 job 렌더·캡컷에서 글자 달라짐 확인 | 2026-09-29 00:16 등록 · 분배 → 장면폰트 |
+| [024](cards/024-장면꾸미기_글자_두께·그림자_설정([폰트]_.md) | 장면꾸미기 글자 두께·그림자 설정([폰트] 탭, 영상 전체) | 장면폰트 | 2026-09-29 00:16 · 사장님 구두 2026-09-29 00:00 '올려봐 라이브후에 랜더랑 캡컷 확인하고' | out/precision20-ui.js:TEXT_WEIGHTS/TEXT_SHADOWS CSS(글자층 data-tw/data-ts) | tools/scene_font_research/check_text_look.py 전부 통과 + 라이브 실제 job 렌더·캡컷에서 글자 달라짐 확인 | 2026-09-29 00:16 승인: 사장님 구두 2026-09-29 00:00 '올려봐 라이브후에 랜더랑  |
 
 ## 라이브실측 (1)
 
