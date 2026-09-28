@@ -1,10 +1,10 @@
 # 관제 보드 (자동 생성 — 손으로 고치지 마라. `py tools/control.py board`)
 
-갱신: 2026-09-28 23:40 · 카드 13장
+갱신: 2026-09-28 23:41 · 카드 14장
 
 상태 흐름: 등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료  (예외: 승인대기 · 회귀)
 
-## 등록 (12)
+## 등록 (13)
 
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
@@ -20,6 +20,7 @@
 | [011](cards/011-편집_화면_DATA.tts_dur_를_트림_.md) | 편집 화면 DATA.tts_dur 를 트림 반영 길이로 — 화면 컷 = 완성본 컷 (#6) | - | **필요** | shopping_shorts/video_assemble.py:_beat_effective_dur | 트림 칸 수 실측 → tools/editor_vs_final_video.py 밀림 감소, 화면 컷 경계 = 완성본 | 2026-09-28 23:40 등록 |
 | [012](cards/012-beats_preview_API_가_capt.md) | beats_preview API 가 caption_rows 를 싣고 produce.html 은 그 값만 (#9-③) | - | **필요** | shopping_shorts/video_assemble.py:caption_rows | produce.html 의 _cutForSegOf 자체 계산 0 · 꾸미기 미리보기 자막 시각 = 완성본(tools/final_caption_audit.py) | 2026-09-28 23:40 등록 |
 | [013](cards/013-화면에_보일_청소_파일_한_함수_—__cle.md) | 화면에 보일 청소 파일 한 함수 — _clean_frame_src·_thumb_clean_background·스타일랩 흡수 (#17) | - | - | shopping_shorts/mix_pipeline.py:clean_route | 썸네일·꾸미기 배경 프레임의 청소 파일 = 완성본이 쓴 것(같은 job 대조 0 불일치) | 2026-09-28 23:40 등록 |
+| [014](cards/014-캡컷_소스_복사_범위_=_render_cut.md) | 캡컷 소스 복사 범위 = render_cut_plan 이 실제 쓴 video_id (#23·#25) | - | - | shopping_shorts/mix_pipeline.py:export_sources_for | tools/capcut_export_audit.py 미디어 누락 0 | 2026-09-28 23:41 등록 |
 
 ## 분배 (1)
 
