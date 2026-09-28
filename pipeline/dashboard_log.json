@@ -362,5 +362,12 @@
     "track": "대본작성",
     "summary": "이정민님 대본 영어 출력 제보 조사: 새벽 02:07 이야기 작가 v4.1 전체 켜짐(story_writer_enabled=1 실측). STYLED_BRIEF에 한국어 지시·한글 검사 없음(옛 경로엔 있었음). 실제 대본은 DB 읽기 권한 거부로 미확인",
     "next": "이정민 job id 받아 대본·재료 대조 → 승인 후 프롬프트 한국어 지시+styled_problems 한글 검사 추가"
+  },
+  {
+    "date": "2026-09-28",
+    "category": "스탁브레인",
+    "track": "회원지원",
+    "summary": "차순엽 회원 분석완료 미표시·대본추출 불가 제보 조사. 코드상 판정 경로(_analysis_state/produce_autoload/job_queue) 파악. 실행 도구 분류기 오류로 서버 DB 조회 실패.",
+    "next": "사장님이 SSH 조회 명령 결과 붙여주면 멈춘 단계(워커/다운로드 래치/URL 누락) 판독 후 조치"
   }
 ]
