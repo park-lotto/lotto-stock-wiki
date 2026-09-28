@@ -1,10 +1,10 @@
 # 관제 보드 (자동 생성 — 손으로 고치지 마라. `py tools/control.py board`)
 
-갱신: 2026-09-28 23:41 · 카드 15장
+갱신: 2026-09-28 23:41 · 카드 16장
 
 상태 흐름: 등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료  (예외: 승인대기 · 회귀)
 
-## 등록 (14)
+## 등록 (15)
 
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
@@ -22,6 +22,7 @@
 | [013](cards/013-화면에_보일_청소_파일_한_함수_—__cle.md) | 화면에 보일 청소 파일 한 함수 — _clean_frame_src·_thumb_clean_background·스타일랩 흡수 (#17) | - | - | shopping_shorts/mix_pipeline.py:clean_route | 썸네일·꾸미기 배경 프레임의 청소 파일 = 완성본이 쓴 것(같은 job 대조 0 불일치) | 2026-09-28 23:40 등록 |
 | [014](cards/014-캡컷_소스_복사_범위_=_render_cut.md) | 캡컷 소스 복사 범위 = render_cut_plan 이 실제 쓴 video_id (#23·#25) | - | - | shopping_shorts/mix_pipeline.py:export_sources_for | tools/capcut_export_audit.py 미디어 누락 0 | 2026-09-28 23:41 등록 |
 | [015](cards/015-음성_지문·서명_한_함수_—_plan_sig.md) | 음성 지문·서명 한 함수 — plan_signature/_pvproxy_tts_stamp/timing_signature (#20) | - | - | shopping_shorts/mix_pipeline.py:plan_signature | 성우 바꾸면 청소본·합본·꾸미기 세 산출물이 동시에 낡음 처리(실측 job) | 2026-09-28 23:41 등록 |
+| [016](cards/016-화면_길이_예산_모델을_화면_계획_결과로_(.md) | 화면 길이 예산 모델을 화면 계획 결과로 (#29) | - | - | shopping_shorts/mix_pipeline.py:beat_screen_budget | 콘폼(재TTS) 발생 건수 전/후 실측, 못 채운 칸 0 | 2026-09-28 23:41 등록 |
 
 ## 분배 (1)
 
