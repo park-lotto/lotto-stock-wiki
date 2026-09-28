@@ -19,6 +19,7 @@ import socket
 import tempfile
 import time
 import urllib.parse
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -1805,7 +1806,11 @@ def api_mix_basket_download(request: Request, sc: str):
 #    비용이 늘어난다. 여기는 순수 북마크: 담아도 수집량은 1건도 늘지 않는다.
 
 _FAV_CH_PATTERNS = [
-    ("instagram",   r"instagram\.com/(?:reels?/[^/?#]+/?\?[^#]*|)?(?!p/|reel/|reels/|explore/|stories/)([A-Za-z0-9._]+)"),
+    # ★프로필 주소(instagram.com/아이디)만 채널로 읽는다. 예전 식은 앞에
+    #   `(?:reels?/[^/?#]+/?\?[^#]*|)?`가 붙어 있어 인스타 앱 공유 주소
+    #   `reel/코드/?igsh=…MWx0…R4`의 **맨 끝 글자('4')를 채널 아이디로** 잡았다
+    #   (2026-09-27 폰 공유 실측). 게시물 주소는 여기서 None → yt-dlp가 채널을 찾는다.
+    ("instagram",   r"instagram\.com/(?!p/|reels?/|tv/|explore/|stories/|share/)([A-Za-z0-9._]+)"),
     ("tiktok",      r"tiktok\.com/@([\w.\-]+)"),
     ("youtube",     r"youtube\.com/(?:@([\w.\-가-힣]+)|channel/([\w\-]+)|c/([\w\-가-힣]+))"),
     ("threads",     r"threads\.(?:net|com)/@([\w.\-]+)"),
@@ -1833,6 +1838,9 @@ def _fav_channel_platform(url: str) -> str:
     for plat in ("instagram", "tiktok", "youtube", "threads"):
         if plat + ".com" in h:
             return plat
+    # 유튜브 앱의 [공유]는 youtu.be 짧은 주소를 준다(폰 공유 입구, 2026-09-27).
+    if "youtu.be/" in h:
+        return "youtube"
     if "xiaohongshu.com" in h or "rednote.com" in h:
         return "xiaohongshu"
     if "douyin.com" in h:
@@ -2317,12 +2325,32 @@ def _resolve_uploader(url: str, username: str = ""):
     ★여기 한 곳에서만 정한다 — 📌채널수집과 ⭐볼채널등록이 같은 답을 써야 한다
     (0순위-B: 같은 판단을 두 군데 적으면 언젠가 어긋난다)."""
     uname, disp = (username or "").strip().lstrip("@"), ""
+    # ★유튜브는 공식 API가 먼저다 — 서버 IP의 yt-dlp는 유튜브가 막는다(2026-09-28 폰 공유 실측).
+    #   API가 못 주면(쿼터 소진 등) 아래 yt-dlp로 내려가되 그 사실을 로그에 남긴다.
+    if not uname and url and _fav_channel_platform(url) == "youtube":
+        try:
+            from shopping_shorts.youtube_client import uploader_of_video
+            uname, disp = uploader_of_video(url)
+        except Exception as e:  # noqa: BLE001
+            print(f"_resolve_uploader 유튜브 API 실패 {url[:80]}: {e!r}", file=sys.stderr)
+        if not uname:
+            print(f"_resolve_uploader 유튜브 API 빈 결과 → yt-dlp로 {url[:80]}", file=sys.stderr)
     if not uname and url:
         try:
-            import subprocess, sys, json
-            r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
-                               capture_output=True, text=True, timeout=60)
-            d = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
+            import subprocess, json   # ★sys는 모듈 것 — 여기서 import하면 위 print(file=sys.stderr)가 UnboundLocalError(2026-09-28 실측)
+            # ★빈 결과면 한 번 더 — 로그인 없이 읽는 인스타는 가끔 한 번씩 튕긴다
+            #   (2026-09-27 실측: 같은 릴스 8회 중 1회만 실패, 바로 다시 하면 성공).
+            #   실패 이유는 로그에 남긴다 — 조용히 삼키면 "못 찾음"의 원인을 못 가린다.
+            d = {}
+            for attempt in (1, 2):
+                r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
+                                   capture_output=True, text=True, timeout=60,
+                                   encoding="utf-8", errors="replace")
+                d = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
+                if d:
+                    break
+                print(f"_resolve_uploader 실패({attempt}/2) {url[:80]}: "
+                      f"{(r.stderr or '').strip()[-200:]}", file=sys.stderr)
             uname = (d.get("uploader_id") or "").strip().lstrip("@")
             # 인스타는 uploader_id가 숫자 pk로 오기도 한다 → channel(핸들)을 우선
             ch = (d.get("channel") or "").strip().lstrip("@")
@@ -2337,6 +2365,67 @@ def _resolve_uploader(url: str, username: str = ""):
     return uname, disp
 
 
+_SHARED_URL_RE = re.compile(r"https?://[^\s<>\"']+")
+
+
+def _shared_link(url: str = "", text: str = "", title: str = "") -> str:
+    """폰 [공유]로 들어온 값에서 주소 하나를 고른다(2026-09-27 모바일공유).
+    ★앱마다 넣는 칸이 다르다 — 인스타·유튜브 앱은 url 칸을 비우고 text에
+    "…https://…" 식으로 문장과 함께 넣는다. 그래서 세 칸을 차례로 훑어 첫 주소를 쓴다."""
+    for s in (url, text, title):
+        m = _SHARED_URL_RE.search(s or "")
+        if m:
+            return _clean_shared_url(m.group(0).rstrip(").,!?"))
+    return ""
+
+
+# 앱 [공유]가 붙이는 추적 꼬리 — 영상 담기의 키가 주소 해시라(_grab_video `sc`) 이걸 안 떼면
+# 같은 영상이 PC 담기(브라우저 주소)와 폰 공유(…?si=xx)로 **두 번** 담긴다.
+_SHARE_DROP_PARAMS = {"si", "igsh", "igshid", "_r", "_t", "feature", "pp", "share_id",
+                      "is_from_webapp", "sender_device", "web_id", "xsec_source", "app_platform"}
+
+
+def _clean_shared_url(u: str) -> str:
+    """공유 주소 → PC 브라우저가 보던 모양(추적 꼬리 제거·호스트 통일)."""
+    try:
+        sp = urllib.parse.urlsplit(u)
+    except Exception:
+        return u
+    host = (sp.netloc or "").lower()
+    if host in ("youtube.com", "m.youtube.com"):
+        host = "www.youtube.com"
+    elif host in ("instagram.com", "m.instagram.com"):
+        host = "www.instagram.com"
+    q = [(k, v) for k, v in urllib.parse.parse_qsl(sp.query, keep_blank_values=True)
+         if k not in _SHARE_DROP_PARAMS and not k.startswith("utm_")]
+    return urllib.parse.urlunsplit((sp.scheme or "https", host, sp.path,
+                                    urllib.parse.urlencode(q), ""))
+
+
+def _fav_channel_register(cid, url: str, username: str = "", thumb: str = "") -> dict:
+    """⭐나만의 채널 담기 — 주소(영상이든 프로필이든) → 채널을 찾아 cid의 목록에 넣는다.
+    ★판단의 주인은 여기 하나다(0순위-C). PC 확장 버튼(/api/fav_channel/grab)과
+    폰 공유(/api/share dest=channel)가 둘 다 이걸 부른다 — 입구마다 따로 적으면
+    한쪽만 고쳐지는 날이 온다(0순위-B).
+    돌려주는 status: added / exists / full / notfound"""
+    plat = _fav_channel_platform(url)
+    chid = (username or "").strip().lstrip("@")
+    disp = ""
+    if not chid:
+        plat2, chid = _fav_channel_from_url(url)     # 프로필 URL이면 여기서 끝난다
+        plat = plat or plat2 or ""
+    if not chid and plat:                            # 모르는 사이트면 yt-dlp를 돌리지 않는다
+        chid, disp = _resolve_uploader(url)          # 게시물 URL → yt-dlp로 채널 해석
+    if not plat or not chid or chid.isdigit():
+        return {"status": "notfound", "platform": plat, "channel_id": ""}
+    store = Store(DB_PATH)
+    added = store.fav_channel_add(plat, chid, name=(disp or chid), url=url,
+                                  last_video_thumb=thumb, customer_id=cid)
+    status = "full" if added is None else ("added" if added else "exists")
+    return {"status": status, "platform": plat, "channel_id": chid, "name": disp,
+            "cap": store.FAV_CHANNEL_CAP}
+
+
 @app.get("/api/fav_channel/grab", response_class=HTMLResponse)
 def api_fav_channel_grab(request: Request, url: str = "", username: str = "",
                          thumb: str = ""):
@@ -2349,30 +2438,50 @@ def api_fav_channel_grab(request: Request, url: str = "", username: str = "",
     if cid is None:      # ★cid==0(관리자)은 정상 로그인이다 — not cid로 판정 금지
         return HTMLResponse(_chadd_html("⛔ 로그인 필요",
                                         "shoppingshorts.duckdns.org에 로그인 후 다시 눌러주세요."))
-    plat = _fav_channel_platform(url)
-    chid = (username or "").strip().lstrip("@")
-    disp = ""
-    if not chid:
-        plat2, chid = _fav_channel_from_url(url)     # 프로필 URL이면 여기서 끝난다
-        plat = plat or plat2 or ""
-    if not chid:
-        chid, disp = _resolve_uploader(url)          # 게시물 URL → yt-dlp로 채널 해석
-    if not plat or not chid or chid.isdigit():
+    r = _fav_channel_register(cid, url, username, thumb)
+    chid, disp = r["channel_id"], r.get("name") or ""
+    if r["status"] == "notfound":
         return HTMLResponse(_chadd_html("❌ 채널을 못 찾았어요",
                                         "영상 또는 채널(프로필) 화면에서 다시 눌러주세요."))
-    store = Store(DB_PATH)
-    added = store.fav_channel_add(plat, chid, name=(disp or chid), url=url,
-                                  last_video_thumb=thumb, customer_id=cid)
-    if added is None:
+    if r["status"] == "full":
         return HTMLResponse(_chadd_html("⚠ 자리가 다 찼어요",
-                                        f"나만의 채널은 최대 {store.FAV_CHANNEL_CAP}개입니다. "
+                                        f"나만의 채널은 최대 {r['cap']}개입니다. "
                                         "즐겨찾기에서 안 보는 채널을 빼주세요."))
-    if not added:
+    if r["status"] == "exists":
         return HTMLResponse(_chadd_html("✔ 이미 담긴 채널",
                                         f"@{chid} — 왼쪽 ⭐나만의 채널등록에서 볼 수 있어요."))
     return HTMLResponse(_chadd_html("✅ 나만의 채널에 담았어요",
                                     f"@{chid}{'·' + disp if disp else ''} — "
                                     "왼쪽 ⭐나만의 채널등록에서 확인하세요."))
+
+
+@app.post("/api/share")
+def api_share(request: Request, background_tasks: BackgroundTasks, body: dict):
+    """📱폰 [공유] → 숏템메이커(2026-09-28 사장님 "채널이랑 영상 나눠서, 붙여넣기 없이").
+    /share 화면이 부른다. body: {url, text, title, dest}
+      dest ""        → 담지 않고 고른 주소만 돌려준다(화면이 미리 보여준다)
+      dest "video"   → ⭐영상 즐겨찾기 — _grab_video (PC 📥담기와 같은 판단)
+      dest "channel" → ⭐나만의 채널등록 — _fav_channel_register (PC ⭐버튼과 같은 판단)
+    주소 고르기는 _shared_link 한 곳."""
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:      # ★cid==0(관리자)은 정상 로그인이다 — not cid로 판정 금지
+        return {"ok": False, "status": "login", "error": "로그인이 필요해요"}
+    link = _shared_link(body.get("url") or "", body.get("text") or "", body.get("title") or "")
+    if not link:
+        return {"ok": False, "status": "nolink", "error": "공유된 내용에 주소가 없어요"}
+    dest = (body.get("dest") or "").strip()
+    if dest == "video":
+        # 제목칸에 주소가 들어오면 제목이 아니다(앱마다 제목칸 쓰임이 다르다)
+        t = (body.get("title") or "").strip()
+        r = _grab_video(cid, link, title=("" if _SHARED_URL_RE.search(t) else t),
+                        background_tasks=background_tasks)
+    elif dest == "channel":
+        r = _fav_channel_register(cid, link)
+    else:
+        return {"ok": True, "status": "preview", "link": link,
+                "platform": _grab_platform(link) or _fav_channel_platform(link)}
+    r.update(ok=r["status"] in ("added", "exists"), link=link, dest=dest)
+    return r
 
 
 @app.get("/api/discover/add_by_url", response_class=HTMLResponse)
@@ -3562,7 +3671,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # [바꾸기] 부분 재생성(/api/script/beat/regen)도 **같은 함수**를 쓴다.
         try:
             _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
-                it, body, store, _cid(request), spines=_picked)
+                it, body, store, _cid(request), spines=_picked,
+                # 이야기 작가가 켜진 계정은 쿠팡·웹검색을 부르지 않는다(작가는 자체 지식으로 특징을 뽑는다)
+                outside=not _setting_gate(store, "story_writer_enabled", _cid(request)))
         except ValueError as e:
             return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
         # 재료가 한 편도 없으면 여기서 멈춘다 — 이 상태로 생성하면 모델이 통째로 지어낸다.
@@ -4997,6 +5108,11 @@ def _save_render_inputs(store, job_id, **fields):
             if (mix_pipeline.intro_signature(before.get("thumbnail"), job_id)
                     != mix_pipeline.intro_signature(value, job_id)):
                 render_changed = True
+        elif key == "deco":
+            # ★장면꾸미기 저장값의 화면 전용 값(보고 있던 장면·틀)은 비교에서 뺀다 — 판단은 scene_style.deco_render_view 한 곳.
+            from .scene_style import deco_render_view
+            if deco_render_view(before.get("deco")) != deco_render_view(value):
+                render_changed = True
         elif before.get(key) != value:
             render_changed = True
 
@@ -5357,9 +5473,10 @@ def api_mix_status(job_id: str, request: Request):
             # 진행 표시용(2026-08-19): 자막제거는 소스 1편당 수 분씩 걸려 전체 25분도 정상이다.
             # 그동안 화면에 아무 변화가 없어 "멈췄나"로 읽혔다(사장님 제보의 절반이 이것).
             # 끝난 소스 수 / 전체를 내려보내 "2/5 완료"로 움직이는 걸 보이게 한다.
-            "clean_done": (len(job.get("clean_sources") or {})
-                           or (len(job.get("urls") or []) if clean_status == "ready" else 0)),
-            "clean_total": len(job.get("urls") or []),
+            "clean_done": _clean_progress(job, clean_status)[0],
+            "clean_total": _clean_progress(job, clean_status)[1],
+            # 완성본 1편 경로는 '편'이 없다 — 범위(고른 장면 N개/전체)를 화면이 보여준다(2026-09-27)
+            "clean_scope": _clean_progress(job, clean_status)[2],
             # 지워진 자막 위치(2026-07-25): 5단계 꾸미기가 자막 자동정렬·'원본 자막 있던 자리' 마커에 쓴다.
             # 좌표(%)뿐이라 안전 — 소스 경로 등 내부정보는 안 실린다.
             "clean_regions": job.get("clean_regions"),
@@ -5469,6 +5586,16 @@ def api_mix_product(body: dict):
     # 등록완료 체크는 저장할 때마다 초기화하지 않는다 — 링크만 고쳤는데 "인포크에
     # 이미 올렸다"는 사실이 지워지면 사장님이 중복 등록하게 된다.
     prev = job.get("product") or {}
+    # ★상품 이미지(2026-09-27) — 인포크에 올릴 그림. 검색 카드에서 고른 이미지는 **같은 상품번호일 때만** 믿는다.
+    _given = body.get("image") if str(body.get("image_pid") or "") == str(product.get("product_id")) else ""
+    if not _given and str(prev.get("product_id") or "") == str(product.get("product_id")):
+        _given = prev.get("image") or ""
+    # 키는 검색과 같은 규칙(_coupang_search_creds) — 회원 키 없으면 사장님 키로 **이미지만** 찾는다(링크는 안 가져온다)
+    from shopping_shorts import keyctx as _kc3
+    _iak, _isk, _ish = _coupang_search_creds(_kc3.owner_cid())
+    product["image"] = coupang_partners.product_image(
+        product.get("product_id"), product.get("name"), _given, _iak, _isk,
+        customer_id=(None if _ish else _kc3.owner_cid()))
     product["inpock_registered"] = bool(
         body.get("inpock_registered", prev.get("inpock_registered", False)))
     # ── 인포크 번호는 **사람이 넣는다** (2026-08-28 사장님 "수정버튼만 만들어주고
@@ -5917,6 +6044,45 @@ def api_coupang_relay_status():
     st["mode"] = config.COUPANG_SEARCH_MODE
     st["configured"] = bool(config.COUPANG_RELAY_TOKEN)
     return st
+
+
+@app.get("/api/mix/product/{job_id}/image")
+def api_mix_product_image(job_id: str):
+    """인포크에 올릴 상품 이미지를 **파일로** 내려준다(2026-09-27 김형관님).
+    고객이 쿠팡 상품 페이지를 열면 봇 차단(Akamai Access Denied)에 걸려 이미지를 못 구했다.
+    이미지 서버(coupangcdn.com)는 막히지 않아 서버가 대신 받아 준다. 대상은 그 호스트뿐(SSRF 방지).
+    저장된 이미지가 없으면(이 기능 전 작업) 여기서 한 번 찾아 저장한다 — 판단은 coupang_partners.product_image."""
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("product"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "확정된 상품이 없어요"})
+    product = dict(job["product"])
+    img = product.get("image") or ""
+    if not coupang_partners.is_product_image_url(img):
+        from shopping_shorts import keyctx as _kc4
+        _iak, _isk, _ish = _coupang_search_creds(_kc4.owner_cid())   # 검색과 같은 규칙(회원 키 없으면 사장님 키로 이미지만)
+        img = coupang_partners.product_image(product.get("product_id"), product.get("name"), "",
+                                             _iak, _isk, customer_id=(None if _ish else _kc4.owner_cid()))
+        if img:
+            product["image"] = img
+            store.set_mix_product(job_id, product)
+    if not img:
+        return JSONResponse(status_code=404, content={
+            "ok": False, "error": "상품 이미지를 찾지 못했어요 — 쿠팡 검색에서 상품을 다시 골라 주세요"})
+    try:
+        req = urllib.request.Request(img, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://www.coupang.com/"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = r.read(8 * 1024 * 1024)
+            ctype = r.headers.get("Content-Type") or "image/jpeg"
+    except Exception as e:                                  # noqa: BLE001
+        print(f"[product_image] 받기 실패 job={job_id} err={e!r}", file=sys.stderr)
+        return JSONResponse(status_code=502, content={"ok": False, "error": "쿠팡 이미지 서버에서 받지 못했어요 — 잠시 뒤 다시"})
+    ext = ".png" if "png" in ctype else (".webp" if "webp" in ctype else ".jpg")
+    stem = str(product.get("inpock_number") or product.get("product_id") or "product")
+    fname = f"coupang_{stem}{ext}"
+    return Response(content=data, media_type=ctype,
+                    headers={"Content-Disposition": f'attachment; filename="{fname}"',
+                             "Cache-Control": "no-store"})
 
 
 @app.get("/api/mix/product/{job_id}")
@@ -6629,6 +6795,10 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
         for _k, _c in enumerate(cuts or []):
             _b = _pb[_owner[_k]] if _k < len(_owner) and _owner[_k] < len(_pb) else None
             _c["_vf"] = video_assemble.frame_vf(_b, 720, 1280)
+            try:        # 칸 통합 속도 — 배속 여부는 screen_clips.plays_at_speed 한 곳(완성본 lookup 과 같은 판단)
+                _c["_sync"] = float((_b or {}).get("sync_speed") or 1.0)
+            except (TypeError, ValueError):
+                _c["_sync"] = 1.0
     except Exception as _e:      # noqa: BLE001 — 구도를 못 정하면 가운데 꽉 채우기(frame_vf 기본과 같은 모양)
         print("[pvproxy] %s 구도 계산 실패(가운데 채우기): %s" % (job_id, _e), file=sys.stderr)
     d = _pvproxy_dir(job_id)
@@ -6686,12 +6856,18 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             배율 = _speed_and_freeze(늘리기 상한·[속도 맞추기])의 재생 길이 / 읽는 길이(2026-09-27 — 종전엔 늘리기 상한 숫자를
             여기 따로 적어 두 벌이었다). 움직이는 프레임 수 = motion_frames(정지가 있을 때만, 없으면 None)."""
             dur = max(0.04, float(c["dur"]))
-            take = min(float(c.get("src_dur") or 0) or dur, dur)
+            take = float(c.get("src_dur") or 0) or dur
             if take <= 0:
                 return take, 1.0, None
-            # [속도 맞추기](fit) = 렌더의 playback_speed(읽는 길이/출력 길이)와 같은 배속 — 정지 없이 끝까지 움직인다
+            # 배속 컷(속도 맞추기·칸 통합 속도·읽는 길이 > 화면 길이) = 읽는 길이 전부를 화면 길이에 일정 배속으로 — 완성본 lookup 의
+            #   playback_speed 와 같은 판단(screen_clips.plays_at_speed 한 곳, 2026-09-27). 종전엔 읽는 길이를 화면 길이로 잘라
+            #   1배속으로 틀어 1.4배 칸의 컷 끝 장면이 완성본과 7프레임 갈렸다(68b48b12c7f5 칸5).
+            from shopping_shorts import screen_clips as _scm
+            _spd = _scm.plays_at_speed(c.get("fit"), c.get("_sync", 1.0), take, dur)
+            if not _spd:
+                take = min(take, dur)
             play, freeze = video_assemble._speed_and_freeze(
-                take, dur, preferred_speed=(take / dur) if c.get("fit") else None)
+                take, dur, preferred_speed=(take / dur) if _spd else None)
             nf = int(c.get("_nf") or 0)
             mv = video_assemble.motion_frames(nf, play, freeze) if (nf and freeze > 1e-3) else None
             return take, play / take, mv
@@ -6719,6 +6895,8 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                               "nf%d" % int(c.get("_nf") or 0),
                               # 읽는 창 정확히 끊기(trim=end, 2026-09-27) — 옛 조각(다음 원본 1프레임 더 읽음)을 재사용하지 않게
                               "rdx1",
+                              # 배속 판단(plays_at_speed)이 바뀌면 다른 조각 — 옛 조각(읽는 길이를 화면 길이로 자른 1배속)을 재사용하지 않게
+                              "sp%.4f" % (c.get("_sync") or 1.0),
                               # 정지 컷은 움직이는 프레임 수를 잘라 굽는다(2026-09-27) — 옛 조각(자르기 없음)을 재사용하지 않게
                               *(["mv%d" % _mv] if (_mv := _cut_motion(c)[2]) else [])], sort_keys=True)
             return hashlib.sha1(raw.encode()).hexdigest()[:20]
@@ -7605,6 +7783,22 @@ def clean_failure_kind(clean_error):
 _CLEAN_DEAD_MSG = "서버가 재시작되어 자막 지우기가 중단됐어요 — 다시 누르면 추가 비용 없이 이어받아요."
 
 
+def _clean_progress(job, clean_status):
+    """자막제거 진행 표시 (done, total, scope) — **한 곳**(0순위-B).
+
+    ★왜(2026-09-27 사장님 화면 "영상 5편 중 0편 완료"): 옛 소스별 청소의 카운터(clean_sources 수 / 소스 수)가
+      완성본 1편 청소 경로에선 clean_sources가 늘 비어 **영원히 0편**으로 떴다. 완성본 경로는 업체 호출이 1회라
+      '편'을 셀 게 없다 — 범위(고른 장면 N개 / 전체 장면)를 보여준다. scope: {"mode": "picked"|"all"|"sources", "n"}.
+    """
+    total_src = len(job.get("urls") or [])
+    if mix_pipeline._clean_strategy(job) == "final":
+        sel = mix_pipeline.clean_selection_of(job)
+        scope = {"mode": "picked", "n": len(sel)} if sel else {"mode": "all", "n": 0}
+        return (1 if clean_status == "ready" else 0), 1, scope
+    done = len(job.get("clean_sources") or {}) or (total_src if clean_status == "ready" else 0)
+    return done, total_src, {"mode": "sources", "n": total_src}
+
+
 def _clean_interrupted(store, job) -> bool:
     """'지우는 중'인데 워커에서 **죽었나** — 화면 상태와 다시 누르기 가드가 같이 쓰는 한 곳(0순위-B).
 
@@ -7981,8 +8175,15 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
             else:
                 _hit = next((c for c in _clips if c.get("video_id") == vid), None)
         if _hit is not None:
-            _src_sec = _hit["src"] + _hit["dur"] * pos
-            _final_sec = _hit["fin"] + _hit["dur"] * pos
+            # ★양쪽을 **같은 프레임 번호**로 찍는다(2026-09-27) — 판단은 mix_pipeline.compare_frame_times 한 곳
+            # 원본 샷 전환 목록(캐시된 scenecuts.json) — 전환 순간을 피해 찍는다(2026-09-28)
+            try:
+                from shopping_shorts import seg_snap as _ss
+                _shots = _ss.scene_cuts(_resolve_sources(job, work)[_hit.get("video_id") or vid])
+            except Exception as _e:      # noqa: BLE001 — 전환을 못 읽으면 종전 자리
+                print("[clean_thumb] 샷 전환 목록 실패(종전 자리): %r" % (_e,), file=sys.stderr)
+                _shots = None
+            _src_sec, _final_sec = mix_pipeline.compare_frame_times(_hit, pos, shot_cuts=_shots)
             vid = _hit.get("video_id") or vid
         elif _clips is None and not _cc.get("stale"):
             # 컷 계획을 못 세운 경우(소스 길이 등) — 종전 비트 기준 근사로 물러선다.
@@ -12463,6 +12664,7 @@ _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    #   과금 요소가 없어 등급과 무관하게 연다 — 로그인 여부는 핸들러가 본다.
                    "/api/fav_channel/add", "/api/fav_channel/remove",
                    "/api/fav_channel/refresh",
+                   "/api/share",   # 폰 공유(2026-09-28) — 영상 담기의 등급 검사는 _grab_video 안에서
 
                    "/api/mix/basket/toggle",
                    "/api/lens/search", "/api/lens/trace_url",
@@ -12501,6 +12703,7 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    #   체험 사용자가 메뉴는 보이는데 눌러도 페이월만 본다(sidebar.js 주석).
                    #   목록·갱신·빼기는 개인 북마크라 과금 요소가 없다.
                    "/fav_channels", "/api/fav_channel/list", "/api/fav_channel/grab",
+                   "/share",   # 폰 [공유] 받는 화면(2026-09-27) — 볼채널등록과 같은 급
                    # ★2026-08-20 체험판: 제작소는 HTML만 연다(소개 페이지가 뜬다).
                    #   /api/produce/* 는 열지 않는다 — 과금 기능은 계속 막힌다.
                    "/produce", "/produce.html",
@@ -17855,27 +18058,18 @@ def _enrich_grab(url, sc, cid):
         overwrite=stale)
 
 
-@app.get("/api/grab", include_in_schema=False)
-def api_grab(request: Request, background_tasks: BackgroundTasks,
-             url: str = "", thumbnail: str = "", title: str = "", video_url: str = ""):
-    """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
-    미들웨어가 customer_id를 안 채우므로 여기서 검증). 영상 즐겨찾기(mix_basket)에 멱등 추가하고
-    백그라운드로 메타(썸네일·조회수 등)를 보강한다(팝업은 즉시 반환)."""
-    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
-    if cid is None:
-        return _grab_popup_html(False, "로그인이 필요해요",
-                                "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+def _grab_video(cid, url, thumbnail="", title="", video_url="", background_tasks=None) -> dict:
+    """⭐영상 즐겨찾기 담기 — 판단의 주인(0순위-C). PC 📥담기(/api/grab 팝업)와
+    폰 공유(/api/share)가 둘 다 이걸 부른다(2026-09-28 뽑아냄 — 본문은 예전 api_grab 그대로).
+    돌려주는 status: pending / paid / badlink / added / exists"""
     # 유료게이트: /api/grab은 _AUTH_ALLOW라 미들웨어 게이트를 우회한다 → 여기서 직접 등급 확인.
     # 담기(+백그라운드 메타 크롤 비용)는 full 전용. pending(승인대기)·ranking_only 모두 차단.
     lvl = access_level(cid)
     if lvl != "full":
-        title = "승인 대기중이에요" if lvl == "pending" else "유료 기능이에요"
-        msg = ("운영자 승인 후 담기를 쓸 수 있어요" if lvl == "pending"
-               else "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
-        return _grab_popup_html(False, title, msg)
+        return {"status": "pending" if lvl == "pending" else "paid"}
     platform = _grab_platform(url)
     if not platform:
-        return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
+        return {"status": "badlink"}
     sc = "grab_" + platform + "_" + hashlib.sha1(url.encode("utf-8", "ignore")).hexdigest()[:12]
     # ★영상 파일 직접 주소(2026-08-17) — 담기 스크립트가 보내면 함께 보관한다.
     #   도우인은 yt-dlp가 쿠키를 요구해 페이지 URL로는 못 받는다(서버·PC 양쪽 재현).
@@ -17896,8 +18090,30 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
     background_tasks.add_task(_enrich_grab, url, sc, cid)   # 썸네일·조회수 등 보강
     _enqueue_prewarm(Store(DB_PATH), sc, url, caption=(title or "")[:200], customer_id=cid,
                      video_url=vurl)
-    return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if added else "이미 담겨 있어요",
-                            f"{platform} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
+    return {"status": "added" if added else "exists", "platform": platform, "shortcode": sc}
+
+
+@app.get("/api/grab", include_in_schema=False)
+def api_grab(request: Request, background_tasks: BackgroundTasks,
+             url: str = "", thumbnail: str = "", title: str = "", video_url: str = ""):
+    """북마클릿/유저스크립트가 여는 팝업 대상. 세션쿠키로 고객을 직접 식별(_AUTH_ALLOW라
+    미들웨어가 customer_id를 안 채우므로 여기서 검증). 영상 즐겨찾기(mix_basket)에 멱등 추가하고
+    백그라운드로 메타(썸네일·조회수 등)를 보강한다(팝업은 즉시 반환). 판단은 _grab_video."""
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:
+        return _grab_popup_html(False, "로그인이 필요해요",
+                                "shoppingshorts.duckdns.org에 먼저 로그인하세요")
+    r = _grab_video(cid, url, thumbnail, title, video_url, background_tasks)
+    st = r["status"]
+    if st == "pending":
+        return _grab_popup_html(False, "승인 대기중이에요", "운영자 승인 후 담기를 쓸 수 있어요")
+    if st == "paid":
+        return _grab_popup_html(False, "유료 기능이에요",
+                                "무료 체험이 끝났어요. 결제하면 담기를 계속 쓸 수 있어요")
+    if st == "badlink":
+        return _grab_popup_html(False, "담을 수 없는 링크예요", "유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상 페이지에서 눌러주세요")
+    return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if st == "added" else "이미 담겨 있어요",
+                            f"{r['platform']} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
 
 
 # 북마클릿 본문(플랫폼 페이지에서 실행) — 따옴표 충돌을 피해 base64로 실어 페이지에서 atob.
@@ -24290,7 +24506,7 @@ def _wow_block_for(sources, store):
     return wow_facts.wow_prompt_block(wows)
 
 
-def _materials_for_generate(item, body, store, cid, spines=None):
+def _materials_for_generate(item, body, store, cid, spines=None, outside=True):
     """대본 생성에 넣을 **재료 한 벌** → (sources, facts_block, job, job_id, scene_block)
 
     ★왜 함수로 뽑았나(2026-08-17): 원래 이 조립이 `/api/wiki/generate` 안에 통째로
@@ -24399,7 +24615,9 @@ def _materials_for_generate(item, body, store, cid, spines=None):
     # ★제품 재료 주입(2026-08-16) — 이 작업에 연결된 쿠팡 상품에서 미리 긁어둔
     #   스펙·리뷰가 있으면 프롬프트에 얹는다. 없으면 ''이라 기존 경로 그대로(회귀 0).
     #   여기서 긁지 않는다 — 수집은 /api/product/facts/collect가 미리 해둔다(2~3분).
-    _facts_block = _facts_block_for_job(_jid, store, _topic_product)
+    # outside=False(이야기 작가, 2026-09-27 사장님 "웹·쿠팡 다 빼고 자체 지식으로"): 쿠팡 수집분은 서버 403이라
+    #   820작업 중 0개, 웹검색 wow는 897회 중 1회 성공(빈 결과는 캐시 안 해 매번 다시 부름) — 안 부른다.
+    _facts_block = _facts_block_for_job(_jid, store, _topic_product) if outside else ""
     # ★1단계 장면 태깅을 대본에도 준다(2026-08-17). label=이 장면이 무엇인가,
     #   use_point=이 장면을 어디에 어떻게 써먹나. 지금까지는 화면 붙일 때(edit_plan)만
     #   쓰고 대본 생성엔 안 실렸다 — 재료를 반만 쓰고 있었다.
@@ -24417,7 +24635,7 @@ def _materials_for_generate(item, body, store, cid, spines=None):
     #   ★캐시가 본체다: 실측에서 키 4개가 연속 429였고, 이 단계는 job마다 부르면 그만큼
     #     느려진다. 같은 제품군은 다시 안 때린다.
     #   ★못 찾으면 빈 문자열 — 대본은 종전대로 나온다(회귀 0).
-    _wow_block = _wow_block_for(_src, store)
+    _wow_block = _wow_block_for(_src, store) if outside else ""
     if _wow_block:
         _facts_block = (_facts_block + chr(10)*2 + _wow_block) if _facts_block else _wow_block
     # ★`_scene_block`도 돌려준다 — 호출부가 응답의 `materials.scene_points`(화면에 "장면 N개"로
@@ -24846,7 +25064,8 @@ except Exception:                                  # noqa: BLE001 — 이 기능
 # ★"produce"는 여기서 뺐다(2026-08-20) — 등급에 따라 다른 파일을 서빙해야 해서
 #   아래 _produce_page 명시 라우트로 옮겼다(voice_tune·refs와 같은 패턴).
 for _pg in ("discover", "find", "library", "mix", "outreach", "collection",
-            "fav_channels", "scene_library", "pattern_bank", "longform", "settings"):
+            "fav_channels", "scene_library", "pattern_bank", "longform", "settings",
+            "share"):   # share = 폰 [공유] 받는 화면(manifest share_target, 2026-09-27)
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",

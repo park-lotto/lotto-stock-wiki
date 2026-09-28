@@ -135,7 +135,7 @@ def test_clean_assembly_warms_screen_cuts_first(tmp_path, env):
 
 def _mkv(path, dur, hue=0):
     import subprocess
-    vf = "hue=h=%d" % hue if hue else "null"
+    vf = "vflip,negate,hue=h=%d" % hue if hue else "null"      # 두 원본이 밝기 모양부터 달라야 한다(두 띠 거리가 둘 다 잰다)
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "testsrc2=s=160x284:r=30:d=%s" % dur,
                     "-vf", vf, "-c:v", "libx264", "-pix_fmt", "yuv420p", str(path)],
                    check=True, capture_output=True, stdin=subprocess.DEVNULL)

@@ -92,7 +92,7 @@ def _gray_full(fr):
     return fr.astype(np.float32).mean(axis=-1)
 
 
-def _match(fe, ff, ge, gf, ie, jf, span=None):
+def _match(fe, ff, ge, gf, ie, jf, span=None, fe2=None, ff2=None):
     """①의 프레임 ie 와 ②의 기대 프레임 jf 주변을 비교 → (거리, 밀림초, 고른 ②프레임, 옛 거리).
     span=(첫, 끝) ②프레임 — 정지 컷이면 찾는 범위를 **그 컷 구간 안**으로 좁힌다(2026-09-27).
       정지 컷은 앞 컷과 같은 원본을 읽으면 앞 컷 끝 프레임과 그림이 같다. 완성본 정지 몫엔 켄번즈가 얹혀
@@ -103,7 +103,8 @@ def _match(fe, ff, ge, gf, ie, jf, span=None):
     if hi < lo or ie >= len(fe):
         return 9.9, 0.0, max(0, min(jf, len(ff) - 1)), 255.0, [], 0
     js = np.arange(lo, hi + 1)
-    d = fm.dist(ff, js, fe[ie])
+    # 거리 = 두 띠(가운데·아래) 중 가까운 쪽(frame_match.dist_any) — 청소본이 원본 위 글자 띠를 지워 채운 칸의 가짜 '다른 장면' 방지
+    d = fm.dist_any(ff, ff2, js, fe[ie], fe2[ie]) if (fe2 is not None and ff2 is not None) else fm.dist(ff, js, fe[ie])
     jb, dmin, _ok = fm.pick(js, d, jf)
     # 옛 판정(전체 화면 회색 평균 차, ±4프레임 최소) — 비교용 기록만
     ol = np.arange(max(0, jf - 4), min(len(gf) - 1, jf + 4) + 1)
@@ -190,6 +191,27 @@ def _ghost_jump(fe, a, b, side, r, span=6):
     return _m(j), (float(np.median(body)) if body else 0.0)
 
 
+def _ghost_backed_by_cut(cut, side, n, cuts):
+    """잔상 후보(화면 컷 cut={v,s,d,sd}의 머리|꼬리 n프레임)가 **원본의 실제 장면 전환**에서 온 것인가(2026-09-28).
+    읽는 창 가장자리 (n+1)프레임(배속 반영) + 반 프레임 안에 전환(seg_snap.scene_cuts — 잔상 가드와 같은 목록)이 있으면 True.
+    없으면 빠른 움직임(손이 휙 지나감·새우 흔들림)을 잔상으로 잘못 본 것 — '움직임 의심'으로 따로 센다."""
+    try:
+        s = float(cut["s"]); d = float(cut.get("d") or 0.0)
+        sd = float(cut["sd"]) if cut.get("sd") is not None else d
+    except (KeyError, TypeError, ValueError):
+        return True                      # 컷을 모르면 보수적으로 잔상으로 센다
+    k = sd / d if d > 1e-6 else 1.0
+    span = (int(n) + 1) / FPS * max(k, 1.0) + 0.5 / FPS
+    e = s + sd
+    for c in cuts or []:
+        c = float(c)
+        if side == "꼬리" and e - span - 1e-3 <= c <= e + 0.5 / FPS:
+            return True
+        if side == "머리" and s - 0.5 / FPS <= c <= s + span + 1e-3:
+            return True
+    return False
+
+
 def _ghost_in_final(fe, ff, k, jf, T=None, win=2):
     """①의 잔상 프레임 k 와 닮은 프레임이 ②의 같은 자리(jf±win)에도 있나 — 있으면 계획(원본 좌표) 쪽, 없으면 화면만."""
     T = SCENE_T if T is None else T
@@ -232,6 +254,13 @@ def check(jid):
     try:
         return _check(jid, app, mp, va, sc, st, job, w, plan, wd)
     finally:
+        _keep = os.getenv("EVF_KEEP_FINAL")       # 관문·매일 점검: 소리 대조(final_audio_audit)가 **같은 완성본**을 잰다 — 렌더 2번 금지
+        if _keep and (wd / "final_preview.mp4").exists():
+            try:
+                Path(_keep).mkdir(parents=True, exist_ok=True)
+                shutil.move(str(wd / "final_preview.mp4"), str(Path(_keep) / ("%s.mp4" % jid)))
+            except OSError as _e:
+                print("[evf] %s 완성본 넘기기 실패: %s" % (jid, _e), file=sys.stderr)
         if not os.getenv("EVF_KEEP"):             # 원인 조사 때만 EVF_KEEP=1 로 남긴다(끝나면 손으로 지워라)
             shutil.rmtree(wd, ignore_errors=True)     # ★영상(①·②) 즉시 삭제 — 사진·보고서만 남긴다
 
@@ -241,9 +270,10 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
     # ① 편집 화면 미리보기 — 화면과 같은 컷(screen_clips 러너) → 화면이 부르는 굽기 함수
     if sc.warm(job) <= 0:
         return None, "화면 계산 실패"
-    cuts, blens, holds = [], [], []
+    cuts, blens, holds, scr = [], [], [], []
     for b in plan["beats"]:
         r = sc._CACHE.get(sc.beat_key(b)) or {}
+        scr.append(list(r.get("c") or []))          # 화면 컷(원본 좌표) — 잔상이 실제 전환에서 왔나 가를 때 쓴다
         # 정지 컷(읽는 길이 < 화면 길이, 속도 맞추기 아님) — 완성본은 여기에 켄번즈 확대를 얹는다(_extend_with_frozen_motion),
         #   편집 화면은 그냥 멈춘다. 이 컷의 '밀림'은 대개 그 확대 차이다 → 보고서에 h 로 따로 표시한다.
         holds.append([bool(c.get("sd") is not None and float(c["sd"]) < float(c["d"]) - 0.02 and not c.get("fit"))
@@ -277,6 +307,7 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
     t2 = time.time()
     rE, rF = _frames(E), _frames(F)
     fe, ff = _feats(rE), _feats(rF)
+    fe2, ff2 = fm.feats_low(rE), fm.feats_low(rF)
     ge, gf = _gray_full(rE), _gray_full(rF)
     me, mf = _motion(fe), _motion(ff)
     clean_beats = {int(x.get("beat_idx")) for x in (plan_used.get("beats") or []) if x.get("clean_replay")} if _b else set()
@@ -302,7 +333,7 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
             _sc = max(1e-3, (e1 - e0))      # 정지 컷: ②에서 이 컷이 차지하는 프레임(칸 비율) 안에서만 찾는다
             span = ((int(np.ceil((f_t + td * bounds[ci] / _sc) * FPS)),
                      int(np.floor((f_t + td * bounds[ci + 1] / _sc) * FPS)) - 1) if hold else None)
-            d, s, jb, old, curve, c0 = _match(fe, ff, ge, gf, ie, jf, span)
+            d, s, jb, old, curve, c0 = _match(fe, ff, ge, gf, ie, jf, span, fe2, ff2)
             worst = max(worst, d); shifts.append((s, hold)); per.append(("%d%s" % (ci, "h" if hold else ""), round(d, 2), round(s, 3)))
             samples.append({"job": jid, "beat": int(b["beat_idx"]), "cut": ci, "hold": hold, "d": round(d, 3), "shift": round(s, 3),
                             "old": round(old, 1), "c0": c0, "curve": curve})
@@ -325,7 +356,7 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
             if bs is not None:
                 bsh.append((ci, round(bs, 3)))
         # ★컷 가장자리 잔상(딴 장면 1~3프레임) — 짧은 컷·경계 9.9 로 묻히던 것을 프레임 단위로 센다(2026-09-27)
-        ghosts, shorts = [], 0
+        ghosts, shorts, motion = [], 0, []
         for ci in range(len(co)):
             a_ = int(round((e0 + co[ci]) * FPS))
             b_ = int(round((e0 + (co[ci + 1] if ci + 1 < len(co) else (e1 - e0))) * FPS)) - 1
@@ -339,6 +370,24 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
                     continue
                 only = sum(1 for k in ks if not _ghost_in_final(
                     fe, ff, k, int(round((f_t + td * (k / FPS - e0) / max(1e-3, (e1 - e0))) * FPS))))
+                # ★완성본에도 있는 몫('둘 다')은 원본 장면 전환이 그 가장자리에 있을 때만 잔상으로 센다(2026-09-28) —
+                #   전환이 없으면 빠른 움직임 오탐(68b4 칸1 컷0 손·62ed 칸5 컷2 새우)이라 '움직임 의심'으로 따로.
+                both = cnt - only
+                if both > 0:
+                    _sc_ = (scr[k] if k < len(scr) else [])
+                    _cut = _sc_[ci] if ci < len(_sc_) else None
+                    try:
+                        from shopping_shorts import seg_snap as _ss
+                        _cl = _ss.scene_cuts(srcs.get(_cut["v"])) if (_cut and srcs.get(_cut["v"])) else None
+                    except Exception:      # noqa: BLE001 — 전환 목록을 못 재면 보수적으로 잔상으로 센다
+                        _cl = None
+                    if _cut is not None and _cl is not None and not _ghost_backed_by_cut(_cut, side, cnt, _cl):
+                        motion.append((ci, side, both))
+                        samples.append({"job": jid, "beat": int(b["beat_idx"]), "cut": ci, "kind": "motion", "side": side,
+                                        "frames": both, "at": list(ks)})
+                        cnt = only
+                        if not cnt:
+                            continue
                 ghosts.append((ci, side, cnt, only))
                 samples.append({"job": jid, "beat": int(b["beat_idx"]), "cut": ci, "kind": "ghost", "side": side,
                                 "frames": cnt, "screen_only": only, "at": list(ks)})
@@ -351,7 +400,7 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
         _nh = [x for x, h in shifts if not h]; _h = [x for x, h in shifts if h]
         rows.append((int(b["beat_idx"]), round(worst, 2), max(_nh, key=abs) if _nh else 0.0,
                      round((e1 - e0) - td, 3), per, max(bsh, key=lambda x: abs(x[1])) if bsh else None,
-                     int(b["beat_idx"]) in clean_beats, max(_h, key=abs) if _h else 0.0, ghosts, shorts))
+                     int(b["beat_idx"]) in clean_beats, max(_h, key=abs) if _h else 0.0, ghosts, shorts, motion))
         f_t += td
     # 눈 확인용 사진: 컷마다 위 = 편집 화면(컷 한가운데), 아래 = 완성본에서 가장 닮은 프레임. 빨강=다른 장면, 노랑=밀림
     try:
@@ -386,7 +435,7 @@ def main():
     print("표기: 칸번호(*=청소본 칸) · 가운데 [(컷(h=정지컷), 거리, 밀림초)] · 경계 (컷, 밀림초 — 9.9=②에 그 경계 없음)"
           " · 정지컷밀림 = 정지 컷에서만 난 밀림(완성본 켄번즈 확대 vs 화면 그냥 정지 — 따로 센다)", file=rep, flush=True)
     bad_scene = bad_shift = bad_bound = bad_hold = tot = 0
-    ghost_fr = ghost_only = ghost_cuts = short_cuts = 0
+    ghost_fr = ghost_only = ghost_cuts = short_cuts = motion_fr = motion_cuts = 0
     for jid in ids:
         t0 = time.time()
         try:
@@ -404,12 +453,14 @@ def main():
         gh = [(nm(x), g) for x in r["rows"] for g in x[8]]
         ghost_cuts += len(gh); ghost_fr += sum(g[2] for _, g in gh); ghost_only += sum(g[3] for _, g in gh)
         short_cuts += sum(x[9] for x in r["rows"])
+        mo = [(nm(x), m) for x in r["rows"] for m in (x[10] if len(x) > 10 else [])]
+        motion_cuts += len(mo); motion_fr += sum(m[2] for _, m in mo)
         print("%s 칸%d(청소본 %d) 화면%.2fs 완성본%.2fs 음성%.2fs | 다른장면 %s | 밀림%.2f+ %s | 경계밀림 %s | 정지컷밀림 %s | 최대거리 %.2f | %.0fs(굽기%.0f 렌더%.0f 비교%.0f)" % (
             jid, len(r["rows"]), sum(1 for x in r["rows"] if x[6]), r["E"], r["F"], r["tts"],
             [(nm(x), x[1], x[4]) for x in bs], SHIFT_T, [(nm(x), round(x[2], 3), x[4]) for x in sh],
             [(nm(x), x[5]) for x in bd], [(nm(x), round(x[7], 3), x[4]) for x in hs], max([x[1] for x in r["rows"]] or [0]), time.time() - t0, *r["sec"])
             # 잔상 = (칸, (컷, 머리|꼬리, 프레임 수, 그중 화면에만 있는 수)) · 짧은컷 = 3프레임 이하 컷 수 — 줄 끝에 붙인다(관문 정규식은 줄 앞만 본다)
-            + " | 잔상 %s | 짧은컷 %d" % (gh, sum(x[9] for x in r["rows"])),
+            + " | 잔상 %s | 짧은컷 %d | 움직임의심 %s" % (gh, sum(x[9] for x in r["rows"]), mo),
             file=rep, flush=True)
     print("== 칸 %d · 다른 장면 %d · %.2f초 이상 밀림(가운데) %d · 경계 밀림 %d · 정지컷만 밀림 %d" % (
           tot, bad_scene, SHIFT_T, bad_shift, bad_bound, bad_hold),
@@ -418,6 +469,8 @@ def main():
     #   거기 덧붙이면 관문이 '요약 줄을 못 읽었다'로 실패한다. 판정에 넣으려면 video_gate 에 이 줄 파서를 같이 넣어라.
     print("== 잔상 %d프레임(컷 %d · 화면에만 %d프레임) · 짧은컷(%d프레임 이하) %d" % (
           ghost_fr, ghost_cuts, ghost_only, SHORT_CUT, short_cuts), file=rep, flush=True)
+    # 움직임 의심 = 가장자리가 튀었지만 원본에 장면 전환이 없는 곳(빠른 움직임) — 잔상에서 빼고 보고만(관문 판정 밖)
+    print("== 움직임 의심 %d프레임(컷 %d)" % (motion_fr, motion_cuts), file=rep, flush=True)
 
 
 if __name__ == "__main__":

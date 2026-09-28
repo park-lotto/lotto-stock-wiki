@@ -93,10 +93,15 @@ def save_base(work, *, sig, path, plan, cuts, sel=None):
 FRAME_EXACT_SINCE = 1790435500      # 2026-09-27 00:11:40 KST — _render_mix 누적 프레임 경계 배포 시각
 
 
-CAL_VERSION = 4     # 1 = 앞뒤 0.4초 고정 창 → 2 = 앞 컷 값 기준 + 넓혀 재탐색 + 이어받기(62ed6 9번 칸 +0.37초 잔여)
+CAL_VERSION = 5     # 1 = 앞뒤 0.4초 고정 창 → 2 = 앞 컷 값 기준 + 넓혀 재탐색 + 이어받기(62ed6 9번 칸 +0.37초 잔여)
                     # → 3 = 도구와 같은 특징(frame_match)·원본을 완성본 구도로 자름·컷 앞/끝 세 지점씩(off·off_end)·
                     #       못 재면 앞 컷과의 경계(튀는 프레임)로 시작만 · 다음 컷 시작에서 자르기(_cut_geom)
                     # → 4 = 속도 불일치 컷(cal_speed_mismatch) 표시 — 그 컷은 덮지 않은 것으로(_speed_bad)
+                    # → 5 = frame_exact 정본도 **잰다**(2026-09-27) — frame_exact 표식은 칸 경계 수리(00:12) 시각으로만 붙어,
+                    #       칸 안 컷 경계 수리(cut_frame_list, 05:11) 전 청소본은 칸 안에서 컷마다 1프레임씩 밀려 있었다
+                    #       (39e55470ebb0 02:06 청소본: 칸 안 +1→+3, 뒤 칸 −3프레임 — 보정을 건너뛰어 완성본이 화면보다 3프레임 앞섬).
+                    #       단 이 정본은 EXACT_MIN 이상 어긋난 컷만 좌표를 고친다(맞는 파일을 잡음으로 흔들지 않게).
+EXACT_MIN = 1.5 / 30.0          # frame_exact 정본: 이 이상(2프레임) 어긋난 컷만 off/off_end 를 남긴다
 CAL_WIN = 18                    # 찾는 범위 ±18프레임(±0.6초) — 기대 밀림(prior) 중심
 CAL_AGREE = 1                   # 세 지점 **모두** 최소(후보)가 확정 밀림의 ±1프레임 안에 있어야 한다(하나라도 딴 데면 못 잼)
 CAL_SPREAD = 3                  # …그중 둘 이상은 '최소 후보' 폭이 3프레임 이하로 뾰족해야 한다(정지 화면은 어디든 닮아 못 박는다)
@@ -316,6 +321,33 @@ def _speed_drift(c, cs_, ff, nxt):
     return float(max(abs(a + b * u[0]), abs(a + b * u[-1])))
 
 
+def _geom_resid(c, cs_, ff, nxt):
+    """좌표(_cut_geom)대로 읽을 때 컷 **전 구간**에서 장면이 2프레임 이상 어긋난 지점 수 → (어긋난 수, 잰 지점 수) 또는 None.
+    원본 0.1초마다 한 장을 좌표가 말하는 청소본 자리 ±10프레임에서 찾는다(뾰족하고 잘 닮은 지점만 — _speed_drift 와 같은 기준).
+    frame_exact 정본에서 새로 잰 좌표가 **실제로 더 맞을 때만** 쓰는 판정(v5) — 세 지점 측정이 빗나가 멀쩡한 컷을 흔들지 않게."""
+    import numpy as np
+    from shopping_shorts import frame_match as fm
+    if not cs_:
+        return None
+    rf = cs_[0]
+    cs, ce, t0, k = _cut_geom(c, nxt)
+    n = min(len(rf), int((ce - cs) * fm.FPS))
+    ks = np.arange(-10, 11)
+    bad = tot = 0
+    for i in range(0, n, 3):
+        jp = int(round((t0 + i / fm.FPS * k) * fm.FPS))
+        d = fm.dist(ff, jp + ks, rf[i])
+        m = np.isfinite(d)
+        if not m.any():
+            continue
+        kb, dmin, ok = fm.pick(ks[m], d[m], 0)
+        if dmin > SPEED_DMAX or ok.max() - ok.min() > CAL_SPREAD:
+            continue
+        tot += 1
+        bad += abs(int(kb)) >= 2
+    return (bad, tot) if tot else None
+
+
 def _speed_bad(c):
     """속도 불일치로 **청소본 좌표를 못 믿는** 지운 컷 — 지워진 조각으로 치지 않는다(렌더가 그 칸만 증분 청소).
     ★안 지운 컷(cleaned:false — 부분 청소 정본에서 원래 안 지우는 컷)은 표식만 남기고 과금 대상이 아니다."""
@@ -340,8 +372,9 @@ def calibrate(work, base, src_paths):
       cal_speed_mismatch=True — _regions·piece_map·coverage 가 그 컷을 **덮지 않은 것**으로 본다(맞는 장면 우선:
       딴 속도로 내보내느니 그 칸만 돈 내고 지운다). 정본의 cal_speed = 그런 컷 수.
     ★한 번 재면 calibrated=CAL_VERSION. 옛 버전 표시는 다시 잰다."""
-    if not base or base.get("frame_exact") or base.get("calibrated") == CAL_VERSION:
+    if not base or base.get("calibrated") == CAL_VERSION:
         return base
+    exact = bool(base.get("frame_exact"))       # v5: frame_exact 도 잰다 — 2프레임 이상 어긋난 컷만 고친다
     try:
         from shopping_shorts import frame_match as fm
         ff = fm.feats(fm.frames(base["path"]))
@@ -379,10 +412,36 @@ def calibrate(work, base, src_paths):
                 last = (off, th)
                 if off_end is not None:
                     c["off_end"] = round(off_end, 3)
+            if exact and got is not None:
+                # 맞게 만든 파일(frame_exact)은 잡음(±1프레임)으로 흔들지 않는다 — 2프레임 이상만 고친다
+                if c.get("off_end") is not None and abs(float(c["off_end"])) < EXACT_MIN and abs(off) < EXACT_MIN:
+                    c.pop("off_end", None)
+                if abs(off) < EXACT_MIN and "off_end" not in c:
+                    off = 0.0
+            elif exact:
+                off = 0.0                       # 못 잰 컷 — 맞게 만든 파일이니 지도 그대로(이어받기 추정으로 옮기지 않는다)
+                c.pop("cal_unsure", None); unsure -= 1
             j_prev = int(round((fin + off) * fm.FPS))
             if abs(off) >= 0.5 / fm.FPS or "off_end" in c:
                 c["off"] = round(off, 3)
             srcs.append(cs_); whys.append(why)
+        if exact:
+            # frame_exact 정본: 새 좌표가 **전 구간 대조에서 실제로 더 맞는** 컷만 남긴다(v5). 세 지점 측정이 빗나가면
+            #   멀쩡한 컷을 오히려 흔든다(68b48b12c7f5 실측: 고치지 않으면 어긋난 지점 소수 → 세 지점 값 그대로 쓰면 38).
+            nx0 = _next_starts({"cuts": cuts})
+            for c, cs_, nxt in zip(cuts, srcs, nx0):
+                if c.get("off") is None and c.get("off_end") is None:
+                    continue
+                plain = {k_: v_ for k_, v_ in c.items() if k_ not in ("off", "off_end")}
+                try:
+                    after, before = _geom_resid(c, cs_, ff, nxt), _geom_resid(plain, cs_, ff, nxt)
+                except Exception:      # noqa: BLE001
+                    after = before = None
+                if after is None or before is None or after[0] >= before[0]:
+                    c.pop("off", None); c.pop("off_end", None)
+                    c.pop("cal_by", None)
+                else:
+                    c["cal_by"] = (c.get("cal_by") or "points") + "+verified"
         # 속도 검사 — 모든 컷 밀림이 정해진 뒤(다음 컷 시작에서 자른 좌표 = 렌더가 읽는 좌표로 잰다)
         nx = _next_starts({"cuts": cuts})
         n_speed = 0
@@ -589,6 +648,41 @@ def _regions(base):
     return out
 
 
+def _kept_iv(base, vid):
+    """고객이 안 지우기로 고른 컷(cleaned:false)의 원본 구간 [(시작, 끝)] — 이 영상(vid)만, 시작순."""
+    return sorted((_f(c.get("src")), _f(c.get("src")) + (_f(c.get("sdur")) or _f(c.get("dur"))))
+                  for c in base.get("cuts") or []
+                  if c.get("cleaned") is False and str(c.get("video_id")) == str(vid))
+
+
+def left_by_choice(base, material):
+    """재료 구간 중 청소본에 없는 부분이 **전부 고객이 안 지우기로 고른 컷**(cleaned:false) 자리인가 — 장면 골라 지우기 정본 전용.
+
+    ★왜(2026-09-28 job 52a1ef1723a8): 고객이 한 칸 안에서 컷 일부만 골라 지웠다(32컷 중 14컷 안 고름, 모든 칸에 고른 컷이
+      하나 이상 → skip_beats 없음). 렌더 컷 재생은 칸 단위 skip 만 알아 안 고른 컷을 '못 덮은 구간'으로 쳐 10칸 중 7칸이
+      uncovered → 렌더가 고객이 **안 지우기로 고른** 장면을 증분 청소(과금) 대상으로 안내했다.
+    판단: 청소본에 없는 틈(uncleaned_gaps)이 안 고른 컷의 원본 구간(src ~ src+sdur) 합집합 안에 다 들어가면 True.
+      편성을 바꿔 새로 읽게 된 원본(어느 컷에도 없던 구간)은 False — 종전대로 '바뀐 장면'(증분 청소·동의창)."""
+    if not base.get("partial"):
+        return False
+    try:
+        vid = str(material.get("video_id"))
+    except AttributeError:
+        return False
+    gaps = uncleaned_gaps(base, material)
+    if not gaps:
+        return False
+    kept = _kept_iv(base, vid)
+    for gs, ge in gaps:
+        pos = gs
+        for a, b in kept:
+            if a <= pos + SPAN_TOL and b > pos:
+                pos = max(pos, b)
+        if ge - pos > SPAN_TOL:
+            return False
+    return True
+
+
 TAIL_MAX = 0.30         # 컷 **끝**이 이만큼 이하로 안 지워졌으면 재청소(과금) 대신 조금 느리게 읽어 메운다
 TAIL_FRAC = 0.15        # …단 그 컷 길이의 이 비율 이하일 때만(느려지는 게 눈에 띄지 않게)
 
@@ -606,10 +700,14 @@ def span_map(base, material, allow_tail=0.0):
         return None
     regs = [r for r in _regions(base) if r[2] == vid]
     out, pos = [], s
-    while e - pos > SPAN_TOL:
+    # ★이음 허용치는 컷 길이의 절반까지만(2026-09-28 cecc7b884bb0 7번 칸): 0.1초짜리 컷은 SPAN_TOL(0.12)보다 짧아
+    #   루프가 한 번도 안 돌아 None — 틈 계산(uncleaned_gaps)은 "빈 곳 없음"인데 재생은 "못 덮음"이라 그 칸이 증분 청소로 갔다.
+    #   SPAN_TOL보다 긴 컷은 종전 그대로(허용치 SPAN_TOL), 그보다 짧은 컷만 절반 허용치로 한 조각을 찾는다.
+    tol = SPAN_TOL if e - s > SPAN_TOL else max(e - s, 0.0) / 2
+    while e - pos > SPAN_TOL or (not out and e - pos > 1e-3):
         best = None
         for r in regs:
-            if r[3] <= pos + SPAN_TOL and r[4] > pos + SPAN_TOL and (best is None or r[4] > best[4]):
+            if r[3] <= pos + tol and r[4] > pos + tol and (best is None or r[4] > best[4]):
                 best = r
         if best is None:
             if out and e - pos <= allow_tail:
@@ -739,6 +837,46 @@ def uncleaned_gaps(base, material):
     return gaps
 
 
+def _span_with_kept(base, material, seg_id=None):
+    """left_by_choice 가 참인 재료 구간 → 지운 부분은 청소본 조각(span_map), 안 고른 컷 자리는 **원본 조각**으로 이어 붙인 목록.
+    원본 조각 = {"video_id": 원본 vid, "seg_id", "start", "end", "_src"}(원본 좌표, 1배속). 못 이으면 None."""
+    vid = str(material.get("video_id")); s = float(material.get("start")); e = float(material.get("end"))
+    # ★컷 대부분이 안 고른 컷 자리면 **통째로 원본** — 청소본(조립본)에서도 그 자리는 원본 프레임이었다. 옆 컷의 지운 끝이
+    #   살짝 걸쳤다고(52a1 칸4 0.19초) 쪼개면 자막이 잠깐 사라졌다 나타나고 컷 수가 편집 화면과 달라진다.
+    kept_len = sum(max(0.0, min(e, b) - max(s, a)) for a, b in _kept_iv(base, vid))
+    if e - s > 1e-3 and kept_len >= 0.5 * (e - s):
+        return [{"video_id": vid, "seg_id": seg_id or "", "start": round(s, 4), "end": round(e, 4),
+                 "_src": round(e - s, 4)}]
+    segs, pos = [], s                      # [("clean"|"orig", 시작, 끝)] 원본 좌표
+    for gs, ge in uncleaned_gaps(base, material) + [(e, e)]:
+        if gs - pos > 1e-3:
+            segs.append(["clean", pos, gs])
+        if ge - gs > 1e-3:
+            segs.append(["orig", gs, ge])
+        pos = max(pos, ge)
+    # SPAN_TOL 이하 지운 자투리(프레임 반올림으로 옆 컷 끝이 걸친 것 — 52a1 칸2 0.007초)는 옆 원본 조각에 붙인다:
+    #   따로 두면 0.03초짜리 컷이 끼어 컷 수가 편집 화면과 달라진다
+    merged = []
+    for k, a, b in segs:
+        if k == "clean" and b - a <= SPAN_TOL and len(segs) > 1:
+            k = "orig"
+        if merged and merged[-1][0] == k == "orig":
+            merged[-1][2] = b
+        else:
+            merged.append([k, a, b])
+    out = []
+    for k, a, b in merged:
+        if k == "clean":
+            sub = span_map(base, {"video_id": vid, "start": a, "end": b})
+            if not sub:
+                return None
+            out.extend(sub)
+        else:
+            out.append({"video_id": vid, "seg_id": seg_id or "", "start": round(a, 4), "end": round(b, 4),
+                        "_src": round(b - a, 4)})
+    return out or None
+
+
 def replay_clips(base, clips):
     """렌더 컷 계획(원본 좌표, plan_beat_clips_for 결과) → 지워진 조각 좌표의 수동 컷.
 
@@ -755,6 +893,10 @@ def replay_clips(base, clips):
         m = {"video_id": c.get("video_id"), "start": s, "end": s + sd}
         got = span_map(base, m)
         short = False
+        if not got and left_by_choice(base, m):
+            # 고객이 안 지우기로 고른 컷 자리 — 그 부분은 원본 그대로 튼다(과금 0), 지운 부분은 청소본 조각.
+            #   렌더는 원본 소스를 같이 받는다(render_inputs_for _left — 칸 재료에 원본 vid 가 남으므로)
+            got = _span_with_kept(base, m, c.get("seg_id"))
         if not got:
             # 끝 자투리(≤0.3초·≤15%)만 안 지워졌으면 재청소 대신 지운 데까지만 읽고 살짝 느리게 채운다
             got = span_map(base, m, allow_tail=min(TAIL_MAX, TAIL_FRAC * sd))

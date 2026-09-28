@@ -1,5 +1,5 @@
 {
-  "_설명": "영상 관문(track.py finish)·매일 점검(daily_video_audit.py) 기준값. null = 보고만(판정에 안 씀). 밀림은 수리 중인 잔여 결함(옛 청소본 밀림·정지 컷 켄번즈·컷 단위 올림)이라 지금은 보고만 — 수리 끝나면 숫자로 조인다. 캡컷·내보내기 대조(tools/capcut_export_audit.py)는 영상 비교 뒤 같은 작업에 돌고 max_capcut_mismatch·max_export_mismatch 로 판정(2026-09-27, 둘 다 0). 잔상(컷 가장자리 딴 장면 1~3프레임, editor_vs_final_video 의 == 잔상 줄)은 max_ghost_screen_only=0 으로 판정(미리보기≠완성본). max_ghost(완성본에도 있는 것 = 소재 안 장면 전환·빠른 움직임 오탐)는 소재 품질 문제라 보고만(null — 조각 생성 시 장면 탐지는 별도 카드, 2026-09-27).",
+  "_설명": "영상 관문(track.py finish)·매일 점검(daily_video_audit.py) 기준값. null = 보고만(판정에 안 씀). 밀림은 수리 중인 잔여 결함(옛 청소본 밀림·정지 컷 켄번즈·컷 단위 올림)이라 지금은 보고만 — 수리 끝나면 숫자로 조인다. 캡컷·내보내기 대조(tools/capcut_export_audit.py)는 영상 비교 뒤 같은 작업에 돌고 max_capcut_mismatch·max_export_mismatch 로 판정(2026-09-27, 둘 다 0). 잔상(컷 가장자리 딴 장면 1~3프레임, editor_vs_final_video 의 == 잔상 줄)은 max_ghost_screen_only=0 으로 판정(미리보기≠완성본). max_ghost(화면·완성본 둘 다 포함 합계)도 0 — 도구가 '둘 다' 잔상을 원본 장면 전환이 있을 때만 세고, 전환 없는 빠른 움직임은 '== 움직임 의심' 줄로 따로 보고만(2026-09-28).",
   "gate": {
     "jobs": 6,
     "timeout_sec": 1500,
@@ -13,9 +13,16 @@
     "max_shift_hold": null,
     "max_capcut_mismatch": 0,
     "max_export_mismatch": 0,
-    "max_ghost": null,
+    "max_ghost": 0,
     "max_ghost_screen_only": 0,
-    "capcut_timeout_sec": 900
+    "capcut_timeout_sec": 900,
+    "max_audio_narr": 0,
+    "max_audio_surplus": 0,
+    "max_audio_delay": 0,
+    "max_audio_lost": 0,
+    "audio_timeout_sec": 600,
+    "max_clean_left": 0,
+    "clean_left_timeout_sec": 600
   },
   "audit": {
     "jobs": 10,
@@ -28,9 +35,20 @@
     "cooldown_sec": 3600,
     "max_capcut_mismatch": 0,
     "max_export_mismatch": 0,
-    "max_ghost": null,
+    "max_ghost": 0,
     "max_ghost_screen_only": 0,
-    "capcut_timeout_sec": 1800
+    "capcut_timeout_sec": 1800,
+    "audio_jobs": 10,
+    "max_clean_left": 0,
+    "clean_left_jobs": 30,
+    "clean_left_timeout_sec": 1200,
+    "audio_timeout_sec": 1200,
+    "max_audio_narr": 0,
+    "max_audio_surplus": 0,
+    "max_audio_delay": 0,
+    "max_audio_lost": 0,
+    "max_audio_sfx_miss": null,
+    "max_audio_bgm": null
   },
   "benign_skips": [
     "음성 없음"
@@ -48,7 +66,8 @@
     "shopping_shorts/static/scene_play.js",
     "tools/editor_vs_final_video.py",
     "tools/evf_run.py",
-    "tools/capcut_export_audit.py"
+    "tools/capcut_export_audit.py",
+    "tools/final_audio_audit.py"
   ],
   "not_measured": [],
   "app_file": "shopping_shorts/app.py",

@@ -47,11 +47,13 @@ from pathlib import Path
 sys.path.insert(0, ".")
 
 OUT = Path(os.getenv("CC_OUT", "/tmp/capcut_audit"))
+# 장면 전환 캐시(seg_snap — 화면 데이터가 부른다)는 결과 폴더 아래 — 도구는 소재 옆(고객 폴더)에 쓰지 않는다(2026-09-27 9차 관문 실측)
+os.environ.setdefault("SEG_SNAP_CACHE_DIR", str(OUT / "snapcache"))
 DB = "shopping_shorts/data/reference.db"
 TOL = 0.05          # 초 — 완성본은 30fps 프레임 경계(±1/60초), 캡컷은 마이크로초라 1프레임+여유
 SPEED_TOL = 0.01
 MIN_FREE_GB = 20
-SUMMARY_RE = re.compile(r"^== 컷 (\d+) · 캡컷 불일치 (\d+) · 내보내기 불일치 (\d+)\s*$")
+SUMMARY_RE = re.compile(r"^== 컷 (\d+) · 캡컷 불일치 (\d+) · 내보내기 불일치 (\d+)(?: · 청소 미생성 (\d+) job)?\s*$")
 # PATCH_DIR 에서 얹는 모듈(순서 = import 의존 순서). 관문(video_gate.PATCH_RELS)이 이 목록을 올려야 한다 — 테스트가 대조한다.
 PATCH_MODULES = ("frame_match", "screen_clips", "video_assemble", "clean_base", "mix_pipeline",
                  "export_bundle", "capcut_draft")
@@ -216,10 +218,26 @@ def export_cuts(records, source_video_paths):
 
 
 # ───────────────────────── 대조 ─────────────────────────
-def compare(R, X, kind, base_paths=(), clean_src_paths=(), render_clean=None):
+def clean_made(job, work, route, base, clean_src, mp):
+    """청소 산출물이 **실제로 있나** — 정본(base) / 청소 완성본 파일(route=final: 내보내기와 같은 식
+    clean_final_path_for_plan or clean_video_path) / 소스별 청소본(route=sources). 자막제거 끔(none)은 해당 없음(True).
+    ★없으면 렌더는 '만들면 청소'지만 내보내기는 '아직 없으니 원본' — 설계상 다른 게 맞다. 청소 차원은 비교에서 뺀다
+      (관문 8차 실측: 미렌더 준비 job 2개 56컷이 {'clean'}로 잡혔다)."""
+    if route == "base":
+        return base is not None
+    if route == "final":
+        cf = mp.clean_final_path_for_plan(job, work) or (job or {}).get("clean_video_path")
+        return bool(cf and Path(cf).exists())
+    if route == "sources":
+        return bool(clean_src)
+    return True
+
+
+def compare(R, X, kind, base_paths=(), clean_src_paths=(), render_clean=None, skip_clean=False):
     """R(완성본)과 X(캡컷|내보내기)를 칸 안 순서로 짝지어 → (불일치 컷 [{beat,ci,why,r,x}], 비교한 컷 수).
     kind='capcut' 이면 타임라인 자리(t0·out)·배속·정지 몫까지, 'export' 면 소스·시작·읽는 길이만 본다.
-    render_clean: 완성본의 청소 종류를 강제(완성본 1편 청소 경로 = 'final' — 조립은 원본으로 하고 뒤에 통째 청소)."""
+    render_clean: 완성본의 청소 종류를 강제(완성본 1편 청소 경로 = 'final' — 조립은 원본으로 하고 뒤에 통째 청소).
+    skip_clean: 청소 산출물이 아직 없는 job — 청소 종류(clean) 차원은 세지 않는다(clean_made). 컷 자리·구간·배속은 그대로 잰다."""
     def _by(rows):
         d = {}
         for r in rows:
@@ -283,6 +301,8 @@ def compare(R, X, kind, base_paths=(), clean_src_paths=(), render_clean=None):
                         why.append("freeze")      # 정지 몫이 다르다(종전: 완성본 = 느리게+정지 / 캡컷 = 한 배속으로 늘림)
                     elif abs(r["speed"] - x["speed"]) > SPEED_TOL:
                         why.append("speed")
+            if skip_clean:
+                why = [w for w in why if w != "clean"]
             if why:
                 bad.append({"beat": b, "ci": k, "why": why, "r": r, "x": x})
     return bad, n
@@ -362,8 +382,8 @@ def parse_summary(text):
     for line in (text or "").splitlines():
         m = SUMMARY_RE.match(line)
         if m:
-            a, b, c = (int(x) for x in m.groups())
-            return {"cuts": a, "capcut": b, "export": c}
+            a, b, c, d = m.groups()
+            return {"cuts": int(a), "capcut": int(b), "export": int(c), "clean_missing": int(d or 0)}
     return None
 
 
@@ -439,7 +459,8 @@ def audit_job(jid, app, mp, va, cb, eb, cd, S, app_file=None):
         base_paths = set(cb.source_paths(base).values()) if base else set()
         clean_src = {v: p for v, p in (job.get("clean_sources") or {}).items() if p and Path(p).exists()}
         route_r = mp.clean_route(job, base)
-        render_clean = "final" if route_r == "final" else None
+        made = clean_made(job, work, route_r, base, clean_src, mp)
+        render_clean = "final" if (route_r == "final" and made) else None
         miss_clean = []
         if route_r == "sources":
             miss_clean = sorted(v for v in paths_r if v not in clean_src)
@@ -492,9 +513,9 @@ def audit_job(jid, app, mp, va, cb, eb, cd, S, app_file=None):
         if not os.getenv("CC_KEEP"):
             shutil.rmtree(wd, ignore_errors=True)
     after = snapshot(work)
-    bc, nc = compare(R, C, "capcut", base_paths, set(clean_src.values()), render_clean) if C else ([], 0)
+    bc, nc = compare(R, C, "capcut", base_paths, set(clean_src.values()), render_clean, skip_clean=not made) if C else ([], 0)
     bc = bc + (media_bad if C else [])
-    be, ne = compare(R, E, "export", base_paths, set(clean_src.values()), render_clean)
+    be, ne = compare(R, E, "export", base_paths, set(clean_src.values()), render_clean, skip_clean=not made)
     if not C and R:
         bc = [{"beat": None, "ci": None, "why": ["capcut_failed"], "r": None, "x": cc_err}]
     kinds = lambda rows, force=None: sorted({force or clean_kind(r["src"], base_paths, set(clean_src.values())) for r in rows})  # noqa: E731
@@ -503,6 +524,7 @@ def audit_job(jid, app, mp, va, cb, eb, cd, S, app_file=None):
             "media": media_names,
             "freeze": sum(1 for r in R if r["freeze"] > TOL),
             "clean": (kinds(R, render_clean), kinds(C), kinds(E)), "miss_clean": miss_clean,
+            "clean_missing": (not made) and route_r in ("final", "sources"), "route": route_r,
             "diff": snap_diff(before, after)}, ""
 
 
@@ -532,7 +554,7 @@ def run(ids_or_n):
     print("판정: 시간 ±%.2fs · 배속 ±%.2f · 표기 [사유:개수] — src 다른 파일 / clean 청소 종류 다름 / start·read 소스 구간 / "
           "t0·out 타임라인 자리 / speed 배속 / freeze 정지 몫 / count 컷 개수 / capcut_failed 초안 못 만듦" % (TOL, SPEED_TOL),
           file=rep, flush=True)
-    tot = cc = ex = 0
+    tot = cc = ex = cmiss = 0
     for jid in ids:
         t0 = time.time()
         try:
@@ -544,6 +566,7 @@ def run(ids_or_n):
             print(jid, "건너뜀", why, file=rep, flush=True)
             continue
         tot += r["R"]
+        cmiss += bool(r.get("clean_missing"))
         cc += len(r["cc_bad"])
         ex += len(r["ex_bad"])
         for side in ("cc_bad", "ex_bad"):
@@ -553,9 +576,10 @@ def run(ids_or_n):
             jid, r["beats"], r["R"], r["screen"], r["freeze"], r["C"], r["E"], r["media"], len(r["cc_bad"]), reasons(r["cc_bad"]),
             (" (캡컷 실패: %s)" % r["cc_err"]) if r["cc_err"] else "", len(r["ex_bad"]), reasons(r["ex_bad"]),
             r["clean"][0], r["clean"][1], r["clean"][2],
-            (" 청소본없는소스%s" % r["miss_clean"]) if r["miss_clean"] else "",
+            ((" 청소본없는소스%s" % r["miss_clean"]) if r["miss_clean"] else "")
+            + ((" · 청소 미생성(%s — 청소 비교 제외)" % r["route"]) if r.get("clean_missing") else ""),
             r["diff"][:5] if r["diff"] else "없음", time.time() - t0), file=rep, flush=True)
-    print("== 컷 %d · 캡컷 불일치 %d · 내보내기 불일치 %d" % (tot, cc, ex), file=rep, flush=True)
+    print("== 컷 %d · 캡컷 불일치 %d · 내보내기 불일치 %d · 청소 미생성 %d job" % (tot, cc, ex, cmiss), file=rep, flush=True)
     rep.close()
     det.close()
 

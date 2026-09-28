@@ -113,3 +113,11 @@ def test_server_screen_clips_same_window(monkeypatch):
     c = got[0]
     assert abs(c["start"] - 10.067) < 1e-6 and c["start"] + c["src_dur"] <= 11.433 + 1e-9, c
     assert abs(c["out_dur"] - 1.5) < 1e-6
+
+
+def test_tail_three_frames_plus_rounding(tmp_path):
+    """끝−전환 = 0.1033초(3프레임 + 반올림 3ms) — 초로 0.1 을 딱 자르면 빠져 3프레임 딴 장면이 번쩍였다
+    (6c1a2da94688 칸1 컷2 재현: 읽기 12.700~14.170, 전환 14.0667 → 14.066 내림)."""
+    c = _run(_data(12.7, 14.17, [12.7, 14.066]), tmp_path)
+    assert c["s"] == 12.7 and c["s"] + c["sd"] <= 14.066 + 1e-9, c
+    assert c["s"] + c["sd"] > 14.066 - 1.5e-3, c

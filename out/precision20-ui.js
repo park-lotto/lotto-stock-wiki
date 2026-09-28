@@ -144,7 +144,7 @@
   const kindOk=k=>{const kind=k.split(':')[1];return mode==='continuous'?kind==='frame':kind!=='frame';};
   // 내 프리셋의 '자리' — 제목·채널명 자리(템플릿:화면:칸 키, 장면 번호 무관)와 지금 장면의 자막 자리 하나(2026-09-25).
   const presetPositions=()=>{
-    const pre=rows[current].id+':',pick=m=>Object.fromEntries([...m].filter(([k])=>k.startsWith(pre)&&!k.includes(':caption')&&kindOk(k)));
+    const pre=rows[current].id+':',pick=m=>Object.fromEntries([...m].filter(([k])=>k.startsWith(pre)&&!k.includes(':caption')&&kindOk(k)&&k.split(':').length===3));   // 09-28: 장면별 덮어쓰기(4토막)는 안 담는다
     // 지금 장면에 자막 기록이 없으면(훅 장면처럼 자막이 숨은 장면) 이 모드에서 끌어 옮긴 다른 장면의 기록을 쓴다 — captionLookStyle과 같은 대비책(Opus 검토 3)
     let ck=captionKey();
     if(!captionDrags.has(ck)){const other=[...captionDrags.keys()].find(k=>k.startsWith(`${rows[current].id}:${mode}:`));if(other)ck=other;}
@@ -299,8 +299,24 @@
   const pickFontSet=id=>{fontSets[frameKind()]=id;fontSet=effFontSet();fittedText.clear();};
   const scaleKey=bind=>`${rows[current].id}:${frameKind()}:${bind}${bind==='caption'?':'+sceneIndex:''}`;
   const BODY_CAPTION_SCALE=1.3;   // 09-19 사장님: 본문 자막 기본 130%(자막 칸 위치·높이는 그대로)
-  const textScale=bind=>fontScales.get(scaleKey(bind))||(bind==='caption'&&mode==='story'&&sceneIndex>0?BODY_CAPTION_SCALE:1);
-  const textOffset=bind=>textOffsets.get(scaleKey(bind))||0;
+  // ★적용 범위(2026-09-28 사장님 "자막·제목·채널명 등 이 장면만 등록이나 전체 등록이나 해야 한다"):
+  //   editScope 하나가 자막·제목·채널명의 글자크기·↑↓·끌기·자막박스 범위를 전부 정한다(0순위-C 판단 주인 = readKey/writeKeys).
+  //   제목·채널명은 틀(훅/본문) 공통 키(scaleKey)가 '모든 장면'이고, '이 장면만'은 그 뒤에 :장면번호를 붙인 덮어쓰기 키다.
+  //   읽을 때는 덮어쓰기 키가 있으면 그것, 없으면 공통 키(readKey). 자막은 원래 장면별 키라 '모든 장면'이면 전 장면 키에 같이 쓴다.
+  //   렌더·캡컷·썸네일은 이 페이지(tools/render_scene_style.js)를 그대로 찍으므로 같은 readKey를 거친다.
+  let editScope='all';
+  const sceneKeyOf=bind=>bind==='caption'?scaleKey(bind):`${scaleKey(bind)}:${sceneIndex}`;
+  const readKey=(map,bind)=>{const k=sceneKeyOf(bind);return bind!=='caption'&&map.has(k)?k:scaleKey(bind);};
+  const captionKeyAt=i=>`${rows[current].id}:${mode==='continuous'?'frame':sceneKind(i)}:caption:${i}`;
+  // 쓸 키 목록: '이 장면만'이면 그 장면 키 하나 / '모든 장면'이면 자막은 전 장면 키, 제목·채널명은 공통 키(+장면별 덮어쓰기를 지운다 — 안 지우면
+  //   손댔던 장면만 안 따라와 "모두 적용했는데 몇 개는 그대로"가 된다. produce.html apply_all과 같은 원리).
+  const writeKeys=(map,bind)=>{
+    if(bind==='caption')return editScope==='all'?Array.from({length:sceneTotal()},(_,i)=>captionKeyAt(i)):[scaleKey(bind)];
+    if(editScope!=='all')return [sceneKeyOf(bind)];
+    const base=scaleKey(bind);for(const k of [...map.keys()])if(k.startsWith(base+':'))map.delete(k);return [base];
+  };
+  const textScale=bind=>fontScales.get(readKey(fontScales,bind))||(bind==='caption'&&mode==='story'&&sceneIndex>0?BODY_CAPTION_SCALE:1);
+  const textOffset=bind=>textOffsets.get(readKey(textOffsets,bind))||0;
   const colorKey=role=>`${rows[current].id}:${frameKind()}:${role}`;
   const colorFor=(role,fallback)=>colorOverrides.get(colorKey(role))||fallback;
   const dirtyKey=()=>`${rows[current].id}:${frameKind()}`;
@@ -392,7 +408,11 @@
   const motionPanel=document.createElement('section');
   motionPanel.className='hook-motion';
   motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button><button type="button" data-hook-motion="push-in">천천히 확대</button><button type="button" data-hook-motion="shake">떨림</button></div><div class="hook-speed hook-band-motion"><span>흰 띠</span><button type="button" data-hook-band-motion="">없음</button><button type="button" data-hook-band-motion="rise">스윽 올라오기</button><button type="button" data-hook-band-motion="grow">천천히 확대</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
-  root.querySelector('.layout-a .ai-card')?.after(motionPanel);
+  const scopeBar=document.createElement('section');scopeBar.className='hook-motion edit-scope';
+  scopeBar.innerHTML='<div class="hook-motion-head"><small>자막·제목·채널명의 글자 크기·위치·자막박스가 이 범위로 저장됩니다</small></div><div class="hook-motion-grid" style="grid-template-columns:1fr 1fr"><button type="button" data-edit-scope="all" class="active">모든 장면</button><button type="button" data-edit-scope="one">이 장면만</button></div>';
+  scopeBar.addEventListener('click',event=>{const b=event.target.closest('[data-edit-scope]');if(!b)return;editScope=b.dataset.editScope;scopeBar.querySelectorAll('[data-edit-scope]').forEach(x=>x.classList.toggle('active',x===b));});
+  root.querySelector('.layout-a .ai-card')?.after(scopeBar);
+  scopeBar.after(motionPanel);
   // 본문 모션(2026-09-19 사장님): 본문 장면 자막이 바뀔 때마다 들어오는 효과. 흰 띠 스윽/확대를 자막 효과로 넓혔다.
   //   값 목록은 BODY_CAPTION_MOTIONS 한 곳 — 버튼·미리보기·렌더(captionEnterAt)가 모두 여기서 읽는다. 서버 허용값은 scene_style.py와 짝.
   // 폰트 템플릿(2026-09-19 사장님): 채널명 · 제목 · 자막 폰트를 한 세트로. 모든 장면 공통.
@@ -869,8 +889,8 @@
   }
   function resetField(bind){
     const input=inputs[bind];if(!input)return;
-    input.value=presetValue(bind)||'';fontScales.delete(scaleKey(bind));textOffsets.delete(scaleKey(bind));textDrags.delete(scaleKey(bind));   // 09-19: 마우스로 옮긴 자리도 되돌린다
-    [...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));
+    input.value=presetValue(bind)||'';for(const m of [fontScales,textOffsets,textDrags])for(const k of writeKeys(m,bind))m.delete(k);   // 09-19: 마우스로 옮긴 자리도 되돌린다 / 09-28: 범위대로(이 장면만이면 그 장면 덮어쓰기만)
+    fittedText.clear();
     if(bind==='caption'){captionLayouts.delete(captionKey());captionPositions.delete(captionKey());captionDrags.delete(captionKey());captionTexts.delete(captionKey());syncCaption();}
     markDirty(bind);updateCount(input);updateSteppers();updateCaptionButtons();renderEdit();
   }
@@ -968,7 +988,7 @@
     const letterPx=ln.letter_spacing!=null?ln.letter_spacing*scale:Math.max(-1.5,-.035*fontPx);
     const capped=bind==='channel'&&pickedFont?Math.min(fontPx,frame.height*scale*CHANNEL_MAX):fontPx;   // 09-19: 채널명 기본 크기 상한
     const manualScale=textScale(bind),scaledFont=Math.max(9,capped*manualScale);
-    const moved=textDrags.get(scaleKey(bind))||{x:0,y:0};   // 09-19 사장님: 제목·채널명도 마우스로 옮긴다
+    const moved=textDrags.get(readKey(textDrags,bind))||{x:0,y:0};   // 09-19 사장님: 제목·채널명도 마우스로 옮긴다
     const topOffset=(bind==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(bind)+(bind==='caption'?0:moved.y);
     const verticalNudge=bind==='channel'?.7:-.35;
     const baseHeight=ln.h/frame.height*100+.9,displayHeight=baseHeight*Math.max(1,manualScale);
@@ -998,14 +1018,14 @@
     // 축소하거나 찌그러뜨리지 않고 templateViolations가 적용 전에 되돌려 보낸다.
     const lockedReference=rows[current]?.id==='t11'&&frame.reference_style&&!pickedFont;   // 09-19: 글꼴을 바꾸면 원본 크기 잠금을 풀어야 글자가 안 잘린다
     if(!lockedReference){
-      const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${Math.round(el.clientWidth)}`   /* 09-19: 세로 위치(y0)는 글자 폭과 무관 — 칸을 올리고 내릴 때마다 다시 맞춰 크기가 0.5~1.5px 튀었다 */,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
+      const fitKey=`${readKey(fontScales,bind)}:${family}:${weight}:${ln.x0}:${Math.round(el.clientWidth)}`   /* 09-19: 세로 위치(y0)는 글자 폭과 무관 — 칸을 올리고 내릴 때마다 다시 맞춰 크기가 0.5~1.5px 튀었다 */,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
       let useCache=cached&&chars<=cached.capacity;
       if(useCache){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}
         // 09-19: 기억해 둔 크기를 그대로 쓰면 글꼴이 바뀐 뒤 글자가 칸 밖으로 나갔다(본문 제목 좌우 잘림). 넘치면 캐시를 버리고 다시 맞춘다.
         const probe=document.createRange();probe.selectNodeContents(el);
         if(Math.max(el.scrollWidth,probe.getBoundingClientRect().width)*xscale>el.clientWidth+1){useCache=false;fittedText.delete(fitKey);el.style.transform='none';el.style.letterSpacing='';}
       }
-      if(!useCache){const isStory=mode==='story',manualSize=fontScales.has(scaleKey(bind));const heightFit=!(rows[current]?.id==='t11'&&frame.reference_style);   // 09-19: 이븐쇼핑은 칸 높이를 바꿔도 글자 크기는 그대로(폭만 맞춘다)
+      if(!useCache){const isStory=mode==='story',manualSize=fontScales.has(readKey(fontScales,bind));const heightFit=!(rows[current]?.id==='t11'&&frame.reference_style);   // 09-19: 이븐쇼핑은 칸 높이를 바꿔도 글자 크기는 그대로(폭만 맞춘다)
         if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,heightFit);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const frameScale=Math.min(1,(preview.clientWidth-6)/Math.max(1,measuredWidth()));   /* 09-19: 손으로 키워도 미리보기 밖으로는 안 나가게 */const xscale=manualSize?frameScale:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
     }
     return el;
@@ -1158,7 +1178,7 @@
     for(const ln of frame.lines||[]){
       if(ln.max_lines!==1||!['hook1','hook2','bodyTitle'].includes(ln.bind))continue;
       const el=layer.querySelector(`.precision-text[data-edit-bind="${ln.bind}"]`);if(!el)continue;
-      fitOneLine(el,fontScales.get(scaleKey(ln.bind))||1);
+      fitOneLine(el,fontScales.get(readKey(fontScales,ln.bind))||1);
     }
   }
   // 채널명 칸(빠른 조절) — 썰쇼핑형·고정형 모두 적용. renderEdit 끝에서 한 번 부른다.
@@ -1168,7 +1188,7 @@
     {
       const saved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
       const chEl0=layer.querySelector('.precision-text[data-edit-bind="channel"]');
-      const chDrag=textDrags.get(scaleKey('channel'))||{x:0,y:0};   // 마우스로 옮긴 양은 칸 위치에 더한다(칸을 쓰면 드래그가 먹지 않던 문제)
+      const chDrag=textDrags.get(readKey(textDrags,'channel'))||{x:0,y:0};   // 마우스로 옮긴 양은 칸 위치에 더한다(칸을 쓰면 드래그가 먹지 않던 문제)
       // 09-19 사장님 선택①을 쉬운 길로: 머리띠만 오려 붙이지 않고 **원본 그림 자체를 내린다**.
       //   그러면 캡슐·검색 아이콘·채널 글자가 한 덩어리로 같이 내려간다. 위에 생긴 빈 줄만 머리띠 색으로 채운다.
       //   머리띠 아래 끝 값은 tools/measure_header_bands.js 가 그림에서 재 둔 것(out/scene-header-bands.js).
@@ -1270,13 +1290,13 @@
         const chEl=layer.querySelector('.precision-text[data-edit-bind="channel"]');
         const pvBox=preview.getBoundingClientRect();
         const chSaved=fixedLayouts.get(layoutKey(p.id,frame))?.channel;
-        const chMoved=textDrags.get(scaleKey('channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
+        const chMoved=textDrags.get(readKey(textDrags,'channel'))||{y:0};   // 09-19: 채널명을 옮겨도 제목은 따라오지 않게 — 옮긴 양을 빼고 원래 자리로 계산
         if(chSaved>0&&chEl&&channelBlock(frame)==null){   // (옛 방식 — 칸 구조가 아닌 템플릿만) '채널명 칸' 슬라이더: 채널명 아래 끝을 그 값에 맞춘다
           const h=chEl.getBoundingClientRect().height/Math.max(1,pvBox.height)*100;
           chEl.style.top=Math.max(0,chSaved-h)+'%';
         }
         const chBottom=chSaved>0?chSaved:(chEl?((chEl.getBoundingClientRect().bottom-pvBox.top)/pvBox.height*100)-chMoved.y:0);
-        const drag=textDrags.get(scaleKey('bodyTitle'))||{x:0,y:0};
+        const drag=textDrags.get(readKey(textDrags,'bodyTitle'))||{x:0,y:0};
         const cutNow=titleHeight(frame);   // 상단 칸을 조절하면 그 칸 기준으로 다시 배치
         // 칸 구조(슬라이더를 건드린 뒤): 기본 상태의 제목 자리(옛 공식 그대로)를 '제목칸 안에서의 비율'로 바꿔, 늘어난 제목칸에 다시 놓는다.
         //   안 건드렸으면 옛 공식 그대로 — 기본 화면이 픽셀까지 같아야 한다.
@@ -1357,7 +1377,7 @@
     Object.assign(text.style,{left:(x+2)+'%',right:'auto',width:Math.max(1,w-4)+'%',top:y+'%',height:h+'%',transform:'none',display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'pre-wrap',lineHeight:'1.15',color:settings.color});
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
     if(capLook?.text)Object.assign(text.style,capLook.text);
-    fitOneLine(text,fontScales.get(scaleKey('caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다
+    fitOneLine(text,fontScales.get(readKey(fontScales,'caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다
   }
   // ★09-22 사장님: 자막이 살짝 커져 두 줄로 꺾이면 "두 포인트 줄이니까 한 줄에 들어간다" → 자막은 한 줄 규격이므로
   //   손으로 키운 크기든 기본이든 **꺾이기 직전까지만** 4%씩 줄인다(바닥 70%). 바닥까지 줄여도 안 들어가면 원래 크기로 두고
@@ -1451,13 +1471,16 @@
     const button=event.target.closest('[data-font-step]');if(!button)return;
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
     const next=Math.min(3,Math.max(.5,textScale(bind)+Number(button.dataset.fontStep)));
-    if(Math.abs(next-1)<.001)fontScales.delete(scaleKey(bind));else fontScales.set(scaleKey(bind),next);[...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));markDirty(bind);preview.classList.remove('is-pristine');updateSteppers();renderEdit();
+    const override=bind!=='caption'&&editScope!=='all';   // 장면별 덮어쓰기는 100%여도 지우지 않는다(지우면 공통 값으로 되돌아간다)
+    for(const k of writeKeys(fontScales,bind)){if(!override&&Math.abs(next-1)<.001)fontScales.delete(k);else fontScales.set(k,next);}
+    fittedText.clear();markDirty(bind);preview.classList.remove('is-pristine');updateSteppers();renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-position-step]');if(!button)return;
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
     if(bind==='caption'){captionLayouts.set(captionKey(),{...captionSettings(),placement:'free'});updateCaptionButtons();}
-    textOffsets.set(scaleKey(bind),Math.max(-18,Math.min(18,textOffset(bind)+Number(button.dataset.positionStep)*.5)));
+    const off=Math.max(-18,Math.min(18,textOffset(bind)+Number(button.dataset.positionStep)*.5));
+    for(const k of writeKeys(textOffsets,bind))textOffsets.set(k,off);
     if(bind==='caption')applyCaptionMoveScope();
     markDirty(bind);preview.classList.remove('is-pristine');renderEdit();
   });
@@ -1548,7 +1571,7 @@
     captionLayouts.set(captionKey(),settings);
     // 2026-09-24 고객(데이워커님): '모든 장면'을 골라 놔도 크기·색은 이 장면에만 들어갔다 — 스위치가 모양 버튼에만 걸려 있었다.
     //   같은 패널 안의 너비·높이·박스색·글자색·투명도도 같은 스위치를 따른다(바꾼 그 값 하나만 옮긴다 — 다른 장면의 자리는 그대로).
-    if(lookScope==='all')spreadCaption(put);
+    if(editScope==='all')spreadCaption(put);
     markDirty('caption');renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
@@ -1570,9 +1593,8 @@
   // 자막박스 모양 고르기(2026-09-18) — 기본(템플릿) / 없음 / 10종. 고르면 직접 고른 박스색은 풀린다.
   const lookRow=document.createElement('div');lookRow.className='caption-looks';
   // 09-22 사장님: 모양은 모든 장면 공통이 기본이지만 "그 장면에 포인트를 주고 싶을 때"가 있다 → [모든 장면|이 장면만] 스위치.
-  let lookScope='all';
-  lookRow.innerHTML='<span>자막박스 모양</span><span class="caption-look-scope" style="grid-column:1/-1;display:flex;gap:6px;margin:2px 0 4px"><button type="button" data-caption-look-scope="all" class="active">모든 장면</button><button type="button" data-caption-look-scope="one">이 장면만</button><small style="opacity:.75;align-self:center">모양·크기·색·투명도를 바꾸면 이 범위에 적용</small></span>'+[['auto','기본'],['none','박스 없음'],...CAPTION_LOOK_NAMES.map((n,i)=>[String(i),n])].map(([v,n])=>`<button type="button" data-caption-look="${v}">${n}</button>`).join('');
-  lookRow.addEventListener('click',event=>{const b=event.target.closest('[data-caption-look-scope]');if(!b)return;lookScope=b.dataset.captionLookScope;lookRow.querySelectorAll('[data-caption-look-scope]').forEach(x=>x.classList.toggle('active',x===b));});
+  // 09-28: 자막박스만의 스위치를 없애고 패널 맨 위 [적용 범위](editScope)를 따른다 — 판단 주인 하나.
+  lookRow.innerHTML='<span>자막박스 모양</span><small style="grid-column:1/-1;opacity:.75;margin:2px 0 4px">모양·크기·색·투명도는 맨 위 [적용 범위]를 따릅니다</small>'+[['auto','기본'],['none','박스 없음'],...CAPTION_LOOK_NAMES.map((n,i)=>[String(i),n])].map(([v,n])=>`<button type="button" data-caption-look="${v}">${n}</button>`).join('');
   maskDetails.querySelector('div').prepend(lookRow);
   // 09-19 사장님 '버튼이 다 검정이라 뭐가 뭔지 모르겠다' — 버튼에 그 모양을 그대로 입혀 눈으로 고른다.
   lookRow.querySelectorAll('[data-caption-look]').forEach(button=>{
@@ -1591,7 +1613,7 @@
     captionLayouts.set(captionKey(),settings);
     // 09-22 사장님: 자막박스 '모양'은 모든 장면 공통, 장면별로 다른 것은 '위치 이동'뿐.
     //   다른 장면에는 모양(look)만 옮긴다 — 그 장면의 위치·폭·높이는 건드리지 않는다. 모양을 바꾸면 손으로 고른 박스색·글자색도 같이 푼다(위와 같게).
-    if(lookScope==='all')spreadCaption(other=>{delete other.bgUser;delete other.colorUser;if('look' in settings)other.look=settings.look;else delete other.look;});   // '이 장면만'이면 다른 장면은 그대로
+    if(editScope==='all')spreadCaption(other=>{delete other.bgUser;delete other.colorUser;if('look' in settings)other.look=settings.look;else delete other.look;});   // '이 장면만'이면 다른 장면은 그대로
     markDirty('caption');renderEdit();syncCaptionLookButtons();
   });
   // 지금 장면 말고 나머지 장면의 자막 설정에 change(other)를 적용한다 — 모양 버튼·크기/색 칸이 같이 쓴다.
@@ -1610,7 +1632,7 @@
   maskDetails.addEventListener('toggle',syncCaptionLookButtons);
   function applyCaptionMoveScope(){
     moveScope.hidden=false;
-    if(captionMoveScope!=='all')return;
+    if(captionMoveScope!=='all'&&editScope!=='all')return;   // 09-28: [적용 범위] 스위치가 '모든 장면'이면 끌기·↑↓·배치도 전 장면
     const drag=captionDrags.get(captionKey())||{x:0,y:0},settings=captionSettings(),offset=textOffset('caption');
     for(let i=0;i<sceneTotal();i++){
       const key=`${rows[current].id}:${mode}:${i}:caption`;
@@ -1632,8 +1654,8 @@
     const hit=event.target.closest('.precision-text[data-edit-bind]');
     const bind=hit?.dataset.editBind;
     if(!bind||!['channel','hook1','hook2','bodyTitle'].includes(bind))return;
-    const rect=preview.getBoundingClientRect(),origin=textDrags.get(scaleKey(bind))||{x:0,y:0};
-    textDrag={pointer:event.pointerId,bind,key:scaleKey(bind),startX:event.clientX,startY:event.clientY,rect,origin,box:hit.getBoundingClientRect()};
+    const rect=preview.getBoundingClientRect(),origin={...(textDrags.get(readKey(textDrags,bind))||{x:0,y:0})};
+    textDrag={pointer:event.pointerId,bind,key:writeKeys(textDrags,bind)[0],startX:event.clientX,startY:event.clientY,rect,origin,box:hit.getBoundingClientRect()};
     preview.setPointerCapture(event.pointerId);event.preventDefault();
   });
   preview.addEventListener('pointermove',event=>{
@@ -1769,7 +1791,8 @@
 //   칸을 찾아 숨김·보임만 바꾸므로 위치가 바뀌어도 그대로 돈다. 안내 상자(.ai-card)는 연결 스크립트의 기준점이라 지우지 않고 숨긴다.
 (()=>{
   const GROUPS=[
-    {key:'motion',title:'훅 모션',pick:p=>[...p.querySelectorAll(':scope > .hook-motion:not(.body-motion)')]},
+    {key:'scope',title:'적용 범위',pick:p=>[...p.querySelectorAll(':scope > .edit-scope')]},   // 09-28: 자막·제목·채널명 공용 [모든 장면|이 장면만] — 맨 위, 기본 펼침
+    {key:'motion',title:'훅 모션',pick:p=>[...p.querySelectorAll(':scope > .hook-motion:not(.body-motion):not(.edit-scope)')]},
     {key:'bodyMotion',title:'본문 모션',pick:p=>[...p.querySelectorAll(':scope > .body-motion')]},
     {key:'quick',title:'빠른 조절',pick:p=>[...p.querySelectorAll(':scope > .fixed-quick-panel')]},
     {key:'title',title:'제목',pick:p=>['channel','hook1','hook2','bodyTitle'].map(k=>p.querySelector(`:scope > [data-field-key="${k}"]`)).filter(Boolean)},
@@ -1790,6 +1813,7 @@
   document.head.append(style);
   function hint(key,body){
     const val=sel=>body.querySelector(sel)?.value?.trim()||'';
+    if(key==='scope')return body.querySelector('[data-edit-scope].active')?.textContent||'';
     if(key==='motion'){const m=body.querySelector('.hook-motion-grid .active')?.textContent||'',b=body.querySelector('[data-hook-band-motion].active')?.textContent||'';return [m,b&&b!=='없음'?b:''].filter(Boolean).join(' + ');}
     if(key==='bodyMotion'){const t=body.querySelector('[data-body-caption-motion].active')?.textContent||'';return t==='없음'?'':t;}
     if(key==='quick')return body.querySelector('.fixed-size-control output')?.textContent?`상단 ${body.querySelector('.fixed-size-control output').textContent}`:'';
@@ -1833,7 +1857,7 @@
       let box=panel.querySelector(`:scope > .text-group[data-group="${g.key}"]`);
       const nodes=g.pick(panel);if(!box&&!nodes.length)continue;
       if(!box){box=document.createElement('details');box.className='text-group';box.dataset.group=g.key;
-        box.innerHTML=`<summary><b>${g.title}</b><small></small></summary><div class="text-group-body"></div>`;nodes[0].before(box);}
+        box.innerHTML=`<summary><b>${g.title}</b><small></small></summary><div class="text-group-body"></div>`;if(g.key==='scope')box.open=true;nodes[0].before(box);}
       const body=box.querySelector('.text-group-body');nodes.forEach(n=>body.append(n));
     }
     // 그룹 순서를 고정(나중에 끼어든 요소가 순서를 바꾸지 않게)

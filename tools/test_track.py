@@ -260,12 +260,14 @@ def test_finish_does_not_destroy_ignorable_edits_in_track_folder(repo):
     _preflight가 통과시키고 → reset --hard는 조용히 날리고 → ff는 보존한다.
     """
     wt = _make_track_commit(repo, "보이스")
-    raw = wt / "raw"
-    raw.mkdir()
+    # ★예시 경로는 wiki/log.d/ — raw/는 2026-09-27부터 트랙에 안 풀리므로(SPARSE_EXCLUDE) 트랙에서 못 올린다.
+    #   지키려는 성질(추적+무시대상 수정분을 ff가 보존)은 같다.
+    raw = wt / "wiki" / "log.d"
+    raw.mkdir(parents=True)
     (raw / "크롤.md").write_text("커밋된 크롤 데이터\n", encoding="utf-8")
-    _git(wt, "add", "raw/크롤.md")
+    _git(wt, "add", "wiki/log.d/크롤.md")
     _git(wt, "commit", "-m", "크롤 데이터 추가")
-    # 이제 추적되는 파일을 고친다 → " M raw/크롤.md" = _preflight가 무시대상으로 통과시킴
+    # 이제 추적되는 파일을 고친다 → " M wiki/log.d/크롤.md" = _preflight가 무시대상으로 통과시킴
     (raw / "크롤.md").write_text("작업 중인 수정분\n", encoding="utf-8")
 
     track.finish("보이스", repo=repo, gate=_Gate())
@@ -510,3 +512,91 @@ def test_finish_rejects_unknown_track(repo):
 def test_ahead_count_tracks_divergence(repo):
     _make_track_commit(repo, "보이스")
     assert track.ahead_count(repo, "track/보이스") == 1
+
+
+# ── 디스크 병목 막기(2026-09-27): 가벼운 트랙 · 주차 · 잔해 청소 · 디스크 거절 ────────────
+
+def _add_heavy_dirs(repo):
+    """실제 저장소처럼 raw/·productions/가 git에 있다."""
+    for rel, body in (("raw/a.md", "원본\n"), ("productions/b.txt", "제작물\n"), ("keep/c.txt", "코드쪽\n")):
+        p = repo / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(body, encoding="utf-8")
+    _git(repo, "add", "raw", "productions", "keep")
+    _git(repo, "commit", "-m", "heavy")
+    _git(repo, "push", "origin", "main")
+
+
+def test_start_is_light_and_main_folder_untouched(repo):
+    """트랙엔 raw/·productions/를 안 푼다. ★main 폴더는 그대로여야 한다(설정이 새면 main이 비워진다)."""
+    _add_heavy_dirs(repo)
+    track.start("가벼움", repo=repo)
+    wt = track.worktree_path("가벼움", repo)
+    assert (wt / "keep" / "c.txt").exists() and (wt / "app.py").exists()
+    assert not (wt / "raw").exists() and not (wt / "productions").exists(), "무거운 폴더가 풀렸다"
+    assert (repo / "raw" / "a.md").exists() and (repo / "productions" / "b.txt").exists(), "★main 폴더가 비워졌다"
+    _git(repo, "checkout", "--", ".")     # main에서 다시 체크아웃해도 그대로(설정이 main에 새지 않았나)
+    assert (repo / "raw" / "a.md").exists()
+
+
+def test_light_track_commit_and_finish_do_not_delete_heavy_files(repo):
+    """가벼운 트랙에서 커밋·병합해도 raw/·productions/가 git에서 지워지지 않는다(안 풀었을 뿐)."""
+    _add_heavy_dirs(repo)
+    wt = _make_track_commit(repo, "가벼움")
+    _git(wt, "add", "-A")                 # -A도 안전해야 한다(트랙 폴더 규칙상 -A를 쓴다)
+    track.finish("가벼움", repo=repo, gate=_Gate())
+    files = _git(repo, "ls-tree", "-r", "--name-only", "origin/main")
+    assert "raw/a.md" in files and "productions/b.txt" in files, "★병합이 무거운 파일을 지웠다"
+    assert (repo / "raw" / "a.md").exists()
+
+
+def test_start_full_keeps_everything(repo):
+    _add_heavy_dirs(repo)
+    track.start("전체", repo=repo, full=True)
+    assert (track.worktree_path("전체", repo) / "raw" / "a.md").exists()
+
+
+def test_park_keeps_branch_and_remote_and_refuses_dirty(repo):
+    wt = _make_track_commit(repo, "주차")
+    (wt / "app.py").write_text("VALUE = 99\n", encoding="utf-8")        # 미커밋
+    with pytest.raises(track.TrackError, match="미커밋"):
+        track.park("주차", repo=repo)
+    assert wt.exists(), "미커밋이 있는데 폴더를 치웠다"
+    _git(wt, "checkout", "--", "app.py")
+    head = _git(wt, "rev-parse", "HEAD").strip()
+    track.park("주차", repo=repo)
+    assert not wt.exists()
+    assert _git(repo, "rev-parse", "track/주차").strip() == head, "브랜치가 사라지거나 바뀌었다"
+    assert head in _git(repo, "ls-remote", "origin", "refs/heads/track/주차"), "원격 백업이 없다"
+    _git(repo, "worktree", "add", str(wt), "track/주차")                  # 되살리기
+    assert (wt / "app.py").read_text(encoding="utf-8") == "VALUE = 2\n"
+
+
+def test_park_idle_parks_only_old_tracks(repo, monkeypatch):
+    _make_track_commit(repo, "오래됨")
+    _make_track_commit(repo, "최근")
+    ages = {"오래됨": 30.0, "최근": 0.5}
+    monkeypatch.setattr(track, "_last_touch_days", lambda r, n: ages[n])
+    track.park_idle(repo=repo, days=7)
+    assert not track.worktree_path("오래됨", repo).exists()
+    assert track.worktree_path("최근", repo).exists()
+    assert track.branch_exists(repo, "track/오래됨")
+
+
+def test_finish_cleans_dead_merge_stages(repo):
+    """락을 쥔 finish가 남은 _merge-* 잔해(끊긴 finish)를 치운다 — 2026-09-27 실측 4개·개당 ~1.8GB."""
+    dead = track.tracks_dir(repo) / f"{track.STAGE_PREFIX}죽은것"
+    dead.parent.mkdir(parents=True, exist_ok=True)
+    _git(repo, "worktree", "add", "--detach", str(dead), "origin/main")
+    _make_track_commit(repo, "보이스")
+    track.finish("보이스", repo=repo, gate=_Gate())
+    assert not dead.exists(), "잔해가 남았다"
+
+
+def test_finish_refuses_when_disk_nearly_full(repo, monkeypatch):
+    """임시 폴더를 만들다 끊기기 전에 멈춘다(끊기면 잔해 1.8GB가 남는다)."""
+    _make_track_commit(repo, "보이스")
+    monkeypatch.setattr(track, "disk_free_gb", lambda p=None: 1.0)
+    with pytest.raises(track.TrackError, match="디스크 여유"):
+        track.finish("보이스", repo=repo, gate=_Gate())
+    assert not (track.tracks_dir(repo) / f"{track.STAGE_PREFIX}보이스").exists()

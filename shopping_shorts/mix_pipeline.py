@@ -3463,6 +3463,41 @@ def _source_layout_from_base(base, clip_dir, cut_plan=None):
     return out, regs
 
 
+def _map_cut_plan_to_sources(cut_plan, layout, regs, raw_ids):
+    """렌더 컷 계획(render_cut_plan — 통짜 청소본·원본 좌표) → 소스별 파일 좌표로 **자리만** 옮긴 사본. 읽는 길이·배속·정지·
+    타임라인 자리는 그대로(소스별 파일은 청소본 조각을 같은 빠르기로 옮긴 것이라 파일 초 = 청소본 초). 못 옮기는 컷이 하나라도
+    있으면 None(호출부가 종전 계산) + stderr."""
+    try:
+        rvs = {r[0] for r in regs}
+        out = []
+        for bp in cut_plan or []:
+            clips = []
+            for cp in bp["clips"]:
+                c, rv = cp["clip"], cp["video_id"]
+                if rv in rvs:
+                    vid, orig, r = clean_origin(regs, rv, c.get("start") or 0.0, c.get("seg_id"))
+                    if vid is None or vid not in layout:
+                        raise ValueError("청소본 조각 못 찾음 %s %.3f" % (rv, float(c.get("start") or 0.0)))
+                    p = _piece_of(layout[vid]["pieces"], orig, r[1], r[6])
+                    if p is None or p.get("off") is None:
+                        raise ValueError("소스별 파일 조각 못 찾음 %s %.3f" % (vid, orig))
+                    def _to_file(t):
+                        o = r[3] + (float(t) - r[5]) / (r[6] or 1.0)
+                        return round(p["off"] + (o - p["cs"]) * p["k"], 4)
+                    nc = dict(c, video_id=vid, start=_to_file(c.get("start") or 0.0))
+                    clips.append(dict(cp, clip=nc, video_id=vid, start=_to_file(cp["start"])))
+                elif rv in raw_ids and rv in layout:
+                    nv = "%s_raw" % rv
+                    clips.append(dict(cp, clip=dict(c, video_id=nv), video_id=nv))
+                else:
+                    clips.append(dict(cp))
+            out.append(dict(bp, clips=clips))
+        return out
+    except Exception as e:      # noqa: BLE001 — 못 옮기면 종전 계산(경보)
+        print("[export] 렌더 컷을 소스별 파일로 못 옮김 — 캡컷·ZIP 이 컷을 다시 계산한다: %r" % (e,), file=sys.stderr)
+        return None
+
+
 def _piece_of(pieces, orig, sid=None, k=None):
     """원본 시각이 든 소스별 파일 조각. 경계에 선 시각은 **뒤 조각**(그 조각의 첫 프레임) — 정확히 든 조각을 먼저, 없으면 ±0.05초.
     ★같은 원본 구간이 빠르기(k)가 다른 조각으로 둘 이상 담길 수 있다(느리게 구운 컷) — 그 컷의 조각(sid)을 먼저, 없으면
@@ -3493,7 +3528,12 @@ def _plan_on_source_files(plan, layout, regs, raw_ids):
     out = copy.deepcopy(plan or {})
     rvs = {r[0] for r in regs}
     moved = unmoved = 0
+    from shopping_shorts import screen_clips as _scm
     for b in out.get("beats") or []:
+        # ★원본 재료 칸을 `<vid>_raw` 로 바꾸면 칸 내용 키가 달라져 화면 컷(screen_clips)을 못 찾고 파이썬 예비 계산으로 떨어졌다 —
+        #   캡컷·ZIP 만 화면(=렌더)과 다른 컷(잔상 가드·배속 없음)이 됐다(2026-09-27 dacd163229e5 칸2 컷0: 렌더 시작 0.066·1.15배 느리게
+        #   vs 캡컷 0.0·1배속). 바꾸기 **전** 키와 이름 대응을 달아 두면 lookup 이 같은 화면 컷을 이름만 바꿔 쓴다('_' 키는 칸 키에서 빠진다).
+        _k0, _vmap = _scm.beat_key(b), {}
         for key in ("manual_cuts", "scene_override"):
             for c in b.get(key) or []:
                 v = c.get("video_id")
@@ -3511,9 +3551,13 @@ def _plan_on_source_files(plan, layout, regs, raw_ids):
                     moved += 1
                 elif v in raw_ids and v in layout:
                     c["video_id"] = "%s_raw" % v
+                    _vmap[v] = c["video_id"]
         for p in [b.get("primary")] + list(b.get("alternates") or []):
             if p and p.get("video_id") in raw_ids and p.get("video_id") in layout:
-                p["video_id"] = "%s_raw" % p["video_id"]
+                _vmap[p["video_id"]] = "%s_raw" % p["video_id"]
+                p["video_id"] = _vmap[p["video_id"]]
+        if _vmap and _k0:
+            b["_screen_key"], b["_screen_vid"] = _k0, _vmap
     return out, moved, unmoved
 
 
@@ -3601,9 +3645,16 @@ def export_sources_for(store, job, job_id, work, customer_id=0, *, for_capcut=Fa
     cdir = Path(clip_dir) if clip_dir else work
     if route == "base" and base is not None:
         from shopping_shorts.video_assemble import render_cut_plan as _rcp
-        layout, regs = _source_layout_from_base(base, cdir, _rcp(plan, tts, paths))
+        _render_cuts = _rcp(plan, tts, paths)
+        layout, regs = _source_layout_from_base(base, cdir, _render_cuts)
         raw_ids = {v for v in paths if v not in {r[0] for r in regs}}
         plan, moved, unmoved = _plan_on_source_files(plan, layout, regs, raw_ids)
+        # ★캡컷·ZIP 컷 = 렌더 컷 계획 **그대로**(청소본 좌표 → 소스별 파일 좌표로 자리만 옮김, 2026-09-27 11cfc4a4b75c).
+        #   종전엔 옮긴 편성(plan)으로 render_cut_plan 을 **다시** 돌려 소스별 파일 길이로 시작 당기기·읽는 길이·정지를 새로 정해
+        #   렌더(통짜 청소본)와 갈렸다(7칸 read·freeze / 8칸 start). 판단은 렌더 계획 한 곳 — 캡컷·ZIP 은 옮겨 적기만.
+        _mapped = _map_cut_plan_to_sources(_render_cuts, layout, regs, raw_ids)
+        if _mapped is not None:
+            plan["_cut_plan"] = _mapped
         newp = {vid: L["path"] for vid, L in layout.items()}
         still = {m.get("video_id") for b in plan.get("beats") or [] for m in (_beat_materials(b) or []) if m}
         for v, p in paths.items():                 # 옮기지 못한 조각(옛 증분 조각)·원본 재료 칸은 그대로
@@ -4379,20 +4430,22 @@ def map_scene_score(clean_path, srcs, cuts):
     같은 자(frame_match — 보정·영상 비교 도구와 같은 닮음)로 잰다. 파일을 보는 판정이라 계산끼리 비교하지 않는다(0순위-C)."""
     import numpy as np
     from shopping_shorts import frame_match as fm
-    cf = fm.feats(fm.frames(clean_path))
+    _cfr = fm.frames(clean_path)
+    cf, cf2 = fm.feats(_cfr), fm.feats_low(_cfr)
     cache, ok = {}, 0
     for c in cuts or []:
         v = c.get("video_id")
         if not srcs.get(v):
             continue
         if v not in cache:
-            cache[v] = fm.feats(fm.frames(srcs[v]))
-        F = cache[v]
+            _fr = fm.frames(srcs[v])
+            cache[v] = (fm.feats(_fr), fm.feats_low(_fr))
+        F, F2 = cache[v]
         j = int(round((float(c["fin"]) + float(c["dur"]) / 2) * fm.FPS))
         if not (0 <= j < len(cf)) or not len(F):
             continue
         k = int(round((float(c["src"]) + min(float(c.get("sdur") or c["dur"]), float(c["dur"])) / 2) * fm.FPS))
-        d = fm.dist(F, np.arange(k - 3, k + 4), cf[j])
+        d = fm.dist_any(F, F2, np.arange(k - 3, k + 4), cf[j], cf2[j])     # 글자 띠를 지운 청소본도 같은 장면으로(두 띠)
         ok += bool(np.isfinite(d).any() and float(np.min(d)) < fm.SCENE_T)
     return ok
 
@@ -4497,6 +4550,48 @@ def _src_durs_for(job, work):
                 for v, p in _resolve_sources(job, Path(work)).items()}
     except Exception:      # noqa: BLE001
         return {}
+
+
+SHOT_AVOID_FRAMES = 2.5     # 비교 그림은 원본 샷 전환에서 이만큼(프레임) 떨어진 곳을 찍는다
+
+
+def compare_frame_times(c, pos, fps=30, shot_cuts=None):
+    """전/후 비교의 **찍을 시각**을 프레임 번호로 정한다 → (원본 초, 청소본 초). 주인 함수(0순위-C).
+
+    ★왜(2026-09-27 사장님 "양쪽 다 프레임 번호로 집도록 바꾸면 0프레임으로"): 종전엔 양쪽을 소수점 초(fin+dur*pos)로
+      찍어 청소본 쪽이 프레임 경계 사이에 떨어졌고, 새 방식 청소본에서도 27컷 중 11컷이 ±1~2프레임 어긋나 보였다.
+      청소본은 우리가 30fps로 만들어(video_assemble.cut_frames: 컷 시작 프레임 = round(누적초×30)) 프레임 시각이
+      정확히 n/30이다. 컷 시작 프레임 f0에 **같은 프레임 수 k**를 더해 청소본은 (f0+k)/30, 원본은 src + k/30 을 찍는다
+      — 조립이 원본에서 그 조각을 뜰 때와 같은 자(1/30초 격자)라 두 그림이 같은 순간이다.
+    c: {src, fin, dur} (fin은 정본이면 보정 off가 이미 들어간 값), pos: 0~1.
+    shot_cuts: 원본의 샷 전환 시각(초) 목록(seg_snap.scene_cuts). 주면 찍을 자리가 전환 ±SHOT_AVOID_FRAMES 안이면
+      같은 컷 안에서 가장 가까운 '전환에서 먼' 프레임으로 옮긴다.
+      ★왜(2026-09-28 사장님 화면 8c63 장면25): 원본 컷 안에 샷 전환(프레임 518→519)이 있고 청소본이 1프레임 앞서
+        있으면, 가운데를 찍는 순간 원본은 전환 직전·청소본은 직후를 찍어 **전혀 다른 장면**으로 보였다(영상은 정상).
+        청소본 ±1프레임은 남을 수 있으니 비교 그림이 전환 순간을 피하는 게 맞다.
+    """
+    from shopping_shorts.video_assemble import cut_frames
+    fin, dur, src = float(c["fin"]), float(c["dur"]), float(c["src"])
+    nf, _ = cut_frames(fin, dur, fps)
+    f0 = int(round(fin * fps))
+    k = min(nf - 1, max(0, int(nf * float(pos))))
+    if shot_cuts:
+        _cuts = [float(x) for x in shot_cuts]
+
+        def _near(kk):
+            t = src + kk / float(fps)
+            return any(abs(t - x) < SHOT_AVOID_FRAMES / float(fps) for x in _cuts)
+        if _near(k):
+            for step in range(1, nf):
+                for kk in (k - step, k + step):
+                    if 0 <= kk < nf and not _near(kk):
+                        k = kk
+                        break
+                else:
+                    continue
+                break
+    # +0.0005: 정확히 n/30에 seek하면 부동소수 오차로 앞 프레임이 잡힐 수 있다 — 격자 안쪽으로 살짝 밀어 둔다
+    return src + k / float(fps) + 0.0005, (f0 + k) / float(fps) + 0.0005
 
 
 def clean_compare_clips(job, work):
@@ -5329,6 +5424,106 @@ def clean_charge_plan(store, job, work, *, mode="render", skip_clean=False):
     return out
 
 
+def _same_clips(a, b, tol=0.02):
+    """렌더 컷 계획 두 개(plan_beat_clips_for 결과)가 같은 원본 구간을 읽는가 — 영상·시작·읽는 길이 ±tol초."""
+    if len(a or []) != len(b or []):
+        return False
+    for x, y in zip(a, b):
+        if str(x.get("video_id")) != str(y.get("video_id")):
+            return False
+        if abs(float(x["start"]) - float(y["start"])) > tol:
+            return False
+        if abs(float(x.get("src_dur") or x["out_dur"]) - float(y.get("src_dur") or y["out_dur"])) > tol:
+            return False
+    return True
+
+
+def clean_left_beats(store, job, work, judged=None):
+    """자막제거를 켠 job에서 **원본 재료(자막 있음)로 나갈 칸** 분류 — 유일한 자리(2026-09-28).
+    관문(tools/clean_left_audit.py → video_gate)·매일 점검(실물 완성본)이 이것만 부른다.
+
+    반환 None(자막제거 끔·정본 없음 — 이 판정의 대상 아님) 또는
+      {"left": [칸]    — 청소본이 있어야 할 칸인데 원본으로 나간다 = **결함**(자막 남음)
+                         · 판정은 안 덮였다(uncovered)는데 청소 뒤 편성의 렌더 컷 계획이 그대로(스냅샷과 같다)
+                         · 또는 덮인 칸인데 원본 조각이 고객이 안 고른 컷 자리(clean_base.left_by_choice)가 아니다
+       "pending": [칸] — 청소 뒤 편성이 바뀌어(렌더 컷 계획이 스냅샷과 다름) 또는 음성이 길어져(extend) **증분 대기** —
+                         렌더하면 동의창을 거쳐 지워질 칸이라 결함이 아니다(자막제거 없이 렌더하면 남는다)
+       "chosen": [칸]  — 고객이 안 지우기로 고른 칸(부분 정본 skip) 또는 안 고른 컷을 원본으로 튼 칸
+       "unknown": [칸] — 안 덮였는데 스냅샷 편성이 없어 원인을 못 가린다
+       "tier_upgrade": bool — 렌더가 정본 대신 요청 등급 전체를 지운다(이때 left·pending 은 렌더에서 사라진다)}
+    judged: clean_base_judge 결과를 이미 가졌으면 넘긴다(두 번 풀지 않게)."""
+    from shopping_shorts import clean_base as _cb
+    from shopping_shorts import video_assemble as _va
+    work = Path(work)
+    j = judged if judged is not None else clean_base_judge(store, job, work)
+    if j is None:
+        return None
+    base, plan2 = j["base"], j["plan2"] or {}
+    tts_durs, src_durs = j.get("tts_durs") or {}, j.get("src_durs") or {}
+    out = {"left": [], "pending": [], "chosen": [], "unknown": [], "tier_upgrade": bool(j.get("tier_upgrade"))}
+    snap = None
+    try:
+        sp = _clean_plan_snapshot_path(work, base.get("sig")) if base.get("sig") else None
+        if sp and sp.exists():
+            snap = json.loads(sp.read_text(encoding="utf-8"))
+    except Exception as e:      # noqa: BLE001 — 스냅샷을 못 읽으면 원인 미상(unknown)으로 센다
+        print("[clean-left] 스냅샷 편성 읽기 실패: %r" % (e,), file=sys.stderr)
+        snap = None
+    cur = {int(b["beat_idx"]): b for b in ((job or {}).get("edit_plan") or {}).get("beats") or []}
+    old = {int(b["beat_idx"]): b for b in (snap or {}).get("beats") or [] if b.get("beat_idx") is not None}
+    live = [bi for bi, d in tts_durs.items() if (d or 0) > 0]
+    runout_idx = max(live) if live else None
+
+    def _clips(b, td, bi):
+        try:
+            return _va.plan_beat_clips_for(b, td, src_durs, runout=_va._LAST_RUNOUT if bi == runout_idx else 0.0)
+        except Exception:      # noqa: BLE001
+            return None
+
+    def _snap_td(b, bi):
+        tp = b.get("tts_path")
+        try:
+            return float(_va._beat_effective_dur(b, tp)) if tp and Path(tp).exists() else float(tts_durs.get(bi) or 0)
+        except Exception:      # noqa: BLE001
+            return float(tts_durs.get(bi) or 0)
+
+    partial = bool(base.get("partial"))
+    skip = {int(x) for x in base.get("skip_beats") or []}
+    unc = {int(x) for x in j.get("uncovered") or []}
+    ext = {int(e["beat_idx"]) for e in j.get("extend") or [] if e.get("beat_idx") is not None}
+    cpaths = _cb.source_paths(base)
+    for b2 in plan2.get("beats") or []:
+        bi = int(b2["beat_idx"])
+        td = float(tts_durs.get(bi) or 0)
+        if td <= 0:
+            continue
+        if partial and (bi in skip or str(bi) not in (base.get("beat_keys") or {})):
+            out["chosen"].append(bi)
+            continue
+        if bi in unc:
+            if bi not in old or bi not in cur:
+                out["unknown" if snap is None else "pending"].append(bi)   # 스냅샷에 없던 칸 = 청소 뒤 새로 생김
+                continue
+            a, c = _clips(old[bi], _snap_td(old[bi], bi), bi), _clips(cur[bi], td, bi)
+            if a is None or c is None:
+                out["unknown"].append(bi)
+            elif _same_clips(a, c):
+                out["left"].append(bi)          # 편성은 그대로인데 못 덮었다 = 판정·청소본 결함
+            else:
+                out["pending"].append(bi)
+            continue
+        raw = [m for m in (_beat_materials(b2) or []) if m and m.get("video_id") not in cpaths]
+        if raw:
+            if all(_cb.left_by_choice(base, m) for m in raw):
+                out["chosen"].append(bi)
+            else:
+                out["left"].append(bi)
+            continue
+        if bi in ext:
+            out["pending"].append(bi)
+    return out
+
+
 def clean_charge_message(plan):
     """확인창·409 안내 문구 — 무엇 때문에, 얼마(초·크레딧)가 나가는지. 판정은 clean_charge_plan."""
     secs, cr = plan.get("seconds"), plan.get("credits")
@@ -5530,7 +5725,8 @@ def _render_stamp(job):
         except Exception as e:      # noqa: BLE001 — 도장 실패가 렌더를 죽이면 안 된다
             return "ERR:%s" % type(e).__name__
     job = job or {}
-    parts = [_norm(job.get(k)) for k in ("deco", "headcopy", "caption_style", "subtitle_removal")]
+    from .scene_style import deco_render_view   # 장면꾸미기 화면 전용 값(sceneIndex·frameKind)은 도장에서 뺀다(2026-09-28)
+    parts = [_norm(deco_render_view(job.get("deco")))] + [_norm(job.get(k)) for k in ("headcopy", "caption_style", "subtitle_removal")]
     parts.append(_norm(_safe(lambda: clean_tier_of(job))))
     parts.append(_norm(_safe(lambda: clean_selection_of(job))))
     parts.append(_norm(_safe(lambda: intro_signature(job.get("thumbnail"), job.get("job_id")))))
@@ -5686,9 +5882,13 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
         #   최종 렌더만 서버 예비 계산으로 떨어졌다(미리보기·캡컷·ZIP엔 이 호출이 없었다). 표식은 편성 단계
         #   (_trim_for_cut_rhythm·_plan_and_tts의 _apply_phrase_min_cut)가 단다 — 표식 없는 칸은 화면도 없이 그렸다(화면이 이긴다).
         _sc.check_mutation(job_id, _scr_before, plan_used)
+        # ★인트로를 붙일 거면 완성본 소리의 무손실 원본을 남겨 둔다 — prepend_still 이 그것으로 소리를 **한 번만** 인코딩한다
+        #   (2026-09-27: 무음 인트로를 따로 AAC로 굽고 이어 붙이면 채움 표본이 한 벌 더 쌓였다 — 라이브 패킷 잉여 0.051초).
+        _audio_wav = (work / "final_audio.wav") if (_intro_on and _intro_png is not None) else None
         assemble(plan_used, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
-                 deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)
+                 deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths,
+                 **({"audio_wav_out": str(_audio_wav)} if _audio_wav else {}))   # 인트로 없으면 종전 호출 그대로
         _sc.summarize(job_id, _scr_mark)
         # 🖼 썸네일을 영상 맨 앞에 붙이기(2026-08-18 사장님 요청, 9단계 체크박스).
         #   켠 경우에만 돈다. 실패해도 렌더 자체는 살린다 — 인트로 때문에 완성 영상을
@@ -5701,10 +5901,17 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
         if _intro_on:
             try:
                 if _intro_png is not None:
-                    if prepend_still(str(out_path), str(_intro_png), seconds=_intro_sec):
+                    if prepend_still(str(out_path), str(_intro_png), seconds=_intro_sec,
+                                     audio_wav=str(_audio_wav) if _audio_wav else None):
                         _intro_shift = _intro_sec
             except Exception:
                 traceback.print_exc(file=sys.stderr)
+            finally:
+                if _audio_wav is not None:
+                    try:
+                        _audio_wav.unlink()
+                    except OSError:
+                        pass
         # ✂ CTA 잘라내기(2026-09-05 사장님 "유튜브 올릴 땐 뒷부분만 잘라내고 싶다").
         #   완성본에서 CTA 비트가 시작하는 시각을 지금 구해 DB에 박아둔다. 렌더가 끝나면
         #   이 값을 다시 구하기가 어렵다 — 비트별 절대시각은 어디에도 저장되지 않고,
