@@ -27,4 +27,10 @@ def test_로직에_핀_카드버튼과_플로팅_규칙이_있다():
     logic = (_ROOT / "userscript" / "grab_logic.js").read_text(encoding="utf-8")
     assert "function addPinCardBtns()" in logic and "try{addPinCardBtns();}" in logic
     assert "function syncPinFloat()" in logic and "try{syncPinFloat();}" in logic
-    assert "var LOGIC_VER = 20260911;" in logic, "LOGIC_VER를 올려야 옛 로직을 이긴다"
+    assert "var LOGIC_VER = 20260928;" in logic, "LOGIC_VER를 올려야 옛 로직을 이긴다"
+
+
+def test_핀터레스트_직접영상주소를_담기에_보낸다():
+    logic = (_ROOT / "userscript" / "grab_logic.js").read_text(encoding="utf-8")
+    assert '"pinimg.com"' in logic
+    assert 'direct.indexOf("pinimg.com") >= 0 ? direct : ""' in logic

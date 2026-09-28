@@ -688,10 +688,10 @@ def _download_via_relay(url, dest_dir):
                 shutil.copy2(src, dst)
             return str(dst), ""
         if rec and rec["status"] == "failed":
-            raise RuntimeError(f"유튜브 릴레이 실패({url}): {rec.get('error') or '알 수 없음'}")
+            raise RuntimeError(f"PC 다운로드 릴레이 실패({url}): {rec.get('error') or '알 수 없음'}")
         time.sleep(2)
     raise RuntimeError(
-        f"유튜브 릴레이 시간초과({url}, {config.YT_RELAY_POLL_TIMEOUT}s) — PC 에이전트가 켜져 있나 확인")
+        f"PC 다운로드 릴레이 시간초과({url}, {config.YT_RELAY_POLL_TIMEOUT}s) — PC 에이전트가 켜져 있나 확인")
 
 
 def _is_direct_video(u):
@@ -715,7 +715,7 @@ def _is_pinterest_host(host):
     return any(host == d or host.endswith("." + d) for d in doms)
 
 
-def _download_pinterest(url, dest_dir):
+def _download_pinterest(url, dest_dir, *, allow_relay=True):
     """핀터레스트 핀 페이지 URL → mp4 다운로드 (2026-08-29, 렌즈 핀터레스트 노출과 짝).
 
     핀 페이지의 JSON-LD VideoObject에서 mp4 직링크를 뽑아(무료·무로그인,
@@ -725,8 +725,17 @@ def _download_pinterest(url, dest_dir):
     분기가 없어 '지원하지 않는 URL'로 떨어졌다."""
     from shopping_shorts import pinterest_crawl
     from shopping_shorts.frame_extract import download_video
-    info = pinterest_crawl.pin_video_info(url)
+    try:
+        info = pinterest_crawl.pin_video_info(url)
+    except Exception:
+        if allow_relay and config.YT_RELAY_ENABLED and not config.YTDLP_PROXY:
+            return _download_via_relay(url, dest_dir)
+        raise
     if info is None:
+        # 데이터센터 IP에서는 영상 핀도 JSON-LD가 빠져 이미지 핀처럼 보인다.
+        # 운영 서버라면 PC 주거용 IP의 에이전트가 실제 영상 여부를 다시 판정한다.
+        if allow_relay and config.YT_RELAY_ENABLED and not config.YTDLP_PROXY:
+            return _download_via_relay(url, dest_dir)
         raise RuntimeError(f"영상이 없는 핀이에요(이미지 핀): {url}")
     caption = info.get("title") or info.get("description") or ""
     return str(download_video(info["video_url"], Path(dest_dir))), caption

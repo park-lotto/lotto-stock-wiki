@@ -15,7 +15,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260911;
+  var LOGIC_VER = 20260928;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -56,7 +56,7 @@
   //   그런데 브라우저에는 CDN 주소가 그대로 있다. 담는 순간 그걸 함께 보내면 서버가
   //   그 주소로 바로 받는다(download_any가 video_url을 우선 쓴다).
   //   blob:은 이 탭 안에서만 유효하므로 보내지 않는다 — 서버가 받을 수 없다.
-  var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com", "rednotecdn.com"];
+  var _MEDIA_HOSTS = ["zjcdn.com", "douyinvod.com", "xhscdn.com", "rednotecdn.com", "pinimg.com"];
   function _mediaFromPageHtml() {
     // RedNote의 새 플레이어는 실제 mp4를 MediaSource에 넣고 <video src>에는 blob:만
     // 남긴다(2026-09-14 라이브 실측). 그래도 현재 노트의 직접 mp4는 렌더된 DOM 안에
@@ -64,7 +64,7 @@
     // 매 tick마다 큰 DOM을 훑지 않고 currentVideoSrc() 호출 때만 실행한다.
     try {
       var html = document.documentElement.innerHTML || "";
-      var ms = html.match(/https:\/\/[^\"'<>\\\s]*(?:xhscdn|rednotecdn)\.com\/[^\"'<>\\\s]*\.mp4(?:\?[^\"'<>\\\s]*)?/gi) || [];
+      var ms = html.match(/https:\/\/[^\"'<>\\\s]*(?:xhscdn|rednotecdn|pinimg)\.com\/[^\"'<>\\\s]*\.mp4(?:\?[^\"'<>\\\s]*)?/gi) || [];
       return ms.length ? ms[0].replace(/&amp;/g, "&") : "";
     } catch (e) {}
     return "";
@@ -1191,7 +1191,8 @@
       var c = cards[i];
       if (c.getAttribute("data-ssgrab")) continue;
       var a = c.querySelector('a[href^="/pin/"]');
-      var im = c.querySelector("img, video");
+      var video = c.querySelector("video");
+      var im = c.querySelector("img") || video;
       if (!a || !im) continue;
       var rr = c.getBoundingClientRect();
       if (rr.width < 100 || rr.height < 100) continue;     // 아직 안 그려진(0x0) 카드는 다음 tick에
@@ -1205,12 +1206,21 @@
         "position:absolute;top:8px;left:8px;z-index:99999;background:#1f6feb;color:#fff;" +
         "border:none;border-radius:16px;width:34px;height:34px;font-size:16px;" +
         "box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer";
-      (function (a, im) {
+      (function (a, im, video) {
         b.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-          openGrab(a.href, im.poster || im.src || "", im.alt || im.getAttribute("aria-label") || "");
+          var direct = "";
+          if (video) {
+            direct = video.currentSrc || video.src || "";
+            if (direct.indexOf("pinimg.com") < 0) {
+              var source = video.querySelector("source");
+              direct = source ? (source.src || source.getAttribute("src") || "") : "";
+            }
+          }
+          openGrab(a.href, im.poster || im.src || "", im.alt || im.getAttribute("aria-label") || "",
+                   direct.indexOf("pinimg.com") >= 0 ? direct : "");
         }, true);
-      })(a, im);
+      })(a, im, video);
       c.appendChild(b);
     }
   }
