@@ -87,5 +87,34 @@ try:
     r = urllib.request.urlopen(BASE + u_after[0]); need(r.status == 200 and len(r.read()) > 1000, '⑥ ?v 붙은 주소로 그림이 실제로 내려온다')
 except Exception as e:
     need(False, f'⑥ ?v 붙은 주소 요청 실패 {e}')
+
+# ── 2026-09-26 사장님 "썸네일로 보냈는데 비율이 안 맞는다" ──
+# ⑦ 핀의 사진 칸은 **완성본(compose)과 같은 구도**여야 한다. **위→아래로 밝아지는** 원본(세로 위치가 곧 밝기)으로 핀과 compose 첫 프레임을 대조.
+#   고치기 전: 원본 9:16 전체 위에 레이어만 얹어 사진 칸이 원본 아랫부분 = compose와 크게 다름.
+from PIL import ImageChops, ImageStat
+JOB2 = 'pin-geom-qa'
+(work / JOB2).mkdir(parents=True, exist_ok=True)
+va._run_ffmpeg(['ffmpeg', '-y', '-f', 'lavfi', '-i', 'nullsrc=s=1080x1920:d=3:r=30,format=gray,geq=lum=Y*255/1920', '-pix_fmt', 'yuv420p', str(work / JOB2 / 'final.mp4')])
+store.create_mix_job(JOB2, [], 3, 'free')
+store.update_mix_job(JOB2, edit_plan=plan, headcopy={'text': '빗질 한 번에 무슨\n일이 벌어질까', 'subline': '손에 에센스 묻혀가며'},
+                     deco={'scene_style': snap})
+r7 = urllib.request.urlopen(urllib.request.Request(f'{BASE}/api/produce/thumb/pin', data=json.dumps(
+    {'job_id': JOB2, 'beat_idx': 0, 'scene_index': 0, 'styled': True, 'scene_style': snap}).encode('utf-8'),
+    headers={'Content-Type': 'application/json'}))
+d7 = json.loads(r7.read())
+timeline = va._beat_timeline(plan, {b['beat_idx']: b['tts_path'] for b in plan['beats']})
+cw = out / 'compose7'; shutil.rmtree(cw, ignore_errors=True); cw.mkdir()
+scene_style.compose(str(work / JOB2 / 'final.mp4'), timeline, snap, str(cw / 'out.mp4'), str(cw),
+                    {'text': '빗질 한 번에 무슨\n일이 벌어질까', 'subline': '손에 에센스 묻혀가며'})
+va._run_ffmpeg(['ffmpeg', '-y', '-ss', '0', '-i', str(cw / 'out.mp4'), '-frames:v', '1', str(cw / 'f0.png')])
+media = json.loads((cw / 'scene-style-layers.json').read_text(encoding='utf-8'))[0]['media']
+y0 = int((media['top'] + 3) * 1920 / 100)
+box = (0, y0, 1080, 1900)
+pin_img = Image.open(module._thumb_dir(JOB2) / d7['name']).convert('L').crop(box)
+ref_img = Image.open(cw / 'f0.png').convert('L').crop(box)
+diff7 = round(ImageStat.Stat(ImageChops.difference(pin_img, ref_img)).mean[0], 1)
+shutil.copyfile(module._thumb_dir(JOB2) / d7['name'], out / 'pin_geom.jpg'); shutil.copyfile(cw / 'f0.png', out / 'compose_f0.png')
+need(d7.get('styled') and diff7 < 8, f"⑦ 핀 사진 칸 = 완성본 구도 (사진칸 평균차 {diff7}, media {media}) — 고치기 전엔 크게 다름")
+
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')
 sys.exit(1 if fails else 0)

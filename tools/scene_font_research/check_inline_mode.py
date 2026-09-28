@@ -62,7 +62,7 @@ with sync_playwright() as p:
     d = json.loads(urllib.request.urlopen(f'{BASE}/api/produce/scene-style/flags').read())
     need(d.get('inline') is True, f'② 스위치 "1" → flags.inline=true ({d})')
     pg = b.new_context(viewport={'width': 1500, 'height': 1000}).new_page(); open_page(pg)
-    r0 = pg.evaluate(PROBE); need(not r0['show'] and not r0['inlineActive'], f'② 6단계 전엔 아무것도 안 연다 ({r0})')
+    r0 = pg.evaluate(PROBE); need(not r0['show'] and not r0['iframeSrc'], f'② 6단계 전엔 편집기를 안 연다(구버전 숨김 표시는 미리 붙어도 패널이 안 보인다) ({r0})')
     goto_step6(pg); r = pg.evaluate(PROBE); fr = editor_frame(pg)
     need(r['show'] and r['hasInline'] and r['inlineActive'] and r['iframeSrc'] and not r['btnVisible'] and not r['dialogOpen'], f'② 6단계에 오면 새 편집기가 패널 안에 바로, 구버전 UI·버튼 숨김, 팝업 없음 ({r})')
     need(fr is not None and fr.evaluate("window.sceneStyle.context().jobId") == JOB, f'② 인라인 편집기가 이 작업 컨텍스트를 실었다 (jobId {fr and fr.evaluate("window.sceneStyle.context().jobId")})')
@@ -75,6 +75,50 @@ with sync_playwright() as p:
     r2 = pg.evaluate(PROBE); need(not r2['show'] and draft, f'③ 6단계를 떠나면 임시저장본이 남는다 (draft {"있음" if draft else "없음"})')
     goto_step6(pg); r3 = pg.evaluate(PROBE); fr2 = editor_frame(pg)
     need(r3['inlineActive'] and fr2 is not None and fr2.evaluate("window.sceneStyle.context().jobId") == JOB, f'③ 다시 오면 다시 열린다 ({r3["inlineActive"]})')
-    pg.close(); b.close()
+    pg.close()
+    # ④ 2026-09-26 사장님 "장면꾸미기를 누르면 구버전이 나오고 신버전 편집을 눌러야 넘어간다":
+    #   제목 후보(AI)가 느리면 그동안 구버전 UI·회색 버튼이 보였다 → 6단계에 오자마자(1초 안) 구버전은 숨어 있어야 한다.
+    import time as _t
+    _fast = module.headcopy_gen.suggest
+    def _slow(*a, **k): _t.sleep(6); return _fast(*a, **k)
+    module.headcopy_gen.suggest = _slow
+    pg = b.new_context(viewport={'width': 1500, 'height': 1000}).new_page(); open_page(pg)
+    pg.evaluate("cur=3;showPanel()"); pg.wait_for_timeout(800); r4 = pg.evaluate(PROBE)
+    need(r4['inlineActive'] and not r4['btnVisible'], f'④ 제목 후보가 느려도 6단계에 오자마자 구버전·회색 버튼은 숨김 ({r4})')
+    pg.screenshot(path=str(out / 'slow_step6.png'))
+    fr4 = None
+    for _ in range(20):
+        fr4 = next((x for x in pg.frames if 'scene-style-ui-showcase' in x.url), None)
+        if fr4: break
+        pg.wait_for_timeout(1000)
+    need(fr4 is not None, '④ 느려도 결국 새 편집기가 열린다')
+    module.headcopy_gen.suggest = _fast
+    pg.close()
+    # ⑤ 장면 불러오기가 실패해도 구버전으로 떨어지지 않고, 새 편집기 자리에 이유 + [다시 시도]가 나온다
+    pg = b.new_context(viewport={'width': 1500, 'height': 1000}).new_page()
+    pg.route('**/api/produce/scene-style/context/**', lambda route: route.fulfill(status=500, body='{"ok":false,"error":"장면을 불러오지 못했습니다(시험)"}', content_type='application/json'))
+    open_page(pg); goto_step6(pg); r5 = pg.evaluate(PROBE)
+    note5 = pg.evaluate("document.getElementById('sceneStyleInlineStatus')?.innerText||''")
+    retry5 = pg.evaluate("!!document.querySelector('#sceneStyleInline button[data-retry]')")
+    need(r5['inlineActive'] and not r5['btnVisible'] and '시험' in note5 and retry5, f'⑤ 불러오기 실패 → 구버전 안 나옴, 이유·다시 시도 표시 ({r5}, note={note5!r}, retry={retry5})')
+    pg.unroute('**/api/produce/scene-style/context/**')
+    if retry5:
+        pg.click('#sceneStyleInline button[data-retry]'); pg.wait_for_timeout(3000)
+        print('   ⑤ 다시시도 뒤 안내:', pg.evaluate("document.getElementById('sceneStyleInlineStatus')?.innerText"), pg.evaluate(PROBE))
+        fr5 = editor_frame(pg)
+        need(fr5 is not None and fr5.evaluate("window.sceneStyle.context().jobId") == JOB, '⑤ [다시 시도]를 누르면 새 편집기가 열린다')
+    pg.screenshot(path=str(out / 'fail_step6.png')); pg.close();
+    # ⑥ 사장님 job 65358b12dd6e 실측: 6단계가 **작업번호(MIX_JOB)보다 먼저** 보이면 편집기 요청이 한 번도 안 나갔다
+    #   → 구버전+회색 버튼이 남고 버튼을 눌러야 열렸다. 작업번호가 늦게 와도 스스로 열려야 하고, 그 사이 구버전은 숨어야 한다.
+    pg = b.new_context(viewport={'width': 1500, 'height': 1000}).new_page()
+    pg.goto(f'{BASE}/produce.html', wait_until='domcontentloaded'); pg.wait_for_timeout(2500)
+    pg.evaluate(STATE_JS.replace(f"MIX_JOB='{JOB}'", "MIX_JOB=''")); pg.evaluate("cur=3;showPanel()"); pg.wait_for_timeout(1500)
+    r6a = pg.evaluate(PROBE)
+    need(r6a['inlineActive'] and not r6a['btnVisible'], f'⑥ 작업번호 전: 구버전·회색 버튼 숨김 ({r6a})')
+    pg.evaluate(f"MIX_JOB='{JOB}'"); pg.wait_for_timeout(2500)
+    fr6 = next((x for x in pg.frames if 'scene-style-ui-showcase' in x.url), None)
+    if fr6: fr6.wait_for_function("window.sceneStyle&&window.sceneStyle.context()", timeout=20000)
+    need(fr6 is not None and fr6.evaluate("window.sceneStyle.context().jobId") == JOB, '⑥ 작업번호가 늦게 와도 누르지 않고 새 편집기가 스스로 열린다')
+    pg.screenshot(path=str(out / 'late_job_step6.png')); pg.close(); b.close()
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')
 sys.exit(1 if fails else 0)

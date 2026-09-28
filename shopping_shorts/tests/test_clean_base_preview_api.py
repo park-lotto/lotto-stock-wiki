@@ -21,6 +21,9 @@ def _setup(tmp_path, monkeypatch, setting="1"):
         def get_mix_job(self, j): return job
         def get_setting(self, k, d=None): return setting
     monkeypatch.setattr(A, "Store", lambda db: _S())
+    # 안내 초 = 증분 청소가 보낼 초(원본 파일을 찾는 조각만, 2026-09-27) — 이 가짜 job 엔 urls 가 없어 원본 지도를 직접 준다
+    from shopping_shorts import mix_pipeline as _mp
+    monkeypatch.setattr(_mp, "_resolve_sources", lambda j, w: {"s0": str(work / "s0.mp4"), "s1": str(work / "s1.mp4")})
     return job
 
 
@@ -47,8 +50,9 @@ def test_preview_disabled_when_switch_off(tmp_path, monkeypatch):
 
 
 def test_produce_html_asks_before_render():
+    """렌더 전 확인은 이제 **서버가 강제**한다(2026-09-27): /api/mix/render 가 409 + 안내를 주면 화면이 그 문구로 묻고
+    표식(confirm_clean·confirm_secs)을 실어 다시 보낸다. 동작 검사는 test_clean_consent 의 node 테스트가 한다."""
     from pathlib import Path
     html = Path(A.__file__).parent.joinpath("static", "produce.html").read_text(encoding="utf-8")
-    i = html.find("clean_base_preview"); j = html.find("fetch('/api/mix/render'")
-    assert 0 < i < j, "안내 호출이 렌더 요청보다 앞에 있어야 한다"
-    assert "추가 과금 없음" in html
+    body = html.split("async function renderFinal(){", 1)[1].split("async function pollFinal(", 1)[0]
+    assert "need_clean_confirm" in body and "confirm_secs" in body and "추가 과금 없음" in body

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>공유 받기 · 숏템메이커</title>
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411">
+<script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<style>
+  /* fav_channels·collection과 같은 토큰 — 담긴 곳과 한 벌로 보여야 한다. */
+:root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;--accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--gold:#f0c453;--inset:#0c1412;--sel-fg:#6ff0d6;color-scheme:dark;}
+:root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;--accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--gold:#b8860b;--inset:#eef7f3;--sel-fg:#0a7d66;color-scheme:light;}
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;margin:0;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+  .box{width:100%;max-width:420px;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:24px 18px 18px;text-align:center}
+  .ico{font-size:38px;line-height:1;min-height:38px}
+  .ttl{font-size:19px;font-weight:800;margin:12px 0 6px}
+  .msg{font-size:14px;color:var(--sub);line-height:1.6;word-break:break-all}
+  .ch{margin:12px 0 0;font-size:15px;font-weight:700;color:var(--sel-fg);word-break:break-all}
+  .link{margin-top:14px;font-size:11.5px;color:var(--sub);background:var(--inset);border-radius:8px;
+    padding:8px 10px;word-break:break-all;text-align:left}
+  .btns{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+  .btns a,.btns button{display:block;width:100%;border-radius:12px;padding:15px 12px;font-size:16px;font-weight:800;
+    text-decoration:none;font-family:inherit;cursor:pointer;border:1px solid var(--line);
+    background:var(--inset);color:var(--txt);text-align:center}
+  .btns .pick{background:var(--accent2);border-color:var(--accent2);color:#fff}
+  .btns .pick small{display:block;font-size:12px;font-weight:500;opacity:.85;margin-top:3px}
+  .btns button:disabled{opacity:.5}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;
+    margin:0 auto;animation:r .8s linear infinite}
+  @keyframes r{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="box">
+  <div id="ico"><div class="spin"></div></div>
+  <div class="ttl" id="ttl">공유 받는 중…</div>
+  <div class="msg" id="msg"></div>
+  <div class="ch" id="ch"></div>
+  <div class="btns" id="btns"></div>
+  <div class="link" id="link" style="display:none"></div>
+</div>
+<script>
+// 폰 [공유] → 숏템메이커 → 여기(manifest share_target). 앱마다 주소를 넣는 칸이
+// 달라서(url/text/title) 셋을 그대로 서버에 넘긴다 — 주소 고르기·담기 판단은 서버(/api/share)가 한다.
+// 흐름: 열리면 주소만 확인(dest 없음) → [영상 담기]/[채널 담기] 중 하나 → 결과.
+const q=new URLSearchParams(location.search);
+const SHARED={url:q.get('url')||'',text:q.get('text')||'',title:q.get('title')||''};
+const PLAT={instagram:"인스타",tiktok:"틱톡",youtube:"유튜브",threads:"쓰레드",xiaohongshu:"샤오홍슈",douyin:"도우인"};
+function $(id){return document.getElementById(id);}
+function setIco(t){ $('ico').innerHTML=''; const d=document.createElement('div'); d.className='ico'; d.textContent=t; $('ico').appendChild(d); }
+function spin(){ $('ico').innerHTML='<div class="spin"></div>'; }
+function btn(cls,html,fn){ const b=document.createElement('button'); b.className=cls; b.innerHTML=html; b.onclick=fn; $('btns').appendChild(b); return b; }
+function link(u){ if(u){ $('link').style.display='block'; $('link').textContent=u; } }
+function closeMe(){ window.close(); setTimeout(function(){ location.href='/collection'; },300); }
+async function call(dest){
+  const r=await fetch('/api/share',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(Object.assign({dest:dest},SHARED))});
+  return r.json();
+}
+function fail(ico,ttl,msg){
+  setIco(ico); $('ttl').textContent=ttl; $('msg').textContent=msg||''; $('btns').innerHTML='';
+  btn('','닫기',closeMe);
+}
+async function start(){
+  let d;
+  try{ d=await call(''); }catch(e){ return fail('⚠','통신 오류','잠시 뒤 다시 공유해 주세요'); }
+  if(d.status==='login')  return fail('⛔','로그인이 필요해요','숏템메이커에 로그인한 뒤 다시 공유해 주세요');
+  if(d.status==='nolink'){ fail('❌','주소가 없어요','영상이나 채널 화면에서 [공유]를 눌러주세요'); return link(SHARED.text||SHARED.title); }
+  setIco('📥'); $('ttl').textContent='어디에 담을까요?';
+  $('msg').textContent=(PLAT[d.platform]||'')+(PLAT[d.platform]?' 링크를 받았어요':'받은 링크');
+  link(d.link);
+  btn('pick','🎬 영상 담기<small>⭐영상 즐겨찾기 — 이 영상 하나</small>',function(){ pick('video'); });
+  btn('pick','⭐ 채널 담기<small>⭐나만의 채널등록 — 이 영상을 올린 채널</small>',function(){ pick('channel'); });
+  btn('','닫기',closeMe);
+}
+async function pick(dest){
+  $('btns').querySelectorAll('button').forEach(function(b){ b.disabled=true; });
+  spin(); $('ttl').textContent=dest==='video'?'영상 담는 중…':'채널 찾는 중…';
+  $('msg').textContent=dest==='channel'?'영상을 올린 채널을 확인하고 있어요 (몇 초 걸려요)':'';
+  let d;
+  try{ d=await call(dest); }catch(e){ return fail('⚠','통신 오류','잠시 뒤 다시 공유해 주세요'); }
+  const where=dest==='video'?'/collection':'/fav_channels';
+  const whereName=dest==='video'?'⭐ 영상 즐겨찾기 보기':'⭐ 나만의 채널등록 보기';
+  const T={
+    video:{added:['✅','영상 즐겨찾기에 담았어요'],exists:['✔','이미 담긴 영상이에요'],
+           pending:['⏳','승인 대기중이에요','운영자 승인 후 담기를 쓸 수 있어요'],
+           paid:['🔒','유료 기능이에요','무료 체험이 끝났어요. 결제하면 영상 담기를 계속 쓸 수 있어요'],
+           badlink:['❌','담을 수 없는 링크예요','유튜브·틱톡·인스타·쓰레드·샤오홍슈·도우인 영상에서 공유해 주세요']},
+    channel:{added:['✅','나만의 채널에 담았어요'],exists:['✔','이미 담긴 채널이에요'],
+           full:['⚠','자리가 다 찼어요','나만의 채널은 최대 '+(d.cap||50)+'개예요. 안 보는 채널을 빼고 다시 공유해 주세요.'],
+           notfound:['❌','채널을 못 찾았어요','인스타·틱톡·유튜브 영상이나 채널 화면에서 공유해 주세요']}
+  }[dest][d.status] || ['⚠','담지 못했어요',d.error||''];
+  setIco(T[0]); $('ttl').textContent=T[1]; $('msg').textContent=T[2]||'';
+  $('ch').textContent=(dest==='channel'&&d.channel_id)?((PLAT[d.platform]||d.platform||'')+' · @'+d.channel_id+(d.name?' · '+d.name:'')):'';
+  $('btns').innerHTML='';
+  if(d.ok){ const a=document.createElement('a'); a.className='pick'; a.href=where; a.textContent=whereName; $('btns').appendChild(a); }
+  // 영상·채널 둘 다 담고 싶을 수 있다 — 다른 쪽도 바로 누를 수 있게 남긴다.
+  if(dest==='video') btn('','⭐ 이 영상의 채널도 담기',function(){ pick('channel'); });
+  else btn('','🎬 이 영상도 담기',function(){ pick('video'); });
+  btn('','닫기',closeMe);
+}
+start();
+</script>
+</body>
+</html>

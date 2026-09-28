@@ -45,7 +45,7 @@ def test_script_generate_is_a_switchable_op():
 
 def test_call_json_uses_vertex_first_and_marks_note(monkeypatch):
     vcl = _client(answer={"a": "vertex"}, name="vertex")
-    monkeypatch.setattr(vr, "client", lambda: vcl)
+    monkeypatch.setattr(vr, "client", lambda *a, **k: vcl)
     monkeypatch.setattr(sg.keyroute, "gemini_keys", lambda *_a, **_k: pytest.fail("Vertex 성공인데 키풀을 건드렸다"))
     note = {}
     out = sg._call_json("p", SCHEMA, note=note)
@@ -56,7 +56,7 @@ def test_call_json_uses_vertex_first_and_marks_note(monkeypatch):
 
 
 def test_call_json_falls_back_to_keypool_when_vertex_fails(monkeypatch):
-    monkeypatch.setattr(vr, "client", lambda: _client(error=RuntimeError("503 UNAVAILABLE"), name="vertex"))
+    monkeypatch.setattr(vr, "client", lambda *a, **k: _client(error=RuntimeError("503 UNAVAILABLE"), name="vertex"))
     monkeypatch.setattr(sg.keyroute, "gemini_keys", lambda *_a, **_k: ["k1"])
     monkeypatch.setattr(sg.key_vault, "pick_paced_key", lambda pool: pool[0])
     kcl = _client(answer={"a": "key"}, name="key")
@@ -68,7 +68,7 @@ def test_call_json_falls_back_to_keypool_when_vertex_fails(monkeypatch):
 
 def test_call_json_vertex_false_skips_vertex(monkeypatch):
     """ai_match처럼 자기 Vertex 시도를 이미 한 호출부는 두 번 두드리지 않는다."""
-    monkeypatch.setattr(vr, "client", lambda: pytest.fail("vertex=False인데 Vertex를 불렀다"))
+    monkeypatch.setattr(vr, "client", lambda *a, **k: pytest.fail("vertex=False인데 Vertex를 불렀다"))
     monkeypatch.setattr(sg.keyroute, "gemini_keys", lambda *_a, **_k: ["k1"])
     monkeypatch.setattr(sg.key_vault, "pick_paced_key", lambda pool: pool[0])
     monkeypatch.setattr(sg.key_vault, "get_client_for_key", lambda k: _client(answer={"a": "key"}))

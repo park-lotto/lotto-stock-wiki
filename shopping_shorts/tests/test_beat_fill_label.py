@@ -35,6 +35,7 @@ def _harness(body):
     keep = []
     for name in ("function trimPieces", "function effLen", "function beatSyncSpeed",
                  "function planClips",
+                 "function beatKeyAt",      # beatDur가 위치→번호 변환(2026-09-27)으로 부른다
                  "function beatDur"):
         m = re.search(re.escape(name) + r".*?(?=\n(?:const |let |var |function |//))", src, re.S)
         assert m, f"{name} 를 scene_play.js에서 못 찾았다 — 이름이 바뀌었나?"

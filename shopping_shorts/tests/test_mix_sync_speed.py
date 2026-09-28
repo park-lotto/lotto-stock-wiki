@@ -132,7 +132,9 @@ def test_구워진_청소조각을_캡컷_배속용_길이로_역변환한다(tm
 
 def test_렌더는_빠른_setpts도_적용한다():
     src = inspect.getsource(video_assemble._render_mix)
-    assert "abs(factor - 1.0)" in src
+    # 2026-09-27: 배율과 상관없이 늘 cut_setpts((PTS-STARTPTS)*factor)를 건다 — 빠르게(factor<1)도 같은 식
+    assert "cut_setpts(factor)" in src
+    assert video_assemble.cut_setpts(0.714286) == "setpts=(PTS-STARTPTS)*0.714286"
 
 
 @pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg 없음")

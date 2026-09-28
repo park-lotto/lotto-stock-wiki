@@ -24,7 +24,7 @@ def page(b):
 def helpers(pg):
     show = lambda i: (pg.evaluate(f'window.sceneStyle.show({i})'), pg.wait_for_timeout(300))
     top = lambda: pg.evaluate(f"(()=>{{const e=document.querySelector('{CAP}');const r=document.querySelector('#a-live-preview').getBoundingClientRect();return e?Math.round((e.getBoundingClientRect().top-r.top)/r.height*1000)/10:null}})()")
-    def open_panel(): pg.evaluate("()=>{const s=document.querySelector('[data-caption-look-scope]');for(let e=s;e;e=e.parentElement){if(e.tagName==='DETAILS')e.open=true;if(e.hidden)e.hidden=false}return 1}")
+    def open_panel(): pg.evaluate("()=>{const s=document.querySelectorAll('.layout-a details').forEach(d=>d.open=true);return 1}")
     def put(k, v): open_panel(); pg.evaluate("([k,v])=>{const i=document.querySelector(`[data-caption-layout=\"${k}\"]`);i.value=v;i.dispatchEvent(new Event('input',{bubbles:true}));return 1}", [k, v]); pg.wait_for_timeout(250)
     return show, top, open_panel, put
 with sync_playwright() as p:

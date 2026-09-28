@@ -12,16 +12,18 @@
   window.SS_CANARY=canaryEnabled;
   let canaryRequest=0,canaryJobId='';
   const currentMixJob=()=>String(typeof MIX_JOB==='undefined'?'':(MIX_JOB||'')).trim();
-  const status=()=>document.getElementById('sceneStyleStatus');
+  const status=()=>(typeof inlineMode!=='undefined'&&inlineMode&&document.getElementById('sceneStyleInlineStatus'))||document.getElementById('sceneStyleStatus');
   const draftKey=id=>'scene-style-draft:'+id;
   // 저장본 비교 — 키 순서·undefined에 흔들리지 않게 정렬해 문자열로 견준다
   const stable=v=>JSON.stringify(v,(k,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,key)=>{if(x[key]!==undefined)o[key]=x[key];return o},{}):x);
-  const sameSnapshot=(a,b)=>stable(a||null)===stable(b||null);
+  // 화면 전용 값(보고 있던 장면·틀)은 빼고 견준다 — 서버 scene_style.render_view와 같은 목록(2026-09-28)
+  const renderView=s=>{if(!s||typeof s!=='object')return null;const {sceneIndex,frameKind,...rest}=s;if(rest.text&&typeof rest.text==='object'){const {caption,...t}=rest.text;rest.text=t;}return rest;};   // text.caption = 보고 있는 장면의 자막 글(장면별 편집은 captionTexts)
+  const sameSnapshot=(a,b)=>stable(renderView(a))===stable(renderView(b));
   let serverText=null;   // 이번에 열 때 서버가 준 제목 글 — 임시저장 복원 때 '고친 칸' 판정 기준
   // ★인라인 모드(2026-09-23 사장님: "구버전에서 신버전으로 바꾸는 작업, 라이브 방송 뒤 바로 교체되게 기본 세팅 먼저").
   //   관리자 스위치 scene_style_inline_enabled(기본 끔)가 켜지면 6단계 패널 안에 새 편집기를 바로 띄우고 구버전 UI를 숨긴다.
   //   팝업(dialog)과 **같은 iframe·같은 메시지 흐름**을 쓴다 — 갈라 두면 둘이 어긋난다(0순위-B). 끄면 종전 화면 그대로.
-  let inlineMode=false,inlineShell=null,inlineOpen=false;
+  let inlineMode=false,inlineShell=null,inlineOpen=false,inlineFailed=false;
   const editorOpen=()=>inlineMode?inlineOpen:!!dialog?.open;
   const stepPanel=()=>document.querySelector('.panel[data-step="3"]');
   function ensureInlineShell(){
@@ -53,11 +55,19 @@
     {const p=stepPanel(),cs=document.getElementById('sceneStyleCanary');p?.classList.remove('scene-style-canary-active');if(cs)cs.hidden=true;}
     const panel=stepPanel();if(!panel)return;
     ensureInlineShell();
+    // ★구버전은 **처음부터** 숨긴다(2026-09-26 사장님 "장면꾸미기를 누르면 구버전이 나오고 신버전 편집을 눌러야 넘어간다").
+    //   예전엔 새 편집기를 다 불러온 뒤에야 숨겨, 불러오는 동안·실패·작업번호(MIX_JOB)가 늦게 온 경우 구버전+회색 버튼이 남았다.
+    //   실측: 사장님 job 65358b12dd6e — 6단계가 떴는데 context 요청이 한 번도 안 나갔다(작업번호 전에 패널이 먼저 보임).
+    panel.classList.add('scene-style-inline-active');
     // 6단계 패널이 보이면 자동으로 열고, 떠나면 임시저장(+적용한 job은 서버 저장) — 사용자가 누를 버튼이 없다
-    const sync=()=>{const visible=panel.classList.contains('show');
-      if(visible&&MIX_JOB&&(!inlineOpen||jobId!==MIX_JOB))openSceneStyleEditor();
+    let opening=false;
+    const sync=async()=>{const visible=panel.classList.contains('show');
+      if(visible&&!MIX_JOB&&!inlineOpen){const n=document.getElementById('sceneStyleInlineStatus');if(n&&!n.textContent)n.textContent='영상 정보를 불러오는 중…';}
+      if(visible&&MIX_JOB&&!opening&&(!inlineOpen||jobId!==MIX_JOB)){opening=true;try{await openSceneStyleEditor();}finally{opening=false;}}
       else if(!visible&&inlineOpen)leaveInline();};
     new MutationObserver(sync).observe(panel,{attributes:true,attributeFilter:['class']});sync();
+    // 작업번호(MIX_JOB)는 패널 표시와 따로 온다 — 클래스 변화만 보면 늦게 온 작업번호를 놓친다. 6단계가 보이는 동안만 1초마다 확인.
+    setInterval(()=>{if(panel.classList.contains('show')&&MIX_JOB&&!inlineOpen&&!opening&&!inlineFailed)sync();},1000);
   }
   async function leaveInline(){
     try{const api=frame?.contentWindow?.sceneStyle;if(api?.context()?.jobId===jobId&&applied())await saveSnapshot(stashDraft());else stashDraft();}catch(error){status().textContent=error.message;}
@@ -128,7 +138,7 @@
   //   덮어써서, 두 번째로 열었다 닫을 때 "적용한 적 있다"로 잘못 읽히는 구멍이 있다.
   const applied=()=>appliedOnServer;
   addEventListener('pagehide',()=>{
-    const snapshot=stashDraft();if(!snapshot||!applied())return;
+    const snapshot=stashDraft();if(!snapshot||!applied()||sameSnapshot(snapshot,packet.snapshot))return;   // 서버 저장본과 같으면 안 올린다(올리면 완성본이 무효화되던 자리)
     fetch('/api/produce/mix/settings',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:jobId,scene_style:snapshot})}).catch(()=>{});
   });
   function saveSnapshot(snapshot){
@@ -152,7 +162,8 @@
     try{
       const api=frame?.contentWindow?.sceneStyle;
       // 닫기·ESC는 **적용한 적 있는 job만** 저장한다(위 applied() 주석과 같은 이유).
-      if(api?.context()?.jobId===jobId&&applied())await saveSnapshot(stashDraft());
+      // ★서버 저장본과 같으면(다른 장면을 구경만 했으면) 올리지 않는다 — 2026-09-28 사장님 job 8c63b0691924: 렌더 뒤 [닫기]만 눌렀는데 완성본이 사라졌다.
+      if(api?.context()?.jobId===jobId&&applied()){const s=stashDraft();if(!sameSnapshot(s,packet.snapshot))await saveSnapshot(s);}
       else stashDraft();
       if(dialog?.open)dialog.close();
     }catch(error){status().textContent=error.message;frame.contentWindow.postMessage({type:'scene-style-saved',ok:false,error:error.message},location.origin);}
@@ -270,7 +281,7 @@
       }catch(error){status().textContent='남겨둔 편집을 복원했습니다. 서버 저장은 다시 시도해 주세요.';}
       if(inlineMode){
         ensureInlineShell();const panel=stepPanel();panel.classList.add('scene-style-inline-active');
-        const note=document.getElementById('sceneStyleInlineStatus');if(note)note.textContent='';
+        const note=document.getElementById('sceneStyleInlineStatus');if(note)note.textContent='';inlineFailed=false;
         frame.src='/api/produce/scene-style/assets/out/scene-style-ui-showcase.html?embedded=1';inlineOpen=true;status().textContent='';return;
       }
       if(!dialog){
@@ -282,7 +293,15 @@
         frame=document.createElement('iframe');frame.title='문구와 효과 편집기';frame.style.cssText='width:100%;height:calc(100% - 45px);border:0';dialog.append(bar,frame);document.body.append(dialog);
       }
       frame.src='/api/produce/scene-style/assets/out/scene-style-ui-showcase.html?embedded=1';dialog.showModal();status().textContent='';
-    }catch(error){status().textContent=error.message;}
+    }catch(error){
+      if(inlineMode){
+        // 구버전으로 떨어뜨리지 않는다 — 이유와 [다시 시도]를 새 편집기 자리에.
+        inlineFailed=true;const n=document.getElementById('sceneStyleInlineStatus');
+        if(n){n.textContent=(error.message||'편집기를 불러오지 못했습니다.')+' ';const b=document.createElement('button');b.type='button';b.dataset.retry='1';b.className='btn';b.textContent='다시 시도';
+          b.onclick=()=>{inlineFailed=false;n.textContent='다시 불러오는 중…';openSceneStyleEditor();};n.append(b);}
+        return;
+      }
+      status().textContent=error.message;}
   };
   addEventListener('message',async event=>{
     if(event.data?.type==='scene-style-legacy'){

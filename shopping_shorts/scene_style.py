@@ -151,11 +151,44 @@ def validate_snapshot(value):
     return {key: val for key, val in value.items() if key in allowed}
 
 
-_TINY_GAP = 0.35   # 이보다 짧은 '자막 없는 틈'은 장면으로 세지 않는다(초)
+# ★화면 전용 값(2026-09-28 사장님 job 8c63b0691924 실사고): 편집기 저장값에는 '보고 있던 장면(sceneIndex)·틀(frameKind)'이 담긴다.
+#   렌더는 장면마다 show(i)를 다시 부르므로 이 둘은 그림에 영향이 없다. 그런데 서버가 저장값을 통째로 비교해
+#   렌더가 끝난 뒤 편집기를 열어 다른 장면을 구경하고 [닫기]만 눌러도 "설정이 바뀌었다"며 완성본을 버렸다.
+#   '설정이 바뀌었나'는 전부 이 함수를 거친다 — app._save_render_inputs(무효화) · mix_pipeline._render_stamp(도장) ·
+#   편집기 scene-style-produce.js sameSnapshot(올릴지 말지)가 같은 키 목록을 본다.
+VIEW_ONLY_KEYS = ("sceneIndex", "frameKind")
+#   text.caption 도 화면 전용이다 — 편집기 syncCaption()이 장면을 넘길 때마다 그 장면 자막 글로 덮어쓴다(precision20-ui.js).
+#   장면별 자막 편집은 captionTexts 에 따로 담기므로 비교에서 text.caption 을 빼도 진짜 편집은 잡힌다(check_reopen_keeps_render ③ 실측).
+VIEW_ONLY_TEXT_KEYS = ("caption",)
+
+
+def render_view(snapshot):
+    """렌더에 영향 있는 부분만 남긴 저장값 — 비교·도장 전용(저장은 원본 그대로)."""
+    if not isinstance(snapshot, dict):
+        return snapshot
+    view = {k: v for k, v in snapshot.items() if k not in VIEW_ONLY_KEYS}
+    if isinstance(view.get("text"), dict):
+        view["text"] = {k: v for k, v in view["text"].items() if k not in VIEW_ONLY_TEXT_KEYS}
+    return view
+
+
+def deco_render_view(deco):
+    """deco 전체에서 scene_style만 render_view로 정규화한 사본."""
+    if isinstance(deco, dict) and isinstance(deco.get("scene_style"), dict):
+        return {**deco, "scene_style": render_view(deco["scene_style"])}
+    return deco
+
+
+from .video_assemble import _LEAD_ABSORB as _TINY_GAP   # 이보다 짧은 '자막 없는 틈'은 장면으로 세지 않는다(초) — 값은 video_assemble 한 곳
 
 
 def _absorb_tiny_gaps(scenes):
-    """자막이 비는 아주 짧은 틈(음성이 비트 시작보다 살짝 늦는 cap_lead 등)을 이웃 자막 장면에 붙인다.
+    """자막이 비는 아주 짧은 **뒤** 틈을 앞 자막 장면에 붙인다.
+
+    ★칸 **앞** 틈(cap_lead)은 여기서 판단하지 않는다(2026-09-27) — 자막 시각의 주인 caption_schedule 이
+      absorb_lead(caption_lead_absorb)로 첫 자막을 칸 시작부터 띄워 오므로, 앞 틈 장면은 애초에 생기지 않는다.
+      종전엔 여기서만 앞 틈을 흡수해 3단계 화면·음성 미리보기(말 시작부터)와 완성본(칸 시작부터)이 갈렸다.
+    (아래는 종전 설명 — 앞 틈 부분은 caption_schedule 로 옮겨 갔다)
 
     2026-09-22 사장님 "본문 첫 자막이 없음": job d29a2bd26032 본문 첫 비트가 3.58~3.74(0.16초) 빈 장면 → 편집기에
     '5/35 장면'으로 빈 띠가 뜨고, 렌더에도 5프레임 빈 띠가 들어갔다. 훅 맨 앞 0.21초도 같은 꼴.
@@ -168,20 +201,14 @@ def _absorb_tiny_gaps(scenes):
         if out and out[-1]["beat_idx"] == sc["beat_idx"] and out[-1]["caption"]:
             out[-1]["end"] = sc["end"]           # 뒤 틈 → 앞 자막이 끝까지
             continue
-        out.append(dict(sc, _lead=True))         # 앞 틈 → 다음 자막이 오면 거기에 붙인다
-    result = []
-    for sc in out:
-        if result and result[-1].get("_lead") and result[-1]["beat_idx"] == sc["beat_idx"] and sc["caption"]:
-            sc = dict(sc, start=result[-1]["start"]); result.pop()
-        result.append(sc)
-    for sc in result:
-        sc.pop("_lead", None)
-    return result
+        out.append(dict(sc))                     # 앞 틈은 caption_schedule 이 이미 흡수했다 — 남았다면 그대로(진짜 틈)
+    return out
 
 
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
-    from .video_assemble import caption_schedule
+    from .video_assemble import caption_schedule, caption_lead_absorb
     from .template_copy import scene_text
+    _absorb = caption_lead_absorb({"scene_style": snapshot or True})   # 장면꾸미기 = 칸 앞 짧은 틈을 첫 자막에
     scenes = []
     hide_hook_captions = (snapshot or {}).get("hookCaptionMode") == "hidden"
     for index, beat in enumerate(timeline):
@@ -189,7 +216,7 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
         cursor = start
         kind = "hook" if index == 0 else "body"
         caption_visible = not (kind == "hook" and hide_hook_captions)
-        for caption, t0, t1 in caption_schedule(beat):
+        for caption, t0, t1 in caption_schedule(beat, absorb_lead=_absorb):
             a, b = max(cursor, start, float(t0)), min(end, float(t1))
             if b <= a:
                 continue
@@ -293,6 +320,48 @@ def render_layer_one(timeline, snapshot, output, index, headcopy=None, job_id=No
     return output / layer["file"]
 
 
+def media_geometry(layer, effect):
+    """장면 레이어의 영상 칸(media) 안에 원본을 어떻게 앉히는지 — 렌더(compose)와 썸네일 후보(compose_still)가 같이 쓴다.
+    반환 (width, height, top, zw, zh, crop_x, crop_y): 원본을 width×height에 꽉 채워(cover) 가운데 자르고,
+    zw×zh로 확대한 뒤 (crop_x, crop_y)에서 width×height를 잘라 top 높이에 둔다(나머지는 검정)."""
+    from . import video_assemble as va
+    top=round(layer["media"]["top"]*va._OUT_H/100/2)*2
+    height=min(va._OUT_H-top,max(2,round(layer["media"]["height"]*va._OUT_H/100/2)*2))
+    zoom,_,_=va.scene_zoom_of({"scene_zoom":(effect or {}).get("zoom",1)})
+    width=va._OUT_W
+    zw,zh=round(width*zoom/2)*2,round(height*zoom/2)*2
+    crop_x=round((zw-width)*(1-(effect or {}).get("panX",0))/2)
+    crop_y=round((zh-height)*(1-(effect or {}).get("panY",0))/2)
+    return width,height,top,zw,zh,crop_x,crop_y
+
+
+def compose_still(frame_path, timeline, snapshot, work, index, out_path, headcopy=None, job_id=None):
+    """장면 하나를 **완성본과 같은 구도**의 정지 그림(1080×1920)으로 만든다 — 썸네일 후보(2026-09-26 사장님 "썸네일로 보냈는데 비율이 안 맞는다").
+    ★여태 핀은 원본 프레임 전체(9:16) 위에 레이어를 그냥 얹어, 영상 칸(media)에 맞춰 줄이지 않았다 —
+      제목 띠가 원본 윗부분(얼굴)을 덮고 아랫부분만 보였다. 여기선 compose의 ffmpeg 필터와 같은 기하(media_geometry)로 앉힌다."""
+    from PIL import Image
+    from . import video_assemble as va
+    snapshot=validate_snapshot(snapshot)
+    layer_png=render_layer_one(timeline,snapshot,work,index,headcopy,job_id)
+    layers=json.loads((Path(work).resolve()/"scene-style-layers.json").read_text(encoding="utf-8"))
+    layer=layers[int(index)]
+    effect=(snapshot.get("effects") or {}).get(str(index)) or {}
+    width,height,top,zw,zh,crop_x,crop_y=media_geometry(layer,effect)
+    src=Image.open(frame_path).convert("RGB")
+    s=max(width/src.width,height/src.height)                    # scale=W:H:force_original_aspect_ratio=increase
+    cw,ch=max(width,round(src.width*s)),max(height,round(src.height*s))
+    img=src.resize((cw,ch),Image.LANCZOS)
+    img=img.crop(((cw-width)//2,(ch-height)//2,(cw-width)//2+width,(ch-height)//2+height))   # crop=W:H (가운데)
+    img=img.resize((zw,zh),Image.LANCZOS).crop((crop_x,crop_y,crop_x+width,crop_y+height))
+    canvas=Image.new("RGBA",(width,va._OUT_H),(0,0,0,255))    # pad=W:OUT_H:0:top:black
+    canvas.paste(img,(0,top))
+    over=Image.open(layer_png).convert("RGBA")
+    if over.size!=canvas.size:
+        over=over.resize(canvas.size)
+    Image.alpha_composite(canvas,over).convert("RGB").save(str(out_path),quality=92)
+    return out_path
+
+
 def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
     from . import video_assemble as va
     snapshot=validate_snapshot(snapshot)
@@ -304,14 +373,8 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
         first_frame, last_frame = round(scene["start"]*30), round(scene["end"]*30)
         if last_frame <= first_frame:
             continue
-        top=round(layer["media"]["top"]*va._OUT_H/100/2)*2
-        height=min(va._OUT_H-top,max(2,round(layer["media"]["height"]*va._OUT_H/100/2)*2))
         effect=(snapshot.get("effects") or {}).get(str(index)) or {}
-        zoom,_,_=va.scene_zoom_of({"scene_zoom":effect.get("zoom",1)})
-        width=va._OUT_W
-        zw,zh=round(width*zoom/2)*2,round(height*zoom/2)*2
-        crop_x=round((zw-width)*(1-effect.get("panX",0))/2)
-        crop_y=round((zh-height)*(1-effect.get("panY",0))/2)
+        width,height,top,zw,zh,crop_x,crop_y=media_geometry(layer,effect)
         vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},scale={zw}:{zh},crop={width}:{height}:{crop_x}:{crop_y},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
         hl=va.highlight_fc({"scene_hl":effect.get("highlight")},vf,grow=False)
         prefix=f"[1:v]tpad=stop_mode=clone:stop_duration={(last_frame-first_frame)/30}[ink];" if layer.get("animation") else "[1:v]null[ink];"

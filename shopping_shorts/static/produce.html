@@ -154,8 +154,10 @@
     #trimbar .hint{font-size:11.5px;color:var(--sub)}
     /* 엔진이 만드는 <video>는 크기를 CSS에 맡긴다 — 이 규칙이 없으면 화면이 안 잡힌다.
        ★비율의 정의처는 scene_play.js PV_AR 한 곳 — var 폴백은 그 값과 같아야 한다. */
+    /* ★cover = 완성본과 같은 구도(9:16 꽉 채워 자르기). contain이면 원본 전체+검은 여백이라 완성본과 보이는 범위가
+       달랐다(08-15~, 2026-09-27 사장님 A안). 합본 미리보기도 같은 자르기(video_assemble.frame_vf)로 굽는다. */
     #player video{width:100%;height:100%;border-radius:10px;background:#000;display:block;
-                  aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;position:absolute;inset:0}
+                  aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:cover;position:absolute;inset:0}
     #player .x:hover{color:var(--txt)}
     #subbox b{color:var(--accent)}
     .panel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
@@ -1900,6 +1902,47 @@
           <div id="subState" class="hint" style="margin-top:10px"></div>
           <div id="cleanPreviewWrap" style="margin-top:14px;display:none">
             <!-- 문구: "내 영상으로 미리보기"는 뭘 하는 버튼인지 안 보였다 → 행동을 그대로 쓴다(2026-07-30 사장님 지시) -->
+            <!-- 🎯 장면 골라 지우기 (2026-09-26 사장님 "전체 장면 중 몇 장면만 지우면 되는 경우가 있다").
+                 요금이 초 단위라 자막 있는 장면만 고르면 그만큼만 나간다. 기본은 '전체'(종전 그대로).
+                 목록은 서버(/clean_pick)가 준다 — 청소가 쓰는 컷 목록과 같은 함수(0순위-B). -->
+            <div id="cleanPickWrap" style="display:none;margin-bottom:16px">
+              <div class="tier-title">어느 장면을 지울까요?</div>
+              <div class="tier-row">
+                <button type="button" id="pickAll" class="tier-btn on" onclick="setCleanPickMode('all')">
+                  <span class="tier-name">전체 지우기</span><span class="tier-sub">모든 장면</span>
+                </button>
+                <button type="button" id="pickSome" class="tier-btn" onclick="setCleanPickMode('some')">
+                  <span class="tier-name">골라서 지우기</span><span class="tier-sub">자막 있는 장면만 · 비용 절약</span>
+                </button>
+              </div>
+              <div id="cleanPickTools" class="pick-tools" style="display:none">
+                <span>장면을 눌러 <b>지울 장면</b>을 고르세요</span>
+                <button type="button" class="pick-mini" onclick="cleanPickAll(true)">모두 고르기</button>
+                <button type="button" class="pick-mini" onclick="cleanPickAll(false)">모두 빼기</button>
+              </div>
+              <div id="cleanPickGrid" class="pick-grid" style="display:none"></div>
+              <div id="cleanPickSum" class="tier-hint"></div>
+            </div>
+            <style>
+              .pick-tools{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;
+                margin:14px 0 8px;font-size:15px;color:#cfe0ef}
+              .pick-mini{background:#182634;color:#cfe0ef;border:2px solid #2b3f52;border-radius:10px;
+                padding:6px 12px;font-size:14px;font-weight:700;cursor:pointer}
+              .pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;
+                max-height:560px;overflow-y:auto;padding:4px}
+              .pick-card{position:relative;border:3px solid #2b3f52;border-radius:12px;overflow:hidden;
+                background:#0e1822;cursor:pointer;padding:0;text-align:left;color:#cfe0ef}
+              .pick-card img{display:block;width:100%;aspect-ratio:9/16;object-fit:cover;background:#0b131b}
+              .pick-card .pk-num{position:absolute;left:6px;top:6px;background:#000a;border-radius:8px;
+                padding:2px 7px;font-size:13px;font-weight:800}
+              .pick-card .pk-sec{display:block;text-align:center;font-size:13px;padding:5px 0}
+              .pick-card .pk-chk{position:absolute;right:6px;top:6px;width:26px;height:26px;border-radius:50%;
+                border:2px solid #fff;background:#0008;display:flex;align-items:center;justify-content:center;
+                font-size:16px;font-weight:900}
+              .pick-card.on{border-color:#2aa3e8;box-shadow:0 0 0 3px #2aa3e833}
+              .pick-card.on .pk-chk{background:#2aa3e8}
+              .pick-card:not(.on) img{opacity:.55}
+            </style>
             <button id="btnCleanPreview" class="cta" onclick="startCleanPreview()">✨ 자막제거 시작하기</button>
             <!-- ★가격을 누르기 **전에** 보여준다(2026-09-02). 종전엔 이 패널 어디에도
                  P·포인트·차감이라는 글자가 없었고, 아래 안내의 "추가 비용 없이"만 보여
@@ -10050,6 +10093,13 @@ function coupangDmSet(){
       <button class="btn-next" style="padding:5px 11px;font-size:11px"
               onclick="saveInpockNumber()">번호 저장</button>
     </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+      <span class="hint" style="min-width:74px">상품 이미지</span>
+      ${p.image?`<img src="${esc(p.image)}" alt="" style="width:64px;height:64px;object-fit:contain;background:#fff;border-radius:6px">`:''}
+      <a class="btn-prev" style="padding:5px 11px;font-size:11px;text-decoration:none"
+         href="/api/mix/product/${encodeURIComponent(MIX_JOB||'')}/image" download
+         title="인포크에 올릴 상품 이미지를 파일로 받습니다(쿠팡 상품 페이지를 열 필요 없음)">⬇ 이미지 저장</a>
+    </div>
     ${row('등록 이름', d.listing_name)}
     ${row('DM 타이틀', d.dm_title)}
     ${row('버튼 이름', d.dm_button)}
@@ -10219,6 +10269,8 @@ function coupangPick(i){
   if(url) url.value=it.url;
   if(name) name.value=it.name;
   if(pu && it.partner_url) pu.value=it.partner_url;   // API 검색 카드엔 내 추적 링크가 이미 붙어 있다(2026-09-04)
+  // ★고른 카드의 이미지(2026-09-27) — 서버는 같은 상품번호일 때만 믿는다(image_pid)
+  COUPANG.pickImage={image:it.image||'', pid:String(it.product_id||'')};
   coupangSave();
 }
 // 🔗 파트너스에서 링크 만들기 — 상품 URL을 클립보드에 담고 파트너스 링크 생성화면을 연다.
@@ -10254,6 +10306,7 @@ async function coupangSave(opts){
     body.name=((document.getElementById('cpName')||{}).value||'').trim();
     body.partner_url=((document.getElementById('cpPartner')||{}).value||'').trim();
     body.keyword=COUPANG.target;
+    if(COUPANG.pickImage){ body.image=COUPANG.pickImage.image; body.image_pid=COUPANG.pickImage.pid; }
     // 파트너스 링크만 있어도 저장 가능 — 그게 최종 링크라 원본 상품 URL이 없어도 된다.
     if(!body.url && body.partner_url) body.url=body.partner_url;
     if(!body.url){ if(msg) msg.textContent='상품 URL을 넣으세요'; return; }
@@ -13105,6 +13158,18 @@ function renderAiSceneBtn(beat, idx){
   return h;
 }
 
+// ★화면 위치 i ↔ 진짜 칸 번호(beat_idx) 변환은 여기 한 곳(2026-09-27).
+//   편집안 화면은 위치 i로 그린다(DOM id sceneCutaway${i}·sceneSfx${i}). 그런데 서버 라우트
+//   (/ai_scene·/cutaway·/sfx)는 edit_plan.beats[].beat_idx로 칸을 찾는다 — 칸을 지운 작업은 번호가
+//   빠져(0,2,3…) 위치를 그대로 보내면 뒤 칸의 AI 장면(약 300원)·짤·효과음 빼기가 엉뚱한 칸에 붙거나 422였다.
+//   서버로 보내는 값은 반드시 이 함수를 탄다. 목록은 마지막으로 받은 편집안(globalThis._mixBeats).
+//   번호 없는 옛 데이터만 위치로(scene_lab.html beatIdOf와 같은 규칙).
+function mixBeatIdAt(i){
+  const bs = (typeof globalThis!=='undefined' && globalThis._mixBeats) || [];
+  const b = bs[i] || {};
+  return b.beat_idx == null ? i : b.beat_idx;
+}
+
 async function startAiScene(idx, style){
   if(!MIX_JOB) return;
   const box = document.getElementById('sceneCutaway'+idx);
@@ -13112,7 +13177,7 @@ async function startAiScene(idx, style){
   try{
     const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/ai_scene',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx, style: style})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx), style: style})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   pollAiScene(idx);
@@ -13120,7 +13185,8 @@ async function startAiScene(idx, style){
 
 async function _refreshBeatBox(idx){
   const d = await (await fetch('/api/mix/result/'+encodeURIComponent(MIX_JOB))).json();
-  const beat = (d.beats||[]).find(b=>b.beat_idx===idx);
+  if(d.beats) globalThis._mixBeats = d.beats;
+  const beat = (d.beats||[])[idx];   // idx = 화면 위치(toggleCutaway·removeSfx와 같은 식)
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
   const box = document.getElementById('sceneCutaway'+idx);
@@ -13169,7 +13235,7 @@ async function toggleCutaway(idx, assetId){
   try{
     const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cutaway',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx, asset_id: assetId})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx), asset_id: assetId})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   // 그 비트 행만 다시 그린다 — 편집안 전체(loadMixReview)를 다시 그리지 않는다.
@@ -13177,6 +13243,7 @@ async function toggleCutaway(idx, assetId){
   if(!d.ok) return;
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
+  if(d.beats) globalThis._mixBeats = d.beats;
   const beat = (d.beats||[])[idx];
   if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
 }
@@ -13203,11 +13270,12 @@ async function removeSfx(idx){
   try{
     const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/sfx',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx)})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   const d = await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   if(!d.ok) return;
+  if(d.beats) globalThis._mixBeats = d.beats;
   const beat = (d.beats||[])[idx];
   if(beat && box) box.innerHTML = renderSceneSfx(beat, idx);
 }
@@ -13268,7 +13336,7 @@ async function doSwap(idx, segId){
   try{
     const r = await (await fetch('/api/mix/adjust',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({job_id: MIX_JOB, beat_idx: idx, seg_id: segId})})).json();
+      body: JSON.stringify({job_id: MIX_JOB, beat_idx: mixBeatIdAt(idx), seg_id: segId})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   loadMixReview();   // 화면이 바뀜=옛 미리보기 무효 → 전체 재로드가 프리뷰까지 정리(2360 규율)
@@ -13299,7 +13367,7 @@ async function doShorten(idx){
   try{
     r=await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/shorten',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({beat_idx:idx})})).json();
+      body:JSON.stringify({beat_idx:mixBeatIdAt(idx)})})).json();
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   if(!r.ok){ if(box) box.innerHTML='<span class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</span>'; return; }
   if(!r.changed){ if(box) box.innerHTML='<span class="hint" style="color:var(--sub)">'+esc(r.note||'더 줄일 여지가 없어요')+'</span>'; return; }
@@ -13313,7 +13381,7 @@ async function doTrim(idx, edge, mode){
   try{
     r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/trim',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: idx, edge, mode, step: 0.3})})).json();
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx), edge, mode, step: 0.3})})).json();
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   if(mode==='auto' && edge==='tail' && !r.tail_trim){
@@ -13757,6 +13825,8 @@ function renderCleanReady(job){
   //   버튼만 바뀌고 BEFORE/AFTER가 그대로라, 되돌렸는데도 '자막 제거됨'에 체크가 살아 있어
   //   아무 일도 안 일어난 것처럼 보였다. 지금 쓰는 쪽에 체크를 옮기고, 안 쓰는 쪽은 흐린다.
   const _useClean = CLEAN_IN_USE;
+  // 고른 장면만 지웠으면 안 고른 컷은 원본 그대로다 — AFTER에 자막이 보여도 실패가 아니라는 걸 말한다
+  const _cutKept = !!(_cut && _cut.cleaned === false);
   const _dim = 'opacity:.35;filter:grayscale(.6)';
   box.innerHTML='<div class="cp-compare">'
     +'<div class="cp-cell"><div class="cp-frame"'+(_useClean?'':' style="outline:2px solid var(--ok,#2ecc8f);outline-offset:2px;border-radius:10px"')+'>'
@@ -13770,7 +13840,7 @@ function renderCleanReady(job){
       +'<span class="cp-lbl'+(_useClean?' on':'')+'">AFTER</span>'
       +(_useClean?'<span class="cp-chk">✓</span>':'')
       +'</div><div class="cp-cap'+(_useClean?' good':'')+'"'+(_useClean?'':' style="opacity:.6"')+'>'
-      +(_useClean?'자막 제거됨':'자막 제거됨 — 지금은 안 씀')+'</div></div>'
+      +(_useClean?(_cutKept?'이 장면은 안 지웠어요(원본 그대로)':'자막 제거됨'):'자막 제거됨 — 지금은 안 씀')+'</div></div>'
     +'</div>'
     +'<div class="cp-pgbar">'+posBtns+srcNav+'</div>'
     +staleNote
@@ -13823,11 +13893,26 @@ async function startCleanPreview(){
   //   2026-09-02 사장님 지시로 **문구 제거**. restoreLastVoice가 지난 작업의 성우를 화면에
   //   미리 골라두고 서버(create_mix_job)도 같은 기억을 job.voice로 심으므로, 순서대로 눌러도
   //   대개 음성은 이미 정해진 상태다 — 매번 뜨는 경고가 더 방해였다.
+  // ★골라서 지우기인데 하나도 안 골랐으면 돈이 나가기 전에 멈춘다(서버도 한 번 더 막는다).
+  const _cuts = cleanPickPayload();
+  if(_cuts && !_cuts.length){
+    paintCleanPick();   // 안내는 그리는 함수 한 곳이 쓴다(한 자리를 두 함수가 덮어쓰지 않게)
+    return;
+  }
   clearInterval(CLEAN_POLL); CLEAN_POLL=null;
   const myGen=++CLEAN_GEN, myJob=MIX_JOB;
   CLEAN_VIEW={si:0, pos:0.5, job:myJob};   // 새로 돌리면 확인 지점도 처음(영상1·가운데)으로
   if(btn) btn.disabled=true;
   const _sc=document.getElementById('cleanShowcase'); if(_sc) _sc.style.display='none';  // 실결과 뜨는 동안 데모 숨김
+  // ★지우는 동안 자리표시 그림은 **3단계 편성의 컷**(골라서면 고른 첫 컷)이다(2026-09-27 사장님 화면).
+  //   종전엔 clean_thumb 기본값(첫 소스 파일 한가운데)이라, 편성에 한 컷도 안 쓰인 소스의 엉뚱한 장면이 떴다
+  //   (d60da49daae0: s0은 사용 0컷인데 그 11.4초 프레임이 '원본'으로). 좌표는 장면 카드와 같은 API(clean_pick_thumb).
+  const _phCi = (CLEAN_PICK && CLEAN_PICK.cuts && CLEAN_PICK.cuts.length)
+    ? ((CLEAN_PICK.mode==='some' && _cuts && _cuts.length) ? (CLEAN_PICK.cuts.find(c=>c.key===_cuts[0])||CLEAN_PICK.cuts[0]).ci : 0)
+    : null;
+  const _phUrl = (_phCi !== null)
+    ? '/api/produce/mix/clean_pick_thumb/'+encodeURIComponent(myJob)+'?ci='+_phCi+'&t='+Date.now()
+    : '/api/produce/mix/clean_thumb/'+encodeURIComponent(myJob)+'?kind=original&t='+Date.now();
   // ★진행 중에도 **완료 후와 같은 2칸 틀**로 그린다(2026-08-18 사장님 "공간활용").
   //   예전엔 가운데 작은 썸네일 한 칸(170px)뿐이라 양옆 968px이 통째로 비었고, 끝나는
   //   순간 1칸→2칸으로 화면이 확 바뀌어 어디를 봐야 할지 튀었다. 왼쪽=원본 그대로,
@@ -13835,17 +13920,30 @@ async function startCleanPreview(){
   //   틀(.cp-compare/.cp-cell/.cp-frame)을 완료 화면과 공유하므로 크기 기준이 한 곳이다.
   box.innerHTML='<div class="cp-run rise">'
     +'<div class="cp-compare">'
-    +  '<div class="cp-cell"><div class="cp-frame"><img src="/api/produce/mix/clean_thumb/'+encodeURIComponent(myJob)+'?kind=original&t='+Date.now()+'" onerror="this.style.display=\'none\'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
+    +  '<div class="cp-cell"><div class="cp-frame"><img src="'+_phUrl+'" onerror="this.style.display=\'none\'"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
     +  '<div class="cp-arrow">→<span>AI</span></div>'
-    +  '<div class="cp-cell"><div class="cp-frame cp-scan"><img src="/api/produce/mix/clean_thumb/'+encodeURIComponent(myJob)+'?kind=original&t='+Date.now()+'" onerror="this.style.display=\'none\'"></div><div class="cp-cap">지금 지우는 중…</div></div>'
+    +  '<div class="cp-cell"><div class="cp-frame cp-scan"><img src="'+_phUrl+'" onerror="this.style.display=\'none\'"></div><div class="cp-cap">지금 지우는 중…</div></div>'
     +'</div>'
     +'<div class="cp-bar"></div>'
     +'<div class="cp-run-lbl"><span class="cp-dot"></span>AI가 자막 영역을 자연스럽게 복원하는 중…</div>'
     +'<div class="cp-run-sub">보통 몇 분, 길면 수십 분 걸릴 수 있어요. 다른 단계 먼저 진행해도 돼요.</div>'
     +'</div>';
   try{
-    const d=await (await fetch('/api/produce/mix/clean',{method:'POST',
-      headers:{'Content-Type':'application/json'}, body:JSON.stringify({job_id:myJob})})).json();
+    // ★돈이 나가는 청소는 서버가 고객 확인을 강제한다(2026-09-27) — 409 + 안내(초·크레딧·사유)가 오면 그 문구로 묻고,
+    //   [확인]이면 서버가 보여준 초(confirm_secs)를 실어 다시 보낸다. [취소]면 아무것도 안 지우고 과금도 없다.
+    let _cbody={job_id:myJob, cuts:_cuts}, d={ok:false};
+    for(let _try=0; _try<3; _try++){
+      const _r=await fetch('/api/produce/mix/clean',{method:'POST',
+        headers:{'Content-Type':'application/json'}, body:JSON.stringify(_cbody)});
+      d=await _r.json().catch(()=>({ok:false}));
+      if(!(_r.status===409 && d && d.need_clean_confirm)) break;
+      if(CLEAN_GEN!==myGen) return;
+      if(!confirm(d.message+'\n\n계속할까요?')){
+        box.innerHTML='<div class="hint">자막제거를 취소했어요(추가 과금 없음).</div>';
+        if(btn) btn.disabled=false; return;
+      }
+      _cbody=Object.assign({}, _cbody, {confirm_clean:true, confirm_secs:d.seconds});
+    }
     if(CLEAN_GEN!==myGen) return;
     if(!d.ok){
       // 자막제거 개인 키 미등록이면 '등록하러 가기' 버튼이 있는 안내를 띄운다(2026-09-01).
@@ -13867,6 +13965,10 @@ function updateCleanProgress(d){
   // ★"20~30분도 정상" 같은 시간 약속을 화면에 적지 않는다(2026-08-25 사장님 "문구 지우고").
   //   실제 시간은 소스 길이·처리 업체 혼잡도에 따라 크게 달라져서, 적어두면 그 자체가 거짓말이 된다.
   //   진행 상황(몇 편 끝났나)만 보여주고 시간은 말하지 않는다.
+  // ★완성본 1편 경로(2026-09-27): '편'을 셀 게 없어 "5편 중 0편"으로 멈춘 듯 보였다 → 범위를 말한다(서버 clean_scope).
+  const sc = d.clean_scope || null;
+  if(sc && sc.mode === 'picked'){ el.textContent = `고른 장면 ${sc.n}개를 지우는 중 — 다른 단계 먼저 진행해도 돼요.`; return; }
+  if(sc && sc.mode === 'all'){ el.textContent = '전체 장면을 지우는 중 — 다른 단계 먼저 진행해도 돼요.'; return; }
   el.textContent = total
     ? `영상 ${total}편 중 ${done}편 완료 — 다른 단계 먼저 진행해도 돼요.`
     : '다른 단계 먼저 진행해도 돼요.';
@@ -13985,8 +14087,10 @@ function cleanFailHtml(kind){
       + 'style="display:inline-block;text-decoration:none">🔑 키·충전 안내 보기</a>';
   }
   if(kind === 'interrupted'){
+    // ★이미 처리된 결과는 다시 눌러도 추가 비용 없이 이어받는다(2026-09-27 이어받기 장부 — 서버 청소 모듈) —
+    //   고객이 "두 번 나가나" 겁내서 안 누르면 결과를 못 받는다.
     return '<div class="cp-fail"><b>작업이 중간에 멈췄어요.</b> 서버 업데이트 등으로 끊긴 경우입니다. '
-      + '다시 시도하시면 됩니다.</div>' + redo;
+      + '다시 시도하시면 됩니다. <b>이미 처리된 결과가 있으면 추가 비용 없이 이어받아요.</b></div>' + redo;
   }
   if(kind === 'vendor_down'){
     // ★영상 탓으로 돌리지 않는다(2026-09-17). 자막제거 업체 앞단이 죽은 것이라
@@ -14027,6 +14131,7 @@ function refreshSub(){
   // T7: 못 쓰는 컨트롤은 비활성 노출 대신 숨긴다 — 자막제거 켜짐+매칭됨일 때만 미리보기가 등장.
   const wrap=document.getElementById('cleanPreviewWrap');
   if(wrap) wrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
+  if(STATE.subtitleRemoval && MIX_JOB) loadCleanPick(MIX_JOB);
   // ★토글을 누르지 않고 이 화면으로 돌아온 경우(작업 복원·단계 이동)에도 가격을 채운다 —
   //   onSubToggle에만 걸면 "이미 켜둔 채 돌아온" 고객에겐 안내가 영영 안 뜬다.
   if(STATE.subtitleRemoval && typeof renderCleanCost === 'function') renderCleanCost();
@@ -14069,6 +14174,83 @@ async function renderCleanCost(){
       + (Number.isFinite(bal) ? ' · 남은 포인트 <b>' + bal + 'P</b>' : '')
       + (short ? ' <span style="color:var(--fire)">— 포인트가 모자라 지금은 실행할 수 없어요</span>' : '');
   }catch(e){ /* 가격 안내 실패가 기능을 막으면 안 된다 */ }
+}
+// ── 🎯 장면 골라 지우기 (2026-09-26) ──────────────────────────────────────
+// 값의 주인: 화면에선 CLEAN_PICK 하나, 서버에선 job.clean_cuts(시작 버튼을 누를 때 함께 보낸다).
+// 컷 목록·키·단가는 서버(/clean_pick)가 준다 — 화면이 컷을 세면 청소와 어긋난다(0순위-B).
+let CLEAN_PICK = null;          // {job, mode:'all'|'some', cuts:[...], sel:Set(key), rate:{basic,pro}}
+async function loadCleanPick(job){
+  const wrap=document.getElementById('cleanPickWrap');
+  if(!wrap) return;
+  try{
+    const d=await (await fetch('/api/produce/mix/clean_pick/'+encodeURIComponent(job))).json();
+    if(MIX_JOB!==job) return;
+    if(!d.ok || !d.partial_ok || !(d.cuts||[]).length){ CLEAN_PICK=null; wrap.style.display='none'; return; }
+    const keep = (CLEAN_PICK && CLEAN_PICK.job===job) ? CLEAN_PICK : null;   // 화면에서 고르던 것은 유지
+    CLEAN_PICK = {job:job, cuts:d.cuts, rate:d.rate||{},
+                  mode: keep ? keep.mode : (d.all ? 'all' : 'some'),
+                  sel: keep ? keep.sel : new Set(d.cuts.filter(c=>c.sel).map(c=>c.key))};
+    wrap.style.display='';
+    paintCleanPick();
+  }catch(e){ CLEAN_PICK=null; wrap.style.display='none'; }
+}
+function setCleanPickMode(mode){
+  if(!CLEAN_PICK) return;
+  CLEAN_PICK.mode = (mode==='some') ? 'some' : 'all';
+  // 처음 '골라서'로 바꾸면 전부 골라진 채로 시작 — 뺄 장면만 누르면 된다
+  if(CLEAN_PICK.mode==='some' && !CLEAN_PICK.sel.size) CLEAN_PICK.cuts.forEach(c=>CLEAN_PICK.sel.add(c.key));
+  paintCleanPick();
+}
+function toggleCleanPick(key){
+  if(!CLEAN_PICK) return;
+  if(CLEAN_PICK.sel.has(key)) CLEAN_PICK.sel.delete(key); else CLEAN_PICK.sel.add(key);
+  paintCleanPick();
+}
+function cleanPickAll(on){
+  if(!CLEAN_PICK) return;
+  CLEAN_PICK.sel = new Set(on ? CLEAN_PICK.cuts.map(c=>c.key) : []);
+  paintCleanPick();
+}
+// 서버로 보낼 값: 전체면 null, 골라서면 키 목록(빈 배열이면 시작을 막는다)
+function cleanPickPayload(){
+  if(!CLEAN_PICK || CLEAN_PICK.mode!=='some') return null;
+  return CLEAN_PICK.cuts.filter(c=>CLEAN_PICK.sel.has(c.key)).map(c=>c.key);
+}
+function _cleanPickCredits(sec){
+  // 단가는 서버(clean_credit_estimate)가 1초 값으로 준다 — 초 단위 올림은 같은 식.
+  const r = (CLEAN_PICK && CLEAN_PICK.rate) ? CLEAN_PICK.rate[STATE.cleanTier==='pro'?'pro':'basic'] : null;
+  return (typeof r==='number' && sec>0) ? Math.ceil(sec)*r : null;
+}
+function paintCleanPick(){
+  const P=CLEAN_PICK; if(!P) return;
+  const some = P.mode==='some';
+  const a=document.getElementById('pickAll'), b=document.getElementById('pickSome');
+  if(a) a.classList.toggle('on', !some);
+  if(b) b.classList.toggle('on', some);
+  const grid=document.getElementById('cleanPickGrid'), tools=document.getElementById('cleanPickTools');
+  if(grid) grid.style.display = some ? '' : 'none';
+  if(tools) tools.style.display = some ? '' : 'none';
+  if(some && grid){
+    grid.innerHTML = P.cuts.map((c,i)=>{
+      const on=P.sel.has(c.key);
+      return '<button type="button" class="pick-card'+(on?' on':'')+'" data-key="'+esc(c.key)+'" onclick="toggleCleanPick(this.dataset.key)">'
+        +'<img src="/api/produce/mix/clean_pick_thumb/'+encodeURIComponent(P.job)+'?ci='+c.ci+'" alt="">'
+        +'<span class="pk-num">장면 '+(i+1)+'</span><span class="pk-chk">'+(on?'✓':'')+'</span>'
+        +'<span class="pk-sec">'+Number(c.dur).toFixed(1)+'초</span></button>';
+    }).join('');
+  }
+  const all = P.cuts.reduce((t,c)=>t+Number(c.dur||0),0);
+  const pick = P.cuts.filter(c=>P.sel.has(c.key)).reduce((t,c)=>t+Number(c.dur||0),0);
+  const n = P.cuts.filter(c=>P.sel.has(c.key)).length;
+  const s=document.getElementById('cleanPickSum'); if(!s) return;
+  const ca=_cleanPickCredits(all), cp=_cleanPickCredits(pick);
+  s.innerHTML = !some
+    ? '장면 '+P.cuts.length+'개 전체 · '+all.toFixed(1)+'초'+(ca!=null?' · 약 <b>'+ca+'크레딧</b>':'')
+    : (n
+      ? '고른 장면 <b>'+n+'개</b> · '+pick.toFixed(1)+'초'+(cp!=null?' · 약 <b>'+cp+'크레딧</b>':'')
+        +(ca!=null?' <span style="opacity:.8">(전체 지우면 약 '+ca+'크레딧)</span>':'')
+        +'<br><span style="opacity:.85">안 고른 장면은 <b>원래 자막이 그대로</b> 남아요. 나중에 그 장면을 바꿔도 추가 비용은 없어요.</span>'
+      : '<b style="color:var(--fire,#ff9a5a)">지울 장면을 하나 이상 골라 주세요.</b>');
 }
 // ── 🧽 지우는 방식(기본/고급) ─────────────────────────────────────────────
 // 값의 주인은 STATE.cleanTier 하나다. 화면은 그걸 보여주고, 서버는 job.clean_tier로
@@ -14125,6 +14307,7 @@ let CLEAN_PRO_READY = false;
 async function setCleanTier(tier){
   STATE.cleanTier = (tier==='pro') ? 'pro' : 'basic';
   paintCleanTier();
+  paintCleanPick();                  // 단가가 바뀌면 고른 장면 비용 안내도 같이 바뀐다
   saveWork();
   if(!MIX_JOB) return;              // 매칭 전이면 설정만 기억해 둔다(자막제거 토글과 같은 규칙)
   try{
@@ -14139,6 +14322,7 @@ async function onSubToggle(){
   const cwrap=document.getElementById('cleanPreviewWrap');
   if(cwrap) cwrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
   if(STATE.subtitleRemoval) renderCleanCost();
+  if(STATE.subtitleRemoval && MIX_JOB) loadCleanPick(MIX_JOB);
   const s=document.getElementById('subState');
   if(!MIX_JOB){ if(s) s.textContent='⚠️ 2단계 매칭 후 적용됩니다(설정은 기억됨).'; return; }
   try{
@@ -15260,25 +15444,25 @@ function _vpShowFrame(b){
   const f=document.getElementById('vpFrame');
   if(f && typeof MIX_JOB!=='undefined' && MIX_JOB){ f.style.display='block'; f.src=_beatFrameUrl(b); }
 }
-function _vpCapDurs(b){
+// ★자막 시각은 서버 cap_rows(= video_assemble.caption_rows → caption_schedule, 렌더와 같은 함수)를 그대로 쓴다(2026-09-27).
+//   종전엔 여기서 글자수 비례를 다시 계산해(하한 없음·칸 길이도 달랐다) 렌더와 두 벌이었다.
+//   화면이 더하는 것은 두 가지뿐: cap_offset(버튼으로 바로 움직이니까) · head_trim(음성 파일은 자르지 않은 원본을 튼다).
+//   cap_rows가 없으면(음성 전 옛 응답) 구절 순서만 균등으로 보여 주고 콘솔에 표식을 남긴다.
+function _vpCapRows(b, audDur){
+  if(Array.isArray(b.cap_rows) && b.cap_rows.length) return b.cap_rows;
   const segs=b.cap_segments||[]; if(!segs.length) return [];
-  if(Array.isArray(b.cap_durs) && b.cap_durs.length===segs.length) return b.cap_durs.slice();
-  const w=segs.map(s=>Math.max(1,(s||'').replace(/\s/g,'').length)); const tw=w.reduce((a,c)=>a+c,0);
-  return w.map(x=>x/tw);   // 표시용 근사(합=1, 오디오 길이에 맞춰 스케일) — 최종 렌더는 서버 cap_durs가 정확히 함
+  console.warn('[vpCap] cap_rows 없음 — 균등 표시(렌더 시각 아님)', b.beat_idx);
+  const d=(audDur||1)/segs.length;
+  return segs.map((t,k)=>({text:t,start:k*d,end:(k+1)*d}));
 }
-// 오디오 currentTime에 맞춰 그 비트 자막 구절을 순차 표시(cap_offset 반영). 자막 구절 자체는 항상 서버 cap_segments — 여기서 재구현하지 않는다.
+// 오디오 currentTime에 맞춰 그 비트 자막 구절을 순차 표시(cap_offset 반영). 구절·시각은 항상 서버 값 — 여기서 재구현하지 않는다.
 function _vpDriveCaption(aud, b){
   const cap=document.getElementById('vpCap'); if(!cap) return;
-  const segs=b.cap_segments||[]; const rel=_vpCapDurs(b);
-  const off=(+b.cap_offset||0);
   const upd=()=>{
-    const dur=aud.duration||rel.reduce((a,c)=>a+c,0)||1;
-    const durs=rel.map(r=> (Array.isArray(b.cap_durs)&&b.cap_durs.length)? r : r*dur);
-    // cap_lead = 말 시작 전 무음(서버 ASR 실측). 렌더러와 같은 기준점을 써야 미리보기와
-    // 최종 영상이 일치한다 — 예전엔 둘 다 0에서 시작해 자막이 먼저 떴다(2026-08-06).
-    const lead=(Array.isArray(b.cap_durs)&&b.cap_durs.length)?(+b.cap_lead||0):0;
-    let t=aud.currentTime-off, acc=lead, cur=(t<lead)?'':(segs[0]||'');
-    for(let k=0;k<segs.length;k++){ if(t>=acc){ cur=segs[k]; } acc+=durs[k]; }
+    const rows=_vpCapRows(b, aud.duration);
+    const t=aud.currentTime-(+b.cap_offset||0)-(+b.head_trim||0);
+    let cur='';
+    for(const r of rows){ if(t>=r.start-1e-3 && t<r.end){ cur=r.text; break; } }
     cap.textContent=cur;
   };
   aud.ontimeupdate=upd; upd();
@@ -16091,36 +16275,29 @@ async function renderFinal(){
   }catch(e){ clearInterval(_rfTimer); _finalRenderRestore('❌ 장면 편집 저장 실패 — 렌더하지 않았어요'); return; }
   // 썸네일 인트로 체크는 렌더 요청과 **같이** 보낸다 — 따로 저장하는 경로를 만들면
   // '체크했는데 안 붙었다'가 난다(저장 실패를 아무도 모른다).
-  // ★자막제거 정본(2026-09-22): 스위치가 켜진 계정만. 바뀐 장면이 있을 때만 초수·크레딧을 알리고 확인받는다.
-  //   나머지 장면은 4단계에서 지운 결과를 그대로 쓰므로 추가 과금이 없다. 실패하면 조용히 통과(렌더는 막지 않는다).
-  let _skipClean=false;
-  try{
-    const cbp=await (await fetch('/api/produce/mix/clean_base_preview/'+encodeURIComponent(MIX_JOB))).json();
-    if(cbp && cbp.enabled && cbp.base){
-      const n=(cbp.uncovered||[]).length + (cbp.extend||[]).length;
-      if(n>0){
-        const secs=(cbp.uncovered||[]).reduce((a,u)=>a+(u.seconds||0),0)+(cbp.extend||[]).reduce((a,e)=>a+(e.need||0),0);
-        // ★안내는 정확하게(2026-09-22 사장님): 무엇 때문에, 어디만, 얼마가 나가는지.
-        //   자막제거(4단계) 뒤에 장면을 새로 넣으면 그 조각은 아직 안 지워진 상태다 — 그 조각만 다시 지운다.
-        //   이미 지운 조각을 옮기거나 빼거나 잘라 쓴 것은 그대로 재사용한다(과금 0).
-        const _unc=(cbp.uncovered||[]).length, _ext=(cbp.extend||[]).length;
-        const msg='자막제거를 한 뒤에 장면을 바꾸셨어요.\n'
-          +(_unc?('· 새로 넣은 조각이 있는 장면 '+_unc+'개'):'')
-          +(_ext?((_unc?'\n':'')+'· 음성이 길어져 화면을 더 가져와야 하는 장면 '+_ext+'개'):'')
-          +'\n→ 이 조각들('+secs.toFixed(1)+'초)만 자막제거를 다시 합니다'+(cbp.est_credits!=null?(' — 약 '+cbp.est_credits+'크레딧'):'')+'.\n'
-          +'이미 지운 장면은 그대로 씁니다(추가 과금 없음).\n\n계속할까요?';
-        if(!confirm(msg)){
-          // ★사장님(2026-09-22): "자막제거 안 하고 렌더할 수는 없나" — 두 번째 선택지. 새로 넣은 조각엔 원본 자막이 남을 수 있다.
-          const skip=confirm('자막제거 없이 그냥 렌더할까요?\n새로 넣은 조각이 있는 장면 '+n+'개에는 원본 자막이 그대로 남을 수 있어요(추가 과금 없음).\n\n[확인] 그냥 렌더 / [취소] 렌더 안 함');
-          if(!skip){ clearInterval(_rfTimer); _finalRenderRestore('렌더를 취소했어요'); return; }
-          _skipClean=true;
-        }
-      }
-    }
-  }catch(_){}
+  // ★자막제거 비용 확인은 **서버가 강제**한다(2026-09-27). 판정(얼마·왜)은 서버 한 곳(mix_pipeline.clean_charge_plan):
+  //   돈이 나가는 청소가 있으면 /api/mix/render 가 409 + 안내(초·크레딧·사유 문구)를 돌려준다. 여기서는 그 안내로
+  //   확인창을 띄우고 [확인]이면 서버가 보여준 초(confirm_secs)를 실어 다시 보낸다. 확인창을 못 띄우면(요청 실패)
+  //   렌더가 시작되지 않을 뿐 — 조용히 과금되는 길은 없다. 종전엔 화면이 따로 초를 재 확인창을 띄우고, 그 호출이
+  //   실패하면 catch 로 조용히 통과해 서버가 확인 없이 과금했다.
   const _intro = !!(document.getElementById('thumbIntro')||{}).checked;
-  const r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB, thumb_intro:_intro, skip_clean:_skipClean})});
-  const d=await r.json().catch(()=>({ok:false}));
+  let _body={job_id:MIX_JOB, thumb_intro:_intro, skip_clean:false};
+  let r=null, d={ok:false};
+  for(let _try=0; _try<3; _try++){
+    r=await fetch('/api/mix/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_body)});
+    d=await r.json().catch(()=>({ok:false}));
+    if(!(r.status===409 && d && d.need_clean_confirm)) break;
+    if(confirm(d.message+'\n\n계속할까요?')){
+      _body=Object.assign({}, _body, {skip_clean:false, confirm_clean:true, confirm_secs:d.seconds});
+      continue;
+    }
+    // ★사장님(2026-09-22): "자막제거 안 하고 렌더할 수는 없나" — 두 번째 선택지(과금 0).
+    const _ask = d.reason==='tier_upgrade'
+      ? '지금 있는 자막제거 결과 그대로 렌더할까요?(추가 과금 없음)\n\n[확인] 그대로 렌더 / [취소] 렌더 안 함'
+      : '자막제거 없이 그냥 렌더할까요?\n아직 안 지운 장면에는 원본 자막이 그대로 남을 수 있어요(추가 과금 없음).\n\n[확인] 그냥 렌더 / [취소] 렌더 안 함';
+    if(!confirm(_ask)){ clearInterval(_rfTimer); _finalRenderRestore('렌더를 취소했어요'); return; }
+    _body={job_id:MIX_JOB, thumb_intro:_intro, skip_clean:true};
+  }
   if(!r.ok||!d.ok){ _finalRenderRestore('❌ 렌더 시작 실패'); document.getElementById('finalVideo').innerHTML=''; return; }
   setMixPoll(pollFinal,3000); pollFinal();
 }
@@ -16129,12 +16306,12 @@ async function pollFinal(){
     const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
     const st=document.getElementById('finalStatus');
     if(d.status!=='done' && d.status!=='failed'){
-      if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>'+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'')+'</span>'; }
+      if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>'+(MIX_LABEL[d.status]||d.status)+(d.error?' — '+d.error:'')+'</span>'+(d.intro_notice?'<div class="hint" style="margin-top:4px">ℹ '+esc(d.intro_notice)+'</div>':''); }
       const rf=document.getElementById('rfStage'); if(rf) rf.textContent=(MIX_LABEL[d.status]||d.status);   // 박스 안 단계 라벨도 동적 갱신
     }
     if(d.status==='done'){ clearInterval(MIX_POLL); clearInterval(_rfTimer);
       document.getElementById('finalVideo').innerHTML=`<video controls autoplay muted src="/api/mix/video/${esc(MIX_JOB)}" style="border-radius:12px;margin-top:10px"></video>`;
-      _finalRenderRestore('✅ 렌더 완료 — 완성 영상이 재생됩니다');
+      _finalRenderRestore('✅ 렌더 완료 — 완성 영상이 재생됩니다'+(d.intro_notice?(' · ℹ '+d.intro_notice):''));
       renderExport({rendered:true});     // 렌더 완료 → 완성 MP4 다운로드 버튼까지
       refreshFinalThumb();               // 썸네일 카드·버튼 라벨도 이때 맞춘다(렌더 전엔 없었다)
       // QR을 누르고 기다린 경우엔 곧바로 띄운다 — 다시 찾아 누르게 하지 않는다.
@@ -19411,6 +19588,6 @@ async function checkTtsKey(){
 }
 try{ checkTtsKey(); }catch(e){}
 </script>
-<script src="/scene-style-produce.js?v=18"></script>
+<script src="/scene-style-produce.js?v=19"></script>
 </body>
 </html>

@@ -362,6 +362,97 @@ def _beat_clips(beat, beat_dur, src_durs):
     return []
 
 
+_FRAME = 1.0 / 30.0
+
+
+def _baked_of(beat):
+    """완성본 조각에 구워진 배속(_capcut_baked_speed, mix_pipeline.plan_using_beat_clips 가 단다). 없으면 0."""
+    try:
+        v = float((beat or {}).get("_capcut_baked_speed") or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+    return v if (v > 0 and math.isfinite(v)) else 0.0
+
+
+def capcut_segments(plan, timeline, source_video_paths, tts_paths=None, video_durs=None):
+    """완성본 컷 계획(video_assemble.render_cut_plan) → 캡컷 영상 트랙 조각 {beat_idx: [조각]} (2026-09-27).
+
+    ★완성본이 쓰는 **바로 그 계획**을 옮겨 적기만 한다 — 캡컷이 컷·길이·배속을 따로 계산하지 않는다(0순위-B).
+      타임라인 자리 = 완성본 프레임(f_start·cfr). 정지 컷(완성본이 느리게 ≤1.15배 + 마지막 프레임 정지)은
+      [움직이는 조각(완성본과 같은 배속) + 정지 조각(hold)] 둘로 싣는다 — 종전엔 한 배속으로 늘려 화면이 달랐다(서버 9컷).
+      캡컷의 '정지 프레임'도 사진 소재다 → 호출부(assemble_draft_folder)가 그 프레임을 사진으로 떠서 준다.
+    조각 = {"ci","video_id","start","read"(움직이는 몫이 읽는 원본 길이),"t0","dur","speed",
+            "hold": None | {"t0","dur","at"(정지 프레임의 원본 시각)}}
+    ★구운 배속 조각(_capcut_baked_speed): 조각 파일이 배속만큼 늘려 둔 전용 소스라 좌표에 배속을 곱하고 정지는 없다
+      (정지까지 완성본에 구워져 있다).
+    계획을 못 구하면 None — 호출부가 종전 조각 계획(_beat_clips)으로 가되 stderr 경보를 남긴다. 계획에 없는 칸도 같다."""
+    import sys
+    try:
+        from shopping_shorts.video_assemble import render_cut_plan
+        srcd = {vid: float((video_durs or {}).get(real, 0.0) or 0.0)
+                for vid, real in (source_video_paths or {}).items() if real}
+        bd = {tl["beat_idx"]: float(tl.get("dur") or 0.0) for tl in timeline or []
+              if float(tl.get("dur") or 0.0) > 0}
+        # 정본 job: 렌더 컷 계획을 소스별 파일 좌표로 옮긴 것(mix_pipeline.export_sources_for → plan["_cut_plan"]) 그대로 —
+        #   다시 계산하면 소스별 파일 길이로 당기기·정지가 달라진다(11cfc4a4b75c)
+        cplan = (plan or {}).get("_cut_plan") or render_cut_plan(plan, tts_paths or {}, source_video_paths or {},
+                                                                 beat_durs=bd, src_durs=srcd)
+    except Exception as e:      # noqa: BLE001 — 계획 실패가 내보내기를 죽이면 안 된다(대신 경보)
+        print("[capcut] 완성본 컷 계획 실패 — 종전 조각 계획으로 대체: %r" % (e,), file=sys.stderr)
+        return None
+    out = {}
+    for bp in cplan:
+        beat, baked = bp["beat"], _baked_of(bp["beat"])
+        segs = []
+        if baked:
+            if not beat.get("manual_cuts"):     # 컷 정보가 없으면 칸 한 덩이
+                d = bp["nfr"] / 30.0
+                segs.append({"ci": 0, "video_id": bp["clips"][0]["video_id"], "start": 0.0, "read": d * baked,
+                             "t0": bp["f0"] / 30.0, "dur": d, "speed": baked, "hold": None})
+            else:
+                for cp in bp["clips"]:
+                    d = cp["cfr"] / 30.0
+                    segs.append({"ci": cp["j"], "video_id": cp["video_id"],
+                                 "start": float(cp["clip"].get("start") or 0.0) * baked, "read": d * baked,
+                                 "t0": cp["f_start"] / 30.0, "dur": d, "speed": baked, "hold": None})
+        else:
+            for cp in bp["clips"]:
+                t0, d = cp["f_start"] / 30.0, cp["cfr"] / 30.0
+                if cp["freeze"] > 1e-3 and cp["hold_fr"] > 0:
+                    move, sp = cp["move_fr"] / 30.0, cp["speed"]
+                    read = move * sp
+                    segs.append({"ci": cp["j"], "video_id": cp["video_id"], "start": cp["start"], "read": read,
+                                 "t0": t0, "dur": move, "speed": sp,
+                                 "hold": {"t0": t0 + move, "dur": d - move,
+                                          "at": max(cp["start"], cp["start"] + read - _FRAME)}})
+                else:
+                    # 배속 = 완성본이 실제로 움직이는 배속(전환 여유까지 읽는 길이 / 그 화면 길이 — render_cut_plan speed).
+                    #   화면에 보이는 d초 동안 원본을 d×배속만큼 읽는다(여유 몫은 다음 컷과 겹치는 자리라 캡컷엔 없다).
+                    sp = float(cp["speed"] or 1.0)
+                    segs.append({"ci": cp["j"], "video_id": cp["video_id"], "start": cp["start"], "read": d * sp,
+                                 "t0": t0, "dur": d, "speed": sp, "hold": None})
+        out[bp["idx"]] = segs
+    return out
+
+
+def _freeze_frame(src, at, out_path):
+    """원본 at초 프레임 한 장을 사진으로(정지 조각 소재). 실패하면 False — 그 칸은 한 배속 늘림으로 간다(경보)."""
+    import subprocess
+    import sys
+    try:
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", "%.3f" % max(0.0, float(at)), "-i", str(src),
+                        "-frames:v", "1", "-q:v", "2", str(out_path)],
+                       check=True, capture_output=True, stdin=subprocess.DEVNULL, timeout=60)
+        ok = Path(out_path).exists() and Path(out_path).stat().st_size > 0
+        if not ok:
+            print("[capcut] 정지 프레임 없음(%s at %.3f) — 파일 끝일 수 있다" % (Path(str(out_path)).name, float(at)),
+                  file=sys.stderr)
+        return ok
+    except Exception as e:      # noqa: BLE001
+        print("[capcut] 정지 프레임 뜨기 실패(%s): %r" % (Path(str(out_path)).name, e), file=sys.stderr)
+        return False
+
+
 
 def _scene_zoom(beat):
     """장면 확대 배율 — **렌더와 같은 함수**가 뜻을 정한다(video_assemble.scene_zoom_of).
@@ -432,7 +523,8 @@ def _watermark_material(wm, font_path):
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None,
                 caption_style=None, deco=None, headcopy_layer=None, bgm_layer=None,
-                sfx_layers=None, cutaway_layers=None, scene_overlay_layers=None):
+                sfx_layers=None, cutaway_layers=None, scene_overlay_layers=None,
+                cut_segments=None, freeze_images=None):
     """편집안 → (draft_content_dict, assets_to_copy).
 
     asset_paths: {real_path: 캡컷이 볼 절대경로} — 호출부가 파일을 그 절대경로에 두고 넘긴다.
@@ -465,6 +557,10 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
     beats_by_idx = {b["beat_idx"]: b for b in plan.get("beats", [])}
     assets_to_copy = []
     total_us = 0
+    import sys as _sys
+    # 완성본 컷 계획 → 캡컷 조각(한 번만). 호출부(assemble_draft_folder)가 이미 구했으면 그것을 쓴다(정지 그림과 짝).
+    _cut_segs = cut_segments if cut_segments is not None else capcut_segments(
+        plan, timeline, source_video_paths, tts_paths, video_durs)
 
     for tl in timeline:
         idx = tl["beat_idx"]
@@ -476,29 +572,49 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
         total_us = max(total_us, t0 + dur)
 
         # ── 영상 트랙: 비트의 화면 조각 **전부** ──
-        # ★2026-08-23 수정. 예전엔 `beat["primary"]` **하나만** 올렸다. 그런데 비트 하나에는
-        #   화면이 여러 개 붙는다(primary + alternates, 실험실 편성이면 scene_override).
-        #   실측: 조각 19개인 job이 캡컷엔 7개만 갔다 = 완성본과 **다른 영상**이 열렸다.
-        #   계획은 렌더와 **같은 함수**가 준다(video_assemble.plan_beat_clips_for, 0순위-B) —
-        #   여기서 따로 나누면 또 어긋난다.
-        _srcd = {vid: (video_durs or {}).get(real, 0.0)
-                 for vid, real in source_video_paths.items() if real}
-        # 배속이 구워진 완성본 조각(_capcut_baked_speed)도 _beat_clips **한 곳**이 처리한다.
-        _clips = _beat_clips(beat, tl.get("dur", 0.0), _srcd)
-        _acc = t0
-        for ci, c in enumerate(_clips):
-            src_real = source_video_paths.get(c.get("video_id"))
+        # ★조각·자리·배속·정지는 완성본 컷 계획(capcut_segments ← video_assemble.render_cut_plan) 그대로(2026-09-27).
+        #   계획에 없는 칸(소스 길이를 못 잰 칸 등)만 종전 조각 계획(_beat_clips — plan_beat_clips_for, primary 폴백)으로 간다.
+        _specs = []          # (video_id, t0_us, dur_us, src_start, read, speed, hold, ci)
+        if _cut_segs is not None and idx in _cut_segs:
+            for sgm in _cut_segs[idx]:
+                _t = _us(sgm["t0"])
+                _specs.append((sgm["video_id"], _t, _us(sgm["t0"] + sgm["dur"]) - _t, sgm["start"],
+                               sgm["read"], sgm["speed"], sgm.get("hold"), sgm["ci"]))
+        else:
+            if _cut_segs is not None:
+                print("[capcut] 칸 %s 완성본 컷 계획 없음 — 종전 조각 계획으로 대체" % idx, file=_sys.stderr)
+            _srcd = {vid: (video_durs or {}).get(real, 0.0)
+                     for vid, real in source_video_paths.items() if real}
+            _clips = _beat_clips(beat, tl.get("dur", 0.0), _srcd)
+            _acc = t0
+            for ci, c in enumerate(_clips):
+                # 마지막 조각은 반올림 오차를 흡수해 비트 끝에 정확히 맞춘다(빈틈·겹침 0).
+                c_dur = (t0 + dur - _acc) if ci == len(_clips) - 1 else _us(c.get("out_dur", 0.0))
+                _src_sec = float(c.get("src_dur", 0.0) or 0.0)
+                _out_sec = float(c.get("out_dur", 0.0) or 0.0)
+                _specs.append((c.get("video_id"), _acc, c_dur, float(c.get("start", 0.0) or 0.0), _src_sec,
+                               (_src_sec / _out_sec) if _src_sec > 0 and _out_sec > 0 else 1.0, None, ci))
+                _acc += max(0, c_dur)
+        _z = _scene_zoom(beat)
+        for _vid, _t, c_dur, _st, _read, _rate, _hold, _ci in _specs:
+            src_real = source_video_paths.get(_vid)
             abs_path = asset_paths.get(src_real) if src_real else None
             if not abs_path:
+                print("[capcut] 칸 %s 조각 %s: 소스 %s 가 초안 폴더에 없다 — 건너뜀" % (idx, _ci, _vid), file=_sys.stderr)
                 continue
-            # 마지막 조각은 반올림 오차를 흡수해 비트 끝에 정확히 맞춘다(빈틈·겹침 0).
-            c_dur = (t0 + dur - _acc) if ci == len(_clips) - 1 else _us(c.get("out_dur", 0.0))
             if c_dur <= 0:
                 continue
+            _img = (freeze_images or {}).get((idx, _ci)) if _hold else None
+            _h_t = _us(_hold["t0"]) if _hold else 0
+            _h_d = (_us(_hold["t0"] + _hold["dur"]) - _h_t) if _hold else 0
+            if _hold and not (_img and _h_d > 0):
+                # 정지 그림이 없다 — 움직이는 조각을 정지 몫까지 한 배속으로 늘린다(종전 표현, 화면이 조금 다르다).
+                if _h_d > 0:
+                    print("[capcut] 칸 %s 조각 %s 정지 그림 없음 — 한 배속으로 늘림" % (idx, _ci), file=_sys.stderr)
+                    c_dur += _h_d
+                    _rate = (_read / (c_dur / 1e6)) if c_dur > 0 else 1.0
+                _hold = None
             assets_to_copy.append((src_real, abs_path))
-            _src_sec = float(c.get("src_dur", 0.0) or 0.0)
-            _out_sec = float(c.get("out_dur", 0.0) or 0.0)
-            _rate = (_src_sec / _out_sec) if _src_sec > 0 and _out_sec > 0 else 1.0
             sp, ca, sc, ph, vs = (
                 _speed(_rate), _canvas(), _sound_channel_mapping(),
                 _placeholder_info(), _vocal_separation(),
@@ -507,26 +623,30 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                            (ph, "placeholder_infos"), (vs, "vocal_separations")):
                 mats[key].append(m)
             vdur = _us((video_durs or {}).get(src_real, 0.0)) or (t0 + dur)
-            vm = _video_material(abs_path, c.get("video_id", "clip"), vdur, cw, ch)
+            vm = _video_material(abs_path, _vid or "clip", vdur, cw, ch)
             mats["videos"].append(vm)
             # volume=0.0 → 원본 클립 오디오 음소거(원본 음악·말소리 제거, 우리 TTS만 들리게).
             # last_nonzero_volume=1.0이라 사장님이 캡컷에서 필요하면 되살릴 수 있다.
-            # source_dur은 **읽을 원본 길이**(src_dur)다 — out_dur을 쓰면 슬로모 구간이 어긋난다.
-            seg = _base_segment(vm["id"], _acc, c_dur, source_start=_us(c.get("start", 0.0)),
-                                source_dur=_us(c.get("src_dur", 0.0)) or c_dur,
+            # source_dur은 **읽을 원본 길이**다 — 화면 길이를 쓰면 슬로모 구간이 어긋난다.
+            seg = _base_segment(vm["id"], _t, c_dur, source_start=_us(_st),
+                                source_dur=_us(_read) or c_dur,
                                 render_index=0, volume=0.0,
                                 extra_refs=[sp["id"], ca["id"], sc["id"], ph["id"], vs["id"]])
             # ── 🔍 장면 확대(6단계에서 끌어 맞춘 것) ──
-            #   뜻은 video_assemble.scene_zoom_of **한 곳**이 정한다(0순위-B) — 여기서
-            #   따로 파싱하면 화면·렌더와 갈린다.
-            #   ⚠️**이동(pan)은 아직 안 간다** — 캡컷 clip.transform의 좌표계(부호·스케일)를
-            #     실측한 근거가 없다. 짐작해 넣으면 화면 밖으로 날아간다(자막 위치와 같은 이유).
-            #     배율만 얹으면 최소한 "얼마나 당겨 봤는지"는 따라간다.
-            _z = _scene_zoom(beat)
+            #   뜻은 video_assemble.scene_zoom_of **한 곳**이 정한다(0순위-B).
+            #   ⚠️**이동(pan)은 아직 안 간다** — 캡컷 clip.transform의 좌표계(부호·스케일)를 실측한 근거가 없다.
             if _z > 1.0:
                 seg["clip"]["scale"] = {"x": _z, "y": _z}
             vid_track["segments"].append(seg)
-            _acc += c_dur
+            if _hold:
+                # ── 정지 조각: 완성본이 마지막 프레임을 세워 둔 몫 — 캡컷 '정지 프레임'과 같은 사진 소재 ──
+                pm = _photo_material(_img, _img.rsplit("/", 1)[-1], cw, ch)
+                mats["videos"].append(pm)
+                hseg = _base_segment(pm["id"], _h_t, _h_d, source_start=0, source_dur=_h_d,
+                                     render_index=0, volume=0.0)
+                if _z > 1.0:
+                    hseg["clip"]["scale"] = {"x": _z, "y": _z}
+                vid_track["segments"].append(hseg)
 
         # ── 음성 트랙: 비트 TTS ──
         tts_real = tts_paths.get(idx)
@@ -877,13 +997,31 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
         if capcut_path:
             copied_scene_layers.append({**layer, "_capcut_path": capcut_path})
 
+    # ── 🎞 완성본 컷 계획 → 캡컷 조각(2026-09-27) + 정지 조각의 사진(완성본이 세워 둔 마지막 프레임) ──
+    cut_segs = capcut_segments(plan, timeline, source_video_paths, tts_paths, video_durs)
+    freeze_images = {}
+    for _bi, _segs in (cut_segs or {}).items():
+        for _sg in _segs:
+            if not _sg.get("hold"):
+                continue
+            _real = source_video_paths.get(_sg["video_id"])
+            if not _real or _real not in asset_paths:
+                continue
+            _fname = "freeze_%02d_%d.jpg" % (int(_bi), int(_sg["ci"]))
+            # 정지 프레임을 뜬다 — 파일 끝에 걸려 못 뜨면 한 프레임씩 앞에서 다시(최대 3프레임, 같은 장면의 끝)
+            for _back in (0, 1, 2, 3):
+                if _freeze_frame(_real, max(0.0, _sg["hold"]["at"] - _back / 30.0), proj / _fname):
+                    freeze_images[(_bi, _sg["ci"])] = f"{base_abs}/{project}/{_fname}"
+                    break
+
     draft, _ = build_draft(caption_style=caption_style, deco=deco,
                            plan=plan, timeline=timeline, source_video_paths=source_video_paths,
                            tts_paths=tts_paths, asset_paths=asset_paths, project_name=project,
                            canvas=canvas, font_path=font_path, video_durs=video_durs,
                            headcopy_layer=headcopy_layer, bgm_layer=bgm_layer,
                            sfx_layers=sfx_layers, cutaway_layers=cutaway_layers,
-                           scene_overlay_layers=copied_scene_layers)
+                           scene_overlay_layers=copied_scene_layers,
+                           cut_segments=cut_segs, freeze_images=freeze_images)
 
     # ── 미디어 보관함(2026-08-23 사장님 "라이브러리에 조각 영상들 불러올 수 있게") ──
     #   타임라인은 그대로 두고, **장면 조각을 캡컷 보관함에 넣어** 끌어다 갈아끼울 수 있게 한다.
@@ -910,24 +1048,32 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
                       "dur": dur, "w": cw2, "h": ch2})
     #   ① 장면 조각 — 원본에서 잘라낸 **깨끗한 화면**(자막·효과 안 구워짐).
     #      갈아끼워도 자막이 어긋나지 않는다. 파일명을 비트 순서로 지어 보관함에서 정렬된다.
+    #      조각 = 타임라인과 **같은 계획**(cut_segs — 완성본 컷 계획). 계획에 없는 칸만 종전 조각 계획.
     for tl in timeline:
         beat = {b["beat_idx"]: b for b in plan.get("beats", [])}.get(tl["beat_idx"])
         if not beat:
             continue
-        _srcd = {vid: (video_durs or {}).get(real, 0.0)
-                 for vid, real in source_video_paths.items() if real}
-        for ci, c in enumerate(_beat_clips(beat, tl.get("dur", 0.0), _srcd)):
-            real = source_video_paths.get(c.get("video_id"))
+        if cut_segs is not None and tl["beat_idx"] in cut_segs:
+            _lib = [(sg["ci"], sg["video_id"], float(sg["start"]), float(sg["read"]),
+                     float(sg["dur"]) + float((sg.get("hold") or {}).get("dur") or 0.0))
+                    for sg in cut_segs[tl["beat_idx"]]]
+        else:
+            _srcd = {vid: (video_durs or {}).get(real, 0.0)
+                     for vid, real in source_video_paths.items() if real}
+            _lib = [(ci, c.get("video_id"), float(c.get("start", 0.0)), float(c.get("src_dur", 0.0) or 0.0),
+                     float(c.get("out_dur", 0.0) or 0.0))
+                    for ci, c in enumerate(_beat_clips(beat, tl.get("dur", 0.0), _srcd))]
+        for ci, _vid, st, _read, _odur in _lib:
+            real = source_video_paths.get(_vid)
             if not real or not Path(real).exists():
                 continue
             role = _safe_part(tl.get("role") or beat.get("role") or "")
             name = "cut_%02d_%d%s.mp4" % (int(tl["beat_idx"]), ci, ("_" + role) if role else "")
             out = proj / name
-            st = float(c.get("start", 0.0))
-            if not _cut(real, st, st + float(c.get("src_dur", 0.0) or 0.0), out):
+            if not _cut(real, st, st + _read, out):
                 continue
             media.append({"path": f"{base_abs}/{project}/{name}", "name": name,
-                          "dur": float(c.get("out_dur", 0.0) or 0.0), "w": cw2, "h": ch2})
+                          "dur": _odur, "w": cw2, "h": ch2})
     #   ② 완성본 — 참고용. 보관함에만 넣고 타임라인엔 안 올린다(TTS와 겹치면 두 번 들린다).
     if final_video and Path(final_video).exists():
         shutil.copy(final_video, proj / "final.mp4")

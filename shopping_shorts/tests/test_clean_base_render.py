@@ -49,7 +49,7 @@ def test_render_inputs_run_incremental_for_changed_beat(tmp_path, monkeypatch):
     job = _setup(tmp_path)
     job["edit_plan"]["beats"][0]["scene_override"] = [{"video_id": "s0", "seg_id": "s0-1", "start": 20.0, "end": 22.0}]
     seen = {}
-    def _inc(store, job, job_id, work, keys, cid, base, plan, uncovered, extend):
+    def _inc(store, job, job_id, work, keys, cid, base, plan, uncovered, extend, **kw):
         seen["uncovered"] = uncovered
         (Path(work) / "cb0_0.mp4").write_bytes(b"q" * 2048)
         return cb.add_extra(work, base, vid="cb0_0", path=str(Path(work) / "cb0_0.mp4"), beat_idx=0,

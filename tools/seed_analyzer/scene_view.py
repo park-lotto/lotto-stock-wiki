@@ -20,6 +20,9 @@ def main():
     ap.add_argument("--seconds", type=int, default=25)
     ap.add_argument("--db", default="/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/reference.db")
     ap.add_argument("--work", default="/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/mix_jobs")
+    # 2026-09-27: 고객 작업과 **같은 조건**(고른 씨앗·스타일)으로 — 없으면 종전(job 안 씨앗, 스타일 없음)
+    ap.add_argument("--work-id", default="")
+    ap.add_argument("--draft", type=int, default=0, help="0=씨앗 결 안, 1=고른 스타일 안")
     a = ap.parse_args()
     from shopping_shorts.store import Store
     from shopping_shorts import edit_plan as ep, mix_pipeline as mp, video_assemble as va, story_writer as sw
@@ -49,10 +52,21 @@ def main():
             if float(s.get("start", 0)) <= t < float(s.get("end", 0)):
                 return s
         return {}
-    drafts, why = sw.make_drafts([], job, a.seconds, job_id=a.job, preset=a.preset)
-    if not drafts:
+    seed_text, product, spines = "", "", []
+    if a.work_id:
+        import sqlite3
+        c = sqlite3.connect("file:%s?mode=ro" % a.db, uri=True)
+        s2 = json.loads(c.execute("select state_json from produce_works where work_id=?", (a.work_id,)).fetchone()[0] or "{}").get("s2") or {}
+        seed_text = (s2.get("seed") or {}).get("text") or ""
+        product = (s2.get("materials") or {}).get("topic_product") or ""
+        ids = [d.get("style_id") for d in s2.get("drafts") or [] if d.get("style_id") is not None]
+        by = {x.get("id"): x for x in store.list_spines()}
+        spines = [by[i] for i in ids if i in by][:1]
+    drafts, why = sw.make_drafts(spines, job, a.seconds, job_id=a.job, preset=a.preset, seed_text=seed_text, seed_product=product)
+    if len(drafts) <= a.draft:
         print("대본 실패:", why); return
-    d = drafts[0]; lines = [b["text"] for b in d["beats"]]
+    d = drafts[a.draft]
+    print("안:", d.get("style_name"), "·", d.get("writer_note")); lines = [b["text"] for b in d["beats"]]
     beat_sources = [{"role": b["role"], "seg": b.get("src_seg"), "segs": b.get("src_segs") or []} for b in d["beats"]]
     plan = ep.build_inherit_plan(srcs, "\n".join(lines), beat_sources, structure="template")
     mp._trim_for_cut_rhythm(plan)
@@ -75,6 +89,9 @@ def main():
             out = os.path.join(a.out, "clips", "b%d_%d.mp4" % (b["beat_idx"], k))
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", str(c["start"]), "-t", str(max(0.3, c["src_dur"])), "-i", p,
                             "-vf", "scale=-2:300", "-an", "-c:v", "libx264", "-preset", "veryfast", "-crf", "28", out])
+            # 눈으로 대조할 정지 화면 한 장(구간 가운데) — 사람이 줄 옆에서 본다
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", str(c["start"] + max(0.15, c["src_dur"] / 2)), "-i", p,
+                            "-frames:v", "1", "-vf", "scale=-2:240", out[:-4] + ".jpg"])
             s = tag_at(vid, c["start"] + 0.05)
             H.append("<div><video src=clips/%s muted autoplay loop playsinline></video><div class=cap>%s %.1f~%.1f초 · 화면 %.1f초</div><div class=tag>%s · %s</div></div>" % (
                 os.path.basename(out), vid, c["start"], c["start"] + c["src_dur"], c["out_dur"], html.escape(str(s.get("shot_role") or "")), html.escape((s.get("scene_desc") or "")[:40])))
