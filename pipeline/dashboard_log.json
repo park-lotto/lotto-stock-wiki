@@ -355,5 +355,12 @@
     "track": "AI장면생성_Veo",
     "summary": "GCP 서비스 계정 키 생성 차단 화면(iam.disableServiceAccountKeyCreation) 해석. 조직 정책 관리자만 해제 가능, 대안=ADC 인증 방식 안내",
     "next": "조직 관리자에게 프로젝트 단위 예외 요청 또는 ADC 방식 유지"
+  },
+  {
+    "date": "2026-09-28",
+    "category": "스탁브레인",
+    "track": "대본작성",
+    "summary": "이정민님 대본 영어 출력 제보 조사: 새벽 02:07 이야기 작가 v4.1 전체 켜짐(story_writer_enabled=1 실측). STYLED_BRIEF에 한국어 지시·한글 검사 없음(옛 경로엔 있었음). 실제 대본은 DB 읽기 권한 거부로 미확인",
+    "next": "이정민 job id 받아 대본·재료 대조 → 승인 후 프롬프트 한국어 지시+styled_problems 한글 검사 추가"
   }
 ]
