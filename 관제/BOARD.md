@@ -1,10 +1,10 @@
 # 관제 보드 (자동 생성 — 손으로 고치지 마라. `py tools/control.py board`)
 
-갱신: 2026-09-28 23:40 · 카드 10장
+갱신: 2026-09-28 23:40 · 카드 11장
 
 상태 흐름: 등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료  (예외: 승인대기 · 회귀)
 
-## 등록 (9)
+## 등록 (10)
 
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
@@ -17,6 +17,7 @@
 | [008](cards/008-청소_크레딧_추정_위임·죽은_clean_ba.md) | 청소 크레딧 추정 위임·죽은 clean_base_preview 정리 (#16-②·#18-①) | - | - | shopping_shorts/mix_pipeline.py:clean_charge_plan | app._clean_credit_est 가 clean_charge_plan(mode=button)['credits'] 만 부름 · clean_base_preview 호출처 0 확인 뒤 제거 | 2026-09-28 23:40 등록 |
 | [009](cards/009-fill_위치·번호_혼용_·__hook_de.md) | /fill 위치·번호 혼용 · _hook_delta Path 결함 · app.py 22060 음성표 tts_paths_of (#21·#27) | - | - | shopping_shorts/store.py:dedupe_beat_idx · shopping_shorts/video_assemble.py:_apply_hook_inpoint · shopping_shorts/mix_pipeline.py:tts_paths_of | 칸 지운 job 에서 /fill 폴백이 같은 칸 길이 · _hook_delta 가 dict 를 받아 0 아닌 값 · 22060 경로가 칸 번호 겹침 차단을 탐(테스트) | 2026-09-28 23:40 등록 |
 | [010](cards/010-소스_길이_표·probe_공용_—_실패_처리.md) | 소스 길이 표·probe 공용 — 실패 처리(None/0/예외) 통일 (#22) | - | - | shopping_shorts/mix_pipeline.py:_src_durs_for · shopping_shorts/video_assemble.py:_probe_duration | ownership audit 에서 #22 예외 3곳(frame_extract·export_bundle·app) → 0, 값 불변 | 2026-09-28 23:40 등록 |
+| [011](cards/011-편집_화면_DATA.tts_dur_를_트림_.md) | 편집 화면 DATA.tts_dur 를 트림 반영 길이로 — 화면 컷 = 완성본 컷 (#6) | - | **필요** | shopping_shorts/video_assemble.py:_beat_effective_dur | 트림 칸 수 실측 → tools/editor_vs_final_video.py 밀림 감소, 화면 컷 경계 = 완성본 | 2026-09-28 23:40 등록 |
 
 ## 분배 (1)
 
