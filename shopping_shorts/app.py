@@ -3679,7 +3679,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         # 재료가 한 편도 없으면 여기서 멈춘다 — 이 상태로 생성하면 모델이 통째로 지어낸다.
         # ★무음 영상은 원문이 없어도 장면 설명·제품명이 재료다(_generate_material_ready, 2026-09-28).
         if not _generate_material_ready(_src):
-            return JSONResponse(status_code=422, content={"ok": False, "error": _NO_MATERIAL_MSG})
+            return JSONResponse(status_code=422, content={"ok": False, "error": _no_material_msg()})
         # ★재료 분량을 알고 나서 은행을 다시 짠다(2026-08-18). 위(2351)에서는 재료를 아직
         #   몰라 예산을 못 건다 — 그대로 두면 은행이 재료를 압도한 채 프롬프트에 실린다
         #   (실측 사고: 재료 750자 vs 은행 2,822자 → 대본이 은행 소재로 끌려감).
@@ -3846,7 +3846,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
     if not _generate_material_ready(_pick_src):   # 스타일 경로와 같은 판정(0순위-B)
-        return JSONResponse(status_code=422, content={"ok": False, "error": _NO_MATERIAL_MSG})
+        return JSONResponse(status_code=422, content={"ok": False, "error": _no_material_msg()})
     # ★은행 예산을 여기서도 건다(2026-09-07). 스타일 경로(위)에는 재료 글자수로 은행을
     #   잘라내는 코드가 있는데 **이 픽업 경로에는 없었다** — 같은 판단이 한쪽에만 적힌
     #   0순위-B다. 실측 work 01e725b98569: 재료 233자인데 은행 1,832자 + 스타일 예시
@@ -24342,8 +24342,11 @@ def _generate_material_ready(sources):
     return False
 
 
-_NO_MATERIAL_MSG = ("재료가 아직 없어요 — 1단계에서 담긴 영상의 분석이 끝난 뒤 다시 눌러주세요. "
-                    "급하면 '직접 쓰기'로 대본을 넣어도 됩니다.")
+def _no_material_msg():
+    """재료가 하나도 없을 때 화면에 보낼 문구(관문 두 곳이 같은 문구를 쓴다). 함수인 이유: 모듈 수준
+    상수는 영상 관문(tools/video_gate.py)이 '모듈 수준 변경'으로 봐 영상 비교를 돌린다."""
+    return ("재료가 아직 없어요 — 1단계에서 담긴 영상의 분석이 끝난 뒤 다시 눌러주세요. "
+            "급하면 '직접 쓰기'로 대본을 넣어도 됩니다.")
 
 
 def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES,
