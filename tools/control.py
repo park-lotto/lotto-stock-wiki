@@ -340,8 +340,13 @@ def _publish(repo, mutate, msg, attempts=4, keep_stage=False):
                 return sha.strip()
             last = out
             lo = out.lower()
-            if not ("rejected" in lo or "non-fast-forward" in lo or "fetch first" in lo):
+            race = "rejected" in lo or "non-fast-forward" in lo or "fetch first" in lo
+            # 깃허브 순단(2026-09-28 실측: 'Failed to connect to github.com port 443') — 잠깐 쉬고 다시. 다른 실패는 바로 알린다.
+            net = "could not connect" in lo or "failed to connect" in lo or "could not resolve host" in lo or "unable to access" in lo
+            if not (race or net):
                 raise ControlError("관제 push 실패 — main 은 안 바뀌었다:\n" + out)
+            if net:
+                time.sleep(5 * attempt)
         finally:
             if not keep_stage:
                 _git(repo, "worktree", "remove", "--force", str(stage))
