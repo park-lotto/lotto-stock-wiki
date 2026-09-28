@@ -57,11 +57,13 @@ def test_head_cut_moves_start_inside(tmp_path, frames):
 
 @pytest.mark.parametrize("frames", [1, 2, 3])
 def test_tail_cut_shrinks_window(tmp_path, frames):
+    """꼬리 1~3프레임이 다음 샷이면 창 끝은 전환 앞. ★2026-09-28(fitBeatCuts): 줄어든 몫은 같은 샷 안 머리(조각 앞 같은 샷)에서
+    채운다 — 종전엔 가드가 채우기 뒤에 돌아 줄어든 몫이 느리게로 남았다(기대값 변경: 시작 10.0 → 전환−1.5)."""
     cut = round(11.5 - frames * F, 3)
     c = _run(_data(10.0, 11.5, [cut]), tmp_path)
-    assert c["s"] == 10.0
     assert c["s"] + c["sd"] <= cut + 1e-9, c               # 다음 장면 첫 프레임부터는 안 읽는다
     assert c["s"] + c["sd"] > cut - 1.5e-3, c
+    assert abs(c["s"] - (cut - 1.5)) < 2e-3 and abs(c["sd"] - 1.5) < 2e-3, c   # 같은 샷 머리로 채워 1배속
     assert abs(c["d"] - 1.5) < 1e-6
 
 
@@ -90,7 +92,7 @@ def test_guard_called_once_in_finish():
     body = "\n".join(ln.split("//")[0] for ln in src.splitlines())
     assert body.count("guardReadWindow(") == 2, "정의 1 + 호출 1(finish) 이어야 한다"
     i = src.index("function planClips(")
-    f0 = src.index("const finish = base =>", i)
+    f0 = src.index("const finish = (base, manual) =>", i)
     fin = src[f0:src.index("const segments =", f0)]
     assert "guardReadWindow(" in fin
 

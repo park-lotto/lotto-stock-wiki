@@ -6557,6 +6557,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         "scenecuts": _lab_scenecuts(job, work),
         # 청소본이 지운 원본 구간(2026-09-27) — fillShortWindow 가 청소본 칸의 창을 이 안에서만 늘린다(과금·원본 자막 방지).
         "clean_spans": _lab_clean_spans(job, work),
+        # 컷 맞춤 방식(2026-09-28) — scene_play.js finish(fitBeatCuts)가 읽는다. 화면·서버 러너(완성본·캡컷)가 같은 값.
+        "cut_fit": _cut_fit_of(plan),
         "captions": caps,
         "tts_dur": tts_dur,
     }}
@@ -8370,6 +8372,40 @@ def api_mix_scene_lab_speed(job_id: str, beat_idx: int, body: dict,
     background_tasks.add_task(mix_pipeline.resynth_one_beat, job_id, beat_idx, voice,
                               DB_PATH, _MIX_WORK_DIR, speed_only=True)
     return {"ok": True, "speed": wanted, "tts_ver": beat.get("tts_ver") or 0}
+
+
+CUT_FIT_MODES = ("phrase", "tail")
+
+
+def _cut_fit_of(plan):
+    """편성의 컷 맞춤 방식 — phrase(구절맞춤: 컷 경계 = 구절 경계, 모자란 컷만 느리게→정지) /
+    tail(꼬다리맞춤: 여유 있는 컷이 모자란 몫을 나눠 가져 정지를 없앤다). 없거나 모르는 값 = phrase.
+    판단은 scene_play.js planClips 의 finish(fitBeatCuts) 한 곳 — 여기는 저장값만 돌려준다."""
+    v = (plan or {}).get("cut_fit")
+    return v if v in CUT_FIT_MODES else "phrase"
+
+
+@app.post("/api/mix/scene_lab/{job_id}/cut_fit")
+def api_mix_scene_lab_cut_fit(job_id: str, body: dict):
+    """3단계 상단 [구절맞춤]/[꼬다리맞춤] — 편성 공통 설정 edit_plan.cut_fit 을 저장한다(2026-09-28).
+    화면·서버 러너(완성본·캡컷)가 같은 값을 읽는다. 컷이 바뀌므로 기존 완성본 연결은 끊는다(속도 저장과 같은 규칙)."""
+    mode = str((body or {}).get("mode") or "")
+    if mode not in CUT_FIT_MODES:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "phrase 또는 tail 만 고를 수 있어요"})
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "생성·렌더 중에는 바꿀 수 없어요"})
+    with _plan_lock(job_id):
+        job = store.get_mix_job(job_id) or job
+        plan = job.get("edit_plan") or {}
+        if _cut_fit_of(plan) == mode and plan.get("cut_fit") == mode:
+            return {"ok": True, "mode": mode, "unchanged": True}
+        plan["cut_fit"] = mode
+        store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review", video_path=None, error=None)
+    return {"ok": True, "mode": mode}
 
 
 @app.post("/api/mix/scene_lab/{job_id}/narration/{beat_idx}")

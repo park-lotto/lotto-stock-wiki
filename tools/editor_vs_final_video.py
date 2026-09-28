@@ -63,7 +63,8 @@ if os.getenv("PATCH_DIR"):          # 배포 전 대조: 고친 모듈을 먼저
         exec(compile(_src[_i:_j], str(_fa), "exec"), _app.__dict__)
         # 조각 경계 붙이기(2026-09-27) — 화면에 조각을 내려주는 입구와 그 보조 함수도 바꿔 끼운다(데코레이터 뒤 몸통만)
         #   입구가 부르는 _lab_captions 도 같이(인자 모양이 바뀌면 옛 것과 섞여 TypeError — 서버 실측 2026-09-27)
-        for _a, _b in (("def _lab_scenecuts(", chr(10) + "def _with_film_segs("),
+        for _a, _b in (("CUT_FIT_MODES = (", chr(10) + "@app."),       # 컷 맞춤 방식(2026-09-28) — 입구가 부른다(없는 서버 app 에 얹기)
+                       ("def _lab_scenecuts(", chr(10) + "def _with_film_segs("),
                        ("def _lab_captions(", chr(10) + "@app."),
                        ("def api_mix_scene_lab_data(", chr(10) + "@app.")):
             if _a in _src:

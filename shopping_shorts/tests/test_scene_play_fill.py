@@ -104,13 +104,14 @@ def test_guard_runs_after_fill(tmp_path):
 
 
 def test_fill_before_guard_in_code():
+    """★2026-09-28: fillShortWindow 는 finish(fitBeatCuts)의 창 놓기로 대체됐다 — 창 놓기(재배분 포함) → 가드 순서, 옛 함수는 없다."""
     src = SCENE_PLAY.read_text(encoding="utf-8")
-    i = src.index("const finish = base =>")
+    i = src.index("const finish = (base, manual) =>")
     body = src[i:src.index("return base;\n  };", i)]
     code = "\n".join(ln.split("//")[0] for ln in body.splitlines())
-    assert code.index("fillShortWindow(") < code.index("guardReadWindow("), "채우기 → 가드 순서"
+    assert code.index("fitCutLens(") < code.index("guardReadWindow("), "재배분·창 놓기 → 가드 순서"
     whole = "\n".join(ln.split("//")[0] for ln in src.splitlines())
-    assert whole.count("fillShortWindow(") == 2, "정의 1 + 호출 1"
+    assert "fillShortWindow(" not in whole, "옛 채우기 함수가 남으면 판단이 두 벌이 된다"
 
 
 def test_app_clean_spans_from_regions(monkeypatch, tmp_path):

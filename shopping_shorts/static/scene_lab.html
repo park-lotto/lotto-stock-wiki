@@ -1117,6 +1117,11 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
     <button type="button" class="act" id="undobtn" style="padding:3px 10px;font-size:11.5px" disabled
             title="되돌릴 편집이 아직 없습니다" onclick="undoWork()">↩ 되돌리기</button>
     <button type="button" class="act" id="tightbtn" title="글자를 접고 화면(영상)을 크게 봅니다" onclick="toggleTight()">▦ 촘촘히</button>
+    <!-- ★컷 맞춤 방식(2026-09-28) — 편성 공통 한 값(edit_plan.cut_fit). 화면·완성본·캡컷이 같은 값을 읽는다(scene_play.js finish). -->
+    <button type="button" class="act" id="cutFitPhrase" style="padding:3px 10px;font-size:11.5px"
+            onclick="setCutFit('phrase')" title="컷 경계를 자막 구절 경계에 고정합니다 — 장면이 모자란 컷만 느리게·멈춤이 생깁니다">📝 구절맞춤</button>
+    <button type="button" class="act" id="cutFitTail" style="padding:3px 10px;font-size:11.5px"
+            onclick="setCutFit('tail')" title="장면이 모자란 컷 몫을 여유 있는 컷이 나눠 가집니다 — 멈춤이 줄고 컷 경계가 구절에서 조금 움직입니다">✂ 꼬다리맞춤</button>
     <!-- ★저장·불러오기는 **여기**에 있어야 한다(2026-09-07 실측). 처음엔 아래 footer에
          뒀는데, 제작소 안(body.inside-studio.grow)에서는 그 줄이 통째로 높이 0으로 접혀
          버튼도 안내문도 안 보였다 — 사장님이 "작동 안 되는 것 같은데"라고 하신 이유다.
@@ -3893,6 +3898,34 @@ const NARR_BUSY = {};                  // beat_idx → 음성·자막 재생성 
 // 머리글 안내문에 상태를 쓴다. makeTts의 say는 그 함수 안의 지역 클로저라 여기서 못 쓴다
 // (이름만 같다고 쓸 수 있는 게 아니다 — 실제로 확인하고 전용 헬퍼를 뒀다).
 function nsay(t){ const h = document.getElementById('tbhint'); if (h) h.textContent = t; }
+// ★컷 맞춤 방식 버튼(2026-09-28) — 지금 방식을 강조하고, 누르면 편성에 저장한 뒤 화면 컷을 다시 계산한다.
+function paintCutFit(){
+  const m = (DATA && DATA.cut_fit === 'tail') ? 'tail' : 'phrase';
+  [['cutFitPhrase', 'phrase'], ['cutFitTail', 'tail']].forEach(([id, v]) => {
+    const b = document.getElementById(id); if (!b) return;
+    b.classList.toggle('on', m === v);
+    b.style.fontWeight = m === v ? '700' : '';
+    b.style.outline = m === v ? '2px solid var(--accent, #4a8cff)' : '';
+    b.setAttribute('aria-pressed', m === v ? 'true' : 'false');
+  });
+}
+async function setCutFit(mode){
+  if (!DATA || (DATA.cut_fit || 'phrase') === mode) { paintCutFit(); return; }
+  const before = DATA.cut_fit || 'phrase';
+  DATA.cut_fit = mode; paintCutFit(); render();
+  if (!SL.server) return;
+  try{
+    const r = await fetch(`/api/mix/scene_lab/${SL.job}/cut_fit`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mode})});
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error(j.error || '저장 실패');
+    try{ if (typeof clearConfirm === 'function') clearConfirm(); }catch(e){}
+    nsay(mode === 'tail' ? '✂ 꼬다리맞춤 — 모자란 컷 몫을 옆 컷이 나눠 가졌어요' : '📝 구절맞춤 — 컷 경계를 자막 구절에 맞췄어요');
+  }catch(e){
+    DATA.cut_fit = before; paintCutFit(); render();
+    nsay('⚠ 컷 맞춤 저장 실패: ' + (e.message || e));
+  }
+}
 // ★사람이 버튼을 눌러 생긴 결과는 **보이는 자리**에 알린다(2026-09-07 사장님
 //   "지금저장·서버에서불러오기 작동 안 되는 것 같은데").
 //   실측: nsay가 쓰는 #tbhint는 제작소 iframe 안에서 **0x0**이라 글자가 아예 안 보였다.
@@ -4638,6 +4671,7 @@ async function boot(){
   }
   SCENE_REV = DATA.scene_lab_revision || '';
   normalizeData();
+  paintCutFit();
   SAVE_KEY = 'sceneLab:' + (DATA.job_id || 'job');
   if (DATA.picks && (DATA.picks.lists || []).length){
     const el = document.getElementById('m-pick');
