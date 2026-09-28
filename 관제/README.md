@@ -37,6 +37,18 @@
 
 상태: `등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료` / 예외 `승인대기` · `회귀`
 
+## 저장 층(C/D) — 카드 023
+
+지도 `storage.json`(경로 → 층 → D 목적지 → 기준 → 방법). 판단 주인 `tools/storage.py:plan`.
+
+```
+py tools/storage.py status                       # C/D 여유·소비 상위·경보선(15/3GB)
+py tools/storage.py plan                         # 지금 D 로 보낼 수 있는 것 + GB (실행 없음)
+py tools/storage.py apply --tracks --stages      # 7일+ 무활동·미커밋 0 트랙 → D bundle + 주차 / 끊긴 병합 잔해 삭제
+py tools/storage.py apply --research             # research/ → D, C 에는 정션
+```
+`apply` 는 D:\숏템 과 `_저장규칙.txt` 가 보일 때만 돈다. 되살리기: `git worktree add .tracks/<트랙> track/<트랙>`.
+
 ## 아직 없는 것 (카드로 등록됨)
 
 - 영향 지도 `tools/impact.py`(호출 그래프 → 수리 명세서, finish 가 diff 와 대조)
