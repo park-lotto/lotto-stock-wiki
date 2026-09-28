@@ -1,0 +1,35 @@
+{
+  "_설명": "승인 표식 규칙. diff 가 여기 닿으면 카드에 '승인:' 한 줄이 있어야 finish 가 병합한다(0순위-A1c). 경로는 접두, 토큰은 정규식(추가·삭제된 줄에서 찾는다).",
+  "approval": {
+    "customer_ui_prefixes": [
+      "shopping_shorts/static/",
+      "shopping_shorts/templates/"
+    ],
+    "customer_ui_suffixes": [
+      ".html",
+      ".js",
+      ".css"
+    ],
+    "token_scope_prefixes": [
+      "shopping_shorts/"
+    ],
+    "billing_tokens": [
+      "_charge_",
+      "clean_charge_plan",
+      "clean_credit",
+      "_sig_tier",
+      "signature",
+      "_render_stamp"
+    ],
+    "customer_data_tokens": [
+      "update_mix_job",
+      "mix_jobs",
+      "clean_base.json"
+    ]
+  },
+  "card_gate": {
+    "require_card": true,
+    "require_approval": true,
+    "ownership_check": true
+  }
+}
