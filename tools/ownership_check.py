@@ -197,7 +197,8 @@ def main(argv=None):
         print("== 새로 생긴 주인 밖 시그니처 %d곳" % len(hits))
         return 1 if hits else 0
     if args.cmd == "render":
-        (repo / TABLE_REL).write_text(render_table(own), encoding="utf-8")
+        with open(repo / TABLE_REL, "w", encoding="utf-8", newline="\n") as fh:     # LF 고정(.gitattributes eol=lf 와 짝)
+            fh.write(render_table(own))
         print("생성: %s" % TABLE_REL)
         return 0
     return 0
