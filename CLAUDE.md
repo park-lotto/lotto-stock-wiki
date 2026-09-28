@@ -2,6 +2,16 @@
 
 ---
 
+## 🎛 관제(管制) — 원칙 3줄 (2026-09-28 사장님 "매우 중요", 도구가 강제한다)
+
+1. **모든 시작은 관제 등록에서.** 카드 없는 트랙·finish 는 없다 — `py tools/control.py new "제목" …` → `py tools/track.py start <트랙> --card <번호>`. `track.py` 가 막는다.
+2. **수리는 뿌리다.** "이 판단이 몇 벌인가·주인이 어디인가"를 먼저 정하고(`관제/ownership.json` · `wiki/rules/판단소유권.md`) 그 한 곳을 고친다. 주인 밖에 같은 판단을 새로 적으면 `finish` 가 거절한다.
+3. **"됐다" = 라이브 실물 숫자가 카드의 '됐다의 기준'을 채운 상태.** 그 전 이름은 "진행 중 / 반영됨·미검증". 고객 화면·과금·고객 데이터에 닿는 병합은 카드에 사장님 승인(`control.py approve`)이 있어야 `finish` 가 통과한다.
+
+> 보드 `관제/BOARD.md`(자동 생성) · 사용법 `관제/README.md` · 설계 `docs/superpowers/specs/2026-09-27-관제시스템-design.md`
+
+---
+
 ## 🚫 0순위 규칙 — 추측 금지, 검증하고 답한다 (2026-08-09)
 
 **다른 모든 규칙보다 앞선다.** 사장님이 가장 싫어하는 것은 **안 찾아보고 아는 척 말하는 것**이다.
@@ -369,7 +379,9 @@ if config.INSTAGRAM_SESSION_PATH and os.path.exists(...):
 규칙으로 못 막는다 — 2026-07-15에 "`git add -A` 금지"를 박은 날 저녁에 흡수가 3번 났다.
 
 ```
-py tools/track.py start <트랙명>     # 내 폴더 .tracks/<트랙명> + track/<트랙명> 브랜치 생성
+py tools/control.py new "<제목>" --from <제보자> --owner <파일:함수> --done "<됐다의 기준>"   # ★먼저 관제 카드(번호가 나온다)
+py tools/track.py start <트랙명> --card <번호>   # 내 폴더 .tracks/<트랙명> + track/<트랙명> 브랜치 생성 (카드 없으면 거절)
+py tools/track.py claim <트랙명> <번호> <파일|파일:함수>   # 선점 신고 — 다른 트랙과 같은 함수를 건드리면 finish 가 경고
 트랙.bat                            # ★열린 트랙 목록에서 번호로 골라 Claude Code 열기
 트랙.bat <트랙명>                    #   바로 그 트랙으로 (경로 칠 필요 없음)
 py tools/track.py finish <트랙명>    # 게이트 통과해야만 main 병합 → 라이브 (폴더는 남는다)
@@ -424,8 +436,9 @@ py tools/track.py park-idle         # 7일 넘게 안 쓴 트랙 폴더를 전�
 **Claude가 알아서 그 트랙 폴더에서 작업한다.** 창을 새로 열라고 요구하지 마라 — 안 지켜지는 규칙은 없는 규칙이다.
 
 ```
+□ 0. 관제 카드가 있나? py tools/control.py list — 없으면 new 로 등록(제보자·판단 주인·됐다의 기준을 적는다)
 □ 1. 트랙 폴더 확인: .tracks/<트랙명> 이 있나?
-      없으면 → py tools/track.py start <트랙명>  (사용자 확인 후)
+      없으면 → py tools/track.py start <트랙명> --card <번호>  (사용자 확인 후)
 □ 2. 편집은 전부 .tracks/<트랙명>/... 절대경로로.
       ★main 폴더의 코드 파일은 단 하나도 건드리지 마라. 그게 흡수의 재료다.
 □ 3. git은 전부 -C 로: git -C .tracks/<트랙명> add -A / commit / status

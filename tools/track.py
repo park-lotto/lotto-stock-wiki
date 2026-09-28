@@ -33,6 +33,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import control as _control
 import merge_gate
 import video_gate as _video_gate
 
@@ -321,10 +322,21 @@ def upstream_of(wt):
     return out.strip() if rc == 0 else None
 
 
-def start(name, repo=BASE, full=False):
+def start(name, repo=BASE, full=False, card=None):
     merge_gate.make_output_safe()
     validate_name(name)
     _disk_guard(repo, "start")
+    # ★관제(2026-09-28): 카드 없는 트랙은 없다. 관제가 설치된 저장소(origin/main 에 관제/cards)에서만 검사한다.
+    run(["git", "fetch", "origin"], repo)
+    if _control.installed(repo):
+        if card is None:
+            raise TrackError(
+                "관제 카드 없이는 트랙을 열지 않는다(관제 원칙 1 — 모든 시작은 관제 등록에서).\n"
+                "  ① 카드 등록: py tools/control.py new \"<제목>\" --from <제보자> --owner <파일:함수> --done \"<됐다의 기준>\"\n"
+                f"  ② 트랙 열기: py tools/track.py start {name} --card <번호>\n"
+                "  (있는 카드 보기: py tools/control.py list)")
+        if _control.find_card(_control.cards_from_ref(repo), card) is None:
+            raise TrackError(f"없는 관제 카드: {card}  (목록: py tools/control.py list)")
     wt = worktree_path(name, repo)
     if wt.exists():
         raise TrackError(
@@ -350,8 +362,13 @@ def start(name, repo=BASE, full=False):
     _copy_local_secrets(repo, wt)
     if not full:
         _apply_sparse(wt)
+    if card is not None:
+        try:
+            _control.link_track(repo, card, name)
+        except _control.ControlError as e:
+            print(f"⚠️ 카드 {card}에 트랙을 못 적었다(트랙은 만들어졌다) — 손으로: py tools/control.py link {card} {name}\n   {e}")
 
-    print(f"✅ 트랙 '{name}' 시작")
+    print(f"✅ 트랙 '{name}' 시작" + (f"  (관제 카드 {card:03d})" if card is not None else ""))
     print(f"   폴더:    {wt}")
     print(f"   브랜치:  {branch_name(name)} (origin/main 기준)")
     print()
@@ -480,6 +497,16 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
 
     print(f"✅ 게이트 통과 (기존 실패 {len(before['failed'])}건은 그대로)")
 
+    # ★관제 관문(2026-09-28): 카드 없는 병합 없음 · 고객 화면/과금/데이터 변경은 카드 승인 · 판단 두 벌 새로 생기면 거절.
+    #   merge_gate 뒤·영상 관문 앞 — 서버 영상 비교(수십 분)를 돌리기 전에 싼 검사로 먼저 거른다.
+    cg = _control.finish_gate(repo, stage, br, name)
+    if not cg.ok:
+        raise TrackError(
+            "❌ 관제 관문 실패 — 병합을 버렸다. 라이브는 무사하다.\n"
+            + "\n".join("  • " + f for f in cg.fails)
+            + f"\n\n트랙 폴더는 그대로 있다: {wt}\n고친 뒤 다시: py tools/track.py finish {name}")
+    _MERGE_CARDS[name] = [c["번호"] for c in cg.cards]
+
     # ★영상 관문(2026-09-27): 제작 라인(미리보기 굽기·렌더·청소·컷 계산)을 건드린 병합은
     #   서버에서 '편집 화면 vs 완성본' 영상 비교를 통과해야 커밋된다. 해당 변경이 없으면 한 줄 찍고 건너뛴다.
     #   실패하면 여기서 버린다 — 아직 커밋 전이라 라이브는 무사하다(stage는 finally에서 통째로 삭제).
@@ -505,7 +532,14 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
             f"push 실패 — main은 안 바뀌었다(라이브 무사):\n{out}"
         )
     print("✅ main에 병합 완료 — push됨. 3분 뒤 서버 반영.")
+    rc, sha = run(["git", "rev-parse", "--short=10", "HEAD"], stage)
+    if _MERGE_CARDS.get(name):
+        _control.record_merge(repo, _MERGE_CARDS[name], name, sha.strip())
     return "pushed"
+
+
+# finish_gate 가 찾은 카드 번호 → push 뒤 병합 기록에 쓴다(트랙명별). 한 프로세스가 finish 하나를 돈다.
+_MERGE_CARDS = {}
 
 
 def _is_race(push_output):
@@ -577,6 +611,8 @@ def close(name, repo=BASE):
     rc, out = run(["git", "branch", "-D", br], repo)
     if rc != 0:
         raise TrackError(f"브랜치를 못 지웠다:\n{out.strip()[:200]}")
+    if _control.installed(repo):
+        _control.release(repo, name)
     print(f"🧹 트랙 '{name}' 접음 (폴더·브랜치 삭제)")
     return 0
 
@@ -674,10 +710,13 @@ def list_tracks(repo=BASE):
         print("열린 트랙 없음.  시작: py tools/track.py start <이름>")
         return 0
     print("열린 트랙:\n")
+    cards = _control.cards_from_ref(repo) if _control.installed(repo) else []
     for br in branches:
         name = br[len(BRANCH_PREFIX):]
         wt = worktree_path(name, repo)
         n = ahead_count(repo, br)
+        mine = _control.cards_for_track(cards, name)
+        card_mark = ("  카드 " + ", ".join("%03d" % c["번호"] for c in mine)) if mine else ("  ❗카드 없음" if cards else "")
         mark = ""
         if n is None:
             mark = "  (앞선 커밋 수 계산 실패)"
@@ -688,7 +727,7 @@ def list_tracks(repo=BASE):
         else:
             mark = f"  main보다 {n}커밋 앞섬"
         exists = "" if wt.exists() else "  ❗폴더 없음(브랜치만 남음)"
-        print(f"  {name:<16} {br}{mark}{exists}")
+        print(f"  {name:<16} {br}{mark}{exists}{card_mark}")
         print(f"  {'':<16} {wt}")
     print("\n끝내기: py tools/track.py finish <이름>")
     return 0
@@ -703,6 +742,11 @@ def main(argv=None):
     p_start = sub.add_parser("start", help="트랙 폴더+브랜치 생성")
     p_start.add_argument("name")
     p_start.add_argument("--full", action="store_true", help="raw/·productions/까지 전부 풀기(기본은 가벼운 트랙)")
+    p_start.add_argument("--card", type=int, default=None, help="관제 카드 번호(관제가 설치된 저장소에선 필수)")
+    p_claim = sub.add_parser("claim", help="선점 신고 — 이 트랙이 손댈 파일/함수를 관제/claims.json 에")
+    p_claim.add_argument("name")
+    p_claim.add_argument("card", type=int)
+    p_claim.add_argument("targets", nargs="+", help="파일 또는 파일:함수")
     p_park = sub.add_parser("park", help="트랙 폴더만 치움 — 브랜치·원격 백업 보존")
     p_park.add_argument("name")
     p_idle = sub.add_parser("park-idle", help=f"{IDLE_PARK_DAYS}일 넘게 안 쓴 트랙 폴더를 전부 치움(브랜치 보존)")
@@ -716,7 +760,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.cmd == "start":
-            return start(args.name, full=args.full)
+            return start(args.name, full=args.full, card=args.card)
+        if args.cmd == "claim":
+            validate_name(args.name)
+            _control.claim(BASE, args.name, args.card, args.targets)
+            return 0
         if args.cmd == "park":
             return park(args.name)
         if args.cmd == "park-idle":
