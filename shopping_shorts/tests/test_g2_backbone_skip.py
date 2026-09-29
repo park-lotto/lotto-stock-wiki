@@ -17,8 +17,10 @@ dedup_clips_global·swap_hook_cta_for_differentiation)은 primary/alternates만 
 from shopping_shorts import backbone, edit_plan
 
 
-_WATCHED = ["order_by_backbone", "dedup_and_balance", "ensure_sources_used",
-            "dedup_clips_global", "swap_hook_cta_for_differentiation"]
+# 카드 033(2026-09-29): dedup_and_balance·ensure_sources_used·dedup_clips_global은 주인 함수
+# finalize_scenes로 흡수돼 지워졌다. finalize_scenes는 화면 못박기 **뒤**에 돌아 소멸하지 않으므로
+# 슬롯 경로에서도 불려야 한다(test_slot_path_runs_finalize_scenes).
+_WATCHED = ["order_by_backbone", "swap_hook_cta_for_differentiation"]
 
 # ★첫·끝 세그는 인벤토리에서 제외된다(썸네일·CTA 차단) — 후보가 참조할 수 있는 것은
 #   가운데 세그뿐이라 소스마다 4개씩 둔다. 이걸 모르면 후보 0개가 나와 테스트가
@@ -179,3 +181,18 @@ def test_trim_is_actually_wired_into_assign_timeline():
         f"_assign_timeline이 예산({budget:.1f}s)을 크게 넘겨 화면 {total:.1f}s를 붙였다 "
         "— 트림 배선이 빠졌다")
     assert len(got["alternates"]) < 6, "alternates를 하나도 안 잘랐다"
+
+
+def test_slot_path_runs_finalize_scenes(monkeypatch):
+    """카드 033: 슬롯 경로도 후보마다 한 편 마감(finalize_scenes)을 **화면 못박기 뒤**에 탄다."""
+    seen = {"n": 0}
+    orig = backbone.finalize_scenes
+
+    def w(*a, **k):
+        seen["n"] += 1
+        return orig(*a, **k)
+
+    monkeypatch.setattr(backbone, "finalize_scenes", w)
+    cands = _run(monkeypatch, True)
+    assert seen["n"] >= len(cands), "슬롯 경로에서 finalize_scenes가 안 불렸다(반복 방지 없음)"
+    assert all("scene_finalize" in c["plan"] for c in cands)

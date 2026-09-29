@@ -1595,10 +1595,20 @@ def _run_gate_correction(plan, source_scripts, target_seconds):
             return plan_gate.check_plan(bs, target_seconds, pool_video_count=pool_ct)
 
     beats = plan.get("beats")
+    # ★한 편 안 장면 중복·소스 배분 마감(카드 033, 2026-09-29) — 모든 3단계 경로(슬롯·옛·legacy·1소스)가
+    #   여기(최종 plan, refill·conform 뒤)를 지난다. 게이트보다 **먼저** 주인 함수로 마감하고 잰다.
+    #   (job 68b48b12c7f5: legacy 경로엔 반복 방지가 아예 없었고, 재픽의 dedup 두 벌은
+    #    '앞 칸 alternate = 뒤 칸 primary'를 못 봐서 게이트가 -39×2를 잡고도 그대로 출고했다.)
+    fin_rep = {}
+    try:
+        beats = backbone.finalize_scenes(beats, source_scripts, report=fin_rep)
+    except Exception:      # noqa: BLE001 — 마감 실패는 경보로 남긴다(조용히 넘기지 않는다)
+        traceback.print_exc(file=sys.stderr)
+        fin_rep = {"error": "finalize_scenes 실패 — 반복 마감 없이 진행"}
     gate = _gate(beats)
     rounds = 0
     while rounds < _MAX_REPICK and _has_repickable(gate):
-        new_beats = backbone.repick_for_gate(beats, source_scripts, gate)
+        new_beats = backbone.repick_for_gate(beats, source_scripts, gate)   # 끝에서 finalize_scenes를 부른다
         if new_beats == beats:
             break   # 더 못 고침 → 종료(잔여 위반은 §4 마감이 처리)
         beats = new_beats
@@ -1607,9 +1617,27 @@ def _run_gate_correction(plan, source_scripts, target_seconds):
     plan["beats"] = beats
     plan["gate"] = gate
     plan["repick_rounds"] = rounds
+    plan["scene_finalize"] = fin_rep
     if not gate["ok"]:
         print("plan_gate 잔여 위반(재픽 %d회 후): " % rounds
               + " / ".join(gate["violations"]), file=sys.stderr)
+    # ★그래도 반복·안 쓴 소스가 남으면 조용히 넘기지 않는다 — 로그 + plan 표식(관리자 화면·점검 도구가 읽는다).
+    try:
+        left = backbone.scene_repeat_report(beats, source_scripts)
+    except Exception:      # noqa: BLE001
+        traceback.print_exc(file=sys.stderr)
+        left = {}
+    if left.get("repeat_segs") or left.get("repeat_descs") or left.get("unused_sources"):
+        plan["scene_repeat_alarm"] = {
+            "repeat_segs": left.get("repeat_segs") or {},
+            "repeat_descs": left.get("repeat_descs") or {},
+            "unused_sources": left.get("unused_sources") or [],
+            "why": "finalize_scenes·재픽 뒤에도 남음(대체 컷 없음) — tools/scene_repeat_audit.py 로 확인"}
+        print("[장면반복 경보] 마감 뒤에도 남음: 반복 seg %s · 같은 설명 %d건 · 안 쓴 소스 %s"
+              % (list(left.get("repeat_segs") or {}), len(left.get("repeat_descs") or {}),
+                 left.get("unused_sources") or []), file=sys.stderr)
+    else:
+        plan.pop("scene_repeat_alarm", None)
 
 
 def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, video_type, work,

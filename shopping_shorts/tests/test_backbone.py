@@ -240,13 +240,14 @@ def test_ping_pong_trims_overflow_narration():
 
 def test_dedup_and_balance_removes_repeat():
     # 두 비트가 같은 클립(s1-1) → 두번째는 안 쓴 같은 행위 클립으로 교체(반복 제거)
+    # (카드 033: 옛 dedup_and_balance는 주인 함수 finalize_scenes로 흡수됐다 — 같은 계약을 그 함수로 잰다)
     beats = [
         {"beat_idx": 0, "narration": "붓기1", "primary": {"seg_id": "s1-1", "action": "붓다", "video_id": "s1"}},
         {"beat_idx": 1, "narration": "붓기2", "primary": {"seg_id": "s1-1", "action": "붓다", "video_id": "s1"}},
     ]
     pool = [{"video_id": "s0", "segments": [
         {"seg_id": "s0-3", "start": 0, "end": 2, "scene_desc": "다른 붓는", "action": "붓다"}]}]
-    out = backbone.dedup_and_balance(beats, pool)
+    out = backbone.finalize_scenes(beats, pool)
     ids = [b["primary"]["seg_id"] for b in out]
     assert len(set(ids)) == 2          # 반복 제거됨
     assert "s0-3" in ids               # 안 쓴 클립으로 교체
@@ -262,7 +263,7 @@ def test_dedup_prefers_underused_source():
         {"video_id": "s1", "segments": [{"seg_id": "s1-9", "start": 0, "end": 2, "action": "붓다", "scene_desc": "s1붓"}]},
         {"video_id": "s0", "segments": [{"seg_id": "s0-9", "start": 0, "end": 2, "action": "붓다", "scene_desc": "s0붓"}]},
     ]
-    out = backbone.dedup_and_balance(beats, pool)
+    out = backbone.finalize_scenes(beats, pool)
     assert out[1]["primary"]["video_id"] == "s0"   # 덜 쓴 소스 우선
 
 

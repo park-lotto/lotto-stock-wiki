@@ -5475,13 +5475,11 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                     source_scripts, meta=backbone_meta, forced=backbone_forced)
                 if bb:
                     plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
-                # 반복장면·한소스 편중 해소: 쓴 클립 재사용 금지 + 덜 쓴 소스 우선 교체
-                plan["beats"] = backbone.dedup_and_balance(plan["beats"], source_scripts)
-                # 서브 의무삽입: 아예 안 쓰인 소스(s2=0)를 같은 행위로 강제 삽입(dedup으론 못 잡음)
-                plan["beats"] = backbone.ensure_sources_used(plan["beats"], source_scripts)
-                # 전역 컷 반복 해소(alternates 포함) + 비트당 클립 상한 → 뚝뚝 끊김·B롤 반복 해소
-                # (dedup_and_balance는 primary만 봐서 B롤 체인이 비트마다 반복됐다, job 실측).
-                plan["beats"] = backbone.dedup_clips_global(plan["beats"], source_scripts)
+                # ★반복장면·소스 편중·안 쓴 소스(옛 dedup_and_balance·ensure_sources_used·
+                #   dedup_clips_global 세 벌)는 아래 backbone.finalize_scenes 하나로 옮겼다
+                #   (카드 033, 2026-09-29). 그 셋이 이 경로에서만 돌고 슬롯 경로에선 건너뛰어,
+                #   라이브(슬롯)엔 반복 방지가 통째로 없었다. 칸당 상한 자르기는 finalize의
+                #   trim_to_cap으로 이 경로(핑퐁·슬롯 없음)에서만 옛 동작대로 유지한다.
                 # 영상 차별화(2026-07-27, 최종 단계): 훅(첫 비트)=비-A 소스 최고장면 / CTA(끝)=중간
                 # 소스 클립(원본 엔딩 회피). 화면만 재배정(narration 불변) → 다른 후처리 뒤에 마지막으로.
                 plan["beats"] = backbone.swap_hook_cta_for_differentiation(
@@ -5505,6 +5503,16 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         #   **뒤**에 온다. 앞에 두면 이 두 함수가 primary/alternates를 통째로 재설정해 결과가
         #   예외 없이 소멸한다(G2 실측이 backbone 5종에서 확인한 것과 같은 함정).
         plan["beats"] = _repick_weak_beats(plan["beats"], seg_map, call=_call)
+        # ★한 편 안 장면 중복·소스 배분 마감(카드 033, 2026-09-29) — 주인 함수 backbone.finalize_scenes.
+        #   반드시 화면 못박기(_assign_timeline/_pin_screens)·약한 비트 재선택 **뒤**(앞에 두면 G2와 같은
+        #   함정으로 결과가 소멸한다). 칸 순서·칸 수·대사·primary 자리는 안 바꾼다 = 슬롯 순서 보호.
+        #   옛 경로(핑퐁·tl_groups 없음)만 옛 dedup_clips_global처럼 칸당 상한도 자른다(trim_to_cap).
+        from shopping_shorts import backbone as _bb_fin
+        _fin_rep = {}
+        plan["beats"] = _bb_fin.finalize_scenes(plan["beats"], source_scripts,
+                                                trim_to_cap=bool(ping_pong and not tl_groups),
+                                                report=_fin_rep)
+        plan["scene_finalize"] = _fin_rep
         plan["detected_type"] = detected
         plan["affiliate_target"] = r.get("story_event", "") or ""
         plan["plagiarism_flags"] = _plagiarism_flags(plan["beats"], src_texts)

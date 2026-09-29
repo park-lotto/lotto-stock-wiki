@@ -231,6 +231,20 @@
         "shopping_shorts/edit_plan.py": "저장 관문 추정(MAX_SHOT 기본 인자) — 함수전수표 #29-②·#30",
         "shopping_shorts/config.py": "MAX_SHOT 설정값 — 함수전수표 #30, 한 곳으로 모을 카드"
       }
+    },
+    {
+      "이름": "한 편 안 장면 중복·소스 배분",
+      "주인": ["shopping_shorts/backbone.py:finalize_scenes"],
+      "시그니처": ["def finalize_scenes\\b", "def scene_repeat_report\\b", "def dedup_and_balance\\b", "def dedup_clips_global\\b", "def ensure_sources_used\\b", "def _dedup_and_fill\\b", "used_all\\s*=\\s*set\\(\\)", "_used\\s*=\\s*\\{c for b in ai_bs", "descs\\s*=\\s*set\\(\\)"],
+      "소비처": ["3단계 후보 카드(edit_plan.build_scene_first_plan._ground_score — 화면 못박기·약한 비트 재선택 뒤)", "최종 관문(mix_pipeline._run_gate_correction — 상속 제외 모든 3단계 경로, 게이트 전)", "게이트 재픽(backbone.repick_for_gate 끝)", "경보 plan.scene_repeat_alarm"],
+      "검사도구": "tools/scene_repeat_audit.py (job.json[+clean_base.json], --apply 전/후 대조) · tests/test_finalize_scenes.py",
+      "과금": false,
+      "예외": {
+        "shopping_shorts/edit_plan.py": "_dedup_and_fill — 레시피 시간순 재배치(_chronological_respine) 안에서 칸 수만큼 조각을 채우는 중복 제거(한 편 판정 아님, 최종은 finalize_scenes가 다시 본다). 별도 카드로 흡수 검토",
+        "shopping_shorts/mix_pipeline.py": "_refill_beats_to_tts 의 used_all — TTS 뒤 채우기가 이미 쓴 seg를 피하는 회피(판정 아님). 그 뒤 _run_gate_correction 에서 finalize_scenes 가 최종 마감",
+        "shopping_shorts/story_writer.py": "_groups_out 의 AI 결과 합치기(_used) — 이야기 작가 경로 줄별 컷 배정. 카드 033 범위 밖(표에 기록만), 별도 카드",
+        "shopping_shorts/ai_match.py": "_vertex 의 used/descs — AI 매칭 줄별 컷 고르기(같은 설명 한 줄 1회). 카드 033 범위 밖(표에 기록만), 별도 카드"
+      }
     }
   ]
 }

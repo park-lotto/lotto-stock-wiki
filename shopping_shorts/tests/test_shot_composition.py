@@ -47,7 +47,7 @@ def test_dedup_clips_global_removes_repeated_alternates():
         {"narration": "a", "primary": _seg("s0-0", 1.5), "alternates": [_seg("s0-2", 1.5)]},
         {"narration": "b", "primary": _seg("s0-1", 1.5), "alternates": [_seg("s0-2", 1.5)]},
     ]
-    out = backbone.dedup_clips_global(beats, pool)
+    out = backbone.finalize_scenes(beats, pool)      # 옛 dedup_clips_global → 주인 함수(카드 033)
     all_alts = [a["seg_id"] for b in out for a in b["alternates"]]
     assert all_alts.count("s0-2") <= 1              # 반복 제거
 
@@ -56,5 +56,5 @@ def test_dedup_clips_global_caps_clips():
     pool = _pool([_seg(f"s0-{i}", 1.5) for i in range(8)])
     beat = {"narration": "a", "primary": _seg("s0-0", 1.5),
             "alternates": [_seg(f"s0-{i}", 1.5) for i in range(1, 6)]}
-    out = backbone.dedup_clips_global([beat], pool)
+    out = backbone.finalize_scenes([beat], pool, trim_to_cap=True)   # 옛 경로의 상한 자르기
     assert 1 + len(out[0]["alternates"]) <= 3       # 상한

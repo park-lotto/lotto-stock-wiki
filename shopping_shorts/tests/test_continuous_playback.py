@@ -67,7 +67,7 @@ def test_dedup_replaces_continuous_alternate():
         {"seg_id": "s2-1", "start": 1.8, "end": 3.1, "scene_desc": "b"},
         {"seg_id": "s2-9", "start": 12.7, "end": 14.2, "scene_desc": "완성된 요리 클로즈업"},
     ]}]
-    out = backbone.dedup_clips_global(beats, pool)
+    out = backbone.finalize_scenes(beats, pool)      # 옛 dedup_clips_global → 주인 함수(카드 033)
     alts = out[0].get("alternates") or []
     # s2-1(이어붙임)은 그대로 쓰이면 안 된다 — 교체되거나 드롭
     assert all(a.get("seg_id") != "s2-1" for a in alts)
@@ -89,9 +89,12 @@ def test_unused_source_is_forced_in_even_without_action_tag():
                           "end": i * 2.0 + 1.8},
               "alternates": [], "narration": "남편이 진짜 좋아하더라고요", "target_seconds": 3.0}
              for i in range(5)]
-    out = backbone.ensure_sources_used(beats, pool)
-    vids = {(b.get("primary") or {}).get("video_id") for b in out}
+    # 카드 033: 옛 ensure_sources_used(primary 갈아끼움) → finalize_scenes(primary 불변, alternate 자리에 넣음)
+    out = backbone.finalize_scenes(beats, pool)
+    vids = {c.get("video_id") for b in out
+            for c in [b.get("primary")] + list(b.get("alternates") or []) if c}
     assert "s1" in vids, "안 쓴 소스가 여전히 안 들어감"
+    assert [b["primary"]["seg_id"] for b in out] == [b["primary"]["seg_id"] for b in beats]
 
 
 def test_gate_flags_single_source_when_more_available():
