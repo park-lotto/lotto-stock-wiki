@@ -200,8 +200,9 @@ def block_reason(store, customer_id, service):
             f"설정 > 🔑 API 키에서 등록해 주세요.")
 
 
-TYPECAST_NEED_KEY_MSG = ("타입캐스트 성우는 타입캐스트 유료 가입 후 API 키를 등록해야 쓸 수 있어요. "
-                         "설정 > 🔑 API 키에서 타입캐스트 키를 등록하거나, 일레븐랩스 성우를 골라 주세요.")
+TYPECAST_NEED_KEY_MSG = ("그동안 타입캐스트 성우는 관리자의 API 키로 만들어졌어요. 이제부터는 본인 키를 등록해야 쓸 수 있어요. "
+                         "타입캐스트 유료 가입 후 설정 > 🔑 API 키에서 타입캐스트 키를 등록해 주세요. "
+                         "(등록 전까지는 일레븐랩스 성우를 골라 주세요)")
 
 
 def _is_typecast_engine(model_id):
