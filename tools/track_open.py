@@ -78,7 +78,10 @@ def _ps_quote(s):
 def launch_script(L):
     """새 PowerShell 창이 -File 로 돌릴 스크립트. 인라인 -Command 는 Start-Process 가 안쪽
     큰따옴표를 벗겨 ParserError 가 난다(2026-09-30 실측) — 그래서 파일로 넘긴다."""
-    lines = [r'$env:PATH = "$env:LOCALAPPDATA\Microsoft\WinGet\Links;$env:PATH"']
+    lines = [r'$env:PATH = "$env:LOCALAPPDATA\Microsoft\WinGet\Links;$env:PATH"',
+             # 관제창(Claude) 안에서 띄우면 CLAUDE_CODE_CHILD_SESSION 등이 물려 새 창이 "자식 세션"이 된다
+             # → 대화 기록 저장 꺼짐(2026-09-30 실측). 독립 창이어야 하므로 전부 지운다.
+             r"Get-ChildItem Env: | Where-Object { $_.Name -match '^(CLAUDECODE|CLAUDE_CODE_|CLAUDE_PID|CLAUDE_EFFORT)' } | Remove-Item"]
     lines += [f"Remove-Item Env:\\{k} -ErrorAction SilentlyContinue" for k in L["env_unset"]]
     lines += [f"$env:{k} = {_ps_quote(v)}" for k, v in L["env"].items()]
     lines.append(f"Set-Location -LiteralPath {_ps_quote(L['cwd'])}")

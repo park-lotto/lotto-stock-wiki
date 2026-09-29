@@ -87,6 +87,7 @@ def test_launch_script_text(tmp_path):
     L = track_open.build_launch(tmp_path, pc="집", tag="t", prompt="it's \"q\"", home=HOME)
     s = track_open.launch_script(L)
     assert "Remove-Item Env:\CLAUDE_CONFIG_DIR" in s
+    assert "CLAUDE_CODE_" in s and "Remove-Item" in s.splitlines()[1]   # 자식 세션 표식 제거
     assert "Set-Location -LiteralPath '" in s
     assert "'it''s \"q\"'" in s          # PowerShell 작은따옴표 이스케이프
 
