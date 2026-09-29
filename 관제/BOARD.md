@@ -1,6 +1,6 @@
 # 관제 보드 (자동 생성 — 손으로 고치지 마라. `py tools/control.py board`)
 
-갱신: 2026-09-29 13:21 · 카드 27장
+갱신: 2026-09-29 13:31 · 카드 27장
 
 상태 흐름: 등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료  (예외: 승인대기 · 회귀)
 
@@ -35,7 +35,7 @@
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
 | [026](cards/026-TopView_Higgsfield_비교_HT.md) | TopView Higgsfield 비교 HTML | topview-higgsfield-html | - | Codex:HTML 보고서 제작 | 비교 HTML 작성·검증·배포 | 2026-09-29 11:58 분배 → topview-higgsfield-html |
-| [027](cards/027-Higgsfield_API_내부_시험_생성.md) | Higgsfield API 내부 시험 생성 | higgsfield-api-pilot | - | Codex | 관리자 전용 이미지→영상 시험 화면, 서버측 API 키, 예상 포인트, 성공 차감·실패 환불, 테스트 통과 | 2026-09-29 13:21 분배 → higgsfield-api-pilot |
+| [027](cards/027-Higgsfield_API_내부_시험_생성.md) | Higgsfield API 내부 시험 생성 | higgsfield-api-pilot | - | Codex | 관리자 전용 이미지→영상 시험 화면, 서버측 API 키, 예상 포인트, 성공 차감·실패 환불, 테스트 통과 | 2026-09-29 13:31 관리자 전용 시험실·암호화 키 연결·5초 Seedance 생성·결과 보관 구현 |
 
 ## 병합 (2)
 
