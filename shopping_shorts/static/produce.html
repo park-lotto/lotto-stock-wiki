@@ -1422,6 +1422,14 @@
     border-radius:8px;padding:6px 0;text-align:center;white-space:nowrap;cursor:pointer}
   .s2-del:hover{color:var(--fire);border-color:var(--fire)}
   .s2-row.s2-busy .s2-del{pointer-events:none;opacity:.4}
+  /* 칸 옮기기·추가(2026-09-30 관제 044) — [빼기] 아래 작은 버튼 셋. 칸 폭(88px)은 그대로. */
+  .s2-mv{display:flex;gap:2px}
+  .s2-mv button{flex:1;font-size:11px;color:var(--s2-sub);background:none;border:1px solid var(--line);
+    border-radius:6px;padding:4px 0;cursor:pointer;line-height:1}
+  .s2-mv button:hover:not([disabled]){color:var(--accent);border-color:var(--accent)}
+  .s2-mv button[disabled]{opacity:.3;cursor:default}
+  .s2-row.s2-busy .s2-mv{pointer-events:none;opacity:.4}
+  .s2-row.s2-moved{border-color:var(--accent)}
   /* 게이트 실패 = 성적표가 아니라 "고칠 곳 안내" */
   .s2-fix{border-top:1px dashed var(--line);padding:16px 0}
   .s2-fix .fx-t{font-size:13px;font-weight:700;color:var(--fire)}
@@ -1496,6 +1504,10 @@
     .s2-acts{grid-column:2;justify-self:end;flex-direction:row;gap:8px}
     .s2-acts .s2-swap{width:auto;padding:8px 16px}
     .s2-del{padding:8px 12px}
+    /* 폰 폭에선 [바꾸기][빼기][▲▼＋]가 한 줄에 안 들어가 행이 화면 밖으로 밀렸다(390px 실측) → ▲▼＋는 다음 줄 오른쪽 */
+    .s2-acts{flex-wrap:wrap;justify-content:flex-end;min-width:0}
+    .s2-mv{flex-basis:100%;justify-content:flex-end;gap:6px}
+    .s2-mv button{flex:0 0 auto;padding:8px 12px;font-size:12px}
     .s2-tabs{gap:8px}
     .si-top{flex-wrap:wrap}
     .si-quote{white-space:normal}
@@ -19191,16 +19203,21 @@ function s2DraftHtml(dr,i){
     const chk=(b.role==='cta')?'<span class="s2-chk">📢 헌장: 댓글에 뭘 남기면 뭘 받는지</span>':'';
     return `<div class="s2-row${isBad?' bad':''}" id="s2r-${i}-${j}" data-role="${esc(b.role||'')}">
       <div class="s2-row-in">
-        <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${(b.role==='title'&&s2TitleSplitOn())?'<span style="font-size:11px;color:var(--accent)">화면 큰 제목 · 첫 TTS</span>':s2SecTag(s2SecOf(b.text))}</span></div>
+        <div class="s2-role"><div class="rn">${esc(b.role?s2RoleName(b.role):"✚ 추가 칸")}</div><span id="s2sec-${i}-${j}">${(b.role==='title'&&s2TitleSplitOn())?'<span style="font-size:11px;color:var(--accent)">화면 큰 제목 · 첫 TTS</span>':s2SecTag(s2SecOf(b.text))}</span></div>
         <div class="s2-sent-wrap">
-          <div class="s2-sent" contenteditable="true" data-ph="${esc(s2RoleName(b.role).replace(/^\S+\s*/,''))} — 여기에 쓰세요"
+          <div class="s2-sent" contenteditable="true" data-ph="${esc(b.role?s2RoleName(b.role).replace(/^\S+\s*/,''):"새 문장")} — 여기에 쓰세요"
                oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}</div>${chk}
           ${(dr.lang==='en'&&b.text_ko)?`<div class="hint" style="margin-top:4px;font-size:12px;opacity:.75">🇰🇷 ${esc(b.text_ko)}</div>`:''}
         </div>
         <div class="s2-acts">
-          ${(dr.mine||dr.lang==='en')?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
+          ${(dr.mine||dr.lang==='en'||!b.role)?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
           <button class="s2-del" title="이 줄을 대본에서 아주 뺍니다 — 3단계에서 이 장면 칸도 안 생깁니다"
             onclick="s2DelBeat(${i},${j})">🗑 빼기</button>
+          <div class="s2-mv">
+            <button title="이 칸을 한 칸 위로" ${j===0?'disabled':''} onclick="s2MoveBeat(${i},${j},-1)">▲</button>
+            <button title="이 칸을 한 칸 아래로" ${j===beats.length-1?'disabled':''} onclick="s2MoveBeat(${i},${j},1)">▼</button>
+            <button title="이 칸 바로 아래에 빈 칸을 하나 만듭니다" onclick="s2AddBeat(${i},${j})">＋</button>
+          </div>
         </div>
       </div>
       <div class="s2-bank" id="s2b-${i}-${j}"><div class="hint">불러오는 중…</div></div>
@@ -19220,7 +19237,7 @@ function s2DraftHtml(dr,i){
         title="${dr.lang==='en'?'영어 문장을 버리고 한국어 원문으로 되돌립니다':'이 안의 모든 문장을 영어로 바꿉니다. 어색한 줄은 칸에서 바로 고치고 확정하면 영어 음성·자막이 됩니다'}">${dr.lang==='en'?'🇰🇷 한국어로':'🌐 영어모드로 변환'}</button></div>
     ${rows}${fix}
     <div class="s2-dfoot">
-      ${dr.mine?`<button class="btn-ghost" style="min-width:auto" title="칸을 하나 더 만듭니다" onclick="s2MineAddRow(${i})">＋ 칸 추가</button>`:''}
+      <button class="btn-ghost" style="min-width:auto" title="맨 아래에 칸을 하나 더 만듭니다 — 칸마다 ▲▼로 옮길 수 있어요" onclick="s2AddBeat(${i},s2Beats(S2.drafts[${i}]).length-1)">＋ 칸 추가</button>
       <button class="btn-next" onclick="s2Confirm(${i})">✔ ${dr.mine?'내 대본으로 확정':(String.fromCharCode(65+i)+'안으로 확정')}</button>
       <button class="btn-ghost" title="지금 작업은 그대로 두고, 담긴 영상까지 그대로 복제한 새 작업을 만들어 이 안을 넣습니다(다채널용 2편)" onclick="s2ConfirmToNewWork(${i})">＋ 이 안으로 새 작업</button>
     </div>
@@ -19255,17 +19272,62 @@ function s2AddMineDraft(){
   }catch(e){}
 }
 
-// 칸을 하나 더 — 역할은 마지막 칸을 따라간다(모르면 비운다: 이름 없는 칸도 정상).
-function s2MineAddRow(i){
-  const dr=S2.drafts[i]; if(!dr || !dr.mine) return;
-  const beats=s2Beats(dr).slice();
-  beats.push({role:'', text:''});
-  dr.beats=beats;
-  s2RenderDrafts(); saveWork();
+// ── 칸 목록 바꾸기(추가·이동·빼기) — 2026-09-30 사장님 "대본에서 칸을 더 만들고 중간으로 옮기게"(관제 044)
+// ★칸 목록을 고쳐 쓰는 곳은 s2CommitBeats 하나다(0순위-B). 추가·이동·빼기가 각자 dr.beats·script·검사를
+//   따로 만지면 언젠가 하나만 빠진다. 옮긴 칸은 자기 출처 장면(src_seg)을 **들고** 움직인다(객체째 이동).
+// ★[바꾸기](s2RegenBeat)가 도는 동안엔 막는다 — 그 함수는 시작 때 잡은 배열의 j번째에 결과를 쓰고
+//   dr.beats를 그 배열로 되돌려 놓으므로, 도는 중에 옮기면 옮긴 것이 조용히 사라진다.
+// ★영어모드 변환(s2ToggleLang)도 같은 꼴이다 — 끝나며 잡아 둔 배열을 dr.beats로 되돌린다. 변환 중엔 버튼이 disabled.
+function s2BeatsBusy(i){
   try{
-    const rows=document.querySelectorAll('#s2d-'+i+' .s2-sent');
-    const last=rows[rows.length-1]; if(last&&last.focus){ last.focus(); last.scrollIntoView({block:'center'}); }
+    if(document.querySelector('#s2d-'+i+' .s2-row.s2-busy')) return true;
+    const lb=document.getElementById('s2lang-'+i);
+    return !!(lb && lb.disabled);
+  }catch(e){ return false; }
+}
+function s2CommitBeats(i, beats, focusJ){
+  const dr=S2.drafts[i]; if(!dr) return;
+  dr.beats=beats;
+  dr.script=beats.map(x=>x.text).filter(Boolean).join('\n');
+  dr.checks=[]; dr.passed=false;          // 칸 구성이 바뀌면 이전 검사 결과는 더 이상 이 안의 것이 아니다
+  s2CloseBanks();
+  s2RenderDrafts();
+  saveWork();                              // 손으로 고친 문장과 같은 취급 — 돈 든 결과다
+  if(focusJ==null) return;
+  try{
+    const el=document.querySelector('#s2r-'+i+'-'+focusJ+' .s2-sent');
+    if(el&&el.focus){ el.focus(); el.scrollIntoView({block:'center'}); }
   }catch(e){}
+}
+// j번째 칸 **바로 아래**에 빈 칸. 역할 이름은 비운다(이름 없는 칸 = "✚ 추가 칸", 3단계는 앞 칸 다음 컷을 붙인다).
+function s2AddBeat(i, j){
+  const dr=S2.drafts[i]; if(!dr) return;
+  if(s2BeatsBusy(i)){ toast('다시 쓰는 칸이 끝난 뒤에 칸을 추가해 주세요'); return; }
+  const beats=s2Beats(dr).slice();
+  const at=Math.max(0, Math.min(beats.length, (j==null?beats.length-1:j)+1));
+  beats.splice(at, 0, {role:'', text:''});
+  s2CommitBeats(i, beats, at);
+  toast('✚ 칸을 만들었어요 — ▲▼로 원하는 자리로 옮길 수 있어요');
+}
+// j번째 칸을 d(-1 위 / +1 아래)만큼 옮긴다.
+function s2MoveBeat(i, j, d){
+  const dr=S2.drafts[i]; if(!dr) return;
+  if(s2BeatsBusy(i)){ toast('다시 쓰는 칸이 끝난 뒤에 옮겨 주세요'); return; }
+  const beats=s2Beats(dr).slice();
+  const k=j+d;
+  if(!beats[j] || k<0 || k>=beats.length) return;
+  const t=beats[j]; beats[j]=beats[k]; beats[k]=t;
+  s2CommitBeats(i, beats, null);
+  try{
+    const row=document.getElementById('s2r-'+i+'-'+k);
+    if(row){ row.scrollIntoView({block:'nearest'}); row.classList.add('s2-moved');
+             setTimeout(()=>row.classList.remove('s2-moved'), 700); }
+  }catch(e){}
+}
+// 옛 이름(내 대본 [＋ 칸 추가]) — 맨 아래에 칸 하나.
+function s2MineAddRow(i){
+  const dr=S2.drafts[i]; if(!dr) return;
+  s2AddBeat(i, s2Beats(dr).length-1);
 }
 function s2PickDraft(i){ S2.curDraft=i; s2RenderDrafts(); saveWork(); }   // 보던 안도 그대로 돌아오게
 // 문장 편집 — beats가 원본이고 script는 거기서 다시 만든다(두 벌 유지 금지, 0순위-B).
@@ -19313,16 +19375,7 @@ function s2DelBeat(i,j){
   // 확인창이 뜨면 그게 더 방해다). 쓴 글이 있는 줄만 확인한다.
   if(txt && !confirm(label+' — "'+head+'"\n\n이 줄을 대본에서 뺍니다. 계속할까요?')) return;
   beats.splice(j,1);
-  dr.beats=beats;
-  // script는 beats에서 다시 만든다 — 두 벌을 따로 고치지 않는다(0순위-B, s2EditBeat와 동일).
-  dr.script=beats.map(x=>x.text).filter(Boolean).join('\n');
-  // ★게이트 판정(dr.checks/passed)은 옛 문장 기준이라 무효다. 그대로 두면 없어진 칸을
-  //   가리키며 "hook 문장틀 준수" 같은 빨간 줄이 남는다. 다시 검사할 길이 화면엔 없으니
-  //   **표시를 지운다** — 모르면 비운다(짐작해서 통과 뱃지를 붙이지 않는다).
-  dr.checks=[]; dr.passed=false;
-  s2CloseBanks();
-  s2RenderDrafts();
-  saveWork();   // 손으로 고친 문장과 같은 취급 — 돈 든 결과다
+  s2CommitBeats(i, beats, null);   // 검사 결과 비우기·다시 그리기·저장은 한 곳에서
   toast('🗑 '+label+' 줄을 뺐습니다 · 남은 '+beats.length+'줄');
 }
 // [바꾸기] — 그 스타일이 가진 **문장틀**을 준다(은행 완성문장이 아니다: 쌀밥 대본에
@@ -19514,8 +19567,13 @@ function s2ScriptLines(dr){
 //   이븐쇼핑 원본처럼 제목은 **첫 TTS로 그대로 읽고**(음성에서 빼지 않는다) 동시에 화면 큰 제목이 된다.
 function s2TitleSplitOn(){ return (typeof SS_CANARY!=='undefined') && !!SS_CANARY; }
 function s2VisualRole(role){ return false; }   // 음성에서 빼는 화면 전용 칸 없음(이븐쇼핑 원본)
+// ★음성이 되는 칸 = **글이 있는 칸**만(2026-09-30, 관제 044). 대본 줄(s2ScriptLines)과 장면 출처
+//   (s2ApplyDraftContract의 script_beat_sources)가 둘 다 이 목록에서 나온다 — 종전엔 줄만 빈 칸을 걸러
+//   빈 칸이 하나라도 있으면 출처 개수 ≠ 줄 개수 → 3단계 '붙어 온 장면 그대로'(build_inherit_plan)가 통째로 빠지고
+//   출처 짝짓기(store._apply_beat_sources)도 자리 대신 역할 이름으로만 붙었다.
 function s2NarrationBeats(dr){
-  return (dr&&dr.beats&&dr.beats.length)?dr.beats:[];
+  const bs=(dr&&dr.beats&&dr.beats.length)?dr.beats:[];
+  return bs.filter(b=>((b&&b.text)||'').trim());
 }
 function s2VisualSubline(dr){ return ''; }
 function s2VisualTitle(dr){
