@@ -373,7 +373,8 @@ def keys_for(store, customer_id, service):
     # ★타입캐스트는 사장님 키로 떨어지지 않는다(2026-09-29). 요청 관문(tts_block_reason)이 막아도
     #   워커·재합성 등 뒷길로 오는 호출이 있어 **키를 주는 자리에서** 한 번 더 막는다 — 면제
     #   명단·사장님(cid 0)만 회사 키. 빈 목록이면 호출부(tts._synthesize_typecast)가 안내문으로 실패한다.
-    if service == SVC_TYPECAST and not is_block_exempt(cid):
+    #   2026-09-29 사장님 "일레븐 유료 안 된 사람은 또 내 거로 쓰게 하지 말고" → 일레븐랩스도 같은 규칙.
+    if service in (SVC_TYPECAST, SVC_ELEVENLABS) and not is_block_exempt(cid):
         return [], False
     owner = _owner_keys(service)
     if not owner and service == SVC_VMAKE:

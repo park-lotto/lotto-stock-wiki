@@ -93,10 +93,33 @@ FALLBACK_VOICE = {
 }
 
 
-def use_fallback(model_id):
-    """이 model_id를 **일레븐랩스로 갈아끼워야 하는가**.
-    타입캐스트 프리셋인데 엔진이 꺼져 있으면 True."""
-    return is_typecast(model_id) and not enabled()
+def use_fallback(model_id, customer_id=None):
+    """이 model_id를 **일레븐랩스로 갈아끼워야 하는가** — 판단은 여기 한 곳(0순위-B).
+
+    · 타입캐스트 프리셋인데 엔진이 꺼져 있으면 True(종전).
+    · customer_id를 주면: 그 회원이 **타입캐스트 키를 못 쓰는** 상태(본인 키 없음·면제 아님 → keys_for가 빈 목록)면 True.
+      2026-09-29 사장님 "관리자 키에서 잘린 사람들도 유료(일레븐) 키가 있으면 일레븐으로 자동 지정해 3단계 넘어가게".
+      배승훈(580)·최소연(134) 등 기본 성우가 타입캐스트로 기억된 회원이 3단계에서 막혀 5단계(성우 바꾸기)에 못 갔다.
+    customer_id를 안 주면 종전과 같다(회귀 0).
+    """
+    if not is_typecast(model_id):
+        return False
+    if not enabled():
+        return True
+    if customer_id is None:
+        return False
+    from shopping_shorts import keyroute
+    from shopping_shorts.store import Store
+    try:
+        st = Store(config.DB_PATH)
+        keys, _ = keyroute.keys_for(st, customer_id, keyroute.SVC_TYPECAST)
+        if keys:
+            return False                   # 타입캐스트를 쓸 수 있다 — 그대로
+        # ★일레븐 **유료 키가 있는** 회원만 일레븐으로 넘긴다(사장님 "일레븐 유료 안 된 사람은 내 거로 쓰게 하지 말고").
+        #   키가 없으면 그대로 둬서 관문(tts_block_reason)이 '키 등록' 안내로 막는다 — 사장님 키로 안 간다.
+        return keyroute.has_own_key(st, customer_id, keyroute.SVC_ELEVENLABS)
+    except Exception:                      # noqa: BLE001 — 조회 실패로 회원 성우를 바꾸지 않는다(종전 동작)
+        return False
 
 
 def api_key(customer_id=0):
