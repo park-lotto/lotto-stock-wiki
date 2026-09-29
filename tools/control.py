@@ -61,7 +61,7 @@ DEFAULT_RULES = {
         "billing_tokens": ["_charge_", "clean_charge_plan", "clean_credit", "_sig_tier", "signature", "_render_stamp"],
         "customer_data_tokens": ["update_mix_job", "mix_jobs", "clean_base.json"],
     },
-    "card_gate": {"require_card": True, "require_approval": True, "ownership_check": True},
+    "card_gate": {"require_card": True, "require_approval": True, "ownership_check": True, "impact_check": True},
 }
 
 
@@ -638,6 +638,19 @@ def finish_gate(repo, stage, br, track_name, printer=print, ownership=None):
                     notes.append("소유권 검사 통과 (판단 %d개 시그니처, 변경 %d파일)" % (len(own.get("판단", [])), len(changed)))
         except Exception as e:      # noqa: BLE001 — 검사 도구가 죽으면 조용히 통과가 아니라 실패
             fails.append("소유권 검사 도구가 죽었다(조용히 통과하지 않는다): %r" % e)
+
+    # ⑤ 영향 지도(카드 002, 관제 1-3): 주인 함수를 고쳤으면 소비처가 diff 에 있거나 카드에 '영향 없음: <파일> — 이유'가 있어야 한다
+    if g.get("impact_check", True):
+        try:
+            import impact as _impact
+            import ownership_check as oc
+            own2 = ownership if ownership is not None else oc.load_map(repo, MAIN_REF)
+            if own2 is not None:
+                i_fails, i_notes = _impact.finish_check(stage, own2, changed, linked)
+                fails += i_fails
+                notes += i_notes
+        except Exception as e:      # noqa: BLE001
+            fails.append("영향 지도 도구가 죽었다(조용히 통과하지 않는다): %r" % e)
 
     for n in notes:
         printer("  관제: " + n)
