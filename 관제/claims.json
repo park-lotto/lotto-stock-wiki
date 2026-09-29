@@ -1,7 +1,17 @@
 {
+  "out/precision20-ui.js": {
+    "at": "2026-09-29 22:57",
+    "card": 36,
+    "track": "장면폰트"
+  },
   "out/precision20-ui.js:drawFontSets": {
     "at": "2026-09-29 16:06",
     "card": 30,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/scene_style.py": {
+    "at": "2026-09-29 22:57",
+    "card": 36,
     "track": "장면폰트"
   },
   "shopping_shorts/scene_style.py:validate_snapshot": {
@@ -14,9 +24,14 @@
     "card": 33,
     "track": "장면분량"
   },
+  "shopping_shorts/tests": {
+    "at": "2026-09-29 22:57",
+    "card": 36,
+    "track": "장면폰트"
+  },
   "tools/scene_font_research/check_text_look.py": {
-    "at": "2026-09-29 16:06",
-    "card": 30,
+    "at": "2026-09-29 22:57",
+    "card": 36,
     "track": "장면폰트"
   }
 }
