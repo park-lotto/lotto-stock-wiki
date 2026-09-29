@@ -48,8 +48,8 @@ def _setup(monkeypatch, tmp_path, admin=True):
     (root / "tools").mkdir()
     real = pathlib.Path(__file__).resolve().parents[2] / "tools" / "control.py"
     (root / "tools" / "control.py").write_text(real.read_text(encoding="utf-8"), encoding="utf-8")
-    monkeypatch.setattr(app_module, "_CONTROL_ROOT", root)
-    monkeypatch.setattr(app_module, "_CONTROL_APPROVALS", tmp_path / "data" / "control_approvals.json")
+    monkeypatch.setattr(app_module, "_control_root", lambda: root)
+    monkeypatch.setattr(app_module, "_control_approvals_path", lambda: tmp_path / "data" / "control_approvals.json")
     if admin:
         monkeypatch.setattr(app_module, "_require_admin", lambda request: None)
     else:

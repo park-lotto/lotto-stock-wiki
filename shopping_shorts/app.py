@@ -16176,21 +16176,27 @@ def _admin_pending(request: Request):
 # 카드는 git(관제/cards, main)이 정본이고 서버는 pull 만 한다(핫패치 금지). 그래서 화면은 **읽기**는 저장소 파일로,
 # **승인 버튼**은 data/control_approvals.json(gitignore)에 적는다 → 로컬 finish 가 ssh 로 읽어 카드 승인으로 인정한다
 # (tools/control.py finish_gate·sync_server_approvals). 카드 파싱은 tools/control.py 한 곳 — 여기서 다시 적지 않는다(0순위-B).
-_CONTROL_ROOT = Path(__file__).parent.parent
-_CONTROL_APPROVALS = Path(__file__).parent / "data" / "control_approvals.json"
+def _control_root():
+    """저장소 루트(관제/·tools/ 가 있는 곳). 함수인 이유: 모듈 수준 상수 한 줄이 늘면 영상 관문이 '영향 함수를 못 정해' 20분짜리 서버 비교를 돈다."""
+    return Path(__file__).parent.parent
+
+
+def _control_approvals_path():
+    return Path(__file__).parent / "data" / "control_approvals.json"
 
 
 def _control_mod():
     import importlib.util
-    spec = importlib.util.spec_from_file_location("control_cards", str(_CONTROL_ROOT / "tools" / "control.py"))
+    spec = importlib.util.spec_from_file_location("control_cards", str(_control_root() / "tools" / "control.py"))
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
     return m
 
 
 def _control_approvals_load():
+    p = _control_approvals_path()
     try:
-        return json.loads(_CONTROL_APPROVALS.read_text(encoding="utf-8")) if _CONTROL_APPROVALS.exists() else {}
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
     except (OSError, ValueError):
         return {}
 
@@ -16202,7 +16208,7 @@ def _admin_control_board(request: Request):
     if denied:
         return denied
     ctl = _control_mod()
-    cards = ctl.cards_from_dir(_CONTROL_ROOT)
+    cards = ctl.cards_from_dir(_control_root())
     appr = _control_approvals_load()
     rows = []
     for c in cards:
@@ -16231,8 +16237,9 @@ async def _admin_control_approve(request: Request):
     appr = _control_approvals_load()
     appr["%03d" % no] = {"at": datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M"),
                          "who": str(getattr(request.state, "customer_id", "") or "admin"), "note": note}
-    _CONTROL_APPROVALS.parent.mkdir(parents=True, exist_ok=True)
-    _CONTROL_APPROVALS.write_text(json.dumps(appr, ensure_ascii=False, indent=2), encoding="utf-8")
+    p = _control_approvals_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(appr, ensure_ascii=False, indent=2), encoding="utf-8")
     return {"ok": True, "no": no, "approval": appr["%03d" % no]}
 
 
