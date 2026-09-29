@@ -49,6 +49,17 @@ py tools/impact.py diff                        # 지금 워킹트리 변경이 �
 finish 관문 ⑤: 주인 함수(ownership.json 의 `주인`)가 바뀐 병합은 소비처 파일이 **diff 에 있거나** 카드에 `영향 없음: <파일> — 이유` 가 있어야 통과.
 새 소비처(주인 함수를 새로 부르는 파일)가 생기면 지도 갱신을 요구하는 줄이 찍힌다.
 
+## 라이브 실측 — 카드 003
+
+병합 뒤 실제 고객 작업으로 결과물 검사 4층(영상·소리·자막·캡컷)을 서버에서 돌려 숫자를 카드에 붙인다. 판정은 `video_gate.judge` 한 곳(매일 점검 도구 `daily_video_audit.py --dry-run` 을 그대로 부른다).
+
+```
+py tools/live_check.py --card 23 [--jobs 4]     # 그 카드의 병합 시각 이후 작업으로 실측 → 카드 '라이브 실측' 칸 + 상태(라이브실측/회귀)
+py tools/live_check.py --all                    # 상태가 병합·서버반영 이고 병합 10분 지난 카드 전부
+py tools/live_check.py --card 23 --no-write     # 찍기만
+```
+대상 작업이 0이면 상태는 그대로 두고 "대상 없음"만 이력에 남긴다. SSH 가 안 되면 실패로 끝난다 — 실측 없이 '됐다'로 만들지 않는다.
+
 ## 저장 층(C/D) — 카드 023
 
 SSD(C)에는 **코드가 도는 것만**(활성 트랙·DB·병합 임시), 나머지는 외장 HDD(D:\숏템). 지도 `storage.json`, 판단 주인 `tools/storage.py:plan`.
