@@ -219,13 +219,6 @@
   {
     "date": "2026-09-29",
     "category": "스탁브레인",
-    "track": "영어모드변환",
-    "summary": "5단계 '영어모드로 변환하기' 구현(관제 029) main 병합 a7d4ad76c8: script_translate·/api/mix/lang·naturalize 우회·영어모드 타입캐스트 차단, 격리시험 10/10. 최성영 자막제거는 VMake 대기(고장 아님).",
-    "next": "DEPLOY_NOW(사장님 실행) 후 라이브 실측 1편. /start_guide.html은 서버 /tmp 정리 후 finish. 최성영 job 9ef1aece64c8 청소 완료 확인."
-  },
-  {
-    "date": "2026-09-29",
-    "category": "스탁브레인",
     "track": "고객제보",
     "summary": "cid207 제보#49(1단계 미리보기 잠금으로 TTS 못 넘어감) 조사: stepLockMsg/canGoNext 게이트 확인, job 671eed5723e0 preview_status 조회는 권한 거부로 미확인",
     "next": "서버에서 job 671eed5723e0 preview_status 확인 후 원인 판정"
@@ -236,5 +229,19 @@
     "track": "PC조사",
     "summary": "cmd창 주기적 팝업 원인 조사: gstack 아님, 코덱스 데몬(PID 1492)이 힉스필드 API 파일럿 작업으로 powershell을 반복 실행하며 콘솔창 생성. 8765 서버도 띄움",
     "next": "사장님이 코덱스 작업 의도 확인 후 유지 또는 taskkill /PID 1492 /T /F"
+  },
+  {
+    "date": "2026-09-29",
+    "category": "스탁브레인",
+    "track": "잠금사유",
+    "summary": "제보#49 답장 전송(타입캐스트 키 원인), 실패 job 잠금문구→실패사유 수정(관제031, 30분 뒤 finish 예약). 이유준 job 06fab43a4922 후킹 7.4초 원인=대본 첫 줄에 후킹+본문 붙음",
+    "next": "finish 결과·라이브 문구 확인, 후킹을 첫 문장까지로 자르는 수리 여부 결정"
+  },
+  {
+    "date": "2026-09-29",
+    "category": "스탁브레인",
+    "track": "영어모드변환",
+    "summary": "영어모드를 2단계 대본 카드로 이동(카드 머리 버튼, 원문 보관, /api/script/translate, job_lang 판정). E2E 시험 스크립트 tools/lang_mode_e2e.py 준비. finish가 타 세션 자동커밋 경쟁으로 3회 밀림, 재시도 중.",
+    "next": "finish 병합 확인 → 서버에서 lang_mode_e2e.py(변환→3단계→일레븐→렌더→캡컷) → capcut_export_audit·final_audio_audit·editor_vs_final_video → 기준선(16:13) 대비 큐 실패 비교"
   }
 ]
