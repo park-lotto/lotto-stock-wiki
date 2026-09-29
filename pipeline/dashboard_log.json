@@ -215,5 +215,19 @@
     "track": "시작안내페이지",
     "summary": "타입캐스트 안내 문구 main 병합(28e9cdad5). 조율가 문의 답장(5단계 일레븐 성우 선택). /start_guide.html 공개 페이지 트랙 커밋(관제 028 승인)했으나 서버 /tmp 17GB<20GB로 영상 관문 실패.",
     "next": "사장님이 /tmp 정리 명령 실행 후 finish 시작안내페이지 재실행 → 쿠키 없는 curl 200 확인. 기본 성우 타입캐스트 회원 자동 전환 여부 결정 대기."
+  },
+  {
+    "date": "2026-09-29",
+    "category": "스탁브레인",
+    "track": "영어모드변환",
+    "summary": "5단계 '영어모드로 변환하기' 구현(관제 029) main 병합 a7d4ad76c8: script_translate·/api/mix/lang·naturalize 우회·영어모드 타입캐스트 차단, 격리시험 10/10. 최성영 자막제거는 VMake 대기(고장 아님).",
+    "next": "DEPLOY_NOW(사장님 실행) 후 라이브 실측 1편. /start_guide.html은 서버 /tmp 정리 후 finish. 최성영 job 9ef1aece64c8 청소 완료 확인."
+  },
+  {
+    "date": "2026-09-29",
+    "category": "스탁브레인",
+    "track": "고객제보",
+    "summary": "cid207 제보#49(1단계 미리보기 잠금으로 TTS 못 넘어감) 조사: stepLockMsg/canGoNext 게이트 확인, job 671eed5723e0 preview_status 조회는 권한 거부로 미확인",
+    "next": "서버에서 job 671eed5723e0 preview_status 확인 후 원인 판정"
   }
 ]
