@@ -227,10 +227,14 @@ def move_track_to_external(repo, smap, name, printer=print):
         shutil.move(str(dest), str(wt))
         printer("   건너뜀 %s: 정션 생성 실패 — 되돌렸다" % name)
         return False
+    _git_safe_directory(dest, add=True)
+    _git_safe_directory(wt, add=True)
     rc, out = _git(wt, "status", "--porcelain")
     if rc != 0:                                        # 정션 뒤에서 git 이 안 되면 되돌린다(조용히 넘기지 않는다)
         remove_junction(wt)
         shutil.move(str(dest), str(wt))
+        _git_safe_directory(dest, add=False)
+        _git_safe_directory(wt, add=False)
         printer("   건너뜀 %s: 정션 뒤 git 실패 — 되돌렸다: %s" % (name, out.strip()[:100]))
         return False
     printer("   → D  %s (%.2fGB)" % (name, gb(dir_size(dest))))
@@ -253,6 +257,8 @@ def warm_track(repo, smap, name, printer=print):
         raise SystemExit("중단: C 여유 %.1fGB 인데 %.1fGB 가 필요하다 — 먼저 다른 트랙을 D 로" % (have, need))
     remove_junction(wt)
     shutil.move(str(real), str(wt))
+    _git_safe_directory(real, add=False)
+    _git_safe_directory(wt, add=False)
     rc, out = _git(wt, "status", "--porcelain")
     printer("← C  %s (%.2fGB)%s" % (name, need, "" if rc == 0 else "  ⚠️ git status 실패: " + out.strip()[:80]))
     return True
@@ -411,11 +417,29 @@ def _file_map(root):
     return out
 
 
+def _git_safe_directory(path, add=True):
+    """exFAT(D) 에는 소유자가 없어 git 이 'detected dubious ownership' 으로 거부한다(09-30 실측: 트랙 0개 이동의 원인).
+    옮긴 폴더를 전역 safe.directory 에 등록/해제한다. pytest 안에서는 전역 설정을 건드리지 않는다."""
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return
+    p = str(path).replace("\\", "/")
+    if add:
+        _git(Path.cwd(), "config", "--global", "--add", "safe.directory", p)
+    else:
+        _git(Path.cwd(), "config", "--global", "--unset-all", "safe.directory", p)
+
+
 def move_dir_safe(src, dst, printer=print):
     """복사 → 개수·크기 대조 → 원본 삭제. 삭제가 중간에 막히면(사용 중 파일) **원본을 D 사본에서 되살리고 D 사본을 지운다** — C 가 정본으로 남는다.
-    (2026-09-30 실사고: shutil.move 가 실행 중인 ShoppingLens 를 옮기다 C 에서 51개를 지우고 멈췄다. 되돌렸지만 이 함수가 그걸 막는다)"""
+    (2026-09-30 실사고: shutil.move 가 실행 중인 ShoppingLens 를 옮기다 C 에서 51개를 지우고 멈췄다. 되돌렸지만 이 함수가 그걸 막는다)
+    깨진 심볼릭 링크는 건너뛴다(09-30 실측: 4개 트랙이 [WinError 2] 로 복사 실패)."""
     src, dst = Path(src), Path(dst)
-    shutil.copytree(str(src), str(dst))
+    try:
+        shutil.copytree(str(src), str(dst), ignore_dangling_symlinks=True)
+    except (OSError, shutil.Error) as e:
+        shutil.rmtree(dst, ignore_errors=True)
+        printer("   건너뜀 %s: 복사 실패 — %s" % (src.name, str(e)[:160]))
+        return False
     a, b = _file_map(src), _file_map(dst)
     if a != b:
         shutil.rmtree(dst, ignore_errors=True)
@@ -573,6 +597,35 @@ def schedule(repo, smap, printer=print):
     return r.returncode == 0
 
 
+_APPLY_LOCK = Path(os.environ.get("TEMP") or os.environ.get("TMP") or ".") / "stockbrain_storage_apply.lock"
+
+
+class _ApplyLock:
+    """apply 는 한 번에 하나만. 09-30 실사고: 사장님이 apply 를 두 번 띄워 둘이 같은 트랙을 동시에 복사·삭제하다
+    '[WinError 2] 지정된 파일을 찾을 수 없습니다' 로 4개 트랙이 실패했다(C 는 되돌려져 무사). OS 파일락 — 프로세스가 죽으면 자동 해제."""
+
+    def __enter__(self):
+        self.fh = open(_APPLY_LOCK, "a+")
+        try:
+            import msvcrt
+            msvcrt.locking(self.fh.fileno(), msvcrt.LK_NBLCK, 1)
+        except OSError:
+            self.fh.close()
+            raise SystemExit("중단: 다른 storage apply 가 돌고 있다 — 끝난 뒤 다시(둘이 같은 폴더를 옮기면 파일이 사라진다)")
+        except ImportError:
+            pass
+        return self
+
+    def __exit__(self, *a):
+        try:
+            import msvcrt
+            self.fh.seek(0)
+            msvcrt.locking(self.fh.fileno(), msvcrt.LK_UNLCK, 1)
+        except (ImportError, OSError):
+            pass
+        self.fh.close()
+
+
 def main(argv=None):
     try:
         sys.stdout.reconfigure(errors="replace")
@@ -613,6 +666,7 @@ def main(argv=None):
     elif args.cmd == "schedule":
         schedule(repo, smap)
     else:
+      with _ApplyLock():
         print("[%s] 저장 층 정리 시작" % time.strftime("%Y-%m-%d %H:%M"))
         if args.tracks or args.auto:
             apply_tracks(repo, smap, days)
