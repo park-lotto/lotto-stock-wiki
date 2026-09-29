@@ -144,7 +144,10 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
         from shopping_shorts import keyroute as _kr
         if not _kr.is_block_exempt(customer_id):
             _record_tts_event("elevenlabs", None, silent=True, customer_id=customer_id)
-            raise RuntimeError("음성 생성을 하려면 일레븐랩스 또는 타입캐스트 API 키를 등록해야 해요. "
+            # ★문구에 '지금 성우가 일레븐랩스'임을 밝힌다(2026-09-30 차순엽 신고 #53 — 타입캐스트 키가 있는데
+            #   "타입캐스트 키를 등록하라"고 나와 헷갈렸다). "키를 등록해야"는 need_own_key 화면 판정용이라 유지.
+            raise RuntimeError("지금 성우는 일레븐랩스 성우라 일레븐랩스 API 키를 등록해야 해요. "
+                               "타입캐스트 키가 있으면 성우를 타입캐스트 성우로 바꿔 주세요. "
                                "설정 > 🔑 API 키에서 등록해 주세요.")
         _record_tts_event("elevenlabs", None, silent=True, customer_id=customer_id)
         _write_silent_mp3(out_path, _estimate_seconds(text))
