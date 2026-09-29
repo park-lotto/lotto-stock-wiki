@@ -116,6 +116,10 @@ def api_key(customer_id=0):
         keys = []
     if keys:
         return keys[0]
+    # ★env 폴백은 사장님·면제 명단만(2026-09-29). 회원에게 회사 키가 새는 마지막 구멍이었다 —
+    #   keys_for가 빈 목록을 줘도 여기서 config로 떨어지면 결국 사장님 키로 나간다.
+    if not keyroute.is_block_exempt(customer_id):
+        return ""
     return config.TYPECAST_API_KEY or ""
 
 

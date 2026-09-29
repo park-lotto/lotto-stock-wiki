@@ -154,10 +154,10 @@ def test_exempt_list_is_exactly_the_four_people():
     #   2026-09-04에 keyroute에서 291을 빼고 이 줄도 원래대로 되돌린다.
     # ⚠️451(심효진)은 2026-09-29 사장님 지시("내 일레븐랩스 키 심효진님한테 열어줘") — 본인 타입캐스트가
     #   업체 403 차단이라 회사 키로 음성만 쓴다. 차단 해제·자기 키 재등록 뒤 빼도 된다.
-    assert set(keyroute.BLOCK_EXEMPT_CIDS) == {4, 5, 9, 11, 12, 291, 451}
+    assert set(keyroute.BLOCK_EXEMPT_CIDS) == {4, 5, 9, 11, 12, 451}
 
 
-@pytest.mark.parametrize("cid", [4, 5, 9, 11, 12, 291, 451])
+@pytest.mark.parametrize("cid", [4, 5, 9, 11, 12, 451])
 def test_exempt_members_are_never_blocked(store, cid):
     """면제 대상은 키가 없어도 VMake·음성 둘 다 열린다."""
     assert keyroute.block_reason(store, cid, keyroute.SVC_VMAKE) is None
@@ -173,3 +173,51 @@ def test_nonexempt_member_is_still_blocked(store):
     """★면제는 명단뿐이다 — 비슷한 이름(민정훈 cid 234)까지 풀리면 안 된다."""
     assert keyroute.tts_block_reason(store, 234) is not None
     assert keyroute.block_reason(store, 261, keyroute.SVC_VMAKE) is not None
+
+
+# ── 성우 엔진에 맞는 키 (2026-09-29 사장님 "왜 내 키를 쓰나 — 타입캐스트 유료 가입 후 키 등록하라고 안내해") ──
+# 라이브 실측 9월: 타입캐스트 음성 작업 380건 중 296건이 타입캐스트 키 없는(일레븐만 낸) 회원 →
+# 사장님 타입캐스트 계정 초과 154,199크레딧. 종전 tts_block_reason은 "둘 중 하나"만 봤다.
+
+def test_typecast_voice_blocked_with_elevenlabs_key_only(store):
+    store.add_customer_key(7, keyroute.SVC_ELEVENLABS, "EL")
+    hit = keyroute.tts_block_reason(store, 7, model_id="ssfm-v30")
+    assert hit is not None and hit[0] == "need_own_key"
+    assert "유료" in hit[1] and "등록" in hit[1] and "일레븐랩스" in hit[1]
+
+
+def test_typecast_voice_allowed_with_own_typecast_key(store):
+    store.add_customer_key(8, keyroute.SVC_TYPECAST, "TC")
+    assert keyroute.tts_block_reason(store, 8, model_id="ssfm-v30") is None
+
+
+def test_elevenlabs_voice_still_allowed_with_elevenlabs_key(store):
+    store.add_customer_key(7, keyroute.SVC_ELEVENLABS, "EL")
+    assert keyroute.tts_block_reason(store, 7, model_id="eleven_v3") is None
+
+
+def test_unknown_engine_falls_back_to_either_key_rule(store):
+    store.add_customer_key(7, keyroute.SVC_ELEVENLABS, "EL")
+    assert keyroute.tts_block_reason(store, 7, model_id=None) is None
+
+
+def test_exempt_member_may_use_typecast_voice_without_key(store):
+    assert keyroute.tts_block_reason(store, 451, model_id="ssfm-v30") is None
+
+
+def test_keys_for_typecast_never_falls_back_to_owner_for_member(store, monkeypatch):
+    """요청 관문을 우회한 뒷길(워커·재합성)도 사장님 타입캐스트 키를 못 받는다."""
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님TC"])
+    keys, is_user = keyroute.keys_for(store, 7, keyroute.SVC_TYPECAST)
+    assert keys == [] and is_user is False
+    keys0, _ = keyroute.keys_for(store, 0, keyroute.SVC_TYPECAST)
+    assert keys0 == ["사장님TC"]
+    keysx, _ = keyroute.keys_for(store, 451, keyroute.SVC_TYPECAST)
+    assert keysx == ["사장님TC"]
+
+
+def test_elevenlabs_owner_fallback_unchanged_for_exempt_only_paths(store, monkeypatch):
+    """일레븐은 종전대로(관문이 막으므로 keys_for 자체는 안 바꿨다)."""
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님EL"])
+    keys, _ = keyroute.keys_for(store, 7, keyroute.SVC_ELEVENLABS)
+    assert keys == ["사장님EL"]
