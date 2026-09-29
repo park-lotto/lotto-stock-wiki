@@ -2,7 +2,7 @@
 """대본 영어모드 변환(2026-09-29 사장님 "한국어 대본 뽑고 영어모드로 변환만 되게", 관제 029).
 
 지키는 것: 줄 수 계약(장면 배정이 문장 순서에 묶여 있다) · 원문 보관과 되돌리기 · 한글 잔존 거부 ·
-영어 문장은 한국어 다듬기(naturalize)를 건너뛴다 · 영어모드에선 타입캐스트 성우 금지 · API가 자막 메타를 지운다.
+영어 문장은 한국어 다듬기(naturalize)를 건너뛴다 · 영어모드(given_script 영어)에선 타입캐스트 성우 금지 · /api/script/translate 줄 수 계약.
 """
 import importlib
 
@@ -50,17 +50,11 @@ def test_already_english_is_not_translated_again():
     assert out == EN and calls == []
 
 
-def test_apply_lang_en_keeps_original_and_ko_restores():
-    plan = {"beats": [{"beat_idx": i, "narration": t, "caption_lines": ["a"], "cap_durs": [1]} for i, t in enumerate(KO)]}
-    n = script_translate.apply_lang(plan, "en", call=_fake(EN))
-    assert n == 3 and plan["lang"] == "en"
-    assert [b["narration"] for b in plan["beats"]] == EN
-    assert [b["narration_ko"] for b in plan["beats"]] == KO
-    # 영어 상태에서 다시 en → 원문(narration_ko)을 재료로 쓰고 결과가 같으면 바뀐 수 0
-    assert script_translate.apply_lang(plan, "en", call=_fake(EN)) == 0
-    n = script_translate.apply_lang(plan, "ko")
-    assert n == 3 and plan["lang"] == "ko"
-    assert [b["narration"] for b in plan["beats"]] == KO
+def test_job_lang_detects_from_given_script():
+    assert script_translate.job_lang({"given_script": "\n".join(EN)}) == "en"
+    assert script_translate.job_lang({"given_script": "\n".join(KO)}) == "ko"
+    assert script_translate.job_lang({"edit_plan": {"lang": "en"}, "given_script": "\n".join(KO)}) == "en"
+    assert script_translate.job_lang({}) == "ko"
 
 
 def test_naturalize_skips_korean_stages_for_english():
@@ -101,35 +95,25 @@ def client(tmp_path, monkeypatch):
     return c, st
 
 
-def test_api_lang_en_translates_and_clears_caption_meta(client):
+def test_api_script_translate_returns_same_count(client):
     c, st = client
-    r = c.post("/api/mix/lang", json={"job_id": "J1", "lang": "en"})
+    st.add_customer_key(c.cid, "elevenlabs", "EL")          # 음성 키 없는 계정은 402로 먼저 안내
+    r = c.post("/api/script/translate", json={"lines": KO, "product": "젓가락"})
     assert r.status_code == 200, r.text
-    d = r.json(); assert d["lang"] == "en" and d["changed"] == 3 and d["narrations"] == EN
-    assert [p["ko"] for p in d["pairs"]] == KO and [p["en"] for p in d["pairs"]] == EN   # 검토표 재료
-    plan = st.get_mix_job("J1")["edit_plan"]
-    assert plan["lang"] == "en"
-    for b in plan["beats"]:
-        assert "caption_lines" not in b or not b.get("caption_lines")
-        assert not b.get("cap_durs")
-    r = c.post("/api/mix/lang", json={"job_id": "J1", "lang": "ko"})
-    assert r.status_code == 200 and r.json()["narrations"] == KO
+    assert r.json()["lines"] == EN
 
 
-def test_api_lang_rejects_other_customers_job(client, monkeypatch):
+def test_api_script_translate_rejects_empty(client):
     c, st = client
-    import time
-    cid2 = st.create_customer("en2", "pw12")
-    other = TestClient(appmod.app, cookies={"dash_auth": appmod._sign_session(cid2, int(time.time()) + 3600)})
-    r = other.post("/api/mix/lang", json={"job_id": "J1", "lang": "en"})
-    assert r.status_code == 403
+    st.add_customer_key(c.cid, "elevenlabs", "EL")
+    assert c.post("/api/script/translate", json={"lines": []}).status_code == 422
 
 
 def test_lang_voice_block_only_in_english_mode():
-    job_en = {"edit_plan": {"lang": "en"}}
+    job_en = {"given_script": "\n".join(EN), "edit_plan": {}}
     assert appmod._lang_voice_block(job_en, {"model_id": "ssfm-v30"}) is not None
     assert appmod._lang_voice_block(job_en, {"model_id": "eleven_v3"}) is None
-    assert appmod._lang_voice_block({"edit_plan": {"lang": "ko"}}, {"model_id": "ssfm-v30"}) is None
+    assert appmod._lang_voice_block({"given_script": "\n".join(KO), "edit_plan": {}}, {"model_id": "ssfm-v30"}) is None
 
 
 def test_short_latin_tokens_still_get_korean_naturalize():
