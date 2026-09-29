@@ -1,10 +1,10 @@
 # 026 · TopView Higgsfield 비교 HTML
 
-- 상태: 등록
+- 상태: 분배
 - 등록: 2026-09-29 11:57
 - 제보: 사용자 요청
 - 판단 주인: Codex:HTML 보고서 제작
-- 분배: 
+- 분배: topview-higgsfield-html
 - 됐다의 기준: 비교 HTML 작성·검증·배포
 - 승인 필요: 미정(finish 가 diff 로 판정)
 - 승인: 
@@ -20,3 +20,4 @@
 ## 이력
 
 - 2026-09-29 11:57 등록
+- 2026-09-29 11:58 분배 → topview-higgsfield-html
