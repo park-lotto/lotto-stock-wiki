@@ -25118,6 +25118,9 @@ try:
     from shopping_shorts import longform_api as _lf_api
     _lf_api.register(app, lambda _req: None)
 except Exception:                                  # noqa: BLE001 — 이 기능이 앱 기동을 막지 않는다
+    # ★traceback을 여기서 부른다(2026-09-29 사고): 모듈 머리에 import가 없어 롱폼 실패가 NameError로
+    #   번져 웹이 기동 루프에 빠졌다(디스크 100%로 롱폼의 임시폴더 생성이 실패한 날).
+    import traceback
     traceback.print_exc()
 
 

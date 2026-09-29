@@ -121,7 +121,7 @@ def server_verdict(data):
     실사고: 디스크 100%(09-16)와 메인 스레드 99.9%(09-18)를 고객이 말해줘서 알았다."""
     lat, cpu, free = data.get("web_latency_ms"), data.get("web_main_cpu"), data.get("disk_free_gb")
     if free is not None and free < 30:
-        return ("danger", f"디스크 여유 {free:.0f}GB — 지금 차고 있습니다. 큰 폴더(du -xh --max-depth=1 /tmp)부터 보세요.")
+        return ("danger", f"디스크 여유 {free:.0f}GB — 지금 차고 있습니다. 큰 폴더(du -xh --max-depth=1 shopping_shorts/data · /tmp)부터 보세요 — 09-29엔 data/find_frames 169GB였다.")
     if lat is not None and lat > 1000:
         return ("danger", f"웹 첫 페이지 응답 {lat:.0f}ms(정상 40ms 이하) — 이벤트 루프 막힘 의심. "
                           f"메인 스레드 CPU {cpu if cpu is not None else '?'}%. py-spy dump로 확인.")
