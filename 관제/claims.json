@@ -1,1 +1,17 @@
-{}
+{
+  "out/precision20-ui.js:drawFontSets": {
+    "at": "2026-09-29 16:06",
+    "card": 30,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/scene_style.py:validate_snapshot": {
+    "at": "2026-09-29 16:06",
+    "card": 30,
+    "track": "장면폰트"
+  },
+  "tools/scene_font_research/check_text_look.py": {
+    "at": "2026-09-29 16:06",
+    "card": 30,
+    "track": "장면폰트"
+  }
+}
