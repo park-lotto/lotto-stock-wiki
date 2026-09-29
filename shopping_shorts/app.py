@@ -9532,7 +9532,15 @@ def _cta_cut_for_job(job):
     if not beats:
         return None, "대본 정보가 없어요"
     # CTA 칸 자체가 없으면 자를 게 없다 — 이건 옛 영상 문제가 아니다.
-    from shopping_shorts.edit_plan import _is_cta
+    from shopping_shorts.edit_plan import _is_cta, apply_cta_mark
+    # ★CTA 표시가 생기기 전 작업(2026-09-30 관제 45)은 **사본**에 같은 판정(apply_cta_mark)을 얹어 본다 —
+    #   '마무리'·'댓글유도' 칸이라 못 자르던 옛 작업(김성현님 3b4111969ac4 등)도 음성 파일이 남아 있으면 자른다.
+    #   DB의 edit_plan은 건드리지 않는다(읽기 전용 계산).
+    if not any("cta_mark" in b for b in beats):
+        import copy as _copy
+        plan = _copy.deepcopy(plan)
+        beats = plan.get("beats") or []
+        apply_cta_mark(beats, job.get("given_script"), job.get("script_structure"))
     if not any(_is_cta(b) for b in beats):
         return None, "이 대본엔 CTA 칸이 없어요 — 잘라낼 뒷부분이 없습니다"
     # ② 옛 job 폴백: TTS mp3가 남아 있으면 그때 계산한다.
