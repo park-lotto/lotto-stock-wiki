@@ -47,6 +47,24 @@ def reuse_pairs(cut_plan, min_overlap=0.3):
     return out
 
 
+def overreads(plan, cut_plan, tol=0.1):
+    """④ 조각 밖 읽기 — 렌더 컷이 그 칸에 넘긴 조각(seg)의 끝을 넘어 원본을 읽은 초. 넘은 만큼은 다음 샷일 수 있다."""
+    out = []
+    for bp in cut_plan:
+        b = bp["beat"] if isinstance(bp.get("beat"), dict) else (plan.get("beats") or [])[bp["idx"]]
+        segs = [b.get("primary") or {}] + list(b.get("alternates") or [])
+        for c in bp["clips"]:
+            cl = c["clip"]
+            v, s = cl.get("video_id") or cl.get("v"), float(cl.get("start") or 0)
+            e = s + float(c.get("play_out") or 0)
+            own = [x for x in segs if x.get("video_id") == v and float(x.get("start") or 0) - 0.05 <= s < float(x.get("end") or 0)]
+            if own:
+                over = e - float(own[0]["end"])
+                if over > tol:
+                    out.append((bp["idx"], v, round(s, 2), round(e, 2), round(over, 2)))
+    return out
+
+
 def repeat_frames(video, fps=5, gap=1.0, same=4.0, moving=1.5):
     import numpy as np
     r = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", "fps=%d,scale=48:84,format=gray" % fps,
@@ -78,15 +96,19 @@ def check(jid):
     reuse = reuse_pairs(cp)
     for a, b in reuse:
         print("  ② 재사용: 칸%d %s %.2f~%.2f  ↔  칸%d %s %.2f~%.2f" % (a[0], a[1], a[2], a[3], b[0], b[1], b[2], b[3]))
+    over = overreads(plan, cp)
+    for x in over:
+        print("  ④ 조각 밖: 칸%d %s %.2f~%.2f (%.2f초 넘음)" % x)
     video = job.get("video_path") or ""
     if not (video and Path(video).exists()):
         video = str(R / "mix_jobs" / jid / "final.mp4")
     rep = repeat_frames(video) if Path(video).exists() else None
     if rep:
         print("  ③ 반복 프레임:", rep[:12])
-    print("== SFC job=%s 컷유지 %s · 재사용 %d · 반복 %s" % (
-        jid, "OK" if ok_keep else "NG", len(reuse), "영상없음" if rep is None else len(rep)), flush=True)
-    return ok_keep and not reuse and rep == []
+    print("== SFC job=%s 컷유지 %s · 재사용 %d · 반복 %s · 조각밖 %d컷 %.2f초" % (
+        jid, "OK" if ok_keep else "NG", len(reuse), "영상없음" if rep is None else len(rep),
+        len(over), sum(x[4] for x in over)), flush=True)
+    return ok_keep and not reuse and rep == [] and not over
 
 
 if __name__ == "__main__":

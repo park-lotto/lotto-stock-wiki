@@ -36,7 +36,10 @@ PREFIX = {"공개": "이건 바로", "고조1": "이게 말도 안 되는게", "
 END_OK = {"마무리": ("라는데", "준다고", "다고")}
 CUT_SECS = 2.5          # 컷 하나가 맡는 초(mix_pipeline._trim_for_cut_rhythm 의 칸 길이 ÷ 2.5 와 같은 리듬)
 MIN_CUT = 0.8           # 이보다 짧은 컷은 후보에서 뺀다(backbone_assemble.MIN_CUT_SECS 와 같은 값)
-FIT_SLACK = 0.2         # 대사가 화면보다 이만큼까지 길어도 통과
+FIT_SLACK = -0.2        # 추정 대사가 화면보다 이만큼 **짧아야** 통과 — 목소리는 대본 뒤(4단계)에 정해져 실제 길이를 모른다
+BUDGET = 0.85           # 글자 예산 = 장면 초 × 말 속도 × 이 값(여유). 실측: 기본 목소리(kr-mina 1.0·추임새)는 추정보다
+                        #   길었다(훅 2.2→2.54초, job sf1c2f259d78) — 708줄 표본 중앙은 추정의 0.72~0.82배
+REDO_ROUNDS = 2         # 넘친 줄·어미 틀린 줄 다시 쓰기 최대 횟수
 MADE_BY = "장면먼저"
 _EXAMPLES = Path(__file__).parent / "assets" / "scene_first_even_examples.json"
 
@@ -144,7 +147,7 @@ def check_board(sb, idx):
             problems.append("칸%d %s 화면 %.1f초 < 하한 %.1f" % (i, n, secs, a))
         used.update(cuts)
         pf = PREFIX.get(n, "")
-        chars = int(secs * cps * 0.95)
+        chars = int(secs * cps * BUDGET)
         board.append({"slot": i, "name": n, "kind": k, "cuts": cuts, "secs": round(secs, 2), "chars": chars,
                       "prefix": pf, "rest_chars": max(6, chars - len(pf) - 1) if pf else chars,
                       "shows": str(got.get("shows") or ""), "desc": [idx[c]["desc"] for c in cuts]})
@@ -244,20 +247,37 @@ def make_drafts(job, cid=0, seed_text="", call=None, note=None):
         s = x.get("slot")
         if s in by and (x.get("text") or "").strip():
             lines[s] = join_prefix(by[s]["prefix"], x["text"])
-    redo = [x for x in board if not lines.get(x["slot"]) or _narr(lines.get(x["slot"])) > x["secs"] + FIT_SLACK
-            or end_bad(x["name"], lines.get(x["slot"]))]
-    if redo:
-        fix = ("아래 줄들을 고쳐라. 뜻과 문체(이븐쇼핑 반말 서술)는 유지. 한국어. 글자 수 상한과 지시를 꼭 지켜라.\n" +
-               "\n".join("칸%d (%d자 이하%s): %s" % (
-                   x["slot"], x["chars"], (", 반드시 " + end_bad(x["name"], lines.get(x["slot"]))) if end_bad(
-                       x["name"], lines.get(x["slot"])) else "", lines.get(x["slot"]) or x["shows"]) for x in redo))
+    def _needs(x):
+        t = lines.get(x["slot"])
+        return (not t) or _narr(t) > x["secs"] + FIT_SLACK or bool(end_bad(x["name"], t))
+
+    def _rest(x):
+        t, pf = (lines.get(x["slot"]) or "").strip(), x["prefix"]
+        return t[len(pf):].strip() if pf and t.startswith(pf) else t
+
+    # 다시 쓰기는 **신호어 뒷말만** 보여주고 뒷말 글자 수로 요구한다 — 줄 전체를 주면 모델이 신호어를 빼거나
+    #   비슷한 말("진짜 대박인 건")을 또 붙여 넘친다(실측 e2e3). 최대 REDO_ROUNDS 번.
+    note["redo"] = []
+    for _round in range(REDO_ROUNDS):
+        redo = [x for x in board if _needs(x)]
+        if not redo:
+            break
+        note["redo"].append([x["name"] for x in redo])
+        fix = ("아래 줄들을 고쳐라. 뜻과 문체(이븐쇼핑 반말 서술)는 유지. 한국어. 글자 수 상한과 지시를 꼭 지켜라.\n"
+               "앞말이 적힌 칸은 **이어지는 말만** 써라(앞말은 코드가 붙인다 — 비슷한 감탄을 또 넣지 마라).\n" +
+               "\n".join("칸%d (%s%d자 이하%s): %s" % (
+                   x["slot"], ("앞말 '%s' 뒤에 이어지는 말만, " % x["prefix"]) if x["prefix"] else "",
+                   x["rest_chars"] if x["prefix"] else x["chars"],
+                   (", 반드시 " + end_bad(x["name"], lines.get(x["slot"]))) if end_bad(x["name"], lines.get(x["slot"])) else "",
+                   _rest(x) or x["shows"]) for x in redo))
         try:
             for x in (call(fix, LN_SCHEMA) or {}).get("lines") or []:
                 s = x.get("slot")
                 if s in by and (x.get("text") or "").strip():
                     lines[s] = join_prefix(by[s]["prefix"], x["text"])
-        except Exception as e:      # noqa: BLE001 — 다시 쓰기 실패면 첫 판으로 판정
+        except Exception as e:      # noqa: BLE001 — 다시 쓰기 실패면 그 판으로 판정
             note["redo_error"] = repr(e)[:200]
+            break
     final = []
     for x in board:
         t = lines.get(x["slot"], "")

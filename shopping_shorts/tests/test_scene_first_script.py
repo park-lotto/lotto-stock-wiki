@@ -52,7 +52,7 @@ def test_장면표가_먼저_불리고_글자예산은_장면길이에서(monkey
     assert "화면부터" in calls[0] and "대사를 쓴다" in calls[1]          # 순서: 장면표 → 대사
     cps = sfs._cps()
     for b in note["board"]:
-        assert b["chars"] == int(b["secs"] * cps * 0.95)                # 글자 수 = 장면 초에서
+        assert b["chars"] == int(b["secs"] * cps * sfs.BUDGET)          # 글자 수 = 장면 초에서
     assert "약 %d자" % note["board"][0]["chars"] in calls[1]
 
 
@@ -82,8 +82,10 @@ def test_화면보다_긴줄은_다시쓰고_그래도_길면_안을_안낸다(m
     long = dict(LINES)
     long = {"lines": [dict(x) for x in LINES["lines"]]}
     long["lines"][4]["text"] = "상자까지 방수로 밀봉되고 서류도 책도 습기 없이 오래오래 보관된다고"
-    drafts, why, calls, _ = _run(monkeypatch, [BOARD, long, long])      # 다시 쓰기도 그대로 긴 답
-    assert len(calls) == 3 and "칸4" in calls[2]                        # 넘친 줄만 다시 쓰기 1회
+    drafts, why, calls, note = _run(monkeypatch, [BOARD, long, long, long])      # 다시 쓰기도 그대로 긴 답
+    assert len(calls) == 2 + sfs.REDO_ROUNDS and all("칸4" in c for c in calls[2:])   # 넘친 줄만, 최대 REDO_ROUNDS번
+    assert "앞말 '심지어' 뒤에 이어지는 말만" in calls[2]
+    assert "): 상자까지 방수로" in calls[2]                             # 신호어 뺀 뒷말만 보여준다
     assert drafts == [] and "고조2" in why
 
 
