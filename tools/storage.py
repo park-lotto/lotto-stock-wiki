@@ -456,6 +456,84 @@ def apply_desktop(smap, printer=print):
     return n
 
 
+# ── 트랙 접기(카드 005 대청소): bundle 을 D 에 → 문서만 남은 커밋은 main 에 → 폴더·브랜치 삭제 ───────────
+
+def archive_track(repo, smap, name, printer=print, allow_code=False):
+    """접는다. ① git bundle(브랜치 전체) → D:/숏템/90_보관/트랙/<이름>.bundle ② 미병합 커밋이 문서(handoff·wiki/log.d·관제)만이면
+    origin/main 위에 cherry-pick 해 push(기록 보존) ③ 코드 미병합이 있으면 allow_code 없이는 멈춘다(사장님 판단) ④ 폴더·브랜치(로컬·원격) 삭제."""
+    import track
+    _require_external(smap)
+    br = track.branch_name(name)
+    if not track.branch_exists(repo, br):
+        printer("   %s: 브랜치 없음" % name)
+        return False
+    _git(repo, "fetch", "origin")
+    dest = _dest(smap, "보관", "90_보관") / "트랙"
+    dest.mkdir(parents=True, exist_ok=True)
+    # ★전체 브랜치가 아니라 main 에 없는 커밋만 bundle — 전체(8GB 저장소)는 pack-objects 가 메모리 부족으로 죽는다(09-30 실측 10/10 실패).
+    #   main 에 다 들어간 트랙은 보존할 게 없다(빈 bundle 은 git 이 거절) → bundle 없이 접는다.
+    rc, n = _git(repo, "rev-list", "--count", "origin/main..%s" % br)
+    if int((n or "0").strip() or 0) > 0:
+        rc, out = _git(repo, "bundle", "create", str(dest / ("%s.bundle" % name)), "origin/main..%s" % br)
+        if rc != 0:
+            printer("   건너뜀 %s: bundle 실패 %s" % (name, out.strip()[:120]))
+            return False
+    rc, files = _git(repo, "diff", "--name-only", "origin/main...%s" % br)
+    unmerged = [f.strip() for f in files.splitlines() if f.strip()]
+    code = [f for f in unmerged if not track._is_non_code(f)]
+    if code and not allow_code:
+        printer("   보류 %s: 미병합 코드 %d파일(%s) — 사장님 판단. bundle 은 D 에 남겼다" % (name, len(code), ", ".join(code[:3])))
+        return False
+    if unmerged and not code:
+        # 내용이 main 과 같은 파일은 보존할 게 없다(09-30 실측: 짤쇼핑카테고리 — 같은 날 main 에도 같은 기록이 들어가 있었다)
+        differ = []
+        for f in unmerged:
+            rc, d = _git(repo, "diff", "origin/main", br, "--", f)
+            if any(ln[:1] in "+-" and not ln.startswith(("+++", "---")) for ln in d.splitlines()):
+                differ.append(f)
+        if differ:
+            # 문서만 남은 것을 main 에 살린다 — 커밋 재생(cherry-pick)이 아니라 **트랙 쪽 파일을 그대로 얹는다**(옛 트랙은
+            # 부모가 멀어 cherry-pick 이 자주 깨진다). 코드가 아니라 게이트 없이 push(관제 카드와 같은 길).
+            stage = Path(repo) / ".tracks" / ("_archive-%s" % name)
+            _git(repo, "worktree", "remove", "--force", str(stage))
+            rc, out = _git(repo, "worktree", "add", "--detach", "--no-checkout", str(stage), "origin/main")
+            ok = rc == 0
+            if ok:
+                _git(stage, "sparse-checkout", "set", "handoff", "wiki/log.d", "관제")
+                _git(stage, "reset", "--hard", "HEAD")
+                rc, out = _git(stage, "checkout", br, "--", *differ)
+                ok = rc == 0
+                if ok:
+                    rc, out = _git(stage, "commit", "-q", "-m", "접은 트랙 %s 의 문서 보존 (%s)" % (name, ", ".join(differ)))
+                    ok = rc == 0 or "nothing to commit" in out
+                if ok:
+                    rc, out = _git(stage, "push", "origin", "HEAD:main")
+                    ok = rc == 0
+                _git(repo, "worktree", "remove", "--force", str(stage))
+            if not ok:
+                printer("   보류 %s: 문서를 main 에 못 살렸다 — 손으로 보고 접어라: %s" % (name, out.strip()[:120]))
+                return False
+            printer("   %s: 문서 %d파일 main 에 살림" % (name, len(differ)))
+        else:
+            printer("   %s: 미병합 문서가 main 과 내용이 같다 — 보존할 것 없음" % name)
+    wt = track.worktree_path(name, repo)
+    if os.path.lexists(wt):
+        if is_junction(wt):
+            real = Path(os.path.realpath(wt))
+            remove_junction(wt)
+            shutil.rmtree(real, ignore_errors=True)
+            _git(repo, "worktree", "prune")
+        else:
+            rc, out = _git(repo, "worktree", "remove", "--force", str(wt))
+            if rc != 0:
+                printer("   보류 %s: 폴더를 못 지웠다(열린 창?) %s" % (name, out.strip()[:100]))
+                return False
+    _git(repo, "push", "origin", "--delete", br)
+    rc, out = _git(repo, "branch", "-D", br)
+    printer("   🧹 %s 접음%s" % (name, (" — bundle %s" % (dest / ("%s.bundle" % name))) if (dest / ("%s.bundle" % name)).exists() else " (main 에 전부 있어 bundle 없음)"))
+    return rc == 0
+
+
 def status(repo, smap, printer=print):
     c = free_gb(repo)
     ok, why = external_ok(smap)

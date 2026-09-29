@@ -503,6 +503,42 @@ def record_merge(repo, numbers, track_name, sha, printer=print):
         printer("ℹ️ 병합은 끝났지만 카드에 기록을 못 남겼다 — 손으로: py tools/control.py note <번호> \"병합 %s\"\n   %s" % (sha, e))
 
 
+# ── 서버 승인 기록(관리자 화면 버튼) → 카드 ───────────────────────────────
+
+SERVER_APPROVALS = "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/control_approvals.json"
+
+
+def server_approvals(sh=None):
+    """서버의 data/control_approvals.json → {번호(int): {at, who, note}}. 없으면 {}."""
+    if sh is None:
+        import video_gate
+        key = video_gate._find_key()
+        if not key:
+            raise ControlError("SSH 키를 못 찾았다")
+        sh = video_gate._ssh_runner(key)
+    rc, out = sh("cat %s 2>/dev/null || echo {}" % SERVER_APPROVALS, timeout=60)
+    if rc != 0:
+        raise ControlError("서버 승인 파일 읽기 실패: " + out.strip()[:120])
+    try:
+        raw = json.loads(out.strip() or "{}")
+    except ValueError:
+        return {}
+    return {int(k): v for k, v in raw.items() if str(k).strip().isdigit()}
+
+
+def sync_server_approvals(repo, cards, sh=None, printer=print):
+    """서버 승인이 있는데 카드에 승인이 비어 있으면 카드에 옮겨 적는다 → 옮긴 카드 번호 목록."""
+    appr = server_approvals(sh)
+    done = []
+    for c in cards:
+        a = appr.get(int(c["번호"]))
+        if a and not c["승인"].strip():
+            approve(repo, c["번호"], "관리자 화면 %s %s (%s)" % (a.get("who", ""), a.get("note", ""), a.get("at", "")), printer=lambda *x: None)
+            printer("  관제: 카드 %03d 승인을 서버 기록에서 옮겨 적음(%s)" % (c["번호"], a.get("note", "")[:40]))
+            done.append(c["번호"])
+    return done
+
+
 # ── 선점 신고 ─────────────────────────────────────────────────────────
 
 def load_claims(repo, ref=MAIN_REF):
@@ -606,8 +642,25 @@ def finish_gate(repo, stage, br, track_name, printer=print, ownership=None):
     changed = [x.strip() for x in out.splitlines() if x.strip()]
     _, diff = _git(stage, "diff", "--cached", "-U0", "HEAD")
 
+    # ①-b 판단 주인(2026-09-30 사장님 "주인함수를 보는 게 우선"): 제품 코드를 건드리는 병합은 카드에 '판단 주인'이 적혀 있어야 한다.
+    #     어느 함수가 이 판단의 주인인지 정하지 않은 수리는 두 벌의 씨앗이다(0순위-C).
+    code_files = [c for c in changed if c.replace("\\", "/").startswith("shopping_shorts/") and c.endswith((".py", ".js", ".html"))]
+    if linked and code_files and g.get("require_owner", True):
+        if not any(c["판단 주인"].strip() for c in linked):
+            fails.append("제품 코드 %d파일을 바꾸는데 카드에 '판단 주인'(어느 함수가 이 판단을 맡나)이 비어 있다(0순위-C, 관제 원칙 2).\n"
+                         "    지도에서 찾아 적어라: wiki/rules/판단소유권.md · py tools/impact.py spec <함수>\n"
+                         "    py tools/control.py set <번호> \"판단 주인\" \"<파일:함수>\"" % len(code_files))
+
     reasons = approval_reasons(changed, diff, rules)
     if reasons and g.get("require_approval", True):
+        if not any(c["승인"].strip() for c in linked):
+            # 관리자 화면 [승인] 버튼은 서버 파일에 적힌다(서버는 git 을 못 고친다) — ssh 로 읽어 카드에 옮긴다(카드 004)
+            try:
+                synced = sync_server_approvals(repo, linked, printer=printer)
+                if synced:
+                    linked = [find_card(cards_from_ref(repo), c["번호"]) or c for c in linked]
+            except Exception as e:      # noqa: BLE001 — 동기화 실패는 승인 없음으로 본다(조용히 통과 없음)
+                notes.append("서버 승인 기록을 못 읽었다: %r" % e)
         approved = [c for c in linked if c["승인"].strip()]
         if not approved:
             fails.append("고객에게 보이거나 돈·데이터가 바뀌는 변경인데 카드에 승인이 없다(0순위-A1c):\n"

@@ -16172,6 +16172,70 @@ def _admin_pending(request: Request):
             "bug_open": bug_open}
 
 
+# ── 관제 보드(2026-09-30, 관제 카드 004 — 사장님 "1 2 다 하고") ────────────────────────────
+# 카드는 git(관제/cards, main)이 정본이고 서버는 pull 만 한다(핫패치 금지). 그래서 화면은 **읽기**는 저장소 파일로,
+# **승인 버튼**은 data/control_approvals.json(gitignore)에 적는다 → 로컬 finish 가 ssh 로 읽어 카드 승인으로 인정한다
+# (tools/control.py finish_gate·sync_server_approvals). 카드 파싱은 tools/control.py 한 곳 — 여기서 다시 적지 않는다(0순위-B).
+_CONTROL_ROOT = Path(__file__).parent.parent
+_CONTROL_APPROVALS = Path(__file__).parent / "data" / "control_approvals.json"
+
+
+def _control_mod():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("control_cards", str(_CONTROL_ROOT / "tools" / "control.py"))
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def _control_approvals_load():
+    try:
+        return json.loads(_CONTROL_APPROVALS.read_text(encoding="utf-8")) if _CONTROL_APPROVALS.exists() else {}
+    except (OSError, ValueError):
+        return {}
+
+
+@app.get("/api/admin/control/board")
+def _admin_control_board(request: Request):
+    """관제 카드 전부(저장소 관제/cards) + 서버 승인 기록. 관리자만."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    ctl = _control_mod()
+    cards = ctl.cards_from_dir(_CONTROL_ROOT)
+    appr = _control_approvals_load()
+    rows = []
+    for c in cards:
+        no = "%03d" % (c["번호"] or 0)
+        rows.append({"no": c["번호"], "title": c["제목"], "state": c["상태"], "tracks": c["분배"], "owner": c["판단 주인"],
+                     "done": c["됐다의 기준"], "approval": c["승인"], "needs_approval": c["승인 필요"],
+                     "merge": c["병합"], "live": c["라이브 실측"], "last": (c["이력"][-1] if c["이력"] else ""),
+                     "server_approval": appr.get(no) or appr.get(str(c["번호"]))})
+    return {"ok": True, "cards": rows, "approvals": appr, "states": list(ctl.STATES)}
+
+
+@app.post("/api/admin/control/approve")
+async def _admin_control_approve(request: Request):
+    """승인 버튼 — 서버 기록. 카드 파일은 git 이라 서버가 못 고친다(로컬 finish 가 이 기록을 카드로 옮긴다)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    b = await request.json()
+    try:
+        no = int(b.get("no") or 0)
+    except (TypeError, ValueError):
+        no = 0
+    note = (b.get("note") or "").strip()
+    if no <= 0 or not note:
+        return JSONResponse({"ok": False, "error": "카드 번호와 승인 근거가 필요하다"}, status_code=400)
+    appr = _control_approvals_load()
+    appr["%03d" % no] = {"at": datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M"),
+                         "who": str(getattr(request.state, "customer_id", "") or "admin"), "note": note}
+    _CONTROL_APPROVALS.parent.mkdir(parents=True, exist_ok=True)
+    _CONTROL_APPROVALS.write_text(json.dumps(appr, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"ok": True, "no": no, "approval": appr["%03d" % no]}
+
+
 @app.post("/api/admin/alerts/read")
 def _admin_alerts_read(request: Request):
     """운영 사고 쪽지 전부 읽음 처리(배지 끄기). 관리자만."""

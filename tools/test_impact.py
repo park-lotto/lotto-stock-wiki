@@ -76,7 +76,7 @@ def _seed(repo_):
 
 def test_owner_change_without_consumer_or_note_is_rejected(repo):
     _seed(repo)
-    n = control.new_card(repo, "컷 고침", printer=lambda *a: None)
+    n = control.new_card(repo, "컷 고침", owner="shopping_shorts/owner.py:render_cut_plan", printer=lambda *a: None)
     _make_track_commit_with_card(repo, "컷", n, files={"shopping_shorts/owner.py": "def render_cut_plan(x):\n    return x + 1\n"})
     before = _origin_head(repo)
     with pytest.raises(track.TrackError) as e:
@@ -91,7 +91,7 @@ def test_owner_change_without_consumer_or_note_is_rejected(repo):
 
 def test_owner_change_with_consumer_changed_passes(repo):
     _seed(repo)
-    n = control.new_card(repo, "함께 고침", printer=lambda *a: None)
+    n = control.new_card(repo, "함께 고침", owner="shopping_shorts/owner.py:render_cut_plan", printer=lambda *a: None)
     _make_track_commit_with_card(repo, "함께", n, files={
         "shopping_shorts/owner.py": "def render_cut_plan(x, y=0):\n    return x + y\n",
         "shopping_shorts/user.py": "from owner import render_cut_plan\n\ndef go():\n    return render_cut_plan(1, 2)\n"})
@@ -100,7 +100,7 @@ def test_owner_change_with_consumer_changed_passes(repo):
 
 def test_non_owner_change_is_not_checked(repo, capsys):
     _seed(repo)
-    n = control.new_card(repo, "무관", printer=lambda *a: None)
+    n = control.new_card(repo, "무관", owner="shopping_shorts/other.py:unrelated", printer=lambda *a: None)
     _make_track_commit_with_card(repo, "무관", n, files={"shopping_shorts/other.py": "def unrelated():\n    return 1\n"})
     assert _finish(repo, "무관") == 0
     assert "주인 함수 변경 없음" in capsys.readouterr().out
@@ -108,7 +108,7 @@ def test_non_owner_change_is_not_checked(repo, capsys):
 
 def test_new_consumer_is_reported(repo, capsys):
     _seed(repo)
-    n = control.new_card(repo, "새 소비처", printer=lambda *a: None)
+    n = control.new_card(repo, "새 소비처", owner="shopping_shorts/owner.py:render_cut_plan", printer=lambda *a: None)
     _make_track_commit_with_card(repo, "새소비", n, files={
         "shopping_shorts/owner.py": "def render_cut_plan(x):\n    return x * 2\n",
         "shopping_shorts/newuser.py": "from owner import render_cut_plan\nprint(render_cut_plan(3))\n"})
