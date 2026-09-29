@@ -3106,7 +3106,10 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
 
 
 # CTA로 인식하는 role 표기(모델이 한글·영문을 섞어 쓴다).
-_CTA_ROLES = ("cta", "CTA", "씨티에이", "행동유도")
+# ★2026-09-30(관제 45): 라이브 7일 실측 — 'call_to_action'(3)·'call-to-action'(1)·'댓글유도'(5)가
+#   CTA인데 목록에 없어 유튜브용 CTA 잘라내기가 "CTA 칸이 없어요"로 막혔다(부분문자열 비교라 'cta'로 못 잡는다).
+_CTA_ROLES = ("cta", "CTA", "씨티에이", "행동유도", "call_to_action", "call-to-action",
+              "call to action", "calltoaction", "댓글유도")
 # 반말 종결 → 존댓말(2026-07-30 실측: CTA가 "댓글에 커피 남겨줘"로 나온 건이 있었다).
 _BANMAL_FIX = [("남겨줘", "남겨주세요"), ("달아줘", "달아주세요"), ("써줘", "써주세요"),
                ("해줘", "해주세요"), ("눌러줘", "눌러주세요"), ("봐줘", "봐주세요"),
@@ -3114,8 +3117,96 @@ _BANMAL_FIX = [("남겨줘", "남겨주세요"), ("달아줘", "달아주세요"
 
 
 def _is_cta(beat):
+    # ★칸에 박힌 CTA 표시(cta_mark)가 역할 이름보다 먼저다(2026-09-30 관제 45) — 2단계 [📢 CTA] 버튼·
+    #   자동 추정이 apply_cta_mark로 박는다. False = 고객이 "CTA 아님"으로 끈 것. 없으면 종전(역할 이름).
+    mark = beat.get("cta_mark")
+    if mark is True or mark is False:
+        return mark
     role = (beat.get("role") or "")
     return any(k.lower() in role.lower() for k in _CTA_ROLES)
+
+
+def _looks_cta_text(text):
+    """대사가 CTA(댓글·프로필 링크로 부르는 말)인가 — 자동 추정 전용.
+
+    _has_comment_cta(댓글 유도)에 **프로필 링크** 안내를 더한다. 썰 대본 '마무리' 칸 실측(7일 18건):
+    "궁금하면 프로필링크에~" / "댓글에 '손빨래' 남겨주시면 정보 보내드릴게요"."""
+    t = (text or "")
+    if _has_comment_cta(t):
+        return True
+    # 마지막 줄 전용이라 넓게 잡는다(guess_cta_index만 부른다) — 라이브 7일 실측 누락:
+    #   "궁금하면 프로필에" / "궁금하시면 나도 남겨주세요" / "아무 댓글 주세요" / "제품사진 눌러봐".
+    if any(k in t for k in ("댓글", "프로필", "남겨주", "남겨 주", "눌러")):
+        return True
+    # "'주름'이라고 남겨주세요"처럼 '댓글' 없이 따옴표 키워드만 부르는 말(김성현님 3b4111969ac4 원문)
+    return bool(re.search(r"['‘’\"“”][^'‘’\"“”]{1,15}['‘’\"“”]\s*(?:이?라고)?\s*(?:댓글에?)?\s*"
+                          r"(?:남겨|적어|달아|써\s?주)", t))
+
+
+def guess_cta_index(lines, roles=None):
+    """줄 목록에서 CTA 줄 번호(없으면 None) — 2단계 [📢 CTA] 버튼의 처음 상태이자 서버 자동 추정. 판단은 여기 한 곳.
+
+    ① 역할 이름이 CTA인 줄(마지막 것) → ② 없으면 **마지막 글 있는 줄**이 CTA 문구면 그 줄.
+    중간 줄의 댓글 유도는 CTA로 치지 않는다(잘라내면 뒷이야기가 통째로 날아간다)."""
+    lines = [str(x or "") for x in (lines or [])]
+    roles = list(roles or [])
+    hit = [i for i, r in enumerate(roles) if i < len(lines) and lines[i].strip()
+           and _is_cta({"role": r or ""})]
+    if hit:
+        return hit[-1]
+    filled = [i for i, t in enumerate(lines) if t.strip()]
+    if len(filled) >= 2 and _looks_cta_text(lines[filled[-1]]):
+        return filled[-1]
+    return None
+
+
+def apply_cta_mark(beats, given_script, script_structure):
+    """어느 칸이 CTA인지 칸에 박는다(beat['cta_mark']). 3단계 계획 직후 한 번(mix_pipeline._plan_and_tts).
+
+    script_structure.cta_line = 2단계에서 고객이 정한 값(확정 대본 줄 번호, -1 = CTA 없음).
+    없으면(옛 화면·다른 진입로) guess_cta_index로 추정 — 역할 이름이 CTA면 결과는 종전과 같다.
+    줄 → 칸: 칸 수가 줄 수와 같으면 번호로(7일 34건 중 33건), 다르면 cta_text와 대사가 같은 칸,
+    그것도 없으면 마지막 줄 지정일 때만 마지막 칸. 못 찾으면 아무것도 안 박는다(종전 판정 유지)."""
+    if not beats:
+        return beats
+    ss = script_structure if isinstance(script_structure, dict) else {}
+    lines = [l.strip() for l in (given_script or "").split("\n") if l.strip()]
+    idx = ss.get("cta_line")
+    text = str(ss.get("cta_text") or "").strip()
+    if isinstance(idx, bool) or not isinstance(idx, int):
+        idx = None
+    if idx is not None and idx < 0:                  # 고객이 "CTA 없음"으로 끈 것
+        for b in beats:
+            b["cta_mark"] = False
+        return beats
+    if idx is None:
+        if len(beats) == len(lines) and lines:
+            idx = guess_cta_index(lines, [b.get("role") for b in beats])
+        else:
+            idx = guess_cta_index([b.get("narration") or "" for b in beats],
+                                  [b.get("role") for b in beats])
+            if idx is not None:
+                for j, b in enumerate(beats):
+                    b["cta_mark"] = (j == idx)
+            return beats
+        if idx is None:
+            return beats
+        text = lines[idx] if idx < len(lines) else ""
+    target = None
+    if len(beats) == len(lines) and idx < len(beats):
+        target = idx
+    else:
+        _n = lambda s: re.sub(r"\s+", "", str(s or ""))
+        same = [j for j, b in enumerate(beats) if text and _n(b.get("narration")) == _n(text)]
+        if same:
+            target = same[-1]
+        elif lines and idx == len(lines) - 1:
+            target = len(beats) - 1
+    if target is None:
+        return beats
+    for j, b in enumerate(beats):
+        b["cta_mark"] = (j == target)
+    return beats
 
 
 def _has_comment_cta(text):
