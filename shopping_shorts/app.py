@@ -9358,6 +9358,24 @@ def api_script_translate(request: Request, body: dict):
     return {"ok": True, "lines": out}
 
 
+@app.post("/api/script/cta_guess")
+def api_script_cta_guess(body: dict):
+    """2단계 카드 [📢 CTA] 버튼의 처음 상태(2026-09-30 관제 45, 김성현님).
+
+    body: {drafts: [{lines: [...], roles: [...]}]} → {ok, idx: [줄번호|None, ...]}.
+    판단은 edit_plan.guess_cta_index 한 곳 — 화면이 같은 판정을 JS로 또 적지 않게 여기서 묻는다.
+    작업(job)을 건드리지 않는 순수 계산."""
+    from shopping_shorts.edit_plan import guess_cta_index
+    drafts = body.get("drafts") if isinstance(body.get("drafts"), list) else []
+    out = []
+    for d in drafts[:20]:
+        d = d if isinstance(d, dict) else {}
+        lines = [str(x or "") for x in (d.get("lines") or [])][:80]
+        roles = [str(x or "") for x in (d.get("roles") or [])][:80]
+        out.append(guess_cta_index(lines, roles))
+    return {"ok": True, "idx": out}
+
+
 def _lang_voice_block(job, voice):
     """영어모드 작업에 타입캐스트(한국 성우) 성우를 쓰려 하면 422 응답, 아니면 None.
     언어 판정은 script_translate.job_lang 한 곳(2단계에서 영어로 확정한 작업 = given_script가 영어)."""

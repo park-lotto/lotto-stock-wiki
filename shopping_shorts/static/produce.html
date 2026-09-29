@@ -1418,6 +1418,8 @@
      [바꾸기]와 같은 칸에 세로로 쌓는다 — 칸 폭(88px)은 그대로라 다른 줄이 안 밀린다. */
   .s2-acts{justify-self:stretch;display:flex;flex-direction:column;gap:4px}
   .s2-acts .s2-swap{width:100%}
+  .s2-cta{font-size:12px;color:var(--s2-sub);background:none;border:1px solid var(--line);border-radius:8px;padding:4px 8px;cursor:pointer;white-space:nowrap}
+  .s2-cta.on{border-color:var(--gold);color:var(--gold);font-weight:700;background:rgba(255,207,111,.10)}
   .s2-del{font-size:12px;color:var(--s2-sub);background:none;border:1px solid var(--line);
     border-radius:8px;padding:6px 0;text-align:center;white-space:nowrap;cursor:pointer}
   .s2-del:hover{color:var(--fire);border-color:var(--fire)}
@@ -9418,6 +9420,8 @@ function _workState(){
   const _st = {handoff:HANDOFF, script:STATE.script||'', script_src_idx:STATE.script_src_idx,
           script_from_wiki:STATE.script_from_wiki,
           script_style_id:STATE.script_style_id??null,
+          script_cta_line:(typeof STATE.script_cta_line==='number'?STATE.script_cta_line:null),
+          script_cta_text:STATE.script_cta_text||'',
           script_copy_family:STATE.script_copy_family||'', step:cur, work_id:WORK_ID,
           hook_inpoint_delta:(STATE.hook_inpoint_delta||0)};   // 3초 훅 미세조정(P1, 서버 render가 읽음)
   if(STATE.title_manual) _st.title_manual = STATE.title_manual;
@@ -9647,6 +9651,8 @@ function revertWork(){
   STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
   STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
   STATE.script_style_id = (typeof w.script_style_id !== 'undefined') ? w.script_style_id : null;
+  STATE.script_cta_line = (typeof w.script_cta_line === 'number') ? w.script_cta_line : null;   // 2단계 [📢 CTA](관제 45)
+  STATE.script_cta_text = w.script_cta_text || '';
   STATE.script_copy_family = w.script_copy_family || '';
   STATE.hook_inpoint_delta = (typeof w.hook_inpoint_delta === 'number') ? w.hook_inpoint_delta : 0;  // 훅 미세조정 복원(P1)
   // ★직접 지은 작업 이름 복원(2026-08-17). 안 되살리면 이 작업을 열자마자 도는 저장이
@@ -9700,6 +9706,8 @@ async function _restoreWork(workId){
   STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
   STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
   STATE.script_style_id = (typeof w.script_style_id !== 'undefined') ? w.script_style_id : null;
+  STATE.script_cta_line = (typeof w.script_cta_line === 'number') ? w.script_cta_line : null;   // 2단계 [📢 CTA](관제 45)
+  STATE.script_cta_text = w.script_cta_text || '';
   STATE.script_copy_family = w.script_copy_family || '';
   STATE.hook_inpoint_delta = (typeof w.hook_inpoint_delta === 'number') ? w.hook_inpoint_delta : 0;  // 훅 미세조정 복원(P1)
   // ★직접 지은 작업 이름 복원(2026-08-17). 안 되살리면 이 작업을 열자마자 도는 저장이
@@ -10516,6 +10524,8 @@ function _consumeProduceHandoff(){
     STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
     STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;   // 구페이로드 호환: 없으면 null(뽑기 유래 취급=안전 기본값, 버튼 보임)
     STATE.script_style_id = (typeof w.script_style_id !== 'undefined') ? w.script_style_id : null;
+    STATE.script_cta_line = (typeof w.script_cta_line === 'number') ? w.script_cta_line : null;   // 2단계 [📢 CTA](관제 45)
+    STATE.script_cta_text = w.script_cta_text || '';
     STATE.script_copy_family = w.script_copy_family || '';
     // ★WORK_ID를 되살린다. 없으면 아래 saveWork()가 매 로드마다 새 작업을 만든다.
     WORK_ID = w.work_id || null;
@@ -12401,6 +12411,10 @@ async function startProduceMix(){
     //   제작 기록(produce_works)은 지워지거나 새 job으로 넘어가면 끈이 끊겨서(실측), job 자체에 싣는다.
     if(STATE.script_style_id!=null && STATE.script_style_id!=='')
       _mixBody.script_structure=Object.assign(_mixBody.script_structure||{}, {script_style_id: STATE.script_style_id});
+    // ★2단계 [📢 CTA] 표시(2026-09-30 관제 45) — 어느 줄이 CTA인지(-1 = 없음). 서버 edit_plan.apply_cta_mark가 칸에 박고
+    //   유튜브용 CTA 잘라내기가 그걸 본다. 안 정했으면(null) 키를 안 보낸다 = 서버 자동 추정.
+    if(typeof STATE.script_cta_line==='number')
+      _mixBody.script_structure=Object.assign(_mixBody.script_structure||{}, {cta_line: STATE.script_cta_line, cta_text: STATE.script_cta_text||''});
     const r=await fetch('/api/produce/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(_mixBody)});
     const d=await r.json();
@@ -19165,6 +19179,7 @@ function s2RenderDrafts(){
     return `<button class="s2-tab${i===S2.curDraft?' on':''}" onclick="s2PickDraft(${i})">${nm} <span>${g}</span></button>`;
   }).join('');
   box.innerHTML=S2.drafts.map((dr,i)=>s2DraftHtml(dr,i)).join('');
+  try{ s2EnsureCtaGuess(); }catch(e){}   // [📢 CTA] 처음 상태(관제 45) — 아직 안 정한 안만 서버에 묻는다
   const cb=document.getElementById('s2ConfirmBtn');
   if(cb) cb.textContent='✔ '+String.fromCharCode(65+S2.curDraft)+'안으로 확정 — 장면 붙이기로';
 }
@@ -19199,6 +19214,8 @@ function s2DraftHtml(dr,i){
         </div>
         <div class="s2-acts">
           ${(dr.mine||dr.lang==='en')?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
+          <button class="s2-cta${b.cta_mark===true?' on':''}" title="이 줄이 CTA(댓글·링크로 부르는 말)입니다 — 유튜브용 'CTA 잘라낸 영상'이 이 줄 앞에서 끝납니다. 다시 누르면 해제"
+            onclick="s2ToggleCta(${i},${j})">📢 CTA</button>
           <button class="s2-del" title="이 줄을 대본에서 아주 뺍니다 — 3단계에서 이 장면 칸도 안 생깁니다"
             onclick="s2DelBeat(${i},${j})">🗑 빼기</button>
         </div>
@@ -19266,6 +19283,41 @@ function s2MineAddRow(i){
     const rows=document.querySelectorAll('#s2d-'+i+' .s2-sent');
     const last=rows[rows.length-1]; if(last&&last.focus){ last.focus(); last.scrollIntoView({block:'center'}); }
   }catch(e){}
+}
+// ── 📢 CTA 표시(2026-09-30 관제 45, 김성현님 "대본작성 단계에 CTA 버튼이 필요") ─────────────
+// 칸(beat)에 cta_mark를 박는다. 확정 때 s2ApplyDraftContract가 줄 번호로 바꿔 3단계로 보낸다.
+// 처음 상태는 서버 edit_plan.guess_cta_index가 정한다(같은 판정을 여기 또 적지 않는다, 0순위-B).
+let _s2CtaAsking=false;
+async function s2EnsureCtaGuess(){
+  if(_s2CtaAsking) return;
+  const todo=(S2.drafts||[]).map((dr,i)=>({dr,i})).filter(({dr})=>{
+    const bs=s2Beats(dr); return bs.length && !bs.some(b=>b && typeof b.cta_mark==='boolean');
+  });
+  if(!todo.length) return;
+  _s2CtaAsking=true;
+  try{
+    const body={drafts:todo.map(({dr})=>{ const bs=s2Beats(dr);
+      return {lines:bs.map(b=>(b&&b.text)||''), roles:bs.map(b=>(b&&b.role)||'')}; })};
+    const d=await (await fetch('/api/script/cta_guess',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)})).json();
+    if(!d||!d.ok||!Array.isArray(d.idx)) return;
+    todo.forEach(({dr},n)=>{
+      const bs=s2Beats(dr); const k=d.idx[n];
+      bs.forEach((b,j)=>{ if(b) b.cta_mark=(j===k); });
+      dr.beats=bs;
+    });
+    s2RenderDrafts(); saveWork();
+  }catch(e){ console.warn('[cta_guess] 실패 — 서버 자동 추정에 맡긴다', e); }
+  finally{ _s2CtaAsking=false; }
+}
+function s2ToggleCta(i,j){
+  const dr=S2.drafts[i]; if(!dr) return;
+  const bs=s2Beats(dr); if(!bs[j]) return;
+  const on=bs[j].cta_mark!==true;
+  bs.forEach((b,k)=>{ if(b) b.cta_mark=on && k===j; });
+  dr.beats=bs;
+  s2RenderDrafts(); saveWork();
+  toast(on?'📢 이 줄을 CTA로 표시했어요 — 유튜브용 영상은 이 줄 앞에서 끝납니다':'CTA 표시를 뺐어요');
 }
 function s2PickDraft(i){ S2.curDraft=i; s2RenderDrafts(); saveWork(); }   // 보던 안도 그대로 돌아오게
 // 문장 편집 — beats가 원본이고 script는 거기서 다시 만든다(두 벌 유지 금지, 0순위-B).
@@ -19538,6 +19590,12 @@ function s2ApplyDraftContract(target, dr){
     segs:Array.isArray(b&&b.src_segs)?b.src_segs.filter(Boolean):[]}));
   if(srcs.some(x=>x.seg)) target.script_beat_sources=srcs;
   else delete target.script_beat_sources;
+  // ★CTA 줄(2026-09-30 관제 45): 확정 대본(글 있는 줄만)에서의 번호. 표시를 한 번도 안 정했으면 null(서버 자동 추정).
+  const _nb=c.narrationBeats.filter(b=>((b&&b.text)||'').trim());
+  const _decided=c.narrationBeats.some(b=>b && typeof b.cta_mark==='boolean');
+  const _k=_nb.findIndex(b=>b.cta_mark===true);
+  target.script_cta_line=_decided?_k:null;
+  target.script_cta_text=(_k>=0)?String(_nb[_k].text||'').trim():'';
   return c;
 }
 function s2Confirm(i){
