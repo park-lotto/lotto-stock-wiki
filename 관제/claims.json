@@ -9,6 +9,16 @@
     "card": 30,
     "track": "장면폰트"
   },
+  "out/scene-style-ui-showcase.html": {
+    "at": "2026-09-29 23:07",
+    "card": 36,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/app.py": {
+    "at": "2026-09-29 23:07",
+    "card": 36,
+    "track": "장면폰트"
+  },
   "shopping_shorts/scene_style.py": {
     "at": "2026-09-29 22:57",
     "card": 36,
@@ -17,6 +27,16 @@
   "shopping_shorts/scene_style.py:validate_snapshot": {
     "at": "2026-09-29 16:06",
     "card": 30,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/static/produce.html": {
+    "at": "2026-09-29 23:07",
+    "card": 36,
+    "track": "장면폰트"
+  },
+  "shopping_shorts/static/text-look-contract.js": {
+    "at": "2026-09-29 23:07",
+    "card": 36,
     "track": "장면폰트"
   },
   "shopping_shorts/story_writer.py:make_drafts": {

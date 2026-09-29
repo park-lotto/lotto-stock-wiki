@@ -254,22 +254,29 @@
   {
     "date": "2026-09-29",
     "category": "스탁브레인",
+    "track": "영어모드변환",
+    "summary": "관제 029 영어모드 2단계 카드 라이브 e2e 통과(job 3052e2a74d37, 소리·화면 대조 0) / 관제 034 타입캐스트 키 없는 회원 기본 성우 일레븐 자동 폴백 병합·웹21:13 반영, 580·207·70·134 실측 / 배승훈 쪽지 51번",
+    "next": "배승훈 3단계 재시작 결과 확인 · /tmp 정리 후 capcut_export_audit 재실행 · 카드 028 start_guide finish"
+  },
+  {
+    "date": "2026-09-29",
+    "category": "스탁브레인",
     "track": "채널명기본",
-    "summary": "후킹 한문장·실패사유 라이브 반영(서버 수동 pull+재시작). 새 편집기 채널명 기본=계정 채널명(관제032) finish 대기. finish 재시도 원인=잠금 밖 main 커밋(auto·관제)",
-    "next": "채널명 병합 후 라이브 확인, finish 재시도 제거(비코드 커밋 재검사 생략·기준선 캐시) 승인 대기"
+    "summary": "21:34 숏템 서버 다운 발견: 디스크 100%(619G) → longform_api 임시폴더 실패 → app.py:25121 traceback 미import로 기동 크래시. 채널명 병합은 main 레이스로 3회 실패",
+    "next": "사장님 정리 명령 후 서비스 복구 확인, 디스크 범인 찾기, traceback import 수정, 채널명 재병합"
+  },
+  {
+    "date": "2026-09-29",
+    "category": "스탁브레인",
+    "track": "디스크방지",
+    "summary": "서버 디스크100% 복구(find_frames 135G·재료 17.9G 정리), 실패 렌더 3건 재실행·쪽지. find_frames 2일 청소·재료 7일·traceback 수정 라이브. 채널명 기본=계정채널 라이브(오탐구 확인)",
+    "next": "내일 04시 청소 로그 확인, 병합 구조 개선(재시도 제거·기준선 캐시)"
   },
   {
     "date": "2026-09-29",
     "category": "스탁브레인",
     "track": "장면반복",
-    "summary": "고객 커피영상 job 68b48b12c7f5 실측: 옛 3단계(legacy) 슬롯 경로에서 전역 중복제거·안쓴소스 넣기가 if not tl_groups로 건너뛰어짐 → seg -39 두 번·s2 0컷·s4 20/40컷. 검사는 반복을 잡고도(ok:false) 그대로 내보냄. story_writer _no_reuse 커밋은 무관(버릴 예정)",
-    "next": "슬롯 경로에 순서 불변 dedup_clips_global+ensure_sources_used 적용, 반복 시 통과 금지 → 이 job 재료로 전/후 대조 → 승인 후 라이브"
-  },
-  {
-    "date": "2026-09-29",
-    "category": "스탁브레인",
-    "track": "영어모드변환",
-    "summary": "영어모드 2단계판 main 병합(df2be0b30b) 서버 pull, 웹 재시작 연기 중. 관제 034: 타입캐스트 키 없는 회원 기본 성우 자동 일레븐 대체(use_fallback 판단, get_last_voice 시드)+일레븐도 사장님 키 폴백 차단, 커밋 ff28b0c2c finish 진행.",
-    "next": "병합·웹/워커 재시작 확인 → 배승훈 안내 쪽지 → lang_mode_e2e.py 영어 작업 끝까지 → 대조 도구 3종 → 큐 실패 기준선 비교"
+    "summary": "서버 디스크 100%→app.py traceback 미import로 21:13~ 크래시루프 발견·보고(사장님 정리 후 200 복구). 이정민님(62) 영어 제보 실측: 저장 대본 10개 전부 한국어, 1단계 원문 전사에 영어·노래가사 그대로. 고객 버전=이야기작가 09-27판+09-29 훅 수정, Vertex 3.6 flash",
+    "next": "이정민님 캡처로 영어 화면 확정 / app.py import traceback 한 줄 수정 / 장면반복 inherit 확장(6fcd2daaf) 실데이터 배치 대조 → 승인 후 라이브"
   }
 ]
