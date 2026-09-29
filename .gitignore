@@ -203,3 +203,4 @@ tiktok_session.json
 /out/페이드확인/*.mp4
 /productions/s3_kakao_claude/04_output.mp4
 /productions/s5_kakao_claude/04_output.mp4
+out/lang_mode_check_*.json
