@@ -127,10 +127,13 @@ def validate_snapshot(value):
         raise ValueError("폰트 템플릿 값이 올바르지 않습니다")
     if not re.fullmatch(r"[a-z0-9_-]{0,32}", str(value.get("titleDeco") or "")):   # precision20-ui.js DECOS의 id(훅 제목 꾸밈)
         raise ValueError("제목 꾸밈 값이 올바르지 않습니다")
-    if value.get("textWeight") not in (None, "", "bold", "heavy"):   # precision20-ui.js TEXT_WEIGHTS와 짝(글자 두께)
-        raise ValueError("글자 두께 값이 올바르지 않습니다")
-    if value.get("textShadow") not in (None, "", "soft", "strong"):   # precision20-ui.js TEXT_SHADOWS와 짝(글자 그림자)
-        raise ValueError("글자 그림자 값이 올바르지 않습니다")
+    # 글자 두께·그림자 = 0~10 단계(precision20-ui.js TEXT_LOOK_MAX와 짝). 옛 글자 값(09-28 하루 라이브)도 받는다 — 편집기가 숫자로 읽는다.
+    for key, old_names, label in (("textWeight", ("bold", "heavy"), "두께"), ("textShadow", ("soft", "strong"), "그림자")):
+        v = value.get(key)
+        if v in (None, "") or v in old_names:
+            continue
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not 0 <= v <= 10:
+            raise ValueError("글자 %s 값이 올바르지 않습니다" % label)
     if value.get("bodyCaptionMotion") not in (None, "", "rise", "grow", "pop", "slide", "drop", "fade", "wide"):   # precision20-ui.js BODY_CAPTION_MOTIONS와 짝
         raise ValueError("본문 자막 효과 값이 올바르지 않습니다")
     if "hookBandRise" in value and not isinstance(value["hookBandRise"], bool):

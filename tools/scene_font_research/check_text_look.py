@@ -1,4 +1,4 @@
-"""글자 두께·그림자(2026-09-28 사장님 "장면에서 폰트 두께와 그림자 설정, 제일 심플하게") — 편집기부터 완성 영상까지 잰다.
+"""글자 두께·그림자(2026-09-28 사장님 "장면에서 폰트 두께와 그림자 설정, 제일 심플하게" → 09-29 "−/＋ 조절, 수치 나오게" 0~10) — 편집기부터 완성 영상까지 잰다.
   py tools/scene_font_research/check_text_look.py <출력폴더> [--root <검사할 체크아웃>]
 
   ① 편집기: [폰트] 탭의 두께·그림자 버튼을 누르면 미리보기 글자의 테두리 폭·그림자가 실제로 바뀐다 / 저장값에 실린다 / 다시 열면 그대로
@@ -43,17 +43,25 @@ with sync_playwright() as p:
     pg.click('[data-left-tab="scene"]'); pg.click('[data-p20="0"]'); pg.wait_for_timeout(500)
     before = pg.evaluate(STYLE_JS); base_snap = pg.evaluate('()=>window.sceneStyle.snapshot()')
     pg.click('[data-left-tab="font"]'); pg.wait_for_timeout(200)
-    has_ui = pg.locator('[data-tw="heavy"]').count() == 1 and pg.locator('[data-ts="strong"]').count() == 1
-    need(has_ui, '① [폰트] 탭에 두께·그림자 버튼이 있다')
+    has_ui = pg.locator('[data-look-step="tw"][data-d="1"]').count() == 1 and pg.locator('[data-look-step="ts"][data-d="1"]').count() == 1
+    need(has_ui, '① [폰트] 탭에 두께·그림자 −/＋ 버튼이 있다')
+    val = lambda k: pg.evaluate(f"()=>document.querySelector('[data-look-value=\"{k}\"]')?.textContent")
     if has_ui:
-        pg.click('[data-tw="heavy"]'); pg.click('[data-ts="strong"]'); pg.wait_for_timeout(300)
+        need(val('tw') == '0' and val('ts') == '0', f"① 처음 수치는 0 (두께 {val('tw')} / 그림자 {val('ts')})")
+        for _ in range(6): pg.click('[data-look-step="tw"][data-d="1"]'); pg.click('[data-look-step="ts"][data-d="1"]')
+        pg.wait_for_timeout(300)
+        need(val('tw') == '6' and val('ts') == '6', f"① ＋ 6번 → 수치 6 (두께 {val('tw')} / 그림자 {val('ts')})")
+        for _ in range(4): pg.click('[data-look-step="tw"][data-d="1"]')
+        need(val('tw') == '10' and pg.locator('[data-look-step="tw"][data-d="1"]').is_disabled(), f"① 최대 10에서 ＋가 꺼진다 ({val('tw')})")
+        for _ in range(4): pg.click('[data-look-step="tw"][data-d="-1"]')
+        pg.wait_for_timeout(300)
     after = pg.evaluate(STYLE_JS); styled_snap = pg.evaluate('()=>window.sceneStyle.snapshot()')
     pg.screenshot(path=str(out / 'editor_styled.png'))
     for bind in ('hook1', 'caption'):
         a, z = before.get(bind, {}), after.get(bind, {})
         need(z.get('stroke', 0) > a.get('stroke', 0), f"① {bind} 글자 두께가 커진다 (테두리 {a.get('stroke')}px → {z.get('stroke')}px)")
         need(z.get('shadow') not in (None, 'none') and z.get('shadow') != a.get('shadow'), f"① {bind} 그림자가 생긴다 ({a.get('shadow')} → {z.get('shadow')})")
-    need(styled_snap.get('textWeight') == 'heavy' and styled_snap.get('textShadow') == 'strong',
+    need(styled_snap.get('textWeight') == 6 and styled_snap.get('textShadow') == 6,
          f"① 저장값에 실린다 (textWeight={styled_snap.get('textWeight')}, textShadow={styled_snap.get('textShadow')})")
     need('textWeight' not in base_snap and 'textShadow' not in base_snap, '① 안 건드린 저장값엔 키가 없다(옛 저장본과 같아 완성본 무효화 없음)')
     # 다시 열기
@@ -61,12 +69,16 @@ with sync_playwright() as p:
     again = pg.evaluate(STYLE_JS)
     need(again.get('hook1', {}).get('stroke') == after.get('hook1', {}).get('stroke'), f"① 다시 열어도 두께 그대로 ({again.get('hook1', {}).get('stroke')}px)")
     pg.click('[data-left-tab="font"]'); pg.wait_for_timeout(200)
-    sel = pg.evaluate("()=>[...document.querySelectorAll('.text-look-row button.selected')].map(b=>b.textContent)")
-    need(sel == ['아주 굵게', '진하게'], f'① 다시 열면 고른 버튼이 켜져 있다 {sel}')
+    need(val('tw') == '6' and val('ts') == '6', f"① 다시 열면 수치가 그대로 (두께 {val('tw')} / 그림자 {val('ts')})")
     if has_ui:
-        pg.click('[data-tw=""]'); pg.click('[data-ts=""]'); pg.wait_for_timeout(300)
+        for _ in range(6): pg.click('[data-look-step="tw"][data-d="-1"]'); pg.click('[data-look-step="ts"][data-d="-1"]')
+        pg.wait_for_timeout(300)
         back = pg.evaluate('()=>window.sceneStyle.snapshot()')
-        need('textWeight' not in back and 'textShadow' not in back, '① 기본·없음으로 되돌리면 저장값에서 빠진다')
+        need('textWeight' not in back and 'textShadow' not in back, '① 0으로 내리면 저장값에서 빠진다')
+    # 09-28 하루 라이브에 나간 옛 글자 값(heavy/strong)도 숫자로 읽는다
+    pg.goto(URL, wait_until='networkidle'); pg.evaluate('([c,s])=>window.sceneStyle.load(c,s)', [CTX, {**base_snap, 'textWeight': 'heavy', 'textShadow': 'soft'}]); pg.wait_for_timeout(700)
+    oldsnap = pg.evaluate('()=>window.sceneStyle.snapshot()')
+    need(oldsnap.get('textWeight') == 6 and oldsnap.get('textShadow') == 3, f"① 옛 저장값 heavy/soft → 6/3 ({oldsnap.get('textWeight')}/{oldsnap.get('textShadow')})")
     b.close()
 srv.shutdown()
 
@@ -78,7 +90,7 @@ timeline = [{'beat_idx': i, 't0': i, 'dur': 1, 'narration': c, 'caption_lines': 
             for i, c in enumerate(['주부들도 감탄한 천재 아이디어', '이건 바로 핑거 찹스틱'])]
 HEAD = {'text': '주부들도 감탄한\n천재 아이디어'}
 base = {k: v for k, v in base_snap.items() if k not in ('textWeight', 'textShadow')}
-styled = {**base, 'textWeight': 'heavy', 'textShadow': 'strong'}
+styled = {**base, 'textWeight': 6, 'textShadow': 6}
 def changed(p1, p2):   # 두 그림에서 눈에 띄게 달라진 점 수(RGBA 합성 후 밝기 차) — 불투명 띠 위 글자도 잡는다
     bg = Image.new('RGBA', Image.open(p1).size, (48, 96, 160, 255))
     g = lambda p: Image.alpha_composite(bg, Image.open(p).convert('RGBA')).convert('L')
