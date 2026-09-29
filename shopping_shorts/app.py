@@ -8287,7 +8287,7 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
     # ★음성 키 없으면 막는다(2026-09-01) — 안 막으면 무음 mp3가 조용히 만들어진다.
-    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True)
+    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True, voice=job.get("voice"))
     if _blocked:
         return _blocked
     # 렌더 단계뿐 아니라 '이 음성으로 전체 생성'(active stage "tts") 등 활성 단계 전부에서 막는다.
@@ -9343,10 +9343,10 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "job/plan 없음"})
-    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True)   # 음성 키 필수(2026-09-01)
+    voice = _voice_snapshot(store, body)
+    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True, voice=voice)   # 음성 키 필수(2026-09-01) + 성우 엔진 키(09-29)
     if _blocked:
         return _blocked
-    voice = _voice_snapshot(store, body)
     _save_render_inputs(store, job_id, voice=voice)
     # 🎙 이 선택을 고객의 '다음 작업 기본 성우'로 기억한다(2026-09-02 사장님 지시).
     #   → 다음 작업은 create_mix_job이 이 값을 job.voice로 심어 3단계 1차 TTS부터 본인
@@ -9378,7 +9378,7 @@ def api_mix_voice_preview(body: dict):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan") or not job["edit_plan"].get("beats"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "plan 없음"})
-    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True)   # 음성 키 필수(2026-09-01)
+    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True, voice=job.get("voice"))   # 음성 키 필수(2026-09-01) + 성우 엔진 키(09-29)
     if _blocked:
         return _blocked
     beats = job["edit_plan"]["beats"]
@@ -15268,7 +15268,7 @@ def uncount(customer_id, op):
     st.usage_decr(customer_id, op, _today_utc())
 
 
-def _need_own_key_or_402(customer_id, service=None, *, tts=False):
+def _need_own_key_or_402(customer_id, service=None, *, tts=False, voice=None):
     """개인 키가 없으면 402로 막는다(2026-09-01 사장님 "v메이크랑 tts는 없으면 못하게 막아").
 
     ★판단은 keyroute 한 곳(0순위-B) — 여기선 응답 모양만 만든다.
@@ -15276,7 +15276,10 @@ def _need_own_key_or_402(customer_id, service=None, *, tts=False):
       나눈다. 새 상태코드를 만들면 옛 화면이 조용히 무시한다.
     반환: 막아야 하면 JSONResponse, 아니면 None."""
     store = Store(DB_PATH)
-    hit = (keyroute.tts_block_reason(store, customer_id) if tts
+    # voice: job.voice 스냅샷(dict) — 있으면 고른 성우 엔진에 맞는 키를 요구한다(2026-09-29,
+    #   타입캐스트 성우 → 본인 타입캐스트 키). 판단은 keyroute.tts_block_reason 한 곳.
+    _mid = (voice or {}).get("model_id") if isinstance(voice, dict) else None
+    hit = (keyroute.tts_block_reason(store, customer_id, model_id=_mid) if tts
            else keyroute.block_reason(store, customer_id, service))
     if not hit:
         return None

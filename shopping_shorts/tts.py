@@ -222,6 +222,13 @@ def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
       호출부(mix_pipeline._voice_params)가 엔진을 보고 extra_tempo를 1.0으로 두어야
       이중 가속이 안 난다 — 그쪽에 같이 반영돼 있다."""
     if not typecast_tts.api_key(customer_id):
+        # ★회원(면제 아님)이 키 없이 타입캐스트 성우로 오면 무음이 아니라 **안내문으로 실패**한다
+        #   (2026-09-29). 무음 mp3는 소리 없는 영상을 "완료"로 만든다. 문구는 keyroute 한 곳의 것을
+        #   그대로 — app._user_error_kind가 "키를 등록해야"를 보고 need_own_key 화면을 띄운다.
+        from shopping_shorts import keyroute as _kr
+        if not _kr.is_block_exempt(customer_id):
+            _record_tts_event("typecast", None, silent=True, customer_id=customer_id)
+            raise RuntimeError(_kr.TYPECAST_NEED_KEY_MSG)
         _record_tts_event("typecast", None, silent=True, customer_id=customer_id)
         _write_silent_mp3(out_path, _estimate_seconds(text))
         return out_path

@@ -150,7 +150,11 @@ SERVICE_LABEL = {
 #      이 명단엔 기간 개념이 없어서 손으로 빼는 것 말고는 만료가 없다.
 #      그는 vmake 키를 이미 등록했으므로(실측) 자막 지우기는 자기 키로 나간다 —
 #      이 면제로 회사가 부담하는 건 음성뿐이다.
-BLOCK_EXEMPT_CIDS = frozenset({4, 5, 9, 11, 12, 291})
+#   ⚠️ 451 심효진(jinshim0510) — 2026-09-29 사장님 지시 "내 일레븐랩스 키 심효진님한테 열어줘".
+#      본인 타입캐스트 키는 업체 측 403(UNUSUAL_ACTIVITY_DETECTED, 계정 차단)이라 못 쓰고,
+#      일레븐 키는 등록 직후 본인이 지웠다. 차단 해제·재등록되면 자기 키가 먼저 잡힌다(keys_for).
+#   ✅ 291 최일환 — 2026-09-29 사장님 "최일환님은 무료키 빼고"로 뺐다(09-03 하루 면제가 26일간 남아 있었다).
+BLOCK_EXEMPT_CIDS = frozenset({4, 5, 9, 11, 12, 451})
 
 
 def is_block_exempt(customer_id):
@@ -196,14 +200,35 @@ def block_reason(store, customer_id, service):
             f"설정 > 🔑 API 키에서 등록해 주세요.")
 
 
-def tts_block_reason(store, customer_id):
-    """음성(TTS)은 일레븐랩스·타입캐스트 **둘 중 하나만** 있으면 된다.
+TYPECAST_NEED_KEY_MSG = ("타입캐스트 성우는 타입캐스트 유료 가입 후 API 키를 등록해야 쓸 수 있어요. "
+                         "설정 > 🔑 API 키에서 타입캐스트 키를 등록하거나, 일레븐랩스 성우를 골라 주세요.")
+
+
+def _is_typecast_engine(model_id):
+    """엔진 판정은 typecast_tts.is_typecast 한 곳(0순위-B). 지역 import — 순환 방지."""
+    if not model_id:
+        return False
+    from shopping_shorts import typecast_tts
+    return bool(typecast_tts.is_typecast(model_id))
+
+
+def tts_block_reason(store, customer_id, model_id=None):
+    """음성(TTS)은 일레븐랩스·타입캐스트 **둘 중 하나만** 있으면 된다 — 단 **고른 성우의 엔진 키**여야 한다.
 
     ★서비스 하나씩 block_reason을 부르면 "일레븐랩스 없음"으로 막혀, 타입캐스트를
       등록한 회원(실측 4명)이 억울하게 막힌다 — 그래서 음성은 이 함수가 판단한다.
+    ★model_id(2026-09-29 사장님 "왜 내 키를 쓰나 — 타입캐스트 유료 가입 후 키 등록하라고 안내해"):
+      일레븐 키만 낸 회원이 타입캐스트 성우(필재·창수·문정…)를 고르면 종전엔 통과돼 keys_for가
+      **사장님 타입캐스트 키**로 떨어졌다. 라이브 실측 9월: 타입캐스트 음성 작업 380건 중 296건이
+      타입캐스트 키 없는 회원 → 사장님 계정 초과 154,199크레딧($13.88). 성우 엔진이 타입캐스트면
+      본인 타입캐스트 키가 있어야 통과한다. model_id를 모르는 호출(제작 시작)은 종전 규칙만 본다.
     """
     if is_block_exempt(customer_id):     # cid 0(사장님) + 지정 면제 명단
         return None
+    if _is_typecast_engine(model_id):
+        if has_own_key(store, customer_id, SVC_TYPECAST):
+            return None
+        return ("need_own_key", TYPECAST_NEED_KEY_MSG)
     if (has_own_key(store, customer_id, SVC_ELEVENLABS)
             or has_own_key(store, customer_id, SVC_TYPECAST)):
         return None
@@ -344,6 +369,11 @@ def keys_for(store, customer_id, service):
         #   ("키 1개 내고 무료로 쓴다"는 거래). 풀은 사장님 키 + 전 회원 키.
         pooled = _owner_keys(service)     # 이미 회원 키가 합류돼 있는 목록
         return (pooled or mine), True
+    # ★타입캐스트는 사장님 키로 떨어지지 않는다(2026-09-29). 요청 관문(tts_block_reason)이 막아도
+    #   워커·재합성 등 뒷길로 오는 호출이 있어 **키를 주는 자리에서** 한 번 더 막는다 — 면제
+    #   명단·사장님(cid 0)만 회사 키. 빈 목록이면 호출부(tts._synthesize_typecast)가 안내문으로 실패한다.
+    if service == SVC_TYPECAST and not is_block_exempt(cid):
+        return [], False
     owner = _owner_keys(service)
     if not owner and service == SVC_VMAKE:
         owner = _owner_vmake_key(store)
