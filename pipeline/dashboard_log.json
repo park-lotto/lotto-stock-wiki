@@ -233,15 +233,15 @@
   {
     "date": "2026-09-29",
     "category": "스탁브레인",
-    "track": "잠금사유",
-    "summary": "제보#49 답장 전송(타입캐스트 키 원인), 실패 job 잠금문구→실패사유 수정(관제031, 30분 뒤 finish 예약). 이유준 job 06fab43a4922 후킹 7.4초 원인=대본 첫 줄에 후킹+본문 붙음",
-    "next": "finish 결과·라이브 문구 확인, 후킹을 첫 문장까지로 자르는 수리 여부 결정"
+    "track": "영어모드변환",
+    "summary": "영어모드를 2단계 대본 카드로 이동(카드 머리 버튼, 원문 보관, /api/script/translate, job_lang 판정). E2E 시험 스크립트 tools/lang_mode_e2e.py 준비. finish가 타 세션 자동커밋 경쟁으로 3회 밀림, 재시도 중.",
+    "next": "finish 병합 확인 → 서버에서 lang_mode_e2e.py(변환→3단계→일레븐→렌더→캡컷) → capcut_export_audit·final_audio_audit·editor_vs_final_video → 기준선(16:13) 대비 큐 실패 비교"
   },
   {
     "date": "2026-09-29",
     "category": "스탁브레인",
-    "track": "영어모드변환",
-    "summary": "영어모드를 2단계 대본 카드로 이동(카드 머리 버튼, 원문 보관, /api/script/translate, job_lang 판정). E2E 시험 스크립트 tools/lang_mode_e2e.py 준비. finish가 타 세션 자동커밋 경쟁으로 3회 밀림, 재시도 중.",
-    "next": "finish 병합 확인 → 서버에서 lang_mode_e2e.py(변환→3단계→일레븐→렌더→캡컷) → capcut_export_audit·final_audio_audit·editor_vs_final_video → 기준선(16:13) 대비 큐 실패 비교"
+    "track": "잠금사유",
+    "summary": "후킹 한 문장 강제(script_gate.enforce_one_sentence_hook)+실패사유 잠금문구, 게이트 1회 거절(절단 하네스)→try 수정 후 finish 재시도 중. 오탐구 채널명 기본값 수정은 패치로 보류",
+    "next": "finish 통과 시 DEPLOY_NOW·라이브 확인, 채널명 패치 적용·커밋"
   }
 ]
