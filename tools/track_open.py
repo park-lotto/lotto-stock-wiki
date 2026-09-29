@@ -28,6 +28,41 @@ AGENTS = {
     "codex": ["codex", "--sandbox", "workspace-write"],
 }
 
+#: 계정 번호 → CLAUDE_CONFIG_DIR. 1번(본계정)은 변수를 **지운다** — 걸면 ~\.claude\.claude.json 을
+#: 찾아 빈 설정을 새로 만든다(프로필 주석, 2026-09-21 실측).
+ACCOUNT_DIRS = {"1": None, "2": ".claude-sub", "3": ".claude-sub3"}
+
+
+def build_launch(cwd, *, account="1", agent="claude", model="", prompt="", pc="", tag="",
+                 card=None, resume=True, home=None):
+    """새 창에서 돌릴 명령·환경·이름을 조립한다(실행 없음 — 테스트 가능한 한 곳, 카드 046).
+
+    이름 = "PC·계정·용도[·카드N]" — Claude 앱 Code 목록에서 두 PC 창을 가른다.
+    Claude 창은 텔레그램 플러그인을 끈 설정으로 띄운다: 봇 수신자는 관제창 하나뿐이어야 한다(409).
+    """
+    account = str(account)
+    if account not in ACCOUNT_DIRS:
+        raise ValueError(f"없는 계정: {account} (1/2/3)")
+    home = Path(home or Path.home())
+    name = "·".join([pc, account, tag] + ([f"카드{card}"] if card else []))
+    env, unset = {}, []
+    if ACCOUNT_DIRS[account]:
+        env["CLAUDE_CONFIG_DIR"] = str(home / ACCOUNT_DIRS[account])
+    else:
+        unset.append("CLAUDE_CONFIG_DIR")
+    if agent == "codex":
+        argv = list(AGENTS["codex"])
+    else:
+        argv = ["claude", "--remote-control", name,
+                "--settings", str(home / "claude-remote-settings.json")]
+        if resume:
+            argv.append("--continue")
+        if model:
+            argv += ["--model", model]
+    if prompt:
+        argv.append(prompt)
+    return {"argv": argv, "env": env, "env_unset": unset, "name": name, "cwd": str(cwd)}
+
 
 def open_track(name, repo=track.BASE, agent="claude", extra=()):
     wt = track.worktree_path(name, repo)
