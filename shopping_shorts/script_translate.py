@@ -39,6 +39,16 @@ def is_english(text):
     return bool(_LATIN.search(t)) and not _HANGUL.search(t)
 
 
+_LATIN_WORD = re.compile(r"[A-Za-z]{2,}")
+
+
+def is_english_sentence(text):
+    """영어 **문장**인가 — 한글 없이 영어 단어 3개 이상. naturalize 우회 판정은 이것만 쓴다.
+    ("AI"·"3.5kg"·"A"처럼 한국어 대본에 낀 짧은 영문 토큰은 문장이 아니다 — 발음 사전·숫자 읽기가 계속 돌아야 한다.)"""
+    t = text or ""
+    return (not _HANGUL.search(t)) and len(_LATIN_WORD.findall(t)) >= 3
+
+
 def english_ratio(lines):
     """줄 목록 중 영어 줄 비율(0~1). 검사 도구·테스트가 쓴다."""
     ls = [x for x in (lines or []) if (x or "").strip()]

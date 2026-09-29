@@ -1453,7 +1453,7 @@ def naturalize_detail(text, profile=None, *, beat_role=None, beat_index=None, be
     # ★영어 문장(한글 0, 영어모드 변환 결과)은 한국어 다듬기 단계를 전부 건너뛴다(2026-09-29, 관제 029).
     #   spoken_style(종결어미 치환)·발음 사전·감정 태그는 한국어 전제라 영어를 망가뜨리거나 헛돈다.
     #   판정은 script_translate.is_english 한 곳(0순위-B).
-    from shopping_shorts.script_translate import is_english as _is_en
+    from shopping_shorts.script_translate import is_english_sentence as _is_en
     if _is_en(out):
         return {"text": out, "applied": {}, "warnings": []}
     for name, fn in _STAGES:

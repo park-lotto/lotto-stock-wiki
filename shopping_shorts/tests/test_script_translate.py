@@ -129,3 +129,12 @@ def test_lang_voice_block_only_in_english_mode():
     assert appmod._lang_voice_block(job_en, {"model_id": "ssfm-v30"}) is not None
     assert appmod._lang_voice_block(job_en, {"model_id": "eleven_v3"}) is None
     assert appmod._lang_voice_block({"edit_plan": {"lang": "ko"}}, {"model_id": "ssfm-v30"}) is None
+
+
+def test_short_latin_tokens_still_get_korean_naturalize():
+    """'AI'·'3.5kg' 같은 짧은 영문 토큰은 문장이 아니다 — 발음 사전·숫자 읽기가 계속 돌아야 한다(게이트가 잡은 회귀)."""
+    assert not script_translate.is_english_sentence("AI")
+    assert not script_translate.is_english_sentence("3.5kg")
+    assert script_translate.is_english_sentence(EN[0])
+    p = {"pronunciation": {"on": True, "dict": {"AI": "에이아이"}}, "fillers": {"on": False}, "emotion_arc": {"on": False}}
+    assert narration_naturalize.naturalize("AI", p) == "에이아이"
