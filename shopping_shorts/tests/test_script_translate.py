@@ -134,6 +134,8 @@ def test_speech_cps_is_language_aware_and_narr_secs_uses_it():
     ko = "전력으로 달려도 귀에서 절대 안 떨어진다고 러너들 사이에서 난리가 났다는데"
     en = "Runners are going crazy because you just hook them on and they won't fall off even in a full sprint"
     assert edit_plan.speech_cps(lang="ko") == edit_plan._SYLLABLES_PER_SEC * edit_plan._speech_speed()
-    assert edit_plan.speech_cps(text=en) == edit_plan.speech_cps(lang="en") == edit_plan._EN_CHARS_PER_SEC
+    assert edit_plan.speech_cps(text=en) == edit_plan.speech_cps(lang="en") == edit_plan._EN_RAW_CHARS_PER_SEC
+    assert edit_plan.speech_cps(lang="en", norm=True) == edit_plan._EN_CHARS_PER_SEC < edit_plan._EN_RAW_CHARS_PER_SEC
     assert edit_plan.speech_cps(text=ko) == edit_plan.speech_cps(lang="ko")
-    assert edit_plan.narr_secs(en) < edit_plan.narr_secs(ko) * 1.5      # 실측: 5.0초 vs 5.3초
+    # 실측(2026-09-29 라이브, 같은 뜻 영어/한국어): 영어 5.0초·한국어 5.3초 — 추정은 ±25% 안에서 실제를 따라간다
+    assert 4.0 <= edit_plan.narr_secs(en) <= 6.3 and 4.0 <= edit_plan.narr_secs(ko) <= 6.6
