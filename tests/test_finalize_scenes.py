@@ -174,3 +174,168 @@ def test_gate_correction_alarms_when_unfixable():
     mix_pipeline._run_gate_correction(plan, pool, 30)
     assert plan.get("scene_repeat_alarm"), "반복이 남았는데 경보가 없다"
     assert "s0-0" in plan["scene_repeat_alarm"]["repeat_segs"]
+
+
+# ── 상속 경로(generator=inherit) 모드 — 서버 실측 09-23 이후 inherit 359건 중 반복 165·안 쓴 소스 228 ─────────
+from shopping_shorts import edit_plan as EP, store as ST   # noqa: E402
+
+
+def _ib(i, prim, alts=(), inherit_segs=None, inherited=True, narr=None):
+    return {"beat_idx": i, "narration": narr or "줄 %d 대사입니다" % i, "primary": prim,
+            "alternates": list(alts), "inherited": inherited,
+            "inherit_segs": list(inherit_segs if inherit_segs is not None else
+                                 ([prim["seg_id"]] + [a["seg_id"] for a in alts] if inherited else [])),
+            "fit": 5 if inherited else 3, "src_seg_applied": prim["seg_id"] if inherited else None}
+
+
+def test_inherit_later_primary_promoted_from_its_own_stage2_candidates():
+    pool = _pool()
+    c = lambda v, i: _clip(pool, v, i)      # noqa: E731
+    beats = [_ib(0, c("s0", 3)),
+             _ib(1, c("s1", 1)),
+             _ib(2, c("s0", 3), inherit_segs=["s0-3", "s0-6"])]   # 떨어진 칸 같은 primary, 2단계 후보 s0-6
+    rep = {}
+    out = backbone.finalize_scenes(beats, pool, report=rep, mode="inherit")
+    assert out[0]["primary"]["seg_id"] == "s0-3"                     # 앞 칸 유지
+    assert out[2]["primary"]["seg_id"] == "s0-6"                     # 그 줄 2단계 후보로 올림
+    assert out[2]["src_seg_applied"] == "s0-6" and out[2]["scene_finalized"] == "primary_dedup"
+    assert rep["primary_kept"] == []
+
+
+def test_inherit_no_stage2_candidate_keeps_primary_and_reports():
+    pool = _pool()
+    c = lambda v, i: _clip(pool, v, i)      # noqa: E731
+    beats = [_ib(0, c("s0", 3)), _ib(1, c("s0", 3))]              # 붙은 칸, 2단계 후보도 같은 컷 하나뿐
+    rep = {}
+    out = backbone.finalize_scenes(beats, pool, report=rep, mode="inherit")
+    assert out[1]["primary"]["seg_id"] == "s0-3"                     # 대사 뜻으로 고른 컷 밖으로 안 나간다
+    assert rep["primary_kept"] and rep["primary_kept"][0]["seg"] == "s0-3"
+    assert rep["ok"] is False
+    plan = {"beats": out}
+    mix_pipeline._scene_repeat_alarm(plan, out, pool, rep)
+    assert plan["scene_repeat_alarm"]["primary_kept"], "못 바꾼 반복인데 경보가 없다"
+
+
+def test_inherit_broll_beat_yields_to_inherited_beat():
+    pool = _pool()
+    c = lambda v, i: _clip(pool, v, i)      # noqa: E731
+    beats = [_ib(0, c("s0", 3), inherited=False),                   # 앞 칸 = b-roll 채움
+             _ib(1, c("s0", 3))]                                     # 뒤 칸 = 2단계가 고른 컷
+    out = backbone.finalize_scenes(beats, pool, mode="inherit")
+    assert out[1]["primary"]["seg_id"] == "s0-3"                     # 상속 칸이 자리를 먼저 잡는다
+    assert out[0]["primary"]["seg_id"] != "s0-3"
+
+
+def test_inherit_mode_keeps_adjacent_continuation_default_mode_does_not():
+    """H1: 상속은 '같은 소스 다음 컷 잇기'가 설계다 — 이어붙임을 반복처럼 갈아치우면 안 된다."""
+    pool = [{"video_id": "s0", "segments": [_seg("s0", 0, 0.0, 2.0), _seg("s0", 1, 2.0, 2.0),
+                                            _seg("s0", 2, 9.0, 2.0)]},
+            {"video_id": "s1", "segments": [_seg("s1", 0, 0.0, 2.0)]}]
+    c = lambda v, i: _clip(pool, v, i)      # noqa: E731
+    beats = [_ib(0, c("s0", 0), [c("s0", 1)]), _ib(1, c("s1", 0))]
+    inh = backbone.finalize_scenes(beats, pool, mode="inherit")
+    assert [a["seg_id"] for a in inh[0]["alternates"]] == ["s0-1"]
+    dft = backbone.finalize_scenes(beats, pool)
+    assert [a["seg_id"] for a in dft[0]["alternates"]] != ["s0-1"]
+
+
+def test_inherit_unused_source_swaps_non_stage2_alternate_and_never_appends():
+    pool = _pool()
+    c = lambda v, i: _clip(pool, v, i)      # noqa: E731
+    beats = [_ib(0, c("s0", 1), [c("s0", 2), c("s0", 8)], inherit_segs=["s0-1", "s0-2"]),   # s0-8 = 이어 붙인 컷
+             _ib(1, c("s1", 1)), _ib(2, c("s3", 1)), _ib(3, c("s4", 1))]                    # 홀드 칸(primary만)
+    counts = [1 + len(b["alternates"]) for b in beats]
+    rep = {}
+    out = backbone.finalize_scenes(beats, pool, report=rep, mode="inherit")
+    assert [1 + len(b["alternates"]) for b in out] == counts          # 칸 컷 수 불변(붙이지 않는다)
+    assert [a["seg_id"] for a in out[0]["alternates"]][0] == "s0-2"  # 2단계가 고른 alternate는 지킨다
+    assert out[0]["alternates"][1]["video_id"] == "s2"               # 이어 붙인 컷 자리에 안 쓴 소스
+    assert "s2" not in rep["unused_sources"]
+
+
+def test_build_inherit_plan_marks_stage2_candidates_and_finalize_uses_them():
+    src = [{"video_id": "s0", "segments": [
+        {"seg_id": "s0-%d" % i, "start": float(i * 2), "end": float(i * 2 + 2), "text": "말%d" % i,
+         "scene_desc": "화면%d" % i, "shot_role": "사용중"} for i in range(8)]}]
+    script = "카페 쿠키 사 먹지 마세요\n버터를 휘핑하고 가루를 섞었죠\n오븐에서 갓 구운 단면이 이래요\n댓글에 쿠키 남겨주세요"
+    bs = [{"role": "hook", "seg": "s0-2", "segs": ["s0-2"]},
+          {"role": "demo", "seg": "s0-4", "segs": ["s0-4"]},
+          {"role": "result", "seg": "s0-2", "segs": ["s0-2", "s0-6"]},      # 1번 줄과 같은 근거 컷 + 다른 후보
+          {"role": "cta", "seg": "", "segs": []}]
+    plan = EP.build_inherit_plan(src, script, bs)
+    assert plan["beats"][2]["inherit_segs"] == ["s0-2", "s0-6"]
+    assert plan["beats"][3]["inherit_segs"] == []
+    out = backbone.finalize_scenes(plan["beats"], src, mode="inherit")
+    assert out[0]["primary"]["seg_id"] == "s0-2"
+    assert out[2]["primary"]["seg_id"] == "s0-6"
+    ids = [x["seg_id"] for x in _material(out)]
+    assert ids.count("s0-2") == 1
+
+
+def test_save_exit_does_not_revert_finalized_primary():
+    """저장 출구(store._apply_beat_sources)가 출처 장면으로 되돌리면 반복이 저장마다 되살아난다."""
+    seg_map = {"s0-2": {"video_id": "s0", "seg_id": "s0-2", "start": 4.0, "end": 6.0},
+               "s0-6": {"video_id": "s0", "seg_id": "s0-6", "start": 12.0, "end": 14.0}}
+    beats = [{"role": "a", "primary": dict(seg_map["s0-2"]), "alternates": []},
+             {"role": "b", "primary": dict(seg_map["s0-6"]), "alternates": [],
+              "scene_finalized": "primary_dedup"}]
+    structure = {"beat_sources": [{"role": "a", "seg": "s0-2"}, {"role": "b", "seg": "s0-2"}]}
+    out = ST._apply_beat_sources(beats, structure, seg_map)
+    assert out[1]["primary"]["seg_id"] == "s0-6"
+    assert out[0]["primary"]["seg_id"] == "s0-2"
+
+
+# ── 검사 도구 --batch (서버에서 생성기별 전/후 대조에 쓴다) ────────────────────────────────
+def _audit_mod():
+    import importlib.util
+    from pathlib import Path
+    p = Path(__file__).resolve().parents[1] / "tools" / "scene_repeat_audit.py"
+    spec = importlib.util.spec_from_file_location("scene_repeat_audit", p)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def _inherit_job():
+    """상속 job 합성 — 1·3번 줄이 같은 근거 컷(떨어진 칸, 3번 줄엔 다른 2단계 후보 있음), 2·3번 붙은 칸 반복 없음,
+    소스 s1 은 안 씀(이어 붙인 컷 자리로 들어갈 수 있게 0번 줄에 이어 붙인 컷을 둔다)."""
+    src = [{"video_id": "s0", "segments": [
+        {"seg_id": "s0-%d" % i, "start": float(i * 3), "end": float(i * 3 + 2), "scene_desc": "s0 화면%d" % i}
+        for i in range(8)]},
+           {"video_id": "s1", "segments": [
+        {"seg_id": "s1-%d" % i, "start": float(i * 3), "end": float(i * 3 + 2), "scene_desc": "s1 화면%d" % i}
+        for i in range(3)]}]
+    c = lambda i: dict(src[0]["segments"][i], video_id="s0")      # noqa: E731
+    beats = [_ib(0, c(2), [c(5)], inherit_segs=["s0-2"]),
+             _ib(1, c(3)),
+             _ib(2, c(2), inherit_segs=["s0-2", "s0-6"])]
+    return {"edit_plan": {"generator": "inherit", "beats": beats},
+            "extract": {s["video_id"]: s for s in src}}
+
+
+def test_audit_batch_counts_before_after_per_generator(tmp_path, capsys):
+    import json as _json
+    m = _audit_mod()
+    job = _inherit_job()
+    (tmp_path / "a.json").write_text(_json.dumps(job, ensure_ascii=False), encoding="utf-8")
+    row = {"edit_plan_json": _json.dumps(job["edit_plan"], ensure_ascii=False),        # DB 행 모양
+           "extract_json": _json.dumps(job["extract"], ensure_ascii=False)}
+    (tmp_path / "b.jsonl").write_text(_json.dumps(row, ensure_ascii=False) + "\n", encoding="utf-8")
+    rows = m.run_batch(str(tmp_path), apply=True)
+    r = rows["inherit"]
+    assert r["jobs"] == 2
+    assert r["생성_반복job"] == 2 and r["생성_미사용job"] == 2       # 수정 전: 둘 다 FAIL 이 잡힌다
+    assert r["생성_떨어진"] == 2
+    assert r["후_반복job"] == 0 and r["후_미사용job"] == 0
+    assert r["후_불변식깨짐job"] == 0
+    out = capsys.readouterr().out
+    assert "inherit | finalize_scenes 후 | 2 | 0 |" in out
+
+
+def test_audit_batch_reads_stdin(monkeypatch, capsys):
+    import io
+    import json as _json
+    m = _audit_mod()
+    monkeypatch.setattr("sys.stdin", io.StringIO(_json.dumps(_inherit_job(), ensure_ascii=False) + "\n"))
+    rows = m.run_batch("-", apply=False)
+    assert rows["inherit"]["jobs"] == 1 and rows["inherit"]["저장_반복job"] == 1

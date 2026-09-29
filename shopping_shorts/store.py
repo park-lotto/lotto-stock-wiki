@@ -100,6 +100,11 @@ def _apply_beat_sources(beats, structure, seg_map):
         붙였으면 True. 지어낸 번호·이미 쓰는 장면이면 False(종전 화면 유지)."""
         if sid not in seg_map:
             return False                  # 지어낸 번호 — 무시하고 종전 화면을 쓴다
+        if b.get("scene_finalized") == "primary_dedup":
+            # ★한 편 마감(backbone.finalize_scenes, 카드 033)이 "이 출처 장면은 다른 칸이 이미 쓴다"고 판정해
+            #   바꾼 칸이다. 여기서 출처로 되돌리면 저장할 때마다 같은 장면 반복이 되살아난다(상속 경로 실측
+            #   46%가 한 편 안 반복). 판정의 주인은 finalize_scenes 한 곳 — 여기선 따른다.
+            return False
         cur = (b.get("primary") or {}).get("seg_id")
         if cur == sid:
             return False

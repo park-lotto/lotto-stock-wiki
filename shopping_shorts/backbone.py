@@ -505,7 +505,8 @@ def scene_repeat_report(beats, pool_sources=None):
             "unused_sources": [v for v in dict.fromkeys(all_vids) if src.get(v, 0) == 0]}
 
 
-def finalize_scenes(beats, pool_sources, max_clips=None, trim_to_cap=False, report=None):
+def finalize_scenes(beats, pool_sources, max_clips=None, trim_to_cap=False, report=None,
+                    mode="default"):
     """★한 편 안 장면 중복·소스 배분의 **주인 함수**(카드 033, 2026-09-29). 모든 3단계 생성 경로가
     마지막에 이것 하나를 부른다(관제/ownership.json "한 편 안 장면 중복·소스 배분").
 
@@ -525,13 +526,29 @@ def finalize_scenes(beats, pool_sources, max_clips=None, trim_to_cap=False, repo
          갈아끼운다(컷 수 불변). 갈아낄 자리가 없으면 상한 미만인 칸 끝에 붙인다.
       ④ is_continuous(인접 구간 이어붙임 금지)·MAX_CLIPS_PER_BEAT·MIN_SHOT_SECONDS 유지.
          trim_to_cap=True면 상한 초과 alternates를 자른다(옛 dedup_clips_global 동작 — 옛 경로용).
-    원본 mutate 안 함. Gemini·IO 없음. report(dict)에 무엇을 바꿨고 무엇이 남았는지 적는다."""
+    원본 mutate 안 함. Gemini·IO 없음. report(dict)에 무엇을 바꿨고 무엇이 남았는지 적는다.
+
+    mode="inherit"(상속 경로 generator=inherit, 2026-09-29 확장) — 2단계가 줄마다 대사 뜻으로 고른 컷을 존중한다:
+      · primary가 겹치면 먼저 자리 잡는 순서 = 포인트 비트 → **상속 칸(inherited)** → b-roll 채움 칸, 같은 층에선 앞 칸.
+      · 상속 칸의 primary를 바꿀 땐 **그 줄의 2단계 후보(beat["inherit_segs"])** 중 안 쓴 것만 올린다.
+        없으면 primary를 그대로 두고 report["primary_kept"]에 남긴다(호출부가 경보). b-roll 칸은 종전처럼 덜 쓴 소스.
+      · ★이어붙임(is_continuous) 검사를 끈다. 09-05 리뷰 H1(mix_pipeline 게이트 건너뜀 주석): 상속은 원리상
+        '앞 비트 다음 컷'(_next_cut)과 '같은 소스 시간순 다음 컷 잇기'(_extend_refs_to_narration)로 화면을 잇는다 —
+        원본은 연속 촬영이라 결이 안 튀게 하려는 설계다. 여기서 이어붙임을 반복처럼 갈아치우면 2단계 결정과
+        inherited·fit 표식이 전부 거짓이 된다. 그래서 상속 모드는 **같은 장면 재사용(seg·설명)만** 반복으로 본다.
+        (칸을 넘어 같은 seg를 다시 쓰면 렌더는 처음부터 다시 튼다 — video_assemble._plan_phrase_clips의 pos·
+         _prev_idx는 칸 안에서만 이어진다. 그래서 붙은 칸이라도 같은 seg는 반복이다.)
+      · 안 쓴 소스는 **갈아끼우기만** 한다(칸 끝에 붙이지 않는다 — 컷 리듬 홀드 1·나머지 2 불변식 유지).
+        갈아낄 자리는 2단계가 고른 컷이 아닌 alternate(이어 붙인 컷·채움 컷)부터."""
     from shopping_shorts import config
     max_clips = getattr(config, "MAX_CLIPS_PER_BEAT", 3) if max_clips is None else max_clips
     min_shot = getattr(config, "MIN_SHOT_SECONDS", 1.2)
     rep = report if isinstance(report, dict) else {}
-    rep.update({"primary_replaced": [], "alt_replaced": [], "alt_dropped": [],
-                "source_inserted": [], "trimmed": 0})
+    inherit = (mode == "inherit")
+    # 상속 모드는 이어붙임을 반복으로 보지 않는다(위 docstring·H1). 판정 함수를 한 번에 갈아 끼운다.
+    _cont = (lambda _a, _b: False) if inherit else is_continuous
+    rep.update({"mode": mode, "primary_replaced": [], "primary_kept": [], "alt_replaced": [],
+                "alt_dropped": [], "source_inserted": [], "trimmed": 0})
     out = []
     for b in beats or []:
         nb = dict(b)
@@ -542,6 +559,7 @@ def finalize_scenes(beats, pool_sources, max_clips=None, trim_to_cap=False, repo
                               if isinstance(g, dict) and g.get("seg_id")])
             for s in (pool_sources or []) if isinstance(s, dict)]
     edge = _edge_seg_ids(pool)
+    seg_idx = {g["seg_id"]: dict(g, video_id=s.get("video_id")) for s in pool for g in s["segments"]}
 
     def _keys(c):
         ks = [("seg", c.get("seg_id"))] if c.get("seg_id") else []
@@ -561,8 +579,8 @@ def finalize_scenes(beats, pool_sources, max_clips=None, trim_to_cap=False, repo
     def _replacement(used, src_count, beat, avoid_prev=None, avoid_next=None, same_action=False):
         """안 쓴 컷 하나 — 같은 행위(원하면) → 덜 쓴 소스 B롤. 이어붙임(앞·뒤 클립)은 뺀다."""
         def ok(c):
-            return (_usable(c, used) and not is_continuous(avoid_prev, c)
-                    and not is_continuous(c, avoid_next))
+            return (_usable(c, used) and not _cont(avoid_prev, c)
+                    and not _cont(c, avoid_next))
         if same_action:
             action = segment_action(beat.get("primary") or {}) or \
                 action_dict.tag_action(beat.get("narration", "") or "")
@@ -581,8 +599,11 @@ def finalize_scenes(beats, pool_sources, max_clips=None, trim_to_cap=False, repo
     # ── ① primary: 포인트 비트가 먼저 자리를 잡고, 그다음 앞 칸부터 ─────────────────────
     used = set()                                  # ("seg", id) / ("desc", 설명)
     src_count = Counter()
-    order = ([i for i, b in enumerate(out) if is_point_beat(b)]
-             + [i for i, b in enumerate(out) if not is_point_beat(b)])
+    def _tier(b):
+        if is_point_beat(b):
+            return 0
+        return 1 if (inherit and b.get("inherited")) else 2
+    order = sorted(range(len(out)), key=lambda i: (_tier(out[i]), i))
     dup_prim = []
     for i in order:
         p = out[i].get("primary") or {}
@@ -598,8 +619,21 @@ def finalize_scenes(beats, pool_sources, max_clips=None, trim_to_cap=False, repo
     for i in sorted(dup_prim):
         prev_p = out[i - 1].get("primary") if i > 0 else None
         next_p = out[i + 1].get("primary") if i + 1 < len(out) else None
-        pick = _replacement(used | alt_keys, src_count, out[i], prev_p, next_p, same_action=True)
         old = (out[i].get("primary") or {}).get("seg_id")
+        if inherit and out[i].get("inherited"):
+            # 그 줄의 2단계 후보 안에서만 — 자기 칸 alternate는 올려 쓸 수 있고, 남의 칸 것은 빼앗지 않는다.
+            own = {k for a in out[i]["alternates"] for k in _keys(a)}
+            other = alt_keys - own
+            cands = [seg_idx[sid] for sid in (out[i].get("inherit_segs") or []) if sid in seg_idx]
+            pick = next((dict(c) for c in cands if _fresh(c, used | other)), None)
+            if pick is None:
+                rep["primary_kept"].append({"beat_idx": out[i].get("beat_idx", i), "seg": old,
+                                            "why": "그 줄의 2단계 후보가 전부 이미 쓰임"})
+                continue
+            out[i]["alternates"] = [a for a in out[i]["alternates"] if a.get("seg_id") != pick["seg_id"]]
+            out[i]["src_seg_applied"] = pick["seg_id"]
+        else:
+            pick = _replacement(used | alt_keys, src_count, out[i], prev_p, next_p, same_action=True)
         if pick is None:
             continue                               # 후보 없음 → 그대로(아래 보고에 반복으로 남는다)
         out[i]["primary"] = dict(pick)
@@ -620,7 +654,7 @@ def finalize_scenes(beats, pool_sources, max_clips=None, trim_to_cap=False, repo
             if trim_to_cap and 1 + len(new_alts) >= max_clips:
                 rep["trimmed"] += 1
                 break
-            if _fresh(a, used) and not is_continuous(prev, a):
+            if _fresh(a, used) and not _cont(prev, a):
                 new_alts.append(a)
                 used.update(_keys(a))
                 src_count[_vid_of(a)] += 1
@@ -663,11 +697,13 @@ def finalize_scenes(beats, pool_sources, max_clips=None, trim_to_cap=False, repo
                 before = nb["alternates"][k - 1] if k > 0 else nb.get("primary")
                 after = (nb["alternates"][k + 1] if k + 1 < len(nb["alternates"])
                          else (out[i + 1].get("primary") if i + 1 < len(out) else None))
-                if is_continuous(before, clip) or is_continuous(clip, after):
+                if _cont(before, clip) or _cont(clip, after):
                     continue
-                slots.append((-src_count.get(_vid_of(a), 0), k, i))
+                picked_by_stage2 = a.get("seg_id") in set(nb.get("inherit_segs") or [])
+                slots.append((picked_by_stage2, -src_count.get(_vid_of(a), 0), k, i))
         if slots:
-            _, k, i = min(slots)       # 가장 많이 쓴 소스 → 칸 안 앞자리(화면에 실제로 나올 확률↑) → 앞 칸
+            # 2단계가 고른 컷이 아닌 자리 → 가장 많이 쓴 소스 → 칸 안 앞자리(화면에 실제로 나올 확률↑) → 앞 칸
+            _, _, k, i = min(slots)
             old = out[i]["alternates"][k]
             for kk in _keys(old):
                 used.discard(kk)
@@ -675,18 +711,20 @@ def finalize_scenes(beats, pool_sources, max_clips=None, trim_to_cap=False, repo
             out[i]["alternates"][k] = clip
             rep["source_inserted"].append({"beat_idx": out[i].get("beat_idx", i), "video_id": vid,
                                            "new": clip.get("seg_id"), "replaced": old.get("seg_id")})
-        else:
+        elif not inherit:
             spots = [i for i, nb in enumerate(out)
                      if not is_point_beat(nb) and 1 + len(nb["alternates"]) < max_clips
                      and nb.get("primary")
-                     and not is_continuous((nb["alternates"] or [nb.get("primary")])[-1], clip)
-                     and not is_continuous(clip, out[i + 1].get("primary") if i + 1 < len(out) else None)]
+                     and not _cont((nb["alternates"] or [nb.get("primary")])[-1], clip)
+                     and not _cont(clip, out[i + 1].get("primary") if i + 1 < len(out) else None)]
             if not spots:
                 continue
             i = max(spots, key=lambda j: (src_count.get(_vid_of(out[j].get("primary")), 0), -j))
             out[i]["alternates"].append(clip)
             rep["source_inserted"].append({"beat_idx": out[i].get("beat_idx", i), "video_id": vid,
                                            "new": clip.get("seg_id"), "replaced": None})
+        else:
+            continue                   # 상속 모드: 갈아낄 자리가 없으면 넣지 않는다(칸 컷 수 불변) — 보고에 남는다
         used.update(_keys(clip))
         src_count[vid] += 1
 

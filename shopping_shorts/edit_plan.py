@@ -4458,6 +4458,9 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
             "inherited": inherited,
             "visual_verb": inherited,
             "src_seg_applied": refs[0]["seg_id"] if inherited else None,
+            # ★그 줄의 2단계 후보 목록(카드 033, 2026-09-29) — 한 편 마감(backbone.finalize_scenes, mode="inherit")이
+            #   primary가 다른 줄과 겹칠 때 **이 안에서만** 갈아 올린다(대사 뜻으로 고른 컷 밖으로 안 나간다).
+            "inherit_segs": list(per_line[i]) if inherited else [],
         })
         prev_sid = refs[-1]["seg_id"]
     if not beats:

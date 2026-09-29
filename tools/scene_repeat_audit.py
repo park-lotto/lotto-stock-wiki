@@ -17,9 +17,15 @@
 --apply: edit_plan beats 에 finalize_scenes 를 적용한 뒤 같은 판정을 한 번 더 보여 준다(전/후 대조).
          scene_override(사람 편성 저장본)는 3단계 생성 시점엔 없던 것이라 지우고 적용한다(그 사실을 출력에 적는다).
 
+--batch SRC: 여러 job 을 한 번에 — 생성기(generator)별로 반복 job 수·안 쓴 소스 job 수를 표로.
+         SRC = 폴더(안의 *.json 전부) · .jsonl(한 줄 = job 하나) · job 목록 .json 배열 · '-'(표준입력 JSONL/배열).
+         job 은 {edit_plan, extract} 또는 DB 행 모양 {edit_plan_json, extract_json(문자열)} 둘 다 받는다.
+         --apply 를 같이 주면 [생성본 → finalize_scenes 후] 열이 붙는다(상속 job 은 mode="inherit").
+
 사용:
     py tools/scene_repeat_audit.py <job.json> [--clean-base <clean_base.json>] [--apply]
-종료코드: 0 = PASS, 1 = FAIL (편성 기준; --apply 면 적용 후 기준)
+    py tools/scene_repeat_audit.py --batch <폴더|jobs.jsonl|-> [--apply]
+종료코드: 0 = PASS, 1 = FAIL (편성 기준; --apply 면 적용 후 기준 · 배치는 항상 0)
 """
 import argparse
 import copy
@@ -170,13 +176,148 @@ def audit_clean_base(cb, sources, seg_idx):
     return ok
 
 
+def _norm_job(job):
+    """DB 행 모양(edit_plan_json·extract_json 문자열)도 받는다."""
+    job = dict(job or {})
+    for k in ("edit_plan", "extract"):
+        if not job.get(k) and isinstance(job.get(k + "_json"), str):
+            try:
+                job[k] = json.loads(job[k + "_json"])
+            except ValueError:
+                job[k] = None
+    return job
+
+
+def _mode_of(plan):
+    return "inherit" if (plan or {}).get("generator") == "inherit" else "default"
+
+
+def repeat_adjacency(beats, rep):
+    """반복 seg 를 칸 위치로 가른다 — 붙은 칸(모든 연속 등장이 바로 옆 칸)/떨어진 칸(하나라도 떨어짐).
+    같은 칸 안 두 번은 떨어진 칸으로 센다(렌더는 칸이 달라지면 처음부터 다시 튼다 — 칸 안도 재생 구간이 겹친다)."""
+    pos = {b.get("beat_idx", i): i for i, b in enumerate(beats)}
+    adj = apart = 0
+    for sid, bis in rep["seg_rep"].items():
+        ps = [pos.get(x, -99) for x in bis]
+        pairs = list(zip(ps, ps[1:]))
+        if pairs and all(q - p == 1 for p, q in pairs):
+            adj += 1
+        else:
+            apart += 1
+    return adj, apart
+
+
+def _iter_jobs(src):
+    """배치 입력 → (이름, job) 들."""
+    def _from_text(name, text):
+        text = text.strip()
+        if not text:
+            return
+        if text[0] == "[":
+            for i, j in enumerate(json.loads(text)):
+                yield "%s#%d" % (name, i), j
+            return
+        if text[0] == "{" and "\n" not in text.strip():
+            yield name, json.loads(text)
+            return
+        try:
+            yield name, json.loads(text)          # 파일 하나 = job 하나(여러 줄 JSON)
+            return
+        except ValueError:
+            pass
+        for i, line in enumerate(text.splitlines()):
+            line = line.strip()
+            if line:
+                yield "%s#%d" % (name, i), json.loads(line)
+    if src == "-":
+        yield from _from_text("stdin", sys.stdin.read())
+        return
+    p = Path(src)
+    if p.is_dir():
+        for f in sorted(p.glob("*.json")) + sorted(p.glob("*.jsonl")):
+            yield from _from_text(f.name, f.read_text(encoding="utf-8"))
+    else:
+        yield from _from_text(p.name, p.read_text(encoding="utf-8"))
+
+
+def run_batch(src, apply=False):
+    backbone = None
+    if apply:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from shopping_shorts import backbone
+    rows = defaultdict(lambda: Counter())
+    bad = []
+    for name, raw in _iter_jobs(src):
+        job = _norm_job(raw)
+        plan = job.get("edit_plan") or {}
+        beats = plan.get("beats") or []
+        if not beats or not job.get("extract"):
+            bad.append(name)
+            continue
+        sources = _sources(job)
+        seg_idx = _seg_index(sources)
+        g = plan.get("generator") or "?"
+        r = rows[g]
+        r["jobs"] += 1
+        saved = audit_plan(beats, sources, seg_idx)
+        gen = copy.deepcopy(beats)
+        for b in gen:
+            b.pop("scene_override", None)
+        base = audit_plan(gen, sources, seg_idx)
+        for tag, rep, bs in (("저장", saved, beats), ("생성", base, gen)):
+            r[tag + "_반복job"] += bool(rep["seg_rep"])
+            r[tag + "_설명반복job"] += bool(rep["desc_rep"])
+            r[tag + "_미사용job"] += bool(rep["unused"])
+            a_, p_ = repeat_adjacency(bs, rep)
+            r[tag + "_반복seg"] += len(rep["seg_rep"])
+            r[tag + "_붙은"] += a_
+            r[tag + "_떨어진"] += p_
+        if apply:
+            frep = {}
+            after_beats = backbone.finalize_scenes(gen, sources, report=frep, mode=_mode_of(plan))
+            aft = audit_plan(after_beats, sources, seg_idx)
+            a_, p_ = repeat_adjacency(after_beats, aft)
+            r["후_반복job"] += bool(aft["seg_rep"])
+            r["후_설명반복job"] += bool(aft["desc_rep"])
+            r["후_미사용job"] += bool(aft["unused"])
+            r["후_반복seg"] += len(aft["seg_rep"])
+            r["후_붙은"] += a_
+            r["후_떨어진"] += p_
+            r["후_primary못바꿈job"] += bool(frep.get("primary_kept"))
+            same = (len(after_beats) == len(gen)
+                    and [b.get("narration") for b in after_beats] == [b.get("narration") for b in gen])
+            r["후_불변식깨짐job"] += (not same)
+    tags = [("저장", "저장본 재료(scene_override 우선)"), ("생성", "생성본 primary+alternates")]
+    if apply:
+        tags.append(("후", "finalize_scenes 후"))
+    print("생성기 | 기준 | job | 반복 job | 반복 seg(붙은/떨어진) | 같은 설명 반복 job | 안 쓴 소스 job")
+    for g in sorted(rows):
+        r = rows[g]
+        for tag, label in tags:
+            print("%s | %s | %d | %d | %d(%d/%d) | %d | %d" % (
+                g, label, r["jobs"], r[tag + "_반복job"], r[tag + "_반복seg"], r[tag + "_붙은"],
+                r[tag + "_떨어진"], r[tag + "_설명반복job"], r[tag + "_미사용job"]))
+        if apply:
+            print("%s | 마감 뒤 경보 | primary 못 바꾼 job %d · 불변식(칸 수·대사) 깨진 job %d" % (
+                g, r["후_primary못바꿈job"], r["후_불변식깨짐job"]))
+    if bad:
+        print("건너뜀(edit_plan·extract 없음) %d건: %s" % (len(bad), ", ".join(bad[:10])))
+    return rows
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("job")
+    ap.add_argument("job", nargs="?")
     ap.add_argument("--clean-base", default=None)
     ap.add_argument("--apply", action="store_true", help="finalize_scenes 적용 전/후 대조")
+    ap.add_argument("--batch", default=None, help="폴더 · .jsonl · job 배열 .json · '-'(표준입력)")
     a = ap.parse_args(argv)
-    job = json.loads(Path(a.job).read_text(encoding="utf-8"))
+    if a.batch:
+        run_batch(a.batch, apply=a.apply)
+        return 0
+    if not a.job:
+        ap.error("job.json 경로 또는 --batch 가 필요하다")
+    job = _norm_job(json.loads(Path(a.job).read_text(encoding="utf-8")))
     plan = job.get("edit_plan") or {}
     beats = plan.get("beats") or []
     sources = _sources(job)
@@ -199,9 +340,9 @@ def main(argv=None):
     print_plan_report("[전-생성본] scene_override %d칸을 지운 primary+alternates(=3단계가 만든 그대로)"
                       % had_override, base)
     report = {}
-    after_beats = backbone.finalize_scenes(gen, sources, report=report)
+    after_beats = backbone.finalize_scenes(gen, sources, report=report, mode=_mode_of(plan))
     after = audit_plan(after_beats, sources, seg_idx)
-    print_plan_report("[후] finalize_scenes 적용", after)
+    print_plan_report("[후] finalize_scenes 적용 (mode=%s)" % _mode_of(plan), after)
     # 불변식: 칸 수·칸 순서·narration·(반복 아닌) primary
     same_n = len(after_beats) == len(gen)
     same_order = [b.get("beat_idx") for b in after_beats] == [b.get("beat_idx") for b in gen]

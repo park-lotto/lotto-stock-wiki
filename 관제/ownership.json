@@ -236,7 +236,7 @@
       "이름": "한 편 안 장면 중복·소스 배분",
       "주인": ["shopping_shorts/backbone.py:finalize_scenes"],
       "시그니처": ["def finalize_scenes\\b", "def scene_repeat_report\\b", "def dedup_and_balance\\b", "def dedup_clips_global\\b", "def ensure_sources_used\\b", "def _dedup_and_fill\\b", "used_all\\s*=\\s*set\\(\\)", "_used\\s*=\\s*\\{c for b in ai_bs", "descs\\s*=\\s*set\\(\\)"],
-      "소비처": ["3단계 후보 카드(edit_plan.build_scene_first_plan._ground_score — 화면 못박기·약한 비트 재선택 뒤)", "최종 관문(mix_pipeline._run_gate_correction — 상속 제외 모든 3단계 경로, 게이트 전)", "게이트 재픽(backbone.repick_for_gate 끝)", "경보 plan.scene_repeat_alarm"],
+      "소비처": ["3단계 후보 카드(edit_plan.build_scene_first_plan._ground_score — 화면 못박기·약한 비트 재선택 뒤)", "최종 관문(mix_pipeline._run_gate_correction — 상속 제외 모든 3단계 경로, 게이트 전)", "상속 경로(mix_pipeline._plan_and_tts 게이트 건너뜀 자리 — mode=inherit, 이어붙임 검사 끔·primary는 그 줄 2단계 후보 안에서만)", "저장 출구(store._apply_beat_sources 는 scene_finalized=primary_dedup 칸을 출처로 되돌리지 않는다)", "게이트 재픽(backbone.repick_for_gate 끝)", "경보 plan.scene_repeat_alarm"],
       "검사도구": "tools/scene_repeat_audit.py (job.json[+clean_base.json], --apply 전/후 대조) · tests/test_finalize_scenes.py",
       "과금": false,
       "예외": {
