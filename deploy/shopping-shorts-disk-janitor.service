@@ -1,0 +1,14 @@
+[Unit]
+Description=Shopping Shorts 매일 디스크 정리(tools/disk_janitor.py — 임시프레임·릴레이·실패/고아·완료7일+ 조각)
+After=network.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+ExecStart=/usr/bin/python3 tools/disk_janitor.py --apply
+Nice=10
+TimeoutStartSec=1800
+# 1 = 일부 삭제 실패(보고서에 남음) — 정리 자체는 돌았다. 2 이상만 실패.
+SuccessExitStatus=0 1
