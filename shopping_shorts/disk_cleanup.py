@@ -68,6 +68,12 @@ THUMB_CACHE_MAX_GB = float(os.getenv("SHORTS_THUMB_CACHE_GB", "8"))
 #     있어야 해서 더 길게 둔다 — 두 기간을 하나로 합치지 마라.
 FINAL_KEEP_DAYS = int(os.getenv("SHORTS_FINAL_KEEP_DAYS", "7"))
 
+# ★찾기·렌즈 임시 프레임(data/find_frames) 보관 기간(2026-09-29 사고).
+#   app._FIND_TMP_DIR — 이름 그대로 임시 폴더인데 청소 대상에 없어 169GB까지 쌓였고(하루 약 11GB, 440폴더),
+#   디스크 100% → 렌더·미리보기·자막제거가 'No space left on device'로 죽고 웹 기동까지 실패했다.
+#   다시 열면 새로 뽑으므로 짧게 둔다.
+FIND_FRAMES_KEEP_DAYS = float(os.getenv("SHORTS_FIND_FRAMES_KEEP_DAYS", "2"))
+
 # 지워도 되는 중간 산출물 — **이름으로 화이트리스트**. 여기 없는 건 안 지운다.
 _JUNK_DIR_EXACT = {"seg_thumbs", "tts", "frames", "tmp", "work", "audio", "parts"}
 _JUNK_DIR_PREFIX = ("s",)        # s0, s1, … 소스 클립 폴더
@@ -255,6 +261,28 @@ def trim_thumb_cache(data_dir, max_gb=None, dry_run=False):
     return freed, removed
 
 
+def clean_find_frames(data_dir, keep_days=None, dry_run=False):
+    """찾기·렌즈 임시 프레임 폴더 중 keep_days 넘게 안 바뀐 것을 통째로 지운다(다시 열면 새로 뽑는다)."""
+    keep_days = FIND_FRAMES_KEEP_DAYS if keep_days is None else keep_days
+    root = Path(data_dir) / "find_frames"
+    if not root.is_dir():
+        return 0, 0
+    cutoff = time.time() - keep_days * 86400
+    freed = removed = 0
+    for d in root.iterdir():
+        try:
+            if d.is_symlink() or not d.is_dir() or not _inside(d, root) or d.stat().st_mtime >= cutoff:
+                continue
+        except OSError:
+            continue
+        size = _dir_size(d)
+        if not dry_run:
+            shutil.rmtree(d, ignore_errors=True)
+        freed += size
+        removed += 1
+    return freed, removed
+
+
 def _gb(n):
     return f"{n / 1024 ** 3:.2f}GB"
 
@@ -264,10 +292,12 @@ def run(data_dir, store=None, dry_run=False):
     j_bytes, j_dirs = clean_mix_jobs(data_dir, store=store, dry_run=dry_run)
     v_bytes, v_files = clean_final_videos(data_dir, store=store, dry_run=dry_run)
     t_bytes, t_files = trim_thumb_cache(data_dir, dry_run=dry_run)
+    f_bytes, f_dirs = clean_find_frames(data_dir, dry_run=dry_run)
     tag = "[모의]" if dry_run else ""
     return (f"디스크정리{tag}: 작업재료 {_gb(j_bytes)}({j_dirs}폴더) · "
             f"완성영상 {_gb(v_bytes)}({v_files}개) · "
             f"썸네일캐시 {_gb(t_bytes)}({t_files}장) · "
+            f"찾기프레임 {_gb(f_bytes)}({f_dirs}폴더) · "
             f"재료보관 {RETENTION_DAYS}일 · 영상보관 {FINAL_KEEP_DAYS}일 · "
             f"캐시상한 {THUMB_CACHE_MAX_GB}GB")
 
