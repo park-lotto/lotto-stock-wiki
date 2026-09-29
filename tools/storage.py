@@ -221,12 +221,7 @@ def move_track_to_external(repo, smap, name, printer=print):
     if dest.exists():
         printer("   건너뜀 %s: %s 가 이미 있다 — 합치는 판단은 사람이" % (name, dest))
         return False
-    try:
-        shutil.move(str(wt), str(dest))
-    except (OSError, shutil.Error) as e:
-        printer("   건너뜀 %s: 못 옮김(열린 창·터미널?) %s" % (name, str(e)[:100]))
-        if dest.exists() and not wt.exists():
-            shutil.move(str(dest), str(wt))           # 반쯤 옮겨진 것 되돌림
+    if not move_dir_safe(wt, dest, printer):          # 복사→대조→삭제. 사용 중이면 C 원본 그대로, D 사본 지움
         return False
     if not make_junction(wt, dest):
         shutil.move(str(dest), str(wt))
@@ -404,6 +399,43 @@ def desktop_targets(smap):
     return out
 
 
+def _file_map(root):
+    out = {}
+    for r, _ds, fs in os.walk(root):
+        for f in fs:
+            p = os.path.join(r, f)
+            try:
+                out[os.path.relpath(p, root)] = os.path.getsize(p)
+            except OSError:
+                out[os.path.relpath(p, root)] = -1
+    return out
+
+
+def move_dir_safe(src, dst, printer=print):
+    """복사 → 개수·크기 대조 → 원본 삭제. 삭제가 중간에 막히면(사용 중 파일) **원본을 D 사본에서 되살리고 D 사본을 지운다** — C 가 정본으로 남는다.
+    (2026-09-30 실사고: shutil.move 가 실행 중인 ShoppingLens 를 옮기다 C 에서 51개를 지우고 멈췄다. 되돌렸지만 이 함수가 그걸 막는다)"""
+    src, dst = Path(src), Path(dst)
+    shutil.copytree(str(src), str(dst))
+    a, b = _file_map(src), _file_map(dst)
+    if a != b:
+        shutil.rmtree(dst, ignore_errors=True)
+        printer("   건너뜀 %s: 복사 대조 불일치(C %d / D %d) — D 사본 지움" % (src.name, len(a), len(b)))
+        return False
+    try:
+        shutil.rmtree(str(src))
+    except OSError as e:
+        left = _file_map(src)
+        for rel in b:
+            if rel not in left:
+                p = src / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(dst / rel, p)
+        shutil.rmtree(dst, ignore_errors=True)
+        printer("   건너뜀 %s: 사용 중(%s) — C 원본 그대로, D 사본 지움" % (src.name, str(e)[:60]))
+        return False
+    return True
+
+
 def apply_desktop(smap, printer=print):
     _require_external(smap)
     dest_root = _dest(smap, "보관", "90_보관") / "바탕화면"
@@ -414,10 +446,7 @@ def apply_desktop(smap, printer=print):
         if dst.exists():
             printer("   건너뜀 %s: D 에 이미 있다" % t["name"])
             continue
-        try:
-            shutil.move(str(t["path"]), str(dst))
-        except (OSError, shutil.Error) as e:
-            printer("   건너뜀 %s: %s" % (t["name"], str(e)[:80]))
+        if not move_dir_safe(t["path"], dst, printer):
             continue
         make_junction(t["path"], dst)                  # 바탕화면 자리는 정션으로 남겨 찾기 쉽게
         n += 1

@@ -350,3 +350,48 @@ def test_list_shows_card_numbers_per_track(repo, capsys):
     track.list_tracks(repo)
     out = capsys.readouterr().out
     assert "목록트랙" in out and "카드 %03d" % n in out
+
+
+def _finish_with_race(repo_, name, land):
+    """첫 push 직전에 land() 로 origin/main 을 먼저 움직여 진짜 경쟁을 만든다."""
+    gate = _Gate()
+    real_run = track.run
+    state = {"n": 0}
+
+    def racing_run(cmd, cwd, check=False):
+        if cmd[:2] == ["git", "push"] and state["n"] == 0:
+            state["n"] += 1
+            land()
+        return real_run(cmd, cwd, check)
+    track.run = racing_run
+    try:
+        import video_gate
+        rc = track.finish(name, repo=repo_, gate=gate, video_gate=lambda s, b: video_gate.GateResult(True, False, "", []))
+    finally:
+        track.run = real_run
+    return rc, gate
+
+
+def test_doc_only_race_is_absorbed_without_regating(repo):
+    """게이트 도는 사이 카드 커밋(관제/)만 들어왔으면 게이트를 다시 돌리지 않고 얹어서 push 한다(09-30 실측: 3연속 실패의 원인)."""
+    _install(repo)
+    n = control.new_card(repo, "경쟁", printer=lambda *a: None)
+    _make_track_commit_with_card(repo, "경쟁", n)
+    rc, gate = _finish_with_race(repo, "경쟁", lambda: control.new_card(repo, "사이에 낀 카드", printer=lambda *a: None))
+    assert rc == 0
+    assert gate.snapshots == 2, "문서만 들어왔으면 게이트(전/후 2회)를 다시 돌리지 않는다"
+    assert _git(repo, "show", "origin/main:app.py") == "VALUE = 2\n"
+    assert any(c["제목"] == "사이에 낀 카드" for c in _origin_cards(repo)), "먼저 들어온 카드 커밋도 살아 있다"
+
+
+def test_code_race_still_regates(repo):
+    _install(repo)
+    n = control.new_card(repo, "코드경쟁", printer=lambda *a: None)
+    _make_track_commit_with_card(repo, "코드경쟁", n)
+
+    def land_code():
+        _publish_file(repo, "shopping_shorts/zzz.py", "Z = 1\n", "코드 커밋")
+    rc, gate = _finish_with_race(repo, "코드경쟁", land_code)
+    assert rc == 0
+    assert gate.snapshots == 4, "코드가 섞였으면 최신 main 위에서 전체 게이트를 다시 돈다"
+    assert _git(repo, "show", "origin/main:shopping_shorts/zzz.py") == "Z = 1\n"

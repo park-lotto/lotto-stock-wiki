@@ -4,7 +4,7 @@
   "경보": {"warn_gb": 15, "refuse_gb": 3, "_": "track.py finish 와 같은 값"},
   "자동": {"작업이름": "숏템_저장층_정리", "시각": "04:40", "명령": "py tools/storage.py apply --auto", "무활동_일": 3, "_": "Windows 작업 스케줄러. 등록: py tools/storage.py schedule. 무활동_일 3 = 09-30 실측 16개 22GB(7일이면 12개 15.5GB). 다시 손대면 warm 한 줄이라 짧게 잡는다"},
   "임시": {"root": "%LOCALAPPDATA%/Temp", "폴더": ["pytest-of-CH", "claude"], "나이_일": 2, "_": "09-30 실측 pytest-of-CH 3.8GB · claude 2.8GB. finish 게이트마다 pytest 임시가 쌓인다. 다른 Temp 는 건드리지 않는다"},
-  "바탕화면": {"root": "%USERPROFILE%/Desktop", "폴더": ["effect_packs", "컨테이너작업", "ShoppingLens"], "_": "09-30 실측 2.1·2.2·1.2GB, shopping_shorts 코드 참조 0. --desktop 은 사장님 확인 뒤에만(자동 아님). 옮긴 자리엔 정션"},
+  "바탕화면": {"root": "%USERPROFILE%/Desktop", "폴더": ["볼케이노작업"], "_": "09-30 실측: 볼케이노작업 2.2GB(사장님 확인 대기). effect_packs 는 research/effect_packs 로 가는 링크라 research 와 함께 간다. ShoppingLens(1.2GB)는 실행 중인 프로그램 — 옮기지 않는다(09-30 반쯤 옮겨져 되돌린 사고). --desktop 은 사장님 확인 뒤에만(자동 아님). 옮긴 자리엔 정션"},
   "층": [
     {"경로": ".tracks/<트랙> (최근 7일 손댐)", "층": "C·활성 작업대(SSD)", "D": null,
      "기준": "코드·pytest 가 여기서 돈다 — HDD 로 보내면 10배 느리다. C 에 둔다", "방법": "none"},
