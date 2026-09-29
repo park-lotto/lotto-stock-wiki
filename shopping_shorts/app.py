@@ -9360,6 +9360,24 @@ def api_script_translate(request: Request, body: dict):
     return {"ok": True, "lines": out, "cps_en": _ep.speech_cps(lang="en", norm=True)}   # 화면 s2SecOf는 norm 글자를 센다
 
 
+@app.post("/api/script/cta_guess")
+def api_script_cta_guess(body: dict):
+    """2단계 카드 [📢 CTA] 버튼의 처음 상태(2026-09-30 관제 45, 김성현님).
+
+    body: {drafts: [{lines: [...], roles: [...]}]} → {ok, idx: [줄번호|None, ...]}.
+    판단은 edit_plan.guess_cta_index 한 곳 — 화면이 같은 판정을 JS로 또 적지 않게 여기서 묻는다.
+    작업(job)을 건드리지 않는 순수 계산."""
+    from shopping_shorts.edit_plan import guess_cta_index
+    drafts = body.get("drafts") if isinstance(body.get("drafts"), list) else []
+    out = []
+    for d in drafts[:20]:
+        d = d if isinstance(d, dict) else {}
+        lines = [str(x or "") for x in (d.get("lines") or [])][:80]
+        roles = [str(x or "") for x in (d.get("roles") or [])][:80]
+        out.append(guess_cta_index(lines, roles))
+    return {"ok": True, "idx": out}
+
+
 def _lang_voice_block(job, voice):
     """영어모드 작업에 타입캐스트(한국 성우) 성우를 쓰려 하면 422 응답, 아니면 None.
     언어 판정은 script_translate.job_lang 한 곳(2단계에서 영어로 확정한 작업 = given_script가 영어)."""
@@ -9516,7 +9534,15 @@ def _cta_cut_for_job(job):
     if not beats:
         return None, "대본 정보가 없어요"
     # CTA 칸 자체가 없으면 자를 게 없다 — 이건 옛 영상 문제가 아니다.
-    from shopping_shorts.edit_plan import _is_cta
+    from shopping_shorts.edit_plan import _is_cta, apply_cta_mark
+    # ★CTA 표시가 생기기 전 작업(2026-09-30 관제 45)은 **사본**에 같은 판정(apply_cta_mark)을 얹어 본다 —
+    #   '마무리'·'댓글유도' 칸이라 못 자르던 옛 작업(김성현님 3b4111969ac4 등)도 음성 파일이 남아 있으면 자른다.
+    #   DB의 edit_plan은 건드리지 않는다(읽기 전용 계산).
+    if not any("cta_mark" in b for b in beats):
+        import copy as _copy
+        plan = _copy.deepcopy(plan)
+        beats = plan.get("beats") or []
+        apply_cta_mark(beats, job.get("given_script"), job.get("script_structure"))
     if not any(_is_cta(b) for b in beats):
         return None, "이 대본엔 CTA 칸이 없어요 — 잘라낼 뒷부분이 없습니다"
     # ② 옛 job 폴백: TTS mp3가 남아 있으면 그때 계산한다.
