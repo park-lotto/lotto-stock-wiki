@@ -132,3 +132,20 @@ def test_keep_cuts는_컷을_안줄이고_구절맞춤_홀드를_끈다():
     assert [len(b.get("alternates") or []) for b in old["beats"]] == [0, 0, 1]
     assert all(b["phrase_sync"] is True for b in old["beats"])
     assert [b["cut_rhythm"]["hold"] for b in old["beats"]] == [True, True, False]
+
+
+def test_keep_cuts면_상속편성이_옆컷을_이어붙이지_않는다():
+    """장면-먼저는 칸 길이·컷 수를 2단계가 정했다 — 상속의 이어붙이기(컷당 2.2초만 셈)·채우기가 컷을 더하면 안 된다
+    (실측 job sfe8a8b848fd: 넘긴 컷 11개에 6개가 덧붙었다)."""
+    from shopping_shorts import edit_plan as EP
+    src = [{"video_id": "s0", "segments": [
+        {"seg_id": "s0-%d" % i, "start": float(i * 3), "end": float(i * 3 + 3), "text": "말", "scene_desc": "화면%d" % i,
+         "shot_role": "사용중"} for i in range(10)]}]
+    script = "이건 바로 열수축 필름이라는 거\n이게 말도 안 되는게 드라이기 열만으로 신발에 착 붙는다는 거"
+    srcs = [{"role": "공개", "seg": "s0-2", "segs": ["s0-2"]}, {"role": "고조1", "seg": "s0-5", "segs": ["s0-5", "s0-7"]}]
+    keep = EP.build_inherit_plan(src, script, srcs, keep_cuts=True)
+    ids = [[b["primary"]["seg_id"]] + [a["seg_id"] for a in b.get("alternates") or []] for b in keep["beats"]]
+    assert ids == [["s0-2"], ["s0-5", "s0-7"]]
+    old = EP.build_inherit_plan(src, script, srcs)                        # 종전(회귀 0): 대사가 길면 이어 붙인다
+    old_ids = [[b["primary"]["seg_id"]] + [a["seg_id"] for a in b.get("alternates") or []] for b in old["beats"]]
+    assert sum(len(x) for x in old_ids) > 3

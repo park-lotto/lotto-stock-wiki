@@ -1676,8 +1676,9 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     _ss = script_structure if isinstance(script_structure, dict) else {}
     if (given_script or "").strip() and _ss.get("inherit_scenes") and _ss.get("beat_sources"):
         from shopping_shorts.edit_plan import build_inherit_plan
+        _keep = bool(_ss.get("scene_cut"))      # 장면-먼저 대본: 칸 길이·컷 수는 2단계가 정했다(scene_first_script)
         plan = build_inherit_plan(source_scripts, given_script, _ss.get("beat_sources"),
-                                  structure=structure, video_type=video_type)
+                                  structure=structure, video_type=video_type, keep_cuts=_keep)
         print("[mix] 3단계 상속: %s" % ("비트 %d개(출처 %d줄)" % (
             len(plan["beats"]), sum(1 for b in plan["beats"] if b.get("inherited")))
             if plan else "이을 수 없어 옛 경로로"), file=sys.stderr)
@@ -1686,7 +1687,6 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         #   붙인 4~7개 조각이 1초씩 돌아가며 나오던 것(실측 job 3abb02f8fd8f: 비트당 조각 중앙 4, 컷 34개/37초)의 뿌리.
         #   모자란 화면은 렌더가 지목 컷을 원본에서 이어 튼다(원본은 연속 촬영). 미리보기(scene_play.js)와
         #   렌더가 같은 조각 목록을 보므로 둘이 같이 조용해진다.
-        _keep = bool(_ss.get("scene_cut"))      # 장면-먼저 대본: 컷 수는 2단계가 정했다(scene_first_script)
         if plan and (_keep or _cut_rhythm_on(store, {"customer_id": customer_id})):
             _n = _trim_for_cut_rhythm(plan, keep_cuts=_keep)
             print("[mix] 컷 리듬: 비트 %d개 조각을 줄임(홀드 1·나머지 2)" % _n, file=sys.stderr)
@@ -1862,7 +1862,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
     # 틈을 렌더가 프리즈/슬로우로 때워왔다(두더지잡기의 뿌리). 실 tts_dur보다 화면이 짧은
     # 비트만 같은 소스 우선 B롤로 더 채운다 → 렌더가 정지 대신 실영상으로 채운다.
-    _rhythm = _cut_rhythm_on(store, {"customer_id": customer_id})
+    # 장면-먼저 대본(script_structure.scene_cut)도 재채우기·콘폼을 건너뛴다 — 칸 길이·컷·대사는 2단계가 정했다
+    _rhythm = _cut_rhythm_on(store, {"customer_id": customer_id}) or bool(_ss.get("scene_cut"))
     if _rhythm:
         print("[mix] 컷 리듬: 재채우기·콘폼 건너뜀 — 줄=칸=지목컷, 화면은 원본을 이어 튼다", file=sys.stderr)
     else:

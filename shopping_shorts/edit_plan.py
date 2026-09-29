@@ -4327,7 +4327,8 @@ def _extend_refs_to_narration(refs, narration, by_video, used, slack=0.3, max_re
     return refs
 
 
-def build_inherit_plan(source_scripts, given_script, beat_sources, structure="template", video_type=None):
+def build_inherit_plan(source_scripts, given_script, beat_sources, structure="template", video_type=None,
+                       keep_cuts=False):
     """3단계 '붙어 온 장면 그대로 쓰기'(2026-09-04, 설계 §3-5·§9 — 사장님 "3단계는 상속만").
 
     2단계가 줄마다 남긴 출처 장면(beat_sources[i] = {role, seg, segs})을 **줄 = 비트**로 그대로 잇는다.
@@ -4466,11 +4467,15 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
     #   1차 루프 안에서 하면 앞 줄이 뒤 줄의 b-roll 후보(훅·CTA의 '완성' 결 컷)를 먼저 먹는다
     #   (test_훅과_CTA의_b_roll: demo가 s0-3·s0-5까지 가져가 CTA가 s0-1로 밀렸다).
     #   지정 컷·b-roll이 전부 used에 들어간 다음에 남은 컷으로만 이어 붙인다.
-    for b in beats:
-        refs = [b["primary"]] + list(b.get("alternates") or [])
-        refs = _extend_refs_to_narration(refs, b["narration"], by_video, used)
-        b["primary"], b["alternates"] = refs[0], refs[1:]
-    beats = _fill_beat_screen_time(beats, seg_map)
+    # ★keep_cuts(장면-먼저 대본, script_structure.scene_cut): 칸 길이·컷 수는 2단계(scene_first_script.make_drafts)가
+    #   "가장 짧은 컷 × 컷 수 ≥ 칸 초 ≥ 대사"로 이미 정했다 — 여기서 옆 컷을 이어 붙이거나 채우면 같은 판단을 두 번 한다
+    #   (실측 job sfe8a8b848fd: 넘긴 컷 11개에 6개가 덧붙었다 — 컷 하나를 2.2초까지만 치는 규칙 때문).
+    if not keep_cuts:
+        for b in beats:
+            refs = [b["primary"]] + list(b.get("alternates") or [])
+            refs = _extend_refs_to_narration(refs, b["narration"], by_video, used)
+            b["primary"], b["alternates"] = refs[0], refs[1:]
+        beats = _fill_beat_screen_time(beats, seg_map)
     return {"structure": structure, "beats": beats, "plagiarism_flags": [],
             "detected_type": _normalize_video_type(video_type), "affiliate_target": "",
             "generator": "inherit"}
