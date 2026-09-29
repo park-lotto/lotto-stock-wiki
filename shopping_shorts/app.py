@@ -9357,7 +9357,7 @@ def api_script_translate(request: Request, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
     # 화면이 "몇 초"를 영어 계수로 말하게 같이 준다(2026-09-29 사장님 "영어는 두 배가 되네" — 한국어 계수로 나눈 표시).
     from shopping_shorts import edit_plan as _ep
-    return {"ok": True, "lines": out, "cps_en": _ep.speech_cps(lang="en")}
+    return {"ok": True, "lines": out, "cps_en": _ep.speech_cps(lang="en", norm=True)}   # 화면 s2SecOf는 norm 글자를 센다
 
 
 def _lang_voice_block(job, voice):

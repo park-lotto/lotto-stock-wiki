@@ -1617,13 +1617,17 @@ def _speech_speed():
 # 영어 글자→초(자/초, 공백·문장부호 제외). 라이브 실측 2026-09-29(관제 029 영어모드, 일레븐 eleven_v3 speed 1.0,
 # 사장님 job 3건 25비트: norm 969자 / 65.2초 = 14.85, 비트별 13.3~17.7). 한국어 표시 계수(5.7×1.30=7.41)의
 # 정확히 2배라, 영어 대본을 한국어 계수로 나누면 "예상 초"가 두 배로 떴다(사장님 제보 "영어는 두 배가 되네").
-_EN_CHARS_PER_SEC = 14.9
+_EN_CHARS_PER_SEC = 14.9        # 공백·문장부호 **제외**(norm) — 화면 "몇 초"(s2SecOf가 norm 글자를 센다)용
+_EN_RAW_CHARS_PER_SEC = 18.0    # 공백 **포함**(raw) — narr_secs(len(text))용. 같은 실측 65.2초: raw 1176자 = 18.04
+#   ★두 값은 같은 실측의 두 기준이다(raw/norm = 1.21). 한국어는 계수 하나(7.41)를 raw 기준 narr_secs 와 norm 기준 화면이
+#   같이 써서 화면이 1.33배 후하게 나오는데(종전 동작, 여기서 안 건드린다), 영어는 사장님 제보가 "표시"라 정확히 가른다.
 
 
-def speech_cps(text=None, lang=None):
-    """글자→초 환산계수(자/초)의 **단일 출처** — 화면 표시(script_gate·2단계 카드)와 계획(narr_secs)이 같은 값을 쓴다.
+def speech_cps(text=None, lang=None, norm=False):
+    """글자→초 환산계수(자/초)의 **단일 출처** — 화면 표시(script_gate·2단계 카드)와 계획(narr_secs)이 여기서 받는다.
 
-    lang="ko" → _SYLLABLES_PER_SEC × _speech_speed() (종전 값 그대로) · lang="en" → _EN_CHARS_PER_SEC.
+    lang="ko" → _SYLLABLES_PER_SEC × _speech_speed() (종전 값 그대로, norm 무시)
+    lang="en" → norm=True(공백·문장부호 제외 글자수로 나눌 때) _EN_CHARS_PER_SEC · norm=False(len(text)) _EN_RAW_CHARS_PER_SEC
     lang이 없으면 text로 판정한다(script_translate.is_english_sentence: 영어 단어 3개 이상·한글 0)."""
     if lang is None and text:
         try:
@@ -1632,7 +1636,7 @@ def speech_cps(text=None, lang=None):
         except Exception:      # noqa: BLE001 — 판정 실패는 종전(한국어) 동작
             lang = "ko"
     if lang == "en":
-        return float(_EN_CHARS_PER_SEC)
+        return float(_EN_CHARS_PER_SEC if norm else _EN_RAW_CHARS_PER_SEC)
     return _SYLLABLES_PER_SEC * _speech_speed()
 
 

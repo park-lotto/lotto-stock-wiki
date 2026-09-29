@@ -103,7 +103,7 @@ def test_api_script_translate_returns_same_count(client):
     assert r.json()["lines"] == EN
     # 화면 "예상 초"가 영어 계수로 계산되게 같이 준다(한국어 계수로 나누면 두 배 — 2026-09-29 사장님 제보)
     from shopping_shorts import edit_plan
-    assert r.json()["cps_en"] == edit_plan.speech_cps(lang="en") > edit_plan.speech_cps(lang="ko") * 1.5
+    assert r.json()["cps_en"] == edit_plan.speech_cps(lang="en", norm=True) > edit_plan.speech_cps(lang="ko") * 1.5
 
 
 def test_api_script_translate_rejects_empty(client):
