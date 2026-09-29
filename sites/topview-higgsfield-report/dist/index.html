@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="TopView AI와 Higgsfield AI의 기능, 가격, 사용자 평가, 쇼핑쇼츠 활용 방안을 비교한 실무 보고서">
+  <title>TopView vs Higgsfield — 쇼핑쇼츠 실무 비교</title>
+  <style>
+    :root{
+      --bg:#07111f;--panel:#0d1a2b;--panel2:#11233a;--line:#243954;--text:#f3f7fb;
+      --muted:#9db0c6;--top:#41d9c4;--higgs:#ffb257;--accent:#75a7ff;--good:#62e6a7;
+      --warn:#ffd06a;--bad:#ff7d86;--shadow:0 24px 70px rgba(0,0,0,.32)
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth}
+    body{margin:0;background:radial-gradient(circle at 15% -10%,#14375a 0,transparent 34%),var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif}
+    a{color:#9fc1ff} button{font:inherit}
+    .shell{max-width:1180px;margin:auto;padding:28px 22px 72px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:32px}
+    .brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.02em}
+    .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--top),var(--accent) 55%,var(--higgs));box-shadow:0 8px 24px rgba(65,217,196,.24)}
+    .actions{display:flex;gap:8px}.btn{border:1px solid var(--line);background:#102038;color:var(--text);padding:9px 13px;border-radius:10px;cursor:pointer}.btn:hover{border-color:#57779d}
+    .hero{display:grid;grid-template-columns:1.3fr .7fr;gap:24px;align-items:stretch}
+    .hero-main,.verdict{border:1px solid var(--line);border-radius:24px;background:linear-gradient(160deg,rgba(17,35,58,.96),rgba(9,22,37,.96));box-shadow:var(--shadow)}
+    .hero-main{padding:34px}.eyebrow{color:var(--accent);font-weight:800;font-size:.84rem;letter-spacing:.1em;text-transform:uppercase}
+    h1{font-size:clamp(2.15rem,5vw,4.35rem);line-height:1.02;letter-spacing:-.055em;margin:12px 0 18px}
+    .vs{color:var(--muted);font-weight:500}.lead{font-size:1.1rem;color:#c5d3e2;max-width:760px;margin:0}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}.chip{border:1px solid var(--line);border-radius:999px;padding:6px 11px;color:#bfd0e1;background:rgba(4,12,22,.45);font-size:.88rem}
+    .verdict{padding:26px;display:flex;flex-direction:column;justify-content:space-between}.verdict h2{font-size:1rem;color:var(--muted);margin:0 0 16px}.pick{font-size:1.55rem;font-weight:850;line-height:1.35;letter-spacing:-.03em}.pick strong{color:var(--top)}
+    .stack{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);color:#c9d5e2}.stack b{color:var(--higgs)}
+    .nav{position:sticky;top:10px;z-index:10;display:flex;gap:8px;overflow:auto;margin:26px 0;padding:8px;background:rgba(7,17,31,.82);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:15px}
+    .nav button{white-space:nowrap;border:0;background:transparent;color:var(--muted);padding:9px 13px;border-radius:9px;cursor:pointer}.nav button:hover,.nav button.active{background:#17304e;color:#fff}
+    section{scroll-margin-top:90px;margin-top:46px}.section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:18px}.section-head h2{font-size:1.75rem;letter-spacing:-.035em;margin:0}.section-head p{margin:0;color:var(--muted);max-width:600px}
+    .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}.card.top{border-top:3px solid var(--top)}.card.higgs{border-top:3px solid var(--higgs)}
+    .card h3{margin:0 0 8px;font-size:1.25rem}.card p{color:#c0cede;margin:0}.tag{display:inline-block;font-size:.78rem;font-weight:800;padding:4px 8px;border-radius:7px;margin-bottom:12px}.tag.top{color:#05241f;background:var(--top)}.tag.higgs{color:#2d1900;background:var(--higgs)}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:var(--panel)}table{width:100%;border-collapse:collapse;min-width:760px}th,td{text-align:left;padding:15px 17px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:#aac0d7;background:#102139}td:first-child{font-weight:750;color:#dbe7f2}tr:last-child td{border-bottom:0}.top-txt{color:var(--top);font-weight:800}.higgs-txt{color:var(--higgs);font-weight:800}
+    .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.price{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:21px;overflow:hidden}.price:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--brand-color)}.price small{color:var(--muted)}.price h3{margin:4px 0 2px}.amount{font-size:1.7rem;font-weight:850;letter-spacing:-.04em}.won{color:var(--muted);font-size:.87rem}.credits{margin-top:13px;padding-top:12px;border-top:1px solid var(--line);color:#c6d4e2}
+    .review-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.review{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}.meter{height:7px;background:#182a40;border-radius:99px;overflow:hidden;margin:15px 0}.meter span{display:block;height:100%;border-radius:99px}.pros,.cons{padding:0;margin:14px 0 0;list-style:none}.pros li,.cons li{padding:7px 0 7px 25px;position:relative}.pros li:before,.cons li:before{position:absolute;left:0;font-weight:900}.pros li:before{content:"+";color:var(--good)}.cons li:before{content:"−";color:var(--bad)}
+    .workflow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.step{background:linear-gradient(150deg,#10223a,#0b1828);border:1px solid var(--line);border-radius:18px;padding:22px}.num{font-size:.75rem;color:var(--muted);font-weight:800;letter-spacing:.12em}.step h3{margin:8px 0}.arrow{color:var(--accent);font-size:1.4rem}
+    .use-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.use{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}.use h3{margin:0 0 10px}.use ul{margin:0;padding-left:20px;color:#c4d2e0}
+    .decision{background:linear-gradient(135deg,rgba(65,217,196,.12),rgba(117,167,255,.1) 52%,rgba(255,178,87,.12));border:1px solid #395b76;border-radius:24px;padding:28px}.decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.decision h2{margin-top:0}.cost{font-size:2rem;font-weight:900;letter-spacing:-.04em}.muted{color:var(--muted)}
+    .sources{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.source{display:block;text-decoration:none;background:#0b1828;border:1px solid var(--line);border-radius:12px;padding:12px 14px}.source:hover{border-color:var(--accent)}.source span{display:block;color:var(--muted);font-size:.82rem}
+    footer{margin-top:48px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:.88rem}
+    @media(max-width:850px){.hero,.decision-grid{grid-template-columns:1fr}.price-grid,.workflow{grid-template-columns:1fr}.cards,.review-grid,.use-grid,.sources{grid-template-columns:1fr}.section-head{display:block}.section-head p{margin-top:5px}.shell{padding:18px 14px 50px}.hero-main{padding:25px}.topbar{align-items:flex-start}.brand{max-width:210px}}
+    @media print{body{background:#fff;color:#111}.shell{max-width:none;padding:0}.topbar,.nav,.actions{display:none}.hero-main,.verdict,.card,.price,.review,.step,.use,.decision,.table-wrap,.source{box-shadow:none;background:#fff;color:#111;border-color:#ccc;break-inside:avoid}.lead,.card p,.muted,.won,.credits,.pros,.cons,.use ul,.source span,footer{color:#444}.table-wrap{overflow:visible}section{margin-top:28px}a{color:#164e8a}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="mark" aria-hidden="true"></span> AI 영상 도구 실무 비교</div>
+      <div class="actions"><button class="btn" onclick="window.print()">인쇄 · PDF 저장</button></div>
+    </header>
+
+    <div class="hero">
+      <div class="hero-main">
+        <div class="eyebrow">Shopping Shorts Decision Brief · 2026.09.29</div>
+        <h1>TopView <span class="vs">vs</span><br>Higgsfield</h1>
+        <p class="lead">상품 광고를 빨리 많이 만들 것인가, 눈에 걸리는 고급 장면을 만들 것인가. 기능·가격·사용자 반응을 쇼핑쇼츠 제작 관점에서 비교했습니다.</p>
+        <div class="chips"><span class="chip">기능 비교</span><span class="chip">현재 요금</span><span class="chip">사용자 평가</span><span class="chip">우리 활용안</span></div>
+      </div>
+      <aside class="verdict">
+        <div><h2>한 줄 결론</h2><div class="pick">하나만 고르면<br><strong>TopView부터</strong></div></div>
+        <div class="stack">최적 조합은 <b>TopView로 광고 초안</b> → Higgsfield로 핵심 장면 → 현재 제작소에서 최종 편집</div>
+      </aside>
+    </div>
+
+    <nav class="nav" aria-label="보고서 목차">
+      <button data-target="summary" class="active">핵심 비교</button><button data-target="pricing">가격</button><button data-target="reviews">사용자 평가</button><button data-target="use">활용 방안</button><button data-target="decision">추천안</button><button data-target="sources">출처</button>
+    </nav>
+
+    <section id="summary">
+      <div class="section-head"><h2>서로 잘하는 일이 다릅니다</h2><p>TopView는 완성형 광고 자동화, Higgsfield는 고급 생성과 연출에 초점이 맞춰져 있습니다.</p></div>
+      <div class="cards">
+        <article class="card top"><span class="tag top">TOPVIEW</span><h3>상품을 광고로 바꾸는 도구</h3><p>상품 URL을 넣으면 이미지·가격·판매 포인트를 읽어 대본, 아바타, 음성, 자막, 음악, CTA까지 광고 형태로 조립합니다.</p></article>
+        <article class="card higgs"><span class="tag higgs">HIGGSFIELD</span><h3>장면을 정교하게 생성하는 도구</h3><p>Kling·Veo·Seedance 등 여러 모델과 Soul ID, Cinema Studio를 묶어 인물 일관성과 카메라·렌즈·조명을 제어합니다.</p></article>
+      </div>
+      <div class="table-wrap" style="margin-top:16px">
+        <table>
+          <thead><tr><th>비교 항목</th><th>TopView</th><th>Higgsfield</th><th>판정</th></tr></thead>
+          <tbody>
+            <tr><td>상품 URL → 광고</td><td>핵심 기능. Amazon·Shopify·AliExpress 지원</td><td>Marketing Studio에서 지원</td><td class="top-txt">TopView 우세</td></tr>
+            <tr><td>UGC·AI 아바타</td><td>짧은 상품 리뷰 광고에 최적화</td><td>Soul ID와 LipSync로 정교하게 구성</td><td>속도는 TopView<br>일관성은 Higgsfield</td></tr>
+            <tr><td>고급 영상 생성</td><td>광고 템플릿과 자동 조립 중심</td><td>Kling 3.0·Veo 3.1·Seedance·Sora·WAN 등</td><td class="higgs-txt">Higgsfield 우세</td></tr>
+            <tr><td>카메라·연출</td><td>광고 구조·후킹·CTA 중심</td><td>렌즈·초점·조명·색감·카메라 무빙 제어</td><td class="higgs-txt">Higgsfield 우세</td></tr>
+            <tr><td>대량 A/B 광고</td><td>스크립트·얼굴·후킹 변형에 적합</td><td>가능하지만 크레딧과 수동 설정 부담</td><td class="top-txt">TopView 우세</td></tr>
+            <tr><td>자동화</td><td>API·MCP 지원. 무제한 모델은 자동화 제외</td><td>API·MCP·CLI. 기능별 크레딧·제약 확인 필요</td><td>둘 다 조건부</td></tr>
+            <tr><td>우리 역할</td><td>광고 초안·UGC 원본 공급</td><td>히어로샷·고급 B-roll 공급</td><td>현재 제작소의 부품</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <div class="section-head"><h2>가격과 실제 사용량</h2><p>환산은 1달러≈1,350원, 세금·카드 수수료 제외입니다. 프로모션과 크레딧 단가는 수시로 바뀝니다.</p></div>
+      <h3 class="top-txt">TopView</h3>
+      <div class="price-grid">
+        <article class="price" style="--brand-color:var(--top)"><small>가벼운 실무 테스트</small><h3>Pro</h3><div class="amount">$29 <span class="won">약 3.9만원/월</span></div><div class="credits">연 결제 $192 · 연 960크레딧</div></article>
+        <article class="price" style="--brand-color:var(--top)"><small>광고 대량 생산</small><h3>Business</h3><div class="amount">$75 <span class="won">약 10.1만원/월</span></div><div class="credits">연 결제 $528 · 연 3,000크레딧</div></article>
+        <article class="price" style="--brand-color:var(--top)"><small>고용량 생성</small><h3>Ultra</h3><div class="amount">$150 <span class="won">약 20.3만원/월</span></div><div class="credits">연 약 $600 · 매월 500크레딧</div></article>
+      </div>
+      <div class="card" style="margin-top:14px"><b>TopView 대표 차감량</b><br><span class="muted">15초 표준 바이럴 광고 5크레딧 · 15초 고화질 7.5 · 25초 표준 10 · Avatar 4 Fast 초당 0.06 · 이미지/텍스트→영상 2.5~20</span></div>
+
+      <h3 class="higgs-txt" style="margin-top:30px">Higgsfield</h3>
+      <div class="price-grid">
+        <article class="price" style="--brand-color:var(--higgs)"><small>적합성 확인</small><h3>Starter</h3><div class="amount">$15 <span class="won">약 2만원/월</span></div><div class="credits">월 200크레딧</div></article>
+        <article class="price" style="--brand-color:var(--higgs)"><small>실제 영상 제작</small><h3>Plus</h3><div class="amount">$49 <span class="won">약 6.6만원/월</span></div><div class="credits">연 결제 환산 $39 · 월 1,000크레딧</div></article>
+        <article class="price" style="--brand-color:var(--higgs)"><small>고급 프로젝트</small><h3>Ultra</h3><div class="amount">$129 <span class="won">약 17.4만원/월</span></div><div class="credits">연 결제 환산 $99 · 월 3,000크레딧</div></article>
+      </div>
+      <div class="card" style="margin-top:14px"><b>비용 함정</b><br><span class="muted">모델·길이·해상도·오디오와 재시도 횟수가 모두 비용에 영향을 줍니다. 공식 9월 사례의 Kling 3.0 8초 1080p는 20크레딧이지만, 쓸 만한 결과까지 3~5회 재생성하면 실제 비용은 몇 배가 됩니다.</span></div>
+    </section>
+
+    <section id="reviews">
+      <div class="section-head"><h2>사용자들은 이렇게 평가했습니다</h2><p>공식 홍보가 아니라 G2·Product Hunt·Reddit에서 반복된 패턴입니다. 후기 수와 이해관계도 함께 봐야 합니다.</p></div>
+      <div class="review-grid">
+        <article class="review"><span class="tag top">TOPVIEW</span><h3>빠른 제작과 대량 생산에 호평</h3><div class="meter"><span style="width:78%;background:var(--top)"></span></div><div class="muted">G2 4.8/5이지만 6개 리뷰뿐이라 신뢰도는 아직 제한적</div><ul class="pros"><li>직접 촬영 없이 아바타 광고를 빠르게 제작</li><li>TikTok Shop 콘텐츠를 대량으로 만들기 편함</li><li>대본·음성·편집을 한 화면에서 처리</li></ul><ul class="cons"><li>대본과 말하는 속도를 여러 번 조정해야 함</li><li>제품 색상·형태·포장이 바뀌는지 검수 필요</li><li>공개 독립 후기 표본이 아직 작음</li></ul></article>
+        <article class="review"><span class="tag higgs">HIGGSFIELD</span><h3>품질은 강력하지만 비용·UI 불만</h3><div class="meter"><span style="width:66%;background:var(--higgs)"></span></div><div class="muted">결과물 품질 호평과 크레딧·환불·무제한 정책 불만이 동시에 큼</div><ul class="pros"><li>최신 모델을 계정 하나에서 비교 가능</li><li>사진·제품 장면의 사실감과 인물 일관성</li><li>카메라·렌즈·조명 제어가 구체적</li></ul><ul class="cons"><li>재생성할 때마다 크레딧이 빠르게 소진</li><li>무제한 범위와 모델별 비용이 복잡함</li><li>자동 갱신·환불·지원 응답 불만이 반복됨</li></ul></article>
+      </div>
+    </section>
+
+    <section id="use">
+      <div class="section-head"><h2>우리 제작소에서 쓸 수 있는 것</h2><p>둘 중 하나로 전체 제작 시스템을 교체하기보다, 필요한 결과물만 공급받는 방식이 안전합니다.</p></div>
+      <div class="use-grid">
+        <article class="use"><h3 class="top-txt">TopView 활용</h3><ul><li>상품 URL에서 광고 대본·스토리보드 초안 생성</li><li>후킹 문구 5~10개 A/B 버전 제작</li><li>직접 출연 없는 한국어 UGC 리뷰 아바타</li><li>인기 광고의 구조를 상품용으로 재구성</li><li>영어·스페인어 등 해외 판매용 버전</li><li>제품 입고 전 테스트 광고 제작</li></ul></article>
+        <article class="use"><h3 class="higgs-txt">Higgsfield 활용</h3><ul><li>평범한 상품 사진을 고급 광고 장면으로 변환</li><li>회전·분해·매크로 제품 히어로샷</li><li>실제 촬영하기 어려운 사용 장면</li><li>동일 모델이 이어지는 UGC 광고</li><li>오비트·돌리인 등 카메라 무빙</li><li>첫 2초 후킹 또는 마지막 제품 강조 장면</li></ul></article>
+      </div>
+      <div class="workflow" style="margin-top:16px">
+        <article class="step"><div class="num">STEP 01</div><h3>TopView</h3><p class="muted">상품 링크에서 대본·UGC·광고 변형 생성</p><div class="arrow">→</div></article>
+        <article class="step"><div class="num">STEP 02</div><h3>Higgsfield</h3><p class="muted">눈에 띄어야 하는 핵심 장면 2~3개만 생성</p><div class="arrow">→</div></article>
+        <article class="step"><div class="num">STEP 03</div><h3>현재 제작소</h3><p class="muted">소스 검수·자막·대본·장면 조립·최종 렌더</p></article>
+      </div>
+    </section>
+
+    <section id="decision">
+      <div class="decision">
+        <div class="decision-grid">
+          <div><h2>추천 결제 순서</h2><ol><li><b>TopView Pro 월 결제</b>로 상품 3개 테스트</li><li><b>Higgsfield Starter</b>로 히어로샷·인물·카메라 무빙 확인</li><li>실제 결과가 좋을 때만 Higgsfield Plus로 확대</li><li>연간 결제는 상품 10개 이상 만든 뒤 결정</li></ol></div>
+          <div><div class="muted">초기 월 실험비</div><div class="cost">약 5.9만~10.5만원</div><p>TopView Pro $29 + Higgsfield Starter $15 또는 Plus $49 조합. 하나만 선택하면 TopView Pro부터 시작합니다.</p><p class="muted">판단 지표: 제작시간 · usable 결과 비율 · 상품 왜곡률 · 클릭률 · 건당 실제 크레딧</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="section-head"><h2>확인한 출처</h2><p>가격과 정책은 변경될 수 있으므로 실제 결제 직전에 공식 페이지를 다시 확인해야 합니다.</p></div>
+      <div class="sources">
+        <a class="source" href="https://www.topview.ai/pricing" target="_blank" rel="noopener"><b>TopView 공식 가격표</b><span>요금제·크레딧·무제한 조건</span></a>
+        <a class="source" href="https://www.topview.ai/guides/credits-consumption" target="_blank" rel="noopener"><b>TopView 크레딧 안내</b><span>기능별 차감량</span></a>
+        <a class="source" href="https://www.topview.ai/use-cases/ecommerce" target="_blank" rel="noopener"><b>TopView 전자상거래 기능</b><span>상품 URL·UGC·다국어·상업 이용</span></a>
+        <a class="source" href="https://www.g2.com/sellers/topview-a328b6ec-7d90-4295-a968-ce40f8f53e36" target="_blank" rel="noopener"><b>G2 TopView 후기</b><span>평점과 검증 사용자 의견</span></a>
+        <a class="source" href="https://higgsfield.ai/creator-hub/help-center/plans/how-do-higgsfield-plans-work" target="_blank" rel="noopener"><b>Higgsfield 요금제 안내</b><span>크레딧·이월·환불 정책</span></a>
+        <a class="source" href="https://higgsfield.ai/blog/credits-vs-unlimited-ai-video-generation" target="_blank" rel="noopener"><b>Higgsfield 크레딧과 무제한</b><span>2026년 9월 요금·사용 조건</span></a>
+        <a class="source" href="https://www.reddit.com/r/Higgsfield_AI/comments/1syf8zq/my_2_month_review_of_higgsfield_incredible_models/" target="_blank" rel="noopener"><b>Higgsfield 장기 사용 후기</b><span>품질·모바일·UI·크레딧 평가</span></a>
+        <a class="source" href="https://www.reddit.com/r/generativeAI/comments/1u3183z/is_higgsfield_actually_legit_now_looking_to_sign/" target="_blank" rel="noopener"><b>Higgsfield 최근 사용자 논쟁</b><span>현재 결제 시스템과 과거 불만 비교</span></a>
+      </div>
+    </section>
+
+    <footer>조사 기준일 2026년 9월 29일 · 원화 금액은 환율 1달러≈1,350원 단순 환산 · 실제 결제액은 세금과 카드 환율에 따라 달라질 수 있습니다.</footer>
+  </main>
+  <script>
+    const buttons=[...document.querySelectorAll('.nav button')];
+    buttons.forEach(button=>button.addEventListener('click',()=>{
+      document.getElementById(button.dataset.target).scrollIntoView({behavior:'smooth'});
+    }));
+    const sections=[...document.querySelectorAll('main section[id]')];
+    const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{
+      if(entry.isIntersecting){buttons.forEach(b=>b.classList.toggle('active',b.dataset.target===entry.target.id));}
+    }),{rootMargin:'-25% 0px -65% 0px'});
+    sections.forEach(section=>observer.observe(section));
+  </script>
+</body>
+</html>
