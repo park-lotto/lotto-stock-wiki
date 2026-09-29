@@ -39,15 +39,18 @@
 
 ## 저장 층(C/D) — 카드 023
 
-지도 `storage.json`(경로 → 층 → D 목적지 → 기준 → 방법). 판단 주인 `tools/storage.py:plan`.
+SSD(C)에는 **코드가 도는 것만**(활성 트랙·DB·병합 임시), 나머지는 외장 HDD(D:\숏템). 지도 `storage.json`, 판단 주인 `tools/storage.py:plan`.
+실측: D 는 큰 파일 124MB/s 지만 작은 파일은 C 의 1/10 속도 — 그래서 7일 안 손댄 트랙은 C 에 둔다.
 
 ```
-py tools/storage.py status                       # C/D 여유·소비 상위·경보선(15/3GB)
-py tools/storage.py plan                         # 지금 D 로 보낼 수 있는 것 + GB (실행 없음)
-py tools/storage.py apply --tracks --stages      # 7일+ 무활동·미커밋 0 트랙 → D bundle + 주차 / 끊긴 병합 잔해 삭제
-py tools/storage.py apply --research             # research/ → D, C 에는 정션
+py tools/storage.py status                 # C/D 여유·죽은 정션·D 에 있는 트랙·소비 상위
+py tools/storage.py plan                   # 지금 D 로 보낼 것 + GB (실행 없음)
+py tools/storage.py apply --auto           # 7일+ 트랙 → D(폴더 이동 + C 정션) · 끊긴 병합 잔해 삭제 · out/ 30일+ → D
+py tools/storage.py apply --research       # research/ → D, C 에는 정션
+py tools/storage.py warm <트랙>            # D 에 있는 트랙을 C 로 되돌린다(다시 일할 때 — 느리면 이걸)
+py tools/storage.py schedule               # 작업 스케줄러에 매일 04:40 --auto 등록
 ```
-`apply` 는 D:\숏템 과 `_저장규칙.txt` 가 보일 때만 돈다. 되살리기: `git worktree add .tracks/<트랙> track/<트랙>`.
+`apply` 는 D:\숏템 과 `_저장규칙.txt` 가 보일 때만 돈다. D 를 뽑으면 정션이 죽는다 — `status` 가 빨강으로 알린다.
 
 ## 아직 없는 것 (카드로 등록됨)
 
