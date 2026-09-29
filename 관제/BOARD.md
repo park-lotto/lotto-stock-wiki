@@ -36,7 +36,7 @@
 |---|---|---|---|---|---|---|
 | [026](cards/026-TopView_Higgsfield_비교_HT.md) | TopView Higgsfield 비교 HTML | topview-higgsfield-html | - | Codex:HTML 보고서 제작 | 비교 HTML 작성·검증·배포 | 2026-09-29 11:58 분배 → topview-higgsfield-html |
 | [027](cards/027-Higgsfield_API_내부_시험_생성.md) | Higgsfield API 내부 시험 생성 | higgsfield-api-pilot | - | Codex | 관리자 전용 이미지→영상 시험 화면, 서버측 API 키, 예상 포인트, 성공 차감·실패 환불, 테스트 통과 | 2026-09-29 13:31 관리자 전용 시험실·암호화 키 연결·5초 Seedance 생성·결과 보관 구현 |
-| [028](cards/028-신규_회원_시작_안내_공개_페이지_start.md) | 신규 회원 시작 안내 공개 페이지 /start_guide.html | 시작안내페이지 | **필요** | shopping_shorts/app.py:_AUTH_ALLOW | 비로그인 curl 200, 링크 클릭 동작, 라이브 주소를 사장님이 카톡 전송 | 2026-09-29 13:46 분배 → 시작안내페이지 |
+| [028](cards/028-신규_회원_시작_안내_공개_페이지_start.md) | 신규 회원 시작 안내 공개 페이지 /start_guide.html | 시작안내페이지 | 2026-09-29 13:46 · 사장님 구두 2026-09-29 '서버에 있어야 계속 쓸 수 있는 거 아닌가' | shopping_shorts/app.py:_AUTH_ALLOW | 비로그인 curl 200, 링크 클릭 동작, 라이브 주소를 사장님이 카톡 전송 | 2026-09-29 13:46 승인: 사장님 구두 2026-09-29 '서버에 있어야 계속 쓸 수 있는 거  |
 
 ## 병합 (2)
 
