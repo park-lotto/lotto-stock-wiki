@@ -128,3 +128,34 @@ def test_dispatch_busy(fake_track, monkeypatch):
 
 def test_dispatch_missing_track(fake_track):
     assert dispatch.main(["없는트랙", "x"]) == 1
+
+
+import tg_notify
+
+
+def _state(tmp_path):
+    d = tmp_path / "telegram"
+    d.mkdir()
+    (d / ".env").write_text("TELEGRAM_BOT_TOKEN=123:SECRET\n", encoding="utf-8")
+    (d / "access.json").write_text(json.dumps({"allowFrom": ["555"]}), encoding="utf-8")
+    return d
+
+
+def test_tg_notify_sends_with_label(tmp_path, monkeypatch, capsys):
+    sent = {}
+
+    def fake_post(url, data):
+        sent.update(url=url, data=data)
+        return True
+
+    monkeypatch.setattr(tg_notify, "_post", fake_post)
+    assert tg_notify.main(["끝났다"], state_dir=_state(tmp_path), pc="집", cwd_name="대본작성") == 0
+    assert sent["data"]["chat_id"] == "555"
+    assert sent["data"]["text"].startswith("[집·대본작성]")
+    assert "SECRET" not in capsys.readouterr().out
+
+
+def test_tg_notify_no_token(tmp_path):
+    d = tmp_path / "telegram"
+    d.mkdir()
+    assert tg_notify.main(["x"], state_dir=d, pc="집", cwd_name="t") == 1
