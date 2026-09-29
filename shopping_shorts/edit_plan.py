@@ -1614,6 +1614,28 @@ def _speech_speed():
     return min(2.0, max(1.0, v))
 
 
+# 영어 글자→초(자/초, 공백·문장부호 제외). 라이브 실측 2026-09-29(관제 029 영어모드, 일레븐 eleven_v3 speed 1.0,
+# 사장님 job 3건 25비트: norm 969자 / 65.2초 = 14.85, 비트별 13.3~17.7). 한국어 표시 계수(5.7×1.30=7.41)의
+# 정확히 2배라, 영어 대본을 한국어 계수로 나누면 "예상 초"가 두 배로 떴다(사장님 제보 "영어는 두 배가 되네").
+_EN_CHARS_PER_SEC = 14.9
+
+
+def speech_cps(text=None, lang=None):
+    """글자→초 환산계수(자/초)의 **단일 출처** — 화면 표시(script_gate·2단계 카드)와 계획(narr_secs)이 같은 값을 쓴다.
+
+    lang="ko" → _SYLLABLES_PER_SEC × _speech_speed() (종전 값 그대로) · lang="en" → _EN_CHARS_PER_SEC.
+    lang이 없으면 text로 판정한다(script_translate.is_english_sentence: 영어 단어 3개 이상·한글 0)."""
+    if lang is None and text:
+        try:
+            from shopping_shorts.script_translate import is_english_sentence
+            lang = "en" if is_english_sentence(text) else "ko"
+        except Exception:      # noqa: BLE001 — 판정 실패는 종전(한국어) 동작
+            lang = "ko"
+    if lang == "en":
+        return float(_EN_CHARS_PER_SEC)
+    return _SYLLABLES_PER_SEC * _speech_speed()
+
+
 def narr_secs(text):
     """그 대사를 실제로 읽는 시간(초) = **모든 target_seconds의 단일 출처**(2026-09-16).
 
@@ -1628,7 +1650,8 @@ def narr_secs(text):
       (중앙 9.69·평균 9.71). 지금 식은 5.7 × _speech_speed()다 — 배속 기본값이 낮으면
       여전히 과대추정이지만, 그 값은 **게이트의 대본 글자수 상한과 짝**이라(script_gate._speech_cps)
       여기서 같이 올리면 대본 길이가 함께 바뀐다. 배속 조정은 별건으로 다룬다."""
-    return round(max(1.5, len((text or "").strip()) / (_SYLLABLES_PER_SEC * _speech_speed())), 1)
+    # 2026-09-29: 영어 대본(영어모드)은 영어 계수 — 한국어 계수로 나누면 목표 초가 2배 부풀어 화면 채우기가 컷을 덧붙인다.
+    return round(max(1.5, len((text or "").strip()) / speech_cps(text)), 1)
 
 
 def _seg_benefits(seg):
