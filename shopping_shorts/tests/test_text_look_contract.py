@@ -28,3 +28,11 @@ def test_four_independent_text_targets_are_kept_simple():
     assert "label:'작은 제목',binds:['bodyTitle']" in EDITOR
     assert "label:'자막',binds:['caption']" in EDITOR
     assert "data-look-target" in EDITOR
+
+
+def test_shadow_reaches_colored_title_spans_and_stays_visible_on_dark_bands():
+    assert '.precision-text[data-ts-on="1"]>span' in EDITOR
+    assert '.precision-text[data-ts-on="1"] .title-deco-ink' in EDITOR
+    assert "color-mix(in srgb,currentColor 52%,#000)" in EDITOR
+    assert "color-mix(in srgb,currentColor 28%,#000)" in EDITOR
+    assert "rgba(0,0,0,.82)" in EDITOR
