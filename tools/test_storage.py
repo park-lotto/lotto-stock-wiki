@@ -160,3 +160,32 @@ def test_git_garbage_removes_only_old_tmp_packs(repo):
     assert storage.apply_gitgc(repo, printer=lambda *a: None)
     assert not old_p.exists()                      # 새 tmp_pack 은 git gc 자체가 치울 수 있다 — 우리가 지운 건 옛 것만
     _git(repo, "fsck", "--no-progress")            # gc 뒤 저장소가 멀쩡하다(실패면 assert 로 죽는다)
+
+
+def _ext_map(tmp):
+    d = _external(tmp)
+    return _map(d), d
+
+
+def test_archive_track_keeps_docs_and_bundles_then_closes(repo, tmp_path):
+    smap, d = _ext_map(tmp_path)
+    wt = _make_track_commit(repo, "옛문서")
+    # 미병합 = 문서만: 트랙의 코드 커밋을 먼저 main 에 올려 두고, 문서 커밋만 남긴다
+    _git(repo, "fetch", "origin")
+    _git(repo, "push", "origin", "track/옛문서:main")
+    (wt / "handoff").mkdir(exist_ok=True)
+    (wt / "handoff" / "옛문서.md").write_text("# 기록\n", encoding="utf-8")
+    _git(wt, "add", "handoff/옛문서.md")
+    _git(wt, "commit", "-m", "핸드오프")
+    assert storage.archive_track(repo, smap, "옛문서", printer=lambda *a: None)
+    assert (d / "90_보관" / "트랙" / "옛문서.bundle").exists(), "미병합 커밋이 있으면 bundle 을 남긴다"
+    assert _git(repo, "show", "origin/main:handoff/옛문서.md") == "# 기록\n", "문서 커밋은 main 에 살아 있다"
+    assert not track.branch_exists(repo, "track/옛문서") and not track.worktree_path("옛문서", repo).exists()
+
+
+def test_archive_track_holds_when_code_is_unmerged(repo, tmp_path):
+    smap, d = _ext_map(tmp_path)
+    _make_track_commit(repo, "옛코드")            # app.py 변경이 main 에 없다
+    assert not storage.archive_track(repo, smap, "옛코드", printer=lambda *a: None)
+    assert track.branch_exists(repo, "track/옛코드"), "코드가 남은 트랙은 사장님 판단 전엔 접지 않는다"
+    assert (d / "90_보관" / "트랙" / "옛코드.bundle").exists(), "bundle 은 남긴다"

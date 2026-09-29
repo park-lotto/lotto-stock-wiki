@@ -260,7 +260,7 @@ def _make_track_commit_with_card(repo_, name, card, files=None, msg=None):
 
 def test_customer_ui_change_needs_card_approval(repo):
     _install(repo)
-    n = control.new_card(repo, "버튼 색", printer=lambda *a: None)
+    n = control.new_card(repo, "버튼 색", owner="shopping_shorts/owner.py:f", printer=lambda *a: None)
     _make_track_commit_with_card(repo, "버튼", n, files={"shopping_shorts/static/produce.html": "<b>x</b>\n"})
     before = _origin_head(repo)
     with pytest.raises(track.TrackError) as e:
@@ -276,7 +276,7 @@ def test_customer_ui_change_needs_card_approval(repo):
 
 def test_billing_token_change_needs_approval(repo):
     _install(repo)
-    n = control.new_card(repo, "과금", printer=lambda *a: None)
+    n = control.new_card(repo, "과금", owner="shopping_shorts/owner.py:f", printer=lambda *a: None)
     _make_track_commit_with_card(repo, "과금", n, files={"shopping_shorts/mix.py": "def f():\n    return clean_charge_plan(1)\n"})
     with pytest.raises(track.TrackError) as e:
         _finish(repo, "과금")
@@ -290,7 +290,7 @@ def test_new_duplicate_of_owner_signature_is_rejected_but_existing_is_not(repo):
     _publish_file(repo, "관제/ownership.json", json.dumps(own, ensure_ascii=False))
     # 이미 있는 두 벌(legacy.py)은 main 에 먼저 둔다
     _publish_file(repo, "shopping_shorts/legacy.py", "def render_cut_plan():\n    return 0\n", "옛 두 벌")
-    n = control.new_card(repo, "컷", printer=lambda *a: None)
+    n = control.new_card(repo, "컷", owner="shopping_shorts/owner.py:f", printer=lambda *a: None)
 
     # 기존 두 벌을 고치는 것만은 통과(새로 생긴 게 아니다)
     _make_track_commit_with_card(repo, "고침", n, files={"shopping_shorts/legacy.py": "def render_cut_plan():\n    return 1\n"})
@@ -313,7 +313,7 @@ def test_new_duplicate_of_owner_signature_is_rejected_but_existing_is_not(repo):
 def test_ownership_check_crash_fails_closed(repo, monkeypatch):
     _install(repo)
     _publish_file(repo, "관제/ownership.json", json.dumps({"판단": []}, ensure_ascii=False))
-    n = control.new_card(repo, "x", printer=lambda *a: None)
+    n = control.new_card(repo, "x", owner="shopping_shorts/owner.py:f", printer=lambda *a: None)
     _make_track_commit_with_card(repo, "x", n)
     monkeypatch.setattr(oc, "compare_refs", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
     with pytest.raises(track.TrackError) as e:
@@ -395,3 +395,44 @@ def test_code_race_still_regates(repo):
     assert rc == 0
     assert gate.snapshots == 4, "코드가 섞였으면 최신 main 위에서 전체 게이트를 다시 돈다"
     assert _git(repo, "show", "origin/main:shopping_shorts/zzz.py") == "Z = 1\n"
+
+
+def test_product_code_change_needs_owner_on_card(repo):
+    """제품 코드를 바꾸는 병합은 카드에 '판단 주인'이 있어야 한다(사장님 09-30 "주인함수를 보는 게 우선")."""
+    _install(repo)
+    n = control.new_card(repo, "주인 없음", printer=lambda *a: None)
+    _make_track_commit_with_card(repo, "주인없음", n, files={"shopping_shorts/thing.py": "X = 1\n"})
+    before = _origin_head(repo)
+    with pytest.raises(track.TrackError) as e:
+        _finish(repo, "주인없음")
+    assert "판단 주인" in str(e.value) and _origin_head(repo) == before
+    control.set_field(repo, n, "판단 주인", "shopping_shorts/thing.py:X", printer=lambda *a: None)
+    assert _finish(repo, "주인없음") == 0
+
+
+def test_non_product_change_needs_no_owner(repo):
+    _install(repo)
+    n = control.new_card(repo, "문서만", printer=lambda *a: None)
+    _make_track_commit_with_card(repo, "문서만", n, files={"tools/note.py": "Y = 2\n"})
+    assert _finish(repo, "문서만") == 0
+
+
+def test_server_approval_is_copied_to_card_and_satisfies_gate(repo):
+    """관리자 화면 [승인] 은 서버 파일에 적힌다 → finish 가 ssh 로 읽어 카드 승인으로 옮긴다(카드 004)."""
+    _install(repo)
+    n = control.new_card(repo, "화면 승인", owner="shopping_shorts/static/produce.html:x", printer=lambda *a: None)
+    fake = lambda cmd, timeout=0: (0, json.dumps({"%03d" % n: {"at": "2026-09-30 03:00", "who": "0", "note": "사장님 화면 승인"}}))  # noqa: E731
+    assert control.server_approvals(fake) == {n: {"at": "2026-09-30 03:00", "who": "0", "note": "사장님 화면 승인"}}
+    moved = control.sync_server_approvals(repo, control.cards_from_ref(repo), sh=fake, printer=lambda *a: None)
+    assert moved == [n]
+    c = control.find_card(_origin_cards(repo), n)
+    assert "관리자 화면" in c["승인"] and "사장님 화면 승인" in c["승인"]
+    # 두 번째 동기화는 아무것도 안 옮긴다(이미 승인)
+    assert control.sync_server_approvals(repo, control.cards_from_ref(repo), sh=fake, printer=lambda *a: None) == []
+
+
+def test_server_approvals_empty_or_broken_means_none():
+    assert control.server_approvals(lambda cmd, timeout=0: (0, "{}")) == {}
+    assert control.server_approvals(lambda cmd, timeout=0: (0, "not json")) == {}
+    with pytest.raises(control.ControlError):
+        control.server_approvals(lambda cmd, timeout=0: (255, "ssh: connect failed"))
