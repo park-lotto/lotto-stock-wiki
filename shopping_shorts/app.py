@@ -20580,6 +20580,11 @@ def api_produce_mix_settings(body: dict):
         except (ValueError, TypeError) as exc:
             return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
         fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), "scene_style": snapshot}
+        # ★새 편집기에서 고친 채널명을 계정 채널명으로도 기억한다(2026-09-29) — 다음 작업의 기본값이 된다
+        #   (scene_style.account_channel). 샘플값 그대로면 건드리지 않는다.
+        _ch = str(((snapshot or {}).get("text") or {}).get("channel") or "").strip()
+        if _ch and _ch != "숏템메이커" and len(_ch) <= 40 and int(job.get("customer_id") or 0):
+            store.set_pref(_MY_CHANNEL_KEY, _ch, customer_id=int(job.get("customer_id")))
     if "seo" in body:
         fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
