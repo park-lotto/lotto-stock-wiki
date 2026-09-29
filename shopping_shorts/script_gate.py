@@ -166,6 +166,41 @@ def density_range(style, seconds=30):
     return min(lo, cap), min(int(tgt * DENSITY_HI), cap)
 
 
+# ★후킹은 무조건 한 문장(2026-09-29 사장님 "후킹은 무조건 한문장으로 들어가는거야").
+#   실측 job 06fab43a4922: 씨앗 자막에 마침표가 없어 모델이 "여러분 다이소 가면 이거 바로 사오세요 요리 진짜
+#   잘하는 친구 집에 갔는데 … 끝나는 거예요."를 훅 한 줄로 썼다 → 훅 비트 7.4초, 본문이 훅 디자인에 갇혔다.
+#   대본 생성기(이야기작가·script_generate)가 전부 이 함수 하나로 가른다 — 판단은 여기 한 곳(0순위-B).
+_HOOK_END = re.compile(r"[.!?…]+[\"'」』)]*(?=\s|$)|(?:요|다|죠)(?=\s)")
+
+
+def split_hook_sentence(text):
+    """훅 줄 → (첫 문장, 나머지). 문장이 하나뿐이면 (text, "").
+    끝맺음 = 문장부호, 또는 마침표 없이 '요·다·죠' 뒤 띄어쓰기(말자막엔 마침표가 없다)."""
+    t = (text or "").strip()
+    for m in _HOOK_END.finditer(t):
+        head, rest = t[:m.end()].strip(), t[m.end():].strip()
+        if len(norm(head)) >= 4 and len(norm(rest)) >= 4:
+            return head, rest
+        if len(norm(head)) >= 4:
+            break
+    return t, ""
+
+
+def enforce_one_sentence_hook(beats, text_key="text", rest_role="장면"):
+    """첫 줄이 훅이고 문장이 둘 이상이면 첫 문장만 훅에 남기고 나머지는 바로 다음 줄(rest_role)로 넣는다.
+    새 줄은 장면 출처를 비워 둔다(하류 매칭이 채운다). 원본 리스트를 바꾸지 않고 새 리스트를 돌려준다."""
+    if not beats or not isinstance(beats[0], dict) or beats[0].get("role") not in ("훅", "hook"):
+        return beats
+    head, rest = split_hook_sentence(beats[0].get(text_key))
+    if not rest:
+        return beats
+    first = dict(beats[0]); first[text_key] = head
+    extra = {"role": rest_role, text_key: rest}
+    if "group" in first:
+        extra["group"] = -1
+    return [first, extra] + list(beats[1:])
+
+
 def norm(s):
     """비교용 정규화 — 공백·문장부호 제거 + 어미 표기 흔들림 통일.
     띄어쓰기나 '구요/고요' 차이로 판정이 갈리면 안 된다(실측 오탐 원인)."""

@@ -1050,6 +1050,9 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
                       twist_n=twist_n, seed_points=note.get("seed_points") or [])
         if sp and plat == "yt":
             lines = _enforce_style(lines, _style)
+        # ★후킹은 무조건 한 문장 — 판단은 script_gate 한 곳(2026-09-29). 컷 매칭(아래) 전에 갈라야 줄마다 장면이 붙는다.
+        from shopping_shorts import script_gate as _sg
+        lines = _sg.enforce_one_sentence_hook(lines)
         n["feats"] = [{"name": f.get("name"), "new": f.get("new"), "videos": f.get("videos"),
                        "cuts": [c for c in (f.get("from_cuts") or []) if c in seg_index]} for f in feats]
         n["twist_n"] = twist_n
