@@ -9334,44 +9334,35 @@ def _voice_snapshot(store, body):
     }
 
 
-@app.post("/api/mix/lang")
-def api_mix_lang(request: Request, body: dict):
-    """대본 영어모드 변환(2026-09-29 사장님 "한국어 대본 뽑고 영어모드로 변환만 되게", 관제 029).
+@app.post("/api/script/translate")
+def api_script_translate(request: Request, body: dict):
+    """2단계 대본 영어모드 변환(2026-09-29 사장님 "대본생성에 두어야 맞는 거 아니야", 관제 029).
 
-    body: {job_id, lang: "en"|"ko"}. 한국어 대본·장면 매칭은 그대로 두고 **비트 문장만** 번역한다.
-    판단 주인은 script_translate.apply_lang(줄 수 계약·원문 보관·되돌리기). 여기서는 소유 확인·자막 메타
-    무효화·저장만 한다. 음성은 고객이 [이 음성으로 전체 생성]을 눌러 다시 만든다(글자가 바뀌면 tts_path
-    해시가 안 맞아 어차피 재합성된다 — /api/mix/candidate와 같은 계약).
-    ★영어모드에선 타입캐스트(한국 성우) 성우를 못 고르게 /api/mix/voice가 막는다(한 곳: _lang_voice_block).
+    body: {lines: [...], product?: str} → {ok, lines: [...]} 같은 길이. 화면(2단계 카드)이 줄을 갈아끼우고
+    사람이 고친 뒤 확정하면 given_script가 영어로 3단계에 간다. 판단 주인은 script_translate.to_english
+    (줄 수 계약·한글 잔존 거부). 작업(job)을 건드리지 않는다 — 순수 문장 변환.
     """
     from shopping_shorts import script_translate
-    job_id = (body.get("job_id") or "").strip()
-    lang = (body.get("lang") or "").strip().lower()
-    store = Store(DB_PATH)
-    job = store.get_mix_job(job_id)
-    if not job or not job.get("edit_plan"):
-        return JSONResponse(status_code=404, content={"ok": False, "error": "job/plan 없음"})
-    cid = _cid(request)
-    if keyroute.as_cid(cid) and int(job.get("customer_id") or 0) != int(cid):
-        return JSONResponse(status_code=403, content={"ok": False, "error": "이 고객의 영상 작업이 아닙니다"})
-    plan = job["edit_plan"]
-    product = ((job.get("product") or {}).get("name") if isinstance(job.get("product"), dict) else "") or ""
+    lines = [str(x or "") for x in (body.get("lines") or []) if isinstance(x, (str, int, float))]
+    if not lines:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "번역할 문장이 없어요"})
+    if len(lines) > 60:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "문장이 너무 많아요(60줄 초과)"})
+    _blocked = _need_own_key_or_402(_cid(request), tts=True)   # 음성 키 없는 계정은 어차피 다음 단계가 막힌다 — 여기서 먼저 안내
+    if _blocked:
+        return _blocked
     try:
-        changed = script_translate.apply_lang(plan, lang, product)
+        out = script_translate.to_english(lines, str(body.get("product") or ""))
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
-    for b in plan.get("beats") or []:
-        if isinstance(b, dict):
-            mix_pipeline.invalidate_caption_meta(b)   # 대본이 바뀐 모든 경로의 규칙(2026-08-15)
-    _save_render_inputs(store, job_id, edit_plan=plan)
-    return {"ok": True, "lang": lang, "changed": changed,
-            "narrations": [b.get("narration") for b in plan.get("beats") or [] if isinstance(b, dict)]}
+    return {"ok": True, "lines": out}
 
 
 def _lang_voice_block(job, voice):
-    """영어모드 작업에 타입캐스트(한국 성우) 성우를 쓰려 하면 422 응답, 아니면 None. 판단은 여기 한 곳."""
-    plan = (job or {}).get("edit_plan") or {}
-    if plan.get("lang") != "en":
+    """영어모드 작업에 타입캐스트(한국 성우) 성우를 쓰려 하면 422 응답, 아니면 None.
+    언어 판정은 script_translate.job_lang 한 곳(2단계에서 영어로 확정한 작업 = given_script가 영어)."""
+    from shopping_shorts import script_translate
+    if script_translate.job_lang(job) != "en":
         return None
     if typecast_tts.is_typecast((voice or {}).get("model_id")):
         return JSONResponse(status_code=422, content={

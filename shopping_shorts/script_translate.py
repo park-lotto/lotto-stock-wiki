@@ -91,34 +91,14 @@ def to_english(lines, product="", *, call=None, tries=2):
     raise ValueError("영어 변환에 실패했어요 — " + (last or "AI 응답이 비었어요") + ". 잠시 후 다시 눌러 주세요")
 
 
-def apply_lang(plan, lang, product="", *, call=None):
-    """edit_plan의 비트 문장을 lang('en'|'ko')으로 바꾼다. 반환: 바뀐 비트 수.
-
-    en: narration → narration_ko에 보관하고 영어로 교체(이미 보관돼 있으면 그 원문을 다시 번역하지 않고 재사용).
-    ko: narration_ko가 있으면 되돌린다.
-    ★자막 메타 무효화는 호출부(app)가 mix_pipeline.invalidate_caption_meta로 한다 — 대본이 바뀌는 모든 경로의 규칙.
-    """
-    beats = [b for b in (plan or {}).get("beats") or [] if isinstance(b, dict)]
-    if not beats:
-        raise ValueError("문장이 없어요 — 3단계 영상 매칭을 먼저 끝내 주세요")
-    changed = 0
-    if lang == "en":
-        src = [b.get("narration_ko") or b.get("narration") or "" for b in beats]
-        out = to_english(src, product, call=call)
-        for b, ko, en in zip(beats, src, out):
-            if not b.get("narration_ko"):
-                b["narration_ko"] = ko
-            if (b.get("narration") or "") != en:
-                b["narration"] = en
-                changed += 1
-        plan["lang"] = "en"
-        return changed
-    if lang == "ko":
-        for b in beats:
-            ko = b.get("narration_ko")
-            if ko and (b.get("narration") or "") != ko:
-                b["narration"] = ko
-                changed += 1
-        plan["lang"] = "ko"
-        return changed
-    raise ValueError("lang은 'en' 또는 'ko'")
+def job_lang(job):
+    """이 작업의 대본 언어('en'|'ko') — 판단은 여기 한 곳. edit_plan.lang이 있으면 그것, 없으면 확정 대본(given_script)의
+    줄들이 영어 문장(단어 3개 이상, 한글 없음)인 비율로 판정한다(2단계에서 영어모드로 확정한 작업은 given_script가 영어)."""
+    plan = (job or {}).get("edit_plan") or {}
+    if isinstance(plan, dict) and plan.get("lang") in ("en", "ko"):
+        return plan["lang"]
+    lines = [x.strip() for x in str((job or {}).get("given_script") or "").splitlines() if x.strip()]
+    if not lines:
+        return "ko"
+    n_en = sum(1 for x in lines if is_english_sentence(x))
+    return "en" if n_en / len(lines) >= 0.8 else "ko"

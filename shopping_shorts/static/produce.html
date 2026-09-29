@@ -2114,13 +2114,6 @@
       </div>
       <!-- ★한 칸 안에서는 세로로 쌓는다 — 360px 폭에 카드와 설정을 좌우로 나누면 둘 다 좁아진다. -->
       <div id="voiceUI" style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
-        <!-- 🌐 영어모드(2026-09-29 사장님 "한국어 대본 뽑고 영어모드로 변환만 되게", 관제 029).
-             한국어 대본·장면 매칭은 그대로 두고 문장만 영어로 바꾼다(/api/mix/lang). 바꾼 뒤엔
-             [이 음성으로 전체 생성]을 눌러야 영어 음성·자막이 된다(대본 직접 수정과 같은 계약). -->
-        <div id="langModeBox" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel)">
-          <button id="langModeBtn" onclick="toggleLangMode()" class="btn-prev" style="padding:8px 14px;min-height:44px" title="확정한 한국어 대본을 문장별로 영어로 바꿉니다. 장면은 그대로입니다.">🌐 영어모드로 변환하기</button>
-          <span id="langModeHint" class="hint" style="flex:1 1 200px;line-height:1.5">한국어 대본을 영어 음성·자막으로 만들 때 누르세요. 바꾼 뒤 <b>[이 음성으로 전체 생성]</b>을 누르면 됩니다.</span>
-        </div>
         <!-- ① 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) — 먼저 하는 일 -->
         <div>
           <!-- 🔎 이미 담은 성우 걸러보기(2026-08-30 사장님). ★일레븐랩스 공개 라이브러리
@@ -15062,42 +15055,6 @@ function syncCurVoiceName(){
     + (tone?(' · '+esc(tone)):'') + (spd?(' · '+spd):'') + '</b>';
 }
 
-// ── 🌐 영어모드(2026-09-29, 관제 029) ─────────────────────────────────────
-// 상태는 서버 plan.lang 한 곳이 정본 — 화면은 /api/mix/result 의 plan.lang 을 읽어 버튼 문구만 맞춘다.
-let LANG_MODE = 'ko';
-// #langModeHint 를 그리는 함수는 이것 하나(test_dom_owner_budget — 한 자리에 그리는 함수 하나).
-function paintLangHint(html){ const h=document.getElementById('langModeHint'); if(h) h.innerHTML=html; }
-function syncLangModeBtn(lang){
-  LANG_MODE = (lang==='en') ? 'en' : 'ko';
-  const b=document.getElementById('langModeBtn');
-  if(!b) return;
-  if(LANG_MODE==='en'){
-    b.textContent='🇰🇷 한국어로 되돌리기';
-    paintLangHint('지금 <b>영어모드</b>입니다 — 문장이 영어로 바뀌어 있어요. 일레븐랩스 성우만 고를 수 있습니다(타입캐스트는 한국 성우).');
-  }else{
-    b.textContent='🌐 영어모드로 변환하기';
-    paintLangHint('한국어 대본을 영어 음성·자막으로 만들 때 누르세요. 바꾼 뒤 <b>[이 음성으로 전체 생성]</b>을 누르면 됩니다.');
-  }
-}
-async function toggleLangMode(){
-  const b=document.getElementById('langModeBtn');
-  if(!MIX_JOB){ paintLangHint('<span style="color:var(--fire)">🎬 3단계 영상 매칭을 끝낸 뒤 쓸 수 있어요.</span>'); return; }
-  const to = (LANG_MODE==='en') ? 'ko' : 'en';
-  if(to==='en' && !confirm('확정한 한국어 대본의 모든 문장을 영어로 바꿉니다.'+String.fromCharCode(10)+'장면 배치는 그대로이고, 원문은 보관돼 있어 언제든 되돌릴 수 있어요.'+String.fromCharCode(10,10)+'영어로 바꿀까요?')) return;
-  b.disabled=true; paintLangHint((to==='en') ? '⏳ 영어로 바꾸는 중… (10초 안팎)' : '⏳ 한국어 원문으로 되돌리는 중…');
-  try{
-    const r=await fetch('/api/mix/lang',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:MIX_JOB, lang:to})});
-    const d=await r.json().catch(()=>null);
-    if(!r.ok || !d || d.ok===false){ paintLangHint('<span style="color:var(--fire)">❌ '+esc((d&&d.error)||'변환에 실패했습니다')+'</span>'); return; }
-    syncLangModeBtn(d.lang);
-    if(typeof markVoiceDirty==='function') markVoiceDirty(true);   // 문장이 바뀌었으니 완성본도 다시 만들어야 한다
-    try{ renderTtsBeats(); }catch(e){}
-    paintLangHint((d.lang==='en')
-      ? '✅ '+d.changed+'문장을 영어로 바꿨어요. 이제 일레븐랩스 성우를 고르고 <b>[이 음성으로 전체 생성]</b>을 누르세요.'
-      : '✅ 한국어 원문으로 되돌렸어요. <b>[이 음성으로 전체 생성]</b>을 눌러 음성을 다시 만드세요.');
-  }catch(e){ paintLangHint('<span style="color:var(--fire)">❌ 서버에 연결하지 못했습니다</span>'); }
-  finally{ b.disabled=false; }
-}
 function pickPreset(gid){
   const g=VOICE_GROUPS.find(x=>x.group_id===gid);
   if(!g) return;
@@ -15381,7 +15338,6 @@ async function renderTtsBeats(){
     </div>`; return; }
   try{
     const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
-    try{ syncLangModeBtn(d && d.plan && d.plan.lang); }catch(e){}   // 🌐 영어모드 버튼 문구를 서버 plan.lang에 맞춘다
     if(!d.ok || !(d.beats||[]).length){ el.innerHTML=''; return; }
     const beats=d.beats;
     const vidLen=beats.reduce((s,b)=>s+(+b.target_seconds||0),0);
@@ -19237,9 +19193,10 @@ function s2DraftHtml(dr,i){
         <div class="s2-sent-wrap">
           <div class="s2-sent" contenteditable="true" data-ph="${esc(s2RoleName(b.role).replace(/^\S+\s*/,''))} — 여기에 쓰세요"
                oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}</div>${chk}
+          ${(dr.lang==='en'&&b.text_ko)?`<div class="hint" style="margin-top:4px;font-size:12px;opacity:.75">🇰🇷 ${esc(b.text_ko)}</div>`:''}
         </div>
         <div class="s2-acts">
-          ${dr.mine?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
+          ${(dr.mine||dr.lang==='en')?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
           <button class="s2-del" title="이 줄을 대본에서 아주 뺍니다 — 3단계에서 이 장면 칸도 안 생깁니다"
             onclick="s2DelBeat(${i},${j})">🗑 빼기</button>
         </div>
@@ -19256,7 +19213,9 @@ function s2DraftHtml(dr,i){
   const fix = '';
   return `<div class="s2-draft ${i===0?'da':'db'}${i===S2.curDraft?' on':''}" id="s2d-${i}">
     <div class="s2-dhead"><span class="s2-dname">${dr.mine?'✍ 내 대본':(String.fromCharCode(65+i)+'안'+(dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''))}</span>
-      <span id="s2tot-${i}" title="우리 보이스 실측 속도로 환산한 예상 길이 — 릴스 기본은 30초 이내">${s2SecTag(s2DraftSec(dr), 30)}</span>${gate}</div>
+      <span id="s2tot-${i}" title="우리 보이스 실측 속도로 환산한 예상 길이 — 릴스 기본은 30초 이내">${s2SecTag(s2DraftSec(dr), 30)}</span>${gate}
+      <button class="btn-ghost s2-lang" id="s2lang-${i}" style="min-width:auto;margin-left:auto;padding:4px 10px" onclick="s2ToggleLang(${i})"
+        title="${dr.lang==='en'?'영어 문장을 버리고 한국어 원문으로 되돌립니다':'이 안의 모든 문장을 영어로 바꿉니다. 어색한 줄은 칸에서 바로 고치고 확정하면 영어 음성·자막이 됩니다'}">${dr.lang==='en'?'🇰🇷 한국어로':'🌐 영어모드로 변환'}</button></div>
     ${rows}${fix}
     <div class="s2-dfoot">
       ${dr.mine?`<button class="btn-ghost" style="min-width:auto" title="칸을 하나 더 만듭니다" onclick="s2MineAddRow(${i})">＋ 칸 추가</button>`:''}
@@ -19406,6 +19365,34 @@ async function s2OpenBank(i,j){
 async function s2PickTmpl(i,j,k){
   const t=(S2._tmpl||[])[k]; if(t==null) return;
   await s2RegenBeat(i,j,t);
+}
+// ── 🌐 영어모드로 변환(2026-09-29 사장님 "대본생성에 두어야 맞는 거 아니야", 관제 029) ──
+// 이 안의 문장을 영어로 갈아끼운다(원문은 text_ko에 보관 → 되돌리기). 사람이 칸에서 고친 뒤 확정하면
+// given_script가 영어로 3단계에 간다. 서버 /api/script/translate 는 줄 수가 다르면 거부한다.
+async function s2ToggleLang(i){
+  const dr=S2.drafts[i]; if(!dr) return;
+  const beats=s2Beats(dr); if(!beats.length){ toast('문장이 없어요'); return; }
+  const btn=document.getElementById('s2lang-'+i);
+  if(dr.lang==='en'){
+    beats.forEach(b=>{ if(b.text_ko){ b.text=b.text_ko; } delete b.text_ko; });
+    dr.lang='ko'; dr.beats=beats; dr.script=beats.map(b=>b.text).filter(Boolean).join(String.fromCharCode(10));
+    s2RenderDrafts(); saveWork(); toast('한국어 원문으로 되돌렸어요'); return;
+  }
+  const src=beats.map(b=>(b.text_ko||b.text||'').trim());
+  if(src.some(t=>!t)){ toast('빈 칸이 있어요 — 채우거나 빼고 다시 눌러 주세요'); return; }
+  if(btn){ btn.disabled=true; btn.textContent='⏳ 영어로 바꾸는 중…'; }
+  try{
+    const r=await fetch('/api/script/translate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({lines:src, product:(S2.materials&&S2.materials.topic_product)||''})});
+    const d=await r.json().catch(()=>null);
+    if(!r.ok||!d||d.ok===false){ toast('❌ '+((d&&d.error)||'변환 실패')); return; }
+    if(!Array.isArray(d.lines)||d.lines.length!==beats.length){ toast('❌ 줄 수가 맞지 않아 적용하지 않았어요'); return; }
+    beats.forEach((b,k)=>{ if(!b.text_ko) b.text_ko=src[k]; b.text=d.lines[k]; });
+    dr.lang='en'; dr.beats=beats; dr.script=beats.map(b=>b.text).filter(Boolean).join(String.fromCharCode(10));
+    s2RenderDrafts(); saveWork();
+    toast('🌐 영어로 바꿨어요 — 어색한 줄은 칸에서 고치고 확정하세요(일레븐랩스 성우만 됩니다)');
+  }catch(e){ toast('❌ 서버에 연결하지 못했어요'); }
+  finally{ const b2=document.getElementById('s2lang-'+i); if(b2){ b2.disabled=false; } }
 }
 // [이대로 쓰기] — 재생성 없이 틀 원문을 그대로 넣는다(옛 동작). 빈칸은 사장님이 손으로 채운다.
 function s2UseTmplRaw(i,j,k){
