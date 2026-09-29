@@ -913,52 +913,6 @@ def _fit_length(lines, limit_secs):
     return lines, dropped
 
 
-def _no_reuse(lines, bs, seg_index, backbone_vid, groups_out):
-    """★한 편 안에서 **같은 장면을 두 줄에 쓰지 않는다** — 판단은 여기 한 곳(2026-09-29 고객 제보 커피 영상:
-    6.0→9.0초·19.5→29.5→33.5초 같은 장면 반복, 6소스 중 롱폼 1개에 쏠림).
-    뿌리: 위 장면 고정이 근거 컷이 모자라면 `allowed[:1]`로 **같은 첫 컷을 여러 줄에** 박았다. 렌더는 줄이 바뀌면
-    그 조각을 처음부터 다시 틀어(video_assemble 구절 이어 틀기는 한 줄 안에서만) 화면에 같은 장면이 또 나온다.
-    같은 장면 = 같은 컷 번호 또는 같은 설명(태깅이 한 샷을 둘로 가른 것 — ai_match와 같은 잣대).
-    겹친 줄은 ①그 특징의 안 쓴 근거 컷 ②안 쓴 컷 중 **가장 덜 쓴 소스**의 것 순으로 바꾸고, 없으면 비워 둔다
-    (비운 줄은 _share_cuts가 넉넉한 줄에서 옮겨 채운다 — 반복보다 낫다). 돌려준 값 = 바꾼 컷 수."""
-    from shopping_shorts import backbone_assemble as ba
-
-    def key(c):
-        return (seg_index.get(c) or {}).get("desc") or c
-    usable = [c for c, v in seg_index.items()
-              if v.get("vid") != backbone_vid and (v.get("secs") or 0) >= ba.MIN_CUT_SECS]
-    used_keys, vid_n, fixed = set(), {}, 0
-    for b in bs:                                   # 먼저 줄마다 첫 등장만 인정한 채로 쓴 소스를 센다
-        for c in (b or {}).get("segs") or []:
-            if key(c) not in used_keys:
-                used_keys.add(key(c))
-                v = (seg_index.get(c) or {}).get("vid")
-                vid_n[v] = vid_n.get(v, 0) + 1
-    used_keys = set()
-    for i, b in enumerate(bs):
-        if not b:
-            continue
-        gi = lines[i].get("group", -1)
-        allowed = (groups_out["groups"][gi]["cuts"]
-                   if isinstance(gi, int) and 0 <= gi < len(groups_out["groups"]) else [])
-        keep = []
-        for c in b.get("segs") or []:
-            if key(c) in used_keys:
-                fixed += 1
-                pool = [x for x in allowed if key(x) not in used_keys and x in seg_index] or sorted(
-                    (x for x in usable if key(x) not in used_keys),
-                    key=lambda x: vid_n.get((seg_index.get(x) or {}).get("vid"), 0))
-                if not pool:
-                    continue
-                c = pool[0]
-                v = (seg_index.get(c) or {}).get("vid")
-                vid_n[v] = vid_n.get(v, 0) + 1
-            used_keys.add(key(c))
-            keep.append(c)
-        bs[i] = {"role": b.get("role"), "seg": keep[0] if keep else "", "segs": keep}
-    return fixed
-
-
 def _share_cuts(lines, bs, seg_index):
     """컷이 하나도 없는 줄에 **남는 컷을 나눠 준다**. 돌려준 값 = 끝내 빈 줄 번호들.
     ★assign_cuts는 앞 줄부터 '길이+여유+최소 2컷'을 채워 재료가 빠듯하면 뒤 줄이 빈손이 된다
@@ -1136,8 +1090,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         # ★장면 고정(2026-09-26 사장님 "다른 소스에 나온 고조·반전 장면을 정말 쓰는지, 쓸 수밖에 없는 구조"):
         #   특징 번호가 붙은 줄(고조·반전)은 **그 특징의 근거 컷(from_cuts) 안에서만**. AI는 특징↔근거 컷을 모르고 골랐고,
         #   코드 매칭도 근거 컷이 모자라면 딴 컷을 채웠다(실측 비교: 근거 안 0/7·3/7) → **매칭 방식과 관계없이** 여기서 고정한다.
-        #   근거 컷이 줄보다 적어 같은 컷이 두 줄에 가면 바로 아래 _no_reuse가 바꾼다(줄이 바뀌면 조각을 처음부터 다시 틀어
-        #   같은 장면이 또 나왔다 — 2026-09-29 고객 제보). 훅·미끼·공개·마무리는 그대로.
+        #   근거 컷이 줄보다 적으면 같은 근거 컷을 이어 쓴다(구절 이어 틀기로 그 장면이 이어진다). 훅·미끼·공개·마무리는 그대로.
         _locked = 0
         for i, L in enumerate(lines):
             gi = L.get("group", -1)
@@ -1149,7 +1102,6 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
                 bs[i] = {"role": bs[i].get("role"), "seg": keep[0], "segs": keep}
                 _locked += 1
         n["locked_lines"] = _locked
-        n["reuse_fixed"] = _no_reuse(lines, bs, seg_index, backbone_vid, groups_out)
         n["no_cut_lines"] = _share_cuts(lines, bs, seg_index)     # 끝내 빈 줄 = 재료가 대본보다 짧다
         meta = {"product": product, "spine": {"id": (sp or {}).get("id"), "name": name},
                 "groups": groups_out, "report": report, "note": n}
@@ -1163,7 +1115,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         #   감사(tools/story_hook_audit.py)가 볼 수 없었다("판정 작동: 없음"으로 보임).
         d["writer_note"] = {k: n.get(k) for k in ("hook_fix", "hook_retry", "escalation_retry", "matcher",
                                                   "no_cut_lines", "dropped_escalations", "diff_retry", "diff_left",
-                                                  "locked_lines", "reuse_fixed", "twist_n", "n_new") if n.get(k)}
+                                                  "locked_lines", "twist_n", "n_new") if n.get(k)}
         d["feats_meta"] = n.get("feats") or []    # 점검용: 특징별 새것 여부·영상 수·근거 컷(tools/script_diff 대조)
         d["seed_points"] = note.get("seed_points") or []   # 점검용: 씨앗이 이미 말한 셀링포인트(차별점 잣대)
         d["line_groups"] = [L.get("group", -1) for L in lines]     # 점검용: 줄이 어느 재료에 걸렸나
