@@ -150,7 +150,10 @@ SERVICE_LABEL = {
 #      이 명단엔 기간 개념이 없어서 손으로 빼는 것 말고는 만료가 없다.
 #      그는 vmake 키를 이미 등록했으므로(실측) 자막 지우기는 자기 키로 나간다 —
 #      이 면제로 회사가 부담하는 건 음성뿐이다.
-BLOCK_EXEMPT_CIDS = frozenset({4, 5, 9, 11, 12, 291})
+#   ⚠️ 451 심효진(jinshim0510) — 2026-09-29 사장님 지시 "내 일레븐랩스 키 심효진님한테 열어줘".
+#      본인 타입캐스트 키는 업체 측 403(UNUSUAL_ACTIVITY_DETECTED, 계정 차단)이라 못 쓰고,
+#      일레븐 키는 등록 직후 본인이 지웠다. 차단 해제·재등록되면 자기 키가 먼저 잡힌다(keys_for).
+BLOCK_EXEMPT_CIDS = frozenset({4, 5, 9, 11, 12, 291, 451})
 
 
 def is_block_exempt(customer_id):

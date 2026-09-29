@@ -152,10 +152,12 @@ def test_exempt_list_is_exactly_the_four_people():
     숫자를 박아 고정한다. 지시 없이 늘어나면 이 테스트가 잡는다."""
     # ⚠️291(최일환)은 2026-09-03 **하루만** 열어둔 임시 면제다(사장님 지시).
     #   2026-09-04에 keyroute에서 291을 빼고 이 줄도 원래대로 되돌린다.
-    assert set(keyroute.BLOCK_EXEMPT_CIDS) == {4, 5, 9, 11, 12, 291}
+    # ⚠️451(심효진)은 2026-09-29 사장님 지시("내 일레븐랩스 키 심효진님한테 열어줘") — 본인 타입캐스트가
+    #   업체 403 차단이라 회사 키로 음성만 쓴다. 차단 해제·자기 키 재등록 뒤 빼도 된다.
+    assert set(keyroute.BLOCK_EXEMPT_CIDS) == {4, 5, 9, 11, 12, 291, 451}
 
 
-@pytest.mark.parametrize("cid", [4, 5, 9, 11, 12, 291])
+@pytest.mark.parametrize("cid", [4, 5, 9, 11, 12, 291, 451])
 def test_exempt_members_are_never_blocked(store, cid):
     """면제 대상은 키가 없어도 VMake·음성 둘 다 열린다."""
     assert keyroute.block_reason(store, cid, keyroute.SVC_VMAKE) is None
