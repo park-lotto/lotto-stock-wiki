@@ -11,6 +11,7 @@
 `cd .tracks\\보이스`를 치게 하면 아무도 안 지킨다. 규칙은 지키기 쉬워야 지켜진다
 (이 프로젝트가 '규칙으로는 못 막는다'를 이미 두 번 배웠다).
 """
+import argparse
 import json
 import os
 import subprocess
@@ -154,6 +155,19 @@ def choose(repo=track.BASE):
 def main(argv=None):
     merge_gate.make_output_safe()
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "--window":        # claude-remote.ps1 이 넘긴다(트랙 없는 창, 카드 046)
+        ap = argparse.ArgumentParser()
+        ap.add_argument("--window", action="store_true")
+        ap.add_argument("--tag", required=True)
+        ap.add_argument("--account", default="1")
+        ap.add_argument("--model", default="")
+        ap.add_argument("--cwd", required=True)
+        a = ap.parse_args(argv)
+        import pc_label
+        L = build_launch(a.cwd, account=a.account, model=a.model, pc=pc_label.label(),
+                         tag=a.tag, resume=False)
+        print(f"열림: {L['name']} (pid {launch_window(L)})")
+        return 0
     agent = "claude"
     if argv and argv[0] == "--agent":        # 코덱스.bat이 넘긴다
         argv.pop(0)

@@ -159,3 +159,17 @@ def test_tg_notify_no_token(tmp_path):
     d = tmp_path / "telegram"
     d.mkdir()
     assert tg_notify.main(["x"], state_dir=d, pc="집", cwd_name="t") == 1
+
+
+def test_track_open_window_mode(tmp_path, monkeypatch):
+    got = {}
+
+    def fake_launch(L):
+        got["L"] = L
+        return 1
+
+    monkeypatch.setattr(track_open, "launch_window", fake_launch)
+    monkeypatch.setattr(pc_label, "label", lambda: "집")
+    assert track_open.main(["--window", "--tag", "볼케이노", "--cwd", str(tmp_path)]) == 0
+    assert got["L"]["name"] == "집·1·볼케이노"
+    assert "--continue" not in got["L"]["argv"]

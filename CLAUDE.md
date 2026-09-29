@@ -10,6 +10,9 @@
 
 > 보드 `관제/BOARD.md`(자동 생성) · 사용법 `관제/README.md` · 설계 `docs/superpowers/specs/2026-09-27-관제시스템-design.md`
 
+> **분배(카드 046):** 관제창(텔레그램)에서 `py tools/dispatch.py <트랙> "<지시>" [--account 2] [--agent codex] [--model fable] [--card N]` — 트랙 폴더에 "PC·계정·트랙·카드N" 창(앱 Code 목록에 뜸)을 연다. exit 3 = 이미 작업 중(두 번째 창 금지 → 사장님께 물어라).
+> 트랙 창은 끝나면 `py tools/tg_notify.py "<결과>"` 로 보고한다. 텔레그램 수신은 `관제창.bat` 창 하나만(감시기 `telegram-guard.ps1`). 새 PC: `tools/pc_setup.ps1 -Label 회사`. 설계 `docs/superpowers/specs/2026-09-30-다중PC관제분배-design.md`
+
 ---
 
 ## 🚫 0순위 규칙 — 추측 금지, 검증하고 답한다 (2026-08-09)
