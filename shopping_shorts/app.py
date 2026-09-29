@@ -12601,6 +12601,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 보여서 못 잡았다. 확인은 반드시 curl 등 쿠키 없는 요청으로 하라).
                "/notice_1gi.html",   # 1기 사전신청 안내 + 신청 버튼
                "/api_manual.html",   # API 발급 매뉴얼(위 페이지와 설정 화면에서 링크)
+               "/start_guide.html",  # 신규 회원 시작 안내(2026-09-29, 관제 028) — 카톡으로 뿌리는 링크
                "/api/prereg",        # 사전신청 접수(POST) — 회원이 아닌 사람이 낸다
                "/api/deposit_claim", # 입금 신고(POST) — 아직 회원이 아닌 사람도 낸다
                "/pay",               # 결제 안내(신청 직후 여기로 보낸다)
@@ -12669,7 +12670,7 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    # 가입 전 안내 2장(2026-08-23) — 무료·체험만료 등급도 봐야 한다.
                    # _AUTH_ALLOW가 비로그인을 열어주고, 여기가 로그인한 무료 등급의 402를 막는다.
                    # 둘 다 넣어야 완전히 열린다 — 한쪽만 넣으면 한쪽 사람만 못 본다.
-                   "/notice_1gi.html", "/api_manual.html",
+                   "/notice_1gi.html", "/api_manual.html", "/start_guide.html",
                    # ★/api/media (2026-08-21). 랭킹 카드의 영상을 누르면 프론트가 이걸로
                    #   재생용 mp4 주소를 받는다 — 하는 일은 주소 반환뿐이고 /api/video·
                    #   /api/thumb과 같은 급인데 이것만 빠져 있었다. 그래서 "랭킹은 열어준다"
