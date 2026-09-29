@@ -9334,6 +9334,51 @@ def _voice_snapshot(store, body):
     }
 
 
+@app.post("/api/mix/lang")
+def api_mix_lang(request: Request, body: dict):
+    """대본 영어모드 변환(2026-09-29 사장님 "한국어 대본 뽑고 영어모드로 변환만 되게", 관제 029).
+
+    body: {job_id, lang: "en"|"ko"}. 한국어 대본·장면 매칭은 그대로 두고 **비트 문장만** 번역한다.
+    판단 주인은 script_translate.apply_lang(줄 수 계약·원문 보관·되돌리기). 여기서는 소유 확인·자막 메타
+    무효화·저장만 한다. 음성은 고객이 [이 음성으로 전체 생성]을 눌러 다시 만든다(글자가 바뀌면 tts_path
+    해시가 안 맞아 어차피 재합성된다 — /api/mix/candidate와 같은 계약).
+    ★영어모드에선 타입캐스트(한국 성우) 성우를 못 고르게 /api/mix/voice가 막는다(한 곳: _lang_voice_block).
+    """
+    from shopping_shorts import script_translate
+    job_id = (body.get("job_id") or "").strip()
+    lang = (body.get("lang") or "").strip().lower()
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job/plan 없음"})
+    cid = _cid(request)
+    if keyroute.as_cid(cid) and int(job.get("customer_id") or 0) != int(cid):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "이 고객의 영상 작업이 아닙니다"})
+    plan = job["edit_plan"]
+    product = ((job.get("product") or {}).get("name") if isinstance(job.get("product"), dict) else "") or ""
+    try:
+        changed = script_translate.apply_lang(plan, lang, product)
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+    for b in plan.get("beats") or []:
+        if isinstance(b, dict):
+            mix_pipeline.invalidate_caption_meta(b)   # 대본이 바뀐 모든 경로의 규칙(2026-08-15)
+    _save_render_inputs(store, job_id, edit_plan=plan)
+    return {"ok": True, "lang": lang, "changed": changed,
+            "narrations": [b.get("narration") for b in plan.get("beats") or [] if isinstance(b, dict)]}
+
+
+def _lang_voice_block(job, voice):
+    """영어모드 작업에 타입캐스트(한국 성우) 성우를 쓰려 하면 422 응답, 아니면 None. 판단은 여기 한 곳."""
+    plan = (job or {}).get("edit_plan") or {}
+    if plan.get("lang") != "en":
+        return None
+    if typecast_tts.is_typecast((voice or {}).get("model_id")):
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "영어모드에서는 타입캐스트(한국 성우)를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
+    return None
+
+
 @app.post("/api/mix/voice")
 def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
     """프리셋 선택을 job에 스냅샷 저장 후 기존 plan에 대해 TTS 재생성(백그라운드).
@@ -9345,6 +9390,9 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
         return JSONResponse(status_code=404, content={"ok": False, "error": "job/plan 없음"})
     voice = _voice_snapshot(store, body)
     _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True, voice=voice)   # 음성 키 필수(2026-09-01) + 성우 엔진 키(09-29)
+    if _blocked:
+        return _blocked
+    _blocked = _lang_voice_block(job, voice)      # 영어모드엔 한국 성우 금지(2026-09-29, 관제 029)
     if _blocked:
         return _blocked
     _save_render_inputs(store, job_id, voice=voice)
