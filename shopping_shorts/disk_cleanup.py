@@ -49,7 +49,8 @@ from pathlib import Path
 
 # ── 정책 값 — 운영 중 바꿔야 할 수 있으니 환경변수로 연다 ──────────────
 # 보관 기간: 이 기간 안의 작업은 재료까지 그대로 둔다(고객이 다시 편집할 수 있다).
-RETENTION_DAYS = int(os.getenv("SHORTS_KEEP_DAYS", "14"))
+# ★14→7일(2026-09-29 사장님 "고객보관 7일로") — 디스크 100% 사고 뒤. 완성본 보관(FINAL_KEEP_DAYS)과 같은 7일.
+RETENTION_DAYS = int(os.getenv("SHORTS_KEEP_DAYS", "7"))
 # 썸네일 캐시 상한(GB). 넘으면 오래 안 쓴 것부터 지운다.
 THUMB_CACHE_MAX_GB = float(os.getenv("SHORTS_THUMB_CACHE_GB", "8"))
 
