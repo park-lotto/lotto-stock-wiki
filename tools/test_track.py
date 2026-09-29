@@ -600,3 +600,68 @@ def test_finish_refuses_when_disk_nearly_full(repo, monkeypatch):
     with pytest.raises(track.TrackError, match="디스크 여유"):
         track.finish("보이스", repo=repo, gate=_Gate())
     assert not (track.tracks_dir(repo) / f"{track.STAGE_PREFIX}보이스").exists()
+
+
+# ── 병합 구조 개선(2026-09-29): 비코드 커밋이 끼어들면 게이트를 다시 돌지 않는다 ──────────
+def _git(cwd, *a):
+    import subprocess
+    r = subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, encoding="utf-8")
+    assert r.returncode == 0, r.stderr
+    return r.stdout
+
+
+def _race_setup(tmp_path, other_path, other_body):
+    """origin(bare) · 내 stage(병합 커밋 완료, 아직 push 전) · 다른 세션이 먼저 main에 push."""
+    from pathlib import Path
+    origin = tmp_path / "origin.git"; _git(tmp_path, "init", "--bare", "-b", "main", str(origin))
+    seed = tmp_path / "seed"; _git(tmp_path, "clone", str(origin), str(seed))
+    for c in (seed,):
+        _git(c, "config", "user.email", "t@t"); _git(c, "config", "user.name", "t")
+    (seed / "app.py").write_text("x=1\n"); _git(seed, "add", "-A"); _git(seed, "commit", "-m", "base"); _git(seed, "push", "origin", "HEAD:main")
+    stage = tmp_path / "stage"; _git(tmp_path, "clone", str(origin), str(stage))
+    _git(stage, "config", "user.email", "t@t"); _git(stage, "config", "user.name", "t")
+    _git(stage, "checkout", "-b", "track"); (stage / "app.py").write_text("x=2\n"); _git(stage, "commit", "-am", "mine")
+    _git(stage, "checkout", "--detach", "origin/main"); _git(stage, "merge", "--no-ff", "--no-edit", "track")
+    p = seed / other_path; p.parent.mkdir(parents=True, exist_ok=True); p.write_text(other_body)
+    _git(seed, "add", "-A"); _git(seed, "commit", "-m", "other"); _git(seed, "push", "origin", "HEAD:main")
+    return stage
+
+
+def test_catch_up_non_code_merges_and_push_succeeds(tmp_path):
+    stage = _race_setup(tmp_path, "관제/cards/001.md", "card\n")
+    assert track._catch_up_non_code(stage) is True
+    _git(stage, "push", "origin", "HEAD:main")                       # 거절 없이 들어간다
+    assert (stage / "app.py").read_text() == "x=2\n"                 # 내 코드 그대로
+
+
+def test_catch_up_refuses_when_code_slipped_in(tmp_path):
+    stage = _race_setup(tmp_path, "shopping_shorts/other.py", "y=1\n")
+    assert track._catch_up_non_code(stage) is False                  # 코드가 끼면 종전대로 게이트 재실행
+
+
+def test_is_non_code_paths():
+    assert track._is_non_code("관제/BOARD.md") and track._is_non_code("handoff/x.md")
+    assert not track._is_non_code("shopping_shorts/app.py")
+    assert not track._is_non_code("shopping_shorts/static/produce.html")
+    assert not track._is_non_code("tools/track.py")
+
+
+def test_cached_baseline_reuses_same_main_commit(tmp_path):
+    """같은 origin/main 커밋이면 두 번째 finish는 기준선(pytest 20분)을 다시 재지 않는다."""
+    repo = tmp_path / "repo"; repo.mkdir(); _git(repo, "init", "-b", "main")
+    _git(repo, "config", "user.email", "t@t"); _git(repo, "config", "user.name", "t")
+    (repo / "a").write_text("1"); _git(repo, "add", "-A"); _git(repo, "commit", "-m", "c")
+    calls = []
+
+    class Gate:
+        def snapshot(self, cwd):
+            calls.append(cwd)
+            return {"failed": ["t::x"], "import_ok": True, "compile_ok": True, "pytest_rc": 1,
+                    "pytest_out": "", "import_out": "", "compile_out": ""}
+
+    b1 = track._cached_baseline(repo, repo, Gate())
+    b2 = track._cached_baseline(repo, repo, Gate())
+    assert len(calls) == 1 and b1 == b2
+    (repo / "a").write_text("2"); _git(repo, "commit", "-am", "c2")
+    track._cached_baseline(repo, repo, Gate())
+    assert len(calls) == 2                                            # main이 바뀌면 다시 잰다
