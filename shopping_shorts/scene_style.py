@@ -209,6 +209,28 @@ def _absorb_tiny_gaps(scenes):
     return out
 
 
+MY_CHANNEL_KEY = "deco_my_channel"      # 계정별 내 채널명(app의 /api/produce/frame/my_channel과 같은 키)
+DEFAULT_CHANNEL = "숏템메이커"
+
+
+def account_channel(job_id):
+    """이 작업 주인의 **내 채널명**(계정 설정). 없거나 못 읽으면 "".
+    ★2026-09-29 이유준님 제보: 새 편집기 '내 프리셋'은 문구(text)를 빼고 저장하므로, 새 작업의 채널명은
+      여기 기본값이 정한다 — 종전엔 계정에 '오탐구'가 있어도 늘 '숏템메이커'가 박혔다(0순위-B: 값의 주인은 계정 한 곳)."""
+    if not job_id:
+        return ""
+    try:
+        from .store import Store
+        from .config import DB_PATH
+        st = Store(DB_PATH)
+        job = st.get_mix_job(job_id) or {}
+        cid = int(job.get("customer_id") or 0)
+        return (st.get_pref(MY_CHANNEL_KEY, customer_id=cid) or "").strip() if cid else ""
+    except Exception as exc:          # 못 읽어도 꾸미기는 떠야 한다 — 단 조용히 넘기지 않는다
+        print(f"[scene_style] 내 채널명 읽기 실패 job={job_id}: {exc}", file=sys.stderr)
+        return ""
+
+
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     from .video_assemble import caption_schedule, caption_lead_absorb
     from .template_copy import scene_text
@@ -239,7 +261,7 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
         from .template_copy import hook_from_script
         copy["text"], copy["hook_source"] = hook_from_script(
             (timeline[0].get("narration") if timeline else "") or "", copy.get("ai_copy") or "")
-    text = {"channel": "숏템메이커", **scene_text(copy)}
+    text = {"channel": account_channel(job_id) or DEFAULT_CHANNEL, **scene_text(copy)}
     auto_text = {k: text.get(k, "") for k in ("hook1", "hook2", "bodyTitle")}   # 편집기가 원본→템플릿으로 바꿀 때 빈 제목을 채우는 데 쓴다
     saved_text = {k:v for k,v in (snapshot or {}).get("text",{}).items() if k != "caption"}
     # ★템플릿(썰쇼핑)에서 제목 세 칸이 **전부 빈칸**으로 저장됐으면 자동 제목(대본 첫 줄)을 그대로 둔다(2026-09-25 사장님 "썰쇼핑 돌려놓고").
