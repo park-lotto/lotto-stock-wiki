@@ -459,8 +459,7 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3, video_gate=None):
 
 
 def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
-    print("기준선 수집 중 (병합 전 origin/main)...")
-    before = gate.snapshot(stage)
+    before = _cached_baseline(repo, stage, gate)
     for w in gate.baseline_warnings(before):
         print(f"  {w}")
 
@@ -525,6 +524,10 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
         raise TrackError(f"커밋 실패 — 병합을 버렸다(라이브 무사):\n{out}")
 
     rc, out = run(["git", "push", "origin", "HEAD:main"], stage)
+    for _ in range(RACE_CATCHUP_MAX):
+        if rc == 0 or not _is_race(out) or not _catch_up_non_code(stage):
+            break
+        rc, out = run(["git", "push", "origin", "HEAD:main"], stage)
     if rc != 0:
         if _is_race(out):
             return "raced"
@@ -536,6 +539,76 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
     if _MERGE_CARDS.get(name):
         _control.record_merge(repo, _MERGE_CARDS[name], name, sha.strip())
     return "pushed"
+
+
+# ── 병합 구조 개선(2026-09-29 사장님 "몇 번째 재시도 병합 이런 거 왜 되냐") ─────────────────
+#  실측: 게이트 = 기준선 20분 + 병합 후 20분. 그 사이 잠금 밖 커밋(auto: session changes·관제 카드)이
+#  main에 올라오면 push가 거절돼 40분을 처음부터 다시 돌았다(3회 = 2시간, 채널명기본 3/3 실패).
+#  ① 끼어든 커밋이 **코드가 아닌 것뿐**이면 테스트 결과가 달라질 수 없다 → 그 위에 합쳐 바로 push.
+#  ② 기준선은 origin/main 커밋이 같으면 결과가 같다 → 커밋별로 저장해 재사용.
+RACE_CATCHUP_MAX = 5
+# 이 경로들만 바뀐 커밋은 게이트 결과(문법·import·pytest)를 바꿀 수 없다. 모르는 경로는 코드로 본다(보수적).
+NON_CODE_PREFIXES = ("관제/", "handoff/", "wiki/", "raw/", "docs/", "channel/", "out/", "memory/", "NEXT_SESSION")
+NON_CODE_SUFFIXES = (".md", ".txt", ".csv", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".mp3")
+
+
+def _is_non_code(path):
+    p = path.strip().strip('"')
+    if p.startswith("shopping_shorts/") and not p.endswith((".md", ".txt")):
+        return False
+    return p.startswith(NON_CODE_PREFIXES) or p.endswith(NON_CODE_SUFFIXES)
+
+
+def _catch_up_non_code(stage):
+    """push가 거절된 뒤: 새로 들어온 main 커밋이 전부 비코드면 그 위에 합쳐(충돌 없을 때만) True.
+    코드가 하나라도 있거나 충돌이면 False — 종전대로 처음부터 게이트를 다시 돈다."""
+    run(["git", "fetch", "origin", "main"], stage)
+    # 기준 = 내 병합과 새 main의 공통 조상(두 번째 따라잡기에서도 맞다 — HEAD^1은 첫 따라잡기 뒤엔 내 커밋이다)
+    rc0, base = run(["git", "merge-base", "HEAD", "origin/main"], stage)
+    if rc0 != 0 or not base.strip():
+        return False
+    rc, files = run(["git", "diff", "--name-only", base.strip(), "origin/main"], stage)
+    if rc != 0:
+        return False
+    changed = [f for f in files.splitlines() if f.strip()]
+    code = [f for f in changed if not _is_non_code(f)]
+    if code:
+        print(f"ℹ️ 끼어든 main 커밋에 코드가 있다({len(code)}개, 예: {code[0]}) — 게이트를 다시 돈다")
+        return False
+    rc, out = run(["git", "merge", "--no-edit", "origin/main"], stage)
+    if rc != 0:
+        run(["git", "merge", "--abort"], stage)
+        print(f"ℹ️ 끼어든 비코드 커밋과 충돌 — 게이트를 다시 돈다: {out[-300:]}")
+        return False
+    print(f"⏩ 끼어든 main 커밋이 비코드 {len(changed)}개뿐 — 게이트 결과 그대로 두고 합쳐서 다시 push")
+    return True
+
+
+def _cached_baseline(repo, stage, gate):
+    """기준선(병합 전 origin/main 스냅샷)을 커밋별로 저장·재사용한다. 저장이 깨졌으면 새로 잰다."""
+    import json
+    rc, sha = run(["git", "rev-parse", "HEAD"], stage)
+    sha = sha.strip()
+    cache = tracks_dir(repo) / "_gate_cache" / f"{sha}.json"
+    if rc == 0 and cache.exists():
+        try:
+            before = json.loads(cache.read_text(encoding="utf-8"))
+            print(f"기준선 재사용 (origin/main {sha[:10]}, 저장본)")
+            return before
+        except Exception as e:  # noqa: BLE001 — 저장본이 깨졌으면 새로 잰다(경보는 남긴다)
+            print(f"⚠️ 기준선 저장본 읽기 실패 — 새로 잰다: {e!r}")
+    print("기준선 수집 중 (병합 전 origin/main)...")
+    before = gate.snapshot(stage)
+    if rc == 0 and sha:
+        try:
+            cache.parent.mkdir(parents=True, exist_ok=True)
+            olds = sorted(cache.parent.glob("*.json"), key=lambda p: p.stat().st_mtime)[:-30]
+            for o in olds:
+                o.unlink(missing_ok=True)
+            cache.write_text(json.dumps(before, ensure_ascii=False), encoding="utf-8")
+        except Exception as e:  # noqa: BLE001
+            print(f"⚠️ 기준선 저장 실패(병합엔 영향 없음): {e!r}")
+    return before
 
 
 # finish_gate 가 찾은 카드 번호 → push 뒤 병합 기록에 쓴다(트랙명별). 한 프로세스가 finish 하나를 돈다.
