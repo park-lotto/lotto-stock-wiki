@@ -1,7 +1,12 @@
 {
+  "handoff/장면폰트.md": {
+    "at": "2026-09-29 23:55",
+    "card": 40,
+    "track": "장면폰트"
+  },
   "out/precision20-ui.js": {
-    "at": "2026-09-29 22:57",
-    "card": 36,
+    "at": "2026-09-29 23:55",
+    "card": 40,
     "track": "장면폰트"
   },
   "out/precision20-ui.js:drawFontSets": {
@@ -10,8 +15,8 @@
     "track": "장면폰트"
   },
   "out/scene-style-ui-showcase.html": {
-    "at": "2026-09-29 23:07",
-    "card": 36,
+    "at": "2026-09-29 23:55",
+    "card": 40,
     "track": "장면폰트"
   },
   "shopping_shorts/app.py": {
@@ -49,9 +54,14 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/tests/test_text_look_contract.py": {
+    "at": "2026-09-29 23:55",
+    "card": 40,
+    "track": "장면폰트"
+  },
   "tools/scene_font_research/check_text_look.py": {
-    "at": "2026-09-29 22:57",
-    "card": 36,
+    "at": "2026-09-29 23:55",
+    "card": 40,
     "track": "장면폰트"
   }
 }
