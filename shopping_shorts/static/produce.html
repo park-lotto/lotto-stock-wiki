@@ -1693,6 +1693,7 @@
 <script src="/error_help.js"></script>
 <script src="/scene-decoration-catalog.js?v=2"></script>
 <script src="/caption-line-input.js?v=1"></script>
+<script src="/text-look-contract.js?v=1"></script>
 </head>
 <body>
   <div class="aurora-bg"></div>
@@ -16850,13 +16851,14 @@ function drawThumb(ctx, img, layers, W, H, view){
       // 외곽선이 있으면 외곽선 두께째로 그림자를 떨어뜨려야 테두리 밖으로 그림자가 보인다.
       if (+L.shadow > 0){
         const k = Math.min(100, +L.shadow) / 100;
+        const look = window.TEXT_LOOK_CONTRACT;
         ctx.save();
         // ★진하게(2026-09-17 사장님 "너무 약해") — 번짐은 줄이고(또렷), 거리는 늘리고, 같은 그림자를
         //   3번 겹쳐 깐다. 한 번만 깔면 번진 가장자리가 반투명이라 밝은 배경에서 회색으로 뜬다.
         ctx.shadowColor = '#000';
-        ctx.shadowBlur = size * 0.06 * k;
-        ctx.shadowOffsetX = size * 0.10 * k; ctx.shadowOffsetY = size * 0.13 * k;
-        for (let _p = 0; _p < 3; _p++){
+        ctx.shadowBlur = size * look.shadowBlur * k;
+        ctx.shadowOffsetX = size * look.shadowX * k; ctx.shadowOffsetY = size * look.shadowY * k;
+        for (let _p = 0; _p < look.shadowPasses; _p++){
         if (L.outline && L.outline.w){
           ctx.lineWidth = Math.max(L.outline.w * s, size * 0.085);
           ctx.strokeStyle = L.outline.color; ctx.lineJoin = 'round';

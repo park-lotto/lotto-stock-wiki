@@ -27,9 +27,14 @@ def test_text_weight_and_shadow_accept_numeric_controls_and_legacy_values():
     assert validate_snapshot(numeric)["textWeight"] == 90
     assert validate_snapshot(numeric)["textShadow"] == 65
     assert validate_snapshot({**base, "textWeight": "heavy", "textShadow": "soft"})["textWeight"] == "heavy"
+    split = {"channel": 5, "titleLarge": 100, "titleSmall": 55, "caption": 35}
+    assert validate_snapshot({**base, "textWeight": split, "textShadow": split})["textShadow"] == split
     for bad in (-5, 7, 105, True, "medium"):
         with pytest.raises(ValueError):
             validate_snapshot({**base, "textWeight": bad})
+    for bad in ({"wrong": 50}, {"channel": 7}, {"caption": True}):
+        with pytest.raises(ValueError):
+            validate_snapshot({**base, "textShadow": bad})
 
 
 def test_real_caption_gaps_and_hook_beat_are_preserved():

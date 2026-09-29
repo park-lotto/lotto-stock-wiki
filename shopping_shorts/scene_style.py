@@ -130,7 +130,13 @@ def validate_snapshot(value):
     for key, old, label in (("textWeight", ("", "bold", "heavy"), "글자 두께"), ("textShadow", ("", "soft", "strong"), "글자 그림자")):
         look = value.get(key)
         # 2026-09-29: 새 저장값은 0~100(5단위), 09-28의 3단계 문자열은 기존 작업 재열기용으로 계속 허용한다.
-        if look is not None and look not in old and (isinstance(look, bool) or not isinstance(look, (int, float)) or look < 0 or look > 100 or look % 5):
+        if isinstance(look, dict):
+            if set(look) - {"channel", "titleLarge", "titleSmall", "caption"} or any(
+                isinstance(v, bool) or not isinstance(v, (int, float)) or v < 0 or v > 100 or v % 5
+                for v in look.values()
+            ):
+                raise ValueError(f"{label} 값이 올바르지 않습니다")
+        elif look is not None and look not in old and (isinstance(look, bool) or not isinstance(look, (int, float)) or look < 0 or look > 100 or look % 5):
             raise ValueError(f"{label} 값이 올바르지 않습니다")
     if value.get("bodyCaptionMotion") not in (None, "", "rise", "grow", "pop", "slide", "drop", "fade", "wide"):   # precision20-ui.js BODY_CAPTION_MOTIONS와 짝
         raise ValueError("본문 자막 효과 값이 올바르지 않습니다")

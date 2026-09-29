@@ -7,7 +7,7 @@
   ④ 최종 합성(compose) mp4 프레임: 두 영상의 글자 영역이 다르다
   --root 로 옛 코드(main 폴더 등)를 주면 ①②③④가 실패해야 한다 — 검사가 진짜로 재는지 확인용.
 """
-import sys, pathlib, shutil, threading, functools, http.server, socketserver, json
+import sys, pathlib, shutil, threading, functools, http.server, socketserver, json, re
 args = sys.argv[1:]
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 if '--root' in args:
@@ -31,11 +31,13 @@ threading.Thread(target=srv.serve_forever, daemon=True).start()
 URL = f'http://127.0.0.1:{srv.server_address[1]}/out/scene-style-ui-showcase.html'
 scenes = [{"start": i * 2, "end": i * 2 + 2, "caption": f"{i}번 자막입니다", "caption_visible": True, "beat_idx": i,
            "kind": "hook" if i == 0 else "body"} for i in range(3)]
-TEXT = {"channel": "숏템메이커", "hook1": "주부들도 감탄한", "hook2": "천재 아이디어", "bodyTitle": "주부들도 감탄한 천재 아이디어"}
+TEXT = {"channel": "숏템메이커", "hook1": "주부들도 감탄한", "hook2": "천재 아이디어", "bodyTitle": "작은 보조 제목"}
 CTX = {"jobId": "tl", "text": TEXT, "scenes": scenes}
 STYLE_JS = """()=>{const L=document.querySelector('#a-live-preview');const r={};
-  const read=b=>{const e=L.querySelector(`.precision-text[data-edit-bind="${b}"]`);if(e){const s=getComputedStyle(e);r[b]={stroke:parseFloat(s.webkitTextStrokeWidth)||0,shadow:s.textShadow}}};
-  window.sceneStyle.show(0);read('hook1');window.sceneStyle.show(1);read('caption');window.sceneStyle.show(0);return r}"""
+  const read=b=>{const e=L.querySelector(`.precision-text[data-edit-bind="${b}"]`);if(e){const s=getComputedStyle(e);r[b]={stroke:parseFloat(s.webkitTextStrokeWidth)||0,shadow:s.textShadow,font:parseFloat(s.fontSize)||0,group:e.dataset.lookGroup}}};
+  window.sceneStyle.show(0);['channel','hook1','hook2','bodyTitle'].forEach(read);window.sceneStyle.show(1);read('caption');window.sceneStyle.show(0);return r}"""
+LOOKS = {"channel": (20, 25), "titleLarge": (90, 100), "titleSmall": (55, 65), "caption": (35, 45)}
+BIND_GROUP = {"channel": "channel", "hook1": "titleLarge", "bodyTitle": "titleSmall", "caption": "caption"}
 base_snap = styled_snap = None
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_context(viewport={'width': 1500, 'height': 1000}).new_page()
@@ -43,41 +45,54 @@ with sync_playwright() as p:
     pg.click('[data-left-tab="scene"]'); pg.click('[data-p20="0"]'); pg.wait_for_timeout(500)
     before = pg.evaluate(STYLE_JS); base_snap = pg.evaluate('()=>window.sceneStyle.snapshot()')
     pg.click('[data-left-tab="font"]'); pg.wait_for_timeout(200)
-    has_ui = all(pg.locator(f'[data-look-{kind}="{key}"]').count() == 1 for key in ('tw', 'ts') for kind in ('range', 'value')) and pg.locator('[data-look-step]').count() == 4
-    need(has_ui, '① [폰트] 탭에 두께·그림자 각각 -/슬라이더/+/숫자가 있다')
+    has_ui = all(pg.locator(f'[data-look-{kind}="{key}"]').count() == 1 for key in ('tw', 'ts') for kind in ('range', 'value')) and pg.locator('[data-look-step]').count() == 4 and pg.locator('[data-look-target]').count() == 4
+    need(has_ui, '① 채널명/큰 제목/작은 제목/자막 선택과 두께·그림자 -/슬라이더/+/숫자가 있다')
     if has_ui:
-        pg.locator('[data-look-range="tw"]').fill('85')
-        pg.locator('[data-look-range="ts"]').fill('70')
-        pg.click('[data-look-step="tw"][data-delta="5"]')
-        pg.click('[data-look-step="ts"][data-delta="-5"]')
+        for target, (weight, shadow) in LOOKS.items():
+            pg.click(f'[data-look-target="{target}"]')
+            pg.locator('[data-look-range="tw"]').fill(str(weight))
+            pg.locator('[data-look-range="ts"]').fill(str(shadow))
         pg.wait_for_timeout(300)
-        need(pg.locator('[data-look-value="tw"]').text_content() == '90' and pg.locator('[data-look-value="ts"]').text_content() == '65',
-             '① 슬라이더·−＋ 조절 뒤 현재 수치가 90·65로 보인다')
+        need(pg.locator('[data-look-value="tw"]').text_content() == '35' and pg.locator('[data-look-value="ts"]').text_content() == '45',
+             '① 대상을 바꾸면 그 대상 수치가 독립적으로 보인다')
     after = pg.evaluate(STYLE_JS); styled_snap = pg.evaluate('()=>window.sceneStyle.snapshot()')
     pg.screenshot(path=str(out / 'editor_styled.png'))
-    for bind in ('hook1', 'caption'):
+    for bind in BIND_GROUP:
         a, z = before.get(bind, {}), after.get(bind, {})
         need(z.get('stroke', 0) > a.get('stroke', 0), f"① {bind} 글자 두께가 커진다 (테두리 {a.get('stroke')}px → {z.get('stroke')}px)")
         need(z.get('shadow') not in (None, 'none') and z.get('shadow') != a.get('shadow'), f"① {bind} 그림자가 생긴다 ({a.get('shadow')} → {z.get('shadow')})")
-    need(styled_snap.get('textWeight') == 90 and styled_snap.get('textShadow') == 65,
+        need(z.get('group') == BIND_GROUP[bind], f"① {bind}는 {BIND_GROUP[bind]} 조절만 받는다 ({z.get('group')})")
+    need(styled_snap.get('textWeight') == {k:v[0] for k,v in LOOKS.items()} and styled_snap.get('textShadow') == {k:v[1] for k,v in LOOKS.items()},
          f"① 저장값에 실린다 (textWeight={styled_snap.get('textWeight')}, textShadow={styled_snap.get('textShadow')})")
+    sh = after['hook1']['shadow']; shadow_x = float(re.search(r'\)\s+([\d.]+)px', sh).group(1))
+    need(sh.count('rgb(') == 3 and abs(shadow_x - after['hook1']['font'] * .10) < .15,
+         f"① 그림자가 썸네일처럼 3회·가로 10%로 그려진다 ({sh})")
     need('textWeight' not in base_snap and 'textShadow' not in base_snap, '① 안 건드린 저장값엔 키가 없다(옛 저장본과 같아 완성본 무효화 없음)')
     # 다시 열기
     pg.goto(URL, wait_until='networkidle'); pg.evaluate('([c,s])=>window.sceneStyle.load(c,s)', [CTX, styled_snap]); pg.wait_for_timeout(700)
     again = pg.evaluate(STYLE_JS)
     need(again.get('hook1', {}).get('stroke') == after.get('hook1', {}).get('stroke'), f"① 다시 열어도 두께 그대로 ({again.get('hook1', {}).get('stroke')}px)")
     pg.click('[data-left-tab="font"]'); pg.wait_for_timeout(200)
-    restored = pg.evaluate("()=>Object.fromEntries(['tw','ts'].map(k=>[k,[document.querySelector(`[data-look-range=\"${k}\"]`)?.value,document.querySelector(`[data-look-value=\"${k}\"]`)?.textContent]]))")
-    need(restored == {'tw': ['90', '90'], 'ts': ['65', '65']}, f'① 다시 열면 슬라이더·숫자가 그대로다 {restored}')
+    restored = {}
+    for target in LOOKS:
+        pg.click(f'[data-look-target="{target}"]')
+        restored[target] = pg.evaluate("()=>['tw','ts'].map(k=>document.querySelector(`[data-look-range=\"${k}\"]`)?.value)")
+    need(restored == {k:[str(v[0]),str(v[1])] for k,v in LOOKS.items()}, f'① 다시 열면 대상별 슬라이더·숫자가 그대로다 {restored}')
     if has_ui:
-        pg.locator('[data-look-range="tw"]').fill('0'); pg.locator('[data-look-range="ts"]').fill('0'); pg.wait_for_timeout(300)
+        for target in LOOKS:
+            pg.click(f'[data-look-target="{target}"]')
+            pg.locator('[data-look-range="tw"]').fill('0'); pg.locator('[data-look-range="ts"]').fill('0')
+        pg.wait_for_timeout(300)
         back = pg.evaluate('()=>window.sceneStyle.snapshot()')
         need('textWeight' not in back and 'textShadow' not in back, '① 기본·없음으로 되돌리면 저장값에서 빠진다')
         legacy = {**base_snap, 'textWeight': 'heavy', 'textShadow': 'soft'}
         pg.goto(URL, wait_until='networkidle'); pg.evaluate('([c,s])=>window.sceneStyle.load(c,s)', [CTX, legacy]); pg.wait_for_timeout(500)
         pg.click('[data-left-tab="font"]')
-        old = pg.evaluate("()=>Object.fromEntries(['tw','ts'].map(k=>[k,document.querySelector(`[data-look-range=\"${k}\"]`)?.value]))")
-        need(old == {'tw': '100', 'ts': '50'}, f'① 옛 3단계 저장값도 100·50으로 그대로 열린다 {old}')
+        old = {}
+        for target in LOOKS:
+            pg.click(f'[data-look-target="{target}"]')
+            old[target] = pg.evaluate("()=>['tw','ts'].map(k=>document.querySelector(`[data-look-range=\"${k}\"]`)?.value)")
+        need(all(v == ['100', '50'] for v in old.values()), f'① 옛 전체 저장값은 네 대상 모두 100·50으로 열린다 {old}')
     b.close()
 srv.shutdown()
 
@@ -89,7 +104,7 @@ timeline = [{'beat_idx': i, 't0': i, 'dur': 1, 'narration': c, 'caption_lines': 
             for i, c in enumerate(['주부들도 감탄한 천재 아이디어', '이건 바로 핑거 찹스틱'])]
 HEAD = {'text': '주부들도 감탄한\n천재 아이디어'}
 base = {k: v for k, v in base_snap.items() if k not in ('textWeight', 'textShadow')}
-styled = {**base, 'textWeight': 90, 'textShadow': 65}
+styled = {**base, 'textWeight': {k:v[0] for k,v in LOOKS.items()}, 'textShadow': {k:v[1] for k,v in LOOKS.items()}}
 def changed(p1, p2):   # 두 그림에서 눈에 띄게 달라진 점 수(RGBA 합성 후 밝기 차) — 불투명 띠 위 글자도 잡는다
     bg = Image.new('RGBA', Image.open(p1).size, (48, 96, 160, 255))
     g = lambda p: Image.alpha_composite(bg, Image.open(p).convert('RGBA')).convert('L')
