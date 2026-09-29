@@ -106,6 +106,7 @@ def test_api_lang_en_translates_and_clears_caption_meta(client):
     r = c.post("/api/mix/lang", json={"job_id": "J1", "lang": "en"})
     assert r.status_code == 200, r.text
     d = r.json(); assert d["lang"] == "en" and d["changed"] == 3 and d["narrations"] == EN
+    assert [p["ko"] for p in d["pairs"]] == KO and [p["en"] for p in d["pairs"]] == EN   # 검토표 재료
     plan = st.get_mix_job("J1")["edit_plan"]
     assert plan["lang"] == "en"
     for b in plan["beats"]:

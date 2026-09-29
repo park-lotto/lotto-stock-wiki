@@ -5509,6 +5509,7 @@ def api_mix_result(job_id: str, request: Request = None):
     detected = _edit_plan._normalize_video_type(plan.get("detected_type"))
     return {
         "ok": True, "structure": plan["structure"], "beats": beats,
+        "lang": plan.get("lang") or "ko",     # 🌐 영어모드(관제 029) — 5단계 버튼·검토표가 읽는다
         # ★P1/P2(2026-07-24): 어느 생성기가 만들었나 + 렌더 전 불변식 위반을 화면에 띄우기 위해
         # 내보낸다(조용한 폴백·조용한 위반 금지). 없으면 옛 job → 프런트가 경고 안 그린다.
         "generator": plan.get("generator", ""),
@@ -9364,8 +9365,11 @@ def api_mix_lang(request: Request, body: dict):
         if isinstance(b, dict):
             mix_pipeline.invalidate_caption_meta(b)   # 대본이 바뀐 모든 경로의 규칙(2026-08-15)
     _save_render_inputs(store, job_id, edit_plan=plan)
+    _bs = [b for b in plan.get("beats") or [] if isinstance(b, dict)]
     return {"ok": True, "lang": lang, "changed": changed,
-            "narrations": [b.get("narration") for b in plan.get("beats") or [] if isinstance(b, dict)]}
+            "narrations": [b.get("narration") for b in _bs],
+            # 검토표용(2026-09-29 사장님 "자막이 먼저 나오고 어색한지 본 다음 음성이 변환돼야지")
+            "pairs": [{"beat_idx": b.get("beat_idx"), "ko": b.get("narration_ko") or "", "en": b.get("narration") or ""} for b in _bs]}
 
 
 def _lang_voice_block(job, voice):
