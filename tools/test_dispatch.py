@@ -115,7 +115,8 @@ def test_dispatch_opens_window(fake_track, monkeypatch):
     assert dispatch.main(["대본작성", "자막 고쳐", "--card", "46"]) == 0
     L = fake_track["L"]
     assert L["name"] == "집·1·대본작성·카드46"
-    assert L["argv"][-1].startswith("자막 고쳐")
+    assert "handoff/대본작성.md" in L["argv"][-1] and "자막 고쳐" in L["argv"][-1]
+    assert "--continue" not in L["argv"]
     assert "tg_notify.py" in L["argv"][-1]
     assert fake_track["card"] == (46, "대본작성")
 
