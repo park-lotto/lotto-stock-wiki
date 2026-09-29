@@ -138,6 +138,14 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
             max_retries=max_retries, customer_id=customer_id)
     api_key = _api_key(customer_id)
     if not api_key:
+        # ★회원(면제 아님)이 키 없이 오면 무음이 아니라 **안내문으로 실패**(2026-09-29, 타입캐스트 경로와 같은 계약).
+        #   keys_for가 회원에겐 사장님 키를 안 주므로(사장님 "일레븐 유료 안 된 사람은 내 거로 쓰게 하지 말고")
+        #   여기서 무음으로 내려가면 소리 없는 영상이 "완료"로 나간다.
+        from shopping_shorts import keyroute as _kr
+        if not _kr.is_block_exempt(customer_id):
+            _record_tts_event("elevenlabs", None, silent=True, customer_id=customer_id)
+            raise RuntimeError("음성 생성을 하려면 일레븐랩스 또는 타입캐스트 API 키를 등록해야 해요. "
+                               "설정 > 🔑 API 키에서 등록해 주세요.")
         _record_tts_event("elevenlabs", None, silent=True, customer_id=customer_id)
         _write_silent_mp3(out_path, _estimate_seconds(text))
         return out_path

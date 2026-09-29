@@ -216,8 +216,8 @@ def test_keys_for_typecast_never_falls_back_to_owner_for_member(store, monkeypat
     assert keysx == ["사장님TC"]
 
 
-def test_elevenlabs_owner_fallback_unchanged_for_exempt_only_paths(store, monkeypatch):
-    """일레븐은 종전대로(관문이 막으므로 keys_for 자체는 안 바꿨다)."""
+def test_elevenlabs_never_falls_back_to_owner_for_member(store, monkeypatch):
+    """일레븐도 회원에겐 사장님 키 폴백 없음(2026-09-29 사장님 "일레븐 유료 안 된 사람은 내 거로 쓰게 하지 말고")."""
     monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님EL"])
-    keys, _ = keyroute.keys_for(store, 7, keyroute.SVC_ELEVENLABS)
-    assert keys == ["사장님EL"]
+    assert keyroute.keys_for(store, 7, keyroute.SVC_ELEVENLABS) == ([], False)
+    assert keyroute.keys_for(store, 0, keyroute.SVC_ELEVENLABS)[0] == ["사장님EL"]

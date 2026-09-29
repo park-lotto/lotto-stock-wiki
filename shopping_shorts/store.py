@@ -6427,6 +6427,16 @@ class Store:
                 return None      # 깨진 값이 영상제작을 막지 않는다
         if not (isinstance(v, dict) and v.get("voice_id")):
             return None
+        # ★타입캐스트 키를 못 쓰는 회원의 기억이 타입캐스트 성우면 일레븐 기본 성우로 바꿔 준다(2026-09-29 사장님).
+        #   관리자 키 차단 뒤 배승훈(580)·최소연(134) 등이 3단계 TTS에서 막혀 5단계(성우 바꾸기)에 못 갔다.
+        #   판단은 typecast_tts.use_fallback 한 곳. 여기(성우 시드의 유일한 출구)에서 갈아끼우면 새 작업·
+        #   5단계 '지난 성우 되살리기' 둘 다 일레븐으로 간다. 회원이 타입캐스트 키를 등록하면 원래 기억이 다시 살아난다.
+        try:
+            from shopping_shorts import typecast_tts as _tc
+            if _tc.use_fallback(v.get("model_id"), customer_id):
+                return dict(_tc.FALLBACK_VOICE)
+        except Exception as e:    # noqa: BLE001 — 판정 실패가 영상제작을 막지 않는다
+            logging.warning("get_last_voice: 타입캐스트 폴백 판정 실패(기억 유지) — %r", e)
         # ★못 쓰는 목소리에 **고착**되는 걸 막는다(2026-09-09 실사고 cid 163).
         #   목록에서 숨기는 것만으론 부족하다 — 한 번 고른 목소리가 여기 저장돼
         #   다음 작업에 자동으로 다시 실린다. cid 163은 이 값이 사장님 계정 보이스라
