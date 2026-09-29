@@ -925,6 +925,10 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     # ★화면에 "영상으로 몇 초"를 띄우려면 초를 서버가 계산해 실어 보내야 한다
     #   (2026-08-18 사장님). 화면이 자기 상수로 따로 계산하면 판정(밀도 게이트)과
     #   다른 수를 말하게 된다 — 초 환산은 script_gate 한 곳에서만 한다(0순위-B).
+    # ★후킹은 무조건 한 문장(2026-09-29) — 판단은 script_gate 한 곳. 넘친 문장은 다음 줄로(장면은 하류가 채운다).
+    if res:
+        res = script_gate.enforce_one_sentence_hook(res)
+        full = " ".join(b.get("text", "") for b in res)   # script_gate.check와 같은 조립
     for _b in (res or []):
         _b["sec"] = script_gate.est_seconds(_b.get("text", ""))
         # ★src_seg 정규화(2026-09-04): 모델이 "s3-10,s3-11"처럼 여럿을 적는다. 하류(store._apply_beat_sources·
