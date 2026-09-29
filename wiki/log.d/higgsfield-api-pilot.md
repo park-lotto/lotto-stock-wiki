@@ -1,5 +1,7 @@
 # Higgsfield API 파일럿
 
+- 2026-09-29: 공식 상세페이지·실제 자매 모델 이미지와 리뷰 인사이트로 지아지조 후반 4개 장면을 제작했다. 총 5장면 18초 HyperFrames 무음 검수본을 바탕화면에 렌더했으며 strict 검사 전 항목 통과, 추가 AI 과금은 없었다.
+
 - 2026-09-29: 지아지조 공식 메인 사진의 실제 자매 모델로 키즈라이드 캐리어 Product Hit 4초 영상을 Open Higgsfield API에서 1건 생성했다($0.39, 당시 cashback 적용). 9:16 후처리본을 바탕화면 `kids-ride-sisters-product-hit-higgsfield-4s.mp4`에 저장하고 접촉시트로 육안 확인했다.
 - 2026-09-29: 제출 성공 응답의 상태 URL 호스트가 기존 허용 검사와 달라 요청 ID 저장 전 예외가 발생했다. 대시보드에서 기존 작업을 복구했으며, 파서와 `aspect_ratio` payload 보강이 후속 과제다.
 
