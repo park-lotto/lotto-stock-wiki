@@ -65,3 +65,27 @@ def test_build_launch_codex(tmp_path):
 def test_build_launch_rejects_bad_account(tmp_path):
     with pytest.raises(ValueError):
         track_open.build_launch(tmp_path, account="4", pc="집", tag="t", home=HOME)
+
+
+def test_session_alive_missing_file(tmp_path):
+    assert track_open.session_alive(tmp_path) is None
+
+
+def test_session_alive_dead_pid(tmp_path, monkeypatch):
+    (tmp_path / ".session.json").write_text(json.dumps({"pid": 99999, "name": "n"}), encoding="utf-8")
+    monkeypatch.setattr(track_open, "_image_name", lambda pid: "")
+    assert track_open.session_alive(tmp_path) is None
+
+
+def test_session_alive_live_window(tmp_path, monkeypatch):
+    (tmp_path / ".session.json").write_text(json.dumps({"pid": 123, "name": "집·1·t"}), encoding="utf-8")
+    monkeypatch.setattr(track_open, "_image_name", lambda pid: "powershell.exe")
+    assert track_open.session_alive(tmp_path)["name"] == "집·1·t"
+
+
+def test_launch_script_text(tmp_path):
+    L = track_open.build_launch(tmp_path, pc="집", tag="t", prompt="it's \"q\"", home=HOME)
+    s = track_open.launch_script(L)
+    assert "Remove-Item Env:\CLAUDE_CONFIG_DIR" in s
+    assert "Set-Location -LiteralPath '" in s
+    assert "'it''s \"q\"'" in s          # PowerShell 작은따옴표 이스케이프

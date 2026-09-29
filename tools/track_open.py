@@ -11,8 +11,11 @@
 `cd .tracks\\보이스`를 치게 하면 아무도 안 지킨다. 규칙은 지키기 쉬워야 지켜진다
 (이 프로젝트가 '규칙으로는 못 막는다'를 이미 두 번 배웠다).
 """
+import json
+import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -62,6 +65,54 @@ def build_launch(cwd, *, account="1", agent="claude", model="", prompt="", pc=""
     if prompt:
         argv.append(prompt)
     return {"argv": argv, "env": env, "env_unset": unset, "name": name, "cwd": str(cwd)}
+
+
+SESSION_FILE = ".session.json"
+
+
+def _ps_quote(s):
+    return "'" + str(s).replace("'", "''") + "'"
+
+
+def launch_script(L):
+    """새 PowerShell 창이 -File 로 돌릴 스크립트. 인라인 -Command 는 Start-Process 가 안쪽
+    큰따옴표를 벗겨 ParserError 가 난다(2026-09-30 실측) — 그래서 파일로 넘긴다."""
+    lines = [r'$env:PATH = "$env:LOCALAPPDATA\Microsoft\WinGet\Links;$env:PATH"']
+    lines += [f"Remove-Item Env:\\{k} -ErrorAction SilentlyContinue" for k in L["env_unset"]]
+    lines += [f"$env:{k} = {_ps_quote(v)}" for k, v in L["env"].items()]
+    lines.append(f"Set-Location -LiteralPath {_ps_quote(L['cwd'])}")
+    lines.append(f"$Host.UI.RawUI.WindowTitle = {_ps_quote(L['name'])}")
+    lines.append("& " + " ".join(_ps_quote(a) for a in L["argv"]))
+    return "\r\n".join(lines) + "\r\n"
+
+
+def launch_window(L):
+    """보이는 새 PowerShell 창에서 L 을 실행하고, 트랙 폴더에 창 pid 를 적는다."""
+    fd, path = tempfile.mkstemp(suffix=".ps1", prefix="track_open_")
+    with os.fdopen(fd, "w", encoding="utf-8-sig") as f:       # PS 5.1 은 BOM 없으면 한글이 깨진다
+        f.write(launch_script(L))
+    p = subprocess.Popen(
+        ["powershell.exe", "-NoProfile", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", path],
+        creationflags=subprocess.CREATE_NEW_CONSOLE,
+    )
+    Path(L["cwd"], SESSION_FILE).write_text(
+        json.dumps({"pid": p.pid, "name": L["name"]}, ensure_ascii=False), encoding="utf-8")
+    return p.pid
+
+
+def _image_name(pid):
+    out = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+                         capture_output=True, text=True).stdout.strip()
+    return out.split(",")[0].strip('"').lower() if out.startswith('"') else ""
+
+
+def session_alive(cwd):
+    """트랙 폴더에 기록된 창이 아직 떠 있으면 그 기록, 아니면 None(낡은 기록 포함)."""
+    try:
+        rec = json.loads(Path(cwd, SESSION_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return rec if _image_name(rec.get("pid", 0)) == "powershell.exe" else None
 
 
 def open_track(name, repo=track.BASE, agent="claude", extra=()):
