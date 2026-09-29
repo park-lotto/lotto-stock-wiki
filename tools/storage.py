@@ -221,12 +221,7 @@ def move_track_to_external(repo, smap, name, printer=print):
     if dest.exists():
         printer("   건너뜀 %s: %s 가 이미 있다 — 합치는 판단은 사람이" % (name, dest))
         return False
-    try:
-        shutil.move(str(wt), str(dest))
-    except (OSError, shutil.Error) as e:
-        printer("   건너뜀 %s: 못 옮김(열린 창·터미널?) %s" % (name, str(e)[:100]))
-        if dest.exists() and not wt.exists():
-            shutil.move(str(dest), str(wt))           # 반쯤 옮겨진 것 되돌림
+    if not move_dir_safe(wt, dest, printer):          # 복사→대조→삭제. 사용 중이면 C 원본 그대로, D 사본 지움
         return False
     if not make_junction(wt, dest):
         shutil.move(str(dest), str(wt))

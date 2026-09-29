@@ -524,7 +524,7 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
     if rc != 0:
         raise TrackError(f"커밋 실패 — 병합을 버렸다(라이브 무사):\n{out}")
 
-    rc, out = run(["git", "push", "origin", "HEAD:main"], stage)
+    rc, out = _push_absorbing_doc_only_races(stage)
     if rc != 0:
         if _is_race(out):
             return "raced"
@@ -540,6 +540,35 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
 
 # finish_gate 가 찾은 카드 번호 → push 뒤 병합 기록에 쓴다(트랙명별). 한 프로세스가 finish 하나를 돈다.
 _MERGE_CARDS = {}
+
+
+# 이 접두의 파일만 바뀐 main 커밋은 게이트 결과를 바꾸지 않는다(코드가 아니다). 관제 카드·보드·선점표가 여기 산다.
+_DOC_ONLY_PREFIXES = ("관제/", "handoff/", "wiki/log.d/")
+_DOC_RACE_TRIES = 6
+
+
+def _push_absorbing_doc_only_races(stage):
+    """push 가 경쟁에서 지면: 그 사이 main 에 들어온 커밋이 **문서(관제 카드 등)만** 건드렸으면 게이트를 다시 돌리지 않고
+    그 위에 얹어 다시 push 한다. 코드가 섞여 있으면 'raced' 로 돌려 finish 가 전체 게이트를 다시 돈다.
+
+    왜(2026-09-30 실측): 관제가 카드 등록·승인·상태마다 main 에 바로 push 하니, 5분짜리 게이트를 도는 동안 거의 매번
+    카드 커밋이 먼저 들어와 finish 가 3번 연속 '다른 트랙이 먼저' 로 실패했다. 카드 md/json 은 게이트 결과와 무관하다."""
+    rc, out = run(["git", "push", "origin", "HEAD:main"], stage)
+    tries = 0
+    while rc != 0 and _is_race(out) and tries < _DOC_RACE_TRIES:
+        tries += 1
+        run(["git", "fetch", "origin"], stage)
+        rc2, changed = run(["git", "-c", "core.quotepath=off", "diff", "--name-only", "HEAD...origin/main"], stage)
+        files = [f.strip().replace("\\", "/") for f in changed.splitlines() if f.strip()]
+        if rc2 != 0 or not files or not all(f.startswith(_DOC_ONLY_PREFIXES) for f in files):
+            return rc, out                                   # 코드가 섞였다 → 전체 게이트 다시
+        rc3, mout = run(["git", "merge", "--no-edit", "origin/main"], stage)
+        if rc3 != 0:
+            run(["git", "merge", "--abort"], stage)
+            return rc, out
+        print(f"ℹ️ 그 사이 main 에 문서 커밋만 {len(files)}파일 — 게이트 재실행 없이 얹어서 다시 push ({tries}/{_DOC_RACE_TRIES})")
+        rc, out = run(["git", "push", "origin", "HEAD:main"], stage)
+    return rc, out
 
 
 def _is_race(push_output):

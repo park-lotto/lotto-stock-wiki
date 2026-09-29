@@ -37,6 +37,18 @@
 
 상태: `등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료` / 예외 `승인대기` · `회귀`
 
+## 영향 지도 — 카드 002
+
+주인 함수를 고치면 어디까지 번지는지 도구가 센다. 판단 주인 `tools/impact.py:consumers`.
+
+```
+py tools/impact.py spec render_cut_plan        # 수리 명세서: 소비처 파일 N · 결과물 노드 · 다시 재야 할 검사 · 승인
+py tools/impact.py template render_cut_plan    # 카드에 붙일 '영향 없음: <파일> — <이유>' 줄 틀
+py tools/impact.py diff                        # 지금 워킹트리 변경이 어떤 주인 함수를 건드렸나
+```
+finish 관문 ⑤: 주인 함수(ownership.json 의 `주인`)가 바뀐 병합은 소비처 파일이 **diff 에 있거나** 카드에 `영향 없음: <파일> — 이유` 가 있어야 통과.
+새 소비처(주인 함수를 새로 부르는 파일)가 생기면 지도 갱신을 요구하는 줄이 찍힌다.
+
 ## 저장 층(C/D) — 카드 023
 
 SSD(C)에는 **코드가 도는 것만**(활성 트랙·DB·병합 임시), 나머지는 외장 HDD(D:\숏템). 지도 `storage.json`, 판단 주인 `tools/storage.py:plan`.
