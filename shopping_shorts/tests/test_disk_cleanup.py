@@ -167,9 +167,9 @@ def test_final_video_of_running_job_survives(data_dir):
 
 
 def test_final_keep_days_differs_from_material_retention():
-    """영상 7일 / 재료 14일 — 두 기간을 하나로 합치면 안 된다(합치면 이 줄이 깨진다)."""
+    """영상 7일 / 재료 7일(2026-09-29 사장님 14→7). 값은 같아도 **변수는 둘**이다 — 따로 바꿀 수 있어야 한다."""
     assert disk_cleanup.FINAL_KEEP_DAYS == 7
-    assert disk_cleanup.RETENTION_DAYS == 14
+    assert disk_cleanup.RETENTION_DAYS == 7
 
 
 def test_material_cleanup_still_never_touches_video(data_dir):
