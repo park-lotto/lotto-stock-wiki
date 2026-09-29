@@ -126,3 +126,37 @@ def test_apply_out_moves_old_files_by_month(repo, tmp_path):
     assert storage.apply_out(repo, _map(d), printer=lambda *a: None) == 1
     assert (d / "90_보관" / "out" / "2026-06" / "옛보고서.html").exists()
     assert not p.exists() and (out / "새것.html").exists()
+
+
+def test_temp_cleanup_only_touches_listed_folders_and_old_files(tmp_path):
+    root = tmp_path / "Temp"
+    (root / "pytest-of-CH" / "a").mkdir(parents=True)
+    (root / "other").mkdir()
+    old = time.time() - 5 * 86400
+    p_old = root / "pytest-of-CH" / "a" / "x.bin"
+    p_old.write_bytes(b"0" * 10)
+    os.utime(p_old, (old, old))
+    p_new = root / "pytest-of-CH" / "y.bin"
+    p_new.write_bytes(b"1")
+    p_other = root / "other" / "z.bin"
+    p_other.write_bytes(b"2")
+    os.utime(p_other, (old, old))
+    smap = {"임시": {"root": str(root), "폴더": ["pytest-of-CH"], "나이_일": 2}}
+    assert [o["path"] for o in storage.temp_targets(smap)] == [p_old]
+    assert storage.apply_temp(smap, printer=lambda *a: None) == 1
+    assert not p_old.exists() and p_new.exists() and p_other.exists(), "목록 밖 폴더·새 파일은 건드리지 않는다"
+    assert not (root / "pytest-of-CH" / "a").exists(), "빈 폴더는 치운다"
+
+
+def test_git_garbage_removes_only_old_tmp_packs(repo):
+    pack = repo / ".git" / "objects" / "pack"
+    pack.mkdir(parents=True, exist_ok=True)
+    old_p = pack / "tmp_pack_old"
+    old_p.write_bytes(b"0" * 100)
+    t = time.time() - 3 * 86400
+    os.utime(old_p, (t, t))
+    (pack / "tmp_pack_new").write_bytes(b"1")
+    assert [g["path"] for g in storage.git_garbage(repo)] == [old_p]
+    assert storage.apply_gitgc(repo, printer=lambda *a: None)
+    assert not old_p.exists()                      # 새 tmp_pack 은 git gc 자체가 치울 수 있다 — 우리가 지운 건 옛 것만
+    _git(repo, "fsck", "--no-progress")            # gc 뒤 저장소가 멀쩡하다(실패면 assert 로 죽는다)

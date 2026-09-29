@@ -186,6 +186,17 @@ def plan(repo, smap, idle_days=7):
     if olds:
         items.append({"what": "out/ %d일+ 안 연 파일 %d개" % (days, len(olds)), "size": sum(o["size"] for o in olds),
                       "how": "move → 90_보관/out", "block": "", "note": "", "ref": olds})
+    tmp = temp_targets(smap)
+    if tmp:
+        items.append({"what": "Temp(pytest·claude) %d일+ 파일 %d개" % (int(smap.get("임시", {}).get("나이_일", 2)), len(tmp)),
+                      "size": sum(o["size"] for o in tmp), "how": "delete", "block": "", "note": "", "ref": tmp})
+    gg = git_garbage(repo)
+    if gg:
+        items.append({"what": ".git tmp_pack 잔해 %d개 (+gc)" % len(gg), "size": sum(g["size"] for g in gg),
+                      "how": "delete+gc", "block": "", "note": "느슨한 객체 팩으로 묶으면 더 준다", "ref": gg})
+    for t in desktop_targets(smap):
+        items.append({"what": "바탕화면/%s" % t["name"], "size": t["size"], "how": "move+junction → 90_보관/바탕화면",
+                      "block": "", "note": "사장님 확인 뒤(--desktop)", "ref": t})
     return items
 
 
@@ -309,6 +320,113 @@ def apply_research(repo, smap, printer=print):
     return True
 
 
+def idle_days_default(smap):
+    return float(smap.get("자동", {}).get("무활동_일", 7))
+
+
+# ── 더 많이 옮기기(2026-09-30 사장님 "기존에 있는 것 안 쓰는 것들 많이 옮기면 안 되나") ─────────
+
+def temp_targets(smap):
+    """Temp 아래 지워도 되는 폴더(pytest 임시·클로드 스크래치)의 N일+ 파일."""
+    t = smap.get("임시", {})
+    root = Path(os.path.expandvars(t.get("root", "%LOCALAPPDATA%/Temp")))
+    days = float(t.get("나이_일", 2))
+    out = []
+    for sub in t.get("폴더", ["pytest-of-CH", "claude"]):
+        out += old_files(root / sub, days)
+    return out
+
+
+def apply_temp(smap, printer=print):
+    n = tot = 0
+    for o in temp_targets(smap):
+        try:
+            os.remove(o["path"])
+            n += 1
+            tot += o["size"]
+        except OSError:
+            pass                                       # 열려 있는 파일은 다음에
+    # 빈 폴더 정리
+    t = smap.get("임시", {})
+    root = Path(os.path.expandvars(t.get("root", "%LOCALAPPDATA%/Temp")))
+    for sub in t.get("폴더", ["pytest-of-CH", "claude"]):
+        for d in sorted((p for p in (root / sub).rglob("*") if p.is_dir()), key=lambda p: -len(str(p))):
+            try:
+                d.rmdir()
+            except OSError:
+                pass
+    printer("Temp 임시 파일 %d개 %.2fGB 삭제" % (n, gb(tot)))
+    return n
+
+
+def git_garbage(repo, days=1):
+    """끊긴 push·gc 가 남긴 .git/objects/pack/tmp_pack_* (09-30 실측 2.55GB) — days 일 넘은 것만."""
+    rc, out = _git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    gitdir = Path(out.strip()) if rc == 0 else Path(repo) / ".git"
+    cut = time.time() - days * 86400
+    res = []
+    for p in (gitdir / "objects" / "pack").glob("tmp_pack_*"):
+        try:
+            st = p.stat()
+        except OSError:
+            continue
+        if st.st_mtime < cut:
+            res.append({"path": p, "size": st.st_size})
+    return res
+
+
+def apply_gitgc(repo, printer=print):
+    """tmp_pack 잔해 삭제 + git gc(느슨한 객체 32,727개·2.7GB 를 팩으로). git 이 도는 중이면 gc 가 스스로 기다리거나 거절한다."""
+    n = tot = 0
+    for g in git_garbage(repo):
+        try:
+            os.remove(g["path"])
+            n += 1
+            tot += g["size"]
+        except OSError:
+            pass
+    before = free_gb(repo)
+    rc, out = _git(repo, "gc", "--prune=now", "--quiet")
+    printer("git 잔해 %d개 %.2fGB 삭제 · gc %s · C 여유 %.1f → %.1fGB" % (
+        n, gb(tot), "완료" if rc == 0 else "실패: " + out.strip()[:100], before or 0, free_gb(repo) or 0))
+    return rc == 0
+
+
+def desktop_targets(smap):
+    """바탕화면의 옛 폴더(지도 '바탕화면' 목록) — 코드가 참조하지 않는 것만 지도에 적는다."""
+    d = smap.get("바탕화면", {})
+    root = Path(os.path.expandvars(d.get("root", "%USERPROFILE%/Desktop")))
+    out = []
+    for name in d.get("폴더", []):
+        p = root / name
+        if p.exists() and not is_junction(p):
+            out.append({"name": name, "path": p, "size": dir_size(p)})
+    return out
+
+
+def apply_desktop(smap, printer=print):
+    _require_external(smap)
+    dest_root = _dest(smap, "보관", "90_보관") / "바탕화면"
+    dest_root.mkdir(parents=True, exist_ok=True)
+    n = tot = 0
+    for t in desktop_targets(smap):
+        dst = dest_root / t["name"]
+        if dst.exists():
+            printer("   건너뜀 %s: D 에 이미 있다" % t["name"])
+            continue
+        try:
+            shutil.move(str(t["path"]), str(dst))
+        except (OSError, shutil.Error) as e:
+            printer("   건너뜀 %s: %s" % (t["name"], str(e)[:80]))
+            continue
+        make_junction(t["path"], dst)                  # 바탕화면 자리는 정션으로 남겨 찾기 쉽게
+        n += 1
+        tot += t["size"]
+        printer("   → D  %s (%.2fGB)" % (t["name"], gb(t["size"])))
+    printer("바탕화면 %d개 %.2fGB → %s" % (n, gb(tot), dest_root))
+    return n
+
+
 def status(repo, smap, printer=print):
     c = free_gb(repo)
     ok, why = external_ok(smap)
@@ -357,11 +475,11 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status")
     p = sub.add_parser("plan")
-    p.add_argument("--days", type=float, default=7)
+    p.add_argument("--days", type=float, default=None, help="무활동 일수(기본: 지도의 자동.무활동_일)")
     p = sub.add_parser("apply")
-    for f in ("tracks", "stages", "out", "research", "auto"):
+    for f in ("tracks", "stages", "out", "temp", "gitgc", "desktop", "research", "auto"):
         p.add_argument("--" + f, action="store_true")
-    p.add_argument("--days", type=float, default=7)
+    p.add_argument("--days", type=float, default=None)
     p = sub.add_parser("warm")
     p.add_argument("name")
     sub.add_parser("schedule")
@@ -371,16 +489,18 @@ def main(argv=None):
     if smap is None:
         print("지도가 없다: %s" % MAP_REL, file=sys.stderr)
         return 2
+    days = args.days if getattr(args, "days", None) is not None else idle_days_default(smap)
     if args.cmd == "status":
         status(repo, smap)
     elif args.cmd == "plan":
-        items = plan(repo, smap, args.days)
+        items = plan(repo, smap, days)
         total = 0
         for it in items:
             extra = ("  · " + it["note"]) if it.get("note") else ""
             print("  %-46s %6.2f GB  %s%s" % (it["what"], gb(it["size"]), it["how"], extra))
             total += it["size"]
-        print("\n지금 D 로 보낼 수 있는 것 %.1fGB (%d항목). 실행: py tools/storage.py apply --tracks --stages --out [--research]" % (gb(total), len(items)))
+        print("\n비울 수 있는 것 %.1fGB (%d항목, 무활동 %g일 기준). 실행: py tools/storage.py apply --auto  (+ --desktop --research 는 확인 뒤)"
+              % (gb(total), len(items), days))
     elif args.cmd == "warm":
         warm_track(repo, smap, args.name)
     elif args.cmd == "schedule":
@@ -388,15 +508,21 @@ def main(argv=None):
     else:
         print("[%s] 저장 층 정리 시작" % time.strftime("%Y-%m-%d %H:%M"))
         if args.tracks or args.auto:
-            apply_tracks(repo, smap, args.days)
+            apply_tracks(repo, smap, days)
         if args.stages or args.auto:
             apply_stages(repo)
         if args.out or args.auto:
             apply_out(repo, smap)
+        if args.temp or args.auto:
+            apply_temp(smap)
+        if args.gitgc or args.auto:
+            apply_gitgc(repo)
+        if args.desktop:
+            apply_desktop(smap)
         if args.research:
             apply_research(repo, smap)
-        if not (args.tracks or args.stages or args.out or args.research or args.auto):
-            print("무엇을 옮길지 골라라: --tracks / --stages / --out / --research / --auto")
+        if not (args.tracks or args.stages or args.out or args.temp or args.gitgc or args.desktop or args.research or args.auto):
+            print("무엇을 옮길지 골라라: --tracks / --stages / --out / --temp / --gitgc / --desktop / --research / --auto")
         status(repo, smap)
     return 0
 
