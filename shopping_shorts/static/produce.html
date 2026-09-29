@@ -19277,8 +19277,13 @@ function s2AddMineDraft(){
 //   따로 만지면 언젠가 하나만 빠진다. 옮긴 칸은 자기 출처 장면(src_seg)을 **들고** 움직인다(객체째 이동).
 // ★[바꾸기](s2RegenBeat)가 도는 동안엔 막는다 — 그 함수는 시작 때 잡은 배열의 j번째에 결과를 쓰고
 //   dr.beats를 그 배열로 되돌려 놓으므로, 도는 중에 옮기면 옮긴 것이 조용히 사라진다.
+// ★영어모드 변환(s2ToggleLang)도 같은 꼴이다 — 끝나며 잡아 둔 배열을 dr.beats로 되돌린다. 변환 중엔 버튼이 disabled.
 function s2BeatsBusy(i){
-  try{ return !!document.querySelector('#s2d-'+i+' .s2-row.s2-busy'); }catch(e){ return false; }
+  try{
+    if(document.querySelector('#s2d-'+i+' .s2-row.s2-busy')) return true;
+    const lb=document.getElementById('s2lang-'+i);
+    return !!(lb && lb.disabled);
+  }catch(e){ return false; }
 }
 function s2CommitBeats(i, beats, focusJ){
   const dr=S2.drafts[i]; if(!dr) return;

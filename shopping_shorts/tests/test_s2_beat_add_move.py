@@ -32,11 +32,11 @@ def _src():
     return edit + "\n" + contract
 
 
-def _run(setup, tail, busy=False):
+def _run(setup, tail, busy=False, translating=False):
     return run_js(f"""
 var toast = function(){{}}, saveWork = function(){{}}, s2RenderDrafts = function(){{}}, s2CloseBanks = function(){{}};
 var SS_CANARY = false;
-var document = {{ getElementById: function(){{ return null; }},
+var document = {{ getElementById: function(id){{ return ({str(translating).lower()} && id.indexOf('s2lang-')===0) ? {{disabled:true}} : null; }},
                   querySelector: function(q){{ return ({str(busy).lower()} && q.indexOf('s2-busy')>=0) ? {{}} : null; }},
                   querySelectorAll: function(){{ return []; }} }};
 function s2Beats(dr){{ return (dr.beats && dr.beats.length) ? dr.beats : []; }}
@@ -107,3 +107,10 @@ def test_화면_계약_칸마다_옮기기_추가_버튼과_모든_안의_칸추
     assert 'onclick="s2MoveBeat(${i},${j},1)"' in src
     assert 'onclick="s2AddBeat(${i},${j})"' in src
     assert "${dr.mine?`<button class=\"btn-ghost\" style=\"min-width:auto\" title=\"칸을 하나 더 만듭니다\"" not in src
+
+
+def test_영어_변환_중엔_칸_목록을_안_바꾼다():
+    """s2ToggleLang도 끝나며 잡아 둔 배열로 dr.beats를 덮는다 — 변환 중(버튼 disabled) 옮기면 사라진다."""
+    out = _run(AI, "s2AddBeat(0, 0); s2MoveBeat(0, 0, 1); "
+                   "console.log(JSON.stringify(S2.drafts[0].beats.map(b=>b.text)));", translating=True)
+    assert json.loads(out) == ["가", "나", "다"]
