@@ -229,5 +229,12 @@
     "track": "고객제보",
     "summary": "cid207 제보#49(1단계 미리보기 잠금으로 TTS 못 넘어감) 조사: stepLockMsg/canGoNext 게이트 확인, job 671eed5723e0 preview_status 조회는 권한 거부로 미확인",
     "next": "서버에서 job 671eed5723e0 preview_status 확인 후 원인 판정"
+  },
+  {
+    "date": "2026-09-29",
+    "category": "스탁브레인",
+    "track": "PC조사",
+    "summary": "cmd창 주기적 팝업 원인 조사: gstack 아님, 코덱스 데몬(PID 1492)이 힉스필드 API 파일럿 작업으로 powershell을 반복 실행하며 콘솔창 생성. 8765 서버도 띄움",
+    "next": "사장님이 코덱스 작업 의도 확인 후 유지 또는 taskkill /PID 1492 /T /F"
   }
 ]
