@@ -3765,6 +3765,17 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                     _bb_why = "; ".join(x for x in (_bb_why, _w2) if x)
             else:
                 _bb_why = "제작 job 재료 없음"
+        # ★장면-먼저 이븐쇼핑(2026-09-30 사장님 "내꺼만 켜봐"): 스위치 scene_cut_enabled(기본 끔, "admin"=관리자만).
+        #   화면(재료 컷)과 칸 길이를 먼저 정하고 그 길이만큼 대사를 쓴다 — 판단 주인 scene_first_script.make_drafts.
+        #   다른 안은 그대로 두고 **맨 앞에 한 안을 더한다**(비교용). 실패하면 이유만 싣는다(조용한 폴백 금지).
+        if _setting_gate(store, "scene_cut_enabled", _cid(request)) and (_job or {}).get("extract"):
+            try:
+                from shopping_shorts import scene_first_script as _sfs
+                _sc_drafts, _sc_why = _sfs.make_drafts(_job, cid=_cid(request), seed_text=(it.get("full_text") or ""))
+            except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
+                _sc_drafts, _sc_why = [], "장면먼저 오류: %s" % repr(_e)[:120]
+            _bb_drafts = list(_sc_drafts) + list(_bb_drafts)
+            _bb_why = "; ".join(x for x in (_sc_why, _bb_why) if x)
         if _bb_drafts:
             _assembled, _asm_left, _asm_why = [], [], ""
         else:

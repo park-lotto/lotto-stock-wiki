@@ -1686,8 +1686,9 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         #   붙인 4~7개 조각이 1초씩 돌아가며 나오던 것(실측 job 3abb02f8fd8f: 비트당 조각 중앙 4, 컷 34개/37초)의 뿌리.
         #   모자란 화면은 렌더가 지목 컷을 원본에서 이어 튼다(원본은 연속 촬영). 미리보기(scene_play.js)와
         #   렌더가 같은 조각 목록을 보므로 둘이 같이 조용해진다.
-        if plan and _cut_rhythm_on(store, {"customer_id": customer_id}):
-            _n = _trim_for_cut_rhythm(plan)
+        _keep = bool(_ss.get("scene_cut"))      # 장면-먼저 대본: 컷 수는 2단계가 정했다(scene_first_script)
+        if plan and (_keep or _cut_rhythm_on(store, {"customer_id": customer_id})):
+            _n = _trim_for_cut_rhythm(plan, keep_cuts=_keep)
             print("[mix] 컷 리듬: 비트 %d개 조각을 줄임(홀드 1·나머지 2)" % _n, file=sys.stderr)
     if plan is not None:
         pass
@@ -3106,8 +3107,10 @@ def _hold_beat(i, beat):
     return (i == 0) or (bool(_HOLD_END.search(narr)) and role in ("고조1", "반전"))
 
 
-def _trim_for_cut_rhythm(plan):
-    """편성 단계 조각 줄이기 — 홀드 줄은 primary만, 나머지는 primary + alternates 1개. 표식(cut_rhythm)도 같이 단다."""
+def _trim_for_cut_rhythm(plan, keep_cuts=False):
+    """편성 단계 조각 줄이기 — 홀드 줄은 primary만, 나머지는 primary + alternates 1개. 표식(cut_rhythm)도 같이 단다.
+    keep_cuts: 장면-먼저 대본(script_structure.scene_cut, scene_first_script.make_drafts)은 칸마다 컷 수를 **이미 정해** 넘긴다
+      → 줄이지 않고, 구절맞춤도 끈다(구절 수 > 컷 수면 같은 컷을 처음부터 다시 틀어 장면이 반복된다 — 실측 job sf1627ea43ac 미끼 칸)."""
     n = 0
     beats = (plan or {}).get("beats") or []
     for i, b in enumerate(beats):
@@ -3116,14 +3119,17 @@ def _trim_for_cut_rhythm(plan):
         # 미끼는 히트작에서 빠른 몽타주 자리(이븐쇼핑 0.6~1.5초 5컷) — "…났다는 거"로 끝나도 홀드하지 않는다
         # 히트작 79편 실측(docs/cut_rhythm_2026-09-22.md): 3초+ 홀드는 편당 2개, 최장(7초)은 영상 1/3 지점 첫 고조의 시연 줄.
         #   → 홀드 = 훅 · 고조1의 결과 줄("…없애 버렸다는 거") · 반전. 고조2 이후 결과 줄은 보통 컷(홀드가 셋을 넘으면 늘어진다).
-        hold = _hold_beat(i, b)
+        # ★장면-먼저(keep_cuts)는 홀드하지 않는다 — 홀드 칸은 첫 조각 하나로 원본을 이어 틀어(plan_beat_clips_for)
+        #   2단계가 고른 두 번째 컷을 버리고 조각 밖 딴 샷을 읽는다(실측 job sf3974bec811 고조1 12.5초).
+        #   칸 길이는 2단계가 "가장 짧은 컷 × 컷 수" 이하로 잘라 두었다(scene_first_script.check_board).
+        hold = _hold_beat(i, b) and not keep_cuts
         # ★컷 리듬으로 배치한 칸도 **구절 맞춤을 켠 상태로 시작한다**(2026-09-25 사장님 "3단계에서
         #   컷리듬 말고 구절맞춤이 기본값"). 09-24엔 끈 채로 시작했는데 뒤집었다.
         #   둘은 같은 것을 다르게 정한다 — 구절 맞춤은 자막 구절마다 컷(6~12개), 컷 리듬은 담은 조각 수(3~4개).
         #   켜진 동안은 구절이 이긴다(video_assemble `_cr = {} if phrase_sync` / 화면 rhythmOne에 !phraseSyncOn).
         #   사람이 3단계에서 구절 맞춤을 끄면(=컷 리듬 켜기) 그때 아래 cut_rhythm 표식이 쓰인다.
         #   ★None으로 두면 안 된다 — 렌더는 표식 없음을 컷 리듬으로, 화면은 켬으로 읽어 둘이 어긋난다.
-        b["phrase_sync"] = True
+        b["phrase_sync"] = not keep_cuts
         alts = list(b.get("alternates") or [])
         # 컷 수는 줄 길이로(히트작 11편 컷 중앙 1.9초 → 약 2.5초에 한 컷): 3초 이하 1컷 · 6초 2컷 · 9초 3컷 · 최대 4컷.
         #   홀드 줄은 5초 홀드 뒤 한 컷만 더. (2026-09-22 사장님 "9초 줄인데 2개만 쓴 건가" — 2개 고정이 무뎠다)
@@ -3131,8 +3137,11 @@ def _trim_for_cut_rhythm(plan):
             secs = float(b.get("target_seconds") or 0.0)
         except (TypeError, ValueError):
             secs = 0.0
-        want = 1 if hold and secs <= 5.0 else (2 if hold else max(1, min(4, int(round(secs / 2.5)))))
-        b["alternates"] = alts[:max(0, want - 1)]
+        if keep_cuts:
+            want = 1 + len(alts)
+        else:
+            want = 1 if hold and secs <= 5.0 else (2 if hold else max(1, min(4, int(round(secs / 2.5)))))
+            b["alternates"] = alts[:max(0, want - 1)]
         b["cut_rhythm"] = {"max_shot": (5.0 if hold else max(2.0, min(4.0, secs / want if want else 4.0))), "hold": hold}
         n += 1
     return n

@@ -12395,8 +12395,10 @@ async function startProduceMix(){
     if(_bbIdx>=0) _mixBody.backbone_main=_bbIdx;   // ⭐메인 지정 시에만(없으면 서버 자동 선정)
     // ★비트별 출처 장면을 함께 보낸다(2026-08-18). 2단계가 남긴 src_seg — 3단계가
     //   그 장면을 1순위로 붙인다. 없으면 키 자체를 안 보낸다 = 종전 그대로(회귀 0).
-    if(STATE.script_beat_sources && STATE.script_beat_sources.length)
+    if(STATE.script_beat_sources && STATE.script_beat_sources.length){
       _mixBody.script_structure={beat_sources: STATE.script_beat_sources};
+      if(STATE.script_scene_cut) _mixBody.script_structure.scene_cut=true;   // 장면-먼저 안: 컷 수 유지·구절맞춤 끔
+    }
     // ★고른 대본 틀(스파인) 번호를 job에 박아 둔다(2026-09-22). 썰 대본 효과음팩이 이걸로 켜진다 —
     //   제작 기록(produce_works)은 지워지거나 새 job으로 넘어가면 끈이 끊겨서(실측), job 자체에 싣는다.
     if(STATE.script_style_id!=null && STATE.script_style_id!=='')
@@ -19538,6 +19540,9 @@ function s2ApplyDraftContract(target, dr){
     segs:Array.isArray(b&&b.src_segs)?b.src_segs.filter(Boolean):[]}));
   if(srcs.some(x=>x.seg)) target.script_beat_sources=srcs;
   else delete target.script_beat_sources;
+  // 장면-먼저 안(관리자 스위치 scene_cut_enabled)은 칸마다 컷 수를 이미 정해 넘긴다 — 3단계가 줄이지 않게 표식을 싣는다
+  if(dr && dr.scene_cut && target.script_beat_sources) target.script_scene_cut=true;
+  else delete target.script_scene_cut;
   return c;
 }
 function s2Confirm(i){
