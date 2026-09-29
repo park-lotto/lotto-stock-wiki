@@ -7653,9 +7653,6 @@ def api_mix_render(request: Request, background_tasks: BackgroundTasks, body: di
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "렌더할 job 없음"})
-    _blocked = _need_own_key_or_402(_cid(request), tts=True, voice=job.get("voice"))   # 성우 엔진 키(2026-09-29)
-    if _blocked:
-        return _blocked
     # removing_subtitles = VMake 유료 단계 진행 중. 여기서 재예약되면 그 돈이 두 번 나간다.
     if job.get("status") in ("rendering", "removing_subtitles") and not _render_is_stale(job):
         return {"ok": True, "status": job["status"]}
@@ -7852,9 +7849,6 @@ def api_produce_mix_preview(request: Request, background_tasks: BackgroundTasks,
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=422, content={"ok": False, "error": "매칭 먼저 실행하세요"})
-    _blocked = _need_own_key_or_402(_cid(request), tts=True, voice=job.get("voice"))   # 성우 엔진 키(2026-09-29)
-    if _blocked:
-        return _blocked
     if job.get("preview_status") == "rendering" and not _render_is_stale(job):
         return {"ok": True, "status": "rendering"}   # 더블클릭 — ffmpeg를 두 번 돌리지 않는다
     # ★'rendering'을 여기서 **동기적으로** 쓴다. run_preview 안에서 쓰면 그건 응답을 보낸 뒤에
