@@ -68,3 +68,51 @@ def test_exempt_member_keeps_typecast(store):
 def test_use_fallback_without_customer_unchanged():
     assert typecast_tts.use_fallback("ssfm-v30") is False or not typecast_tts.enabled()
     assert typecast_tts.use_fallback("eleven_v3", 7) is False
+
+
+# ── 반대 방향: 일레븐 못 쓰고 타입캐스트 키만 있는 회원 → 기본 성우 필재(2026-09-30 사장님, 차순엽 610) ──
+
+def test_typecast_only_member_without_memory_gets_piljae(store):
+    """기억 없음 → 종전엔 None(=호출부가 일레븐 미나) → 3단계 키 없음으로 막혔다(610, 5연속)."""
+    cid = store.create_customer("t1", "pw12")
+    store.add_customer_key(cid, keyroute.SVC_TYPECAST, "TC")
+    v = store.get_last_voice(cid)
+    assert v == typecast_tts.TYPECAST_DEFAULT_VOICE
+    assert v["preset_id"] == "tc-piljae-stable" and typecast_tts.is_typecast(v["model_id"])
+
+
+def test_typecast_only_member_with_eleven_memory_gets_piljae(store):
+    cid = store.create_customer("t2", "pw12")
+    store.add_customer_key(cid, keyroute.SVC_TYPECAST, "TC")
+    store.set_last_voice(cid, EL)
+    assert store.get_last_voice(cid)["preset_id"] == "tc-piljae-stable"
+
+
+def test_typecast_only_member_keeps_own_typecast_memory(store):
+    cid = store.create_customer("t3", "pw12")
+    store.add_customer_key(cid, keyroute.SVC_TYPECAST, "TC")
+    store.set_last_voice(cid, TC)
+    assert store.get_last_voice(cid)["preset_id"] == "tc-changsu-stable"
+
+
+def test_member_with_eleven_key_and_no_memory_unchanged(store):
+    cid = store.create_customer("t4", "pw12")
+    store.add_customer_key(cid, keyroute.SVC_ELEVENLABS, "EL")
+    store.add_customer_key(cid, keyroute.SVC_TYPECAST, "TC")
+    assert store.get_last_voice(cid) is None
+
+
+def test_member_without_keys_and_no_memory_unchanged(store):
+    cid = store.create_customer("t5", "pw12")
+    assert store.get_last_voice(cid) is None
+
+
+def test_typecast_disabled_no_piljae(store, monkeypatch):
+    monkeypatch.setattr(typecast_tts, "enabled", lambda: False)
+    cid = store.create_customer("t6", "pw12")
+    store.add_customer_key(cid, keyroute.SVC_TYPECAST, "TC")
+    assert store.get_last_voice(cid) is None
+
+
+def test_owner_cid0_unchanged(store):
+    assert typecast_tts.use_typecast_default(None, 0) is False
