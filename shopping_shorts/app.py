@@ -95,7 +95,7 @@ from shopping_shorts.audio_post import detect_edge_silence
 from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRIM_FLOOR
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
-from shopping_shorts import effect_match, remotion_render, points
+from shopping_shorts import effect_match, remotion_render, points, higgsfield_api
 from shopping_shorts import keycrypt, keyctx, keyroute, pricing, canary
 from shopping_shorts import buffer_api      # BYOK(사용자 키·포인트). points는 위에서 이미 import
 from shopping_shorts import video_assemble
@@ -15810,6 +15810,211 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "ai_scene_enabled",
                        # 장면꾸미기 새 편집기를 6단계 화면에 바로(2026-09-23, 사장님: 유튜브 라이브 뒤 구버전→신버전 교체) — ""끔 · "admin" · "1" 전체
                        "scene_style_inline_enabled"}
+
+
+# ── Higgsfield API 내부 시험실(관리자 전용) ──────────────────────────────
+# 고객 공개 전 공급자 품질·실비·대기시간을 재는 자리다. 일반 Higgsfield 구독/MCP가
+# 아니라 Open Higgsfield API 잔액을 쓰며, 키는 higgsfield_api가 서버 환경변수에서만 읽는다.
+_HIGGSFIELD_PILOT_DIR = Path(__file__).parent / "data" / "higgsfield_pilot"
+_HIGGSFIELD_PILOT_JOBS = {}
+_HIGGSFIELD_PILOT_LOCK = threading.Lock()
+_HIGGSFIELD_KEY_SERVICE = "higgsfield_owner"
+
+
+def _higgsfield_estimated_points():
+    """고객 공개 때 쓸 가상 가격. 지금 관리자 시험에서는 표시만 하고 차감하지 않는다."""
+    try:
+        return max(0, int(os.getenv("HIGGSFIELD_PILOT_ESTIMATED_POINTS", "10")))
+    except ValueError:
+        return 10
+
+
+def _higgsfield_credentials():
+    """환경변수 우선, 없으면 관리자 화면에서 암호화 저장한 한 벌을 쓴다."""
+    env_id = (os.getenv("HIGGSFIELD_API_KEY_ID") or os.getenv("HF_API_KEY_ID") or "").strip()
+    env_secret = (os.getenv("HIGGSFIELD_API_KEY_SECRET") or os.getenv("HF_API_KEY_SECRET") or "").strip()
+    if env_id and env_secret:
+        return f"{env_id}:{env_secret}", "environment"
+    try:
+        stored = Store(DB_PATH).get_customer_keys_plain(0, _HIGGSFIELD_KEY_SERVICE)
+    except Exception:
+        logging.exception("Higgsfield 관리자 키 조회 실패")
+        stored = []
+    return (stored[-1], "encrypted_admin_store") if stored else ("", "none")
+
+
+def _higgsfield_safe_job(job):
+    """공급자 원문·자격증명을 내보내지 않는 화면용 작업 스냅샷."""
+    return {k: job.get(k) for k in (
+        "job_id", "status", "created_at", "started_at", "finished_at",
+        "request_id", "prompt", "image_url", "error", "video_url",
+    )}
+
+
+def _higgsfield_job_update(job_id, **fields):
+    with _HIGGSFIELD_PILOT_LOCK:
+        job = _HIGGSFIELD_PILOT_JOBS.get(job_id)
+        if job:
+            job.update(fields)
+
+
+def _run_higgsfield_pilot(job_id, image_url, prompt):
+    """실제 유료 요청. 공급자 URL은 곧 만료될 수 있어 성공 즉시 우리 파일로 보관한다."""
+    _higgsfield_job_update(job_id, status="running",
+                           started_at=datetime.now(timezone.utc).isoformat())
+    try:
+        credential, _source = _higgsfield_credentials()
+        submitted = higgsfield_api.submit_image_to_video(
+            image_url, prompt, credentials=credential)
+        _higgsfield_job_update(job_id, request_id=submitted.get("request_id") or "")
+        result = higgsfield_api.wait_for_result(submitted, credentials=credential)
+        output = _HIGGSFIELD_PILOT_DIR / f"{job_id}.mp4"
+        higgsfield_api.download_video(result["video_url"], output)
+        _higgsfield_job_update(
+            job_id, status="done", video_path=str(output),
+            video_url=f"/api/admin/higgsfield/file/{job_id}",
+            finished_at=datetime.now(timezone.utc).isoformat(), error="",
+        )
+    except Exception as exc:
+        # 키나 응답 본문 전체를 로그·화면에 흘리지 않는다. 어댑터가 만든 짧은 오류만 보관.
+        logging.exception("Higgsfield pilot failed job=%s", job_id)
+        _higgsfield_job_update(
+            job_id, status="failed", error=str(exc)[:500],
+            finished_at=datetime.now(timezone.utc).isoformat(),
+        )
+
+
+@app.get("/admin/higgsfield", response_class=HTMLResponse)
+def admin_higgsfield(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return RedirectResponse("/", status_code=302)
+    return FileResponse(Path(__file__).parent / "static" / "higgsfield_pilot.html",
+                        headers=_NOCACHE)
+
+
+@app.get("/api/admin/higgsfield/config")
+def api_admin_higgsfield_config(request: Request):
+    if (denied := _require_admin(request)) is not None:
+        return denied
+    credential, key_source = _higgsfield_credentials()
+    with _HIGGSFIELD_PILOT_LOCK:
+        recent = [_higgsfield_safe_job(v) for v in list(_HIGGSFIELD_PILOT_JOBS.values())[-10:]][::-1]
+    return {
+        "ok": True,
+        "configured": higgsfield_api.configured(credential),
+        "key_source": key_source,
+        "encrypted_key_store_ready": keycrypt.enabled(),
+        "model": higgsfield_api.MODEL_ID,
+        "duration": higgsfield_api.DURATION,
+        "resolution": higgsfield_api.RESOLUTION,
+        "generate_audio": higgsfield_api.GENERATE_AUDIO,
+        "estimated_usd": higgsfield_api.estimated_usd(),
+        "estimated_points": _higgsfield_estimated_points(),
+        "charge_mode": "admin_pilot_no_points",
+        "jobs": recent,
+    }
+
+
+@app.post("/api/admin/higgsfield/generate")
+def api_admin_higgsfield_generate(request: Request, body: dict):
+    if (denied := _require_admin(request)) is not None:
+        return denied
+    credential, _source = _higgsfield_credentials()
+    if not higgsfield_api.configured(credential):
+        return JSONResponse(status_code=503, content={
+            "ok": False,
+            "error": "Higgsfield API 키를 서버에 먼저 등록하세요.",
+        })
+    if body.get("confirm_spend") is not True:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "실제 API 비용 발생 확인이 필요합니다.",
+        })
+    image_url = (body.get("image_url") or "").strip()
+    prompt = (body.get("prompt") or "").strip()
+    if not image_url:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "이미지 주소가 필요합니다."})
+    if len(prompt) > 1200:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "프롬프트는 1,200자 이하로 입력하세요."})
+    try:
+        image_url = higgsfield_api.validate_public_https_url(image_url)
+    except higgsfield_api.HiggsfieldError as exc:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
+    with _HIGGSFIELD_PILOT_LOCK:
+        active = next((j for j in _HIGGSFIELD_PILOT_JOBS.values()
+                       if j.get("status") in {"queued", "running"}), None)
+        if active:
+            return JSONResponse(status_code=409, content={
+                "ok": False, "error": "시험 생성이 이미 진행 중입니다.",
+                "job": _higgsfield_safe_job(active),
+            })
+        job_id = uuid.uuid4().hex[:12]
+        job = {
+            "job_id": job_id, "status": "queued", "image_url": image_url,
+            "prompt": prompt, "request_id": "", "error": "", "video_url": "",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        _HIGGSFIELD_PILOT_JOBS[job_id] = job
+    threading.Thread(target=_run_higgsfield_pilot,
+                     args=(job_id, image_url, prompt), daemon=True,
+                     name=f"higgsfield-{job_id}").start()
+    return {"ok": True, "job": _higgsfield_safe_job(job)}
+
+
+@app.post("/api/admin/higgsfield/key")
+def api_admin_higgsfield_key(request: Request, body: dict):
+    """API 키 한 벌을 기존 BYOK 암호화 저장소에 보관한다. 평문은 응답·로그에 남기지 않는다."""
+    if (denied := _require_admin(request)) is not None:
+        return denied
+    if not keycrypt.enabled():
+        return JSONResponse(status_code=503, content={
+            "ok": False, "error": "서버 암호화 키 저장소가 준비되지 않았습니다.",
+        })
+    key_id = (body.get("key_id") or "").strip()
+    key_secret = (body.get("key_secret") or "").strip()
+    if not key_id or not key_secret or len(key_id) > 300 or len(key_secret) > 500:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "Key ID와 Key Secret을 모두 정확히 입력하세요.",
+        })
+    if keyroute.masked_key_reason(key_id) or keyroute.masked_key_reason(key_secret):
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "점·별표로 가려진 값이 아니라 전체 키를 복사하세요.",
+        })
+    combined = f"{key_id}:{key_secret}"
+    store = Store(DB_PATH)
+    # 운영자 키는 한 벌만: 새 키 저장 뒤 옛 키를 지워, 저장 실패 때 기존 키를 보존한다.
+    if not store.add_customer_key(0, _HIGGSFIELD_KEY_SERVICE, combined,
+                                  label=f"Higgsfield ···{key_id[-4:]}"):
+        return {"ok": True, "configured": True, "unchanged": True}
+    rows = store.list_customer_keys(0, _HIGGSFIELD_KEY_SERVICE)
+    newest = rows[-1]["id"] if rows else None
+    for row in rows:
+        if row["id"] != newest:
+            store.delete_customer_key(0, row["id"])
+    return {"ok": True, "configured": True}
+
+
+@app.get("/api/admin/higgsfield/status/{job_id}")
+def api_admin_higgsfield_status(request: Request, job_id: str):
+    if (denied := _require_admin(request)) is not None:
+        return denied
+    with _HIGGSFIELD_PILOT_LOCK:
+        job = _HIGGSFIELD_PILOT_JOBS.get(job_id)
+        if not job:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "시험 작업을 찾을 수 없습니다."})
+        safe = _higgsfield_safe_job(job)
+    return {"ok": True, "job": safe}
+
+
+@app.get("/api/admin/higgsfield/file/{job_id}")
+def api_admin_higgsfield_file(request: Request, job_id: str):
+    if (denied := _require_admin(request)) is not None:
+        return denied
+    with _HIGGSFIELD_PILOT_LOCK:
+        job = dict(_HIGGSFIELD_PILOT_JOBS.get(job_id) or {})
+    path = Path(job.get("video_path") or "")
+    if job.get("status") != "done" or not path.is_file():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "완성 영상이 없습니다."})
+    return FileResponse(path, media_type="video/mp4", filename=f"higgsfield-{job_id}.mp4")
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
