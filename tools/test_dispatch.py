@@ -89,3 +89,42 @@ def test_launch_script_text(tmp_path):
     assert "Remove-Item Env:\CLAUDE_CONFIG_DIR" in s
     assert "Set-Location -LiteralPath '" in s
     assert "'it''s \"q\"'" in s          # PowerShell 작은따옴표 이스케이프
+
+
+import dispatch
+
+
+@pytest.fixture
+def fake_track(tmp_path, monkeypatch):
+    (tmp_path / "대본작성").mkdir()
+    monkeypatch.setattr(dispatch.track, "worktree_path", lambda name, repo=None: tmp_path / name)
+    monkeypatch.setattr(dispatch.pc_label, "label", lambda: "집")
+    calls = {}
+
+    def fake_launch(L):
+        calls["L"] = L
+        return 777
+
+    monkeypatch.setattr(dispatch.track_open, "launch_window", fake_launch)
+    monkeypatch.setattr(dispatch, "_link_card", lambda n, t: calls.setdefault("card", (n, t)))
+    return calls
+
+
+def test_dispatch_opens_window(fake_track, monkeypatch):
+    monkeypatch.setattr(dispatch.track_open, "session_alive", lambda cwd: None)
+    assert dispatch.main(["대본작성", "자막 고쳐", "--card", "46"]) == 0
+    L = fake_track["L"]
+    assert L["name"] == "집·1·대본작성·카드46"
+    assert L["argv"][-1].startswith("자막 고쳐")
+    assert "tg_notify.py" in L["argv"][-1]
+    assert fake_track["card"] == (46, "대본작성")
+
+
+def test_dispatch_busy(fake_track, monkeypatch):
+    monkeypatch.setattr(dispatch.track_open, "session_alive", lambda cwd: {"pid": 1, "name": "집·1·대본작성"})
+    assert dispatch.main(["대본작성", "x"]) == 3
+    assert "L" not in fake_track
+
+
+def test_dispatch_missing_track(fake_track):
+    assert dispatch.main(["없는트랙", "x"]) == 1
