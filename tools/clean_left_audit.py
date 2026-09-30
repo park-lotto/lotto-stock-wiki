@@ -41,7 +41,7 @@ WORK_ROOT = Path("shopping_shorts/data/mix_jobs")
 SUMMARY_RE = re.compile(r"^== 작업 (\d+) · 자막 남음 (\d+)칸 · 증분 대기 (\d+)칸 · 원인 미상 (\d+)칸 · 대상 아님 (\d+)작업"
                         r"(?: · 재구성 불가 (\d+)작업)?\s*$")
 # PATCH_DIR 에서 얹는 모듈(import 의존 순서) — 관문(video_gate.PATCH_RELS)에 전부 있어야 한다(test_clean_left_audit 가 대조)
-PATCH_MODULES = ("frame_match", "screen_clips", "video_assemble", "clean_base", "mix_pipeline")
+PATCH_MODULES = ("voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "frame_match", "screen_clips", "video_assemble", "clean_base", "mix_pipeline")
 FINAL_SLACK = 180       # 완성본 파일 시각이 job updated_at 보다 이만큼 이상 앞서면 '렌더 뒤 편집'(done 저장이 파일 뒤에 온다)
 
 
