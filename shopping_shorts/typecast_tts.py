@@ -24,6 +24,7 @@ import sys
 import requests
 
 from shopping_shorts import config
+from shopping_shorts import voice_presets
 
 # 타임스탬프 전용 엔드포인트. voice_id는 **경로가 아니라 본문**으로 간다
 # (`/v1/text-to-speech/{voice_id}/with-timestamps`는 404 — 2026-08-19 실측).
@@ -101,7 +102,7 @@ TYPECAST_DEFAULT_VOICE = {
     "voice_id": "tc_68257f68bc6e3c161ab5078d",
     "model_id": "ssfm-v30",
     "settings": {"emotion": "normal", "emotion_intensity": 1},
-    "speed": 1.2,
+    "speed": voice_presets.default_speed("tc_68257f68bc6e3c161ab5078d"),   # 2026-10-01 관제 049
     "silence_trim": "mid",
     "pace_mode": True,
     "naturalize_profile": None,

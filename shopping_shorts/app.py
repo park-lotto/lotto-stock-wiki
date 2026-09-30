@@ -8897,7 +8897,7 @@ async def api_typecast_adopt(request: Request):
             "archetype": "타입캐스트에서 담은 성우",
             "base_voice_id": vid, "model_id": model,
             "voice_settings": {"emotion": emotion, "emotion_intensity": intensity},
-            "default_speed": 1.2, "default_silence_trim": "mid",
+            "default_speed": voice_presets.default_speed(vid), "default_silence_trim": "mid",
             "sample_file": None, "source_ref": "타입캐스트 성우 찾기(2026-08-30)",
             "origin": "curated", "best": False, "owner_customer_id": cid,
         })

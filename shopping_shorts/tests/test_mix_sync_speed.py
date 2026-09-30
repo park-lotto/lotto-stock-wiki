@@ -52,7 +52,8 @@ def test_절대값처럼_잘못저장된_첫배포_기본속도를_복구한다(
     beat["voice_override"] = {"speed": 1.4}
     base = mix_pipeline.base_voice_for_beat(None, beat)
     assert base["speed"] == pytest.approx(mix_pipeline._DEFAULT_VOICE["speed"])
-    assert mix_pipeline.voice_for_beat(base, beat)["speed"] == pytest.approx(2.24)
+    assert mix_pipeline.voice_for_beat(base, beat)["speed"] == pytest.approx(
+        mix_pipeline._DEFAULT_VOICE["speed"] * 1.4)   # 기본 1.6→1.35(관제 049)라 숫자 대신 식으로
 
 
 def test_저장된_칸별_성우톤은_배속을_바꿔도_보존되고_중복가속하지_않는다():

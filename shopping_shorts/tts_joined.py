@@ -72,9 +72,9 @@ _BOUNDARY_WINDOW = 0.15
 
 
 def enabled():
-    """통짜 합성을 쓸 것인가. 기본 off — 라이브에서 실측한 뒤 켠다(CLAUDE.md:
-    검증 안 된 플래그를 라이브에 켜지 마라)."""
-    return (os.getenv("TTS_JOINED") or "").strip().lower() in ("1", "true", "on", "yes")
+    """통짜 합성을 쓸 것인가. **기본 켬**(2026-10-01 관제 049 — 사장님 청취: 문장별 합성은 마디마디
+    끊기고 통째 합성은 안 끊긴다. 서버 사본 job 0875d89db254 렌더로 실측). `TTS_JOINED=0`으로 끈다."""
+    return (os.getenv("TTS_JOINED") or "1").strip().lower() not in ("0", "false", "off", "no")
 
 
 def _cut(src, dst, start, end):

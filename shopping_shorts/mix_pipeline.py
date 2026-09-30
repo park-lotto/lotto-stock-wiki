@@ -29,6 +29,7 @@ from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, confo
 from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import typecast_tts
+from shopping_shorts import voice_presets
 from shopping_shorts import audio_post
 from shopping_shorts import tts_joined
 from shopping_shorts import config
@@ -192,17 +193,9 @@ def _cache_keys_for_url(url):
 #   대체 성우와 여기 기본 성우가 같은 값이라, 두 벌로 적으면 언젠가 어긋난다.
 _DEFAULT_VOICE = {
     **typecast_tts.FALLBACK_VOICE,
-    # ★1.4 (2026-08-22 사장님 지시 — 2.2는 실제로 들어보니 말도 안 되게 빨랐다).
-    #   ⚠️아래 "메종 8.45자/초"는 **자막 글자수 ÷ 영상 길이**로 낸 값이라
-    #     사람이 말하는 속도가 아니다(무음·화면전환·자막만 있는 구간이 섞였다).
-    #     그 값을 TTS 배속 목표로 삼은 것이 잘못이었다. 재측정 전까지 참고만 할 것.
-    #   [옛 근거 — 검증 실패]
-    #   메종 23.8초·193자·**8.45자/초** ← 사장님이 "밀도·시간 다 맞다"고 지목한 채널.
-    #   우리는 1.6에서 6.46자/초라 히트작 하위10%(6.72)보다도 느렸다 — 같은 25초에
-    #   메종보다 49자 적게 말한다 = "말이 빈다". 배속 샘플 실측(렌더와 같은 경로):
-    #   1.6→6.51 · 1.8→7.26 · 2.0→7.66 · **2.2→8.75자/초**(메종과 일치).
-    #   ⚠️길이는 글자를 줄여서 맞추면 안 된다 — 그러면 말이 비는 쪽으로 되돌아간다.
-    "speed": 1.6,
+    # ★기본 속도 = voice_presets.default_speed(2026-10-01 사장님 청취: 미나 1.35, 그 외 1.25).
+    #   뜻은 "API 1.0 합성 뒤 atempo 배율"(_voice_params). 옛 1.6·2.2 논의는 handoff/TTS속도125.md.
+    "speed": voice_presets.default_speed(typecast_tts.FALLBACK_VOICE.get("voice_id")),
     "silence_trim": "mid",
     # 컷편집 빠른 느낌(2026-07-25 사장님): 4단계 UI 기본(⚡속도감 모드 체크)과 동일하게
     # 미리보기 기본도 무음 컷·타이트 이음을 켠다 — 안 켜면 미리보기만 늘어져 들린다.
@@ -231,16 +224,13 @@ def _voice_params(voice):
     #   voice_id·model_id·settings는 **짝**이라 함께 바꾼다(0순위-B: 따로 바꾸면 어긋난다).
     if typecast_tts.use_fallback(v.get("model_id")):
         v = {**v, **typecast_tts.FALLBACK_VOICE}
+    # ★배속은 **전부 뒤에서 atempo로** 건다 — 합성 API에는 항상 1.0(2026-10-01 사장님 청취, 관제 049).
+    #   종전: 일레븐은 1.2까지 API speed + 초과분 atempo, 타입캐스트는 API tempo.
+    #   사장님이 고른 소리는 "API 1.0으로 합성 → ffmpeg atempo" 샘플이었다(일레븐 v3는 API speed 1.2가
+    #   1.0보다 오히려 5초 길게 나온 적도 있다 — 한 번 실측, 신뢰 못 할 손잡이). 엔진 구분 없이 한 규칙.
     speed = v.get("speed", 1.0)
-    model_id = v.get("model_id") or "eleven_v3"
-    # ★타입캐스트는 API가 tempo 0.5~2.0을 직접 받는다(2026-08-19). 일레븐랩스처럼
-    #   1.2 초과분을 후처리 atempo로 또 당기면 **이중 가속**이 된다(1.6배가 2.1배로
-    #   들린다). 엔진 판정은 typecast_tts.is_typecast 한 곳만 쓴다(0순위-B).
-    if typecast_tts.is_typecast(model_id):
-        extra_tempo = 1.0
-    else:
-        extra_tempo = speed / 1.2 if speed > 1.2 else 1.0  # 1.2 초과분만 atempo로
-    return (v.get("voice_id"), v.get("settings"), speed, extra_tempo,
+    extra_tempo = float(speed or 1.0)
+    return (v.get("voice_id"), v.get("settings"), 1.0, extra_tempo,
             v.get("silence_trim", "off"), v.get("naturalize_profile"),
             v.get("model_id") or "eleven_v3", v.get("pace_mode", False))
 
@@ -270,7 +260,11 @@ def line_profile(prof_v, profile=None, *, global_pron=None, hook_opener=None,
     prof_v = 보이스 스냅샷의 naturalize_profile. 나머지 인자 의미는
     synthesize_line의 docstring과 같다.
     """
-    prof = merge_profile(profile if profile is not None else prof_v)
+    prof = copy.deepcopy(merge_profile(profile if profile is not None else prof_v))
+    # ★추임새("음"·"아" 등)는 **항상 끈다**(2026-10-01 사장님 "음 빼고", 관제 049). 자막에 없는 말이
+    #   소리에만 들어가 "발음이 이상하다"로 들렸다(황선희님 job 첫마디 "음..."). 훅 감탄사도 대본(add_hook_opener)이
+    #   이미 글로 넣으므로 소리에서 또 붙일 이유가 없다. deepcopy = 호출자 프리셋 오염 금지.
+    prof.setdefault("fillers", {})["on"] = False
     # 전역 발음교정을 profile 위에 병합(설계 §2-A) — 렌더·작업대 공통 choke.
     prof = pron_corrections.overlay(prof, global_pron or {})
     # ★훅 감탄사 스위치는 **음성도 같이** 끈다(2026-09-01 사장님 "대본 끄면 tts도 동시에").
