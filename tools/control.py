@@ -61,7 +61,9 @@ DEFAULT_RULES = {
         "billing_tokens": ["_charge_", "clean_charge_plan", "clean_credit", "_sig_tier", "signature", "_render_stamp"],
         "customer_data_tokens": ["update_mix_job", "mix_jobs", "clean_base.json"],
     },
-    "card_gate": {"require_card": True, "require_approval": True, "ownership_check": True, "impact_check": True},
+    "card_gate": {"require_card": True, "require_approval": True, "ownership_check": True, "impact_check": True,
+                  "auto_approve": ["고객 화면"],
+                  "_auto_approve": "2026-10-01 사장님 '승인 자동으로 해, 내가 필요한 건 미리 얘기해줌'. 고객 화면 변경은 관문(테스트·소유권·영향 지도) 통과면 관제가 승인하고 라이브 뒤 자동 실측으로 잡는다. 돈(과금)·회원 데이터는 사람 승인 — 카드 만들 때 사장님께 먼저 말한다"},
 }
 
 
@@ -392,6 +394,8 @@ def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", 
         made["n"], made["rel"] = n, rel
     sha = _publish(repo, mutate, "관제 카드 등록: %s" % title)
     printer("✅ 관제 카드 %03d 등록 — %s (main %s)" % (made["n"], made["rel"], sha))
+    if approval:
+        printer("   ★돈(과금)·회원 데이터가 바뀌는 카드는 사장님께 **지금** 먼저 말해라(10-01 사장님 '필요한 건 미리 얘기해줌'). 고객 화면만 바뀌면 관제가 자동 승인한다.")
     printer("   트랙 열기: py tools/track.py start <트랙명> --card %d" % made["n"])
     return made["n"]
 
@@ -662,10 +666,21 @@ def finish_gate(repo, stage, br, track_name, printer=print, ownership=None):
             except Exception as e:      # noqa: BLE001 — 동기화 실패는 승인 없음으로 본다(조용히 통과 없음)
                 notes.append("서버 승인 기록을 못 읽었다: %r" % e)
         approved = [c for c in linked if c["승인"].strip()]
-        if not approved:
-            fails.append("고객에게 보이거나 돈·데이터가 바뀌는 변경인데 카드에 승인이 없다(0순위-A1c):\n"
-                         + "\n".join("    · " + r for r in reasons)
-                         + "\n    사장님 승인을 받은 뒤: py tools/control.py approve <번호> \"사장님 구두 %s\"" % time.strftime("%Y-%m-%d"))
+        auto_kinds = tuple(g.get("auto_approve", []))
+        human = [r for r in reasons if not r.startswith(auto_kinds)]          # 돈·회원 데이터 — 사람이 본다
+        if not approved and not human and auto_kinds:
+            # 관제 자동 승인(2026-10-01 사장님): 관문을 다 통과한 고객 화면 변경. 카드에 근거를 남긴다 — 라이브 뒤 실측이 잡는다
+            why = "관제 자동 승인 — 고객 화면 변경 %d건, 관문(카드·주인·소유권·영향) 통과, 라이브 뒤 자동 실측" % len(reasons)
+            for c in linked:
+                try:
+                    approve(repo, c["번호"], why, printer=lambda *x: None)
+                except ControlError as e:
+                    notes.append("자동 승인 기록 실패(무해): %s" % str(e).splitlines()[0])
+            notes.append("✅ " + why)
+        elif not approved:
+            fails.append("돈·회원 데이터가 바뀌는 변경인데 카드에 사장님 승인이 없다(자동 승인 대상 아님):\n"
+                         + "\n".join("    · " + r for r in (human or reasons))
+                         + "\n    ★이런 카드는 만들 때 사장님께 먼저 말했어야 한다. 승인 받은 뒤: py tools/control.py approve <번호> \"사장님 구두 %s\"" % time.strftime("%Y-%m-%d"))
         else:
             notes.append("승인 필요 변경 %d건 — 카드 %s 승인 있음" % (len(reasons), ", ".join("%03d" % c["번호"] for c in approved)))
     elif reasons:
