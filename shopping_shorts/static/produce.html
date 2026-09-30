@@ -9650,7 +9650,7 @@ async function deleteWork(wid, btn){
 function revertWork(){
   if(!_prevCommitted) return;
   let w; try{ w = JSON.parse(_prevCommitted); }catch(e){ return; }
-  HANDOFF = _migrateSeedFlags(w.handoff || []);
+  HANDOFF = (typeof _migrateSeedFlags==='function') ? _migrateSeedFlags(w.handoff || []) : (w.handoff || []);   // typeof: 절단 하네스 대비
   STATE.script = w.script || '';
   STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
   STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
@@ -9695,7 +9695,7 @@ async function _restoreWork(workId){
   //   복원 도중의 어떤 저장도 cur가 아직 0인 채로 나가는데, _serverStep이 비어 있으면
   //   _stepDemoted가 강등을 못 알아봐 step=0이 서버 진행단계를 파괴한다(위 refreshStep0 주석).
   try{ if(typeof d.step === 'number' && d.step > 0) _serverStep = d.step; }catch(e){}
-  HANDOFF = _migrateSeedFlags(w.handoff || []);
+  HANDOFF = (typeof _migrateSeedFlags==='function') ? _migrateSeedFlags(w.handoff || []) : (w.handoff || []);   // typeof: 절단 하네스 대비
   // ★즐겨찾기에서 "이 작업으로 보내기"로 들어온 영상을 여기서 합친다(2026-08-18).
   //   전엔 서버 작업으로 통째 덮어쓰기만 해서 방금 보낸 영상이 조용히 사라졌다.
   //   합치는 규칙은 _mergeHandoffItems 한 곳(중복 제거 포함).
@@ -10520,7 +10520,7 @@ function _consumeProduceHandoff(){
   // 1) 진행 중 작업을 base로 복원(있으면). 신규는 여기에 누적된다.
   let w; try{ w=JSON.parse(sessionStorage.getItem('produce_work')||'null'); }catch(e){ w=null; }
   if(w && ((w.handoff && w.handoff.length) || w.script)){
-    HANDOFF=_migrateSeedFlags(w.handoff||[]); savedScript=w.script||''; restored=true;
+    HANDOFF=(typeof _migrateSeedFlags==='function')?_migrateSeedFlags(w.handoff||[]):(w.handoff||[]); savedScript=w.script||''; restored=true;
     STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
     STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;   // 구페이로드 호환: 없으면 null(뽑기 유래 취급=안전 기본값, 버튼 보임)
     STATE.script_style_id = (typeof w.script_style_id !== 'undefined') ? w.script_style_id : null;
@@ -12416,7 +12416,7 @@ async function startProduceMix(){
     if(STATE.script_beat_sources && STATE.script_beat_sources.length)
       _mixBody.script_structure={beat_sources: STATE.script_beat_sources};
     // ★씨앗 영상의 urls 인덱스(2026-09-30) — 서버가 그 소스를 자동 배치에서만 뺀다(영상 소스엔 유지).
-    const _noAuto=collectNoAutoIdx(urls);
+    const _noAuto=(typeof collectNoAutoIdx==='function')?collectNoAutoIdx(urls):[];
     if(_noAuto.length){ _mixBody.script_structure=Object.assign({}, _mixBody.script_structure||{}, {no_auto_idx:_noAuto}); }
     // ★고른 대본 틀(스파인) 번호를 job에 박아 둔다(2026-09-22). 썰 대본 효과음팩이 이걸로 켜진다 —
     //   제작 기록(produce_works)은 지워지거나 새 job으로 넘어가면 끈이 끊겨서(실측), job 자체에 싣는다.
