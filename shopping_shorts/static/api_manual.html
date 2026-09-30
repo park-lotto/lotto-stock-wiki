@@ -1055,8 +1055,8 @@
 
   <!-- ★실제 화면 영상(2026-09-27) — 구글 콘솔을 직접 돌며 캡처(개인정보 가림). 만드는 법: tools/vertex_guide/ -->
   <div class="card">
-    <div class="card-head"><div class="num">▶</div><h3>영상으로 보기<br>(1분 31초)</h3></div>
-    <video src="/landing/vertex_guide.mp4" poster="/landing/vertex_guide.jpg" controls preload="metadata" playsinline
+    <div class="card-head"><div class="num">▶</div><h3>영상으로 보기<br>(2분 1초)</h3></div>
+    <video src="/landing/vertex_guide.mp4?v=2" poster="/landing/vertex_guide.jpg" controls preload="metadata" playsinline
            style="width:100%;border-radius:12px;background:#000;display:block"></video>
   </div>
 
@@ -1105,10 +1105,27 @@
     <a class="go-btn" href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener">서비스 계정 열기 →</a>
   </div>
 
+  <!-- ★키 생성 차단 풀기(2026-10-01 관제 050) — 2024-05 이후 새 계정은 구글이 「서비스 계정 키 생성 사용 중지」
+       조직 정책(iam.disableServiceAccountKeyCreation)을 기본으로 켠다. 이 단계가 없어서 등록이 전부 막혔다
+       (09-30~10-01 422 15건). 사장님 계정으로 실제 수행해 확인한 순서다. -->
+  <div class="card">
+    <div class="card-head"><div class="num">!</div><h3>키 만들기가 막히면<br>— 차단 풀기(대부분 해당)</h3></div>
+    <p class="say">4단계에서 <b>「서비스 계정 키 생성 사용 중지됨」</b> 창이 뜨면 구글이 새 계정에 기본으로 걸어 둔 차단입니다.
+      아래 두 번만 바꾸면 풀립니다. <span style="opacity:.75">(창이 안 뜨면 이 단계는 건너뛰세요)</span></p>
+    <p class="say"><b>① 나에게 권한 주기</b> — 아래 버튼 → 맨 위 <b>프로젝트 이름 버튼</b>을 눌러 <b>「○○-org」(건물 모양)</b>을 고르기 →
+      내 이메일 줄 끝 <b>연필 ✏️</b> → <b>「다른 역할 추가」</b> → <b>「조직 정책 관리자」</b> → <b>저장</b>.</p>
+    <a class="go-btn" href="https://console.cloud.google.com/iam-admin/iam" target="_blank" rel="noopener">IAM 열기 →</a>
+    <p class="say" style="margin-top:14px"><b>② 차단 끄기</b> — 아래 버튼(위쪽이 「○○-org」인 상태) → <b>「정책 관리」</b> →
+      <b>「상위 정책 재정의」</b> 선택 → 규칙을 <b>「미적용」</b>으로 → <b>「정책 설정」</b>.
+      화면의 상태가 <b>「미적용」</b>으로 바뀌면 끝입니다.<br/>
+      <span style="opacity:.75">★「권한이 없습니다」가 뜨면 ①을 저장하고 1~2분 뒤 새로고침하세요.</span></p>
+    <a class="go-btn" href="https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation" target="_blank" rel="noopener">키 생성 차단 정책 열기 →</a>
+  </div>
+
   <div class="card">
     <div class="card-head"><div class="num">4</div><h3>키(.json)<br>내려받기</h3></div>
-    <p class="say">만든 서비스 계정을 누르고 <b>「키」 탭 › 「키 추가」 › 「새 키 만들기」 › JSON</b> → 파일이 내려받아집니다.
-      이 파일은 비밀번호와 같아요 — 다른 곳에 올리지 마세요.</p>
+    <p class="say">만든 서비스 계정을 누르고 <b>「키」 탭 › 「키 추가」 › 「새 키 만들기」 › JSON › 「만들기」</b> → 파일이 <b>다운로드 폴더</b>에 저장됩니다.
+      아래 목록에 키 한 줄(「Active」)이 생기면 성공이에요. 이 파일은 비밀번호와 같아요 — 다른 곳에 올리지 마세요.</p>
   </div>
 
   <div class="card">
