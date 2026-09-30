@@ -76,3 +76,31 @@ def test_추임새를_꺼도_호출자_프리셋을_오염시키지_않는다():
     prof = {"fillers": {"on": True, "intensity": 0.2}}
     mix_pipeline.line_profile(prof, None, hook_opener=True)
     assert prof["fillers"]["on"] is True
+
+
+def test_합성글은_원문_그대로_숫자읽기와_발음교정만():
+    """사장님이 고른 샘플은 원문 그대로 보낸 소리였다 — 태그·…·추임새·어미치환을 넣지 않는다."""
+    from shopping_shorts.narration_naturalize import naturalize
+    prof = mix_pipeline.line_profile(None, None)
+    for stage in ("spoken_style", "phrasing", "endings", "fillers", "emotion_arc", "conclusion", "intonation", "whisper"):
+        assert prof[stage]["on"] is False, stage
+    assert prof["normalize"]["on"] is True and prof["pronunciation"]["on"] is True
+    out = naturalize("이건 바로 사과 껍질 제거기", prof, beat_role="훅", beat_index=0, beat_total=5)
+    assert "…" not in out and "[" not in out, out
+
+
+def test_속삭임톤을_고른_스냅샷은_속삭임을_남긴다():
+    prof = mix_pipeline.line_profile({"whisper": {"on": True, "roles": ["훅"]}}, None)
+    assert prof["whisper"]["on"] is True
+
+
+def test_오독이_같으면_짧은_후보를_고른다(tmp_path, monkeypatch):
+    """필재 job 14882edcb67a: 오독 0 동점에서 4.49초(늘어진) take가 2.64초 take를 이겼다."""
+    from shopping_shorts import tts, audio_post
+    lens = {"_0": 4.49, "_1": 2.64}
+    monkeypatch.setattr(tts, "synthesize_tts", lambda text, p, **k: open(p, "wb").write(p.encode()) and p)
+    monkeypatch.setattr(tts.tts_timestamps, "copy", lambda a, b: None)
+    monkeypatch.setattr(audio_post, "_audio_dur", lambda p: lens["_0" if p.endswith("_0.mp3") else "_1"])
+    out = tmp_path / "b.mp3"
+    tts.synthesize_best("t", str(out), n=2, base_seed=1, ranker=lambda p, t: 0)
+    assert out.read_bytes().endswith(b"_1.mp3")

@@ -260,11 +260,18 @@ def line_profile(prof_v, profile=None, *, global_pron=None, hook_opener=None,
     prof_v = 보이스 스냅샷의 naturalize_profile. 나머지 인자 의미는
     synthesize_line의 docstring과 같다.
     """
-    prof = copy.deepcopy(merge_profile(profile if profile is not None else prof_v))
-    # ★추임새("음"·"아" 등)는 **항상 끈다**(2026-10-01 사장님 "음 빼고", 관제 049). 자막에 없는 말이
-    #   소리에만 들어가 "발음이 이상하다"로 들렸다(황선희님 job 첫마디 "음..."). 훅 감탄사도 대본(add_hook_opener)이
-    #   이미 글로 넣으므로 소리에서 또 붙일 이유가 없다. deepcopy = 호출자 프리셋 오염 금지.
-    prof.setdefault("fillers", {})["on"] = False
+    raw = profile if profile is not None else prof_v
+    prof = copy.deepcopy(merge_profile(raw))
+    # ★합성에 보내는 글 = **대본 원문**(2026-10-01 사장님 청취 확정, 관제 049). 남기는 단계는
+    #   숫자 읽기(normalize: 5성급→오성급)·발음 교정(pronunciation) 둘뿐 — 소리에 꼭 필요한 것만.
+    #   끄는 것: 추임새("음" — 자막에 없는 말), 문장 끝 `…`(endings — 필재 "제거기…"가 1초 끌림),
+    #   감정 태그(emotion_arc·intonation — 문장마다 톤이 바뀜), 구어체 치환·끊어읽기·마무리(원문과 달라짐).
+    #   사장님이 고른 샘플은 전부 원문 그대로 보낸 소리였다. deepcopy = 호출자 프리셋 오염 금지.
+    for stage in ("spoken_style", "phrasing", "endings", "fillers", "emotion_arc", "conclusion", "intonation"):
+        prof.setdefault(stage, {})["on"] = False
+    # 속삭임은 고객이 **속삭임 톤을 골라** 설정이 스냅샷에 실린 경우에만 남긴다(기본값의 "반전 문장 속삭임" 끔).
+    if not (isinstance(raw, dict) and raw.get("whisper")):
+        prof.setdefault("whisper", {})["on"] = False
     # 전역 발음교정을 profile 위에 병합(설계 §2-A) — 렌더·작업대 공통 choke.
     prof = pron_corrections.overlay(prof, global_pron or {})
     # ★훅 감탄사 스위치는 **음성도 같이** 끈다(2026-09-01 사장님 "대본 끄면 tts도 동시에").
