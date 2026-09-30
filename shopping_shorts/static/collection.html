@@ -137,14 +137,26 @@ function toggleSelect(sc){
 // 판정은 서버 _analysis_state 한 곳이 한다 — 제작소 1단계 카드와 같은 답을 쓴다.
 let ANALYSIS={};          // shortcode -> {state:'done'|'pending'|'gave_up', reason}
 let _pollTimer=null;
+// ★한 번에 묻는 개수 = 서버가 한 번에 답하는 개수(app.api_basket_analysis_status `[:100]`)와 같게(2026-09-30 관제 48).
+//   종전엔 즐겨찾기 **전부**를 주소 한 줄에 실었다 → 300개쯤부터 주소가 앞단 Apache 한도(8190바이트)를 넘어
+//   414로 튕겨 앱까지 가지도 못했고(하루 177~566건, 회원 13명), 통과해도 서버가 앞 100개만 답해
+//   101번째부터는 늘 '분석 전'이었다. 100개씩 나눠 묻고 합친다 — 100개 ≈ 3KB.
+const ANALYSIS_BATCH=100;
+function _chunks(xs,n){ const out=[]; for(let i=0;i<xs.length;i+=n) out.push(xs.slice(i,i+n)); return out; }
 async function loadAnalysis(){
   const codes=ITEMS.map(i=>i.shortcode).filter(Boolean);
   if(!codes.length){ ANALYSIS={}; return; }
-  try{
-    const d=await (await fetch('/api/basket/analysis_status?shortcodes='+
-      encodeURIComponent(codes.join(',')))).json();
-    if(d && d.ok) ANALYSIS=d.items||{};
-  }catch(e){}
+  const next={}; let failed=0;
+  await Promise.all(_chunks(codes,ANALYSIS_BATCH).map(async part=>{
+    try{
+      const r=await fetch('/api/basket/analysis_status?shortcodes='+encodeURIComponent(part.join(',')));
+      const d=await r.json();
+      if(d && d.ok) Object.assign(next, d.items||{}); else failed++;
+    }catch(e){ failed++; }
+  }));
+  // ★못 받은 묶음이 있으면 **이전 상태를 지우지 않는다** — 조용히 전부 '분석 전'으로 떨어지던 게 이번 사고의 얼굴이다.
+  if(failed) console.warn('[analysis_status] '+failed+'묶음 실패 — 이전 표시 유지');
+  ANALYSIS=Object.assign({}, failed?ANALYSIS:{}, next);
   // 도는 중인 게 남아 있으면 20초마다 다시 본다(다 끝나면 폴링을 멈춘다 — 서버 부담 0).
   const pending=codes.some(c=>(ANALYSIS[c]||{}).state==='pending');
   clearTimeout(_pollTimer);
@@ -169,13 +181,23 @@ async function analyzeCodes(codes){
   if(!codes.length){ alert('분석할 항목을 먼저 선택하세요'); return; }
   codes.forEach(c=>{ ANALYSIS[c]={state:'pending',reason:''}; });   // 누른 즉시 표시
   render();
+  // ★서버가 한 번에 100개만 받는다(app.api_basket_analyze `[:100]`) — 100개 넘게 고르면 101번째부터 조용히
+  //   빠졌다(관제 48). 같은 크기로 나눠 보내고 결과를 합친다.
   let res=null;
-  try{
-    const r=await fetch('/api/basket/analyze',{method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({shortcodes:codes})});
-    res=await r.json();
-  }catch(e){}
+  const parts=await Promise.all(_chunks(codes,ANALYSIS_BATCH).map(async part=>{
+    try{
+      const r=await fetch('/api/basket/analyze',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({shortcodes:part})});
+      return await r.json();
+    }catch(e){ return null; }
+  }));
+  const oks=parts.filter(Boolean);
+  if(oks.length){
+    // 안내문은 서버가 정한다(묶음마다 같은 판정) — 모든 묶음이 안내를 줬을 때만 띄운다.
+    res={ok:true, items:Object.assign({}, ...oks.map(p=>p.items||{})),
+         note:oks.every(p=>p.note)?oks[0].note:''};
+  }
   await loadAnalysis(); render();
   // ★조용히 되돌아가지 않게 한다(2026-08-28 조율가 제보 "몇 초 하다가 분석 전으로 돌아감").
   //   누른 직후엔 pending을 칠했는데 서버가 아무것도 안 걸었으면 배지가 '분석 전'으로
