@@ -1,31 +1,32 @@
 # 관제 보드 (자동 생성 — 손으로 고치지 마라. `py tools/control.py board`)
 
-갱신: 2026-09-30 05:27 · 카드 46장
+갱신: 2026-10-01 01:16 · 카드 48장
 
 상태 흐름: 등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료  (예외: 승인대기 · 회귀)
 
-## 등록 (18)
+## 등록 (19)
 
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
-| [006](cards/006-효과음_타점_두_벌_—_sfx_events_.md) | 효과음 타점 두 벌 — sfx_events_for 'last' 에 cap_lead·cap_offset 반영, sfx_pack.plan_events 에 absorb 전달 (#9-①④·#11) | - | **필요** | shopping_shorts/video_assemble.py:sfx_events_for | tools/final_audio_audit.py 효과음 시각차 0 (cap_lead>0 칸 포함) | 2026-09-28 23:38 등록 |
-| [007](cards/007-효과음·BGM_볼륨_기본값_상수_하나_—_c.md) | 효과음·BGM 볼륨 기본값 상수 하나 — capcut_draft 리터럴 15/60 네 곳 (#12) | - | - | shopping_shorts/video_assemble.py:_burn_captions | capcut_draft 에 볼륨 리터럴 0, 값 불변(캡컷 초안 볼륨 = 렌더 기본값) | 2026-09-28 23:40 등록 |
-| [008](cards/008-청소_크레딧_추정_위임·죽은_clean_ba.md) | 청소 크레딧 추정 위임·죽은 clean_base_preview 정리 (#16-②·#18-①) | - | - | shopping_shorts/mix_pipeline.py:clean_charge_plan | app._clean_credit_est 가 clean_charge_plan(mode=button)['credits'] 만 부름 · clean_base_preview 호출처 0 확인 뒤 제거 | 2026-09-28 23:40 등록 |
-| [009](cards/009-fill_위치·번호_혼용_·__hook_de.md) | /fill 위치·번호 혼용 · _hook_delta Path 결함 · app.py 22060 음성표 tts_paths_of (#21·#27) | - | - | shopping_shorts/store.py:dedupe_beat_idx · shopping_shorts/video_assemble.py:_apply_hook_inpoint · shopping_shorts/mix_pipeline.py:tts_paths_of | 칸 지운 job 에서 /fill 폴백이 같은 칸 길이 · _hook_delta 가 dict 를 받아 0 아닌 값 · 22060 경로가 칸 번호 겹침 차단을 탐(테스트) | 2026-09-28 23:40 등록 |
-| [010](cards/010-소스_길이_표·probe_공용_—_실패_처리.md) | 소스 길이 표·probe 공용 — 실패 처리(None/0/예외) 통일 (#22) | - | - | shopping_shorts/mix_pipeline.py:_src_durs_for · shopping_shorts/video_assemble.py:_probe_duration | ownership audit 에서 #22 예외 3곳(frame_extract·export_bundle·app) → 0, 값 불변 | 2026-09-28 23:40 등록 |
-| [011](cards/011-편집_화면_DATA.tts_dur_를_트림_.md) | 편집 화면 DATA.tts_dur 를 트림 반영 길이로 — 화면 컷 = 완성본 컷 (#6) | - | **필요** | shopping_shorts/video_assemble.py:_beat_effective_dur | 트림 칸 수 실측 → tools/editor_vs_final_video.py 밀림 감소, 화면 컷 경계 = 완성본 | 2026-09-28 23:40 등록 |
-| [012](cards/012-beats_preview_API_가_capt.md) | beats_preview API 가 caption_rows 를 싣고 produce.html 은 그 값만 (#9-③) | - | **필요** | shopping_shorts/video_assemble.py:caption_rows | produce.html 의 _cutForSegOf 자체 계산 0 · 꾸미기 미리보기 자막 시각 = 완성본(tools/final_caption_audit.py) | 2026-09-28 23:40 등록 |
-| [013](cards/013-화면에_보일_청소_파일_한_함수_—__cle.md) | 화면에 보일 청소 파일 한 함수 — _clean_frame_src·_thumb_clean_background·스타일랩 흡수 (#17) | - | - | shopping_shorts/mix_pipeline.py:clean_route | 썸네일·꾸미기 배경 프레임의 청소 파일 = 완성본이 쓴 것(같은 job 대조 0 불일치) | 2026-09-28 23:40 등록 |
-| [014](cards/014-캡컷_소스_복사_범위_=_render_cut.md) | 캡컷 소스 복사 범위 = render_cut_plan 이 실제 쓴 video_id (#23·#25) | - | - | shopping_shorts/mix_pipeline.py:export_sources_for | tools/capcut_export_audit.py 미디어 누락 0 | 2026-09-28 23:41 등록 |
-| [015](cards/015-음성_지문·서명_한_함수_—_plan_sig.md) | 음성 지문·서명 한 함수 — plan_signature/_pvproxy_tts_stamp/timing_signature (#20) | - | - | shopping_shorts/mix_pipeline.py:plan_signature | 성우 바꾸면 청소본·합본·꾸미기 세 산출물이 동시에 낡음 처리(실측 job) | 2026-09-28 23:41 등록 |
-| [016](cards/016-화면_길이_예산_모델을_화면_계획_결과로_(.md) | 화면 길이 예산 모델을 화면 계획 결과로 (#29) | - | - | shopping_shorts/mix_pipeline.py:beat_screen_budget | 콘폼(재TTS) 발생 건수 전/후 실측, 못 채운 칸 0 | 2026-09-28 23:41 등록 |
-| [017](cards/017-파이썬_예비_컷_계획_축소_—_화면_데이터_.md) | 파이썬 예비 컷 계획 축소 — 화면 데이터 없는 옛 job 전용 + 경보 (#1) | - | - | shopping_shorts/static/scene_play.js:planClips | FALLBACK 경보 건수 7일 0 · ownership 예외(video_assemble 예비 계획) 삭제 | 2026-09-28 23:41 등록 |
-| [018](cards/018-캡컷_이동(pan)·기본_확대_반영_+_꾸미.md) | 캡컷 이동(pan)·기본 확대 반영 + 꾸미기 프레임 구도를 frame_vf 로 (#5) | - | - | shopping_shorts/video_assemble.py:frame_vf | 확대·이동 준 칸의 캡컷 위치 = 완성본(좌표계 실측) · 꾸미기 배경 프레임 구도 = 완성본 | 2026-09-28 23:41 등록 |
-| [019](cards/019-캡컷_자막_위치·폰트_—_cap_xy_cap.md) | 캡컷 자막 위치·폰트 — cap_xy/cap_pos·폰트 동봉 (#10) | - | - | shopping_shorts/video_assemble.py:_beat_cap_style | 캡컷 초안 자막 위치 = 완성본(좌표계 실측), 폰트 동봉 | 2026-09-28 23:42 등록 |
-| [020](cards/020-컷_규칙_상수_한_곳_+_MAX_SLOWMO.md) | 컷 규칙 상수 한 곳 + MAX_SLOWMO 서버 주입 (#30·#4) | - | - | shopping_shorts/config.py(상수) → scene_play.js DATA 주입 | MAX_SHOT/MIN_CLIP/CUT_MIN/MAX_SLOWMO 정의 1곳, ownership 예외(edit_plan·config·scene_play) 삭제 | 2026-09-28 23:42 등록 |
-| [021](cards/021-고질병_선별_—_find_work.py_로_.md) | 고질병 선별 — find_work.py 로 증상어 재발 횟수 세어 재발 순 카드화 | - | - | tools/find_work.py | 후보 9개(자막 먼저 뜸·칸 길이 올림·서명 재과금·인스타 세션·beat_idx·데코레이터 밀림·검정 프레임·미리보기만 바뀜·정지 컷) 각각 '지금도 재발하나' 실측 → 카드 또는 완료 표시 | 2026-09-30 02:01 재료(09-30 find_work 기록 언급 수, 재발 수 아님): 서명 54 |
-| [022](cards/022-옛_규칙_정리_—_도구가_강제하게_된_CLA.md) | 옛 규칙 정리 — 도구가 강제하게 된 CLAUDE.md 문장 삭제·요약 (설계 §5-7) | - | - | CLAUDE.md | CLAUDE.md 길이 감소, 삭제한 문장마다 대신 강제하는 도구 이름이 핸드오프에 적힘 | 2026-09-28 23:42 등록 |
+| [006](cards/006-효과음_타점_두_벌_—_sfx_events_.md) | 효과음 타점 두 벌 — sfx_events_for 'last' 에 cap_lead·cap_offset 반영, sfx_pack.plan_events 에 absorb 전달 (#9-①④·#11) | - | - | shopping_shorts/video_assemble.py:sfx_events_for | tools/final_audio_audit.py 효과음 시각차 0 (cap_lead>0 칸 포함) | 2026-10-01 01:16 승인 필요: 아니오(고객 화면·소리 변경 — 관제 자동 승인, 라이브 뒤 자동 |
+| [007](cards/007-효과음·BGM_볼륨_기본값_상수_하나_—_c.md) | 효과음·BGM 볼륨 기본값 상수 하나 — capcut_draft 리터럴 15/60 네 곳 (#12) | - | - | shopping_shorts/video_assemble.py:_burn_captions | capcut_draft 에 볼륨 리터럴 0, 값 불변(캡컷 초안 볼륨 = 렌더 기본값) | 2026-10-01 00:38 쉬운 설명: 캡컷 초안의 효과음·배경음 볼륨을 렌더와 같은 값으로(값은 안 바 |
+| [008](cards/008-청소_크레딧_추정_위임·죽은_clean_ba.md) | 청소 크레딧 추정 위임·죽은 clean_base_preview 정리 (#16-②·#18-①) | - | - | shopping_shorts/mix_pipeline.py:clean_charge_plan | app._clean_credit_est 가 clean_charge_plan(mode=button)['credits'] 만 부름 · clean_base_preview 호출처 0 확인 뒤 제거 | 2026-10-01 00:38 쉬운 설명: 청소 크레딧 계산을 한 곳으로(화면 숫자와 실제 과금이 갈릴 여지 |
+| [009](cards/009-fill_위치·번호_혼용_·__hook_de.md) | /fill 위치·번호 혼용 · _hook_delta Path 결함 · app.py 22060 음성표 tts_paths_of (#21·#27) | - | - | shopping_shorts/store.py:dedupe_beat_idx · shopping_shorts/video_assemble.py:_apply_hook_inpoint · shopping_shorts/mix_pipeline.py:tts_paths_of | 칸 지운 job 에서 /fill 폴백이 같은 칸 길이 · _hook_delta 가 dict 를 받아 0 아닌 값 · 22060 경로가 칸 번호 겹침 차단을 탐(테스트) | 2026-10-01 00:38 쉬운 설명: 칸 지운 작업에서 엉뚱한 칸 길이가 쓰이던 결함 등 작은 결함 3 |
+| [010](cards/010-소스_길이_표·probe_공용_—_실패_처리.md) | 소스 길이 표·probe 공용 — 실패 처리(None/0/예외) 통일 (#22) | - | - | shopping_shorts/mix_pipeline.py:_src_durs_for · shopping_shorts/video_assemble.py:_probe_duration | ownership audit 에서 #22 예외 3곳(frame_extract·export_bundle·app) → 0, 값 불변 | 2026-10-01 00:39 쉬운 설명: 영상 길이 읽기를 한 곳으로(실패 처리가 곳마다 달라 생기는 오판 |
+| [011](cards/011-편집_화면_DATA.tts_dur_를_트림_.md) | 편집 화면 DATA.tts_dur 를 트림 반영 길이로 — 화면 컷 = 완성본 컷 (#6) | - | - | shopping_shorts/video_assemble.py:_beat_effective_dur | 트림 칸 수 실측 → tools/editor_vs_final_video.py 밀림 감소, 화면 컷 경계 = 완성본 | 2026-10-01 01:16 승인 필요: 아니오(고객 화면·소리 변경 — 관제 자동 승인, 라이브 뒤 자동 |
+| [012](cards/012-beats_preview_API_가_capt.md) | beats_preview API 가 caption_rows 를 싣고 produce.html 은 그 값만 (#9-③) | - | - | shopping_shorts/video_assemble.py:caption_rows | produce.html 의 _cutForSegOf 자체 계산 0 · 꾸미기 미리보기 자막 시각 = 완성본(tools/final_caption_audit.py) | 2026-10-01 01:16 승인 필요: 아니오(고객 화면·소리 변경 — 관제 자동 승인, 라이브 뒤 자동 |
+| [013](cards/013-화면에_보일_청소_파일_한_함수_—__cle.md) | 화면에 보일 청소 파일 한 함수 — _clean_frame_src·_thumb_clean_background·스타일랩 흡수 (#17) | - | - | shopping_shorts/mix_pipeline.py:clean_route | 썸네일·꾸미기 배경 프레임의 청소 파일 = 완성본이 쓴 것(같은 job 대조 0 불일치) | 2026-10-01 00:39 쉬운 설명: 썸네일·꾸미기 배경이 완성본과 다른 청소본을 쓰는 일 제거 |
+| [014](cards/014-캡컷_소스_복사_범위_=_render_cut.md) | 캡컷 소스 복사 범위 = render_cut_plan 이 실제 쓴 video_id (#23·#25) | - | - | shopping_shorts/mix_pipeline.py:export_sources_for | tools/capcut_export_audit.py 미디어 누락 0 | 2026-10-01 00:39 쉬운 설명: 캡컷 내보내기에 소스가 빠지는 일 제거 |
+| [015](cards/015-음성_지문·서명_한_함수_—_plan_sig.md) | 음성 지문·서명 한 함수 — plan_signature/_pvproxy_tts_stamp/timing_signature (#20) | - | - | shopping_shorts/mix_pipeline.py:plan_signature | 성우 바꾸면 청소본·합본·꾸미기 세 산출물이 동시에 낡음 처리(실측 job) | 2026-10-01 00:39 쉬운 설명: 성우를 바꾸면 청소본·합본·꾸미기가 동시에 새로 만들어지게 |
+| [016](cards/016-화면_길이_예산_모델을_화면_계획_결과로_(.md) | 화면 길이 예산 모델을 화면 계획 결과로 (#29) | - | - | shopping_shorts/mix_pipeline.py:beat_screen_budget | 콘폼(재TTS) 발생 건수 전/후 실측, 못 채운 칸 0 | 2026-10-01 00:39 쉬운 설명: 대본이 화면을 못 채울 때의 예산 계산을 실제 화면 기준으로(불필 |
+| [017](cards/017-파이썬_예비_컷_계획_축소_—_화면_데이터_.md) | 파이썬 예비 컷 계획 축소 — 화면 데이터 없는 옛 job 전용 + 경보 (#1) | - | - | shopping_shorts/static/scene_play.js:planClips | FALLBACK 경보 건수 7일 0 · ownership 예외(video_assemble 예비 계획) 삭제 | 2026-10-01 00:39 쉬운 설명: 화면 데이터 없는 옛 작업만 예비 계산을 쓰게 — 화면≠완성본의  |
+| [018](cards/018-캡컷_이동(pan)·기본_확대_반영_+_꾸미.md) | 캡컷 이동(pan)·기본 확대 반영 + 꾸미기 프레임 구도를 frame_vf 로 (#5) | - | - | shopping_shorts/video_assemble.py:frame_vf | 확대·이동 준 칸의 캡컷 위치 = 완성본(좌표계 실측) · 꾸미기 배경 프레임 구도 = 완성본 | 2026-10-01 00:39 쉬운 설명: 캡컷에서 확대·이동한 컷 위치가 완성본과 같게 |
+| [019](cards/019-캡컷_자막_위치·폰트_—_cap_xy_cap.md) | 캡컷 자막 위치·폰트 — cap_xy/cap_pos·폰트 동봉 (#10) | - | - | shopping_shorts/video_assemble.py:_beat_cap_style | 캡컷 초안 자막 위치 = 완성본(좌표계 실측), 폰트 동봉 | 2026-10-01 00:39 쉬운 설명: 캡컷 자막 위치·폰트가 완성본과 같게 |
+| [020](cards/020-컷_규칙_상수_한_곳_+_MAX_SLOWMO.md) | 컷 규칙 상수 한 곳 + MAX_SLOWMO 서버 주입 (#30·#4) | - | - | shopping_shorts/config.py(상수) → scene_play.js DATA 주입 | MAX_SHOT/MIN_CLIP/CUT_MIN/MAX_SLOWMO 정의 1곳, ownership 예외(edit_plan·config·scene_play) 삭제 | 2026-10-01 00:40 쉬운 설명: 컷 길이 상수(최대 2.2초 등)를 한 곳에서 정하게 |
+| [021](cards/021-고질병_선별_—_find_work.py_로_.md) | 고질병 선별 — find_work.py 로 증상어 재발 횟수 세어 재발 순 카드화 | - | - | tools/find_work.py | 후보 9개(자막 먼저 뜸·칸 길이 올림·서명 재과금·인스타 세션·beat_idx·데코레이터 밀림·검정 프레임·미리보기만 바뀜·정지 컷) 각각 '지금도 재발하나' 실측 → 카드 또는 완료 표시 | 2026-10-01 00:40 쉬운 설명: 자꾸 재발하는 문제(자막 먼저 뜸 등)를 재발 횟수 순으로 정리해 |
+| [022](cards/022-옛_규칙_정리_—_도구가_강제하게_된_CLA.md) | 옛 규칙 정리 — 도구가 강제하게 된 CLAUDE.md 문장 삭제·요약 (설계 §5-7) | - | - | CLAUDE.md | CLAUDE.md 길이 감소, 삭제한 문장마다 대신 강제하는 도구 이름이 핸드오프에 적힘 | 2026-10-01 00:40 쉬운 설명: 도구가 대신 막게 된 규칙 문장을 CLAUDE.md 에서 정리 |
 | [042](cards/042-오류_자동감지_→_회원_안내_쪽지_+_클로드.md) | 오류 자동감지 → 회원 안내 쪽지 + 클로드 자동진단 보고(수리 배포는 사장님 승인) | - | - | shopping_shorts/app.py:ops_alert(설계 중 확정) | 같은 오류 반복 회원 발생 시 N분 내 회원 쪽지 자동 발송 + 사장님께 원인 진단 쪽지 도착(라이브 실측 1건) | 2026-09-30 01:04 등록 |
+| [047](cards/047-씨앗_영상_자동배치만_제외,_영상_소스엔_포.md) | 씨앗 영상: 자동배치만 제외, 영상 소스엔 포함 | - | 2026-09-30 14:29 · 사장님 | shopping_shorts/mix_pipeline.py:mark_auto_exclude | 씨앗을 고른 작업의 3단계 소스 목록에 씨앗 영상이 보이고, 자동 배치 컷엔 씨앗 조각이 0개(라이브 job 실측) | 2026-09-30 14:29 승인: 사장님 |
 
 ## 분배 (7)
 
@@ -36,16 +37,16 @@
 | [028](cards/028-신규_회원_시작_안내_공개_페이지_start.md) | 신규 회원 시작 안내 공개 페이지 /start_guide.html | 시작안내페이지 | 2026-09-29 13:46 · 사장님 구두 2026-09-29 '서버에 있어야 계속 쓸 수 있는 거 아닌가' | shopping_shorts/app.py:_AUTH_ALLOW | 비로그인 curl 200, 링크 클릭 동작, 라이브 주소를 사장님이 카톡 전송 | 2026-09-29 13:46 승인: 사장님 구두 2026-09-29 '서버에 있어야 계속 쓸 수 있는 거  |
 | [033](cards/033-장면_반복·소스_쏠림_—_장면_고정이_같은_.md) | 장면 반복·소스 쏠림 — 장면 고정이 같은 근거컷 재사용 | 장면반복 | - | shopping_shorts/backbone.py:finalize_scenes | 같은 재료 재생성 시 한 편 안 같은 컷 재사용 0, 소스 편중 완화 — 결과 영상 프레임 대조 | 2026-09-29 21:31 판단 주인: shopping_shorts/backbone.py:finalize |
 | [039](cards/039-영어_씨앗이면_이야기_작가가_영어_대본을_낼.md) | 영어 씨앗이면 이야기 작가가 영어 대본을 낼 수 있음 — 한국어 지시·검사 없음 | 대본한국어 | - | shopping_shorts/story_writer.py:write | 영어 씨앗 job ef4b100bf1c0 재료로 N회 생성 시 영어 대본 0 (수정 전 재현 수치와 대조) | 2026-09-29 23:55 분배 → 대본한국어 |
-| [043](cards/043-장면-먼저_이븐쇼핑_대본(관리자_스위치_sc.md) | 장면-먼저 이븐쇼핑 대본(관리자 스위치 scene_cut_enabled) | 장면먼저대본 | - | shopping_shorts/scene_first_script.py:make_drafts | 관리자 계정 2단계에 장면먼저 안이 뜨고, 확정·렌더한 job에서 tools/scene_first_check.py 통과(넘긴 컷 유지·같은 장면 재사용 0·완성본 반복 프레임 0), 고객 계정 화면 불변 | 2026-09-30 01:41 분배 → 장면먼저대본 |
+| [043](cards/043-장면-먼저_이븐쇼핑_대본(관리자_스위치_sc.md) | 장면-먼저 이븐쇼핑 대본(관리자 스위치 scene_cut_enabled) | 장면먼저대본 | 2026-10-01 00:36 · 사장님 | shopping_shorts/scene_first_script.py:make_drafts | 관리자 계정 2단계에 장면먼저 안이 뜨고, 확정·렌더한 job에서 tools/scene_first_check.py 통과(넘긴 컷 유지·같은 장면 재사용 0·완성본 반복 프레임 0), 고객 계정 화면 불변 | 2026-10-01 00:36 사장님 2026-10-01: 관리자용 라이브하고 보자 (scene_cut_en |
 | [046](cards/046-다중_PC_관제·분배_—_창_이름(PC·계정.md) | 다중 PC 관제·분배 — 창 이름(PC·계정·트랙)·텔레그램 관제에서 트랙 창으로 일 내리기·회사 PC 설치 | 관제분배 | - | tools/track_open.py:open_track · tools/dispatch.py(신설) | 텔레그램 지시 1건이 트랙 창(앱 목록 '집·1·<트랙>·카드N')으로 열려 작업하고 결과가 텔레그램에 보고됨(집 PC 실측) + 회사 PC 설치 스크립트 1회 실행으로 같은 구성(회사 PC 실측) | 2026-09-30 02:55 분배 → 관제분배 |
 
-## 병합 (14)
+## 병합 (15)
 
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
-| [002](cards/002-영향_지도_tools_impact.py_—_.md) | 영향 지도 tools/impact.py — 호출 그래프로 소비처·검사·승인·병합 묶음 명세서, finish 가 diff 와 대조 | 관제 | - | tools/impact.py(신설) | 주인 함수 하나 넣으면 소비처 N·검사 M·승인 여부가 나오고, 손대지 않은 소비처는 카드에 '영향 없음 — 이유'가 없으면 finish 거절(테스트로 실패→통과) | 2026-09-30 05:25 병합 55b9e6ca85 ← 트랙 관제 (반영됨·미검증 — 라이브 실측 전) |
-| [003](cards/003-라이브_실측_파이프라인_tools_live_.md) | 라이브 실측 파이프라인 tools/live_check.py --card N + 관리자 버튼 + 반영 뒤 첫 고객 job 자동 1회 실측 | 관제 | - | tools/live_check.py(신설) | 카드 층에 맞는 도구(영상·소리·자막·캡컷)를 실제 job 에 돌려 숫자·사진이 카드에 붙고, 기준 미달이면 상태 회귀 + 관리자 쪽지 | 2026-09-30 05:25 병합 55b9e6ca85 ← 트랙 관제 (반영됨·미검증 — 라이브 실측 전) |
-| [005](cards/005-트랙_대청소_—_51개_→_한_자릿수(닫기_.md) | 트랙 대청소 — 51개 → 한 자릿수(닫기 후보표 → 사장님 확정 → close) | 관제 | 2026-09-30 02:45 · 사장님 구두 2026-09-30 '1 2 다 하고' — 30일+ 무커밋·미병합≤1 후보 10개(코드 남은 3개는 따로 보고) | tools/track.py:close · 기준 docs/superpowers/specs/2026-09-27-트랙대청소표.md | 열린 트랙 수 ≤ 9, 닫은 트랙은 미병합 0 확인 뒤에만, 살릴 트랙은 카드 연결 | 2026-09-30 05:25 병합 55b9e6ca85 ← 트랙 관제 (반영됨·미검증 — 라이브 실측 전) |
+| [002](cards/002-영향_지도_tools_impact.py_—_.md) | 영향 지도 tools/impact.py — 호출 그래프로 소비처·검사·승인·병합 묶음 명세서, finish 가 diff 와 대조 | 관제 | - | tools/impact.py(신설) | 주인 함수 하나 넣으면 소비처 N·검사 M·승인 여부가 나오고, 손대지 않은 소비처는 카드에 '영향 없음 — 이유'가 없으면 finish 거절(테스트로 실패→통과) | 2026-10-01 01:00 병합 9c1e745c96 ← 트랙 관제 (반영됨·미검증 — 라이브 실측 전) |
+| [003](cards/003-라이브_실측_파이프라인_tools_live_.md) | 라이브 실측 파이프라인 tools/live_check.py --card N + 관리자 버튼 + 반영 뒤 첫 고객 job 자동 1회 실측 | 관제 | - | tools/live_check.py(신설) | 카드 층에 맞는 도구(영상·소리·자막·캡컷)를 실제 job 에 돌려 숫자·사진이 카드에 붙고, 기준 미달이면 상태 회귀 + 관리자 쪽지 | 2026-10-01 01:00 병합 9c1e745c96 ← 트랙 관제 (반영됨·미검증 — 라이브 실측 전) |
+| [005](cards/005-트랙_대청소_—_51개_→_한_자릿수(닫기_.md) | 트랙 대청소 — 51개 → 한 자릿수(닫기 후보표 → 사장님 확정 → close) | 관제 | 2026-09-30 02:45 · 사장님 구두 2026-09-30 '1 2 다 하고' — 30일+ 무커밋·미병합≤1 후보 10개(코드 남은 3개는 따로 보고) | tools/track.py:close · 기준 docs/superpowers/specs/2026-09-27-트랙대청소표.md | 열린 트랙 수 ≤ 9, 닫은 트랙은 미병합 0 확인 뒤에만, 살릴 트랙은 카드 연결 | 2026-10-01 01:00 병합 9c1e745c96 ← 트랙 관제 (반영됨·미검증 — 라이브 실측 전) |
 | [025](cards/025-심효진(451)_음성_차단_면제_—_사장님_.md) | 심효진(451) 음성 차단 면제 — 사장님 일레븐 키 개방 | 음성면제_심효진 | 2026-09-29 11:43 · 사장님 구두 2026-09-29 '내꺼 일레븐 랩스 키 심효진님한테 열어줘 쓸수있게' | shopping_shorts/keyroute.py:is_block_exempt | 라이브에서 cid 451 음성 생성 요청이 402 need_own_key 없이 200 · 서버 로그 tts 호출 1건 이상 | 2026-09-29 14:29 병합 28e9cdad51 ← 트랙 음성면제_심효진 (반영됨·미검증 — 라이브  |
 | [030](cards/030-장면꾸미기_글자_두께·그림자_슬라이더·수치.md) | 장면꾸미기 글자 두께·그림자 슬라이더·수치 | 장면폰트 | 2026-09-29 16:21 · 사장님 — 올려 (2026-09-29) | out/precision20-ui.js:drawFontSets | 폰트 탭에 두께·그림자 각각 −/슬라이더/＋/현재 수치가 보이고 조절값이 저장·재열기·렌더 레이어·썸네일·최종 합성에 동일 반영 | 2026-09-30 03:22 병합 8eb3fd005b ← 트랙 장면폰트 (반영됨·미검증 — 라이브 실측 전 |
 | [031](cards/031-job_실패_시_1단계_잠금_문구_대신_실패.md) | job 실패 시 1단계 잠금 문구 대신 실패 사유 표시 | 잠금사유 | 2026-09-29 16:20 · 사장님 | shopping_shorts/static/produce.html:stepLockMsg | status=failed job에서 잠긴 단계 클릭 시 job.error가 보인다(라이브 확인) | 2026-09-29 18:44 병합 406e99cf5c ← 트랙 잠금사유 (반영됨·미검증 — 라이브 실측 전 |
@@ -56,20 +57,21 @@
 | [040](cards/040-장면꾸미기_제목·채널명_그림자_미적용_및_시.md) | 장면꾸미기 제목·채널명 그림자 미적용 및 시각 개선 | 장면폰트 | **필요** | out/precision20-ui.js:applyTextLook | 두께 0에서도 채널명·큰 제목·작은 제목·자막의 그림자가 각각 눈에 보이고, 네 대상의 미리보기·렌더 결과가 일치하며, 강도별 비교 화면을 육안 검수 | 2026-09-30 03:22 병합 8eb3fd005b ← 트랙 장면폰트 (반영됨·미검증 — 라이브 실측 전 |
 | [041](cards/041-타입캐스트_키만_있는_회원_기본_성우_=_필.md) | 타입캐스트 키만 있는 회원 기본 성우 = 필재(일레븐 기본값으로 3단계 막힘) | 타입캐스트기본성우 | 2026-09-30 00:46 · 사장님 2026-09-30 '필재' '긴급' | shopping_shorts/store.py:get_last_voice | 610처럼 타입캐스트 키만 있는 회원의 새 작업 voice_json이 tc-piljae-stable로 심기고 3단계 TTS가 키 오류 없이 통과(라이브 실측) | 2026-09-30 01:48 병합 a568c8e177 ← 트랙 타입캐스트기본성우 (반영됨·미검증 — 라이브 |
 | [044](cards/044-2단계_대본_칸_추가·이동(모든_안)_+_빈.md) | 2단계 대본 칸 추가·이동(모든 안) + 빈 칸이 장면 출처 줄맞춤 깨는 것 | 대본칸추가 | 2026-09-30 02:40 · 사장님 구두 2026-09-30 '이거 적용하고 뒷 작업들에 영향없는지 점검까지' | shopping_shorts/static/produce.html:s2DraftContract | 라이브 관리자 작업: A안에 칸 추가→가운데로 이동→확정 시 STATE.script 줄 순서=화면 칸 순서, script_beat_sources 개수=대본 줄 수(빈 칸 섞여도), 3단계 칸 순서 동일, 완성 영상에서 새 칸 대사가 옮긴 자리에서 들림 | 2026-09-30 04:26 병합 75dbc3425d ← 트랙 대본칸추가 (반영됨·미검증 — 라이브 실측  |
-| [045](cards/045-CTA_자르기_—_역할이름_누락(댓글유도·c.md) | CTA 자르기 — 역할이름 누락(댓글유도·call_to_action) + 2단계 줄별 [CTA] 버튼 + 썰 마무리 댓글유도 자동표시 | CTA표시 | 2026-09-30 03:06 · 사장님 2026-09-30 '진행' | shopping_shorts/edit_plan.py:_is_cta | CTA 표시한 줄이 있는 새 작업 렌더 뒤 cta_cut_sec 저장·유튜브용 잘라낸 영상 길이=CTA 시작 시각(라이브 실측 1건) | 2026-09-30 04:51 병합 f3bb03a883 ← 트랙 CTA표시 (반영됨·미검증 — 라이브 실측  |
+| [045](cards/045-CTA_자르기_—_역할이름_누락(댓글유도·c.md) | CTA 자르기 — 역할이름 누락(댓글유도·call_to_action) + 2단계 줄별 [CTA] 버튼 + 썰 마무리 댓글유도 자동표시 | CTA표시 | 2026-09-30 03:06 · 사장님 2026-09-30 '진행' | shopping_shorts/edit_plan.py:_is_cta | CTA 표시한 줄이 있는 새 작업 렌더 뒤 cta_cut_sec 저장·유튜브용 잘라낸 영상 길이=CTA 시작 시각(라이브 실측 1건) | 2026-10-01 00:22 병합 8557122635 ← 트랙 CTA표시 (반영됨·미검증 — 라이브 실측  |
+| [048](cards/048-즐겨찾기_분석상태_요청이_주소_한도(8190.md) | 즐겨찾기 분석상태 요청이 주소 한도(8190B) 초과로 414 — 즐겨찾기 많은 회원 전부 '분석 전' | 분석상태414 | 2026-09-30 23:52 · 사장님 2026-09-30 '뿌리해결을 진행하고 그다음에 cta까지 한번에 라이브' | shopping_shorts/static/collection.html:loadAnalysis | 즐겨찾기 300개+ 회원 화면에서 상태 요청 414 0건·분석완료 배지가 서버 판정 수와 일치(라이브 apache 로그 + 화면) | 2026-10-01 00:09 병합 302cdfcbdb ← 트랙 분석상태414 (반영됨·미검증 — 라이브 실 |
 
-## 서버반영 (2)
-
-| 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
-|---|---|---|---|---|---|---|
-| [004](cards/004-관리자_페이지_관제_보드_탭_+_승인_버튼.md) | 관리자 페이지 관제 보드 탭 + 승인 버튼 | 관제 | 2026-09-30 02:45 · 사장님 구두 2026-09-30 '1 2 다 하고' | shopping_shorts/app.py(관리자 라우트) · 보드 렌더는 control.render_board 한 곳 | 관리자 페이지에서 BOARD.md 와 같은 내용이 보이고 승인 버튼이 카드의 승인 칸을 채운다(라이브에서 눌러 확인) | 2026-09-30 05:26 상태 병합 → 서버반영 |
-| [023](cards/023-저장_층(C_D)_관제_—_외장_D_숏템_을.md) | 저장 층(C/D) 관제 — 외장 D:\숏템 을 지도(관제/storage.json)로 나누고 tools/storage.py 가 status/plan/apply | 관제 | - | tools/storage.py:plan | C 여유가 경고선 15GB 위로 올라오고 유지 · 옮긴 것마다 D 에 bundle/파일이 있고 C 에 두 벌 없음 · 다른 세션 경로 깨짐 0 | 2026-09-30 05:27 상태 병합 → 서버반영 |
-
-## 라이브실측 (5)
+## 서버반영 (1)
 
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
-| [001](cards/001-관제_시스템_1차_구축(카드·보드·승인·선점.md) | 관제 시스템 1차 구축(카드·보드·승인·선점·소유권 관문) | 관제 | - | tools/control.py:finish_gate · tools/ownership_check.py:compare_texts | 실제 저장소에서 ①카드 없는 start 거절 ②finish 관제 관문 통과·카드에 병합 기록 자동 ③test_control 29건 green | 2026-09-30 05:25 병합 55b9e6ca85 ← 트랙 관제 (반영됨·미검증 — 라이브 실측 전) |
+| [023](cards/023-저장_층(C_D)_관제_—_외장_D_숏템_을.md) | 저장 층(C/D) 관제 — 외장 D:\숏템 을 지도(관제/storage.json)로 나누고 tools/storage.py 가 status/plan/apply | 관제 | - | tools/storage.py:plan | C 여유가 경고선 15GB 위로 올라오고 유지 · 옮긴 것마다 D 에 bundle/파일이 있고 C 에 두 벌 없음 · 다른 세션 경로 깨짐 0 | 2026-10-01 01:00 병합 9c1e745c96 ← 트랙 관제 (반영됨·미검증 — 라이브 실측 전) |
+
+## 라이브실측 (6)
+
+| 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
+|---|---|---|---|---|---|---|
+| [001](cards/001-관제_시스템_1차_구축(카드·보드·승인·선점.md) | 관제 시스템 1차 구축(카드·보드·승인·선점·소유권 관문) | 관제 | - | tools/control.py:finish_gate · tools/ownership_check.py:compare_texts | 실제 저장소에서 ①카드 없는 start 거절 ②finish 관제 관문 통과·카드에 병합 기록 자동 ③test_control 29건 green | 2026-10-01 01:00 병합 9c1e745c96 ← 트랙 관제 (반영됨·미검증 — 라이브 실측 전) |
+| [004](cards/004-관리자_페이지_관제_보드_탭_+_승인_버튼.md) | 관리자 페이지 관제 보드 탭 + 승인 버튼 | 관제 | 2026-09-30 02:45 · 사장님 구두 2026-09-30 '1 2 다 하고' | shopping_shorts/app.py(관리자 라우트) · 보드 렌더는 control.render_board 한 곳 | 관리자 페이지에서 BOARD.md 와 같은 내용이 보이고 승인 버튼이 카드의 승인 칸을 채운다(라이브에서 눌러 확인) | 2026-10-01 01:00 병합 9c1e745c96 ← 트랙 관제 (반영됨·미검증 — 라이브 실측 전) |
 | [024](cards/024-장면꾸미기_글자_두께·그림자_설정([폰트]_.md) | 장면꾸미기 글자 두께·그림자 설정([폰트] 탭, 영상 전체) | 장면폰트 | 2026-09-29 00:16 · 사장님 구두 2026-09-29 00:00 '올려봐 라이브후에 랜더랑 캡컷 확인하고' | out/precision20-ui.js:TEXT_WEIGHTS/TEXT_SHADOWS CSS(글자층 data-tw/data-ts) | tools/scene_font_research/check_text_look.py 전부 통과 + 라이브 실제 job 렌더·캡컷에서 글자 달라짐 확인 | 2026-09-30 03:22 병합 8eb3fd005b ← 트랙 장면폰트 (반영됨·미검증 — 라이브 실측 전 |
 | [029](cards/029-대본_영어모드로_변환하기_—_확정_한국어_대.md) | 대본 영어모드로 변환하기 — 확정 한국어 대본을 문장별 영어로 번역(TTS·자막 영어) | 영어모드변환 | 2026-09-29 14:49 · 사장님 구두 2026-09-29 '영어모드로 변환하기 이런거' | shopping_shorts/script_translate.py:to_english | 격리 시험 실재료 10편: 번역 줄수=원문 줄수, 영어 비율≥95%, 일레븐 TTS 정상, 자막 줄 영어, 타입캐스트 성우는 영어모드에서 차단. 사장님 승인 후 라이브 | 2026-09-30 04:16 09-30 04:16 웹 재시작 후: /api/script/translate  |
 | [034](cards/034-타입캐스트_키_없는_회원의_기본_성우_자동_.md) | 타입캐스트 키 없는 회원의 기본 성우 자동 일레븐 대체 — 3단계 막힘 해소 | 영어모드변환 | 2026-09-29 19:52 · 사장님 구두 2026-09-29 '먼저 수리하고 잘린 사람들 유료키 있으면 일레븐으로 자동 지정 / 일레븐 유료 안 된 사람은 내 거로 쓰게 하지 말고' | shopping_shorts/typecast_tts.py:use_fallback | 라이브: 580 배승훈 새 3단계 작업이 TTS 통과(ready_for_review), 기본 성우 타입캐스트+일레븐키 회원 6명 새 작업 실패 0 | 2026-09-30 04:02 병합 7099fcfb65 ← 트랙 영어모드변환 (반영됨·미검증 — 라이브 실측 |
