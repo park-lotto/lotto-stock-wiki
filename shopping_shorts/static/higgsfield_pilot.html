@@ -3,155 +3,73 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Higgsfield API 시험실 · 숏템메이커</title>
+  <title>Higgsfield 후킹 라이브러리 · 숏템메이커</title>
   <style>
-    :root{--bg:#07110f;--panel:#0d1d19;--line:#1e3b34;--mint:#61e6c1;--text:#edf7f3;--sub:#94aaa3;--bad:#ff7777;--warn:#ffc86a}
-    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#12372d 0,transparent 34%),var(--bg);color:var(--text);font-family:system-ui,'Noto Sans KR',sans-serif}
-    main{width:min(980px,calc(100% - 28px));margin:0 auto;padding:30px 0 70px}
-    a{color:var(--mint)}h1{font-size:28px;margin:10px 0 6px}.lead{color:var(--sub);margin:0 0 22px;line-height:1.6}
-    .badge{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:5px 10px;color:var(--mint);font-size:12px;font-weight:800}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:rgba(13,29,25,.94);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 16px 40px rgba(0,0,0,.2)}
-    h2{font-size:17px;margin:0 0 14px}.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.fact{background:#091713;border:1px solid #173129;border-radius:10px;padding:11px}.fact small{display:block;color:var(--sub);margin-bottom:4px}.fact b{font-size:15px}
-    label{display:block;color:#c9d9d4;font-weight:700;font-size:13px;margin:13px 0 6px}input,textarea{width:100%;background:#07120f;border:1px solid #28483f;color:var(--text);border-radius:10px;padding:12px;font:inherit}textarea{min-height:120px;resize:vertical;line-height:1.5}input:focus,textarea:focus{outline:2px solid rgba(97,230,193,.24);border-color:var(--mint)}
-    .preview{aspect-ratio:16/10;border:1px dashed #31544a;border-radius:12px;display:grid;place-items:center;overflow:hidden;color:var(--sub);background:#07120f;margin-top:12px}.preview img{width:100%;height:100%;object-fit:contain;display:none}
-    .check{display:flex;gap:9px;align-items:flex-start;background:#211b0d;border:1px solid #5c4820;border-radius:10px;padding:11px;color:#f4dfb1;font-size:13px;line-height:1.45;margin-top:14px}.check input{width:auto;margin-top:3px}
-    button{width:100%;border:0;border-radius:11px;padding:13px 16px;background:linear-gradient(90deg,#61e6c1,#3fc7ad);color:#04100d;font-size:15px;font-weight:900;cursor:pointer;margin-top:12px}button:disabled{opacity:.42;cursor:not-allowed}
-    .notice{border-radius:10px;padding:11px 13px;margin:12px 0;font-size:13px;line-height:1.5}.notice.ok{background:#0c2b22;color:#94f1d8}.notice.warn{background:#261e0d;color:#f1d697}.notice.bad{background:#2b1111;color:#ffadad}
-    .job{border:1px solid #1e3b34;border-radius:12px;padding:13px;margin-top:10px;background:#091713}.jobtop{display:flex;align-items:center;gap:9px}.state{font-size:12px;font-weight:900;border-radius:999px;padding:4px 8px;background:#243b35;color:#bfe8dc}.state.done{background:#11492f;color:#8cf0ba}.state.failed{background:#4b1c1c;color:#ffb0b0}.meta{color:var(--sub);font-size:12px;margin-top:7px;overflow-wrap:anywhere}.err{color:var(--bad)}video{width:100%;border-radius:11px;background:#000;margin-top:12px;max-height:520px}.empty{color:var(--sub);font-size:13px;padding:15px 0}
-    .spin{display:inline-block;width:14px;height:14px;border:2px solid #45645c;border-top-color:var(--mint);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
-    @media(max-width:760px){.grid{grid-template-columns:1fr}.facts{grid-template-columns:1fr 1fr}main{padding-top:18px}}
+    :root{--bg:#070a0f;--panel:#10151d;--line:#27313e;--blue:#58c7ff;--mint:#62e4bd;--text:#f3f7fb;--sub:#9ba8b7;--bad:#ff7d86;--warn:#ffc66d}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 80% -10%,#17344a 0,transparent 30%),radial-gradient(circle at 5% 15%,#132e27 0,transparent 26%),var(--bg);color:var(--text);font-family:system-ui,'Noto Sans KR',sans-serif}
+    button,input,textarea{font:inherit}button{cursor:pointer}a{color:var(--blue)}.shell{width:min(1460px,calc(100% - 32px));margin:auto;padding:24px 0 80px}
+    .topbar{display:flex;align-items:center;gap:14px;margin-bottom:20px}.back{text-decoration:none;color:#c9d4df}.badge{border:1px solid #31536a;background:#0d2130;color:#8fdcff;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900}
+    .hero{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:22px}.hero h1{font-size:clamp(27px,4vw,46px);letter-spacing:-.04em;margin:0 0 8px}.hero p{color:var(--sub);line-height:1.65;margin:0;max-width:760px}.hero strong{color:var(--mint)}
+    .tabs{display:flex;gap:8px;position:sticky;top:0;z-index:20;padding:10px 0;background:linear-gradient(var(--bg) 70%,transparent)}.tab{border:1px solid var(--line);background:#101721;color:#b8c4d0;padding:10px 16px;border-radius:999px;font-weight:800}.tab.active{background:var(--text);color:#091019;border-color:var(--text)}.panel{display:none}.panel.active{display:block}
+    .toolbar{display:flex;gap:10px;align-items:center;margin:12px 0 18px;flex-wrap:wrap}.search{flex:1;min-width:250px;background:#0f151e;border:1px solid var(--line);color:var(--text);padding:12px 14px;border-radius:12px}.filters{display:flex;gap:7px;flex-wrap:wrap}.filter{border:1px solid var(--line);background:#101721;color:#aeb9c5;border-radius:999px;padding:9px 13px;font-size:13px;font-weight:800}.filter.active{border-color:var(--mint);color:#8af2d3;background:#10271f}.count{color:var(--sub);font-size:13px;white-space:nowrap}
+    .gallery{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}.preset{padding:0;text-align:left;border:1px solid var(--line);border-radius:15px;overflow:hidden;background:var(--panel);color:var(--text);transition:.18s transform,.18s border-color,.18s box-shadow}.preset:hover{transform:translateY(-3px);border-color:#4f6c83;box-shadow:0 15px 35px rgba(0,0,0,.28)}.thumb{aspect-ratio:9/12;background:#0a0d12;position:relative;overflow:hidden}.thumb img{width:100%;height:100%;display:block;object-fit:cover;transition:.3s transform}.preset:hover img{transform:scale(1.035)}.play{position:absolute;inset:auto 12px 12px auto;width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:rgba(7,10,15,.82);border:1px solid rgba(255,255,255,.3);font-size:15px}.preset-body{padding:12px}.preset h3{font-size:15px;margin:0 0 7px}.preset p{color:var(--sub);font-size:12px;line-height:1.45;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.tag{display:inline-block;color:#7ddbbf;background:#10241e;border:1px solid #234b3e;border-radius:999px;padding:3px 7px;font-size:10px;font-weight:900;margin-top:10px}.empty{color:var(--sub);padding:50px 0;text-align:center;grid-column:1/-1}
+    .featured{display:grid;grid-template-columns:minmax(260px,.62fr) minmax(0,1.38fr);gap:18px;background:linear-gradient(135deg,#11241e,#101824);border:1px solid #315447;border-radius:18px;padding:16px;margin:12px 0 20px}.featured-preview{min-height:330px;overflow:hidden;border-radius:13px;background:#05070a;display:grid;place-items:center}.featured-preview video{width:100%;height:100%;max-height:430px;object-fit:contain}.featured-info{padding:8px;display:flex;flex-direction:column;justify-content:center}.featured-info h2{font-size:28px;margin:5px 0 8px}.featured-info p{color:#b8c5cf;line-height:1.65;margin:0}.featured-info .use{margin-top:16px;align-self:flex-start;padding-inline:22px}.hook-copy{margin-top:13px;padding:12px 14px;border-radius:11px;background:#09120f;border:1px solid #294b40;color:#bfe9db;font:600 13px/1.55 ui-monospace,Consolas,monospace}.section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:28px 0 12px}.section-head h2{margin:0 0 5px;font-size:22px}.section-head p{margin:0;color:var(--sub);line-height:1.55}.divider{height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin:34px 0 8px}
+    .notice{border-radius:11px;padding:11px 13px;margin:12px 0;font-size:13px;line-height:1.5}.notice.ok{background:#0d2c23;color:#98f0d5}.notice.warn{background:#2b220f;color:#f2daab}.notice.bad{background:#311517;color:#ffb3b8}.lab-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);gap:16px}.card{background:rgba(16,21,29,.95);border:1px solid var(--line);border-radius:16px;padding:18px}.card h2{font-size:18px;margin:0 0 14px}.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.fact{background:#0b1118;border:1px solid #242f3a;border-radius:10px;padding:11px}.fact small{display:block;color:var(--sub);margin-bottom:5px}.fact b{font-size:14px}.card label{display:block;color:#d1d9e2;font-weight:800;font-size:13px;margin:13px 0 6px}.card input,.card textarea{width:100%;background:#090e14;border:1px solid #303b48;color:var(--text);border-radius:10px;padding:12px}.card textarea{min-height:130px;resize:vertical;line-height:1.5}.preview{aspect-ratio:16/9;border:1px dashed #3c4c5d;border-radius:12px;display:grid;place-items:center;overflow:hidden;color:var(--sub);background:#090e14;margin-top:12px}.preview img{width:100%;height:100%;object-fit:contain;display:none}.check{display:flex!important;gap:9px;align-items:flex-start;background:#2b220f;border:1px solid #645029;border-radius:10px;padding:11px;color:#f3dfb6!important;font-weight:500!important;line-height:1.45}.check input{width:auto;margin:3px 0 0}.primary{width:100%;border:0;border-radius:11px;padding:13px 16px;background:linear-gradient(90deg,var(--mint),#40c9ad);color:#04100d;font-weight:900;margin-top:12px}.primary:disabled{opacity:.42;cursor:not-allowed}.job{border:1px solid #283440;border-radius:12px;padding:13px;margin-top:10px;background:#0b1118}.jobtop{display:flex;align-items:center;gap:9px}.state{font-size:12px;font-weight:900;border-radius:999px;padding:4px 8px;background:#28353e;color:#c6e1eb}.state.done{background:#11492f;color:#8cf0ba}.state.failed{background:#4b1c1c;color:#ffb0b0}.meta{color:var(--sub);font-size:12px;margin-top:7px;overflow-wrap:anywhere}.err{color:var(--bad)}.job video{width:100%;border-radius:11px;background:#000;margin-top:12px;max-height:520px}.spin{display:inline-block;width:14px;height:14px;border:2px solid #45645c;border-top-color:var(--mint);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    dialog{width:min(980px,calc(100% - 24px));border:1px solid #394858;border-radius:18px;padding:0;background:#0d1219;color:var(--text);box-shadow:0 30px 100px #000;overflow:hidden}dialog::backdrop{background:rgba(0,0,0,.8);backdrop-filter:blur(7px)}.modal-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(270px,.7fr)}.modal-media{background:#000;min-height:480px;display:grid;place-items:center}.modal-media video{width:100%;height:100%;max-height:75vh;object-fit:contain}.modal-info{padding:22px;display:flex;flex-direction:column}.modal-info h2{font-size:25px;margin:7px 0 10px}.modal-info p{color:#b2bfcc;line-height:1.65}.close{align-self:flex-end;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#151d27;color:#fff}.use{margin-top:auto;border:0;border-radius:11px;padding:12px;background:var(--mint);color:#06130f;font-weight:900}
+    @media(max-width:1150px){.gallery{grid-template-columns:repeat(4,1fr)}}@media(max-width:900px){.gallery{grid-template-columns:repeat(3,1fr)}.lab-grid,.featured{grid-template-columns:1fr}.facts{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.shell{width:min(100% - 20px,1460px)}.hero{display:block}.hero .badge{display:inline-flex;margin-top:14px}.gallery{grid-template-columns:repeat(2,1fr);gap:9px}.preset-body{padding:10px}.modal-grid{grid-template-columns:1fr}.modal-media{min-height:280px}.modal-info{padding:16px}.toolbar{align-items:stretch}.search{width:100%}.fly-stage{min-height:180px}}
   </style>
 </head>
 <body>
-<main>
-  <a href="/admin">← 관리자 화면</a>
-  <h1>🎞 Higgsfield API 시험실</h1>
-  <p class="lead">상품 이미지 한 장을 5초짜리 AI 영상으로 움직여 봅니다. 현재는 관리자 내부 검증용이며 고객 포인트는 차감하지 않습니다.</p>
-
-  <div class="grid">
-    <section class="card">
-      <h2>고정 시험 조건</h2>
-      <div id="configMsg" class="notice warn">설정을 확인하는 중입니다.</div>
-      <div class="facts">
-        <div class="fact"><small>모델</small><b id="model">–</b></div>
-        <div class="fact"><small>출력</small><b id="spec">–</b></div>
-        <div class="fact"><small>공급자 예상원가</small><b id="usd">–</b></div>
-        <div class="fact"><small>향후 고객 예상가</small><b id="points">–</b></div>
-      </div>
-      <div class="notice warn">API 호출 즉시 Higgsfield 잔액에서 실제 비용이 발생합니다. 웹 구독의 Unlimited 크레딧과는 별개입니다.</div>
-
-      <details id="keyBox">
-        <summary style="cursor:pointer;color:var(--mint);font-weight:800">🔑 결제 후 API 키 연결</summary>
-        <div class="notice warn">키는 이 서버의 기존 암호화 저장소에 보관되며 화면에 다시 표시되지 않습니다.</div>
-        <label for="keyId">API Key ID</label>
-        <input id="keyId" type="password" autocomplete="off" placeholder="발급 화면의 Key ID">
-        <label for="keySecret">API Key Secret</label>
-        <input id="keySecret" type="password" autocomplete="off" placeholder="한 번만 보이는 전체 Secret">
-        <button id="saveKey" type="button" style="background:#213d35;color:#bdf5e5;border:1px solid #3d6b5e">암호화해서 연결하기</button>
-        <div id="keyMsg"></div>
-      </details>
-
-      <label for="imageUrl">공개 상품 이미지 주소</label>
-      <input id="imageUrl" type="url" placeholder="https://…/product.jpg" autocomplete="off">
-      <div class="preview"><span id="previewEmpty">이미지 주소를 입력하면 미리보기</span><img id="previewImg" alt="입력 이미지 미리보기"></div>
-
-      <label for="prompt">움직임 지시</label>
-      <textarea id="prompt" maxlength="1200" placeholder="카메라가 상품을 천천히 원형으로 돌며 비추고, 부드러운 스튜디오 조명이 반사된다. 상품 모양과 글자는 바꾸지 않는다."></textarea>
-
-      <label class="check"><input id="confirm" type="checkbox"><span>이 시험이 실제 API 비용을 사용한다는 것을 확인했습니다.</span></label>
-      <button id="generate" type="button" disabled>5초 시험 영상 만들기</button>
-      <div id="actionMsg"></div>
-    </section>
-
-    <section class="card">
-      <h2>최근 시험</h2>
-      <div id="jobs" class="empty">불러오는 중…</div>
-    </section>
-  </div>
+<main class="shell">
+  <div class="topbar"><a class="back" href="/admin">← 관리자 화면</a><span class="badge">관리자 실험실</span></div>
+  <header class="hero"><div><h1>Higgsfield 쇼핑 후킹 라이브러리</h1><p><strong>Marketing Studio UGC 훅</strong>과 Viral Hub 효과를 구분해 모았습니다. 카드를 누르면 공식 예시 영상을 볼 수 있고, 미리보기만 재생하면 생성 비용은 발생하지 않습니다.</p></div><span class="badge">MCP 실측 · 2026-09-29</span></header>
+  <nav class="tabs" aria-label="페이지 구역"><button class="tab active" data-panel="library" type="button">Marketing Studio 훅</button><button class="tab" data-panel="generator" type="button">API 영상 생성</button></nav>
+  <section id="library" class="panel active">
+    <article class="featured"><div class="featured-preview"><video controls playsinline preload="metadata" poster="https://cdn.higgsfield.ai/cdn-cgi/image/width=1080,quality=80,format=auto/marketing_studio_setup/672b7bc8-fd7e-48ef-954f-f194b83eb1ba.webp" src="https://cdn.higgsfield.ai/marketing_studio_setup/0376d63f-7fcb-4622-bdd0-4dc700d44cc6.mp4"></video></div><div class="featured-info"><span class="tag">Marketing Studio 2.0 · UGC 공식 훅</span><h2>Product Hit</h2><p>찾으시던 연출이 이것입니다. 제품과 아바타를 넣으면 제품이 프레임 밖에서 날아와 인물과 부딪히고, 인물이 짧게 반응한 뒤 제품 소개로 전환됩니다. 영상 속 화면에는 <b>Unboxing · Product Hit · Setting</b> 선택지가 보였고 Product Hit가 선택돼 있었습니다.</p><div class="hook-copy">Object flies into frame, hits subject. Brief reaction → pivot to product.</div><div class="notice warn">이 훅은 일반 Seedance 프롬프트가 아니라 Marketing Studio의 제품+아바타 워크플로입니다. 아래 API 시험 생성과는 같은 기능이 아닙니다.</div><button id="useSideEntry" class="use" type="button">참고 문장을 API 칸에 복사</button></div></article>
+    <div class="section-head"><div><h2>Marketing Studio UGC 공식 예시</h2><p>MCP의 현재 UGC 첫 화면 12개입니다. 전체 UGC 카탈로그는 986개로 확인됐습니다.</p></div><span class="badge">첫 화면 12 / 전체 986</span></div>
+    <div id="ugcGallery" class="gallery"></div>
+    <div class="divider"></div>
+    <div class="section-head"><div><h2>Viral Hub 효과</h2><p>아래 87개는 Product Hit와 다른 카탈로그입니다. 카메라·전환·초현실 효과 참고용입니다.</p></div><span class="badge">Viral Hub · 87</span></div>
+    <div class="toolbar"><input id="presetSearch" class="search" type="search" placeholder="예시 이름이나 연출 검색 — product, zoom, transition…"><div class="filters" id="filters"><button class="filter active" data-filter="all" type="button">전체</button><button class="filter" data-filter="intrusion" type="button">인물 난입</button><button class="filter" data-filter="product" type="button">제품 강조</button><button class="filter" data-filter="camera" type="button">카메라</button><button class="filter" data-filter="transition" type="button">전환·반전</button><button class="filter" data-filter="surreal" type="button">초현실</button></div><span id="presetCount" class="count"></span></div>
+    <div id="gallery" class="gallery"></div>
+  </section>
+  <section id="generator" class="panel">
+    <div class="lab-grid"><section class="card"><h2>Higgsfield API 시험 생성</h2><div id="configMsg" class="notice warn">설정을 확인하는 중입니다.</div><div class="facts"><div class="fact"><small>모델</small><b id="model">—</b></div><div class="fact"><small>출력</small><b id="spec">—</b></div><div class="fact"><small>공급사 공개 최저가</small><b id="usd">—</b></div><div class="fact"><small>향후 고객 예상가</small><b id="points">—</b></div></div><div class="notice warn">생성 버튼을 누를 때만 실제 API 비용이 발생합니다. 예시 영상 재생은 무료입니다.</div>
+      <details id="keyBox"><summary style="cursor:pointer;color:var(--mint);font-weight:800">결제용 API 키 연결</summary><div class="notice warn">키는 서버 암호화 저장소에 보관하며 화면에 다시 표시하지 않습니다.</div><label for="keyId">API Key ID</label><input id="keyId" type="password" autocomplete="off"><label for="keySecret">API Key Secret</label><input id="keySecret" type="password" autocomplete="off"><button id="saveKey" class="primary" type="button">암호화해 연결하기</button><div id="keyMsg"></div></details>
+      <label for="imageUrl">공개 제품 이미지 주소</label><input id="imageUrl" type="url" placeholder="https://…/product.jpg" autocomplete="off"><div class="preview"><span id="previewEmpty">이미지 주소를 입력하면 미리보기</span><img id="previewImg" alt="입력 이미지 미리보기"></div><label for="prompt">움직임 지시</label><textarea id="prompt" maxlength="1200" placeholder="예시를 선택하면 콘셉트 설명을 여기로 가져올 수 있습니다."></textarea><label class="check"><input id="confirm" type="checkbox"><span>이 생성에 실제 API 비용이 사용된다는 것을 확인했습니다.</span></label><button id="generate" class="primary" type="button" disabled>시험 영상 만들기</button><div id="actionMsg"></div></section>
+      <section class="card"><h2>최근 시험</h2><div id="jobs" class="empty">불러오는 중…</div></section></div>
+  </section>
 </main>
+<dialog id="presetDialog"><div class="modal-grid"><div class="modal-media"><video id="modalVideo" controls playsinline preload="metadata"></video></div><div class="modal-info"><button id="modalClose" class="close" type="button" aria-label="닫기">✕</button><span id="modalTag" class="tag"></span><h2 id="modalTitle"></h2><p id="modalDescription"></p><div class="notice warn">이 영상은 연출 참고 예시입니다. 같은 프리셋을 실행하는 버튼이 아니므로 비용이 발생하지 않습니다.</div><button id="useConcept" class="use" type="button">콘셉트 설명을 생성 칸으로 가져오기</button></div></div></dialog>
+<script src="/higgsfield_presets.js"></script>
 <script>
-const $=id=>document.getElementById(id);
-let CONFIG=null, POLL=null;
-
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function stateName(s){return ({queued:'대기',running:'생성 중',done:'완료',failed:'실패'})[s]||s||'–';}
-function fmtTime(v){if(!v)return '–';try{return new Date(v).toLocaleString('ko-KR')}catch(_){return v}}
-function renderJobs(jobs){
-  const box=$('jobs');
-  if(!jobs?.length){box.className='empty';box.textContent='아직 시험한 영상이 없습니다.';return;}
-  box.className='';
-  box.innerHTML=jobs.map(j=>`<article class="job">
-    <div class="jobtop">${j.status==='running'||j.status==='queued'?'<span class="spin"></span>':''}<b>${esc(j.job_id)}</b><span class="state ${esc(j.status)}">${esc(stateName(j.status))}</span></div>
-    <div class="meta">${esc(fmtTime(j.created_at))}<br>${esc(j.prompt||'움직임 지시 없음')}</div>
-    ${j.error?`<div class="meta err">${esc(j.error)}</div>`:''}
-    ${j.video_url?`<video controls playsinline src="${esc(j.video_url)}"></video><a href="${esc(j.video_url)}" download>영상 내려받기</a>`:''}
-  </article>`).join('');
-}
-
-async function loadConfig(){
-  try{
-    const r=await fetch('/api/admin/higgsfield/config',{cache:'no-store'}), d=await r.json();
-    if(!r.ok)throw new Error(d.error||'설정을 읽지 못했습니다.');
-    CONFIG=d;$('model').textContent=d.model.split('/').slice(0,2).join(' / ');
-    $('spec').textContent=`${d.duration}초 · ${d.resolution} · 소리 없음`;
-    $('usd').textContent=`약 $${Number(d.estimated_usd).toFixed(4)}`;
-    $('points').textContent=`${d.estimated_points}P (아직 미차감)`;
-    $('configMsg').className='notice '+(d.configured?'ok':'bad');
-    $('configMsg').textContent=d.configured
-      ?`API 키가 연결되어 시험할 수 있습니다. (${d.key_source==='environment'?'서버 환경변수':'암호화 관리자 저장소'})`
-      :(d.encrypted_key_store_ready?'API 키 미등록 — 아래에서 Key ID와 Secret을 연결하세요.':'API 키 미등록 — 서버 암호화 저장소 설정이 먼저 필요합니다.');
-    $('generate').disabled=!d.configured||!$('confirm').checked;
-    renderJobs(d.jobs); armPoll(d.jobs);
-  }catch(e){$('configMsg').className='notice bad';$('configMsg').textContent=e.message;}
-}
-
-function armPoll(jobs){
-  const active=(jobs||[]).find(j=>j.status==='queued'||j.status==='running');
-  if(!active){if(POLL){clearInterval(POLL);POLL=null;}return;}
-  if(!POLL)POLL=setInterval(()=>poll(active.job_id),3500);
-}
-async function poll(id){
-  try{
-    const r=await fetch('/api/admin/higgsfield/status/'+encodeURIComponent(id),{cache:'no-store'}),d=await r.json();
-    if(!r.ok)throw new Error(d.error||'상태 확인 실패');
-    if(d.job.status==='done'||d.job.status==='failed'){clearInterval(POLL);POLL=null;await loadConfig();}
-    else{const jobs=[d.job,...((CONFIG?.jobs||[]).filter(x=>x.job_id!==d.job.job_id))];renderJobs(jobs);}
-  }catch(e){$('actionMsg').innerHTML=`<div class="notice bad">${esc(e.message)}</div>`;}
-}
-
-$('imageUrl').addEventListener('input',()=>{
-  const url=$('imageUrl').value.trim(),img=$('previewImg');
-  if(!url){img.style.display='none';$('previewEmpty').style.display='block';return;}
-  img.onload=()=>{img.style.display='block';$('previewEmpty').style.display='none'};
-  img.onerror=()=>{img.style.display='none';$('previewEmpty').style.display='block';$('previewEmpty').textContent='이미지를 불러올 수 없습니다.'};
-  img.src=url;
-});
-$('confirm').addEventListener('change',()=>{$('generate').disabled=!CONFIG?.configured||!$('confirm').checked});
-$('saveKey').addEventListener('click',async()=>{
-  const key_id=$('keyId').value.trim(),key_secret=$('keySecret').value.trim();
-  if(!key_id||!key_secret){$('keyMsg').innerHTML='<div class="notice bad">Key ID와 Secret을 모두 입력하세요.</div>';return;}
-  $('saveKey').disabled=true;$('keyMsg').innerHTML='<div class="notice warn">암호화해서 저장하는 중…</div>';
-  try{
-    const r=await fetch('/api/admin/higgsfield/key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key_id,key_secret})});
-    const d=await r.json();if(!r.ok)throw new Error(d.error||'키를 연결하지 못했습니다.');
-    $('keyId').value='';$('keySecret').value='';
-    $('keyMsg').innerHTML='<div class="notice ok">연결했습니다. 이제 시험 영상을 만들 수 있습니다.</div>';
-    await loadConfig();
-  }catch(e){$('keyMsg').innerHTML=`<div class="notice bad">${esc(e.message)}</div>`;}
-  finally{$('saveKey').disabled=false;}
-});
-$('generate').addEventListener('click',async()=>{
-  const image_url=$('imageUrl').value.trim();
-  if(!image_url){$('actionMsg').innerHTML='<div class="notice bad">이미지 주소를 입력하세요.</div>';return;}
-  $('generate').disabled=true;$('actionMsg').innerHTML='<div class="notice warn"><span class="spin"></span> 요청을 보내는 중입니다.</div>';
-  try{
-    const r=await fetch('/api/admin/higgsfield/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image_url,prompt:$('prompt').value,confirm_spend:true})});
-    const d=await r.json();if(!r.ok)throw new Error(d.error||'생성을 시작하지 못했습니다.');
-    $('actionMsg').innerHTML='<div class="notice ok">생성을 시작했습니다. 이 화면에서 자동으로 상태를 확인합니다.</div>';
-    await loadConfig();
-  }catch(e){$('actionMsg').innerHTML=`<div class="notice bad">${esc(e.message)}</div>`;$('generate').disabled=!CONFIG?.configured||!$('confirm').checked;}
-});
-loadConfig();
+const $=id=>document.getElementById(id);let CONFIG=null,POLL=null,ACTIVE_FILTER='all',SELECTED=null;const PRESETS=Array.isArray(window.HIGGSFIELD_PRESETS)?window.HIGGSFIELD_PRESETS:[];const labels={intrusion:'인물 난입',product:'제품 강조',camera:'카메라',transition:'전환·반전',surreal:'초현실'};
+const UGC_PRESETS=[
+  {id:'ms-how-to',source:'marketing',name:'How-To',description:'제품 사용법을 아바타가 단계별로 설명하는 UGC 형식.',preview_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_video_preset/775ac6dc-a83d-4c4e-a11a-69d9f8cd43d5-3aa4479f2fdb479b.mp4',thumbnail_url:'https://cdn.higgsfield.ai/cdn-cgi/image/width=1080,quality=80,format=auto/user_39acLUpaKDzX3Ox7Ekzzl7vlQ67/hf_20260413_143526_2f7b5dac-e0f6-4515-a534-9831f7ba01db_thumbnail.webp'},
+  {id:'ms-mystery-box',source:'marketing',name:'Mystery Box',description:'상자 공개 자체를 궁금증 훅으로 사용하는 UGC 형식.',preview_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_video_preset/ecf14de6-a542-4c31-88dc-096abb95e108-3a58c709f0d2555e.mp4',thumbnail_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_preset_thumbnails/ecf14de6-a542-4c31-88dc-096abb95e108-2aba61554bf94b2e.jpg'},
+  {id:'ms-classic-unboxing',source:'marketing',name:'Classic Unboxing',description:'택배 개봉부터 제품 공개까지 이어지는 기본 언박싱 훅.',preview_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_video_preset/9f8bc173-e29a-4fa9-8809-4f6ba0475974-74d89c050f6fa165.mp4',thumbnail_url:'https://cdn.higgsfield.ai/cdn-cgi/image/width=1080,quality=80,format=auto/user_39acLUpaKDzX3Ox7Ekzzl7vlQ67/hf_20260413_133035_bf1fbde5-d95a-4c23-907d-df9c475f948f_thumbnail.webp'},
+  {id:'ms-addiction',source:'marketing',name:'UGC Addiction',description:'강한 첫 반응으로 시선을 잡은 뒤 제품 경험으로 전환.',preview_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_video_preset/5d920c0b-523d-443f-b122-a09de57d66f7-7421d168255a357a.mp4',thumbnail_url:'https://cdn.higgsfield.ai/cdn-cgi/image/width=1080,quality=80,format=auto/user_3Cfdr00kbZ1hJCLpPQkaicInqxv/hf_20260603_153723_6b1bb39e-dd94-43fc-9fe8-007a658e49a5_thumbnail.webp'},
+  {id:'ms-vto',source:'marketing',name:'UGC Virtual Try On',description:'아바타가 제품을 착용한 모습을 보여주는 가상 착용 UGC.',preview_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_video_preset/4dcc2a50-47de-46a1-b7e6-d5bd378bb5d1-91841e48382ec5af.mp4',thumbnail_url:'https://cdn.higgsfield.ai/cdn-cgi/image/width=1080,quality=80,format=auto/user_39acLUpaKDzX3Ox7Ekzzl7vlQ67/hf_20260413_132040_3db6758b-7eef-4046-87e1-ec81097c126e_thumbnail.webp'},
+  {id:'ms-before-after',source:'marketing',name:'Before and After',description:'사용 전과 후의 차이를 대비시키는 결과 중심 훅.',preview_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_video_preset/a6bd1da8-b768-425e-beb6-821075efbc2e-6748bfc5a91afbfc.mp4',thumbnail_url:'https://cdn.higgsfield.ai/cdn-cgi/image/width=1080,quality=80,format=auto/user_3Cfdr00kbZ1hJCLpPQkaicInqxv/hf_20260604_001524_97ecfb10-b20e-46a8-b2ce-2104dd612f08_thumbnail.webp'},
+  {id:'ms-secret-hack',source:'marketing',name:'Secret Hack Reveal',description:'몰랐던 사용법이나 비밀 팁을 공개하는 정보형 훅.',preview_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_video_preset/02af8f7c-40cc-4dd5-ad32-7386a2e05e9b-0a3a8105eec7de9c.mp4',thumbnail_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_preset_thumbnails/02af8f7c-40cc-4dd5-ad32-7386a2e05e9b-fecc1782077ca2cb.jpg'},
+  {id:'ms-direct-camera',source:'marketing',name:'Direct-to-Camera',description:'아바타가 카메라를 정면으로 보며 바로 제품 이야기를 시작.',preview_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_video_preset/a254d42a-4d6d-4787-b973-a4a579994543-74ea5a90c5936b4c.mp4',thumbnail_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_preset_thumbnails/a254d42a-4d6d-4787-b973-a4a579994543-5bca179d395511e7.jpg'},
+  {id:'ms-product-hit',source:'marketing',name:'Product Hit',description:'제품이 프레임 밖에서 날아와 인물과 부딪힌 뒤 제품 소개로 전환.',prompt:'Object flies into frame, hits subject. Brief reaction → pivot to product.',preview_url:'https://cdn.higgsfield.ai/marketing_studio_setup/0376d63f-7fcb-4622-bdd0-4dc700d44cc6.mp4',thumbnail_url:'https://cdn.higgsfield.ai/cdn-cgi/image/width=1080,quality=80,format=auto/marketing_studio_setup/672b7bc8-fd7e-48ef-954f-f194b83eb1ba.webp'},
+  {id:'ms-testimonial',source:'marketing',name:'Selfie Testimonial',description:'셀카 구도로 실제 사용자 후기처럼 말하는 신뢰형 UGC.',preview_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_video_preset/62848384-ca64-46c0-87c0-c0b1fcc5df11-379f1af60b6068c1.mp4',thumbnail_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_preset_thumbnails/62848384-ca64-46c0-87c0-c0b1fcc5df11-39a9685211767250.jpg'},
+  {id:'ms-spicy',source:'marketing',name:'Spicy',description:'강한 상황과 반응을 앞세운 자극적인 초반 훅.',preview_url:'https://cdn.higgsfield.ai/marketing_studio_setup/310818fe-e1af-4e3c-a8c2-3d4a3579365f.mp4',thumbnail_url:'https://cdn.higgsfield.ai/cdn-cgi/image/width=1080,quality=80,format=auto/marketing_studio_setup/f7d72731-0188-4897-ab2b-642465dbe028.webp'},
+  {id:'ms-couple',source:'marketing',name:'Couple Sharing At Home',description:'집에서 두 사람이 제품 경험을 나누는 생활형 UGC.',preview_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_video_preset/5afcdf1f-587a-4062-8476-e791b5117f9b-a94d63838639490d.mp4',thumbnail_url:'https://dqv0cqkoy5oj7.cloudfront.net/marketing_studio_preset_thumbnails/5afcdf1f-587a-4062-8476-e791b5117f9b-f175a7e7b862ce02.jpg'}
+];
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function category(p){const s=(p.name+' '+(p.description||'')).toLowerCase();if(/storm the|drops from the sky|appears before|walks in|crashes into|steps out of|reaches in/.test(s))return'intrusion';if(/product|close-up|reveal|showcase|ads|handbag/.test(s))return'product';if(/camera|zoom|tracking|orbit|angle|shot/.test(s))return'camera';if(/transition|switch|morph|collapse|disappear|vanish|tilt|snap/.test(s))return'transition';return'surreal'}
+function renderGallery(){const q=$('presetSearch').value.trim().toLowerCase(),list=PRESETS.filter(p=>{const c=category(p),hay=(p.name+' '+(p.description||'')+' '+labels[c]).toLowerCase();return(ACTIVE_FILTER==='all'||c===ACTIVE_FILTER)&&(!q||hay.includes(q))});$('presetCount').textContent=`${list.length}개 표시`;$('gallery').innerHTML=list.length?list.map(p=>`<button class="preset" type="button" data-id="${esc(p.id)}"><div class="thumb"><img loading="lazy" src="${esc(p.thumbnail_url)}" alt="${esc(p.name)} 미리보기"><span class="play">▶</span></div><div class="preset-body"><h3>${esc(p.name)}</h3><p>${esc(p.description||'공식 Higgsfield 후킹 예시')}</p><span class="tag">${labels[category(p)]}</span></div></button>`).join(''):'<div class="empty">조건에 맞는 예시가 없습니다.</div>'}
+function renderUgcGallery(){$('ugcGallery').innerHTML=UGC_PRESETS.map(p=>`<button class="preset" type="button" data-id="${esc(p.id)}"><div class="thumb"><img loading="lazy" src="${esc(p.thumbnail_url)}" alt="${esc(p.name)} 미리보기"><span class="play">▶</span></div><div class="preset-body"><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><span class="tag">Marketing Studio UGC</span></div></button>`).join('')}
+function openPreset(id){SELECTED=UGC_PRESETS.find(p=>p.id===id)||PRESETS.find(p=>p.id===id);if(!SELECTED)return;$('modalTitle').textContent=SELECTED.name;$('modalDescription').textContent=SELECTED.description||'공식 Higgsfield 후킹 예시';$('modalTag').textContent=SELECTED.source==='marketing'?'Marketing Studio UGC':labels[category(SELECTED)];$('modalVideo').src=SELECTED.preview_url;$('useConcept').textContent=SELECTED.source==='marketing'?'참고 설명을 API 칸에 복사':'콘셉트 설명을 생성 칸으로 가져오기';$('presetDialog').showModal();$('modalVideo').play().catch(()=>{})}function closePreset(){$('modalVideo').pause();$('modalVideo').removeAttribute('src');$('modalVideo').load();$('presetDialog').close()}
+$('gallery').addEventListener('click',e=>{const card=e.target.closest('.preset');if(card)openPreset(card.dataset.id)});$('ugcGallery').addEventListener('click',e=>{const card=e.target.closest('.preset');if(card)openPreset(card.dataset.id)});$('presetSearch').addEventListener('input',renderGallery);$('filters').addEventListener('click',e=>{const b=e.target.closest('.filter');if(!b)return;ACTIVE_FILTER=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));renderGallery()});$('modalClose').addEventListener('click',closePreset);$('presetDialog').addEventListener('click',e=>{if(e.target===$('presetDialog'))closePreset()});
+document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===tab));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab.dataset.panel));if(tab.dataset.panel==='generator')loadConfig()}));$('useConcept').addEventListener('click',()=>{if(!SELECTED)return;$('prompt').value=SELECTED.prompt||`Reference concept: ${SELECTED.name}. ${SELECTED.description}\nAdapt this visual hook to the supplied product image. Preserve the exact product shape, color, material and design. No text, subtitles, logos, extra fingers or deformed hands.`;closePreset();document.querySelector('.tab[data-panel="generator"]').click();$('prompt').focus()});
+$('useSideEntry').addEventListener('click',()=>{$('prompt').value='Object flies into frame, hits subject. Brief reaction → pivot to product.';document.querySelector('.tab[data-panel="generator"]').click();$('prompt').focus()});
+function stateName(s){return({queued:'대기',running:'생성 중',done:'완료',failed:'실패'})[s]||s||'—'}function fmtTime(v){if(!v)return'—';try{return new Date(v).toLocaleString('ko-KR')}catch(_){return v}}function renderJobs(jobs){const box=$('jobs');if(!jobs?.length){box.className='empty';box.textContent='아직 시험한 영상이 없습니다.';return}box.className='';box.innerHTML=jobs.map(j=>`<article class="job"><div class="jobtop">${j.status==='running'||j.status==='queued'?'<span class="spin"></span>':''}<b>${esc(j.job_id)}</b><span class="state ${esc(j.status)}">${esc(stateName(j.status))}</span></div><div class="meta">${esc(fmtTime(j.created_at))}<br>${esc(j.prompt||'움직임 지시 없음')}</div>${j.error?`<div class="meta err">${esc(j.error)}</div>`:''}${j.video_url?`<video controls playsinline src="${esc(j.video_url)}"></video><a href="${esc(j.video_url)}" download>영상 내려받기</a>`:''}</article>`).join('')}
+async function loadConfig(){try{const r=await fetch('/api/admin/higgsfield/config',{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.error||'설정을 읽지 못했습니다.');CONFIG=d;$('model').textContent=d.model.split('/').slice(0,2).join(' / ');$('spec').textContent=`${d.duration}초 · ${d.resolution} · 무음`;$('usd').textContent=`$${Number(d.estimated_usd).toFixed(4)}부터`;$('points').textContent=`${d.estimated_points}P (미차감)`;$('configMsg').className='notice '+(d.configured?'ok':'bad');$('configMsg').textContent=d.configured?`API 키가 연결되어 있습니다. (${d.key_source==='environment'?'서버 환경변수':'암호화 관리자 저장소'})`:(d.encrypted_key_store_ready?'API 키를 아래에서 연결하세요.':'서버 암호화 저장소 설정이 필요합니다.');$('generate').disabled=!d.configured||!$('confirm').checked;renderJobs(d.jobs);armPoll(d.jobs)}catch(e){$('configMsg').className='notice bad';$('configMsg').textContent=e.message}}
+function armPoll(jobs){const active=(jobs||[]).find(j=>j.status==='queued'||j.status==='running');if(!active){if(POLL){clearInterval(POLL);POLL=null}return}if(!POLL)POLL=setInterval(()=>poll(active.job_id),3500)}async function poll(id){try{const r=await fetch('/api/admin/higgsfield/status/'+encodeURIComponent(id),{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.error||'상태 확인 실패');if(d.job.status==='done'||d.job.status==='failed'){clearInterval(POLL);POLL=null;await loadConfig()}else renderJobs([d.job,...((CONFIG?.jobs||[]).filter(x=>x.job_id!==d.job.job_id))])}catch(e){$('actionMsg').innerHTML=`<div class="notice bad">${esc(e.message)}</div>`}}
+$('imageUrl').addEventListener('input',()=>{const url=$('imageUrl').value.trim(),img=$('previewImg');if(!url){img.style.display='none';$('previewEmpty').style.display='block';return}img.onload=()=>{img.style.display='block';$('previewEmpty').style.display='none'};img.onerror=()=>{img.style.display='none';$('previewEmpty').style.display='block';$('previewEmpty').textContent='이미지를 불러올 수 없습니다.'};img.src=url});$('confirm').addEventListener('change',()=>{$('generate').disabled=!CONFIG?.configured||!$('confirm').checked});
+$('saveKey').addEventListener('click',async()=>{const key_id=$('keyId').value.trim(),key_secret=$('keySecret').value.trim();if(!key_id||!key_secret){$('keyMsg').innerHTML='<div class="notice bad">Key ID와 Secret을 모두 입력하세요.</div>';return}$('saveKey').disabled=true;$('keyMsg').innerHTML='<div class="notice warn">암호화해 저장하는 중…</div>';try{const r=await fetch('/api/admin/higgsfield/key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key_id,key_secret})}),d=await r.json();if(!r.ok)throw new Error(d.error||'키를 연결하지 못했습니다.');$('keyId').value='';$('keySecret').value='';$('keyMsg').innerHTML='<div class="notice ok">연결되었습니다.</div>';await loadConfig()}catch(e){$('keyMsg').innerHTML=`<div class="notice bad">${esc(e.message)}</div>`}finally{$('saveKey').disabled=false}});$('generate').addEventListener('click',async()=>{const image_url=$('imageUrl').value.trim();if(!image_url){$('actionMsg').innerHTML='<div class="notice bad">이미지 주소를 입력하세요.</div>';return}$('generate').disabled=true;$('actionMsg').innerHTML='<div class="notice warn"><span class="spin"></span> 요청을 보내는 중입니다.</div>';try{const r=await fetch('/api/admin/higgsfield/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image_url,prompt:$('prompt').value,confirm_spend:true})}),d=await r.json();if(!r.ok)throw new Error(d.error||'생성을 시작하지 못했습니다.');$('actionMsg').innerHTML='<div class="notice ok">생성을 시작했습니다.</div>';await loadConfig()}catch(e){$('actionMsg').innerHTML=`<div class="notice bad">${esc(e.message)}</div>`;$('generate').disabled=!CONFIG?.configured||!$('confirm').checked}});renderUgcGallery();renderGallery();
 </script>
 </body>
 </html>

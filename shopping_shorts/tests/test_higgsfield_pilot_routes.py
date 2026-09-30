@@ -16,7 +16,15 @@ def test_admin_pilot_page_and_config_do_not_expose_secret(monkeypatch):
 
     page = client.get("/admin/higgsfield")
     assert page.status_code == 200
-    assert "Higgsfield API 시험실" in page.text
+    assert "Higgsfield 쇼핑 후킹 라이브러리" in page.text
+    assert "Product Hit" in page.text
+    assert "Marketing Studio UGC 공식 예시" in page.text
+    assert "higgsfield_presets.js" in page.text
+
+    catalog = client.get("/higgsfield_presets.js")
+    assert catalog.status_code == 200
+    assert "window.HIGGSFIELD_PRESETS" in catalog.text
+    assert "Floating fall" in catalog.text
 
     response = client.get("/api/admin/higgsfield/config")
     assert response.status_code == 200

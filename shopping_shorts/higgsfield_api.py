@@ -22,7 +22,9 @@ MODEL_URL = f"{BASE_URL}/{MODEL_ID}"
 DURATION = 5
 RESOLUTION = "720p"
 GENERATE_AUDIO = False
-ESTIMATED_USD_PER_SECOND = 0.0985
+# 공급사 공개 페이지의 현재 "from" 단가다. 실제 과금은 출력 픽셀 수와
+# 영상 비율에 따라 달라지므로 고정 예상가처럼 표시하면 안 된다.
+FROM_USD_PER_SECOND = 0.0985
 
 
 class HiggsfieldError(RuntimeError):
@@ -46,7 +48,8 @@ def configured(credentials=None):
 
 
 def estimated_usd():
-    return round(ESTIMATED_USD_PER_SECOND * DURATION, 4)
+    """공급사 공개 최저가 기준 금액. 실제 청구액이 아니라 하한 안내용이다."""
+    return round(FROM_USD_PER_SECOND * DURATION, 4)
 
 
 def _headers(credentials=None):
