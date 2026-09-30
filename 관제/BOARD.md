@@ -1,6 +1,6 @@
 # 관제 보드 (자동 생성 — 손으로 고치지 마라. `py tools/control.py board`)
 
-갱신: 2026-10-01 01:15 · 카드 48장
+갱신: 2026-10-01 01:16 · 카드 48장
 
 상태 흐름: 등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료  (예외: 승인대기 · 회귀)
 
@@ -8,7 +8,7 @@
 
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
-| [006](cards/006-효과음_타점_두_벌_—_sfx_events_.md) | 효과음 타점 두 벌 — sfx_events_for 'last' 에 cap_lead·cap_offset 반영, sfx_pack.plan_events 에 absorb 전달 (#9-①④·#11) | - | **필요** | shopping_shorts/video_assemble.py:sfx_events_for | tools/final_audio_audit.py 효과음 시각차 0 (cap_lead>0 칸 포함) | 2026-10-01 00:38 쉬운 설명: 효과음이 자막보다 일찍 터지는 것 수정 — 완성본 소리가 바뀌어  |
+| [006](cards/006-효과음_타점_두_벌_—_sfx_events_.md) | 효과음 타점 두 벌 — sfx_events_for 'last' 에 cap_lead·cap_offset 반영, sfx_pack.plan_events 에 absorb 전달 (#9-①④·#11) | - | - | shopping_shorts/video_assemble.py:sfx_events_for | tools/final_audio_audit.py 효과음 시각차 0 (cap_lead>0 칸 포함) | 2026-10-01 01:16 승인 필요: 아니오(고객 화면·소리 변경 — 관제 자동 승인, 라이브 뒤 자동 |
 | [007](cards/007-효과음·BGM_볼륨_기본값_상수_하나_—_c.md) | 효과음·BGM 볼륨 기본값 상수 하나 — capcut_draft 리터럴 15/60 네 곳 (#12) | - | - | shopping_shorts/video_assemble.py:_burn_captions | capcut_draft 에 볼륨 리터럴 0, 값 불변(캡컷 초안 볼륨 = 렌더 기본값) | 2026-10-01 00:38 쉬운 설명: 캡컷 초안의 효과음·배경음 볼륨을 렌더와 같은 값으로(값은 안 바 |
 | [008](cards/008-청소_크레딧_추정_위임·죽은_clean_ba.md) | 청소 크레딧 추정 위임·죽은 clean_base_preview 정리 (#16-②·#18-①) | - | - | shopping_shorts/mix_pipeline.py:clean_charge_plan | app._clean_credit_est 가 clean_charge_plan(mode=button)['credits'] 만 부름 · clean_base_preview 호출처 0 확인 뒤 제거 | 2026-10-01 00:38 쉬운 설명: 청소 크레딧 계산을 한 곳으로(화면 숫자와 실제 과금이 갈릴 여지 |
 | [009](cards/009-fill_위치·번호_혼용_·__hook_de.md) | /fill 위치·번호 혼용 · _hook_delta Path 결함 · app.py 22060 음성표 tts_paths_of (#21·#27) | - | - | shopping_shorts/store.py:dedupe_beat_idx · shopping_shorts/video_assemble.py:_apply_hook_inpoint · shopping_shorts/mix_pipeline.py:tts_paths_of | 칸 지운 job 에서 /fill 폴백이 같은 칸 길이 · _hook_delta 가 dict 를 받아 0 아닌 값 · 22060 경로가 칸 번호 겹침 차단을 탐(테스트) | 2026-10-01 00:38 쉬운 설명: 칸 지운 작업에서 엉뚱한 칸 길이가 쓰이던 결함 등 작은 결함 3 |
