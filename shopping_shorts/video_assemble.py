@@ -3472,6 +3472,9 @@ def _beat_timeline(edit_plan, tts_paths):
             "cap_xy_segs": beat.get("cap_xy_segs"),        # 화면에 보이는 자막 한 줄별 자유 좌표
             "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
             "head_trim": beat.get("head_trim", 0.0),
+            # ★CTA 표시(2026-09-30 관제 45) — cta_cut_sec가 이 타임라인으로 _is_cta를 본다. 안 실으면
+            #   칸에 박은 표시가 여기서 사라져 '마무리' 칸 CTA를 또 못 자른다(라이브 3b4111969ac4로 발견).
+            "cta_mark": beat.get("cta_mark"),
         })
         t0 += dur
     return timeline
