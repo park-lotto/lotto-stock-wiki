@@ -221,21 +221,20 @@ def move_track_to_external(repo, smap, name, printer=print):
     if dest.exists():
         printer("   건너뜀 %s: %s 가 이미 있다 — 합치는 판단은 사람이" % (name, dest))
         return False
-    try:
-        shutil.move(str(wt), str(dest))
-    except (OSError, shutil.Error) as e:
-        printer("   건너뜀 %s: 못 옮김(열린 창·터미널?) %s" % (name, str(e)[:100]))
-        if dest.exists() and not wt.exists():
-            shutil.move(str(dest), str(wt))           # 반쯤 옮겨진 것 되돌림
+    if not move_dir_safe(wt, dest, printer):          # 복사→대조→삭제. 사용 중이면 C 원본 그대로, D 사본 지움
         return False
     if not make_junction(wt, dest):
         shutil.move(str(dest), str(wt))
         printer("   건너뜀 %s: 정션 생성 실패 — 되돌렸다" % name)
         return False
+    _git_safe_directory(dest, add=True)
+    _git_safe_directory(wt, add=True)
     rc, out = _git(wt, "status", "--porcelain")
     if rc != 0:                                        # 정션 뒤에서 git 이 안 되면 되돌린다(조용히 넘기지 않는다)
         remove_junction(wt)
         shutil.move(str(dest), str(wt))
+        _git_safe_directory(dest, add=False)
+        _git_safe_directory(wt, add=False)
         printer("   건너뜀 %s: 정션 뒤 git 실패 — 되돌렸다: %s" % (name, out.strip()[:100]))
         return False
     printer("   → D  %s (%.2fGB)" % (name, gb(dir_size(dest))))
@@ -258,6 +257,8 @@ def warm_track(repo, smap, name, printer=print):
         raise SystemExit("중단: C 여유 %.1fGB 인데 %.1fGB 가 필요하다 — 먼저 다른 트랙을 D 로" % (have, need))
     remove_junction(wt)
     shutil.move(str(real), str(wt))
+    _git_safe_directory(real, add=False)
+    _git_safe_directory(wt, add=False)
     rc, out = _git(wt, "status", "--porcelain")
     printer("← C  %s (%.2fGB)%s" % (name, need, "" if rc == 0 else "  ⚠️ git status 실패: " + out.strip()[:80]))
     return True
@@ -404,6 +405,61 @@ def desktop_targets(smap):
     return out
 
 
+def _file_map(root):
+    out = {}
+    for r, _ds, fs in os.walk(root):
+        for f in fs:
+            p = os.path.join(r, f)
+            try:
+                out[os.path.relpath(p, root)] = os.path.getsize(p)
+            except OSError:
+                out[os.path.relpath(p, root)] = -1
+    return out
+
+
+def _git_safe_directory(path, add=True):
+    """exFAT(D) 에는 소유자가 없어 git 이 'detected dubious ownership' 으로 거부한다(09-30 실측: 트랙 0개 이동의 원인).
+    옮긴 폴더를 전역 safe.directory 에 등록/해제한다. pytest 안에서는 전역 설정을 건드리지 않는다."""
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return
+    p = str(path).replace("\\", "/")
+    if add:
+        _git(Path.cwd(), "config", "--global", "--add", "safe.directory", p)
+    else:
+        _git(Path.cwd(), "config", "--global", "--unset-all", "safe.directory", p)
+
+
+def move_dir_safe(src, dst, printer=print):
+    """복사 → 개수·크기 대조 → 원본 삭제. 삭제가 중간에 막히면(사용 중 파일) **원본을 D 사본에서 되살리고 D 사본을 지운다** — C 가 정본으로 남는다.
+    (2026-09-30 실사고: shutil.move 가 실행 중인 ShoppingLens 를 옮기다 C 에서 51개를 지우고 멈췄다. 되돌렸지만 이 함수가 그걸 막는다)
+    깨진 심볼릭 링크는 건너뛴다(09-30 실측: 4개 트랙이 [WinError 2] 로 복사 실패)."""
+    src, dst = Path(src), Path(dst)
+    try:
+        shutil.copytree(str(src), str(dst), ignore_dangling_symlinks=True)
+    except (OSError, shutil.Error) as e:
+        shutil.rmtree(dst, ignore_errors=True)
+        printer("   건너뜀 %s: 복사 실패 — %s" % (src.name, str(e)[:160]))
+        return False
+    a, b = _file_map(src), _file_map(dst)
+    if a != b:
+        shutil.rmtree(dst, ignore_errors=True)
+        printer("   건너뜀 %s: 복사 대조 불일치(C %d / D %d) — D 사본 지움" % (src.name, len(a), len(b)))
+        return False
+    try:
+        shutil.rmtree(str(src))
+    except OSError as e:
+        left = _file_map(src)
+        for rel in b:
+            if rel not in left:
+                p = src / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(dst / rel, p)
+        shutil.rmtree(dst, ignore_errors=True)
+        printer("   건너뜀 %s: 사용 중(%s) — C 원본 그대로, D 사본 지움" % (src.name, str(e)[:60]))
+        return False
+    return True
+
+
 def apply_desktop(smap, printer=print):
     _require_external(smap)
     dest_root = _dest(smap, "보관", "90_보관") / "바탕화면"
@@ -414,10 +470,7 @@ def apply_desktop(smap, printer=print):
         if dst.exists():
             printer("   건너뜀 %s: D 에 이미 있다" % t["name"])
             continue
-        try:
-            shutil.move(str(t["path"]), str(dst))
-        except (OSError, shutil.Error) as e:
-            printer("   건너뜀 %s: %s" % (t["name"], str(e)[:80]))
+        if not move_dir_safe(t["path"], dst, printer):
             continue
         make_junction(t["path"], dst)                  # 바탕화면 자리는 정션으로 남겨 찾기 쉽게
         n += 1
@@ -425,6 +478,84 @@ def apply_desktop(smap, printer=print):
         printer("   → D  %s (%.2fGB)" % (t["name"], gb(t["size"])))
     printer("바탕화면 %d개 %.2fGB → %s" % (n, gb(tot), dest_root))
     return n
+
+
+# ── 트랙 접기(카드 005 대청소): bundle 을 D 에 → 문서만 남은 커밋은 main 에 → 폴더·브랜치 삭제 ───────────
+
+def archive_track(repo, smap, name, printer=print, allow_code=False):
+    """접는다. ① git bundle(브랜치 전체) → D:/숏템/90_보관/트랙/<이름>.bundle ② 미병합 커밋이 문서(handoff·wiki/log.d·관제)만이면
+    origin/main 위에 cherry-pick 해 push(기록 보존) ③ 코드 미병합이 있으면 allow_code 없이는 멈춘다(사장님 판단) ④ 폴더·브랜치(로컬·원격) 삭제."""
+    import track
+    _require_external(smap)
+    br = track.branch_name(name)
+    if not track.branch_exists(repo, br):
+        printer("   %s: 브랜치 없음" % name)
+        return False
+    _git(repo, "fetch", "origin")
+    dest = _dest(smap, "보관", "90_보관") / "트랙"
+    dest.mkdir(parents=True, exist_ok=True)
+    # ★전체 브랜치가 아니라 main 에 없는 커밋만 bundle — 전체(8GB 저장소)는 pack-objects 가 메모리 부족으로 죽는다(09-30 실측 10/10 실패).
+    #   main 에 다 들어간 트랙은 보존할 게 없다(빈 bundle 은 git 이 거절) → bundle 없이 접는다.
+    rc, n = _git(repo, "rev-list", "--count", "origin/main..%s" % br)
+    if int((n or "0").strip() or 0) > 0:
+        rc, out = _git(repo, "bundle", "create", str(dest / ("%s.bundle" % name)), "origin/main..%s" % br)
+        if rc != 0:
+            printer("   건너뜀 %s: bundle 실패 %s" % (name, out.strip()[:120]))
+            return False
+    rc, files = _git(repo, "diff", "--name-only", "origin/main...%s" % br)
+    unmerged = [f.strip() for f in files.splitlines() if f.strip()]
+    code = [f for f in unmerged if not track._is_non_code(f)]
+    if code and not allow_code:
+        printer("   보류 %s: 미병합 코드 %d파일(%s) — 사장님 판단. bundle 은 D 에 남겼다" % (name, len(code), ", ".join(code[:3])))
+        return False
+    if unmerged and not code:
+        # 내용이 main 과 같은 파일은 보존할 게 없다(09-30 실측: 짤쇼핑카테고리 — 같은 날 main 에도 같은 기록이 들어가 있었다)
+        differ = []
+        for f in unmerged:
+            rc, d = _git(repo, "diff", "origin/main", br, "--", f)
+            if any(ln[:1] in "+-" and not ln.startswith(("+++", "---")) for ln in d.splitlines()):
+                differ.append(f)
+        if differ:
+            # 문서만 남은 것을 main 에 살린다 — 커밋 재생(cherry-pick)이 아니라 **트랙 쪽 파일을 그대로 얹는다**(옛 트랙은
+            # 부모가 멀어 cherry-pick 이 자주 깨진다). 코드가 아니라 게이트 없이 push(관제 카드와 같은 길).
+            stage = Path(repo) / ".tracks" / ("_archive-%s" % name)
+            _git(repo, "worktree", "remove", "--force", str(stage))
+            rc, out = _git(repo, "worktree", "add", "--detach", "--no-checkout", str(stage), "origin/main")
+            ok = rc == 0
+            if ok:
+                _git(stage, "sparse-checkout", "set", "handoff", "wiki/log.d", "관제")
+                _git(stage, "reset", "--hard", "HEAD")
+                rc, out = _git(stage, "checkout", br, "--", *differ)
+                ok = rc == 0
+                if ok:
+                    rc, out = _git(stage, "commit", "-q", "-m", "접은 트랙 %s 의 문서 보존 (%s)" % (name, ", ".join(differ)))
+                    ok = rc == 0 or "nothing to commit" in out
+                if ok:
+                    rc, out = _git(stage, "push", "origin", "HEAD:main")
+                    ok = rc == 0
+                _git(repo, "worktree", "remove", "--force", str(stage))
+            if not ok:
+                printer("   보류 %s: 문서를 main 에 못 살렸다 — 손으로 보고 접어라: %s" % (name, out.strip()[:120]))
+                return False
+            printer("   %s: 문서 %d파일 main 에 살림" % (name, len(differ)))
+        else:
+            printer("   %s: 미병합 문서가 main 과 내용이 같다 — 보존할 것 없음" % name)
+    wt = track.worktree_path(name, repo)
+    if os.path.lexists(wt):
+        if is_junction(wt):
+            real = Path(os.path.realpath(wt))
+            remove_junction(wt)
+            shutil.rmtree(real, ignore_errors=True)
+            _git(repo, "worktree", "prune")
+        else:
+            rc, out = _git(repo, "worktree", "remove", "--force", str(wt))
+            if rc != 0:
+                printer("   보류 %s: 폴더를 못 지웠다(열린 창?) %s" % (name, out.strip()[:100]))
+                return False
+    _git(repo, "push", "origin", "--delete", br)
+    rc, out = _git(repo, "branch", "-D", br)
+    printer("   🧹 %s 접음%s" % (name, (" — bundle %s" % (dest / ("%s.bundle" % name))) if (dest / ("%s.bundle" % name)).exists() else " (main 에 전부 있어 bundle 없음)"))
+    return rc == 0
 
 
 def status(repo, smap, printer=print):
@@ -464,6 +595,35 @@ def schedule(repo, smap, printer=print):
                        capture_output=True, text=True, encoding="cp949", errors="replace")
     printer(("✅ 작업 스케줄러 등록: %s 매일 %s" % (name, at)) if r.returncode == 0 else ("❌ 등록 실패: " + (r.stdout + r.stderr).strip()[:200]))
     return r.returncode == 0
+
+
+_APPLY_LOCK = Path(os.environ.get("TEMP") or os.environ.get("TMP") or ".") / "stockbrain_storage_apply.lock"
+
+
+class _ApplyLock:
+    """apply 는 한 번에 하나만. 09-30 실사고: 사장님이 apply 를 두 번 띄워 둘이 같은 트랙을 동시에 복사·삭제하다
+    '[WinError 2] 지정된 파일을 찾을 수 없습니다' 로 4개 트랙이 실패했다(C 는 되돌려져 무사). OS 파일락 — 프로세스가 죽으면 자동 해제."""
+
+    def __enter__(self):
+        self.fh = open(_APPLY_LOCK, "a+")
+        try:
+            import msvcrt
+            msvcrt.locking(self.fh.fileno(), msvcrt.LK_NBLCK, 1)
+        except OSError:
+            self.fh.close()
+            raise SystemExit("중단: 다른 storage apply 가 돌고 있다 — 끝난 뒤 다시(둘이 같은 폴더를 옮기면 파일이 사라진다)")
+        except ImportError:
+            pass
+        return self
+
+    def __exit__(self, *a):
+        try:
+            import msvcrt
+            self.fh.seek(0)
+            msvcrt.locking(self.fh.fileno(), msvcrt.LK_UNLCK, 1)
+        except (ImportError, OSError):
+            pass
+        self.fh.close()
 
 
 def main(argv=None):
@@ -506,6 +666,7 @@ def main(argv=None):
     elif args.cmd == "schedule":
         schedule(repo, smap)
     else:
+      with _ApplyLock():
         print("[%s] 저장 층 정리 시작" % time.strftime("%Y-%m-%d %H:%M"))
         if args.tracks or args.auto:
             apply_tracks(repo, smap, days)

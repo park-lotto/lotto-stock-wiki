@@ -45,8 +45,9 @@ _EXAMPLES = Path(__file__).parent / "assets" / "scene_first_even_examples.json"
 
 
 def _cps():
-    from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, _speech_speed
-    return _SYLLABLES_PER_SEC * _speech_speed()
+    # 글자→초 계수의 단일 출처(edit_plan.speech_cps). 이븐쇼핑 초안은 한국어 대본이다.
+    from shopping_shorts.edit_plan import speech_cps
+    return speech_cps(lang="ko")
 
 
 def _narr(t):

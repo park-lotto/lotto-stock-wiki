@@ -9366,7 +9366,27 @@ def api_script_translate(request: Request, body: dict):
         out = script_translate.to_english(lines, str(body.get("product") or ""))
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
-    return {"ok": True, "lines": out}
+    # 화면이 "몇 초"를 영어 계수로 말하게 같이 준다(2026-09-29 사장님 "영어는 두 배가 되네" — 한국어 계수로 나눈 표시).
+    from shopping_shorts import edit_plan as _ep
+    return {"ok": True, "lines": out, "cps_en": _ep.speech_cps(lang="en", norm=True)}   # 화면 s2SecOf는 norm 글자를 센다
+
+
+@app.post("/api/script/cta_guess")
+def api_script_cta_guess(body: dict):
+    """2단계 카드 [📢 CTA] 버튼의 처음 상태(2026-09-30 관제 45, 김성현님).
+
+    body: {drafts: [{lines: [...], roles: [...]}]} → {ok, idx: [줄번호|None, ...]}.
+    판단은 edit_plan.guess_cta_index 한 곳 — 화면이 같은 판정을 JS로 또 적지 않게 여기서 묻는다.
+    작업(job)을 건드리지 않는 순수 계산."""
+    from shopping_shorts.edit_plan import guess_cta_index
+    drafts = body.get("drafts") if isinstance(body.get("drafts"), list) else []
+    out = []
+    for d in drafts[:20]:
+        d = d if isinstance(d, dict) else {}
+        lines = [str(x or "") for x in (d.get("lines") or [])][:80]
+        roles = [str(x or "") for x in (d.get("roles") or [])][:80]
+        out.append(guess_cta_index(lines, roles))
+    return {"ok": True, "idx": out}
 
 
 def _lang_voice_block(job, voice):
@@ -9525,7 +9545,15 @@ def _cta_cut_for_job(job):
     if not beats:
         return None, "대본 정보가 없어요"
     # CTA 칸 자체가 없으면 자를 게 없다 — 이건 옛 영상 문제가 아니다.
-    from shopping_shorts.edit_plan import _is_cta
+    from shopping_shorts.edit_plan import _is_cta, apply_cta_mark
+    # ★CTA 표시가 생기기 전 작업(2026-09-30 관제 45)은 **사본**에 같은 판정(apply_cta_mark)을 얹어 본다 —
+    #   '마무리'·'댓글유도' 칸이라 못 자르던 옛 작업(김성현님 3b4111969ac4 등)도 음성 파일이 남아 있으면 자른다.
+    #   DB의 edit_plan은 건드리지 않는다(읽기 전용 계산).
+    if not any("cta_mark" in b for b in beats):
+        import copy as _copy
+        plan = _copy.deepcopy(plan)
+        beats = plan.get("beats") or []
+        apply_cta_mark(beats, job.get("given_script"), job.get("script_structure"))
     if not any(_is_cta(b) for b in beats):
         return None, "이 대본엔 CTA 칸이 없어요 — 잘라낼 뒷부분이 없습니다"
     # ② 옛 job 폴백: TTS mp3가 남아 있으면 그때 계산한다.
@@ -16181,6 +16209,77 @@ def _admin_pending(request: Request):
             "bug_newest_id": (bug_newest["id"] if bug_newest else 0),
             "bug_newest": bug_newest,
             "bug_open": bug_open}
+
+
+# ── 관제 보드(2026-09-30, 관제 카드 004 — 사장님 "1 2 다 하고") ────────────────────────────
+# 카드는 git(관제/cards, main)이 정본이고 서버는 pull 만 한다(핫패치 금지). 그래서 화면은 **읽기**는 저장소 파일로,
+# **승인 버튼**은 data/control_approvals.json(gitignore)에 적는다 → 로컬 finish 가 ssh 로 읽어 카드 승인으로 인정한다
+# (tools/control.py finish_gate·sync_server_approvals). 카드 파싱은 tools/control.py 한 곳 — 여기서 다시 적지 않는다(0순위-B).
+def _control_root():
+    """저장소 루트(관제/·tools/ 가 있는 곳). 함수인 이유: 모듈 수준 상수 한 줄이 늘면 영상 관문이 '영향 함수를 못 정해' 20분짜리 서버 비교를 돈다."""
+    return Path(__file__).parent.parent
+
+
+def _control_approvals_path():
+    return Path(__file__).parent / "data" / "control_approvals.json"
+
+
+def _control_mod():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("control_cards", str(_control_root() / "tools" / "control.py"))
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def _control_approvals_load():
+    p = _control_approvals_path()
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    except (OSError, ValueError):
+        return {}
+
+
+@app.get("/api/admin/control/board")
+def _admin_control_board(request: Request):
+    """관제 카드 전부(저장소 관제/cards) + 서버 승인 기록. 관리자만."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    ctl = _control_mod()
+    cards = ctl.cards_from_dir(_control_root())
+    appr = _control_approvals_load()
+    rows = []
+    for c in cards:
+        no = "%03d" % (c["번호"] or 0)
+        rows.append({"no": c["번호"], "title": c["제목"], "state": c["상태"], "tracks": c["분배"], "owner": c["판단 주인"],
+                     "done": c["됐다의 기준"], "approval": c["승인"], "needs_approval": c["승인 필요"],
+                     "merge": c["병합"], "live": c["라이브 실측"], "last": (c["이력"][-1] if c["이력"] else ""),
+                     "server_approval": appr.get(no) or appr.get(str(c["번호"]))})
+    return {"ok": True, "cards": rows, "approvals": appr, "states": list(ctl.STATES)}
+
+
+@app.post("/api/admin/control/approve")
+async def _admin_control_approve(request: Request):
+    """승인 버튼 — 서버 기록. 카드 파일은 git 이라 서버가 못 고친다(로컬 finish 가 이 기록을 카드로 옮긴다)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    b = await request.json()
+    try:
+        no = int(b.get("no") or 0)
+    except (TypeError, ValueError):
+        no = 0
+    note = (b.get("note") or "").strip()
+    if no <= 0 or not note:
+        return JSONResponse({"ok": False, "error": "카드 번호와 승인 근거가 필요하다"}, status_code=400)
+    appr = _control_approvals_load()
+    appr["%03d" % no] = {"at": datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M"),
+                         "who": str(getattr(request.state, "customer_id", "") or "admin"), "note": note}
+    p = _control_approvals_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(appr, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"ok": True, "no": no, "approval": appr["%03d" % no]}
 
 
 @app.post("/api/admin/alerts/read")

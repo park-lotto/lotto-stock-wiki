@@ -108,9 +108,10 @@ def norm_chars_per_30s(style):
 #   _SYLLABLES_PER_SEC(5.7, 성우 14명 실합성 측정) × _speech_speed()(라이브 배속 1.44).
 #   여기에 8.19를 따로 적어두면 배속을 튜닝한 날 화면·판정·계획이 서로 다른 초를 말한다
 #   (같은 판단이 두 곳에 적히면 반드시 어긋난다 = 0순위-B). 값 하나만 빌려 쓴다.
-def _speech_cps():
+def _speech_cps(lang="ko"):
+    """자/초 — 정본은 edit_plan.speech_cps 하나(2026-09-29 언어별로 갈라짐)."""
     from shopping_shorts import edit_plan as _ep
-    return _ep._SYLLABLES_PER_SEC * _ep._speech_speed()
+    return _ep.speech_cps(lang=lang, norm=True)     # 게이트·화면은 norm 글자 기준
 
 
 def __getattr__(name):          # 모듈 속성 지연 평가 — import 순환을 피한다

@@ -6413,18 +6413,28 @@ class Store:
         #   (2026-09-22 사장님 "필재로 바꿨는데 다음 작업이 다시 미나"). 예전엔 cid 0을
         #   "비로그인 공용"으로 보고 아예 안 기억했는데, 라이브는 로그인 게이트가 있어
         #   cid 0 작업 = 사장님(과 사장님 자동작업)뿐이다.
+        v = None
         if not customer_id:
             v = self.get_pref(_LAST_VOICE_PREF, 0)
         else:
             with self._conn() as c:
                 row = c.execute("SELECT last_voice_json FROM customers WHERE id=?",
                                 (customer_id,)).fetchone()
-            if not row or not row[0]:
-                return None
-            try:
-                v = json.loads(row[0])
-            except (ValueError, TypeError):
-                return None      # 깨진 값이 영상제작을 막지 않는다
+            if row and row[0]:
+                try:
+                    v = json.loads(row[0])
+                except (ValueError, TypeError):
+                    v = None      # 깨진 값이 영상제작을 막지 않는다
+        # ★일레븐을 못 쓰고 타입캐스트 키만 있는 회원은 기본 성우를 타입캐스트 필재로(2026-09-30 사장님).
+        #   기억이 없으면 호출부가 _DEFAULT_VOICE(일레븐 미나)를 써서 3단계가 키 없음으로 막혔다(차순엽 610, 5연속).
+        #   기억이 일레븐 성우인 경우도 같다. 판단은 typecast_tts.use_typecast_default 한 곳.
+        _mid = v.get("model_id") if isinstance(v, dict) and v.get("voice_id") else None
+        try:
+            from shopping_shorts import typecast_tts as _tc
+            if _tc.use_typecast_default(_mid, customer_id):
+                return dict(_tc.TYPECAST_DEFAULT_VOICE)
+        except Exception as e:    # noqa: BLE001 — 판정 실패가 영상제작을 막지 않는다
+            logging.warning("get_last_voice: 타입캐스트 기본성우 판정 실패(종전 유지) — %r", e)
         if not (isinstance(v, dict) and v.get("voice_id")):
             return None
         # ★타입캐스트 키를 못 쓰는 회원의 기억이 타입캐스트 성우면 일레븐 기본 성우로 바꿔 준다(2026-09-29 사장님).
