@@ -100,3 +100,4 @@ def test_화면에_보드와_승인_버튼이_있다():
     assert 'id=controlBoard' in html and "renderControlBoard()" in html
     assert "/api/admin/control/board" in html and "/api/admin/control/approve" in html
     assert "function approveCard" in html
+    assert "결정할 것" in html and "잘못된 것" in html and "ctlTech" in html, "사장님용 두 줄 + 기술 보기 토글"

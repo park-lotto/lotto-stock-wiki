@@ -16241,7 +16241,7 @@ def _admin_control_board(request: Request):
     rows = []
     for c in cards:
         no = "%03d" % (c["번호"] or 0)
-        rows.append({"no": c["번호"], "title": c["제목"], "state": c["상태"], "tracks": c["분배"], "owner": c["판단 주인"],
+        rows.append({"no": c["번호"], "title": c["제목"], "easy": c.get("쉬운 설명", ""), "state": c["상태"], "tracks": c["분배"], "owner": c["판단 주인"],
                      "done": c["됐다의 기준"], "approval": c["승인"], "needs_approval": c["승인 필요"],
                      "merge": c["병합"], "live": c["라이브 실측"], "last": (c["이력"][-1] if c["이력"] else ""),
                      "server_approval": appr.get(no) or appr.get(str(c["번호"]))})
