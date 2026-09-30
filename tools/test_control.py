@@ -262,25 +262,23 @@ def test_customer_ui_change_needs_card_approval(repo):
     _install(repo)
     n = control.new_card(repo, "버튼 색", owner="shopping_shorts/owner.py:f", printer=lambda *a: None)
     _make_track_commit_with_card(repo, "버튼", n, files={"shopping_shorts/static/produce.html": "<b>x</b>\n"})
-    before = _origin_head(repo)
-    with pytest.raises(track.TrackError) as e:
-        _finish(repo, "버튼")
-    assert "승인이 없다" in str(e.value) and "고객 화면 변경" in str(e.value)
-    assert _origin_head(repo) == before, "승인 없는 고객 화면 변경이 main 에 나가면 안 된다"
-
-    control.approve(repo, n, "사장님 구두", printer=lambda *a: None)
+    # 2026-10-01 사장님 "승인 자동으로": 고객 화면 변경은 관문 통과면 관제가 승인하고 카드에 근거를 남긴다
     assert _finish(repo, "버튼") == 0
     c = control.find_card(_origin_cards(repo), n)
-    assert c["승인"].endswith("사장님 구두") and c["상태"] == "병합"
+    assert "관제 자동 승인" in c["승인"] and c["상태"] == "병합"
 
 
 def test_billing_token_change_needs_approval(repo):
     _install(repo)
     n = control.new_card(repo, "과금", owner="shopping_shorts/owner.py:f", printer=lambda *a: None)
     _make_track_commit_with_card(repo, "과금", n, files={"shopping_shorts/mix.py": "def f():\n    return clean_charge_plan(1)\n"})
+    before = _origin_head(repo)
     with pytest.raises(track.TrackError) as e:
         _finish(repo, "과금")
-    assert "과금 관련 코드 변경" in str(e.value)
+    assert "과금 관련 코드 변경" in str(e.value) and "사장님께" in str(e.value)
+    assert _origin_head(repo) == before, "돈이 바뀌는 변경은 자동 승인 대상이 아니다"
+    control.approve(repo, n, "사장님 구두", printer=lambda *a: None)
+    assert _finish(repo, "과금") == 0
 
 
 def test_new_duplicate_of_owner_signature_is_rejected_but_existing_is_not(repo):

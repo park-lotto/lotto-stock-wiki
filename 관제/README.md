@@ -26,8 +26,8 @@
 ① 등록   py tools/control.py new "제목" --from <제보자> --owner <파일:함수> --done "<됐다의 기준(숫자·도구)>" [--body 원문]
 ② 트랙   py tools/track.py start <트랙> --card <번호>        ← 카드 없으면 거절
 ③ 수리   (트랙 폴더에서) 커밋 메시지에 [관제 N] 을 적어도 연결된다
-④ 승인   고객 화면(static/*.html|js)·과금 함수·고객 데이터 쓰기에 닿는 변경은
-         사장님 승인 뒤  py tools/control.py approve <번호> "사장님 구두 2026-..."  ← 없으면 finish 거절
+④ 승인   고객 화면(static/*.html|js) 변경 → 관문 통과면 **관제 자동 승인**(카드에 근거 기록)
+         돈(과금 함수)·회원 데이터 쓰기 → 사장님 승인(카드 만들 때 먼저 말한다) py tools/control.py approve <번호> "사장님 구두 …"
 ⑤ 병합   py tools/track.py finish <트랙>
          관제 관문 = 카드 있나 → 승인 필요한가 → 다른 트랙 선점과 겹치나(경고) → 주인 밖 시그니처 새로 생겼나(거절)
          통과·push 뒤 카드에 "병합 <sha> (반영됨·미검증)" 이 자동으로 적힌다

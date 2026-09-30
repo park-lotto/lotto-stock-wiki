@@ -419,8 +419,15 @@ function drawControlBoard(){
   h+='<div style="font-weight:700;margin:12px 0 4px">🟠 잘못된 것 — 배포 뒤 실제 고객 작업으로 재보니 기준 미달 ('+bad.length+')</div>';
   h+=bad.length?bad.map(c=>row(c,'<div style="font-size:11px;color:#e0a0a0">'+_abEsc(c.live||c.last||'')+'</div><div style="font-size:11px;color:#8a8a92">담당 세션에 "회귀 뜬 거 봐" 라고 하면 됩니다.</div>')).join('')
       :'<div style="color:#8a8a92;font-size:12px;padding:4px 0 8px">없음 — 잘못된 것이 없습니다.</div>';
-  h+='<details style="margin-top:12px"><summary style="cursor:pointer;color:#8a8a92">진행 중 ('+doing.length+') — 세션들이 처리 중, 사장님이 할 일 없음</summary>'
-      +doing.map(c=>row(c,'<span style="font-size:11px;color:#8a8a92;margin-left:8px">'+_abEsc(c.state)+'</span>')).join('')+'</details>';
+  // 진행 중은 단계 순서대로(등록→분배→수리→로컬검증→병합→서버반영) 묶어 세어 준다 — 어디까지 왔는지 한눈에
+  const STAGE_HELP={'등록':'대기 — 아직 아무도 안 맡음','분배':'맡은 세션 있음','수리':'고치는 중','로컬검증':'테스트 통과, 병합 대기','병합':'main 에 들어감, 서버 반영 대기','서버반영':'서버에 올라감, 라이브 실측 대기(1시간 안에 자동)'};
+  const stages=['서버반영','병합','로컬검증','수리','분배','등록'];
+  const doingHtml=stages.filter(s=>doing.some(c=>c.state===s)).map(s=>{
+    const items=doing.filter(c=>c.state===s);
+    return '<div style="margin:8px 0 2px;font-size:12px;color:#c8c8d0">'+_abEsc(s)+' ('+items.length+') <span style="color:#8a8a92">— '+_abEsc(STAGE_HELP[s]||'')+'</span></div>'
+      +items.map(c=>row(c,'')).join('');
+  }).join('');
+  h+='<details style="margin-top:12px"><summary style="cursor:pointer;color:#8a8a92">진행 중 ('+doing.length+') — 세션들이 처리 중, 사장님이 할 일 없음</summary>'+doingHtml+'</details>';
   h+='<details style="margin-top:8px"><summary style="cursor:pointer;color:#8a8a92">끝난 것 ('+done.length+') — 실제 고객 작업으로 확인됨</summary>'
       +done.map(c=>row(c,'<div style="font-size:11px;color:#8a8a92">'+_abEsc(c.live||'')+'</div>')).join('')+'</details>';
   box.innerHTML=h;
