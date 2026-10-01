@@ -18670,9 +18670,9 @@ function s2PickSeed(i){
 //   화면 재료의 판단처는 useFootage 하나다(collectMixUrls) — 새 통로를 만들지 않고 그 값을 끈다.
 //   앞서 씨앗이던 영상은 화면 사용을 되살린다(씨앗을 바꿨는데 계속 빠져 있으면 재료가 조용히 준다).
 function _seedFootageOff(prevSeed, nextSeed){
-  // ★지금은 사장님 계정만(2026-09-21 사장님 "고객들은 예전 걸로 해두고 나만 라이브"). 새 대본
-  //   스위치(backbone_script_enabled=admin)와 짝 — 대본이 옛 경로인 고객은 화면 재료도 종전대로 둔다.
-  if(!(typeof _s2SeedAuto==='function' && _s2SeedAuto())) return;
+  // ★모든 모드·계정 공통(2026-10-01 사장님 "썰 말고 인스타에 쓸 때도 — 매칭은 안 되고 소스는 모두 믹스로").
+  //   종전엔 이야기작가 켜진 계정만(_s2SeedAuto) 돌아 다른 계정은 씨앗이 자동 매칭에 그대로 쓰였다.
+  //   이 함수는 이제 재료를 빼지 않고 표식(seedNoAuto)만 달므로 모든 계정에 켜도 재료가 줄지 않는다.
   try{
     const find=sc=>(sc? HANDOFF.find(h=>h && h.shortcode===sc) : null);
     // ★2026-09-30 사장님 "씨앗은 자동배치는 빼주되 영상소스로는 넣어라": 종전엔 useFootage를 꺼서 job에서
