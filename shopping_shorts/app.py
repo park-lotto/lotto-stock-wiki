@@ -6564,6 +6564,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         "clean_spans": _lab_clean_spans(job, work),
         "captions": caps,
         "tts_dur": tts_dur,
+        # ★슬로우모션 상한을 화면에 준다(관제 020) — scene_play.js 가 자기 숫자를 들고 있지 않게. 정본 config.MAX_SLOWMO.
+        "max_slowmo": float(config.MAX_SLOWMO),
     }}
 
 

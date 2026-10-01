@@ -49,7 +49,9 @@ def _harness(body):
 const EPS=0.05, MIN_CLIP=0.6, MAX_SHOT=2.2; let onePerSeg=false; const TRIMS={};
 // ★planClips가 쓰는 상수는 여기에 **빠짐없이** 세워야 한다 — 하나라도 빠지면
 //   ReferenceError로 이 하네스가 통째로 죽는다(2026-09-06 MAX_SLOWMO 추가 때 겪음).
-const MAX_SLOWMO=1.15, MANUAL_MIN=0.3, FREE_MIN=0.6;
+const MANUAL_MIN=0.3, FREE_MIN=0.6;
+// 2026-10-01 관제 020: scene_play 는 상한을 maxSlowmo()(서버 DATA.max_slowmo)로 읽는다 — 하네스도 같은 모양으로.
+function maxSlowmo(){ return 1.2; }
 const BEAT_1CUT_UNDER=2.0, BEAT_3CUT_OVER=4.0;
 function cutsForBeat(sec){ sec=+sec; if(!(sec>0)) return 1;
   return sec<BEAT_1CUT_UNDER?1:(sec>BEAT_3CUT_OVER?3:2); }
