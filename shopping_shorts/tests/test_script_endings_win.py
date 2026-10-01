@@ -94,11 +94,12 @@ def test_synthesize_line_keeps_endings_when_script_wins(monkeypatch, tmp_path):
 
 
 def test_synthesize_line_default_unchanged(monkeypatch, tmp_path):
-    """★기본값은 종전 그대로 — 인자를 안 주면 어미 치환이 살아있다(회귀 0)."""
+    """★2026-10-01 관제 049: 합성 글 = 대본 원문 — 인자를 안 줘도 어미 치환은 꺼진다(사장님 청취 확정).
+    종전엔 기본이 켬이었다. 대본이 어미를 이긴다는 이 파일의 원칙이 이제 모든 job 에 적용된다."""
     seen = _capture_naturalize(monkeypatch)
     mix_pipeline.synthesize_line("이건 진짜 물건입니다.", tmp_path / "a.mp3",
                                  voice={"voice_id": "v"})
-    assert seen["profile"]["spoken_style"]["on"] is True
+    assert seen["profile"]["spoken_style"]["on"] is False
 
 
 def test_script_endings_does_not_mutate_caller_profile(monkeypatch, tmp_path):

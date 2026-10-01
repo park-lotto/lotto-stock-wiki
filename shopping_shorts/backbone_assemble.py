@@ -60,6 +60,8 @@ def _seg_index(sources):
     """seg_id -> {secs, desc, vid, ...}. 모든 소스의 컷을 한 표로."""
     idx = {}
     for s in sources:
+        if s.get("auto_exclude"):      # 씨앗(2026-09-30): 영상 소스엔 있되 자동 배치 표엔 안 올린다
+            continue
         for x in (s.get("segments") or []):
             sid = x.get("seg_id")
             if not sid:

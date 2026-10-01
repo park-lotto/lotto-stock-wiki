@@ -57,8 +57,8 @@ VARIANT_SPECS = [
 ]
 
 MODEL_ID = "ssfm-v30"
-# 사장님 확정(2026-08-19 청취): 1.2배. 일레븐랩스 프리셋(1.5~1.6)과 다른 값이라 그대로 둔다.
-DEFAULT_SPEED = 1.2
+# 기본 속도는 voice_presets.default_speed 가 정한다(2026-10-01 사장님 청취: 타입캐스트 전부 1.25).
+from shopping_shorts.voice_presets import DEFAULT_SPEED  # noqa: E402
 DEFAULT_SILENCE_TRIM = "mid"
 SOURCE_REF = "타입캐스트 지목 성우(2026-08-19)"
 

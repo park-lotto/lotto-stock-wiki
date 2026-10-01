@@ -261,6 +261,10 @@ def verify_sa(info, model_name=None):
         if not (r.text or "").strip():
             return False, "확인 실패 — 응답이 비었습니다"
     except Exception as e:      # noqa: BLE001
+        # ★구글 원문을 남긴다(2026-10-01 관제 053) — 번역문만 남기면 "역할 추가"가 결제 미연결인지 반영 대기인지 못 가른다.
+        #   키 내용은 예외 문자열에 안 들어온다(요청 본문 아님). 앞 300자만.
+        print("[vertex_verify] project=%s 구글원문: %s" % (info.get("project_id"), str(e)[:300].replace("\n", " ")),
+              file=sys.stderr)
         return False, _explain(e, model_name)
     # Veo 권한 확인 — 영상은 만들지 않고(과금 방지) 모델 조회만 한다. 조회가 막혀도 대본은 되므로 등록은 받는다.
     try:
@@ -276,10 +280,14 @@ def _explain(e, model_name=None):
     m = str(e)
     if "SERVICE_DISABLED" in m or "has not been used" in m or "is disabled" in m:
         return "Vertex AI API가 꺼져 있습니다 — 구글 클라우드 콘솔에서 'Vertex AI API 사용'을 눌러 주세요"
-    if "PERMISSION_DENIED" in m or "403" in m:
-        return "권한이 없습니다 — 서비스계정 역할에 'Vertex AI 사용자(Vertex AI User)'를 추가해 주세요"
+    # ★결제 미연결도 HTTP 403이다 — 403 검사보다 먼저 가른다(2026-10-01 관제 053: 회원 153이 역할을 맞게 넣고도
+    #   "역할 추가"만 보고 막혔다. 구글 원문: "This API method requires billing to be enabled" / reason BILLING_DISABLED).
     if "BILLING" in m.upper():
-        return "결제 계정이 연결돼 있지 않습니다 — 무료 체험($300)을 시작하거나 결제를 연결해 주세요"
+        return ("결제 계정이 연결돼 있지 않습니다 — 구글 콘솔 「결제」에서 이 프로젝트에 결제 계정을 연결해 주세요"
+                "(무료 체험 $300 시작). 안내서 💳 단계")
+    if "PERMISSION_DENIED" in m or "403" in m:
+        return ("권한이 없습니다 — 서비스계정 역할에 'Agent Platform 사용자(옛 이름 Vertex AI 사용자)'가 있는지 확인하고, "
+                "방금 넣었다면 5분 뒤 다시 눌러 주세요. 역할이 맞는데도 그대로면 「결제」에 결제 계정이 연결됐는지 보세요")
     if "invalid_grant" in m or "401" in m:
         return "키가 폐기됐거나 잘못됐습니다 — 새 키를 내려받아 주세요"
     if "404" in m:
