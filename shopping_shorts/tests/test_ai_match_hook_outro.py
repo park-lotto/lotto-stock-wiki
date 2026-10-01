@@ -86,3 +86,18 @@ def test_prompt_has_expert_role_topic_and_steps(monkeypatch):
     p = seen["p"]
     assert "최고 전문가" in p and "[주제] 이 영상이 파는 것: 접이식 거치대" in p and "steps" in p
     assert "소구점:자석이라 착" in p and "종류:기능" in p and "훅:클로즈업" in p and "속도:보통" in p
+
+
+def test_only_mode_picks_just_that_line(monkeypatch):
+    """3단계 「채우기」: 대본 전체를 보여주되 그 줄만 고른다 — 프롬프트에 '2번 줄만', 다른 줄은 빈 segs."""
+    idx = {"s1-1": {"secs": 3.0, "desc": "펼침", "vid": "s1", "role": "", "hook": "반전", "outro": False, "label": "펼침"},
+           "s1-2": {"secs": 3.0, "desc": "가방", "vid": "s1", "role": "", "hook": "", "outro": False, "label": "수납"}}
+    seen = {}
+
+    def fake(prompt, schema, **k):
+        seen["p"] = prompt
+        return {"picks": [{"line": 1, "cuts": ["s1-1"]}, {"line": 2, "cuts": ["s1-2"]}]}
+    monkeypatch.setattr(am._sg, "_call_json", fake)
+    out = am.match([{"role": "훅", "text": "정체"}, {"role": "전환", "text": "가방에 쏙"}], idx, None, note={}, only=[1])
+    assert "2번 줄만" in seen["p"] and "1. [훅]" in seen["p"]
+    assert out[0]["segs"] == [] and out[1]["segs"] == ["s1-2"], out

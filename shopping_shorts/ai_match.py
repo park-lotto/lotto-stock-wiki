@@ -160,16 +160,25 @@ def _parse(out, n_lines):
     return picks
 
 
-def match(lines, seg_index, backbone_vid, note=None, model=None, product=""):
-    """lines: [{role, text, sub}] → [{"role","seg","segs"}] (assign_cuts와 같은 모양). 실패면 []."""
+ONLY = """★이번엔 **%s번 줄만** 골라라. 다른 줄은 이미 장면이 정해져 있고(컷 목록에서 이미 뺐다) 그 줄들은 출력하지 마라.
+대본 전체는 흐름을 읽으라고 보여주는 것이다 — 앞뒤 줄과 같은 그림이 되지 않게 고른다."""
+
+
+def match(lines, seg_index, backbone_vid, note=None, model=None, product="", only=None):
+    """lines: [{role, text, sub}] → [{"role","seg","segs"}] (assign_cuts와 같은 모양). 실패면 [].
+    only=[줄번호(0부터)]: 그 줄만 고른다(3단계 「채우기」, 2026-10-01 사장님 "채우기를 같은 함수로") — 나머지 줄은 빈 segs."""
     from shopping_shorts.backbone_assemble import _secs, MIN_CUT_SECS
     order = sorted(seg_index, key=lambda s: (seg_index[s].get("vid") or "", s))
     lb = "\n".join("  %d. [%s] (%.1f초) %s" % (i + 1, L.get("role") or "", _secs(L["text"]), L["text"]) for i, L in enumerate(lines))
     cut_txt = _cut_block(seg_index, backbone_vid, order)
-    prompt = "%s\n\n[주제] 이 영상이 파는 것: %s\n\n[대본]\n%s\n\n[컷 목록] 번호 | 영상 | 길이 | 화면 | 쓰임 | 소구점 | 종류 | 훅 | 속도\n%s" % (
-        BRIEF, product or "(제품명 미상 — 대본에서 읽어라)", lb, cut_txt)
+    only = sorted({int(i) for i in (only or []) if 0 <= int(i) < len(lines)}) or None
+    prompt = "%s\n%s\n[주제] 이 영상이 파는 것: %s\n\n[대본]\n%s\n\n[컷 목록] 번호 | 영상 | 길이 | 화면 | 쓰임 | 소구점 | 종류 | 훅 | 속도\n%s" % (
+        BRIEF, ("\n" + ONLY % ", ".join(str(i + 1) for i in only) + "\n") if only else "",
+        product or "(제품명 미상 — 대본에서 읽어라)", lb, cut_txt)
     out = _ask(prompt, note, model)
     picks = _parse(out, len(lines))
+    if only:
+        picks = {i: cs for i, cs in picks.items() if i in only}
     if not picks:
         if note is not None:
             note.setdefault("reason", "AI 매칭 응답 없음")
@@ -178,6 +187,8 @@ def match(lines, seg_index, backbone_vid, note=None, model=None, product=""):
         note["matcher_steps"] = str((out or {}).get("steps") or "")[:400]
     # ④ 검사 → 걸린 줄만 한 번 더 묻는다(사장님 2026-10-01 "AI한테 다시 묻고 매칭해보라는 과정을 안 했나")
     bad = check(picks, lines, seg_index, backbone_vid)
+    if only:
+        bad = {i: w for i, w in bad.items() if i in only}
     if bad:
         if note is not None:
             note["matcher_recheck"] = {str(i + 1): w for i, w in bad.items()}

@@ -7295,10 +7295,23 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
     # ★칸의 역할(훅·CTA·결과…)을 함께 넘긴다(2026-08-17 사장님 "훅부터 기준이 뭘로 한 건지").
     #   대사만으로는 감정·상황을 말하는 훅에 아무 화면이나 붙는다 — 역할을 알아야
     #   "훅엔 시선 끄는 완성품"처럼 고를 수 있다(edit_plan._ROLE_WANT_SHOTS).
-    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool,
-                                        taken_ids=sorted(taken),
-                                        role=beats[bi].get("role") or "")
-    return {"ok": True, "picks": picks}
+    # ★2026-10-01 사장님 "채우기를 같은 함수로": 2단계 이야기작가가 쓰는 전문가 매칭(ai_match.match)으로 **이 칸만** 고른다.
+    #   주제·대본 전체·다른 칸이 쓴 컷(taken)을 같이 주므로 2단계 자동 결과와 같은 판단이다(0순위-B — 종전 fill_beat_scenes 는
+    #   칸 하나만 보고 옛 지시문으로 묻는 두 번째 판단이었다). AI가 비우면(맞는 장면 없음) 빈 picks + 이유 — 조용히 아무 컷을 넣지 않는다.
+    from shopping_shorts import ai_match as _am, backbone_assemble as _ba
+    _srcs = _ba.sources_from_extract(job.get("extract") or {})
+    _idx = {sid: v for sid, v in _ba._seg_index(_srcs).items() if sid not in taken}
+    _lines = [{"role": b.get("role") or "", "text": (b.get("narration") or "").strip()} for b in beats]
+    _product = next((ex["source_brief"].get("product") for ex in (job.get("extract") or {}).values()
+                     if isinstance(ex, dict) and isinstance(ex.get("source_brief"), dict) and ex["source_brief"].get("product")), "")
+    _note = {}
+    _bs = _am.match(_lines, _idx, None, note=_note, product=_product, only=[bi])
+    _segs = (_bs[bi].get("segs") if _bs and bi < len(_bs) else []) or []
+    picks = [{"seg_id": sid, "fit": 5, "why": (_bs[bi].get("why") or "") if _bs else ""} for sid in _segs if sid in seg_map]
+    if not picks:
+        return {"ok": True, "picks": [], "reason": _note.get("reason") or "이 멘트에 맞는 장면이 재료에 없어요(불편·기존 방식 장면이면 그런 영상을 담아 주세요)",
+                "matcher_note": {k: _note.get(k) for k in ("matcher_recheck", "matcher_left", "matcher_steps") if _note.get(k)}}
+    return {"ok": True, "picks": picks, "matcher_note": {k: _note.get(k) for k in ("matcher_recheck", "matcher_left") if _note.get(k)}}
 
 
 @app.post("/api/mix/scene_lab/{job_id}/apply")
