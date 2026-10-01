@@ -434,3 +434,14 @@ def test_server_approvals_empty_or_broken_means_none():
     assert control.server_approvals(lambda cmd, timeout=0: (0, "not json")) == {}
     with pytest.raises(control.ControlError):
         control.server_approvals(lambda cmd, timeout=0: (255, "ssh: connect failed"))
+
+
+def test_approval_tokens_skip_test_files():
+    """2026-10-02 관제 068: 테스트 파일의 mix_jobs 같은 토큰은 승인 사유가 아니다(메모리 DB 시험). 본체 변경은 그대로 잡힌다."""
+    d = ("diff --git a/shopping_shorts/tests/test_x.py b/shopping_shorts/tests/test_x.py\n"
+         "--- a/shopping_shorts/tests/test_x.py\n+++ b/shopping_shorts/tests/test_x.py\n@@ -1 +1 @@\n"
+         "+    con.execute('create table mix_jobs(job_id text)')\n")
+    assert control.approval_reasons(["shopping_shorts/tests/test_x.py"], d, control.DEFAULT_RULES) == []
+    d2 = d.replace("shopping_shorts/tests/test_x.py", "shopping_shorts/store.py")
+    r = control.approval_reasons(["shopping_shorts/store.py"], d2, control.DEFAULT_RULES)
+    assert r and "mix_jobs" in r[0]
