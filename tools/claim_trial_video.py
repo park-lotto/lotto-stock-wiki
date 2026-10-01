@@ -195,10 +195,11 @@ def run(jid):
             sents.append({"lines": [i], "claims": [], "cuts": [], "needs_scene": False, "unlisted": ""})
     sents.sort(key=lambda x: x["lines"][0])
     # ③-2 주장으로 좁힌 후보 안에서 컷 설명↔줄 글로 순위(길이 포함) — 한 번에
-    blocks = []
+    blocks, block_ks = [], []
     for k, x in enumerate(sents):
         if not x.get("needs_scene", True):
             continue
+        block_ks.append(k)
         want = set(x.get("claims") or [])
         direct = {int(str(v).lstrip("#")) for v in (x.get("cuts") or []) if str(v).lstrip("#").isdigit()}
         cs = [c for c in cuts if (set(c["claims"]) & want) or c["no"] in direct] or cuts
@@ -209,10 +210,14 @@ def run(jid):
     if blocks:
         rr, _ = _call([RANK_PROMPT % "\n\n".join(blocks)])
         calls += 1
-        for e in rr.get("ranks") or []:
+        rl = rr.get("ranks") or []
+        ks = [e.get("k") for e in rl]
+        by_order = len(rl) == len(block_ks) and sorted(ks) != sorted(block_ks)   # 모델이 0부터 다시 센 경우(10-01 실측) → 순서로 짝짓기
+        for pos, e in enumerate(rl):
             try:
-                ranked[int(e.get("k"))] = [int(str(v).lstrip("#")) for v in e.get("cuts") or [] if str(v).lstrip("#").isdigit()]
-            except (TypeError, ValueError):
+                k = block_ks[pos] if by_order else int(e.get("k"))
+                ranked[k] = [int(str(v).lstrip("#")) for v in e.get("cuts") or [] if str(v).lstrip("#").isdigit()]
+            except (TypeError, ValueError, IndexError):
                 pass
     for k, x in enumerate(sents):
         x["ranked"] = ranked.get(k, [])
