@@ -72,9 +72,9 @@ _BOUNDARY_WINDOW = 0.15
 
 
 def enabled():
-    """통짜 합성을 쓸 것인가. 기본 off — 라이브에서 실측한 뒤 켠다(CLAUDE.md:
-    검증 안 된 플래그를 라이브에 켜지 마라)."""
-    return (os.getenv("TTS_JOINED") or "").strip().lower() in ("1", "true", "on", "yes")
+    """통짜 합성을 쓸 것인가. **기본 켬**(2026-10-01 관제 049 — 사장님 청취: 문장별 합성은 마디마디
+    끊기고 통째 합성은 안 끊긴다. 서버 사본 job 0875d89db254 렌더로 실측). `TTS_JOINED=0`으로 끈다."""
+    return (os.getenv("TTS_JOINED") or "1").strip().lower() not in ("0", "false", "off", "no")
 
 
 def _cut(src, dst, start, end):
@@ -184,8 +184,9 @@ def synthesize_joined(beats, naturals, out_paths, *, voice_id, settings, speed,
     실패는 전부 False — 호출부가 종전 비트별 경로로 폴백한다."""
     if not beats or len(beats) != len(naturals) != len(out_paths):
         return False
-    if typecast_tts.is_typecast(model_id):
-        return False              # 타입캐스트는 문자단위 정렬 계약이 다르다(1차 범위 밖)
+    # ★타입캐스트도 통째로(2026-10-01 관제 049 — 사장님이 고른 필재 1.25 샘플이 통째 합성이었다).
+    #   tts.synthesize_tts가 타입캐스트 정렬(to_alignment)도 같은 모양으로 저장한다. 비트 글을 정렬에서
+    #   못 찾으면 아래 _spans가 None → 비트별 경로 폴백(종전과 같다).
     full_text = _SEP.join(naturals)
     if len(full_text) > _MAX_CHARS:
         print(f"[tts_joined] {len(full_text)}자 > 상한 {_MAX_CHARS} — 비트별 경로로",
@@ -217,9 +218,9 @@ def synthesize_joined(beats, naturals, out_paths, *, voice_id, settings, speed,
     #   맞는다. 무음삭제·배속은 조각별로(아래 finish_line_audio) — 통짜에 먼저 걸면 정렬을
     #   되당겨야 하는데 그 예측 오차가 컷을 최대 234ms 빗나가게 했다(모듈 주석).
     # 무음 mock에 loudnorm을 걸면 무음 바닥을 노이즈로 끌어올린다
-    # (reference_local_tts_silent_mock_trap). 타입캐스트는 위에서 이미 배제했으므로
-    # 판정 기준은 synthesize_line의 일레븐랩스 가지와 같다.
-    has_voice_key = bool(config.ELEVENLABS_API_KEY)
+    # (reference_local_tts_silent_mock_trap). 판정 기준은 synthesize_line과 같다(엔진별 키).
+    has_voice_key = (bool(typecast_tts.api_key(customer_id)) if typecast_tts.is_typecast(model_id)
+                     else bool(config.ELEVENLABS_API_KEY))     # 엔진별 키 판정 = synthesize_line과 같은 규칙
     if has_voice_key:
         try:
             audio_post.post_process(str(full), str(full), loudnorm=True)
