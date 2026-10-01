@@ -154,6 +154,17 @@ def list_packs():
 ACTIVE_PACKS = ("팩21_사장님",)
 
 
+SLOT_LABEL = {"opener": "시작(두둥)", "pop": "뽁", "dung": "둥", "ding": "띠링", "whoosh": "휙", "tick": "틱", "click2": "딸깍"}
+
+
+def pack_label(name):
+    """팩 폴더 이름 → 회원에게 보여줄 이름. 팩21_사장님=기본(전 회원 배정), 나머지는 '소리 묶음 N'."""
+    if name in ACTIVE_PACKS:
+        return "기본"
+    m = re.match(r"팩(\d+)", str(name))
+    return "소리 묶음 %d" % int(m.group(1)) if m else str(name)
+
+
 def pack_for(customer_id, override=None):
     """회원 → 팩 (이름, 폴더). override(1부터, 전체 목록 기준)가 있으면 그 팩. 팩이 없으면 None.
     기본은 ACTIVE_PACKS 안에서 고른다(없으면 전체). crc32라 프로세스마다 안 바뀐다 — 미리보기=최종본."""
@@ -229,12 +240,43 @@ def is_sul_script(store, job):
     return looks_sul_by_roles(job)
 
 
+# ★사용자 조절(2026-10-01 관제 059, 사장님 "효과음 탭 4개 사용자 선택") — 값의 뜻은 **여기 한 곳**이 정한다.
+#   deco.sfx_density  : "low"(칸 첫 줄만) · "normal"(자막 줄마다 1발, 긴 줄 2발=지금) · "high"(줄마다 1발, 1.4초 넘는 줄 2발)
+#   deco.sfx_level    : "low"(-3dB) · "normal" · "high"(+3dB)   — PACK_GAIN_DB 위에 더한다
+#   deco.sfx_pack     : "off" · "auto"(회원 배정) · "7"(전체 팩 목록 번호, 1부터)
+#   deco.sfx_mute_beats: [beat_idx, …] 이 칸은 효과음 없음(사람이 고른 효과음은 그대로)
+DENSITY_MAX_SILENCE = {"low": None, "normal": MAX_SILENCE, "high": 1.4}
+LEVEL_DB = {"low": -3.0, "normal": 0.0, "high": 3.0}
+DENSITY_LABEL = {"low": "적게", "normal": "보통", "high": "많이"}
+LEVEL_LABEL = {"low": "작게", "normal": "보통", "high": "크게"}
+
+
+def settings_of(deco):
+    """deco → {"pack","density","level","mute_beats"} 정규화. 모르는 값은 기본으로."""
+    d = deco if isinstance(deco, dict) else {}
+    pack = str(d.get("sfx_pack") or "").strip()
+    if pack not in ("off", "auto") and not pack.isdigit():
+        pack = ""
+    density = str(d.get("sfx_density") or "normal")
+    level = str(d.get("sfx_level") or "normal")
+    mute = set()
+    for x in (d.get("sfx_mute_beats") or []):
+        try:
+            mute.add(int(x))
+        except (TypeError, ValueError):
+            pass
+    return {"pack": pack, "density": density if density in DENSITY_MAX_SILENCE else "normal",
+            "level": level if level in LEVEL_DB else "normal", "mute_beats": sorted(mute)}
+
+
 def resolve(store, job):
-    """이 job에 쓸 팩 {"name","dir"} 또는 None. 렌더·미리보기·캡컷이 전부 여기 하나를 거친다."""
+    """이 job에 쓸 팩 {"name","dir","density","level","mute_beats"} 또는 None.
+    렌더·미리보기·캡컷이 전부 여기 하나를 거친다 — 사용자 조절값도 여기서만 읽는다."""
     if not job:
         return None
     deco = job.get("deco") or {}
-    choice = str(deco.get("sfx_pack") or "") if isinstance(deco, dict) else ""
+    st = settings_of(deco)
+    choice = st["pack"]
     if choice == "off":
         return None
     # 관리자 스위치 — ""=끔 · "admin"=사장님(cid 0) 영상에서만(시험용) · "1"=전 회원.
@@ -253,19 +295,25 @@ def resolve(store, job):
     if not choice and not is_sul_script(store, job):
         return None
     got = pack_for(job.get("customer_id", 0), override=choice)
-    return {"name": got[0], "dir": got[1]} if got else None
+    if not got:
+        return None
+    return {"name": got[0], "dir": got[1], "density": st["density"], "level": st["level"],
+            "mute_beats": st["mute_beats"]}
 
 
-def plan_events(timeline, manual_beats=()):
+def plan_events(timeline, manual_beats=(), density="normal"):
     """[(소리, 절대초, 자막)] — 파일 경로 없이 '무엇을 언제'만. 테스트·검증이 이걸 본다.
 
     영상 시작 = 오프너 · 첫 칸→둘째 칸 넘김 = 휙+틱 · 그 뒤 자막 줄이 바뀔 때마다 1발(칸 첫 줄은 칸 역할의 소리).
-    시각은 렌더 자막 함수(caption_schedule)에서 그대로 받는다. manual_beats(사람이 고른 칸)는 건너뛴다.
+    시각은 렌더 자막 함수(caption_schedule)에서 그대로 받는다. manual_beats(사람이 고른 칸·끈 칸)는 건너뛴다.
+    density(2026-10-01 사용자 조절): "low"=칸 첫 줄만 · "normal"=지금 규칙 · "high"=1.4초 넘는 줄도 가운데 1발.
     """
     from shopping_shorts.video_assemble import caption_schedule
     tl = [b for b in (timeline or []) if float(b.get("dur") or 0) > 0]
     if not tl:
         return []
+    density = density if density in DENSITY_MAX_SILENCE else "normal"
+    max_silence = DENSITY_MAX_SILENCE[density]
     manual = set(manual_beats or ())
     total = sum(float(b["dur"]) for b in tl)
     ev = [("opener", OPENER_AT, "")]
@@ -290,6 +338,8 @@ def plan_events(timeline, manual_beats=()):
             seg, start, end = sched[k]
             if float(start) < TITLE_CARD:
                 continue
+            if density == "low" and k > 0:
+                continue        # 적게: 칸의 첫 자막 줄에만
             if bi == 1 and k == 0:
                 pass        # 둘째 칸 첫 줄은 첫 넘김 휙+틱이 맡았다 — 줄 한가운데는 아래에서 본다
             elif k == 0 and first:
@@ -298,7 +348,7 @@ def plan_events(timeline, manual_beats=()):
                 n = used.get(ring, 0); used[ring] = n + 1
                 ev.append((ring[n % len(ring)], start, seg))
             # ★한 줄이 길면 그 줄 한가운데에 한 발 더 — 이븐쇼핑은 무음이 2.5초를 넘지 않는다(4편 실측).
-            if float(end) - float(start) > MAX_SILENCE:
+            if max_silence is not None and float(end) - float(start) > max_silence:
                 n = used.get(ring, 0); used[ring] = n + 1
                 ev.append((ring[n % len(ring)], (float(start) + float(end)) / 2.0, seg))
     ev = [e for e in ev if e[1] < total]
@@ -311,8 +361,10 @@ def events(timeline, pack, manual_beats=()):
     세 번째 칸(보정배)은 렌더·캡컷이 효과음 볼륨에 곱한다(없으면 1.0 — 종전 이벤트와 호환)."""
     if not pack or not pack.get("dir"):
         return []
+    skip = set(manual_beats or ()) | set(pack.get("mute_beats") or ())      # 끈 칸은 사람이 고른 칸처럼 건너뛴다
+    level_mul = 10 ** (LEVEL_DB.get(pack.get("level") or "normal", 0.0) / 20.0)
     out = []
-    for slot, t, _ in plan_events(timeline, manual_beats):
+    for slot, t, _ in plan_events(timeline, skip, density=pack.get("density") or "normal"):
         path = os.path.join(pack["dir"], slot + ".wav")
-        out.append((path, t, _gain_for(path, slot)))
+        out.append((path, t, _gain_for(path, slot) * level_mul))
     return out

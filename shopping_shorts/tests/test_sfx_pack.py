@@ -279,3 +279,103 @@ def test_settings_toggle_and_preserve(tmp_path, monkeypatch):
     Store(str(db)).update_mix_job("jx", preview_status="ready")
     A.api_produce_mix_settings({"job_id": "jx", "sfx_pack": "auto"})          # 같은 값이면 그대로 둔다
     assert Store(str(db)).get_mix_job("jx").get("preview_status") == "ready"
+
+
+# ── 2026-10-01 관제 059: 사용자 조절(밀도·크기·팩·칸별) — 값의 뜻은 sfx_pack 한 곳 ──
+def test_density_low_normal_high_change_hit_counts():
+    tl = _tl(lines=3)
+    low = sfx_pack.plan_events(tl, density="low")
+    normal = sfx_pack.plan_events(tl)
+    high = sfx_pack.plan_events(tl, density="high")
+    assert len(low) < len(normal) <= len(high)
+    # 적게: 칸마다 첫 줄만(둘째 칸은 첫 넘김 휙+틱이 맡음) → 자막 달린 이벤트가 칸당 1개 이하
+    per_beat = {}
+    for s, t, txt in low:
+        if txt:
+            per_beat[txt] = per_beat.get(txt, 0) + 1
+    assert all(v == 1 for v in per_beat.values())
+    assert sfx_pack.plan_events(tl, density="이상한값") == normal     # 모르는 값은 보통
+
+
+def test_level_and_mute_beats_apply_in_events(tmp_path):
+    import wave, struct
+    d = tmp_path / "p"; d.mkdir()
+    for s in sfx_pack.SLOTS:
+        with wave.open(str(d / (s + ".wav")), "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000)
+            w.writeframes(struct.pack("<" + "h" * 1600, *([8000] * 1600)))
+    tl = _tl()
+    base = sfx_pack.events(tl, {"name": "p", "dir": str(d)})
+    loud = sfx_pack.events(tl, {"name": "p", "dir": str(d), "level": "high"})
+    quiet = sfx_pack.events(tl, {"name": "p", "dir": str(d), "level": "low"})
+    assert len(base) == len(loud) == len(quiet)
+    assert abs(loud[0][2] / base[0][2] - 10 ** (3 / 20)) < 1e-3
+    assert abs(quiet[0][2] / base[0][2] - 10 ** (-3 / 20)) < 1e-3
+    # 칸 끄기: 그 칸의 시간대에 소리가 없다(사람이 고른 칸과 같은 취급)
+    muted = sfx_pack.events(tl, {"name": "p", "dir": str(d), "mute_beats": [3]})
+    b3 = tl[3]
+    assert not [e for e in muted if b3["t0"] <= e[1] < b3["t0"] + b3["dur"]]
+    assert len(muted) < len(base)
+
+
+def test_settings_of_normalizes_and_resolve_carries_them():
+    st = sfx_pack.settings_of({"sfx_pack": "3", "sfx_density": "high", "sfx_level": "low", "sfx_mute_beats": ["2", 5, "x"]})
+    assert st == {"pack": "3", "density": "high", "level": "low", "mute_beats": [2, 5]}
+    assert sfx_pack.settings_of({"sfx_pack": "weird", "sfx_density": "zzz"})["pack"] == ""
+    job = {"customer_id": 7, "deco": {"sfx_pack": "auto", "sfx_density": "low", "sfx_level": "high", "sfx_mute_beats": [1]},
+           "edit_plan": {"beats": [{"beat_idx": i, "role": r} for i, r in enumerate(["훅", "미끼", "공개", "고조", "반전", "마무리"])]}}
+    got = sfx_pack.resolve(_Store(), job)
+    assert got and got["density"] == "low" and got["level"] == "high" and got["mute_beats"] == [1]
+
+
+def test_settings_api_saves_all_four_controls_and_preserves(tmp_path, monkeypatch):
+    """관제 059: 밀도·크기·팩 번호·칸별 끄기 저장 → 렌더가 읽는 resolve가 그대로 받는다 · 통째 저장이 안 지운다."""
+    from shopping_shorts import app as A
+    from shopping_shorts.store import Store
+    db = tmp_path / "t.db"; st = Store(str(db))
+    st.set_setting("sfx_pack_enabled", "1")
+    st.create_mix_job("jy", ["u"], 25, "free", customer_id=7)
+    monkeypatch.setattr(A, "DB_PATH", str(db))
+    assert A.api_produce_mix_settings({"job_id": "jy", "sfx_pack": "3", "sfx_density": "high",
+                                       "sfx_level": "low", "sfx_mute_beats": [2, "4"]})["ok"]
+    d = Store(str(db)).get_mix_job("jy")["deco"]
+    assert d == {"sfx_pack": "3", "sfx_density": "high", "sfx_level": "low", "sfx_mute_beats": [2, 4]}
+    A.api_produce_mix_settings({"job_id": "jy", "deco": {"bgm": {"volume": 30}}})       # 통째 저장
+    d = Store(str(db)).get_mix_job("jy")["deco"]
+    assert d["sfx_density"] == "high" and d["sfx_mute_beats"] == [2, 4] and d["sfx_pack"] == "3"
+    got = sfx_pack.resolve(Store(str(db)), Store(str(db)).get_mix_job("jy"))
+    assert got["name"] == sfx_pack.list_packs()[2][0] and got["density"] == "high" and got["mute_beats"] == [2, 4]
+    # 모르는 값은 보통으로 · 조절값을 바꾸면 미리보기를 버린다
+    Store(str(db)).update_mix_job("jy", preview_status="ready")
+    A.api_produce_mix_settings({"job_id": "jy", "sfx_level": "zzz"})
+    j = Store(str(db)).get_mix_job("jy")
+    assert j["deco"]["sfx_level"] == "normal" and not j.get("preview_status")
+
+
+def test_status_api_lists_packs_and_per_beat_plan(tmp_path, monkeypatch):
+    import types
+    from shopping_shorts import app as A
+    from shopping_shorts.store import Store
+    db = tmp_path / "t.db"; st = Store(str(db))
+    st.set_setting("sfx_pack_enabled", "1")
+    sp = st.add_spine("유튜브 「OO도 당황한 천재 발명품」", fit_categories=["발명품형"], status="approved")
+    st.create_mix_job("jz", ["u"], 25, "free", customer_id=0, script_structure={"script_style_id": sp})
+    beats = [{"beat_idx": i, "role": r, "narration": "줄", "caption_lines": ["줄 %d" % i]}
+             for i, r in enumerate(["훅", "미끼", "공개", "고조", "반전", "마무리"])]
+    st.update_mix_job("jz", edit_plan={"beats": beats}, deco={"sfx_mute_beats": [2]})
+    monkeypatch.setattr(A, "DB_PATH", str(db))
+    req = types.SimpleNamespace(state=types.SimpleNamespace(customer_id=0))
+    d = A.api_produce_mix_sfx_pack("jz", req)
+    assert d["ok"] and d["on"] and d["density"] == "normal" and d["level"] == "normal"
+    assert len(d["packs"]) == len(sfx_pack.list_packs()) and d["pack_no"] and d["packs"][d["pack_no"] - 1]["label"] == "기본"
+    assert [b["beat_idx"] for b in d["beats"]] == [0, 1, 2, 3, 4, 5] and d["beats"][2]["muted"] is True
+    assert d["timeline_ready"] is False          # 음성 없음 → 칸 목록만, 타점 수는 0
+    assert all(b["hits"] == 0 for b in d["beats"])
+
+
+def test_sound_preview_endpoint_serves_wav():
+    from shopping_shorts import app as A
+    r = A.api_sfx_pack_sound(1, "pop", None)
+    assert getattr(r, "path", "").endswith("pop.wav") and r.media_type == "audio/wav"
+    assert A.api_sfx_pack_sound(999, "pop", None).status_code == 404
+    assert A.api_sfx_pack_sound(1, "nope", None).status_code == 404

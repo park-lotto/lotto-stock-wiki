@@ -20680,14 +20680,36 @@ def api_produce_mix_settings(body: dict):
                 return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
         # ★효과음 켜기/끄기(deco.sfx_pack)는 3단계 스위치가 따로 정한다. 다른 화면이 꾸미기를 **통째로**
         #   저장할 때 이 값을 모르고 보내면 조용히 지워져 "껐는데 다시 켜짐"이 된다 → 없으면 기존 값 유지.
-        if isinstance(fields["deco"], dict) and "sfx_pack" not in fields["deco"]                 and (job.get("deco") or {}).get("sfx_pack"):
-            fields["deco"]["sfx_pack"] = job["deco"]["sfx_pack"]
+        #   2026-10-01(관제 059): 효과음 조절값(sfx_density·sfx_level·sfx_mute_beats)도 같은 운명 — 전부 보존.
+        if isinstance(fields["deco"], dict):
+            for _k in ("sfx_pack", "sfx_density", "sfx_level", "sfx_mute_beats"):
+                if _k not in fields["deco"] and (job.get("deco") or {}).get(_k) is not None:
+                    fields["deco"][_k] = job["deco"][_k]
     sfx_switched = False
+    _sfx_new = {}
     if "sfx_pack" in body:
-        # 3단계 [🔊 썰 효과음 자동 넣기] 스위치(2026-09-22). 기존 꾸미기 값에 이 칸만 합친다.
-        _new = "off" if body.get("sfx_pack") in ("off", False, 0, "0") else "auto"
-        sfx_switched = _new != str((job.get("deco") or {}).get("sfx_pack") or "")
-        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), "sfx_pack": _new}
+        # 3단계 [🔊 효과음] 스위치(2026-09-22) — "off" / "auto"(회원 배정) / "7"(팩 번호, 2026-10-01 사용자 선택).
+        _v = body.get("sfx_pack")
+        if _v in ("off", False, 0, "0"):
+            _sfx_new["sfx_pack"] = "off"
+        elif str(_v).strip().isdigit():
+            _sfx_new["sfx_pack"] = str(_v).strip()
+        else:
+            _sfx_new["sfx_pack"] = "auto"
+    if "sfx_density" in body or "sfx_level" in body or "sfx_mute_beats" in body:
+        # 값의 뜻·허용 범위는 sfx_pack.settings_of 한 곳(렌더가 읽는 것과 같은 정규화) — 여기선 그대로 넘긴다.
+        from shopping_shorts import sfx_pack as _sp
+        _norm = _sp.settings_of({k: body.get(k) for k in ("sfx_density", "sfx_level", "sfx_mute_beats") if k in body})
+        if "sfx_density" in body:
+            _sfx_new["sfx_density"] = _norm["density"]
+        if "sfx_level" in body:
+            _sfx_new["sfx_level"] = _norm["level"]
+        if "sfx_mute_beats" in body:
+            _sfx_new["sfx_mute_beats"] = _norm["mute_beats"]
+    if _sfx_new:
+        _cur = job.get("deco") or {}
+        sfx_switched = any(str(_cur.get(k) or "") != str(v or "") for k, v in _sfx_new.items())
+        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), **_sfx_new}
     if "scene_style" in body:
         from .scene_style import validate_snapshot
         try:
@@ -20731,11 +20753,49 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
     _mode = str(store.get_setting("sfx_pack_enabled", "") or "").strip().lower()
     switch_on = _mode in ("1", "on") or (_mode == "admin" and int(job.get("customer_id") or 0) == 0)
     sul = sfx_pack.is_sul_script(store, job)
-    choice = str((job.get("deco") or {}).get("sfx_pack") or "")
+    st = sfx_pack.settings_of(job.get("deco") or {})
+    choice = st["pack"]
     on = (choice != "off") if choice else sul      # 손댄 적 없으면 기본값 = 썰 대본인가
-    got = sfx_pack.pack_for(job.get("customer_id", 0)) if switch_on else None
+    got = sfx_pack.pack_for(job.get("customer_id", 0), override=choice) if switch_on else None
+    # ── 2026-10-01 관제 059: 사용자 조절 재료 — 팩 목록·밀도·크기·칸별 계획 ──
+    allp = sfx_pack.list_packs()
+    packs = [{"no": i + 1, "name": n, "label": sfx_pack.pack_label(n)} for i, (n, _) in enumerate(allp)]
+    pack_no = next((i + 1 for i, (n, _) in enumerate(allp) if got and n == got[0]), None)
+    beats_out = []
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    try:
+        tts = {b["beat_idx"]: b["tts_path"] for b in beats if b.get("tts_path")}
+        timeline = video_assemble._beat_timeline(plan, tts) if beats and len(tts) == len(beats) else []
+    except Exception:      # noqa: BLE001 — 음성이 아직 없으면 칸 목록만
+        timeline = []
+    manual = {b["beat_idx"] for b in beats if (b.get("sfx") or {}).get("match_type") == "manual"}
+    ev = sfx_pack.plan_events(timeline, manual | set(st["mute_beats"]), density=st["density"]) if (timeline and on and got) else []
+    tl_by = {t["beat_idx"]: t for t in timeline}
+    for b in beats:
+        bi = b.get("beat_idx")
+        t = tl_by.get(bi)
+        hits = [e for e in ev if t and float(t["t0"]) <= e[1] < float(t["t0"]) + float(t["dur"])]
+        caps = b.get("caption_lines") or []
+        label = (caps[0] if caps else str(b.get("narration") or ""))[:18]
+        beats_out.append({"beat_idx": bi, "role": b.get("role") or "", "label": label, "hits": len(hits),
+                          "muted": bi in st["mute_beats"], "manual": bi in manual})
     return {"ok": True, "eligible": bool(switch_on), "sul": sul, "on": on,
-            "pack": got[0] if got else None, "family": sfx_pack.script_family(store, job)}
+            "pack": got[0] if got else None, "pack_no": pack_no, "pack_choice": choice or "auto",
+            "density": st["density"], "level": st["level"], "mute_beats": st["mute_beats"],
+            "packs": packs, "beats": beats_out, "timeline_ready": bool(timeline),
+            "family": sfx_pack.script_family(store, job)}
+
+
+@app.get("/api/produce/sfx_pack/sound/{pack_no}/{slot}")
+def api_sfx_pack_sound(pack_no: int, slot: str, request: Request):
+    """팩 소리 미리듣기(2026-10-01 관제 059) — 팩 번호(1부터, list_packs 순서)·칸 이름의 wav 그대로."""
+    from shopping_shorts import sfx_pack
+    allp = sfx_pack.list_packs()
+    if slot not in sfx_pack.SLOTS or not (1 <= int(pack_no) <= len(allp)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "소리 없음"})
+    path = os.path.join(allp[int(pack_no) - 1][1], slot + ".wav")
+    return FileResponse(path, media_type="audio/wav", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/api/produce/scene-style/assets/{asset_path:path}")
