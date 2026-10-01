@@ -56,13 +56,15 @@ moments(컷이 3초보다 길면 "0~2초 뚜껑 염, 2~5초 내용물 부음"처
 출력 JSON만: {"tags":[{"no":1,"scene_desc":"...","label":"...","claims":["C1"],"moments":""}]} — 컷을 빠짐없이.
 """
 
-LINE_PROMPT = """아래는 한 쇼츠 대본의 줄 목록(자막 단위로 쪼개져 있다)과, 이 제품 재료의 주장 목록·컷 목록이다.
-1) 줄을 **문장 단위로 묶어라**(한 문장이 여러 줄에 걸쳐 있으면 한 묶음). 묶음은 줄 순서대로 빠짐없이.
-2) 묶음마다 그 문장이 말하는 주장 번호(claims)를 단다. 훅·감정·연결·가격·CTA처럼 특정 화면이 필요 없으면
+LINE_PROMPT = """아래는 한 쇼츠 대본의 줄 목록(자막 단위, 줄마다 음성 길이 초)과, 이 제품 재료의 주장 목록·컷 목록이다.
+★줄은 **한 줄에 하나씩** 다룬다(묶지 마라 — 한 줄이 곧 화면 하나다). 줄 순서대로 빠짐없이.
+1) 줄마다 그 줄이 말하는 주장 번호(claims)를 단다. 훅·감정·연결·가격·CTA처럼 특정 화면이 필요 없으면
    claims=[] + needs_scene=false.
-3) 주장 번호로 딱 맞는 게 없으면 **컷 목록에서 그 문장을 보여주는 컷 번호를 직접 찾아** cuts에 적어라.
+2) 문제 제기 줄(쓰기 전 불편·짜증·기존 제품의 단점)은 주장 목록에 문제 주장이 없어도 **컷 목록에서
+   '제품 없이 불편한 상황' 또는 '기존 둔탁한 물건' 컷을 직접 찾아** cuts에 적어라.
+3) 주장 번호로 딱 맞는 게 없으면 컷 목록에서 그 줄을 보여주는 컷 번호를 직접 찾아 cuts에 적어라.
    주장 목록에도 컷 목록에도 없을 때만 unlisted에 그 주장을 적는다(재료에 진짜 없는 말).
-출력 JSON만: {"sentences":[{"lines":[0,1],"claims":["C2"],"cuts":[],"needs_scene":true,"unlisted":""}]}
+출력 JSON만: {"sentences":[{"lines":[0],"claims":["C2"],"cuts":[],"needs_scene":true,"unlisted":""}]}
 
 [주장 목록]
 %s
@@ -180,10 +182,41 @@ def run(jid):
     cut_txt = "\n".join("#%d %s %.1f~%.1f초 %s | %s" % (c["no"], c["src"], c["start"], c["end"], c["claims"],
                                                         c["scene_desc"][:50]) for c in cuts)
     r, _ = _call(LINE_PROMPT % (claims_txt, cut_txt,
-                                "\n".join("%d: %s" % (k, b["text"]) for k, b in enumerate(beats))))
+                                "\n".join("%d: %s (%.1f초)" % (k, b["text"], b["need"]) for k, b in enumerate(beats))))
     calls += 1
-    sents = r.get("sentences") or []
-    # ④ 문장마다 후보 고르기(꼬다리 규칙) + 완성본과 A/B 판정
+    sents = []
+    for x in r.get("sentences") or []:                 # 묶음이 와도 줄 단위로 편다(구조로 강제)
+        ln = [i for i in x.get("lines") or [] if isinstance(i, int) and 0 <= i < len(beats)]
+        for i in ln:
+            sents.append(dict(x, lines=[i]))
+    seen = {i for x in sents for i in x["lines"]}
+    for i in range(len(beats)):                       # 빠진 줄은 장면 불필요로 채운다
+        if i not in seen:
+            sents.append({"lines": [i], "claims": [], "cuts": [], "needs_scene": False, "unlisted": ""})
+    sents.sort(key=lambda x: x["lines"][0])
+    # ③-2 주장으로 좁힌 후보 안에서 컷 설명↔줄 글로 순위(길이 포함) — 한 번에
+    blocks = []
+    for k, x in enumerate(sents):
+        if not x.get("needs_scene", True):
+            continue
+        want = set(x.get("claims") or [])
+        direct = {int(str(v).lstrip("#")) for v in (x.get("cuts") or []) if str(v).lstrip("#").isdigit()}
+        cs = [c for c in cuts if (set(c["claims"]) & want) or c["no"] in direct] or cuts
+        i = x["lines"][0]
+        blocks.append("[줄 %d] %s (필요 %.1f초)\n" % (k, beats[i]["text"], beats[i]["need"]) +
+                      "\n".join("  #%d %.1f초 %s" % (c["no"], c["end"] - c["start"], c["scene_desc"][:60]) for c in cs[:25]))
+    ranked = {}
+    if blocks:
+        rr, _ = _call([RANK_PROMPT % "\n\n".join(blocks)])
+        calls += 1
+        for e in rr.get("ranks") or []:
+            try:
+                ranked[int(e.get("k"))] = [int(str(v).lstrip("#")) for v in e.get("cuts") or [] if str(v).lstrip("#").isdigit()]
+            except (TypeError, ValueError):
+                pass
+    for k, x in enumerate(sents):
+        x["ranked"] = ranked.get(k, [])
+    # ④ 줄마다 후보 고르기(꼬다리 규칙) + 완성본(또는 믹스 편성)과 A/B 판정
     judged = judge(jid, work, cuts, beats, sents)
     calls += 1 if any(x.get("verdict") for x in judged) else 0
     out = {"job": jid, "model": model, "calls": calls, "secs": round(time.time() - t0, 1),
@@ -197,6 +230,15 @@ def run(jid):
 
 SLOW_MAX = 1.2
 
+RANK_PROMPT = """너는 쇼핑 쇼츠 편집자다. 대본 줄마다 후보 컷 목록(번호·길이·화면 설명)이 있다.
+줄이 읽히는 동안 화면에 나올 컷을 고른다. **줄의 내용을 화면이 직접 보여주는 컷**이 1순위다
+(같은 주장 번호라도 설명이 줄과 안 맞으면 뒤로). 길이는 '필요 초'에 가까운 것을 앞세우되 내용보다 뒤다.
+줄마다 좋은 순서로 컷 번호 최대 4개. 후보 중 맞는 게 하나도 없으면 [].
+출력 JSON만: {"ranks":[{"k":0,"cuts":[12,7]}]}
+
+%s
+"""
+
 JUDGE_PROMPT = """너는 쇼핑 쇼츠 편집 검수자다. 문장마다 이미지 두 장(A, B)이 있다 — 각각 그 문장이 읽히는 동안
 화면에 나올 영상의 프레임을 왼쪽부터 이어붙인 띠다. **문장 내용을 화면이 더 잘 보여주는 쪽**을 골라라.
 화면에 박힌 글자·자막은 무시하고 장면 내용만 본다. 차이가 없으면 "같음".
@@ -205,7 +247,7 @@ JUDGE_PROMPT = """너는 쇼핑 쇼츠 편집 검수자다. 문장마다 이미�
 """
 
 
-def pick_scene(sent, beats, cuts):
+def pick_scene(sent, beats, cuts, ranked=None):
     """문장 → (고른 컷 번호 목록, 해결 단계, 필요 초). 판단 순서 = 꼬다리 규칙:
     1한컷 → 2같은소스 다음 컷 잇기(같은 주장일 때만, 모자라면 1.2배 늦추기까지 허용) → 3한컷 고르게 늦추기(1.2배 이내)
     → 4다른 소스 같은 주장 합치기(마지막 수단) → 5부족
@@ -223,7 +265,12 @@ def pick_scene(sent, beats, cuts):
     cands = [c for c in cuts if ok(c)]
     if not cands or need <= 0:
         return [], "후보없음", need
-    cands.sort(key=lambda c: (len(set(c["claims"]) & want) + (2 if c["no"] in direct else 0), L(c)), reverse=True)
+    byno = {c["no"]: c for c in cuts}
+    if ranked:                                        # 10-01: 주장은 좁히기만, 순서는 컷 설명↔줄 글(RANK) 이 정한다
+        rk = [byno[n] for n in ranked if n in byno]
+        cands = rk + [c for c in cands if c not in rk]
+    else:
+        cands.sort(key=lambda c: (len(set(c["claims"]) & want) + (2 if c["no"] in direct else 0), L(c)), reverse=True)
     best = cands[0]
     if L(best) >= need:
         return [best["no"]], "1한컷", need
@@ -291,7 +338,7 @@ def judge(jid, work, cuts, beats, sents):
         ln = [i for i in s.get("lines") or [] if isinstance(i, int) and 0 <= i < len(beats)]
         if not ln:
             continue
-        nos, how, need = pick_scene(s, beats, cuts)
+        nos, how, need = pick_scene(s, beats, cuts, ranked=s.get("ranked"))
         if scale is not None:
             a0, a1 = starts[ln[0]] * scale, (starts[ln[-1]] + beats[ln[-1]]["need"]) * scale
             fin = [_grab(final, a0 + (a1 - a0) * (q + 0.5) / 4, os.path.join(work, "fin_%d_%d.jpg" % (k, q)))
