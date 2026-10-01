@@ -185,7 +185,8 @@ def frames_for_lines(jid, given, beat_sources, seg_index, work):
                               os.path.join(work, "line%02d_%s_%d.jpg" % (i, sid.replace("/", "_"), q)))
                     if p:
                         paths.append(p)
-            descs.append("%s(%.1fs) %s" % (sid, v.get("secs") or 0, (v.get("desc") or "")[:40]))
+            # 시트엔 **대본화 문장(소구점)**을 먼저, 묘사는 뒤에 — 사장님 10-01 "이거 태깅이 대본화한 거 맞아?"(묘사만 보여 오해)
+            descs.append("%s(%.1fs) 대본화:%s | 묘사:%s" % (sid, v.get("secs") or 0, (v.get("use") or "-")[:40], (v.get("desc") or "")[:30]))
         rows.append({"i": i, "text": text, "role": (bs or {}).get("role"), "segs": segs, "frames": paths, "descs": descs})
     return rows
 
