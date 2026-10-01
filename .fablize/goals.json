@@ -6,22 +6,22 @@
    "id": "G001",
    "title": "G1 하네스",
    "objective": "job 재료→assemble(옛 태그) 서버 읽기전용 재현",
-   "status": "pending",
-   "evidence": null
+   "status": "complete",
+   "evidence": "서버 live 모드 '완료 live 줄 11 10s | 줄별 컷 수 [1,3,2,2,2,1,3,2,1,4,1]' 프레임 46장; 로컬 렌더러 sheet_29109deff2a9_live.jpg 11줄 출력 확인"
   },
   {
    "id": "G002",
    "title": "G2 지침서+재태깅",
    "objective": "소구점·후킹·속도·대본화 지침으로 5소스 재태깅→같은 하네스",
-   "status": "pending",
-   "evidence": null
+   "status": "complete",
+   "evidence": "서버 new 2차 '완료 new 줄 6 209s', 새 칸 88/88(appeal/hook/tempo/speed), writer_materials에 '소구:기능 훅3 속도:보통/1.0배' 실림"
   },
   {
    "id": "G003",
    "title": "G3 대조·판정",
    "objective": "두 벌 줄별 장면 프레임 시트→사람 판정·보고",
-   "status": "pending",
-   "evidence": null
+   "status": "complete",
+   "evidence": "시트 3장(live/old/new) 사람 판정: live 9/11, old 8/8, new1 5/7, new2 6/6; 바탕화면 태깅지침시험_29109deff2a9_*.jpg"
   }
  ]
 }

@@ -74,8 +74,10 @@ def retag_source(jid, vid, ex, guide_text, work):
             except (TypeError, ValueError):
                 idx = seq
             seq = idx + 1
-            if 0 <= idx < n:
-                extras[idx] = {k: t.get(k) for k in EXTRA_KEYS if t.get(k) not in (None, "")}
+            if 0 <= idx < n and out[idx]:
+                # ★정규화된 dict 안에 바로 심는다 — _gemini_tag_frames 가 out[b0:b1]=got 으로 그대로 돌려주므로 살아남는다
+                #   (첫 실행 10-01: extras 를 따로 모아 놓고 안 썼다 → 새 칸 0/88. 묶음별 지역 번호라 전역 짝도 못 맞췄다)
+                out[idx].update({k: t.get(k) for k in EXTRA_KEYS if t.get(k) not in (None, "")})
         return out
     fs.normalize_tags = _norm_keep
     try:
