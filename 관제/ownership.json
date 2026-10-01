@@ -96,6 +96,7 @@
   {
    "이름": "배속(느리게 상한)·정지·마지막 프레임",
    "주인": [
+    "shopping_shorts/config.py:MAX_SLOWMO",
     "shopping_shorts/video_assemble.py:_speed_and_freeze",
     "shopping_shorts/video_assemble.py:motion_frames"
    ],
@@ -115,12 +116,13 @@
    "검사도구": "tools/editor_vs_final_video.py",
    "과금": false,
    "예외": {
-    "shopping_shorts/static/scene_play.js": "MAX_SLOWMO=1.15 화면 상수 — 서버가 DATA 로 주입하기 전까지 값 동일 유지. 함수전수표 #4-①",
+    "shopping_shorts/static/scene_play.js": "숫자 없음 — maxSlowmo() 가 서버 DATA.max_slowmo(config.MAX_SLOWMO)를 읽는다(관제 020, 2026-10-01). 서버 값 없을 때 1.15 폴백은 콘솔 경고와 함께",
     "shopping_shorts/clean_base.py": "_OLD_SLOWMO 옛 조립 역산용 의도적 고정 — 함수전수표 #4-②",
     "shopping_shorts/mix_pipeline.py": "합본 배속 판단은 screen_clips.plays_at_speed 한 곳으로 옮김(09-27 88b24b88e); 남은 setpts 는 청소 비교 클립용. 재확인 카드 예정",
     "shopping_shorts/tts_joined.py": "TTS 이어붙이기의 setpts — 영상 컷 배속과 다른 판단(음성)",
     "shopping_shorts/static/scene_lab.html": "실험실 화면(고객 비노출) 상수 표시"
-   }
+   },
+   "메모": "상한 숫자의 정본은 config.MAX_SLOWMO 한 곳(2026-10-01 관제 020, 1.15→1.2). video_assemble 은 import, app 이 scene_lab 데이터로 주입, scene_play 는 읽기만."
   },
   {
    "이름": "구도(자르기·확대·이동)",

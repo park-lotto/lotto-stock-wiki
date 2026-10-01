@@ -1169,12 +1169,25 @@ function wantFull(v){
   try{ v.preload = 'auto'; if (v.readyState < 2 && typeof v.load === 'function') v.load(); }catch(e){}
   return v;
 }
+// ★열 때는 원본을 한 바이트도 당기지 않는다(2026-10-01 관제 061, 사장님 "3단계가 왜 이렇게 무겁지").
+//   접근로그 실측: 고객이 3단계를 한 번 열 때 115MB를 받았고 그중 82MB가 /api/mix/src(원본 7개)였다.
+//   머리말(metadata)만 받는다던 재생기 28개가 소스마다 1.6MB씩 여섯 번 당기고, 첫 앉히기(seat→wantFull)가
+//   24MB짜리를 통째로 받았다. 재생을 누르기 전엔 쓸 일이 없는 바이트다.
+//   규칙: 재생기는 **재생을 누를 때까지 preload='none'**(src 는 둔다 — 요청은 안 나간다). startSeq 가
+//   armPlay() 를 부르는 순간부터 종전 규칙(머리말 metadata → 쓸 것만 wantFull 로 auto)으로 돌아간다.
+//   합본(PVX)은 여기 해당 없음 — 전체 재생을 끊기지 않게 하는 재료라 종전대로 미리 받는다.
+let PLAY_ARMED = false;
+function armPlay(){
+  if (PLAY_ARMED) return;
+  PLAY_ARMED = true;
+  Object.values(_vids).forEach(v => { try { if (v.preload === 'none') v.preload = 'metadata'; } catch(e){} });
+}
 function vidFor(videoId, slot){
   const key = videoId + ':' + (slot || 0);
   if (_vids[key]) return _vids[key];
   const box = document.getElementById('vidbox');
   const v = document.createElement('video');
-  v.muted = true; v.playsInline = true; v.preload = 'metadata';
+  v.muted = true; v.playsInline = true; v.preload = PLAY_ARMED ? 'metadata' : 'none';
   v._vid = videoId;
   v.src = _blobs[videoId] || SL.src(videoId);   // 이미 받아 둔 blob이 있으면 그것부터
   v.style.display = 'none';
@@ -1501,8 +1514,8 @@ function _pinHidden(v, want){
   _hidePin = { v: v, go: reveal, timer: setTimeout(tick, _PIN_STEP_MS) };
 }
 const vid = () => curVid || document.getElementById('vid');
-// 페이지가 열리면 소스들을 미리 열어 둔다(첫 전환도 매끄럽게).
-// 페이지가 열리면 소스들의 **머리말(metadata)만** 미리 받아 둔다 — 본문은 안 당긴다.
+// 페이지가 열리면 재생기 요소만 만들어 둔다 — **네트워크는 0**(preload none, 관제 061). 머리말은 재생을 누르면
+//   armPlay 가 받기 시작한다. (종전엔 열자마자 머리말을 받았는데 그게 소스당 1.6MB×슬롯 수였다.)
 // ★칸 넘김 슬롯(2·3)도 함께 만든다: 전체 재생은 칸마다 첫 컷을 handoffSlot(2·3)으로
 //   쓰는데 예전엔 0·1만 데워 둬서, 그 재생기가 **그 컷에 가서야 처음 만들어졌다**
 //   (readyState 0 → 열림 대기창 초과 → 그 컷은 정지 그림). 머리말만이라 값이 싸다.
@@ -1708,6 +1721,7 @@ let preSeated = -1;
 // slot0을 주면 **첫 컷만** 그 재생기를 쓴다(전체 재생에서 미리 앉혀둔 것을 그대로 이어받는다).
 // 안 주면 예전 그대로 0·1 번갈아 — 칸별 재생·장면 미리보기는 동작이 안 바뀐다.
 function startSeq(clips, slot0){
+  armPlay();                       // 재생을 누른 순간부터 원본을 받는다(관제 061) — 모든 재생 길이 여기를 지난다
   clearTimeout(seqTimer);
   // 재생을 켜는 순간 꾸미기를 얹는다(자막이 뜨기 전에도 틀·헤드카피가 보이게).
   if (typeof syncPlayDeco === 'function'){ try{ syncPlayDeco(); }catch(e){} }
