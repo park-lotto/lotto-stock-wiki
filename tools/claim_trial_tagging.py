@@ -22,7 +22,7 @@ import time
 
 sys.path[:] = [os.getcwd()] + [p for p in sys.path if os.path.abspath(p or ".") != os.path.dirname(os.path.abspath(__file__))]
 MIX = "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/mix_jobs"
-EXTRA_KEYS = ("appeal_kind", "hook_power", "hook_why", "tempo", "speed_hint")   # 새 지침서가 더 내는 칸(정규화가 버리므로 따로 붙인다)
+EXTRA_KEYS = ("appeal_kind", "hook_type", "hook_why", "is_outro", "moments", "tempo", "speed_hint")   # 새 지침서가 더 내는 칸(정규화가 버리므로 따로 붙인다)
 
 
 def _grab(video, t, out):
@@ -117,8 +117,10 @@ def patch_source_block(ba):
                 add = []
                 if x.get("appeal_kind"):
                     add.append("소구:%s" % x["appeal_kind"])
-                if x.get("hook_power") not in (None, ""):
-                    add.append("훅%s(%s)" % (x["hook_power"], (x.get("hook_why") or "")[:12]))
+                if x.get("hook_type"):
+                    add.append("훅:%s(%s)" % (x["hook_type"], (x.get("hook_why") or "")[:12]))
+                if x.get("is_outro") in (True, "true", "True"):
+                    add.append("뒷컷")
                 if x.get("tempo"):
                     add.append("속도:%s/%s배" % (x["tempo"], x.get("speed_hint") or "1.0"))
                 if add:
@@ -192,6 +194,7 @@ def main():
     ap.add_argument("job")
     ap.add_argument("--mode", choices=("live", "old", "new"), required=True)
     ap.add_argument("--guide", default="")
+    ap.add_argument("--extract", default="", help="new 모드: 전에 저장한 extract_new.json 을 다시 써서 재태깅을 건너뛴다")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -205,17 +208,26 @@ def main():
         sys.exit("extract 없음")
     note = {"mode": a.mode}
     if a.mode == "new":
-        guide = open(a.guide, encoding="utf-8").read()
-        ext2 = {}
-        for vid, ex in sorted((job.get("extract") or {}).items()):
-            if not isinstance(ex, dict):
-                continue
-            ex2, why = retag_source(a.job, vid, ex, guide, a.out)
-            print("재태깅", vid, why, flush=True)
-            note.setdefault("retag", {})[vid] = why
-            ext2[vid] = ex2
+        if a.extract:
+            ext2 = json.load(open(a.extract, encoding="utf-8"))
+            note["retag"] = "reused:%s" % a.extract
+            print("재태깅 생략 — 저장본 재사용", a.extract, flush=True)
+        else:
+            guide = open(a.guide, encoding="utf-8").read()
+            ext2 = {}
+            for vid, ex in sorted((job.get("extract") or {}).items()):
+                if not isinstance(ex, dict):
+                    continue
+                ex2, why = retag_source(a.job, vid, ex, guide, a.out)
+                print("재태깅", vid, why, flush=True)
+                note.setdefault("retag", {})[vid] = why
+                ext2[vid] = ex2
+        with open(os.path.join(a.out, "extract_new.json"), "w", encoding="utf-8") as f:
+            json.dump(ext2, f, ensure_ascii=False)
         job = dict(job, extract=ext2)
-        patch_source_block(ba)
+        # ★패치본 패키지(/tmp/patch)로 돌리면 _source_block 이 이미 훅·속도·뒷컷을 싣는다 — 그땐 덧붙이지 않는다
+        if "훅:" not in ba._source_block.__code__.co_consts.__repr__():
+            patch_source_block(ba)
     # 작가에게 들어간 재료 블록도 남긴다(무엇이 달라졌나를 눈으로 보려고)
     srcs = ba.sources_from_extract(job.get("extract") or {})
     seg_index = ba._seg_index(srcs)
