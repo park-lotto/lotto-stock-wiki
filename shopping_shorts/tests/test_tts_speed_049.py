@@ -104,3 +104,13 @@ def test_오독이_같으면_짧은_후보를_고른다(tmp_path, monkeypatch):
     out = tmp_path / "b.mp3"
     tts.synthesize_best("t", str(out), n=2, base_seed=1, ranker=lambda p, t: 0)
     assert out.read_bytes().endswith(b"_1.mp3")
+
+
+def test_성우저장에_속도가_안오면_성우_기본값(tmp_path):
+    """2026-09-29 20:09 서버 내부 호출이 속도 없이 미나를 저장 → 사장님 기억이 1.0으로 덮였다."""
+    from shopping_shorts import app
+    s = Store(tmp_path / "t.db")
+    snap = app._voice_snapshot(s, {"voice_id": MINA})
+    assert snap["speed"] == 1.35 and snap["silence_trim"] == "mid"
+    assert app._voice_snapshot(s, {"voice_id": "tc_x"})["speed"] == 1.25
+    assert app._voice_snapshot(s, {"voice_id": MINA, "speed": 1.1})["speed"] == 1.1     # 보낸 값은 그대로

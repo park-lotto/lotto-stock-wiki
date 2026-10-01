@@ -9326,8 +9326,11 @@ def _voice_snapshot(store, body):
         "preset_id": preset_id,
         "voice_id": body.get("voice_id") or (p or {}).get("base_voice_id"),
         "settings": body.get("settings") or (p or {}).get("voice_settings"),
-        "speed": body.get("speed", 1.0),
-        "silence_trim": body.get("silence_trim", "off"),
+        # ★속도·무음이 안 오면 **그 성우 기본값**(2026-10-01 관제 049). 종전 1.0·"off"는 "값 없음"이 곧 "가장 느림"이
+        #   되어, 2026-09-29 20:09 서버 내부 호출(127.0.0.1)이 속도 없이 미나를 저장하자 사장님 기억이 1.0으로 덮였다.
+        "speed": body.get("speed") or voice_presets.default_speed(
+            body.get("voice_id") or (p or {}).get("base_voice_id")),
+        "silence_trim": body.get("silence_trim") or (p or {}).get("default_silence_trim") or "mid",
         "pace_mode": body.get("pace_mode", True),
         "naturalize_profile": naturalize_profile,
         "model_id": (p or {}).get("model_id") or "eleven_v3",
