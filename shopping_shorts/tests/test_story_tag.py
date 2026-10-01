@@ -40,8 +40,11 @@ def test_assemble_uses_story_groups_without_ai_grouping(monkeypatch):
         raise AssertionError("스토리가 있는데 build_groups(AI)를 불렀다")
     monkeypatch.setattr(ba, "build_groups", boom)
     srcs = [{"video_id": "s0", "full_text": "씨앗 원문 " * 20, "source_brief": {"product": "쿠커"}, "segments": [{"seg_id": "s0-0", "start": 0, "end": 3, "scene_desc": "씨앗"}]},
-            {"video_id": "s1", "story": [{"text": "물만 쏙", "cuts": ["s1-2"], "kind": "장점", "point": "배수"}],
-             "segments": [{"seg_id": "s1-2", "start": 4, "end": 7, "scene_desc": "물만 빠짐"}]}]
+            {"video_id": "s1", "story": [{"text": "물만 쏙", "cuts": ["s1-2"], "kind": "장점", "point": "배수"},
+                                         {"text": "렌지에 쏙", "cuts": ["s1-1"], "kind": "기능", "point": "조리"},
+                                         {"text": "구멍에 딱", "cuts": ["s1-0"], "kind": "기능", "point": "계량"}],
+             "segments": [{"seg_id": "s1-0", "start": 0, "end": 2, "scene_desc": "계량"}, {"seg_id": "s1-1", "start": 2, "end": 4, "scene_desc": "렌지"},
+                          {"seg_id": "s1-2", "start": 4, "end": 7, "scene_desc": "물만 빠짐"}]}]
     seen = {}
 
     def fake_write(groups_out, spine, seg_index, *a, **k):
@@ -55,7 +58,9 @@ def test_assemble_uses_story_groups_without_ai_grouping(monkeypatch):
     assert bs[1]["segs"] == ["s1-2"]
 
 
-def test_has_stories_requires_all_non_seed_sources():
-    assert st.has_stories([{"story": [{"text": "a", "cuts": ["x"]}]}])
-    assert not st.has_stories([{"story": [{"text": "a", "cuts": ["x"]}]}, {"story": []}])
-    assert not st.has_stories([])
+def test_has_stories_majority_and_min_lines():
+    L = {"text": "a", "cuts": ["x"]}
+    assert st.has_stories([{"story": [L, L, L]}])
+    assert st.has_stories([{"story": [L, L, L]}, {"story": []}])            # 절반 이상이면 된다(한 편 빈 응답)
+    assert not st.has_stories([{"story": [L, L, L]}, {"story": []}, {"story": []}])
+    assert not st.has_stories([{"story": [L]}]) and not st.has_stories([])

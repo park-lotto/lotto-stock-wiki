@@ -93,22 +93,33 @@ def make_story(product, segments, call=None, note=None):
         return []
     prompt = PROMPT % (MAX_LINES, product or "(제품명 미상 — 컷에서 읽어라)", "\n".join(rows))
     seg_ids = {s.get("seg_id") for s in segments if isinstance(s, dict)}
-    try:
-        out = (call or (lambda p: _sg._call_json(p, SCHEMA, note=note, vertex=False)))(prompt) or {}
-    except Exception as e:      # noqa: BLE001 — 스토리 실패가 추출을 막으면 안 된다(이유는 note 에)
-        if note is not None:
-            note["story_reason"] = "호출 실패 %s" % repr(e)[:80]
-        return []
-    lines = normalize(out.get("lines") if isinstance(out, dict) else [], seg_ids)
+    fn = call or (lambda p: _sg._call_json(p, SCHEMA, note=note, vertex=False))
+    lines = []
+    for _try in range(2):                              # 빈 응답은 한 번 더(실측: 8편 중 1편 빈 응답)
+        try:
+            out = fn(prompt) or {}
+        except Exception as e:      # noqa: BLE001 — 스토리 실패가 추출을 막으면 안 된다(이유는 note 에)
+            if note is not None:
+                note["story_reason"] = "호출 실패 %s" % repr(e)[:80]
+            return []
+        lines = normalize(out.get("lines") if isinstance(out, dict) else [], seg_ids)
+        if lines:
+            break
     if not lines and note is not None:
         note["story_reason"] = "빈 응답"
     return lines
 
 
 def has_stories(sources):
-    """비씨앗 소스 전부에 스토리가 있나 — 하나라도 없으면 종전 경로(섞어 쓰면 묶음이 반쪽이 된다)."""
+    """스토리를 특징 묶음으로 쓸 만큼 있나 — 비씨앗 소스의 **절반 이상**에 스토리가 있고 줄이 3개 이상.
+    (처음엔 '전부'로 했더니 한 편이 빈 응답이면 통째로 옛 경로로 떨어졌다 — 2026-10-01 파스타 8편 중 1편 빈 응답.)
+    스토리 없는 소스의 컷은 assign_cuts 채우기에서 그대로 쓰인다."""
     srcs = [s for s in (sources or []) if isinstance(s, dict)]
-    return bool(srcs) and all((s.get("story") or []) for s in srcs)
+    if not srcs:
+        return False
+    with_story = [s for s in srcs if (s.get("story") or [])]
+    n_lines = sum(len(s.get("story") or []) for s in with_story)
+    return len(with_story) * 2 >= len(srcs) and n_lines >= 3
 
 
 def feats_from_stories(sources, seg_index):
