@@ -493,6 +493,19 @@ def _merge_too_short(raw_segments, min_clip=None):
     return segs
 
 
+def _story_for(brief, segments, note=None):
+    """1단계 마무리에서 스토리 한 번(호출 1회). 실패·빈 응답은 [] 로 두고 stderr 에 남긴다(조용히 숨기지 않는다)."""
+    from shopping_shorts import story_tag
+    import sys as _sys
+    n = {}
+    lines = story_tag.make_story((brief or {}).get("product") if isinstance(brief, dict) else "", segments, note=n)
+    if not lines:
+        print("script_extract: 스토리 없음 — %s" % (n.get("story_reason") or "?"), file=_sys.stderr)
+    if note is not None:
+        note.update(n)
+    return lines
+
+
 def _assign_seg_ids(video_id, raw_segments, motion_map=None):
     """모델이 준 세그먼트 목록에 seg_id 부여 + 숫자 필드 float 캐스팅(순수함수).
     motion_map({seg_id: level|None})이 오면 그 값을 motion_level로 싣는다(P2, 2026-07-29)."""
@@ -799,12 +812,16 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
             # 소스 단위 특장점: 모델의 최상위 요약을 우선하고, 없으면 세그별 집계로 폴백.
             # 무자막 영상(full_text 0자)이 대본 생성에서 통째로 빠지던 것을 막는 재료다.
             benefits = _norm_benefits(data.get("product_benefits")) or _collect_benefits(segments)
+            _brief = _norm_brief(data.get("source_brief"))
             result = {
                 "segments": segments,
                 "full_text": data.get("full_text", ""),
                 "product_benefits": benefits,
                 # 영상 단위 요약(2026-08-16). 없으면 {} — 읽는 쪽이 빈 dict를 견딘다.
-                "source_brief": _norm_brief(data.get("source_brief")),
+                "source_brief": _brief,
+                # ★스토리(2026-10-01 사장님 "태깅부터 대본화"): 순서 있는 대본 문장 + 컷. 2단계가 특징 묶음 자리에 그대로 쓴다.
+                #   실패하면 [] — 2단계는 종전 경로(note 에 이유). 판단은 story_tag 한 곳.
+                "story": _story_for(_brief, segments),
             }
             # ★태깅 QA(2026-08-01). 지금까진 스키마만 통과하면 무조건 채택했다 — 프롬프트의
             #   지침(0초 훅·받아쓰기·shot_role·change)이 지켜졌는지 아무도 안 봤다. 슬롯 기반

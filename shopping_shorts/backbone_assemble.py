@@ -1264,7 +1264,15 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
         backbone_vid = max(vis_sources, key=lambda x: len(x.get("segments") or [])).get("video_id")
         note["backbone_moved"] = backbone_vid      # 씨앗이 백본이었으면 재료 중 하나로 옮긴다
     seg_index = _seg_index(vis_sources)
-    groups_out = build_groups(vis_sources, backbone_vid, note=note)
+    # ★스토리(2026-10-01 사장님 "태깅부터 대본화"): 비씨앗 소스 전부에 1단계 스토리가 있으면 그것이 특징 묶음이다 — AI 묶기 호출 없음,
+    #   문장(말맛)과 컷이 태깅 때 이미 짝. 하나라도 없으면 종전 build_groups(note 에 이유 — 조용한 분기 아님).
+    from shopping_shorts import story_tag as _st
+    if _st.has_stories(vis_sources):
+        groups_out = _st.groups_from_stories(vis_sources, seg_index, max_groups=MAX_GROUPS)
+        note["groups_from"] = "story"
+    else:
+        note["groups_from"] = "build_groups(스토리 없는 소스 %d)" % sum(1 for s_ in vis_sources if not (s_.get("story") or []))
+        groups_out = build_groups(vis_sources, backbone_vid, note=note)
     # ★모델 혼잡(503)은 잠깐 뒤 다시 하면 된다 — 전엔 0.7초 만에 포기해 대본 0개(09-18 실측 42건 중 2건 전부 503).
     #   혼잡일 때만 다시 한다. 다른 이유로 비면(재료 문제) 바로 실패로 둔다.
     for wait in (4, 10):

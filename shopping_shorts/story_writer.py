@@ -1009,7 +1009,13 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         product = ((seed_src.get("source_brief") or {}).get("product") or "").strip()
     seg_index = ba._seg_index(vis)
     note = {}
-    feats_cands = extract_feats(vis, product, note=note, seed_text=seed_text)
+    from shopping_shorts import story_tag as _st
+    if _st.has_stories(vis):                      # 2026-10-01: 스토리가 특징 후보다(AI 특징 뽑기 호출 없음). 씨앗은 vis 에서 이미 빠졌다.
+        feats_cands = _st.feats_from_stories(vis, seg_index)
+        note["feats_from"] = "story"
+    else:
+        note["feats_from"] = "extract_feats"
+        feats_cands = extract_feats(vis, product, note=note, seed_text=seed_text)
     if not feats_cands:
         return [], "특징을 못 뽑음(%s)" % (note.get("reason") or "빈 응답")
     hook_slots = note.get("hook_slots") or {}
