@@ -44,3 +44,10 @@
 {"ts": "2026-10-01T02:44:51.090751+00:00", "event": "story_started", "id": "G003", "title": "G3 대조·판정"}
 {"ts": "2026-10-01T02:44:51.205398+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "시트 3장(live/old/new) 사람 판정: live 9/11, old 8/8, new1 5/7, new2 6/6; 바탕화면 태깅지침시험_29109deff2a9_*.jpg", "verify_cmd": "py tools/claim_trial_tagging_sheet.py %TEMP%/tagtrial 29109deff2a9", "verify_evidence": "new → sheet_29109deff2a9_new.jpg | 줄 6"}
 {"ts": "2026-10-01T07:35:03.522923+00:00", "event": "plan_created", "brief": "효과음 탭(밀도·크기·팩·칸별) — 관제 059", "count": 4}
+{"ts": "2026-10-01T15:18:46.761404+00:00", "event": "plan_created", "brief": "관제수리(카드069)", "count": 3}
+{"ts": "2026-10-01T15:18:46.917009+00:00", "event": "story_started", "id": "G001", "title": "검사종류"}
+{"ts": "2026-10-01T15:33:34.715120+00:00", "event": "checkpoint", "id": "G001", "status": "complete", "evidence": "test_control_repair 9 passed; 실제 보드 --all --no-write: 수동 25장 목록·영상 4장 서버 비교 통과(2작업)·url/api 분기는 fake sh/fetch 테스트로 완료/회귀/서버미반영 3갈래 확인", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-10-01T15:33:34.896479+00:00", "event": "story_started", "id": "G002", "title": "관문심볼판정"}
+{"ts": "2026-10-01T15:33:35.052788+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "어제 실제 diff(5696da7a2→7c5fd9c18) app_touches_video → False '모듈 상수 _AUTH_ALLOW,_PRICING_TMPL,_REFUND_BODY'; 반대증거 RENDER_FPS_X 상수 → True", "verify_cmd": "", "verify_evidence": ""}
+{"ts": "2026-10-01T15:33:35.233353+00:00", "event": "story_started", "id": "G003", "title": "기존실패분류"}
+{"ts": "2026-10-01T15:33:56.005238+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "단위 2갈래 + 실제 재실행", "verify_cmd": "py -m pytest shopping_shorts/tests/test_control_repair.py -q", "verify_evidence": "9 passed, 1 warning in 1.70s; _rerun_on_main 실제 실행 104초로 test_auto_deploy_pending을 origin/main 기존 실패로 분류"}
