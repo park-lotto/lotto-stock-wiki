@@ -33,11 +33,8 @@
       //   클래스·속성만으로는 항상 진다(2026-09-24 실측: 규칙 둘 다 걸렸는데 숨김이 이겼다).
       // ★원본 모드(plain)에서는 옛 헤드카피·자막 칸을 다시 보여 준다 — 그 모드는 새 편집기가 글자를 안 그리고
       //   렌더가 옛 경로를 타서, 이 칸들이 실제로 결과물에 반영되는 자리다(2026-09-24).
-      style.textContent='.panel[data-step="3"].scene-style-inline-active>:not(h3):not(#sceneStyleInline){display:none!important}'
-                // ★옛 화면은 더 이상 꺼내지 않는다(2026-09-24 사장님: "구버전으로 이동하게 한 거야?").
-        //   헤드카피·자막은 새 편집기 오른쪽 '문구/텍스트' 안에 같은 카드 모양으로 들어갔다.
-        //   이 규칙은 값을 읽고 쓰기 위해 옛 칸을 **화면 밖에** 살려 두는 용도다(display:none이면 값이 안 읽힌다).
-        +'.panel[data-step="3"].scene-style-inline-active.scene-style-plain>#legacyDecoWrap{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important}';document.head.append(style);}
+      style.textContent='.panel[data-step="3"].scene-style-inline-active>:not(h3):not(#sceneStyleInline){display:none!important}';   // 옛 피팅룸 HTML은 10-01 삭제(관제 058 C1) — 이 규칙은 카나리 섹션·상태 span만 가린다
+      document.head.append(style);}
     inlineShell=document.createElement('section');inlineShell.id='sceneStyleInline';inlineShell.style.cssText='margin-top:10px';
     const note=document.createElement('div');note.id='sceneStyleInlineStatus';note.setAttribute('role','status');note.style.cssText='margin:0 0 8px;color:#bdeee5;font-size:13px';
     frame=document.createElement('iframe');frame.title='문구와 효과 편집기';frame.style.cssText='width:100%;height:calc(100vh - 200px);min-height:720px;border:1px solid #35505b;border-radius:12px;background:#071118';
@@ -237,6 +234,7 @@
     let fresh=false;
     if(!STATE.captionStyle||!Object.keys(STATE.captionStyle).length){STATE.captionStyle={...SIMPLE_WHITE_CAP};fresh=true;}
     if(!STATE.headcopy||!Object.keys(STATE.headcopy).length){STATE.headcopy={...SIMPLE_WHITE_HC};}
+    if(STATE.deco&&typeof STATE.deco==='object'&&!('watermark' in STATE.deco))STATE.deco.watermark=null;   // 옛 applyWatermark가 남기던 모양 그대로
     if(!fresh)return;
     try{
       const d=await (await fetch('/api/mix/status/'+encodeURIComponent(job))).json();
@@ -327,25 +325,7 @@
       status().textContent=error.message;}
   };
   addEventListener('message',async event=>{
-    if(event.data?.type==='scene-style-legacy'){
-      // 새 편집기 카드에서 바꾼 값을 옛 칸에 그대로 넣고, 옛 저장 흐름(hcTouched/capTouched)을 깨운다.
-      const el=document.getElementById(event.data.id);if(!el)return;
-      if(el.type==='checkbox')el.checked=!!event.data.value;else el.value=event.data.value;
-      el.dispatchEvent(new Event(el.type==='checkbox'||el.tagName==='SELECT'?'change':'input',{bubbles:true}));
-      return;
-    }
-    if(event.data?.type==='scene-style-template'){
-      const panel=stepPanel();if(panel)panel.classList.toggle('scene-style-plain',!!event.data.plain);
-      // 헤드카피 칸은 옛 '문구' 탭 안에 있다 — 원본 모드로 들어오면 그 탭을 열어 준다(안 열면 빈 화면으로 보인다).
-      if(event.data.plain){
-        // 편집기 카드에 지금 값을 채워 준다(빈칸으로 열리지 않게).
-        const ids=['hcText','hcSize','hcY','hcColor','capColor','capOutline','capBox'];
-        const values={};
-        for(const id of ids){const el=document.getElementById(id);if(!el)continue;values[id]=el.type==='checkbox'?el.checked:el.value;}
-        frame.contentWindow?.postMessage({type:'scene-style-legacy-values',values},location.origin);
-      }
-      return;
-    }
+    // scene-style-legacy(옛 칸 다리)는 2026-10-01 제거(관제 058 C1) — 옛 피팅룸 칸이 더는 없다
     if(!frame||event.source!==frame.contentWindow||event.origin!==location.origin)return;
     if(event.data?.type==='scene-style-ready')frame.contentWindow.postMessage({type:'scene-style-context',...packet},location.origin);
     // 09-22 편집기의 [이 장면을 썸네일 후보로]: 7단계를 이미 열어 봤으면 후보 목록을 바로 다시 그리고, [썸네일 단계로 이동]은 저장하고 닫은 뒤 7단계로 보낸다.
