@@ -21,7 +21,8 @@ import time
 DB = "file:/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/reference.db?mode=ro"
 MIX = "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/mix_jobs"
 BATCH = 12
-SPLIT_MAX = 3.0        # 컷 없는 긴 구간은 3초 이하로(대본 한 줄 3~5초 — 6.8초 한 태그면 동작이 뭉개졌다)
+SPLIT_MAX = 7.0        # 컷 없는 긴 구간은 7초 이하로. 3초로 자르니 컷 중앙 1.1초가 돼 문장(3.7~5.8초)을 한 컷으로 못 채우고
+                       # 전부 '다른 소스 조각 모으기'가 됐다(10-01 두피 빗). 긴 컷은 태그의 moments 로 "몇 초에 무엇"을 적는다.
 
 CLAIM_PROMPT = """너는 쇼핑 쇼츠 편집자다. 이미지는 한 제품을 찍은 소스 영상들의 **컷 대표 프레임 격자**다
 (칸 왼쪽 위 숫자 = 컷 번호, 예 "12.0s"는 12번 컷). 아래 자막/말은 참고용이다 — 화면이 우선이다.
@@ -41,7 +42,8 @@ CLAIM_PROMPT = """너는 쇼핑 쇼츠 편집자다. 이미지는 한 제품을 
 TAG_PROMPT = """아래 이미지는 컷 하나당 한 장이고, 각 이미지는 그 컷의 시작→끝 프레임을 왼쪽부터 이어붙인 띠다.
 띠 왼쪽 위의 # 번호가 컷 번호다(세지 말고 읽어라).
 컷마다: scene_desc(무엇이 보이고 어떻게 바뀌나, 40자 안팎), label(이 컷이 하는 일 12자 이내),
-claims(그 컷이 **화면으로 증명하는** 주장 번호 — 여러 개 가능, 없으면 []).
+claims(그 컷이 **화면으로 증명하는** 주장 번호 — 여러 개 가능, 없으면 []),
+moments(컷이 3초보다 길면 "0~2초 뚜껑 염, 2~5초 내용물 부음"처럼 몇 초에 무엇이 보이는지. 3초 이하면 "").
 ★띠 안에서 실제로 보이는 것만. 문제 장면(쓰기 전 불편)은 문제 주장 번호를 단다.
 도입·인물·포장·링크 안내처럼 어떤 주장도 보여주지 못하면 [].
 
@@ -51,7 +53,7 @@ claims(그 컷이 **화면으로 증명하는** 주장 번호 — 여러 개 가
 [이번 컷]
 %s
 
-출력 JSON만: {"tags":[{"no":1,"scene_desc":"...","label":"...","claims":["C1"]}]} — 컷을 빠짐없이.
+출력 JSON만: {"tags":[{"no":1,"scene_desc":"...","label":"...","claims":["C1"],"moments":""}]} — 컷을 빠짐없이.
 """
 
 LINE_PROMPT = """아래는 한 쇼츠 대본의 줄 목록(자막 단위로 쪼개져 있다)과, 이 제품 재료의 주장 목록·컷 목록이다.
@@ -165,7 +167,8 @@ def run(jid):
                 pass
     for c in cuts:
         t = tags.get(c["no"]) or {}
-        c.update(scene_desc=t.get("scene_desc", ""), label=t.get("label", ""), claims=t.get("claims") or [])
+        c.update(scene_desc=t.get("scene_desc", ""), label=t.get("label", ""), claims=t.get("claims") or [],
+                 moments=t.get("moments") or "")
     # ③ 기존 대본 줄
     beats = []
     for b in plan.get("beats") or []:
@@ -204,7 +207,9 @@ JUDGE_PROMPT = """너는 쇼핑 쇼츠 편집 검수자다. 문장마다 이미�
 
 def pick_scene(sent, beats, cuts):
     """문장 → (고른 컷 번호 목록, 해결 단계, 필요 초). 판단 순서 = 꼬다리 규칙:
-    1한컷 → 2같은소스 다음 컷 잇기(같은 주장일 때만) → 3고르게 늦추기(1.2배 이내) → 4다른 소스 같은 주장 합치기 → 5부족"""
+    1한컷 → 2같은소스 다음 컷 잇기(같은 주장일 때만, 모자라면 1.2배 늦추기까지 허용) → 3한컷 고르게 늦추기(1.2배 이내)
+    → 4다른 소스 같은 주장 합치기(마지막 수단) → 5부족
+    (10-01: 2·3을 합쳐서 '같은 소스 잇기+늦추기'가 다른 소스 조각 모으기보다 반드시 앞서게 했다)"""
     need = sum(beats[i]["need"] for i in sent.get("lines") or [] if isinstance(i, int) and 0 <= i < len(beats))
     want = set(sent.get("claims") or [])
     direct = {int(x) for x in (sent.get("cuts") or []) if str(x).lstrip("#").isdigit() for x in [str(x).lstrip("#")]}
@@ -231,6 +236,8 @@ def pick_scene(sent, beats, cuts):
             tot += L(cuts[j])
         if tot >= need:
             return [x["no"] for x in chain], "2이어붙이기", need
+        if len(chain) > 1 and tot * SLOW_MAX >= need:
+            return [x["no"] for x in chain], "2이어붙이기+늦추기", need
     if L(best) * SLOW_MAX >= need:
         return [best["no"]], "3늦추기", need
     chain, tot = [], 0.0
