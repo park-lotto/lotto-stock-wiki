@@ -877,6 +877,28 @@ def _video_seconds(path):
         return None
 
 
+def mark_auto_exclude(extracts, job):
+    """씨앗(레퍼런스) 영상 표식 — **영상 소스에는 넣되 자동 배치에서만 뺀다**(2026-09-30 사장님).
+    종전(09-21)엔 화면이 씨앗의 useFootage를 꺼서 job에서 통째로 빠졌다 → 고객이 "8개 중 7개만 온다"(이연정님).
+    이제 화면은 씨앗을 job에 그대로 보내고 script_structure.no_auto_idx(urls 인덱스)만 적는다.
+    판단의 주인은 이 표식 하나: 소스 dict의 auto_exclude=True. 자동 배치 재고(edit_plan.non_edge_segs·
+    _build_inventory 프롬프트·backbone_assemble._seg_index)가 이걸 보고 거르고, 사람이 고르는 화면(scene_lab의
+    /api/mix/segments)은 extract 전체를 그대로 본다."""
+    ss = (job or {}).get("script_structure") or {}
+    idx = ss.get("no_auto_idx") if isinstance(ss, dict) else None
+    if not isinstance(idx, list):
+        return extracts
+    for i in idx:
+        try:
+            r = extracts.get(f"s{int(i)}")
+        except (TypeError, ValueError):
+            continue
+        if isinstance(r, dict):
+            r["auto_exclude"] = True
+            print(f"[extract] s{int(i)} 씨앗 — 자동 배치 제외(영상 소스엔 유지)", flush=True)
+    return extracts
+
+
 def _extract_coverage(r, path):
     """추출 구간이 영상의 몇 %를 덮었나. 판정 불가면 None.
 
@@ -1346,6 +1368,7 @@ def run_mix_job(job_id, db_path, work_root):
             from shopping_shorts import keyctx as _kc
             with _kc.pool(max_workers=max(1, len(video_paths))) as ex:
                 extracts = dict(ex.map(_extract, video_paths.items()))
+            mark_auto_exclude(extracts, job)
             store.update_mix_job(job_id, extract=extracts)
 
             # 3~4) 통합 EDL 생성 + 비트별 TTS (video_type=None → 자동 유형 감지)

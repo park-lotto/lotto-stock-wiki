@@ -20559,6 +20559,11 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     script_structure = body.get("script_structure") or None
     if not isinstance(script_structure, dict):
         script_structure = None   # 잘못된 형식은 조용히 버린다(보관 전용이라 무해)
+    # ★씨앗 자동배치 제외 인덱스(2026-09-30): urls 범위 안 정수만 남긴다 — 표식은 mix_pipeline.mark_auto_exclude가 단다.
+    if script_structure and "no_auto_idx" in script_structure:
+        _raw = script_structure.get("no_auto_idx")
+        script_structure["no_auto_idx"] = sorted({int(i) for i in (_raw if isinstance(_raw, list) else [])
+                                                  if str(i).lstrip("-").isdigit() and 0 <= int(i) < len(urls)})
     # ★3단계 상속 스위치(2026-09-04): 켜져 있으면 잡에 표식을 남겨 mix_pipeline이 2단계 출처 장면을 그대로 잇는다
     #   (Gemini 0회·추측 층 없음). 기본 꺼짐 — 고객 화면 불변.
     if _setting_gate(Store(DB_PATH), "edl_inherit_enabled", getattr(request.state, "customer_id", 0)):
