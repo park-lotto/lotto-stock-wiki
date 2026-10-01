@@ -26,3 +26,4 @@
 - 2026-10-01 19:10 영향 없음: shopping_shorts/screen_clips_runner.js — planClips 안의 늦추기 상한 숫자만 서버 값(maxSlowmo)으로 바뀌었고 컷 계획 규칙·출력 모양은 그대로
 - 2026-10-01 19:11 영향 없음: shopping_shorts/static/scene_lab.html — planClips 호출 인자·반환 모양 불변, DATA.max_slowmo 는 서버가 주입(scene_lab 코드 변경 없음)
 - 2026-10-01 19:11 영향 없음: shopping_shorts/static/scene_timeline.js — 상한 숫자 출처만 바뀜, 타임라인 계산 불변
+- 2026-10-01 19:11 영향 없음: beatKeyAt 소비처 scene_lab.html — beatKeyAt 는 이번 diff 에서 안 바뀜(같은 파일 다른 함수 maxSlowmo 추가)
