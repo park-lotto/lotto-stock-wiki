@@ -1,10 +1,10 @@
 # 관제 보드 (자동 생성 — 손으로 고치지 마라. `py tools/control.py board`)
 
-갱신: 2026-10-01 16:04 · 카드 56장
+갱신: 2026-10-01 16:08 · 카드 56장
 
 상태 흐름: 등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료  (예외: 승인대기 · 회귀)
 
-## 등록 (18)
+## 등록 (17)
 
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
@@ -22,15 +22,15 @@
 | [017](cards/017-파이썬_예비_컷_계획_축소_—_화면_데이터_.md) | 파이썬 예비 컷 계획 축소 — 화면 데이터 없는 옛 job 전용 + 경보 (#1) | - | - | shopping_shorts/static/scene_play.js:planClips | FALLBACK 경보 건수 7일 0 · ownership 예외(video_assemble 예비 계획) 삭제 | 2026-10-01 00:39 쉬운 설명: 화면 데이터 없는 옛 작업만 예비 계산을 쓰게 — 화면≠완성본의  |
 | [018](cards/018-캡컷_이동(pan)·기본_확대_반영_+_꾸미.md) | 캡컷 이동(pan)·기본 확대 반영 + 꾸미기 프레임 구도를 frame_vf 로 (#5) | - | - | shopping_shorts/video_assemble.py:frame_vf | 확대·이동 준 칸의 캡컷 위치 = 완성본(좌표계 실측) · 꾸미기 배경 프레임 구도 = 완성본 | 2026-10-01 00:39 쉬운 설명: 캡컷에서 확대·이동한 컷 위치가 완성본과 같게 |
 | [019](cards/019-캡컷_자막_위치·폰트_—_cap_xy_cap.md) | 캡컷 자막 위치·폰트 — cap_xy/cap_pos·폰트 동봉 (#10) | - | - | shopping_shorts/video_assemble.py:_beat_cap_style | 캡컷 초안 자막 위치 = 완성본(좌표계 실측), 폰트 동봉 | 2026-10-01 00:39 쉬운 설명: 캡컷 자막 위치·폰트가 완성본과 같게 |
-| [020](cards/020-컷_규칙_상수_한_곳_+_MAX_SLOWMO.md) | 컷 규칙 상수 한 곳 + MAX_SLOWMO 서버 주입 (#30·#4) | - | - | shopping_shorts/config.py(상수) → scene_play.js DATA 주입 | MAX_SHOT/MIN_CLIP/CUT_MIN/MAX_SLOWMO 정의 1곳, ownership 예외(edit_plan·config·scene_play) 삭제 | 2026-10-01 00:40 쉬운 설명: 컷 길이 상수(최대 2.2초 등)를 한 곳에서 정하게 |
 | [021](cards/021-고질병_선별_—_find_work.py_로_.md) | 고질병 선별 — find_work.py 로 증상어 재발 횟수 세어 재발 순 카드화 | - | - | tools/find_work.py | 후보 9개(자막 먼저 뜸·칸 길이 올림·서명 재과금·인스타 세션·beat_idx·데코레이터 밀림·검정 프레임·미리보기만 바뀜·정지 컷) 각각 '지금도 재발하나' 실측 → 카드 또는 완료 표시 | 2026-10-01 00:40 쉬운 설명: 자꾸 재발하는 문제(자막 먼저 뜸 등)를 재발 횟수 순으로 정리해 |
 | [022](cards/022-옛_규칙_정리_—_도구가_강제하게_된_CLA.md) | 옛 규칙 정리 — 도구가 강제하게 된 CLAUDE.md 문장 삭제·요약 (설계 §5-7) | - | - | CLAUDE.md | CLAUDE.md 길이 감소, 삭제한 문장마다 대신 강제하는 도구 이름이 핸드오프에 적힘 | 2026-10-01 00:40 쉬운 설명: 도구가 대신 막게 된 규칙 문장을 CLAUDE.md 에서 정리 |
 | [042](cards/042-오류_자동감지_→_회원_안내_쪽지_+_클로드.md) | 오류 자동감지 → 회원 안내 쪽지 + 클로드 자동진단 보고(수리 배포는 사장님 승인) | - | - | shopping_shorts/app.py:ops_alert(설계 중 확정) | 같은 오류 반복 회원 발생 시 N분 내 회원 쪽지 자동 발송 + 사장님께 원인 진단 쪽지 도착(라이브 실측 1건) | 2026-09-30 01:04 등록 |
 
-## 분배 (8)
+## 분배 (9)
 
 | 번호 | 제목 | 분배 | 승인 | 판단 주인 | 됐다의 기준 | 최근 |
 |---|---|---|---|---|---|---|
+| [020](cards/020-컷_규칙_상수_한_곳_+_MAX_SLOWMO.md) | 컷 규칙 상수 한 곳 + MAX_SLOWMO 서버 주입 (#30·#4) | 주장번호시험 | - | shopping_shorts/config.py(상수) → scene_play.js DATA 주입 | MAX_SHOT/MIN_CLIP/CUT_MIN/MAX_SLOWMO 정의 1곳, ownership 예외(edit_plan·config·scene_play) 삭제 | 2026-10-01 16:08 분배 → 주장번호시험 |
 | [026](cards/026-TopView_Higgsfield_비교_HT.md) | TopView Higgsfield 비교 HTML | topview-higgsfield-html | - | Codex:HTML 보고서 제작 | 비교 HTML 작성·검증·배포 | 2026-09-29 11:58 분배 → topview-higgsfield-html |
 | [027](cards/027-Higgsfield_API_내부_시험_생성.md) | Higgsfield API 내부 시험 생성 | higgsfield-api-pilot | 2026-09-29 14:09 · 사장님 | Codex | 관리자 전용 이미지→영상 시험 화면, 서버측 API 키, 예상 포인트, 성공 차감·실패 환불, 테스트 통과 | 2026-09-29 14:09 승인: 사장님 |
 | [028](cards/028-신규_회원_시작_안내_공개_페이지_start.md) | 신규 회원 시작 안내 공개 페이지 /start_guide.html | 시작안내페이지 | 2026-09-29 13:46 · 사장님 구두 2026-09-29 '서버에 있어야 계속 쓸 수 있는 거 아닌가' | shopping_shorts/app.py:_AUTH_ALLOW | 비로그인 curl 200, 링크 클릭 동작, 라이브 주소를 사장님이 카톡 전송 | 2026-09-29 13:46 승인: 사장님 구두 2026-09-29 '서버에 있어야 계속 쓸 수 있는 거  |
