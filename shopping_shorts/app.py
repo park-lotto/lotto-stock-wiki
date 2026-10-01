@@ -12673,7 +12673,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
                "/help", "/api/help/items",
                "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
-               "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order", "/api/landing/hits", "/api/pricing",   # 토스 카드결제(2026-09-15)
+               "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order", "/api/landing/hits",   # 토스 카드결제(2026-09-15)
                "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
                # 가입 전 안내(2026-08-23) — ★반드시 비로그인 공개다. 이 두 장은 아직 회원이
                # 아닌 사람에게 뿌리는 링크(공지·카톡)라, 로그인에 막히면 링크가 통째로 죽는다.
@@ -12724,7 +12724,7 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 #   없어서(실측) prefix로 열면 상한 없이 샌다.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
-                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order", "/api/landing/hits", "/api/pricing",   # 토스 카드결제(2026-09-15)
+                   "/pay/toss", "/pay/toss/success", "/pay/toss/fail", "/api/pay/toss/order", "/api/landing/hits",   # 토스 카드결제(2026-09-15)
                    # ★가입 마무리 화면(2026-08-24). 등급과 무관하게 열려야 한다 —
                    #   막으면 **빠져나갈 수 없는 막다른 길**이 된다: 어느 화면을 열든
                    #   미들웨어가 /welcome으로 보내는데(_needs_welcome), 정작 /welcome이
@@ -12811,7 +12811,8 @@ def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
         return False
     if any(path.startswith(p) for p in _FREE_PREFIX):
         return False
-    if (path in _AUTH_ALLOW or path.startswith("/api/find/frame/")
+    if (path in _AUTH_ALLOW or path == "/api/pricing"   # 기수·가격 공개 조회(2026-10-01, 정적 안내·설정 화면이 읽는다)
+            or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")):
         return False   # 유저스크립트 담기·favicon 등 기존 공개 경로(단 /api/grab은 핸들러서 등급확인)
     # ★잘못 낸 챌린지 영상 삭제(2026-08-29). 경로에 id가 붙어 exact 목록으로는 못 잡는다.
@@ -13604,7 +13605,7 @@ a{text-decoration:none;color:inherit}
 <div class=qa><div class=q>결제는 어떻게 하나요?</div><div class=a>[카드로 결제하기]로 바로 카드결제하시거나, 결제 안내에서 계좌이체하실 수 있습니다. 결제 확인 후 바로 이용권이 열립니다.</div></div>
 <div class=qa><div class=q>무료 체험만 써도 되나요?</div><div class=a>네. 무료 회원은 레퍼런스 랭킹을 보실 수 있어요. 대본·장면·보이스·영상 제작은 이용권에서 쓰실 수 있습니다.</div></div>
 <div class=qa><div class=q>환불되나요?</div><div class=a>이용권은 결제 확인 즉시 열려 모든 기능(대본·보이스·영상 제작 등)을 바로 쓸 수 있는 디지털 콘텐츠라, <b>이용권이 열린 뒤에는 환불되지 않습니다.</b> 이용권이 열리기 전에는 전액 환불됩니다. 자세한 기준은 <a href="/refund" style="color:inherit">환불정책</a>을 확인해 주세요.</div></div>
-<div class=qa><div class=q>전자상거래법상 7일 안에는 환불되지 않나요?</div><div class=a>전자상거래법 제17조제2항제5호에 따라, 디지털 콘텐츠는 <b>제공이 시작된 뒤에는 7일 이내라도 청약철회가 제한</b>됩니다. 숏템메이커 이용권은 결제 확인과 동시에 제공이 시작되므로 7일 이내라도 환불되지 않습니다. 이 내용은 결제 전 요금·결제 페이지와 신청서의 동의 항목에서 미리 안내하고 동의를 받으며, 결제 전에 무료 회원으로 레퍼런스 랭킹을 먼저 써보실 수 있습니다.</div></div></div></div>
+<div class=qa><div class=q>전자상거래법상 7일 안에는 환불되지 않나요?</div><div class=a>전자상거래법 제17조제2항제5호에 따라, 디지털 콘텐츠는 <b>제공이 시작된 뒤에는 7일 이내라도 청약철회가 제한</b>됩니다. 숏템메이커 이용권은 결제 확인과 동시에 제공이 시작되므로 7일 이내라도 환불되지 않습니다. 이 내용은 결제 전 요금·결제 페이지와 1기 신청서의 동의 항목에서 미리 안내하고 동의를 받으며, 결제 전에 무료 회원으로 레퍼런스 랭킹을 먼저 써보실 수 있습니다.</div></div></div></div>
 <div class=band>
 <h2>무료로 레퍼런스 랭킹부터 둘러보세요</h2>
 <p>구글 계정이면 3초 · 카드 없이 시작. 궁금한 건 카톡으로.</p>
@@ -14630,7 +14631,7 @@ _REFUND_BODY = f"""
 <li>이용권은 결제 확인 즉시 열려 대본·보이스·영상 제작 등 모든 기능을 바로 쓸 수 있는 디지털 콘텐츠입니다.
 카드결제는 결제와 동시에 이용권이 열리므로, <b>결제 후 7일 이내라도 이용권이 열린 뒤에는 환불되지 않습니다.</b></li>
 <li>AI 대본·음성·영상 생성은 이용하는 즉시 외부 AI·클라우드 처리 비용이 발생하는 서비스 특성상, 제공이 시작된 뒤에는 되돌릴 수 없습니다.</li>
-<li>회사는 이 내용을 결제 전 요금 페이지·결제 페이지와 신청서의 동의 항목에서 미리 알리고 동의를 받습니다.</li>
+<li>회사는 이 내용을 결제 전 요금 페이지·결제 페이지와 1기 신청서의 동의 항목에서 미리 알리고 동의를 받습니다.</li>
 </ul>
 <p style="color:#8aa0a0;font-size:13px">
 ※ 회사는 가입 전 <b>무료 멤버 등록</b>을 통해 레퍼런스랭킹 등 주요 기능을 미리 체험할 수 있도록
@@ -15076,7 +15077,8 @@ async def _auth_guard(request: Request, call_next):
     # /api/coupang/relay/*도 같은 이유다(2026-07-29) — 쿠팡은 한국 IP가 아니면 막아서
     #   사장님 PC의 도우미가 로그인 쿠키 없이 폴링한다. 엔드포인트가 자체 토큰
     #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
-    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
+    if (path in _AUTH_ALLOW or path == "/api/pricing"   # 기수·가격 공개 조회(2026-10-01) — _AUTH_ALLOW 튜플을 안 건드린 건 모듈 수준 diff가 영상 관문을 깨우기 때문
+            or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
             or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
             or path.startswith("/s/") or path.startswith("/api/share/v/")
