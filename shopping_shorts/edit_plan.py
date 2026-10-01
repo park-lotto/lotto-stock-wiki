@@ -1709,7 +1709,8 @@ def non_edge_segs(seg_map):
     → 그래서 사람이 고르는 경로는 seg_map 전체를, 자동 배치는 이 함수를 지나게 한다.
       거르는 규칙을 소비자 7곳에 각각 적으면 언젠가 한 곳이 빠진다(0순위-B).
     """
-    return {sid: s for sid, s in (seg_map or {}).items() if not _is_edge_seg(s)}
+    # auto_exclude(씨앗, 2026-09-30): 소스엔 있되 자동 배치 재고에서 뺀다 — 표식의 주인은 mix_pipeline.mark_auto_exclude
+    return {sid: s for sid, s in (seg_map or {}).items() if not _is_edge_seg(s) and not s.get("auto_exclude")}
 
 
 def _build_inventory(source_scripts):
@@ -1745,6 +1746,7 @@ def _build_inventory(source_scripts):
                 "start": seg["start"], "end": seg["end"],
                 # ⚠ 첫·끝 조각 표식(2026-08-26). 프롬프트에는 안 실리고 화면만 본다.
                 "edge": is_edge,
+                "auto_exclude": bool(script.get("auto_exclude")),   # 씨앗: 화면엔 보이고 자동 배치엔 안 잡힌다
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
                 # 짧은 이름(2026-08-16). 옛 추출본엔 없어 ""(fail-open) — 아래 라인 조립이
                 # 빈 값이면 그 칸을 통째로 생략하므로 기존 잡은 종전과 완전히 같은 줄을 받는다.
@@ -1765,7 +1767,7 @@ def _build_inventory(source_scripts):
             }
             # ★여기부터는 **프롬프트 줄 조립**이다 — 첫·끝 조각은 종전처럼 한 줄도 안 낸다.
             #   (seg_map에는 위에서 이미 실었다. 모델이 보는 인벤토리 = 종전과 완전 동일)
-            if is_edge:
+            if is_edge or script.get("auto_exclude"):   # 씨앗 소스도 모델 인벤토리엔 안 싣는다(2026-09-30)
                 continue
             _act = seg.get("action")
             _act_s = f" | 행위:{_act}" if _act else ""
