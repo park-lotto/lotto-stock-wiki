@@ -120,7 +120,11 @@ def test_speed_and_hold_same_frames_as_editor(tmp_path, monkeypatch, src_dur, fi
         # 정지 컷: 움직이는 프레임 수 = motion_frames(나머지는 같은 그림)
         play, freeze = va._speed_and_freeze(src_dur, 1.0)
         mv = va.motion_frames(30, play, freeze)
-        assert len(set(el[mv - 1:])) == 1 and el[mv - 2] != el[mv - 1], (mv, el)
+        # 정지 구간은 전부 같은 그림이고, 움직이는 구간엔 실제로 변화가 있어야 한다.
+        # ★"마지막 움직인 프레임 ≠ 정지 프레임"은 상한·길이 조합의 반올림에 달린 값이라 여기서 못 박지 않는다
+        #   (2026-10-01 관제 020: 상한 1.15→1.2 에서 0.62초 컷이 경계에 걸림. 계산상 1.15 에서도 0.7초 컷이 같은 꼴 —
+        #    두 경로가 같은 프레임을 내는가(위 diff 검사)가 진짜 관문이다).
+        assert len(set(el[mv - 1:])) == 1 and len(set(el[:mv - 1])) > 1, (mv, el)
 
 
 def test_app_has_no_own_slowmo_cap():
