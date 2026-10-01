@@ -11395,6 +11395,10 @@ function _srcCard(it, i){
       ${row('Key', b.role)}
       ${row('상세', b.core)}
       ${b.summary ? `<div class="srcSum">${esc(b.summary)}</div>` : ''}
+      ${(d.story||[]).length ? `<div class="srcSum" style="margin-top:6px" title="1단계 태깅이 만든 영상 스토리 — 이 문장이 대본 재료가 되고 그 위에 적힌 컷이 깔립니다(2026-10-01)">
+        <div style="font-weight:600;margin-bottom:2px">📖 스토리(대본 문장 → 컷)</div>
+        ${(d.story||[]).map((L,i)=>`<div style="font-size:12px;line-height:1.5">${i+1}. ${L.kind?`<span class="srcChip" style="font-size:10px">${esc(L.kind)}</span> `:''}${esc(L.text||'')} <span class="mute" style="font-size:10px">(컷 ${(L.cuts||[]).map(c=>String(c).split('-').pop()).join(',')})</span></div>`).join('')}
+      </div>` : (segs.some(s=>s.use_point) ? `<div class="srcSum" style="margin-top:6px"><div style="font-weight:600;margin-bottom:2px">🗣 대본화 소구점(장면별)</div>${segs.filter(s=>s.use_point).slice(0,8).map((s,i)=>`<div style="font-size:12px;line-height:1.5">${esc(s.use_point)}${s.hook_type?` <span class="srcChip" style="font-size:10px">훅:${esc(s.hook_type)}</span>`:''}</div>`).join('')}</div>` : '')}
     </div>
     ${segs.length ? `<div class="srcStat">
        <span class="srcStatN">${segs.length}</span><span class="srcStatK">쓸 장면</span>

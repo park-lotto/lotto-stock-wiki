@@ -6554,6 +6554,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
             "shot_role": v.get("shot_role") or "기타", "is_key": bool(v.get("is_key")),
             "action": v.get("action") or "", "change": v.get("change") or "",
             "benefits": v.get("product_benefits") or [],
+            # 2026-10-01 사장님 "이거 태깅이 대본화한 거 맞아?" — 카드가 묘사만 보여줘 오해. 대본화 소구점·훅 유형을 같이 준다.
+            "use_point": v.get("use_point") or "", "hook_type": v.get("hook_type") or "", "appeal_kind": v.get("appeal_kind") or "",
         } for sid, v in seg_map.items()},
         "phash": _lab_phash_load(work),      # 썸네일 캐시가 채워지는 대로 /phash로 늦채움
         "src_duration": src_duration,
@@ -20045,6 +20047,8 @@ def api_produce_source_brief(request: Request, shortcode: str):
             # 무자막·외국어 소스도 화면만 보고 태깅되므로 '말 없음'은 결함이 아니라 성질이다.
             "shot_role": s.get("shot_role") or "기타",
             "chars": len((s.get("text") or "").strip()),
+            # 2026-10-01: 대본화 소구점(1단계 카드에 보여준다 — 묘사만 보이면 '태깅이 설명문'으로 보인다)
+            "use_point": s.get("use_point") or "", "hook_type": s.get("hook_type") or "", "appeal_kind": s.get("appeal_kind") or "",
         })
     # ★가로형(롱폼) 여부는 **서버가 판정해서** 내려준다(2026-08-27 사장님 지시).
     #   프론트가 w>h를 다시 계산하면 판단이 두 곳이 된다(0순위-B) — 실제 차단을 하는
@@ -20061,6 +20065,7 @@ def api_produce_source_brief(request: Request, shortcode: str):
     #   None을 그대로 실어 화면이 "모름"을 알 수 있게 한다 — 기존 프론트는
     #   `b.landscape ? 경고 : ''` 라 None에서도 종전과 똑같이 조용하다(회귀 없음).
     return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs,
+            "story": data.get("story") or [],         # 2026-10-01 영상 스토리(대본 문장+컷) — 1단계 카드 아래에 보여준다
             "video_w": _w, "video_h": _h,
             "landscape": is_landscape_wh(_w, _h)}
 

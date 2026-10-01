@@ -3368,7 +3368,8 @@ function render(){
                <button type="button" class="gm" onclick="unMerge('${s.sid}',event)">해제</button></div>`:''}
             ${tooShort(s.sid)?`<div class="oorbadge">⚠ 너무 짧아서(0.8초 미만) 담아도 화면에 안 나와요</div>`:''}
             ${dupMates(s.sid).length?`<div class="utag" style="border-color:var(--accent);color:var(--accent)">비슷한 그림 ${dupMates(s.sid).length}장 접힘</div>`:''}
-            <div class="d">${esc(s.scene_desc||'(설명 없음)')}</div>
+            ${s.use_point?`<div class="d" style="color:var(--accent2);font-weight:600" title="대본화 소구점 — 이 장면 위에 읽힐 말(1단계 태깅)">🗣 ${esc(s.use_point)}${s.hook_type?` <span class="utag" style="margin-left:4px">훅:${esc(s.hook_type)}</span>`:''}</div>`:''}
+            <div class="d"${s.use_point?' style="opacity:.75"':''}>${esc(s.scene_desc||'(설명 없음)')}</div>
             </div>
         </div>`).join('')}${_folded ? '' : '</div></div>'}</div>`;
   }).join('');
