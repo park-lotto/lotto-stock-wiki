@@ -32,18 +32,22 @@ def test_validate_keeps_image_mask_only_when_file_exists(tmp_path):
 
 
 def test_upload_api_saves_png_and_rejects_non_image(monkeypatch):
-    from fastapi.testclient import TestClient
+    """★앱을 TestClient로 띄우지 않는다 — 기동 훅이 임시 폴더에 DB를 만들어 뒤에 도는 순서 의존 테스트(tier_wiring 등)를 깬다(게이트 실측)."""
+    import asyncio
+    from starlette.datastructures import UploadFile as SUploadFile
     from shopping_shorts import app as A
     monkeypatch.setattr(A, "_cid", lambda request: 999998)
-    c = TestClient(A.app)
-    r = c.post("/api/produce/scene-style/logo", files={"file": ("logo.png", _png_bytes(2000, 1000), "image/png")})
-    assert r.status_code == 200 and r.json()["ok"], r.text
-    src = r.json()["src"]
+
+    def up(name, data):
+        return SUploadFile(filename=name, file=io.BytesIO(data))
+    r = asyncio.run(A.api_scene_style_logo_upload(None, up("logo.png", _png_bytes(2000, 1000))))
+    assert isinstance(r, dict) and r["ok"], r
+    src = r["src"]
     assert re.fullmatch(r"장면꾸미기_로고/999998/[0-9a-f]{16}\.png", src)
     p = ROOT / "out" / src
     assert p.is_file() and Image.open(p).size[0] <= 1024            # 큰 그림은 1024로 줄인다
-    bad = c.post("/api/produce/scene-style/logo", files={"file": ("x.png", b"not an image", "image/png")})
-    assert bad.status_code == 422
-    lst = c.get("/api/produce/scene-style/logo").json()
+    bad = asyncio.run(A.api_scene_style_logo_upload(None, up("x.png", b"not an image")))
+    assert getattr(bad, "status_code", None) == 422
+    lst = A.api_scene_style_logo_list(None)
     assert any(it["src"] == src for it in lst["items"])
     p.unlink(missing_ok=True)
