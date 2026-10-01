@@ -261,8 +261,10 @@ def pick_scene(sent, beats, cuts, ranked=None):
     want = set(sent.get("claims") or [])
     direct = {int(x) for x in (sent.get("cuts") or []) if str(x).lstrip("#").isdigit() for x in [str(x).lstrip("#")]}
 
+    rset = set(ranked or [])                          # 10-01: 순위(설명↔줄 글)가 준 컷은 주장 번호가 안 붙었어도 후보다(문제 줄이 비던 것)
+
     def ok(c):
-        return bool(set(c["claims"]) & want) or c["no"] in direct
+        return bool(set(c["claims"]) & want) or c["no"] in direct or c["no"] in rset
 
     def L(c):
         return c["end"] - c["start"]
@@ -276,22 +278,38 @@ def pick_scene(sent, beats, cuts, ranked=None):
         cands = rk + [c for c in cands if c not in rk]
     else:
         cands.sort(key=lambda c: (len(set(c["claims"]) & want) + (2 if c["no"] in direct else 0), L(c)), reverse=True)
-    best = cands[0]
-    if L(best) >= need:
-        return [best["no"]], "1한컷", need
-    for c in cands:                                   # 같은 소스 바로 다음 컷을 같은 주장인 동안 잇는다
+    def _chain(c):                                    # 같은 소스 바로 다음 컷을 같은 주장인 동안 잇는다
         chain, tot, j = [c], L(c), cuts.index(c)
-        while tot < need and j + 1 < len(cuts) and cuts[j + 1]["src"] == c["src"] \
-                and cuts[j + 1]["start"] - cuts[j]["end"] < 0.25 and ok(cuts[j + 1]):
+        while (tot < need and j + 1 < len(cuts) and cuts[j + 1]["src"] == c["src"]
+               and cuts[j + 1]["start"] - cuts[j]["end"] < 0.25 and ok(cuts[j + 1])):
             j += 1
             chain.append(cuts[j])
             tot += L(cuts[j])
-        if tot >= need:
-            return [x["no"] for x in chain], "2이어붙이기", need
-        if len(chain) > 1 and tot * SLOW_MAX >= need:
-            return [x["no"] for x in chain], "2이어붙이기+늦추기", need
-    if L(best) * SLOW_MAX >= need:
-        return [best["no"]], "3늦추기", need
+        return chain, tot
+
+    if ranked:                                        # 순위(내용)가 우선: 컷마다 한컷→잇기→잇기+늦추기→늦추기를 다 해보고 다음 순위로
+        for c in cands:
+            if L(c) >= need:
+                return [c["no"]], "1한컷", need
+            chain, tot = _chain(c)
+            if len(chain) > 1 and tot >= need:
+                return [x["no"] for x in chain], "2이어붙이기", need
+            if len(chain) > 1 and tot * SLOW_MAX >= need:
+                return [x["no"] for x in chain], "2이어붙이기+늦추기", need
+            if L(c) * SLOW_MAX >= need:
+                return [c["no"]], "3늦추기", need
+    else:
+        best = cands[0]
+        if L(best) >= need:
+            return [best["no"]], "1한컷", need
+        for c in cands:
+            chain, tot = _chain(c)
+            if tot >= need:
+                return [x["no"] for x in chain], "2이어붙이기", need
+            if len(chain) > 1 and tot * SLOW_MAX >= need:
+                return [x["no"] for x in chain], "2이어붙이기+늦추기", need
+        if L(best) * SLOW_MAX >= need:
+            return [best["no"]], "3늦추기", need
     chain, tot = [], 0.0
     for c in cands:
         chain.append(c)
