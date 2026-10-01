@@ -1704,7 +1704,12 @@ function runAllFrom(i){
   const nx = DATA.beats[i + 1];
   if (nx){
     const ncl = planClips(lists[i + 1] || [], beatDur(i + 1), STRETCH[i + 1], i + 1);
-    if (ncl[0]){ ncl[0]._slot = handoffSlot(i + 1); seat(ncl[0]); preSeated = i + 1; }
+    // ★합본이 다음 칸까지 덮으면 원본 재생기를 미리 앉히지 않는다(2026-10-01 관제 063).
+    //   종전엔 합본으로 돌면서도 여기 seat→wantFull 이 다음 칸 **원본을 통째로** 받았다
+    //   (하네스 실측: 전체 재생 8초에 /api/mix/src 35~40MB, 재생은 합본이 하는데 받기만 했다).
+    //   합본이 못 덮는 칸(편성이 합본과 다른 칸)만 종전대로 원본을 미리 앉힌다 — 폴백 그대로.
+    const nxPx = pvxAttach(i + 1, ncl);
+    if (ncl[0] && !nxPx){ ncl[0]._slot = handoffSlot(i + 1); seat(ncl[0]); preSeated = i + 1; }
     seatTts(i + 1, (i + 1) % 2);      // ← 이음매의 버퍼를 없애는 핵심 한 줄
   }
   const a = playTts(i, i % 2);

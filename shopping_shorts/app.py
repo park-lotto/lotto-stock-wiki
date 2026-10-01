@@ -11363,6 +11363,11 @@ def _thumb_via_oembed(url: str, shortcode: str | None):
 #:   그 주소를 기억해** 바깥 조회 없이 즉시 404를 낸다. 5분 뒤엔 다시 복구를 시도한다.
 _THUMB_NEG: dict = {}
 _THUMB_NEG_TTL = 300
+#: ★확정된 죽은 주소(403·404·410 — oembed 복구·규격 폴백까지 실패한 뒤)는 60분 기억한다(2026-10-01 관제 064).
+#:   실측: 2시간 /api/thumb 37,583건 중 86%가 404, 같은 주소가 평균 24회(최대 182회) 되돌아왔다. 브라우저는 404를
+#:   캐시하지 않는다(헤드리스 크롬 실측: 같은 주소 8번 그림 → 8번 요청) — 그래서 서버 기억이 유일한 방패인데
+#:   5분마다 CDN 에 다시 나가(6초 타임아웃) 스레드풀을 갉아먹었다. 타임아웃·5xx(일시 장애)는 종전대로 5분.
+_THUMB_NEG_TTL_DEAD = 3600
 #: ★죽은 썸네일 응답(404·400)에 붙이는 **브라우저 쪽 짧은 기억**(2026-09-18). 한 번만 정한다(0순위-B).
 #:   실측: 한 고객 화면이 40분에 9,634건 — 같은 주소를 최대 72번(1위는 `chrome-extension://…svg`,
 #:   2위 `youtube.com/img/…png`처럼 **영원히 안 열리는 주소**). 제작소 화면이 몇 초마다 목록을 다시
@@ -11387,12 +11392,23 @@ def _thumb_neg_hit(url):
     return True
 
 
-def _thumb_neg_put(url):
+def _thumb_dead_ttl(exc):
+    """실패 원인 → 기억 기간. 확정 죽음(403·404·410)만 길게, 나머지(타임아웃·5xx·연결)는 짧게."""
+    try:
+        import requests as _rq
+        if isinstance(exc, _rq.HTTPError) and exc.response is not None                 and int(exc.response.status_code) in (403, 404, 410):
+            return _THUMB_NEG_TTL_DEAD
+    except Exception:      # noqa: BLE001
+        pass
+    return _THUMB_NEG_TTL
+
+
+def _thumb_neg_put(url, ttl=None):
     with _THUMB_NEG_LOCK:
         if len(_THUMB_NEG) > 5000:        # 무한히 안 자라게 — 오래된 것부터 반쯤 비운다
             for k in sorted(_THUMB_NEG, key=_THUMB_NEG.get)[:2500]:
                 _THUMB_NEG.pop(k, None)
-        _THUMB_NEG[url] = time.time() + _THUMB_NEG_TTL
+        _THUMB_NEG[url] = time.time() + (ttl or _THUMB_NEG_TTL)
 
 
 @app.get("/api/thumb")
@@ -11471,7 +11487,7 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
                 pass    # 캐시 실패는 서빙에 영향 없음
         return Response(content=body, media_type=ctype,
                         headers={"Cache-Control": "public, max-age=86400"})
-    except Exception:
+    except Exception as _thumb_exc:
         # ★만료 자가복구(2026-08-09): CDN 서명(oe=)은 ~4일이면 만료돼 저장된 URL이 전부
         # 403이 된다. 그런데 **게시물 자체는 살아 있으므로** 공개 oembed에 물어보면 인스타가
         # 서명이 새로 붙은 주소를 알려준다 — 로그인 불필요라 계정이 429여도 된다(실측
@@ -11509,7 +11525,7 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
         # 캐싱으로 이 404를 몇 시간 기억한다. 그 뒤 우리가 이미지를 복구해 디스크 캐시에
         # 넣어도 **브라우저가 재요청을 안 해** 카드가 계속 까맣게 남는다(실측: 서버는
         # 200/71KB를 주는데 화면만 검은 상태). URL이 글자까지 같아 캐시버스팅도 안 먹는다.
-        _thumb_neg_put(url)               # 서버만 5분 기억 — 위 _THUMB_NEG 주석
+        _thumb_neg_put(url, _thumb_dead_ttl(_thumb_exc))   # 확정 죽음 60분 · 일시 장애 5분(_THUMB_NEG_TTL_DEAD 주석)
         return Response(status_code=404, content=b"",
                         headers=_THUMB_DEAD_HEADERS)   # 짧게·명시적으로 — 위 _THUMB_DEAD_HEADERS 주석
 
@@ -20885,7 +20901,7 @@ def api_scene_style_asset(asset_path: str):
     names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js"}
     allowed = (asset_path.startswith("out/") and asset_path[4:] in names)
     allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "shopping_shorts/static/text-look-contract.js", "out/scene-style-labels.js"}
-    allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
+    allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/", "out/장면꾸미기_로고/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
     allowed |= asset_path.startswith("shopping_shorts/static/fonts/") and candidate.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}
     if ".." in Path(asset_path).parts or "\\" in asset_path or not allowed or not candidate.is_relative_to(ROOT) or not candidate.is_file():
         return JSONResponse(status_code=404, content={"error": "파일 없음"})
@@ -20948,6 +20964,56 @@ def _scene_style_lab_owned_job(store, request, job_id):
     if not job or int(job.get("customer_id") or 0) != _cid(request):
         return None
     return job
+
+
+# ── 🏷 장면꾸미기 로고(관제 065, 2026-10-01 사장님 "효과 맨 아래 로고 하나, 파일 불러오기") ──────────────
+#   값의 주인 = 저장값 effects[장면].masks[] 안의 {kind:"image", src:"장면꾸미기_로고/<cid>/<sha>.png"} 한 항목.
+#   파일은 out/장면꾸미기_로고/ 아래 — 편집기(http 에셋 라우트)와 headless 렌더(file://, tools/render_scene_style.js)가
+#   **같은 상대 경로**로 읽는다. 그래서 썸네일(render_layer_one)·완성본·캡컷(render_layers)이 전부 같은 그림을 얹는다.
+#   내 프리셋은 effects를 그대로 담으므로 계정 경로인 이 src가 다른 작업에서도 산다.
+from .scene_style import ROOT as _SS_ROOT   # 저장소 루트(scene_style·에셋 라우트와 같은 기준)
+_LOGO_DIR = _SS_ROOT / "out" / "장면꾸미기_로고"
+_LOGO_MAX_BYTES = 2 * 1024 * 1024
+_LOGO_MAX_SIDE = 1024
+
+
+@app.post("/api/produce/scene-style/logo")
+async def api_scene_style_logo_upload(request: Request, file: UploadFile = File(...)):
+    cid = _cid(request)
+    if not cid and not _is_admin(cid):
+        return JSONResponse(status_code=401, content={"ok": False, "error": "로그인이 필요합니다"})
+    raw = await file.read()
+    if not raw or len(raw) > _LOGO_MAX_BYTES:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "로고 파일은 2MB까지(PNG·JPG·WEBP)"})
+    try:
+        from PIL import Image
+        import io as _io
+        im = Image.open(_io.BytesIO(raw)); im.load()
+        if im.format not in ("PNG", "JPEG", "WEBP"):
+            raise ValueError(im.format)
+        im = im.convert("RGBA")
+        if max(im.size) > _LOGO_MAX_SIDE:
+            im.thumbnail((_LOGO_MAX_SIDE, _LOGO_MAX_SIDE))
+        buf = _io.BytesIO(); im.save(buf, "PNG", optimize=True); data = buf.getvalue()
+    except Exception as exc:      # noqa: BLE001 — 그림이 아니면 거절(사유는 남긴다)
+        print(f"[logo] 거절 cid={cid}: {exc!r}", file=sys.stderr)
+        return JSONResponse(status_code=422, content={"ok": False, "error": "그림 파일(PNG·JPG·WEBP)만 올릴 수 있어요"})
+    name = hashlib.sha1(data).hexdigest()[:16] + ".png"
+    d = _LOGO_DIR / str(int(cid)); d.mkdir(parents=True, exist_ok=True)
+    (d / name).write_bytes(data)
+    return {"ok": True, "src": f"장면꾸미기_로고/{int(cid)}/{name}", "w": im.size[0], "h": im.size[1]}
+
+
+@app.get("/api/produce/scene-style/logo")
+def api_scene_style_logo_list(request: Request):
+    """내 로고 목록(최근 올린 순) — 편집기 '로고' 칸이 다시 고를 수 있게."""
+    cid = _cid(request)
+    d = _LOGO_DIR / str(int(cid))
+    items = []
+    if d.is_dir():
+        for p in sorted(d.glob("*.png"), key=lambda x: x.stat().st_mtime, reverse=True)[:12]:
+            items.append({"src": f"장면꾸미기_로고/{int(cid)}/{p.name}"})
+    return {"ok": True, "items": items}
 
 
 @app.get("/api/produce/scene-style/flags")

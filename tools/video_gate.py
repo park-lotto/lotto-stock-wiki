@@ -605,8 +605,37 @@ def _p(printer, s):
     return s
 
 
+# ★관문이 말한 것(영상·자막·소리·캡컷 report 포함)을 **파일로 남긴다**(2026-10-02 관제 070).
+#   실측 10-01: 실패 사유(어느 작업·어느 칸)가 화면 출력에서 잘려(tail) 서버에서 비교를 다시 돌려야 했다(+7분×2).
+#   자리: <stage 의 부모 = .tracks>/_gate_reports/<브랜치>_<시각>.txt — 트랙 폴더 옆, gitignore 안(.tracks/).
+def _keep_log(stage, br, lines, now=None):
+    try:
+        d = Path(stage).resolve().parent / "_gate_reports"
+        d.mkdir(parents=True, exist_ok=True)
+        ts = time.strftime("%Y%m%d_%H%M%S", time.localtime(now))
+        safe = "".join(c if (c.isalnum() or c in "-_") else "_" for c in str(br).replace("track/", ""))
+        f = d / ("%s_%s.txt" % (safe, ts))
+        f.write_text("\n".join(str(x) for x in lines) + "\n", encoding="utf-8")
+        return f
+    except Exception:      # noqa: BLE001 — 보관 실패가 관문 판정을 바꾸면 안 된다
+        return None
+
+
 def run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sleep=time.sleep, remote_tmp="/tmp"):
-    """finish 에서 부른다. GateResult(ok=False)면 병합을 버려야 한다."""
+    """finish 에서 부른다. GateResult(ok=False)면 병합을 버려야 한다. 말한 것은 전부 _keep_log 로 남긴다."""
+    kept = []
+    def _printer(s):
+        kept.append(s)
+        return printer(s)
+    try:
+        return _run_video_gate(stage, br, printer=_printer, sh=sh, cfg=cfg, env=env, sleep=sleep, remote_tmp=remote_tmp)
+    finally:
+        f = _keep_log(stage, br, kept)
+        if f is not None:
+            _p(printer, "  (관문 기록 저장: %s)" % f)
+
+
+def _run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sleep=time.sleep, remote_tmp="/tmp"):
     env = os.environ if env is None else env
     log = []
     say = lambda s: log.append(_p(printer, s))           # noqa: E731
