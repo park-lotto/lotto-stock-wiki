@@ -1072,7 +1072,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         #   빈 줄이 남으면 그 줄만 코드 매칭(assign_cuts)이 채운다. AI가 아예 실패하면 전부 코드 매칭.
         from shopping_shorts import ai_match as _am
         _an = {}
-        ai_bs = _am.match(lines, seg_index, backbone_vid, note=_an)
+        ai_bs = _am.match(lines, seg_index, backbone_vid, note=_an, product=product)   # 주제를 준다(2026-10-01 전문가 지시문)
         bs, report = ba.assign_cuts(lines, groups_out, seg_index, backbone_vid)
         code_bs = [dict(b) for b in bs]                        # 코드 매칭 원본(근거 컷) — 아래 장면 고정이 쓴다
         if ai_bs:

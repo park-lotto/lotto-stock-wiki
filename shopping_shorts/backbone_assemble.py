@@ -79,6 +79,7 @@ def _seg_index(sources):
                              "text": (x.get("text") or "").strip(),
                              # 2026-10-01 태깅 확장(카드 051): 훅 유형·뒷컷·화면 배속 힌트 — 없으면 빈칸/False/None
                              "label": (x.get("label") or "").strip(),          # 1단계 '이 장면이 하는 일' — 같은 장면 판정(ai_match 채우기)에 쓴다
+                             "use": (x.get("use_point") or "").strip(), "kind": x.get("appeal_kind") or "", "tempo": x.get("tempo") or "",
                              "hook": str(x.get("hook_type") or "").strip(),
                              # ★뒷컷은 "제품이 안 보일 때"만 믿는다 — 태거가 영상 끝의 제품 컷(가방 수납·완성품)을 자꾸 뒷컷으로
                              #   찍었다(10-01 실측 4차: 뒷컷 5개 전부 제품 컷). 훅 유형이나 특장점이 달린 컷은 제품 컷이다.
