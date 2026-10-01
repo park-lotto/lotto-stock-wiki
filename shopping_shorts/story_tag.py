@@ -144,7 +144,18 @@ def feats_from_stories(sources, seg_index):
         k += 1
         if k > MAX_LINES:
             break
-    return out
+    # ★같은 포인트(앞 12자)는 영상 넘어 **컷을 합친다** — 한 줄=컷 1~3개로 두면 고조 세 줄이 같은 컷을 돌려쓴다
+    #   (2026-10-01 실측 파스타: 3808e1-0 이 세 줄). 문장은 먼저 나온 영상 것, 컷은 전부.
+    merged, by_key = [], {}
+    for f in out:
+        key = (f.get("name") or f.get("claim") or "").replace(" ", "")[:12]
+        if key and key in by_key:
+            g = merged[by_key[key]]
+            g["from_cuts"] += [c for c in f["from_cuts"] if c not in g["from_cuts"]]
+            continue
+        by_key[key] = len(merged)
+        merged.append(dict(f, from_cuts=list(f["from_cuts"])))
+    return merged
 
 
 def groups_from_stories(sources, seg_index, max_groups=4):

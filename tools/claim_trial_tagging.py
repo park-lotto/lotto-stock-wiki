@@ -236,7 +236,8 @@ def main():
         # 2026-10-01: 소스마다 1단계 스토리(story_tag.make_story)를 붙인 뒤 백본 2단계(groups_from_stories)를 돈다 — 라이브 코드 그대로
         from shopping_shorts import story_tag as _st
         ext2 = {}
-        for vid, ex in sorted((job.get("extract") or {}).items()):
+        base = json.load(open(a.extract, encoding="utf-8")) if a.extract else (job.get("extract") or {})
+        for vid, ex in sorted(base.items()):
             if not isinstance(ex, dict):
                 continue
             if not ex.get("story"):
@@ -271,7 +272,7 @@ def main():
         if not drafts:
             sys.exit("이야기작가 실패: %s" % why)
         d = drafts[0]
-        res = {"given": d.get("script") or "\n".join(b.get("text") or "" for b in d.get("beats") or []),
+        res = {"given": "\n".join(b.get("text") or "" for b in d.get("beats") or []),
                "beat_sources": [{"role": b.get("role"), "seg": (b.get("src_segs") or [b.get("src_seg")] or [""])[0] or "", "segs": [str(x) for x in (b.get("src_segs") or ([b.get("src_seg")] if b.get("src_seg") else []))]} for b in d.get("beats") or []],
                "spine": {"name": d.get("style_name")}, "report": None, "groups": None, "note": dict(note, writer_note=d.get("writer_note"))}
     else:

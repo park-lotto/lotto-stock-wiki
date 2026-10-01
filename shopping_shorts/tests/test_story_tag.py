@@ -64,3 +64,11 @@ def test_has_stories_majority_and_min_lines():
     assert st.has_stories([{"story": [L, L, L]}, {"story": []}])            # 절반 이상이면 된다(한 편 빈 응답)
     assert not st.has_stories([{"story": [L, L, L]}, {"story": []}, {"story": []}])
     assert not st.has_stories([{"story": [L]}]) and not st.has_stories([])
+
+
+def test_feats_from_stories_merges_same_point_across_videos():
+    srcs = [{"video_id": "s1", "story": [{"text": "물만 쏙", "cuts": ["s1-2"], "kind": "장점", "point": "거름망 배수"}]},
+            {"video_id": "s2", "story": [{"text": "체 없이 물만", "cuts": ["s2-5", "s2-6"], "kind": "장점", "point": "거름망 배수"}]}]
+    idx = {"s1-2": {"vid": "s1"}, "s2-5": {"vid": "s2"}, "s2-6": {"vid": "s2"}}
+    f = st.feats_from_stories(srcs, idx)
+    assert len(f) == 1 and sorted(f[0]["from_cuts"]) == ["s1-2", "s2-5", "s2-6"]

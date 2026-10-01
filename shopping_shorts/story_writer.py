@@ -1103,6 +1103,10 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
             gi = L.get("group", -1)
             if not (isinstance(gi, int) and 0 <= gi < len(groups_out["groups"])):
                 continue
+            # ★스토리 모드(2026-10-01)에선 고정하지 않는다 — 스토리 컷은 작가 재료이고, 최종 컷은 전문가 매처+검사(중복·뒷컷·길이)가 정한다.
+            #   실측: 고정이 AI 선택 7/11줄을 묶음 첫 컷으로 덮어써 같은 컷이 세 줄에 갔다.
+            if note.get("feats_from") == "story" and (bs[i].get("segs") or []):
+                continue
             allowed = groups_out["groups"][gi]["cuts"]
             if allowed and not set(bs[i].get("segs") or []) <= set(allowed):
                 # ★같은 묶음의 줄 3개가 전부 allowed[0] 하나를 받아 **같은 컷이 세 번** 나왔다(2026-10-01 사장님 화면, job 4a1d44721e8a
