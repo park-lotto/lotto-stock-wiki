@@ -66,7 +66,7 @@ if os.getenv("PATCH_DIR"):          # 관문: 병합본 모듈을 먼저 얹는�
     import importlib.util as _ilu
     sys.path.insert(0, ".")
     import shopping_shorts as _ss
-    for _n in ("frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
+    for _n in ("voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
         _f = Path(os.getenv("PATCH_DIR")) / ("%s.py" % _n)
         if _f.exists():
             _sp = _ilu.spec_from_file_location("shopping_shorts." + _n, str(_f))

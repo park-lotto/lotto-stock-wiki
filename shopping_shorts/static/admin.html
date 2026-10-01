@@ -132,7 +132,7 @@ tbody tr:hover{background:#1b1b22}
 <div class=alertBoard id=alertBoard></div>
 <details class=card id=controlCard>
 <summary style="cursor:pointer;font-size:14px;font-weight:600">🎛 관제 보드 <span id=ctlSummary style="font-weight:400;color:#8a8a92"></span> <span id=ctlMsg class=msg></span></summary>
-<div style="font-size:11px;color:#8a8a92;margin:4px 0 8px">카드 = 요청 하나. 상태: 등록 → 분배 → 수리 → 로컬검증 → 병합 → 서버반영 → 라이브실측 → 완료 (예외 승인대기·회귀). 고객 화면·과금·데이터가 바뀌는 카드는 여기서 [승인]을 눌러야 병합됩니다. 정본은 git <code>관제/BOARD.md</code>.</div>
+<div style="font-size:11px;color:#8a8a92;margin:4px 0 8px">사장님이 볼 것은 두 줄입니다 — <b>결정할 것</b>(승인 버튼)과 <b>잘못된 것</b>(회귀). 나머지는 세션들이 알아서 합니다.</div>
 <div id=controlBoard style="font-size:12px"></div>
 </details>
 
@@ -384,28 +384,53 @@ async function renderAlertBoard(){
 }
 // ── 관제 보드(2026-09-30, 카드 004) — 카드 파싱·상태는 서버(/api/admin/control/board → tools/control.py) 한 곳. 여기선 그리기만.
 const CTL_ORDER={'회귀':0,'승인대기':1,'등록':2,'분배':3,'수리':4,'로컬검증':5,'병합':6,'서버반영':7,'라이브실측':8,'완료':9};
+// 사장님용 화면(2026-10-01 "너무 복잡해"): 볼 것은 **결정할 것(승인 대기)** 과 **잘못된 것(회귀)** 두 줄뿐. 나머지는 접어 두고,
+// 함수 이름·번호 같은 기술 정보는 [기술 보기] 를 켜야 나온다. 카드 '쉬운 설명' 이 있으면 제목 대신 그걸 보여준다.
+let CTL_CARDS=[];
+function _ctlLabel(c){ return _abEsc(c.easy||c.title); }
+function _ctlNeeds(c){ return String(c.needs_approval||'').startsWith('예') && !c.approval && !c.server_approval; }
 async function renderControlBoard(){
   const box=document.getElementById('controlBoard'); if(!box) return;
   let d=null;
   try{ const r=await fetch('/api/admin/control/board',{headers:{'Accept':'application/json'}});
        if(!r.ok) return; d=await r.json(); }catch(e){ return; }
   if(!d||!d.ok) return;
-  const cards=(d.cards||[]).slice().sort((a,b)=>(CTL_ORDER[a.state]??5)-(CTL_ORDER[b.state]??5) || (b.no-a.no));
-  const need=cards.filter(c=>String(c.needs_approval||'').startsWith('예') && !c.approval && !c.server_approval);
+  CTL_CARDS=(d.cards||[]).slice().sort((a,b)=>(CTL_ORDER[a.state]??5)-(CTL_ORDER[b.state]??5) || (b.no-a.no));
+  drawControlBoard();
+}
+function drawControlBoard(){
+  const box=document.getElementById('controlBoard'); if(!box) return;
+  const cards=CTL_CARDS;
+  const tech=!!(document.getElementById('ctlTech')||{}).checked;
+  const need=cards.filter(_ctlNeeds);
+  const bad=cards.filter(c=>c.state==='회귀');
+  const doing=cards.filter(c=>!_ctlNeeds(c)&&c.state!=='회귀'&&!['라이브실측','완료'].includes(c.state));
+  const done=cards.filter(c=>['라이브실측','완료'].includes(c.state));
   const sum=document.getElementById('ctlSummary');
-  if(sum) sum.textContent='카드 '+cards.length+'장 · 승인 대기 '+need.length+'장 · 회귀 '+cards.filter(c=>c.state==='회귀').length+'장';
-  const groups={};
-  cards.forEach(c=>{ (groups[c.state]=groups[c.state]||[]).push(c); });
-  box.innerHTML=Object.keys(groups).sort((a,b)=>(CTL_ORDER[a]??5)-(CTL_ORDER[b]??5)).map(st=>{
-    const rows=groups[st].map(c=>{
-      const appr=c.approval?('✅ '+_abEsc(c.approval)):(c.server_approval?('✅ 서버 '+_abEsc(c.server_approval.at)+' '+_abEsc(c.server_approval.note)):
-        (String(c.needs_approval||'').startsWith('예')?'<button onclick="approveCard('+c.no+')">승인</button>':'-'));
-      return '<tr><td style="white-space:nowrap">'+String(c.no).padStart(3,'0')+'</td><td>'+_abEsc(c.title)+'</td><td>'+_abEsc(c.tracks||'-')+'</td><td>'+appr+'</td>'
-        +'<td style="font-size:11px">'+_abEsc(c.owner||'-')+'</td><td style="font-size:11px">'+_abEsc(c.live||c.merge||c.last||'')+'</td></tr>';
-    }).join('');
-    return '<div style="margin:6px 0 2px;font-weight:600">'+_abEsc(st)+' ('+groups[st].length+')</div>'
-      +'<table style="width:100%;border-collapse:collapse"><tr style="color:#8a8a92"><th>번호</th><th>제목</th><th>분배</th><th>승인</th><th>판단 주인</th><th>최근</th></tr>'+rows+'</table>';
+  if(sum) sum.textContent=(need.length?'🔴 결정할 것 '+need.length+' · ':'')+(bad.length?'🟠 잘못된 것 '+bad.length+' · ':'')+'진행 중 '+doing.length+' · 끝남 '+done.length;
+  const techLine=c=>tech?'<div style="font-size:11px;color:#8a8a92;margin-top:2px">#'+String(c.no).padStart(3,'0')+' · '+_abEsc(c.title)+' · 주인 '+_abEsc(c.owner||'-')+' · 트랙 '+_abEsc(c.tracks||'-')+(c.done?' · 됐다의 기준: '+_abEsc(c.done):'')+'</div>':'';
+  const row=(c,extra)=>'<div style="padding:6px 0;border-bottom:1px solid #2a2a30"><div style="display:flex;gap:10px;align-items:center"><div style="flex:1;min-width:0">'+_ctlLabel(c)+(extra||'')+'</div></div>'+techLine(c)+'</div>';
+  let h='';
+  h+='<div style="margin:4px 0 10px;text-align:right"><label style="font-size:11px;color:#8a8a92;cursor:pointer"><input type=checkbox id=ctlTech '+(tech?'checked':'')+' onchange="drawControlBoard()"> 기술 보기(번호·함수 이름)</label></div>';
+  h+='<div style="font-weight:700;margin:4px 0">🔴 결정할 것 — 사장님 승인이 있어야 라이브로 갑니다 ('+need.length+')</div>';
+  h+=need.length?need.map(c=>row(c,' <button onclick="approveCard('+c.no+')" style="margin-left:8px">승인</button>'
+      +'<div style="font-size:11px;color:#8a8a92">고객 화면·돈·회원 데이터가 바뀌는 변경. 승인 뒤 병합되고, 병합 뒤 실제 고객 작업으로 다시 잽니다.</div>')).join('')
+      :'<div style="color:#8a8a92;font-size:12px;padding:4px 0 8px">없음 — 지금 결정할 것이 없습니다.</div>';
+  h+='<div style="font-weight:700;margin:12px 0 4px">🟠 잘못된 것 — 배포 뒤 실제 고객 작업으로 재보니 기준 미달 ('+bad.length+')</div>';
+  h+=bad.length?bad.map(c=>row(c,'<div style="font-size:11px;color:#e0a0a0">'+_abEsc(c.live||c.last||'')+'</div><div style="font-size:11px;color:#8a8a92">담당 세션에 "회귀 뜬 거 봐" 라고 하면 됩니다.</div>')).join('')
+      :'<div style="color:#8a8a92;font-size:12px;padding:4px 0 8px">없음 — 잘못된 것이 없습니다.</div>';
+  // 진행 중은 단계 순서대로(등록→분배→수리→로컬검증→병합→서버반영) 묶어 세어 준다 — 어디까지 왔는지 한눈에
+  const STAGE_HELP={'등록':'대기 — 아직 아무도 안 맡음','분배':'맡은 세션 있음','수리':'고치는 중','로컬검증':'테스트 통과, 병합 대기','병합':'main 에 들어감, 서버 반영 대기','서버반영':'서버에 올라감, 라이브 실측 대기(1시간 안에 자동)'};
+  const stages=['서버반영','병합','로컬검증','수리','분배','등록'];
+  const doingHtml=stages.filter(s=>doing.some(c=>c.state===s)).map(s=>{
+    const items=doing.filter(c=>c.state===s);
+    return '<div style="margin:8px 0 2px;font-size:12px;color:#c8c8d0">'+_abEsc(s)+' ('+items.length+') <span style="color:#8a8a92">— '+_abEsc(STAGE_HELP[s]||'')+'</span></div>'
+      +items.map(c=>row(c,'')).join('');
   }).join('');
+  h+='<details style="margin-top:12px"><summary style="cursor:pointer;color:#8a8a92">진행 중 ('+doing.length+') — 세션들이 처리 중, 사장님이 할 일 없음</summary>'+doingHtml+'</details>';
+  h+='<details style="margin-top:8px"><summary style="cursor:pointer;color:#8a8a92">끝난 것 ('+done.length+') — 실제 고객 작업으로 확인됨</summary>'
+      +done.map(c=>row(c,'<div style="font-size:11px;color:#8a8a92">'+_abEsc(c.live||'')+'</div>')).join('')+'</details>';
+  box.innerHTML=h;
 }
 async function approveCard(no){
   const note=prompt('카드 '+no+' 승인 근거(누가·언제·무슨 말로)', '사장님 관리자 화면 승인');

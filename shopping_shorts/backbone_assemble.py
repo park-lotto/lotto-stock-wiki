@@ -60,6 +60,8 @@ def _seg_index(sources):
     """seg_id -> {secs, desc, vid, ...}. 모든 소스의 컷을 한 표로."""
     idx = {}
     for s in sources:
+        if s.get("auto_exclude"):      # 씨앗(2026-09-30): 영상 소스엔 있되 자동 배치 표엔 안 올린다
+            continue
         for x in (s.get("segments") or []):
             sid = x.get("seg_id")
             if not sid:
@@ -74,7 +76,13 @@ def _seg_index(sources):
                              #   컷 번호 접두어(예 DdOayfhAnpx)로 두면 백본과 절대 안 맞아 '서브 먼저·원본 나중'이
                              #   통째로 무력이었다(2026-09-18 실측: 씨앗 s0 백본인데 원본 컷 10/29).
                              "key": bool(x.get("is_key")), "vid": s.get("video_id") or _vid_of(sid),
-                             "text": (x.get("text") or "").strip()}
+                             "text": (x.get("text") or "").strip(),
+                             # 2026-10-01 태깅 확장(카드 051): 훅 유형·뒷컷·화면 배속 힌트 — 없으면 빈칸/False/None
+                             "hook": str(x.get("hook_type") or "").strip(),
+                             # ★뒷컷은 "제품이 안 보일 때"만 믿는다 — 태거가 영상 끝의 제품 컷(가방 수납·완성품)을 자꾸 뒷컷으로
+                             #   찍었다(10-01 실측 4차: 뒷컷 5개 전부 제품 컷). 훅 유형이나 특장점이 달린 컷은 제품 컷이다.
+                             "outro": bool(x.get("is_outro")) and not (x.get("hook_type") or x.get("product_benefits")),
+                             "speed": x.get("speed_hint")}
     return idx
 
 
@@ -117,7 +125,11 @@ def _source_block(s, is_backbone):
                      + (f" | 말:{say}" if say else "")
                      + (f" | 변화:{(x.get('change') or '')[:40]}" if x.get("change") else "")
                      + (f" | 특징:{ben[:80]}" if ben else "")
-                     + (f" | 용처:{(x.get('use_point') or '')[:60]}" if x.get("use_point") else ""))
+                     + (f" | 용처:{(x.get('use_point') or '')[:60]}" if x.get("use_point") else "")
+                     # 2026-10-01: 훅 유형·속도·뒷컷을 작가도 본다(사장님 "훅컷은 제품의 뚜렷한 클로즈업·줌…")
+                     + (f" | 훅:{x.get('hook_type')}({(x.get('hook_why') or '')[:12]})" if x.get("hook_type") else "")
+                     + (f" | 속도:{x.get('tempo')}/{x.get('speed_hint') or 1.0}배" if x.get("tempo") else "")
+                     + (" | 뒷컷(안 씀)" if x.get("is_outro") else ""))
     return "\n".join(lines)
 
 
@@ -1100,8 +1112,20 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
     훅·CTA(group=-1)는 order 밖의 '휴대/외관' 류 서브 컷 → 없으면 아무 미사용 서브 컷."""
     used = set()
 
+    def _is_outro(s):
+        """1단계 태그 is_outro — CTA·마무리·인사·남의 채널 UI 컷. 어떤 줄에도 안 붙인다(사장님 2026-10-01 "뒷쪽 컷 금지")."""
+        return bool(seg_index.get(s, {}).get("outro"))
+
+    def _hook_first(sids, line_role=""):
+        """훅 줄엔 훅 유형이 달린 컷(문제 제외)을 앞세운다 — 길이 규칙은 그대로, 순서만 바꾼다."""
+        if not str(line_role or "").startswith("훅"):
+            return list(sids)
+        hk = [s for s in sids if seg_index.get(s, {}).get("hook") and seg_index[s]["hook"] != "문제"]
+        return hk + [s for s in sids if s not in hk]
+
     def _cands(sids):
-        out = [s for s in sids if s in seg_index and s not in used and seg_index[s]["secs"] >= MIN_CUT_SECS]
+        out = [s for s in sids if s in seg_index and s not in used and not _is_outro(s)
+               and seg_index[s]["secs"] >= MIN_CUT_SECS]
         sub = [s for s in out if seg_index[s]["vid"] != backbone_vid]
         org = [s for s in out if seg_index[s]["vid"] == backbone_vid]
         return sub + org      # 서브 먼저
@@ -1118,7 +1142,7 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
                 break
         return picked, have
 
-    all_sub = [s for s, v in seg_index.items() if v["vid"] != backbone_vid]
+    all_sub = [s for s, v in seg_index.items() if v["vid"] != backbone_vid and not v.get("outro")]
     order = groups_out.get("order") or []
     in_group = {c for g in groups_out["groups"] for c in (g.get("cuts") or [])}
     # 구조 줄(정체·떼돈·이건 바로·한계·마무리)용 후보: 어느 특징에도 안 들어간 컷 중 '제품 전체·외관'을 먼저,
@@ -1174,6 +1198,7 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
                 sids = [s for s in all_sub if _is_problem(s) and s not in used] + sids
         else:
             sids = _structural_pool(L.get("role"))
+        sids = _hook_first(sids, L.get("role"))
         picked, have = _fill(sids, need)
         # ★모자라면 서브에서 보충 — 짧은 컷(<MIN_CUT_SECS)을 거르고 나면 그룹 컷만으론 부족할 때가 있다
         #   (실측 1회차: 펜촉 줄 화면 2.6s < 대사 4.9s). 안 채우면 3단계 채우기가 대본 안 보고 메운다.
@@ -1186,9 +1211,21 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
         if len(picked) < MIN_CUTS_PER_LINE and need > TARGET_CUT_SECS:
             more, more_have = _fill(free + all_sub, 0.0)  # 0.0 = 개수만 채운다(길이는 이미 찼다)
             picked += more; have += more_have
-        if not picked:                                   # 그래도 없으면 원본 아무 컷
+        if not picked:                                   # 그래도 없으면 원본 아무 컷(뒷컷은 _cands 가 거른다)
             picked, have = _fill(list(seg_index), need)
         beat_sources[li] = {"role": L["role"], "seg": picked[0] if picked else "", "segs": picked}
+        # 2026-10-01: 컷별 화면 배속 힌트를 **데이터로만** 싣는다. 렌더 적용은 sync_speed(음성+화면 통합) 설계와
+        #   부딪혀 사장님 결정 대기 — 여기서 재생 속도를 바꾸지 않는다.
+        _sp = {}
+        for sid in picked:
+            try:
+                _v = float(seg_index.get(sid, {}).get("speed"))
+            except (TypeError, ValueError):
+                continue
+            if abs(_v - 1.0) > 1e-6:
+                _sp[sid] = _v
+        if _sp:
+            beat_sources[li]["speed_hints"] = _sp
         report[li] = {"text": L["text"], "need": round(need, 1), "have": round(have, 1),
                       "cuts": picked, "from_sub": all(seg_index[s]["vid"] != backbone_vid for s in picked)}
     return beat_sources, report

@@ -75,3 +75,35 @@ def test_run_card_refuses_unmerged_card(repo):
     calls = []
     assert lc.run_card(repo, c, sh=lambda *a, **k: calls.append(1) or (0, ""), printer=lambda *a: None) == 2
     assert calls == [], "병합 기록 없는 카드는 서버를 부르지 않는다"
+
+
+def test_run_all_measures_once_and_writes_every_due_card(repo):
+    """병합된 카드 여럿을 서버 한 번 실행으로 재고 전부에 적는다(사장님 10-01 "묻지 않아도 라이브 뒤 테스트")."""
+    _install(repo)
+    old = time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() - 3 * 3600))
+    nos = []
+    for t in ("가", "나"):
+        n = control.new_card(repo, "묶음 " + t, printer=lambda *a: None)
+        control.set_field(repo, n, "병합", "abc%d000000 %s (t)" % (n, old), printer=lambda *a: None)
+        control.set_status(repo, n, "병합", printer=lambda *a: None)
+        nos.append(n)
+    done = control.new_card(repo, "이미 끝", printer=lambda *a: None)     # 병합 기록 없음 → 대상 아님
+    calls = []
+    fake = lambda cmd, timeout=0: calls.append(cmd) or (0, "== 칸 30 · 다른 장면 0\n✅ 깨끗\n")  # noqa: E731
+    assert lc.run_all(repo, control.cards_from_ref(repo), sh=fake, printer=lambda *a: None) == 0
+    assert len(calls) == 1 and "--hours 3" in calls[0] or "--hours 4" in calls[0]
+    cards = control.cards_from_ref(repo)
+    for n in nos:
+        c = control.find_card(cards, n)
+        assert c["상태"] == "라이브실측" and "묶음 실측 2장" in c["라이브 실측"]
+    assert control.find_card(cards, done)["상태"] == "등록"
+
+
+def test_run_all_regresses_all_when_audit_fails(repo):
+    _install(repo)
+    old = time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() - 3600))
+    n = control.new_card(repo, "회귀될 것", printer=lambda *a: None)
+    control.set_field(repo, n, "병합", "abcdef0000 %s (t)" % old, printer=lambda *a: None)
+    control.set_status(repo, n, "서버반영", printer=lambda *a: None)
+    assert lc.run_all(repo, control.cards_from_ref(repo), sh=lambda cmd, timeout=0: (1, "== 칸 30 · 다른 장면 2\n❌\n"), printer=lambda *a: None) == 1
+    assert control.find_card(control.cards_from_ref(repo), n)["상태"] == "회귀"

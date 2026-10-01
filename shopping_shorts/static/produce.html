@@ -3468,14 +3468,46 @@
       <!-- ★썰 효과음 자동 넣기 스위치(2026-09-22 사장님 "효과음 켜고 끄는 걸 단계에 들어가는 구간에").
            썰 대본(오용형·제품정체형·발명품형)이고 관리자 스위치가 켜진 영상에서만 보인다 — 판정은
            서버(/api/produce/mix/sfx_pack)가 렌더와 같은 함수로 한다. 끄면 이 영상의 미리보기·완성본·캡컷에서 빠진다. -->
+      <!-- ★효과음 탭(2026-10-01 관제 059 사장님 "효과음 탭을 구성하고 4개를 다 만들어서 사용자 선택"):
+           횟수 3단 · 크기 3단 · 소리 묶음 고르기(미리듣기) · 칸별 끄기. 값의 뜻은 서버 sfx_pack.settings_of 한 곳 —
+           여기는 보여주고 저장(/api/produce/mix/settings)만 한다. 미리보기·완성본·캡컷이 같은 값을 읽는다. -->
       <div id="sfxPackBar" style="display:none;margin:8px 0 4px;padding:10px 12px;border:1px solid var(--line);
-           border-radius:10px;background:var(--inset);font-size:14px;align-items:center;gap:10px;flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600">
-          <input type="checkbox" id="sfxPackToggle" style="width:20px;height:20px;cursor:pointer" onchange="sfxPackSet(this.checked)">
-          🔊 썰 효과음 자동 넣기
-        </label>
-        <span id="sfxPackInfo" class="hint" style="margin:0"></span>
+           border-radius:10px;background:var(--inset);font-size:14px;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600">
+            <input type="checkbox" id="sfxPackToggle" style="width:20px;height:20px;cursor:pointer" onchange="sfxPackSet(this.checked)">
+            🔊 효과음 자동 넣기
+          </label>
+          <span id="sfxPackInfo" class="hint" style="margin:0;flex:1 1 200px"></span>
+          <button type="button" class="btn-prev" id="sfxPackMore" style="min-height:36px;padding:6px 14px;font-size:14px" onclick="sfxPackTabToggle()">⚙ 효과음 조절</button>
+        </div>
+        <div id="sfxPackTab" style="display:none;border-top:1px solid var(--line);padding-top:10px;gap:12px;flex-direction:column">
+          <div class="sfxrow"><b>횟수</b><span class="sfxseg" data-key="sfx_density">
+            <button type="button" data-v="low">적게</button><button type="button" data-v="normal">보통</button><button type="button" data-v="high">많이</button></span>
+            <span class="hint" style="margin:0">보통 = 자막 줄마다 한 번</span></div>
+          <div class="sfxrow"><b>크기</b><span class="sfxseg" data-key="sfx_level">
+            <button type="button" data-v="low">작게</button><button type="button" data-v="normal">보통</button><button type="button" data-v="high">크게</button></span></div>
+          <div class="sfxrow"><b>소리</b>
+            <select id="sfxPackSel" style="min-height:36px;font-size:14px;padding:4px 8px" onchange="sfxPackSave({sfx_pack:this.value})"></select>
+            <span id="sfxPackPlay" style="display:inline-flex;gap:6px;flex-wrap:wrap"></span>
+            <span class="hint" style="margin:0">▶를 눌러 들어 보세요</span></div>
+          <div class="sfxrow" style="align-items:flex-start"><b>칸별</b>
+            <div id="sfxBeatList" style="display:flex;flex-direction:column;gap:4px;flex:1 1 260px"></div></div>
+          <div id="sfxPackSaved" class="hint" style="margin:0"></div>
+        </div>
       </div>
+      <style>
+        .sfxrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+        .sfxrow>b{min-width:44px;font-size:14px}
+        .sfxseg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+        .sfxseg button{min-height:36px;min-width:60px;padding:6px 14px;font-size:14px;border:0;background:var(--panel);color:var(--txt);cursor:pointer}
+        .sfxseg button+button{border-left:1px solid var(--line)}
+        .sfxseg button.on{background:var(--grad);color:#fff;font-weight:700}
+        .sfxplay{min-height:34px;padding:4px 10px;font-size:13px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--txt);cursor:pointer}
+        .sfxbeat{display:flex;align-items:center;gap:8px;font-size:14px;padding:4px 8px;border-radius:8px;background:var(--panel)}
+        .sfxbeat input{width:18px;height:18px;cursor:pointer}
+        .sfxbeat .n{color:var(--sub);font-size:12px;margin-left:auto}
+      </style>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 좌측 레일: ③ 미리보기(9:16) — 편집안이 뜨면(loadMixReview) 여기가 프리뷰 자리가 된다.
              T8: 다른 패널의 .previewSlot과 같은 규약(sticky) 공유. -->
@@ -5097,7 +5129,10 @@ function frameUrl(f){
   }
   return '/api/produce/frame.png?'+q.toString();
 }
-async function loadFramePresets(){
+async function loadFramePresets(opts){
+  // lite(2026-10-01): 새 편집기(인라인)가 켜졌을 때 — 목록 JSON은 받되(제목 화법·채널 스타일이 참고) 축소판 그림
+  //   24장(frame.png 서버 렌더)과 이미지 틀 목록은 안 받는다. 화면엔 안 보이는데 새 편집기와 네트워크를 다퉜다.
+  const _lite = !!(opts && opts.lite);
   const box=document.getElementById('frPresets'); if(!box) return;
   /* ★내 채널명을 틀 목록보다 **먼저** 읽는다 — frPick이 MY_CHANNEL을 쓰는데
      아직 null이면 샘플값('숏템메이커')이 박혀 저장해둔 이름이 무시된다(2026-08-30). */
@@ -5106,6 +5141,7 @@ async function loadFramePresets(){
     try{ const d=await (await fetch('/api/produce/frame/presets')).json(); FR_PRESETS=(d&&d.presets)||[]; }
     catch(e){ box.innerHTML='<span class="hint" style="color:var(--fire)">틀 목록을 불러오지 못했어요</span>'; return; }
   }
+  if(_lite) return;
   try{ const r=await (await fetch('/api/produce/frame/images')).json(); FR_IMAGES=(r&&r.images)||[]; }
   catch(e){ FR_IMAGES=[]; }      // 목록 하나 못 읽었다고 틀 고르기가 통째로 막히면 안 된다
   renderFramePresets();
@@ -6142,6 +6178,7 @@ function decoTab(name){
   }
 }
 function initHeadcopy(){
+  const _inlineLite = (typeof window !== 'undefined' && window.SCENE_STYLE_INLINE === true);   // typeof: node 절단 하네스
   const t=document.getElementById('hcText');
   // 헤드카피는 빈칸으로 시작한다. 내가 입력한 값(STATE.headcopy.text)만 복원하고,
   // 대본 첫 문장으로 자동 채우지 않는다 — 지우고 뒤로갔다 와도 다시 채워지던 버그 차단.
@@ -6183,11 +6220,15 @@ function initHeadcopy(){
   renderOverlayPreview();
   applyDefaultStyleOnEntry();   // step5 진입 시 1회: 미터치 상태면 기본 스타일+실장면 배경 자동 적용
   ensureCleanRegions();         // 지워진 자막 자리 표시 + 자막 자동정렬(미터치 시)
-  loadBeatsPreview();
+  if(!_inlineLite) loadBeatsPreview();
   syncMotionPicker();
-  loadHeadcopySuggest(false);   // 진입 시 자동(같은 대본이면 서버 캐시가 받아 호출 0회)
+  if(!_inlineLite) loadHeadcopySuggest(false);   // 진입 시 자동(같은 대본이면 서버 캐시가 받아 호출 0회)
   loadTemplates();              // 템플릿 카드(목록은 1회만 읽고 캐시)
-  loadFramePresets();           // 📰 내용물 있는 틀 프리셋(같은 탭에 함께 산다)
+  // ★새 편집기(인라인)가 켜져 있으면 옛 피팅룸의 **무거운 불러오기**는 건너뛴다(2026-10-01 사장님 "열면 항상 구버전이
+  //   백그라운드에 깔려 로딩이 늦다"). 틀 프리셋 24종은 서버가 frame.png를 실제로 그려 보내고, 장면 미리보기·제목 후보도
+  //   요청이 나간다 — 화면엔 안 보이는데 새 편집기와 네트워크를 다툰다. 값 채우기(applyConfig·updateHC·자막 폰트)는
+  //   원본(plain) 모드가 옛 칸을 읽으므로 그대로 둔다. 플래그를 아직 모르면(undefined) 종전대로 전부 돈다.
+  loadFramePresets(_inlineLite ? {lite:true} : undefined);   // 📰 내용물 있는 틀 프리셋 — 인라인이면 목록만(그림 24장 생략)
   renderTemplatePreview();      // 복원된 선택을 미리보기에 반영
   restoreCommentControls();     // 💬 저장된 댓글 카드 복원 + 서버 PNG 미리보기
 }
@@ -9385,6 +9426,14 @@ function addMixUrl(){
 // 배정하지 않는다 — 각 영상에 pickScript(대본 뽑음)/useFootage(화면 담김) 두 상태를 두어
 // 겸용을 허용한다(같은 영상을 대본으로도 화면으로도 쓸 수 있음, 2026-07-15 역할배정 폐기).
 let HANDOFF = [];   // [{url,shortcode,name,thumbnail,caption,pickScript,useFootage,play_url?}]
+// ★옛 저장본 변환(2026-09-30): 09-21~09-30 사이 저장된 작업은 씨앗의 useFootage가 꺼져 있다(_seedFootageOff).
+//   새 규칙(자동배치만 제외, 소스엔 포함)으로 옮긴다 — 복원 경로 셋이 전부 이 함수를 지난다(판단 한 곳).
+function _migrateSeedFlags(list){
+  for(const h of (list||[])){
+    if(h && h._seedFootageOff){ h.useFootage=true; h.seedNoAuto=true; delete h._seedFootageOff; }
+  }
+  return list||[];
+}
                     // play_url = 인앱 재생용 직접 mp4(있을 때만). 재료 썸네일 미리보기에서 인라인 재생.
 // 작업 상태 저장/복원 — 다른 페이지 갔다 오면 받은 영상·상태·대본이 사라지던 것 방지
 // (2026-07-14). sessionStorage에 상시 보관, 매 변경 시 갱신, 로드 시 복원.
@@ -9662,7 +9711,7 @@ async function deleteWork(wid, btn){
 function revertWork(){
   if(!_prevCommitted) return;
   let w; try{ w = JSON.parse(_prevCommitted); }catch(e){ return; }
-  HANDOFF = w.handoff || [];
+  HANDOFF = (typeof _migrateSeedFlags==='function') ? _migrateSeedFlags(w.handoff || []) : (w.handoff || []);   // typeof: 절단 하네스 대비
   STATE.script = w.script || '';
   STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
   STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;
@@ -9709,7 +9758,7 @@ async function _restoreWork(workId){
   //   복원 도중의 어떤 저장도 cur가 아직 0인 채로 나가는데, _serverStep이 비어 있으면
   //   _stepDemoted가 강등을 못 알아봐 step=0이 서버 진행단계를 파괴한다(위 refreshStep0 주석).
   try{ if(typeof d.step === 'number' && d.step > 0) _serverStep = d.step; }catch(e){}
-  HANDOFF = w.handoff || [];
+  HANDOFF = (typeof _migrateSeedFlags==='function') ? _migrateSeedFlags(w.handoff || []) : (w.handoff || []);   // typeof: 절단 하네스 대비
   // ★즐겨찾기에서 "이 작업으로 보내기"로 들어온 영상을 여기서 합친다(2026-08-18).
   //   전엔 서버 작업으로 통째 덮어쓰기만 해서 방금 보낸 영상이 조용히 사라졌다.
   //   합치는 규칙은 _mergeHandoffItems 한 곳(중복 제거 포함).
@@ -10536,7 +10585,7 @@ function _consumeProduceHandoff(){
   // 1) 진행 중 작업을 base로 복원(있으면). 신규는 여기에 누적된다.
   let w; try{ w=JSON.parse(sessionStorage.getItem('produce_work')||'null'); }catch(e){ w=null; }
   if(w && ((w.handoff && w.handoff.length) || w.script)){
-    HANDOFF=w.handoff||[]; savedScript=w.script||''; restored=true;
+    HANDOFF=(typeof _migrateSeedFlags==='function')?_migrateSeedFlags(w.handoff||[]):(w.handoff||[]); savedScript=w.script||''; restored=true;
     STATE.script_src_idx = (typeof w.script_src_idx === 'number') ? w.script_src_idx : null;
     STATE.script_from_wiki = (typeof w.script_from_wiki !== 'undefined') ? w.script_from_wiki : null;   // 구페이로드 호환: 없으면 null(뽑기 유래 취급=안전 기본값, 버튼 보임)
     STATE.script_style_id = (typeof w.script_style_id !== 'undefined') ? w.script_style_id : null;
@@ -11973,6 +12022,16 @@ function collectMixUrls(){
   for(const u of [...fromPool, ...typed]){ if(!seen.has(u)){ seen.add(u); out.push(u); } }
   return out;
 }
+// 씨앗(seedNoAuto) 영상이 urls의 몇 번째인지 — collectMixUrls와 같은 url 규칙(샤오홍슈는 play_url)으로 찾는다.
+function collectNoAutoIdx(urls){
+  const out=[];
+  for(const h of HANDOFF){
+    if(!h || !h.seedNoAuto || !h.useFootage) continue;
+    const u=(h.play_url && /rednote\.com|xiaohongshu\.com|xhslink\.com/.test(h.url||'')) ? h.play_url : h.url;
+    const i=urls.indexOf(u); if(i>=0 && !out.includes(i)) out.push(i);
+  }
+  return out;
+}
 // 📝뽑기: 영상 i의 대본을 확보(캐시/추출)한 뒤 구조분석해 도서관식 생성 모달을 연다.
 // (도서관 library.html의 openGen/runGen/refineDraft/history를 pm 접두로 이식, 2026-07-15)
 let PM_IDX=null, PM_BASE_STRUCT=null, PM_CATEGORY='', PM_URL='', PM_SHORTCODE='', PM_BASE_SCRIPT='';
@@ -12423,6 +12482,9 @@ async function startProduceMix(){
     //   그 장면을 1순위로 붙인다. 없으면 키 자체를 안 보낸다 = 종전 그대로(회귀 0).
     if(STATE.script_beat_sources && STATE.script_beat_sources.length)
       _mixBody.script_structure={beat_sources: STATE.script_beat_sources};
+    // ★씨앗 영상의 urls 인덱스(2026-09-30) — 서버가 그 소스를 자동 배치에서만 뺀다(영상 소스엔 유지).
+    const _noAuto=(typeof collectNoAutoIdx==='function')?collectNoAutoIdx(urls):[];
+    if(_noAuto.length){ _mixBody.script_structure=Object.assign({}, _mixBody.script_structure||{}, {no_auto_idx:_noAuto}); }
     // ★고른 대본 틀(스파인) 번호를 job에 박아 둔다(2026-09-22). 썰 대본 효과음팩이 이걸로 켜진다 —
     //   제작 기록(produce_works)은 지워지거나 새 job으로 넘어가면 끈이 끊겨서(실측), job 자체에 싣는다.
     if(STATE.script_style_id!=null && STATE.script_style_id!=='')
@@ -12833,6 +12895,7 @@ function _syncSceneLab(on){
 // ── 🔊 썰 효과음 자동 넣기 스위치 ─────────────────────────────────────────
 //   보일지·켜졌는지는 서버가 렌더와 같은 판정으로 알려 준다. 같은 영상이면 다시 묻지 않는다.
 let _sfxPackJob=null;
+let SFX_STATE=null;
 async function sfxPackRefresh(force){
   const bar=document.getElementById('sfxPackBar'); if(!bar) return;
   if(!MIX_JOB){ bar.style.display='none'; _sfxPackJob=null; return; }
@@ -12841,13 +12904,76 @@ async function sfxPackRefresh(force){
   try{
     const d=await (await fetch('/api/produce/mix/sfx_pack/'+encodeURIComponent(MIX_JOB))).json();
     if(!d.ok || !d.eligible){ bar.style.display='none'; return; }
+    SFX_STATE=d;
     document.getElementById('sfxPackToggle').checked=!!d.on;
     document.getElementById('sfxPackInfo').textContent = d.on
       ? '완성본 만들기를 누르면 장면마다 효과음이 자동으로 들어가요'
       : (d.sul ? '꺼져 있어요 — 이 영상에는 효과음이 안 들어가요'
                : '체크하면 이 영상에도 효과음을 넣어 드려요 (썰 대본 스타일에 맞춘 소리예요)');
+    document.getElementById('sfxPackMore').style.display = d.on ? '' : 'none';
+    if(!d.on){ const t=document.getElementById('sfxPackTab'); if(t) t.style.display='none'; }
+    sfxPackRenderTab(d);
     bar.style.display='flex';
   }catch(e){ bar.style.display='none'; }
+}
+// ── ⚙ 효과음 조절 탭(관제 059) — 그리기만. 저장은 sfxPackSave 한 곳 ──
+function sfxPackTabToggle(){
+  const t=document.getElementById('sfxPackTab'); if(!t) return;
+  const open = t.style.display!=='flex';
+  t.style.display = open ? 'flex' : 'none';
+  document.getElementById('sfxPackMore').textContent = open ? '⚙ 효과음 조절 닫기' : '⚙ 효과음 조절';
+}
+function sfxPackRenderTab(d){
+  document.querySelectorAll('#sfxPackTab .sfxseg').forEach(seg=>{
+    const key=seg.dataset.key, cur = key==='sfx_density' ? d.density : d.level;
+    seg.querySelectorAll('button').forEach(b=>{
+      b.classList.toggle('on', b.dataset.v===cur);
+      b.onclick=()=>{ const o={}; o[key]=b.dataset.v; sfxPackSave(o); };
+    });
+  });
+  const sel=document.getElementById('sfxPackSel');
+  if(sel){
+    sel.innerHTML = '<option value="auto">기본(자동 배정)</option>' +
+      (d.packs||[]).filter(p=>p.label!=='기본').map(p=>`<option value="${p.no}">${p.label}</option>`).join('');
+    sel.value = (d.pack_choice && d.pack_choice!=='auto') ? String(d.pack_choice) : 'auto';
+  }
+  const play=document.getElementById('sfxPackPlay');
+  if(play){
+    const no = d.pack_no || 1;
+    const names={opener:'두둥',pop:'뽁',dung:'둥',ding:'띠링',whoosh:'휙',tick:'틱',click2:'딸깍'};
+    play.innerHTML = Object.keys(names).map(k=>`<button type="button" class="sfxplay" onclick="sfxPlay(${no},'${k}')">▶ ${names[k]}</button>`).join('');
+  }
+  const list=document.getElementById('sfxBeatList');
+  if(list){
+    const beats=d.beats||[];
+    list.innerHTML = beats.length ? beats.map(b=>{
+      const n = b.manual ? '직접 고른 소리' : (d.timeline_ready ? (b.muted ? '없음' : `${b.hits}번`) : '');
+      return `<label class="sfxbeat"><input type="checkbox" data-beat="${b.beat_idx}" ${b.muted?'':'checked'} ${b.manual?'disabled':''} onchange="sfxBeatToggle()">`+
+        `<span>${b.beat_idx+1}. ${sfxEsc(b.label||b.role||'')}</span><span class="n">${n}</span></label>`;
+    }).join('') : '<span class="hint" style="margin:0">장면이 아직 없어요</span>';
+  }
+}
+function sfxEsc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function sfxBeatToggle(){
+  const off=[...document.querySelectorAll('#sfxBeatList input[data-beat]')].filter(i=>!i.checked).map(i=>parseInt(i.dataset.beat,10));
+  sfxPackSave({sfx_mute_beats: off});
+}
+let _sfxAudio=null;
+function sfxPlay(no, slot){
+  try{ if(_sfxAudio){ _sfxAudio.pause(); } _sfxAudio=new Audio('/api/produce/sfx_pack/sound/'+no+'/'+slot); _sfxAudio.play().catch(()=>{}); }catch(e){}
+}
+async function sfxPackSave(patch){
+  if(!MIX_JOB) return;
+  const saved=document.getElementById('sfxPackSaved');
+  try{
+    const r=await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(Object.assign({job_id:MIX_JOB}, patch))});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    try{ STATE.deco=Object.assign({}, STATE.deco||{}, patch); if(typeof saveWork==='function') saveWork(); }catch(e){}
+    if(saved) saved.textContent='저장했어요 — 완성본 만들기를 다시 누르면 바뀐 효과음으로 만들어져요';
+    await sfxPackRefresh(true);
+    const t=document.getElementById('sfxPackTab'); if(t && t.style.display!=='flex'){ sfxPackTabToggle(); }
+  }catch(e){ if(saved) saved.textContent='저장하지 못했어요 — 다시 눌러 주세요'; }
 }
 async function sfxPackSet(on){
   if(!MIX_JOB) return;
@@ -14378,7 +14504,9 @@ const VARIANT_LABELS = {stable:'안정', natural:'자연', expressive:'표현', 
 // ★1.6까지 연다(2026-08-22 사장님 청취 확정). 종전 상한 1.5는 근거 없이 박혀
 //   있던 값이고, 기본 보이스가 이미 1.6이라 **화면에서 고를 수 없는 값이 실제로
 //   쓰이고 있었다**(고르면 1.5로 내려가는 함정). 실측 6.87자/초.
-const SPEEDS=[0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6];
+// ★1.25·1.35 추가(2026-10-01 관제 049) — 성우 기본 속도가 미나 1.35·그 외 1.25로 바뀌었다
+//   (voice_presets.default_speed). 버튼에 없으면 같은 함정(고르면 옆 값으로 내려감)이 재발한다.
+const SPEEDS=[0.8,0.9,1.0,1.1,1.2,1.25,1.3,1.35,1.4,1.5,1.6];
 const SIL=[['off','OFF'],['weak','약'],['mid','중'],['strong','강']];
 // 영상별 "이 영상은 속삭임을 훅에만" 선택(2026-07-17). 새 저장층 없음 — /api/mix/voice의
 // body.whisper_roles가 job voice 스냅샷의 naturalize_profile.whisper.roles에만 얹힌다
@@ -18647,15 +18775,19 @@ function s2PickSeed(i){
 //   화면 재료의 판단처는 useFootage 하나다(collectMixUrls) — 새 통로를 만들지 않고 그 값을 끈다.
 //   앞서 씨앗이던 영상은 화면 사용을 되살린다(씨앗을 바꿨는데 계속 빠져 있으면 재료가 조용히 준다).
 function _seedFootageOff(prevSeed, nextSeed){
-  // ★지금은 사장님 계정만(2026-09-21 사장님 "고객들은 예전 걸로 해두고 나만 라이브"). 새 대본
-  //   스위치(backbone_script_enabled=admin)와 짝 — 대본이 옛 경로인 고객은 화면 재료도 종전대로 둔다.
-  if(!(typeof _s2SeedAuto==='function' && _s2SeedAuto())) return;
+  // ★모든 모드·계정 공통(2026-10-01 사장님 "썰 말고 인스타에 쓸 때도 — 매칭은 안 되고 소스는 모두 믹스로").
+  //   종전엔 이야기작가 켜진 계정만(_s2SeedAuto) 돌아 다른 계정은 씨앗이 자동 매칭에 그대로 쓰였다.
+  //   이 함수는 이제 재료를 빼지 않고 표식(seedNoAuto)만 달므로 모든 계정에 켜도 재료가 줄지 않는다.
   try{
     const find=sc=>(sc? HANDOFF.find(h=>h && h.shortcode===sc) : null);
+    // ★2026-09-30 사장님 "씨앗은 자동배치는 빼주되 영상소스로는 넣어라": 종전엔 useFootage를 꺼서 job에서
+    //   통째로 빠졌다(이연정님 "8개 중 7개만 온다"). 이제 useFootage는 손대지 않고 seedNoAuto 표식만 단다 —
+    //   collectMixUrls가 이걸 script_structure.no_auto_idx로 보내고, 서버(mix_pipeline.mark_auto_exclude)가
+    //   그 소스를 자동 배치에서만 뺀다. 3단계 영상 소스 목록엔 그대로 보인다.
     const prev=find(prevSeed && prevSeed.shortcode);
-    if(prev && prev._seedFootageOff){ prev.useFootage=true; delete prev._seedFootageOff; }
+    if(prev){ delete prev.seedNoAuto; if(prev._seedFootageOff){ prev.useFootage=true; delete prev._seedFootageOff; } }
     const cur=find(nextSeed && nextSeed.shortcode);
-    if(cur && cur.useFootage!==false){ cur.useFootage=false; cur._seedFootageOff=true; }
+    if(cur){ cur.seedNoAuto=true; if(cur._seedFootageOff){ cur.useFootage=true; delete cur._seedFootageOff; } }
     if(typeof renderPool==="function") renderPool();
   }catch(_){ }
 }

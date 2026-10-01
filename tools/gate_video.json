@@ -54,6 +54,7 @@
     "음성 없음"
   ],
   "watch_files": [
+    "shopping_shorts/config.py",
     "shopping_shorts/video_assemble.py",
     "shopping_shorts/mix_pipeline.py",
     "shopping_shorts/clean_base.py",
@@ -64,6 +65,11 @@
     "shopping_shorts/capcut_draft.py",
     "shopping_shorts/export_bundle.py",
     "shopping_shorts/static/scene_play.js",
+    "shopping_shorts/voice_presets.py",
+    "shopping_shorts/typecast_tts.py",
+    "shopping_shorts/audio_post.py",
+    "shopping_shorts/tts.py",
+    "shopping_shorts/tts_joined.py",
     "tools/editor_vs_final_video.py",
     "tools/evf_run.py",
     "tools/capcut_export_audit.py",

@@ -174,7 +174,9 @@
         '</div>' +
         (typeof opt.onGoBeat === 'function'
           ? '<button type="button" class="frgo down" data-go="1" title="다음 장면의 필름으로">▼ 다음 장면</button>' : '') +
-        '<video class="frpv" muted playsinline preload="auto"></video>' +
+        // ★preload none(2026-10-01 관제 061): 필름은 열자마자 떠 있는데(08-26 "늘 켜져 있다") auto면 그 순간
+        //   원본 전체(고객 실측 24MB)를 받는다. 재생(스페이스·▶)을 누를 때 auto로 올린다 — 아래 pv.play() 자리.
+        '<video class="frpv" muted playsinline preload="none"></video>' +
         '<canvas class="frcv" style="display:none"></canvas>' +
       '</div>';
 
@@ -701,7 +703,8 @@
       N = Math.max(1, Math.ceil(DUR / STEP));
       host.querySelector('.frstep').textContent = `한 칸 ${STEP}초`;
       const tmp = document.createElement('video');
-      tmp.muted = true; tmp.preload = 'auto'; tmp.src = opt.src;
+      // metadata만(관제 061) — 길이와 캡처용 시크만 필요하다. auto면 캡처 전에 파일 전체를 받는다.
+      tmp.muted = true; tmp.preload = 'metadata'; tmp.src = opt.src;
       await new Promise(r => {
         if (tmp.readyState >= 1) return r();
         tmp.addEventListener('loadedmetadata', r, { once: true });
@@ -1107,7 +1110,7 @@
         return;
       }
       try { pv.currentTime = a; } catch (_) {}
-      pv.play().then(() => tick(() => pv.currentTime)).catch(() => {
+      (pv.preload = 'auto', pv).play().then(() => tick(() => pv.currentTime)).catch(() => {
         // 자동재생 거부 — 시계로 간다(구간 길이만큼 균일하게).
         const t0 = performance.now();
         tick(() => a + (performance.now() - t0) / 1000);
@@ -1188,7 +1191,7 @@
       if (playing) { pv.pause(); playing = false; if (raf) cancelAnimationFrame(raf); raf = 0; return; }
       const b = bx;
       if (b && (pv.currentTime < b.s - 0.05 || pv.currentTime >= b.e - 0.02)) pv.currentTime = b.s;
-      pv.play().then(() => {
+      (pv.preload = 'auto', pv).play().then(() => {
         playing = true;
         const loop = () => {
           if (!playing || destroyed) return;
@@ -1253,7 +1256,7 @@
     let v = _FVIDS[vid];
     if (!v) {
       v = document.createElement('video');
-      v.muted = true; v.preload = 'auto'; v.src = src;
+      v.muted = true; v.preload = 'metadata'; v.src = src;   // 캡처는 시크로 — 전체 받기(auto) 금지(관제 061)
       _FVIDS[vid] = v;
     }
     await new Promise(r => {

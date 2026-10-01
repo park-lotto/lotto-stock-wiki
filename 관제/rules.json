@@ -30,6 +30,11 @@
   "card_gate": {
     "require_card": true,
     "require_approval": true,
-    "ownership_check": true
+    "ownership_check": true,
+    "auto_approve": [
+      "고객 화면"
+    ],
+    "_auto_approve": "2026-10-01 사장님 '승인 자동으로 해, 내가 필요한 건 미리 얘기해줌'. 고객 화면 변경은 관문 통과면 관제가 승인·라이브 뒤 자동 실측. 돈(과금)·회원 데이터는 사람 승인 — 카드 만들 때 사장님께 먼저 말한다",
+    "require_owner": true
   }
 }

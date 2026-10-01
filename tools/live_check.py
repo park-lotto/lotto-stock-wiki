@@ -105,6 +105,57 @@ def run_card(repo, card, *, jobs=4, write=True, sh=None, printer=print, now=None
     return rc
 
 
+def run_all(repo, cards, *, jobs=6, write=True, sh=None, printer=print, now=None, min_minutes=10):
+    """병합·서버반영 상태 카드 전부를 **서버 한 번 실행**으로 잰다(2026-10-01 사장님 "고치면 묻지 않아도 라이브 뒤 테스트").
+    카드마다 따로 돌리면 카드 수 × 10~20분 — 같은 시간대 병합은 같은 고객 작업을 보므로 가장 오래된 병합 기준 hours 로 한 번 재고
+    결과를 전부에 적는다. 판정은 daily_video_audit(video_gate.judge) 한 곳."""
+    due = cards_due(cards, min_minutes=min_minutes, now=now)
+    if not due:
+        printer("실측 대상 없음(병합·서버반영 상태 카드 없음)")
+        return 0
+    oldest = min(parse_merge(c["병합"])[1] for c in due)
+    hours = hours_since(oldest, now)
+    if sh is None:
+        key = video_gate._find_key()
+        if not key:
+            printer("❌ SSH 키를 못 찾았다 — 실측 없이 '됐다'로 만들지 않는다")
+            return 2
+        sh = video_gate._ssh_runner(key)
+    printer("실측 대상 %d장(%s) · 병합 뒤 최대 %d시간 · 서버에서 %d작업 검사 중…" % (
+        len(due), ", ".join("%03d" % c["번호"] for c in due), hours, jobs))
+    rc, out = sh(remote_command(0, hours, jobs), timeout=3600)
+    lines = summary_lines(out)
+    state, one = verdict(rc, out)
+    stamp = time.strftime("%Y-%m-%d %H:%M")
+    printer(("✅ " if rc == 0 else "❌ ") + one + " · " + " / ".join(lines[-6:]))
+    if write:
+        for c in due:
+            sha = parse_merge(c["병합"])[0]
+            text = "%s %s · 병합 %s 뒤 %d시간(묶음 실측 %d장) · %s" % (stamp, one, sha, hours, len(due), " / ".join(lines[-6:]) if lines else out.strip()[-300:])
+            control.set_field(repo, c["번호"], "라이브 실측", text, printer=lambda *a: None)
+            if state:
+                control.set_status(repo, c["번호"], state, printer=lambda *a: None)
+            else:
+                control.note(repo, c["번호"], "라이브 실측 시도: " + one, printer=lambda *a: None)
+        printer("   카드 %d장에 기록%s" % (len(due), " · 상태 " + state if state else ""))
+    return rc
+
+
+def schedule(printer=print, every_minutes=60):
+    """Windows 작업 스케줄러에 매시간 `live_check.py --all` 등록 — 병합된 카드는 묻지 않아도 라이브 뒤 4층 실측을 받는다."""
+    import shutil
+    import subprocess
+    repo = control.main_worktree()
+    py = shutil.which("python") or sys.executable
+    cmd = 'cmd /c "cd /d \\"%s\\" && \\"%s\\" tools\\live_check.py --all >> \\"%s\\" 2>&1"' % (
+        repo, py, Path(repo) / "관제" / "live_check_auto.log")
+    r = subprocess.run(["schtasks", "/Create", "/F", "/SC", "MINUTE", "/MO", str(every_minutes), "/TN", "숏템_관제_라이브실측", "/TR", cmd],
+                       capture_output=True, text=True, encoding="cp949", errors="replace")
+    printer(("✅ 작업 스케줄러 등록: 숏템_관제_라이브실측 매 %d분" % every_minutes) if r.returncode == 0
+            else ("❌ 등록 실패: " + (r.stdout + r.stderr).strip()[:200]))
+    return r.returncode == 0
+
+
 def cards_due(cards, min_minutes=10, now=None):
     now = now or time.time()
     out = []
@@ -127,7 +178,10 @@ def main(argv=None):
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--jobs", type=int, default=4)
     ap.add_argument("--no-write", action="store_true")
+    ap.add_argument("--schedule", action="store_true", help="작업 스케줄러에 매시간 --all 등록")
     args = ap.parse_args(argv)
+    if args.schedule:
+        return 0 if schedule() else 1
     repo = control.main_worktree()
     control._git(repo, "fetch", "origin")
     cards = control.cards_from_ref(repo)
@@ -138,12 +192,8 @@ def main(argv=None):
             return 2
         return run_card(repo, c, jobs=args.jobs, write=not args.no_write)
     if args.all:
-        due = cards_due(cards)
-        print("실측 대상 %d장: %s" % (len(due), ", ".join("%03d" % c["번호"] for c in due)))
-        worst = 0
-        for c in due:
-            worst = max(worst, run_card(repo, c, jobs=args.jobs, write=not args.no_write))
-        return worst
+        print("[%s]" % time.strftime("%Y-%m-%d %H:%M"))
+        return run_all(repo, cards, jobs=args.jobs, write=not args.no_write)
     ap.print_help()
     return 2
 

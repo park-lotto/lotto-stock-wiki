@@ -68,7 +68,7 @@ def _apply_patch_dir():
         return
     import types
     import shopping_shorts
-    for n in ("video_assemble", "scene_style", "mix_pipeline"):
+    for n in ("voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "video_assemble", "scene_style", "mix_pipeline"):
         f = Path(PATCH_DIR) / ("%s.py" % n)
         if f.exists():
             # ★__file__ 은 저장소 자리로 둔다 — 모듈이 자기 위치 기준으로 폰트(fonts/)·틀(out/)을 찾는다

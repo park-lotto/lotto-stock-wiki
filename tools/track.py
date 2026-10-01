@@ -538,6 +538,8 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
     rc, sha = run(["git", "rev-parse", "--short=10", "HEAD"], stage)
     if _MERGE_CARDS.get(name):
         _control.record_merge(repo, _MERGE_CARDS[name], name, sha.strip())
+        print("   라이브 실측은 묻지 않아도 자동 — 매시간 tools/live_check.py --all 이 실제 고객 작업으로 영상·소리·자막·캡컷을 재서 카드에 적는다"
+              "(기준 미달이면 회귀). 지금 바로: py tools/live_check.py --all")
     return "pushed"
 
 

@@ -112,3 +112,44 @@
 .caption-looks{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px}.caption-looks>span{grid-column:1/-1;color:#8fa3ad;font-size:11px;font-weight:900}
 .caption-looks button{height:30px;border:1px solid #294451;border-radius:6px;background:#0d202b;color:#9eb0b9;font-size:10px;font-weight:900;cursor:pointer;white-space:nowrap}
 .caption-looks button.active,.caption-looks button:hover{border-color:#43e2b4;background:#10362f;color:#63edc6}
+
+/* ── 가독성(2026-10-01 사장님 "설명 글자·메뉴 다 진하게, 폰트 키워서") ─────────────────────────
+   60대가 쓰는 화면이다. 흐린 회색(#6f8791·#8fa3ad 계열)과 8~11px 글자를 한 블록에서 끌어올린다.
+   이 파일이 showcase 인라인 스타일 뒤에 읽히므로 같은 셀렉터면 여기가 이긴다. 미리보기 폰(.dynamic-phone)은 안 건드린다. */
+.layout-a{--muted:#c7d3da}
+.layout-a .pane h2{font-size:17px;font-weight:900}
+.layout-a .tool-tabs button{font-size:15px;font-weight:900}
+.layout-a .seg button{font-size:14px;font-weight:900}
+.layout-a .template-mode-bar button{font-size:14px;color:#c7d3da}
+.layout-a .preset-card>b{font-size:15px;font-weight:900;color:#f4f8fa}
+.layout-a .preset-card>small,.layout-a .preset-card.wide small{font-size:12.5px;font-weight:700;color:#c7d3da}
+.layout-a .preset-card.wide b{font-size:15px}
+.layout-a .caption-kind{font-size:10px}
+.layout-a .stage-note{font-size:12.5px;font-weight:800;color:#dbe5ea}
+.layout-a .stage-note b{font-size:13px}
+.layout-a .ai-card{font-size:13px;font-weight:700}
+.layout-a .field label{font-size:14px;font-weight:900;color:#eaf1f4}
+.layout-a .field label span{color:#b6c5cd}
+.layout-a .field input{font-size:14px;font-weight:700}
+.layout-a details summary{font-size:14px;font-weight:900}
+.layout-a .fineprint,.layout-a .caption-guide{font-size:12.5px;color:#b9c7cf;font-weight:700}
+.layout-a .scene-summary b{font-size:13px}.layout-a .scene-summary small{font-size:12px;color:#b9c7cf}
+.layout-a .hook-motion-head b{font-size:14px}.layout-a .hook-motion-head small{font-size:12px}
+.layout-a .hook-motion-grid button,.layout-a .caption-looks button,.layout-a .caption-position button{font-size:13px;color:#dbe5ea}
+.layout-a .hook-speed span,.layout-a .caption-looks>span,.layout-a .caption-position span{font-size:13px;color:#dbe5ea}
+.layout-a .hook-speed button{font-size:12px;color:#dbe5ea}
+.layout-a .fixed-quick-head b{font-size:14px}.layout-a .fixed-quick-head button{font-size:12px}
+.layout-a .fixed-size-control>span{font-size:13px;color:#eaf1f4}.layout-a .fixed-size-control output{font-size:12px}
+.layout-a .fixed-palette-row button{font-size:12.5px}
+.layout-a .fixed-color-grid label{font-size:12px;color:#dbe5ea}
+.layout-a .font-stepper{color:#c7d3da!important}.layout-a .font-stepper output{font-size:12px;color:#dbe5ea}
+.layout-a .scene-navigator button{font-size:13px}.layout-a .scene-navigator strong{font-size:14px}
+.layout-a .plain-row>span{font-size:13px;color:#c7d3da}.layout-a .plain-row>i{font-size:12px;color:#aebcc4}
+.layout-a .caption-readonly{color:#c7d3da!important}
+.layout-a .precision-badge{font-size:10px}
+.layout-a .direction-note{font-size:13px;color:#c7d3da}
+.layout-a .transport{font-size:12.5px}
+.layout-a .none-card .none-thumb{font-size:14px;color:#c7d3da}
+.layout-a .my-preset-card b{font-size:14px}.layout-a .my-preset-card small{font-size:12px;color:#b9c7cf}
+.layout-a .font-template-empty{font-size:13px;color:#c7d3da}
+.layout-a .edit-pane small,.layout-a .edit-pane summary small,.layout-a .edit-pane .hint{font-size:12.5px;font-weight:800;color:#b9c7cf}
