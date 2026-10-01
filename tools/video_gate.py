@@ -43,6 +43,7 @@ PATCH_RELS = {                       # 서버 PATCH_DIR 안의 자리 ← 저장
     #   죽어 관문이 실패한다(2026-09-27 실사고: frame_match.py 를 새로 만들고 여기 안 넣어 첫 finish 가 막혔다).
     #   test_video_gate::test_patch_rels_cover_tool_loader 가 두 목록을 대조한다.
     # 음성 라인(2026-10-01 관제 049) — mix_pipeline 이 이들의 새 함수를 부른다. 안 올리면 도구 4개가 import 에서 죽는다.
+    "config.py": "shopping_shorts/config.py",                 # ★상수 정본(2026-10-01 관제 020: MAX_SLOWMO) — 다른 모듈이 import 때 읽으므로 가장 먼저
     "voice_presets.py": "shopping_shorts/voice_presets.py",
     "typecast_tts.py": "shopping_shorts/typecast_tts.py",
     "audio_post.py": "shopping_shorts/audio_post.py",
