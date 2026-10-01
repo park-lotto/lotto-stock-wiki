@@ -109,10 +109,15 @@ def match(lines, seg_index, backbone_vid, note=None, model=None):
             vid = seg_index[chosen[-1]]["vid"]
             lst = by_video.get(vid) or []
             k = lst.index(chosen[-1]) + 1 if chosen[-1] in lst else len(lst)
+            _lab = (seg_index[chosen[-1]].get("label") or "").strip()
             while have < need and k < len(lst):
                 s = lst[k]; k += 1
                 if s in used or not _usable(seg_index, s, backbone_vid) or (seg_index[s].get("desc") or s) in descs:
                     continue
+                # ★다음 컷이 **같은 장면**(1단계 label 같음)일 때만 — 배수구 0.8초 다음이 '감자 결과 확인'이라 감자가 붙었다
+                #   (2026-10-01 사장님 "감자가 무슨 태깅이길래", job 4a1d44721e8a). 같은 장면이 아니면 멈추고 코드 채우기에 맡긴다.
+                if _lab and (seg_index[s].get("label") or "").strip() != _lab:
+                    break
                 chosen.append(s); used.add(s); have += seg_index[s]["secs"]; descs.add(seg_index[s].get("desc") or s)
         out_bs.append({"role": L.get("role") or "", "seg": chosen[0] if chosen else "", "segs": chosen,
                        "why": next((p.get("why") for p in (out.get("picks") or []) if p.get("line") == i + 1), "")})

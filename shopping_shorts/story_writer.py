@@ -1092,14 +1092,22 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         #   코드 매칭도 근거 컷이 모자라면 딴 컷을 채웠다(실측 비교: 근거 안 0/7·3/7) → **매칭 방식과 관계없이** 여기서 고정한다.
         #   근거 컷이 줄보다 적으면 같은 근거 컷을 이어 쓴다(구절 이어 틀기로 그 장면이 이어진다). 훅·미끼·공개·마무리는 그대로.
         _locked = 0
+        _taken = {c for b in bs for c in (b.get("segs") or [])}       # 다른 줄이 이미 쓴 컷 — 고정할 때 같은 컷을 또 박지 않는다
         for i, L in enumerate(lines):
             gi = L.get("group", -1)
             if not (isinstance(gi, int) and 0 <= gi < len(groups_out["groups"])):
                 continue
             allowed = groups_out["groups"][gi]["cuts"]
             if allowed and not set(bs[i].get("segs") or []) <= set(allowed):
-                keep = [c for c in (code_bs[i].get("segs") or []) if c in allowed] or allowed[:1]
+                # ★같은 묶음의 줄 3개가 전부 allowed[0] 하나를 받아 **같은 컷이 세 번** 나왔다(2026-10-01 사장님 화면, job 4a1d44721e8a
+                #   고조1 세 줄 = 8e1-38 배수구 0.8초). 아직 아무 줄도 안 쓴 묶음 컷을 먼저, 없을 때만 첫 컷.
+                for c in (bs[i].get("segs") or []):
+                    _taken.discard(c)
+                keep = [c for c in (code_bs[i].get("segs") or []) if c in allowed and c not in _taken]
+                if not keep:
+                    keep = [c for c in allowed if c not in _taken][:1] or allowed[:1]
                 bs[i] = {"role": bs[i].get("role"), "seg": keep[0], "segs": keep}
+                _taken.update(keep)
                 _locked += 1
         n["locked_lines"] = _locked
         n["no_cut_lines"] = _share_cuts(lines, bs, seg_index)     # 끝내 빈 줄 = 재료가 대본보다 짧다
