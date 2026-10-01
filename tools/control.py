@@ -60,6 +60,10 @@ DEFAULT_RULES = {
         "token_scope_prefixes": ["shopping_shorts/"],
         "billing_tokens": ["_charge_", "clean_charge_plan", "clean_credit", "_sig_tier", "signature", "_render_stamp"],
         "customer_data_tokens": ["update_mix_job", "mix_jobs", "clean_base.json"],
+        # ★테스트 파일은 과금·데이터 토큰 검사에서 뺀다(2026-10-02 관제 068, 사장님 "관제 시스템을 바꿔야되네").
+        #   실측: 메모리 DB에 mix_jobs 표를 만드는 단위 테스트가 '회원 데이터 쓰기'로 분류돼 병합이 막혔다(067).
+        #   테스트는 라이브 DB·과금에 닿지 않는다. 고객 화면 판정(customer_ui_*)은 그대로.
+        "token_exclude_prefixes": ["shopping_shorts/tests/"],
     },
     "card_gate": {"require_card": True, "require_approval": True, "ownership_check": True, "impact_check": True,
                   "auto_approve": ["고객 화면"],
@@ -259,12 +263,14 @@ def approval_reasons(changed_files, diff_u0, rules):
                 any(f.endswith(s) for s in a.get("customer_ui_suffixes", [])):
             reasons.append("고객 화면 변경: %s" % f)
     scope = tuple(a.get("token_scope_prefixes", ["shopping_shorts/"]))
+    excl = tuple(a.get("token_exclude_prefixes", ["shopping_shorts/tests/"]))   # 규칙 파일이 옛것이어도 테스트는 뺀다
     per_file = split_diff_by_file(diff_u0)
     if not per_file and diff_u0:                       # 파일 헤더 없는 조각(단일 파일 diff) — 첫 변경 파일의 것으로 본다
         per_file = {(changed_files[0] if changed_files else ""): [ln[1:] for ln in diff_u0.splitlines()
                     if (ln.startswith("+") or ln.startswith("-")) and not ln.startswith(("+++", "---"))]}
     for f, lines in per_file.items():
-        if not f.replace("\\", "/").startswith(scope):
+        _fp = f.replace("\\", "/")
+        if not _fp.startswith(scope) or _fp.startswith(excl):
             continue
         blob = "\n".join(lines)
         for tok in a.get("billing_tokens", []):
