@@ -57,3 +57,22 @@ def test_range_media_response_routes_through_owner(tmp_path, monkeypatch):
     _, f = _setup(tmp_path, monkeypatch, True)
     r = A._range_media_response(str(f), _req({"X-Forwarded-For": "1.2.3.4"}), "audio/mpeg")
     assert r.headers.get("x-sendfile") == str(f.resolve()) and r.headers["content-type"] == "audio/mpeg"
+
+
+def test_unreadable_by_apache_is_chmodded_or_falls_back(tmp_path, monkeypatch):
+    """2026-10-02 03:18 사고: 0600 파일에 X-Sendfile 헤더를 줘 아파치가 404(고객 음성 83건). o+r 없으면 0644로 바꾸고, 못 바꾸면 파이썬 전송."""
+    _, f = _setup(tmp_path, monkeypatch, True)
+    key = str(f.resolve())
+    modes = {key: 0o100600}
+    class _St:
+        def __init__(self, m): self.st_mode = m
+    orig = A._xsf_readable
+    def ch_ok(p, m): modes[str(p)] = 0o100000 | m
+    monkeypatch.setattr(A, "_xsf_readable", lambda rp: orig(rp, chmod=ch_ok, stat=lambda p: _St(modes[str(p)])))
+    r = A._send_media(str(f), _req({"X-Forwarded-For": "1.2.3.4"}))
+    assert r.headers.get("x-sendfile") == key and modes[key] & 0o004          # 0600 → 0644 → X-Sendfile
+    modes[key] = 0o100600
+    def ch_fail(p, m): raise OSError("read-only")
+    monkeypatch.setattr(A, "_xsf_readable", lambda rp: orig(rp, chmod=ch_fail, stat=lambda p: _St(modes[str(p)])))
+    r = A._send_media(str(f), _req({"Range": "bytes=0-9", "X-Forwarded-For": "1.2.3.4"}))
+    assert r.status_code == 206 and "x-sendfile" not in r.headers              # 못 바꾸면 파이썬 전송
