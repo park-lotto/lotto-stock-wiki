@@ -29,7 +29,7 @@
   .pane{display:none}
   .pane.on{display:block}
 
-  /* ── 💳 1기 참가비 결제 카드 (2026-08-30) ──────────── */
+  /* ── 💳 참가비 결제 카드 (2026-08-30) ──────────── */
   .payCard{background:var(--panel);border:2px solid var(--accent);border-radius:16px;
     padding:24px;margin-bottom:20px}
   .payTop{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -272,14 +272,14 @@
       <p class="hint" style="margin:10px 0 0;font-size:12px;color:#5f6773">
         PC를 바꾸셨거나 자리가 다 찼으면 문의해 주세요 — 바로 비워드립니다.</p>
     </div>
-    <!-- ═══════ 💳 1기 참가비 결제 안내 (2026-08-30) ═══════
+    <!-- ═══════ 💳 참가비 결제 안내 (2026-08-30) ═══════
          Pro가 아닌 회원(체험·무료)에게만 뜬다. 판단은 /api/me의 plan·is_admin을
          그대로 쓴다 — 결제 여부를 여기서 새로 계산하면 언젠가 어긋난다(0순위-B).
          카드결제 오픈 시각 전에는 버튼을 눌러도 소용없으므로 아예 비활성으로 둔다. -->
     <div class="payCard" id="payCard" hidden>
       <div class="payTop">
-        <div class="payTitle">💳 1기 이용권 결제</div>
-        <div class="payPrice">77만원</div>
+        <div class="payTitle">💳 <span data-pr=cohort></span> 이용권 결제</div>
+        <div class="payPrice" data-pr=amount_man></div>
       </div>
       <div class="paySub" id="payCardSub">카드결제는 8월 31일(일) 오전 11시부터 열립니다.</div>
 
@@ -938,7 +938,7 @@ async function pcRegister(){
    따로 만들면 어긋난다 — 화면만 옮겨온 것이다. */
 var PLAN_LABEL = { pro: "Pro 이용권", trial: "체험 중", free: "무료" };
 
-/* ── 💳 1기 참가비 결제 카드 (2026-08-30) ─────────────
+/* ── 💳 참가비 결제 카드 (2026-08-30) ─────────────
    Pro/관리자가 아닌 회원에게만 보인다. 오픈 시각 전에는 카드결제 버튼을 잠근다. */
 var PAY_CARD_OPEN = new Date("2026-08-31T11:00:00+09:00").getTime();
 
@@ -1013,5 +1013,15 @@ loadKeys();
 loadVertex();
 </script>
 <script src="/sidebar.js?v=4"></script>
+<script>
+/* 기수·가격은 서버 /api/pricing 한 곳에서(2026-10-01 2기 전환). 이 파일에 '2기'·금액을 적지 마라 — test_cohort_pricing이 막는다. */
+(function(){ fetch('/api/pricing').then(function(r){return r.json()}).then(function(p){
+  var v={cohort:p.cohort, next_cohort:p.next_cohort, name:p.name,
+         amount:(p.amount||0).toLocaleString('ko-KR')+'원', amount_man:Math.round((p.amount||0)/10000)+'만원',
+         next_price:(p.next_price||0).toLocaleString('ko-KR')+'원'};
+  document.querySelectorAll('[data-pr]').forEach(function(el){ var k=el.getAttribute('data-pr'); if(v[k]!=null) el.textContent=v[k]; });
+  if(p.cohort && /^\s*$/.test(document.title)===false) document.title=document.title.replace('__COHORT__', p.cohort);
+}).catch(function(){}); })();
+</script>
 </body>
 </html>

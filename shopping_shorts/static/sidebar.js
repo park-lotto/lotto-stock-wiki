@@ -55,9 +55,9 @@
       //   ⚠ 랭킹의 '제작소로 보내기'는 재료를 sessionStorage에 담고 **쿼리 없는**
       //      /produce로 가야 한다(_consumeProduceHandoff) — 그쪽은 안 건드린다.
       { icon: "🎬", text: "숏템 제작소",     href: "/produce", go: "/produce?new=1", free: true },
-      // 1기 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지.
+      // 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지. 참가자가 첫 기수 회원이라 기수를 안 박는다(2026-10-01).
       // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
-      { icon: "🔥", text: "1기 챌린지",      href: "/challenge", free: true },
+      { icon: "🔥", text: "챌린지",      href: "/challenge", free: true },
       { icon: "🏁", text: "챌린지 관리",     href: "/challenge/admin", free: true, admin: true },
     ] },
     { label: "소통", items: [
@@ -587,15 +587,19 @@
     var today = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD
     try { if (localStorage.getItem(_PAY_SEEN_KEY) === today) return; } catch (e) {}
     try { localStorage.setItem(_PAY_SEEN_KEY, today); } catch (e) {}
-    setTimeout(function () {
-      _pwModal({
-        title: "가입 신청 감사합니다 🙏",
-        body: "숏템메이커 1기 · 1년 이용권 770,000원\n"
-            + "아래에서 결제 안내를 확인하실 수 있어요.\n"
-            + "입금 후 알려주시면 바로 열어드립니다.",
-        closeLabel: "나중에"
-      });
-    }, 900);   // 화면이 다 그려진 뒤에 띄운다(로딩 중 겹쳐 보이지 않게)
+    // 기수·금액은 서버 /api/pricing 한 곳에서(2026-10-01 2기 전환) — 여기에 숫자를 적지 마라.
+    fetch("/api/pricing").then(function (r) { return r.json(); }).catch(function () { return {}; }).then(function (p) {
+      var line = (p && p.cohort) ? ("숏템메이커 " + p.cohort + " · 1년 이용권 " + (p.amount || 0).toLocaleString("ko-KR") + "원\n") : "";
+      setTimeout(function () {
+        _pwModal({
+          title: "가입 신청 감사합니다 🙏",
+          body: line
+              + "아래에서 결제 안내를 확인하실 수 있어요.\n"
+              + "입금 후 알려주시면 바로 열어드립니다.",
+          closeLabel: "나중에"
+        });
+      }, 900);
+    });   // 화면이 다 그려진 뒤에 띄운다(로딩 중 겹쳐 보이지 않게)
   }
   // ── 제미니 키 안내 (2026-09-25, 사장님 "회원안내까지 / 몇 개 충분히 등록 당부") ──────
   // 공용 풀에 선불 소진·월 한도·할당량 0·무효 키가 섞여 계속 불렸는데 회원 화면엔 '● 정상'이었다.

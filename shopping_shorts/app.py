@@ -12811,7 +12811,8 @@ def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
         return False
     if any(path.startswith(p) for p in _FREE_PREFIX):
         return False
-    if (path in _AUTH_ALLOW or path.startswith("/api/find/frame/")
+    if (path in _AUTH_ALLOW or path == "/api/pricing"   # 기수·가격 공개 조회(2026-10-01, 정적 안내·설정 화면이 읽는다)
+            or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")):
         return False   # 유저스크립트 담기·favicon 등 기존 공개 경로(단 /api/grab은 핸들러서 등급확인)
     # ★잘못 낸 챌린지 영상 삭제(2026-08-29). 경로에 id가 붙어 exact 목록으로는 못 잡는다.
@@ -13090,8 +13091,46 @@ def _card_cta(fallback_href="", fallback_label=""):
     return fallback_href, fallback_label
 
 
+def _cohort_info():
+    """기수·가격·다음 기수·마감 — **판단은 여기 한 곳**(0순위-B). 요청마다 읽어 재시작 없이 반영.
+    2026-10-01 사장님 "2기 모집 88만원, 10월": 마감 없음(카운트다운 숨김) · 3기 990,000원 예고 · 정가 1,500,000원 유지.
+    설정 키: cohort / toss_order_name / toss_amount / next_cohort / next_price / recruit_deadline(빈값=마감 없음) / list_price.
+    화면(랜딩·요금·/pay·/pay/toss·설정·사이드바·안내·챌린지)은 _with_pay 자리표시자 또는 /api/pricing으로 **이 값만** 쓴다 —
+    '1기'·770,000원처럼 화면에 숫자·기수를 적으면 다음 기수 때 또 전수 수정이 된다(test_cohort_pricing이 지킨다)."""
+    st = Store(DB_PATH)
+    def g(k, d=""):
+        return (st.get_setting(k, "") or d).strip()
+    def gi(k, d):
+        try:
+            return int(g(k, "") or d)
+        except ValueError:
+            return d
+    cohort = g("cohort", "2기")
+    return {"cohort": cohort,
+            "name": g("toss_order_name", f"숏템메이커 {cohort} 이용권"),
+            "amount": gi("toss_amount", 880000),
+            "next_cohort": g("next_cohort", "3기"),
+            "next_price": gi("next_price", 990000),
+            "list_price": gi("list_price", 1500000),
+            "deadline": g("recruit_deadline", ""),
+            "period": _PRO_PERIOD}
+
+
+def _dl_blocks(html: str, has_deadline: bool) -> str:
+    """마감 유무로 갈리는 문구 블록. <!--DL-->…<!--/DL-->는 마감이 있을 때만, <!--NODL-->…<!--/NODL-->는 없을 때만 남긴다."""
+    drop, keep = ("NODL", "DL") if has_deadline else ("DL", "NODL")
+    html = re.sub(rf"<!--{drop}-->.*?<!--/{drop}-->", "", html, flags=re.S)
+    return html.replace(f"<!--{keep}-->", "").replace(f"<!--/{keep}-->", "")
+
+
+@app.get("/api/pricing")
+def api_pricing():
+    """공개 — 정적 화면(설정·사이드바·안내·챌린지)이 기수·가격을 여기서 받는다. 판단은 _cohort_info 한 곳."""
+    return _cohort_info()
+
+
 def _with_pay(html: str) -> str:
-    """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다."""
+    """결제 CTA(__PAY_HREF__/__PAY_LABEL__)와 기수·가격·마감(_cohort_info)을 요청 시점에 채운다."""
     href, label = _pay_cta()
     # ★상품명·가격·카드결제 버튼(2026-09-15 토스 심사 "상품 금액 = 결제 금액").
     #   가격은 결제가 실제로 받는 금액(_toss_order_name_amount) **한 곳**에서 읽는다 —
@@ -13099,28 +13138,23 @@ def _with_pay(html: str) -> str:
     name, amount = _toss_order_name_amount()
     ck, sk = _toss_keys()
     card_href, card_label = _card_cta(href, label)
-    # 모집 마감·다음 기수 가격(2026-09-15 사장님 "1기 9월말 마감, 10월 1일부터 2기 88만원").
-    #   관리자 설정으로 바꿀 수 있게 settings에서 읽고, 없으면 사장님이 말한 값을 쓴다.
-    _st = Store(DB_PATH)
-    dl_iso = (_st.get_setting("recruit_deadline", "") or "2026-09-30T23:59:59+09:00").strip()
-    try:
-        _dl = datetime.fromisoformat(dl_iso)
-        dl_label = f"{_dl.month}월 {_dl.day}일"
-        _nx = _dl + timedelta(seconds=1)
-        nx_label = f"{_nx.month}월 {_nx.day}일"
-    except ValueError:
-        dl_label, nx_label = "마감일", "다음 기수"
-    try:
-        next_price = int(_st.get_setting("next_price", "") or 880000)
-    except ValueError:
-        next_price = 880000
-    # 정가(할인 전) — 사장님 "150만원 → 77만원 할인중 표시"(2026-09-15). 설정 list_price로 바꾼다.
-    try:
-        list_price = int(_st.get_setting("list_price", "") or 1500000)
-    except ValueError:
-        list_price = 1500000
+    # 기수·마감·다음 기수 가격 — _cohort_info 한 곳(2026-10-01). 마감이 비면 카운트다운·"N일까지" 문구 블록이 빠진다.
+    c = _cohort_info()
+    dl_iso = c["deadline"]
+    dl_label, nx_label = "", ""
+    if dl_iso:
+        try:
+            _dl = datetime.fromisoformat(dl_iso)
+            dl_label = f"{_dl.month}월 {_dl.day}일"
+            _nx = _dl + timedelta(seconds=1)
+            nx_label = f"{_nx.month}월 {_nx.day}일"
+        except ValueError:
+            dl_label, nx_label = "마감일", "다음 기수"
+    next_price, list_price = c["next_price"], c["list_price"]
     discount = max(0, round((1 - amount / list_price) * 100)) if list_price > amount else 0
+    html = _dl_blocks(html, bool(dl_iso))
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
+                .replace("__COHORT__", _toss_esc(c["cohort"])).replace("__NEXT_COHORT__", _toss_esc(c["next_cohort"]))
                 .replace("__PRO_NAME__", _toss_esc(name))
                 .replace("__PRO_PRICE__", f"{amount:,}원")
                 .replace("__PRO_PERIOD__", _PRO_PERIOD)
@@ -14136,13 +14170,8 @@ _PRO_PERIOD = "12개월"
 
 
 def _toss_order_name_amount():
-    st = Store(DB_PATH)
-    name = (st.get_setting("toss_order_name", "") or "숏템메이커 1기 이용권").strip()
-    try:
-        amount = int(st.get_setting("toss_amount", "") or 770000)
-    except ValueError:
-        amount = 770000
-    return name, amount
+    c = _cohort_info()          # 상품명·금액은 기수 설정 한 곳에서(2026-10-01)
+    return c["name"], c["amount"]
 
 
 def _toss_db():
@@ -14244,7 +14273,7 @@ def _toss_checkout(request: Request):
 <div class=p style="margin:-4px 0 12px">이용기간: 결제(이용권 활성화)일로부터 {_PRO_PERIOD}</div>
 <div style="border:1px solid #6ff0d6;border-radius:12px;padding:14px;margin:6px 0 16px;background:#0c1a17">
   <div style="font-weight:800;font-size:16px">① 신청서 작성 <span style="color:#ff8a8a">(필수)</span></div>
-  <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 1기 신청서를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
+  <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 {_toss_esc(_cohort_info()['cohort'])} 신청서를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
   <a id=fl href="{_toss_esc(form_url)}" target=_blank rel=noopener style="display:block;text-align:center;padding:12px;border-radius:10px;background:#e0a33d;color:#111;font-weight:800;text-decoration:none">📝 신청서 작성하기</a>
   <label class=p style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px">
     <input id=fd type=checkbox disabled> <span id=fdl style="opacity:.5">신청서를 작성해 제출했습니다</span></label>
@@ -15048,7 +15077,8 @@ async def _auth_guard(request: Request, call_next):
     # /api/coupang/relay/*도 같은 이유다(2026-07-29) — 쿠팡은 한국 IP가 아니면 막아서
     #   사장님 PC의 도우미가 로그인 쿠키 없이 폴링한다. 엔드포인트가 자체 토큰
     #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
-    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
+    if (path in _AUTH_ALLOW or path == "/api/pricing"   # 기수·가격 공개 조회(2026-10-01) — _AUTH_ALLOW 튜플을 안 건드린 건 모듈 수준 diff가 영상 관문을 깨우기 때문
+            or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
             or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
             or path.startswith("/s/") or path.startswith("/api/share/v/")
