@@ -4990,14 +4990,19 @@ def api_vertex_register(request: Request, body: dict):
     if not keycrypt.enabled():
         return JSONResponse(status_code=503, content={
             "ok": False, "error": "키 저장이 설정되지 않았습니다 (관리자 문의)"})
+    cid = keyroute.as_cid(_cid(request))
     info, err = vertex_route.validate_sa(body.get("json") or "")
     if err:
+        # ★거절 사유를 남긴다(2026-10-01 관제 050) — 종전엔 422 숫자만 남아 "다들 안 된다"의 원인을 못 갈랐다.
+        #   키 내용은 절대 찍지 않는다: 회원 번호·단계·사유 문구만.
+        print("[vertex_register] 거절(모양) cid=%s: %s" % (cid, err), file=sys.stderr)
         return JSONResponse(status_code=422, content={"ok": False, "error": err})
     ok, msg = vertex_route.verify_sa(info)
     if not ok:
+        print("[vertex_register] 거절(구글확인) cid=%s project=%s: %s" % (cid, info.get("project_id"), msg), file=sys.stderr)
         return JSONResponse(status_code=422, content={"ok": False, "error": msg})
+    print("[vertex_register] 통과 cid=%s project=%s: %s" % (cid, info.get("project_id"), msg), file=sys.stderr)
     store = Store(DB_PATH)
-    cid = keyroute.as_cid(_cid(request))
     for r in store.list_customer_keys(cid, vertex_route.SVC):      # 회원당 1개 — 새 키가 옛 키를 갈아끼운다
         store.delete_customer_key(cid, r["id"])
     import json as _json
@@ -16241,7 +16246,7 @@ def _admin_control_board(request: Request):
     rows = []
     for c in cards:
         no = "%03d" % (c["번호"] or 0)
-        rows.append({"no": c["번호"], "title": c["제목"], "state": c["상태"], "tracks": c["분배"], "owner": c["판단 주인"],
+        rows.append({"no": c["번호"], "title": c["제목"], "easy": c.get("쉬운 설명", ""), "state": c["상태"], "tracks": c["분배"], "owner": c["판단 주인"],
                      "done": c["됐다의 기준"], "approval": c["승인"], "needs_approval": c["승인 필요"],
                      "merge": c["병합"], "live": c["라이브 실측"], "last": (c["이력"][-1] if c["이력"] else ""),
                      "server_approval": appr.get(no) or appr.get(str(c["번호"]))})

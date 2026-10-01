@@ -95,3 +95,15 @@ def test_existing_cta_role_unchanged():
     beats = _beats(lines, ["훅", "소감", "CTA"])
     ep.apply_cta_mark(beats, "\n".join(lines), {})
     assert [ep._is_cta(b) for b in beats] == [False, False, True]
+
+
+def test_mark_survives_beat_timeline_to_cut():
+    """★실제 자르기 경로 — 칸 → _beat_timeline → cta_cut_sec. 표시가 타임라인에서 빠지면 못 자른다
+    (2026-09-30 라이브 3b4111969ac4로 발견: cta_cut_sec만 직접 부른 테스트는 통과했었다)."""
+    from unittest.mock import patch
+    from shopping_shorts.video_assemble import _beat_timeline
+    beats = _beats(SUL_LINES, SUL_ROLES)
+    ep.apply_cta_mark(beats, "\n".join(SUL_LINES), {})
+    with patch("shopping_shorts.video_assemble._probe_duration", side_effect=[4.0, 3.0]):
+        tl = _beat_timeline({"beats": beats}, {0: "a.mp3", 1: "b.mp3"})
+    assert cta_cut_sec(tl) == 4.0
