@@ -6601,6 +6601,17 @@ def _xsendfile_on(request):
     return bool(h.get("x-forwarded-for") or h.get("x-forwarded-host") or h.get("x-forwarded-proto"))
 
 
+def _xsf_readable(rp, chmod=os.chmod, stat=os.stat):
+    """아파치가 읽을 수 있는 파일인가(o+r). 없으면 0644로 바꿔 본다(우리 소유 파일). 실패하면 False → 파이썬 전송."""
+    try:
+        if stat(rp).st_mode & 0o004:
+            return True
+        chmod(rp, 0o644)
+        return bool(stat(rp).st_mode & 0o004)
+    except OSError:
+        return False
+
+
 def _send_media(path, request, media_type="video/mp4", filename=None):
     """파일 → 응답. 아파치 X-Sendfile(켜짐·프록시 경유·허용 폴더)이면 경로 헤더만, 아니면 종전 길."""
     p = Path(path)
@@ -6609,8 +6620,11 @@ def _send_media(path, request, media_type="video/mp4", filename=None):
     except OSError:
         rp = p
     # ★경로는 HTTP 헤더에 실리므로 ASCII 여야 한다(한글 경로는 latin-1 인코딩 불가 → 종전 길). 서버 경로는 ASCII.
+    # ★아파치(www-data)가 읽을 수 있어야 한다(2026-10-02 03:18 사고): TTS·합본 등 임시파일로 만든 파일은 0600이라
+    #   아파치가 "Permission denied" → 고객에게 404(02:46~03:18, 2명, 음성 83건·완성본 3건). 세상-읽기(o+r)가 없으면
+    #   먼저 0644로 바꿔 보고, 그래도 안 되면 종전 파이썬 전송으로 간다 — 헤더만 주고 404가 나는 일은 없어야 한다.
     if _xsendfile_on(request) and rp.is_file() and str(rp).isascii() and any(
-            str(rp).startswith(str(r.resolve()) + os.sep) for r in _XSF_ROOTS):
+            str(rp).startswith(str(r.resolve()) + os.sep) for r in _XSF_ROOTS) and _xsf_readable(rp):
         headers = {"X-Sendfile": str(rp), "Content-Type": media_type, "Accept-Ranges": "bytes",
                    "X-Media-Via": "xsendfile"}
         if filename:
