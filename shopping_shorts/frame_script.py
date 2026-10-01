@@ -52,7 +52,11 @@ _TAG_DEFAULTS = {"scene_desc": "", "shot_role": "기타", "is_key": False,
                  "action": None, "has_effect": False, "product_benefits": [],
                  # ★2026-09-04: 통째 업로드 추출과 같은 필드를 낸다 — 3단계 인벤토리가 쓰임(label)·활용(use_point)·
                  #   변화(change)를 읽는데 B1은 종전에 이 셋을 아예 안 줬다(빈칸 = 매칭 재료 손실).
-                 "label": "", "use_point": "", "change": ""}
+                 "label": "", "use_point": "", "change": "",
+                 # ★2026-10-01 태깅 지침 확장(카드 051): 소구 종류·훅 유형·뒷컷·긴 컷 구간·속도. 없으면 빈칸.
+                 "appeal_kind": "", "hook_type": "", "hook_why": "", "is_outro": False, "outro_why": "", "moments": "",
+                 "tempo": "", "speed_hint": None}
+
 
 
 def merge_frame_tags(segs, tags):
@@ -272,6 +276,7 @@ def normalize_tags(tags, n_segs):
     · seg_no(1부터)가 있으면 그 자리에, 없으면 순서대로 채운다(모델이 하나 빠뜨려도 뒤가 안 밀린다)
     · shot_role은 shot_roles.normalize(모르는 값 → '기타'), is_key는 bool, product_benefits는 list
     반환: 길이 n_segs, 빈 자리는 {}(merge_frame_tags가 기본값으로 채운다)."""
+    from shopping_shorts import script_extract as _se      # 정규화 규칙은 script_extract 한 곳(0순위-B)
     out = [{} for _ in range(max(0, int(n_segs)))]
     seq = 0
     for t in (tags or []):
@@ -302,6 +307,15 @@ def normalize_tags(tags, n_segs):
             "use_point": t.get("use_point"),
             "action": t.get("action"),
             "change": t.get("change"),
+            # 2026-10-01 확장 칸 — 모르는 값은 빈칸으로(폴백 없음, 조용히 버리지도 않음)
+            "appeal_kind": str(t.get("appeal_kind") or "").strip(),
+            "hook_type": _se._norm_hook_type(t.get("hook_type")),
+            "hook_why": str(t.get("hook_why") or "").strip()[:40],
+            "is_outro": _se._norm_bool(t.get("is_outro")),
+            "outro_why": str(t.get("outro_why") or "").strip()[:40],
+            "moments": str(t.get("moments") or "").strip()[:120],
+            "tempo": str(t.get("tempo") or "").strip(),
+            "speed_hint": _se._norm_speed_hint(t.get("speed_hint")),
         }
     return out
 
@@ -565,7 +579,9 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
             + _guide + "\n\n"
             '출력은 JSON 객체 {"tags": [{"seg_no": 1, "scene_desc": "...", "label": "...", "use_point": "...", '
             '"action": "...", "change": "...", "has_effect": false, "is_key": false, "shot_role": "...", '
-            '"product_benefits": []}, ...]} 만. 구간을 빠짐없이, 구간 순서대로. JSON 뒤에 다른 글을 붙이지 마라.'
+            '"product_benefits": [], "appeal_kind": "...", "hook_type": "...", "hook_why": "...", "is_outro": false, '
+            '"outro_why": "", "moments": "", "tempo": "...", "speed_hint": 1.0}, ...]} 만. 구간을 빠짐없이, 구간 순서대로. '
+            'JSON 뒤에 다른 글을 붙이지 마라.'
             f"\n캡션(참고):{caption or '(없음)'}")
         parts = [prompt] + parts_img
         got = None
