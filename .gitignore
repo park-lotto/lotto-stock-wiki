@@ -204,3 +204,6 @@ tiktok_session.json
 /productions/s3_kakao_claude/04_output.mp4
 /productions/s5_kakao_claude/04_output.mp4
 out/lang_mode_check_*.json
+
+# 고객 로고 업로드(관제 065) — 서버 데이터
+/out/장면꾸미기_로고/

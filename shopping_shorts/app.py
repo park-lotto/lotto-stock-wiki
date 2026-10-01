@@ -20885,7 +20885,7 @@ def api_scene_style_asset(asset_path: str):
     names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js"}
     allowed = (asset_path.startswith("out/") and asset_path[4:] in names)
     allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "shopping_shorts/static/text-look-contract.js", "out/scene-style-labels.js"}
-    allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
+    allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/", "out/장면꾸미기_로고/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
     allowed |= asset_path.startswith("shopping_shorts/static/fonts/") and candidate.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}
     if ".." in Path(asset_path).parts or "\\" in asset_path or not allowed or not candidate.is_relative_to(ROOT) or not candidate.is_file():
         return JSONResponse(status_code=404, content={"error": "파일 없음"})
@@ -20948,6 +20948,56 @@ def _scene_style_lab_owned_job(store, request, job_id):
     if not job or int(job.get("customer_id") or 0) != _cid(request):
         return None
     return job
+
+
+# ── 🏷 장면꾸미기 로고(관제 065, 2026-10-01 사장님 "효과 맨 아래 로고 하나, 파일 불러오기") ──────────────
+#   값의 주인 = 저장값 effects[장면].masks[] 안의 {kind:"image", src:"장면꾸미기_로고/<cid>/<sha>.png"} 한 항목.
+#   파일은 out/장면꾸미기_로고/ 아래 — 편집기(http 에셋 라우트)와 headless 렌더(file://, tools/render_scene_style.js)가
+#   **같은 상대 경로**로 읽는다. 그래서 썸네일(render_layer_one)·완성본·캡컷(render_layers)이 전부 같은 그림을 얹는다.
+#   내 프리셋은 effects를 그대로 담으므로 계정 경로인 이 src가 다른 작업에서도 산다.
+from .scene_style import ROOT as _SS_ROOT   # 저장소 루트(scene_style·에셋 라우트와 같은 기준)
+_LOGO_DIR = _SS_ROOT / "out" / "장면꾸미기_로고"
+_LOGO_MAX_BYTES = 2 * 1024 * 1024
+_LOGO_MAX_SIDE = 1024
+
+
+@app.post("/api/produce/scene-style/logo")
+async def api_scene_style_logo_upload(request: Request, file: UploadFile = File(...)):
+    cid = _cid(request)
+    if not cid and not _is_admin(cid):
+        return JSONResponse(status_code=401, content={"ok": False, "error": "로그인이 필요합니다"})
+    raw = await file.read()
+    if not raw or len(raw) > _LOGO_MAX_BYTES:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "로고 파일은 2MB까지(PNG·JPG·WEBP)"})
+    try:
+        from PIL import Image
+        import io as _io
+        im = Image.open(_io.BytesIO(raw)); im.load()
+        if im.format not in ("PNG", "JPEG", "WEBP"):
+            raise ValueError(im.format)
+        im = im.convert("RGBA")
+        if max(im.size) > _LOGO_MAX_SIDE:
+            im.thumbnail((_LOGO_MAX_SIDE, _LOGO_MAX_SIDE))
+        buf = _io.BytesIO(); im.save(buf, "PNG", optimize=True); data = buf.getvalue()
+    except Exception as exc:      # noqa: BLE001 — 그림이 아니면 거절(사유는 남긴다)
+        print(f"[logo] 거절 cid={cid}: {exc!r}", file=sys.stderr)
+        return JSONResponse(status_code=422, content={"ok": False, "error": "그림 파일(PNG·JPG·WEBP)만 올릴 수 있어요"})
+    name = hashlib.sha1(data).hexdigest()[:16] + ".png"
+    d = _LOGO_DIR / str(int(cid)); d.mkdir(parents=True, exist_ok=True)
+    (d / name).write_bytes(data)
+    return {"ok": True, "src": f"장면꾸미기_로고/{int(cid)}/{name}", "w": im.size[0], "h": im.size[1]}
+
+
+@app.get("/api/produce/scene-style/logo")
+def api_scene_style_logo_list(request: Request):
+    """내 로고 목록(최근 올린 순) — 편집기 '로고' 칸이 다시 고를 수 있게."""
+    cid = _cid(request)
+    d = _LOGO_DIR / str(int(cid))
+    items = []
+    if d.is_dir():
+        for p in sorted(d.glob("*.png"), key=lambda x: x.stat().st_mtime, reverse=True)[:12]:
+            items.append({"src": f"장면꾸미기_로고/{int(cid)}/{p.name}"})
+    return {"ok": True, "items": items}
 
 
 @app.get("/api/produce/scene-style/flags")
