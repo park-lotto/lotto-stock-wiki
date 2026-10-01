@@ -36,3 +36,4 @@
 {"ts": "2026-08-31T01:22:19.000625+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "pytest 9 passed - 기본값이면 옛 그림과 픽셀동일(tobytes 일치), title_y 이동, head_block 끄면 덮인폭 감소, 띠없이 채널명 그려짐", "verify_cmd": "", "verify_evidence": ""}
 {"ts": "2026-08-31T01:31:19.968159+00:00", "event": "story_started", "id": "G004", "title": "제작소UI"}
 {"ts": "2026-08-31T01:31:37.743851+00:00", "event": "checkpoint", "id": "G004", "status": "complete", "evidence": "실브라우저 검증: 업로드 200, 카드 33개(안씀/+내그림/내틀2/프리셋20), 미리보기에 캔바 그림 그대로, frameUrl이 bg_image 16자+head_block=0 전송. head_block 문자열 0 버그 발견·수정(DEFAULTS 타입에서 뽑도록)", "verify_cmd": "pytest shopping_shorts/tests/test_frame_image_api.py test_deco_bg_image.py", "verify_evidence": "16 passed"}
+{"ts": "2026-10-01T02:30:30.537165+00:00", "event": "plan_created", "brief": "카드051: 태깅 지침서(소구점·후킹·속도·대본화) 다듬기가 라이브 기본 경로(backbone_assemble) 장면 매칭을 바꾸는지 사장님 거치대 job 재료로 시험", "count": 3}

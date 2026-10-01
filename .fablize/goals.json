@@ -1,34 +1,27 @@
 {
- "brief": "캔바 이미지를 틀로 그대로 얹고 글자만 위에 올린다(코드 재현 금지 - 질감이 죽는다)",
- "created": "2026-08-31T01:16:51.767403+00:00",
+ "brief": "카드051: 태깅 지침서(소구점·후킹·속도·대본화) 다듬기가 라이브 기본 경로(backbone_assemble) 장면 매칭을 바꾸는지 사장님 거치대 job 재료로 시험",
+ "created": "2026-10-01T02:30:30.535318+00:00",
  "goals": [
   {
    "id": "G001",
-   "title": "배경레이어",
-   "objective": "deco_frame에 bg_image 레이어 추가. 경로탈출 차단, 캐시키에 반영",
-   "status": "complete",
-   "evidence": "pytest test_deco_bg_image.py 5 passed - 경로탈출 6종 차단, 투명유지, 캐시키 갈림, 깨진파일 fail-open, cover채움"
+   "title": "G1 하네스",
+   "objective": "job 재료→assemble(옛 태그) 서버 읽기전용 재현",
+   "status": "pending",
+   "evidence": null
   },
   {
    "id": "G002",
-   "title": "업로드API",
-   "objective": "이미지 업로드/목록/삭제 엔드포인트, 고객별 저장소",
-   "status": "complete",
-   "evidence": "pytest test_frame_image_api.py 5 passed - 투명유지·1080x1920 정규화·중복1건·삭제는 목록만·깨진파일 422·id위조 404"
+   "title": "G2 지침서+재태깅",
+   "objective": "소구점·후킹·속도·대본화 지침으로 5소스 재태깅→같은 하네스",
+   "status": "pending",
+   "evidence": null
   },
   {
    "id": "G003",
-   "title": "글자세로위치",
-   "objective": "ch_y·title_y 추가, 0=안 정했음 규약 유지",
-   "status": "complete",
-   "evidence": "pytest 9 passed - 기본값이면 옛 그림과 픽셀동일(tobytes 일치), title_y 이동, head_block 끄면 덮인폭 감소, 띠없이 채널명 그려짐"
-  },
-  {
-   "id": "G004",
-   "title": "제작소UI",
-   "objective": "이미지 틀 업로드·선택 카드 + 글자 위치 조절",
-   "status": "complete",
-   "evidence": "실브라우저 검증: 업로드 200, 카드 33개(안씀/+내그림/내틀2/프리셋20), 미리보기에 캔바 그림 그대로, frameUrl이 bg_image 16자+head_block=0 전송. head_block 문자열 0 버그 발견·수정(DEFAULTS 타입에서 뽑도록)"
+   "title": "G3 대조·판정",
+   "objective": "두 벌 줄별 장면 프레임 시트→사람 판정·보고",
+   "status": "pending",
+   "evidence": null
   }
  ]
 }
