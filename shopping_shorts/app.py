@@ -6576,8 +6576,58 @@ def api_mix_scene_lab_phash(job_id: str):
     return {"ok": True, "phash": _lab_phash_load(_MIX_WORK_DIR / job_id)}
 
 
+# ★영상·음성 파일 전송의 주인(2026-10-01 관제 062) — 재생·다운로드용 파일 응답은 전부 _send_media 한 곳.
+#   왜: 웹 프로세스(uvicorn 1개)가 영상을 Range 로 직접 흘려서 2시간에 4GB+, CPU 평균 74%였다(실측 10-01).
+#   아파치 mod_xsendfile 이 켜져 있으면(서버 vhost: XSendFile On · XSendFilePath data/·static/) 파이썬은
+#   "X-Sendfile: <경로>" 헤더만 주고 본문은 비운다 — Range·HEAD·If-Range·캐시는 아파치가 커널에서 한다.
+#   스위치: 관리자 설정 xsendfile_enabled="1" (30초 캐시). 꺼져 있거나 아파치를 안 거친 요청(X-Forwarded-* 없음,
+#   로컬 직결·테스트)이거나 XSendFilePath 밖의 파일이면 종전 파이썬 전송 그대로 — 되돌리기는 설정 한 줄.
+_XSF_ROOTS = (Path(__file__).parent / "data", Path(__file__).parent / "static")
+_XSF_CACHE = {"t": 0.0, "on": False}
+
+
+def _xsendfile_on(request):
+    import time as _t
+    now = _t.monotonic()
+    if now - _XSF_CACHE["t"] > 30:
+        try:
+            _XSF_CACHE["on"] = str(Store(DB_PATH).get_setting("xsendfile_enabled", "") or "").strip() == "1"
+        except Exception:      # noqa: BLE001 — 설정을 못 읽으면 종전 전송
+            _XSF_CACHE["on"] = False
+        _XSF_CACHE["t"] = now
+    if not _XSF_CACHE["on"] or request is None:
+        return False
+    h = request.headers
+    return bool(h.get("x-forwarded-for") or h.get("x-forwarded-host") or h.get("x-forwarded-proto"))
+
+
+def _send_media(path, request, media_type="video/mp4", filename=None):
+    """파일 → 응답. 아파치 X-Sendfile(켜짐·프록시 경유·허용 폴더)이면 경로 헤더만, 아니면 종전 길."""
+    p = Path(path)
+    try:
+        rp = p.resolve()
+    except OSError:
+        rp = p
+    # ★경로는 HTTP 헤더에 실리므로 ASCII 여야 한다(한글 경로는 latin-1 인코딩 불가 → 종전 길). 서버 경로는 ASCII.
+    if _xsendfile_on(request) and rp.is_file() and str(rp).isascii() and any(
+            str(rp).startswith(str(r.resolve()) + os.sep) for r in _XSF_ROOTS):
+        headers = {"X-Sendfile": str(rp), "Content-Type": media_type, "Accept-Ranges": "bytes",
+                   "X-Media-Via": "xsendfile"}
+        if filename:
+            headers["Content-Disposition"] = "attachment; filename*=utf-8''%s" % urllib.parse.quote(filename)
+        return Response(status_code=200, content=b"", headers=headers)
+    if filename:
+        return FileResponse(str(p), media_type=media_type, filename=filename)
+    return _range_media_response_py(str(p), request, media_type)
+
+
 def _range_media_response(path, request, media_type="video/mp4"):
-    """미디어를 Range(부분 요청)까지 지원해 내보낸다 — **재생용 파일은 전부 이 함수로**.
+    """재생용 파일은 전부 여기(→ _send_media). 옛 이름을 그대로 둔다 — 부르는 곳이 많다."""
+    return _send_media(path, request, media_type)
+
+
+def _range_media_response_py(path, request, media_type="video/mp4"):
+    """파이썬이 직접 Range 를 처리해 흘리는 종전 구현(X-Sendfile 이 꺼져 있을 때의 길).
 
     ★2026-09-20: 음성(TTS)이 이 길을 안 타고 FileResponse 로 나가고 있었다. 실측하니
       Range 요청에 200 전체를 주어 **브라우저가 음성 시크를 못 했다**(어디로 보내도
@@ -9506,8 +9556,8 @@ def api_mix_video(job_id: str, request: Request, dl: int = 0):
     if _gone:
         return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     if dl:   # ?dl=1 → 첨부 다운로드(Content-Disposition attachment). 없으면 인라인 재생(기존).
-        return FileResponse(job["video_path"], media_type="video/mp4",
-                            filename=export_bundle.safe_name(job_id) + ".mp4")
+        return _send_media(job["video_path"], request, "video/mp4",
+                           filename=export_bundle.safe_name(job_id) + ".mp4")
     # ★인라인 재생도 Range로 준다(2026-08-31). 종전엔 맨 FileResponse라 media_type조차
     #   없었다 — 완성본은 faststart가 걸려 있어 티가 덜 났을 뿐, 시크는 안 됐다.
     return _range_mp4_response(job["video_path"], request)
@@ -9643,8 +9693,8 @@ def api_mix_video_nocta(job_id: str, request: Request, dl: int = 0):
         return JSONResponse(status_code=409,
                             content={"ok": False, "error": "새로 렌더된 영상이 있어요 — 다시 잘라주세요"})
     if dl:
-        return FileResponse(str(out_p), media_type="video/mp4",
-                            filename=export_bundle.safe_name(job_id) + "_noCTA.mp4")
+        return _send_media(str(out_p), request, "video/mp4",
+                           filename=export_bundle.safe_name(job_id) + "_noCTA.mp4")
     return _range_mp4_response(str(out_p), request)
 
 
@@ -9698,8 +9748,8 @@ def api_share_v(request: Request, sid: str, dl: int = 0):
     if _gone:
         return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     if dl:
-        return FileResponse(job["video_path"], media_type="video/mp4",
-                            filename=export_bundle.safe_name(job_id) + ".mp4")
+        return _send_media(job["video_path"], request, "video/mp4",
+                           filename=export_bundle.safe_name(job_id) + ".mp4")
     return _mp4_range_response(job["video_path"], request)
 
 
