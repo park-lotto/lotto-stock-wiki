@@ -43,3 +43,4 @@
 {"ts": "2026-10-01T02:44:50.964465+00:00", "event": "checkpoint", "id": "G002", "status": "complete", "evidence": "서버 new 2차 '완료 new 줄 6 209s', 새 칸 88/88(appeal/hook/tempo/speed), writer_materials에 '소구:기능 훅3 속도:보통/1.0배' 실림", "verify_cmd": "", "verify_evidence": ""}
 {"ts": "2026-10-01T02:44:51.090751+00:00", "event": "story_started", "id": "G003", "title": "G3 대조·판정"}
 {"ts": "2026-10-01T02:44:51.205398+00:00", "event": "checkpoint", "id": "G003", "status": "complete", "evidence": "시트 3장(live/old/new) 사람 판정: live 9/11, old 8/8, new1 5/7, new2 6/6; 바탕화면 태깅지침시험_29109deff2a9_*.jpg", "verify_cmd": "py tools/claim_trial_tagging_sheet.py %TEMP%/tagtrial 29109deff2a9", "verify_evidence": "new → sheet_29109deff2a9_new.jpg | 줄 6"}
+{"ts": "2026-10-01T07:35:03.522923+00:00", "event": "plan_created", "brief": "효과음 탭(밀도·크기·팩·칸별) — 관제 059", "count": 4}
