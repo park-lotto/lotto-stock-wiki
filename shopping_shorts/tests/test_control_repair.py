@@ -145,3 +145,20 @@ def test_새로_깨진_테스트가_main에서도_깨지면_기존_실패로_뺀
     assert any("기존 실패" in o and "test_x" in o for o in out)
     rerun2 = lambda ids: set(ids)
     assert track._classify_new_failures(before, after, list(problems), rerun=rerun2, printer=out.append) == []
+
+
+def test_run_card도_검사_종류로_가른다(monkeypatch):
+    st = []
+    monkeypatch.setattr(control, "set_status", lambda repo, n, s, printer=None: st.append((n, s)))
+    monkeypatch.setattr(control, "set_field", lambda repo, n, k, v, printer=None: None)
+    monkeypatch.setattr(control, "note", lambda repo, n, t, printer=None: None)
+    monkeypatch.setattr(live_check, "_fetch_live", lambda path: (200, json.dumps({"amount": 880000})))
+    calls = []
+    def sh(cmd, timeout=0):
+        calls.append(cmd)
+        return (0, "DEPLOYED") if "merge-base" in cmd else (0, "")
+    out = []
+    live_check.run_card("repo", _card(11, **{"검사": "api /api/pricing amount=880000"}), sh=sh, printer=out.append, now=1_800_000_000)
+    assert (11, "완료") in st and not any("daily_video_audit" in c for c in calls), "api 카드는 영상 비교를 돌리지 않는다"
+    live_check.run_card("repo", _card(12, **{"판단 주인": "shopping_shorts/app.py:x"}), sh=sh, printer=out.append, now=1_800_000_000)
+    assert any("검사=수동" in o for o in out) and not any("daily_video_audit" in c for c in calls)

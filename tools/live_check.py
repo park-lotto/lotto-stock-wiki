@@ -87,6 +87,14 @@ def run_card(repo, card, *, jobs=4, write=True, sh=None, printer=print, now=None
             printer("❌ SSH 키를 못 찾았다 — 실측 없이 '됐다'로 만들지 않는다")
             return 2
         sh = video_gate._ssh_runner(key)
+    # ★--card 도 검사 종류로 가른다(2026-10-02 실측: 056 api 카드가 --card 로는 영상 비교를 돌았다). 판정은 check_kind 한 곳.
+    kind = check_kind(card)[0]
+    if kind in ("url", "api"):
+        _close_http_cards(repo, [card], sh=sh, write=write, printer=printer)
+        return 0
+    if kind == "수동":
+        printer("카드 %03d: 검사=수동 — 자동으로 못 잰다. 보고 닫아라: py tools/control.py status %d 완료" % (card["번호"], card["번호"]))
+        return 0
     cmd = remote_command(card["번호"], hours, jobs)
     printer("카드 %03d 실측: 병합 %s(%s, %d시간 전) · 서버에서 %d작업 검사 중…" % (card["번호"], sha, card.get("병합", "")[:27], hours, jobs))
     rc, out = sh(cmd, timeout=3600)
