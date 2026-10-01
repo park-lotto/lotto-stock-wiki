@@ -22,7 +22,7 @@ import time
 
 sys.path[:] = [os.getcwd()] + [p for p in sys.path if os.path.abspath(p or ".") != os.path.dirname(os.path.abspath(__file__))]
 MIX = "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/mix_jobs"
-EXTRA_KEYS = ("appeal_kind", "hook_type", "hook_why", "is_outro", "moments", "tempo", "speed_hint")   # 새 지침서가 더 내는 칸(정규화가 버리므로 따로 붙인다)
+EXTRA_KEYS = ("appeal_kind", "hook_type", "hook_why", "is_outro", "outro_why", "moments", "tempo", "speed_hint")   # 새 지침서가 더 내는 칸(정규화가 버리므로 따로 붙인다)
 
 
 def _grab(video, t, out):
@@ -77,7 +77,8 @@ def retag_source(jid, vid, ex, guide_text, work):
             if 0 <= idx < n and out[idx]:
                 # ★정규화된 dict 안에 바로 심는다 — _gemini_tag_frames 가 out[b0:b1]=got 으로 그대로 돌려주므로 살아남는다
                 #   (첫 실행 10-01: extras 를 따로 모아 놓고 안 썼다 → 새 칸 0/88. 묶음별 지역 번호라 전역 짝도 못 맞췄다)
-                out[idx].update({k: t.get(k) for k in EXTRA_KEYS if t.get(k) not in (None, "")})
+                #   패치본 패키지(normalize_tags 가 이미 새 키를 정규화)면 덮어쓰지 않는다 — 4차에서 speed_hint 가 문자열 '1.0'으로 덮였다.
+                out[idx].update({k: t.get(k) for k in EXTRA_KEYS if t.get(k) not in (None, "") and k not in out[idx]})
         return out
     fs.normalize_tags = _norm_keep
     try:

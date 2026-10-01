@@ -77,7 +77,9 @@ def _seg_index(sources):
                              "text": (x.get("text") or "").strip(),
                              # 2026-10-01 태깅 확장(카드 051): 훅 유형·뒷컷·화면 배속 힌트 — 없으면 빈칸/False/None
                              "hook": str(x.get("hook_type") or "").strip(),
-                             "outro": bool(x.get("is_outro")),
+                             # ★뒷컷은 "제품이 안 보일 때"만 믿는다 — 태거가 영상 끝의 제품 컷(가방 수납·완성품)을 자꾸 뒷컷으로
+                             #   찍었다(10-01 실측 4차: 뒷컷 5개 전부 제품 컷). 훅 유형이나 특장점이 달린 컷은 제품 컷이다.
+                             "outro": bool(x.get("is_outro")) and not (x.get("hook_type") or x.get("product_benefits")),
                              "speed": x.get("speed_hint")}
     return idx
 
@@ -1212,7 +1214,14 @@ def assign_cuts(lines, groups_out, seg_index, backbone_vid):
         beat_sources[li] = {"role": L["role"], "seg": picked[0] if picked else "", "segs": picked}
         # 2026-10-01: 컷별 화면 배속 힌트를 **데이터로만** 싣는다. 렌더 적용은 sync_speed(음성+화면 통합) 설계와
         #   부딪혀 사장님 결정 대기 — 여기서 재생 속도를 바꾸지 않는다.
-        _sp = {sid: seg_index[sid]["speed"] for sid in picked if seg_index.get(sid, {}).get("speed") not in (None, 1.0)}
+        _sp = {}
+        for sid in picked:
+            try:
+                _v = float(seg_index.get(sid, {}).get("speed"))
+            except (TypeError, ValueError):
+                continue
+            if abs(_v - 1.0) > 1e-6:
+                _sp[sid] = _v
         if _sp:
             beat_sources[li]["speed_hints"] = _sp
         report[li] = {"text": L["text"], "need": round(need, 1), "have": round(have, 1),

@@ -40,6 +40,14 @@ def test_outro_cut_never_used():
     assert "s1-0" not in used, used
 
 
+def test_outro_ignored_when_product_visible():
+    srcs = _mats()
+    srcs[1]["segments"][3].update(is_outro=True)          # 문제 컷인데 뒷컷으로 잘못 찍힘 — hook_type 있으니 제품 컷
+    srcs[1]["segments"][1].update(is_outro=True, product_benefits=["접힌다"])   # 특장점 있으면 제품 컷
+    idx = ba._seg_index(srcs)
+    assert idx["s1-3"]["outro"] is False and idx["s1-1"]["outro"] is False and idx["s1-0"]["outro"] is True
+
+
 def test_hook_line_gets_hook_cut_first():
     bs, idx = _run([{"role": "훅", "text": "해외 천재가 만든 제품의 정체", "group": -1}])
     assert bs[0]["segs"][0] == "s1-2", bs[0]

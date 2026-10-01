@@ -18,15 +18,21 @@ import sys
 def check(path):
     d = json.load(io.open(path, encoding="utf-8"))
     segs = {s["seg_id"]: s for v in (d.get("tags") or {}).values() for s in v if s.get("seg_id")}
+    # ★뒷컷 판정은 backbone_assemble._seg_index 한 곳(0순위-B) — 태그 is_outro 그대로가 아니라 "제품이 안 보일 때만"이다
+    sys.path.insert(0, ".")
+    from shopping_shorts import backbone_assemble as ba
+    idx = ba._seg_index([{"video_id": vid, "segments": list(v)} for vid, v in (d.get("tags") or {}).items()])
+    for sid, s in segs.items():
+        s["_outro"] = bool(idx.get(sid, {}).get("outro"))
     bs = d.get("beat_sources") or []
     lines = (d.get("given") or "").split("\n")
     bad = []
     # ① 뒷컷
-    outro_used = [(i, sid) for i, b in enumerate(bs) for sid in (b or {}).get("segs") or [] if segs.get(sid, {}).get("is_outro")]
+    outro_used = [(i, sid) for i, b in enumerate(bs) for sid in (b or {}).get("segs") or [] if segs.get(sid, {}).get("_outro")]
     if outro_used:
         bad.append("뒷컷 사용 %s" % outro_used)
     # ② 훅 줄 첫 컷
-    hooks_avail = [sid for sid, s in segs.items() if s.get("hook_type") and s["hook_type"] != "문제" and not s.get("is_outro")]
+    hooks_avail = [sid for sid, s in segs.items() if s.get("hook_type") and s["hook_type"] != "문제" and not s.get("_outro")]
     for i, b in enumerate(bs):
         if str((b or {}).get("role") or "").startswith("훅"):
             first = ((b or {}).get("segs") or [""])[0]
@@ -39,7 +45,8 @@ def check(path):
         "훅유형": collections.Counter(s.get("hook_type") or "" for s in segs.values()).most_common(),
         "소구": collections.Counter(s.get("appeal_kind") or "" for s in segs.values()).most_common(),
         "속도": collections.Counter(s.get("tempo") or "" for s in segs.values()).most_common(),
-        "뒷컷": sum(1 for s in segs.values() if s.get("is_outro")),
+        "뒷컷(태그)": sum(1 for s in segs.values() if s.get("is_outro")),
+        "뒷컷(판정=제품 안 보임)": sum(1 for s in segs.values() if s.get("_outro")),
         "배속힌트≠1": sum(1 for s in segs.values() if s.get("speed_hint") not in (None, 1.0, "")),
     }
     print("%s: %s | 줄 %d · 배속힌트 실린 줄 %d" % (path, "FAIL" if bad else "PASS", len(bs), n_speed))
