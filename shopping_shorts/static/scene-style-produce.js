@@ -223,11 +223,33 @@
     }
     result.effects={};sources.forEach((source,i)=>{if(snapshot.effects?.[source])result.effects[i]=snapshot.effects[source]});return result;
   }
+  // ★'템플릿 없이 완성본'의 기본 자막·제목 스타일(관제 058 B단계, 2026-10-01).
+  //   옛 피팅룸 초기화(initHeadcopy→applyDefaultStyleOnEntry·applyErasedRegion)가 6단계에 들어올 때 넣어 주던 값이다.
+  //   옛 코드를 지우기 전에 같은 판단을 새 길 한 곳으로 옮긴다 — 값은 서버에 실제 저장된 원본(job ec038d16ee0f)을 그대로.
+  //   규칙(옛 코드와 같다): ① 자막·제목 설정이 비어 있을 때만 '심플 화이트'를 넣는다
+  //                        ② 그렇게 **새로 넣은 경우에만** 자막 지운 자리(clean_regions.primary)가 있으면 자막 위치를 그 자리로
+  //                           (옛 applyConfig는 저장값에 x_pct가 있으면 CAP_POS_TOUCHED=true라 다시 안 옮겼다 — 저장본 전부 x_pct를 가진다)
+  //   렌더가 읽는 값은 STATE.headcopy/captionStyle → saveHeadcopy(렌더 직전 POST) 그대로라 결과물은 전과 같다.
+  const SIMPLE_WHITE_CAP={font:'Pretendard-ExtraBold.otf',color:'#ffffff',size:50,y_pct:37,outline:false,outline_color:'#000000',outline_w:0,box:false,box_color:'#000000',box_pad:12,box_opacity:80,bar:false,effect:'fade',shadow:true,shadow_color:'#000000',shadow_d:3,x_pct:50};
+  const SIMPLE_WHITE_HC={text:'',font:'Pretendard-ExtraBold.otf',color:'#ffffff',weight:900,size:54,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2,box:false,box_color:'#000000',box_pad:16,box_opacity:80};
+  async function ensureLegacyStyleDefaults(job){
+    if(typeof STATE==='undefined'||!STATE)return;
+    let fresh=false;
+    if(!STATE.captionStyle||!Object.keys(STATE.captionStyle).length){STATE.captionStyle={...SIMPLE_WHITE_CAP};fresh=true;}
+    if(!STATE.headcopy||!Object.keys(STATE.headcopy).length){STATE.headcopy={...SIMPLE_WHITE_HC};}
+    if(!fresh)return;
+    try{
+      const d=await (await fetch('/api/mix/status/'+encodeURIComponent(job))).json();
+      const p=d&&d.clean_regions&&d.clean_regions.primary;
+      if(p&&p.x_pct!=null&&p.y_pct!=null){STATE.captionStyle.x_pct=Math.round(p.x_pct);STATE.captionStyle.y_pct=Math.round(p.y_pct);}
+    }catch(_){ /* 자리 정보를 못 읽으면 기본 자리(옛 코드도 같았다) */ }
+  }
   window.openSceneStyleEditor=async()=>{
     if(!allowed){status().textContent='';return;}   // 고객에겐 아직 안 연다(관리자·스위치만)
     if(!MIX_JOB){status().textContent='영상의 음성·장면을 먼저 준비해 주세요.';return;}
     jobId=MIX_JOB;status().textContent='실제 제목과 자막을 불러오는 중…';
     try{
+      await ensureLegacyStyleDefaults(jobId);   // 옛 피팅룸 초기화가 하던 '템플릿 없는 완성본' 기본값 — 이제 이 한 곳(관제 058 B단계)
       // ★제목·소제목은 **누르지 않아도 들어가 있어야 한다**(2026-09-22 사장님:
       //   "그냥 자동화가 되는 과정이야 눌러야 되는 거 없이 처음에 배치까지 잘 되야 하는 거야").
       //   진입할 때 loadHeadcopySuggest가 후보를 자동으로 뽑아 window._hcCopies에 담아 둔다.
