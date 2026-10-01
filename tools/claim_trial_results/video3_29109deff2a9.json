@@ -1,0 +1,1583 @@
+{
+ "job": "29109deff2a9",
+ "model": "gemini-3.6-flash",
+ "calls": 11,
+ "secs": 273.6,
+ "product": "올인원 접이식 멀티 거치대",
+ "claims": [
+  {
+   "id": "C1",
+   "text": "마그네틱 자석으로 스마트폰 1초 부착",
+   "kind": "기능"
+  },
+  {
+   "id": "C2",
+   "text": "다리를 펼치면 안정적인 미니 삼각대 변형",
+   "kind": "기능"
+  },
+  {
+   "id": "C3",
+   "text": "넓게 펼쳐 무거운 노트북까지 안정 거치",
+   "kind": "활용"
+  },
+  {
+   "id": "C4",
+   "text": "하단 받침대를 꺼내 태블릿도 편하게 거치",
+   "kind": "기능"
+  },
+  {
+   "id": "C5",
+   "text": "접으면 주머니나 가방에 쏙 들어가는 크기",
+   "kind": "외관"
+  },
+  {
+   "id": "C6",
+   "text": "손에 쥐고 간편하게 촬영하는 셀카 그립",
+   "kind": "활용"
+  },
+  {
+   "id": "C7",
+   "text": "자유로운 높이와 8단계 다양한 각도 조절",
+   "kind": "특징"
+  },
+  {
+   "id": "C8",
+   "text": "노트북 타이핑 시에도 흔들림 없는 고정력",
+   "kind": "효과"
+  },
+  {
+   "id": "C9",
+   "text": "전용 보관 파우치에 넣어서 깔끔하게 휴대",
+   "kind": "구성"
+  },
+  {
+   "id": "C10",
+   "text": "스마트폰부터 노트북까지 하나로 해결",
+   "kind": "장점"
+  }
+ ],
+ "cuts": [
+  {
+   "no": 1,
+   "src": "s0",
+   "start": 0.0,
+   "end": 4.77,
+   "strip": "/tmp/claimv_29109deff2a9/strip_001.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c001_1.jpg",
+   "scene_desc": "삼각대 다리를 펴고 상단 마그네틱 자석에 스마트폰을 붙여 부착합니다.",
+   "label": "삼각대 변형 및 스마트폰 부착",
+   "claims": [
+    "C1",
+    "C2"
+   ],
+   "moments": "0~2초 삼각대 다리를 펼침, 2~5초 스마트폰을 마그네틱에 붙임"
+  },
+  {
+   "no": 2,
+   "src": "s0",
+   "start": 4.77,
+   "end": 6.6,
+   "strip": "/tmp/claimv_29109deff2a9/strip_002.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c002_1.jpg",
+   "scene_desc": "탁자 위에 세워진 스마트폰 삼각대의 안정적인 높이와 거치 상태를 보여줍니다.",
+   "label": "스마트폰 삼각대 거치",
+   "claims": [
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 3,
+   "src": "s0",
+   "start": 6.6,
+   "end": 8.23,
+   "strip": "/tmp/claimv_29109deff2a9/strip_003.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c003_1.jpg",
+   "scene_desc": "삼각대에 거치된 스마트폰의 기울기 각도를 뒤에서 손으로 조절합니다.",
+   "label": "각도 조절",
+   "claims": [
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 4,
+   "src": "s0",
+   "start": 8.23,
+   "end": 9.3,
+   "strip": "/tmp/claimv_29109deff2a9/strip_004.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c004_1.jpg",
+   "scene_desc": "삼각대 다리 하단에 내장된 받침대를 손가락으로 꺼내어 펼칩니다.",
+   "label": "하단 받침대 펼치기",
+   "claims": [
+    "C4"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 5,
+   "src": "s0",
+   "start": 9.3,
+   "end": 10.5,
+   "strip": "/tmp/claimv_29109deff2a9/strip_005.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c005_1.jpg",
+   "scene_desc": "펼친 하단 받침대에 스마트폰을 안정적으로 올려놓아 거치합니다.",
+   "label": "받침대 스마트폰 거치",
+   "claims": [
+    "C4"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 6,
+   "src": "s0",
+   "start": 10.5,
+   "end": 12.43,
+   "strip": "/tmp/claimv_29109deff2a9/strip_006.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c006_1.jpg",
+   "scene_desc": "펼쳐진 하단 받침대 위에 화면이 큰 태블릿을 올려놓아 거치합니다.",
+   "label": "태블릿 거치",
+   "claims": [
+    "C4"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 7,
+   "src": "s0",
+   "start": 12.43,
+   "end": 15.37,
+   "strip": "/tmp/claimv_29109deff2a9/strip_007.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c007_1.jpg",
+   "scene_desc": "거치대 다리를 십자 모양으로 넓게 펼쳐 대형 기기 거치를 준비합니다.",
+   "label": "거치대 넓게 펼치기",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 8,
+   "src": "s0",
+   "start": 15.37,
+   "end": 17.2,
+   "strip": "/tmp/claimv_29109deff2a9/strip_008.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c008_1.jpg",
+   "scene_desc": "넓게 펼친 거치대 뒤쪽의 지지 다리를 열어 스탠드 형태로 만듭니다.",
+   "label": "노트북 스탠드 변형",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 9,
+   "src": "s0",
+   "start": 17.2,
+   "end": 18.0,
+   "strip": "/tmp/claimv_29109deff2a9/c009_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c009_0.jpg",
+   "scene_desc": "스탠드 모드로 변형된 넓은 거치대를 테이블 위에 안정적으로 놓습니다.",
+   "label": "노트북 거치대 세팅",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 10,
+   "src": "s0",
+   "start": 18.0,
+   "end": 19.23,
+   "strip": "/tmp/claimv_29109deff2a9/strip_010.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c010_1.jpg",
+   "scene_desc": "넓게 펼쳐진 거치대 위에 묵직한 노트북을 올려놓습니다.",
+   "label": "노트북 거치",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 11,
+   "src": "s0",
+   "start": 19.23,
+   "end": 20.47,
+   "strip": "/tmp/claimv_29109deff2a9/strip_011.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c011_1.jpg",
+   "scene_desc": "거치대에 놓인 노트북의 상판을 열 때도 흔들림 없이 안정적으로 고정됩니다.",
+   "label": "노트북 개폐 안정성",
+   "claims": [
+    "C3",
+    "C8"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 12,
+   "src": "s0",
+   "start": 20.47,
+   "end": 21.8,
+   "strip": "/tmp/claimv_29109deff2a9/strip_012.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c012_1.jpg",
+   "scene_desc": "거치대 위의 노트북을 손으로 꾹 눌러도 흔들리지 않는 고정력을 보여줍니다.",
+   "label": "흔들림 없는 고정력",
+   "claims": [
+    "C8"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 13,
+   "src": "s0",
+   "start": 21.8,
+   "end": 23.73,
+   "strip": "/tmp/claimv_29109deff2a9/strip_013.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c013_1.jpg",
+   "scene_desc": "손으로 거치대의 상단과 하단을 펼쳤다가 접는 모습을 보여준다.",
+   "label": "전체 구조 시연",
+   "claims": [],
+   "moments": ""
+  },
+  {
+   "no": 14,
+   "src": "s0",
+   "start": 23.73,
+   "end": 25.47,
+   "strip": "/tmp/claimv_29109deff2a9/strip_014.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c014_1.jpg",
+   "scene_desc": "거치대 하단 다리를 펼쳐 책상 위에 안정적인 미니 삼각대로 세운다.",
+   "label": "삼각대 변형",
+   "claims": [
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 15,
+   "src": "s1",
+   "start": 0.0,
+   "end": 0.7,
+   "strip": "/tmp/claimv_29109deff2a9/c015_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c015_0.jpg",
+   "scene_desc": "손으로 거치대의 두 다리를 좌우로 벌려 삼각대 형태로 펼친다.",
+   "label": "다리 펼치기",
+   "claims": [
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 16,
+   "src": "s1",
+   "start": 0.7,
+   "end": 1.37,
+   "strip": "/tmp/claimv_29109deff2a9/c016_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c016_0.jpg",
+   "scene_desc": "접었을 때의 슬림한 두께와 콤팩트한 외관 크기를 손에 쥐고 보여준다.",
+   "label": "접은 외관",
+   "claims": [
+    "C5"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 17,
+   "src": "s1",
+   "start": 1.37,
+   "end": 1.9,
+   "strip": "/tmp/claimv_29109deff2a9/c017_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c017_0.jpg",
+   "scene_desc": "거치대의 상하단 지지대를 십자 모양으로 넓게 펼쳐 세운다.",
+   "label": "넓게 펼침",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 18,
+   "src": "s1",
+   "start": 1.9,
+   "end": 4.0,
+   "strip": "/tmp/claimv_29109deff2a9/strip_018.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c018_1.jpg",
+   "scene_desc": "거치대의 다리와 날개를 넓게 펼치고 다시 빠르게 접는다.",
+   "label": "접기 동작",
+   "claims": [],
+   "moments": ""
+  },
+  {
+   "no": 19,
+   "src": "s1",
+   "start": 4.0,
+   "end": 6.27,
+   "strip": "/tmp/claimv_29109deff2a9/strip_019.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c019_1.jpg",
+   "scene_desc": "접은 거치대를 백팩 측면 포켓 속으로 쏙 넣어 간편하게 보관한다.",
+   "label": "가방 수납",
+   "claims": [
+    "C5"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 20,
+   "src": "s1",
+   "start": 6.27,
+   "end": 7.5,
+   "strip": "/tmp/claimv_29109deff2a9/strip_020.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c020_1.jpg",
+   "scene_desc": "콤팩트하게 접힌 상태에서 원형 마그네틱 헤드와 외관을 보여준다.",
+   "label": "콤팩트 크기",
+   "claims": [
+    "C5"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 21,
+   "src": "s1",
+   "start": 7.5,
+   "end": 12.4,
+   "strip": "/tmp/claimv_29109deff2a9/strip_021.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c021_1.jpg",
+   "scene_desc": "뒤쪽 지지대를 홈에 걸어 8단계로 다채로운 각도를 조절한다.",
+   "label": "8단계 각도조절",
+   "claims": [
+    "C7"
+   ],
+   "moments": "0~2초 받침대 펼침, 2~5초 지지대를 홈에 걸어 각도 조절"
+  },
+  {
+   "no": 22,
+   "src": "s1",
+   "start": 12.4,
+   "end": 15.57,
+   "strip": "/tmp/claimv_29109deff2a9/strip_022.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c022_1.jpg",
+   "scene_desc": "스마트폰 뒷면에 마그네틱 헤드를 착 붙여 안정적으로 고정한다.",
+   "label": "자석 1초 부착",
+   "claims": [
+    "C1"
+   ],
+   "moments": "0~2초 스마트폰 뒷면에 자석 부착, 2~3초 손으로 잡고 고정 확인"
+  },
+  {
+   "no": 23,
+   "src": "s1",
+   "start": 15.57,
+   "end": 17.2,
+   "strip": "/tmp/claimv_29109deff2a9/strip_023.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c023_1.jpg",
+   "scene_desc": "부착된 스마트폰을 손으로 잡고 각도를 회전하며 셀카 그립으로 활용한다.",
+   "label": "셀카 그립",
+   "claims": [
+    "C6"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 24,
+   "src": "s1",
+   "start": 17.2,
+   "end": 19.87,
+   "strip": "/tmp/claimv_29109deff2a9/strip_024.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c024_1.jpg",
+   "scene_desc": "손으로 헤드 조인트와 지지대 관절을 다각도로 자유롭게 각도 조절한다.",
+   "label": "각도 자유 조절",
+   "claims": [
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 25,
+   "src": "s1",
+   "start": 19.87,
+   "end": 24.23,
+   "strip": "/tmp/claimv_29109deff2a9/strip_025.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c025_1.jpg",
+   "scene_desc": "넓게 펼친 거치대 위에 태블릿을 올려놓아 안정적으로 거치한다.",
+   "label": "태블릿 거치 시연",
+   "claims": [
+    "C4"
+   ],
+   "moments": "0~2초 거치대 조작 준비, 2~4초 태블릿 거치"
+  },
+  {
+   "no": 26,
+   "src": "s1",
+   "start": 24.23,
+   "end": 27.63,
+   "strip": "/tmp/claimv_29109deff2a9/strip_026.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c026_1.jpg",
+   "scene_desc": "접혀 있던 거치대의 다리를 벌려 미니 삼각대 형태로 펼친다.",
+   "label": "삼각대 다리 펼치기",
+   "claims": [
+    "C2"
+   ],
+   "moments": "0~2초 거치대 조작, 2~3초 다리 펼침"
+  },
+  {
+   "no": 27,
+   "src": "s1",
+   "start": 27.63,
+   "end": 31.57,
+   "strip": "/tmp/claimv_29109deff2a9/strip_027.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c027_1.jpg",
+   "scene_desc": "거치대의 상단 헤드를 접어 휴대하기 좋은 콤팩트한 상태로 만든다.",
+   "label": "접은 형태 시연",
+   "claims": [
+    "C5"
+   ],
+   "moments": "0~2초 헤드 구부리기, 2~4초 접힌 거치대 조작"
+  },
+  {
+   "no": 28,
+   "src": "s2",
+   "start": 0.0,
+   "end": 0.8,
+   "strip": "/tmp/claimv_29109deff2a9/c028_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c028_0.jpg",
+   "scene_desc": "스마트폰이 미니 삼각대에 마그네틱 자석으로 부착되어 서 있는 모습.",
+   "label": "스마트폰 삼각대 거치",
+   "claims": [
+    "C1",
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 29,
+   "src": "s2",
+   "start": 0.8,
+   "end": 1.7,
+   "strip": "/tmp/claimv_29109deff2a9/c029_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c029_0.jpg",
+   "scene_desc": "거치대 측면의 다단계 각도 조절 홈 구조를 클로즈업해 보여준다.",
+   "label": "각도 조절 구조",
+   "claims": [
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 30,
+   "src": "s2",
+   "start": 1.7,
+   "end": 2.57,
+   "strip": "/tmp/claimv_29109deff2a9/c030_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c030_0.jpg",
+   "scene_desc": "손으로 거치대 지지대를 조작하여 높이와 각도를 조절한다.",
+   "label": "각도 조절 시연",
+   "claims": [
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 31,
+   "src": "s2",
+   "start": 2.57,
+   "end": 3.97,
+   "strip": "/tmp/claimv_29109deff2a9/strip_031.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c031_1.jpg",
+   "scene_desc": "한 손으로 펼쳐진 십자 모양의 거치대를 쥐고 유연한 형태를 보여준다.",
+   "label": "펼쳐진 거치대",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 32,
+   "src": "s2",
+   "start": 3.97,
+   "end": 4.8,
+   "strip": "/tmp/claimv_29109deff2a9/c032_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c032_0.jpg",
+   "scene_desc": "거치대 위에 노트북이 평평하게 올려져 받쳐져 있는 하단 모습.",
+   "label": "노트북 거치",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 33,
+   "src": "s2",
+   "start": 4.8,
+   "end": 5.53,
+   "strip": "/tmp/claimv_29109deff2a9/c033_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c033_0.jpg",
+   "scene_desc": "하단 받침대에 거치된 태블릿 화면을 손으로 조작한다.",
+   "label": "태블릿 거치 사용",
+   "claims": [
+    "C4"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 34,
+   "src": "s2",
+   "start": 5.53,
+   "end": 6.3,
+   "strip": "/tmp/claimv_29109deff2a9/c034_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c034_0.jpg",
+   "scene_desc": "미니 삼각대에 자석으로 스마트폰이 결합되어 있는 모습.",
+   "label": "스마트폰 자석 거치",
+   "claims": [
+    "C1",
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 35,
+   "src": "s2",
+   "start": 6.3,
+   "end": 7.67,
+   "strip": "/tmp/claimv_29109deff2a9/strip_035.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c035_1.jpg",
+   "scene_desc": "접은 거치대와 마그네틱 케이스 스마트폰을 양손에 들고 비교한다.",
+   "label": "크기 및 부착면 비교",
+   "claims": [
+    "C1",
+    "C5"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 36,
+   "src": "s2",
+   "start": 7.67,
+   "end": 8.47,
+   "strip": "/tmp/claimv_29109deff2a9/c036_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c036_0.jpg",
+   "scene_desc": "마그네틱 자석으로 삼각대에 부착되어 안정적으로 세워진 스마트폰.",
+   "label": "삼각대 거치 모습",
+   "claims": [
+    "C1",
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 37,
+   "src": "s2",
+   "start": 8.47,
+   "end": 8.97,
+   "strip": "/tmp/claimv_29109deff2a9/c037_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c037_0.jpg",
+   "scene_desc": "원목 테이블 위에 삼각대 형태로 안정적으로 서 있는 거치대의 모습",
+   "label": "삼각대 변형",
+   "claims": [
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 38,
+   "src": "s2",
+   "start": 8.97,
+   "end": 9.97,
+   "strip": "/tmp/claimv_29109deff2a9/strip_038.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c038_1.jpg",
+   "scene_desc": "거치대 상단을 손으로 세게 눌러도 흔들리지 않는 고정력을 보여준다.",
+   "label": "흔들림 고정",
+   "claims": [
+    "C8"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 39,
+   "src": "s2",
+   "start": 9.97,
+   "end": 10.87,
+   "strip": "/tmp/claimv_29109deff2a9/c039_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c039_0.jpg",
+   "scene_desc": "접힌 상태의 거치대를 한 손으로 들고 가방 옆에 세워둔 모습",
+   "label": "휴대용 크기",
+   "claims": [
+    "C5"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 40,
+   "src": "s2",
+   "start": 10.87,
+   "end": 11.87,
+   "strip": "/tmp/claimv_29109deff2a9/strip_040.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c040_1.jpg",
+   "scene_desc": "거치대 다리 뒤쪽의 각도 조절 홈에 지지대를 끼워 맞추는 모습",
+   "label": "각도 조절",
+   "claims": [
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 41,
+   "src": "s2",
+   "start": 11.87,
+   "end": 12.93,
+   "strip": "/tmp/claimv_29109deff2a9/strip_041.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c041_1.jpg",
+   "scene_desc": "옆 모습에서 지지대 위치를 조정하여 거치대의 높낮이를 조절한다.",
+   "label": "높이 조절",
+   "claims": [
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 42,
+   "src": "s2",
+   "start": 12.93,
+   "end": 13.53,
+   "strip": "/tmp/claimv_29109deff2a9/c042_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c042_0.jpg",
+   "scene_desc": "거치대의 상하좌우 다리를 넓게 펼쳐 노트북 거치 준비를 한다.",
+   "label": "넓은 펼침",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 43,
+   "src": "s2",
+   "start": 13.53,
+   "end": 14.07,
+   "strip": "/tmp/claimv_29109deff2a9/c043_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c043_0.jpg",
+   "scene_desc": "거치대 다리 끝에 숨겨진 하단 받침대를 손가락으로 꺼내는 모습",
+   "label": "받침대 돌출",
+   "claims": [
+    "C4"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 44,
+   "src": "s2",
+   "start": 14.07,
+   "end": 14.8,
+   "strip": "/tmp/claimv_29109deff2a9/c044_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c044_0.jpg",
+   "scene_desc": "하단 받침대를 펼친 거치대 위에 태블릿을 안정적으로 올려놓는다.",
+   "label": "태블릿 거치",
+   "claims": [
+    "C4"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 45,
+   "src": "s2",
+   "start": 14.8,
+   "end": 15.8,
+   "strip": "/tmp/claimv_29109deff2a9/strip_045.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c045_1.jpg",
+   "scene_desc": "거치대에 올려진 태블릿을 손으로 터치하며 사용하는 측면 모습",
+   "label": "태블릿 활용",
+   "claims": [
+    "C4"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 46,
+   "src": "s2",
+   "start": 15.8,
+   "end": 17.67,
+   "strip": "/tmp/claimv_29109deff2a9/strip_046.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c046_1.jpg",
+   "scene_desc": "마그네틱으로 스마트폰을 부착한 후 셀카봉 그립으로 활용하는 모습",
+   "label": "셀카 그립",
+   "claims": [
+    "C1",
+    "C6"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 47,
+   "src": "s2",
+   "start": 17.67,
+   "end": 19.02,
+   "strip": "/tmp/claimv_29109deff2a9/strip_047.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c047_1.jpg",
+   "scene_desc": "노트북, 태블릿, 스마트폰 사이에 거치대를 놓아 하나로 해결함을 보여준다.",
+   "label": "올인원 활용",
+   "claims": [
+    "C10"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 48,
+   "src": "s3",
+   "start": 0.0,
+   "end": 1.13,
+   "strip": "/tmp/claimv_29109deff2a9/strip_048.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c048_1.jpg",
+   "scene_desc": "접혀 있던 거치대의 다리를 사방으로 넓게 펼치는 모습",
+   "label": "거치대 펼치기",
+   "claims": [
+    "C2",
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 49,
+   "src": "s3",
+   "start": 1.13,
+   "end": 2.07,
+   "strip": "/tmp/claimv_29109deff2a9/c049_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c049_0.jpg",
+   "scene_desc": "손으로 거치대 다리를 펼쳐 십자 형태로 만드는 모습",
+   "label": "노트북 거치 형태",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 50,
+   "src": "s3",
+   "start": 2.07,
+   "end": 3.3,
+   "strip": "/tmp/claimv_29109deff2a9/strip_050.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c050_1.jpg",
+   "scene_desc": "거치대 다리 하단의 받침대를 손가락으로 꺼내는 모습",
+   "label": "하단 받침대 돌출",
+   "claims": [
+    "C4"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 51,
+   "src": "s3",
+   "start": 3.3,
+   "end": 3.9,
+   "strip": "/tmp/claimv_29109deff2a9/c051_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c051_0.jpg",
+   "scene_desc": "펼쳐진 거치대 위에 노트북을 올리고 안정적으로 받치는 모습",
+   "label": "노트북 거치",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 52,
+   "src": "s3",
+   "start": 3.9,
+   "end": 4.87,
+   "strip": "/tmp/claimv_29109deff2a9/c052_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c052_0.jpg",
+   "scene_desc": "삼각대 형태 거치대에 스마트폰을 자석 부착하여 터치하는 모습",
+   "label": "스마트폰 자석 거치",
+   "claims": [
+    "C1",
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 53,
+   "src": "s3",
+   "start": 4.87,
+   "end": 5.37,
+   "strip": "/tmp/claimv_29109deff2a9/c053_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c053_0.jpg",
+   "scene_desc": "삼각대 거치대 헤드 자석 부위에 스마트폰이 부착된 뒷모습",
+   "label": "삼각대 자석 결합",
+   "claims": [
+    "C1",
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 54,
+   "src": "s3",
+   "start": 5.37,
+   "end": 5.97,
+   "strip": "/tmp/claimv_29109deff2a9/c054_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c054_0.jpg",
+   "scene_desc": "삼각대로 변형된 거치대 위에 스마트폰이 세워져 있는 모습",
+   "label": "삼각대 스마트폰 거치",
+   "claims": [
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 55,
+   "src": "s3",
+   "start": 5.97,
+   "end": 7.23,
+   "strip": "/tmp/claimv_29109deff2a9/strip_055.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c055_1.jpg",
+   "scene_desc": "거치대를 접은 상태로 스마트폰에 부착해 손으로 쥐고 사용하는 모습",
+   "label": "셀카 그립 활용",
+   "claims": [
+    "C6"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 56,
+   "src": "s3",
+   "start": 7.23,
+   "end": 8.4,
+   "strip": "/tmp/claimv_29109deff2a9/strip_056.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c056_1.jpg",
+   "scene_desc": "자를 이용하여 거치대의 높이 및 각도 조절 구조를 보여주는 모습",
+   "label": "각도 조절 구조",
+   "claims": [
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 57,
+   "src": "s3",
+   "start": 8.4,
+   "end": 10.01,
+   "strip": "/tmp/claimv_29109deff2a9/strip_057.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c057_1.jpg",
+   "scene_desc": "완전히 접은 컴팩트한 크기의 거치대를 탁자 위에 놓는 모습",
+   "label": "컴팩트 접이식 보관",
+   "claims": [
+    "C5"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 58,
+   "src": "s4",
+   "start": 0.0,
+   "end": 2.77,
+   "strip": "/tmp/claimv_29109deff2a9/strip_058.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c058_1.jpg",
+   "scene_desc": "접힌 상태의 거치대를 한 손에 쥐고 크기와 디자인을 보여주는 모습",
+   "label": "접이식 슬림 디자인",
+   "claims": [
+    "C5"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 59,
+   "src": "s4",
+   "start": 2.77,
+   "end": 5.5,
+   "strip": "/tmp/claimv_29109deff2a9/strip_059.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c059_1.jpg",
+   "scene_desc": "삼각대로 펼친 거치대 하단 받침에 스마트폰을 올리는 모습",
+   "label": "하단 받침 거치",
+   "claims": [
+    "C2",
+    "C4"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 60,
+   "src": "s4",
+   "start": 5.5,
+   "end": 7.63,
+   "strip": "/tmp/claimv_29109deff2a9/strip_060.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c060_1.jpg",
+   "scene_desc": "태블릿을 거치대 하단 받침대에 안정적으로 올려놓는 모습",
+   "label": "태블릿 받침 거치",
+   "claims": [
+    "C4"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 61,
+   "src": "s4",
+   "start": 7.63,
+   "end": 9.93,
+   "strip": "/tmp/claimv_29109deff2a9/strip_061.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c061_1.jpg",
+   "scene_desc": "미니 삼각대에 스마트폰을 마그네틱으로 부착하는 모습",
+   "label": "스마트폰 1초 부착",
+   "claims": [
+    "C1",
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 62,
+   "src": "s4",
+   "start": 9.93,
+   "end": 16.07,
+   "strip": "/tmp/claimv_29109deff2a9/strip_062.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c062_2.jpg",
+   "scene_desc": "미니 삼각대로 테이블 위에 스마트폰을 안정적으로 거치한 모습",
+   "label": "안정적 미니 삼각대",
+   "claims": [
+    "C2"
+   ],
+   "moments": "0~3초 테이블 위 미니 삼각대 거치, 3~6초 대각선 각도에서 바라본 거치 모습"
+  },
+  {
+   "no": 63,
+   "src": "s4",
+   "start": 16.07,
+   "end": 19.95,
+   "strip": "/tmp/claimv_29109deff2a9/strip_063.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c063_1.jpg",
+   "scene_desc": "거치대를 셀카 그립처럼 손에 쥐고 화면을 보며 촬영하는 모습",
+   "label": "셀카 그립 촬영",
+   "claims": [
+    "C6"
+   ],
+   "moments": "0~2초 손으로 그립을 잡고 촬영, 2~4초 텍스트 안내 화면"
+  },
+  {
+   "no": 64,
+   "src": "s5",
+   "start": 0.0,
+   "end": 1.95,
+   "strip": "/tmp/claimv_29109deff2a9/strip_064.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c064_1.jpg",
+   "scene_desc": "접혀 있던 거치대를 펼쳐 테이블에 미니 삼각대로 세우는 모습",
+   "label": "삼각대 변형 펼치기",
+   "claims": [
+    "C2",
+    "C5"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 65,
+   "src": "s5",
+   "start": 1.95,
+   "end": 2.83,
+   "strip": "/tmp/claimv_29109deff2a9/c065_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c065_0.jpg",
+   "scene_desc": "손으로 거치대의 접이식 관절 다리를 펼치는 모습",
+   "label": "접이식 다리 펼침",
+   "claims": [
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 66,
+   "src": "s5",
+   "start": 2.83,
+   "end": 3.48,
+   "strip": "/tmp/claimv_29109deff2a9/c066_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c066_0.jpg",
+   "scene_desc": "세워진 미니 삼각대에 스마트폰을 터치하며 사용하는 모습",
+   "label": "스마트폰 거치 사용",
+   "claims": [
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 67,
+   "src": "s5",
+   "start": 3.48,
+   "end": 4.05,
+   "strip": "/tmp/claimv_29109deff2a9/c067_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c067_0.jpg",
+   "scene_desc": "스마트폰을 가로 방향으로 회전시켜 거치하는 모습",
+   "label": "가로 화면 거치",
+   "claims": [
+    "C1",
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 68,
+   "src": "s5",
+   "start": 4.05,
+   "end": 4.83,
+   "strip": "/tmp/claimv_29109deff2a9/c068_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c068_0.jpg",
+   "scene_desc": "손으로 거치대 헤드와 다리 각도를 자유롭게 조절하는 모습",
+   "label": "자유로운 각도 조절",
+   "claims": [
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 69,
+   "src": "s5",
+   "start": 4.83,
+   "end": 5.4,
+   "strip": "/tmp/claimv_29109deff2a9/c069_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c069_0.jpg",
+   "scene_desc": "마그네틱 헤드 부위를 손으로 만지며 회전시키는 모습",
+   "label": "헤드 각도 조절",
+   "claims": [
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 70,
+   "src": "s5",
+   "start": 5.4,
+   "end": 6.15,
+   "strip": "/tmp/claimv_29109deff2a9/c070_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c070_0.jpg",
+   "scene_desc": "케이스가 씌워진 스마트폰을 거치대 헤드에 착 붙이는 모습",
+   "label": "자석 부착 거치",
+   "claims": [
+    "C1"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 71,
+   "src": "s5",
+   "start": 6.15,
+   "end": 7.3,
+   "strip": "/tmp/claimv_29109deff2a9/strip_071.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c071_1.jpg",
+   "scene_desc": "삼각대 거치 다리를 십자 형태로 넓게 펼쳐 확장하는 모습",
+   "label": "다리 넓게 펼치기",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 72,
+   "src": "s5",
+   "start": 7.3,
+   "end": 8.48,
+   "strip": "/tmp/claimv_29109deff2a9/strip_072.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c072_1.jpg",
+   "scene_desc": "넓게 펼친 거치대와 셀카 그립으로 휴대하며 촬영하는 모습",
+   "label": "셀카 그립 촬영",
+   "claims": [
+    "C3",
+    "C6"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 73,
+   "src": "s5",
+   "start": 8.48,
+   "end": 9.58,
+   "strip": "/tmp/claimv_29109deff2a9/strip_073.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c073_1.jpg",
+   "scene_desc": "접혀 있는 제품 다리를 손으로 펼치며 살펴본다.",
+   "label": "제품 살펴보기",
+   "claims": [],
+   "moments": ""
+  },
+  {
+   "no": 74,
+   "src": "s5",
+   "start": 9.58,
+   "end": 10.62,
+   "strip": "/tmp/claimv_29109deff2a9/strip_074.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c074_1.jpg",
+   "scene_desc": "미니 삼각대 형태 거치대 상단에 스마트폰을 부착한다.",
+   "label": "스마트폰 부착",
+   "claims": [
+    "C1",
+    "C2"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 75,
+   "src": "s5",
+   "start": 10.62,
+   "end": 11.7,
+   "strip": "/tmp/claimv_29109deff2a9/strip_075.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c075_1.jpg",
+   "scene_desc": "스마트폰, 노트북, 태블릿이 각각 거치된 모습을 보여준다.",
+   "label": "올인원 거치대",
+   "claims": [
+    "C10"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 76,
+   "src": "s5",
+   "start": 11.7,
+   "end": 12.55,
+   "strip": "/tmp/claimv_29109deff2a9/c076_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c076_0.jpg",
+   "scene_desc": "제품을 손에 쥐고 셀카봉 그립 형태로 들고 촬영한다.",
+   "label": "셀카 그립",
+   "claims": [
+    "C6"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 77,
+   "src": "s5",
+   "start": 12.55,
+   "end": 13.1,
+   "strip": "/tmp/claimv_29109deff2a9/c077_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c077_0.jpg",
+   "scene_desc": "손으로 거치대의 단계별 각도 조절 홈을 변경한다.",
+   "label": "각도 조절",
+   "claims": [
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 78,
+   "src": "s5",
+   "start": 13.1,
+   "end": 15.38,
+   "strip": "/tmp/claimv_29109deff2a9/strip_078.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c078_1.jpg",
+   "scene_desc": "거치대를 넓게 펼쳐 각도를 조절한 뒤 태블릿을 올린다.",
+   "label": "태블릿 거치",
+   "claims": [
+    "C4",
+    "C7"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 79,
+   "src": "s5",
+   "start": 15.38,
+   "end": 16.25,
+   "strip": "/tmp/claimv_29109deff2a9/c079_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c079_0.jpg",
+   "scene_desc": "거치대 위에 안정적으로 놓인 태블릿 화면을 보여준다.",
+   "label": "태블릿 거치대",
+   "claims": [
+    "C4"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 80,
+   "src": "s5",
+   "start": 16.25,
+   "end": 17.52,
+   "strip": "/tmp/claimv_29109deff2a9/strip_080.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c080_1.jpg",
+   "scene_desc": "거치대를 넓게 펼친 후 그 위에 노트북을 올려놓는다.",
+   "label": "노트북 거치",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 81,
+   "src": "s5",
+   "start": 17.52,
+   "end": 18.33,
+   "strip": "/tmp/claimv_29109deff2a9/c081_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c081_0.jpg",
+   "scene_desc": "거치대에 올려진 노트북 키보드를 안정적으로 타이핑한다.",
+   "label": "노트북 타이핑",
+   "claims": [
+    "C8"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 82,
+   "src": "s5",
+   "start": 18.33,
+   "end": 19.33,
+   "strip": "/tmp/claimv_29109deff2a9/strip_082.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c082_1.jpg",
+   "scene_desc": "거치대에 받쳐진 노트북을 고정하고 상판 각도를 조절한다.",
+   "label": "노트북 거치",
+   "claims": [
+    "C3"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 83,
+   "src": "s5",
+   "start": 19.33,
+   "end": 20.9,
+   "strip": "/tmp/claimv_29109deff2a9/strip_083.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c083_1.jpg",
+   "scene_desc": "노트북, 태블릿, 스마트폰이 순서대로 거치된 장면들을 보여준다.",
+   "label": "모든 기기 거치",
+   "claims": [
+    "C10"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 84,
+   "src": "s5",
+   "start": 20.9,
+   "end": 22.32,
+   "strip": "/tmp/claimv_29109deff2a9/strip_084.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c084_1.jpg",
+   "scene_desc": "넓게 펼쳐져 있던 거치대 다리를 접어 작고 슬림하게 만든다.",
+   "label": "접이식 휴대",
+   "claims": [
+    "C5"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 85,
+   "src": "s5",
+   "start": 22.32,
+   "end": 24.13,
+   "strip": "/tmp/claimv_29109deff2a9/strip_085.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c085_1.jpg",
+   "scene_desc": "파우치에 거치대를 넣고 가방 포켓에 수납하는 모습",
+   "label": "가방 수납",
+   "claims": [
+    "C5",
+    "C9"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 86,
+   "src": "s5",
+   "start": 24.13,
+   "end": 25.07,
+   "strip": "/tmp/claimv_29109deff2a9/c086_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c086_0.jpg",
+   "scene_desc": "접은 거치대를 바지 주머니 속으로 쏙 넣는 모습",
+   "label": "주머니 수납",
+   "claims": [
+    "C5"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 87,
+   "src": "s5",
+   "start": 25.07,
+   "end": 25.63,
+   "strip": "/tmp/claimv_29109deff2a9/c087_0.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c087_0.jpg",
+   "scene_desc": "테이블 위에서 전용 파우치에 담긴 거치대를 꺼내는 모습",
+   "label": "파우치 사용",
+   "claims": [
+    "C9"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 88,
+   "src": "s5",
+   "start": 25.63,
+   "end": 26.67,
+   "strip": "/tmp/claimv_29109deff2a9/strip_088.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c088_1.jpg",
+   "scene_desc": "파우치에서 거치대를 꺼내 양손으로 들어 보이는 모습",
+   "label": "제품 꺼내기",
+   "claims": [
+    "C5"
+   ],
+   "moments": ""
+  },
+  {
+   "no": 89,
+   "src": "s5",
+   "start": 26.67,
+   "end": 28.21,
+   "strip": "/tmp/claimv_29109deff2a9/strip_089.jpg",
+   "mid": "/tmp/claimv_29109deff2a9/c089_1.jpg",
+   "scene_desc": "컴팩트하게 접힌 거치대와 스마트폰·태블릿 크기 비교",
+   "label": "컴팩트 크기",
+   "claims": [
+    "C5"
+   ],
+   "moments": ""
+  }
+ ],
+ "beats": [
+  {
+   "text": "제조사도 감탄한 미친 거치대 활용법",
+   "role": "훅",
+   "need": 2.83,
+   "cur_seg": "lens_tiktok_1k4seur-0",
+   "cur_src": "s0",
+   "cur_start": 0.0,
+   "cur_end": 4.767
+  },
+  {
+   "text": "카페에서 노트북 쓸 때 둔탁한 거치대 때문에 가방만 볼록해지고 거추장스럽던 사람들 사이에서 난리가 났다는데",
+   "role": "미끼",
+   "need": 7.31,
+   "cur_seg": "lens_tiktok_1yzcfio-6",
+   "cur_src": "s1",
+   "cur_start": 7.5,
+   "cur_end": 12.4
+  },
+  {
+   "text": "이건 바로 올인원 거치대.",
+   "role": "공개",
+   "need": 1.86,
+   "cur_seg": "lens_instagram_8ap264-18",
+   "cur_src": "s2",
+   "cur_start": 15.8,
+   "cur_end": 17.667
+  },
+  {
+   "text": "이게 말도 안 되는게 기존 둔탁한 거치대와 달리 가방에 넣을 때마다",
+   "role": "고조1",
+   "need": 4.8,
+   "cur_seg": "lens_tiktok_1yzcfio-4",
+   "cur_src": "s1",
+   "cur_start": 4.0,
+   "cur_end": 6.267
+  },
+  {
+   "text": "볼록하게 튀어나와 짐만 되고 공간 다 차지하던 괴로움을",
+   "role": "고조1",
+   "need": 4.85,
+   "cur_seg": "lens_tiktok_1yzcfio-12",
+   "cur_src": "s1",
+   "cur_start": 27.633,
+   "cur_end": 31.567
+  },
+  {
+   "text": "한 손에 딱 쥐어지는 일자 막대로 접어버렸다는 거",
+   "role": "고조1",
+   "need": 3.43,
+   "cur_seg": "lens_instagram_1fkofme-8",
+   "cur_src": "s3",
+   "cur_start": 7.233,
+   "cur_end": 8.4
+  },
+  {
+   "text": "심지어 거기다 타이핑할 때마다 덜덜 떨려서",
+   "role": "고조2",
+   "need": 3.07,
+   "cur_seg": "lens_instagram_8ap264-4",
+   "cur_src": "s2",
+   "cur_start": 3.967,
+   "cur_end": 4.8
+  },
+  {
+   "text": "화면 흔들리고 목 노이로제 걸리던 순간도",
+   "role": "고조2",
+   "need": 3.0,
+   "cur_seg": "lens_tiktok_1k4seur-11",
+   "cur_src": "s0",
+   "cur_start": 20.467,
+   "cur_end": 21.8
+  },
+  {
+   "text": "무거운 노트북까지 흔들림 없이 딱 잡아준다는 거",
+   "role": "고조2",
+   "need": 3.41,
+   "cur_seg": "lens_tiktok_1yzcfio-10",
+   "cur_src": "s1",
+   "cur_start": 19.867,
+   "cur_end": 24.233
+  },
+  {
+   "text": "근데 진짜 충격적인 포인트는 펼치자마자 십자 삼각대로 변신해서 어떤 바닥이든 절대 안 넘어진다는 거임",
+   "role": "반전",
+   "need": 7.82,
+   "cur_seg": "lens_instagram_1fkofme-0",
+   "cur_src": "s3",
+   "cur_start": 0.0,
+   "cur_end": 1.133
+  },
+  {
+   "text": "벌써 품절 난리라는데",
+   "role": "마무리",
+   "need": 1.62,
+   "cur_seg": "lens_instagram_1fkofme-9",
+   "cur_src": "s3",
+   "cur_start": 8.4,
+   "cur_end": 10.009002
+  }
+ ],
+ "sentences": [
+  {
+   "lines": [
+    0
+   ],
+   "claims": [],
+   "cuts": [],
+   "needs_scene": false,
+   "unlisted": ""
+  },
+  {
+   "lines": [
+    1,
+    2
+   ],
+   "claims": [
+    "C10"
+   ],
+   "cuts": [],
+   "needs_scene": true,
+   "unlisted": ""
+  },
+  {
+   "lines": [
+    3,
+    4,
+    5
+   ],
+   "claims": [
+    "C5"
+   ],
+   "cuts": [],
+   "needs_scene": true,
+   "unlisted": ""
+  },
+  {
+   "lines": [
+    6,
+    7,
+    8
+   ],
+   "claims": [
+    "C3",
+    "C8"
+   ],
+   "cuts": [],
+   "needs_scene": true,
+   "unlisted": ""
+  },
+  {
+   "lines": [
+    9
+   ],
+   "claims": [
+    "C2",
+    "C3"
+   ],
+   "cuts": [],
+   "needs_scene": true,
+   "unlisted": ""
+  },
+  {
+   "lines": [
+    10
+   ],
+   "claims": [],
+   "cuts": [],
+   "needs_scene": false,
+   "unlisted": ""
+  }
+ ],
+ "judged": [
+  {
+   "k": 1,
+   "text": "카페에서 노트북 쓸 때 둔탁한 거치대 때문에 가방만 볼록해지고 거추장스럽던 사람들 사이에서 난리가 났다는데 이건 바로 올인원 거치대.",
+   "need": 9.17,
+   "cand": [
+    83,
+    47,
+    75
+   ],
+   "how": "5부족",
+   "cand_desc": [
+    "노트북, 태블릿, 스마트폰이 순서대로 거치된 장면들을 보여준다.",
+    "노트북, 태블릿, 스마트폰 사이에 거치대를 놓아 하나로 해결함을 보여준다.",
+    "스마트폰, 노트북, 태블릿이 각각 거치된 모습을 보여준다."
+   ],
+   "unlisted": "",
+   "final_strip": "/tmp/claimv_29109deff2a9/finstrip_1.jpg",
+   "cand_strip": "/tmp/claimv_29109deff2a9/candstrip_1.jpg",
+   "a_is": "후보",
+   "verdict": "후보",
+   "why": "일자 막대 모양과 가방 수납이 잘 표현됨"
+  },
+  {
+   "k": 2,
+   "text": "이게 말도 안 되는게 기존 둔탁한 거치대와 달리 가방에 넣을 때마다 볼록하게 튀어나와 짐만 되고 공간 다 차지하던 괴로움을 한 손에 딱 쥐어지는 일자 막대로 접어버렸다는 거",
+   "need": 13.08,
+   "cand": [
+    27,
+    58,
+    19,
+    64,
+    85,
+    57
+   ],
+   "how": "4다른소스합치기",
+   "cand_desc": [
+    "거치대의 상단 헤드를 접어 휴대하기 좋은 콤팩트한 상태로 만든다.",
+    "접힌 상태의 거치대를 한 손에 쥐고 크기와 디자인을 보여주는 모습",
+    "접은 거치대를 백팩 측면 포켓 속으로 쏙 넣어 간편하게 보관한다."
+   ],
+   "unlisted": "",
+   "final_strip": "/tmp/claimv_29109deff2a9/finstrip_2.jpg",
+   "cand_strip": "/tmp/claimv_29109deff2a9/candstrip_2.jpg",
+   "a_is": "후보",
+   "verdict": "완성본",
+   "why": "노트북을 얹어 흔들림 없는 상태를 보여줌"
+  },
+  {
+   "k": 3,
+   "text": "심지어 거기다 타이핑할 때마다 덜덜 떨려서 화면 흔들리고 목 노이로제 걸리던 순간도 무거운 노트북까지 흔들림 없이 딱 잡아준다는 거",
+   "need": 9.48,
+   "cand": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "how": "2이어붙이기+늦추기",
+   "cand_desc": [
+    "거치대 다리를 십자 모양으로 넓게 펼쳐 대형 기기 거치를 준비합니다.",
+    "넓게 펼친 거치대 뒤쪽의 지지 다리를 열어 스탠드 형태로 만듭니다.",
+    "스탠드 모드로 변형된 넓은 거치대를 테이블 위에 안정적으로 놓습니다."
+   ],
+   "unlisted": "",
+   "final_strip": "/tmp/claimv_29109deff2a9/finstrip_3.jpg",
+   "cand_strip": "/tmp/claimv_29109deff2a9/candstrip_3.jpg",
+   "a_is": "후보",
+   "verdict": "후보",
+   "why": "십자 형태로 펼쳐지는 과정을 직접 보여줌"
+  },
+  {
+   "k": 4,
+   "text": "근데 진짜 충격적인 포인트는 펼치자마자 십자 삼각대로 변신해서 어떤 바닥이든 절대 안 넘어진다는 거임",
+   "need": 7.82,
+   "cand": [
+    1,
+    2
+   ],
+   "how": "2이어붙이기+늦추기",
+   "cand_desc": [
+    "삼각대 다리를 펴고 상단 마그네틱 자석에 스마트폰을 붙여 부착합니다.",
+    "탁자 위에 세워진 스마트폰 삼각대의 안정적인 높이와 거치 상태를 보여줍니다."
+   ],
+   "unlisted": "",
+   "final_strip": "/tmp/claimv_29109deff2a9/finstrip_4.jpg",
+   "cand_strip": "/tmp/claimv_29109deff2a9/candstrip_4.jpg",
+   "a_is": "완성본"
+  }
+ ]
+}
