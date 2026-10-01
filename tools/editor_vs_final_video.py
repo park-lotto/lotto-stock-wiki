@@ -51,6 +51,16 @@ if os.getenv("PATCH_DIR"):          # 배포 전 대조: 고친 모듈을 먼저
             _sp = importlib.util.spec_from_file_location("shopping_shorts." + _n, str(_f))
             _m = importlib.util.module_from_spec(_sp); sys.modules["shopping_shorts." + _n] = _m
             _sp.loader.exec_module(_m); setattr(shopping_shorts, _n, _m)
+            if _n == "config":
+                # ★config 를 PATCH_DIR 에서 얹으면 DB_PATH 등 **파일 위치 기준 경로**가 /tmp/gate_…/data 를 가리켜 DB 가 빈 것처럼 보인다
+                #   (2026-10-01 관문 실측: 6작업 전부 '데이터 없음' 404 → 화면 계산 실패). 경로 상수는 저장소 config 값으로 되돌린다.
+                _rs = importlib.util.spec_from_file_location("_repo_config", str(Path("shopping_shorts/config.py").resolve()))
+                _rc = importlib.util.module_from_spec(_rs); _rs.loader.exec_module(_rc)
+                _pd = str(Path(os.getenv("PATCH_DIR")).resolve())
+                for _k in dir(_m):
+                    _v = getattr(_m, _k)
+                    if isinstance(_v, Path) and str(_v.resolve()).startswith(_pd) and hasattr(_rc, _k):
+                        setattr(_m, _k, getattr(_rc, _k))
             # ★파일 위치 기준 경로는 저장소로 되돌린다(2026-09-27 실측) — PATCH_DIR 에서 얹으면 video_assemble 의 폰트 폴더
             #   (_FONT_DIR = 파일 옆 static/fonts)를 못 찾아 완성본이 '폰트 미해결 — 자막·BGM 전부 스킵'으로 구워졌고,
             #   clean_base._ROOT(파일의 두 단계 위)가 /tmp 를 가리켰다. 비교 결과가 수리 전(자막 있음)과 조건이 달라졌다.

@@ -73,6 +73,13 @@ def load_patches():
             m = importlib.util.module_from_spec(sp)
             sys.modules["shopping_shorts." + n] = m
             sp.loader.exec_module(m)
+            if n == "config":                         # editor_vs_final_video 와 같은 되돌리기(경로 상수는 저장소 값) — 2026-10-01
+                _rs = importlib.util.spec_from_file_location("_repo_config", str(Path("shopping_shorts/config.py").resolve()))
+                _rc = importlib.util.module_from_spec(_rs); _rs.loader.exec_module(_rc)
+                for _k in dir(m):
+                    _v = getattr(m, _k)
+                    if isinstance(_v, Path) and str(_v.resolve()).startswith(str(Path(pd).resolve())) and hasattr(_rc, _k):
+                        setattr(m, _k, getattr(_rc, _k))
             setattr(shopping_shorts, n, m)
     return Path(pd)
 
