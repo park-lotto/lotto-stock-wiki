@@ -27,6 +27,7 @@
 결과: $AUDIO_OUT/report.txt (job 한 줄 + '== 칸 N · 나레이션 0.15초+ 오차 X · 효과음 누락 Y · BGM 이상 Z ...' 요약)
       $AUDIO_OUT/samples.jsonl (칸·효과음별 원시값)
 """
+import importlib.util
 import json
 import math
 import os
@@ -66,12 +67,19 @@ if os.getenv("PATCH_DIR"):          # 관문: 병합본 모듈을 먼저 얹는�
     import importlib.util as _ilu
     sys.path.insert(0, ".")
     import shopping_shorts as _ss
-    for _n in ("voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
+    for _n in ("config", "voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):   # config 맨 앞(관제 020)
         _f = Path(os.getenv("PATCH_DIR")) / ("%s.py" % _n)
         if _f.exists():
             _sp = _ilu.spec_from_file_location("shopping_shorts." + _n, str(_f))
             _m = _ilu.module_from_spec(_sp); sys.modules["shopping_shorts." + _n] = _m
             _sp.loader.exec_module(_m); setattr(_ss, _n, _m)
+            if _n == "config":                     # config 를 얹으면 DB_PATH 등 경로 상수가 /tmp 를 가리킨다 — 저장소 값으로(editor_vs_final_video 와 같은 되돌리기, 2026-10-01)
+                _rs = importlib.util.spec_from_file_location("_repo_config", str(Path("shopping_shorts/config.py").resolve()))
+                _rc = importlib.util.module_from_spec(_rs); _rs.loader.exec_module(_rc)
+                for _k in dir(_m):
+                    _v = getattr(_m, _k)
+                    if isinstance(_v, Path) and str(_v.resolve()).startswith(str(Path(os.getenv("PATCH_DIR")).resolve())) and hasattr(_rc, _k):
+                        setattr(_m, _k, getattr(_rc, _k))
 
 
 # ── 소리 읽기(임시 파일 없음 — 파이프) ───────────────────────────────────────
