@@ -61,7 +61,9 @@ DEFAULT_RULES = {
         "billing_tokens": ["_charge_", "clean_charge_plan", "clean_credit", "_sig_tier", "signature", "_render_stamp"],
         "customer_data_tokens": ["update_mix_job", "mix_jobs", "clean_base.json"],
     },
-    "card_gate": {"require_card": True, "require_approval": True, "ownership_check": True, "impact_check": True},
+    "card_gate": {"require_card": True, "require_approval": True, "ownership_check": True, "impact_check": True,
+                  "auto_approve": ["고객 화면"],
+                  "_auto_approve": "2026-10-01 사장님 '승인 자동으로 해, 내가 필요한 건 미리 얘기해줌'. 고객 화면 변경은 관문(테스트·소유권·영향 지도) 통과면 관제가 승인하고 라이브 뒤 자동 실측으로 잡는다. 돈(과금)·회원 데이터는 사람 승인 — 카드 만들 때 사장님께 먼저 말한다"},
 }
 
 
@@ -119,7 +121,7 @@ _HEAD_LINE = re.compile(r"^- ([^:]+):\s?(.*)$")
 _TITLE = re.compile(r"^#\s*0*(\d+)\s*·\s*(.+?)\s*$")
 _FILE = re.compile(r"^0*(\d+)-.*\.md$")
 
-CARD_KEYS = ("상태", "등록", "제보", "판단 주인", "분배", "됐다의 기준", "승인 필요", "승인", "병합", "서버 반영", "라이브 실측", "재발")
+CARD_KEYS = ("쉬운 설명", "상태", "등록", "제보", "판단 주인", "분배", "됐다의 기준", "승인 필요", "승인", "병합", "서버 반영", "라이브 실측", "재발")
 
 
 def parse_card(text, path=""):
@@ -370,7 +372,7 @@ def install(repo, printer=print):
     return sha
 
 
-def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", approval=None, printer=print):
+def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", approval=None, easy="", printer=print):
     """카드 등록 → 번호. approval None 이면 '미정'(finish 가 diff 로 판정해 필요하면 막는다)."""
     title = (title or "").strip()
     if not title:
@@ -382,7 +384,7 @@ def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", 
     def mutate(wt):
         cards = cards_from_dir(wt)
         n = next_number(cards)
-        c = {"번호": n, "제목": title, "상태": "분배" if track else "등록", "등록": _now(), "제보": reporter,
+        c = {"번호": n, "제목": title, "쉬운 설명": easy, "상태": "분배" if track else "등록", "등록": _now(), "제보": reporter,
              "판단 주인": owner, "분배": track, "됐다의 기준": done,
              "승인 필요": ("예" if approval else "아니오") if approval is not None else "미정(finish 가 diff 로 판정)",
              "승인": "", "병합": "", "서버 반영": "", "라이브 실측": "", "재발": "", "요청": body,
@@ -392,6 +394,8 @@ def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", 
         made["n"], made["rel"] = n, rel
     sha = _publish(repo, mutate, "관제 카드 등록: %s" % title)
     printer("✅ 관제 카드 %03d 등록 — %s (main %s)" % (made["n"], made["rel"], sha))
+    if approval:
+        printer("   ★돈(과금)·회원 데이터가 바뀌는 카드는 사장님께 **지금** 먼저 말해라(10-01 사장님 '필요한 건 미리 얘기해줌'). 고객 화면만 바뀌면 관제가 자동 승인한다.")
     printer("   트랙 열기: py tools/track.py start <트랙명> --card %d" % made["n"])
     return made["n"]
 
@@ -503,6 +507,42 @@ def record_merge(repo, numbers, track_name, sha, printer=print):
         printer("ℹ️ 병합은 끝났지만 카드에 기록을 못 남겼다 — 손으로: py tools/control.py note <번호> \"병합 %s\"\n   %s" % (sha, e))
 
 
+# ── 서버 승인 기록(관리자 화면 버튼) → 카드 ───────────────────────────────
+
+SERVER_APPROVALS = "/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/control_approvals.json"
+
+
+def server_approvals(sh=None):
+    """서버의 data/control_approvals.json → {번호(int): {at, who, note}}. 없으면 {}."""
+    if sh is None:
+        import video_gate
+        key = video_gate._find_key()
+        if not key:
+            raise ControlError("SSH 키를 못 찾았다")
+        sh = video_gate._ssh_runner(key)
+    rc, out = sh("cat %s 2>/dev/null || echo {}" % SERVER_APPROVALS, timeout=60)
+    if rc != 0:
+        raise ControlError("서버 승인 파일 읽기 실패: " + out.strip()[:120])
+    try:
+        raw = json.loads(out.strip() or "{}")
+    except ValueError:
+        return {}
+    return {int(k): v for k, v in raw.items() if str(k).strip().isdigit()}
+
+
+def sync_server_approvals(repo, cards, sh=None, printer=print):
+    """서버 승인이 있는데 카드에 승인이 비어 있으면 카드에 옮겨 적는다 → 옮긴 카드 번호 목록."""
+    appr = server_approvals(sh)
+    done = []
+    for c in cards:
+        a = appr.get(int(c["번호"]))
+        if a and not c["승인"].strip():
+            approve(repo, c["번호"], "관리자 화면 %s %s (%s)" % (a.get("who", ""), a.get("note", ""), a.get("at", "")), printer=lambda *x: None)
+            printer("  관제: 카드 %03d 승인을 서버 기록에서 옮겨 적음(%s)" % (c["번호"], a.get("note", "")[:40]))
+            done.append(c["번호"])
+    return done
+
+
 # ── 선점 신고 ─────────────────────────────────────────────────────────
 
 def load_claims(repo, ref=MAIN_REF):
@@ -606,13 +646,41 @@ def finish_gate(repo, stage, br, track_name, printer=print, ownership=None):
     changed = [x.strip() for x in out.splitlines() if x.strip()]
     _, diff = _git(stage, "diff", "--cached", "-U0", "HEAD")
 
+    # ①-b 판단 주인(2026-09-30 사장님 "주인함수를 보는 게 우선"): 제품 코드를 건드리는 병합은 카드에 '판단 주인'이 적혀 있어야 한다.
+    #     어느 함수가 이 판단의 주인인지 정하지 않은 수리는 두 벌의 씨앗이다(0순위-C).
+    code_files = [c for c in changed if c.replace("\\", "/").startswith("shopping_shorts/") and c.endswith((".py", ".js", ".html"))]
+    if linked and code_files and g.get("require_owner", True):
+        if not any(c["판단 주인"].strip() for c in linked):
+            fails.append("제품 코드 %d파일을 바꾸는데 카드에 '판단 주인'(어느 함수가 이 판단을 맡나)이 비어 있다(0순위-C, 관제 원칙 2).\n"
+                         "    지도에서 찾아 적어라: wiki/rules/판단소유권.md · py tools/impact.py spec <함수>\n"
+                         "    py tools/control.py set <번호> \"판단 주인\" \"<파일:함수>\"" % len(code_files))
+
     reasons = approval_reasons(changed, diff, rules)
     if reasons and g.get("require_approval", True):
+        if not any(c["승인"].strip() for c in linked):
+            # 관리자 화면 [승인] 버튼은 서버 파일에 적힌다(서버는 git 을 못 고친다) — ssh 로 읽어 카드에 옮긴다(카드 004)
+            try:
+                synced = sync_server_approvals(repo, linked, printer=printer)
+                if synced:
+                    linked = [find_card(cards_from_ref(repo), c["번호"]) or c for c in linked]
+            except Exception as e:      # noqa: BLE001 — 동기화 실패는 승인 없음으로 본다(조용히 통과 없음)
+                notes.append("서버 승인 기록을 못 읽었다: %r" % e)
         approved = [c for c in linked if c["승인"].strip()]
-        if not approved:
-            fails.append("고객에게 보이거나 돈·데이터가 바뀌는 변경인데 카드에 승인이 없다(0순위-A1c):\n"
-                         + "\n".join("    · " + r for r in reasons)
-                         + "\n    사장님 승인을 받은 뒤: py tools/control.py approve <번호> \"사장님 구두 %s\"" % time.strftime("%Y-%m-%d"))
+        auto_kinds = tuple(g.get("auto_approve", []))
+        human = [r for r in reasons if not r.startswith(auto_kinds)]          # 돈·회원 데이터 — 사람이 본다
+        if not approved and not human and auto_kinds:
+            # 관제 자동 승인(2026-10-01 사장님): 관문을 다 통과한 고객 화면 변경. 카드에 근거를 남긴다 — 라이브 뒤 실측이 잡는다
+            why = "관제 자동 승인 — 고객 화면 변경 %d건, 관문(카드·주인·소유권·영향) 통과, 라이브 뒤 자동 실측" % len(reasons)
+            for c in linked:
+                try:
+                    approve(repo, c["번호"], why, printer=lambda *x: None)
+                except ControlError as e:
+                    notes.append("자동 승인 기록 실패(무해): %s" % str(e).splitlines()[0])
+            notes.append("✅ " + why)
+        elif not approved:
+            fails.append("돈·회원 데이터가 바뀌는 변경인데 카드에 사장님 승인이 없다(자동 승인 대상 아님):\n"
+                         + "\n".join("    · " + r for r in (human or reasons))
+                         + "\n    ★이런 카드는 만들 때 사장님께 먼저 말했어야 한다. 승인 받은 뒤: py tools/control.py approve <번호> \"사장님 구두 %s\"" % time.strftime("%Y-%m-%d"))
         else:
             notes.append("승인 필요 변경 %d건 — 카드 %s 승인 있음" % (len(reasons), ", ".join("%03d" % c["번호"] for c in approved)))
     elif reasons:
@@ -684,6 +752,7 @@ def main(argv=None):
     p.add_argument("--done", default="", help="됐다의 기준(숫자·측정 도구)")
     p.add_argument("--track", default="")
     p.add_argument("--body", default="", help="요청 원문")
+    p.add_argument("--easy", default="", help="사장님용 한 줄(고객·돈에 무엇이 달라지나)")
     p.add_argument("--approval", choices=["예", "아니오"], default=None)
     sub.add_parser("list", help="카드 목록(origin/main)")
     sub.add_parser("board", help="보드 재생성(main 에 커밋)")
@@ -718,7 +787,7 @@ def main(argv=None):
             install(repo)
         elif args.cmd == "new":
             new_card(repo, args.title, reporter=args.reporter, owner=args.owner, done=args.done, track=args.track,
-                     body=args.body, approval=(None if args.approval is None else args.approval == "예"))
+                     body=args.body, easy=args.easy, approval=(None if args.approval is None else args.approval == "예"))
         elif args.cmd == "list":
             _git(repo, "fetch", "origin")
             _print_cards(cards_from_ref(repo))

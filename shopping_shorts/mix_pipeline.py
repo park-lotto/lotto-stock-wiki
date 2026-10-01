@@ -1849,6 +1849,15 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
             print(f"[ops_alert] edl_empty 알림 실패(무해): {_ae!r}", file=sys.stderr)
         raise RuntimeError(f"EDL 비어있음({code}) — {why}")
 
+    # 3.4) CTA 표시(2026-09-30 관제 45, 김성현님) — 2단계 [📢 CTA] 버튼(script_structure.cta_line)
+    #   또는 자동 추정으로 어느 칸이 CTA인지 칸에 박는다. 모든 생성 경로가 여기를 지난다(한 곳).
+    #   판단은 edit_plan.apply_cta_mark — 유튜브용 CTA 잘라내기(cta_cut_sec)가 이 표시를 본다.
+    try:
+        from shopping_shorts.edit_plan import apply_cta_mark
+        apply_cta_mark(plan["beats"], given_script, script_structure)
+    except Exception as _ce:      # noqa: BLE001 — 표시 실패가 제작을 막지 않는다(종전=역할 이름 판정)
+        print(f"[cta_mark] 적용 실패(역할 이름 판정 유지): {_ce!r}", file=sys.stderr)
+
     # 3.5/3.6) 장면 라이브러리 자동 배치(컷어웨이 + 효과음) — ★기본 OFF(2026-08-01 실사고).
     #
     # 사장님 제보 "완성 영상에 왜 감자 레시피 조각이 들어가지?"의 범인이 이 자동 배치였다.
