@@ -121,7 +121,10 @@ _HEAD_LINE = re.compile(r"^- ([^:]+):\s?(.*)$")
 _TITLE = re.compile(r"^#\s*0*(\d+)\s*·\s*(.+?)\s*$")
 _FILE = re.compile(r"^0*(\d+)-.*\.md$")
 
-CARD_KEYS = ("쉬운 설명", "상태", "등록", "제보", "판단 주인", "분배", "됐다의 기준", "승인 필요", "승인", "병합", "서버 반영", "라이브 실측", "재발")
+CARD_KEYS = ("쉬운 설명", "상태", "등록", "제보", "판단 주인", "분배", "됐다의 기준", "검사", "승인 필요", "승인", "병합", "서버 반영", "라이브 실측", "재발")
+# 검사(2026-10-02, 카드 069): 라이브 실측을 **무엇으로** 재나 — live_check.check_kind 가 읽는다.
+#   "영상"(서버 영상 비교) · "url <경로> <들어 있어야 할 글자>" · "api <경로> <키>=<값>[,<키>=<값>]" · "수동".
+#   비면 판단 주인으로 추론(제작 라인 파일이면 영상, 아니면 수동). 영상 없는 카드가 '병합'에 영원히 남던 것(28장)의 뿌리.
 
 
 def parse_card(text, path=""):
@@ -372,7 +375,7 @@ def install(repo, printer=print):
     return sha
 
 
-def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", approval=None, easy="", printer=print):
+def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", approval=None, easy="", check="", printer=print):
     """카드 등록 → 번호. approval None 이면 '미정'(finish 가 diff 로 판정해 필요하면 막는다)."""
     title = (title or "").strip()
     if not title:
@@ -385,7 +388,7 @@ def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", 
         cards = cards_from_dir(wt)
         n = next_number(cards)
         c = {"번호": n, "제목": title, "쉬운 설명": easy, "상태": "분배" if track else "등록", "등록": _now(), "제보": reporter,
-             "판단 주인": owner, "분배": track, "됐다의 기준": done,
+             "판단 주인": owner, "분배": track, "됐다의 기준": done, "검사": check,
              "승인 필요": ("예" if approval else "아니오") if approval is not None else "미정(finish 가 diff 로 판정)",
              "승인": "", "병합": "", "서버 반영": "", "라이브 실측": "", "재발": "", "요청": body,
              "이력": ["%s 등록%s" % (_now(), (" · 분배 → " + track) if track else "")]}
@@ -754,6 +757,7 @@ def main(argv=None):
     p.add_argument("--body", default="", help="요청 원문")
     p.add_argument("--easy", default="", help="사장님용 한 줄(고객·돈에 무엇이 달라지나)")
     p.add_argument("--approval", choices=["예", "아니오"], default=None)
+    p.add_argument("--check", default="", help="라이브 실측 방법: 영상 | url <경로> <글자> | api <경로> 키=값[,키=값] | 수동 (비면 판단 주인으로 추론)")
     sub.add_parser("list", help="카드 목록(origin/main)")
     sub.add_parser("board", help="보드 재생성(main 에 커밋)")
     p = sub.add_parser("show", help="카드 본문")
@@ -786,7 +790,7 @@ def main(argv=None):
         if args.cmd == "install":
             install(repo)
         elif args.cmd == "new":
-            new_card(repo, args.title, reporter=args.reporter, owner=args.owner, done=args.done, track=args.track,
+            new_card(repo, args.title, reporter=args.reporter, owner=args.owner, done=args.done, track=args.track, check=args.check,
                      body=args.body, easy=args.easy, approval=(None if args.approval is None else args.approval == "예"))
         elif args.cmd == "list":
             _git(repo, "fetch", "origin")

@@ -85,3 +85,26 @@ py tools/storage.py schedule               # 작업 스케줄러에 매일 04:40
 - 라이브 실측 `tools/live_check.py --card N` + 관리자 버튼 + 반영 뒤 자동 1회 실측
 - 관리자 페이지 보드 탭(지금은 이 폴더의 BOARD.md)
 - 트랙 대청소(닫기 기준 확정 뒤 실행 — 사장님 승인)
+
+## 검사 칸 — 라이브 실측을 무엇으로 재나 (2026-10-02, 카드 069)
+
+병합 뒤 카드가 '병합'에 영원히 남던 뿌리: 영상 없는 변경(화면·가격·설정)은 영상 비교 대상 작업이 없어 "대상 없음"만 찍혔다(28장).
+카드 `검사` 칸이 방법을 말한다 — 판정은 `tools/live_check.py:check_kind` 한 곳.
+
+| 검사 | 뜻 | live_check --all 이 하는 일 |
+|---|---|---|
+| `영상` | 제작 라인(판단 주인이 video_assemble·mix_pipeline·sfx_pack… 이면 자동) | 서버 영상 비교 한 번 → 라이브실측 / 회귀 |
+| `url /경로 글자` | 공개 페이지에 그 글자가 있어야 | 서버에 병합 sha 반영 확인 → HTTP → **완료** / 회귀 |
+| `api /경로 키=값,키=값` | 공개 JSON 값이 같아야 | 위와 같음 |
+| `수동` (비면 기본) | 로그인 화면·도구 변경 등 자동으로 못 잼 | 목록만 보여준다 → `py tools/control.py status <번호> 완료` |
+
+```
+py tools/control.py new "제목" … --check "api /api/pricing amount=880000,cohort=2기"
+py tools/control.py set 56 검사 "api /api/pricing amount=880000,cohort=2기"
+```
+서버에 아직 그 sha 가 없으면(자동배포 시간창 02~06시) "서버 미반영"으로 두고 다음 시간에 다시 잰다.
+
+## finish 게이트 두 가지 오판 수리 (같은 날)
+
+- **기존 실패 분류**: 새로 깨진 테스트는 origin/main 코드로 그 테스트만 다시 돌려(`track._rerun_on_main`, 약 100초) 거기서도 깨지면 "기존 실패"로 빼고 통과시킨다. 낡은 기준선 저장본이 main 의 기존 실패를 트랙 탓으로 돌리던 것.
+- **영상 관문 모듈 수준 판정**: app.py 의 모듈 수준 변경(튜플·템플릿 문자열)은 **대입 대상 이름**으로 판정한다(`video_gate.module_stmt_names`). 이름에 제작 라인 열쇠(render·clean·capcut·assemble·export·pvproxy…)가 없으면 상수 변경으로 보고 관문을 건너뛴다. import·호출·if 문은 종전대로 실행.
