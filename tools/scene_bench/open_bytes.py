@@ -104,9 +104,11 @@ with sync_playwright() as p:
     print("   PLAY_ARMED =", W.evaluate("() => typeof PLAY_ARMED !== 'undefined' ? PLAY_ARMED : 'n/a'"), "· blobs =", W.evaluate("() => typeof _blobs !== 'undefined' ? Object.keys(_blobs) : []"))
     print(f"   <video> 요소 {vids}개")
     W.evaluate("""() => { window.__wait=0; document.querySelectorAll('video').forEach(v => v.addEventListener('waiting', () => window.__wait++)); }""")
-    prog = "() => { const v=[...document.querySelectorAll('video')].find(x => !x.paused && x.currentTime>0); return {key: (typeof playKey!=='undefined'?playKey:'?'), seqI: (typeof seqI!=='undefined'?seqI:-1), t: v ? +v.currentTime.toFixed(2) : null, px: !!(typeof seq!=='undefined' && seq && seq[0] && seq[0]._px)}; }"
+    # 흐름 판정은 **합본 재생기(PVX.vid) 또는 재생 중인 아무 video** 의 currentTime 으로(합본은 숨은 재생기라 paused 만으로 못 찾는다)
+    prog = "() => { const pv=(typeof PVX!=='undefined'&&PVX.vid)?PVX.vid:null; const v=[...document.querySelectorAll('video')].find(x => !x.paused && x.currentTime>0) || pv; return {key: (typeof playKey!=='undefined'?playKey:'?'), seqI: (typeof seqI!=='undefined'?seqI:-1), t: v ? +v.currentTime.toFixed(2) : null, paused: v ? v.paused : null, px: !!(typeof seq!=='undefined' && seq && seq[0] && seq[0]._px), aud: (typeof audio==='function' && audio()) ? {paused: audio().paused, t: +audio().currentTime.toFixed(2)} : null}; }"
     W.evaluate("() => { try { playBeat(1); } catch(e) { console.log('playBeat 실패', e); } }")
-    pg.wait_for_timeout(2500); p1 = W.evaluate(prog); pg.wait_for_timeout(2500); p2 = W.evaluate(prog); pg.wait_for_timeout(1000)
+    # 칸 하나는 2~3초라 1초 간격으로 두 번 본다(2.5초 뒤면 이미 끝나 '멈춤'으로 오판했다 — 2026-10-01 실측)
+    pg.wait_for_timeout(700); p1 = W.evaluate(prog); pg.wait_for_timeout(900); p2 = W.evaluate(prog); pg.wait_for_timeout(4400)
     beat_tot, _ = show("칸 재생 6초", rs); rs.clear()
     print(f"   재생 진행: {p1} → {p2}  ({'합본' if p1['px'] else '원본'} 경로, {'흐름' if (p1['t'] is not None and p2['t'] is not None and p2['t'] > p1['t']) else '★멈춤/끝'})")
     w1 = W.evaluate("() => window.__wait")
