@@ -54,6 +54,7 @@
     "음성 없음"
   ],
   "watch_files": [
+    "shopping_shorts/config.py",
     "shopping_shorts/video_assemble.py",
     "shopping_shorts/mix_pipeline.py",
     "shopping_shorts/clean_base.py",
