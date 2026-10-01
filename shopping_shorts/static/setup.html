@@ -15,7 +15,7 @@
     <span class="exitnote">이 안내는 <b>마이페이지 → 📖 설치와 준비</b>에서 언제든 다시 보실 수 있습니다.</span>
   </div>
 
-  <p class="eyebrow">숏템메이커 1기 · 8월 24일 시작</p>
+  <p class="eyebrow">숏템메이커 <span data-pr=cohort></span></p>
   <h2>설치와 준비</h2>
   <p class="h2sub">승인이 끝나면 여기서부터 하시면 됩니다. 설치는 <b>두 개</b>뿐이고 둘 다 PC에서 합니다.
      캡컷은 원하는 분만 하시면 됩니다.</p>
@@ -249,7 +249,7 @@
   </div>
 
   <h2>알아두실 하루 사용량</h2>
-  <p class="h2sub">1기(pro) 기준 계정별 하루 상한입니다. 넉넉하지만 무제한은 아닙니다.</p>
+  <p class="h2sub">Pro 기준 계정별 하루 상한입니다. 넉넉하지만 무제한은 아닙니다.</p>
 
   <div class="tablewrap">
     <table>
@@ -291,7 +291,7 @@
     <span class="exitnote">다시 보실 때는 <b>마이페이지 → 📖 설치와 준비</b></span>
   </div>
 
-  <p class="foot">외부 서비스의 요금제·무료 사용량·API 정책은 각 제공업체 정책에 따라 변경될 수 있습니다. 막히는 곳이 있으면 1기 단톡방에 물어봐 주세요.</p>
+  <p class="foot">외부 서비스의 요금제·무료 사용량·API 정책은 각 제공업체 정책에 따라 변경될 수 있습니다. 막히는 곳이 있으면 단톡방에 물어봐 주세요.</p>
 
 </div>
 
@@ -303,4 +303,14 @@ if (window.top !== window.self) {
     if (e) e.style.display = "none";
   });
 }
+</script>
+<script>
+/* 기수·가격은 서버 /api/pricing 한 곳에서(2026-10-01 2기 전환). 이 파일에 '2기'·금액을 적지 마라 — test_cohort_pricing이 막는다. */
+(function(){ fetch('/api/pricing').then(function(r){return r.json()}).then(function(p){
+  var v={cohort:p.cohort, next_cohort:p.next_cohort, name:p.name,
+         amount:(p.amount||0).toLocaleString('ko-KR')+'원', amount_man:Math.round((p.amount||0)/10000)+'만원',
+         next_price:(p.next_price||0).toLocaleString('ko-KR')+'원'};
+  document.querySelectorAll('[data-pr]').forEach(function(el){ var k=el.getAttribute('data-pr'); if(v[k]!=null) el.textContent=v[k]; });
+  if(p.cohort && /^\s*$/.test(document.title)===false) document.title=document.title.replace('__COHORT__', p.cohort);
+}).catch(function(){}); })();
 </script>

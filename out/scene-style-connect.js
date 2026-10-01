@@ -99,6 +99,7 @@
       const saved=event.data.snapshot||{...api.snapshot(),captionTexts:{},effects:{}};
       api.load(context,saved);
       if(Number.isInteger(event.data.sceneIndex))api.show(event.data.sceneIndex);
+      document.documentElement.classList.remove('scene-waiting');   // 실제 데이터가 그려졌다 — 본문을 보인다(머리띠 가림은 html 표식이 계속)
       const status=pane.querySelector('[data-connection-status]');if(status)status.textContent=`실제 자막 ${context.scenes.length}개를 연결했습니다.`;
       if(headerStatus)headerStatus.textContent=`실제 자막 ${context.scenes.length}개 연결`;
       sync();

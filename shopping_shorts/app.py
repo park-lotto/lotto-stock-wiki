@@ -12826,7 +12826,8 @@ def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
         return False
     if any(path.startswith(p) for p in _FREE_PREFIX):
         return False
-    if (path in _AUTH_ALLOW or path.startswith("/api/find/frame/")
+    if (path in _AUTH_ALLOW or path == "/api/pricing"   # 기수·가격 공개 조회(2026-10-01, 정적 안내·설정 화면이 읽는다)
+            or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")):
         return False   # 유저스크립트 담기·favicon 등 기존 공개 경로(단 /api/grab은 핸들러서 등급확인)
     # ★잘못 낸 챌린지 영상 삭제(2026-08-29). 경로에 id가 붙어 exact 목록으로는 못 잡는다.
@@ -13105,8 +13106,46 @@ def _card_cta(fallback_href="", fallback_label=""):
     return fallback_href, fallback_label
 
 
+def _cohort_info():
+    """기수·가격·다음 기수·마감 — **판단은 여기 한 곳**(0순위-B). 요청마다 읽어 재시작 없이 반영.
+    2026-10-01 사장님 "2기 모집 88만원, 10월": 마감 없음(카운트다운 숨김) · 3기 990,000원 예고 · 정가 1,500,000원 유지.
+    설정 키: cohort / toss_order_name / toss_amount / next_cohort / next_price / recruit_deadline(빈값=마감 없음) / list_price.
+    화면(랜딩·요금·/pay·/pay/toss·설정·사이드바·안내·챌린지)은 _with_pay 자리표시자 또는 /api/pricing으로 **이 값만** 쓴다 —
+    '1기'·770,000원처럼 화면에 숫자·기수를 적으면 다음 기수 때 또 전수 수정이 된다(test_cohort_pricing이 지킨다)."""
+    st = Store(DB_PATH)
+    def g(k, d=""):
+        return (st.get_setting(k, "") or d).strip()
+    def gi(k, d):
+        try:
+            return int(g(k, "") or d)
+        except ValueError:
+            return d
+    cohort = g("cohort", "2기")
+    return {"cohort": cohort,
+            "name": g("toss_order_name", f"숏템메이커 {cohort} 이용권"),
+            "amount": gi("toss_amount", 880000),
+            "next_cohort": g("next_cohort", "3기"),
+            "next_price": gi("next_price", 990000),
+            "list_price": gi("list_price", 1500000),
+            "deadline": g("recruit_deadline", ""),
+            "period": _PRO_PERIOD}
+
+
+def _dl_blocks(html: str, has_deadline: bool) -> str:
+    """마감 유무로 갈리는 문구 블록. <!--DL-->…<!--/DL-->는 마감이 있을 때만, <!--NODL-->…<!--/NODL-->는 없을 때만 남긴다."""
+    drop, keep = ("NODL", "DL") if has_deadline else ("DL", "NODL")
+    html = re.sub(rf"<!--{drop}-->.*?<!--/{drop}-->", "", html, flags=re.S)
+    return html.replace(f"<!--{keep}-->", "").replace(f"<!--/{keep}-->", "")
+
+
+@app.get("/api/pricing")
+def api_pricing():
+    """공개 — 정적 화면(설정·사이드바·안내·챌린지)이 기수·가격을 여기서 받는다. 판단은 _cohort_info 한 곳."""
+    return _cohort_info()
+
+
 def _with_pay(html: str) -> str:
-    """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다."""
+    """결제 CTA(__PAY_HREF__/__PAY_LABEL__)와 기수·가격·마감(_cohort_info)을 요청 시점에 채운다."""
     href, label = _pay_cta()
     # ★상품명·가격·카드결제 버튼(2026-09-15 토스 심사 "상품 금액 = 결제 금액").
     #   가격은 결제가 실제로 받는 금액(_toss_order_name_amount) **한 곳**에서 읽는다 —
@@ -13114,28 +13153,23 @@ def _with_pay(html: str) -> str:
     name, amount = _toss_order_name_amount()
     ck, sk = _toss_keys()
     card_href, card_label = _card_cta(href, label)
-    # 모집 마감·다음 기수 가격(2026-09-15 사장님 "1기 9월말 마감, 10월 1일부터 2기 88만원").
-    #   관리자 설정으로 바꿀 수 있게 settings에서 읽고, 없으면 사장님이 말한 값을 쓴다.
-    _st = Store(DB_PATH)
-    dl_iso = (_st.get_setting("recruit_deadline", "") or "2026-09-30T23:59:59+09:00").strip()
-    try:
-        _dl = datetime.fromisoformat(dl_iso)
-        dl_label = f"{_dl.month}월 {_dl.day}일"
-        _nx = _dl + timedelta(seconds=1)
-        nx_label = f"{_nx.month}월 {_nx.day}일"
-    except ValueError:
-        dl_label, nx_label = "마감일", "다음 기수"
-    try:
-        next_price = int(_st.get_setting("next_price", "") or 880000)
-    except ValueError:
-        next_price = 880000
-    # 정가(할인 전) — 사장님 "150만원 → 77만원 할인중 표시"(2026-09-15). 설정 list_price로 바꾼다.
-    try:
-        list_price = int(_st.get_setting("list_price", "") or 1500000)
-    except ValueError:
-        list_price = 1500000
+    # 기수·마감·다음 기수 가격 — _cohort_info 한 곳(2026-10-01). 마감이 비면 카운트다운·"N일까지" 문구 블록이 빠진다.
+    c = _cohort_info()
+    dl_iso = c["deadline"]
+    dl_label, nx_label = "", ""
+    if dl_iso:
+        try:
+            _dl = datetime.fromisoformat(dl_iso)
+            dl_label = f"{_dl.month}월 {_dl.day}일"
+            _nx = _dl + timedelta(seconds=1)
+            nx_label = f"{_nx.month}월 {_nx.day}일"
+        except ValueError:
+            dl_label, nx_label = "마감일", "다음 기수"
+    next_price, list_price = c["next_price"], c["list_price"]
     discount = max(0, round((1 - amount / list_price) * 100)) if list_price > amount else 0
+    html = _dl_blocks(html, bool(dl_iso))
     return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
+                .replace("__COHORT__", _toss_esc(c["cohort"])).replace("__NEXT_COHORT__", _toss_esc(c["next_cohort"]))
                 .replace("__PRO_NAME__", _toss_esc(name))
                 .replace("__PRO_PRICE__", f"{amount:,}원")
                 .replace("__PRO_PERIOD__", _PRO_PERIOD)
@@ -14151,13 +14185,8 @@ _PRO_PERIOD = "12개월"
 
 
 def _toss_order_name_amount():
-    st = Store(DB_PATH)
-    name = (st.get_setting("toss_order_name", "") or "숏템메이커 1기 이용권").strip()
-    try:
-        amount = int(st.get_setting("toss_amount", "") or 770000)
-    except ValueError:
-        amount = 770000
-    return name, amount
+    c = _cohort_info()          # 상품명·금액은 기수 설정 한 곳에서(2026-10-01)
+    return c["name"], c["amount"]
 
 
 def _toss_db():
@@ -14259,7 +14288,7 @@ def _toss_checkout(request: Request):
 <div class=p style="margin:-4px 0 12px">이용기간: 결제(이용권 활성화)일로부터 {_PRO_PERIOD}</div>
 <div style="border:1px solid #6ff0d6;border-radius:12px;padding:14px;margin:6px 0 16px;background:#0c1a17">
   <div style="font-weight:800;font-size:16px">① 신청서 작성 <span style="color:#ff8a8a">(필수)</span></div>
-  <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 1기 신청서를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
+  <div class=p style="font-size:13px;margin:4px 0 10px">결제 전에 {_toss_esc(_cohort_info()['cohort'])} 신청서를 먼저 제출해 주세요. 새 창에서 열립니다.</div>
   <a id=fl href="{_toss_esc(form_url)}" target=_blank rel=noopener style="display:block;text-align:center;padding:12px;border-radius:10px;background:#e0a33d;color:#111;font-weight:800;text-decoration:none">📝 신청서 작성하기</a>
   <label class=p style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px">
     <input id=fd type=checkbox disabled> <span id=fdl style="opacity:.5">신청서를 작성해 제출했습니다</span></label>
@@ -15063,7 +15092,8 @@ async def _auth_guard(request: Request, call_next):
     # /api/coupang/relay/*도 같은 이유다(2026-07-29) — 쿠팡은 한국 IP가 아니면 막아서
     #   사장님 PC의 도우미가 로그인 쿠키 없이 폴링한다. 엔드포인트가 자체 토큰
     #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
-    if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
+    if (path in _AUTH_ALLOW or path == "/api/pricing"   # 기수·가격 공개 조회(2026-10-01) — _AUTH_ALLOW 튜플을 안 건드린 건 모듈 수준 diff가 영상 관문을 깨우기 때문
+            or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
             or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
             or path.startswith("/s/") or path.startswith("/api/share/v/")
@@ -20695,14 +20725,36 @@ def api_produce_mix_settings(body: dict):
                 return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
         # ★효과음 켜기/끄기(deco.sfx_pack)는 3단계 스위치가 따로 정한다. 다른 화면이 꾸미기를 **통째로**
         #   저장할 때 이 값을 모르고 보내면 조용히 지워져 "껐는데 다시 켜짐"이 된다 → 없으면 기존 값 유지.
-        if isinstance(fields["deco"], dict) and "sfx_pack" not in fields["deco"]                 and (job.get("deco") or {}).get("sfx_pack"):
-            fields["deco"]["sfx_pack"] = job["deco"]["sfx_pack"]
+        #   2026-10-01(관제 059): 효과음 조절값(sfx_density·sfx_level·sfx_mute_beats)도 같은 운명 — 전부 보존.
+        if isinstance(fields["deco"], dict):
+            for _k in ("sfx_pack", "sfx_density", "sfx_level", "sfx_mute_beats"):
+                if _k not in fields["deco"] and (job.get("deco") or {}).get(_k) is not None:
+                    fields["deco"][_k] = job["deco"][_k]
     sfx_switched = False
+    _sfx_new = {}
     if "sfx_pack" in body:
-        # 3단계 [🔊 썰 효과음 자동 넣기] 스위치(2026-09-22). 기존 꾸미기 값에 이 칸만 합친다.
-        _new = "off" if body.get("sfx_pack") in ("off", False, 0, "0") else "auto"
-        sfx_switched = _new != str((job.get("deco") or {}).get("sfx_pack") or "")
-        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), "sfx_pack": _new}
+        # 3단계 [🔊 효과음] 스위치(2026-09-22) — "off" / "auto"(회원 배정) / "7"(팩 번호, 2026-10-01 사용자 선택).
+        _v = body.get("sfx_pack")
+        if _v in ("off", False, 0, "0"):
+            _sfx_new["sfx_pack"] = "off"
+        elif str(_v).strip().isdigit():
+            _sfx_new["sfx_pack"] = str(_v).strip()
+        else:
+            _sfx_new["sfx_pack"] = "auto"
+    if "sfx_density" in body or "sfx_level" in body or "sfx_mute_beats" in body:
+        # 값의 뜻·허용 범위는 sfx_pack.settings_of 한 곳(렌더가 읽는 것과 같은 정규화) — 여기선 그대로 넘긴다.
+        from shopping_shorts import sfx_pack as _sp
+        _norm = _sp.settings_of({k: body.get(k) for k in ("sfx_density", "sfx_level", "sfx_mute_beats") if k in body})
+        if "sfx_density" in body:
+            _sfx_new["sfx_density"] = _norm["density"]
+        if "sfx_level" in body:
+            _sfx_new["sfx_level"] = _norm["level"]
+        if "sfx_mute_beats" in body:
+            _sfx_new["sfx_mute_beats"] = _norm["mute_beats"]
+    if _sfx_new:
+        _cur = job.get("deco") or {}
+        sfx_switched = any(str(_cur.get(k) or "") != str(v or "") for k, v in _sfx_new.items())
+        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), **_sfx_new}
     if "scene_style" in body:
         from .scene_style import validate_snapshot
         try:
@@ -20746,11 +20798,49 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
     _mode = str(store.get_setting("sfx_pack_enabled", "") or "").strip().lower()
     switch_on = _mode in ("1", "on") or (_mode == "admin" and int(job.get("customer_id") or 0) == 0)
     sul = sfx_pack.is_sul_script(store, job)
-    choice = str((job.get("deco") or {}).get("sfx_pack") or "")
+    st = sfx_pack.settings_of(job.get("deco") or {})
+    choice = st["pack"]
     on = (choice != "off") if choice else sul      # 손댄 적 없으면 기본값 = 썰 대본인가
-    got = sfx_pack.pack_for(job.get("customer_id", 0)) if switch_on else None
+    got = sfx_pack.pack_for(job.get("customer_id", 0), override=choice) if switch_on else None
+    # ── 2026-10-01 관제 059: 사용자 조절 재료 — 팩 목록·밀도·크기·칸별 계획 ──
+    allp = sfx_pack.list_packs()
+    packs = [{"no": i + 1, "name": n, "label": sfx_pack.pack_label(n)} for i, (n, _) in enumerate(allp)]
+    pack_no = next((i + 1 for i, (n, _) in enumerate(allp) if got and n == got[0]), None)
+    beats_out = []
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    try:
+        tts = {b["beat_idx"]: b["tts_path"] for b in beats if b.get("tts_path")}
+        timeline = video_assemble._beat_timeline(plan, tts) if beats and len(tts) == len(beats) else []
+    except Exception:      # noqa: BLE001 — 음성이 아직 없으면 칸 목록만
+        timeline = []
+    manual = {b["beat_idx"] for b in beats if (b.get("sfx") or {}).get("match_type") == "manual"}
+    ev = sfx_pack.plan_events(timeline, manual | set(st["mute_beats"]), density=st["density"]) if (timeline and on and got) else []
+    tl_by = {t["beat_idx"]: t for t in timeline}
+    for b in beats:
+        bi = b.get("beat_idx")
+        t = tl_by.get(bi)
+        hits = [e for e in ev if t and float(t["t0"]) <= e[1] < float(t["t0"]) + float(t["dur"])]
+        caps = b.get("caption_lines") or []
+        label = (caps[0] if caps else str(b.get("narration") or ""))[:18]
+        beats_out.append({"beat_idx": bi, "role": b.get("role") or "", "label": label, "hits": len(hits),
+                          "muted": bi in st["mute_beats"], "manual": bi in manual})
     return {"ok": True, "eligible": bool(switch_on), "sul": sul, "on": on,
-            "pack": got[0] if got else None, "family": sfx_pack.script_family(store, job)}
+            "pack": got[0] if got else None, "pack_no": pack_no, "pack_choice": choice or "auto",
+            "density": st["density"], "level": st["level"], "mute_beats": st["mute_beats"],
+            "packs": packs, "beats": beats_out, "timeline_ready": bool(timeline),
+            "family": sfx_pack.script_family(store, job)}
+
+
+@app.get("/api/produce/sfx_pack/sound/{pack_no}/{slot}")
+def api_sfx_pack_sound(pack_no: int, slot: str, request: Request):
+    """팩 소리 미리듣기(2026-10-01 관제 059) — 팩 번호(1부터, list_packs 순서)·칸 이름의 wav 그대로."""
+    from shopping_shorts import sfx_pack
+    allp = sfx_pack.list_packs()
+    if slot not in sfx_pack.SLOTS or not (1 <= int(pack_no) <= len(allp)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "소리 없음"})
+    path = os.path.join(allp[int(pack_no) - 1][1], slot + ".wav")
+    return FileResponse(path, media_type="audio/wav", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/api/produce/scene-style/assets/{asset_path:path}")

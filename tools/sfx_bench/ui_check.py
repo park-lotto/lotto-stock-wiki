@@ -75,6 +75,40 @@ with sync_playwright() as p:
     check("체크하면" in pg.inner_text("#sfxPackInfo"), "안내 문구가 켜보라고 안내")
     pg.click("#sfxPackToggle"); time.sleep(1.2)
     check(Store(str(db)).get_mix_job("jsoc0001")["deco"].get("sfx_pack") == "auto", "켜면 저장된다")
+    print("⑤ 효과음 조절 탭(관제 059) — 횟수·크기·소리·칸별이 DB에 저장되고 새로고침 뒤 유지")
+    open_job("jsul0001")
+    pg.click("#sfxPackMore"); time.sleep(0.5)
+    check(pg.evaluate("() => getComputedStyle(document.getElementById('sfxPackTab')).display==='flex'"), "⚙ 효과음 조절을 누르면 탭이 열린다")
+    pg.click("#sfxPackTab .sfxseg[data-key=sfx_density] button[data-v=high]"); time.sleep(1.2)
+    d = Store(str(db)).get_mix_job("jsul0001")["deco"]
+    check(d.get("sfx_density") == "high", f"횟수 「많이」 → sfx_density=high ({d.get('sfx_density')})")
+    pg.click("#sfxPackTab .sfxseg[data-key=sfx_level] button[data-v=low]"); time.sleep(1.2)
+    d = Store(str(db)).get_mix_job("jsul0001")["deco"]
+    check(d.get("sfx_level") == "low", f"크기 「작게」 → sfx_level=low ({d.get('sfx_level')})")
+    pg.select_option("#sfxPackSel", "3"); time.sleep(1.2)
+    d = Store(str(db)).get_mix_job("jsul0001")["deco"]
+    check(d.get("sfx_pack") == "3", f"소리 묶음 3 → sfx_pack='3' ({d.get('sfx_pack')})")
+    check(pg.evaluate("() => document.querySelectorAll('#sfxPackPlay .sfxplay').length") == 7, "미리듣기 버튼 7개")
+    r = pg.request.get(f"http://127.0.0.1:{PORT}/api/produce/sfx_pack/sound/3/pop")
+    check(r.status == 200 and r.headers.get("content-type", "").startswith("audio/"), f"미리듣기 소리가 내려온다 ({r.status})")
+    n_beats = pg.evaluate("() => document.querySelectorAll('#sfxBeatList input[data-beat]').length")
+    check(n_beats == 6, f"칸별 목록 6칸 ({n_beats})")
+    pg.click("#sfxBeatList input[data-beat='2']"); time.sleep(1.2)
+    d = Store(str(db)).get_mix_job("jsul0001")["deco"]
+    check(d.get("sfx_mute_beats") == [2], f"3번 칸 끄기 → sfx_mute_beats=[2] ({d.get('sfx_mute_beats')})")
+    pg.screenshot(path=str(Path(a.shot) / "sfx_tab.png"), clip=pg.locator("#sfxPackBar").bounding_box() or None)
+    pg.reload(wait_until="domcontentloaded"); time.sleep(3); open_job("jsul0001"); pg.click("#sfxPackMore"); time.sleep(0.5)
+    kept = pg.evaluate("""() => ({
+        den: document.querySelector('#sfxPackTab .sfxseg[data-key=sfx_density] button.on').dataset.v,
+        lv: document.querySelector('#sfxPackTab .sfxseg[data-key=sfx_level] button.on').dataset.v,
+        pack: document.getElementById('sfxPackSel').value,
+        b2: document.querySelector('#sfxBeatList input[data-beat="2"]').checked })""")
+    check(kept == {"den": "high", "lv": "low", "pack": "3", "b2": False}, f"새로고침 뒤 네 값이 그대로 보인다 {kept}")
+    # 렌더가 읽는 함수가 같은 값을 받는다(화면≠렌더 방지)
+    from shopping_shorts import sfx_pack as _sp
+    got = _sp.resolve(Store(str(db)), Store(str(db)).get_mix_job("jsul0001"))
+    check(got and got["density"] == "high" and got["level"] == "low" and got["mute_beats"] == [2] and got["name"] == _sp.list_packs()[2][0],
+          f"렌더 resolve가 같은 값을 받는다 {got and {k: got[k] for k in ('name','density','level','mute_beats')}}")
     check(not errs, f"페이지 오류 없음 {errs[:2]}")
     b.close()
 print("결과:", "통과" if ok else "실패")
