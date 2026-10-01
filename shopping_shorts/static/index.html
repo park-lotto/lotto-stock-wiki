@@ -3559,9 +3559,15 @@ async function lensSearch(btn, shortcode){
 }
 // 늦게 도착한 응답이 **다른 카드의 렌즈 모달**을 덮어쓰지 않게 하는 공용 가드.
 // (fetchLensYt·fetchLensCnKeywords가 쓰던 root.dataset.sc 검사와 같은 규칙 — 한 곳에 모았다)
+// ★id로 찾지 마라(2026-10-01 사장님 "키워드 검색도 안 들어감"): 주소 카드(__single__)가
+//   #urlCardBox에 #lensRoot를 **숨긴 채** 남기고 추적 모달이 같은 id로 또 그린다 — getElementById는
+//   문서 앞쪽(숨은 카드)만 돌려줘 data-sc가 늘 '__single__'이라 모달은 응답이 와도 다시 안 그려졌고,
+//   #lensKwInput 값도 늘 ''이라 검색어 요청이 0건이었다(서버 로그). 뭉치는 data-sc로 찾는다 — 한 곳.
+function _lensRoot(shortcode){
+  try{ return document.querySelector('#lensRoot[data-sc="'+CSS.escape(shortcode)+'"]'); }catch(e){ return null; }
+}
 function _lensRerender(shortcode){
-  const root=document.getElementById('lensRoot');
-  if(root && root.dataset.sc===shortcode) renderLens(shortcode);
+  if(_lensRoot(shortcode)) renderLens(shortcode);
 }
 // ── URL 붙여넣기 → 구글렌즈 원본/유사 역추적(2026-07-19) ─── TRACE-START
 // 프레임 캡처 대신 서버가 URL을 받아 중간 프레임을 뽑는다(/api/lens/trace_url). 결과 형태는
@@ -3603,9 +3609,15 @@ async function traceByUrl(urlArg){
     // 📕🎬 키워드검색 후보는 서버가 프레임 비전으로 만들어 cn_candidates로 내려준다
     // (caption만으론 cn_search_candidates가 빈 리스트 — 프레임 필수라 서버가 처리).
     const tcn=(d.cn_candidates||[]).filter(c=>c&&c.zh);
+    // ★프레임을 화면에도 둔다(2026-10-01 사장님 캡처 "대본 분석이 막힌다"): 서버 cn_search_candidates는
+    //   image_bytes가 없으면 **즉시 빈 리스트**인데, 추적 카드는 프레임이 서버에만 있어 '대본 분석' 뒤
+    //   재생성 요청에 frame 0장 → 후보 0개로 검색어가 통째로 사라졌다(서버 로그: 1초 안에 200).
+    //   서버가 받은 바이트(frame_b64)를 랭킹 카드와 같은 자리(frameBlob)에 두면 🔄 더 뽑기까지 그대로 산다.
+    let _fb=null;
+    try{ if(d.frame_b64){ const _bin=atob(d.frame_b64); const _u8=new Uint8Array(_bin.length); for(let k=0;k<_bin.length;k++) _u8[k]=_bin.charCodeAt(k); _fb=new Blob([_u8],{type:'image/jpeg'}); } }catch(e){ _fb=null; }
     LENS_STATE['__trace__']={items, on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved,
                              sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false, ytLoading:false, keyword:'', caption:tcap, cnCands:tcn,
-                             srcUrl:url, srcCode:(d.script_code||'')};   // ★대본 분석 후 찾기가 이 주소·코드로 추출한다(가짜 ID '__trace__'는 서버에 없다)
+                             frameBlob:_fb, srcUrl:url, srcCode:(d.script_code||'')};   // ★대본 분석 후 찾기가 이 주소·코드로 추출한다(가짜 ID '__trace__'는 서버에 없다)
     renderLens('__trace__');
   }catch(e){ const body=document.getElementById('scriptBody'); if(body) body.innerHTML='<div style="padding:10px;color:#e0623d">❌ '+e.message+'</div>'; }
 }
@@ -3697,8 +3709,7 @@ async function fetchLensYt(shortcode, caption, blob){
     st.items.push(...add.filter(i=>!have.has(i.savesc)));   // 중복 savesc 제외
     st.ytLoading=false;
   }catch(e){ const st=LENS_STATE[shortcode]; if(st) st.ytLoading=false; }
-  const root=document.getElementById('lensRoot');
-  if(root && root.dataset.sc===shortcode) renderLens(shortcode);
+  _lensRerender(shortcode);
 }
 // 프레임(비전)으로 중국어 후보 검색어를 받아 '사이트 링크' 버튼으로 그린다.
 // ★무료: Apify로 자동검색하지 않는다. 후보 클릭=그 중국어로 샤오홍슈/도우인 사이트를 열고,
@@ -3745,14 +3756,12 @@ async function fetchLensCnKeywords(shortcode, caption, blob, append){
     _markScriptProduct(st);     // 대본이 말한 제품을 가리키는 검색어를 맨 위로 + 표시
     // 비전 5~15초 사이 사용자가 다른 카드 렌즈를 열었으면 이 모달은 남의 것 → 재렌더 금지
     // (형제 fetchLensYt와 동일 가드. 안 하면 늦은 응답이 현재 모달을 덮어씀)
-    const root=document.getElementById('lensRoot');
-    if(root && root.dataset.sc===shortcode) renderLens(shortcode);
+    _lensRerender(shortcode);
   }catch(e){ /* 후보 실패해도 렌즈 나머지는 정상 */ }
   finally{
     const st=LENS_STATE[shortcode];
     if(st) st.cnLoading=false;
-    const root=document.getElementById('lensRoot');
-    if(root && root.dataset.sc===shortcode) renderLens(shortcode);
+    _lensRerender(shortcode);
   }
 }
 // ⌨️ 키워드 직접 넣기 → 검색어 조합 펼치기(2026-08-14 사장님 "시금치 치아바타처럼
@@ -3761,7 +3770,8 @@ async function fetchLensCnKeywords(shortcode, caption, blob, append){
 // 인스타·틱톡·샤오홍슈·도우인 버튼이 한 줄에 다 생긴다. 무료(Gemini 텍스트 1회).
 async function lensExpandKeyword(shortcode){
   const st=LENS_STATE[shortcode]; if(!st || st.cnLoading) return;
-  const inp=document.getElementById('lensKwInput');
+  const _root=_lensRoot(shortcode);           // 숨은 주소 카드의 빈 칸이 아니라 **이 뭉치**의 입력칸
+  const inp=_root && _root.querySelector('#lensKwInput');
   const kw=((inp && inp.value)||'').trim();
   if(!kw){ if(inp) inp.focus(); return; }
   st.cnLoading=true; st.cnNoNew=false; st.kwSeed=kw;
@@ -3782,8 +3792,7 @@ async function lensExpandKeyword(shortcode){
   }catch(e){ /* 실패해도 렌즈 나머지는 정상 */ }
   finally{
     const st3=LENS_STATE[shortcode]; if(st3) st3.cnLoading=false;
-    const root=document.getElementById('lensRoot');
-    if(root && root.dataset.sc===shortcode) renderLens(shortcode);
+    _lensRerender(shortcode);
   }
 }
 // 📕🎬 인앱 CN 검색(2026-08-17) — 후보를 눌러도 **페이지를 떠나지 않는다**.

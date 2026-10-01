@@ -11998,17 +11998,22 @@ def api_lens_trace_url(request: Request, body: dict):
         # 바이트를 받아 직접 만든다. cn_search_candidates는 image_bytes가 없으면 빈 리스트라
         # caption만으론 안 됨(2026-07-21 사장님 제보로 확인). Gemini 무료쿼터, 실패해도 무시.
         cn_cands = []
+        img_bytes = b""
         try:
             img_bytes = requests.get(image_url, timeout=15).content
             cn_cands = (cn_search_candidates(img_bytes, caption) or {}).get("candidates", [])
         except Exception:
             pass
+        # ★프레임 바이트를 화면에도 준다(2026-10-01 사장님 "대본 분석이 막힌다"). 화면이 '대본 분석' 뒤
+        #   /api/lens/cn/keywords를 다시 부를 때 frame이 없으면 cn_search_candidates가 즉시 빈 리스트라
+        #   검색어가 사라졌다. 랭킹 카드는 프레임을 화면이 들고 있어 되는데 추적 카드만 서버에 있었다.
+        frame_b64 = base64.b64encode(img_bytes).decode("ascii") if (img_bytes and len(img_bytes) <= 2_000_000) else ""
         _n = _diag.get("serpapi_calls", 1)
         if _n:                      # 0 = 키가 없어 아예 못 때렸다 → 한도를 깎지 않는다
             store.bump_lens(month, _n)
         ok = True
         return {"ok": True, "items": items, "count": len(items), "source_url": url,
-                "caption": caption, "cn_candidates": cn_cands,
+                "caption": caption, "cn_candidates": cn_cands, "frame_b64": frame_b64,
                 # ★주소 카드의 대본 코드(2026-09-26): 화면이 '대본 분석 후 찾기'를 이 코드로 추출·조회한다.
                 #   가짜 ID('__trace__')로 조회하면 서버에 없어 404·썸네일 검색어가 됐다. 판정은 _lens_script_code 한 곳.
                 "script_code": _lens_script_code(url, "")}
