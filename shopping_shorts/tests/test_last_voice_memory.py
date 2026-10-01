@@ -70,7 +70,8 @@ def test_기억한_성우가_실제_합성_파라미터까지_닿는다(store):
     voice = store.get_mix_job("job_p")["voice"]
     got = mix_pipeline._voice_params(voice)
     assert got[0] == "VID_SENA"                     # voice_id
-    assert got[2] == 1.4                            # speed
+    assert got[2] == 1.0                            # API 속도는 항상 1.0(관제 049)
+    assert got[3] == 1.4                            # 고른 속도는 atempo 배율로 닿는다
     default = mix_pipeline._voice_params(None)
     assert default[0] == mix_pipeline._DEFAULT_VOICE["voice_id"]
     assert got[0] != default[0], "기억이 미나 폴백을 실제로 대체해야 한다"

@@ -5898,6 +5898,19 @@ class Store:
                 int(p.get("owner_customer_id", 0) or 0),
             ))
 
+    def set_voice_default_speeds(self, speeds):
+        """{preset_id: 기본 속도} 를 한 번에 적는다. 바뀐 행 수 반환.
+        값은 voice_presets.default_speed 가 정한다 — 여기서 판단하지 않는다(0순위-B)."""
+        if not speeds:
+            return 0
+        with self._conn() as c:
+            n = 0
+            for pid, sp in speeds.items():
+                n += c.execute("UPDATE voice_presets SET default_speed=? WHERE preset_id=? "
+                               "AND (default_speed IS NULL OR abs(default_speed-?)>1e-9)",
+                               (float(sp), pid, float(sp))).rowcount
+            return n
+
     def _row_to_preset(self, r):
         return {
             "preset_id": r[0], "name": r[1], "one_liner": r[2], "lang": r[3],
@@ -6493,6 +6506,53 @@ class Store:
         val = json.dumps(voice, ensure_ascii=False) if ok else None
         with self._conn() as c:
             c.execute("UPDATE customers SET last_voice_json=? WHERE id=?", (val, customer_id))
+
+    def rewrite_voice_speeds(self, speed_of, apply=False):
+        """저장된 성우 스냅샷의 speed 를 speed_of(voice_id) 로 바꾼다 — 고객 기억(last_voice_json·
+        사장님 cid 0 pref) + 작업(mix_jobs.voice_json). 2026-10-01 관제 049(사장님 "기존 고객도 전원").
+        ★last_voice_json 을 만지는 출구는 이 클래스 안에만 둔다(get/set_last_voice 주석, 0순위-B).
+        apply=False 면 아무것도 안 쓰고 바뀔 목록만 준다. 반환: [(종류, id, voice_id, 옛 speed, 새 speed)]."""
+        changes = []
+
+        def _fix(raw):
+            try:
+                v = json.loads(raw) if isinstance(raw, str) else raw
+            except (ValueError, TypeError):
+                return None, None
+            if not (isinstance(v, dict) and v.get("voice_id")):
+                return None, None
+            new = float(speed_of(v.get("voice_id")))
+            old = v.get("speed")
+            if isinstance(old, (int, float)) and abs(float(old) - new) < 1e-9:
+                return None, None
+            return {**v, "speed": new}, old
+
+        with self._conn() as c:
+            rows = c.execute("SELECT id, last_voice_json FROM customers "
+                             "WHERE last_voice_json IS NOT NULL").fetchall()
+            for cid, raw in rows:
+                nv, old = _fix(raw)
+                if nv:
+                    changes.append(("customer", cid, nv["voice_id"], old, nv["speed"]))
+                    if apply:
+                        c.execute("UPDATE customers SET last_voice_json=? WHERE id=?",
+                                  (json.dumps(nv, ensure_ascii=False), cid))
+            jobs = c.execute("SELECT job_id, voice_json FROM mix_jobs "
+                             "WHERE voice_json IS NOT NULL AND voice_json != ''").fetchall()
+            for jid, raw in jobs:
+                nv, old = _fix(raw)
+                if nv:
+                    changes.append(("job", jid, nv["voice_id"], old, nv["speed"]))
+                    if apply:
+                        c.execute("UPDATE mix_jobs SET voice_json=? WHERE job_id=?",
+                                  (json.dumps(nv, ensure_ascii=False), jid))
+        owner = self.get_pref(_LAST_VOICE_PREF, 0)
+        nv, old = _fix(owner) if owner else (None, None)
+        if nv:
+            changes.append(("owner_pref", 0, nv["voice_id"], old, nv["speed"]))
+            if apply:
+                self.set_pref(_LAST_VOICE_PREF, nv, 0)
+        return changes
 
     def get_customer(self, customer_id):
         """customer_id → {id, username, created_at, plan, full_access_until, google_sub, email, approved_at, name, phone} 또는 None."""

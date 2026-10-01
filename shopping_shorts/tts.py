@@ -299,7 +299,13 @@ def synthesize_best(text, out_path, n=1, base_seed=None, ranker=None, **kw):
         synthesize_tts(text, cand, seed=seed, **kw)
         score = ranker(cand, text) if ranker else i
         cands.append((score, cand))
-    cands.sort(key=lambda x: x[0])
+    # ★점수(오독)가 같으면 **짧은 take**(2026-10-01 관제 049). 동점이면 첫 take를 골랐는데, 필재 job 14882edcb67a
+    #   "이건 바로…"에서 4.49초짜리(바로~~~ 1초 끌림)가 2.64초짜리 정상 take를 이겼다(둘 다 오독 0).
+    #   오독이 같다 = 글자는 다 맞게 읽었다 → 더 짧은 쪽이 덜 늘어진 소리다.
+    from shopping_shorts import audio_post as _ap     # audio_post는 tts를 import하지 않는다(순환 없음)
+    cands = [(s, _ap._audio_dur(c) or 0.0, c) for s, c in cands]
+    cands.sort(key=lambda x: (x[0], x[1]))
+    cands = [(s, c) for s, _d, c in cands]
     shutil.copyfile(cands[0][1], out_path)
     # ★고른 take의 정렬도 같이 옮긴다. 안 옮기면 out_path엔 정렬이 없어 ASR 폴백으로
     #   돌아가고(효과 0), 더 나쁘게는 옛 정렬이 남아 있으면 stale이 된다(copy가 지운다).
