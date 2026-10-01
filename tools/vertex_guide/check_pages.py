@@ -40,19 +40,19 @@ with sync_playwright() as p:
     pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
     pg.goto(f'{BASE}/api_manual.html#vertex', wait_until='networkidle'); pg.wait_for_timeout(800)
     txt = pg.inner_text('body')
-    for s in ('Agent Platform API', 'Agent Platform 사용자', '2단계 인증', '「개인」', '마이페이지 › 🔑 내 키 등록', '결제 계정 폐쇄', '무료 체험판 계정'):
+    for s in ('Agent Platform API', 'Agent Platform 사용자', '2단계 인증', '「개인」', '마이페이지 › 🔑 내 키 등록', '결제 계정 폐쇄', '무료 체험판 계정', '결제 연결 확인', '결제 계정 연결'):
         need(s in txt, f'① 새 문구 있음: {s}')
     need('Vertex AI API 열기' not in txt, '① 옛 버튼 문구(Vertex AI API 열기) 없음')
     need('⑧ 구글 버텍스 API' in txt and '사람이 몰리는' not in txt and '그대로 쓰실 수 있습니다' not in txt, '⑦ 설명서 ⑧ 제목·문구')
-    v = pg.locator('video[src="/landing/vertex_guide.mp4"]')
+    v = pg.locator('video[src^="/landing/vertex_guide.mp4"]')
     need(v.count() == 1, '① 영상 태그 1개')
     v.scroll_into_view_if_needed()
-    t = pg.evaluate("""async()=>{const v=document.querySelector('video[src="/landing/vertex_guide.mp4"]');v.muted=true;
+    t = pg.evaluate("""async()=>{const v=document.querySelector('video[src^="/landing/vertex_guide.mp4"]');v.muted=true;
         await v.play();await new Promise(r=>setTimeout(r,2500));return {t:v.currentTime,d:v.duration,w:v.videoWidth,err:v.error&&v.error.code}}""")
     need(t['t'] > 1 and t['w'] == 1920 and abs(t['d'] - DUR) < 1 and not t['err'], f'① 영상이 실제로 재생된다 {t}')
     pg.screenshot(path=str(out / 'manual_vertex.png'))
     # ⑤ 되감기 — 앞으로 갔다가 뒤로(2026-09-27 사장님 "뒤로 이동이 안 먹힌다"): 요청한 위치로 실제로 가는지
-    sk = pg.evaluate("""async()=>{const v=document.querySelector('video[src="/landing/vertex_guide.mp4"]');
+    sk = pg.evaluate("""async()=>{const v=document.querySelector('video[src^="/landing/vertex_guide.mp4"]');
         const go=t=>new Promise(r=>{v.addEventListener('seeked',()=>r(v.currentTime),{once:true});v.currentTime=t;});
         const a=await go(60); const b=await go(5); return {fwd:a,back:b,seekable:v.seekable.length?v.seekable.end(0):0}}""")
     need(abs(sk['fwd'] - 60) < 1 and abs(sk['back'] - 5) < 1 and sk['seekable'] > DUR - 1, f'⑤ 앞·뒤로 이동된다 {sk}')
@@ -66,7 +66,7 @@ with sync_playwright() as p:
     with ctx.expect_page() as newp:
         btn.click()
     np_ = newp.value; np_.wait_for_load_state()
-    need(np_.url.endswith('/landing/vertex_guide.mp4'), f'③ 누르면 영상이 새 탭으로 열린다 ({np_.url})')
+    need('/landing/vertex_guide.mp4' in np_.url, f'③ 누르면 영상이 새 탭으로 열린다 ({np_.url})')
     pg2.locator('#vertexCard').screenshot(path=str(out / 'settings_vertex_card.png'))
     # ⑦ 2026-09-27 사장님 문구: 제목 「구글 버텍스 API」, (선택)·'사람이 몰리는'·'안 하셔도 지금처럼' 없음
     vt = pg2.inner_text('#vertexCard')

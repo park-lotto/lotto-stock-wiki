@@ -1135,6 +1135,18 @@
     <a class="go-btn" href="/settings#keys">설정으로 →</a>
   </div>
 
+  <!-- ★「권한이 없습니다」가 떠도 역할이 맞는 경우(2026-10-01 관제 053) — 결제 계정이 프로젝트에 안 붙은 것이 대부분.
+       구글 클라우드를 이미 쓰던 분은 1단계(무료 체험=결제 등록)가 안 떠서 결제 없이 프로젝트만 만들어진다. -->
+  <div class="card">
+    <div class="card-head"><div class="num">!</div><h3>「권한이 없습니다」가<br>뜨면 — 결제 연결 확인</h3></div>
+    <p class="say">역할(3단계)을 맞게 넣었는데도 <b>「권한이 없습니다」</b>가 뜨면, 거의 다 <b>이 프로젝트에 결제 계정이 안 붙은 것</b>입니다.
+      구글 클라우드를 <b>전부터 쓰던 분</b>은 1단계 무료 체험 화면이 안 떠서 결제 없이 프로젝트만 만들어져요.</p>
+    <p class="say">아래 버튼을 눌러 <b>결제</b> 화면을 여세요. <b>「결제 계정 연결」 버튼이 보이면</b> 그걸 눌러 결제 계정을 만들거나 고르세요
+      (처음이면 무료 체험 $300이 함께 들어와요). <b>결제 계정 이름과 「개요」 화면이 보이면</b> 이미 붙은 것이니,
+      역할을 <b>방금 넣은 경우 5분 기다렸다가</b> 「확인하고 연결」을 다시 눌러 주세요.</p>
+    <a class="go-btn" href="https://console.cloud.google.com/billing" target="_blank" rel="noopener">이 프로젝트의 결제 연결 보기 →</a>
+  </div>
+
   <!-- ★카드가 실제로 결제되지 않게(2026-09-27 사장님) — 근거: 구글 공식 문서(무료 체험·예산·결제 계정 폐쇄), 캡처로 화면 문구 확인 -->
   <div class="card">
     <div class="card-head"><div class="num">💳</div><h3>카드가 실제로<br>결제되지 않게</h3></div>
@@ -1156,6 +1168,10 @@
     <div class="fix-row">
       <div class="q"><span class="ic">?</span><span>저장했더니 <b>“키가 틀렸습니다”</b></span></div>
       <div class="a"><span class="ic">→</span><span>앞뒤에 <b>빈칸이나 줄바꿈</b>이 딸려온 경우가 가장 많습니다. 다시 복사해서 넣어보세요. Vmake는 <code>앱키:시크릿</code> 모양이 맞는지 확인하세요.</span></div>
+    </div>
+    <div class="fix-row">
+      <div class="q"><span class="ic">?</span><span>버텍스에서 <b>「권한이 없습니다」</b>가 뜹니다 (역할은 맞게 넣었는데)</span></div>
+      <div class="a"><span class="ic">→</span><span>프로젝트에 <b>결제 계정이 안 붙은</b> 경우가 대부분입니다. ⑧의 <b>「결제 연결 확인」</b> 카드대로 결제 › 「결제 계정 연결」을 눌러 주세요. 역할을 <b>방금</b> 넣으셨다면 5분 뒤 다시 눌러 보세요.</span></div>
     </div>
     <div class="fix-row">
       <div class="q"><span class="ic">?</span><span>유튜브 키가 <b>계속 틀렸다고</b> 나옵니다</span></div>
