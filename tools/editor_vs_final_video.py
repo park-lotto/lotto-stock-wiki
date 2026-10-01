@@ -40,7 +40,11 @@ if os.getenv("PATCH_DIR"):          # 배포 전 대조: 고친 모듈을 먼저
     _bf = Path("shopping_shorts/assets/NanumGothic.ttf").resolve()
     if _bf.exists():
         os.environ.setdefault("SHORTS_CAPTION_FONT", str(_bf))
-    for _n in ("frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
+    # ★음성 라인(voice_presets·typecast_tts·audio_post·tts·tts_joined)도 얹는다(2026-10-01 관제 049) — mix_pipeline 이
+    #   이들의 새 함수(default_speed 등)를 부르는데 옛 라이브 모듈이 섞이면 import 때 죽는다(관문 첫 실행 실측).
+    #   의존 순서대로: 아래 모듈을 먼저, mix_pipeline 을 마지막에.
+    for _n in ("voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined",
+               "frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
         _f = Path(os.getenv("PATCH_DIR")) / ("%s.py" % _n)
         if _f.exists():
             _sp = importlib.util.spec_from_file_location("shopping_shorts." + _n, str(_f))
