@@ -1,0 +1,2184 @@
+{
+ "given": "해외 천재가 만들어 떼돈번 제품의 정체.\n최근 딱 봤을 때는 일반 휴대폰 받침대처럼 생겼지만 전 세계 SNS에서 엄청난 인기를 끌며 만든 대박 유튜버나 개발자가 잭팟을 터뜨렸다는 이 물건은 마그네틱 부착 방식으로 핸드폰을 착 붙이고 자유롭게 가로 세로 회전과 각도 조절까지 완벽히 해내는 스탠드인데\n이건 바로 올인원 메탈 거치대\n이게 말도 안 되는 게 강력한 자석에 폰을 붙이고 가로 세로 각도를 자유롭게 맞출 수 있어\n하단 받침대를 펼치면 태블릿부터 심지어 무거운 노트북까지 흔들림 없이 고정할 수 있어\n사실상 이거 하나로 온갖 스마트 기기를 다 세울 수 있다는 거\n근데 진짜 충격적인 포인트는 쏙 접어서 주머니에 넣는 휴대성에 가격도 고작 부담 없는 수준이라 가성비와 성능까지 3박자를 다 맞춘 제품이라고",
+ "beat_sources": [
+  {
+   "role": "훅",
+   "seg": "lens_tiktok_1k4seur-6",
+   "segs": [
+    "lens_tiktok_1k4seur-6",
+    "lens_tiktok_1k4seur-8"
+   ]
+  },
+  {
+   "role": "계기",
+   "seg": "lens_tiktok_1k4seur-0",
+   "segs": [
+    "lens_tiktok_1k4seur-0",
+    "lens_tiktok_1k4seur-1",
+    "lens_tiktok_1k4seur-2",
+    "lens_tiktok_1yzcfio-7",
+    "lens_tiktok_1yzcfio-8",
+    "lens_instagram_1fkofme-4",
+    "lens_instagram_1fkofme-7",
+    "lens_instagram_qa2z5r-1",
+    "lens_instagram_qa2z5r-3",
+    "lens_instagram_qa2z5r-4"
+   ]
+  },
+  {
+   "role": "전환",
+   "seg": "lens_tiktok_1k4seur-12",
+   "segs": [
+    "lens_tiktok_1k4seur-12",
+    "lens_tiktok_1yzcfio-3"
+   ]
+  },
+  {
+   "role": "작동",
+   "seg": "lens_instagram_8ap264-0",
+   "segs": [
+    "lens_instagram_8ap264-0",
+    "lens_instagram_8ap264-1",
+    "lens_instagram_8ap264-2",
+    "lens_instagram_8ap264-8",
+    "lens_instagram_8ap264-12",
+    "lens_instagram_8ap264-13",
+    "lens_instagram_8ap264-18",
+    "lens_tiktok_1k4seur-3"
+   ]
+  },
+  {
+   "role": "심지어",
+   "seg": "lens_tiktok_1k4seur-4",
+   "segs": [
+    "lens_tiktok_1k4seur-4",
+    "lens_tiktok_1k4seur-5",
+    "lens_tiktok_1k4seur-7",
+    "lens_tiktok_1k4seur-9",
+    "lens_tiktok_1k4seur-10"
+   ]
+  },
+  {
+   "role": "감정",
+   "seg": "lens_tiktok_1k4seur-11",
+   "segs": [
+    "lens_tiktok_1k4seur-11",
+    "lens_tiktok_1yzcfio-5",
+    "lens_tiktok_1yzcfio-6"
+   ]
+  },
+  {
+   "role": "전환",
+   "seg": "lens_tiktok_1k4seur-13",
+   "segs": [
+    "lens_tiktok_1k4seur-13",
+    "lens_tiktok_1yzcfio-4",
+    "lens_tiktok_1yzcfio-11",
+    "lens_tiktok_1yzcfio-12",
+    "lens_instagram_1fkofme-0"
+   ]
+  }
+ ],
+ "spine": {
+  "id": 391,
+  "name": "히트작 제품정체형 「장거리 커플이 환장하는 로봇의…」",
+  "situation_type": "원문형 — 아이템스토리 22000회 대본을 틀로(2026-09-20)",
+  "character_roles": null,
+  "beat_chain": null,
+  "emotion_arc": null,
+  "appeal": null,
+  "fit_categories": [
+   "제품정체형"
+  ],
+  "source_count": 0,
+  "perf_score": 0.0,
+  "status": "pending",
+  "created_at": "2026-09-20 12:45:26",
+  "updated_at": "2026-09-20 12:45:26",
+  "beat_roles": [
+   "훅",
+   "불편",
+   "작동",
+   "전환",
+   "심지어",
+   "감정"
+  ],
+  "templates": {
+   "_origin": {
+    "cells": [
+     {
+      "role": "훅",
+      "text": "장거리 커플이 환장하는 로봇의 정체"
+     },
+     {
+      "role": "불편",
+      "text": "장거리 외출시 고정된 카메라가 아닌 다양하게 움직여서 사각 지대를 없애 버린 혁명적인 카메라인"
+     },
+     {
+      "role": "작동",
+      "text": "앱을 통해 직접 움직이고 한번 충전으로 무려 25일 작동이 가능한이 제품은 에나옷 롤라 미니인데"
+     },
+     {
+      "role": "전환",
+      "text": "진짜 핵심은 출시하자마자 단거리 커플이 사재기라도 하듯이 물량이 소진되는데"
+     },
+     {
+      "role": "심지어",
+      "text": "그 이유는 실시간 전화나 영상 통화랑은 다르게 직접 움직이면서 상대방과 대화를 할 수 있다 보니 같이 있게 만드는 생각까지 들게 한다는 거"
+     },
+     {
+      "role": "감정",
+      "text": "고양이 장난감 붙여서 놀아주려고 산 로봇인데 사람 마음도 녹여주는 로봇이 돼 버림"
+     }
+    ],
+    "views": 22000,
+    "user": "아이템스토리",
+    "hit_id": "8oPrePge59A",
+    "hook_tpl": "{인물}이 환장하는 {제품군}의 정체"
+   },
+   "title": [
+    "{인물}이 환장하는 {제품군}의 정체"
+   ]
+  },
+  "chars_per_30s": null,
+  "voice": {
+   "tone": "반말"
+  },
+  "no_cta": true,
+  "hook_3s": true,
+  "hook_conceal": false,
+  "is_list": false,
+  "_use_seed_origin": true
+ },
+ "report": [
+  {
+   "text": "해외 천재가 만들어 떼돈번 제품의 정체.",
+   "need": 3.1,
+   "have": 3.7,
+   "cuts": [
+    "lens_tiktok_1k4seur-6",
+    "lens_tiktok_1k4seur-8"
+   ],
+   "from_sub": true
+  },
+  {
+   "text": "최근 딱 봤을 때는 일반 휴대폰 받침대처럼 생겼지만 전 세계 SNS에서 엄청난 인기를 끌며 만든 대박 유튜버나 개발자가 잭팟을 터뜨렸다는 이 물건은 마그네틱 부착 방식으로 핸드폰을 착 붙이고 자유롭게 가로 세로 회전과 각도 조절까지 완벽히 해내는 스탠드인데",
+   "need": 20.4,
+   "have": 26.4,
+   "cuts": [
+    "lens_tiktok_1k4seur-0",
+    "lens_tiktok_1k4seur-1",
+    "lens_tiktok_1k4seur-2",
+    "lens_tiktok_1yzcfio-7",
+    "lens_tiktok_1yzcfio-8",
+    "lens_instagram_1fkofme-4",
+    "lens_instagram_1fkofme-7",
+    "lens_instagram_qa2z5r-1",
+    "lens_instagram_qa2z5r-3",
+    "lens_instagram_qa2z5r-4"
+   ],
+   "from_sub": true
+  },
+  {
+   "text": "이건 바로 올인원 메탈 거치대",
+   "need": 2.3,
+   "have": 4.0,
+   "cuts": [
+    "lens_tiktok_1k4seur-12",
+    "lens_tiktok_1yzcfio-3"
+   ],
+   "from_sub": true
+  },
+  {
+   "text": "이게 말도 안 되는 게 강력한 자석에 폰을 붙이고 가로 세로 각도를 자유롭게 맞출 수 있어",
+   "need": 7.1,
+   "have": 8.4,
+   "cuts": [
+    "lens_instagram_8ap264-0",
+    "lens_instagram_8ap264-1",
+    "lens_instagram_8ap264-2",
+    "lens_instagram_8ap264-8",
+    "lens_instagram_8ap264-12",
+    "lens_instagram_8ap264-13",
+    "lens_instagram_8ap264-18",
+    "lens_tiktok_1k4seur-3"
+   ],
+   "from_sub": false
+  },
+  {
+   "text": "하단 받침대를 펼치면 태블릿부터 심지어 무거운 노트북까지 흔들림 없이 고정할 수 있어",
+   "need": 6.7,
+   "have": 7.4,
+   "cuts": [
+    "lens_tiktok_1k4seur-4",
+    "lens_tiktok_1k4seur-5",
+    "lens_tiktok_1k4seur-7",
+    "lens_tiktok_1k4seur-9",
+    "lens_tiktok_1k4seur-10"
+   ],
+   "from_sub": true
+  },
+  {
+   "text": "사실상 이거 하나로 온갖 스마트 기기를 다 세울 수 있다는 거",
+   "need": 4.8,
+   "have": 7.5,
+   "cuts": [
+    "lens_tiktok_1k4seur-11",
+    "lens_tiktok_1yzcfio-5",
+    "lens_tiktok_1yzcfio-6"
+   ],
+   "from_sub": true
+  },
+  {
+   "text": "근데 진짜 충격적인 포인트는 쏙 접어서 주머니에 넣는 휴대성에 가격도 고작 부담 없는 수준이라 가성비와 성능까지 3박자를 다 맞춘 제품이라고",
+   "need": 11.1,
+   "have": 12.5,
+   "cuts": [
+    "lens_tiktok_1k4seur-13",
+    "lens_tiktok_1yzcfio-4",
+    "lens_tiktok_1yzcfio-11",
+    "lens_tiktok_1yzcfio-12",
+    "lens_instagram_1fkofme-0"
+   ],
+   "from_sub": true
+  }
+ ],
+ "groups": {
+  "product": "Kjell 메탈 접이식 다기능 거치대",
+  "groups": [
+   {
+    "name": "마그네틱 착탈 및 자유로운 각도·회전 조절",
+    "claim": "강력한 자석으로 스마트폰을 바로 부착하고 가로·세로 회전 및 섬세한 각도 조절이 가능하다.",
+    "where": "둘다",
+    "doubt": false,
+    "cuts": [
+     "lens_tiktok_1k4seur-0",
+     "lens_tiktok_1k4seur-1",
+     "lens_tiktok_1k4seur-2",
+     "lens_tiktok_1yzcfio-7",
+     "lens_tiktok_1yzcfio-8",
+     "lens_instagram_8ap264-0",
+     "lens_instagram_8ap264-1",
+     "lens_instagram_8ap264-2",
+     "lens_instagram_8ap264-6",
+     "lens_instagram_8ap264-8",
+     "lens_instagram_8ap264-12",
+     "lens_instagram_8ap264-13",
+     "lens_instagram_8ap264-18",
+     "lens_instagram_1fkofme-4",
+     "lens_instagram_1fkofme-5",
+     "lens_instagram_1fkofme-6",
+     "lens_instagram_1fkofme-7",
+     "lens_instagram_qa2z5r-1",
+     "lens_instagram_qa2z5r-3",
+     "lens_instagram_qa2z5r-4"
+    ]
+   },
+   {
+    "name": "콤팩트 접이식 설계 및 뛰어난 휴대성",
+    "claim": "접으면 한 손에 쏙 들어오는 미니 사이즈로 가방이나 주머니에 간편하게 휴대할 수 있다.",
+    "where": "둘다",
+    "doubt": false,
+    "cuts": [
+     "lens_tiktok_1k4seur-12",
+     "lens_tiktok_1k4seur-13",
+     "lens_tiktok_1yzcfio-0",
+     "lens_tiktok_1yzcfio-1",
+     "lens_tiktok_1yzcfio-2",
+     "lens_tiktok_1yzcfio-3",
+     "lens_tiktok_1yzcfio-4",
+     "lens_tiktok_1yzcfio-11",
+     "lens_tiktok_1yzcfio-12",
+     "lens_instagram_8ap264-3",
+     "lens_instagram_8ap264-7",
+     "lens_instagram_8ap264-9",
+     "lens_instagram_8ap264-10",
+     "lens_instagram_8ap264-11",
+     "lens_instagram_8ap264-14",
+     "lens_instagram_8ap264-15",
+     "lens_instagram_8ap264-19",
+     "lens_instagram_1fkofme-0",
+     "lens_instagram_1fkofme-1",
+     "lens_instagram_1fkofme-8",
+     "lens_instagram_1fkofme-9",
+     "lens_instagram_qa2z5r-0"
+    ]
+   },
+   {
+    "name": "태블릿·노트북을 견디는 강력한 고하중 지지력",
+    "claim": "프레임을 확장하면 태블릿부터 무거운 노트북까지 흔들림 없이 안정적으로 지탱해 준다.",
+    "where": "둘다",
+    "doubt": false,
+    "cuts": [
+     "lens_tiktok_1k4seur-3",
+     "lens_tiktok_1k4seur-4",
+     "lens_tiktok_1k4seur-5",
+     "lens_tiktok_1k4seur-6",
+     "lens_tiktok_1k4seur-7",
+     "lens_tiktok_1k4seur-8",
+     "lens_tiktok_1k4seur-9",
+     "lens_tiktok_1k4seur-10",
+     "lens_tiktok_1k4seur-11",
+     "lens_tiktok_1yzcfio-5",
+     "lens_tiktok_1yzcfio-6",
+     "lens_tiktok_1yzcfio-9",
+     "lens_tiktok_1yzcfio-10",
+     "lens_instagram_8ap264-4",
+     "lens_instagram_8ap264-5",
+     "lens_instagram_8ap264-16",
+     "lens_instagram_8ap264-17",
+     "lens_instagram_1fkofme-2",
+     "lens_instagram_1fkofme-3",
+     "lens_instagram_qa2z5r-2"
+    ]
+   }
+  ],
+  "order": [
+   0,
+   1,
+   2
+  ],
+  "alt_use": false
+ },
+ "note": {
+  "seed_visual_excluded": "s5",
+  "backbone_moved": "s2",
+  "auth": "vertex",
+  "origin_from_seed": true,
+  "seed_cells": [
+   {
+    "role": "훅",
+    "text": "미국 천재가 만들어 떼돈번 제품의 정체",
+    "fixed": []
+   },
+   {
+    "role": "계기",
+    "text": "최근 딱 봤을 때는 평범한 핸드폰 거치대처럼 생긴 이 제품이 미국을 넘어 전세계 SNS에서 역대 종결급 아이템으로 바이럴이 폭발하며 이걸 개발한 미국 천재가 돈방석에 앉았다는데",
+    "fixed": [
+     "최근 딱 봤을 때는"
+    ]
+   },
+   {
+    "role": "전환",
+    "text": "이건 바로 올인원 거치대",
+    "fixed": [
+     "이건 바로"
+    ]
+   },
+   {
+    "role": "작동",
+    "text": "이게 말도 안 되는 게 총 8가지 각도로 다양한 각도 조절이 가능해",
+    "fixed": [
+     "이게 말도 안 되는 게"
+    ]
+   },
+   {
+    "role": "심지어",
+    "text": "아이패드 같은 태블릿 PC부터 심지어 노트북 거치대로도 활용해버릴 수 있어",
+    "fixed": [
+     "부터 심지어"
+    ]
+   },
+   {
+    "role": "감정",
+    "text": "사실상 이거 하나로 모든 전자기기를 커버할 수 있다는 거",
+    "fixed": [
+     "사실상 이거 하나로",
+     "수 있다는 거"
+    ]
+   },
+   {
+    "role": "전환",
+    "text": "근데 진짜 충격적인 포인트는 가격도 고작 만 원대에 손보다도 작은 컴팩트한 사이즈라 가성비부터 휴대성과 성능까지 3박자를 다 맞춘 제품이라고",
+    "fixed": [
+     "근데 진짜 충격적인 포인트는",
+     "가격도 고작",
+     "3박자를 다 맞춘 제품이라고"
+    ]
+   }
+  ],
+  "cast": {
+   "table": {},
+   "issues": []
+  },
+  "seed_voice": {
+   "issues": []
+  }
+ },
+ "rows": [
+  {
+   "i": 0,
+   "text": "해외 천재가 만들어 떼돈번 제품의 정체.",
+   "role": "훅",
+   "segs": [
+    "lens_tiktok_1k4seur-6",
+    "lens_tiktok_1k4seur-8"
+   ],
+   "frames": [
+    "/tmp/tagtrial_29109deff2a9_new3/line00_lens_tiktok_1k4seur-6_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line00_lens_tiktok_1k4seur-6_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line00_lens_tiktok_1k4seur-8_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line00_lens_tiktok_1k4seur-8_1.jpg"
+   ],
+   "descs": [
+    "lens_tiktok_1k4seur-6(2.9s) 거치대의 다리를 양옆으로 잡아당겨 X자 형태의 넓은 대칭 구조로 형태를 ",
+    "lens_tiktok_1k4seur-8(0.8s) 양옆과 뒤까지 완벽히 전개되어 테이블 위에 세워진 노트북 전용 스탠드의 "
+   ]
+  },
+  {
+   "i": 1,
+   "text": "최근 딱 봤을 때는 일반 휴대폰 받침대처럼 생겼지만 전 세계 SNS에서 엄청난 인기를 끌며 만든 대박 유튜버나 개발자가 잭팟을 터뜨렸다는 이 물건은 마그네틱 부착 방식으로 핸드폰을 착 붙이고 자유롭게 가로 세로 회전과 각도 조절까지 완벽히 해내는 스탠드인데",
+   "role": "계기",
+   "segs": [
+    "lens_tiktok_1k4seur-0",
+    "lens_tiktok_1k4seur-1",
+    "lens_tiktok_1k4seur-2",
+    "lens_tiktok_1yzcfio-7",
+    "lens_tiktok_1yzcfio-8",
+    "lens_instagram_1fkofme-4",
+    "lens_instagram_1fkofme-7",
+    "lens_instagram_qa2z5r-1",
+    "lens_instagram_qa2z5r-3",
+    "lens_instagram_qa2z5r-4"
+   ],
+   "frames": [
+    "/tmp/tagtrial_29109deff2a9_new3/line01_lens_tiktok_1k4seur-0_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line01_lens_tiktok_1k4seur-0_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line01_lens_tiktok_1k4seur-1_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line01_lens_tiktok_1k4seur-1_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line01_lens_tiktok_1k4seur-2_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line01_lens_tiktok_1k4seur-2_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line01_lens_tiktok_1yzcfio-7_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line01_lens_tiktok_1yzcfio-7_1.jpg"
+   ],
+   "descs": [
+    "lens_tiktok_1k4seur-0(4.8s) 거치대의 삼각 다리를 펼치고 자석 부위에 스마트폰을 부착한 뒤 가로로 회",
+    "lens_tiktok_1k4seur-1(1.8s) 거치대 위에 가로로 거치된 스마트폰의 눈높이가 적절함을 손가락으로 가리키",
+    "lens_tiktok_1k4seur-2(1.6s) 스마트폰이 거치된 헤드 부분의 뒤쪽을 양손으로 잡고 부드럽게 앞뒤 각도를",
+    "lens_tiktok_1yzcfio-7(3.2s) 거치대를 다시 접어 스마트폰을 자석 부분에 부착함"
+   ]
+  },
+  {
+   "i": 2,
+   "text": "이건 바로 올인원 메탈 거치대",
+   "role": "전환",
+   "segs": [
+    "lens_tiktok_1k4seur-12",
+    "lens_tiktok_1yzcfio-3"
+   ],
+   "frames": [
+    "/tmp/tagtrial_29109deff2a9_new3/line02_lens_tiktok_1k4seur-12_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line02_lens_tiktok_1k4seur-12_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line02_lens_tiktok_1yzcfio-3_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line02_lens_tiktok_1yzcfio-3_1.jpg"
+   ],
+   "descs": [
+    "lens_tiktok_1k4seur-12(1.9s) 손으로 접이식 거치대를 V자 형태에서 일자로 완전히 접어 정리하는 모습.",
+    "lens_tiktok_1yzcfio-3(2.1s) 손으로 거치대를 더 넓게 펼쳐 십자 형태로 만듦"
+   ]
+  },
+  {
+   "i": 3,
+   "text": "이게 말도 안 되는 게 강력한 자석에 폰을 붙이고 가로 세로 각도를 자유롭게 맞출 수 있어",
+   "role": "작동",
+   "segs": [
+    "lens_instagram_8ap264-0",
+    "lens_instagram_8ap264-1",
+    "lens_instagram_8ap264-2",
+    "lens_instagram_8ap264-8",
+    "lens_instagram_8ap264-12",
+    "lens_instagram_8ap264-13",
+    "lens_instagram_8ap264-18",
+    "lens_tiktok_1k4seur-3"
+   ],
+   "frames": [
+    "/tmp/tagtrial_29109deff2a9_new3/line03_lens_instagram_8ap264-0_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line03_lens_instagram_8ap264-0_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line03_lens_instagram_8ap264-1_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line03_lens_instagram_8ap264-1_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line03_lens_instagram_8ap264-2_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line03_lens_instagram_8ap264-2_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line03_lens_instagram_8ap264-8_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line03_lens_instagram_8ap264-8_1.jpg"
+   ],
+   "descs": [
+    "lens_instagram_8ap264-0(0.8s) 거치대에 스마트폰이 부착된 모습, 전체적인 구조를 보여줌.",
+    "lens_instagram_8ap264-1(0.9s) 거치대의 다리가 펼쳐져 있고 각도를 조정하는 듯한 모습.",
+    "lens_instagram_8ap264-2(0.9s) 손으로 거치대 다리를 움직여 각도를 변경하는 모습.",
+    "lens_instagram_8ap264-8(0.8s) 거치대 다리 각도를 조정함."
+   ]
+  },
+  {
+   "i": 4,
+   "text": "하단 받침대를 펼치면 태블릿부터 심지어 무거운 노트북까지 흔들림 없이 고정할 수 있어",
+   "role": "심지어",
+   "segs": [
+    "lens_tiktok_1k4seur-4",
+    "lens_tiktok_1k4seur-5",
+    "lens_tiktok_1k4seur-7",
+    "lens_tiktok_1k4seur-9",
+    "lens_tiktok_1k4seur-10"
+   ],
+   "frames": [
+    "/tmp/tagtrial_29109deff2a9_new3/line04_lens_tiktok_1k4seur-4_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line04_lens_tiktok_1k4seur-4_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line04_lens_tiktok_1k4seur-5_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line04_lens_tiktok_1k4seur-5_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line04_lens_tiktok_1k4seur-7_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line04_lens_tiktok_1k4seur-7_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line04_lens_tiktok_1k4seur-9_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line04_lens_tiktok_1k4seur-9_1.jpg"
+   ],
+   "descs": [
+    "lens_tiktok_1k4seur-4(1.2s) 펼쳐낸 하단 홀더 부분 위에 스마트폰을 가로로 얹어 자석 없이도 안정감 ",
+    "lens_tiktok_1k4seur-5(1.9s) 거치대 하단 홀더 위에 무겁고 널찍한 태블릿 PC를 가로로 안착시켜 지탱",
+    "lens_tiktok_1k4seur-7(1.8s) X자로 펼쳐진 거치대의 후면 지지대 바를 끝까지 바깥으로 당겨내 각도를 ",
+    "lens_tiktok_1k4seur-9(1.2s) 전개된 거치대 받침대 위에 실버 노트북을 가볍게 조심스럽게 안착시키는 모"
+   ]
+  },
+  {
+   "i": 5,
+   "text": "사실상 이거 하나로 온갖 스마트 기기를 다 세울 수 있다는 거",
+   "role": "감정",
+   "segs": [
+    "lens_tiktok_1k4seur-11",
+    "lens_tiktok_1yzcfio-5",
+    "lens_tiktok_1yzcfio-6"
+   ],
+   "frames": [
+    "/tmp/tagtrial_29109deff2a9_new3/line05_lens_tiktok_1k4seur-11_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line05_lens_tiktok_1k4seur-11_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line05_lens_tiktok_1yzcfio-5_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line05_lens_tiktok_1yzcfio-5_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line05_lens_tiktok_1yzcfio-6_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line05_lens_tiktok_1yzcfio-6_1.jpg"
+   ],
+   "descs": [
+    "lens_tiktok_1k4seur-11(1.3s) 스탠드 뒤편 하단을 한 손으로 단단히 짚고, 손가락으로 거치대를 눌러 짱",
+    "lens_tiktok_1yzcfio-5(1.2s) 접힌 거치대를 손으로 돌려 각도를 조정함",
+    "lens_tiktok_1yzcfio-6(4.9s) 거치대 다리를 단계별로 들어 올려 노트북 스탠드로 고정함"
+   ]
+  },
+  {
+   "i": 6,
+   "text": "근데 진짜 충격적인 포인트는 쏙 접어서 주머니에 넣는 휴대성에 가격도 고작 부담 없는 수준이라 가성비와 성능까지 3박자를 다 맞춘 제품이라고",
+   "role": "전환",
+   "segs": [
+    "lens_tiktok_1k4seur-13",
+    "lens_tiktok_1yzcfio-4",
+    "lens_tiktok_1yzcfio-11",
+    "lens_tiktok_1yzcfio-12",
+    "lens_instagram_1fkofme-0"
+   ],
+   "frames": [
+    "/tmp/tagtrial_29109deff2a9_new3/line06_lens_tiktok_1k4seur-13_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line06_lens_tiktok_1k4seur-13_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line06_lens_tiktok_1yzcfio-4_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line06_lens_tiktok_1yzcfio-4_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line06_lens_tiktok_1yzcfio-11_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line06_lens_tiktok_1yzcfio-11_1.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line06_lens_tiktok_1yzcfio-12_0.jpg",
+    "/tmp/tagtrial_29109deff2a9_new3/line06_lens_tiktok_1yzcfio-12_1.jpg"
+   ],
+   "descs": [
+    "lens_tiktok_1k4seur-13(1.7s) 접힌 거치대를 펼쳐 탁자 위에 삼각대처럼 안정적으로 세워두는 모습.",
+    "lens_tiktok_1yzcfio-4(2.3s) 접힌 거치대를 가방 주머니에 쏙 넣음",
+    "lens_tiktok_1yzcfio-11(3.4s) 거치대를 손으로 만지며 재질감을 보여주고 다시 접음",
+    "lens_tiktok_1yzcfio-12(3.9s) 손에 들린 거치대의 헤드 부분을 아래로 접어 일자 형태로 만드는 과정."
+   ]
+  }
+ ],
+ "mode": "new",
+ "job": "29109deff2a9",
+ "secs": 288.5,
+ "tags": {
+  "s0": [
+   {
+    "seg_id": "lens_tiktok_1k4seur-0",
+    "start": 0.0,
+    "end": 4.767,
+    "label": "스마트폰 거치 시연",
+    "use_point": "자석식이라 폰을 갖다 대기만 하면 착 붙고 가로세로 회전도 편해요",
+    "change": "스마트폰이 거치대 자석에 부착되어 가로로 회전되었다",
+    "product_benefits": [
+     "자력으로 스마트폰을 안정적으로 고정함",
+     "360도 회전이 가능하여 가로/세로 거치가 편리함"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "특징",
+    "hook_type": "클로즈업",
+    "hook_why": "자석에 스마트폰이 착 붙음",
+    "is_outro": false,
+    "moments": "0~2초 거치대 다리 펼침, 2~4초 스마트폰 자석 부착 및 가로로 회전",
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-1",
+    "start": 4.767,
+    "end": 6.6,
+    "label": "거치 높이 소개",
+    "use_point": "눈높이에 딱 맞는 최적의 높이로 목과 어깨의 피로를 덜어줍니다",
+    "change": "스마트폰 높이를 손가락으로 가리켜 강조했다",
+    "product_benefits": [
+     "사용하기 편리한 안정적이고 적절한 고정 높이를 제공함"
+    ],
+    "is_key": false,
+    "shot_role": "완성",
+    "appeal_kind": "특징",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-2",
+    "start": 6.6,
+    "end": 8.233,
+    "label": "각도 조절 시연",
+    "use_point": "원하는 시야각에 맞춰 부드럽고 빡빡하지 않게 각도 조절이 돼요",
+    "change": "거치대 헤드 각도가 부드럽게 뒤로 기울어졌다",
+    "product_benefits": [
+     "유연하고 자유로운 각도 조절 힌지가 설계됨"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-3",
+    "start": 8.233,
+    "end": 9.3,
+    "label": "고정 받침대 전개",
+    "use_point": "하단의 숨겨진 고정 장치를 아래로 쏙 내려주기만 하면",
+    "change": "다리 밑부분의 고정 받침대가 아래로 펼쳐졌다",
+    "product_benefits": [
+     "기기를 올려놓을 수 있는 고정식 홀더가 다리에 내장됨"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "특징",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-4",
+    "start": 9.3,
+    "end": 10.5,
+    "label": "일반 거치 시연",
+    "use_point": "맥세이프가 없는 기종이라도 흘러내림 없이 안정적으로 올릴 수 있어요",
+    "change": "스마트폰이 하단 받침대에 놓여 거치되었다",
+    "product_benefits": [
+     "마그네틱 비지원 스마트폰 기종도 넓은 홀더로 거치 가능함"
+    ],
+    "is_key": true,
+    "shot_role": "설치",
+    "appeal_kind": "활용",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-5",
+    "start": 10.5,
+    "end": 12.433,
+    "label": "태블릿 거치 시연",
+    "use_point": "화면이 큰 태블릿까지 미끄러짐 없이 거뜬하게 소화합니다",
+    "change": "대화면 태블릿이 거치대 위에 안정감 있게 안착되었다",
+    "product_benefits": [
+     "넓은 태블릿 디바이스도 미끄러짐 없이 거치할 수 있는 강력한 지지력"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "효과",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-6",
+    "start": 12.433,
+    "end": 15.367,
+    "label": "거치대 형태 변형 시연",
+    "use_point": "양옆으로 쫙 펼쳐주면 넓은 크로스 형태로 변신해 노트북도 받쳐요",
+    "change": "거치대의 지지 다리가 넓은 X자 형태로 완전히 확장되었다",
+    "product_benefits": [
+     "가로형 노트북 지지를 위해 좌우 크로스 형태로 전개되는 프레임 설계"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "hook_type": "반전",
+    "hook_why": "다리가 사방으로 넓게 펼쳐짐",
+    "is_outro": false,
+    "moments": "0~2초 삼각 다리를 잡고 늘림, 2~3초 X자 형태로 완전 전개됨",
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-7",
+    "start": 15.367,
+    "end": 17.2,
+    "label": "후면 지지대 세팅",
+    "use_point": "뒷면에 장착된 고정용 보조 지지대를 당겨 고정해 주기만 하면 끝",
+    "change": "거치대의 후면 각도 고정 프레임이 세워져 펼쳐졌다",
+    "product_benefits": [
+     "노트북 하중을 견뎌내기 위한 별도의 백 서포트 프레임 내장"
+    ],
+    "is_key": true,
+    "shot_role": "설치",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-8",
+    "start": 17.2,
+    "end": 18.0,
+    "label": "노트북 스탠드 준비 완료",
+    "use_point": "휴대용 미니 거치대에서 든든한 노트북 스탠드로 완벽히 조립됐어요",
+    "change": "노트북 지지가 가능한 완벽한 스탠드 형태가 준비되었다",
+    "product_benefits": [
+     "접이식 프레임으로 노트북도 안정감 있게 하단 고정이 가능한 거치대 형태"
+    ],
+    "is_key": false,
+    "shot_role": "완성",
+    "appeal_kind": "외관",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-9",
+    "start": 18.0,
+    "end": 19.233,
+    "label": "노트북 거치 시연",
+    "use_point": "노트북을 스탠드 프레임 홈 위에 슥 올려놓기만 하면 장착 완료",
+    "change": "실버 노트북이 거치 스탠드 위에 안정적으로 올려졌다",
+    "product_benefits": [
+     "일반 노트북 무게를 고스란히 받아내 균형을 유지함"
+    ],
+    "is_key": true,
+    "shot_role": "설치",
+    "appeal_kind": "활용",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-10",
+    "start": 19.233,
+    "end": 20.467,
+    "label": "안정성 테스트 시연",
+    "use_point": "화면을 열고 키보드를 쳐도 뒤로 밀리거나 휘청이지 않고 짱짱해요",
+    "change": "노트북 모니터가 열리며 정상적으로 고정 상태를 유지했다",
+    "product_benefits": [
+     "노트북 개폐 동작 중에도 앞뒤 쏠림 현상 없는 정밀한 무게 밸런스"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "효과",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-11",
+    "start": 20.467,
+    "end": 21.8,
+    "label": "지지력 내구성 확인",
+    "use_point": "강한 타이핑이나 누름에도 흔들림 없는 완벽한 내구성을 가졌습니다",
+    "change": "노트북 스탠드가 강한 압력에도 유격 없이 견고하게 지탱되었다",
+    "product_benefits": [
+     "뒤틀림 방지 및 고하중 기기를 지탱하는 압도적 메탈 프레임 강도"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "장점",
+    "hook_type": "충격",
+    "hook_why": "노트북을 위에서 세게 눌러도 버팀",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-12",
+    "start": 21.8,
+    "end": 23.733,
+    "label": "제품 수납 시연",
+    "use_point": "사용 안 할 땐 이렇게 한 손에 쏙 들어오게 접을 수 있어요.",
+    "change": "거치대가 V자에서 일자 막대 형태로 접혔다.",
+    "product_benefits": [
+     "완전히 접으면 한 손에 들어오는 슬림한 막대 형태가 된다"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "장점",
+    "hook_type": "반전",
+    "hook_why": "V자 거치대가 일자로 깔끔하게 접힘",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1k4seur-13",
+    "start": 23.733,
+    "end": 25.472993,
+    "label": "제품 설치 시연",
+    "use_point": "펼치기만 하면 어디든 바로 안정적인 거치대로 변신합니다.",
+    "change": "거치대가 삼각대 형태로 펼쳐져 탁자에 세워졌다.",
+    "product_benefits": [
+     "별도의 고정 없이 펼치는 것만으로 안정적인 삼각대 거치 모드가 된다"
+    ],
+    "is_key": true,
+    "shot_role": "설치",
+    "appeal_kind": "특징",
+    "hook_type": "반전",
+    "hook_why": "막대에서 삼각대 구조로 펼쳐짐",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   }
+  ],
+  "s1": [
+   {
+    "seg_id": "lens_tiktok_1yzcfio-0",
+    "start": 0.0,
+    "end": 0.7,
+    "label": "제품 소개",
+    "use_point": "그저 그런 거치대인 줄 아셨죠?",
+    "change": "거치대가 펼쳐지기 시작함",
+    "is_key": false,
+    "shot_role": "기타",
+    "appeal_kind": "외관",
+    "hook_type": "클로즈업",
+    "hook_why": "제품 클로즈업",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-1",
+    "start": 0.7,
+    "end": 1.367,
+    "label": "제품 소개",
+    "use_point": "놀라운 3-in-1 변신 도구거든요.",
+    "product_benefits": [
+     "접었을 때 콤팩트한 사이즈"
+    ],
+    "is_key": false,
+    "shot_role": "기타",
+    "appeal_kind": "외관",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-2",
+    "start": 1.367,
+    "end": 1.9,
+    "label": "제품 소개",
+    "use_point": "펼치면 완벽한 거치대로 변신합니다.",
+    "change": "거치대가 날개 형태로 변함",
+    "is_key": false,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "hook_type": "반전",
+    "hook_why": "접힌 상태에서 펼쳐짐",
+    "is_outro": false,
+    "tempo": "빠름",
+    "speed_hint": 0.8
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-3",
+    "start": 1.9,
+    "end": 4.0,
+    "label": "제품 변형 시연",
+    "use_point": "접었을 땐 작고, 펼치면 무엇이든 다 돼요.",
+    "change": "거치대가 십자형 스탠드로 펼쳐짐",
+    "product_benefits": [
+     "다양한 형태로 변형 가능"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "hook_type": "반전",
+    "hook_why": "막대 형태에서 십자 형태로 변함",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-4",
+    "start": 4.0,
+    "end": 6.267,
+    "label": "휴대성 강조",
+    "use_point": "가방에 쏙, 공간 차지 걱정도 없죠.",
+    "change": "가방 주머니에 거치대가 수납됨",
+    "product_benefits": [
+     "휴대성이 뛰어난 접이식 디자인"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "장점",
+    "hook_type": "충격",
+    "hook_why": "작게 접혀 가방에 쏙 들어감",
+    "is_outro": false,
+    "moments": "0~1.5초 넣기 시작, 1.5~3초 수납 완료, 3~6초 정지",
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-5",
+    "start": 6.267,
+    "end": 7.5,
+    "label": "제품 구조 확인",
+    "use_point": "펼치면 어떤 기기도 든든하게 받쳐줘요.",
+    "change": "거치대 각도가 조절됨",
+    "product_benefits": [
+     "자유로운 각도 조절"
+    ],
+    "is_key": false,
+    "shot_role": "조작",
+    "appeal_kind": "특징",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-6",
+    "start": 7.5,
+    "end": 12.4,
+    "label": "노트북 거치 시연",
+    "use_point": "노트북 작업할 때 눈높이가 딱 맞아요.",
+    "change": "노트북 거치대로 모양이 완성됨",
+    "product_benefits": [
+     "노트북 스탠드로 활용 가능"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "효과",
+    "is_outro": false,
+    "moments": "0~2초 다리 펴기, 2~4초 단계별 고정, 4~5초 완료",
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-7",
+    "start": 12.4,
+    "end": 15.567,
+    "label": "스마트폰 거치 시연",
+    "use_point": "자석 거치대로 변신해서 폰도 딱 붙죠.",
+    "change": "스마트폰이 자석에 부착됨",
+    "product_benefits": [
+     "마그네틱 스마트폰 거치 가능"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "기능",
+    "hook_type": "반전",
+    "hook_why": "스탠드에서 자석 거치대로 변화",
+    "is_outro": false,
+    "moments": "0~1.5초 거치대 접기, 1.5~3초 자석 부착",
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-8",
+    "start": 15.567,
+    "end": 17.2,
+    "label": "각도 조절 시연",
+    "use_point": "가로로, 세로로 자유롭게 돌려 쓰세요.",
+    "change": "스마트폰 방향이 세로에서 가로로 바뀜",
+    "product_benefits": [
+     "가로/세로 방향 전환 가능"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "빠름",
+    "speed_hint": 0.8
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-9",
+    "start": 17.2,
+    "end": 19.867,
+    "label": "태블릿 거치 준비",
+    "use_point": "더 넓게 펼치면 태블릿도 완벽하게 잡아줍니다.",
+    "change": "거치대 지지대가 넓게 펴짐",
+    "product_benefits": [
+     "넓은 지지대로 태블릿 거치 가능"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "moments": "0~1.5초 날개 펼침, 1.5~2.7초 위치 고정",
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-10",
+    "start": 19.867,
+    "end": 24.233,
+    "label": "태블릿 사용 시연",
+    "use_point": "메모하거나 그림 그릴 때 이만한 게 없죠.",
+    "change": "태블릿이 안정적으로 거치됨",
+    "product_benefits": [
+     "태블릿 스탠드로 안정적인 거치"
+    ],
+    "is_key": true,
+    "shot_role": "사용중",
+    "appeal_kind": "활용",
+    "is_outro": false,
+    "moments": "0~1.5초 거치, 1.5~4.3초 사용 모습",
+    "tempo": "느림",
+    "speed_hint": 1.2
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-11",
+    "start": 24.233,
+    "end": 27.633,
+    "label": "제품 내구성 강조",
+    "use_point": "튼튼한 알루미늄인데 무게는 정말 가벼워요.",
+    "change": "거치대가 접힘",
+    "product_benefits": [
+     "튼튼한 알루미늄 합금 소재",
+     "가벼운 무게감"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "외관",
+    "is_outro": false,
+    "moments": "0~2초 재질 확인, 2~3.4초 접기",
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_tiktok_1yzcfio-12",
+    "start": 27.633,
+    "end": 31.567,
+    "label": "제품 수납 시연",
+    "use_point": "한 손에 쏙 들어올 만큼 작게 접혀서 휴대하기 정말 간편해요.",
+    "change": "거치대가 일자형으로 완전히 접혔다.",
+    "product_benefits": [
+     "접었을 때 한 손에 들어오는 콤팩트한 사이즈로 휴대성이 뛰어남"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "특징",
+    "hook_type": "반전",
+    "hook_why": "거치대가 일자 막대 모양으로 완전히 접힘",
+    "is_outro": true,
+    "moments": "0~2초 헤드 접기, 2~4초 정지",
+    "tempo": "빠름",
+    "speed_hint": 1.0
+   }
+  ],
+  "s2": [
+   {
+    "seg_id": "lens_instagram_8ap264-0",
+    "start": 0.0,
+    "end": 0.8,
+    "label": "제품 거치 시연",
+    "use_point": "자석으로 착! 갖다 대기만 해도 완벽하게 거치돼요.",
+    "product_benefits": [
+     "자석을 이용한 간편한 스마트폰 거치"
+    ],
+    "is_key": true,
+    "shot_role": "사용중",
+    "appeal_kind": "기능",
+    "hook_type": "클로즈업",
+    "hook_why": "제품과 스마트폰이 결합된 모습",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-1",
+    "start": 0.8,
+    "end": 1.7,
+    "label": "다리 조절 시연",
+    "use_point": "내 마음대로 각도 조절, 눈높이에 딱 맞출 수 있어요.",
+    "change": "거치대 다리가 펼쳐졌다",
+    "product_benefits": [
+     "다양한 각도 조절 가능"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "장점",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-2",
+    "start": 1.7,
+    "end": 2.567,
+    "label": "각도 조절 시연",
+    "use_point": "원하는 각도를 찾을 때까지 부드럽게 딱 고정됩니다.",
+    "change": "거치대 다리 각도가 변함",
+    "product_benefits": [
+     "다각도 자유 조절 기능"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-3",
+    "start": 2.567,
+    "end": 3.967,
+    "label": "제품 구조 소개",
+    "use_point": "접이식이라 정말 가볍고 콤팩트하죠?",
+    "product_benefits": [
+     "콤팩트한 디자인"
+    ],
+    "is_key": false,
+    "shot_role": "기타",
+    "appeal_kind": "외관",
+    "hook_type": "반전",
+    "hook_why": "펼쳐진 상태에서 회전함",
+    "is_outro": false,
+    "moments": "0~1초 회전, 1~2초 정지, 2~4초 다시 회전",
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-4",
+    "start": 3.967,
+    "end": 4.8,
+    "label": "태블릿 거치 실증",
+    "use_point": "태블릿도 안정적으로 거치, 흔들림 없이 튼튼해요.",
+    "change": "태블릿이 거치대에 올려짐",
+    "product_benefits": [
+     "안정적인 거치 성능"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "장점",
+    "hook_type": "충격",
+    "hook_why": "안정적으로 기기를 지지함",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-5",
+    "start": 4.8,
+    "end": 5.533,
+    "label": "거치 안정성 강조",
+    "use_point": "영상 볼 때 이만한 각도가 없죠.",
+    "product_benefits": [
+     "태블릿 활용도"
+    ],
+    "is_key": true,
+    "shot_role": "사용중",
+    "appeal_kind": "장점",
+    "is_outro": false,
+    "tempo": "느림",
+    "speed_hint": 1.2
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-6",
+    "start": 5.533,
+    "end": 6.3,
+    "label": "스마트폰 거치 시연",
+    "use_point": "스마트폰도 물론, 자석이라 더 간편해요.",
+    "change": "스마트폰이 거치됨",
+    "product_benefits": [
+     "기기 호환성"
+    ],
+    "is_key": true,
+    "shot_role": "사용중",
+    "appeal_kind": "활용",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-7",
+    "start": 6.3,
+    "end": 7.667,
+    "label": "휴대성 크기 비교",
+    "use_point": "접으면 스마트폰만 해서 가방에 쏙 들어가요.",
+    "change": "거치대가 접힘",
+    "product_benefits": [
+     "뛰어난 휴대성"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "외관",
+    "hook_type": "비포애프터",
+    "hook_why": "접힌 거치대와 스마트폰의 크기 비교",
+    "is_outro": false,
+    "moments": "0~3초 비교, 3~7초 제품만 보여줌",
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-8",
+    "start": 7.667,
+    "end": 8.467,
+    "label": "각도 조절 시연",
+    "use_point": "원하는 각도로 툭툭, 조절이 정말 쉬워요.",
+    "change": "다리 각도 변경",
+    "product_benefits": [
+     "직관적인 조절 방식"
+    ],
+    "is_key": false,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-9",
+    "start": 8.467,
+    "end": 8.967,
+    "label": "제품 디테일 강조",
+    "use_point": "깔끔한 디자인에 견고함까지 챙겼습니다.",
+    "product_benefits": [
+     "견고한 마감"
+    ],
+    "is_key": false,
+    "shot_role": "기타",
+    "appeal_kind": "외관",
+    "hook_type": "클로즈업",
+    "hook_why": "제품 마감 상세",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-10",
+    "start": 8.967,
+    "end": 9.967,
+    "label": "조립 방식 시연",
+    "use_point": "사용할 땐 이렇게 싹 펴주기만 하면 끝!",
+    "change": "거치대가 펼쳐짐",
+    "product_benefits": [
+     "간편한 펼침 구조"
+    ],
+    "is_key": true,
+    "shot_role": "설치",
+    "appeal_kind": "특징",
+    "hook_type": "반전",
+    "hook_why": "접힌 상태가 펼쳐짐",
+    "is_outro": false,
+    "tempo": "빠름",
+    "speed_hint": 0.8
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-11",
+    "start": 9.967,
+    "end": 10.867,
+    "label": "수납 휴대 확인",
+    "use_point": "가방 옆주머니에 쏙, 휴대용으로 정말 딱이죠.",
+    "change": "거치대가 수납됨",
+    "product_benefits": [
+     "간편한 수납"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "장점",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-12",
+    "start": 10.867,
+    "end": 11.867,
+    "label": "거치대 다리 조절",
+    "use_point": "내 마음대로 각도 조절이 자유로워요.",
+    "change": "거치대 다리가 펼쳐졌다",
+    "product_benefits": [
+     "자유로운 각도 조절이 가능함"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "활용",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-13",
+    "start": 11.867,
+    "end": 12.933,
+    "label": "각도 조절 시연",
+    "use_point": "눈높이에 딱 맞게 미세 조절도 문제없죠.",
+    "change": "거치대 다리 각도가 변경됨",
+    "product_benefits": [
+     "다단계 각도 조절 가능"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-14",
+    "start": 12.933,
+    "end": 13.533,
+    "label": "거치대 거치 시연",
+    "use_point": "어디든 놓기만 하면 든든한 거치대 완성.",
+    "change": "거치대가 십자형으로 펼쳐짐",
+    "product_benefits": [
+     "십자형 구조로 안정적 거치"
+    ],
+    "is_key": true,
+    "shot_role": "설치",
+    "appeal_kind": "기능",
+    "hook_type": "반전",
+    "hook_why": "접힌 상태에서 십자 형태로 변신",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-15",
+    "start": 13.533,
+    "end": 14.067,
+    "label": "제품 구조 확인",
+    "use_point": "슬림한 디자인에 견고함까지 챙겼어요.",
+    "product_benefits": [
+     "슬림하고 깔끔한 마감"
+    ],
+    "is_key": false,
+    "shot_role": "사용중",
+    "appeal_kind": "외관",
+    "hook_type": "클로즈업",
+    "hook_why": "다리 끝부분 근접 촬영",
+    "is_outro": false,
+    "tempo": "느림",
+    "speed_hint": 1.2
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-16",
+    "start": 14.067,
+    "end": 14.8,
+    "label": "태블릿 거치 실증",
+    "use_point": "태블릿도 안정적으로 싹 잡아줍니다.",
+    "change": "태블릿이 거치대에 올려짐",
+    "product_benefits": [
+     "태블릿 무게를 지탱하는 안정성"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "효과",
+    "hook_type": "클로즈업",
+    "hook_why": "태블릿 거치 장면 확대",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-17",
+    "start": 14.8,
+    "end": 15.8,
+    "label": "거치 안정성 확인",
+    "use_point": "흔들림 없이 탄탄하게 받쳐주니까 불안하지 않죠.",
+    "product_benefits": [
+     "흔들림 없는 거치 성능"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "장점",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-18",
+    "start": 15.8,
+    "end": 17.667,
+    "label": "스마트폰 활용 시연",
+    "use_point": "손에 쥐기 편한 그립으로도 딱이에요.",
+    "change": "스마트폰이 거치대에 부착됨",
+    "product_benefits": [
+     "거치 및 손잡이용으로 멀티 활용"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "활용",
+    "hook_type": "반전",
+    "hook_why": "거치대를 손잡이로 변형 사용",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_8ap264-19",
+    "start": 17.667,
+    "end": 19.019002,
+    "label": "제품 수납 시연",
+    "use_point": "작게 접히니까 노트북 위에도 쏙 들어가요.",
+    "change": "거치대가 접혀 노트북 위에 놓임",
+    "product_benefits": [
+     "휴대성이 뛰어난 초소형 폴딩"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "특징",
+    "hook_type": "클로즈업",
+    "hook_why": "노트북 위 제품 배치 장면",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   }
+  ],
+  "s3": [
+   {
+    "seg_id": "lens_instagram_1fkofme-0",
+    "start": 0.0,
+    "end": 1.133,
+    "label": "거치대 펼치기 시연",
+    "use_point": "접혀있던 막대를 툭 펼치면 바로 삼각대가 됩니다.",
+    "change": "거치대가 십자 형태로 펼쳐졌다.",
+    "product_benefits": [
+     "접이식 구조로 보관이 간편함"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "특징",
+    "hook_type": "반전",
+    "hook_why": "일자 막대가 십자로 변신",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_1fkofme-1",
+    "start": 1.133,
+    "end": 2.067,
+    "label": "제품 구조 확인",
+    "use_point": "가볍고 심플해서 어디든 들고 다니기 딱이죠.",
+    "product_benefits": [
+     "휴대성이 좋은 경량 디자인"
+    ],
+    "is_key": false,
+    "shot_role": "사용중",
+    "appeal_kind": "외관",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_1fkofme-2",
+    "start": 2.067,
+    "end": 3.3,
+    "label": "다리 각도 조절 시연",
+    "use_point": "다리 끝도 미세하게 조절해서 완벽하게 고정하세요.",
+    "change": "거치대 다리가 안정적으로 고정되었다.",
+    "product_benefits": [
+     "안정적인 다리 고정 기능"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "느림",
+    "speed_hint": 1.2
+   },
+   {
+    "seg_id": "lens_instagram_1fkofme-3",
+    "start": 3.3,
+    "end": 3.9,
+    "label": "노트북 거치 시연",
+    "use_point": "노트북도 거뜬하게 버티는 튼튼함을 보세요.",
+    "change": "거치대 위에 노트북이 안정적으로 거치되었다.",
+    "product_benefits": [
+     "노트북 거치가 가능한 높은 하중 지지력"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "활용",
+    "hook_type": "충격",
+    "hook_why": "작은 삼각대가 노트북을 지탱함",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_1fkofme-4",
+    "start": 3.9,
+    "end": 4.867,
+    "label": "자석 부착 시연",
+    "use_point": "가까이 가져가기만 해도 자석처럼 착 붙습니다.",
+    "change": "스마트폰이 거치대에 자석으로 부착되었다.",
+    "product_benefits": [
+     "편리한 마그네틱 부착 방식"
+    ],
+    "is_key": true,
+    "shot_role": "설치",
+    "appeal_kind": "기능",
+    "hook_type": "클로즈업",
+    "hook_why": "스마트폰이 자석에 붙는 순간",
+    "is_outro": false,
+    "tempo": "빠름",
+    "speed_hint": 0.8
+   },
+   {
+    "seg_id": "lens_instagram_1fkofme-5",
+    "start": 4.867,
+    "end": 5.367,
+    "label": "부착 상태 확인",
+    "use_point": "한번 붙으면 흔들림 없이 안정적이에요.",
+    "product_benefits": [
+     "흔들림 없는 고정력"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "특징",
+    "is_outro": false,
+    "tempo": "느림",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_1fkofme-6",
+    "start": 5.367,
+    "end": 5.967,
+    "label": "각도 조절 시연",
+    "use_point": "영상 볼 때 제일 편한 각도로 딱 맞춰보세요.",
+    "change": "스마트폰의 각도가 변경되었다.",
+    "product_benefits": [
+     "자유로운 각도 조절"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_1fkofme-7",
+    "start": 5.967,
+    "end": 7.233,
+    "label": "탈착 시연",
+    "use_point": "떼어낼 때도 그냥 쓱, 너무 간편하죠?",
+    "change": "스마트폰과 거치대가 분리되었다.",
+    "product_benefits": [
+     "간편한 탈착"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_1fkofme-8",
+    "start": 7.233,
+    "end": 8.4,
+    "label": "거치대 접기 시연",
+    "use_point": "사용 후엔 이렇게 다시 일자로 찹 접어주세요.",
+    "change": "거치대가 일자 형태로 접혔다.",
+    "product_benefits": [
+     "콤팩트한 보관 방식"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "특징",
+    "hook_type": "반전",
+    "hook_why": "십자가가 다시 일자로 접힘",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_1fkofme-9",
+    "start": 8.4,
+    "end": 10.009002,
+    "label": "제품 구성 소개",
+    "use_point": "깔끔한 디자인으로 어디든 어울리는 거치대입니다.",
+    "change": "책상 위에 접힌 제품 두 개가 놓였다.",
+    "product_benefits": [
+     "깔끔하고 심플한 디자인"
+    ],
+    "is_key": false,
+    "shot_role": "완성",
+    "appeal_kind": "구성",
+    "is_outro": true,
+    "tempo": "느림",
+    "speed_hint": 1.2
+   }
+  ],
+  "s4": [
+   {
+    "seg_id": "lens_instagram_qa2z5r-0",
+    "start": 0.0,
+    "end": 2.7666666666666666,
+    "label": "제품 소개",
+    "use_point": "거치대가 이렇게 작다고? 휴대성 하나는 끝내주네요.",
+    "product_benefits": [
+     "접었을 때 한 손에 들어오는 콤팩트한 크기"
+    ],
+    "is_key": false,
+    "shot_role": "사용중",
+    "appeal_kind": "외관",
+    "hook_type": "클로즈업",
+    "hook_why": "제품을 손에 쥐고 강조함",
+    "is_outro": false,
+    "tempo": "느림",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_qa2z5r-1",
+    "start": 2.7666666666666666,
+    "end": 5.5,
+    "label": "시연",
+    "use_point": "폰만 갖다 대면 착! 1초 만에 거치 완료예요.",
+    "change": "거치대가 삼각대 형태로 펼쳐졌다",
+    "product_benefits": [
+     "삼각대 형태로 안정적인 거치 가능"
+    ],
+    "is_key": true,
+    "shot_role": "설치",
+    "appeal_kind": "활용",
+    "hook_type": "반전",
+    "hook_why": "접혀있던 거치대가 삼각대처럼 펼쳐짐",
+    "is_outro": false,
+    "moments": "0~1초 삼각대로 펼침, 1~3초 스마트폰 거치",
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_qa2z5r-2",
+    "start": 5.5,
+    "end": 7.633333333333334,
+    "label": "안정성 확인",
+    "use_point": "태블릿을 올려도 흔들림 없이 튼튼하게 잡아줘요.",
+    "product_benefits": [
+     "태블릿을 거치해도 흔들림 없는 안정성"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "장점",
+    "hook_type": "충격",
+    "hook_why": "무거운 태블릿을 흔들어도 고정됨",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "lens_instagram_qa2z5r-3",
+    "start": 7.633333333333334,
+    "end": 9.933333333333334,
+    "label": "자석 부착 시연",
+    "use_point": "사진 찍을 때도 자석이라 툭 갖다 대면 바로 고정돼요.",
+    "change": "스마트폰이 자석에 부착되었다",
+    "product_benefits": [
+     "자석식 부착으로 간편한 사용성"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "hook_type": "클로즈업",
+    "hook_why": "자석에 착 붙는 동작 클로즈업",
+    "is_outro": false,
+    "tempo": "빠름",
+    "speed_hint": 0.8
+   },
+   {
+    "seg_id": "lens_instagram_qa2z5r-4",
+    "start": 9.933333333333334,
+    "end": 16.066666666666666,
+    "label": "사용 환경 시연",
+    "use_point": "영상 볼 때나 촬영할 때, 이거 하나면 든든하죠.",
+    "product_benefits": [
+     "영상 시청 및 촬영 등 다용도 활용 가능"
+    ],
+    "is_key": false,
+    "shot_role": "사용중",
+    "appeal_kind": "활용",
+    "is_outro": false,
+    "moments": "0~3초 탁자 위 거치 모습, 3~6초 수납 예시",
+    "tempo": "느림",
+    "speed_hint": 1.0
+   }
+  ],
+  "s5": [
+   {
+    "seg_id": "ierrJ6wJ-Oc-0",
+    "start": 0.0,
+    "end": 1.95,
+    "label": "제품 구조 소개",
+    "use_point": "접혀있던 막대가 펴지면서 순식간에 삼각대로 변신해요",
+    "change": "거치대가 삼각대 형태로 펼쳐짐",
+    "product_benefits": [
+     "접이식 구조로 휴대와 설치가 간편함"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "외관",
+    "hook_type": "반전",
+    "hook_why": "접힌 막대가 십자로 펴짐",
+    "is_outro": false,
+    "tempo": "빠름",
+    "speed_hint": 0.8
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-1",
+    "start": 1.95,
+    "end": 2.833,
+    "label": "조작 방법 시연",
+    "use_point": "원하는 각도로 자유롭게 조절할 수 있어서 정말 편리하죠",
+    "change": "거치대의 각도가 조정됨",
+    "product_benefits": [
+     "자유로운 각도 조절 가능"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-2",
+    "start": 2.833,
+    "end": 3.483,
+    "label": "스마트폰 거치 시연",
+    "use_point": "스마트폰을 올리면 바로 영상 시청 준비 완료입니다",
+    "change": "스마트폰이 거치대에 세로로 거치됨",
+    "product_benefits": [
+     "스마트폰 세로 거치 가능"
+    ],
+    "is_key": true,
+    "shot_role": "사용중",
+    "appeal_kind": "활용",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-3",
+    "start": 3.483,
+    "end": 4.05,
+    "label": "거치 방향 조절 시연",
+    "use_point": "가로로 돌리면 영화나 유튜브 보기 딱 좋은 각도가 돼요",
+    "change": "스마트폰 거치 방향이 가로로 바뀜",
+    "product_benefits": [
+     "가로/세로 방향 자유 전환"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-4",
+    "start": 4.05,
+    "end": 4.833,
+    "label": "제품 수납 시연",
+    "use_point": "다 썼으면 이렇게 반으로 착 접어서 보관하세요",
+    "change": "삼각대가 막대 형태로 접힘",
+    "product_benefits": [
+     "컴팩트하게 접히는 휴대성"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "외관",
+    "hook_type": "반전",
+    "hook_why": "삼각대가 다시 막대로 접힘",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-5",
+    "start": 4.833,
+    "end": 5.4,
+    "label": "설치 시연",
+    "use_point": "복잡할 것 없이 그냥 펼치기만 하면 끝이니까 정말 간편하죠",
+    "change": "거치대가 펼쳐져 고정됨",
+    "product_benefits": [
+     "빠른 설치와 접이식 디자인"
+    ],
+    "is_key": true,
+    "shot_role": "설치",
+    "appeal_kind": "특징",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-6",
+    "start": 5.4,
+    "end": 6.15,
+    "label": "제품 설치 시연",
+    "use_point": "어디서든 1초 만에 거치대 완성, 정말 대박 아이템이죠",
+    "change": "거치대의 다리가 벌어짐",
+    "product_benefits": [
+     "빠른 설치 가능"
+    ],
+    "is_key": true,
+    "shot_role": "설치",
+    "appeal_kind": "활용",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-7",
+    "start": 6.15,
+    "end": 7.3,
+    "label": "거치 기능 확인",
+    "use_point": "흔들림 없이 탄탄하게 잡아주니까 거치 안정감이 남달라요",
+    "change": "스마트폰이 안정적으로 거치됨",
+    "product_benefits": [
+     "안정적인 기기 거치"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "장점",
+    "hook_type": "클로즈업",
+    "hook_why": "제품 사용 과정을 근접 촬영",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-8",
+    "start": 7.3,
+    "end": 8.483,
+    "label": "사용성 확인",
+    "use_point": "이렇게 영상 몰입도가 확 살아납니다",
+    "change": "화면 시야가 확보됨",
+    "product_benefits": [
+     "최적의 시청 환경 제공"
+    ],
+    "is_key": true,
+    "shot_role": "사용중",
+    "appeal_kind": "효과",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-9",
+    "start": 8.483,
+    "end": 9.583,
+    "label": "휴대성 강조 시연",
+    "use_point": "가방에 넣으면 있는지 없는지도 모를 만큼 작고 가벼워요",
+    "change": "거치대가 휴대 가능한 크기로 보임",
+    "product_benefits": [
+     "초경량 및 미니멀 사이즈"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "장점",
+    "hook_type": "클로즈업",
+    "hook_why": "가방 앞에서 제품 크기 강조",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-10",
+    "start": 9.583,
+    "end": 10.617,
+    "label": "거치 테스트",
+    "use_point": "스마트폰 무게를 올려도 끄떡없을 만큼 내구성이 진짜 좋습니다",
+    "change": "스마트폰이 거치됨",
+    "product_benefits": [
+     "탄탄한 거치 지지력"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-11",
+    "start": 10.617,
+    "end": 11.7,
+    "label": "다용도 거치 시연",
+    "use_point": "스마트폰부터 노트북까지, 이거 하나면 거치 걱정 끝입니다",
+    "change": "스마트폰, 노트북, 태블릿이 차례로 거치됨",
+    "product_benefits": [
+     "폰·태블릿·노트북 올인원 거치"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "활용",
+    "hook_type": "충격",
+    "hook_why": "노트북까지 거치되는 범용성",
+    "is_outro": false,
+    "moments": "0~2초 스마트폰 거치, 2~5초 노트북 거치, 5초~ 태블릿 거치",
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-12",
+    "start": 11.7,
+    "end": 12.55,
+    "label": "제품 소개",
+    "use_point": "이거 정말 물건인데, 대체 정체가 뭐냐고요?",
+    "product_benefits": [
+     "막대 형태의 컴팩트한 디자인"
+    ],
+    "is_key": false,
+    "shot_role": "사용중",
+    "appeal_kind": "외관",
+    "hook_type": "클로즈업",
+    "hook_why": "제품이 손에 쥐어져 있음",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-13",
+    "start": 12.55,
+    "end": 13.1,
+    "label": "제품 조작",
+    "use_point": "무려 8가지 각도로 세밀하게 조절돼요.",
+    "change": "거치대가 8단계 각도 조절을 위해 펼쳐졌다",
+    "product_benefits": [
+     "8가지 각도 조절 가능"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "기능",
+    "hook_type": "반전",
+    "hook_why": "접힌 막대가 펼쳐짐",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-14",
+    "start": 13.1,
+    "end": 15.383,
+    "label": "기기 거치 시연",
+    "use_point": "아이패드 같은 태블릿도 아주 안정적으로 딱 고정됩니다.",
+    "change": "거치대 위에 태블릿이 고정되었다",
+    "product_benefits": [
+     "태블릿 안정적 거치 가능"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "활용",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-15",
+    "start": 15.383,
+    "end": 16.25,
+    "label": "기기 거치 확인",
+    "use_point": "흔들림 없이 딱 잡아주니까 영상 볼 때 정말 편해요.",
+    "product_benefits": [
+     "흔들림 없는 견고한 거치"
+    ],
+    "is_key": true,
+    "shot_role": "사용중",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "느림",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-16",
+    "start": 16.25,
+    "end": 17.517,
+    "label": "노트북 거치 시연",
+    "use_point": "무거운 노트북까지 거치대로 쓸 수 있어요.",
+    "change": "거치대 위에 노트북이 거치되었다",
+    "product_benefits": [
+     "노트북 거치 가능한 강한 내구성"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "활용",
+    "hook_type": "충격",
+    "hook_why": "노트북이라는 무게감 있는 기기를 지지함",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-17",
+    "start": 17.517,
+    "end": 18.333,
+    "label": "기기 사용 시연",
+    "use_point": "타이핑할 때도 전혀 밀리지 않아서 업무 효율이 올라가요.",
+    "product_benefits": [
+     "타이핑 시 밀리지 않는 안정감"
+    ],
+    "is_key": true,
+    "shot_role": "사용중",
+    "appeal_kind": "기능",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-18",
+    "start": 18.333,
+    "end": 19.333,
+    "label": "제품 조작",
+    "use_point": "진짜 이거 하나면 노트북부터 패드까지 다 해결되죠.",
+    "change": "노트북이 거치대에 거치되었다",
+    "product_benefits": [
+     "모든 전자기기 호환 가능"
+    ],
+    "is_key": true,
+    "shot_role": "조작",
+    "appeal_kind": "장점",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-19",
+    "start": 19.333,
+    "end": 20.9,
+    "label": "기기 호환성 확인",
+    "use_point": "모든 전자기기를 이 작은 거치대 하나로 끝냅니다.",
+    "product_benefits": [
+     "모든 전자기기 커버 가능"
+    ],
+    "is_key": true,
+    "shot_role": "실증",
+    "appeal_kind": "활용",
+    "is_outro": false,
+    "moments": "0~0.5초 노트북, 0.5~1.2초 태블릿, 1.2초~ 스마트폰",
+    "tempo": "빠름",
+    "speed_hint": 0.8
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-20",
+    "start": 20.9,
+    "end": 22.317,
+    "label": "휴대성 강조",
+    "use_point": "근데 가장 놀라운 건 휴대성이에요.",
+    "change": "거치대가 막대 형태로 접혔다",
+    "product_benefits": [
+     "컴팩트하게 접히는 구조"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "기능",
+    "hook_type": "반전",
+    "hook_why": "완전한 막대 형태로 접힘",
+    "is_outro": false,
+    "tempo": "빠름",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-21",
+    "start": 22.317,
+    "end": 24.133,
+    "label": "휴대성 시연",
+    "use_point": "만원대 가격에, 손보다 작아서 그냥 주머니에 쏙 들어가요.",
+    "change": "거치대가 주머니와 가방에 수납되었다",
+    "product_benefits": [
+     "만원대의 가성비",
+     "주머니에 들어가는 작은 크기"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "장점",
+    "hook_type": "충격",
+    "hook_why": "주머니에 거치대가 쏙 들어감",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-22",
+    "start": 24.133,
+    "end": 25.067,
+    "label": "휴대성 강조",
+    "use_point": "어디든 간편하게 들고 다니기 딱 좋죠.",
+    "change": "거치대가 주머니에 수납되었다",
+    "product_benefits": [
+     "휴대성이 뛰어난 컴팩트 사이즈"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "외관",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-23",
+    "start": 25.067,
+    "end": 25.633,
+    "label": "마무리",
+    "use_point": "가성비와 휴대성, 이만한 제품 없습니다.",
+    "change": "거치대가 파우치에 들어갔다",
+    "product_benefits": [
+     "가성비와 휴대성의 결합"
+    ],
+    "is_key": false,
+    "shot_role": "정리",
+    "appeal_kind": "장점",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-24",
+    "start": 25.633,
+    "end": 26.667,
+    "label": "휴대성 및 구조 소개",
+    "use_point": "가방에 쏙 들어갔다가 꺼내면 바로 거치대가 돼요",
+    "change": "접힌 거치대가 펼쳐졌다",
+    "product_benefits": [
+     "접이식 구조로 휴대성이 뛰어남"
+    ],
+    "is_key": true,
+    "shot_role": "정리",
+    "appeal_kind": "특징",
+    "hook_type": "반전",
+    "hook_why": "접힌 막대가 거치대로 펼쳐짐",
+    "is_outro": false,
+    "tempo": "보통",
+    "speed_hint": 1.0
+   },
+   {
+    "seg_id": "ierrJ6wJ-Oc-25",
+    "start": 26.667,
+    "end": 28.211995,
+    "label": "최종 완성품 소개",
+    "use_point": "이 작은 게 스마트폰만큼이나 콤팩트하죠",
+    "change": "제품이 스마트폰 옆에 배치됨",
+    "product_benefits": [
+     "스마트폰과 비슷한 초소형 크기"
+    ],
+    "is_key": false,
+    "shot_role": "완성",
+    "appeal_kind": "외관",
+    "hook_type": "클로즈업",
+    "hook_why": "제품을 손에 쥐고 근접해서 보여줌",
+    "is_outro": true,
+    "tempo": "느림",
+    "speed_hint": 1.0
+   }
+  ]
+ }
+}
