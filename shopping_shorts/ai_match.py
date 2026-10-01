@@ -30,18 +30,30 @@ BRIEF = """너는 숏폼 편집자다. 대본 줄마다 **그 말과 같은 그�
 - 씨앗 영상(표시됨)의 컷은 쓰지 마라.
 - ★줄의 **주인공**을 찍어라: "A가 아니라 B" · "A와 달리 B"에서 화면은 **B(제품이 하는 일)**다. 부정된 A(버리는 청소포, 기존 걸레)는
   그 줄이 불편 자체를 말할 때만 쓴다. 결과·반전·마무리 줄에 A를 넣지 마라(2026-09-22 사장님: "물티슈 버리는 게 아니라 제품을 계속 쓴다는 건데").
-- why는 한 줄(10자 안팎)."""
+- why는 한 줄(10자 안팎).
+- ★훅 줄(맨 앞 [훅])엔 **훅:** 표시가 있는 컷(클로즈업·반전·비포애프터·충격)을 먼저 골라라. "훅:문제"는 미끼(불편) 줄 몫이다.
+  (2026-10-01 사장님 "훅컷은 제품의 뚜렷한 클로즈업·줌이나 변신". 컷 목록의 훅 표시는 1단계 태그 hook_type 이다)"""
 
 MODEL = "gemini-3.5-flash"     # 매칭은 뜻을 읽는 일이라 한 단계 위 모델(호출 1회). 실패하면 _call_json이 기본 모델로 가지 않는다 — note에 남는다.
+
+
+def _usable(seg_index, sid, backbone_vid):
+    """AI 에게 보여 주고 AI 가 고를 수 있는 컷인가 — **한 곳**(목록·검증·채우기가 같은 판정을 쓴다, 0순위-B).
+    뒷컷(seg_index['outro'] = 1단계 is_outro 이면서 제품 안 보임, backbone_assemble._seg_index 가 정함)은 여기서 빠진다
+    (2026-10-01 실측 work 9bf4c5929d3d: AI 가 '엄지 치켜세우며 인사' 컷을 훅·마무리 줄에 붙였다 — assign_cuts 는 뺐는데 AI 는 몰랐다)."""
+    from shopping_shorts.backbone_assemble import MIN_CUT_SECS      # match() 와 같은 지연 import(순환 방지)
+    v = seg_index.get(sid) or {}
+    return bool(v) and v.get("vid") != backbone_vid and v.get("secs", 0) >= MIN_CUT_SECS and not v.get("outro")
 
 
 def _cut_block(seg_index, backbone_vid, order):
     rows = []
     for sid in order:
-        v = seg_index.get(sid) or {}
-        if v.get("vid") == backbone_vid or v.get("secs", 0) < 0.8:
+        if not _usable(seg_index, sid, backbone_vid):
             continue
-        rows.append("  %s | %s | %.1f초 | [%s] %s" % (sid, v.get("vid"), v.get("secs", 0), v.get("role") or "", (v.get("desc") or "")[:70]))
+        v = seg_index[sid]
+        rows.append("  %s | %s | %.1f초 | [%s] %s%s" % (sid, v.get("vid"), v.get("secs", 0), v.get("role") or "", (v.get("desc") or "")[:70],
+                                                       (" | 훅:%s" % v["hook"]) if v.get("hook") else ""))
     return "\n".join(rows)
 
 
@@ -90,7 +102,7 @@ def match(lines, seg_index, backbone_vid, note=None, model=None):
         chosen, have = [], 0.0
         descs = set()          # 태깅이 한 샷을 둘로 가른 것(설명이 같음)은 한 줄에 한 번만 — "중복 장면"의 뿌리(show8: s3 11.8/13.9, s7 19.0/21.1)
         for c in picks.get(i, []):
-            if c in seg_index and c not in used and seg_index[c]["vid"] != backbone_vid and seg_index[c]["secs"] >= MIN_CUT_SECS                     and (seg_index[c].get("desc") or c) not in descs:
+            if _usable(seg_index, c, backbone_vid) and c not in used and (seg_index[c].get("desc") or c) not in descs:
                 chosen.append(c); used.add(c); have += seg_index[c]["secs"]; descs.add(seg_index[c].get("desc") or c)
         # ③ 모자라면 고른 컷과 같은 영상의 **다음 컷**으로 채운다(원본은 연속 촬영 — 결이 안 튄다)
         if chosen and have < need:
@@ -99,7 +111,7 @@ def match(lines, seg_index, backbone_vid, note=None, model=None):
             k = lst.index(chosen[-1]) + 1 if chosen[-1] in lst else len(lst)
             while have < need and k < len(lst):
                 s = lst[k]; k += 1
-                if s in used or seg_index[s]["secs"] < MIN_CUT_SECS or (seg_index[s].get("desc") or s) in descs:
+                if s in used or not _usable(seg_index, s, backbone_vid) or (seg_index[s].get("desc") or s) in descs:
                     continue
                 chosen.append(s); used.add(s); have += seg_index[s]["secs"]; descs.add(seg_index[s].get("desc") or s)
         out_bs.append({"role": L.get("role") or "", "seg": chosen[0] if chosen else "", "segs": chosen,
