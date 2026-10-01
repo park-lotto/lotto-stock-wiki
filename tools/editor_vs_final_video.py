@@ -425,13 +425,38 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
             "sec": (round(t1 - t0, 1), round(t2 - t1, 1), round(time.time() - t2, 1))}, ""
 
 
+# ★비교 대상 선정(2026-10-01 관제 067) — "완성본을 최근에 렌더한" 작업만.
+#   종전엔 updated_at 최신순이라, 완성본은 9/21·9/22인데 행만 오늘 건드려진 작업(사장님 시험 작업 2건)이 들어왔다.
+#   그 완성본은 그때 코드로 만든 것이고 미리보기는 오늘 코드로 굽으니 열흘치 코드 변화가 '다른 장면'으로 떠서
+#   **모든 병합이 막혔다**(10-01 세 finish 전부, main 그대로 돌려도 같은 2칸). 이 관문은 지금 제작 라인의 두 길이
+#   같은가를 재는 것이지 옛 완성본과 새 코드의 차이를 재는 것이 아니다 — 완성본 파일 시각으로 고른다.
+RECENT_FINAL_DAYS = 3
+
+
+def _pick_jobs(con, n, now=None, days=RECENT_FINAL_DAYS, mtime=os.path.getmtime):
+    """[job_id] — preview 준비된 작업 중 완성본(video_path) 파일이 days 일 안에 만들어진 것, 최신순 n개."""
+    now = time.time() if now is None else now
+    rows = con.execute("select job_id, video_path from mix_jobs where preview_status='ready' "
+                       "order by updated_at desc limit ?", (max(n * 8, 40),)).fetchall()
+    out = []
+    for jid, vp in rows:
+        try:
+            if vp and now - mtime(vp) <= days * 86400:
+                out.append(jid)
+        except OSError:
+            continue
+        if len(out) >= n:
+            break
+    return out
+
+
 def main():
     args = sys.argv[1:]
     n = int(args[0]) if args and args[0].isdigit() else 30
     ids = [a for a in args if not a.isdigit()]
     if not ids:
         con = sqlite3.connect("shopping_shorts/data/reference.db")
-        ids = [r[0] for r in con.execute("select job_id from mix_jobs where preview_status='ready' order by updated_at desc limit ?", (n,))]
+        ids = _pick_jobs(con, n)
     rep = open(OUT / "report.txt", "w", encoding="utf-8")
     (OUT / "samples.jsonl").write_text("", encoding="utf-8")
     print("판정: 가운데 띠(%d~%d%%) 5x5 z거리 >= %.2f = 다른 장면 / 밀림 >= %.2fs (찾는 범위 ±%.1fs)" % (
