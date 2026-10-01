@@ -47,6 +47,7 @@
   async function initInline(){
     try{const r=await fetch('/api/produce/scene-style/flags',{cache:'no-store'});const d=await r.json();inlineMode=!!(r.ok&&d&&d.inline);allowed=!!(r.ok&&d&&d.allowed);}catch(_){inlineMode=false;allowed=false;}
     if(!allowed){const btn=document.querySelector('.panel[data-step="3"] button.btn[onclick="openSceneStyleEditor()"]');if(btn)btn.hidden=true;const st=status();if(st)st.textContent='';}
+    window.SCENE_STYLE_INLINE=inlineMode;   // produce.html initHeadcopy가 읽는다 — 새 편집기면 옛 피팅룸의 무거운 불러오기를 건너뛴다(2026-10-01)
     if(!inlineMode)return;
     // ★인라인 모드가 켜지면 관리자 시험 모드(canary)는 물러난다(2026-09-25 사고).
     //   둘 다 '내 칸만 남기고 패널을 전부 숨김' 규칙이라 같이 켜지면 서로의 칸을 숨겨 6단계가 제목만 남았다
