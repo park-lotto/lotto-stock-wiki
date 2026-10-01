@@ -268,12 +268,16 @@ def judge(jid, work, cuts, beats, sents):
     """완성본(final.mp4)의 그 문장 구간 vs 후보 컷. A/B는 무작위(편향 방지). 반환: 문장별 기록."""
     import random
     final = os.path.join(MIX, jid, "final.mp4")
-    if not os.path.exists(final):
-        return []
-    dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
-                                final], capture_output=True, text=True).stdout or 0)
-    total = sum(b["need"] for b in beats) or 1.0
-    scale = dur / total                                # 줄 길이 합 ↔ 완성본 길이(여백 차이) 비례 보정
+    if os.path.exists(final):
+        dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+                                    final], capture_output=True, text=True).stdout or 0)
+        total = sum(b["need"] for b in beats) or 1.0
+        scale = dur / total                            # 줄 길이 합 ↔ 완성본 길이(여백 차이) 비례 보정
+    else:
+        # 10-01: 완성본이 없으면(믹스까지만) 편성의 primary 구간을 소스 영상에서 직접 뽑는다 —
+        # TTS·렌더 과금 없이 "지금 라이브가 고른 장면" vs 후보를 볼 수 있다. 이때 need 는 TTS 전 추정값(target_seconds).
+        print("  완성본 없음 → 믹스 편성(primary)에서 현재 장면 프레임을 뽑는다", flush=True)
+        dur = scale = None
     starts, t = [], 0.0
     for b in beats:
         starts.append(t)
@@ -288,9 +292,20 @@ def judge(jid, work, cuts, beats, sents):
         if not ln:
             continue
         nos, how, need = pick_scene(s, beats, cuts)
-        a0, a1 = starts[ln[0]] * scale, (starts[ln[-1]] + beats[ln[-1]]["need"]) * scale
-        fin = [_grab(final, a0 + (a1 - a0) * (q + 0.5) / 4, os.path.join(work, "fin_%d_%d.jpg" % (k, q)))
-               for q in range(4)]
+        if scale is not None:
+            a0, a1 = starts[ln[0]] * scale, (starts[ln[-1]] + beats[ln[-1]]["need"]) * scale
+            fin = [_grab(final, a0 + (a1 - a0) * (q + 0.5) / 4, os.path.join(work, "fin_%d_%d.jpg" % (k, q)))
+                   for q in range(4)]
+        else:
+            fin = []
+            for i in ln:                               # 문장에 걸친 줄마다 primary 구간에서 2장씩
+                b = beats[i]
+                vids = sorted(glob.glob(os.path.join(MIX, jid, str(b.get("cur_src") or ""), "*.mp4")))
+                if not vids or b.get("cur_start") is None or b.get("cur_end") is None:
+                    continue
+                c0, c1 = float(b["cur_start"]), float(b["cur_end"])
+                fin += [_grab(vids[0], c0 + (c1 - c0) * (q + 0.5) / 2,
+                              os.path.join(work, "fin_%d_%d_%d.jpg" % (k, i, q))) for q in range(2)]
         fstrip = _hstrip(fin, os.path.join(work, "finstrip_%d.jpg" % k))
         cstrip = None
         if nos:
