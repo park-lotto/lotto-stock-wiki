@@ -214,7 +214,9 @@ def main():
             note["retag"] = "reused:%s" % a.extract
             print("재태깅 생략 — 저장본 재사용", a.extract, flush=True)
         else:
-            guide = open(a.guide, encoding="utf-8").read()
+            # 지침서 정본은 script_extract._SEG_FIELD_GUIDE 한 곳(0순위-B). --guide 는 실험용 대체본일 때만.
+            from shopping_shorts import script_extract as _se
+            guide = open(a.guide, encoding="utf-8").read() if a.guide else _se._SEG_FIELD_GUIDE
             ext2 = {}
             for vid, ex in sorted((job.get("extract") or {}).items()):
                 if not isinstance(ex, dict):

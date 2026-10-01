@@ -75,3 +75,14 @@ def test_normalize_tags_keeps_new_keys():
     assert out[0]["hook_type"] == "클로즈업" and out[0]["is_outro"] is True and out[0]["speed_hint"] == 0.8
     assert out[0]["appeal_kind"] == "기능" and out[0]["tempo"] == "빠름"
     assert out[1]["hook_type"] == "" and out[1]["speed_hint"] is None
+
+
+def test_assign_seg_ids_keeps_new_keys():
+    from shopping_shorts import script_extract as se
+    r = se._assign_seg_ids("v", [{"start": 0, "end": 1, "text": "", "scene_desc": "d", "hook_type": "충격",
+                                   "speed_hint": 0.8, "is_outro": "true", "tempo": "빠름", "appeal_kind": "기능",
+                                   "moments": "0~2초 염"},
+                                  {"start": 1, "end": 2, "text": "", "scene_desc": "e", "hook_type": "엉뚱", "speed_hint": 9}])[0:2]
+    assert (r[0]["hook_type"], r[0]["speed_hint"], r[0]["is_outro"], r[0]["tempo"], r[0]["appeal_kind"]) == ("충격", 0.8, True, "빠름", "기능")
+    assert r[1]["hook_type"] == "" and r[1]["speed_hint"] is None and r[1]["is_outro"] is False
+    assert "{_SHOT_ROLE_GUIDE}" in se._SEG_FIELD_GUIDE and "hook_type" in se._SEG_FIELD_GUIDE
