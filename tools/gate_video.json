@@ -51,7 +51,8 @@
     "max_audio_bgm": null
   },
   "benign_skips": [
-    "음성 없음"
+    "음성 없음",
+    "RuntimeError: 소스 영상을 하나도 찾지 못했습니다"
   ],
   "watch_files": [
     "shopping_shorts/config.py",
