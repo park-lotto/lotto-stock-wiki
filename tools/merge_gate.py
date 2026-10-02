@@ -99,7 +99,9 @@ def _xdist_args():
         return []
     # 사장님(2026-09-21): 16코어를 다 쓸 일이 아니다 — 게이트가 돌 때마다 PC가 버벅였다.
     # 4개로 묶어 나머지 코어는 다른 작업에 남긴다.
-    return ["-n", "4"]
+    # 2026-10-02 사장님 "병렬도 다 해도 된다" → 실측(같은 코드·같은 실패 15건): -n 4 727초 · -n 8 376초 · -n auto(16) 358초.
+    #   16개는 8개보다 18초 빠를 뿐이라 코어 절반을 남기는 8개로(카드 081).
+    return ["-n", "8"]
 
 
 def _tools_test_paths(cwd):
@@ -132,6 +134,27 @@ def snapshot(cwd=BASE, run=_run):
     }
 
 
+def snapshot_light(cwd=BASE, run=_run):
+    """기준선은 **문법·import 만**(2026-10-02 카드 081). 전체 pytest(7~10분)는 병합본에서만 돌리고, 실패한 것만
+    main 코드로 다시 돌려 '원래 실패'를 가른다(track._known_main_failures). 실측: 오늘 main 커밋 108개 중 72개가
+    관제·핸드오프라 커밋별 기준선 캐시가 거의 안 먹었다(새로 수집 6 · 재사용 2)."""
+    rc_c, out_c = run([sys.executable, "-m", "compileall", TARGET, "-q"], cwd)
+    rc_i, out_i = run([sys.executable, "-c", f"import {TARGET}.app"], cwd)
+    return {"compile_ok": rc_c == 0, "compile_out": out_c[-4000:], "import_ok": rc_i == 0, "import_out": out_i[-4000:],
+            "pytest_rc": 0, "pytest_out": "", "failed": [], "light": True}
+
+
+def rerun_ids(cwd, ids, run=_run):
+    """이 폴더 코드로 그 시험들만 다시 돌려 **여전히 깨지는 id 집합**을 돌려준다(우연한 실패 거르기·락 전 선검사)."""
+    ids = list(ids)
+    if not ids:
+        return set()
+    extra = _xdist_args() if len(ids) > 8 else []
+    rc, out = run([sys.executable, "-m", "pytest", *ids, "-q", "--tb=no", "-rfE", "--continue-on-collection-errors",
+                   "-p", "no:cacheprovider", *extra], cwd)
+    return parse_failed(out)
+
+
 def baseline_warnings(before):
     """병합 전부터 깨져 있던 것 — 막지는 않되 반드시 보여준다."""
     warn = []
@@ -141,7 +164,9 @@ def baseline_warnings(before):
         warn.append("⚠️ 병합 전부터 import가 깨져 있다 — 의미적 충돌 검출기가 죽은 상태다")
     if before["pytest_rc"] not in _PYTEST_SANE_RC:
         warn.append(f"⚠️ 병합 전부터 pytest가 비정상 종료(rc={before['pytest_rc']}) — 테스트 검사는 무력하다")
-    if before["failed"]:
+    if before.get("light"):
+        warn.append("ℹ️ 기준선: 문법·import 만 — 전체 시험은 병합본에서 한 번, 실패한 것만 main 에서 재확인(카드 081)")
+    elif before["failed"]:
         warn.append(f"ℹ️ 병합 전 이미 실패 {len(before['failed'])}건 (기준선으로 통과시킴)")
     return warn
 
