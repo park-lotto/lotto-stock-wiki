@@ -178,3 +178,20 @@ def test_snapshot_cmd_includes_xdist(monkeypatch):
     merge_gate.snapshot(cwd=".", run=fake_run)
     pytest_cmd = next(c for c in seen if "pytest" in c)
     assert "-n" in pytest_cmd and "auto" in pytest_cmd
+
+
+def test_norm_test_id_makes_korean_and_mojibake_equal():
+    """같은 테스트가 세션 인코딩(py / py -X utf8)에 따라 다른 이름으로 보이던 것(2026-10-01) — 정규화 뒤엔 같다."""
+    from tools import merge_gate as g
+    a = g.norm_test_id("shopping_shorts/tests/test_tier_wiring.py::test_config_한글이름_검사")
+    b = g.norm_test_id("shopping_shorts/tests/test_tier_wiring.py::test_config_???_??")
+    c = g.norm_test_id("shopping_shorts/tests/test_tier_wiring.py::test_config_��_�")
+    assert a == b == c == "shopping_shorts/tests/test_tier_wiring.py::test_config_?_?"
+    assert g.norm_test_id("a.py::test_plain[x-1]") == "a.py::test_plain[x-1]"
+
+
+def test_compare_ignores_encoding_only_differences():
+    from tools import merge_gate as g
+    base = {"compile_ok": True, "import_ok": True, "pytest_rc": 1, "failed": ["t.py::test_한글"], "compile_out": "", "import_out": "", "pytest_out": ""}
+    after = {**base, "failed": ["t.py::test_???"]}
+    assert not [p for p in g.compare(base, after) if "새로" in p or "new" in p.lower()]

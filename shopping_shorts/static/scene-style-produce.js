@@ -33,11 +33,8 @@
       //   클래스·속성만으로는 항상 진다(2026-09-24 실측: 규칙 둘 다 걸렸는데 숨김이 이겼다).
       // ★원본 모드(plain)에서는 옛 헤드카피·자막 칸을 다시 보여 준다 — 그 모드는 새 편집기가 글자를 안 그리고
       //   렌더가 옛 경로를 타서, 이 칸들이 실제로 결과물에 반영되는 자리다(2026-09-24).
-      style.textContent='.panel[data-step="3"].scene-style-inline-active>:not(h3):not(#sceneStyleInline){display:none!important}'
-                // ★옛 화면은 더 이상 꺼내지 않는다(2026-09-24 사장님: "구버전으로 이동하게 한 거야?").
-        //   헤드카피·자막은 새 편집기 오른쪽 '문구/텍스트' 안에 같은 카드 모양으로 들어갔다.
-        //   이 규칙은 값을 읽고 쓰기 위해 옛 칸을 **화면 밖에** 살려 두는 용도다(display:none이면 값이 안 읽힌다).
-        +'.panel[data-step="3"].scene-style-inline-active.scene-style-plain>#legacyDecoWrap{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important}';document.head.append(style);}
+      style.textContent='.panel[data-step="3"].scene-style-inline-active>:not(h3):not(#sceneStyleInline){display:none!important}';   // 옛 피팅룸 HTML은 10-01 삭제(관제 058 C1) — 이 규칙은 카나리 섹션·상태 span만 가린다
+      document.head.append(style);}
     inlineShell=document.createElement('section');inlineShell.id='sceneStyleInline';inlineShell.style.cssText='margin-top:10px';
     const note=document.createElement('div');note.id='sceneStyleInlineStatus';note.setAttribute('role','status');note.style.cssText='margin:0 0 8px;color:#bdeee5;font-size:13px';
     frame=document.createElement('iframe');frame.title='문구와 효과 편집기';frame.style.cssText='width:100%;height:calc(100vh - 200px);min-height:720px;border:1px solid #35505b;border-radius:12px;background:#071118';
@@ -223,11 +220,34 @@
     }
     result.effects={};sources.forEach((source,i)=>{if(snapshot.effects?.[source])result.effects[i]=snapshot.effects[source]});return result;
   }
+  // ★'템플릿 없이 완성본'의 기본 자막·제목 스타일(관제 058 B단계, 2026-10-01).
+  //   옛 피팅룸 초기화(initHeadcopy→applyDefaultStyleOnEntry·applyErasedRegion)가 6단계에 들어올 때 넣어 주던 값이다.
+  //   옛 코드를 지우기 전에 같은 판단을 새 길 한 곳으로 옮긴다 — 값은 서버에 실제 저장된 원본(job ec038d16ee0f)을 그대로.
+  //   규칙(옛 코드와 같다): ① 자막·제목 설정이 비어 있을 때만 '심플 화이트'를 넣는다
+  //                        ② 그렇게 **새로 넣은 경우에만** 자막 지운 자리(clean_regions.primary)가 있으면 자막 위치를 그 자리로
+  //                           (옛 applyConfig는 저장값에 x_pct가 있으면 CAP_POS_TOUCHED=true라 다시 안 옮겼다 — 저장본 전부 x_pct를 가진다)
+  //   렌더가 읽는 값은 STATE.headcopy/captionStyle → saveHeadcopy(렌더 직전 POST) 그대로라 결과물은 전과 같다.
+  const SIMPLE_WHITE_CAP={font:'Pretendard-ExtraBold.otf',color:'#ffffff',size:50,y_pct:37,outline:false,outline_color:'#000000',outline_w:0,box:false,box_color:'#000000',box_pad:12,box_opacity:80,bar:false,effect:'fade',shadow:true,shadow_color:'#000000',shadow_d:3,x_pct:50};
+  const SIMPLE_WHITE_HC={text:'',font:'Pretendard-ExtraBold.otf',color:'#ffffff',weight:900,size:54,x:50,y:12,outline:true,outline_color:'#000000',outline_w:2,box:false,box_color:'#000000',box_pad:16,box_opacity:80};
+  async function ensureLegacyStyleDefaults(job){
+    if(typeof STATE==='undefined'||!STATE)return;
+    let fresh=false;
+    if(!STATE.captionStyle||!Object.keys(STATE.captionStyle).length){STATE.captionStyle={...SIMPLE_WHITE_CAP};fresh=true;}
+    if(!STATE.headcopy||!Object.keys(STATE.headcopy).length){STATE.headcopy={...SIMPLE_WHITE_HC};}
+    if(STATE.deco&&typeof STATE.deco==='object'&&!('watermark' in STATE.deco))STATE.deco.watermark=null;   // 옛 applyWatermark가 남기던 모양 그대로
+    if(!fresh)return;
+    try{
+      const d=await (await fetch('/api/mix/status/'+encodeURIComponent(job))).json();
+      const p=d&&d.clean_regions&&d.clean_regions.primary;
+      if(p&&p.x_pct!=null&&p.y_pct!=null){STATE.captionStyle.x_pct=Math.round(p.x_pct);STATE.captionStyle.y_pct=Math.round(p.y_pct);}
+    }catch(_){ /* 자리 정보를 못 읽으면 기본 자리(옛 코드도 같았다) */ }
+  }
   window.openSceneStyleEditor=async()=>{
     if(!allowed){status().textContent='';return;}   // 고객에겐 아직 안 연다(관리자·스위치만)
     if(!MIX_JOB){status().textContent='영상의 음성·장면을 먼저 준비해 주세요.';return;}
     jobId=MIX_JOB;status().textContent='실제 제목과 자막을 불러오는 중…';
     try{
+      await ensureLegacyStyleDefaults(jobId);   // 옛 피팅룸 초기화가 하던 '템플릿 없는 완성본' 기본값 — 이제 이 한 곳(관제 058 B단계)
       // ★제목·소제목은 **누르지 않아도 들어가 있어야 한다**(2026-09-22 사장님:
       //   "그냥 자동화가 되는 과정이야 눌러야 되는 거 없이 처음에 배치까지 잘 되야 하는 거야").
       //   진입할 때 loadHeadcopySuggest가 후보를 자동으로 뽑아 window._hcCopies에 담아 둔다.
@@ -305,25 +325,7 @@
       status().textContent=error.message;}
   };
   addEventListener('message',async event=>{
-    if(event.data?.type==='scene-style-legacy'){
-      // 새 편집기 카드에서 바꾼 값을 옛 칸에 그대로 넣고, 옛 저장 흐름(hcTouched/capTouched)을 깨운다.
-      const el=document.getElementById(event.data.id);if(!el)return;
-      if(el.type==='checkbox')el.checked=!!event.data.value;else el.value=event.data.value;
-      el.dispatchEvent(new Event(el.type==='checkbox'||el.tagName==='SELECT'?'change':'input',{bubbles:true}));
-      return;
-    }
-    if(event.data?.type==='scene-style-template'){
-      const panel=stepPanel();if(panel)panel.classList.toggle('scene-style-plain',!!event.data.plain);
-      // 헤드카피 칸은 옛 '문구' 탭 안에 있다 — 원본 모드로 들어오면 그 탭을 열어 준다(안 열면 빈 화면으로 보인다).
-      if(event.data.plain){
-        // 편집기 카드에 지금 값을 채워 준다(빈칸으로 열리지 않게).
-        const ids=['hcText','hcSize','hcY','hcColor','capColor','capOutline','capBox'];
-        const values={};
-        for(const id of ids){const el=document.getElementById(id);if(!el)continue;values[id]=el.type==='checkbox'?el.checked:el.value;}
-        frame.contentWindow?.postMessage({type:'scene-style-legacy-values',values},location.origin);
-      }
-      return;
-    }
+    // scene-style-legacy(옛 칸 다리)는 2026-10-01 제거(관제 058 C1) — 옛 피팅룸 칸이 더는 없다
     if(!frame||event.source!==frame.contentWindow||event.origin!==location.origin)return;
     if(event.data?.type==='scene-style-ready')frame.contentWindow.postMessage({type:'scene-style-context',...packet},location.origin);
     // 09-22 편집기의 [이 장면을 썸네일 후보로]: 7단계를 이미 열어 봤으면 후보 목록을 바로 다시 그리고, [썸네일 단계로 이동]은 저장하고 닫은 뒤 7단계로 보낸다.

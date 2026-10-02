@@ -89,7 +89,7 @@ def validate_snapshot(value):
             for mask in effect["masks"]:
                 if not isinstance(mask,dict):
                     raise ValueError("가림막 항목이 올바르지 않습니다")
-                base=_norm_masks([{**mask,"kind":"shape" if mask.get("kind")=="graphic" else mask.get("kind")}])
+                base=_norm_masks([{**mask,"kind":"shape" if mask.get("kind") in ("graphic","image") else mask.get("kind")}])
                 if not base:
                     continue
                 item=base[0]
@@ -97,6 +97,12 @@ def validate_snapshot(value):
                     if not re.fullmatch(r"[a-z_]{1,32}",str(mask.get("graphic") or "")):
                         raise ValueError("도형 종류가 올바르지 않습니다")
                     item.update(kind="graphic",graphic=mask["graphic"])
+                if mask.get("kind")=="image":
+                    # 로고(관제 065): 계정 폴더의 PNG만. 파일이 없으면 버린다(없는 그림을 렌더가 기다리지 않게).
+                    src=str(mask.get("src") or "")
+                    if not re.fullmatch(r"장면꾸미기_로고/\d{1,9}/[0-9a-f]{16}\.png",src) or not (ROOT/"out"/src).is_file():
+                        continue
+                    item.update(kind="image",src=src)
                 if mask.get("motion") in ("none","point","pulse","spin","float","reveal"):
                     item["motion"]=mask["motion"]
                 if item["kind"]=="badge":

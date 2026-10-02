@@ -49,20 +49,30 @@ def make_output_safe():
             pass  # 리다이렉트·파이프 등 reconfigure 못 하는 스트림이면 그냥 둔다
 
 
+def norm_test_id(tid):
+    """비교용 정규화 — 비ASCII(한글 이름)와 깨진 글자(?·�)를 한 기호로. 인코딩이 달라도 같은 테스트는 같게 본다."""
+    import re as _re
+    return _re.sub(r"[^ ->@-~]+", "?", str(tid or "")).strip()   # '?'(0x3f)도 깨진 글자로 본다
+
+
 def parse_failed(output):
-    """pytest 출력에서 실패한 테스트 id 집합을 뽑는다."""
+    """pytest 출력에서 실패한 테스트 id 집합을 뽑는다(정규화된 id)."""
     failed = set()
     for line in output.splitlines():
         m = _FAIL_RE.match(line.strip())
         if m:
-            failed.add(m.group(1).strip())
+            failed.add(norm_test_id(m.group(1)))
     return failed
 
 
 def _run(cmd, cwd):
+    # ★자식(pytest)도 UTF-8로 쓰게 못박는다(2026-10-01 실측): 세션마다 `py`/`py -X utf8`가 섞여 한글 테스트 이름이
+    #   한쪽은 제대로, 한쪽은 '?'로 저장돼 **같은 실패가 '새로 깨짐'으로 오판**됐다(기준선 캐시 vs 병합 후 비교).
+    import os as _os
+    env = {**_os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
     p = subprocess.run(
         cmd, cwd=str(cwd), capture_output=True, text=True,
-        encoding="utf-8", errors="replace",
+        encoding="utf-8", errors="replace", env=env,
     )
     return p.returncode, (p.stdout or "") + (p.stderr or "")
 
@@ -153,7 +163,8 @@ def compare(before, after):
               % (before["pytest_rc"], after["pytest_rc"], len(after["failed"])))
         return problems
 
-    new_failed = sorted(set(after["failed"]) - set(before["failed"]))
+    # 옛 기준선 저장본(정규화 전 이름)과도 맞게 양쪽 다 정규화해 비교한다
+    new_failed = sorted(set(map(norm_test_id, after["failed"])) - set(map(norm_test_id, before["failed"])))
     if new_failed:
         shown = "\n".join(f"    - {t}" for t in new_failed[:20])
         more = f"\n    ... 외 {len(new_failed) - 20}건" if len(new_failed) > 20 else ""

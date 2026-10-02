@@ -138,6 +138,34 @@ def _scope_of(scopes, ln):
     return None
 
 
+def module_stmt_names(src):
+    """최상위 **문장**(함수·클래스 밖)의 (시작줄, 끝줄, [이름], 종류). 대입·주석 대입·누적 대입은 대상 이름을 준다.
+    import·호출(Expr)·if 등은 이름 없이 종류만 — 영향을 못 정하므로 호출부가 '실행'으로 본다. 파싱 실패면 None."""
+    try:
+        tree = ast.parse(src)
+    except (SyntaxError, ValueError):
+        return None
+    out = []
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        names = []
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                names += [n.id for n in ast.walk(t) if isinstance(n, ast.Name)]
+        elif isinstance(node, (ast.AnnAssign, ast.AugAssign)) and isinstance(node.target, ast.Name):
+            names = [node.target.id]
+        out.append((node.lineno, node.end_lineno, names, type(node).__name__))
+    return out
+
+
+def _module_stmt_of(stmts, ln):
+    for s, e, names, kind in stmts:
+        if s <= ln <= e:
+            return names, kind
+    return None
+
+
 def app_touches_video(old_src, new_src, diff_u0, cfg):
     """app.py 변경이 제작 라인(미리보기 굽기·렌더·청소·캡컷 라우트)에 닿나 → (실행?, 사유)."""
     old_lines, new_lines = diff_changed_lines(diff_u0)
@@ -145,25 +173,37 @@ def app_touches_video(old_src, new_src, diff_u0, cfg):
         return False, "app.py: 빈 줄·주석만 바뀜"
     name_keys = [k.lower() for k in cfg.get("app_name_keys", [])]
     route_keys = cfg.get("app_route_keys", [])
-    hits, names = [], set()
+    hits, names, consts = [], set(), set()
     for src, lines in ((old_src, old_lines), (new_src, new_lines)):
         if not lines:
             continue
         scopes = top_level_scopes(src or "")
-        if scopes is None:
+        stmts = module_stmt_names(src or "")
+        if scopes is None or stmts is None:
             return True, "app.py: 파싱 실패 — 함수를 못 정해 실행"
         for ln in sorted(lines):
             sc = _scope_of(scopes, ln)
             if sc is None:
-                return True, "app.py: 모듈 수준 변경(%d줄) — 영향 함수를 못 정해 실행" % ln
+                # ★모듈 수준(2026-10-02, 카드 069): 전엔 무조건 실행이라 공개 경로 튜플·요금 템플릿 한 줄에도 20분 관문이 돌고
+                #   라이브 잔상(제작 라인 기존 결함)으로 막혔다. 대입문이면 **대상 이름**으로 판정 — 이름에 제작 라인 열쇠가
+                #   있으면 실행, 아니면 상수 변경으로 본다. 이름을 못 정하는 문장(import·호출·if)은 종전대로 실행.
+                ms = _module_stmt_of(stmts, ln)
+                if ms is None or not ms[0]:
+                    return True, "app.py: 모듈 수준 변경(%d줄, %s) — 영향을 못 정해 실행" % (ln, ms[1] if ms else "문장 밖")
+                for nm in ms[0]:
+                    if any(k in nm.lower() for k in name_keys):
+                        hits.append(nm)
+                    consts.add(nm)
+                continue
             name, routes = sc
             names.add(name)
             if any(k in name.lower() for k in name_keys) or \
                     any(r.startswith(k) for r in routes for k in route_keys):
                 hits.append(name)
     if hits:
-        return True, "app.py: 제작 라인 함수 변경 %s" % sorted(set(hits))
-    return False, "app.py: 제작 라인 밖 함수만 변경 %s" % sorted(names)[:8]
+        return True, "app.py: 제작 라인 함수·상수 변경 %s" % sorted(set(hits))
+    extra = (" · 모듈 상수 %s" % sorted(consts)[:6]) if consts else ""
+    return False, "app.py: 제작 라인 밖 함수만 변경 %s%s" % (sorted(names)[:8], extra)
 
 
 def needs_video_gate(changed_files, cfg, app_decision=None):
@@ -565,8 +605,37 @@ def _p(printer, s):
     return s
 
 
+# ★관문이 말한 것(영상·자막·소리·캡컷 report 포함)을 **파일로 남긴다**(2026-10-02 관제 070).
+#   실측 10-01: 실패 사유(어느 작업·어느 칸)가 화면 출력에서 잘려(tail) 서버에서 비교를 다시 돌려야 했다(+7분×2).
+#   자리: <stage 의 부모 = .tracks>/_gate_reports/<브랜치>_<시각>.txt — 트랙 폴더 옆, gitignore 안(.tracks/).
+def _keep_log(stage, br, lines, now=None):
+    try:
+        d = Path(stage).resolve().parent / "_gate_reports"
+        d.mkdir(parents=True, exist_ok=True)
+        ts = time.strftime("%Y%m%d_%H%M%S", time.localtime(now))
+        safe = "".join(c if (c.isalnum() or c in "-_") else "_" for c in str(br).replace("track/", ""))
+        f = d / ("%s_%s.txt" % (safe, ts))
+        f.write_text("\n".join(str(x) for x in lines) + "\n", encoding="utf-8")
+        return f
+    except Exception:      # noqa: BLE001 — 보관 실패가 관문 판정을 바꾸면 안 된다
+        return None
+
+
 def run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sleep=time.sleep, remote_tmp="/tmp"):
-    """finish 에서 부른다. GateResult(ok=False)면 병합을 버려야 한다."""
+    """finish 에서 부른다. GateResult(ok=False)면 병합을 버려야 한다. 말한 것은 전부 _keep_log 로 남긴다."""
+    kept = []
+    def _printer(s):
+        kept.append(s)
+        return printer(s)
+    try:
+        return _run_video_gate(stage, br, printer=_printer, sh=sh, cfg=cfg, env=env, sleep=sleep, remote_tmp=remote_tmp)
+    finally:
+        f = _keep_log(stage, br, kept)
+        if f is not None:
+            _p(printer, "  (관문 기록 저장: %s)" % f)
+
+
+def _run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sleep=time.sleep, remote_tmp="/tmp"):
     env = os.environ if env is None else env
     log = []
     say = lambda s: log.append(_p(printer, s))           # noqa: E731
