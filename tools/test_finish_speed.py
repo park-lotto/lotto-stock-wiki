@@ -220,6 +220,7 @@ def test_옛_판본_트랙에서도_main_폴더의_최신_track_py로_돈다(tmp
     newer.write_text("# 더 새 판본\n", encoding="utf-8")
     monkeypatch.setattr(track, "main_worktree", lambda cwd=None: tmp_path)
     monkeypatch.delenv("TRACK_REEXEC", raising=False)
+    monkeypatch.setattr(track, "_sh", lambda cmd, cwd: (0, ""))      # 이 트랙은 track.py 를 고치지 않는다
     calls = []
     monkeypatch.setattr(track.subprocess, "call", lambda cmd, env=None, **kw: calls.append((cmd, env)) or 7)
     assert track.main(["list"]) == 7
