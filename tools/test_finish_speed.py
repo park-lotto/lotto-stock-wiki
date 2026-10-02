@@ -94,8 +94,11 @@ def test_한_번만_실패하고_다시_돌리면_통과하면_우연한_실패�
 def test_비코드_병합은_테스트를_생략한다(repo, monkeypatch):
     _make_track_commit(repo, "문서만", fname="handoff/문서만.md")
     g = _LightGate()
+    stored = []
+    monkeypatch.setattr(track, "_store_full_failures", lambda *a: stored.append(a))
     track.finish("문서만", repo=repo, gate=g, video_gate=_ok_video)
     assert g.full == 0, "코드 없는 병합인데 전체 테스트를 돌렸다"
+    assert stored == [], "시험을 생략했는데 전체 실패 목록(빈 목록)을 저장했다 — 다음 기준선을 망친다(10-02 실측)"
 
 
 def test_main_실패_재확인은_코드_트리가_같으면_캐시(tmp_path, monkeypatch):
