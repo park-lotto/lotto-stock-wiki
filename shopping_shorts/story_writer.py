@@ -143,7 +143,7 @@ YT_SCHEMA = {
     "required": ["hook", "bait", "reveal", "contrast", "escalations", "twist", "closing"],
 }
 
-YT_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 유튜브 썰쇼핑 대본을 써라.
+YT_BRIEF = """■ 이번 대본 스타일 = **유튜브 썰쇼핑** (씨앗 말투가 반말 썰이다). 한 편 전체를 이 스타일 하나로 — 인스타 존댓말 어미를 섞지 마라.
 
 ■ 말투 = 남 얘기 전하는 혼잣말 (썰 히트작 520편 실측 — 청자에게 말 거는 반말은 4%뿐이다)
 보는 사람에게 말을 걸지 마라. "~있지?" "~해봐" "다들 알지?" 같은 대화체는 이 채널 말투가 아니다.
@@ -232,7 +232,7 @@ IG_SCHEMA = {
     "required": ["opening", "scene", "ask", "reveal", "beats", "feeling", "cta"],
 }
 
-IG_BRIEF = """너는 인스타 릴스 쇼핑 대본 작가다. **겪은 일을 이야기하듯** 써라.
+IG_BRIEF = """■ 이번 대본 스타일 = **인스타 릴스 체험담** (씨앗 말투가 존댓말 체험담이다). **겪은 일을 이야기하듯**, 한 편 전체를 이 스타일 하나로 — 유튜브 썰 어미를 섞지 마라.
 
 ■ 이건 설명이 아니라 상황극이다
   X 이 제품은 콩알만큼 떼어 붙이면 고정되는 기능이 있습니다
@@ -398,7 +398,10 @@ def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, n
         hook_mold, _ = story_hook.pick(hook_slots, key, nth, seed_text)
         if hook_mold and style:
             style = dict(style, hook_angle="")       # 꼴은 은행이 정한다 — 씨앗 첫 줄 꼴(_seed_style)은 쓰지 않는다
-    brief = IG_BRIEF if ig else YT_BRIEF
+    # ★2단계 영상 대본 작가 지침서(지위·재료·왜·규칙)는 backbone_assemble.WRITER_BRIEF 한 곳 — 고객 경로(이 함수)와 백본이 같이 쓴다(2026-10-02).
+    #   그 아래에 스타일(유튜브 썰 / 인스타 체험담)이 붙는다. 스타일은 씨앗 말투(seed_platform)로 하나만 고른다.
+    from shopping_shorts import backbone_assemble as _ba
+    brief = _ba.WRITER_BRIEF + chr(10) + (IG_BRIEF if ig else YT_BRIEF)
     if preset == "full":
         brief += IG_FULL_BLOCK if ig else FULL_BLOCK
     elif not ig:
