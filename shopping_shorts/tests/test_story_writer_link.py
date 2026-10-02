@@ -79,10 +79,11 @@ def test_reasons_are_reported(monkeypatch):
     _fake(monkeypatch, out={})
     drafts, why = sw.make_drafts([], _job())
     assert drafts == [] and "0줄" in why
+    # 씨앗이 짧아도(외국 영상) 거절하지 않는다 — 2026-10-02 사장님 "씨앗 없는 것도 라이브 가자". 막히면 다른 이유여야 한다.
     short = _job()
     short["extract"]["s0"]["full_text"] = "짧다"
     drafts, why = sw.make_drafts([], short)
-    assert drafts == [] and "짧음" in why
+    assert "짧음" not in (why or "")
     assert sw.make_drafts([], {"extract": {}})[1]
 
 
