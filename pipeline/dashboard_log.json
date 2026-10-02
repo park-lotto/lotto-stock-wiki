@@ -439,5 +439,12 @@
     "track": "게이트구멍",
     "summary": "첫 finish가 기준선(main 코드)에서 교착 실측 → 자식 pytest TMP/TEMP 개별 폴더로 수리, 재현 596초 완주. 069가 깨뜨린 tools/test_live_check 3건·merge_gate 옛 기대 2건 정리. 분리 프로세스로 finish 재실행 중(PID 25804)",
     "next": "병합 결과 확인 → ②번호표 ③모듈목록 한곳 ④finish 분리실행 기본화"
+  },
+  {
+    "date": "2026-10-02",
+    "category": "스탁브레인",
+    "track": "main · 조사",
+    "summary": "볼케이노 MCP 등록 확인: ~/.claude.json에 http 서버로 등록됐으나 현재 세션 미연결(계정별 설정 분리 추정)",
+    "next": "사장님 승인 시 볼케이노 서버 도구 목록 조회"
   }
 ]
