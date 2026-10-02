@@ -647,7 +647,11 @@ _LAUNCHER = r"""
 import os, subprocess, sys
 log, rcf, cwd, args = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
 env = dict(os.environ, TRACK_FINISH_CHILD="1", PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
-code = "import subprocess,sys;r=subprocess.call(sys.argv[3:]);open(sys.argv[2],'w').write(str(r))"
+# ★finish 는 **숨은 콘솔**로, 출력은 로그 파일로 **명시**해 넘긴다(2026-10-02 실측): 명시 안 하면 윈도는 출력을 상속하지 않아 로그가 0바이트였고,
+#   콘솔 없는 부모 밑이라 finish 에 **새 콘솔 창**이 따로 떠 그 창이 닫히며 Ctrl+C(0xC000013A)로 6분 만에 죽었다.
+code = ("import subprocess,sys;o=open(sys.argv[1],'ab');"
+        "r=subprocess.call(sys.argv[3:],stdout=o,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,"
+        "creationflags=(0x08000000 if sys.platform=='win32' else 0));open(sys.argv[2],'w').write(str(r))")
 out = open(log, "ab")
 kw = dict(cwd=cwd, env=env, stdout=out, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
 if os.name == "nt":

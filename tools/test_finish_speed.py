@@ -160,3 +160,19 @@ def test_finish_명령은_기본으로_분리_실행(monkeypatch):
     called.clear()
     track.main(["finish", "x", "--attached"])
     assert called.get("a") == "x" and "d" not in called
+
+
+@pytest.mark.skipif(os.name != "nt", reason="윈도 콘솔 동작")
+def test_분리_실행은_출력을_로그에_남기고_창을_띄우지_않는다(tmp_path):
+    """10-02 실측 결함: 로그 0바이트 + finish 에 새 콘솔 창이 떠 닫히며 0xC000013A 로 죽었다. 실제 프로세스로 잰다."""
+    import subprocess
+    log, rcf = tmp_path / "x.log", tmp_path / "x.rc"
+    child = [sys.executable, "-u", "-c",
+             "import ctypes;print('보임=%s' % bool(ctypes.windll.user32.IsWindowVisible(ctypes.windll.kernel32.GetConsoleWindow())))"]
+    subprocess.Popen([sys.executable, "-c", track._LAUNCHER, str(log), str(rcf), str(tmp_path)] + child,
+                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=0x08000000)
+    t = time.time()
+    while not rcf.exists() and time.time() - t < 30:
+        time.sleep(0.3)
+    assert rcf.read_text().strip() == "0"
+    assert "보임=False" in log.read_text(encoding="utf-8", errors="replace")
