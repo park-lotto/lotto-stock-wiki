@@ -1819,6 +1819,9 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
     # (2026-07-12 최종 전체리뷰 Important).
+    # ★새 계획에 컷 규칙 표식(관제 084) — 화면·렌더·캡컷이 같은 planClips 로 읽는다. 옛 작업엔 없다(종전 규칙).
+    from shopping_shorts.config import CUT_RULE as _CUT_RULE
+    plan["cut_rule"] = _CUT_RULE
     if not plan["beats"]:
         # ★사유를 갈라서 말한다(2026-08-19). 종전엔 "추출 실패 또는 키 소진"으로 뭉개서
         #   실측 13건 중 대부분이 **추출은 성공한 상태**(9,091자)였는데도 "추출 실패"로

@@ -637,6 +637,60 @@ function togglePhraseSync(i, on){
 // beatIdx는 **선택**이다 — 넘기면 그 칸의 수동 지정 길이(FIXLEN)를 반영한다.
 // 안 넘기는 옛 호출부는 종전과 똑같이 동작한다(하위호환).
 function planClips(segIds, ttsDur, spread, beatIdx){
+  // ── 관제 084 장면 시간 배분(2026-10-02 사장님 규칙) ─────────────────────────────────────────────
+  //   ① 컷 수 = 장면 수(자막 줄 수가 아니다 — 같은 장면을 조각내 반복하지 않는다)
+  //   ② 시간은 장면에 고르게. 짧은 장면은 가진 만큼(원본에서 같은 장면이 이어지면 거기까지)만, 남는 시간은 옆 장면이 더 보여 준다
+  //   ③ 진짜 화면을 다 합쳐도 모자라면 칸 전체에 같은 배속(원본에서 이어지는 장면은 finish 채우기가 진짜 화면으로)
+  //   ④ 장면이 바뀌는 순간은 가까운 자막 줄 경계(0.4초 안)에 맞춘다
+  //   장면 공급(줄마다 대사를 채울 만큼)은 2단계 ai_match.ensure_cover 가 책임진다 — 여기선 받은 장면에 시간만 나눈다.
+  function _maxS(){ return typeof maxSlowmo === 'function' ? maxSlowmo() : 1.2; }
+  function cutRuleV2(){ return typeof DATA === 'object' && DATA && DATA.cut_rule === 'scenes_v2'; }
+  function scenesV2(segments, ttsDur, beatIdx){
+    let scenes = segments.filter(g => g.end - g.start > EPS);
+    if (!scenes.length) return [];
+    while (scenes.length > 1 && ttsDur / scenes.length < MIN_CLIP) scenes = scenes.slice(0, -1);
+      // 장면마다 가진 화면 = 태깅 길이. 원본에서 이어 읽기는 아래 finish 의 채우기 한 곳만 한다(이어 읽기 판단 한 벌).
+    const av = scenes.map(g => ({st: g.start, len: Math.max(0, g.end - g.start)}));
+  const sum = a => a.reduce((x, y) => x + y, 0);
+    let real = scenes.map(() => 0);                       // 장면마다 보여 줄 진짜 화면 초
+    for (let it = 0; it < 12; it++){
+      const rest = ttsDur - sum(real);
+      const open = real.map((_, k) => k).filter(k => av[k].len - real[k] > EPS);
+      if (rest <= EPS || !open.length) break;
+      const share = rest / open.length;
+      open.forEach(k => { real[k] += Math.min(share, av[k].len - real[k]); });
+    }
+    let dur = real.slice();
+    const totalReal = sum(real);
+    if (ttsDur - totalReal > EPS && totalReal > EPS){
+      // 다 합쳐도 모자라면 칸 전체에 같은 배속 — 원본이 이어지는 장면은 finish 채우기가 진짜 화면으로 메운다
+      const f = ttsDur / totalReal;
+      dur = real.map(r => r * f);
+    }
+    // ④ 전환 시점을 가까운 자막 경계에 — 양쪽 컷이 MIN_CLIP 이상이고 배속 상한을 안 넘을 때만
+    const caps = (typeof capsOf === 'function' ? (capsOf(beatIdx) || []) : []);
+    const SNAP_SEC = 0.4;
+    const capB = caps.slice(1).map(c => Number(c.start)).filter(x => isFinite(x) && x > EPS && x < ttsDur - EPS);
+    let acc = 0;
+    for (let j = 0; j < dur.length - 1; j++){
+      acc += dur[j];
+      let best = null;
+      capB.forEach(x => { if (Math.abs(x - acc) <= SNAP_SEC && (best === null || Math.abs(x - acc) < Math.abs(best - acc))) best = x; });
+      if (best === null) continue;
+      const delta = best - acc, a = dur[j] + delta, b = dur[j + 1] - delta;
+      const okA = a >= MIN_CLIP && a <= av[j].len * _maxS() + EPS;
+      const okB = b >= MIN_CLIP && b <= av[j + 1].len * _maxS() + EPS;
+      if (okA && okB){ dur[j] = a; dur[j + 1] = b; acc = best; }
+    }
+    return scenes.map((g, k) => {
+      const d = Math.round(dur[k] * 100) / 100;
+      const c = {seg_id: g.seg_id, video_id: g.video_id, start: av[k].st, dur: d};
+      const src = Math.min(av[k].len, dur[k]);
+      if (src < d - EPS) c.src_dur = +src.toFixed(3);
+      return c;
+    });
+  }
+
   // 서버 plan_beat_clips_for와 같은 규칙: 기존 편성의 출력 길이·구절 경계는 건드리지
   // 않고, 각 컷이 읽는 원본 길이(src_dur)에만 통합 속도를 적용한다.
   // 이 함수는 회귀 테스트와 진단 도구가 단독으로 떼어 실행하기도 한다. 외부 helper에
@@ -790,6 +844,12 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   if (rhythmOne && crBeat.hold && segments.length){
     const seg = segments[0];
     return finish([{seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: Math.round(ttsDur * 100) / 100}]);
+  }
+  // ★관제 084 새 규칙(표식 있는 작업 · 구절 맞춤 켠 · 사람이 느리게/늘려 채우기/컷 리듬을 안 건 칸)
+  if (cutRuleV2() && !rhythmOne && beatIdx != null && phraseSyncOn(beatIdx) && !spread
+      && !(typeof SLOW === 'object' && SLOW && SLOW[beatIdx] > 1)
+      && typeof lists !== 'undefined' && lists[beatIdx] === segIds) {
+    return finish(scenesV2(segments, ttsDur, beatIdx));
   }
   if (!rhythmOne && beatIdx != null && phraseSyncOn(beatIdx) && typeof capsOf === 'function') {
     const caps = capsOf(beatIdx) || [];

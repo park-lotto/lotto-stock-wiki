@@ -6583,6 +6583,7 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         "tts_dur": tts_dur,
         # ★슬로우모션 상한을 화면에 준다(관제 020) — scene_play.js 가 자기 숫자를 들고 있지 않게. 정본 config.MAX_SLOWMO.
         "max_slowmo": float(config.MAX_SLOWMO),
+        "cut_rule": str(plan.get("cut_rule") or ""),        # 관제 084 — 표식 있는 작업만 planClips 새 규칙
     }}
 
 
