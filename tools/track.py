@@ -155,10 +155,12 @@ class _FileLock:
 
 
 @contextlib.contextmanager
-def _finish_gate_lock():
-    """finish 전역 직렬화 락. 이미 다른 finish가 게이트 중이면 풀릴 때까지 대기(순번제). → 락 객체(영상 관문 동안 놓는다)."""
-    lk = _FileLock(_finish_lock_path(),
-                   "[대기] 다른 트랙이 finish 게이트 중 - 선착순 대기(동시 실행이 더 느려서 줄 세운다)", queue=True).acquire()
+def _finish_gate_lock(prepared=None):
+    """finish 전역 직렬화 락. 이미 다른 finish가 게이트 중이면 풀릴 때까지 대기(순번제). → 락 객체(영상 관문 동안 놓는다).
+    prepared: 번호표를 미리 받아 둔 락(선검사 동안 줄을 서 둔 것)."""
+    lk = (prepared or _FileLock(_finish_lock_path(),
+                                "[대기] 다른 트랙이 finish 게이트 중 - 선착순 대기(동시 실행이 더 느려서 줄 세운다)",
+                                queue=True)).acquire()
     try:
         yield lk
     finally:
@@ -633,7 +635,10 @@ def _precheck(name, repo, wt, br, gate):
         return
     t0 = time.time()
     print("선검사: 관련 시험 %d개를 트랙 폴더에서 먼저(락 전)..." % len(sel))
-    failed = set(gate.rerun_ids(wt, sel))
+    try:
+        failed = set(gate.rerun_ids(wt, sel, workers=2))        # 남의 게이트와 CPU 를 나눠 쓰니 병렬 2(카드 083)
+    except TypeError:
+        failed = set(gate.rerun_ids(wt, sel))
     if failed:
         pre = _known_main_failures(repo, wt, sorted(failed), ref="origin/main")
         failed -= pre
@@ -704,10 +709,21 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3, video_gate=None):
     wt = _preflight(name, repo)
     br = branch_name(name)
     run(["git", "fetch", "origin"], repo)
-    _precheck(name, repo, wt, br, gate)
+    # ★번호표 먼저 받고(줄을 서 둔 채) 선검사(카드 083) — 선검사 5분이 대기 시간에 묻힌다. 실패하면 번호표를 버린다.
+    _lk_pre = _FileLock(_finish_lock_path(),
+                        "[대기] 다른 트랙이 finish 게이트 중 - 선착순 대기(동시 실행이 더 느려서 줄 세운다)", queue=True)
+    _lk_pre._ticket = _lk_pre._new_ticket()
+    try:
+        _precheck(name, repo, wt, br, gate)
+    except BaseException:
+        try:
+            _lk_pre._ticket.unlink()
+        except OSError:
+            pass
+        raise
 
     # ★전역 락: 한 번에 하나의 finish만 게이트를 돈다(동시 pytest는 CPU 포화라 더 느림).
-    with _finish_gate_lock() as _lk:
+    with _finish_gate_lock(_lk_pre) as _lk:
         # 락을 쥐었으니 남아 있는 _merge-* 는 전부 끊긴 finish의 잔해다(2026-09-27 실측 4개·개당 ~1.8GB)
         _clean_dead_stages(repo)
         _disk_guard(repo, "finish")
@@ -739,6 +755,14 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3, video_gate=None):
 def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None):
     light = hasattr(gate, "snapshot_light")
     before = gate.snapshot_light(stage) if light else _cached_baseline(repo, stage, gate)
+    exact = None
+    if light:
+        # ★정확한 기준선(카드 083): 이 코드 트리로 병합될 때 저장한 **전체 시험 실패 목록**이 있으면 그것과 비교한다.
+        #   관제·핸드오프 커밋은 코드 트리를 안 바꿔 대부분 맞는다. 없으면(다른 PC 의 코드 병합 직후) 파일 단위 재확인으로 가른다.
+        exact = _load_full_failures(repo, _code_key(stage))
+        if exact is not None:
+            before = dict(before, failed=list(exact))
+            print("  ℹ️ 기준선: 저장된 전체 실패 %d건(같은 코드 트리) — 정확 비교" % len(exact))
     for w in gate.baseline_warnings(before):
         print(f"  {w}")
 
@@ -774,6 +798,7 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None)
     problems = _classify_new_failures(before, after, problems,
                                       rerun=lambda ids: _known_main_failures(repo, stage, ids), printer=print,
                                       recheck=(lambda ids: gate.rerun_ids(stage, ids)) if hasattr(gate, "rerun_ids") else None)
+    _after_failed_for_store = list(after.get("failed", []))
 
     if problems:
         msg = ["❌ 게이트 실패 — 병합을 버렸다. 라이브는 무사하다.\n"]
@@ -826,6 +851,11 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None)
             f"push 실패 — main은 안 바뀌었다(라이브 무사):\n{out}"
         )
     print("✅ main에 병합 완료 — push됨. 3분 뒤 서버 반영.")
+    if light:
+        try:
+            _store_full_failures(repo, _code_key(stage), _after_failed_for_store)   # 다음 finish 의 정확한 기준선(카드 083)
+        except Exception as e:  # noqa: BLE001
+            print(f"  ⚠️ 전체 실패 목록 저장 실패(병합엔 영향 없음): {e!r}")
     rc, sha = run(["git", "rev-parse", "--short=10", "HEAD"], stage)
     if _MERGE_CARDS.get(name):
         _control.record_merge(repo, _MERGE_CARDS[name], name, sha.strip())
@@ -918,6 +948,29 @@ def _code_key(cwd, ref="HEAD"):
     return hashlib.sha1("|".join(parts).encode()).hexdigest()[:16]
 
 
+def _full_fail_path(repo, key):
+    return tracks_dir(repo) / "_gate_cache" / ("full_fail_%s.json" % key)
+
+
+def _store_full_failures(repo, key, failed):
+    """이 코드 트리에서 전체 시험을 돌렸을 때 깨진 목록 — 다음 finish 의 **정확한 기준선**(카드 083)."""
+    import json
+    f = _full_fail_path(repo, key)
+    try:
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(json.dumps(sorted(failed), ensure_ascii=False), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _load_full_failures(repo, key):
+    import json
+    try:
+        return json.loads(_full_fail_path(repo, key).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
 def _known_main_failures(repo, stage, ids, ref="HEAD"):
     """그 시험들이 **main 코드에서도** 깨지나 → 깨지는 id 집합. 코드 트리 열쇠별로 기억해 같은 코드면 다시 안 돌린다(카드 081)."""
     import json
@@ -969,9 +1022,12 @@ def _rerun_on_main(stage, ids):
         # main 코드의 finish 시험이 이 프로세스가 쥔 전역 락을 기다리지 않게 — 임시 폴더를 통째로 따로(카드 075)
         for _k in ("TMP", "TEMP", "TMPDIR"):
             env[_k] = str(tmp)
-        r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--no-header"] + list(ids),
+        # 파일 통째로(카드 083) — id 하나씩이면 같은 파일 안 순서 영향이 사라져 '원래 실패'를 못 가른다
+        r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--no-header", "--tb=no", "-rfE"]
+                           + merge_gate.test_files_of(ids),
                            cwd=str(tmp), capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=900)
-        return merge_gate.parse_failed((r.stdout or "") + (r.stderr or ""))
+        got = merge_gate.parse_failed((r.stdout or "") + (r.stderr or ""))
+        return {f for f in got if f in set(ids)}
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -1200,8 +1256,37 @@ def list_tracks(repo=BASE):
 
 # ── cli ──────────────────────────────────────────────────────────
 
+def _reexec_latest(argv):
+    """main 폴더의 tools/track.py 가 이 파일과 다르면 그걸로 바꿔 실행한다(카드 083). 트랙 폴더 350개 중 349개가
+    옛 판본이라, main 에 새 finish 가 들어가도 각 세션은 자기 폴더의 옛 것으로 돌았다(10-02 실측). main 폴더는 병합 때마다 최신.
+    → (실행했나, rc)."""
+    import subprocess
+    if os.environ.get("TRACK_REEXEC"):
+        return False, 0
+    try:
+        latest = Path(main_worktree()) / "tools" / "track.py"
+        me = Path(__file__).resolve()
+        if not latest.exists() or latest.resolve() == me or latest.read_bytes() == me.read_bytes():
+            return False, 0
+        # ★이 트랙이 track.py 자체를 고치는 중이면 바꾸지 않는다 — 고친 판본으로 병합해야 한다(10-02 실측: 카드 083 finish 가
+        #   main 의 옛 판본으로 돌았다). 트랙 폴더 판본이 origin/main 판본과 다르고, 그 차이가 이 트랙의 커밋이면 = 고치는 중.
+        rc, base = _sh(["git", "show", "origin/main:tools/track.py"], me.parent)
+        if rc == 0 and base.replace("\r\n", "\n") != me.read_text(encoding="utf-8").replace("\r\n", "\n"):
+            rc2, ch = _sh(["git", "diff", "--name-only", "origin/main...HEAD", "--", ":/tools/track.py"], me.parent)   # :/ = 저장소 최상위 기준
+            if rc2 == 0 and ch.strip():
+                return False, 0
+    except Exception:  # noqa: BLE001 — 못 정하면 이 판본으로 돈다
+        return False, 0
+    print("ℹ️ main 폴더의 최신 track.py 로 실행한다(이 트랙 폴더 판본은 옛것): %s" % latest, flush=True)
+    env = dict(os.environ, TRACK_REEXEC="1")
+    return True, subprocess.call([sys.executable, str(latest)] + list(argv), env=env)
+
+
 def main(argv=None):
     merge_gate.make_output_safe()  # cp949 콘솔에서 ✅·⚠️ 찍다 터지는 것 방지(실측)
+    _done, _rc = _reexec_latest(sys.argv[1:] if argv is None else argv)
+    if _done:
+        return _rc
     parser = argparse.ArgumentParser(description="트랙별 작업 폴더")
     sub = parser.add_subparsers(dest="cmd", required=True)
     p_start = sub.add_parser("start", help="트랙 폴더+브랜치 생성")
