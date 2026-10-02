@@ -76,6 +76,12 @@ def _run(cmd, cwd):
     _priv = Path(_tf.gettempdir()) / ("gate_child_%d" % _os.getpid())
     env.setdefault("TRACK_FINISH_LOCK", str(_priv) + "_finish.lock")
     env.setdefault("TRACK_VIDEO_LOCK", str(_priv) + "_video.lock")
+    # ★임시 폴더 자체를 따로 준다(2026-10-02 실측 교착): 기준선은 **main 코드**로 찍는데, 그 코드의 track.py 는 위 환경변수를
+    #   모른다 → main 의 finish 시험이 바깥 finish 가 쥔 전역 락(tempfile.gettempdir()/stockbrain_track_finish.lock)을 기다려
+    #   워커 4개가 CPU 0 으로 멈췄다. 락 경로가 gettempdir() 에서 나오므로 TMP/TEMP 를 바꾸면 **어느 판본 코드든** 개별 락이 된다.
+    _priv.mkdir(parents=True, exist_ok=True)
+    for _k in ("TMP", "TEMP", "TMPDIR"):
+        env[_k] = str(_priv)
     p = subprocess.run(
         cmd, cwd=str(cwd), capture_output=True, text=True,
         encoding="utf-8", errors="replace", env=env,

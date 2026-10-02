@@ -740,6 +740,9 @@ def _rerun_on_main(stage, ids):
         with tarfile.open(tar_path) as tf:
             tf.extractall(tmp)
         env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        # main 코드의 finish 시험이 이 프로세스가 쥔 전역 락을 기다리지 않게 — 임시 폴더를 통째로 따로(카드 075)
+        for _k in ("TMP", "TEMP", "TMPDIR"):
+            env[_k] = str(tmp)
         r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--no-header"] + list(ids),
                            cwd=str(tmp), capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=900)
         return merge_gate.parse_failed((r.stdout or "") + (r.stderr or ""))
