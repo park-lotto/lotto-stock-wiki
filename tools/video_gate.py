@@ -827,20 +827,18 @@ def run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sle
             _p(printer, "  (관문 기록 저장: %s)" % f)
 
 
-def _run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sleep=time.sleep, remote_tmp="/tmp"):
-    env = os.environ if env is None else env
-    log = []
-    say = lambda s: log.append(_p(printer, s))           # noqa: E731
+def _stage_config(stage):
+    raw = _main_or_stage(stage, CONFIG_REL)
+    return load_config(raw.decode("utf-8") if raw else None)
 
-    if cfg is None:
-        raw = _main_or_stage(stage, CONFIG_REL)
-        cfg = load_config(raw.decode("utf-8") if raw else None)
-    g = cfg["gate"]
 
+def gate_decision(stage, cfg=None):
+    """이 병합에 영상 관문이 도나 — **판정은 여기 한 곳**(run_video_gate 와 track 의 락 놓기가 같이 쓴다, 2026-10-02 카드 075).
+    → (오류문|None, 변경 파일, 실행?, 사유, 못 재는 파일)."""
+    cfg = cfg or _stage_config(stage)
     rc, out = _git(stage, "-c", "core.quotepath=off", "diff", "--cached", "--name-only", "HEAD")
     if rc != 0:
-        say("❌ 영상 관문: 병합 변경 목록을 못 읽었다 — 실패로 본다\n" + out)
-        return GateResult(False, False, "\n".join(log), log)
+        return out, [], True, [], []
     changed = [x.strip() for x in out.splitlines() if x.strip()]
 
     def app_decision():
@@ -851,6 +849,22 @@ def _run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sl
         return app_touches_video(old, new, d, cfg)
 
     run, reasons, unmeasured = needs_video_gate(changed, cfg, app_decision)
+    return None, changed, run, reasons, unmeasured
+
+
+def _run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sleep=time.sleep, remote_tmp="/tmp"):
+    env = os.environ if env is None else env
+    log = []
+    say = lambda s: log.append(_p(printer, s))           # noqa: E731
+
+    if cfg is None:
+        cfg = _stage_config(stage)
+    g = cfg["gate"]
+
+    err, changed, run, reasons, unmeasured = gate_decision(stage, cfg)
+    if err:
+        say("❌ 영상 관문: 병합 변경 목록을 못 읽었다 — 실패로 본다\n" + err)
+        return GateResult(False, False, "\n".join(log), log)
     if not run:
         say("영상 관문: 건너뜀 — 제작 라인 변경 없음 (변경 %d파일%s)" % (
             len(changed), "; " + "; ".join(reasons) if reasons else ""))

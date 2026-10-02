@@ -48,7 +48,7 @@ def test_remote_command_uses_same_audit_tool_dry_run():
 
 def test_run_card_writes_result_and_state(repo):
     _install(repo)
-    n = control.new_card(repo, "실측 대상", printer=lambda *a: None)
+    n = control.new_card(repo, "실측 대상", check="영상", printer=lambda *a: None)
     control.set_field(repo, n, "병합", "deadbeef00 %s (t)" % time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() - 7200)), printer=lambda *a: None)
     control.set_status(repo, n, "병합", printer=lambda *a: None)
     c = control.find_card(control.cards_from_ref(repo), n)
@@ -83,7 +83,7 @@ def test_run_all_measures_once_and_writes_every_due_card(repo):
     old = time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() - 3 * 3600))
     nos = []
     for t in ("가", "나"):
-        n = control.new_card(repo, "묶음 " + t, printer=lambda *a: None)
+        n = control.new_card(repo, "묶음 " + t, check="영상", printer=lambda *a: None)
         control.set_field(repo, n, "병합", "abc%d000000 %s (t)" % (n, old), printer=lambda *a: None)
         control.set_status(repo, n, "병합", printer=lambda *a: None)
         nos.append(n)
@@ -102,7 +102,7 @@ def test_run_all_measures_once_and_writes_every_due_card(repo):
 def test_run_all_regresses_all_when_audit_fails(repo):
     _install(repo)
     old = time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() - 3600))
-    n = control.new_card(repo, "회귀될 것", printer=lambda *a: None)
+    n = control.new_card(repo, "회귀될 것", check="영상", printer=lambda *a: None)
     control.set_field(repo, n, "병합", "abcdef0000 %s (t)" % old, printer=lambda *a: None)
     control.set_status(repo, n, "서버반영", printer=lambda *a: None)
     assert lc.run_all(repo, control.cards_from_ref(repo), sh=lambda cmd, timeout=0: (1, "== 칸 30 · 다른 장면 2\n❌\n"), printer=lambda *a: None) == 1
