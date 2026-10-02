@@ -6,7 +6,6 @@ run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 """
 import copy
 import hashlib
-import math
 import os
 import json
 import logging
@@ -3164,8 +3163,24 @@ def _trim_for_cut_rhythm(plan):
             secs = float(b.get("target_seconds") or 0.0)
         except (TypeError, ValueError):
             secs = 0.0
-        want = 1 if hold and secs <= 5.0 else (2 if hold else max(1, min(4, int(round(secs / 2.5)))))
-        b["alternates"] = alts[:max(0, want - 1)]
+        # ★2026-10-02 관제 084(사장님 "2.5초 넘으면 다른 장면 / 같은 장면 길게·멈춤 금지"): 반올림 → **올림**.
+        #   종전 round(secs/2.5)는 3.7초 줄까지 1컷이라, 2단계가 준 장면을 깎아 같은 장면이 조각나고(구절 맞춤) 모자라 멈췄다
+        #   (실측 24시간: 2.5초↑ 칸 35%가 한 장면, 멈춤 18%). 2.5초까지 1 · 5초까지 2 · 7.5초까지 3 · 최대 4.
+        want = 1 if hold and secs <= 5.0 else (2 if hold else max(1, min(4, int(math.ceil(secs / 2.5 - 1e-6)))))
+        kept = alts[:max(0, want - 1)]
+        # ★어떤 줄도 대사를 못 채울 만큼 깎지 않는다 — 남긴 장면 길이(한 장면 max_shot까지)×배속 상한 < 대사면 하나씩 되살린다.
+        def _len(r):
+            try:
+                return max(0.0, float(r.get("end") or 0) - float(r.get("start") or 0))
+            except (TypeError, ValueError):
+                return 0.0
+        _cap = 5.0 if hold else 2.2
+        _have = lambda: sum(min(_cap, _len(r)) for r in [b.get("primary") or {}] + kept)
+        from shopping_shorts.config import MAX_SLOWMO as _MAXS   # 배속 상한 정본(관제 020)
+        while secs and _have() * float(_MAXS) < secs - 0.2 and len(kept) < len(alts):
+            kept.append(alts[len(kept)])
+        b["alternates"] = kept
+        want = 1 + len(kept)
         b["cut_rhythm"] = {"max_shot": (5.0 if hold else max(2.0, min(4.0, secs / want if want else 4.0))), "hold": hold}
         n += 1
     return n
