@@ -143,7 +143,7 @@ YT_SCHEMA = {
     "required": ["hook", "bait", "reveal", "contrast", "escalations", "twist", "closing"],
 }
 
-YT_BRIEF = """너는 한국 쇼핑 숏폼 나레이션 작가다. 유튜브 썰쇼핑 대본을 써라.
+YT_BRIEF = """■ 이번 대본 스타일 = **유튜브 썰쇼핑** (씨앗 말투가 반말 썰이다). 한 편 전체를 이 스타일 하나로 — 인스타 존댓말 어미를 섞지 마라.
 
 ■ 말투 = 남 얘기 전하는 혼잣말 (썰 히트작 520편 실측 — 청자에게 말 거는 반말은 4%뿐이다)
 보는 사람에게 말을 걸지 마라. "~있지?" "~해봐" "다들 알지?" 같은 대화체는 이 채널 말투가 아니다.
@@ -232,7 +232,7 @@ IG_SCHEMA = {
     "required": ["opening", "scene", "ask", "reveal", "beats", "feeling", "cta"],
 }
 
-IG_BRIEF = """너는 인스타 릴스 쇼핑 대본 작가다. **겪은 일을 이야기하듯** 써라.
+IG_BRIEF = """■ 이번 대본 스타일 = **인스타 릴스 체험담** (씨앗 말투가 존댓말 체험담이다). **겪은 일을 이야기하듯**, 한 편 전체를 이 스타일 하나로 — 유튜브 썰 어미를 섞지 마라.
 
 ■ 이건 설명이 아니라 상황극이다
   X 이 제품은 콩알만큼 떼어 붙이면 고정되는 기능이 있습니다
@@ -398,7 +398,10 @@ def write(product, seed_text, feats, platform="yt", style=None, key="", nth=0, n
         hook_mold, _ = story_hook.pick(hook_slots, key, nth, seed_text)
         if hook_mold and style:
             style = dict(style, hook_angle="")       # 꼴은 은행이 정한다 — 씨앗 첫 줄 꼴(_seed_style)은 쓰지 않는다
-    brief = IG_BRIEF if ig else YT_BRIEF
+    # ★2단계 영상 대본 작가 지침서(지위·재료·왜·규칙)는 backbone_assemble.WRITER_BRIEF 한 곳 — 고객 경로(이 함수)와 백본이 같이 쓴다(2026-10-02).
+    #   그 아래에 스타일(유튜브 썰 / 인스타 체험담)이 붙는다. 스타일은 씨앗 말투(seed_platform)로 하나만 고른다.
+    from shopping_shorts import backbone_assemble as _ba
+    brief = _ba.WRITER_BRIEF + chr(10) + (IG_BRIEF if ig else YT_BRIEF)
     if preset == "full":
         brief += IG_FULL_BLOCK if ig else FULL_BLOCK
     elif not ig:
@@ -975,6 +978,11 @@ def _norm_text(t):
     return re.sub(r"\s+", "", str(t or ""))
 
 
+# 씨앗이 없을 때 씨앗 자리에 넣는 안내(2026-10-02). 60자 이상이어야 하고, 대본에 그대로 옮기지 않게 괄호로 감싼다.
+SEEDLESS_NOTE = ("(씨앗 대본 없음 — 외국 영상이라 참고할 한국어 말이 없다. 씨앗을 흉내 내지 말고, 아래 재료의 스토리 문장과 "
+                 "소구점만으로 이 제품의 대본을 처음부터 써라. 이 괄호 안 문장은 대본에 쓰지 마라.)")
+
+
 def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product=""):
     """(drafts, why) — app._backbone_drafts와 같은 계약(비면 why에 이유, 조용한 폴백 금지).
 
@@ -1002,14 +1010,27 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
     else:
         seed_src = ba.seed_source(srcs, (job or {}).get("backbone_main"))
         seed_text = ((seed_src or {}).get("full_text_ko") or (seed_src or {}).get("full_text") or "").strip()
-        if len(seed_text) < 60:
-            return [], "씨앗 영상의 말이 너무 짧음(%d자)" % len(seed_text)
-        seed_from = "job:%s" % (seed_src.get("video_id") or "")
-        vis = ba._drop_seed(srcs, seed_src)
-        product = ((seed_src.get("source_brief") or {}).get("product") or "").strip()
+        if len(seed_text) >= 60:
+            seed_from = "job:%s" % (seed_src.get("video_id") or "")
+            vis = ba._drop_seed(srcs, seed_src)
+            product = ((seed_src.get("source_brief") or {}).get("product") or "").strip()
+        else:
+            # ★씨앗 없음(2026-10-02 사장님 "씨앗 없는 것도 라이브 가자"): 외국 영상만 담으면 한국어 씨앗이 없다.
+            #   막지 않고 1단계 스토리·소구점만으로 쓴다(실측: 목베개 2편·트럭 1편, 스타일 2개씩 8안 전부 말맛 대본).
+            #   재료 영상은 전부 화면에 쓴다(뺄 씨앗이 없다).
+            seed_text, seed_src, seed_from, vis = SEEDLESS_NOTE, None, "none", list(srcs)
+            product = (seed_product or "").strip() or next(
+                ((s_.get("source_brief") or {}).get("product") or "" for s_ in srcs if (s_.get("source_brief") or {}).get("product")), "")
     seg_index = ba._seg_index(vis)
     note = {}
+    from shopping_shorts import story_tag as _st
+    # ★특징 뽑기 호출은 **늘** 한다 — 이 호출이 씨앗의 '홀린 요인'(hook_slots: 권위자·대상·나라…)과 씨앗 셀링포인트(seed_points)도
+    #   같이 뽑는다. 2026-10-02 실측: 스토리 모드에서 이 호출을 건너뛰었더니 첫 줄 틀 빈칸이 비어 「OO도 예상 못한」이 「셰프도 감탄한」으로 샜다.
     feats_cands = extract_feats(vis, product, note=note, seed_text=seed_text)
+    note["feats_from"] = "extract_feats"
+    if _st.has_stories(vis):                      # 2026-10-01: 스토리가 있으면 특징 후보는 스토리(문장·컷이 태깅 때 이미 짝). 씨앗은 vis 에서 이미 빠졌다.
+        feats_cands = _st.feats_from_stories(vis, seg_index) or feats_cands
+        note["feats_from"] = "story"
     if not feats_cands:
         return [], "특징을 못 뽑음(%s)" % (note.get("reason") or "빈 응답")
     hook_slots = note.get("hook_slots") or {}
@@ -1071,35 +1092,34 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         # ★AI 매칭(2026-09-22 사장님 "매칭은 AI가 해봐"): 줄 전체 + 컷 목록을 한 번에 주고 줄마다 고르게 한다(호출 1회).
         #   빈 줄이 남으면 그 줄만 코드 매칭(assign_cuts)이 채운다. AI가 아예 실패하면 전부 코드 매칭.
         from shopping_shorts import ai_match as _am
-        _an = {}
-        ai_bs = _am.match(lines, seg_index, backbone_vid, note=_an)
         bs, report = ba.assign_cuts(lines, groups_out, seg_index, backbone_vid)
         code_bs = [dict(b) for b in bs]                        # 코드 매칭 원본(근거 컷) — 아래 장면 고정이 쓴다
-        if ai_bs:
-            _used = {c for b in ai_bs for c in (b.get("segs") or [])}
-            for i, b in enumerate(ai_bs):
-                if b.get("segs"):
-                    bs[i] = b
-                else:                                          # AI가 비운 줄 = 코드 매칭 결과에서 안 겹치는 컷만
-                    keep = [c for c in (bs[i].get("segs") or []) if c not in _used]
-                    bs[i] = {"role": bs[i].get("role"), "seg": keep[0] if keep else "", "segs": keep}
-                    _used.update(keep)
-            n["matcher"] = "ai"
-        else:
-            n["matcher"] = "code(%s)" % (_an.get("reason") or "")
+        bs = _am.apply(lines, code_bs, seg_index, backbone_vid, note=n, product=product)   # 3단계 매칭 전문가(백본과 같은 함수)
         # ★장면 고정(2026-09-26 사장님 "다른 소스에 나온 고조·반전 장면을 정말 쓰는지, 쓸 수밖에 없는 구조"):
         #   특징 번호가 붙은 줄(고조·반전)은 **그 특징의 근거 컷(from_cuts) 안에서만**. AI는 특징↔근거 컷을 모르고 골랐고,
         #   코드 매칭도 근거 컷이 모자라면 딴 컷을 채웠다(실측 비교: 근거 안 0/7·3/7) → **매칭 방식과 관계없이** 여기서 고정한다.
         #   근거 컷이 줄보다 적으면 같은 근거 컷을 이어 쓴다(구절 이어 틀기로 그 장면이 이어진다). 훅·미끼·공개·마무리는 그대로.
         _locked = 0
+        _taken = {c for b in bs for c in (b.get("segs") or [])}       # 다른 줄이 이미 쓴 컷 — 고정할 때 같은 컷을 또 박지 않는다
         for i, L in enumerate(lines):
             gi = L.get("group", -1)
             if not (isinstance(gi, int) and 0 <= gi < len(groups_out["groups"])):
                 continue
+            # ★스토리 모드(2026-10-01)에선 고정하지 않는다 — 스토리 컷은 작가 재료이고, 최종 컷은 전문가 매처+검사(중복·뒷컷·길이)가 정한다.
+            #   실측: 고정이 AI 선택 7/11줄을 묶음 첫 컷으로 덮어써 같은 컷이 세 줄에 갔다.
+            if note.get("feats_from") == "story" and (bs[i].get("segs") or []):
+                continue
             allowed = groups_out["groups"][gi]["cuts"]
             if allowed and not set(bs[i].get("segs") or []) <= set(allowed):
-                keep = [c for c in (code_bs[i].get("segs") or []) if c in allowed] or allowed[:1]
+                # ★같은 묶음의 줄 3개가 전부 allowed[0] 하나를 받아 **같은 컷이 세 번** 나왔다(2026-10-01 사장님 화면, job 4a1d44721e8a
+                #   고조1 세 줄 = 8e1-38 배수구 0.8초). 아직 아무 줄도 안 쓴 묶음 컷을 먼저, 없을 때만 첫 컷.
+                for c in (bs[i].get("segs") or []):
+                    _taken.discard(c)
+                keep = [c for c in (code_bs[i].get("segs") or []) if c in allowed and c not in _taken]
+                if not keep:
+                    keep = [c for c in allowed if c not in _taken][:1] or allowed[:1]
                 bs[i] = {"role": bs[i].get("role"), "seg": keep[0], "segs": keep}
+                _taken.update(keep)
                 _locked += 1
         n["locked_lines"] = _locked
         n["no_cut_lines"] = _share_cuts(lines, bs, seg_index)     # 끝내 빈 줄 = 재료가 대본보다 짧다

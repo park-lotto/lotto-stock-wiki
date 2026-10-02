@@ -185,7 +185,8 @@ def frames_for_lines(jid, given, beat_sources, seg_index, work):
                               os.path.join(work, "line%02d_%s_%d.jpg" % (i, sid.replace("/", "_"), q)))
                     if p:
                         paths.append(p)
-            descs.append("%s(%.1fs) %s" % (sid, v.get("secs") or 0, (v.get("desc") or "")[:40]))
+            # 시트엔 **대본화 문장(소구점)**을 먼저, 묘사는 뒤에 — 사장님 10-01 "이거 태깅이 대본화한 거 맞아?"(묘사만 보여 오해)
+            descs.append("%s(%.1fs) 대본화:%s | 묘사:%s" % (sid, v.get("secs") or 0, (v.get("use") or "-")[:40], (v.get("desc") or "")[:30]))
         rows.append({"i": i, "text": text, "role": (bs or {}).get("role"), "segs": segs, "frames": paths, "descs": descs})
     return rows
 
@@ -193,10 +194,11 @@ def frames_for_lines(jid, given, beat_sources, seg_index, work):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("job")
-    ap.add_argument("--mode", choices=("live", "old", "new"), required=True)
+    ap.add_argument("--mode", choices=("live", "old", "new", "story"), required=True)
     ap.add_argument("--guide", default="")
     ap.add_argument("--extract", default="", help="new 모드: 전에 저장한 extract_new.json 을 다시 써서 재태깅을 건너뛴다")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--writer", choices=("backbone", "story_writer"), default="backbone", help="2단계 경로(사장님 계정은 story_writer 가 켜져 있다)")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     t0 = time.time()
@@ -231,6 +233,24 @@ def main():
         # ★패치본 패키지(/tmp/patch)로 돌리면 _source_block 이 이미 훅·속도·뒷컷을 싣는다 — 그땐 덧붙이지 않는다
         if "훅:" not in ba._source_block.__code__.co_consts.__repr__():
             patch_source_block(ba)
+    if a.mode == "story":
+        # 2026-10-01: 소스마다 1단계 스토리(story_tag.make_story)를 붙인 뒤 백본 2단계(groups_from_stories)를 돈다 — 라이브 코드 그대로
+        from shopping_shorts import story_tag as _st
+        ext2 = {}
+        base = json.load(open(a.extract, encoding="utf-8")) if a.extract else (job.get("extract") or {})
+        for vid, ex in sorted(base.items()):
+            if not isinstance(ex, dict):
+                continue
+            if not ex.get("story"):
+                n = {}
+                ex = dict(ex, story=_st.make_story(((ex.get("source_brief") or {}) or {}).get("product") or "", ex.get("segments") or [], note=n))
+                print("스토리", vid, len(ex["story"]), "줄", n.get("story_reason") or "", flush=True)
+                for L in ex["story"]:
+                    print("    [%s] %s  (컷 %s)" % (L.get("kind"), L.get("text"), ",".join(c[-6:] for c in L.get("cuts") or [])), flush=True)
+            ext2[vid] = ex
+        job = dict(job, extract=ext2)
+        with open(os.path.join(a.out, "extract_story.json"), "w", encoding="utf-8") as f:
+            json.dump(ext2, f, ensure_ascii=False)
     # 작가에게 들어간 재료 블록도 남긴다(무엇이 달라졌나를 눈으로 보려고)
     srcs = ba.sources_from_extract(job.get("extract") or {})
     seg_index = ba._seg_index(srcs)
@@ -245,6 +265,17 @@ def main():
         ss = job.get("script_structure") or {}
         res = {"given": job.get("given_script") or "", "beat_sources": ss.get("beat_sources") or [], "spine": None,
                "report": None, "groups": None, "note": note}
+    elif a.writer == "story_writer":
+        from shopping_shorts import story_writer as _sw
+        drafts, why = _sw.make_drafts([], job, int(job.get("target_seconds") or 25), job_id=a.job, preset="short",
+                                      seed_text="", seed_product=srcs[0].get("source_brief", {}).get("product", "") if srcs else "")
+        note["story_writer_why"] = why
+        if not drafts:
+            sys.exit("이야기작가 실패: %s" % why)
+        d = drafts[0]
+        res = {"given": "\n".join(b.get("text") or "" for b in d.get("beats") or []),
+               "beat_sources": [{"role": b.get("role"), "seg": (b.get("src_segs") or [b.get("src_seg")] or [""])[0] or "", "segs": [str(x) for x in (b.get("src_segs") or ([b.get("src_seg")] if b.get("src_seg") else []))]} for b in d.get("beats") or []],
+               "spine": {"name": d.get("style_name")}, "report": None, "groups": None, "note": dict(note, writer_note=d.get("writer_note"))}
     else:
         res = run_assemble(job, a.job, store, note)
         if not res:

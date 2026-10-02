@@ -43,13 +43,24 @@ if os.getenv("PATCH_DIR"):          # 배포 전 대조: 고친 모듈을 먼저
     # ★음성 라인(voice_presets·typecast_tts·audio_post·tts·tts_joined)도 얹는다(2026-10-01 관제 049) — mix_pipeline 이
     #   이들의 새 함수(default_speed 등)를 부르는데 옛 라이브 모듈이 섞이면 import 때 죽는다(관문 첫 실행 실측).
     #   의존 순서대로: 아래 모듈을 먼저, mix_pipeline 을 마지막에.
-    for _n in ("voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined",
+    # ★config 를 맨 먼저(2026-10-01 관제 020): video_assemble 이 config.MAX_SLOWMO 를 import 때 읽는다 — 옛 라이브 config 면 ImportError(관문 실측).
+    for _n in ("config", "voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined",
                "frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
         _f = Path(os.getenv("PATCH_DIR")) / ("%s.py" % _n)
         if _f.exists():
             _sp = importlib.util.spec_from_file_location("shopping_shorts." + _n, str(_f))
             _m = importlib.util.module_from_spec(_sp); sys.modules["shopping_shorts." + _n] = _m
             _sp.loader.exec_module(_m); setattr(shopping_shorts, _n, _m)
+            if _n == "config":
+                # ★config 를 PATCH_DIR 에서 얹으면 DB_PATH 등 **파일 위치 기준 경로**가 /tmp/gate_…/data 를 가리켜 DB 가 빈 것처럼 보인다
+                #   (2026-10-01 관문 실측: 6작업 전부 '데이터 없음' 404 → 화면 계산 실패). 경로 상수는 저장소 config 값으로 되돌린다.
+                _rs = importlib.util.spec_from_file_location("_repo_config", str(Path("shopping_shorts/config.py").resolve()))
+                _rc = importlib.util.module_from_spec(_rs); _rs.loader.exec_module(_rc)
+                _pd = str(Path(os.getenv("PATCH_DIR")).resolve())
+                for _k in dir(_m):
+                    _v = getattr(_m, _k)
+                    if isinstance(_v, Path) and str(_v.resolve()).startswith(_pd) and hasattr(_rc, _k):
+                        setattr(_m, _k, getattr(_rc, _k))
             # ★파일 위치 기준 경로는 저장소로 되돌린다(2026-09-27 실측) — PATCH_DIR 에서 얹으면 video_assemble 의 폰트 폴더
             #   (_FONT_DIR = 파일 옆 static/fonts)를 못 찾아 완성본이 '폰트 미해결 — 자막·BGM 전부 스킵'으로 구워졌고,
             #   clean_base._ROOT(파일의 두 단계 위)가 /tmp 를 가리켰다. 비교 결과가 수리 전(자막 있음)과 조건이 달라졌다.
@@ -425,13 +436,38 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
             "sec": (round(t1 - t0, 1), round(t2 - t1, 1), round(time.time() - t2, 1))}, ""
 
 
+# ★비교 대상 선정(2026-10-01 관제 067) — "완성본을 최근에 렌더한" 작업만.
+#   종전엔 updated_at 최신순이라, 완성본은 9/21·9/22인데 행만 오늘 건드려진 작업(사장님 시험 작업 2건)이 들어왔다.
+#   그 완성본은 그때 코드로 만든 것이고 미리보기는 오늘 코드로 굽으니 열흘치 코드 변화가 '다른 장면'으로 떠서
+#   **모든 병합이 막혔다**(10-01 세 finish 전부, main 그대로 돌려도 같은 2칸). 이 관문은 지금 제작 라인의 두 길이
+#   같은가를 재는 것이지 옛 완성본과 새 코드의 차이를 재는 것이 아니다 — 완성본 파일 시각으로 고른다.
+RECENT_FINAL_DAYS = 3
+
+
+def _pick_jobs(con, n, now=None, days=RECENT_FINAL_DAYS, mtime=os.path.getmtime):
+    """[job_id] — preview 준비된 작업 중 완성본(video_path) 파일이 days 일 안에 만들어진 것, 최신순 n개."""
+    now = time.time() if now is None else now
+    rows = con.execute("select job_id, video_path from mix_jobs where preview_status='ready' "
+                       "order by updated_at desc limit ?", (max(n * 8, 40),)).fetchall()
+    out = []
+    for jid, vp in rows:
+        try:
+            if vp and now - mtime(vp) <= days * 86400:
+                out.append(jid)
+        except OSError:
+            continue
+        if len(out) >= n:
+            break
+    return out
+
+
 def main():
     args = sys.argv[1:]
     n = int(args[0]) if args and args[0].isdigit() else 30
     ids = [a for a in args if not a.isdigit()]
     if not ids:
         con = sqlite3.connect("shopping_shorts/data/reference.db")
-        ids = [r[0] for r in con.execute("select job_id from mix_jobs where preview_status='ready' order by updated_at desc limit ?", (n,))]
+        ids = _pick_jobs(con, n)
     rep = open(OUT / "report.txt", "w", encoding="utf-8")
     (OUT / "samples.jsonl").write_text("", encoding="utf-8")
     print("판정: 가운데 띠(%d~%d%%) 5x5 z거리 >= %.2f = 다른 장면 / 밀림 >= %.2fs (찾는 범위 ±%.1fs)" % (

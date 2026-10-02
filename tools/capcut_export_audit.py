@@ -55,7 +55,8 @@ SPEED_TOL = 0.01
 MIN_FREE_GB = 20
 SUMMARY_RE = re.compile(r"^== 컷 (\d+) · 캡컷 불일치 (\d+) · 내보내기 불일치 (\d+)(?: · 청소 미생성 (\d+) job)?\s*$")
 # PATCH_DIR 에서 얹는 모듈(순서 = import 의존 순서). 관문(video_gate.PATCH_RELS)이 이 목록을 올려야 한다 — 테스트가 대조한다.
-PATCH_MODULES = ("voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "frame_match", "screen_clips", "video_assemble", "clean_base", "mix_pipeline",
+PATCH_MODULES = ("config",            # ★상수 정본 먼저(2026-10-01 관제 020: video_assemble 이 config.MAX_SLOWMO 를 import 때 읽는다)
+                 "voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "frame_match", "screen_clips", "video_assemble", "clean_base", "mix_pipeline",
                  "export_bundle", "capcut_draft")
 
 
@@ -72,6 +73,13 @@ def load_patches():
             m = importlib.util.module_from_spec(sp)
             sys.modules["shopping_shorts." + n] = m
             sp.loader.exec_module(m)
+            if n == "config":                         # editor_vs_final_video 와 같은 되돌리기(경로 상수는 저장소 값) — 2026-10-01
+                _rs = importlib.util.spec_from_file_location("_repo_config", str(Path("shopping_shorts/config.py").resolve()))
+                _rc = importlib.util.module_from_spec(_rs); _rs.loader.exec_module(_rc)
+                for _k in dir(m):
+                    _v = getattr(m, _k)
+                    if isinstance(_v, Path) and str(_v.resolve()).startswith(str(Path(pd).resolve())) and hasattr(_rc, _k):
+                        setattr(m, _k, getattr(_rc, _k))
             setattr(shopping_shorts, n, m)
     return Path(pd)
 

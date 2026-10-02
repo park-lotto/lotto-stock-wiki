@@ -68,9 +68,10 @@
     return {...fixedBaseColors(frame),channel:paint.top?readableInk(paint.top):(frame.channel_box?.color||frame.channel_boxes?.[0]?.color||'#FFFFFF'),...paint};
   };
   const captionSource=frame=>{
-    // ★훅 흰 띠도 자막 칸이다(2026-10-02 사장님 "썰 채널 스타일 훅은 제목 아래 띠에 자막이 들어간다") — 본문 흰 띠와 같은 규칙
-    const wbCap=frame===rows[current]?.body||frame===rows[current]?.hook;
-    const ln=(frame.lines||[]).find(l=>l.bind==='caption')||(frame===rows[current]?.hook?hookCapLine(frame):(wbCap?frame.white_box?.text:null));
+    // 어제 그대로 + '썰훅만' 본문 대본 장면에서만 훅 띠를 자막 칸으로 쓴다(10-02 사장님 "추가된 건 썰훅만 하나, 나머지는 어제 그대로")
+    const hookCap=frame===rows[current]?.hook&&hookHasCaptionBand();
+    const wbCap=frame===rows[current]?.body||hookCap;
+    const ln=(frame.lines||[]).find(l=>l.bind==='caption')||(hookCap?hookCapLine(frame):(frame===rows[current]?.body?frame.white_box?.text:null));
     const start=frame.video_from?.y||0;
     const surface=ln&&(frame.surfaces||[]).find(s=>s.y<=ln.y0+ln.h/2&&s.y+s.height>=ln.y0+ln.h/2&&s.y>start*.45);
     const band=wbCap&&frame.white_box?{y:frame.white_box.y0,height:frame.white_box.y1-frame.white_box.y0,background:frame.white_box.background}:surface;
@@ -96,7 +97,7 @@
     if(sc[sceneIndex]?.beat_idx===sc[0]?.beat_idx)return false;   // 첫 비트(훅 문장)는 기존 훅 그대로
     return !!(frameFor(rows[current])?.white_box||hookCapLine(frameFor(rows[current])));
   };
-  const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body'||rows[current]?.id===PLAIN_ID||hookHasCaptionBand());
+  const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body'||rows[current]?.id===PLAIN_ID);
   // ★자막 기본 배치는 **이 함수 하나**로 정한다(2026-09-25 Opus 검토 — 네 곳에 따로 적혀 원본 예외가 두 곳에서 빠졌다:
   //   원본에서 슬라이더를 만지면 다른 장면 자막이 'title' 배치가 돼 화면 맨 위(y=0)로 튀었다. 렌더·캡컷도 같은 코드라 영상에도 나온다).
   //   끌어 옮긴 장면 또는 원본(plain, 제목칸이 없는 틀) = 'free'(제 자리), 아니면 'title'(제목칸 아래).
@@ -308,7 +309,8 @@
     textarea.value=originalCaption.value;textarea.rows=3;originalCaption.replaceWith(textarea);
   }
   const inputs=Object.fromEntries([...root.querySelectorAll('.layout-a [data-bind]')].map(x=>[x.dataset.bind,x]));
-  const value=k=>inputs[k]?.value||' ';
+  // 썰훅만 본문 대본 장면: 보조제목 줄에 그 장면 자막을 **보조제목과 같은 스타일**로 넣는다(10-02 사장님 "훅 소제목=자막자리 똑같은 스타일로 계속")
+  const value=k=>(k==='bodyTitle'&&hookHasCaptionBand()?inputs.caption?.value:inputs[k]?.value)||' ';
   const rgba=hex=>hex&&/^#[0-9a-f]{6}$/i.test(hex)?hex:'#111111';
   const rememberedBranding=()=>{try{return JSON.parse(localStorage.getItem('scene_style_branding')||'{}')}catch{return {}}};
   let sceneContext=null,effects={},branding=labMode?{}:rememberedBranding();
@@ -318,7 +320,7 @@
   const frameKindOf=(beatOrder,rule)=>rule==='hook_all'?'hook':rule==='body_all'?'body':(beatOrder===0?'hook':'body');
   function applyFrameRule(){
     const sc=sceneContext?.scenes;if(!sc?.length)return;const order=[...new Set(sc.map(x=>x.beat_idx))];
-    for(const x of sc){x.kind=frameKindOf(order.indexOf(x.beat_idx),frameRule);x.caption_visible=!(x.kind==='hook'&&hookCaptionMode==='hidden');}
+    for(const x of sc){x.kind=frameKindOf(order.indexOf(x.beat_idx),frameRule);x.caption_visible=!(x.kind==='hook'&&order.indexOf(x.beat_idx)===0&&hookCaptionMode==='hidden');}   // '훅 자막 숨김'은 첫 훅 문장에만(10-02: 썰훅만 본문 자막이 같이 숨던 것)
   }
   const frameFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame:p[sceneKind(index)];
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
@@ -692,7 +694,8 @@
   motionPanel.after(bodyMotionPanel);
   bodyMotionPanel.addEventListener('click',event=>{
     const b=event.target.closest('[data-body-caption-motion]');if(!b)return;
-    bodyCaptionMotion=b.dataset.bodyCaptionMotion;syncHookMotionUI();rememberLocal({bodyCaptionMotion});if(sceneIndex===0)showScene(1);else runCaptionEnter();
+    bodyCaptionMotion=b.dataset.bodyCaptionMotion;if(mode==='continuous')hookBandMotion='';   // 10-02 사장님: 고정형에서 '없음'을 눌러도 옛 흰 띠 값이 남아 스윽 올라왔다 — 고정형 자막 등장은 이 버튼이 정한다
+    syncHookMotionUI();rememberLocal({bodyCaptionMotion});if(sceneIndex===0)showScene(1);else runCaptionEnter();
   });
   const fixedPanel=document.createElement('section');
   fixedPanel.className='fixed-quick-panel';
@@ -741,7 +744,8 @@
   //   63wyUy6d0Jc 제목 폭 125→180px/1.2초(화면 전체가 천천히 확대, 흔들림 없음)
   //   ZaPpvrHkZ1U 크기 고정·매 프레임 가로 ±2px/세로 ±3px(360px 기준) 떨림, 훅 내내
   const CAMERA_MOTIONS=['zoom-punch','push-in','shake'];
-  const hookEndMs=()=>{const hs=(sceneContext?.scenes||[]).filter(s=>s.kind==='hook');return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
+  // 훅 모션 길이 = **첫 비트(훅 문장)** 의 훅 장면만(10-02 사장님 "썰훅만 본문은 훅 모션 없이 자막 스타일대로"). 썰훅+본문은 훅이 첫 비트뿐이라 종전과 같다
+  const hookEndMs=()=>{const sc=sceneContext?.scenes||[],b0=sc[0]?.beat_idx;const hs=sc.filter(s=>s.kind==='hook'&&s.beat_idx===b0);return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
   function cameraAt(ms){
     if(hookMotion==='push-in'){
       if(ms>=hookEndMs())return {zoom:1,dx:0,dy:0};   // 훅이 끝나면 본문은 원래 크기(레퍼런스도 전환 순간 복귀)
@@ -843,6 +847,7 @@
   //   고르는 곳은 흰 띠 줄(스윽/확대)과 같다 — 자막 글자 + 자막 가림막 상자를 한 덩어리로 움직인다.
   const CAPTION_ENTER_MS=300;
   function captionMotionNow(){
+    if(mode==='continuous'&&BODY_CAPTION_MOTIONS[bodyCaptionMotion])return BODY_CAPTION_MOTIONS[bodyCaptionMotion];   // 고정형은 1장부터 같은 등장
     if(sceneIndex>0&&BODY_CAPTION_MOTIONS[bodyCaptionMotion])return BODY_CAPTION_MOTIONS[bodyCaptionMotion];
     if(mode==='continuous'&&hookBandMotion)return BODY_CAPTION_MOTIONS[hookBandMotion]||null;   // 고정형은 예전부터 흰 띠 줄 값이 자막 등장
     return null;
@@ -1122,7 +1127,7 @@
     const hookBandText=String(value('bodyTitle')||'').trim();
     const hookBandSame=hookBandText.replace(/\s+/g,'')===String((value('hook1')||'')+(value('hook2')||'')).replace(/\s+/g,'');
     // 10-02: 흰 띠가 있는 훅은 띠가 자막 칸이라, 보조 제목이 아니라 **자막 유무**로 숨김을 정한다(9/24 빈 띠 규칙은 그대로 산다).
-    const hookBandEmpty=kind==='hook'&&(hookHasCaptionBand()?(!hasEditableCaption()||!String(value('caption')||'').trim()):(!hookBandText||hookBandSame));
+    const hookBandEmpty=kind==='hook'&&(!hookBandText||hookBandSame);
     const inBand=(y,h)=>bandLine&&y<bandLine.y1+6&&y+h>bandLine.y0-6;
     (frame.surfaces||[]).forEach(s=>{
       if(s.bind==='caption')return;
@@ -1166,7 +1171,6 @@
       if(key==='caption'||!dirty.has(key))return;
       // 2026-09-21 사장님: 훅 화면에 큰 제목(hook1·hook2)과 같은 문장이 본문 제목 줄로 한 번 더 그려졌다.
       //   같은 글일 때만 건너뛴다 — 다른 문구를 넣으면 예전처럼 보인다.
-      if(kind==='hook'&&key==='bodyTitle'&&hookHasCaptionBand())return;   // 흰 띠는 자막 칸 — 보조 제목은 안 그린다(10-02)
       if(kind==='hook'&&key==='bodyTitle'){
         const flat=t=>String(t||'').replace(/\s+/g,'');
         if(flat(value('bodyTitle'))===flat(String(value('hook1')||'')+String(value('hook2')||'')))return;
@@ -1186,7 +1190,7 @@
       addText(value(key),drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
     });
     const wb=frame.white_box;
-    if(wb&&kind==='hook'&&!hookBandEmpty&&!hookHasCaptionBand()){
+    if(wb&&kind==='hook'&&!hookBandEmpty){
       // 원본 설명띠의 글자/흔적을 먼저 완전히 덮고 편집 가능한 텍스트만 다시 올린다.
       const movedCaption=kind==='body'&&(fixedLayouts.get(layoutKey(p.id,frame))?.bottom||0)>0;
       const savedCap=fixedLayoutFor(p.id,frame).caption;   // 09-19: '자막 칸' 슬라이더가 훅 흰 띠에도 먹게
@@ -1196,7 +1200,7 @@
     // 2026-09-21 사장님: 훅 화면에 큰 제목과 흰 띠 글자가 같은 문장이라 두 번 보였다.
     //   두 글이 같은 때만 띠 글자를 그리지 않는다(띠 배경은 그대로, 다른 문구면 예전처럼 보인다).
     const hookTitleSame=kind==='hook'&&String(value('bodyTitle')||'').replace(/\s+/g,'')===String((value('hook1')||'')+(value('hook2')||'')).replace(/\s+/g,'');
-    if(wb?.text&&kind==='hook'&&!hookTitleSame&&!hookHasCaptionBand()){
+    if(wb?.text&&kind==='hook'&&!hookTitleSame){
       const key=kind==='hook'?'bodyTitle':'caption';
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
