@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-01  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-02  (LOGIC_VER가 정본)
 //   · 핀터레스트 — 핀 페이지 플로팅 담기 + 검색 그리드 카드마다 📥 (2026-09-11 고객 문의)
 //   · ⭐볼채널등록 — 회원용 개인 채널 즐겨찾기
 //   · 유튜브는 쇼츠에서만 동작 — 메인·롱폼 차단
@@ -15,7 +15,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261001;
+  var LOGIC_VER = 20261002;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -895,9 +895,12 @@
       if (tk) clearCardBtns();   // 틱톡: SPA 뷰어에 그리드 버튼이 남아 떠다니는 것 제거
       return;                    // 공통: 뷰어에선 새 카드버튼 안 붙임(플로팅만) — 종전 동작
     }
-    // 유튜브는 검색 결과에서만 쇼츠 카드(/shorts/ID)를 잡는다 — watch 화면 '관련 쇼츠'에 붙으면
+    // 유튜브는 검색 결과에서만 카드를 잡는다 — watch 화면 '관련 쇼츠'에 붙으면
     // syncFloat가 플로팅(본 영상 담기)을 숨긴다(2026-10-01).
-    var links = document.querySelectorAll(_ytResults() ? 'a[href*="/shorts/"]'
+    // 쇼츠(/shorts/ID) + **짧은 일반 영상**(/watch, 길이 ≤ _YT_SHORT_MAX — 2026-10-02 사장님
+    // "📥를 붙여야지 당연히"). 렌즈 키워드탭은 '4분 미만' 필터라 결과 대부분이 /watch 카드다.
+    var ytr = _ytResults();
+    var links = document.querySelectorAll(ytr ? 'a[href*="/shorts/"], a#thumbnail[href*="/watch?v="]'
       : 'a[href*="/video/"], a[href*="/p/"], a[href*="/reel/"]');
     var big = [];
     for (var k = 0; k < links.length; k++) {
@@ -908,6 +911,12 @@
       if (tk) {
         var im = links[k].querySelector("img");
         if (!im || im.getBoundingClientRect().width < 80) continue;
+      }
+      // 유튜브 /watch 카드: 썸네일 길이 배지(m:ss)를 읽어 짧은 것만. 배지가 아직 안 그려졌으면
+      // 이번엔 건너뛴다(2초 뒤 tick이 다시 본다 — data-ssgrab은 붙일 때만 찍으므로).
+      if (ytr && links[k].getAttribute("href").indexOf("/watch") === 0) {
+        var d = _ytCardSeconds(links[k]);
+        if (!(d > 0 && d <= _YT_SHORT_MAX)) continue;
       }
       big.push(links[k]);
     }
@@ -933,7 +942,7 @@
           var im = a.querySelector("img, source");
           var thumb = im ? (im.src || (im.getAttribute("srcset") || "").split(" ")[0]) : "";
           var ttl = (im && im.alt) ? im.alt : "";
-          openGrab(a.href, thumb, ttl);
+          openGrab(_ytCleanUrl(a.href), thumb, ttl);
         }, true);
       })(a);
       a.appendChild(b);
@@ -1238,7 +1247,24 @@
   //   예외: 공유 링크로 열린 쇼츠는 /watch?v=... 로 뜨기도 한다 → 재생 중인 영상 길이가
   //   3분 이하이면 쇼츠로 보고 허용한다(길이를 못 읽으면 롱폼으로 간주해 끈다).
   // 예외 2(2026-10-01 사장님): **검색 결과(/results)** 는 렌즈 키워드 검색이 보내는 화면이다.
-  //   여기선 플로팅(=검색 페이지 통째) 없이 **쇼츠 카드마다 📥** 만 붙인다(_ytResultsTick).
+  //   여기선 플로팅(=검색 페이지 통째) 없이 **쇼츠·짧은 영상 카드마다 📥** 만 붙인다(_ytResultsTick).
+  // '짧은 영상'의 기준 — 이 숫자 하나가 watch 화면 허용(_ytOff)과 검색 카드 📥 둘 다를 정한다.
+  var _YT_SHORT_MAX = 180;
+  // 검색 카드 썸네일의 길이 배지("1:41", "1:02:03")를 초로. 못 읽으면 0.
+  function _ytCardSeconds(a) {
+    var els = a.querySelectorAll("*");
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].children.length) continue;
+      var m = (els[i].textContent || "").trim().match(/^(?:(\d+):)?(\d{1,2}):(\d{2})$/);
+      if (m) return (+(m[1] || 0)) * 3600 + (+m[2]) * 60 + (+m[3]);
+    }
+    return 0;
+  }
+  // 검색 카드 링크의 추적 꼬리(&pp=...)를 떼고 영상 주소만 보낸다. 유튜브 밖은 그대로.
+  function _ytCleanUrl(href) {
+    var m = /youtube\.com\/watch\?(?:.*&)?v=([\w-]{6,})/.exec(href || "");
+    return m ? "https://www.youtube.com/watch?v=" + m[1] : href;
+  }
   function _ytResults() {
     return location.host.indexOf("youtube.com") >= 0 && location.pathname === "/results";
   }
@@ -1250,7 +1276,7 @@
     if (/^\/watch/.test(location.pathname) || h.indexOf("youtu.be") >= 0) {
       var v = document.querySelector("video");
       var d = v && isFinite(v.duration) ? v.duration : 0;
-      if (d > 0 && d <= 180) return false;                        // watch로 열린 쇼츠
+      if (d > 0 && d <= _YT_SHORT_MAX) return false;                        // watch로 열린 쇼츠
     }
     return true;                                                  // 그 외 유튜브 = 끔
   }
