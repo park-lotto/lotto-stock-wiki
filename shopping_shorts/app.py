@@ -110,6 +110,21 @@ import uuid
 
 app = FastAPI(title="숏템메이커 레퍼런스 랭킹")   # /docs 노출 제목 — 브랜드 통일(2026-07-25)
 
+# ★서버 버전 표식(관제 080, 2026-10-02 사장님 "재시작 때 고객이 가만있으면 불편 겪는 걸 해결"):
+#   프로세스가 뜰 때 한 번 정한 값을 모든 응답 머리글 X-SS-Boot 에 싣는다. 화면(sidebar.js 공용 fetch)이
+#   이 값이 바뀐 걸 보면 "새 버전 적용" 띠를 띄운다. 웹은 uvicorn 1프로세스라 재시작 사이엔 값이 같다.
+_SS_BOOT_ID = "%x" % int(time.time())
+
+
+@app.middleware("http")
+async def _ss_boot_header(request, call_next):
+    resp = await call_next(request)
+    try:
+        resp.headers["X-SS-Boot"] = _SS_BOOT_ID
+    except Exception:      # noqa: BLE001 — 머리글 실패가 응답을 막으면 안 된다
+        pass
+    return resp
+
 # 응답 gzip 압축(2026-07-30) — 유튜브 랭킹이 느리게 뜨던 직접 원인.
 # /api/reference?platform=youtube 응답이 **3.34MB**였다(6,113건, 인스타는 0.30MB/289건).
 # nginx는 gzip on이지만 gzip_types가 주석 처리돼 있어 application/json은 그대로 나갔다

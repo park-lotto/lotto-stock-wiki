@@ -718,13 +718,92 @@
   // 8초·30초로 도는 폴러는 이 창을 넘겨 자연히 배제된다(폴러 목록을 관리할 필요가 없다).
   var _GESTURE_MS = 3000;
   var _origFetch = window.fetch;
+
+  // ── 웹 재시작 자동 조치·안내 (관제 080, 2026-10-02) ─────────────────────────────
+  // 사장님: "재시작 때 고객이 가만있으면 불편 겪는 걸 해결해 주면서 조치 방법 안내를 하든지 조치까지 해 주든지".
+  // ① 재시작 중(연결 실패·502/503/504) **조회(GET)** 는 화면이 40초 동안 스스로 다시 묻는다 — 두 번 해도 안전하다.
+  // ② 저장·생성(POST 등)은 두 번 실행되면 위험하니 다시 보내지 않고 "한 번 더 눌러 주세요"만 띄운다.
+  // ③ 서버 버전 표식(X-SS-Boot)이 바뀌면 "새 버전 적용" 띠 + [새로고침]. 탭이 숨어 있었으면 돌아올 때 자동 새로고침.
+  var _SS_RETRY_MS = [1000, 2000, 3000, 4000, 5000, 5000, 10000, 10000];   // 합 40초(실서버 재시작 2~5초 실측 — 넉넉히)
+  var _ssBoot = null, _ssBootShown = false, _ssReloadOnShow = false;
+  function _ssBar(kind, text, withReload) {
+    try {
+      var id = "ss-restart-bar", el = document.getElementById(id);
+      if (!text) { if (el) el.remove(); return; }
+      if (!el) {
+        el = document.createElement("div"); el.id = id;
+        el.setAttribute("role", "status");
+        el.style.cssText = "position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:2147483000;" +
+          "max-width:92vw;padding:10px 16px;border-radius:10px;font:600 14px/1.5 'Pretendard','Malgun Gothic',sans-serif;" +
+          "box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center";
+        (document.body || document.documentElement).appendChild(el);
+      }
+      el.style.background = kind === "warn" ? "#fff4e5" : "#e8f1ff";
+      el.style.color = kind === "warn" ? "#7a4100" : "#0b3d91";
+      el.style.border = "1px solid " + (kind === "warn" ? "#f5b65b" : "#8bb4ff");
+      el.innerHTML = "";
+      var t = document.createElement("span"); t.textContent = text; el.appendChild(t);
+      if (withReload) {
+        var b = document.createElement("button"); b.type = "button"; b.textContent = "새로고침";
+        b.style.cssText = "border:0;border-radius:8px;padding:5px 12px;font:inherit;cursor:pointer;background:#0b5bd3;color:#fff";
+        b.onclick = function () { location.reload(); }; el.appendChild(b);
+      }
+      var x = document.createElement("button"); x.type = "button"; x.textContent = "✕"; x.title = "닫기";
+      x.style.cssText = "border:0;background:transparent;font:inherit;cursor:pointer;color:inherit";
+      x.onclick = function () { el.remove(); }; el.appendChild(x);
+    } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && _ssReloadOnShow) { try { location.reload(); } catch (e) {} }
+  });
+  function _ssSeeBoot(resp) {
+    try {
+      var h = resp && resp.headers && resp.headers.get("X-SS-Boot");
+      if (!h) return;
+      if (_ssBoot === null) { _ssBoot = h; return; }
+      if (h !== _ssBoot && !_ssBootShown) {
+        _ssBootShown = true;
+        if (document.hidden) { _ssReloadOnShow = true; return; }
+        _ssBar("info", "새 버전이 적용됐어요. 화면이 이상하면 새로고침을 한 번 눌러 주세요.", true);
+      }
+    } catch (e) {}
+  }
+  function _ssIsGet(args) {
+    var init = args[1], req = args[0];
+    var m = (init && init.method) || (req && typeof req === "object" && req.method) || "GET";
+    return String(m).toUpperCase() === "GET";
+  }
+  function _ssDown(resp) { return !resp || resp.status === 502 || resp.status === 503 || resp.status === 504; }
+  function _ssFetch(self, args) {
+    var isGet = _ssIsGet(args), tries = 0, barOn = false;
+    function attempt() {
+      return _origFetch.apply(self, args).then(function (resp) {
+        if (_ssDown(resp) && isGet && tries < _SS_RETRY_MS.length) return retry();
+        if (_ssDown(resp) && !isGet) _ssBar("warn", "업데이트로 잠깐 연결이 끊겼어요. 같은 버튼을 한 번 더 눌러 주세요.");
+        else if (barOn) _ssBar(null);
+        _ssSeeBoot(resp);
+        return resp;
+      }, function (err) {
+        if (isGet && tries < _SS_RETRY_MS.length) return retry();
+        if (!isGet) _ssBar("warn", "업데이트로 잠깐 연결이 끊겼어요. 같은 버튼을 한 번 더 눌러 주세요.");
+        throw err;
+      });
+    }
+    function retry() {
+      var wait = _SS_RETRY_MS[tries++];
+      if (!barOn) { barOn = true; _ssBar("info", "업데이트 적용 중이에요. 자동으로 다시 연결하고 있어요…"); }
+      return new Promise(function (r) { setTimeout(r, wait); }).then(attempt);
+    }
+    return attempt();
+  }
+
   window.fetch = function () {
     // ★판정 시각은 **응답이 아니라 요청**이다. 느린 API가 5초 뒤에 402를 줘도,
     //   누르고 나간 요청이면 사장님에겐 방금 누른 그 버튼의 결과다.
     var byUser = (Date.now() - _lastGesture) < _GESTURE_MS;
     // ★url은 여기서 붙잡는다 — 아래 then 안의 arguments는 (resp)라 호출 주소가 아니다.
     var _reqUrl = arguments[0];
-    return _origFetch.apply(this, arguments).then(function (resp) {
+    return _ssFetch(this, arguments).then(function (resp) {
       if (resp && resp.status === 402) {
         if (!byUser) {
           // 배경 호출의 402 — 정상 동작이다. 조용히 넘기되 흔적은 남긴다
