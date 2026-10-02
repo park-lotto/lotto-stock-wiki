@@ -54,7 +54,9 @@ BRIEF = """너는 쇼핑 쇼츠에서 **대본과 장면을 딱 맞게 배치하
       한 영상의 컷이 연달아 세 줄 이상 가지 않게. 같은 컷·같은 장면을 두 줄에 쓰지 마라.
    d. **시간을 맞춰라.** 줄마다 고른 컷 길이 합 × 1.2 ≥ 대사 초가 되게 하고, have(합)·need(대사 초)를 적어라.
       모자라면 같은 영상의 **같은 쓰임** 컷을 이어 붙이고, 그래도 모자라면 다른 영상의 같은 뜻 컷을 더한다.
-      **딴 장면(다른 물건·다른 쓰임)으로 길이를 채우지 마라** — 길이보다 그림이 먼저다. 긴 줄(5초↑)은 2~3컷으로 나눠 리듬을 줘라.
+      **딴 장면(다른 물건·다른 쓰임)으로 길이를 채우지 마라** — 길이보다 그림이 먼저다.
+      ★한 장면만 길게 틀지 마라: **2.5초가 넘는 줄은 서로 다른 장면(다른 컷 번호) 2개 이상**, 5초가 넘으면 3개. 같은 뜻의 다른 컷·다른 영상의
+      같은 쓰임 컷으로 리듬을 줘라(2026-10-02 실측: 2.5초↑ 칸 34%가 한 장면만 이어져 같은 화면이 계속 나왔다).
    e. 씨앗 영상(표시됨)의 컷은 쓰지 마라. 목록에 없는 번호를 만들지 마라.
 4단계 — 점검: 다 고른 뒤 전체를 다시 보며 ①중복 컷 ②길이 부족 ③세 줄 연속 같은 영상 을 스스로 잡아 고쳐라.
 
@@ -103,6 +105,14 @@ def _secs_of(text):
     return _secs(text)
 
 
+LONG_LINE_SECS = 2.5     # 이 길이 이상인 줄은 서로 다른 장면 2개 이상(2026-10-02)
+
+
+def _spare_cuts(seg_index, used, backbone_vid):
+    """아직 어느 줄도 안 쓴, 쓸 수 있는 컷이 남았나(재료가 모자라면 '한 장면 더'를 요구하지 않는다)."""
+    return any(_usable(seg_index, c, backbone_vid) for c in seg_index if c not in used)
+
+
 def check(picks, lines, seg_index, backbone_vid):
     """코드 검사 — {줄번호(0부터): 이유}. 중복·목록 밖(뒷컷 포함)·길이 부족·같은 영상 세 줄 연속."""
     bad, used = {}, {}
@@ -120,6 +130,10 @@ def check(picks, lines, seg_index, backbone_vid):
         have = sum(seg_index[c]["secs"] for c in cs if c in seg_index)
         if cs and need and have * SLOW < need - 0.3:
             why.append("길이 %.1f×%.1f < %.1f" % (have, SLOW, need))
+        # ★긴 줄 한 장면(2026-10-02 사장님 "같은 장면 계속 / 화면 모자라 멈춤"): 2.5초↑ 줄에 다른 컷이 1개뿐이면 다시 묻는다.
+        #   실측 24시간 687칸 중 2.5초↑인데 한 장면만 이어진 칸 237(34%). 남은 쓸 컷이 없으면(재료 부족) 묻지 않는다.
+        if need >= LONG_LINE_SECS and len({c for c in cs if c in seg_index}) == 1 and _spare_cuts(seg_index, used, backbone_vid):
+            why.append("%.1f초 줄에 장면 1개 — 다른 장면 1개 이상 더" % need)
         if why:
             bad[i] = "; ".join(why)
     vids = [sorted({seg_index[c]["vid"] for c in picks.get(i, []) if c in seg_index}) for i in range(len(lines))]
