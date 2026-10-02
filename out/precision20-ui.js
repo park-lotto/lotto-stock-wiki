@@ -68,9 +68,10 @@
     return {...fixedBaseColors(frame),channel:paint.top?readableInk(paint.top):(frame.channel_box?.color||frame.channel_boxes?.[0]?.color||'#FFFFFF'),...paint};
   };
   const captionSource=frame=>{
-    // ★훅 흰 띠도 자막 칸이다(2026-10-02 사장님 "썰 채널 스타일 훅은 제목 아래 띠에 자막이 들어간다") — 본문 흰 띠와 같은 규칙
-    const wbCap=frame===rows[current]?.body||frame===rows[current]?.hook;
-    const ln=(frame.lines||[]).find(l=>l.bind==='caption')||(frame===rows[current]?.hook?hookCapLine(frame):(wbCap?frame.white_box?.text:null));
+    // 어제 그대로 + '썰훅만' 본문 대본 장면에서만 훅 띠를 자막 칸으로 쓴다(10-02 사장님 "추가된 건 썰훅만 하나, 나머지는 어제 그대로")
+    const hookCap=frame===rows[current]?.hook&&hookHasCaptionBand();
+    const wbCap=frame===rows[current]?.body||hookCap;
+    const ln=(frame.lines||[]).find(l=>l.bind==='caption')||(hookCap?hookCapLine(frame):(frame===rows[current]?.body?frame.white_box?.text:null));
     const start=frame.video_from?.y||0;
     const surface=ln&&(frame.surfaces||[]).find(s=>s.y<=ln.y0+ln.h/2&&s.y+s.height>=ln.y0+ln.h/2&&s.y>start*.45);
     const band=wbCap&&frame.white_box?{y:frame.white_box.y0,height:frame.white_box.y1-frame.white_box.y0,background:frame.white_box.background}:surface;
