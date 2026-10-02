@@ -83,7 +83,8 @@
     return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:(fixedLayoutFor(rows[current].id,frame).caption||0)>0?fixedLayoutFor(rows[current].id,frame).caption:(mode==='continuous'?6.5:(isStoryBody(frame)?STORY_BODY.capH:measured))};
   };
   // 고정형은 훅이 없다 — '훅 말자막 숨김'(이븐쇼핑 큰 제목용)이 첫 장면 자막까지 지우지 않게 항상 보인다(2026-09-18 실측: LAB 1/23 자막 없음).
-  const captionVisible=()=>mode==='continuous'||sceneContext?.scenes?.[sceneIndex]?.caption_visible!==false;
+  // 10-02: 썰 훅 틀은 제목 아래 칸이 자막 자리다 — 추천 스타일이 넣은 '훅 자막 숨김'(이븐쇼핑 큰 제목용)이 그 칸까지 지워 '자막 칸이 사라졌다'(사장님 캡처, 최근 작업 956a6843 hidden). 그 틀에선 숨김을 따르지 않는다
+  const captionVisible=()=>mode==='continuous'||hookHasCaptionBand()||sceneContext?.scenes?.[sceneIndex]?.caption_visible!==false;
   // ★원본(plain)은 제목 띠가 없어 훅 장면에도 자막을 그대로 보여 준다(2026-09-24 고객 제보:
   //   "원본 영상 그대로를 선택하면 자막이 보이질 않습니다 / 장면마다 자막을 옮길 수 있었는데").
   //   템플릿에서는 훅 자막이 제목·띠와 겹쳐 종전처럼 본문에서만 보인다.
