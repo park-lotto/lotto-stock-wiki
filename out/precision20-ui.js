@@ -195,8 +195,9 @@
       : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${esc(fontLabel(p))} · 훅+본문</small></button>`).join('');
   };
   const presetPane=grid.closest('.pane'),modeBar=document.createElement('div');modeBar.className='template-mode-bar';
-  // ★틀 고르기 5버튼(관제 058, 2026-10-02 사장님 "썰훅·훅만·썰만·인스타·원본그대로, 깔끔하고 복잡하지 않게").
-  modeBar.innerHTML='<button type="button" data-frame-rule="hook_body" class="active">썰훅+본문</button><button type="button" data-frame-rule="hook_all" title="모든 장면 훅 틀, 아래 띠에 장면 자막">썰훅만</button><button type="button" data-frame-rule="body_all">썰본문만</button><button type="button" data-template-mode="continuous">전장면고정형</button><button type="button" data-plain-pick title="제목 띠 없이 자막만">원본그대로</button>';
+  // ★틀 고르기 4버튼(관제 058, 2026-10-02 사장님 확정: 썰훅+본문·썰훅만·전장면고정형·원본그대로 — 썰본문만은 전장면고정형과 겹쳐 뺐다).
+  //   서버는 옛 저장값(body_all)도 그대로 받는다(판정 주인 scene_style.frame_kind).
+  modeBar.innerHTML='<button type="button" data-frame-rule="hook_body" class="active">썰훅+본문</button><button type="button" data-frame-rule="hook_all" title="모든 장면 훅 틀, 아래 띠에 장면 자막">썰훅만</button><button type="button" data-template-mode="continuous">전장면고정형</button><button type="button" data-plain-pick title="제목 띠 없이 자막만">원본그대로</button>';
   presetPane.querySelector('.pane-head').after(modeBar);renderGrid();
   // 왼쪽 맨 위 탭(2026-09-19 사장님): '템플릿 선택' 머리말 자리에 [장면 템플릿 | 폰트 템플릿].
   //   오른쪽 문구/효과 탭과 같은 .tool-tabs 모양. 폰트 템플릿(채널명·제목·자막 한 세트)은 다음 단계 — 지금은 자리만.

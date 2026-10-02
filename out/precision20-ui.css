@@ -155,5 +155,5 @@
 .layout-a .edit-pane small,.layout-a .edit-pane summary small,.layout-a .edit-pane .hint{font-size:12.5px;font-weight:800;color:#b9c7cf}
 /* 틀 고르기 5버튼(관제 058) — 위 3개(썰훅·훅만·썰만) / 아래 2개(인스타·원본그대로) */
 .layout-a .template-mode-bar{grid-template-columns:repeat(6,1fr)}
-.layout-a .template-mode-bar button{grid-column:span 2;height:36px;font-size:13px;padding:0 4px;white-space:nowrap}
-.layout-a .template-mode-bar button[data-template-mode],.layout-a .template-mode-bar button[data-plain-pick]{grid-column:span 3}
+.layout-a .template-mode-bar button{grid-column:span 3;height:36px;font-size:14px;padding:0 4px;white-space:nowrap}
+
