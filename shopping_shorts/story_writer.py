@@ -1077,22 +1077,9 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         # ★AI 매칭(2026-09-22 사장님 "매칭은 AI가 해봐"): 줄 전체 + 컷 목록을 한 번에 주고 줄마다 고르게 한다(호출 1회).
         #   빈 줄이 남으면 그 줄만 코드 매칭(assign_cuts)이 채운다. AI가 아예 실패하면 전부 코드 매칭.
         from shopping_shorts import ai_match as _am
-        _an = {}
-        ai_bs = _am.match(lines, seg_index, backbone_vid, note=_an, product=product)   # 주제를 준다(2026-10-01 전문가 지시문)
         bs, report = ba.assign_cuts(lines, groups_out, seg_index, backbone_vid)
         code_bs = [dict(b) for b in bs]                        # 코드 매칭 원본(근거 컷) — 아래 장면 고정이 쓴다
-        if ai_bs:
-            _used = {c for b in ai_bs for c in (b.get("segs") or [])}
-            for i, b in enumerate(ai_bs):
-                if b.get("segs"):
-                    bs[i] = b
-                else:                                          # AI가 비운 줄 = 코드 매칭 결과에서 안 겹치는 컷만
-                    keep = [c for c in (bs[i].get("segs") or []) if c not in _used]
-                    bs[i] = {"role": bs[i].get("role"), "seg": keep[0] if keep else "", "segs": keep}
-                    _used.update(keep)
-            n["matcher"] = "ai"
-        else:
-            n["matcher"] = "code(%s)" % (_an.get("reason") or "")
+        bs = _am.apply(lines, code_bs, seg_index, backbone_vid, note=n, product=product)   # 3단계 매칭 전문가(백본과 같은 함수)
         # ★장면 고정(2026-09-26 사장님 "다른 소스에 나온 고조·반전 장면을 정말 쓰는지, 쓸 수밖에 없는 구조"):
         #   특징 번호가 붙은 줄(고조·반전)은 **그 특징의 근거 컷(from_cuts) 안에서만**. AI는 특징↔근거 컷을 모르고 골랐고,
         #   코드 매칭도 근거 컷이 모자라면 딴 컷을 채웠다(실측 비교: 근거 안 0/7·3/7) → **매칭 방식과 관계없이** 여기서 고정한다.

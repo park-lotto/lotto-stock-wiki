@@ -101,3 +101,16 @@ def test_only_mode_picks_just_that_line(monkeypatch):
     out = am.match([{"role": "훅", "text": "정체"}, {"role": "전환", "text": "가방에 쏙"}], idx, None, note={}, only=[1])
     assert "2번 줄만" in seen["p"] and "1. [훅]" in seen["p"]
     assert out[0]["segs"] == [] and out[1]["segs"] == ["s1-2"], out
+
+
+def test_apply_merges_ai_with_code_and_falls_back(monkeypatch):
+    """3단계 매칭 전문가 합치기(백본·이야기작가 공용): AI 줄은 AI 컷, 비운 줄은 코드 컷 중 안 겹친 것, 실패면 코드 그대로."""
+    code = [{"role": "훅", "seg": "a", "segs": ["a"]}, {"role": "고조", "seg": "b", "segs": ["b", "c"]}]
+    monkeypatch.setattr(am, "match", lambda *a, **k: [{"role": "훅", "seg": "c", "segs": ["c"]}, {"role": "고조", "seg": "", "segs": []}])
+    n = {}
+    out = am.apply([{"text": "x"}, {"text": "y"}], code, {}, None, note=n)
+    assert n["matcher"] == "ai" and out[0]["segs"] == ["c"] and out[1]["segs"] == ["b"]
+    monkeypatch.setattr(am, "match", lambda *a, **k: [])
+    n = {}
+    out = am.apply([{"text": "x"}, {"text": "y"}], code, {}, None, note=n)
+    assert n["matcher"].startswith("code") and out == code

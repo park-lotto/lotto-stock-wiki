@@ -52,10 +52,14 @@ def test_assemble_uses_story_groups_without_ai_grouping(monkeypatch):
         return [{"role": "훅", "text": "정체", "group": -1}, {"role": "고조1", "text": "물만 쏙 빠진다", "group": 0}, {"role": "마무리", "text": "끝", "group": -1}]
     monkeypatch.setattr(ba, "write_lines", fake_write)
     monkeypatch.setattr(ba, "pick_hook_spine", lambda *a, **k: {"id": 1, "name": "틀", "fit_categories": []})
+    from shopping_shorts import ai_match as _am
+    seen_m = {}
+    monkeypatch.setattr(_am, "match", lambda *a, **k: seen_m.setdefault("called", True) and [])   # 매칭 전문가가 불리는지만 본다(실패 → 코드 매칭)
     note = {}
     given, bs, meta = ba.assemble(srcs, "s0", store=None, note=note, seed_src=srcs[0])
     assert note["groups_from"] == "story" and seen["g"]["groups"][0]["cuts"] == ["s1-2"]
     assert bs[1]["segs"] == ["s1-2"]
+    assert seen_m.get("called") and note["matcher"].startswith("code")     # 고객 기본 경로(백본)도 3단계 매칭 전문가를 부른다
 
 
 def test_has_stories_majority_and_min_lines():

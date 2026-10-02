@@ -232,3 +232,31 @@ def match(lines, seg_index, backbone_vid, note=None, model=None, product="", onl
         out_bs.append({"role": L.get("role") or "", "seg": chosen[0] if chosen else "", "segs": chosen,
                        "why": next((p.get("why") for p in (out.get("picks") or []) if p.get("line") == i + 1), "")})
     return out_bs
+
+
+def apply(lines, code_bs, seg_index, backbone_vid, note=None, product=""):
+    """3단계 매칭 전문가를 부르고 코드 매칭(code_bs)과 합친다 — **두 경로(백본·이야기작가)가 이 함수 하나를 부른다**(2026-10-02 사장님
+    "각 단계별로 전문가가 들어가는 것": 1단계 이야기 작가 · 2단계 대본 작가 · 3단계 매칭 전문가).
+    AI가 고른 줄은 AI 컷, AI가 비운 줄은 코드 매칭 컷 중 안 겹치는 것만, AI가 아예 실패하면 코드 매칭 그대로(note["matcher"]에 이유)."""
+    note = note if note is not None else {}
+    an = {}
+    ai_bs = match(lines, seg_index, backbone_vid, note=an, product=product)
+    for k in ("matcher_recheck", "matcher_left", "matcher_auth"):
+        if an.get(k):
+            note[k] = an[k]
+    bs = [dict(b) for b in (code_bs or [])]
+    if not ai_bs:
+        note["matcher"] = "code(%s)" % (an.get("reason") or "")
+        return bs
+    used = {c for b in ai_bs for c in (b.get("segs") or [])}
+    for i, b in enumerate(ai_bs):
+        if i >= len(bs):
+            break
+        if b.get("segs"):
+            bs[i] = b
+        else:
+            keep = [c for c in (bs[i].get("segs") or []) if c not in used]
+            bs[i] = {"role": bs[i].get("role"), "seg": keep[0] if keep else "", "segs": keep}
+            used.update(keep)
+    note["matcher"] = "ai"
+    return bs
