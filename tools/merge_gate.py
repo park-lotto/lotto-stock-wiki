@@ -70,6 +70,12 @@ def _run(cmd, cwd):
     #   한쪽은 제대로, 한쪽은 '?'로 저장돼 **같은 실패가 '새로 깨짐'으로 오판**됐다(기준선 캐시 vs 병합 후 비교).
     import os as _os
     env = {**_os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
+    # ★게이트가 띄운 pytest 는 **개별 락**을 쓴다(2026-10-02, 카드 075): tools/test_video_gate.py 의 finish 시험이
+    #   게이트가 이미 쥔 전역 finish 락을 다시 기다리면 영원히 멈춘다(교착). 락 경로는 track._finish_lock_path 가 읽는다.
+    import tempfile as _tf
+    _priv = Path(_tf.gettempdir()) / ("gate_child_%d" % _os.getpid())
+    env.setdefault("TRACK_FINISH_LOCK", str(_priv) + "_finish.lock")
+    env.setdefault("TRACK_VIDEO_LOCK", str(_priv) + "_video.lock")
     p = subprocess.run(
         cmd, cwd=str(cwd), capture_output=True, text=True,
         encoding="utf-8", errors="replace", env=env,
@@ -90,13 +96,23 @@ def _xdist_args():
     return ["-n", "4"]
 
 
+def _tools_test_paths(cwd):
+    """게이트가 함께 돌 tools 시험 파일(2026-10-02, 카드 075). 관제·관문 도구(track·control·video_gate·live_check …)가
+    tools/ 에 있는데 그 시험이 게이트 밖이라, 도구를 깨뜨린 병합이 그대로 들어갔다(10-02 관제수리 → test_video_gate)."""
+    root = Path(cwd)
+    found = sorted(root.glob("tools/test_*.py")) + sorted(root.glob("tools/*/test_*.py"))
+    return [p.relative_to(root).as_posix() for p in found]
+
+
 def snapshot(cwd=BASE, run=_run):
-    """지금 이 워킹트리 상태를 찍는다 (문법·import·pytest)."""
+    """지금 이 워킹트리 상태를 찍는다 (문법·import·pytest — shopping_shorts/tests + tools 시험)."""
     rc_c, out_c = run([sys.executable, "-m", "compileall", TARGET, "-q"], cwd)
     rc_i, out_i = run([sys.executable, "-c", f"import {TARGET}.app"], cwd)
+    # ★--continue-on-collection-errors: tools 쪽 시험 파일 하나가 수집에서 죽어도 나머지는 돈다(전체 rc=2 로 게이트 무력화 금지).
+    #   -rfE: 수집 오류(ERROR)도 실패 목록에 들어와 '새로 깨짐' 비교를 받는다.
     rc_p, out_p = run(
-        [sys.executable, "-m", "pytest", f"{TARGET}/tests",
-         "-q", "--tb=no", "-rf", "-p", "no:cacheprovider", *_xdist_args()],
+        [sys.executable, "-m", "pytest", f"{TARGET}/tests", *_tools_test_paths(cwd),
+         "-q", "--tb=no", "-rfE", "--continue-on-collection-errors", "-p", "no:cacheprovider", *_xdist_args()],
         cwd,
     )
     return {

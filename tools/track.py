@@ -45,41 +45,143 @@ MAIN_BRANCH = "main"
 # 오히려 손해 → 한 번에 하나만 돌게 줄 세운다. OS 파일락이라 프로세스가 죽으면 커널이
 # 자동 해제(스테일락 없음). 락은 트랙별이 아니라 **전역 1개**(모든 finish가 같은 파일).
 _FINISH_LOCK = Path(tempfile.gettempdir()) / "stockbrain_track_finish.lock"
+# ★영상 관문 전용 락(2026-10-02, 카드 075): 서버 영상 비교(10~25분)는 로컬 CPU 를 안 쓴다 → 전역 finish 락을 놓고
+#   이 락으로만 줄 세운다(서버에서 비교 두 개가 겹치지 않게). 그동안 다른 트랙의 pytest·병합은 진행한다.
+_VIDEO_LOCK = Path(tempfile.gettempdir()) / "stockbrain_video_gate.lock"
 
 
-@contextlib.contextmanager
-def _finish_gate_lock():
-    """finish 전역 직렬화 락. 이미 다른 finish가 게이트 중이면 풀릴 때까지 대기(순번제)."""
-    fh = open(_FINISH_LOCK, "a+")
-    try:
+def _lock_path(env_key, default):
+    """시험 중엔 개별 락(전역 락을 잡으면 게이트 안에서 교착한다). 환경변수가 주면 그것."""
+    v = os.environ.get(env_key)
+    if v:
+        return Path(v)
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return Path(tempfile.gettempdir()) / ("%s_test_%d.lock" % (default.stem, os.getpid()))
+    return default
+
+
+def _finish_lock_path():
+    return _lock_path("TRACK_FINISH_LOCK", _FINISH_LOCK)
+
+
+def _video_lock_path():
+    return _lock_path("TRACK_VIDEO_LOCK", _VIDEO_LOCK)
+
+
+class _FileLock:
+    """OS 파일락(프로세스가 죽으면 커널이 자동 해제). 같은 객체로 놓았다 다시 잡을 수 있다(release/acquire)."""
+
+    def __init__(self, path, wait_msg):
+        self.path, self.wait_msg, self.fh = Path(path), wait_msg, None
+
+    def acquire(self):
+        self.fh = open(self.path, "a+")
         if os.name == "nt":
             import msvcrt
             waited = False
             while True:
                 try:
-                    msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
-                    break
+                    msvcrt.locking(self.fh.fileno(), msvcrt.LK_NBLCK, 1)
+                    return self
                 except OSError:
                     if not waited:
-                        print("[대기] 다른 트랙이 finish 게이트 중 - 순번 대기(동시 실행이 더 느려서 줄 세운다)...")
+                        print(self.wait_msg)
                         waited = True
                     time.sleep(3)
-        else:
-            import fcntl
-            try:
-                fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except OSError:
-                print("[대기] 다른 트랙이 finish 게이트 중 - 순번 대기...")
-                fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
-        yield
-    finally:
+        import fcntl
+        try:
+            fcntl.flock(self.fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            print(self.wait_msg)
+            fcntl.flock(self.fh.fileno(), fcntl.LOCK_EX)
+        return self
+
+    def release(self):
+        if self.fh is None:
+            return
         try:
             if os.name == "nt":
                 import msvcrt
-                fh.seek(0)
-                msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+                self.fh.seek(0)
+                msvcrt.locking(self.fh.fileno(), msvcrt.LK_UNLCK, 1)
         finally:
-            fh.close()
+            self.fh.close()
+            self.fh = None
+
+
+@contextlib.contextmanager
+def _finish_gate_lock():
+    """finish 전역 직렬화 락. 이미 다른 finish가 게이트 중이면 풀릴 때까지 대기(순번제). → 락 객체(영상 관문 동안 놓는다)."""
+    lk = _FileLock(_finish_lock_path(),
+                   "[대기] 다른 트랙이 finish 게이트 중 - 순번 대기(동시 실행이 더 느려서 줄 세운다)...").acquire()
+    try:
+        yield lk
+    finally:
+        lk.release()
+
+
+def _run_video_gate_unlocked(lk, video_gate, stage, br):
+    """영상 관문을 **전역 finish 락 밖**에서 돌린다 — 영상 락만 쥔다. 끝나면 finish 락을 다시 잡고 돌아온다.
+    lk 가 None 이면(옛 호출) 그대로 돌린다."""
+    if lk is None:
+        return video_gate(stage, br)
+    if video_gate is _video_gate.run_video_gate:
+        # 건너뛸 병합이면 락을 놓지 않는다 — 놓았다 다시 잡는 사이 다른 트랙이 가져가면 그쪽 pytest 를 통째로 기다린다.
+        try:
+            if not _video_gate.gate_decision(stage)[2] or os.environ.get("VIDEO_GATE_SKIP", "").strip():
+                return video_gate(stage, br)
+        except Exception:  # noqa: BLE001 — 판정을 못 하면 종전대로(락 놓고) 돈다
+            pass
+    lk.release()
+    print("  (영상 관문은 전역 병합 락 밖에서 돈다 — 그동안 다른 트랙 finish 는 진행한다)")
+    vlk = _FileLock(_video_lock_path(), "[대기] 다른 트랙의 영상 관문이 서버에서 도는 중 - 순번 대기...").acquire()
+    try:
+        return video_gate(stage, br)
+    finally:
+        vlk.release()
+        lk.acquire()
+
+
+def _stage_owner_file(stage):
+    stage = Path(stage)
+    return stage.parent / (stage.name + ".owner")
+
+
+def _mark_stage_owner(stage):
+    """이 stage 를 쓰는 프로세스를 적는다 — 영상 관문 동안 락을 놓아도 다른 finish 의 청소가 지우지 않게."""
+    try:
+        _stage_owner_file(stage).write_text(str(os.getpid()), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _pid_alive(pid):
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        import ctypes
+        k = ctypes.windll.kernel32
+        h = k.OpenProcess(0x1000, False, pid)          # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return False
+        try:
+            code = ctypes.c_ulong()
+            return bool(k.GetExitCodeProcess(h, ctypes.byref(code))) and code.value == 259   # STILL_ACTIVE
+        finally:
+            k.CloseHandle(h)
+    try:
+        os.kill(pid, 0)                                  # posix 만 — 윈도에서 0 은 CTRL_C_EVENT 라 쓰면 안 된다
+        return True
+    except OSError:
+        return False
+
+
+def _stage_in_use(stage):
+    try:
+        pid = int(_stage_owner_file(stage).read_text(encoding="utf-8").strip())
+    except (OSError, ValueError):
+        return False
+    return pid != os.getpid() and _pid_alive(pid)
 
 
 def _sh(cmd, cwd):
@@ -215,7 +317,13 @@ def _clean_dead_stages(repo, keep=None):
     removed = []
     for d in root.iterdir():
         if d.is_dir() and d.name.startswith(STAGE_PREFIX) and d.name != keep:
+            if _stage_in_use(d):
+                continue                 # 영상 관문 동안 락을 놓은 다른 finish 의 살아 있는 stage(2026-10-02, 카드 075)
             run(["git", "worktree", "remove", "--force", str(d)], repo)
+            try:
+                _stage_owner_file(d).unlink()
+            except OSError:
+                pass
             if d.exists():
                 shutil.rmtree(d, ignore_errors=True)
             removed.append(d.name)
@@ -415,11 +523,16 @@ def _open_stage(repo, name):
     rc, out = run(["git", "worktree", "add", "--detach", str(stage), "origin/main"], repo)
     if rc != 0:
         raise TrackError(f"병합용 임시 폴더를 못 만들었다:\n{out}")
+    _mark_stage_owner(stage)
     return stage
 
 
 def _close_stage(repo, stage):
     run(["git", "worktree", "remove", "--force", str(stage)], repo)
+    try:
+        _stage_owner_file(stage).unlink()
+    except OSError:
+        pass
 
 
 def finish(name, repo=BASE, gate=merge_gate, attempts=3, video_gate=None):
@@ -429,7 +542,7 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3, video_gate=None):
     br = branch_name(name)
 
     # ★전역 락: 한 번에 하나의 finish만 게이트를 돈다(동시 pytest는 CPU 포화라 더 느림).
-    with _finish_gate_lock():
+    with _finish_gate_lock() as _lk:
         # 락을 쥐었으니 남아 있는 _merge-* 는 전부 끊긴 finish의 잔해다(2026-09-27 실측 4개·개당 ~1.8GB)
         _clean_dead_stages(repo)
         _disk_guard(repo, "finish")
@@ -437,7 +550,7 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3, video_gate=None):
             run(["git", "fetch", "origin"], repo)
             stage = _open_stage(repo, name)
             try:
-                result = _merge_and_gate(name, repo, stage, br, gate, wt, video_gate)
+                result = _merge_and_gate(name, repo, stage, br, gate, wt, video_gate, lock=_lk)
             finally:
                 _close_stage(repo, stage)
 
@@ -458,7 +571,7 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3, video_gate=None):
     )
 
 
-def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
+def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None):
     before = _cached_baseline(repo, stage, gate)
     for w in gate.baseline_warnings(before):
         print(f"  {w}")
@@ -513,7 +626,7 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
     # ★영상 관문(2026-09-27): 제작 라인(미리보기 굽기·렌더·청소·컷 계산)을 건드린 병합은
     #   서버에서 '편집 화면 vs 완성본' 영상 비교를 통과해야 커밋된다. 해당 변경이 없으면 한 줄 찍고 건너뛴다.
     #   실패하면 여기서 버린다 — 아직 커밋 전이라 라이브는 무사하다(stage는 finally에서 통째로 삭제).
-    vg = (video_gate or _video_gate.run_video_gate)(stage, br)
+    vg = _run_video_gate_unlocked(lock, (video_gate or _video_gate.run_video_gate), stage, br)
     if not vg.ok:
         raise TrackError(
             "❌ 영상 관문 실패 — 병합을 버렸다. 라이브는 무사하다.\n"
