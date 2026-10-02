@@ -275,11 +275,14 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
             if b <= a:
                 continue
             if a > cursor + .001:
-                scenes.append({"start":cursor,"end":a,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
+                # 훅 틀은 제목 아래 띠가 자막 칸이라, 말 시작 전 빈 틈에 빈 띠가 뜨면 칸이 사라진 것처럼 보인다(10-02 사장님 캡처) — 곧 나올 자막을 미리 채운다
+                lead = caption if kind == "hook" else ""
+                scenes.append({"start":cursor,"end":a,"caption":lead,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
             scenes.append({"start":a,"end":b,"caption":caption,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
             cursor = b
         if cursor < end - .001:
-            scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
+            tail = (scenes[-1]["caption"] if kind == "hook" and scenes and scenes[-1]["beat_idx"] == beat["beat_idx"] else "")   # 훅 말 끝난 뒤 틈도 띠를 비우지 않는다(10-02)
+            scenes.append({"start":cursor,"end":end,"caption":tail,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
     scenes = _absorb_tiny_gaps(scenes)
     copy = dict(headcopy) if isinstance(headcopy, dict) else {}
     if not (copy.get("text") or "").strip():
