@@ -190,7 +190,8 @@
       : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${esc(fontLabel(p))} · 훅+본문</small></button>`).join('');
   };
   const presetPane=grid.closest('.pane'),modeBar=document.createElement('div');modeBar.className='template-mode-bar';
-  modeBar.innerHTML='<button type="button" data-template-mode="story" class="active">썰쇼핑형 <small>20</small></button><button type="button" data-template-mode="continuous">전장면 고정형 <small>20</small></button>';
+  // ★틀 고르기 5버튼(관제 058, 2026-10-02 사장님 "썰훅·훅만·썰만·인스타·원본그대로, 깔끔하고 복잡하지 않게").
+  modeBar.innerHTML='<button type="button" data-frame-rule="hook_body" class="active">썰훅</button><button type="button" data-frame-rule="hook_all">훅만</button><button type="button" data-frame-rule="body_all">썰만</button><button type="button" data-template-mode="continuous">인스타</button><button type="button" data-plain-pick>원본그대로</button>';
   presetPane.querySelector('.pane-head').after(modeBar);renderGrid();
   // 왼쪽 맨 위 탭(2026-09-19 사장님): '템플릿 선택' 머리말 자리에 [장면 템플릿 | 폰트 템플릿].
   //   오른쪽 문구/효과 탭과 같은 .tool-tabs 모양. 폰트 템플릿(채널명·제목·자막 한 세트)은 다음 단계 — 지금은 자리만.
@@ -267,6 +268,7 @@
   // 템플릿 없음(2026-09-18 사장님 "템플릿 없는 거 쓰는 사람들") — 선택하면 snapshot()이 null을 내고 제작소가 그대로 서버에 저장,
   //   최종 렌더(video_assemble)는 scene_style이 비면 꾸미기를 건너뛴다.
   let noTemplate=false;
+  let frameRule='hook_body';   // 썰훅·훅만·썰만(관제 058) — 판단 주인은 서버 scene_style.frame_kind. 여기선 버튼을 누른 순간 미리보기만 같은 규칙으로 맞춘다
   let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',bodyCaptionMotion='',fontSet='',hookMotionSpeed=.72,hookCaptionMode='visible';
   // 글자 두께·그림자(2026-09-28, 09-29) — 영상 전체 글자(채널명·제목·자막)에 한 번에 건다.
   //   글꼴이 대부분 한 굵기뿐이라 두께는 같은 색 테두리(text-stroke)로 키운다. 규칙은 아래 CSS 한 곳뿐이고,
@@ -299,6 +301,13 @@
   const rememberedBranding=()=>{try{return JSON.parse(localStorage.getItem('scene_style_branding')||'{}')}catch{return {}}};
   let sceneContext=null,effects={},branding=labMode?{}:rememberedBranding();
   const sceneKind=index=>sceneContext?.scenes?.[index]?.kind||(index===0?'hook':'body');
+  // ★서버 frame_kind의 거울 — 버튼을 누르면 서버 왕복 없이 미리보기를 바로 바꾼다. 저장 뒤 렌더·썸네일·캡컷은 서버 context_for가 같은 규칙으로 다시 정한다.
+  //   두 벌이라 테스트(test_scene_style_frame_rule)가 세 규칙 결과를 서로 대조한다.
+  const frameKindOf=(beatOrder,rule)=>rule==='hook_all'?'hook':rule==='body_all'?'body':(beatOrder===0?'hook':'body');
+  function applyFrameRule(){
+    const sc=sceneContext?.scenes;if(!sc?.length)return;const order=[...new Set(sc.map(x=>x.beat_idx))];
+    for(const x of sc){x.kind=frameKindOf(order.indexOf(x.beat_idx),frameRule);x.caption_visible=!(x.kind==='hook'&&hookCaptionMode==='hidden');}
+  }
   const frameFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame:p[sceneKind(index)];
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
   const frameKind=()=>mode==='continuous'?'frame':kind;
@@ -1476,10 +1485,19 @@
     preview.classList.remove('is-pristine');showFrame(kind);
   }
   grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){plainLegacy=false;const i=rows.findIndex(p=>p.id===PLAIN_ID);if(i>=0)selectPreset(i);else setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
+  const markMode=btn=>modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===btn));
+  const toStory=()=>{if(mode!=='story'){mode='story';rows=storyRows;current=0;renderGrid();}};
   modeBar.addEventListener('click',event=>{
-    const button=event.target.closest('[data-template-mode]');if(!button)return;
+    const ruleBtn=event.target.closest('[data-frame-rule]'),plainBtn=event.target.closest('[data-plain-pick]'),button=event.target.closest('[data-template-mode]');
+    if(ruleBtn){   // 썰훅·훅만·썰만 — 같은 썰 템플릿에 장면 틀 규칙만 바꾼다
+      toStory();frameRule=ruleBtn.dataset.frameRule;applyFrameRule();markMode(ruleBtn);
+      if(rows[current]?.id===PLAIN_ID)current=Math.max(0,rows.findIndex(p=>p.id!==PLAIN_ID));
+      sceneIndex=0;selectPreset(current);return;
+    }
+    if(plainBtn){toStory();frameRule='hook_body';applyFrameRule();markMode(plainBtn);plainLegacy=false;const i=rows.findIndex(p=>p.id===PLAIN_ID);if(i>=0)selectPreset(i);return;}
+    if(!button)return;
     mode=button.dataset.templateMode;rows=mode==='continuous'?fixedRows:storyRows;if(!rows.length)return;
-    modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));current=0;kind='hook';sceneIndex=0;renderGrid();selectPreset(0);
+    markMode(button);current=0;kind='hook';sceneIndex=0;renderGrid();selectPreset(0);
   });
   root.querySelectorAll('.layout-a [data-frame]').forEach(button=>button.addEventListener('click',()=>showFrame(button.dataset.frame)));
   root.querySelector('.layout-a .scene-navigator')?.addEventListener('click',event=>{
@@ -1770,9 +1788,10 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,fontSets:{...fontSets},titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,...(mode!=='continuous'&&frameRule!=='hook_body'?{frameRule}:{}),...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,fontSets:{...fontSets},titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
+      frameRule=['hook_all','body_all'].includes(saved?.frameRule)?saved.frameRule:'hook_body';applyFrameRule();
       plainLegacy=!!(saved&&saved.presetId===PLAIN_ID&&saved.plainCaption!==2);   // 표시 없는 옛 원본 = 예전 그대로
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
       if(saved){
@@ -1782,7 +1801,7 @@
         effects=saved.effects||{};
         hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';restoreFontSets(saved);titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';textWeight=textLookMap(saved.textWeight,'weight');textShadow=textLookMap(saved.textShadow,'shadow');window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
-        modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
+        {const sel=mode==='continuous'?'[data-template-mode="continuous"]':(saved.presetId===PLAIN_ID?'[data-plain-pick]':`[data-frame-rule="${frameRule}"]`);const b=modeBar.querySelector(sel);if(b)markMode(b);}
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
         for(const [key,value] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption')inputs[key].value=value;
       }
