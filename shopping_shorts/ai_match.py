@@ -274,3 +274,67 @@ def apply(lines, code_bs, seg_index, backbone_vid, note=None, product=""):
             used.update(keep)
     note["matcher"] = "ai"
     return bs
+
+
+def _order_key(sid):
+    """seg_id → (영상 접두, 순번) — 1단계가 영상마다 0부터 매긴 순번(_assign_seg_ids)으로 원본 순서를 안다."""
+    head, _, tail = str(sid).rpartition("-")
+    try:
+        return head, int(tail)
+    except ValueError:
+        return str(sid), 0
+
+
+def ensure_cover(bs, lines, seg_index, backbone_vid, note=None):
+    """★2단계 장면 보장(관제 084, 2026-10-02 사장님 "화면 모자라 멈춤 — 땜빵 말고 구조적으로"):
+    줄마다 **장면 길이 합 × SLOW ≥ 대사 초**가 되게 장면을 더한다. 3단계(planClips)는 받은 장면에 시간만 나눈다.
+    더하는 순서(사장님 규칙): ① 같은 의미 장면 — 그 줄 첫 장면과 같은 쓰임(label)의 안 쓴 컷(다른 영상 우선)
+                            ② 원본에서 이어지는 장면 — 뒤쪽 가장 가까운 안 쓴 컷, 없으면 앞쪽
+                            ③ 다른 영상의 같은 종류(기능·효과…) 컷.
+    뒷컷·목록 밖·다른 줄이 쓴 컷은 안 쓴다. 끝내 모자란 줄은 note["cover_short"]에 남긴다(대사 줄이기 대상).
+    bs 를 제자리에서 고치고 더한 컷 수를 돌려준다. 실측(24시간 706칸): 멈춤 126칸 중 102칸이 여기(2단계)서부터 짧았다."""
+    from shopping_shorts.backbone_assemble import _secs
+    used = {c for b in (bs or []) if b for c in (b.get("segs") or [])}
+    by_vid = {}
+    for sid in seg_index:
+        by_vid.setdefault(_order_key(sid)[0], []).append(sid)
+    for v in by_vid.values():
+        v.sort(key=lambda x: _order_key(x)[1])
+    added, short = 0, []
+    for i, L in enumerate(lines or []):
+        b = bs[i] if bs and i < len(bs) else None
+        if not b or not (b.get("segs") or []):
+            continue
+        segs = [c for c in b["segs"] if c in seg_index]
+        need = _secs(L.get("text") or "")
+        have = lambda: sum(seg_index[c]["secs"] for c in segs)
+        guard = 0
+        while segs and have() * SLOW < need - 0.3 and guard < 8:
+            guard += 1
+            pick = None
+            lab = (seg_index[segs[0]].get("label") or "")[:6]
+            if lab:
+                same = [c for c in seg_index if c not in used and c not in segs and _usable(seg_index, c, backbone_vid)
+                        and (seg_index[c].get("label") or "")[:6] == lab]
+                same.sort(key=lambda c: (seg_index[c]["vid"] == seg_index[segs[0]]["vid"], -seg_index[c]["secs"]))
+                pick = same[0] if same else None
+            if not pick:   # ② 원본에서 이어지는 장면 — 뒤쪽으로 가장 가까운 안 쓴 컷, 없으면 앞쪽으로 가장 가까운 컷
+                head, k = _order_key(segs[-1])
+                seq = by_vid.get(head) or []
+                ok = lambda c: c not in used and c not in segs and _usable(seg_index, c, backbone_vid)
+                pick = next((c for c in seq if _order_key(c)[1] > k and ok(c)), None)                     or next((c for c in reversed(seq) if _order_key(c)[1] < _order_key(segs[0])[1] and ok(c)), None)
+            if not pick:   # ③ 다른 영상의 같은 종류(기능·효과…) 컷
+                kind = seg_index[segs[0]].get("kind") or ""
+                pick = next((c for c in seg_index if kind and seg_index[c].get("kind") == kind and c not in used
+                             and c not in segs and _usable(seg_index, c, backbone_vid)), None)
+            if not pick:
+                break
+            segs.append(pick); used.add(pick); added += 1
+        b["segs"] = segs
+        b["seg"] = segs[0] if segs else b.get("seg", "")
+        if segs and have() * SLOW < need - 0.3:
+            short.append(i)
+    if note is not None:
+        note["cover_added"] = added
+        note["cover_short"] = short
+    return added
