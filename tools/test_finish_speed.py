@@ -238,3 +238,19 @@ def test_번호표를_먼저_받고_선검사한다(repo, monkeypatch, tmp_path)
     monkeypatch.setattr(track, "_known_main_failures", lambda *a, **k: set())
     track.finish("번호표먼저", repo=repo, gate=_LightGate(), video_gate=_ok_video)
     assert seen.get("tickets") == 1, "선검사 때 이미 줄(번호표)에 서 있어야 한다"
+
+
+def test_track_py를_고치는_트랙은_바꿔_실행하지_않는다(tmp_path, monkeypatch):
+    newer = tmp_path / "tools" / "track.py"
+    newer.parent.mkdir(parents=True)
+    newer.write_text("# main 판본\n", encoding="utf-8")
+    monkeypatch.setattr(track, "main_worktree", lambda cwd=None: tmp_path)
+    monkeypatch.delenv("TRACK_REEXEC", raising=False)
+    def fake_sh(cmd, cwd):
+        if cmd[:2] == ["git", "show"]:
+            return 0, "# origin/main 판본\n"
+        if cmd[:2] == ["git", "diff"]:
+            return 0, "tools/track.py\n"
+        return 1, ""
+    monkeypatch.setattr(track, "_sh", fake_sh)
+    assert track._reexec_latest(["list"]) == (False, 0)

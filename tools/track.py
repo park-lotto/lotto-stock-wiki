@@ -1268,6 +1268,13 @@ def _reexec_latest(argv):
         me = Path(__file__).resolve()
         if not latest.exists() or latest.resolve() == me or latest.read_bytes() == me.read_bytes():
             return False, 0
+        # ★이 트랙이 track.py 자체를 고치는 중이면 바꾸지 않는다 — 고친 판본으로 병합해야 한다(10-02 실측: 카드 083 finish 가
+        #   main 의 옛 판본으로 돌았다). 트랙 폴더 판본이 origin/main 판본과 다르고, 그 차이가 이 트랙의 커밋이면 = 고치는 중.
+        rc, base = _sh(["git", "show", "origin/main:tools/track.py"], me.parent)
+        if rc == 0 and base.replace("\r\n", "\n") != me.read_text(encoding="utf-8").replace("\r\n", "\n"):
+            rc2, ch = _sh(["git", "diff", "--name-only", "origin/main...HEAD", "--", ":/tools/track.py"], me.parent)   # :/ = 저장소 최상위 기준
+            if rc2 == 0 and ch.strip():
+                return False, 0
     except Exception:  # noqa: BLE001 — 못 정하면 이 판본으로 돈다
         return False, 0
     print("ℹ️ main 폴더의 최신 track.py 로 실행한다(이 트랙 폴더 판본은 옛것): %s" % latest, flush=True)
