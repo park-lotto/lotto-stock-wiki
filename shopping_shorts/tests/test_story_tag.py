@@ -76,3 +76,11 @@ def test_feats_from_stories_merges_same_point_across_videos():
     idx = {"s1-2": {"vid": "s1"}, "s2-5": {"vid": "s2"}, "s2-6": {"vid": "s2"}}
     f = st.feats_from_stories(srcs, idx)
     assert len(f) == 1 and sorted(f[0]["from_cuts"]) == ["s1-2", "s2-5", "s2-6"]
+
+
+def test_story_survives_storable():
+    """스토리는 DB 저장 화이트리스트(script_extract.storable)를 통과해야 한다 — 10-02 실측: 빠져서 배포 뒤 전부 버려졌다."""
+    from shopping_shorts import script_extract as se
+    story = [{"text": "물만 쏙", "cuts": ["s1-2"], "kind": "장점", "point": "배수"}]
+    assert se.storable({"segments": [], "story": story})["story"] == story
+    assert se.storable({"segments": []})["story"] == []

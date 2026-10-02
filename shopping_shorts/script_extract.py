@@ -696,7 +696,10 @@ def storable(result):
             # 가로 영상을 세로 숏폼에 넣으면 좌우가 잘려 확대된 것처럼 나오고, 제작은
             # mix_pipeline._block_landscape가 막는다. 여기 없으면 담을 때 알릴 방법이 없다.
             "video_w": int(r.get("video_w") or 0) or None,
-            "video_h": int(r.get("video_h") or 0) or None}
+            "video_h": int(r.get("video_h") or 0) or None,
+            # 영상 스토리(2026-10-02, 관제 020) — 1단계가 만든 "대본 문장+컷". 2단계 백본·이야기작가가 특징 묶음 자리에 쓴다.
+            # ★10-02 실측: 여기 빠져 있어 배포 뒤 분석된 영상 전부 스토리가 저장 순간 버려졌다(만들고도 0건).
+            "story": r.get("story") or []}
 
 
 def _pick_better_extract(first, second, duration):
