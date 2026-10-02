@@ -36,7 +36,7 @@ def _estimate_seconds(text):
 
 
 def _record_tts_event(service, exc, *, silent=False, customer_id=None, ok=False,
-                      dur_ms=None):
+                      dur_ms=None, need_key=False):
     """관측판 배선(2026-09-01) — TTS 성공·실패·무음폴백을 api_events에 남긴다.
 
     ★무음 폴백은 그동안 완전한 사각이었다: 키가 없으면 조용히 무음 mp3를 만들어
@@ -54,7 +54,12 @@ def _record_tts_event(service, exc, *, silent=False, customer_id=None, ok=False,
     기록 실패는 삼킨다 — 관측이 본작업을 죽이면 안 된다."""
     try:
         from shopping_shorts import api_health
-        if silent:
+        if need_key:
+            # ★키 없는 회원을 안내문으로 막은 것 — 무음 mp3를 만들지 않는다(2026-10-02 관제 082).
+            #   종전엔 silent로 남겨 "고객이 무음 영상을 받았다" 경보가 거짓으로 떴다(실측 235건, 무음 영상 0편).
+            api_health.record(service, api_health.OUT_NEED_KEY,
+                              customer_id=customer_id, detail="본인 키 없음 → 안내문으로 막음")
+        elif silent:
             api_health.record(service, api_health.OUT_SILENT,
                               customer_id=customer_id, detail="키 없음 → 무음 mp3 폴백")
         elif ok:
@@ -143,7 +148,7 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
         #   여기서 무음으로 내려가면 소리 없는 영상이 "완료"로 나간다.
         from shopping_shorts import keyroute as _kr
         if not _kr.is_block_exempt(customer_id):
-            _record_tts_event("elevenlabs", None, silent=True, customer_id=customer_id)
+            _record_tts_event("elevenlabs", None, need_key=True, customer_id=customer_id)
             # ★문구에 '지금 성우가 일레븐랩스'임을 밝힌다(2026-09-30 차순엽 신고 #53 — 타입캐스트 키가 있는데
             #   "타입캐스트 키를 등록하라"고 나와 헷갈렸다). "키를 등록해야"는 need_own_key 화면 판정용이라 유지.
             raise RuntimeError("지금 성우는 일레븐랩스 성우라 일레븐랩스 API 키를 등록해야 해요. "
@@ -238,7 +243,7 @@ def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
         #   그대로 — app._user_error_kind가 "키를 등록해야"를 보고 need_own_key 화면을 띄운다.
         from shopping_shorts import keyroute as _kr
         if not _kr.is_block_exempt(customer_id):
-            _record_tts_event("typecast", None, silent=True, customer_id=customer_id)
+            _record_tts_event("typecast", None, need_key=True, customer_id=customer_id)
             raise RuntimeError(_kr.TYPECAST_NEED_KEY_MSG)
         _record_tts_event("typecast", None, silent=True, customer_id=customer_id)
         _write_silent_mp3(out_path, _estimate_seconds(text))

@@ -50,6 +50,7 @@ OUT_TIMEOUT = "timeout"
 OUT_NETWORK = "network"
 OUT_EMPTY = "empty"                # 200인데 내용 없음(빈 응답)
 OUT_SILENT = "silent_fallback"     # ★키 없음 → 무음 mp3로 조용히 내려앉음(고객은 무음 영상)
+OUT_NEED_KEY = "need_own_key"      # 회원이 본인 키 없이 와서 안내문으로 막힘(무음 아님, 2026-10-02 관제 082)
 OUT_LOCK = "lock"                  # 로테이션이 키를 잠금(소진 마킹)
 OUT_REVIVE = "revive"              # 프로브가 키를 되살림
 OUT_ERROR = "error"                # 그 외
