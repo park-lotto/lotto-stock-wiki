@@ -319,7 +319,7 @@
   const frameKindOf=(beatOrder,rule)=>rule==='hook_all'?'hook':rule==='body_all'?'body':(beatOrder===0?'hook':'body');
   function applyFrameRule(){
     const sc=sceneContext?.scenes;if(!sc?.length)return;const order=[...new Set(sc.map(x=>x.beat_idx))];
-    for(const x of sc){x.kind=frameKindOf(order.indexOf(x.beat_idx),frameRule);x.caption_visible=!(x.kind==='hook'&&hookCaptionMode==='hidden');}
+    for(const x of sc){x.kind=frameKindOf(order.indexOf(x.beat_idx),frameRule);x.caption_visible=!(x.kind==='hook'&&order.indexOf(x.beat_idx)===0&&hookCaptionMode==='hidden');}   // '훅 자막 숨김'은 첫 훅 문장에만(10-02: 썰훅만 본문 자막이 같이 숨던 것)
   }
   const frameFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame:p[sceneKind(index)];
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
