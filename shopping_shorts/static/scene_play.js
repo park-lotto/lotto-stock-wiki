@@ -651,12 +651,21 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     const cuts = ((((typeof DATA === 'object' && DATA) || {}).scenecuts) || {})[vid];
     if (!Array.isArray(cuts) || !cuts.length || !(d > 0) || !isFinite(s)) return {start: s, sdur: d};
     const e = s + d;
+    // ★연속 전환(짧은 번쩍임)은 끝까지 넘긴다(2026-10-02 관제 073). 실측 f65d5cc30072 s3: 첫머리 전환 0.1001·0.1335·0.1668 —
+    //   종전엔 머리 3프레임 안의 전환 하나(0.1001)로만 옮겨, 옮긴 자리가 2프레임짜리 딴 장면 안이었다(화면·완성본 둘 다 번쩍).
+    //   옮긴 새 경계에서 다시 3프레임 안에 전환이 있으면 거기로 또 옮긴다(최대 8번). 꼬리도 같다.
+    const cs = cuts.map(Number).filter(isFinite).sort((a, b) => a - b);
     let ns = s, ne = e;
-    for (const x of cuts){
-      const c = Number(x);
-      if (!isFinite(c)) continue;
-      if (c > s + 1e-6 && c <= s + READ_GUARD && c > ns) ns = c;     // 머리: 앞 장면 프레임을 읽지 않는다
-      if (c < e - 1e-6 && c >= e - READ_GUARD && c < ne) ne = c;     // 꼬리: 다음 장면 첫 프레임부터는 안 읽는다
+    for (let k = 0; k < 8; k++){                                     // 머리: 앞 장면·번쩍 장면 프레임을 읽지 않는다
+      const nx = cs.find(c => c > ns + 1e-6 && c <= ns + READ_GUARD);
+      if (nx === undefined) break;
+      ns = nx;
+    }
+    for (let k = 0; k < 8; k++){                                     // 꼬리: 다음 장면·번쩍 장면 첫 프레임부터는 안 읽는다
+      let pv;
+      for (const c of cs) if (c < ne - 1e-6 && c >= ne - READ_GUARD) { pv = c; break; }
+      if (pv === undefined) break;
+      ne = pv;
     }
     if (ns === s && ne === e) return {start: s, sdur: d};
     if (ne - ns < 0.1) return {start: s, sdur: d};                   // 창이 너무 짧아지면 안 건드린다
