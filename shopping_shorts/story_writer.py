@@ -1013,12 +1013,13 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
     seg_index = ba._seg_index(vis)
     note = {}
     from shopping_shorts import story_tag as _st
-    if _st.has_stories(vis):                      # 2026-10-01: 스토리가 특징 후보다(AI 특징 뽑기 호출 없음). 씨앗은 vis 에서 이미 빠졌다.
-        feats_cands = _st.feats_from_stories(vis, seg_index)
+    # ★특징 뽑기 호출은 **늘** 한다 — 이 호출이 씨앗의 '홀린 요인'(hook_slots: 권위자·대상·나라…)과 씨앗 셀링포인트(seed_points)도
+    #   같이 뽑는다. 2026-10-02 실측: 스토리 모드에서 이 호출을 건너뛰었더니 첫 줄 틀 빈칸이 비어 「OO도 예상 못한」이 「셰프도 감탄한」으로 샜다.
+    feats_cands = extract_feats(vis, product, note=note, seed_text=seed_text)
+    note["feats_from"] = "extract_feats"
+    if _st.has_stories(vis):                      # 2026-10-01: 스토리가 있으면 특징 후보는 스토리(문장·컷이 태깅 때 이미 짝). 씨앗은 vis 에서 이미 빠졌다.
+        feats_cands = _st.feats_from_stories(vis, seg_index) or feats_cands
         note["feats_from"] = "story"
-    else:
-        note["feats_from"] = "extract_feats"
-        feats_cands = extract_feats(vis, product, note=note, seed_text=seed_text)
     if not feats_cands:
         return [], "특징을 못 뽑음(%s)" % (note.get("reason") or "빈 응답")
     hook_slots = note.get("hook_slots") or {}
