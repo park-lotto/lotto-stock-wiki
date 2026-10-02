@@ -165,19 +165,19 @@ def test_compare_reports_every_new_failure_not_just_first():
 
 
 def test_xdist_args_parallel_when_installed():
-    # 이 리포 환경은 pytest-xdist를 requirements로 설치 → -n auto 병렬
-    assert merge_gate._xdist_args() == ["-n", "auto"]
+    # 이 리포 환경은 pytest-xdist를 requirements로 설치 → -n 4 병렬(2026-09-21 사장님 "16코어 다 쓸 일 아니다")
+    assert merge_gate._xdist_args() == ["-n", "4"]
 
 
 def test_snapshot_cmd_includes_xdist(monkeypatch):
-    # snapshot이 pytest 호출에 -n auto를 실어 보내는지(설치 환경) — run을 가로채 확인
+    # snapshot이 pytest 호출에 -n 4를 실어 보내는지(설치 환경) — run을 가로채 확인
     seen = []
     def fake_run(cmd, cwd):
         seen.append(cmd)
         return (0, "")
     merge_gate.snapshot(cwd=".", run=fake_run)
     pytest_cmd = next(c for c in seen if "pytest" in c)
-    assert "-n" in pytest_cmd and "auto" in pytest_cmd
+    assert "-n" in pytest_cmd and "4" in pytest_cmd
 
 
 def test_norm_test_id_makes_korean_and_mojibake_equal():
