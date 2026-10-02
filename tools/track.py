@@ -483,6 +483,10 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None):
     print("게이트 실행 중 (병합된 상태, 아직 커밋 없음)...")
     after = gate.snapshot(stage)
     problems = gate.compare(before, after)
+    # ★새로 깨진 테스트를 origin/main 코드로 다시 돌린다(2026-10-02, 카드 069). 기준선 저장본이 낡거나 환경이 달라지면
+    #   main 의 기존 실패가 '새로 깨진 것'으로 잡혀 무관한 트랙을 막았다(10-01 추적대본검색어 실측).
+    problems = _classify_new_failures(before, after, problems,
+                                      rerun=lambda ids: _rerun_on_main(stage, ids), printer=print)
 
     if problems:
         msg = ["❌ 게이트 실패 — 병합을 버렸다. 라이브는 무사하다.\n"]
@@ -584,6 +588,50 @@ def _catch_up_non_code(stage):
         return False
     print(f"⏩ 끼어든 main 커밋이 비코드 {len(changed)}개뿐 — 게이트 결과 그대로 두고 합쳐서 다시 push")
     return True
+
+
+def _classify_new_failures(before, after, problems, *, rerun, printer=print):
+    """'새로 깨진 테스트' 문제를 다시 가른다: rerun(ids) 가 돌려준 집합(= main 에서도 깨지는 것)은 기존 실패로 빼고,
+    남는 것만 문제로 둔다. 전부 기존 실패면 그 문제 줄을 지운다."""
+    new_ids = sorted(set(after.get("failed", [])) - set(before.get("failed", [])))
+    if not new_ids or not any(p.startswith("새로 깨진 테스트") for p in problems):
+        return problems
+    try:
+        pre = set(rerun(new_ids))
+    except Exception as e:  # noqa: BLE001 — 재실행을 못 하면 보수적으로 종전 판정 유지
+        printer(f"  ⚠️ 기존 실패 분류 건너뜀(main 재실행 실패): {e!r}")
+        return problems
+    if pre:
+        printer("  ℹ️ 기존 실패로 분류(origin/main 에서도 깨짐) %d건: %s" % (len(pre), ", ".join(sorted(pre)[:6])))
+    left = [t for t in new_ids if t not in pre]
+    out = [p for p in problems if not p.startswith("새로 깨진 테스트")]
+    if left:
+        shown = "\n".join(f"    - {t}" for t in left[:20])
+        out.append(f"새로 깨진 테스트 {len(left)}건:\n{shown}")
+    return out
+
+
+def _rerun_on_main(stage, ids):
+    """origin/main 코드(코드 폴더만 git archive)로 그 테스트들만 돌려 **거기서도 깨지는 id 집합**을 돌려준다."""
+    rc, sha = run(["git", "rev-parse", "origin/main"], stage)
+    sha = sha.strip()
+    tmp = Path(tempfile.mkdtemp(prefix="gate_main_"))
+    try:
+        paths = ["conftest.py", "pytest.ini", "shopping_shorts", "tools", "pipeline", "dashboard", "scripts", "deploy"]
+        p = subprocess.run(["git", "archive", "--format=tar", sha, "--"] + paths, cwd=str(stage), capture_output=True)
+        if p.returncode != 0:
+            p = subprocess.run(["git", "archive", "--format=tar", sha], cwd=str(stage), capture_output=True)
+        tar_path = tmp / "main.tar"
+        tar_path.write_bytes(p.stdout)
+        import tarfile
+        with tarfile.open(tar_path) as tf:
+            tf.extractall(tmp)
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--no-header"] + list(ids),
+                           cwd=str(tmp), capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=900)
+        return merge_gate.parse_failed((r.stdout or "") + (r.stderr or ""))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 def _cached_baseline(repo, stage, gate):

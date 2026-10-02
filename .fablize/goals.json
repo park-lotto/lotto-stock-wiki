@@ -1,34 +1,27 @@
 {
- "brief": "효과음 탭(밀도·크기·팩·칸별) — 관제 059",
- "created": "2026-10-01T07:35:03.521410+00:00",
+ "brief": "관제수리(카드069)",
+ "created": "2026-10-01T15:18:46.760153+00:00",
  "goals": [
   {
    "id": "G001",
-   "title": "sfx_pack 조절값",
-   "objective": "deco.sfx_density/level/pack번호/mute_beats 를 resolve 한 곳에서 읽어 plan_events·events 반영 + 테스트",
-   "status": "pending",
-   "evidence": null
+   "title": "검사종류",
+   "objective": "live_check에 카드 '검사' 칸(url/api/수동/영상). url·api는 서버 반영 확인 후 HTTP로 재서 완료/회귀, 수동은 목록만",
+   "status": "complete",
+   "evidence": "test_control_repair 9 passed; 실제 보드 --all --no-write: 수동 25장 목록·영상 4장 서버 비교 통과(2작업)·url/api 분기는 fake sh/fetch 테스트로 완료/회귀/서버미반영 3갈래 확인"
   },
   {
    "id": "G002",
-   "title": "API",
-   "objective": "GET 상태에 밀도·크기·팩목록·칸별 계획, POST settings 저장, 팩 소리 미리듣기",
-   "status": "pending",
-   "evidence": null
+   "title": "관문심볼판정",
+   "objective": "video_gate.app_touches_video가 모듈 수준 변경을 심볼 이름으로 판정(상수·템플릿은 제작 라인 밖)",
+   "status": "complete",
+   "evidence": "어제 실제 diff(5696da7a2→7c5fd9c18) app_touches_video → False '모듈 상수 _AUTH_ALLOW,_PRICING_TMPL,_REFUND_BODY'; 반대증거 RENDER_FPS_X 상수 → True"
   },
   {
    "id": "G003",
-   "title": "UI",
-   "objective": "3단계 효과음 탭(밀도3단·크기3단·팩+미리듣기·칸별 켜고끄기)",
-   "status": "pending",
-   "evidence": null
-  },
-  {
-   "id": "G004",
-   "title": "검증",
-   "objective": "ui_check 실브라우저 + 실렌더 이벤트 대조 + finish",
-   "status": "pending",
-   "evidence": null
+   "title": "기존실패분류",
+   "objective": "track 게이트가 새로 깨진 테스트를 origin/main 코드로 재실행해 거기서도 깨지면 기존 실패로 분류",
+   "status": "complete",
+   "evidence": "단위 2갈래 + 실제 재실행"
   }
  ]
 }

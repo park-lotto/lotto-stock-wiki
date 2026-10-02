@@ -6580,8 +6580,72 @@ def api_mix_scene_lab_phash(job_id: str):
     return {"ok": True, "phash": _lab_phash_load(_MIX_WORK_DIR / job_id)}
 
 
+# ★영상·음성 파일 전송의 주인(2026-10-01 관제 062) — 재생·다운로드용 파일 응답은 전부 _send_media 한 곳.
+#   왜: 웹 프로세스(uvicorn 1개)가 영상을 Range 로 직접 흘려서 2시간에 4GB+, CPU 평균 74%였다(실측 10-01).
+#   아파치 mod_xsendfile 이 켜져 있으면(서버 vhost: XSendFile On · XSendFilePath data/·static/) 파이썬은
+#   "X-Sendfile: <경로>" 헤더만 주고 본문은 비운다 — Range·HEAD·If-Range·캐시는 아파치가 커널에서 한다.
+#   스위치: 관리자 설정 xsendfile_enabled="1" (30초 캐시). 꺼져 있거나 아파치를 안 거친 요청(X-Forwarded-* 없음,
+#   로컬 직결·테스트)이거나 XSendFilePath 밖의 파일이면 종전 파이썬 전송 그대로 — 되돌리기는 설정 한 줄.
+_XSF_ROOTS = (Path(__file__).parent / "data", Path(__file__).parent / "static")
+_XSF_CACHE = {"t": 0.0, "on": False}
+
+
+def _xsendfile_on(request):
+    import time as _t
+    now = _t.monotonic()
+    if now - _XSF_CACHE["t"] > 30:
+        try:
+            _XSF_CACHE["on"] = str(Store(DB_PATH).get_setting("xsendfile_enabled", "") or "").strip() == "1"
+        except Exception:      # noqa: BLE001 — 설정을 못 읽으면 종전 전송
+            _XSF_CACHE["on"] = False
+        _XSF_CACHE["t"] = now
+    if not _XSF_CACHE["on"] or request is None:
+        return False
+    h = request.headers
+    return bool(h.get("x-forwarded-for") or h.get("x-forwarded-host") or h.get("x-forwarded-proto"))
+
+
+def _xsf_readable(rp, chmod=os.chmod, stat=os.stat):
+    """아파치가 읽을 수 있는 파일인가(o+r). 없으면 0644로 바꿔 본다(우리 소유 파일). 실패하면 False → 파이썬 전송."""
+    try:
+        if stat(rp).st_mode & 0o004:
+            return True
+        chmod(rp, 0o644)
+        return bool(stat(rp).st_mode & 0o004)
+    except OSError:
+        return False
+
+
+def _send_media(path, request, media_type="video/mp4", filename=None):
+    """파일 → 응답. 아파치 X-Sendfile(켜짐·프록시 경유·허용 폴더)이면 경로 헤더만, 아니면 종전 길."""
+    p = Path(path)
+    try:
+        rp = p.resolve()
+    except OSError:
+        rp = p
+    # ★경로는 HTTP 헤더에 실리므로 ASCII 여야 한다(한글 경로는 latin-1 인코딩 불가 → 종전 길). 서버 경로는 ASCII.
+    # ★아파치(www-data)가 읽을 수 있어야 한다(2026-10-02 03:18 사고): TTS·합본 등 임시파일로 만든 파일은 0600이라
+    #   아파치가 "Permission denied" → 고객에게 404(02:46~03:18, 2명, 음성 83건·완성본 3건). 세상-읽기(o+r)가 없으면
+    #   먼저 0644로 바꿔 보고, 그래도 안 되면 종전 파이썬 전송으로 간다 — 헤더만 주고 404가 나는 일은 없어야 한다.
+    if _xsendfile_on(request) and rp.is_file() and str(rp).isascii() and any(
+            str(rp).startswith(str(r.resolve()) + os.sep) for r in _XSF_ROOTS) and _xsf_readable(rp):
+        headers = {"X-Sendfile": str(rp), "Content-Type": media_type, "Accept-Ranges": "bytes",
+                   "X-Media-Via": "xsendfile"}
+        if filename:
+            headers["Content-Disposition"] = "attachment; filename*=utf-8''%s" % urllib.parse.quote(filename)
+        return Response(status_code=200, content=b"", headers=headers)
+    if filename:
+        return FileResponse(str(p), media_type=media_type, filename=filename)
+    return _range_media_response_py(str(p), request, media_type)
+
+
 def _range_media_response(path, request, media_type="video/mp4"):
-    """미디어를 Range(부분 요청)까지 지원해 내보낸다 — **재생용 파일은 전부 이 함수로**.
+    """재생용 파일은 전부 여기(→ _send_media). 옛 이름을 그대로 둔다 — 부르는 곳이 많다."""
+    return _send_media(path, request, media_type)
+
+
+def _range_media_response_py(path, request, media_type="video/mp4"):
+    """파이썬이 직접 Range 를 처리해 흘리는 종전 구현(X-Sendfile 이 꺼져 있을 때의 길).
 
     ★2026-09-20: 음성(TTS)이 이 길을 안 타고 FileResponse 로 나가고 있었다. 실측하니
       Range 요청에 200 전체를 주어 **브라우저가 음성 시크를 못 했다**(어디로 보내도
@@ -9523,8 +9587,8 @@ def api_mix_video(job_id: str, request: Request, dl: int = 0):
     if _gone:
         return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     if dl:   # ?dl=1 → 첨부 다운로드(Content-Disposition attachment). 없으면 인라인 재생(기존).
-        return FileResponse(job["video_path"], media_type="video/mp4",
-                            filename=export_bundle.safe_name(job_id) + ".mp4")
+        return _send_media(job["video_path"], request, "video/mp4",
+                           filename=export_bundle.safe_name(job_id) + ".mp4")
     # ★인라인 재생도 Range로 준다(2026-08-31). 종전엔 맨 FileResponse라 media_type조차
     #   없었다 — 완성본은 faststart가 걸려 있어 티가 덜 났을 뿐, 시크는 안 됐다.
     return _range_mp4_response(job["video_path"], request)
@@ -9660,8 +9724,8 @@ def api_mix_video_nocta(job_id: str, request: Request, dl: int = 0):
         return JSONResponse(status_code=409,
                             content={"ok": False, "error": "새로 렌더된 영상이 있어요 — 다시 잘라주세요"})
     if dl:
-        return FileResponse(str(out_p), media_type="video/mp4",
-                            filename=export_bundle.safe_name(job_id) + "_noCTA.mp4")
+        return _send_media(str(out_p), request, "video/mp4",
+                           filename=export_bundle.safe_name(job_id) + "_noCTA.mp4")
     return _range_mp4_response(str(out_p), request)
 
 
@@ -9715,8 +9779,8 @@ def api_share_v(request: Request, sid: str, dl: int = 0):
     if _gone:
         return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     if dl:
-        return FileResponse(job["video_path"], media_type="video/mp4",
-                            filename=export_bundle.safe_name(job_id) + ".mp4")
+        return _send_media(job["video_path"], request, "video/mp4",
+                           filename=export_bundle.safe_name(job_id) + ".mp4")
     return _mp4_range_response(job["video_path"], request)
 
 
@@ -11330,6 +11394,11 @@ def _thumb_via_oembed(url: str, shortcode: str | None):
 #:   그 주소를 기억해** 바깥 조회 없이 즉시 404를 낸다. 5분 뒤엔 다시 복구를 시도한다.
 _THUMB_NEG: dict = {}
 _THUMB_NEG_TTL = 300
+#: ★확정된 죽은 주소(403·404·410 — oembed 복구·규격 폴백까지 실패한 뒤)는 60분 기억한다(2026-10-01 관제 064).
+#:   실측: 2시간 /api/thumb 37,583건 중 86%가 404, 같은 주소가 평균 24회(최대 182회) 되돌아왔다. 브라우저는 404를
+#:   캐시하지 않는다(헤드리스 크롬 실측: 같은 주소 8번 그림 → 8번 요청) — 그래서 서버 기억이 유일한 방패인데
+#:   5분마다 CDN 에 다시 나가(6초 타임아웃) 스레드풀을 갉아먹었다. 타임아웃·5xx(일시 장애)는 종전대로 5분.
+_THUMB_NEG_TTL_DEAD = 3600
 #: ★죽은 썸네일 응답(404·400)에 붙이는 **브라우저 쪽 짧은 기억**(2026-09-18). 한 번만 정한다(0순위-B).
 #:   실측: 한 고객 화면이 40분에 9,634건 — 같은 주소를 최대 72번(1위는 `chrome-extension://…svg`,
 #:   2위 `youtube.com/img/…png`처럼 **영원히 안 열리는 주소**). 제작소 화면이 몇 초마다 목록을 다시
@@ -11354,12 +11423,23 @@ def _thumb_neg_hit(url):
     return True
 
 
-def _thumb_neg_put(url):
+def _thumb_dead_ttl(exc):
+    """실패 원인 → 기억 기간. 확정 죽음(403·404·410)만 길게, 나머지(타임아웃·5xx·연결)는 짧게."""
+    try:
+        import requests as _rq
+        if isinstance(exc, _rq.HTTPError) and exc.response is not None                 and int(exc.response.status_code) in (403, 404, 410):
+            return _THUMB_NEG_TTL_DEAD
+    except Exception:      # noqa: BLE001
+        pass
+    return _THUMB_NEG_TTL
+
+
+def _thumb_neg_put(url, ttl=None):
     with _THUMB_NEG_LOCK:
         if len(_THUMB_NEG) > 5000:        # 무한히 안 자라게 — 오래된 것부터 반쯤 비운다
             for k in sorted(_THUMB_NEG, key=_THUMB_NEG.get)[:2500]:
                 _THUMB_NEG.pop(k, None)
-        _THUMB_NEG[url] = time.time() + _THUMB_NEG_TTL
+        _THUMB_NEG[url] = time.time() + (ttl or _THUMB_NEG_TTL)
 
 
 @app.get("/api/thumb")
@@ -11438,7 +11518,7 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
                 pass    # 캐시 실패는 서빙에 영향 없음
         return Response(content=body, media_type=ctype,
                         headers={"Cache-Control": "public, max-age=86400"})
-    except Exception:
+    except Exception as _thumb_exc:
         # ★만료 자가복구(2026-08-09): CDN 서명(oe=)은 ~4일이면 만료돼 저장된 URL이 전부
         # 403이 된다. 그런데 **게시물 자체는 살아 있으므로** 공개 oembed에 물어보면 인스타가
         # 서명이 새로 붙은 주소를 알려준다 — 로그인 불필요라 계정이 429여도 된다(실측
@@ -11476,7 +11556,7 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
         # 캐싱으로 이 404를 몇 시간 기억한다. 그 뒤 우리가 이미지를 복구해 디스크 캐시에
         # 넣어도 **브라우저가 재요청을 안 해** 카드가 계속 까맣게 남는다(실측: 서버는
         # 200/71KB를 주는데 화면만 검은 상태). URL이 글자까지 같아 캐시버스팅도 안 먹는다.
-        _thumb_neg_put(url)               # 서버만 5분 기억 — 위 _THUMB_NEG 주석
+        _thumb_neg_put(url, _thumb_dead_ttl(_thumb_exc))   # 확정 죽음 60분 · 일시 장애 5분(_THUMB_NEG_TTL_DEAD 주석)
         return Response(status_code=404, content=b"",
                         headers=_THUMB_DEAD_HEADERS)   # 짧게·명시적으로 — 위 _THUMB_DEAD_HEADERS 주석
 
@@ -20855,7 +20935,7 @@ def api_scene_style_asset(asset_path: str):
     names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js"}
     allowed = (asset_path.startswith("out/") and asset_path[4:] in names)
     allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "shopping_shorts/static/text-look-contract.js", "out/scene-style-labels.js"}
-    allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
+    allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/", "out/장면꾸미기_로고/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
     allowed |= asset_path.startswith("shopping_shorts/static/fonts/") and candidate.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}
     if ".." in Path(asset_path).parts or "\\" in asset_path or not allowed or not candidate.is_relative_to(ROOT) or not candidate.is_file():
         return JSONResponse(status_code=404, content={"error": "파일 없음"})
@@ -20918,6 +20998,56 @@ def _scene_style_lab_owned_job(store, request, job_id):
     if not job or int(job.get("customer_id") or 0) != _cid(request):
         return None
     return job
+
+
+# ── 🏷 장면꾸미기 로고(관제 065, 2026-10-01 사장님 "효과 맨 아래 로고 하나, 파일 불러오기") ──────────────
+#   값의 주인 = 저장값 effects[장면].masks[] 안의 {kind:"image", src:"장면꾸미기_로고/<cid>/<sha>.png"} 한 항목.
+#   파일은 out/장면꾸미기_로고/ 아래 — 편집기(http 에셋 라우트)와 headless 렌더(file://, tools/render_scene_style.js)가
+#   **같은 상대 경로**로 읽는다. 그래서 썸네일(render_layer_one)·완성본·캡컷(render_layers)이 전부 같은 그림을 얹는다.
+#   내 프리셋은 effects를 그대로 담으므로 계정 경로인 이 src가 다른 작업에서도 산다.
+from .scene_style import ROOT as _SS_ROOT   # 저장소 루트(scene_style·에셋 라우트와 같은 기준)
+_LOGO_DIR = _SS_ROOT / "out" / "장면꾸미기_로고"
+_LOGO_MAX_BYTES = 2 * 1024 * 1024
+_LOGO_MAX_SIDE = 1024
+
+
+@app.post("/api/produce/scene-style/logo")
+async def api_scene_style_logo_upload(request: Request, file: UploadFile = File(...)):
+    cid = _cid(request)
+    if not cid and not _is_admin(cid):
+        return JSONResponse(status_code=401, content={"ok": False, "error": "로그인이 필요합니다"})
+    raw = await file.read()
+    if not raw or len(raw) > _LOGO_MAX_BYTES:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "로고 파일은 2MB까지(PNG·JPG·WEBP)"})
+    try:
+        from PIL import Image
+        import io as _io
+        im = Image.open(_io.BytesIO(raw)); im.load()
+        if im.format not in ("PNG", "JPEG", "WEBP"):
+            raise ValueError(im.format)
+        im = im.convert("RGBA")
+        if max(im.size) > _LOGO_MAX_SIDE:
+            im.thumbnail((_LOGO_MAX_SIDE, _LOGO_MAX_SIDE))
+        buf = _io.BytesIO(); im.save(buf, "PNG", optimize=True); data = buf.getvalue()
+    except Exception as exc:      # noqa: BLE001 — 그림이 아니면 거절(사유는 남긴다)
+        print(f"[logo] 거절 cid={cid}: {exc!r}", file=sys.stderr)
+        return JSONResponse(status_code=422, content={"ok": False, "error": "그림 파일(PNG·JPG·WEBP)만 올릴 수 있어요"})
+    name = hashlib.sha1(data).hexdigest()[:16] + ".png"
+    d = _LOGO_DIR / str(int(cid)); d.mkdir(parents=True, exist_ok=True)
+    (d / name).write_bytes(data)
+    return {"ok": True, "src": f"장면꾸미기_로고/{int(cid)}/{name}", "w": im.size[0], "h": im.size[1]}
+
+
+@app.get("/api/produce/scene-style/logo")
+def api_scene_style_logo_list(request: Request):
+    """내 로고 목록(최근 올린 순) — 편집기 '로고' 칸이 다시 고를 수 있게."""
+    cid = _cid(request)
+    d = _LOGO_DIR / str(int(cid))
+    items = []
+    if d.is_dir():
+        for p in sorted(d.glob("*.png"), key=lambda x: x.stat().st_mtime, reverse=True)[:12]:
+            items.append({"src": f"장면꾸미기_로고/{int(cid)}/{p.name}"})
+    return {"ok": True, "items": items}
 
 
 @app.get("/api/produce/scene-style/flags")

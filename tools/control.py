@@ -60,6 +60,10 @@ DEFAULT_RULES = {
         "token_scope_prefixes": ["shopping_shorts/"],
         "billing_tokens": ["_charge_", "clean_charge_plan", "clean_credit", "_sig_tier", "signature", "_render_stamp"],
         "customer_data_tokens": ["update_mix_job", "mix_jobs", "clean_base.json"],
+        # ★테스트 파일은 과금·데이터 토큰 검사에서 뺀다(2026-10-02 관제 068, 사장님 "관제 시스템을 바꿔야되네").
+        #   실측: 메모리 DB에 mix_jobs 표를 만드는 단위 테스트가 '회원 데이터 쓰기'로 분류돼 병합이 막혔다(067).
+        #   테스트는 라이브 DB·과금에 닿지 않는다. 고객 화면 판정(customer_ui_*)은 그대로.
+        "token_exclude_prefixes": ["shopping_shorts/tests/"],
     },
     "card_gate": {"require_card": True, "require_approval": True, "ownership_check": True, "impact_check": True,
                   "auto_approve": ["고객 화면"],
@@ -121,7 +125,10 @@ _HEAD_LINE = re.compile(r"^- ([^:]+):\s?(.*)$")
 _TITLE = re.compile(r"^#\s*0*(\d+)\s*·\s*(.+?)\s*$")
 _FILE = re.compile(r"^0*(\d+)-.*\.md$")
 
-CARD_KEYS = ("쉬운 설명", "상태", "등록", "제보", "판단 주인", "분배", "됐다의 기준", "승인 필요", "승인", "병합", "서버 반영", "라이브 실측", "재발")
+CARD_KEYS = ("쉬운 설명", "상태", "등록", "제보", "판단 주인", "분배", "됐다의 기준", "검사", "승인 필요", "승인", "병합", "서버 반영", "라이브 실측", "재발")
+# 검사(2026-10-02, 카드 069): 라이브 실측을 **무엇으로** 재나 — live_check.check_kind 가 읽는다.
+#   "영상"(서버 영상 비교) · "url <경로> <들어 있어야 할 글자>" · "api <경로> <키>=<값>[,<키>=<값>]" · "수동".
+#   비면 판단 주인으로 추론(제작 라인 파일이면 영상, 아니면 수동). 영상 없는 카드가 '병합'에 영원히 남던 것(28장)의 뿌리.
 
 
 def parse_card(text, path=""):
@@ -259,12 +266,14 @@ def approval_reasons(changed_files, diff_u0, rules):
                 any(f.endswith(s) for s in a.get("customer_ui_suffixes", [])):
             reasons.append("고객 화면 변경: %s" % f)
     scope = tuple(a.get("token_scope_prefixes", ["shopping_shorts/"]))
+    excl = tuple(a.get("token_exclude_prefixes", ["shopping_shorts/tests/"]))   # 규칙 파일이 옛것이어도 테스트는 뺀다
     per_file = split_diff_by_file(diff_u0)
     if not per_file and diff_u0:                       # 파일 헤더 없는 조각(단일 파일 diff) — 첫 변경 파일의 것으로 본다
         per_file = {(changed_files[0] if changed_files else ""): [ln[1:] for ln in diff_u0.splitlines()
                     if (ln.startswith("+") or ln.startswith("-")) and not ln.startswith(("+++", "---"))]}
     for f, lines in per_file.items():
-        if not f.replace("\\", "/").startswith(scope):
+        _fp = f.replace("\\", "/")
+        if not _fp.startswith(scope) or _fp.startswith(excl):
             continue
         blob = "\n".join(lines)
         for tok in a.get("billing_tokens", []):
@@ -372,7 +381,7 @@ def install(repo, printer=print):
     return sha
 
 
-def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", approval=None, easy="", printer=print):
+def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", approval=None, easy="", check="", printer=print):
     """카드 등록 → 번호. approval None 이면 '미정'(finish 가 diff 로 판정해 필요하면 막는다)."""
     title = (title or "").strip()
     if not title:
@@ -385,7 +394,7 @@ def new_card(repo, title, *, reporter="", owner="", done="", track="", body="", 
         cards = cards_from_dir(wt)
         n = next_number(cards)
         c = {"번호": n, "제목": title, "쉬운 설명": easy, "상태": "분배" if track else "등록", "등록": _now(), "제보": reporter,
-             "판단 주인": owner, "분배": track, "됐다의 기준": done,
+             "판단 주인": owner, "분배": track, "됐다의 기준": done, "검사": check,
              "승인 필요": ("예" if approval else "아니오") if approval is not None else "미정(finish 가 diff 로 판정)",
              "승인": "", "병합": "", "서버 반영": "", "라이브 실측": "", "재발": "", "요청": body,
              "이력": ["%s 등록%s" % (_now(), (" · 분배 → " + track) if track else "")]}
@@ -754,6 +763,7 @@ def main(argv=None):
     p.add_argument("--body", default="", help="요청 원문")
     p.add_argument("--easy", default="", help="사장님용 한 줄(고객·돈에 무엇이 달라지나)")
     p.add_argument("--approval", choices=["예", "아니오"], default=None)
+    p.add_argument("--check", default="", help="라이브 실측 방법: 영상 | url <경로> <글자> | api <경로> 키=값[,키=값] | 수동 (비면 판단 주인으로 추론)")
     sub.add_parser("list", help="카드 목록(origin/main)")
     sub.add_parser("board", help="보드 재생성(main 에 커밋)")
     p = sub.add_parser("show", help="카드 본문")
@@ -786,7 +796,7 @@ def main(argv=None):
         if args.cmd == "install":
             install(repo)
         elif args.cmd == "new":
-            new_card(repo, args.title, reporter=args.reporter, owner=args.owner, done=args.done, track=args.track,
+            new_card(repo, args.title, reporter=args.reporter, owner=args.owner, done=args.done, track=args.track, check=args.check,
                      body=args.body, easy=args.easy, approval=(None if args.approval is None else args.approval == "예"))
         elif args.cmd == "list":
             _git(repo, "fetch", "origin")

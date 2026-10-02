@@ -10,7 +10,7 @@
 
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const compact=n=>n?new Intl.NumberFormat('ko-KR',{notation:n>=1e6?'compact':'standard',maximumFractionDigits:1}).format(n)+'회':'시인성 선별';
-  const displayName=p=>p.id==='s0101'?'숏템 기본형':p.name;
+  const displayName=p=>p.name;   // 2026-10-01 관제 066: 남의 채널명 대신 '썰 스타일 NN'(데이터 파일 name) 그대로
   const fontNames={SBAggroB:'강렬한 어그로체',YgJalnan:'친근한 잘난체',Cafe24Ohsquare:'각진 카페24',BinggraeBold:'부드러운 빙그레',Jalnan2:'잘난체 2',JalnanGothic:'잘난고딕',GasoekOne:'묵직한 가석체',GmarketSansBold:'지마켓 산스',TmonMonsori:'티몬 몬소리',BlackHanSans:'검은고딕',GothicA1Black:'고딕 A1',Pretendard:'깔끔한 프리텐다드'};
   const fontLabel=p=>{const family=(p.hook||p.frame)?.lines?.[0]?.font_family;return fontNames[family==='PretendardXBold'?'Pretendard':family]||'템플릿 전용 서체'};
   const uniformMedia='assets/scene-style/uniform-household-demo.png';
@@ -1466,7 +1466,7 @@
     root.querySelectorAll('[data-preview-body-title]').forEach(x=>x.textContent=p.sample.bodyTitle);
     root.querySelectorAll('[data-preview-caption]').forEach(x=>x.textContent=p.sample.caption);
     Object.values(inputs).forEach(updateCount);
-    root.querySelector('[data-stage-name]').textContent=displayName(p);
+    {const _sn=root.querySelector('[data-stage-name]');if(_sn)_sn.textContent=displayName(p);}   // '선택 프리셋' 상자는 10-01 삭제(관제 066) — 없으면 건너뜀
     const frame=frameFor(p),accent=frame?.lines?.[1]?.color||frame?.lines?.[0]?.color||'#ffe500';
     const top=frame?.top_band?.color||frame?.title_bg||'#111111';
     const accentInput=colorRow?.querySelector('[data-color-role="accent"]'),topInput=colorRow?.querySelector('[data-color-role="background"]');
