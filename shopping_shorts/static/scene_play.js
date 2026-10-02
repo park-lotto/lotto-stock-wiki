@@ -22,7 +22,13 @@ const MANUAL_MIN = 0.3;
 //   생긴다"가 된다(2026-09-06 실측: 칸 2.8초·재료 1.7초에서 미리보기 1.65배 vs 렌더
 //   1.15배+정지 0.85초). 이보다 더 필요한 시간은 렌더가 정지 프레임으로 떠안으므로
 //   미리보기도 마지막 컷을 그만큼 늘려 **정지가 생길 것을 미리 보여준다**.
-const MAX_SLOWMO = 1.15;
+// ★숫자는 서버(config.MAX_SLOWMO)가 /api/mix/scene_lab 데이터 max_slowmo 로 준다(관제 020, 2026-10-01).
+//   여기엔 숫자를 적지 않는다 — 두 곳에 적히면 미리보기와 완성본이 어긋난다. 서버 값이 없으면(옛 응답) 콘솔에 알리고 1.15.
+function maxSlowmo(){
+  const v = Number(DATA && DATA.max_slowmo);
+  if (!(v > 1)) { if (DATA && !maxSlowmo._warned) { maxSlowmo._warned = true; console.warn('[scene_play] max_slowmo 서버 값 없음 → 1.15'); } return 1.15; }
+  return v;
+}
 // ★손대지 않은 컷에게 **반드시 남겨줄** 최소 길이. MANUAL_MIN(수동 지정 하한)과 다르다 —
 //   둘을 같은 값으로 쓴 탓에 ✋를 2.5초 이상 잡으면 남의 컷이 0.3초로 눌려 화면에 0.0으로
 //   떴다(2026-09-06 사장님 "장면 하나가 없어진다"). 수동은 0.3초까지 짧게 정할 수 있지만,
@@ -956,7 +962,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     if (spread && filled > EPS){
       // ★상한(1.15배)까지만 늘린다 — 렌더와 같은 규칙. 남는 시간은 마지막 컷이
       //   떠안아 **정지가 생길 것을 미리보기에서도 보이게** 한다(거짓 안심 금지).
-      const scale = Math.min(MAX_SLOWMO, ttsDur / filled);
+      const scale = Math.min(maxSlowmo(), ttsDur / filled);
       // ★실제 소스 길이를 남겨 둔다 — 재생기가 이 값으로 속도를 정한다(applyRate).
       //   이게 없으면 dur만 늘어나고 재생은 1배속이라 '느려짐'이 아니라 '멈춤'이 된다.
       clips.forEach(c => { c.src_dur = c.dur; c.dur *= scale; });
@@ -1208,7 +1214,7 @@ function applyRate(v, c){
   let rate = 1;
   if (src > 0 && c.dur > EPS){
     rate = src / c.dur;
-    if (rate < 1 && !c.fit) rate = Math.max(1 / MAX_SLOWMO, rate);   // 느리게 상한은 기존 유지([속도 맞추기] 컷만 예외)
+    if (rate < 1 && !c.fit) rate = Math.max(1 / maxSlowmo(), rate);   // 느리게 상한은 기존 유지([속도 맞추기] 컷만 예외)
   }
   try { if (Math.abs(v.playbackRate - rate) > 1e-3) v.playbackRate = rate; } catch (e) {}
   return rate;

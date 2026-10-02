@@ -539,7 +539,7 @@ def piece_map(base, material, cleaned_only=False):
             continue            # 고른 장면만 지운 정본 — 안 지운 컷을 '지운 조각'으로 빌려 쓰지 않는다
         if _speed_bad(c):
             continue            # 속도 불일치 컷 — 좌표를 못 믿는다(_regions 와 같은 판단)
-        cs, ce, fin, k = _cut_geom(c, nx[i])
+        cs, ce, fin, k = _cut_geom(c, nx[i], exact=bool(base.get("frame_exact")))
         lo, hi = max(s, cs), min(e, ce)
         if hi - lo >= MIN_PIECE:
             out.append((lo, {"video_id": CLEAN_VID, "seg_id": "%s-%d" % (CLEAN_VID, i),
@@ -555,7 +555,7 @@ def _f(v, dflt=0.0):
         return dflt
 
 
-def _cut_geom(c, nxt=None):
+def _cut_geom(c, nxt=None, exact=False):
     """청소본 컷 하나 → (원본 시작, 원본 끝, 청소본 시작, 원본1초당 청소본 초). **청소본 컷 좌표의 유일한 자리.**
 
     ★원본 끝은 sdur(원본에서 실제로 읽은 길이)로 잰다. dur는 완성본 길이라 느리게·정지로 늘어난 컷이면
@@ -575,6 +575,14 @@ def _cut_geom(c, nxt=None):
             span = dur
     k = span / sd if sd > 1e-6 else 1.0
     t0 = float(c["fin"]) + off
+    # ★맞게 만든 파일(frame_exact)은 조각이 정확히 fin 에서 시작한다 — 머리를 fin 앞으로 당기지 않는다(2026-10-02 관제 077).
+    #   실측 2683d3703512: 칸6 조각 off=-0.033(측정이 한 프레임 빗나감, 원본 첫머리 프레임들이 서로 닮아서)이 남아
+    #   머리가 앞 조각 마지막 프레임(칸5 그림)을 읽었다 → 완성본 21.23초 번쩍 + 같은 원본을 빌린 칸2(6.83초)도 번쩍.
+    #   당긴 몫은 원본 머리에서 뺀다(그 몫을 읽지 않는다). 옛 정본(frame_exact 없음)은 종전 그대로 — 음수 밀림이 진짜일 수 있다.
+    if exact and off < 0:
+        cs += (-off) / k if k > 1e-9 else 0.0
+        t0 = float(c["fin"])
+        sd = max(sd - (-off) / (k if k > 1e-9 else 1.0), 1e-3)
     ce = cs + sd
     if nxt is not None and t0 + span > nxt + 1e-4:
         ce = cs + max(0.0, nxt - t0) / k
@@ -586,9 +594,11 @@ def _next_starts(base):
     cuts = base.get("cuts") or []
     order = sorted(range(len(cuts)), key=lambda i: _f(cuts[i].get("fin")))
     out = [None] * len(cuts)
+    exact = bool(base.get("frame_exact"))
     for a, b in zip(order, order[1:]):
         if _f(cuts[b].get("fin")) > _f(cuts[a].get("fin")) + 1e-6:
-            out[a] = _f(cuts[b].get("fin")) + _f(cuts[b].get("off"))
+            ob = _f(cuts[b].get("off"))
+            out[a] = _f(cuts[b].get("fin")) + (max(ob, 0.0) if exact else ob)   # 다음 조각 시작 = _cut_geom 머리와 같은 규칙
     return out
 
 
@@ -596,10 +606,11 @@ def _geom_in(base, c):
     """base 안 컷 c 의 좌표(다음 컷 시작에서 자르기 포함)."""
     cuts = base.get("cuts") or []
     nx = _next_starts(base)
+    ex = bool(base.get("frame_exact"))
     for i, x in enumerate(cuts):
         if x is c:
-            return _cut_geom(c, nx[i])
-    return _cut_geom(c)
+            return _cut_geom(c, nx[i], exact=ex)
+    return _cut_geom(c, exact=ex)
 
 
 def _clean_span(base, c):
@@ -635,7 +646,7 @@ def _regions(base):
             continue            # 고른 장면만 지운 정본(장면 골라 지우기) — 안 지운 컷은 지운 조각이 아니다
         if _speed_bad(c):
             continue            # 속도 불일치 — 좌표를 못 믿는다(그 구간은 증분 청소 대상이 된다)
-        cs, ce, fin, k = _cut_geom(c, nx[i])     # ★다음 컷 시작에서 자른다 — 다음 조각으로 못 넘어간다
+        cs, ce, fin, k = _cut_geom(c, nx[i], exact=bool(base.get("frame_exact")))     # ★다음 컷 시작에서 자른다 — 다음 조각으로 못 넘어간다
         out.append((CLEAN_VID, "%s-%d" % (CLEAN_VID, i), str(c.get("video_id")), cs, ce, fin, k))
     for vid, ex in (base.get("extras") or {}).items():
         if ex.get("src_vid") is None or not Path(ex.get("path", "")).exists():

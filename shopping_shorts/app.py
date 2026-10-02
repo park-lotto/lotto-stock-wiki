@@ -110,6 +110,21 @@ import uuid
 
 app = FastAPI(title="숏템메이커 레퍼런스 랭킹")   # /docs 노출 제목 — 브랜드 통일(2026-07-25)
 
+# ★서버 버전 표식(관제 080, 2026-10-02 사장님 "재시작 때 고객이 가만있으면 불편 겪는 걸 해결"):
+#   프로세스가 뜰 때 한 번 정한 값을 모든 응답 머리글 X-SS-Boot 에 싣는다. 화면(sidebar.js 공용 fetch)이
+#   이 값이 바뀐 걸 보면 "새 버전 적용" 띠를 띄운다. 웹은 uvicorn 1프로세스라 재시작 사이엔 값이 같다.
+_SS_BOOT_ID = "%x" % int(time.time())
+
+
+@app.middleware("http")
+async def _ss_boot_header(request, call_next):
+    resp = await call_next(request)
+    try:
+        resp.headers["X-SS-Boot"] = _SS_BOOT_ID
+    except Exception:      # noqa: BLE001 — 머리글 실패가 응답을 막으면 안 된다
+        pass
+    return resp
+
 # 응답 gzip 압축(2026-07-30) — 유튜브 랭킹이 느리게 뜨던 직접 원인.
 # /api/reference?platform=youtube 응답이 **3.34MB**였다(6,113건, 인스타는 0.30MB/289건).
 # nginx는 gzip on이지만 gzip_types가 주석 처리돼 있어 application/json은 그대로 나갔다
@@ -6554,6 +6569,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
             "shot_role": v.get("shot_role") or "기타", "is_key": bool(v.get("is_key")),
             "action": v.get("action") or "", "change": v.get("change") or "",
             "benefits": v.get("product_benefits") or [],
+            # 2026-10-01 사장님 "이거 태깅이 대본화한 거 맞아?" — 카드가 묘사만 보여줘 오해. 대본화 소구점·훅 유형을 같이 준다.
+            "use_point": v.get("use_point") or "", "hook_type": v.get("hook_type") or "", "appeal_kind": v.get("appeal_kind") or "",
         } for sid, v in seg_map.items()},
         "phash": _lab_phash_load(work),      # 썸네일 캐시가 채워지는 대로 /phash로 늦채움
         "src_duration": src_duration,
@@ -6564,6 +6581,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         "clean_spans": _lab_clean_spans(job, work),
         "captions": caps,
         "tts_dur": tts_dur,
+        # ★슬로우모션 상한을 화면에 준다(관제 020) — scene_play.js 가 자기 숫자를 들고 있지 않게. 정본 config.MAX_SLOWMO.
+        "max_slowmo": float(config.MAX_SLOWMO),
     }}
 
 
@@ -7357,10 +7376,23 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
     # ★칸의 역할(훅·CTA·결과…)을 함께 넘긴다(2026-08-17 사장님 "훅부터 기준이 뭘로 한 건지").
     #   대사만으로는 감정·상황을 말하는 훅에 아무 화면이나 붙는다 — 역할을 알아야
     #   "훅엔 시선 끄는 완성품"처럼 고를 수 있다(edit_plan._ROLE_WANT_SHOTS).
-    picks = _edit_plan.fill_beat_scenes(narration, need, seg_map, pool,
-                                        taken_ids=sorted(taken),
-                                        role=beats[bi].get("role") or "")
-    return {"ok": True, "picks": picks}
+    # ★2026-10-01 사장님 "채우기를 같은 함수로": 2단계 이야기작가가 쓰는 전문가 매칭(ai_match.match)으로 **이 칸만** 고른다.
+    #   주제·대본 전체·다른 칸이 쓴 컷(taken)을 같이 주므로 2단계 자동 결과와 같은 판단이다(0순위-B — 종전 fill_beat_scenes 는
+    #   칸 하나만 보고 옛 지시문으로 묻는 두 번째 판단이었다). AI가 비우면(맞는 장면 없음) 빈 picks + 이유 — 조용히 아무 컷을 넣지 않는다.
+    from shopping_shorts import ai_match as _am, backbone_assemble as _ba
+    _srcs = _ba.sources_from_extract(job.get("extract") or {})
+    _idx = {sid: v for sid, v in _ba._seg_index(_srcs).items() if sid not in taken}
+    _lines = [{"role": b.get("role") or "", "text": (b.get("narration") or "").strip()} for b in beats]
+    _product = next((ex["source_brief"].get("product") for ex in (job.get("extract") or {}).values()
+                     if isinstance(ex, dict) and isinstance(ex.get("source_brief"), dict) and ex["source_brief"].get("product")), "")
+    _note = {}
+    _bs = _am.match(_lines, _idx, None, note=_note, product=_product, only=[bi])
+    _segs = (_bs[bi].get("segs") if _bs and bi < len(_bs) else []) or []
+    picks = [{"seg_id": sid, "fit": 5, "why": (_bs[bi].get("why") or "") if _bs else ""} for sid in _segs if sid in seg_map]
+    if not picks:
+        return {"ok": True, "picks": [], "reason": _note.get("reason") or "이 멘트에 맞는 장면이 재료에 없어요(불편·기존 방식 장면이면 그런 영상을 담아 주세요)",
+                "matcher_note": {k: _note.get(k) for k in ("matcher_recheck", "matcher_left", "matcher_steps") if _note.get(k)}}
+    return {"ok": True, "picks": picks, "matcher_note": {k: _note.get(k) for k in ("matcher_recheck", "matcher_left") if _note.get(k)}}
 
 
 @app.post("/api/mix/scene_lab/{job_id}/apply")
@@ -20110,6 +20142,8 @@ def api_produce_source_brief(request: Request, shortcode: str):
             # 무자막·외국어 소스도 화면만 보고 태깅되므로 '말 없음'은 결함이 아니라 성질이다.
             "shot_role": s.get("shot_role") or "기타",
             "chars": len((s.get("text") or "").strip()),
+            # 2026-10-01: 대본화 소구점(1단계 카드에 보여준다 — 묘사만 보이면 '태깅이 설명문'으로 보인다)
+            "use_point": s.get("use_point") or "", "hook_type": s.get("hook_type") or "", "appeal_kind": s.get("appeal_kind") or "",
         })
     # ★가로형(롱폼) 여부는 **서버가 판정해서** 내려준다(2026-08-27 사장님 지시).
     #   프론트가 w>h를 다시 계산하면 판단이 두 곳이 된다(0순위-B) — 실제 차단을 하는
@@ -20126,6 +20160,7 @@ def api_produce_source_brief(request: Request, shortcode: str):
     #   None을 그대로 실어 화면이 "모름"을 알 수 있게 한다 — 기존 프론트는
     #   `b.landscape ? 경고 : ''` 라 None에서도 종전과 똑같이 조용하다(회귀 없음).
     return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs,
+            "story": data.get("story") or [],         # 2026-10-01 영상 스토리(대본 문장+컷) — 1단계 카드 아래에 보여준다
             "video_w": _w, "video_h": _h,
             "landscape": is_landscape_wh(_w, _h)}
 
