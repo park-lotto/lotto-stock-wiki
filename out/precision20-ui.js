@@ -97,7 +97,7 @@
     if(sc[sceneIndex]?.beat_idx===sc[0]?.beat_idx)return false;   // 첫 비트(훅 문장)는 기존 훅 그대로
     return !!(frameFor(rows[current])?.white_box||hookCapLine(frameFor(rows[current])));
   };
-  const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body'||rows[current]?.id===PLAIN_ID||hookHasCaptionBand());
+  const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body'||rows[current]?.id===PLAIN_ID);
   // ★자막 기본 배치는 **이 함수 하나**로 정한다(2026-09-25 Opus 검토 — 네 곳에 따로 적혀 원본 예외가 두 곳에서 빠졌다:
   //   원본에서 슬라이더를 만지면 다른 장면 자막이 'title' 배치가 돼 화면 맨 위(y=0)로 튀었다. 렌더·캡컷도 같은 코드라 영상에도 나온다).
   //   끌어 옮긴 장면 또는 원본(plain, 제목칸이 없는 틀) = 'free'(제 자리), 아니면 'title'(제목칸 아래).
@@ -309,7 +309,8 @@
     textarea.value=originalCaption.value;textarea.rows=3;originalCaption.replaceWith(textarea);
   }
   const inputs=Object.fromEntries([...root.querySelectorAll('.layout-a [data-bind]')].map(x=>[x.dataset.bind,x]));
-  const value=k=>inputs[k]?.value||' ';
+  // 썰훅만 본문 대본 장면: 보조제목 줄에 그 장면 자막을 **보조제목과 같은 스타일**로 넣는다(10-02 사장님 "훅 소제목=자막자리 똑같은 스타일로 계속")
+  const value=k=>(k==='bodyTitle'&&hookHasCaptionBand()?inputs.caption?.value:inputs[k]?.value)||' ';
   const rgba=hex=>hex&&/^#[0-9a-f]{6}$/i.test(hex)?hex:'#111111';
   const rememberedBranding=()=>{try{return JSON.parse(localStorage.getItem('scene_style_branding')||'{}')}catch{return {}}};
   let sceneContext=null,effects={},branding=labMode?{}:rememberedBranding();
@@ -1126,7 +1127,7 @@
     const hookBandText=String(value('bodyTitle')||'').trim();
     const hookBandSame=hookBandText.replace(/\s+/g,'')===String((value('hook1')||'')+(value('hook2')||'')).replace(/\s+/g,'');
     // 10-02: 흰 띠가 있는 훅은 띠가 자막 칸이라, 보조 제목이 아니라 **자막 유무**로 숨김을 정한다(9/24 빈 띠 규칙은 그대로 산다).
-    const hookBandEmpty=kind==='hook'&&(hookHasCaptionBand()?(!hasEditableCaption()||!String(value('caption')||'').trim()):(!hookBandText||hookBandSame));
+    const hookBandEmpty=kind==='hook'&&(!hookBandText||hookBandSame);
     const inBand=(y,h)=>bandLine&&y<bandLine.y1+6&&y+h>bandLine.y0-6;
     (frame.surfaces||[]).forEach(s=>{
       if(s.bind==='caption')return;
@@ -1170,7 +1171,6 @@
       if(key==='caption'||!dirty.has(key))return;
       // 2026-09-21 사장님: 훅 화면에 큰 제목(hook1·hook2)과 같은 문장이 본문 제목 줄로 한 번 더 그려졌다.
       //   같은 글일 때만 건너뛴다 — 다른 문구를 넣으면 예전처럼 보인다.
-      if(kind==='hook'&&key==='bodyTitle'&&hookHasCaptionBand())return;   // 흰 띠는 자막 칸 — 보조 제목은 안 그린다(10-02)
       if(kind==='hook'&&key==='bodyTitle'){
         const flat=t=>String(t||'').replace(/\s+/g,'');
         if(flat(value('bodyTitle'))===flat(String(value('hook1')||'')+String(value('hook2')||'')))return;
@@ -1190,7 +1190,7 @@
       addText(value(key),drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
     });
     const wb=frame.white_box;
-    if(wb&&kind==='hook'&&!hookBandEmpty&&!hookHasCaptionBand()){
+    if(wb&&kind==='hook'&&!hookBandEmpty){
       // 원본 설명띠의 글자/흔적을 먼저 완전히 덮고 편집 가능한 텍스트만 다시 올린다.
       const movedCaption=kind==='body'&&(fixedLayouts.get(layoutKey(p.id,frame))?.bottom||0)>0;
       const savedCap=fixedLayoutFor(p.id,frame).caption;   // 09-19: '자막 칸' 슬라이더가 훅 흰 띠에도 먹게
@@ -1200,7 +1200,7 @@
     // 2026-09-21 사장님: 훅 화면에 큰 제목과 흰 띠 글자가 같은 문장이라 두 번 보였다.
     //   두 글이 같은 때만 띠 글자를 그리지 않는다(띠 배경은 그대로, 다른 문구면 예전처럼 보인다).
     const hookTitleSame=kind==='hook'&&String(value('bodyTitle')||'').replace(/\s+/g,'')===String((value('hook1')||'')+(value('hook2')||'')).replace(/\s+/g,'');
-    if(wb?.text&&kind==='hook'&&!hookTitleSame&&!hookHasCaptionBand()){
+    if(wb?.text&&kind==='hook'&&!hookTitleSame){
       const key=kind==='hook'?'bodyTitle':'caption';
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
