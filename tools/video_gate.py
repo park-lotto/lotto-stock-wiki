@@ -285,7 +285,9 @@ def judge(parsed, cfg, benign_skips=("음성 없음",)):
         fails.append("오류로 건너뛴 작업 %d개: %s" % (len(err_skips), "; ".join("%s(%s)" % (k["job"], k["why"][:80]) for k in err_skips)))
     if s["scene"] > int(cfg.get("max_scene") or 0):
         fails.append("다른 장면 %d칸 (기준 %d)" % (s["scene"], int(cfg.get("max_scene") or 0)))
-    elif parsed.get("scene_jobs"):
+    elif s["scene"] == 0 and parsed.get("scene_jobs"):
+        # 교차 확인은 **요약이 0일 때만**(parse_report: "요약이 0이면 요약을 믿지 않는다"). 전후 비교로 기준이 main 실측(>0)까지
+        # 올라가면 작업 줄에 다른 장면이 있는 게 정상이다(2026-10-02, 카드 071).
         fails.append("요약은 다른 장면 %d인데 작업 줄에 다른 장면이 있다(또는 작업 줄 형식을 못 읽음): %s"
                      % (s["scene"], parsed["scene_jobs"]))
     for key, label in (("shift_center", "밀림(가운데)"), ("shift_boundary", "경계 밀림"), ("shift_hold", "정지컷만 밀림")):
@@ -443,7 +445,7 @@ def judge_clean_left(report_text, cfg, crash="", label="자막 남음"):
     return (not fails), fails, notes
 
 
-def run_clean_left_audit(sh, d, ids, g, *, say, sleep=time.sleep):
+def run_clean_left_audit(sh, d, ids, g, *, say, sleep=time.sleep, keep=None):
     """⑦ 영상 비교가 본 그 작업들로 자막 남음 대조(병합본 모듈 PATCH_DIR) → (통과?, 실패 사유, 보고 줄)."""
     if not ids:
         return False, ["자막 남음 대조: 비교할 작업이 없다(영상 비교 report 에 작업 줄 0)"], []
@@ -465,10 +467,12 @@ def run_clean_left_audit(sh, d, ids, g, *, say, sleep=time.sleep):
     _, report = sh("cat %s/cl/report.txt 2>/dev/null" % d)
     _, crash = sh("cat %s/cl/crash.txt 2>/dev/null" % d)
     say("\n--- 자막 남음 대조 report (서버 %s/cl/report.txt) ---\n%s\n--- report 끝 ---" % (d, report.rstrip()))
+    if keep is not None:
+        keep['cl'] = report
     return judge_clean_left(report, g, crash)
 
 
-def run_audio_audit(sh, d, ids, g, *, say, sleep=time.sleep):
+def run_audio_audit(sh, d, ids, g, *, say, sleep=time.sleep, keep=None):
     """⑥ 영상 비교가 구운 임시 완성본(d/finals/<job>.mp4)으로 소리 대조 → (통과?, 실패 사유, 보고 줄). 렌더 없음."""
     ids = [i for i in (ids or []) if re.fullmatch(r"[0-9A-Za-z_-]{4,64}", i)]
     if not ids:
@@ -490,6 +494,8 @@ def run_audio_audit(sh, d, ids, g, *, say, sleep=time.sleep):
     _, report = sh("cat %s/audio/report.txt 2>/dev/null" % d)
     _, crash = sh("cat %s/audio/crash.txt 2>/dev/null" % d)
     say("\n--- 소리 대조 report (서버 %s/audio/report.txt) ---\n%s\n--- report 끝 ---" % (d, report.rstrip()))
+    if keep is not None:
+        keep['au'] = report
     return judge_audio(report, g, crash)
 
 
@@ -507,7 +513,7 @@ def _wait_done(sh, d_done, pid, timeout, poll, sleep):
     return False, True
 
 
-def run_capcut_audit(sh, d, ids, g, *, say, sleep=time.sleep):
+def run_capcut_audit(sh, d, ids, g, *, say, sleep=time.sleep, keep=None):
     """⑤ 영상 비교가 본 그 작업들로 캡컷·내보내기 대조를 돌린다(병합본 모듈 PATCH_DIR) → (통과?, 실패 사유, 보고 줄)."""
     if not ids:
         return False, ["캡컷·내보내기 대조: 비교할 작업이 없다(영상 비교 report 에 작업 줄 0)"], []
@@ -530,7 +536,186 @@ def run_capcut_audit(sh, d, ids, g, *, say, sleep=time.sleep):
     _, report = sh("cat %s/cc/report.txt 2>/dev/null" % d)
     _, crash = sh("cat %s/cc/crash.txt 2>/dev/null" % d)
     say("\n--- 캡컷·내보내기 대조 report (서버 %s/cc/report.txt) ---\n%s\n--- report 끝 ---" % (d, report.rstrip()))
+    if keep is not None:
+        keep['cc'] = report
     return judge_capcut(report, g, crash)
+
+
+# ── 전후 비교(2026-10-02 사장님 "쓸데없는 것까지 하는 거 아닌가", 카드 071) ─────────────────────────────
+#   종전엔 병합본 영상이 **완벽한가**(잔상 0·다른 장면 0 …)를 봤다 → main 에도 있는 차이(옛 완성본·기존 결함)로 무관한 병합이 막혔다
+#   (10-01 062·063·064 세 건, 2기모집 1차, 관문선정 11차 — 카드 067 실측: main 코드 그대로 돌려도 같은 2칸).
+#   이제 같은 작업을 **main 코드로 먼저** 재고 기준 = max(설정값, main 실측) 으로 병합본을 같은 작업 목록에서 판정한다.
+#   → 병합본이 **더 나빠졌을 때만** 막는다. 설정 gate.compare_main=false 면 종전(절대 기준) 그대로.
+MAIN_CACHE_DIR = "/home/ubuntu/gate_main_cache"
+MAIN_CACHE_TTL = 6 * 3600
+
+
+def baseline_limits(g, parsed_main, reports):
+    """main 실측으로 기준을 **올린다**(설정값보다 낮추지 않는다). 보고만 하는 기준(None)은 그대로 → (g2, 올린 목록)."""
+    g2, raised = dict(g), []
+
+    def up(key, val, label):
+        cur = g.get(key)
+        if val is None or cur is None:
+            return
+        if int(val) > int(cur):
+            g2[key] = int(val)
+            raised.append("%s %d→%d" % (label, int(cur), int(val)))
+    s_ = parsed_main.get("summary") or {}
+    up("max_scene", s_.get("scene"), "다른 장면")
+    for k, label in (("shift_center", "밀림(가운데)"), ("shift_boundary", "경계 밀림"), ("shift_hold", "정지컷만 밀림")):
+        up("max_" + k, s_.get(k), label)
+    gh = parsed_main.get("ghost") or {}
+    up("max_ghost", gh.get("frames"), "잔상")
+    up("max_ghost_screen_only", gh.get("screen_only"), "화면에만 있는 잔상")
+    cc = capcut_summary(reports["cc"]) if reports.get("cc") else None
+    if cc:
+        up("max_capcut_mismatch", cc.get("capcut"), "캡컷 불일치")
+        up("max_export_mismatch", cc.get("export"), "내보내기 불일치")
+    au = audio_summary(reports["au"]) if reports.get("au") else None
+    if au:
+        for key, sk, label in (("max_audio_narr", "narr", "나레이션 0.15초+"), ("max_audio_surplus", "surplus", "패킷 잉여"),
+                               ("max_audio_delay", "delay", "일정 지연"), ("max_audio_lost", "lost", "나레이션 못찾음"),
+                               ("max_audio_sfx_miss", "sfx_miss", "효과음 누락"), ("max_audio_bgm", "bgm", "BGM 이상")):
+            up(key, au.get(sk), label)
+    cl = clean_left_summary(reports["cl"]) if reports.get("cl") else None
+    if cl:
+        up("max_clean_left", cl.get("left"), "자막 남음")
+    return g2, raised
+
+
+def _run_side(sh, d, blob, job_arg, g, cfg, *, say, sleep, label):
+    """서버 폴더 d 에 묶음을 올려 영상 비교 → 캡컷 → 소리 → 자막 남음 대조. 판정은 g 로.
+    → (통과?, 실패, 보고, parsed, reports, 돌았나). 못 돌았으면(올리기·띄우기·시간 초과) 돌았나=False."""
+    reports = {}
+    rc, out = sh("rm -rf %s && mkdir -p %s && tar xzf - -C %s && mkdir -p %s/static %s/out && "
+                 "ln -s %s/shopping_shorts/static/fonts %s/static/fonts && ln -s %s/shopping_shorts/assets %s/assets && echo UP_OK"
+                 % (d, d, d, d, d, REMOTE_REPO, d, REMOTE_REPO, d), stdin=blob, timeout=300)
+    if rc != 0 or "UP_OK" not in out:
+        return False, ["영상 관문(%s): 서버에 모듈을 못 올렸다\n%s" % (label, out.strip()[:400])], [], {}, reports, False
+    # ★& 는 중괄호 안의 한 명령에만 — `a && b && c &` 로 쓰면 && 사슬 전체가 배경 셸이 되고 그 셸이 ssh 출력을
+    #   붙잡아 ssh 가 안 끝난다(2026-09-27 시험 실행에서 120초 시간 초과로 실측).
+    # ★SEG_SNAP_CACHE_DIR: 장면 전환 캐시를 관문 임시 폴더에 — 고객 폴더에 쓰지 않는다. EVF_KEEP_FINAL: 소리 대조가 같은 임시 완성본을 잰다.
+    rc, out = sh("cd %s && set -a && . /etc/shopping-shorts.env && set +a && "
+                 "{ PATCH_DIR=%s EVF_OUT=%s/out EVF_KEEP_FINAL=%s/finals SEG_SNAP_CACHE_DIR=%s/snapcache setsid nohup python3 %s/_tool/evf_run.py %s > %s/run.log 2>&1 < /dev/null & echo PID=$!; }"
+                 % (REMOTE_REPO, d, d, d, d, d, job_arg, d))
+    m = re.search(r"PID=(\d+)", out)
+    if rc != 0 or not m:
+        return False, ["영상 관문(%s): 비교를 못 띄웠다\n%s" % (label, out.strip()[:400])], [], {}, reports, False
+    pid = int(m.group(1))
+    say("  [%s] 비교 시작 — 작업 %s (작업당 26~72초). pid %d" % (label, job_arg, pid))
+    t0 = time.time()
+    timeout = int(g.get("timeout_sec", 1500))
+    poll = int(g.get("poll_sec", 20))
+    done, seen = False, 0
+    while time.time() - t0 < timeout:
+        sleep(poll)
+        rc, out = sh("cat %s/out/done.txt 2>/dev/null; echo ---; wc -l < %s/out/report.txt 2>/dev/null; "
+                     "kill -0 %d 2>/dev/null && echo ALIVE || echo GONE" % (d, d, pid))
+        if "EVF_DONE" in out:
+            done = True
+            break
+        lines = re.search(r"---\s*(\d+)", out)
+        k = int(lines.group(1)) if lines else 0
+        if k != seen:
+            say("  … [%s] report %d줄 (%.0f초)" % (label, k, time.time() - t0))
+            seen = k
+        if "GONE" in out:
+            break
+    if not done:
+        sh("kill -- -%d 2>/dev/null; kill %d 2>/dev/null; true" % (pid, pid))
+        _, tail = sh("tail -30 %s/run.log 2>/dev/null; cat %s/out/crash.txt 2>/dev/null" % (d, d))
+        return False, ["영상 관문(%s): 비교가 %s\n%s" % (
+            label, "시간 초과(%d초)" % timeout if time.time() - t0 >= timeout else "끝 표식 없이 죽었다", tail.strip()[-2000:])], [], {}, reports, False
+    _, report = sh("cat %s/out/report.txt 2>/dev/null" % d)
+    _, crash = sh("cat %s/out/crash.txt 2>/dev/null" % d)
+    say("\n--- [%s] 영상 비교 report (서버 %s/out/report.txt) ---\n%s\n--- report 끝 ---" % (label, d, report.rstrip()))
+    if crash.strip():
+        say("--- [%s] 도구 비정상 종료 ---\n%s" % (label, crash.strip()[-2000:]))
+    parsed = parse_report(report)
+    ok, fails, notes = judge(parsed, g, tuple(cfg.get("benign_skips", ["음성 없음"])))
+    if crash.strip():
+        ok = False
+        fails.append("도구가 예외로 끝났다(crash.txt)")
+    ids = [j["job"] for j in parsed.get("jobs", [])]
+    for fn in (run_capcut_audit, run_audio_audit, run_clean_left_audit):
+        a_ok, a_fails, a_notes = fn(sh, d, ids, g, say=say, sleep=sleep, keep=reports)
+        ok = ok and a_ok
+        fails += a_fails
+        notes += a_notes
+    return ok, fails, notes, parsed, reports, True
+
+
+def _measure_and_judge(sh, stage, br, cfg, g, *, say, sleep=time.sleep, remote_tmp="/tmp", with_summary=False):
+    """서버 준비 → (compare_main 이면) main 실측(캐시) → 병합본 판정 → (통과?, 실패, 보고[, 요약 줄])."""
+    def ret(ok, fails, notes, line=""):
+        return (ok, fails, notes, line) if with_summary else (ok, fails, notes)
+    rc, sha = _git(stage, "rev-parse", "--short=10", br)
+    sha = sha.strip()
+    if rc != 0 or not re.fullmatch(r"[0-9a-f]{7,40}", sha):
+        return ret(False, ["영상 관문: 트랙 커밋 해시를 못 읽었다: %r" % sha[:80]], [])
+    d = "%s/gate_%s" % (remote_tmp.rstrip("/"), sha)            # remote_tmp 는 시험 실행 때만 바꾼다(/tmp/gatecheck)
+    try:
+        rc, out = sh("df -BG --output=avail /tmp | tail -1")
+        m = re.search(r"(\d+)G", out)
+        if rc != 0 or not m:
+            return ret(False, ["영상 관문: 서버에 못 붙었다(디스크 확인 실패) — 비교 없이 병합하지 않는다\n%s" % out.strip()[:300]], [])
+        free = int(m.group(1))
+        if free < int(g.get("min_free_gb", 20)):
+            return ret(False, ["영상 관문: 서버 /tmp 여유 %dGB < %dGB — 비교를 못 돌려 실패로 본다(디스크부터 비워라)"
+                               % (free, int(g.get("min_free_gb", 20)))], [])
+        say("  서버 /tmp 여유 %dGB · 폴더 %s" % (free, d))
+        try:
+            merged_blob = _bundle(stage, side="merged")
+            main_blob = _bundle(stage, side="main") if g.get("compare_main") else None
+        except FileNotFoundError as e:
+            return ret(False, ["영상 관문: 비교 도구 파일이 없다: %s" % e], [])
+        n = int(g.get("jobs", 6))
+        g_use, job_arg, lead = g, str(n), []
+        if g.get("compare_main"):
+            import hashlib
+            ck = hashlib.sha256(main_blob + (":jobs=%d" % n).encode()).hexdigest()[:16]
+            cpath = "%s/%s.json" % (MAIN_CACHE_DIR, ck)
+            base = None
+            rc, txt = sh("cat %s" % cpath)
+            if rc == 0 and txt.strip():
+                try:
+                    c = json.loads(txt)
+                    if time.time() - float(c.get("t", 0)) < MAIN_CACHE_TTL and c.get("ids"):
+                        base = c
+                        lead.append("main 실측 캐시 재사용(%s · %d분 전) — main 비교를 다시 안 돌렸다"
+                                    % (ck, int((time.time() - float(c["t"])) / 60)))
+                except (ValueError, TypeError):
+                    base = None
+            if base is None:
+                dm = "%s/gate_main_%s" % (remote_tmp.rstrip("/"), ck)
+                say("  [main] 같은 작업을 병합 전 main 코드로 먼저 잰다(기준 = max(설정, main 실측))")
+                try:
+                    _ok, _f, _n, parsed_m, rep_m, ran_m = _run_side(sh, dm, main_blob, str(n), g, cfg, say=say, sleep=sleep, label="main")
+                finally:
+                    sh("rm -rf %s" % dm)
+                if ran_m and parsed_m.get("summary") is not None and parsed_m.get("jobs"):
+                    g2, raised = baseline_limits(g, parsed_m, rep_m)
+                    base = {"t": time.time(), "ids": [j["job"] for j in parsed_m["jobs"]], "g2": g2, "raised": raised,
+                            "summary_line": parsed_m.get("summary_line", "")}
+                    sh("mkdir -p %s && cat > %s" % (MAIN_CACHE_DIR, cpath),
+                       stdin=json.dumps(base, ensure_ascii=False).encode("utf-8"))
+                else:
+                    lead.append("⚠️ main 을 못 재서 종전 절대 기준으로 판정한다(main: %s)" % ("; ".join(_f)[:200] or "요약 줄 없음"))
+            if base is not None:
+                g_use = dict(g)
+                g_use.update(base["g2"])
+                ids = list(base["ids"])
+                if len(ids) < int(g.get("min_jobs_compared") or 0):
+                    g_use["min_jobs_compared"] = len(ids)
+                job_arg = " ".join(i for i in ids if re.fullmatch(r"[0-9A-Za-z_-]{4,64}", i))
+                lead.append("기준 = max(설정, main 실측) — main 이 같은 작업 %d개에서 잰 값: %s · main 요약: %s"
+                            % (len(ids), ", ".join(base.get("raised") or []) or "전부 설정값 이하", base.get("summary_line", "")[:120]))
+        ok, fails, notes, parsed, _reps, _ran = _run_side(sh, d, merged_blob, job_arg, g_use, cfg, say=say, sleep=sleep,
+                                                         label="병합본" if g.get("compare_main") else "비교")
+        return ret(ok, fails, lead + notes, (parsed or {}).get("summary_line", ""))
+    finally:
+        sh("rm -rf %s" % d)
 
 
 # ── 서버 실행 ────────────────────────────────────────────────────
@@ -579,18 +764,24 @@ def _main_or_stage(stage, rel):
     return out if rc == 0 else _merged_blob(stage, rel)
 
 
-def _bundle(stage):
-    """PATCH_DIR 묶음(병합본 모듈) + _tool/(main 의 도구) → tar.gz 바이트."""
+def _bundle(stage, side="merged"):
+    """PATCH_DIR 묶음(side="merged": 병합본 모듈 / "main": 병합 전 main 모듈) + _tool/(병합본 도구 — 양쪽 같은 자) → tar.gz 바이트.
+    ★결정적이다(2026-10-02, 카드 071): mtime·gzip 시각을 0으로 — 같은 내용이면 같은 바이트라 main 실측 캐시의 열쇠로 쓴다."""
+    import gzip
     buf = io.BytesIO()
-    with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+    with tarfile.open(fileobj=buf, mode="w") as tf:
         def add(name, data):
             ti = tarfile.TarInfo(name)
             ti.size = len(data)
             ti.mode = 0o644
-            ti.mtime = int(time.time())
+            ti.mtime = 0
             tf.addfile(ti, io.BytesIO(data))
         for dst, rel in PATCH_RELS.items():
-            data = _merged_blob(stage, rel)
+            if side == "main":
+                rc, data = _git_bytes(stage, "show", "HEAD:%s" % rel)
+                data = data if rc == 0 else None
+            else:
+                data = _merged_blob(stage, rel)
             if data is not None:
                 add(dst, data)
         for rel in TOOL_RELS:
@@ -598,7 +789,7 @@ def _bundle(stage):
             if data is None:
                 raise FileNotFoundError(rel)
             add("_tool/" + Path(rel).name, data)
-    return buf.getvalue()
+    return gzip.compress(buf.getvalue(), mtime=0)
 
 
 def _p(printer, s):
@@ -687,111 +878,12 @@ def _run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sl
             return GateResult(False, True, "\n".join(log), log)
         sh = _ssh_runner(key)
 
-    rc, sha = _git(stage, "rev-parse", "--short=10", br)
-    sha = sha.strip()
-    if rc != 0 or not re.fullmatch(r"[0-9a-f]{7,40}", sha):
-        say("❌ 영상 관문: 트랙 커밋 해시를 못 읽었다: %r" % sha[:80])
-        return GateResult(False, True, "\n".join(log), log)
-    d = "%s/gate_%s" % (remote_tmp.rstrip("/"), sha)            # remote_tmp 는 시험 실행 때만 바꾼다(/tmp/gatecheck)
-
-    try:
-        rc, out = sh("df -BG --output=avail /tmp | tail -1")
-        m = re.search(r"(\d+)G", out)
-        if rc != 0 or not m:
-            say("❌ 영상 관문: 서버에 못 붙었다(디스크 확인 실패) — 비교 없이 병합하지 않는다\n%s" % out.strip()[:300])
-            return GateResult(False, True, "\n".join(log), log)
-        free = int(m.group(1))
-        if free < int(g.get("min_free_gb", 20)):
-            say("❌ 영상 관문: 서버 /tmp 여유 %dGB < %dGB — 비교를 못 돌려 실패로 본다(디스크부터 비워라)"
-                % (free, int(g.get("min_free_gb", 20))))
-            return GateResult(False, True, "\n".join(log), log)
-        say("  서버 /tmp 여유 %dGB · 폴더 %s" % (free, d))
-
-        try:
-            blob = _bundle(stage)
-        except FileNotFoundError as e:
-            say("❌ 영상 관문: 비교 도구 파일이 없다: %s" % e)
-            return GateResult(False, True, "\n".join(log), log)
-        rc, out = sh("rm -rf %s && mkdir -p %s && tar xzf - -C %s && mkdir -p %s/static %s/out && "
-                     "ln -s %s/shopping_shorts/static/fonts %s/static/fonts && ln -s %s/shopping_shorts/assets %s/assets && echo UP_OK"
-                     % (d, d, d, d, d, REMOTE_REPO, d, REMOTE_REPO, d), stdin=blob, timeout=300)
-        if rc != 0 or "UP_OK" not in out:
-            say("❌ 영상 관문: 서버에 모듈을 못 올렸다\n%s" % out.strip()[:400])
-            return GateResult(False, True, "\n".join(log), log)
-
-        n = int(g.get("jobs", 6))
-        # ★& 는 중괄호 안의 한 명령에만 — `a && b && c &` 로 쓰면 && 사슬 전체가 배경 셸이 되고 그 셸이 ssh 출력을
-        #   붙잡아 ssh 가 안 끝난다(2026-09-27 시험 실행에서 120초 시간 초과로 실측).
-        rc, out = sh("cd %s && set -a && . /etc/shopping-shorts.env && set +a && "
-                     # ★SEG_SNAP_CACHE_DIR: 장면 전환 캐시(seg_snap)를 관문 임시 폴더에 — 소재 옆(고객 폴더)에 쓰지 않는다(2026-09-27 9차 관문 실측)
-                     # ★EVF_KEEP_FINAL: 비교가 구운 임시 완성본을 d/finals 에 남긴다 — ⑥ 소리 대조가 그것을 잰다(렌더 2번 금지)
-                     "{ PATCH_DIR=%s EVF_OUT=%s/out EVF_KEEP_FINAL=%s/finals SEG_SNAP_CACHE_DIR=%s/snapcache setsid nohup python3 %s/_tool/evf_run.py %d > %s/run.log 2>&1 < /dev/null & echo PID=$!; }"
-                     % (REMOTE_REPO, d, d, d, d, d, n, d))
-        m = re.search(r"PID=(\d+)", out)
-        if rc != 0 or not m:
-            say("❌ 영상 관문: 비교를 못 띄웠다\n%s" % out.strip()[:400])
-            return GateResult(False, True, "\n".join(log), log)
-        pid = int(m.group(1))
-        say("  비교 시작 — 최근 작업 %d개 (작업당 26~72초). pid %d" % (n, pid))
-
-        t0 = time.time()
-        timeout = int(g.get("timeout_sec", 1500))
-        poll = int(g.get("poll_sec", 20))
-        done, seen = False, 0
-        while time.time() - t0 < timeout:
-            sleep(poll)
-            rc, out = sh("cat %s/out/done.txt 2>/dev/null; echo ---; wc -l < %s/out/report.txt 2>/dev/null; "
-                         "kill -0 %d 2>/dev/null && echo ALIVE || echo GONE" % (d, d, pid))
-            if "EVF_DONE" in out:
-                done = True
-                break
-            lines = re.search(r"---\s*(\d+)", out)
-            k = int(lines.group(1)) if lines else 0
-            if k != seen:
-                say("  … report %d줄 (%.0f초)" % (k, time.time() - t0))
-                seen = k
-            if "GONE" in out:
-                break                         # done.txt 없이 죽었다 → 아래에서 실패
-        if not done:
-            sh("kill -- -%d 2>/dev/null; kill %d 2>/dev/null; true" % (pid, pid))
-            _, tail = sh("tail -30 %s/run.log 2>/dev/null; cat %s/out/crash.txt 2>/dev/null" % (d, d))
-            say("❌ 영상 관문: 비교가 %s — 실패로 본다\n%s" % (
-                "시간 초과(%d초)" % timeout if time.time() - t0 >= timeout else "끝 표식 없이 죽었다", tail.strip()[-2000:]))
-            return GateResult(False, True, "\n".join(log), log)
-
-        _, report = sh("cat %s/out/report.txt 2>/dev/null" % d)
-        _, crash = sh("cat %s/out/crash.txt 2>/dev/null" % d)
-        say("\n--- 영상 비교 report (서버 %s/out/report.txt) ---\n%s\n--- report 끝 ---" % (d, report.rstrip()))
-        if crash.strip():
-            say("--- 도구 비정상 종료 ---\n%s" % crash.strip()[-2000:])
-        parsed = parse_report(report)
-        ok, fails, notes = judge(parsed, g, tuple(cfg.get("benign_skips", ["음성 없음"])))
-        if crash.strip():
-            ok = False
-            fails.append("도구가 예외로 끝났다(crash.txt)")
-        # ⑤ 캡컷·내보내기 대조 — 영상 비교가 본 그 작업들(병합본 모듈). 캡컷 초안·ZIP 이 완성본과 같은 소스·청소·컷인가.
-        cc_ok, cc_fails, cc_notes = run_capcut_audit(sh, d, [j["job"] for j in parsed.get("jobs", [])], g,
-                                                     say=say, sleep=sleep)
-        ok = ok and cc_ok
-        fails += cc_fails
-        notes += cc_notes
-        # ⑥ 소리 대조 — 같은 작업·같은 임시 완성본. 목소리가 화면 칸과 맞나(나레이션 0.15+ · 패킷 잉여 · 일정 지연).
-        au_ok, au_fails, au_notes = run_audio_audit(sh, d, [j["job"] for j in parsed.get("jobs", [])], g, say=say, sleep=sleep)
-        ok = ok and au_ok
-        fails += au_fails
-        notes += au_notes
-        # ⑦ 자막 남음 — 같은 작업. 영상 비교는 원본을 틀어 장면이 같게 나오므로 "청소본이 있어야 할 칸인데 원본"을 따로 센다.
-        cl_ok, cl_fails, cl_notes = run_clean_left_audit(sh, d, [j["job"] for j in parsed.get("jobs", [])], g,
-                                                         say=say, sleep=sleep)
-        ok = ok and cl_ok
-        fails += cl_fails
-        notes += cl_notes
-        say("판정 근거: %s" % (parsed.get("summary_line") or "(요약 줄 없음)"))
-        for f_ in fails:
-            say("  ✗ " + f_)
-        for n_ in notes:
-            say("  · " + n_)
-        say("✅ 영상 관문 통과" if ok else "❌ 영상 관문 실패")
-        return GateResult(ok, True, "\n".join(log), log)
-    finally:
-        sh("rm -rf %s" % d)
+    ok, fails, notes, summary_line = _measure_and_judge(sh, stage, br, cfg, g, say=say, sleep=sleep, remote_tmp=remote_tmp,
+                                                        with_summary=True)
+    say("판정 근거: %s" % (summary_line or "(요약 줄 없음)"))
+    for f_ in fails:
+        say("  ✗ " + f_)
+    for n_ in notes:
+        say("  · " + n_)
+    say("✅ 영상 관문 통과" if ok else "❌ 영상 관문 실패")
+    return GateResult(ok, True, "\n".join(log), log)
