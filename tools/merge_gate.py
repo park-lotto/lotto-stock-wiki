@@ -144,15 +144,30 @@ def snapshot_light(cwd=BASE, run=_run):
             "pytest_rc": 0, "pytest_out": "", "failed": [], "light": True}
 
 
-def rerun_ids(cwd, ids, run=_run):
-    """이 폴더 코드로 그 시험들만 다시 돌려 **여전히 깨지는 id 집합**을 돌려준다(우연한 실패 거르기·락 전 선검사)."""
+def test_files_of(ids):
+    """시험 id → 그 시험 파일(중복 없이, 순서 유지). 'a.py::b[x]' → 'a.py'. 파일 경로가 오면 그대로."""
+    out = []
+    for i in ids:
+        f = str(i).split("::", 1)[0]
+        if f not in out:
+            out.append(f)
+    return out
+
+
+def rerun_ids(cwd, ids, run=_run, workers=None):
+    """이 폴더 코드로 그 시험들이 든 **파일을 통째로** 다시 돌려, 물어본 id 중 **여전히 깨지는 것**을 돌려준다.
+    ★id 하나씩 돌리면 같은 파일 안 다른 시험의 영향(순서·공유 상태)이 사라져 '원래 실패'가 통과로 보였다
+    (2026-10-02 실측 15건 — 파일 통째로 main 에서 돌리니 6건 재현, 카드 083). 파일 경로를 주면 그 파일의 실패 전부."""
     ids = list(ids)
     if not ids:
         return set()
-    extra = _xdist_args() if len(ids) > 8 else []
-    rc, out = run([sys.executable, "-m", "pytest", *ids, "-q", "--tb=no", "-rfE", "--continue-on-collection-errors",
+    files = test_files_of(ids)
+    extra = (["-n", str(workers)] if workers else (_xdist_args() if len(files) > 4 else []))
+    rc, out = run([sys.executable, "-m", "pytest", *files, "-q", "--tb=no", "-rfE", "--continue-on-collection-errors",
                    "-p", "no:cacheprovider", *extra], cwd)
-    return parse_failed(out)
+    failed = parse_failed(out)
+    asked_files = {i for i in ids if "::" not in str(i)}
+    return {f for f in failed if f in ids or f.split("::", 1)[0] in asked_files}
 
 
 def baseline_warnings(before):

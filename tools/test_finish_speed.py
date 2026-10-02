@@ -155,6 +155,7 @@ def test_finish_명령은_기본으로_분리_실행(monkeypatch):
     monkeypatch.setattr(track, "_finish_detached", lambda name: called.setdefault("d", name) and 0)
     monkeypatch.setattr(track, "finish", lambda name, **kw: called.setdefault("a", name) and 0)
     monkeypatch.delenv("TRACK_FINISH_CHILD", raising=False)
+    monkeypatch.setenv("TRACK_REEXEC", "1")          # 최신 판본 바꿔 실행(카드 083)은 따로 시험
     track.main(["finish", "x"])
     assert called.get("d") == "x" and "a" not in called
     called.clear()
@@ -176,3 +177,64 @@ def test_분리_실행은_출력을_로그에_남기고_창을_띄우지_않는�
         time.sleep(0.3)
     assert rcf.read_text().strip() == "0"
     assert "보임=False" in log.read_text(encoding="utf-8", errors="replace")
+
+
+# ───────── 카드 083 후속 ─────────
+def test_저장된_전체_실패목록이_있으면_그것이_기준선(repo, monkeypatch):
+    """10-02 실측: 전체로 돌릴 때만 깨지는 원래 실패 15건이 '우연한 실패'로 통과됐다 → 병합 때 전체 실패 목록을 코드 트리별로 저장해 정확히 비교."""
+    _make_track_commit(repo, "정확기준")
+    monkeypatch.setattr(track, "_code_key", lambda cwd, ref="HEAD": "K1")
+    track._store_full_failures(repo, "K1", ["t/a.py::old"])
+    def boom(*a, **k):
+        raise AssertionError("저장된 기준선이 있는데 재확인을 돌렸다")
+    monkeypatch.setattr(track, "_known_main_failures", boom)
+    g = _LightGate(after_failed=["t/a.py::old"])
+    g.rerun_ids = boom
+    track.finish("정확기준", repo=repo, gate=g, video_gate=_ok_video)
+    assert g.full == 1
+
+
+def test_병합되면_그_코드의_전체_실패목록을_저장한다(repo, monkeypatch):
+    _make_track_commit(repo, "저장")
+    keys = iter(["BEFORE", "AFTER", "AFTER", "AFTER"])
+    monkeypatch.setattr(track, "_code_key", lambda cwd, ref="HEAD": next(keys, "AFTER"))
+    monkeypatch.setattr(track, "_known_main_failures", lambda *a, **k: {"t/z.py::known"})
+    track.finish("저장", repo=repo, gate=_LightGate(after_failed=["t/z.py::known"]), video_gate=_ok_video)
+    assert track._load_full_failures(repo, "AFTER") == ["t/z.py::known"]
+
+
+def test_재확인은_파일_단위로_돌린다():
+    seen = []
+    def fake_run(cmd, cwd):
+        seen.append(cmd)
+        return 1, "FAILED t/a.py::x - boom\nFAILED t/a.py::other - boom\n"
+    got = merge_gate.rerun_ids(".", ["t/a.py::x", "t/a.py::y"], run=fake_run)
+    args = seen[0]
+    assert "t/a.py" in args and "t/a.py::x" not in args, "같은 파일 안 순서 영향을 재현하려면 파일 통째로 돌려야 한다"
+    assert got == {"t/a.py::x"}, "물어본 id 만 돌려준다"
+
+
+def test_옛_판본_트랙에서도_main_폴더의_최신_track_py로_돈다(tmp_path, monkeypatch):
+    newer = tmp_path / "tools" / "track.py"
+    newer.parent.mkdir(parents=True)
+    newer.write_text("# 더 새 판본\n", encoding="utf-8")
+    monkeypatch.setattr(track, "main_worktree", lambda cwd=None: tmp_path)
+    monkeypatch.delenv("TRACK_REEXEC", raising=False)
+    calls = []
+    monkeypatch.setattr(track.subprocess, "call", lambda cmd, env=None, **kw: calls.append((cmd, env)) or 7)
+    assert track.main(["list"]) == 7
+    cmd, env = calls[0]
+    assert str(newer) in cmd and env.get("TRACK_REEXEC") == "1"
+
+
+def test_번호표를_먼저_받고_선검사한다(repo, monkeypatch, tmp_path):
+    monkeypatch.setenv("TRACK_FINISH_LOCK", str(tmp_path / "f.lock"))
+    _make_track_commit(repo, "번호표먼저")
+    q = Path(str(tmp_path / "f_queue"))
+    seen = {}
+    def pre(name, repo_, wt, br, gate):
+        seen["tickets"] = len(list(q.glob("*_*_*"))) if q.exists() else 0
+    monkeypatch.setattr(track, "_precheck", pre)
+    monkeypatch.setattr(track, "_known_main_failures", lambda *a, **k: set())
+    track.finish("번호표먼저", repo=repo, gate=_LightGate(), video_gate=_ok_video)
+    assert seen.get("tickets") == 1, "선검사 때 이미 줄(번호표)에 서 있어야 한다"
