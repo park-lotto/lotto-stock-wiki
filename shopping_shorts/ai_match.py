@@ -276,6 +276,11 @@ def apply(lines, code_bs, seg_index, backbone_vid, note=None, product=""):
     return bs
 
 
+def _min_good():
+    from shopping_shorts.edit_plan import MIN_GOOD_CUT_SECS
+    return MIN_GOOD_CUT_SECS
+
+
 def _order_key(sid):
     """seg_id → (영상 접두, 순번) — 1단계가 영상마다 0부터 매긴 순번(_assign_seg_ids)으로 원본 순서를 안다."""
     head, _, tail = str(sid).rpartition("-")
@@ -285,7 +290,7 @@ def _order_key(sid):
         return str(sid), 0
 
 
-def ensure_cover(bs, lines, seg_index, backbone_vid, note=None):
+def ensure_cover(bs, lines, seg_index, backbone_vid, note=None, cap=None):
     """★2단계 장면 보장(관제 084, 2026-10-02 사장님 "화면 모자라 멈춤 — 땜빵 말고 구조적으로"):
     줄마다 **장면 길이 합 × SLOW ≥ 대사 초**가 되게 장면을 더한다. 3단계(planClips)는 받은 장면에 시간만 나눈다.
     더하는 순서(사장님 규칙): ① 같은 의미 장면 — 그 줄 첫 장면과 같은 쓰임(label)의 안 쓴 컷(다른 영상 우선)
@@ -294,6 +299,10 @@ def ensure_cover(bs, lines, seg_index, backbone_vid, note=None):
     뒷컷·목록 밖·다른 줄이 쓴 컷은 안 쓴다. 끝내 모자란 줄은 note["cover_short"]에 남긴다(대사 줄이기 대상).
     bs 를 제자리에서 고치고 더한 컷 수를 돌려준다. 실측(24시간 706칸): 멈춤 126칸 중 102칸이 여기(2단계)서부터 짧았다."""
     from shopping_shorts.backbone_assemble import _secs
+    from shopping_shorts import config as _cfg
+    # ★한 컷의 기여는 MAX_SHOT_SECONDS(2.2초)까지만 센다(09-17 edit_plan._extend_refs_to_narration 에서 가져옴) —
+    #   6초 컷 하나로 3.5초 줄을 "충분"으로 보면 한 장면이 내내 이어진다(사장님 "같은 장면 길게"). 여러 장면으로 리듬을 준다.
+    cap = float(cap if cap is not None else (getattr(_cfg, "MAX_SHOT_SECONDS", 2.2) or 2.2))
     used = {c for b in (bs or []) if b for c in (b.get("segs") or [])}
     by_vid = {}
     for sid in seg_index:
@@ -307,7 +316,7 @@ def ensure_cover(bs, lines, seg_index, backbone_vid, note=None):
             continue
         segs = [c for c in b["segs"] if c in seg_index]
         need = _secs(L.get("text") or "")
-        have = lambda: sum(seg_index[c]["secs"] for c in segs)
+        have = lambda: sum(min(cap, seg_index[c]["secs"]) for c in segs)
         guard = 0
         while segs and have() * SLOW < need - 0.3 and guard < 8:
             guard += 1
@@ -322,7 +331,11 @@ def ensure_cover(bs, lines, seg_index, backbone_vid, note=None):
                 head, k = _order_key(segs[-1])
                 seq = by_vid.get(head) or []
                 ok = lambda c: c not in used and c not in segs and _usable(seg_index, c, backbone_vid)
-                pick = next((c for c in seq if _order_key(c)[1] > k and ok(c)), None)                     or next((c for c in reversed(seq) if _order_key(c)[1] < _order_key(segs[0])[1] and ok(c)), None)
+                fwd = [c for c in seq if _order_key(c)[1] > k and ok(c)]
+                back = [c for c in reversed(seq) if _order_key(c)[1] < _order_key(segs[0])[1] and ok(c)]
+                # 1.2초 이상 컷을 먼저(09-17 사장님 "1.2초 이상이면 좋겠다") — 없으면 짧은 컷이라도(막지 않는다)
+                good = lambda xs: next((c for c in xs if seg_index[c]["secs"] >= _min_good()), None)
+                pick = good(fwd) or (fwd[0] if fwd else None) or good(back) or (back[0] if back else None)
             if not pick:   # ③ 다른 영상의 같은 종류(기능·효과…) 컷
                 kind = seg_index[segs[0]].get("kind") or ""
                 pick = next((c for c in seg_index if kind and seg_index[c].get("kind") == kind and c not in used
