@@ -58,6 +58,28 @@
 이 세션에서 한 설정: 이 계정(`C:\Users\TheRose\.claude\.claude.json`)에 MCP 5개 등록 — volcano·AfterEffectsMCP·browsermcp·firecrawl ✔ / elevenlabs ✘(ELEVENLABS_API_KEY 없음). 백업 `.claude.json.bak-mcp`.
 **다른 계정은 설정 폴더가 다르니 `claude mcp list`로 volcano 있는지 먼저 확인** — 없으면 `claude mcp add --transport http --scope user volcano https://volcano-mcp.groove1027.workers.dev` 후 `claude mcp login volcano`.
 
+## 3-A. ★자산 재조사 (2026-10-02 두 번째 세션, TheRose PC) — 3절 표는 **크게 틀렸다**
+
+3절은 "코드 0줄·타 채널 데이터 0편"이라 적었지만, `origin/track/숏템엔진`(CH PC, main 대비 **105커밋** 미병합, 마지막 09-28)이
+**1단계 제안(채널 카피 규격서)을 뜨거운사람들 채널로 이미 한 바퀴 돌렸다.** 전부 `git show origin/track/숏템엔진:<경로>`로 읽을 수 있다.
+
+| 자산 | 경로(숏템엔진 브랜치) | 규모 |
+|---|---|---|
+| **칼카피 기준표 1안** — 기준마다 정의·단위·통계·재는 법·**뼈대/결**(=겉·손잡이 층)·실측값·표본 N·출처 | `channel/hotpeople/칼카피_기준표_1안_2026-09-27.md` | 414줄 · §1~§21(L배치·S자막·H헤드라인·T컷·A소리·W언어·K후킹·M소재·C채널·V터지는 지점 + 재현일치도·정정·미측정·사고) |
+| 기준 합집합 — **문서 12종**(김시선·지무비·노빠꾸·이븐쇼핑·인물형·린박스·어랍숏·쇼핑·뇌전구·영화리뷰·인물디벨롭·뜨거운사람들)이 실제로 잰 기준 **409개** | `docs/칼카피/기준_전수_문서12종_2026-09-27.md` | 471줄 |
+| 외부 조사 112개(출처 URL) / 내부 지표 8절 | `docs/칼카피/기준_외부조사_…md` · `기준_내부지표_…md` | 218 · 174줄 |
+| 측정 도구 — 원본과 우리 것을 **같은 자**로 재는 것 | `tools/hotpeople/measure/` 20개 · `shopping_shorts/channelkit/bench/`(통합본 1단계, 기준선 json) · 설계 `docs/superpowers/specs/2026-09-28-channelkit-bench-design.md` · 함수지도 `docs/칼카피/측정코드_세벌_함수지도_2026-09-28.md` | |
+| 엔진 = 공통 `channelkit/` + 채널 `channel_presets/<이름>/spec.py` (brainbulb·hotpeople 2개) | `shopping_shorts/channelkit/` · `channel_presets/` | 테스트 272+ |
+| 재현 결과 | 안세영 v3 = 6규칙 통과·같은 자 재측정 일치(§18) / 우상혁 = **내용 관문이 막음**(§20, 장면 엉뚱함 사고 → 하드 게이트) | |
+
+"속" 층(스토리·정보 선택)도 이미 한 편 있다: `origin/track/뇌전구벤치:channel/volcano/뇌전구_내용분석_2026-09-13.md`(376줄 — PUNCH·훅·CHAR·버린 정보를 실물 5편 vs 우리 3편으로 셈).
+실행기 실측: 같은 브랜치 `조사결과_아스트라_2026-09-13.md`(효과음·자막 타이밍·프레임, 455줄) · `조사결과_페이블_2026-09-13.md`(cast·이미지 프롬프트·대본 생성, 492줄).
+
+**이 PC에 없는 것**: 12종 중 뜨거운사람들·뇌전구 외 **10채널 역분석 원문**은 CH PC `Desktop/볼케이노작업/카피/docs/`(git 밖, `handoff/볼케이노MCP.md` §13)와 CH 스크래치패드 `bench_merge/volcano_side/`(노빠꾸패밀리 등)에만 있다. `카피/` 경로는 어느 브랜치에도 없다(실측 `git log --all -- 카피/` 0건).
+`Desktop/볼케이노작업`·`D:\볼케이노작업` 모두 TheRose PC에는 없다(실측).
+
+→ **1단계는 "처음부터"가 아니라 "기준표 1안을 채널 10개로 넓히기"다.** 다른 자산 때문에 새로 짤 것: ①10채널 원문 회수(CH PC에서 커밋) ②"속" 층(줄↔장면 짝짓기·스토리 흐름) 기준 id 추가 ③손잡이(결) 칸을 사장님 프리셋 편집 단위로.
+
 ## 4. 전체 하위 프로젝트 (순서 미확정 — 1단계 규격서 뒤 재정렬)
 
 1. **채널 카피 규격서** ← 지금 여기
