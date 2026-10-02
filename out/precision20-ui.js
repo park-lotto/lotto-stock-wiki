@@ -693,7 +693,8 @@
   motionPanel.after(bodyMotionPanel);
   bodyMotionPanel.addEventListener('click',event=>{
     const b=event.target.closest('[data-body-caption-motion]');if(!b)return;
-    bodyCaptionMotion=b.dataset.bodyCaptionMotion;syncHookMotionUI();rememberLocal({bodyCaptionMotion});if(sceneIndex===0)showScene(1);else runCaptionEnter();
+    bodyCaptionMotion=b.dataset.bodyCaptionMotion;if(mode==='continuous')hookBandMotion='';   // 10-02 사장님: 고정형에서 '없음'을 눌러도 옛 흰 띠 값이 남아 스윽 올라왔다 — 고정형 자막 등장은 이 버튼이 정한다
+    syncHookMotionUI();rememberLocal({bodyCaptionMotion});if(sceneIndex===0)showScene(1);else runCaptionEnter();
   });
   const fixedPanel=document.createElement('section');
   fixedPanel.className='fixed-quick-panel';
@@ -845,6 +846,7 @@
   //   고르는 곳은 흰 띠 줄(스윽/확대)과 같다 — 자막 글자 + 자막 가림막 상자를 한 덩어리로 움직인다.
   const CAPTION_ENTER_MS=300;
   function captionMotionNow(){
+    if(mode==='continuous'&&BODY_CAPTION_MOTIONS[bodyCaptionMotion])return BODY_CAPTION_MOTIONS[bodyCaptionMotion];   // 고정형은 1장부터 같은 등장
     if(sceneIndex>0&&BODY_CAPTION_MOTIONS[bodyCaptionMotion])return BODY_CAPTION_MOTIONS[bodyCaptionMotion];
     if(mode==='continuous'&&hookBandMotion)return BODY_CAPTION_MOTIONS[hookBandMotion]||null;   // 고정형은 예전부터 흰 띠 줄 값이 자막 등장
     return null;
