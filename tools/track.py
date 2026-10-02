@@ -789,16 +789,19 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None)
         # ★코드가 없는 병합(핸드오프·관제·문서)은 시험 결과가 달라질 수 없다(카드 081) — 문법·import 만 보고 넘긴다.
         print("게이트: 코드 없는 병합(%d파일) — 시험 생략" % len(changed))
         after = dict(before)
+        ran_full = False
     else:
         print("게이트 실행 중 (병합된 상태, 아직 커밋 없음)...")
         after = gate.snapshot(stage)
+        ran_full = True
     problems = gate.compare(before, after)
     # ★새로 깨진 테스트를 origin/main 코드로 다시 돌린다(2026-10-02, 카드 069). 기준선 저장본이 낡거나 환경이 달라지면
     #   main 의 기존 실패가 '새로 깨진 것'으로 잡혀 무관한 트랙을 막았다(10-01 추적대본검색어 실측).
     problems = _classify_new_failures(before, after, problems,
                                       rerun=lambda ids: _known_main_failures(repo, stage, ids), printer=print,
                                       recheck=(lambda ids: gate.rerun_ids(stage, ids)) if hasattr(gate, "rerun_ids") else None)
-    _after_failed_for_store = list(after.get("failed", []))
+    # 전체 시험을 **실제로 돌렸을 때만** 저장한다 — 생략한 병합이 빈 목록을 저장해 다음 기준선을 망쳤다(10-02 실측, 카드 083)
+    _after_failed_for_store = list(after.get("failed", [])) if ran_full else None
 
     if problems:
         msg = ["❌ 게이트 실패 — 병합을 버렸다. 라이브는 무사하다.\n"]
@@ -851,7 +854,7 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None)
             f"push 실패 — main은 안 바뀌었다(라이브 무사):\n{out}"
         )
     print("✅ main에 병합 완료 — push됨. 3분 뒤 서버 반영.")
-    if light:
+    if light and _after_failed_for_store is not None:
         try:
             _store_full_failures(repo, _code_key(stage), _after_failed_for_store)   # 다음 finish 의 정확한 기준선(카드 083)
         except Exception as e:  # noqa: BLE001
