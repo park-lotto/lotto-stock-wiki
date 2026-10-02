@@ -742,7 +742,8 @@
   //   63wyUy6d0Jc 제목 폭 125→180px/1.2초(화면 전체가 천천히 확대, 흔들림 없음)
   //   ZaPpvrHkZ1U 크기 고정·매 프레임 가로 ±2px/세로 ±3px(360px 기준) 떨림, 훅 내내
   const CAMERA_MOTIONS=['zoom-punch','push-in','shake'];
-  const hookEndMs=()=>{const hs=(sceneContext?.scenes||[]).filter(s=>s.kind==='hook');return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
+  // 훅 모션 길이 = **첫 비트(훅 문장)** 의 훅 장면만(10-02 사장님 "썰훅만 본문은 훅 모션 없이 자막 스타일대로"). 썰훅+본문은 훅이 첫 비트뿐이라 종전과 같다
+  const hookEndMs=()=>{const sc=sceneContext?.scenes||[],b0=sc[0]?.beat_idx;const hs=sc.filter(s=>s.kind==='hook'&&s.beat_idx===b0);return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
   function cameraAt(ms){
     if(hookMotion==='push-in'){
       if(ms>=hookEndMs())return {zoom:1,dx:0,dy:0};   // 훅이 끝나면 본문은 원래 크기(레퍼런스도 전환 순간 복귀)
