@@ -684,7 +684,10 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const share = rest / open.length;
       open.forEach(k => { real[k] += Math.min(share, cap(k) - real[k]); });
     } };
-    pour(k => av[k].len);                                 // ① 태깅된 장면 안에서 고르게
+    // ① 태깅된 장면 안에서 고르게 — 단 0.5초처럼 너무 짧은 장면은 원본에서 이어지는 화면으로 1.2초까지는 보여 준다
+    //   (09-17 고객 "컷이 1.2초 이상이면 좋겠다", edit_plan.MIN_GOOD_CUT_SECS 와 같은 값). 번쩍 지나가는 컷을 만들지 않는다.
+    const GOOD = 1.2;
+    pour(k => Math.max(av[k].len, Math.min(av[k].room, GOOD)));
     pour(k => av[k].room);                                // ② 모자라면 원본에서 이어 틀기(옆 장면이 더 보여 준다) — 다른 칸 장면 앞까지
     // ③ 1.2배까지 느리게 해도 모자라면 ④ 다른 칸 장면과 겹치더라도 원본을 더 튼다 — 멈춤이 가장 나쁘다(사장님 "화면 모자라 멈춤")
     if (sum(real) * _maxS() < ttsDur - EPS) pour(k => av[k].far, ttsDur / _maxS());
@@ -715,6 +718,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const c = {seg_id: g.seg_id, video_id: g.video_id, start: av[k].st, dur: d};
       const src = Math.min(Math.max(real[k], av[k].room), dur[k]);   // 자막 경계에 맞춰 늘어난 몫도 원본에 있으면 진짜 화면으로
       if (src < d - EPS) c.src_dur = +src.toFixed(3);
+      if (src > av[k].len + 0.05) c.more = +(src - av[k].len).toFixed(2);   // 카드 표시용 — 원본에서 이어 보여 준 초(그리기만)
       return c;
     });
   }

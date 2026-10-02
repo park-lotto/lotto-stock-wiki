@@ -54,7 +54,7 @@ def test_두_장면_고르게_나눈다(tmp_path):
 
 
 def test_짧은_장면은_가진_만큼_옆_장면이_더(tmp_path):
-    c = _run(_data({"a": (10.0, 13.0), "b": (20.0, 20.8)}, 3.0), tmp_path)
+    c = _run(_data({"a": (10.0, 13.0), "b": (20.0, 20.8)}, 3.0, reel=0), tmp_path)   # 원본 길이 모름 = b 는 0.8초뿐
     assert len(c) == 2
     assert abs(c[1]["d"] - 0.8) < 0.02 and abs(c[0]["d"] - 2.2) < 0.02     # 0.8초 장면은 0.8초만, 나머지는 a
     assert all(abs(x.get("sd", x["d"]) - x["d"]) < 0.02 for x in c)         # 속도 그대로
@@ -110,3 +110,20 @@ def test_겹쳐_틀기도_같은_칸_다른_장면과는_안_겹친다(tmp_path)
     c = _run(_data({"a": (2.45, 3.4), "b": (3.733, 4.5)}, 4.4), tmp_path)
     a, b = c
     assert a["s"] + a.get("sd", a["d"]) <= 3.733 + 1e-3
+
+
+def test_화면_안내_1점5배_넘으면_장면_붙이기_버튼():
+    src = (HERE / "static" / "scene_lab.html").read_text(encoding="utf-8")
+    i = src.index("const fitHtml =")
+    body = src[i:src.index("}).join('');", i)]
+    assert "autoFill(${i})" in body and "addNextScene(${i}" in body          # 같은 의미 / 원본 다음 장면
+    big = body[body.index("+ratio > 1.5\n"):]
+    assert big.index("addNextScene") < big.index("fitToggle(${i}, '${c.seg_id}', true)")   # 1.5배 넘으면 속도 맞추기 대신
+    assert "function addNextScene(i, sid)" in src
+
+
+def test_너무_짧은_장면도_원본이_이어지면_1점2초까지(tmp_path):
+    c = _run(_data({"a": (10.0, 10.5), "b": (20.0, 23.0)}, 2.6), tmp_path)
+    a, b = c
+    assert abs(a["d"] - 1.2) < 0.02 and abs(a.get("sd", a["d"]) - 1.2) < 0.02     # 0.5초 장면 → 원본 이어 1.2초
+    assert abs(b["d"] - 1.4) < 0.02
