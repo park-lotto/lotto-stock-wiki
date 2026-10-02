@@ -639,31 +639,59 @@ function togglePhraseSync(i, on){
 function planClips(segIds, ttsDur, spread, beatIdx){
   // ── 관제 084 장면 시간 배분(2026-10-02 사장님 규칙) ─────────────────────────────────────────────
   //   ① 컷 수 = 장면 수(자막 줄 수가 아니다 — 같은 장면을 조각내 반복하지 않는다)
-  //   ② 시간은 장면에 고르게. 짧은 장면은 가진 만큼(원본에서 같은 장면이 이어지면 거기까지)만, 남는 시간은 옆 장면이 더 보여 준다
+  //   ② 시간은 장면에 고르게. 짧은 장면은 가진 만큼만, 남는 시간은 옆 장면이 더 보여 준다(태깅 길이 → 모자라면 원본에서 이어 틀기)
   //   ③ 진짜 화면을 다 합쳐도 모자라면 칸 전체에 같은 배속(원본에서 이어지는 장면은 finish 채우기가 진짜 화면으로)
   //   ④ 장면이 바뀌는 순간은 가까운 자막 줄 경계(0.4초 안)에 맞춘다
   //   장면 공급(줄마다 대사를 채울 만큼)은 2단계 ai_match.ensure_cover 가 책임진다 — 여기선 받은 장면에 시간만 나눈다.
   function _maxS(){ return typeof maxSlowmo === 'function' ? maxSlowmo() : 1.2; }
   function cutRuleV2(){ return typeof DATA === 'object' && DATA && DATA.cut_rule === 'scenes_v2'; }
   function scenesV2(segments, ttsDur, beatIdx){
-    let scenes = segments.filter(g => g.end - g.start > EPS);
+    // 같은 장면이 목록에 두 번 들어와도(같은 id·같은 영상 같은 시작) 한 번만 — 한 칸에 같은 장면 반복 금지(사장님 "같은 것 많아")
+    const _seen = new Set();
+    let scenes = segments.filter(g => {
+      if (!(g.end - g.start > EPS)) return false;
+      const k1 = 'i' + g.seg_id, k2 = 'v' + g.video_id + '@' + Number(g.start).toFixed(2);
+      if (_seen.has(k1) || _seen.has(k2)) return false;
+      _seen.add(k1); _seen.add(k2); return true;
+    });
     if (!scenes.length) return [];
     while (scenes.length > 1 && ttsDur / scenes.length < MIN_CLIP) scenes = scenes.slice(0, -1);
-      // 장면마다 가진 화면 = 태깅 길이. 원본에서 이어 읽기는 아래 finish 의 채우기 한 곳만 한다(이어 읽기 판단 한 벌).
-    const av = scenes.map(g => ({st: g.start, len: Math.max(0, g.end - g.start)}));
-  const sum = a => a.reduce((x, y) => x + y, 0);
+    // 장면마다 ①태깅 길이 ②원본에서 이어 틀 수 있는 끝(같은 영상의 다른 칸·이 칸 다른 장면이 쓰는 곳 앞, 원본 끝, 청소 구간 안)
+    const D = (typeof DATA === 'object' && DATA) || {};
+    const starts = {};
+    (typeof lists !== 'undefined' && Array.isArray(lists) ? lists : []).forEach(L => (L || []).forEach(id => {
+      const g = (D.segments || {})[id]; if (g) (starts[g.video_id] = starts[g.video_id] || []).push(Number(g.start));
+    }));
+    const av = scenes.map(g => {
+      const len = Math.max(0, g.end - g.start);
+      const reel = Number((D.src_duration || {})[g.video_id] || 0);
+      if (!(reel > 0) || String(g.seg_id || '').startsWith('film_') || (typeof TRIMS === 'object' && TRIMS && TRIMS[g.seg_id]))
+        return {st: g.start, len, room: len, far: len};        // 원본 길이 모름·사람이 자른 구간 = 그 구간만
+      const cb = cleanBound(g.video_id, g.start, g.end);
+      if (!cb) return {st: g.start, len, room: len, far: len};
+      let far = Math.min(reel, cb.hi);                         // 원본 끝·청소 구간 끝
+      scenes.forEach(o => { if (o !== g && o.video_id === g.video_id && o.start > g.start + EPS && o.start < far) far = o.start; });   // 같은 칸 다른 장면과는 절대 안 겹친다
+      let hi = far;
+      (starts[g.video_id] || []).forEach(x => { if (x > g.start + EPS && x < hi) hi = x; });
+      return {st: g.start, len, room: Math.max(len, hi - g.start), far: Math.max(len, far - g.start)};
+    });
+    const sum = a => a.reduce((x, y) => x + y, 0);
     let real = scenes.map(() => 0);                       // 장면마다 보여 줄 진짜 화면 초
-    for (let it = 0; it < 12; it++){
-      const rest = ttsDur - sum(real);
-      const open = real.map((_, k) => k).filter(k => av[k].len - real[k] > EPS);
+    const pour = (cap, goal) => { for (let it = 0; it < 12; it++){
+      const rest = (goal == null ? ttsDur : goal) - sum(real);
+      const open = real.map((_, k) => k).filter(k => cap(k) - real[k] > EPS);
       if (rest <= EPS || !open.length) break;
       const share = rest / open.length;
-      open.forEach(k => { real[k] += Math.min(share, av[k].len - real[k]); });
-    }
+      open.forEach(k => { real[k] += Math.min(share, cap(k) - real[k]); });
+    } };
+    pour(k => av[k].len);                                 // ① 태깅된 장면 안에서 고르게
+    pour(k => av[k].room);                                // ② 모자라면 원본에서 이어 틀기(옆 장면이 더 보여 준다) — 다른 칸 장면 앞까지
+    // ③ 1.2배까지 느리게 해도 모자라면 ④ 다른 칸 장면과 겹치더라도 원본을 더 튼다 — 멈춤이 가장 나쁘다(사장님 "화면 모자라 멈춤")
+    if (sum(real) * _maxS() < ttsDur - EPS) pour(k => av[k].far, ttsDur / _maxS());
     let dur = real.slice();
     const totalReal = sum(real);
     if (ttsDur - totalReal > EPS && totalReal > EPS){
-      // 다 합쳐도 모자라면 칸 전체에 같은 배속 — 원본이 이어지는 장면은 finish 채우기가 진짜 화면으로 메운다
+      // ③ 그래도 모자라면 칸 전체에 같은 배속(재료가 정말 바닥 — 2단계 cover_short 대상)
       const f = ttsDur / totalReal;
       dur = real.map(r => r * f);
     }
@@ -678,14 +706,14 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       capB.forEach(x => { if (Math.abs(x - acc) <= SNAP_SEC && (best === null || Math.abs(x - acc) < Math.abs(best - acc))) best = x; });
       if (best === null) continue;
       const delta = best - acc, a = dur[j] + delta, b = dur[j + 1] - delta;
-      const okA = a >= MIN_CLIP && a <= av[j].len * _maxS() + EPS;
-      const okB = b >= MIN_CLIP && b <= av[j + 1].len * _maxS() + EPS;
+      const okA = a >= MIN_CLIP && a <= Math.max(real[j], av[j].room) * _maxS() + EPS;
+      const okB = b >= MIN_CLIP && b <= Math.max(real[j + 1], av[j + 1].room) * _maxS() + EPS;
       if (okA && okB){ dur[j] = a; dur[j + 1] = b; acc = best; }
     }
     return scenes.map((g, k) => {
       const d = Math.round(dur[k] * 100) / 100;
       const c = {seg_id: g.seg_id, video_id: g.video_id, start: av[k].st, dur: d};
-      const src = Math.min(av[k].len, dur[k]);
+      const src = Math.min(Math.max(real[k], av[k].room), dur[k]);   // 자막 경계에 맞춰 늘어난 몫도 원본에 있으면 진짜 화면으로
       if (src < d - EPS) c.src_dur = +src.toFixed(3);
       return c;
     });
@@ -730,6 +758,16 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   느리게(1.15배)→정지. 장면 전환 목록(DATA.scenecuts)이 없는 소재는 **안 늘린다**(장면이 이어지는지 모르면 딴 장면이 샐 수 있다).
   //   청소본 칸: DATA.clean_spans[vid](지운 원본 구간)가 있으면 그 **안에서만** — 밖이면 원본 자막이 보이거나 증분 청소(과금)가 난다.
   //   lo/hi = 같은 칸 같은 소재 다른 컷과 겹치지 않을 한계(같은 그림 반복 금지).
+  // 원본을 더 읽어도 되는 범위 — 청소본이 있으면 그 청소 구간 안만. null = 못 늘림(청소 구간을 못 읽었거나 창이 구간 밖).
+  //   판단 한 곳: fillShortWindow(장면 전환 앞까지 채우기)와 scenesV2(원본 이어 틀기)가 같이 쓴다.
+  function cleanBound(vid, s, e){
+    const D = (typeof DATA === 'object' && DATA) || {};
+    if ((D.clean_spans || {}).__error__) return null;
+    const spans = (D.clean_spans || {})[vid];
+    if (!Array.isArray(spans) || !spans.length) return {lo: 0, hi: Infinity};
+    const sp = spans.find(x => Number(x[0]) <= s + 1e-3 && Number(x[1]) >= e - 1e-3);
+    return sp ? {lo: Number(sp[0]), hi: Number(sp[1])} : null;
+  }
   function fillShortWindow(vid, start, sdur, need, lo, hi){
     const D = (typeof DATA === 'object' && DATA) || {};
     const s = Number(start), d = Number(sdur), e = s + d;
@@ -739,13 +777,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     if (!isFinite(lim1)) lim1 = Infinity;
     const reel = Number((D.src_duration || {})[vid] || 0);
     if (reel > 0) lim1 = Math.min(lim1, reel);
-    if ((D.clean_spans || {}).__error__) return {start: s, sdur: d};   // 청소 구간을 못 읽었다 — 안 늘린다(과금 방지)
-    const spans = (D.clean_spans || {})[vid];
-    if (Array.isArray(spans) && spans.length){
-      const sp = spans.find(x => Number(x[0]) <= s + 1e-3 && Number(x[1]) >= e - 1e-3);
-      if (!sp) return {start: s, sdur: d};                          // 청소 구간 밖 창 — 움직이지 않는다
-      lim0 = Math.max(lim0, Number(sp[0])); lim1 = Math.min(lim1, Number(sp[1]));
-    }
+    const cb = cleanBound(vid, s, e);
+    if (!cb) return {start: s, sdur: d};                            // 청소 구간을 못 읽었거나 그 밖 창 — 안 늘린다(과금 방지)
+    lim0 = Math.max(lim0, cb.lo); lim1 = Math.min(lim1, cb.hi);
     for (const x of cuts){
       const c = Number(x);
       if (!isFinite(c)) continue;
