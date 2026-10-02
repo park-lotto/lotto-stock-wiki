@@ -978,6 +978,11 @@ def _norm_text(t):
     return re.sub(r"\s+", "", str(t or ""))
 
 
+# 씨앗이 없을 때 씨앗 자리에 넣는 안내(2026-10-02). 60자 이상이어야 하고, 대본에 그대로 옮기지 않게 괄호로 감싼다.
+SEEDLESS_NOTE = ("(씨앗 대본 없음 — 외국 영상이라 참고할 한국어 말이 없다. 씨앗을 흉내 내지 말고, 아래 재료의 스토리 문장과 "
+                 "소구점만으로 이 제품의 대본을 처음부터 써라. 이 괄호 안 문장은 대본에 쓰지 마라.)")
+
+
 def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product=""):
     """(drafts, why) — app._backbone_drafts와 같은 계약(비면 why에 이유, 조용한 폴백 금지).
 
@@ -1005,11 +1010,17 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
     else:
         seed_src = ba.seed_source(srcs, (job or {}).get("backbone_main"))
         seed_text = ((seed_src or {}).get("full_text_ko") or (seed_src or {}).get("full_text") or "").strip()
-        if len(seed_text) < 60:
-            return [], "씨앗 영상의 말이 너무 짧음(%d자)" % len(seed_text)
-        seed_from = "job:%s" % (seed_src.get("video_id") or "")
-        vis = ba._drop_seed(srcs, seed_src)
-        product = ((seed_src.get("source_brief") or {}).get("product") or "").strip()
+        if len(seed_text) >= 60:
+            seed_from = "job:%s" % (seed_src.get("video_id") or "")
+            vis = ba._drop_seed(srcs, seed_src)
+            product = ((seed_src.get("source_brief") or {}).get("product") or "").strip()
+        else:
+            # ★씨앗 없음(2026-10-02 사장님 "씨앗 없는 것도 라이브 가자"): 외국 영상만 담으면 한국어 씨앗이 없다.
+            #   막지 않고 1단계 스토리·소구점만으로 쓴다(실측: 목베개 2편·트럭 1편, 스타일 2개씩 8안 전부 말맛 대본).
+            #   재료 영상은 전부 화면에 쓴다(뺄 씨앗이 없다).
+            seed_text, seed_src, seed_from, vis = SEEDLESS_NOTE, None, "none", list(srcs)
+            product = (seed_product or "").strip() or next(
+                ((s_.get("source_brief") or {}).get("product") or "" for s_ in srcs if (s_.get("source_brief") or {}).get("product")), "")
     seg_index = ba._seg_index(vis)
     note = {}
     from shopping_shorts import story_tag as _st
