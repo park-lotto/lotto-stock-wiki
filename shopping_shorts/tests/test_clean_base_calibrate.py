@@ -181,3 +181,26 @@ def test_cut_geom_clamps_at_next_start_even_without_measure():
     r = [x for x in cb._regions(base) if x[2] == "v"][0]
     assert abs(r[5] + (r[4] - r[3]) * r[6] - (1.2 - 0.067)) < 1e-6      # 청소본 끝 = B 시작
     assert cb.span_map(base, {"video_id": "v", "start": 0.0, "end": 1.2}) is None     # 없는 꼬리를 덮었다고 하지 않는다
+
+
+def test_frame_exact_head_never_reads_previous_piece():
+    """2026-10-02 관제 077 실측(2683d3703512): frame_exact 정본의 칸6 조각(fin 21.233)에 off=-0.033(한 프레임 앞)이 남아
+    조각 머리가 앞 조각 마지막 프레임(칸5 그림)을 읽었다 → 완성본 21.23초 번쩍. 같은 원본을 쓰는 칸2(6.83초)도 이 조각을 골라 번쩍.
+    맞게 만든 파일(frame_exact)은 조각이 정확히 fin 에서 시작한다 — 머리를 fin 앞으로 당기지 않는다(꼬리 off_end 는 그대로)."""
+    base = {"frame_exact": True, "extras": {},
+            "cuts": [{"video_id": "a", "src": 3.0, "sdur": 1.0, "dur": 1.0, "fin": 20.233, "cleaned": True},
+                     {"video_id": "s2", "src": 0.1, "sdur": 1.43, "dur": 1.5333, "fin": 21.2333,
+                      "off": -0.033, "off_end": -0.067, "cleaned": True}]}
+    r = [x for x in cb._regions(base) if x[2] == "s2"][0]
+    assert r[5] >= 21.2333 - 1e-6, r                       # 청소본 읽기 시작이 앞 조각으로 안 넘어간다
+    a = [x for x in cb._regions(base) if x[2] == "a"][0]
+    assert abs(a[5] + (a[4] - a[3]) * a[6] - 21.2333) < 1e-3, a   # 앞 조각은 제 끝(fin)까지
+    got = cb.span_map(base, {"video_id": "s2", "start": 0.1, "end": 1.0})
+    assert got and got[0]["start"] >= 21.2333 - 1e-3, got   # 좌표는 0.001초 반올림(프레임 반 칸=0.0167초보다 훨씬 작다)   # 다른 칸(같은 원본)이 이 조각을 빌려도 앞 조각을 안 읽는다
+
+
+def test_old_base_negative_off_unchanged():
+    """옛 정본(frame_exact 없음)은 종전 그대로 — 음수 off 가 진짜 밀림일 수 있다(앞 조각이 짧게 구워진 옛 조립)."""
+    base = {"extras": {}, "cuts": [{"video_id": "w", "src": 5.0, "sdur": 0.8, "dur": 0.8, "fin": 1.2, "off": -0.067, "cleaned": True}]}
+    r = cb._regions(base)[0]
+    assert abs(r[5] - (1.2 - 0.067)) < 1e-6
