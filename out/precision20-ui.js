@@ -68,10 +68,9 @@
     return {...fixedBaseColors(frame),channel:paint.top?readableInk(paint.top):(frame.channel_box?.color||frame.channel_boxes?.[0]?.color||'#FFFFFF'),...paint};
   };
   const captionSource=frame=>{
-    // 어제 그대로 + '썰훅만' 본문 대본 장면에서만 훅 띠를 자막 칸으로 쓴다(10-02 사장님 "추가된 건 썰훅만 하나, 나머지는 어제 그대로")
-    const hookCap=frame===rows[current]?.hook&&hookHasCaptionBand();
-    const wbCap=frame===rows[current]?.body||hookCap;
-    const ln=(frame.lines||[]).find(l=>l.bind==='caption')||(hookCap?hookCapLine(frame):(frame===rows[current]?.body?frame.white_box?.text:null));
+    // 어제 그대로(10-02: 썰훅만 본문 자막은 보조제목 줄에 넣으므로 여기서는 훅을 건드리지 않는다 — 건드리면 제목칸 높이가 줄어 띠가 0이 됐다)
+    const wbCap=frame===rows[current]?.body;
+    const ln=(frame.lines||[]).find(l=>l.bind==='caption')||(wbCap?frame.white_box?.text:null);
     const start=frame.video_from?.y||0;
     const surface=ln&&(frame.surfaces||[]).find(s=>s.y<=ln.y0+ln.h/2&&s.y+s.height>=ln.y0+ln.h/2&&s.y>start*.45);
     const band=wbCap&&frame.white_box?{y:frame.white_box.y0,height:frame.white_box.y1-frame.white_box.y0,background:frame.white_box.background}:surface;
