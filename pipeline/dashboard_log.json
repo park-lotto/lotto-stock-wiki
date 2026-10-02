@@ -446,5 +446,12 @@
     "track": "main · 조사",
     "summary": "볼케이노 MCP 등록 확인: ~/.claude.json에 http 서버로 등록됐으나 현재 세션 미연결(계정별 설정 분리 추정)",
     "next": "사장님 승인 시 볼케이노 서버 도구 목록 조회"
+  },
+  {
+    "date": "2026-10-02",
+    "category": "스탁브레인",
+    "track": "도구점검",
+    "summary": "볼케이노 MCP 미연결 원인 확인: 홈 .claude.json엔 등록, 현재 세션 설정폴더(.claude/.claude.json)엔 없음",
+    "next": "사장님 승인 시 claude mcp add로 이 계정에 볼케이노 등 등록"
   }
 ]
