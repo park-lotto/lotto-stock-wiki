@@ -1,0 +1,27 @@
+# finish단축 — finish 시간 단축 (카드 081, 2026-10-02)
+
+> **소유 트랙**: finish단축 — 이 파일은 이 트랙 세션만 수정한다.
+
+## 왜 (사장님 10-02 "이게 제일 시간 많이 잡아먹는 거야 / 할 수 있는 거 검증해서 다 해 / 병렬도 다 해도 된다")
+실측: 기준선 전체 시험 7~10분이 거의 매번(오늘 main 커밋 108개 중 72개가 관제·핸드오프 → 커밋 번호 캐시 무력, 내 기록 새로 수집 6·재사용 2) ·
+병합 폴더 전체 풀기 45초+지우기 19초(1229MB) · 대기열 선착순 아님(최대 2시간 26분 대기) · 대기 중 Claude 시간 제한으로 finish 꺼짐 ·
+다른 PC가 끼어들면 기준선+병합본을 처음부터.
+
+## 한 것 (tools/track.py · tools/merge_gate.py)
+1. **기준선 = 문법·import 만**(`merge_gate.snapshot_light`). 전체 시험은 병합본에서 한 번. 실패한 것만 **main 코드로 재확인**
+   (`track._known_main_failures` — 코드 트리 열쇠 `_code_key`(shopping_shorts·tools·pipeline·conftest 트리 id)별 기억 → 관제 커밋엔 안 바뀜).
+   남은 것은 **병합본에서 한 번 더**(`merge_gate.rerun_ids`) — 다시 통과하면 우연한 실패로 경고만.
+2. **코드 없는 병합은 시험 생략**(`_is_non_code` 전부 → 문법·import 만).
+3. **선착순 번호표**(`_FileLock(queue=True)`): `<락>_queue/<시각ns>_<pid>_<id>`, 맨 앞만 락 시도, 죽은 프로세스 번호표 치움.
+   영상 관문 뒤 다시 잡을 땐 `priority=True`(줄 맨 앞).
+4. **finish 분리 실행 기본**(`_finish_detached`): 런처가 손자 프로세스를 DETACHED(+가능하면 BREAKAWAY_FROM_JOB)로 띄우고 바로 죽는다 →
+   부모 트리 종료에 안 딸려간다. 로그 `.tracks/_finish_logs/<트랙>_<시각>.log`, 결과 `.rc`. 앞단은 로그를 따라 읽다 rc 로 끝난다.
+   `--attached` 로 종전처럼. (자식은 `TRACK_FINISH_CHILD=1`)
+5. **락 전 선검사**(`_precheck`): 바뀐 코드 파일과 관련된 시험(`_select_related_tests`, 최대 60개)만 트랙 폴더에서 먼저 → main 에서도 깨지는 건 빼고,
+   새로 깨진 게 있으면 줄 서기 전에 멈춘다. `TRACK_PRECHECK=0` 이면 건너뜀.
+6. **병합 폴더 경량화**(`STAGE_SPARSE`): 코드·시험이 읽는 폴더만(실측 9초+3초·600MB). 실패하면 전체로.
+7. 병렬 수: 실측 뒤 반영(아래).
+- 테스트 `tools/test_finish_speed.py` 9건(고치기 전 9건 모두 실패 확인). 병합·관문·관제 묶음 233 passed.
+
+## 실측
+- (진행 중)
