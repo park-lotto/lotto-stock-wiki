@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-02  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-03  (LOGIC_VER가 정본)
 //   · 핀터레스트 — 핀 페이지 플로팅 담기 + 검색 그리드 카드마다 📥 (2026-09-11 고객 문의)
 //   · ⭐볼채널등록 — 회원용 개인 채널 즐겨찾기
 //   · 유튜브는 쇼츠에서만 동작 — 메인·롱폼 차단
@@ -15,7 +15,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261002;
+  var LOGIC_VER = 20261003;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -802,10 +802,17 @@
 
   // 검색 그리드(카드 담기 버튼이 있는 페이지)에선 플로팅을 숨긴다 — '검색 페이지 전체'를
   // 담는 오작동/혼동을 막고, 카드마다 있는 버튼만 쓰게 한다. 단일 영상 페이지에선 다시 보인다.
+  // ★플로팅을 띄울지는 **여기 한 곳**이 정한다(2026-10-03). 종전엔 syncFloat·syncPinFloat·_dockBtns
+  //   셋이 각자 display를 썼고, 마지막에 도는 _dockBtns가 숨김을 되돌려 핀터레스트 홈 격자에
+  //   '📥 담기'가 광고 카드 위에 떠 있었다(사장님 로그인 크롬 실측 — 수정 전 코드도 동일).
+  function _floatWanted() {
+    if (_isPin()) return _pinSingle();                    // 핀터레스트: 핀 상세 화면에서만
+    // 단일 영상 페이지에선 아래 '더 보기' 그리드에 카드버튼이 생겨도 플로팅(=본 영상 담기)을 남긴다.
+    return !(document.querySelector(".ss-card-grab") && !isSinglePost());
+  }
   function syncFloat() {
     var f = document.getElementById("ss-grab-btn");
-    // 단일 영상 페이지에선 아래 '더 보기' 그리드에 카드버튼이 생겨도 플로팅(=본 영상 담기)을 남긴다.
-    if (f) f.style.display = (document.querySelector(".ss-card-grab") && !isSinglePost()) ? "none" : "";
+    if (f) f.style.display = _floatWanted() ? "" : "none";
   }
 
   // 지금 보고 있는 게 '단일 영상/게시물' 페이지인가 (인스타 /p/·/reel/, 틱톡 /video/ 등)
@@ -1080,6 +1087,17 @@
   var DOCK_IDS = ["ss-adopt-btn", "ss-favch-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn"];
   var DOCK_STEP = 52;      // 버튼 세로 간격
   function _dockAnchor() {
+    // 핀터레스트 핀 상세: 본 핀 칸(closeup-media-container)이 기준이다. 본 핀이 사진이면 '가장 큰
+    //   영상'은 옆 격자의 영상 카드라 버튼이 남의 카드 위에 붙었다(2026-10-03 실측).
+    if (_isPin() && _pinSingle()) {
+      var cm = document.querySelector('[data-test-id="closeup-media-container"]');
+      if (cm) {
+        var q0 = cm.getBoundingClientRect();
+        // 칸 바로 오른쪽은 하트·공유 버튼 줄이라 덮는다(실측) → 본 핀 **안쪽 오른쪽 위**에 세운다.
+        if (q0.width > 200 && q0.right < window.innerWidth)
+          return { top: q0.top, bottom: q0.bottom, right: q0.right - 130 };
+      }
+    }
     // 가장 큰 <video>가 지금 보는 영상이다.
     var vs = document.querySelectorAll("video"), best = null, area = 0;
     for (var i = 0; i < vs.length; i++) {
@@ -1148,8 +1166,9 @@
     var slot = 0;
     for (var i = 0; i < live.length; i++) {
       var el = live[i];
-      el.style.display = gone ? "none" : "";
-      if (gone) continue;
+      var off = gone || (el.id === "ss-grab-btn" && !_floatWanted());
+      el.style.display = off ? "none" : "";
+      if (off) continue;
       // 화면 밖으로 밀리면(좁은 창) 종전 오른쪽 아래 자리로 되돌린다.
       var w = el.offsetWidth || 150;
       if (!rr || x + 16 + w + 12 > window.innerWidth) {
@@ -1193,8 +1212,21 @@
   //     주소를 담으면 서버가 "지원 안 함"을 낼 뿐이라 혼동만 준다.
   function _isPin() { return location.host.indexOf("pinterest.") >= 0; }
   function _pinSingle() { return /^\/pin\/[^/]+/.test(location.pathname); }
+  // 카드 → 담을 핀 주소. 일반 핀은 카드 안 /pin/ 링크, **후원 핀**(광고)은 카드 링크가 광고주
+  //   사이트라 /pin/이 없다 — 카드를 감싼 [data-test-pin-id]의 고유번호(영문)로 핀 주소를 만든다
+  //   (2026-10-03 사장님 로그인 크롬 실측: 후원 핀 5/5 링크=temu·ljmbxx 등, 번호 AVkr… →
+  //   /pin/AVkr…/ 가 열리고 서버 pin_video_info가 720w mp4를 찾았다).
+  function _pinCardUrl(c) {
+    var a = c.querySelector('a[href^="/pin/"]');
+    if (a) return a.href;
+    var h = c.closest("[data-test-pin-id]");
+    var id = h ? h.getAttribute("data-test-pin-id") : "";
+    return /^[\w-]{6,}$/.test(id) ? location.origin + "/pin/" + id + "/" : "";
+  }
   function addPinCardBtns() {
-    if (!_isPin() || _pinSingle()) return;
+    // 핀 상세 화면도 아래 '더 보기' 격자 카드엔 붙인다(본 핀은 플로팅이 담는다).
+    if (!_isPin()) return;
+    var here = _pinSingle() ? (location.pathname.match(/^\/pin\/([^/]+)/) || [])[1] : "";
     // ★핀터레스트 실측(2026-09-11): 핀 링크 <a href="/pin/…">는 **0x0**(레이아웃 없음)이고
     //   크기를 가진 상자는 [data-test-id="pin"] 래퍼다. 영상 핀은 <img> 대신 <video>만 있다.
     //   그래서 래퍼 기준으로 크기·버튼 자리를 잡고, 썸네일은 img.src 또는 video.poster.
@@ -1202,10 +1234,11 @@
     for (var i = 0; i < cards.length; i++) {
       var c = cards[i];
       if (c.getAttribute("data-ssgrab")) continue;
-      var a = c.querySelector('a[href^="/pin/"]');
+      var url = _pinCardUrl(c);
       var video = c.querySelector("video");
       var im = c.querySelector("img") || video;
-      if (!a || !im) continue;
+      if (!url || !im) continue;
+      if (here && url.indexOf("/pin/" + here + "/") >= 0) continue;   // 본 핀은 플로팅 몫
       var rr = c.getBoundingClientRect();
       if (rr.width < 100 || rr.height < 100) continue;     // 아직 안 그려진(0x0) 카드는 다음 tick에
       c.setAttribute("data-ssgrab", "1");
@@ -1218,7 +1251,7 @@
         "position:absolute;top:8px;left:8px;z-index:99999;background:#1f6feb;color:#fff;" +
         "border:none;border-radius:16px;width:34px;height:34px;font-size:16px;" +
         "box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer";
-      (function (a, im, video) {
+      (function (url, im, video) {
         b.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
           var direct = "";
@@ -1229,17 +1262,12 @@
               direct = source ? (source.src || source.getAttribute("src") || "") : "";
             }
           }
-          openGrab(a.href, im.poster || im.src || "", im.alt || im.getAttribute("aria-label") || "",
+          openGrab(url, im.poster || im.src || "", im.alt || im.getAttribute("aria-label") || "",
                    direct.indexOf("pinimg.com") >= 0 ? direct : "");
         }, true);
-      })(a, im, video);
+      })(url, im, video);
       c.appendChild(b);
     }
-  }
-  function syncPinFloat() {
-    if (!_isPin()) return;
-    var f = document.getElementById("ss-grab-btn");
-    if (f) f.style.display = _pinSingle() ? "" : "none";
   }
 
   // ── 유튜브는 '쇼츠'에서만 동작한다 (2026-09-02 사장님 요청) ──────────────
@@ -1298,7 +1326,7 @@
     try { addAnchorCardBtns(); } catch (e) {}
   }
 
-  function tick() { if (_ytOff()) { _ytClear(); return; } if (_ytResults()) { _ytResultsTick(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncPinFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
+  function tick() { if (_ytOff()) { _ytClear(); return; } if (_ytResults()) { _ytResultsTick(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.
