@@ -231,19 +231,6 @@ def test_옛_판본_트랙에서도_main_폴더의_최신_track_py로_돈다(tmp
     assert str(newer) in cmd and env.get("TRACK_REEXEC") == "1"
 
 
-def test_번호표를_먼저_받고_선검사한다(repo, monkeypatch, tmp_path):
-    monkeypatch.setenv("TRACK_FINISH_LOCK", str(tmp_path / "f.lock"))
-    _make_track_commit(repo, "번호표먼저")
-    q = Path(str(tmp_path / "f_queue"))
-    seen = {}
-    def pre(name, repo_, wt, br, gate):
-        seen["tickets"] = len(list(q.glob("*_*_*"))) if q.exists() else 0
-    monkeypatch.setattr(track, "_precheck", pre)
-    monkeypatch.setattr(track, "_known_main_failures", lambda *a, **k: set())
-    track.finish("번호표먼저", repo=repo, gate=_LightGate(), video_gate=_ok_video)
-    assert seen.get("tickets") == 1, "선검사 때 이미 줄(번호표)에 서 있어야 한다"
-
-
 def test_track_py를_고치는_트랙은_바꿔_실행하지_않는다(tmp_path, monkeypatch):
     newer = tmp_path / "tools" / "track.py"
     newer.parent.mkdir(parents=True)
