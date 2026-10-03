@@ -1332,8 +1332,32 @@ def _reexec_latest(argv):
     return True, subprocess.call([sys.executable, str(latest)] + list(argv), env=env)
 
 
+class _StampOut:
+    """finish 로그 줄마다 시각(HH:MM:SS)을 붙인다(카드 089) — 어느 단계가 몇 분인지 tools/finish_report.py 가 잰다."""
+
+    def __init__(self, inner):
+        self.inner, self.bol = inner, True
+
+    def write(self, s):
+        out = []
+        for part in s.splitlines(True):
+            if self.bol and part.strip():
+                out.append(time.strftime("%H:%M:%S "))
+            out.append(part)
+            self.bol = part.endswith("\n")
+        return self.inner.write("".join(out))
+
+    def flush(self):
+        return self.inner.flush()
+
+    def __getattr__(self, k):
+        return getattr(self.inner, k)
+
+
 def main(argv=None):
     merge_gate.make_output_safe()  # cp949 콘솔에서 ✅·⚠️ 찍다 터지는 것 방지(실측)
+    if os.environ.get("TRACK_FINISH_CHILD") and not isinstance(sys.stdout, _StampOut):
+        sys.stdout = _StampOut(sys.stdout)
     _done, _rc = _reexec_latest(sys.argv[1:] if argv is None else argv)
     if _done:
         return _rc
