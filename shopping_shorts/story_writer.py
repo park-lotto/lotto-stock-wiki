@@ -1113,11 +1113,17 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
             if allowed and not set(bs[i].get("segs") or []) <= set(allowed):
                 # ★같은 묶음의 줄 3개가 전부 allowed[0] 하나를 받아 **같은 컷이 세 번** 나왔다(2026-10-01 사장님 화면, job 4a1d44721e8a
                 #   고조1 세 줄 = 8e1-38 배수구 0.8초). 아직 아무 줄도 안 쓴 묶음 컷을 먼저, 없을 때만 첫 컷.
-                for c in (bs[i].get("segs") or []):
+                mine = list(bs[i].get("segs") or [])
+                for c in mine:
                     _taken.discard(c)
                 keep = [c for c in (code_bs[i].get("segs") or []) if c in allowed and c not in _taken]
                 if not keep:
-                    keep = [c for c in allowed if c not in _taken][:1] or allowed[:1]
+                    keep = [c for c in allowed if c not in _taken][:1]
+                if not keep:
+                    # ★근거 컷이 다른 줄에 다 쓰였으면 첫 컷을 **다시 쓰지 않는다** — 매칭 전문가가 고른 컷을 그대로 둔다
+                    #   (2026-10-03 실측: 반영 후 중복 3건 전부 고조2 두 줄에 같은 컷 = 여기 allowed[:1] 대체값. 사장님 "같은 카드가 자주 쓰인다")
+                    _taken.update(mine)
+                    continue
                 bs[i] = {"role": bs[i].get("role"), "seg": keep[0], "segs": keep}
                 _taken.update(keep)
                 _locked += 1

@@ -49,8 +49,10 @@ def test_lock_does_not_repeat_same_cut_across_group_lines():
     import io as _io, os as _os, re as _re
     src = _io.open(_os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "story_writer.py"), encoding="utf-8").read()
     body = src[src.index("_locked = 0"):src.index('n["locked_lines"]')]
-    assert "_taken" in body and "allowed[:1]" in body
-    # allowed[:1] 로 떨어지기 전에 '안 쓴 컷'을 먼저 고르는 줄이 있어야 한다
+    code = "
+".join(l.split("#")[0] for l in body.splitlines())
+    assert "_taken" in code and "or allowed[:1]" not in code     # 2026-10-03: 근거 컷이 다 쓰였으면 첫 컷 재사용 금지
+    # '안 쓴 컷'을 먼저 고르는 줄이 있어야 한다
     assert _re.search(r"c not in _taken", body)
 
 
