@@ -81,3 +81,14 @@ def test_run_cleans_its_own_temp(tmp_path, monkeypatch):
     rc, _ = merge_gate._run([sys.executable, "-c", code], tmp_path)
     assert rc == 0
     assert not list(tmp_path.glob("gate_child_%d*" % os.getpid()))
+
+
+def test_clean_gate_temp_removes_readonly_git_objects(tmp_path):
+    # 시험이 만든 git 저장소의 객체 파일은 윈도에서 읽기 전용 — 예전엔 rmtree(ignore_errors)가 467KB씩 남겼다(10-04 실측)
+    import stat
+    obj = tmp_path / "gate_child_77" / "pytest-of-CH" / "repo" / ".git" / "objects" / "ab" / "cdef"
+    obj.parent.mkdir(parents=True)
+    obj.write_bytes(b"x")
+    os.chmod(obj, stat.S_IREAD)
+    assert merge_gate.clean_gate_temp(77, tmp_root=tmp_path) == ["gate_child_77"]
+    assert not (tmp_path / "gate_child_77").exists()

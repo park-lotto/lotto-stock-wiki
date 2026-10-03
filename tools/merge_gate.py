@@ -101,6 +101,26 @@ def _run(cmd, cwd):
 GATE_TEMP_PREFIX = "gate_child_"
 
 
+def _rmtree_force(path):
+    """읽기 전용 파일까지 지운다. 시험이 만든 git 저장소의 객체 파일은 윈도에서 읽기 전용이라
+    rmtree(ignore_errors) 가 조용히 남겼다(2026-10-04 실측: 게이트마다 467KB 폴더가 남음 — 관제 107)."""
+    import shutil as _sh
+    import stat as _st
+
+    def _again(func, p, *_):
+        try:
+            os.chmod(p, _st.S_IWRITE)
+            func(p)
+        except OSError:
+            pass
+    try:
+        _sh.rmtree(path, onexc=_again)
+    except TypeError:                                   # 3.12 미만
+        _sh.rmtree(path, onerror=_again)
+    except OSError:
+        pass
+
+
 def clean_gate_temp(pid, tmp_root=None):
     """gate_child_<pid> 와 그 형제(gate_child_<pid>_finish_queue·_finish.lock 등)를 지운다. 지운 이름 목록."""
     import shutil as _sh
@@ -112,7 +132,7 @@ def clean_gate_temp(pid, tmp_root=None):
         if x.name != base and not x.name.startswith(base + "_"):
             continue                      # gate_child_12 이 gate_child_123 을 지우지 않게
         if x.is_dir():
-            _sh.rmtree(x, ignore_errors=True)
+            _rmtree_force(x)
         else:
             try:
                 x.unlink()
