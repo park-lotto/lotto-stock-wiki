@@ -10303,10 +10303,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
             _ss_dir.mkdir(parents=True, exist_ok=True)
             _ss_layers = _scene_style.render_layers(timeline, _ss_snapshot, _ss_dir, _hc, job_id)
             _ss_scenes = _scene_style.context_for(timeline, _hc, _ss_snapshot, job_id)["scenes"]
-            _scene_layers = [{"path": str(_ss_dir / _lay["file"]),
-                              "start": float(_sc["start"]), "end": float(_sc["end"])}
-                             for _sc, _lay in zip(_ss_scenes, _ss_layers)
-                             if _lay.get("file")]
+            _scene_layers = _scene_style.overlay_spans(_ss_scenes, _ss_layers, _ss_dir)   # 단어 강조면 단어마다 한 장(관제 102)
         except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
             import traceback as _tb4
             _tb4.print_exc(file=sys.stderr)

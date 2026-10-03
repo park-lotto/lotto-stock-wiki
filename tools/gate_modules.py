@@ -15,7 +15,10 @@ from pathlib import Path
 
 # 얹는 순서 = import 의존 순서. config 가 맨 앞(video_assemble 이 config.MAX_SLOWMO 를 import 때 읽는다, 관제 020),
 # 음성 라인이 mix_pipeline 앞(관제 049), 캡컷·내보내기는 맨 뒤.
-PATCH_MODULES = ("config", "voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined",
+# tts_timestamps 는 audio_post 뒤·tts 앞(자기는 audio_post 만 import, tts·video_assemble 이 이것을 부른다). 2026-10-04 관제 102 실측:
+#   video_assemble._beat_timeline 이 새 함수 tts_timestamps.words_relative 를 부르는데 이 목록에 없어 서버의 옛 파일이 쓰였고,
+#   병합본 작업 6개가 전부 AttributeError 로 건너뛰어 관문이 한 칸도 못 쟀다.
+PATCH_MODULES = ("config", "voice_presets", "typecast_tts", "audio_post", "tts_timestamps", "tts", "tts_joined",
                  "frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline",
                  "export_bundle", "capcut_draft")
 

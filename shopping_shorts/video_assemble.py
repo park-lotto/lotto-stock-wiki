@@ -3434,6 +3434,25 @@ def _merge_highlight_rules(headcopy, caption_style, deco):
     return headcopy, caption_style
 
 
+def _beat_words_relative(tts):
+    """구절 **안에서** 단어가 어디쯤인지 잴 때 쓰는 단어 시각(장면꾸미기 단어 강조, 2026-10-03 관제 102). 없으면 None.
+
+    사이드카(정밀 타임스탬프)만 본다 — 렌더·미리보기 때 불리므로 받아쓰기(ASR) 폴백으로 네트워크를 타지 않는다.
+    쓰는 쪽(scene_style.attach_scene_words)은 구절 창 안의 **비율**만 쓰므로 배속 같은 균등 변화는 갚을 필요가 없고,
+    구절 안 무음을 잘라낸 파일(removed)일 때만 길이를 재서 rescale 로 갚는다(쓸데없는 ffprobe 를 안 부른다).
+    ★tts_timestamps 의 **이미 있는 함수만** 부른다 — 이 함수는 타임라인을 만드는 이 파일이 주인이다
+      (2026-10-04: 새 함수를 tts_timestamps 에 뒀더니 영상 관문이 그 파일을 안 올려 병합본 6작업이 전부 건너뛰었다)."""
+    from . import tts_timestamps      # 표준 라이브러리+audio_post 만 끌어온다(순환 없음)
+    words = tts_timestamps.words_from_mp3(tts)
+    if not words:
+        return None
+    removed = tts_timestamps.load_removed(tts)
+    if not removed:
+        return words
+    dur = _probe_duration(tts)
+    return tts_timestamps.rescale(words, dur, removed=removed) if dur else words
+
+
 def _beat_timeline(edit_plan, tts_paths):
     """비트별 전체 타임라인 [{beat_idx, t0, dur, narration, role, cap_durs}, ...].
 
@@ -3465,6 +3484,8 @@ def _beat_timeline(edit_plan, tts_paths):
             "cap_lead": _cap_lead,
             "cap_offset": beat.get("cap_offset", 0.0),
             "caption_lines": beat.get("caption_lines"),   # AI가 끊어준 자막 호흡 줄(있으면)
+            # 단어 시각(정밀 사이드카, 없으면 None) — 장면꾸미기 단어 강조가 구절 안 단어 자리를 잰다(관제 102).
+            "words": _beat_words_relative(tts),
             # 장면별 자막 자리(2026-08-25). 여기서 안 실으면 저장위치≠읽기위치가 되어
             # 사장님이 고친 자리가 렌더에 반영되지 않는다(위 cap_durs와 같은 함정).
             "cap_pos": beat.get("cap_pos"),
