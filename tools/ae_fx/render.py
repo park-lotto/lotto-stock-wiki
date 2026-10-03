@@ -10,6 +10,7 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -22,12 +23,13 @@ def free_gb():
     return shutil.disk_usage("C:\\").free / 1024 ** 3
 
 
-def purge_since(began):
+def purge_since(began, older_than=0):
     n = size = 0
+    now = time.time()
     for f in CACHE_ROOT.rglob("*.aecache"):
         try:
             st = f.stat()
-            if st.st_mtime >= began:
+            if st.st_mtime >= began and now - st.st_mtime >= older_than:
                 f.unlink()
                 n += 1
                 size += st.st_size
@@ -43,13 +45,22 @@ def main():
         print(f"[거절] C 여유 {before:.1f}GB < {MIN_FREE_GB}GB — 렌더 캐시가 디스크를 채운다. 먼저 비워라.")
         return 3
     began = time.time()
+    stop = threading.Event()
+
+    def sweep():                         # 렌더가 길면 끝나기 전에 C 가 찬다 → 도는 동안에도 1분 지난 캐시를 지운다
+        while not stop.wait(30):
+            purge_since(began, older_than=60)
+
+    threading.Thread(target=sweep, daemon=True).start()
     try:
         run = subprocess.run([str(AERENDER), "-project", project], capture_output=True)
+        stop.set()
         text = run.stdout.decode("cp949", errors="replace")
         lines = [ln for ln in text.splitlines() if ln.strip() and "PROGRESS:  0:" not in ln]
         print("\n".join(lines[-12:]))
         rc = run.returncode
     finally:
+        stop.set()
         n, gb = purge_since(began)
         print(f"[캐시] {n}개 {gb:.2f}GB 지움 · C 여유 {before:.1f} → {free_gb():.1f}GB · {time.time() - began:.0f}초")
     return rc
