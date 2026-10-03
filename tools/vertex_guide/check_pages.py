@@ -5,7 +5,7 @@
   ③ settings.html#keys: 「▶ 받는 방법 영상」 → 새 탭으로 영상 주소가 열린다
   ④ 두 페이지 콘솔 오류 0
   ⑧ 자동 설정(관제 096): 설명서·설정의 명령 글자 = 스크립트 머리말 명령, 「명령 복사」가 클립보드에 그 글자를 넣는다,
-     클라우드 셸 버튼은 터미널만 여는 주소, /landing/vertex_setup.sh 비로그인 200·파일과 같다,
+     클라우드 셸 버튼은 실제로 열리는 주소(show=ide,terminal — show=terminal만은 안 열림 2026-10-03), /landing/vertex_setup.sh 비로그인 200·파일과 같다,
      옛 5단계는 「직접 하기」로 접혀 처음엔 안 보인다"""
 import sys, time, shutil, threading, pathlib, urllib.request
 ROOT = pathlib.Path(__file__).resolve().parents[2]; sys.path.insert(0, str(ROOT))
@@ -49,7 +49,7 @@ with sync_playwright() as p:
     # ⑧ 자동 설정 카드
     need(pg.locator('#vertex-auto').is_visible(), '⑧ 설명서: 자동 설정 카드가 보인다')
     need(pg.inner_text('#vertexCmd').strip() == CMD, f'⑧ 설명서 명령 = 스크립트 명령 ({CMD})')
-    need(pg.get_attribute('#vertexShellLink', 'href') == 'https://shell.cloud.google.com/?show=terminal', '⑧ 설명서 클라우드 셸 버튼 = 터미널만')
+    need(pg.get_attribute('#vertexShellLink', 'href') == 'https://shell.cloud.google.com/?show=ide%2Cterminal', '⑧ 설명서 클라우드 셸 버튼 = 열리는 주소(편집기+터미널, 2026-10-03 show=terminal만은 안 열림)')
     pg.evaluate("navigator.clipboard.writeText('')"); pg.click('#vertexCmdCopy'); pg.wait_for_timeout(300)
     need(pg.evaluate('navigator.clipboard.readText()') == CMD, '⑧ 설명서 「명령 복사」 → 클립보드에 명령')
     need(not pg.locator('#vertex-manual').evaluate('d=>d.open') and not pg.locator('#vertex-manual .card').first.is_visible(),
@@ -93,7 +93,7 @@ with sync_playwright() as p:
     # ⑧ 설정 자동 설정 칸
     need(pg2.locator('#vertexAuto').is_visible(), '⑧ 설정: 자동 설정 칸이 보인다')
     need(pg2.inner_text('#vertexCmd').strip() == CMD, '⑧ 설정 명령 = 스크립트 명령')
-    need(pg2.get_attribute('#vertexShellBtn', 'href') == 'https://shell.cloud.google.com/?show=terminal', '⑧ 설정 클라우드 셸 버튼 = 터미널만')
+    need(pg2.get_attribute('#vertexShellBtn', 'href') == 'https://shell.cloud.google.com/?show=ide%2Cterminal', '⑧ 설정 클라우드 셸 버튼 = 열리는 주소(편집기+터미널)')
     pg2.evaluate("navigator.clipboard.writeText('')"); pg2.click('#vertexCmdBtn'); pg2.wait_for_timeout(300)
     need(pg2.evaluate('navigator.clipboard.readText()') == CMD, '⑧ 설정 「명령 복사」 → 클립보드에 명령')
     pg2.locator('#vertexCard').screenshot(path=str(out / 'settings_vertex_card.png'))
