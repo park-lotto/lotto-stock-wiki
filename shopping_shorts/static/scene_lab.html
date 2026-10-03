@@ -1103,6 +1103,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 /* 구절 맞춤 — 이 카드들이 구절 수만큼 들어간다는 표시(2026-08-29 사장님 "파란색 테두리") */
 .tbcut.inuse{outline:2px solid #4ac1ff;outline-offset:-2px}
 .boxbtn{color:#ffd24a}
+.segthumb .usedin{position:absolute;right:3px;top:22px;line-height:1.35;background:rgba(255,160,40,.92);color:#111;font-size:10.5px;font-weight:700;padding:1px 5px;border-radius:6px;z-index:6;pointer-events:none}
 </style><style>
 /* 에러 설명(error_help.js가 그린다) — 빨간 한 줄로 끝내지 않고 왜·무엇을 함께 보여준다 */
 .errHelp{border-left:3px solid var(--fire,#e5484d);background:rgba(229,72,77,.07);
@@ -3510,7 +3511,7 @@ function render(){
             <span class="dur">${(mergeSpan(s.sid).end-s.start).toFixed(1)}초${TRIMS[s.sid]?' ✂':''}${MERGES[s.sid]?' 🔗':''}</span>
             ${/* 촘촘히 보기에서 카드 밑 글자가 접히면 이 한 줄이 대신 선다(번호·이름·경고).
                  설명은 카드 title에 이미 있다 — 마우스를 올리면 그대로 보인다. */''}
-            <span class="tiglab"><span class="no">${segMark(s.sid)}</span><span class="nm">${esc(s.label || s.scene_desc || '')}</span>${tooShort(s.sid)?'<span class="wr">⚠</span>':''}</span>
+            ${usedCells(s.sid).length ? `<span class="usedin" title="이미 ${usedCells(s.sid).join('·')}번 칸에 쓰인 장면">${usedCells(s.sid).join('·')}번 칸</span>` : ''}<span class="tiglab"><span class="no">${segMark(s.sid)}</span><span class="nm">${esc(s.label || s.scene_desc || '')}</span>${tooShort(s.sid)?'<span class="wr">⚠</span>':''}</span>
             ${/* ★2026-08-26 사장님: [고르기][자르기] 없애고 [필름 펼치기] 하나만.
                   자르기는 이제 필름에서 한다(오른쪽으로 펼쳐짐). 합치기는 아래 🔗로 남긴다. */''}
             <button class="cutbtn" title="이 영상을 필름으로 펼쳐 원하는 구간을 잘라 담습니다"
@@ -4512,7 +4513,12 @@ function add(sid){
     return;
   }
   l.push(sid); chosen.add(sid); render();
+  // ★다른 칸에도 쓰인 장면이면 알린다(2026-10-03 사장님 "같은 카드가 자주 쓰인다" — 막지는 않는다, 일부러 쓸 수도 있다)
+  const _also = lists.map((L, k) => (k !== sel && (L || []).includes(sid)) ? k + 1 : 0).filter(Boolean);
+  if (_also.length && typeof nsay === 'function') nsay(`담았어요 — 이 장면은 ${_also.join('·')}번 칸에도 쓰여 같은 화면이 두 번 나와요`);
 }
+// 이 장면이 담긴 칸 번호들(재료 목록 표시용 — 그리기만)
+function usedCells(sid){ return lists.map((L, k) => (L || []).includes(sid) ? k + 1 : 0).filter(Boolean); }
 // 편집목록에서 빼기(두 번 클릭 · 팔레트로 끌어놓기). 타임프레임의 dropCutFromBand와
 // **같은 약속**이다: 뺀 자리는 자동으로 안 채운다, 대신 무슨 일이 났는지 알린다.
 function delSeg(i, k){

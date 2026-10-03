@@ -308,6 +308,28 @@
    }
   },
   {
+   "이름": "자막제거 덧지우기(이미 지운 청소본 위에 고른 장면만)",
+   "주인": [
+    "shopping_shorts/mix_pipeline.py:clean_topup_plan"
+   ],
+   "시그니처": [
+    "def clean_topup_plan\b",
+    "def clean_cuts_merged\b",
+    "def clean_cut_states\b",
+    "def _topup_same_spots\b",
+    "def clean_repick_full\b"
+   ],
+   "소비처": [
+    "버튼",
+    "확인창",
+    "장면 고르기 화면",
+    "완성본 청소(_final_clean_fn)"
+   ],
+   "검사도구": "shopping_shorts/scripts/clean_topup_e2e.py · shopping_shorts/scripts/qa_clean_topup_ui.py",
+   "과금": true,
+   "예외": {}
+  },
+  {
    "이름": "청소 종류·화면에 보일 청소 파일 / 내보내기 재료",
    "주인": [
     "shopping_shorts/mix_pipeline.py:clean_route",

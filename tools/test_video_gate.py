@@ -36,7 +36,8 @@ def _sum(cells, scene, sc=0, sb=0, sh=0, ghost=0, ghost_only=0):
     line = "== 칸 %d · 다른 장면 %d · 0.15초 이상 밀림(가운데) %d · 경계 밀림 %d · 정지컷만 밀림 %d" % (cells, scene, sc, sb, sh)
     if ghost is None:
         return line
-    return line + chr(10) + _ghost_line(ghost, ghost_only)
+    # 번쩍임 줄(관제 099)도 도구가 늘 함께 낸다
+    return line + chr(10) + _ghost_line(ghost, ghost_only) + chr(10) + "== 번쩍임 0프레임(작업 0 · 못 잰 작업 0)"
 
 
 def _ghost_line(frames, only=0, cuts=None, short=0):
@@ -684,3 +685,52 @@ def test_keep_log_writes_next_to_tracks(tmp_path):
     body = f.read_text(encoding="utf-8")
     assert "다른장면 [1]" in body and "❌ 영상 관문 실패" in body
     assert f.name.startswith("영상전송아파치_")
+
+
+# ── 한 장 번쩍임(관제 099) ──────────────────────────────────────────────
+_FLASH_REP = ("== 칸 12 · 다른 장면 0 · 0.15초 이상 밀림(가운데) 0 · 경계 밀림 0 · 정지컷만 밀림 0\n"
+              "== 잔상 0프레임(컷 0 · 화면에만 0프레임) · 짧은컷(3프레임 이하) 0\n"
+              "aaa 칸12(청소본 3) 화면1s 완성본1s 음성1s | 다른장면 [] | 밀림0.15+ [] | 경계밀림 [] | 정지컷밀림 [] | 최대거리 0.1 | 1s\n")
+
+
+def test_flash_line_parsed_and_judged():
+    from tools import video_gate as vg
+    p = vg.parse_report(_FLASH_REP + "== 번쩍임 1프레임(작업 1 · 못 잰 작업 0)\n")
+    assert p["flash"] == {"frames": 1, "jobs": 1, "unknown": 0}
+    ok, fails, _ = vg.judge(p, {"max_scene": 0, "max_flash": 0, "max_ghost": 0, "max_ghost_screen_only": 0})
+    assert not ok and any("번쩍임" in f for f in fails)
+    ok2, _, _ = vg.judge(vg.parse_report(_FLASH_REP + "== 번쩍임 0프레임(작업 0 · 못 잰 작업 0)\n"),
+                         {"max_scene": 0, "max_flash": 0, "max_ghost": 0, "max_ghost_screen_only": 0})
+    assert ok2
+
+
+def test_flash_line_missing_or_unmeasured_fails():
+    from tools import video_gate as vg
+    cfg = {"max_scene": 0, "max_flash": 0, "max_ghost": 0, "max_ghost_screen_only": 0}
+    ok, fails, _ = vg.judge(vg.parse_report(_FLASH_REP), cfg)
+    assert not ok and any("번쩍임 줄" in f for f in fails)
+    ok, fails, _ = vg.judge(vg.parse_report(_FLASH_REP + "== 번쩍임 0프레임(작업 0 · 못 잰 작업 2)\n"), cfg)
+    assert not ok and any("못 잰" in f for f in fails)
+
+
+def test_flash_baseline_raised_by_main():
+    from tools import video_gate as vg
+    g2, raised = vg.baseline_limits({"max_flash": 0}, vg.parse_report(_FLASH_REP + "== 번쩍임 2프레임(작업 1 · 못 잰 작업 0)\n"), {})
+    assert g2["max_flash"] == 2 and any("번쩍임" in r for r in raised)
+
+
+def test_flash_frames_island_vs_repeat_vs_motion():
+    """077 꼴(한 장이 다른 자리 그림) = 잡는다 / 같은 재료 반복 = 안 잡는다 / 빠른 움직임(다른 자리에 없는 그림) = 안 잡는다."""
+    import numpy as np
+    from tools.editor_vs_final_video import flash_frames
+    rng = np.random.default_rng(0)
+    shots = [rng.normal(0, 1, (5, 5)) for _ in range(6)]
+    def run(seq):
+        return np.stack([shots[s] + rng.normal(0, 0.02, (5, 5)) for s in seq])
+    seq = [0] * 20 + [1] * 20 + [2] * 20 + [3] * 20
+    f = run(seq); f[30] = shots[3] + 0.0      # 1번 장면 한가운데 한 장이 3번 장면 그림
+    assert [x[0] for x in flash_frames(f)] == [30]
+    f2 = run(seq)
+    assert flash_frames(f2) == []
+    f3 = run(seq); f3[30] = rng.normal(0, 1, (5, 5))     # 흐린 프레임(다른 자리에 없는 그림)
+    assert flash_frames(f3) == []
