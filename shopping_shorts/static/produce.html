@@ -5808,7 +5808,40 @@ function _labRefreshCaptions(beatIdx){
     if (w && typeof w.refreshCaptions === 'function') w.refreshCaptions(beatIdx);
   }catch(e){}
 }
+async function saveBeatCapLines(){
+  const b=_curBeat(); if(!b || typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  const lines=[...document.querySelectorAll('#capLinesBox [data-capline]')]
+                .map(el=>el.value.trim()).filter(Boolean);
+  if(!lines.length){ _capMsg('줄이 비었어요','var(--fire)'); return; }
+  try{
+    const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/caplines',
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({beat_idx:_beatNo(b), lines})});
+    const d=await r.json();
+    if(!r.ok || !d.ok){ _capMsg(d.error||'저장 실패','var(--fire)'); return; }
+    _capApplyToBeat(b, {segs:d.lines, durs:null});   // 이 자막의 컷 칸 전부에(표시시간은 서버가 다시 잰다)
+    _capMsg('저장했어요'+(d.timed?'':' (표시시간은 글자수 기준)'),'var(--ok)');
+    _playBeatCaptions(b);                        // 바뀐 줄로 미리보기 다시 재생
+    _labRefreshCaptions(_beatNo(b));             // 장면 편집(실험실)도 새 줄로 컷을 다시 그린다
+  }catch(e){ _capMsg(ErrorHelp.text('network'),'var(--fire)'); }
+}
 
+async function resetBeatCapLines(){
+  // '자동으로' = 사람이 정한 줄을 서버에서 지운다. 화면만 새로 그리면 저장된 줄이
+  // 그대로 남아 되돌아가지 않는다(그래서 reset을 서버에 보낸다).
+  const b=_curBeat(); if(!b || typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  try{
+    const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/caplines',
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({beat_idx:_beatNo(b), reset:true})});
+    const d=await r.json();
+    if(!r.ok || !d.ok){ _capMsg(d.error||'되돌리기 실패','var(--fire)'); return; }
+    _capApplyToBeat(b, {segs:d.lines, durs:null}); renderBeatTools();
+    _capMsg('자동 분할로 되돌렸어요','var(--ok)');
+    _playBeatCaptions(b);
+    _labRefreshCaptions(_beatNo(b));             // 실험실 컷도 되돌린 줄 기준으로
+  }catch(e){ _capMsg(ErrorHelp.text('network'),'var(--fire)'); }
+}
 function renderCapFontSelect(){
   const s=document.getElementById('capFont');
   if(s && !s.options.length) s.innerHTML=fontList().map(f=>`<option value="${f.file}"${f.file==='NanumGothic-Bold.ttf'?' selected':''}>${isFav(f.file)?'★ ':''}${f.name}</option>`).join('');

@@ -1,4 +1,5 @@
 // 사용: (acorn 필요) node tools/legacy_deco/dead_funcs.js shopping_shorts/static/produce.html <보호이름목록.txt> [--apply]  — 관제 058 C2(10-03): 43개·391줄 제거에 썼다
+// 실행: NODE_PATH=<acorn 설치 폴더>/node_modules. 보호 목록엔 테스트가 문자열로 지키는 함수(saveBeatCapLines·resetBeatCapLines)도 넣는다 — 이름 검색만으론 못 잡았다(10-03 게이트가 잡음)
 // produce.html 인라인 스크립트에서 '파일 어디서도 안 불리는' 최상위 함수 선언을 반복 제거(보호 목록 제외)
 const fs=require('fs'),acorn=require('acorn');
 const [,,file,protectFile,apply]=process.argv;
