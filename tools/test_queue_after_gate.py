@@ -74,6 +74,7 @@ def test_시험_프로세스_합계는_8개_이하(tmp_path, monkeypatch):
 
 
 def test_메모리가_모자라면_병렬을_줄이고_최소도_안되면_기다린다(tmp_path, monkeypatch):
+    monkeypatch.delenv("GATE_XDIST_N", raising=False)
     monkeypatch.setenv("TRACK_FINISH_LOCK", str(tmp_path / "f.lock"))
     assert track._gate_target_workers(100000) == 8
     assert track._gate_target_workers(track.GATE_RESERVE_MB + 3 * track.GATE_WORKER_MB) == 3
@@ -178,3 +179,11 @@ def test_재시도에서도_끼어든_코드와_맞물려_깨지면_막는다(re
     with pytest.raises(track.TrackError, match="새로 깨진"):
         track.finish("재시도막힘", repo=repo, gate=G(), video_gate=_ok_video)
     assert state["n"] == 1
+
+
+def test_병렬_수_환경값은_시험_자식에_새지_않는다(tmp_path, monkeypatch):
+    """092 실측: GATE_XDIST_N 이 자식 pytest 에 새어 그 값을 검사하는 시험 4건이 게이트 안에서만 깨졌다."""
+    import merge_gate
+    monkeypatch.setenv("GATE_XDIST_N", "3")
+    rc, out = merge_gate._run([sys.executable, "-c", "import os;print('N=' + os.environ.get('GATE_XDIST_N', '없음'))"], tmp_path)
+    assert "N=없음" in out, out
