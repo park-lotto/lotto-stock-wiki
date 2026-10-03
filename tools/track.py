@@ -388,10 +388,24 @@ class TrackError(Exception):
     """사람에게 그대로 보여줄 중단 사유."""
 
 
+def _git_env_for(cwd):
+    """cwd 가 .tracks 안이면 git 이 그 위(= main 폴더)로 올라가지 못하게 막는다(GIT_CEILING_DIRECTORIES).
+    ★2026-10-03 실측(카드 093): 다른 finish 의 청소가 막 만든 병합 폴더를 지우자, 그 폴더에서 돈 `git merge` 가 상위의
+    main 폴더 저장소를 찾아 **main 폴더에서 병합**했다 → MERGE_HEAD 가 남아 main 폴더 동기화가 2시간 멈췄다."""
+    try:
+        cp = Path(cwd).resolve()
+    except OSError:
+        return None
+    for anc in [cp] + list(cp.parents):
+        if anc.name == TRACKS_DIR:
+            return dict(os.environ, GIT_CEILING_DIRECTORIES=str(anc))
+    return None
+
+
 def run(cmd, cwd, check=False):
     p = subprocess.run(
         cmd, cwd=str(cwd), capture_output=True, text=True,
-        encoding="utf-8", errors="replace",
+        encoding="utf-8", errors="replace", env=_git_env_for(cwd),
     )
     out = (p.stdout or "") + (p.stderr or "")
     if check and p.returncode != 0:
@@ -463,6 +477,9 @@ def _apply_sparse(wt):
     return True
 
 
+STAGE_YOUNG_SEC = 1800          # 이보다 젊은 주인 없는 병합 폴더는 청소하지 않는다
+
+
 def _clean_dead_stages(repo, keep=None):
     """finish 락을 쥔 뒤에만 부른다 — 락이 있으니 지금 살아 있는 stage는 없다(있다면 keep 하나)."""
     root = tracks_dir(repo)
@@ -473,6 +490,12 @@ def _clean_dead_stages(repo, keep=None):
         if d.is_dir() and d.name.startswith(STAGE_PREFIX) and d.name != keep:
             if _stage_in_use(d):
                 continue                 # 영상 관문 동안 락을 놓은 다른 finish 의 살아 있는 stage(2026-10-02, 카드 075)
+            if not _stage_owner_file(d).exists():
+                try:
+                    if time.time() - d.stat().st_mtime < STAGE_YOUNG_SEC:
+                        continue         # 주인 표시 없는 막 생긴 폴더 — 옛 판본 finish 가 만드는 중일 수 있다(카드 093)
+                except OSError:
+                    continue
             run(["git", "worktree", "remove", "--force", str(d)], repo)
             try:
                 _stage_owner_file(d).unlink()
@@ -676,6 +699,8 @@ def _open_stage(repo, name):
         run(["git", "worktree", "remove", "--force", str(stage)], repo)
     # ★코드 폴더만 푼다(2026-10-02 카드 081 실측: 전체 만들기 45초+지우기 19초·1229MB → 9초+3초·600MB).
     #   병합·관제·영향 지도는 git(index/ref)에서 읽고, 시험이 읽는 폴더(static·userscript·out·deploy·extension·docs)는 아래에 다 있다.
+    # ★주인 표시를 **만들기 전에**(카드 093) — 만든 뒤에 쓰던 몇 초 사이 다른 finish 의 청소가 '주인 없는 잔해'로 보고 지웠다(실측).
+    _mark_stage_owner(stage)
     rc, out = run(["git", "worktree", "add", "--detach", "--no-checkout", str(stage), "origin/main"], repo)
     if rc != 0:
         raise TrackError(f"병합용 임시 폴더를 못 만들었다:\n{out}")
@@ -887,6 +912,11 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
     for w in gate.baseline_warnings(before):
         print(f"  {w}")
 
+    # ★병합 폴더가 진짜 병합 폴더인가(카드 093) — 지워졌으면 git 이 다른 저장소를 잡는다. 아니면 멈춘다(main 폴더 보호).
+    _rc_t, _top = run(["git", "rev-parse", "--show-toplevel"], stage)
+    if _rc_t != 0 or Path(_top.strip()).resolve() != Path(stage).resolve():
+        raise TrackError("병합 폴더가 사라졌거나 다른 저장소를 가리킨다 — main 폴더 보호를 위해 멈췄다(라이브 무사).\n"
+                         f"  폴더 {stage} · git 이 본 위치 {_top.strip()[:200]}\n다시: py tools/track.py finish {name}")
     # ★ 커밋 없이 병합만 — 커밋하면 post-commit(git push)이 게이트 전에 라이브로 보낸다
     rc, out = run(["git", "merge", "--no-ff", "--no-commit", br], stage)
 
@@ -1407,6 +1437,34 @@ def list_tracks(repo=BASE):
 
 # ── cli ──────────────────────────────────────────────────────────
 
+TOOLS_LATEST = "_tools_latest"
+
+
+def _latest_tools_track_py():
+    """origin/main 에 맞춘 전용 도구 폴더(.tracks/_tools_latest, tools/ 만)의 track.py — main 폴더 상태와 무관(카드 093).
+    ★main 폴더는 누가 작업을 걸어 두면(멈춘 병합·스테이징) 동기화가 막혀 낡는다 — 10-03 실측 51커밋·2시간, 그동안 모든
+    세션의 finish 가 옛 판본(088)으로 돌아 089·091·092 가 안 먹었다. 갱신은 파일락 하나로 줄 세운다."""
+    repo = Path(main_worktree())
+    tl = tracks_dir(repo) / TOOLS_LATEST
+    lk = _FileLock(Path(tempfile.gettempdir()) / "stockbrain_tools_latest.lock", "[대기] 최신 도구 폴더 갱신 중...").acquire()
+    try:
+        run(["git", "fetch", "-q", "origin", "main"], repo)
+        if not (tl / ".git").exists():
+            if tl.exists():
+                run(["git", "worktree", "remove", "--force", str(tl)], repo)
+                shutil.rmtree(tl, ignore_errors=True)
+            rc, out = run(["git", "worktree", "add", "--detach", "--no-checkout", str(tl), "origin/main"], repo)
+            if rc != 0:
+                raise TrackError("최신 도구 폴더를 못 만들었다: " + out[-200:])
+            run(["git", "sparse-checkout", "set", "--no-cone", "/tools/"], tl)
+        rc, out = run(["git", "checkout", "-q", "--detach", "--force", "origin/main"], tl)
+        if rc != 0:
+            raise TrackError("최신 도구 폴더를 못 맞췄다: " + out[-200:])
+    finally:
+        lk.release()
+    return tl / "tools" / "track.py"
+
+
 def _reexec_latest(argv):
     """main 폴더의 tools/track.py 가 이 파일과 다르면 그걸로 바꿔 실행한다(카드 083). 트랙 폴더 350개 중 349개가
     옛 판본이라, main 에 새 finish 가 들어가도 각 세션은 자기 폴더의 옛 것으로 돌았다(10-02 실측). main 폴더는 병합 때마다 최신.
@@ -1415,7 +1473,7 @@ def _reexec_latest(argv):
     if os.environ.get("TRACK_REEXEC"):
         return False, 0
     try:
-        latest = Path(main_worktree()) / "tools" / "track.py"
+        latest = _latest_tools_track_py()
         me = Path(__file__).resolve()
         if not latest.exists() or latest.resolve() == me or latest.read_bytes() == me.read_bytes():
             return False, 0
@@ -1428,7 +1486,7 @@ def _reexec_latest(argv):
                 return False, 0
     except Exception:  # noqa: BLE001 — 못 정하면 이 판본으로 돈다
         return False, 0
-    print("ℹ️ main 폴더의 최신 track.py 로 실행한다(이 트랙 폴더 판본은 옛것): %s" % latest, flush=True)
+    print("ℹ️ 최신(origin/main) track.py 로 실행한다(이 트랙 폴더 판본은 옛것): %s" % latest, flush=True)
     env = dict(os.environ, TRACK_REEXEC="1")
     return True, subprocess.call([sys.executable, str(latest)] + list(argv), env=env)
 
