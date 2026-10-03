@@ -86,11 +86,41 @@ def _run(cmd, cwd):
     _priv.mkdir(parents=True, exist_ok=True)
     for _k in ("TMP", "TEMP", "TMPDIR"):
         env[_k] = str(_priv)
-    p = subprocess.run(
-        cmd, cwd=str(cwd), capture_output=True, text=True,
-        encoding="utf-8", errors="replace", env=env,
-    )
+    try:
+        p = subprocess.run(
+            cmd, cwd=str(cwd), capture_output=True, text=True,
+            encoding="utf-8", errors="replace", env=env,
+        )
+    finally:
+        # ★만든 곳이 치운다(관제 107): pytest 임시 파일이 이 폴더에 쌓여 한 번에 1.4~2.4GB — 안 지워서 하루 7개(11GB)가
+        #   C 를 채워 finish 가 「No space left」로 죽었다(2026-10-03). 락·번호표 형제 폴더(gate_child_<pid>_*)도 함께.
+        clean_gate_temp(_os.getpid())
     return p.returncode, (p.stdout or "") + (p.stderr or "")
+
+
+GATE_TEMP_PREFIX = "gate_child_"
+
+
+def clean_gate_temp(pid, tmp_root=None):
+    """gate_child_<pid> 와 그 형제(gate_child_<pid>_finish_queue·_finish.lock 등)를 지운다. 지운 이름 목록."""
+    import shutil as _sh
+    import tempfile as _tf
+    root = Path(tmp_root or _tf.gettempdir())
+    base = "%s%d" % (GATE_TEMP_PREFIX, pid)
+    removed = []
+    for x in root.glob(base + "*"):
+        if x.name != base and not x.name.startswith(base + "_"):
+            continue                      # gate_child_12 이 gate_child_123 을 지우지 않게
+        if x.is_dir():
+            _sh.rmtree(x, ignore_errors=True)
+        else:
+            try:
+                x.unlink()
+            except OSError:
+                continue
+        if not x.exists():
+            removed.append(x.name)
+    return removed
 
 
 def _xdist_args():
