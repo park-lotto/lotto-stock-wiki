@@ -668,7 +668,29 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   장면 공급(줄마다 대사를 채울 만큼)은 2단계 ai_match.ensure_cover 가 책임진다 — 여기선 받은 장면에 시간만 나눈다.
   function _maxS(){ return typeof maxSlowmo === 'function' ? maxSlowmo() : 1.2; }
   function cutRuleV2(){ return typeof DATA === 'object' && DATA && DATA.cut_rule === 'scenes_v2'; }
+  // ★청소 뒤에도 같은 편성이면 컷이 그대로(관제 110, 2026-10-04 황선희님 c9fbcc3ac28c 7번 칸).
+  //   청소본은 **청소 전 컷이 읽은 구간**을 지운 것이다. 그런데 지운 구간(DATA.clean_spans)이 생기면 아래 배분의 여유(room)가
+  //   달라져(구간이 장면보다 짧으면 cleanBound 가 null → room=len) 같은 편성의 컷이 바뀌었다(s5 2.53→2.13초, s1 1.49→1.90초)
+  //   → 새 컷이 지운 구간 밖 0.41초를 읽어 칸 전체가 원본으로 떨어지고 꾸미기에 원본 자막이 보였다.
+  //   그래서 먼저 **청소 구간을 안 보고**(=청소 전과 똑같이) 배분하고, 그 컷들이 전부 지운 구간 안이면 그대로 쓴다.
+  //   하나라도 밖이면(청소 뒤 편성·음성이 바뀜) 종전대로 청소 구간을 보고 배분한다. 판단은 여기 한 곳.
   function scenesV2(segments, ttsDur, beatIdx, exact){
+    const D0 = (typeof DATA === 'object' && DATA) || {};
+    const spansAll = D0.clean_spans || {};
+    if (!spansAll.__error__ && Object.keys(spansAll).length){
+      const free = scenesV2Alloc(segments, ttsDur, beatIdx, exact, false);
+      const TOL = 0.05;                                      // 컷 길이 0.01초 반올림 + 1프레임 — 읽는 창은 뒤(finish)에서 다시 다듬는다
+      const inside = free.length && free.every(c => {
+        const sp = spansAll[c.video_id];
+        if (!Array.isArray(sp) || !sp.length) return true;   // 이 영상은 지운 적 없음(골라 지우기에서 안 고른 장면) — 청소 구간 제한 없음
+        const s = Number(c.start), e = s + Number(c.src_dur || c.dur || 0);
+        return sp.some(x => Number(x[0]) <= s + TOL && Number(x[1]) >= e - TOL);
+      });
+      if (inside) return free;
+    }
+    return scenesV2Alloc(segments, ttsDur, beatIdx, exact, true);
+  }
+  function scenesV2Alloc(segments, ttsDur, beatIdx, exact, useClean){
     // 같은 장면이 목록에 두 번 들어와도(같은 id·같은 영상 같은 시작) 한 번만 — 한 칸에 같은 장면 반복 금지(사장님 "같은 것 많아")
     const _seen = new Set();
     let scenes = segments.filter(g => {
@@ -690,7 +712,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const reel = Number((D.src_duration || {})[g.video_id] || 0);
       if (!(reel > 0) || String(g.seg_id || '').startsWith('film_') || (typeof TRIMS === 'object' && TRIMS && TRIMS[g.seg_id]))
         return {st: g.start, len, room: len, far: len};        // 원본 길이 모름·사람이 자른 구간 = 그 구간만
-      const cb = cleanBound(g.video_id, g.start, g.end);
+      const cb = useClean ? cleanBound(g.video_id, g.start, g.end) : {lo: 0, hi: Infinity};
       if (!cb) return {st: g.start, len, room: len, far: len};
       let far = Math.min(reel, cb.hi);                         // 원본 끝·청소 구간 끝
       scenes.forEach(o => { if (o !== g && o.video_id === g.video_id && o.start > g.start + EPS && o.start < far) far = o.start; });   // 같은 칸 다른 장면과는 절대 안 겹친다

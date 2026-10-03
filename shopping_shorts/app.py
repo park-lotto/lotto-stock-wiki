@@ -22625,6 +22625,43 @@ def _beat_by_idx(beats, i):
     return beats[i] if 0 <= i < len(beats) else None
 
 
+_RENDER_VIEW_CACHE = {}          # (job_id, updated_at, 정본 시각) → (만든 시각, 결과) — 장면 그림 요청마다 같은 계산을 되풀이하지 않게
+_RENDER_VIEW_TTL = 120.0
+_RENDER_VIEW_LOCK = threading.Lock()
+
+
+def _render_view(job, work):
+    """렌더 입력(render_inputs_for, 과금 없는 조회)과 그 컷 목록 — 장면 그림(_beatframe_file·_clean_frame_src·_final_cuts)이 같이 쓴다.
+
+    ★왜(관제 110, 2026-10-04 황선희님 "장면꾸미기 번호를 넘기면 너무 느리다"): 그림 한 장을 줄 때마다 이 계산
+      (정본 판정 + 컷 계획)이 2~3번씩 새로 돌았다 — 이미 뽑아 둔 그림 파일이 있어도 파일을 보기 전에 계산부터 했다
+      (서버 실측 c9fbcc3ac28c 1회 0.2초, 웹 프로세스가 바쁠 때는 그 몇 배).
+    ★열쇠 = 작업 수정 시각(updated_at — update_mix_job 이 매번 바꾼다) + 정본 파일 시각(증분 청소가 정본을 다시 쓴다).
+      둘 중 하나라도 바뀌면 새로 계산한다. 그래도 남을 수 있는 낡음은 120초로 끊는다. 실패는 캐시하지 않는다(호출부가 받는다)."""
+    work = Path(work)
+    try:
+        _bm = (work / "clean_base.json").stat().st_mtime_ns
+    except OSError:
+        _bm = 0
+    key = (work.name, str((job or {}).get("updated_at") or ""), _bm)
+    now = time.time()
+    with _RENDER_VIEW_LOCK:
+        hit = _RENDER_VIEW_CACHE.get(key)
+        if hit and now - hit[0] < _RENDER_VIEW_TTL and (job or {}).get("updated_at"):
+            return hit[1]
+    plan, paths, base = mix_pipeline.render_inputs_for(
+        Store(DB_PATH), job, work.name, work, [], (job or {}).get("customer_id") or 0, allow_clean=False)
+    tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
+    durs = {v: (frame_extract._probe_duration(pth) or 0.0) for v, pth in paths.items()}
+    view = {"plan": plan, "paths": paths, "base": base, "durs": durs,
+            "cuts": mix_pipeline.final_clip_pairs(plan, tts, durs) or []}
+    with _RENDER_VIEW_LOCK:
+        if len(_RENDER_VIEW_CACHE) > 64:
+            _RENDER_VIEW_CACHE.clear()
+        _RENDER_VIEW_CACHE[key] = (now, view)
+    return view
+
+
 def _final_cuts(job, work):
     """완성본에 **실제로 나가는 컷** 목록. mix_pipeline.final_clip_pairs 그대로.
 
@@ -22632,11 +22669,10 @@ def _final_cuts(job, work):
       (_clean_frame_src/_beatframe_file)이 **같은 컷 목록**을 봐야 한다. 각자 세면
       "3번 칸"이 서로 다른 그림을 가리킨다.
     실패하면 [] — 호출부는 비트 단위로 물러선다(조용히 깨지지 않게)."""
-    # ★정본(2026-09-22)이면 재배치된 사본·청소본으로 컷을 편다 — 렌더와 같은 입력(render_inputs_for)
+    # ★정본(2026-09-22)이면 재배치된 사본·청소본으로 컷을 편다 — 렌더와 같은 입력(render_inputs_for). 계산은 _render_view 한 곳.
     try:
-        plan, _srcs, _b = mix_pipeline.render_inputs_for(
-            Store(DB_PATH), job, Path(work).name, work, [], (job or {}).get("customer_id") or 0, allow_clean=False)
-    except Exception:      # noqa: BLE001
+        return list(_render_view(job, work)["cuts"])
+    except Exception:      # noqa: BLE001 — 아래 종전 계산(원본 편성)으로
         plan, _srcs = (job or {}).get("edit_plan") or {}, None
     tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
     try:
@@ -22739,11 +22775,9 @@ def _clean_frame_src(job, work, beat_idx, cut=None, at=None):
     _b = mix_pipeline.clean_base_for(job, work)
     if _b is not None:
         try:
-            _p2, _paths, _ = mix_pipeline.render_inputs_for(
-                Store(DB_PATH), job, Path(work).name, work, [], job.get("customer_id") or 0, allow_clean=False)
-            _t2 = {b["beat_idx"]: b["tts_path"] for b in (_p2.get("beats") or []) if b.get("tts_path")}
-            _d2 = {v: (frame_extract._probe_duration(pth) or 0.0) for v, pth in _paths.items()}
-            _cl = _cuts_of_beat(mix_pipeline.final_clip_pairs(_p2, _t2, _d2), beat_idx)
+            _v = _render_view(job, work)                 # 렌더 입력·컷 목록(요청마다 되풀이하지 않는다 — 관제 110)
+            _paths, _d2 = _v["paths"], _v["durs"]
+            _cl = _cuts_of_beat(_v["cuts"], beat_idx)
             if _cl:
                 _c = _cl[cut] if (cut is not None and 0 <= cut < len(_cl)) else _cl[0]
                 _sec = float(_c["src"]) + float(_c["dur"]) * 0.5
