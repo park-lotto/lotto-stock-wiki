@@ -189,3 +189,79 @@ def test_archive_track_holds_when_code_is_unmerged(repo, tmp_path):
     assert not storage.archive_track(repo, smap, "옛코드", printer=lambda *a: None)
     assert track.branch_exists(repo, "track/옛코드"), "코드가 남은 트랙은 사장님 판단 전엔 접지 않는다"
     assert (d / "90_보관" / "트랙" / "옛코드.bundle").exists(), "bundle 은 남긴다"
+
+
+# ── 관제 109: 쓸 때 자동으로 C · 자동 정리가 정말 도나 ─────────────────────
+
+@pytest.mark.skipif(os.name != "nt", reason="정션은 윈도우")
+def test_track_warm_brings_cold_track_back_on_use(repo, tmp_path, monkeypatch):
+    # 트랙.bat·finish·`track.py use` 가 부르는 track.warm 이 D 에 간 트랙을 C 로 되돌린다
+    d = _external(tmp_path)
+    smap = _map(d)
+    monkeypatch.setattr(storage, "load_map", lambda r: smap)
+    wt = _make_track_commit(repo, "다시씀")
+    (wt / "wip.py").write_text("z = 3\n", encoding="utf-8")
+    monkeypatch.setattr(track, "_last_touch_days", lambda r, n: 30.0)
+    assert storage.apply_tracks(repo, smap, 7, printer=lambda *a: None) == 1 and storage.is_junction(wt)
+    assert track.warm("다시씀", repo) is True
+    assert not storage.is_junction(wt) and (wt / "wip.py").read_text(encoding="utf-8") == "z = 3\n"
+    assert not (d / "00_트랙(정션)" / "다시씀").exists()
+    assert _git(wt, "status", "--porcelain").strip().endswith("wip.py")
+    assert track.warm("다시씀", repo) is True, "이미 C 면 그냥 통과"
+
+
+@pytest.mark.skipif(os.name != "nt", reason="정션은 윈도우")
+def test_warm_keeps_junction_when_c_is_full(repo, tmp_path, monkeypatch, capsys):
+    d = _external(tmp_path)
+    smap = _map(d)
+    smap["경보"]["refuse_gb"] = 10 ** 6                       # C 여유가 늘 모자란 상황
+    monkeypatch.setattr(storage, "load_map", lambda r: smap)
+    wt = _make_track_commit(repo, "꽉참")
+    monkeypatch.setattr(track, "_last_touch_days", lambda r, n: 30.0)
+    storage.apply_tracks(repo, smap, 7, printer=lambda *a: None)
+    assert track.warm("꽉참", repo) is False
+    assert storage.is_junction(wt) and (wt / "README.md").exists() or storage.is_junction(wt), "정션 그대로 — D 에서 열린다"
+    assert "D(외장 HDD)에서 연다" in capsys.readouterr().out, "조용히 넘기지 않는다"
+
+
+def test_auto_run_warning_states(tmp_path):
+    (tmp_path / "관제").mkdir()
+    assert "기록이 없다" in storage.auto_run_warning(tmp_path)
+    storage.record_auto_run(tmp_path, True, "")
+    assert storage.auto_run_warning(tmp_path) is None
+    assert "시간째 안 돌았다" in storage.auto_run_warning(tmp_path, now=time.time() + 31 * 3600)
+    storage.record_auto_run(tmp_path, False, "OSError: 꽉 참")
+    assert "실패했다" in storage.auto_run_warning(tmp_path)
+
+
+def test_apply_auto_records_result(repo, tmp_path, monkeypatch):
+    d = _external(tmp_path)
+    smap = _map(d)
+    (repo / "관제").mkdir(exist_ok=True)
+    monkeypatch.setattr(storage, "main_worktree", lambda: repo)
+    monkeypatch.setattr(storage, "_APPLY_LOCK", tmp_path / "apply.lock")     # 진짜 정리가 도는 중이어도 시험은 따로
+    monkeypatch.setattr(storage, "load_map", lambda r: smap)
+    for f in ("apply_tracks", "apply_stages", "apply_out", "apply_gitgc"):
+        monkeypatch.setattr(storage, f, lambda *a, **k: 0)
+    monkeypatch.setattr(storage, "apply_temp", lambda *a, **k: 0)
+    monkeypatch.setattr(storage, "status", lambda *a, **k: None)
+    assert storage.main(["apply", "--auto"]) == 0
+    assert storage.auto_run_warning(repo) is None
+    monkeypatch.setattr(storage, "apply_out", lambda *a, **k: (_ for _ in ()).throw(OSError("디스크")))
+    with pytest.raises(OSError):
+        storage.main(["apply", "--auto"])
+    assert "실패했다" in storage.auto_run_warning(repo)
+
+
+def test_temp_star_means_whole_temp(tmp_path):
+    old = time.time() - 5 * 86400
+    for rel in ("gate_child_1/a.bin", "Adobe/x.tmp", "fresh.tmp"):
+        p = tmp_path / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(b"x")
+        if rel != "fresh.tmp":
+            os.utime(p, (old, old))
+    smap = {"임시": {"root": str(tmp_path), "폴더": ["*"], "나이_일": 3}}
+    storage.apply_temp(smap, printer=lambda *a: None)
+    assert (tmp_path / "fresh.tmp").exists(), "3일 안 된 건 그대로"
+    assert not (tmp_path / "gate_child_1").exists() and not (tmp_path / "Adobe").exists(), "오래된 건 폴더째 비워진다"
