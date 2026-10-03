@@ -82,7 +82,7 @@ def main():
     ap.add_argument("--job-dir", required=True)
     ap.add_argument("--beats", type=int, default=2)
     ap.add_argument("--style", default="box", choices=["box", "color"])
-    ap.add_argument("--grow", action="store_true")
+    ap.add_argument("--grow", default="", choices=["", "hold", "pop"])
     ap.add_argument("--work", default=str(ROOT / "out" / "_word_fx_check"))
     ap.add_argument("--selftest", action="store_true", help="강조를 끈 스냅샷을 '켬' 자리에 넣는다 — 검사가 실패해야 정상")
     args = ap.parse_args()
@@ -93,7 +93,7 @@ def main():
     timeline = build_timeline(job_dir, work, args.beats)
     total = timeline[-1]["t0"] + timeline[-1]["dur"]
     base = {"mode": "story", "presetId": "plain", "plainCaption": 2}
-    on = dict(base) if args.selftest else {**base, "wordFx": {"style": args.style, "color": "#FF2D6F", "grow": bool(args.grow)}}
+    on = dict(base) if args.selftest else {**base, "wordFx": {"style": args.style, "color": "#FF2D6F", "grow": args.grow}}
     scenes = scene_style.context_for(timeline, None, on)["scenes"]
     with_words = [s for s in scenes if s.get("words")]
     print(f"장면 {len(scenes)} · 단어 시각 붙은 장면 {len(with_words)} · 길이 {total:.2f}초")

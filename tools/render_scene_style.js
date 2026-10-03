@@ -39,7 +39,9 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
           await page.evaluate(i=>window.sceneStyle.show(i),index);
           // 단어 상태를 먼저 묻는다 — 등장이 끝났고 단어도 안 바뀌었으면 앞 그림을 그대로 쓴다.
           const word=words!==null?await page.evaluate(t=>window.sceneStyle.wordFxAt(t),f/30*1000):null;
-          if(words!==null&&word!==lastWord){(wordSpans=wordSpans||[]).push({frame:f,word});}
+          // word = '단어 번호:배율'. 캡컷 구간은 단어가 바뀔 때만 끊는다('툭 커짐'은 같은 단어 안에서 배율만 바뀐다).
+          const wordNo=word===null?null:Number(String(word).split(':')[0]);
+          if(words!==null&&(!wordSpans||wordNo!==wordSpans[wordSpans.length-1].word)){(wordSpans=wordSpans||[]).push({frame:f,word:wordNo});}
           if(words!==null&&!moving&&f>settle&&word===lastWord&&lastShot>=0){
             fs.copyFileSync(path.join(request.output,frameFile(lastShot)),path.join(request.output,frameFile(f)));
             continue;

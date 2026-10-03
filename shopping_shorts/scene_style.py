@@ -156,7 +156,7 @@ def validate_snapshot(value):
         # 단어 강조(관제 102) — precision20-ui.js WORD_FX_STYLES 와 짝. color 빈칸 = 템플릿 포인트 색(자동).
         if (not isinstance(word_fx, dict) or set(word_fx) - {"style", "color", "grow"}
                 or word_fx.get("style", "") not in ("", "box", "color")
-                or not isinstance(word_fx.get("grow", False), bool)
+                or word_fx.get("grow", "") not in ("", "hold", "pop", True, False)      # 옛 값(참/거짓)도 받는다 — 참 = hold
                 or not re.fullmatch(r"(#[0-9a-fA-F]{6})?", str(word_fx.get("color", "")))):
             raise ValueError("단어 강조 값이 올바르지 않습니다")
     if "hookBandRise" in value and not isinstance(value["hookBandRise"], bool):
