@@ -507,7 +507,23 @@ def _clean_dead_stages(repo, keep=None):
     if removed:
         run(["git", "worktree", "prune"], repo)
         print(f"🧹 끊긴 병합 임시 폴더 {len(removed)}개 정리: {', '.join(removed)}")
+    gone = _clean_dead_gate_temp()
+    if gone:
+        print(f"🧹 죽은 게이트 시험 임시 폴더 {len(gone)}개 정리(Temp\\gate_child_*)")
     return removed
+
+
+def _clean_dead_gate_temp(tmp_root=None):
+    """게이트가 중간에 죽어 못 치운 Temp\\gate_child_<pid>* — 그 pid 가 살아 있지 않을 때만 지운다(관제 107).
+    정상 종료는 merge_gate._run 이 스스로 치운다. 이건 강제 종료·정전 때 남은 것."""
+    import tempfile
+    root = Path(tmp_root or tempfile.gettempdir())
+    gone = []
+    for x in root.glob(merge_gate.GATE_TEMP_PREFIX + "*"):
+        m = re.match(re.escape(merge_gate.GATE_TEMP_PREFIX) + r"(\d+)", x.name)
+        if m and int(m.group(1)) != os.getpid() and not _pid_alive(int(m.group(1))):
+            gone += merge_gate.clean_gate_temp(int(m.group(1)), tmp_root=root)
+    return gone
 
 
 def tracks_dir(repo=BASE):
