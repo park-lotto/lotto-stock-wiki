@@ -168,7 +168,8 @@ def test_button_route_needs_confirm_and_keeps_cuts_unsaved(tmp_path, monkeypatch
                                        "confirm_clean": True, "confirm_secs": d["seconds"]})
     code, d2 = _status(r)
     assert code == 200 and job["clean_cuts"] == ["0|s0|1.00"]
-    assert store.q == [("clean", {"job_id": "jobx", "confirm_clean": True, "confirm_secs": d["seconds"]})]
+    assert store.q == [("clean", {"job_id": "jobx", "confirm_clean": True, "confirm_secs": d["seconds"],
+                                 "pick": ["0|s0|1.00"]})]      # 이번에 고른 컷도 워커까지 간다(덧지우기 판정, 2026-10-03)
 
 
 # ── 화면(node): 409 → 확인창 → 표식 실어 재요청 ───────────────────────────────────
