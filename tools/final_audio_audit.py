@@ -66,23 +66,11 @@ OFFSET_T = 0.04           # 일정 지연 보고 기준(초) — 2026-10-02 사�
 OUT = Path(os.getenv("AUDIO_OUT") or "/tmp/audio_audit")
 FINAL_DIR = os.getenv("AUDIO_FINAL_DIR") or ""   # 관문: 영상 비교가 이미 구운 임시 완성본(<dir>/<job>.mp4)을 잰다(렌더 2번 금지)
 
-if os.getenv("PATCH_DIR"):          # 관문: 병합본 모듈을 먼저 얹는다(editor_vs_final_video 와 같은 목록·순서)
-    import importlib.util as _ilu
+if os.getenv("PATCH_DIR"):          # 관문: 병합본 모듈을 먼저 얹는다(목록·순서·경로 되돌리기 = gate_modules, 관제 085)
     sys.path.insert(0, ".")
-    import shopping_shorts as _ss
-    for _n in ("config", "voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):   # config 맨 앞(관제 020)
-        _f = Path(os.getenv("PATCH_DIR")) / ("%s.py" % _n)
-        if _f.exists():
-            _sp = _ilu.spec_from_file_location("shopping_shorts." + _n, str(_f))
-            _m = _ilu.module_from_spec(_sp); sys.modules["shopping_shorts." + _n] = _m
-            _sp.loader.exec_module(_m); setattr(_ss, _n, _m)
-            if _n == "config":                     # config 를 얹으면 DB_PATH 등 경로 상수가 /tmp 를 가리킨다 — 저장소 값으로(editor_vs_final_video 와 같은 되돌리기, 2026-10-01)
-                _rs = importlib.util.spec_from_file_location("_repo_config", str(Path("shopping_shorts/config.py").resolve()))
-                _rc = importlib.util.module_from_spec(_rs); _rs.loader.exec_module(_rc)
-                for _k in dir(_m):
-                    _v = getattr(_m, _k)
-                    if isinstance(_v, Path) and str(_v.resolve()).startswith(str(Path(os.getenv("PATCH_DIR")).resolve())) and hasattr(_rc, _k):
-                        setattr(_m, _k, getattr(_rc, _k))
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import gate_modules
+    gate_modules.load_patch_modules()
 
 
 # ── 소리 읽기(임시 파일 없음 — 파이프) ───────────────────────────────────────

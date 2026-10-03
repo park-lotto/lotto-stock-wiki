@@ -1319,6 +1319,7 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
     #   대본 줄↔컷을 전문가에게 다시 맡긴다. 코드 매칭(스토리 짝 컷·훅·뒷컷 규칙)은 전문가가 실패·비운 줄의 대비다.
     from shopping_shorts import ai_match as _am
     beat_sources = _am.apply(lines, beat_sources, seg_index, backbone_vid, note=note, product=groups_out.get("product") or "")
+    _am.ensure_cover(beat_sources, lines, seg_index, backbone_vid, note=note)   # ★줄마다 대사를 채울 장면 보장(관제 084)
     given = "\n".join(L["text"] for L in lines)
     # 씨앗을 뼈대로 썼으면 이름도 그렇게 말한다 — 유형을 고르느라 집은 스파인 이름("히트작 발명품형…")이
     #   뜨면 그 스파인 틀로 만든 줄 안다(2026-09-21 사장님 화면 확인).

@@ -1113,16 +1113,23 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
             if allowed and not set(bs[i].get("segs") or []) <= set(allowed):
                 # ★같은 묶음의 줄 3개가 전부 allowed[0] 하나를 받아 **같은 컷이 세 번** 나왔다(2026-10-01 사장님 화면, job 4a1d44721e8a
                 #   고조1 세 줄 = 8e1-38 배수구 0.8초). 아직 아무 줄도 안 쓴 묶음 컷을 먼저, 없을 때만 첫 컷.
-                for c in (bs[i].get("segs") or []):
+                mine = list(bs[i].get("segs") or [])
+                for c in mine:
                     _taken.discard(c)
                 keep = [c for c in (code_bs[i].get("segs") or []) if c in allowed and c not in _taken]
                 if not keep:
-                    keep = [c for c in allowed if c not in _taken][:1] or allowed[:1]
+                    keep = [c for c in allowed if c not in _taken][:1]
+                if not keep:
+                    # ★근거 컷이 다른 줄에 다 쓰였으면 첫 컷을 **다시 쓰지 않는다** — 매칭 전문가가 고른 컷을 그대로 둔다
+                    #   (2026-10-03 실측: 반영 후 중복 3건 전부 고조2 두 줄에 같은 컷 = 여기 allowed[:1] 대체값. 사장님 "같은 카드가 자주 쓰인다")
+                    _taken.update(mine)
+                    continue
                 bs[i] = {"role": bs[i].get("role"), "seg": keep[0], "segs": keep}
                 _taken.update(keep)
                 _locked += 1
         n["locked_lines"] = _locked
         n["no_cut_lines"] = _share_cuts(lines, bs, seg_index)     # 끝내 빈 줄 = 재료가 대본보다 짧다
+        _am.ensure_cover(bs, lines, seg_index, backbone_vid, note=n)   # ★줄마다 대사를 채울 장면 보장(관제 084) — 배정의 마지막
         meta = {"product": product, "spine": {"id": (sp or {}).get("id"), "name": name},
                 "groups": groups_out, "report": report, "note": n}
         d = ba.to_draft("\n".join(L["text"] for L in lines), bs, meta)
@@ -1134,7 +1141,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         # ★작가 메모를 안에 남긴다(2026-09-26) — to_draft는 meta.note를 버려서 훅 판정·고조 재작성이 작동했는지
         #   감사(tools/story_hook_audit.py)가 볼 수 없었다("판정 작동: 없음"으로 보임).
         d["writer_note"] = {k: n.get(k) for k in ("hook_fix", "hook_retry", "escalation_retry", "matcher",
-                                                  "no_cut_lines", "dropped_escalations", "diff_retry", "diff_left",
+                                                  "no_cut_lines", "cover_added", "cover_short", "dropped_escalations", "diff_retry", "diff_left",
                                                   "locked_lines", "twist_n", "n_new") if n.get(k)}
         d["feats_meta"] = n.get("feats") or []    # 점검용: 특징별 새것 여부·영상 수·근거 컷(tools/script_diff 대조)
         d["seed_points"] = note.get("seed_points") or []   # 점검용: 씨앗이 이미 말한 셀링포인트(차별점 잣대)

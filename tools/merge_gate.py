@@ -18,6 +18,7 @@
 """
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -70,6 +71,9 @@ def _run(cmd, cwd):
     #   한쪽은 제대로, 한쪽은 '?'로 저장돼 **같은 실패가 '새로 깨짐'으로 오판**됐다(기준선 캐시 vs 병합 후 비교).
     import os as _os
     env = {**_os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
+    # ★자원 관문이 정한 병렬 수(GATE_XDIST_N)는 **이 프로세스의 pytest 인자**로만 쓴다 — 자식(시험)에 새면 그 값을 검사하는
+    #   시험이 게이트 안에서만 깨지고, 칸 밖 재확인에선 통과해 '우연한 실패'로 덮였다(2026-10-03 092 병합 실측 4건).
+    env.pop("GATE_XDIST_N", None)
     # ★게이트가 띄운 pytest 는 **개별 락**을 쓴다(2026-10-02, 카드 075): tools/test_video_gate.py 의 finish 시험이
     #   게이트가 이미 쥔 전역 finish 락을 다시 기다리면 영원히 멈춘다(교착). 락 경로는 track._finish_lock_path 가 읽는다.
     import tempfile as _tf
@@ -101,7 +105,9 @@ def _xdist_args():
     # 4개로 묶어 나머지 코어는 다른 작업에 남긴다.
     # 2026-10-02 사장님 "병렬도 다 해도 된다" → 실측(같은 코드·같은 실패 15건): -n 4 727초 · -n 8 376초 · -n auto(16) 358초.
     #   16개는 8개보다 18초 빠를 뿐이라 코어 절반을 남기는 8개로(카드 081).
-    return ["-n", "8"]
+    # ★시험 프로세스 수는 finish 의 자원 관문(track._gate_slot)이 남은 메모리·전체 상한으로 정해 넘긴다(2026-10-03 카드 092).
+    n = os.environ.get("GATE_XDIST_N", "").strip()
+    return ["-n", n if n.isdigit() and int(n) >= 1 else "8"]
 
 
 def _tools_test_paths(cwd):
@@ -112,14 +118,15 @@ def _tools_test_paths(cwd):
     return [p.relative_to(root).as_posix() for p in found]
 
 
-def snapshot(cwd=BASE, run=_run):
-    """지금 이 워킹트리 상태를 찍는다 (문법·import·pytest — shopping_shorts/tests + tools 시험)."""
+def snapshot(cwd=BASE, run=_run, paths=None):
+    """지금 이 워킹트리 상태를 찍는다 (문법·import·pytest — shopping_shorts/tests + tools 시험).
+    paths: 그 시험 파일들만(재시도 때 끼어든 코드와 관련된 것만 — 카드 092)."""
     rc_c, out_c = run([sys.executable, "-m", "compileall", TARGET, "-q"], cwd)
     rc_i, out_i = run([sys.executable, "-c", f"import {TARGET}.app"], cwd)
     # ★--continue-on-collection-errors: tools 쪽 시험 파일 하나가 수집에서 죽어도 나머지는 돈다(전체 rc=2 로 게이트 무력화 금지).
     #   -rfE: 수집 오류(ERROR)도 실패 목록에 들어와 '새로 깨짐' 비교를 받는다.
     rc_p, out_p = run(
-        [sys.executable, "-m", "pytest", f"{TARGET}/tests", *_tools_test_paths(cwd),
+        [sys.executable, "-m", "pytest", *(list(paths) if paths else [f"{TARGET}/tests", *_tools_test_paths(cwd)]),
          "-q", "--tb=no", "-rfE", "--continue-on-collection-errors", "-p", "no:cacheprovider", *_xdist_args()],
         cwd,
     )

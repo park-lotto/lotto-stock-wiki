@@ -43,6 +43,8 @@ import time
 import traceback
 import types
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))   # 서버 _tool/ 에서도 같은 폴더의 gate_modules 를 읽는다
+import gate_modules  # noqa: E402  — 얹는 모듈 목록·방법의 정본(관제 085)
 
 sys.path.insert(0, ".")
 
@@ -55,33 +57,12 @@ SPEED_TOL = 0.01
 MIN_FREE_GB = 20
 SUMMARY_RE = re.compile(r"^== 컷 (\d+) · 캡컷 불일치 (\d+) · 내보내기 불일치 (\d+)(?: · 청소 미생성 (\d+) job)?\s*$")
 # PATCH_DIR 에서 얹는 모듈(순서 = import 의존 순서). 관문(video_gate.PATCH_RELS)이 이 목록을 올려야 한다 — 테스트가 대조한다.
-PATCH_MODULES = ("config",            # ★상수 정본 먼저(2026-10-01 관제 020: video_assemble 이 config.MAX_SLOWMO 를 import 때 읽는다)
-                 "voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "frame_match", "screen_clips", "video_assemble", "clean_base", "mix_pipeline",
-                 "export_bundle", "capcut_draft")
+PATCH_MODULES = gate_modules.PATCH_MODULES   # 정본은 tools/gate_modules.py(관제 085) — 여기 사본을 두지 않는다
 
 
 def load_patches():
     """PATCH_DIR 의 병합본 모듈을 먼저 얹는다(app 을 import 하기 전에). app.py 는 라우트 원문만 거기서 읽는다(route_fn)."""
-    pd = os.getenv("PATCH_DIR")
-    if not pd:
-        return None
-    import shopping_shorts
-    for n in PATCH_MODULES:
-        f = Path(pd) / ("%s.py" % n)
-        if f.exists():
-            sp = importlib.util.spec_from_file_location("shopping_shorts." + n, str(f))
-            m = importlib.util.module_from_spec(sp)
-            sys.modules["shopping_shorts." + n] = m
-            sp.loader.exec_module(m)
-            if n == "config":                         # editor_vs_final_video 와 같은 되돌리기(경로 상수는 저장소 값) — 2026-10-01
-                _rs = importlib.util.spec_from_file_location("_repo_config", str(Path("shopping_shorts/config.py").resolve()))
-                _rc = importlib.util.module_from_spec(_rs); _rs.loader.exec_module(_rc)
-                for _k in dir(m):
-                    _v = getattr(m, _k)
-                    if isinstance(_v, Path) and str(_v.resolve()).startswith(str(Path(pd).resolve())) and hasattr(_rc, _k):
-                        setattr(m, _k, getattr(_rc, _k))
-            setattr(shopping_shorts, n, m)
-    return Path(pd)
+    return gate_modules.load_patch_modules()   # 목록·순서·경로 되돌리기 = gate_modules(관제 085)
 
 
 # ───────────────────────── 읽기 전용 장치 ─────────────────────────

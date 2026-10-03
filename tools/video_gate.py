@@ -20,6 +20,7 @@
   대신 이 병합이 도구를 바꾸면 finish 출력에 큰 경고를 남긴다(관문을 약하게 고쳤는지 사람이 볼 수 있게).
 ★우회: 환경변수 VIDEO_GATE_SKIP="<사유>" — 사장님 지시가 있을 때만. 쓰면 finish 출력에 큰 경고가 남는다.
 """
+import gate_modules  # noqa: E402  — 제작 라인 모듈 목록 정본(관제 085)
 import ast
 import io
 import json
@@ -33,37 +34,12 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 CONFIG_REL = "tools/gate_video.json"
-TOOL_RELS = ("tools/editor_vs_final_video.py", "tools/evf_run.py", "tools/capcut_export_audit.py", "tools/final_audio_audit.py",
-             "tools/clean_left_audit.py")
+TOOL_RELS = gate_modules.TOOL_RELS   # 정본은 tools/gate_modules.py(관제 085)
 AUDIO_TOOL = "final_audio_audit.py"     # ⑥ 소리 대조(편성표 vs 완성본 소리) — 영상 비교가 구운 임시 완성본을 그대로 잰다
 CL_TOOL = "clean_left_audit.py"         # ⑦ 자막 남음(청소본이 있어야 할 칸인데 원본 재료) — 영상 비교는 원본을 틀어 장면이 같게 나와 못 본다
 CC_TOOL = "capcut_export_audit.py"      # ⑤ 캡컷·내보내기 대조(완성본 컷 계획 vs 캡컷 초안 vs ZIP 조각) — 영상 비교 뒤 같은 작업에
-PATCH_RELS = {                       # 서버 PATCH_DIR 안의 자리 ← 저장소 경로
-    # ★도구(editor_vs_final_video.py)가 PATCH_DIR 에서 얹는 모듈 목록과 **짝**이다 — 한쪽에만 있으면 도구가 import 에서
-    #   죽어 관문이 실패한다(2026-09-27 실사고: frame_match.py 를 새로 만들고 여기 안 넣어 첫 finish 가 막혔다).
-    #   test_video_gate::test_patch_rels_cover_tool_loader 가 두 목록을 대조한다.
-    # 음성 라인(2026-10-01 관제 049) — mix_pipeline 이 이들의 새 함수를 부른다. 안 올리면 도구 4개가 import 에서 죽는다.
-    "config.py": "shopping_shorts/config.py",                 # ★상수 정본(2026-10-01 관제 020: MAX_SLOWMO) — 다른 모듈이 import 때 읽으므로 가장 먼저
-    "voice_presets.py": "shopping_shorts/voice_presets.py",
-    "typecast_tts.py": "shopping_shorts/typecast_tts.py",
-    "audio_post.py": "shopping_shorts/audio_post.py",
-    "tts.py": "shopping_shorts/tts.py",
-    "tts_joined.py": "shopping_shorts/tts_joined.py",
-    "frame_match.py": "shopping_shorts/frame_match.py",
-    "seg_snap.py": "shopping_shorts/seg_snap.py",          # 조각 경계 붙이기(2026-09-27) — app 입구가 부른다
-    "screen_clips.py": "shopping_shorts/screen_clips.py",
-    "video_assemble.py": "shopping_shorts/video_assemble.py",
-    "clean_base.py": "shopping_shorts/clean_base.py",
-    "mix_pipeline.py": "shopping_shorts/mix_pipeline.py",
-    "app.py": "shopping_shorts/app.py",
-    # screen_clips 는 자기 파일 옆의 runner.js·static/scene_play.js 를 부른다(_HERE 기준) — 같이 올려야
-    # 패치된 screen_clips 가 '러너 없음'으로 죽지 않고, 러너·화면 코드 변경도 실제로 재진다.
-    "screen_clips_runner.js": "shopping_shorts/screen_clips_runner.js",
-    "static/scene_play.js": "shopping_shorts/static/scene_play.js",
-    # 캡컷·내보내기 대조 도구(capcut_export_audit.PATCH_MODULES)가 얹는 모듈 — test_capcut_export_audit 가 대조한다.
-    "export_bundle.py": "shopping_shorts/export_bundle.py",
-    "capcut_draft.py": "shopping_shorts/capcut_draft.py",
-}
+PATCH_RELS = gate_modules.PATCH_RELS   # 서버 PATCH_DIR 안의 자리 ← 저장소 경로. 정본은 tools/gate_modules.py(관제 085) —
+#   새 제작 라인 모듈은 거기 한 곳에만 적는다(전엔 6벌이 서로 어긋나 있었다: seg_snap·clean_left_audit 누락 등).
 REMOTE_REPO = "/home/ubuntu/lotto-stock-wiki"
 HOST = "ubuntu@shoppingshorts.duckdns.org"          # IP는 바뀐다 — 도메인으로 간다(tools/mirror_live_job.py 와 같다)
 
@@ -211,7 +187,7 @@ def needs_video_gate(changed_files, cfg, app_decision=None):
     """변경 파일 목록 → (실행?, 사유 목록, 비교가 못 재는 파일 목록).
     app_decision: app.py 가 바뀌었을 때 부를 () -> (실행?, 사유). None 이면 app.py 변경은 '못 정함 → 실행'."""
     changed = [c.replace("\\", "/") for c in changed_files]
-    watch = set(cfg.get("watch_files", []))
+    watch = set(cfg.get("watch_files") or gate_modules.WATCH_FILES)   # 기본 = 정본 목록(관제 085)
     hits = [c for c in changed if c in watch]
     reasons = ["제작 라인 파일 변경: %s" % c for c in hits]
     app_rel = cfg.get("app_file", "shopping_shorts/app.py")
