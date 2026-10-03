@@ -39,6 +39,9 @@ var document = {{
   querySelectorAll: function (sel) {{ return sel === "video" && {'true' if video_rect else 'false'} ? [vid] : []; }},
   getElementById: function (id) {{ return els[id] || null; }}
 }};
+// 자리 판단만 잰다 — 표시 여부(_floatWanted)는 주인 함수 몫이라 '띄운다'로 고정.
+var location = {{ host: "www.instagram.com", pathname: "/reel/x/" }};
+function _floatWanted() {{ return true; }}
 {_dock_src()}
 _dockBtns();
 var out = {{}};
