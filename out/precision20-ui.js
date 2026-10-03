@@ -906,12 +906,14 @@
   function wordFxOn(){return !!WORD_FX_STYLES[wordFx.style]}
   function wordFxColor(auto){
     if(!auto&&/^#[0-9a-f]{6}$/i.test(wordFx.color||''))return wordFx.color;
-    return (fixedColorsFor(rows[current].id,frameFor(rows[current],sceneIndex)).title2||'#00F9ED').slice(0,7);   // 자동 = 템플릿 포인트 색(자막박스 모양과 같은 값)
+    // 자동 = 템플릿 포인트 색(자막박스 모양과 같은 값). 포인트 색이 흰·검정·회색이면(원본그대로: 흰색 — 실측, 흰 글자 뒤 흰 박스라 안 보였다) 노랑으로.
+    const accent=(fixedColorsFor(rows[current].id,frameFor(rows[current],sceneIndex)).title2||'#00F9ED').slice(0,7),ch=[1,3,5].map(i=>parseInt(accent.slice(i,i+2),16));
+    return /^#[0-9a-f]{6}$/i.test(accent)&&Math.max(...ch)-Math.min(...ch)>60?accent:'#FFE600';
   }
   function wordFxTimes(tokens){
     const scene=sceneContext?.scenes?.[sceneIndex];if(!scene)return null;
     const dur=Math.max(.01,scene.end-scene.start);
-    if(Array.isArray(scene.words)&&scene.words.length===tokens.length)return scene.words.map(t=>Math.max(0,Math.min(dur,t-scene.start)));
+    if(Array.isArray(scene.words)&&scene.words.length===tokens.length&&scene.words.every(Number.isFinite))return scene.words.map(t=>Math.max(0,Math.min(dur,t-scene.start)));   // 숫자가 아니면(모양이 다른 값) 추정으로 — 첫 단어에 멈춰 서지 않게
     const sizes=tokens.map(t=>Math.max(1,t.replace(/[^0-9A-Za-z가-힣]/g,'').length)),total=sizes.reduce((a,b)=>a+b,0);let acc=0;
     return sizes.map(size=>{const at=dur*acc/total;acc+=size;return at});
   }
