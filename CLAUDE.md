@@ -440,6 +440,7 @@ py tools/track.py park-idle         # 7일 넘게 안 쓴 트랙 폴더를 전�
 □ 0. 관제 카드가 있나? py tools/control.py list — 없으면 new 로 등록(제보자·판단 주인·됐다의 기준을 적는다)
 □ 1. 트랙 폴더 확인: .tracks/<트랙명> 이 있나?
       없으면 → py tools/track.py start <트랙명> --card <번호>  (사용자 확인 후)
+      있으면 → py tools/track.py use <트랙명>   ★3일+ 안 쓴 트랙은 D(외장)로 가 있다 — use 가 C 로 되돌린다(관제 109)
 □ 2. 편집은 전부 .tracks/<트랙명>/... 절대경로로.
       ★main 폴더의 코드 파일은 단 하나도 건드리지 마라. 그게 흡수의 재료다.
 □ 3. git은 전부 -C 로: git -C .tracks/<트랙명> add -A / commit / status
