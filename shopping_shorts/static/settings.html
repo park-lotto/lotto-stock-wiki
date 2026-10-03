@@ -352,8 +352,20 @@
       </p>
       <div id="vertexState" style="margin:0 0 10px;font-size:14px"></div>
       <div id="vertexForm">
+        <!-- ★자동 설정(2026-10-03 관제 096) — 클라우드 셸에 한 줄 붙여넣으면 API·서비스계정·역할·키차단풀기·키를
+             static/landing/vertex_setup.sh 가 대신한다. 명령 글자는 api_manual.html 과 같아야 한다(test_vertex_setup_script). -->
+        <div id="vertexAuto" style="margin:0 0 10px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.18);font-size:13px;line-height:1.8">
+          <b>가장 쉬운 방법 — 자동 설정(3분)</b><br/>
+          ① 구글 클라우드 <a href="https://console.cloud.google.com/freetrial" target="_blank" rel="noopener">무료 체험 가입</a>(카드 등록 · 이미 했으면 건너뛰기)<br/>
+          ② <a class="btn" id="vertexShellBtn" href="https://shell.cloud.google.com/?show=ide%2Cterminal" target="_blank" rel="noopener" style="padding:4px 10px;font-size:12px">클라우드 셸 열기 →</a>
+             아래 검은 창이 뜰 때까지 기다리기<br/>
+          ③ <button class="btn" type="button" id="vertexCmdBtn" onclick="copyText(el('vertexCmd').textContent, this)" style="padding:4px 10px;font-size:12px">명령 복사</button>
+             → 검은 창에 붙여넣고(Ctrl+V) <b>엔터</b> · 「승인」 창이 뜨면 누르기<br/>
+          <code id="vertexCmd" style="display:block;margin:4px 0;font-size:11px;opacity:.75;word-break:break-all">curl -fsSL https://shoppingshorts.duckdns.org/landing/vertex_setup.sh | bash</code>
+          ④ 마지막에 나온 <b>{ 부터 } 까지</b> 한 줄을 복사해 아래 칸에 붙여넣고 「확인하고 연결」
+        </div>
         <textarea id="vertexJson" rows="5" spellcheck="false"
-          placeholder='서비스계정 키 파일(.json)을 메모장으로 열어 전체를 붙여넣으세요 — {"type": "service_account", ...}'
+          placeholder='자동 설정 마지막에 나온 { … } 한 줄(또는 서비스계정 키 파일 .json 전체)을 붙여넣으세요 — {"type":"service_account", ...}'
           style="width:100%;box-sizing:border-box;font-family:Consolas,monospace;font-size:12px;border-radius:10px;padding:10px;background:rgba(0,0,0,.25);color:inherit;border:1px solid var(--line)"></textarea>
         <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap">
           <button class="btn btn-mint" id="vertexBtn" onclick="vertexRegister()">확인하고 연결</button>
@@ -963,8 +975,10 @@ function renderPayCard(d){
 }
 
 function copyAcct(){
-  var t = (el("payAcctNo") || {}).textContent || "";
-  var btn = event && event.target;
+  copyText((el("payAcctNo") || {}).textContent || "", event && event.target);
+}
+
+function copyText(t, btn){
   function done(){
     if (!btn) return;
     var old = btn.textContent;

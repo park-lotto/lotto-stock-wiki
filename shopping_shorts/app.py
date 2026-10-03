@@ -10671,7 +10671,21 @@ def api_thumb_pin(body: dict):
         _cut = None if body.get("cut") is None else int(body.get("cut"))
     except (TypeError, ValueError):
         _cut = None
-    src = _beatframe_file(job, job_id, i, cut=_cut)   # ★미리보기와 같은 함수 = 같은 그림(0순위-B)
+    # ★새 편집기는 페이지 번호(scene_index)를 보낸다 — 화면에 보이던 **그 페이지 시각**의 그림을 보낸다(관제 101).
+    _at = None
+    if body.get("scene_index") is not None and _cut is None:
+        try:
+            from shopping_shorts import scene_style as _ss_pg
+            _plan_pg = job.get("edit_plan") or {}
+            _tts_pg = {b["beat_idx"]: b["tts_path"] for b in (_plan_pg.get("beats") or []) if b.get("tts_path")}
+            _scs = _ss_pg.context_for(video_assemble._beat_timeline(_plan_pg, _tts_pg), job.get("headcopy") or {},
+                                      (job.get("deco") or {}).get("scene_style"), job_id)["scenes"]
+            _k = int(body.get("scene_index"))
+            if 0 <= _k < len(_scs) and int(_scs[_k]["beat_idx"]) == i:
+                _at = _scene_page_time(_scs[_k])
+        except Exception as _e:      # noqa: BLE001 — 못 찾으면 종전대로 칸 그림
+            print(f"[thumb-pin] 페이지 시각 계산 실패(칸 그림 사용): {_e!r}", file=sys.stderr)
+    src = _beatframe_file(job, job_id, i, cut=_cut, at=_at)   # ★미리보기와 같은 함수 = 같은 그림(0순위-B)
     if src is None:
         return JSONResponse(status_code=404,
                             content={"ok": False, "error": "이 장면의 화면을 아직 못 떴어요"})
@@ -20997,7 +21011,6 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     snapshot = (job.get("deco") or {}).get("scene_style")
     # ★장면 사진을 지금 뒤에서 한꺼번에 뽑아 둔다. 실측(2026-09-22 라이브 저널): 편집기가 장면을
     #   넘길 때마다 beatframe을 한 장씩 ffmpeg로 뽑아 1~2.5초 간격으로 줄줄이 왔다("사진이 제일 늦다").
-    _prewarm_beatframes(job, job_id, [t["beat_idx"] for t in timeline])
     headcopy = dict(job.get("headcopy") or {})
     if headcopy_text:
         headcopy["text"] = headcopy_text[:2000]
@@ -21008,9 +21021,28 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     if copy_family:
         headcopy["copy_family"] = headcopy_gen.normalize_family(copy_family)
     context = context_for(timeline, headcopy, snapshot, job_id)
-    for scene in context["scenes"]:
-        scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{scene['beat_idx']}"
+    # ★페이지 그림 = **그 페이지 시간 한가운데**의 실제 화면(2026-10-03 관제 101, 황선희님 817308da1647).
+    #   종전엔 모든 페이지에 칸 대표 그림 한 장(beatframe/<칸>)을 줘서, 장면 앞 1초에만 지나가는 원본 자막이
+    #   편집기에 안 보였다 → 고객이 가림막을 못 넣고 완성본에서야 자막을 봤다. 시각 → 그림은 _beatframe_file(at=) 한 곳.
+    _pages = [(scene["beat_idx"], _scene_page_time(scene)) for scene in context["scenes"]]
+    _prewarm_beatframes(job, job_id, _pages)
+    for scene, (_bi, _at) in zip(context["scenes"], _pages):
+        scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}"
+        # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
+        scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}" for _t in _scene_page_points(scene)]
     return {"context": context, "snapshot": snapshot}
+
+
+def _scene_page_points(scene):
+    """한 페이지의 앞·가운데·뒤 완성본 시각 — 앞·뒤는 창 끝에서 창 길이의 1/5(최대 0.15초) 안쪽. 가운데 = _scene_page_time."""
+    a, b = float(scene["start"]), float(scene["end"])
+    e = min(0.15, max(0.0, (b - a) * 0.2))
+    return [round(a + e, 2), _scene_page_time(scene), round(b - e, 2)]
+
+
+def _scene_page_time(scene):
+    """장면꾸미기 한 페이지(자막 한 구절의 시간 창)를 대표하는 완성본 시각 — 창 한가운데. 주소·썸네일 보내기가 같이 쓴다."""
+    return round((float(scene["start"]) + float(scene["end"])) / 2.0, 2)
 
 
 # 관리자 전용 장면꾸미기 실데이터 시험판. 기존 제작소 job은 읽기만 하고
@@ -22620,9 +22652,32 @@ def _cuts_of_beat(cuts, beat_idx):
     return [c for c in (cuts or []) if c.get("beat_idx") == beat_idx]
 
 
-def _clean_frame_src(job, work, beat_idx, cut=None):
+def _cut_at(cuts, at):
+    """완성본 시각 at(초)에 화면에 나가는 컷과 그 컷 재료 안의 시각 → (컷, 재료 시각) 또는 (None, None).
+    ★장면꾸미기 페이지 그림(2026-10-03 관제 101)이 쓰는 유일한 자리 — 원본에서 뜰 때도 청소본에서 뜰 때도 이 함수다."""
+    best = None
+    for c in cuts or []:
+        try:
+            f, d = float(c["fin"]), float(c["dur"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if d <= 0:
+            continue
+        gap = 0.0 if f <= at < f + d else min(abs(at - f), abs(at - (f + d)))
+        if best is None or gap < best[0]:
+            best = (gap, c, f, d)
+    if best is None:
+        return None, None
+    _g, c, f, d = best
+    rate = float(c.get("sdur") or d) / d          # 재료를 느리게/빠르게 트는 컷은 그 비율로 옮긴다
+    return c, float(c["src"]) + min(max(at - f, 0.0), max(d - 0.04, 0.0)) * rate
+
+
+def _clean_frame_src(job, work, beat_idx, cut=None, at=None):
     """**청소된 화면을 어디서 뜰지** 정하는 유일한 자리 (2026-08-27).
 
+    at: 완성본 시각(초). 주면 그 순간 화면에 나가는 컷의 그 지점을 뜬다(장면꾸미기 페이지 그림, 2026-10-03).
+        없으면 종전대로 컷 한가운데(cut) 또는 칸의 첫 컷.
     returns (clean_sources, clean_final, final_ratio, cache_tag, clean_fresh)
     ★clean_fresh = 완성본 청소본이 **지금 편성**으로 만든 것인가
       (mix_pipeline.clean_final_matches_plan). 참이면 컷 좌표를 완성본 시각으로
@@ -22688,9 +22743,13 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
             _cl = _cuts_of_beat(mix_pipeline.final_clip_pairs(_p2, _t2, _d2), beat_idx)
             if _cl:
                 _c = _cl[cut] if (cut is not None and 0 <= cut < len(_cl)) else _cl[0]
+                _sec = float(_c["src"]) + float(_c["dur"]) * 0.5
+                if at is not None:
+                    _ca, _sa = _cut_at(_cl, float(at))
+                    if _ca is not None:
+                        _c, _sec = _ca, _sa
                 _f = _paths.get(_c["video_id"]) or cvp
                 _dur = _d2.get(_c["video_id"]) or (frame_extract._probe_duration(_f) or 0.0)
-                _sec = float(_c["src"]) + float(_c["dur"]) * 0.5
                 return {}, _f, (min(0.98, max(0.02, _sec / _dur)) if _dur > 0 else 0.5), "_cb_%s" % _b["sig"], True
         except Exception as e:      # noqa: BLE001 — 정본 좌표 실패는 아래 종전 계산으로
             print(f"[beatframe] 정본 좌표 실패(종전 계산 사용): {e!r}", file=sys.stderr)
@@ -22705,9 +22764,11 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
     except Exception:      # noqa: BLE001
         _sd = {}
     sec = mix_pipeline.final_time_of_beat(_plan, beat_idx, tts_paths=_tts, src_durs=_sd)
+    if at is not None:
+        sec = float(at)        # 청소본(완성본 1편)의 시간축 = 완성본 시간축
     # ★컷 번호가 오면 **그 컷** 한가운데다(2026-08-31). 종전엔 늘 첫 컷이라, 한 비트에
     #   컷이 여럿이면 2번째 이후 칸이 모두 같은 그림(첫 컷)으로 보였다.
-    if cut is not None:
+    if cut is not None and at is None:
         try:
             _cl = _cuts_of_beat(mix_pipeline.final_clip_pairs(_plan, _tts, _sd), beat_idx)
             if _cl:
@@ -22876,8 +22937,10 @@ def _frame_cache_key(job, work) -> str:
         return ""
 
 
-def _beatframe_file(job, job_id: str, i: int, cut=None):
+def _beatframe_file(job, job_id: str, i: int, cut=None, at=None):
     """i번 비트(cut을 주면 그 비트의 cut번째 컷)의 정지 프레임 파일. 못 만들면 None.
+    at(완성본 시각, 초)을 주면 **그 순간** 화면에 나가는 컷의 그 지점이다(장면꾸미기 페이지 그림 — 관제 101:
+    칸 대표 그림 한 장만 보여주면 장면 중간에 지나가는 원본 자막을 못 본다, 황선희님 817308da1647).
 
     ★이 판단은 **여기 한 곳에만** 있다(0순위-B). 미리보기(api_produce_mix_beatframe)와
     '썸네일로 보내기'(api_thumb_pin)가 같은 함수를 부르므로, 어느 소스(청소본/원본)에서
@@ -22892,11 +22955,19 @@ def _beatframe_file(job, job_id: str, i: int, cut=None):
     # 2단계 자막제거를 밟았으면(clean_sources 존재) 청소본에서 프레임을 뜬다. 캐시 파일명도
     # 분리(_clean)해, 자막제거 전에 캐시된 원본 프레임이 남아 미리보기에 지운 자막이 살아
     # 있는 것처럼 보이는 캐시 오염을 막는다(2026-07-21 제보).
-    clean_map, _cfin, _crat, _ctag, _cfresh = _clean_frame_src(job, work, i, cut=cut)
+    try:
+        at = None if at is None else max(0.0, float(at))
+    except (TypeError, ValueError):
+        at = None
+    clean_map, _cfin, _crat, _ctag, _cfresh = _clean_frame_src(job, work, i, cut=cut, at=at)
     # ★캐시 이름에 **그 칸이 실제로 쓰는 소스·시각**을 넣는다(2026-08-21). 종전엔 칸 번호만
     #   써서, 3단계에서 편성을 바꿔도 옛 프레임이 그대로 나왔다(조용한 어긋남).
     _spec = None
-    if cut is not None:
+    if at is not None:
+        _c, _src_t = _cut_at(_cuts_of_beat(_final_cuts(job, work), i), at)
+        if _c is not None:
+            _spec = {"video_id": _c.get("video_id"), "start": round(_src_t, 3)}
+    elif cut is not None:
         _cl = _cuts_of_beat(_final_cuts(job, work), i)
         if _cl:
             _c = _cl[cut] if 0 <= cut < len(_cl) else _cl[-1]
@@ -22905,6 +22976,8 @@ def _beatframe_file(job, job_id: str, i: int, cut=None):
     _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
     _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
     _ct = "" if cut is None else f"c{cut}_"
+    if at is not None:
+        _ct = f"t{at:.2f}_"         # 완성본 시각으로 뜬 그림 — 칸·컷 그림과 캐시를 가른다
     # ★컷 좌표가 있으면 _extract_beat_frame이 **소스에서** 뜬다(완성본 청소본은 좌표계가
     #   달라 안 쓴다 — 아래 함수 주석). 그런데 캐시 이름은 그대로 _clean이라, 옛 완성본에서
     #   뜬 **틀린 그림**이 그대로 재사용됐다. 실제로 무엇에서 떴는지를 이름에 반영한다.
@@ -22925,8 +22998,9 @@ _PREWARM_BUSY: set = set()          # 지금 뽑는 중인 job_id — 같은 job
 
 def _prewarm_beatframes(job, job_id: str, beat_idxs, workers: int = 4):
     """장면 사진(beatframe)을 뒤에서 병렬로 미리 만든다. 이미 있는 파일은 _beatframe_file이
-    그냥 돌려주므로 두 번째부터는 비용 0. 실패해도 조용히 넘어간다(요청 때 다시 뽑는다)."""
-    idxs = [int(i) for i in beat_idxs]
+    그냥 돌려주므로 두 번째부터는 비용 0. 실패해도 조용히 넘어간다(요청 때 다시 뽑는다).
+    beat_idxs 의 항목은 칸 번호 또는 (칸 번호, 완성본 시각) — 뒤의 것은 그 시각 그림을 뽑는다."""
+    idxs = [(int(x[0]), float(x[1])) if isinstance(x, (tuple, list)) else (int(x), None) for x in beat_idxs]
     if not idxs:
         return
     with _PREWARM_LOCK:
@@ -22937,7 +23011,7 @@ def _prewarm_beatframes(job, job_id: str, beat_idxs, workers: int = 4):
     def _run():
         try:
             with ThreadPoolExecutor(max_workers=workers) as ex:
-                list(ex.map(lambda i: _beatframe_file(job, job_id, i), idxs))
+                list(ex.map(lambda x: _beatframe_file(job, job_id, x[0], at=x[1]), idxs))
         except Exception:
             pass
         finally:
@@ -22948,8 +23022,8 @@ def _prewarm_beatframes(job, job_id: str, beat_idxs, workers: int = 4):
 
 
 @app.get("/api/produce/mix/beatframe/{job_id}/{i}")
-def api_produce_mix_beatframe(job_id: str, i: int, cut: int = None):
-    """i번 비트(cut=그 비트의 몇 번째 컷)의 영상 프레임 1장(캐시).
+def api_produce_mix_beatframe(job_id: str, i: int, cut: int = None, at: float = None):
+    """i번 비트(cut=그 비트의 몇 번째 컷, at=완성본 시각)의 영상 프레임 1장(캐시).
     없으면 404 → 프론트는 흰 배경 폴백.
 
     ★캐시 정책(2026-08-31): **immutable을 주면 안 된다.** 이 주소는 칸 번호로만 갈리는데
@@ -22959,7 +23033,7 @@ def api_produce_mix_beatframe(job_id: str, i: int, cut: int = None):
       '조용한 어긋남'이 브라우저 쪽에서 되살아난다). 그래서 "캐시하되 매번 재검증"으로 둔다 —
       FileResponse가 ETag·Last-Modified를 주므로 안 바뀌었으면 304, 전송량은 0이다."""
     job = Store(DB_PATH).get_mix_job(job_id)
-    out = _beatframe_file(job, job_id, i, cut=cut)
+    out = _beatframe_file(job, job_id, i, cut=cut, at=at)
     if out is None:
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(str(out), media_type="image/jpeg",

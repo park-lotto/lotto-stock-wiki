@@ -588,13 +588,9 @@ def status(repo, smap, printer=print):
 def schedule(repo, smap, printer=print):
     a = smap.get("자동", {})
     name, at = a.get("작업이름", "숏템_저장층_정리"), a.get("시각", "04:40")
-    py = shutil.which("python") or sys.executable
-    cmd = 'cmd /c "cd /d \\"%s\\" && \\"%s\\" tools\\storage.py apply --auto >> \\"%s\\" 2>&1"' % (
-        repo, py, Path(repo) / "관제" / "storage_auto.log")
-    r = subprocess.run(["schtasks", "/Create", "/F", "/SC", "DAILY", "/ST", at, "/TN", name, "/TR", cmd],
-                       capture_output=True, text=True, encoding="cp949", errors="replace")
-    printer(("✅ 작업 스케줄러 등록: %s 매일 %s" % (name, at)) if r.returncode == 0 else ("❌ 등록 실패: " + (r.stdout + r.stderr).strip()[:200]))
-    return r.returncode == 0
+    import win_schedule   # 예약 명령은 한 곳(관제 107 — 옛 \" 따옴표로 등록돼 한 번도 안 돌았다)
+    return win_schedule.register(name, ["/SC", "DAILY", "/ST", at], repo, ["tools\\storage.py", "apply", "--auto"],
+                                 Path(repo) / "관제" / "storage_auto.log", printer=printer)
 
 
 _APPLY_LOCK = Path(os.environ.get("TEMP") or os.environ.get("TMP") or ".") / "stockbrain_storage_apply.lock"

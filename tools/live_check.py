@@ -259,14 +259,9 @@ def schedule(printer=print, every_minutes=60):
     import shutil
     import subprocess
     repo = control.main_worktree()
-    py = shutil.which("python") or sys.executable
-    cmd = 'cmd /c "cd /d \\"%s\\" && \\"%s\\" tools\\live_check.py --all >> \\"%s\\" 2>&1"' % (
-        repo, py, Path(repo) / "관제" / "live_check_auto.log")
-    r = subprocess.run(["schtasks", "/Create", "/F", "/SC", "MINUTE", "/MO", str(every_minutes), "/TN", "숏템_관제_라이브실측", "/TR", cmd],
-                       capture_output=True, text=True, encoding="cp949", errors="replace")
-    printer(("✅ 작업 스케줄러 등록: 숏템_관제_라이브실측 매 %d분" % every_minutes) if r.returncode == 0
-            else ("❌ 등록 실패: " + (r.stdout + r.stderr).strip()[:200]))
-    return r.returncode == 0
+    import win_schedule   # 예약 명령은 한 곳(관제 107 — 옛 \" 따옴표로 등록돼 한 번도 안 돌았다)
+    return win_schedule.register("숏템_관제_라이브실측", ["/SC", "MINUTE", "/MO", str(every_minutes)], repo,
+                                 ["tools\\live_check.py", "--all"], Path(repo) / "관제" / "live_check_auto.log", printer=printer)
 
 
 def cards_due(cards, min_minutes=10, now=None):

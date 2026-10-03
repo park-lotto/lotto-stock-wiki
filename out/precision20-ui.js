@@ -290,6 +290,7 @@
   //   최종 렌더(video_assemble)는 scene_style이 비면 꾸미기를 건너뛴다.
   let noTemplate=false;
   let frameRule='hook_body';   // 썰훅·훅만·썰만(관제 058) — 판단 주인은 서버 scene_style.frame_kind. 여기선 버튼을 누른 순간 미리보기만 같은 규칙으로 맞춘다
+  let scenePeek=1,scenePeekAt=-1;   // 페이지 안 어느 순간을 볼지(0 앞·1 가운데·2 뒤)와 그 값이 속한 페이지 — 페이지가 바뀌면 가운데로
   let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',bodyCaptionMotion='',wordFx={style:'',color:'',grow:''},fontSet='',hookMotionSpeed=.72,hookCaptionMode='visible';
   // 단어 강조(2026-10-03 관제 102) — 말하는 단어를 따라 박스·색이 옮겨간다. 값 목록은 WORD_FX_STYLES 한 곳(서버 허용값은 scene_style.py와 짝).
   //   LEAD = 소리보다 0.05초 먼저 켠다 / GROWS = 지금 단어 크기. hold = 말하는 동안 1.08배 / pop = 0.07초에 1.14배까지 커졌다 0.17초에 1.06배로 가라앉는다
@@ -672,6 +673,11 @@
       const bar=document.createElement('div');bar.className='scene-thumb-pin';
       bar.innerHTML='<button type="button" data-thumb-pin>🖼 이 장면을 썸네일 후보로</button><button type="button" data-thumb-go hidden>썸네일 단계로 이동 ›</button><small data-thumb-msg role="status"></small>';
       nav.after(bar);
+      // 페이지 안 앞·가운데·뒤 화면 보기(관제 104) — 그림 주소는 서버(context scenes[].media_points)가 준다. 꾸미기 값은 안 바뀐다(보기만).
+      const peek=document.createElement('div');peek.className='scene-peek';peek.dataset.scenePeek='1';peek.hidden=true;
+      peek.innerHTML='<span>이 페이지 화면</span><button type="button" data-peek="0">앞</button><button type="button" data-peek="1" class="on">가운데</button><button type="button" data-peek="2">뒤</button><small>원본 자막이 잠깐만 지나가는지 확인해 보세요</small>';
+      nav.after(peek);
+      peek.addEventListener('click',event=>{const b=event.target.closest('[data-peek]');if(!b)return;scenePeek=Number(b.dataset.peek)||0;scenePeekAt=sceneIndex;renderEdit();});
       const pin=bar.querySelector('[data-thumb-pin]'),go=bar.querySelector('[data-thumb-go]'),msg=bar.querySelector('[data-thumb-msg]');
       const say=(text,ok)=>{msg.textContent=text;msg.dataset.ok=ok?'1':'0';};
       pin.addEventListener('click',async()=>{
@@ -689,7 +695,7 @@
       });
       go.addEventListener('click',()=>{window.parent?.postMessage({type:'scene-style-goto-thumb',jobId:sceneContext?.jobId},location.origin);});
       const css=document.createElement('style');
-      css.textContent='.scene-thumb-pin{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:10px}.scene-thumb-pin button{padding:9px 14px;border-radius:10px;border:1px solid #294451;background:#0f1c25;color:#dce8ec;font-weight:700;cursor:pointer}.scene-thumb-pin button:hover{border-color:#3fe0b5}.scene-thumb-pin button:disabled{opacity:.55;cursor:wait}.scene-thumb-pin [data-thumb-go]{border-color:#3fe0b5;background:#0f2a26;color:#d9fff4}.scene-thumb-pin small{flex-basis:100%;text-align:center;font-size:12px;color:#ff9b9b;min-height:16px}.scene-thumb-pin small[data-ok="1"]{color:#7ee3c4}';
+      css.textContent='.scene-peek{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;margin-top:8px;color:#9fb4bd;font-size:12px}.scene-peek[hidden]{display:none}.scene-peek button{padding:5px 12px;border-radius:8px;border:1px solid #294451;background:#0f1c25;color:#dce8ec;font-weight:700;cursor:pointer}.scene-peek button.on{border-color:#43e2b4;color:#63edc6;background:#0f2a24}.scene-peek small{flex-basis:100%;text-align:center;opacity:.75}.scene-thumb-pin{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:10px}.scene-thumb-pin button{padding:9px 14px;border-radius:10px;border:1px solid #294451;background:#0f1c25;color:#dce8ec;font-weight:700;cursor:pointer}.scene-thumb-pin button:hover{border-color:#3fe0b5}.scene-thumb-pin button:disabled{opacity:.55;cursor:wait}.scene-thumb-pin [data-thumb-go]{border-color:#3fe0b5;background:#0f2a26;color:#d9fff4}.scene-thumb-pin small{flex-basis:100%;text-align:center;font-size:12px;color:#ff9b9b;min-height:16px}.scene-thumb-pin small[data-ok="1"]{color:#7ee3c4}';
       document.head.append(css);
     }
   }
@@ -1203,7 +1209,19 @@
     // Reference screenshots are picker assets, never a live editable background.
     // Their baked-in letters/icons cannot follow resized title geometry.
     base.hidden=true;sourceClean.hidden=true;
-    const mediaSource=sceneContext?.scenes?.[sceneIndex]?.media||frame.media_source||uniformMedia;if(media.getAttribute('src')!==mediaSource)media.src=mediaSource;
+    // ★장면 그림 교체(2026-10-03 관제 104, 황선희님): ① 새 그림이 뜰 때까지 영상 칸을 숨긴다 — 종전엔 src만 바꿔서, 새 그림이
+    //   오기 전 잠깐 '앞 페이지 그림 + 새 페이지 가림막(없음)'이 겹쳐 가린 글자가 보였다("가림막이 먼저 끝난다").
+    //   ② 페이지 안 앞·가운데·뒤(scenePeek) — 한 페이지 창에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 기본은 가운데.
+    const sceneNow=sceneContext?.scenes?.[sceneIndex];
+    if(scenePeekAt!==sceneIndex){scenePeekAt=sceneIndex;scenePeek=1;}
+    const mediaSource=sceneNow?.media_points?.[scenePeek]||sceneNow?.media||frame.media_source||uniformMedia;
+    if(media.getAttribute('src')!==mediaSource){
+      media.style.visibility='hidden';
+      const shown=()=>{if(media.getAttribute('src')===mediaSource)media.style.visibility='';};
+      media.addEventListener('load',shown,{once:true});media.addEventListener('error',shown,{once:true});
+      media.src=mediaSource;
+    }
+    {const wrap=root.querySelector('[data-scene-peek]');if(wrap){wrap.hidden=!(sceneNow?.media_points?.length===3);wrap.querySelectorAll('[data-peek]').forEach(b=>b.classList.toggle('on',Number(b.dataset.peek)===scenePeek));}}
     badge.textContent=frame.design_label?frame.design_label:'원본 실측 편집';
     badge.hidden=!!frame.design_label;
     const dirty=currentDirty();

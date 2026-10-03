@@ -3,7 +3,10 @@
   ① api_manual.html#vertex: 영상이 실제로 재생(시간 흐름)·새 문구(Agent Platform·2단계 인증·개인) 있음·옛 문구 없음
   ② /landing/vertex_guide.mp4·jpg 비로그인으로 200(로그인 켠 상태에서)
   ③ settings.html#keys: 「▶ 받는 방법 영상」 → 새 탭으로 영상 주소가 열린다
-  ④ 두 페이지 콘솔 오류 0"""
+  ④ 두 페이지 콘솔 오류 0
+  ⑧ 자동 설정(관제 096): 설명서·설정의 명령 글자 = 스크립트 머리말 명령, 「명령 복사」가 클립보드에 그 글자를 넣는다,
+     클라우드 셸 버튼은 실제로 열리는 주소(show=ide,terminal — show=terminal만은 안 열림 2026-10-03), /landing/vertex_setup.sh 비로그인 200·파일과 같다,
+     옛 5단계는 「직접 하기」로 접혀 처음엔 안 보인다"""
 import sys, time, shutil, threading, pathlib, urllib.request
 ROOT = pathlib.Path(__file__).resolve().parents[2]; sys.path.insert(0, str(ROOT))
 out = pathlib.Path(sys.argv[1]).resolve(); out.mkdir(parents=True, exist_ok=True)
@@ -24,21 +27,36 @@ threading.Thread(target=server.run, daemon=True).start(); time.sleep(1.5)
 
 # ② 로그인 켠 상태에서 비로그인 요청
 auth_was = module._AUTH_ON; module._AUTH_ON = True
-for path in ('/landing/vertex_guide.mp4', '/landing/vertex_guide.jpg', '/api_manual.html'):
+for path in ('/landing/vertex_guide.mp4', '/landing/vertex_guide.jpg', '/api_manual.html', '/landing/vertex_setup.sh'):
     try:
         r = urllib.request.urlopen(BASE + path); code = r.status; n = len(r.read())
     except urllib.error.HTTPError as e:
         code, n = e.code, 0
     need(code == 200 and n > 1000, f'② 비로그인 {path} → {code} ({n}바이트)')
+SCRIPT = ROOT / 'shopping_shorts/static/landing/vertex_setup.sh'
+served = urllib.request.urlopen(BASE + '/landing/vertex_setup.sh').read()
+need(served == SCRIPT.read_bytes(), '⑧ 서버가 주는 스크립트 = 파일 그대로(줄바꿈 포함)')
+CMD = next(l for l in SCRIPT.read_text(encoding='utf-8').splitlines() if l.startswith('#   curl ')).lstrip('# ').strip()
 module._AUTH_ON = False
 
 with sync_playwright() as p:
     b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'])
-    ctx = b.new_context(viewport={'width': 1300, 'height': 1000})
+    ctx = b.new_context(viewport={'width': 1300, 'height': 1000}, permissions=['clipboard-read', 'clipboard-write'])
     pg = ctx.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
     pg.goto(f'{BASE}/api_manual.html#vertex', wait_until='networkidle'); pg.wait_for_timeout(800)
+    # ⑧ 자동 설정 카드
+    need(pg.locator('#vertex-auto').is_visible(), '⑧ 설명서: 자동 설정 카드가 보인다')
+    need(pg.inner_text('#vertexCmd').strip() == CMD, f'⑧ 설명서 명령 = 스크립트 명령 ({CMD})')
+    need(pg.get_attribute('#vertexShellLink', 'href') == 'https://shell.cloud.google.com/?show=ide%2Cterminal', '⑧ 설명서 클라우드 셸 버튼 = 열리는 주소(편집기+터미널, 2026-10-03 show=terminal만은 안 열림)')
+    pg.evaluate("navigator.clipboard.writeText('')"); pg.click('#vertexCmdCopy'); pg.wait_for_timeout(300)
+    need(pg.evaluate('navigator.clipboard.readText()') == CMD, '⑧ 설명서 「명령 복사」 → 클립보드에 명령')
+    need(not pg.locator('#vertex-manual').evaluate('d=>d.open') and not pg.locator('#vertex-manual .card').first.is_visible(),
+         '⑧ 옛 5단계는 처음엔 접혀 있다')
+    pg.screenshot(path=str(out / 'manual_vertex_auto.png'), full_page=False)
+    pg.locator('#vertex-auto').screenshot(path=str(out / 'manual_vertex_auto_card.png'))
+    pg.locator('#vertex-manual > summary').click(); pg.wait_for_timeout(200)
     txt = pg.inner_text('body')
     for s in ('Agent Platform API', 'Agent Platform 사용자', '2단계 인증', '「개인」', '마이페이지 › 🔑 내 키 등록', '결제 계정 폐쇄', '무료 체험판 계정', '결제 연결 확인', '결제 계정 연결'):
         need(s in txt, f'① 새 문구 있음: {s}')
@@ -72,6 +90,13 @@ with sync_playwright() as p:
     vt = pg2.inner_text('#vertexCard')
     need('구글 버텍스 API' in vt and '(선택)' not in vt and '사람이 몰리는' not in vt and '안 하셔도' not in vt and '오류와 버그' in vt,
          f'⑦ 버텍스 카드 문구({vt.splitlines()[0] if vt else ""})')
+    # ⑧ 설정 자동 설정 칸
+    need(pg2.locator('#vertexAuto').is_visible(), '⑧ 설정: 자동 설정 칸이 보인다')
+    need(pg2.inner_text('#vertexCmd').strip() == CMD, '⑧ 설정 명령 = 스크립트 명령')
+    need(pg2.get_attribute('#vertexShellBtn', 'href') == 'https://shell.cloud.google.com/?show=ide%2Cterminal', '⑧ 설정 클라우드 셸 버튼 = 열리는 주소(편집기+터미널)')
+    pg2.evaluate("navigator.clipboard.writeText('')"); pg2.click('#vertexCmdBtn'); pg2.wait_for_timeout(300)
+    need(pg2.evaluate('navigator.clipboard.readText()') == CMD, '⑧ 설정 「명령 복사」 → 클립보드에 명령')
+    pg2.locator('#vertexCard').screenshot(path=str(out / 'settings_vertex_card.png'))
     need(not errs, f'④ 설정 콘솔 오류 {errs[:3]}')
     b.close()
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')

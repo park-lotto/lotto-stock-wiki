@@ -9,6 +9,11 @@
     "card": 40,
     "track": "장면폰트"
   },
+  "out/precision20-ui.js:addText": {
+    "at": "2026-10-03 22:33",
+    "card": 103,
+    "track": "단어강조"
+  },
   "out/precision20-ui.js:drawFontSets": {
     "at": "2026-09-29 16:06",
     "card": 30,
@@ -34,6 +39,11 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/scene_style.py:context_for": {
+    "at": "2026-10-03 21:53",
+    "card": 102,
+    "track": "단어강조"
+  },
   "shopping_shorts/scene_style.py:validate_snapshot": {
     "at": "2026-09-29 16:06",
     "card": 30,
@@ -43,6 +53,11 @@
     "at": "2026-09-29 23:07",
     "card": 36,
     "track": "장면폰트"
+  },
+  "shopping_shorts/static/scene_play.js:planClips": {
+    "at": "2026-10-03 23:09",
+    "card": 106,
+    "track": "구절컷리듬분리"
   },
   "shopping_shorts/static/text-look-contract.js": {
     "at": "2026-09-29 23:07",
