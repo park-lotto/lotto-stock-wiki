@@ -1129,6 +1129,27 @@
           (isModal || rr.width <= v.width * 1.6)) right = rr.right;
       el = el.parentElement;
     }
+    // ★인스타 팝업 새 구조(2026-10-03 사장님 스샷 + 라이브 실측): 영상 폭 칸이 14겹이라
+    //   위 10칸 안에 팝업 칸이 안 잡히고, 15겹째 칸(ARTICLE)은 **화면보다 넓어**(-114~2019)
+    //   오른쪽 끝을 못 쓴다. 눈에 보이는 팝업은 그 칸의 자식 둘(영상 칸 + 본문 칸)이다.
+    //   → 댓글 입력창(textarea)에서 위로 올라가며 '영상 오른쪽에 있는 칸'까지만 따라가면
+    //     본문 칸이 나온다. 그 오른쪽 끝 바깥에 세운다. 댓글창이 영상 아래면(피드) 해당 없음.
+    var host = best.parentElement, g2 = 0, ta = null;
+    while (host && g2++ < 30) {
+      ta = host.querySelector ? host.querySelector("textarea") : null;
+      if (ta) break;
+      host = host.parentElement;
+    }
+    if (ta && ta.getBoundingClientRect) {
+      var p = ta, panel = null;
+      while (p && p !== host) {
+        var pr = p.getBoundingClientRect();
+        if (pr.left < v.right - 4) break;
+        panel = pr; p = p.parentElement;
+      }
+      if (panel && panel.left <= v.right + 200 && panel.top < v.bottom && panel.bottom > v.top &&
+          panel.right > right && panel.right < window.innerWidth) right = panel.right;
+    }
     // 액션열(좋아요·댓글·공유)이 영상 **바깥 형제**인 경우(유튜브 쇼츠) — 따로 찾아 넘는다.
     var rails = document.querySelectorAll("#actions,ytd-reel-player-overlay-renderer #actions");
     for (var k = 0; k < rails.length; k++) {
