@@ -1839,6 +1839,43 @@
     markDirty(d.bind);renderEdit();
   });
   for(const type of ['pointerup','pointercancel','lostpointercapture'])preview.addEventListener(type,()=>{if(textDrag)rememberLocal({textDrags:Object.fromEntries(textDrags)});textDrag=null;});   /* 옮긴 자리를 바로 기억 */
+  // ── 글자 끝을 잡고 크기 늘리기(2026-10-03 사장님 "글자 끝에 잡고 늘릴 수 있게 썸네일 만들기처럼", 관제 103) ──
+  //   글자에 마우스를 올리면 오른쪽 아래에 손잡이가 뜬다. 끌면 글자 가운데에서 멀어진 만큼 커진다.
+  //   값은 ＋/− 버튼·글자 설정 줄과 같은 setFontScale 하나로 쓴다. 렌더·검사(qa)에서는 손잡이를 만들지 않는다(그림에 찍히면 안 된다).
+  if(!qaMode){
+    const handle=document.createElement('button');handle.type='button';handle.className='text-size-handle';handle.hidden=true;handle.title='끌어서 글자 크기 조절';handle.setAttribute('aria-label','글자 크기 조절');
+    preview.append(handle);
+    let sizeBind='',sizeDrag=null,sizeFrame=0;
+    const inkOf=bind=>{const el=layer.querySelector(`.precision-text[data-edit-bind="${bind}"]`);if(!el||el.hidden||!el.textContent.trim())return null;const range=document.createRange();range.selectNodeContents(el);const r=range.getBoundingClientRect();return r.width&&r.height?r:null;};
+    const placeHandle=()=>{
+      const r=sizeBind&&!window.sceneStyleExporting?inkOf(sizeBind):null;
+      if(!r){handle.hidden=true;return;}
+      const box=preview.getBoundingClientRect();
+      handle.hidden=false;handle.style.left=Math.max(0,Math.min(box.width-14,r.right-box.left-3))+'px';handle.style.top=Math.max(0,Math.min(box.height-14,r.bottom-box.top-3))+'px';
+    };
+    preview.addEventListener('pointermove',event=>{
+      if(sizeDrag||textDrag||captionDrag)return;
+      const hit=event.target.closest?.('.precision-text[data-edit-bind]');
+      if(hit&&hit.dataset.editBind!==sizeBind){sizeBind=hit.dataset.editBind;placeHandle();}
+    });
+    preview.addEventListener('pointerleave',()=>{if(!sizeDrag){sizeBind='';placeHandle();}});
+    handle.addEventListener('pointerdown',event=>{
+      if(event.button!==0||!sizeBind)return;
+      const r=inkOf(sizeBind);if(!r)return;
+      const cx=r.left+r.width/2,cy=r.top+r.height/2;
+      sizeDrag={pointer:event.pointerId,bind:sizeBind,cx,cy,start:Math.max(8,Math.hypot(event.clientX-cx,event.clientY-cy)),scale:textScale(sizeBind)};
+      handle.setPointerCapture(event.pointerId);event.preventDefault();event.stopPropagation();
+    });
+    handle.addEventListener('pointermove',event=>{
+      if(!sizeDrag||event.pointerId!==sizeDrag.pointer)return;
+      const d=sizeDrag,next=Math.round(d.scale*Math.hypot(event.clientX-d.cx,event.clientY-d.cy)/d.start*100)/100;
+      cancelAnimationFrame(sizeFrame);sizeFrame=requestAnimationFrame(()=>{if(Math.abs(next-textScale(d.bind))>.004)setFontScale(d.bind,next);placeHandle();});
+    });
+    for(const type of ['pointerup','pointercancel','lostpointercapture'])handle.addEventListener(type,()=>{if(!sizeDrag)return;sizeDrag=null;rememberLocal({fontScales:Object.fromEntries(fontScales)});placeHandle();});
+    // 글자를 다시 그릴 때마다(크기·문구·장면이 바뀌면) 손잡이를 새 자리에 붙인다
+    new MutationObserver(()=>{if(sizeBind&&!sizeDrag)placeHandle();}).observe(layer,{childList:true});
+    const css=document.createElement('style');css.textContent='.text-size-handle{position:absolute;z-index:60;width:14px;height:14px;padding:0;border-radius:50%;border:2px solid #fff;background:#11B98C;box-shadow:0 1px 5px rgba(0,0,0,.55);cursor:nwse-resize;touch-action:none}.text-size-handle[hidden]{display:none}';document.head.append(css);
+  }
   preview.addEventListener('pointerdown',event=>{
     if(event.button!==0||!event.target.closest('[data-edit-bind="caption"]'))return;
     const rect=preview.getBoundingClientRect(),text=layer.querySelector('.precision-text[data-edit-bind="caption"]');if(!text)return;
