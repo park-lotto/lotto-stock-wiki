@@ -4387,69 +4387,8 @@ def scene_swap_rows(plan_before, plan_after, job=None):
     return rows
 
 
-def _extend_refs_to_narration(refs, narration, by_video, used, slack=0.3, max_refs=6):
-    """★컷 이어붙이기(2026-09-17, 사장님 "컷이 모자랄 때 같은 영상 다음 컷을 이어 붙여라").
-
-    2단계가 준 컷이 대사보다 짧으면 **같은 소스의 시간순 다음 컷**을 이어 붙여 대사 길이를 채운다.
-    한 컷의 기여는 config.MAX_SHOT_SECONDS(2.2초)까지만 센다 — 렌더(planClips)가 장면 2개 이상이면
-    그만큼씩 돌려 담으므로, 6초 컷 하나를 "충분"으로 보면 화면 한 장이 3.5초 내내 멈춘다
-    (실측 자동조립 ba630a537511: 컷당 3.5s, 원본은 1.7s). 여러 컷을 붙여야 리듬이 원본에 가깝다.
-
-    왜 여기서(3단계 채우기 말고): 채우기는 '뒤에서 메우기'라 대본을 안 본다 — 어제 정렬을 고쳐도
-    26→23컷이었다(job 26698eb0a362). 유일하게 빈칸 0을 만든 건 **앞에서 컷을 길이만큼 지정**한
-    조립기(assign_cuts, 7→7컷)였다. 그 원리를 상속 경로에 그대로 둔다.
-    모자랄 때만 작동한다 — 컷이 대사보다 길면 아무것도 안 붙인다. 다음 컷이 없으면 그만둔다(폴백 없음,
-    그때는 종전처럼 _fill_beat_screen_time이 받는다).
-
-    ★짧은 컷 정책(집 세션 ffad9c56a, 사장님 2026-09-17 "1.2초 이상이면 좋겠다는 반응이 많다"):
-      MIN_GOOD_CUT_SECS(1.2) 미만은 **뒤로 밀되 막지 않는다** — 막으면 이을 게 동나 다시 채우기로 넘어간다.
-      실측(reference.db 컷 100,658개): 중앙값 1.67초 · 1.2초 미만 29.3% → 걸러도 70.7%가 남는다.
-      ⚠️짧은 컷이 '나쁜 컷'은 아니다 — 손교체 2,773건에서 버린 컷의 1.2초 미만 비율 25.2% vs 고른 컷 24.5%로
-      길이는 매칭 품질과 무관. 이 값은 조각남만 다스린다. 렌더가 독립 클립으로 안 만드는 0.8초 미만
-      (video_assemble._MIN_CLIP)만 건너뛴다 — 붙여도 화면에 안 나온다.
-    ★왜 2차 패스인가: 집 세션은 이걸 1차 루프(per_line) 안에서 했는데, 그러면 앞 줄이 훅·CTA의
-      b-roll 후보('완성' 결)를 먼저 먹어 기존 테스트 2개가 깨진다(스크래치 실측: CTA s0-6→s0-4).
-      지정 컷·b-roll이 전부 used에 든 뒤 남은 컷으로만 잇는다."""
-    from shopping_shorts import config as _cfg
-    cap = float(getattr(_cfg, "MAX_SHOT_SECONDS", 2.2) or 2.2)
-    # 건너뛸 최소 길이는 **렌더가 독립 클립으로 안 만드는** 기준(video_assemble._MIN_CLIP 0.8)을 빌린다.
-    # 채우기의 _MIN_CUT_SECONDS(1.5)는 "뒤로 미는" 기준이지 막는 기준이 아니고, 이어붙이기는
-    # 순서가 핵심이라 1초짜리 다음 컷도 붙여야 한다(팬케이크 job 컷이 0.6~1.0초 — 1.5로 막으면 하나도 못 붙인다).
-    try:
-        from shopping_shorts.video_assemble import _MIN_CLIP as _skip_below
-    except Exception:
-        _skip_below = 0.8
-    need = narr_secs(narration)
-
-    def _contrib(r):
-        try:
-            return min(cap, max(0.0, float(r.get("end") or 0) - float(r.get("start") or 0)))
-        except (TypeError, ValueError):
-            return 0.0
-
-    refs = list(refs)
-    have = sum(_contrib(r) for r in refs)
-    while have < need + slack and len(refs) < max_refs:
-        last = refs[-1]
-        vid = last.get("video_id")
-        try:
-            last_end = float(last.get("end") or 0)
-        except (TypeError, ValueError):
-            break
-        cands = [s for s in by_video.get(vid, [])          # 시간순 정렬돼 있다
-                 if s["seg_id"] not in used
-                 and float(s.get("start") or 0) >= last_end
-                 and _seg_secs(s) >= _skip_below]           # 렌더가 흡수해 화면에 안 나오는 조각은 제외
-        # 짧은 컷(<MIN_GOOD_CUT_SECS)은 뒤로 — 막지는 않는다(위 docstring). 같은 등급 안에선 가까운 순.
-        cands.sort(key=lambda s: (_seg_secs(s) < MIN_GOOD_CUT_SECS, float(s.get("start") or 0)))
-        nxt = cands[0] if cands else None
-        if nxt is None:
-            break
-        used.add(nxt["seg_id"])
-        refs.append(dict(nxt))
-        have += _contrib(nxt)
-    return refs
-
+# _extend_refs_to_narration(09-17) 은 관제 084(2026-10-02)에 ai_match.ensure_cover 로 합쳤다 — 줄마다 장면 보장 판단은 그 한 곳.
+#   옮긴 정책: 한 컷 기여 MAX_SHOT_SECONDS(2.2초)까지·1.2초 이상 컷 먼저·뒷컷 제외. 바뀐 점: 바로 다음 컷이 쓰였으면 멈추던 것 → 더 뒤/앞·같은 의미 컷.
 
 def build_inherit_plan(source_scripts, given_script, beat_sources, structure="template", video_type=None):
     """3단계 '붙어 온 장면 그대로 쓰기'(2026-09-04, 설계 §3-5·§9 — 사장님 "3단계는 상속만").
@@ -4590,10 +4529,21 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
     #   1차 루프 안에서 하면 앞 줄이 뒤 줄의 b-roll 후보(훅·CTA의 '완성' 결 컷)를 먼저 먹는다
     #   (test_훅과_CTA의_b_roll: demo가 s0-3·s0-5까지 가져가 CTA가 s0-1로 밀렸다).
     #   지정 컷·b-roll이 전부 used에 들어간 다음에 남은 컷으로만 이어 붙인다.
-    for b in beats:
-        refs = [b["primary"]] + list(b.get("alternates") or [])
-        refs = _extend_refs_to_narration(refs, b["narration"], by_video, used)
-        b["primary"], b["alternates"] = refs[0], refs[1:]
+    # ★줄마다 대사를 채울 장면 보장은 ai_match.ensure_cover 한 곳(관제 084, 0순위-B) — 2단계 백본·이야기작가와 같은 함수.
+    #   종전 _extend_refs_to_narration 은 '바로 다음 컷'이 다른 줄에 쓰였으면 멈춰, 24시간 703칸 중 130칸이 대사보다 짧았다.
+    from shopping_shorts import ai_match as _am
+    _idx = {sid: {"secs": max(0.0, float(g.get("end") or 0) - float(g.get("start") or 0)),
+                  "vid": g.get("video_id") or "", "label": (g.get("label") or "").strip(),
+                  "kind": g.get("appeal_kind") or "",
+                  "outro": bool(g.get("is_outro")) and not (g.get("hook_type") or g.get("product_benefits"))}
+            for sid, g in (seg_map or {}).items() if isinstance(g, dict)}
+    _bs = [{"segs": [r["seg_id"] for r in [b["primary"]] + list(b.get("alternates") or []) if r and r.get("seg_id")]}
+           for b in beats]
+    _am.ensure_cover(_bs, [{"text": b.get("narration") or ""} for b in beats], _idx, None)
+    for b, x in zip(beats, _bs):
+        refs = [r for r in (_ground_ref({"seg_id": sid}, seg_map) for sid in x["segs"]) if r]
+        if refs:
+            b["primary"], b["alternates"] = refs[0], refs[1:]
     beats = _fill_beat_screen_time(beats, seg_map)
     return {"structure": structure, "beats": beats, "plagiarism_flags": [],
             "detected_type": _normalize_video_type(video_type), "affiliate_target": "",
