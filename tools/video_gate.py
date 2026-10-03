@@ -928,6 +928,23 @@ def gate_decision(stage, cfg=None):
     return None, changed, run, reasons, unmeasured
 
 
+VIDEO_PASS_TTL = 6 * 3600
+
+
+def _video_pass_key(stage, g):
+    """(지문, 기억 파일) — 서버에 올리는 두 묶음(병합본·main) + 기준값의 지문. 못 만들면 (None, None)."""
+    import hashlib
+    try:
+        h = hashlib.sha256()
+        h.update(_bundle(stage, side="merged"))
+        h.update(_bundle(stage, side="main"))
+        h.update(json.dumps(g, sort_keys=True, ensure_ascii=False).encode("utf-8"))
+        fp = h.hexdigest()[:16]
+    except Exception:  # noqa: BLE001 — 지문을 못 만들면 늘 잰다
+        return None, None
+    return fp, Path(stage).resolve().parent / "_gate_cache" / ("video_pass_%s.json" % fp)
+
+
 def _run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sleep=time.sleep, remote_tmp="/tmp"):
     env = os.environ if env is None else env
     log = []
@@ -968,8 +985,28 @@ def _run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sl
             return GateResult(False, True, "\n".join(log), log)
         sh = _ssh_runner(key)
 
+    # ★같은 묶음이면 결과도 같다(2026-10-03 카드 089) — 서버에 올리는 것(병합본·main 제작 라인 파일 + 관문 도구) + 기준이 같으면
+    #   재시도·재finish 때 20분짜리 서버 비교를 다시 돌리지 않는다. 통과만 기억한다(실패는 늘 다시 잰다). 6시간 지나면 다시 잰다.
+    vfp, vpath = _video_pass_key(stage, g)
+    if vpath is not None and not (env.get("VIDEO_GATE_FRESH") or "").strip():
+        try:
+            c = json.loads(vpath.read_text(encoding="utf-8"))
+            age = time.time() - float(c.get("t", 0))
+            if age < VIDEO_PASS_TTL:
+                say("판정 근거(재사용): %s" % c.get("summary_line", ""))
+                say("✅ 영상 관문 통과 — 같은 묶음(%s)이 %d분 전에 통과했다. 서버 비교를 다시 안 돌렸다(VIDEO_GATE_FRESH=1 이면 다시)."
+                    % (vfp, int(age / 60)))
+                return GateResult(True, True, "\n".join(log), log)
+        except (OSError, ValueError):
+            pass
     ok, fails, notes, summary_line = _measure_and_judge(sh, stage, br, cfg, g, say=say, sleep=sleep, remote_tmp=remote_tmp,
                                                         with_summary=True)
+    if ok and vpath is not None:
+        try:
+            vpath.parent.mkdir(parents=True, exist_ok=True)
+            vpath.write_text(json.dumps({"t": time.time(), "summary_line": summary_line}, ensure_ascii=False), encoding="utf-8")
+        except OSError:
+            pass
     say("판정 근거: %s" % (summary_line or "(요약 줄 없음)"))
     for f_ in fails:
         say("  ✗ " + f_)
