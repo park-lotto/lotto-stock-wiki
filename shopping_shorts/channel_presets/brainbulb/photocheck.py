@@ -96,6 +96,7 @@ def rules_json_shape():
             ' "who_what": "그림에 실제로 찍힌 것 한 문장",'
             ' "matches_subtitle": true 또는 false,'
             ' "product_ok": true 또는 false,'
+            ' "identifies_subject": true 또는 false,'
             ' "single_scene": true 또는 false,'
             ' "reason": "보이는 것을 근거로 한 판정 이유"}')
 

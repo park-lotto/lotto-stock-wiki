@@ -272,6 +272,7 @@ def test_parse_review_keeps_who_what():
 def _ok_review(**kw):
     d = {"verdict": "accepted", "visual_kind": "photo", "fabricated_text": [],
          "matches_subtitle": True, "product_ok": True, "single_scene": True,
+         "identifies_subject": False,
          "who_what": "양파밭", "reason": "좋다"}
     d.update(kw)
     return json.dumps(d, ensure_ascii=False)
@@ -304,6 +305,7 @@ def test_every_blocking_rule_actually_rejects():
         "subtitle": {"matches_subtitle": False},
         "product": {"product_ok": False},
         "collage": {"single_scene": False},
+        "identifies": {"identifies_subject": True},
     }
     for r in spec.PHOTO_RULES:
         if not r["blocking"]:

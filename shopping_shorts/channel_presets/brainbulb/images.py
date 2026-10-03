@@ -391,6 +391,10 @@ def regenerate(slots, prompts, workdir, imagegen, files, *, log=print, reasons=N
                            " not a collage, not split panels")
             if "제품" in why:
                 fix.append("do not show any branded packaging or product label in frame")
+            if "대상 특정" in why:
+                # 실존 업소를 가리키는 간판·상호가 읽히면 안 된다(명예훼손)
+                fix.append("no shop sign, no storefront name, no logo, no street address"
+                           " or vehicle plate visible; keep any signage out of frame or unreadable")
             if "사진인가" in why:
                 fix.append("photorealistic documentary photograph, natural light, real camera depth")
             if "지어낸" in why or not fix:
