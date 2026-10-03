@@ -22,7 +22,10 @@ def main():
     run_dir = WORK / "_run"
     run_dir.mkdir(parents=True, exist_ok=True)
     staged = run_dir / jsx.name
-    staged.write_text(jsx.read_text(encoding="utf-8"), encoding="utf-8-sig")
+    body = jsx.read_text(encoding="utf-8")
+    if body.lstrip().startswith("// use-lib"):   # ("// @..." 는 ExtendScript 가 전처리 지시문으로 읽어 구문 오류를 낸다)          # 공통 도구(_lib.jsx)를 앞에 붙여 한 파일로 보낸다
+        body = (jsx.parent / "_lib.jsx").read_text(encoding="utf-8") + chr(10) + body
+    staged.write_text(body, encoding="utf-8-sig")
     if done.exists():
         done.unlink()
     subprocess.Popen([str(AFTERFX), "-r", str(staged)])
