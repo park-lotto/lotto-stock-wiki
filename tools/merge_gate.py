@@ -18,6 +18,7 @@
 """
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -101,7 +102,9 @@ def _xdist_args():
     # 4개로 묶어 나머지 코어는 다른 작업에 남긴다.
     # 2026-10-02 사장님 "병렬도 다 해도 된다" → 실측(같은 코드·같은 실패 15건): -n 4 727초 · -n 8 376초 · -n auto(16) 358초.
     #   16개는 8개보다 18초 빠를 뿐이라 코어 절반을 남기는 8개로(카드 081).
-    return ["-n", "8"]
+    # ★시험 프로세스 수는 finish 의 자원 관문(track._gate_slot)이 남은 메모리·전체 상한으로 정해 넘긴다(2026-10-03 카드 092).
+    n = os.environ.get("GATE_XDIST_N", "").strip()
+    return ["-n", n if n.isdigit() and int(n) >= 1 else "8"]
 
 
 def _tools_test_paths(cwd):
@@ -112,14 +115,15 @@ def _tools_test_paths(cwd):
     return [p.relative_to(root).as_posix() for p in found]
 
 
-def snapshot(cwd=BASE, run=_run):
-    """지금 이 워킹트리 상태를 찍는다 (문법·import·pytest — shopping_shorts/tests + tools 시험)."""
+def snapshot(cwd=BASE, run=_run, paths=None):
+    """지금 이 워킹트리 상태를 찍는다 (문법·import·pytest — shopping_shorts/tests + tools 시험).
+    paths: 그 시험 파일들만(재시도 때 끼어든 코드와 관련된 것만 — 카드 092)."""
     rc_c, out_c = run([sys.executable, "-m", "compileall", TARGET, "-q"], cwd)
     rc_i, out_i = run([sys.executable, "-c", f"import {TARGET}.app"], cwd)
     # ★--continue-on-collection-errors: tools 쪽 시험 파일 하나가 수집에서 죽어도 나머지는 돈다(전체 rc=2 로 게이트 무력화 금지).
     #   -rfE: 수집 오류(ERROR)도 실패 목록에 들어와 '새로 깨짐' 비교를 받는다.
     rc_p, out_p = run(
-        [sys.executable, "-m", "pytest", f"{TARGET}/tests", *_tools_test_paths(cwd),
+        [sys.executable, "-m", "pytest", *(list(paths) if paths else [f"{TARGET}/tests", *_tools_test_paths(cwd)]),
          "-q", "--tb=no", "-rfE", "--continue-on-collection-errors", "-p", "no:cacheprovider", *_xdist_args()],
         cwd,
     )

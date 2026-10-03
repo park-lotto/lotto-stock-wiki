@@ -69,39 +69,96 @@ def _video_lock_path():
     return _lock_path("TRACK_VIDEO_LOCK", _VIDEO_LOCK)
 
 
-# ★시험 칸(2026-10-03 카드 088): 병합본 전체 시험은 줄(전역 락) **밖**에서 돈다 — 다 된 것만 줄 선다.
-#   동시에 너무 많이 돌면 CPU 포화로 전부 기어간다(07-24 실측: 5개 동시 20분+) → 칸 2개(16코어 · 시험당 병렬 8).
-GATE_SLOTS = 2
+# ★자원 관문(2026-10-03 카드 092 — 사장님 "병합이 한 번에 다 같이 들어가서 CPU 많이 쓰는 거 아닌가 / 근본 방법으로").
+#   종전(088) '칸 2개 × 병렬 8' = 시험 프로세스 16개 → 코어를 다 쓰고(09-21 사장님 "게이트 돌 때마다 PC 버벅" 으로 정한
+#   '코어 절반'을 깼다), 메모리도 한 판 4.0~4.5GB(실측)라 두 판이 8.5GB → 남은 메모리 2.7GB, Claude 가 작업을 강제 종료.
+#   이제 **시험 프로세스 표(GATE_WORKER_TOKENS)** 를 병합 전체가 나눠 쓴다: 합계 8개 이하(코어 절반) + 남은 메모리로 더 줄인다.
+#   몰리면 한 판씩 전속력(-n 8 376초)으로 — 둘이 반씩(-n 4 각 727초)보다 먼저 끝난다(카드 081 실측).
+GATE_WORKER_TOKENS = 8           # 동시에 도는 시험 프로세스 합계 상한(16코어의 절반)
+GATE_WORKER_MB = 550             # 시험 프로세스 1개 메모리(실측: -n 8 한 판 4,027~4,501MB / 13~14개)
+GATE_RESERVE_MB = 2500           # 다른 프로그램(크롬·Claude 세션)을 위해 남기는 메모리
+GATE_MIN_WORKERS = 2
+
+
+def _free_mb():
+    """지금 남은 물리 메모리(MB). 못 재면 큰 값(막지 않는다)."""
+    try:
+        import ctypes
+
+        class _MS(ctypes.Structure):
+            _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                        ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                        ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                        ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                        ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+        m = _MS()
+        m.dwLength = ctypes.sizeof(_MS)
+        ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
+        return int(m.ullAvailPhys / 2 ** 20)
+    except Exception:  # noqa: BLE001
+        return 10 ** 6
+
+
+def _gate_target_workers(free_mb):
+    """남은 메모리로 돌릴 수 있는 시험 프로세스 수(최대 GATE_WORKER_TOKENS). 최소치도 안 되면 0(기다린다)."""
+    n = (int(free_mb) - GATE_RESERVE_MB) // GATE_WORKER_MB
+    n = min(GATE_WORKER_TOKENS, n)
+    return n if n >= GATE_MIN_WORKERS else 0
 
 
 @contextlib.contextmanager
 def _gate_slot():
-    """시험 칸 하나를 잡는다(빈 칸이 날 때까지 대기). 프로세스가 죽으면 커널이 칸을 놓는다."""
+    """시험 프로세스 표를 잡는다 → 쓸 병렬 수(n)를 돌려준다(GATE_XDIST_N 으로 merge_gate 에 넘긴다).
+    표가 모자라거나 메모리가 모자라면 기다린다. 프로세스가 죽으면 커널이 표를 놓는다(파일락)."""
     import msvcrt
     base = _finish_lock_path()
-    fh, waited = None, False
-    while fh is None:
-        for i in range(GATE_SLOTS):
-            f = open(base.parent / ("%s_slot%d.lock" % (base.stem, i)), "a+")
-            try:
-                msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
-                fh = f
+    held, waited, last_why = [], False, ""
+    while True:
+        target = _gate_target_workers(_free_mb())
+        if target:
+            for i in range(GATE_WORKER_TOKENS):
+                if len(held) >= target:
+                    break
+                f = open(base.parent / ("%s_worker%d.lock" % (base.stem, i)), "a+")
+                try:
+                    msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+                    held.append(f)
+                except OSError:
+                    f.close()
+            if len(held) >= target:
                 break
-            except OSError:
+            why = "다른 병합이 시험 프로세스 표를 쓰는 중(%d/%d 확보)" % (len(held), target)
+        else:
+            why = "남은 메모리 %dMB — 최소 %d개분(%dMB+여유 %dMB) 모자람" % (
+                _free_mb(), GATE_MIN_WORKERS, GATE_MIN_WORKERS * GATE_WORKER_MB, GATE_RESERVE_MB)
+        for f in held:                       # 다 못 잡았으면 쥔 것도 놓고 기다린다(조금씩 쥐고 버티면 서로 굶는다)
+            try:
+                f.seek(0)
+                msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+            finally:
                 f.close()
-        if fh is None:
-            if not waited:
-                print("[대기] 시험 칸 %d개가 모두 사용 중 - 빈 칸 대기(줄과 별개 — 줄은 안 막는다)" % GATE_SLOTS)
-                waited = True
-            time.sleep(3)
+        held = []
+        if not waited or why != last_why:
+            print("[대기] 시험 자원 대기 — %s (줄과 별개 — 줄은 안 막는다)" % why)
+            waited, last_why = True, why
+        time.sleep(5)
+    n = len(held)
+    prev = os.environ.get("GATE_XDIST_N")
+    os.environ["GATE_XDIST_N"] = str(n)
+    print("시험 자원: 병렬 %d (남은 메모리 %dMB)" % (n, _free_mb()))
     try:
-        yield
+        yield n
     finally:
-        try:
-            fh.seek(0)
-            msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
-        finally:
-            fh.close()
+        if prev is None:
+            os.environ.pop("GATE_XDIST_N", None)
+        else:
+            os.environ["GATE_XDIST_N"] = prev
+        for f in held:
+            try:
+                f.seek(0)
+                msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+            finally:
+                f.close()
 
 
 class _FileLock:
@@ -762,12 +819,14 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
         _precheck(name, repo, wt, br, gate)        # 시험이 줄 밖에서 돌게 돼 중복 — 원할 때만(카드 088)
     _clean_dead_stages(repo)                        # 살아 있는 남의 stage 는 건너뛴다(주인 pid)
     _disk_guard(repo, "finish")
+    prev_base = None
     for attempt in range(1, attempts + 1):
         run(["git", "fetch", "origin"], repo)
         stage = _open_stage(repo, name)
+        base_now = run(["git", "rev-parse", "HEAD"], stage)[1].strip()
         try:
             result = _merge_and_gate(name, repo, stage, br, gate, wt, video_gate, lock=None,
-                                     push_lock=_finish_gate_lock)
+                                     push_lock=_finish_gate_lock, prev_base=prev_base)
         finally:
             _close_stage(repo, stage)
 
@@ -778,7 +837,9 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
             _sync_main_folder(repo)
             _level_track_with_main(name, repo, wt, br)
             return 0
-        # result == "raced": 시험하는 사이 main 에 코드가 들어왔다 → 줄 밖에서 최신 main 위로 다시
+        # result == "raced": 시험하는 사이 main 에 코드가 들어왔다 → 줄 밖에서 최신 main 위로 다시.
+        #   이 시도는 시험·관문을 **통과**했다('raced' 는 push 단계에서만 나온다) → 다음 시도는 끼어든 코드 관련만 다시(카드 092).
+        prev_base = base_now
         print(f"⚠️ 시험하는 사이 main 에 코드가 들어왔다. 줄에서 빠져 최신 main 위에서 다시 잰다 "
               f"({attempt}/{attempts})...")
 
@@ -788,7 +849,31 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
     )
 
 
-def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None, push_lock=None):
+def _retry_test_subset(stage, prev_base, my_changed, *, half=0.5):
+    """재시도(앞 시도 통과) 때 다시 돌릴 시험 파일. [] = 끼어든 게 코드 아님(시험 생략) · None = 너무 많음(전체).
+    끼어든 코드 관련 + 내 변경 관련(새 main 위에서 맞물림) — 끼어든 커밋은 이미 제 관문을 통과했다."""
+    rc, out = run(["git", "-c", "core.quotepath=off", "diff", "--name-only", prev_base, "HEAD"], stage)
+    if rc != 0:
+        return None
+    inter = [x.strip() for x in out.splitlines() if x.strip()]
+    inter_code = [x for x in inter if not _is_non_code(x)]
+    if not inter_code:
+        return []
+    texts = {}
+    for p in list(Path(stage).glob("shopping_shorts/tests/test_*.py")) + list(Path(stage).glob("tools/test_*.py")) \
+            + list(Path(stage).glob("tools/*/test_*.py")):
+        try:
+            texts[p.relative_to(stage).as_posix()] = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            pass
+    want = [x for x in set(inter_code) | {c for c in my_changed if not _is_non_code(c)}]
+    sel = _select_related_tests(want, texts, limit=max(1, int(len(texts) * half)))
+    if not sel and any(x.endswith(".py") for x in want):
+        return None                         # 너무 많아 빈 목록(또는 못 고름) — 전체로
+    return sel or None
+
+
+def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None, push_lock=None, prev_base=None):
     light = hasattr(gate, "snapshot_light")
     before = gate.snapshot_light(stage) if light else _cached_baseline(repo, stage, gate)
     exact = None
@@ -827,10 +912,24 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
         after = dict(before)
         ran_full = False
     else:
-        with (_gate_slot() if push_lock is not None else contextlib.nullcontext()):
-            print("게이트 실행 중 (병합된 상태, 아직 커밋 없음 · 줄 밖)...")
-            after = gate.snapshot(stage)
-        ran_full = True
+        sub = _retry_test_subset(stage, prev_base, changed) if (light and prev_base) else None
+        if sub == []:
+            print("재시도: 끼어든 main 커밋에 코드가 없다 — 앞 시도 시험 결과 그대로(시험 생략)")
+            after = dict(before)
+            ran_full = False
+        else:
+            with (_gate_slot() if push_lock is not None else contextlib.nullcontext()):
+                if sub:
+                    print("재시도: 끼어든 코드·내 변경 관련 시험 %d개 파일만 다시(앞 시도 통과 · 줄 밖)..." % len(sub))
+                    try:
+                        after = gate.snapshot(stage, paths=sub)
+                    except TypeError:                         # 옛 게이트 스텁 — 전체
+                        after = gate.snapshot(stage)
+                    ran_full = False
+                else:
+                    print("게이트 실행 중 (병합된 상태, 아직 커밋 없음 · 줄 밖)...")
+                    after = gate.snapshot(stage)
+                    ran_full = True
     problems = gate.compare(before, after)
     # ★새로 깨진 테스트를 origin/main 코드로 다시 돌린다(2026-10-02, 카드 069). 기준선 저장본이 낡거나 환경이 달라지면
     #   main 의 기존 실패가 '새로 깨진 것'으로 잡혀 무관한 트랙을 막았다(10-01 추적대본검색어 실측).
