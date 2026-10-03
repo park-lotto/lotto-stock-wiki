@@ -59,6 +59,11 @@
     "card": 40,
     "track": "장면폰트"
   },
+  "shopping_shorts/userscript/grab_logic.js:_dockAnchor": {
+    "at": "2026-10-03 17:40",
+    "card": 94,
+    "track": "팝업버튼자리"
+  },
   "tools/scene_font_research/check_text_look.py": {
     "at": "2026-09-29 23:55",
     "card": 40,
