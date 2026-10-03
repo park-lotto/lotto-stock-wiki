@@ -3074,8 +3074,13 @@ function renderBand(){
       return _fitSegs.includes(c.seg_id)
         ? `<div class="cutgap slow" onclick="event.stopPropagation()">✅ ${ci + 1}번째 카드: 속도 맞춤 ${ratio}배로 채웠어요 <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', false)">되돌리기</button>${
             +ratio > 1.5 ? ` <span class="slowwarn">많이 느려요 — 다른 장면으로 바꾸는 걸 추천해요</span>` : ''}</div>`
-        : `<div class="cutgap" onclick="event.stopPropagation()">⏱ ${ci + 1}번째 카드: ${gap.toFixed(1)}초가 비어요(끝이 멈춰요) <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', true)">속도 맞추기 ${ratio}배</button>${
-            +ratio > 1.5 ? ` <span class="slowwarn">많이 느려져요 — 박스로 다른 장면을 고르는 걸 추천해요</span>` : ''}</div>`;
+        : (+ratio > 1.5
+          // ★관제 084(2026-10-02 사장님): 1.5배 넘게 느려지는 '속도 맞추기'는 슬로모션이라 못 쓴다 — 버튼을 숨기고
+          //   장면을 더 붙이는 두 길을 준다. 시간은 컷 계산(planClips)이 붙인 장면들에 고르게 나눈다.
+          ? `<div class="cutgap" onclick="event.stopPropagation()">⏱ ${ci + 1}번째 카드가 짧아 ${gap.toFixed(1)}초가 비어요 — 장면을 하나 더 붙이면 시간을 나눠 보여 줘요
+               <button class="act" onclick="autoFill(${i})">✨ 같은 의미 장면 붙이기</button>
+               <button class="act" onclick="addNextScene(${i}, '${c.seg_id}')">➕ 원본 다음 장면 붙이기</button></div>`
+          : `<div class="cutgap" onclick="event.stopPropagation()">⏱ ${ci + 1}번째 카드: ${gap.toFixed(1)}초가 비어요(끝이 멈춰요) <button class="act" onclick="fitToggle(${i}, '${c.seg_id}', true)">속도 맞추기 ${ratio}배</button></div>`);
     }).join('');
     const cuts = clips.length
       ? clips.map((c, ci) => `<div class="tbcut ${phraseSyncOn(i) ? 'inuse' : ''} ${c.dur > LONG_CUT ? 'long' : ''} ${isPicked(i, c.seg_id) ? 'picked' : ''}"
@@ -3087,8 +3092,8 @@ function renderBand(){
              ondrop="bandDrop(${i}, '${c.seg_id}', event)"
              onclick="bandCutClick(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCardAt(${i}, ${ci}, '${c.seg_id}')"
-             title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · ✕ 버튼이나 두 번 클릭 = 빼기">
-             <img src="${SL.thumb(cardThumbId(c))}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '🔒' : ''}${c.dur.toFixed(1)}</span
+             title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초${c.more ? ` · 옆 장면이 짧아 원본에서 ${c.more.toFixed(1)}초 더 이어 보여 줘요` : ''} · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · ✕ 버튼이나 두 번 클릭 = 빼기">
+             <img src="${SL.thumb(cardThumbId(c))}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '🔒' : ''}${c.dur.toFixed(1)}${c.more ? '↪' : ''}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
@@ -4376,6 +4381,22 @@ async function aiPicks(i){
     }
     return ok.length ? ok.map(p => p.seg_id) : null;
   }catch(e){ return null; }
+}
+// [➕ 원본 다음 장면 붙이기](관제 084) — 그 카드가 쓰는 구간 바로 뒤, 같은 영상의 안 쓴 장면 하나를 이 칸에 담는다.
+//   같은 의미 장면은 [✨ 같은 의미 장면 붙이기](autoFill — 매칭 전문가)가 고른다. 시간 나누기는 planClips 한 곳.
+function addNextScene(i, sid){
+  let vid = null, end = null;
+  const m = /^film_(.+)_([\d.]+)_([\d.]+)$/.exec(String(sid || ''));
+  if (m){ vid = m[1]; end = +m[3]; }
+  else if (DATA.segments[sid]){ vid = DATA.segments[sid].video_id; end = +DATA.segments[sid].end; }
+  const used = new Set(lists.flat());
+  const cand = Object.keys(DATA.segments || {})
+    .filter(k => { const g = DATA.segments[k]; return g && g.video_id === vid && +g.start >= end - 0.05 && !used.has(k) && !tooShort(k); })
+    .sort((a, b) => DATA.segments[a].start - DATA.segments[b].start);
+  if (!vid || !cand.length){ nsay('이 영상에는 이어지는 장면이 없어요 — ✨ 같은 의미 장면 붙이기를 눌러 보세요'); return; }
+  lists[i].push(cand[0]); sel = i; render();
+  const el0 = document.getElementById('savedmsg');
+  if (el0) el0.textContent = '➕ 원본에서 이어지는 장면을 하나 붙였어요 — 시간은 두 장면에 나눠 보여 줘요';
 }
 async function autoFill(i){
   if (AUTOADD[i] && AUTOADD[i].length){                  // 두 번째 누름 = 되돌리기
