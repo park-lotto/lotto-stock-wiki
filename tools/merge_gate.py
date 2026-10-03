@@ -71,6 +71,9 @@ def _run(cmd, cwd):
     #   한쪽은 제대로, 한쪽은 '?'로 저장돼 **같은 실패가 '새로 깨짐'으로 오판**됐다(기준선 캐시 vs 병합 후 비교).
     import os as _os
     env = {**_os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
+    # ★자원 관문이 정한 병렬 수(GATE_XDIST_N)는 **이 프로세스의 pytest 인자**로만 쓴다 — 자식(시험)에 새면 그 값을 검사하는
+    #   시험이 게이트 안에서만 깨지고, 칸 밖 재확인에선 통과해 '우연한 실패'로 덮였다(2026-10-03 092 병합 실측 4건).
+    env.pop("GATE_XDIST_N", None)
     # ★게이트가 띄운 pytest 는 **개별 락**을 쓴다(2026-10-02, 카드 075): tools/test_video_gate.py 의 finish 시험이
     #   게이트가 이미 쥔 전역 finish 락을 다시 기다리면 영원히 멈춘다(교착). 락 경로는 track._finish_lock_path 가 읽는다.
     import tempfile as _tf
