@@ -228,7 +228,11 @@ def words_relative(mp3_path, final_dur=None):
     if not words:
         return None
     removed = load_removed(mp3_path)
-    return rescale(words, final_dur, removed=removed) if (removed and final_dur) else words
+    if not removed:
+        return words
+    # final_dur 는 값 또는 '부르면 길이를 주는 함수' — 무음을 잘라낸 파일일 때만 길이를 잰다(쓸데없는 ffprobe 를 안 부른다).
+    dur = final_dur() if callable(final_dur) else final_dur
+    return rescale(words, dur, removed=removed) if dur else words
 
 
 def words_from_mp3(mp3_path):

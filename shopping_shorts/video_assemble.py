@@ -3467,7 +3467,7 @@ def _beat_timeline(edit_plan, tts_paths):
             "cap_offset": beat.get("cap_offset", 0.0),
             "caption_lines": beat.get("caption_lines"),   # AI가 끊어준 자막 호흡 줄(있으면)
             # 단어 시각(정밀 사이드카, 없으면 None) — 장면꾸미기 단어 강조가 구절 안 단어 자리를 잰다(관제 102).
-            "words": tts_timestamps.words_relative(tts, _probe_duration(tts)),
+            "words": tts_timestamps.words_relative(tts, lambda tts=tts: _probe_duration(tts)),   # 길이는 필요할 때만 잰다
             # 장면별 자막 자리(2026-08-25). 여기서 안 실으면 저장위치≠읽기위치가 되어
             # 사장님이 고친 자리가 렌더에 반영되지 않는다(위 cap_durs와 같은 함정).
             "cap_pos": beat.get("cap_pos"),
