@@ -67,3 +67,13 @@ def test_prewarm_passes_page_times(monkeypatch):
             break
         time.sleep(0.05)
     assert sorted(got, key=str) == sorted([(8, 19.36), (8, 20.4), (3, None)], key=str)
+
+
+def test_page_points_are_front_middle_back_inside_the_window():
+    """페이지 안 앞·가운데·뒤(관제 104) — 셋 다 창 안쪽이고, 가운데는 기본 그림 시각과 같다."""
+    sc = {"start": 18.82, "end": 19.91}
+    a, m, b = A._scene_page_points(sc)
+    assert 18.82 < a < m < b < 19.91 and m == A._scene_page_time(sc)
+    assert abs((a - 18.82) - 0.15) < 0.011 and abs((19.91 - b) - 0.15) < 0.011      # 창 끝에서 0.15초 안쪽
+    a, m, b = A._scene_page_points({"start": 1.0, "end": 1.3})                       # 짧은 창은 창 길이의 1/5
+    assert abs(a - 1.06) < 0.011 and abs(b - 1.24) < 0.011
