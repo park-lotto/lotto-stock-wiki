@@ -9,6 +9,11 @@
     "card": 40,
     "track": "장면폰트"
   },
+  "out/precision20-ui.js:addText": {
+    "at": "2026-10-03 22:33",
+    "card": 103,
+    "track": "단어강조"
+  },
   "out/precision20-ui.js:drawFontSets": {
     "at": "2026-09-29 16:06",
     "card": 30,
