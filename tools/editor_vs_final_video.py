@@ -33,43 +33,14 @@ from PIL import Image, ImageDraw
 import os, importlib.util
 # 조각 경계 붙이기(seg_snap)의 장면 전환 캐시는 원래 소재 옆(고객 작업 폴더)에 쓴다 — 도구는 고객 폴더를 안 바꾸므로 /tmp 로 돌린다
 os.environ.setdefault("SEG_SNAP_CACHE_DIR", "/tmp/evf_snapcache")
-if os.getenv("PATCH_DIR"):          # 배포 전 대조: 고친 모듈을 먼저 얹는다
-    import shopping_shorts
-    # 폰트 후보 목록(video_assemble._FONT_CANDIDATES)은 **import 때** 파일 옆 assets 로 정해진다 — PATCH_DIR 에서 얹으면
-    #   못 찾아 자막 없이 구워진다(2026-09-27 실측 '폰트 미해결'). 저장소 폰트를 첫 후보(환경 변수)로 준다.
+if os.getenv("PATCH_DIR"):          # 배포 전 대조: 고친 모듈을 먼저 얹는다(목록·순서·경로 되돌리기 = gate_modules, 관제 085)
+    # 폰트 후보 목록(video_assemble._FONT_CANDIDATES)은 import 때 정해진다 — 저장소 폰트를 첫 후보로(2026-09-27 실측 '폰트 미해결')
     _bf = Path("shopping_shorts/assets/NanumGothic.ttf").resolve()
     if _bf.exists():
         os.environ.setdefault("SHORTS_CAPTION_FONT", str(_bf))
-    # ★음성 라인(voice_presets·typecast_tts·audio_post·tts·tts_joined)도 얹는다(2026-10-01 관제 049) — mix_pipeline 이
-    #   이들의 새 함수(default_speed 등)를 부르는데 옛 라이브 모듈이 섞이면 import 때 죽는다(관문 첫 실행 실측).
-    #   의존 순서대로: 아래 모듈을 먼저, mix_pipeline 을 마지막에.
-    # ★config 를 맨 먼저(2026-10-01 관제 020): video_assemble 이 config.MAX_SLOWMO 를 import 때 읽는다 — 옛 라이브 config 면 ImportError(관문 실측).
-    for _n in ("config", "voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined",
-               "frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
-        _f = Path(os.getenv("PATCH_DIR")) / ("%s.py" % _n)
-        if _f.exists():
-            _sp = importlib.util.spec_from_file_location("shopping_shorts." + _n, str(_f))
-            _m = importlib.util.module_from_spec(_sp); sys.modules["shopping_shorts." + _n] = _m
-            _sp.loader.exec_module(_m); setattr(shopping_shorts, _n, _m)
-            if _n == "config":
-                # ★config 를 PATCH_DIR 에서 얹으면 DB_PATH 등 **파일 위치 기준 경로**가 /tmp/gate_…/data 를 가리켜 DB 가 빈 것처럼 보인다
-                #   (2026-10-01 관문 실측: 6작업 전부 '데이터 없음' 404 → 화면 계산 실패). 경로 상수는 저장소 config 값으로 되돌린다.
-                _rs = importlib.util.spec_from_file_location("_repo_config", str(Path("shopping_shorts/config.py").resolve()))
-                _rc = importlib.util.module_from_spec(_rs); _rs.loader.exec_module(_rc)
-                _pd = str(Path(os.getenv("PATCH_DIR")).resolve())
-                for _k in dir(_m):
-                    _v = getattr(_m, _k)
-                    if isinstance(_v, Path) and str(_v.resolve()).startswith(_pd) and hasattr(_rc, _k):
-                        setattr(_m, _k, getattr(_rc, _k))
-            # ★파일 위치 기준 경로는 저장소로 되돌린다(2026-09-27 실측) — PATCH_DIR 에서 얹으면 video_assemble 의 폰트 폴더
-            #   (_FONT_DIR = 파일 옆 static/fonts)를 못 찾아 완성본이 '폰트 미해결 — 자막·BGM 전부 스킵'으로 구워졌고,
-            #   clean_base._ROOT(파일의 두 단계 위)가 /tmp 를 가리켰다. 비교 결과가 수리 전(자막 있음)과 조건이 달라졌다.
-            _repo_pkg = Path("shopping_shorts").resolve()
-            for _attr, _val in (("_FONT_DIR", _repo_pkg / "static" / "fonts"),
-                                ("_BUNDLED_FONT", str(_repo_pkg / "assets" / "NanumGothic.ttf")),
-                                ("_ROOT", _repo_pkg.parent)):
-                if hasattr(_m, _attr):
-                    setattr(_m, _attr, _val)
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import gate_modules
+    gate_modules.load_patch_modules()
     _fa = Path(os.getenv("PATCH_DIR")) / "app.py"
     if _fa.exists():                 # app 은 통째로 못 얹는다(정적 파일 경로) — 미리보기 굽기 함수만 바꿔 끼운다
         from shopping_shorts import app as _app

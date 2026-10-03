@@ -215,7 +215,7 @@ def _stage(tmp_path, changed_rel="shopping_shorts/video_assemble.py"):
     files = {"shopping_shorts/video_assemble.py": "A = 1\n", "shopping_shorts/app.py": "B = 1\n",
              "tools/editor_vs_final_video.py": "# tool\n", "tools/evf_run.py": "# run\n",
              "tools/capcut_export_audit.py": "# cc\n", "tools/final_audio_audit.py": "# au\n",
-             "tools/clean_left_audit.py": "# cl\n", "README.md": "r\n"}
+             "tools/clean_left_audit.py": "# cl\n", "tools/gate_modules.py": "# gm\n", "README.md": "r\n"}
     for rel, body in files.items():
         (r / rel).parent.mkdir(parents=True, exist_ok=True)
         (r / rel).write_bytes(body.encode("utf-8"))
@@ -421,20 +421,14 @@ def test_gate_warns_loudly_when_merge_changes_the_gate_tool(tmp_path):
 
 
 def test_patch_rels_cover_tool_loader():
-    """도구가 PATCH_DIR 에서 얹는 모듈(for _n in (...))은 전부 관문이 서버에 올리는 목록(PATCH_RELS)에 있어야 한다.
-    2026-09-27: frame_match.py 가 도구 목록엔 있고 업로드 목록엔 없어 첫 finish 가 ImportError 로 막혔다."""
-    import re
-    src = (Path(__file__).resolve().parent / "editor_vs_final_video.py").read_text(encoding="utf-8")
-    m = re.search(r"for _n in \(([^)]*)\):", src)
-    assert m, "도구의 PATCH_DIR 모듈 목록(for _n in (...))을 못 찾았다"
-    names = re.findall(r'"([A-Za-z_]+)"', m.group(1))
-    assert names, m.group(1)
-    missing = [n for n in names if ("%s.py" % n) not in vg.PATCH_RELS]
-    assert not missing, "도구는 얹는데 관문이 안 올리는 모듈: %s" % missing
-    for n in names:
+    """도구가 PATCH_DIR 에서 얹는 모듈은 전부 관문이 서버에 올리고(PATCH_RELS) 감시한다(WATCH_FILES).
+    2026-09-27: frame_match.py 가 도구 목록엔 있고 업로드 목록엔 없어 첫 finish 가 ImportError 로 막혔다.
+    관제 085 부터 목록 정본은 gate_modules 하나다."""
+    import gate_modules as gm
+    for n in gm.PATCH_MODULES:
         rel = vg.PATCH_RELS["%s.py" % n]
         assert (Path(__file__).resolve().parents[1] / rel).exists(), rel
-        assert rel in vg.load_config().get("watch_files", []), "감시 목록(gate_video.json)에도 있어야 한다: %s" % rel
+        assert rel in gm.WATCH_FILES, "감시 목록에도 있어야 한다: %s" % rel
 
 
 # ── ⑤ 캡컷·내보내기 대조(2026-09-27) ─────────────────────────────────
@@ -475,7 +469,7 @@ def test_gate_fails_when_capcut_audit_crashes_or_dies(tmp_path):
 def test_capcut_files_are_measured_now():
     """캡컷·내보내기 파일은 이제 재는 대상이다(not_measured 에서 빠짐) — 대조 도구도 감시 목록에."""
     assert not set(CFG.get("not_measured") or []) & {"shopping_shorts/capcut_draft.py", "shopping_shorts/export_bundle.py"}
-    assert "tools/capcut_export_audit.py" in CFG["watch_files"]
+    assert "tools/capcut_export_audit.py" in __import__("gate_modules").WATCH_FILES
     assert CFG["gate"]["max_capcut_mismatch"] == 0 and CFG["gate"]["max_export_mismatch"] == 0
 
 
@@ -611,7 +605,7 @@ def test_gate_fails_when_audio_audit_crashes_or_dies(tmp_path):
 
 def test_audio_tool_is_uploaded_and_watched():
     assert "tools/final_audio_audit.py" in vg.TOOL_RELS
-    assert "tools/final_audio_audit.py" in CFG["watch_files"]
+    assert "tools/final_audio_audit.py" in __import__("gate_modules").WATCH_FILES
     for k in ("max_audio_narr", "max_audio_surplus", "max_audio_delay"):
         assert CFG["gate"][k] == 0 and CFG["audit"][k] == 0, k
 

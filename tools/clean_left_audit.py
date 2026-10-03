@@ -31,6 +31,8 @@ import time
 import traceback
 from datetime import datetime
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))   # 서버 _tool/ 에서도 같은 폴더의 gate_modules 를 읽는다
+import gate_modules  # noqa: E402  — 얹는 모듈 목록·방법의 정본(관제 085)
 
 sys.path.insert(0, ".")
 
@@ -41,32 +43,12 @@ WORK_ROOT = Path("shopping_shorts/data/mix_jobs")
 SUMMARY_RE = re.compile(r"^== 작업 (\d+) · 자막 남음 (\d+)칸 · 증분 대기 (\d+)칸 · 원인 미상 (\d+)칸 · 대상 아님 (\d+)작업"
                         r"(?: · 재구성 불가 (\d+)작업)?\s*$")
 # PATCH_DIR 에서 얹는 모듈(import 의존 순서) — 관문(video_gate.PATCH_RELS)에 전부 있어야 한다(test_clean_left_audit 가 대조)
-PATCH_MODULES = ("config",            # 상수 정본 먼저(관제 020, 2026-10-01)
-                 "voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "frame_match", "screen_clips", "video_assemble", "clean_base", "mix_pipeline")
+PATCH_MODULES = gate_modules.PATCH_MODULES   # 정본은 tools/gate_modules.py(관제 085) — 여기 사본을 두지 않는다
 FINAL_SLACK = 180       # 완성본 파일 시각이 job updated_at 보다 이만큼 이상 앞서면 '렌더 뒤 편집'(done 저장이 파일 뒤에 온다)
 
 
 def load_patches():
-    pd = os.getenv("PATCH_DIR")
-    if not pd:
-        return None
-    import shopping_shorts
-    for n in PATCH_MODULES:
-        f = Path(pd) / ("%s.py" % n)
-        if f.exists():
-            sp = importlib.util.spec_from_file_location("shopping_shorts." + n, str(f))
-            m = importlib.util.module_from_spec(sp)
-            sys.modules["shopping_shorts." + n] = m
-            sp.loader.exec_module(m)
-            if n == "config":                     # config 를 얹으면 DB_PATH 등 경로 상수가 /tmp 를 가리킨다 — 저장소 값으로(editor_vs_final_video 와 같은 되돌리기, 2026-10-01)
-                _rs = importlib.util.spec_from_file_location("_repo_config", str(Path("shopping_shorts/config.py").resolve()))
-                _rc = importlib.util.module_from_spec(_rs); _rs.loader.exec_module(_rc)
-                for _k in dir(m):
-                    _v = getattr(m, _k)
-                    if isinstance(_v, Path) and str(_v.resolve()).startswith(str(Path(os.getenv("PATCH_DIR")).resolve())) and hasattr(_rc, _k):
-                        setattr(m, _k, getattr(_rc, _k))
-            setattr(shopping_shorts, n, m)
-    return Path(pd)
+    return gate_modules.load_patch_modules()   # 목록·순서·경로 되돌리기 = gate_modules(관제 085)
 
 
 def ro_store():
