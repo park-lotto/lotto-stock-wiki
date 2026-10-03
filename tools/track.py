@@ -69,6 +69,41 @@ def _video_lock_path():
     return _lock_path("TRACK_VIDEO_LOCK", _VIDEO_LOCK)
 
 
+# ★시험 칸(2026-10-03 카드 088): 병합본 전체 시험은 줄(전역 락) **밖**에서 돈다 — 다 된 것만 줄 선다.
+#   동시에 너무 많이 돌면 CPU 포화로 전부 기어간다(07-24 실측: 5개 동시 20분+) → 칸 2개(16코어 · 시험당 병렬 8).
+GATE_SLOTS = 2
+
+
+@contextlib.contextmanager
+def _gate_slot():
+    """시험 칸 하나를 잡는다(빈 칸이 날 때까지 대기). 프로세스가 죽으면 커널이 칸을 놓는다."""
+    import msvcrt
+    base = _finish_lock_path()
+    fh, waited = None, False
+    while fh is None:
+        for i in range(GATE_SLOTS):
+            f = open(base.parent / ("%s_slot%d.lock" % (base.stem, i)), "a+")
+            try:
+                msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+                fh = f
+                break
+            except OSError:
+                f.close()
+        if fh is None:
+            if not waited:
+                print("[대기] 시험 칸 %d개가 모두 사용 중 - 빈 칸 대기(줄과 별개 — 줄은 안 막는다)" % GATE_SLOTS)
+                waited = True
+            time.sleep(3)
+    try:
+        yield
+    finally:
+        try:
+            fh.seek(0)
+            msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+        finally:
+            fh.close()
+
+
 class _FileLock:
     """OS 파일락(프로세스가 죽으면 커널이 자동 해제). 같은 객체로 놓았다 다시 잡을 수 있다(release/acquire).
     queue=True: **선착순 번호표**(2026-10-02 카드 081) — 종전엔 3초마다 '지금 잡히나'를 찔러 먼저 찌른 쪽이 들어가
@@ -171,6 +206,18 @@ def _run_video_gate_unlocked(lk, video_gate, stage, br):
     """영상 관문을 **전역 finish 락 밖**에서 돌린다 — 영상 락만 쥔다. 끝나면 finish 락을 다시 잡고 돌아온다.
     lk 가 None 이면(옛 호출) 그대로 돌린다."""
     if lk is None:
+        # 줄 밖에서 부른 경우(카드 088) — 영상 락만 쥔다(서버 비교는 한 번에 하나).
+        if video_gate is _video_gate.run_video_gate:
+            try:
+                if not _video_gate.gate_decision(stage)[2] or os.environ.get("VIDEO_GATE_SKIP", "").strip():
+                    return video_gate(stage, br)
+            except Exception:  # noqa: BLE001
+                pass
+            vlk = _FileLock(_video_lock_path(), "[대기] 다른 트랙의 영상 관문이 서버에서 도는 중 - 순번 대기...").acquire()
+            try:
+                return video_gate(stage, br)
+            finally:
+                vlk.release()
         return video_gate(stage, br)
     if video_gate is _video_gate.run_video_gate:
         # 건너뛸 병합이면 락을 놓지 않는다 — 놓았다 다시 잡는 사이 다른 트랙이 가져가면 그쪽 pytest 를 통째로 기다린다.
@@ -703,48 +750,37 @@ def _finish_detached(name):
         time.sleep(2)
 
 
-def finish(name, repo=BASE, gate=merge_gate, attempts=3, video_gate=None):
+def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
+    """★다 된 것만 줄 선다(2026-10-03 카드 088): 병합·시험·관제·영상 관문은 줄(전역 락) 밖에서,
+    줄 안에선 커밋·push 만(몇 초). 그사이 main 에 코드가 들어왔으면 줄에서 빠져 밖에서 다시 잰다."""
     merge_gate.make_output_safe()
     validate_name(name)
     wt = _preflight(name, repo)
     br = branch_name(name)
     run(["git", "fetch", "origin"], repo)
-    # ★번호표 먼저 받고(줄을 서 둔 채) 선검사(카드 083) — 선검사 5분이 대기 시간에 묻힌다. 실패하면 번호표를 버린다.
-    _lk_pre = _FileLock(_finish_lock_path(),
-                        "[대기] 다른 트랙이 finish 게이트 중 - 선착순 대기(동시 실행이 더 느려서 줄 세운다)", queue=True)
-    _lk_pre._ticket = _lk_pre._new_ticket()
-    try:
-        _precheck(name, repo, wt, br, gate)
-    except BaseException:
+    if os.environ.get("TRACK_PRECHECK", "") == "1":
+        _precheck(name, repo, wt, br, gate)        # 시험이 줄 밖에서 돌게 돼 중복 — 원할 때만(카드 088)
+    _clean_dead_stages(repo)                        # 살아 있는 남의 stage 는 건너뛴다(주인 pid)
+    _disk_guard(repo, "finish")
+    for attempt in range(1, attempts + 1):
+        run(["git", "fetch", "origin"], repo)
+        stage = _open_stage(repo, name)
         try:
-            _lk_pre._ticket.unlink()
-        except OSError:
-            pass
-        raise
+            result = _merge_and_gate(name, repo, stage, br, gate, wt, video_gate, lock=None,
+                                     push_lock=_finish_gate_lock)
+        finally:
+            _close_stage(repo, stage)
 
-    # ★전역 락: 한 번에 하나의 finish만 게이트를 돈다(동시 pytest는 CPU 포화라 더 느림).
-    with _finish_gate_lock(_lk_pre) as _lk:
-        # 락을 쥐었으니 남아 있는 _merge-* 는 전부 끊긴 finish의 잔해다(2026-09-27 실측 4개·개당 ~1.8GB)
-        _clean_dead_stages(repo)
-        _disk_guard(repo, "finish")
-        for attempt in range(1, attempts + 1):
-            run(["git", "fetch", "origin"], repo)
-            stage = _open_stage(repo, name)
-            try:
-                result = _merge_and_gate(name, repo, stage, br, gate, wt, video_gate, lock=_lk)
-            finally:
-                _close_stage(repo, stage)
-
-            if result == "nothing":
-                print(f"\n병합할 것이 없다 (트랙 '{name}'에 새 커밋 없음).")
-                return 0
-            if result == "pushed":
-                _sync_main_folder(repo)
-                _level_track_with_main(name, repo, wt, br)
-                return 0
-            # result == "raced": 다른 트랙이 먼저 병합했다 → 그 위에서 다시
-            print(f"⚠️ 다른 트랙이 먼저 main에 들어왔다. 최신 main 위에서 다시 시도 "
-                  f"({attempt}/{attempts})...")
+        if result == "nothing":
+            print(f"\n병합할 것이 없다 (트랙 '{name}'에 새 커밋 없음).")
+            return 0
+        if result == "pushed":
+            _sync_main_folder(repo)
+            _level_track_with_main(name, repo, wt, br)
+            return 0
+        # result == "raced": 시험하는 사이 main 에 코드가 들어왔다 → 줄 밖에서 최신 main 위로 다시
+        print(f"⚠️ 시험하는 사이 main 에 코드가 들어왔다. 줄에서 빠져 최신 main 위에서 다시 잰다 "
+              f"({attempt}/{attempts})...")
 
     raise TrackError(
         f"{attempts}번 시도했는데 매번 다른 트랙이 먼저 들어왔다.\n"
@@ -752,7 +788,7 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=3, video_gate=None):
     )
 
 
-def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None):
+def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None, push_lock=None):
     light = hasattr(gate, "snapshot_light")
     before = gate.snapshot_light(stage) if light else _cached_baseline(repo, stage, gate)
     exact = None
@@ -791,8 +827,9 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None)
         after = dict(before)
         ran_full = False
     else:
-        print("게이트 실행 중 (병합된 상태, 아직 커밋 없음)...")
-        after = gate.snapshot(stage)
+        with (_gate_slot() if push_lock is not None else contextlib.nullcontext()):
+            print("게이트 실행 중 (병합된 상태, 아직 커밋 없음 · 줄 밖)...")
+            after = gate.snapshot(stage)
         ran_full = True
     problems = gate.compare(before, after)
     # ★새로 깨진 테스트를 origin/main 코드로 다시 돌린다(2026-10-02, 카드 069). 기준선 저장본이 낡거나 환경이 달라지면
@@ -836,6 +873,16 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None)
             f"트랙 폴더는 그대로 있다: {wt}\n고친 뒤 다시: py tools/track.py finish {name}"
         )
 
+    if push_lock is None:
+        return _commit_and_push(name, repo, stage, light, _after_failed_for_store)
+    print("검사 끝 — 줄에 선다(줄 안에선 커밋·push 만)")
+    with push_lock() as _q:
+        return _commit_and_push(name, repo, stage, light, _after_failed_for_store)
+
+
+def _commit_and_push(name, repo, stage, light, _after_failed_for_store):
+    """줄 안: 커밋 → push. main 이 그사이 움직였으면 비코드만 따라잡고, 코드면 'raced'(줄 밖에서 다시)."""
+    run(["git", "fetch", "origin", "main"], stage)
     # stage는 detached HEAD라 post-commit의 인자 없는 `git push`는 조용히 실패한다.
     # 그래서 push는 아래에서 우리가 명시적으로 한다 — 즉 **게이트 통과 후에만** 나간다.
     rc, out = run(["git", "commit", "--no-edit"], stage)
@@ -1285,8 +1332,32 @@ def _reexec_latest(argv):
     return True, subprocess.call([sys.executable, str(latest)] + list(argv), env=env)
 
 
+class _StampOut:
+    """finish 로그 줄마다 시각(HH:MM:SS)을 붙인다(카드 089) — 어느 단계가 몇 분인지 tools/finish_report.py 가 잰다."""
+
+    def __init__(self, inner):
+        self.inner, self.bol = inner, True
+
+    def write(self, s):
+        out = []
+        for part in s.splitlines(True):
+            if self.bol and part.strip():
+                out.append(time.strftime("%H:%M:%S "))
+            out.append(part)
+            self.bol = part.endswith("\n")
+        return self.inner.write("".join(out))
+
+    def flush(self):
+        return self.inner.flush()
+
+    def __getattr__(self, k):
+        return getattr(self.inner, k)
+
+
 def main(argv=None):
     merge_gate.make_output_safe()  # cp949 콘솔에서 ✅·⚠️ 찍다 터지는 것 방지(실측)
+    if os.environ.get("TRACK_FINISH_CHILD") and not isinstance(sys.stdout, _StampOut):
+        sys.stdout = _StampOut(sys.stdout)
     _done, _rc = _reexec_latest(sys.argv[1:] if argv is None else argv)
     if _done:
         return _rc

@@ -106,10 +106,10 @@ def test_verify_sa_translates_google_errors(monkeypatch):
 def test_veo_uses_member_project_admin_owner_and_blocks_others(monkeypatch):
     """Veo는 비싸다 — 회원은 자기 프로젝트, 관리자는 사장님 프로젝트, 나머지는 **안 만든다**(사장님 크레딧 대납 금지)."""
     monkeypatch.setattr(vr, "member_info", lambda cid: SA if str(cid) == "205" else None)
-    monkeypatch.setattr(vr, "_member_client", lambda cid, info: ("MEMBER", cid, info["project_id"]))
-    monkeypatch.setattr(vr, "client", lambda cid=None: ("OWNER", cid))
-    assert vr.veo_client(205) == ("MEMBER", 205, "member-proj-1")
-    assert vr.veo_client(0) == ("OWNER", 0)
+    monkeypatch.setattr(vr, "_member_client", lambda cid, info, loc="global": ("MEMBER", cid, info["project_id"], loc))
+    monkeypatch.setattr(vr, "client", lambda cid=None, loc="global": ("OWNER", cid, loc))
+    assert vr.veo_client(205) == ("MEMBER", 205, "member-proj-1", "us-central1")
+    assert vr.veo_client(0) == ("OWNER", 0, "us-central1")
     assert vr.veo_client(204) is None
     assert vr.veo_allowed(205) == (True, "") and vr.veo_allowed(0) == (True, "")
     ok, why = vr.veo_allowed(204)
