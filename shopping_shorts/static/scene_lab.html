@@ -697,10 +697,37 @@ body.tight #tbhint,                                  /* C. 안내문 3줄 */
 body.tight footer .hint{display:none}
 body.tight.hintson #tbhint,
 body.tight.hintson footer .hint{display:inline}
+/* ⋯ 메뉴(관제 086) */
+.tbmore{position:relative;display:inline-block}
+.tbmenu{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;flex-direction:column;gap:6px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px;min-width:170px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.tbmore.open .tbmenu{display:flex}
+.tbmenu .act{text-align:left;width:100%}
+/* 효과음 | 배경음 패널(관제 086) */
+#sfxPanel{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--panel)}
+#sfxPanel .sfxtabs{display:flex;gap:4px;background:var(--panel2);border-radius:10px;padding:3px;margin-bottom:10px}
+#sfxPanel .sfxtab{flex:1;min-height:34px;border:0;border-radius:8px;background:transparent;color:var(--dim);font-size:13px;cursor:pointer}
+#sfxPanel .sfxtab.on{background:var(--accent);color:#fff;font-weight:700}
+#sfxPanel .soon{font-size:10.5px;padding:1px 6px;border-radius:6px;background:#3a2f12;color:#ffd08f;margin-left:4px}
+#sfxPanel .sfxbody{display:flex;flex-direction:column;gap:8px;font-size:13px}
+#sfxPanel .sfxon{display:flex;align-items:center;gap:8px;cursor:pointer}
+#sfxPanel .sfxon input{width:18px;height:18px;cursor:pointer}
+#sfxPanel #sfxOpts{display:flex;flex-direction:column;gap:8px}
+#sfxPanel .sfxrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#sfxPanel .k{min-width:34px;color:var(--dim)}
+#sfxPanel .sfxseg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+#sfxPanel .sfxseg button{min-height:32px;min-width:52px;padding:4px 10px;font-size:13px;border:0;background:var(--panel2);color:var(--txt,#ddd);cursor:pointer}
+#sfxPanel .sfxseg button+button{border-left:1px solid var(--line)}
+#sfxPanel .sfxseg button.on{background:var(--accent);color:#fff;font-weight:700}
+#sfxPanel select{min-height:32px;font-size:13px;padding:3px 6px;background:var(--panel2);color:var(--txt,#ddd);border:1px solid var(--line);border-radius:8px}
+#sfxPanel .hint0{font-size:12px;color:var(--dim)}
+.sfxmute{border:1px solid var(--line);background:transparent;border-radius:6px;padding:0 5px;font-size:12px;line-height:18px;cursor:pointer;margin-left:6px;opacity:.75}
+.sfxmute.off{border-color:#ffb9b9;color:#ffb9b9;opacity:1}
 #hintbtn{border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:50%;
   width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;padding:0;margin-left:auto}
 #hintbtn:hover{border-color:var(--accent);color:var(--accent)}
 body:not(.tight) #hintbtn{display:none}
+#hintbtn{display:none!important}   /* 관제 086: 조작 안내는 ⋯ 메뉴로 — 같은 toggleHints 를 부른다 */
 
 body.tight footer{padding:4px 14px;gap:8px}          /* D. 하단 KPI — 한 줄 배지 */
 body.tight footer .kpi{font-size:11.5px;padding:1px 7px}
@@ -1114,9 +1141,16 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
             onclick="playAllHere(event)" title="1번 칸부터 끝까지 이어서 봅니다">▶️ 전체 재생</button>
     <button type="button" id="ttsBtn" class="act" style="padding:3px 10px;font-size:11.5px"
             onclick="makeTts()" title="음성이 없는 칸의 음성을 만듭니다(1~2분)">🔊 음성 만들기</button>
+    <button type="button" class="act" id="tightbtn" title="글자를 접고 화면(영상)을 크게 봅니다" onclick="toggleTight()">▦ 촘촘히</button>
+    <!-- ★⋯ 메뉴(2026-10-03 관제 086 사장님 확정 목업): 자주 누르는 것(전체 재생·음성 만들기·촘촘히)만 줄에 두고
+         한 번씩 누르는 것은 여기로. 버튼 id·onclick 은 그대로라 다른 코드(undoBtnSync 등)가 그대로 찾는다.
+         ⋯ 자체는 어느 상태에서도 보인다(저장·불러오기가 숨으면 안 된다 — 2026-09-07 실측 이유 그대로). -->
+    <span class="tbmore" id="tbmore">
+      <button type="button" class="act" id="tbmorebtn" style="padding:3px 10px;font-size:13px;line-height:1"
+              title="되돌리기·지금 저장·서버에서 불러오기·이전 편성" onclick="tbMoreToggle(event)">⋯</button>
+      <span class="tbmenu" id="tbmenu" onclick="event.stopPropagation()">
     <button type="button" class="act" id="undobtn" style="padding:3px 10px;font-size:11.5px" disabled
             title="되돌릴 편집이 아직 없습니다" onclick="undoWork()">↩ 되돌리기</button>
-    <button type="button" class="act" id="tightbtn" title="글자를 접고 화면(영상)을 크게 봅니다" onclick="toggleTight()">▦ 촘촘히</button>
     <!-- ★저장·불러오기는 **여기**에 있어야 한다(2026-09-07 실측). 처음엔 아래 footer에
          뒀는데, 제작소 안(body.inside-studio.grow)에서는 그 줄이 통째로 높이 0으로 접혀
          버튼도 안내문도 안 보였다 — 사장님이 "작동 안 되는 것 같은데"라고 하신 이유다.
@@ -1127,10 +1161,14 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
             onclick="loadFromServer()" title="서버에 저장된 편성을 다시 불러옵니다 — 화면이 초기화된 것처럼 보일 때 누르세요">📥 서버에서 불러오기</button>
     <button type="button" class="act" id="histbtn" style="padding:3px 10px;font-size:11.5px"
             onclick="openHistory()" title="예전 편성으로 되돌립니다 — 최근 5벌까지 보관합니다">🕘 이전 편성</button>
+        <button type="button" class="act" style="padding:3px 10px;font-size:11.5px" onclick="toggleHints();tbMoreClose()"
+                title="조작 안내 줄을 보이거나 숨깁니다">？ 조작 안내</button>
+      </span>
+    </span>
     <!-- ★지금 화면이 새 코드인지 눈으로 바로 알 수 있게(2026-08-26). 이게 없어서
          '고쳤는데 안 된다'가 캐시 때문인지 진짜 버그인지 매번 헤맸다. -->
     <span id="buildtag" title="이 화면의 코드 버전 — 새로고침해도 안 바뀌면 캐시입니다"
-          style="margin-left:8px;font-size:10.5px;color:var(--dim);opacity:.75">v?</span>
+          style="margin-left:auto;font-size:10.5px;color:var(--dim);opacity:.75">v?</span>
     <button type="button" id="hintbtn" title="조작 안내 보이기/숨기기" onclick="toggleHints()">?</button>
     <span class="tbhint" id="tbhint">조각을 누르면 그 조각만 · 아래 대본을 누르면 그 칸 전체가 재생됩니다 · 주황 = 재료가 모자라 늘어난 컷</span>
     <!-- ✋ 컷 길이 직접 정하기(2026-08-24) — 초 배지를 누르면 열린다.
@@ -1168,7 +1206,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
             title="자막과 음성까지 얹은 진짜 결과 — 누르면 만들어져요(20초쯤)">완성본 만들기</button>
   </div>
   <!-- ★줄 높이를 줄인다(2026-08-22) — 버튼 자체는 그대로고 위아래 여백만 뗀다. -->
-  <div class="lbl" style="display:flex;align-items:center;gap:14px;margin:0;min-height:0"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button></div>
+  <div class="lbl" id="pballrow" style="display:none;align-items:center;gap:14px;margin:0;min-height:0"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button></div>
   <!-- 재생 전 안내(2026-08-16) — 미리보기 칸이 통째로 비어 있으면 "여기가 뭐 하는
        자리인지" 알 수 없다. #player가 켜지면(.on) 이건 자동으로 숨는다. -->
   <div id="playerIdle">
@@ -1206,6 +1244,36 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
        ★#player의 **형제**여야 한다 — 안에 들어가면 .on 전환에 끌려다닌다. -->
   <div id="confirmPane">
     <div id="confirmBody"></div>
+  </div>
+  <!-- ★효과음 | 배경음 패널(2026-10-03 관제 086, 사장님 확정 목업 mock5). 종전엔 제작소 위쪽 가로 바(produce #sfxPackBar)였다.
+       값의 뜻·허용 범위는 서버 sfx_pack.settings_of 한 곳 — 여기는 보여주고 /api/produce/mix/settings 로 저장만 한다.
+       미리보기·완성본·캡컷은 종전처럼 같은 저장값을 읽는다. 칸별 끄기는 각 칸 머리의 🔇(sfxMuteBtn). -->
+  <div id="sfxPanel" style="display:none">
+    <div class="sfxtabs">
+      <button type="button" class="sfxtab on" data-t="sfx" onclick="sfxTab('sfx')">🔊 효과음</button>
+      <button type="button" class="sfxtab" data-t="bgm" onclick="sfxTab('bgm')">🎵 배경음 <span class="soon">준비중</span></button>
+    </div>
+    <div class="sfxbody" id="sfxBodySfx">
+      <label class="sfxon"><input type="checkbox" id="sfxOn" onchange="sfxpSave({sfx_pack: this.checked ? 'auto' : 'off'})">
+        <b>효과음 자동 넣기</b></label>
+      <div id="sfxOpts">
+        <div class="sfxrow"><span class="k">횟수</span><span class="sfxseg" data-key="sfx_density">
+          <button type="button" data-v="low">적게</button><button type="button" data-v="normal">보통</button><button type="button" data-v="high">많이</button></span></div>
+        <div class="sfxrow"><span class="k">크기</span><span class="sfxseg" data-key="sfx_level">
+          <button type="button" data-v="low">작게</button><button type="button" data-v="normal">보통</button><button type="button" data-v="high">크게</button></span></div>
+        <div class="sfxrow"><span class="k">소리</span>
+          <select id="sfxSel" onchange="sfxpSave({sfx_pack: this.value})"></select>
+          <button type="button" class="act" id="sfxListen" onclick="sfxListen()">▶ 들어보기</button></div>
+      </div>
+      <div class="sfxrow"><button type="button" class="act" id="sfxUpBtn" onclick="document.getElementById('sfxFile').click()">＋ 내 효과음 등록</button>
+        <span class="hint0" id="sfxHint">칸별 끄기는 그 칸 머리의 🔈</span>
+        <input type="file" id="sfxFile" accept=".mp3,.wav,.m4a,.aac,audio/*" style="display:none" onchange="sfxUpload(this)"></div>
+      <div class="hint0" id="sfxMsg"></div>
+    </div>
+    <div class="sfxbody" id="sfxBodyBgm" style="display:none">
+      <div class="hint0">배경음(BGM) 고르기·직접 등록은 <b>준비중</b>이에요. 지금은 꾸미기 단계에서 정한 배경음이 그대로 들어가요.</div>
+      <div class="sfxrow"><button type="button" class="act" disabled title="준비중">＋ 내 배경음 등록 (준비중)</button></div>
+    </div>
   </div>
 </div>
 </div>
@@ -2740,6 +2808,114 @@ function sayDropped(i, left){
   if (el) el.textContent = msg;
 }
 
+// ── ⋯ 메뉴(관제 086) ─────────────────────────────────────────────────────
+function tbMoreToggle(e){ if (e) e.stopPropagation(); const m = document.getElementById('tbmore'); if (m) m.classList.toggle('open'); }
+function tbMoreClose(){ const m = document.getElementById('tbmore'); if (m) m.classList.remove('open'); }
+document.addEventListener('click', tbMoreClose);
+
+// ── 효과음 | 배경음 패널(2026-10-03 관제 086) ─────────────────────────────────
+//   보일지·켜졌는지·값은 서버(/api/produce/mix/sfx_pack)가 렌더와 같은 판정으로 알려 준다(종전 제작소 바와 같은 API).
+//   저장은 sfxpSave 한 곳 → /api/produce/mix/settings. 제작소가 들고 있는 꾸미기 값(STATE.deco)도 맞춘다 —
+//   다른 저장이 STATE.deco 를 통째로 보내므로 안 맞추면 옛 값이 방금 누른 값을 덮는다(종전 sfxPackSave 와 같은 이유).
+let SFXP = null;
+async function sfxpRefresh(){
+  const box = document.getElementById('sfxPanel'); if (!box) return;
+  if (!SL.server || !SL.job){ box.style.display = 'none'; return; }
+  try{
+    const d = await (await fetch('/api/produce/mix/sfx_pack/' + SL.job, {cache:'no-store'})).json();
+    if (!d.ok || !d.eligible){ SFXP = null; box.style.display = 'none'; renderBand(); return; }
+    SFXP = d;
+    sfxpPaint();
+    box.style.display = '';
+    renderBand();
+  }catch(e){ SFXP = null; box.style.display = 'none'; }
+}
+function sfxpPaint(){
+  const d = SFXP; if (!d) return;
+  const on = !!d.on;
+  document.getElementById('sfxOn').checked = on;
+  document.getElementById('sfxOpts').style.display = on ? '' : 'none';
+  document.getElementById('sfxHint').style.display = on ? '' : 'none';
+  document.querySelectorAll('#sfxPanel .sfxseg').forEach(seg => {
+    const key = seg.dataset.key, cur = key === 'sfx_density' ? d.density : d.level;
+    seg.querySelectorAll('button').forEach(b => {
+      b.classList.toggle('on', b.dataset.v === cur);
+      b.onclick = () => { const o = {}; o[key] = b.dataset.v; sfxpSave(o); };
+    });
+  });
+  const sel = document.getElementById('sfxSel');
+  sel.innerHTML = '<option value="auto">기본</option>' +
+    (d.packs || []).filter(p => p.label !== '기본').map(p => `<option value="${p.no}">${esc(p.label)}</option>`).join('');
+  sel.value = (d.pack_choice && d.pack_choice !== 'auto') ? String(d.pack_choice) : 'auto';
+  if (!on && !document.getElementById('sfxMsg').textContent)
+    sfxSay(d.sul ? '꺼져 있어요 — 이 영상에는 효과음이 안 들어가요' : '켜면 이 영상에도 효과음을 넣어 드려요');
+}
+function sfxSay(t){ const m = document.getElementById('sfxMsg'); if (m) m.textContent = t || ''; }
+function sfxTab(t){
+  document.querySelectorAll('#sfxPanel .sfxtab').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  document.getElementById('sfxBodySfx').style.display = t === 'sfx' ? '' : 'none';
+  document.getElementById('sfxBodyBgm').style.display = t === 'bgm' ? '' : 'none';
+}
+let _sfxpAudio = null, _sfxpSlot = 0;
+function sfxListen(){
+  if (!SFXP) return;
+  const slots = ['opener', 'pop', 'dung', 'ding', 'whoosh', 'tick', 'click2'];
+  const slot = slots[_sfxpSlot++ % slots.length];
+  try{
+    if (_sfxpAudio) _sfxpAudio.pause();
+    _sfxpAudio = new Audio('/api/produce/sfx_pack/sound/' + (SFXP.pack_no || 1) + '/' + slot);
+    _sfxpAudio.play().catch(() => {});
+  }catch(e){}
+}
+async function sfxpSave(patch){
+  if (!SL.server || !SL.job) return;
+  try{
+    const r = await fetch('/api/produce/mix/settings', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({job_id: decodeURIComponent(SL.job)}, patch))});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    try{ if (window.parent && window.parent !== window && typeof window.parent.sfxDecoSync === 'function') window.parent.sfxDecoSync(patch); }catch(e){}
+    sfxSay('저장했어요 — 완성본 만들기를 다시 누르면 바뀐 효과음으로 만들어져요');
+    await sfxpRefresh();
+  }catch(e){
+    sfxSay('저장하지 못했어요 — 다시 눌러 주세요');
+    sfxpPaint();
+  }
+}
+// 칸 머리 🔈/🔇 — 이 칸만 자동 효과음 끄기/켜기(사람이 고른 효과음은 그대로). 값은 sfx_mute_beats.
+function sfxMuteBtn(i){
+  if (!SFXP || !SFXP.on) return '';
+  const bi = (DATA.beats[i] && DATA.beats[i].beat_idx != null) ? DATA.beats[i].beat_idx : i;
+  const muted = (SFXP.mute_beats || []).map(Number).includes(Number(bi));
+  return `<button type="button" class="sfxmute ${muted ? 'off' : ''}" data-mute="${bi}" title="${muted ? '이 칸 효과음이 꺼져 있어요 — 누르면 다시 켭니다' : '이 칸만 효과음을 끕니다'}"
+    onclick="event.stopPropagation();sfxMuteToggle(${bi})">${muted ? '🔇' : '🔈'}</button>`;
+}
+function sfxMuteToggle(bi){
+  if (!SFXP) return;
+  const cur = new Set((SFXP.mute_beats || []).map(Number));
+  if (cur.has(bi)) cur.delete(bi); else cur.add(bi);
+  sfxpSave({sfx_mute_beats: [...cur].sort((a, b) => a - b)});
+}
+// ＋ 내 효과음 등록 — 장면 라이브러리와 같은 업로드(/api/scene/upload, asset_type=sfx). 등록하면 칸의 효과음 고르기에 뜬다.
+async function sfxUpload(inp){
+  const f = inp.files && inp.files[0]; inp.value = '';
+  if (!f) return;
+  if (!SL.server){ sfxSay('이 화면에서는 등록할 수 없어요'); return; }
+  sfxSay('등록하는 중…');
+  try{
+    const fd = new FormData();
+    fd.append('asset_type', 'sfx');
+    fd.append('title', (f.name || '내 효과음').replace(/\.[^.]+$/, '').slice(0, 40) || '내 효과음');
+    fd.append('file', f);
+    const r = await fetch('/api/scene/upload', {method:'POST', body: fd});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    SFX_LIST = null;
+    await loadSfxList();
+    renderBand();
+    sfxSay('등록했어요 — 칸마다 있는 효과음 고르기에서 쓸 수 있어요');
+  }catch(e){ sfxSay('등록하지 못했어요 — ' + (e.message || e)); }
+}
+
 // ── 🔊 효과음(2026-08-21 사장님 "장면처럼 빼거나 다른거 넣거나") ─────────────
 // 장면(컷)과 같은 자리에서 다룬다 — 4단계까지 가서야 만지던 것을 여기로 당겼다.
 // SFX_LIST는 내 효과음 자산 목록(한 번만 받는다), 칸별 현재 값은 DATA.beats[i].sfx.
@@ -3164,7 +3340,7 @@ function renderBand(){
                //   2.7초 말하는데 9.2초를 담아 6.5초가 안 나왔다. 잡 전체로 45.1초 중
                //   11.8초가 버려졌다). 종전엔 '모자람'만 뜨고 '남음'은 툴팁에만 있어,
                //   담아도 안 나온다는 사실을 화면에서 알 길이 없었다.
-               : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
+               : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}${sfxMuteBtn(i)}
           <span class="tbtools" onclick="event.stopPropagation()">
             ${speedControl(i)}
             ${(DATA.beats[i] && DATA.beats[i].cut_rhythm) ? `<label title="잘되는 썰 채널 79편에서 잰 컷 리듬으로 배치합니다 — 훅과 핵심 결과 줄은 한 컷으로 길게 끌고(편당 2번), 나머지 줄은 담은 장면을 한 번씩 순서대로 씁니다. 컷은 2초 안팎, 0.5초짜리 파편과 같은 장면 되풀이가 없습니다. 끄면 자막 구절대로 나뉩니다(구절 맞춤)"><input type="checkbox" ${cutRhythmOn(i) ? 'checked' : ''} onchange="toggleCutRhythm(${i}, this.checked)"> 컷 리듬</label>` : ''}
@@ -4687,6 +4863,7 @@ async function boot(){
   wireBandPan();
   // 효과음 목록을 받아오면 칸 도구줄에 선택칸이 생긴다(없으면 줄 자체가 안 난다).
   loadSfxList().then(l => { if (l && l.length) renderBand(); });
+  sfxpRefresh();                   // 미리보기 아래 효과음 | 배경음 패널(관제 086)
   autoOpenRoll();                  // 필름 자리를 켠 채로 연다
   autoMakeTts();
   // 여기까지는 읽기/복원이다. 이후 사람 조작으로 상태가 달라질 때만 저장한다.

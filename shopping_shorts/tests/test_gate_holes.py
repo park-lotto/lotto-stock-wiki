@@ -91,6 +91,8 @@ def test_락을_놓은_사이에도_내_임시폴더는_청소되지_않는다(t
     dead = track.tracks_dir(repo) / (track.STAGE_PREFIX + "죽은것")
     stage.mkdir(parents=True)
     dead.mkdir(parents=True)
+    _old = time.time() - track.STAGE_YOUNG_SEC - 60          # 주인 없는 잔해는 30분 지나야 치운다(카드 093)
+    os.utime(dead, (_old, _old))
     track._stage_owner_file(stage).write_text(str(os.getppid()), encoding="utf-8")   # 다른 살아 있는 프로세스(부모)가 쓰는 stage
     monkeypatch.setattr(track, "run", lambda cmd, cwd, check=False: (0, ""))
     removed = track._clean_dead_stages(repo)

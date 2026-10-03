@@ -69,39 +69,96 @@ def _video_lock_path():
     return _lock_path("TRACK_VIDEO_LOCK", _VIDEO_LOCK)
 
 
-# ★시험 칸(2026-10-03 카드 088): 병합본 전체 시험은 줄(전역 락) **밖**에서 돈다 — 다 된 것만 줄 선다.
-#   동시에 너무 많이 돌면 CPU 포화로 전부 기어간다(07-24 실측: 5개 동시 20분+) → 칸 2개(16코어 · 시험당 병렬 8).
-GATE_SLOTS = 2
+# ★자원 관문(2026-10-03 카드 092 — 사장님 "병합이 한 번에 다 같이 들어가서 CPU 많이 쓰는 거 아닌가 / 근본 방법으로").
+#   종전(088) '칸 2개 × 병렬 8' = 시험 프로세스 16개 → 코어를 다 쓰고(09-21 사장님 "게이트 돌 때마다 PC 버벅" 으로 정한
+#   '코어 절반'을 깼다), 메모리도 한 판 4.0~4.5GB(실측)라 두 판이 8.5GB → 남은 메모리 2.7GB, Claude 가 작업을 강제 종료.
+#   이제 **시험 프로세스 표(GATE_WORKER_TOKENS)** 를 병합 전체가 나눠 쓴다: 합계 8개 이하(코어 절반) + 남은 메모리로 더 줄인다.
+#   몰리면 한 판씩 전속력(-n 8 376초)으로 — 둘이 반씩(-n 4 각 727초)보다 먼저 끝난다(카드 081 실측).
+GATE_WORKER_TOKENS = 8           # 동시에 도는 시험 프로세스 합계 상한(16코어의 절반)
+GATE_WORKER_MB = 550             # 시험 프로세스 1개 메모리(실측: -n 8 한 판 4,027~4,501MB / 13~14개)
+GATE_RESERVE_MB = 2500           # 다른 프로그램(크롬·Claude 세션)을 위해 남기는 메모리
+GATE_MIN_WORKERS = 2
+
+
+def _free_mb():
+    """지금 남은 물리 메모리(MB). 못 재면 큰 값(막지 않는다)."""
+    try:
+        import ctypes
+
+        class _MS(ctypes.Structure):
+            _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                        ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                        ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                        ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                        ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+        m = _MS()
+        m.dwLength = ctypes.sizeof(_MS)
+        ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
+        return int(m.ullAvailPhys / 2 ** 20)
+    except Exception:  # noqa: BLE001
+        return 10 ** 6
+
+
+def _gate_target_workers(free_mb):
+    """남은 메모리로 돌릴 수 있는 시험 프로세스 수(최대 GATE_WORKER_TOKENS). 최소치도 안 되면 0(기다린다)."""
+    n = (int(free_mb) - GATE_RESERVE_MB) // GATE_WORKER_MB
+    n = min(GATE_WORKER_TOKENS, n)
+    return n if n >= GATE_MIN_WORKERS else 0
 
 
 @contextlib.contextmanager
 def _gate_slot():
-    """시험 칸 하나를 잡는다(빈 칸이 날 때까지 대기). 프로세스가 죽으면 커널이 칸을 놓는다."""
+    """시험 프로세스 표를 잡는다 → 쓸 병렬 수(n)를 돌려준다(GATE_XDIST_N 으로 merge_gate 에 넘긴다).
+    표가 모자라거나 메모리가 모자라면 기다린다. 프로세스가 죽으면 커널이 표를 놓는다(파일락)."""
     import msvcrt
     base = _finish_lock_path()
-    fh, waited = None, False
-    while fh is None:
-        for i in range(GATE_SLOTS):
-            f = open(base.parent / ("%s_slot%d.lock" % (base.stem, i)), "a+")
-            try:
-                msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
-                fh = f
+    held, waited, last_why = [], False, ""
+    while True:
+        target = _gate_target_workers(_free_mb())
+        if target:
+            for i in range(GATE_WORKER_TOKENS):
+                if len(held) >= target:
+                    break
+                f = open(base.parent / ("%s_worker%d.lock" % (base.stem, i)), "a+")
+                try:
+                    msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+                    held.append(f)
+                except OSError:
+                    f.close()
+            if len(held) >= target:
                 break
-            except OSError:
+            why = "다른 병합이 시험 프로세스 표를 쓰는 중(%d/%d 확보)" % (len(held), target)
+        else:
+            why = "남은 메모리 %dMB — 최소 %d개분(%dMB+여유 %dMB) 모자람" % (
+                _free_mb(), GATE_MIN_WORKERS, GATE_MIN_WORKERS * GATE_WORKER_MB, GATE_RESERVE_MB)
+        for f in held:                       # 다 못 잡았으면 쥔 것도 놓고 기다린다(조금씩 쥐고 버티면 서로 굶는다)
+            try:
+                f.seek(0)
+                msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+            finally:
                 f.close()
-        if fh is None:
-            if not waited:
-                print("[대기] 시험 칸 %d개가 모두 사용 중 - 빈 칸 대기(줄과 별개 — 줄은 안 막는다)" % GATE_SLOTS)
-                waited = True
-            time.sleep(3)
+        held = []
+        if not waited or why != last_why:
+            print("[대기] 시험 자원 대기 — %s (줄과 별개 — 줄은 안 막는다)" % why)
+            waited, last_why = True, why
+        time.sleep(5)
+    n = len(held)
+    prev = os.environ.get("GATE_XDIST_N")
+    os.environ["GATE_XDIST_N"] = str(n)
+    print("시험 자원: 병렬 %d (남은 메모리 %dMB)" % (n, _free_mb()))
     try:
-        yield
+        yield n
     finally:
-        try:
-            fh.seek(0)
-            msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
-        finally:
-            fh.close()
+        if prev is None:
+            os.environ.pop("GATE_XDIST_N", None)
+        else:
+            os.environ["GATE_XDIST_N"] = prev
+        for f in held:
+            try:
+                f.seek(0)
+                msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+            finally:
+                f.close()
 
 
 class _FileLock:
@@ -331,10 +388,24 @@ class TrackError(Exception):
     """사람에게 그대로 보여줄 중단 사유."""
 
 
+def _git_env_for(cwd):
+    """cwd 가 .tracks 안이면 git 이 그 위(= main 폴더)로 올라가지 못하게 막는다(GIT_CEILING_DIRECTORIES).
+    ★2026-10-03 실측(카드 093): 다른 finish 의 청소가 막 만든 병합 폴더를 지우자, 그 폴더에서 돈 `git merge` 가 상위의
+    main 폴더 저장소를 찾아 **main 폴더에서 병합**했다 → MERGE_HEAD 가 남아 main 폴더 동기화가 2시간 멈췄다."""
+    try:
+        cp = Path(cwd).resolve()
+    except OSError:
+        return None
+    for anc in [cp] + list(cp.parents):
+        if anc.name == TRACKS_DIR:
+            return dict(os.environ, GIT_CEILING_DIRECTORIES=str(anc))
+    return None
+
+
 def run(cmd, cwd, check=False):
     p = subprocess.run(
         cmd, cwd=str(cwd), capture_output=True, text=True,
-        encoding="utf-8", errors="replace",
+        encoding="utf-8", errors="replace", env=_git_env_for(cwd),
     )
     out = (p.stdout or "") + (p.stderr or "")
     if check and p.returncode != 0:
@@ -406,6 +477,9 @@ def _apply_sparse(wt):
     return True
 
 
+STAGE_YOUNG_SEC = 1800          # 이보다 젊은 주인 없는 병합 폴더는 청소하지 않는다
+
+
 def _clean_dead_stages(repo, keep=None):
     """finish 락을 쥔 뒤에만 부른다 — 락이 있으니 지금 살아 있는 stage는 없다(있다면 keep 하나)."""
     root = tracks_dir(repo)
@@ -416,6 +490,12 @@ def _clean_dead_stages(repo, keep=None):
         if d.is_dir() and d.name.startswith(STAGE_PREFIX) and d.name != keep:
             if _stage_in_use(d):
                 continue                 # 영상 관문 동안 락을 놓은 다른 finish 의 살아 있는 stage(2026-10-02, 카드 075)
+            if not _stage_owner_file(d).exists():
+                try:
+                    if time.time() - d.stat().st_mtime < STAGE_YOUNG_SEC:
+                        continue         # 주인 표시 없는 막 생긴 폴더 — 옛 판본 finish 가 만드는 중일 수 있다(카드 093)
+                except OSError:
+                    continue
             run(["git", "worktree", "remove", "--force", str(d)], repo)
             try:
                 _stage_owner_file(d).unlink()
@@ -619,6 +699,8 @@ def _open_stage(repo, name):
         run(["git", "worktree", "remove", "--force", str(stage)], repo)
     # ★코드 폴더만 푼다(2026-10-02 카드 081 실측: 전체 만들기 45초+지우기 19초·1229MB → 9초+3초·600MB).
     #   병합·관제·영향 지도는 git(index/ref)에서 읽고, 시험이 읽는 폴더(static·userscript·out·deploy·extension·docs)는 아래에 다 있다.
+    # ★주인 표시를 **만들기 전에**(카드 093) — 만든 뒤에 쓰던 몇 초 사이 다른 finish 의 청소가 '주인 없는 잔해'로 보고 지웠다(실측).
+    _mark_stage_owner(stage)
     rc, out = run(["git", "worktree", "add", "--detach", "--no-checkout", str(stage), "origin/main"], repo)
     if rc != 0:
         raise TrackError(f"병합용 임시 폴더를 못 만들었다:\n{out}")
@@ -762,12 +844,14 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
         _precheck(name, repo, wt, br, gate)        # 시험이 줄 밖에서 돌게 돼 중복 — 원할 때만(카드 088)
     _clean_dead_stages(repo)                        # 살아 있는 남의 stage 는 건너뛴다(주인 pid)
     _disk_guard(repo, "finish")
+    prev_base = None
     for attempt in range(1, attempts + 1):
         run(["git", "fetch", "origin"], repo)
         stage = _open_stage(repo, name)
+        base_now = run(["git", "rev-parse", "HEAD"], stage)[1].strip()
         try:
             result = _merge_and_gate(name, repo, stage, br, gate, wt, video_gate, lock=None,
-                                     push_lock=_finish_gate_lock)
+                                     push_lock=_finish_gate_lock, prev_base=prev_base)
         finally:
             _close_stage(repo, stage)
 
@@ -778,7 +862,9 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
             _sync_main_folder(repo)
             _level_track_with_main(name, repo, wt, br)
             return 0
-        # result == "raced": 시험하는 사이 main 에 코드가 들어왔다 → 줄 밖에서 최신 main 위로 다시
+        # result == "raced": 시험하는 사이 main 에 코드가 들어왔다 → 줄 밖에서 최신 main 위로 다시.
+        #   이 시도는 시험·관문을 **통과**했다('raced' 는 push 단계에서만 나온다) → 다음 시도는 끼어든 코드 관련만 다시(카드 092).
+        prev_base = base_now
         print(f"⚠️ 시험하는 사이 main 에 코드가 들어왔다. 줄에서 빠져 최신 main 위에서 다시 잰다 "
               f"({attempt}/{attempts})...")
 
@@ -788,7 +874,31 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
     )
 
 
-def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None, push_lock=None):
+def _retry_test_subset(stage, prev_base, my_changed, *, half=0.5):
+    """재시도(앞 시도 통과) 때 다시 돌릴 시험 파일. [] = 끼어든 게 코드 아님(시험 생략) · None = 너무 많음(전체).
+    끼어든 코드 관련 + 내 변경 관련(새 main 위에서 맞물림) — 끼어든 커밋은 이미 제 관문을 통과했다."""
+    rc, out = run(["git", "-c", "core.quotepath=off", "diff", "--name-only", prev_base, "HEAD"], stage)
+    if rc != 0:
+        return None
+    inter = [x.strip() for x in out.splitlines() if x.strip()]
+    inter_code = [x for x in inter if not _is_non_code(x)]
+    if not inter_code:
+        return []
+    texts = {}
+    for p in list(Path(stage).glob("shopping_shorts/tests/test_*.py")) + list(Path(stage).glob("tools/test_*.py")) \
+            + list(Path(stage).glob("tools/*/test_*.py")):
+        try:
+            texts[p.relative_to(stage).as_posix()] = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            pass
+    want = [x for x in set(inter_code) | {c for c in my_changed if not _is_non_code(c)}]
+    sel = _select_related_tests(want, texts, limit=max(1, int(len(texts) * half)))
+    if not sel and any(x.endswith(".py") for x in want):
+        return None                         # 너무 많아 빈 목록(또는 못 고름) — 전체로
+    return sel or None
+
+
+def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None, push_lock=None, prev_base=None):
     light = hasattr(gate, "snapshot_light")
     before = gate.snapshot_light(stage) if light else _cached_baseline(repo, stage, gate)
     exact = None
@@ -802,6 +912,11 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
     for w in gate.baseline_warnings(before):
         print(f"  {w}")
 
+    # ★병합 폴더가 진짜 병합 폴더인가(카드 093) — 지워졌으면 git 이 다른 저장소를 잡는다. 아니면 멈춘다(main 폴더 보호).
+    _rc_t, _top = run(["git", "rev-parse", "--show-toplevel"], stage)
+    if _rc_t != 0 or Path(_top.strip()).resolve() != Path(stage).resolve():
+        raise TrackError("병합 폴더가 사라졌거나 다른 저장소를 가리킨다 — main 폴더 보호를 위해 멈췄다(라이브 무사).\n"
+                         f"  폴더 {stage} · git 이 본 위치 {_top.strip()[:200]}\n다시: py tools/track.py finish {name}")
     # ★ 커밋 없이 병합만 — 커밋하면 post-commit(git push)이 게이트 전에 라이브로 보낸다
     rc, out = run(["git", "merge", "--no-ff", "--no-commit", br], stage)
 
@@ -827,10 +942,24 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
         after = dict(before)
         ran_full = False
     else:
-        with (_gate_slot() if push_lock is not None else contextlib.nullcontext()):
-            print("게이트 실행 중 (병합된 상태, 아직 커밋 없음 · 줄 밖)...")
-            after = gate.snapshot(stage)
-        ran_full = True
+        sub = _retry_test_subset(stage, prev_base, changed) if (light and prev_base) else None
+        if sub == []:
+            print("재시도: 끼어든 main 커밋에 코드가 없다 — 앞 시도 시험 결과 그대로(시험 생략)")
+            after = dict(before)
+            ran_full = False
+        else:
+            with (_gate_slot() if push_lock is not None else contextlib.nullcontext()):
+                if sub:
+                    print("재시도: 끼어든 코드·내 변경 관련 시험 %d개 파일만 다시(앞 시도 통과 · 줄 밖)..." % len(sub))
+                    try:
+                        after = gate.snapshot(stage, paths=sub)
+                    except TypeError:                         # 옛 게이트 스텁 — 전체
+                        after = gate.snapshot(stage)
+                    ran_full = False
+                else:
+                    print("게이트 실행 중 (병합된 상태, 아직 커밋 없음 · 줄 밖)...")
+                    after = gate.snapshot(stage)
+                    ran_full = True
     problems = gate.compare(before, after)
     # ★새로 깨진 테스트를 origin/main 코드로 다시 돌린다(2026-10-02, 카드 069). 기준선 저장본이 낡거나 환경이 달라지면
     #   main 의 기존 실패가 '새로 깨진 것'으로 잡혀 무관한 트랙을 막았다(10-01 추적대본검색어 실측).
@@ -958,29 +1087,31 @@ def _catch_up_non_code(stage):
 
 
 def _classify_new_failures(before, after, problems, *, rerun, printer=print, recheck=None):
-    """'새로 깨진 테스트' 문제를 다시 가른다: rerun(ids) 가 돌려준 집합(= main 에서도 깨지는 것)은 기존 실패로 빼고,
-    남는 것만 문제로 둔다. 전부 기존 실패면 그 문제 줄을 지운다."""
+    """'새로 깨진 테스트' 문제를 다시 가른다. ★순서(2026-10-03 카드 091):
+    ① 병합본에서 그 시험 파일들을 한 번 더(recheck) — 다시 통과하면 우연한 실패(경고만).
+    ② 남은 것만 main 코드로(rerun) — main 에서도 깨지면 기존 실패.
+    어느 단계가 예외여도 **다른 단계는 한다** — 종전엔 main 재실행이 예외면 ①까지 건너뛰어 39건 거짓 실패로 막혔다(3단계화면정리 실측)."""
     new_ids = sorted(set(after.get("failed", [])) - set(before.get("failed", [])))
     if not new_ids or not any(p.startswith("새로 깨진 테스트") for p in problems):
         return problems
-    try:
-        pre = set(rerun(new_ids))
-    except Exception as e:  # noqa: BLE001 — 재실행을 못 하면 보수적으로 종전 판정 유지
-        printer(f"  ⚠️ 기존 실패 분류 건너뜀(main 재실행 실패): {e!r}")
-        return problems
-    if pre:
-        printer("  ℹ️ 기존 실패로 분류(origin/main 에서도 깨짐) %d건: %s" % (len(pre), ", ".join(sorted(pre)[:6])))
-    left = [t for t in new_ids if t not in pre]
-    if left and recheck is not None:
-        # ★우연한 실패 거르기(카드 081): 병합본에서 한 번 더 돌려 통과하면 이 병합 탓이 아니다(경고만 남긴다).
+    left = list(new_ids)
+    if recheck is not None:
         try:
             still = set(recheck(left))
             flaky = [t for t in left if t not in still]
             if flaky:
                 printer("  ⚠️ 다시 돌리니 통과 — 우연한 실패로 본다 %d건: %s" % (len(flaky), ", ".join(flaky[:6])))
             left = [t for t in left if t in still]
-        except Exception as e:  # noqa: BLE001 — 재확인 못 하면 종전 판정
-            printer(f"  ⚠️ 재확인 건너뜀: {e!r}")
+        except Exception as e:  # noqa: BLE001 — 재확인 못 하면 다음 단계로
+            printer(f"  ⚠️ 병합본 재확인 건너뜀: {e!r}")
+    if left:
+        try:
+            pre = set(rerun(left))
+            if pre:
+                printer("  ℹ️ 기존 실패로 분류(병합 전 main 에서도 깨짐) %d건: %s" % (len(pre), ", ".join(sorted(pre)[:6])))
+            left = [t for t in left if t not in pre]
+        except Exception as e:  # noqa: BLE001 — main 재실행을 못 하면 남은 것은 그대로 문제로 둔다(보수적)
+            printer(f"  ⚠️ 기존 실패 분류 건너뜀(main 재실행 실패): {e!r}")
     out = [p for p in problems if not p.startswith("새로 깨진 테스트")]
     if left:
         shown = "\n".join(f"    - {t}" for t in left[:20])
@@ -1049,36 +1180,36 @@ def _known_main_failures(repo, stage, ids, ref="HEAD"):
 
 
 def _rerun_on_main(stage, ids):
-    """origin/main 코드(코드 폴더만 git archive)로 그 테스트들만 돌려 **거기서도 깨지는 id 집합**을 돌려준다."""
-    rc, sha = run(["git", "rev-parse", "origin/main"], stage)
+    """**병합 폴더의 기준 커밋(HEAD = 병합 전 main)** 코드로 그 시험 파일들만 돌려 거기서도 깨지는 id 집합을 돌려준다.
+    ★(2026-10-03 카드 091) 종전엔 origin/main 을 git archive 로 통째(실측 661MB) 풀어 느렸고, 그 압축이 깨져(ReadError)
+    분류가 통째로 빠졌다. 그사이 origin/main 이 움직이면 다른 코드로 가르기도 했다 → 같은 경량 폴더(STAGE_SPARSE)를 기준 커밋에 만든다."""
+    rc, sha = run(["git", "rev-parse", "HEAD"], stage)
     sha = sha.strip()
+    if rc != 0 or not sha:
+        raise TrackError("병합 폴더 기준 커밋을 못 읽었다: %s" % sha[:200])
     tmp = Path(tempfile.mkdtemp(prefix="gate_main_"))
+    wt = tmp / "wt"
     try:
-        # 병합 폴더(STAGE_SPARSE)와 **같은 범위**를 푼다 — 좁으면 out·docs 를 읽는 시험이 main 에서만 깨져 '원래 실패'로 잘못 분류된다(카드 081).
-        top = run(["git", "-c", "core.quotepath=off", "ls-tree", "--name-only", sha], stage)[1].split()
-        want = {x.strip("/").split("/")[0] for x in STAGE_SPARSE if x != "/*"}
-        paths = [t for t in top if t in want or (("/" not in t) and t.endswith((".py", ".ini", ".toml", ".cfg")))]
-        if any(x.startswith("/wiki/") for x in STAGE_SPARSE) and "wiki" in paths:
-            paths = [t for t in paths if t != "wiki"] + ["wiki/rules"]
-        p = subprocess.run(["git", "archive", "--format=tar", sha, "--"] + paths, cwd=str(stage), capture_output=True)
-        if p.returncode != 0:
-            p = subprocess.run(["git", "archive", "--format=tar", sha], cwd=str(stage), capture_output=True)
-        tar_path = tmp / "main.tar"
-        tar_path.write_bytes(p.stdout)
-        import tarfile
-        with tarfile.open(tar_path) as tf:
-            tf.extractall(tmp)
+        rc, out = run(["git", "worktree", "add", "--detach", "--no-checkout", str(wt), sha], stage)
+        if rc != 0:
+            raise TrackError("main 재실행 폴더를 못 만들었다: %s" % out[-300:])
+        rc, out = run(["git", "sparse-checkout", "set", "--no-cone", *STAGE_SPARSE], wt)
+        if rc == 0:
+            rc, out = run(["git", "checkout"], wt)
+        if rc != 0:
+            raise TrackError("main 재실행 폴더를 못 풀었다: %s" % out[-300:])
         env = dict(os.environ, PYTHONIOENCODING="utf-8")
-        # main 코드의 finish 시험이 이 프로세스가 쥔 전역 락을 기다리지 않게 — 임시 폴더를 통째로 따로(카드 075)
+        # main 코드의 finish 시험이 이 프로세스가 쥔 락을 기다리지 않게 — 임시 폴더를 통째로 따로(카드 075)
         for _k in ("TMP", "TEMP", "TMPDIR"):
             env[_k] = str(tmp)
         # 파일 통째로(카드 083) — id 하나씩이면 같은 파일 안 순서 영향이 사라져 '원래 실패'를 못 가른다
         r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--no-header", "--tb=no", "-rfE"]
                            + merge_gate.test_files_of(ids),
-                           cwd=str(tmp), capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=900)
+                           cwd=str(wt), capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=900)
         got = merge_gate.parse_failed((r.stdout or "") + (r.stderr or ""))
         return {f for f in got if f in set(ids)}
     finally:
+        run(["git", "worktree", "remove", "--force", str(wt)], stage)
         shutil.rmtree(tmp, ignore_errors=True)
 
 
@@ -1306,6 +1437,34 @@ def list_tracks(repo=BASE):
 
 # ── cli ──────────────────────────────────────────────────────────
 
+TOOLS_LATEST = "_tools_latest"
+
+
+def _latest_tools_track_py():
+    """origin/main 에 맞춘 전용 도구 폴더(.tracks/_tools_latest, tools/ 만)의 track.py — main 폴더 상태와 무관(카드 093).
+    ★main 폴더는 누가 작업을 걸어 두면(멈춘 병합·스테이징) 동기화가 막혀 낡는다 — 10-03 실측 51커밋·2시간, 그동안 모든
+    세션의 finish 가 옛 판본(088)으로 돌아 089·091·092 가 안 먹었다. 갱신은 파일락 하나로 줄 세운다."""
+    repo = Path(main_worktree())
+    tl = tracks_dir(repo) / TOOLS_LATEST
+    lk = _FileLock(Path(tempfile.gettempdir()) / "stockbrain_tools_latest.lock", "[대기] 최신 도구 폴더 갱신 중...").acquire()
+    try:
+        run(["git", "fetch", "-q", "origin", "main"], repo)
+        if not (tl / ".git").exists():
+            if tl.exists():
+                run(["git", "worktree", "remove", "--force", str(tl)], repo)
+                shutil.rmtree(tl, ignore_errors=True)
+            rc, out = run(["git", "worktree", "add", "--detach", "--no-checkout", str(tl), "origin/main"], repo)
+            if rc != 0:
+                raise TrackError("최신 도구 폴더를 못 만들었다: " + out[-200:])
+            run(["git", "sparse-checkout", "set", "--no-cone", "/tools/"], tl)
+        rc, out = run(["git", "checkout", "-q", "--detach", "--force", "origin/main"], tl)
+        if rc != 0:
+            raise TrackError("최신 도구 폴더를 못 맞췄다: " + out[-200:])
+    finally:
+        lk.release()
+    return tl / "tools" / "track.py"
+
+
 def _reexec_latest(argv):
     """main 폴더의 tools/track.py 가 이 파일과 다르면 그걸로 바꿔 실행한다(카드 083). 트랙 폴더 350개 중 349개가
     옛 판본이라, main 에 새 finish 가 들어가도 각 세션은 자기 폴더의 옛 것으로 돌았다(10-02 실측). main 폴더는 병합 때마다 최신.
@@ -1314,7 +1473,7 @@ def _reexec_latest(argv):
     if os.environ.get("TRACK_REEXEC"):
         return False, 0
     try:
-        latest = Path(main_worktree()) / "tools" / "track.py"
+        latest = _latest_tools_track_py()
         me = Path(__file__).resolve()
         if not latest.exists() or latest.resolve() == me or latest.read_bytes() == me.read_bytes():
             return False, 0
@@ -1327,7 +1486,7 @@ def _reexec_latest(argv):
                 return False, 0
     except Exception:  # noqa: BLE001 — 못 정하면 이 판본으로 돈다
         return False, 0
-    print("ℹ️ main 폴더의 최신 track.py 로 실행한다(이 트랙 폴더 판본은 옛것): %s" % latest, flush=True)
+    print("ℹ️ 최신(origin/main) track.py 로 실행한다(이 트랙 폴더 판본은 옛것): %s" % latest, flush=True)
     env = dict(os.environ, TRACK_REEXEC="1")
     return True, subprocess.call([sys.executable, str(latest)] + list(argv), env=env)
 

@@ -164,12 +164,14 @@ def test_compare_reports_every_new_failure_not_just_first():
     assert "tests/t.py::a" in joined and "tests/t.py::b" in joined
 
 
-def test_xdist_args_parallel_when_installed():
+def test_xdist_args_parallel_when_installed(monkeypatch):
+    monkeypatch.delenv("GATE_XDIST_N", raising=False)   # 자원 관문 값에 기대지 않는다(카드 092)
     # 이 리포 환경은 pytest-xdist를 requirements로 설치 → -n 4 병렬(2026-09-21 사장님 "16코어 다 쓸 일 아니다")
     assert merge_gate._xdist_args() == ["-n", "8"]
 
 
 def test_snapshot_cmd_includes_xdist(monkeypatch):
+    monkeypatch.delenv("GATE_XDIST_N", raising=False)
     # snapshot이 pytest 호출에 -n 4를 실어 보내는지(설치 환경) — run을 가로채 확인
     seen = []
     def fake_run(cmd, cwd):

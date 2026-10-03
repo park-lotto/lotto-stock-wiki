@@ -221,7 +221,7 @@ def test_옛_판본_트랙에서도_main_폴더의_최신_track_py로_돈다(tmp
     newer = tmp_path / "tools" / "track.py"
     newer.parent.mkdir(parents=True)
     newer.write_text("# 더 새 판본\n", encoding="utf-8")
-    monkeypatch.setattr(track, "main_worktree", lambda cwd=None: tmp_path)
+    monkeypatch.setattr(track, "_latest_tools_track_py", lambda: newer)     # 판본은 전용 도구 폴더에서(카드 093)
     monkeypatch.delenv("TRACK_REEXEC", raising=False)
     monkeypatch.setattr(track, "_sh", lambda cmd, cwd: (0, ""))      # 이 트랙은 track.py 를 고치지 않는다
     calls = []
@@ -245,3 +245,32 @@ def test_track_py를_고치는_트랙은_바꿔_실행하지_않는다(tmp_path,
         return 1, ""
     monkeypatch.setattr(track, "_sh", fake_sh)
     assert track._reexec_latest(["list"]) == (False, 0)
+
+
+# ───────── 카드 091 ─────────
+def test_main_재실행이_예외여도_우연한_실패는_병합본_재확인으로_걸러진다():
+    """10-03 실측: main 재실행 ReadError 로 재확인까지 건너뛰어 39건 거짓 실패."""
+    before = {"failed": []}
+    after = {"failed": ["t/a.py::x", "t/a.py::y"]}
+    probs = ["새로 깨진 테스트 2건:"]
+    def boom(ids):
+        raise RuntimeError("ReadError")
+    out = track._classify_new_failures(before, after, probs, rerun=boom, printer=lambda s: None,
+                                       recheck=lambda ids: {"t/a.py::y"})
+    assert out == ["새로 깨진 테스트 1건:\n    - t/a.py::y"], out
+
+
+def test_재확인에서도_깨지고_main_에선_통과면_막는다():
+    out = track._classify_new_failures({"failed": []}, {"failed": ["t/b.py::new"]}, ["새로 깨진 테스트 1건:"],
+                                       rerun=lambda ids: set(), printer=lambda s: None, recheck=lambda ids: set(ids))
+    assert out and "t/b.py::new" in out[0]
+
+
+def test_main_재실행은_병합_폴더_기준_커밋의_경량_폴더에서(repo):
+    _make_track_commit(repo, "기준커밋", fname="tests_x/test_k.py", body="def test_k():\n    assert False\n")
+    stage = track._open_stage(repo, "기준커밋")
+    try:
+        got = track._rerun_on_main(stage, ["tests_x/test_k.py::test_k"])
+        assert got == set(), "main(기준 커밋)엔 그 시험이 없다 — 깨진 것으로 잡으면 안 된다"
+    finally:
+        track._close_stage(repo, stage)

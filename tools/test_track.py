@@ -588,6 +588,9 @@ def test_finish_cleans_dead_merge_stages(repo):
     dead = track.tracks_dir(repo) / f"{track.STAGE_PREFIX}죽은것"
     dead.parent.mkdir(parents=True, exist_ok=True)
     _git(repo, "worktree", "add", "--detach", str(dead), "origin/main")
+    import os as _os, time as _t
+    _old = _t.time() - track.STAGE_YOUNG_SEC - 60           # 주인 없는 잔해는 30분 지나야 치운다(카드 093)
+    _os.utime(dead, (_old, _old))
     _make_track_commit(repo, "보이스")
     track.finish("보이스", repo=repo, gate=_Gate())
     assert not dead.exists(), "잔해가 남았다"
