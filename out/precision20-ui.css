@@ -172,3 +172,10 @@
 .word-fx-grow{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}
 /* 제목·채널명 칸도 Enter 로 줄을 바꾼다(2026-10-03 관제 103) — 한 줄 칸처럼 보이다가 줄 수만큼 자란다. */
 .layout-a .field textarea.one-line-field{font-size:14px;font-weight:700;resize:none;overflow:hidden;line-height:1.4;min-height:0;field-sizing:content}
+/* 칸 조절 줄 정리(2026-10-03 관제 103) — 칸 이름·글자 수는 윗줄, 크기·위치 조절은 이름을 붙여 아랫줄. */
+.layout-a .field label{flex-wrap:wrap;row-gap:6px}
+.layout-a .font-stepper{order:3;flex-basis:100%;margin:0;gap:5px}
+.layout-a .font-stepper .stp-label{font-size:11px;font-weight:700;color:#8fa3ad}
+.layout-a .font-stepper .stp-gap{margin-left:10px}
+.layout-a .font-stepper button{width:26px;height:24px}
+.layout-a .font-stepper [data-field-reset]{width:auto;margin-left:auto;padding:0 9px;font-size:11px;font-weight:800}

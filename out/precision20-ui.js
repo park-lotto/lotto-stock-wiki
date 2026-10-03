@@ -431,7 +431,7 @@
     const count=field.querySelector('[data-count]');
     const stepper=document.createElement('span');
     stepper.className='font-stepper';
-    stepper.innerHTML='<button type="button" data-font-step="-0.1" title="글자 10% 작게">−</button><output>100%</output><button type="button" data-font-step="0.1" title="글자 10% 크게">＋</button><button type="button" data-position-step="-1" title="위로">↑</button><button type="button" data-position-step="1" title="아래로">↓</button><button type="button" data-field-reset title="프리셋 기본값으로">↺</button>';
+    stepper.innerHTML='<span class="stp-label">크기</span><button type="button" data-font-step="-0.1" title="글자 10% 작게">−</button><output>100%</output><button type="button" data-font-step="0.1" title="글자 10% 크게">＋</button><span class="stp-label stp-gap">위치</span><button type="button" data-position-step="-1" title="위로">↑</button><button type="button" data-position-step="1" title="아래로">↓</button><button type="button" data-field-reset title="크기·위치·문구를 처음 값으로">처음으로</button>';   // 10-03 사장님 "헷갈린다": 기호만 있던 버튼에 이름을 붙이고 칸 이름 아랫줄로 내렸다
     count.before(stepper);
   });
   const captionField=root.querySelector('.layout-a [data-field-key="caption"]');
@@ -1756,8 +1756,8 @@
   moveScope.innerHTML='<button type="button" data-caption-scope="all" style="grid-column:1/-1">이 위치를 다른 장면에도 적용</button><small style="grid-column:1/-1" data-caption-scope-status></small>';
   const captionPlacement=captionField?.querySelector('.caption-position');
   captionPlacement?.after(moveScope);
-  captionPlacement.querySelector('[data-caption-placement="free"]').textContent='위치 옮기기';
-  captionPlacement.querySelector('[data-caption-placement="title"]').textContent='위치 초기화';
+  captionPlacement.querySelector('[data-caption-placement="free"]').textContent='끌어서 옮기기';
+  captionPlacement.querySelector('[data-caption-placement="title"]').textContent='기본 자리로';   // 10-03: '위치 초기화/위치 옮기기'가 무슨 차이인지 헷갈린다 — 하는 일을 그대로 적는다
   const maskDetails=document.createElement('details');maskDetails.style.gridColumn='1/-1';maskDetails.innerHTML='<summary style="cursor:pointer">자막박스 크기 · 색상</summary><div class="caption-position"></div>';
   captionPlacement?.querySelectorAll('label').forEach(label=>maskDetails.querySelector('div').append(label));
   captionPlacement?.append(maskDetails);
