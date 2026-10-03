@@ -2006,6 +2006,10 @@ function restoreServer(msg){
     Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
     (DATA.beats || []).forEach((b, i) => { if (b.phrase_sync === false) PHRASE_SYNC[i] = false; });
   }
+  if (typeof PHRASE_EXACT !== "undefined"){   // 구절 맞춤 '정확' 표식(관제 106)
+    Object.keys(PHRASE_EXACT).forEach(k => delete PHRASE_EXACT[k]);
+    (DATA.beats || []).forEach((b, i) => { if (b.phrase_exact === true) PHRASE_EXACT[i] = true; });
+  }
   if (typeof hydrateCuts === "function") hydrateCuts(...cutsFromBeats());   // 끈 칸의 얼린 컷도(2026-09-14)
   mode = 'hand';                       // 서버 편성 = 사람이 정한 배치다
   ['live','one','hand','pick'].forEach(x => {
@@ -3270,7 +3274,7 @@ function renderBand(){
              onclick="bandCutClick(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCardAt(${i}, ${ci}, '${c.seg_id}')"
              title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초${c.more ? ` · 옆 장면이 짧아 원본에서 ${c.more.toFixed(1)}초 더 이어 보여 줘요` : ''} · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · ✕ 버튼이나 두 번 클릭 = 빼기">
-             <img src="${SL.thumb(cardThumbId(c))}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '🔒' : ''}${c.dur.toFixed(1)}${c.more ? '↪' : ''}</span
+             <img src="${SL.thumb(cardThumbId(c))}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${(getFix(i, c.seg_id) && !sceneRuleOn(i)) ? '🔒' : ''}${c.dur.toFixed(1)}${c.more ? '↪' : ''}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
@@ -3344,8 +3348,11 @@ function renderBand(){
                : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}${sfxMuteBtn(i)}
           <span class="tbtools" onclick="event.stopPropagation()">
             ${speedControl(i)}
-            ${(DATA.beats[i] && DATA.beats[i].cut_rhythm) ? `<label title="잘되는 썰 채널 79편에서 잰 컷 리듬으로 배치합니다 — 훅과 핵심 결과 줄은 한 컷으로 길게 끌고(편당 2번), 나머지 줄은 담은 장면을 한 번씩 순서대로 씁니다. 컷은 2초 안팎, 0.5초짜리 파편과 같은 장면 되풀이가 없습니다. 끄면 자막 구절대로 나뉩니다(구절 맞춤)"><input type="checkbox" ${cutRhythmOn(i) ? 'checked' : ''} onchange="toggleCutRhythm(${i}, this.checked)"> 컷 리듬</label>` : ''}
-            <label title="컷 경계를 자막 구절 경계에 1:1로 맞춥니다(구절 수만큼 컷·길이도 구절대로). 켜면 컷 리듬보다 우선합니다. ✋수동 길이가 있으면 수동이 우선"><input type="checkbox" ${phraseSyncOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>
+            ${cutRuleIsV2()
+              ? `<label title="담은 장면 수만큼 컷을 만들고 시간을 장면에 고르게 나눕니다. 짧은 장면은 가진 만큼만 쓰고 남는 시간은 옆 장면이 원본을 이어서 더 보여 줍니다. 장면이 바뀌는 순간은 가까운 자막 경계에 맞추되, 1.2배 넘게 느려져야 하면 맞추지 않습니다. 끄면 구절 맞춤이 켜집니다"><input type="checkbox" ${cutRhythmOn(i) ? 'checked' : ''} onchange="toggleCutRhythm(${i}, this.checked)"> 컷 리듬</label>
+            <label title="장면이 바뀌는 순간을 자막 줄 경계에 정확히 맞춥니다. 컷 수는 담은 장면 수 그대로이고, 화면이 모자란 장면은 그만큼 느리게 틉니다(1.2배를 넘을 수 있습니다). 장면이 자막 줄보다 많으면 남는 전환은 고르게 나눕니다. 끄면 컷 리듬이 켜집니다"><input type="checkbox" ${phraseBoxOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>`
+              : `${(DATA.beats[i] && DATA.beats[i].cut_rhythm) ? `<label title="잘되는 썰 채널 79편에서 잰 컷 리듬으로 배치합니다 — 훅과 핵심 결과 줄은 한 컷으로 길게 끌고(편당 2번), 나머지 줄은 담은 장면을 한 번씩 순서대로 씁니다. 컷은 2초 안팎, 0.5초짜리 파편과 같은 장면 되풀이가 없습니다. 끄면 자막 구절대로 나뉩니다(구절 맞춤)"><input type="checkbox" ${cutRhythmOn(i) ? 'checked' : ''} onchange="toggleCutRhythm(${i}, this.checked)"> 컷 리듬</label>` : ''}
+            <label title="컷 경계를 자막 구절 경계에 1:1로 맞춥니다(구절 수만큼 컷·길이도 구절대로). 켜면 컷 리듬보다 우선합니다. ✋수동 길이가 있으면 수동이 우선"><input type="checkbox" ${phraseSyncOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>`}
             ${frozen ? '' : `<label title="담은 장면이 모자랄 때 어떻게 채울지 고릅니다 — 끄면 [뒷부분 채우기]: 담은 구간 뒤에 이어지는 원본을 1배속으로 더 틉니다(새 화면이 나옵니다). 켜면 [전체 늘리기]: 담은 장면 전부를 고르게 늘려 채웁니다(최대 1.15배, 티가 덜 납니다)"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 전체 늘리기</label>`}
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
                  대본수정 만들고"). 그 자리에 대본수정을 둔다 — 3단계에서 자막을 보다가
@@ -3850,6 +3857,7 @@ function snapWork(){
     stretch: STRETCH, autoadd: AUTOADD, extra: EXTRA,
     fixlen: FIXLEN,        // ✋ 손으로 정한 컷 길이(2026-08-29 — "저장을 빼먹어" 경고의 해소)
     phraseOff: PHRASE_SYNC,  // 구절 맞춤 끔 표시(기본 켬이라 끈 칸만 남는다)
+    phraseExact: PHRASE_EXACT,   // 새 규칙 작업의 [구절 맞춤] 켠 칸(관제 106)
     cuts: CUTS, slow: SLOW   // 끈 칸의 얼린 컷·느리게(2026-09-14)
     // ★at(저장 시각)은 일부러 미포함 — 매번 달라져 "바뀜 것이 없으면 안 쌓는다"를
     //   통째로 무력화한다. 저장할 때만 saveWork가 붙인다.
@@ -4021,6 +4029,8 @@ function applyWork(w){
     hydrateFixlen(w.fixlen);   // ✋ 옛 저장본엔 없다 → 비워진다(캐리오버 방지)
     Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
     Object.assign(PHRASE_SYNC, w.phraseOff || {});
+    Object.keys(PHRASE_EXACT).forEach(k => delete PHRASE_EXACT[k]);
+    Object.assign(PHRASE_EXACT, w.phraseExact || {});
     if (typeof hydrateCuts === "function") hydrateCuts(w.cuts, w.slow);
     ['live','one','hand','pick'].forEach(x => {
       const b = document.getElementById('m-' + x);
@@ -4051,6 +4061,8 @@ function loadSaved(){
   hydrateFixlen(w.fixlen);     // ✋ 없으면 비운다
   Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
   Object.assign(PHRASE_SYNC, w.phraseOff || {});
+  Object.keys(PHRASE_EXACT).forEach(k => delete PHRASE_EXACT[k]);
+  Object.assign(PHRASE_EXACT, w.phraseExact || {});
   if (typeof hydrateCuts === "function") hydrateCuts(w.cuts, w.slow);
   ['live','one','hand','pick'].forEach(x => {
     const b = document.getElementById('m-' + x);
@@ -4375,6 +4387,7 @@ function _editPayload(){
       list: (lists[i] || []).slice(), stretch: !!STRETCH[i],
       fit: (b.fit_segs || []).filter(x => (lists[i] || []).includes(x)),   // [속도 맞추기] 누른 조각
       phrase: phraseSyncOn(i),      // 구절 맞춤 — 렌더도 같은 경계로(video_assemble)
+      exact: phraseExactOn(i),      // 새 규칙 작업의 [구절 맞춤] — 전환을 자막 경계에 정확히(관제 106)
       // 끈 칸 = 화면에 보이는 컷 그대로 렌더(2026-09-14). 켠 칸은 안 보낸다.
       cuts: phraseSyncOn(i) ? null : (CUTS[i] || []).map(c => c.lock
               ? ({seg_id: c.seg_id, dur: c.dur, lock: 1})     // 🔒 잠금도 저장(새로고침·다른 PC 유지)
