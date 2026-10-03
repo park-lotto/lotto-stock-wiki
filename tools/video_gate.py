@@ -208,12 +208,22 @@ _SKIP = re.compile(r"^(\S+) 건너뜀 ?(.*)$")
 _JOB_SCENE = re.compile(r"\| 다른장면 (\[.*?\]) \| 밀림")
 # 잔상 줄(2026-09-27) — editor_vs_final_video 가 '== 칸' 줄과 **따로** 낸다(그 줄은 위 _SUMMARY 가 줄 끝까지 맞춰 읽는다)
 _GHOST = re.compile(r"^== 잔상 (\d+)프레임\(컷 (\d+) · 화면에만 (\d+)프레임\) · 짧은컷\((\d+)프레임 이하\) (\d+)\s*$")
+# 번쩍임 줄(2026-10-03 관제 099) — 완성본 한 장 번쩍임(다른 자리 그림 1프레임). editor_vs_final_video 가 따로 낸다.
+_FLASH = re.compile(r"^== 번쩍임 (\d+)프레임\(작업 (\d+) · 못 잰 작업 (\d+)\)\s*$")
 
 
 def parse_report(text):
     """editor_vs_final_video report.txt → dict. 요약 줄이 없거나 모양이 다르면 summary=None(=판정 불가 → 실패)."""
-    r = {"summary": None, "summary_line": "", "jobs": [], "skips": [], "scene_jobs": [], "ghost": None, "ghost_line": ""}
+    r = {"summary": None, "summary_line": "", "jobs": [], "skips": [], "scene_jobs": [], "ghost": None, "ghost_line": "",
+         "flash": None, "flash_line": ""}
     for line in (text or "").splitlines():
+        if line.startswith("== 번쩍임"):
+            r["flash_line"] = line
+            mf = _FLASH.match(line)
+            if mf:
+                fr, jb, un = (int(x) for x in mf.groups())
+                r["flash"] = {"frames": fr, "jobs": jb, "unknown": un}
+            continue
         if line.startswith("== 잔상"):
             r["ghost_line"] = line
             mg = _GHOST.match(line)
@@ -286,6 +296,15 @@ def judge(parsed, cfg, benign_skips=("음성 없음",)):
             break
         if g[gk] > int(lim):
             fails.append("%s %d프레임 (기준 %d)" % (label, g[gk], int(lim)))
+    # ★번쩍임(관제 099) — 기준 키가 있으면 판정. 줄을 못 읽거나 못 잰 작업이 있으면 실패(조용히 통과 금지)
+    if cfg.get("max_flash") is not None:
+        fl = parsed.get("flash")
+        if fl is None:
+            fails.append("번쩍임 줄(== 번쩍임 …)을 못 읽었다 — 도구가 옛 판본이거나 형식이 바뀌었다: %r" % parsed.get("flash_line", "")[:200])
+        elif fl["unknown"]:
+            fails.append("번쩍임을 못 잰 작업 %d개" % fl["unknown"])
+        elif fl["frames"] > int(cfg["max_flash"]):
+            fails.append("한 장 번쩍임 %d프레임 (기준 %d) — 완성본에 다른 자리 그림이 한 장 끼었다" % (fl["frames"], int(cfg["max_flash"])))
     ratio_lim = cfg.get("max_shift_ratio")
     if ratio_lim is not None and s["cells"] > 0:
         ratio = s["shift_center"] / s["cells"]
@@ -547,6 +566,7 @@ def baseline_limits(g, parsed_main, reports):
     gh = parsed_main.get("ghost") or {}
     up("max_ghost", gh.get("frames"), "잔상")
     up("max_ghost_screen_only", gh.get("screen_only"), "화면에만 있는 잔상")
+    up("max_flash", (parsed_main.get("flash") or {}).get("frames"), "한 장 번쩍임")
     cc = capcut_summary(reports["cc"]) if reports.get("cc") else None
     if cc:
         up("max_capcut_mismatch", cc.get("capcut"), "캡컷 불일치")
