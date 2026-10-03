@@ -12,6 +12,9 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
     await page.evaluate(async()=>{await document.fonts.ready;window.sceneStyle.refresh();window.sceneStyleExporting=true});
     const layers=[];
     const only=Array.isArray(request.only)?new Set(request.only.map(Number)):null;   // 썸네일 핀: 한 장면만(2026-09-23)
+    // 단어 강조(관제 102): 켜져 있으면 자막 있는 장면을 장면 끝까지 프레임 묶음으로 낸다. 그림은 단어가 바뀔 때만 달라지므로
+    //   바뀐 프레임만 찍고 나머지는 앞 그림을 복사한다(찍기 1장 ≈ 0.26초, 복사는 거의 0).
+    const wordFx=!!(request.snapshot.wordFx&&request.snapshot.wordFx.style);
     for(let index=0;index<request.context.scenes.length;index++){
       if(only&&!only.has(index)){layers.push(null);continue;}
       const g=await page.evaluate(i=>window.sceneStyle.show(i),index);
@@ -22,17 +25,28 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
       // 고정형 자막 등장(0.3초): 훅뿐 아니라 자막이 바뀌는 모든 장면의 시작을 프레임별로 찍는다.
       const enter=(request.snapshot.mode==='continuous'&&request.snapshot.hookBandMotion)||request.snapshot.bodyCaptionMotion?await page.evaluate(()=>window.sceneStyle.captionEnterAt?.(100000)||0):0;
       const moving=await page.evaluate(()=>{const shape=window.sceneDecorations?.motionAt(0),brand=window.sceneBranding?.motionAt(0);return shape||brand||false});
+      const words=wordFx?await page.evaluate(()=>window.sceneStyle.wordFxAt?.(0)??null):null;   // null = 이 장면엔 강조할 자막이 없다
       await page.screenshot({path:path.join(request.output,file),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
       const scene=request.context.scenes[index],first=Math.round(scene.start*30),end=Math.round(scene.end*30);
-      let animation=null;
+      let animation=null,wordSpans=null;
       const hookCount=duration>first/30*1000&&g.kind==='hook'?Math.ceil(duration/1000*30)-first+1:0,enterCount=enter?Math.ceil(enter/1000*30)+1:0;
-      if(!request.still&&(moving||hookCount||enterCount)){   // still=정지 한 장만(썸네일 핀)
-        const count=moving?end-first:Math.min(end-first,Math.max(hookCount,enterCount));
-        const pattern=`scene-style-motion-${index}-%04d.png`;
+      if(!request.still&&(moving||hookCount||enterCount||words!==null)){   // still=정지 한 장만(썸네일 핀)
+        const settle=Math.max(hookCount,enterCount);   // 이 프레임까지는 제목·자막 등장이 움직인다 → 매 프레임 찍는다
+        const count=moving||words!==null?end-first:Math.min(end-first,settle);
+        const pattern=`scene-style-motion-${index}-%04d.png`,frameFile=f=>pattern.replace('%04d',String(f).padStart(4,'0'));
+        let lastWord=null,lastShot=-1;
         for(let f=0;f<count;f++){
           await page.evaluate(i=>window.sceneStyle.show(i),index);
+          // 단어 상태를 먼저 묻는다 — 등장이 끝났고 단어도 안 바뀌었으면 앞 그림을 그대로 쓴다.
+          const word=words!==null?await page.evaluate(t=>window.sceneStyle.wordFxAt(t),f/30*1000):null;
+          if(words!==null&&word!==lastWord){(wordSpans=wordSpans||[]).push({frame:f,word});}
+          if(words!==null&&!moving&&f>settle&&word===lastWord&&lastShot>=0){
+            fs.copyFileSync(path.join(request.output,frameFile(lastShot)),path.join(request.output,frameFile(f)));
+            continue;
+          }
+          lastWord=word;
           await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
-          await page.evaluate(({title,shape,brand,cap})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape);window.sceneBranding?.motionAt(brand);if(cap!==null)window.sceneStyle.captionEnterAt?.(cap)},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000,brand:(first+f)/30*1000,cap:enter?f/30*1000:null});
+          await page.evaluate(({title,shape,brand,cap,word})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape);window.sceneBranding?.motionAt(brand);if(cap!==null)window.sceneStyle.captionEnterAt?.(cap);if(word!==null)window.sceneStyle.wordFxAt(word)},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000,brand:(first+f)/30*1000,cap:enter?f/30*1000:null,word:words!==null?f/30*1000:null});   // 단어 상태는 찍기 직전에 한 번 더 못 박는다
           await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
           // Materialize the sampled animation state for Chromium's screenshot compositor.
           await page.evaluate(()=>{
@@ -43,12 +57,15 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
               animations.forEach(a=>a.cancel());Object.assign(el.style,values);
             });
           });
-          await page.screenshot({path:path.join(request.output,pattern.replace('%04d',String(f).padStart(4,'0'))),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
+          await page.screenshot({path:path.join(request.output,frameFile(f)),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
+          lastShot=f;
         }
         animation={pattern,count};
+        // 캡컷은 정지 그림 클립만 받는다 — 단어마다 그 단어의 마지막 프레임(등장이 끝난 그림)을 대표로 넘긴다(scene_style.overlay_spans).
+        if(wordSpans)wordSpans=wordSpans.map((span,k)=>({frame:span.frame,word:span.word,file:frameFile((k+1<wordSpans.length?wordSpans[k+1].frame:count)-1)}));
       }
       const camera=isCamera?await page.evaluate(({first,end})=>Array.from({length:end-first},(_,f)=>window.sceneStyle.cameraAt((first+f)/30*1000)),{first,end}):null;
-      layers.push({...g,file,animation,camera});
+      layers.push({...g,file,animation,camera,...(wordSpans?{wordSpans}:{})});
     }
     if(errors.length)throw new Error(errors.join('\n'));
     fs.writeFileSync(path.join(request.output,'scene-style-layers.json'),JSON.stringify(layers));

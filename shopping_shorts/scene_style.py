@@ -146,6 +146,14 @@ def validate_snapshot(value):
             raise ValueError(f"{label} 값이 올바르지 않습니다")
     if value.get("bodyCaptionMotion") not in (None, "", "rise", "grow", "pop", "slide", "drop", "fade", "wide"):   # precision20-ui.js BODY_CAPTION_MOTIONS와 짝
         raise ValueError("본문 자막 효과 값이 올바르지 않습니다")
+    word_fx = value.get("wordFx")
+    if word_fx is not None:
+        # 단어 강조(관제 102) — precision20-ui.js WORD_FX_STYLES 와 짝. color 빈칸 = 템플릿 포인트 색(자동).
+        if (not isinstance(word_fx, dict) or set(word_fx) - {"style", "color", "grow"}
+                or word_fx.get("style", "") not in ("", "box", "color")
+                or not isinstance(word_fx.get("grow", False), bool)
+                or not re.fullmatch(r"(#[0-9a-fA-F]{6})?", str(word_fx.get("color", "")))):
+            raise ValueError("단어 강조 값이 올바르지 않습니다")
     if "hookBandRise" in value and not isinstance(value["hookBandRise"], bool):
         raise ValueError("흰 띠 스윽 올라오기 값이 올바르지 않습니다")
     if "hookMotionSpeed" in value:
@@ -166,7 +174,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
@@ -259,6 +267,78 @@ def frame_kind(index, rule):
     return "hook" if index == 0 else "body"
 
 
+def _word_key(text):
+    return re.sub(r"[^0-9A-Za-z가-힣]", "", text or "")
+
+
+def attach_scene_words(scenes, timeline):
+    """장면(자막 구절)마다 **어절이 켜지는 시각**(초, 영상 기준)을 scene["words"] 에 붙인다 — 단어 강조의 주인(관제 102).
+
+    화면·렌더·캡컷은 이 값만 읽는다(`out/precision20-ui.js` wordFxTimes). 여기서 정하는 것:
+      · 구절의 어절을 음성 정렬 단어(beat["words"], tts_timestamps.words_relative)와 **순서대로** 맞춘다.
+      · 시각은 정렬의 절대값이 아니라 **구절 창 [start,end) 안의 비율**로 옮긴다. 구절 창은 caption_schedule 이
+        트림·리드인·배속을 다 갚은 값이라, 여기에 비율로 얹으면 자막이 바뀌는 순간과 단어 강조가 절대 어긋나지 않는다.
+      · 정렬이 없거나 글자가 안 맞는 구절에는 words 를 안 붙인다 → 화면 쪽이 글자수 비례로 나눈다(추정은 그 한 곳).
+    """
+    cursor = {}
+    # [curious] 같은 음성 지시 태그는 정렬에는 있지만 자막 글이 아니다 — 뺀다(안 빼면 첫 어절부터 어긋난다, 실측 409f894230c6).
+    words_of = {beat["beat_idx"]: [w for w in (beat.get("words") or [])
+                                   if _word_key(w.get("word")) and w.get("start") is not None
+                                   and not re.fullmatch(r"\[[^\]]*\]", str(w.get("word")).strip())]
+                for beat in timeline}
+    for scene in scenes:
+        tokens = (scene.get("caption") or "").split()
+        words = words_of.get(scene.get("beat_idx")) or []
+        if not tokens or not words:
+            continue
+        k, starts = cursor.get(scene["beat_idx"], 0), []
+        for token in tokens:
+            want, got, first = _word_key(token), "", None
+            if not want:                      # 기호뿐인 어절 — 앞 어절과 같이 켠다
+                starts.append(starts[-1] if starts else None)
+                continue
+            while k < len(words) and len(got) < len(want):      # 정렬이 어절을 더 잘게 쪼갠 경우 이어 붙인다
+                got += _word_key(words[k]["word"])
+                first = words[k]["start"] if first is None else first
+                k += 1
+            if got != want:
+                starts = None
+                break
+            starts.append(first)
+        if not starts or all(s is None for s in starts):      # 글자가 안 맞음 → 이 구절은 화면 쪽 추정에 맡긴다
+            continue
+        cursor[scene["beat_idx"]] = k
+        head = next(s for s in starts if s is not None)
+        starts = [head if s is None else s for s in starts]
+        tail = words[k]["start"] if k < len(words) else (words[k - 1].get("end") or starts[-1])
+        span = max(1e-6, float(tail) - float(head))
+        a, b = float(scene["start"]), float(scene["end"])
+        scene["words"] = [round(a + (b - a) * max(0.0, min(1.0, (float(s) - float(head)) / span)), 3) for s in starts]
+    return scenes
+
+
+def overlay_spans(scenes, layers, folder):
+    """캡컷에 올릴 장면 레이어 구간 [{path,start,end}]. 단어 강조가 켜진 장면은 단어마다 한 장씩 쪼갠다.
+
+    완성본은 compose 가 프레임 묶음(animation)으로 굽지만 캡컷은 정지 그림 클립만 받는다 — 렌더러가 단어 상태마다
+    남긴 그림(layer["wordSpans"])을 그 구간에 올린다. 없으면 종전대로 장면당 한 장."""
+    folder, out = Path(folder), []
+    for scene, layer in zip(scenes, layers):
+        if not layer or not layer.get("file"):
+            continue
+        start, end = float(scene["start"]), float(scene["end"])
+        spans = layer.get("wordSpans") or []
+        if not spans:
+            out.append({"path": str(folder / layer["file"]), "start": start, "end": end})
+            continue
+        for index, span in enumerate(spans):
+            a = start + span["frame"] / 30
+            b = start + spans[index + 1]["frame"] / 30 if index + 1 < len(spans) else end
+            if b > a:
+                out.append({"path": str(folder / span["file"]), "start": a, "end": b})
+    return out
+
+
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     from .video_assemble import caption_schedule, caption_lead_absorb
     from .template_copy import scene_text
@@ -280,7 +360,7 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
             cursor = b
         if cursor < end - .001:
             scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
-    scenes = _absorb_tiny_gaps(scenes)
+    scenes = attach_scene_words(_absorb_tiny_gaps(scenes), timeline)
     copy = dict(headcopy) if isinstance(headcopy, dict) else {}
     if not (copy.get("text") or "").strip():
         # ★제목이 비면 **대본의 제목 줄(첫 문장)**을 쓴다. AI 후보(ai_copy)는 그 줄이

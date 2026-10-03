@@ -218,6 +218,19 @@ def rescale(words, final_dur, removed=None):
     return out
 
 
+def words_relative(mp3_path, final_dur=None):
+    """구절 **안에서** 단어가 어디쯤인지 잴 때 쓰는 단어 시각(장면꾸미기 단어 강조, 2026-10-03 관제 102).
+
+    사이드카(정밀 타임스탬프)만 본다 — 렌더·미리보기 때 불리므로 받아쓰기(ASR) 폴백으로 네트워크를 타지 않는다.
+    없으면 None(호출부가 글자수 비례로 나눈다). 쓰는 쪽은 구절 창 안의 **비율**만 쓰므로 배속 같은 균등 변화는
+    갚을 필요가 없고, 구절 안 무음을 잘라낸 경우(removed)만 rescale 로 갚는다."""
+    words = words_from_mp3(mp3_path)
+    if not words:
+        return None
+    removed = load_removed(mp3_path)
+    return rescale(words, final_dur, removed=removed) if (removed and final_dur) else words
+
+
 def words_from_mp3(mp3_path):
     """mp3 옆 사이드카를 읽어 단어 타임스탬프 반환. 없거나 깨졌으면 None(호출부가 ASR 폴백)."""
     try:

@@ -156,4 +156,17 @@
 /* 틀 고르기 5버튼(관제 058) — 위 3개(썰훅·훅만·썰만) / 아래 2개(인스타·원본그대로) */
 .layout-a .template-mode-bar{grid-template-columns:repeat(6,1fr)}
 .layout-a .template-mode-bar button{grid-column:span 3;height:36px;font-size:14px;padding:0 4px;white-space:nowrap}
-
+/* 단어 강조(2026-10-03 관제 102) — 지금 말하는 단어만 박스/색. 박스는 글자 뒤(z-index:-1)라 옆 글자를 가리지 않는다. */
+.precision-text.wfx-on{isolation:isolate}
+.precision-text .wfx-w{position:relative;display:inline-block;transform-origin:50% 60%}
+.precision-text .wfx-w.now{z-index:1}
+.precision-text.wfx-box .wfx-w.now::before{content:'';position:absolute;z-index:-1;left:-.16em;right:-.16em;top:-.02em;bottom:-.02em;border-radius:.24em;background:var(--wfx-color)}
+.precision-text.wfx-color .wfx-w.now{color:var(--wfx-color)!important}
+.word-fx-head{margin-top:14px}
+.word-fx-more{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.word-fx-more[hidden]{display:none}
+.word-fx-colors{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.word-fx-colors button{width:26px;height:26px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.18);cursor:pointer}
+.word-fx-colors button[data-word-fx-color=""]{width:auto;height:26px;padding:0 10px;border-radius:13px;background:transparent;color:inherit;font-size:12px}
+.word-fx-colors button.active{outline:2px solid #fff;outline-offset:2px}
+.word-fx-grow{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}

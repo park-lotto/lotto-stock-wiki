@@ -3444,6 +3444,7 @@ def _beat_timeline(edit_plan, tts_paths):
     여기서 새 dict를 만들며 원본 beat를 복사하지 않으므로, 이 필드를 안 실어보내면
     저장위치(_synthesize_beats)≠읽기위치(_burn_captions)가 되어 seam이 끊긴다.
     """
+    from . import tts_timestamps      # 표준 라이브러리+audio_post 만 끌어온다(순환 없음)
     timeline = []
     t0 = 0.0
     for beat in edit_plan["beats"]:
@@ -3465,6 +3466,8 @@ def _beat_timeline(edit_plan, tts_paths):
             "cap_lead": _cap_lead,
             "cap_offset": beat.get("cap_offset", 0.0),
             "caption_lines": beat.get("caption_lines"),   # AI가 끊어준 자막 호흡 줄(있으면)
+            # 단어 시각(정밀 사이드카, 없으면 None) — 장면꾸미기 단어 강조가 구절 안 단어 자리를 잰다(관제 102).
+            "words": tts_timestamps.words_relative(tts, _probe_duration(tts)),
             # 장면별 자막 자리(2026-08-25). 여기서 안 실으면 저장위치≠읽기위치가 되어
             # 사장님이 고친 자리가 렌더에 반영되지 않는다(위 cap_durs와 같은 함정).
             "cap_pos": beat.get("cap_pos"),
