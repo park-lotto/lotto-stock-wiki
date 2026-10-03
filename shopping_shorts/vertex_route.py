@@ -21,6 +21,8 @@ OPS = ("script_extract", "frame_script", "ai_match", "script_generate")
 # script_generate = script_generate._call_json 깔때기(이야기 작가·백본·옛 생성기·판정 전부) — 2026-09-26 사장님
 #   "태깅은 무료로, 대본작성과 장면매칭이 얼마나 잘되는지 해보자" → 설정 vertex_ops=script_generate,ai_match
 LOCATION = "global"                 # ★us-central1은 3.6-flash 404(2026-09-25 실측) — 글로벌만
+VEO_LOCATION = "us-central1"        # ★Veo는 거꾸로 global 404·us-central1 OK(2026-10-02 실측, 관제 076)
+VEO_MODEL = "veo-3.1-lite-generate-001"
 DEFAULT_MODEL = "gemini-3.6-flash"
 INLINE_MAX_BYTES = 40 * 1024 * 1024  # 실측 32.4MB OK. 그 위는 미검증 → 키풀(파일 업로드) 경로로
 SETTING_ENABLED, SETTING_OPS, SETTING_MODEL = "vertex_enabled", "vertex_ops", "vertex_model"
@@ -187,10 +189,10 @@ def model():
     return _read_settings().get(SETTING_MODEL) or DEFAULT_MODEL
 
 
-def _member_client(cid, info):
+def _member_client(cid, info, location=LOCATION):
     import hashlib
     fp = hashlib.sha256(str(info.get("private_key_id") or info.get("client_email")).encode()).hexdigest()[:10]
-    ck = "m:%s:%s" % (cid, fp)
+    ck = "m:%s:%s:%s" % (cid, fp, location)
     if ck not in _client_cache:
         from google import genai
         from google.genai import types
@@ -198,27 +200,28 @@ def _member_client(cid, info):
         from shopping_shorts import usage_meter
         creds = service_account.Credentials.from_service_account_info(
             info, scopes=["https://www.googleapis.com/auth/cloud-platform"])
-        cl = genai.Client(vertexai=True, project=info["project_id"], location=LOCATION, credentials=creds,
+        cl = genai.Client(vertexai=True, project=info["project_id"], location=location, credentials=creds,
                           http_options=types.HttpOptions(timeout=180_000))
         _client_cache[ck] = usage_meter.wrap(cl, auth="vertex", pool="vertex-member", key="member:%s" % cid)
     return _client_cache[ck]
 
 
-def client(cid=None):
+def client(cid=None, location=LOCATION):
     """Vertex 클라이언트(계측 래핑, 캐시). ★회원이 자기 서비스계정을 등록했으면 **그 프로젝트**(회원 비용),
     아니면 사장님 프로젝트(GOOGLE_APPLICATION_CREDENTIALS). 판단은 여기 한 곳(0순위-B)."""
     cid = current_cid() if cid is None else cid
     info = member_info(cid)
     if info:
-        return _member_client(cid, info)
-    if "cl" not in _client_cache:
+        return _member_client(cid, info, location)
+    ck = "cl" if location == LOCATION else "cl:%s" % location
+    if ck not in _client_cache:
         from google import genai
         from google.genai import types
         from shopping_shorts import config, usage_meter
-        cl = genai.Client(vertexai=True, project=config.GCP_PROJECT, location=LOCATION,
+        cl = genai.Client(vertexai=True, project=config.GCP_PROJECT, location=location,
                           http_options=types.HttpOptions(timeout=180_000))
-        _client_cache["cl"] = usage_meter.wrap(cl, auth="vertex", pool="vertex", key="vertex")
-    return _client_cache["cl"]
+        _client_cache[ck] = usage_meter.wrap(cl, auth="vertex", pool="vertex", key="vertex")
+    return _client_cache[ck]
 
 
 def is_member(cid=None):
@@ -234,9 +237,9 @@ def veo_client(cid):
     (사장님 크레딧으로 회원 영상을 대신 만들지 않는다 — 2026-09-26 사장님 확정 설계)."""
     info = member_info(cid)
     if info:
-        return _member_client(cid, info)
+        return _member_client(cid, info, VEO_LOCATION)
     if _is_admin(cid):
-        return client(cid)
+        return client(cid, VEO_LOCATION)
     return None
 
 
@@ -268,11 +271,13 @@ def verify_sa(info, model_name=None):
         return False, _explain(e, model_name)
     # Veo 권한 확인 — 영상은 만들지 않고(과금 방지) 모델 조회만 한다. 조회가 막혀도 대본은 되므로 등록은 받는다.
     try:
-        cl.models.get(model="veo-3.1-lite-generate-001")
+        vcl = genai.Client(vertexai=True, project=info["project_id"], location=VEO_LOCATION, credentials=creds,
+                           http_options=types.HttpOptions(timeout=60_000))
+        vcl.models.get(model=VEO_MODEL)
         return True, "확인 완료 — 대본·장면매칭과 AI 장면생성을 이 계정으로 씁니다"
     except Exception as e:      # noqa: BLE001
         return True, ("확인 완료(대본·장면매칭) — AI 장면생성 모델 조회는 실패했습니다: %s"
-                      % _explain(e, "veo-3.1-lite-generate-001"))
+                      % _explain(e, VEO_MODEL))
 
 
 def _explain(e, model_name=None):
