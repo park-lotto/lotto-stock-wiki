@@ -134,6 +134,10 @@
   //   (사장님 B안: 고객이 보고 저장한 화면과 영상이 같아야 한다). 새로 저장하는 원본 스냅샷엔 plainCaption:2 표시가 붙는다.
   //   표시 없는 원본 스냅샷을 load하면 plainLegacy=true. 원본 카드를 다시 누르거나 내 프리셋을 적용하면 새 방식.
   let plainLegacy=false;
+  // ★글자 직접 조절(2026-10-03 사장님 "크기를 키울 때 자동으로 글자 크기 조정되거나 칸 바뀌는 거 말고, 칸 바꾸는 것도 엔터로 직접").
+  //   손으로 크기를 정한 글자는 정한 크기 그대로 — 자동 줄임·자동 줄바꿈·가로 찌그러뜨림을 하지 않는다. 줄은 Enter 로만 바뀐다.
+  //   손대지 않은 글자(자동 생성 제목·자막)는 종전대로 칸에 맞춘다. 옛 저장본(표식 없음)은 고객이 보고 저장한 그림 그대로 둔다.
+  let manualText=true;
   const PLAIN_LEGACY_CAP_Y=1560/1920*100;   // 예전 원본 자막 줄 y0(81.25%)
   // 자막박스 '모양'만 뽑아낸다 — 지금 장면에 없으면 다른 장면에서 찾는다(훅에서 저장해도 담기게).
   const CAPTION_LOOK_KEYS=['look','w','h','background','color','bgUser','colorUser','boxClear'];
@@ -306,11 +310,10 @@
   const dirtyFields=new Map();
   const captionPositions=new Map();
   const captionTexts=new Map(),captionDrags=new Map();
-  const originalCaption=root.querySelector('.layout-a [data-bind="caption"]');
-  if(originalCaption?.tagName==='INPUT'){
-    const textarea=document.createElement('textarea');for(const a of originalCaption.attributes)if(a.name!=='value')textarea.setAttribute(a.name,a.value);
-    textarea.value=originalCaption.value;textarea.rows=3;originalCaption.replaceWith(textarea);
-  }
+  root.querySelectorAll('.layout-a input[data-bind]').forEach(original=>{   // 10-03: 자막뿐 아니라 제목·채널명도 Enter 로 줄을 바꾼다
+    const textarea=document.createElement('textarea');for(const a of original.attributes)if(a.name!=='value')textarea.setAttribute(a.name,a.value);
+    textarea.value=original.value;textarea.rows=original.dataset.bind==='caption'?3:1;if(original.dataset.bind!=='caption')textarea.classList.add('one-line-field');original.replaceWith(textarea);
+  });
   const inputs=Object.fromEntries([...root.querySelectorAll('.layout-a [data-bind]')].map(x=>[x.dataset.bind,x]));
   // 썰훅만 본문 대본 장면: 보조제목 줄에 그 장면 자막을 **보조제목과 같은 스타일**로 넣는다(10-02 사장님 "훅 소제목=자막자리 똑같은 스타일로 계속")
   const value=k=>(k==='bodyTitle'&&hookHasCaptionBand()?inputs.caption?.value:inputs[k]?.value)||' ';
@@ -979,7 +982,7 @@
   }
   function updateCount(input){
     const limit=Number(input.dataset.max)||Infinity;
-    const length=[...input.value].length;
+    const length=Math.max(...input.value.split('\n').map(line=>[...line].length));   // 가장 긴 줄(Enter 로 나누면 줄마다)
     const counter=input.closest('.field')?.querySelector('[data-count]');
     if(counter)counter.textContent=`${length}/${input.dataset.max}`;
     input.classList.toggle('contract-invalid',length>limit);
@@ -1000,8 +1003,7 @@
     for(const [bind,limit] of Object.entries(evenLimits)){
       const text=inputs[bind]?.value||'';
       if((bind==='hook1'||bind==='hook2')&&!text.trim())found.push(`${labels[bind]}이 비어 있습니다.`);
-      if([...text].length>limit)found.push(`${labels[bind]}은 공백 포함 ${limit}자 이하여야 합니다.`);
-      if((bind==='hook1'||bind==='hook2')&&/[\r\n]/.test(text))found.push(`${labels[bind]}은 한 줄이어야 합니다.`);
+      if(Math.max(...text.split('\n').map(line=>[...line].length))>limit&&!(manualText&&fontScales.has(readKey(fontScales,bind))))found.push(`${labels[bind]}은 한 줄에 공백 포함 ${limit}자 이하여야 합니다.`);   // 10-03: Enter 로 나눈 줄마다 센다. 손으로 크기를 정한 칸은 고객이 보고 맞춘 것이라 막지 않는다
     }
     return found;
   }
@@ -1088,7 +1090,8 @@
     apply(el);Array.from(el.children).forEach(apply);
   }
   function addText(text,ln,frame,color,role='center',bind='bodyTitle'){
-    const manualLines=bind==='caption'?String(text).split('\n').length:1;
+    const manualSize=manualText&&fontScales.has(readKey(fontScales,bind));   // 손으로 크기를 정한 글자
+    const manualLines=(bind==='caption'||manualText)?String(text).split('\n').length:1;
     if(manualLines>1)ln={...ln,max_lines:manualLines,h:ln.h*manualLines,y0:ln.y0-ln.h*(manualLines-1)/2};
     const scale=preview.clientHeight/frame.height;
     const measuredBounds=role.includes('left')||role.includes('precision-channel');
@@ -1126,7 +1129,8 @@
     contrastOutline(el,ln,frame,bind);
     if(frame.reference_style){el.style.webkitTextStroke=ln.stroke?`${ln.stroke*scale}px #080808`:'0px';el.style.textShadow=ln.shadow_y?`0 ${ln.shadow_y*scale}px ${2*scale}px #000000AA`:'none';}
     applyTitleDeco(el,bind,frame);   // 09-22 장면폰트: 꾸밈은 맞춤 전에 — 박스 여백·외곽선이 폭에 들어간다
-    if(manualLines>1){el.textContent=text;el.style.whiteSpace='pre-wrap';el.style.display='block';el.style.lineHeight='1.2';el.style.textWrap='wrap';}
+    if(manualLines>1){el.textContent=text;el.style.whiteSpace=manualSize?'pre':'pre-wrap';el.style.display='block';el.style.lineHeight='1.2';el.style.textWrap='wrap';el.style.textAlign=role.includes('left')?'left':'center';}
+    else if(manualSize){el.style.whiteSpace='nowrap';}   // 직접 조절: 줄은 Enter 로만 바뀐다
     else if(ln.max_lines>1||WRAP3.includes(bind)){el.style.whiteSpace='normal';el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.18';el.style.display='-webkit-box';el.style.webkitBoxOrient='vertical';el.style.webkitLineClamp='3';}   // 09-19 사장님: 본문 제목·자막은 3줄까지
     const chosen=colorOverrides.get(colorKey(bind==='hook2'?'accent':'white'));
     if(chosen){el.style.color=chosen;el.querySelectorAll('span').forEach(span=>span.style.color=chosen);}
@@ -1153,8 +1157,8 @@
         const probe=document.createRange();probe.selectNodeContents(el);
         if(Math.max(el.scrollWidth,probe.getBoundingClientRect().width)*xscale>el.clientWidth+1){useCache=false;fittedText.delete(fitKey);el.style.transform='none';el.style.letterSpacing='';}
       }
-      if(!useCache){const isStory=mode==='story',manualSize=fontScales.has(readKey(fontScales,bind));const heightFit=!(rows[current]?.id==='t11'&&frame.reference_style);   // 09-19: 이븐쇼핑은 칸 높이를 바꿔도 글자 크기는 그대로(폭만 맞춘다)
-        if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,heightFit);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const frameScale=Math.min(1,(preview.clientWidth-6)/Math.max(1,measuredWidth()));   /* 09-19: 손으로 키워도 미리보기 밖으로는 안 나가게 */const xscale=manualSize?frameScale:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
+      if(!useCache){const isStory=mode==='story',legacyManual=!manualText&&fontScales.has(readKey(fontScales,bind)),manualSize=legacyManual||fontScales.has(readKey(fontScales,bind));const heightFit=!(rows[current]?.id==='t11'&&frame.reference_style);   // 09-19: 이븐쇼핑은 칸 높이를 바꿔도 글자 크기는 그대로(폭만 맞춘다)
+        if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,heightFit);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const frameScale=Math.min(1,(preview.clientWidth-6)/Math.max(1,measuredWidth()));   /* 09-19: 손으로 키워도 미리보기 밖으로는 안 나가게 */const xscale=manualSize?(legacyManual?frameScale:1):isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
     }
     return el;
   }
@@ -1307,6 +1311,7 @@
     for(const ln of frame.lines||[]){
       if(ln.max_lines!==1||!['hook1','hook2','bodyTitle'].includes(ln.bind))continue;
       const el=layer.querySelector(`.precision-text[data-edit-bind="${ln.bind}"]`);if(!el)continue;
+      if(manualText&&fontScales.has(readKey(fontScales,ln.bind)))continue;   // 10-03: 손으로 정한 크기는 줄이지 않는다(실측: 보조제목 130% → 실제 102%, 여기서 도로 줄였다)
       fitOneLine(el,fontScales.get(readKey(fontScales,ln.bind))||1);
     }
   }
@@ -1506,7 +1511,7 @@
     Object.assign(text.style,{left:(x+2)+'%',right:'auto',width:Math.max(1,w-4)+'%',top:y+'%',height:h+'%',transform:'none',display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'pre-wrap',lineHeight:'1.15',color:settings.color});
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
     if(capLook?.text)Object.assign(text.style,capLook.text);
-    fitOneLine(text,fontScales.get(readKey(fontScales,'caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다
+    if(!(manualText&&fontScales.has(readKey(fontScales,'caption'))))fitOneLine(text,fontScales.get(readKey(fontScales,'caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다. 손으로 정한 크기는 줄이지 않는다(넘치면 줄만 넘긴다 — 화면 밖으로 잘리지 않게)
     applyWordFx();   // 단어 강조(관제 102) — 크기를 다 맞춘 뒤에 어절을 감싼다(폭은 안 바뀐다)
   }
   // ★09-22 사장님: 자막이 살짝 커져 두 줄로 꺾이면 "두 포인트 줄이니까 한 줄에 들어간다" → 자막은 한 줄 규격이므로
@@ -1611,6 +1616,7 @@
     const button=event.target.closest('[data-font-step]');if(!button)return;
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
     const next=Math.min(3,Math.max(.5,textScale(bind)+Number(button.dataset.fontStep)));
+    manualText=true;   // 크기를 손대는 순간부터 새 방식 — 지금 화면을 보고 정하는 것이므로(옛 저장본도 여기서 넘어온다)
     const override=bind!=='caption'&&editScope!=='all';   // 장면별 덮어쓰기는 100%여도 지우지 않는다(지우면 공통 값으로 되돌아간다)
     for(const k of writeKeys(fontScales,bind)){if(!override&&Math.abs(next-1)<.001)fontScales.delete(k);else fontScales.set(k,next);}
     fittedText.clear();markDirty(bind);preview.classList.remove('is-pristine');updateSteppers();renderEdit();
@@ -1887,11 +1893,12 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,...(mode!=='continuous'&&frameRule!=='hook_body'?{frameRule}:{}),...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,...(wordFxOn()?{wordFx:{style:wordFx.style,color:/^#[0-9a-f]{6}$/i.test(wordFx.color||'')?wordFx.color:'',grow:!!wordFx.grow}}:{}),fontSet,fontSets:{...fontSets},titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,...(mode!=='continuous'&&frameRule!=='hook_body'?{frameRule}:{}),...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),...(manualText?{manualText:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,...(wordFxOn()?{wordFx:{style:wordFx.style,color:/^#[0-9a-f]{6}$/i.test(wordFx.color||'')?wordFx.color:'',grow:!!wordFx.grow}}:{}),fontSet,fontSets:{...fontSets},titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       frameRule=['hook_all','body_all'].includes(saved?.frameRule)?saved.frameRule:'hook_body';applyFrameRule();
       plainLegacy=!!(saved&&saved.presetId===PLAIN_ID&&saved.plainCaption!==2);   // 표시 없는 옛 원본 = 예전 그대로
+      manualText=!saved||saved.manualText===2||!Object.keys(saved.fontScales||{}).length;   // 손으로 키운 글자가 있는 옛 저장본만 예전 방식(고객이 본 그림 유지)
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
       if(saved){
         for(const [name,map] of Object.entries({fontScales,textOffsets,textDrags,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts})){

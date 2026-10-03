@@ -170,3 +170,5 @@
 .word-fx-colors button[data-word-fx-color=""]{width:auto;height:26px;padding:0 10px;border-radius:13px;background:transparent;color:inherit;font-size:12px}
 .word-fx-colors button.active{outline:2px solid #fff;outline-offset:2px}
 .word-fx-grow{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}
+/* 제목·채널명 칸도 Enter 로 줄을 바꾼다(2026-10-03 관제 103) — 한 줄 칸처럼 보이다가 줄 수만큼 자란다. */
+.layout-a .field textarea.one-line-field{font-size:14px;font-weight:700;resize:none;overflow:hidden;line-height:1.4;min-height:0;field-sizing:content}

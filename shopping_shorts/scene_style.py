@@ -170,11 +170,13 @@ def validate_snapshot(value):
                 number(item.get(key,default),lo,hi)
             if not re.fullmatch(r"#[0-9a-fA-F]{6}",item.get("color","#ffffff")):
                 raise ValueError("표시 색상이 올바르지 않습니다")
+    if "manualText" in value and value["manualText"] != 2:      # 글자 직접 조절 표식(관제 103) — precision20-ui.js manualText 와 짝
+        raise ValueError("글자 조절 방식 값이 올바르지 않습니다")
     if "plainCaption" in value and value["plainCaption"] != 2:
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
