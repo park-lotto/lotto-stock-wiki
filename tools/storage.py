@@ -246,7 +246,13 @@ def ensure_warm(repo, name, printer=print, smap=None):
     트랙.bat(track_open)·finish·`track.py use` 가 이걸 부른다. 반환 (C 에 있나, 이유).
     못 되돌리면(D 빠짐·C 여유 모자람·사용 중) 정션은 그대로 둔다 — 느리지만 그 자리에서 동작한다. 조용히 넘기지 않고 이유를 말한다."""
     import track
-    wt = track.worktree_path(name, repo)
+    return warm_link(repo, track.worktree_path(name, repo), printer, smap)
+
+
+def warm_link(repo, wt, printer=print, smap=None):
+    """C 에 정션으로 남은 자리(트랙·바탕화면 폴더 등)를 실제 폴더로 되돌린다 — ensure_warm·`storage.py warm <경로>` 공용."""
+    wt = Path(wt)
+    name = wt.name
     if not is_junction(wt):
         return True, "C"
     if dead_junction(wt):
@@ -257,11 +263,14 @@ def ensure_warm(repo, name, printer=print, smap=None):
     have = free_gb(repo) or 0
     if have - need < smap.get("경보", {}).get("refuse_gb", 3):
         return False, "C 여유 %.1fGB 인데 %.1fGB 가 필요하다 — D 에서 그대로 연다(느림)" % (have, need)
-    printer("← D 에 있던 트랙 %s 를 C 로 되돌리는 중(%.2fGB, 외장 HDD 라 몇 분 걸릴 수 있다)…" % (name, need))
+    printer("← D 에 있던 %s 를 C 로 되돌리는 중(%.2fGB, 외장 HDD 라 몇 분 걸릴 수 있다)…" % (name, need))
     remove_junction(wt)
     if not move_dir_safe(real, wt, printer):              # 복사→대조→D 삭제. 실패하면 D 정본 그대로
         make_junction(wt, real)
         return False, "C 로 복사가 안 됐다 — D 에서 그대로 연다(느림)"
+    if not (wt / ".git").exists():                        # 트랙이 아닌 폴더(바탕화면 등)
+        printer("← C  %s (%.2fGB)" % (name, need))
+        return True, "D→C"
     _git_safe_directory(real, add=False)
     _git_safe_directory(wt, add=False)
     rc, out = _git(wt, "status", "--porcelain")
@@ -270,8 +279,15 @@ def ensure_warm(repo, name, printer=print, smap=None):
 
 
 def warm_track(repo, smap, name, printer=print):
-    """D 에 있는 트랙 폴더를 C 로 되돌린다(손으로 부를 때). 판단은 ensure_warm."""
-    ok, why = ensure_warm(repo, name, printer, smap)
+    """D 에 있는 트랙 폴더(이름) 또는 정션 자리(경로·바탕화면 폴더 이름)를 C 로 되돌린다(손으로 부를 때)."""
+    import track
+    desk = Path(os.path.expandvars(smap.get("바탕화면", {}).get("root", "%USERPROFILE%/Desktop"))) / name
+    if os.path.lexists(track.worktree_path(name, repo)):
+        ok, why = ensure_warm(repo, name, printer, smap)
+    elif os.path.lexists(name) or os.path.lexists(desk):
+        ok, why = warm_link(repo, name if os.path.lexists(name) else desk, printer, smap)
+    else:
+        raise SystemExit("중단: %s — 트랙도 경로도 바탕화면 폴더도 아니다" % name)
     if not ok:
         raise SystemExit("중단: " + why)
     if why == "C":

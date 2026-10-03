@@ -265,3 +265,20 @@ def test_temp_star_means_whole_temp(tmp_path):
     storage.apply_temp(smap, printer=lambda *a: None)
     assert (tmp_path / "fresh.tmp").exists(), "3일 안 된 건 그대로"
     assert not (tmp_path / "gate_child_1").exists() and not (tmp_path / "Adobe").exists(), "오래된 건 폴더째 비워진다"
+
+
+@pytest.mark.skipif(os.name != "nt", reason="정션은 윈도우")
+def test_desktop_folder_moves_and_warms_back_by_name(tmp_path):
+    d = _external(tmp_path)
+    desk = tmp_path / "Desktop"
+    (desk / "옛작업").mkdir(parents=True)
+    (desk / "옛작업" / "a.mp4").write_bytes(b"v" * 100)
+    smap = _map(d)
+    smap["바탕화면"] = {"root": str(desk), "폴더": ["옛작업"]}
+    assert storage.apply_desktop(smap, printer=lambda *a: None) == 1
+    assert storage.is_junction(desk / "옛작업") and (desk / "옛작업" / "a.mp4").exists(), "정션 자리에서 그대로 열린다"
+    lines = []
+    assert storage.warm_track(tmp_path, smap, "옛작업", printer=lines.append)        # 쓸 때 이름으로 부르면 C 로
+    assert not storage.is_junction(desk / "옛작업") and (desk / "옛작업" / "a.mp4").read_bytes() == b"v" * 100
+    assert not (d / "90_보관" / "바탕화면" / "옛작업").exists()
+    assert not any("git status 실패" in ln for ln in lines)
