@@ -74,6 +74,43 @@ def _dur(p):
         return 0.0
 
 
+# ── 한 장 번쩍임(2026-10-03 관제 099) — 완성본만 보고 판정한다(설명·실측: tools/flash_frames.py) ──
+#   미리보기도 같은 좌표를 써서 둘 다 같은 그림이면 '잔상'(미리보기 vs 완성본 대조)은 0이다(077 2683d3703512 실측).
+#   그래서 완성본 안에서 '한 장짜리 섬 + 그 그림이 다른 자리에 그대로 있음'을 직접 센다. 판정 주인은 여기 한 곳.
+FLASH_JUMP_T = 0.45       # 앞·뒤 프레임 둘 다와 이만큼 넘게 달라야 섬(특징 z거리 평균). 실측: 진짜 번쩍임 0.71~0.82 · 그 외 최대 0.28(손 흔들림 포함)
+FLASH_MATCH_R = 0.35      # 다른 자리 닮음 거리 ≤ 섬 거리 × 이 비율이어야 '같은 그림'
+FLASH_FAR = 8             # 이 프레임 수 밖에서만 닮은 그림을 찾는다(바로 옆 컷은 섬 판정에서 이미 걸렀다)
+
+
+def flash_frames(ff):
+    """특징 배열(n, …) → [(i, j, 섬거리, 닮음거리)] — i 가 번쩍인 프레임, j 가 그 그림이 원래 있는 프레임."""
+    ff = np.asarray(ff, dtype=np.float32)
+    n = len(ff)
+    if n < 3:
+        return []
+    step = np.abs(ff[1:] - ff[:-1]).reshape(n - 1, -1).mean(axis=1)     # step[k] = d(k, k+1)
+    flat = ff.reshape(n, -1)
+    out = []
+    for i in range(1, n - 1):
+        jump = min(step[i - 1], step[i])
+        if jump <= FLASH_JUMP_T:
+            continue
+        d = np.abs(flat - flat[i]).mean(axis=1)
+        d[max(0, i - FLASH_FAR):i + FLASH_FAR + 1] = np.inf
+        j = int(np.argmin(d))
+        if not (np.isfinite(d[j]) and d[j] <= FLASH_MATCH_R * jump):
+            continue
+        # ★같은 재료를 두 번 쓴 것(반복 구간)이면 앞·뒤 이웃도 같이 닮는다 — 번쩍임이 아니다(9f556df5ae9e 실측:
+        #   빠른 손 동작 구간을 두 칸에 썼다). 진짜 번쩍임은 그 한 장만 다른 자리에서 왔으니 이웃까지 둘 다 닮지는 않는다
+        #   (2683d3703512: 204↔636 은 다른 칸이라 안 닮는다 — 205 뒤 206↔638 은 같은 원본이라 닮을 수 있어 '둘 다'로 본다).
+        if 0 < j < n - 1:
+            nb = lambda a, b: float(np.abs(flat[a] - flat[b]).mean())
+            if nb(i - 1, j - 1) <= FLASH_MATCH_R * jump and nb(i + 1, j + 1) <= FLASH_MATCH_R * jump:
+                continue
+        out.append((i, j, round(float(jump), 3), round(float(d[j]), 3)))
+    return out
+
+
 def _gray_full(fr):
     return fr.astype(np.float32).mean(axis=-1)
 
@@ -403,7 +440,12 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
     with open(OUT / "samples.jsonl", "a", encoding="utf-8") as f:
         for s in samples:
             f.write(json.dumps(s, ensure_ascii=False) + "\n")
-    return {"job": jid, "rows": rows, "E": _dur(E), "F": _dur(F), "tts": round(f_t, 3),
+    try:
+        flash = flash_frames(ff)
+    except Exception as e:      # noqa: BLE001 — 못 재면 None(관문이 '못 읽었다'로 실패시킨다)
+        print("[evf] %s 번쩍임 판정 실패: %s" % (jid, e), file=sys.stderr)
+        flash = None
+    return {"job": jid, "rows": rows, "flash": flash, "E": _dur(E), "F": _dur(F), "tts": round(f_t, 3),
             "sec": (round(t1 - t0, 1), round(t2 - t1, 1), round(time.time() - t2, 1))}, ""
 
 
@@ -447,6 +489,7 @@ def main():
           " · 정지컷밀림 = 정지 컷에서만 난 밀림(완성본 켄번즈 확대 vs 화면 그냥 정지 — 따로 센다)", file=rep, flush=True)
     bad_scene = bad_shift = bad_bound = bad_hold = tot = 0
     ghost_fr = ghost_only = ghost_cuts = short_cuts = motion_fr = motion_cuts = 0
+    flash_fr, flash_jobs, flash_unk = 0, 0, 0
     for jid in ids:
         t0 = time.time()
         try:
@@ -464,6 +507,11 @@ def main():
         gh = [(nm(x), g) for x in r["rows"] for g in x[8]]
         ghost_cuts += len(gh); ghost_fr += sum(g[2] for _, g in gh); ghost_only += sum(g[3] for _, g in gh)
         short_cuts += sum(x[9] for x in r["rows"])
+        fl_ = r.get("flash")
+        if fl_ is None:
+            flash_unk += 1
+        elif fl_:
+            flash_fr += len(fl_); flash_jobs += 1
         mo = [(nm(x), m) for x in r["rows"] for m in (x[10] if len(x) > 10 else [])]
         motion_cuts += len(mo); motion_fr += sum(m[2] for _, m in mo)
         print("%s 칸%d(청소본 %d) 화면%.2fs 완성본%.2fs 음성%.2fs | 다른장면 %s | 밀림%.2f+ %s | 경계밀림 %s | 정지컷밀림 %s | 최대거리 %.2f | %.0fs(굽기%.0f 렌더%.0f 비교%.0f)" % (
@@ -471,7 +519,8 @@ def main():
             [(nm(x), x[1], x[4]) for x in bs], SHIFT_T, [(nm(x), round(x[2], 3), x[4]) for x in sh],
             [(nm(x), x[5]) for x in bd], [(nm(x), round(x[7], 3), x[4]) for x in hs], max([x[1] for x in r["rows"]] or [0]), time.time() - t0, *r["sec"])
             # 잔상 = (칸, (컷, 머리|꼬리, 프레임 수, 그중 화면에만 있는 수)) · 짧은컷 = 3프레임 이하 컷 수 — 줄 끝에 붙인다(관문 정규식은 줄 앞만 본다)
-            + " | 잔상 %s | 짧은컷 %d | 움직임의심 %s" % (gh, sum(x[9] for x in r["rows"]), mo),
+            + " | 잔상 %s | 짧은컷 %d | 움직임의심 %s" % (gh, sum(x[9] for x in r["rows"]), mo)
+            + " | 번쩍임 %s" % ("못잼" if fl_ is None else [(i, round(i / FPS, 2), j) for i, j, _a, _b in fl_]),
             file=rep, flush=True)
     print("== 칸 %d · 다른 장면 %d · %.2f초 이상 밀림(가운데) %d · 경계 밀림 %d · 정지컷만 밀림 %d" % (
           tot, bad_scene, SHIFT_T, bad_shift, bad_bound, bad_hold),
@@ -482,6 +531,8 @@ def main():
           ghost_fr, ghost_cuts, ghost_only, SHORT_CUT, short_cuts), file=rep, flush=True)
     # 움직임 의심 = 가장자리가 튀었지만 원본에 장면 전환이 없는 곳(빠른 움직임) — 잔상에서 빼고 보고만(관문 판정 밖)
     print("== 움직임 의심 %d프레임(컷 %d)" % (motion_fr, motion_cuts), file=rep, flush=True)
+    # ★번쩍임(관제 099) — 따로 한 줄. 관문(video_gate _FLASH)이 이 줄을 읽어 max_flash 로 판정한다.
+    print("== 번쩍임 %d프레임(작업 %d · 못 잰 작업 %d)" % (flash_fr, flash_jobs, flash_unk), file=rep, flush=True)
 
 
 if __name__ == "__main__":

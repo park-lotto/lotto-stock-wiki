@@ -15,6 +15,7 @@
     "max_export_mismatch": 0,
     "max_ghost": 0,
     "max_ghost_screen_only": 0,
+    "max_flash": 0,
     "capcut_timeout_sec": 900,
     "max_audio_narr": 0,
     "max_audio_surplus": 0,
