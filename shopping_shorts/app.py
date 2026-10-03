@@ -8052,14 +8052,17 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
     # ★장면 골라 지우기(2026-09-26): body.cuts = 지울 컷 키 목록(없거나 null = 전체).
     #   키 해석은 mix_pipeline.cut_selected 한 곳. 지금 편성의 컷과 하나도 안 맞으면 거절한다
     #   (돈이 나가기 전에 — 아무것도 안 지우고 과금되거나 조용히 전체를 지우면 안 된다).
-    _pick = None
+    _pick, _picked = None, None
     if "cuts" in body:
         _pick = _clean_cuts_from_body(job, job_id, body.get("cuts"))
         if isinstance(_pick, JSONResponse):
             return _pick
+        # ★덧지우기(2026-10-03): 저장되는 선택(_pick)은 '이미 지운 장면 ∪ 이번에 고른 장면'이고,
+        #   이번에 고른 장면(_picked)은 따로 워커까지 들고 간다 — 무엇을 업체로 보낼지는 clean_topup_plan 한 곳.
+        _picked = mix_pipeline.clean_picked_keys(job, _MIX_WORK_DIR / job_id, body.get("cuts"))
     # ★돈이 나가기 전 고객 동의(2026-09-27) — 렌더와 같은 관문(_clean_consent_or_409 → mix_pipeline.clean_charge_plan).
     #   고른 장면(cuts)은 아직 저장 전이라 이번 요청 값으로 잰다 — 409면 저장하지 않는다(확인 뒤 다시 보낸다).
-    _judge_job = dict(job, clean_cuts=_pick) if "cuts" in body else job
+    _judge_job = dict(job, clean_cuts=_pick, _clean_pick=_picked) if "cuts" in body else job
     _consent = _clean_consent_or_409(store, _judge_job, _MIX_WORK_DIR / job_id, body, mode="button")
     if isinstance(_consent, JSONResponse):
         return _consent
@@ -8067,7 +8070,7 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
         store.update_mix_job(job_id, clean_cuts=_pick)
     # 'cleaning'을 여기서 동기 기록(응답 전) — run 안에서 쓰면 이중예약된다(preview 라우트 주석 참조)
     store.update_mix_job(job_id, clean_status="cleaning", clean_error=None)
-    Store(DB_PATH).enqueue("clean", dict({"job_id": job_id}, **_consent))
+    Store(DB_PATH).enqueue("clean", dict({"job_id": job_id}, **dict(_consent, **({"pick": _picked} if _picked else {}))))
     return {"ok": True, "status": "cleaning"}
 
 
@@ -8077,6 +8080,8 @@ def _clean_cuts_from_body(job, job_id, raw):
     ★지금 편성의 컷을 전부 골랐으면 None(전체)으로 저장한다 — 그래야 청소본 이름이 옛 '전체' 파일과
       같아 이미 지운 결과를 그대로 쓴다(재과금 0).
     ★고른 것 중 지금 편성에 없는 키는 버린다. 남는 게 없으면 거절(아무것도 안 지우는 과금 방지).
+    ★저장 값은 '이미 지운 장면 ∪ 고른 장면'이다(mix_pipeline.clean_cuts_merged, 2026-10-03) — 고른 것만 저장하면
+      이미 지운 장면이 원본으로 돌아간다(황선희님 817308da1647).
     """
     if raw is None:
         return None
@@ -8092,7 +8097,7 @@ def _clean_cuts_from_body(job, job_id, raw):
             "ok": False, "error": "지울 장면을 하나 이상 골라 주세요 (고른 장면이 지금 영상에 없어요 — 새로고침 해 주세요)"})
     if len(hit) == len(cuts):
         return None
-    return [c["key"] for c in hit]
+    return mix_pipeline.clean_cuts_merged(job, _MIX_WORK_DIR / job_id, [c["key"] for c in hit])
 
 
 @app.get("/api/produce/mix/clean_pick/{job_id}")
@@ -8116,12 +8121,22 @@ def api_produce_mix_clean_pick(job_id: str):
         print("[clean_pick] 컷 목록 실패: %r" % (e,), file=sys.stderr)
         cuts = []
     tier = mix_pipeline.clean_tier_of(job)
+    # ★이미 지운 장면 표시(2026-10-03 덧지우기): kept = 지금 청소본에 지워져 있다 · done[등급] = 그 등급으로 지웠다.
+    #   판정은 mix_pipeline.clean_cut_states 한 곳 — 화면은 받아서 표시만 한다(다시 보낼지는 서버 clean_topup_plan).
+    try:
+        states, topup = mix_pipeline.clean_cut_states(job, _MIX_WORK_DIR / job_id, cuts=cuts) if cuts else ([], False)
+    except Exception as e:      # noqa: BLE001 — 못 알아내면 '안 지움'으로 보인다(과금은 서버 확인창이 다시 잰다)
+        print("[clean_pick] 지운 장면 상태 실패: %r" % (e,), file=sys.stderr)
+        states, topup = [], False
+    if len(states) != len(cuts):
+        states = [{"kept": False, "done": {"basic": False, "pro": False}} for _ in cuts]
     return {"ok": True, "partial_ok": bool(partial_ok and cuts), "tier": tier,
-            "all": mix_pipeline.clean_selection_of(job) is None,
+            "all": mix_pipeline.clean_selection_of(job) is None, "topup": bool(topup),
             "rate": {"basic": mix_pipeline.clean_credit_estimate(1, "basic"),
                      "pro": mix_pipeline.clean_credit_estimate(1, "pro")},
             "cuts": [{"ci": c["ci"], "beat_idx": c.get("beat_idx"), "key": c["key"],
-                      "dur": round(float(c["dur"]), 3), "sel": bool(c["sel"])} for c in cuts]}
+                      "dur": round(float(c["dur"]), 3), "sel": bool(c["sel"]),
+                      "kept": bool(s["kept"]), "done": s["done"]} for c, s in zip(cuts, states)]}
 
 
 @app.get("/api/produce/mix/clean_pick_thumb/{job_id}")

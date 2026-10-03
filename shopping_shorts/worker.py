@@ -45,7 +45,8 @@ TASKS = {
     "preview":  lambda a: mix_pipeline.run_preview(a["job_id"], DB_PATH, _MIX_WORK_DIR),
     "clean":    lambda a: mix_pipeline.run_clean_sources(a["job_id"], DB_PATH, _MIX_WORK_DIR,
                                                          confirm_clean=a.get("confirm_clean"),
-                                                         confirm_secs=a.get("confirm_secs")),
+                                                         confirm_secs=a.get("confirm_secs"),
+                                                         pick=a.get("pick")),
     # AI 장면 생성(Veo, 2026-09-23) — 관리자 스위치 ai_scene_enabled 뒤. 실패는 beat.ai_scene.state로 남는다.
     "ai_scene": lambda a: __import__("shopping_shorts.ai_scene", fromlist=["run_ai_scene"]).run_ai_scene(
         a["job_id"], int(a["beat_idx"]), a.get("style") or "natural", DB_PATH, _MIX_WORK_DIR),

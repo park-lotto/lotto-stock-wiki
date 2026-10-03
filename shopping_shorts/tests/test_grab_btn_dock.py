@@ -135,3 +135,61 @@ def test_릴_직접주소_화면은_댓글판_바깥_오른쪽으로():
 def test_화면_거의_전체를_덮는_칸은_textarea가_있어도_버린다():
     st = _run(1673, RECT, ancestor={"width": 1600, "right": 1650, "left": 50}, ancestor_textarea=True)
     assert st["ss-grab-btn"]["left"] == "576px"
+
+
+def _run_modal(inner_width, depth=14, panel_left=1079, ta_left=1137):
+    """인스타 팝업 새 구조(2026-10-03 라이브 실측, 게시물 CcfWWv2lviz):
+    영상 → 영상 폭 칸 14겹 → 화면보다 넓은 칸(자식 = 영상 칸 + 본문 칸) → ARTICLE → dialog.
+    본문 칸 안에 댓글 입력창(textarea)이 있다."""
+    script = f"""
+var window = {{ innerWidth: {inner_width}, innerHeight: 1012 }};
+function R(l, r, t, b) {{ return {{ left: l, right: r, width: r - l, top: t, bottom: b, height: b - t }}; }}
+function N(rect, parent, ta) {{
+  return {{ tagName: "DIV", getAttribute: function () {{ return null; }},
+           getBoundingClientRect: function () {{ return rect; }},
+           querySelector: function () {{ return ta || null; }}, parentElement: parent }};
+}}
+var ta = {{ getBoundingClientRect: function () {{ return R({ta_left}, {ta_left} + 393, 953, 971); }} }};
+var dialog = N(R(0, {inner_width} - 15, 0, 1012), null, ta);
+var wide = N(R(-114, {inner_width} + 99, 24, 988), dialog, ta);
+var panel = N(R({panel_left}, {panel_left} + 500, 24, 988), wide, ta);
+ta.parentElement = N(R({panel_left} + 2, {panel_left} + 484, 942, 982), panel, ta);
+var p = wide;
+for (var n = 0; n < {depth}; n++) p = N(R(537, 1079, 24, 988), p, null);
+var vid = {{ getBoundingClientRect: function () {{ return R(537, 1079, 24, 988); }}, parentElement: p }};
+var els = {{}};
+["ss-adopt-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn", "ss-seek"].forEach(function (id) {{
+  els[id] = {{ offsetWidth: 150, style: {{}} }};
+}});
+var document = {{
+  querySelectorAll: function (sel) {{ return sel === "video" ? [vid] : []; }},
+  getElementById: function (id) {{ return els[id] || null; }}
+}};
+var location = {{ host: "www.instagram.com", pathname: "/p/x/" }};
+function _floatWanted() {{ return true; }}
+{_dock_src()}
+_dockBtns();
+var out = {{}};
+Object.keys(els).forEach(function (k) {{ out[k] = els[k].style; }});
+console.log(JSON.stringify(out));
+"""
+    return json.loads(run_js(script))
+
+
+def test_인스타_팝업은_본문칸_바깥_오른쪽으로():
+    """2026-10-03 사장님 스샷: 버튼·속도창이 본문 글자를 덮었다. 팝업 칸이 15겹째로 깊어졌고
+    그 칸은 화면보다 넓어 못 쓴다 — 댓글 입력창이 든 본문 칸의 오른쪽 끝이 기준이다."""
+    st = _run_modal(1920)
+    for k in ("ss-adopt-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn", "ss-seek"):
+        assert st[k]["left"] == "1595px", (k, st[k])     # 본문 칸 오른쪽(1579) + 16
+
+
+def test_댓글창이_영상_아래면_본문칸으로_치지_않는다():
+    """피드처럼 댓글 입력창이 영상 아래(오른쪽이 아님)에 있으면 종전 자리(영상 오른쪽)다."""
+    st = _run_modal(1920, panel_left=537, ta_left=560)
+    assert st["ss-grab-btn"]["left"] == "1095px"         # 영상 오른쪽(1079) + 16
+
+
+def test_팝업_오른쪽_여백이_모자라면_종전_자리로_물러난다():
+    st = _run_modal(1700)                                # 1579+16+150+12 > 1700
+    assert st["ss-grab-btn"]["right"] == "18px"

@@ -127,3 +127,11 @@ def test_너무_짧은_장면도_원본이_이어지면_1점2초까지(tmp_path)
     a, b = c
     assert abs(a["d"] - 1.2) < 0.02 and abs(a.get("sd", a["d"]) - 1.2) < 0.02     # 0.5초 장면 → 원본 이어 1.2초
     assert abs(b["d"] - 1.4) < 0.02
+
+
+def test_재료에서_담을_때_다른_칸_사용을_알린다():
+    src = (HERE / "static" / "scene_lab.html").read_text(encoding="utf-8")
+    i = src.index("function add(sid){")
+    body = src[i:src.index("function delSeg(", i)]
+    assert "칸에도 쓰여" in body and "function usedCells(sid)" in body
+    assert "usedCells(s.sid).length" in src and ".segthumb .usedin{" in src

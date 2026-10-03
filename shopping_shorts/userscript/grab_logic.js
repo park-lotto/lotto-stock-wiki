@@ -1,6 +1,8 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-03  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-03 두 번째 = 20261004  (LOGIC_VER가 정본)
+//   · 인스타 팝업·게시물 화면 — 버튼을 본문 칸 바깥 오른쪽으로(관제 094). 같은 날 핀터레스트 수정이
+//     20261003을 이미 썼다 → 한 칸 올려야 옛 확장 동봉본을 새 로직이 이어받는다.
 //   · 핀터레스트 — 핀 페이지 플로팅 담기 + 검색 그리드 카드마다 📥 (2026-09-11 고객 문의)
 //   · ⭐볼채널등록 — 회원용 개인 채널 즐겨찾기
 //   · 유튜브는 쇼츠에서만 동작 — 메인·롱폼 차단
@@ -15,7 +17,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261003;
+  var LOGIC_VER = 20261004;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -1128,6 +1130,27 @@
       if (rr.right > right && rr.right < window.innerWidth &&
           (isModal || rr.width <= v.width * 1.6)) right = rr.right;
       el = el.parentElement;
+    }
+    // ★인스타 팝업 새 구조(2026-10-03 사장님 스샷 + 라이브 실측): 영상 폭 칸이 14겹이라
+    //   위 10칸 안에 팝업 칸이 안 잡히고, 15겹째 칸(ARTICLE)은 **화면보다 넓어**(-114~2019)
+    //   오른쪽 끝을 못 쓴다. 눈에 보이는 팝업은 그 칸의 자식 둘(영상 칸 + 본문 칸)이다.
+    //   → 댓글 입력창(textarea)에서 위로 올라가며 '영상 오른쪽에 있는 칸'까지만 따라가면
+    //     본문 칸이 나온다. 그 오른쪽 끝 바깥에 세운다. 댓글창이 영상 아래면(피드) 해당 없음.
+    var host = best.parentElement, g2 = 0, ta = null;
+    while (host && g2++ < 30) {
+      ta = host.querySelector ? host.querySelector("textarea") : null;
+      if (ta) break;
+      host = host.parentElement;
+    }
+    if (ta && ta.getBoundingClientRect) {
+      var p = ta, panel = null;
+      while (p && p !== host) {
+        var pr = p.getBoundingClientRect();
+        if (pr.left < v.right - 4) break;
+        panel = pr; p = p.parentElement;
+      }
+      if (panel && panel.left <= v.right + 200 && panel.top < v.bottom && panel.bottom > v.top &&
+          panel.right > right && panel.right < window.innerWidth) right = panel.right;
     }
     // 액션열(좋아요·댓글·공유)이 영상 **바깥 형제**인 경우(유튜브 쇼츠) — 따로 찾아 넘는다.
     var rails = document.querySelectorAll("#actions,ytd-reel-player-overlay-renderer #actions");
