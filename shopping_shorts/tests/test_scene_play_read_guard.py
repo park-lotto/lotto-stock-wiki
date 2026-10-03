@@ -121,3 +121,19 @@ def test_tail_three_frames_plus_rounding(tmp_path):
     c = _run(_data(12.7, 14.17, [12.7, 14.066]), tmp_path)
     assert c["s"] == 12.7 and c["s"] + c["sd"] <= 14.066 + 1e-9, c
     assert c["s"] + c["sd"] > 14.066 - 1.5e-3, c
+
+
+def test_head_chain_of_flash_cuts_skips_all(tmp_path):
+    """2026-10-02 관문 실측(f65d5cc30072 s3): 원본 첫머리 전환이 0.1001·0.1335·0.1668 연달아(2프레임짜리 딴 장면).
+    가드가 첫 전환(0.1001)에만 옮기면 그 자리가 딴 장면 안이라 화면·완성본 둘 다 2프레임 번쩍. 연속 전환은 끝까지 넘긴다."""
+    c = _run(_data(0.0, 2.97, [0.1001, 0.1335, 0.1668, 2.9696, 5.3053]), tmp_path)
+    assert abs(c["s"] - 0.1668) < 1e-6, c
+    assert abs((c["s"] + c["sd"]) - 2.97) < 1.5e-3, c
+
+
+def test_tail_chain_of_flash_cuts_skips_all(tmp_path):
+    """꼬리도 같다 — 줄인 끝 바로 앞(3프레임 안)에 또 전환이 있으면 계속 앞으로 줄인다(1·3·5프레임 앞 연쇄)."""
+    e = 11.5
+    cuts = [round(e - 1 * F, 4), round(e - 3 * F, 4), round(e - 5 * F, 4)]
+    c = _run(_data(10.0, e, [3.0] + sorted(cuts) + [20.0]), tmp_path)
+    assert abs((c["s"] + c["sd"]) - min(cuts)) < 1.5e-3, c

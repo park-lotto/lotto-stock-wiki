@@ -276,3 +276,13 @@ def test_parse_summary_reads_vcut_mismatch():
             " · 효과음 타점0.10+ 0 · 길이 이상 0 · 렌더뒤음성바뀜 0 · 건너뜀 0 · 패킷 잉여 0.05초+ 0편 · 일정 지연 0편 · 검출불일치 2칸   (…)")
     assert fa.parse_summary(line)["vcut_mis"] == 2
     assert fa.parse_summary(line.split(" · 검출불일치")[0]) is None      # 새 항목이 없는 옛 판본 → 판정 불가
+
+
+def test_const_delay_allows_one_frame_but_catches_original_defect():
+    """관제 067 '가'(2026-10-02): 한 프레임(0.033초)은 통과, 이 검사를 만든 결함(+0.059초)과 두 프레임(0.067초)은 잡는다."""
+    import final_audio_audit as fa
+    def live(off):
+        return [{"nar": t + off, "plan_t": t} for t in (0.0, 2.0, 4.0, 6.0)]
+    assert fa._const_delay({"intro_used": 0}, live(0.033))["delay_bad"] == 0     # 63bf334e457b 실측값
+    assert fa._const_delay({"intro_used": 0}, live(0.059))["delay_bad"] == 1     # 2026-09-27 인트로 결함
+    assert fa._const_delay({"intro_used": 0}, live(0.067))["delay_bad"] == 1     # 두 프레임

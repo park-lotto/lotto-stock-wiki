@@ -44,7 +44,7 @@ def _ghost_line(frames, only=0, cuts=None, short=0):
         frames, frames if cuts is None else cuts, only, short)
 
 
-GATE = dict(CFG["gate"], min_jobs_compared=1)
+GATE = dict(CFG["gate"], min_jobs_compared=1, compare_main=False)   # 한쪽 판정·업로드 시험 — 전후 비교는 test_video_gate_delta.py(카드 071)
 
 
 # ── 요약 판정 ────────────────────────────────────────────────────
@@ -170,7 +170,9 @@ def _udiff(tmp_path, old, new):
     ("    return 1", "    return 11", True, "_pvproxy_build"),
     ("    return 2", "    return 22", True, "api_render"),                 # 이름엔 render 가 있고 라우트도 /api/mix/render
     ("    return 3", "    return 33", False, "api_customers"),             # 제작 라인 밖
-    ("X = 1", "X = 2", True, "모듈 수준"),                                   # 못 정함 → 실행
+    ("X = 1", "X = 2", False, "모듈 상수"),                                  # 이름이 제작 라인 밖 상수 → 건너뜀(2026-10-02 카드 069)
+    ("X = 1", "X = 1\nRENDER_FPS = 30", True, "RENDER_FPS"),                # 이름에 제작 라인 열쇠 → 실행
+    ("X = 1", "X = 1\nimport sys", True, "모듈 수준"),                      # import·호출은 영향을 못 정함 → 실행
     ("    return 3", "    return 3  # 주석만", False, None),                 # 주석이 붙어도 코드 줄이 바뀌면…
 ])
 def test_app_function_level_decision(tmp_path, old, new, expect, why):

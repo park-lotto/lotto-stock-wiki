@@ -78,6 +78,8 @@ def _seg_index(sources):
                              "key": bool(x.get("is_key")), "vid": s.get("video_id") or _vid_of(sid),
                              "text": (x.get("text") or "").strip(),
                              # 2026-10-01 태깅 확장(카드 051): 훅 유형·뒷컷·화면 배속 힌트 — 없으면 빈칸/False/None
+                             "label": (x.get("label") or "").strip(),          # 1단계 '이 장면이 하는 일' — 같은 장면 판정(ai_match 채우기)에 쓴다
+                             "use": (x.get("use_point") or "").strip(), "kind": x.get("appeal_kind") or "", "tempo": x.get("tempo") or "",
                              "hook": str(x.get("hook_type") or "").strip(),
                              # ★뒷컷은 "제품이 안 보일 때"만 믿는다 — 태거가 영상 끝의 제품 컷(가방 수납·완성품)을 자꾸 뒷컷으로
                              #   찍었다(10-01 실측 4차: 뒷컷 5개 전부 제품 컷). 훅 유형이나 특장점이 달린 컷은 제품 컷이다.
@@ -573,6 +575,19 @@ def seed_voice_gap(lines, cells):
     return gaps
 
 
+# ★2단계 영상 대본 작가 지침서(2026-10-02 사장님 "영상추출분석 전문가 / 영상대본작가 / 장면매칭 전문가 — 지침서가 확실하게 있어야").
+#   대본을 쓰는 프롬프트 세 곳(원문 옮기기·자유 쓰기·틀 채우기) 머리에 **이 한 상수**를 붙인다 — 1단계(script_extract._SEG_FIELD_GUIDE)·3단계(ai_match.BRIEF)와 짝.
+WRITER_BRIEF = """너는 수천 편을 쓴 **쇼핑 쇼츠 영상 대본 작가**다.
+1단계 영상 추출·분석 전문가가 영상마다 컷과 "그 컷 위에 읽힐 문장(소구점·스토리)"을 짝지어 넘겼다 — 그게 네 재료다.
+★왜 네 대본이 중요한가: 네 줄 하나하나가 그대로 화면 위에 읽히고, 3단계 장면 매칭 전문가는 **네 줄과 재료 문장이 같은 말인지**로 컷을 고른다.
+  재료에 없는 말을 지어내면 맞는 컷이 없어 화면이 어긋나고, 밋밋하게 쓰면 시청자가 넘긴다.
+그러니: ① 재료 문장의 디테일(구체 동작·부위 — 무엇을 어떻게 하면 어떻게 되는지)을 살려라 ② 주어진 틀·말투로 말맛 있게 써라
+③ 구체적인 가짜 사실(판매량·구매자 수·가격 같은 숫자, 화면에 없는 효능)만 지어내지 마라 — **품절 대란·난리·돈방석·기립박수·떼돈 같은
+  과장·소문 표현은 쇼츠 스타일이라 마음껏 써도 된다**(2026-09-18 사장님) ④ 한 줄 = 한 그림. 두 장면을 한 줄에 몰지 마라.
+⑤ 불편은 요약하지 말고 **한 순간의 장면**으로 — "짜증 나는 상황" 대신 "겨우 재워 내려놓는 순간 등이 닿자마자 눈을 번쩍 떠서 처음부터 다시 재우던".
+"""
+
+
 def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds=25, note=None, seed_src=None):
     """원문형 스파인: ①전제 읽기 → ②이 제품 상황표 → ③원문 말투로 대본 → ④상황표와 대조, 어긋나면 1회 재작성.
 
@@ -623,6 +638,7 @@ def write_lines_from_origin(origin, groups_out, spine, seg_index, target_seconds
         prod_rule = "- 제품 이야기는 아래 특징에 있는 것만. 원문의 원래 제품 이야기는 한 조각도 남기지 마라.\n"
         cast_part = "[상황표]\n%s\n\n" % json.dumps(cast, ensure_ascii=False)
     prompt = (
+        WRITER_BRIEF + "\n" +   # 2단계 영상 대본 작가 지침서(2026-10-02)
         "아래 [원문]은 조회수 %s회가 나온 쇼핑 숏폼 대본이다. %s\n\n규칙\n%s%s"
         "- 칸은 정확히 %d개, 순서는 원문과 똑같이. 칸을 더 만들거나 빼지 마라.\n"
         "- 칸마다 원문의 말투·어미·연결어를 그대로 살리고, 글자수도 [칸 구조]의 ±20%% 안으로.\n"
@@ -741,6 +757,7 @@ def write_lines(groups_out, hook_spine, seg_index, target_seconds=25, note=None,
         lines = _no_made_up_country(lines, seg_index)
         return _fit_length(lines, target_seconds, note=note)
     prompt = (
+        WRITER_BRIEF + "\n" +   # 2단계 영상 대본 작가 지침서(2026-10-02)
         f"제품: {groups_out.get('product')}\n"
         f"훅 스타일: 「{hook_spine.get('name')}」 — {hook_rule}\n"
         f"말투: {hook_spine.get('emotion_arc') or ''} / {hook_spine.get('appeal') or ''}\n\n"
@@ -988,6 +1005,7 @@ def _spine_prompt(groups_out, spine, roles, tpl, feats, per_line, seed=None):
         tgt = f"group={order[gi]} (특징 {gi + 1}번)" if 0 <= gi < len(order) else "group=-1"
         lines_spec.append(f"  {k + 1}. role={r}, {tgt} — 문장틀: {ex}")
     return (
+        WRITER_BRIEF + "\n" +   # 2단계 영상 대본 작가 지침서(2026-10-02)
         f"제품: {groups_out.get('product')}\n"
         f"대본 스타일: 「{spine.get('name')}」 — {spine.get('situation_type') or ''}\n"
         f"감정선: {spine.get('emotion_arc') or ''}\n\n"
@@ -1262,7 +1280,15 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
         backbone_vid = max(vis_sources, key=lambda x: len(x.get("segments") or [])).get("video_id")
         note["backbone_moved"] = backbone_vid      # 씨앗이 백본이었으면 재료 중 하나로 옮긴다
     seg_index = _seg_index(vis_sources)
-    groups_out = build_groups(vis_sources, backbone_vid, note=note)
+    # ★스토리(2026-10-01 사장님 "태깅부터 대본화"): 비씨앗 소스 전부에 1단계 스토리가 있으면 그것이 특징 묶음이다 — AI 묶기 호출 없음,
+    #   문장(말맛)과 컷이 태깅 때 이미 짝. 하나라도 없으면 종전 build_groups(note 에 이유 — 조용한 분기 아님).
+    from shopping_shorts import story_tag as _st
+    if _st.has_stories(vis_sources):
+        groups_out = _st.groups_from_stories(vis_sources, seg_index, max_groups=MAX_GROUPS)
+        note["groups_from"] = "story"
+    else:
+        note["groups_from"] = "build_groups(스토리 없는 소스 %d)" % sum(1 for s_ in vis_sources if not (s_.get("story") or []))
+        groups_out = build_groups(vis_sources, backbone_vid, note=note)
     # ★모델 혼잡(503)은 잠깐 뒤 다시 하면 된다 — 전엔 0.7초 만에 포기해 대본 0개(09-18 실측 42건 중 2건 전부 503).
     #   혼잡일 때만 다시 한다. 다른 이유로 비면(재료 문제) 바로 실패로 둔다.
     for wait in (4, 10):
@@ -1289,6 +1315,10 @@ def assemble(sources, backbone_vid, store, spine_id=None, target_seconds=25, see
         note["reason"] = "lines_short"
         return None, None, {"note": note, "groups": groups_out}
     beat_sources, report = assign_cuts(lines, groups_out, seg_index, backbone_vid)
+    # ★3단계 매칭 전문가(2026-10-02 사장님 "각 단계별로 전문가가 들어가는 것"): 고객 기본 경로도 이야기작가와 **같은 함수**로
+    #   대본 줄↔컷을 전문가에게 다시 맡긴다. 코드 매칭(스토리 짝 컷·훅·뒷컷 규칙)은 전문가가 실패·비운 줄의 대비다.
+    from shopping_shorts import ai_match as _am
+    beat_sources = _am.apply(lines, beat_sources, seg_index, backbone_vid, note=note, product=groups_out.get("product") or "")
     given = "\n".join(L["text"] for L in lines)
     # 씨앗을 뼈대로 썼으면 이름도 그렇게 말한다 — 유형을 고르느라 집은 스파인 이름("히트작 발명품형…")이
     #   뜨면 그 스파인 틀로 만든 줄 안다(2026-09-21 사장님 화면 확인).

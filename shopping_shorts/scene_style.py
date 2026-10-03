@@ -269,7 +269,7 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
         start, end = float(beat["t0"]), float(beat["t0"] + beat["dur"])
         cursor = start
         kind = frame_kind(index, (snapshot or {}).get("frameRule"))
-        caption_visible = not (kind == "hook" and hide_hook_captions)
+        caption_visible = not (kind == "hook" and index == 0 and hide_hook_captions)   # 숨김은 첫 훅 문장만(썰훅만 본문 자막은 보인다, 10-02)
         for caption, t0, t1 in caption_schedule(beat, absorb_lead=_absorb):
             a, b = max(cursor, start, float(t0)), min(end, float(t1))
             if b <= a:

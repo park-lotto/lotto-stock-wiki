@@ -823,6 +823,7 @@ def _extract_script_frames_body(video_path, video_id, caption, _no_classic, extr
         "full_text": full_text_of(segments),
         "product_benefits": script_extract._collect_benefits(segments),
         "source_brief": brief,       # 1차 브리프(product·role·core·summary·flow·confidence), 없으면 {}
+        "story": script_extract._story_for(brief, segments),   # 2026-10-01 스토리(대본 문장+컷) — 통째 업로드 경로와 같은 함수
         "tag_empty_ratio": round(_er, 3),   # 묘사 빈 비율 — 0이 정상. 실패를 숫자로 남긴다(2026-09-05)
         "transcript_status": transcript_status,   # ok | no_groq_key | audio_extract_failed | asr_none | asr_empty | exception: …
         # 외국 소스의 한국어 전사 전문(대본 재료용). 한국어 소스는 빈칸 → 호출부가 full_text로 폴백.

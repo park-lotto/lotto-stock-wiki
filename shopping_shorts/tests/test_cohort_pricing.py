@@ -61,7 +61,5 @@ def test_공개_화면에_1기_77만원_하드코딩이_없다():
     assert not bad, bad
     a = (ROOT / "app.py").read_text(encoding="utf-8")
     assert "숏템메이커 1기 이용권" not in a
-    # ⚠️ _PRICING_TMPL(요금 FAQ)·_REFUND_BODY(환불규정) — 둘 다 **모듈 수준 문자열** — 의 "1기 신청서의" 2곳은
-    #   일부러 남겼다(2026-10-01): 모듈 수준 diff는 영상 관문을 깨우고, 그 관문이 라이브 잔상(제작 라인 결함)으로
-    #   막혀 있다. 잔상이 고쳐져 관문이 열리면 두 줄을 "신청서의"로 바꾸고 이 상한을 0으로 조인다.
-    assert a.count("1기 신청서") <= 2
+    # _PRICING_TMPL(요금 FAQ)·_REFUND_BODY(환불규정)의 "1기 신청서의" 2곳은 기수 중립 "신청서의"로 바꿨다(2026-10-03 관제 087).
+    assert a.count("1기 신청서") == 0
