@@ -1955,6 +1955,9 @@
                 border:2px solid #fff;background:#0008;display:flex;align-items:center;justify-content:center;
                 font-size:16px;font-weight:900}
               .pick-card.on{border-color:#2aa3e8;box-shadow:0 0 0 3px #2aa3e833}
+              .pick-card .pk-kept{position:absolute;left:6px;bottom:34px;background:#1f9d6bdd;color:#fff;border-radius:8px;
+                                  font-size:12px;font-weight:700;padding:2px 7px}
+              .pick-card.kept:not(.on) img{opacity:.85}
               .pick-card.on .pk-chk{background:#2aa3e8}
               .pick-card:not(.on) img{opacity:.55}
             </style>
@@ -12693,6 +12696,12 @@ async function startCleanPreview(){
     paintCleanPick();   // 안내는 그리는 함수 한 곳이 쓴다(한 자리를 두 함수가 덮어쓰지 않게)
     return;
   }
+  // ★고른 장면이 전부 지금 방식으로 이미 지운 것이면 보낼 게 없다(2026-10-03) — 안내만 하고 멈춘다(서버도 과금 0으로 끝낸다).
+  if(_cuts && CLEAN_PICK && CLEAN_PICK.anyKept
+     && CLEAN_PICK.cuts.filter(c=>CLEAN_PICK.sel.has(c.key)).every(c=>_cleanPickDone(c))){
+    paintCleanPick();
+    return;
+  }
   clearInterval(CLEAN_POLL); CLEAN_POLL=null;
   const myGen=++CLEAN_GEN, myJob=MIX_JOB;
   CLEAN_VIEW={si:0, pos:0.5, job:myJob};   // 새로 돌리면 확인 지점도 처음(영상1·가운데)으로
@@ -12799,6 +12808,8 @@ async function pollClean(gen,job){
       CLEAN_SRC_N = d.clean_source_count || 1;
       CLEAN_SRC_IDX = (d.clean_source_indices && d.clean_source_indices.length) ? d.clean_source_indices : null;
       CLEAN_CLIPS_JOB=null;                 // 방금 청소가 끝났다 — 컷 목록·stale을 새로 받는다
+      // 장면 고르기도 새로 받는다(2026-10-03) — 방금 지운 장면이 '지움'으로 바뀌고, 고르던 것은 비운다(다시 눌러 또 보내지 않게)
+      if(typeof CLEAN_PICK!=='undefined' && CLEAN_PICK && CLEAN_PICK.job===job){ CLEAN_PICK=null; loadCleanPick(job); }
       renderCleanReady(job);
       // ★5단계(꾸미기) 미리보기도 청소본으로 갈아준다 (2026-09-06 사장님 질문
       //   "자막제거 동안 장면꾸미기를 하면 어떻게 되나 / 새로고침하나").
@@ -12981,9 +12992,12 @@ async function loadCleanPick(job){
     if(MIX_JOB!==job) return;
     if(!d.ok || !d.partial_ok || !(d.cuts||[]).length){ CLEAN_PICK=null; wrap.style.display='none'; return; }
     const keep = (CLEAN_PICK && CLEAN_PICK.job===job) ? CLEAN_PICK : null;   // 화면에서 고르던 것은 유지
-    CLEAN_PICK = {job:job, cuts:d.cuts, rate:d.rate||{},
+    // ★덧지우기(2026-10-03): 고르는 것은 "지금 지울 장면"이다. 이미 지운 장면(kept)이 있으면 아무것도 안 고른 채로
+    //   시작한다 — 지운 장면은 '지움' 표시로 보이고 그대로 유지된다(서버가 이미 지운 것 ∪ 고른 것을 저장).
+    const anyKept = d.cuts.some(c=>c.kept);
+    CLEAN_PICK = {job:job, cuts:d.cuts, rate:d.rate||{}, anyKept:anyKept, topup:!!d.topup,
                   mode: keep ? keep.mode : (d.all ? 'all' : 'some'),
-                  sel: keep ? keep.sel : new Set(d.cuts.filter(c=>c.sel).map(c=>c.key))};
+                  sel: keep ? keep.sel : new Set(anyKept ? [] : d.cuts.filter(c=>c.sel).map(c=>c.key))};
     wrap.style.display='';
     paintCleanPick();
   }catch(e){ CLEAN_PICK=null; wrap.style.display='none'; }
@@ -12992,7 +13006,8 @@ function setCleanPickMode(mode){
   if(!CLEAN_PICK) return;
   CLEAN_PICK.mode = (mode==='some') ? 'some' : 'all';
   // 처음 '골라서'로 바꾸면 전부 골라진 채로 시작 — 뺄 장면만 누르면 된다
-  if(CLEAN_PICK.mode==='some' && !CLEAN_PICK.sel.size) CLEAN_PICK.cuts.forEach(c=>CLEAN_PICK.sel.add(c.key));
+  // (이미 지운 장면이 있으면 빈 채로 둔다 — 다시 지울 장면만 누른다)
+  if(CLEAN_PICK.mode==='some' && !CLEAN_PICK.sel.size && !CLEAN_PICK.anyKept) CLEAN_PICK.cuts.forEach(c=>CLEAN_PICK.sel.add(c.key));
   paintCleanPick();
 }
 function toggleCleanPick(key){
@@ -13009,6 +13024,10 @@ function cleanPickAll(on){
 function cleanPickPayload(){
   if(!CLEAN_PICK || CLEAN_PICK.mode!=='some') return null;
   return CLEAN_PICK.cuts.filter(c=>CLEAN_PICK.sel.has(c.key)).map(c=>c.key);
+}
+// 이 컷이 지금 고른 방식(기본/고급)으로 이미 지워져 있나 — 값은 서버(/clean_pick done)가 준다
+function _cleanPickDone(c){
+  return !!(c && c.done && c.done[STATE.cleanTier==='pro'?'pro':'basic']);
 }
 function _cleanPickCredits(sec){
   // 단가는 서버(clean_credit_estimate)가 1초 값으로 준다 — 초 단위 올림은 같은 식.
@@ -13027,24 +13046,42 @@ function paintCleanPick(){
   if(some && grid){
     grid.innerHTML = P.cuts.map((c,i)=>{
       const on=P.sel.has(c.key);
-      return '<button type="button" class="pick-card'+(on?' on':'')+'" data-key="'+esc(c.key)+'" onclick="toggleCleanPick(this.dataset.key)">'
+      const keptLbl = c.kept ? '<span class="pk-kept">지움'+((c.done&&c.done.pro)?'·고급':((c.done&&c.done.basic)?'·기본':''))+'</span>' : '';
+      return '<button type="button" class="pick-card'+(on?' on':'')+(c.kept?' kept':'')+'" data-key="'+esc(c.key)+'" onclick="toggleCleanPick(this.dataset.key)">'
         +'<img src="/api/produce/mix/clean_pick_thumb/'+encodeURIComponent(P.job)+'?ci='+c.ci+'" alt="">'
-        +'<span class="pk-num">장면 '+(i+1)+'</span><span class="pk-chk">'+(on?'✓':'')+'</span>'
+        +'<span class="pk-num">장면 '+(i+1)+'</span><span class="pk-chk">'+(on?'✓':'')+'</span>'+keptLbl
         +'<span class="pk-sec">'+Number(c.dur).toFixed(1)+'초</span></button>';
     }).join('');
   }
   const all = P.cuts.reduce((t,c)=>t+Number(c.dur||0),0);
-  const pick = P.cuts.filter(c=>P.sel.has(c.key)).reduce((t,c)=>t+Number(c.dur||0),0);
-  const n = P.cuts.filter(c=>P.sel.has(c.key)).length;
+  const picked = P.cuts.filter(c=>P.sel.has(c.key));
+  const n = picked.length;
+  // ★덧지우기: 고른 것 중 지금 방식으로 이미 지운 장면은 다시 보내지 않는다(서버 clean_topup_plan) — 새로 지울 것만 센다.
+  //   덧붙일 수 없는 상태(P.topup=false)면 서버가 '이미 지운 것 ∪ 고른 것'을 통째로 다시 지운다 — 정확한 값은 확인창이 말한다.
+  const fresh = picked.filter(c=>!_cleanPickDone(c));
+  const redoAll = P.anyKept && !P.topup && fresh.length>0;     // 덧붙일 수 없는 상태 — 이미 지운 장면도 함께 다시 지운다
+  const pick = (redoAll ? P.cuts.filter(c=>c.kept||P.sel.has(c.key)) : ((P.anyKept && P.topup) ? fresh : picked))
+    .reduce((t,c)=>t+Number(c.dur||0),0);
   const s=document.getElementById('cleanPickSum'); if(!s) return;
   const ca=_cleanPickCredits(all), cp=_cleanPickCredits(pick);
+  const tierName = (STATE.cleanTier==='pro') ? '고급' : '기본';
+  const keptNote = P.anyKept
+    ? '<br><span style="opacity:.85"><b>이미 지운 장면(지움 표시)은 그대로 유지</b>돼요. 한 번도 안 지운 장면은 원래 자막이 남아요.</span>'
+    : '<br><span style="opacity:.85">안 고른 장면은 <b>원래 자막이 그대로</b> 남아요. 나중에 그 장면을 바꿔도 추가 비용은 없어요.</span>';
   s.innerHTML = !some
     ? '장면 '+P.cuts.length+'개 전체 · '+all.toFixed(1)+'초'+(ca!=null?' · 약 <b>'+ca+'크레딧</b>':'')
     : (n
-      ? '고른 장면 <b>'+n+'개</b> · '+pick.toFixed(1)+'초'+(cp!=null?' · 약 <b>'+cp+'크레딧</b>':'')
-        +(ca!=null?' <span style="opacity:.8">(전체 지우면 약 '+ca+'크레딧)</span>':'')
-        +'<br><span style="opacity:.85">안 고른 장면은 <b>원래 자막이 그대로</b> 남아요. 나중에 그 장면을 바꿔도 추가 비용은 없어요.</span>'
-      : '<b style="color:var(--fire,#ff9a5a)">지울 장면을 하나 이상 골라 주세요.</b>');
+      ? ((P.anyKept && !fresh.length)
+          ? '<b style="color:var(--fire,#ff9a5a)">고른 장면은 이미 '+tierName+' 방식으로 지웠어요.</b> 같은 방식으로 다시 지워도 결과가 같아 보내지 않아요(비용 0). '
+            +'방식(기본/고급)을 바꾸면 그 장면만 다시 지울 수 있어요.'
+          : '고른 장면 <b>'+n+'개</b>'+((P.anyKept && P.topup && fresh.length!==n)?' 중 새로 지울 <b>'+fresh.length+'개</b>':'')
+            +' · '+pick.toFixed(1)+'초'+(cp!=null?' · 약 <b>'+cp+'크레딧</b>':'')
+            +(ca!=null?' <span style="opacity:.8">(전체 지우면 약 '+ca+'크레딧)</span>':'')
+            +(redoAll?'<br><span style="opacity:.85">지금 지운 영상에는 덧붙일 수 없어, <b>이미 지운 장면도 함께 다시 지워요</b>(위 비용에 포함).</span>':''))
+        +keptNote
+      : (P.anyKept
+          ? '<b style="color:var(--fire,#ff9a5a)">다시 지울 장면을 골라 주세요.</b>'+keptNote
+          : '<b style="color:var(--fire,#ff9a5a)">지울 장면을 하나 이상 골라 주세요.</b>'));
 }
 // ── 🧽 지우는 방식(기본/고급) ─────────────────────────────────────────────
 // 값의 주인은 STATE.cleanTier 하나다. 화면은 그걸 보여주고, 서버는 job.clean_tier로

@@ -37,7 +37,7 @@ A._need_own_key_or_402 = lambda *x, **k: None
 CALLS = []
 
 
-def _fake_vmake(src, keys, out, tier=None):
+def _fake_vmake(src, keys, out, tier=None, **k):
     CALLS.append((Path(src).name, tier, mp._probe_seconds(src)))
     print("[QA] 가짜 업체 호출: %s tier=%s %.2f초" % CALLS[-1], file=sys.stderr)
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(src),
@@ -54,7 +54,10 @@ _orig_enqueue = store_mod.Store.enqueue
 
 def _enqueue(self, kind, payload, *x, **k):
     if kind == "clean":
+        # 워커(worker.py)와 같은 인자 — 동의(confirm_*)·이번에 고른 컷(pick, 덧지우기 2026-10-03)
         threading.Thread(target=mp.run_clean_sources, args=(payload["job_id"], a.db, str(WORK_ROOT)),
+                         kwargs={"confirm_clean": payload.get("confirm_clean"), "confirm_secs": payload.get("confirm_secs"),
+                                 "pick": payload.get("pick")},
                          daemon=True).start()
         return 0
     return _orig_enqueue(self, kind, payload, *x, **k)

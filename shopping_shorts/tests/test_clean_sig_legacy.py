@@ -46,7 +46,7 @@ def test_실제_파일을_찾는다_과금_0(tmp_path, monkeypatch, p):
     monkeypatch.setattr(mp, "_charge_clean", lambda *a, **k: pytest.fail("있는 청소본에 과금했다"))
     saved = {}
     monkeypatch.setattr(mp, "_save_clean_base",
-                        lambda job, work, sig, path, only_if_new=False: saved.update(sig=sig, path=path, oin=only_if_new))
+                        lambda job, work, sig, path, only_if_new=False, **k: saved.update(sig=sig, path=path, oin=only_if_new))
     out = mp._final_clean_fn(None, job, "j", tmp_path, ["k"], 0)(str(tmp_path / "mix_raw.mp4"))
     assert out == str(f)
     assert saved == {"sig": d["sig"], "path": str(f), "oin": True}

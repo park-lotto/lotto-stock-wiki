@@ -3808,6 +3808,136 @@ def clean_pick_cuts(job, work):
     return [dict(c, ci=i, key=cut_key(c), sel=cut_selected(c, sel)) for i, c in enumerate(cuts)]
 
 
+# ── 덧지우기 (2026-10-03 황선희님 job 817308da1647) ────────────────────────────────────────
+# 실측: 9장면 지움(17:22) → 덜 지워진 2장면만 골라 다시(17:29) → 나머지 7장면이 **원본으로 돌아갔다**.
+# 골라 지우기가 늘 원본 조립본에서 새로 시작하고, 선택이 다르면 다른 파일이라 앞 결과를 이어받지 않았기 때문이다.
+# 이제 고른 장면은 "지금 지울 장면"이다 — 이미 지운 장면은 그대로 두고(저장되는 선택 = 이미 지운 것 ∪ 고른 것),
+# 새로 지울 컷만 업체로 보내 **이미 지운 청소본의 같은 프레임 자리**에 덧붙인다.
+# 판정은 전부 여기(clean_cut_states · clean_cuts_merged · clean_topup_plan) — 화면·라우트·워커·과금 안내가 이것만 부른다.
+_TOPUP_TOL = 1.5 / 30.0        # 정본을 만든 지도와 지금 컷 지도가 같은 자리인가(±1프레임)
+
+
+def _base_cut_cleaned(base, c):
+    """정본에서 이 컷이 지워져 있나 — 고른 장면만 지운 정본이면 그 선택으로, 전체 정본이면 늘 True."""
+    if not base:
+        return False
+    if base.get("partial"):
+        return cut_selected(c, [str(x) for x in base.get("sel") or []])
+    return True
+
+
+def _base_cut_tier(base, c):
+    """정본에서 이 컷을 지운 등급 — 덧지운 정본은 컷마다 다를 수 있다(cut_tiers), 없으면 정본 서명의 등급."""
+    for k, t in ((base or {}).get("cut_tiers") or {}).items():
+        if cut_selected(c, [str(k)]):
+            return t
+    return _sig_tier((base or {}).get("sig"))
+
+
+def clean_topup_capable(job, work, base):
+    """이 정본 위에 **프레임 자리 그대로** 덧붙일 수 있나.
+    조건: 정본 지도가 그 파일을 만든 조립 지도(cut_map=assembled) · 증분 조각 없음 · 정본을 만든 편성 = 지금 편성(서명)."""
+    if not base or base.get("extras") or base.get("cut_map") != "assembled":
+        return False
+    plan = (job or {}).get("edit_plan") or {}
+    return str(base.get("sig") or "")[:16] in {_plan_signature(plan), _plan_signature(plan, with_speed=False)}
+
+
+def clean_cut_states(job, work, cuts=None):
+    """장면 고르기 화면용 — 지금 편성 컷마다 {"kept": 이미 지워져 있나, "done": {등급: 그 등급으로 지워져 있나}} + 덧지우기 가능 여부.
+    반환 (states, topup). 정본이 없으면 전부 False. cuts: clean_pick_cuts 결과를 이미 가졌으면 넘긴다(두 번 계산하지 않게)."""
+    from shopping_shorts.vmake_client import TIER_BASIC, TIER_PRO
+    base = clean_base_for(job, work) if _clean_strategy(job) == "final" else None
+    out = []
+    for c in (cuts if cuts is not None else clean_pick_cuts(job, work)):
+        kept = _base_cut_cleaned(base, c)
+        t = _base_cut_tier(base, c) if kept else None
+        out.append({"kept": bool(kept), "done": {TIER_BASIC: t == TIER_BASIC, TIER_PRO: t == TIER_PRO}})
+    return out, bool(base is not None and clean_topup_capable(job, work, base))
+
+
+def clean_picked_keys(job, work, raw):
+    """화면이 보낸 컷 키 중 **지금 편성에 있는 것**만(이번에 지울 장면). 전체(None)·옛 경로면 None."""
+    if not isinstance(raw, list) or _clean_strategy(job) != "final":
+        return None
+    keys = [str(k) for k in raw]
+    return [c["key"] for c in clean_pick_cuts(dict(job, clean_cuts=None), work) if cut_selected(c, keys)]
+
+
+def clean_cuts_merged(job, work, picked):
+    """저장할 선택(job.clean_cuts) = **이미 지운 장면 ∪ 이번에 고른 장면**. 전부면 None(전체).
+    ★고른 것만 저장하면 이미 지운 장면이 '안 고른 장면'이 되어 원본으로 돌아간다(이 구획 머리말의 사고)."""
+    base = clean_base_for(job, work)
+    cuts = clean_pick_cuts(dict(job, clean_cuts=None), work)
+    keep = [c for c in cuts if cut_selected(c, picked) or _base_cut_cleaned(base, c)]
+    return None if len(keep) == len(cuts) else [c["key"] for c in keep]
+
+
+def clean_topup_plan(job, work):
+    """덧지우기 계획 — **유일한 자리**. 버튼 종류(button_clean_kind)·과금 안내(clean_charge_plan)·실행(_final_clean_fn)이 같이 부른다.
+
+    반환 None(덧지우기 아님 — 종전 경로) 또는 {"base", "send": [업체로 보낼 컷 키], "seconds", "tiers": {컷 키: 등급}}.
+      send  = 이번에 고른 컷(job["_clean_pick"]) 중 **이 등급으로 아직 안 지운 것**. 같은 등급으로 이미 지운 컷은
+              다시 보내지 않는다(실측 817308da1647: 같은 고급으로 두 번 보낸 결과가 같았다 — 돈만 나간다).
+      tiers = 덧지운 뒤 정본의 컷별 등급(지워진 컷 전부).
+    ★job["_clean_pick"]은 버튼 요청에만 실린다(라우트 → 큐 → 워커). 렌더에는 없다 → 렌더는 덧지우기를 하지 않는다."""
+    picked = (job or {}).get("_clean_pick")
+    if not picked or _clean_strategy(job) != "final":
+        return None
+    base = clean_base_for(job, work)
+    if base is None or not clean_topup_capable(job, work, base):
+        return None
+    tier = clean_tier_of(job)
+    found = _clean_final_found(job, work, tier)
+    if found is not None and Path(found[1]) != Path(base["path"]):
+        return None            # 이 선택·등급 파일이 따로 있다 — 그 파일 재사용(과금 0)이 낫다
+    cuts = clean_pick_cuts(job, work)
+    send = [c for c in cuts if cut_selected(c, picked)
+            and not (_base_cut_cleaned(base, c) and _base_cut_tier(base, c) == tier)]
+    if not send or not _topup_same_spots(base.get("cuts"), send):
+        return None
+    keys = [c["key"] for c in send]
+    tiers = {c["key"]: (tier if c["key"] in keys else _base_cut_tier(base, c))
+             for c in cuts if c["key"] in keys or _base_cut_cleaned(base, c)}
+    return {"base": base, "send": keys, "seconds": sum(float(c["dur"]) for c in send), "tiers": tiers}
+
+
+def clean_repick_full(job, work):
+    """덧붙일 수 없는 정본(옛 정본·지도를 못 믿음·편성 바뀜)인데 이번에 고른 컷 중 **이 등급으로 안 지운 것**이 있나.
+    True → 버튼은 정본 재사용으로 끝내지 않고 '이미 지운 것 ∪ 고른 것'(저장된 선택)을 이 등급으로 다시 지운다
+    (같은 선택·등급 파일이 따로 있으면 _final_clean_fn 이 그 파일을 과금 없이 쓴다).
+    ★이게 없으면: 고급 정본에서 기본으로 바꿔 몇 장면만 고른 요청이 '정본이 다 덮는다'로 아무 일 없이 끝난다(조용한 무시)."""
+    picked = (job or {}).get("_clean_pick")
+    if not picked or _clean_strategy(job) != "final" or clean_topup_plan(job, work) is not None:
+        return False
+    base = clean_base_for(job, work)
+    if base is None:
+        return False
+    tier = clean_tier_of(job)
+    return any(cut_selected(c, picked) and not (_base_cut_cleaned(base, c) and _base_cut_tier(base, c) == tier)
+               for c in clean_pick_cuts(job, work))
+
+
+def _topup_same_spots(base_cuts, send):
+    """보낼 컷마다 정본을 만든 지도에 **같은 자리**(같은 영상·칸, 원본 시작·완성본 자리·길이 ±1프레임) 컷이 있나.
+    하나라도 없으면 덧붙일 프레임 자리를 믿을 수 없다 → 덧지우기 안 함."""
+    for c in send or []:
+        ok = False
+        for b in base_cuts or []:
+            try:
+                if (str(b.get("video_id")) == str(c.get("video_id")) and b.get("beat_idx") == c.get("beat_idx")
+                        and abs(float(b["src"]) - float(c["src"])) < _SEL_TOL
+                        and abs(float(b["fin"]) - float(c["fin"])) < _TOPUP_TOL
+                        and abs(float(b["dur"]) - float(c["dur"])) < _TOPUP_TOL):
+                    ok = True
+                    break
+            except (KeyError, TypeError, ValueError):
+                continue
+        if not ok:
+            return False
+    return True
+
+
 def _probe_fps_frames(path):
     """(fps 문자열 '30/1', fps 실수, 프레임 수). 프레임은 패킷을 세서 잰다(끝까지 디코드하지 않는다)."""
     r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_packets",
@@ -3840,16 +3970,24 @@ def _probe_fps_frames(path):
     return "%d/1000" % int(round(fps * 1000)), fps, nb
 
 
-def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work):
+def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work, over=None, tag=None):
     """조립본 mix_raw에서 **고른 컷 구간만** 업체로 지우고, 같은 프레임 자리에 되붙여 out에 쓴다.
 
     ★결과 길이·프레임 수 = mix_raw 그대로(검사한다). 소리는 mix_raw 것을 그대로 복사한다.
     ★업체 호출은 1회 — 고른 구간들을 이어 한 파일로 보낸다(보낸 초 = 고른 초).
     ★돌려받은 파일이 몇 프레임 짧아도 마지막 프레임을 늘려 채우므로 뒤 구간이 밀리지 않는다.
+    over: 덧지우기(clean_topup_plan) — 고른 구간 **밖**을 원본 조립본이 아니라 이 파일(이미 지운 청소본)에서 가져온다.
+          그래야 앞서 지운 장면이 원본으로 돌아가지 않는다. 프레임 수가 조립본과 다르면 업체를 부르기 전에 멈춘다.
+    tag : 받아둔 조각·이어받기 이름표를 가르는 꼬리(덧지우기는 결과 파일 이름이 같아도 보낸 컷이 다르다).
     """
     work = Path(work)
     fs, fps, nb = _probe_fps_frames(mix_raw)
     W, H, _d = _probe_wh_dur(mix_raw)
+    if over is not None:
+        _onb = _probe_fps_frames(over)[2]
+        if _onb != nb:
+            raise RuntimeError("이전에 지운 영상과 지금 영상의 길이가 달라 덧지울 수 없습니다(%d != %d프레임) — "
+                               "전체 지우기로 다시 해 주세요" % (_onb, nb))
     ranges = []
     for c in cuts:
         if not cut_selected(c, sel):
@@ -3881,13 +4019,13 @@ def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work):
     # 이름표 = 결과 파일 이름(final_clean_{편성서명}{등급}{고른장면}.mp4) — 같은 작업을 다시 누르면 과금 없이 이어받는다
     # ★받아둔 조각도 같은 이름으로 둔다 — 업체에서 받은 뒤 되붙이기(ffmpeg)에서 죽으면 다음 클릭이 파일만 쓴다.
     #   (2026-09-27 점검: 종전엔 partial_clean.mp4 고정 이름이라 어느 선택의 것인지 몰라 매번 다시 보냈다)
-    cleaned_path = work / ("partial_clean_%s.mp4" % Path(out).stem[len("final_clean_"):])
+    cleaned_path = work / ("partial_clean_%s%s.mp4" % (Path(out).stem[len("final_clean_"):], ("_t" + tag) if tag else ""))
     if cleaned_path.exists() and cleaned_path.stat().st_size > 1024 and _probe_fps_frames(cleaned_path)[2] == total:
         print("[clean] 받아둔 조각 재사용(업체 호출·과금 0): %s" % cleaned_path.name, file=sys.stderr)
         cleaned = str(cleaned_path)
     else:
         cleaned = _vmake_clean(str(part), keys, str(cleaned_path), tier=tier,
-                               resume_key="part:" + Path(out).name)
+                               resume_key="part:" + Path(out).name + ((":" + tag) if tag else ""))
     # 되붙이기 — 원본 틈(g)과 청소 조각(p)을 프레임 번호로 잘라 순서대로 이어 붙인다.
     segs, cur, off = [], 0, 0
     for a, b in ranges:
@@ -3920,17 +4058,22 @@ def _clean_partial(mix_raw, cuts, sel, keys, out, tier, work):
             labels.append("[p%d]" % pi)
             pi += 1
     fc.append("%sconcat=n=%d:v=1:a=0[v]" % ("".join(labels), len(labels)))
-    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(mix_raw), "-i", str(cleaned),
+    # ★덧지우기면 틈(g)의 바탕은 이미 지운 청소본(over)이다. 결과 이름이 바탕과 같을 수 있어(같은 서명) 임시 이름에 쓰고 바꾼다.
+    _bg = str(over) if over is not None else str(mix_raw)
+    _dst = Path(out).with_name(Path(out).stem + ".topup_tmp.mp4") if over is not None else Path(out)
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", _bg, "-i", str(cleaned),
                     "-filter_complex", ";".join(fc), "-map", "[v]", "-map", "0:a?",
                     "-fps_mode", "passthrough", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
-                    "-pix_fmt", "yuv420p", "-c:a", "copy", str(out)], check=True)
-    got = _probe_fps_frames(out)[2]
+                    "-pix_fmt", "yuv420p", "-c:a", "copy", str(_dst)], check=True)
+    got = _probe_fps_frames(_dst)[2]
     if got != nb:
         raise RuntimeError("고른 장면 되붙이기 프레임 불일치(%d != %d)" % (got, nb))
     # ★영상 길이가 조립본 길이와 같아야 한다 — 프레임 수만 같고 시각이 몰리면(240fps 사고) 렌더가 빈 조각을 만든다
-    _vd = _probe_wh_dur(out)[2]
+    _vd = _probe_wh_dur(_dst)[2]
     if _d and _vd and abs(_vd - _d) > 0.5:
         raise RuntimeError("고른 장면 되붙이기 길이 불일치(%.2f초 != %.2f초)" % (_vd, _d))
+    if _dst != Path(out):
+        os.replace(str(_dst), str(out))
     return str(out)
 
 
@@ -4286,6 +4429,50 @@ def _va_read_cut_map(video_path):
     return read_cut_map(video_path)
 
 
+CLEAN_SIDECAR_RULE = "clean_cut_map/v1"
+
+
+def _write_clean_sidecar(clean_path, cuts, cut_tiers=None):
+    """청소본 옆에 **그 파일을 만든 컷 지도**(+컷별 등급)를 남긴다(final_clean_<sig>.cuts.json, 생성 규칙 표식 — 0순위-C).
+    지도가 없으면(cuts None) 쓰지 않는다. 실패해도 청소 결과는 산다(경보만)."""
+    if cuts is None:
+        return
+    try:
+        p = Path(str(clean_path)).with_suffix(".cuts.json")
+        p.write_text(json.dumps({"rule": CLEAN_SIDECAR_RULE, "cuts": list(cuts), "cut_tiers": cut_tiers or None},
+                                ensure_ascii=False), encoding="utf-8")
+    except Exception as e:      # noqa: BLE001
+        print("[clean] 청소본 옆 지도 기록 실패(%s): %r" % (clean_path, e), file=sys.stderr)
+
+
+def _read_clean_sidecar(clean_path):
+    """청소본 옆 지도 → {"cuts": [...]|None, "cut_tiers": {...}|None}. 없거나 영상보다 오래됐으면 둘 다 None
+    (그 파일의 지도가 아닐 수 있다 — 믿지 않는다)."""
+    out = {"cuts": None, "cut_tiers": None}
+    try:
+        v = Path(str(clean_path))
+        p = v.with_suffix(".cuts.json")
+        if not p.exists() or p.stat().st_mtime + 5 < v.stat().st_mtime:
+            return out
+        d = json.loads(p.read_text(encoding="utf-8"))
+        if d.get("rule") == CLEAN_SIDECAR_RULE and isinstance(d.get("cuts"), list):
+            out["cuts"], out["cut_tiers"] = d["cuts"], (d.get("cut_tiers") or None)
+    except Exception as e:      # noqa: BLE001
+        print("[clean] 청소본 옆 지도 읽기 실패(%s): %r" % (clean_path, e), file=sys.stderr)
+    return out
+
+
+def _drop_clean_frame_caches(work, sig):
+    """같은 이름의 청소본 내용이 바뀌었을 때(덧지우기) 그 파일에서 뜬 그림 캐시를 버린다 — 다시 뜨면 된다(비용 0)."""
+    for pat in ("beatframes/*%s*" % sig, "clean_thumb/*"):
+        for f in Path(work).glob(pat):
+            try:
+                if f.is_file():
+                    f.unlink()
+            except OSError:
+                pass
+
+
 def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
     """assemble에 넘길 clean_fn — **조립된 완성본 1편**을 VMake로 청소한다.
 
@@ -4298,15 +4485,21 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
     """
     def _clean(mix_raw):
         tier = clean_tier_of(job)
+        # ★덧지우기(2026-10-03): 이미 지운 청소본 위에 이번에 고른 컷만 지워 붙인다 — 판정은 clean_topup_plan 한 곳.
+        _top = clean_topup_plan(job, work)
         # 등급이 다르면 다른 파일 — 옛 기본 결과를 재사용하지 않는다. 옛 식(09-20 이전) 이름도 함께 찾는다.
-        _found = _clean_final_found(job, work, tier)
+        _found = _clean_final_found(job, work, tier) if _top is None else None
         if _found:
             sig, out = _found           # ★찾은 **파일의** 서명 — 정본 sig·스냅샷이 파일 이름과 짝이 된다
             print(f"[clean] 완성본 재사용(편성 그대로, 과금 0): {out.name}", file=sys.stderr)
             _save_clean_plan_snapshot(work, sig, job.get("edit_plan"), clean_selection_of(job))
             # 정본이 없거나 **다른 등급/서명의 파일**이면 이 파일로 정본을 다시 쓴다(등급 변경 = 새 정본)
             #   sig를 파일 이름의 것으로 넘기므로, 정본이 이미 이 파일이면 지도·보정·증분 조각을 다시 쓰지 않는다.
-            _save_clean_base(job, work, sig, str(out), only_if_new=True)
+            # ★지도는 **그 파일을 만든 지도**(청소본 옆 .cuts.json)를 쓴다(2026-10-03 817308da1647: 종전엔 여기서 스냅샷
+            #   편성으로 지도를 다시 유도해, 파일은 0~113프레임이 지워졌는데 정본은 그 안의 컷을 '안 지움'으로 적었다).
+            _side = _read_clean_sidecar(out)
+            _save_clean_base(job, work, sig, str(out), only_if_new=True,
+                             cuts=_side.get("cuts"), cut_tiers=_side.get("cut_tiers"))
             return str(out)
         sig = _clean_sig(job)          # 새로 만들 땐 현재 식 이름으로만 쓴다
         out = Path(work) / f"final_clean_{sig}.mp4"
@@ -4316,7 +4509,26 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
             _sel = clean_selection_of(job)
             # ★컷 지도 = 이 조립본을 만든 계획(조립본 옆 .cuts.json — video_assemble._render_mix 가 남긴다)
             _map = _va_read_cut_map(mix_raw)
-            if _sel:
+            _tiers = None
+            if _top is not None:
+                _plan = job.get("edit_plan") or {}
+                _mc = _map if _map is not None else final_clip_pairs(_plan, tts_paths_of(_plan), _src_durs_for(job, work))
+                _send = [c for c in _mc if cut_selected(c, _top["send"])]
+                # ★실제 조립본의 지도로 한 번 더 확인 — 보낼 컷 자리가 정본을 만든 지도와 다르면 업체를 부르기 전에 멈춘다(환불)
+                if len(_send) != len(_top["send"]) or not _topup_same_spots(_top["base"].get("cuts"), _send):
+                    raise RuntimeError("이전에 지운 영상과 지금 영상의 장면 자리가 달라 덧지울 수 없습니다 — 전체 지우기로 다시 해 주세요")
+                print("[clean] 덧지우기: 이미 지운 %s 위에 %d컷(%.1f초)만 %s" % (
+                    Path(_top["base"]["path"]).name, len(_send), sum(float(c["dur"]) for c in _send), tier), file=sys.stderr)
+                _tag = hashlib.sha1(("|".join(sorted(_top["send"])) + "|" + tier).encode("utf-8")).hexdigest()[:8]
+                res = _clean_partial(str(mix_raw), _mc, _top["send"], keys, str(out), tier, work,
+                                     over=_top["base"]["path"], tag=_tag)
+                # 정본 지도 = 바탕 파일을 만든 지도(보정 흔적은 떼고) — 덧붙인 컷은 같은 자리임을 위에서 확인했다
+                _map = [{k: c[k] for k in ("video_id", "beat_idx", "src", "fin", "dur", "sdur") if k in c}
+                        for c in _top["base"].get("cuts") or []]
+                _tiers = _top["tiers"]
+                if Path(_top["base"]["path"]) == Path(out):
+                    _drop_clean_frame_caches(work, sig)     # 같은 이름으로 내용이 바뀌었다 — 옛 그림 캐시를 버린다
+            elif _sel:
                 # 고른 장면만 — 컷 지도는 조립본을 만든 그 계획(없을 때만 지금 편성으로 계산)
                 _plan = job.get("edit_plan") or {}
                 _tts = tts_paths_of(_plan)
@@ -4332,7 +4544,8 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
         _save_clean_plan_snapshot(work, sig, job.get("edit_plan"), clean_selection_of(job))
         # ★청소본 정본(2026-09-22): 이 파일과 **이 파일을 만든** 컷 지도를 job의 정본으로 남긴다.
         #   이후 렌더·프레임·캡컷은 clean_base.remap_plan 으로 이 파일을 소스 삼아 조립한다.
-        _save_clean_base(job, work, sig, str(res), cuts=_map)
+        _write_clean_sidecar(res, _map, _tiers)      # 이 파일을 만든 지도를 파일 옆에(재사용 때 다시 유도하지 않게)
+        _save_clean_base(job, work, sig, str(res), cuts=_map, cut_tiers=_tiers)
         return res
     return _clean
 
@@ -4420,7 +4633,7 @@ def incremental_clean(store, job, job_id, work, keys, customer_id, base, plan, u
     return base
 
 
-def _save_clean_base(job, work, sig, path, only_if_new=False, cuts=None):
+def _save_clean_base(job, work, sig, path, only_if_new=False, cuts=None, cut_tiers=None):
     """청소본 정본 저장(clean_base.save_base) — 실패해도 청소는 성공이다(종전 경로로 남을 뿐).
     only_if_new: 정본이 없거나 서명이 다를 때만(재사용 분기).
     cuts: 청소한 조립본을 **만든** 컷 지도(video_assemble.read_cut_map). 주면 그대로 쓴다 — 청소 몇 분 뒤 편성·화면 컷으로
@@ -4445,8 +4658,11 @@ def _save_clean_base(job, work, sig, path, only_if_new=False, cuts=None):
                 _plan = snap
         _cuts = [dict(c, cleaned=cut_selected(c, _sel)) for c in cuts]
         base = _cb.save_base(work, sig=sig, path=path, plan=_plan, cuts=_cuts, sel=_sel)
-        if base is not None and how != "current":
-            base["cut_map"] = how
+        if base is not None and (how != "current" or cut_tiers):
+            if how != "current":
+                base["cut_map"] = how
+            if cut_tiers:
+                base["cut_tiers"] = dict(cut_tiers)      # 덧지운 정본: 컷마다 지운 등급(_base_cut_tier 가 읽는다)
             _cb._write(work, base)
     except Exception as _e:      # noqa: BLE001
         print("[clean-base] 정본 저장 실패(무해, 종전 경로): %s" % _e, file=sys.stderr)
@@ -4917,7 +5133,7 @@ def _reassemble_clean_quiet(job_id, db_path, work_root):
 
 
 @_owned_job
-def run_clean_sources(job_id, db_path, work_root, confirm_clean=None, confirm_secs=None):
+def run_clean_sources(job_id, db_path, work_root, confirm_clean=None, confirm_secs=None, pick=None):
     """2단계: 각 소스 원본을 VMake로 자막제거해 clean_sources에 캐시.
     BackgroundTasks로 불리므로 예외를 밖으로 안 던진다(clean_status로만 알린다)."""
     store = Store(db_path)
@@ -4925,6 +5141,8 @@ def run_clean_sources(job_id, db_path, work_root, confirm_clean=None, confirm_se
     job = store.get_mix_job(job_id)
     if not job:
         return
+    if pick:
+        job["_clean_pick"] = list(pick)      # 이번 요청에 고른 컷(덧지우기 판정용 — clean_topup_plan). DB에는 안 남는다
     if _beat_dup_blocked(store, job_id, job.get("edit_plan") or {}, "자막제거"):
         store.update_mix_job(job_id, clean_status="failed", clean_error=BEAT_DUP_MSG)   # 과금 전에 막는다
         return
@@ -4964,6 +5182,8 @@ def run_clean_sources(job_id, db_path, work_root, confirm_clean=None, confirm_se
                     print("[clean] 훅 시작점 선확정 건너뜀: %s" % e2, file=sys.stderr)
                 store.update_mix_job(job_id, edit_plan=plan_for_tts)
                 job = store.get_mix_job(job_id)      # 갱신된 편성으로 아래를 진행
+                if pick:
+                    job["_clean_pick"] = list(pick)
             except Exception as e:      # noqa: BLE001 — TTS 실패가 자막제거를 막지 않는다
                 print("[clean] TTS 선확정 실패(계속 진행): %s" % e, file=sys.stderr)
         # ★워커는 HTTP 요청이 없어 request.state가 없다 — job 레코드에서 읽는다.
@@ -5393,6 +5613,10 @@ def button_clean_kind(store, job, work):
             judged = clean_base_judge(store, job, work)
         except Exception as e:      # noqa: BLE001 — 판정 실패는 종전 경로(전체 청소)
             print("[clean-base] 버튼 정본 판정 실패(전체 청소): %r" % (e,), file=sys.stderr)
+    # ★덧지우기(이번에 고른 컷 중 이 등급으로 아직 안 지운 것이 있다) — 완성본 청소 경로(_final_clean_fn)가 정본 위에 붙인다.
+    #   정본이 '다 덮는다(reuse)'보다 먼저 본다: 같은 선택이라도 다른 등급으로 다시 지우려는 컷이 있을 수 있다.
+    if judged is not None and (clean_topup_plan(job, work) is not None or clean_repick_full(job, work)):
+        return "full", judged
     if judged is not None and clean_base_ready_for(store, job, work, judged=judged):
         return "reuse", judged
     found = _clean_final_found(job, work) if judged is not None else None
@@ -5463,10 +5687,16 @@ def clean_charge_plan(store, job, work, *, mode="render", skip_clean=False):
         unc, ext, secs = incremental_seconds(job, work, judged)
         out.update(reason="changed", seconds=round(secs, 2), changed=len(unc), extend=len(ext))
     elif kind == "full":
-        up = bool(judged is not None and judged.get("tier_upgrade"))
-        out["reason"] = "tier_upgrade" if up else ("changed" if judged is not None else "no_base")
-        secs = full_clean_seconds(job, work, tier)
-        out["seconds"] = round(secs, 2) if secs is not None else None
+        top = clean_topup_plan(job, work) if mode == "button" else None
+        if top is not None:
+            out.update(reason="topup", seconds=round(top["seconds"], 2), changed=len(top["send"]))
+        else:
+            up = bool(judged is not None and judged.get("tier_upgrade"))
+            out["reason"] = "tier_upgrade" if up else ("changed" if judged is not None else "no_base")
+            if mode == "button" and judged is not None and (job or {}).get("_clean_pick"):
+                out["reason"] = "reselect"       # 장면을 골라 다시 — 덧붙일 수 없어 저장된 선택 전체를 다시 지운다
+            secs = full_clean_seconds(job, work, tier)
+            out["seconds"] = round(secs, 2) if secs is not None else None
     elif kind == "sources":
         out["reason"] = "no_base"
         out["seconds"] = _sources_clean_seconds(job, work)
@@ -5581,7 +5811,13 @@ def clean_charge_message(plan):
     amt = ("%.1f초" % secs if secs is not None else "길이 확인 불가") + (" — 약 %d크레딧" % cr if cr else "")
     tier_name = "고급" if plan.get("tier") == "pro" else "기본"
     reason = plan.get("reason")
-    if reason == "tier_upgrade":
+    if reason == "topup":
+        head = ("이미 지운 장면은 그대로 두고, 고른 장면 %d개만 %s으로 지워 덧붙입니다"
+                % (plan.get("changed") or 0, tier_name))
+    elif reason == "reselect":
+        head = ("지금 지운 영상에는 덧붙일 수 없는 상태예요. 이미 지운 장면과 고른 장면을 %s으로 함께 다시 지웁니다"
+                % tier_name)
+    elif reason == "tier_upgrade":
         head = "자막제거 방식을 %s으로 바꾸셨어요. %s으로 영상 전체를 다시 지웁니다" % (tier_name, tier_name)
     elif reason == "changed" and plan.get("kind") == "incremental":
         parts = []
