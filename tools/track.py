@@ -958,29 +958,31 @@ def _catch_up_non_code(stage):
 
 
 def _classify_new_failures(before, after, problems, *, rerun, printer=print, recheck=None):
-    """'새로 깨진 테스트' 문제를 다시 가른다: rerun(ids) 가 돌려준 집합(= main 에서도 깨지는 것)은 기존 실패로 빼고,
-    남는 것만 문제로 둔다. 전부 기존 실패면 그 문제 줄을 지운다."""
+    """'새로 깨진 테스트' 문제를 다시 가른다. ★순서(2026-10-03 카드 091):
+    ① 병합본에서 그 시험 파일들을 한 번 더(recheck) — 다시 통과하면 우연한 실패(경고만).
+    ② 남은 것만 main 코드로(rerun) — main 에서도 깨지면 기존 실패.
+    어느 단계가 예외여도 **다른 단계는 한다** — 종전엔 main 재실행이 예외면 ①까지 건너뛰어 39건 거짓 실패로 막혔다(3단계화면정리 실측)."""
     new_ids = sorted(set(after.get("failed", [])) - set(before.get("failed", [])))
     if not new_ids or not any(p.startswith("새로 깨진 테스트") for p in problems):
         return problems
-    try:
-        pre = set(rerun(new_ids))
-    except Exception as e:  # noqa: BLE001 — 재실행을 못 하면 보수적으로 종전 판정 유지
-        printer(f"  ⚠️ 기존 실패 분류 건너뜀(main 재실행 실패): {e!r}")
-        return problems
-    if pre:
-        printer("  ℹ️ 기존 실패로 분류(origin/main 에서도 깨짐) %d건: %s" % (len(pre), ", ".join(sorted(pre)[:6])))
-    left = [t for t in new_ids if t not in pre]
-    if left and recheck is not None:
-        # ★우연한 실패 거르기(카드 081): 병합본에서 한 번 더 돌려 통과하면 이 병합 탓이 아니다(경고만 남긴다).
+    left = list(new_ids)
+    if recheck is not None:
         try:
             still = set(recheck(left))
             flaky = [t for t in left if t not in still]
             if flaky:
                 printer("  ⚠️ 다시 돌리니 통과 — 우연한 실패로 본다 %d건: %s" % (len(flaky), ", ".join(flaky[:6])))
             left = [t for t in left if t in still]
-        except Exception as e:  # noqa: BLE001 — 재확인 못 하면 종전 판정
-            printer(f"  ⚠️ 재확인 건너뜀: {e!r}")
+        except Exception as e:  # noqa: BLE001 — 재확인 못 하면 다음 단계로
+            printer(f"  ⚠️ 병합본 재확인 건너뜀: {e!r}")
+    if left:
+        try:
+            pre = set(rerun(left))
+            if pre:
+                printer("  ℹ️ 기존 실패로 분류(병합 전 main 에서도 깨짐) %d건: %s" % (len(pre), ", ".join(sorted(pre)[:6])))
+            left = [t for t in left if t not in pre]
+        except Exception as e:  # noqa: BLE001 — main 재실행을 못 하면 남은 것은 그대로 문제로 둔다(보수적)
+            printer(f"  ⚠️ 기존 실패 분류 건너뜀(main 재실행 실패): {e!r}")
     out = [p for p in problems if not p.startswith("새로 깨진 테스트")]
     if left:
         shown = "\n".join(f"    - {t}" for t in left[:20])
@@ -1049,36 +1051,36 @@ def _known_main_failures(repo, stage, ids, ref="HEAD"):
 
 
 def _rerun_on_main(stage, ids):
-    """origin/main 코드(코드 폴더만 git archive)로 그 테스트들만 돌려 **거기서도 깨지는 id 집합**을 돌려준다."""
-    rc, sha = run(["git", "rev-parse", "origin/main"], stage)
+    """**병합 폴더의 기준 커밋(HEAD = 병합 전 main)** 코드로 그 시험 파일들만 돌려 거기서도 깨지는 id 집합을 돌려준다.
+    ★(2026-10-03 카드 091) 종전엔 origin/main 을 git archive 로 통째(실측 661MB) 풀어 느렸고, 그 압축이 깨져(ReadError)
+    분류가 통째로 빠졌다. 그사이 origin/main 이 움직이면 다른 코드로 가르기도 했다 → 같은 경량 폴더(STAGE_SPARSE)를 기준 커밋에 만든다."""
+    rc, sha = run(["git", "rev-parse", "HEAD"], stage)
     sha = sha.strip()
+    if rc != 0 or not sha:
+        raise TrackError("병합 폴더 기준 커밋을 못 읽었다: %s" % sha[:200])
     tmp = Path(tempfile.mkdtemp(prefix="gate_main_"))
+    wt = tmp / "wt"
     try:
-        # 병합 폴더(STAGE_SPARSE)와 **같은 범위**를 푼다 — 좁으면 out·docs 를 읽는 시험이 main 에서만 깨져 '원래 실패'로 잘못 분류된다(카드 081).
-        top = run(["git", "-c", "core.quotepath=off", "ls-tree", "--name-only", sha], stage)[1].split()
-        want = {x.strip("/").split("/")[0] for x in STAGE_SPARSE if x != "/*"}
-        paths = [t for t in top if t in want or (("/" not in t) and t.endswith((".py", ".ini", ".toml", ".cfg")))]
-        if any(x.startswith("/wiki/") for x in STAGE_SPARSE) and "wiki" in paths:
-            paths = [t for t in paths if t != "wiki"] + ["wiki/rules"]
-        p = subprocess.run(["git", "archive", "--format=tar", sha, "--"] + paths, cwd=str(stage), capture_output=True)
-        if p.returncode != 0:
-            p = subprocess.run(["git", "archive", "--format=tar", sha], cwd=str(stage), capture_output=True)
-        tar_path = tmp / "main.tar"
-        tar_path.write_bytes(p.stdout)
-        import tarfile
-        with tarfile.open(tar_path) as tf:
-            tf.extractall(tmp)
+        rc, out = run(["git", "worktree", "add", "--detach", "--no-checkout", str(wt), sha], stage)
+        if rc != 0:
+            raise TrackError("main 재실행 폴더를 못 만들었다: %s" % out[-300:])
+        rc, out = run(["git", "sparse-checkout", "set", "--no-cone", *STAGE_SPARSE], wt)
+        if rc == 0:
+            rc, out = run(["git", "checkout"], wt)
+        if rc != 0:
+            raise TrackError("main 재실행 폴더를 못 풀었다: %s" % out[-300:])
         env = dict(os.environ, PYTHONIOENCODING="utf-8")
-        # main 코드의 finish 시험이 이 프로세스가 쥔 전역 락을 기다리지 않게 — 임시 폴더를 통째로 따로(카드 075)
+        # main 코드의 finish 시험이 이 프로세스가 쥔 락을 기다리지 않게 — 임시 폴더를 통째로 따로(카드 075)
         for _k in ("TMP", "TEMP", "TMPDIR"):
             env[_k] = str(tmp)
         # 파일 통째로(카드 083) — id 하나씩이면 같은 파일 안 순서 영향이 사라져 '원래 실패'를 못 가른다
         r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--no-header", "--tb=no", "-rfE"]
                            + merge_gate.test_files_of(ids),
-                           cwd=str(tmp), capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=900)
+                           cwd=str(wt), capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=900)
         got = merge_gate.parse_failed((r.stdout or "") + (r.stderr or ""))
         return {f for f in got if f in set(ids)}
     finally:
+        run(["git", "worktree", "remove", "--force", str(wt)], stage)
         shutil.rmtree(tmp, ignore_errors=True)
 
 
