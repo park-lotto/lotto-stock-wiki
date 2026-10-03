@@ -469,6 +469,7 @@ def run_clean_left_audit(sh, d, ids, g, *, say, sleep=time.sleep, keep=None):
     say("\n--- 자막 남음 대조 report (서버 %s/cl/report.txt) ---\n%s\n--- report 끝 ---" % (d, report.rstrip()))
     if keep is not None:
         keep['cl'] = report
+        keep['cl_crash'] = crash
     return judge_clean_left(report, g, crash)
 
 
@@ -496,6 +497,7 @@ def run_audio_audit(sh, d, ids, g, *, say, sleep=time.sleep, keep=None):
     say("\n--- 소리 대조 report (서버 %s/audio/report.txt) ---\n%s\n--- report 끝 ---" % (d, report.rstrip()))
     if keep is not None:
         keep['au'] = report
+        keep['au_crash'] = crash
     return judge_audio(report, g, crash)
 
 
@@ -538,6 +540,7 @@ def run_capcut_audit(sh, d, ids, g, *, say, sleep=time.sleep, keep=None):
     say("\n--- 캡컷·내보내기 대조 report (서버 %s/cc/report.txt) ---\n%s\n--- report 끝 ---" % (d, report.rstrip()))
     if keep is not None:
         keep['cc'] = report
+        keep['cc_crash'] = crash
     return judge_capcut(report, g, crash)
 
 
@@ -584,7 +587,7 @@ def baseline_limits(g, parsed_main, reports):
     return g2, raised
 
 
-def _run_side(sh, d, blob, job_arg, g, cfg, *, say, sleep, label):
+def _run_side(sh, d, blob, job_arg, g, cfg, *, say, sleep, label, g_fn=None):
     """서버 폴더 d 에 묶음을 올려 영상 비교 → 캡컷 → 소리 → 자막 남음 대조. 판정은 g 로.
     → (통과?, 실패, 보고, parsed, reports, 돌았나). 못 돌았으면(올리기·띄우기·시간 초과) 돌았나=False."""
     reports = {}
@@ -633,17 +636,86 @@ def _run_side(sh, d, blob, job_arg, g, cfg, *, say, sleep, label):
     if crash.strip():
         say("--- [%s] 도구 비정상 종료 ---\n%s" % (label, crash.strip()[-2000:]))
     parsed = parse_report(report)
-    ok, fails, notes = judge(parsed, g, tuple(cfg.get("benign_skips", ["음성 없음"])))
+    ids = [j["job"] for j in parsed.get("jobs", [])]
+    ran_audits = []
+    for key, fn in (("cc", run_capcut_audit), ("au", run_audio_audit), ("cl", run_clean_left_audit)):
+        ran_audits.append((key, fn(sh, d, ids, g, say=say, sleep=sleep, keep=reports)))
+    # ★판정은 측정이 다 끝난 뒤 한 번에(2026-10-03 카드 088) — 병합본 쪽은 main 실측 기준(g_fn)이 나올 때까지 기다렸다 판정한다.
+    #   판정 함수는 보고서 글만 보는 순수 함수라, 같은 보고서·같은 기준이면 종전(차례 실행)과 결과가 같다.
+    gj = g_fn() if g_fn else g
+    ok, fails, notes = judge(parsed, gj, tuple(cfg.get("benign_skips", ["음성 없음"])))
     if crash.strip():
         ok = False
         fails.append("도구가 예외로 끝났다(crash.txt)")
-    ids = [j["job"] for j in parsed.get("jobs", [])]
-    for fn in (run_capcut_audit, run_audio_audit, run_clean_left_audit):
-        a_ok, a_fails, a_notes = fn(sh, d, ids, g, say=say, sleep=sleep, keep=reports)
+    judges = {"cc": judge_capcut, "au": judge_audio, "cl": judge_clean_left}
+    for key, first in ran_audits:
+        a_ok, a_fails, a_notes = (judges[key](reports[key], gj, reports.get(key + "_crash", ""))
+                                  if key in reports else first)       # 못 돌았으면 그때의 실패 그대로
         ok = ok and a_ok
         fails += a_fails
         notes += a_notes
     return ok, fails, notes, parsed, reports, True
+
+
+def _pick_ids(sh, blob, n, remote_tmp="/tmp"):
+    """서버에서 비교할 작업을 **먼저** 고른다(도구의 _pick_jobs 그대로) — main·병합본이 같은 작업을 동시에 재게(카드 088). 실패면 []."""
+    dp = "%s/gate_pick_%d" % (remote_tmp.rstrip("/"), os.getpid())
+    rc, out = sh("rm -rf %s && mkdir -p %s && tar xzf - -C %s && cd %s && python3 -c \"import sys,sqlite3;"
+                 "sys.path.insert(0,'%s/_tool');import editor_vs_final_video as e;"
+                 "print('IDS=' + ' '.join(e._pick_jobs(sqlite3.connect('shopping_shorts/data/reference.db'),%d)))\"; rm -rf %s"
+                 % (dp, dp, dp, REMOTE_REPO, dp, int(n), dp), stdin=blob, timeout=300)
+    m = re.search(r"IDS=([0-9A-Za-z_ -]*)", out or "")
+    ids = [i for i in (m.group(1).split() if m else []) if re.fullmatch(r"[0-9A-Za-z_-]{4,64}", i)]
+    return ids
+
+
+def _measure_parallel(sh, d, ck, cpath, ids, main_blob, merged_blob, g, cfg, *, say, sleep, remote_tmp, lead):
+    """main·병합본을 **동시에** 잰다(2026-10-03 사장님 "둘 다 해", 카드 088 — 종전엔 main 다 재고 병합본을 차례로: 영상 관문 ~20분).
+    병합본은 측정만 먼저 하고, 판정은 main 실측 기준(max(설정, main))이 나온 뒤에 한다 → 판정은 종전과 같다."""
+    import threading
+    dm = "%s/gate_main_%s" % (remote_tmp.rstrip("/"), ck)
+    job_arg = " ".join(ids)
+    got, ready, res = {}, threading.Event(), {}
+    say("  [main·병합본] 같은 작업 %d개를 동시에 잰다(기준 = max(설정, main 실측)): %s" % (len(ids), job_arg))
+
+    def g_for_merged():
+        ready.wait()
+        return got.get("g_use", g)
+
+    def run_main():
+        try:
+            res["m"] = _run_side(sh, dm, main_blob, job_arg, g, cfg, say=say, sleep=sleep, label="main")
+        except Exception as e:  # noqa: BLE001 — main 을 못 재면 종전 절대 기준
+            res["m"] = (False, ["main 측정 예외: %r" % e], [], {}, {}, False)
+        finally:
+            try:
+                _ok, _f, _n, parsed_m, rep_m, ran_m = res["m"]
+                if ran_m and parsed_m.get("summary") is not None and parsed_m.get("jobs"):
+                    g2, raised = baseline_limits(g, parsed_m, rep_m)
+                    base = {"t": time.time(), "ids": [j["job"] for j in parsed_m["jobs"]], "g2": g2, "raised": raised,
+                            "summary_line": parsed_m.get("summary_line", "")}
+                    sh("mkdir -p %s && cat > %s" % (MAIN_CACHE_DIR, cpath), stdin=json.dumps(base, ensure_ascii=False).encode("utf-8"))
+                    g_use = dict(g)
+                    g_use.update(g2)
+                    if len(base["ids"]) < int(g.get("min_jobs_compared") or 0):
+                        g_use["min_jobs_compared"] = len(base["ids"])
+                    got["g_use"] = g_use
+                    lead.append("기준 = max(설정, main 실측) — main 이 같은 작업 %d개에서 잰 값: %s · main 요약: %s"
+                                % (len(base["ids"]), ", ".join(raised) or "전부 설정값 이하", base["summary_line"][:120]))
+                else:
+                    lead.append("⚠️ main 을 못 재서 종전 절대 기준으로 판정한다(main: %s)" % ("; ".join(_f)[:200] or "요약 줄 없음"))
+            finally:
+                ready.set()
+                sh("rm -rf %s" % dm)
+
+    t0 = time.time()
+    tm = threading.Thread(target=run_main, daemon=True)
+    tm.start()
+    ok, fails, notes, parsed, _reps, _ran = _run_side(sh, d, merged_blob, job_arg, g, cfg, say=say, sleep=sleep,
+                                                     label="병합본", g_fn=g_for_merged)
+    tm.join()
+    lead.append("main·병합본 동시 측정 %.0f초" % (time.time() - t0))
+    return ok, fails, lead + notes, (parsed or {}).get("summary_line", "")
 
 
 def _measure_and_judge(sh, stage, br, cfg, g, *, say, sleep=time.sleep, remote_tmp="/tmp", with_summary=False):
@@ -687,6 +759,10 @@ def _measure_and_judge(sh, stage, br, cfg, g, *, say, sleep=time.sleep, remote_t
                                     % (ck, int((time.time() - float(c["t"])) / 60)))
                 except (ValueError, TypeError):
                     base = None
+            par_ids = _pick_ids(sh, merged_blob, n, remote_tmp) if base is None and g.get("parallel_sides", True) else []
+            if base is None and par_ids:
+                return ret(*_measure_parallel(sh, d, ck, cpath, par_ids, main_blob, merged_blob, g, cfg,
+                                              say=say, sleep=sleep, remote_tmp=remote_tmp, lead=lead))
             if base is None:
                 dm = "%s/gate_main_%s" % (remote_tmp.rstrip("/"), ck)
                 say("  [main] 같은 작업을 병합 전 main 코드로 먼저 잰다(기준 = max(설정, main 실측))")
@@ -852,6 +928,23 @@ def gate_decision(stage, cfg=None):
     return None, changed, run, reasons, unmeasured
 
 
+VIDEO_PASS_TTL = 6 * 3600
+
+
+def _video_pass_key(stage, g):
+    """(지문, 기억 파일) — 서버에 올리는 두 묶음(병합본·main) + 기준값의 지문. 못 만들면 (None, None)."""
+    import hashlib
+    try:
+        h = hashlib.sha256()
+        h.update(_bundle(stage, side="merged"))
+        h.update(_bundle(stage, side="main"))
+        h.update(json.dumps(g, sort_keys=True, ensure_ascii=False).encode("utf-8"))
+        fp = h.hexdigest()[:16]
+    except Exception:  # noqa: BLE001 — 지문을 못 만들면 늘 잰다
+        return None, None
+    return fp, Path(stage).resolve().parent / "_gate_cache" / ("video_pass_%s.json" % fp)
+
+
 def _run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sleep=time.sleep, remote_tmp="/tmp"):
     env = os.environ if env is None else env
     log = []
@@ -892,8 +985,28 @@ def _run_video_gate(stage, br, *, printer=print, sh=None, cfg=None, env=None, sl
             return GateResult(False, True, "\n".join(log), log)
         sh = _ssh_runner(key)
 
+    # ★같은 묶음이면 결과도 같다(2026-10-03 카드 089) — 서버에 올리는 것(병합본·main 제작 라인 파일 + 관문 도구) + 기준이 같으면
+    #   재시도·재finish 때 20분짜리 서버 비교를 다시 돌리지 않는다. 통과만 기억한다(실패는 늘 다시 잰다). 6시간 지나면 다시 잰다.
+    vfp, vpath = _video_pass_key(stage, g)
+    if vpath is not None and not (env.get("VIDEO_GATE_FRESH") or "").strip():
+        try:
+            c = json.loads(vpath.read_text(encoding="utf-8"))
+            age = time.time() - float(c.get("t", 0))
+            if age < VIDEO_PASS_TTL:
+                say("판정 근거(재사용): %s" % c.get("summary_line", ""))
+                say("✅ 영상 관문 통과 — 같은 묶음(%s)이 %d분 전에 통과했다. 서버 비교를 다시 안 돌렸다(VIDEO_GATE_FRESH=1 이면 다시)."
+                    % (vfp, int(age / 60)))
+                return GateResult(True, True, "\n".join(log), log)
+        except (OSError, ValueError):
+            pass
     ok, fails, notes, summary_line = _measure_and_judge(sh, stage, br, cfg, g, say=say, sleep=sleep, remote_tmp=remote_tmp,
                                                         with_summary=True)
+    if ok and vpath is not None:
+        try:
+            vpath.parent.mkdir(parents=True, exist_ok=True)
+            vpath.write_text(json.dumps({"t": time.time(), "summary_line": summary_line}, ensure_ascii=False), encoding="utf-8")
+        except OSError:
+            pass
     say("판정 근거: %s" % (summary_line or "(요약 줄 없음)"))
     for f_ in fails:
         say("  ✗ " + f_)
