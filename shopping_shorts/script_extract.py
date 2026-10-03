@@ -177,9 +177,14 @@ def _norm_bool(v):
     return v if isinstance(v, bool) else str(v).strip().lower() in ("true", "1", "yes")
 
 
-_SEG_FIELD_GUIDE = """★너는 분류가가 아니라 **쇼핑 쇼츠 대본을 쓸 편집자**다. 아래 태그는 창고 목록이 아니라 **대본 재료**다.
-장면을 보면서 "시청자가 이 장면을 보고 무엇에 끌리나(소구점·어필 포인트)"를 **대본에 그대로 쓸 문장**으로 적어라.
-그 문장이 나중에 이 장면 위에 읽힌다 — 화면과 말이 딱 맞아야 한다. 화면에 안 보이는 효능은 쓰지 마라.
+_SEG_FIELD_GUIDE = """★너는 쇼핑 쇼츠 영상을 수천 편 뜯어본 **영상 추출·분석 전문가**이자, 그걸 대본으로 옮기는 **이야기 작가**다. 이 태깅은 분류가 아니라 **최고의 대본을 쓰기 위한 밑작업**이다.
+★왜 이 작업이 꼭 필요한가: 뒤에 오는 두 단계가 **전부 여기 적은 문장에 기대어** 돈다.
+  ① 대본 작가는 네 문장을 재료로 대본을 쓴다 — 네가 밋밋하게 쓰면 대본도 밋밋해진다.
+  ② 장면 매칭은 "대본 줄 ↔ 네 문장"이 같은 말인지로 컷을 고른다 — 네 문장에 그 컷만의 디테일이 없으면 엉뚱한 컷이 붙거나
+     같은 컷이 여러 줄에 반복된다(실제로 그렇게 됐다). 네 문장이 곧 그 컷이 그 줄에 가야 할 **이유**다.
+그러니 컷마다 **정말 디테일하게, 말맛을 살려서** 써라. 대충 쓴 한 줄이 대본 한 줄과 장면 하나를 망친다.
+디테일이 말맛이다: 화면에 보이는 구체 동작·부위(어느 손가락으로 무엇을 어떻게, 무엇이 어디로 쏙)를 문장에 담아라.
+"튼튼해요·간편해요" 같은 추상 장점만 적은 문장은 어느 컷에나 붙는 죽은 문장이다. 화면에 안 보이는 효능은 쓰지 마라.
 
 - scene_desc: 그 구간 화면에 무엇이 보이는지 짧게(제품/행동/구도, 40자 안팎). 띠 안에서 무엇이 어떻게 바뀌나까지.
   화면 속 **주 대상을 정확히** 적어라 — 헷갈리는 물체를 다른 것으로 단정하지 마라. 확실치 않으면 색·형태로만.
@@ -189,10 +194,10 @@ _SEG_FIELD_GUIDE = """★너는 분류가가 아니라 **쇼핑 쇼츠 대본을
 - appeal_kind: 이 장면이 보여주는 소구점의 **종류 하나** — 문제(쓰기 전 불편·기존 제품 단점) / 기능 / 특징 / 장점 /
   효과(전후 변화·결과) / 외관(색·재질·크기) / 활용(어디에 쓰나) / 구성 / 반응(사람 표정·댓글). 소구점이 없으면 "".
   ★"문제"를 놓치지 마라 — 제품 없이 불편한 상황, 기존 둔탁한 물건, 지저분한 상태가 보이면 문제다. 대본의 문제 제기 줄이 쓴다.
-- use_point: ★**대본화 소구점** — 이 장면 위에서 읽힐 **대본 한 줄**(한국어 구어체, 18~40자). 시청자가 "오 저거 괜찮다"고
-  느낄 어필 포인트를 **화면 근거로** 쓴다. 대본 작가가 이 문장을 거의 그대로 가져다 쓴다고 생각하고 써라.
-  · 좋은 예: "접으면 한 손에 쏙 들어가는 일자 막대가 돼요" / "노트북 올리고 눌러도 꿈쩍을 안 해요" /
-             "가방 옆주머니에 그냥 쓱 넣으면 끝" / "기존 거치대는 가방이 볼록 튀어나와 짐이었죠"(문제)
+- use_point: ★**대본화 소구점** — 시청자가 "오 저거 괜찮다"고 느낄 어필 포인트를, 이 장면 위에서 그대로 읽힐 **대본 한 줄**로
+  (한국어 구어체, 18~40자. 위 '디테일이 말맛' 원칙대로).
+  · 좋은 예: "접으면 한 손에 쏙 들어가는 일자 막대가 돼요" / "손가락으로 하단 고리를 쓱 빼면 노트북까지 버텨요" /
+             "노트북 올리고 눌러도 꿈쩍을 안 해요" / "가방 옆주머니에 그냥 쓱 넣으면 끝" / "기존 거치대는 가방이 볼록 튀어나와 짐이었죠"(문제)
   · 나쁜 예: "도입부에 쓰기 좋습니다"(어디 쓰나 ≠ 대본) / "제품을 보여줍니다"(묘사 반복) / "최고의 거치대"(근거 없음)
 - hook_type: 이 컷이 **훅(시선 잡기)으로 쓸 만한 유형**을 하나 고른다. 점수가 아니라 "무엇이 보이면 훅인가"다. 해당 없으면 "".
   · "클로즈업" = 제품이 화면의 절반 이상을 차지하는 뚜렷한 근접·줌인(손이나 배경보다 제품이 큼)
@@ -493,6 +498,19 @@ def _merge_too_short(raw_segments, min_clip=None):
     return segs
 
 
+def _story_for(brief, segments, note=None):
+    """1단계 마무리에서 스토리 한 번(호출 1회). 실패·빈 응답은 [] 로 두고 stderr 에 남긴다(조용히 숨기지 않는다)."""
+    from shopping_shorts import story_tag
+    import sys as _sys
+    n = {}
+    lines = story_tag.make_story((brief or {}).get("product") if isinstance(brief, dict) else "", segments, note=n)
+    if not lines:
+        print("script_extract: 스토리 없음 — %s" % (n.get("story_reason") or "?"), file=_sys.stderr)
+    if note is not None:
+        note.update(n)
+    return lines
+
+
 def _assign_seg_ids(video_id, raw_segments, motion_map=None):
     """모델이 준 세그먼트 목록에 seg_id 부여 + 숫자 필드 float 캐스팅(순수함수).
     motion_map({seg_id: level|None})이 오면 그 값을 motion_level로 싣는다(P2, 2026-07-29)."""
@@ -678,7 +696,10 @@ def storable(result):
             # 가로 영상을 세로 숏폼에 넣으면 좌우가 잘려 확대된 것처럼 나오고, 제작은
             # mix_pipeline._block_landscape가 막는다. 여기 없으면 담을 때 알릴 방법이 없다.
             "video_w": int(r.get("video_w") or 0) or None,
-            "video_h": int(r.get("video_h") or 0) or None}
+            "video_h": int(r.get("video_h") or 0) or None,
+            # 영상 스토리(2026-10-02, 관제 020) — 1단계가 만든 "대본 문장+컷". 2단계 백본·이야기작가가 특징 묶음 자리에 쓴다.
+            # ★10-02 실측: 여기 빠져 있어 배포 뒤 분석된 영상 전부 스토리가 저장 순간 버려졌다(만들고도 0건).
+            "story": r.get("story") or []}
 
 
 def _pick_better_extract(first, second, duration):
@@ -799,12 +820,16 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
             # 소스 단위 특장점: 모델의 최상위 요약을 우선하고, 없으면 세그별 집계로 폴백.
             # 무자막 영상(full_text 0자)이 대본 생성에서 통째로 빠지던 것을 막는 재료다.
             benefits = _norm_benefits(data.get("product_benefits")) or _collect_benefits(segments)
+            _brief = _norm_brief(data.get("source_brief"))
             result = {
                 "segments": segments,
                 "full_text": data.get("full_text", ""),
                 "product_benefits": benefits,
                 # 영상 단위 요약(2026-08-16). 없으면 {} — 읽는 쪽이 빈 dict를 견딘다.
-                "source_brief": _norm_brief(data.get("source_brief")),
+                "source_brief": _brief,
+                # ★스토리(2026-10-01 사장님 "태깅부터 대본화"): 순서 있는 대본 문장 + 컷. 2단계가 특징 묶음 자리에 그대로 쓴다.
+                #   실패하면 [] — 2단계는 종전 경로(note 에 이유). 판단은 story_tag 한 곳.
+                "story": _story_for(_brief, segments),
             }
             # ★태깅 QA(2026-08-01). 지금까진 스키마만 통과하면 무조건 채택했다 — 프롬프트의
             #   지침(0초 훅·받아쓰기·shot_role·change)이 지켜졌는지 아무도 안 봤다. 슬롯 기반

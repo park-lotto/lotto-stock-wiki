@@ -10,7 +10,7 @@
 
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const compact=n=>n?new Intl.NumberFormat('ko-KR',{notation:n>=1e6?'compact':'standard',maximumFractionDigits:1}).format(n)+'회':'시인성 선별';
-  const displayName=p=>p.id==='s0101'?'숏템 기본형':p.name;
+  const displayName=p=>p.name;   // 2026-10-01 관제 066: 남의 채널명 대신 '썰 스타일 NN'(데이터 파일 name) 그대로
   const fontNames={SBAggroB:'강렬한 어그로체',YgJalnan:'친근한 잘난체',Cafe24Ohsquare:'각진 카페24',BinggraeBold:'부드러운 빙그레',Jalnan2:'잘난체 2',JalnanGothic:'잘난고딕',GasoekOne:'묵직한 가석체',GmarketSansBold:'지마켓 산스',TmonMonsori:'티몬 몬소리',BlackHanSans:'검은고딕',GothicA1Black:'고딕 A1',Pretendard:'깔끔한 프리텐다드'};
   const fontLabel=p=>{const family=(p.hook||p.frame)?.lines?.[0]?.font_family;return fontNames[family==='PretendardXBold'?'Pretendard':family]||'템플릿 전용 서체'};
   const uniformMedia='assets/scene-style/uniform-household-demo.png';
@@ -68,10 +68,12 @@
     return {...fixedBaseColors(frame),channel:paint.top?readableInk(paint.top):(frame.channel_box?.color||frame.channel_boxes?.[0]?.color||'#FFFFFF'),...paint};
   };
   const captionSource=frame=>{
-    const ln=(frame.lines||[]).find(l=>l.bind==='caption')||(frame===rows[current]?.body?frame.white_box?.text:null);
+    // 어제 그대로(10-02: 썰훅만 본문 자막은 보조제목 줄에 넣으므로 여기서는 훅을 건드리지 않는다 — 건드리면 제목칸 높이가 줄어 띠가 0이 됐다)
+    const wbCap=frame===rows[current]?.body;
+    const ln=(frame.lines||[]).find(l=>l.bind==='caption')||(wbCap?frame.white_box?.text:null);
     const start=frame.video_from?.y||0;
     const surface=ln&&(frame.surfaces||[]).find(s=>s.y<=ln.y0+ln.h/2&&s.y+s.height>=ln.y0+ln.h/2&&s.y>start*.45);
-    const band=frame===rows[current]?.body&&frame.white_box?{y:frame.white_box.y0,height:frame.white_box.y1-frame.white_box.y0,background:frame.white_box.background}:surface;
+    const band=wbCap&&frame.white_box?{y:frame.white_box.y0,height:frame.white_box.y1-frame.white_box.y0,background:frame.white_box.background}:surface;
     // 원본(plain)은 영상이 0에서 시작하므로 '자막 줄이 영상 위쪽에 있나' 판정이 통째로 무너진다
     //   (start=0이라 cut이 0이 되어 자막이 화면 맨 위로 붙었다, 2026-09-24 실측). 제 줄 자리를 그대로 쓴다.
     const cut=rows[current]?.id===PLAIN_ID?(ln?.y0??start):(ln&&ln.y0<start?(band?.y??ln.y0):start);
@@ -85,6 +87,15 @@
   // ★원본(plain)은 제목 띠가 없어 훅 장면에도 자막을 그대로 보여 준다(2026-09-24 고객 제보:
   //   "원본 영상 그대로를 선택하면 자막이 보이질 않습니다 / 장면마다 자막을 옮길 수 있었는데").
   //   템플릿에서는 훅 자막이 제목·띠와 겹쳐 종전처럼 본문에서만 보인다.
+  // 훅 자막 칸 = 제목 아래 흰 띠 또는 3번째 줄(10-02 실측: 20종 중 흰 띠 4·3줄 16). 옛 규칙은 여기에 보조 제목을 넣고, 훅 문장과 같으면 숨겨 칸이 사라졌다.
+  const hookCapLine=frame=>frame?.white_box?.text||(frame?.white_box?null:(frame?.lines||[])[2])||null;
+  // ★10-02 사장님 확정: 썰훅+본문의 훅은 **기존 그대로**(제목 아래 띠 = 훅 문장 소제목, 흰 띠 모션 포함). 띠를 자막 칸으로 쓰는 건 '썰훅만'에서 훅 문장 다음(본문 대본) 장면뿐이다.
+  const hookHasCaptionBand=()=>{
+    if(kind!=='hook'||mode==='continuous'||frameRule!=='hook_all'||rows[current]?.id===PLAIN_ID)return false;
+    const sc=sceneContext?.scenes;if(!sc?.length)return false;
+    if(sc[sceneIndex]?.beat_idx===sc[0]?.beat_idx)return false;   // 첫 비트(훅 문장)는 기존 훅 그대로
+    return !!(frameFor(rows[current])?.white_box||hookCapLine(frameFor(rows[current])));
+  };
   const hasEditableCaption=()=>captionVisible()&&(mode==='continuous'||kind==='body'||rows[current]?.id===PLAIN_ID);
   // ★자막 기본 배치는 **이 함수 하나**로 정한다(2026-09-25 Opus 검토 — 네 곳에 따로 적혀 원본 예외가 두 곳에서 빠졌다:
   //   원본에서 슬라이더를 만지면 다른 장면 자막이 'title' 배치가 돼 화면 맨 위(y=0)로 튀었다. 렌더·캡컷도 같은 코드라 영상에도 나온다).
@@ -190,7 +201,9 @@
       : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${esc(fontLabel(p))} · 훅+본문</small></button>`).join('');
   };
   const presetPane=grid.closest('.pane'),modeBar=document.createElement('div');modeBar.className='template-mode-bar';
-  modeBar.innerHTML='<button type="button" data-template-mode="story" class="active">썰쇼핑형 <small>20</small></button><button type="button" data-template-mode="continuous">전장면 고정형 <small>20</small></button>';
+  // ★틀 고르기 4버튼(관제 058, 2026-10-02 사장님 확정: 썰훅+본문·썰훅만·전장면고정형·원본그대로 — 썰본문만은 전장면고정형과 겹쳐 뺐다).
+  //   서버는 옛 저장값(body_all)도 그대로 받는다(판정 주인 scene_style.frame_kind).
+  modeBar.innerHTML='<button type="button" data-frame-rule="hook_body" data-template-mode="story" class="active">썰훅+본문</button><button type="button" data-frame-rule="hook_all" title="모든 장면 훅 틀, 아래 띠에 장면 자막">썰훅만</button><button type="button" data-template-mode="continuous">전장면고정형</button><button type="button" data-plain-pick title="제목 띠 없이 자막만">원본그대로</button>';
   presetPane.querySelector('.pane-head').after(modeBar);renderGrid();
   // 왼쪽 맨 위 탭(2026-09-19 사장님): '템플릿 선택' 머리말 자리에 [장면 템플릿 | 폰트 템플릿].
   //   오른쪽 문구/효과 탭과 같은 .tool-tabs 모양. 폰트 템플릿(채널명·제목·자막 한 세트)은 다음 단계 — 지금은 자리만.
@@ -267,6 +280,7 @@
   // 템플릿 없음(2026-09-18 사장님 "템플릿 없는 거 쓰는 사람들") — 선택하면 snapshot()이 null을 내고 제작소가 그대로 서버에 저장,
   //   최종 렌더(video_assemble)는 scene_style이 비면 꾸미기를 건너뛴다.
   let noTemplate=false;
+  let frameRule='hook_body';   // 썰훅·훅만·썰만(관제 058) — 판단 주인은 서버 scene_style.frame_kind. 여기선 버튼을 누른 순간 미리보기만 같은 규칙으로 맞춘다
   let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookBandMotion='',bodyCaptionMotion='',fontSet='',hookMotionSpeed=.72,hookCaptionMode='visible';
   // 글자 두께·그림자(2026-09-28, 09-29) — 영상 전체 글자(채널명·제목·자막)에 한 번에 건다.
   //   글꼴이 대부분 한 굵기뿐이라 두께는 같은 색 테두리(text-stroke)로 키운다. 규칙은 아래 CSS 한 곳뿐이고,
@@ -294,11 +308,19 @@
     textarea.value=originalCaption.value;textarea.rows=3;originalCaption.replaceWith(textarea);
   }
   const inputs=Object.fromEntries([...root.querySelectorAll('.layout-a [data-bind]')].map(x=>[x.dataset.bind,x]));
-  const value=k=>inputs[k]?.value||' ';
+  // 썰훅만 본문 대본 장면: 보조제목 줄에 그 장면 자막을 **보조제목과 같은 스타일**로 넣는다(10-02 사장님 "훅 소제목=자막자리 똑같은 스타일로 계속")
+  const value=k=>(k==='bodyTitle'&&hookHasCaptionBand()?inputs.caption?.value:inputs[k]?.value)||' ';
   const rgba=hex=>hex&&/^#[0-9a-f]{6}$/i.test(hex)?hex:'#111111';
   const rememberedBranding=()=>{try{return JSON.parse(localStorage.getItem('scene_style_branding')||'{}')}catch{return {}}};
   let sceneContext=null,effects={},branding=labMode?{}:rememberedBranding();
   const sceneKind=index=>sceneContext?.scenes?.[index]?.kind||(index===0?'hook':'body');
+  // ★서버 frame_kind의 거울 — 버튼을 누르면 서버 왕복 없이 미리보기를 바로 바꾼다. 저장 뒤 렌더·썸네일·캡컷은 서버 context_for가 같은 규칙으로 다시 정한다.
+  //   두 벌이라 테스트(test_scene_style_frame_rule)가 세 규칙 결과를 서로 대조한다.
+  const frameKindOf=(beatOrder,rule)=>rule==='hook_all'?'hook':rule==='body_all'?'body':(beatOrder===0?'hook':'body');
+  function applyFrameRule(){
+    const sc=sceneContext?.scenes;if(!sc?.length)return;const order=[...new Set(sc.map(x=>x.beat_idx))];
+    for(const x of sc){x.kind=frameKindOf(order.indexOf(x.beat_idx),frameRule);x.caption_visible=!(x.kind==='hook'&&order.indexOf(x.beat_idx)===0&&hookCaptionMode==='hidden');}   // '훅 자막 숨김'은 첫 훅 문장에만(10-02: 썰훅만 본문 자막이 같이 숨던 것)
+  }
   const frameFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame:p[sceneKind(index)];
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
   const frameKind=()=>mode==='continuous'?'frame':kind;
@@ -671,7 +693,8 @@
   motionPanel.after(bodyMotionPanel);
   bodyMotionPanel.addEventListener('click',event=>{
     const b=event.target.closest('[data-body-caption-motion]');if(!b)return;
-    bodyCaptionMotion=b.dataset.bodyCaptionMotion;syncHookMotionUI();rememberLocal({bodyCaptionMotion});if(sceneIndex===0)showScene(1);else runCaptionEnter();
+    bodyCaptionMotion=b.dataset.bodyCaptionMotion;if(mode==='continuous')hookBandMotion='';   // 10-02 사장님: 고정형에서 '없음'을 눌러도 옛 흰 띠 값이 남아 스윽 올라왔다 — 고정형 자막 등장은 이 버튼이 정한다
+    syncHookMotionUI();rememberLocal({bodyCaptionMotion});if(sceneIndex===0)showScene(1);else runCaptionEnter();
   });
   const fixedPanel=document.createElement('section');
   fixedPanel.className='fixed-quick-panel';
@@ -720,7 +743,8 @@
   //   63wyUy6d0Jc 제목 폭 125→180px/1.2초(화면 전체가 천천히 확대, 흔들림 없음)
   //   ZaPpvrHkZ1U 크기 고정·매 프레임 가로 ±2px/세로 ±3px(360px 기준) 떨림, 훅 내내
   const CAMERA_MOTIONS=['zoom-punch','push-in','shake'];
-  const hookEndMs=()=>{const hs=(sceneContext?.scenes||[]).filter(s=>s.kind==='hook');return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
+  // 훅 모션 길이 = **첫 비트(훅 문장)** 의 훅 장면만(10-02 사장님 "썰훅만 본문은 훅 모션 없이 자막 스타일대로"). 썰훅+본문은 훅이 첫 비트뿐이라 종전과 같다
+  const hookEndMs=()=>{const sc=sceneContext?.scenes||[],b0=sc[0]?.beat_idx;const hs=sc.filter(s=>s.kind==='hook'&&s.beat_idx===b0);return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
   function cameraAt(ms){
     if(hookMotion==='push-in'){
       if(ms>=hookEndMs())return {zoom:1,dx:0,dy:0};   // 훅이 끝나면 본문은 원래 크기(레퍼런스도 전환 순간 복귀)
@@ -822,6 +846,7 @@
   //   고르는 곳은 흰 띠 줄(스윽/확대)과 같다 — 자막 글자 + 자막 가림막 상자를 한 덩어리로 움직인다.
   const CAPTION_ENTER_MS=300;
   function captionMotionNow(){
+    if(mode==='continuous'&&BODY_CAPTION_MOTIONS[bodyCaptionMotion])return BODY_CAPTION_MOTIONS[bodyCaptionMotion];   // 고정형은 1장부터 같은 등장
     if(sceneIndex>0&&BODY_CAPTION_MOTIONS[bodyCaptionMotion])return BODY_CAPTION_MOTIONS[bodyCaptionMotion];
     if(mode==='continuous'&&hookBandMotion)return BODY_CAPTION_MOTIONS[hookBandMotion]||null;   // 고정형은 예전부터 흰 띠 줄 값이 자막 등장
     return null;
@@ -1100,6 +1125,7 @@
     const bandLine=(frame.lines||[]).find(l=>l.bind==='bodyTitle');
     const hookBandText=String(value('bodyTitle')||'').trim();
     const hookBandSame=hookBandText.replace(/\s+/g,'')===String((value('hook1')||'')+(value('hook2')||'')).replace(/\s+/g,'');
+    // 10-02: 흰 띠가 있는 훅은 띠가 자막 칸이라, 보조 제목이 아니라 **자막 유무**로 숨김을 정한다(9/24 빈 띠 규칙은 그대로 산다).
     const hookBandEmpty=kind==='hook'&&(!hookBandText||hookBandSame);
     const inBand=(y,h)=>bandLine&&y<bandLine.y1+6&&y+h>bandLine.y0-6;
     (frame.surfaces||[]).forEach(s=>{
@@ -1466,7 +1492,7 @@
     root.querySelectorAll('[data-preview-body-title]').forEach(x=>x.textContent=p.sample.bodyTitle);
     root.querySelectorAll('[data-preview-caption]').forEach(x=>x.textContent=p.sample.caption);
     Object.values(inputs).forEach(updateCount);
-    root.querySelector('[data-stage-name]').textContent=displayName(p);
+    {const _sn=root.querySelector('[data-stage-name]');if(_sn)_sn.textContent=displayName(p);}   // '선택 프리셋' 상자는 10-01 삭제(관제 066) — 없으면 건너뜀
     const frame=frameFor(p),accent=frame?.lines?.[1]?.color||frame?.lines?.[0]?.color||'#ffe500';
     const top=frame?.top_band?.color||frame?.title_bg||'#111111';
     const accentInput=colorRow?.querySelector('[data-color-role="accent"]'),topInput=colorRow?.querySelector('[data-color-role="background"]');
@@ -1476,10 +1502,19 @@
     preview.classList.remove('is-pristine');showFrame(kind);
   }
   grid.addEventListener('click',e=>{if(e.target.closest('[data-none]')){plainLegacy=false;const i=rows.findIndex(p=>p.id===PLAIN_ID);if(i>=0)selectPreset(i);else setNoTemplate();return;}const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
+  const markMode=btn=>modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===btn));
+  const toStory=()=>{if(mode!=='story'){mode='story';rows=storyRows;current=0;renderGrid();}};
   modeBar.addEventListener('click',event=>{
-    const button=event.target.closest('[data-template-mode]');if(!button)return;
+    const ruleBtn=event.target.closest('[data-frame-rule]'),plainBtn=event.target.closest('[data-plain-pick]'),button=event.target.closest('[data-template-mode]');
+    if(ruleBtn){   // 썰훅·훅만·썰만 — 같은 썰 템플릿에 장면 틀 규칙만 바꾼다
+      toStory();frameRule=ruleBtn.dataset.frameRule;applyFrameRule();markMode(ruleBtn);
+      if(rows[current]?.id===PLAIN_ID)current=Math.max(0,rows.findIndex(p=>p.id!==PLAIN_ID));
+      sceneIndex=0;selectPreset(current);return;
+    }
+    if(plainBtn){toStory();frameRule='hook_body';applyFrameRule();markMode(plainBtn);plainLegacy=false;const i=rows.findIndex(p=>p.id===PLAIN_ID);if(i>=0)selectPreset(i);return;}
+    if(!button)return;
     mode=button.dataset.templateMode;rows=mode==='continuous'?fixedRows:storyRows;if(!rows.length)return;
-    modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));current=0;kind='hook';sceneIndex=0;renderGrid();selectPreset(0);
+    markMode(button);current=0;kind='hook';sceneIndex=0;renderGrid();selectPreset(0);
   });
   root.querySelectorAll('.layout-a [data-frame]').forEach(button=>button.addEventListener('click',()=>showFrame(button.dataset.frame)));
   root.querySelector('.layout-a .scene-navigator')?.addEventListener('click',event=>{
@@ -1749,7 +1784,8 @@
         //   이 값들은 그 작업의 문장 길이에 맞춘 미세조정이라 작업마다 다르다 — 취향(글꼴·색·꾸밈·칸 배치·색톤)만 되살린다. 작업별 값은 서버 저장본이 갖고 온다.
         for(const [name,map] of Object.entries({colors:colorOverrides,fixedLayouts,fixedColors}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         if(force||(!query.has('preset')&&!query.has('mode'))){
-          modeBar.querySelector(`[data-template-mode="${saved.mode==='continuous'?'continuous':'story'}"]`).click();
+          // 10-02: 썰 버튼이 틀 규칙 버튼으로 바뀌어 옛 'story' 버튼을 못 찾아 적용이 통째로 멈췄다(사장님 "내 프리셋 안 불러와짐") — 저장된 규칙 버튼을 누른다
+          modeBar.querySelector(saved.mode==='continuous'?'[data-template-mode="continuous"]':`[data-frame-rule="${['hook_all','body_all'].includes(saved.frameRule)&&modeBar.querySelector(`[data-frame-rule="${saved.frameRule}"]`)?saved.frameRule:'hook_body'}"]`).click();
           const index=rows.findIndex(p=>p.id===saved.presetId);if(index>=0)selectPreset(index);
         }
         // ★'내 프리셋 적용'(force)은 **취향만** 옮긴다 — 보던 장면과 그때의 문구는 안 옮긴다(2026-09-23 고객 제보).
@@ -1770,9 +1806,10 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,fontSets:{...fontSets},titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,...(mode!=='continuous'&&frameRule!=='hook_body'?{frameRule}:{}),...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,fontSet,fontSets:{...fontSets},titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
+      frameRule=['hook_all','body_all'].includes(saved?.frameRule)?saved.frameRule:'hook_body';applyFrameRule();
       plainLegacy=!!(saved&&saved.presetId===PLAIN_ID&&saved.plainCaption!==2);   // 표시 없는 옛 원본 = 예전 그대로
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
       if(saved){
@@ -1782,7 +1819,7 @@
         effects=saved.effects||{};
         hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';restoreFontSets(saved);titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';textWeight=textLookMap(saved.textWeight,'weight');textShadow=textLookMap(saved.textShadow,'shadow');window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
-        modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
+        {const sel=mode==='continuous'?'[data-template-mode="continuous"]':(saved.presetId===PLAIN_ID?'[data-plain-pick]':`[data-frame-rule="${frameRule}"]`);const b=modeBar.querySelector(sel);if(b)markMode(b);}
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
         for(const [key,value] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption')inputs[key].value=value;
       }

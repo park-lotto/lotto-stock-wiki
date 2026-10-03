@@ -22,7 +22,13 @@ const MANUAL_MIN = 0.3;
 //   생긴다"가 된다(2026-09-06 실측: 칸 2.8초·재료 1.7초에서 미리보기 1.65배 vs 렌더
 //   1.15배+정지 0.85초). 이보다 더 필요한 시간은 렌더가 정지 프레임으로 떠안으므로
 //   미리보기도 마지막 컷을 그만큼 늘려 **정지가 생길 것을 미리 보여준다**.
-const MAX_SLOWMO = 1.15;
+// ★숫자는 서버(config.MAX_SLOWMO)가 /api/mix/scene_lab 데이터 max_slowmo 로 준다(관제 020, 2026-10-01).
+//   여기엔 숫자를 적지 않는다 — 두 곳에 적히면 미리보기와 완성본이 어긋난다. 서버 값이 없으면(옛 응답) 콘솔에 알리고 1.15.
+function maxSlowmo(){
+  const v = Number(DATA && DATA.max_slowmo);
+  if (!(v > 1)) { if (DATA && !maxSlowmo._warned) { maxSlowmo._warned = true; console.warn('[scene_play] max_slowmo 서버 값 없음 → 1.15'); } return 1.15; }
+  return v;
+}
 // ★손대지 않은 컷에게 **반드시 남겨줄** 최소 길이. MANUAL_MIN(수동 지정 하한)과 다르다 —
 //   둘을 같은 값으로 쓴 탓에 ✋를 2.5초 이상 잡으면 남의 컷이 0.3초로 눌려 화면에 0.0으로
 //   떴다(2026-09-06 사장님 "장면 하나가 없어진다"). 수동은 0.3초까지 짧게 정할 수 있지만,
@@ -651,12 +657,21 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     const cuts = ((((typeof DATA === 'object' && DATA) || {}).scenecuts) || {})[vid];
     if (!Array.isArray(cuts) || !cuts.length || !(d > 0) || !isFinite(s)) return {start: s, sdur: d};
     const e = s + d;
+    // ★연속 전환(짧은 번쩍임)은 끝까지 넘긴다(2026-10-02 관제 073). 실측 f65d5cc30072 s3: 첫머리 전환 0.1001·0.1335·0.1668 —
+    //   종전엔 머리 3프레임 안의 전환 하나(0.1001)로만 옮겨, 옮긴 자리가 2프레임짜리 딴 장면 안이었다(화면·완성본 둘 다 번쩍).
+    //   옮긴 새 경계에서 다시 3프레임 안에 전환이 있으면 거기로 또 옮긴다(최대 8번). 꼬리도 같다.
+    const cs = cuts.map(Number).filter(isFinite).sort((a, b) => a - b);
     let ns = s, ne = e;
-    for (const x of cuts){
-      const c = Number(x);
-      if (!isFinite(c)) continue;
-      if (c > s + 1e-6 && c <= s + READ_GUARD && c > ns) ns = c;     // 머리: 앞 장면 프레임을 읽지 않는다
-      if (c < e - 1e-6 && c >= e - READ_GUARD && c < ne) ne = c;     // 꼬리: 다음 장면 첫 프레임부터는 안 읽는다
+    for (let k = 0; k < 8; k++){                                     // 머리: 앞 장면·번쩍 장면 프레임을 읽지 않는다
+      const nx = cs.find(c => c > ns + 1e-6 && c <= ns + READ_GUARD);
+      if (nx === undefined) break;
+      ns = nx;
+    }
+    for (let k = 0; k < 8; k++){                                     // 꼬리: 다음 장면·번쩍 장면 첫 프레임부터는 안 읽는다
+      let pv;
+      for (const c of cs) if (c < ne - 1e-6 && c >= ne - READ_GUARD) { pv = c; break; }
+      if (pv === undefined) break;
+      ne = pv;
     }
     if (ns === s && ne === e) return {start: s, sdur: d};
     if (ne - ns < 0.1) return {start: s, sdur: d};                   // 창이 너무 짧아지면 안 건드린다
@@ -956,7 +971,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     if (spread && filled > EPS){
       // ★상한(1.15배)까지만 늘린다 — 렌더와 같은 규칙. 남는 시간은 마지막 컷이
       //   떠안아 **정지가 생길 것을 미리보기에서도 보이게** 한다(거짓 안심 금지).
-      const scale = Math.min(MAX_SLOWMO, ttsDur / filled);
+      const scale = Math.min(maxSlowmo(), ttsDur / filled);
       // ★실제 소스 길이를 남겨 둔다 — 재생기가 이 값으로 속도를 정한다(applyRate).
       //   이게 없으면 dur만 늘어나고 재생은 1배속이라 '느려짐'이 아니라 '멈춤'이 된다.
       clips.forEach(c => { c.src_dur = c.dur; c.dur *= scale; });
@@ -1208,7 +1223,7 @@ function applyRate(v, c){
   let rate = 1;
   if (src > 0 && c.dur > EPS){
     rate = src / c.dur;
-    if (rate < 1 && !c.fit) rate = Math.max(1 / MAX_SLOWMO, rate);   // 느리게 상한은 기존 유지([속도 맞추기] 컷만 예외)
+    if (rate < 1 && !c.fit) rate = Math.max(1 / maxSlowmo(), rate);   // 느리게 상한은 기존 유지([속도 맞추기] 컷만 예외)
   }
   try { if (Math.abs(v.playbackRate - rate) > 1e-3) v.playbackRate = rate; } catch (e) {}
   return rate;
@@ -1704,7 +1719,12 @@ function runAllFrom(i){
   const nx = DATA.beats[i + 1];
   if (nx){
     const ncl = planClips(lists[i + 1] || [], beatDur(i + 1), STRETCH[i + 1], i + 1);
-    if (ncl[0]){ ncl[0]._slot = handoffSlot(i + 1); seat(ncl[0]); preSeated = i + 1; }
+    // ★합본이 다음 칸까지 덮으면 원본 재생기를 미리 앉히지 않는다(2026-10-01 관제 063).
+    //   종전엔 합본으로 돌면서도 여기 seat→wantFull 이 다음 칸 **원본을 통째로** 받았다
+    //   (하네스 실측: 전체 재생 8초에 /api/mix/src 35~40MB, 재생은 합본이 하는데 받기만 했다).
+    //   합본이 못 덮는 칸(편성이 합본과 다른 칸)만 종전대로 원본을 미리 앉힌다 — 폴백 그대로.
+    const nxPx = pvxAttach(i + 1, ncl);
+    if (ncl[0] && !nxPx){ ncl[0]._slot = handoffSlot(i + 1); seat(ncl[0]); preSeated = i + 1; }
     seatTts(i + 1, (i + 1) % 2);      // ← 이음매의 버퍼를 없애는 핵심 한 줄
   }
   const a = playTts(i, i % 2);

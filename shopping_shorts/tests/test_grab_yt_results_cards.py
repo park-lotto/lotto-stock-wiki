@@ -21,7 +21,9 @@ def _fn(name, nxt):
 
 
 def _judge(host, pathname, duration=0):
-    src = _fn("_ytResults", "  // 유튜브 비대상 화면")
+    s = LOGIC.read_text(encoding="utf-8")
+    i = s.index("  // '짧은 영상'의 기준")
+    src = s[i:s.index("  // 유튜브 비대상 화면", i)]
     script = f"""
 var location = {{host: {json.dumps(host)}, pathname: {json.dumps(pathname)}}};
 var document = {{querySelector: function () {{ return {{duration: {duration}}}; }}}};
@@ -46,5 +48,35 @@ def test_쇼츠는_종전대로_켜지고_카드모드가_아니다():
 
 def test_검색결과에서는_쇼츠링크만_잡고_플로팅을_걷는다():
     s = LOGIC.read_text(encoding="utf-8")
-    assert "_ytResults() ? 'a[href*=\"/shorts/\"]'" in s
+    assert "ytr ? 'a[href*=\"/shorts/\"], a#thumbnail[href*=\"/watch?v=\"]'" in s
     assert "if (_ytResults()) { _ytResultsTick(); return; }" in s
+
+
+def _helpers(expr):
+    s = LOGIC.read_text(encoding="utf-8")
+    i = s.index("  // '짧은 영상'의 기준")
+    src = s[i:s.index("  function _ytResults()", i)]
+    return json.loads(run_js(src + "\nconsole.log(JSON.stringify(" + expr + "));"))
+
+
+def _card(*texts):
+    kids = ",".join('{children:[],textContent:%s}' % json.dumps(t) for t in texts)
+    return "{querySelectorAll:function(){return [%s];}}" % kids
+
+
+def test_카드_길이배지를_초로_읽는다():
+    assert _helpers("_ytCardSeconds(%s)" % _card("새 영상", " 1:41 ")) == 101
+    assert _helpers("_ytCardSeconds(%s)" % _card("1:02:03")) == 3723
+    assert _helpers("_ytCardSeconds(%s)" % _card("배지 없음")) == 0
+
+
+def test_짧은영상_기준은_3분_하나다():
+    assert _helpers("_YT_SHORT_MAX") == 180
+    s = LOGIC.read_text(encoding="utf-8")
+    assert s.count("<= _YT_SHORT_MAX") == 2 and "d <= 180" not in s
+
+
+def test_검색카드_주소에서_추적꼬리를_뗀다():
+    assert _helpers('_ytCleanUrl("https://www.youtube.com/watch?v=zUBq581EUvc&pp=ygUW")') == (
+        "https://www.youtube.com/watch?v=zUBq581EUvc")
+    assert _helpers('_ytCleanUrl("https://www.youtube.com/shorts/abc")') == "https://www.youtube.com/shorts/abc"

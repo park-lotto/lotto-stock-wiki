@@ -89,7 +89,7 @@ def validate_snapshot(value):
             for mask in effect["masks"]:
                 if not isinstance(mask,dict):
                     raise ValueError("가림막 항목이 올바르지 않습니다")
-                base=_norm_masks([{**mask,"kind":"shape" if mask.get("kind")=="graphic" else mask.get("kind")}])
+                base=_norm_masks([{**mask,"kind":"shape" if mask.get("kind") in ("graphic","image") else mask.get("kind")}])
                 if not base:
                     continue
                 item=base[0]
@@ -97,6 +97,12 @@ def validate_snapshot(value):
                     if not re.fullmatch(r"[a-z_]{1,32}",str(mask.get("graphic") or "")):
                         raise ValueError("도형 종류가 올바르지 않습니다")
                     item.update(kind="graphic",graphic=mask["graphic"])
+                if mask.get("kind")=="image":
+                    # 로고(관제 065): 계정 폴더의 PNG만. 파일이 없으면 버린다(없는 그림을 렌더가 기다리지 않게).
+                    src=str(mask.get("src") or "")
+                    if not re.fullmatch(r"장면꾸미기_로고/\d{1,9}/[0-9a-f]{16}\.png",src) or not (ROOT/"out"/src).is_file():
+                        continue
+                    item.update(kind="image",src=src)
                 if mask.get("motion") in ("none","point","pulse","spin","float","reveal"):
                     item["motion"]=mask["motion"]
                 if item["kind"]=="badge":
@@ -158,7 +164,9 @@ def validate_snapshot(value):
                 raise ValueError("표시 색상이 올바르지 않습니다")
     if "plainCaption" in value and value["plainCaption"] != 2:
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
-    allowed = {"version", "plainCaption", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    if value.get("frameRule") not in (None, *FRAME_RULES):
+        raise ValueError("장면 틀 규칙이 올바르지 않습니다")
+    allowed = {"version", "frameRule", "plainCaption", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
@@ -238,6 +246,19 @@ def account_channel(job_id):
         return ""
 
 
+FRAME_RULES = ("hook_body", "hook_all", "body_all")   # 썰훅 · 훅만 · 썰만(관제 058, 2026-10-02 사장님 5버튼)
+
+
+def frame_kind(index, rule):
+    """장면 index의 틀(hook/body) — **판단의 주인은 이 함수 하나**. 편집기 미리보기는 서버가 준 scenes[i].kind를 그대로 따르고,
+    렌더·썸네일·캡컷 레이어도 같은 context_for를 거친다. rule이 없거나 모르는 값이면 종전(첫 장면 훅·나머지 본문)."""
+    if rule == "hook_all":
+        return "hook"
+    if rule == "body_all":
+        return "body"
+    return "hook" if index == 0 else "body"
+
+
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     from .video_assemble import caption_schedule, caption_lead_absorb
     from .template_copy import scene_text
@@ -247,8 +268,8 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     for index, beat in enumerate(timeline):
         start, end = float(beat["t0"]), float(beat["t0"] + beat["dur"])
         cursor = start
-        kind = "hook" if index == 0 else "body"
-        caption_visible = not (kind == "hook" and hide_hook_captions)
+        kind = frame_kind(index, (snapshot or {}).get("frameRule"))
+        caption_visible = not (kind == "hook" and index == 0 and hide_hook_captions)   # 숨김은 첫 훅 문장만(썰훅만 본문 자막은 보인다, 10-02)
         for caption, t0, t1 in caption_schedule(beat, absorb_lead=_absorb):
             a, b = max(cursor, start, float(t0)), min(end, float(t1))
             if b <= a:

@@ -44,7 +44,7 @@ def _ghost_line(frames, only=0, cuts=None, short=0):
         frames, frames if cuts is None else cuts, only, short)
 
 
-GATE = dict(CFG["gate"], min_jobs_compared=1)
+GATE = dict(CFG["gate"], min_jobs_compared=1, compare_main=False)   # 한쪽 판정·업로드 시험 — 전후 비교는 test_video_gate_delta.py(카드 071)
 
 
 # ── 요약 판정 ────────────────────────────────────────────────────
@@ -170,7 +170,9 @@ def _udiff(tmp_path, old, new):
     ("    return 1", "    return 11", True, "_pvproxy_build"),
     ("    return 2", "    return 22", True, "api_render"),                 # 이름엔 render 가 있고 라우트도 /api/mix/render
     ("    return 3", "    return 33", False, "api_customers"),             # 제작 라인 밖
-    ("X = 1", "X = 2", True, "모듈 수준"),                                   # 못 정함 → 실행
+    ("X = 1", "X = 2", False, "모듈 상수"),                                  # 이름이 제작 라인 밖 상수 → 건너뜀(2026-10-02 카드 069)
+    ("X = 1", "X = 1\nRENDER_FPS = 30", True, "RENDER_FPS"),                # 이름에 제작 라인 열쇠 → 실행
+    ("X = 1", "X = 1\nimport sys", True, "모듈 수준"),                      # import·호출은 영향을 못 정함 → 실행
     ("    return 3", "    return 3  # 주석만", False, None),                 # 주석이 붙어도 코드 줄이 바뀌면…
 ])
 def test_app_function_level_decision(tmp_path, old, new, expect, why):
@@ -677,3 +679,14 @@ def test_clean_left_tool_is_bundled_and_patch_modules_uploaded():
     import clean_left_audit as cla
     assert "tools/clean_left_audit.py" in vg.TOOL_RELS
     assert set("%s.py" % n for n in cla.PATCH_MODULES) <= set(vg.PATCH_RELS), "도구가 얹는 모듈은 관문이 올려야 한다"
+
+
+
+def test_keep_log_writes_next_to_tracks(tmp_path):
+    """관제 070: 관문이 말한 것은 <stage 부모>/_gate_reports/<브랜치>_<시각>.txt 로 남는다."""
+    stage = tmp_path / ".tracks" / "_merge-x"; stage.mkdir(parents=True)
+    f = vg._keep_log(stage, "track/영상전송아파치", ["--- 영상 비교 report ---", "job1 칸4 다른장면 [1]", "❌ 영상 관문 실패"], now=0)
+    assert f is not None and f.parent == (tmp_path / ".tracks" / "_gate_reports")
+    body = f.read_text(encoding="utf-8")
+    assert "다른장면 [1]" in body and "❌ 영상 관문 실패" in body
+    assert f.name.startswith("영상전송아파치_")

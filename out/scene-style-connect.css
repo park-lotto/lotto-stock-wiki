@@ -32,3 +32,8 @@
 .scene-media-clip{touch-action:none}.scene-media-clip .scene-focus{pointer-events:auto;cursor:grab;touch-action:none}.scene-media-clip .scene-lens{pointer-events:none}[data-effects-all]{margin-top:12px}
 /* 내 배지(2026-09-22): 저장한 배지 버튼 + 지우기 × */
 .dec-my-badges{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px;padding:8px;border:1px dashed #35505b;border-radius:10px}.dec-my-badges p{flex-basis:100%;margin:0 0 2px;font-size:12px;color:#9fb6bf}.dec-my-badge{display:inline-flex;align-items:center;gap:2px}.dec-my-badge [data-del-my-badge]{min-width:22px;padding:2px 6px;border-radius:99px;background:#16252e;color:#9fb6bf;border:1px solid #294451;font-size:12px;line-height:1.2}.dec-my-badge [data-del-my-badge]:hover{color:#fff;border-color:#ff6b6b}.dec-edit [data-save-badge]{width:100%;margin:6px 0 2px;padding:8px;border-radius:8px;border:1px solid #3fe0b5;background:#0f2a26;color:#d9fff4;font-weight:700;cursor:pointer}
+
+/* 로고(관제 065) */
+.dec-logo p{margin:4px 0 8px;font-size:12.5px;color:#c7d3da}.dec-logo-pick{display:inline-flex;align-items:center;height:32px;padding:0 12px;border:1px solid #43e2b4;border-radius:8px;background:#0f2a24;color:#63edc6;font-weight:900;font-size:13px;cursor:pointer}.dec-my-logos{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.dec-my-logo{width:52px;height:52px;padding:4px;border:1px solid #294451;border-radius:8px;background:#0b1b25;cursor:pointer}.dec-my-logo img{width:100%;height:100%;object-fit:contain}.dec-my-logo:hover{border-color:#43e2b4}
+.scene-decorations-top{z-index:9}
+.dec-logo input[type=file]{display:none!important}   /* 효과 패널 input{display:block}이 hidden을 덮어 기본 파일칸이 보이던 것(10-02 사장님 캡처) */

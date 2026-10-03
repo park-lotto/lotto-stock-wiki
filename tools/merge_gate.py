@@ -49,20 +49,42 @@ def make_output_safe():
             pass  # 리다이렉트·파이프 등 reconfigure 못 하는 스트림이면 그냥 둔다
 
 
+def norm_test_id(tid):
+    """비교용 정규화 — 비ASCII(한글 이름)와 깨진 글자(?·�)를 한 기호로. 인코딩이 달라도 같은 테스트는 같게 본다."""
+    import re as _re
+    return _re.sub(r"[^ ->@-~]+", "?", str(tid or "")).strip()   # '?'(0x3f)도 깨진 글자로 본다
+
+
 def parse_failed(output):
-    """pytest 출력에서 실패한 테스트 id 집합을 뽑는다."""
+    """pytest 출력에서 실패한 테스트 id 집합을 뽑는다(정규화된 id)."""
     failed = set()
     for line in output.splitlines():
         m = _FAIL_RE.match(line.strip())
         if m:
-            failed.add(m.group(1).strip())
+            failed.add(norm_test_id(m.group(1)))
     return failed
 
 
 def _run(cmd, cwd):
+    # ★자식(pytest)도 UTF-8로 쓰게 못박는다(2026-10-01 실측): 세션마다 `py`/`py -X utf8`가 섞여 한글 테스트 이름이
+    #   한쪽은 제대로, 한쪽은 '?'로 저장돼 **같은 실패가 '새로 깨짐'으로 오판**됐다(기준선 캐시 vs 병합 후 비교).
+    import os as _os
+    env = {**_os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
+    # ★게이트가 띄운 pytest 는 **개별 락**을 쓴다(2026-10-02, 카드 075): tools/test_video_gate.py 의 finish 시험이
+    #   게이트가 이미 쥔 전역 finish 락을 다시 기다리면 영원히 멈춘다(교착). 락 경로는 track._finish_lock_path 가 읽는다.
+    import tempfile as _tf
+    _priv = Path(_tf.gettempdir()) / ("gate_child_%d" % _os.getpid())
+    env.setdefault("TRACK_FINISH_LOCK", str(_priv) + "_finish.lock")
+    env.setdefault("TRACK_VIDEO_LOCK", str(_priv) + "_video.lock")
+    # ★임시 폴더 자체를 따로 준다(2026-10-02 실측 교착): 기준선은 **main 코드**로 찍는데, 그 코드의 track.py 는 위 환경변수를
+    #   모른다 → main 의 finish 시험이 바깥 finish 가 쥔 전역 락(tempfile.gettempdir()/stockbrain_track_finish.lock)을 기다려
+    #   워커 4개가 CPU 0 으로 멈췄다. 락 경로가 gettempdir() 에서 나오므로 TMP/TEMP 를 바꾸면 **어느 판본 코드든** 개별 락이 된다.
+    _priv.mkdir(parents=True, exist_ok=True)
+    for _k in ("TMP", "TEMP", "TMPDIR"):
+        env[_k] = str(_priv)
     p = subprocess.run(
         cmd, cwd=str(cwd), capture_output=True, text=True,
-        encoding="utf-8", errors="replace",
+        encoding="utf-8", errors="replace", env=env,
     )
     return p.returncode, (p.stdout or "") + (p.stderr or "")
 
@@ -77,16 +99,28 @@ def _xdist_args():
         return []
     # 사장님(2026-09-21): 16코어를 다 쓸 일이 아니다 — 게이트가 돌 때마다 PC가 버벅였다.
     # 4개로 묶어 나머지 코어는 다른 작업에 남긴다.
-    return ["-n", "4"]
+    # 2026-10-02 사장님 "병렬도 다 해도 된다" → 실측(같은 코드·같은 실패 15건): -n 4 727초 · -n 8 376초 · -n auto(16) 358초.
+    #   16개는 8개보다 18초 빠를 뿐이라 코어 절반을 남기는 8개로(카드 081).
+    return ["-n", "8"]
+
+
+def _tools_test_paths(cwd):
+    """게이트가 함께 돌 tools 시험 파일(2026-10-02, 카드 075). 관제·관문 도구(track·control·video_gate·live_check …)가
+    tools/ 에 있는데 그 시험이 게이트 밖이라, 도구를 깨뜨린 병합이 그대로 들어갔다(10-02 관제수리 → test_video_gate)."""
+    root = Path(cwd)
+    found = sorted(root.glob("tools/test_*.py")) + sorted(root.glob("tools/*/test_*.py"))
+    return [p.relative_to(root).as_posix() for p in found]
 
 
 def snapshot(cwd=BASE, run=_run):
-    """지금 이 워킹트리 상태를 찍는다 (문법·import·pytest)."""
+    """지금 이 워킹트리 상태를 찍는다 (문법·import·pytest — shopping_shorts/tests + tools 시험)."""
     rc_c, out_c = run([sys.executable, "-m", "compileall", TARGET, "-q"], cwd)
     rc_i, out_i = run([sys.executable, "-c", f"import {TARGET}.app"], cwd)
+    # ★--continue-on-collection-errors: tools 쪽 시험 파일 하나가 수집에서 죽어도 나머지는 돈다(전체 rc=2 로 게이트 무력화 금지).
+    #   -rfE: 수집 오류(ERROR)도 실패 목록에 들어와 '새로 깨짐' 비교를 받는다.
     rc_p, out_p = run(
-        [sys.executable, "-m", "pytest", f"{TARGET}/tests",
-         "-q", "--tb=no", "-rf", "-p", "no:cacheprovider", *_xdist_args()],
+        [sys.executable, "-m", "pytest", f"{TARGET}/tests", *_tools_test_paths(cwd),
+         "-q", "--tb=no", "-rfE", "--continue-on-collection-errors", "-p", "no:cacheprovider", *_xdist_args()],
         cwd,
     )
     return {
@@ -100,6 +134,42 @@ def snapshot(cwd=BASE, run=_run):
     }
 
 
+def snapshot_light(cwd=BASE, run=_run):
+    """기준선은 **문법·import 만**(2026-10-02 카드 081). 전체 pytest(7~10분)는 병합본에서만 돌리고, 실패한 것만
+    main 코드로 다시 돌려 '원래 실패'를 가른다(track._known_main_failures). 실측: 오늘 main 커밋 108개 중 72개가
+    관제·핸드오프라 커밋별 기준선 캐시가 거의 안 먹었다(새로 수집 6 · 재사용 2)."""
+    rc_c, out_c = run([sys.executable, "-m", "compileall", TARGET, "-q"], cwd)
+    rc_i, out_i = run([sys.executable, "-c", f"import {TARGET}.app"], cwd)
+    return {"compile_ok": rc_c == 0, "compile_out": out_c[-4000:], "import_ok": rc_i == 0, "import_out": out_i[-4000:],
+            "pytest_rc": 0, "pytest_out": "", "failed": [], "light": True}
+
+
+def test_files_of(ids):
+    """시험 id → 그 시험 파일(중복 없이, 순서 유지). 'a.py::b[x]' → 'a.py'. 파일 경로가 오면 그대로."""
+    out = []
+    for i in ids:
+        f = str(i).split("::", 1)[0]
+        if f not in out:
+            out.append(f)
+    return out
+
+
+def rerun_ids(cwd, ids, run=_run, workers=None):
+    """이 폴더 코드로 그 시험들이 든 **파일을 통째로** 다시 돌려, 물어본 id 중 **여전히 깨지는 것**을 돌려준다.
+    ★id 하나씩 돌리면 같은 파일 안 다른 시험의 영향(순서·공유 상태)이 사라져 '원래 실패'가 통과로 보였다
+    (2026-10-02 실측 15건 — 파일 통째로 main 에서 돌리니 6건 재현, 카드 083). 파일 경로를 주면 그 파일의 실패 전부."""
+    ids = list(ids)
+    if not ids:
+        return set()
+    files = test_files_of(ids)
+    extra = (["-n", str(workers)] if workers else (_xdist_args() if len(files) > 4 else []))
+    rc, out = run([sys.executable, "-m", "pytest", *files, "-q", "--tb=no", "-rfE", "--continue-on-collection-errors",
+                   "-p", "no:cacheprovider", *extra], cwd)
+    failed = parse_failed(out)
+    asked_files = {i for i in ids if "::" not in str(i)}
+    return {f for f in failed if f in ids or f.split("::", 1)[0] in asked_files}
+
+
 def baseline_warnings(before):
     """병합 전부터 깨져 있던 것 — 막지는 않되 반드시 보여준다."""
     warn = []
@@ -109,7 +179,9 @@ def baseline_warnings(before):
         warn.append("⚠️ 병합 전부터 import가 깨져 있다 — 의미적 충돌 검출기가 죽은 상태다")
     if before["pytest_rc"] not in _PYTEST_SANE_RC:
         warn.append(f"⚠️ 병합 전부터 pytest가 비정상 종료(rc={before['pytest_rc']}) — 테스트 검사는 무력하다")
-    if before["failed"]:
+    if before.get("light"):
+        warn.append("ℹ️ 기준선: 문법·import 만 — 전체 시험은 병합본에서 한 번, 실패한 것만 main 에서 재확인(카드 081)")
+    elif before["failed"]:
         warn.append(f"ℹ️ 병합 전 이미 실패 {len(before['failed'])}건 (기준선으로 통과시킴)")
     return warn
 
@@ -153,7 +225,8 @@ def compare(before, after):
               % (before["pytest_rc"], after["pytest_rc"], len(after["failed"])))
         return problems
 
-    new_failed = sorted(set(after["failed"]) - set(before["failed"]))
+    # 옛 기준선 저장본(정규화 전 이름)과도 맞게 양쪽 다 정규화해 비교한다
+    new_failed = sorted(set(map(norm_test_id, after["failed"])) - set(map(norm_test_id, before["failed"])))
     if new_failed:
         shown = "\n".join(f"    - {t}" for t in new_failed[:20])
         more = f"\n    ... 외 {len(new_failed) - 20}건" if len(new_failed) > 20 else ""

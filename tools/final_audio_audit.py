@@ -27,6 +27,7 @@
 결과: $AUDIO_OUT/report.txt (job 한 줄 + '== 칸 N · 나레이션 0.15초+ 오차 X · 효과음 누락 Y · BGM 이상 Z ...' 요약)
       $AUDIO_OUT/samples.jsonl (칸·효과음별 원시값)
 """
+import importlib.util
 import json
 import math
 import os
@@ -55,7 +56,10 @@ SURPLUS_T = 0.05           # 소리 패킷 표본 잉여(nb_frames×1024/표본�
 STALE_SLACK = 1.0          # mp3 수정 시각이 완성본보다 이만큼 뒤면 '렌더 뒤 음성 바뀜'
 
 VCUT_T = 0.10             # 검출 컷이 계획 프레임과 이만큼 넘게 갈리면 '검출불일치'(판정 아님 — 칸 안 장면 전환 오검출이 대부분)
-OFFSET_T = 0.03           # 일정 지연 보고 기준(초) — 전 칸 음성-영상(계획 프레임) 오차 **중앙값** 또는 인트로 뒤 첫 칸 오차가 이 이상.
+OFFSET_T = 0.04           # 일정 지연 보고 기준(초) — 2026-10-02 사장님 결정(관제 067 '가'): 0.03→0.04, 한 프레임(1/30=0.0333초)은 통과.
+#   왜: 0.03은 한 프레임보다 작아 AAC 앞뒤 채움(+0.02~0.03)에 반올림 한 번만 겹쳐도 걸렸다(실측 63bf334e457b 중앙 0.033).
+#   이 검사를 만든 원래 결함(인트로 경로 +0.059~0.064초)은 0.04로도 그대로 잡힌다. 두 프레임(0.067) 이상은 막힌다.
+#   (아래는 종전 설명) — 전 칸 음성-영상(계획 프레임) 오차 **중앙값** 또는 인트로 뒤 첫 칸 오차가 이 이상.
 #   왜(2026-09-27): 종전 인트로 경로는 인트로 뒤 목소리 **전체**를 +0.059~0.064초 늦췄는데, 패킷 잉여(0.05)로도
 #   나레이션 기준(0.15)으로도 안 잡혔다. 칸마다 같은 크기로 밀리는 결함은 '가장 큰 칸'이 아니라 '가운데 값'으로 잡는다.
 #   기준은 계획 프레임(렌더가 칸을 놓는 자리)이다 — 영상 컷 검출은 1프레임(0.033초) 흔들려(ff3b 실측 +1프레임) 0.03 판정에 못 쓴다.
@@ -66,12 +70,19 @@ if os.getenv("PATCH_DIR"):          # 관문: 병합본 모듈을 먼저 얹는�
     import importlib.util as _ilu
     sys.path.insert(0, ".")
     import shopping_shorts as _ss
-    for _n in ("voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):
+    for _n in ("config", "voice_presets", "typecast_tts", "audio_post", "tts", "tts_joined", "frame_match", "seg_snap", "screen_clips", "video_assemble", "clean_base", "mix_pipeline"):   # config 맨 앞(관제 020)
         _f = Path(os.getenv("PATCH_DIR")) / ("%s.py" % _n)
         if _f.exists():
             _sp = _ilu.spec_from_file_location("shopping_shorts." + _n, str(_f))
             _m = _ilu.module_from_spec(_sp); sys.modules["shopping_shorts." + _n] = _m
             _sp.loader.exec_module(_m); setattr(_ss, _n, _m)
+            if _n == "config":                     # config 를 얹으면 DB_PATH 등 경로 상수가 /tmp 를 가리킨다 — 저장소 값으로(editor_vs_final_video 와 같은 되돌리기, 2026-10-01)
+                _rs = importlib.util.spec_from_file_location("_repo_config", str(Path("shopping_shorts/config.py").resolve()))
+                _rc = importlib.util.module_from_spec(_rs); _rs.loader.exec_module(_rc)
+                for _k in dir(_m):
+                    _v = getattr(_m, _k)
+                    if isinstance(_v, Path) and str(_v.resolve()).startswith(str(Path(os.getenv("PATCH_DIR")).resolve())) and hasattr(_rc, _k):
+                        setattr(_m, _k, getattr(_rc, _k))
 
 
 # ── 소리 읽기(임시 파일 없음 — 파이프) ───────────────────────────────────────
