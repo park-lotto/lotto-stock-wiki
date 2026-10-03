@@ -21031,7 +21031,16 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     _prewarm_beatframes(job, job_id, _pages)
     for scene, (_bi, _at) in zip(context["scenes"], _pages):
         scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}"
+        # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
+        scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}" for _t in _scene_page_points(scene)]
     return {"context": context, "snapshot": snapshot}
+
+
+def _scene_page_points(scene):
+    """한 페이지의 앞·가운데·뒤 완성본 시각 — 앞·뒤는 창 끝에서 창 길이의 1/5(최대 0.15초) 안쪽. 가운데 = _scene_page_time."""
+    a, b = float(scene["start"]), float(scene["end"])
+    e = min(0.15, max(0.0, (b - a) * 0.2))
+    return [round(a + e, 2), _scene_page_time(scene), round(b - e, 2)]
 
 
 def _scene_page_time(scene):
