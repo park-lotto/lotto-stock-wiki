@@ -1495,7 +1495,11 @@
     const x=settings.placement==='title'?0:Math.max(0,Math.min(100-w,(100-w)/2+drag.x));
     // ★원본(plain)은 제목칸이 없다 — 자막 기준선을 titleHeight(=0)로 잡으면 화면 맨 위로 붙는다(2026-09-24 실측).
     //   그 틀에서는 자막 줄이 정해 둔 제 자리(영상 아래쪽)를 기준으로 삼고, 끌어 옮긴 양만 더한다.
-    const capBase=rows[current]?.id===PLAIN_ID?(plainLegacy?PLAIN_LEGACY_CAP_Y:source.ln?source.ln.y0/frame.height*100:80):titleHeight(frame);
+    // ★원본 자막은 제목 **실제 아래**에 붙는다(2026-10-03 사장님 화면: 제목이 커지거나 내려가 있으면 고정 줄(22%)의 자막이 제목 둘째 줄과 겹쳤다).
+    //   제 줄 자리가 기본이고, 그려진 제목 끝이 그보다 아래면 그 밑으로 민다. 제목이 없으면 종전 자리 그대로.
+    const plainTitleEnd=()=>{const box=preview.getBoundingClientRect();let end=0;layer.querySelectorAll('.precision-text[data-edit-bind="hook1"],.precision-text[data-edit-bind="hook2"],.precision-text[data-edit-bind="bodyTitle"]').forEach(el=>{if(el.hidden||!el.textContent.trim())return;const range=document.createRange();range.selectNodeContents(el);const r=range.getBoundingClientRect();if(r.height)end=Math.max(end,(r.bottom-box.top)/Math.max(1,box.height)*100);});return end;};
+    const plainLine=source.ln?source.ln.y0/frame.height*100:80;
+    const capBase=rows[current]?.id===PLAIN_ID?(plainLegacy?PLAIN_LEGACY_CAP_Y:Math.max(plainLine,plainTitleEnd()+1)):titleHeight(frame);
     const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,capBase+drag.y+textOffset('caption')));
     const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
     const capLook=captionLook(frame);
@@ -1946,7 +1950,7 @@
     {key:'bodyMotion',title:'본문 모션',pick:p=>[...p.querySelectorAll(':scope > .body-motion')]},
     {key:'quick',title:'빠른 조절',pick:p=>[...p.querySelectorAll(':scope > .fixed-quick-panel')]},
     {key:'title',title:'제목',pick:p=>['channel','hook1','hook2','bodyTitle'].map(k=>p.querySelector(`:scope > [data-field-key="${k}"]`)).filter(Boolean)},
-    {key:'caption',title:'자막',pick:p=>[p.querySelector(':scope > [data-field-key="caption"]'),p.querySelector(':scope > .scene-line-editor')].filter(Boolean)},
+    {key:'caption',title:'자막',pick:p=>[p.querySelector(':scope > [data-field-key="caption"]'),p.querySelector(':scope > .scene-line-editor'),p.querySelector(':scope > .hook-caption-note')].filter(Boolean)},
   ];
   const style=document.createElement('style');
   style.textContent=`.scene-text-panel > .ai-card{display:none!important}
@@ -1967,8 +1971,8 @@
     if(key==='motion'){const m=body.querySelector('.hook-motion-grid .active')?.textContent||'',b=body.querySelector('[data-hook-band-motion].active')?.textContent||'';return [m,b&&b!=='없음'?b:''].filter(Boolean).join(' + ');}
     if(key==='bodyMotion'){const t=body.querySelector('[data-body-caption-motion].active')?.textContent||'';return t==='없음'?'':t;}
     if(key==='quick')return body.querySelector('.fixed-size-control output')?.textContent?`상단 ${body.querySelector('.fixed-size-control output').textContent}`:'';
-    if(key==='title')return [...body.querySelectorAll('[data-field-key]:not([hidden]) input')].map(i=>i.value.trim()).filter(Boolean)[1]||val('input');
-    if(key==='caption')return val('textarea');
+    if(key==='title')return [...body.querySelectorAll('[data-field-key]:not([hidden]) :is(input,textarea)')].map(i=>i.value.split('\n')[0].trim()).filter(Boolean)[1]||val('input,textarea');   // 10-03: 제목 칸도 여러 줄 칸
+    if(key==='caption')return body.querySelector('[data-field-key="caption"]')?.hidden?'':val('textarea');   // 자막이 안 나오는 장면(템플릿 훅)에선 비운다
     return '';
   }
   // ★'원본 영상 그대로'를 고르면 문구 칸이 전부 숨어 오른쪽이 텅 빈다(2026-09-24 사장님 제보).
