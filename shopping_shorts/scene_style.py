@@ -144,6 +144,11 @@ def validate_snapshot(value):
                 raise ValueError(f"{label} 값이 올바르지 않습니다")
         elif look is not None and look not in old and (isinstance(look, bool) or not isinstance(look, (int, float)) or look < 0 or look > 100 or look % 5):
             raise ValueError(f"{label} 값이 올바르지 않습니다")
+    for key, lo, hi, label in (("textSpacing", -20, 60, "자간"), ("textLeading", -30, 100, "행간")):      # 글자 설정(관제 103) — precision20-ui.js LOOK_ROWS 와 짝
+        look = value.get(key)
+        if look is not None and (not isinstance(look, dict) or set(look) - {"channel", "titleLarge", "titleSmall", "caption"} or any(
+                isinstance(v, bool) or not isinstance(v, (int, float)) or not lo <= v <= hi for v in look.values())):
+            raise ValueError(f"{label} 값이 올바르지 않습니다")
     if value.get("bodyCaptionMotion") not in (None, "", "rise", "grow", "pop", "slide", "drop", "fade", "wide"):   # precision20-ui.js BODY_CAPTION_MOTIONS와 짝
         raise ValueError("본문 자막 효과 값이 올바르지 않습니다")
     word_fx = value.get("wordFx")
@@ -176,7 +181,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 

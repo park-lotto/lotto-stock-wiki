@@ -218,11 +218,16 @@
     //   처음 열리는 탭은 '장면' 그대로 — 템플릿 카드가 처음부터 보여야 하는 검사 도구·기존 사용 흐름을 안 깨려고.
     leftTabs.innerHTML='<button type="button" data-left-tab="mine">내 프리셋</button><button type="button" data-left-tab="look">추천</button><button type="button" class="active" data-left-tab="scene">장면</button><button type="button" data-left-tab="font">폰트</button><button type="button" data-left-tab="tone">색톤</button><button type="button" data-left-tab="deco">꾸밈</button>';
     const fontPane=document.createElement('div');fontPane.className='font-template-pane';fontPane.hidden=true;
-    const drawFontSets=()=>{const lookRow=(label,key,cur,help)=>`<div class="text-look-row" data-look-row="${key}"><span>${label}<small>${help}</small></span><button type="button" data-look-step="${key}" data-delta="-5" aria-label="${label} 줄이기">−</button><input type="range" min="0" max="100" step="5" value="${cur}" data-look-range="${key}" aria-label="${label}"><button type="button" data-look-step="${key}" data-delta="5" aria-label="${label} 늘리기">＋</button><output data-look-value="${key}">${cur}</output></div>`;const targetButtons=TEXT_LOOK_TARGETS.map(t=>`<button type="button" class="${textLookTarget===t.id?'active':''}" data-look-target="${t.id}">${t.label}</button>`).join('');fontPane.innerHTML=`<div class="text-look-targets">${targetButtons}</div>`+lookRow('글자 두께','tw',textWeight[textLookTarget],'0 = 기본')+lookRow('그림자','ts',textShadow[textLookTarget],'썸네일식 입체감')+'<div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
+    const drawFontSets=()=>{const lookRow=r=>{const cur=lookValue(r.key);return `<div class="text-look-row" data-look-row="${r.key}"><span>${r.label}<small>${r.help}</small></span><button type="button" data-look-step="${r.key}" data-delta="${-r.step}" aria-label="${r.label} 줄이기">−</button><input type="range" min="${r.min}" max="${r.max}" step="${r.step}" value="${cur}" data-look-range="${r.key}" aria-label="${r.label}"><button type="button" data-look-step="${r.key}" data-delta="${r.step}" aria-label="${r.label} 늘리기">＋</button><output data-look-value="${r.key}">${cur}</output></div>`};const targetButtons=TEXT_LOOK_TARGETS.map(t=>`<button type="button" class="${textLookTarget===t.id?'active':''}" data-look-target="${t.id}">${t.label}</button>`).join('');fontPane.innerHTML=`<div class="text-look-targets">${targetButtons}</div>`+LOOK_ROWS.map(lookRow).join('')+'<div class="font-set-grid">'+[{id:'',name:'기본 (강렬 어그로)',channel:'SBAggroB',title:'SBAggroB',caption:'BlackHanSans'},...FONT_SETS].map(f=>`<button type="button" class="font-set-card${f.id===fontSet?' selected':''}" data-font-set="${f.id}"><span class="fs-ch" style="font-family:'${f.channel||'Pretendard'}'">숏템메이커</span><span class="fs-title" style="font-family:'${f.title||'Pretendard'}'">제목 첫줄<br><em>제목 둘째줄</em></span><span class="fs-cap" style="font-family:'${f.caption||'Pretendard'}'">자막 예시</span><b>${f.name}</b></button>`).join('')+'</div>';};
     window.addEventListener('scene-style-fontset',()=>{if(!fontPane.hidden)drawFontSets();});   // FONT_SETS는 아래에서 정의되므로 탭을 열 때 그린다
-    const setTextLook=(key,value)=>{const v=Math.max(0,Math.min(100,Math.round(Number(value||0)/5)*5));if(key==='tw')textWeight[textLookTarget]=v;else textShadow[textLookTarget]=v;const range=fontPane.querySelector(`[data-look-range="${key}"]`),out=fontPane.querySelector(`[data-look-value="${key}"]`);if(range)range.value=String(v);if(out)out.value=out.textContent=String(v);renderEdit();rememberLocal({textWeight:{...textWeight},textShadow:{...textShadow}});};
+    const setTextLook=(key,value)=>{const r=LOOK_ROWS.find(x=>x.key===key);if(!r)return;const v=Math.max(r.min,Math.min(r.max,Math.round(Number(value||0)/r.step)*r.step));
+      manualText=true;   // 글자 설정을 만지는 순간부터 새 방식(지금 화면을 보고 정하는 것이므로)
+      if(key==='size'){for(const bind of TEXT_LOOK_TARGETS.find(t=>t.id===textLookTarget).binds)setFontScale(bind,v/100);}
+      else{({tw:textWeight,ts:textShadow,ls:textSpacing,lh:textLeading})[key][textLookTarget]=v;fittedText.clear();renderEdit();}
+      const range=fontPane.querySelector(`[data-look-range="${key}"]`),out=fontPane.querySelector(`[data-look-value="${key}"]`);if(range)range.value=String(v);if(out)out.value=out.textContent=String(v);
+      rememberLocal({textWeight:{...textWeight},textShadow:{...textShadow},textSpacing:{...textSpacing},textLeading:{...textLeading}});};
     fontPane.addEventListener('input',event=>{const range=event.target.closest('[data-look-range]');if(range)setTextLook(range.dataset.lookRange,range.value);});
-    fontPane.addEventListener('click',event=>{const target=event.target.closest('[data-look-target]');if(target){textLookTarget=target.dataset.lookTarget;drawFontSets();return;}const step=event.target.closest('[data-look-step]');if(step){const key=step.dataset.lookStep;setTextLook(key,(key==='tw'?textWeight[textLookTarget]:textShadow[textLookTarget])+Number(step.dataset.delta));return;}const c=event.target.closest('[data-font-set]');if(!c)return;pickFontSet(c.dataset.fontSet);drawFontSets();renderEdit();rememberLocal({fontSet,fontSets:{...fontSets}});});   /* 저장 버튼을 안 눌러도 기억 — 새로고침하면 풀리던 문제 */
+    fontPane.addEventListener('click',event=>{const target=event.target.closest('[data-look-target]');if(target){textLookTarget=target.dataset.lookTarget;drawFontSets();return;}const step=event.target.closest('[data-look-step]');if(step){const key=step.dataset.lookStep;setTextLook(key,lookValue(key)+Number(step.dataset.delta));return;}const c=event.target.closest('[data-font-set]');if(!c)return;pickFontSet(c.dataset.fontSet);drawFontSets();renderEdit();rememberLocal({fontSet,fontSets:{...fontSets}});});   /* 저장 버튼을 안 눌러도 기억 — 새로고침하면 풀리던 문제 */
     // 2026-09-23 사장님: "마지막에 저장한 템플릿은 기억해 첫 시작에 보이게 하고, 프리셋 몇 개 저장해 쓰게 탭 하나 맨 앞에".
     //   저장 = localStorage 'scene_style_my_presets' [{id,name,at,snap}] — 취향(템플릿·글꼴·색톤·꾸밈·칸 배치·모션)만 되살린다(작업별 글자 크기·자막 위치는 안 옮긴다, 09-22 규칙과 같다).
     //   적용·저장하면 'scene_style_preset'(첫 시작 복원 키)도 그걸로 바꿔 다음에 열 때 그 템플릿으로 시작한다.
@@ -299,7 +304,12 @@
   const textLookNumber=(value,kind)=>{if(typeof value==='number'&&Number.isFinite(value))return Math.max(0,Math.min(100,Math.round(value/5)*5));const old=kind==='weight'?{bold:50,heavy:100}:{soft:50,strong:100};return old[value]||0;};
   const textLookMap=(value,kind)=>{const out=blankTextLook();if(value&&typeof value==='object'&&!Array.isArray(value)){for(const t of TEXT_LOOK_TARGETS)out[t.id]=textLookNumber(value[t.id],kind);return out;}const old=textLookNumber(value,kind);for(const t of TEXT_LOOK_TARGETS)out[t.id]=old;return out;};
   const textLookGroup=bind=>TEXT_LOOK_TARGETS.find(t=>t.binds.includes(bind))?.id||'titleSmall';
-  let textWeight=blankTextLook(),textShadow=blankTextLook(),textLookTarget='titleLarge';
+  let textWeight=blankTextLook(),textShadow=blankTextLook(),textSpacing=blankTextLook(),textLeading=blankTextLook(),textLookTarget='titleLarge';
+  // 글자 설정 다섯 줄 — 대상(채널명·큰 제목·작은 제목·자막)을 고르고 한곳에서 정한다. 크기는 기존 크기 값(fontScales)을 그대로 쓴다(값은 한 벌).
+  //   자간 = 글자 크기의 %, 행간 = 줄 높이에 더하는 %. 허용 범위는 scene_style.py 와 짝.
+  const LOOK_ROWS=[{key:'size',label:'글자 크기',help:'100 = 기본',min:50,max:300,step:5},{key:'tw',label:'글자 두께',help:'0 = 기본',min:0,max:100,step:5},{key:'ts',label:'그림자',help:'썸네일과 같은 검정',min:0,max:100,step:5},{key:'ls',label:'자간',help:'0 = 기본',min:-20,max:60,step:2},{key:'lh',label:'행간',help:'0 = 기본',min:-30,max:100,step:5}];
+  const lookValue=key=>key==='size'?Math.round(textScale(TEXT_LOOK_TARGETS.find(t=>t.id===textLookTarget).binds[0])*100):(({tw:textWeight,ts:textShadow,ls:textSpacing,lh:textLeading})[key][textLookTarget]||0);
+  const textLookSigned=(value,lo,hi)=>{const out=blankTextLook();if(value&&typeof value==='object'&&!Array.isArray(value))for(const t of TEXT_LOOK_TARGETS){const n=Number(value[t.id]);if(Number.isFinite(n))out[t.id]=Math.max(lo,Math.min(hi,n));}return out;};
   {const css=document.createElement('style');css.textContent='.text-look-row{display:grid;grid-template-columns:94px 32px minmax(120px,1fr) 32px 42px;align-items:center;gap:8px;margin:0 0 10px}.text-look-row>span{color:#d7e2e7;font:800 12px system-ui,sans-serif}.text-look-row>span small{display:block;margin-top:2px;color:#718993;font:500 10px system-ui,sans-serif}.text-look-row button{width:32px;height:32px;padding:0;border-radius:8px;border:1px solid #294451;background:#0b1a22;color:#dfe9ee;font:800 17px system-ui,sans-serif;cursor:pointer}.text-look-row button:hover{border-color:#43e2b4;color:#63edc6}.text-look-row input{width:100%;accent-color:#63a9df}.text-look-row output{display:grid;place-items:center;min-width:42px;height:30px;border:1px solid #294451;border-radius:7px;background:#071219;color:#fff;font:800 12px ui-monospace,monospace;font-variant-numeric:tabular-nums}';document.head.append(css);}
   {const css=document.createElement('style');css.textContent='.precision-text[data-tw-on="1"]{-webkit-text-stroke-width:var(--p20-text-stroke)!important}.precision-text[data-ts-on="1"],.precision-text[data-ts-on="1"]>span,.precision-text[data-ts-on="1"] .title-deco-ink{text-shadow:var(--p20-text-shadow)!important}.text-look-targets{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:0 0 12px}.text-look-targets button{height:31px;padding:0 3px;border:1px solid #294451;border-radius:7px;background:#0b1a22;color:#91a5af;font:800 10px system-ui,sans-serif;cursor:pointer}.text-look-targets button.active{border-color:#43e2b4;background:#10362f;color:#63edc6}';document.head.append(css);}
   const fontScales=new Map();
@@ -1106,7 +1116,8 @@
     const pickedFont=fontSetFamily(bind);
     const family=pickedFont||ln.font_family||frame.font_family||'TmonMonsori';
     const weight=pickedFont?400:(ln.font_weight||frame.font_weight||400);   // 세트 폰트는 한 굵기뿐 — 가짜 볼드 방지
-    const letterPx=ln.letter_spacing!=null?ln.letter_spacing*scale:Math.max(-1.5,-.035*fontPx);
+    const lookGroup0=textLookGroup(bind),spacing=manualText?(textSpacing[lookGroup0]||0):0,leading=manualText?(textLeading[lookGroup0]||0):0;
+    const letterPx=(ln.letter_spacing!=null?ln.letter_spacing*scale:Math.max(-1.5,-.035*fontPx))+fontPx*textScale(bind)*spacing/100;   // 자간 = 글자 크기의 %
     const capped=bind==='channel'&&pickedFont?Math.min(fontPx,frame.height*scale*CHANNEL_MAX):fontPx;   // 09-19: 채널명 기본 크기 상한
     const manualScale=textScale(bind),scaledFont=Math.max(9,capped*manualScale);
     const moved=textDrags.get(readKey(textDrags,bind))||{x:0,y:0};   // 09-19 사장님: 제목·채널명도 마우스로 옮긴다
@@ -1137,12 +1148,18 @@
     // 썸네일과 같은 최대 거리(x 10% / y 13% / blur 6%)를 쓰되, CSS에서 같은 검정을 3회 겹치면
     // 실제로는 한 겹과 같고 어두운 제목판에서 사라진다. 가까운 색 그림자 → 중간 그림자 → 검정 소프트 그림자로
     // 깊이를 나누고, currentColor를 섞어 흰·노랑 제목과 채널명도 어두운 배경에서 보이게 한다.
+    if(leading)el.style.lineHeight=String(Math.max(.6,(parseFloat(el.style.lineHeight)||1)+leading/100));   // 행간(여러 줄일 때 줄 사이)
     const lookGroup=textLookGroup(bind),tw=textWeight[lookGroup]||0,ts=textShadow[lookGroup]||0,k=ts/100;
-    el.dataset.lookGroup=lookGroup;el.dataset.twOn=tw>0?'1':'0';el.dataset.tsOn=ts>0?'1':'0';
+    // ★10-03 사장님 "썸네일식이 좋다": 새 방식(manualText)은 썸네일과 같은 검정 그림자(text-look-contract 의 거리·번짐 그대로 3겹).
+    //   옛 방식(글자색을 섞은 돌출)은 표식 없는 옛 저장본만 — 고객이 보고 저장한 그림을 지킨다.
+    const inkRgb=(String(el.style.color||'').match(/\d+(\.\d+)?/g)||[255,255,255]).slice(0,3).map(Number),darkInk=(.2126*inkRgb[0]+.7152*inkRgb[1]+.0722*inkRgb[2])/255<.25;
+    const shadowOn=ts>0&&!(manualText&&darkInk);
+    el.dataset.lookGroup=lookGroup;el.dataset.twOn=tw>0?'1':'0';el.dataset.tsOn=shadowOn?'1':'0';
     el.style.setProperty('--p20-text-stroke',`${(tw*.0013).toFixed(4)}em`);
     const look=window.TEXT_LOOK_CONTRACT,unit=(n,f=1)=>(n*k*f).toFixed(4)+'em';
     const shadowInk='color-mix(in srgb,currentColor 52%,#000)',shadowMid='color-mix(in srgb,currentColor 28%,#000)';
-    const shadows=[`${unit(look.shadowX,.34)} ${unit(look.shadowY,.34)} 0 ${shadowInk}`,`${unit(look.shadowX,.68)} ${unit(look.shadowY,.68)} ${unit(look.shadowBlur,.18)} ${shadowMid}`,`${unit(look.shadowX)} ${unit(look.shadowY)} ${unit(look.shadowBlur)} rgba(0,0,0,.82)`];
+    const blackShadow=`${unit(look.shadowX)} ${unit(look.shadowY)} ${unit(look.shadowBlur)} #000`;
+    const shadows=manualText?Array(look.shadowPasses||3).fill(blackShadow):[`${unit(look.shadowX,.34)} ${unit(look.shadowY,.34)} 0 ${shadowInk}`,`${unit(look.shadowX,.68)} ${unit(look.shadowY,.68)} ${unit(look.shadowBlur,.18)} ${shadowMid}`,`${unit(look.shadowX)} ${unit(look.shadowY)} ${unit(look.shadowBlur)} rgba(0,0,0,.82)`];
     el.style.setProperty('--p20-text-shadow',shadows.join(','));
     layer.insertBefore(el,badge);
     if(bind==='caption'){el.style.left=(left+captionX())+'%';el.style.right=(right-captionX())+'%';}
@@ -1512,7 +1529,7 @@
     const ln={...original,font_size:baseSize,x0:(x+2)/100*frame.width,x1:(x+w-2)/100*frame.width,y0:y/100*frame.height,h:h/100*frame.height,max_lines:1,no_patch:true};
     addText(value('caption'),ln,frame,settings.color,'center','caption');
     const text=layer.querySelector('.precision-text[data-edit-bind="caption"]');
-    Object.assign(text.style,{left:(x+2)+'%',right:'auto',width:Math.max(1,w-4)+'%',top:y+'%',height:h+'%',transform:'none',display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'pre-wrap',lineHeight:'1.15',color:settings.color});
+    Object.assign(text.style,{left:(x+2)+'%',right:'auto',width:Math.max(1,w-4)+'%',top:y+'%',height:h+'%',transform:'none',display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'pre-wrap',lineHeight:String(Math.max(.6,1.15+(manualText?(textLeading.caption||0):0)/100)),color:settings.color});
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
     if(capLook?.text)Object.assign(text.style,capLook.text);
     if(!(manualText&&fontScales.has(readKey(fontScales,'caption'))))fitOneLine(text,fontScales.get(readKey(fontScales,'caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다. 손으로 정한 크기는 줄이지 않는다(넘치면 줄만 넘긴다 — 화면 밖으로 잘리지 않게)
@@ -1616,14 +1633,18 @@
     else if(sceneContext?.text)sceneContext.text[input.dataset.bind]=input.value;
     updateCount(input);markDirty(input.dataset.bind);preview.classList.remove('is-pristine');renderEdit();
   }));
-  root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
-    const button=event.target.closest('[data-font-step]');if(!button)return;
-    const bind=button.closest('[data-field-key]').dataset.fieldKey;
-    const next=Math.min(3,Math.max(.5,textScale(bind)+Number(button.dataset.fontStep)));
+  // 글자 크기 쓰기 — ＋/− 버튼·글자 설정 줄·화면에서 끌어 늘리기가 모두 이 함수 하나를 쓴다(값은 fontScales 한 벌).
+  function setFontScale(bind,value){
+    const next=Math.min(3,Math.max(.5,value));
     manualText=true;   // 크기를 손대는 순간부터 새 방식 — 지금 화면을 보고 정하는 것이므로(옛 저장본도 여기서 넘어온다)
     const override=bind!=='caption'&&editScope!=='all';   // 장면별 덮어쓰기는 100%여도 지우지 않는다(지우면 공통 값으로 되돌아간다)
     for(const k of writeKeys(fontScales,bind)){if(!override&&Math.abs(next-1)<.001)fontScales.delete(k);else fontScales.set(k,next);}
     fittedText.clear();markDirty(bind);preview.classList.remove('is-pristine');updateSteppers();renderEdit();
+  }
+  root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
+    const button=event.target.closest('[data-font-step]');if(!button)return;
+    const bind=button.closest('[data-field-key]').dataset.fieldKey;
+    setFontScale(bind,textScale(bind)+Number(button.dataset.fontStep));
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-position-step]');if(!button)return;
@@ -1889,7 +1910,7 @@
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';wordFx={style:'',color:'',grow:false,...(saved.wordFx&&typeof saved.wordFx==='object'?saved.wordFx:{})};restoreFontSets(saved);titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';textWeight=textLookMap(saved.textWeight,'weight');textShadow=textLookMap(saved.textShadow,'shadow');window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';wordFx={style:'',color:'',grow:false,...(saved.wordFx&&typeof saved.wordFx==='object'?saved.wordFx:{})};restoreFontSets(saved);titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';textWeight=textLookMap(saved.textWeight,'weight');textShadow=textLookMap(saved.textShadow,'shadow');textSpacing=textLookSigned(saved.textSpacing,-20,60);textLeading=textLookSigned(saved.textLeading,-30,100);window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;fittedText.clear();syncHookMotionUI();renderEdit();   // 09-19: 복원한 폰트 세트·모션을 화면에 바로 반영renderEdit();syncHookMotionUI();
       }
       if(force&&saved){applyPresetPositions(saved.positions);markDirty('caption');}   // 자리 없는 옛 프리셋이면 템플릿 기본 자리로
       if(force&&saved&&saved.captionLook)applyCaptionLook(saved.captionLook);
@@ -1897,19 +1918,20 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>noTemplate?null:({version:1,...(mode!=='continuous'&&frameRule!=='hook_body'?{frameRule}:{}),...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),...(manualText?{manualText:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,...(wordFxOn()?{wordFx:{style:wordFx.style,color:/^#[0-9a-f]{6}$/i.test(wordFx.color||'')?wordFx.color:'',grow:!!wordFx.grow}}:{}),fontSet,fontSets:{...fontSets},titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>noTemplate?null:({version:1,...(mode!=='continuous'&&frameRule!=='hook_body'?{frameRule}:{}),...(rows[current].id===PLAIN_ID&&!plainLegacy?{plainCaption:2}:{}),...(manualText?{manualText:2}:{}),mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookBandMotion,bodyCaptionMotion,...(wordFxOn()?{wordFx:{style:wordFx.style,color:/^#[0-9a-f]{6}$/i.test(wordFx.color||'')?wordFx.color:'',grow:!!wordFx.grow}}:{}),fontSet,fontSets:{...fontSets},titleDeco,...(Object.values(textWeight).some(Boolean)?{textWeight:{...textWeight}}:{}),...(Object.values(textShadow).some(Boolean)?{textShadow:{...textShadow}}:{}),...(Object.values(textSpacing).some(Boolean)?{textSpacing:{...textSpacing}}:{}),...(Object.values(textLeading).some(Boolean)?{textLeading:{...textLeading}}:{}),hookMotionSpeed,hookCaptionMode,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),textDrags:Object.fromEntries(textDrags),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       frameRule=['hook_all','body_all'].includes(saved?.frameRule)?saved.frameRule:'hook_body';applyFrameRule();
       plainLegacy=!!(saved&&saved.presetId===PLAIN_ID&&saved.plainCaption!==2);   // 표시 없는 옛 원본 = 예전 그대로
-      manualText=!saved||saved.manualText===2||!Object.keys(saved.fontScales||{}).length;   // 손으로 키운 글자가 있는 옛 저장본만 예전 방식(고객이 본 그림 유지)
+      {const oldShadow=saved&&(typeof saved.textShadow==='object'&&saved.textShadow?Object.values(saved.textShadow).some(Boolean):!!saved.textShadow);
+       manualText=!saved||saved.manualText===2||!(Object.keys(saved.fontScales||{}).length||oldShadow);}   // 손으로 키운 글자·그림자가 있는 옛 저장본만 예전 방식(고객이 본 그림 유지)
       branding=Object.keys(saved?.branding||{}).length?saved.branding:(labMode?{}:rememberedBranding());
       if(saved){
         for(const [name,map] of Object.entries({fontScales,textOffsets,textDrags,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts})){
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};
-        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';wordFx={style:'',color:'',grow:false,...(saved.wordFx&&typeof saved.wordFx==='object'?saved.wordFx:{})};restoreFontSets(saved);titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';textWeight=textLookMap(saved.textWeight,'weight');textShadow=textLookMap(saved.textShadow,'shadow');window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
+        hookMotion=saved.hookMotion||hookMotion;bodyCaptionMotion=saved.bodyCaptionMotion||'';wordFx={style:'',color:'',grow:false,...(saved.wordFx&&typeof saved.wordFx==='object'?saved.wordFx:{})};restoreFontSets(saved);titleDeco=DECOS.some(d=>d.id===saved.titleDeco)?saved.titleDeco:'';textWeight=textLookMap(saved.textWeight,'weight');textShadow=textLookMap(saved.textShadow,'shadow');textSpacing=textLookSigned(saved.textSpacing,-20,60);textLeading=textLookSigned(saved.textLeading,-30,100);window.dispatchEvent(new Event('scene-style-fontset'));hookBandMotion=saved.hookBandMotion??((saved.hookBandRise||saved.hookMotion==='rise')?'rise':'');hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;hookCaptionMode=saved.hookCaptionMode||hookCaptionMode;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
         {const sel=mode==='continuous'?'[data-template-mode="continuous"]':(saved.presetId===PLAIN_ID?'[data-plain-pick]':`[data-frame-rule="${frameRule}"]`);const b=modeBar.querySelector(sel);if(b)markMode(b);}
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
