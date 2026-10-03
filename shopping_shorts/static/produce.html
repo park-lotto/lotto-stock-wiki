@@ -1962,6 +1962,10 @@
               .pick-card:not(.on) img{opacity:.55}
             </style>
             <button id="btnCleanPreview" class="cta" onclick="startCleanPreview()">✨ 자막제거 시작하기</button>
+            <!-- ★눌렀는데 보낼 게 없을 때의 안내 자리(관제 111, 2026-10-04 황선희님 "눌렀을 때 작동이 안되네요").
+                 종전엔 버튼 위 요약 줄만 다시 그려, 고객 눈엔 아무 일도 안 일어난 것으로 보였다. 내용은 showCleanStartNote 한 곳. -->
+            <div id="cleanStartNote" role="status" style="display:none;margin-top:10px;padding:12px 14px;border-radius:12px;
+                 border:2px solid var(--fire,#ff9a5a);background:#2a1a10;color:#fff;line-height:1.6;font-size:14px"></div>
             <!-- ★가격을 누르기 **전에** 보여준다(2026-09-02). 종전엔 이 패널 어디에도
                  P·포인트·차감이라는 글자가 없었고, 아래 안내의 "추가 비용 없이"만 보여
                  오히려 무료로 읽혔다. 실제로는 _charge_clean이 선차감하고, 고객이 금액을
@@ -12694,14 +12698,17 @@ async function startCleanPreview(){
   const _cuts = cleanPickPayload();
   if(_cuts && !_cuts.length){
     paintCleanPick();   // 안내는 그리는 함수 한 곳이 쓴다(한 자리를 두 함수가 덮어쓰지 않게)
+    showCleanStartNote('none');
     return;
   }
   // ★고른 장면이 전부 지금 방식으로 이미 지운 것이면 보낼 게 없다(2026-10-03) — 안내만 하고 멈춘다(서버도 과금 0으로 끝낸다).
   if(_cuts && CLEAN_PICK && CLEAN_PICK.anyKept
      && CLEAN_PICK.cuts.filter(c=>CLEAN_PICK.sel.has(c.key)).every(c=>_cleanPickDone(c))){
     paintCleanPick();
+    showCleanStartNote('done');
     return;
   }
+  showCleanStartNote(null);
   clearInterval(CLEAN_POLL); CLEAN_POLL=null;
   const myGen=++CLEAN_GEN, myJob=MIX_JOB;
   CLEAN_VIEW={si:0, pos:0.5, job:myJob};   // 새로 돌리면 확인 지점도 처음(영상1·가운데)으로
@@ -13034,7 +13041,26 @@ function _cleanPickCredits(sec){
   const r = (CLEAN_PICK && CLEAN_PICK.rate) ? CLEAN_PICK.rate[STATE.cleanTier==='pro'?'pro':'basic'] : null;
   return (typeof r==='number' && sec>0) ? Math.ceil(sec)*r : null;
 }
+// ── [자막제거 시작하기]를 눌렀는데 **업체로 보낼 것이 없을 때** 버튼 바로 아래에 띄우는 안내(관제 111, 2026-10-04).
+//   kind: 'done' = 고른 장면이 전부 지금 방식으로 이미 지운 것 · 'none' = 하나도 안 고름 · null = 지운다.
+//   ★보낼지 말지의 판단은 startCleanPreview(와 서버 clean_topup_plan)에 있다 — 여기는 글만 쓴다.
+//   ★업체명을 쓰지 마라(브랜드 정책). 고르기·방식을 바꾸면 paintCleanPick 이 지운다(낡은 안내가 남지 않게).
+function showCleanStartNote(kind){
+  const el=document.getElementById('cleanStartNote'); if(!el) return;
+  if(!kind){ el.style.display='none'; el.innerHTML=''; return; }
+  const cur = (STATE.cleanTier==='pro') ? '고급' : '기본', other = (STATE.cleanTier==='pro') ? '기본' : '고급';
+  el.innerHTML = (kind==='done')
+    ? '<b>✋ 다시 지우지 않았어요 (비용 0)</b><br>'
+      +'고른 장면은 <b>이미 '+cur+' 방식으로 지운 장면</b>이에요. 같은 방식으로 다시 지워도 결과가 똑같아서 보내지 않았어요.'
+      +'<br>① <b>다른 방식으로 다시 지우기</b> — 위 「지우는 방식」을 <b>'+other+'</b>으로 바꾸고 다시 눌러 주세요. 고른 장면만 다시 지워요.'
+      +'<br>② <b>그래도 글자가 남으면</b> — 장면꾸미기의 <b>가림막</b>으로 그 자리를 가려 주세요.'
+      +'<br>③ <b>아직 안 지운 장면을 더 지우려면</b> — 「지움」 표시가 없는 장면을 골라 주세요.'
+    : '<b>✋ 지울 장면을 먼저 골라 주세요</b><br>위 장면 카드에서 지울 장면을 누른 뒤 다시 눌러 주세요(아직 아무것도 보내지 않았어요).';
+  el.style.display='block';
+  try{ el.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(_e){}
+}
 function paintCleanPick(){
+  showCleanStartNote(null);
   const P=CLEAN_PICK; if(!P) return;
   const some = P.mode==='some';
   const a=document.getElementById('pickAll'), b=document.getElementById('pickSome');

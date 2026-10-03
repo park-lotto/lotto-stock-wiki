@@ -70,8 +70,20 @@ with sync_playwright() as p:
     pg.click("#btnCleanPreview")
     pg.wait_for_timeout(1200)
     check(not posts and not dialogs, "시작을 눌러도 요청·확인창이 안 나간다(과금 0)")
+    # 관제 111: 눌렀는데 보낼 게 없으면 **버튼 바로 아래**에 안내가 보여야 한다(종전엔 아무 일도 안 일어난 것처럼 보였다)
+    note = pg.evaluate("""()=>{const e=document.getElementById('cleanStartNote'), b=document.getElementById('btnCleanPreview');
+        if(!e) return null; const r=e.getBoundingClientRect(), rb=b.getBoundingClientRect();
+        return {shown:getComputedStyle(e).display!=='none' && r.height>20, below:r.top>=rb.bottom-1, gap:Math.round(r.top-rb.bottom), text:e.innerText}; }""")
+    print("시작 버튼 아래 안내:", (note or {}).get("text", "").replace(chr(10), " / "))
+    check(bool(note) and note["shown"] and note["below"] and note["gap"] < 40, "시작을 누르면 버튼 바로 아래에 안내 상자가 보인다")
+    check(bool(note) and "이미 고급 방식으로 지운 장면" in note["text"] and "비용 0" in note["text"]
+          and "기본" in note["text"] and "가림막" in note["text"], "안내 내용: 이미 지움·비용 0·방식 바꾸기(기본)·가림막")
+    pg.locator("#cleanPickWrap").screenshot(path=str(out / "2b_시작누른뒤_안내.png"))
+    pg.locator("#cleanStartNote").screenshot(path=str(out / "2c_안내상자.png"))
 
     pg.locator(".pick-card").nth(done_pro[0]).click()                       # 뺀다
+    gone = pg.evaluate("()=>getComputedStyle(document.getElementById('cleanStartNote')||document.body).display")
+    check(gone == "none", "고른 장면을 바꾸면 안내 상자가 사라진다(낡은 안내가 남지 않는다)")
     fresh = [i for i, c in enumerate(s0) if not c["kept"]][0]
     dur = pg.evaluate("(i)=>CLEAN_PICK.cuts[i].dur", fresh)
     pg.locator(".pick-card").nth(fresh).click()
