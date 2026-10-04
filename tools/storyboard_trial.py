@@ -171,11 +171,21 @@ OLD_EXPAND = {
 }
 
 
+def _core_txt(fam):
+    """[스타일 핵심] 상황·감정 흐름·왜 먹히나 — 칸·문장 틀만 주면 '가족갈등'이 친구 이야기로, '단정 명령'이 공감·전문가 없이 나온다(2026-10-04 전수 검사 40편)."""
+    c = (fam.get("core") or [{}])[0]
+    if not c.get("sit"):
+        return ""
+    return ("\n[스타일 핵심 — 대본에 반드시 살아야 한다] 상황: %s / 감정 흐름: %s / 왜 먹히나: %s"
+            "\n  ★이 상황·등장인물·감정 흐름을 칸 흐름 위에 그대로 얹어라. 재료가 다른 종류면 그 상황을 이 제품에 맞게 옮겨라(예: 요리 상황 → 이 제품을 급하게 쓴 상황)."
+            % (c["sit"], c.get("arc") or "", c.get("appeal") or ""))
+
+
 def _families(db):
     rows = db.execute("select id, name, situation_type, fit_categories_json, beat_roles_json, beat_chain_json, emotion_arc, "
-                      "templates_json, voice_json from spine where status='approved' order by id").fetchall()
+                      "templates_json, voice_json, appeal from spine where status='approved' order by id").fetchall()
     fam, order = {}, []
-    for sid, name, sit, fit, roles, chain, arc, tpl, voice in rows:
+    for sid, name, sit, fit, roles, chain, arc, tpl, voice, appeal in rows:
         roles_l = json.loads(roles or "[]")
         chain_l = json.loads(chain or "[]")
         tpl_d = json.loads(tpl or "{}") or {}
@@ -192,9 +202,10 @@ def _families(db):
         key = tuple(roles_l) if roles_l else ("solo", sid)
         if key not in fam:
             fam[key] = {"ids": [], "names": [], "fit": set(), "roles": roles_l, "chain": json.loads(chain or "[]"), "arc": arc or "",
-                        "sit": sit or "", "tpl": {}, "voice": {}}
+                        "sit": sit or "", "tpl": {}, "voice": {}, "core": []}
             order.append(key)
         f = fam[key]
+        f["core"].append({"name": name, "sit": sit or "", "arc": arc or "", "appeal": appeal or ""})      # 스타일의 상황·감정·소구(2026-10-04 전수 검사: 이게 빠져 가족갈등이 친구 이야기로 나왔다)
         f["ids"].append(sid); f["names"].append(name); f["fit"].update(json.loads(fit or "[]"))
         try:
             for k, v in (json.loads(tpl or "{}") or {}).items():
@@ -208,8 +219,9 @@ def _families(db):
             except ValueError:
                 pass
     out = []
-    for n, k in enumerate(order, 1):
+    for k in order:
         f = fam[k]
+        n = int(f["ids"][0])      # 묶음 번호 = 첫 스타일 고유번호(spine id). 순번이면 묶음이 바뀔 때 화면·서버 번호가 엇갈린다(2026-10-04 '가족갈등' 탭에 비밀 궁금증형이 나온 사고)
         slots = " / ".join("%s: %s" % (r, (f["chain"][i] if i < len(f["chain"]) else ""))[:80] for i, r in enumerate(f["roles"])) \
             or ("(칸 구조 없음 — %s)" % f["sit"])
         out.append((n, f, "%d | %s | %s | %s" % (n, ", ".join(f["names"]), ", ".join(sorted(f["fit"])), slots)))
@@ -330,7 +342,7 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
                                          ", ".join(fam["names"]), " → ".join(roles), creative) + add, S3, note=n3, vertex=True) or {}
     else:
         r3 = sg._call_json(head + P3 % (r1.get("kind") or "", pan or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
-                                        ", ".join(fam["names"]), voice, len(roles), slot_txt), S3, note=n3, vertex=True) or {}
+                                        ", ".join(fam["names"]) + _core_txt(fam), voice, len(roles), slot_txt), S3, note=n3, vertex=True) or {}
     slots = r3.get("slots") or []
     if creative is None:      # 스타일 대본: 칸 이름은 그 스타일 칸 그대로(3.6이 "1"·"2" 같은 번호로 돌려줄 때가 있다 — 2026-10-04 인물 드라마형 실측)
         for i, sl in enumerate(slots):

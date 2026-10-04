@@ -17,6 +17,11 @@ async function makeBoards(){
   ks.forEach(k => delete BUSY[key()+k]); VIEW[key()] = VIEW[key()] && made()[VIEW[key()]] ? VIEW[key()] : ks.find(k => made()[k]); render();
 }
 function alertBox(m){ const el = document.getElementById('msg2'); if (el) el.textContent = m; }
+// 재료 종류와 스타일이 안 맞으면 막지 않고 알려 준다(2026-10-04 전수 검사: 레시피 전용 스타일을 필터 재료에 쓰면 상황이 어긋난다)
+const KINDS = ['레시피','홈템','뷰티','생활용품','장비템','가전'];
+function fitWarn(f){ const k = job().kind; const fk = (f.fit||[]).filter(c => KINDS.includes(c));
+  if (!k || !fk.length || fk.includes(k)) return '';
+  return `<div class="fwarn">⚠ ${fk.join('·')}용 스타일 — 이 재료(${k})엔 상황을 옮겨 써요</div>`; }
 function famCard(f){
   const x = job(); const k = String(f.id); const on = picks2().has(k); const sc = (x.styles||[]).find(s => String(s.family) === k);
   const nm = f.names.length > 1 ? f.names[0] + ` <span class="note">외 ${f.names.length-1}</span>` : f.names[0];
