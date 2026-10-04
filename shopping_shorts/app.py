@@ -25944,6 +25944,53 @@ def _archive_page(request: Request):
 app.add_api_route("/archive", _archive_page, include_in_schema=False)
 
 
+# ── 효과 견본(2026-10-04, 관제 118) — 관리자 전용 ───────────────────────────
+# 에펙으로 만든 효과 견본 영상(스크립트 견본 + 에펙 기본 글자 프리셋)을 카테고리별로 본다.
+# 영상·목록(manifest.json)은 git 밖 data/fx_samples 에 둔다 — 견본이 늘어도 배포가 필요 없다
+# (올리는 도구: tools/ae_fx/publish_web.py). 어느 폴더를 보는지는 _fx_samples_dir 한 곳만 정한다.
+_FX_SAMPLE_ID = re.compile(r"^[A-Z][0-9]{1,3}$")
+
+
+def _fx_samples_dir():
+    return Path(__file__).parent / "data" / "fx_samples"
+
+
+def _fx_samples_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "fx_samples.html", media_type="text/html", headers=_NOCACHE)
+
+
+def _fx_samples_list(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    manifest = _fx_samples_dir() / "manifest.json"
+    if not manifest.exists():
+        return JSONResponse({"ok": True, "groups": [], "note": "아직 올린 견본이 없습니다"}, headers=_NOCACHE)
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    return JSONResponse({"ok": True, **data}, headers=_NOCACHE)
+
+
+def _fx_samples_video(vid: str, request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    if not _FX_SAMPLE_ID.match(vid or ""):
+        return JSONResponse({"error": "견본 번호가 아닙니다"}, status_code=404)
+    path = _fx_samples_dir() / f"{vid}.mp4"
+    if not path.exists():
+        return JSONResponse({"error": "없는 견본"}, status_code=404)
+    return FileResponse(str(path), media_type="video/mp4")
+
+
+app.add_api_route("/fx_samples", _fx_samples_page, include_in_schema=False)
+app.add_api_route("/fx_samples.html", _fx_samples_page, include_in_schema=False)   # StaticFiles 마운트로 뚫리지 않게
+app.add_api_route("/api/admin/fx_samples", _fx_samples_list, include_in_schema=False)
+app.add_api_route("/api/admin/fx_samples/video/{vid}.mp4", _fx_samples_video, include_in_schema=False)
+
+
 def _archive_channel_cat_fn(store):
     """채널→카테고리 판정 함수(2026-08-03) — 랭킹과 같은 우선순위:
     reel_history 최빈 > 발굴등록 카테고리 > 채널명 키워드 분류. 채널 목록과
