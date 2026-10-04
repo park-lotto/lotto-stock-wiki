@@ -29,10 +29,25 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/app.py:api_buffer_schedule": {
+    "at": "2026-10-04 11:13",
+    "card": 114,
+    "track": "버퍼중복취소"
+  },
   "shopping_shorts/app.py:api_mix_voice_preview": {
     "at": "2026-10-04 11:05",
     "card": 113,
     "track": "단어강조"
+  },
+  "shopping_shorts/buffer_api.py": {
+    "at": "2026-10-04 11:13",
+    "card": 114,
+    "track": "버퍼중복취소"
+  },
+  "shopping_shorts/buffer_posts.py": {
+    "at": "2026-10-04 11:13",
+    "card": 114,
+    "track": "버퍼중복취소"
   },
   "shopping_shorts/deco_frame.py:_norm_masks": {
     "at": "2026-10-03 20:53",
