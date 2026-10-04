@@ -1276,6 +1276,7 @@ def run_mix_job(job_id, db_path, work_root):
 
             def _extract(item):
                 vid, path = item
+                _ck_hit = None
                 # 캐시 재사용(2026-07-24): 이 소스 대본을 담기/AI PICK/뽑기 때 이미 뽑아
                 # script_extracts에 저장했으면 그대로 쓴다 — Gemini/Whisper 재전사 스킵(속도↑).
                 # ★품질 무해 가드: extract_script와 동일한 {segments(seg_id 포함), full_text} 형태를
@@ -1288,9 +1289,11 @@ def run_mix_job(job_id, db_path, work_root):
                     for _ck in _cache_keys_for_url(_url_of.get(vid)):
                         cached = store.get_extract(_ck)
                         if cached is not None:
+                            _ck_hit = _ck
                             break
                     if cached is None:
                         cached = store.get_extract(vid)      # 옛 방식도 남겨둔다(하위호환)
+                        _ck_hit = vid if cached is not None else None
                 except Exception:
                     cached = None
                 segs = (cached or {}).get("segments")
@@ -1322,6 +1325,17 @@ def run_mix_job(job_id, db_path, work_root):
                     # full_text도 비었다면 그 소스는 예전처럼 화면 재료로만 쓰인다(무해).
                     r["product_benefits"] = (script_extract._norm_benefits(
                         cached.get("product_benefits")) or script_extract._collect_benefits(segs))
+                    # ★스토리(관제 084, 2026-10-04 실측: 10-02 저녁 뒤 분석 영상 377개 중 스토리 0) — 손님 작업은 거의 이 캐시 길이라
+                    #   새로 분석하는 길에만 있던 스토리가 한 번도 안 만들어졌다. 캐시에 있으면 쓰고, 없으면 만드는 함수(판단 주인
+                    #   script_extract._story_for) 한 번 부른 뒤 캐시에 한 칸만 저장해 다음 작업이 재사용한다.
+                    r["story"] = cached.get("story") or []
+                    if not r["story"]:
+                        r["story"] = script_extract._story_for(r.get("source_brief"), segs)
+                        if r["story"] and _ck_hit:
+                            try:
+                                store.save_extract_story(_ck_hit, r["story"])
+                            except Exception as _e:      # noqa: BLE001 — 캐시 저장 실패가 제작을 막으면 안 된다(이유는 남긴다)
+                                print("[extract] %s 스토리 캐시 저장 실패: %r" % (vid, _e), file=sys.stderr)
                 elif _use_frames:
                     from shopping_shorts import frame_script
                     r = frame_script.extract_script_frames(path, vid, caption=captions.get(vid, ""))
