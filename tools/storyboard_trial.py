@@ -96,7 +96,7 @@ P3 = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편집
 칸마다:
 - ids: 그 칸 조각 번호 1~3개(목록에 있는 것만, 한 조각은 한 칸에만). 조각 길이 합 × 1.2 ≥ 그 칸 문장 읽는 시간(글자 수 ÷ 7초).
 - line: 그 칸의 일을 하는 한 문장(12~45자). ★위 문장 틀의 말투·어미·리듬을 그대로 타라({ } 빈칸은 이 재료의 말로 채움).
-  화면에 보이는 장면을 구체 동작·질감으로 말하고, 과장·감탄은 허용.
+  화면에 보이는 장면을 살려 말맛 있게(구어·리듬·감탄·과장 허용). 장면 설명문 금지.
   그 칸이 화면 밖 이야기(가족 반응·전문가 출처·댓글 유도)를 하는 칸이면 그 이야기를 하되, 깔리는 조각은 그 이야기에 어울리는 결과 장면으로.
   ★화면에 없는 가격·숫자·제품 기능은 지어내지 마라.
 - need: 그 칸이 하는 일.
@@ -183,6 +183,38 @@ def _code_flags(slots, text_of):
     return out
 
 
+_HEAD_CACHE = {}
+
+
+def _writer_head(fam, kind):
+    """라이브 대본 작가가 쓰는 지침(WRITER_BRIEF) + 플랫폼 말투(YT/IG) + 그 종류 히트 대본(없으면 가까운 종류) + 승인 부품."""
+    yt = any(str(n).startswith("유튜브") for n in fam["names"]) or (fam["roles"][:1] == ["title"])
+    ck = (yt, kind)
+    if ck in _HEAD_CACHE:
+        return _HEAD_CACHE[ck]
+    from shopping_shorts import backbone_assemble as _ba, story_writer as _sw, bank_assemble as _bk
+    from shopping_shorts.store import Store
+    st = Store(DB)
+    win = ""
+    for k in [kind, "홈템", "생활용품", "레시피", "기타"]:
+        try:
+            win = _bk.winners_block(st, k, k=2) or ""
+        except Exception as e:      # noqa: BLE001 — 시험 도구: 이유만 남긴다
+            print("   히트 대본 읽기 실패(%s): %r" % (k, e), flush=True)
+        if win:
+            break
+    try:
+        parts = _bk.parts_block(st)
+    except Exception as e:      # noqa: BLE001
+        print("   부품 읽기 실패: %r" % e, flush=True)
+        parts = ""
+    head = "%s\n%s\n%s\n%s\n\n" % (_ba.WRITER_BRIEF, _sw.YT_BRIEF if yt else _sw.IG_BRIEF, win, parts)
+    head += ("★이번 일은 스토리보드다 — 칸마다 장면을 먼저 꽂고 그 위에 읽힐 대본 문장을 쓴다. 문장은 장면 설명문이 아니라 "
+             "위 지침·히트 대본처럼 **말맛 있는 대본**이어야 한다(\"~해 줍니다\" 같은 설명·요리법 낭독 금지).\n\n")
+    _HEAD_CACHE[ck] = head
+    return head
+
+
 def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pick=""):
     roles = fam["roles"] or ["hook", "problem", "method", "result", "land"]
     slot_txt = "\n".join("  %d. %s — %s\n     문장 틀: %s" % (i + 1, r, (fam["chain"][i] if i < len(fam["chain"]) else ""),
@@ -191,12 +223,14 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
     voice = "어조: %s · 어미: %s · 강조어: %s · 의성어: %s" % (v.get("tone_note", ""), ", ".join(v.get("endings", [])),
                                                        ", ".join(v.get("intensifier", [])), ", ".join(v.get("onomatopoeia", [])))
     n3, n4 = {}, {}
+    # ★말맛(2026-10-04 사장님 "투박하고 어색 — S급·우리 자료를 참고 안 한 듯"): 라이브 대본 작가 지침서 + 플랫폼 말투 지침 + 히트 대본 + 승인 부품을 앞에 붙인다
+    head = _writer_head(fam, r1.get("kind") or "")
     if creative is not None:      # 1번 AI 자동 — 스타일은 참고, 말맛은 부품·히트 대본
-        r3 = sg._call_json(P3C % (r1.get("kind") or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
-                                  ", ".join(fam["names"]), " → ".join(roles), creative), S3, note=n3, vertex=True) or {}
+        r3 = sg._call_json(head + P3C % (r1.get("kind") or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
+                                         ", ".join(fam["names"]), " → ".join(roles), creative), S3, note=n3, vertex=True) or {}
     else:
-        r3 = sg._call_json(P3 % (r1.get("kind") or "", pan or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
-                                 ", ".join(fam["names"]), voice, len(roles), slot_txt), S3, note=n3, vertex=True) or {}
+        r3 = sg._call_json(head + P3 % (r1.get("kind") or "", pan or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
+                                        ", ".join(fam["names"]), voice, len(roles), slot_txt), S3, note=n3, vertex=True) or {}
     slots = r3.get("slots") or []
     flags = _code_flags(slots, lambda c: texts.get(c, ""))
     block = "\n".join("칸 %d [%s — %s] 문장: %s\n   화면: %s" % (i, sl.get("slot"), sl.get("need") or "", sl.get("line"),
@@ -312,5 +346,59 @@ def main(args):
                 sum(1 for c in ck if c["short"]), len(bd["fixed"]), len(bd["left_flags"]), bd["star_missing"]), flush=True)
 
 
+def gen(jid, keys, star_s="", role_s=""):
+    """[화면 버튼용] 저장된 장면 목록(/tmp/sbtrial_<job>.json)으로 고른 스타일들의 스토리보드만 만든다(스타일당 호출 2번).
+    keys: 'auto' 또는 스타일 묶음 번호들. 결과 JSON을 표준출력 마지막 줄에 'RESULT ' + JSON 으로."""
+    db = sqlite3.connect("file:%s?mode=ro" % DB, uri=True)
+    fams = _families(db)
+    R = json.load(open("/tmp/sbtrial_%s.json" % jid))
+    r1 = R["inventory"]
+    ex = json.loads(db.execute("select extract_json from mix_jobs where job_id=?", (jid,)).fetchone()[0])
+    segs, texts, order = {}, {}, []
+    for vid, e in ex.items():
+        for s in (e or {}).get("segments") or []:
+            a, b = float(s.get("start") or 0), float(s.get("end") or 0)
+            if b - a < 0.6 or (s.get("is_outro") and not s.get("product_benefits")):
+                continue
+            segs[s["seg_id"]] = round(b - a, 1); order.append(s["seg_id"])
+            texts[s["seg_id"]] = "%s %s" % (s.get("scene_desc") or "", s.get("use_point") or "")
+    tag_of = r1.get("tag_of") or {}
+    groups_txt = "\n".join("  %s: %s" % (g["name"], ", ".join("%s(%.1f초%s)" % (c, segs.get(c, 0), ("·" + "/".join(tag_of[c])) if tag_of.get(c) else "")
+                                                              for c in g["ids"])) for g in r1["groups"])
+    star = [x for x in star_s.split(",") if x]
+    roles_txt = " / ".join("%s: %s" % (p.split("=")[0], p.split("=")[1]) for p in role_s.split("|") if "=" in p)
+    pan_of = {str(s.get("family")): s.get("pan") for s in R.get("styles") or []}
+    out = {}
+    for k in keys:
+        if k == "auto":
+            top = next((f for n, f, _ in fams if R.get("styles") and n == R["styles"][0].get("family")), fams[0][1])
+            from shopping_shorts.store import Store
+            from shopping_shorts import bank_assemble as _bk
+            creative = _bk.parts_block(Store(DB))
+            out["auto"] = _board(top, "", r1, groups_txt, star, segs, texts, creative=creative, roles_pick=roles_txt)
+            out["auto"]["names"] = ["AI 자동"]
+        else:
+            fam = next((f for n, f, _ in fams if str(n) == str(k)), None)
+            if fam:
+                out[str(k)] = _board(fam, pan_of.get(str(k)) or "", r1, groups_txt, star, segs, texts, roles_pick=roles_txt)
+    print("RESULT " + json.dumps(out, ensure_ascii=False))
+
+
+def families_json():
+    """[화면용] 스타일 카드 — 칸 구조가 같은 스타일을 한 카드로. 플랫폼·맞는 종류·첫 줄 틀들·칸 구조."""
+    db = sqlite3.connect("file:%s?mode=ro" % DB, uri=True)
+    out = []
+    for n, f, _ in _families(db):
+        first = f["tpl"].get((f["roles"] or ["hook"])[0]) or []
+        out.append({"id": n, "names": f["names"], "yt": any(str(x).startswith("유튜브") for x in f["names"]) or f["roles"][:1] == ["title"],
+                    "fit": sorted(f["fit"]), "first": first[:6], "roles": f["roles"], "chain": f["chain"], "arc": f["arc"], "sit": f["sit"]})
+    print("RESULT " + json.dumps(out, ensure_ascii=False))
+
+
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    if sys.argv[1:2] == ["gen"]:
+        gen(sys.argv[2], sys.argv[3].split(","), *(sys.argv[4:6]))
+    elif sys.argv[1:2] == ["families"]:
+        families_json()
+    else:
+        main(sys.argv[1:])

@@ -1,0 +1,214 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>1·2단계 페이지 틀</title>
+<style>
+:root{--bg:#0f1420;--card:#161d2c;--line:#263048;--text:#e8ecf5;--dim:#8b96ad;--pick:#2b6cff;--warn:#ffb443;--ok:#3ddc97;--star:#ffd24a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Malgun Gothic",system-ui,sans-serif}
+.wrap{max-width:1500px;margin:0 auto;padding:14px 16px 90px}
+.top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.top h1{font-size:19px;margin:0 12px 0 0}.btn{border:1px solid #3a4b73;background:#1d2a45;color:#dfe9ff;border-radius:9px;padding:5px 12px;font-size:13px;cursor:pointer}
+.btn.on{background:var(--pick);border-color:var(--pick);color:#fff;font-weight:700}.btn.main{background:var(--pick);border-color:var(--pick);color:#fff;font-weight:700;padding:8px 18px}
+.steps{display:flex;gap:8px;margin:6px 0 14px}.step{padding:7px 16px;border-radius:12px;background:#18223a;color:var(--dim);cursor:pointer;font-weight:700}
+.step.on{background:#ff4fa3;color:#fff}.note{color:var(--dim);font-size:12.5px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:10px 12px;margin-bottom:12px}.bh{font-weight:700;margin-bottom:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bh small{font-weight:400;color:var(--dim)}
+.strip{display:flex;gap:8px;overflow-x:auto}.vi{width:96px;flex:none}.vi .cap{font-size:11px;color:var(--dim)}
+.th{position:relative;flex:none;border-radius:7px;overflow:hidden;background:#2a3550;cursor:pointer;border:2px solid transparent}
+.th img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}.th .sec{position:absolute;right:3px;bottom:3px;background:#000a;color:#fff;font-size:10.5px;border-radius:5px;padding:0 4px}
+.th .tg{position:absolute;left:3px;top:3px;display:flex;flex-direction:column;gap:2px}.th .tg span{background:#000b;color:#fff;font-size:10px;border-radius:5px;padding:0 4px}
+.th.star{border-color:var(--star)}.th.star:after{content:"⭐";position:absolute;right:3px;top:2px;font-size:14px}
+.grps{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px}.grp{background:#121a2b;border-radius:11px;padding:8px;border:2px solid transparent}
+.grp.star{border-color:var(--star)}.gh{cursor:pointer}.gh b{font-size:14px}.gh span{color:var(--dim);font-size:12px}
+.gth{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}.gth .th{width:66px}.more{font-size:12px;color:#9fc0ff;cursor:pointer;margin-top:4px;display:inline-block}
+.missing{background:#2a2112;border:1px solid #5a4520;border-radius:10px;padding:8px 10px;color:#ffd99a}.missing ul{margin:4px 0 6px 18px;padding:0}
+.starbar{position:sticky;top:0;z-index:5;background:#1b2440;border:1px solid #3a4b73;border-radius:11px;padding:7px 10px;margin-bottom:10px;font-size:13px}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.opt{background:#121a2b;border:2px solid #2c3d63;border-radius:12px;padding:9px 10px;cursor:pointer}.opt.on{border-color:var(--pick);background:#152447}
+.opt .n{font-weight:700}.opt .s{color:var(--dim);font-size:12px;margin-top:2px}.bar{display:inline-block;width:90px;height:7px;background:#26314c;border-radius:5px;vertical-align:middle}.bar i{display:block;height:100%;background:var(--ok);border-radius:5px}
+.badge{font-size:11px;border-radius:7px;padding:0 6px;margin-left:4px}.badge.auto{background:#4a2a5e;color:#f0c8ff}.badge.new{background:#33405f;color:#cfe0ff}
+.sb{display:grid;grid-template-columns:1fr 330px;gap:12px}@media(max-width:1000px){.sb{grid-template-columns:1fr}}
+.cells{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.cell{background:#121a2b;border:1px solid #2c3d63;border-radius:11px;padding:8px}.cell.weak{border-color:var(--warn)}.cell.hasstar{box-shadow:0 0 0 2px #ffd24a55}
+.ch{display:flex;justify-content:space-between;align-items:baseline;gap:6px}.ch span{color:var(--dim);font-size:11.5px;text-align:right}
+.cth{display:flex;gap:4px;margin:6px 0}.cth .th{width:60px}
+.line{font-size:13.5px;background:#0f1626;border:1px solid #2a3a5c;border-radius:8px;padding:5px 7px;min-height:40px;outline:none}.line:focus{border-color:var(--pick)}
+.why{margin-top:5px;color:var(--warn);font-size:12px}.meta{color:var(--dim);font-size:11.5px;margin-top:4px}
+.script{background:#121a2b;border:1px solid #2c3d63;border-radius:12px;padding:10px;position:sticky;top:10px}.script ol{margin:6px 0 10px 18px;padding:0}.script li{margin-bottom:5px}
+.chips{display:flex;flex-wrap:wrap;gap:2px;margin-top:3px;max-width:80px}.gchips{display:flex;gap:6px;align-items:center;margin-top:4px}.gchips .chips{max-width:none}
+.chip{font-size:10.5px;border-radius:7px;padding:0 5px;cursor:pointer;border:1px solid #3a4560;color:#7f8aa3;user-select:none}
+.chip.ai{border-color:var(--c);color:var(--c);border-style:dashed}.chip.on{background:var(--c);border-color:var(--c);color:#fff;font-weight:700}
+.pc{display:flex;flex-direction:column;align-items:flex-start;min-height:150px}
+.pc .chip:not(.ai):not(.on){display:none}.pc:hover .chip{display:inline-block}.pc.picked .th{border-color:#fff}
+.vcard{width:112px;flex:none;cursor:pointer;border-radius:10px;padding:3px}.vcard.open{background:#1d2a45}.vcap{font-size:12px;line-height:1.3;margin-top:3px}
+.plat{font-size:10.5px;background:#2b3a5e;color:#bcd3ff;border-radius:6px;padding:0 5px}
+.adetail{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:8px;margin-top:10px}
+.acard{background:#0f1a14;border:1px solid #23402f;border-radius:12px;padding:10px}.ah{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.tag{background:#1f6b4d;color:#c9ffe6;border-radius:8px;padding:0 7px;font-size:12px;font-weight:700}.chip2{font-size:11.5px;background:#1d2a45;border-radius:7px;padding:0 6px;margin-right:3px}
+.kv{font-size:12.5px;margin:3px 0}.kv b{color:#9fd4ff;margin-right:4px}
+.sline{border-top:1px solid #23402f;padding:6px 0}.kind{font-size:11px;background:#33405f;border-radius:6px;padding:0 5px}.sth{display:flex;gap:4px;margin-top:4px}.sth .pc,.gth .pc{min-height:0}
+.rbar{position:sticky;top:0;z-index:6;background:#121a2b;border:1px solid #3a4b73;border-radius:12px;padding:8px 10px;margin-bottom:12px}
+.rboxes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}@media(max-width:900px){.rboxes{grid-template-columns:repeat(2,1fr)}}
+.rbox{border:2px dashed #3a4560;border-radius:10px;padding:5px 7px;cursor:pointer;min-height:58px}.rbox.on{border-style:solid;border-color:var(--c);background:#1b2440;box-shadow:0 0 0 2px var(--c)}
+.rh{font-size:13px;font-weight:700}.rh b{background:var(--c);color:#111;border-radius:7px;padding:0 6px;margin-left:3px}.rs{font-size:10.5px;color:var(--dim)}
+.rth{display:flex;gap:2px;margin-top:3px}.rth img{width:24px;height:42px;object-fit:cover;border-radius:3px}
+.pc.armed{cursor:crosshair}.pc.armed:hover .th{border-color:#fff}.aisug{background:#000a!important;color:#cfd8ff!important;font-size:9.5px!important}
+.hitb{font-size:11.5px;background:#5a4b12;color:#ffe28a;border-radius:7px;padding:0 6px}
+.pickbar{position:sticky;top:0;z-index:6;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#121a2b;border:1px solid #3a4b73;border-radius:12px;padding:8px 12px;margin-bottom:10px}
+.pickbar .btn[disabled]{opacity:.45;cursor:default}.fsec{font-weight:700;margin:10px 0 6px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.fcard{background:#0f1a16;border:2px solid #23402f;border-radius:12px;padding:9px;cursor:pointer;position:relative}.fcard.on{border-color:#3ddc97;background:#123024}
+.fcard.auto{background:#1c1530;border-color:#4a2a5e}.fcard.auto.on{border-color:#c85cff;background:#2a1a45}
+.fh{font-size:13.5px;line-height:1.35}.pf{font-size:10.5px;border-radius:6px;padding:0 6px;color:#fff;font-weight:700}.pf.yt{background:#e0284f}.pf.ig{background:#c13584}.pf.ai{background:#7b3fe4}
+.ck{position:absolute;right:8px;top:6px;background:#3ddc97;color:#062;border-radius:50%;width:20px;height:20px;text-align:center;font-weight:900}
+.fit{display:flex;gap:3px;flex-wrap:wrap;margin:5px 0}.fit span{font-size:10.5px;border:1px solid #33405f;border-radius:6px;padding:0 5px;color:#aab}
+.rec{font-size:11.5px;color:#7ee2b0;margin-bottom:3px}.fq{font-size:13px;margin:3px 0;line-height:1.4}.slotw{border:1px dashed #3ddc97;border-radius:5px;padding:0 3px;color:#7ee2b0}
+.fstruct{font-size:11.5px;background:#0b1410;border-radius:8px;padding:6px;margin-top:4px}.busy{color:#ffd24a;font-size:12px;margin-top:4px}.done{color:#3ddc97;font-size:12px;margin-top:4px}
+.empty{color:var(--dim);padding:30px;text-align:center;border:1px dashed #3a4b73;border-radius:12px}
+</style></head><body><div class="wrap">
+<div class="top"><h1>🎬 숏템메이커 · 1·2단계 페이지 틀 (시안)</h1><span id="jobs"></span><span class="note" id="meta"></span></div>
+<div class="steps"><div class="step" id="st1" onclick="go(1)">1 · 영상추출/분석 (재료)</div><div class="step" id="st2" onclick="go(2)">2 · 스토리보드 = 대본</div><div class="step" style="opacity:.5">3 · 장면 디테일 수정</div></div>
+<div id="page"></div>
+</div>
+<script>
+const JOBS = /*DATA*/[];
+window.FAMS = /*FAMS*/[];
+let J = 0, STEP = 1, OPT = 'auto', SHOWALL = {}, STARS = {}, STARG = {}, EDIT = {};
+const KO = {hook:'훅',title:'제목',bait:'미끼',fame:'유명세',reveal:'정체 공개',limit:'한계',solve:'해결',more:'더',twist:'반전',land:'마무리',
+  price:'가격',power:'성능',easy:'쉬움',extra:'덤',deal:'딜',howto:'사용법',vs:'비교',proof:'증거',react:'반응',what:'정체',good:'좋은 점',
+  pain:'불편',how:'어떻게',story:'탄생 이야기',benefit:'효능',escalate:'고조',escalation:'고조',method:'방법',steps:'단계',texture:'식감',usage:'활용',
+  witness:'증인',cta:'마무리',situation:'상황',notice:'눈치챔',ask:'물어봄',result:'결과',regret:'후회',origin:'본래 용도',cases:'엉뚱한 쓰임',
+  mistake:'실수',authority:'권위',reason:'이유',problem:'문제',mechanism:'원리',ease:'쉬움',context:'맥락',spec:'스펙',bonus:'덤',source:'출처',fit:'맞는 사람',control:'조절'};
+function ko(s){ s = String(s||''); const b = s.split('_')[0].toLowerCase(); return KO[s.toLowerCase()] || KO[b] || s; }
+const TAGI = {"훅감":"🎣","비포":"😩","애프터":"✨","반전":"🔄","반응":"👥"};
+function job(){ return JOBS[J]; }
+function key(){ return job().jid; }
+function stars(){ return STARS[key()] || (STARS[key()] = new Set(job().star)); }
+function starg(){ return STARG[key()] || (STARG[key()] = new Set()); }
+function th(id, w){ const p = job().pieces[id]; if (!p) return '';
+  const tg = (job().tag_of[id] || []).map(t => `<span>${TAGI[t]||''}${t}</span>`).join('');
+  return `<div class="th ${stars().has(id)?'star':''}" style="width:${w||66}px" title="${(p.desc||'').replace(/"/g,'&quot;')}" onclick="tstar('${id}')"><img src="data:image/jpeg;base64,${p.th}"><span class="tg">${tg}</span><span class="sec">${p.sec}초</span></div>`; }
+function tstar(id){ const s = stars(); s.has(id) ? s.delete(id) : s.add(id); render(); }
+function tgroup(i){ const g = starg(); g.has(i) ? g.delete(i) : g.add(i); render(); }
+function go(n){ STEP = n; render(); }
+function pick(j){ J = j; OPT = 'auto'; render(); }
+// ── 1단계(2026-10-04 사장님): ① 담은 영상 = 출처·제목 카드, 펼치면 영상별 분석(장면 구성·스토리 줄)
+//    ② 역할 상자(우리 스타일 칸에서 뽑은 10개) — 상자를 켜고 카드를 누르면 그 상자에 담김. 담긴 카드의 묶음은 대본에 반영 표시
+const ROLES = [["훅","🎣","#c85cff","title·hook"],["미끼·궁금증","🪤","#a17bff","bait·notice·situation"],["문제·불편","😩","#ff8a3d","limit·pain·problem·mistake"],
+  ["정체 공개","💡","#ffc23d","reveal·origin·what"],["사용법","🔧","#3a9bff","solve·method·steps·how"],["효과·소구점","✨","#2fbf82","escalation·more·benefit·power"],
+  ["반전·의외","🔄","#ff4f7b","twist·cases"],["반응·증거","👥","#24c6d6","fame·proof·witness·react"],["결과","🏁","#7ed957","result·land"],["CTA·가격","💬","#ff6fb1","cta·price·deal"]];
+const SUG = {"훅감":"훅","비포":"문제·불편","애프터":"결과","반전":"반전·의외","반응":"반응·증거"};
+const PLAT = [["xiaohongshu","샤오홍슈"],["douyin","도우인"],["instagram","인스타"],["tiktok","틱톡"],["youtube","유튜브"],["pinterest","핀터레스트"],["naver","네이버"],["threads","쓰레드"]];
+let ROLE = {}, ACTIVE = null, OPENV = {};
+function plat(id){ const s = String(id||'').toLowerCase(); const m = PLAT.find(([k]) => s.includes(k)); return m ? m[1] : '직접 올림'; }
+function asg(){ return ROLE[key()] = ROLE[key()] || {}; }          // 역할 → Set(조각)
+function rolesOf(id){ return Object.entries(asg()).filter(([r, s]) => s.has(id)).map(([r]) => r); }
+function setActive(r){ ACTIVE = (ACTIVE === r ? null : r); render(); }
+function cardClick(id){ if (!ACTIVE){ return; } const s = asg()[ACTIVE] = asg()[ACTIVE] || new Set(); s.has(id) ? s.delete(id) : s.add(id); render(); }
+function roleColor(r){ return (ROLES.find(x => x[0] === r) || [,,'#888'])[2]; }
+function card1(id, w){ const p = job().pieces[id]; if (!p) return '';
+  const mine = rolesOf(id); const sug = [...new Set((job().tag_of[id]||[]).map(t => SUG[t]).filter(Boolean))];
+  return `<div class="pc ${mine.length?'picked':''} ${ACTIVE?'armed':''}" onclick="cardClick('${id}')" title="${(p.desc||'').replace(/"/g,'&quot;')}">
+    <div class="th" style="width:${w||76}px;${mine.length?'border-color:'+roleColor(mine[0]):''}"><img src="data:image/jpeg;base64,${p.th}"><span class="sec">${p.sec}초</span>
+      <span class="tg">${mine.map(r => `<span style="background:${roleColor(r)}">${(ROLES.find(x=>x[0]===r)||[])[1]} ${r}</span>`).join('')}${!mine.length && sug.length ? `<span class="aisug">AI: ${sug.join('·')}</span>` : ''}</span></div></div>`; }
+function vidKey(id){ const m = String(id).match(/^(.*)-\d+$/); return m ? m[1] : id; }
+function page1(){
+  const x = job();
+  const byVid = {}; Object.keys(x.pieces).forEach(id => { (byVid[x.pieces[id].vid] = byVid[x.pieces[id].vid] || []).push(id); });
+  const gOf = {}; x.groups.forEach((g, i) => g.ids.forEach(id => gOf[id] = i));
+  const strip = x.vids.map((v, i) => { const ids = byVid[v.vid] || []; const open = OPENV[key()+i];
+    return `<div class="vcard ${open?'open':''}" onclick="OPENV['${key()}${i}']=!${!!open};render()"><div class="th" style="width:104px"><img src="data:image/jpeg;base64,${v.th}"></div>
+      <div class="vcap"><span class="plat">${plat(ids[0])}</span> <b>${v.prod||'영상 '+(i+1)}</b></div><div class="note">${open?'▲ 접기':'▼ 분석 보기'}</div></div>`; }).join('');
+  const opened = x.vids.map((v, i) => [v, i]).filter(([v, i]) => OPENV[key()+i]);
+  const detail = opened.map(([v, i]) => { const ids = byVid[v.vid] || []; const b = v.brief || {};
+    const comp = {}; ids.forEach(id => { const g = x.groups[gOf[id]]; if (g) comp[g.name] = (comp[g.name]||0) + 1; });
+    const story = (v.story || []).map(L => `<div class="sline"><div><span class="kind">${L.kind||''}</span> <b>${L.text}</b> <span class="note">${L.point||''}</span></div>
+      <div class="sth">${(L.cuts||[]).slice(0,4).map(c => card1(c, 52)).join('')}</div></div>`).join('') || '<div class="note">스토리 없음</div>';
+    return `<div class="acard"><div class="ah"><span class="tag">영상 ${i+1}</span> <span class="plat">${plat(ids[0])}</span> <b>${v.prod||''}</b>
+        <span class="chip2">🗣 말 있음 ${v.talk||0}자</span><span class="chip2">⏱ ${v.dur||'?'}초</span><span class="chip2">조각 ${ids.length}</span></div>
+      <div class="kv"><b>핵심</b> ${b.core||''}</div><div class="kv"><b>흐름</b> ${b.flow||''}</div>
+      <div class="kv"><b>장면 구성</b> ${Object.entries(comp).sort((a,b)=>b[1]-a[1]).map(([n,c]) => `<span class="chip2">${n} ${c}</span>`).join('')}</div>
+      <div class="kv" style="margin-top:6px"><b>📖 스토리 줄 — 대본에 그대로 들어갈 문장 → 그 장면</b> <span class="note">(${ACTIVE?'켜진 상자: '+ACTIVE+' — 장면을 누르면 담겨요':'위 역할 상자를 켜고 장면을 누르면 담겨요'})</span></div>${story}</div>`; }).join('');
+  const boxes = ROLES.map(([r, ic, c, slots]) => { const s = asg()[r] || new Set();
+    return `<div class="rbox ${ACTIVE===r?'on':''}" style="--c:${c}" onclick="setActive('${r}')"><div class="rh">${ic} ${r} ${s.size?`<b>${s.size}</b>`:''}</div><div class="rs">${slots}</div>
+      <div class="rth">${[...s].slice(0,5).map(id => { const p = x.pieces[id]; return p ? `<img src="data:image/jpeg;base64,${p.th}">` : ''; }).join('')}</div></div>`; }).join('');
+  const grps = x.groups.map((g, i) => { const all = SHOWALL[key()+i]; const ids = all ? g.ids : g.ids.slice(0, 7);
+    const hit = g.ids.filter(id => rolesOf(id).length).length;
+    return `<div class="grp ${hit?'star':''}"><div class="gh"><b>${g.name}</b> <span>${g.desc||''} · ${g.ids.length}개</span>${hit?` <span class="hitb">🎯 ${hit}장 담김 — 이 묶음 대본에 반영</span>`:''}</div>
+      <div class="gth">${ids.map(id => card1(id)).join('')}</div>${g.ids.length > 7 ? `<span class="more" onclick="SHOWALL['${key()}${i}']=!${!!all};render()">${all?'접기':'나머지 '+(g.ids.length-7)+'개 펼치기'}</span>`:''}</div>`; }).join('');
+  return `<div class="box"><div class="bh">① 담은 영상 <small>${x.vids.length}개 · 카드를 누르면 영상별 분석이 펼쳐져요</small></div><div class="strip">${strip}</div>${detail?`<div class="adetail">${detail}</div>`:''}</div>
+  <div class="rbar"><div class="bh">🎯 꼭 쓰고 싶은 장면 — 상자를 켜고 카드를 누르세요 <small>${ACTIVE?'지금 켜진 상자: <b>'+ACTIVE+'</b> (다시 누르면 꺼짐)':'다 채울 필요 없어요 — 이 소스를 고른 이유만'}</small></div><div class="rboxes">${boxes}</div></div>
+  <div class="box"><div class="bh">② 장면 목록 <small>조각 ${Object.keys(x.pieces).length}개를 ${x.groups.length}묶음으로 — 빠진 조각 없음 · 카드 위 'AI:' = AI가 본 쓰임(참고)</small></div><div class="grps">${grps}</div></div>
+  <div class="box"><div class="missing"><b>③ 이 재료에 없는 장면</b><ul>${x.missing.map(m=>'<li>'+m+'</li>').join('')}</ul><button class="btn">＋ 영상 더 담기</button> <span class="note">새 영상 조각만 분석해 위 묶음에 더해요(전체 다시 안 함)</span></div></div>
+  <div style="text-align:right"><button class="btn main" onclick="go(2)">2단계 스토리보드로 →</button></div>`;
+}
+
+// ── 2단계(2026-10-04 사장님): 대본 스타일 카드(같은 칸 구조는 한 카드) — 처음엔 아무것도 안 고름, 여러 개 고른 뒤 [스토리보드 만들기] → 실제 3.6 생성
+let PICK = {}, MADE = {}, BUSY = {}, VIEW = {}, OPENF = {};
+function picks2(){ return PICK[key()] = PICK[key()] || new Set(); }
+function made(){ return MADE[key()] = MADE[key()] || {}; }
+function tpick(k){ const s = picks2(); s.has(k) ? s.delete(k) : s.add(k); render(); }
+function hl(t){ return String(t||'').replace(/\{([^}]+)\}/g, '<span class="slotw">$1</span>'); }
+function rolesParam(){ return Object.entries(asg()).filter(([r, s]) => s.size).map(([r, s]) => r + '=' + [...s].join(',')).join('|'); }
+async function makeBoards(){
+  const ks = [...picks2()].filter(k => !made()[k]); if (!ks.length){ VIEW[key()] = [...picks2()][0]; render(); return; }
+  ks.forEach(k => BUSY[key()+k] = true); render();
+  const t0 = Date.now();
+  try {
+    const r = await fetch('/gen', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({jid: key(), keys: ks, roles: rolesParam()})});
+    const d = await r.json(); Object.entries(d).forEach(([k, v]) => { if (!k.startsWith('_err')) made()[k] = Object.assign(v, {secs: Math.round((Date.now()-t0)/1000)}); });
+    const errs = Object.keys(d).filter(k => k.startsWith('_err')); if (errs.length) console.log('[sb] 실패', d);
+  } catch(e){ console.log('[sb] 요청 실패', e); alertBox('만들기 실패 — 시험 서버(127.0.0.1:8790)가 켜져 있어야 해요'); }
+  ks.forEach(k => delete BUSY[key()+k]); VIEW[key()] = VIEW[key()] && made()[VIEW[key()]] ? VIEW[key()] : ks.find(k => made()[k]); render();
+}
+function alertBox(m){ const el = document.getElementById('msg2'); if (el) el.textContent = m; }
+function famCard(f){
+  const x = job(); const k = String(f.id); const on = picks2().has(k); const sc = (x.styles||[]).find(s => String(s.family) === k);
+  const nm = f.names.length > 1 ? f.names[0] + ` <span class="note">외 ${f.names.length-1}</span>` : f.names[0];
+  const first = (f.first||[]).slice(0, 2).map(t => `<div class="fq">“${hl(t)}”</div>`).join('');
+  const st = OPENF[k] ? `<div class="fstruct">${f.roles.map((r, i) => `<div><b>${i+1}. ${ko(r)}</b> ${(f.chain[i]||'').slice(0,60)}</div>`).join('')}${f.names.length>1?`<div class="note">같은 구조 첫 줄 틀: ${f.names.join(' · ')}</div>`:''}</div>` : '';
+  return `<div class="fcard ${on?'on':''}" onclick="tpick('${k}')"><div class="fh"><span class="pf ${f.yt?'yt':'ig'}">${f.yt?'유튜브':'인스타'}</span> <b>${nm}</b>${on?'<span class="ck">✓</span>':''}</div>
+    <div class="fit">${(f.fit||[]).slice(0,4).map(c => `<span>${c}</span>`).join('')}</div>
+    ${sc ? `<div class="rec">재료 맞음 <div class="bar"><i style="width:${100*sc.filled/Math.max(1,sc.total)}%"></i></div> ${sc.filled}/${sc.total}</div>` : ''}
+    <div class="note">${f.yt?'📌 제목 후킹':'🎣 첫 후킹'}</div>${first}
+    <span class="more" onclick="event.stopPropagation();OPENF['${k}']=!OPENF['${k}'];render()">${OPENF[k]?'▲ 접기':'▼ 구조·스토리라인 보기'}</span>${st}
+    ${BUSY[key()+k]?'<div class="busy">⏳ 만드는 중…</div>':(made()[k]?'<div class="done">✔ 만들어짐</div>':'')}</div>`;
+}
+function page2(){
+  const x = job(); const F = window.FAMS || [];
+  const recIds = new Set((x.styles||[]).map(s => String(s.family)));
+  const auto = `<div class="fcard auto ${picks2().has('auto')?'on':''}" onclick="tpick('auto')"><div class="fh"><span class="pf ai">AI 자동</span> <b>이 재료에 맞게 자유롭게</b>${picks2().has('auto')?'<span class="ck">✓</span>':''}</div>
+    <div class="note">스타일은 참고만 — 우리 S급 히트 대본·승인 부품 말맛으로 창의적으로</div>${BUSY[key()+'auto']?'<div class="busy">⏳ 만드는 중…</div>':(made()['auto']?'<div class="done">✔ 만들어짐</div>':'')}</div>`;
+  const rec = F.filter(f => recIds.has(String(f.id))), rest = F.filter(f => !recIds.has(String(f.id)));
+  const n = picks2().size, busy = Object.keys(BUSY).some(k => k.startsWith(key()));
+  const tabs = Object.keys(made()).map(k => `<button class="btn ${VIEW[key()]===k?'on':''}" onclick="VIEW['${key()}']='${k}';render()">${k==='auto'?'AI 자동':((F.find(f=>String(f.id)===k)||{names:[k]}).names[0])} <span class="note">${made()[k].secs||''}초</span></button>`).join(' ');
+  const bd = made()[VIEW[key()]];
+  let body = '';
+  if (bd){
+    const ek = key()+VIEW[key()]; const lines = bd.slots.map((sl, i) => (EDIT[ek] && EDIT[ek][i] != null) ? EDIT[ek][i] : sl.line);
+    const mine = new Set(Object.values(asg()).flatMap(s => [...s]));
+    const cells = bd.slots.map((sl, i) => { const hs = (sl.ids||[]).some(id => mine.has(id)); const ck = bd.check[i] || {};
+      return `<div class="cell ${sl.weak?'weak':''} ${hs?'hasstar':''}"><div class="ch"><b>${i+1}. ${ko(sl.slot)}${hs?' 🎯':''}</b><span>${sl.need||''}</span></div>
+        <div class="cth">${(sl.ids||[]).map(id => th(id, 60)).join('')}</div>
+        <div class="line" contenteditable="true" oninput="(EDIT['${ek}']=EDIT['${ek}']||{})[${i}]=this.innerText;upd2()">${lines[i]}</div>
+        ${sl.weak?`<div class="why">⚠ ${sl.weak}</div>`:''}${sl.line_before?`<div class="meta">✎ 검수: "${sl.line_before}" → 제품 사실 빼고 고침</div>`:''}
+        <div class="meta">장면 ${ck.have}초 · 문장 ${ck.need}초</div></div>`; }).join('');
+    body = `<div class="sb"><div><div class="note" style="margin:6px 0">${bd.first_line_style||''} · 🎯 = 1단계에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요</div><div class="cells">${cells}</div></div>
+      <div class="script"><b>📜 대본</b><ol id="scr">${lines.map(l=>'<li>'+l+'</li>').join('')}</ol><button class="btn main" style="width:100%">이 대본으로 확정 → 3단계</button></div></div>`;
+  }
+  return `<div class="pickbar"><b>대본 스타일 고르기</b> <span class="note">여러 개 골라도 돼요 · 고른 만큼 스토리보드가 따로 나와요 · 스타일 하나에 약 35초(동시에 만듦)</span>
+      <span style="margin-left:auto"></span><span id="msg2" class="note"></span>
+      <button class="btn main" ${n&&!busy?'':'disabled'} onclick="makeBoards()">${busy?'⏳ 만드는 중…':'선택한 '+n+'개로 스토리보드 만들기'}</button></div>
+    <div class="fsec">✨ 추천 — 이 재료에 맞는 스타일</div><div class="fgrid">${auto}${rec.map(famCard).join('')}</div>
+    <div class="fsec">전체 스타일 <span class="note">같은 칸 구조는 한 카드로 합침(${F.length}개)</span></div><div class="fgrid">${rest.map(famCard).join('')}</div>
+    ${tabs?`<div class="box" style="margin-top:12px"><div class="bh">만든 스토리보드 ${tabs}</div>${body}</div>`:''}`;
+}
+function upd2(){ const ek = key()+VIEW[key()]; const bd = made()[VIEW[key()]]; if (!bd) return;
+  document.getElementById('scr').innerHTML = bd.slots.map((sl,i)=>'<li>'+((EDIT[ek]&&EDIT[ek][i]!=null)?EDIT[ek][i]:sl.line)+'</li>').join(''); }
+
+function render(){
+  document.getElementById('jobs').innerHTML = JOBS.map((x, j) => `<button class="btn ${J===j?'on':''}" onclick="pick(${j})">${x.title}</button>`).join(' ');
+  document.getElementById('meta').textContent = `버튼을 누르면 운영 서버에서 gemini-3.6-flash(버텍스)가 실제로 만듭니다 · 사람이 고친 문장 없음`;
+  document.getElementById('st1').classList.toggle('on', STEP===1); document.getElementById('st2').classList.toggle('on', STEP===2);
+  document.getElementById('page').innerHTML = STEP === 1 ? page1() : page2();
+}
+render();
+</script></body></html>
