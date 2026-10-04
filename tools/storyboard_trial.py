@@ -86,7 +86,7 @@ P3 = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편집
 %s
 [없는 장면] %s
 [⭐ 손님이 꼭 쓰라고 고른 조각 — 반드시 어느 칸엔가 넣어라] %s
-[🎯 손님이 쓸 곳을 정한 조각 — 그 역할(훅·소구점·문제·해결·CTA)에 해당하는 칸에 **먼저** 놓아라] %s
+[🎯 손님이 역할을 정한 조각 — 그 역할 칸의 **맨 앞**에 놓아라(그 칸 시간이 남으면 다른 조각을 뒤에 더 붙여도 된다). ★그 조각만 그 역할에 쓰라는 뜻이 아니고, 같은 묶음의 다른 조각은 다른 칸에도 자유롭게 써라] %s
 
 [스타일] %s
 [말투] %s
@@ -112,7 +112,7 @@ P3C = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편�
 %s
 [없는 장면] %s
 [⭐ 손님이 꼭 쓰라고 고른 조각 — 반드시 어느 칸엔가 넣어라] %s
-[🎯 손님이 쓸 곳을 정한 조각 — 그 역할(훅·소구점·문제·해결·CTA)에 해당하는 칸에 **먼저** 놓아라] %s
+[🎯 손님이 역할을 정한 조각 — 그 역할 칸의 **맨 앞**에 놓아라(그 칸 시간이 남으면 다른 조각을 뒤에 더 붙여도 된다). ★그 조각만 그 역할에 쓰라는 뜻이 아니고, 같은 묶음의 다른 조각은 다른 칸에도 자유롭게 써라] %s
 [참고 스타일] %s — 칸 흐름: %s
 [말맛 재료 — 우리가 모은 승인 부품·히트 대본]
 %s
@@ -215,6 +215,41 @@ def _writer_head(fam, kind):
     return head
 
 
+# 역할 상자 → 스타일 칸 이름(우리 승인 스타일 칸에서 뽑음, 화면 page1.js ROLES 와 같은 표)
+BOX_SLOTS = {"훅": ("title", "hook"), "미끼·궁금증": ("bait", "notice", "situation", "ask", "context"),
+             "문제·불편": ("limit", "pain", "problem", "mistake", "regret"), "정체 공개": ("reveal", "origin", "what"),
+             "사용법": ("solve", "method", "steps", "how", "howto", "usage", "easy", "ease"),
+             "효과·소구점": ("escalation", "escalate", "more", "benefit", "power", "texture", "spec", "mechanism", "good", "extra", "bonus"),
+             "반전·의외": ("twist", "cases"), "반응·증거": ("fame", "proof", "witness", "react", "authority", "spread", "scale"),
+             "결과": ("result", "land"), "CTA·가격": ("cta", "price", "deal")}
+
+
+def _apply_role_picks(slots, roles_pick):
+    """★손님이 상자에 담은 조각을 그 역할 칸 **맨 앞**으로(모델이 안 지켜도 코드가 보장). 다른 칸에 들어가 있었으면 거기선 뺀다.
+    그 칸의 나머지 조각(AI 고른 것)은 뒤로 — 3단계에서 시간이 넘치면 흑백으로 보이고 손님이 순서를 바꾼다."""
+    moved = []
+    for part in (roles_pick or "").split(" / "):
+        box, _, ids_s = part.partition(": ")
+        keys = BOX_SLOTS.get(box.strip())
+        ids = [x.strip() for x in ids_s.split(",") if x.strip()]
+        if not keys or not ids:
+            continue
+        tgt = next((i for i, sl in enumerate(slots) if str(sl.get("slot") or "").lower().split("_")[0] in keys), None)
+        if tgt is None:
+            continue
+        for sid in reversed(ids):
+            for j, sl in enumerate(slots):
+                if j != tgt and sid in (sl.get("ids") or []):
+                    sl["ids"] = [c for c in sl["ids"] if c != sid]
+            cur = [c for c in (slots[tgt].get("ids") or []) if c != sid]
+            slots[tgt]["ids"] = [sid] + cur
+            slots[tgt].setdefault("picked", [])
+            if sid not in slots[tgt]["picked"]:
+                slots[tgt]["picked"].insert(0, sid)
+            moved.append((box.strip(), sid, tgt))
+    return moved
+
+
 def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pick=""):
     roles = fam["roles"] or ["hook", "problem", "method", "result", "land"]
     slot_txt = "\n".join("  %d. %s — %s\n     문장 틀: %s" % (i + 1, r, (fam["chain"][i] if i < len(fam["chain"]) else ""),
@@ -251,9 +286,10 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
         for c in ids:
             used.setdefault(c, i)
     star_missing = [c for c in star if c not in used]
+    role_fixed = _apply_role_picks(slots, roles_pick)
     return {"names": fam["names"], "pan": pan, "first_line_style": r3.get("first_line_style") or "", "slots": slots, "check": check,
             "fixed": fixed, "left_flags": {str(k): v for k, v in _code_flags(slots, lambda c: texts.get(c, "")).items()},
-            "star_missing": star_missing, "auth": [n3.get("auth"), n4.get("auth")]}
+            "star_missing": star_missing, "role_fixed": role_fixed, "auth": [n3.get("auth"), n4.get("auth")]}
 
 
 def main(args):

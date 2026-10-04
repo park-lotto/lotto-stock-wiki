@@ -40,10 +40,10 @@ function page1(){
       <div class="rth">${[...s].slice(0,5).map(id => { const p = x.pieces[id]; return p ? `<img src="data:image/jpeg;base64,${p.th}">` : ''; }).join('')}</div></div>`; }).join('');
   const grps = x.groups.map((g, i) => { const all = SHOWALL[key()+i]; const ids = all ? g.ids : g.ids.slice(0, 7);
     const hit = g.ids.filter(id => rolesOf(id).length).length;
-    return `<div class="grp ${hit?'star':''}"><div class="gh"><b>${g.name}</b> <span>${g.desc||''} · ${g.ids.length}개</span>${hit?` <span class="hitb">🎯 ${hit}장 담김 — 이 묶음 대본에 반영</span>`:''}</div>
+    return `<div class="grp ${hit?'star':''}"><div class="gh"><b>${g.name}</b> <span>${g.desc||''} · ${g.ids.length}개</span>${hit?` <span class="hitb">🎯 ${hit}장 담김 — 그 자리에 먼저 놓아요 · 이 묶음의 나머지 조각은 다른 자리에도 쓰여요</span>`:''}</div>
       <div class="gth">${ids.map(id => card1(id)).join('')}</div>${g.ids.length > 7 ? `<span class="more" onclick="SHOWALL['${key()}${i}']=!${!!all};render()">${all?'접기':'나머지 '+(g.ids.length-7)+'개 펼치기'}</span>`:''}</div>`; }).join('');
   return `<div class="box"><div class="bh">① 담은 영상 <small>${x.vids.length}개 · 카드를 누르면 영상별 분석이 펼쳐져요</small></div><div class="strip">${strip}</div>${detail?`<div class="adetail">${detail}</div>`:''}</div>
-  <div class="rbar"><div class="bh">🎯 꼭 쓰고 싶은 장면 — 상자를 켜고 카드를 누르세요 <small>${ACTIVE?'지금 켜진 상자: <b>'+ACTIVE+'</b> (다시 누르면 꺼짐)':'다 채울 필요 없어요 — 이 소스를 고른 이유만'}</small></div><div class="rboxes">${boxes}</div></div>
+  <div class="rbar"><div class="bh">🎯 꼭 쓰고 싶은 장면 — 상자를 켜고 카드를 누르세요 <small>${ACTIVE?'지금 켜진 상자: <b>'+ACTIVE+'</b> (다시 누르면 꺼짐)':'담은 장면은 그 자리 맨 앞에 놓이고, AI가 뒤에 더 붙여요 · 그 자리를 담은 것만으로 채우지는 않아요 · 다 채울 필요 없어요'}</small></div><div class="rboxes">${boxes}</div></div>
   <div class="box"><div class="bh">② 장면 목록 <small>조각 ${Object.keys(x.pieces).length}개를 ${x.groups.length}묶음으로 — 빠진 조각 없음 · 카드 위 'AI:' = AI가 본 쓰임(참고)</small></div><div class="grps">${grps}</div></div>
   <div class="box"><div class="missing"><b>③ 이 재료에 없는 장면</b><ul>${x.missing.map(m=>'<li>'+m+'</li>').join('')}</ul><button class="btn">＋ 영상 더 담기</button> <span class="note">새 영상 조각만 분석해 위 묶음에 더해요(전체 다시 안 함)</span></div></div>
   <div style="text-align:right"><button class="btn main" onclick="go(2)">2단계 스토리보드로 →</button></div>`;

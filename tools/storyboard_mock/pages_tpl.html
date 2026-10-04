@@ -62,6 +62,10 @@
 .fit{display:flex;gap:3px;flex-wrap:wrap;margin:5px 0}.fit span{font-size:10.5px;border:1px solid #33405f;border-radius:6px;padding:0 5px;color:#aab}
 .rec{font-size:11.5px;color:#7ee2b0;margin-bottom:3px}.fq{font-size:13px;margin:3px 0;line-height:1.4}.slotw{border:1px dashed #3ddc97;border-radius:5px;padding:0 3px;color:#7ee2b0}
 .fstruct{font-size:11.5px;background:#0b1410;border-radius:8px;padding:6px;margin-top:4px}.busy{color:#ffd24a;font-size:12px;margin-top:4px}.done{color:#3ddc97;font-size:12px;margin-top:4px}
+.cc{position:relative;display:flex;flex-direction:column;align-items:center}.cc.off .th{filter:grayscale(1) brightness(.6)}.offt{position:absolute;top:40%;left:0;right:0;text-align:center;font-size:11px;color:#ffd24a;font-weight:700}
+.ccb{display:flex;gap:2px;align-items:center;margin-top:2px}.pk{font-size:9.5px;background:#c85cff;color:#fff;border-radius:5px;padding:0 4px}.aik{font-size:9.5px;background:#33405f;color:#cfe0ff;border-radius:5px;padding:0 4px}
+.mv{font-size:10px;cursor:pointer;color:#9fc0ff;padding:0 2px}.cth{flex-wrap:wrap}
+.recb{display:inline-block;font-size:11.5px;font-weight:800;background:#ffd24a;color:#3a2a00;border-radius:7px;padding:1px 8px;margin-bottom:5px}.recb.ai{background:#c85cff;color:#fff}.fcard.isrec{border-color:#8a7a2a}
 .empty{color:var(--dim);padding:30px;text-align:center;border:1px dashed #3a4b73;border-radius:12px}
 </style></head><body><div class="wrap">
 <div class="top"><h1>🎬 숏템메이커 · 1·2단계 페이지 틀 (시안)</h1><span id="jobs"></span><span class="note" id="meta"></span></div>
@@ -128,14 +132,14 @@ function page1(){
       <div class="kv"><b>장면 구성</b> ${Object.entries(comp).sort((a,b)=>b[1]-a[1]).map(([n,c]) => `<span class="chip2">${n} ${c}</span>`).join('')}</div>
       <div class="kv" style="margin-top:6px"><b>📖 스토리 줄 — 대본에 그대로 들어갈 문장 → 그 장면</b> <span class="note">(${ACTIVE?'켜진 상자: '+ACTIVE+' — 장면을 누르면 담겨요':'위 역할 상자를 켜고 장면을 누르면 담겨요'})</span></div>${story}</div>`; }).join('');
   const boxes = ROLES.map(([r, ic, c, slots]) => { const s = asg()[r] || new Set();
-    return `<div class="rbox ${ACTIVE===r?'on':''}" style="--c:${c}" onclick="setActive('${r}')"><div class="rh">${ic} ${r} ${s.size?`<b>${s.size}</b>`:''}</div><div class="rs">${slots}</div>
+    return `<div class="rbox ${ACTIVE===r?'on':''}" style="--c:${c}" onclick="setActive('${r}')"><div class="rh">${ic} ${r} <b>${s.size||''}</b></div><div class="rs">${slots}</div>
       <div class="rth">${[...s].slice(0,5).map(id => { const p = x.pieces[id]; return p ? `<img src="data:image/jpeg;base64,${p.th}">` : ''; }).join('')}</div></div>`; }).join('');
   const grps = x.groups.map((g, i) => { const all = SHOWALL[key()+i]; const ids = all ? g.ids : g.ids.slice(0, 7);
     const hit = g.ids.filter(id => rolesOf(id).length).length;
-    return `<div class="grp ${hit?'star':''}"><div class="gh"><b>${g.name}</b> <span>${g.desc||''} · ${g.ids.length}개</span>${hit?` <span class="hitb">🎯 ${hit}장 담김 — 이 묶음 대본에 반영</span>`:''}</div>
+    return `<div class="grp ${hit?'star':''}"><div class="gh"><b>${g.name}</b> <span>${g.desc||''} · ${g.ids.length}개</span>${hit?` <span class="hitb">🎯 ${hit}장 담김 — 그 자리에 먼저 놓아요 · 이 묶음의 나머지 조각은 다른 자리에도 쓰여요</span>`:''}</div>
       <div class="gth">${ids.map(id => card1(id)).join('')}</div>${g.ids.length > 7 ? `<span class="more" onclick="SHOWALL['${key()}${i}']=!${!!all};render()">${all?'접기':'나머지 '+(g.ids.length-7)+'개 펼치기'}</span>`:''}</div>`; }).join('');
   return `<div class="box"><div class="bh">① 담은 영상 <small>${x.vids.length}개 · 카드를 누르면 영상별 분석이 펼쳐져요</small></div><div class="strip">${strip}</div>${detail?`<div class="adetail">${detail}</div>`:''}</div>
-  <div class="rbar"><div class="bh">🎯 꼭 쓰고 싶은 장면 — 상자를 켜고 카드를 누르세요 <small>${ACTIVE?'지금 켜진 상자: <b>'+ACTIVE+'</b> (다시 누르면 꺼짐)':'다 채울 필요 없어요 — 이 소스를 고른 이유만'}</small></div><div class="rboxes">${boxes}</div></div>
+  <div class="rbar"><div class="bh">🎯 꼭 쓰고 싶은 장면 — 상자를 켜고 카드를 누르세요 <small>${ACTIVE?'지금 켜진 상자: <b>'+ACTIVE+'</b> (다시 누르면 꺼짐)':'담은 장면은 그 자리 맨 앞에 놓이고, AI가 뒤에 더 붙여요 · 그 자리를 담은 것만으로 채우지는 않아요 · 다 채울 필요 없어요'}</small></div><div class="rboxes">${boxes}</div></div>
   <div class="box"><div class="bh">② 장면 목록 <small>조각 ${Object.keys(x.pieces).length}개를 ${x.groups.length}묶음으로 — 빠진 조각 없음 · 카드 위 'AI:' = AI가 본 쓰임(참고)</small></div><div class="grps">${grps}</div></div>
   <div class="box"><div class="missing"><b>③ 이 재료에 없는 장면</b><ul>${x.missing.map(m=>'<li>'+m+'</li>').join('')}</ul><button class="btn">＋ 영상 더 담기</button> <span class="note">새 영상 조각만 분석해 위 묶음에 더해요(전체 다시 안 함)</span></div></div>
   <div style="text-align:right"><button class="btn main" onclick="go(2)">2단계 스토리보드로 →</button></div>`;
@@ -165,9 +169,9 @@ function famCard(f){
   const nm = f.names.length > 1 ? f.names[0] + ` <span class="note">외 ${f.names.length-1}</span>` : f.names[0];
   const first = (f.first||[]).slice(0, 2).map(t => `<div class="fq">“${hl(t)}”</div>`).join('');
   const st = OPENF[k] ? `<div class="fstruct">${f.roles.map((r, i) => `<div><b>${i+1}. ${ko(r)}</b> ${(f.chain[i]||'').slice(0,60)}</div>`).join('')}${f.names.length>1?`<div class="note">같은 구조 첫 줄 틀: ${f.names.join(' · ')}</div>`:''}</div>` : '';
-  return `<div class="fcard ${on?'on':''}" onclick="tpick('${k}')"><div class="fh"><span class="pf ${f.yt?'yt':'ig'}">${f.yt?'유튜브':'인스타'}</span> <b>${nm}</b>${on?'<span class="ck">✓</span>':''}</div>
+  return `<div class="fcard ${on?'on':''} ${sc?'isrec':''}" onclick="tpick('${k}')">${sc?`<div class="recb">⭐ 추천 · 재료 ${sc.filled}/${sc.total}칸</div>`:''}<div class="fh"><span class="pf ${f.yt?'yt':'ig'}">${f.yt?'유튜브':'인스타'}</span> <b>${nm}</b>${on?'<span class="ck">✓</span>':''}</div>
     <div class="fit">${(f.fit||[]).slice(0,4).map(c => `<span>${c}</span>`).join('')}</div>
-    ${sc ? `<div class="rec">재료 맞음 <div class="bar"><i style="width:${100*sc.filled/Math.max(1,sc.total)}%"></i></div> ${sc.filled}/${sc.total}</div>` : ''}
+    
     <div class="note">${f.yt?'📌 제목 후킹':'🎣 첫 후킹'}</div>${first}
     <span class="more" onclick="event.stopPropagation();OPENF['${k}']=!OPENF['${k}'];render()">${OPENF[k]?'▲ 접기':'▼ 구조·스토리라인 보기'}</span>${st}
     ${BUSY[key()+k]?'<div class="busy">⏳ 만드는 중…</div>':(made()[k]?'<div class="done">✔ 만들어짐</div>':'')}</div>`;
@@ -175,7 +179,7 @@ function famCard(f){
 function page2(){
   const x = job(); const F = window.FAMS || [];
   const recIds = new Set((x.styles||[]).map(s => String(s.family)));
-  const auto = `<div class="fcard auto ${picks2().has('auto')?'on':''}" onclick="tpick('auto')"><div class="fh"><span class="pf ai">AI 자동</span> <b>이 재료에 맞게 자유롭게</b>${picks2().has('auto')?'<span class="ck">✓</span>':''}</div>
+  const auto = `<div class="fcard auto ${picks2().has('auto')?'on':''}" onclick="tpick('auto')"><div class="recb ai">⭐ 추천 · 자유 창작</div><div class="fh"><span class="pf ai">AI 자동</span> <b>이 재료에 맞게 자유롭게</b>${picks2().has('auto')?'<span class="ck">✓</span>':''}</div>
     <div class="note">스타일은 참고만 — 우리 S급 히트 대본·승인 부품 말맛으로 창의적으로</div>${BUSY[key()+'auto']?'<div class="busy">⏳ 만드는 중…</div>':(made()['auto']?'<div class="done">✔ 만들어짐</div>':'')}</div>`;
   const rec = F.filter(f => recIds.has(String(f.id))), rest = F.filter(f => !recIds.has(String(f.id)));
   const n = picks2().size, busy = Object.keys(BUSY).some(k => k.startsWith(key()));
@@ -187,7 +191,7 @@ function page2(){
     const mine = new Set(Object.values(asg()).flatMap(s => [...s]));
     const cells = bd.slots.map((sl, i) => { const hs = (sl.ids||[]).some(id => mine.has(id)); const ck = bd.check[i] || {};
       return `<div class="cell ${sl.weak?'weak':''} ${hs?'hasstar':''}"><div class="ch"><b>${i+1}. ${ko(sl.slot)}${hs?' 🎯':''}</b><span>${sl.need||''}</span></div>
-        <div class="cth">${(sl.ids||[]).map(id => th(id, 60)).join('')}</div>
+        <div class="cth">${cellCards(ek, i, sl, ck)}</div>
         <div class="line" contenteditable="true" oninput="(EDIT['${ek}']=EDIT['${ek}']||{})[${i}]=this.innerText;upd2()">${lines[i]}</div>
         ${sl.weak?`<div class="why">⚠ ${sl.weak}</div>`:''}${sl.line_before?`<div class="meta">✎ 검수: "${sl.line_before}" → 제품 사실 빼고 고침</div>`:''}
         <div class="meta">장면 ${ck.have}초 · 문장 ${ck.need}초</div></div>`; }).join('');
@@ -197,10 +201,17 @@ function page2(){
   return `<div class="pickbar"><b>대본 스타일 고르기</b> <span class="note">여러 개 골라도 돼요 · 고른 만큼 스토리보드가 따로 나와요 · 스타일 하나에 약 35초(동시에 만듦)</span>
       <span style="margin-left:auto"></span><span id="msg2" class="note"></span>
       <button class="btn main" ${n&&!busy?'':'disabled'} onclick="makeBoards()">${busy?'⏳ 만드는 중…':'선택한 '+n+'개로 스토리보드 만들기'}</button></div>
-    <div class="fsec">✨ 추천 — 이 재료에 맞는 스타일</div><div class="fgrid">${auto}${rec.map(famCard).join('')}</div>
-    <div class="fsec">전체 스타일 <span class="note">같은 칸 구조는 한 카드로 합침(${F.length}개)</span></div><div class="fgrid">${rest.map(famCard).join('')}</div>
+    <div class="fsec">대본 스타일 <span class="note">같은 칸 구조는 한 카드로 합침(${F.length}개) · ⭐ 추천 = 이 재료로 칸이 잘 채워지는 스타일</span></div><div class="fgrid">${auto}${F.map(famCard).join('')}</div>
     ${tabs?`<div class="box" style="margin-top:12px"><div class="bh">만든 스토리보드 ${tabs}</div>${body}</div>`:''}`;
 }
+let ORD = {};
+function ordOf(ek, i, sl){ const k = ek + '#' + i; return ORD[k] = ORD[k] || [...(sl.ids||[])]; }
+function mv(ek, i, j, d){ const k = ek + '#' + i; const a = ORD[k]; const t = j + d; if (!a || t < 0 || t >= a.length) return; [a[j], a[t]] = [a[t], a[j]]; render(); }
+function cellCards(ek, i, sl, ck){
+  const ids = ordOf(ek, i, sl); const picked = new Set(sl.picked || []); let acc = 0; const need = Number(ck.need || 0);
+  return ids.map((id, j) => { const p = job().pieces[id]; const sec = p ? Number(p.sec) : 0; const show = acc * 1.2 < need - 0.05; acc += sec;
+    return `<div class="cc ${show?'':'off'}">${th(id, 60)}<div class="ccb">${picked.has(id)?'<span class="pk">고른 장면</span>':'<span class="aik">AI</span>'}
+      <span class="mv" onclick="mv('${ek}',${i},${j},-1)">◀</span><span class="mv" onclick="mv('${ek}',${i},${j},1)">▶</span></div>${show?'':'<div class="offt">안 나옴</div>'}</div>`; }).join(''); }
 function upd2(){ const ek = key()+VIEW[key()]; const bd = made()[VIEW[key()]]; if (!bd) return;
   document.getElementById('scr').innerHTML = bd.slots.map((sl,i)=>'<li>'+((EDIT[ek]&&EDIT[ek][i]!=null)?EDIT[ek][i]:sl.line)+'</li>').join(''); }
 
