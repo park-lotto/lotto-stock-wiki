@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>효과 견본 · 숏템메이커</title>
+<style>
+  :root{
+    --bg:#0a0f0d; --panel:#0f1512; --line:#1e2a24;
+    --txt:#e6efe9; --sub:#8fa39a; --accent:#37e0bd; --warn:#e0b23a;
+    --t-lay:#ffd84a; --t-text:#7ad1ff; --t-video:#ff8fb1;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic",sans-serif;line-height:1.5}
+  .wrap{max-width:1600px;margin:0 auto;padding:28px 20px 80px}
+  h1{font-size:26px;margin:0 0 4px;background:linear-gradient(90deg,#dff7f0,var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 14px}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px;font-size:12px;color:var(--sub)}
+  .tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:11.5px;font-weight:700;color:#111}
+  .tag.lay{background:var(--t-lay)} .tag.text{background:var(--t-text)} .tag.video{background:var(--t-video)}
+  nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+    padding:10px 0;display:flex;gap:8px;flex-wrap:wrap}
+  nav a{color:var(--txt);text-decoration:none;font-size:13px;padding:4px 11px;border:1px solid var(--line);
+    border-radius:99px;background:var(--panel)}
+  nav a:hover{border-color:var(--accent)}
+  section{padding:22px 0 4px;scroll-margin-top:64px}
+  h2{margin:0;font-size:19px}
+  h2 small{color:var(--sub);font-weight:400;font-size:13px;margin-left:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;margin-top:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .card video{display:block;width:100%;aspect-ratio:9/16;background:#000;cursor:pointer}
+  .card .meta{padding:8px 10px 10px;font-size:13px}
+  .card b{display:block;font-weight:600}
+  .card .id{color:var(--sub);font-size:12px;margin-right:6px}
+  .card .note{color:var(--warn);font-size:12px;display:block}
+  .empty{color:var(--sub);padding:40px 0;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>효과 견본</h1>
+  <p class="lead" id="lead">에펙으로 만든 효과 견본입니다. 영상을 누르면 크게 봅니다. (관리자 전용)</p>
+  <div class="legend">
+    <span><span class="tag lay">얹기</span> 에펙 결과물 그대로 얹기</span>
+    <span><span class="tag text">글자</span> 편집기 코드로 옮김</span>
+    <span><span class="tag video">영상</span> 서버 영상 처리로 옮김</span>
+  </div>
+  <nav id="nav"></nav>
+  <div id="body"><div class="empty">불러오는 중…</div></div>
+</div>
+<script src="/sidebar.js"></script>
+<script>
+const TAG = {lay:'얹기', text:'글자', video:'영상'};
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+const io = new IntersectionObserver(es => es.forEach(e => {
+  const v = e.target;
+  if (e.isIntersecting) { if (!v.src) v.src = v.dataset.src; v.play().catch(()=>{}); } else v.pause();
+}), {rootMargin:'200px'});
+
+function render(d){
+  const nav = document.getElementById('nav'), body = document.getElementById('body');
+  nav.textContent = ''; body.textContent = '';
+  const groups = d.groups || [];
+  if (!groups.length) { body.appendChild(el('div','empty', d.note || '아직 올린 견본이 없습니다')); return; }
+  let total = 0;
+  groups.forEach((g, i) => {
+    const a = el('a', null, g.name + ' ' + g.items.length); a.href = '#g' + i; nav.appendChild(a);
+    const sec = el('section'); sec.id = 'g' + i;
+    const h = el('h2', null, g.name); h.appendChild(el('small', null, (g.desc ? g.desc + ' · ' : '') + g.items.length + '개'));
+    sec.appendChild(h);
+    const grid = el('div','grid');
+    g.items.forEach(it => {
+      total++;
+      const card = el('div','card'), v = el('video');
+      v.dataset.src = '/api/admin/fx_samples/video/' + encodeURIComponent(it.id) + '.mp4';
+      v.loop = true; v.muted = true; v.playsInline = true; v.preload = 'none';
+      v.addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen(); else v.requestFullscreen(); });
+      io.observe(v);
+      const meta = el('div','meta'), b = el('b');
+      b.appendChild(el('span','id', it.id)); b.appendChild(document.createTextNode(it.title));
+      meta.appendChild(b);
+      if (TAG[it.tag]) meta.appendChild(el('span','tag ' + it.tag, TAG[it.tag]));
+      if (it.note) meta.appendChild(el('span','note', it.note));
+      card.appendChild(v); card.appendChild(meta); grid.appendChild(card);
+    });
+    sec.appendChild(grid); body.appendChild(sec);
+  });
+  document.getElementById('lead').textContent =
+    '에펙으로 만든 효과 견본 ' + total + '개입니다. 영상을 누르면 크게 봅니다. (관리자 전용' + (d.updated ? ' · 올린 날 ' + d.updated : '') + ')';
+}
+
+fetch('/api/admin/fx_samples', {headers:{'Accept':'application/json'}})
+  .then(r => { if (!r.ok) throw new Error(r.status === 403 ? '관리자 전용 화면입니다' : '목록을 불러오지 못했습니다 (' + r.status + ')'); return r.json(); })
+  .then(render)
+  .catch(e => { const b = document.getElementById('body'); b.textContent = ''; b.appendChild(el('div','empty', e.message)); });
+</script>
+</body>
+</html>

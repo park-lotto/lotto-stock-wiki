@@ -59,6 +59,8 @@
       // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
       { icon: "🔥", text: "챌린지",      href: "/challenge", free: true },
       { icon: "🏁", text: "챌린지 관리",     href: "/challenge/admin", free: true, admin: true },
+      // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다.
+      { icon: "✨", text: "효과 견본",       href: "/fx_samples", admin: true },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
