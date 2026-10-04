@@ -9949,7 +9949,11 @@ async def api_buffer_schedule(request: Request):
     """완성 영상을 Buffer에 예약한다.
 
     body: {job_id, channel_ids[], texts{채널id:글}, due_at?(ISO8601 UTC), thumb_ms?,
-           share_now?(지금 바로 게시), privacy?(유튜브 공개범위)}
+           share_now?(지금 바로 게시), privacy?(유튜브 공개범위), force?(중복이어도 올린다)}
+
+    ★같은 영상을 같은 채널에 두 번 올리지 않는다(2026-10-04 관제 114 — 고객 유튜브·인스타에
+      같은 영상이 2개씩 올라갔다). 이미 걸려 있는 채널은 Buffer로 보내지 않고 dup으로 돌려주고,
+      화면이 물어본 뒤 force로 다시 보낼 때만 올린다. 판정은 buffer_posts.already_scheduled 한 곳.
 
     ★글은 **채널마다 다르다**(2026-08-29 사장님). 인스타는 해시태그를 많이 달고
       쓰레드는 거의 안 단다 — 8단계가 이미 플랫폼별로 만들어 두므로 하나로 뭉개면
@@ -9993,6 +9997,44 @@ async def api_buffer_schedule(request: Request):
     if int(job.get("customer_id") or 0) != _cid(request):
         return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
 
+    # ★중복 판정이 먼저다 — 판정과 기록 사이에 같은 요청이 끼어들지 못하게 작업 단위로 줄 세운다
+    #   (실측 2026-10-03: 같은 작업 예약이 15초 간격으로 두 번 들어왔다).
+    async with _buffer_job_lock(_cid(request), job_id):
+        return await _buffer_schedule_locked(request, body, key, job, job_id, chans, texts, text,
+                                             due_at, thumb_ms, share_now, privacy)
+
+
+_BUFFER_JOB_LOCKS: dict = {}
+
+
+def _buffer_job_lock(customer_id, job_id):
+    """(고객, 작업)마다 하나의 asyncio.Lock. 워커 프로세스가 하나라 이것으로 충분하다."""
+    k = (int(customer_id), str(job_id))
+    lk = _BUFFER_JOB_LOCKS.get(k)
+    if lk is None:
+        if len(_BUFFER_JOB_LOCKS) > 500:          # 끝난 작업의 락이 쌓이지 않게
+            for kk in [x for x, v in _BUFFER_JOB_LOCKS.items() if not v.locked()]:
+                _BUFFER_JOB_LOCKS.pop(kk, None)
+        lk = _BUFFER_JOB_LOCKS[k] = asyncio.Lock()
+    return lk
+
+
+async def _buffer_schedule_locked(request, body, key, job, job_id, chans, texts, text,
+                                  due_at, thumb_ms, share_now, privacy):
+    from shopping_shorts import buffer_posts
+    cust = _cid(request)
+    out = []
+    if not bool(body.get("force")):
+        dups = await run_in_threadpool(
+            buffer_posts.already_scheduled, DB_PATH, key, cust, job_id, chans)
+        for cid_ in [c for c in chans if c in dups]:
+            out.append({"channel_id": cid_, "ok": False, "dup": True,
+                        "error": "이 영상은 이 채널에 이미 예약(게시)돼 있습니다.",
+                        "existing": dups[cid_]})
+        chans = [c for c in chans if c not in dups]
+        if not chans:                 # 전부 중복 — 공개 링크도 만들지 않는다
+            return {"ok": False, "results": out}
+
     # ★주소를 내주기 전에 moov를 앞으로 보장한다(2026-08-30 실측). Buffer는 영상을
     #   받아보다가 못 읽으면 "Video could not be read from its URL"로 거절하는데,
     #   렌더 시점에만 처리하면 **그 전에 만든 완성본**이 영영 안 올라간다.
@@ -10018,7 +10060,6 @@ async def api_buffer_schedule(request: Request):
     # ★.mp4를 붙인다 — 확장자로 종류를 판단하는 수집기가 있다(라우트가 떼고 읽는다).
     video_url = f"{base}/api/share/{'e' if use_edited else 'v'}/{sid}.mp4"
 
-    out = []
     for cid_ in chans:
         try:
             t = str(texts.get(cid_) or text or "")
@@ -10032,10 +10073,45 @@ async def api_buffer_schedule(request: Request):
                 buffer_api.schedule_video, key, cid_, t, video_url, due_at, thumb_ms,
                 share_now=share_now, privacy=privacy)
             out.append({"channel_id": cid_, "ok": True, "post_id": r["id"], "due_at": r["dueAt"]})
+            # ★예약이 성공한 그 자리에서 장부에 적는다 — 이것이 중복 판정·취소의 근거다.
+            buffer_posts.record(DB_PATH, cust, job_id, cid_, r["id"], r["dueAt"], share_now)
         except buffer_api.BufferError as e:
             out.append({"channel_id": cid_, "ok": False, "error": str(e)})
     return {"ok": any(x["ok"] for x in out), "results": out, "video_url": video_url,
             "source": "edited" if use_edited else "final"}
+
+
+@app.get("/api/buffer/posts")
+async def api_buffer_posts(request: Request, job_id: str = ""):
+    """이 작업으로 걸어 둔 예약 목록(Buffer에 지금 상태를 물어 맞춘 것)."""
+    key = _buffer_key(request)
+    if not key:
+        return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
+    from shopping_shorts import buffer_posts
+    posts = await run_in_threadpool(
+        buffer_posts.sync, DB_PATH, key, _cid(request), os.path.basename(job_id))
+    return {"ok": True, "posts": posts}
+
+
+@app.post("/api/buffer/cancel")
+async def api_buffer_cancel(request: Request):
+    """예약 하나를 취소한다. body: {post_id}
+
+    ★취소할 수 있는지(내 예약인가·아직 안 올라갔나)는 buffer_posts.cancel 한 곳이 정한다.
+    """
+    key = _buffer_key(request)
+    if not key:
+        return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
+    from shopping_shorts import buffer_posts
+    body = await request.json()
+    post_id = str(body.get("post_id") or "").strip()
+    if not post_id:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "post_id가 없습니다."})
+    try:
+        await run_in_threadpool(buffer_posts.cancel, DB_PATH, key, _cid(request), post_id)
+    except buffer_posts.CancelError as e:
+        return {"ok": False, "error": str(e)}
+    return {"ok": True}
 
 
 @app.get("/api/mix/edited/{job_id}")

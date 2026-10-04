@@ -620,6 +620,26 @@
    "검사도구": "수동(라이브 job 62680fe18e5e 실측)",
    "과금": false,
    "예외": {}
+  },
+  {
+   "이름": "Buffer 예약 중복·취소 판정(이 영상이 이 채널에 이미 걸렸나 / 취소할 수 있나)",
+   "주인": [
+    "shopping_shorts/buffer_posts.py:already_scheduled",
+    "shopping_shorts/buffer_posts.py:cancel"
+   ],
+   "시그니처": [
+    "def already_scheduled\b",
+    "_CANCELLABLE\\s*="
+   ],
+   "소비처": [
+    "app.api_buffer_schedule",
+    "app.api_buffer_posts",
+    "app.api_buffer_cancel",
+    "produce.html 10단계(그리기만)"
+   ],
+   "검사도구": "shopping_shorts/tests/test_buffer_posts.py · tools/buffer_dup_ui_check.py",
+   "과금": false,
+   "예외": {}
   }
  ]
 }
