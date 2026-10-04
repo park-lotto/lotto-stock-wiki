@@ -2545,6 +2545,10 @@
 
         <button id="btnBufGo" class="btn-next" style="padding:12px 22px;margin-top:12px" onclick="bufSchedule()">📅 예약하기</button>
         <div id="bufStatus" class="hint" style="margin-top:10px"></div>
+        <!-- 📋 이 영상으로 걸어 둔 예약 + 취소(2026-10-04 관제 114). 같은 영상이 두 번 올라간
+             사고의 뿌리 = 무엇을 예약했는지 화면 어디에도 안 남았다. 목록·취소 판정은 서버
+             buffer_posts 한 곳이고 여기는 그리기만 한다. -->
+        <div id="bufPosts" style="margin-top:14px"></div>
       </div>
     </section>
 
@@ -3092,6 +3096,7 @@ async function loadBuffer(){
   if (!BUF.channels.length){
     box.innerHTML = '<div class="hint">Buffer에 연결된 채널이 없습니다 — Buffer에서 먼저 SNS 계정을 연결해 주세요.</div>';
   } else {
+    bufLoadPosts();                           /* 이 영상으로 이미 걸어 둔 예약을 먼저 보여준다 */
     box.innerHTML = BUF.channels.map(function(c, i){
       return '<label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;'
            + 'border:1px solid var(--line);border-radius:10px;padding:6px 12px">'
@@ -3398,22 +3403,39 @@ async function bufSchedule(){
     var ta = document.getElementById('bufTx-' + id);
     texts[id] = ta ? ta.value : '';
   });
-  var d = null;
-  try {
-    d = await (await fetch('/api/buffer/schedule', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ job_id: MIX_JOB, channel_ids: ids, texts: texts, due_at: due,
-                             share_now: now, source: (BUF.source === 'edited') ? 'edited' : 'final',
-                             privacy: (document.getElementById('bufPrivacy') || {}).value || '' })
-    })).json();
-  } catch(e){ d = null; }
-  btn.disabled = false;
-  if (!d){ st.textContent = '서버에 연결하지 못했습니다.'; return; }
-  if (d.need_key){ st.textContent = d.error; return; }
-  if (!d.results){ st.textContent = d.error || '예약에 실패했습니다.'; return; }
+  async function send(chs, force){
+    try {
+      return await (await fetch('/api/buffer/schedule', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ job_id: MIX_JOB, channel_ids: chs, texts: texts, due_at: due,
+                               share_now: now, source: (BUF.source === 'edited') ? 'edited' : 'final',
+                               force: !!force,
+                               privacy: (document.getElementById('bufPrivacy') || {}).value || '' })
+      })).json();
+    } catch(e){ return null; }
+  }
+  var d = await send(ids, false);
+  if (!d){ btn.disabled = false; st.textContent = '서버에 연결하지 못했습니다.'; return; }
+  if (d.need_key){ btn.disabled = false; st.textContent = d.error; return; }
+  if (!d.results){ btn.disabled = false; st.textContent = d.error || '예약에 실패했습니다.'; return; }
   /* 채널마다 결과가 다를 수 있다 — 성공/실패를 있는 그대로 보여준다. */
   var name = {};
   BUF.channels.forEach(function(c){ name[c.id] = c.name; });
+  /* ★이미 걸려 있는 채널은 서버가 올리지 않고 dup으로 돌려준다(판정은 서버 한 곳).
+     여기서는 **물어보기만** 한다 — 그래도 올리겠다고 하면 그 채널만 force로 다시 보낸다. */
+  var dupIds = d.results.filter(function(r){ return r.dup; }).map(function(r){ return r.channel_id; });
+  if (dupIds.length){
+    var dupWhere = dupIds.map(function(i){ return name[i] || i; }).join('\n  · ');
+    if (confirm('이 영상은 아래 채널에 이미 예약(게시)돼 있습니다.\n\n  · ' + dupWhere
+                + '\n\n같은 영상을 한 번 더 올릴까요?\n(취소를 누르면 더 올리지 않습니다)')){
+      st.textContent = now ? '올리는 중…' : '예약하는 중…';
+      var d2 = await send(dupIds, true);
+      var again = (d2 && d2.results) || dupIds.map(function(i){
+        return {channel_id: i, ok: false, error: (d2 && d2.error) || '서버에 연결하지 못했습니다.'}; });
+      d.results = d.results.filter(function(r){ return !r.dup; }).concat(again);
+    }
+  }
+  btn.disabled = false;
   /* ★"예약됨" 한 마디로 끝내지 않는다 — **언제 올라가는지, 어디서 확인하는지**까지
      보여준다(사장님 2026-08-30: "정상적으로 올라간건지 결과도 볼수있게").
      ⚠️여기서 끝난 것은 **예약**이다. 실제 게시는 그 시각에 Buffer가 한다 —
@@ -3421,6 +3443,7 @@ async function bufSchedule(){
   var okN = d.results.filter(function(r){ return r.ok; }).length;
   var rows = d.results.map(function(r){
     var nm = esc(name[r.channel_id] || r.channel_id);
+    if (r.dup) return '⏸ <b>' + nm + '</b> — 이미 예약돼 있어 다시 올리지 않았습니다';
     if (!r.ok) return '⚠️ <b>' + nm + '</b> — ' + esc(r.error || '실패');
     var when = '';
     if (r.due_at){
@@ -3440,6 +3463,60 @@ async function bufSchedule(){
                    : ' — 예약이 걸린 것이고, 실제 게시는 그 시각에 Buffer가 합니다.') + '</div>');
   }
   st.innerHTML = rows.join('<br>');
+  bufLoadPosts();
+}
+
+/* ── 📋 이 영상으로 걸어 둔 예약 목록 + 취소 ─────────────────────────────
+   서버가 Buffer에 지금 상태를 물어 맞춘 목록을 준다. 취소할 수 있는지(cancellable)도
+   서버가 정한다 — 화면은 그 값대로 버튼을 그릴 뿐이다. */
+var BUF_STATUS_KO = { scheduled: '예약됨', sent: '올라감', sending: '올리는 중',
+                      error: '실패', draft: '임시저장', needs_approval: '승인 대기' };
+async function bufLoadPosts(){
+  var box = document.getElementById('bufPosts');
+  if (!box || !MIX_JOB) return;
+  var job = MIX_JOB, d = null;
+  try { d = await (await fetch('/api/buffer/posts?job_id=' + encodeURIComponent(job))).json(); }
+  catch(e){ d = null; }
+  if (job !== MIX_JOB) return;                /* 기다리는 사이 작업이 바뀌었다 */
+  if (!d || !d.ok){ box.innerHTML = ''; return; }
+  var posts = d.posts || [];
+  if (!posts.length){ box.innerHTML = ''; return; }
+  var ch = {};
+  BUF.channels.forEach(function(c){ ch[c.id] = c.service + ' · ' + c.name; });
+  box.innerHTML = '<div class="hint" style="margin-bottom:6px">📋 이 영상으로 걸어 둔 예약 <b>'
+    + posts.length + '</b>건</div>'
+    + posts.map(function(p){
+        var when = '';
+        if (p.due_at){
+          try { when = new Date(p.due_at).toLocaleString('ko-KR',
+                  {month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+          catch(e){ when = p.due_at; }
+        }
+        var act = p.cancellable
+          ? '<button type="button" class="btn-prev" style="min-height:38px;padding:6px 12px" '
+            + 'data-post="' + esc(p.post_id) + '" onclick="bufCancel(this)">예약 취소</button>'
+          : (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener" '
+                      + 'style="color:var(--accent2)">올라간 글 보기</a>' : '');
+        return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;'
+             + 'border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:6px">'
+             + '<span style="flex:1 1 220px"><b>' + esc(ch[p.channel_id] || p.channel_id) + '</b>'
+             + (when ? ' — ' + esc(when) : '') + ' · ' + esc(BUF_STATUS_KO[p.status] || p.status)
+             + '</span>' + act + '</div>';
+      }).join('');
+}
+async function bufCancel(btn){
+  var id = btn.getAttribute('data-post');
+  if (!confirm('이 예약을 취소할까요?\n(Buffer에서 지워져 그 시각에 올라가지 않습니다)')) return;
+  btn.disabled = true; btn.textContent = '취소하는 중…';
+  var d = null;
+  try {
+    d = await (await fetch('/api/buffer/cancel', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ post_id: id })
+    })).json();
+  } catch(e){ d = null; }
+  if (!d || !d.ok) alert((d && d.error) || '취소하지 못했습니다. 잠시 뒤 다시 해 주세요.');
+  await bufLoadPosts();
 }
 
 const PANEL_COUNT = document.querySelectorAll('.panel').length;
