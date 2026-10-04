@@ -33,8 +33,10 @@
    focusedLine.dispatchEvent(new KeyboardEvent('keydown',{key:split?'Enter':'Backspace',bubbles:true,cancelable:true}));
  });
  caption.after(lines);let lastKey='',pending=false;
+ // 10-03 사장님: 템플릿 훅 장면은 제목·보조제목만 나온다(대사 자막은 본문부터). 화면에 없는 자막을 편집 칸에 띄워 헷갈렸다 — 그 장면에선 안내만 보인다.
+ const hookNote=document.createElement('p');hookNote.className='hook-caption-note';hookNote.hidden=true;hookNote.textContent='훅 장면은 제목이 나옵니다. 대사 자막은 본문 장면부터 보입니다.';lines.after(hookNote);
  function fillLines(){const context=api.context(),scene=context?.scenes[api.geometry().sceneIndex],input=caption.querySelector('[data-bind="caption"]');const values=scene?context.scenes.filter(s=>s.beat_idx===scene.beat_idx&&s.caption).map(s=>s.caption):input.value.split('\n');const box=lines.querySelector('[data-line-inputs]');box.replaceChildren(...values.map((text,i)=>window.makeCaptionLineInput(text,i)));}
- function sync(){const context=api.context(),index=api.geometry().sceneIndex,key=context?`${context.jobId}:${context.scenes[index]?.beat_idx}`:`local:${api.snapshot()?.presetId||"none"}:${index}`;lines.hidden=!context&&caption.hidden;lines.querySelector('[data-lines-context]').textContent=context?'':'샘플 자막';if(key!==lastKey){lastKey=key;fillLines()}controls();draw()}
+ function sync(){const context=api.context(),index=api.geometry().sceneIndex,key=context?`${context.jobId}:${context.scenes[index]?.beat_idx}`:`local:${api.snapshot()?.presetId||"none"}:${index}`;{const hideLines=caption.hidden,showNote=caption.hidden&&!!context&&!document.body.classList.contains('no-template');if(lines.hidden!==hideLines)lines.hidden=hideLines;if(hookNote.hidden===showNote)hookNote.hidden=!showNote;}lines.querySelector('[data-lines-context]').textContent=context?'':'샘플 자막';if(key!==lastKey){lastKey=key;fillLines()}controls();draw()}
  const status=message=>lines.querySelector('[data-lines-status]').textContent=message;
  lines.addEventListener('toggle',()=>{if(lines.open&&!pending)fillLines()});
  lines.addEventListener('click',event=>{const reset=!!event.target.closest('[data-lines-reset]');if(!reset&&!event.target.closest('[data-lines-save]'))return;if(pending)return;const values=[...lines.querySelectorAll('[data-capline]')].map(e=>e.value.trim()).filter(Boolean);if(!reset&&!values.length){status('줄을 입력해 주세요.');return;}const context=api.context();

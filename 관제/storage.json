@@ -3,7 +3,7 @@
   "외장": {"root": "D:/숏템", "규칙": "D:/숏템/_저장규칙.txt", "트랙": "00_트랙(정션)", "보관": "90_보관", "필수": "apply 는 D 가 꽂혀 있고 규칙 파일이 보일 때만 돈다. D 가 빠지면 정션이 죽으므로 status 가 빨강으로 알린다"},
   "경보": {"warn_gb": 15, "refuse_gb": 3, "_": "track.py finish 와 같은 값"},
   "자동": {"작업이름": "숏템_저장층_정리", "시각": "04:40", "명령": "py tools/storage.py apply --auto", "무활동_일": 3, "_": "Windows 작업 스케줄러. 등록: py tools/storage.py schedule. 무활동_일 3 = 09-30 실측 16개 22GB(7일이면 12개 15.5GB). 다시 손대면 warm 한 줄이라 짧게 잡는다"},
-  "임시": {"root": "%LOCALAPPDATA%/Temp", "폴더": ["pytest-of-CH", "claude"], "나이_일": 2, "_": "09-30 실측 pytest-of-CH 3.8GB · claude 2.8GB. finish 게이트마다 pytest 임시가 쌓인다. 다른 Temp 는 건드리지 않는다"},
+  "임시": {"root": "%LOCALAPPDATA%/Temp", "폴더": ["*"], "나이_일": 3, "_": "10-04 관제 109: Temp 전체에서 3일+ 안 건드린 파일(윈도 저장소 센스와 같은 방식, 열려 있는 파일은 못 지워 건너뜀). 09-30 엔 pytest-of-CH·claude 만이었는데 gate_child·앱 임시가 11GB 쌓였다"},
   "바탕화면": {"root": "%USERPROFILE%/Desktop", "폴더": ["볼케이노작업"], "_": "09-30 실측: 볼케이노작업 2.2GB(사장님 확인 대기). effect_packs 는 research/effect_packs 로 가는 링크라 research 와 함께 간다. ShoppingLens(1.2GB)는 실행 중인 프로그램 — 옮기지 않는다(09-30 반쯤 옮겨져 되돌린 사고). --desktop 은 사장님 확인 뒤에만(자동 아님). 옮긴 자리엔 정션"},
   "층": [
     {"경로": ".tracks/<트랙> (최근 7일 손댐)", "층": "C·활성 작업대(SSD)", "D": null,

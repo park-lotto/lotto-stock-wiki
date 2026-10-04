@@ -18,6 +18,7 @@ DATA = __DATA__;
 const _sl = b => { const ov = b && b.scene_override; if (!ov || !ov.length) return null; const o=[]; ov.forEach(s=>{const id=s&&s.seg_id; if(id&&!o.includes(id)) o.push(id)}); return o.length?o:null; };
 lists = DATA.beats.map(b => _sl(b) || [b.primary && b.primary.seg_id].concat((b.alternates||[]).map(a=>a.seg_id)).filter(Boolean));
 DATA.beats.forEach((b,i) => { if (b.phrase_sync === false) PHRASE_SYNC[i] = false;
+  if (b.phrase_exact === true) PHRASE_EXACT[i] = true;
   if (Array.isArray(b.manual_cuts)) CUTS[i] = b.manual_cuts.filter(c=>c&&c.seg_id&&c.dur>0).map(c=>c.lock?{seg_id:c.seg_id,dur:+c.dur,lock:1}:{seg_id:c.seg_id,dur:+c.dur});
   if (+b.slow > 1) SLOW[i] = +b.slow;
   for (const [sid,v] of Object.entries(b.fixed_lens||{})) FIXLEN[i+':'+sid] = v; });

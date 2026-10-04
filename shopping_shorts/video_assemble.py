@@ -2706,6 +2706,17 @@ def narration_track(edit_plan, tts_paths, beat_frames, out_wav, sample_rate=NARR
     return str(out_wav)
 
 
+def cutaway_overlay(asset_dur, beat_dur, w, h):
+    """끼움 장면(컷어웨이·AI 장면)을 칸 영상 위에 얹는 규칙 — **여기 한 곳**(관제 116, 2026-10-04).
+    완성본(_render_mix)과 편집 화면 합본(app._pvproxy_build)이 같이 쓴다 — 따로 적으면 미리보기와 완성본이 어긋난다(0순위-B).
+    돌려주는 것 = (얹는 창 길이, filter_complex). 창 = [0, min(자산 길이, 칸 길이)], 풀프레임, 입력 0 = 칸 영상 · 입력 1 = 끼움 장면."""
+    win = min(float(asset_dur or 0), float(beat_dur or 0))
+    fc = (f"[1:v]scale={int(w)}:{int(h)}:force_original_aspect_ratio=increase,"
+          f"crop={int(w)}:{int(h)},setpts=PTS-STARTPTS[ov];"
+          f"[0:v][ov]overlay=0:0:enable='between(t,0,{win:.3f})'[vout]")
+    return win, fc
+
+
 def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
     """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
@@ -2820,12 +2831,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         cutaway = (cutaway_paths or {}).get(idx)
         if cutaway:
             asset_dur = _probe_duration(cutaway)
-            win = min(asset_dur, tts_dur)
-            fc = (
-                f"[1:v]scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,"
-                f"crop={_OUT_W}:{_OUT_H},setpts=PTS-STARTPTS[ov];"
-                f"[0:v][ov]overlay=0:0:enable='between(t,0,{win:.3f})'[vout]"
-            )
+            win, fc = cutaway_overlay(asset_dur, tts_dur, _OUT_W, _OUT_H)   # 규칙 한 곳 — 편집 화면 합본과 같은 창
             _run_ffmpeg([
                 "ffmpeg", "-y",
                 "-i", str(beat_video),   # 0: 내 다중클립 비트영상(이미 vf 적용)
@@ -3434,6 +3440,25 @@ def _merge_highlight_rules(headcopy, caption_style, deco):
     return headcopy, caption_style
 
 
+def _beat_words_relative(tts):
+    """구절 **안에서** 단어가 어디쯤인지 잴 때 쓰는 단어 시각(장면꾸미기 단어 강조, 2026-10-03 관제 102). 없으면 None.
+
+    사이드카(정밀 타임스탬프)만 본다 — 렌더·미리보기 때 불리므로 받아쓰기(ASR) 폴백으로 네트워크를 타지 않는다.
+    쓰는 쪽(scene_style.attach_scene_words)은 구절 창 안의 **비율**만 쓰므로 배속 같은 균등 변화는 갚을 필요가 없고,
+    구절 안 무음을 잘라낸 파일(removed)일 때만 길이를 재서 rescale 로 갚는다(쓸데없는 ffprobe 를 안 부른다).
+    ★tts_timestamps 의 **이미 있는 함수만** 부른다 — 이 함수는 타임라인을 만드는 이 파일이 주인이다
+      (2026-10-04: 새 함수를 tts_timestamps 에 뒀더니 영상 관문이 그 파일을 안 올려 병합본 6작업이 전부 건너뛰었다)."""
+    from . import tts_timestamps      # 표준 라이브러리+audio_post 만 끌어온다(순환 없음)
+    words = tts_timestamps.words_from_mp3(tts)
+    if not words:
+        return None
+    removed = tts_timestamps.load_removed(tts)
+    if not removed:
+        return words
+    dur = _probe_duration(tts)
+    return tts_timestamps.rescale(words, dur, removed=removed) if dur else words
+
+
 def _beat_timeline(edit_plan, tts_paths):
     """비트별 전체 타임라인 [{beat_idx, t0, dur, narration, role, cap_durs}, ...].
 
@@ -3465,6 +3490,8 @@ def _beat_timeline(edit_plan, tts_paths):
             "cap_lead": _cap_lead,
             "cap_offset": beat.get("cap_offset", 0.0),
             "caption_lines": beat.get("caption_lines"),   # AI가 끊어준 자막 호흡 줄(있으면)
+            # 단어 시각(정밀 사이드카, 없으면 None) — 장면꾸미기 단어 강조가 구절 안 단어 자리를 잰다(관제 102).
+            "words": _beat_words_relative(tts),
             # 장면별 자막 자리(2026-08-25). 여기서 안 실으면 저장위치≠읽기위치가 되어
             # 사장님이 고친 자리가 렌더에 반영되지 않는다(위 cap_durs와 같은 함정).
             "cap_pos": beat.get("cap_pos"),

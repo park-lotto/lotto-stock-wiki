@@ -41,3 +41,13 @@ def test_output_is_what_register_accepts():
     info, err = vertex_route.validate_sa(one_line)
     assert err == "" and info["project_id"] == fake["project_id"]
     assert "separators=(\",\",\":\")" in SCRIPT.read_text(encoding="utf-8")
+
+
+def test_pages_show_same_command_as_script():
+    # 명령 글자는 설명서·마이페이지 두 곳에 보인다 — 스크립트 머리말 명령과 한 글자라도 다르면 실패
+    import re
+    cmd = next(l for l in SCRIPT.read_text(encoding="utf-8").splitlines() if l.startswith("#   curl ")).lstrip("# ").strip()
+    static = SCRIPT.parents[1]
+    for page in ("api_manual.html", "settings.html"):
+        m = re.search(r'id="vertexCmd"[^>]*>([^<]+)<', (static / page).read_text(encoding="utf-8"))
+        assert m and m.group(1).strip() == cmd, page

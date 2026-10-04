@@ -461,6 +461,13 @@ def _disk_guard(repo, action):
         raise TrackError(
             f"디스크 여유 {free:.1f}GB — 병합용 임시 폴더(약 1.8GB)를 만들다 중간에 끊겨 잔해가 남는다.\n"
             f"먼저 공간을 비워라: py tools/track.py park-idle  (오래 안 쓴 트랙 폴더만 치움, 브랜치 보존)")
+    try:
+        import storage
+        w = storage.auto_run_warning(repo)
+    except Exception as e:                           # 경고를 못 만들었다는 것도 말한다
+        w = "자동 저장층 정리 상태를 못 읽었다: %s" % e
+    if w:
+        print(f"⚠️ {w}")
     if free < DISK_WARN_GB:
         print(f"⚠️ 디스크 여유 {free:.1f}GB (<{DISK_WARN_GB}GB). 오래 안 쓴 트랙 폴더를 치우면 트랙당 1~2GB가 돌아온다:")
         print("   py tools/track.py park-idle        (브랜치·원격 백업 보존, 미커밋 있으면 건너뜀)")
@@ -507,7 +514,23 @@ def _clean_dead_stages(repo, keep=None):
     if removed:
         run(["git", "worktree", "prune"], repo)
         print(f"🧹 끊긴 병합 임시 폴더 {len(removed)}개 정리: {', '.join(removed)}")
+    gone = _clean_dead_gate_temp()
+    if gone:
+        print(f"🧹 죽은 게이트 시험 임시 폴더 {len(gone)}개 정리(Temp\\gate_child_*)")
     return removed
+
+
+def _clean_dead_gate_temp(tmp_root=None):
+    """게이트가 중간에 죽어 못 치운 Temp\\gate_child_<pid>* — 그 pid 가 살아 있지 않을 때만 지운다(관제 107).
+    정상 종료는 merge_gate._run 이 스스로 치운다. 이건 강제 종료·정전 때 남은 것."""
+    import tempfile
+    root = Path(tmp_root or tempfile.gettempdir())
+    gone = []
+    for x in root.glob(merge_gate.GATE_TEMP_PREFIX + "*"):
+        m = re.match(re.escape(merge_gate.GATE_TEMP_PREFIX) + r"(\d+)", x.name)
+        if m and int(m.group(1)) != os.getpid() and not _pid_alive(int(m.group(1))):
+            gone += merge_gate.clean_gate_temp(int(m.group(1)), tmp_root=root)
+    return gone
 
 
 def tracks_dir(repo=BASE):
@@ -605,6 +628,19 @@ def _copy_local_secrets(repo, wt):
 def upstream_of(wt):
     rc, out = run(["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], wt)
     return out.strip() if rc == 0 else None
+
+
+def warm(name, repo=BASE):
+    """트랙을 쓰기 직전 — D 에 가 있으면 C 로 되돌린다. 판단은 storage.ensure_warm 한 곳(관제 109).
+    못 되돌려도 막지 않는다(정션이라 D 에서 그대로 열린다) — 이유만 크게 말한다."""
+    import storage
+    try:
+        ok, why = storage.ensure_warm(repo, name)
+    except Exception as e:                          # 되돌리기 실패가 일을 막으면 안 된다 — 단 조용히 넘기지 않는다
+        ok, why = False, "되돌리기 오류: %s" % e
+    if not ok:
+        print(f"⚠️ {name} 트랙은 D(외장 HDD)에서 연다 — {why}")
+    return ok
 
 
 def start(name, repo=BASE, full=False, card=None):
@@ -837,6 +873,7 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
     줄 안에선 커밋·push 만(몇 초). 그사이 main 에 코드가 들어왔으면 줄에서 빠져 밖에서 다시 잰다."""
     merge_gate.make_output_safe()
     validate_name(name)
+    warm(name, repo)                                # D 에 가 있던 트랙이면 C 로(관제 109)
     wt = _preflight(name, repo)
     br = branch_name(name)
     run(["git", "fetch", "origin"], repo)
@@ -1541,13 +1578,19 @@ def main(argv=None):
     p_close = sub.add_parser("close", help="트랙을 접는다 — 폴더·브랜치 삭제")
     p_close.add_argument("name")
     sub.add_parser("list", help="열린 트랙과 밀린 정도")
+    p_use = sub.add_parser("use", help="이 트랙으로 일을 시작한다 — D(외장)에 가 있으면 C 로 되돌린다(관제 109)")
+    p_use.add_argument("name")
 
     args = parser.parse_args(argv)
     try:
         if args.cmd == "start":
             return start(args.name, full=args.full, card=args.card)
+        if args.cmd == "use":
+            validate_name(args.name)
+            return 0 if warm(args.name) else 1
         if args.cmd == "claim":
             validate_name(args.name)
+            warm(args.name)
             _control.claim(BASE, args.name, args.card, args.targets)
             return 0
         if args.cmd == "park":

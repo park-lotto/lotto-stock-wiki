@@ -6016,6 +6016,11 @@ def apply_scene_lab(plan, seg_map, edits):
             beat["phrase_sync"] = False
         else:
             beat.pop("phrase_sync", None)
+        # 구절 맞춤 '정확'(관제 106) — 새 규칙 작업에서 손님이 [구절 맞춤]을 켠 칸만. 화면 컷 계산(scene_play.js scenesV2)이 읽는다.
+        if eb.get("exact") and eb.get("phrase"):
+            beat["phrase_exact"] = True
+        else:
+            beat.pop("phrase_exact", None)
         # ★끈 칸 = 화면에 보이던 컷 **그대로** 렌더(2026-09-14 사장님 "그 화면 그대로, 경계만 조절").
         #   화면(scene_play.js CUTS)이 정한 컷을 받아 원본 위치로 풀어 둔다 — 서버가 다시 나누지 않는다.
         _mc = []

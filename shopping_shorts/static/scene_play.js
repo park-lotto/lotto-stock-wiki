@@ -468,6 +468,20 @@ function beatSyncSpeed(i){
 //   얹는다. 기본 **켬**(끄면 종전 배분). ✋수동 길이(FIXLEN)가 있는 칸은 수동이 이긴다.
 const PHRASE_SYNC = {};             // beat_idx → false(끔)일 때만 기록. 기본은 켬.
 function phraseSyncOn(i){ return PHRASE_SYNC[i] !== false; }
+// ★새 규칙 작업(cut_rule scenes_v2)의 두 모드(관제 106, 2026-10-03 사장님 "구절 맞춤은 좀 더 느리게 되더라도 / 지금 규칙은 하나 더").
+//   컷 리듬(기본) = 관제 084 배분 그대로(장면 수만큼 컷·고르게·전환은 가까운 자막 경계 0.4초·1.2배 안에서만).
+//   구절 맞춤     = 같은 배분에서 **장면 전환을 자막 경계에 정확히**(모자란 화면은 상한 없이 느리게). 컷 수는 여전히 장면 수.
+//   상태는 PHRASE_EXACT 한 곳(칸 표식 beat.phrase_exact) — 켠 칸만 기록한다. 옛 규칙 작업에는 쓰지 않는다.
+const PHRASE_EXACT = {};            // beat_idx → true(구절 맞춤 정확)일 때만 기록
+function cutRuleIsV2(){ return typeof DATA === 'object' && !!DATA && DATA.cut_rule === 'scenes_v2'; }
+function phraseExactOn(i){ return cutRuleIsV2() && PHRASE_EXACT[i] === true && phraseSyncOn(i); }
+// 화면의 [구절 맞춤] 체크 상태 — 새 규칙 작업은 '정확' 표식, 옛 작업은 종전 그대로
+function phraseBoxOn(i){ return cutRuleIsV2() ? phraseExactOn(i) : phraseSyncOn(i); }
+// 새 배분(scenesV2)이 도는 칸 = ✋ 손 길이를 계산에 안 쓴다(배지를 숨기는 판단 한 곳). planClips 의 분기 조건과 같다.
+function sceneRuleOn(i){
+  return cutRuleIsV2() && phraseSyncOn(i) && !(typeof STRETCH === 'object' && STRETCH && STRETCH[i])
+    && !(typeof SLOW === 'object' && SLOW && SLOW[i] > 1);
+}
 // ══ 구절 맞춤을 끈 칸 = "그 화면 그대로" 규칙(2026-09-14 사장님 확정) ══════════════
 //   규칙은 이것뿐이다 — 계산으로 길이를 다시 나누지 않는다.
 //   ① 끄는 순간 켜져 있던 컷(장면·시작·길이)을 CUTS[i]에 그대로 얼린다
@@ -624,11 +638,20 @@ function slowUndo(i){
 // 컷 리듬 ↔ 구절 맞춤은 **정반대 한 쌍**이다(같은 것을 다르게 정하므로 둘 다 켤 수 없다).
 //   컷 리듬 켬 = 구절 맞춤 끔. 상태는 PHRASE_SYNC 한 곳에만 둔다 — 두 벌로 두면 어긋난다(0순위-B).
 function cutRhythmOn(i){
+  if (cutRuleIsV2()) return phraseSyncOn(i) && !phraseExactOn(i);   // 새 규칙 작업: 컷 리듬 = 084 배분(기본)
   const b = ((typeof DATA === 'object' && DATA && DATA.beats) || [])[i] || {};
   return !!(b.cut_rhythm) && !phraseSyncOn(i);
 }
 function toggleCutRhythm(i, on){ togglePhraseSync(i, !on); }
 function togglePhraseSync(i, on){
+  if (cutRuleIsV2()){
+    // 새 규칙 작업: 두 체크는 한 쌍(하나를 끄면 다른 하나가 켜진다). 손 컷으로 얼려 둔 칸도 누르면 새 배분으로 돌아온다.
+    delete CUTS[i]; delete SLOW[i]; delete PHRASE_SYNC[i];
+    if (on) PHRASE_EXACT[i] = true; else delete PHRASE_EXACT[i];
+    if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
+    (typeof render === 'function' && render());
+    return;
+  }
   if (on){ delete CUTS[i]; delete SLOW[i]; } else freezeCuts(i);
   if (on) delete PHRASE_SYNC[i]; else PHRASE_SYNC[i] = false;
   if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
@@ -645,7 +668,29 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   //   장면 공급(줄마다 대사를 채울 만큼)은 2단계 ai_match.ensure_cover 가 책임진다 — 여기선 받은 장면에 시간만 나눈다.
   function _maxS(){ return typeof maxSlowmo === 'function' ? maxSlowmo() : 1.2; }
   function cutRuleV2(){ return typeof DATA === 'object' && DATA && DATA.cut_rule === 'scenes_v2'; }
-  function scenesV2(segments, ttsDur, beatIdx){
+  // ★청소 뒤에도 같은 편성이면 컷이 그대로(관제 110, 2026-10-04 황선희님 c9fbcc3ac28c 7번 칸).
+  //   청소본은 **청소 전 컷이 읽은 구간**을 지운 것이다. 그런데 지운 구간(DATA.clean_spans)이 생기면 아래 배분의 여유(room)가
+  //   달라져(구간이 장면보다 짧으면 cleanBound 가 null → room=len) 같은 편성의 컷이 바뀌었다(s5 2.53→2.13초, s1 1.49→1.90초)
+  //   → 새 컷이 지운 구간 밖 0.41초를 읽어 칸 전체가 원본으로 떨어지고 꾸미기에 원본 자막이 보였다.
+  //   그래서 먼저 **청소 구간을 안 보고**(=청소 전과 똑같이) 배분하고, 그 컷들이 전부 지운 구간 안이면 그대로 쓴다.
+  //   하나라도 밖이면(청소 뒤 편성·음성이 바뀜) 종전대로 청소 구간을 보고 배분한다. 판단은 여기 한 곳.
+  function scenesV2(segments, ttsDur, beatIdx, exact){
+    const D0 = (typeof DATA === 'object' && DATA) || {};
+    const spansAll = D0.clean_spans || {};
+    if (!spansAll.__error__ && Object.keys(spansAll).length){
+      const free = scenesV2Alloc(segments, ttsDur, beatIdx, exact, false);
+      const TOL = 0.05;                                      // 컷 길이 0.01초 반올림 + 1프레임 — 읽는 창은 뒤(finish)에서 다시 다듬는다
+      const inside = free.length && free.every(c => {
+        const sp = spansAll[c.video_id];
+        if (!Array.isArray(sp) || !sp.length) return true;   // 이 영상은 지운 적 없음(골라 지우기에서 안 고른 장면) — 청소 구간 제한 없음
+        const s = Number(c.start), e = s + Number(c.src_dur || c.dur || 0);
+        return sp.some(x => Number(x[0]) <= s + TOL && Number(x[1]) >= e - TOL);
+      });
+      if (inside) return free;
+    }
+    return scenesV2Alloc(segments, ttsDur, beatIdx, exact, true);
+  }
+  function scenesV2Alloc(segments, ttsDur, beatIdx, exact, useClean){
     // 같은 장면이 목록에 두 번 들어와도(같은 id·같은 영상 같은 시작) 한 번만 — 한 칸에 같은 장면 반복 금지(사장님 "같은 것 많아")
     const _seen = new Set();
     let scenes = segments.filter(g => {
@@ -667,7 +712,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const reel = Number((D.src_duration || {})[g.video_id] || 0);
       if (!(reel > 0) || String(g.seg_id || '').startsWith('film_') || (typeof TRIMS === 'object' && TRIMS && TRIMS[g.seg_id]))
         return {st: g.start, len, room: len, far: len};        // 원본 길이 모름·사람이 자른 구간 = 그 구간만
-      const cb = cleanBound(g.video_id, g.start, g.end);
+      const cb = useClean ? cleanBound(g.video_id, g.start, g.end) : {lo: 0, hi: Infinity};
       if (!cb) return {st: g.start, len, room: len, far: len};
       let far = Math.min(reel, cb.hi);                         // 원본 끝·청소 구간 끝
       scenes.forEach(o => { if (o !== g && o.video_id === g.video_id && o.start > g.start + EPS && o.start < far) far = o.start; });   // 같은 칸 다른 장면과는 절대 안 겹친다
@@ -702,8 +747,53 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     const caps = (typeof capsOf === 'function' ? (capsOf(beatIdx) || []) : []);
     const SNAP_SEC = 0.4;
     const capB = caps.slice(1).map(c => Number(c.start)).filter(x => isFinite(x) && x > EPS && x < ttsDur - EPS);
+    if (exact && dur.length > 1){
+      // ★구절 맞춤(관제 106): 전환을 자막 경계에 **정확히** — 0.4초·배속 상한을 보지 않는다.
+      //   고른 배분의 전환 자리(ideal)에서 가장 덜 움직이는 경계 조합을 고른다(순서 유지 · 맞춘 전환 수가 최대인 조합 중 이동이 최소).
+      //   컷 하한은 손 컷과 같은 MANUAL_MIN(0.3초) — 사람이 구절 맞춤을 골랐으니 자막 줄이 짧으면 컷도 그만큼 짧다.
+      //   장면이 자막 줄보다 많아 경계가 모자란 전환은 양옆 맞춘 전환 사이를 고르게 나눈다. 모자란 화면은 아래에서 컷마다 정확히 느리게(fit).
+      const n = dur.length, m = MANUAL_MIN, ideal = [];
+      let run = 0;
+      for (let j = 0; j < n - 1; j++){ run += dur[j]; ideal.push(run); }
+      const B = capB.slice().sort((x, y) => x - y);
+      // pts: 맞출 수 있는 자리 = (전환 j, 경계 k). 앞 (-1, 0초)에서 뒤 (n-1, 끝)까지 가는 길 중 건너뛴 전환이 가장 적고 이동이 가장 작은 길.
+      const SKIP = 1000, best = {}, from = {};
+      const key = (j, k) => j + ':' + k;
+      const timeOf = (j, k) => j < 0 ? 0 : (j >= n - 1 ? ttsDur : B[k]);
+      const reach = (j0, k0, j1, k1) => timeOf(j1, k1) - timeOf(j0, k0) >= m * (j1 - j0) - EPS;
+      best[key(-1, -1)] = 0;
+      for (let j = 0; j <= n - 1; j++){
+        const ks = j === n - 1 ? [B.length] : B.map((_, k) => k);
+        ks.forEach(k => {
+          let bc = Infinity, bf = null;
+          for (let j0 = -1; j0 < j; j0++){
+            const k0s = j0 < 0 ? [-1] : B.map((_, q) => q).filter(q => q < k);
+            k0s.forEach(k0 => {
+              const c0 = best[key(j0, k0)];
+              if (c0 === undefined || !reach(j0, k0, j, k)) return;
+              const c = c0 + SKIP * (j - j0 - 1) + (j === n - 1 ? 0 : Math.abs(B[k] - ideal[j]));
+              if (c < bc){ bc = c; bf = [j0, k0]; }
+            });
+          }
+          if (bf){ best[key(j, k)] = bc; from[key(j, k)] = bf; }
+        });
+      }
+      const T = new Array(n).fill(null); T[n - 1] = ttsDur;
+      let cur = [n - 1, B.length];
+      while (from[key(cur[0], cur[1])]){
+        cur = from[key(cur[0], cur[1])];
+        if (cur[0] >= 0) T[cur[0]] = B[cur[1]];
+      }
+      for (let j = 0; j < n - 1; j++){                     // 못 맞춘 전환 = 양옆 정해진 전환 사이를 고르게
+        if (T[j] !== null) continue;
+        let j1 = j; while (T[j1] === null) j1++;
+        const t0 = j ? T[j - 1] : 0, cnt = j1 - j + 1;
+        for (let q = j; q < j1; q++) T[q] = t0 + (T[j1] - t0) * (q - j + 1) / cnt;
+      }
+      dur = T.map((t, j) => t - (j ? T[j - 1] : 0));
+    }
     let acc = 0;
-    for (let j = 0; j < dur.length - 1; j++){
+    for (let j = 0; !exact && j < dur.length - 1; j++){
       acc += dur[j];
       let best = null;
       capB.forEach(x => { if (Math.abs(x - acc) <= SNAP_SEC && (best === null || Math.abs(x - acc) < Math.abs(best - acc))) best = x; });
@@ -718,6 +808,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const c = {seg_id: g.seg_id, video_id: g.video_id, start: av[k].st, dur: d};
       const src = Math.min(Math.max(real[k], av[k].room), dur[k]);   // 자막 경계에 맞춰 늘어난 몫도 원본에 있으면 진짜 화면으로
       if (src < d - EPS) c.src_dur = +src.toFixed(3);
+      if (exact && src < dur[k] - 0.01) c.fit = true;             // 구절 맞춤: 자막 경계까지 정확히 느리게(1.2배 상한·정지 없이)
       if (src > av[k].len + 0.05) c.more = +(src - av[k].len).toFixed(2);   // 카드 표시용 — 원본에서 이어 보여 준 초(그리기만)
       return c;
     });
@@ -896,7 +987,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   if (cutRuleV2() && !rhythmOne && beatIdx != null && phraseSyncOn(beatIdx) && !spread
       && !(typeof SLOW === 'object' && SLOW && SLOW[beatIdx] > 1)
       && typeof lists !== 'undefined' && lists[beatIdx] === segIds) {
-    return finish(scenesV2(segments, ttsDur, beatIdx));
+    return finish(scenesV2(segments, ttsDur, beatIdx, phraseExactOn(beatIdx)));
   }
   if (!rhythmOne && beatIdx != null && phraseSyncOn(beatIdx) && typeof capsOf === 'function') {
     const caps = capsOf(beatIdx) || [];
@@ -1351,7 +1442,10 @@ function pvxCuts(){
   //   다시 묻지도 않고 옛 목소리 합본을 계속 틀었다. 서버 서명(app._pvproxy_sig)도 칸 음성 지문을 싣는다.
   //   beats(칸별 컷 JSON)는 그대로 둔다 — pvxAttach 가 칸 목록을 글자 그대로 대조한다.
   const vers = (DATA && DATA.beats || []).map(b => (b && b.tts_ver) || 0).join(',');
-  return {beats, cuts, key: beats.join('|') + '#tts:' + vers};
+  // ★끼움 장면(AI 장면 등)도 key 에 싣는다(관제 116) — 만들거나 빼면 컷은 그대로라 종전엔 다시 묻지 않아 미리보기에 안 나왔다.
+  //   서버 서명(app._pvproxy_beat_meta)도 끼움 장면 파일을 싣는다.
+  const cws = (DATA && DATA.beats || []).map(b => (b && b.cutaway && b.cutaway.asset_id) || '').join(',');
+  return {beats, cuts, key: beats.join('|') + '#tts:' + vers + (cws.replace(/,/g, '') ? '#cw:' + cws : '')};
 }
 function pvxClock(c){ return c && c._px; }
 // ★언제 만드나(2026-09-14 사장님 "처음 배치시 빠르게 / 장면 교체했을 땐 버튼을 눌러서").

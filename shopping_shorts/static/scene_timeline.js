@@ -68,7 +68,7 @@
         <span class="tl-len${getFix(i, c.seg_id) ? ' fixed' : ''}"
           ${getFix(i, c.seg_id) ? `title="내가 정한 길이 — 누르면 자동 배분으로 되돌립니다"
             onclick="event.stopPropagation();tlFixReset(${i},${k})"` : ''}
-          >${(getFix(i, c.seg_id) && !CUTS[i]) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
+          >${(getFix(i, c.seg_id) && !CUTS[i] && !sceneRuleOn(i)) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
         ${CUTS[i] ? `<span class="tl-edge l" data-k="${k}" title="끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다"></span>` : ''}
         <span class="tl-edge" data-k="${k}" title="${CUTS[i] ? '끌어서 이 컷 길이만 조절 — 다른 컷은 그대로, 빈 시간에서 가져옵니다' : '끌어서 이 컷의 길이 조절 — 늘리면 나머지 컷이 비례로 줄어듭니다'}"></span>
         <button type="button" class="tl-repbtn${inRep ? ' on' : ''}"
