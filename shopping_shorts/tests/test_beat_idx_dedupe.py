@@ -157,7 +157,12 @@ _DRIVER = r"""
   // 칸 2개를 지운 작업 — 위치 i와 beat_idx가 다르다
   global.DATA = {ai_scene_enabled: true, beats: [{beat_idx: 0}, {beat_idx: 2}, {beat_idx: 5}]};
   global.renderBand = () => {};
-  global.document = {getElementById: () => null};
+  // 관제 117: [AI 장면]은 확인 창(초안)을 거쳐 만든다 — 창을 그릴 최소 DOM 과 화면 도우미를 준다
+  const _el = () => new Proxy({style: {}, dataset: {}}, {get: (t, k) => k in t ? t[k] : (k === 'appendChild' || k === 'removeAttribute' ? () => {} : ''), set: (t, k, v) => { t[k] = v; return true; }});
+  const _els = {};
+  global.document = {getElementById: id => id === 'tbhint' ? null : (_els[id] = _els[id] || _el()), createElement: () => _el(),
+                     querySelectorAll: () => [], body: {appendChild: () => {}}};
+  global.lists = [[], [], []]; global.esc = x => String(x); global.segMark = x => x;
   global.setInterval = (fn) => { fn(); return 1; };
   global.clearInterval = () => {};
   global.fetch = async (url, opts) => {
@@ -166,10 +171,14 @@ _DRIVER = r"""
       return {json: async () => ({beats: [{beat_idx: 2, ai_scene: {state: 'running'}},
                                           {beat_idx: 5, ai_scene: {state: 'done'}, cutaway: {match_type: 'ai'}},
                                           {beat_idx: 1, ai_scene: {state: 'failed'}}]})};
+    if (url.split('/').pop() === 'draft')
+      return {json: async () => ({ok: true, draft: 'd1', sec: 4, visible: 4, base_url: 'b', prompt_en: 'en', prompt_ko: 'ko', base: null})};
     return {json: async () => ({ok: true, sfx: null})};
   };
   (async () => {
     await startAiScene(2, 'natural');
+    await new Promise(r => setTimeout(r, 20));      // 초안이 온 뒤
+    await confirmAiDraft();
     await removeAiScene(1);
     await _sfxPost(2, {asset_id: 3});
     await new Promise(r => setTimeout(r, 20));
@@ -195,5 +204,6 @@ def test_scene_lab_sends_real_beat_idx(tmp_path):
     posts = [s for s in d["sent"] if s[0] in ("ai_scene", "cutaway", "sfx")]
     # 위치 2 → beat_idx 5 / 위치 1 → beat_idx 2 / 위치 2 → beat_idx 5
     assert posts == [["ai_scene", 5], ["cutaway", 2], ["sfx", 5]], d["sent"]
+    assert ["draft", 5] in d["sent"], d["sent"]            # 초안 요청도 진짜 칸 번호(관제 117)
     # 폴링도 진짜 번호(5)의 상태를 읽는다 — 위치(2)로 찾으면 'running'을 읽는다
     assert d["polled"] == {"state": "done"}, d
