@@ -154,6 +154,23 @@ def _roles_from_chain(chain):
     return out
 
 
+# 옛 레시피 스타일 1~4번(2026-07, 근거 1~3편, 흐름 글 4단계뿐) → 7~8칸 틀(2026-10-04 사장님 "인물 드라마형 틀이 너무 짧다").
+# 원래 흐름 글의 뜻은 그대로 두고, 빠진 단계(왜 곤란했나·정체 공개·결과·고조)를 같은 계열 최신 스타일(가족갈등 반전형 10칸) 결로 채운다.
+# ★시안 도구 안에서만 — 라이브 스타일 표(reference.db spine)는 고치면 고객에게 바로 가므로 사장님 확인 뒤에.
+OLD_EXPAND = {
+    "인물 드라마형": [("hook", "[인물]이 [상황]이라 급하게 — 이야기로 연다"), ("situation", "왜 급했나·뭐가 곤란했나(불편을 생생하게)"),
+                  ("reveal", "그래서 꺼낸 게 이거 — 정체 공개"), ("method", "시도: 이렇게만 했을 뿐"), ("result", "결과가 눈에 보이는 순간"),
+                  ("react", "주변 놀란 반응"), ("escalation", "심지어 — 한 단계 더(덤·의외의 장점)"), ("cta", "CTA")],
+    "역발상 경고형": [("hook", "충격 경고: [소재] 절대 [흔한방법] 마세요"), ("mistake", "다들 그렇게 하는데"), ("problem", "왜 틀렸나 이유"),
+                  ("reveal", "올바른 비법·도구 공개"), ("method", "이렇게 하면 된다(킥 하나 감춤)"), ("result", "결과 차이"),
+                  ("escalation", "심지어 — 한 단계 더"), ("cta", "CTA 댓글")],
+    "비밀 궁금증형": [("hook", "[소재] [흔한방법] 하는 분들 이거 꼭 보세요"), ("problem", "문제 제기"), ("bait", "다들 놓치는 결정적 한 끗"),
+                  ("reveal", "핵심 비법 살짝만 공개"), ("method", "하는 법"), ("result", "결과"), ("escalation", "심지어 — 한 단계 더"), ("cta", "CTA")],
+    "충격 결과형": [("hook", "결과 먼저: [행동]했을 뿐인데 [놀라운결과]"), ("result", "결과를 한 번 더 보여 줌"), ("bait", "비결이 궁금하게"),
+                  ("reveal", "알고 보니 간단한 방법·도구"), ("method", "하는 법"), ("escalation", "심지어 — 한 단계 더"), ("twist", "비법 킥 감춤"), ("cta", "CTA")],
+}
+
+
 def _families(db):
     rows = db.execute("select id, name, situation_type, fit_categories_json, beat_roles_json, beat_chain_json, emotion_arc, "
                       "templates_json, voice_json from spine where status='approved' order by id").fetchall()
@@ -162,7 +179,13 @@ def _families(db):
         roles_l = json.loads(roles or "[]")
         chain_l = json.loads(chain or "[]")
         tpl_d = json.loads(tpl or "{}") or {}
-        if not roles_l and chain_l:      # 옛 스타일: 흐름 글로 칸을 만들고, 첫 흐름 글을 첫 줄 틀로 쓴다([소재] → {소재})
+        if not roles_l and name in OLD_EXPAND:      # 옛 스타일 1~4번: 7~8칸 틀로
+            roles_l = [r for r, _ in OLD_EXPAND[name]]
+            chain_l = [c for _, c in OLD_EXPAND[name]]
+            chain = json.dumps(chain_l, ensure_ascii=False)
+            tpl_d = {"hook": [str(chain_l[0]).split(" — ")[0].replace("충격 경고: ", "").replace("결과 먼저: ", "").replace("[", "{").replace("]", "}")]}
+            tpl = json.dumps(tpl_d, ensure_ascii=False)
+        elif not roles_l and chain_l:      # 옛 스타일: 흐름 글로 칸을 만들고, 첫 흐름 글을 첫 줄 틀로 쓴다([소재] → {소재})
             roles_l = _roles_from_chain(chain_l)
             tpl_d = {roles_l[0]: [re.sub(r"^[^:]*:\s*", "", str(chain_l[0])).replace("[", "{").replace("]", "}")]} if not tpl_d else tpl_d
             tpl = json.dumps(tpl_d, ensure_ascii=False)
@@ -309,6 +332,10 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
         r3 = sg._call_json(head + P3 % (r1.get("kind") or "", pan or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
                                         ", ".join(fam["names"]), voice, len(roles), slot_txt), S3, note=n3, vertex=True) or {}
     slots = r3.get("slots") or []
+    if creative is None:      # 스타일 대본: 칸 이름은 그 스타일 칸 그대로(3.6이 "1"·"2" 같은 번호로 돌려줄 때가 있다 — 2026-10-04 인물 드라마형 실측)
+        for i, sl in enumerate(slots):
+            if i < len(roles) and str(sl.get("slot") or "") not in roles:
+                sl["slot"] = roles[i]
     if creative is not None and extra:
         def _miss(sl):
             names = {str(x.get("slot") or "").split("_")[0].lower() for x in sl}

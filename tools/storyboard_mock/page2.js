@@ -36,7 +36,7 @@ function page2(){
     <div class="note">스타일은 참고만 — 우리 S급 히트 대본·승인 부품 말맛으로 창의적으로</div>${BUSY[key()+'auto']?'<div class="busy">⏳ 만드는 중…</div>':(made()['auto']?'<div class="done">✔ 만들어짐</div>':'')}</div>`;
   const rec = F.filter(f => recIds.has(String(f.id))), rest = F.filter(f => !recIds.has(String(f.id)));
   const n = picks2().size, busy = Object.keys(BUSY).some(k => k.startsWith(key()));
-  const tabs = Object.keys(made()).map(k => `<button class="btn ${VIEW[key()]===k?'on':''}" onclick="VIEW['${key()}']='${k}';render()">${k==='auto'?'AI 자동':k==='mine'?'✍ 내가 직접 쓴 대본':((F.find(f=>String(f.id)===k)||{names:[k]}).names[0])} <span class="note">${made()[k].secs||''}초</span></button>`).join(' ');
+  const tabs = Object.keys(made()).map(k => `<button class="btn ${VIEW[key()]===k?'on':''}" onclick="VIEW['${key()}']='${k}';render()">${tabName(k)} <span class="note">${made()[k].secs||''}초</span></button>`).join(' ');
   const bd = made()[VIEW[key()]];
   let body = '';
   if (bd){
@@ -71,6 +71,9 @@ function bake(ek, bd){      // 손으로 고친 문장·장면 순서를 칸에 
   bd.slots.forEach((sl, i) => { sl.ids = ordOf(ek, i, sl).slice(); if (EDIT[ek] && EDIT[ek][i] != null) sl.line = EDIT[ek][i]; });
   [ORD, CAND].forEach(M => Object.keys(M).filter(o => o.startsWith(ek+'#')).forEach(o => delete M[o])); delete EDIT[ek];
 }
+function tabName(k){ const F = window.FAMS || []; const [base, ...ex] = String(k).split('+');
+  const nm = base==='auto'?'AI 자동':base==='mine'?'✍ 내가 직접 쓴 대본':((F.find(f=>String(f.id)===base)||{names:[base]}).names[0]);
+  return nm + (ex.length ? ' <span class="addb" style="margin:0">＋' + ex.join('+').split('·')[0].split('+').map(ko).join('·') + '</span>' : ''); }
 function curBd(){ const k = VIEW[key()]; return [key()+k, made()[k]]; }
 function rowMove(i, d){ const [ek, bd] = curBd(); const t = i + d; if (t < 0 || t >= bd.slots.length) return; bake(ek, bd);
   [bd.slots[i], bd.slots[t]] = [bd.slots[t], bd.slots[i]]; if (bd.check) [bd.check[i], bd.check[t]] = [bd.check[t], bd.check[i]]; render(); }
@@ -133,8 +136,9 @@ async function rewrite(){
   try {
     const r = await fetch('/insert', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({jid: key(), board: cur, extra: [...xset(ek)]})});
     const d = await r.json();
-    if (d.slots){ made()[k] = Object.assign(d, {secs: Math.round((Date.now()-t0)/1000)}); Object.keys(ORD).filter(o => o.startsWith(ek+'#')).forEach(o => delete ORD[o]);
-      Object.keys(CAND).filter(o => o.startsWith(ek+'#')).forEach(o => delete CAND[o]); delete EDIT[ek]; XTRA[ek] = new Set(); }
+    // 원래 탭은 그대로 두고 새 탭으로(2026-10-04 사장님 "추가로 만들어도 미리 만든 탭은 없어지지 않게")
+    if (d.slots){ const base = String(k).split('+')[0]; let nk = base + '+' + (d.extra||[]).join('+'); let c = 2; while (made()[nk]) nk = base + '+' + (d.extra||[]).join('+') + '·' + (c++);
+      made()[nk] = Object.assign(d, {secs: Math.round((Date.now()-t0)/1000), from: k}); XTRA[ek] = new Set(); VIEW[key()] = nk; }
     else { console.log('[sb] 끼워 넣기 실패', d); alertBox('끼워 넣기 실패 — 다시 눌러 주세요'); }
   } catch(e){ console.log('[sb] 요청 실패', e); alertBox('끼워 넣기 실패 — 시험 서버(127.0.0.1:8790)가 켜져 있어야 해요'); }
   delete BUSY[ek]; delete BUSY[key()+k]; render();
