@@ -195,7 +195,7 @@ function page2(){
     const mine = new Set(Object.values(asg()).flatMap(s => [...s]));
     const cells = bd.slots.map((sl, i) => { const hs = (sl.ids||[]).some(id => mine.has(id)); const ck = bd.check[i] || {};
       const added = (bd.extra||[]).includes(String(sl.slot||'').split('_')[0].toLowerCase());
-      return `<div class="cell ${sl.weak?'weak':''} ${hs?'hasstar':''} ${added?'added':''}"><div class="ch"><b>${i+1}. ${ko(sl.slot)}${hs?' 🎯':''}</b><span>${sl.need||''}</span></div>${added?'<div class="addb">＋ 다시 쓰기로 추가한 칸</div>':''}
+      return `<div class="cell ${sl.weak?'weak':''} ${hs?'hasstar':''} ${added?'added':''}"><div class="ch"><b>${i+1}. ${ko(sl.slot)}${hs?' 🎯':''}</b><span>${sl.need||''}</span></div>${added?'<div class="addb">＋ 다시 쓰기로 추가한 칸</div>':''}${(i===0&&(bd.extra_missing||[]).length)?`<div class="why">⚠ 다시 쓰기에서 빠진 칸: ${bd.extra_missing.map(ko).join(', ')}</div>`:''}
         <div class="cth">${cellCards(ek, i, sl, ck)}</div>${candBox(ek, i, sl, bd)}
         <div class="line" contenteditable="true" oninput="(EDIT['${ek}']=EDIT['${ek}']||{})[${i}]=this.innerText;upd2()">${lines[i]}</div>
         ${sl.weak?`<div class="why">⚠ ${sl.weak}</div>`:''}${sl.line_before?`<div class="meta">✎ 검수: "${sl.line_before}" → 제품 사실 빼고 고침</div>`:''}
@@ -251,7 +251,7 @@ async function rewrite(){
   const ex = [...new Set([...(bd.extra||[]), ...xset(ek)])].join(',');
   BUSY[ek] = BUSY[key()+k] = true; render(); const t0 = Date.now();
   try {
-    const r = await fetch('/gen', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({jid: key(), keys: [k], roles: rolesParam(), extra: ex})});
+    const r = await fetch('/gen', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({jid: key(), keys: [k], roles: rolesParam(), extra: ex, prev: bd.slots.map(x => x.slot).join(',')})});
     const d = await r.json();
     if (d[k]){ made()[k] = Object.assign(d[k], {secs: Math.round((Date.now()-t0)/1000)}); Object.keys(ORD).filter(o => o.startsWith(ek+'#')).forEach(o => delete ORD[o]);
       Object.keys(CAND).filter(o => o.startsWith(ek+'#')).forEach(o => delete CAND[o]); delete EDIT[ek]; XTRA[ek] = new Set(); }

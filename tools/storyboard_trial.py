@@ -273,10 +273,12 @@ def _apply_role_picks(slots, roles_pick):
     return moved
 
 
-def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pick="", extra=None):
+def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pick="", extra=None, prev=None):
     roles = list(fam["roles"] or ["hook", "problem", "method", "result", "land"])
     chain = list(fam["chain"] or [])
-    extra = [e for e in (extra or []) if e in EXTRA_DESC and e not in roles]
+    # 이미 있는 칸은 뺀다 — 스타일은 그 스타일 칸과, AI 자동은 직전 스토리보드 칸과 비교(AI 자동은 스타일 칸이 참고일 뿐이라 roles 와 비교하면 고조가 조용히 버려진다)
+    _have = set(roles) if creative is None else {str(x).split("_")[0].lower() for x in (prev or []) if x}
+    extra = [e for e in (extra or []) if e in EXTRA_DESC and e not in _have]
     if extra and creative is None:      # ★손님이 고른 칸을 마무리 앞에 넣는다(칸 구조는 그 스타일 그대로 + 추가 칸)
         at = max(1, len(roles) - 1)
         roles[at:at] = extra
@@ -291,13 +293,30 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
     # ★말맛(2026-10-04 사장님 "투박하고 어색 — S급·우리 자료를 참고 안 한 듯"): 라이브 대본 작가 지침서 + 플랫폼 말투 지침 + 히트 대본 + 승인 부품을 앞에 붙인다
     head = _writer_head(fam, r1.get("kind") or "")
     if creative is not None:      # 1번 AI 자동 — 스타일은 참고, 말맛은 부품·히트 대본
-        add = ("\n★손님이 꼭 넣어 달라고 한 칸(알맞은 자리에 넣어라): " + " / ".join(EXTRA_DESC[e] for e in extra) + "\n") if extra else ""
+        add = ""
+        if extra:      # ★AI 자동은 칸을 코드로 못 끼운다 → 직전 흐름을 주고, 끼운 칸 이름을 정해 주고, 결과를 코드로 검사한다(2026-10-04 사장님 "고조 눌렀는데 8칸→7칸, 고조 없음")
+            pv = [x for x in (prev or []) if x]
+            add = ("\n★다시 쓰기 — 직전 스토리보드 칸 흐름: %s (%d칸)\n그 흐름은 그대로 두고, 아래 칸을 알맞은 자리에 끼워 %d칸 이상으로 써라. 칸 수를 줄이지 마라.\n"
+                   "끼우는 칸(slot 이름을 정확히 이 영어 이름으로): %s\n") % (" → ".join(pv) or "(없음)", len(pv), len(pv) + len(extra),
+                                                                       " / ".join("%s = %s" % (e, EXTRA_DESC[e]) for e in extra))
         r3 = sg._call_json(head + P3C % (r1.get("kind") or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
                                          ", ".join(fam["names"]), " → ".join(roles), creative) + add, S3, note=n3, vertex=True) or {}
     else:
         r3 = sg._call_json(head + P3 % (r1.get("kind") or "", pan or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
                                         ", ".join(fam["names"]), voice, len(roles), slot_txt), S3, note=n3, vertex=True) or {}
     slots = r3.get("slots") or []
+    if creative is not None and extra:
+        def _miss(sl):
+            names = {str(x.get("slot") or "").split("_")[0].lower() for x in sl}
+            m = [e for e in extra if e not in names]
+            if len(sl) < len([x for x in (prev or []) if x]) + len(extra):
+                m.append("칸 수 줄어듦(%d칸)" % len(sl))
+            return m
+        if _miss(slots):      # 한 번만 다시 시킨다 — 그래도 빠지면 빠졌다고 결과에 남긴다(조용히 넘기지 않음)
+            r3 = sg._call_json(head + P3C % (r1.get("kind") or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
+                                             ", ".join(fam["names"]), " → ".join(roles), creative) + add + "★직전 답에서 끼울 칸이 빠졌거나 칸이 줄었다. 반드시 넣어라.", S3, note=n3, vertex=True) or r3
+            slots = r3.get("slots") or []
+        r3["extra_missing"] = _miss(slots)
     flags = _code_flags(slots, lambda c: texts.get(c, ""))
     block = "\n".join("칸 %d [%s — %s] 문장: %s\n   화면: %s" % (i, sl.get("slot"), sl.get("need") or "", sl.get("line"),
                                                        " / ".join(texts.get(c, "?") for c in sl.get("ids") or [])) for i, sl in enumerate(slots))
@@ -320,7 +339,7 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
     role_fixed = _apply_role_picks(slots, roles_pick)
     return {"names": fam["names"], "pan": pan, "first_line_style": r3.get("first_line_style") or "", "slots": slots, "check": check,
             "fixed": fixed, "left_flags": {str(k): v for k, v in _code_flags(slots, lambda c: texts.get(c, "")).items()},
-            "star_missing": star_missing, "role_fixed": role_fixed, "extra": extra, "auth": [n3.get("auth"), n4.get("auth")]}
+            "star_missing": star_missing, "role_fixed": role_fixed, "extra": extra, "extra_missing": r3.get("extra_missing") or [], "auth": [n3.get("auth"), n4.get("auth")]}
 
 
 def main(args):
@@ -413,7 +432,7 @@ def main(args):
                 sum(1 for c in ck if c["short"]), len(bd["fixed"]), len(bd["left_flags"]), bd["star_missing"]), flush=True)
 
 
-def gen(jid, keys, star_s="", role_s="", extra_s=""):
+def gen(jid, keys, star_s="", role_s="", extra_s="", prev_s=""):
     """[화면 버튼용] 저장된 장면 목록(/tmp/sbtrial_<job>.json)으로 고른 스타일들의 스토리보드만 만든다(스타일당 호출 2번).
     keys: 'auto' 또는 스타일 묶음 번호들. 결과 JSON을 표준출력 마지막 줄에 'RESULT ' + JSON 으로."""
     db = sqlite3.connect("file:%s?mode=ro" % DB, uri=True)
@@ -442,7 +461,7 @@ def gen(jid, keys, star_s="", role_s="", extra_s=""):
             from shopping_shorts.store import Store
             from shopping_shorts import bank_assemble as _bk
             creative = _bk.parts_block(Store(DB))
-            out["auto"] = _board(top, "", r1, groups_txt, star, segs, texts, creative=creative, roles_pick=roles_txt, extra=extra_s.split(","))
+            out["auto"] = _board(top, "", r1, groups_txt, star, segs, texts, creative=creative, roles_pick=roles_txt, extra=extra_s.split(","), prev=prev_s.split(","))
             out["auto"]["names"] = ["AI 자동"]
         else:
             fam = next((f for n, f, _ in fams if str(n) == str(k)), None)
@@ -464,7 +483,7 @@ def families_json():
 
 if __name__ == "__main__":
     if sys.argv[1:2] == ["gen"]:
-        gen(sys.argv[2], sys.argv[3].split(","), *(sys.argv[4:7]))
+        gen(sys.argv[2], sys.argv[3].split(","), *(sys.argv[4:8]))
     elif sys.argv[1:2] == ["families"]:
         families_json()
     else:

@@ -6,10 +6,10 @@ HOST = "ubuntu@3.35.251.172"
 PAGE = r"C:/Users/TheRose/Desktop/1·2단계_페이지틀_20261004.html"
 
 
-def run_one(jid, key, roles, out, extra=""):
+def run_one(jid, key, roles, out, extra="", prev=""):
     cmd = ("set -a; . /etc/shopping-shorts.env; set +a; cd /home/ubuntu/lotto-stock-wiki && "
-           "timeout 300 python3 /tmp/storyboard_trial.py gen %s %s '' %s %s 2>/dev/null | grep '^RESULT' | cut -c8-") % (
-        jid, key, "'" + roles.replace("'", "") + "'", "'" + "".join(ch for ch in extra if ch.isalnum() or ch == ",") + "'")
+           "timeout 300 python3 /tmp/storyboard_trial.py gen %s %s '' %s %s %s 2>/dev/null | grep '^RESULT' | cut -c8-") % (
+        jid, key, "'" + roles.replace("'", "") + "'", "'" + "".join(ch for ch in extra if ch.isalnum() or ch == ",") + "'", "'" + "".join(ch for ch in prev if ch.isalnum() or ch in ",_") + "'")
     r = subprocess.run(["ssh", "-o", "ConnectTimeout=15", "-i", KEY, HOST, cmd], capture_output=True, text=True, encoding="utf-8")
     try:
         out.update(json.loads(r.stdout.strip() or "{}"))
@@ -27,7 +27,7 @@ class H(http.server.BaseHTTPRequestHandler):
         q = json.loads(self.rfile.read(n) or b"{}")
         out, ths = {}, []
         for k in q.get("keys") or []:
-            t = threading.Thread(target=run_one, args=(q["jid"], str(k), q.get("roles") or "", out, q.get("extra") or "")); t.start(); ths.append(t)
+            t = threading.Thread(target=run_one, args=(q["jid"], str(k), q.get("roles") or "", out, q.get("extra") or "", q.get("prev") or "")); t.start(); ths.append(t)
         for t in ths:
             t.join()
         b = json.dumps(out, ensure_ascii=False).encode("utf-8")
