@@ -13,6 +13,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import merge_gate  # noqa: E402
+import sched_run  # noqa: E402,F401
 import track  # noqa: E402
 import win_schedule  # noqa: E402
 
@@ -34,14 +35,35 @@ def _repo_with_script(tmp_path):
 
 
 @win
-def test_task_command_really_runs_under_cmd(tmp_path):
+def test_task_command_runs_windowless_and_logs(tmp_path):
+    # 작업 스케줄러가 /TR 문자열을 그대로 띄운다 — 같은 문자열을 그대로 실행(한글·띄어쓰기 경로, cmd 없음)
+    import shutil
     repo = _repo_with_script(tmp_path)
+    shutil.copy(Path(__file__).with_name("sched_run.py"), repo / "tools" / "sched_run.py")
     log = repo / "관제 로그.log"
     cmd = win_schedule.task_command(repo, ["tools\\hello.py"], log, python=sys.executable)
-    # 작업 스케줄러는 /TR 문자열을 그대로 명령줄로 띄운다 — 같은 문자열을 그대로 실행
+    assert not cmd.lower().startswith("cmd"), "cmd 창을 띄우지 않는다"
+    assert "pythonw" in cmd.lower() or not Path(sys.executable).with_name("pythonw.exe").exists()
     r = subprocess.run(cmd, capture_output=True, env=_sched_env(), timeout=60)
     assert r.returncode == 0, r.stderr
-    assert log.exists() and "ran in" in log.read_text(encoding="utf-8", errors="replace")
+    text = log.read_text(encoding="utf-8")
+    assert "ran in" in text and str(repo) in text, "repo 폴더에서 돌았다"
+    assert "■ 끝 rc=0" in text
+
+
+def test_sched_run_logs_line_by_line_and_rc(tmp_path):
+    import sched_run
+    (tmp_path / "tools").mkdir()
+    (tmp_path / "tools" / "boom.py").write_text("print('step1')\nraise SystemExit(3)\n", encoding="utf-8")
+    log = tmp_path / "x.log"
+    old = os.getcwd()
+    try:
+        rc = sched_run.main(["--log", str(log), "--", str(tmp_path / "tools" / "boom.py")])
+    finally:
+        sys.stdout, sys.stderr = sys.__stdout__, sys.__stderr__
+        os.chdir(old)
+    t = log.read_text(encoding="utf-8")
+    assert rc == 3 and "step1" in t and "■ 끝 rc=3" in t
 
 
 @win
@@ -81,3 +103,14 @@ def test_run_cleans_its_own_temp(tmp_path, monkeypatch):
     rc, _ = merge_gate._run([sys.executable, "-c", code], tmp_path)
     assert rc == 0
     assert not list(tmp_path.glob("gate_child_%d*" % os.getpid()))
+
+
+def test_clean_gate_temp_removes_readonly_git_objects(tmp_path):
+    # 시험이 만든 git 저장소의 객체 파일은 윈도에서 읽기 전용 — 예전엔 rmtree(ignore_errors)가 467KB씩 남겼다(10-04 실측)
+    import stat
+    obj = tmp_path / "gate_child_77" / "pytest-of-CH" / "repo" / ".git" / "objects" / "ab" / "cdef"
+    obj.parent.mkdir(parents=True)
+    obj.write_bytes(b"x")
+    os.chmod(obj, stat.S_IREAD)
+    assert merge_gate.clean_gate_temp(77, tmp_root=tmp_path) == ["gate_child_77"]
+    assert not (tmp_path / "gate_child_77").exists()

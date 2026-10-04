@@ -888,11 +888,13 @@ def _span_with_kept(base, material, seg_id=None):
     return out or None
 
 
-def replay_clips(base, clips):
+def replay_clips(base, clips, keep_miss=False):
     """렌더 컷 계획(원본 좌표, plan_beat_clips_for 결과) → 지워진 조각 좌표의 수동 컷.
 
     반환 (cuts, miss). cuts 원소 {video_id, seg_id, start, dur(화면 길이), sdur(읽는 길이)[, pspeed]}.
-    miss = 지워진 조각으로 못 덮은 원본 구간들(증분 청소 대상) — 하나라도 있으면 그 칸은 못 옮긴 것이다."""
+    miss = 지워진 조각으로 못 덮은 원본 구간들(증분 청소 대상) — 하나라도 있으면 그 칸은 못 옮긴 것이다.
+    keep_miss: 못 덮은 컷을 빼지 않고 **그 컷만 원본 좌표 그대로** cuts 에 넣는다(관제 110) — 호출부(_remap_replay)가
+      '덮인 컷은 청소본, 못 덮은 컷만 원본'인 칸을 만든다. 종전엔 컷 하나가 0.4초 모자라도 칸 전체(4.9초)가 원본이었다."""
     cuts, miss = [], []
     for c in clips or []:
         try:
@@ -915,6 +917,12 @@ def replay_clips(base, clips):
         if not got:
             for gs, ge in uncleaned_gaps(base, m) or [(s, s + sd)]:
                 miss.append({"video_id": c.get("video_id"), "start": round(gs, 3), "end": round(ge, 3)})
+            if keep_miss:
+                cut = {"video_id": c.get("video_id"), "seg_id": c.get("seg_id") or "", "start": round(s, 4),
+                       "dur": round(out, 4), "sdur": round(sd, 4)}
+                if c.get("playback_speed"):
+                    cut["pspeed"] = True
+                cuts.append(cut)
             continue
         tot = sum(p["_src"] for p in got) or 1.0
         for p in got:
@@ -999,7 +1007,12 @@ def _remap_replay(plan, base, tts_durs, src_durs):
                 continue
             uncovered.append(bi)
             need[str(bi)] = miss
-            continue
+            # ★못 덮은 컷만 원본, 덮인 컷은 청소본(관제 110, 2026-10-04 황선희님 c9fbcc3ac28c 7번 칸: s1 컷 끝 0.41초가
+            #   모자라다고 s4·s5 컷까지 칸 전체가 원본으로 나가 꾸미기 4쪽에 원본 자막이 보였다). 판정(uncovered·need)과
+            #   증분 청소·과금은 종전 그대로 — 호출부는 원본 편성(plan)으로 조각을 자른다. 여기는 그 전까지 보여 줄 재료만 바꾼다.
+            cuts, _ = replay_clips(base, clips, keep_miss=True)
+            if not any(str(x.get("video_id")) in source_paths(base) for x in cuts):
+                continue                  # 덮인 컷이 하나도 없다 — 종전대로 원본 재료 그대로
         for k in _REPLAY_DROP:
             b.pop(k, None)                # 이미 계획에 녹아 있다 — 남기면 두 번 먹는다
         b["phrase_sync"] = False

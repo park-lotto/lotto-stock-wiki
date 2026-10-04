@@ -4568,6 +4568,8 @@ def _explain_key_failure(service: str, code: int, body: str) -> str:
             return "ElevenLabs가 이 키를 인식하지 못합니다. 키를 새로 만들어 다시 넣어주세요."
     if service == keyroute.SVC_TYPECAST:
         # 타입캐스트는 목록 조회는 되고 합성만 403인 키가 있다(요금제 미가입·만료·크레딧 0). "값 확인"은 틀린 안내.
+        if code == 403 and any(k in (body or "").lower() for k in _TYPECAST_BLOCKED_KEYS):
+            return _TYPECAST_BLOCKED_MSG      # 계정 차단 — 요금제·크레딧 안내는 틀린 안내다(다시 넣어도 안 풀린다)
         if code == 403:
             return ("타입캐스트가 이 키의 음성 합성을 거부했습니다(403). 타입캐스트 API 요금제가 활성인지·크레딧이 "
                     "남았는지 확인해 주세요. 키 값 자체는 맞습니다.")
@@ -5231,6 +5233,16 @@ _BYOK_VENDORS = (
 _OUT_OF_CREDIT = ("402", "payment required", "not enough credits", "insufficient",
                   "[600", "quota exceeded for your plan", "quota_exceeded", "exceeds your quota")
 
+# 타입캐스트가 **계정을 막은 경우**의 안내(2026-10-04 사장님 "타입캐스트에 확인해 봐야 된다는 문구도 넣고", 관제 113).
+#   본문이 {"error_code":"UNUSUAL_ACTIVITY_DETECTED", ...}. 키 값은 맞고 요금제·목소리 문제도 아니다 — 풀 수 있는 곳은 타입캐스트뿐.
+#   실측: 서로 다른 회원 3명(09-29 cid 451, 10-04 cid 364·484)이 본인 키로 같은 거절을 받았고, 364 는 키 검사가
+#   "요금제·크레딧을 확인하라"고만 해서 24분간 등록·삭제를 8번 반복했다. 문구는 이 상수 한 곳 — 키 검사와 미리듣기·렌더 안내가 같이 쓴다.
+_TYPECAST_BLOCKED_KEYS = ("unusual_activity_detected", "unusual account activity")
+_TYPECAST_BLOCKED_MSG = ("타입캐스트가 이 계정에서 비정상 활동이 감지됐다며 음성 합성을 막았습니다(403). 키 값은 맞습니다. "
+                         "타입캐스트 고객센터에 계정 상태를 확인해 주세요 — 타입캐스트에서 풀어 줘야 다시 쓸 수 있습니다. "
+                         "그동안은 설정 > 🔑 내 키 등록에서 다른 음성 키(ElevenLabs 등)를 쓰거나 오류 신고를 남겨 주세요.")
+#   ★이 자리(_TTS_VENDOR_RULES 바로 위)에 둔다 — test_user_facing_error 가 _USER_ERROR_RULES~_script_hash 구간만 떼어 돌린다.
+#     키 검사(_explain_key_failure)는 파일 위쪽에 있지만 부를 때 이 값을 읽으므로 순서는 상관없다.
 # ★음성 서비스(BYOK) 오류를 원인별로 가른다(2026-09-05 고객 신고 cid 260 "3단계에서 계속 실패" — 화면엔
 #   "음성 서비스가 잠시 몰려"만 떠서 키 문제인지 한도인지 장애인지 고객도 사장님도 알 수 없었다).
 #   ElevenLabs/타입캐스트 HTTP 오류 문구(요청 라이브러리의 "401 Client Error … for url: https://api.elevenlabs.io/…")를
@@ -5239,6 +5251,8 @@ _TTS_VENDOR_RULES = (
     # 타입캐스트 403 = 키는 맞는데 **합성이 거부** — 목소리 목록은 되고 합성만 막힌다(실측 cid 260, 14일간 21건 전부).
     # ⚠️요금제·크레딧 정상인데도 났다(09-05 사장님 확인) — 타입캐스트 문서에 403 정의가 없다(402=크레딧, 404=voice 없음).
     #   남은 후보는 그 voice_id를 이 키로 못 쓰는 경우(uc_ 커스텀 목소리는 만든 계정 전용). "키를 다시 넣어라"는 틀린 안내다.
+    # 타입캐스트 계정 차단 — 아래 일반 403 줄보다 **위**에 둔다(문구·판정 낱말은 위 _TYPECAST_BLOCKED_* 한 곳).
+    (("api.typecast.ai",) + _TYPECAST_BLOCKED_KEYS, _TYPECAST_BLOCKED_MSG),
     (("api.typecast.ai", "403"),
      # ⚠️"ElevenLabs로 바꾸세요"는 빼라 — 타입캐스트를 등록한 회원은 일레븐이 무료 계정인 경우가 있다(cid 260, 사장님 확인).
      "타입캐스트가 이 키로의 음성 합성을 거부했습니다(403). 선택한 목소리가 이 키(계정)에서 쓸 수 있는 목소리인지, "
@@ -9569,12 +9583,18 @@ def api_mix_voice_preview(body: dict):
     # ★키 주인은 요청자가 아니라 **작업의 주인**으로 잡는다(2026-08-24). 이 라우트는
     #   Request를 안 받고, job에 customer_id가 이미 있어 렌더 경로와 같은 키를 쓴다
     #   — 미리듣기와 최종 영상이 다른 키로 나가면 소리가 갈릴 수 있다.
-    mix_pipeline.synthesize_line(
-        beats[0]["narration"], out, voice=_voice_snapshot(Store(DB_PATH), body),
-        beat_role=beats[0].get("role"), beat_index=0, beat_total=len(beats),
-        next_text=beats[1]["narration"] if len(beats) > 1 else None,
-        customer_id=job.get("customer_id", 0),
-    )
+    try:
+        mix_pipeline.synthesize_line(
+            beats[0]["narration"], out, voice=_voice_snapshot(Store(DB_PATH), body),
+            beat_role=beats[0].get("role"), beat_index=0, beat_total=len(beats),
+            next_text=beats[1]["narration"] if len(beats) > 1 else None,
+            customer_id=job.get("customer_id", 0),
+        )
+    except Exception as e:      # noqa: BLE001 — 음성 업체 거절·장애. 삼키지 않는다: 기록을 남기고 원인을 고객에게 말한다
+        # ★전엔 예외가 그대로 올라가 500 이었다(2026-10-04 실측: cid 364 미리듣기 2건, 타입캐스트 403 UNUSUAL_ACTIVITY_DETECTED).
+        #   키 검사 화면은 원인을 말해 주는데 미리듣기만 '서버 오류'로 보였다. 문구의 주인은 _user_facing_error 한 곳.
+        print(f"[voice/preview] 합성 실패 job={job_id}: {e!r}", file=sys.stderr)
+        return JSONResponse(status_code=502, content={"ok": False, "error": _user_facing_error(str(e))})
     return FileResponse(str(out), media_type="audio/mpeg")
 
 
@@ -9929,7 +9949,11 @@ async def api_buffer_schedule(request: Request):
     """완성 영상을 Buffer에 예약한다.
 
     body: {job_id, channel_ids[], texts{채널id:글}, due_at?(ISO8601 UTC), thumb_ms?,
-           share_now?(지금 바로 게시), privacy?(유튜브 공개범위)}
+           share_now?(지금 바로 게시), privacy?(유튜브 공개범위), force?(중복이어도 올린다)}
+
+    ★같은 영상을 같은 채널에 두 번 올리지 않는다(2026-10-04 관제 114 — 고객 유튜브·인스타에
+      같은 영상이 2개씩 올라갔다). 이미 걸려 있는 채널은 Buffer로 보내지 않고 dup으로 돌려주고,
+      화면이 물어본 뒤 force로 다시 보낼 때만 올린다. 판정은 buffer_posts.already_scheduled 한 곳.
 
     ★글은 **채널마다 다르다**(2026-08-29 사장님). 인스타는 해시태그를 많이 달고
       쓰레드는 거의 안 단다 — 8단계가 이미 플랫폼별로 만들어 두므로 하나로 뭉개면
@@ -9973,6 +9997,44 @@ async def api_buffer_schedule(request: Request):
     if int(job.get("customer_id") or 0) != _cid(request):
         return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
 
+    # ★중복 판정이 먼저다 — 판정과 기록 사이에 같은 요청이 끼어들지 못하게 작업 단위로 줄 세운다
+    #   (실측 2026-10-03: 같은 작업 예약이 15초 간격으로 두 번 들어왔다).
+    async with _buffer_job_lock(_cid(request), job_id):
+        return await _buffer_schedule_locked(request, body, key, job, job_id, chans, texts, text,
+                                             due_at, thumb_ms, share_now, privacy)
+
+
+_BUFFER_JOB_LOCKS: dict = {}
+
+
+def _buffer_job_lock(customer_id, job_id):
+    """(고객, 작업)마다 하나의 asyncio.Lock. 워커 프로세스가 하나라 이것으로 충분하다."""
+    k = (int(customer_id), str(job_id))
+    lk = _BUFFER_JOB_LOCKS.get(k)
+    if lk is None:
+        if len(_BUFFER_JOB_LOCKS) > 500:          # 끝난 작업의 락이 쌓이지 않게
+            for kk in [x for x, v in _BUFFER_JOB_LOCKS.items() if not v.locked()]:
+                _BUFFER_JOB_LOCKS.pop(kk, None)
+        lk = _BUFFER_JOB_LOCKS[k] = asyncio.Lock()
+    return lk
+
+
+async def _buffer_schedule_locked(request, body, key, job, job_id, chans, texts, text,
+                                  due_at, thumb_ms, share_now, privacy):
+    from shopping_shorts import buffer_posts
+    cust = _cid(request)
+    out = []
+    if not bool(body.get("force")):
+        dups = await run_in_threadpool(
+            buffer_posts.already_scheduled, DB_PATH, key, cust, job_id, chans)
+        for cid_ in [c for c in chans if c in dups]:
+            out.append({"channel_id": cid_, "ok": False, "dup": True,
+                        "error": "이 영상은 이 채널에 이미 예약(게시)돼 있습니다.",
+                        "existing": dups[cid_]})
+        chans = [c for c in chans if c not in dups]
+        if not chans:                 # 전부 중복 — 공개 링크도 만들지 않는다
+            return {"ok": False, "results": out}
+
     # ★주소를 내주기 전에 moov를 앞으로 보장한다(2026-08-30 실측). Buffer는 영상을
     #   받아보다가 못 읽으면 "Video could not be read from its URL"로 거절하는데,
     #   렌더 시점에만 처리하면 **그 전에 만든 완성본**이 영영 안 올라간다.
@@ -9998,7 +10060,6 @@ async def api_buffer_schedule(request: Request):
     # ★.mp4를 붙인다 — 확장자로 종류를 판단하는 수집기가 있다(라우트가 떼고 읽는다).
     video_url = f"{base}/api/share/{'e' if use_edited else 'v'}/{sid}.mp4"
 
-    out = []
     for cid_ in chans:
         try:
             t = str(texts.get(cid_) or text or "")
@@ -10012,10 +10073,45 @@ async def api_buffer_schedule(request: Request):
                 buffer_api.schedule_video, key, cid_, t, video_url, due_at, thumb_ms,
                 share_now=share_now, privacy=privacy)
             out.append({"channel_id": cid_, "ok": True, "post_id": r["id"], "due_at": r["dueAt"]})
+            # ★예약이 성공한 그 자리에서 장부에 적는다 — 이것이 중복 판정·취소의 근거다.
+            buffer_posts.record(DB_PATH, cust, job_id, cid_, r["id"], r["dueAt"], share_now)
         except buffer_api.BufferError as e:
             out.append({"channel_id": cid_, "ok": False, "error": str(e)})
     return {"ok": any(x["ok"] for x in out), "results": out, "video_url": video_url,
             "source": "edited" if use_edited else "final"}
+
+
+@app.get("/api/buffer/posts")
+async def api_buffer_posts(request: Request, job_id: str = ""):
+    """이 작업으로 걸어 둔 예약 목록(Buffer에 지금 상태를 물어 맞춘 것)."""
+    key = _buffer_key(request)
+    if not key:
+        return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
+    from shopping_shorts import buffer_posts
+    posts = await run_in_threadpool(
+        buffer_posts.sync, DB_PATH, key, _cid(request), os.path.basename(job_id))
+    return {"ok": True, "posts": posts}
+
+
+@app.post("/api/buffer/cancel")
+async def api_buffer_cancel(request: Request):
+    """예약 하나를 취소한다. body: {post_id}
+
+    ★취소할 수 있는지(내 예약인가·아직 안 올라갔나)는 buffer_posts.cancel 한 곳이 정한다.
+    """
+    key = _buffer_key(request)
+    if not key:
+        return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
+    from shopping_shorts import buffer_posts
+    body = await request.json()
+    post_id = str(body.get("post_id") or "").strip()
+    if not post_id:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "post_id가 없습니다."})
+    try:
+        await run_in_threadpool(buffer_posts.cancel, DB_PATH, key, _cid(request), post_id)
+    except buffer_posts.CancelError as e:
+        return {"ok": False, "error": str(e)}
+    return {"ok": True}
 
 
 @app.get("/api/mix/edited/{job_id}")
@@ -10303,10 +10399,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
             _ss_dir.mkdir(parents=True, exist_ok=True)
             _ss_layers = _scene_style.render_layers(timeline, _ss_snapshot, _ss_dir, _hc, job_id)
             _ss_scenes = _scene_style.context_for(timeline, _hc, _ss_snapshot, job_id)["scenes"]
-            _scene_layers = [{"path": str(_ss_dir / _lay["file"]),
-                              "start": float(_sc["start"]), "end": float(_sc["end"])}
-                             for _sc, _lay in zip(_ss_scenes, _ss_layers)
-                             if _lay.get("file")]
+            _scene_layers = _scene_style.overlay_spans(_ss_scenes, _ss_layers, _ss_dir)   # 단어 강조면 단어마다 한 장(관제 102)
         except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
             import traceback as _tb4
             _tb4.print_exc(file=sys.stderr)
@@ -22625,6 +22718,43 @@ def _beat_by_idx(beats, i):
     return beats[i] if 0 <= i < len(beats) else None
 
 
+_RENDER_VIEW_CACHE = {}          # (job_id, updated_at, 정본 시각) → (만든 시각, 결과) — 장면 그림 요청마다 같은 계산을 되풀이하지 않게
+_RENDER_VIEW_TTL = 120.0
+_RENDER_VIEW_LOCK = threading.Lock()
+
+
+def _render_view(job, work):
+    """렌더 입력(render_inputs_for, 과금 없는 조회)과 그 컷 목록 — 장면 그림(_beatframe_file·_clean_frame_src·_final_cuts)이 같이 쓴다.
+
+    ★왜(관제 110, 2026-10-04 황선희님 "장면꾸미기 번호를 넘기면 너무 느리다"): 그림 한 장을 줄 때마다 이 계산
+      (정본 판정 + 컷 계획)이 2~3번씩 새로 돌았다 — 이미 뽑아 둔 그림 파일이 있어도 파일을 보기 전에 계산부터 했다
+      (서버 실측 c9fbcc3ac28c 1회 0.2초, 웹 프로세스가 바쁠 때는 그 몇 배).
+    ★열쇠 = 작업 수정 시각(updated_at — update_mix_job 이 매번 바꾼다) + 정본 파일 시각(증분 청소가 정본을 다시 쓴다).
+      둘 중 하나라도 바뀌면 새로 계산한다. 그래도 남을 수 있는 낡음은 120초로 끊는다. 실패는 캐시하지 않는다(호출부가 받는다)."""
+    work = Path(work)
+    try:
+        _bm = (work / "clean_base.json").stat().st_mtime_ns
+    except OSError:
+        _bm = 0
+    key = (work.name, str((job or {}).get("updated_at") or ""), _bm)
+    now = time.time()
+    with _RENDER_VIEW_LOCK:
+        hit = _RENDER_VIEW_CACHE.get(key)
+        if hit and now - hit[0] < _RENDER_VIEW_TTL and (job or {}).get("updated_at"):
+            return hit[1]
+    plan, paths, base = mix_pipeline.render_inputs_for(
+        Store(DB_PATH), job, work.name, work, [], (job or {}).get("customer_id") or 0, allow_clean=False)
+    tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
+    durs = {v: (frame_extract._probe_duration(pth) or 0.0) for v, pth in paths.items()}
+    view = {"plan": plan, "paths": paths, "base": base, "durs": durs,
+            "cuts": mix_pipeline.final_clip_pairs(plan, tts, durs) or []}
+    with _RENDER_VIEW_LOCK:
+        if len(_RENDER_VIEW_CACHE) > 64:
+            _RENDER_VIEW_CACHE.clear()
+        _RENDER_VIEW_CACHE[key] = (now, view)
+    return view
+
+
 def _final_cuts(job, work):
     """완성본에 **실제로 나가는 컷** 목록. mix_pipeline.final_clip_pairs 그대로.
 
@@ -22632,11 +22762,10 @@ def _final_cuts(job, work):
       (_clean_frame_src/_beatframe_file)이 **같은 컷 목록**을 봐야 한다. 각자 세면
       "3번 칸"이 서로 다른 그림을 가리킨다.
     실패하면 [] — 호출부는 비트 단위로 물러선다(조용히 깨지지 않게)."""
-    # ★정본(2026-09-22)이면 재배치된 사본·청소본으로 컷을 편다 — 렌더와 같은 입력(render_inputs_for)
+    # ★정본(2026-09-22)이면 재배치된 사본·청소본으로 컷을 편다 — 렌더와 같은 입력(render_inputs_for). 계산은 _render_view 한 곳.
     try:
-        plan, _srcs, _b = mix_pipeline.render_inputs_for(
-            Store(DB_PATH), job, Path(work).name, work, [], (job or {}).get("customer_id") or 0, allow_clean=False)
-    except Exception:      # noqa: BLE001
+        return list(_render_view(job, work)["cuts"])
+    except Exception:      # noqa: BLE001 — 아래 종전 계산(원본 편성)으로
         plan, _srcs = (job or {}).get("edit_plan") or {}, None
     tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
     try:
@@ -22739,11 +22868,9 @@ def _clean_frame_src(job, work, beat_idx, cut=None, at=None):
     _b = mix_pipeline.clean_base_for(job, work)
     if _b is not None:
         try:
-            _p2, _paths, _ = mix_pipeline.render_inputs_for(
-                Store(DB_PATH), job, Path(work).name, work, [], job.get("customer_id") or 0, allow_clean=False)
-            _t2 = {b["beat_idx"]: b["tts_path"] for b in (_p2.get("beats") or []) if b.get("tts_path")}
-            _d2 = {v: (frame_extract._probe_duration(pth) or 0.0) for v, pth in _paths.items()}
-            _cl = _cuts_of_beat(mix_pipeline.final_clip_pairs(_p2, _t2, _d2), beat_idx)
+            _v = _render_view(job, work)                 # 렌더 입력·컷 목록(요청마다 되풀이하지 않는다 — 관제 110)
+            _paths, _d2 = _v["paths"], _v["durs"]
+            _cl = _cuts_of_beat(_v["cuts"], beat_idx)
             if _cl:
                 _c = _cl[cut] if (cut is not None and 0 <= cut < len(_cl)) else _cl[0]
                 _sec = float(_c["src"]) + float(_c["dur"]) * 0.5
