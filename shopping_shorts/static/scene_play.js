@@ -1442,7 +1442,10 @@ function pvxCuts(){
   //   다시 묻지도 않고 옛 목소리 합본을 계속 틀었다. 서버 서명(app._pvproxy_sig)도 칸 음성 지문을 싣는다.
   //   beats(칸별 컷 JSON)는 그대로 둔다 — pvxAttach 가 칸 목록을 글자 그대로 대조한다.
   const vers = (DATA && DATA.beats || []).map(b => (b && b.tts_ver) || 0).join(',');
-  return {beats, cuts, key: beats.join('|') + '#tts:' + vers};
+  // ★끼움 장면(AI 장면 등)도 key 에 싣는다(관제 116) — 만들거나 빼면 컷은 그대로라 종전엔 다시 묻지 않아 미리보기에 안 나왔다.
+  //   서버 서명(app._pvproxy_beat_meta)도 끼움 장면 파일을 싣는다.
+  const cws = (DATA && DATA.beats || []).map(b => (b && b.cutaway && b.cutaway.asset_id) || '').join(',');
+  return {beats, cuts, key: beats.join('|') + '#tts:' + vers + (cws.replace(/,/g, '') ? '#cw:' + cws : '')};
 }
 function pvxClock(c){ return c && c._px; }
 // ★언제 만드나(2026-09-14 사장님 "처음 배치시 빠르게 / 장면 교체했을 땐 버튼을 눌러서").

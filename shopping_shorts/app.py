@@ -6842,7 +6842,7 @@ def _pvproxy_prewarm(job_id: str) -> None:
                                                "fit": c.get("fit")}))
         if not cuts or sum(blens) != len(cuts):
             return
-        sig = _pvproxy_sig(cuts, blens, _pvproxy_beat_meta(beats))
+        sig = _pvproxy_sig(cuts, blens, _pvproxy_beat_meta(beats, _pvproxy_cutaways(job)))
         if (d / ("%s.mp4" % sig)).exists():
             return                          # 이미 있다
         with _PVPROXY_LOCK:
@@ -6885,7 +6885,8 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
     # ★컷마다 **그 칸의 구도**(완성본과 같은 frame_vf)를 붙인다 — 칸 번호는 beat_lens 순서(화면 DATA.beats 순서)
     _pb = []        # 칸 순서 = beat_lens 순서의 편성 칸(구도·head_trim/tail_trim 을 여기서 읽는다)
     try:
-        _pb = ((Store(DB_PATH).get_mix_job(job_id) or {}).get("edit_plan") or {}).get("beats") or []
+        _job = Store(DB_PATH).get_mix_job(job_id) or {}
+        _pb = (_job.get("edit_plan") or {}).get("beats") or []
         _owner = [bi for bi, n in enumerate(beat_lens or []) for _ in range(int(n))]
         for _k, _c in enumerate(cuts or []):
             _b = _pb[_owner[_k]] if _k < len(_owner) and _owner[_k] < len(_pb) else None
@@ -6896,6 +6897,11 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 _c["_sync"] = 1.0
     except Exception as _e:      # noqa: BLE001 — 구도를 못 정하면 가운데 꽉 채우기(frame_vf 기본과 같은 모양)
         print("[pvproxy] %s 구도 계산 실패(가운데 채우기): %s" % (job_id, _e), file=sys.stderr)
+    # 끼움 장면(AI 장면 등)이 붙은 칸 — 완성본과 같은 규칙으로 칸 영상 위에 얹는다(관제 116)
+    try:
+        _cw = _pvproxy_cutaways(_job)
+    except NameError:
+        _cw = {}
     d = _pvproxy_dir(job_id)
     tmp = d / f"_tmp_{sig}"
     try:
@@ -7109,8 +7115,10 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 #   컷만 재사용해선 7.1초에서 안 줄었던 이유가 이것이다.
                 # ★음성 지문도 싣는다(2026-09-27) — 성우·톤만 바꾸면 경로가 같고 길이도 같은 프레임 수일 수 있어
                 #   옛 칸 음성(b_*.m4a)을 그대로 집어 왔다. 서명만 고치면 새 합본에 옛 목소리가 다시 들어간다.
+                cwp = _cw.get(bi) if want > 0 else None
                 bkey = _hash([_cut_key(c) for c in mine_cuts] + [str(ap or ""), "%.3f" % want,
-                                                                  _pvproxy_tts_stamp(ap) if ap else ""])
+                                                                  _pvproxy_tts_stamp(ap) if ap else ""]
+                             + (["cw", str(cwp), _pvproxy_tts_stamp(cwp)] if cwp else []))
                 bl = cache / ("b_%s.ts" % bkey)
                 if bl.exists() and bl.stat().st_size > 0:
                     try: bl.touch()
@@ -7151,6 +7159,20 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                                         capture_output=True, timeout=120)
                 if r2.returncode != 0 or not bl.exists():
                     raise RuntimeError(r2.stderr.decode("utf-8", "ignore")[-300:])
+                if cwp:
+                    # 끼움 장면을 칸 위에 얹는다 — 창·필터는 video_assemble.cutaway_overlay 한 곳(완성본과 같은 규칙)
+                    _base = tmp / ("b%03d_base.ts" % bi)
+                    bl.replace(_base)
+                    _win, _fc = video_assemble.cutaway_overlay(_dur(cwp), want, 720, 1280)
+                    r3 = subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(_base), "-i", str(cwp),
+                                         "-filter_complex", _fc, "-map", "[vout]", "-an",
+                                         "-r", "30", "-frames:v", str(_nfr),
+                                         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "30",
+                                         "-pix_fmt", "yuv420p"] + kfx +
+                                        ["-g", "30", "-keyint_min", "1", "-sc_threshold", "0", str(bl)],
+                                        capture_output=True, timeout=180)
+                    if r3.returncode != 0 or not bl.exists():
+                        raise RuntimeError(r3.stderr.decode("utf-8", "ignore")[-300:])
                 segs.append(bl)
                 # ★칸 **안**의 컷 경계도 실제로 잰다 — 여기가 짐작으로 남아 있으면
                 #   화면이 "칸 끝"이라며 합본보다 먼저 멈춰 세우고, 합본은 그 자리에서
@@ -7249,10 +7271,31 @@ def _pvproxy_tts_stamp(path) -> str:
         return ""
 
 
-def _pvproxy_beat_meta(beats: list) -> list:
-    """칸마다 [음성 경로, 음성 지문, tts_ver, voice_override, 구도] — 칸 순서(edit_plan beats 순서) 그대로."""
+def _pvproxy_cutaways(job) -> dict:
+    """{칸 순서(0부터): 끼움 장면 파일} — AI 장면·라이브러리 끼움 장면(beat.cutaway)이 붙은 칸만(관제 116).
+    찾는 법은 완성본과 같은 함수(mix_pipeline._resolve_cutaway_paths — 저장위치=읽기위치). 못 찾으면 빈 dict + 한 줄."""
+    try:
+        plan = (job or {}).get("edit_plan") or {}
+        beats = plan.get("beats") or []
+        if not any((b or {}).get("cutaway") for b in beats):
+            return {}
+        by_idx = mix_pipeline._resolve_cutaway_paths(Store(DB_PATH), plan, (job or {}).get("customer_id", 0)) or {}
+        out = {}
+        for k, b in enumerate(beats):
+            pth = by_idx.get((b or {}).get("beat_idx")) if (b or {}).get("cutaway") else None
+            if pth and Path(pth).exists():
+                out[k] = str(pth)
+        return out
+    except Exception as e:      # noqa: BLE001 — 끼움 장면을 못 찾아도 합본은 굽는다(대신 알린다)
+        print("[pvproxy] 끼움 장면 경로 실패: %s" % e, file=sys.stderr)
+        return {}
+
+
+def _pvproxy_beat_meta(beats: list, cutaways: dict = None) -> list:
+    """칸마다 [음성 경로, 음성 지문, tts_ver, voice_override, 구도(, 끼움 장면 파일·지문)] — 칸 순서(edit_plan beats 순서) 그대로.
+    끼움 장면은 **붙은 칸에만** 싣는다 — 안 붙은 작업의 서명은 종전과 같다(합본을 다시 굽지 않는다)."""
     out = []
-    for b in beats or []:
+    for _k, b in enumerate(beats or []):
         tp = str((b or {}).get("tts_path") or "")
         try:
             vf = video_assemble.frame_vf(b, 720, 1280)     # _pvproxy_build 가 컷에 붙이는 구도와 같은 호출
@@ -7262,7 +7305,11 @@ def _pvproxy_beat_meta(beats: list) -> list:
             vo = json.dumps((b or {}).get("voice_override") or {}, sort_keys=True, ensure_ascii=False)
         except (TypeError, ValueError):
             vo = str((b or {}).get("voice_override"))
-        out.append([tp, _pvproxy_tts_stamp(tp) if tp else "", int((b or {}).get("tts_ver") or 0), vo, vf])
+        row = [tp, _pvproxy_tts_stamp(tp) if tp else "", int((b or {}).get("tts_ver") or 0), vo, vf]
+        cw = (cutaways or {}).get(_k)
+        if cw:
+            row += ["cw", str(cw), _pvproxy_tts_stamp(cw)]
+        out.append(row)
     return out
 
 
@@ -7299,7 +7346,8 @@ def api_mix_preview_proxy(job_id: str, body: dict):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
-    sig = _pvproxy_sig(norm, blens, _pvproxy_beat_meta((job.get("edit_plan") or {}).get("beats") or []))
+    sig = _pvproxy_sig(norm, blens, _pvproxy_beat_meta((job.get("edit_plan") or {}).get("beats") or [],
+                                                      _pvproxy_cutaways(job)))
     if (_pvproxy_dir(job_id) / f"{sig}.mp4").exists():
         res = {"ok": True, "sig": sig, "state": "ready",
                "url": f"/api/mix/preview_proxy/{job_id}/{sig}.mp4"}

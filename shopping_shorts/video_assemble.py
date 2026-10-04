@@ -2706,6 +2706,17 @@ def narration_track(edit_plan, tts_paths, beat_frames, out_wav, sample_rate=NARR
     return str(out_wav)
 
 
+def cutaway_overlay(asset_dur, beat_dur, w, h):
+    """끼움 장면(컷어웨이·AI 장면)을 칸 영상 위에 얹는 규칙 — **여기 한 곳**(관제 116, 2026-10-04).
+    완성본(_render_mix)과 편집 화면 합본(app._pvproxy_build)이 같이 쓴다 — 따로 적으면 미리보기와 완성본이 어긋난다(0순위-B).
+    돌려주는 것 = (얹는 창 길이, filter_complex). 창 = [0, min(자산 길이, 칸 길이)], 풀프레임, 입력 0 = 칸 영상 · 입력 1 = 끼움 장면."""
+    win = min(float(asset_dur or 0), float(beat_dur or 0))
+    fc = (f"[1:v]scale={int(w)}:{int(h)}:force_original_aspect_ratio=increase,"
+          f"crop={int(w)}:{int(h)},setpts=PTS-STARTPTS[ov];"
+          f"[0:v][ov]overlay=0:0:enable='between(t,0,{win:.3f})'[vout]")
+    return win, fc
+
+
 def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=None):
     """각 비트를 [소스영상+TTS]로 렌더(우리 자막 없음) → concat → mix_raw.mp4 경로.
     자막을 굽지 않으므로 이후 VMake 자막제거가 우리 자막을 지우지 않는다.
@@ -2820,12 +2831,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         cutaway = (cutaway_paths or {}).get(idx)
         if cutaway:
             asset_dur = _probe_duration(cutaway)
-            win = min(asset_dur, tts_dur)
-            fc = (
-                f"[1:v]scale={_OUT_W}:{_OUT_H}:force_original_aspect_ratio=increase,"
-                f"crop={_OUT_W}:{_OUT_H},setpts=PTS-STARTPTS[ov];"
-                f"[0:v][ov]overlay=0:0:enable='between(t,0,{win:.3f})'[vout]"
-            )
+            win, fc = cutaway_overlay(asset_dur, tts_dur, _OUT_W, _OUT_H)   # 규칙 한 곳 — 편집 화면 합본과 같은 창
             _run_ffmpeg([
                 "ffmpeg", "-y",
                 "-i", str(beat_video),   # 0: 내 다중클립 비트영상(이미 vf 적용)
