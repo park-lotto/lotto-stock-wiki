@@ -22153,13 +22153,105 @@ def api_produce_mix_ai_scene(job_id: str, request: Request, body: dict):
         return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 만들 수 없어요 — 끝난 뒤 다시 눌러 주세요"})
     if store.task_is_alive("ai_scene", {"job_id": job_id, "beat_idx": bi}):
         return JSONResponse(status_code=409, content={"ok": False, "error": "이 장면은 지금 만드는 중이에요"})
+    # ★프롬프트를 확인한 뒤에만 만든다(관제 117, 2026-10-04 사장님 "어떤 프롬프트로 하는지 보여주고 진행").
+    #   화면이 /ai_scene/draft 로 받은 문장(고쳤으면 고친 문장)을 그대로 보낸다 — 워커는 그 문장으로 만든다.
+    #   ★문장은 화면이 보내지 않는다 — 서버가 초안 때 저장해 둔 것(ai_scene_draft_<칸>.json)을 초안 번호로 찾아 쓴다.
+    #     화면에서 영어를 못 고치게 한 것과 짝(사장님 "영어는 수정 못 하게, 한글 방향으로만").
+    _dr = _ai_scene_draft_load(job_id, bi)
+    if not _dr or not body.get("draft") or str(body.get("draft")) != str(_dr.get("id")) or len(str(_dr.get("prompt_en") or "")) < 20:
+        return JSONResponse(status_code=422, content={"ok": False, "need": "draft",
+                            "error": "프롬프트를 확인한 뒤 만들 수 있어요 — 장면 편집 화면의 [AI 장면]에서 눌러 주세요"})
+    prompt = str(_dr["prompt_en"])
+    style = _dr.get("style") if _dr.get("style") in ("natural", "impact") else style
     # 화면이 바로 ⏳를 그리도록 상태를 먼저 남긴다(워커가 running으로 다시 덮는다)
     for b in beats:
         if int(b.get("beat_idx", -1)) == bi:
-            b["ai_scene"] = {"state": "queued", "style": style, "error": None}
+            b["ai_scene"] = {"state": "queued", "style": style, "error": None, "confirmed": True,
+                             "prompt_en": prompt, "prompt_ko": str(_dr.get("prompt_ko") or ""),
+                             "direction": str(_dr.get("direction") or ""),
+                             # 사장님이 고른 출발 화면·길이 — 워커가 같은 화면·같은 초로 만든다
+                             "base": _dr.get("base") if isinstance(_dr.get("base"), dict) else None,
+                             "sec_pick": _dr.get("sec") if _dr.get("sec") in (4, 6, 8) else None}
     _save_render_inputs(store, job_id, edit_plan=job["edit_plan"])
     qid = store.enqueue("ai_scene", {"job_id": job_id, "beat_idx": bi, "style": style})
     return {"ok": True, "qid": qid, "beat_idx": bi, "style": style}
+
+
+def _ai_scene_draft_file(job_id, beat_idx):
+    return _MIX_WORK_DIR / job_id / ("ai_scene_draft_%d.json" % int(beat_idx))
+
+
+def _ai_scene_draft_load(job_id, beat_idx):
+    """그 칸의 마지막 초안(화면에 보여 준 그 프롬프트) — 없거나 못 읽으면 None."""
+    try:
+        return json.loads(_ai_scene_draft_file(job_id, beat_idx).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def _ai_scene_gate(job_id, request, body):
+    """AI 장면 초안·출발 화면 공용 문지기 — (job, beat, 오류응답). 스위치·Vertex·칸 번호 판정은 생성 API 와 같다."""
+    if not _ai_scene_on(_cid(request)):
+        return None, None, JSONResponse(status_code=403, content={"ok": False, "error": "AI 장면 생성은 아직 관리자만 쓸 수 있어요"})
+    from shopping_shorts import vertex_route as _vr
+    _ok_veo, _why_veo = _vr.veo_allowed(_cid(request))
+    if not _ok_veo:
+        return None, None, JSONResponse(status_code=403, content={"ok": False, "error": _why_veo, "need": "vertex"})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return None, None, JSONResponse(status_code=404, content={"ok": False, "error": "편집안이 아직 없습니다"})
+    try:
+        bi = int((body or {}).get("beat_idx"))
+    except (TypeError, ValueError):
+        return None, None, JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    beat = next((b for b in (job["edit_plan"].get("beats") or []) if int(b.get("beat_idx", -1)) == bi), None)
+    if beat is None:
+        return None, None, JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    return job, beat, None
+
+
+@app.post("/api/produce/mix/{job_id}/ai_scene/draft")
+def api_produce_mix_ai_scene_draft(job_id: str, request: Request, body: dict):
+    """AI 장면 초안(관제 117) — 그 칸 조각에서 뜬 출발 화면 + 프롬프트(영어·한글 설명). **Veo 는 부르지 않는다**(생성 비용 0).
+    body {beat_idx, style, base?{video_id,t}, sec?(4|6|8), direction?(한글 방향), only_frame?(출발 화면만)}. 편성표는 안 고친다 — 사장님이 확인하고 /ai_scene 에 prompt 를 실어 보내야 만든다."""
+    job, beat, err = _ai_scene_gate(job_id, request, body)
+    if err is not None:
+        return err
+    from shopping_shorts import ai_scene as _ais
+    style = body.get("style") if body.get("style") in ("natural", "impact") else "natural"
+    work = _MIX_WORK_DIR / job_id
+    work.mkdir(parents=True, exist_ok=True)
+    try:
+        d = _ais.draft_scene(job, work, beat, style, resolve_sources=mix_pipeline._resolve_sources,
+                             base=body.get("base") if isinstance(body.get("base"), dict) else None,
+                             sec=body.get("sec"), direction=str(body.get("direction") or "")[:600],
+                             only_frame=bool(body.get("only_frame")))
+    except Exception as e:      # noqa: BLE001 — 출발 화면을 못 뜨면 이유를 그대로 알린다
+        return JSONResponse(status_code=422, content={"ok": False, "error": "초안을 못 만들었어요: %s" % str(e)[:160]})
+    bi = int(beat.get("beat_idx"))
+    did = ""
+    if d.get("prompt_en"):
+        # 보여 준 초안을 서버에 남긴다 — [이대로 만들기]는 이 번호로만 받는다(문장은 화면을 거치지 않는다)
+        did = uuid.uuid4().hex[:16]
+        _ai_scene_draft_file(job_id, bi).write_text(json.dumps(
+            {"id": did, "style": d["style"], "sec": d["sec"], "base": d["base"], "prompt_en": d["prompt_en"],
+             "prompt_ko": d.get("prompt_ko") or "", "direction": str(body.get("direction") or "")[:600],
+             "at": time.strftime("%Y-%m-%dT%H:%M:%S")}, ensure_ascii=False), encoding="utf-8")
+    return {"ok": True, "beat_idx": bi, "style": d["style"], "sec": d["sec"], "visible": d["visible"], "draft": did,
+            "base": d["base"], "prompt_en": d.get("prompt_en"), "prompt_ko": d.get("prompt_ko"),
+            "base_url": "/api/produce/mix/%s/ai_scene/base/%d?t=%d" % (job_id, bi, int(time.time()))}
+
+
+@app.get("/api/produce/mix/{job_id}/ai_scene/base/{beat_idx}")
+def api_produce_mix_ai_scene_base(job_id: str, beat_idx: int, request: Request):
+    """AI 장면 출발 화면(초안이 뜬 그 PNG) — 프롬프트와 함께 보여 준다."""
+    _job, _beat, err = _ai_scene_gate(job_id, request, {"beat_idx": beat_idx})
+    if err is not None:
+        return err
+    f = _MIX_WORK_DIR / job_id / ("ai_scene_base_%d.png" % int(beat_idx))
+    if not f.exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "출발 화면 없음"})
+    return FileResponse(str(f), media_type="image/png", headers={"Cache-Control": "no-store"})
 
 
 @app.post("/api/produce/mix/{job_id}/cutaway")

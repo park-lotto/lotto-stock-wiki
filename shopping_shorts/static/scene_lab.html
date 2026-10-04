@@ -2987,19 +2987,169 @@ function aiSceneControl(i){
 function beatIdOf(i){
   return beatKeyAt(i);     // 위치→번호 규칙은 scene_play.js beatKeyAt 한 곳(번호 없는 로컬 데이터만 위치로)
 }
+// ★AI 장면은 **프롬프트를 확인한 뒤에만** 만든다(관제 117, 2026-10-04 사장님 "어떤 프롬프트로 하는지 한글과 영어를 같이
+//   보여주고 / 기존 영상 조각을 활용 / 출발 장면·초를 고르고 / 대본 흐름에 맞게 초안을 쓰고 방향을 바꿀 수 있게").
+//   누르면 서버가 그 칸 조각에서 출발 화면을 뜨고 프롬프트 초안을 준다(Veo 호출 없음). 출발 화면(조각·순간)·길이·방향을
+//   바꿔 [초안 다시 쓰기]를 누르면 그 조건으로 다시 쓴다. [이대로 만들기]를 눌러야 생성이 시작되고, 워커는 여기서 확인한
+//   영어 문장·출발 화면·길이 그대로 만든다(영어는 화면에서 못 고친다 — 한글 방향으로만 바꾼다). 규칙은 서버 ai_scene.draft_scene 한 곳.
+const AI_DRAFT = {i: -1, style: 'natural', base: null, sec: null, draft: '', busy: false};
+function aiDraftBox(){
+  let box = document.getElementById('aiDraftBox');
+  if (box) return box;
+  box = document.createElement('div');
+  box.id = 'aiDraftBox';
+  box.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:16px';
+  box.innerHTML = `<div style="background:#111722;border:1px solid #2b3a52;border-radius:12px;max-width:1040px;width:100%;max-height:94vh;overflow:auto;padding:16px;color:#e8eef8">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
+        <b id="aiDraftTitle">AI 장면 프롬프트 확인</b>
+        <button type="button" class="act" onclick="closeAiDraft()">닫기</button></div>
+      <div id="aiDraftFlow" class="hint" style="margin-bottom:8px;line-height:1.6"></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <div style="flex:0 0 220px">
+          <div class="hint" style="margin-bottom:4px">① 출발 화면 — 이 칸에 담은 장면에서 고릅니다</div>
+          <img id="aiDraftImg" alt="" style="width:220px;aspect-ratio:9/16;object-fit:cover;border-radius:8px;background:#000">
+          <div id="aiDraftSegs" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+          <input id="aiDraftT" type="range" step="0.1" style="width:100%;margin-top:6px" oninput="aiDraftTLabel()" onchange="aiDraftFrame()">
+          <div id="aiDraftTLab" class="hint"></div>
+        </div>
+        <div style="flex:1 1 440px;min-width:300px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+            <span class="hint">② 길이</span>
+            <select id="aiDraftSec" onchange="AI_DRAFT.sec = +this.value; aiDraftStale()">
+              <option value="4">4초</option><option value="6">6초</option><option value="8">8초</option></select>
+            <span id="aiDraftVis" class="hint"></span>
+          </div>
+          <div class="hint" style="margin-bottom:4px">③ 방향(선택) — 보강할 장면이나 바꿀 방향을 한글로 간단히 적으면, 그에 맞춰 최종 프롬프트를 다시 씁니다</div>
+          <textarea id="aiDraftDir" placeholder="예) 손가락에 끼운 채로 과자를 집어 올리는 모습을 천천히 보여줘" oninput="aiDraftStale()" style="width:100%;height:54px;background:#0a1018;color:#e8eef8;border:1px solid #24324a;border-radius:8px;padding:8px;font:13px/1.5 inherit"></textarea>
+          <div style="display:flex;gap:8px;align-items:center;margin:8px 0 10px">
+            <button type="button" class="act" id="aiDraftRe" onclick="aiDraftWrite()">✍ 초안 다시 쓰기</button>
+            <span id="aiDraftMsg" class="hint"></span></div>
+          <div class="hint" style="margin-bottom:4px">④ 한글 번역본 — 사물·환경·카메라·움직임·효과</div>
+          <pre id="aiDraftKo" style="white-space:pre-wrap;background:#0a1018;border:1px solid #24324a;border-radius:8px;padding:10px;margin:0 0 10px;font:13px/1.55 inherit;min-height:60px"></pre>
+          <div class="hint" style="margin-bottom:4px">⑤ 최종 영어 프롬프트 — 실제로 Veo에 들어가는 문장(읽기 전용 · 바꾸려면 ③에 한글로 적고 다시 쓰기)</div>
+          <textarea id="aiDraftEn" readonly spellcheck="false" style="width:100%;height:230px;background:#0a1018;color:#e8eef8;border:1px solid #24324a;border-radius:8px;padding:10px;font:12px/1.5 ui-monospace,Consolas,monospace"></textarea>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+            <button type="button" class="act" onclick="closeAiDraft()">취소</button>
+            <button type="button" class="act" id="aiDraftGo" style="border-color:var(--good);color:var(--good)" onclick="confirmAiDraft()">이대로 만들기</button></div>
+        </div></div></div>`;
+  document.body.appendChild(box);
+  return box;
+}
+function closeAiDraft(){ const b = document.getElementById('aiDraftBox'); if (b) b.style.display = 'none'; AI_DRAFT.i = -1; }
+function aiDraftSay(t, bad){ const m = document.getElementById('aiDraftMsg'); if (m){ m.style.color = bad ? '#f66' : ''; m.textContent = t || ''; } }
+// 출발 화면·길이·방향을 바꿨는데 초안은 옛 조건 그대로일 때 — 만들기 전에 다시 쓰라고 알린다
+function aiDraftStale(){
+  AI_DRAFT.stale = true;
+  aiDraftSay('조건을 바꿨어요 — [초안 다시 쓰기]를 누르면 이 조건으로 다시 씁니다');
+}
+function aiDraftSegOf(){ return (DATA.segments || {})[AI_DRAFT.sid] || null; }
+function aiDraftTLabel(){
+  const g = aiDraftSegOf(), el = document.getElementById('aiDraftT'), lab = document.getElementById('aiDraftTLab');
+  if (!g || !el || !lab) return;
+  lab.textContent = `${segMark(AI_DRAFT.sid)} · 원본 ${(+el.value).toFixed(1)}초 지점 (이 장면 ${(+g.start).toFixed(1)}~${(+g.end).toFixed(1)}초)`;
+}
+function aiDraftPick(sid){
+  const g = (DATA.segments || {})[sid]; if (!g) return;
+  AI_DRAFT.sid = sid;
+  const el = document.getElementById('aiDraftT');
+  el.min = (+g.start).toFixed(1); el.max = Math.max(+g.start, +g.end - 0.1).toFixed(1);
+  el.value = Math.min(+el.max, +g.start + 0.2).toFixed(1);
+  document.querySelectorAll('#aiDraftSegs img').forEach(im => { im.style.outline = im.dataset.sid === sid ? '2px solid var(--good)' : 'none'; });
+  aiDraftTLabel();
+  aiDraftFrame();
+}
+async function aiDraftCall(extra){
+  const i = AI_DRAFT.i;
+  const r = await fetch('/api/produce/mix/' + SL.job + '/ai_scene/draft', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(Object.assign({beat_idx: beatIdOf(i), style: AI_DRAFT.style, base: AI_DRAFT.base, sec: AI_DRAFT.sec}, extra || {}))});
+  const d = await r.json().catch(()=>({ok:false}));
+  if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+  if (AI_DRAFT.i !== i) return null;                       // 그 사이 닫았거나 다른 칸을 눌렀다
+  return d;
+}
+function aiDraftShowFrame(d){
+  document.getElementById('aiDraftImg').src = d.base_url;
+  AI_DRAFT.base = d.base || AI_DRAFT.base;
+  AI_DRAFT.sec = d.sec;
+  document.getElementById('aiDraftSec').value = String(d.sec);
+  document.getElementById('aiDraftVis').textContent = `화면에는 앞 ${(+d.visible).toFixed(1)}초가 나옵니다(칸 길이)`;
+}
+// 출발 화면만 다시 뜬다(프롬프트는 안 쓴다 — 빠르다). 화면이 바뀌었으니 초안은 다시 써야 한다.
+async function aiDraftFrame(){
+  const g = aiDraftSegOf(); if (!g) return;
+  AI_DRAFT.base = {video_id: g.video_id, t: +document.getElementById('aiDraftT').value};
+  try{
+    const d = await aiDraftCall({only_frame: true});
+    if (d){ aiDraftShowFrame(d); aiDraftStale(); }
+  }catch(e){ aiDraftSay('⚠ 출발 화면을 못 떴어요: ' + (e.message || e), true); }
+}
+async function aiDraftWrite(){
+  if (AI_DRAFT.busy) return;
+  AI_DRAFT.busy = true;
+  aiDraftSay('⏳ 대본 흐름에 맞춰 프롬프트를 쓰는 중… (아직 영상은 만들지 않습니다)');
+  try{
+    const d = await aiDraftCall({direction: (document.getElementById('aiDraftDir').value || '').trim()});
+    if (d){
+      aiDraftShowFrame(d);
+      document.getElementById('aiDraftKo').textContent = d.prompt_ko || '';
+      document.getElementById('aiDraftEn').value = d.prompt_en || '';
+      AI_DRAFT.draft = d.draft || '';
+      AI_DRAFT.stale = false;
+      aiDraftSay('확인하고 [이대로 만들기]를 누르면 그때 영상을 만듭니다.');
+    }
+  }catch(e){ aiDraftSay('⚠ 프롬프트 초안을 못 만들었어요: ' + (e.message || e), true); }
+  AI_DRAFT.busy = false;
+}
 async function startAiScene(i, style){
+  const box = aiDraftBox();
+  Object.assign(AI_DRAFT, {i, style: style || 'natural', base: null, sec: null, draft: '', stale: false, sid: null});
+  document.getElementById('aiDraftTitle').textContent = `${i + 1}번 칸 · AI 장면 프롬프트 확인 (${style === 'impact' ? '임팩트' : '자연'})`;
+  const nb = k => (DATA.beats[k] && (DATA.beats[k].narration || '')) || '';
+  document.getElementById('aiDraftFlow').innerHTML = '대본 흐름 — '
+    + (i > 0 ? `<span style="opacity:.6">앞: ${esc(nb(i - 1))}</span> → ` : '')
+    + `<b>이 칸: ${esc(nb(i))}</b>`
+    + (i + 1 < DATA.beats.length ? ` → <span style="opacity:.6">뒤: ${esc(nb(i + 1))}</span>` : '');
+  // 이 칸에 담은 장면들 — 눌러서 출발 화면을 바꾼다
+  const ids = (lists[i] || []).filter(id => (DATA.segments || {})[id]);
+  document.getElementById('aiDraftSegs').innerHTML = ids.map(id =>
+    `<img data-sid="${esc(id)}" src="${SL.thumb(id)}" title="${esc(segMark(id))} — 이 장면에서 출발" onclick="aiDraftPick(this.dataset.sid)" style="width:48px;aspect-ratio:9/16;object-fit:cover;border-radius:4px;cursor:pointer;background:#000">`).join('');
+  document.getElementById('aiDraftImg').removeAttribute('src');
+  document.getElementById('aiDraftKo').textContent = '';
+  document.getElementById('aiDraftEn').value = '';
+  document.getElementById('aiDraftDir').value = '';
+  document.getElementById('aiDraftTLab').textContent = '';
+  box.style.display = 'flex';
+  if (ids.length){
+    // 첫 장면을 고른 상태로 시작(서버 기본과 같은 자리 — 첫 장면 시작 0.2초 뒤). 슬라이더만 맞추고 초안은 한 번에 쓴다.
+    const g = DATA.segments[ids[0]];
+    AI_DRAFT.sid = ids[0];
+    const el = document.getElementById('aiDraftT');
+    el.min = (+g.start).toFixed(1); el.max = Math.max(+g.start, +g.end - 0.1).toFixed(1);
+    el.value = Math.min(+el.max, +g.start + 0.2).toFixed(1);
+    AI_DRAFT.base = {video_id: g.video_id, t: +el.value};
+    document.querySelectorAll('#aiDraftSegs img').forEach(im => { im.style.outline = im.dataset.sid === ids[0] ? '2px solid var(--good)' : 'none'; });
+    aiDraftTLabel();
+  }
+  aiDraftWrite();
+}
+async function confirmAiDraft(){
+  const i = AI_DRAFT.i; if (i < 0) return;
+  if (AI_DRAFT.stale){ aiDraftSay('조건을 바꾼 뒤 초안을 다시 쓰지 않았어요 — [초안 다시 쓰기]를 먼저 눌러 주세요', true); return; }
+  if (!AI_DRAFT.draft){ aiDraftSay('프롬프트 초안이 아직 없어요 — [초안 다시 쓰기]를 눌러 주세요', true); return; }
   try{
     const r = await fetch('/api/produce/mix/' + SL.job + '/ai_scene', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({beat_idx: beatIdOf(i), style: style || 'natural'})});
+      // 서버가 방금 보여 준 그 초안(draft 번호)으로만 만든다 — 프롬프트 문장은 서버에 저장돼 있다
+      body: JSON.stringify({beat_idx: beatIdOf(i), style: AI_DRAFT.style, draft: AI_DRAFT.draft})});
     const d = await r.json().catch(()=>({ok:false}));
     if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
-    DATA.beats[i].ai_scene = {state:'queued', style: d.style || style};
+    DATA.beats[i].ai_scene = {state:'queued', style: d.style || AI_DRAFT.style};
+    closeAiDraft();
     renderBand();
     pollAiScene(i);
   }catch(e){
-    const h = document.getElementById('tbhint');
-    if (h) h.textContent = '⚠ AI 장면을 시작하지 못했어요: ' + (e.message || e);
+    aiDraftSay('⚠ AI 장면을 시작하지 못했어요: ' + (e.message || e), true);
   }
 }
 function pollAiScene(i){
