@@ -183,6 +183,10 @@ def _code_flags(slots, text_of):
     return out
 
 
+EXTRA_DESC = {"escalation": "고조 — 효능을 한 단계 더 세게(더 놀라운 장면으로)", "twist": "반전 — 예상 밖·딴 용도·충격 포인트",
+              "proof": "반응·증거 — 사람 반응·감탄·입소문", "pain": "불편 — 쓰기 전 겪던 답답함", "how": "사용법 — 어떻게 쓰는지 과정",
+              "reveal": "정체 공개 — 제품이 처음 제대로 등장", "bait": "미끼 — 궁금증을 거는 한 줄", "result": "결과 — 완성·효과가 보이는 장면"}
+
 _HEAD_CACHE = {}
 
 
@@ -250,8 +254,15 @@ def _apply_role_picks(slots, roles_pick):
     return moved
 
 
-def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pick=""):
-    roles = fam["roles"] or ["hook", "problem", "method", "result", "land"]
+def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pick="", extra=None):
+    roles = list(fam["roles"] or ["hook", "problem", "method", "result", "land"])
+    chain = list(fam["chain"] or [])
+    extra = [e for e in (extra or []) if e in EXTRA_DESC and e not in roles]
+    if extra and creative is None:      # ★손님이 고른 칸을 마무리 앞에 넣는다(칸 구조는 그 스타일 그대로 + 추가 칸)
+        at = max(1, len(roles) - 1)
+        roles[at:at] = extra
+        chain[at:at] = [EXTRA_DESC[e] + " (손님이 추가한 칸)" for e in extra]
+    fam = dict(fam, roles=roles, chain=chain)
     slot_txt = "\n".join("  %d. %s — %s\n     문장 틀: %s" % (i + 1, r, (fam["chain"][i] if i < len(fam["chain"]) else ""),
                                                     " / ".join((fam["tpl"].get(r) or [])[:4]) or "(없음)") for i, r in enumerate(roles))
     v = fam["voice"] or {}
@@ -261,8 +272,9 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
     # ★말맛(2026-10-04 사장님 "투박하고 어색 — S급·우리 자료를 참고 안 한 듯"): 라이브 대본 작가 지침서 + 플랫폼 말투 지침 + 히트 대본 + 승인 부품을 앞에 붙인다
     head = _writer_head(fam, r1.get("kind") or "")
     if creative is not None:      # 1번 AI 자동 — 스타일은 참고, 말맛은 부품·히트 대본
+        add = ("\n★손님이 꼭 넣어 달라고 한 칸(알맞은 자리에 넣어라): " + " / ".join(EXTRA_DESC[e] for e in extra) + "\n") if extra else ""
         r3 = sg._call_json(head + P3C % (r1.get("kind") or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
-                                         ", ".join(fam["names"]), " → ".join(roles), creative), S3, note=n3, vertex=True) or {}
+                                         ", ".join(fam["names"]), " → ".join(roles), creative) + add, S3, note=n3, vertex=True) or {}
     else:
         r3 = sg._call_json(head + P3 % (r1.get("kind") or "", pan or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
                                         ", ".join(fam["names"]), voice, len(roles), slot_txt), S3, note=n3, vertex=True) or {}
@@ -289,7 +301,7 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
     role_fixed = _apply_role_picks(slots, roles_pick)
     return {"names": fam["names"], "pan": pan, "first_line_style": r3.get("first_line_style") or "", "slots": slots, "check": check,
             "fixed": fixed, "left_flags": {str(k): v for k, v in _code_flags(slots, lambda c: texts.get(c, "")).items()},
-            "star_missing": star_missing, "role_fixed": role_fixed, "auth": [n3.get("auth"), n4.get("auth")]}
+            "star_missing": star_missing, "role_fixed": role_fixed, "extra": extra, "auth": [n3.get("auth"), n4.get("auth")]}
 
 
 def main(args):
@@ -382,7 +394,7 @@ def main(args):
                 sum(1 for c in ck if c["short"]), len(bd["fixed"]), len(bd["left_flags"]), bd["star_missing"]), flush=True)
 
 
-def gen(jid, keys, star_s="", role_s=""):
+def gen(jid, keys, star_s="", role_s="", extra_s=""):
     """[화면 버튼용] 저장된 장면 목록(/tmp/sbtrial_<job>.json)으로 고른 스타일들의 스토리보드만 만든다(스타일당 호출 2번).
     keys: 'auto' 또는 스타일 묶음 번호들. 결과 JSON을 표준출력 마지막 줄에 'RESULT ' + JSON 으로."""
     db = sqlite3.connect("file:%s?mode=ro" % DB, uri=True)
@@ -411,12 +423,12 @@ def gen(jid, keys, star_s="", role_s=""):
             from shopping_shorts.store import Store
             from shopping_shorts import bank_assemble as _bk
             creative = _bk.parts_block(Store(DB))
-            out["auto"] = _board(top, "", r1, groups_txt, star, segs, texts, creative=creative, roles_pick=roles_txt)
+            out["auto"] = _board(top, "", r1, groups_txt, star, segs, texts, creative=creative, roles_pick=roles_txt, extra=extra_s.split(","))
             out["auto"]["names"] = ["AI 자동"]
         else:
             fam = next((f for n, f, _ in fams if str(n) == str(k)), None)
             if fam:
-                out[str(k)] = _board(fam, pan_of.get(str(k)) or "", r1, groups_txt, star, segs, texts, roles_pick=roles_txt)
+                out[str(k)] = _board(fam, pan_of.get(str(k)) or "", r1, groups_txt, star, segs, texts, roles_pick=roles_txt, extra=extra_s.split(","))
     print("RESULT " + json.dumps(out, ensure_ascii=False))
 
 
@@ -433,7 +445,7 @@ def families_json():
 
 if __name__ == "__main__":
     if sys.argv[1:2] == ["gen"]:
-        gen(sys.argv[2], sys.argv[3].split(","), *(sys.argv[4:6]))
+        gen(sys.argv[2], sys.argv[3].split(","), *(sys.argv[4:7]))
     elif sys.argv[1:2] == ["families"]:
         families_json()
     else:

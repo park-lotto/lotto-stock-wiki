@@ -43,12 +43,13 @@ function page2(){
     const ek = key()+VIEW[key()]; const lines = bd.slots.map((sl, i) => (EDIT[ek] && EDIT[ek][i] != null) ? EDIT[ek][i] : sl.line);
     const mine = new Set(Object.values(asg()).flatMap(s => [...s]));
     const cells = bd.slots.map((sl, i) => { const hs = (sl.ids||[]).some(id => mine.has(id)); const ck = bd.check[i] || {};
-      return `<div class="cell ${sl.weak?'weak':''} ${hs?'hasstar':''}"><div class="ch"><b>${i+1}. ${ko(sl.slot)}${hs?' 🎯':''}</b><span>${sl.need||''}</span></div>
-        <div class="cth">${cellCards(ek, i, sl, ck)}</div>
+      const added = (bd.extra||[]).includes(String(sl.slot||'').split('_')[0].toLowerCase());
+      return `<div class="cell ${sl.weak?'weak':''} ${hs?'hasstar':''} ${added?'added':''}"><div class="ch"><b>${i+1}. ${ko(sl.slot)}${hs?' 🎯':''}</b><span>${sl.need||''}</span></div>${added?'<div class="addb">＋ 다시 쓰기로 추가한 칸</div>':''}
+        <div class="cth">${cellCards(ek, i, sl, ck)}</div>${candBox(ek, i, sl, bd)}
         <div class="line" contenteditable="true" oninput="(EDIT['${ek}']=EDIT['${ek}']||{})[${i}]=this.innerText;upd2()">${lines[i]}</div>
         ${sl.weak?`<div class="why">⚠ ${sl.weak}</div>`:''}${sl.line_before?`<div class="meta">✎ 검수: "${sl.line_before}" → 제품 사실 빼고 고침</div>`:''}
         <div class="meta">장면 ${ck.have}초 · 문장 ${ck.need}초</div></div>`; }).join('');
-    body = `<div class="sb"><div><div class="note" style="margin:6px 0">${bd.first_line_style||''} · 🎯 = 1단계에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요</div><div class="cells">${cells}</div></div>
+    body = `<div class="sb"><div><div class="note" style="margin:6px 0">${bd.first_line_style||''} · 🎯 = 1단계에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요</div><div class="cells">${cells}</div>${xpick(ek, bd)}</div>
       <div class="script"><b>📜 대본</b><ol id="scr">${lines.map(l=>'<li>'+l+'</li>').join('')}</ol><button class="btn main" style="width:100%">이 대본으로 확정 → 3단계</button></div></div>`;
   }
   return `<div class="pickbar"><b>대본 스타일 고르기</b> <span class="note">여러 개 골라도 돼요 · 고른 만큼 스토리보드가 따로 나와요 · 스타일 하나에 약 35초(동시에 만듦)</span>
@@ -64,6 +65,46 @@ function cellCards(ek, i, sl, ck){
   const ids = ordOf(ek, i, sl); const picked = new Set(sl.picked || []); let acc = 0; const need = Number(ck.need || 0);
   return ids.map((id, j) => { const p = job().pieces[id]; const sec = p ? Number(p.sec) : 0; const show = acc * 1.2 < need - 0.05; acc += sec;
     return `<div class="cc ${show?'':'off'}">${th(id, 60)}<div class="ccb">${picked.has(id)?'<span class="pk">고른 장면</span>':'<span class="aik">AI</span>'}
-      <span class="mv" onclick="mv('${ek}',${i},${j},-1)">◀</span><span class="mv" onclick="mv('${ek}',${i},${j},1)">▶</span></div>${show?'':'<div class="offt">안 나옴</div>'}</div>`; }).join(''); }
+      <span class="mv" onclick="mv('${ek}',${i},${j},-1)">◀</span><span class="mv" onclick="mv('${ek}',${i},${j},1)">▶</span><span class="mv" title="이 칸에서 빼기" onclick="rmCard('${ek}',${i},${j})">✕</span></div>${show?'':'<div class="offt">안 나옴</div>'}</div>`; }).join(''); }
 function upd2(){ const ek = key()+VIEW[key()]; const bd = made()[VIEW[key()]]; if (!bd) return;
   document.getElementById('scr').innerHTML = bd.slots.map((sl,i)=>'<li>'+((EDIT[ek]&&EDIT[ek][i]!=null)?EDIT[ek][i]:sl.line)+'</li>').join(''); }
+// ── 칸 후보(2026-10-04 사장님 "한 장짜리 칸에도 관련 카드를 후보로"): 그 칸 장면과 같은 묶음 + AI 쓰임이 맞는 조각 중 아직 어느 칸에도 안 쓰인 것 — 흑백으로 접어 두고, 누르면 그 칸 뒤에 들어간다
+const SLOT_TAG = {hook:'훅감',title:'훅감',bait:'훅감',pain:'비포',problem:'비포',limit:'비포',mistake:'비포',regret:'비포',result:'애프터',land:'애프터',twist:'반전',cases:'반전',proof:'반응',react:'반응',witness:'반응',fame:'반응'};
+let CAND = {};
+function usedAll(ek, bd){ const s = new Set(); bd.slots.forEach((sl, i) => ordOf(ek, i, sl).forEach(id => s.add(id))); return s; }
+function candOf(ek, i, sl, bd){
+  const x = job(); const used = usedAll(ek, bd); const mine = new Set(ordOf(ek, i, sl)); const a = [];
+  x.groups.filter(g => g.ids.some(id => mine.has(id))).forEach(g => g.ids.forEach(id => { if (!used.has(id) && !a.includes(id)) a.push(id); }));
+  const tag = SLOT_TAG[String(sl.slot||'').split('_')[0].toLowerCase()];
+  if (tag) Object.keys(x.pieces).forEach(id => { if (!used.has(id) && !a.includes(id) && (x.tag_of[id]||[]).includes(tag)) a.push(id); });
+  return a.slice(0, 12);
+}
+function candBox(ek, i, sl, bd){ const cs = candOf(ek, i, sl, bd); if (!cs.length) return ''; const k = ek+'#'+i, open = CAND[k];
+  return `<div class="cand"><span class="more" onclick="CAND['${k}']=!${!!open};render()">${open?'▲ 후보 접기':'＋ 관련 후보 '+cs.length+'개 보기'}</span>${open?`<div class="cth">${cs.map(id => `<div class="cc cand1" onclick="addCand('${ek}',${i},'${id}')" title="누르면 이 칸 뒤에 넣어요">${th(id, 52)}<div class="ccb"><span class="ck2">＋ 넣기</span></div></div>`).join('')}</div>`:''}</div>`; }
+function addCand(ek, i, id){ const bd = made()[VIEW[key()]]; ordOf(ek, i, bd.slots[i]).push(id); render(); }
+function rmCard(ek, i, j){ ORD[ek+'#'+i].splice(j, 1); render(); }
+// ── 칸 넣어 다시 쓰기(2026-10-04 사장님 "고조 같은 칸을 고르면 장면과 대본을 추가해서 다시"): 고른 칸을 그 스타일 구조에 끼워 3.6이 장면을 찾고 대본을 처음부터 다시 쓴다
+const EXTRA = [['escalation','📈 고조','효능을 한 단계 더 세게'],['twist','🔄 반전','예상 밖 쓰임·충격'],['proof','👥 반응·증거','사람 반응·감탄'],['pain','😩 불편','쓰기 전 답답함'],
+  ['how','🔧 사용법','쓰는 과정'],['reveal','💡 정체 공개','제품 첫 등장'],['bait','🪤 미끼','궁금증 한 줄'],['result','🏁 결과','완성·효과 장면']];
+let XTRA = {};
+function xset(ek){ return XTRA[ek] = XTRA[ek] || new Set(); }
+function txtra(ek, r){ const s = xset(ek); s.has(r) ? s.delete(r) : s.add(r); render(); }
+function xpick(ek, bd){
+  const have = new Set(bd.slots.map(s => String(s.slot||'').split('_')[0].toLowerCase())); const opts = EXTRA.filter(([r]) => !have.has(r));
+  if (!opts.length) return ''; const n = xset(ek).size, busy = BUSY[ek];
+  return `<div class="xpick"><b>＋ 대본을 더 탄탄하게 — 넣고 싶은 칸을 고르세요</b> <span class="note">고른 칸에 맞는 장면을 찾아 넣고 대본을 처음부터 다시 써요(약 35초) · 1단계에서 담은 장면은 그대로 앞에</span>
+    <div class="xopts">${opts.map(([r, nm, d]) => `<span class="xo ${xset(ek).has(r)?'on':''}" onclick="txtra('${ek}','${r}')">${nm} <small>${d}</small></span>`).join('')}</div>
+    <button class="btn main" ${n&&!busy?'':'disabled'} onclick="rewrite()">${busy?'⏳ 다시 쓰는 중…':(n?'고른 '+n+'칸 넣어 다시 쓰기':'칸을 고르면 다시 써요')}</button></div>`; }
+async function rewrite(){
+  const k = VIEW[key()], ek = key()+k, bd = made()[k]; if (!bd) return;
+  const ex = [...new Set([...(bd.extra||[]), ...xset(ek)])].join(',');
+  BUSY[ek] = BUSY[key()+k] = true; render(); const t0 = Date.now();
+  try {
+    const r = await fetch('/gen', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({jid: key(), keys: [k], roles: rolesParam(), extra: ex})});
+    const d = await r.json();
+    if (d[k]){ made()[k] = Object.assign(d[k], {secs: Math.round((Date.now()-t0)/1000)}); Object.keys(ORD).filter(o => o.startsWith(ek+'#')).forEach(o => delete ORD[o]);
+      Object.keys(CAND).filter(o => o.startsWith(ek+'#')).forEach(o => delete CAND[o]); delete EDIT[ek]; XTRA[ek] = new Set(); }
+    else { console.log('[sb] 다시 쓰기 실패', d); alertBox('다시 쓰기 실패 — 다시 눌러 주세요'); }
+  } catch(e){ console.log('[sb] 요청 실패', e); alertBox('다시 쓰기 실패 — 시험 서버(127.0.0.1:8790)가 켜져 있어야 해요'); }
+  delete BUSY[ek]; delete BUSY[key()+k]; render();
+}

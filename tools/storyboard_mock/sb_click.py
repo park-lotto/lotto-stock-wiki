@@ -1,0 +1,33 @@
+# 2단계 실제 클릭 시험: 스타일 1개로 만들기 → 후보 펼쳐 넣기 → 고조 칸 골라 다시 쓰기 (실제 3.6 호출)
+import sys, time, json
+from playwright.sync_api import sync_playwright
+OUT = sys.argv[1] if len(sys.argv) > 1 else "."
+with sync_playwright() as p:
+    b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1500, "height": 1000})
+    errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.goto("http://127.0.0.1:8790/"); pg.wait_for_timeout(800)
+    pg.evaluate("go(2)"); pg.wait_for_timeout(300)
+    fam = pg.evaluate("String((job().styles||[])[0] ? job().styles[0].family : FAMS[0].id)")
+    pg.evaluate("k => tpick(k)", fam)
+    t0 = time.time(); pg.evaluate("makeBoards()")
+    pg.wait_for_function("() => Object.keys(made()).length > 0 && !Object.keys(BUSY).length", timeout=300000)
+    print("만들기", round(time.time() - t0), "초 fam", fam)
+    bd = pg.evaluate("made()[VIEW[key()]]")
+    print("칸", [(s["slot"], len(s.get("ids") or [])) for s in bd["slots"]])
+    ncand = pg.evaluate("document.querySelectorAll('.cand .more').length"); print("후보 버튼 칸 수", ncand)
+    pg.locator(".cand .more").first.click(); pg.wait_for_timeout(200)
+    before = pg.evaluate("document.querySelectorAll('.cell')[[...document.querySelectorAll('.cell')].findIndex(c=>c.querySelector('.cand1'))].querySelectorAll('.cth > .cc:not(.cand1)').length")
+    pg.locator(".cand1").first.click(); pg.wait_for_timeout(200)
+    print("후보 넣기 전/후 그 칸 카드 수", before, "→", pg.evaluate("Math.max(...[...document.querySelectorAll('.cell')].map(c=>0))") if False else "")
+    pg.screenshot(path=OUT + "/sb_cand.png", full_page=True)
+    opts = pg.evaluate("[...document.querySelectorAll('.xo')].map(e=>e.innerText.split(' ')[0]+e.innerText.split(' ')[1])"); print("추가 칸 선택지", opts)
+    pg.locator(".xo", has_text="고조").first.click()
+    t0 = time.time(); pg.locator(".xpick button").click()
+    pg.wait_for_function("() => !Object.keys(BUSY).length", timeout=300000)
+    bd2 = pg.evaluate("made()[VIEW[key()]]")
+    print("다시 쓰기", round(time.time() - t0), "초 extra", bd2.get("extra"))
+    for i, s in enumerate(bd2["slots"]):
+        print(" %d %s ids=%s | %s" % (i + 1, s["slot"], s.get("ids"), s["line"][:70]))
+    print("추가칸 배지", pg.evaluate("document.querySelectorAll('.addb').length"))
+    pg.screenshot(path=OUT + "/sb_regen.png", full_page=True)
+    print("JS 오류", errs); b.close()
