@@ -803,7 +803,11 @@ class GateResult:
 def _ssh_runner(key, host=HOST):
     def sh(cmd, stdin=None, timeout=120):
         try:
-            p = subprocess.run(["ssh", "-i", key, "-o", "ConnectTimeout=15", "-o", "BatchMode=yes", host, cmd],
+            # ★ServerAlive(관제 107, 2026-10-04 실측): 서버도 PC 도 연결 유지 신호가 꺼져 있어(ClientAliveInterval 0) 출력 없이
+            #   10분쯤 지나면 중간 장비가 연결을 조용히 끊었다 → 서버는 끝났는데 PC 는 1시간 timeout 까지 매달렸다
+            #   (sleep 330 은 331초에 답, sleep 660 은 서버가 끝난 뒤에도 답 없음). 라이브 실측이 2시간마다 124 로 죽던 뿌리.
+            p = subprocess.run(["ssh", "-i", key, "-o", "ConnectTimeout=15", "-o", "BatchMode=yes",
+                                "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=6", host, cmd],
                                input=stdin, capture_output=True, timeout=timeout)
         except subprocess.TimeoutExpired:
             return 124, "ssh 시간 초과(%ds): %s" % (timeout, cmd[:80])

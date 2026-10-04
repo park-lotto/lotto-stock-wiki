@@ -9,6 +9,11 @@
     "card": 40,
     "track": "장면폰트"
   },
+  "out/precision20-ui.js:addText": {
+    "at": "2026-10-03 22:33",
+    "card": 103,
+    "track": "단어강조"
+  },
   "out/precision20-ui.js:drawFontSets": {
     "at": "2026-09-29 16:06",
     "card": 30,
@@ -24,10 +29,40 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/app.py:api_buffer_schedule": {
+    "at": "2026-10-04 11:13",
+    "card": 114,
+    "track": "버퍼중복취소"
+  },
+  "shopping_shorts/app.py:api_mix_voice_preview": {
+    "at": "2026-10-04 11:05",
+    "card": 113,
+    "track": "단어강조"
+  },
+  "shopping_shorts/buffer_api.py": {
+    "at": "2026-10-04 11:13",
+    "card": 114,
+    "track": "버퍼중복취소"
+  },
+  "shopping_shorts/buffer_posts.py": {
+    "at": "2026-10-04 11:13",
+    "card": 114,
+    "track": "버퍼중복취소"
+  },
+  "shopping_shorts/deco_frame.py:_norm_masks": {
+    "at": "2026-10-03 20:53",
+    "card": 100,
+    "track": "화살표회전"
+  },
   "shopping_shorts/scene_style.py": {
     "at": "2026-09-29 22:57",
     "card": 36,
     "track": "장면폰트"
+  },
+  "shopping_shorts/scene_style.py:context_for": {
+    "at": "2026-10-03 21:53",
+    "card": 102,
+    "track": "단어강조"
   },
   "shopping_shorts/scene_style.py:validate_snapshot": {
     "at": "2026-09-29 16:06",
@@ -38,6 +73,11 @@
     "at": "2026-09-29 23:07",
     "card": 36,
     "track": "장면폰트"
+  },
+  "shopping_shorts/static/scene_play.js:planClips": {
+    "at": "2026-10-03 23:09",
+    "card": 106,
+    "track": "구절컷리듬분리"
   },
   "shopping_shorts/static/text-look-contract.js": {
     "at": "2026-09-29 23:07",

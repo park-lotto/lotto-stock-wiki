@@ -241,27 +241,58 @@ def move_track_to_external(repo, smap, name, printer=print):
     return True
 
 
-def warm_track(repo, smap, name, printer=print):
-    """D 에 있는 트랙 폴더를 C 로 되돌린다(다시 일할 때)."""
+def ensure_warm(repo, name, printer=print, smap=None):
+    """★트랙을 쓰기 직전에 부른다(관제 109 — 사장님 "쓸 때만 C 로"). D 에 있으면 C 로 되돌린다. 판단 주인은 여기 한 곳:
+    트랙.bat(track_open)·finish·`track.py use` 가 이걸 부른다. 반환 (C 에 있나, 이유).
+    못 되돌리면(D 빠짐·C 여유 모자람·사용 중) 정션은 그대로 둔다 — 느리지만 그 자리에서 동작한다. 조용히 넘기지 않고 이유를 말한다."""
     import track
-    wt = track.worktree_path(name, repo)
+    return warm_link(repo, track.worktree_path(name, repo), printer, smap)
+
+
+def warm_link(repo, wt, printer=print, smap=None):
+    """C 에 정션으로 남은 자리(트랙·바탕화면 폴더 등)를 실제 폴더로 되돌린다 — ensure_warm·`storage.py warm <경로>` 공용."""
+    wt = Path(wt)
+    name = wt.name
     if not is_junction(wt):
-        printer("%s 는 이미 C 에 있다" % name)
-        return False
+        return True, "C"
     if dead_junction(wt):
-        raise SystemExit("중단: %s 정션의 목적지가 없다 — D 가 꽂혀 있나?" % name)
+        return False, "D 에 있는데 D 가 안 보인다 — 외장하드가 꽂혀 있나?"
+    smap = smap or load_map(repo) or {}
     real = Path(os.path.realpath(wt))
     need = gb(dir_size(real))
     have = free_gb(repo) or 0
     if have - need < smap.get("경보", {}).get("refuse_gb", 3):
-        raise SystemExit("중단: C 여유 %.1fGB 인데 %.1fGB 가 필요하다 — 먼저 다른 트랙을 D 로" % (have, need))
+        return False, "C 여유 %.1fGB 인데 %.1fGB 가 필요하다 — D 에서 그대로 연다(느림)" % (have, need)
+    printer("← D 에 있던 %s 를 C 로 되돌리는 중(%.2fGB, 외장 HDD 라 몇 분 걸릴 수 있다)…" % (name, need))
     remove_junction(wt)
-    shutil.move(str(real), str(wt))
+    if not move_dir_safe(real, wt, printer):              # 복사→대조→D 삭제. 실패하면 D 정본 그대로
+        make_junction(wt, real)
+        return False, "C 로 복사가 안 됐다 — D 에서 그대로 연다(느림)"
+    if not (wt / ".git").exists():                        # 트랙이 아닌 폴더(바탕화면 등)
+        printer("← C  %s (%.2fGB)" % (name, need))
+        return True, "D→C"
     _git_safe_directory(real, add=False)
     _git_safe_directory(wt, add=False)
     rc, out = _git(wt, "status", "--porcelain")
     printer("← C  %s (%.2fGB)%s" % (name, need, "" if rc == 0 else "  ⚠️ git status 실패: " + out.strip()[:80]))
-    return True
+    return True, "D→C"
+
+
+def warm_track(repo, smap, name, printer=print):
+    """D 에 있는 트랙 폴더(이름) 또는 정션 자리(경로·바탕화면 폴더 이름)를 C 로 되돌린다(손으로 부를 때)."""
+    import track
+    desk = Path(os.path.expandvars(smap.get("바탕화면", {}).get("root", "%USERPROFILE%/Desktop"))) / name
+    if os.path.lexists(track.worktree_path(name, repo)):
+        ok, why = ensure_warm(repo, name, printer, smap)
+    elif os.path.lexists(name) or os.path.lexists(desk):
+        ok, why = warm_link(repo, name if os.path.lexists(name) else desk, printer, smap)
+    else:
+        raise SystemExit("중단: %s — 트랙도 경로도 바탕화면 폴더도 아니다" % name)
+    if not ok:
+        raise SystemExit("중단: " + why)
+    if why == "C":
+        printer("%s 는 이미 C 에 있다" % name)
+    return why == "D→C"
 
 
 def apply_tracks(repo, smap, idle_days=7, printer=print):
@@ -334,7 +365,7 @@ def temp_targets(smap):
     days = float(t.get("나이_일", 2))
     out = []
     for sub in t.get("폴더", ["pytest-of-CH", "claude"]):
-        out += old_files(root / sub, days)
+        out += old_files(root if sub == "*" else root / sub, days)   # "*" = Temp 전체(관제 109 — 윈도 저장소 센스와 같은 방식)
     return out
 
 
@@ -351,7 +382,8 @@ def apply_temp(smap, printer=print):
     t = smap.get("임시", {})
     root = Path(os.path.expandvars(t.get("root", "%LOCALAPPDATA%/Temp")))
     for sub in t.get("폴더", ["pytest-of-CH", "claude"]):
-        for d in sorted((p for p in (root / sub).rglob("*") if p.is_dir()), key=lambda p: -len(str(p))):
+        base = root if sub == "*" else root / sub
+        for d in sorted((p for p in base.rglob("*") if p.is_dir()), key=lambda p: -len(str(p))):
             try:
                 d.rmdir()
             except OSError:
@@ -588,13 +620,9 @@ def status(repo, smap, printer=print):
 def schedule(repo, smap, printer=print):
     a = smap.get("자동", {})
     name, at = a.get("작업이름", "숏템_저장층_정리"), a.get("시각", "04:40")
-    py = shutil.which("python") or sys.executable
-    cmd = 'cmd /c "cd /d \\"%s\\" && \\"%s\\" tools\\storage.py apply --auto >> \\"%s\\" 2>&1"' % (
-        repo, py, Path(repo) / "관제" / "storage_auto.log")
-    r = subprocess.run(["schtasks", "/Create", "/F", "/SC", "DAILY", "/ST", at, "/TN", name, "/TR", cmd],
-                       capture_output=True, text=True, encoding="cp949", errors="replace")
-    printer(("✅ 작업 스케줄러 등록: %s 매일 %s" % (name, at)) if r.returncode == 0 else ("❌ 등록 실패: " + (r.stdout + r.stderr).strip()[:200]))
-    return r.returncode == 0
+    import win_schedule   # 예약 명령은 한 곳(관제 107 — 옛 \" 따옴표로 등록돼 한 번도 안 돌았다)
+    return win_schedule.register(name, ["/SC", "DAILY", "/ST", at], repo, ["tools\\storage.py", "apply", "--auto"],
+                                 Path(repo) / "관제" / "storage_auto.log", printer=printer)
 
 
 _APPLY_LOCK = Path(os.environ.get("TEMP") or os.environ.get("TMP") or ".") / "stockbrain_storage_apply.lock"
@@ -668,6 +696,19 @@ def main(argv=None):
     else:
       with _ApplyLock():
         print("[%s] 저장 층 정리 시작" % time.strftime("%Y-%m-%d %H:%M"))
+        try:
+            _apply_selected(args, repo, smap, days)
+        except BaseException as e:
+            if args.auto:
+                record_auto_run(repo, False, "%s: %s" % (type(e).__name__, e))
+            raise
+        if args.auto:
+            record_auto_run(repo, True, "")
+        status(repo, smap)
+    return 0
+
+
+def _apply_selected(args, repo, smap, days):
         if args.tracks or args.auto:
             apply_tracks(repo, smap, days)
         if args.stages or args.auto:
@@ -684,8 +725,37 @@ def main(argv=None):
             apply_research(repo, smap)
         if not (args.tracks or args.stages or args.out or args.temp or args.gitgc or args.desktop or args.research or args.auto):
             print("무엇을 옮길지 골라라: --tracks / --stages / --out / --temp / --gitgc / --desktop / --research / --auto")
-        status(repo, smap)
-    return 0
+
+
+# ── 자동 정리가 정말 도나(관제 109) ──────────────────────────────────────
+# 09-29 등록한 04:40 작업이 따옴표 오류로 한 달 내내 조용히 실패했다(로그 0개). 이제 --auto 는 끝날 때마다 기록을 남기고,
+# track.py start·finish 가 기록이 낡았거나 실패면 크게 알린다 — "안 돌고 있다"를 사람이 아니라 도구가 먼저 본다.
+LAST_RUN_REL = "관제/storage_last.json"
+LAST_RUN_STALE_H = 30
+
+
+def record_auto_run(repo, ok, error):
+    try:
+        (Path(repo) / LAST_RUN_REL).write_text(json.dumps(
+            {"at": time.strftime("%Y-%m-%d %H:%M:%S"), "epoch": time.time(), "ok": bool(ok), "error": error[:300],
+             "c_free_gb": round(free_gb(repo) or 0, 1)}, ensure_ascii=False), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def auto_run_warning(repo, now=None):
+    """자동 정리가 최근에 성공했으면 None, 아니면 사람이 읽을 경고 한 줄."""
+    p = Path(repo) / LAST_RUN_REL
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "자동 저장층 정리(04:40) 기록이 없다 — 한 번도 안 돌았을 수 있다. 확인: schtasks /query /tn 숏템_저장층_정리 /fo LIST /v"
+    age_h = ((now or time.time()) - float(d.get("epoch", 0))) / 3600
+    if not d.get("ok"):
+        return "자동 저장층 정리가 실패했다(%s): %s" % (d.get("at"), d.get("error") or "?")
+    if age_h > LAST_RUN_STALE_H:
+        return "자동 저장층 정리가 %.0f시간째 안 돌았다(마지막 %s). PC가 04:40에 꺼져 있었거나 작업이 죽었다" % (age_h, d.get("at"))
+    return None
 
 
 if __name__ == "__main__":

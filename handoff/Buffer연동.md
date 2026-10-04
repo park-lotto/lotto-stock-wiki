@@ -130,3 +130,31 @@ shareNow는 쓰지 않았다(되돌릴 수 없다).
   (로그 16:10:13·16:42:14). → 고객 눈엔 완성본이 있는 것처럼 보이고, 예약만 404로 22번 막혔다.
 - ⏭ 고칠 것(승인 대기): 10단계 진입 시 완성본 유무를 서버 판정(`_video_gone_reason` 한 곳)으로 받아,
   없으면 "완성본" 문구·썸네일 대신 "아직 완성본이 없어요 → [완성본 만들기]로 가기"를 띄우고 예약 버튼을 잠근다.
+
+## 2026-10-04 — 같은 영상이 2개씩 올라감(고객 340 박세현) → 중복 방지·예약 취소·페이스북 (관제 114, 트랙 버퍼중복취소)
+
+**증상**: 유튜브·인스타에 같은 영상이 2개씩. **Buffer 실측**(고객 키로 posts 조회, 읽기만):
+- job `c2e762780e08`(바늘) — 10-04 00:18·00:23 KST 두 번 예약, 둘 다 유튜브+인스타·같은 시각(07:30) → 2개씩 게시
+- job `869943fae072`(지퍼백) — 인스타 예약 1건 + 즉시 게시 1건
+- 페이스북은 `Facebook posts require a type` 로 거절(10-03 2회) — metadata 누락
+
+**뿌리**: 예약 요청은 부를 때마다 createPost 했고 서버는 **무엇을 예약했는지 안 적었다**. 화면에도 흔적이 안 남아
+패널을 다시 열면 예약했는지 알 수 없었다. 취소할 게시물 id도 없었다.
+
+**주인 함수**: `shopping_shorts/buffer_posts.py` — `already_scheduled`(중복), `cancel`(취소 가능 여부). 장부 테이블 `buffer_posts`.
+판단 직전에 Buffer에 지금 상태를 물어 장부를 맞춘다(`sync`) — Buffer에서 직접 지운 예약은 더는 안 막는다.
+**결과물 검사**: `shopping_shorts/tests/test_buffer_posts.py`(끝단: 두 번 눌러도 createPost 횟수 불변) · `tools/buffer_dup_ui_check.py`(화면 실제 함수).
+
+**고친 것**
+- `app.py` `/api/buffer/schedule`: 중복 채널은 Buffer로 안 보내고 `dup`으로 돌려줌 → 화면이 묻고 `force`로만 다시. 작업 단위 락. 성공 시 장부 기록.
+- `app.py` 신규 `/api/buffer/posts`(목록) · `/api/buffer/cancel`(취소). 올라간 글(sent)·올리는 중은 취소 거절(SNS에서 지우라고 안내).
+- `buffer_api.py`: `post_status` · `delete_post` · `BufferNotFound`(extensions.code NOT_FOUND) · 페이스북 `{"type":"reel"}`.
+- `produce.html` 10단계: 📋 예약 목록 + [예약 취소] + 중복 확인창.
+
+**Buffer 규격 실측(2026-10-04)**: `post(input:{id})` 없는 id → errors code NOT_FOUND / `deletePost` 없는 id → `{message:"Document not found"}` /
+facebook reel metadata로 createPost → 스키마 통과("Channel not found"까지 도달).
+
+⏭ 남은 것
+- **라이브에서 실제 Buffer로 예약→중복 물음→취소** 한 바퀴는 미실측(사장님 계정에 Buffer 키가 없어 대신 돌릴 계정이 없다). 배포 뒤 Buffer 키 있는 계정으로 확인 필요.
+- 페이스북 실제 예약 성공 여부는 페이스북 채널이 있는 고객 실사용 로그로 확인(거절 로그 `Facebook posts require a type` 가 사라지는지).
+- 배포 전 예약분은 장부에 없다 — 목록·중복 판정은 배포 뒤 예약부터 적용.

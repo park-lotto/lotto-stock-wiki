@@ -33,10 +33,10 @@
 
 무결성 및 한글 글리프 검사는 `py tools/verify_scene_fonts.py`로 실행한다.
 
-## 2026-09-12 · 볼케이노 팩 활용
+## 2026-09-12 · 글꼴 2종 추가
 
-- 로컬 `.volcano/jobs/20260911_뇌전구/fonts`에서 원본 그대로 복사: `SBAggroB.ttf`, `yg-jalnan.ttf`.
-- 팩 동봉 고지는 `licenses/Volcano-pack-LICENSE.txt`에 보존했다. 이를 OFL 또는 무제한 재배포 허가로 해석하지 않는다.
+- 원본 그대로 복사: `SBAggroB.ttf`, `yg-jalnan.ttf`.
+- 팩 동봉 고지는 `licenses/bundled-fonts-LICENSE.txt`에 보존했다. 이를 OFL 또는 무제한 재배포 허가로 해석하지 않는다.
 - 어그로체 공식 안내: https://sandbox.co.kr/assets/images/pc/aggro/SB_Aggro_Font_license.pdf (웹사이트/영상/서버 임베딩 허용, OFL 아님).
 - 잘난체 공식 안내: https://image.goodchoice.kr/images/jalnan_font/jalnan-font-202004ver.pdf (파일 자체 유료 판매·임의 개작 재배포 금지).
 - 이번 사용은 편집기 웹폰트 임베딩이다. 별도 폰트 판매/다운로드 팩 기능은 추가하지 않았다.

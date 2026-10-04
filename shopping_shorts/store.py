@@ -3766,6 +3766,13 @@ class Store:
                  (method or None)),
             )
 
+    def save_extract_story(self, shortcode, story):
+        """분석 캐시(script_extracts.script_json)에 **스토리 한 칸만** 더한다(2026-10-04 관제 084).
+        save_script 는 전체를 덮어써 추출 시각·방식 표식까지 바뀌므로 쓰지 않는다 — 다음 작업이 같은 영상을 담으면 재사용."""
+        with self._conn() as c:
+            c.execute("UPDATE script_extracts SET script_json=json_set(script_json, '$.story', json(?)) WHERE shortcode=?",
+                      (json.dumps(story or [], ensure_ascii=False), shortcode))
+
     def update_extract_category(self, shortcode, category, source=None):
         """category만 UPDATE — script_json은 절대 안 건드린다(2026-07-15, C-1 재발방지).
         원본 텍스트를 다시 쓰지 않고 카테고리 추론·교정만 반영할 때 이걸 쓸 것

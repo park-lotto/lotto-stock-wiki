@@ -135,36 +135,67 @@ _MOTION_SCHEMA = {
         "subject_desc_en": {"type": "string"},
         "motion_steps_en": {"type": "array", "items": {"type": "string"}},
         "forbid_extra": {"type": "array", "items": {"type": "string"}},
+        # 관제 117 — 구체 항목(환경·카메라·효과)과 한글 번역. 화면에 영어·한글을 나란히 보여 준다.
+        "environment_en": {"type": "string"},
+        "camera_en": {"type": "string"},
+        "effects_en": {"type": "string"},
+        "subject_desc_ko": {"type": "string"},
+        "environment_ko": {"type": "string"},
+        "camera_ko": {"type": "string"},
+        "effects_ko": {"type": "string"},
+        "motion_steps_ko": {"type": "array", "items": {"type": "string"}},
     },
     "required": ["subject_desc_en", "motion_steps_en"],
 }
+_DETAIL_KEYS = ("environment_en", "camera_en", "effects_en",
+                "subject_desc_ko", "environment_ko", "camera_ko", "effects_ko")
 
 
-def motion_request(narration, subject_hint="", style="natural", call=None, frame_path=None):
-    """대사 한 줄 + **베이스 프레임 이미지** → (영어) 피사체 묘사 + 초 단위 동작 3단계. Gemini JSON 호출; 실패하면 기본값.
+def motion_request(narration, subject_hint="", style="natural", call=None, frame_path=None, flow=None, direction=""):
+    """대사 한 줄 + **베이스 프레임 이미지** → (영어) 피사체·환경·카메라·초 단위 동작 3단계·효과 + 한글 번역. Gemini JSON 호출; 실패하면 기본값.
 
     ★이미지를 반드시 같이 준다(2026-09-23 실측): 텍스트만 주면 "뒤집으면 핑크가 되는 리버시블 인형"처럼
-      제품에 없는 기능을 지어내고 Veo가 그대로 만든다(훅 실측 — 노란 인형이 핑크로 뒤집힘)."""
+      제품에 없는 기능을 지어내고 Veo가 그대로 만든다(훅 실측 — 노란 인형이 핑크로 뒤집힘).
+    ★관제 117(2026-10-04 사장님 "사물·환경·카메라 각도·효과 등 아주 구체적으로 / 대충 하면 장면 잘 안 나와"):
+      flow = 대본 흐름(앞 줄·이 줄·뒤 줄), direction = 사장님이 한글로 적은 방향. 구체 항목은 **보이는 것만** 적게 한다."""
     if call is None:
         from shopping_shorts.edit_plan import _vault_call, _vault_call_image
         call = (lambda p, s: _vault_call_image(p, s, frame_path)) if frame_path else _vault_call
+    _flow = flow or {}
+    _dir = str(direction or "").strip()[:600]
     prompt = (
         "You write shot directions for a 4-8 second product video clip that starts from the attached still frame (FRAME 0).\n"
         "Describe ONLY what is visible in the frame. Do not invent product features, colors, parts or mechanisms that are not visible.\n"
         f"Product / subject hint (Korean): {subject_hint or '(unknown)'}\n"
         f"Narration line (Korean) this shot must match: {narration}\n"
-        f"Style: {'energetic hook (quick dolly-in toward the subject, one bold physical action; still real handheld phone footage - no drawn, animated or graphic effects)' if style == 'impact' else 'natural subtle motion (breathing, gentle hand, slow push-in)'}\n"
+        + ((f"Script flow (Korean). Line before: {_flow.get('prev') or '(none - this is the opening)'} | "
+            f"THIS line: {_flow.get('this') or narration} | Line after: {_flow.get('next') or '(none - this is the ending)'}. "
+            "The motion must show what THIS line says, at this point of the story.\n") if flow else "")
+        + ((f"DIRECTOR'S NOTE (Korean, written by the editor). Follow it as far as it is physically possible with what is "
+            f"visible in the frame; it overrides the default style: {_dir}\n") if _dir else "")
+        + f"Style: {'energetic hook (quick dolly-in toward the subject, one bold physical action; still real handheld phone footage - no drawn, animated or graphic effects)' if style == 'impact' else 'natural subtle motion (breathing, gentle hand, slow push-in)'}\n"
         + ("HOOK ORDER: the FIRST of the three sentences must already contain the single boldest moment. "
            "Do not build up to it and do not save it for the end; the viewer only sees the opening.\n"
            if style == "impact" else "")
-        + "Return JSON: subject_desc_en (one sentence describing the subject exactly as it appears, colors, materials), "
+        + "BE CONCRETE. Vague directions give bad video. Name the exact objects, where they sit in the frame, what they are made of, "
+        "which direction things move, how far and how fast. No generic phrases like 'the product moves nicely'.\n"
+        + "Return JSON: subject_desc_en (2-3 sentences: every visible object exactly as it appears - shape, color, material, size "
+        "relation, where it sits in the frame, how it is held or placed), "
+        "environment_en (1-2 sentences: the visible background, the surface it rests on, the kind of place, light direction and "
+        "quality, time-of-day feel - only what the frame shows), "
+        "camera_en (1-2 sentences: shot size (macro / close-up / medium), camera height and angle (eye-level, high angle, top-down...), "
+        "lens feel and depth of field, and the exact camera move with direction and speed), "
         "motion_steps_en (exactly 3 short sentences: what happens in the first third, middle third, last third; "
         "only movements that could physically happen to what is visible in this frame — camera moves, gentle hand contact, "
         "soft parts swaying, light changes; the product must keep its exact shape, color, material and design; it must not "
         "transform, flip inside out, change color or reveal hidden parts; NO person, face or body may appear or enter - "
         "prefer camera moves and self-motion of soft parts; if a hand is needed, it is only a hand already visible at the frame edge, "
         "never an arm, body or face; no text), "
-        "forbid_extra (0-3 short English phrases to forbid, e.g. 'no washing machine')."
+        "effects_en (1 sentence: real in-camera effects only - focus pull, light glint or reflection change, shadow movement, "
+        "natural motion blur; never drawn or graphic effects), "
+        "forbid_extra (0-3 short English phrases to forbid, e.g. 'no washing machine'), "
+        "subject_desc_ko, environment_ko, camera_ko, effects_ko (faithful, complete Korean translations of the matching English fields), "
+        "motion_steps_ko (exactly 3 Korean sentences, faithful translations of the 3 motion_steps_en in the same order)."
     )
     res = {}
     for attempt in range(3):          # 네트워크 끊김(RemoteProtocolError 실측 2026-09-23)은 한두 번 더 시도
@@ -176,7 +207,9 @@ def motion_request(narration, subject_hint="", style="natural", call=None, frame
             break
         time.sleep(2)
     steps = [str(x).strip() for x in (res.get("motion_steps_en") or []) if str(x).strip()][:3]
+    steps_ko = [str(x).strip() for x in (res.get("motion_steps_ko") or []) if str(x).strip()][:3]
     if len(steps) < 3:
+        steps_ko = []           # 영어가 기본 문장으로 바뀌면 모델의 한글 번역은 못 쓴다(짝이 안 맞는다)
         steps = (["The camera holds on the subject with a slight natural handheld sway.",
                   "A slow gentle push-in toward the subject; soft parts move subtly.",
                   "The push-in continues; the subject stays centered and unchanged."]
@@ -185,9 +218,135 @@ def motion_request(narration, subject_hint="", style="natural", call=None, frame
                  ["A fast push-in slams toward the subject and the boldest moment lands at once.",
                   "The motion carries through and starts to settle in the centre of the frame.",
                   "The camera holds steady; the subject is centred, sharp and unchanged."])
-    return {"subject_desc_en": str(res.get("subject_desc_en") or subject_hint or "the product in the input image").strip(),
-            "motion_steps_en": steps,
-            "forbid_extra": [str(x).strip() for x in (res.get("forbid_extra") or []) if str(x).strip()][:3]}
+    out = {"subject_desc_en": str(res.get("subject_desc_en") or subject_hint or "the product in the input image").strip(),
+           "motion_steps_en": steps,
+           "forbid_extra": [str(x).strip() for x in (res.get("forbid_extra") or []) if str(x).strip()][:3]}
+    # 구체 항목·한글 번역은 **모델이 준 것만** 싣는다(없으면 키도 없다 — 프롬프트는 종전 모양 그대로)
+    for k in _DETAIL_KEYS:
+        v = str(res.get(k) or "").strip()
+        if v:
+            out[k] = v
+    if len(steps_ko) == 3:
+        out["motion_steps_ko"] = steps_ko
+    return out
+
+
+def _visible_window(sec, visible):
+    """(보이는 길이, 1/3 지점, 2/3 지점) — build_prompt·build_prompt_ko 가 같은 숫자를 쓴다."""
+    sec = int(sec)
+    try:
+        vis = float(visible) if visible else float(sec)
+    except (TypeError, ValueError):
+        vis = float(sec)
+    vis = max(1.2, min(vis, float(sec)))
+    return vis, round(vis / 3.0, 1), round(vis * 2 / 3.0, 1)
+
+
+def build_prompt_ko(motion, sec, style="natural", visible=None):
+    """영어 프롬프트(build_prompt)의 **한글 번역본** — 같은 항목·같은 순서(사물·환경·시간표·카메라·효과·금지). 만들기 전에
+    화면에 같이 보여 준다(관제 117). Veo 에는 영어만 간다. 한글 번역이 없는 항목은 영어 원문을 그대로 보여 준다(지어내지 않는다)."""
+    vis, a, b = _visible_window(sec, visible)
+    en = motion.get("motion_steps_en") or ["", "", ""]
+    ko = motion.get("motion_steps_ko") or en
+    g = lambda k_ko, k_en: (motion.get(k_ko) or motion.get(k_en) or "").strip()
+    lines = [f"[출발 화면 = 첫 프레임] {g('subject_desc_ko', 'subject_desc_en')} — 이 모습(모양·색·재질·디자인) 그대로 유지합니다."]
+    if g("environment_ko", "environment_en"):
+        lines.append(f"[환경] {g('environment_ko', 'environment_en')}")
+    lines.append(f"[한 번에 이어 찍은 한 컷 · 컷 전환 없음 · {int(sec)}초]"
+                 + (f" 화면에는 앞 {vis:.1f}초만 쓰입니다 — 중요한 건 그 안에 다 나옵니다." if vis < int(sec) - 0.05 else ""))
+    if style == "impact":
+        lines.append(f"[훅] 가장 강한 순간이 처음 {a}초 안에 나옵니다.")
+    lines += [f"0.0~{a}초  {ko[0]}", f"{a}~{b}초  {ko[1]}", f"{b}~{vis:.1f}초  {ko[2]}"]
+    if vis < int(sec) - 0.05:
+        lines.append(f"{vis:.1f}~{int(sec)}.0초  그대로 머뭅니다(새 동작 없음).")
+    cam = g("camera_ko", "camera_en")
+    lines.append("[카메라·빛] " + (cam + " " if cam else "")
+                 + ("손으로 든 휴대폰 영상, 세로 9:16, 출발 화면과 같은 자연광, " + ("빠르게 다가가기(실제 손 움직임만)." if style == "impact" else "살짝 흔들리는 손떨림.")))
+    if g("effects_ko", "effects_en"):
+        lines.append(f"[효과] {g('effects_ko', 'effects_en')}")
+    lines.append("[사실감] 실제 휴대폰으로 찍은 실사. 그리거나 덧입힌 효과 없음. 사람·얼굴·몸이 화면에 들어오지 않음.")
+    lines.append("[금지] 글자·자막·로고·워터마크 / 아기·사람 얼굴·새 사람 / 제품 복제·모양·색·디자인 변화 / 만화풍·컷 전환·디졸브 / 속도선·그린 선·덧씌우기"
+                 + "".join(" / " + f for f in (motion.get("forbid_extra") or [])))
+    return chr(10).join(lines)
+
+
+def beat_visible_dur(beat):
+    """이 칸이 화면에 나오는 길이(초) — 음성 길이(앞뒤 다듬기 반영), 없으면 target_seconds."""
+    tts = (beat or {}).get("tts_path")
+    try:
+        from shopping_shorts import video_assemble as _va
+        return float(_va._beat_effective_dur(beat, tts)) if tts and os.path.exists(tts) else float(beat.get("target_seconds") or 4)
+    except Exception:      # noqa: BLE001
+        return float((beat or {}).get("target_seconds") or 4)
+
+
+def draft_scene(job, work, beat, style="natural", *, call=None, resolve_sources=None,
+                base=None, sec=None, direction="", only_frame=False):
+    """AI 장면 **초안** — 출발 화면 + 프롬프트(영어·한글 설명)를 만든다. Veo 는 부르지 않는다(관제 117, 2026-10-04 사장님
+    "어떤 프롬프트로 하는지 한글과 영어를 같이 보여주고 / 기존 영상 조각을 활용 — 새로 창조하는 게 아니다").
+    ★출발 화면은 **그 칸에 담은 장면**에서 뜬다(product_only=False — 청소본이 있으면 그 칸의 청소본 자리, 없으면 칸 첫 장면).
+      종전엔 작업 전체에서 '제품만 나오는 가장 긴 조각'을 골라 칸과 무관한 화면에서 시작할 수 있었다.
+    화면(초안 API)과 워커(run_ai_scene)가 이 함수 하나를 쓴다."""
+    style = style if style in STYLES else "natural"
+    extract = (job or {}).get("extract") or {}
+    product = ((job.get("product") or {}).get("name") if isinstance(job.get("product"), dict) else "") or ""
+    # 출발 화면 = 사장님이 고른 (영상, 초) — 안 골랐으면 이 칸 첫 장면의 시작 0.2초 뒤
+    vid, t = None, None
+    if isinstance(base, dict) and base.get("video_id") is not None:
+        try:
+            vid, t = str(base.get("video_id")), round(float(base.get("t")), 3)
+        except (TypeError, ValueError):
+            vid, t = None, None
+    if vid is None:
+        vid, t = pick_base_material(beat, extract, product_only=False)
+    png = frame_at(job, work, beat, vid, t, resolve_sources=resolve_sources)
+    dur = beat_visible_dur(beat)
+    # 길이 = 사장님이 고른 4·6·8초 — 안 골랐으면 칸 길이에 맞춘 값. 화면에 나오는 건 칸 길이까지다.
+    try:
+        sec = int(sec) if int(sec) in (4, 6, 8) else pick_seconds(dur)
+    except (TypeError, ValueError):
+        sec = pick_seconds(dur)
+    out = {"png": png, "sec": sec, "visible": round(min(dur, float(sec)), 2), "style": style, "product": product,
+           "base": {"video_id": vid, "t": t}}
+    if only_frame:
+        return out
+    motion = motion_request(beat.get("narration") or "", product or "", style, call=call, frame_path=png,
+                            flow=script_flow(job, beat), direction=direction)
+    out["prompt_en"] = build_prompt(motion, sec, style, visible=dur)
+    out["prompt_ko"] = build_prompt_ko(motion, sec, style, visible=dur)
+    return out
+
+
+def script_flow(job, beat):
+    """대본 흐름 — 이 칸의 앞 줄·이 줄·뒤 줄(역할 포함). 초안이 대본 흐름에 맞게 동작을 쓰도록 준다(관제 117)."""
+    beats = (((job or {}).get("edit_plan") or {}).get("beats")) or []
+    k = next((i for i, b in enumerate(beats) if b is beat or b.get("beat_idx") == (beat or {}).get("beat_idx")), None)
+    if k is None:
+        return {}
+    line = lambda b: ("[%s] %s" % (b.get("role") or "", (b.get("narration") or "").strip())).strip()
+    return {"prev": line(beats[k - 1]) if k > 0 else "", "this": line(beats[k]),
+            "next": line(beats[k + 1]) if k + 1 < len(beats) else ""}
+
+
+def frame_at(job, work, beat, vid, t, *, resolve_sources=None):
+    """출발 화면 PNG — (영상, 초) 한 순간. 그 순간이 청소본(글자 지운 영상)에 있으면 청소본에서 뜬다
+    (원본은 자막·워터마크가 남아 Veo가 가짜 글자를 본뜬다 — 2026-09-23 실측). 없으면 원본에서."""
+    from shopping_shorts import clean_base as cb
+    work = Path(work)
+    out = work / f"ai_scene_base_{int(beat.get('beat_idx', 0))}.png"
+    try:
+        base = cb.load_base(work)
+        if base is not None:
+            pieces = cb.piece_map(base, {"video_id": vid, "start": float(t), "end": float(t) + 0.1})
+            if pieces:
+                return extract_frame(base["path"], pieces[0]["start"], out)
+    except Exception as e:      # noqa: BLE001 — 청소본을 못 읽으면 원본에서 뜬다(알린다)
+        print(f"[ai-scene] 청소본 자리 찾기 실패 → 원본에서: {e!r}", file=sys.stderr)
+    srcs = resolve_sources(job, work) if resolve_sources else {}
+    src = srcs.get(vid)
+    if not src:
+        raise RuntimeError("출발 화면을 뜰 소스 영상이 없습니다")
+    return extract_frame(src, t, out)
 
 
 def build_prompt(motion, sec, style="natural", visible=None):
@@ -199,19 +358,16 @@ def build_prompt(motion, sec, style="natural", visible=None):
       이제 3단계를 **보이는 구간 안에서** 나누고, 안 보이는 뒤쪽은 '가만히 있는다'로 채운다.
     """
     sec = int(sec)
-    try:
-        vis = float(visible) if visible else float(sec)
-    except (TypeError, ValueError):
-        vis = float(sec)
-    vis = max(1.2, min(vis, float(sec)))     # 너무 짧으면 Veo가 3단계를 못 나눈다
-    a, b = round(vis / 3.0, 1), round(vis * 2 / 3.0, 1)
+    vis, a, b = _visible_window(sec, visible)     # 너무 짧으면(1.2초 미만) Veo가 3단계를 못 나눈다
     steps = motion["motion_steps_en"]
     cam = ("Handheld phone video, vertical 9:16, natural lighting as in the input image, slight handheld sway."
            if style != "impact" else
            "Handheld phone video, vertical 9:16, natural lighting as in the input image, quick dolly-in, real handheld movement only.")
     forbid = FORBID + "".join(", " + f for f in motion.get("forbid_extra") or [])
     return (
-        f"INPUT IMAGE = FRAME 0: {motion['subject_desc_en']} Keep this subject exactly the same in shape, color, material and design.\n\n"
+        f"INPUT IMAGE = FRAME 0: {motion['subject_desc_en']} Keep this subject exactly the same in shape, color, material and design.\n"
+        + (f"SCENE AND ENVIRONMENT: {motion['environment_en']}\n" if motion.get("environment_en") else "")
+        + "\n"
         f"CONTINUOUS SINGLE SHOT, ONE TAKE, NO CUT, NO DISSOLVE, {sec}.0 seconds.\n"
         + (f"ONLY THE FIRST {vis:.1f} SECONDS ARE USED. Everything that matters happens before {vis:.1f}s.\n"
            if vis < sec - 0.05 else "")
@@ -222,8 +378,9 @@ def build_prompt(motion, sec, style="natural", visible=None):
         f"{b}-{vis:.1f}s  {steps[2]}\n"
         + (f"{vis:.1f}-{sec}.0s  The shot simply holds; nothing new happens.\n" if vis < sec - 0.05 else "")
         + "\n"
-        f"CAMERA AND LIGHT: {cam}\n"
-        f"REALISM: photorealistic live-action smartphone footage. Nothing is drawn, painted or animated on top of the image. "
+        f"CAMERA AND LIGHT: {(motion['camera_en'] + ' ') if motion.get('camera_en') else ''}{cam}\n"
+        + (f"IN-CAMERA EFFECTS: {motion['effects_en']}\n" if motion.get("effects_en") else "")
+        + f"REALISM: photorealistic live-action smartphone footage. Nothing is drawn, painted or animated on top of the image. "
         f"No person, face or body enters the frame at any moment.\n\n"
         f"NEGATIVE: {forbid}."
     )
@@ -302,20 +459,19 @@ def run_ai_scene(job_id, beat_idx, style, db_path, work_root, *, gen=None, call=
     work.mkdir(parents=True, exist_ok=True)
     _set_state(store, job_id, beat_idx, state="running", style=style, error=None, started_at=time.strftime("%Y-%m-%dT%H:%M:%S"))
     try:
-        extract = job.get("extract") or {}
+        # ★출발 화면·프롬프트는 draft_scene 한 곳(관제 117). 화면에서 사장님이 확인(또는 고친) 프롬프트가 있으면
+        #   **그 문장 그대로** 만든다 — 출발 화면만 같은 규칙으로 다시 뜬다(Gemini 동작 호출 없음).
+        _st = beat.get("ai_scene") or {}
+        _confirmed = str(_st.get("prompt_en") or "").strip() if _st.get("confirmed") else ""
         product = ((job.get("product") or {}).get("name") if isinstance(job.get("product"), dict) else "") or ""
-        words = tuple(w for w in re.split(r"[\s,/]+", product) if len(w) >= 2)[:4]
-        png = base_frame_path(job, work, beat, extract, product_only=True, product_words=words,
-                              resolve_sources=mp._resolve_sources)
-        tts = beat.get("tts_path")
-        try:
-            from shopping_shorts import video_assemble as _va
-            dur = float(_va._beat_effective_dur(beat, tts)) if tts and os.path.exists(tts) else float(beat.get("target_seconds") or 4)
-        except Exception:      # noqa: BLE001
-            dur = float(beat.get("target_seconds") or 4)
-        sec = pick_seconds(dur)
-        motion = motion_request(beat.get("narration") or "", product or "", style, call=call, frame_path=png)
-        prompt = build_prompt(motion, sec, style, visible=dur)
+        if _confirmed:
+            _f = draft_scene(job, work, beat, style, resolve_sources=mp._resolve_sources,
+                             base=_st.get("base"), sec=_st.get("sec_pick"), only_frame=True)
+            png, sec = _f["png"], _f["sec"]
+            prompt = _confirmed
+        else:
+            _d = draft_scene(job, work, beat, style, call=call, resolve_sources=mp._resolve_sources)
+            png, sec, prompt = _d["png"], _d["sec"], _d["prompt_en"]
         ts = time.strftime("%Y%m%d_%H%M%S")
         from shopping_shorts.app import _SCENE_ASSETS_DIR
         _SCENE_ASSETS_DIR.mkdir(parents=True, exist_ok=True)

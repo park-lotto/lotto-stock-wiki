@@ -1,0 +1,420 @@
+^C[2026-10-04 02:41]
+¼öµ¿ È®ÀÎ ´ë±â 52Àå ? »çÀå´ÔÀÌ º¸°í ´İ´Â´Ù: py tools/control.py status <¹øÈ£> ¿Ï·á  (¶Ç´Â °Ë»ç Ä­: py tools/control.py set <¹øÈ£> °Ë»ç "url /°æ·Î ±ÛÀÚ")
+   002 ¿µÇâ Áöµµ tools/impact.py ? È£Ãâ ±×·¡ÇÁ·Î ¼ÒºñÃ³¡¤°Ë»ç¡¤½Â ¡¤ ÁÖÀÎ tools/impact.py(½Å¼³)
+   003 ¶óÀÌºê ½ÇÃø ÆÄÀÌÇÁ¶óÀÎ tools/live_check.py --card  ¡¤ ÁÖÀÎ tools/live_check.py(½Å¼³)
+   023 ÀúÀå Ãş(C/D) °üÁ¦ ? ¿ÜÀå D:\¼ôÅÛ À» Áöµµ(°üÁ¦/storage. ¡¤ ÁÖÀÎ tools/storage.py:plan
+   025 ½ÉÈ¿Áø(451) À½¼º Â÷´Ü ¸éÁ¦ ? »çÀå´Ô ÀÏ·¹ºì Å° °³¹æ ¡¤ ÁÖÀÎ shopping_shorts/keyroute.py:is_block_exempt
+   030 Àå¸é²Ù¹Ì±â ±ÛÀÚ µÎ²²¡¤±×¸²ÀÚ ½½¶óÀÌ´õ¡¤¼öÄ¡ ¡¤ ÁÖÀÎ out/precision20-ui.js:drawFontSets
+   031 job ½ÇÆĞ ½Ã 1´Ü°è Àá±İ ¹®±¸ ´ë½Å ½ÇÆĞ »çÀ¯ Ç¥½Ã ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:stepLockMsg
+   032 »õ ÆíÁı±â Ã¤³Î¸í ±âº»°ª=°èÁ¤ ³» Ã¤³Î¸í(ÇÁ¸®¼Â Àû¿ë ½Ã ¼ôÅÛ¸ŞÀÌÄ¿·Î µ¹ ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:account_channel
+   035 ¼­¹ö µğ½ºÅ© °¡µæ Âü Àç¹ß ¹æÁö(find_frames Ã»¼Ò¡¤µğ½ºÅ© °æº¸¡¤ ¡¤ ÁÖÀÎ shopping_shorts/disk_cleanup.py:run
+   036 Àå¸é²Ù¹Ì±â ½æ³×ÀÏ µ¿ÀÏ ±×¸²ÀÚ¡¤´ë»óº° ºĞ¸® ¡¤ ÁÖÀÎ out/precision20-ui.js:drawFontSets
+   037 finish º´ÇÕ ±¸Á¶ °³¼±: ºñÄÚµå Ä¿¹Ô °æÀï ½Ã Àç°Ë»ç »ı·« + ±âÁØ ¡¤ ÁÖÀÎ tools/track.py:finish
+   040 Àå¸é²Ù¹Ì±â Á¦¸ñ¡¤Ã¤³Î¸í ±×¸²ÀÚ ¹ÌÀû¿ë ¹× ½Ã°¢ °³¼± ¡¤ ÁÖÀÎ out/precision20-ui.js:applyTextLook
+   041 Å¸ÀÔÄ³½ºÆ® Å°¸¸ ÀÖ´Â È¸¿ø ±âº» ¼º¿ì = ÇÊÀç(ÀÏ·¹ºì ±âº»°ªÀ¸·Î 3´Ü°è  ¡¤ ÁÖÀÎ shopping_shorts/store.py:get_last_voice
+   044 2´Ü°è ´ëº» Ä­ Ãß°¡¡¤ÀÌµ¿(¸ğµç ¾È) + ºó Ä­ÀÌ Àå¸é ÃâÃ³ ÁÙ¸ÂÃã ±ú´Â ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA ÀÚ¸£±â ? ¿ªÇÒÀÌ¸§ ´©¶ô(´ñ±ÛÀ¯µµ¡¤call_to_action) + ¡¤ ÁÖÀÎ shopping_shorts/edit_plan.py:_is_cta
+   048 Áñ°ÜÃ£±â ºĞ¼®»óÅÂ ¿äÃ»ÀÌ ÁÖ¼Ò ÇÑµµ(8190B) ÃÊ°ú·Î 414 ? Áñ°ÜÃ£ ¡¤ ÁÖÀÎ shopping_shorts/static/collection.html:loadAnalysi
+   050 ¹öÅØ½º µî·ÏÀÌ ´Ù ¸·Èû ? Á¶Á÷Á¤Ã¥(Å° »ı¼º Â÷´Ü) ¾È³» Ãß°¡ + °ÅÀı  ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:verify_sa
+   051 ÁÖÀå ¹øÈ£ ÅÂ±ë ½ÃÇè(°æÀï»ç½Ä Àå¸é ¸ÅÄª °ËÁõ) ¡¤ ÁÖÀÎ tools/claim_trial_video.py:run
+   052 ¿µ»ó °ü¹®ÀÌ À½¼º ¶óÀÎ ¸ğµâµµ º´ÇÕº»À¸·Î ¾ñ°Ô(°üÁ¦ 049 ¼±Çà) ¡¤ ÁÖÀÎ tools/video_gate.py:PATCH_RELS
+   053 ¹öÅØ½º '±ÇÇÑ ¾øÀ½' ¿ÀÁø ? °áÁ¦ ¹Ì¿¬°áÀ» ¿ªÇÒ ¹®Á¦·Î ¾È³»ÇÔ. ¿À·ù  ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:_explain
+   054 ·¹ÆÛ·±½º ÃßÀû Ä«µå¿¡¼­ ´ëº» ºĞ¼® ÈÄ °Ë»ö¾î°¡ »ç¶óÁü(ÇÁ·¹ÀÓ ¾øÀÌ °Ë»ö¾î ¡¤ ÁÖÀÎ shopping_shorts/static/index.html:traceByUrl (¼­¹ö t
+   057 Àå¸é²Ù¹Ì±â »õ ÆíÁı±â ±ÛÀÚ °¡µ¶¼º(¼³¸í¡¤¸Ş´º ÁøÇÏ°Ô¡¤Å°¿ò) ¡¤ ÁÖÀÎ out/precision20-ui.css:°¡µ¶¼º ºí·Ï
+   058 Àå¸é²Ù¹Ì±â Æ² ¼±ÅÃ 4Á¾: ½äÈÅ°íÁ¤/½äÈÅ+º»¹®/½äº»¹®/ÀüÀå¸é°íÁ¤ (fra ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:context_for
+   060 À¯Æ©ºê °Ë»ö°á°ú(·»Áî Å°¿öµå°Ë»ö)¿¡¼­ ¼îÃ÷ Ä«µå ´ã±â ¡¤ ÁÖÀÎ shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 ¿µ»ó ÆÄÀÏ Àü¼ÛÀ» ÆÄÀÌ½ã ´ë½Å ¾ÆÆÄÄ¡°¡(X-Sendfile) ? À¥ ÇÁ·Î ¡¤ ÁÖÀÎ shopping_shorts/app.py:_send_media(¿µ»ó¡¤ÇÕº»¡¤¹Ì¸®º¸±â¡¤¿Ï¼ºº» 
+   064 ½æ³×ÀÏ ÇÁ·Ï½Ã Á×Àº ÁÖ¼Ò ±â¾ï 5ºĞ¡æÈ®Á¤ 404/403Àº 60ºĞ(Á¡Áø)  ¡¤ ÁÖÀÎ shopping_shorts/app.py:_thumb_neg_put¡¤api_thumb ½ÇÆĞ
+   065 Àå¸é²Ù¹Ì±â È¿°ú ÅÇ ·Î°í Ç×¸ñ(ÆÄÀÏ ºÒ·¯¿À±â, ½æ³×ÀÏ ¸Ç À§, ³» ÇÁ¸®¼Â ¡¤ ÁÖÀÎ out/precision20-ui.js:effects(logo)
+   066 Àå¸é²Ù¹Ì±â ÅÛÇÃ¸´ Ä«µåÀÇ º£³¤ Ã¤³Î ÀÌ¸§ »èÁ¦(ÀÌºì¼îÇÎ¡¤¼ôÅÛ ±âº»Çü¡¤»ì¸² ¡¤ ÁÖÀÎ out/precision20-data.js:name
+   067 ¿µ»ó °ü¹®ÀÇ ºñ±³ ÀÛ¾÷ ¼±Á¤: updated_at ÃÖ½Å ¡æ '¿Ï¼ºº»À» ÃÖ ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py:_pick_jobs(ºñ±³ ´ë»ó ¼±Á¤
+   068 °üÁ¦: ½ÂÀÎ ÆÇÁ¤(µ·¡¤È¸¿ø µ¥ÀÌÅÍ)¿¡¼­ Å×½ºÆ® ÆÄÀÏ(shopping_sh ¡¤ ÁÖÀÎ tools/control.py:_approval_reasons(½ÂÀÎ ÇÊ¿ä ÆÇÁ¤ÀÇ À¯ÀÏÇÑ ÀÚ
+   069 °üÁ¦ ¼ö¸® 3°Ç: ¨ç¿µ»ó ¾ø´Â Ä«µå °Ë»ç Á¾·ù(url/api/¼öµ¿)·Î ÀÚ ¡¤ ÁÖÀÎ tools/live_check.py:run_all + tools/video_gate.py:
+   070 °üÁ¦: finish °ÔÀÌÆ®ÀÇ ¼­¹ö report(¿µ»ó¡¤ÀÚ¸·¡¤¼Ò¸®¡¤Ä¸ÄÆ ´ëÁ¶ ¡¤ ÁÖÀÎ tools/video_gate.py:_keep_report(report º¸°üÀÇ À¯ÀÏÇÑ ÀÚ¸®
+   071 ¿µ»ó °ü¹®À» ÀüÈÄ ºñ±³·Î: °°Àº ÀÛ¾÷À» main ÄÚµå¡¤º´ÇÕº» ÄÚµå·Î °¢°¢ ¡¤ ÁÖÀÎ tools/video_gate.py:run_video_gate¡¤judge
+   075 finish °ÔÀÌÆ® ±¸¸Û 2°³: ¨çtools/ Å×½ºÆ®µµ °ÔÀÌÆ®¿¡¼­ µ·´Ù( ¡¤ ÁÖÀÎ tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 Veo´Â global¿¡ ¾ø´Ù ? Veo È£Ãâ¸¸ us-central1·Î(È¸ ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:veo_client
+   081 finish ½Ã°£ ´ÜÃà: ¨ç±âÁØ¼± ÀüÃ¼ Å×½ºÆ® Á¦°Å(½ÇÆĞ¸¸ main ÀçÈ® ¡¤ ÁÖÀÎ tools/track.py:_merge_and_gate¡¤_open_stage¡¤_FileLo
+   083 finish ´ÜÃà ÈÄ¼Ó: ¨çÁ¤È®ÇÑ ±âÁØ¼±(º´ÇÕ ¶§ ÀüÃ¼ ½ÇÆĞ ¸ñ·ÏÀ» ÄÚµå ¡¤ ÁÖÀÎ tools/track.py:_merge_and_gate¡¤main¡¤finish + tools
+   085 °ü¹® ¸ğµâ ¸ñ·Ï 6¹úÀ» ÇÏ³ª·Î: video_gate.PATCH_RELS¡¤ ¡¤ ÁÖÀÎ tools/gate_modules.py:PATCH_MODULES¡¤WATCH_FILES
+   088 finish: ´Ù µÈ °Í¸¸ ÁÙ ¼±´Ù ? Å×½ºÆ®¡¤¿µ»ó °ü¹®À» ÁÙ ¹Û¿¡¼­(C ¡¤ ÁÖÀÎ tools/track.py:finish¡¤_merge_and_gate¡¤_gate_slot +
+   089 finish ½Ã°£ °èÃø¡¤Àç½ÇÇà Á¦°Å: finish ·Î±×¿¡ ½Ã°¢+´Ü°èº° Áı ¡¤ ÁÖÀÎ tools/video_gate.py:run_video_gate + tools/track.p
+   090 ¿µ»ó °ü¹® ÀÛ¾÷ ¼±Á¤: ÃÖ±Ù 6°³ ¡æ À¯Çüº°(Ã»¼Òº» ÀüºÎ/ÀÏºÎ/¾øÀ½¡¤È¿°ú ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py:_pick_jobs
+   091 °ÔÀÌÆ® ½ÇÆĞ ºĞ·ù ¼ö¸®: º´ÇÕº» ÀçÈ®ÀÎ(¿ì¿¬ ½ÇÆĞ °Å¸£±â)À» ¸ÕÀú¡¤mai ¡¤ ÁÖÀÎ tools/track.py:_classify_new_failures¡¤_rerun_on_ma
+   092 finish ÀÚ¿ø °ü¹®+Àç½Ãµµ ºñ¿ë: ½ÃÇè ½ÃÀÛ Àü ³²Àº ¸Ş¸ğ¸®¡¤CPU  ¡¤ ÁÖÀÎ tools/track.py:_gate_slot¡¤_merge_and_gate(Àç½Ãµµ)
+   093 finish ÆÇº»: main Æú´õ(´õ·¯¿ì¸é µ¿±âÈ­ ¸·Çô 51Ä¿¹Ô ³°À½)  ¡¤ ÁÖÀÎ tools/track.py:_reexec_latest
+   094 ÀÎ½ºÅ¸ ÆË¾÷¿¡¼­ ´ã±â¡¤·»Áî¡¤Ã¤³Î¼öÁı ¹öÆ°°ú ¼ÓµµÃ¢ÀÌ º»¹® ±ÛÀÚ¸¦ °¡¸² ? ¡¤ ÁÖÀÎ shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 ¹öÅØ½º Å° ¿øÅ¬¸¯: Å¬¶ó¿ìµå ¼Ğ ÇÑ ÁÙ·Î API¡¤¼­ºñ½º°èÁ¤¡¤¿ªÇÒ¡¤Å°Â÷´ÜÇØ ¡¤ ÁÖÀÎ shopping_shorts/static/landing/vertex_setup.sh
+   099 ¿µ»ó °ü¹®ÀÌ ¿Ï¼ºº» ÇÑ Àå ¹øÂ½ÀÓ(´Ù¸¥ ÀÚ¸® ±×¸² 1ÇÁ·¹ÀÓ)À» ¸ø Àâ´Â´Ù ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py(¿Ï¼ºº» ÇÁ·¹ÀÓ ÆÇÁ¤ ? °ü¹®¡¤¸ÅÀÏ 
+   101 Àå¸é²Ù¹Ì±â ÆäÀÌÁö ±×¸²ÀÌ ±× ÆäÀÌÁö ½Ã°¢ÀÌ ¾Æ´Ï¶ó Ä­ ´ëÇ¥ ±×¸² ÇÑ Àå  ¡¤ ÁÖÀÎ shopping_shorts/app.py:_beatframe_file
+   104 Àå¸é²Ù¹Ì±â ¹Ì¸®º¸±â: ÆäÀÌÁö ³Ñ±æ ¶§ °¡¸²¸·ÀÌ ¸ÕÀú ³¡³ª º¸ÀÓ(¿¾ ±×¸²  ¡¤ ÁÖÀÎ out/precision20-ui.js:draw(Àå¸é ±×¸² ±³Ã¼)
+   105 °í°´ ³ëÃâ ÀÚ¸®¿¡¼­ Å¸»ç ÀÌ¸§(³úÀü±¸¡¤º¼ÄÉÀÌ³ë) ÀüºÎ Á¦°Å ? È¿°úÀ½¡¤¹Ò ¡¤ ÁÖÀÎ shopping_shorts/scene_match.py:_has_pack
+   107 C µğ½ºÅ©°¡ °è¼Ó Âü: °ü¹® ÀÓ½ÃÆú´õ(gate_child) ¹ÌÁ¤¸® + ¿¹ ¡¤ ÁÖÀÎ tools/merge_gate.py:_run ¡¤ tools/control.py:schedu
+   109 ÀúÀåÃş v3: 3ÀÏ+ ¾È ¾´ °ÍÀº ÀüºÎ D, ¾µ ¶§ ÀÚµ¿À¸·Î C º¹±Í(Æ® ¡¤ ÁÖÀÎ tools/storage.py:plan ¡¤ tools/storage.py:ensure_wa
+   111 ÀÚ¸·Á¦°Å: ÀÌ¹Ì Áö¿î Àå¸éÀ» °°Àº ¹æ½ÄÀ¸·Î ´Ù½Ã °ñ¶ó [ÀÚ¸·Á¦°Å ½ÃÀÛÇÏ±â ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:paintCleanPick
+¿µ»ó ½ÇÃø ´ë»ó 13Àå(047, 049, 055, 059, 061, 063, 073, 077, 084, 086, 095, 100, 106) ¡¤ º´ÇÕ µÚ ÃÖ´ë 65½Ã°£ ¡¤ ¼­¹ö¿¡¼­ 4ÀÛ¾÷ °Ë»ç Áß¡¦
+? ¸ø µ¹¸²(rc=124) ? ¼­¹ö¡¤µğ½ºÅ© È®ÀÎ ¡¤ 
+   Ä«µå 13Àå¿¡ ±â·Ï
+[2026-10-04 04:41]
+¼öµ¿ È®ÀÎ ´ë±â 54Àå ? »çÀå´ÔÀÌ º¸°í ´İ´Â´Ù: py tools/control.py status <¹øÈ£> ¿Ï·á  (¶Ç´Â °Ë»ç Ä­: py tools/control.py set <¹øÈ£> °Ë»ç "url /°æ·Î ±ÛÀÚ")
+   002 ¿µÇâ Áöµµ tools/impact.py ? È£Ãâ ±×·¡ÇÁ·Î ¼ÒºñÃ³¡¤°Ë»ç¡¤½Â ¡¤ ÁÖÀÎ tools/impact.py(½Å¼³)
+   003 ¶óÀÌºê ½ÇÃø ÆÄÀÌÇÁ¶óÀÎ tools/live_check.py --card  ¡¤ ÁÖÀÎ tools/live_check.py(½Å¼³)
+   023 ÀúÀå Ãş(C/D) °üÁ¦ ? ¿ÜÀå D:\¼ôÅÛ À» Áöµµ(°üÁ¦/storage. ¡¤ ÁÖÀÎ tools/storage.py:plan
+   025 ½ÉÈ¿Áø(451) À½¼º Â÷´Ü ¸éÁ¦ ? »çÀå´Ô ÀÏ·¹ºì Å° °³¹æ ¡¤ ÁÖÀÎ shopping_shorts/keyroute.py:is_block_exempt
+   030 Àå¸é²Ù¹Ì±â ±ÛÀÚ µÎ²²¡¤±×¸²ÀÚ ½½¶óÀÌ´õ¡¤¼öÄ¡ ¡¤ ÁÖÀÎ out/precision20-ui.js:drawFontSets
+   031 job ½ÇÆĞ ½Ã 1´Ü°è Àá±İ ¹®±¸ ´ë½Å ½ÇÆĞ »çÀ¯ Ç¥½Ã ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:stepLockMsg
+   032 »õ ÆíÁı±â Ã¤³Î¸í ±âº»°ª=°èÁ¤ ³» Ã¤³Î¸í(ÇÁ¸®¼Â Àû¿ë ½Ã ¼ôÅÛ¸ŞÀÌÄ¿·Î µ¹ ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:account_channel
+   035 ¼­¹ö µğ½ºÅ© °¡µæ Âü Àç¹ß ¹æÁö(find_frames Ã»¼Ò¡¤µğ½ºÅ© °æº¸¡¤ ¡¤ ÁÖÀÎ shopping_shorts/disk_cleanup.py:run
+   036 Àå¸é²Ù¹Ì±â ½æ³×ÀÏ µ¿ÀÏ ±×¸²ÀÚ¡¤´ë»óº° ºĞ¸® ¡¤ ÁÖÀÎ out/precision20-ui.js:drawFontSets
+   037 finish º´ÇÕ ±¸Á¶ °³¼±: ºñÄÚµå Ä¿¹Ô °æÀï ½Ã Àç°Ë»ç »ı·« + ±âÁØ ¡¤ ÁÖÀÎ tools/track.py:finish
+   040 Àå¸é²Ù¹Ì±â Á¦¸ñ¡¤Ã¤³Î¸í ±×¸²ÀÚ ¹ÌÀû¿ë ¹× ½Ã°¢ °³¼± ¡¤ ÁÖÀÎ out/precision20-ui.js:applyTextLook
+   041 Å¸ÀÔÄ³½ºÆ® Å°¸¸ ÀÖ´Â È¸¿ø ±âº» ¼º¿ì = ÇÊÀç(ÀÏ·¹ºì ±âº»°ªÀ¸·Î 3´Ü°è  ¡¤ ÁÖÀÎ shopping_shorts/store.py:get_last_voice
+   044 2´Ü°è ´ëº» Ä­ Ãß°¡¡¤ÀÌµ¿(¸ğµç ¾È) + ºó Ä­ÀÌ Àå¸é ÃâÃ³ ÁÙ¸ÂÃã ±ú´Â ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA ÀÚ¸£±â ? ¿ªÇÒÀÌ¸§ ´©¶ô(´ñ±ÛÀ¯µµ¡¤call_to_action) + ¡¤ ÁÖÀÎ shopping_shorts/edit_plan.py:_is_cta
+   048 Áñ°ÜÃ£±â ºĞ¼®»óÅÂ ¿äÃ»ÀÌ ÁÖ¼Ò ÇÑµµ(8190B) ÃÊ°ú·Î 414 ? Áñ°ÜÃ£ ¡¤ ÁÖÀÎ shopping_shorts/static/collection.html:loadAnalysi
+   050 ¹öÅØ½º µî·ÏÀÌ ´Ù ¸·Èû ? Á¶Á÷Á¤Ã¥(Å° »ı¼º Â÷´Ü) ¾È³» Ãß°¡ + °ÅÀı  ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:verify_sa
+   051 ÁÖÀå ¹øÈ£ ÅÂ±ë ½ÃÇè(°æÀï»ç½Ä Àå¸é ¸ÅÄª °ËÁõ) ¡¤ ÁÖÀÎ tools/claim_trial_video.py:run
+   052 ¿µ»ó °ü¹®ÀÌ À½¼º ¶óÀÎ ¸ğµâµµ º´ÇÕº»À¸·Î ¾ñ°Ô(°üÁ¦ 049 ¼±Çà) ¡¤ ÁÖÀÎ tools/video_gate.py:PATCH_RELS
+   053 ¹öÅØ½º '±ÇÇÑ ¾øÀ½' ¿ÀÁø ? °áÁ¦ ¹Ì¿¬°áÀ» ¿ªÇÒ ¹®Á¦·Î ¾È³»ÇÔ. ¿À·ù  ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:_explain
+   054 ·¹ÆÛ·±½º ÃßÀû Ä«µå¿¡¼­ ´ëº» ºĞ¼® ÈÄ °Ë»ö¾î°¡ »ç¶óÁü(ÇÁ·¹ÀÓ ¾øÀÌ °Ë»ö¾î ¡¤ ÁÖÀÎ shopping_shorts/static/index.html:traceByUrl (¼­¹ö t
+   057 Àå¸é²Ù¹Ì±â »õ ÆíÁı±â ±ÛÀÚ °¡µ¶¼º(¼³¸í¡¤¸Ş´º ÁøÇÏ°Ô¡¤Å°¿ò) ¡¤ ÁÖÀÎ out/precision20-ui.css:°¡µ¶¼º ºí·Ï
+   058 Àå¸é²Ù¹Ì±â Æ² ¼±ÅÃ 4Á¾: ½äÈÅ°íÁ¤/½äÈÅ+º»¹®/½äº»¹®/ÀüÀå¸é°íÁ¤ (fra ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:context_for
+   060 À¯Æ©ºê °Ë»ö°á°ú(·»Áî Å°¿öµå°Ë»ö)¿¡¼­ ¼îÃ÷ Ä«µå ´ã±â ¡¤ ÁÖÀÎ shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 ¿µ»ó ÆÄÀÏ Àü¼ÛÀ» ÆÄÀÌ½ã ´ë½Å ¾ÆÆÄÄ¡°¡(X-Sendfile) ? À¥ ÇÁ·Î ¡¤ ÁÖÀÎ shopping_shorts/app.py:_send_media(¿µ»ó¡¤ÇÕº»¡¤¹Ì¸®º¸±â¡¤¿Ï¼ºº» 
+   064 ½æ³×ÀÏ ÇÁ·Ï½Ã Á×Àº ÁÖ¼Ò ±â¾ï 5ºĞ¡æÈ®Á¤ 404/403Àº 60ºĞ(Á¡Áø)  ¡¤ ÁÖÀÎ shopping_shorts/app.py:_thumb_neg_put¡¤api_thumb ½ÇÆĞ
+   065 Àå¸é²Ù¹Ì±â È¿°ú ÅÇ ·Î°í Ç×¸ñ(ÆÄÀÏ ºÒ·¯¿À±â, ½æ³×ÀÏ ¸Ç À§, ³» ÇÁ¸®¼Â ¡¤ ÁÖÀÎ out/precision20-ui.js:effects(logo)
+   066 Àå¸é²Ù¹Ì±â ÅÛÇÃ¸´ Ä«µåÀÇ º£³¤ Ã¤³Î ÀÌ¸§ »èÁ¦(ÀÌºì¼îÇÎ¡¤¼ôÅÛ ±âº»Çü¡¤»ì¸² ¡¤ ÁÖÀÎ out/precision20-data.js:name
+   067 ¿µ»ó °ü¹®ÀÇ ºñ±³ ÀÛ¾÷ ¼±Á¤: updated_at ÃÖ½Å ¡æ '¿Ï¼ºº»À» ÃÖ ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py:_pick_jobs(ºñ±³ ´ë»ó ¼±Á¤
+   068 °üÁ¦: ½ÂÀÎ ÆÇÁ¤(µ·¡¤È¸¿ø µ¥ÀÌÅÍ)¿¡¼­ Å×½ºÆ® ÆÄÀÏ(shopping_sh ¡¤ ÁÖÀÎ tools/control.py:_approval_reasons(½ÂÀÎ ÇÊ¿ä ÆÇÁ¤ÀÇ À¯ÀÏÇÑ ÀÚ
+   069 °üÁ¦ ¼ö¸® 3°Ç: ¨ç¿µ»ó ¾ø´Â Ä«µå °Ë»ç Á¾·ù(url/api/¼öµ¿)·Î ÀÚ ¡¤ ÁÖÀÎ tools/live_check.py:run_all + tools/video_gate.py:
+   070 °üÁ¦: finish °ÔÀÌÆ®ÀÇ ¼­¹ö report(¿µ»ó¡¤ÀÚ¸·¡¤¼Ò¸®¡¤Ä¸ÄÆ ´ëÁ¶ ¡¤ ÁÖÀÎ tools/video_gate.py:_keep_report(report º¸°üÀÇ À¯ÀÏÇÑ ÀÚ¸®
+   071 ¿µ»ó °ü¹®À» ÀüÈÄ ºñ±³·Î: °°Àº ÀÛ¾÷À» main ÄÚµå¡¤º´ÇÕº» ÄÚµå·Î °¢°¢ ¡¤ ÁÖÀÎ tools/video_gate.py:run_video_gate¡¤judge
+   075 finish °ÔÀÌÆ® ±¸¸Û 2°³: ¨çtools/ Å×½ºÆ®µµ °ÔÀÌÆ®¿¡¼­ µ·´Ù( ¡¤ ÁÖÀÎ tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 Veo´Â global¿¡ ¾ø´Ù ? Veo È£Ãâ¸¸ us-central1·Î(È¸ ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:veo_client
+   081 finish ½Ã°£ ´ÜÃà: ¨ç±âÁØ¼± ÀüÃ¼ Å×½ºÆ® Á¦°Å(½ÇÆĞ¸¸ main ÀçÈ® ¡¤ ÁÖÀÎ tools/track.py:_merge_and_gate¡¤_open_stage¡¤_FileLo
+   083 finish ´ÜÃà ÈÄ¼Ó: ¨çÁ¤È®ÇÑ ±âÁØ¼±(º´ÇÕ ¶§ ÀüÃ¼ ½ÇÆĞ ¸ñ·ÏÀ» ÄÚµå ¡¤ ÁÖÀÎ tools/track.py:_merge_and_gate¡¤main¡¤finish + tools
+   085 °ü¹® ¸ğµâ ¸ñ·Ï 6¹úÀ» ÇÏ³ª·Î: video_gate.PATCH_RELS¡¤ ¡¤ ÁÖÀÎ tools/gate_modules.py:PATCH_MODULES¡¤WATCH_FILES
+   088 finish: ´Ù µÈ °Í¸¸ ÁÙ ¼±´Ù ? Å×½ºÆ®¡¤¿µ»ó °ü¹®À» ÁÙ ¹Û¿¡¼­(C ¡¤ ÁÖÀÎ tools/track.py:finish¡¤_merge_and_gate¡¤_gate_slot +
+   089 finish ½Ã°£ °èÃø¡¤Àç½ÇÇà Á¦°Å: finish ·Î±×¿¡ ½Ã°¢+´Ü°èº° Áı ¡¤ ÁÖÀÎ tools/video_gate.py:run_video_gate + tools/track.p
+   090 ¿µ»ó °ü¹® ÀÛ¾÷ ¼±Á¤: ÃÖ±Ù 6°³ ¡æ À¯Çüº°(Ã»¼Òº» ÀüºÎ/ÀÏºÎ/¾øÀ½¡¤È¿°ú ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py:_pick_jobs
+   091 °ÔÀÌÆ® ½ÇÆĞ ºĞ·ù ¼ö¸®: º´ÇÕº» ÀçÈ®ÀÎ(¿ì¿¬ ½ÇÆĞ °Å¸£±â)À» ¸ÕÀú¡¤mai ¡¤ ÁÖÀÎ tools/track.py:_classify_new_failures¡¤_rerun_on_ma
+   092 finish ÀÚ¿ø °ü¹®+Àç½Ãµµ ºñ¿ë: ½ÃÇè ½ÃÀÛ Àü ³²Àº ¸Ş¸ğ¸®¡¤CPU  ¡¤ ÁÖÀÎ tools/track.py:_gate_slot¡¤_merge_and_gate(Àç½Ãµµ)
+   093 finish ÆÇº»: main Æú´õ(´õ·¯¿ì¸é µ¿±âÈ­ ¸·Çô 51Ä¿¹Ô ³°À½)  ¡¤ ÁÖÀÎ tools/track.py:_reexec_latest
+   094 ÀÎ½ºÅ¸ ÆË¾÷¿¡¼­ ´ã±â¡¤·»Áî¡¤Ã¤³Î¼öÁı ¹öÆ°°ú ¼ÓµµÃ¢ÀÌ º»¹® ±ÛÀÚ¸¦ °¡¸² ? ¡¤ ÁÖÀÎ shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 ¹öÅØ½º Å° ¿øÅ¬¸¯: Å¬¶ó¿ìµå ¼Ğ ÇÑ ÁÙ·Î API¡¤¼­ºñ½º°èÁ¤¡¤¿ªÇÒ¡¤Å°Â÷´ÜÇØ ¡¤ ÁÖÀÎ shopping_shorts/static/landing/vertex_setup.sh
+   099 ¿µ»ó °ü¹®ÀÌ ¿Ï¼ºº» ÇÑ Àå ¹øÂ½ÀÓ(´Ù¸¥ ÀÚ¸® ±×¸² 1ÇÁ·¹ÀÓ)À» ¸ø Àâ´Â´Ù ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py(¿Ï¼ºº» ÇÁ·¹ÀÓ ÆÇÁ¤ ? °ü¹®¡¤¸ÅÀÏ 
+   101 Àå¸é²Ù¹Ì±â ÆäÀÌÁö ±×¸²ÀÌ ±× ÆäÀÌÁö ½Ã°¢ÀÌ ¾Æ´Ï¶ó Ä­ ´ëÇ¥ ±×¸² ÇÑ Àå  ¡¤ ÁÖÀÎ shopping_shorts/app.py:_beatframe_file
+   102 Àå¸é²Ù¹Ì±â ´Ü¾î °­Á¶ ? ¸»ÇÏ´Â ´Ü¾î¸¦ µû¶ó ¹Ú½º¡¤»ö ¹Ù²ñ¡¤»ìÂ¦ Å°¿ì±â  ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:context_for
+   103 Àå¸é²Ù¹Ì±â ±ÛÀÚ Á÷Á¢ Á¶Àı ? ¼ÕÀ¸·Î Á¤ÇÑ Å©±â´Â ±×´ë·Î(ÀÚµ¿ ÁÙÀÓ¡¤ÀÚµ¿ ¡¤ ÁÖÀÎ out/precision20-ui.js:addText
+   104 Àå¸é²Ù¹Ì±â ¹Ì¸®º¸±â: ÆäÀÌÁö ³Ñ±æ ¶§ °¡¸²¸·ÀÌ ¸ÕÀú ³¡³ª º¸ÀÓ(¿¾ ±×¸²  ¡¤ ÁÖÀÎ out/precision20-ui.js:draw(Àå¸é ±×¸² ±³Ã¼)
+   105 °í°´ ³ëÃâ ÀÚ¸®¿¡¼­ Å¸»ç ÀÌ¸§(³úÀü±¸¡¤º¼ÄÉÀÌ³ë) ÀüºÎ Á¦°Å ? È¿°úÀ½¡¤¹Ò ¡¤ ÁÖÀÎ shopping_shorts/scene_match.py:_has_pack
+   107 C µğ½ºÅ©°¡ °è¼Ó Âü: °ü¹® ÀÓ½ÃÆú´õ(gate_child) ¹ÌÁ¤¸® + ¿¹ ¡¤ ÁÖÀÎ tools/merge_gate.py:_run ¡¤ tools/control.py:schedu
+   109 ÀúÀåÃş v3: 3ÀÏ+ ¾È ¾´ °ÍÀº ÀüºÎ D, ¾µ ¶§ ÀÚµ¿À¸·Î C º¹±Í(Æ® ¡¤ ÁÖÀÎ tools/storage.py:plan ¡¤ tools/storage.py:ensure_wa
+   111 ÀÚ¸·Á¦°Å: ÀÌ¹Ì Áö¿î Àå¸éÀ» °°Àº ¹æ½ÄÀ¸·Î ´Ù½Ã °ñ¶ó [ÀÚ¸·Á¦°Å ½ÃÀÛÇÏ±â ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:paintCleanPick
+¿µ»ó ½ÇÃø ´ë»ó 14Àå(047, 049, 055, 059, 061, 063, 073, 077, 084, 086, 095, 100, 106, 110) ¡¤ º´ÇÕ µÚ ÃÖ´ë 67½Ã°£ ¡¤ ¼­¹ö¿¡¼­ 4ÀÛ¾÷ °Ë»ç Áß¡¦
+? ¸ø µ¹¸²(rc=124) ? ¼­¹ö¡¤µğ½ºÅ© È®ÀÎ ¡¤ 
+   Ä«µå 14Àå¿¡ ±â·Ï
+[2026-10-04 06:41]
+¼öµ¿ È®ÀÎ ´ë±â 54Àå ? »çÀå´ÔÀÌ º¸°í ´İ´Â´Ù: py tools/control.py status <¹øÈ£> ¿Ï·á  (¶Ç´Â °Ë»ç Ä­: py tools/control.py set <¹øÈ£> °Ë»ç "url /°æ·Î ±ÛÀÚ")
+   002 ¿µÇâ Áöµµ tools/impact.py ? È£Ãâ ±×·¡ÇÁ·Î ¼ÒºñÃ³¡¤°Ë»ç¡¤½Â ¡¤ ÁÖÀÎ tools/impact.py(½Å¼³)
+   003 ¶óÀÌºê ½ÇÃø ÆÄÀÌÇÁ¶óÀÎ tools/live_check.py --card  ¡¤ ÁÖÀÎ tools/live_check.py(½Å¼³)
+   023 ÀúÀå Ãş(C/D) °üÁ¦ ? ¿ÜÀå D:\¼ôÅÛ À» Áöµµ(°üÁ¦/storage. ¡¤ ÁÖÀÎ tools/storage.py:plan
+   025 ½ÉÈ¿Áø(451) À½¼º Â÷´Ü ¸éÁ¦ ? »çÀå´Ô ÀÏ·¹ºì Å° °³¹æ ¡¤ ÁÖÀÎ shopping_shorts/keyroute.py:is_block_exempt
+   030 Àå¸é²Ù¹Ì±â ±ÛÀÚ µÎ²²¡¤±×¸²ÀÚ ½½¶óÀÌ´õ¡¤¼öÄ¡ ¡¤ ÁÖÀÎ out/precision20-ui.js:drawFontSets
+   031 job ½ÇÆĞ ½Ã 1´Ü°è Àá±İ ¹®±¸ ´ë½Å ½ÇÆĞ »çÀ¯ Ç¥½Ã ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:stepLockMsg
+   032 »õ ÆíÁı±â Ã¤³Î¸í ±âº»°ª=°èÁ¤ ³» Ã¤³Î¸í(ÇÁ¸®¼Â Àû¿ë ½Ã ¼ôÅÛ¸ŞÀÌÄ¿·Î µ¹ ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:account_channel
+   035 ¼­¹ö µğ½ºÅ© °¡µæ Âü Àç¹ß ¹æÁö(find_frames Ã»¼Ò¡¤µğ½ºÅ© °æº¸¡¤ ¡¤ ÁÖÀÎ shopping_shorts/disk_cleanup.py:run
+   036 Àå¸é²Ù¹Ì±â ½æ³×ÀÏ µ¿ÀÏ ±×¸²ÀÚ¡¤´ë»óº° ºĞ¸® ¡¤ ÁÖÀÎ out/precision20-ui.js:drawFontSets
+   037 finish º´ÇÕ ±¸Á¶ °³¼±: ºñÄÚµå Ä¿¹Ô °æÀï ½Ã Àç°Ë»ç »ı·« + ±âÁØ ¡¤ ÁÖÀÎ tools/track.py:finish
+   040 Àå¸é²Ù¹Ì±â Á¦¸ñ¡¤Ã¤³Î¸í ±×¸²ÀÚ ¹ÌÀû¿ë ¹× ½Ã°¢ °³¼± ¡¤ ÁÖÀÎ out/precision20-ui.js:applyTextLook
+   041 Å¸ÀÔÄ³½ºÆ® Å°¸¸ ÀÖ´Â È¸¿ø ±âº» ¼º¿ì = ÇÊÀç(ÀÏ·¹ºì ±âº»°ªÀ¸·Î 3´Ü°è  ¡¤ ÁÖÀÎ shopping_shorts/store.py:get_last_voice
+   044 2´Ü°è ´ëº» Ä­ Ãß°¡¡¤ÀÌµ¿(¸ğµç ¾È) + ºó Ä­ÀÌ Àå¸é ÃâÃ³ ÁÙ¸ÂÃã ±ú´Â ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA ÀÚ¸£±â ? ¿ªÇÒÀÌ¸§ ´©¶ô(´ñ±ÛÀ¯µµ¡¤call_to_action) + ¡¤ ÁÖÀÎ shopping_shorts/edit_plan.py:_is_cta
+   048 Áñ°ÜÃ£±â ºĞ¼®»óÅÂ ¿äÃ»ÀÌ ÁÖ¼Ò ÇÑµµ(8190B) ÃÊ°ú·Î 414 ? Áñ°ÜÃ£ ¡¤ ÁÖÀÎ shopping_shorts/static/collection.html:loadAnalysi
+   050 ¹öÅØ½º µî·ÏÀÌ ´Ù ¸·Èû ? Á¶Á÷Á¤Ã¥(Å° »ı¼º Â÷´Ü) ¾È³» Ãß°¡ + °ÅÀı  ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:verify_sa
+   051 ÁÖÀå ¹øÈ£ ÅÂ±ë ½ÃÇè(°æÀï»ç½Ä Àå¸é ¸ÅÄª °ËÁõ) ¡¤ ÁÖÀÎ tools/claim_trial_video.py:run
+   052 ¿µ»ó °ü¹®ÀÌ À½¼º ¶óÀÎ ¸ğµâµµ º´ÇÕº»À¸·Î ¾ñ°Ô(°üÁ¦ 049 ¼±Çà) ¡¤ ÁÖÀÎ tools/video_gate.py:PATCH_RELS
+   053 ¹öÅØ½º '±ÇÇÑ ¾øÀ½' ¿ÀÁø ? °áÁ¦ ¹Ì¿¬°áÀ» ¿ªÇÒ ¹®Á¦·Î ¾È³»ÇÔ. ¿À·ù  ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:_explain
+   054 ·¹ÆÛ·±½º ÃßÀû Ä«µå¿¡¼­ ´ëº» ºĞ¼® ÈÄ °Ë»ö¾î°¡ »ç¶óÁü(ÇÁ·¹ÀÓ ¾øÀÌ °Ë»ö¾î ¡¤ ÁÖÀÎ shopping_shorts/static/index.html:traceByUrl (¼­¹ö t
+   057 Àå¸é²Ù¹Ì±â »õ ÆíÁı±â ±ÛÀÚ °¡µ¶¼º(¼³¸í¡¤¸Ş´º ÁøÇÏ°Ô¡¤Å°¿ò) ¡¤ ÁÖÀÎ out/precision20-ui.css:°¡µ¶¼º ºí·Ï
+   058 Àå¸é²Ù¹Ì±â Æ² ¼±ÅÃ 4Á¾: ½äÈÅ°íÁ¤/½äÈÅ+º»¹®/½äº»¹®/ÀüÀå¸é°íÁ¤ (fra ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:context_for
+   060 À¯Æ©ºê °Ë»ö°á°ú(·»Áî Å°¿öµå°Ë»ö)¿¡¼­ ¼îÃ÷ Ä«µå ´ã±â ¡¤ ÁÖÀÎ shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 ¿µ»ó ÆÄÀÏ Àü¼ÛÀ» ÆÄÀÌ½ã ´ë½Å ¾ÆÆÄÄ¡°¡(X-Sendfile) ? À¥ ÇÁ·Î ¡¤ ÁÖÀÎ shopping_shorts/app.py:_send_media(¿µ»ó¡¤ÇÕº»¡¤¹Ì¸®º¸±â¡¤¿Ï¼ºº» 
+   064 ½æ³×ÀÏ ÇÁ·Ï½Ã Á×Àº ÁÖ¼Ò ±â¾ï 5ºĞ¡æÈ®Á¤ 404/403Àº 60ºĞ(Á¡Áø)  ¡¤ ÁÖÀÎ shopping_shorts/app.py:_thumb_neg_put¡¤api_thumb ½ÇÆĞ
+   065 Àå¸é²Ù¹Ì±â È¿°ú ÅÇ ·Î°í Ç×¸ñ(ÆÄÀÏ ºÒ·¯¿À±â, ½æ³×ÀÏ ¸Ç À§, ³» ÇÁ¸®¼Â ¡¤ ÁÖÀÎ out/precision20-ui.js:effects(logo)
+   066 Àå¸é²Ù¹Ì±â ÅÛÇÃ¸´ Ä«µåÀÇ º£³¤ Ã¤³Î ÀÌ¸§ »èÁ¦(ÀÌºì¼îÇÎ¡¤¼ôÅÛ ±âº»Çü¡¤»ì¸² ¡¤ ÁÖÀÎ out/precision20-data.js:name
+   067 ¿µ»ó °ü¹®ÀÇ ºñ±³ ÀÛ¾÷ ¼±Á¤: updated_at ÃÖ½Å ¡æ '¿Ï¼ºº»À» ÃÖ ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py:_pick_jobs(ºñ±³ ´ë»ó ¼±Á¤
+   068 °üÁ¦: ½ÂÀÎ ÆÇÁ¤(µ·¡¤È¸¿ø µ¥ÀÌÅÍ)¿¡¼­ Å×½ºÆ® ÆÄÀÏ(shopping_sh ¡¤ ÁÖÀÎ tools/control.py:_approval_reasons(½ÂÀÎ ÇÊ¿ä ÆÇÁ¤ÀÇ À¯ÀÏÇÑ ÀÚ
+   069 °üÁ¦ ¼ö¸® 3°Ç: ¨ç¿µ»ó ¾ø´Â Ä«µå °Ë»ç Á¾·ù(url/api/¼öµ¿)·Î ÀÚ ¡¤ ÁÖÀÎ tools/live_check.py:run_all + tools/video_gate.py:
+   070 °üÁ¦: finish °ÔÀÌÆ®ÀÇ ¼­¹ö report(¿µ»ó¡¤ÀÚ¸·¡¤¼Ò¸®¡¤Ä¸ÄÆ ´ëÁ¶ ¡¤ ÁÖÀÎ tools/video_gate.py:_keep_report(report º¸°üÀÇ À¯ÀÏÇÑ ÀÚ¸®
+   071 ¿µ»ó °ü¹®À» ÀüÈÄ ºñ±³·Î: °°Àº ÀÛ¾÷À» main ÄÚµå¡¤º´ÇÕº» ÄÚµå·Î °¢°¢ ¡¤ ÁÖÀÎ tools/video_gate.py:run_video_gate¡¤judge
+   075 finish °ÔÀÌÆ® ±¸¸Û 2°³: ¨çtools/ Å×½ºÆ®µµ °ÔÀÌÆ®¿¡¼­ µ·´Ù( ¡¤ ÁÖÀÎ tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 Veo´Â global¿¡ ¾ø´Ù ? Veo È£Ãâ¸¸ us-central1·Î(È¸ ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:veo_client
+   081 finish ½Ã°£ ´ÜÃà: ¨ç±âÁØ¼± ÀüÃ¼ Å×½ºÆ® Á¦°Å(½ÇÆĞ¸¸ main ÀçÈ® ¡¤ ÁÖÀÎ tools/track.py:_merge_and_gate¡¤_open_stage¡¤_FileLo
+   083 finish ´ÜÃà ÈÄ¼Ó: ¨çÁ¤È®ÇÑ ±âÁØ¼±(º´ÇÕ ¶§ ÀüÃ¼ ½ÇÆĞ ¸ñ·ÏÀ» ÄÚµå ¡¤ ÁÖÀÎ tools/track.py:_merge_and_gate¡¤main¡¤finish + tools
+   085 °ü¹® ¸ğµâ ¸ñ·Ï 6¹úÀ» ÇÏ³ª·Î: video_gate.PATCH_RELS¡¤ ¡¤ ÁÖÀÎ tools/gate_modules.py:PATCH_MODULES¡¤WATCH_FILES
+   088 finish: ´Ù µÈ °Í¸¸ ÁÙ ¼±´Ù ? Å×½ºÆ®¡¤¿µ»ó °ü¹®À» ÁÙ ¹Û¿¡¼­(C ¡¤ ÁÖÀÎ tools/track.py:finish¡¤_merge_and_gate¡¤_gate_slot +
+   089 finish ½Ã°£ °èÃø¡¤Àç½ÇÇà Á¦°Å: finish ·Î±×¿¡ ½Ã°¢+´Ü°èº° Áı ¡¤ ÁÖÀÎ tools/video_gate.py:run_video_gate + tools/track.p
+   090 ¿µ»ó °ü¹® ÀÛ¾÷ ¼±Á¤: ÃÖ±Ù 6°³ ¡æ À¯Çüº°(Ã»¼Òº» ÀüºÎ/ÀÏºÎ/¾øÀ½¡¤È¿°ú ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py:_pick_jobs
+   091 °ÔÀÌÆ® ½ÇÆĞ ºĞ·ù ¼ö¸®: º´ÇÕº» ÀçÈ®ÀÎ(¿ì¿¬ ½ÇÆĞ °Å¸£±â)À» ¸ÕÀú¡¤mai ¡¤ ÁÖÀÎ tools/track.py:_classify_new_failures¡¤_rerun_on_ma
+   092 finish ÀÚ¿ø °ü¹®+Àç½Ãµµ ºñ¿ë: ½ÃÇè ½ÃÀÛ Àü ³²Àº ¸Ş¸ğ¸®¡¤CPU  ¡¤ ÁÖÀÎ tools/track.py:_gate_slot¡¤_merge_and_gate(Àç½Ãµµ)
+   093 finish ÆÇº»: main Æú´õ(´õ·¯¿ì¸é µ¿±âÈ­ ¸·Çô 51Ä¿¹Ô ³°À½)  ¡¤ ÁÖÀÎ tools/track.py:_reexec_latest
+   094 ÀÎ½ºÅ¸ ÆË¾÷¿¡¼­ ´ã±â¡¤·»Áî¡¤Ã¤³Î¼öÁı ¹öÆ°°ú ¼ÓµµÃ¢ÀÌ º»¹® ±ÛÀÚ¸¦ °¡¸² ? ¡¤ ÁÖÀÎ shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 ¹öÅØ½º Å° ¿øÅ¬¸¯: Å¬¶ó¿ìµå ¼Ğ ÇÑ ÁÙ·Î API¡¤¼­ºñ½º°èÁ¤¡¤¿ªÇÒ¡¤Å°Â÷´ÜÇØ ¡¤ ÁÖÀÎ shopping_shorts/static/landing/vertex_setup.sh
+   099 ¿µ»ó °ü¹®ÀÌ ¿Ï¼ºº» ÇÑ Àå ¹øÂ½ÀÓ(´Ù¸¥ ÀÚ¸® ±×¸² 1ÇÁ·¹ÀÓ)À» ¸ø Àâ´Â´Ù ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py(¿Ï¼ºº» ÇÁ·¹ÀÓ ÆÇÁ¤ ? °ü¹®¡¤¸ÅÀÏ 
+   101 Àå¸é²Ù¹Ì±â ÆäÀÌÁö ±×¸²ÀÌ ±× ÆäÀÌÁö ½Ã°¢ÀÌ ¾Æ´Ï¶ó Ä­ ´ëÇ¥ ±×¸² ÇÑ Àå  ¡¤ ÁÖÀÎ shopping_shorts/app.py:_beatframe_file
+   102 Àå¸é²Ù¹Ì±â ´Ü¾î °­Á¶ ? ¸»ÇÏ´Â ´Ü¾î¸¦ µû¶ó ¹Ú½º¡¤»ö ¹Ù²ñ¡¤»ìÂ¦ Å°¿ì±â  ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:context_for
+   103 Àå¸é²Ù¹Ì±â ±ÛÀÚ Á÷Á¢ Á¶Àı ? ¼ÕÀ¸·Î Á¤ÇÑ Å©±â´Â ±×´ë·Î(ÀÚµ¿ ÁÙÀÓ¡¤ÀÚµ¿ ¡¤ ÁÖÀÎ out/precision20-ui.js:addText
+   104 Àå¸é²Ù¹Ì±â ¹Ì¸®º¸±â: ÆäÀÌÁö ³Ñ±æ ¶§ °¡¸²¸·ÀÌ ¸ÕÀú ³¡³ª º¸ÀÓ(¿¾ ±×¸²  ¡¤ ÁÖÀÎ out/precision20-ui.js:draw(Àå¸é ±×¸² ±³Ã¼)
+   105 °í°´ ³ëÃâ ÀÚ¸®¿¡¼­ Å¸»ç ÀÌ¸§(³úÀü±¸¡¤º¼ÄÉÀÌ³ë) ÀüºÎ Á¦°Å ? È¿°úÀ½¡¤¹Ò ¡¤ ÁÖÀÎ shopping_shorts/scene_match.py:_has_pack
+   107 C µğ½ºÅ©°¡ °è¼Ó Âü: °ü¹® ÀÓ½ÃÆú´õ(gate_child) ¹ÌÁ¤¸® + ¿¹ ¡¤ ÁÖÀÎ tools/merge_gate.py:_run ¡¤ tools/control.py:schedu
+   109 ÀúÀåÃş v3: 3ÀÏ+ ¾È ¾´ °ÍÀº ÀüºÎ D, ¾µ ¶§ ÀÚµ¿À¸·Î C º¹±Í(Æ® ¡¤ ÁÖÀÎ tools/storage.py:plan ¡¤ tools/storage.py:ensure_wa
+   111 ÀÚ¸·Á¦°Å: ÀÌ¹Ì Áö¿î Àå¸éÀ» °°Àº ¹æ½ÄÀ¸·Î ´Ù½Ã °ñ¶ó [ÀÚ¸·Á¦°Å ½ÃÀÛÇÏ±â ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:paintCleanPick
+¿µ»ó ½ÇÃø ´ë»ó 14Àå(047, 049, 055, 059, 061, 063, 073, 077, 084, 086, 095, 100, 106, 110) ¡¤ º´ÇÕ µÚ ÃÖ´ë 69½Ã°£ ¡¤ ¼­¹ö¿¡¼­ 4ÀÛ¾÷ °Ë»ç Áß¡¦
+? ¸ø µ¹¸²(rc=124) ? ¼­¹ö¡¤µğ½ºÅ© È®ÀÎ ¡¤ 
+   Ä«µå 14Àå¿¡ ±â·Ï
+[2026-10-04 08:41]
+¼öµ¿ È®ÀÎ ´ë±â 54Àå ? »çÀå´ÔÀÌ º¸°í ´İ´Â´Ù: py tools/control.py status <¹øÈ£> ¿Ï·á  (¶Ç´Â °Ë»ç Ä­: py tools/control.py set <¹øÈ£> °Ë»ç "url /°æ·Î ±ÛÀÚ")
+   002 ¿µÇâ Áöµµ tools/impact.py ? È£Ãâ ±×·¡ÇÁ·Î ¼ÒºñÃ³¡¤°Ë»ç¡¤½Â ¡¤ ÁÖÀÎ tools/impact.py(½Å¼³)
+   003 ¶óÀÌºê ½ÇÃø ÆÄÀÌÇÁ¶óÀÎ tools/live_check.py --card  ¡¤ ÁÖÀÎ tools/live_check.py(½Å¼³)
+   023 ÀúÀå Ãş(C/D) °üÁ¦ ? ¿ÜÀå D:\¼ôÅÛ À» Áöµµ(°üÁ¦/storage. ¡¤ ÁÖÀÎ tools/storage.py:plan
+   025 ½ÉÈ¿Áø(451) À½¼º Â÷´Ü ¸éÁ¦ ? »çÀå´Ô ÀÏ·¹ºì Å° °³¹æ ¡¤ ÁÖÀÎ shopping_shorts/keyroute.py:is_block_exempt
+   030 Àå¸é²Ù¹Ì±â ±ÛÀÚ µÎ²²¡¤±×¸²ÀÚ ½½¶óÀÌ´õ¡¤¼öÄ¡ ¡¤ ÁÖÀÎ out/precision20-ui.js:drawFontSets
+   031 job ½ÇÆĞ ½Ã 1´Ü°è Àá±İ ¹®±¸ ´ë½Å ½ÇÆĞ »çÀ¯ Ç¥½Ã ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:stepLockMsg
+   032 »õ ÆíÁı±â Ã¤³Î¸í ±âº»°ª=°èÁ¤ ³» Ã¤³Î¸í(ÇÁ¸®¼Â Àû¿ë ½Ã ¼ôÅÛ¸ŞÀÌÄ¿·Î µ¹ ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:account_channel
+   035 ¼­¹ö µğ½ºÅ© °¡µæ Âü Àç¹ß ¹æÁö(find_frames Ã»¼Ò¡¤µğ½ºÅ© °æº¸¡¤ ¡¤ ÁÖÀÎ shopping_shorts/disk_cleanup.py:run
+   036 Àå¸é²Ù¹Ì±â ½æ³×ÀÏ µ¿ÀÏ ±×¸²ÀÚ¡¤´ë»óº° ºĞ¸® ¡¤ ÁÖÀÎ out/precision20-ui.js:drawFontSets
+   037 finish º´ÇÕ ±¸Á¶ °³¼±: ºñÄÚµå Ä¿¹Ô °æÀï ½Ã Àç°Ë»ç »ı·« + ±âÁØ ¡¤ ÁÖÀÎ tools/track.py:finish
+   040 Àå¸é²Ù¹Ì±â Á¦¸ñ¡¤Ã¤³Î¸í ±×¸²ÀÚ ¹ÌÀû¿ë ¹× ½Ã°¢ °³¼± ¡¤ ÁÖÀÎ out/precision20-ui.js:applyTextLook
+   041 Å¸ÀÔÄ³½ºÆ® Å°¸¸ ÀÖ´Â È¸¿ø ±âº» ¼º¿ì = ÇÊÀç(ÀÏ·¹ºì ±âº»°ªÀ¸·Î 3´Ü°è  ¡¤ ÁÖÀÎ shopping_shorts/store.py:get_last_voice
+   044 2´Ü°è ´ëº» Ä­ Ãß°¡¡¤ÀÌµ¿(¸ğµç ¾È) + ºó Ä­ÀÌ Àå¸é ÃâÃ³ ÁÙ¸ÂÃã ±ú´Â ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA ÀÚ¸£±â ? ¿ªÇÒÀÌ¸§ ´©¶ô(´ñ±ÛÀ¯µµ¡¤call_to_action) + ¡¤ ÁÖÀÎ shopping_shorts/edit_plan.py:_is_cta
+   048 Áñ°ÜÃ£±â ºĞ¼®»óÅÂ ¿äÃ»ÀÌ ÁÖ¼Ò ÇÑµµ(8190B) ÃÊ°ú·Î 414 ? Áñ°ÜÃ£ ¡¤ ÁÖÀÎ shopping_shorts/static/collection.html:loadAnalysi
+   050 ¹öÅØ½º µî·ÏÀÌ ´Ù ¸·Èû ? Á¶Á÷Á¤Ã¥(Å° »ı¼º Â÷´Ü) ¾È³» Ãß°¡ + °ÅÀı  ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:verify_sa
+   051 ÁÖÀå ¹øÈ£ ÅÂ±ë ½ÃÇè(°æÀï»ç½Ä Àå¸é ¸ÅÄª °ËÁõ) ¡¤ ÁÖÀÎ tools/claim_trial_video.py:run
+   052 ¿µ»ó °ü¹®ÀÌ À½¼º ¶óÀÎ ¸ğµâµµ º´ÇÕº»À¸·Î ¾ñ°Ô(°üÁ¦ 049 ¼±Çà) ¡¤ ÁÖÀÎ tools/video_gate.py:PATCH_RELS
+   053 ¹öÅØ½º '±ÇÇÑ ¾øÀ½' ¿ÀÁø ? °áÁ¦ ¹Ì¿¬°áÀ» ¿ªÇÒ ¹®Á¦·Î ¾È³»ÇÔ. ¿À·ù  ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:_explain
+   054 ·¹ÆÛ·±½º ÃßÀû Ä«µå¿¡¼­ ´ëº» ºĞ¼® ÈÄ °Ë»ö¾î°¡ »ç¶óÁü(ÇÁ·¹ÀÓ ¾øÀÌ °Ë»ö¾î ¡¤ ÁÖÀÎ shopping_shorts/static/index.html:traceByUrl (¼­¹ö t
+   057 Àå¸é²Ù¹Ì±â »õ ÆíÁı±â ±ÛÀÚ °¡µ¶¼º(¼³¸í¡¤¸Ş´º ÁøÇÏ°Ô¡¤Å°¿ò) ¡¤ ÁÖÀÎ out/precision20-ui.css:°¡µ¶¼º ºí·Ï
+   058 Àå¸é²Ù¹Ì±â Æ² ¼±ÅÃ 4Á¾: ½äÈÅ°íÁ¤/½äÈÅ+º»¹®/½äº»¹®/ÀüÀå¸é°íÁ¤ (fra ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:context_for
+   060 À¯Æ©ºê °Ë»ö°á°ú(·»Áî Å°¿öµå°Ë»ö)¿¡¼­ ¼îÃ÷ Ä«µå ´ã±â ¡¤ ÁÖÀÎ shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 ¿µ»ó ÆÄÀÏ Àü¼ÛÀ» ÆÄÀÌ½ã ´ë½Å ¾ÆÆÄÄ¡°¡(X-Sendfile) ? À¥ ÇÁ·Î ¡¤ ÁÖÀÎ shopping_shorts/app.py:_send_media(¿µ»ó¡¤ÇÕº»¡¤¹Ì¸®º¸±â¡¤¿Ï¼ºº» 
+   064 ½æ³×ÀÏ ÇÁ·Ï½Ã Á×Àº ÁÖ¼Ò ±â¾ï 5ºĞ¡æÈ®Á¤ 404/403Àº 60ºĞ(Á¡Áø)  ¡¤ ÁÖÀÎ shopping_shorts/app.py:_thumb_neg_put¡¤api_thumb ½ÇÆĞ
+   065 Àå¸é²Ù¹Ì±â È¿°ú ÅÇ ·Î°í Ç×¸ñ(ÆÄÀÏ ºÒ·¯¿À±â, ½æ³×ÀÏ ¸Ç À§, ³» ÇÁ¸®¼Â ¡¤ ÁÖÀÎ out/precision20-ui.js:effects(logo)
+   066 Àå¸é²Ù¹Ì±â ÅÛÇÃ¸´ Ä«µåÀÇ º£³¤ Ã¤³Î ÀÌ¸§ »èÁ¦(ÀÌºì¼îÇÎ¡¤¼ôÅÛ ±âº»Çü¡¤»ì¸² ¡¤ ÁÖÀÎ out/precision20-data.js:name
+   067 ¿µ»ó °ü¹®ÀÇ ºñ±³ ÀÛ¾÷ ¼±Á¤: updated_at ÃÖ½Å ¡æ '¿Ï¼ºº»À» ÃÖ ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py:_pick_jobs(ºñ±³ ´ë»ó ¼±Á¤
+   068 °üÁ¦: ½ÂÀÎ ÆÇÁ¤(µ·¡¤È¸¿ø µ¥ÀÌÅÍ)¿¡¼­ Å×½ºÆ® ÆÄÀÏ(shopping_sh ¡¤ ÁÖÀÎ tools/control.py:_approval_reasons(½ÂÀÎ ÇÊ¿ä ÆÇÁ¤ÀÇ À¯ÀÏÇÑ ÀÚ
+   069 °üÁ¦ ¼ö¸® 3°Ç: ¨ç¿µ»ó ¾ø´Â Ä«µå °Ë»ç Á¾·ù(url/api/¼öµ¿)·Î ÀÚ ¡¤ ÁÖÀÎ tools/live_check.py:run_all + tools/video_gate.py:
+   070 °üÁ¦: finish °ÔÀÌÆ®ÀÇ ¼­¹ö report(¿µ»ó¡¤ÀÚ¸·¡¤¼Ò¸®¡¤Ä¸ÄÆ ´ëÁ¶ ¡¤ ÁÖÀÎ tools/video_gate.py:_keep_report(report º¸°üÀÇ À¯ÀÏÇÑ ÀÚ¸®
+   071 ¿µ»ó °ü¹®À» ÀüÈÄ ºñ±³·Î: °°Àº ÀÛ¾÷À» main ÄÚµå¡¤º´ÇÕº» ÄÚµå·Î °¢°¢ ¡¤ ÁÖÀÎ tools/video_gate.py:run_video_gate¡¤judge
+   075 finish °ÔÀÌÆ® ±¸¸Û 2°³: ¨çtools/ Å×½ºÆ®µµ °ÔÀÌÆ®¿¡¼­ µ·´Ù( ¡¤ ÁÖÀÎ tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 Veo´Â global¿¡ ¾ø´Ù ? Veo È£Ãâ¸¸ us-central1·Î(È¸ ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:veo_client
+   081 finish ½Ã°£ ´ÜÃà: ¨ç±âÁØ¼± ÀüÃ¼ Å×½ºÆ® Á¦°Å(½ÇÆĞ¸¸ main ÀçÈ® ¡¤ ÁÖÀÎ tools/track.py:_merge_and_gate¡¤_open_stage¡¤_FileLo
+   083 finish ´ÜÃà ÈÄ¼Ó: ¨çÁ¤È®ÇÑ ±âÁØ¼±(º´ÇÕ ¶§ ÀüÃ¼ ½ÇÆĞ ¸ñ·ÏÀ» ÄÚµå ¡¤ ÁÖÀÎ tools/track.py:_merge_and_gate¡¤main¡¤finish + tools
+   085 °ü¹® ¸ğµâ ¸ñ·Ï 6¹úÀ» ÇÏ³ª·Î: video_gate.PATCH_RELS¡¤ ¡¤ ÁÖÀÎ tools/gate_modules.py:PATCH_MODULES¡¤WATCH_FILES
+   088 finish: ´Ù µÈ °Í¸¸ ÁÙ ¼±´Ù ? Å×½ºÆ®¡¤¿µ»ó °ü¹®À» ÁÙ ¹Û¿¡¼­(C ¡¤ ÁÖÀÎ tools/track.py:finish¡¤_merge_and_gate¡¤_gate_slot +
+   089 finish ½Ã°£ °èÃø¡¤Àç½ÇÇà Á¦°Å: finish ·Î±×¿¡ ½Ã°¢+´Ü°èº° Áı ¡¤ ÁÖÀÎ tools/video_gate.py:run_video_gate + tools/track.p
+   090 ¿µ»ó °ü¹® ÀÛ¾÷ ¼±Á¤: ÃÖ±Ù 6°³ ¡æ À¯Çüº°(Ã»¼Òº» ÀüºÎ/ÀÏºÎ/¾øÀ½¡¤È¿°ú ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py:_pick_jobs
+   091 °ÔÀÌÆ® ½ÇÆĞ ºĞ·ù ¼ö¸®: º´ÇÕº» ÀçÈ®ÀÎ(¿ì¿¬ ½ÇÆĞ °Å¸£±â)À» ¸ÕÀú¡¤mai ¡¤ ÁÖÀÎ tools/track.py:_classify_new_failures¡¤_rerun_on_ma
+   092 finish ÀÚ¿ø °ü¹®+Àç½Ãµµ ºñ¿ë: ½ÃÇè ½ÃÀÛ Àü ³²Àº ¸Ş¸ğ¸®¡¤CPU  ¡¤ ÁÖÀÎ tools/track.py:_gate_slot¡¤_merge_and_gate(Àç½Ãµµ)
+   093 finish ÆÇº»: main Æú´õ(´õ·¯¿ì¸é µ¿±âÈ­ ¸·Çô 51Ä¿¹Ô ³°À½)  ¡¤ ÁÖÀÎ tools/track.py:_reexec_latest
+   094 ÀÎ½ºÅ¸ ÆË¾÷¿¡¼­ ´ã±â¡¤·»Áî¡¤Ã¤³Î¼öÁı ¹öÆ°°ú ¼ÓµµÃ¢ÀÌ º»¹® ±ÛÀÚ¸¦ °¡¸² ? ¡¤ ÁÖÀÎ shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 ¹öÅØ½º Å° ¿øÅ¬¸¯: Å¬¶ó¿ìµå ¼Ğ ÇÑ ÁÙ·Î API¡¤¼­ºñ½º°èÁ¤¡¤¿ªÇÒ¡¤Å°Â÷´ÜÇØ ¡¤ ÁÖÀÎ shopping_shorts/static/landing/vertex_setup.sh
+   099 ¿µ»ó °ü¹®ÀÌ ¿Ï¼ºº» ÇÑ Àå ¹øÂ½ÀÓ(´Ù¸¥ ÀÚ¸® ±×¸² 1ÇÁ·¹ÀÓ)À» ¸ø Àâ´Â´Ù ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py(¿Ï¼ºº» ÇÁ·¹ÀÓ ÆÇÁ¤ ? °ü¹®¡¤¸ÅÀÏ 
+   101 Àå¸é²Ù¹Ì±â ÆäÀÌÁö ±×¸²ÀÌ ±× ÆäÀÌÁö ½Ã°¢ÀÌ ¾Æ´Ï¶ó Ä­ ´ëÇ¥ ±×¸² ÇÑ Àå  ¡¤ ÁÖÀÎ shopping_shorts/app.py:_beatframe_file
+   102 Àå¸é²Ù¹Ì±â ´Ü¾î °­Á¶ ? ¸»ÇÏ´Â ´Ü¾î¸¦ µû¶ó ¹Ú½º¡¤»ö ¹Ù²ñ¡¤»ìÂ¦ Å°¿ì±â  ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:context_for
+   103 Àå¸é²Ù¹Ì±â ±ÛÀÚ Á÷Á¢ Á¶Àı ? ¼ÕÀ¸·Î Á¤ÇÑ Å©±â´Â ±×´ë·Î(ÀÚµ¿ ÁÙÀÓ¡¤ÀÚµ¿ ¡¤ ÁÖÀÎ out/precision20-ui.js:addText
+   104 Àå¸é²Ù¹Ì±â ¹Ì¸®º¸±â: ÆäÀÌÁö ³Ñ±æ ¶§ °¡¸²¸·ÀÌ ¸ÕÀú ³¡³ª º¸ÀÓ(¿¾ ±×¸²  ¡¤ ÁÖÀÎ out/precision20-ui.js:draw(Àå¸é ±×¸² ±³Ã¼)
+   105 °í°´ ³ëÃâ ÀÚ¸®¿¡¼­ Å¸»ç ÀÌ¸§(³úÀü±¸¡¤º¼ÄÉÀÌ³ë) ÀüºÎ Á¦°Å ? È¿°úÀ½¡¤¹Ò ¡¤ ÁÖÀÎ shopping_shorts/scene_match.py:_has_pack
+   107 C µğ½ºÅ©°¡ °è¼Ó Âü: °ü¹® ÀÓ½ÃÆú´õ(gate_child) ¹ÌÁ¤¸® + ¿¹ ¡¤ ÁÖÀÎ tools/merge_gate.py:_run ¡¤ tools/control.py:schedu
+   109 ÀúÀåÃş v3: 3ÀÏ+ ¾È ¾´ °ÍÀº ÀüºÎ D, ¾µ ¶§ ÀÚµ¿À¸·Î C º¹±Í(Æ® ¡¤ ÁÖÀÎ tools/storage.py:plan ¡¤ tools/storage.py:ensure_wa
+   111 ÀÚ¸·Á¦°Å: ÀÌ¹Ì Áö¿î Àå¸éÀ» °°Àº ¹æ½ÄÀ¸·Î ´Ù½Ã °ñ¶ó [ÀÚ¸·Á¦°Å ½ÃÀÛÇÏ±â ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:paintCleanPick
+¿µ»ó ½ÇÃø ´ë»ó 14Àå(047, 049, 055, 059, 061, 063, 073, 077, 084, 086, 095, 100, 106, 110) ¡¤ º´ÇÕ µÚ ÃÖ´ë 71½Ã°£ ¡¤ ¼­¹ö¿¡¼­ 4ÀÛ¾÷ °Ë»ç Áß¡¦
+? ¸ø µ¹¸²(rc=124) ? ¼­¹ö¡¤µğ½ºÅ© È®ÀÎ ¡¤ 
+   Ä«µå 14Àå¿¡ ±â·Ï
+^C[2026-10-04 11:41]
+¼öµ¿ È®ÀÎ ´ë±â 55Àå ? »çÀå´ÔÀÌ º¸°í ´İ´Â´Ù: py tools/control.py status <¹øÈ£> ¿Ï·á  (¶Ç´Â °Ë»ç Ä­: py tools/control.py set <¹øÈ£> °Ë»ç "url /°æ·Î ±ÛÀÚ")
+   002 ¿µÇâ Áöµµ tools/impact.py ? È£Ãâ ±×·¡ÇÁ·Î ¼ÒºñÃ³¡¤°Ë»ç¡¤½Â ¡¤ ÁÖÀÎ tools/impact.py(½Å¼³)
+   003 ¶óÀÌºê ½ÇÃø ÆÄÀÌÇÁ¶óÀÎ tools/live_check.py --card  ¡¤ ÁÖÀÎ tools/live_check.py(½Å¼³)
+   023 ÀúÀå Ãş(C/D) °üÁ¦ ? ¿ÜÀå D:\¼ôÅÛ À» Áöµµ(°üÁ¦/storage. ¡¤ ÁÖÀÎ tools/storage.py:plan
+   025 ½ÉÈ¿Áø(451) À½¼º Â÷´Ü ¸éÁ¦ ? »çÀå´Ô ÀÏ·¹ºì Å° °³¹æ ¡¤ ÁÖÀÎ shopping_shorts/keyroute.py:is_block_exempt
+   030 Àå¸é²Ù¹Ì±â ±ÛÀÚ µÎ²²¡¤±×¸²ÀÚ ½½¶óÀÌ´õ¡¤¼öÄ¡ ¡¤ ÁÖÀÎ out/precision20-ui.js:drawFontSets
+   031 job ½ÇÆĞ ½Ã 1´Ü°è Àá±İ ¹®±¸ ´ë½Å ½ÇÆĞ »çÀ¯ Ç¥½Ã ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:stepLockMsg
+   032 »õ ÆíÁı±â Ã¤³Î¸í ±âº»°ª=°èÁ¤ ³» Ã¤³Î¸í(ÇÁ¸®¼Â Àû¿ë ½Ã ¼ôÅÛ¸ŞÀÌÄ¿·Î µ¹ ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:account_channel
+   035 ¼­¹ö µğ½ºÅ© °¡µæ Âü Àç¹ß ¹æÁö(find_frames Ã»¼Ò¡¤µğ½ºÅ© °æº¸¡¤ ¡¤ ÁÖÀÎ shopping_shorts/disk_cleanup.py:run
+   036 Àå¸é²Ù¹Ì±â ½æ³×ÀÏ µ¿ÀÏ ±×¸²ÀÚ¡¤´ë»óº° ºĞ¸® ¡¤ ÁÖÀÎ out/precision20-ui.js:drawFontSets
+   037 finish º´ÇÕ ±¸Á¶ °³¼±: ºñÄÚµå Ä¿¹Ô °æÀï ½Ã Àç°Ë»ç »ı·« + ±âÁØ ¡¤ ÁÖÀÎ tools/track.py:finish
+   040 Àå¸é²Ù¹Ì±â Á¦¸ñ¡¤Ã¤³Î¸í ±×¸²ÀÚ ¹ÌÀû¿ë ¹× ½Ã°¢ °³¼± ¡¤ ÁÖÀÎ out/precision20-ui.js:applyTextLook
+   041 Å¸ÀÔÄ³½ºÆ® Å°¸¸ ÀÖ´Â È¸¿ø ±âº» ¼º¿ì = ÇÊÀç(ÀÏ·¹ºì ±âº»°ªÀ¸·Î 3´Ü°è  ¡¤ ÁÖÀÎ shopping_shorts/store.py:get_last_voice
+   044 2´Ü°è ´ëº» Ä­ Ãß°¡¡¤ÀÌµ¿(¸ğµç ¾È) + ºó Ä­ÀÌ Àå¸é ÃâÃ³ ÁÙ¸ÂÃã ±ú´Â ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA ÀÚ¸£±â ? ¿ªÇÒÀÌ¸§ ´©¶ô(´ñ±ÛÀ¯µµ¡¤call_to_action) + ¡¤ ÁÖÀÎ shopping_shorts/edit_plan.py:_is_cta
+   048 Áñ°ÜÃ£±â ºĞ¼®»óÅÂ ¿äÃ»ÀÌ ÁÖ¼Ò ÇÑµµ(8190B) ÃÊ°ú·Î 414 ? Áñ°ÜÃ£ ¡¤ ÁÖÀÎ shopping_shorts/static/collection.html:loadAnalysi
+   050 ¹öÅØ½º µî·ÏÀÌ ´Ù ¸·Èû ? Á¶Á÷Á¤Ã¥(Å° »ı¼º Â÷´Ü) ¾È³» Ãß°¡ + °ÅÀı  ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:verify_sa
+   051 ÁÖÀå ¹øÈ£ ÅÂ±ë ½ÃÇè(°æÀï»ç½Ä Àå¸é ¸ÅÄª °ËÁõ) ¡¤ ÁÖÀÎ tools/claim_trial_video.py:run
+   052 ¿µ»ó °ü¹®ÀÌ À½¼º ¶óÀÎ ¸ğµâµµ º´ÇÕº»À¸·Î ¾ñ°Ô(°üÁ¦ 049 ¼±Çà) ¡¤ ÁÖÀÎ tools/video_gate.py:PATCH_RELS
+   053 ¹öÅØ½º '±ÇÇÑ ¾øÀ½' ¿ÀÁø ? °áÁ¦ ¹Ì¿¬°áÀ» ¿ªÇÒ ¹®Á¦·Î ¾È³»ÇÔ. ¿À·ù  ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:_explain
+   054 ·¹ÆÛ·±½º ÃßÀû Ä«µå¿¡¼­ ´ëº» ºĞ¼® ÈÄ °Ë»ö¾î°¡ »ç¶óÁü(ÇÁ·¹ÀÓ ¾øÀÌ °Ë»ö¾î ¡¤ ÁÖÀÎ shopping_shorts/static/index.html:traceByUrl (¼­¹ö t
+   057 Àå¸é²Ù¹Ì±â »õ ÆíÁı±â ±ÛÀÚ °¡µ¶¼º(¼³¸í¡¤¸Ş´º ÁøÇÏ°Ô¡¤Å°¿ò) ¡¤ ÁÖÀÎ out/precision20-ui.css:°¡µ¶¼º ºí·Ï
+   058 Àå¸é²Ù¹Ì±â Æ² ¼±ÅÃ 4Á¾: ½äÈÅ°íÁ¤/½äÈÅ+º»¹®/½äº»¹®/ÀüÀå¸é°íÁ¤ (fra ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:context_for
+   060 À¯Æ©ºê °Ë»ö°á°ú(·»Áî Å°¿öµå°Ë»ö)¿¡¼­ ¼îÃ÷ Ä«µå ´ã±â ¡¤ ÁÖÀÎ shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 ¿µ»ó ÆÄÀÏ Àü¼ÛÀ» ÆÄÀÌ½ã ´ë½Å ¾ÆÆÄÄ¡°¡(X-Sendfile) ? À¥ ÇÁ·Î ¡¤ ÁÖÀÎ shopping_shorts/app.py:_send_media(¿µ»ó¡¤ÇÕº»¡¤¹Ì¸®º¸±â¡¤¿Ï¼ºº» 
+   064 ½æ³×ÀÏ ÇÁ·Ï½Ã Á×Àº ÁÖ¼Ò ±â¾ï 5ºĞ¡æÈ®Á¤ 404/403Àº 60ºĞ(Á¡Áø)  ¡¤ ÁÖÀÎ shopping_shorts/app.py:_thumb_neg_put¡¤api_thumb ½ÇÆĞ
+   065 Àå¸é²Ù¹Ì±â È¿°ú ÅÇ ·Î°í Ç×¸ñ(ÆÄÀÏ ºÒ·¯¿À±â, ½æ³×ÀÏ ¸Ç À§, ³» ÇÁ¸®¼Â ¡¤ ÁÖÀÎ out/precision20-ui.js:effects(logo)
+   066 Àå¸é²Ù¹Ì±â ÅÛÇÃ¸´ Ä«µåÀÇ º£³¤ Ã¤³Î ÀÌ¸§ »èÁ¦(ÀÌºì¼îÇÎ¡¤¼ôÅÛ ±âº»Çü¡¤»ì¸² ¡¤ ÁÖÀÎ out/precision20-data.js:name
+   067 ¿µ»ó °ü¹®ÀÇ ºñ±³ ÀÛ¾÷ ¼±Á¤: updated_at ÃÖ½Å ¡æ '¿Ï¼ºº»À» ÃÖ ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py:_pick_jobs(ºñ±³ ´ë»ó ¼±Á¤
+   068 °üÁ¦: ½ÂÀÎ ÆÇÁ¤(µ·¡¤È¸¿ø µ¥ÀÌÅÍ)¿¡¼­ Å×½ºÆ® ÆÄÀÏ(shopping_sh ¡¤ ÁÖÀÎ tools/control.py:_approval_reasons(½ÂÀÎ ÇÊ¿ä ÆÇÁ¤ÀÇ À¯ÀÏÇÑ ÀÚ
+   069 °üÁ¦ ¼ö¸® 3°Ç: ¨ç¿µ»ó ¾ø´Â Ä«µå °Ë»ç Á¾·ù(url/api/¼öµ¿)·Î ÀÚ ¡¤ ÁÖÀÎ tools/live_check.py:run_all + tools/video_gate.py:
+   070 °üÁ¦: finish °ÔÀÌÆ®ÀÇ ¼­¹ö report(¿µ»ó¡¤ÀÚ¸·¡¤¼Ò¸®¡¤Ä¸ÄÆ ´ëÁ¶ ¡¤ ÁÖÀÎ tools/video_gate.py:_keep_report(report º¸°üÀÇ À¯ÀÏÇÑ ÀÚ¸®
+   071 ¿µ»ó °ü¹®À» ÀüÈÄ ºñ±³·Î: °°Àº ÀÛ¾÷À» main ÄÚµå¡¤º´ÇÕº» ÄÚµå·Î °¢°¢ ¡¤ ÁÖÀÎ tools/video_gate.py:run_video_gate¡¤judge
+   075 finish °ÔÀÌÆ® ±¸¸Û 2°³: ¨çtools/ Å×½ºÆ®µµ °ÔÀÌÆ®¿¡¼­ µ·´Ù( ¡¤ ÁÖÀÎ tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 Veo´Â global¿¡ ¾ø´Ù ? Veo È£Ãâ¸¸ us-central1·Î(È¸ ¡¤ ÁÖÀÎ shopping_shorts/vertex_route.py:veo_client
+   081 finish ½Ã°£ ´ÜÃà: ¨ç±âÁØ¼± ÀüÃ¼ Å×½ºÆ® Á¦°Å(½ÇÆĞ¸¸ main ÀçÈ® ¡¤ ÁÖÀÎ tools/track.py:_merge_and_gate¡¤_open_stage¡¤_FileLo
+   083 finish ´ÜÃà ÈÄ¼Ó: ¨çÁ¤È®ÇÑ ±âÁØ¼±(º´ÇÕ ¶§ ÀüÃ¼ ½ÇÆĞ ¸ñ·ÏÀ» ÄÚµå ¡¤ ÁÖÀÎ tools/track.py:_merge_and_gate¡¤main¡¤finish + tools
+   085 °ü¹® ¸ğµâ ¸ñ·Ï 6¹úÀ» ÇÏ³ª·Î: video_gate.PATCH_RELS¡¤ ¡¤ ÁÖÀÎ tools/gate_modules.py:PATCH_MODULES¡¤WATCH_FILES
+   088 finish: ´Ù µÈ °Í¸¸ ÁÙ ¼±´Ù ? Å×½ºÆ®¡¤¿µ»ó °ü¹®À» ÁÙ ¹Û¿¡¼­(C ¡¤ ÁÖÀÎ tools/track.py:finish¡¤_merge_and_gate¡¤_gate_slot +
+   089 finish ½Ã°£ °èÃø¡¤Àç½ÇÇà Á¦°Å: finish ·Î±×¿¡ ½Ã°¢+´Ü°èº° Áı ¡¤ ÁÖÀÎ tools/video_gate.py:run_video_gate + tools/track.p
+   090 ¿µ»ó °ü¹® ÀÛ¾÷ ¼±Á¤: ÃÖ±Ù 6°³ ¡æ À¯Çüº°(Ã»¼Òº» ÀüºÎ/ÀÏºÎ/¾øÀ½¡¤È¿°ú ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py:_pick_jobs
+   091 °ÔÀÌÆ® ½ÇÆĞ ºĞ·ù ¼ö¸®: º´ÇÕº» ÀçÈ®ÀÎ(¿ì¿¬ ½ÇÆĞ °Å¸£±â)À» ¸ÕÀú¡¤mai ¡¤ ÁÖÀÎ tools/track.py:_classify_new_failures¡¤_rerun_on_ma
+   092 finish ÀÚ¿ø °ü¹®+Àç½Ãµµ ºñ¿ë: ½ÃÇè ½ÃÀÛ Àü ³²Àº ¸Ş¸ğ¸®¡¤CPU  ¡¤ ÁÖÀÎ tools/track.py:_gate_slot¡¤_merge_and_gate(Àç½Ãµµ)
+   093 finish ÆÇº»: main Æú´õ(´õ·¯¿ì¸é µ¿±âÈ­ ¸·Çô 51Ä¿¹Ô ³°À½)  ¡¤ ÁÖÀÎ tools/track.py:_reexec_latest
+   094 ÀÎ½ºÅ¸ ÆË¾÷¿¡¼­ ´ã±â¡¤·»Áî¡¤Ã¤³Î¼öÁı ¹öÆ°°ú ¼ÓµµÃ¢ÀÌ º»¹® ±ÛÀÚ¸¦ °¡¸² ? ¡¤ ÁÖÀÎ shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 ¹öÅØ½º Å° ¿øÅ¬¸¯: Å¬¶ó¿ìµå ¼Ğ ÇÑ ÁÙ·Î API¡¤¼­ºñ½º°èÁ¤¡¤¿ªÇÒ¡¤Å°Â÷´ÜÇØ ¡¤ ÁÖÀÎ shopping_shorts/static/landing/vertex_setup.sh
+   099 ¿µ»ó °ü¹®ÀÌ ¿Ï¼ºº» ÇÑ Àå ¹øÂ½ÀÓ(´Ù¸¥ ÀÚ¸® ±×¸² 1ÇÁ·¹ÀÓ)À» ¸ø Àâ´Â´Ù ¡¤ ÁÖÀÎ tools/editor_vs_final_video.py(¿Ï¼ºº» ÇÁ·¹ÀÓ ÆÇÁ¤ ? °ü¹®¡¤¸ÅÀÏ 
+   101 Àå¸é²Ù¹Ì±â ÆäÀÌÁö ±×¸²ÀÌ ±× ÆäÀÌÁö ½Ã°¢ÀÌ ¾Æ´Ï¶ó Ä­ ´ëÇ¥ ±×¸² ÇÑ Àå  ¡¤ ÁÖÀÎ shopping_shorts/app.py:_beatframe_file
+   102 Àå¸é²Ù¹Ì±â ´Ü¾î °­Á¶ ? ¸»ÇÏ´Â ´Ü¾î¸¦ µû¶ó ¹Ú½º¡¤»ö ¹Ù²ñ¡¤»ìÂ¦ Å°¿ì±â  ¡¤ ÁÖÀÎ shopping_shorts/scene_style.py:context_for
+   103 Àå¸é²Ù¹Ì±â ±ÛÀÚ Á÷Á¢ Á¶Àı ? ¼ÕÀ¸·Î Á¤ÇÑ Å©±â´Â ±×´ë·Î(ÀÚµ¿ ÁÙÀÓ¡¤ÀÚµ¿ ¡¤ ÁÖÀÎ out/precision20-ui.js:addText
+   104 Àå¸é²Ù¹Ì±â ¹Ì¸®º¸±â: ÆäÀÌÁö ³Ñ±æ ¶§ °¡¸²¸·ÀÌ ¸ÕÀú ³¡³ª º¸ÀÓ(¿¾ ±×¸²  ¡¤ ÁÖÀÎ out/precision20-ui.js:draw(Àå¸é ±×¸² ±³Ã¼)
+   105 °í°´ ³ëÃâ ÀÚ¸®¿¡¼­ Å¸»ç ÀÌ¸§(³úÀü±¸¡¤º¼ÄÉÀÌ³ë) ÀüºÎ Á¦°Å ? È¿°úÀ½¡¤¹Ò ¡¤ ÁÖÀÎ shopping_shorts/scene_match.py:_has_pack
+   107 C µğ½ºÅ©°¡ °è¼Ó Âü: °ü¹® ÀÓ½ÃÆú´õ(gate_child) ¹ÌÁ¤¸® + ¿¹ ¡¤ ÁÖÀÎ tools/merge_gate.py:_run ¡¤ tools/control.py:schedu
+   109 ÀúÀåÃş v3: 3ÀÏ+ ¾È ¾´ °ÍÀº ÀüºÎ D, ¾µ ¶§ ÀÚµ¿À¸·Î C º¹±Í(Æ® ¡¤ ÁÖÀÎ tools/storage.py:plan ¡¤ tools/storage.py:ensure_wa
+   111 ÀÚ¸·Á¦°Å: ÀÌ¹Ì Áö¿î Àå¸éÀ» °°Àº ¹æ½ÄÀ¸·Î ´Ù½Ã °ñ¶ó [ÀÚ¸·Á¦°Å ½ÃÀÛÇÏ±â ¡¤ ÁÖÀÎ shopping_shorts/static/produce.html:paintCleanPick
+   113 ¸ñ¼Ò¸® ¹Ì¸®µè±â: À½¼º ¾÷Ã¼°¡ °ÅÀıÇÏ¸é 500 ´ë½Å ¿øÀÎ ¾È³»(Å¸ÀÔÄ³½ºÆ® ¡¤ ÁÖÀÎ shopping_shorts/app.py:_tts_vendor_message
+¿µ»ó ½ÇÃø ´ë»ó 14Àå(047, 049, 055, 059, 061, 063, 073, 077, 084, 086, 095, 100, 106, 110) ¡¤ º´ÇÕ µÚ ÃÖ´ë 72½Ã°£ ¡¤ ¼­¹ö¿¡¼­ 4ÀÛ¾÷ °Ë»ç Áß¡¦
+? ¸ø µ¹¸²(rc=124) ? ¼­¹ö¡¤µğ½ºÅ© È®ÀÎ ¡¤ 
+   Ä«µå 14Àå¿¡ ±â·Ï
+[2026-10-04 12:43:41] â–¶ tools\live_check.py --all
+[2026-10-04 12:43]
+ìˆ˜ë™ í™•ì¸ ëŒ€ê¸° 55ì¥ â€” ì‚¬ì¥ë‹˜ì´ ë³´ê³  ë‹«ëŠ”ë‹¤: py tools/control.py status <ë²ˆí˜¸> ì™„ë£Œ  (ë˜ëŠ” ê²€ì‚¬ ì¹¸: py tools/control.py set <ë²ˆí˜¸> ê²€ì‚¬ "url /ê²½ë¡œ ê¸€ì")
+   002 ì˜í–¥ ì§€ë„ tools/impact.py â€” í˜¸ì¶œ ê·¸ë˜í”„ë¡œ ì†Œë¹„ì²˜Â·ê²€ì‚¬Â·ìŠ¹ Â· ì£¼ì¸ tools/impact.py(ì‹ ì„¤)
+   003 ë¼ì´ë¸Œ ì‹¤ì¸¡ íŒŒì´í”„ë¼ì¸ tools/live_check.py --card  Â· ì£¼ì¸ tools/live_check.py(ì‹ ì„¤)
+   023 ì €ì¥ ì¸µ(C/D) ê´€ì œ â€” ì™¸ì¥ D:\ìˆí…œ ì„ ì§€ë„(ê´€ì œ/storage. Â· ì£¼ì¸ tools/storage.py:plan
+   025 ì‹¬íš¨ì§„(451) ìŒì„± ì°¨ë‹¨ ë©´ì œ â€” ì‚¬ì¥ë‹˜ ì¼ë ˆë¸ í‚¤ ê°œë°© Â· ì£¼ì¸ shopping_shorts/keyroute.py:is_block_exempt
+   030 ì¥ë©´ê¾¸ë¯¸ê¸° ê¸€ì ë‘ê»˜Â·ê·¸ë¦¼ì ìŠ¬ë¼ì´ë”Â·ìˆ˜ì¹˜ Â· ì£¼ì¸ out/precision20-ui.js:drawFontSets
+   031 job ì‹¤íŒ¨ ì‹œ 1ë‹¨ê³„ ì ê¸ˆ ë¬¸êµ¬ ëŒ€ì‹  ì‹¤íŒ¨ ì‚¬ìœ  í‘œì‹œ Â· ì£¼ì¸ shopping_shorts/static/produce.html:stepLockMsg
+   032 ìƒˆ í¸ì§‘ê¸° ì±„ë„ëª… ê¸°ë³¸ê°’=ê³„ì • ë‚´ ì±„ë„ëª…(í”„ë¦¬ì…‹ ì ìš© ì‹œ ìˆí…œë©”ì´ì»¤ë¡œ ëŒ Â· ì£¼ì¸ shopping_shorts/scene_style.py:account_channel
+   035 ì„œë²„ ë””ìŠ¤í¬ ê°€ë“ ì°¸ ì¬ë°œ ë°©ì§€(find_frames ì²­ì†ŒÂ·ë””ìŠ¤í¬ ê²½ë³´Â· Â· ì£¼ì¸ shopping_shorts/disk_cleanup.py:run
+   036 ì¥ë©´ê¾¸ë¯¸ê¸° ì¸ë„¤ì¼ ë™ì¼ ê·¸ë¦¼ìÂ·ëŒ€ìƒë³„ ë¶„ë¦¬ Â· ì£¼ì¸ out/precision20-ui.js:drawFontSets
+   037 finish ë³‘í•© êµ¬ì¡° ê°œì„ : ë¹„ì½”ë“œ ì»¤ë°‹ ê²½ìŸ ì‹œ ì¬ê²€ì‚¬ ìƒëµ + ê¸°ì¤€ Â· ì£¼ì¸ tools/track.py:finish
+   040 ì¥ë©´ê¾¸ë¯¸ê¸° ì œëª©Â·ì±„ë„ëª… ê·¸ë¦¼ì ë¯¸ì ìš© ë° ì‹œê° ê°œì„  Â· ì£¼ì¸ out/precision20-ui.js:applyTextLook
+   041 íƒ€ì…ìºìŠ¤íŠ¸ í‚¤ë§Œ ìˆëŠ” íšŒì› ê¸°ë³¸ ì„±ìš° = í•„ì¬(ì¼ë ˆë¸ ê¸°ë³¸ê°’ìœ¼ë¡œ 3ë‹¨ê³„  Â· ì£¼ì¸ shopping_shorts/store.py:get_last_voice
+   044 2ë‹¨ê³„ ëŒ€ë³¸ ì¹¸ ì¶”ê°€Â·ì´ë™(ëª¨ë“  ì•ˆ) + ë¹ˆ ì¹¸ì´ ì¥ë©´ ì¶œì²˜ ì¤„ë§ì¶¤ ê¹¨ëŠ” Â· ì£¼ì¸ shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA ìë¥´ê¸° â€” ì—­í• ì´ë¦„ ëˆ„ë½(ëŒ“ê¸€ìœ ë„Â·call_to_action) + Â· ì£¼ì¸ shopping_shorts/edit_plan.py:_is_cta
+   048 ì¦ê²¨ì°¾ê¸° ë¶„ì„ìƒíƒœ ìš”ì²­ì´ ì£¼ì†Œ í•œë„(8190B) ì´ˆê³¼ë¡œ 414 â€” ì¦ê²¨ì°¾ Â· ì£¼ì¸ shopping_shorts/static/collection.html:loadAnalysi
+   050 ë²„í…ìŠ¤ ë“±ë¡ì´ ë‹¤ ë§‰í˜ â€” ì¡°ì§ì •ì±…(í‚¤ ìƒì„± ì°¨ë‹¨) ì•ˆë‚´ ì¶”ê°€ + ê±°ì ˆ  Â· ì£¼ì¸ shopping_shorts/vertex_route.py:verify_sa
+   051 ì£¼ì¥ ë²ˆí˜¸ íƒœê¹… ì‹œí—˜(ê²½ìŸì‚¬ì‹ ì¥ë©´ ë§¤ì¹­ ê²€ì¦) Â· ì£¼ì¸ tools/claim_trial_video.py:run
+   052 ì˜ìƒ ê´€ë¬¸ì´ ìŒì„± ë¼ì¸ ëª¨ë“ˆë„ ë³‘í•©ë³¸ìœ¼ë¡œ ì–¹ê²Œ(ê´€ì œ 049 ì„ í–‰) Â· ì£¼ì¸ tools/video_gate.py:PATCH_RELS
+   053 ë²„í…ìŠ¤ 'ê¶Œí•œ ì—†ìŒ' ì˜¤ì§„ â€” ê²°ì œ ë¯¸ì—°ê²°ì„ ì—­í•  ë¬¸ì œë¡œ ì•ˆë‚´í•¨. ì˜¤ë¥˜  Â· ì£¼ì¸ shopping_shorts/vertex_route.py:_explain
+   054 ë ˆí¼ëŸ°ìŠ¤ ì¶”ì  ì¹´ë“œì—ì„œ ëŒ€ë³¸ ë¶„ì„ í›„ ê²€ìƒ‰ì–´ê°€ ì‚¬ë¼ì§(í”„ë ˆì„ ì—†ì´ ê²€ìƒ‰ì–´ Â· ì£¼ì¸ shopping_shorts/static/index.html:traceByUrl (ì„œë²„ t
+   057 ì¥ë©´ê¾¸ë¯¸ê¸° ìƒˆ í¸ì§‘ê¸° ê¸€ì ê°€ë…ì„±(ì„¤ëª…Â·ë©”ë‰´ ì§„í•˜ê²ŒÂ·í‚¤ì›€) Â· ì£¼ì¸ out/precision20-ui.css:ê°€ë…ì„± ë¸”ë¡
+   058 ì¥ë©´ê¾¸ë¯¸ê¸° í‹€ ì„ íƒ 4ì¢…: ì°í›…ê³ ì •/ì°í›…+ë³¸ë¬¸/ì°ë³¸ë¬¸/ì „ì¥ë©´ê³ ì • (fra Â· ì£¼ì¸ shopping_shorts/scene_style.py:context_for
+   060 ìœ íŠœë¸Œ ê²€ìƒ‰ê²°ê³¼(ë Œì¦ˆ í‚¤ì›Œë“œê²€ìƒ‰)ì—ì„œ ì‡¼ì¸  ì¹´ë“œ ë‹´ê¸° Â· ì£¼ì¸ shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 ì˜ìƒ íŒŒì¼ ì „ì†¡ì„ íŒŒì´ì¬ ëŒ€ì‹  ì•„íŒŒì¹˜ê°€(X-Sendfile) â€” ì›¹ í”„ë¡œ Â· ì£¼ì¸ shopping_shorts/app.py:_send_media(ì˜ìƒÂ·í•©ë³¸Â·ë¯¸ë¦¬ë³´ê¸°Â·ì™„ì„±ë³¸ 
+   064 ì¸ë„¤ì¼ í”„ë¡ì‹œ ì£½ì€ ì£¼ì†Œ ê¸°ì–µ 5ë¶„â†’í™•ì • 404/403ì€ 60ë¶„(ì ì§„)  Â· ì£¼ì¸ shopping_shorts/app.py:_thumb_neg_putÂ·api_thumb ì‹¤íŒ¨
+   065 ì¥ë©´ê¾¸ë¯¸ê¸° íš¨ê³¼ íƒ­ ë¡œê³  í•­ëª©(íŒŒì¼ ë¶ˆëŸ¬ì˜¤ê¸°, ì¸ë„¤ì¼ ë§¨ ìœ„, ë‚´ í”„ë¦¬ì…‹ Â· ì£¼ì¸ out/precision20-ui.js:effects(logo)
+   066 ì¥ë©´ê¾¸ë¯¸ê¸° í…œí”Œë¦¿ ì¹´ë“œì˜ ë² ë‚€ ì±„ë„ ì´ë¦„ ì‚­ì œ(ì´ë¸ì‡¼í•‘Â·ìˆí…œ ê¸°ë³¸í˜•Â·ì‚´ë¦¼ Â· ì£¼ì¸ out/precision20-data.js:name
+   067 ì˜ìƒ ê´€ë¬¸ì˜ ë¹„êµ ì‘ì—… ì„ ì •: updated_at ìµœì‹  â†’ 'ì™„ì„±ë³¸ì„ ìµœ Â· ì£¼ì¸ tools/editor_vs_final_video.py:_pick_jobs(ë¹„êµ ëŒ€ìƒ ì„ ì •
+   068 ê´€ì œ: ìŠ¹ì¸ íŒì •(ëˆÂ·íšŒì› ë°ì´í„°)ì—ì„œ í…ŒìŠ¤íŠ¸ íŒŒì¼(shopping_sh Â· ì£¼ì¸ tools/control.py:_approval_reasons(ìŠ¹ì¸ í•„ìš” íŒì •ì˜ ìœ ì¼í•œ ì
+   069 ê´€ì œ ìˆ˜ë¦¬ 3ê±´: â‘ ì˜ìƒ ì—†ëŠ” ì¹´ë“œ ê²€ì‚¬ ì¢…ë¥˜(url/api/ìˆ˜ë™)ë¡œ ì Â· ì£¼ì¸ tools/live_check.py:run_all + tools/video_gate.py:
+   070 ê´€ì œ: finish ê²Œì´íŠ¸ì˜ ì„œë²„ report(ì˜ìƒÂ·ìë§‰Â·ì†Œë¦¬Â·ìº¡ì»· ëŒ€ì¡° Â· ì£¼ì¸ tools/video_gate.py:_keep_report(report ë³´ê´€ì˜ ìœ ì¼í•œ ìë¦¬
+   071 ì˜ìƒ ê´€ë¬¸ì„ ì „í›„ ë¹„êµë¡œ: ê°™ì€ ì‘ì—…ì„ main ì½”ë“œÂ·ë³‘í•©ë³¸ ì½”ë“œë¡œ ê°ê° Â· ì£¼ì¸ tools/video_gate.py:run_video_gateÂ·judge
+   075 finish ê²Œì´íŠ¸ êµ¬ë© 2ê°œ: â‘ tools/ í…ŒìŠ¤íŠ¸ë„ ê²Œì´íŠ¸ì—ì„œ ëˆë‹¤( Â· ì£¼ì¸ tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 VeoëŠ” globalì— ì—†ë‹¤ â€” Veo í˜¸ì¶œë§Œ us-central1ë¡œ(íšŒ Â· ì£¼ì¸ shopping_shorts/vertex_route.py:veo_client
+   081 finish ì‹œê°„ ë‹¨ì¶•: â‘ ê¸°ì¤€ì„  ì „ì²´ í…ŒìŠ¤íŠ¸ ì œê±°(ì‹¤íŒ¨ë§Œ main ì¬í™• Â· ì£¼ì¸ tools/track.py:_merge_and_gateÂ·_open_stageÂ·_FileLo
+   083 finish ë‹¨ì¶• í›„ì†: â‘ ì •í™•í•œ ê¸°ì¤€ì„ (ë³‘í•© ë•Œ ì „ì²´ ì‹¤íŒ¨ ëª©ë¡ì„ ì½”ë“œ Â· ì£¼ì¸ tools/track.py:_merge_and_gateÂ·mainÂ·finish + tools
+   085 ê´€ë¬¸ ëª¨ë“ˆ ëª©ë¡ 6ë²Œì„ í•˜ë‚˜ë¡œ: video_gate.PATCH_RELSÂ· Â· ì£¼ì¸ tools/gate_modules.py:PATCH_MODULESÂ·WATCH_FILES
+   088 finish: ë‹¤ ëœ ê²ƒë§Œ ì¤„ ì„ ë‹¤ â€” í…ŒìŠ¤íŠ¸Â·ì˜ìƒ ê´€ë¬¸ì„ ì¤„ ë°–ì—ì„œ(C Â· ì£¼ì¸ tools/track.py:finishÂ·_merge_and_gateÂ·_gate_slot +
+   089 finish ì‹œê°„ ê³„ì¸¡Â·ì¬ì‹¤í–‰ ì œê±°: finish ë¡œê·¸ì— ì‹œê°+ë‹¨ê³„ë³„ ì§‘ Â· ì£¼ì¸ tools/video_gate.py:run_video_gate + tools/track.p
+   090 ì˜ìƒ ê´€ë¬¸ ì‘ì—… ì„ ì •: ìµœê·¼ 6ê°œ â†’ ìœ í˜•ë³„(ì²­ì†Œë³¸ ì „ë¶€/ì¼ë¶€/ì—†ìŒÂ·íš¨ê³¼ Â· ì£¼ì¸ tools/editor_vs_final_video.py:_pick_jobs
+   091 ê²Œì´íŠ¸ ì‹¤íŒ¨ ë¶„ë¥˜ ìˆ˜ë¦¬: ë³‘í•©ë³¸ ì¬í™•ì¸(ìš°ì—° ì‹¤íŒ¨ ê±°ë¥´ê¸°)ì„ ë¨¼ì €Â·mai Â· ì£¼ì¸ tools/track.py:_classify_new_failuresÂ·_rerun_on_ma
+   092 finish ìì› ê´€ë¬¸+ì¬ì‹œë„ ë¹„ìš©: ì‹œí—˜ ì‹œì‘ ì „ ë‚¨ì€ ë©”ëª¨ë¦¬Â·CPU  Â· ì£¼ì¸ tools/track.py:_gate_slotÂ·_merge_and_gate(ì¬ì‹œë„)
+   093 finish íŒë³¸: main í´ë”(ë”ëŸ¬ìš°ë©´ ë™ê¸°í™” ë§‰í˜€ 51ì»¤ë°‹ ë‚¡ìŒ)  Â· ì£¼ì¸ tools/track.py:_reexec_latest
+   094 ì¸ìŠ¤íƒ€ íŒì—…ì—ì„œ ë‹´ê¸°Â·ë Œì¦ˆÂ·ì±„ë„ìˆ˜ì§‘ ë²„íŠ¼ê³¼ ì†ë„ì°½ì´ ë³¸ë¬¸ ê¸€ìë¥¼ ê°€ë¦¼ â€” Â· ì£¼ì¸ shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 ë²„í…ìŠ¤ í‚¤ ì›í´ë¦­: í´ë¼ìš°ë“œ ì…¸ í•œ ì¤„ë¡œ APIÂ·ì„œë¹„ìŠ¤ê³„ì •Â·ì—­í• Â·í‚¤ì°¨ë‹¨í•´ Â· ì£¼ì¸ shopping_shorts/static/landing/vertex_setup.sh
+   099 ì˜ìƒ ê´€ë¬¸ì´ ì™„ì„±ë³¸ í•œ ì¥ ë²ˆì©ì„(ë‹¤ë¥¸ ìë¦¬ ê·¸ë¦¼ 1í”„ë ˆì„)ì„ ëª» ì¡ëŠ”ë‹¤ Â· ì£¼ì¸ tools/editor_vs_final_video.py(ì™„ì„±ë³¸ í”„ë ˆì„ íŒì • â€” ê´€ë¬¸Â·ë§¤ì¼ 
+   101 ì¥ë©´ê¾¸ë¯¸ê¸° í˜ì´ì§€ ê·¸ë¦¼ì´ ê·¸ í˜ì´ì§€ ì‹œê°ì´ ì•„ë‹ˆë¼ ì¹¸ ëŒ€í‘œ ê·¸ë¦¼ í•œ ì¥  Â· ì£¼ì¸ shopping_shorts/app.py:_beatframe_file
+   102 ì¥ë©´ê¾¸ë¯¸ê¸° ë‹¨ì–´ ê°•ì¡° â€” ë§í•˜ëŠ” ë‹¨ì–´ë¥¼ ë”°ë¼ ë°•ìŠ¤Â·ìƒ‰ ë°”ë€œÂ·ì‚´ì§ í‚¤ìš°ê¸°  Â· ì£¼ì¸ shopping_shorts/scene_style.py:context_for
+   103 ì¥ë©´ê¾¸ë¯¸ê¸° ê¸€ì ì§ì ‘ ì¡°ì ˆ â€” ì†ìœ¼ë¡œ ì •í•œ í¬ê¸°ëŠ” ê·¸ëŒ€ë¡œ(ìë™ ì¤„ì„Â·ìë™ Â· ì£¼ì¸ out/precision20-ui.js:addText
+   104 ì¥ë©´ê¾¸ë¯¸ê¸° ë¯¸ë¦¬ë³´ê¸°: í˜ì´ì§€ ë„˜ê¸¸ ë•Œ ê°€ë¦¼ë§‰ì´ ë¨¼ì € ëë‚˜ ë³´ì„(ì˜› ê·¸ë¦¼  Â· ì£¼ì¸ out/precision20-ui.js:draw(ì¥ë©´ ê·¸ë¦¼ êµì²´)
+   105 ê³ ê° ë…¸ì¶œ ìë¦¬ì—ì„œ íƒ€ì‚¬ ì´ë¦„(ë‡Œì „êµ¬Â·ë³¼ì¼€ì´ë…¸) ì „ë¶€ ì œê±° â€” íš¨ê³¼ìŒÂ·ë°ˆ Â· ì£¼ì¸ shopping_shorts/scene_match.py:_has_pack
+   111 ìë§‰ì œê±°: ì´ë¯¸ ì§€ìš´ ì¥ë©´ì„ ê°™ì€ ë°©ì‹ìœ¼ë¡œ ë‹¤ì‹œ ê³¨ë¼ [ìë§‰ì œê±° ì‹œì‘í•˜ê¸° Â· ì£¼ì¸ shopping_shorts/static/produce.html:paintCleanPick
+   113 ëª©ì†Œë¦¬ ë¯¸ë¦¬ë“£ê¸°: ìŒì„± ì—…ì²´ê°€ ê±°ì ˆí•˜ë©´ 500 ëŒ€ì‹  ì›ì¸ ì•ˆë‚´(íƒ€ì…ìºìŠ¤íŠ¸ Â· ì£¼ì¸ shopping_shorts/app.py:_tts_vendor_message
+   114 ë²„í¼ ì˜ˆì•½ ì¤‘ë³µ ë°©ì§€ + ì˜ˆì•½ ì·¨ì†Œ + í˜ì´ìŠ¤ë¶ ê±°ì ˆ ìˆ˜ë¦¬ Â· ì£¼ì¸ shopping_shorts/buffer_posts.py:already_scheduled
+   115 íš¨ê³¼ìŒ ì„¤ì •ì„ ë°”ê¾¼ ë’¤ ì™„ì„±ë³¸ ë§Œë“¤ê¸° íƒ­ì„ ëˆŒëŸ¬ë„ ë‹¤ì‹œ ì•ˆ ë§Œë“¤ì–´ì§„ë‹¤ â€” Â· ì£¼ì¸ shopping_shorts/static/scene_lab.html:sfxpSave
+ì˜ìƒ ì‹¤ì¸¡ ëŒ€ìƒ 14ì¥(047, 049, 055, 059, 061, 063, 073, 077, 084, 086, 095, 100, 106, 110) Â· ë³‘í•© ë’¤ ìµœëŒ€ 72ì‹œê°„ Â· ì„œë²„ì—ì„œ 4ì‘ì—… ê²€ì‚¬ ì¤‘â€¦
+âŒ ì–´ê¸‹ë‚¨ Â· ëŒ€ìƒ: ìµœê·¼ 72ì‹œê°„ ë¯¸ë¦¬ë³´ê¸° ì¤€ë¹„ ì‘ì—… 4ê°œ (ìƒí•œ 4) ['e56f4b733d54', 'c71cb1395328', '49e10cb2c30b', 'dbbba1872f23'] / íŒì • ê·¼ê±°: == ì¹¸ 43 Â· ë‹¤ë¥¸ ì¥ë©´ 0 Â· 0.15ì´ˆ ì´ìƒ ë°€ë¦¼(ê°€ìš´ë°) 0 Â· ê²½ê³„ ë°€ë¦¼ 0 Â· ì •ì§€ì»·ë§Œ ë°€ë¦¼ 0
+   ì¹´ë“œ 14ì¥ì— ê¸°ë¡ Â· ìƒíƒœ íšŒê·€
+[2026-10-04 12:58:32] â–  ë rc=1
+[2026-10-04 13:41:02] â–¶ tools\live_check.py --all
+[2026-10-04 13:41]
+ìˆ˜ë™ í™•ì¸ ëŒ€ê¸° 57ì¥ â€” ì‚¬ì¥ë‹˜ì´ ë³´ê³  ë‹«ëŠ”ë‹¤: py tools/control.py status <ë²ˆí˜¸> ì™„ë£Œ  (ë˜ëŠ” ê²€ì‚¬ ì¹¸: py tools/control.py set <ë²ˆí˜¸> ê²€ì‚¬ "url /ê²½ë¡œ ê¸€ì")
+   002 ì˜í–¥ ì§€ë„ tools/impact.py â€” í˜¸ì¶œ ê·¸ë˜í”„ë¡œ ì†Œë¹„ì²˜Â·ê²€ì‚¬Â·ìŠ¹ Â· ì£¼ì¸ tools/impact.py(ì‹ ì„¤)
+   003 ë¼ì´ë¸Œ ì‹¤ì¸¡ íŒŒì´í”„ë¼ì¸ tools/live_check.py --card  Â· ì£¼ì¸ tools/live_check.py(ì‹ ì„¤)
+   023 ì €ì¥ ì¸µ(C/D) ê´€ì œ â€” ì™¸ì¥ D:\ìˆí…œ ì„ ì§€ë„(ê´€ì œ/storage. Â· ì£¼ì¸ tools/storage.py:plan
+   025 ì‹¬íš¨ì§„(451) ìŒì„± ì°¨ë‹¨ ë©´ì œ â€” ì‚¬ì¥ë‹˜ ì¼ë ˆë¸ í‚¤ ê°œë°© Â· ì£¼ì¸ shopping_shorts/keyroute.py:is_block_exempt
+   030 ì¥ë©´ê¾¸ë¯¸ê¸° ê¸€ì ë‘ê»˜Â·ê·¸ë¦¼ì ìŠ¬ë¼ì´ë”Â·ìˆ˜ì¹˜ Â· ì£¼ì¸ out/precision20-ui.js:drawFontSets
+   031 job ì‹¤íŒ¨ ì‹œ 1ë‹¨ê³„ ì ê¸ˆ ë¬¸êµ¬ ëŒ€ì‹  ì‹¤íŒ¨ ì‚¬ìœ  í‘œì‹œ Â· ì£¼ì¸ shopping_shorts/static/produce.html:stepLockMsg
+   032 ìƒˆ í¸ì§‘ê¸° ì±„ë„ëª… ê¸°ë³¸ê°’=ê³„ì • ë‚´ ì±„ë„ëª…(í”„ë¦¬ì…‹ ì ìš© ì‹œ ìˆí…œë©”ì´ì»¤ë¡œ ëŒ Â· ì£¼ì¸ shopping_shorts/scene_style.py:account_channel
+   035 ì„œë²„ ë””ìŠ¤í¬ ê°€ë“ ì°¸ ì¬ë°œ ë°©ì§€(find_frames ì²­ì†ŒÂ·ë””ìŠ¤í¬ ê²½ë³´Â· Â· ì£¼ì¸ shopping_shorts/disk_cleanup.py:run
+   036 ì¥ë©´ê¾¸ë¯¸ê¸° ì¸ë„¤ì¼ ë™ì¼ ê·¸ë¦¼ìÂ·ëŒ€ìƒë³„ ë¶„ë¦¬ Â· ì£¼ì¸ out/precision20-ui.js:drawFontSets
+   037 finish ë³‘í•© êµ¬ì¡° ê°œì„ : ë¹„ì½”ë“œ ì»¤ë°‹ ê²½ìŸ ì‹œ ì¬ê²€ì‚¬ ìƒëµ + ê¸°ì¤€ Â· ì£¼ì¸ tools/track.py:finish
+   040 ì¥ë©´ê¾¸ë¯¸ê¸° ì œëª©Â·ì±„ë„ëª… ê·¸ë¦¼ì ë¯¸ì ìš© ë° ì‹œê° ê°œì„  Â· ì£¼ì¸ out/precision20-ui.js:applyTextLook
+   041 íƒ€ì…ìºìŠ¤íŠ¸ í‚¤ë§Œ ìˆëŠ” íšŒì› ê¸°ë³¸ ì„±ìš° = í•„ì¬(ì¼ë ˆë¸ ê¸°ë³¸ê°’ìœ¼ë¡œ 3ë‹¨ê³„  Â· ì£¼ì¸ shopping_shorts/store.py:get_last_voice
+   044 2ë‹¨ê³„ ëŒ€ë³¸ ì¹¸ ì¶”ê°€Â·ì´ë™(ëª¨ë“  ì•ˆ) + ë¹ˆ ì¹¸ì´ ì¥ë©´ ì¶œì²˜ ì¤„ë§ì¶¤ ê¹¨ëŠ” Â· ì£¼ì¸ shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA ìë¥´ê¸° â€” ì—­í• ì´ë¦„ ëˆ„ë½(ëŒ“ê¸€ìœ ë„Â·call_to_action) + Â· ì£¼ì¸ shopping_shorts/edit_plan.py:_is_cta
+   048 ì¦ê²¨ì°¾ê¸° ë¶„ì„ìƒíƒœ ìš”ì²­ì´ ì£¼ì†Œ í•œë„(8190B) ì´ˆê³¼ë¡œ 414 â€” ì¦ê²¨ì°¾ Â· ì£¼ì¸ shopping_shorts/static/collection.html:loadAnalysi
+   050 ë²„í…ìŠ¤ ë“±ë¡ì´ ë‹¤ ë§‰í˜ â€” ì¡°ì§ì •ì±…(í‚¤ ìƒì„± ì°¨ë‹¨) ì•ˆë‚´ ì¶”ê°€ + ê±°ì ˆ  Â· ì£¼ì¸ shopping_shorts/vertex_route.py:verify_sa
+   051 ì£¼ì¥ ë²ˆí˜¸ íƒœê¹… ì‹œí—˜(ê²½ìŸì‚¬ì‹ ì¥ë©´ ë§¤ì¹­ ê²€ì¦) Â· ì£¼ì¸ tools/claim_trial_video.py:run
+   052 ì˜ìƒ ê´€ë¬¸ì´ ìŒì„± ë¼ì¸ ëª¨ë“ˆë„ ë³‘í•©ë³¸ìœ¼ë¡œ ì–¹ê²Œ(ê´€ì œ 049 ì„ í–‰) Â· ì£¼ì¸ tools/video_gate.py:PATCH_RELS
+   053 ë²„í…ìŠ¤ 'ê¶Œí•œ ì—†ìŒ' ì˜¤ì§„ â€” ê²°ì œ ë¯¸ì—°ê²°ì„ ì—­í•  ë¬¸ì œë¡œ ì•ˆë‚´í•¨. ì˜¤ë¥˜  Â· ì£¼ì¸ shopping_shorts/vertex_route.py:_explain
+   054 ë ˆí¼ëŸ°ìŠ¤ ì¶”ì  ì¹´ë“œì—ì„œ ëŒ€ë³¸ ë¶„ì„ í›„ ê²€ìƒ‰ì–´ê°€ ì‚¬ë¼ì§(í”„ë ˆì„ ì—†ì´ ê²€ìƒ‰ì–´ Â· ì£¼ì¸ shopping_shorts/static/index.html:traceByUrl (ì„œë²„ t
+   057 ì¥ë©´ê¾¸ë¯¸ê¸° ìƒˆ í¸ì§‘ê¸° ê¸€ì ê°€ë…ì„±(ì„¤ëª…Â·ë©”ë‰´ ì§„í•˜ê²ŒÂ·í‚¤ì›€) Â· ì£¼ì¸ out/precision20-ui.css:ê°€ë…ì„± ë¸”ë¡
+   058 ì¥ë©´ê¾¸ë¯¸ê¸° í‹€ ì„ íƒ 4ì¢…: ì°í›…ê³ ì •/ì°í›…+ë³¸ë¬¸/ì°ë³¸ë¬¸/ì „ì¥ë©´ê³ ì • (fra Â· ì£¼ì¸ shopping_shorts/scene_style.py:context_for
+   060 ìœ íŠœë¸Œ ê²€ìƒ‰ê²°ê³¼(ë Œì¦ˆ í‚¤ì›Œë“œê²€ìƒ‰)ì—ì„œ ì‡¼ì¸  ì¹´ë“œ ë‹´ê¸° Â· ì£¼ì¸ shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 ì˜ìƒ íŒŒì¼ ì „ì†¡ì„ íŒŒì´ì¬ ëŒ€ì‹  ì•„íŒŒì¹˜ê°€(X-Sendfile) â€” ì›¹ í”„ë¡œ Â· ì£¼ì¸ shopping_shorts/app.py:_send_media(ì˜ìƒÂ·í•©ë³¸Â·ë¯¸ë¦¬ë³´ê¸°Â·ì™„ì„±ë³¸ 
+   064 ì¸ë„¤ì¼ í”„ë¡ì‹œ ì£½ì€ ì£¼ì†Œ ê¸°ì–µ 5ë¶„â†’í™•ì • 404/403ì€ 60ë¶„(ì ì§„)  Â· ì£¼ì¸ shopping_shorts/app.py:_thumb_neg_putÂ·api_thumb ì‹¤íŒ¨
+   065 ì¥ë©´ê¾¸ë¯¸ê¸° íš¨ê³¼ íƒ­ ë¡œê³  í•­ëª©(íŒŒì¼ ë¶ˆëŸ¬ì˜¤ê¸°, ì¸ë„¤ì¼ ë§¨ ìœ„, ë‚´ í”„ë¦¬ì…‹ Â· ì£¼ì¸ out/precision20-ui.js:effects(logo)
+   066 ì¥ë©´ê¾¸ë¯¸ê¸° í…œí”Œë¦¿ ì¹´ë“œì˜ ë² ë‚€ ì±„ë„ ì´ë¦„ ì‚­ì œ(ì´ë¸ì‡¼í•‘Â·ìˆí…œ ê¸°ë³¸í˜•Â·ì‚´ë¦¼ Â· ì£¼ì¸ out/precision20-data.js:name
+   067 ì˜ìƒ ê´€ë¬¸ì˜ ë¹„êµ ì‘ì—… ì„ ì •: updated_at ìµœì‹  â†’ 'ì™„ì„±ë³¸ì„ ìµœ Â· ì£¼ì¸ tools/editor_vs_final_video.py:_pick_jobs(ë¹„êµ ëŒ€ìƒ ì„ ì •
+   068 ê´€ì œ: ìŠ¹ì¸ íŒì •(ëˆÂ·íšŒì› ë°ì´í„°)ì—ì„œ í…ŒìŠ¤íŠ¸ íŒŒì¼(shopping_sh Â· ì£¼ì¸ tools/control.py:_approval_reasons(ìŠ¹ì¸ í•„ìš” íŒì •ì˜ ìœ ì¼í•œ ì
+   069 ê´€ì œ ìˆ˜ë¦¬ 3ê±´: â‘ ì˜ìƒ ì—†ëŠ” ì¹´ë“œ ê²€ì‚¬ ì¢…ë¥˜(url/api/ìˆ˜ë™)ë¡œ ì Â· ì£¼ì¸ tools/live_check.py:run_all + tools/video_gate.py:
+   070 ê´€ì œ: finish ê²Œì´íŠ¸ì˜ ì„œë²„ report(ì˜ìƒÂ·ìë§‰Â·ì†Œë¦¬Â·ìº¡ì»· ëŒ€ì¡° Â· ì£¼ì¸ tools/video_gate.py:_keep_report(report ë³´ê´€ì˜ ìœ ì¼í•œ ìë¦¬
+   071 ì˜ìƒ ê´€ë¬¸ì„ ì „í›„ ë¹„êµë¡œ: ê°™ì€ ì‘ì—…ì„ main ì½”ë“œÂ·ë³‘í•©ë³¸ ì½”ë“œë¡œ ê°ê° Â· ì£¼ì¸ tools/video_gate.py:run_video_gateÂ·judge
+   075 finish ê²Œì´íŠ¸ êµ¬ë© 2ê°œ: â‘ tools/ í…ŒìŠ¤íŠ¸ë„ ê²Œì´íŠ¸ì—ì„œ ëˆë‹¤( Â· ì£¼ì¸ tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 VeoëŠ” globalì— ì—†ë‹¤ â€” Veo í˜¸ì¶œë§Œ us-central1ë¡œ(íšŒ Â· ì£¼ì¸ shopping_shorts/vertex_route.py:veo_client
+   081 finish ì‹œê°„ ë‹¨ì¶•: â‘ ê¸°ì¤€ì„  ì „ì²´ í…ŒìŠ¤íŠ¸ ì œê±°(ì‹¤íŒ¨ë§Œ main ì¬í™• Â· ì£¼ì¸ tools/track.py:_merge_and_gateÂ·_open_stageÂ·_FileLo
+   083 finish ë‹¨ì¶• í›„ì†: â‘ ì •í™•í•œ ê¸°ì¤€ì„ (ë³‘í•© ë•Œ ì „ì²´ ì‹¤íŒ¨ ëª©ë¡ì„ ì½”ë“œ Â· ì£¼ì¸ tools/track.py:_merge_and_gateÂ·mainÂ·finish + tools
+   085 ê´€ë¬¸ ëª¨ë“ˆ ëª©ë¡ 6ë²Œì„ í•˜ë‚˜ë¡œ: video_gate.PATCH_RELSÂ· Â· ì£¼ì¸ tools/gate_modules.py:PATCH_MODULESÂ·WATCH_FILES
+   088 finish: ë‹¤ ëœ ê²ƒë§Œ ì¤„ ì„ ë‹¤ â€” í…ŒìŠ¤íŠ¸Â·ì˜ìƒ ê´€ë¬¸ì„ ì¤„ ë°–ì—ì„œ(C Â· ì£¼ì¸ tools/track.py:finishÂ·_merge_and_gateÂ·_gate_slot +
+   089 finish ì‹œê°„ ê³„ì¸¡Â·ì¬ì‹¤í–‰ ì œê±°: finish ë¡œê·¸ì— ì‹œê°+ë‹¨ê³„ë³„ ì§‘ Â· ì£¼ì¸ tools/video_gate.py:run_video_gate + tools/track.p
+   090 ì˜ìƒ ê´€ë¬¸ ì‘ì—… ì„ ì •: ìµœê·¼ 6ê°œ â†’ ìœ í˜•ë³„(ì²­ì†Œë³¸ ì „ë¶€/ì¼ë¶€/ì—†ìŒÂ·íš¨ê³¼ Â· ì£¼ì¸ tools/editor_vs_final_video.py:_pick_jobs
+   091 ê²Œì´íŠ¸ ì‹¤íŒ¨ ë¶„ë¥˜ ìˆ˜ë¦¬: ë³‘í•©ë³¸ ì¬í™•ì¸(ìš°ì—° ì‹¤íŒ¨ ê±°ë¥´ê¸°)ì„ ë¨¼ì €Â·mai Â· ì£¼ì¸ tools/track.py:_classify_new_failuresÂ·_rerun_on_ma
+   092 finish ìì› ê´€ë¬¸+ì¬ì‹œë„ ë¹„ìš©: ì‹œí—˜ ì‹œì‘ ì „ ë‚¨ì€ ë©”ëª¨ë¦¬Â·CPU  Â· ì£¼ì¸ tools/track.py:_gate_slotÂ·_merge_and_gate(ì¬ì‹œë„)
+   093 finish íŒë³¸: main í´ë”(ë”ëŸ¬ìš°ë©´ ë™ê¸°í™” ë§‰í˜€ 51ì»¤ë°‹ ë‚¡ìŒ)  Â· ì£¼ì¸ tools/track.py:_reexec_latest
+   094 ì¸ìŠ¤íƒ€ íŒì—…ì—ì„œ ë‹´ê¸°Â·ë Œì¦ˆÂ·ì±„ë„ìˆ˜ì§‘ ë²„íŠ¼ê³¼ ì†ë„ì°½ì´ ë³¸ë¬¸ ê¸€ìë¥¼ ê°€ë¦¼ â€” Â· ì£¼ì¸ shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 ë²„í…ìŠ¤ í‚¤ ì›í´ë¦­: í´ë¼ìš°ë“œ ì…¸ í•œ ì¤„ë¡œ APIÂ·ì„œë¹„ìŠ¤ê³„ì •Â·ì—­í• Â·í‚¤ì°¨ë‹¨í•´ Â· ì£¼ì¸ shopping_shorts/static/landing/vertex_setup.sh
+   099 ì˜ìƒ ê´€ë¬¸ì´ ì™„ì„±ë³¸ í•œ ì¥ ë²ˆì©ì„(ë‹¤ë¥¸ ìë¦¬ ê·¸ë¦¼ 1í”„ë ˆì„)ì„ ëª» ì¡ëŠ”ë‹¤ Â· ì£¼ì¸ tools/editor_vs_final_video.py(ì™„ì„±ë³¸ í”„ë ˆì„ íŒì • â€” ê´€ë¬¸Â·ë§¤ì¼ 
+   101 ì¥ë©´ê¾¸ë¯¸ê¸° í˜ì´ì§€ ê·¸ë¦¼ì´ ê·¸ í˜ì´ì§€ ì‹œê°ì´ ì•„ë‹ˆë¼ ì¹¸ ëŒ€í‘œ ê·¸ë¦¼ í•œ ì¥  Â· ì£¼ì¸ shopping_shorts/app.py:_beatframe_file
+   102 ì¥ë©´ê¾¸ë¯¸ê¸° ë‹¨ì–´ ê°•ì¡° â€” ë§í•˜ëŠ” ë‹¨ì–´ë¥¼ ë”°ë¼ ë°•ìŠ¤Â·ìƒ‰ ë°”ë€œÂ·ì‚´ì§ í‚¤ìš°ê¸°  Â· ì£¼ì¸ shopping_shorts/scene_style.py:context_for
+   103 ì¥ë©´ê¾¸ë¯¸ê¸° ê¸€ì ì§ì ‘ ì¡°ì ˆ â€” ì†ìœ¼ë¡œ ì •í•œ í¬ê¸°ëŠ” ê·¸ëŒ€ë¡œ(ìë™ ì¤„ì„Â·ìë™ Â· ì£¼ì¸ out/precision20-ui.js:addText
+   104 ì¥ë©´ê¾¸ë¯¸ê¸° ë¯¸ë¦¬ë³´ê¸°: í˜ì´ì§€ ë„˜ê¸¸ ë•Œ ê°€ë¦¼ë§‰ì´ ë¨¼ì € ëë‚˜ ë³´ì„(ì˜› ê·¸ë¦¼  Â· ì£¼ì¸ out/precision20-ui.js:draw(ì¥ë©´ ê·¸ë¦¼ êµì²´)
+   105 ê³ ê° ë…¸ì¶œ ìë¦¬ì—ì„œ íƒ€ì‚¬ ì´ë¦„(ë‡Œì „êµ¬Â·ë³¼ì¼€ì´ë…¸) ì „ë¶€ ì œê±° â€” íš¨ê³¼ìŒÂ·ë°ˆ Â· ì£¼ì¸ shopping_shorts/scene_match.py:_has_pack
+   107 C ë””ìŠ¤í¬ê°€ ê³„ì† ì°¸: ê´€ë¬¸ ì„ì‹œí´ë”(gate_child) ë¯¸ì •ë¦¬ + ì˜ˆ Â· ì£¼ì¸ tools/merge_gate.py:_run Â· tools/control.py:schedu
+   109 ì €ì¥ì¸µ v3: 3ì¼+ ì•ˆ ì“´ ê²ƒì€ ì „ë¶€ D, ì“¸ ë•Œ ìë™ìœ¼ë¡œ C ë³µê·€(íŠ¸ Â· ì£¼ì¸ tools/storage.py:plan Â· tools/storage.py:ensure_wa
+   111 ìë§‰ì œê±°: ì´ë¯¸ ì§€ìš´ ì¥ë©´ì„ ê°™ì€ ë°©ì‹ìœ¼ë¡œ ë‹¤ì‹œ ê³¨ë¼ [ìë§‰ì œê±° ì‹œì‘í•˜ê¸° Â· ì£¼ì¸ shopping_shorts/static/produce.html:paintCleanPick
+   113 ëª©ì†Œë¦¬ ë¯¸ë¦¬ë“£ê¸°: ìŒì„± ì—…ì²´ê°€ ê±°ì ˆí•˜ë©´ 500 ëŒ€ì‹  ì›ì¸ ì•ˆë‚´(íƒ€ì…ìºìŠ¤íŠ¸ Â· ì£¼ì¸ shopping_shorts/app.py:_tts_vendor_message
+   114 ë²„í¼ ì˜ˆì•½ ì¤‘ë³µ ë°©ì§€ + ì˜ˆì•½ ì·¨ì†Œ + í˜ì´ìŠ¤ë¶ ê±°ì ˆ ìˆ˜ë¦¬ Â· ì£¼ì¸ shopping_shorts/buffer_posts.py:already_scheduled
+   115 íš¨ê³¼ìŒ ì„¤ì •ì„ ë°”ê¾¼ ë’¤ ì™„ì„±ë³¸ ë§Œë“¤ê¸° íƒ­ì„ ëˆŒëŸ¬ë„ ë‹¤ì‹œ ì•ˆ ë§Œë“¤ì–´ì§„ë‹¤ â€” Â· ì£¼ì¸ shopping_shorts/static/scene_lab.html:sfxpSave
+ì˜ìƒ ì‹¤ì¸¡ ëŒ€ìƒ 1ì¥(116) Â· ë³‘í•© ë’¤ ìµœëŒ€ 1ì‹œê°„ Â· ì„œë²„ì—ì„œ 4ì‘ì—… ê²€ì‚¬ ì¤‘â€¦
+âœ… í†µê³¼ Â· ëŒ€ìƒ: ìµœê·¼ 1ì‹œê°„ ë¯¸ë¦¬ë³´ê¸° ì¤€ë¹„ ì‘ì—… 1ê°œ (ìƒí•œ 4) ['e56f4b733d54'] / íŒì • ê·¼ê±°: == ì¹¸ 9 Â· ë‹¤ë¥¸ ì¥ë©´ 0 Â· 0.15ì´ˆ ì´ìƒ ë°€ë¦¼(ê°€ìš´ë°) 0 Â· ê²½ê³„ ë°€ë¦¼ 0 Â· ì •ì§€ì»·ë§Œ ë°€ë¦¼ 0
+   ì¹´ë“œ 1ì¥ì— ê¸°ë¡ Â· ìƒíƒœ ë¼ì´ë¸Œì‹¤ì¸¡
+[2026-10-04 13:48:57] â–  ë rc=0

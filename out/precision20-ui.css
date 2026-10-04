@@ -156,4 +156,27 @@
 /* 틀 고르기 5버튼(관제 058) — 위 3개(썰훅·훅만·썰만) / 아래 2개(인스타·원본그대로) */
 .layout-a .template-mode-bar{grid-template-columns:repeat(6,1fr)}
 .layout-a .template-mode-bar button{grid-column:span 3;height:36px;font-size:14px;padding:0 4px;white-space:nowrap}
-
+/* 단어 강조(2026-10-03 관제 102) — 지금 말하는 단어만 박스/색. 박스는 글자 뒤(z-index:-1)라 옆 글자를 가리지 않는다. */
+.precision-text.wfx-on{isolation:isolate}
+.precision-text .wfx-w{position:relative;display:inline-block;transform-origin:50% 60%}
+.precision-text .wfx-w.now{z-index:1}
+.precision-text.wfx-box .wfx-w.now::before{content:'';position:absolute;z-index:-1;left:-.16em;right:-.16em;top:-.02em;bottom:-.02em;border-radius:.24em;background:var(--wfx-color)}
+.precision-text.wfx-color .wfx-w.now{color:var(--wfx-color)!important}
+.word-fx-head{margin-top:14px}
+.word-fx-more{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.word-fx-more[hidden]{display:none}
+.word-fx-colors{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.word-fx-colors button{width:26px;height:26px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.18);cursor:pointer}
+.word-fx-colors button[data-word-fx-color=""]{width:auto;height:26px;padding:0 10px;border-radius:13px;background:transparent;color:inherit;font-size:12px}
+.word-fx-colors button.active{outline:2px solid #fff;outline-offset:2px}
+.word-fx-grow{display:flex;flex-direction:column;gap:6px}
+.word-fx-grow>span{font-size:12px;font-weight:800;color:#b9c7cf}
+/* 제목·채널명 칸도 Enter 로 줄을 바꾼다(2026-10-03 관제 103) — 한 줄 칸처럼 보이다가 줄 수만큼 자란다. */
+.layout-a .field textarea.one-line-field{font-size:14px;font-weight:700;resize:none;overflow:hidden;line-height:1.4;min-height:0;field-sizing:content}
+/* 칸 조절 줄 정리(2026-10-03 관제 103) — 칸 이름·글자 수는 윗줄, 크기·위치 조절은 이름을 붙여 아랫줄. */
+.layout-a .field label{flex-wrap:wrap;row-gap:6px}
+.layout-a .font-stepper{order:3;flex-basis:100%;margin:0;gap:5px}
+.layout-a .font-stepper .stp-label{font-size:11px;font-weight:700;color:#8fa3ad}
+.layout-a .font-stepper .stp-gap{margin-left:10px}
+.layout-a .font-stepper button{width:26px;height:24px}
+.layout-a .font-stepper [data-field-reset]{width:auto;margin-left:auto;padding:0 9px;font-size:11px;font-weight:800}
