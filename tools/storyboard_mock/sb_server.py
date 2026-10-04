@@ -17,6 +17,17 @@ def run_one(jid, key, roles, out, extra="", prev=""):
         out["_err_" + key] = (r.stderr or r.stdout)[-300:]
 
 
+def run_insert(q):
+    cmd = ("set -a; . /etc/shopping-shorts.env; set +a; cd /home/ubuntu/lotto-stock-wiki && "
+           "timeout 300 python3 /tmp/storyboard_trial.py insert %s 2>/dev/null | grep '^RESULT' | cut -c8-") % "".join(ch for ch in q["jid"] if ch.isalnum())
+    r = subprocess.run(["ssh", "-o", "ConnectTimeout=15", "-i", KEY, HOST, cmd], input=json.dumps({"board": q["board"], "extra": q.get("extra") or []}, ensure_ascii=False),
+                       capture_output=True, text=True, encoding="utf-8")
+    try:
+        return json.loads(r.stdout.strip() or "{}")
+    except ValueError:
+        return {"_err": (r.stderr or r.stdout)[-300:]}
+
+
 class H(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         body = open(PAGE, "rb").read()
@@ -25,6 +36,10 @@ class H(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         n = int(self.headers.get("Content-Length") or 0)
         q = json.loads(self.rfile.read(n) or b"{}")
+        if self.path == "/insert":
+            b = json.dumps(run_insert(q), ensure_ascii=False).encode("utf-8")
+            self.send_response(200); self.send_header("Content-Type", "application/json; charset=utf-8"); self.end_headers(); self.wfile.write(b)
+            return
         out, ths = {}, []
         for k in q.get("keys") or []:
             t = threading.Thread(target=run_one, args=(q["jid"], str(k), q.get("roles") or "", out, q.get("extra") or "", q.get("prev") or "")); t.start(); ths.append(t)

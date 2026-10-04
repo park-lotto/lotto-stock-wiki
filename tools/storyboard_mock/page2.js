@@ -36,28 +36,58 @@ function page2(){
     <div class="note">스타일은 참고만 — 우리 S급 히트 대본·승인 부품 말맛으로 창의적으로</div>${BUSY[key()+'auto']?'<div class="busy">⏳ 만드는 중…</div>':(made()['auto']?'<div class="done">✔ 만들어짐</div>':'')}</div>`;
   const rec = F.filter(f => recIds.has(String(f.id))), rest = F.filter(f => !recIds.has(String(f.id)));
   const n = picks2().size, busy = Object.keys(BUSY).some(k => k.startsWith(key()));
-  const tabs = Object.keys(made()).map(k => `<button class="btn ${VIEW[key()]===k?'on':''}" onclick="VIEW['${key()}']='${k}';render()">${k==='auto'?'AI 자동':((F.find(f=>String(f.id)===k)||{names:[k]}).names[0])} <span class="note">${made()[k].secs||''}초</span></button>`).join(' ');
+  const tabs = Object.keys(made()).map(k => `<button class="btn ${VIEW[key()]===k?'on':''}" onclick="VIEW['${key()}']='${k}';render()">${k==='auto'?'AI 자동':k==='mine'?'✍ 내가 직접 쓴 대본':((F.find(f=>String(f.id)===k)||{names:[k]}).names[0])} <span class="note">${made()[k].secs||''}초</span></button>`).join(' ');
   const bd = made()[VIEW[key()]];
   let body = '';
   if (bd){
     const ek = key()+VIEW[key()]; const lines = bd.slots.map((sl, i) => (EDIT[ek] && EDIT[ek][i] != null) ? EDIT[ek][i] : sl.line);
     const mine = new Set(Object.values(asg()).flatMap(s => [...s]));
-    const cells = bd.slots.map((sl, i) => { const hs = (sl.ids||[]).some(id => mine.has(id)); const ck = bd.check[i] || {};
-      const added = (bd.extra||[]).includes(String(sl.slot||'').split('_')[0].toLowerCase());
-      return `<div class="cell ${sl.weak?'weak':''} ${hs?'hasstar':''} ${added?'added':''}"><div class="ch"><b>${i+1}. ${ko(sl.slot)}${hs?' 🎯':''}</b><span>${sl.need||''}</span></div>${added?'<div class="addb">＋ 다시 쓰기로 추가한 칸</div>':''}${(i===0&&(bd.extra_missing||[]).length)?`<div class="why">⚠ 다시 쓰기에서 빠진 칸: ${bd.extra_missing.map(ko).join(', ')}</div>`:''}
-        <div class="cth">${cellCards(ek, i, sl, ck)}</div>${candBox(ek, i, sl, bd)}
-        <div class="line" contenteditable="true" oninput="(EDIT['${ek}']=EDIT['${ek}']||{})[${i}]=this.innerText;upd2()">${lines[i]}</div>
-        ${sl.weak?`<div class="why">⚠ ${sl.weak}</div>`:''}${sl.line_before?`<div class="meta">✎ 검수: "${sl.line_before}" → 제품 사실 빼고 고침</div>`:''}
-        <div class="meta">장면 ${ck.have}초 · 문장 ${ck.need}초</div></div>`; }).join('');
-    body = `<div class="sb"><div><div class="note" style="margin:6px 0">${bd.first_line_style||''} · 🎯 = 1단계에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요</div><div class="cells">${cells}</div>${xpick(ek, bd)}</div>
-      <div class="script"><b>📜 대본</b><ol id="scr">${lines.map(l=>'<li>'+l+'</li>').join('')}</ol><button class="btn main" style="width:100%">이 대본으로 확정 → 3단계</button></div></div>`;
+    const cells = bd.slots.map((sl, i) => { const hs = (sl.ids||[]).some(id => mine.has(id)); const ck = (bd.check||[])[i] || {};
+      const added = (bd.extra||[]).includes(String(sl.slot||'').split('_')[0].toLowerCase()) || sl.added;
+      const fixedTxt = sl.line_before ? `<div class="meta">✎ ${sl.fixed_why&&!sl.fixed_why.includes('사실')&&(made()[VIEW[key()]]||{}).mode==='insert'?'이어지게 고침':'검수'}: "${sl.line_before}"${sl.fixed_why?' — '+sl.fixed_why:''}</div>` : '';
+      return `<div class="row ${sl.weak?'weak':''} ${hs?'hasstar':''} ${added?'added':''} ${ck.short?'short':''}">
+        <div class="rl"><div class="rn">${i+1}</div><div><b>${ko(sl.slot)}${hs?' 🎯':''}</b><div class="rneed">${sl.need||''}</div>
+          ${added?'<div class="addb">＋ 끼워 넣은 칸</div>':''}${sl.cta_mark?'<div class="addb" style="background:#ff6fb1">📢 CTA 줄</div>':''}
+          <div class="rsec ${ck.short?'bad':''}">문장 ${ck.need||0}초 · 장면 ${ck.have||0}초</div></div></div>
+        <div class="rm"><div class="line" contenteditable="true" data-ph="${ko(sl.slot)} — 여기에 쓰세요" oninput="(EDIT['${ek}']=EDIT['${ek}']||{})[${i}]=this.innerText">${lines[i]}</div>
+          ${sl.weak?`<div class="why">⚠ ${sl.weak}</div>`:''}${fixedTxt}${(added&&sl.why_scene)?`<div class="meta">🎬 장면 고른 이유: ${sl.why_scene}</div>`:''}
+          ${(i===0&&(bd.extra_missing||[]).length)?`<div class="why">⚠ 끼워 넣기에서 빠진 칸: ${bd.extra_missing.map(ko).join(', ')}</div>`:''}
+          ${rowActs(i, bd.slots.length, sl)}</div>
+        <div class="rs"><div class="cth">${cellCards(ek, i, sl, ck)}</div>${candBox(ek, i, sl, bd)}</div></div>`; }).join('');
+    body = `<div class="note" style="margin:6px 0">${bd.first_line_style||''} · 🎯 = 1단계에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
+      <div class="rows">${cells}</div>${xpick(ek, bd)}
+      <div style="text-align:right;margin-top:10px"><button class="btn main">이 대본으로 확정 → 3단계</button></div>`;
   }
   return `<div class="pickbar"><b>대본 스타일 고르기</b> <span class="note">여러 개 골라도 돼요 · 고른 만큼 스토리보드가 따로 나와요 · 스타일 하나에 약 35초(동시에 만듦)</span>
       <span style="margin-left:auto"></span><span id="msg2" class="note"></span>
+      <button class="btn" title="AI 없이 내 대본을 그대로 — 지금 보고 있는 안의 칸 구성을 따라가요" onclick="mineDraft()">✍ 내가 직접 쓰기</button>
       <button class="btn main" ${n&&!busy?'':'disabled'} onclick="makeBoards()">${busy?'⏳ 만드는 중…':'선택한 '+n+'개로 스토리보드 만들기'}</button></div>
     <div class="fsec">대본 스타일 <span class="note">같은 칸 구조는 한 카드로 합침(${F.length}개) · ⭐ 추천 = 이 재료로 칸이 잘 채워지는 스타일</span></div><div class="fgrid">${auto}${F.map(famCard).join('')}</div>
     ${tabs?`<div class="box" style="margin-top:12px"><div class="bh">만든 스토리보드 ${tabs}</div>${body}</div>`:''}`;
 }
+// ── 라이브 대본 줄 기능 유지(2026-10-04 사장님 "대본 기능들과 대본 직접 쓰는 것들의 기능도 다 유지"): produce.html 2단계와 같은 버튼
+//    [바꾸기](라이브 부품 은행 — 시안에선 자리만) · [📢 CTA](한 줄만) · [🗑 빼기] · [▲▼](칸 이동 — 장면도 같이) · [＋](아래 빈 칸) · [✍ 내가 직접 쓰기]
+function bake(ek, bd){      // 손으로 고친 문장·장면 순서를 칸에 굳힌 뒤 구조를 바꾼다(칸 번호로 붙은 기억이 엇갈리지 않게)
+  bd.slots.forEach((sl, i) => { sl.ids = ordOf(ek, i, sl).slice(); if (EDIT[ek] && EDIT[ek][i] != null) sl.line = EDIT[ek][i]; });
+  [ORD, CAND].forEach(M => Object.keys(M).filter(o => o.startsWith(ek+'#')).forEach(o => delete M[o])); delete EDIT[ek];
+}
+function curBd(){ const k = VIEW[key()]; return [key()+k, made()[k]]; }
+function rowMove(i, d){ const [ek, bd] = curBd(); const t = i + d; if (t < 0 || t >= bd.slots.length) return; bake(ek, bd);
+  [bd.slots[i], bd.slots[t]] = [bd.slots[t], bd.slots[i]]; if (bd.check) [bd.check[i], bd.check[t]] = [bd.check[t], bd.check[i]]; render(); }
+function rowDel(i){ const [ek, bd] = curBd(); bake(ek, bd); bd.slots.splice(i, 1); if (bd.check) bd.check.splice(i, 1); render(); }
+function rowAdd(i){ const [ek, bd] = curBd(); bake(ek, bd); bd.slots.splice(i + 1, 0, {slot: 'free', need: '새 칸', line: '', ids: [], added: true});
+  if (bd.check) bd.check.splice(i + 1, 0, {have: 0, need: 0}); render(); }
+function rowCta(i){ const [ek, bd] = curBd(); const on = !bd.slots[i].cta_mark; bd.slots.forEach((s, k) => s.cta_mark = on && k === i); render(); }
+function rowSwap(i){ alertBox('[바꾸기]는 라이브의 부품 은행(같은 칸의 다른 승인 문장)을 그대로 씁니다 — 시안에선 자리만 보여요'); }
+function rowActs(i, n, sl){
+  return `<div class="racts"><button class="rb" onclick="rowSwap(${i})">바꾸기</button><button class="rb ${sl.cta_mark?'on':''}" title="이 줄이 CTA — 다시 누르면 해제" onclick="rowCta(${i})">📢 CTA</button>
+    <button class="rb" title="이 줄을 대본에서 뺍니다(장면 칸도 같이)" onclick="rowDel(${i})">🗑 빼기</button>
+    <span class="rmv"><button ${i===0?'disabled':''} onclick="rowMove(${i},-1)">▲</button><button ${i===n-1?'disabled':''} onclick="rowMove(${i},1)">▼</button><button title="아래에 빈 칸" onclick="rowAdd(${i})">＋</button></span></div>`; }
+function mineDraft(){      // ✍ 내가 직접 쓰기 — 지금 보고 있는 안의 칸 구성을 따라간다(없으면 기본 뼈대). AI를 부르지 않는다
+  const v = made()[VIEW[key()]]; const roles = v && v.slots ? v.slots.map(s => s.slot) : ['hook', 'problem', 'method', 'proof', 'cta'];
+  made()['mine'] = {names: ['내가 직접 쓴 대본'], mine: true, first_line_style: '내가 직접 쓴 대본 — 칸을 채우고, 칸마다 관련 후보에서 장면을 넣으세요',
+                    slots: roles.map(r => ({slot: r, need: '', line: '', ids: []})), check: roles.map(() => ({have: 0, need: 0}))};
+  VIEW[key()] = 'mine'; render(); }
 let ORD = {};
 function ordOf(ek, i, sl){ const k = ek + '#' + i; return ORD[k] = ORD[k] || [...(sl.ids||[])]; }
 function mv(ek, i, j, d){ const k = ek + '#' + i; const a = ORD[k]; const t = j + d; if (!a || t < 0 || t >= a.length) return; [a[j], a[t]] = [a[t], a[j]]; render(); }
@@ -66,7 +96,7 @@ function cellCards(ek, i, sl, ck){
   return ids.map((id, j) => { const p = job().pieces[id]; const sec = p ? Number(p.sec) : 0; const show = acc * 1.2 < need - 0.05; acc += sec;
     return `<div class="cc ${show?'':'off'}">${th(id, 60)}<div class="ccb">${picked.has(id)?'<span class="pk">고른 장면</span>':'<span class="aik">AI</span>'}
       <span class="mv" onclick="mv('${ek}',${i},${j},-1)">◀</span><span class="mv" onclick="mv('${ek}',${i},${j},1)">▶</span><span class="mv" title="이 칸에서 빼기" onclick="rmCard('${ek}',${i},${j})">✕</span></div>${show?'':'<div class="offt">안 나옴</div>'}</div>`; }).join(''); }
-function upd2(){ const ek = key()+VIEW[key()]; const bd = made()[VIEW[key()]]; if (!bd) return;
+function upd2(){ const ek = key()+VIEW[key()]; const bd = made()[VIEW[key()]]; if (!bd || !document.getElementById('scr')) return;
   document.getElementById('scr').innerHTML = bd.slots.map((sl,i)=>'<li>'+((EDIT[ek]&&EDIT[ek][i]!=null)?EDIT[ek][i]:sl.line)+'</li>').join(''); }
 // ── 칸 후보(2026-10-04 사장님 "한 장짜리 칸에도 관련 카드를 후보로"): 그 칸 장면과 같은 묶음 + AI 쓰임이 맞는 조각 중 아직 어느 칸에도 안 쓰인 것 — 흑백으로 접어 두고, 누르면 그 칸 뒤에 들어간다
 const SLOT_TAG = {hook:'훅감',title:'훅감',bait:'훅감',pain:'비포',problem:'비포',limit:'비포',mistake:'비포',regret:'비포',result:'애프터',land:'애프터',twist:'반전',cases:'반전',proof:'반응',react:'반응',witness:'반응',fame:'반응'};
@@ -92,19 +122,20 @@ function txtra(ek, r){ const s = xset(ek); s.has(r) ? s.delete(r) : s.add(r); re
 function xpick(ek, bd){
   const have = new Set(bd.slots.map(s => String(s.slot||'').split('_')[0].toLowerCase())); const opts = EXTRA.filter(([r]) => !have.has(r));
   if (!opts.length) return ''; const n = xset(ek).size, busy = BUSY[ek];
-  return `<div class="xpick"><b>＋ 대본을 더 탄탄하게 — 넣고 싶은 칸을 고르세요</b> <span class="note">고른 칸에 맞는 장면을 찾아 넣고 대본을 처음부터 다시 써요(약 35초) · 1단계에서 담은 장면은 그대로 앞에</span>
+  return `<div class="xpick"><b>＋ 대본을 더 탄탄하게 — 넣고 싶은 칸을 고르세요</b> <span class="note">지금 대본은 그대로 두고 고른 칸만 끼워요 — 우리 히트 스타일 접속어로 앞 칸에 이어 쓰고, 안 쓴 장면 중 그 문장을 보여 주는 장면을 골라요(약 20초)</span>
     <div class="xopts">${opts.map(([r, nm, d]) => `<span class="xo ${xset(ek).has(r)?'on':''}" onclick="txtra('${ek}','${r}')">${nm} <small>${d}</small></span>`).join('')}</div>
-    <button class="btn main" ${n&&!busy?'':'disabled'} onclick="rewrite()">${busy?'⏳ 다시 쓰는 중…':(n?'고른 '+n+'칸 넣어 다시 쓰기':'칸을 고르면 다시 써요')}</button></div>`; }
+    <button class="btn main" ${n&&!busy?'':'disabled'} onclick="rewrite()">${busy?'⏳ 끼워 넣는 중…':(n?'고른 '+n+'칸 끼워 넣기':'칸을 고르면 끼워 넣어요')}</button></div>`; }
 async function rewrite(){
+  // 끼워 넣기(2026-10-04 사장님): 대본을 처음부터 다시 쓰지 않는다 — 지금 스토리보드(손으로 고친 문장·장면 순서 포함)를 넘기고 고른 칸만 끼운다
   const k = VIEW[key()], ek = key()+k, bd = made()[k]; if (!bd) return;
-  const ex = [...new Set([...(bd.extra||[]), ...xset(ek)])].join(',');
+  const cur = Object.assign({}, bd, {slots: bd.slots.map((sl, i) => Object.assign({}, sl, {line: (EDIT[ek] && EDIT[ek][i] != null) ? EDIT[ek][i] : sl.line, ids: ordOf(ek, i, sl)}))});
   BUSY[ek] = BUSY[key()+k] = true; render(); const t0 = Date.now();
   try {
-    const r = await fetch('/gen', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({jid: key(), keys: [k], roles: rolesParam(), extra: ex, prev: bd.slots.map(x => x.slot).join(',')})});
+    const r = await fetch('/insert', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({jid: key(), board: cur, extra: [...xset(ek)]})});
     const d = await r.json();
-    if (d[k]){ made()[k] = Object.assign(d[k], {secs: Math.round((Date.now()-t0)/1000)}); Object.keys(ORD).filter(o => o.startsWith(ek+'#')).forEach(o => delete ORD[o]);
+    if (d.slots){ made()[k] = Object.assign(d, {secs: Math.round((Date.now()-t0)/1000)}); Object.keys(ORD).filter(o => o.startsWith(ek+'#')).forEach(o => delete ORD[o]);
       Object.keys(CAND).filter(o => o.startsWith(ek+'#')).forEach(o => delete CAND[o]); delete EDIT[ek]; XTRA[ek] = new Set(); }
-    else { console.log('[sb] 다시 쓰기 실패', d); alertBox('다시 쓰기 실패 — 다시 눌러 주세요'); }
-  } catch(e){ console.log('[sb] 요청 실패', e); alertBox('다시 쓰기 실패 — 시험 서버(127.0.0.1:8790)가 켜져 있어야 해요'); }
+    else { console.log('[sb] 끼워 넣기 실패', d); alertBox('끼워 넣기 실패 — 다시 눌러 주세요'); }
+  } catch(e){ console.log('[sb] 요청 실패', e); alertBox('끼워 넣기 실패 — 시험 서버(127.0.0.1:8790)가 켜져 있어야 해요'); }
   delete BUSY[ek]; delete BUSY[key()+k]; render();
 }

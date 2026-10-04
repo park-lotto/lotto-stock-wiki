@@ -117,8 +117,12 @@ P3C = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편�
 [말맛 재료 — 우리가 모은 승인 부품·히트 대본]
 %s
 
-칸 6~10개를 네가 정해라(첫 칸은 3초 안에 스크롤을 멈출 훅, 끝 칸은 마무리). 칸마다:
-- slot: 칸 이름(짧게), need: 그 칸이 하는 일
+칸 6~10개를 네가 정해라. ★흐름 틀(이 순서를 지켜라, 필요 없는 칸은 빼도 되고 같은 칸을 두 번 써도 된다):
+  hook(3초 안에 스크롤을 멈출 훅) → bait(궁금증) → pain(쓰기 전 불편, 선택) → reveal(정체 공개: 이건 OO) → feature(이건 이런 특징·쓰는 법)
+  → escalation(고조: 앞 효능보다 한 단계 더 센 것) → twist(반전: 예상 밖 쓰임·충격, 선택) → benefit(이점·반응·증거) → closing(마무리)
+  각 칸은 **제 역할을 하는 문장**이어야 한다 — twist 칸에 고조 문장, feature 칸에 마무리 문장을 쓰지 마라.
+칸마다:
+- slot: 위 영어 칸 이름 그대로(두 번째면 feature_2 처럼), need: 그 칸이 하는 일
 - ids: 그 칸 조각 번호 1~3개(목록에 있는 것만, 한 조각은 한 칸에만). 조각 길이 합 × 1.2 ≥ 문장 읽는 시간(글자 수 ÷ 7초).
 - line: 한 문장(12~45자). 화면에 보이는 장면을 구체 동작·질감으로, 과장·감탄·반전 허용. 화면 밖 이야기(가족 반응·전문가 출처·댓글 유도)도 허용.
   ★화면에 없는 가격·숫자·제품 기능은 지어내지 마라.
@@ -481,9 +485,222 @@ def families_json():
     print("RESULT " + json.dumps(out, ensure_ascii=False))
 
 
+# ── 칸 끼워 넣기(2026-10-04 사장님 "지금 나온 대본에 고조 한 칸을 더 — '이게 미친 포인트가'·'이게 말도 안 되는게' 같은 우리 접속어로,
+#    전체 문장이 어색하지 않게, 고조 장면도 잘 골라야 살아난다"): 대본을 처음부터 다시 쓰지 않는다. 있는 칸은 그대로 두고 고른 칸만 끼운다.
+#    접속어·문장 틀은 승인 스타일의 그 역할 칸 문장에서 실제로 뽑아 준다. 장면은 아직 안 쓴 조각을 쓰임·설명과 함께 주고 고르게 한다. 3.6 1번.
+EXTRA_KIN = {"escalation": ("escalation", "escalate", "more", "extra", "bonus"), "twist": ("twist", "cases"),
+             "proof": ("proof", "react", "witness", "fame", "spread"), "pain": ("pain", "problem", "limit", "mistake"),
+             "how": ("how", "howto", "method", "steps", "usage", "solve"), "reveal": ("reveal", "what", "origin"),
+             "bait": ("bait", "notice", "situation"), "result": ("result",)}
+EXTRA_TAG = {"escalation": ("애프터", "반전", "반응"), "twist": ("반전",), "proof": ("반응",), "pain": ("비포",), "result": ("애프터",),
+             "reveal": ("훅감", "애프터"), "how": (), "bait": ("훅감",)}
+EXTRA_HOW = {"escalation": "바로 앞 칸보다 **한 단계 더 센** 효능·장면. 앞 칸을 받아 '심지어 / 게다가 / 근데 진짜 미친 포인트는 / 이게 말도 안 되는게' 같은 접속어로 올라탄다",
+             "twist": "예상 밖 쓰임이나 충격 포인트. '근데 진짜 충격적인 포인트는 / 하지만 진짜 소름 돋는 반전은' 처럼 꺾는다",
+             "proof": "사람 반응·입소문·주변 반응으로 증명한다", "pain": "쓰기 전 겪던 답답함을 생생하게",
+             "how": "쓰는 과정이 쉽다는 걸 한 줄로", "reveal": "제품이 무엇인지 처음 제대로 밝힌다", "bait": "다음이 궁금해지게 한 줄 건다",
+             "result": "완성·효과가 눈에 보이는 순간"}
+S_INS = {"type": "object", "properties": {
+    "inserts": {"type": "array", "items": {"type": "object", "properties": {
+        "after": {"type": "integer"}, "slot": {"type": "string"}, "need": {"type": "string"}, "line": {"type": "string"},
+        "ids": {"type": "array", "items": {"type": "string"}}, "why_scene": {"type": "string"}}, "required": ["after", "slot", "line", "ids"]}},
+    "touch": {"type": "array", "items": {"type": "object", "properties": {
+        "i": {"type": "integer"}, "line": {"type": "string"}, "why": {"type": "string"}}, "required": ["i", "line"]}}},
+    "required": ["inserts"]}
+P_INS = """너는 쇼핑 쇼츠 대본 작가다. 아래는 **이미 완성된 스토리보드**다. 다시 쓰지 마라 — 고른 칸만 끼워 넣는다.
+
+[완성된 스토리보드] (칸 번호 | 칸 | 문장 | 쓰는 장면)
+%s
+
+[끼워 넣을 칸]
+%s
+
+[쓰는 법]
+- 끼울 자리는 흐름 틀(훅→미끼→불편→정체 공개→특징→고조→반전→이점·반응→마무리)대로 정해진다 — after 에 그 자리(그 칸 **뒤**) 번호를 적고, 문장은 그 바로 앞 칸을 받아 이어 써라.
+- 문장은 **앞 칸에서 이어지는 접속어로 시작**해 한 단계 끌어올린다. 아래 우리 히트 스타일 문장 틀의 결을 따라라(그대로 베끼지 말고 이 제품에 맞게).
+- 말투·어미·길이는 **앞뒤 칸과 똑같은 결**로(앞 칸이 '~다는 거'면 그 결, '~거 있죠'면 그 결). 한 칸 = 한 문장.
+- 강조어는 우리 것만: %s
+- 제품 사실(기능·숫자·가격)은 아래 장면 설명과 지금 대본에 있는 것만. 지어내지 마라.
+- 앞뒤 칸 문장은 **원문 그대로** 둔다. 끼운 문장 때문에 이어짐이 어색할 때만 바로 앞이나 뒤 **한 칸**을 최소로 고쳐 touch 에 적어라(칸 번호는 위 원래 번호, 고친 이유 한 줄).
+
+[장면 고르기 — 이게 대본만큼 중요하다]
+- 아래 **아직 안 쓴 장면**에서만 고른다. 끼운 문장이 말하는 걸 **화면이 그대로 보여 주는** 장면, 그중 시각적으로 가장 센 것.
+- 문장 길이(약 %s초)를 채울 만큼 1~3개. 이미 쓴 장면과 거의 같은 그림은 피한다. why_scene 에 고른 이유 한 줄.
+후보 (조각 번호 | 길이 | AI가 본 쓰임 | 화면 설명):
+%s
+"""
+
+
+def _tpl_for(db, extra):
+    got = []
+    names = EXTRA_KIN.get(extra, (extra,))
+    for (t,) in db.execute("select templates_json from spine where status='approved'"):
+        try:
+            d = json.loads(t or "{}") or {}
+        except ValueError:
+            continue
+        for r, v in d.items():
+            if str(r).split("_")[0].lower() in names:
+                for x in (v if isinstance(v, list) else [v]):
+                    if x and x not in got:
+                        got.append(x)
+    return got
+
+
+# ── 흐름 틀(2026-10-04 사장님 "정체 공개 후에 이건 이런 특징이 있는데 → 고조1 → 반전 → 이점… 자연스러워야"): 칸 이름 → 흐름 순위
+ARC_RANK = [(("hook", "title"), 0), (("bait", "notice", "situation", "ask", "context"), 1), (("pain", "problem", "limit", "mistake", "regret", "before"), 2),
+            (("reveal", "what", "origin", "identity", "intro"), 3),
+            (("feature", "how", "method", "steps", "usage", "solve", "easy", "ease", "action", "use", "power", "spec", "effect", "benefit_", "texture", "mechanism", "contrast", "more", "extra", "good"), 4),
+            (("escalation", "escalate", "bonus"), 5), (("twist", "cases", "shock"), 6),
+            (("benefit", "proof", "react", "witness", "fame", "spread", "scale", "authority", "result", "land_"), 7),
+            (("price", "deal", "cta", "closing", "land", "outro", "end"), 8)]
+ARC_KO = {"hook": "훅", "bait": "미끼(궁금증)", "pain": "불편", "reveal": "정체 공개", "feature": "특징·쓰는 법", "escalation": "고조", "twist": "반전",
+          "benefit": "이점·반응", "proof": "반응·증거", "how": "사용법", "result": "결과", "closing": "마무리"}
+
+
+def arc_rank(slot):
+    t = str(slot or "").lower()
+    b = t.split("_")[0]
+    for keys, r in ARC_RANK:          # 칸 이름 앞부분이 정확히 맞으면 그 순위
+        if b in keys:
+            return r
+    for keys, r in ARC_RANK:          # 아니면 들어 있는 낱말로(effect_water → effect → 특징)
+        if any(k.rstrip("_") in t for k in keys):
+            return r
+    return 4
+
+
+def arc_place(slots, extra):
+    """끼울 자리(그 칸 뒤 번호). 스타일마다 순서가 다르다(arc_audit.py 실측 18묶음 중 14개가 공통 틀과 다름 — 결과 → '심지어' 고조로 끝을 미는 틀,
+    가격·딜·반응이 첫 칸인 틀). 그래서 ① 첫 칸은 훅, 끝 칸은 마무리로 고정(그 사이에만 끼운다) ② 같은 종류 칸이 이미 있으면 그 바로 뒤(고조2)
+    ③ 없으면 흐름 순위가 extra 이하인 마지막 칸 뒤."""
+    n = len(slots)
+    if n < 2:
+        return n
+    kin = EXTRA_KIN.get(extra, (extra,))
+    same = [i for i, x in enumerate(slots[1:n - 1], 1) if str(x.get("slot") or "").split("_")[0].lower() in kin]
+    if same:
+        return same[-1] + 1
+    r = arc_rank(extra)
+    at = 1
+    for i, x in enumerate(slots[1:n - 1], 1):
+        if arc_rank(x.get("slot")) <= r:
+            at = i + 1
+    return at
+
+
+S_FLOW = {"type": "object", "properties": {"fix": {"type": "array", "items": {"type": "object", "properties": {
+    "n": {"type": "integer"}, "why": {"type": "string"}, "line": {"type": "string"}}, "required": ["n", "line"]}}}, "required": ["fix"]}
+P_FLOW = """너는 쇼핑 쇼츠 대본 **편집장**이다. 아래 스토리보드를 처음부터 끝까지 소리 내 읽는다고 생각하고 검수하라.
+흐름 틀: 훅 → 미끼 → (불편) → 정체 공개 → 특징·쓰는 법 → 고조(앞 효능보다 한 단계 더 센 것) → 반전(예상 밖·충격으로 꺾음) → 이점·반응 → 마무리
+
+(칸 번호 | 칸 역할 | 문장 | 화면)
+%s
+
+고칠 칸만 골라라:
+1) **역할을 못 하는 칸** — 반전 칸인데 꺾임이 없다 / 고조 칸인데 앞 칸보다 약하거나 같은 얘기 / 특징 칸인데 마무리 말투 등.
+2) **이어짐이 끊기는 칸** — 앞 문장을 받아 주는 접속어가 없어 뚝 끊기거나, 같은 접속어('심지어')가 연달아 반복.
+3) 같은 효능을 두 칸이 되풀이.
+고칠 때: 그 칸 **화면에 보이는 것**으로, 앞뒤와 같은 말투·어미, 한 문장(12~45자). 제품 사실(기능·숫자·가격)은 지금 대본과 화면 설명에 있는 것만.
+우리 접속어 결: %s
+강조어는 우리 것만: %s
+멀쩡한 칸은 건드리지 마라(최대 3칸). 출력 JSON만: {"fix":[{"n":칸번호,"why":"무엇이 어색했나 한 줄","line":"고친 문장"}]}
+"""
+
+
+def flow_review(slots, texts, voice):
+    """끼운 뒤 전체 흐름 검수(3.6 1번) — 역할 못 하는 칸·끊기는 이음만 고친다. 고친 칸은 line_before·fixed_why 로 남긴다."""
+    body = "\n".join("%d | %s | %s | %s" % (i + 1, ARC_KO.get(str(x.get("slot") or "").split("_")[0].lower(), x.get("need") or x.get("slot")), x.get("line"),
+                                             " / ".join(texts.get(c, "?")[:50] for c in x.get("ids") or []))
+                     for i, x in enumerate(slots))
+    conj = "심지어 / 게다가 / 근데 진짜 미친 포인트는 / 이게 말도 안 되는게 / 근데 진짜 충격적인 포인트는 / 알고 보니 / 그래서 / 덕분에 / 이 정도면"
+    n = {}
+    r = sg._call_json(P_FLOW % (body, conj, ", ".join(sorted(voice))), S_FLOW, note=n, vertex=True) or {}
+    done = []
+    for f in (r.get("fix") or [])[:3]:
+        i = f.get("n")
+        if isinstance(i, int) and 1 <= i <= len(slots) and (f.get("line") or "").strip() and f["line"].strip() != slots[i - 1].get("line"):
+            x = slots[i - 1]
+            x["line_before"], x["line"], x["fixed_why"] = x.get("line"), f["line"].strip(), "흐름 검수: " + (f.get("why") or "")
+            done.append(i)
+    return done, n.get("auth")
+
+
+def insert(jid, payload):
+    """[모드 insert] stdin = {"board": 지금 스토리보드, "extra": [칸...]} → 그 스토리보드에 고른 칸만 끼운 결과(3.6 1번)."""
+    db = sqlite3.connect("file:%s?mode=ro" % DB, uri=True)
+    R = json.load(open("/tmp/sbtrial_%s.json" % jid))
+    tag_of = R["inventory"].get("tag_of") or {}
+    ex = json.loads(db.execute("select extract_json from mix_jobs where job_id=?", (jid,)).fetchone()[0])
+    segs, texts = {}, {}
+    for vid, e in ex.items():
+        for s_ in (e or {}).get("segments") or []:
+            a, b = float(s_.get("start") or 0), float(s_.get("end") or 0)
+            if b - a < 0.6 or (s_.get("is_outro") and not s_.get("product_benefits")):
+                continue
+            segs[s_["seg_id"]] = round(b - a, 1)
+            texts[s_["seg_id"]] = "%s %s" % (s_.get("scene_desc") or "", s_.get("use_point") or "")
+    bd = payload["board"]
+    slots = [dict(x) for x in bd["slots"]]
+    have = {str(x.get("slot") or "").split("_")[0].lower() for x in slots}
+    extra = [e for e in payload.get("extra") or [] if e in EXTRA_DESC and e not in have]
+    used = {c for x in slots for c in (x.get("ids") or [])}
+    board_txt = "\n".join("%d | %s | %s | %s" % (i + 1, x.get("slot"), x.get("line"),
+                                                 " / ".join("%s(%s)" % (c, texts.get(c, "?")[:40]) for c in x.get("ids") or []))
+                          for i, x in enumerate(slots))
+    want_tags = set(t for e in extra for t in EXTRA_TAG.get(e, ()))
+    cand = [c for c in segs if c not in used]
+    cand.sort(key=lambda c: (0 if want_tags & set(tag_of.get(c) or []) else 1, -segs[c]))
+    cand_txt = "\n".join("%s | %.1f초 | %s | %s" % (c, segs[c], "/".join(tag_of.get(c) or []) or "-", texts.get(c, "")[:90]) for c in cand[:30])
+    ex_txt = "\n".join("- %s (%s): %s\n  우리 히트 스타일 문장 틀 예: %s" % (e, EXTRA_DESC[e], EXTRA_HOW[e], " / ".join(_tpl_for(db, e)[:10]) or "(없음)")
+                       for e in extra)
+    voice = set()
+    for (v,) in db.execute("select voice_json from spine where status='approved'"):
+        try:
+            voice.update((json.loads(v or "{}") or {}).get("intensifier") or [])
+        except ValueError:
+            pass
+    avg = sum(narr_secs(x.get("line") or "") for x in slots) / max(1, len(slots))
+    prompt = P_INS % (board_txt, ex_txt, ", ".join(sorted(voice)), "%.1f" % avg, cand_txt)
+    n = {}
+    r = (sg._call_json(prompt, S_INS, note=n, vertex=True) or {}) if extra else {}
+    ok_ids = set(cand)
+    ins = []
+    for it in r.get("inserts") or []:
+        sl = str(it.get("slot") or "").split("_")[0].lower()
+        if sl not in extra or any(x["slot"] == sl for x in ins):
+            continue
+        ids = [c for c in it.get("ids") or [] if c in ok_ids][:3]
+        ins.append({"after": arc_place(slots, sl), "slot": sl,
+                    "need": it.get("need") or EXTRA_DESC[sl].split(" — ")[0],
+                    "line": (it.get("line") or "").strip(), "ids": ids, "why_scene": it.get("why_scene") or "", "added": True})
+    touched = []
+    for t in (r.get("touch") or [])[:len(ins)]:
+        i = t.get("i")
+        if isinstance(i, int) and 1 <= i <= len(slots) and (t.get("line") or "").strip():
+            x = slots[i - 1]
+            x["line_before"], x["line"], x["fixed_why"] = x.get("line"), t["line"].strip(), t.get("why") or "이어짐"
+            touched.append(i)
+    for it in sorted(ins, key=lambda x: arc_rank(x["slot"])):      # 흐름 순위 순서로 하나씩 — 고조·반전을 같이 넣어도 고조 → 반전
+        it["after"] = arc_place(slots, it["slot"])
+        slots.insert(it["after"], it)
+    flow_fixed, auth2 = flow_review(slots, texts, voice) if ins else ([], None)
+    check, seen = [], set()
+    for x in slots:
+        ids = x.get("ids") or []
+        check.append({"bad_ids": [c for c in ids if c not in segs], "dup_ids": [c for c in ids if c in seen],
+                      "have": round(sum(segs.get(c, 0) for c in ids), 1), "need": round(narr_secs(x.get("line") or ""), 1)})
+        check[-1]["short"] = check[-1]["have"] * 1.2 < check[-1]["need"] - 0.2
+        seen.update(ids)
+    out = dict(bd, slots=slots, check=check, extra=sorted(set((bd.get("extra") or []) + [x["slot"] for x in ins])),
+               extra_missing=[e for e in extra if e not in [x["slot"] for x in ins]], touched=touched, flow_fixed=flow_fixed, auth=[n.get("auth"), auth2], mode="insert",
+               prompt_chars=len(prompt))
+    print("RESULT " + json.dumps(out, ensure_ascii=False))
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["gen"]:
         gen(sys.argv[2], sys.argv[3].split(","), *(sys.argv[4:8]))
+    elif sys.argv[1:2] == ["insert"]:
+        insert(sys.argv[2], json.load(sys.stdin))
     elif sys.argv[1:2] == ["families"]:
         families_json()
     else:
