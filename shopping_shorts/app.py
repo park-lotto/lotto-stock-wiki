@@ -4568,6 +4568,8 @@ def _explain_key_failure(service: str, code: int, body: str) -> str:
             return "ElevenLabs가 이 키를 인식하지 못합니다. 키를 새로 만들어 다시 넣어주세요."
     if service == keyroute.SVC_TYPECAST:
         # 타입캐스트는 목록 조회는 되고 합성만 403인 키가 있다(요금제 미가입·만료·크레딧 0). "값 확인"은 틀린 안내.
+        if code == 403 and any(k in (body or "").lower() for k in _TYPECAST_BLOCKED_KEYS):
+            return _TYPECAST_BLOCKED_MSG      # 계정 차단 — 요금제·크레딧 안내는 틀린 안내다(다시 넣어도 안 풀린다)
         if code == 403:
             return ("타입캐스트가 이 키의 음성 합성을 거부했습니다(403). 타입캐스트 API 요금제가 활성인지·크레딧이 "
                     "남았는지 확인해 주세요. 키 값 자체는 맞습니다.")
@@ -5231,6 +5233,16 @@ _BYOK_VENDORS = (
 _OUT_OF_CREDIT = ("402", "payment required", "not enough credits", "insufficient",
                   "[600", "quota exceeded for your plan", "quota_exceeded", "exceeds your quota")
 
+# 타입캐스트가 **계정을 막은 경우**의 안내(2026-10-04 사장님 "타입캐스트에 확인해 봐야 된다는 문구도 넣고", 관제 113).
+#   본문이 {"error_code":"UNUSUAL_ACTIVITY_DETECTED", ...}. 키 값은 맞고 요금제·목소리 문제도 아니다 — 풀 수 있는 곳은 타입캐스트뿐.
+#   실측: 서로 다른 회원 3명(09-29 cid 451, 10-04 cid 364·484)이 본인 키로 같은 거절을 받았고, 364 는 키 검사가
+#   "요금제·크레딧을 확인하라"고만 해서 24분간 등록·삭제를 8번 반복했다. 문구는 이 상수 한 곳 — 키 검사와 미리듣기·렌더 안내가 같이 쓴다.
+_TYPECAST_BLOCKED_KEYS = ("unusual_activity_detected", "unusual account activity")
+_TYPECAST_BLOCKED_MSG = ("타입캐스트가 이 계정에서 비정상 활동이 감지됐다며 음성 합성을 막았습니다(403). 키 값은 맞습니다. "
+                         "타입캐스트 고객센터에 계정 상태를 확인해 주세요 — 타입캐스트에서 풀어 줘야 다시 쓸 수 있습니다. "
+                         "그동안은 설정 > 🔑 내 키 등록에서 다른 음성 키(ElevenLabs 등)를 쓰거나 오류 신고를 남겨 주세요.")
+#   ★이 자리(_TTS_VENDOR_RULES 바로 위)에 둔다 — test_user_facing_error 가 _USER_ERROR_RULES~_script_hash 구간만 떼어 돌린다.
+#     키 검사(_explain_key_failure)는 파일 위쪽에 있지만 부를 때 이 값을 읽으므로 순서는 상관없다.
 # ★음성 서비스(BYOK) 오류를 원인별로 가른다(2026-09-05 고객 신고 cid 260 "3단계에서 계속 실패" — 화면엔
 #   "음성 서비스가 잠시 몰려"만 떠서 키 문제인지 한도인지 장애인지 고객도 사장님도 알 수 없었다).
 #   ElevenLabs/타입캐스트 HTTP 오류 문구(요청 라이브러리의 "401 Client Error … for url: https://api.elevenlabs.io/…")를
@@ -5239,6 +5251,8 @@ _TTS_VENDOR_RULES = (
     # 타입캐스트 403 = 키는 맞는데 **합성이 거부** — 목소리 목록은 되고 합성만 막힌다(실측 cid 260, 14일간 21건 전부).
     # ⚠️요금제·크레딧 정상인데도 났다(09-05 사장님 확인) — 타입캐스트 문서에 403 정의가 없다(402=크레딧, 404=voice 없음).
     #   남은 후보는 그 voice_id를 이 키로 못 쓰는 경우(uc_ 커스텀 목소리는 만든 계정 전용). "키를 다시 넣어라"는 틀린 안내다.
+    # 타입캐스트 계정 차단 — 아래 일반 403 줄보다 **위**에 둔다(문구·판정 낱말은 위 _TYPECAST_BLOCKED_* 한 곳).
+    (("api.typecast.ai",) + _TYPECAST_BLOCKED_KEYS, _TYPECAST_BLOCKED_MSG),
     (("api.typecast.ai", "403"),
      # ⚠️"ElevenLabs로 바꾸세요"는 빼라 — 타입캐스트를 등록한 회원은 일레븐이 무료 계정인 경우가 있다(cid 260, 사장님 확인).
      "타입캐스트가 이 키로의 음성 합성을 거부했습니다(403). 선택한 목소리가 이 키(계정)에서 쓸 수 있는 목소리인지, "
@@ -9569,12 +9583,18 @@ def api_mix_voice_preview(body: dict):
     # ★키 주인은 요청자가 아니라 **작업의 주인**으로 잡는다(2026-08-24). 이 라우트는
     #   Request를 안 받고, job에 customer_id가 이미 있어 렌더 경로와 같은 키를 쓴다
     #   — 미리듣기와 최종 영상이 다른 키로 나가면 소리가 갈릴 수 있다.
-    mix_pipeline.synthesize_line(
-        beats[0]["narration"], out, voice=_voice_snapshot(Store(DB_PATH), body),
-        beat_role=beats[0].get("role"), beat_index=0, beat_total=len(beats),
-        next_text=beats[1]["narration"] if len(beats) > 1 else None,
-        customer_id=job.get("customer_id", 0),
-    )
+    try:
+        mix_pipeline.synthesize_line(
+            beats[0]["narration"], out, voice=_voice_snapshot(Store(DB_PATH), body),
+            beat_role=beats[0].get("role"), beat_index=0, beat_total=len(beats),
+            next_text=beats[1]["narration"] if len(beats) > 1 else None,
+            customer_id=job.get("customer_id", 0),
+        )
+    except Exception as e:      # noqa: BLE001 — 음성 업체 거절·장애. 삼키지 않는다: 기록을 남기고 원인을 고객에게 말한다
+        # ★전엔 예외가 그대로 올라가 500 이었다(2026-10-04 실측: cid 364 미리듣기 2건, 타입캐스트 403 UNUSUAL_ACTIVITY_DETECTED).
+        #   키 검사 화면은 원인을 말해 주는데 미리듣기만 '서버 오류'로 보였다. 문구의 주인은 _user_facing_error 한 곳.
+        print(f"[voice/preview] 합성 실패 job={job_id}: {e!r}", file=sys.stderr)
+        return JSONResponse(status_code=502, content={"ok": False, "error": _user_facing_error(str(e))})
     return FileResponse(str(out), media_type="audio/mpeg")
 
 
