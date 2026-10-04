@@ -86,6 +86,7 @@ P3 = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편집
 %s
 [없는 장면] %s
 [⭐ 손님이 꼭 쓰라고 고른 조각 — 반드시 어느 칸엔가 넣어라] %s
+[🎯 손님이 쓸 곳을 정한 조각 — 그 역할(훅·소구점·문제·해결·CTA)에 해당하는 칸에 **먼저** 놓아라] %s
 
 [스타일] %s
 [말투] %s
@@ -111,6 +112,7 @@ P3C = """너는 수천 편을 쓴 쇼핑 쇼츠 **영상 대본 작가 겸 편�
 %s
 [없는 장면] %s
 [⭐ 손님이 꼭 쓰라고 고른 조각 — 반드시 어느 칸엔가 넣어라] %s
+[🎯 손님이 쓸 곳을 정한 조각 — 그 역할(훅·소구점·문제·해결·CTA)에 해당하는 칸에 **먼저** 놓아라] %s
 [참고 스타일] %s — 칸 흐름: %s
 [말맛 재료 — 우리가 모은 승인 부품·히트 대본]
 %s
@@ -181,7 +183,7 @@ def _code_flags(slots, text_of):
     return out
 
 
-def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None):
+def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pick=""):
     roles = fam["roles"] or ["hook", "problem", "method", "result", "land"]
     slot_txt = "\n".join("  %d. %s — %s\n     문장 틀: %s" % (i + 1, r, (fam["chain"][i] if i < len(fam["chain"]) else ""),
                                                     " / ".join((fam["tpl"].get(r) or [])[:4]) or "(없음)") for i, r in enumerate(roles))
@@ -190,10 +192,10 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None):
                                                        ", ".join(v.get("intensifier", [])), ", ".join(v.get("onomatopoeia", [])))
     n3, n4 = {}, {}
     if creative is not None:      # 1번 AI 자동 — 스타일은 참고, 말맛은 부품·히트 대본
-        r3 = sg._call_json(P3C % (r1.get("kind") or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)",
+        r3 = sg._call_json(P3C % (r1.get("kind") or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
                                   ", ".join(fam["names"]), " → ".join(roles), creative), S3, note=n3, vertex=True) or {}
     else:
-        r3 = sg._call_json(P3 % (r1.get("kind") or "", pan or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)",
+        r3 = sg._call_json(P3 % (r1.get("kind") or "", pan or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
                                  ", ".join(fam["names"]), voice, len(roles), slot_txt), S3, note=n3, vertex=True) or {}
     slots = r3.get("slots") or []
     flags = _code_flags(slots, lambda c: texts.get(c, ""))
@@ -224,7 +226,8 @@ def main(args):
     db = sqlite3.connect("file:%s?mode=ro" % DB, uri=True)
     fams = _families(db)
     for arg in args:
-        jid, _, star_s = arg.partition(":")
+        jid, _, rest = arg.partition(":")
+        star_s, _, role_s = rest.partition(":")
         t0 = time.time()
         ex = json.loads(db.execute("select extract_json from mix_jobs where job_id=?", (jid,)).fetchone()[0])
         segs, rows, texts, order = {}, [], {}, []
@@ -238,6 +241,12 @@ def main(args):
                 rows.append("  %s | %.1f초 | %s | 쓰임:%s | 소구점:%s" % (sid, b - a, (s.get("scene_desc") or "")[:70],
                                                                  s.get("label") or "-", (s.get("use_point") or "")[:40] or "-"))
         star = [next((sid for sid in order if sid.endswith(x.strip())), x.strip()) for x in star_s.split(",") if x.strip()]
+        role_pick = {}
+        for part in role_s.split("|"):
+            r, _, ids = part.partition("=")
+            if r.strip() and ids.strip():
+                role_pick[r.strip()] = [next((sid for sid in order if sid.endswith(x.strip())), x.strip()) for x in ids.split(",") if x.strip()]
+        roles_txt = " / ".join("%s: %s" % (r, ", ".join(v)) for r, v in role_pick.items())
         n1, n2 = {}, {}
         r1 = {}
         for _try in range(2):      # 1차 시험: CPL 에서 묶음이 비어 전부 '기타'로 떨어짐 — 그러면 한 번 더 묻는다
@@ -281,16 +290,16 @@ def main(args):
         except Exception as e:      # noqa: BLE001 — 시험 도구: 부품을 못 읽으면 이유를 남기고 빈 재료로
             print("   부품 읽기 실패: %r" % e, flush=True)
             creative = ""
-        boards["auto"] = _board(top, styles[0].get("pan") if styles else "", r1, groups_txt, star, segs, texts, creative=creative)
+        boards["auto"] = _board(top, styles[0].get("pan") if styles else "", r1, groups_txt, star, segs, texts, creative=creative, roles_pick=roles_txt)
         boards["auto"]["names"] = ["AI 자동(참고: %s)" % ", ".join(top["names"])]
         # 2번: 1위 스타일 그대로(나머지 3·4번은 화면에서 누르면 만든다 — +2번 호출)
         if styles:
             fam = next((f for n, f, _ in fams if n == styles[0].get("family")), None)
             if fam:
-                boards[str(styles[0]["family"])] = _board(fam, styles[0].get("pan"), r1, groups_txt, star, segs, texts)
+                boards[str(styles[0]["family"])] = _board(fam, styles[0].get("pan"), r1, groups_txt, star, segs, texts, roles_pick=roles_txt)
         fam_names = {str(n): f["names"] for n, f, _ in fams}
         fam_first = {str(n): (f["tpl"].get((f["roles"] or ["hook"])[0]) or [""])[0] for n, f, _ in fams}
-        out = {"job": jid, "secs": round(time.time() - t0, 1), "star": star, "inventory": r1, "styles": r2.get("styles") or [],
+        out = {"job": jid, "secs": round(time.time() - t0, 1), "star": star, "role_pick": role_pick, "inventory": r1, "styles": r2.get("styles") or [],
                "boards": boards, "family_names": fam_names, "family_first": fam_first, "auth": [n1.get("auth"), n2.get("auth")]}
         json.dump(out, open("/tmp/sbtrial_%s.json" % jid, "w"), ensure_ascii=False, indent=1)
         calls = 2 + 2 * len(boards)
