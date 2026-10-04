@@ -137,12 +137,31 @@ P4 = """너는 쇼핑 쇼츠 **제품 사실 검수자**다. 아래는 스토리
 """
 
 
+def _roles_from_chain(chain):
+    """[옛 스타일 1~4번(2026-07 레시피)] 칸 이름·첫 줄 틀 없이 흐름 글(beat_chain)만 있다 → 흐름 글로 칸 이름을 붙인다(첫 칸은 훅, CTA는 마무리)."""
+    out = []
+    for i, c in enumerate(chain):
+        t = str(c)
+        r = ("hook" if i == 0 else "cta" if "CTA" in t.upper() else "react" if "반응" in t else "problem" if ("이유" in t or "문제" in t or "틀렸" in t)
+             else "method" if any(w in t for w in ("비법", "방법", "시도")) else "result" if "결과" in t else "solve")
+        while r in out:
+            r += "_2"
+        out.append(r)
+    return out
+
+
 def _families(db):
     rows = db.execute("select id, name, situation_type, fit_categories_json, beat_roles_json, beat_chain_json, emotion_arc, "
                       "templates_json, voice_json from spine where status='approved' order by id").fetchall()
     fam, order = {}, []
     for sid, name, sit, fit, roles, chain, arc, tpl, voice in rows:
         roles_l = json.loads(roles or "[]")
+        chain_l = json.loads(chain or "[]")
+        tpl_d = json.loads(tpl or "{}") or {}
+        if not roles_l and chain_l:      # 옛 스타일: 흐름 글로 칸을 만들고, 첫 흐름 글을 첫 줄 틀로 쓴다([소재] → {소재})
+            roles_l = _roles_from_chain(chain_l)
+            tpl_d = {roles_l[0]: [re.sub(r"^[^:]*:\s*", "", str(chain_l[0])).replace("[", "{").replace("]", "}")]} if not tpl_d else tpl_d
+            tpl = json.dumps(tpl_d, ensure_ascii=False)
         key = tuple(roles_l) if roles_l else ("solo", sid)
         if key not in fam:
             fam[key] = {"ids": [], "names": [], "fit": set(), "roles": roles_l, "chain": json.loads(chain or "[]"), "arc": arc or "",
