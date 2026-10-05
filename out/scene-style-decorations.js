@@ -2,7 +2,7 @@
  const api=window.sceneStyle,catalog=window.SCENE_DECORATION_CATALOG;if(!api||!catalog)return;
  const panel=document.querySelector('.scene-effects-panel'),preview=document.querySelector('#a-live-preview');
  const box=document.createElement('section');box.className='scene-decoration-panel';
- box.innerHTML=`<details open class="dec-shopset"><summary>🛍 쇼핑 안내 세트</summary><p>아래쪽 가리키는 화살표 + 「영상 속 제품 클릭!」을 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).</p><div class="dec-choices"><button type="button" data-shopset="last3">마지막 3장면에 넣기</button><button type="button" data-shopset="here">이 장면만</button><button type="button" data-shopset="clear">세트 빼기</button></div><small data-shopset-status></small></details>
+ box.innerHTML=`<details open class="dec-shopset"><summary>🛍 쇼핑 안내 세트</summary><p>아래쪽 가리키는 화살표 + 안내 배지를 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).</p><label class="dec-shopset-target">가리킬 곳 <select data-shopset-target><option value="link">구매링크 칸(왼쪽 맨 아래)</option><option value="sticker">쇼핑 스티커(예전 자리)</option></select></label><div class="dec-choices"><button type="button" data-shopset="last3">마지막 3장면에 넣기</button><button type="button" data-shopset="here">이 장면만</button><button type="button" data-shopset="clear">세트 빼기</button></div><small data-shopset-status></small></details>
  <details open><summary>가림막</summary><div class="dec-choices"><button data-add-mask="blur">흐림</button><button data-add-mask="fade">그라데이션</button></div></details>
  <details open><summary>스티커 · 도형 · 배지</summary><div class="dec-kit"><button data-dec-kit="sticker" class="active">😀 스티커</button><button data-dec-kit="shape">🎨 도형</button><button data-dec-kit="badge">🏷 배지</button></div><div data-kit="sticker"><div class="dec-categories"></div><div class="dec-stickers"></div></div><div data-kit="shape" hidden><p>움직이는 도형 · 눌러서 영상 위에 추가</p><div class="dec-shapes"></div></div><div data-kit="badge" hidden><p>문구와 색, 모양을 바꿀 수 있어요</p><div class="dec-my-badges" hidden></div><div class="dec-badges"></div></div></details>
  <div class="dec-items"></div><div class="dec-edit" hidden><p>화면에서 끌어 이동 · ↘ 손잡이로 크기 · ⟳ 손잡이로 회전</p><label data-badge-text>배지 문구<input data-dec="text" type="text" maxlength="24"></label><label data-badge-style>배지 모양<select data-dec="badgeStyle"><option value="pill">그라데이션 알약</option><option value="ticket">티켓</option><option value="glass">유리 배지</option><option value="burst">포인트 배지</option></select></label><button type="button" data-save-badge hidden>⭐ 이 배지를 내 버튼으로 저장</button><label data-motion-control>움직임<select data-dec="motion"><option value="none">없음</option><option value="point">가리키기</option><option value="pulse">두근두근</option><option value="spin">회전</option><option value="float">둥실둥실</option><option value="reveal">쓱 나타나기</option></select></label><label>크기<input data-dec="size" type="range" min="5" max="90" step="1"></label><label data-mask-height>높이<input data-dec="h" type="range" min="2" max="35" step="1"></label><label>회전<input data-dec="rot" type="range" min="-180" max="180" step="1"></label><label>투명도<input data-dec="op" type="range" min="10" max="100" step="1"></label><label data-mask-color>색상<input data-dec="color" type="color"></label><button data-dec-delete>선택한 항목 삭제</button></div>`;
@@ -22,6 +22,47 @@
  const layer=document.createElement('div');layer.className='scene-decorations';preview.append(layer);
  // ★로고 전용 층(관제 065): 워터마크(.scene-brand-layer z8)·제목보다 위(z9) — '썸네일에 적용할 때 맨 위'. 드래그는 아래 bindLayer로 두 층에 같이 건다.
  const layerTop=document.createElement('div');layerTop.className='scene-decorations scene-decorations-top';preview.append(layerTop);
+ // 📱 유튜브 화면 자리 보기(관제 133, 2026-10-06 사장님 "채널명·제목·링크 자리를 볼 수 있게만 — 렌더에 있으면 유튜브에 올렸을 때 중복"):
+ //   쇼츠를 폰에서 볼 때 유튜브가 영상 위에 얹는 것들의 자리. 값 = 영상(9:16) 기준 %, 실제 폰 캡처(390x966, 영상 y101~800)에서 잰 것.
+ //   ★링크 칸은 이 폰에서 영상 아래 바깥(t>100)이다 — 영상 안에 그릴 수 없는 자리라 세트는 그 바로 위를 가리킨다.
+ //   ★자리의 주인은 이 표 하나다. 겹쳐보기(ytDraw)와 쇼핑 안내 세트(shopSetItems)가 둘 다 이 표를 읽는다.
+ //   ★편집 화면 전용 — 미리보기(#a-live-preview) 밖에 두고, 렌더(?qa=1·sceneStyleExporting)에서는 만들지도 않는다.
+ const YT_SHORTS_UI={
+   channel:{label:'채널명 · 구독',l:3.6,t:89.9,w:40,h:4},
+   title:{label:'제목',l:3.6,t:95.3,w:78,h:2.8},
+   link:{label:'🔗 링크 칸(구매링크)',l:3.6,t:102.5,w:63.9,h:3.7},
+   buttons:{label:'좋아요·댓글·공유',l:87,t:54.5,w:10.5,h:43.5},
+ };
+ const YT_KEY='scene_style_yt_ui',ytAllowed=!new URLSearchParams(location.search).has('qa');
+ let ytLayer=null,ytButton=null;
+ const ytOn=()=>{try{return localStorage.getItem(YT_KEY)==='1'}catch{return false}};
+ function ytDraw(){
+   if(!ytLayer)return;
+   const on=ytOn()&&!window.sceneStyleExporting;
+   ytLayer.style.display=on?'block':'none';ytButton.setAttribute('aria-pressed',String(on));ytButton.style.background=on?'#11B98C':'transparent';ytButton.style.color=on?'#04231b':'#dce8ec';
+   preview.parentElement.style.marginBottom=on?Math.ceil(preview.offsetHeight*.075)+'px':'';   // 링크 칸이 영상 아래로 나가는 만큼 자리를 비운다
+   if(on)Object.assign(ytLayer.style,{left:preview.offsetLeft+'px',top:preview.offsetTop+'px',width:preview.offsetWidth+'px',height:preview.offsetHeight+'px',fontSize:Math.max(9,preview.offsetHeight*.019)+'px'});
+ }
+ function ytSet(on){try{localStorage.setItem(YT_KEY,on?'1':'0')}catch{}ytDraw();}
+ if(ytAllowed){
+   ytLayer=document.createElement('div');ytLayer.className='scene-yt-ui';
+   Object.assign(ytLayer.style,{position:'absolute',zIndex:40,pointerEvents:'none',display:'none',fontFamily:'Pretendard,sans-serif',fontWeight:'700',lineHeight:'1'});
+   for(const [key,a] of Object.entries(YT_SHORTS_UI)){
+     const el=document.createElement('div');el.dataset.ytUi=key;el.textContent=a.label;
+     Object.assign(el.style,{position:'absolute',left:a.l+'%',top:a.t+'%',width:a.w+'%',height:a.h+'%',boxSizing:'border-box',display:'flex',alignItems:'center',justifyContent:key==='buttons'?'center':'flex-start',padding:'0 .5em',overflow:'hidden',whiteSpace:'nowrap',color:'#fff',textShadow:'0 1px 2px #000',border:'1.5px dashed '+(key==='link'?'#FFE600':'#7FE7FF'),background:key==='link'?'#FFE60055':'#00000066',borderRadius:key==='link'?'999px':'6px'});
+     if(key==='buttons')el.style.writingMode='vertical-rl';
+     ytLayer.append(el);
+   }
+   preview.parentElement.append(ytLayer);
+   ytButton=document.createElement('button');ytButton.type='button';ytButton.dataset.ytUiToggle='';ytButton.textContent='📱 유튜브 화면 자리';
+   ytButton.title='폰에서 쇼츠를 볼 때 채널명·제목·링크 칸이 놓이는 자리를 겹쳐 봅니다. 편집 화면에만 보이고 영상에는 안 들어가요. (긴 폰 캡처 기준 — 폰마다 조금 달라요)';
+   Object.assign(ytButton.style,{border:'1px solid #294451',borderRadius:'8px',padding:'6px 10px',fontSize:'12px',fontWeight:'700',cursor:'pointer',marginRight:'8px'});
+   ytButton.addEventListener('click',()=>ytSet(!ytOn()));
+   const seg=document.querySelector('[data-frame="hook"]')?.closest('.seg');
+   if(seg)seg.before(ytButton);else box.querySelector('.dec-shopset').append(ytButton);
+   if(window.ResizeObserver)new ResizeObserver(ytDraw).observe(preview);
+   addEventListener('resize',ytDraw);ytDraw();
+ }
  let selected=-1,category=0,index=-1,drag=null;
  const masks=()=>api.effect().masks||[];
  const commit=list=>api.effect({...api.effect(),masks:list});
@@ -144,24 +185,37 @@
  //   유튜브 쇼핑 스티커가 기본으로 뜨는 왼쪽 아래를 가리키는 굵은 화살표 + 「영상 속 제품 클릭!」 배지.
  //   set 표식으로 묶어서 다시 누르면 옛 세트를 지우고 새로 놓는다(쌓이지 않게). 놓은 뒤엔 보통 항목처럼 끌어 고친다.
  const SHOPSET='shopcta';
- function shopSetItems(){
-   const label='영상 속 제품 클릭!',color=catalog.thumbnailBadges.find(x=>x.label===label)?.color||'#FF2D5E';
+ // 가리킬 곳(관제 133): link = 「관련 동영상」 링크 칸(구매링크 롱폼으로 가는 자리) / sticker = 예전 자리(쇼핑 스티커).
+ //   link 자리는 YT_SHORTS_UI 에서 계산한다 — 화살표 끝(가리키기 움직임 포함)이 채널명 줄 바로 위에서 멈춘다(그 아래는 유튜브 글자에 가린다).
+ function shopSetItems(target){
    const base={shape:'round',fx:'solid',op:100,soft:30,set:SHOPSET};
+   if(target==='sticker'){
+     const label='영상 속 제품 클릭!',color=catalog.thumbnailBadges.find(x=>x.label===label)?.color||'#FF2D5E';
+     return [
+       {...base,kind:'graphic',graphic:'arrow_bold',l:1,t:43,w:30,h:16.875,color:'#FF3B30',rot:90,motion:'point'},
+       {...base,kind:'badge',text:label,l:3,t:79,w:48,h:6,color,badgeStyle:'pill',rot:0,motion:'none'},
+     ];
+   }
+   // 화살표 상자 = 가로 30%·세로 16.875%(정사각). 그림은 가운데에서 아래로 상자 높이의 22%(끝)·위로 25%(꼬리)까지, 움직임은 아래 +10%·위 -8%(가로 기준).
+   const H=16.875,sway=30*9/16,tipMax=YT_SHORTS_UI.channel.t-2,cy=tipMax-H*.22-sway*.10,top=cy-H*.25-sway*.08;
+   const r=n=>Math.round(n*100)/100;
    return [
-     {...base,kind:'graphic',graphic:'arrow_bold',l:1,t:43,w:30,h:16.875,color:'#FF3B30',rot:90,motion:'point'},
-     {...base,kind:'badge',text:label,l:3,t:79,w:48,h:6,color,badgeStyle:'pill',rot:0,motion:'none'},
+     {...base,kind:'graphic',graphic:'arrow_bold',l:1,t:r(cy-H/2),w:30,h:H,color:'#FF3B30',rot:90,motion:'point'},
+     {...base,kind:'badge',text:'아래 구매링크 클릭!',l:3,t:r(top-7),w:48,h:6,color:'#FF2D5E',badgeStyle:'pill',rot:0,motion:'none'},
    ];
  }
  function shopSet(scope){
    const cur=api.geometry().sceneIndex,total=api.sceneCount?.()||0;
    const targets=scope==='last3'?[total-3,total-2,total-1].filter(i=>i>=1):scope==='clear'?Array.from({length:total},(_,i)=>i):[cur];   // 마지막 3장에 1장(훅)은 안 넣는다 · 빼기는 전 장면
+   const items=shopSetItems(box.querySelector('[data-shopset-target]').value);
    let done=0,full=[];
    for(const i of targets){
      const keep=(api.effectAt(i).masks||[]).filter(m=>m.set!==SHOPSET);
      if(scope!=='clear'&&keep.length+2>12){full.push(i+1);continue;}
-     api.effectAt(i,{...api.effectAt(i),masks:scope==='clear'?keep:[...keep,...shopSetItems()]});done++;
+     api.effectAt(i,{...api.effectAt(i),masks:scope==='clear'?keep:[...keep,...items]});done++;
    }
    selected=-1;controls();draw();
+   if(scope!=='clear'&&done&&ytLayer)ytSet(true);   // 넣은 자리가 유튜브 화면 어디인지 바로 보이게
    const nums=targets.map(i=>i+1).join('·');
    box.querySelector('[data-shopset-status]').textContent=(scope==='clear'?'모든 장면에서 세트를 뺐어요':`${nums}장에 넣었어요`)+(full.length?` (${full.join('·')}장은 항목이 12개라 못 넣음)`:'');
    return done;
