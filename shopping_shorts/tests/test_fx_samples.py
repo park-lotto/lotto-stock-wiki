@@ -70,3 +70,42 @@ def test_사이드바_항목은_관리자_전용(monkeypatch):
     js = (STATIC / "sidebar.js").read_text(encoding="utf-8")
     line = next(ln for ln in js.splitlines() if 'href: "/fx_samples"' in ln)
     assert "admin: true" in line
+
+
+# ── 판정 달기(2026-10-05, 관제 125 자막팩 1단계) ──────────────────────────────
+# 5. 관리자가 견본마다 판정(쓸 것/보류/못 씀)·쓰는 순간·메모를 달면 data/fx_samples/verdicts.json 에 남고 목록에 실려 온다.
+# 6. 쓰는 순간·판정 이름표는 서버(_FX_MOMENTS·_FX_VERDICTS) 한 곳이 목록 응답으로 내려준다 — 화면에 따로 적지 않는다.
+# 7. 목록에 없는 견본·모르는 값은 400, 비관리자는 403, 다 비우면 기록에서 지운다.
+
+def test_판정을_달면_파일에_남고_목록에_실린다(monkeypatch, tmp_path):
+    c = _client(monkeypatch, tmp_path)
+    r = c.post("/api/admin/fx_samples/verdict", json={"id": "A1", "verdict": "use", "moments": ["hook", "price"], "memo": "훅에 좋음"})
+    assert r.status_code == 200 and r.json()["ok"]
+    saved = json.loads((tmp_path / "fx_samples" / "verdicts.json").read_text(encoding="utf-8"))
+    assert saved["A1"]["verdict"] == "use" and saved["A1"]["moments"] == ["hook", "price"] and saved["A1"]["memo"] == "훅에 좋음"
+    d = c.get("/api/admin/fx_samples").json()
+    assert d["verdicts"]["A1"]["verdict"] == "use"
+    assert [m["key"] for m in d["moments"]][:2] == ["hook", "product"]
+    assert {v["key"] for v in d["verdict_kinds"]} == {"use", "hold", "no"}
+
+
+def test_다_비우면_기록에서_지운다(monkeypatch, tmp_path):
+    c = _client(monkeypatch, tmp_path)
+    c.post("/api/admin/fx_samples/verdict", json={"id": "A1", "verdict": "no"})
+    c.post("/api/admin/fx_samples/verdict", json={"id": "A1", "verdict": "", "moments": [], "memo": ""})
+    assert c.get("/api/admin/fx_samples").json()["verdicts"] == {}
+
+
+def test_모르는_견본이나_값은_400(monkeypatch, tmp_path):
+    c = _client(monkeypatch, tmp_path)
+    assert c.post("/api/admin/fx_samples/verdict", json={"id": "Z9", "verdict": "use"}).status_code == 400
+    assert c.post("/api/admin/fx_samples/verdict", json={"id": "A1", "verdict": "good"}).status_code == 400
+    assert c.post("/api/admin/fx_samples/verdict", json={"id": "A1", "moments": ["sky"]}).status_code == 400
+    assert c.post("/api/admin/fx_samples/verdict", json={"id": "A1", "memo": "x" * 501}).status_code == 400
+    assert not (tmp_path / "fx_samples" / "verdicts.json").exists()
+
+
+def test_비관리자는_판정_못_단다(monkeypatch, tmp_path):
+    c = _client(monkeypatch, tmp_path, admin=False)
+    assert c.post("/api/admin/fx_samples/verdict", json={"id": "A1", "verdict": "use"}).status_code == 403
+    assert not (tmp_path / "fx_samples" / "verdicts.json").exists()

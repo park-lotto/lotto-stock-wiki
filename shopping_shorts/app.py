@@ -26075,7 +26075,72 @@ def _fx_samples_list(request: Request):
     if not manifest.exists():
         return JSONResponse({"ok": True, "groups": [], "note": "아직 올린 견본이 없습니다"}, headers=_NOCACHE)
     data = json.loads(manifest.read_text(encoding="utf-8"))
-    return JSONResponse({"ok": True, **data}, headers=_NOCACHE)
+    return JSONResponse({"ok": True, **data, **_fx_verdict_meta(), "verdicts": _fx_verdicts_load()}, headers=_NOCACHE)
+
+
+# 판정 달기(2026-10-05, 관제 125 자막팩 1단계) — 견본을 '쓰는 순간'으로 다시 묶어 자막팩을 만들기 위한 관리자 판정.
+# 쓰는 순간·판정 이름표는 여기 한 곳(화면은 목록 응답으로 받아 그린다). 기록은 git 밖 verdicts.json(_fx_verdicts_path).
+_FX_VERDICTS = (("use", "쓸 것"), ("hold", "보류"), ("no", "못 씀"))
+_FX_MOMENTS = (("hook", "훅 첫 줄"), ("product", "제품 등장"), ("price", "가격·숫자"),
+               ("word", "핵심 단어"), ("body", "일반 설명 줄"), ("turn", "반전·마무리"))
+_FX_MEMO_MAX = 500
+_fx_verdicts_lock = threading.Lock()
+
+
+def _fx_verdict_meta():
+    return {"verdict_kinds": [{"key": k, "label": v} for k, v in _FX_VERDICTS],
+            "moments": [{"key": k, "label": v} for k, v in _FX_MOMENTS]}
+
+
+def _fx_verdicts_path():
+    return _fx_samples_dir() / "verdicts.json"
+
+
+def _fx_verdicts_load():
+    p = _fx_verdicts_path()
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+
+
+def _fx_sample_ids():
+    manifest = _fx_samples_dir() / "manifest.json"
+    if not manifest.exists():
+        return set()
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    return {it["id"] for g in data.get("groups", []) for it in g.get("items", [])}
+
+
+async def _fx_samples_verdict(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    b = await request.json()
+    vid = str(b.get("id") or "")
+    verdict = b.get("verdict") or ""
+    moments = b.get("moments") or []
+    memo = str(b.get("memo") or "").strip()
+    if vid not in _fx_sample_ids():
+        return JSONResponse({"ok": False, "error": "없는 견본"}, status_code=400)
+    if verdict not in ("",) + tuple(k for k, _ in _FX_VERDICTS):
+        return JSONResponse({"ok": False, "error": "판정 값이 올바르지 않습니다"}, status_code=400)
+    known = [k for k, _ in _FX_MOMENTS]
+    if not isinstance(moments, list) or any(m not in known for m in moments):
+        return JSONResponse({"ok": False, "error": "쓰는 순간 값이 올바르지 않습니다"}, status_code=400)
+    if len(memo) > _FX_MEMO_MAX:
+        return JSONResponse({"ok": False, "error": f"메모는 {_FX_MEMO_MAX}자까지"}, status_code=400)
+    moments = [m for m in known if m in moments]          # 순서는 _FX_MOMENTS 순, 중복 제거
+    with _fx_verdicts_lock:
+        allv = _fx_verdicts_load()
+        if verdict or moments or memo:
+            allv[vid] = {"verdict": verdict, "moments": moments, "memo": memo,
+                         "at": datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M"),
+                         "who": str(getattr(request.state, "customer_id", "") or "admin")}
+        else:
+            allv.pop(vid, None)
+        p = _fx_verdicts_path()
+        tmp = p.with_suffix(".tmp")
+        tmp.write_text(json.dumps(allv, ensure_ascii=False, indent=1), encoding="utf-8")
+        os.replace(tmp, p)
+    return {"ok": True, "id": vid, "verdict": allv.get(vid)}
 
 
 def _fx_samples_video(vid: str, request: Request):
@@ -26094,6 +26159,7 @@ app.add_api_route("/fx_samples", _fx_samples_page, include_in_schema=False)
 app.add_api_route("/fx_samples.html", _fx_samples_page, include_in_schema=False)   # StaticFiles 마운트로 뚫리지 않게
 app.add_api_route("/api/admin/fx_samples", _fx_samples_list, include_in_schema=False)
 app.add_api_route("/api/admin/fx_samples/video/{vid}.mp4", _fx_samples_video, include_in_schema=False)
+app.add_api_route("/api/admin/fx_samples/verdict", _fx_samples_verdict, methods=["POST"], include_in_schema=False)
 
 
 def _archive_channel_cat_fn(store):

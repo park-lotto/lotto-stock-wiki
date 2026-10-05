@@ -36,6 +36,24 @@
   .card .id{color:var(--sub);font-size:12px;margin-right:6px}
   .card .note{color:var(--warn);font-size:12px;display:block}
   .empty{color:var(--sub);padding:40px 0;text-align:center}
+  /* 판정 달기(관제 125) */
+  .bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 10px;font-size:12.5px;color:var(--sub)}
+  .bar b{color:var(--txt);font-weight:600;margin-right:2px}
+  .chip{font:inherit;font-size:12px;padding:3px 10px;border-radius:99px;border:1px solid var(--line);
+    background:var(--panel);color:var(--txt);cursor:pointer}
+  .chip.on{border-color:var(--accent);background:#123a31;color:#dff7f0}
+  .vd{display:flex;gap:4px;margin-top:6px}
+  .vd button{flex:1;font:inherit;font-size:12px;padding:3px 0;border-radius:6px;border:1px solid var(--line);
+    background:#0b110e;color:var(--sub);cursor:pointer}
+  .vd button.on.use{background:#1f5c3a;color:#fff;border-color:#2f8a57}
+  .vd button.on.hold{background:#5c4b1f;color:#fff;border-color:#8a722f}
+  .vd button.on.no{background:#5c1f2a;color:#fff;border-color:#8a2f3f}
+  .mo{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px}
+  .mo .chip{font-size:11px;padding:1px 7px}
+  .memo{width:100%;margin-top:6px;font:inherit;font-size:12px;padding:4px 6px;border-radius:6px;
+    border:1px solid var(--line);background:#0b110e;color:var(--txt)}
+  .card.v-use{border-color:#2f8a57} .card.v-no{opacity:.55}
+  .saved{color:var(--accent);font-size:11px;margin-left:4px}
 </style>
 </head>
 <body>
@@ -47,6 +65,8 @@
     <span><span class="tag text">글자</span> 편집기 코드로 옮김</span>
     <span><span class="tag video">영상</span> 서버 영상 처리로 옮김</span>
   </div>
+  <div class="bar" id="filters"></div>
+  <div class="bar" id="mfilters"></div>
   <nav id="nav"></nav>
   <div id="body"><div class="empty">불러오는 중…</div></div>
 </div>
@@ -59,7 +79,80 @@ const io = new IntersectionObserver(es => es.forEach(e => {
   if (e.isIntersecting) { if (!v.src) v.src = v.dataset.src; v.play().catch(()=>{}); } else v.pause();
 }), {rootMargin:'200px'});
 
+// 판정 달기(2026-10-05, 관제 125) — 판정·쓰는 순간 이름표는 서버가 내려준다(app.py _FX_VERDICTS·_FX_MOMENTS 한 곳).
+let DATA = null, FILTER = 'all', MFILTER = '';
+function vOf(id){ return (DATA.verdicts || {})[id] || {verdict:'', moments:[], memo:''}; }
+function shown(id){
+  const v = vOf(id);
+  if (FILTER === 'none' && v.verdict) return false;
+  if (FILTER !== 'all' && FILTER !== 'none' && v.verdict !== FILTER) return false;
+  if (MFILTER && !(v.moments || []).includes(MFILTER)) return false;
+  return true;
+}
+function saveVerdict(id, patch, card){
+  const cur = vOf(id), body = {id, verdict: cur.verdict || '', moments: cur.moments || [], memo: cur.memo || '', ...patch};
+  return fetch('/api/admin/fx_samples/verdict', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)})
+    .then(r => r.json().then(j => { if (!r.ok || !j.ok) throw new Error(j.error || ('저장 실패 ' + r.status)); return j; }))
+    .then(j => {
+      if (j.verdict) DATA.verdicts[id] = j.verdict; else delete DATA.verdicts[id];
+      paintCard(card, id); drawFilters();
+      const s = card.querySelector('.saved'); s.textContent = '저장됨'; setTimeout(() => { s.textContent = ''; }, 1200);
+    })
+    .catch(e => alert(id + ' ' + e.message));
+}
+function paintCard(card, id){
+  const v = vOf(id);
+  card.className = 'card' + (v.verdict ? ' v-' + v.verdict : '');
+  card.querySelectorAll('.vd button').forEach(b => b.classList.toggle('on', b.dataset.k === v.verdict));
+  card.querySelectorAll('.mo .chip').forEach(b => b.classList.toggle('on', (v.moments || []).includes(b.dataset.k)));
+  const m = card.querySelector('.memo'); if (document.activeElement !== m) m.value = v.memo || '';
+}
+function verdictUI(card, id){
+  const vd = el('div','vd');
+  (DATA.verdict_kinds || []).forEach(k => {
+    const b = el('button', k.key, k.label); b.dataset.k = k.key;
+    b.onclick = () => saveVerdict(id, {verdict: vOf(id).verdict === k.key ? '' : k.key}, card);
+    vd.appendChild(b);
+  });
+  const mo = el('div','mo');
+  (DATA.moments || []).forEach(k => {
+    const b = el('button','chip', k.label); b.dataset.k = k.key;
+    b.onclick = () => { const ms = new Set(vOf(id).moments || []); ms.has(k.key) ? ms.delete(k.key) : ms.add(k.key); saveVerdict(id, {moments:[...ms]}, card); };
+    mo.appendChild(b);
+  });
+  const memo = el('input','memo'); memo.placeholder = '메모 (어디에 좋은지·흠)'; memo.maxLength = 500;
+  memo.onchange = () => saveVerdict(id, {memo: memo.value.trim()}, card);
+  const meta = card.querySelector('.meta');
+  meta.querySelector('b').appendChild(el('span','saved'));
+  meta.appendChild(vd); meta.appendChild(mo); meta.appendChild(memo);
+  paintCard(card, id);
+}
+function drawFilters(){
+  const all = []; (DATA.groups || []).forEach(g => g.items.forEach(it => all.push(it.id)));
+  const cnt = k => all.filter(id => { const v = vOf(id).verdict; return k === 'all' ? true : k === 'none' ? !v : v === k; }).length;
+  const f = document.getElementById('filters'); f.textContent = ''; f.appendChild(el('b', null, '판정'));
+  [{key:'all',label:'전체'},{key:'none',label:'미판정'}].concat(DATA.verdict_kinds || []).forEach(k => {
+    const c = el('button','chip' + (FILTER === k.key ? ' on' : ''), k.label + ' ' + cnt(k.key));
+    c.onclick = () => { FILTER = k.key; applyFilter(); }; f.appendChild(c);
+  });
+  const mf = document.getElementById('mfilters'); mf.textContent = ''; mf.appendChild(el('b', null, '쓰는 순간'));
+  [{key:'',label:'전부'}].concat(DATA.moments || []).forEach(k => {
+    const n = k.key ? all.filter(id => (vOf(id).moments || []).includes(k.key)).length : null;
+    const c = el('button','chip' + (MFILTER === k.key ? ' on' : ''), k.label + (n == null ? '' : ' ' + n));
+    c.onclick = () => { MFILTER = k.key; applyFilter(); }; mf.appendChild(c);
+  });
+}
+function applyFilter(){
+  drawFilters();
+  document.querySelectorAll('section').forEach(sec => {
+    let n = 0;
+    sec.querySelectorAll('.card').forEach(c => { const ok = shown(c.dataset.id); c.style.display = ok ? '' : 'none'; if (ok) n++; });
+    sec.style.display = n ? '' : 'none';
+  });
+}
+
 function render(d){
+  DATA = d; DATA.verdicts = d.verdicts || {};
   const nav = document.getElementById('nav'), body = document.getElementById('body');
   nav.textContent = ''; body.textContent = '';
   const groups = d.groups || [];
@@ -83,10 +176,13 @@ function render(d){
       meta.appendChild(b);
       if (TAG[it.tag]) meta.appendChild(el('span','tag ' + it.tag, TAG[it.tag]));
       if (it.note) meta.appendChild(el('span','note', it.note));
+      card.dataset.id = it.id;
       card.appendChild(v); card.appendChild(meta); grid.appendChild(card);
+      verdictUI(card, it.id);
     });
     sec.appendChild(grid); body.appendChild(sec);
   });
+  drawFilters();
   document.getElementById('lead').textContent =
     '에펙으로 만든 효과 견본 ' + total + '개입니다. 영상을 누르면 크게 봅니다. (관리자 전용' + (d.updated ? ' · 올린 날 ' + d.updated : '') + ')';
 }
