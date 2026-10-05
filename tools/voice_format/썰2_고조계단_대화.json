@@ -1,14 +1,13 @@
 {
- "name": "썰2_고조계단_대화",
+ "name": "썰2_고조계단_대화_v2캐스팅",
  "source": {
   "work_id": "168338875dd7",
   "job_id": "42880a677c14",
   "note": "라이브 확정 대본 사실만 — 썰 칸(훅·문제·이건 바로·말도 안 되는 게·심지어·충격 포인트·마무리) 유지"
  },
  "cast": {
-  "나레이션": "kr-mina-natural",
-  "동생": "kr-yura-natural",
-  "언니": "kr-kanna-natural"
+  "동생": "kr-yooni-natural",
+  "언니": "kr-mina-natural"
  },
  "lines": [
   [

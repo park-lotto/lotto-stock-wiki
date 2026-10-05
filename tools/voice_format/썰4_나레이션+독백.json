@@ -1,13 +1,13 @@
 {
- "name": "썰4_나레이션+독백",
+ "name": "썰4_나레이션+독백_v2캐스팅",
  "source": {
   "work_id": "168338875dd7",
   "job_id": "42880a677c14",
   "note": "라이브 확정 대본 사실만"
  },
  "cast": {
-  "나레이션": "kr-mina-natural",
-  "독백": "kr-yura-natural"
+  "나레이션": "tc-piljae-natural",
+  "독백": "kr-mina-natural"
  },
  "lines": [
   [
