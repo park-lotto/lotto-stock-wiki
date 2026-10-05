@@ -33,7 +33,8 @@ const twoFrames=page=>page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=
       const CAMERA=['zoom-punch','push-in','shake'],isCamera=CAMERA.includes(request.snapshot.hookMotion);
       const duration=(request.snapshot.hookMotion&&!isCamera)||request.snapshot.hookBandMotion||request.snapshot.hookBandRise?await page.evaluate(()=>window.sceneStyle.motionAt(100000)):0;   // 흰 띠 스윽은 줌 펀치와 겹쳐도 프레임별로 찍는다
       // 고정형 자막 등장(0.3초): 훅뿐 아니라 자막이 바뀌는 모든 장면의 시작을 프레임별로 찍는다.
-      const enter=(request.snapshot.mode==='continuous'&&request.snapshot.hookBandMotion)||request.snapshot.bodyCaptionMotion||request.snapshot.captionPack?await page.evaluate(()=>window.sceneStyle.captionEnterAt?.(100000)||0):0;
+      // 등장이 있나는 편집기(captionMotionNow)에 장면마다 묻는다 — 여기서 저장값으로 따로 짐작하면 '팩 없이 어둡게 강조만 켠 장면'처럼 편집기만 움직이고 완성본은 멈춘다(10-05 합본 실측)
+      const enter=await page.evaluate(()=>window.sceneStyle.captionEnterAt?.(100000)||0);
       const moving=await page.evaluate(()=>{const shape=window.sceneDecorations?.motionAt(0),brand=window.sceneBranding?.motionAt(0);return shape||brand||false});
       const words=wordFx?await page.evaluate(()=>window.sceneStyle.wordFxAt?.(0)??null):null;   // null = 이 장면엔 강조할 자막이 없다
       await page.screenshot({path:path.join(request.output,file),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
