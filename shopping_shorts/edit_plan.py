@@ -2979,6 +2979,7 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
             max_alts = 6
     if not beats:
         return beats
+    from shopping_shorts.ai_match import is_pinned as _is_pinned
     used = set()
     for b in beats:
         for s in [b.get("primary")] + list(b.get("alternates") or []):
@@ -2987,7 +2988,7 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
     for b in beats:
         need = float(b.get("target_seconds") or 0)
         have = _beat_screen_secs(b)
-        if have >= need or not b.get("primary"):
+        if have >= need or not b.get("primary") or _is_pinned(b):   # 사람이 고른 줄은 더하지 않는다(관제 120)
             continue
         home = (b["primary"] or {}).get("video_id")
         # ★말이 통하는 장면부터 채운다(2026-07-31 2차).
@@ -4426,6 +4427,7 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
                 out.append(sid)
         return out
 
+    from shopping_shorts.ai_match import is_pinned as _pinned
     per_line = [_ids_of(x) for x in srcs]
     if not any(per_line):
         return None
@@ -4521,6 +4523,7 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
             "inherited": inherited,
             "visual_verb": inherited,
             "src_seg_applied": refs[0]["seg_id"] if inherited else None,
+            "pinned": bool(inherited and _pinned(srcs[i])),   # 스토리보드에서 사람이 고른 줄(관제 120)
         })
         prev_sid = refs[-1]["seg_id"]
     if not beats:
@@ -4537,8 +4540,8 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
                   "kind": g.get("appeal_kind") or "",
                   "outro": bool(g.get("is_outro")) and not (g.get("hook_type") or g.get("product_benefits"))}
             for sid, g in (seg_map or {}).items() if isinstance(g, dict)}
-    _bs = [{"segs": [r["seg_id"] for r in [b["primary"]] + list(b.get("alternates") or []) if r and r.get("seg_id")]}
-           for b in beats]
+    _bs = [{"segs": [r["seg_id"] for r in [b["primary"]] + list(b.get("alternates") or []) if r and r.get("seg_id")],
+            "pinned": b.get("pinned")} for b in beats]
     _am.ensure_cover(_bs, [{"text": b.get("narration") or ""} for b in beats], _idx, None)
     for b, x in zip(beats, _bs):
         refs = [r for r in (_ground_ref({"seg_id": sid}, seg_map) for sid in x["segs"]) if r]

@@ -1694,6 +1694,93 @@
 .ttsban-low .go{background:#d4a843;color:#1a1a1a}
 .ttsban-invalid{background:#3a1414;border-color:#c0392b;color:#ffd9d3}
 .ttsban-invalid .go{background:#e74c3c;color:#fff}
+/* ── 2단계 스토리보드(관제 120, 2026-10-05) — 시안 tools/storyboard_mock/pages_tpl.html 을 옮김. 스위치 storyboard_enabled 뒤에서만 그려진다.
+   클래스는 전부 sb- 접두사(라이브 클래스와 겹치지 않게) · #s2Storyboard 안에만 걸린다. */
+#s2Storyboard{--sb-card:#161d2c;--sb-line:#263048;--sb-dim:#8b96ad;--sb-pick:#2b6cff;--sb-warn:#ffb443;--sb-ok:#3ddc97;--sb-star:#ffd24a;color:#e8ecf5;margin:0 0 14px}
+#s2Storyboard .sb-btn{border:1px solid #3a4b73;background:#1d2a45;color:#dfe9ff;border-radius:9px;padding:5px 12px;font-size:13px;cursor:pointer}
+#s2Storyboard .sb-btn.on{background:var(--sb-pick);border-color:var(--sb-pick);color:#fff;font-weight:700}
+#s2Storyboard .sb-btn.main{background:var(--sb-pick);border-color:var(--sb-pick);color:#fff;font-weight:700;padding:8px 18px}
+#s2Storyboard .sb-btn[disabled]{opacity:.45;cursor:default}
+#s2Storyboard .sb-note{color:var(--sb-dim);font-size:12.5px}
+#s2Storyboard .sb-box{background:var(--sb-card);border:1px solid var(--sb-line);border-radius:13px;padding:10px 12px;margin-bottom:12px}
+#s2Storyboard .sb-bh{font-weight:700;margin-bottom:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#s2Storyboard .sb-bh small{font-weight:400;color:var(--sb-dim)}
+#s2Storyboard .sb-th{position:relative;flex:none;border-radius:7px;overflow:hidden;background:#2a3550;cursor:pointer;border:2px solid transparent}
+#s2Storyboard .sb-th img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover}
+#s2Storyboard .sb-th .sb-sec{position:absolute;right:3px;bottom:3px;background:#000a;color:#fff;font-size:10.5px;border-radius:5px;padding:0 4px}
+#s2Storyboard .sb-th .sb-tg{position:absolute;left:3px;top:3px;display:flex;flex-direction:column;gap:2px}
+#s2Storyboard .sb-th .sb-tg span{background:#000b;color:#fff;font-size:10px;border-radius:5px;padding:0 4px}
+#s2Storyboard .sb-grps{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px}
+#s2Storyboard .sb-grp{background:#121a2b;border-radius:11px;padding:8px;border:2px solid transparent}
+#s2Storyboard .sb-grp.star{border-color:var(--sb-star)}
+#s2Storyboard .sb-gh b{font-size:14px}#s2Storyboard .sb-gh span{color:var(--sb-dim);font-size:12px}
+#s2Storyboard .sb-gth{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+#s2Storyboard .sb-more{font-size:12px;color:#9fc0ff;cursor:pointer;margin-top:4px;display:inline-block}
+#s2Storyboard .sb-missing{background:#2a2112;border:1px solid #5a4520;border-radius:10px;padding:8px 10px;color:#ffd99a}
+#s2Storyboard .sb-missing ul{margin:4px 0 6px 18px;padding:0}
+#s2Storyboard .sb-pc{display:flex;flex-direction:column;align-items:flex-start}
+#s2Storyboard .sb-pc.armed{cursor:crosshair}#s2Storyboard .sb-pc.armed:hover .sb-th{border-color:#fff}
+#s2Storyboard .sb-aisug{background:#000a!important;color:#cfd8ff!important;font-size:9.5px!important}
+#s2Storyboard .sb-hitb{font-size:11.5px;background:#5a4b12;color:#ffe28a;border-radius:7px;padding:0 6px}
+#s2Storyboard .sb-rbar{background:#121a2b;border:1px solid #3a4b73;border-radius:12px;padding:8px 10px;margin-bottom:12px}
+#s2Storyboard .sb-rboxes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+@media(max-width:900px){#s2Storyboard .sb-rboxes{grid-template-columns:repeat(2,1fr)}}
+#s2Storyboard .sb-rbox{border:2px dashed #3a4560;border-radius:10px;padding:5px 7px;cursor:pointer;min-height:58px}
+#s2Storyboard .sb-rbox.on{border-style:solid;border-color:var(--c);background:#1b2440;box-shadow:0 0 0 2px var(--c)}
+#s2Storyboard .sb-rh{font-size:13px;font-weight:700}#s2Storyboard .sb-rh b{background:var(--c);color:#111;border-radius:7px;padding:0 6px;margin-left:3px}
+#s2Storyboard .sb-rs{font-size:10.5px;color:var(--sb-dim)}
+#s2Storyboard .sb-rth{display:flex;gap:2px;margin-top:3px}#s2Storyboard .sb-rth img{width:24px;height:42px;object-fit:cover;border-radius:3px}
+#s2Storyboard .sb-pickbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#121a2b;border:1px solid #3a4b73;border-radius:12px;padding:8px 12px;margin-bottom:10px}
+#s2Storyboard .sb-fsec{font-weight:700;margin:10px 0 6px}
+#s2Storyboard .sb-fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+#s2Storyboard .sb-fcard{background:#0f1a16;border:2px solid #23402f;border-radius:12px;padding:9px;cursor:pointer;position:relative}
+#s2Storyboard .sb-fcard.on{border-color:#3ddc97;background:#123024}
+#s2Storyboard .sb-fcard.auto{background:#1c1530;border-color:#4a2a5e}#s2Storyboard .sb-fcard.auto.on{border-color:#c85cff;background:#2a1a45}
+#s2Storyboard .sb-fcard.isrec{border-color:#8a7a2a}
+#s2Storyboard .sb-fh{font-size:13.5px;line-height:1.35}
+#s2Storyboard .sb-pf{font-size:10.5px;border-radius:6px;padding:0 6px;color:#fff;font-weight:700}
+#s2Storyboard .sb-pf.yt{background:#e0284f}#s2Storyboard .sb-pf.ig{background:#c13584}#s2Storyboard .sb-pf.ai{background:#7b3fe4}
+#s2Storyboard .sb-ck{position:absolute;right:8px;top:6px;background:#3ddc97;color:#062;border-radius:50%;width:20px;height:20px;text-align:center;font-weight:900}
+#s2Storyboard .sb-fit{display:flex;gap:3px;flex-wrap:wrap;margin:5px 0}#s2Storyboard .sb-fit span{font-size:10.5px;border:1px solid #33405f;border-radius:6px;padding:0 5px;color:#aab}
+#s2Storyboard .sb-fq{font-size:13px;margin:3px 0;line-height:1.4}
+#s2Storyboard .sb-slotw{border:1px dashed #3ddc97;border-radius:5px;padding:0 3px;color:#7ee2b0}
+#s2Storyboard .sb-fstruct{font-size:11.5px;background:#0b1410;border-radius:8px;padding:6px;margin-top:4px}
+#s2Storyboard .sb-busy{color:#ffd24a;font-size:12px;margin-top:4px}#s2Storyboard .sb-done{color:#3ddc97;font-size:12px;margin-top:4px}
+#s2Storyboard .sb-err{color:#ff7b7b;font-size:12px;margin-top:4px}
+#s2Storyboard .sb-recb{display:inline-block;font-size:11.5px;font-weight:800;background:#ffd24a;color:#3a2a00;border-radius:7px;padding:1px 8px;margin-bottom:5px}
+#s2Storyboard .sb-recb.ai{background:#c85cff;color:#fff}
+#s2Storyboard .sb-fwarn{font-size:11px;color:#ffb36b;margin:3px 0}
+#s2Storyboard .sb-cc{position:relative;display:flex;flex-direction:column;align-items:center}
+#s2Storyboard .sb-cc.off .sb-th{filter:grayscale(1) brightness(.6)}
+#s2Storyboard .sb-offt{position:absolute;top:40%;left:0;right:0;text-align:center;font-size:11px;color:#ffd24a;font-weight:700}
+#s2Storyboard .sb-ccb{display:flex;gap:2px;align-items:center;margin-top:2px}
+#s2Storyboard .sb-pk{font-size:9.5px;background:#c85cff;color:#fff;border-radius:5px;padding:0 4px}
+#s2Storyboard .sb-aik{font-size:9.5px;background:#33405f;color:#cfe0ff;border-radius:5px;padding:0 4px}
+#s2Storyboard .sb-mv{font-size:10px;cursor:pointer;color:#9fc0ff;padding:0 2px}
+#s2Storyboard .sb-cth{display:flex;gap:4px;margin:6px 0;flex-wrap:wrap}
+#s2Storyboard .sb-cand{margin:4px 0}#s2Storyboard .sb-cand1{cursor:pointer}
+#s2Storyboard .sb-cand1 .sb-th{filter:grayscale(1) brightness(.75)}#s2Storyboard .sb-cand1:hover .sb-th{filter:none}
+#s2Storyboard .sb-ck2{font-size:10px;color:#9fe3b0}
+#s2Storyboard .sb-addb{display:inline-block;white-space:nowrap;font-size:11px;background:#2fbf82;color:#fff;border-radius:6px;padding:1px 6px;margin:2px 0 4px}
+#s2Storyboard .sb-xpick{margin-top:10px;padding:10px;border:1px dashed #555;border-radius:10px}
+#s2Storyboard .sb-xopts{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+#s2Storyboard .sb-xo{cursor:pointer;padding:5px 9px;border:1px solid #555;border-radius:14px;font-size:13px}
+#s2Storyboard .sb-xo small{color:#999}#s2Storyboard .sb-xo.on{background:#2fbf82;border-color:#2fbf82;color:#fff}
+#s2Storyboard .sb-racts{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+#s2Storyboard .sb-rb{font-size:11px;padding:3px 7px;border-radius:6px;border:1px solid #444;background:#1b2230;color:#cfd8e3;cursor:pointer}
+#s2Storyboard .sb-rb.on{background:#ff6fb1;color:#fff;border-color:#ff6fb1}
+#s2Storyboard .sb-rmv button{font-size:11px;padding:2px 6px;margin-left:2px;border-radius:5px;border:1px solid #444;background:#1b2230;color:#cfd8e3;cursor:pointer}
+#s2Storyboard .sb-rmv button:disabled{opacity:.35}
+#s2Storyboard .sb-line{font-size:13.5px;background:#0f1626;border:1px solid #2a3a5c;border-radius:8px;padding:5px 7px;min-height:40px;outline:none}
+#s2Storyboard .sb-line:focus{border-color:var(--sb-pick)}#s2Storyboard .sb-line:empty:before{content:attr(data-ph);color:#6b7686}
+#s2Storyboard .sb-why{margin-top:5px;color:var(--sb-warn);font-size:12px}#s2Storyboard .sb-meta{color:var(--sb-dim);font-size:11.5px;margin-top:4px}
+#s2Storyboard .sb-rows{display:flex;flex-direction:column;gap:6px}
+#s2Storyboard .sb-row{display:grid;grid-template-columns:170px minmax(260px,1fr) minmax(300px,1.25fr);gap:10px;align-items:start;background:#121a2b;border:1px solid #2c3d63;border-radius:11px;padding:8px 10px}
+#s2Storyboard .sb-row.weak{border-color:var(--sb-warn)}#s2Storyboard .sb-row.hasstar{box-shadow:0 0 0 2px #ffd24a55}#s2Storyboard .sb-row.added{border-color:#2fbf82}
+#s2Storyboard .sb-rl{display:flex;gap:8px}#s2Storyboard .sb-rn{font-size:18px;font-weight:800;color:#9fc0ff;min-width:20px}
+#s2Storyboard .sb-rneed{font-size:11.5px;color:var(--sb-dim);margin:2px 0}
+#s2Storyboard .sb-rsec{font-size:11px;color:var(--sb-dim)}#s2Storyboard .sb-rsec.bad{color:var(--sb-warn)}
+@media(max-width:1000px){#s2Storyboard .sb-row{grid-template-columns:1fr}}
 </style>
   <link rel="stylesheet" href="theme.css?v=1">
 <style>
@@ -2750,6 +2837,9 @@
             <span class="hint" id="s2GenHint" style="margin:0"></span>
           </div>
         </div>
+
+        <!-- 스토리보드(관제 120) — STORYBOARD_ON(서버 storyboard_enabled)일 때만 sbRender가 채운다. 꺼지면 빈 채로 숨김 = 고객 화면 불변 -->
+        <div id="s2Storyboard" style="display:none"></div>
 
         <!-- ③ 결과 대본 — 안마다 역할이 보이는 행. 게이트는 성적표가 아니라 고칠 곳 안내 -->
         <div class="s2-band" id="s2ResultBand" style="margin-bottom:0;display:none">
@@ -11302,6 +11392,9 @@ async function startProduceMix(){
     //   유튜브용 CTA 잘라내기가 그걸 본다. 안 정했으면(null) 키를 안 보낸다 = 서버 자동 추정.
     if(typeof STATE.script_cta_line==='number')
       _mixBody.script_structure=Object.assign(_mixBody.script_structure||{}, {cta_line: STATE.script_cta_line, cta_text: STATE.script_cta_text||''});
+    // ★스토리보드(관제 120): 2단계 스토리보드로 확정했으면 칸마다 문장·장면을 싣는다 — 서버가 대본·줄별 장면을 정한다
+    if(Array.isArray(STATE.script_storyboard) && STATE.script_storyboard.length)
+      _mixBody.script_structure=Object.assign({}, _mixBody.script_structure||{}, {storyboard: STATE.script_storyboard});
     const r=await fetch('/api/produce/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(_mixBody)});
     const d=await r.json();
@@ -17386,6 +17479,7 @@ function s2Enter(){
   s2RenderSeeds();
   if(!S2.loadedStyles) s2LoadStyles();
   s2RenderDrafts();
+  if(window.STORYBOARD_ON){ try{ sbEnter(); }catch(e){ console.warn('[sb] 진입 실패', e); } }
 }
 // ── ① 씨앗 ───────────────────────────────────────────────────
 // 출처는 AI PICK(window._aiPick) 하나뿐이다 — 카드의 숫자·이름·대본이 같은 응답에서
@@ -18556,6 +18650,9 @@ function s2ApplyDraftContract(target, dr){
   const _k=_nb.findIndex(b=>b.cta_mark===true);
   target.script_cta_line=_decided?_k:null;
   target.script_cta_text=(_k>=0)?String(_nb[_k].text||'').trim():'';
+  // ★스토리보드(관제 120): 스토리보드로 만든 안만 칸·문장·장면을 싣는다. 다른 안으로 확정하면 지운다(옛 스토리보드가 따라가지 않게) — 이 한 곳에서만
+  if(dr && Array.isArray(dr.storyboard) && dr.storyboard.length) target.script_storyboard=dr.storyboard;
+  else delete target.script_storyboard;
   return c;
 }
 function s2Confirm(i){
@@ -18583,10 +18680,288 @@ function s2Confirm(i){
   try{ renderScriptDrift(); }catch(e){}   // 옛 job이 붙어 있으면 3단계에서 경고를 띄운다
   jump(PANEL_TO_ORB[7]);   // 3단계 = 화면 붙이기(물리 패널 7). 번호를 손으로 적지 않는다.
 }
+// ── 2단계 스토리보드(관제 120, 2026-10-05) ─────────────────────────────────────────
+// 시안 tools/storyboard_mock/pages_tpl.html 의 1단계(역할 상자·장면 카드 담기) + 2단계(스타일 → 스토리보드 줄)를 옮겼다.
+// 스위치: window.STORYBOARD_ON(/api/me storyboard = 서버 storyboard_enabled) — 꺼져 있으면 #s2Storyboard 에 아무것도 안 그린다.
+// 데이터: /api/produce/storyboard/{MIX_JOB} (판단은 서버 shopping_shorts.storyboard 한 곳). 확정은 기존 s2Confirm 흐름을 그대로 탄다.
+const SB = {jid:'', data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, showall:{}, openf:{},
+            edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, poll:null, err:''};
+const SB_KO = {hook:'훅',title:'제목',bait:'미끼',fame:'유명세',reveal:'정체 공개',limit:'한계',solve:'해결',more:'더',twist:'반전',land:'마무리',
+  price:'가격',power:'성능',easy:'쉬움',extra:'덤',deal:'딜',howto:'사용법',vs:'비교',proof:'증거',react:'반응',what:'정체',good:'좋은 점',
+  pain:'불편',how:'어떻게',story:'탄생 이야기',benefit:'효능',escalate:'고조',escalation:'고조',method:'방법',steps:'단계',texture:'식감',usage:'활용',
+  witness:'증인',cta:'마무리',situation:'상황',notice:'눈치챔',ask:'물어봄',result:'결과',regret:'후회',origin:'본래 용도',cases:'엉뚱한 쓰임',
+  mistake:'실수',authority:'권위',reason:'이유',problem:'문제',mechanism:'원리',ease:'쉬움',context:'맥락',spec:'스펙',bonus:'덤',source:'출처',fit:'맞는 사람',control:'조절',free:'새 칸'};
+function sbKo(s){ s=String(s||''); const b=s.split('_')[0].toLowerCase(); return SB_KO[s.toLowerCase()]||SB_KO[b]||s; }
+function sbE(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function sbA(s){ return sbE(String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")); }   // onclick 안 '…' 인자
+const SB_TAGI = {"훅감":"🎣","비포":"😩","애프터":"✨","반전":"🔄","반응":"👥"};
+const SB_ROLES = [["훅","🎣","#c85cff","title·hook"],["미끼·궁금증","🪤","#a17bff","bait·notice·situation"],["문제·불편","😩","#ff8a3d","limit·pain·problem·mistake"],
+  ["정체 공개","💡","#ffc23d","reveal·origin·what"],["사용법","🔧","#3a9bff","solve·method·steps·how"],["효과·소구점","✨","#2fbf82","escalation·more·benefit·power"],
+  ["반전·의외","🔄","#ff4f7b","twist·cases"],["반응·증거","👥","#24c6d6","fame·proof·witness·react"],["결과","🏁","#7ed957","result·land"],["CTA·가격","💬","#ff6fb1","cta·price·deal"]];
+const SB_SUG = {"훅감":"훅","비포":"문제·불편","애프터":"결과","반전":"반전·의외","반응":"반응·증거"};
+const SB_KINDS = ['레시피','홈템','뷰티','생활용품','장비템','가전'];
+const SB_SLOT_TAG = {hook:'훅감',title:'훅감',bait:'훅감',pain:'비포',problem:'비포',limit:'비포',mistake:'비포',regret:'비포',result:'애프터',land:'애프터',twist:'반전',cases:'반전',proof:'반응',react:'반응',witness:'반응',fame:'반응'};
+const SB_EXTRA = [['escalation','📈 고조','효능을 한 단계 더 세게'],['twist','🔄 반전','예상 밖 쓰임·충격'],['proof','👥 반응·증거','사람 반응·감탄'],['pain','😩 불편','쓰기 전 답답함'],
+  ['how','🔧 사용법','쓰는 과정'],['reveal','💡 정체 공개','제품 첫 등장'],['bait','🪤 미끼','궁금증 한 줄'],['result','🏁 결과','완성·효과 장면']];
+
+function sbJid(){ return (typeof MIX_JOB!=='undefined' && MIX_JOB) ? String(MIX_JOB) : ''; }
+function sbInv(){ const st=SB.data&&SB.data.state; return (st&&st.inventory)||null; }
+function sbPieces(){ return (SB.data&&SB.data.pieces)||{}; }
+function sbTagOf(id){ const v=sbInv(); return ((v&&v.tag_of)||{})[id]||[]; }
+function sbGroups(){ const v=sbInv(); return (v&&v.groups)||[]; }
+// 스토리보드 진입 — 작업(job)이 바뀌면 화면 기억을 비운다(다른 작업의 스토리보드가 따라오지 않게)
+function sbEnter(){
+  const box=document.getElementById('s2Storyboard'); if(!box) return;
+  // ★#s2Storyboard 를 그리는 건 sbRender 하나(DOM 주인 한 곳) — 여기선 상태만 바꾸고 부른다
+  const j=sbJid();
+  if(j!==SB.jid){ Object.assign(SB, {jid:j, data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, err:''}); }
+  if(!window.STORYBOARD_ON || !j){ sbRender(); return; }
+  sbLoad();
+}
+async function sbLoad(){
+  const j=SB.jid; if(!j) return;
+  clearTimeout(SB.poll); SB.poll=null;
+  try{
+    const r=await fetch('/api/produce/storyboard/'+encodeURIComponent(j));
+    const d=await r.json().catch(()=>null);
+    if(j!==SB.jid) return;
+    if(!r.ok || !d || !d.ok){ SB.err=(d&&d.error)||('불러오기 실패('+r.status+')'); SB.data=SB.data||null; sbRender(); return; }
+    SB.err=''; SB.data=d; sbAbsorb(d.tasks||{});
+  }catch(e){ console.warn('[sb] 불러오기 실패', e); SB.err='불러오기 실패 — 잠시 뒤 다시 열어 주세요'; }
+  sbRender();
+  const t=(SB.data&&SB.data.tasks)||{};
+  if(Object.values(t).some(x=>x&&x.state==='run')) SB.poll=setTimeout(sbLoad, 3000);   // 진행 중이면 3초마다 묻는다
+}
+// 끝난 일을 탭으로 — 이미 받은 탭은 덮어쓰지 않는다(사람이 고친 문장·장면 순서를 지킨다)
+function sbAbsorb(tasks){
+  Object.entries(tasks).forEach(([name, t])=>{
+    if(!t || t.state!=='done' || !t.result) return;
+    let k=null;
+    if(name.startsWith('board:')) k=name.slice(6);
+    else if(name.startsWith('insert:')) k=name.slice(7);
+    if(k==null || SB.made[k]) return;
+    if(!(t.result.slots||[]).length) return;
+    SB.made[k]=JSON.parse(JSON.stringify(t.result));
+    if(SB.pend[k]){ SB.made[k].from=SB.pend[k]; SB.view=k; delete SB.pend[k]; }
+    if(!SB.view) SB.view=k;
+  });
+}
+function sbTask(name){ return ((SB.data&&SB.data.tasks)||{})[name]||null; }
+async function sbPost(path, body){
+  try{
+    const r=await fetch('/api/produce/storyboard/'+encodeURIComponent(SB.jid)+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+    const d=await r.json().catch(()=>null);
+    if(!r.ok || !d || !d.ok){ toast((d&&d.error)||'요청 실패'); return false; }
+    return true;
+  }catch(e){ toast('요청 실패 — 다시 눌러 주세요'); return false; }
+}
+async function sbMakeInventory(){ if(await sbPost('/inventory', {})) setTimeout(sbLoad, 500); }
+
+// ── 1단계 부분: 역할 상자 + 장면 카드 ──
+function sbAsg(){ return SB.role; }
+function sbRolesOf(id){ return Object.entries(SB.role).filter(([r,s])=>s.has(id)).map(([r])=>r); }
+function sbSetActive(r){ SB.active=(SB.active===r?null:r); sbRender(); }
+function sbCardClick(id){ if(!SB.active) return; const s=SB.role[SB.active]=SB.role[SB.active]||new Set(); s.has(id)?s.delete(id):s.add(id); sbRender(); }
+function sbRoleColor(r){ return (SB_ROLES.find(x=>x[0]===r)||[,,'#888'])[2]; }
+function sbCard1(id, w){ const p=sbPieces()[id]; if(!p) return '';
+  const mine=sbRolesOf(id); const sug=[...new Set(sbTagOf(id).map(t=>SB_SUG[t]).filter(Boolean))];
+  return `<div class="sb-pc ${SB.active?'armed':''}" onclick="sbCardClick('${sbA(id)}')" title="${sbE(p.desc)}">
+    <div class="sb-th" style="width:${w||76}px;${mine.length?'border-color:'+sbRoleColor(mine[0]):''}"><img src="${sbE(p.th)}" alt=""><span class="sb-sec">${sbE(p.sec)}초</span>
+      <span class="sb-tg">${mine.map(r=>`<span style="background:${sbRoleColor(r)}">${(SB_ROLES.find(x=>x[0]===r)||[])[1]} ${sbE(r)}</span>`).join('')}${!mine.length&&sug.length?`<span class="sb-aisug">AI: ${sbE(sug.join('·'))}</span>`:''}</span></div></div>`; }
+function sbTh(id, w){ const p=sbPieces()[id]; if(!p) return '';
+  const tg=sbTagOf(id).map(t=>`<span>${SB_TAGI[t]||''}${sbE(t)}</span>`).join('');
+  return `<div class="sb-th" style="width:${w||66}px" title="${sbE(p.desc)}"><img src="${sbE(p.th)}" alt=""><span class="sb-tg">${tg}</span><span class="sb-sec">${sbE(p.sec)}초</span></div>`; }
+function sbPage1(){
+  const inv=sbInv(); const P=sbPieces();
+  const boxes=SB_ROLES.map(([r,ic,c,slots])=>{ const s=SB.role[r]||new Set();
+    return `<div class="sb-rbox ${SB.active===r?'on':''}" style="--c:${c}" onclick="sbSetActive('${sbA(r)}')"><div class="sb-rh">${ic} ${sbE(r)} <b>${s.size||''}</b></div><div class="sb-rs">${slots}</div>
+      <div class="sb-rth">${[...s].slice(0,5).map(id=>{ const p=P[id]; return p?`<img src="${sbE(p.th)}" alt="">`:''; }).join('')}</div></div>`; }).join('');
+  const grps=sbGroups().map((g,i)=>{ const all=SB.showall[i]; const gids=(g.ids||[]); const ids=all?gids:gids.slice(0,7);
+    const hit=gids.filter(id=>sbRolesOf(id).length).length;
+    return `<div class="sb-grp ${hit?'star':''}"><div class="sb-gh"><b>${sbE(g.name)}</b> <span>${sbE(g.desc||'')} · ${gids.length}개</span>${hit?` <span class="sb-hitb">🎯 ${hit}장 담김 — 그 자리에 먼저 놓아요 · 이 묶음의 나머지 조각은 다른 자리에도 쓰여요</span>`:''}</div>
+      <div class="sb-gth">${ids.map(id=>sbCard1(id)).join('')}</div>${gids.length>7?`<span class="sb-more" onclick="SB.showall[${i}]=!SB.showall[${i}];sbRender()">${all?'접기':'나머지 '+(gids.length-7)+'개 펼치기'}</span>`:''}</div>`; }).join('');
+  const miss=(inv&&inv.missing)||[];
+  return `<div class="sb-rbar"><div class="sb-bh">🎯 꼭 쓰고 싶은 장면 — 상자를 켜고 카드를 누르세요 <small>${SB.active?'지금 켜진 상자: <b>'+sbE(SB.active)+'</b> (다시 누르면 꺼짐)':'담은 장면은 그 자리 맨 앞에 놓이고, AI가 뒤에 더 붙여요 · 다 채울 필요 없어요'}</small></div><div class="sb-rboxes">${boxes}</div></div>
+  <div class="sb-box"><div class="sb-bh">장면 목록 <small>조각 ${Object.keys(P).length}개를 ${sbGroups().length}묶음으로 · 카드 위 'AI:' = AI가 본 쓰임(참고)</small></div><div class="sb-grps">${grps}</div></div>
+  ${miss.length?`<div class="sb-box"><div class="sb-missing"><b>이 재료에 없는 장면</b><ul>${miss.map(m=>'<li>'+sbE(m)+'</li>').join('')}</ul></div></div>`:''}`;
+}
+
+// ── 2단계 부분: 스타일 카드 → 스토리보드 ──
+function sbTpick(k){ SB.pick.has(k)?SB.pick.delete(k):SB.pick.add(k); sbRender(); }
+function sbHl(t){ return sbE(t).replace(/\{([^}]+)\}/g,'<span class="sb-slotw">$1</span>'); }
+function sbRolesParam(){ return Object.entries(SB.role).filter(([r,s])=>s.size).map(([r,s])=>r+'='+[...s].join(',')).join('|'); }
+function sbBusy(k){ const t=sbTask('board:'+k); return !!(t&&t.state==='run'); }
+async function sbMakeBoards(){
+  const ks=[...SB.pick].filter(k=>!SB.made[k]&&!sbBusy(k));
+  if(!ks.length){ const f=[...SB.pick].find(k=>SB.made[k]); if(f){ SB.view=f; sbRender(); } return; }
+  if(await sbPost('/boards', {keys:ks, star:'', roles:sbRolesParam()})) setTimeout(sbLoad, 500);
+}
+function sbFitWarn(f){ const v=sbInv(); const k=v&&v.kind; const fk=(f.fit||[]).filter(c=>SB_KINDS.includes(c));
+  if(!k || !fk.length || fk.includes(k)) return '';
+  return `<div class="sb-fwarn">⚠ ${sbE(fk.join('·'))}용 스타일 — 이 재료(${sbE(k)})엔 상황을 옮겨 써요</div>`; }
+function sbTaskBadge(k){ const t=sbTask('board:'+k);
+  if(t&&t.state==='run') return '<div class="sb-busy">⏳ 만드는 중…</div>';
+  if(SB.made[k]) return '<div class="sb-done">✔ 만들어짐</div>';
+  if(t&&t.state==='error') return `<div class="sb-err">✖ 실패 — ${sbE(t.error||'')}</div>`;
+  return ''; }
+function sbFamCard(f){
+  const k=String(f.id); const on=SB.pick.has(k); const sc=(((SB.data||{}).state||{}).styles||[]).find(s=>String(s.family)===k);
+  const names=f.names||[k];
+  const nm=names.length>1?sbE(names[0])+` <span class="sb-note">외 ${names.length-1}</span>`:sbE(names[0]);
+  const first=(f.first||[]).slice(0,2).map(t=>`<div class="sb-fq">“${sbHl(t)}”</div>`).join('');
+  const st=SB.openf[k]?`<div class="sb-fstruct">${(f.roles||[]).map((r,i)=>`<div><b>${i+1}. ${sbE(sbKo(r))}</b> ${sbE(((f.chain||[])[i]||'').slice(0,60))}</div>`).join('')}${names.length>1?`<div class="sb-note">같은 구조 첫 줄 틀: ${sbE(names.join(' · '))}</div>`:''}</div>`:'';
+  return `<div class="sb-fcard ${on?'on':''} ${sc?'isrec':''}" onclick="sbTpick('${sbA(k)}')">${sc?`<div class="sb-recb">⭐ 추천${sc.filled!=null?' · 재료 '+sbE(sc.filled)+'/'+sbE(sc.total)+'칸':''}</div>`:''}<div class="sb-fh"><span class="sb-pf ${f.yt?'yt':'ig'}">${f.yt?'유튜브':'인스타'}</span> <b>${nm}</b>${on?'<span class="sb-ck">✓</span>':''}</div>
+    <div class="sb-fit">${(f.fit||[]).slice(0,4).map(c=>`<span>${sbE(c)}</span>`).join('')}</div>${sbFitWarn(f)}
+    <div class="sb-note">${f.yt?'📌 제목 후킹':'🎣 첫 후킹'}</div>${first}
+    <span class="sb-more" onclick="event.stopPropagation();SB.openf['${sbA(k)}']=!SB.openf['${sbA(k)}'];sbRender()">${SB.openf[k]?'▲ 접기':'▼ 구조·스토리라인 보기'}</span>${st}
+    ${sbTaskBadge(k)}</div>`;
+}
+function sbTabName(k){ const F=(SB.data&&SB.data.families)||[]; const [base,...ex]=String(k).split('+');
+  const nm=base==='auto'?'AI 자동':base==='mine'?'✍ 내가 직접 쓴 대본':(((F.find(f=>String(f.id)===base)||{names:[base]}).names||[base])[0]);
+  return sbE(nm)+(ex.length?' <span class="sb-addb" style="margin:0">＋'+sbE(ex.join('+').split('·')[0].split('+').map(sbKo).join('·'))+'</span>':''); }
+function sbCur(){ const k=SB.view; return [k, SB.made[k]]; }
+function sbOrdOf(ek, i, sl){ const k=ek+'#'+i; return SB.ord[k]=SB.ord[k]||[...(sl.ids||[])]; }
+function sbLine(ek, i, sl){ return (SB.edit[ek]&&SB.edit[ek][i]!=null)?SB.edit[ek][i]:(sl.line||''); }
+function sbBake(ek, bd){   // 손으로 고친 문장·장면 순서를 칸에 굳힌 뒤 구조를 바꾼다(칸 번호로 붙은 기억이 엇갈리지 않게)
+  bd.slots.forEach((sl,i)=>{ sl.ids=sbOrdOf(ek,i,sl).slice(); sl.line=sbLine(ek,i,sl); });
+  [SB.ord, SB.cand].forEach(M=>Object.keys(M).filter(o=>o.startsWith(ek+'#')).forEach(o=>delete M[o])); delete SB.edit[ek]; }
+function sbEditLine(i, el){ const ek=SB.view; (SB.edit[ek]=SB.edit[ek]||{})[i]=el.innerText; }
+function sbRowMove(i, d){ const [ek,bd]=sbCur(); const t=i+d; if(!bd||t<0||t>=bd.slots.length) return; sbBake(ek,bd);
+  [bd.slots[i],bd.slots[t]]=[bd.slots[t],bd.slots[i]]; if(bd.check) [bd.check[i],bd.check[t]]=[bd.check[t],bd.check[i]]; sbRender(); }
+function sbRowDel(i){ const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd); bd.slots.splice(i,1); if(bd.check) bd.check.splice(i,1); sbRender(); }
+function sbRowAdd(i){ const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd); bd.slots.splice(i+1,0,{slot:'free',need:'새 칸',line:'',ids:[],added:true});
+  if(bd.check) bd.check.splice(i+1,0,{have:0,need:0}); sbRender(); }
+function sbRowCta(i){ const [ek,bd]=sbCur(); if(!bd) return; const on=!bd.slots[i].cta_mark; bd.slots.forEach((s,k)=>s.cta_mark=on&&k===i); sbRender(); }
+function sbRowActs(i, n, sl){
+  return `<div class="sb-racts"><button class="sb-rb ${sl.cta_mark?'on':''}" title="이 줄이 CTA — 다시 누르면 해제" onclick="sbRowCta(${i})">📢 CTA</button>
+    <button class="sb-rb" title="이 줄을 대본에서 뺍니다(장면 칸도 같이)" onclick="sbRowDel(${i})">🗑 빼기</button>
+    <span class="sb-rmv"><button ${i===0?'disabled':''} onclick="sbRowMove(${i},-1)">▲</button><button ${i===n-1?'disabled':''} onclick="sbRowMove(${i},1)">▼</button><button title="아래에 빈 칸" onclick="sbRowAdd(${i})">＋</button></span></div>`; }
+function sbMine(){   // ✍ 내가 직접 쓰기 — 지금 보고 있는 안의 칸 구성을 따라간다(없으면 기본 뼈대). AI를 부르지 않는다
+  const v=SB.made[SB.view]; const roles=v&&v.slots?v.slots.map(s=>s.slot):['hook','problem','method','proof','cta'];
+  SB.made['mine']={names:['내가 직접 쓴 대본'], mine:true, first_line_style:'내가 직접 쓴 대본 — 칸을 채우고, 칸마다 관련 후보에서 장면을 넣으세요',
+                   slots:roles.map(r=>({slot:r,need:'',line:'',ids:[]})), check:roles.map(()=>({have:0,need:0}))};
+  Object.keys(SB.ord).filter(o=>o.startsWith('mine#')).forEach(o=>delete SB.ord[o]); delete SB.edit['mine'];
+  SB.view='mine'; sbRender(); }
+function sbMv(ek, i, j, d){ const a=SB.ord[ek+'#'+i]; const t=j+d; if(!a||t<0||t>=a.length) return; [a[j],a[t]]=[a[t],a[j]]; sbRender(); }
+function sbRmCard(ek, i, j){ const a=SB.ord[ek+'#'+i]; if(a){ a.splice(j,1); sbRender(); } }
+function sbLeftRow(bd){ const L=bd.role_left||[]; if(!L.length) return '';
+  return `<div class="sb-row"><div class="sb-rl"><div class="sb-rn">－</div><div><b>못 넣은 장면</b><div class="sb-rneed">1단계에서 담았지만 이 대본엔 안 들어갔어요</div></div></div>
+    <div><div class="sb-why">${L.map(x=>`「${sbE(x.box)}」 ${sbE(x.why)}`).join(' · ')}</div></div>
+    <div><div class="sb-cth">${L.map(x=>`<div class="sb-cc">${sbTh(x.id,60)}<div class="sb-ccb"><span class="sb-pk">${sbE(x.box)}</span></div></div>`).join('')}</div></div></div>`; }
+function sbCellCards(ek, i, sl, ck){
+  const ids=sbOrdOf(ek,i,sl); const picked=new Set(sl.picked||[]); let acc=0; const need=Number(ck.need||0);
+  return ids.map((id,j)=>{ const p=sbPieces()[id]; const sec=p?Number(p.sec):0; const show=acc*1.2<need-0.05; acc+=sec;
+    return `<div class="sb-cc ${show?'':'off'}">${sbTh(id,60)}<div class="sb-ccb">${picked.has(id)?'<span class="sb-pk">고른 장면</span>':'<span class="sb-aik">AI</span>'}
+      <span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},-1)">◀</span><span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},1)">▶</span><span class="sb-mv" title="이 칸에서 빼기" onclick="sbRmCard('${sbA(ek)}',${i},${j})">✕</span></div>${show?'':'<div class="sb-offt">안 나옴</div>'}</div>`; }).join(''); }
+function sbUsedAll(ek, bd){ const s=new Set(); bd.slots.forEach((sl,i)=>sbOrdOf(ek,i,sl).forEach(id=>s.add(id))); return s; }
+function sbCandOf(ek, i, sl, bd){
+  const used=sbUsedAll(ek,bd); const mine=new Set(sbOrdOf(ek,i,sl)); const a=[];
+  sbGroups().filter(g=>(g.ids||[]).some(id=>mine.has(id))).forEach(g=>g.ids.forEach(id=>{ if(!used.has(id)&&!a.includes(id)) a.push(id); }));
+  const tag=SB_SLOT_TAG[String(sl.slot||'').split('_')[0].toLowerCase()];
+  if(tag) Object.keys(sbPieces()).forEach(id=>{ if(!used.has(id)&&!a.includes(id)&&sbTagOf(id).includes(tag)) a.push(id); });
+  if(!a.length && !mine.size) Object.keys(sbPieces()).forEach(id=>{ if(!used.has(id)&&a.length<12) a.push(id); });   // 빈 칸(직접 쓰기·새 칸)은 안 쓴 장면부터
+  return a.slice(0,12); }
+function sbCandBox(ek, i, sl, bd){ const cs=sbCandOf(ek,i,sl,bd); if(!cs.length) return ''; const k=ek+'#'+i, open=SB.cand[k];
+  return `<div class="sb-cand"><span class="sb-more" onclick="SB.cand['${sbA(k)}']=!SB.cand['${sbA(k)}'];sbRender()">${open?'▲ 후보 접기':'＋ 관련 후보 '+cs.length+'개 보기'}</span>${open?`<div class="sb-cth">${cs.map(id=>`<div class="sb-cc sb-cand1" onclick="sbAddCand('${sbA(ek)}',${i},'${sbA(id)}')" title="누르면 이 칸 뒤에 넣어요">${sbTh(id,52)}<div class="sb-ccb"><span class="sb-ck2">＋ 넣기</span></div></div>`).join('')}</div>`:''}</div>`; }
+function sbAddCand(ek, i, id){ const bd=SB.made[ek]; if(!bd) return; sbOrdOf(ek,i,bd.slots[i]).push(id); sbRender(); }
+function sbXset(ek){ return SB.xtra[ek]=SB.xtra[ek]||new Set(); }
+function sbTxtra(ek, r){ const s=sbXset(ek); s.has(r)?s.delete(r):s.add(r); sbRender(); }
+function sbXBusy(ek){ return Object.entries(SB.pend).some(([nk,from])=>from===ek && (sbTask('insert:'+nk)||{state:'run'}).state==='run'); }
+function sbXpick(ek, bd){
+  const have=new Set(bd.slots.map(s=>String(s.slot||'').split('_')[0].toLowerCase())); const opts=SB_EXTRA.filter(([r])=>!have.has(r));
+  if(!opts.length) return ''; const n=sbXset(ek).size, busy=sbXBusy(ek);
+  return `<div class="sb-xpick"><b>＋ 대본을 더 탄탄하게 — 넣고 싶은 칸을 고르세요</b> <span class="sb-note">지금 대본은 그대로 두고 고른 칸만 끼워요 — 앞 칸에 이어 쓰고, 안 쓴 장면 중 그 문장을 보여 주는 장면을 골라요(약 20초)</span>
+    <div class="sb-xopts">${opts.map(([r,nm,d])=>`<span class="sb-xo ${sbXset(ek).has(r)?'on':''}" onclick="sbTxtra('${sbA(ek)}','${r}')">${nm} <small>${d}</small></span>`).join('')}</div>
+    <button class="sb-btn main" ${n&&!busy?'':'disabled'} onclick="sbInsert()">${busy?'⏳ 끼워 넣는 중…':(n?'고른 '+n+'칸 끼워 넣기':'칸을 고르면 끼워 넣어요')}</button></div>`; }
+function sbCurBoard(ek, bd){   // 손으로 고친 문장·장면 순서를 반영한 지금 스토리보드
+  return Object.assign({}, bd, {slots:bd.slots.map((sl,i)=>Object.assign({}, sl, {line:sbLine(ek,i,sl), ids:sbOrdOf(ek,i,sl).slice()}))}); }
+async function sbInsert(){
+  // 끼워 넣기: 대본을 처음부터 다시 쓰지 않는다 — 원래 탭은 그대로 두고 결과는 새 탭으로
+  const [ek,bd]=sbCur(); if(!bd) return; const ex=[...sbXset(ek)]; if(!ex.length) return;
+  const base=String(ek).split('+')[0]; let nk=base+'+'+ex.join('+'); let c=2; while(SB.made[nk]||SB.pend[nk]) nk=base+'+'+ex.join('+')+'·'+(c++);
+  SB.pend[nk]=ek; sbRender();
+  if(await sbPost('/insert', {name:nk, board:sbCurBoard(ek,bd), extra:ex})){ SB.xtra[ek]=new Set(); setTimeout(sbLoad, 500); }
+  else { delete SB.pend[nk]; sbRender(); }
+}
+// 확정 — 지금 탭의 스토리보드 줄을 대본 안(draft)으로 만들어 **기존 확정 흐름(s2Confirm)** 에 태운다.
+// 스토리보드 자체는 dr.storyboard 로 실어 보내고, STATE.script_storyboard 에 넣고 빼는 자리는 s2ApplyDraftContract 한 곳이다.
+function sbConfirm(){
+  const [ek,bd]=sbCur(); if(!bd){ toast('먼저 스토리보드를 만들어 주세요'); return; }
+  const cur=sbCurBoard(ek,bd);
+  const rows=cur.slots.map(sl=>({slot:String(sl.slot||''), line:String(sl.line||'').trim(), ids:(sl.ids||[]).filter(Boolean), cta:sl.cta_mark})).filter(x=>x.line);
+  if(!rows.length){ toast('대본이 비어 있습니다'); return; }
+  const decided=cur.slots.some(sl=>sl.cta_mark===true);
+  const beats=rows.map(x=>{ const b={role:x.slot, text:x.line, src_seg:x.ids[0]||'', src_segs:x.ids.slice()}; if(decided) b.cta_mark=(x.cta===true); return b; });
+  const dr={script:rows.map(x=>x.line).join('\n'), hook:rows[0].line, beats, style_id:null,
+            storyboard:rows.map(x=>({slot:x.slot, line:x.line, ids:x.ids})), from_storyboard:sbTabName(ek).replace(/<[^>]+>/g,'')};
+  S2.drafts=(S2.drafts||[]).filter(d=>!(d&&d.storyboard)).concat([dr]);   // 다시 확정하면 옛 스토리보드 안은 바꿔 끼운다
+  const idx=S2.drafts.length-1; S2.curDraft=idx;
+  try{ s2RenderDrafts(); }catch(e){}
+  s2Confirm(idx);
+}
+function sbPage2(){
+  const F=(SB.data&&SB.data.families)||[];
+  const recIds=new Set((((SB.data||{}).state||{}).styles||[]).map(s=>String(s.family)));
+  const auto=`<div class="sb-fcard auto ${SB.pick.has('auto')?'on':''}" onclick="sbTpick('auto')"><div class="sb-recb ai">⭐ 추천 · 자유 창작</div><div class="sb-fh"><span class="sb-pf ai">AI 자동</span> <b>이 재료에 맞게 자유롭게</b>${SB.pick.has('auto')?'<span class="sb-ck">✓</span>':''}</div>
+    <div class="sb-note">스타일은 참고만 — 우리 S급 히트 대본·승인 부품 말맛으로 창의적으로</div>${sbTaskBadge('auto')}</div>`;
+  const rec=F.filter(f=>recIds.has(String(f.id))), rest=F.filter(f=>!recIds.has(String(f.id)));
+  const n=SB.pick.size, busy=[...SB.pick].some(sbBusy);
+  const tabs=Object.keys(SB.made).map(k=>`<button class="sb-btn ${SB.view===k?'on':''}" onclick="SB.view='${sbA(k)}';sbRender()">${sbTabName(k)}</button>`).join(' ');
+  const pend=Object.keys(SB.pend).map(k=>{ const t=sbTask('insert:'+k); return t&&t.state==='error'?`<span class="sb-err">✖ 끼워 넣기 실패 — ${sbE(t.error||'')}</span>`:`<span class="sb-busy">⏳ ${sbTabName(k)} 끼워 넣는 중…</span>`; }).join(' ');
+  const bd=SB.made[SB.view]; let body='';
+  if(bd && Array.isArray(bd.slots)){
+    const ek=SB.view; const mine=new Set(Object.values(SB.role).flatMap(s=>[...s]));
+    const cells=bd.slots.map((sl,i)=>{ const ids=sbOrdOf(ek,i,sl); const hs=ids.some(id=>mine.has(id)); const ck=(bd.check||[])[i]||{};
+      const added=(bd.extra||[]).includes(String(sl.slot||'').split('_')[0].toLowerCase())||sl.added;
+      const fixedTxt=sl.line_before?`<div class="sb-meta">✎ 검수: "${sbE(sl.line_before)}"${sl.fixed_why?' — '+sbE(sl.fixed_why):''}</div>`:'';
+      return `<div class="sb-row ${sl.weak?'weak':''} ${hs?'hasstar':''} ${added?'added':''}">
+        <div class="sb-rl"><div class="sb-rn">${i+1}</div><div><b>${sbE(sbKo(sl.slot))}${hs?' 🎯':''}</b><div class="sb-rneed">${sbE(sl.need||'')}</div>
+          ${added?'<div class="sb-addb">＋ 끼워 넣은 칸</div>':''}${sl.cta_mark?'<div class="sb-addb" style="background:#ff6fb1">📢 CTA 줄</div>':''}
+          <div class="sb-rsec ${ck.short?'bad':''}">문장 ${sbE(ck.need||0)}초 · 장면 ${sbE(ck.have||0)}초</div></div></div>
+        <div><div class="sb-line" contenteditable="true" data-ph="${sbE(sbKo(sl.slot))} — 여기에 쓰세요" oninput="sbEditLine(${i},this)">${sbE(sbLine(ek,i,sl))}</div>
+          ${sl.weak?`<div class="sb-why">⚠ ${sbE(sl.weak)}</div>`:''}${fixedTxt}${(added&&sl.why_scene)?`<div class="sb-meta">🎬 장면 고른 이유: ${sbE(sl.why_scene)}</div>`:''}
+          ${(i===0&&(bd.extra_missing||[]).length)?`<div class="sb-why">⚠ 끼워 넣기에서 빠진 칸: ${sbE(bd.extra_missing.map(sbKo).join(', '))}</div>`:''}
+          ${sbRowActs(i,bd.slots.length,sl)}</div>
+        <div><div class="sb-cth">${sbCellCards(ek,i,sl,ck)}</div>${sbCandBox(ek,i,sl,bd)}</div></div>`; }).join('');
+    body=`<div class="sb-note" style="margin:6px 0">${sbE(bd.first_line_style||'')} · 🎯 = 위에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
+      <div class="sb-rows">${cells}</div>${sbLeftRow(bd)}${sbXpick(ek,bd)}
+      <div style="text-align:right;margin-top:10px"><button class="sb-btn main" onclick="sbConfirm()">이 대본으로 확정 → 3단계</button></div>`;
+  }
+  return `<div class="sb-pickbar"><b>대본 스타일 고르기</b> <span class="sb-note">여러 개 골라도 돼요 · 고른 만큼 스토리보드가 따로 나와요 · 스타일 하나에 약 35초(동시에 만듦)</span>
+      <span style="margin-left:auto"></span>
+      <button class="sb-btn" title="AI 없이 내 대본을 그대로 — 지금 보고 있는 안의 칸 구성을 따라가요" onclick="sbMine()">✍ 내가 직접 쓰기</button>
+      <button class="sb-btn main" ${n&&!busy?'':'disabled'} onclick="sbMakeBoards()">${busy?'⏳ 만드는 중…':'선택한 '+n+'개로 스토리보드 만들기'}</button></div>
+    <div class="sb-fsec">대본 스타일 <span class="sb-note">같은 칸 구조는 한 카드로 합침(${F.length}개) · ⭐ 추천 = 이 재료로 칸이 잘 채워지는 스타일</span></div><div class="sb-fgrid">${auto}${rec.concat(rest).map(sbFamCard).join('')}</div>
+    ${(tabs||pend)?`<div class="sb-box" style="margin-top:12px"><div class="sb-bh">만든 스토리보드 ${tabs} ${pend}</div>${body}</div>`:''}`;
+}
+function sbRender(){
+  const box=document.getElementById('s2Storyboard'); if(!box) return;
+  if(!window.STORYBOARD_ON){ box.innerHTML=''; box.style.display='none'; return; }   // 고객 화면 불변
+  box.style.display='';
+  if(!SB.jid){ box.innerHTML='<div class="sb-box"><div class="sb-bh">🎬 스토리보드 <small>1단계 재료 분석(영상 매칭 작업)이 있어야 열려요</small></div></div>'; return; }
+  const head=`<div class="s2-label" style="margin-bottom:8px">🎬 스토리보드 <span class="sb-note">(관리자 시험) 장면을 먼저 고르고 → 대본 스타일로 줄마다 문장·장면을 짝지어 만듭니다</span></div>`;
+  if(!SB.data){ box.innerHTML=head+`<div class="sb-box">${SB.err?'<span class="sb-err">'+sbE(SB.err)+'</span>':'<span class="sb-note">불러오는 중…</span>'}</div>`; return; }
+  const ti=sbTask('inventory');
+  if(!sbInv()){
+    const run=ti&&ti.state==='run';
+    box.innerHTML=head+`<div class="sb-box"><div class="sb-bh">장면 목록이 아직 없어요 <small>재료 조각을 묶음으로 나누고 이 재료에 맞는 스타일을 추천해요(약 30~60초)</small></div>
+      ${ti&&ti.state==='error'?`<div class="sb-err">✖ 실패 — ${sbE(ti.error||'')}</div>`:''}
+      <button class="sb-btn main" ${run?'disabled':''} onclick="sbMakeInventory()">${run?'⏳ 장면 목록 만드는 중…':'장면 목록 만들기'}</button></div>`;
+    return;
+  }
+  // 다시 그려도 보던 자리를 지킨다(innerHTML 교체 순간 스크롤이 깎이는 것 방지)
+  const y=window.scrollY;
+  box.innerHTML=head+sbPage1()+sbPage2();
+  if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y);
+}
 // 관리자(사장님 cid0) 판별 — 비유튜브 재료의 "정보 채우기" 버튼 노출 조건(index.html과 동일 플래그명).
 window.IS_ADMIN=false;
 window.STORY_WRITER_ON=false;   // 서버 스위치(story_writer_enabled) — /api/me가 정본
-fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{ if(d && d.story_writer){ window.STORY_WRITER_ON=true;
+window.STORYBOARD_ON=false;     // 서버 스위치(storyboard_enabled, 관제 120) — /api/me가 정본. false면 #s2Storyboard 를 안 그린다
+fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
+  if(d && d.storyboard===true){ window.STORYBOARD_ON=true;
+    try{ const _r=document.getElementById('s2Root'); if(_r && _r.offsetParent!==null) sbEnter(); }catch(e){} }
+  if(d && d.story_writer){ window.STORY_WRITER_ON=true;
   // ★예전에 저장해 둔 작업에 스타일이 2개 고른 채로 남아 있을 수 있다 — 씨앗 자동안이 A칸을 쓰므로
   //   둘째는 어차피 안 만들어진다. 조용히 두면 있지도 않은 'C안' 뱃지가 뜨므로 한 개로 줄이고 알린다.
   try{ if(typeof S2!=='undefined' && Array.isArray(S2.picked) && S2.picked.length>1){ S2.picked.length=1;

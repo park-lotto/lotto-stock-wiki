@@ -16066,6 +16066,8 @@ def _api_me(request: Request):
             #   기대하는데 실제로는 씨앗+첫 스타일이 나와 두 번째 고른 것이 조용히 버려진다
             #   (2026-09-23 사장님 캡처). 자리 계산은 서버 한 곳을 보고 화면이 따라간다(0순위-B).
             "story_writer": _setting_gate(st, "story_writer_enabled", cid),
+            # 2단계 스토리보드(관제 120) — 서버 입구(mix/start)와 같은 스위치 하나. 화면은 이 값으로만 보인다
+            "storyboard": _setting_gate(st, "storyboard_enabled", cid),
             # 관리자가 아니어도 열어준 기능들(2026-08-31). 화면은 이 값만 보고 켠다.
             "features": {f: _feature_allowed(st, cid, f) for f in _FEATURE_KEYS},
             "email": email, "name": name, "member_days": member_days,
@@ -16202,7 +16204,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # AI 장면 생성(Veo, 2026-09-23) — 기본 admin(사장님만). 고객은 사장님 판정 뒤 "1"
                        "ai_scene_enabled",
                        # 장면꾸미기 새 편집기를 6단계 화면에 바로(2026-09-23, 사장님: 유튜브 라이브 뒤 구버전→신버전 교체) — ""끔 · "admin" · "1" 전체
-                       "scene_style_inline_enabled"}
+                       "scene_style_inline_enabled",
+                       # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
+                       "storyboard_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -20850,6 +20854,95 @@ def _enqueue_prefetch(code, product, cat, lens_tried=False):
           % (product, cat, code, " · 렌즈" if lens_tried else ""))
 
 
+# ── 2단계 스토리보드(관제 120, 2026-10-05) ─────────────────────────────────────────
+# 판단은 shopping_shorts.storyboard 한 곳. 여기는 스위치·작업 실행(3.6 호출이라 수십 초 — 실 하나로 돌리고 화면이 물어본다)만.
+# 스위치 storyboard_enabled 가 꺼진 계정은 403 — 화면도 /api/me 의 같은 값으로만 보인다(서버·화면 같은 스위치).
+_SB_TASKS = {}          # (job_id, 이름) → {"state": "run"|"done"|"error", "result"|"error"}
+_SB_LOCK = threading.Lock()
+
+
+def _sb_gate(request):
+    if not _setting_gate(Store(DB_PATH), "storyboard_enabled", getattr(request.state, "customer_id", 0)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "스토리보드는 아직 열리지 않았습니다"})
+    return None
+
+
+def _sb_run(job_id, name, fn):
+    """같은 작업·같은 이름이 돌고 있으면 새로 띄우지 않는다(더블클릭). 실패는 이유를 남긴다 — 조용히 삼키지 않는다."""
+    key = (job_id, name)
+    with _SB_LOCK:
+        if (_SB_TASKS.get(key) or {}).get("state") == "run":
+            return
+        _SB_TASKS[key] = {"state": "run", "t0": time.time()}
+
+    def _go():
+        try:
+            res = fn()
+            _SB_TASKS[key] = {"state": "done", "result": res}
+        except Exception as e:      # noqa: BLE001 — 이유를 화면에 보여 준다
+            print("[storyboard] %s %s 실패: %r" % (job_id, name, e), file=sys.stderr)
+            _SB_TASKS[key] = {"state": "error", "error": str(e)[:300]}
+    threading.Thread(target=_go, daemon=True).start()
+
+
+@app.get("/api/produce/storyboard/{job_id}")
+def api_storyboard_get(request: Request, job_id: str):
+    """재료 장면 카드(썸네일·초·설명) + 장면 목록·스타일 추천(있으면) + 스타일 카드 + 진행 중인 일."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    from shopping_shorts import storyboard as _sb
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("extract"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
+    pieces = {}
+    for vid, ex in (job.get("extract") or {}).items():
+        for sg_ in (ex or {}).get("segments") or []:
+            sid = sg_.get("seg_id")
+            if sid:
+                pieces[sid] = {"sec": round(float(sg_.get("end") or 0) - float(sg_.get("start") or 0), 1),
+                               "desc": sg_.get("scene_desc") or "", "label": sg_.get("label") or "",
+                               "use": sg_.get("use_point") or "", "kind": sg_.get("appeal_kind") or "",
+                               "th": "/api/mix/seg_thumb/%s/%s" % (job_id, sid)}
+    tasks = {k[1]: {kk: vv for kk, vv in v.items() if kk != "t0"} for k, v in list(_SB_TASKS.items()) if k[0] == job_id}
+    return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH), "tasks": tasks}
+
+
+@app.post("/api/produce/storyboard/{job_id}/inventory")
+def api_storyboard_inventory(request: Request, job_id: str):
+    g = _sb_gate(request)
+    if g:
+        return g
+    from shopping_shorts import storyboard as _sb
+    _sb_run(job_id, "inventory", lambda: _sb.inventory(DB_PATH, job_id))
+    return {"ok": True}
+
+
+@app.post("/api/produce/storyboard/{job_id}/boards")
+def api_storyboard_boards(request: Request, job_id: str, body: dict):
+    """body: {keys:[스타일 묶음 번호|'auto'], star:"id,id", roles:"훅=id,id|CTA·가격=id"} — 스타일마다 따로 돌린다(동시에)."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    from shopping_shorts import storyboard as _sb
+    star, roles = str(body.get("star") or ""), str(body.get("roles") or "")
+    for k in [str(x) for x in (body.get("keys") or [])][:6]:
+        _sb_run(job_id, "board:" + k, lambda k=k: _sb.make_boards(DB_PATH, job_id, [k], star, roles).get(k))
+    return {"ok": True}
+
+
+@app.post("/api/produce/storyboard/{job_id}/insert")
+def api_storyboard_insert(request: Request, job_id: str, body: dict):
+    """body: {name: 결과 이름, board: 지금 스토리보드, extra: [칸...]} → 고른 칸만 끼운 새 스토리보드."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    from shopping_shorts import storyboard as _sb
+    name = "insert:" + str(body.get("name") or "x")[:40]
+    _sb_run(job_id, name, lambda: _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}))
+    return {"ok": True}
+
+
 @app.post("/api/produce/mix/start")
 def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, body: dict):
     """2단계 영상믹스 — 확정 대본(given_script)을 소스영상 장면에 매칭하는 job 시작.
@@ -20860,6 +20953,18 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     모드 플래그 문자열)와는 이름만 비슷할 뿐 전혀 다른 값이니 섞지 말 것."""
     script = (body.get("script") or "").strip()
     urls = [u for u in (body.get("urls") or []) if u]
+    # ★스토리보드(관제 120): 칸마다 사람이 고른 장면이 오면 대본·줄별 출처를 그 한 곳(story_writer.storyboard_to_beat_sources)에서
+    #   만들고, 3단계는 상속 경로로 그대로 잇는다(재매칭 0회). 고른 줄은 pinned — 이후 어느 단계도 장면을 더하거나 깎지 않는다.
+    _sb = (body.get("script_structure") or {}).get("storyboard") if isinstance(body.get("script_structure"), dict) else None
+    # 스위치 storyboard_enabled(기본 끔 → 고객 화면 불변, "admin" = 관리자만 실사용 테스트, 끝나면 고객으로 넓힌다)
+    if isinstance(_sb, list) and _sb and _setting_gate(Store(DB_PATH), "storyboard_enabled",
+                                                       getattr(request.state, "customer_id", 0)):
+        from shopping_shorts.story_writer import storyboard_to_beat_sources
+        _conv = storyboard_to_beat_sources(_sb)
+        if _conv["script"]:
+            script = _conv["script"]
+            body["script_structure"] = dict(body["script_structure"], beat_sources=_conv["beat_sources"],
+                                            inherit_scenes=True, origin="storyboard")
     if not script:
         return JSONResponse(status_code=422, content={"ok": False, "error": "확정 대본이 비어 있습니다(1단계)"})
     if len(urls) < 1:
