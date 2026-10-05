@@ -4429,6 +4429,11 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
 
     from shopping_shorts.ai_match import is_pinned as _pinned
     per_line = [_ids_of(x) for x in srcs]
+    # ★스토리보드로 고른 장면이 재료에 없으면 조용히 버려진다 — 경보로 남긴다(관제 120: 1단계 캐시 seg_id 와
+    #   3단계에서 새로 뽑은 job 의 seg_id(s0-n)가 다를 수 있다. 캐시를 탄 job 은 실측 15/15 같았다)
+    _lost = sum(1 for x, ids in zip(srcs, per_line) if _pinned(x) and len(ids) < len(x.get("segs") or []))
+    if _lost:
+        print("[inherit] ⚠ 스토리보드 장면이 재료에 없음: %d줄 (seg_id 불일치)" % _lost, file=sys.stderr)
     if not any(per_line):
         return None
 

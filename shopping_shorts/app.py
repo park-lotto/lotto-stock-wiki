@@ -20963,17 +20963,60 @@ def _sb_gate(request):
 
 
 def _sb_job(request, key):
-    """화면이 주는 열쇠 → 재료 작업 번호. 2단계엔 아직 MIX_JOB 이 없어 화면은 'w:<작업파일>'을 준다 —
-    그 작업파일의 job_id 가 정본(_materials_for_generate 와 같은 규칙: 남의 작업은 못 연다)."""
+    """화면 열쇠 → (상태 열쇠, 재료 extract, 매칭 작업 번호|None). ★재료 규칙은 2단계 대본 생성(_materials_for_generate)과 같다:
+    작업파일에 매칭 작업(job)이 있으면 그 job.extract(캐시 보충 _enrich_job_extract), 없으면 담은 영상 분석(_extract_from_work).
+    ★상태 열쇠는 작업파일 기준('w-<작업파일>') — 1단계(매칭 작업 없음)에서 만든 장면 목록·스토리보드가 3단계 뒤에도 이어지게.
+    seg_id 는 두 경우가 같다(캐시를 탄 job 실측 15/15 일치) — 짝은 seg_id 로만 잇는다. 남의 작업은 못 연다."""
     st, cid = Store(DB_PATH), getattr(request.state, "customer_id", 0)
     key = str(key or "").strip()
     if key.startswith("w:"):
-        work = st.get_produce_work(key[2:], customer_id=cid)
-        key = str((work or {}).get("job_id") or "").strip()
+        wid = key[2:]
+        work = st.get_produce_work(wid, customer_id=cid)
+        if not work:
+            return None, None, None
+        jid = str(work.get("job_id") or "").strip()
+        job = st.get_mix_job(jid) if jid else None
+        if job and int(job.get("customer_id") or 0) == int(cid or 0) and job.get("extract"):
+            return "w-" + wid, (_enrich_job_extract(job, st) or {}).get("extract") or {}, jid
+        return "w-" + wid, _extract_from_work(wid, cid, st), None
     job = st.get_mix_job(key) if key else None
     if not job or int(job.get("customer_id") or 0) != int(cid or 0):
-        return None, None
-    return key, job
+        return None, None, None
+    return key, (_enrich_job_extract(job, st) or {}).get("extract") or {}, key
+
+
+_SB_THUMB_DIR = Path(__file__).parent / "data" / "storyboard_thumbs"
+
+
+@app.get("/api/produce/storyboard/thumb/{key}/{seg_id}")
+def api_storyboard_thumb(request: Request, key: str, seg_id: str):
+    """스토리보드 장면 썸네일. 매칭 작업이 있으면 그 썸네일(/api/mix/seg_thumb 과 같은 것),
+    없으면 1단계 분석 때 받아 둔 영상(data/find_frames/<sha1(영상코드)[:16]>/*.mp4)에서 조각 첫 장면을 뜬다
+    (프레임 뜨기는 frame_extract 한 곳 — _seg_strip_thumb). 영상이 치워졌으면(2일 보관) 404 → 화면은 설명 글로 보인다."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    skey, ex, jid = _sb_job(request, key.replace("w-", "w:", 1) if key.startswith("w-") else key)
+    if ex is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if jid:
+        return api_mix_seg_thumb(jid, seg_id)
+    for vid, e in (ex or {}).items():
+        for sg_ in (e or {}).get("segments") or []:
+            if sg_.get("seg_id") != seg_id:
+                continue
+            safe = re.sub(r"[^0-9A-Za-z_.-]", "", seg_id)
+            out = _SB_THUMB_DIR / ("%s.jpg" % safe)
+            if not out.exists():
+                vdir = _FIND_TMP_DIR / hashlib.sha1(str(vid).encode()).hexdigest()[:16]
+                mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
+                if not mp4:
+                    return JSONResponse(status_code=404, content={"ok": False, "error": "영상 파일이 치워졌습니다"})
+                _SB_THUMB_DIR.mkdir(parents=True, exist_ok=True)
+                if not _seg_strip_thumb(str(mp4[0]), _SB_THUMB_DIR, sg_, out.name):
+                    return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+            return FileResponse(str(out), media_type="image/jpeg")
+    return JSONResponse(status_code=404, content={"ok": False, "error": "없는 장면"})
 
 
 def _sb_run(job_id, name, fn):
@@ -21002,18 +21045,18 @@ def api_storyboard_get(request: Request, job_id: str):
     if g:
         return g
     from shopping_shorts import storyboard as _sb
-    job_id, job = _sb_job(request, job_id)
-    if not job or not job.get("extract"):
+    job_id, _ex, _jid = _sb_job(request, job_id)
+    if not _ex:
         return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     pieces = {}
-    for vid, ex in (job.get("extract") or {}).items():
+    for vid, ex in _ex.items():
         for sg_ in (ex or {}).get("segments") or []:
             sid = sg_.get("seg_id")
             if sid:
                 pieces[sid] = {"sec": round(float(sg_.get("end") or 0) - float(sg_.get("start") or 0), 1),
                                "desc": sg_.get("scene_desc") or "", "label": sg_.get("label") or "",
                                "use": sg_.get("use_point") or "", "kind": sg_.get("appeal_kind") or "",
-                               "th": "/api/mix/seg_thumb/%s/%s" % (job_id, sid)}
+                               "th": "/api/produce/storyboard/thumb/%s/%s" % (job_id, sid)}
     tasks = {k[1]: {kk: vv for kk, vv in v.items() if kk != "t0"} for k, v in list(_SB_TASKS.items()) if k[0] == job_id}
     return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH), "tasks": tasks}
 
@@ -21023,11 +21066,11 @@ def api_storyboard_inventory(request: Request, job_id: str):
     g = _sb_gate(request)
     if g:
         return g
-    job_id, _job = _sb_job(request, job_id)
-    if not _job:
+    job_id, _ex, _jid = _sb_job(request, job_id)
+    if not _ex:
         return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
-    _sb_run(job_id, "inventory", lambda: _sb.inventory(DB_PATH, job_id))
+    _sb_run(job_id, "inventory", lambda: _sb.inventory(DB_PATH, job_id, ex=_ex))
     return {"ok": True}
 
 
@@ -21037,13 +21080,13 @@ def api_storyboard_boards(request: Request, job_id: str, body: dict):
     g = _sb_gate(request)
     if g:
         return g
-    job_id, _job = _sb_job(request, job_id)
-    if not _job:
+    job_id, _ex, _jid = _sb_job(request, job_id)
+    if not _ex:
         return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
     star, roles = str(body.get("star") or ""), str(body.get("roles") or "")
     for k in [str(x) for x in (body.get("keys") or [])][:6]:
-        _sb_run(job_id, "board:" + k, lambda k=k: _sb.make_boards(DB_PATH, job_id, [k], star, roles).get(k))
+        _sb_run(job_id, "board:" + k, lambda k=k: _sb.make_boards(DB_PATH, job_id, [k], star, roles, ex=_ex).get(k))
     return {"ok": True}
 
 
@@ -21053,12 +21096,12 @@ def api_storyboard_insert(request: Request, job_id: str, body: dict):
     g = _sb_gate(request)
     if g:
         return g
-    job_id, _job = _sb_job(request, job_id)
-    if not _job:
+    job_id, _ex, _jid = _sb_job(request, job_id)
+    if not _ex:
         return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
     name = "insert:" + str(body.get("name") or "x")[:40]
-    _sb_run(job_id, name, lambda: _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}))
+    _sb_run(job_id, name, lambda: _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}, ex=_ex))
     return {"ok": True}
 
 
