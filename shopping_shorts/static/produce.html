@@ -1901,6 +1901,7 @@
                ★타임스탬프 목록은 뺐다(사장님) — 구간 확인은 3단계 장면 편집이 한다.
                ★옛 작업엔 source_brief가 없다 → 그 카드는 장면 수만 뜬다. -->
           <div id="srcAnalysis"></div>
+          <div id="s1Storyboard" style="display:none"></div>   <!-- 스토리보드 1단계 쪽(역할 상자·장면 목록) — sbRender 가 그린다(관제 120) -->
           <!-- ★AI PICK(대본 고르기)은 2단계 담당이다(9단계 개편) — 1단계에선 감춘다.
                영상을 담았는데도 "아직 담긴 영상이 없어요" CTA가 떠서 화면 아래 1/3을
                빈 채로 먹고 있었다. 요소는 남긴다: renderAiPick/renderEmptyState가 이
@@ -10053,6 +10054,7 @@ function toggleSrcCard(code){
 //   규칙은 서버(업로드 응답·자동적재)와 **똑같은** sha1(url) 앞 12자다 — 같은 키를
 //   봐야 어긋나지 않는다(0순위-B). 다시 올릴 필요 없이 그 자리에서 풀린다.
 async function renderSourceAnalysis(){
+  try{ if(window.STORYBOARD_ON) sbEnter(); }catch(e){}   // 1단계 스토리보드 재료(관제 120)
   const box = document.getElementById('srcAnalysis');
   if(!box) return;
   // ★빈 shortcode 보정은 **여기 안에서** 한다(2026-08-31). 별도 함수로 빼면
@@ -18711,7 +18713,8 @@ const SB_SLOT_TAG = {hook:'훅감',title:'훅감',bait:'훅감',pain:'비포',pr
 const SB_EXTRA = [['escalation','📈 고조','효능을 한 단계 더 세게'],['twist','🔄 반전','예상 밖 쓰임·충격'],['proof','👥 반응·증거','사람 반응·감탄'],['pain','😩 불편','쓰기 전 답답함'],
   ['how','🔧 사용법','쓰는 과정'],['reveal','💡 정체 공개','제품 첫 등장'],['bait','🪤 미끼','궁금증 한 줄'],['result','🏁 결과','완성·효과 장면']];
 
-function sbJid(){ return (typeof MIX_JOB!=='undefined' && MIX_JOB) ? String(MIX_JOB) : ''; }
+// 2단계엔 MIX_JOB 이 아직 없다 — 작업파일 번호를 주면 서버가 그 작업의 재료(job_id)를 찾는다(_sb_job, 2단계 대본 생성과 같은 규칙)
+function sbJid(){ if (typeof MIX_JOB!=='undefined' && MIX_JOB) return String(MIX_JOB); return (typeof WORK_ID!=='undefined' && WORK_ID) ? 'w:'+WORK_ID : ''; }
 function sbInv(){ const st=SB.data&&SB.data.state; return (st&&st.inventory)||null; }
 function sbPieces(){ return (SB.data&&SB.data.pieces)||{}; }
 function sbTagOf(id){ const v=sbInv(); return ((v&&v.tag_of)||{})[id]||[]; }
@@ -18942,24 +18945,28 @@ function sbPage2(){
     ${(tabs||pend)?`<div class="sb-box" style="margin-top:12px"><div class="sb-bh">만든 스토리보드 ${tabs} ${pend}</div>${body}</div>`:''}`;
 }
 function sbRender(){
-  const box=document.getElementById('s2Storyboard'); if(!box) return;
-  if(!window.STORYBOARD_ON){ box.innerHTML=''; box.style.display='none'; return; }   // 고객 화면 불변
-  box.style.display='';
-  if(!SB.jid){ box.innerHTML='<div class="sb-box"><div class="sb-bh">🎬 스토리보드 <small>1단계 재료 분석(영상 매칭 작업)이 있어야 열려요</small></div></div>'; return; }
-  const head=`<div class="s2-label" style="margin-bottom:8px">🎬 스토리보드 <span class="sb-note">(관리자 시험) 장면을 먼저 고르고 → 대본 스타일로 줄마다 문장·장면을 짝지어 만듭니다</span></div>`;
-  if(!SB.data){ box.innerHTML=head+`<div class="sb-box">${SB.err?'<span class="sb-err">'+sbE(SB.err)+'</span>':'<span class="sb-note">불러오는 중…</span>'}</div>`; return; }
+  // ★스토리보드 화면 주인은 이 함수 하나 — 1단계 #s1Storyboard(꼭 쓸 장면 상자·장면 목록) + 2단계 #s2Storyboard(스타일·스토리보드).
+  //   시안(1·2단계 페이지틀)과 같은 배치: 재료를 고르는 건 1단계, 대본은 2단계(사장님 10-05 "이게 1단계 아닌가").
+  const b1=document.getElementById('s1Storyboard'), b2=document.getElementById('s2Storyboard');
+  const put=(box, html)=>{ if(!box) return; if(html===null){ box.innerHTML=''; box.style.display='none'; } else { box.style.display=''; box.innerHTML=html; } };
+  if(!window.STORYBOARD_ON){ put(b1,null); put(b2,null); return; }   // 고객 화면 불변
+  const y=window.scrollY;
+  const head1=`<div class="s2-label" style="margin:14px 0 8px">🎬 스토리보드 재료 <span class="sb-note">(관리자 시험) 꼭 쓰고 싶은 장면을 상자에 담아 두면 2단계 스토리보드가 그 자리에 씁니다</span></div>`;
+  const head2=`<div class="s2-label" style="margin-bottom:8px">🎬 스토리보드 <span class="sb-note">(관리자 시험) 대본 스타일로 줄마다 문장·장면을 짝지어 만듭니다</span></div>`;
+  if(!SB.jid){ const m='<div class="sb-box"><span class="sb-note">영상을 담고 분석이 끝나면 열려요</span></div>'; put(b1,head1+m); put(b2,head2+m); return; }
+  if(!SB.data){ const m=`<div class="sb-box">${SB.err?'<span class="sb-err">'+sbE(SB.err)+'</span>':'<span class="sb-note">불러오는 중…</span>'}</div>`; put(b1,head1+m); put(b2,head2+m); return; }
   const ti=sbTask('inventory');
   if(!sbInv()){
     const run=ti&&ti.state==='run';
-    box.innerHTML=head+`<div class="sb-box"><div class="sb-bh">장면 목록이 아직 없어요 <small>재료 조각을 묶음으로 나누고 이 재료에 맞는 스타일을 추천해요(약 30~60초)</small></div>
+    put(b1, head1+`<div class="sb-box"><div class="sb-bh">장면 목록이 아직 없어요 <small>재료 조각을 묶음으로 나누고 이 재료에 맞는 스타일을 추천해요(약 30~60초)</small></div>
       ${ti&&ti.state==='error'?`<div class="sb-err">✖ 실패 — ${sbE(ti.error||'')}</div>`:''}
-      <button class="sb-btn main" ${run?'disabled':''} onclick="sbMakeInventory()">${run?'⏳ 장면 목록 만드는 중…':'장면 목록 만들기'}</button></div>`;
-    return;
+      <button class="sb-btn main" ${run?'disabled':''} onclick="sbMakeInventory()">${run?'⏳ 장면 목록 만드는 중…':'장면 목록 만들기'}</button></div>`);
+    put(b2, head2+'<div class="sb-box"><span class="sb-note">1단계에서 [장면 목록 만들기]를 먼저 눌러 주세요</span></div>');
+  } else {
+    put(b1, head1+sbPage1());
+    put(b2, head2+sbPage2());
   }
-  // 다시 그려도 보던 자리를 지킨다(innerHTML 교체 순간 스크롤이 깎이는 것 방지)
-  const y=window.scrollY;
-  box.innerHTML=head+sbPage1()+sbPage2();
-  if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y);
+  if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y);   // 다시 그려도 보던 자리를 지킨다
 }
 // 관리자(사장님 cid0) 판별 — 비유튜브 재료의 "정보 채우기" 버튼 노출 조건(index.html과 동일 플래그명).
 window.IS_ADMIN=false;
@@ -18967,7 +18974,7 @@ window.STORY_WRITER_ON=false;   // 서버 스위치(story_writer_enabled) — /a
 window.STORYBOARD_ON=false;     // 서버 스위치(storyboard_enabled, 관제 120) — /api/me가 정본. false면 #s2Storyboard 를 안 그린다
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   if(d && d.storyboard===true){ window.STORYBOARD_ON=true;
-    try{ const _r=document.getElementById('s2Root'); if(_r && _r.offsetParent!==null) sbEnter(); }catch(e){} }
+    try{ sbEnter(); }catch(e){} }   // 1·2단계 어느 쪽이 보이든 — 안 보이는 칸도 미리 그려 둔다
   if(d && d.story_writer){ window.STORY_WRITER_ON=true;
   // ★예전에 저장해 둔 작업에 스타일이 2개 고른 채로 남아 있을 수 있다 — 씨앗 자동안이 A칸을 쓰므로
   //   둘째는 어차피 안 만들어진다. 조용히 두면 있지도 않은 'C안' 뱃지가 뜨므로 한 개로 줄이고 알린다.
