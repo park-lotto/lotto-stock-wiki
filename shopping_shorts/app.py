@@ -3778,7 +3778,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                             _picked, _job, body.get("target_seconds") or 25, job_id=_jid,
                             preset=str(body.get("length_preset") or "short"),
                             seed_text=(it.get("full_text") or ""),
-                            seed_product=script_generate._sources_product(_src) or "")
+                            seed_product=script_generate._sources_product(_src) or "",
+                            # 고른 씨앗이 job 의 어느 영상인지(URL·원문 대조) — 이야기 작가가 그 영상 컷을 줄에 안 붙인다(관제 138)
+                            seed_vid=_selected_source_id(it, shortcode, _job))
                     except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
                         _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
                 if not _bb_drafts and _bb_on:
@@ -6551,6 +6553,7 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
     # ★사람이 필름에서 오려낸 조각을 되살려 함께 내려보낸다(2026-09-05 고객 다수 제보).
     #   안 하면 편성엔 id가 있는데 segments엔 없어 화면이 '0-0'·검은 칸이 된다.
     seg_map = _with_film_segs(seg_map, plan, job)
+    _auto_ok = _edit_plan.non_edge_segs(seg_map)
     work = _MIX_WORK_DIR / job_id
     # 소스 실길이 — 범위초과 세그(실체 없는 화면) 표시용. 소스가 없으면 {}로 폴백(표시만 꺼진다).
     src_duration = {}
@@ -6613,6 +6616,9 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
             "benefits": v.get("product_benefits") or [],
             # 2026-10-01 사장님 "이거 태깅이 대본화한 거 맞아?" — 카드가 묘사만 보여줘 오해. 대본화 소구점·훅 유형을 같이 준다.
             "use_point": v.get("use_point") or "", "hook_type": v.get("hook_type") or "", "appeal_kind": v.get("appeal_kind") or "",
+            # 자동 채우기가 집어도 되는 컷인가(관제 138) — 판단은 edit_plan.non_edge_segs 한 곳. 화면의 태그 기준 채우기가 읽는다
+            #   (씨앗·첫끝 컷은 false — 사람이 직접 담는 건 그대로 된다).
+            "auto_ok": sid in _auto_ok,
         } for sid, v in seg_map.items()},
         "phash": _lab_phash_load(work),      # 썸네일 캐시가 채워지는 대로 /phash로 늦채움
         "src_duration": src_duration,
@@ -7454,8 +7460,7 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
     # ⚠ AI 자동 채우기 후보에서 첫·끝(CTA·썸네일) 조각을 뺀다(2026-08-26).
     #   _build_inventory가 edge 표식만 달고 버리지 않게 바뀌었다 — 사람이 화면에서 골라
     #   쓰는 건 되지만 **AI가 자동으로 집는 건 종전대로 막는다**(설계 ⑤).
-    pool = [sid for sid, _s in seg_map.items()
-            if sid not in taken and not _edit_plan._is_edge_seg(_s)]
+    pool = [sid for sid in _edit_plan.non_edge_segs(seg_map) if sid not in taken]
     if not pool:
         return {"ok": True, "picks": [], "reason": "남은 장면이 없어요"}
     need = body.get("need")
