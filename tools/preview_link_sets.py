@@ -17,6 +17,7 @@ with sync_playwright() as pw:
     b = pw.chromium.launch(); pg = b.new_page(viewport={'width': 1500, 'height': 1000}, device_scale_factor=2)
     errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto(base + '/out/scene-style-ui-showcase.html'); pg.wait_for_timeout(1500)
+    pg.evaluate('sceneDecorations.linkGuide(true)')
     n = pg.evaluate('sceneStyle.sceneCount()'); pg.evaluate(f'sceneStyle.show({n - 1})'); pg.wait_for_timeout(500)
     plain = out / '_쇼츠한장.png'; pg.locator('#a-live-preview').screenshot(path=str(plain))
     shots = []

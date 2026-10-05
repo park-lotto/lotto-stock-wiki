@@ -2,7 +2,7 @@
  const api=window.sceneStyle,catalog=window.SCENE_DECORATION_CATALOG;if(!api||!catalog)return;
  const panel=document.querySelector('.scene-effects-panel'),preview=document.querySelector('#a-live-preview');
  const box=document.createElement('section');box.className='scene-decoration-panel';
- box.innerHTML=`<details open class="dec-shopset"><summary>🛍 쇼핑 안내 세트</summary><p>아래쪽 가리키는 화살표 + 안내 배지를 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).</p><label class="dec-shopset-target">가리킬 곳 <select data-shopset-target><option value="link">구매링크 칸(왼쪽 맨 아래)</option><option value="sticker">쇼핑 스티커(예전 자리)</option></select></label><div class="dec-choices" data-shopset-designs><button type="button" data-shopset-design="arrow" class="active">① 화살표 알약</button><button type="button" data-shopset-design="finger">② 손가락 콕</button><button type="button" data-shopset-design="ticket">③ 링크 티켓</button></div><div class="dec-choices"><button type="button" data-shopset="last3">마지막 3장면에 넣기</button><button type="button" data-shopset="here">이 장면만</button><button type="button" data-shopset="clear">세트 빼기</button></div><small data-shopset-status></small></details>
+ box.innerHTML=`<details open class="dec-shopset"><summary>🛍 쇼핑 안내 세트</summary><p data-shopset-help>아래쪽 가리키는 화살표 + 「영상 속 제품 클릭!」을 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).</p><label class="dec-shopset-target" hidden>가리킬 곳 <select data-shopset-target><option value="link">구매링크 칸(왼쪽 맨 아래)</option><option value="sticker">쇼핑 스티커(예전 자리)</option></select></label><div class="dec-choices" data-shopset-designs hidden><button type="button" data-shopset-design="arrow" class="active">① 화살표 알약</button><button type="button" data-shopset-design="finger">② 손가락 콕</button><button type="button" data-shopset-design="ticket">③ 링크 티켓</button></div><div class="dec-choices"><button type="button" data-shopset="last3">마지막 3장면에 넣기</button><button type="button" data-shopset="here">이 장면만</button><button type="button" data-shopset="clear">세트 빼기</button></div><small data-shopset-status></small></details>
  <details open><summary>가림막</summary><div class="dec-choices"><button data-add-mask="blur">흐림</button><button data-add-mask="fade">그라데이션</button></div></details>
  <details open><summary>스티커 · 도형 · 배지</summary><div class="dec-kit"><button data-dec-kit="sticker" class="active">😀 스티커</button><button data-dec-kit="shape">🎨 도형</button><button data-dec-kit="badge">🏷 배지</button></div><div data-kit="sticker"><div class="dec-categories"></div><div class="dec-stickers"></div></div><div data-kit="shape" hidden><p>움직이는 도형 · 눌러서 영상 위에 추가</p><div class="dec-shapes"></div></div><div data-kit="badge" hidden><p>문구와 색, 모양을 바꿀 수 있어요</p><div class="dec-my-badges" hidden></div><div class="dec-badges"></div></div></details>
  <div class="dec-items"></div><div class="dec-edit" hidden><p>화면에서 끌어 이동 · ↘ 손잡이로 크기 · ⟳ 손잡이로 회전</p><label data-badge-text>배지 문구<input data-dec="text" type="text" maxlength="24"></label><label data-badge-style>배지 모양<select data-dec="badgeStyle"><option value="pill">그라데이션 알약</option><option value="ticket">티켓</option><option value="glass">유리 배지</option><option value="burst">포인트 배지</option></select></label><button type="button" data-save-badge hidden>⭐ 이 배지를 내 버튼으로 저장</button><label data-motion-control>움직임<select data-dec="motion"><option value="none">없음</option><option value="point">가리키기</option><option value="pulse">두근두근</option><option value="spin">회전</option><option value="float">둥실둥실</option><option value="reveal">쓱 나타나기</option></select></label><label>크기<input data-dec="size" type="range" min="5" max="90" step="1"></label><label data-mask-height>높이<input data-dec="h" type="range" min="2" max="35" step="1"></label><label>회전<input data-dec="rot" type="range" min="-180" max="180" step="1"></label><label>투명도<input data-dec="op" type="range" min="10" max="100" step="1"></label><label data-mask-color>색상<input data-dec="color" type="color"></label><button data-dec-delete>선택한 항목 삭제</button></div>`;
@@ -46,12 +46,22 @@
    },
  };
  const YT_MODES=['','basic','comment'],YT_MODE_LABEL={'':'📱 유튜브 화면 자리',basic:'📱 유튜브 화면 자리 · 기본',comment:'📱 유튜브 화면 자리 · 댓글창'};
+ // ★스위치(관제 133, 사장님 "일단 관리자만 스위치 켜서"): 서버가 link_guide_enabled 로 열어 준 계정만 본다(context.linkGuide).
+ //   꺼져 있으면 버튼·디자인 고르기가 안 보이고 세트는 예전 자리 그대로다 — 고객 화면은 한 글자도 안 바뀐다.
+ let guideForce=false;
+ const guideOn=()=>guideForce||!!api.context?.()?.linkGuide;
+ function applyGuide(){
+   const on=guideOn();
+   box.querySelector('.dec-shopset-target').hidden=!on;box.querySelector('[data-shopset-designs]').hidden=!on;
+   box.querySelector('[data-shopset-help]').textContent=on?'아래쪽 가리키는 화살표 + 안내 배지를 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).':'아래쪽 가리키는 화살표 + 「영상 속 제품 클릭!」을 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).';
+   if(ytButton)ytButton.hidden=!on;
+ }
  const YT_KEY='scene_style_yt_ui',ytAllowed=!new URLSearchParams(location.search).has('qa');
  let ytLayer=null,ytButton=null;
  const ytOn=()=>{try{const v=localStorage.getItem(YT_KEY);return v==='2'?'comment':v==='1'?'basic':''}catch{return ''}};   // '' = 끔
  function ytDraw(){
    if(!ytLayer)return;
-   const on=window.sceneStyleExporting?'':ytOn();
+   const on=window.sceneStyleExporting||!guideOn()?'':ytOn();
    ytLayer.style.display=on?'block':'none';ytButton.setAttribute('aria-pressed',String(!!on));ytButton.textContent=YT_MODE_LABEL[on];ytButton.style.background=on?'#11B98C':'transparent';ytButton.style.color=on?'#04231b':'#dce8ec';
    preview.parentElement.style.marginBottom=on?Math.ceil(preview.offsetHeight*.075)+'px':'';   // 링크 칸이 영상 아래로 나가는 만큼 자리를 비운다
    if(!on)return;
@@ -166,6 +176,7 @@
  function draw(){
    if(editing)return;
    const next=api.geometry().sceneIndex;if(index!==next){index=next;selected=-1;controls()}
+   applyGuide();ytDraw();
    layer.replaceChildren();layerTop.replaceChildren();
    handles.hidden=true;
    const _order=[...masks().keys()].sort((x,y)=>(masks()[x].kind==='image')-(masks()[y].kind==='image'));   // 로고(image)는 늘 맨 위 — 나중에 그린다
@@ -224,7 +235,7 @@
  function shopSet(scope){
    const cur=api.geometry().sceneIndex,total=api.sceneCount?.()||0;
    const targets=scope==='last3'?[total-3,total-2,total-1].filter(i=>i>=1):scope==='clear'?Array.from({length:total},(_,i)=>i):[cur];   // 마지막 3장에 1장(훅)은 안 넣는다 · 빼기는 전 장면
-   const items=shopSetItems(box.querySelector('[data-shopset-target]').value,box.querySelector('[data-shopset-design].active')?.dataset.shopsetDesign);
+   const items=shopSetItems(guideOn()?box.querySelector('[data-shopset-target]').value:'sticker',box.querySelector('[data-shopset-design].active')?.dataset.shopsetDesign);
    let done=0,full=[];
    for(const i of targets){
      const keep=(api.effectAt(i).masks||[]).filter(m=>m.set!==SHOPSET);
@@ -232,7 +243,7 @@
      api.effectAt(i,{...api.effectAt(i),masks:scope==='clear'?keep:[...keep,...items]});done++;
    }
    selected=-1;controls();draw();
-   if(scope!=='clear'&&done&&ytLayer&&!ytOn())ytSet('basic');   // 넣은 자리가 유튜브 화면 어디인지 바로 보이게
+   if(scope!=='clear'&&done&&ytLayer&&guideOn()&&!ytOn())ytSet('basic');   // 넣은 자리가 유튜브 화면 어디인지 바로 보이게
    const nums=targets.map(i=>i+1).join('·');
    box.querySelector('[data-shopset-status]').textContent=(scope==='clear'?'모든 장면에서 세트를 뺐어요':`${nums}장에 넣었어요`)+(full.length?` (${full.join('·')}장은 항목이 12개라 못 넣음)`:'');
    return done;
@@ -323,5 +334,5 @@
  document.addEventListener('keydown',event=>{if(!['Delete','Backspace'].includes(event.key)||event.target.closest('input,textarea,select,[contenteditable="true"]')||panel.hidden)return;if(selected>=0){event.preventDefault();removeSelected();}});
  new MutationObserver(draw).observe(preview.querySelector('.precision-edit-layer'),{childList:true});
  addEventListener('resize',()=>{if(!window.sceneStyleExporting)draw()});picker();draw();
- window.sceneDecorations={motionAt(time){for(const el of layer.children)for(const animation of el.getAnimations()){animation.pause();animation.currentTime=time;}return masks().some(m=>m.motion&&m.motion!=='none')},refresh(){controls();draw();}};
+ window.sceneDecorations={motionAt(time){for(const el of layer.children)for(const animation of el.getAnimations()){animation.pause();animation.currentTime=time;}return masks().some(m=>m.motion&&m.motion!=='none')},refresh(){controls();draw();},linkGuide(on){guideForce=!!on;applyGuide();ytDraw();return guideOn()}};
 })();

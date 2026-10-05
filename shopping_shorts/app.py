@@ -16383,7 +16383,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 신호어 새 풀(히트 자막 2,051편 빈도 가중, 2026-10-05) — ""끔(종전 8세트) · "admin" · "1" 전체
                        "signal_pool_enabled",
                        # 대화형 대본(관제 128, 2026-10-05) — ""끔 · "admin" 사장님만 시험 · "1" 전체
-                       "dialogue_enabled"}
+                       "dialogue_enabled",
+                       # 구매링크 안내(관제 133, 2026-10-06) — 장면꾸미기 유튜브 화면 자리 표시 + 쇼핑 안내 세트 새 디자인. ""끔 · "admin" 사장님만 · "1" 전체
+                       "link_guide_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -21584,6 +21586,8 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     if copy_family:
         headcopy["copy_family"] = headcopy_gen.normalize_family(copy_family)
     context = context_for(timeline, headcopy, snapshot, job_id)
+    # 구매링크 안내(관제 133): 스위치가 열어 준 계정에만 편집기가 유튜브 화면 자리·새 세트 디자인을 보여 준다(out/scene-style-decorations.js guideOn).
+    context["linkGuide"] = bool(_setting_gate(Store(DB_PATH), "link_guide_enabled", _cid(request)))
     # ★페이지 그림 = **그 페이지 시간 한가운데**의 실제 화면(2026-10-03 관제 101, 황선희님 817308da1647).
     #   종전엔 모든 페이지에 칸 대표 그림 한 장(beatframe/<칸>)을 줘서, 장면 앞 1초에만 지나가는 원본 자막이
     #   편집기에 안 보였다 → 고객이 가림막을 못 넣고 완성본에서야 자막을 봤다. 시각 → 그림은 _beatframe_file(at=) 한 곳.

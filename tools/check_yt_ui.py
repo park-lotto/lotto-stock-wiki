@@ -41,6 +41,13 @@ with sync_playwright() as pw:
         for _ in range(3):
             if pg.evaluate(RECTS) == {}: return
             pg.evaluate(CLICK); pg.wait_for_timeout(200)
+    # ⓪ 스위치가 꺼진 계정(기본): 버튼·디자인 고르기가 안 보이고, 세트는 예전 자리·예전 문구 그대로
+    need(pg.evaluate("document.querySelector('[data-yt-ui-toggle]').hidden && document.querySelector('[data-shopset-designs]').hidden && document.querySelector('.dec-shopset-target').hidden"), '⓪ 스위치 끔: 자리 버튼·가리킬 곳·디자인 고르기가 숨어 있다')
+    pg.evaluate("document.querySelector('[data-shopset=\"here\"]').click()"); pg.wait_for_timeout(200)
+    old = pg.evaluate('sceneStyle.effect().masks')
+    need([(m.get('graphic') or m.get('text'), m['l'], m['t']) for m in old] == [('arrow_bold', 1, 43), ('영상 속 제품 클릭!', 3, 79)] and pg.evaluate(RECTS) == {}, f"⓪ 스위치 끔: 세트 = 예전 그대로 {[(m.get('graphic') or m.get('text'), m['l'], m['t']) for m in old]}, 자리 표시 안 켜짐")
+    pg.evaluate("document.querySelector('[data-shopset=\"clear\"]').click()")
+    need(pg.evaluate('sceneDecorations.linkGuide(true)') is True and not pg.evaluate("document.querySelector('[data-yt-ui-toggle]').hidden"), '⓪ 스위치 켬: 자리 버튼이 보인다')
     # ① 겹쳐보기 — 누를 때마다 기본 → 댓글창 화면 → 끔
     need(pg.locator('[data-yt-ui-toggle]').count() == 1, '① 「유튜브 화면 자리」 버튼이 있다')
     need(pg.evaluate(RECTS) == {}, '① 처음에는 꺼져 있다(자리 표시 0개)')
@@ -98,6 +105,7 @@ with sync_playwright() as pw:
     # ③ 렌더 조건: 켜 둔 브라우저 + ?qa=1
     ctx = b.new_context(); ctx.add_init_script("try{localStorage.setItem('scene_style_yt_ui','1')}catch(e){}")
     p2 = ctx.new_page(); p2.goto(URL); p2.wait_for_timeout(1200)
+    p2.evaluate('sceneDecorations.linkGuide(true)')
     need(bool(p2.evaluate(RECTS)), '③ (대조) 켜 둔 브라우저의 편집 화면에는 자리 표시가 있다 — 이 검사가 실제로 잡는다')
     p3 = ctx.new_page(); p3.goto(URL + '?qa=1'); p3.wait_for_timeout(1200)
     need(p3.evaluate("document.querySelectorAll('.scene-yt-ui,[data-yt-ui-toggle]').length") == 0, '③ 렌더 조건(?qa=1)에서는 자리 표시 층·버튼이 아예 없다')
