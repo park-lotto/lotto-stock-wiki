@@ -117,3 +117,31 @@ def test_api_from_work_makes_new_job(api):
     assert st.get_mix_job("J1")["given_script"] == "\n".join(SRC)   # 원본은 그대로
     w2 = st.get_produce_work(r.json()["work_id"], 0)
     assert w2["job_id"] == j["job_id"] and w2["title"].startswith("[대화형")
+
+
+def test_api_forms_and_preview_by_work(api):
+    c, st, wid = api
+    st.set_setting("dialogue_enabled", "admin")
+    f = c.get("/api/produce/dialogue/forms").json()
+    assert [x["id"] for x in f["forms"]] == list(ds.FORMS) and all(x["desc"] for x in f["forms"])
+    r = c.post("/api/produce/dialogue/convert", json={"work_id": wid, "form": "narr_then_talk"}).json()
+    assert r["ok"] and r["source"] == SRC and len(r["lines"]) == 4
+    me = c.get("/api/me").json()
+    assert me["dialogue"] is True
+
+
+def test_api_make_uses_previewed_lines_as_is(api, monkeypatch):
+    c, st, wid = api
+    st.set_setting("dialogue_enabled", "admin")
+    lines = ds.convert(SRC, "narr_then_talk", call=lambda p, s: _good())
+    lines[3]["text"] = "파란 강아지가 꽉 물어 줘."                 # 사람이 본 그대로 — 다시 변환하지 않는다
+    monkeypatch.setattr(ds.script_generate, "_call_json", lambda p, s: (_ for _ in ()).throw(AssertionError("재변환 금지")))
+    r = c.post(f"/api/produce/dialogue/from_work/{wid}", json={"form": "narr_then_talk", "lines": lines,
+                                                              "cast": {"언니": "kr-hanna-natural"}})
+    assert r.status_code == 200, r.text
+    j = st.get_mix_job(r.json()["job_id"])
+    assert j["given_script"].split("\n")[3] == "파란 강아지가 꽉 물어 줘."
+    assert j["script_structure"]["dialogue"]["cast"]["언니"] == "kr-hanna-natural"
+    bad = [dict(l) for l in lines]; bad[3]["text"] = "2만 원인데 꽉 물어 줘."
+    r2 = c.post(f"/api/produce/dialogue/from_work/{wid}", json={"form": "narr_then_talk", "lines": bad})
+    assert r2.status_code == 422 and "숫자" in r2.json()["error"]
