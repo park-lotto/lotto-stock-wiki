@@ -1,0 +1,2752 @@
+{
+ "ed4e1b534327": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 3.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "화면에 손만 보이며 남성 목소리로 요리 제목을 말한다."
+   }
+  ],
+  "overall": "와플 메이커로 콘비프 요리를 만드는 과정을 남성 목소리의 내레이션과 함께 보여주는 쇼츠 영상이다.",
+  "model": "gemini-3.5-flash"
+ },
+ "a43402fe1546": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 2.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "레고 피규어를 손에 들고 소개하고 있다."
+   },
+   {
+    "s": 2.4,
+    "e": 5.6,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": true,
+    "note": "남성이 카메라를 보며 레고 손에 충전선이 들어간다는 발견을 말하고 있다."
+   },
+   {
+    "s": 5.6,
+    "e": 8.3,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "책상 위의 지저분한 전선들을 보여주고 있다."
+   },
+   {
+    "s": 8.3,
+    "e": 10.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "긴 레고 밑판을 준비하는 모습을 보여준다."
+   },
+   {
+    "s": 10.2,
+    "e": 12.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "책상 모서리에 벨크로 테이프를 붙이고 있다."
+   },
+   {
+    "s": 12.4,
+    "e": 14.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "벨크로 위에 레고 밑판을 고정하고 있다."
+   },
+   {
+    "s": 14.6,
+    "e": 17.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "밑판에 다양한 레고 피규어들을 차례로 끼우고 있다."
+   },
+   {
+    "s": 23.2,
+    "e": 26.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "완성된 레고 전선 정리기를 보여주며 마무리 멘트를 한다."
+   }
+  ],
+  "overall": "레고 피규어를 활용하여 책상 위의 전선을 깔끔하게 정리하는 DIY 방법을 소개하는 영상이다.",
+  "model": "gemini-3.5-flash"
+ },
+ "97beb603d0d4": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 2.0,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": false,
+    "note": "달리던 여성이 폰을 떨어뜨리고 비명을 지릅니다."
+   },
+   {
+    "s": 2.0,
+    "e": 5.0,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": false,
+    "note": "여성이 차가 폰을 칠 뻔하자 놀라 소리칩니다."
+   },
+   {
+    "s": 5.0,
+    "e": 8.0,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "다른 여성이 다가와 달리며 폰을 떨어뜨리는 것이 위험하다고 말합니다."
+   },
+   {
+    "s": 8.0,
+    "e": 10.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "벨트를 착용하는 모습을 보여주며 러닝 벨트를 추천합니다."
+   },
+   {
+    "s": 10.0,
+    "e": 12.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "벨트에 소지품을 넣는 모습을 보여주며 안전하게 보관된다고 설명합니다."
+   },
+   {
+    "s": 12.0,
+    "e": 14.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "물병 홀더가 있어 손이 자유롭다고 설명합니다."
+   },
+   {
+    "s": 14.0,
+    "e": 16.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "부드럽고 신축성 있는 소재로 편안하다고 설명합니다."
+   },
+   {
+    "s": 16.0,
+    "e": 20.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "반사 스트립이 있어 야간 러닝 시 안전하다고 설명합니다."
+   }
+  ],
+  "overall": "러닝 중 휴대폰을 떨어뜨리는 위험한 상황을 보여준 후, 소지품과 물병을 안전하게 보관할 수 있는 러닝 벨트를 소개하는 광고 영상입니다.",
+  "model": "gemini-3.5-flash"
+ },
+ "c9617b862189": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 2.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "배경 음악의 밈 오디오 목소리가 나옵니다."
+   },
+   {
+    "s": 2.0,
+    "e": 4.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "배경 음악의 밈 오디오 목소리가 나옵니다."
+   },
+   {
+    "s": 4.0,
+    "e": 6.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "배경 음악의 밈 오디오 목소리가 나옵니다."
+   },
+   {
+    "s": 6.0,
+    "e": 8.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "배경 음악의 밈 오디오 목소리가 나옵니다."
+   },
+   {
+    "s": 8.0,
+    "e": 10.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "배경 음악의 밈 오디오 목소리가 나옵니다."
+   },
+   {
+    "s": 10.0,
+    "e": 12.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "배경 음악의 밈 오디오 목소리가 나옵니다."
+   }
+  ],
+  "overall": "비행기 안에서 여성이 에어 필로우를 불어 편안하게 잠을 자는 모습을 담은 영상으로, 배경 음악과 밈 오디오가 깔려 있습니다.",
+  "model": "gemini-3.5-flash"
+ },
+ "2477688a62b0": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 3.3,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "손에 수납백을 들고 사용 소감을 말한다."
+   },
+   {
+    "s": 3.3,
+    "e": 4.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "수납백을 열며 디자인 특징을 설명한다."
+   },
+   {
+    "s": 4.8,
+    "e": 7.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "수납백 안의 물건들을 보여주며 설명한다."
+   },
+   {
+    "s": 7.2,
+    "e": 9.8,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "수납백에서 화장품을 꺼내며 편리함을 설명한다."
+   },
+   {
+    "s": 9.8,
+    "e": 12.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "수납백에 들어가는 화장품들을 보여준다."
+   },
+   {
+    "s": 12.4,
+    "e": 14.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "화장품들을 수납백에 넣으며 수납력을 보여준다."
+   },
+   {
+    "s": 14.8,
+    "e": 17.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "수납백 안쪽의 그물망 주머니를 보여주며 설명한다."
+   },
+   {
+    "s": 17.8,
+    "e": 21.7,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "다양한 소지품을 수납한 모습을 보여준다."
+   },
+   {
+    "s": 21.7,
+    "e": 23.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "큰 가방 안에 수납백을 넣으며 정리된 모습을 보여준다."
+   },
+   {
+    "s": 23.6,
+    "e": 25.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "수납백을 손에 들고 외출하는 모습을 보여준다."
+   },
+   {
+    "s": 25.4,
+    "e": 26.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "수납백을 들고 가벼움을 칭찬한다."
+   }
+  ],
+  "overall": "한 여성이 다용도 미니 수납백의 수납력과 편리함을 직접 사용하며 소개하는 영상이다.",
+  "model": "gemini-3.5-flash"
+ },
+ "199154517ed1": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 2.9,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "손으로 화장품 파우치를 열어 보여주며 말한다."
+   },
+   {
+    "s": 2.9,
+    "e": 5.1,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "파우치를 서랍에서 꺼내며 말한다."
+   },
+   {
+    "s": 5.1,
+    "e": 7.1,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "가방에서 화장품들을 꺼내며 말한다."
+   },
+   {
+    "s": 7.1,
+    "e": 10.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "파우치에 화장품들을 하나씩 넣으며 말한다."
+   },
+   {
+    "s": 10.6,
+    "e": 12.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "파우치에 화장품을 다 넣고 지퍼를 닫으며 말한다."
+   },
+   {
+    "s": 12.0,
+    "e": 13.4,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "파우치를 손에 들고 보여주며 말한다."
+   },
+   {
+    "s": 13.4,
+    "e": 15.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "파우치를 이리저리 돌려보며 말한다."
+   },
+   {
+    "s": 15.6,
+    "e": 17.1,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "파우치를 흔들어 보이며 말한다."
+   },
+   {
+    "s": 17.1,
+    "e": 19.2,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "파우치를 열어 내부 수납 상태를 보여주며 말한다."
+   },
+   {
+    "s": 19.2,
+    "e": 21.2,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "가방에서 파우치를 꺼내 책상에 놓으며 말한다."
+   },
+   {
+    "s": 21.2,
+    "e": 23.4,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "파우치에서 화장품을 꺼내며 말한다."
+   },
+   {
+    "s": 23.4,
+    "e": 24.3,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "파우치를 책상 위에 올려두고 가방을 수납장에 넣으며 말한다."
+   }
+  ],
+  "overall": "화장품 파우치의 수납력과 편리함을 직접 사용하며 설명하는 영상",
+  "model": "gemini-3.5-flash"
+ },
+ "9aafc8197b2b": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 4.3,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "제품을 보여주며 추천하는 목소리"
+   },
+   {
+    "s": 4.3,
+    "e": 8.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "제품 구성품과 세정액을 보여주며 설명하는 목소리"
+   },
+   {
+    "s": 8.8,
+    "e": 13.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "타사 제품과 비교하며 장점을 설명하는 목소리"
+   },
+   {
+    "s": 13.0,
+    "e": 17.5,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "소파를 청소하며 상황을 설명하는 목소리"
+   },
+   {
+    "s": 17.5,
+    "e": 22.5,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "차량 시트를 청소하며 설명하는 목소리"
+   },
+   {
+    "s": 22.5,
+    "e": 27.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "틈새 도구를 사용하며 설명하는 목소리"
+   },
+   {
+    "s": 27.0,
+    "e": 31.3,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "브러시 헤드를 교체하며 설명하는 목소리"
+   },
+   {
+    "s": 31.3,
+    "e": 36.2,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "야외 가구를 청소하며 설명하는 목소리"
+   },
+   {
+    "s": 36.2,
+    "e": 40.5,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "쿠션의 절반만 청소하며 설명하는 목소리"
+   },
+   {
+    "s": 40.5,
+    "e": 46.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "더러워진 물을 보여주며 설명하는 목소리"
+   },
+   {
+    "s": 46.0,
+    "e": 50.1,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "청소 성능에 감탄하며 설명하는 목소리"
+   },
+   {
+    "s": 50.1,
+    "e": 54.8,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "더러운 물을 버리고 세척하는 방법을 추천하는 목소리"
+   },
+   {
+    "s": 54.8,
+    "e": 56.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "보관 방법을 설명하며 마무리하는 목소리"
+   }
+  ],
+  "overall": "사용자가 직접 청소기를 사용하며 다양한 장소의 얼룩을 제거하고 성능에 감탄하는 후기 영상",
+  "model": "gemini-3.5-flash"
+ },
+ "097e232b5b93": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 3.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "카펫의 얼룩을 보여주며 청소 방법을 소개하는 남성의 목소리."
+   },
+   {
+    "s": 3.8,
+    "e": 5.3,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "청소기 제품명을 말하는 남성의 목소리."
+   },
+   {
+    "s": 5.3,
+    "e": 8.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "청소기를 꺼내 전원을 켜는 방법을 설명하는 남성의 목소리."
+   },
+   {
+    "s": 8.4,
+    "e": 12.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "청소기 헤드를 카펫에 밀착시키는 방법을 설명하는 남성의 목소리."
+   },
+   {
+    "s": 12.2,
+    "e": 16.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "얼룩 위로 청소기를 미는 방법을 설명하는 남성의 목소리."
+   },
+   {
+    "s": 16.8,
+    "e": 17.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "청소기 작동법을 계속 설명하는 남성의 목소리."
+   },
+   {
+    "s": 17.8,
+    "e": 22.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "액체가 더 이상 흡입되지 않을 때까지 반복하라고 설명하는 남성의 목소리."
+   },
+   {
+    "s": 22.4,
+    "e": 24.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "청소기 헤드를 통해 액체가 흡입되는 모습을 설명하는 남성의 목소리."
+   },
+   {
+    "s": 24.2,
+    "e": 28.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "세척액을 뿌리는 단계를 설명하는 남성의 목소리."
+   },
+   {
+    "s": 28.4,
+    "e": 30.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "스크럽 헤드를 선택하는 단계를 설명하는 남성의 목소리."
+   },
+   {
+    "s": 30.6,
+    "e": 32.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "플라스틱 솔을 사용할 것이라고 설명하는 남성의 목소리."
+   },
+   {
+    "s": 32.2,
+    "e": 35.7,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "세척액이 카펫 섬유에 스며들도록 문지르는 단계를 설명하는 남성의 목소리."
+   },
+   {
+    "s": 35.7,
+    "e": 37.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "카펫 섬유를 문지르는 모습을 설명하는 남성의 목소리."
+   },
+   {
+    "s": 37.2,
+    "e": 41.1,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "다시 청소기를 켜고 세척액을 흡입하는 단계를 설명하는 남성의 목소리."
+   },
+   {
+    "s": 41.1,
+    "e": 44.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "남은 얼룩과 세척액을 흡입하는 모습을 설명하는 남성의 목소리."
+   },
+   {
+    "s": 44.2,
+    "e": 47.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "오물이 수거함에 모인 모습을 보여주며 버리는 방법을 설명하는 남성의 목소리."
+   }
+  ],
+  "overall": "남성이 카펫의 얼룩을 제거하기 위해 청소기를 사용하는 단계를 차근차근 설명하는 튜토리얼 영상입니다.",
+  "model": "gemini-3.5-flash"
+ },
+ "8ee2ad926183": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 2.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "주방에 아직 설치되지 않은 식기 선반이 있다고 설명한다."
+   },
+   {
+    "s": 2.9,
+    "e": 4.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "제품을 보여주며 사용해 보라고 권한다."
+   },
+   {
+    "s": 4.6,
+    "e": 6.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "구멍을 뚫을 필요가 없다고 설명하며 벽에 설치한다."
+   },
+   {
+    "s": 6.8,
+    "e": 9.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "제품을 벽에 고정하고 튼튼함을 보여준다."
+   },
+   {
+    "s": 9.0,
+    "e": 11.7,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "요리할 때 음식을 미리 준비해 두는 용도로 사용한다고 설명한다."
+   },
+   {
+    "s": 11.7,
+    "e": 13.7,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "테이블 공간을 절약할 수 있다고 설명한다."
+   },
+   {
+    "s": 13.7,
+    "e": 15.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "음식을 꺼내기 편리하다고 설명하며 팬에 넣는다."
+   },
+   {
+    "s": 15.2,
+    "e": 18.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "사용하지 않을 때는 접어둘 수 있다고 설명한다."
+   },
+   {
+    "s": 18.2,
+    "e": 20.1,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "주방이 깔끔해졌다고 말하며 마무리한다."
+   }
+  ],
+  "overall": "벽면 설치형 접이식 식기 선반의 편리함과 공간 절약 효과를 설명하는 영상",
+  "model": "gemini-3.5-flash"
+ },
+ "a5aafec87553": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 3.1,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": false,
+    "note": "손으로 벽의 구멍을 뜯으며 불평한다."
+   },
+   {
+    "s": 3.1,
+    "e": 5.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "벽 패치 스티커를 보여준다."
+   },
+   {
+    "s": 5.4,
+    "e": 7.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "구멍 위에 패치를 붙인다."
+   },
+   {
+    "s": 7.4,
+    "e": 10.5,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "패치 위에 퍼티를 바른다."
+   },
+   {
+    "s": 10.5,
+    "e": 12.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": false,
+    "note": "퍼티를 펴 바르며 구멍이 사라진다고 말한다."
+   },
+   {
+    "s": 12.6,
+    "e": 14.5,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": false,
+    "note": "스스로 하기 쉽다고 말하며 표면을 정리한다."
+   },
+   {
+    "s": 14.5,
+    "e": 16.1,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": false,
+    "note": "수리공을 부를 필요가 없다고 말한다."
+   },
+   {
+    "s": 16.1,
+    "e": 17.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "따봉을 하며 무료 배송을 언급한다."
+   },
+   {
+    "s": 17.9,
+    "e": 20.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "제품 세트를 가리키며 저렴한 가격을 강조한다."
+   },
+   {
+    "s": 20.9,
+    "e": 21.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "기회를 놓치지 말라고 말한다."
+   },
+   {
+    "s": 21.9,
+    "e": 24.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "아래 링크를 통해 구매하라고 권유한다."
+   }
+  ],
+  "overall": "벽의 구멍을 간편하게 메울 수 있는 벽 패치 스티커와 퍼티 세트를 소개하고 사용법을 보여주는 광고 영상",
+  "model": "gemini-3.5-flash"
+ },
+ "171f9ff7a437": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 3.7,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "여성이 손으로 필통을 만지며 말하고 있다."
+   },
+   {
+    "s": 3.7,
+    "e": 6.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "여성이 필통의 태그를 보여주며 말하고 있다."
+   },
+   {
+    "s": 6.6,
+    "e": 9.3,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "여성이 여러 색상의 필통을 보여주며 말하고 있다."
+   },
+   {
+    "s": 9.3,
+    "e": 11.9,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "여성이 필통을 들고 보여주며 말하고 있다."
+   },
+   {
+    "s": 11.9,
+    "e": 13.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 필통에 물을 뿌리며 방수 기능을 보여주고 있다."
+   },
+   {
+    "s": 13.9,
+    "e": 16.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 필통 내부의 낙서를 지우개로 지우며 말하고 있다."
+   },
+   {
+    "s": 16.4,
+    "e": 18.9,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "여성이 필통 내부를 닦아내며 말하고 있다."
+   },
+   {
+    "s": 18.9,
+    "e": 21.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 열쇠로 필통 표면을 긁으며 내구성을 보여주고 있다."
+   },
+   {
+    "s": 21.0,
+    "e": 23.1,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 필통을 열어 내부 공간을 보여주며 말하고 있다."
+   },
+   {
+    "s": 23.1,
+    "e": 26.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 필통에 많은 펜을 넣으며 수납력을 보여주고 있다."
+   },
+   {
+    "s": 26.6,
+    "e": 30.1,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 필통 내부의 수납 공간을 설명하며 말하고 있다."
+   },
+   {
+    "s": 30.1,
+    "e": 32.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 필통 외부 주머니에 가위를 넣으며 말하고 있다."
+   },
+   {
+    "s": 32.2,
+    "e": 36.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 필통을 180도로 펼쳐서 펜을 꺼내며 말하고 있다."
+   },
+   {
+    "s": 36.4,
+    "e": 38.2,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "여성이 필통의 손잡이와 마감을 보여주며 말하고 있다."
+   },
+   {
+    "s": 38.2,
+    "e": 40.1,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "여성이 필통의 지퍼를 열고 닫으며 말하고 있다."
+   },
+   {
+    "s": 40.1,
+    "e": 43.3,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 여러 색상의 필통을 보여주며 구매를 권유하고 있다."
+   },
+   {
+    "s": 43.3,
+    "e": 44.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 필통을 들고 보여주며 말하고 있다."
+   }
+  ],
+  "overall": "여성이 손으로 필통의 다양한 기능과 수납력을 직접 시연하며 장점을 설명하는 영상이다.",
+  "model": "gemini-3.5-flash"
+ },
+ "24d7eb89052a": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 3.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "스마트 충전기를 소개하며 배터리 손상에 대해 질문함."
+   },
+   {
+    "s": 3.2,
+    "e": 4.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "스마트 충전기를 보여주며 소개함."
+   },
+   {
+    "s": 4.9,
+    "e": 7.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "기기를 연결하고 자리를 비워도 된다고 설명함."
+   },
+   {
+    "s": 7.2,
+    "e": 10.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "배터리가 100%가 되면 전원을 물리적으로 차단한다고 설명함."
+   },
+   {
+    "s": 10.6,
+    "e": 13.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "과충전 위험을 제거하여 배터리 수명을 보호한다고 설명함."
+   },
+   {
+    "s": 13.8,
+    "e": 19.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "최대 140W 고속 충전을 지원한다고 설명함."
+   },
+   {
+    "s": 19.0,
+    "e": 22.5,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "다양한 기기와 호환된다고 설명함."
+   },
+   {
+    "s": 22.5,
+    "e": 25.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "기기 배터리를 장기적으로 건강하게 유지하라고 권장함."
+   },
+   {
+    "s": 25.0,
+    "e": 27.5,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "재고가 소진되기 전에 링크를 통해 구매하라고 유도함."
+   }
+  ],
+  "overall": "스마트 충전기의 과충전 방지 기능과 고속 충전 성능을 소개하며 구매를 유도하는 광고 영상",
+  "model": "gemini-3.5-flash"
+ },
+ "d86608dac217": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 4.2,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "화면에는 손만 보이며 여행 시 항상 챙기는 테크 키트를 소개하고 있다."
+   },
+   {
+    "s": 4.2,
+    "e": 8.8,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "테크 키트의 크기가 작지만 유용한 물건들이 가득 차 있다고 설명하고 있다."
+   },
+   {
+    "s": 8.8,
+    "e": 10.1,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "여행할 때 유용하다고 덧붙이고 있다."
+   },
+   {
+    "s": 10.1,
+    "e": 16.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "키트 내부에 포함된 다양한 케이블과 어댑터를 보여주며 설명하고 있다."
+   },
+   {
+    "s": 16.0,
+    "e": 20.3,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "충전이나 파일 전송 등 모든 연결이 가능하다고 설명하고 있다."
+   },
+   {
+    "s": 20.3,
+    "e": 21.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "모든 연결이 커버된다고 마무리하고 있다."
+   },
+   {
+    "s": 21.8,
+    "e": 27.1,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "유심 핀과 유심 카드, TF 카드를 보관할 수 있는 슬롯을 보여주고 있다."
+   },
+   {
+    "s": 27.1,
+    "e": 30.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "가방 안에서 작은 물건들을 잃어버리지 않게 해준다고 설명하고 있다."
+   },
+   {
+    "s": 30.0,
+    "e": 33.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "거치대 부분을 당겨서 휴대폰 거치대로 사용하는 모습을 보여주고 있다."
+   },
+   {
+    "s": 33.9,
+    "e": 38.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "모든 부품이 다시 작은 케이스에 쏙 들어간다고 설명하고 있다."
+   },
+   {
+    "s": 38.2,
+    "e": 39.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "가방에 걸 수 있다고 덧붙이고 있다."
+   },
+   {
+    "s": 39.2,
+    "e": 42.4,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "여행용 비상 테크 키트라고 정의하며 추천하고 있다."
+   },
+   {
+    "s": 42.4,
+    "e": 47.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "여행 중 케이블이나 어댑터가 자주 필요한 사람들에게 추천하고 있다."
+   },
+   {
+    "s": 47.0,
+    "e": 48.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "아래에 링크를 남겨두겠다고 말하고 있다."
+   }
+  ],
+  "overall": "화면에는 손만 등장하여 다양한 케이블, 어댑터, 유심 핀, 거치대 기능이 포함된 다기능 여행용 미니 테크 키트를 직접 시연하며 유용성을 설명하고 있다.",
+  "model": "gemini-3.5-flash"
+ },
+ "c39a8785f607": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 4.2,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "손으로 다기능 케이블 키트를 보여주며 설명한다."
+   },
+   {
+    "s": 4.2,
+    "e": 7.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "키트 내부의 작은 도구들을 보여준다."
+   },
+   {
+    "s": 7.2,
+    "e": 12.7,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "다양한 어댑터와 케이블을 연결하는 모습을 보여준다."
+   },
+   {
+    "s": 12.7,
+    "e": 16.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "유심 핀과 카드 슬롯을 사용하는 모습을 보여준다."
+   },
+   {
+    "s": 16.6,
+    "e": 20.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "랜야드 케이블과 케이스의 거치대 기능을 보여준다."
+   },
+   {
+    "s": 20.9,
+    "e": 23.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "휴대폰을 거치대에 올려놓는 모습을 보여준다."
+   },
+   {
+    "s": 23.2,
+    "e": 26.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "제품을 손에 쥐고 추천하며 마무리한다."
+   }
+  ],
+  "overall": "한 남성이 손으로 다기능 케이블 키트의 다양한 기능과 구성품을 직접 시연하며 제품을 추천하는 영상이다.",
+  "model": "gemini-3.5-flash"
+ },
+ "e0ecd2c193cf": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 6.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "스티로폼 머리에 안전 안경을 씌우고 네일을 박은 모습을 보여주며 설명한다."
+   },
+   {
+    "s": 6.0,
+    "e": 12.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "벤치 위에 놓인 다양한 네일건들을 보여주며 테스트를 예고한다."
+   },
+   {
+    "s": 12.0,
+    "e": 14.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "네일건들을 가리키며 테스트할 준비를 한다."
+   },
+   {
+    "s": 14.0,
+    "e": 22.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "스티로폼 머리에 다양한 종류의 네일을 쏘는 테스트를 보여준다."
+   },
+   {
+    "s": 22.0,
+    "e": 27.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "마지막으로 큰 프레이밍 네일을 쏘는 모습을 보여준다."
+   },
+   {
+    "s": 27.0,
+    "e": 30.5,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "안경을 벗겨 블루투스 기능이 있는 안경다리 부분을 보여준다."
+   },
+   {
+    "s": 30.5,
+    "e": 34.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "안경다리의 상세한 버튼과 충전 단자 부위를 보여준다."
+   },
+   {
+    "s": 34.8,
+    "e": 38.6,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": true,
+    "note": "남성이 안경을 쓰고 소리가 얼마나 좋은지 직접 경험한 소감을 말한다."
+   },
+   {
+    "s": 38.6,
+    "e": 40.8,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": true,
+    "note": "스피커가 귀 바로 옆에 완벽하게 위치해 있다고 설명한다."
+   },
+   {
+    "s": 40.8,
+    "e": 45.3,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": true,
+    "note": "안경을 벗어 카메라 앞으로 가져가며 소리가 안 들리는 것을 보여준다."
+   },
+   {
+    "s": 45.3,
+    "e": 48.7,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": true,
+    "note": "카메라 바로 앞에서도 소리가 새어 나가지 않는 것을 보여준다."
+   },
+   {
+    "s": 48.7,
+    "e": 52.7,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": true,
+    "note": "소리가 정확하고 주변 사람들에게 방해가 되지 않는 점이 인상적이라고 말한다."
+   },
+   {
+    "s": 52.7,
+    "e": 56.6,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": true,
+    "note": "작업장에서 동료들에게 음악 소리로 방해를 주지 않을 것이라며 추천한다."
+   }
+  ],
+  "overall": "블루투스 기능이 탑재된 스마트 안전 안경의 내구성과 음향 성능을 직접 테스트하고 소감을 전하는 영상",
+  "model": "gemini-3.5-flash"
+ },
+ "951750cf580a": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 2.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "지붕 위에서 사다리가 넘어지는 것을 보고 소리치는 목소리"
+   },
+   {
+    "s": 2.6,
+    "e": 4.3,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": false,
+    "note": "사다리가 쓰러지는 것을 보고 놀라는 남성"
+   },
+   {
+    "s": 4.3,
+    "e": 8.3,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "이어폰을 끼고 있어 경고를 듣지 못해 사다리에 맞을 뻔한 상황을 설명하는 남성"
+   },
+   {
+    "s": 8.3,
+    "e": 11.0,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "스마트 안전 안경을 소개하는 남성"
+   },
+   {
+    "s": 11.0,
+    "e": 13.7,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "안전 안경의 인증 정보를 설명하는 남성"
+   },
+   {
+    "s": 13.7,
+    "e": 16.6,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "안전 안경의 장점을 설명하는 남성"
+   },
+   {
+    "s": 16.6,
+    "e": 18.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "다시 사다리가 넘어지는 상황에서 소리치는 목소리"
+   },
+   {
+    "s": 21.2,
+    "e": 22.4,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": false,
+    "note": "사다리를 피한 후 다칠 뻔했다고 말하는 남성"
+   },
+   {
+    "s": 22.4,
+    "e": 25.8,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "사다리 위에서 아내의 전화를 받는 상황을 설명하는 남성"
+   },
+   {
+    "s": 25.8,
+    "e": 27.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "전화를 받아야겠다고 말하는 남성"
+   },
+   {
+    "s": 27.4,
+    "e": 30.7,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "아내와 통화하는 남성"
+   },
+   {
+    "s": 30.7,
+    "e": 33.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "시끄러운 작업장 상황을 설명하는 남성"
+   },
+   {
+    "s": 33.4,
+    "e": 34.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "지붕 위에서 동료에게 소리치는 남성"
+   },
+   {
+    "s": 34.4,
+    "e": 35.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "시끄러워서 잘 안 들린다고 답하는 동료"
+   },
+   {
+    "s": 35.4,
+    "e": 37.6,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "들리지 않는다고 소리치는 동료"
+   },
+   {
+    "s": 37.6,
+    "e": 40.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "무전기 기능을 사용하겠다고 말하는 남성"
+   },
+   {
+    "s": 40.4,
+    "e": 41.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "무전기로 물건을 요청하는 남성"
+   },
+   {
+    "s": 41.4,
+    "e": 43.9,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "무전기로 답변하는 동료"
+   },
+   {
+    "s": 43.9,
+    "e": 44.9,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "다른 유용한 기능을 소개하려는 동료"
+   },
+   {
+    "s": 44.9,
+    "e": 46.6,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "음성 인식 AI 기능을 설명하는 동료"
+   },
+   {
+    "s": 46.6,
+    "e": 47.6,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "시리를 호출하는 동료"
+   },
+   {
+    "s": 47.6,
+    "e": 50.2,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "시리에게 질문하는 동료"
+   },
+   {
+    "s": 50.2,
+    "e": 52.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "시리의 답변 소리"
+   },
+   {
+    "s": 52.6,
+    "e": 53.6,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "시리의 답변을 듣고 수긍하는 남성"
+   },
+   {
+    "s": 53.6,
+    "e": 56.3,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "제품 정보를 찾을 수 있는 링크를 안내하는 남성"
+   },
+   {
+    "s": 56.3,
+    "e": 59.7,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": false,
+    "note": "댓글이나 프로필 링크를 통해 구매할 수 있다고 안내하는 남성"
+   }
+  ],
+  "overall": "스마트 안전 안경의 다양한 기능(소음 차단, 통화, 무전기, AI 비서)을 실제 작업 상황을 통해 소개하는 영상",
+  "model": "gemini-3.5-flash"
+ },
+ "d14ae54b7c6c": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 2.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "제품의 롤러 부분을 손가락으로 만지며 설명한다."
+   },
+   {
+    "s": 2.0,
+    "e": 3.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "제품의 롤러 부분을 보여준다."
+   },
+   {
+    "s": 3.4,
+    "e": 5.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "제품 반대편의 실리콘 브러시 부분을 만지며 보여준다."
+   },
+   {
+    "s": 5.2,
+    "e": 6.7,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "옷에 묻은 얼룩에 제품을 바르는 모습을 보여준다."
+   },
+   {
+    "s": 6.7,
+    "e": 9.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "얼룩이 묻은 옷을 휴지로 닦아내는 모습을 보여준다."
+   },
+   {
+    "s": 9.0,
+    "e": 10.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "가방끈에 제품을 매다는 모습을 보여준다."
+   },
+   {
+    "s": 10.6,
+    "e": 11.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "가방에 매달린 제품을 보여준다."
+   }
+  ],
+  "overall": "휴대용 얼룩 제거제의 편리함과 사용법을 설명하는 영상",
+  "model": "gemini-3.5-flash"
+ },
+ "73354652be74": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 0.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "식사 중 입가에 묻히는 상황을 설명함."
+   },
+   {
+    "s": 0.8,
+    "e": 2.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "밝은 색 옷을 즐겨 입는 상황을 설명함."
+   },
+   {
+    "s": 2.0,
+    "e": 3.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "얼룩 제거 펜을 소개함."
+   },
+   {
+    "s": 3.6,
+    "e": 4.7,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "방금 식사를 마친 상황을 보여줌."
+   },
+   {
+    "s": 4.7,
+    "e": 5.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "옷에 기름이 튄 것을 보여줌."
+   },
+   {
+    "s": 5.8,
+    "e": 6.7,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "평소 자신과 비슷한 사람들을 언급함."
+   },
+   {
+    "s": 6.7,
+    "e": 7.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "면 요리를 좋아하는 상황을 언급함."
+   },
+   {
+    "s": 7.4,
+    "e": 8.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "훠궈를 좋아하는 상황을 언급함."
+   },
+   {
+    "s": 8.0,
+    "e": 8.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "루오스펀 등을 좋아하는 상황을 언급함."
+   },
+   {
+    "s": 8.8,
+    "e": 10.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "제품을 챙겨 다닐 것을 권장함."
+   },
+   {
+    "s": 10.0,
+    "e": 10.5,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "얼룩 제거 과정을 보여주기 시작함."
+   },
+   {
+    "s": 10.5,
+    "e": 11.8,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "얼룩이 쉽게 지워지는 모습을 보여주며 감탄함."
+   },
+   {
+    "s": 11.8,
+    "e": 13.1,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "사용법이 간단함을 설명함."
+   },
+   {
+    "s": 13.1,
+    "e": 14.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "종이를 얼룩 밑에 대는 법을 설명함."
+   },
+   {
+    "s": 14.9,
+    "e": 16.3,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "즉각적인 얼룩 제거 효과에 감탄함."
+   },
+   {
+    "s": 16.3,
+    "e": 17.2,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "제품이 매우 유용하다고 추천함."
+   },
+   {
+    "s": 17.2,
+    "e": 18.3,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "브러시 사용법을 설명함."
+   },
+   {
+    "s": 18.3,
+    "e": 19.1,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "브러시로 문지르는 모습을 보여줌."
+   },
+   {
+    "s": 19.1,
+    "e": 20.8,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "기름때가 종이로 옮겨간 것을 보여줌."
+   },
+   {
+    "s": 20.8,
+    "e": 21.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여름철 밝은 옷을 입는 상황을 설명함."
+   },
+   {
+    "s": 21.9,
+    "e": 23.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "기름이 옷에 쉽게 튀는 상황을 설명함."
+   },
+   {
+    "s": 23.4,
+    "e": 25.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "제품 덕분에 번거로움이 줄었다고 증언함."
+   },
+   {
+    "s": 25.0,
+    "e": 26.5,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "외출 시 항상 휴대한다고 말함."
+   },
+   {
+    "s": 30.0,
+    "e": 31.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "가방에 걸었을 때 예쁘다고 칭찬함."
+   },
+   {
+    "s": 31.0,
+    "e": 32.5,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "두 개 구매 시 혜택을 설명함."
+   },
+   {
+    "s": 32.5,
+    "e": 34.5,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "집과 외출용으로 각각 구비할 것을 권장함."
+   }
+  ],
+  "overall": "얼룩 제거 펜의 사용법과 효과를 직접 시연하며 추천하는 영상",
+  "model": "gemini-3.5-flash"
+ },
+ "a58996f122b4": {
+  "segs": [
+   {
+    "s": 9.0,
+    "e": 12.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "화면에 와플 메이커가 작동하는 모습을 보여주며 내레이션으로 제품을 홍보하고 있다."
+   }
+  ],
+  "overall": "화면에 와플 메이커가 작동하는 모습을 보여주며 내레이션으로 제품을 홍보하고 있다.",
+  "model": "gemini-3.5-flash"
+ },
+ "07558871cb3e": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 1.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "상자를 들고 카시오 시계를 또 샀다고 말한다."
+   },
+   {
+    "s": 1.6,
+    "e": 4.5,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "상자에서 시계를 꺼내며 가격이 적당해서 샀다고 말한다."
+   },
+   {
+    "s": 4.5,
+    "e": 7.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "시계를 보여주며 모델명을 소개한다."
+   },
+   {
+    "s": 7.0,
+    "e": 8.9,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "시계 화면을 확대해 보여주며 마음에 든다고 말한다."
+   },
+   {
+    "s": 8.9,
+    "e": 10.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "시계의 월드 타이머 기능을 설명한다."
+   },
+   {
+    "s": 10.8,
+    "e": 12.4,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "시계의 초록색 세계 지도 디자인이 아주 마음에 든다고 말한다."
+   },
+   {
+    "s": 12.4,
+    "e": 16.2,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "검은색 레진 케이스와 금색 포인트 디자인을 칭찬한다."
+   },
+   {
+    "s": 16.2,
+    "e": 17.2,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "디자인이 매력적이라고 덧붙인다."
+   },
+   {
+    "s": 17.2,
+    "e": 20.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "다른 모델과 나란히 놓아 비교해 보여준다."
+   },
+   {
+    "s": 20.8,
+    "e": 23.5,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "손목에 찬 모습을 보여주며 검은색과 금색 조합이 더 마음에 든다고 말한다."
+   },
+   {
+    "s": 23.5,
+    "e": 25.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "구매 가격을 언급한다."
+   },
+   {
+    "s": 25.0,
+    "e": 26.3,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "시청자들에게 어떤 것을 선택할지 묻는다."
+   }
+  ],
+  "overall": "새로 구매한 카시오 시계를 언박싱하고 디자인과 기능을 설명하며 다른 모델과 비교하는 영상이다.",
+  "model": "gemini-3.5-flash"
+ },
+ "dc49805004c7": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 2.0,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 미니 다리미를 들고 소개하기 시작한다."
+   },
+   {
+    "s": 2.0,
+    "e": 5.1,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 다리미의 작은 크기를 비유하며 설명한다."
+   },
+   {
+    "s": 5.1,
+    "e": 5.7,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 동의를 구한다."
+   },
+   {
+    "s": 5.7,
+    "e": 8.8,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 왜 이렇게 작은 다리미를 추천하는지 질문한다."
+   },
+   {
+    "s": 8.8,
+    "e": 11.6,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 여행이나 출장 갈 때를 언급한다."
+   },
+   {
+    "s": 11.6,
+    "e": 13.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 큰 다리미는 휴대하기 불편하다고 말한다."
+   },
+   {
+    "s": 13.4,
+    "e": 14.0,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 동의를 구한다."
+   },
+   {
+    "s": 14.0,
+    "e": 16.1,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 캐리어에 넣으면 자리를 차지한다고 말한다."
+   },
+   {
+    "s": 16.1,
+    "e": 18.3,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 특히 여성들이 외출할 때를 언급한다."
+   },
+   {
+    "s": 18.3,
+    "e": 20.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 캐리어에 가장 많은 물건이 무엇인지 묻는다."
+   },
+   {
+    "s": 20.4,
+    "e": 21.8,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 대부분 옷이 아니냐고 묻는다."
+   },
+   {
+    "s": 21.8,
+    "e": 23.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 사진을 예쁘게 찍어야 하기 때문이라고 말한다."
+   },
+   {
+    "s": 23.4,
+    "e": 25.0,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 그래서 옷을 많이 챙긴다고 말한다."
+   },
+   {
+    "s": 25.0,
+    "e": 25.8,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 하지만 옷은 어떻냐고 묻는다."
+   },
+   {
+    "s": 25.8,
+    "e": 27.5,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 캐리어에 가득 채우면 꺼냈을 때 구겨진다고 말한다."
+   },
+   {
+    "s": 27.5,
+    "e": 29.0,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 다리지 않으면 안 된다고 말한다."
+   },
+   {
+    "s": 29.0,
+    "e": 30.0,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 지금처럼 사진 찍을 때를 예로 든다."
+   },
+   {
+    "s": 30.0,
+    "e": 30.8,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 사진을 찍을 때를 말한다."
+   },
+   {
+    "s": 30.8,
+    "e": 32.1,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 얼굴의 잡티는 보정할 수 있다고 말한다."
+   },
+   {
+    "s": 32.1,
+    "e": 34.8,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 옷의 넓은 구김은 보정할 수 없다고 말한다."
+   },
+   {
+    "s": 34.8,
+    "e": 35.5,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 동의를 구한다."
+   },
+   {
+    "s": 35.5,
+    "e": 37.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 옷이 구겨지면 고급스러워 보이지 않는다고 말한다."
+   },
+   {
+    "s": 37.4,
+    "e": 39.0,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 그래서 다리미가 필요하다고 말한다."
+   },
+   {
+    "s": 39.0,
+    "e": 40.1,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 작아 보여도 무시하지 말라고 말한다."
+   },
+   {
+    "s": 40.1,
+    "e": 41.9,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 외출 필수 템이라고 말한다."
+   },
+   {
+    "s": 41.9,
+    "e": 44.2,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 테플론 열판으로 되어 있다고 설명한다."
+   },
+   {
+    "s": 44.2,
+    "e": 46.6,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 부드럽게 다려져 옷감 손상 걱정이 없다고 말한다."
+   },
+   {
+    "s": 46.6,
+    "e": 48.6,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 미인선 디자인이 있다고 설명한다."
+   },
+   {
+    "s": 48.6,
+    "e": 50.8,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 옷의 세세한 부분까지 다릴 수 있다고 말한다."
+   },
+   {
+    "s": 50.8,
+    "e": 52.3,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 셔츠의 모서리 부분을 언급한다."
+   },
+   {
+    "s": 52.3,
+    "e": 55.3,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 깃 모서리까지 잘 다려진다고 말한다."
+   },
+   {
+    "s": 55.3,
+    "e": 58.7,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 여행용 휴대용 다리미라고 소개한다."
+   },
+   {
+    "s": 58.7,
+    "e": 60.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 접으면 더 작아진다고 말한다."
+   },
+   {
+    "s": 60.4,
+    "e": 61.4,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": true,
+    "note": "여성이 다리미가 뜨겁다고 말한다."
+   },
+   {
+    "s": 61.4,
+    "e": 62.1,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 지금은 접지 않겠다고 말한다."
+   },
+   {
+    "s": 62.1,
+    "e": 63.2,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 나중에 접어서 보여주겠다고 말한다."
+   },
+   {
+    "s": 63.2,
+    "e": 65.2,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 먼저 다림질 효과를 보여주겠다고 말한다."
+   },
+   {
+    "s": 65.6,
+    "e": 67.2,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 시연을 시작하겠다고 말한다."
+   },
+   {
+    "s": 67.2,
+    "e": 68.7,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 구겨진 손수건을 보여준다."
+   },
+   {
+    "s": 68.7,
+    "e": 69.3,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 구김을 확인시킨다."
+   },
+   {
+    "s": 69.3,
+    "e": 70.5,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 절반만 먼저 다려보겠다고 말한다."
+   },
+   {
+    "s": 71.8,
+    "e": 72.7,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 전원이 켜졌는지 확인한다."
+   },
+   {
+    "s": 72.7,
+    "e": 73.1,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "스태프가 그렇다고 대답한다."
+   },
+   {
+    "s": 73.1,
+    "e": 73.9,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 보여주겠다고 말한다."
+   },
+   {
+    "s": 73.9,
+    "e": 75.0,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 절반을 다리기 시작한다."
+   },
+   {
+    "s": 75.0,
+    "e": 76.3,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 다림질하는 모습을 보여준다."
+   },
+   {
+    "s": 76.3,
+    "e": 77.8,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": true,
+    "note": "여성이 정말 잘 다려진다고 감탄한다."
+   },
+   {
+    "s": 77.8,
+    "e": 79.7,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 곧 설날이라고 언급한다."
+   },
+   {
+    "s": 79.7,
+    "e": 82.1,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 고향에 내려갈 때를 언급한다."
+   },
+   {
+    "s": 82.1,
+    "e": 84.2,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 동창회에 갈 때를 언급한다."
+   },
+   {
+    "s": 84.2,
+    "e": 86.7,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 큰 다리미를 가져가면 불편하다고 말한다."
+   },
+   {
+    "s": 86.7,
+    "e": 88.1,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 잘 다려지지도 않는다고 말한다."
+   },
+   {
+    "s": 88.1,
+    "e": 88.6,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 너무 크다고 말한다."
+   },
+   {
+    "s": 88.6,
+    "e": 89.7,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 휴대하기 불편하다고 말한다."
+   },
+   {
+    "s": 89.7,
+    "e": 90.2,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 자리를 차지한다고 말한다."
+   },
+   {
+    "s": 90.2,
+    "e": 91.4,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 이 다리미를 보라고 말한다."
+   },
+   {
+    "s": 91.4,
+    "e": 92.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "스태프가 신기하다고 감탄한다."
+   },
+   {
+    "s": 92.6,
+    "e": 93.6,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 평평해졌는지 묻는다."
+   },
+   {
+    "s": 93.6,
+    "e": 94.6,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 다린 쪽을 보여준다."
+   },
+   {
+    "s": 94.6,
+    "e": 95.8,
+    "who_speaks": "on_camera",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 안 다린 쪽을 보여준다."
+   },
+   {
+    "s": 95.8,
+    "e": 96.5,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "스태프가 차이가 확실하다고 말한다."
+   }
+  ],
+  "overall": "여성이 휴대하기 좋은 미니 다리미를 소개하며 직접 구겨진 손수건을 다려 성능을 시연하고 있습니다.",
+  "model": "gemini-3.5-flash"
+ },
+ "689fd57df4c8": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 5.7,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "손으로 스팀 청소기를 들고 작동 준비를 하며 말한다."
+   },
+   {
+    "s": 5.7,
+    "e": 10.1,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "스팀 청소기로 찌든 때를 지우며 말한다."
+   },
+   {
+    "s": 10.1,
+    "e": 15.7,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "수전의 찌든 때를 스팀 청소기로 지우며 말한다."
+   },
+   {
+    "s": 15.7,
+    "e": 21.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "수전 구석구석을 스팀 청소기로 닦으며 말한다."
+   },
+   {
+    "s": 21.0,
+    "e": 26.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "수전을 천으로 닦고 다른 노즐로 청소하며 말한다."
+   },
+   {
+    "s": 26.6,
+    "e": 29.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "스팀 청소기로 모서리를 닦으며 말한다."
+   }
+  ],
+  "overall": "스팀 청소기를 사용하여 욕실과 수전의 찌든 때를 간편하게 청소하는 모습을 보여주는 광고 영상이다.",
+  "model": "gemini-3.5-flash"
+ },
+ "bfec41d7c156": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 1.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "미니 와플 기계로 감자 요리를 하겠다고 말한다."
+   },
+   {
+    "s": 1.9,
+    "e": 3.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "달라붙지 않게 기름을 바르라고 설명한다."
+   },
+   {
+    "s": 3.0,
+    "e": 4.3,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "삶은 감자 반 개를 넣는다고 말한다."
+   },
+   {
+    "s": 4.3,
+    "e": 5.6,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "소금과 허브를 취향껏 뿌리라고 설명한다."
+   },
+   {
+    "s": 5.6,
+    "e": 7.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "뚜껑을 닫고 10분간 둔다고 말한다."
+   },
+   {
+    "s": 7.2,
+    "e": 10.4,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "완성된 감자 와플이 훌륭하고 맛있다고 감탄한다."
+   },
+   {
+    "s": 10.4,
+    "e": 12.1,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "겉은 바삭하고 속은 부드럽다고 맛을 평가한다."
+   }
+  ],
+  "overall": "미니 와플 기계로 감자 와플을 만드는 과정을 설명하고 완성된 요리의 맛을 평가한다.",
+  "model": "gemini-3.5-flash"
+ },
+ "2cf5804ba1cb": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 4.7,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": false,
+    "note": "와플 메이커에 반죽을 넣으며 아이들이 냉동 와플을 먹어본 적이 없다고 말함."
+   },
+   {
+    "s": 4.7,
+    "e": 11.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": false,
+    "note": "집에서 만드는 것이 더 쉽고 저렴하며 미니 와플 메이커가 편리하다고 설명함."
+   },
+   {
+    "s": 11.9,
+    "e": 14.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": false,
+    "note": "몇 분 만에 많은 양의 와플을 만들 수 있다고 설명함."
+   },
+   {
+    "s": 14.6,
+    "e": 17.8,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": false,
+    "note": "여분의 와플을 만들어 나중에 먹기 위해 냉동 보관한다고 말함."
+   },
+   {
+    "s": 17.9,
+    "e": 23.8,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "와플을 쿠키 시트에 올려 냉동실에 얼린 후 지퍼백에 보관하는 방법을 설명함."
+   },
+   {
+    "s": 24.3,
+    "e": 27.1,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "먹고 싶을 때 토스터기에 넣어 데워 먹으면 된다고 설명함."
+   },
+   {
+    "s": 27.1,
+    "e": 30.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": false,
+    "note": "미니 와플 메이커 구매 링크를 안내하며 구매를 권장함."
+   }
+  ],
+  "overall": "화면에 얼굴을 비추지 않고 내레이션으로 미니 와플 메이커의 편리함과 와플 보관 팁을 설명하며 제품을 홍보하고 있다.",
+  "model": "gemini-3.5-flash"
+ },
+ "d4d1ae2932bb": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 29.0,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": false,
+    "note": "와플 메이커에 계란을 구워 아보카도 토스트 위에 올리며 감탄하는 목소리"
+   }
+  ],
+  "overall": "와플 메이커로 계란을 구워 아보카도 토스트를 만드는 과정을 보여주며 감탄하는 영상입니다.",
+  "model": "gemini-3.5-flash"
+ },
+ "c7c017263d95": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 3.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "남성이 프로젝터 스크린을 들고 집으로 들어오며 구매 계기를 설명한다."
+   },
+   {
+    "s": 3.9,
+    "e": 6.3,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "남성이 스크린의 전원을 켜며 작동 방식을 보여준다."
+   },
+   {
+    "s": 6.3,
+    "e": 8.7,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "스크린이 자동으로 팽팽하게 펴지는 모습을 보여준다."
+   },
+   {
+    "s": 8.7,
+    "e": 13.7,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "스크린의 화질에 감탄하며 강력히 추천한다."
+   }
+  ],
+  "overall": "남성이 새로 구매한 자동 상승형 프로젝터 스크린의 개봉 및 작동 모습을 보여주며 뛰어난 화질과 편리함을 극찬하는 쇼핑 후기 영상이다.",
+  "model": "gemini-3.5-flash"
+ },
+ "da2282b90f44": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 3.4,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "손으로 특이하게 생긴 계량 스푼을 보여주며 제품 이름을 설명한다."
+   },
+   {
+    "s": 3.4,
+    "e": 8.2,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "제품이 어떻게 접혀서 용량이 조절되는지 설명한다."
+   }
+  ],
+  "overall": "특이하게 생긴 다용도 계량 스푼의 명칭과 사용법을 설명하는 광고 영상이다.",
+  "model": "gemini-3.5-flash"
+ },
+ "fafc125eec69": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 3.5,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 손으로 다각형 모양의 계량 스푼을 만지며 제품을 소개하고 있다."
+   },
+   {
+    "s": 3.5,
+    "e": 7.0,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "여성이 계량 스푼의 접히는 기능을 설명하고 있다."
+   }
+  ],
+  "overall": "여성이 손으로 다각형 모양의 계량 스푼을 만지며 제품의 특징과 기능을 설명하고 있다.",
+  "model": "gemini-3.5-flash"
+ },
+ "cefd5056f0f4": {
+  "segs": [
+   {
+    "s": 0.0,
+    "e": 3.4,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "와플 메이커로 누룽지를 만드는 모습을 보여주며 말한다."
+   },
+   {
+    "s": 3.4,
+    "e": 7.9,
+    "who_speaks": "voiceover",
+    "testimony": false,
+    "music_under": true,
+    "note": "누룽지 와플 위에 참치, 연어, 오이, 아보카도를 올리며 설명한다."
+   },
+   {
+    "s": 7.9,
+    "e": 10.6,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "완성된 요리에 고명을 얹으며 자랑스럽게 말한다."
+   },
+   {
+    "s": 10.6,
+    "e": 12.1,
+    "who_speaks": "on_camera",
+    "testimony": true,
+    "music_under": true,
+    "note": "카메라를 보며 자신이 만든 가장 예쁜 음식이라고 말한다."
+   },
+   {
+    "s": 12.1,
+    "e": 13.4,
+    "who_speaks": "voiceover",
+    "testimony": true,
+    "music_under": true,
+    "note": "음식을 한 입 먹고 맛있다고 감탄한다."
+   }
+  ],
+  "overall": "와플 메이커로 만든 누룽지 위에 스시 재료를 올려 예쁘고 맛있는 요리를 완성하는 과정을 소개하는 영상입니다.",
+  "model": "gemini-3.5-flash"
+ }
+}
