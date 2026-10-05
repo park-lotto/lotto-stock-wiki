@@ -292,7 +292,8 @@ def _writer_head(fam, kind):
         return _HEAD_CACHE[ck]
     from shopping_shorts import backbone_assemble as _ba, story_writer as _sw, bank_assemble as _bk
     from shopping_shorts.store import Store
-    st = Store(DB)
+    from shopping_shorts.config import DB_PATH as _DBP   # 시안 도구에서 옮길 때 남은 DB(전역) — 라이브엔 없다(10-05 라이브 첫 생성에서 NameError)
+    st = Store(_DBP)
     win = ""
     for k in [kind, "홈템", "생활용품", "레시피", "기타"]:
         try:
