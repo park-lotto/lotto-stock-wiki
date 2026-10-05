@@ -16208,7 +16208,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 장면꾸미기 새 편집기를 6단계 화면에 바로(2026-09-23, 사장님: 유튜브 라이브 뒤 구버전→신버전 교체) — ""끔 · "admin" · "1" 전체
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
-                       "storyboard_enabled"}
+                       "storyboard_enabled",
+                       # 장면꾸미기 장면 효과(관제 124, 2026-10-05) — 강조 확대·어둡게·흑백 충격·자동 배치. ""끔 · "admin" · "11,42" · "1" 전체
+                       "scene_fx_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -21281,6 +21283,8 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
         scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}"
         # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
         scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}" for _t in _scene_page_points(scene)]
+    # 장면 효과(관제 124) 스위치 — 꺼진 계정은 편집기가 '강조 효과' 상자·자동 배치를 안 띄운다(고객 화면 불변)
+    context["fxEnabled"] = bool(_setting_gate(Store(DB_PATH), "scene_fx_enabled", _cid(request)))
     return {"context": context, "snapshot": snapshot}
 
 
@@ -23418,9 +23422,11 @@ def api_produce_mix_beatframe(job_id: str, i: int, cut: int = None, at: float = 
 
 
 @app.get("/api/produce/mix/scene_focus/{job_id}/{i}")
-def api_produce_mix_scene_focus(job_id: str, i: int, at: float = None):
+def api_produce_mix_scene_focus(job_id: str, i: int, request: Request, at: float = None):
     """장면 그림(beatframe 과 같은 그림) 속 제품 상자 [x0,y0,x1,y1](0~1) — 장면꾸미기 강조 확대가 제품을 향하게(관제 124).
     판단(제품이 어디냐)은 video_analysis.product_box 한 곳. 결과는 그림 옆 .box.json 에 남겨 같은 그림은 다시 묻지 않는다."""
+    if not _setting_gate(Store(DB_PATH), "scene_fx_enabled", getattr(request.state, "customer_id", 0)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능입니다"})   # AI 호출(비용)도 스위치 뒤
     job = Store(DB_PATH).get_mix_job(job_id)
     out = _beatframe_file(job, job_id, i, cut=None, at=at)
     if out is None:

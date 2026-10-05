@@ -218,8 +218,10 @@
       context=event.data.context;
       const saved=event.data.snapshot||{...api.snapshot(),captionTexts:{},effects:{}};
       api.load(context,saved);
+      // 관리자 스위치 scene_fx_enabled(서버 context.fxEnabled) — 꺼지면 '강조 효과' 상자도 자동 배치도 없다(고객 화면 불변)
+      refBox.hidden=context.fxEnabled===false;
       // 효과를 하나도 안 넣은 영상이면 처음 열 때 자동 배치(관제 124). 한 번이라도 손댄 영상(효과 칸이 있음)은 건드리지 않는다.
-      if(!Object.keys(saved.effects||{}).length&&api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));
+      if(context.fxEnabled!==false&&!Object.keys(saved.effects||{}).length&&api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));
       if(Number.isInteger(event.data.sceneIndex))api.show(event.data.sceneIndex);
       document.documentElement.classList.remove('scene-waiting');   // 실제 데이터가 그려졌다 — 본문을 보인다(머리띠 가림은 html 표식이 계속)
       const status=pane.querySelector('[data-connection-status]');if(status)status.textContent=`실제 자막 ${context.scenes.length}개를 연결했습니다.`;
