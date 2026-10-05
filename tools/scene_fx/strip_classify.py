@@ -143,6 +143,12 @@ def main():
             ok, buf = cv2.imencode(".jpg", g, [cv2.IMWRITE_JPEG_QUALITY, 82])
             imgs.append(buf.tobytes())
             buf.tofile(os.path.join(sheets, f'{r["id"]}_{b // ROWS_PER_IMG}.jpg'))
+        # 훅 시트: 첫 3.2초를 0.1초 간격 32칸(2줄) — 훅에서 확대·전환을 어떻게 쓰는지 레퍼런스 그대로 본다
+        cap = cv2.VideoCapture(os.path.join(a.dir, r["id"] + ".mp4"))
+        hook = [strip(cap, fps, 0.0, [0.1 * j for j in range(16)]), strip(cap, fps, 1.6, [0.1 * j for j in range(16)])]
+        cap.release()
+        cv2.imencode(".jpg", np.vstack(hook), [cv2.IMWRITE_JPEG_QUALITY, 82])[1].tofile(
+            os.path.join(sheets, f'{r["id"]}_hook.jpg'))
         if a.sheets_only:
             json.dump([{"n": n, "t": t, "cand": k} for n, (t, k, _) in enumerate(cands)],
                       open(os.path.join(sheets, r["id"] + ".json"), "w", encoding="utf-8"), ensure_ascii=False)

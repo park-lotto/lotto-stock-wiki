@@ -353,36 +353,59 @@ def _selftest():
     return ok
 
 
+def _one(job):
+    cv2.setNumThreads(1)        # 여러 편 동시 처리 — 편마다 스레드를 늘리면 CPU 가 엉킨다
+    ch, vid, views, p = job
+    try:
+        r = analyze(p)
+    except Exception as e:                      # 한 편이 깨져도 나머지는 잰다 — 실패는 이름과 함께 알린다
+        return {"channel": ch, "id": vid, "error": repr(e)[:200]}
+    r.update({"channel": ch, "id": vid, "views": views})
+    return r
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir")
     ap.add_argument("--list")
     ap.add_argument("--out")
     ap.add_argument("--sheets")
+    ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest:
         sys.exit(0 if _selftest() else 1)
     items = json.load(open(a.list, encoding="utf-8"))
-    res = []
+    # 이어 재기: 이미 잰 영상은 건너뛴다(수집이 계속 쌓이므로)
+    done = {r["id"]: r for r in json.load(open(a.out, encoding="utf-8"))} if a.out and os.path.exists(a.out) else {}
+    jobs = []
     for it in items:
         # bench_list.json = [채널, id, 조회수] / bench_rank.json(collect_rank.py) = {"channel","id","views",...}
         ch, vid, views = (it["channel"], it["id"], it["views"]) if isinstance(it, dict) else it
         p = os.path.join(a.dir, vid + ".mp4")
+        if vid in done and "error" not in done[vid]:
+            continue
         if not os.path.exists(p):
             print("없음", vid); continue
-        r = analyze(p)
-        r.update({"channel": ch, "id": vid, "views": views})
-        res.append(r)
-        c = {}
-        for e in r["events"]:
-            c[e["kind"]] = c.get(e["kind"], 0) + 1
-        print(f'{ch:10s} {vid} {r["dur"]:5.1f}s 컷{r["cuts"]:3d} 컷길이중앙{r["cut_len_median"]}s', c)
-        if a.sheets:
-            os.makedirs(a.sheets, exist_ok=True)
-            sheet(p, [e for e in r["events"] if e["kind"] != "cut"], os.path.join(a.sheets, vid + ".png"))
-    if a.out:
-        json.dump(res, open(a.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        jobs.append((ch, vid, views, p))
+    print(f"잴 영상 {len(jobs)}편 (이미 잰 것 {len(done)}편) · 동시 {a.jobs}", flush=True)
+    import multiprocessing as mp
+    with mp.Pool(a.jobs) as pool:
+        for r in pool.imap_unordered(_one, jobs):
+            done[r["id"]] = r
+            if "error" in r:
+                print("실패", r["channel"], r["id"], r["error"], flush=True)
+            else:
+                c = {}
+                for e in r["events"]:
+                    c[e["kind"]] = c.get(e["kind"], 0) + 1
+                print(f'{len(done):3d} {r["channel"]:10s} {r["id"]} {r["dur"]:5.1f}s 컷{r["cuts"]:3d}', c, flush=True)
+            if a.out:
+                json.dump(list(done.values()), open(a.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+            if a.sheets and "error" not in r:
+                os.makedirs(a.sheets, exist_ok=True)
+                sheet(os.path.join(a.dir, r["id"] + ".mp4"), [e for e in r["events"] if e["kind"] != "cut"],
+                      os.path.join(a.sheets, r["id"] + ".png"))
 
 
 if __name__ == "__main__":
