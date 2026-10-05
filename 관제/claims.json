@@ -24,6 +24,11 @@
     "card": 40,
     "track": "장면폰트"
   },
+  "shopping_shorts/ai_match.py:ensure_cover": {
+    "at": "2026-10-05 11:38",
+    "card": 120,
+    "track": "장면배분"
+  },
   "shopping_shorts/app.py": {
     "at": "2026-09-29 23:07",
     "card": 36,
