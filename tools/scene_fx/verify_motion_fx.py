@@ -42,15 +42,14 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
     await page.goto(pathToFileURL(path.resolve(req.root,'out/scene-style-ui-showcase.html')).href+'?qa=1',{waitUntil:'networkidle0'});
     await page.evaluate(r=>window.sceneStyle.load(r.context,r.snapshot),req);
     await page.click('[data-editor-tab="effects"]');
-    // 문제 장면은 확대 대신 흑백 충격만 — '중요 장면 한 번에'에서 문제 칩을 끄고 강조 확대
-    await page.click('[data-ref-moment-pick="problem"]');
-    await page.click('[data-ref-fx="all-zoom"]');
-    await new Promise(r=>setTimeout(r,2500));
+    // 장면마다 한 번 눌러 하나 고르기: 훅 0.5초 확대 · 문제 흑백 충격 · 제품 공개 쭉 당기기 · CTA 확대 후 복귀
     const show=async i=>{await page.evaluate(i=>window.sceneStyle.show(i),i);await new Promise(r=>setTimeout(r,150));};
-    await show(req.at.problem);await page.click('[data-ref-fx="shock"]');
+    await show(req.at.hook);await page.click('[data-scene-fx="in"]');
+    await show(req.at.problem);await page.click('[data-scene-fx="shock"]');
     const shockFilter=await page.$eval('#a-live-preview .scene-media-clip',m=>m.style.filter);
-    await show(req.at.reveal);await page.click('[data-zoom-way="pull"]');
-    await show(req.at.cta);await page.click('[data-zoom-way="inout"]');
+    await show(req.at.reveal);await page.click('[data-scene-fx="pull"]');
+    await show(req.at.cta);await page.click('[data-scene-fx="inout"]');
+    await new Promise(r=>setTimeout(r,2500));
     const snap=await page.evaluate(()=>window.sceneStyle.snapshot());
     fs.writeFileSync(req.out,JSON.stringify({snapshot:snap,shockFilter,errors}));
   }finally{await browser.close()}

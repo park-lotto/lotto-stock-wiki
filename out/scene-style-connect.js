@@ -22,7 +22,6 @@
   // 장면 효과(관제 124) — 잘된 썰 쇼핑 채널 114편에서 실제로 쓰는 것만. 값은 api.refFx(실측·사장님 선택) 한 곳.
   //   아무 장면이든 켤 수 있고, 중요 장면(훅·제품 공개·고조·CTA — 서버 scene_style.moment_of 판단)엔 한 번에 켠다.
   const MOMENT_NAME={hook:'훅',problem:'문제(비포)',reveal:'제품 공개',peak:'고조',cta:'CTA'};
-  const ZOOM_WAYS={in:'0.5초 확대',pull:'쭉 당기기',inout:'확대 후 돌아오기'};
   // 강조 확대 위치(관제 124) — 화면 가운데를 무조건 키우면 엄지·빈 바닥만 커졌다(2026-10-05 결과물 확인).
   //   레퍼런스는 보여줄 대상(제품·손)을 향해 자른다 → 그 장면 그림 3장(media_points 앞·가운데·뒤)에서
   //   윤곽이 몰린 곳 + 앞뒤로 달라진 곳(움직이는 손·제품)의 무게중심을 잡아 panX/panY 로 저장한다.
@@ -36,7 +35,7 @@
   async function focusPan(i,zoom){
     const sc=api.context()?.scenes?.[i];const urls=sc?.media_points?.length?sc.media_points:(sc?.media?[sc.media]:[]);
     if(!urls.length||!(zoom>1))return null;
-    const g0=api.geometry(),bw0=1080,bh0=1920*g0.media.height/100;
+    const g0=api.geometryAt(i),bw0=1080,bh0=1920*g0.media.height/100;
     const ai=await aiBox(sc);
     if(ai){
       const im=await new Promise(r=>{const x=new Image();x.onload=()=>r(x);x.onerror=()=>r(null);x.src=urls[0];});
@@ -58,69 +57,44 @@
     for(let k=0;k<e.length;k++)if(e[k]>=thr&&e[k]>0){sx+=(k%W+.5)/W*e[k];sy+=(Math.floor(k/W)+.5)/H*e[k];sw+=e[k];}
     if(!sw)return null;
     // 원본 그림 좌표 → 영상 칸(cover로 가운데 잘림) 좌표 → pan(media_geometry 식: crop=(zw-w)(1-pan)/2)
-    const g=api.geometry(),bw=1080,bh=1920*g.media.height/100,iw=imgs[0].naturalWidth||1080,ih=imgs[0].naturalHeight||1920,s=Math.max(bw/iw,bh/ih);
+    const g=api.geometryAt(i),bw=1080,bh=1920*g.media.height/100,iw=imgs[0].naturalWidth||1080,ih=imgs[0].naturalHeight||1920,s=Math.max(bw/iw,bh/ih);
     const box=(c,vis)=>Math.min(1,Math.max(0,(c-.5)/vis+.5)),bx=box(sx/sw,bw/s/iw),by=box(sy/sw,bh/s/ih);
     const pan=b=>Math.max(-1,Math.min(1,1-(2*b*zoom-1)/(zoom-1)));
     return {panX:+pan(bx).toFixed(3),panY:+pan(by).toFixed(3),focus:[+bx.toFixed(3),+by.toFixed(3)],by:'edge'};
   }
   async function aimEmphasis(indexes){
-    const keep=api.geometry().sceneIndex;
     for(const i of indexes){const e=api.effectAt(i);if(e.fxAuto!=='emph')continue;
-      api.show(i);const f=await focusPan(i,Number(e.zoom)||1);
-      if(f)api.effectAt(i,{...api.effectAt(i),...(f.zoom?{zoom:f.zoom}:{}),panX:f.panX,panY:f.panY,fxFocus:f.focus,fxFocusBy:f.by,...(f.box?{fxBox:f.box}:{})});}
-    api.show(keep);sync();updateControls();
+      const f=await focusPan(i,Number(e.zoom)||1);
+      if(f&&api.effectAt(i).fxAuto==='emph')api.effectAt(i,{...api.effectAt(i),...(f.zoom?{zoom:f.zoom}:{}),panX:f.panX,panY:f.panY,fxFocus:f.focus,fxFocusBy:f.by,...(f.box?{fxBox:f.box}:{})});}   // 기다리는 사이 효과를 바꿨으면 덮지 않는다
+    if(indexes.includes(api.geometry().sceneIndex))lastIndex=-1;sync();updateControls();
   }
-  const pickMoments=new Set(Object.keys(MOMENT_NAME));
   const refBox=document.createElement('div');refBox.className='scene-ref-fx';
-  refBox.innerHTML=`<p><b>강조 효과</b><br><small>잘된 쇼츠 114편 실측 · 이 장면: <b data-ref-moment>-</b></small></p>
-    <button type="button" class="scene-effects-reset" data-ref-fx="zoom">이 장면 강조 확대 (2배)</button>
-    <div class="scene-effect-choices" data-zoom-ways>${Object.entries(ZOOM_WAYS).map(([k,v])=>`<button type="button" data-zoom-way="${k}">${v}</button>`).join('')}</div>
-    <button type="button" class="scene-effects-reset" data-ref-fx="dim">이 장면 어둡게 강조</button>
-    <button type="button" class="scene-effects-reset" data-ref-fx="shock">이 장면 흑백 충격 (지지직·흔들림)</button>
-    <button type="button" class="scene-effects-reset" data-ref-fx="auto"></button>
-    <p><b>중요 장면에 한 번에</b></p>
-    <div class="scene-effect-choices">${Object.entries(MOMENT_NAME).map(([k,v])=>`<button type="button" class="active" data-ref-moment-pick="${k}">${v}</button>`).join('')}</div>
-    <button type="button" class="scene-effects-reset" data-ref-fx="all-zoom">고른 장면에 강조 확대</button>
-    <button type="button" class="scene-effects-reset" data-ref-fx="all-dim">고른 장면에 어둡게 강조</button>
-    <button type="button" class="scene-effects-reset" data-ref-fx="all-shock">고른 장면에 흑백 충격</button>
-    <p><b>영상 전체</b></p>
-    <button type="button" class="scene-effects-reset" data-ref-fx="jump"></button>
-    <button type="button" class="scene-effects-reset" data-ref-fx="title">시작 어두운 제목 화면</button>`;
+  // 장면마다 한 번 눌러 하나만 고른다(사장님 2026-10-05 "조작이 복잡해서 효율적으로"). 중요 장면은 [자동 배치] 스위치 하나.
+  const SCENE_FX=[['none','없음'],['in','0.5초 확대'],['pull','쭉 당기기'],['inout','확대→복귀'],['dim','어둡게+글자'],['shock','흑백 충격']];
+  refBox.innerHTML=`<p style="display:flex;justify-content:space-between;align-items:center;margin:0 0 6px"><b>강조 효과</b>
+      <button type="button" class="scene-effects-reset" data-ref-fx="auto" style="width:auto;padding:4px 10px;margin:0"></button></p>
+    <small>이 장면: <b data-ref-moment>-</b> · 잘된 쇼츠 114편 실측</small>
+    <div class="scene-effect-choices" data-scene-fx-list style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${SCENE_FX.map(([k,v])=>`<button type="button" data-scene-fx="${k}">${v}</button>`).join('')}</div>
+    <small>영상 전체</small>
+    <div class="scene-effect-choices"><button type="button" data-ref-fx="jump">점프 줌</button><button type="button" data-ref-fx="title">시작 어두운 제목</button></div>`;
   effectsPanel.append(refBox);
-  // 고른 중요 장면이 전부 켜져 있으면 '끄기'로 보인다
-  const allOn=kind=>{const ms=api.moments(),scenes=api.context()?.scenes||[];let prev=null,any=false,all=true;
-    scenes.forEach((s,i)=>{const first=s.beat_idx!==prev;prev=s.beat_idx;if(first&&ms[i]&&pickMoments.has(ms[i])){any=true;all=all&&api.emphOn(i,kind);}});return any&&all;};
   function syncRefFx(){
-    const i=api.geometry().sceneIndex,m=api.moments()[i];
+    const i=api.geometry().sceneIndex,m=api.moments()[i],cur=api.sceneFx(i);
     refBox.querySelector('[data-ref-moment]').textContent=m?MOMENT_NAME[m]:'일반';
-    // 켜짐은 글자로 보인다 — 이 버튼 모양(scene-effects-reset)엔 켜짐 색이 없다(화면 캡처로 확인)
-    const on=(sel,yes,label)=>{const b=refBox.querySelector(sel);b.classList.toggle('active',yes);b.textContent=label+(yes?' ✓ 켜짐':'');};
-    on('[data-ref-fx="zoom"]',api.emphOn(i,'zoom'),'이 장면 강조 확대 (2배)');
-    on('[data-ref-fx="dim"]',api.emphOn(i,'dim'),'이 장면 어둡게 강조');
-    on('[data-ref-fx="shock"]',api.emphOn(i,'shock'),'이 장면 흑백 충격 (지지직·흔들림)');
-    const zoomed=api.emphOn(i,'zoom'),way=api.zoomMove(i);refBox.querySelector('[data-zoom-ways]').hidden=!zoomed;
-    refBox.querySelectorAll('[data-zoom-way]').forEach(b=>b.classList.toggle('active',b.dataset.zoomWay===way));
-    refBox.querySelector('[data-ref-fx="all-shock"]').textContent=allOn('shock')?'고른 장면 흑백 충격 끄기':'고른 장면에 흑백 충격';
-    refBox.querySelectorAll('[data-ref-moment-pick]').forEach(b=>b.classList.toggle('active',pickMoments.has(b.dataset.refMomentPick)));
-    refBox.querySelector('[data-ref-fx="all-zoom"]').textContent=allOn('zoom')?'고른 장면 강조 확대 끄기':'고른 장면에 강조 확대';
-    refBox.querySelector('[data-ref-fx="all-dim"]').textContent=allOn('dim')?'고른 장면 어둡게 끄기':'고른 장면에 어둡게 강조';
-    refBox.querySelector('[data-ref-fx="auto"]').textContent=api.autoPlaced()?'자동 배치 빼기':'자동 배치 (훅·문제·제품 공개·고조·CTA)';
-    refBox.querySelector('[data-ref-fx="jump"]').textContent=api.jumpZoomOn()?'점프 줌 컷 빼기':'점프 줌 컷 넣기 (구절마다 1.35배)';
-    const t=api.effectAt(0).dim;
-    on('[data-ref-fx="title"]',!!t&&t.sec>0,'시작 어두운 제목 화면');
+    refBox.querySelectorAll('[data-scene-fx]').forEach(b=>b.classList.toggle('active',b.dataset.sceneFx===cur));
+    const auto=refBox.querySelector('[data-ref-fx="auto"]'),on=api.autoPlaced();auto.textContent=on?'자동 배치 켜짐 ●':'자동 배치 꺼짐 ○';auto.classList.toggle('active',on);
+    refBox.querySelector('[data-ref-fx="jump"]').classList.toggle('active',api.jumpZoomOn());
+    const t=api.effectAt(0).dim;refBox.querySelector('[data-ref-fx="title"]').classList.toggle('active',!!t&&t.sec>0);
   }
   refBox.addEventListener('click',ev=>{
-    const zw=ev.target.closest('[data-zoom-way]');
-    if(zw){const k=api.geometry().sceneIndex;api.zoomMove(k,zw.dataset.zoomWay);lastIndex=-1;updateControls();sync();return;}   // lastIndex=-1 → 미리보기 움직임을 다시 보여 준다
-    const pick=ev.target.closest('[data-ref-moment-pick]');
-    if(pick){const k=pick.dataset.refMomentPick;pickMoments.has(k)?pickMoments.delete(k):pickMoments.add(k);syncRefFx();return;}
-    const b=ev.target.closest('[data-ref-fx]');if(!b)return;const fx=api.refFx,i=api.geometry().sceneIndex,what=b.dataset.refFx;
-    if(what==='zoom'||what==='dim'||what==='shock'){api.emphAt(i,what,!api.emphOn(i,what));if(what==='zoom')aimEmphasis([i]);lastIndex=-1;}
-    else if(what==='all-zoom'||what==='all-dim'||what==='all-shock'){const kind=what.slice(4);api.emphMoments([...pickMoments],kind,!allOn(kind));if(kind==='zoom')aimEmphasis(api.moments().map((_,k)=>k));}
-    else if(what==='jump')api.jumpZoom(!api.jumpZoomOn());
-    else if(what==='auto'){const on=!api.autoPlaced();api.autoPlace(on);if(on)aimEmphasis(api.moments().map((_,k)=>k));}
+    const pick=ev.target.closest('[data-scene-fx]');
+    // 고른 뒤 그 장면을 통째로 다시 그린다(show) — 자막 자리(어둡게+큰 글자)·자막 등장·미리보기 움직임이 누르자마자 바뀐다(자막팩 실측: 안 그리면 넘겼다 와야 보였다)
+    if(pick){const i=api.geometry().sceneIndex,k=pick.dataset.sceneFx;api.sceneFx(i,k);if(['in','pull','inout'].includes(k))aimEmphasis([i]);lastIndex=-1;api.show(i);updateControls();sync();return;}
+    const b=ev.target.closest('[data-ref-fx]');if(!b)return;const fx=api.refFx,what=b.dataset.refFx;
+    if(what==='jump')api.jumpZoom(!api.jumpZoomOn());
+    else if(what==='auto'){const on=!api.autoPlaced();api.autoPlace(on);if(on)aimEmphasis(api.moments().map((_,k)=>k));lastIndex=-1;}
     else{const e=structuredClone(api.effectAt(0));if(e.dim&&e.dim.sec>0)delete e.dim;else e.dim={...fx.dimTitle};api.effectAt(0,e);}
-    updateControls();sync();
+    lastIndex=-1;api.show(api.geometry().sceneIndex);updateControls();sync();
   });
   if(titleMotion)textPanel.querySelector('.ai-card').after(titleMotion);
   const note=textPanel.querySelector('.ai-card');if(note)note.innerHTML='<b>문구·자막 편집</b><br><span data-connection-status>저장한 설정으로 미리보고 있습니다.</span>';

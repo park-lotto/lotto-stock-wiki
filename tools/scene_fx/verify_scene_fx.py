@@ -43,14 +43,14 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
     await page.evaluate(r=>window.sceneStyle.load(r.context,r.snapshot),req);
     // [효과] 탭 → 버튼을 실제로 누른다: ①중요 장면 한 번에 강조 확대 ②점프 줌(리듬) ③한 장면 어둡게 ④시작 어두운 제목
     await page.click('[data-editor-tab="effects"]');
-    const before=await page.$eval('[data-ref-fx="all-zoom"]',b=>b.textContent);
-    await page.click('[data-ref-fx="all-zoom"]');
+    // 중요 장면(각 비트 첫 구절)마다 [0.5초 확대]를 한 번씩 누른다(장면마다 하나 고르기 화면)
+    const before='',after='';
+    for(const i of req.firsts){await page.evaluate(i=>window.sceneStyle.show(i),i);await new Promise(r=>setTimeout(r,150));await page.click('[data-scene-fx="in"]');}
     await new Promise(r=>setTimeout(r,2500));   // 강조 확대 위치 잡기(그림 읽기)는 비동기
-    const after=await page.$eval('[data-ref-fx="all-zoom"]',b=>b.textContent);
     await page.click('[data-ref-fx="jump"]');
     await page.evaluate(i=>window.sceneStyle.show(i),req.dimScene);
     const label=await page.$eval('[data-ref-moment]',b=>b.textContent);
-    await page.click('[data-ref-fx="dim"]');
+    await page.click('[data-scene-fx="dim"]');
     await page.click('[data-ref-fx="title"]');
     // 미리보기 밝기: 어둡게 장면 영상 칸에 걸린 filter
     const filter=await page.$eval('#a-live-preview .precision-media',m=>m.style.filter);
@@ -148,7 +148,7 @@ def main():
     # 1) 편집기에서 버튼을 눌러 snapshot 받기
     req = work / "editor-req.json"
     req.write_text(json.dumps({"root": str(ROOT), "context": ctx, "snapshot": snap0, "dimScene": dim_scene,
-                               "files": files, "boxes": boxes,
+                               "files": files, "boxes": boxes, "firsts": firsts,
                                "out": str(work / "editor-out.json")}, ensure_ascii=False), encoding="utf-8")
     js = work / "editor.js"
     js.write_text(PAGE_JS, encoding="utf-8")

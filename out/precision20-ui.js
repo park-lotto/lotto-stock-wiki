@@ -2038,6 +2038,8 @@
     },
     show(index){showScene(index);return this.geometry()},
     geometry:()=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
+    // 장면을 열지 않고 i번 장면의 영상 칸(관제 124) — 강조 확대 위치 잡기가 장면을 오가며 화면을 되돌리던 것(빠르게 누르면 엉뚱한 장면에 들어감)을 없앤다
+    geometryAt:i=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current],i),rows[current].id),sceneIndex:i,kind:sceneKind(i)}),
     effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
     // 다른 장면의 효과를 직접 읽고 쓴다(쇼핑 안내 세트가 마지막 장면 여러 개에 한 번에 넣는다, 2026-09-23)
     effectAt(i,value){const k=String(i);if(value!==undefined)effects[k]=value;return effects[k]||{}},
@@ -2082,13 +2084,25 @@
       scenes.forEach((s,i)=>{const first=s.beat_idx!==prev;prev=s.beat_idx;const key=String(i),e=effects[key]||{};
         if(!on){if(e.fxAutoPlaced){effects[key]={};count++;}return;}
         const rule=first&&s.moment&&AUTO_FX[s.moment];if(!rule||Object.keys(e).length)return;
-        if(rule.zoom){this.emphAt(i,'zoom',true);if(rule.zoom!=='in')this.zoomMove(i,rule.zoom);}
-        if(rule.shock)this.emphAt(i,'shock',true);
-        if(rule.dim)this.emphAt(i,'dim',true);
+        this.sceneFx(i,rule.zoom||(rule.shock?'shock':rule.dim?'dim':'none'));
         effects[key]={...effects[key],fxAutoPlaced:true};count++;});
       return count;
     },
     autoPlaced:()=>Object.values(effects).some(e=>e&&e.fxAutoPlaced),
+    // 장면 효과 하나 고르기(관제 124, 사장님 "조작이 복잡해서 효율적으로") — 장면마다 한 번 눌러 하나만.
+    //   kind: 'none'|'in'|'pull'|'inout'(강조 확대 방식)|'dim'(어둡게+큰 글자)|'shock'(흑백 충격). 시작 어두운 제목(dim.sec>0)은 그대로 둔다.
+    sceneFx(i,kind){
+      const key=String(i),e={...(effects[key]||{})};
+      if(kind===undefined){if(e.shock)return 'shock';if(e.dim&&!e.dim.sec)return 'dim';if(e.fxAuto==='emph')return e.zoomMove||'in';return 'none';}
+      const title=e.dim&&e.dim.sec>0?e.dim:null,keepJump=e.fxAuto==='jump';
+      ['zoomIn','zoomMove','shock','fxFocus','fxFocusBy','fxBox','fxAutoPlaced'].forEach(k=>delete e[k]);
+      if(e.fxAuto==='emph'){delete e.zoom;delete e.fxAuto;delete e.panX;delete e.panY;}
+      delete e.dim;if(title)e.dim=title;
+      effects[key]=e;
+      if(kind==='in'||kind==='pull'||kind==='inout'){if(keepJump){delete e.zoom;delete e.fxAuto;}this.emphAt(i,'zoom',true);this.zoomMove(i,kind);}
+      else if(kind==='dim'||kind==='shock')this.emphAt(i,kind,true);
+      return kind;
+    },
     emphMoments(moments,kind,on){
       const scenes=sceneContext?.scenes||[],want=new Set(moments);let prev=null,count=0;
       scenes.forEach((s,i)=>{const first=s.beat_idx!==prev;prev=s.beat_idx;
