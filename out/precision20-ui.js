@@ -2066,10 +2066,14 @@
         else if(e.fxAuto==='emph'||e.fxAuto==='jump'){delete e.zoom;delete e.fxAuto;delete e.zoomIn;if(e.fxFocus){delete e.panX;delete e.panY;delete e.fxFocus;delete e.fxFocusBy;delete e.fxBox;}}   // 자동으로 맞춘 위치(fxFocus)도 같이 뺀다
       }else if(kind==='dim'){
         if(on)e.dim={...REF_FX.dimEmphasis};else if(e.dim&&!e.dim.sec)delete e.dim;
+      }else if(kind==='shock'){   // 흑백 충격(흑백·지지직·흔들림) — 문제·실수·비포 장면용(완성본 scene_style.shock_vf)
+        if(on)e.shock=true;else delete e.shock;
       }
       effects[key]=e;
     },
-    emphOn(i,kind){const e=effects[String(i)]||{};return kind==='zoom'?e.fxAuto==='emph':!!(e.dim&&!e.dim.sec)},
+    emphOn(i,kind){const e=effects[String(i)]||{};return kind==='zoom'?e.fxAuto==='emph':kind==='shock'?!!e.shock:!!(e.dim&&!e.dim.sec)},
+    // 확대 방식: 'in' 0.5초 들어가 멈춤 / 'pull' 장면 내내 쭉 당기기 / 'inout' 들어갔다 끝에 원본 크기로(완성본 scene_style.zoom_move_vf 와 짝)
+    zoomMove(i,way){const k=String(i),e={...(effects[k]||{})};if(way!==undefined){if(way==='in')delete e.zoomMove;else e.zoomMove=way;effects[k]=e;}return e.zoomMove||'in'},
     emphMoments(moments,kind,on){
       const scenes=sceneContext?.scenes||[],want=new Set(moments);let prev=null,count=0;
       scenes.forEach((s,i)=>{const first=s.beat_idx!==prev;prev=s.beat_idx;

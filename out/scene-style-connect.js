@@ -21,7 +21,8 @@
   copyEffects.addEventListener('click',()=>{api.copyEffectsToAll();copyEffects.textContent='모든 장면에 적용했어요';setTimeout(()=>copyEffects.textContent='이 효과를 다른 장면에도 적용',1600);});
   // 장면 효과(관제 124) — 잘된 썰 쇼핑 채널 114편에서 실제로 쓰는 것만. 값은 api.refFx(실측·사장님 선택) 한 곳.
   //   아무 장면이든 켤 수 있고, 중요 장면(훅·제품 공개·고조·CTA — 서버 scene_style.moment_of 판단)엔 한 번에 켠다.
-  const MOMENT_NAME={hook:'훅',reveal:'제품 공개',peak:'고조',cta:'CTA'};
+  const MOMENT_NAME={hook:'훅',problem:'문제(비포)',reveal:'제품 공개',peak:'고조',cta:'CTA'};
+  const ZOOM_WAYS={in:'0.5초 확대',pull:'쭉 당기기',inout:'확대 후 돌아오기'};
   // 강조 확대 위치(관제 124) — 화면 가운데를 무조건 키우면 엄지·빈 바닥만 커졌다(2026-10-05 결과물 확인).
   //   레퍼런스는 보여줄 대상(제품·손)을 향해 자른다 → 그 장면 그림 3장(media_points 앞·가운데·뒤)에서
   //   윤곽이 몰린 곳 + 앞뒤로 달라진 곳(움직이는 손·제품)의 무게중심을 잡아 panX/panY 로 저장한다.
@@ -73,11 +74,14 @@
   const refBox=document.createElement('div');refBox.className='scene-ref-fx';
   refBox.innerHTML=`<p><b>강조 효과</b><br><small>잘된 쇼츠 114편 실측 · 이 장면: <b data-ref-moment>-</b></small></p>
     <button type="button" class="scene-effects-reset" data-ref-fx="zoom">이 장면 강조 확대 (2배)</button>
+    <div class="scene-effect-choices" data-zoom-ways>${Object.entries(ZOOM_WAYS).map(([k,v])=>`<button type="button" data-zoom-way="${k}">${v}</button>`).join('')}</div>
     <button type="button" class="scene-effects-reset" data-ref-fx="dim">이 장면 어둡게 강조</button>
+    <button type="button" class="scene-effects-reset" data-ref-fx="shock">이 장면 흑백 충격 (지지직·흔들림)</button>
     <p><b>중요 장면에 한 번에</b></p>
     <div class="scene-effect-choices">${Object.entries(MOMENT_NAME).map(([k,v])=>`<button type="button" class="active" data-ref-moment-pick="${k}">${v}</button>`).join('')}</div>
     <button type="button" class="scene-effects-reset" data-ref-fx="all-zoom">고른 장면에 강조 확대</button>
     <button type="button" class="scene-effects-reset" data-ref-fx="all-dim">고른 장면에 어둡게 강조</button>
+    <button type="button" class="scene-effects-reset" data-ref-fx="all-shock">고른 장면에 흑백 충격</button>
     <p><b>영상 전체</b></p>
     <button type="button" class="scene-effects-reset" data-ref-fx="jump"></button>
     <button type="button" class="scene-effects-reset" data-ref-fx="title">시작 어두운 제목 화면</button>`;
@@ -92,6 +96,10 @@
     const on=(sel,yes,label)=>{const b=refBox.querySelector(sel);b.classList.toggle('active',yes);b.textContent=label+(yes?' ✓ 켜짐':'');};
     on('[data-ref-fx="zoom"]',api.emphOn(i,'zoom'),'이 장면 강조 확대 (2배)');
     on('[data-ref-fx="dim"]',api.emphOn(i,'dim'),'이 장면 어둡게 강조');
+    on('[data-ref-fx="shock"]',api.emphOn(i,'shock'),'이 장면 흑백 충격 (지지직·흔들림)');
+    const zoomed=api.emphOn(i,'zoom'),way=api.zoomMove(i);refBox.querySelector('[data-zoom-ways]').hidden=!zoomed;
+    refBox.querySelectorAll('[data-zoom-way]').forEach(b=>b.classList.toggle('active',b.dataset.zoomWay===way));
+    refBox.querySelector('[data-ref-fx="all-shock"]').textContent=allOn('shock')?'고른 장면 흑백 충격 끄기':'고른 장면에 흑백 충격';
     refBox.querySelectorAll('[data-ref-moment-pick]').forEach(b=>b.classList.toggle('active',pickMoments.has(b.dataset.refMomentPick)));
     refBox.querySelector('[data-ref-fx="all-zoom"]').textContent=allOn('zoom')?'고른 장면 강조 확대 끄기':'고른 장면에 강조 확대';
     refBox.querySelector('[data-ref-fx="all-dim"]').textContent=allOn('dim')?'고른 장면 어둡게 끄기':'고른 장면에 어둡게 강조';
@@ -100,11 +108,13 @@
     on('[data-ref-fx="title"]',!!t&&t.sec>0,'시작 어두운 제목 화면');
   }
   refBox.addEventListener('click',ev=>{
+    const zw=ev.target.closest('[data-zoom-way]');
+    if(zw){const k=api.geometry().sceneIndex;api.zoomMove(k,zw.dataset.zoomWay);lastIndex=-1;updateControls();sync();return;}   // lastIndex=-1 → 미리보기 움직임을 다시 보여 준다
     const pick=ev.target.closest('[data-ref-moment-pick]');
     if(pick){const k=pick.dataset.refMomentPick;pickMoments.has(k)?pickMoments.delete(k):pickMoments.add(k);syncRefFx();return;}
     const b=ev.target.closest('[data-ref-fx]');if(!b)return;const fx=api.refFx,i=api.geometry().sceneIndex,what=b.dataset.refFx;
-    if(what==='zoom'||what==='dim'){api.emphAt(i,what,!api.emphOn(i,what));if(what==='zoom')aimEmphasis([i]);}
-    else if(what==='all-zoom'||what==='all-dim'){const kind=what.slice(4);api.emphMoments([...pickMoments],kind,!allOn(kind));if(kind==='zoom')aimEmphasis(api.moments().map((_,k)=>k));}
+    if(what==='zoom'||what==='dim'||what==='shock'){api.emphAt(i,what,!api.emphOn(i,what));if(what==='zoom')aimEmphasis([i]);lastIndex=-1;}
+    else if(what==='all-zoom'||what==='all-dim'||what==='all-shock'){const kind=what.slice(4);api.emphMoments([...pickMoments],kind,!allOn(kind));if(kind==='zoom')aimEmphasis(api.moments().map((_,k)=>k));}
     else if(what==='jump')api.jumpZoom(!api.jumpZoomOn());
     else{const e=structuredClone(api.effectAt(0));if(e.dim&&e.dim.sec>0)delete e.dim;else e.dim={...fx.dimTitle};api.effectAt(0,e);}
     updateControls();sync();
@@ -131,8 +141,20 @@
     const mh=ph*g.media.height/100;
     Object.assign(lens.style,{width:pw+'px',height:mh+'px',left:r+pw/2-2*cx+px*2+'px',top:r+mh/2-2*cy+py*2+'px',transform:`scale(${z*2})`});
     if(lastIndex!==g.sceneIndex){lastIndex=g.sceneIndex;updateControls();
-      // 확대 움직임(관제 124): 장면을 열면 0.5초 동안 1배→도착 구도로. 곡선 1-(1-t)² = 완성본(scene_style.zoom_move_vf)과 같다.
-      if(Number(e.zoomIn)>0&&z>1)media.animate([{transform:'translate(0px,0px) scale(1)'},{transform:media.style.transform}],{duration:Number(e.zoomIn)*1000,easing:'cubic-bezier(.5,1,.89,1)'});}
+      // 확대 움직임(관제 124): 장면을 열면 1배→도착 구도로. 곡선은 완성본(scene_style.zoom_move_vf)과 같다 —
+      //   in: 0.5초 1-(1-t)² · pull: 장면 길이 동안 3t²-2t³ · inout: 0.5초 들어가고 끝 0.5초에 원본 크기로.
+      media.getAnimations().forEach(a=>a.cancel());
+      const sc=api.context()?.scenes?.[g.sceneIndex],len=sc?Math.max(.6,sc.end-sc.start)*1000:1500,inMs=Number(e.zoomIn)*1000,way=e.zoomMove||'in',to=media.style.transform,from='translate(0px,0px) scale(1)';
+      if(inMs>0&&z>1){
+        if(way==='pull')media.animate([{transform:from},{transform:to}],{duration:len,easing:'cubic-bezier(.65,0,.35,1)'});
+        else if(way==='inout'&&len>2*inMs)media.animate([{transform:from,easing:'cubic-bezier(.5,1,.89,1)'},{transform:to,offset:inMs/len},{transform:to,offset:1-inMs/len,easing:'cubic-bezier(.65,0,.35,1)'},{transform:from}],{duration:len});
+        else media.animate([{transform:from},{transform:to}],{duration:inMs,easing:'cubic-bezier(.5,1,.89,1)'});
+      }
+      // 흑백 충격: 흑백·대비 + 프레임마다 흔들림 + 13프레임마다 찢기듯 밀림·번쩍(완성본 scene_style.shock_vf 를 흉내)
+      windowEl.getAnimations().forEach(a=>a.cancel());windowEl.style.filter=e.shock?'grayscale(1) contrast(1.28) brightness(.97)':'';
+      if(e.shock){const kf=[];for(let f=0;f<26;f++){const glitch=f%13<2,dx=(.012*Math.sin(f*12.9898)+(glitch?.045*Math.sin(f*7.31):0))*100,dy=.009*Math.sin(f*78.233)*100;
+        kf.push({transform:`translate(${dx.toFixed(2)}%,${dy.toFixed(2)}%) scale(1.06)`,filter:`grayscale(1) contrast(1.28) brightness(${glitch?1.16:.97})`,easing:'steps(1)'});}
+        windowEl.animate(kf,{duration:26*33.3,iterations:Infinity});}}
   }
   let mediaDrag=null;
   windowEl.addEventListener('pointerdown',event=>{if(event.button!==0)return;const isLens=!!event.target.closest('.scene-focus'),e=structuredClone(api.effect());if(!isLens&&(e.zoom||1)<=1)return;mediaDrag={id:event.pointerId,x:event.clientX,y:event.clientY,isLens,e,rect:preview.getBoundingClientRect()};windowEl.setPointerCapture(event.pointerId);event.preventDefault();});

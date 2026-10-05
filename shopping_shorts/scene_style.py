@@ -86,7 +86,11 @@ def validate_snapshot(value):
             if not isinstance(dim,dict):
                 raise ValueError("어둡게 형식이 올바르지 않습니다")
             number(dim.get("level"),.1,1);number(dim.get("sec",0),0,10)
-        number(effect.get("zoomIn",0),0,3)   # 확대 움직임(관제 124): 장면 시작부터 zoomIn초 동안 1배→zoom 배로 빨려 들어감(0=멈춘 확대)
+        number(effect.get("zoomIn",0),0,3)
+        if effect.get("zoomMove",'in') not in ("in","pull","inout"):   # 확대 방식: 0.5초 확대 / 장면 내내 쭉 당기기 / 확대 후 돌아오기
+            raise ValueError("확대 방식이 올바르지 않습니다")
+        if not isinstance(effect.get("shock",False),bool):   # 흑백 충격(흑백·지지직·흔들림)
+            raise ValueError("흑백 충격 형식이 올바르지 않습니다")   # 확대 움직임(관제 124): 장면 시작부터 zoomIn초 동안 1배→zoom 배로 빨려 들어감(0=멈춘 확대)
         if "fxAuto" in effect and effect["fxAuto"] not in ("jump","emph"):
             raise ValueError("자동 효과 표식이 올바르지 않습니다")
         if "masks" in effect:
@@ -361,11 +365,13 @@ _MOMENT_ROLES = {
     "hook": ("훅", "hook", "title", "미끼", "bait"),
     "reveal": ("공개", "reveal", "정체", "정체공개"),
     "peak": ("고조", "고조1", "고조2", "고조3", "escalation", "반전", "twist"),
+    # 문제·실수·비포 — 흑백 충격을 거는 자리(사장님 2026-10-05 "충격이나 잘못된 비포 장면"). 실측 problem 113.
+    "problem": ("문제", "problem", "페인포인트", "페인", "pain", "before", "비포", "실수"),
 }
 
 
 def moment_of(role):
-    """비트 역할 → 'hook'|'reveal'|'peak'|'cta'|None. CTA 이름은 edit_plan._CTA_ROLES 를 그대로 쓴다."""
+    """비트 역할 → 'hook'|'reveal'|'peak'|'problem'|'cta'|None. CTA 이름은 edit_plan._CTA_ROLES 를 그대로 쓴다."""
     from .edit_plan import _CTA_ROLES
     r = str(role or "").strip()
     if not r:
@@ -509,7 +515,7 @@ def media_geometry(layer, effect):
     return width,height,top,zw,zh,crop_x,crop_y
 
 
-def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y):
+def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y, frames=0):
     """영상 칸 확대 필터. zoomIn>0 이면 장면 시작부터 zoomIn초 동안 1배→zoom 배로 **움직이며** 확대(관제 124, 사장님
     2026-10-05 "그냥 확대 장면을 보여주는 건 의미가 없다, 0.5초로 제품에 확대되는 거"). 곡선은 1-(1-t)² (처음 빠르고 끝에서 멈춤) —
     편집기 미리보기(scene-style-connect.js, cubic-bezier(.5,1,.89,1) = 같은 곡선)와 짝. 도착점은 멈춘 확대와 같은 자리(panX·panY).
@@ -520,9 +526,30 @@ def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y):
         return f"scale={zw}:{zh},crop={width}:{height}:{crop_x}:{crop_y}"
     n=max(1,round(move*30))
     fx=crop_x/max(1,zw-width); fy=crop_y/max(1,zh-height)          # 도착했을 때 잘리는 자리(0~1)
-    e=f"(1-pow(1-min(1,on/{n}),2))"
+    way=(effect or {}).get("zoomMove") or "in"
+    N=max(n+1,int(frames or 0))
+    if way=="pull":      # 장면 내내 쭉 당기기 — 처음·끝이 부드러운 3t²-2t³ (사장님 "2배로 쭉 땡기면서 집중")
+        e=f"(3*pow(min(1,on/{N-1}),2)-2*pow(min(1,on/{N-1}),3))"
+    elif way=="inout" and N>2*n:   # 0.5초 들어가고, 끝 0.5초에 원본 크기로 돌아온다(사장님 "다시 원본 크기로 돌아오기")
+        b=f"max(0,(on-{N-n})/{n})"
+        e=f"((1-pow(1-min(1,on/{n}),2))*(1-(3*pow({b},2)-2*pow({b},3))))"
+    else:
+        e=f"(1-pow(1-min(1,on/{n}),2))"
     return (f"scale={width*2}:{height*2},zoompan=z='1+{zoom-1:.5f}*{e}':x='(iw-iw/zoom)*{fx:.5f}':y='(ih-ih/zoom)*{fy:.5f}'"
             f":d=1:s={width}x{height}:fps=30")
+
+
+def shock_vf(effect, width, height):
+    """흑백 충격(관제 124, 사장님 2026-10-05 "흑백은 충격·잘못된 비포 장면에, 흑백과 지지직 효과·약간 흔들리는 느낌") — 영상 칸에만.
+    흑백+대비 · 필름 잡티(noise) · 흔들림(프레임마다 ±1.2% 이동) · 지지직(13프레임마다 2프레임 크게 찢기듯 밀림+번쩍).
+    흔들려도 가장자리가 안 보이게 6% 키워 두고 자른다. 편집기 미리보기(scene-style-connect.js)는 같은 모양을 CSS로 흉내 낸다."""
+    if not (effect or {}).get("shock"):
+        return ""
+    g="lt(mod(n,13),2)"
+    bw,bh=round(width*1.06/2)*2,round(height*1.06/2)*2
+    return (f",hue=s=0,eq=contrast=1.28:brightness=-0.03,noise=c0s=22:c0f=t,scale={bw}:{bh},"
+            f"crop={width}:{height}:x='(iw-ow)/2+ow*(0.012*sin(n*12.9898)+{g}*0.045*sin(n*7.31))'"
+            f":y='(ih-oh)/2+oh*0.009*sin(n*78.233)',eq=brightness=0.16:enable='{g}'")
 
 
 def dim_of(effect, frames):
@@ -601,6 +628,8 @@ def compose_still(frame_path, timeline, snapshot, work, index, out_path, headcop
     img=src.resize((cw,ch),Image.LANCZOS)
     img=img.crop(((cw-width)//2,(ch-height)//2,(cw-width)//2+width,(ch-height)//2+height))   # crop=W:H (가운데)
     img=img.resize((zw,zh),Image.LANCZOS).crop((crop_x,crop_y,crop_x+width,crop_y+height))
+    if effect.get("shock"):   # 흑백 충격 장면 썸네일은 흑백(완성본 첫 프레임과 같은 색)
+        img=img.convert("L").convert("RGB")
     if dim_of(effect,1):   # 썸네일 = 장면 첫 프레임 — 완성본도 장면 시작부터 어둡다(관제 124)
         level=dim_of(effect,1)[0];img=img.point(lambda v:round(v*level))
     canvas=Image.new("RGBA",(width,va._OUT_H),(0,0,0,255))    # pad=W:OUT_H:0:top:black
@@ -627,7 +656,7 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
         width,height,top,zw,zh,crop_x,crop_y=media_geometry(layer,effect)
         dim=dim_of(effect,last_frame-first_frame)   # 어둡게(관제 124) — 영상 칸에만, 틀·자막 레이어는 밝게 남는다
         dim_f=(f",colorchannelmixer=rr={dim[0]:.3f}:gg={dim[0]:.3f}:bb={dim[0]:.3f}:enable='lt(n,{dim[1]})'" if dim else "")
-        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},{zoom_move_vf(effect,width,height,zw,zh,crop_x,crop_y)}{dim_f},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
+        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},{zoom_move_vf(effect,width,height,zw,zh,crop_x,crop_y,last_frame-first_frame)}{shock_vf(effect,width,height)}{dim_f},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
         hl=va.highlight_fc({"scene_hl":effect.get("highlight")},vf,grow=False)
         prefix=f"[1:v]tpad=stop_mode=clone:stop_duration={(last_frame-first_frame)/30}[ink];" if layer.get("animation") else "[1:v]null[ink];"
         graph=prefix+(hl+";" if hl else f"[0:v]{vf}[out];")
