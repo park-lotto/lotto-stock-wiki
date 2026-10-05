@@ -60,7 +60,7 @@ function page2(){
           ${rowActs(i, bd.slots.length, sl)}</div>
         <div class="rs"><div class="cth">${cellCards(ek, i, sl, ck)}</div>${candBox(ek, i, sl, bd)}</div></div>`; }).join('');
     body = `<div class="note" style="margin:6px 0">${bd.first_line_style||''} · 🎯 = 1단계에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
-      <div class="rows">${cells}</div>${xpick(ek, bd)}
+      <div class="rows">${cells}</div>${leftRow(bd)}${xpick(ek, bd)}
       <div style="text-align:right;margin-top:10px"><button class="btn main">이 대본으로 확정 → 3단계</button></div>`;
   }
   return `<div class="pickbar"><b>대본 스타일 고르기</b> <span class="note">여러 개 골라도 돼요 · 고른 만큼 스토리보드가 따로 나와요 · 스타일 하나에 약 35초(동시에 만듦)</span>
@@ -99,6 +99,11 @@ function mineDraft(){      // ✍ 내가 직접 쓰기 — 지금 보고 있는 
 let ORD = {};
 function ordOf(ek, i, sl){ const k = ek + '#' + i; return ORD[k] = ORD[k] || [...(sl.ids||[])]; }
 function mv(ek, i, j, d){ const k = ek + '#' + i; const a = ORD[k]; const t = j + d; if (!a || t < 0 || t >= a.length) return; [a[j], a[t]] = [a[t], a[j]]; render(); }
+// 1단계 상자에 담았는데 이 스타일 대본에 못 들어간 장면 — 맨 아래 칸에 카드로(사장님 10-05: 조용히 버리지 않는다)
+function leftRow(bd){ const L = bd.role_left || []; if (!L.length) return '';
+  return `<div class="row leftrow"><div class="rl"><div class="rn">－</div><div><b>못 넣은 장면</b><div class="rneed">1단계에서 담았지만 이 대본엔 안 들어갔어요</div></div></div>
+    <div class="rm"><div class="why">${L.map(x => `「${x.box}」 ${x.why}`).join(' · ')}</div></div>
+    <div class="rs"><div class="cth">${L.map(x => `<div class="cc">${th(x.id, 60)}<div class="ccb"><span class="pk">${x.box}</span></div></div>`).join('')}</div></div></div>`; }
 function cellCards(ek, i, sl, ck){
   const ids = ordOf(ek, i, sl); const picked = new Set(sl.picked || []); let acc = 0; const need = Number(ck.need || 0);
   return ids.map((id, j) => { const p = job().pieces[id]; const sec = p ? Number(p.sec) : 0; const show = acc * 1.2 < need - 0.05; acc += sec;
