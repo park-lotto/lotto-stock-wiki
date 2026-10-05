@@ -840,6 +840,23 @@ def _main_or_stage(stage, rel):
     return out if rc == 0 else _merged_blob(stage, rel)
 
 
+def _patch_rels(stage):
+    """올릴 모듈 목록 — **병합본** gate_modules 의 PATCH_RELS(2026-10-05 관제 123).
+    서버 도구(_tool/gate_modules.py)는 병합본이라 새 모듈(fish_tts)을 얹으려 하는데, 올리는 목록을 main 판본에서
+    읽으면 그 파일이 안 올라가 병합본 tts.py 가 ImportError 로 죽었다(새 모듈을 만드는 병합마다 막히는 구조).
+    병합본을 못 읽으면 main 판본 목록."""
+    data = _merged_blob(stage, "tools/gate_modules.py")
+    if data is None:
+        return PATCH_RELS
+    ns = {"__name__": "_merged_gate_modules"}
+    try:
+        exec(compile(data.decode("utf-8"), "gate_modules(merged)", "exec"), ns)
+        return dict(ns["PATCH_RELS"])
+    except Exception as e:
+        print("  ! 병합본 gate_modules 목록을 못 읽어 main 목록을 쓴다: %r" % (e,))
+        return PATCH_RELS
+
+
 def _bundle(stage, side="merged"):
     """PATCH_DIR 묶음(side="merged": 병합본 모듈 / "main": 병합 전 main 모듈) + _tool/(병합본 도구 — 양쪽 같은 자) → tar.gz 바이트.
     ★결정적이다(2026-10-02, 카드 071): mtime·gzip 시각을 0으로 — 같은 내용이면 같은 바이트라 main 실측 캐시의 열쇠로 쓴다."""
@@ -852,7 +869,7 @@ def _bundle(stage, side="merged"):
             ti.mode = 0o644
             ti.mtime = 0
             tf.addfile(ti, io.BytesIO(data))
-        for dst, rel in PATCH_RELS.items():
+        for dst, rel in _patch_rels(stage).items():
             if side == "main":
                 rc, data = _git_bytes(stage, "show", "HEAD:%s" % rel)
                 data = data if rc == 0 else None
