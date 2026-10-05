@@ -558,7 +558,7 @@
   },
   "emph": {
    "font": "SBAggroB",
-   "size": 160,
+   "size": 135,
    "color": "#FFFFFF",
    "style": {
     "WebkitTextStroke": "0.06em #000",
@@ -661,7 +661,7 @@
   },
   "emph": {
    "font": "BMJUA",
-   "size": 160,
+   "size": 135,
    "color": "#FFFFFF",
    "style": {
     "WebkitTextStroke": "0.06em #000",
@@ -700,7 +700,7 @@
   },
   "emph": {
    "font": "BlackHanSans",
-   "size": 170,
+   "size": 140,
    "color": "#FFE600",
    "style": {
     "WebkitTextStroke": "0.06em #000",
