@@ -157,7 +157,11 @@ def _ensure_screen_time(plan, store, job_id):
         #   되살아났다. 컷 리듬 스위치가 켜진 계정은 관문을 **지나지 않는다** — 고객 경로는 종전 그대로.
         try:
             from shopping_shorts.mix_pipeline import _cut_rhythm_on as _cr_on
+            from shopping_shorts.ai_match import is_pinned as _is_pinned
             if (plan or {}).get("generator") == "inherit" and _cr_on(store, job):
+                return plan
+            # ★스토리보드에서 사람이 장면을 고른 계획(관제 120)은 관문이 다시 꽂거나 채우지 않는다 — 고른 장면이 정본.
+            if (plan or {}).get("generator") == "inherit" and any(_is_pinned(b) for b in beats):
                 return plan
         except Exception:      # noqa: BLE001 — 판정 실패는 종전 관문 그대로
             pass

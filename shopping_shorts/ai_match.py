@@ -290,6 +290,21 @@ def _order_key(sid):
         return str(sid), 0
 
 
+def is_pinned(b):
+    """★사람이 스토리보드에서 직접 고른 줄인가(관제 120) — 판정은 여기 한 곳. 장면 보장·화면 채우기·컷 리듬·저장 관문이
+    모두 이 함수를 보고 그 줄의 장면을 더하거나 깎지 않는다. 표식은 beat_sources[i]["pinned"] → 3단계 비트["pinned"]."""
+    return bool(isinstance(b, dict) and b.get("pinned"))
+
+
+def cover_short(segs, text, seg_index, cap=None):
+    """줄 하나가 대사를 못 채우나(장면 길이 합 × SLOW < 대사 초 - 0.3) — ensure_cover 와 스토리보드 검사가 같이 쓴다."""
+    from shopping_shorts.backbone_assemble import _secs
+    from shopping_shorts import config as _cfg
+    cap = float(cap if cap is not None else (getattr(_cfg, "MAX_SHOT_SECONDS", 2.2) or 2.2))
+    have = sum(min(cap, float((seg_index.get(c) or {}).get("secs") or 0)) for c in (segs or []))
+    return have * SLOW < _secs(text or "") - 0.3
+
+
 def ensure_cover(bs, lines, seg_index, backbone_vid, note=None, cap=None):
     """★2단계 장면 보장(관제 084, 2026-10-02 사장님 "화면 모자라 멈춤 — 땜빵 말고 구조적으로"):
     줄마다 **장면 길이 합 × SLOW ≥ 대사 초**가 되게 장면을 더한다. 3단계(planClips)는 받은 장면에 시간만 나눈다.
@@ -315,6 +330,10 @@ def ensure_cover(bs, lines, seg_index, backbone_vid, note=None, cap=None):
         if not b or not (b.get("segs") or []):
             continue
         segs = [c for c in b["segs"] if c in seg_index]
+        if is_pinned(b):   # 사람이 고른 줄은 더하지 않는다 — 모자라면 알리기만(3단계가 원본 이어 틀기·늦추기로 메운다)
+            if segs and cover_short(segs, L.get("text") or "", seg_index, cap):
+                short.append(i)
+            continue
         need = _secs(L.get("text") or "")
         have = lambda: sum(min(cap, seg_index[c]["secs"]) for c in segs)
         guard = 0

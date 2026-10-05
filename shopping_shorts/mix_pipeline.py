@@ -3184,6 +3184,9 @@ def _trim_for_cut_rhythm(plan):
         #   종전 round(secs/2.5)는 3.7초 줄까지 1컷이라, 2단계가 준 장면을 깎아 같은 장면이 조각나고(구절 맞춤) 모자라 멈췄다
         #   (실측 24시간: 2.5초↑ 칸 35%가 한 장면, 멈춤 18%). 2.5초까지 1 · 5초까지 2 · 7.5초까지 3 · 최대 4.
         want = 1 if hold and secs <= 5.0 else (2 if hold else max(1, min(4, int(math.ceil(secs / 2.5 - 1e-6)))))
+        from shopping_shorts.ai_match import is_pinned as _is_pinned
+        if _is_pinned(b):   # 스토리보드에서 사람이 고른 장면은 깎지 않는다(관제 120)
+            want = 1 + len(alts)
         kept = alts[:max(0, want - 1)]
         # ★어떤 줄도 대사를 못 채울 만큼 깎지 않는다 — 남긴 장면 길이(한 장면 max_shot까지)×배속 상한 < 대사면 하나씩 되살린다.
         def _len(r):

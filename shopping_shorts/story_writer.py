@@ -1149,3 +1149,30 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         d["feat_names"] = [f.get("name") or "" for f in feats]
         drafts.append(d)
     return drafts, "; ".join(whys)
+
+
+def storyboard_to_beat_sources(slots):
+    """★스토리보드(사람이 칸마다 장면을 고르고 그 위에 쓴 대본) → 확정 대본 + 줄별 출처 장면(관제 120).
+
+    slots = [{slot(역할), line(문장), ids(고른 장면 번호들)}] — 2단계 스토리보드 한 탭.
+    돌려주는 것 = {"script": 줄바꿈으로 이은 대본, "beat_sources": [{role, seg, segs, pinned}]}.
+    ★줄 = 칸이다: 문장 안 줄바꿈은 공백으로 펴서 3단계 script_sentences 가 한 칸을 둘로 쪼개지 않게 한다
+      (갈리면 줄 수 ≠ 출처 수 → 상속이 옛 경로로 떨어져 고른 장면이 통째로 버려진다).
+    ★장면을 고른 줄만 pinned — 판정은 ai_match.is_pinned 한 곳이 읽는다. 장면 보장·화면 채우기·컷 리듬·저장 관문은
+      그 줄의 장면을 더하거나 깎지 않는다. 고른 번호가 실재하는지는 3단계 상속(build_inherit_plan)이 재료와 대조한다."""
+    lines, bs = [], []
+    for sl in slots or []:
+        if not isinstance(sl, dict):
+            continue
+        text = " ".join(str(sl.get("line") or "").split())
+        if not text:
+            continue
+        ids = []
+        for c in sl.get("ids") or []:
+            c = str(c).strip()
+            if c and c not in ids:
+                ids.append(c)
+        lines.append(text)
+        bs.append({"role": str(sl.get("slot") or sl.get("role") or ""), "seg": ids[0] if ids else "",
+                   "segs": ids, "pinned": bool(ids)})
+    return {"script": "\n".join(lines), "beat_sources": bs}

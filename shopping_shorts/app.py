@@ -20860,6 +20860,16 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     모드 플래그 문자열)와는 이름만 비슷할 뿐 전혀 다른 값이니 섞지 말 것."""
     script = (body.get("script") or "").strip()
     urls = [u for u in (body.get("urls") or []) if u]
+    # ★스토리보드(관제 120): 칸마다 사람이 고른 장면이 오면 대본·줄별 출처를 그 한 곳(story_writer.storyboard_to_beat_sources)에서
+    #   만들고, 3단계는 상속 경로로 그대로 잇는다(재매칭 0회). 고른 줄은 pinned — 이후 어느 단계도 장면을 더하거나 깎지 않는다.
+    _sb = (body.get("script_structure") or {}).get("storyboard") if isinstance(body.get("script_structure"), dict) else None
+    if isinstance(_sb, list) and _sb:
+        from shopping_shorts.story_writer import storyboard_to_beat_sources
+        _conv = storyboard_to_beat_sources(_sb)
+        if _conv["script"]:
+            script = _conv["script"]
+            body["script_structure"] = dict(body["script_structure"], beat_sources=_conv["beat_sources"],
+                                            inherit_scenes=True, origin="storyboard")
     if not script:
         return JSONResponse(status_code=422, content={"ok": False, "error": "확정 대본이 비어 있습니다(1단계)"})
     if len(urls) < 1:
