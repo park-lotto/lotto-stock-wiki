@@ -2043,7 +2043,7 @@
     geometry:()=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
     effect(value){if(value!==undefined){const k=String(sceneIndex),before=effects[k];effects[k]=value;if(logoScope==='all'&&logoSig(before)!==logoSig(value))spreadLogos(sceneIndex);noteLogo(before,value);}return effects[String(sceneIndex)]||{}},
     // 로고 범위 읽기·바꾸기(관제 131). '모든 장면'으로 바꾸면 보는 장면의 로고를 곧바로 전 장면에 맞춘다(로고가 없는 장면이면 그대로 둔다).
-    logoScope(value){if(value==='all'||value==='one'){logoScope=value;if(!qaMode&&!labMode)try{localStorage.setItem(LOGO_SCOPE_KEY,value)}catch{}if(value==='all'&&logoOf(effects[String(sceneIndex)]))spreadLogos(sceneIndex);}return logoScope},
+    logoScope(value){if(value==='all'||value==='one'){logoScope=value;if(!qaMode&&!labMode)try{localStorage.setItem(LOGO_SCOPE_KEY,value)}catch{}if(value==='all'&&logoOf(effects[String(sceneIndex)])){spreadLogos(sceneIndex);rememberLogo(logoOf(effects[String(sceneIndex)]));}}return logoScope},   // 전 장면에 맞춘 그 로고가 곧 최종기억(직전에 '이 장면만'으로 손댄 값이 아니라)
     // 저장본이 없는 새 작업의 첫 효과(관제 131): 마지막에 쓴 로고를 전 장면에 얹는다. 기억이 없으면 빈 값.
     freshEffects(count){const item=logoScope==='all'?rememberedLogo():null,out={};if(item)for(let i=0;i<count;i++)out[String(i)]=withLogo({},item);return out},
     // 다른 장면의 효과를 직접 읽고 쓴다(쇼핑 안내 세트가 마지막 장면 여러 개에 한 번에 넣는다, 2026-09-23)

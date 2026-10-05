@@ -83,6 +83,10 @@ with sync_playwright() as p:
     need(list(f2.evaluate(LOGOS).keys()) == ['0'], "⑨ '이 장면만'에서 얹으면 그 장면에만")
     f2.evaluate("()=>document.querySelector('[data-logo-scope=\"all\"]').click()"); pg.wait_for_timeout(200)
     need(len(f2.evaluate(LOGOS)) == 4, "⑨ '모든 장면'을 누르면 보던 장면의 로고가 곧바로 4장면 전부에")
+    # 라이브 실측 10-06에서 잡은 것: '이 장면만'으로 다른 장면을 옮긴 뒤 '모든 장면'을 누르면, 기억은 전 장면에 맞춘 그 로고여야 한다(직전에 손댄 값이 아니라)
+    f2.evaluate("()=>{sceneStyle.logoScope('one');sceneStyle.show(2);sceneStyle.effect({...sceneStyle.effect(),masks:sceneStyle.effect().masks.map(m=>m.kind==='image'?{...m,l:5}:m)});sceneStyle.show(0);sceneDecorations.refresh();document.querySelector('[data-logo-scope=\"all\"]').click()}"); pg.wait_for_timeout(200)
+    m2 = f2.evaluate(MEM); ls2 = sorted({v[0][1] for v in f2.evaluate(LOGOS).values()})
+    need(bool(m2) and round(m2['l']) == 70 and ls2 == [70], f"⑨ '모든 장면'으로 맞춘 로고가 최종기억이 된다 (기억 자리 {m2 and m2.get('l')}, 장면들 {ls2}) — 고치기 전엔 기억이 5")
     f2.evaluate("()=>{const r=document.querySelector('[data-dec=\"size\"]');r.value='15';r.dispatchEvent(new Event('input',{bubbles:true}))}"); pg.wait_for_timeout(200)
     mem = f2.evaluate(MEM); f = f2
     # ⑦ 실제로 그려지나

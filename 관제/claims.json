@@ -69,6 +69,11 @@
     "card": 124,
     "track": "장면효과팩"
   },
+  "shopping_shorts/clean_base.py:_remap_replay": {
+    "at": "2026-10-06 02:29",
+    "card": 135,
+    "track": "청소뒤원본전수"
+  },
   "shopping_shorts/deco_frame.py:_norm_masks": {
     "at": "2026-10-03 20:53",
     "card": 100,
