@@ -194,9 +194,11 @@
    }
    // ★구매링크 칸 디자인 3종(2026-10-06 사장님 "디자인 3개씩 — 사람들이 눌러보게" → "실제 구매링크 칸까지 최대한 내려").
    //   가리키는 것(화살표·손가락)은 영상 맨 아래까지 내린다 — 상자가 화면 밖으로 나가면 서버(_norm_masks)가 줄여 찌그러뜨리므로 상자 아래 = 100%.
+   //     ★화살표는 '가로로 길고 세로로 낮은 상자(LONG×FLAT)'를 90° 돌려 쓴다(2026-10-06 사장님 "최대한 구매링크 아래까지"): 정사각 상자는 아래 28%가
+   //       빈 여백이라 끝이 95%에서 멈췄다. 낮은 상자는 돌리면 가운데(93%)에서 아래로 길게 뻗어 끝이 영상 맨 아래(약 98~100%)에 닿는다.
    //     링크 칸은 기본 화면에서 영상 바로 아래(102.5%~)다. 내려온 화살표 위로는 유튜브의 채널명·제목 글자가 겹쳐 보인다.
    //   글자 배지는 '바닥선' 위에 둔다: 바닥선 = 두 화면(기본·댓글창) 중 더 높은 채널명 줄 - 2%. 글자가 유튜브 글자와 겹치면 못 읽는다.
-   const floor=Math.min(...Object.values(YT_SHORTS_UI).map(v=>v.channel.t))-2,r=n=>Math.round(n*100)/100,sq=w=>w*9/16;   // sq = 가로 w% 인 정사각의 세로 %
+   const floor=Math.min(...Object.values(YT_SHORTS_UI).map(v=>v.channel.t))-2,r=n=>Math.round(n*100)/100,sq=w=>w*9/16,LONG=44,FLAT=14;   // sq = 가로 w% 인 정사각의 세로 %
    if(design==='finger'){
      // ② 손가락 콕: 큼직한 👇 가 둥실거리고(아래로 상자 높이의 5%), 위에 반투명 유리 배지.
      const w=20,h=sq(w);
@@ -207,17 +209,15 @@
    }
    if(design==='ticket'){
      // ③ 링크 티켓: 살짝 기운 검정 티켓 배지 + 노란 번쩍, 곡선 화살표가 왼쪽 아래로 꺾여 내려간다(가리키기 = 진행 방향으로 가로의 10%).
-     const w=30,h=sq(w);
      return [
        {...base,kind:'badge',text:'🔗 구매링크 열기',l:5,t:r(floor-8.2),w:46,h:6.6,color:'#111111',badgeStyle:'ticket',rot:-4,motion:'none'},
        {...base,kind:'graphic',graphic:'burst',l:43,t:r(floor-13),w:13,h:r(sq(13)),color:'#FFD400',rot:12,motion:'pulse'},
-       {...base,kind:'graphic',graphic:'arrow_curve',l:4,t:r(100-h-w*.10*9/16),w,h:r(h),color:'#FFD400',rot:105,motion:'point'},
+       {...base,kind:'graphic',graphic:'arrow_curve',l:0,t:100-FLAT,w:40,h:FLAT,color:'#FFD400',rot:105,motion:'point'},
      ];
    }
-   // ① 화살표 알약: 화살표 상자 = 가로 30%·세로 16.875%(정사각). 그림 끝은 상자 가운데에서 아래로 높이의 22%, 가리키기는 아래 +10%(가로 기준).
-   const H=16.875;
+   // ① 화살표 알약: 굵은 화살표. 끝 = 상자 가운데에서 진행 방향으로 길이의 22% → 가운데 93% + 44*9/16*0.22 = 약 98.4%(가리키기로 100%까지).
    return [
-     {...base,kind:'graphic',graphic:'arrow_bold',l:1,t:r(100-H),w:30,h:H,color:'#FF3B30',rot:90,motion:'point'},
+     {...base,kind:'graphic',graphic:'arrow_bold',l:0,t:100-FLAT,w:LONG,h:FLAT,color:'#FF3B30',rot:90,motion:'point'},
      {...base,kind:'badge',text:'아래 구매링크 클릭!',l:3,t:r(floor-6),w:48,h:6,color:'#FF2D5E',badgeStyle:'pill',rot:0,motion:'none'},
    ];
  }

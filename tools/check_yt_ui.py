@@ -74,7 +74,7 @@ with sync_playwright() as pw:
         pg.wait_for_timeout(100)
     tip = low / H * 100; cx = sum((a + c) / 2 for a, c in xs) / max(1, len(xs)) / W * 100
     ch = min((v['channel'] for v in table.values()), key=lambda c: c['t']); lk = table['basic']['link']   # 두 화면 중 더 높은 채널명 줄
-    LOW = 93        # 사장님(2026-10-06): 가리키는 것은 실제 링크 칸까지 최대한 내린다 → 영상 맨 아래 7% 안에서 끝나야 한다
+    LOW = 97        # 사장님(2026-10-06): 가리키는 것은 실제 링크 칸까지 최대한 내린다 → 영상 맨 아래 3% 안에서 끝나야 한다
     need(LOW <= tip <= 100, f"② 화살표가 닿는 가장 아래 {tip:.1f}% — 영상 맨 아래({LOW}~100%)까지 내려온다")
     def badge_ok(ms): return all(m['t'] + m['h'] <= ch['t'] for m in ms if m.get('kind') == 'badge')
     need(badge_ok(masks_link), f"② 글자 배지는 채널명 줄({ch['t']}%) 위 ({[round(m['t'] + m['h'], 1) for m in masks_link if m.get('kind') == 'badge']})")
@@ -141,9 +141,9 @@ worst = 0; tips = []
 for p in pngs:
     im = Image.open(p); worst = max(worst, overlay_px(im)); tips.append(red_low(im))
 need(worst == 0, f'④ 렌더·캡컷 레이어 {len(pngs)}장에 겹쳐보기 색 {worst}픽셀')
-need(pngs and 93 <= max(tips) <= 100, f"④ 레이어에서 화살표가 닿는 가장 아래 {max(tips) if tips else 0:.1f}% (영상 맨 아래 93~100%)")
+need(pngs and 97 <= max(tips) <= 100, f"④ 레이어에서 화살표가 닿는 가장 아래 {max(tips) if tips else 0:.1f}% (영상 맨 아래 97~100%)")
 one = pathlib.Path(scene_style.render_layer_one(timeline, snap, out / 'thumb_style', 1, {'text': '주부들도 감탄한' + chr(10) + '천재 아이디어'}, 'ytqa'))
-need(one.exists() and overlay_px(Image.open(one)) == 0 and 90 <= red_low(Image.open(one)) <= 100,
+need(one.exists() and overlay_px(Image.open(one)) == 0 and 95 <= red_low(Image.open(one)) <= 100,
      f'④ 썸네일용 한 장: 겹쳐보기 색 {overlay_px(Image.open(one)) if one.exists() else "없음"}픽셀 · 화살표 {red_low(Image.open(one)) if one.exists() else 0:.1f}%')
 final = out / 'final.mp4'
 scene_style.compose(str(src), timeline, snap, str(final), out / 'cw', {'text': '주부들도 감탄한\n천재 아이디어'})
@@ -152,6 +152,6 @@ if final.exists():
     frame = out / '4_완성본_프레임.png'; va._run_ffmpeg(['ffmpeg', '-y', '-ss', '1.5', '-i', str(final), '-frames:v', '1', str(frame)])
     im = Image.open(frame)
     need(overlay_px(im) == 0, f'④ 완성 영상 프레임에 겹쳐보기 색 {overlay_px(im)}픽셀')
-    t = red_low(im, alpha=False); need(93 <= t <= 100, f"④ 완성 영상에서 화살표가 닿는 가장 아래 {t:.1f}%")
+    t = red_low(im, alpha=False); need(97 <= t <= 100, f"④ 완성 영상에서 화살표가 닿는 가장 아래 {t:.1f}%")
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건')
 sys.exit(1 if fails else 0)
