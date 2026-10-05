@@ -20962,6 +20962,20 @@ def _sb_gate(request):
     return None
 
 
+def _sb_job(request, key):
+    """화면이 주는 열쇠 → 재료 작업 번호. 2단계엔 아직 MIX_JOB 이 없어 화면은 'w:<작업파일>'을 준다 —
+    그 작업파일의 job_id 가 정본(_materials_for_generate 와 같은 규칙: 남의 작업은 못 연다)."""
+    st, cid = Store(DB_PATH), getattr(request.state, "customer_id", 0)
+    key = str(key or "").strip()
+    if key.startswith("w:"):
+        work = st.get_produce_work(key[2:], customer_id=cid)
+        key = str((work or {}).get("job_id") or "").strip()
+    job = st.get_mix_job(key) if key else None
+    if not job or int(job.get("customer_id") or 0) != int(cid or 0):
+        return None, None
+    return key, job
+
+
 def _sb_run(job_id, name, fn):
     """같은 작업·같은 이름이 돌고 있으면 새로 띄우지 않는다(더블클릭). 실패는 이유를 남긴다 — 조용히 삼키지 않는다."""
     key = (job_id, name)
@@ -20988,7 +21002,7 @@ def api_storyboard_get(request: Request, job_id: str):
     if g:
         return g
     from shopping_shorts import storyboard as _sb
-    job = Store(DB_PATH).get_mix_job(job_id)
+    job_id, job = _sb_job(request, job_id)
     if not job or not job.get("extract"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     pieces = {}
@@ -21009,6 +21023,9 @@ def api_storyboard_inventory(request: Request, job_id: str):
     g = _sb_gate(request)
     if g:
         return g
+    job_id, _job = _sb_job(request, job_id)
+    if not _job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
     _sb_run(job_id, "inventory", lambda: _sb.inventory(DB_PATH, job_id))
     return {"ok": True}
@@ -21020,6 +21037,9 @@ def api_storyboard_boards(request: Request, job_id: str, body: dict):
     g = _sb_gate(request)
     if g:
         return g
+    job_id, _job = _sb_job(request, job_id)
+    if not _job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
     star, roles = str(body.get("star") or ""), str(body.get("roles") or "")
     for k in [str(x) for x in (body.get("keys") or [])][:6]:
@@ -21033,6 +21053,9 @@ def api_storyboard_insert(request: Request, job_id: str, body: dict):
     g = _sb_gate(request)
     if g:
         return g
+    job_id, _job = _sb_job(request, job_id)
+    if not _job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
     name = "insert:" + str(body.get("name") or "x")[:40]
     _sb_run(job_id, name, lambda: _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}))
