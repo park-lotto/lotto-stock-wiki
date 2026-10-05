@@ -53,10 +53,7 @@ def _press(pg, job, out_dir):
         renderExport({rendered: true}); }""", job)
     pg.wait_for_timeout(2500)
     print("버튼(누르기 전):", pg.evaluate("[_lfState.phase, document.getElementById('btnLongform').disabled, document.getElementById('btnLongform').textContent]"))
-    if pg.evaluate("_lfState.phase") == "ready":
-        # 이미 만든 것이 있으면 다른 문구로 바꿔 **새로 굽는 길**을 탄다
-        pg.select_option("#lfWhere", "desc")
-        pg.wait_for_timeout(2500)
+    # 이미 만든 것이 최신이면(ready) 굽지 않고 받기·대조만 한다(문구 고르기는 2026-10-06 화면에서 뺐다).
     if pg.evaluate("_lfState.phase") != "ready":
         pg.click("#btnLongform")
         t0 = time.time()
