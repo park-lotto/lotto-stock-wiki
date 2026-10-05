@@ -70,6 +70,12 @@ def items():
                         "duration": r.get("duration") or 0, "w": r.get("w") or 0, "h": r.get("h") or 0,
                         "source": r.get("source") or "", "origin": r["emotion"],
                         "emotion": st.get("emotion") or r["emotion"], "deleted": bool(st.get("deleted"))})
+    # 국내/해외·실사/애니: 사장님이 고친 값(state.json)이 자동 판정(tags.json)을 이긴다
+    tags = _load("tags.json", {})
+    for it in out:
+        st, tg = state.get(it["id"], {}), tags.get(it["id"], {})
+        it["region"] = st.get("region") or tg.get("region") or ""
+        it["kind"] = st.get("kind") or tg.get("kind") or ""
     hl = _load("highlights.json", {})
     for it in out:
         h = hl.get(it["id"])
@@ -135,7 +141,9 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
         elif path == "/api/items":
-            self._json({"categories": list(EMOTIONS), "items": items()})
+            import classify  # 구분 목록의 주인
+            self._json({"categories": list(EMOTIONS), "regions": list(classify.REGIONS),
+                        "kinds": list(classify.KINDS), "items": items()})
         elif path.startswith(("/raw/", "/sheets/", "/library/")):
             self._file(path.lstrip("/"))
         else:
@@ -162,6 +170,18 @@ class Handler(BaseHTTPRequestHandler):
                 except Exception as e:
                     return self._json({"error": str(e)}, 400)
                 return self._json({"ok": True, "start": h["start"], "dur": h["dur"]})
+            if path == "/api/tag":
+                import classify
+                region, kind = req.get("region"), req.get("kind")
+                if (region and region not in classify.REGIONS) or (kind and kind not in classify.KINDS) or not (region or kind):
+                    return self._json({"error": "없는 구분"}, 400)
+                for i in ids:
+                    if region:
+                        state.setdefault(i, {})["region"] = region
+                    if kind:
+                        state.setdefault(i, {})["kind"] = kind
+                _save_state(state)
+                return self._json({"ok": True, "count": len(ids)})
             if path == "/api/move":
                 emo = req.get("emotion")
                 if emo not in EMOTIONS:
@@ -190,6 +210,12 @@ h1{font-size:17px;margin:0 0 8px}
 #tabs button.on{background:#ffd84a;color:#000;border-color:#ffd84a;font-weight:bold}
 #tabs button.trash{border-color:#a44}
 #tabs button.trash.on{background:#e55;color:#fff;border-color:#e55}
+#filters{margin:0 0 8px;font-size:13px;color:#aaa}
+#filters button{background:#1b1b1b;color:#ccc;border:1px solid #444;border-radius:6px;padding:3px 10px;margin-right:4px;font-size:13px;cursor:pointer}
+#filters button.on{background:#7ab8ff;color:#000;border-color:#7ab8ff;font-weight:bold}
+#filters span{margin:0 6px 0 14px} #filters span:first-child{margin-left:0}
+.tg{display:inline-block;border-radius:4px;padding:0 6px;margin-right:4px;font-size:11px;font-weight:bold;cursor:pointer;border:1px solid #555;color:#ddd;background:#2a2a2a}
+.tg.r국내{background:#2d4f8a;border-color:#2d4f8a;color:#fff} .tg.k애니{background:#7a3d8a;border-color:#7a3d8a;color:#fff}
 #bar{display:flex;gap:8px;align-items:center;font-size:13px;color:#aaa;flex-wrap:wrap}
 #bar select,#bar button,figure select,figure button{background:#2a2a2a;color:#eee;border:1px solid #555;border-radius:6px;padding:4px 8px;font-size:13px;cursor:pointer}
 .act button.del,#bar button.del{border-color:#a44!important;color:#f99!important}
@@ -210,6 +236,7 @@ figcaption b{color:#fff} figcaption a{color:#7ab8ff}
 </style></head><body>
 <header><h1>감정짤 밈팩 고르기 <small id="total" style="color:#999;font-weight:normal"></small></h1>
 <div id="tabs"></div>
+<div id="filters"></div>
 <div id="bar"><span id="selcount">선택 0개</span>
 <button id="selall">이 화면 전체 선택</button><button id="selnone">선택 해제</button>
 <select id="bulkmove"></select><button id="bulkdel" class="del">선택한 것 지우기</button>
@@ -217,16 +244,25 @@ figcaption b{color:#fff} figcaption a{color:#7ab8ff}
 <div class="grid" id="grid"></div><div id="empty" style="display:none">이 카테고리는 비어 있습니다</div>
 <div id="big"><video controls></video></div><div id="msg"></div>
 <script>
-const TRASH='휴지통'; let cats=[], all=[], cur=null, sel=new Set();
+const TRASH='휴지통'; let cats=[], regions=[], kinds=[], all=[], cur=null, sel=new Set(), fR='', fK='';
 const $=id=>document.getElementById(id);
 function say(t){const m=$('msg');m.textContent=t;m.style.display='block';clearTimeout(say.t);say.t=setTimeout(()=>m.style.display='none',1600);}
-async function load(){const r=await fetch('/api/items');const j=await r.json();cats=j.categories;all=j.items;if(cur===null)cur=cats[0];draw();}
+async function load(){const r=await fetch('/api/items');const j=await r.json();cats=j.categories;regions=j.regions;kinds=j.kinds;all=j.items;if(cur===null)cur=cats[0];draw();}
 async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const j=await r.json();if(!r.ok||!j.ok){alert('저장 실패: '+(j.error||r.status));return false;}return true;}
 function src(it){return it.hl?`/library/clips/${it.id}.mp4?s=${it.hl.start}`:`/raw/${it.id}.mp4`;}
-function inCat(it,c){return c===TRASH?it.deleted:(!it.deleted&&it.emotion===c);}
+function passF(it){return (!fR||it.region===fR)&&(!fK||it.kind===fK);}
+function inCat(it,c){return passF(it)&&(c===TRASH?it.deleted:(!it.deleted&&it.emotion===c));}
+function drawFilters(){const f=$('filters');f.innerHTML='';
+  const grp=(label,vals,get,set)=>{const s=document.createElement('span');s.textContent=label;f.appendChild(s);
+    ['',...vals].forEach(v=>{const b=document.createElement('button');const live=all.filter(i=>!i.deleted);
+      const n=v?live.filter(i=>(label==='지역'?i.region:i.kind)===v).length:live.length;
+      b.textContent=(v||'전체')+' '+n;b.dataset.f=label+':'+v;if(get()===v)b.classList.add('on');
+      b.onclick=()=>{set(v);sel.clear();draw();};f.appendChild(b);});};
+  grp('지역',regions,()=>fR,v=>fR=v);grp('종류',kinds,()=>fK,v=>fK=v);
+  const un=all.filter(i=>!i.deleted&&(!i.region||!i.kind)).length;if(un){const s=document.createElement('span');s.textContent='· 구분 전 '+un+'개';f.appendChild(s);}}
 function draw(){
-  const tabs=$('tabs');tabs.innerHTML='';
+  drawFilters();const tabs=$('tabs');tabs.innerHTML='';
   [...cats,TRASH].forEach(c=>{const b=document.createElement('button');const n=all.filter(it=>inCat(it,c)).length;
     b.textContent=c.replace('_','·')+' '+n;b.dataset.cat=c;if(c===TRASH)b.classList.add('trash');if(c===cur)b.classList.add('on');
     b.onclick=()=>{cur=c;sel.clear();draw();window.scrollTo(0,0);};tabs.appendChild(b);});
@@ -240,10 +276,13 @@ function draw(){
     const esc=s=>s.replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
     f.innerHTML=`<input type="checkbox" ${sel.has(it.id)?'checked':''}>
       <video src="${src(it)}" poster="${it.hl?`/library/thumbs/${it.id}.jpg?s=${it.hl.start}`:`/sheets/thumbs/${it.id}.jpg`}" preload="none" muted loop playsinline></video>
-      <figcaption><b>${esc(it.title)}</b><br>${it.hl?`<span class="cut">✂ ${it.hl.dur.toFixed(1)}초</span> (원본 ${Math.round(it.duration)}초 중 ${it.hl.start.toFixed(1)}초부터)${it.hl.usable?"":` <span class="warn">리액션 불분명</span>`}`:`<span class="warn">아직 안 자름</span> · 원본 ${Math.round(it.duration)}초`} · ${it.w}×${it.h} · <a href="${esc(it.source)}" target="_blank">출처</a></figcaption>
+      <figcaption><span class="tg r${it.region}" data-t="region" title="누르면 국내↔해외">${it.region||"지역?"}</span><span class="tg k${it.kind}" data-t="kind" title="누르면 실사↔애니">${it.kind||"종류?"}</span><br><b>${esc(it.title)}</b><br>${it.hl?`<span class="cut">✂ ${it.hl.dur.toFixed(1)}초</span> (원본 ${Math.round(it.duration)}초 중 ${it.hl.start.toFixed(1)}초부터)${it.hl.usable?"":` <span class="warn">리액션 불분명</span>`}`:`<span class="warn">아직 안 자름</span> · 원본 ${Math.round(it.duration)}초`} · ${it.w}×${it.h} · <a href="${esc(it.source)}" target="_blank">출처</a></figcaption>
       ${it.hl?`<div class="act nd"><button data-d="-0.5">◀ 0.5초 앞</button><button data-d="0.5">0.5초 뒤 ▶</button><button class="full">전체 보기</button></div>`:""}
       <div class="act"><select class="mv">${cur===TRASH?'<option value="">(휴지통)</option>':opts(it.emotion)}</select>
       <button class="${cur===TRASH?'rs':'del'}">${cur===TRASH?'되살리기':'지우기'}</button></div>`;
+    f.querySelectorAll('.tg').forEach(t=>t.onclick=async()=>{const key=t.dataset.t,vals=key==='region'?regions:kinds;
+      const next=vals[(vals.indexOf(it[key])+1)%vals.length];
+      if(await post('/api/tag',{ids:[it.id],[key]:next})){it[key]=next;say(next+' 로 바꿈');draw();}});
     const v=f.querySelector('video');
     f.querySelectorAll('.nd button[data-d]').forEach(b=>b.onclick=async()=>{b.disabled=true;
       const r=await fetch('/api/nudge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:[it.id],delta:parseFloat(b.dataset.d)})});

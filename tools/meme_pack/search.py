@@ -11,7 +11,7 @@ import os
 import subprocess
 import sys
 
-# 감정 6종 — 관제 카드 121 '됐다의 기준'과 같은 목록이다(이 파일이 감정 목록의 주인).
+# 감정 12종(2026-10-05 사장님 확정 흐름: 6→9→12) — 관제 카드 121 '됐다의 기준'과 같은 목록이다(이 파일이 감정 목록의 주인).
 EMOTIONS = {
     "놀람": ["놀라는 짤 밈 소스", "깜짝 놀라는 리액션 밈", "surprised reaction meme clip", "shocked face reaction meme template"],
     "충격_입막": ["입틀막 짤 밈", "충격 받은 리액션 짤", "hand over mouth shocked reaction meme", "omg reaction meme clip"],
@@ -22,6 +22,41 @@ EMOTIONS = {
     "슬픔": ["우는 짤 밈 리액션", "오열하는 짤 밈", "crying reaction meme clip", "sad reaction meme template"],
     "분노_짜증": ["화내는 리액션 짤 밈", "빡친 표정 짤", "angry reaction meme clip", "annoyed frustrated reaction meme"],
     "당황_멘붕": ["당황하는 짤 밈", "멘붕 리액션 짤", "awkward panic reaction meme clip", "speechless reaction meme"],
+    "공포_움찔": ["무서워하는 리액션 짤 밈", "깜짝 놀라 움찔 짤", "scared reaction meme clip", "terrified flinch reaction meme"],
+    "거절_절레": ["고개 절레절레 짤 밈", "싫어 안돼 리액션 짤", "no no no reaction meme clip", "shaking head nope reaction meme"],
+    "끄덕_엄지": ["고개 끄덕 인정 짤 밈", "엄지척 리액션 짤", "nodding approval reaction meme clip", "thumbs up reaction meme"],
+}
+
+# 짤 사이트(GIPHY·Gifer·Tenor·GIFDB) 검색어 — 감정마다 영어 태그. 사이트별 수집기는 전부 이 표를 가져다 쓴다
+# (수집기마다 검색어를 따로 적으면 감정이 사이트마다 어긋난다 — 0순위-B).
+SITE_QUERIES = {
+    "놀람": ["surprised reaction", "wow shocked face"],
+    "충격_입막": ["gasp hand over mouth", "omg shocked reaction"],
+    "의심_황당": ["confused reaction", "skeptical side eye"],
+    "기쁨_환호": ["cheering excited reaction", "yes celebration happy"],
+    "감탄_박수": ["clapping applause reaction", "impressed standing ovation"],
+    "웃음": ["laughing hard reaction", "cant stop laughing"],
+    "슬픔": ["crying reaction", "sad tears reaction"],
+    "분노_짜증": ["angry reaction", "annoyed eye roll"],
+    "당황_멘붕": ["awkward reaction", "facepalm speechless"],
+    "공포_움찔": ["scared reaction", "terrified flinch"],
+    "거절_절레": ["no shaking head reaction", "nope reaction"],
+    "끄덕_엄지": ["nodding yes approval", "thumbs up reaction"],
+}
+# 국내(한국 방송·연예인) 짤을 찾는 한국어 검색어 — 한국어 검색이 되는 사이트(Tenor 등)에서 쓴다
+SITE_QUERIES_KO = {
+    "놀람": ["놀람", "깜짝"],
+    "충격_입막": ["충격", "입틀막"],
+    "의심_황당": ["황당", "어이없음"],
+    "기쁨_환호": ["환호", "신남"],
+    "감탄_박수": ["박수", "감탄"],
+    "웃음": ["빵터짐", "웃음"],
+    "슬픔": ["오열", "눈물"],
+    "분노_짜증": ["화남", "짜증"],
+    "당황_멘붕": ["당황", "멘붕"],
+    "공포_움찔": ["무서워", "소름"],
+    "거절_절레": ["절레절레", "싫어"],
+    "끄덕_엄지": ["끄덕", "엄지척"],
 }
 MAX_SEC = 60
 

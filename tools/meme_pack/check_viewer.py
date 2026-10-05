@@ -95,6 +95,27 @@ def main():
                     pg.reload()
                     pg.wait_for_selector("figure")
 
+            # 국내/해외·실사/애니: 필터를 누르면 그 구분만 남나 + 카드 표시를 누르면 바뀌어 저장되나
+            tagged = [it for it in api["items"] if it.get("region") and it.get("kind") and not it["deleted"]]
+            if tagged:
+                for label, key, vals in (("지역", "region", api["regions"]), ("종류", "kind", api["kinds"])):
+                    for val in vals:
+                        # 자동 구분이 도는 중이면 숫자가 계속 는다 → 화면과 서버를 같은 순간에 다시 받아 견준다
+                        pg.reload()
+                        pg.wait_for_selector("#filters button")
+                        now = json.load(urllib.request.urlopen(url + "api/items"))["items"]
+                        pg.click(f'#filters button[data-f="{label}:{val}"]')
+                        want = sum(1 for it in now if not it["deleted"] and it[key] == val)
+                        shown = sum(n for c, n in counts().items() if c != "휴지통")
+                        check(f"필터 {label}={val}: 탭 합계 = 그 구분 수", shown == want, f"{shown}/{want}")
+                    pg.click(f'#filters button[data-f="{label}:"]')
+                t0 = next(it for it in tagged if it["emotion"] == first)
+                touched.append(t0["id"])
+                other = [r for r in api["regions"] if r != t0["region"]][0]
+                pg.click(f'figure[data-id="{t0["id"]}"] .tg[data-t="region"]')
+                pg.wait_for_function(f"document.querySelector('figure[data-id=\"{t0['id']}\"] .tg[data-t=\"region\"]').textContent==='{other}'")
+                check("지역 표시 누르면 바뀌고 저장", state().get(t0["id"], {}).get("region") == other, f'{t0["region"]}→{other}')
+
             # 지우기 → 휴지통
             vid = pg.query_selector("figure").get_attribute("data-id")
             touched.append(vid)

@@ -4,7 +4,7 @@
 
 GIPHY 짤은 이미 1~4초로 잘린 리액션이라 자를 게 적다(소리 없음·가로 480px 안팎 — 화질은 유튜브 원본보다 낮다).
 결과: raw/gph_<id>.mp4 + sheets/thumbs/gph_<id>.jpg + extra_giphy.json (뷰어 serve.py 가 같이 싣는다)
-이미 받은 것은 다시 안 받는다. 감정 목록의 주인은 search.py:EMOTIONS — 여기는 감정별 영어 검색어만 둔다.
+이미 받은 것은 다시 안 받는다. 감정 목록·사이트 검색어의 주인은 search.py(EMOTIONS·SITE_QUERIES) — 여기서 다시 적지 않는다.
 """
 import argparse
 import json
@@ -17,19 +17,8 @@ import urllib.parse
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from search import EMOTIONS  # noqa: E402
+from search import EMOTIONS, SITE_QUERIES as QUERIES  # noqa: E402
 
-QUERIES = {
-    "놀람": ["surprised reaction", "wow shocked face"],
-    "충격_입막": ["gasp hand over mouth", "omg shocked reaction"],
-    "의심_황당": ["confused reaction", "skeptical side eye"],
-    "기쁨_환호": ["cheering excited reaction", "yes celebration happy"],
-    "감탄_박수": ["clapping applause reaction", "impressed standing ovation"],
-    "웃음": ["laughing hard reaction", "cant stop laughing"],
-    "슬픔": ["crying reaction", "sad tears reaction"],
-    "분노_짜증": ["angry reaction", "annoyed eye roll"],
-    "당황_멘붕": ["awkward reaction", "facepalm speechless"],
-}
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
 MIN_SEC, MIN_H = 1.0, 200
 
