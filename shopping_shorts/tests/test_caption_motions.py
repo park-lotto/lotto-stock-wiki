@@ -84,6 +84,8 @@ def test_서버는_팩_값을_저장하고_모르는_팩은_거절():
         scene_style.validate_snapshot({**snap, "captionPack": "nope"})
 
 
-def test_렌더러는_팩만_골라도_자막_등장을_찍는다():
+def test_렌더러는_등장_여부를_장면마다_편집기에_묻는다():
+    # 저장값(bodyCaptionMotion·captionPack)으로 따로 짐작하면 '팩 없이 어둡게 강조만 켠 장면'처럼 편집기만 움직이고 완성본은 멈춘다(10-05 합본 실측)
     js = (ROOT / "tools/render_scene_style.js").read_text(encoding="utf-8")
-    assert "request.snapshot.captionPack" in js
+    assert "const enter=await page.evaluate(()=>window.sceneStyle.captionEnterAt?.(100000)||0);" in js
+    assert "request.snapshot.bodyCaptionMotion" not in js
