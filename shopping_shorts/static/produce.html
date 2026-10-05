@@ -15341,6 +15341,13 @@ async function pollFinal(){
       // QR을 누르고 기다린 경우엔 곧바로 띄운다 — 다시 찾아 누르게 하지 않는다.
       if(QR_AFTER_RENDER){ QR_AFTER_RENDER=false; showShareQr(MIX_JOB); } }
     if(d.status==='failed'){ clearInterval(MIX_POLL); clearInterval(_rfTimer); _finalRenderRestore('❌ 렌더 실패'+(d.error?' — '+d.error:'')); }
+    // ★렌더 중에 '매칭 완료'로 돌아왔다 = 서버가 다 만든 결과를 버렸다(도는 사이 설정이 바뀜, mix_pipeline.run_render 도장 검사).
+    //   렌더 요청이 status 를 'rendering'으로 먼저 박으므로, 이 폴러가 ready_for_review 를 보면 진행 중일 수 없다.
+    //   종전엔 done/failed 만 기다려 화면이 '렌더 중'으로 영원히 멈췄다(2026-10-05 박세현님, 관제 122).
+    if(d.status==='ready_for_review'){ clearInterval(MIX_POLL); clearInterval(_rfTimer);
+      document.getElementById('finalVideo').innerHTML='';
+      _finalIdleSlot();
+      _finalRenderRestore('⚠ 설정이 바뀌어 다시 렌더가 필요해요 — 「최종 렌더」를 한 번 더 눌러 주세요'); }
   }catch(e){}
 }
 

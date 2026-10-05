@@ -5379,10 +5379,8 @@ def run_preview(job_id, db_path, work_root):
         #   edit_plan에 꽂으면 tts_paths가 비어 video_assemble이 "렌더할 비트가 없습니다"로 죽었다.
         #   조립 직전 스스로 낫는다 — 이미 있는 비트는 skip(재과금 0), 빠진 비트만 합성.
         #   합성 결과(tts_path)를 edit_plan에 되박아 최종 렌더가 재합성 없이 재사용하게 한다.
-        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
-                          global_pron=_gpron, customer_id=job.get("customer_id", 0),
-                          script_endings=job_script_endings(job))
-        store.update_mix_job(job_id, edit_plan=plan)
+        plan = _save_plan_with_tts(store, job_id, job, plan, work, _gpron)
+        job = dict(job, edit_plan=plan)
         # ★지문은 **DB에 막 저장한 편성**으로 지금 뜬다 — 조립이 메모리의 plan 을 만져도(check_mutation 감시)
         #   DB와 같은 값으로 비교되게. 끝에서 뜨면 그 차이로 멀쩡한 미리보기가 영원히 "낡음"이 된다.
         _psig = plan_signature(plan)
@@ -6006,6 +6004,42 @@ def intro_signature(thumb, job_id=None):
     return [True, name, sec, (Path(png).name if png is not None else None), st]
 
 
+# 도장 칸 이름 — _render_stamp 가 이어 붙이는 **순서 그대로**(바꾸면 둘 다 바꾼다). 버린 이유 로그용.
+_STAMP_PARTS = ("deco", "headcopy", "caption_style", "subtitle_removal", "clean_tier", "clean_cuts", "intro", "plan")
+
+
+def render_stamp_diff(a, b):
+    """두 도장에서 달라진 칸 이름 목록(로그용). 칸 수가 다르면 'parts' 를 넣는다."""
+    pa, pb = (a or "").split("|"), (b or "").split("|")
+    if len(pa) != len(pb):
+        return ["parts"]
+    # deco 등 JSON 안에 '|' 가 들어가면 칸이 밀린다 — 그때는 이름 대신 번호로 남긴다
+    names = _STAMP_PARTS if len(pa) == len(_STAMP_PARTS) else tuple(str(i) for i in range(len(pa)))
+    return [names[i] for i, (x, y) in enumerate(zip(pa, pb)) if x != y]
+
+
+def _save_plan_with_tts(store, job_id, job, plan, work, gpron):
+    """빠진 음성을 채워 편성을 저장하고, **DB에 실제로 들어간 편성**을 돌려준다(2026-10-05 관제 122).
+
+    ★왜: 저장 출구(store.update_mix_job)의 관문(_ensure_screen_time·_dedupe_on_save)이 저장할 때마다 편성을
+      고쳐 쓰고, 그 관문은 한 번에 수렴하지 않는다(실측 박세현님 job cd0cc361bb3e: 저장마다 9번 칸 alternates 가
+      바뀌어 3번째에야 멈춤). 메모리 편성으로 지문·도장을 뜨면 DB와 어긋나 렌더는 **매번 스스로 완성본을 버렸고**
+      (화면은 무한 '렌더 중'), 미리보기는 늘 '낡음'이 될 수 있었다. 렌더·미리보기가 같은 이 함수를 부른다(0순위-B).
+    ★관문이 칸 음성을 버렸으면(번호 겹침 정리) 한 번 더 채워 저장한다 — 음성 빠진 칸으로 만들지 않게."""
+    for _ in range(2):
+        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
+                          global_pron=gpron, customer_id=job.get("customer_id", 0),
+                          script_endings=job_script_endings(job))
+        store.update_mix_job(job_id, edit_plan=copy.deepcopy(plan))
+        saved = (store.get_mix_job(job_id) or {}).get("edit_plan")
+        if not saved or not saved.get("beats"):
+            return plan                      # 못 읽으면 종전대로(메모리 편성)
+        plan = copy.deepcopy(saved)
+        if all(b.get("tts_path") for b in plan["beats"]):
+            break
+    return plan
+
+
 def _render_stamp(job):
     """렌더 결과물이 '지금 설정'으로 만든 것인지 가리는 도장.
 
@@ -6066,10 +6100,9 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
         job = dict(job, edit_plan=plan)
         # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
         #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
-        _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
-                          global_pron=_gpron, customer_id=job.get("customer_id", 0),
-                          script_endings=job_script_endings(job))
-        store.update_mix_job(job_id, edit_plan=copy.deepcopy(plan))
+        # ★저장한 뒤 **DB에 실제로 들어간 편성**으로 렌더·도장한다(_save_plan_with_tts, 2026-10-05 관제 122).
+        plan = _save_plan_with_tts(store, job_id, job, plan, work, _gpron)
+        job = dict(job, edit_plan=plan)
         # ★도장은 TTS 보장 저장 **뒤에** 찍는다 — 그 저장이 tts_path 를 채워 편성 지문을 바꾸기 때문
         #   (앞에서 찍으면 정상 렌더도 스스로 도장을 깬다). 편성 외 설정은 시작 시점 job 값 그대로.
         _stamp = _render_stamp(job)
@@ -6245,9 +6278,13 @@ def run_render(job_id, db_path, work_root, skip_clean=False, confirm_clean=None,
         except Exception:
             traceback.print_exc(file=sys.stderr)
         _now = store.get_mix_job(job_id) or {}
-        if _render_stamp(_now) != _stamp:
+        _end_stamp = _render_stamp(_now)
+        if _end_stamp != _stamp:
             # 도는 사이에 설정이 바뀌었다 — 이 결과물은 옛 설정이라 완성본으로 박지 않는다.
             #   고객이 "꾸민 대로 렌더가 안 된다"고 보는 자리다. 다시 만들 수 있게 되돌려 둔다.
+            # ★무엇이 달라 버렸는지 남긴다(2026-10-05 관제 122) — 종전엔 말없이 버려 원인을 거꾸로 못 쫓았다.
+            print(f"[render-stamp] job={job_id} 완성본 버림 — 달라진 항목: "
+                  f"{', '.join(render_stamp_diff(_stamp, _end_stamp)) or '?'}", file=sys.stderr, flush=True)
             store.update_mix_job(job_id, status="ready_for_review", video_path=None)
             return
         store.update_mix_job(job_id, status="done", video_path=str(out_path))

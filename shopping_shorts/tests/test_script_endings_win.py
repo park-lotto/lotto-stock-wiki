@@ -141,4 +141,8 @@ def test_all_synthesize_beats_callers_pass_script_endings():
     # 정의 1개(def) + 호출 n개 → 호출부 = calls - 1
     assert calls - 1 == wired, (
         "_synthesize_beats 호출부 %d곳 중 %d곳만 script_endings를 넘긴다" % (calls - 1, wired))
-    assert wired >= 5
+    # ★렌더·미리보기는 공용 함수 _save_plan_with_tts 한 곳에서 부른다(2026-10-05 관제 122) — 5곳→4곳.
+    #   대신 두 경로가 그 함수를 실제로 부르는지 같이 본다(경로가 빠져 숫자만 맞는 일이 없게).
+    assert wired >= 4
+    for fn in (mix_pipeline.run_render, mix_pipeline.run_preview):
+        assert "_save_plan_with_tts(" in inspect.getsource(fn), fn.__name__ + " 가 음성 보장 공용 함수를 안 부른다"
