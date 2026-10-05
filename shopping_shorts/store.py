@@ -3740,6 +3740,33 @@ class Store:
     #: '채널별 터진 영상' 탭에 나오는 카테고리 — 사장님이 채널을 직접 고른 두 탭(관제 134).
     HIT_CATEGORIES = ("제품정체형", "홈템")
 
+    def hit_channel_ids(self):
+        """'채널별 터진 영상'에 나오는 채널의 유튜브 채널 ID → (찾은 ID 목록, 못 찾은 고정표 이름 목록).
+
+        ★채널 고정표는 이름을 소문자로 적는다(인스타 핸들과 한 표를 쓰기 때문). 유튜브 API 는 대소문자를
+          가리므로 원래 ID 를 스타일표·지난 조사분·수집 시드에서 되찾는다. 못 찾은 것은 숨기지 않고 돌려준다.
+        """
+        import re
+        with self._conn() as c:
+            force = [u for u, cat in c.execute("SELECT username, category FROM channel_category_force")
+                     if cat in self.HIT_CATEGORIES and str(u).startswith("uc")]
+            proper = {}
+            for q in ("SELECT channel_id FROM channel_styles", "SELECT DISTINCT channel_id FROM channel_survey"):
+                try:
+                    for (cid,) in c.execute(q):
+                        if cid:
+                            proper.setdefault(cid.lower(), cid)
+                except sqlite3.Error:
+                    pass
+            try:
+                for (v,) in c.execute("SELECT value FROM platform_seeds WHERE platform='youtube'"):
+                    m = re.search(r"/channel/(UC[A-Za-z0-9_-]{6,})", v or "")
+                    if m:
+                        proper.setdefault(m.group(1).lower(), m.group(1))
+            except sqlite3.Error:
+                pass
+        return [proper[u] for u in force if u in proper], [u for u in force if u not in proper]
+
     def channel_hit_items(self, now=None):
         """채널별 터진 영상 — 고른 채널(채널 고정표의 썰쇼핑·홈템)마다 평소 대비 크게 터진 쇼츠. 추가 크롤 0.
 

@@ -83,3 +83,46 @@ def test_화면_탭_이름과_유형_버튼_순서():
     # 선언 전 접근 방지 — 이 탭 판정은 SPAN_DAYS 변수가 아니라 화면의 눌린 탭에서 읽는다
     body = HTML[HTML.index("function isChannelHitsTab()"):HTML.index("function isChannelHitsTab()") + 120]
     assert "SPAN_DAYS" not in body
+
+
+# ── 주 1회 다시 조사(2026-10-06 사장님 "주1회") ─────────────────────────────
+def test_조사_대상은_고른_채널이고_원래_ID를_되찾는다(tmp_path):
+    st = _store(tmp_path)
+    st.set_channel_force("UCnoid", "홈템")           # 고정표엔 있지만(소문자) 원래 ID 를 아는 곳이 없다
+    st.set_channel_force("UCseedOnly1", "홈템")      # 수집 시드 주소에서만 ID 를 알 수 있는 채널
+    st.add_seed("youtube", "account", "https://www.youtube.com/channel/UCseedOnly1")
+    ids, unknown = st.hit_channel_ids()
+    assert set(ids) == {"UCsul", "UChome", "UCseedOnly1"} and unknown == ["ucnoid"]
+
+
+def test_주간_조사는_온전히_받은_채널만_갈아_끼운다(tmp_path):
+    from shopping_shorts import channel_survey as cs
+    st = _store(tmp_path)
+    fresh = {"UCsul": _vids([1000] * 10 + [300000]), "UChome": None}       # 홈템 채널은 쿼터로 못 받음
+    r = cs.run(st, fetch=lambda cid: fresh[cid])
+    assert (r["ok"], r["fail"]) == (1, ["UChome"])
+    got = {(i["username"], i["views"]) for i in st.channel_hit_items()}
+    assert got == {("UCsul", 300000), ("UChome", 80000), ("UChome", 70000)}   # 못 받은 채널은 지난 조사분 그대로
+    assert '"ok": 1' in st.get_setting("channel_survey::last_run")
+
+
+def test_한_채널_조사는_다음_장까지_넘기고_60초_넘는_것은_버린다(monkeypatch):
+    from shopping_shorts import channel_survey as cs
+    pages = {None: {"items": [{"contentDetails": {"videoId": "a"}}], "nextPageToken": "T"},
+             "T": {"items": [{"contentDetails": {"videoId": "b"}}]}}
+
+    def fake(url, params):
+        if "playlistItems" in url:
+            assert params["playlistId"] == "UUSHxyz"
+            return pages[params.get("pageToken")], False
+        return {"items": [{"id": "a", "snippet": {"title": "짧다", "publishedAt": "2026-01-01T00:00:00Z", "channelTitle": "채널"},
+                           "contentDetails": {"duration": "PT45S"}, "statistics": {"viewCount": "123"}},
+                          {"id": "b", "snippet": {"title": "길다"}, "contentDetails": {"duration": "PT2M"}, "statistics": {}}]}, False
+    monkeypatch.setattr(cs, "_first_ok", fake)
+    assert [(v["id"], v["views"]) for v in cs.survey_channel("UCxyz")] == [("a", 123)]
+    monkeypatch.setattr(cs, "_first_ok", lambda url, params: (None, True))      # 쿼터 소진
+    assert cs.survey_channel("UCxyz") is None
+
+
+def test_이_탭의_기본_정렬은_조회수순():
+    assert "function applyHitsDefaultSort()" in HTML and "STATE.tab = 'views'" in HTML

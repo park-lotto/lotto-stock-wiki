@@ -1143,6 +1143,7 @@ function switchPlatform(p, el){
   // ★카테고리 줄도 다시 그린다(2026-08-26) — 플랫폼마다 숨기는 버튼이 다르다.
   //   안 부르면 유튜브에서 인스타로 갈아타도 썰쇼핑·장비템 버튼이 그대로 남는다.
   applyArchiveTabFor(p);          // '역대 히트작' 자리의 이름 — 유튜브는 '채널별 터진 영상'
+  applyHitsDefaultSort();
   renderCtypes(); renderCats();
   applyMetricTabsFor(p);          // 플랫폼에 안 맞는 지표는 아예 숨긴다
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
@@ -1764,6 +1765,21 @@ function _archiveTabOn(){ const t = document.querySelector('#spanTabs .tab.activ
 function isChannelHitsTab(){ return PLATFORM === 'youtube' && _archiveTabOn(); }
 // 이 탭에 있는 카테고리 — 서버가 주는 두 가지(썰쇼핑·홈템)뿐이라 나머지 버튼은 누르면 빈 화면이다.
 const CHANNEL_HITS_CTYPES = ["전체", "썰쇼핑", "홈템"];
+// ★이 탭의 기본 정렬은 조회수순(2026-10-06 사장님 "채널터진영상은 기본이 조회수순") — 크게 터진 것부터 본다.
+//   들어올 때 보던 정렬을 기억해 두고, 나갈 때 돌려놓는다(다른 탭의 기본 '최신순'을 건드리지 않게).
+//   들어와서 손님이 다른 정렬을 고르면 그건 그대로 둔다 — 나갈 때만 되돌린다.
+let _HITS_PREV_SORT = null;
+function applyHitsDefaultSort(){
+  const on = isChannelHitsTab();
+  if(on && _HITS_PREV_SORT === null){
+    _HITS_PREV_SORT = STATE.tab;
+    STATE.tab = 'views';
+  } else if(!on && _HITS_PREV_SORT !== null){
+    STATE.tab = _HITS_PREV_SORT;
+    _HITS_PREV_SORT = null;
+  } else return;
+  document.querySelectorAll('.tab[data-tab]').forEach(x => x.classList.toggle('active', x.dataset.tab === STATE.tab));
+}
 function applyArchiveTabFor(p){
   const t = document.querySelector('#spanTabs .tab[data-span="-1"]');
   if(t){ const c = SPAN_ARCHIVE_COPY[p] || SPAN_ARCHIVE_COPY._; t.textContent = c.label; t.title = c.title; }
@@ -3275,6 +3291,7 @@ document.addEventListener("click", (e)=>{
   // 문턱 버튼은 역대 탭에서만 — 기간 탭은 문턱이 고정이라 보여줄 게 없다(유튜브는 그 자리가 채널별 터진 영상)
   applyArchiveTabFor(PLATFORM);
   renderCtypes();                 // 채널별 터진 영상 탭은 썰쇼핑·홈템 버튼만
+  applyHitsDefaultSort();
   loadLast();
 });
 
