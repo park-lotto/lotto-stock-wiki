@@ -15122,11 +15122,9 @@ function _lfRender(){
   const S=_lfState, on=S.rendered, run=(S.phase==='running');
   const can=(on && !run && S.phase!=='ready');   // 이미 만든 것이 최신이면 다시 누를 일이 없다(문구를 바꾸면 다시 켜진다)
   const j=encodeURIComponent(S.job), q='where='+encodeURIComponent(S.where);
-  // 장면꾸미기 「롱폼」에서 문구 띠·화살표를 꾸며 두었으면(관제 133) 그걸 굽는다 — 고정 문구 고르기는 숨긴다.
-  const sel=S.custom?'<span class="hint" style="display:inline-block;margin:0 6px 8px 0">🎨 장면꾸미기에서 꾸민 롱폼 안내로 만듭니다</span>':('<select id="lfWhere" onchange="lfWhere(this.value)" '+((on&&!run)?'':'disabled ')
-    + 'style="min-height:44px;padding:8px 10px;margin:0 6px 8px 0;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-size:13px">'
-    + '<option value="comment"'+(S.where==='comment'?' selected':'')+'>문구: 구매링크 댓글에 있습니다</option>'
-    + '<option value="desc"'+(S.where==='desc'?' selected':'')+'>문구: 구매링크 설명란에 있습니다</option></select>');
+  // ★문구 고르기는 뺐다(2026-10-06 사장님 "문구는 장면꾸미기에서 만들어서 올 거라 여기는 선택이 없어도 된다").
+  //   장면꾸미기 「롱폼」에서 꾸며 두었으면(관제 133) 그걸 굽고, 아니면 서버 기본 문구(link_longform.DEFAULT_WHERE)로 굽는다.
+  const sel=S.custom?'<span class="hint" style="display:inline-block;margin:0 6px 8px 0">🎨 장면꾸미기에서 꾸민 롱폼 안내로 만듭니다</span>':'';
   let body='';
   if(!on){
     body='<div class="hint">먼저 위 <b>🎬 최종 렌더</b>로 완성본을 만들면 이 버튼이 켜집니다.</div>';
@@ -15137,7 +15135,7 @@ function _lfRender(){
     body='<video controls preload="metadata" src="'+S.url+'?'+q+'&v='+S.t0+'" style="display:block;width:100%;max-width:440px;aspect-ratio:16/9;border-radius:10px;background:#000;margin:4px 0 10px"></video>'
       + '<a class="btn-next" style="display:inline-block;padding:11px 18px;margin:0 6px 8px 0;text-decoration:none;min-height:44px;box-sizing:border-box" href="'+S.url+'?dl=1&'+q+'" download>⬇ 롱폼 영상 받기 (MP4)</a>'
       + '<div class="hint" style="line-height:1.7">① 이 영상을 유튜브에 <b>일반(가로) 영상</b>으로 올리고 제목을 <b>구매링크</b>로<br>'
-      + '② 그 영상의 <b>'+(S.where==='desc'?'설명란':'댓글')+'</b>에 구매링크를 붙이고<br>'
+      + '② 그 영상의 <b>댓글·설명란</b>에 구매링크를 붙이고<br>'
       + '③ 쇼츠 수정 화면의 <b>관련 동영상</b>에 이 영상을 고르면, 쇼츠 아래에 「구매링크」 버튼이 생깁니다.</div>';
   }else if(S.phase==='error'){
     body='<div class="warnBox" style="margin:6px 0">⚠️ '+esc(S.msg||'만들지 못했어요')+' — 다시 눌러주세요.</div>';
@@ -15181,7 +15179,6 @@ function _lfSync(rendered){
   if(!same) S.phase='idle';
   _lfRender(); _lfQuery();
 }
-function lfWhere(v){ _lfState.where=(v==='desc'?'desc':'comment'); _lfState.phase='idle'; _lfRender(); _lfQuery(); }
 async function renderLongform(){
   const S=_lfState;
   if(!S.rendered || !S.job){ if(typeof toast==='function') toast('먼저 최종 렌더로 완성본을 만들어 주세요'); return; }
