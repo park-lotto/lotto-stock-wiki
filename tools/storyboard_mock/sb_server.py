@@ -28,8 +28,35 @@ def run_insert(q):
         return {"_err": (r.stderr or r.stdout)[-300:]}
 
 
+MEME_DIR = r"C:/Users/TheRose/Desktop/로또의 주식/research/meme_pack"   # 감정짤밈팩 트랙(관제 121)이 만드는 팩 — 실험실 8765가 파일을 준다
+
+
+def meme_list():
+    """밈팩 표 = library/manifest.json(쓸 수 있는 클립) + state.json(뷰어에서 지움·감정 옮김). 표는 여기서 만들지 않고 읽기만."""
+    import os
+    try:
+        m = json.load(open(os.path.join(MEME_DIR, "library", "manifest.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        return {"clips": [], "err": "밈팩 표가 아직 없어요"}
+    try:
+        st = json.load(open(os.path.join(MEME_DIR, "state.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        st = {}
+    out = []
+    for c in m.get("clips") or []:
+        s_ = st.get(c.get("id")) or {}
+        if not c.get("usable") or s_.get("deleted"):
+            continue
+        out.append({"id": c["id"], "emotion": s_.get("emotion") or c.get("emotion"), "dur": c.get("dur"), "what": c.get("what") or ""})
+    return {"clips": out, "base": "http://127.0.0.1:8765/library"}
+
+
 class H(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path.startswith("/meme"):
+            b = json.dumps(meme_list(), ensure_ascii=False).encode("utf-8")
+            self.send_response(200); self.send_header("Content-Type", "application/json; charset=utf-8"); self.end_headers(); self.wfile.write(b)
+            return
         body = open(PAGE, "rb").read()
         self.send_response(200); self.send_header("Content-Type", "text/html; charset=utf-8"); self.end_headers(); self.wfile.write(body)
 
