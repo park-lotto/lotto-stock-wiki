@@ -201,20 +201,25 @@ def attach_signal(text, word):
 
 
 def storyboard_signals(kinds, key, nth=0, platform="yt", ranks=None):
-    """스토리보드 칸 종류 목록(esc/twist/"") → 칸마다 박을 신호어. 자리 규칙은 라이브 대본과 같다:
-    고조 칸은 순서대로 [1]·[2], 반전 칸은 [3]. 반전 칸이 없고 고조 칸이 셋 이상이면 마지막 고조가 [3].
+    """스토리보드 칸 종류 목록(esc/twist/"") → 칸마다 박을 신호어. ★칸 **순서대로** 자리를 준다(10-05 라이브 실측:
+    고조·반전·고조 순서 대본에서 [3]"대박인 건" 뒤에 [2]"심지어"가 붙었다 — 반전 다음 '더하기'는 어색하다).
+      [1] = 첫 신호 칸 · [3] = 반전 칸(없으면 셋 이상일 때 마지막 고조) · [2] = 그 사이 첫 칸 · [3] 뒤 칸은 빈칸.
     남는 칸은 빈칸(한 편 안 반복 금지)."""
     _, ws = pick_signals(platform, key, nth)
     out = [""] * len(kinds)
-    esc = [i for i, k in enumerate(kinds) if k == "esc"]
-    tw = [i for i, k in enumerate(kinds) if k == "twist"]
-    if not tw and len(esc) >= 3:
-        tw, esc = [esc[-1]], esc[:-1]
-    rk = [0] * len(kinds)                 # 칸마다 몇 번 자리 신호어인가([1] 대비·[2] 더하기·[3] 최고 반전) — 짤 자리 판정이 이걸 본다
-    for j, i in enumerate(esc[:2]):
-        out[i], rk[i] = ws[j], j + 1
-    if tw:
-        out[tw[0]], rk[tw[0]] = ws[2], 3
+    rk = [0] * len(kinds)                 # 칸마다 몇 번 자리 신호어인가 — 짤 자리 판정이 이걸 본다
+    sig = [i for i, k in enumerate(kinds) if k in ("esc", "twist")]
+    if not sig:
+        if ranks is not None:
+            ranks[:] = rk
+        return out
+    tw = [i for i in sig if kinds[i] == "twist"]
+    last = tw[0] if tw else (sig[-1] if len(sig) >= 3 else None)
+    first = sig[0] if sig[0] != last else None
+    mid = next((i for i in sig if i != first and i != last and (last is None or i < last)), None)
+    for i, r in ((first, 1), (mid, 2), (last, 3)):
+        if i is not None:
+            out[i], rk[i] = ws[r - 1], r
     if ranks is not None:
         ranks[:] = rk
     return out
