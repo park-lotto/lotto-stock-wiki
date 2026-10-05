@@ -23,6 +23,14 @@ from shopping_shorts import mix_pipeline
 from shopping_shorts.store import Store
 
 
+@pytest.fixture(autouse=True)
+def _fish_default_off(monkeypatch):
+    """이 파일은 '성우 기억' 자체를 잰다. 키 없는 회원의 Fish 기본 성우 정책(2026-10-05,
+    fish_tts.use_fish_default)은 test_fish_tts·test_voice_fallback_no_key가 따로 잰다."""
+    from shopping_shorts import config
+    monkeypatch.setattr(config, "FISH_ENABLED", False)
+
+
 @pytest.fixture
 def store(tmp_path, monkeypatch):
     from shopping_shorts import keycrypt

@@ -16,13 +16,39 @@ SAMPLES_DIR = Path(__file__).parent / "assets" / "voice_samples"
 #   속도의 뜻은 "일레븐 API 1.0 합성 뒤 atempo 배율"이다(mix_pipeline._voice_params).
 #   시드·라이브러리 등록·기본 성우·고객 저장값 마이그레이션이 전부 이 함수를 부른다.
 MINA_VOICE_ID = "aiUUgjHa4mpHf6UenZuf"
-_SPEED_BY_VOICE = {MINA_VOICE_ID: 1.35}
+# ★Fish 기본 성우 8명(2026-10-05 사장님 "기존 속도들이랑 맞춰서, 어색하지 않게", 관제 123).
+#   Fish 는 원래 말이 빨라 1.25 를 걸면 기존 성우보다 훨씬 빠르다. 그래서 여기만 **결과 말 빠르기**로 맞췄다:
+#   라이브 586 job·5,100 비트 실측(tools/voice_speed/measure_rate.py, 무음 뺀 초당 글자) 전체 중앙값 7.26
+#   (일레븐 7.12·타입캐스트 7.69)에, 실제 쇼핑 대본 8줄을 파이프라인(API 1.0 + atempo)으로 돌린 Fish 값을 맞춤.
+#   검증(같은 8줄, 바꾼 속도): 7.07~7.37 = 목표 ±3% 안. 다시 잴 땐 그 도구로.
+_FISH_SPEED = {
+    "4e118bfbb83e401c84699c09b5f08257": 1.05,  # 하늘
+    "54f52a4d2b994612a30306b4a2a95758": 1.1,   # 소연
+    "46939387dd944a45a399bd92b8de52cb": 0.95,  # 다인
+    "773c8796d726413bb9273821fdc1a5f9": 1.1,   # 정숙
+    "29da56534ac84ccd81092be4359a1639": 1.15,  # 태호
+    "5a53fa5e9d3147c692abbc9327e588ba": 0.95,  # 민준
+    "f5ce3e1771d44d6eae3749a1be49117b": 0.95,  # 도윤
+    "67ede89a20a0433fb4c8d3de046e03ae": 1.0,   # 지성
+}
+_SPEED_BY_VOICE = {MINA_VOICE_ID: 1.35, **_FISH_SPEED}
 DEFAULT_SPEED = 1.25
 
 
 def default_speed(voice_id):
     """성우(voice_id)의 기본 속도. 모르는 성우는 DEFAULT_SPEED."""
     return _SPEED_BY_VOICE.get((voice_id or "").strip(), DEFAULT_SPEED)
+
+
+def engine_of(model_id):
+    """성우 model_id → 엔진 이름("fish"|"typecast"|"elevenlabs"). 화면 배지·진단이 이것만 부른다.
+    판정 자체는 각 엔진 모듈의 is_* 한 곳(0순위-B) — 여기는 이름만 붙인다. 지역 import(순환 방지)."""
+    from shopping_shorts import fish_tts, typecast_tts
+    if fish_tts.is_fish(model_id):
+        return "fish"
+    if typecast_tts.is_typecast(model_id):
+        return "typecast"
+    return "elevenlabs"
 
 
 def load_presets_file():

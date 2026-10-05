@@ -1561,12 +1561,30 @@
 
   /* 🎙 성우 두 열(2026-08-30) — 일레븐랩스 | 타입캐스트를 나란히 본다.
      좁아지면 자동으로 위아래로 쌓인다(minmax + auto-fit). */
-  .voiceCols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  /* ★3열 고정(2026-10-05 Fish) — auto-fit(200px)이면 5단계 칸(약 530px)에 2칸만 들어가 Fish 열이
+     일레븐 아래로 떨어졌다(위 찾기 버튼 3열과 축이 어긋남, 로컬 실측). 찾기 버튼(.findCols)과 같은 규칙.
+     3열에선 카드가 좁아 아바타를 빼고 별·재생을 줄인다. 좁은 화면(≤480px)은 1열로 쌓고 원래 모양. */
+  .voiceCols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .voiceCols > div{min-width:0}
+  .voiceCols .vavatar{display:none}
+  .voiceCols .vrow{gap:4px;padding:8px 6px 8px 10px}
+  .voiceCols .vname{font-size:14px}
+  .voiceCols .vstar{width:28px}
+  .voiceCols .vplay{width:34px;height:34px;min-width:0;padding:0}
+  @media (max-width:480px){
+    .voiceCols{grid-template-columns:1fr}
+    .voiceCols .vavatar{display:flex}
+    .voiceCols .vrow{gap:11px;padding:10px 12px}
+    .voiceCols .vname{font-size:15px}
+    .voiceCols .vstar{width:40px}
+    .voiceCols .vplay{width:40px;height:40px}
+  }
   /* 성우 늘리는 버튼 2열 — 아래 카드 2열(.voiceCols)과 **같은 규칙**이라 축이 맞는다.
      패널이 열리면 그 열만 아래로 길어진다(align-items:start). */
   /* ★2×2 고정(2026-09-04): 1줄 찾기, 2줄 내가 만든 목소리 — 왼쪽 일레븐랩스·오른쪽 타입캐스트.
      auto-fit이면 폭에 따라 3칸·1칸으로 흩어져 "양옆 짝"이 깨진다. 좁은 화면만 1열. */
-  .findCols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px;
+  /* ★3열(2026-10-05 Fish 추가) — 왼쪽부터 일레븐랩스 | 타입캐스트 | Fish. 1줄 찾기, 2줄 내 목소리. */
+  .findCols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px;
             align-items:start;margin-bottom:10px}
   .findCols > div{min-width:0}
   @media (max-width:480px){ .findCols{grid-template-columns:1fr} }
@@ -1585,6 +1603,9 @@
                     font-size:12px;font-weight:900;letter-spacing:-.5px}
   .voiceColHead .lg.elv{background:#e8eaf0;color:#0f1115}          /* 일레븐랩스 = 흰 바탕 */
   .voiceColHead .lg.tc{background:#6c4bf5;color:#fff}              /* 타입캐스트 = 보라 */
+  .voiceColHead .lg.fs{background:#16a34a;color:#fff}              /* Fish = 초록 */
+  .voiceColHead .free{font-size:10.5px;font-weight:800;color:#16a34a;border:1px solid #16a34a;
+                      border-radius:999px;padding:0 6px;line-height:16px}
   .voiceColHead small{font-weight:600;color:var(--sub);font-size:11.5px}
   /* ★성우 카드 — 시안(사장님 승인본)대로 [아바타][이름·설명][☆][▶] 한 줄.
      종전엔 이름·설명이 한 줄 텍스트로 흐르고 <audio controls>가 통째로 박혀 있어
@@ -2190,6 +2211,20 @@
           <div id="tcvList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
         </div>
       </div>
+      <div id="fsvBox">
+        <button class="btn-prev findBtn"
+                onclick="toggleFishFinder()">🔎 Fish 성우 찾기</button>
+        <div id="fsvPanel" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <input id="fsvQ" placeholder="이름으로 찾기 (예) 쇼츠, 내레이션" onkeydown="if(event.key==='Enter')searchFishVoices()"
+                   style="flex:1 1 150px;min-width:120px;padding:8px 10px;border:1px solid var(--line);
+                          border-radius:8px;background:var(--panel);color:var(--txt)">
+            <button class="btn-next" style="padding:8px 14px" onclick="searchFishVoices()">찾기</button>
+          </div>
+          <div class="hint" style="margin-top:6px">한국어 공개 성우를 많이 쓰인 순으로 보여줍니다. 담으면 Fish 열에 추가돼요.</div>
+          <div id="fsvList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
+        </div>
+      </div>
       <div id="vmineBox">
         <button class="btn-prev findBtn" onclick="toggleMyVoices()">🎤 내가 만든 목소리 쓰기 <span class="hint">· 일레븐랩스</span></button>
         <div id="vminePanel" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px">
@@ -2207,6 +2242,14 @@
         <div id="tcminePanel" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px">
           <div class="hint">내 타입캐스트 계정에서 만든 목소리를 성우 카드로 담습니다.</div>
           <div id="tcmineList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
+        </div>
+      </div>
+      <!-- Fish '내가 만든 목소리'(2026-10-05) — 내 Fish 키로 self=true 목록을 받는다(회원 본인 키 필요). -->
+      <div id="fsmineBox">
+        <button class="btn-prev findBtn" onclick="toggleFishMine()">🎤 내가 만든 목소리 쓰기 <span class="hint">· Fish</span></button>
+        <div id="fsminePanel" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px">
+          <div class="hint">내 Fish 계정에서 만든 목소리를 성우 카드로 담습니다.</div>
+          <div id="fsmineList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
         </div>
       </div>
       </div><!-- .findCols 끝 -->
@@ -13473,6 +13516,7 @@ function watchVoiceSamples(groupId){
 // ── 내 음성 키 잔액(2026-09-04) ──────────────────────────────────────────
 // 서버가 업체(일레븐랩스·타입캐스트) 구독 API를 대신 물어 숫자를 준다. 이 칸이 죽어도
 // 5단계 본작업(성우 고르기)은 돌아야 하므로 loadTtsBeats와 따로 돌고 실패는 삼킨다.
+let FISH_KEY_OK = null;   // 내 Fish 키 등록 여부(null=모름). Fish 열 '무료 키 등록하기' 링크용
 function ttsCreditLine(s){
   const dash = '<a href="'+esc(s.dashboard)+'" target="_blank" rel="noopener" style="color:var(--accent2)">대시보드 ↗</a>';
   if(!s.registered) return '';                              // 등록 안 한 업체는 줄을 안 만든다
@@ -13508,6 +13552,9 @@ async function loadTtsCredits(force){
     //   고객은 show=false → 남의 잔액 대시보드를 열어주지 않는다.
     if(btn) btn.hidden = !(d.subclean && d.subclean.show);
     if(!box) return;
+    const fs=(d.services||[]).find(s=>s.service==='fish');
+    FISH_KEY_OK = fs ? !!fs.registered : null;
+    if(typeof renderPresetCards==='function' && document.getElementById('presetCards') && (VOICE_GROUPS||[]).length) renderPresetCards();
     const lines=(d.services||[]).map(ttsCreditLine).filter(Boolean);
     const redo=' <button type="button" onclick="loadTtsCredits(1)" title="다시 조회" style="border:0;background:none;cursor:pointer;color:var(--sub);font-size:12px;padding:0 4px;line-height:1">↻</button>';
     if(lines.length){
@@ -13773,6 +13820,84 @@ async function tcvUse(btn, i, src){
   }catch(e){ toast('⚠️ 등록 실패'); btn.disabled=false; btn.textContent=orig; }
 }
 
+// ── Fish 성우 찾기·내가 만든 목소리(2026-10-05, 관제 123) — 타입캐스트 짝 ──────────
+let FSV_RESULTS = [], FSMINE_RESULTS = [];
+function toggleFishFinder(){
+  const p=document.getElementById('fsvPanel'); if(!p) return;
+  const open = p.style.display==='none';
+  p.style.display = open ? 'block' : 'none';
+  if(open && !p.dataset.loaded){ p.dataset.loaded='1'; searchFishVoices(); }
+}
+function toggleFishMine(){
+  const p=document.getElementById('fsminePanel'); if(!p) return;
+  const open = p.style.display==='none';
+  p.style.display = open ? 'block' : 'none';
+  if(open && !p.dataset.loaded){ p.dataset.loaded='1'; loadFishMine(); }
+}
+const _fq = x => JSON.stringify(x).replace(/"/g,'&quot;');   // onclick 인자용(jq는 다른 함수 안 지역값이라 못 쓴다)
+function _fishRows(list, src){
+  return list.map(function(v,i){
+    const url=v.sample_url||'';
+    return '<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)">'
+      + '<div style="flex:1;min-width:0">'
+      +   '<div style="font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(v.name)
+      +     (src==='mine'?' <span class="r" style="color:var(--accent2)">내가 만든 것</span>':'')+'</div>'
+      +   '<div class="hint" style="margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+      +     (v.task_count?('사용 '+Number(v.task_count).toLocaleString('ko-KR')+'회'):'')
+      +     (v.description?(' · '+esc(v.description)):'')+'</div>'
+      + '</div>'
+      + '<button type="button" class="vplay" title="'+(url?'샘플 듣기':'샘플 없음')+'" onclick="playSample(this,'+_fq(url)+')" '+(url?'':'disabled')+'>▶</button>'
+      + '<button class="btn-next" style="padding:6px 12px" onclick="fsvUse(this,'+i+','+_fq(src)+')">이 성우로</button>'
+      + '</div>';
+  }).join('');
+}
+async function searchFishVoices(){
+  const box=document.getElementById('fsvList'); if(!box) return;
+  box.innerHTML='<div class="hint">찾는 중…</div>';
+  const q=(document.getElementById('fsvQ')||{}).value||'';
+  let d;
+  try{ d=await (await fetch('/api/fish/voices?limit=40&q='+encodeURIComponent(q))).json(); }
+  catch(e){ box.innerHTML=ErrorHelp.html('network'); return; }
+  if(!d || !d.ok){
+    box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc((d&&d.error)||'불러오지 못했습니다')+'</div>'; return; }
+  FSV_RESULTS = d.voices||[];
+  if(!FSV_RESULTS.length){ box.innerHTML='<div class="hint">결과가 없습니다.</div>'; return; }
+  box.innerHTML = '<div class="hint" style="margin-bottom:6px">전체 '+Number(d.total||FSV_RESULTS.length).toLocaleString('ko-KR')
+    +'명 중 '+FSV_RESULTS.length+'명</div>' + _fishRows(FSV_RESULTS, 'find');
+}
+async function loadFishMine(){
+  const box=document.getElementById('fsmineList'); if(!box) return;
+  box.innerHTML='<div class="hint">불러오는 중…</div>';
+  let d;
+  try{ d=await (await fetch('/api/fish/voices/mine')).json(); }
+  catch(e){ box.innerHTML=ErrorHelp.html('network'); return; }
+  if(d && d.need_key){
+    box.innerHTML='<div class="hint" style="line-height:1.6">'+esc(d.error||'')
+      +'<br><a href="/settings#keys" style="color:var(--accent2)">→ 내 API 키 등록하러 가기</a></div>';
+    return;
+  }
+  if(!d || !d.ok){
+    box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc((d&&d.error)||'불러오지 못했습니다')+'</div>'; return; }
+  FSMINE_RESULTS = d.voices||[];
+  if(!FSMINE_RESULTS.length){ box.innerHTML='<div class="hint">내 계정에 만든 목소리가 없습니다. fish.audio에서 먼저 만들어 주세요.</div>'; return; }
+  box.innerHTML = _fishRows(FSMINE_RESULTS, 'mine');
+}
+async function fsvUse(btn, i, src){
+  const v=(src==='mine' ? FSMINE_RESULTS : FSV_RESULTS)[i]; if(!v) return;
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='등록 중…';
+  try{
+    const r=await (await fetch('/api/fish/voices/adopt',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({voice_id:v.voice_id, name:v.name, model:v.model})
+    })).json();
+    if(!r || !r.ok){ toast('⚠️ '+((r&&r.error)||'등록 실패')); btn.disabled=false; btn.textContent=orig; return; }
+    toast('✅ '+v.name+' 성우를 담았습니다');
+    await loadPresets();
+    if(r.group_id) pickPreset(r.group_id);
+    btn.textContent='✓ 담음';
+  }catch(e){ toast('⚠️ 등록 실패'); btn.disabled=false; btn.textContent=orig; }
+}
+
 function vlibPlay(i){
   const v = VLIB_RESULTS[i]; if(!v || !v.preview_url) return;
   try{ if(VLIB_AUDIO) VLIB_AUDIO.pause(); }catch(e){}
@@ -13807,11 +13932,11 @@ async function vlibAdd(btn, i){
 let VOICES_EXPANDED=false;   // ＋더보기 펼침 상태 — 재렌더(pickPreset)가 접힘으로 되돌리지 않게 보존
 // ★접힘은 **열마다 따로** 기억한다(2026-08-30). 예전엔 VOICES_EXPANDED 하나를 두 열이
 //   같이 봐서, 타입캐스트를 펼치면 일레븐랩스 14명이 통째로 같이 쏟아졌다.
-let VOICES_OPEN = {elevenlabs:false, typecast:false};
+let VOICES_OPEN = {elevenlabs:false, typecast:false, fish:false};
 function toggleMoreVoices(engine){
   if(engine){ VOICES_OPEN[engine] = !VOICES_OPEN[engine]; }
-  else { VOICES_OPEN.elevenlabs = VOICES_OPEN.typecast = !VOICES_EXPANDED; }  // 옛 호출 호환
-  VOICES_EXPANDED = VOICES_OPEN.elevenlabs || VOICES_OPEN.typecast;
+  else { VOICES_OPEN.elevenlabs = VOICES_OPEN.typecast = VOICES_OPEN.fish = !VOICES_EXPANDED; }  // 옛 호출 호환
+  VOICES_EXPANDED = VOICES_OPEN.elevenlabs || VOICES_OPEN.typecast || VOICES_OPEN.fish;
   renderPresetCards();
 }
 // ── 성우 카드 (시안 승인본 이식, 2026-08-30) ────────────────────────────────
@@ -13921,6 +14046,9 @@ function renderPresetCards(){
   // ★열 안에 '목소리 찾기'를 넣지 않는다(2026-08-30). 위쪽 #vlibBox에 같은 버튼이 이미 있어
   //   두 벌이 됐고, 한쪽 열에만 있으니 두 열의 첫 카드 높이가 어긋나 보였다(0순위-B).
   const elvAct = '', tcAct = '';
+  // Fish 열: 내 Fish 키가 없으면 "무료 키 등록하기" 링크(서버 /api/produce/tts/credits의 registered로 판정).
+  const fsAct = (typeof FISH_KEY_OK!=='undefined' && FISH_KEY_OK===false)
+    ? '<a class="hint" href="/settings#keys" target="_blank" rel="noopener" style="display:block;margin:0 0 8px 2px;color:var(--accent2)">🔑 Fish 무료 키 등록하기 (비용 0원)</a>' : '';
   document.getElementById('presetCards').innerHTML =
       renderFavRow()
     + '<div class="voiceCols">'
@@ -13928,6 +14056,8 @@ function renderPresetCards(){
     +     colHtml(VOICE_GROUPS,'elevenlabs',elvAct) + '</div>'
     +   '<div><div class="voiceColHead"><span class="lg tc">TC</span>타입캐스트</div>'
     +     colHtml(VOICE_GROUPS,'typecast',tcAct) + '</div>'
+    +   '<div><div class="voiceColHead"><span class="lg fs">F</span>Fish <span class="free">무료</span></div>'
+    +     colHtml(VOICE_GROUPS,'fish',fsAct) + '</div>'
     + '</div>';
 }
 // ⭐즐겨찾기 줄 — 별을 누른 성우가 두 열 위에 모인다. 이름을 누르면 바로 그 성우로 바뀐다.

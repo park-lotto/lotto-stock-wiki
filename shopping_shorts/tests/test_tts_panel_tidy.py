@@ -30,12 +30,13 @@ def test_names_match_and_old_name_gone():
 
 def test_two_by_two_order_left_eleven_right_typecast():
     g = _grid()
-    order = [g.index('id="vlibBox"'), g.index('id="tcvBox"'), g.index('id="vmineBox"'), g.index('id="tcmineBox"')]
-    assert order == sorted(order), "1줄=찾기(일레븐|타입), 2줄=내가 만든(일레븐|타입) 순서"
+    order = [g.index('id="vlibBox"'), g.index('id="tcvBox"'), g.index('id="fsvBox"'),
+             g.index('id="vmineBox"'), g.index('id="tcmineBox"'), g.index('id="fsmineBox"')]
+    assert order == sorted(order), "1줄=찾기(일레븐|타입|Fish), 2줄=내가 만든(일레븐|타입|Fish) 순서"
     assert 'id="elvAdmin"' not in g                       # 관리자 전용은 격자 밖(고객 화면 2×2 유지)
     assert 'id="elvAdmin"' in HTML
-    assert ".findCols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))" in HTML
-    assert "· 일레븐랩스</span>" in g and "· 타입캐스트</span>" in g
+    assert ".findCols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))" in HTML
+    assert "· 일레븐랩스</span>" in g and "· 타입캐스트</span>" in g and "· Fish</span>" in g
 
 
 def test_typecast_mine_wiring_in_html():

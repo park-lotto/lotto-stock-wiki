@@ -28,6 +28,7 @@ from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, confo
 from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import typecast_tts
+from shopping_shorts import fish_tts
 from shopping_shorts import voice_presets
 from shopping_shorts import audio_post
 from shopping_shorts import tts_joined
@@ -221,7 +222,7 @@ def _voice_params(voice):
     #   일레븐랩스 성우로 갈아끼운다(2026-09-07). 안 갈면 3단계에서 "타입캐스트 오류"가
     #   그대로 난다 — 고객이 옛날에 고른 성우가 job.voice에 통째로 박혀 있기 때문이다.
     #   voice_id·model_id·settings는 **짝**이라 함께 바꾼다(0순위-B: 따로 바꾸면 어긋난다).
-    if typecast_tts.use_fallback(v.get("model_id")):
+    if typecast_tts.use_fallback(v.get("model_id")) or fish_tts.use_fallback(v.get("model_id")):
         v = {**v, **typecast_tts.FALLBACK_VOICE}
     # ★배속은 **전부 뒤에서 atempo로** 건다 — 합성 API에는 항상 1.0(2026-10-01 사장님 청취, 관제 049).
     #   종전: 일레븐은 1.2까지 API speed + 초과분 atempo, 타입캐스트는 API tempo.
@@ -352,9 +353,12 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     #   ★2026-08-31: 키를 **그 job 주인 기준**으로 본다. 회원이 자기 타입캐스트 키를
     #   등록했으면 회사 키가 비어 있어도 진짜 음성이다 — customer_id를 안 넘기면
     #   회사 키만 보고 "무음 mock"으로 오판해 정규화를 건너뛴다.
-    has_voice_key = (bool(typecast_tts.api_key(customer_id))
-                     if typecast_tts.is_typecast(model_id)
-                     else bool(config.ELEVENLABS_API_KEY))
+    if fish_tts.is_fish(model_id):
+        has_voice_key = bool(fish_tts.api_key(customer_id))
+    elif typecast_tts.is_typecast(model_id):
+        has_voice_key = bool(typecast_tts.api_key(customer_id))
+    else:
+        has_voice_key = bool(config.ELEVENLABS_API_KEY)
     audio_post.finish_line_audio(str(out_path), tempo=extra_tempo, silence_trim=trim,
                                  pace_mode=pace_mode, loudnorm=has_voice_key)
     return natural
@@ -1204,7 +1208,7 @@ def humanize_tts_error(err, has_own_key=None):
     raw = str(err or "")
     low = raw.lower()
     tip = None
-    if "elevenlabs" in low or "typecast" in low or "text-to-speech" in low:
+    if "elevenlabs" in low or "typecast" in low or "text-to-speech" in low or "api.fish.audio" in low:
         if "401" in raw or "unauthorized" in low or "invalid_api_key" in low:
             tip = ("🎙 음성(TTS) 키에 문제가 있어요. "
                    "설정에서 **TTS 키를 재등록**해 주세요. "
