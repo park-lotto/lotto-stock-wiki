@@ -1,6 +1,6 @@
 """구매링크 안내 세트 디자인을 눈으로 보는 견본(관제 133): 숏폼 3종(편집 화면 그대로) + 롱폼 3종(롱폼 화면 그대로).
 
-  py tools/preview_link_sets.py <결과 폴더> [comment|desc]
+  py tools/preview_link_sets.py <결과 폴더>
 """
 import sys, io, pathlib, threading, functools, http.server, urllib.parse
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -28,7 +28,7 @@ with sync_playwright() as pw:
     for s in shots: sheet.paste(s, (x, 0)); x += s.width
     sheet.save(out / '숏폼_디자인3종.png')
     lf = b.new_page(viewport={'width': 1280, 'height': 720}); lf.on('pageerror', lambda e: errs.append(str(e)))
-    for s in ('pin', 'chat', 'tap'):
+    for s in ('time', 'event', 'stock', 'crowd', 'price'):
         lf.goto(base + '/out/link-longform-stage.html?' + urllib.parse.urlencode({'src': '/' + plain.relative_to(ROOT).as_posix() if plain.is_relative_to(ROOT) else '', 'set': s, 'where': where, 'channel': '숏템메이커'}))
         if not plain.is_relative_to(ROOT):
             import base64
@@ -39,7 +39,7 @@ with sync_playwright() as pw:
         fr = out / f'_frames_{s}'; fr.mkdir(exist_ok=True); loop = lf.evaluate('linkLongform.loopMs'); n = round(loop / 1000 * 30)
         for f in range(n):
             lf.evaluate('t=>linkLongform.motionAt(t)', f / 30 * 1000); lf.locator('#lf-stage').screenshot(path=str(fr / f'{f:04d}.png'))
-            if f == round(n * .5): (out / f'롱폼_{s}.png').write_bytes((fr / f'{f:04d}.png').read_bytes())
+            if f == round(n * .2): (out / f'롱폼_{s}.png').write_bytes((fr / f'{f:04d}.png').read_bytes())
         import subprocess
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-stream_loop', '2', '-framerate', '30', '-i', str(fr / '%04d.png'), '-pix_fmt', 'yuv420p', '-vf', 'scale=1280:720', str(out / f'롱폼_{s}.mp4')], check=True)
     print('오류', errs); b.close()
