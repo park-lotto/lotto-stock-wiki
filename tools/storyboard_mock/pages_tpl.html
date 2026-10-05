@@ -296,7 +296,13 @@ function memeWant(sl){ const k = String(sl.slot||'').split('_')[0].toLowerCase()
 function memeAuto(ek, bd){            // 자동 배치 — 짤 자리 줄(최대 2) · 내 짤 먼저 · 한 영상에 같은 짤 두 번 없음
   if (MEMEPICK[ek] || !MEME || !MEME.clips.length) return MEMEPICK[ek] || {};
   const pick = {}, used = new Set(); let n = 0;
-  bd.slots.forEach((sl, i) => { if (n >= MEME_MAX || i === 0) return; const want = memeWant(sl); if (!want) return;
+  const ranked = bd.slots.some(sl => sl.sig_rank);      // 신호어를 넣은 대본이면 [1]·[3] 자리에만 짤(사장님 10-05 "1 3번만")
+  // 자리 번호가 없는 보드(신호어 버튼 전·옛 결과): 신호어 줄 중 **첫 번째·마지막**만 = [1]·[3]과 같은 뜻(위에서부터 채우면 [2]가 자리를 먹는다)
+  const cand = ranked ? [] : bd.slots.map((sl, i) => (i > 0 && memeWant(sl)) ? i : -1).filter(i => i >= 0);
+  const ends = new Set(cand.length ? [cand[0], cand[cand.length - 1]] : []);
+  bd.slots.forEach((sl, i) => { if (n >= MEME_MAX || i === 0) return;
+    if (ranked ? ![1, 3].includes(sl.sig_rank) : !ends.has(i)) return;
+    const want = ranked ? (sl.sig_rank === 1 ? (memeWant(sl) || '의심_황당') : (memeWant(sl) || '충격_입막')) : memeWant(sl); if (!want) return;
     const pool = MEME.clips.filter(c => c.emotion === want && !used.has(c.id));
     const pref = pool.filter(c => mRank(c.id) >= 0).sort((a, b) => mRank(a.id) - mRank(b.id));
     const c = pref[0] || pool[0]; if (!c) return; pick[i] = c.id; used.add(c.id); n++; });
