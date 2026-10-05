@@ -2850,7 +2850,21 @@ class Store:
                     force = dict(c.execute(q).fetchall())
         except sqlite3.Error:
             force = {}
-        if ov or force:
+        # 탭 잠금(2026-10-06 사장님 "홈템이랑 썰쇼핑은 다른거 들어오지 못하게 막아놔", 관제 134).
+        # 설정 yt_category_lock 에 적힌 카테고리는 **사람이 그 카테고리로 지정한 채널·영상만**
+        # 들어간다. 자동판정만으로 들어오려는 유튜브 영상은 '기타'로 보낸다.
+        # 빈값(기본) = 잠금 없음. 끄려면 설정만 비우면 된다(배포 불필요).
+        try:
+            q = "SELECT value FROM settings WHERE key='yt_category_lock'"
+            if conn is not None:
+                row = conn.execute(q).fetchone()
+            else:
+                with self._conn() as c:
+                    row = c.execute(q).fetchone()
+            lock = {t.strip() for t in ((row[0] if row else "") or "").split(",") if t.strip()}
+        except sqlite3.Error:
+            lock = set()
+        if ov or force or lock:
             # 우선순위: 영상별 지정 > 채널 고정 > 자동판정
             for x in items or []:
                 if not isinstance(x, dict):
@@ -2861,6 +2875,8 @@ class Store:
                     u = (x.get("username") or "").strip().lstrip("@").lower()
                     if u in force:
                         x["category"] = force[u]
+                    elif x.get("category") in lock and x.get("platform") == "youtube":
+                        x["category"] = "기타"
         return items
 
     def _fill_delta(self, platform, items):
