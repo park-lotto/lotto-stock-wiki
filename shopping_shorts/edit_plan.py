@@ -2951,6 +2951,13 @@ def _seg_secs(s):
         return 0.0
 
 
+#: 채우기 비교 허용 오차·덧붙일 최소 길이(초) — 2026-10-05 관제 126.
+#  실측(job 2388dd0b9650·89dcb2d6f6b6): 화면 3.5초=대사 3.5초인데 소수점 오차로 '모자람'이 되어,
+#  저장할 때마다 **길이 0초 조각**(end<start)을 하나씩 덧붙였다 — 길이가 안 늘어 다음 저장에도 또 붙었다(상한 14까지).
+#  저장 관문이 고정점이 아니게 되어 렌더 도장이 깨졌다(관제 122). 0.05초 = 30fps 1.5프레임 — 화면에 안 보이는 차이.
+_FILL_EPS = 0.05
+
+
 def _fill_beat_screen_time(beats, seg_map, max_alts=None):
     """비트마다 **화면 길이 합 ≥ 대사 읽는 시간**이 되게 컷을 더 붙인다(2026-07-31).
 
@@ -2988,7 +2995,7 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
     for b in beats:
         need = float(b.get("target_seconds") or 0)
         have = _beat_screen_secs(b)
-        if have >= need or not b.get("primary") or _is_pinned(b):   # 사람이 고른 줄은 더하지 않는다(관제 120)
+        if have >= need - _FILL_EPS or not b.get("primary") or _is_pinned(b):   # 사람이 고른 줄은 더하지 않는다(관제 120)
             continue
         home = (b["primary"] or {}).get("video_id")
         # ★말이 통하는 장면부터 채운다(2026-07-31 2차).
@@ -3064,31 +3071,31 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
                                      _dist(s), s.get("start") or 0))
         alts = list(b.get("alternates") or [])
         for s in pool:
-            if have >= need or len(alts) >= max_alts:
+            if have >= need - _FILL_EPS or len(alts) >= max_alts:
                 break
             sid = s.get("seg_id")
             if not sid or sid in used:
                 continue
             g = _ground_ref({"seg_id": sid}, seg_map)
-            if not g:
+            if not g or _seg_secs(g) < _FILL_EPS:     # 0초 조각은 채우지 못한다 — 붙이면 저장마다 또 붙는다
                 continue
             alts.append(g)
             used.add(sid)
             have += max(0.0, float(g["end"]) - float(g["start"]))
-        if have < need:                     # 인벤토리 소진 → 재사용 허용(빈 화면보다 낫다)
+        if have < need - _FILL_EPS:          # 인벤토리 소진 → 재사용 허용(빈 화면보다 낫다)
             # ★pool을 **여러 바퀴** 돈다(2026-08-09). 종전엔 한 바퀴뿐이라 컷이 6개인
             #   소재에서는 붙일 게 금방 동나 화면이 19초에 묶였다 — 대본이 27~30초로
             #   길어진 뒤엔 말이 화면을 1.4~2.2배 초과했다(자막 밀림·말 도중 종료).
             #   사장님 지시 "중복 허용"에 따라 같은 컷을 다시 쓰더라도 화면을 채운다.
             _guard = 0
-            while have < need and len(alts) < max_alts and _guard < 40:
+            while have < need - _FILL_EPS and len(alts) < max_alts and _guard < 40:
                 _guard += 1
                 _added = False
                 for s in pool:
-                    if have >= need or len(alts) >= max_alts:
+                    if have >= need - _FILL_EPS or len(alts) >= max_alts:
                         break
                     g = _ground_ref({"seg_id": s.get("seg_id")}, seg_map)
-                    if not g or g["seg_id"] == (b["primary"] or {}).get("seg_id"):
+                    if not g or g["seg_id"] == (b["primary"] or {}).get("seg_id") or _seg_secs(g) < _FILL_EPS:
                         continue
                     alts.append(g)
                     have += max(0.0, float(g["end"]) - float(g["start"]))
