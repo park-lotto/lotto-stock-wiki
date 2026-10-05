@@ -12,19 +12,24 @@ html,body{margin:0;background:#0b1418;font-family:Pretendard,'Malgun Gothic',san
 .lf-item{position:absolute;display:flex;align-items:center;justify-content:center;cursor:grab;box-sizing:border-box;touch-action:none}
 .lf-block{display:block}.lf-block>*{pointer-events:none}
 .lf-item.selected{outline:2px dashed #11B98C;outline-offset:3px}
+#lf-size{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:2px solid #fff;background:#11B98C;cursor:nwse-resize;z-index:50;touch-action:none;display:none;box-shadow:0 2px 6px #0007}
 body.qa #lf-bg,body.qa #lf-fg{display:none}body.qa,body.qa #lf-stage{background:transparent}body.qa .lf-item{outline:none!important}
 </style></head><body>
-<div id="lf-stage"><div id="lf-bg"></div><div id="lf-fg"></div><div id="lf-items"></div></div>
+<div id="lf-stage"><div id="lf-bg"></div><div id="lf-fg"></div><div id="lf-items"></div><div id="lf-size" title="끌어서 크기"></div></div>
 <script src="../shopping_shorts/static/scene-decoration-catalog.js?v=3"></script>
 <script src="link-longform-blocks.js?v=3"></script>
 <script>
 (()=>{
  const C=window.SCENE_DECORATION_CATALOG,B=window.LINK_LONGFORM_BLOCKS,q=new URLSearchParams(location.search),qa=q.has('qa');
  const stage=document.querySelector('#lf-stage'),layer=document.querySelector('#lf-items');
- if(qa)document.body.classList.add('qa');
+ if(qa){document.body.classList.add('qa');document.documentElement.style.background='transparent';}   // 렌더: 배경까지 투명(안 하면 영상이 통째로 가려진다)
  document.head.append(Object.assign(document.createElement('style'),{textContent:B.CSS}));
- const src=q.get('src');if(src&&!qa)for(const id of ['#lf-bg','#lf-fg'])document.querySelector(id).style.backgroundImage=`url("${src}")`;
- let items=[],selected=-1,drag=null;
+ const setImage=u=>{for(const id of ['#lf-bg','#lf-fg'])document.querySelector(id).style.backgroundImage=u?`url("${u}")`:'';};
+ if(q.get('src')&&!qa)setImage(q.get('src'));
+ const sizer=document.querySelector('#lf-size');let sizing=null;
+ const changed=()=>{try{window.linkLongform.onChange?.(structuredClone(items),selected)}catch(e){console.error(e)}};
+ function placeSizer(){const el=layer.children[selected];if(qa||!el){sizer.style.display='none';return;}const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();Object.assign(sizer.style,{display:'block',left:r.right-s.left+'px',top:r.bottom-s.top+'px'});}
+ let items=[],selected=-1,drag=null,frozen=false;
  function draw(){
    layer.replaceChildren();
    items.forEach((m,i)=>{const el=document.createElement('div');el.className='lf-item';el.dataset.i=i;el.classList.toggle('selected',!qa&&i===selected);
@@ -32,24 +37,37 @@ body.qa #lf-bg,body.qa #lf-fg{display:none}body.qa,body.qa #lf-stage{background:
        el.classList.add('lf-block');Object.assign(el.style,{left:m.l+'%',top:m.t+'%',width:m.w+'%',fontSize:stage.clientWidth*m.w/100/20+'px'});
        el.innerHTML=B.BLOCKS[m.block]?.html(m)||'';layer.append(el);return;}
      C.paint(el,m,stage.clientWidth,stage.clientHeight);layer.append(el);C.animate(el,m,stage.clientWidth);});
+    placeSizer();
  }
- layer.addEventListener('pointerdown',e=>{const el=e.target.closest('.lf-item');if(!el||qa){selected=-1;draw();return;}
-   selected=+el.dataset.i;const m=items[selected];drag={id:e.pointerId,x:e.clientX,y:e.clientY,l:m.l,t:m.t};draw();layer.setPointerCapture(e.pointerId);e.preventDefault();});
+ layer.addEventListener('pointerdown',e=>{const el=e.target.closest('.lf-item');if(!el||qa){selected=-1;draw();changed();return;}
+   selected=+el.dataset.i;const m=items[selected];drag={id:e.pointerId,x:e.clientX,y:e.clientY,l:m.l,t:m.t};draw();changed();layer.setPointerCapture(e.pointerId);e.preventDefault();});
  layer.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const m=items[selected],r=stage.getBoundingClientRect();
    m.l=Math.max(0,Math.min(100-m.w,drag.l+(e.clientX-drag.x)/r.width*100));m.t=Math.max(0,Math.min(100-(m.h||5),drag.t+(e.clientY-drag.y)/r.height*100));
-   const el=layer.children[selected];if(el){el.style.left=m.l+'%';el.style.top=m.t+'%';}});   // 끄는 동안은 자리만 옮긴다(다시 그리면 움직임이 처음으로 돌아간다)});
- for(const n of ['pointerup','pointercancel'])layer.addEventListener(n,()=>drag=null);
- addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&selected>=0){items.splice(selected,1);selected=-1;draw();}});
- addEventListener('resize',draw);
+   const el=layer.children[selected];if(el){el.style.left=m.l+'%';el.style.top=m.t+'%';}placeSizer();});   // 끄는 동안은 자리만 옮긴다(다시 그리면 움직임이 처음으로 돌아간다)});
+ for(const n of ['pointerup','pointercancel'])layer.addEventListener(n,()=>{if(drag){drag=null;changed();}});
+ // 크기: 오른쪽 아래 손잡이를 끌면 폭이 바뀐다(블록은 폭이 곧 크기 — 글자·화살표가 통째로 커진다)
+ sizer.addEventListener('pointerdown',e=>{if(selected<0)return;sizing={id:e.pointerId,x:e.clientX,w:items[selected].w};sizer.setPointerCapture(e.pointerId);e.preventDefault();e.stopPropagation();});
+ sizer.addEventListener('pointermove',e=>{if(!sizing||e.pointerId!==sizing.id)return;const m=items[selected],r=stage.getBoundingClientRect();m.w=Math.max(4,Math.min(110,sizing.w+(e.clientX-sizing.x)/r.width*100));
+   const el=layer.children[selected];if(el){el.style.width=m.w+'%';if(m.kind==='block')el.style.fontSize=stage.clientWidth*m.w/100/20+'px';}placeSizer();});
+ for(const n of ['pointerup','pointercancel'])sizer.addEventListener(n,()=>{if(sizing){sizing=null;draw();changed();}});
+ addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&selected>=0&&!e.target.closest('input,textarea')){items.splice(selected,1);selected=-1;draw();changed();}});
+ if(!qa)addEventListener('resize',draw);   // ★렌더(qa)에서는 다시 그리지 않는다 — 화면 찍기가 resize 를 일으켜 시계·움직임이 처음으로 돌아갔다(2026-10-06 실측)
  // 편집 화면: 시계가 실제로 흐른다. motionAt 으로 시각을 못 박기 시작하면(렌더·견본) 멈춘다.
- let live=!qa;const t0=performance.now();(function tick(){if(!live)return;B.clockAt(layer,performance.now()-t0);requestAnimationFrame(tick)})();
+ let live=!qa,t0=performance.now();(function tick(){if(!live)return;B.clockAt(layer,performance.now()-t0);requestAnimationFrame(tick)})();
  window.linkLongform={
    sets:()=>B.SETS.map(s=>({id:s.id,label:s.label})),
-   useSet(id){items=B.items(id);selected=-1;draw();return items.length},
+   useSet(id){items=B.items(id);selected=-1;t0=performance.now();draw();changed();return items.length},   // 세트를 고른 순간부터 시계가 다시 흐른다
+   setImage,
+   onChange:null,   // 편집기가 건다: (항목 목록, 고른 번호) — 놓기·크기·지우기·세트 바꾸기 뒤에 부른다
+   patch(i,obj){if(!items[i])return;Object.assign(items[i],obj);draw();changed();},
+   clear(){items=[];selected=-1;draw();changed();},
    load(list){items=structuredClone(list||[]);selected=-1;draw()},
    items:()=>structuredClone(items),
    loopMs:B.LOOP_MS,
-   motionAt(time){live=false;const list=layer.getAnimations({subtree:true});for(const a of list){a.pause();a.currentTime=time;}B.clockAt(layer,time);return list.length>0},
+   // 렌더용: 지금 모양을 요소에 박고 움직임을 걷는다(화면 합성이 멈춘 움직임의 새 시각을 안 그리는 문제). 다음 motionAt 이 다시 그린다.
+   freeze(){frozen=true;layer.querySelectorAll('[data-a]').forEach(el=>{const an=el.getAnimations();if(!an.length)return;const cs=getComputedStyle(el),v={};
+     for(const k of ['transform','opacity'])v[k]=cs[k];an.forEach(a=>a.cancel());el.style.animation='none';Object.assign(el.style,v);})},
+   motionAt(time){live=false;if(frozen){frozen=false;draw();}const list=layer.getAnimations({subtree:true});for(const a of list){a.pause();a.currentTime=time;}B.clockAt(layer,time);return list.length>0},
  };
  if(q.get('set'))window.linkLongform.useSet(q.get('set'));
 })();
