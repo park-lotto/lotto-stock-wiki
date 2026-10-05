@@ -10438,7 +10438,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
     #   ★그림과 구간은 렌더가 쓰는 함수를 그대로 쓴다(render_layers·context_for) — 여기서
     #     따로 그리면 완성본과 캡컷이 갈린다.
     #   ★실패해도 내보내기는 그대로 된다 — 그때는 종전대로 머리카피만 간다.
-    _scene_layers = None
+    _scene_layers, _scene_dims, _scene_zooms = None, None, None
     _ss_snapshot = (_deco or {}).get("scene_style") if _deco else None
     if _style_on and _ss_snapshot:
         try:
@@ -10448,10 +10448,12 @@ def api_mix_capcut(job_id: str, base: str = ""):
             _ss_layers = _scene_style.render_layers(timeline, _ss_snapshot, _ss_dir, _hc, job_id)
             _ss_scenes = _scene_style.context_for(timeline, _hc, _ss_snapshot, job_id)["scenes"]
             _scene_layers = _scene_style.overlay_spans(_ss_scenes, _ss_layers, _ss_dir)   # 단어 강조면 단어마다 한 장(관제 102)
+            _scene_dims = _scene_style.dim_spans(_ss_scenes, _ss_snapshot, _ss_layers, _ss_dir)   # 어둡게 막(관제 124)
+            _scene_zooms = _scene_style.zoom_spans(_ss_scenes, _ss_snapshot)   # 장면별 확대·점프 줌(관제 124)
         except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
             import traceback as _tb4
             _tb4.print_exc(file=sys.stderr)
-            _scene_layers = None
+            _scene_layers, _scene_dims, _scene_zooms = None, None, None
     if _scene_layers:
         # 제목·채널명은 장면 레이어에 이미 그려져 있다 — 머리카피를 또 올리면 겹쳐 보인다.
         _hc_png, _hc_span = None, None
@@ -10465,7 +10467,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
         headcopy_png=(_hc_png if _style_on else None),
         headcopy_span=_hc_span,
         sfx_events=_sfx_events, cutaway_paths=_cutaways,
-        scene_overlay_layers=_scene_layers,
+        scene_overlay_layers=_scene_layers, scene_dim_layers=_scene_dims, scene_zoom_spans=_scene_zooms,
         extra_library_video_paths=_original_library_sources)
     texts, assets = {}, []
     for name in files:

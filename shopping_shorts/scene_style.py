@@ -81,6 +81,13 @@ def validate_snapshot(value):
         number(effect.get("zoom",1),1,3)
         number(effect.get("panX",0),-1,1)
         number(effect.get("panY",0),-1,1)
+        if "dim" in effect:   # 어둡게(관제 124): 영상 칸 밝기 level(0.1~1)을 장면 시작부터 sec초(0=장면 내내)
+            dim=effect["dim"]
+            if not isinstance(dim,dict):
+                raise ValueError("어둡게 형식이 올바르지 않습니다")
+            number(dim.get("level"),.1,1);number(dim.get("sec",0),0,10)
+        if "fxAuto" in effect and effect["fxAuto"] not in ("jump",):
+            raise ValueError("자동 효과 표식이 올바르지 않습니다")
         if "masks" in effect:
             from .deco_frame import _norm_masks
             if not isinstance(effect["masks"],list):
@@ -476,6 +483,58 @@ def media_geometry(layer, effect):
     return width,height,top,zw,zh,crop_x,crop_y
 
 
+def dim_of(effect, frames):
+    """장면 영상 칸을 어둡게 하는 값 — 완성본(compose)·썸네일(compose_still)·캡컷(dim_spans)이 같이 쓴다(관제 124).
+    반환 (밝기 0.1~1, 어둡게 할 프레임 수) 또는 None. 장면 시작부터 sec초(0이면 장면 내내, frames 로 자른다)."""
+    dim=(effect or {}).get("dim")
+    if not isinstance(dim,dict):
+        return None
+    level=float(dim.get("level") or 1)
+    if level>=1:
+        return None
+    sec=float(dim.get("sec") or 0)
+    n=frames if sec<=0 else min(frames,max(1,round(sec*30)))
+    return level,n
+
+
+def dim_spans(scenes, snapshot, layers, folder):
+    """캡컷용 어둡게 구간 [{path,start,end}] — 영상 칸 자리만 반투명 검정 PNG(투명도 1-밝기).
+    완성본은 영상에 밝기를 곱하고, 캡컷은 같은 구간에 검정 막을 얹는다(같은 dim_of)."""
+    from PIL import Image
+    from . import video_assemble as va
+    folder,out=Path(folder),[]
+    effects=(validate_snapshot(snapshot) or {}).get("effects") or {}
+    for index,(scene,layer) in enumerate(zip(scenes,layers)):
+        if not layer:
+            continue
+        start,end=float(scene["start"]),float(scene["end"])
+        frames=round(end*30)-round(start*30)
+        got=dim_of(effects.get(str(index)),frames)
+        if not got:
+            continue
+        level,n=got
+        _,height,top,*_=media_geometry(layer,effects.get(str(index)))
+        img=Image.new("RGBA",(va._OUT_W,va._OUT_H),(0,0,0,0))
+        img.paste((0,0,0,round(255*(1-level))),(0,top,va._OUT_W,top+height))
+        path=folder/f"scene-style-dim-{index}.png";img.save(path)
+        out.append({"path":str(path),"start":start,"end":min(end,start+n/30)})
+    return out
+
+
+def zoom_spans(scenes, snapshot):
+    """캡컷용 장면별 영상 확대 구간 [{start,end,zoom}] (관제 124 점프 줌 컷 + 손으로 맞춘 확대).
+    배율 뜻은 완성본과 같은 video_assemble.scene_zoom_of 한 곳. 캡컷은 화면 가운데 기준 확대라
+    완성본(영상 칸 가운데 기준)과 위아래 위치가 조금 다를 수 있다 — 이동(pan)은 캡컷 좌표 실측 전이라 안 보낸다."""
+    from . import video_assemble as va
+    effects=(validate_snapshot(snapshot) or {}).get("effects") or {}
+    out=[]
+    for index,scene in enumerate(scenes):
+        zoom,_,_=va.scene_zoom_of({"scene_zoom":(effects.get(str(index)) or {}).get("zoom",1)})
+        if zoom>1.0001:
+            out.append({"start":float(scene["start"]),"end":float(scene["end"]),"zoom":zoom})
+    return out
+
+
 def compose_still(frame_path, timeline, snapshot, work, index, out_path, headcopy=None, job_id=None):
     """장면 하나를 **완성본과 같은 구도**의 정지 그림(1080×1920)으로 만든다 — 썸네일 후보(2026-09-26 사장님 "썸네일로 보냈는데 비율이 안 맞는다").
     ★여태 핀은 원본 프레임 전체(9:16) 위에 레이어를 그냥 얹어, 영상 칸(media)에 맞춰 줄이지 않았다 —
@@ -494,6 +553,8 @@ def compose_still(frame_path, timeline, snapshot, work, index, out_path, headcop
     img=src.resize((cw,ch),Image.LANCZOS)
     img=img.crop(((cw-width)//2,(ch-height)//2,(cw-width)//2+width,(ch-height)//2+height))   # crop=W:H (가운데)
     img=img.resize((zw,zh),Image.LANCZOS).crop((crop_x,crop_y,crop_x+width,crop_y+height))
+    if dim_of(effect,1):   # 썸네일 = 장면 첫 프레임 — 완성본도 장면 시작부터 어둡다(관제 124)
+        level=dim_of(effect,1)[0];img=img.point(lambda v:round(v*level))
     canvas=Image.new("RGBA",(width,va._OUT_H),(0,0,0,255))    # pad=W:OUT_H:0:top:black
     canvas.paste(img,(0,top))
     over=Image.open(layer_png).convert("RGBA")
@@ -516,7 +577,9 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
             continue
         effect=(snapshot.get("effects") or {}).get(str(index)) or {}
         width,height,top,zw,zh,crop_x,crop_y=media_geometry(layer,effect)
-        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},scale={zw}:{zh},crop={width}:{height}:{crop_x}:{crop_y},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
+        dim=dim_of(effect,last_frame-first_frame)   # 어둡게(관제 124) — 영상 칸에만, 틀·자막 레이어는 밝게 남는다
+        dim_f=(f",colorchannelmixer=rr={dim[0]:.3f}:gg={dim[0]:.3f}:bb={dim[0]:.3f}:enable='lt(n,{dim[1]})'" if dim else "")
+        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},scale={zw}:{zh},crop={width}:{height}:{crop_x}:{crop_y}{dim_f},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
         hl=va.highlight_fc({"scene_hl":effect.get("highlight")},vf,grow=False)
         prefix=f"[1:v]tpad=stop_mode=clone:stop_duration={(last_frame-first_frame)/30}[ink];" if layer.get("animation") else "[1:v]null[ink];"
         graph=prefix+(hl+";" if hl else f"[0:v]{vf}[out];")

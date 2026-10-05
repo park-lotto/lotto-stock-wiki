@@ -778,6 +778,11 @@
   //   63wyUy6d0Jc 제목 폭 125→180px/1.2초(화면 전체가 천천히 확대, 흔들림 없음)
   //   ZaPpvrHkZ1U 크기 고정·매 프레임 가로 ±2px/세로 ±3px(360px 기준) 떨림, 훅 내내
   const CAMERA_MOTIONS=['zoom-punch','push-in','shake'];
+  // 레퍼런스 장면 효과 값(관제 124) — 랭킹 썰 쇼핑 채널 114편 실측(tools/scene_fx/data/params_2026-10-05.json). 지어낸 값이 아니다.
+  //   jumpZoom: 점프 줌 컷 확대 배율 중앙 1.35(사분위 1.21~1.56)
+  //   dimEmphasis: 화면을 어둡게 덮고 강조 글자 — 밝기 32%(17~56%)·중앙 1.2초 ≈ 장면(구절) 하나 길이(중앙 1.17초) → 장면 내내(sec 0)
+  //   dimTitle: 시작 어두운 제목 화면 — 밝기 46%·0.13초(4프레임), 12편 중 10편
+  const REF_FX={jumpZoom:1.35,dimEmphasis:{level:.32,sec:0},dimTitle:{level:.46,sec:.13}};
   // 훅 모션 길이 = **첫 비트(훅 문장)** 의 훅 장면만(10-02 사장님 "썰훅만 본문은 훅 모션 없이 자막 스타일대로"). 썰훅+본문은 훅이 첫 비트뿐이라 종전과 같다
   const hookEndMs=()=>{const sc=sceneContext?.scenes||[],b0=sc[0]?.beat_idx;const hs=sc.filter(s=>s.kind==='hook'&&s.beat_idx===b0);return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
   function cameraAt(ms){
@@ -2013,6 +2018,21 @@
     effectAt(i,value){const k=String(i);if(value!==undefined)effects[k]=value;return effects[k]||{}},
     sceneCount:()=>sceneTotal(),
     copyEffectsToAll(){const value=structuredClone(effects[String(sceneIndex)]||{});for(let i=0;i<sceneTotal();i++)effects[String(i)]=structuredClone(value);},
+    refFx:REF_FX,
+    // 점프 줌 컷(관제 124) — 같은 비트(대본 한 줄) 안에서 장면(자막 구절)이 바뀔 때 영상 칸을 1↔1.35배로 번갈아 자른다.
+    //   레퍼런스: 같은 장면을 더 크게/작게 잘라 잇는 컷, 114편 중 22편·48건, 확대 1.35배·되돌림 0.76배(정밀 측정 11건).
+    //   손으로 맞춘 확대(zoom>1)는 건드리지 않는다. 넣은 칸엔 fxAuto:'jump' 표식 — 빼기는 표식 있는 칸만.
+    jumpZoom(on){
+      const scenes=sceneContext?.scenes||[];let k=0,prev=null,count=0;
+      scenes.forEach((s,i)=>{
+        k=s.beat_idx===prev?k+1:0;prev=s.beat_idx;
+        const key=String(i),e=effects[key]||{};
+        if(on&&k%2===1&&!((Number(e.zoom)||1)>1)){effects[key]={...e,zoom:REF_FX.jumpZoom,fxAuto:'jump'};count++;}
+        if(!on&&e.fxAuto==='jump'){const {fxAuto,zoom,...rest}=e;effects[key]=rest;count++;}
+      });
+      return count;
+    },
+    jumpZoomOn:()=>Object.values(effects).some(e=>e&&e.fxAuto==='jump'),
     branding(value){if(value!==undefined){branding=value;if(!labMode)try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
     context:()=>sceneContext,
     validation:()=>templateViolations(),

@@ -19,6 +19,26 @@
   textPanel.after(effectsPanel);
   const copyEffects=document.createElement('button');copyEffects.className='scene-effects-reset';copyEffects.textContent='이 효과를 다른 장면에도 적용';copyEffects.dataset.effectsAll='';effectsPanel.append(copyEffects);
   copyEffects.addEventListener('click',()=>{api.copyEffectsToAll();copyEffects.textContent='모든 장면에 적용했어요';setTimeout(()=>copyEffects.textContent='이 효과를 다른 장면에도 적용',1600);});
+  // 레퍼런스 장면 효과(관제 124) — 잘된 썰 쇼핑 채널 114편에서 실제로 쓰는 것만. 값은 api.refFx(실측) 한 곳.
+  const refBox=document.createElement('div');refBox.className='scene-ref-fx';
+  refBox.innerHTML=`<p><b>잘된 쇼츠 장면 효과</b><br><small>레퍼런스 114편 실측값</small></p>
+    <button type="button" class="scene-effects-reset" data-ref-fx="jump"></button>
+    <button type="button" class="scene-effects-reset" data-ref-fx="dim">이 장면 어둡게 강조</button>
+    <button type="button" class="scene-effects-reset" data-ref-fx="title">시작 어두운 제목 화면</button>`;
+  effectsPanel.append(refBox);
+  function syncRefFx(){
+    refBox.querySelector('[data-ref-fx="jump"]').textContent=api.jumpZoomOn()?'점프 줌 컷 빼기':'점프 줌 컷 넣기 (구절마다 1.35배)';
+    const d=api.effect().dim,t=api.effectAt(0).dim;
+    refBox.querySelector('[data-ref-fx="dim"]').classList.toggle('active',!!d&&!d.sec);
+    refBox.querySelector('[data-ref-fx="title"]').classList.toggle('active',!!t&&t.sec>0);
+  }
+  refBox.addEventListener('click',ev=>{
+    const b=ev.target.closest('[data-ref-fx]');if(!b)return;const fx=api.refFx;
+    if(b.dataset.refFx==='jump')api.jumpZoom(!api.jumpZoomOn());
+    else if(b.dataset.refFx==='dim'){const e=structuredClone(api.effect());if(e.dim&&!e.dim.sec)delete e.dim;else e.dim={...fx.dimEmphasis};api.effect(e);}
+    else{const e=structuredClone(api.effectAt(0));if(e.dim&&e.dim.sec>0)delete e.dim;else e.dim={...fx.dimTitle};api.effectAt(0,e);}
+    updateControls();sync();
+  });
   if(titleMotion)textPanel.querySelector('.ai-card').after(titleMotion);
   const note=textPanel.querySelector('.ai-card');if(note)note.innerHTML='<b>문구·자막 편집</b><br><span data-connection-status>저장한 설정으로 미리보고 있습니다.</span>';
   const preview=document.querySelector('#a-live-preview'),media=preview.querySelector('.precision-media');
@@ -31,7 +51,9 @@
     const g=api.geometry(),e=api.effect(),z=Number(e.zoom)||1,h=e.highlight||{},m=h.on?h.mode:'none';
     windowEl.style.top=g.media.top+'%';windowEl.style.height=g.media.height+'%';
     const px=(e.panX||0)*(z-1)*preview.clientWidth/2,py=(e.panY||0)*(z-1)*preview.clientHeight*g.media.height/200;
-    Object.assign(media.style,{top:'0',height:'100%',objectPosition:'center',transform:`translate(${px}px,${py}px) scale(${z})`});windowEl.style.cursor=z>1?'grab':'default';
+    // 어둡게(관제 124): 미리보기 그림 = 장면 첫 프레임 — 완성본(compose)·썸네일(compose_still)도 장면 시작에 같은 밝기를 건다.
+    const dim=e.dim&&Number(e.dim.level)>0?Number(e.dim.level):1;
+    Object.assign(media.style,{top:'0',height:'100%',objectPosition:'center',transform:`translate(${px}px,${py}px) scale(${z})`,filter:dim<1?`brightness(${dim})`:''});windowEl.style.cursor=z>1?'grab':'default';
     focus.hidden=m==='none';
     const pw=preview.clientWidth,ph=preview.clientHeight,r=(h.r||.22)*pw,cx=(h.cx??.5)*pw,cy=((h.cy??.55)-g.media.top/100)*ph;
     Object.assign(focus.style,{width:r*2+'px',height:r*2+'px',left:cx-r+'px',top:cy-r+'px',boxShadow:m==='spot'?'0 0 0 3000px #0009':'none'});
@@ -56,6 +78,7 @@
     effectsPanel.querySelector('output').textContent=Math.round((e.zoom||1)*100)+'%';
     effectsPanel.querySelectorAll('[data-effect-mode]').forEach(b=>b.classList.toggle('active',b.dataset.effectMode===(h.on?h.mode:'none')));
     effectsPanel.querySelector('[data-highlight-controls]').hidden=!h.on;
+    syncRefFx();
   }
   effectsPanel.addEventListener('input',ev=>{
     const key=ev.target.dataset.effect;if(!key)return;
