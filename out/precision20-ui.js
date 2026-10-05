@@ -1581,11 +1581,16 @@
   function emphasisCaption(frame,text,patch){
     const d=(effects[String(sceneIndex)]||{}).dim;
     if(!d||Number(d.sec)>0||!text||!text.textContent.trim())return;   // 장면 내내 어둡게(강조)일 때만 — 시작 어두운 제목(0.13초)은 아니다
-    const b=mediaBounds(frame,rows[current].id),size=(parseFloat(text.style.fontSize)||parseFloat(getComputedStyle(text).fontSize))*1.8;
+    // 모양(글꼴·크기 배율·색·테두리·등장)은 자막팩이 정한다 — captionEmphasisStyle()(자막팩 관제 127, 같은 파일). 없으면 기본값.
+    //   여기는 자리(영상 칸 가운데 left/top/width, 2줄까지)만 맡는다.
+    const look=typeof captionEmphasisStyle==='function'?(captionEmphasisStyle()||{}):{};
+    const b=mediaBounds(frame,rows[current].id),size=(parseFloat(text.style.fontSize)||parseFloat(getComputedStyle(text).fontSize))*(Number(look.sizeScale)||1.8);
+    const color=look.color||'#fff';
     if(patch)patch.style.display='none';
     Object.assign(text.style,{left:'6%',width:'88%',right:'auto',top:(b.top+b.height*.3)+'%',height:(b.height*.4)+'%',fontSize:size+'px',
-      whiteSpace:'pre-wrap',color:'#fff',textShadow:'0 0 3px #000,0 3px 10px rgba(0,0,0,.85)',alignItems:'center',justifyContent:'center'});
-    text.querySelectorAll('span').forEach(s=>s.style.color='#fff');
+      whiteSpace:'pre-wrap',color,textShadow:'0 0 3px #000,0 3px 10px rgba(0,0,0,.85)',alignItems:'center',justifyContent:'center',
+      ...(look.font?{fontFamily:look.font}:{}),...(look.textStyle||{})});
+    text.querySelectorAll('span').forEach(s=>s.style.color=color);
     text.dataset.emphasis='1';
   }
   function fitOneLine(el,manual){

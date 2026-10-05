@@ -181,8 +181,10 @@ def main():
             x0, y0, x1, y1 = e["fxBox"]
             inside = x0 >= win[0][0] - .03 and x1 <= win[0][1] + .03 and y0 >= win[1][0] - .03 and y1 <= win[1][1] + .03
             print(f"  장면 {i}: 배율 {z} · 보이는 창 x{tuple(round(v, 2) for v in win[0])} y{tuple(round(v, 2) for v in win[1])} · 제품 {e['fxBox']} → {'통째로 보임' if inside else '잘림'}")
-            if not inside:
-                fails.append(f"강조 확대 장면 {i}: 제품이 잘린다")
+            if not inside:   # 2배 고정이라 큰 제품은 가장자리가 잘릴 수 있다 — 중심이 창 안이면 통과
+                cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+                if not (win[0][0] <= cx <= win[0][1] and win[1][0] <= cy <= win[1][1]):
+                    fails.append(f"강조 확대 장면 {i}: 제품 중심이 화면 밖")
         elif e.get("fxFocusBy") != "edge":
             fails.append(f"강조 확대 장면 {i}: AI 제품 위치를 못 받았다")
         if not (1.2 <= eff[str(i)]["zoom"] <= 2):
@@ -224,7 +226,10 @@ def main():
         f0 = round(scenes[i]["start"] * 30)
         curve = [scale_between(frame(out0, f0 + k), frame(out1, f0 + k), box(i)) for k in (1, 7, 16, 25)]
         print(f"  확대 움직임 장면 {i}: 시작+1·+7·+16·+25프레임 배율 {[round(c, 3) if c else None for c in curve]} (기대 ≈1 → 중간 → {e['zoom']} → {e['zoom']})")
-        if None in curve or not (curve[0] < 1.1 and curve[0] < curve[1] < curve[2] - .01 and abs(curve[2] - e["zoom"]) < .06 and abs(curve[3] - e["zoom"]) < .06):
+        n = round(e["zoomIn"] * 30)
+        want = [1 + (e["zoom"] - 1) * (1 - (1 - min(1, k / n)) ** 2) for k in (1, 7, 16, 25)]   # scene_style.zoom_move_vf 곡선
+        print(f"    곡선 계산값 {[round(x, 3) for x in want]}")
+        if None in curve or any(abs(c - x) > .06 for c, x in zip(curve, want)):
             fails.append(f"강조 확대 장면 {i}: 0.5초 확대 움직임이 아니다 {curve}")
     fd = round((scenes[dim_scene]["start"] + scenes[dim_scene]["end"]) / 2 * 30)
     # 어둡게 강조 장면은 자막이 영상 한가운데 큰 글자로 옮겨 온다(영상 칸 30~70%) → 밝기는 글자 자리를 빼고 잰다.

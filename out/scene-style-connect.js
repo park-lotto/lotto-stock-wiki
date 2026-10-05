@@ -42,7 +42,7 @@
       const iw=im?.naturalWidth||1080,ih=im?.naturalHeight||1920,s0=Math.max(bw0/iw,bh0/ih),vx=bw0/s0/iw,vy=bh0/s0/ih;
       const toBox=(c,v)=>(c-.5)/v+.5;   // 원본 그림 좌표 → 영상 칸 좌표(칸 밖이면 0~1 밖)
       const x0=toBox(ai[0],vx),x1=toBox(ai[2],vx),y0=toBox(ai[1],vy),y1=toBox(ai[3],vy);
-      const z=Math.max(1.2,Math.min(api.refFx.emphZoom,.75/Math.max(x1-x0,y1-y0,.01)));
+      const z=api.refFx.emphZoom;   // 2배 고정(사장님 2026-10-05 "2배로 키워봐") — 제품 크기로 줄이던 것(1.2~2배)은 확대가 약해 보였다
       const panOf=(b,zz)=>Math.max(-1,Math.min(1,1-(2*Math.min(1,Math.max(0,b))*zz-1)/(zz-1)));
       return {zoom:+z.toFixed(2),panX:+panOf((x0+x1)/2,z).toFixed(3),panY:+panOf((y0+y1)/2,z).toFixed(3),focus:[+((x0+x1)/2).toFixed(3),+((y0+y1)/2).toFixed(3)],box:[x0,y0,x1,y1].map(v=>+v.toFixed(3)),by:'ai'};
     }
