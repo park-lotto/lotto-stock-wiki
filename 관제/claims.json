@@ -69,6 +69,11 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/scene_style.py:compose": {
+    "at": "2026-10-05 15:47",
+    "card": 124,
+    "track": "장면효과팩"
+  },
   "shopping_shorts/scene_style.py:context_for": {
     "at": "2026-10-03 21:53",
     "card": 102,
