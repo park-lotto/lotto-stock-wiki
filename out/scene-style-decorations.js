@@ -9,7 +9,7 @@
  // ★로고(관제 065, 2026-10-01): 파일을 올려 장면 맨 위에 얹는다. 값의 주인 = masks[] 안 {kind:'image',src}. 렌더·썸네일·캡컷은 이 draw()를
  //   headless로 돌려 같은 그림을 얻는다. 파일은 out/장면꾸미기_로고/<계정>/ (편집기 http·렌더 file:// 둘 다 같은 상대 경로).
  const logoBox=document.createElement('details');logoBox.open=true;logoBox.className='dec-logo';
- logoBox.innerHTML='<summary>🏷 로고</summary><p>내 로고 그림을 올리면 장면 <b>맨 위</b>에 얹혀요(PNG·JPG·WEBP, 2MB). 마지막에 쓴 로고는 <b>다음 작업에도 자동으로</b> 모든 장면에 들어가요. 내 프리셋에도 함께 담겨요.</p><div class="dec-choices"><label class="dec-logo-pick"><input type="file" accept="image/png,image/jpeg,image/webp" data-logo-file hidden>📂 파일 불러오기</label></div><div class="dec-my-logos"></div>';
+ logoBox.innerHTML='<summary>🏷 로고</summary><p>내 로고 그림을 올리면 장면 <b>맨 위</b>에 얹혀요(PNG·JPG·WEBP, 2MB). <b>모든 장면</b>으로 쓴 마지막 로고는 다음 작업에도 자동으로 들어가요. 내 프리셋에도 함께 담겨요.</p><div class="dec-choices dec-logo-scope"><button type="button" data-logo-scope="all">모든 장면</button><button type="button" data-logo-scope="one">이 장면만</button></div><div class="dec-choices"><label class="dec-logo-pick"><input type="file" accept="image/png,image/jpeg,image/webp" data-logo-file hidden>📂 파일 불러오기</label></div><div class="dec-my-logos"></div>';
  box.append(logoBox);
  panel.append(box);
  const itemList=box.querySelector('.dec-items');
@@ -201,7 +201,11 @@
  const drawMyLogos=async()=>{const wrap=logoBox.querySelector('.dec-my-logos');try{const r=await fetch('/api/produce/scene-style/logo');const d=await r.json();const items=(d&&d.items)||[];
    wrap.replaceChildren(...items.map(it=>{const b=document.createElement('button');b.type='button';b.className='dec-my-logo';b.title='이 로고 얹기';const img=document.createElement('img');img.src=it.src;img.alt='';b.append(img);b.addEventListener('click',()=>addLogo(it.src));return b;}));
    wrap.hidden=!items.length;}catch(_){wrap.hidden=true;}};
- if(location.protocol!=='file:')drawMyLogos();   // 렌더(file://)에선 목록이 필요 없다
+ // 로고 범위(모든 장면 / 이 장면만) — 판단은 precision20-ui.js logoScope 한 곳, 여기는 버튼만 그린다.
+  const syncLogoScope=()=>{const v=api.logoScope();logoBox.querySelectorAll('[data-logo-scope]').forEach(b=>b.classList.toggle('active',b.dataset.logoScope===v));};
+  logoBox.addEventListener('click',e=>{const b=e.target.closest('[data-logo-scope]');if(!b)return;api.logoScope(b.dataset.logoScope);syncLogoScope();controls();draw();});
+  syncLogoScope();
+  if(location.protocol!=='file:')drawMyLogos();   // 렌더(file://)에선 목록이 필요 없다
  logoBox.querySelector('[data-logo-file]').addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
    const fd=new FormData();fd.append('file',f);
    try{const r=await fetch('/api/produce/scene-style/logo',{method:'POST',body:fd});const d=await r.json();if(!r.ok||!d.ok){alert(d.error||'로고를 올리지 못했어요');return;}addLogo(d.src,d.w,d.h);drawMyLogos();}
