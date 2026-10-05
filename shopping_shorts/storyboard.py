@@ -345,7 +345,11 @@ def apply_signals(slots, key, nth=0, yt=True):
     """고조·반전 칸 첫머리에 신호어를 박는다(생성 뒤 코드 확인·보정). 다른 신호어로 열었으면 떼고 붙이고,
     신호어가 안 배정된 칸이 배정된 낱말로 또 시작하면 뗀다(한 편 안 반복 금지). 박은 낱말은 칸의 signal 에 남긴다."""
     from shopping_shorts import story_writer as _sw
-    words = _sw.storyboard_signals(signal_kinds(slots), key, nth, "yt" if yt else "ig")
+    ranks = []
+    words = _sw.storyboard_signals(signal_kinds(slots), key, nth, "yt" if yt else "ig", ranks)
+    for sl, r in zip(slots, ranks):
+        if r:
+            sl["sig_rank"] = r            # 짤은 [1]·[3] 자리에만(사장님 10-05) — 자리 번호는 신호어 배정한 곳이 정한다
     used = [w for w in words if w]
     for sl, w in zip(slots, words):
         line = sl.get("line") or ""

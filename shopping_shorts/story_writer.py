@@ -189,7 +189,7 @@ def attach_signal(text, word):
     return (word + " " + t).strip() if word else t
 
 
-def storyboard_signals(kinds, key, nth=0, platform="yt"):
+def storyboard_signals(kinds, key, nth=0, platform="yt", ranks=None):
     """스토리보드 칸 종류 목록(esc/twist/"") → 칸마다 박을 신호어. 자리 규칙은 라이브 대본과 같다:
     고조 칸은 순서대로 [1]·[2], 반전 칸은 [3]. 반전 칸이 없고 고조 칸이 셋 이상이면 마지막 고조가 [3].
     남는 칸은 빈칸(한 편 안 반복 금지)."""
@@ -199,10 +199,13 @@ def storyboard_signals(kinds, key, nth=0, platform="yt"):
     tw = [i for i, k in enumerate(kinds) if k == "twist"]
     if not tw and len(esc) >= 3:
         tw, esc = [esc[-1]], esc[:-1]
+    rk = [0] * len(kinds)                 # 칸마다 몇 번 자리 신호어인가([1] 대비·[2] 더하기·[3] 최고 반전) — 짤 자리 판정이 이걸 본다
     for j, i in enumerate(esc[:2]):
-        out[i] = ws[j]
+        out[i], rk[i] = ws[j], j + 1
     if tw:
-        out[tw[0]] = ws[2]
+        out[tw[0]], rk[tw[0]] = ws[2], 3
+    if ranks is not None:
+        ranks[:] = rk
     return out
 
 
