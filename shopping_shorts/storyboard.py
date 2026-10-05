@@ -136,10 +136,13 @@ P4 = """너는 쇼핑 쇼츠 **제품 사실 검수자**다. 아래는 스토리
 
 
 
-def _materials(db, jid):
-    """작업 재료(1단계 조각) — 조각별 길이·설명. 0.6초 미만·끝 화면(효능 없음)은 뺀다. 목록·생성·끼워 넣기 공용(한 곳)."""
-    row = db.execute("select extract_json from mix_jobs where job_id=?", (jid,)).fetchone()
-    ex = json.loads((row[0] if row else None) or "{}")
+def _materials(db, jid, ex=None):
+    """작업 재료(1단계 조각) — 조각별 길이·설명. 0.6초 미만·끝 화면(효능 없음)은 뺀다. 목록·생성·끼워 넣기 공용(한 곳).
+    ex = 재료(job.extract 모양 {영상: {segments}}) — 라이브는 app 이 넘긴다(매칭 작업이 없으면 작업파일의 담은 영상 분석,
+    2단계 대본 생성과 같은 규칙). 없으면(시험 도구) mix_jobs 에서 읽는다. ★짝은 seg_id 로만 — 바깥 키(s0·shortcode)는 다를 수 있다."""
+    if ex is None:
+        row = db.execute("select extract_json from mix_jobs where job_id=?", (jid,)).fetchone()
+        ex = json.loads((row[0] if row else None) or "{}")
     segs, texts, order, rows = {}, {}, [], []
     for vid, e in ex.items():
         for s in (e or {}).get("segments") or []:
@@ -503,12 +506,12 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
             "sig_key": key, "sig_yt": yt, "auth": [n3.get("auth"), n4.get("auth")]}
 
 
-def inventory(db_path, jid, star_s="", role_s=""):
+def inventory(db_path, jid, star_s="", role_s="", ex=None):
     """① 장면 목록 묶기 + ② 스타일 추천(3.6 2번). 결과는 data/storyboard/<작업>.json — 스토리보드 만들기가 이어 쓴다."""
     db = _ro(db_path)
     fams = _families(db)
     t0 = time.time()
-    segs, texts, order, rows = _materials(db, jid)
+    segs, texts, order, rows = _materials(db, jid, ex)
     star = [next((sid for sid in order if sid.endswith(x.strip())), x.strip()) for x in star_s.split(",") if x.strip()]
     role_pick = {}
     for part in role_s.split("|"):
@@ -553,7 +556,7 @@ def inventory(db_path, jid, star_s="", role_s=""):
     return out
 
 
-def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="", R=None):
+def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="", R=None, ex=None):
     """고른 스타일들의 스토리보드(스타일당 3.6 2번). 장면 목록(inventory)을 먼저 만들어 둬야 한다. keys: 'auto' 또는 스타일 묶음 번호."""
     db = _ro(db_path)
     fams = _families(db)
@@ -561,7 +564,7 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
     if not R:
         raise ValueError("장면 목록을 먼저 만들어야 합니다")
     r1 = R["inventory"]
-    segs, texts, order, _rows = _materials(db, jid)
+    segs, texts, order, _rows = _materials(db, jid, ex)
     tag_of = r1.get("tag_of") or {}
     groups_txt = "\n".join("  %s: %s" % (g["name"], ", ".join("%s(%.1f초%s)" % (c, segs.get(c, 0), ("·" + "/".join(tag_of[c])) if tag_of.get(c) else "")
                                                               for c in g["ids"])) for g in r1["groups"])
@@ -736,12 +739,12 @@ def flow_review(slots, texts, voice):
     return done, n.get("auth")
 
 
-def insert(db_path, jid, payload, R=None):
+def insert(db_path, jid, payload, R=None, ex=None):
     """[모드 insert] stdin = {"board": 지금 스토리보드, "extra": [칸...]} → 그 스토리보드에 고른 칸만 끼운 결과(3.6 1번)."""
     db = _ro(db_path)
     R = R or load_state(jid) or {"inventory": {}}
     tag_of = R["inventory"].get("tag_of") or {}
-    segs, texts, _order, _rows = _materials(db, jid)
+    segs, texts, _order, _rows = _materials(db, jid, ex)
     bd = payload["board"]
     slots = [dict(x) for x in bd["slots"]]
     have = {str(x.get("slot") or "").split("_")[0].lower() for x in slots}

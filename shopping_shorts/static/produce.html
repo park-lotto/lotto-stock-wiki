@@ -18843,8 +18843,8 @@ const SB_SLOT_TAG = {hook:'훅감',title:'훅감',bait:'훅감',pain:'비포',pr
 const SB_EXTRA = [['escalation','📈 고조','효능을 한 단계 더 세게'],['twist','🔄 반전','예상 밖 쓰임·충격'],['proof','👥 반응·증거','사람 반응·감탄'],['pain','😩 불편','쓰기 전 답답함'],
   ['how','🔧 사용법','쓰는 과정'],['reveal','💡 정체 공개','제품 첫 등장'],['bait','🪤 미끼','궁금증 한 줄'],['result','🏁 결과','완성·효과 장면']];
 
-// 2단계엔 MIX_JOB 이 아직 없다 — 작업파일 번호를 주면 서버가 그 작업의 재료(job_id)를 찾는다(_sb_job, 2단계 대본 생성과 같은 규칙)
-function sbJid(){ if (typeof MIX_JOB!=='undefined' && MIX_JOB) return String(MIX_JOB); return (typeof WORK_ID!=='undefined' && WORK_ID) ? 'w:'+WORK_ID : ''; }
+// 작업파일 번호를 주면 서버가 재료를 찾는다 — 매칭 작업이 있으면 그 재료, 없으면 담은 영상 분석(_sb_job, 2단계 대본 생성과 같은 규칙)
+function sbJid(){ if (typeof WORK_ID!=='undefined' && WORK_ID) return 'w:'+WORK_ID; return (typeof MIX_JOB!=='undefined' && MIX_JOB) ? String(MIX_JOB) : ''; }   // 작업파일 우선 — 1단계에서 만든 스토리보드가 3단계 뒤에도 같은 열쇠
 function sbInv(){ const st=SB.data&&SB.data.state; return (st&&st.inventory)||null; }
 function sbPieces(){ return (SB.data&&SB.data.pieces)||{}; }
 function sbTagOf(id){ const v=sbInv(); return ((v&&v.tag_of)||{})[id]||[]; }
