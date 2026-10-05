@@ -81,7 +81,7 @@ from shopping_shorts.media_download import (resolve_media_url, download_any, pro
                                             _is_direct_video, DouyinBusy)
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import edit_plan
-from shopping_shorts import voice_presets, audio_post, typecast_tts
+from shopping_shorts import voice_presets, audio_post, typecast_tts, fish_tts
 from shopping_shorts import pron_corrections
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
@@ -4524,6 +4524,21 @@ def _probe_typecast_synth(service, key):
         return False
 
 
+def _probe_fish_synth(service, key):
+    """Fish 키를 무료 모델 "안녕" 합성으로 검사한다(기본 성우 하늘). 200+음성이면 ok."""
+    try:
+        rs = requests.post(fish_tts._ENDPOINT, headers=fish_tts.headers(key, fish_tts.DEFAULT_MODEL_ID),
+                           json=fish_tts.build_payload("안녕", fish_tts.FISH_DEFAULT_VOICE["voice_id"]),
+                           timeout=30)
+        if rs.status_code == 200 and rs.content:
+            return True
+        _remember_key_failure(service, rs.status_code, (rs.text or "")[:300])
+        return False
+    except requests.RequestException as e:
+        _remember_key_failure(service, 0, f"네트워크: {e!r}"[:300])
+        return False
+
+
 def _remember_key_failure(service: str, code: int, body: str) -> None:
     """업체가 준 실패 사유를 사람 말로 바꿔 기억해둔다. 로그에도 남긴다."""
     msg = _explain_key_failure(service, code, body)
@@ -4575,6 +4590,8 @@ def _explain_key_failure(service: str, code: int, body: str) -> str:
                     "남았는지 확인해 주세요. 키 값 자체는 맞습니다.")
         if code == 402:
             return "타입캐스트 크레딧이 부족합니다. typecast.ai에서 충전해 주세요."
+    if service == keyroute.SVC_FISH and code == 402:
+        return "Fish 잔액이 부족합니다. fish.audio에서 충전하거나 무료 모델 성우를 써 주세요."
     if code in (401, 403):
         return "키가 인식되지 않습니다(권한 없음). 값을 다시 확인해주세요."
     if code == 429:
@@ -4704,6 +4721,9 @@ def _probe_user_key(service: str, key: str):
         #   14일간 잡 21건 전부 합성 403. "돈을 쓰면 안 된다"보다 "고객이 14일 막힌다"가 더 나쁘다 → "안녕" 2자(2크레딧)를
         #   진짜로 합성해 본다(_probe_typecast_synth). 403이면 요금제·크레딧 안내가 등록 화면에 바로 뜬다.
         return _probe_typecast_synth(service, key)
+    elif service == keyroute.SVC_FISH:
+        # Fish(2026-10-05): 타입캐스트처럼 **진짜로 짧게 합성**해 본다(무료 모델이라 비용 0).
+        return _probe_fish_synth(service, key)
     elif service == keyroute.SVC_YOUTUBE:
         url = ("https://www.googleapis.com/youtube/v3/videos"
                f"?part=id&id=dQw4w9WgXcQ&key={urllib.parse.quote(key)}")
@@ -5176,7 +5196,7 @@ _USER_ERROR_RULES = (
     # 자기 키인데 잔액이 아닌 실패(429 한도·409 충돌) — 기다리면 대개 풀린다.
     # 여기서 '충전하세요'라고 하면 헛돈을 쓰게 만든다. 위 _byok_credit_message가
     # 잔액 건을 먼저 걷어내므로, 여기 오는 건 잔액이 아닌 것들이다.
-    (("api.elevenlabs.io", "api.typecast.ai"),
+    (("api.elevenlabs.io", "api.typecast.ai", "api.fish.audio"),
      "음성 서비스가 잠시 몰려 응답하지 않았습니다. 1~2분 뒤 다시 시도해 주세요. "
      "(반복되면 설정 > 🔑 내 키 등록에서 키 상태를 확인해 주세요)"),
     (("payment required", "402", "not enough credits", "[600", "insufficient"),
@@ -5225,6 +5245,7 @@ def _looks_user_written(msg):
 _BYOK_VENDORS = (
     (("api.elevenlabs.io", "elevenlabs"), "음성 서비스(ElevenLabs)", "elevenlabs.io"),
     (("api.typecast.ai", "typecast"), "음성 서비스(타입캐스트)", "typecast.ai"),
+    (("api.fish.audio",), "음성 서비스(Fish)", "fish.audio"),
     (("vmake",), "자막 제거 서비스(VMake)", "vmake.ai"),
 )
 
@@ -5297,7 +5318,7 @@ _TTS_VENDOR_RULES = (
 
 def _tts_vendor_message(low):
     """음성 서비스 오류면 원인별 안내를, 아니면 None. 잔액 소진은 _byok_credit_message가 먼저 본다."""
-    if not any(m in low for m in ("api.elevenlabs.io", "api.typecast.ai", "elevenlabs", "typecast")):
+    if not any(m in low for m in ("api.elevenlabs.io", "api.typecast.ai", "elevenlabs", "typecast", "api.fish.audio")):
         return None
     for keys, friendly in _TTS_VENDOR_RULES:
         # ★벤더를 못박은 줄(예: ("api.typecast.ai","403"))은 **둘 다** 있어야 한다(2026-09-09).
@@ -7703,7 +7724,7 @@ def _diag_voice(v):
     vid = str(v.get("voice_id") or "")
     mid = str(v.get("model_id") or "")
     return {"voice_id": vid, "model_id": mid, "preset_id": v.get("preset_id"),
-            "engine": "typecast" if typecast_tts.is_typecast(mid) else "elevenlabs",
+            "engine": voice_presets.engine_of(mid),
             "voice_kind": ("custom(uc_)" if vid.startswith("uc_") else "builtin(tc_)" if vid.startswith("tc_") else "?")}
 
 
@@ -9083,6 +9104,59 @@ async def api_typecast_adopt(request: Request):
     return {"ok": True, "group_id": gid, "count": len(tones)}
 
 
+# ── Fish 성우 찾기·내 목소리·담기 (2026-10-05, 관제 123) — 타입캐스트 3종의 짝 ──────────
+# ★공개 라이브러리 검색은 키 없이도 된다(실측). 담기는 타입캐스트처럼 DB 프리셋 행만 만든다.
+# ★엔진 판정은 fish_tts.is_fish 한 곳(0순위-B).
+@app.get("/api/fish/voices")
+def api_fish_voices(request: Request, q: str = "", limit: int = 40):
+    d = fish_tts.list_voices(q, limit=limit)
+    if not d.get("ok"):
+        return {"ok": False, "voices": [], "error": d.get("error") or "성우 목록을 못 불러왔습니다"}
+    return {"ok": True, "voices": d["voices"], "total": d.get("total", 0), "error": None}
+
+
+@app.get("/api/fish/voices/mine")
+def api_fish_voices_mine(request: Request):
+    """내 Fish 계정에서 만든 목소리. 회원 본인 키가 있어야 한다(사장님 키로 부르면 사장님 계정 것이 나온다)."""
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    if not keyroute.has_own_key(store, cid, keyroute.SVC_FISH) and not _is_admin(cid):
+        return {"ok": False, "need_key": True, "voices": [],
+                "error": "내 Fish 키를 등록해야 내 계정에서 만든 목소리를 볼 수 있어요."}
+    d = fish_tts.list_voices(mine=True, limit=100, customer_id=cid)
+    if not d.get("ok"):
+        return {"ok": False, "voices": [], "error": d.get("error") or "목소리 목록을 못 불러왔습니다"}
+    return {"ok": True, "voices": d["voices"], "total": d.get("total", 0), "error": None}
+
+
+@app.post("/api/fish/voices/adopt")
+async def api_fish_adopt(request: Request):
+    """고른 Fish 성우를 성우 카드로 등록(DB 프리셋 행). 감정축이 없어 톤은 기본 1종."""
+    cid = getattr(request.state, "customer_id", 0) or 0
+    body = await request.json()
+    vid = ((body or {}).get("voice_id") or "").strip()
+    name = ((body or {}).get("name") or "").strip()[:40]
+    model = ((body or {}).get("model") or fish_tts.DEFAULT_MODEL_ID).strip()
+    if not vid or not name or not re.fullmatch(r"[0-9a-fA-F]{16,64}", vid):
+        return JSONResponse({"ok": False, "error": "성우 정보가 모자랍니다."}, status_code=400)
+    if not fish_tts.is_fish(model):
+        return JSONResponse({"ok": False, "error": f"Fish 모델이 아닙니다({model})."}, status_code=400)
+    # 실제로 있는 성우인지 Fish에 묻는다 — 화면이 보낸 값을 그대로 믿지 않는다.
+    if not fish_tts.get_voice(vid, customer_id=cid):
+        return JSONResponse({"ok": False, "error": "그 성우를 Fish에서 찾지 못했습니다."}, status_code=404)
+    gid = "fsv-" + re.sub(r"[^a-zA-Z0-9]", "", vid)[-16:]
+    Store(DB_PATH).upsert_voice_preset({
+        "preset_id": f"{gid}-stable", "group_id": gid, "variant": "stable",
+        "name": name, "one_liner": "Fish에서 담은 성우", "lang": "KR",
+        "archetype": "Fish에서 담은 성우",
+        "base_voice_id": vid, "model_id": model, "voice_settings": {},
+        "default_speed": voice_presets.default_speed(vid), "default_silence_trim": "mid",
+        "sample_file": None, "source_ref": "Fish 성우 찾기(2026-10-05)",
+        "origin": "curated", "best": False, "owner_customer_id": cid,
+    })
+    return {"ok": True, "group_id": gid, "count": 1}
+
+
 @app.get("/api/voice-presets")
 def api_voice_presets(request: Request, lang: str = "KR"):
     """성우별 그룹 목록(유저 노출용 — source_ref는 내부 전용이라 제외).
@@ -9109,7 +9183,7 @@ def api_voice_presets(request: Request, lang: str = "KR"):
         # ★타입캐스트를 껐으면 그 성우 카드는 아예 안 보인다(2026-09-07 사장님 "일레븐만
         #   쓴다"). 고를 수 없으면 3단계에서 타입캐스트 오류가 날 길이 없다. 판정은
         #   typecast_tts 한 곳(0순위-B) — 프론트가 "tc-" 접두사로 추측하지 않는다.
-        if typecast_tts.use_fallback(p.get("model_id")):
+        if typecast_tts.use_fallback(p.get("model_id")) or fish_tts.use_fallback(p.get("model_id")):
             continue
         gid = p["group_id"]
         g = groups.setdefault(gid, {
@@ -9121,8 +9195,7 @@ def api_voice_presets(request: Request, lang: str = "KR"):
             "best": bool(p.get("best", False)),
             # 어느 엔진 성우인지 카드에 배지로 띄운다(2026-08-19). 판정은 서버가 한다 —
             # 프론트가 group_id 접두사("tc-") 따위로 추측하면 판단이 두 곳이 된다(0순위-B).
-            "engine": ("typecast" if typecast_tts.is_typecast(p.get("model_id"))
-                       else "elevenlabs"),
+            "engine": voice_presets.engine_of(p.get("model_id")),
             "default_variant": "stable", "variants": {}, "samples_pending": False,
         })
         g["variants"][p["variant"]] = {
@@ -9566,6 +9639,9 @@ def _lang_voice_block(job, voice):
     from shopping_shorts import script_translate
     if script_translate.job_lang(job) != "en":
         return None
+    if fish_tts.is_fish((voice or {}).get("model_id")):
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "영어모드에서는 Fish 한국어 성우를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
     if typecast_tts.is_typecast((voice or {}).get("model_id")):
         return JSONResponse(status_code=422, content={
             "ok": False, "error": "영어모드에서는 타입캐스트(한국 성우)를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
@@ -12791,6 +12867,11 @@ _TTS_CREDIT_VENDORS = {
                    "url": "https://api.typecast.ai/v1/users/me/subscription",
                    "header": "X-API-KEY",
                    "dashboard": "https://typecast.ai/developers"},
+    # Fish(2026-10-05): 잔액은 달러. 무료 모델(s2.1-pro-free)은 잔액을 안 쓴다.
+    "fish":       {"label": "Fish", "unit": "$",
+                   "url": "https://api.fish.audio/wallet/self/api-credit",
+                   "header": "Authorization", "prefix": "Bearer ",
+                   "dashboard": "https://fish.audio/app/api-keys/"},
 }
 _TTS_CREDIT_CACHE_SEC = 60
 _TTS_CREDIT_CACHE = {}          # cid → (expires_epoch, payload)
@@ -12807,6 +12888,13 @@ def _tts_credit_parse(service, status, body):
     if status != 200:
         return {"ok": False, "error_kind": "http", "http": int(status)}
     j = body if isinstance(body, dict) else {}
+    if service == "fish":
+        try:
+            credit = float(j.get("credit") or 0)
+        except (TypeError, ValueError):
+            credit = 0.0
+        return {"ok": True, "used": 0, "limit": 0, "remaining": round(credit, 2),
+                "reset_at": None, "plan": "무료 모델(s2.1-pro-free)은 잔액을 안 씀"}
     if service == "elevenlabs":
         used = int(j.get("character_count") or 0)
         limit = int(j.get("character_limit") or 0)
@@ -12826,7 +12914,7 @@ def _tts_credit_probe(service, key):
     """키 하나의 잔액을 업체에 묻는다. 실패해도 예외를 올리지 않는다(화면 한 줄이 죽을 뿐)."""
     v = _TTS_CREDIT_VENDORS[service]
     try:
-        r = requests.get(v["url"], headers={v["header"]: key}, timeout=8)
+        r = requests.get(v["url"], headers={v["header"]: v.get("prefix", "") + key}, timeout=8)
     except requests.RequestException as e:
         return {"ok": False, "error_kind": "network", "error": str(e)[:120]}
     try:
@@ -15616,7 +15704,7 @@ def check_and_count(customer_id, op):
     return True
 
 
-_SVC_KO = {"elevenlabs": "목소리(ElevenLabs)", "typecast": "목소리(타입캐스트)",
+_SVC_KO = {"elevenlabs": "목소리(ElevenLabs)", "typecast": "목소리(타입캐스트)", "fish": "목소리(Fish)",
            "vmake": "자막제거(Vmake)",
            "serpapi": "제품찾기(SerpApi)", "gemini": "AI(Gemini)", "youtube": "유튜브"}
 

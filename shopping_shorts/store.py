@@ -6449,6 +6449,14 @@ class Store:
         #   기억이 없으면 호출부가 _DEFAULT_VOICE(일레븐 미나)를 써서 3단계가 키 없음으로 막혔다(차순엽 610, 5연속).
         #   기억이 일레븐 성우인 경우도 같다. 판단은 typecast_tts.use_typecast_default 한 곳.
         _mid = v.get("model_id") if isinstance(v, dict) and v.get("voice_id") else None
+        # ★TTS 키(일레븐·타입캐스트)를 하나도 등록 안 한 회원은 기본 성우를 Fish 무료 성우로(2026-10-05 사장님).
+        #   판단은 fish_tts.use_fish_default 한 곳. 키 등록한 회원은 아래 종전 동작 그대로.
+        try:
+            from shopping_shorts import fish_tts as _fs
+            if _fs.use_fish_default(_mid, customer_id):
+                return dict(_fs.FISH_DEFAULT_VOICE)
+        except Exception as e:    # noqa: BLE001 — 판정 실패가 영상제작을 막지 않는다
+            logging.warning("get_last_voice: Fish 기본성우 판정 실패(종전 유지) — %r", e)
         try:
             from shopping_shorts import typecast_tts as _tc
             if _tc.use_typecast_default(_mid, customer_id):

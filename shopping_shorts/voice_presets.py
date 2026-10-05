@@ -25,6 +25,17 @@ def default_speed(voice_id):
     return _SPEED_BY_VOICE.get((voice_id or "").strip(), DEFAULT_SPEED)
 
 
+def engine_of(model_id):
+    """성우 model_id → 엔진 이름("fish"|"typecast"|"elevenlabs"). 화면 배지·진단이 이것만 부른다.
+    판정 자체는 각 엔진 모듈의 is_* 한 곳(0순위-B) — 여기는 이름만 붙인다. 지역 import(순환 방지)."""
+    from shopping_shorts import fish_tts, typecast_tts
+    if fish_tts.is_fish(model_id):
+        return "fish"
+    if typecast_tts.is_typecast(model_id):
+        return "typecast"
+    return "elevenlabs"
+
+
 def load_presets_file():
     """assets/voice_presets.json → list[dict]. 파일 없으면 빈 리스트."""
     if not PRESETS_JSON.exists():
