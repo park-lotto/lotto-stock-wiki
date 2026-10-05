@@ -521,7 +521,7 @@ def _watermark_material(wm, font_path):
 
 
 def _zoom_pieces(t, dur, spans, base_zoom):
-    """[t, t+dur) 를 장면 확대 구간(scene_style.zoom_spans, 초)이 바뀌는 시각에서 나눈다 → [(시작us, 길이us, 배율)].
+    """[t, t+dur) 를 장면 확대 구간(scene_style.zoom_spans, 초)이 바뀌는 시각에서 나눈다 → [(시작us, 길이us, 배율, 이동)].
     구간 밖은 비트 확대(base_zoom). 구간이 없으면 통째로 한 조각(종전과 같다)."""
     cuts = {t, t + dur}
     for sp in spans or []:
@@ -534,9 +534,11 @@ def _zoom_pieces(t, dur, spans, base_zoom):
         if b - a <= 0:
             continue
         mid = (a + b) / 2
-        z = next((float(sp["zoom"]) for sp in spans or [] if _us(sp["start"]) <= mid < _us(sp["end"])), base_zoom)
-        out.append((a, b - a, max(z, base_zoom)))
-    return out or [(t, dur, base_zoom)]
+        sp = next((sp for sp in spans or [] if _us(sp["start"]) <= mid < _us(sp["end"])), None)
+        z = float(sp["zoom"]) if sp else base_zoom
+        move = (float(sp.get("tx", 0)), float(sp.get("ty", 0))) if sp and z >= base_zoom else (0.0, 0.0)
+        out.append((a, b - a, max(z, base_zoom), move))
+    return out or [(t, dur, base_zoom, (0.0, 0.0))]
 
 
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
@@ -642,7 +644,7 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
             vm = _video_material(abs_path, _vid or "clip", vdur, cw, ch)
             mats["videos"].append(vm)
             # 장면꾸미기 장면별 확대(관제 124 점프 줌 컷 포함)가 바뀌는 시각에서 조각을 나눈다 — 나뉜 조각은 같은 소재를 이어 읽는다.
-            for _pt, _pd, _pz in _zoom_pieces(_t, c_dur, scene_zoom_spans, _z):
+            for _pt, _pd, _pz, _pmove in _zoom_pieces(_t, c_dur, scene_zoom_spans, _z):
                 sp, ca, sc, ph, vs = (
                     _speed(_rate), _canvas(), _sound_channel_mapping(),
                     _placeholder_info(), _vocal_separation(),
@@ -659,9 +661,11 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                                     render_index=0, volume=0.0,
                                     extra_refs=[sp["id"], ca["id"], sc["id"], ph["id"], vs["id"]])
                 # ── 🔍 장면 확대 ── 뜻은 video_assemble.scene_zoom_of **한 곳**이 정한다(0순위-B).
-                #   ⚠️**이동(pan)은 아직 안 간다** — 캡컷 clip.transform의 좌표계(부호·스케일)를 실측한 근거가 없다.
+                #   이동: 비트 확대(6단계)는 아직 안 보낸다. 장면꾸미기 확대 위치는 zoom_spans 의 tx·ty(캔버스 절반 단위)로 보낸다.
                 if _pz > 1.0:
                     seg["clip"]["scale"] = {"x": _pz, "y": _pz}
+                if _pmove != (0.0, 0.0):   # 장면꾸미기 확대 위치(강조 확대가 제품·손을 향함) — scene_style.zoom_spans 가 계산
+                    seg["clip"]["transform"] = {"x": _pmove[0], "y": _pmove[1]}
                 vid_track["segments"].append(seg)
             if _hold:
                 # ── 정지 조각: 완성본이 마지막 프레임을 세워 둔 몫 — 캡컷 '정지 프레임'과 같은 사진 소재 ──

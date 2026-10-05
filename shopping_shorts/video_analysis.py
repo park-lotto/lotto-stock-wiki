@@ -731,6 +731,59 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
     return {}
 
 
+_PRODUCT_BOX_PROMPT = """이 이미지는 쇼핑 쇼츠 영상의 한 장면이다. 이 영상이 소개하는 **제품**(손에 들고 있거나 쓰고 있는 물건)을
+찾아 그 물건만 감싸는 상자를 box_2d = [ymin, xmin, ymax, xmax] (0~1000 정수, 이미지 기준)로 줘라.
+손·사람·배경·화면에 박힌 글자는 빼고 물건만. 물건이 안 보이면 found=false.
+참고 대사: {hint}"""
+
+
+def product_box(image_bytes, hint="", key=None, max_retries=3, quota_sleep=8):
+    """장면 그림 → 제품 상자 [x0, y0, x1, y1] (0~1, 그림 기준) 또는 None (관제 124 강조 확대 위치).
+    ★그림 윤곽으로 위치를 잡으면 반지·손가락 무늬에 끌려 제품이 잘렸다(2026-10-05 4장 중 1장) — 그래서 비전으로 묻는다.
+    렌즈와 같은 가벼운 모델(_LENS_MODEL)·같은 키 풀. key 를 주면 그 키 하나로만(로컬 시험용)."""
+    if not image_bytes or not (key or SHORTS_GEMINI_KEYS):
+        return None
+    prompt = _PRODUCT_BOX_PROMPT.format(hint=(hint or "(없음)")[:200])
+    schema = {"type": "object", "properties": {
+        "found": {"type": "boolean"},
+        "box_2d": {"type": "array", "items": {"type": "integer"}, "minItems": 4, "maxItems": 4}},
+        "required": ["found"]}
+    for attempt in range(max_retries):
+        idx = None
+        if key is None:
+            use, idx = comment_gen._next_live_key_and_idx()
+            if use is None:
+                return None
+            client = _client_for_key(use)
+        else:
+            client = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=60_000))
+        try:
+            resp = client.models.generate_content(
+                model=_LENS_MODEL,
+                contents=[prompt, types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")],
+                config=types.GenerateContentConfig(response_mime_type="application/json", response_schema=schema))
+            data = json.loads(resp.text)
+            box = data.get("box_2d") or []
+            if not data.get("found") or len(box) != 4:
+                return None
+            y0, x0, y1, x1 = [max(0, min(1000, int(v))) / 1000 for v in box]
+            if x1 - x0 < .02 or y1 - y0 < .02:
+                return None
+            return [round(x0, 3), round(y0, 3), round(x1, 3), round(y1, 3)]
+        except Exception as e:
+            if idx is not None and (key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e)):
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
+                continue
+            if key_vault.is_quota_error(e):
+                time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
+                continue
+            if attempt < max_retries - 1 and (_is_timeout_error(e) or any(c in str(e) for c in ("503", "UNAVAILABLE", "overloaded"))):
+                continue
+            print(f"video_analysis.product_box: 실패 — {e!r}", file=sys.stderr)
+            return None
+    return None
+
+
 _CN_CANDIDATES_PROMPT = """이 이미지는 한국어 쇼츠 영상의 한 장면(썸네일)이다. 화면에 박힌 글자와 \
 물건의 생김새를 아래 소재(캡션·대본)와 종합해 '이 영상이 소개하는 바로 그 제품'을 특정하고, \
 같은 제품이 나오는 영상을 찾을 **검색어 후보 5~6개**를 만들라.

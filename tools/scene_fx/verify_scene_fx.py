@@ -34,12 +34,18 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
   try{
     const page=await browser.newPage();await page.setViewport({width:1600,height:1100});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.setRequestInterception(true);
+    page.on('request',r=>{const u=r.url();
+      if(req.files[u])return r.respond({status:200,contentType:'image/jpeg',headers:{'access-control-allow-origin':'*'},body:fs.readFileSync(req.files[u])});
+      if(u in req.boxes)return r.respond({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({ok:true,box:req.boxes[u]})});
+      r.continue();});
     await page.goto(pathToFileURL(path.resolve(req.root,'out/scene-style-ui-showcase.html')).href+'?qa=1',{waitUntil:'networkidle0'});
     await page.evaluate(r=>window.sceneStyle.load(r.context,r.snapshot),req);
     // [효과] 탭 → 버튼을 실제로 누른다: ①중요 장면 한 번에 강조 확대 ②점프 줌(리듬) ③한 장면 어둡게 ④시작 어두운 제목
     await page.click('[data-editor-tab="effects"]');
     const before=await page.$eval('[data-ref-fx="all-zoom"]',b=>b.textContent);
     await page.click('[data-ref-fx="all-zoom"]');
+    await new Promise(r=>setTimeout(r,2500));   // 강조 확대 위치 잡기(그림 읽기)는 비동기
     const after=await page.$eval('[data-ref-fx="all-zoom"]',b=>b.textContent);
     await page.click('[data-ref-fx="jump"]');
     await page.evaluate(i=>window.sceneStyle.show(i),req.dimScene);
@@ -118,11 +124,31 @@ def main():
     print("장면", [(i, s["beat_idx"], round(s["start"], 2), round(s["end"], 2), s["caption"][:8]) for i, s in enumerate(scenes)])
     if len(body) < 2:
         raise SystemExit("본문 비트가 구절 2개 이상으로 안 나뉘었다 — 점프 줌을 잴 수 없다")
+    # 장면 그림 3장(앞·가운데·뒤) — 라이브는 /api/produce/mix/beatframe 주소, 여기선 바탕 영상 프레임을 그림 주소로 넣는다
+    #   주소 모양을 라이브와 같게 두고 편집기 요청을 가로채(아래 PAGE_JS) 그림·AI 제품 상자를 돌려준다.
+    #   AI 상자는 라이브와 같은 함수(video_analysis.product_box) — 이 PC 엔 쇼츠 키가 없어 ingest 키를 넘긴다.
+    from shopping_shorts import video_analysis
+    from pipeline.atoms import key_vault
+    ai_key = key_vault.pick_paced_key(key_vault.get_live_keys("ingest")) if key_vault.get_live_keys("ingest") else None
+    files, boxes = {}, {}
+    for si, sc in enumerate(scenes):
+        pts = []
+        for k, t in enumerate((sc["start"] + .05, (sc["start"] + sc["end"]) / 2, sc["end"] - .05)):
+            url = f"http://qa.local/api/produce/mix/beatframe/qa/{sc['beat_idx']}?at={t:.2f}"
+            path = work / f"pt_{si}_{k}.jpg"
+            cv2.imwrite(str(path), frame(base, round(t * 30)))
+            files[url] = str(path)
+            pts.append(url)
+            if k == 1:
+                boxes[url.replace("/beatframe/", "/scene_focus/")] = video_analysis.product_box(path.read_bytes(), sc["caption"], key=ai_key) if ai_key else None
+        sc["media_points"] = pts
+    print("AI 제품 상자(장면 가운데 그림):", {k.split("/qa/")[1]: v for k, v in boxes.items()})
     dim_scene = body[1]                        # 공개 비트 둘째 구절: 점프 줌(1.35)과 어둡게가 겹치는 칸
     firsts = [i for i, sc in enumerate(scenes) if i == 0 or sc["beat_idx"] != scenes[i - 1]["beat_idx"]]
     # 1) 편집기에서 버튼을 눌러 snapshot 받기
     req = work / "editor-req.json"
     req.write_text(json.dumps({"root": str(ROOT), "context": ctx, "snapshot": snap0, "dimScene": dim_scene,
+                               "files": files, "boxes": boxes,
                                "out": str(work / "editor-out.json")}, ensure_ascii=False), encoding="utf-8")
     js = work / "editor.js"
     js.write_text(PAGE_JS, encoding="utf-8")
@@ -135,6 +161,9 @@ def main():
     eff = snap["effects"]
     print("편집기 버튼:", ed["before"], "→", ed["after"], "| 장면 표시:", ed["label"], "| 미리보기 filter:", ed["filter"], "| 오류:", ed["errors"])
     emph = sorted(int(k) for k, v in eff.items() if v.get("fxAuto") == "emph")
+    print("강조 확대(배율·제품 중심·pan·방식):", {k: (v.get("zoom"), v.get("fxFocus"), v.get("panX"), v.get("panY"), v.get("fxFocusBy")) for k, v in eff.items() if v.get("fxAuto") == "emph"})
+    if any(eff[str(i)].get("fxFocus") is None for i in emph):
+        fails.append("강조 확대 칸에 대상 위치(fxFocus)가 안 잡혔다")
     jumped = sorted(int(k) for k, v in eff.items() if v.get("fxAuto") in ("jump", "emph"))
     print("중요 장면(각 비트 첫 구절):", firsts, "moment", [scenes[i].get("moment") for i in firsts], "| 강조 확대 켜진 칸:", emph)
     if emph != firsts:
@@ -142,8 +171,22 @@ def main():
     if ed["label"] != "제품 공개":
         fails.append(f"장면 종류 표시 {ed['label']!r} (기대 '제품 공개')")
     for i in emph:
-        if eff[str(i)]["zoom"] != 2:
-            fails.append(f"강조 확대 장면 {i} 배율 {eff[str(i)]['zoom']} (기대 2)")
+        e = eff[str(i)]
+        if e.get("fxBox"):   # 확대·이동 뒤 보이는 창(영상 칸 기준) 안에 제품 상자가 통째로 들어가나
+            z = e["zoom"]
+            win = []
+            for p in (e.get("panX", 0), e.get("panY", 0)):
+                c = ((1 - p) * (z - 1) / 2 + .5) / z
+                win.append((c - .5 / z, c + .5 / z))
+            x0, y0, x1, y1 = e["fxBox"]
+            inside = x0 >= win[0][0] - .03 and x1 <= win[0][1] + .03 and y0 >= win[1][0] - .03 and y1 <= win[1][1] + .03
+            print(f"  장면 {i}: 배율 {z} · 보이는 창 x{tuple(round(v, 2) for v in win[0])} y{tuple(round(v, 2) for v in win[1])} · 제품 {e['fxBox']} → {'통째로 보임' if inside else '잘림'}")
+            if not inside:
+                fails.append(f"강조 확대 장면 {i}: 제품이 잘린다")
+        elif e.get("fxFocusBy") != "edge":
+            fails.append(f"강조 확대 장면 {i}: AI 제품 위치를 못 받았다")
+        if not (1.2 <= eff[str(i)]["zoom"] <= 2):
+            fails.append(f"강조 확대 장면 {i} 배율 {eff[str(i)]['zoom']} (기대 1.2~2, 제품 크기로)")
     print("점프 줌 장면:", jumped, "| 어둡게:", {k: v.get("dim") for k, v in eff.items() if v.get("dim")})
     if ed["errors"]:
         fails.append(f"편집기 오류 {ed['errors']}")
@@ -155,6 +198,10 @@ def main():
     out0, out1 = work / "plain.mp4", work / "fx.mp4"
     scene_style.compose(str(base), TIMELINE, snap0, str(out0), work / "w0", {"text": "주방 정리\n끝판왕"})
     scene_style.compose(str(base), TIMELINE, snap, str(out1), work / "w1", {"text": "주방 정리\n끝판왕"})
+    # 어둡게만 뺀 대조(확대·위치는 같다) — 어둡게 칸에 확대가 겹치면 효과 없음 영상과의 비율에 확대 몫이 섞인다
+    snap_nodim = {**snap, "effects": {k: {kk: vv for kk, vv in v.items() if kk != "dim"} for k, v in eff.items()}}
+    out2 = work / "nodim.mp4"
+    scene_style.compose(str(base), TIMELINE, snap_nodim, str(out2), work / "w2", {"text": "주방 정리\n끝판왕"})
     layers = json.loads((work / "w1" / "scene-style-layers.json").read_text(encoding="utf-8"))
     def box(i):
         _, h, top, *_ = scene_style.media_geometry(layers[i], eff.get(str(i)))
@@ -166,17 +213,17 @@ def main():
         print(f"점프 줌 장면 {i}({scenes[i]['kind']}) 프레임 {f}: 완성본 배율 {s} (기대 {want})")
         if not s or abs(s - want) > .05:
             fails.append(f"점프 줌 장면 {i} 완성본 배율 {s} (기대 {want})")
-        if abs(want - (2.0 if i in emph else 1.35)) > 1e-6:
-            fails.append(f"장면 {i} 저장 배율 {want} — 강조 2.0/점프 줌 1.35 이어야")
+        if i not in emph and abs(want - 1.35) > 1e-6:
+            fails.append(f"장면 {i} 저장 배율 {want} — 점프 줌 1.35 이어야")
     fd = round((scenes[dim_scene]["start"] + scenes[dim_scene]["end"]) / 2 * 30)
-    ratio = luma(frame(out1, fd), box(dim_scene)) / max(1, luma(frame(out0, fd), box(dim_scene)))
-    top_ratio = luma(frame(out1, fd), (0, box(dim_scene)[0] - 20)) / max(1, luma(frame(out0, fd), (0, box(dim_scene)[0] - 20)))
+    ratio = luma(frame(out1, fd), box(dim_scene)) / max(1, luma(frame(out2, fd), box(dim_scene)))
+    top_ratio = luma(frame(out1, fd), (0, box(dim_scene)[0] - 20)) / max(1, luma(frame(out2, fd), (0, box(dim_scene)[0] - 20)))
     print(f"어둡게 강조 장면 {dim_scene}: 영상 칸 밝기 비율 {ratio:.3f} (기대 ≈0.32) · 틀 영역 {top_ratio:.3f} (기대 ≈1)")
     if not (.25 <= ratio <= .40):
         fails.append(f"어둡게 강조 밝기 비율 {ratio:.3f}")
     if not (.95 <= top_ratio <= 1.05):
         fails.append(f"어둡게가 틀(제목 띠)까지 어둡게 했다 {top_ratio:.3f}")
-    t_ratios = [luma(frame(out1, n), box(0)) / max(1, luma(frame(out0, n), box(0))) for n in (0, 2, 3, 4, 6)]
+    t_ratios = [luma(frame(out1, n), box(0)) / max(1, luma(frame(out2, n), box(0))) for n in (0, 2, 3, 4, 6)]
     # 첫 장면에 확대도 걸리면 효과 없음 영상과의 비율에 확대 몫이 섞인다 → 같은 장면 4프레임 이후(어둡게 끝) 값으로 나눈다
     after = sum(t_ratios[3:]) / 2
     norm = [x / after for x in t_ratios[:3]]
@@ -188,7 +235,7 @@ def main():
     fp = work / "src_frame.jpg"
     cv2.imwrite(str(fp), frame(base, fd))
     th0, th1 = work / "thumb0.jpg", work / "thumb1.jpg"
-    scene_style.compose_still(str(fp), TIMELINE, snap0, work / "t0", dim_scene, str(th0), {"text": "주방 정리\n끝판왕"})
+    scene_style.compose_still(str(fp), TIMELINE, snap_nodim, work / "t0", dim_scene, str(th0), {"text": "주방 정리\n끝판왕"})
     scene_style.compose_still(str(fp), TIMELINE, snap, work / "t1", dim_scene, str(th1), {"text": "주방 정리\n끝판왕"})
     tr = luma(cv2.imread(str(th1)), box(dim_scene)) / max(1, luma(cv2.imread(str(th0)), box(dim_scene)))
     print(f"썸네일 어둡게 밝기 비율 {tr:.3f}")

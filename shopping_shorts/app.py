@@ -10449,7 +10449,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
             _ss_scenes = _scene_style.context_for(timeline, _hc, _ss_snapshot, job_id)["scenes"]
             _scene_layers = _scene_style.overlay_spans(_ss_scenes, _ss_layers, _ss_dir)   # 단어 강조면 단어마다 한 장(관제 102)
             _scene_dims = _scene_style.dim_spans(_ss_scenes, _ss_snapshot, _ss_layers, _ss_dir)   # 어둡게 막(관제 124)
-            _scene_zooms = _scene_style.zoom_spans(_ss_scenes, _ss_snapshot)   # 장면별 확대·점프 줌(관제 124)
+            _scene_zooms = _scene_style.zoom_spans(_ss_scenes, _ss_snapshot, _ss_layers)   # 장면별 확대·점프 줌(관제 124)
         except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
             import traceback as _tb4
             _tb4.print_exc(file=sys.stderr)
@@ -23415,6 +23415,30 @@ def api_produce_mix_beatframe(job_id: str, i: int, cut: int = None, at: float = 
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(str(out), media_type="image/jpeg",
                         headers={"cache-control": "no-cache"})
+
+
+@app.get("/api/produce/mix/scene_focus/{job_id}/{i}")
+def api_produce_mix_scene_focus(job_id: str, i: int, at: float = None):
+    """장면 그림(beatframe 과 같은 그림) 속 제품 상자 [x0,y0,x1,y1](0~1) — 장면꾸미기 강조 확대가 제품을 향하게(관제 124).
+    판단(제품이 어디냐)은 video_analysis.product_box 한 곳. 결과는 그림 옆 .box.json 에 남겨 같은 그림은 다시 묻지 않는다."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    out = _beatframe_file(job, job_id, i, cut=None, at=at)
+    if out is None:
+        return JSONResponse(status_code=404, content={"ok": False})
+    cache = Path(str(out) + ".box.json")
+    if cache.exists():
+        return {"ok": True, **json.loads(cache.read_text(encoding="utf-8"))}
+    hint = ""
+    try:
+        beats = (job.get("edit_plan") or {}).get("beats") or []
+        hint = next((b.get("narration") or "" for b in beats if int(b.get("beat_idx", -1)) == int(i)), "")
+    except Exception:      # noqa: BLE001 — 힌트는 없어도 된다
+        hint = ""
+    from shopping_shorts import video_analysis
+    box = video_analysis.product_box(Path(out).read_bytes(), hint)
+    if box:   # 못 찾은 결과(키 한도·일시 오류 포함)는 남기지 않는다 — 다음에 다시 묻는다
+        cache.write_text(json.dumps({"box": box}), encoding="utf-8")
+    return {"ok": True, "box": box}
 
 
 # ── 장면 라이브러리(재사용 짤 뱅크, 2026-07-15) ──

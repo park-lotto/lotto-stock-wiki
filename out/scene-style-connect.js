@@ -22,6 +22,53 @@
   // 장면 효과(관제 124) — 잘된 썰 쇼핑 채널 114편에서 실제로 쓰는 것만. 값은 api.refFx(실측·사장님 선택) 한 곳.
   //   아무 장면이든 켤 수 있고, 중요 장면(훅·제품 공개·고조·CTA — 서버 scene_style.moment_of 판단)엔 한 번에 켠다.
   const MOMENT_NAME={hook:'훅',reveal:'제품 공개',peak:'고조',cta:'CTA'};
+  // 강조 확대 위치(관제 124) — 화면 가운데를 무조건 키우면 엄지·빈 바닥만 커졌다(2026-10-05 결과물 확인).
+  //   레퍼런스는 보여줄 대상(제품·손)을 향해 자른다 → 그 장면 그림 3장(media_points 앞·가운데·뒤)에서
+  //   윤곽이 몰린 곳 + 앞뒤로 달라진 곳(움직이는 손·제품)의 무게중심을 잡아 panX/panY 로 저장한다.
+  //   판단은 이 함수 하나 — 완성본(media_geometry)·썸네일은 저장된 panX/panY 를 그대로 쓴다.
+  // ① 서버 AI(/api/produce/mix/scene_focus — video_analysis.product_box)에 제품 상자를 묻는다 → 제품이 영상 칸의 약 75%를
+  //    채우는 배율(1.2~2배, 사장님 상한 2배)로 그 중심을 향해 자른다. ② AI가 없거나 못 찾으면 그림 윤곽·움직임(아래)으로.
+  async function aiBox(sc){
+    const url=(sc?.media_points?.[1]||sc?.media||'');if(!url.includes('/beatframe/'))return null;
+    try{const r=await fetch(url.replace('/beatframe/','/scene_focus/'));if(!r.ok)return null;const d=await r.json();return Array.isArray(d.box)?d.box:null;}catch{return null;}
+  }
+  async function focusPan(i,zoom){
+    const sc=api.context()?.scenes?.[i];const urls=sc?.media_points?.length?sc.media_points:(sc?.media?[sc.media]:[]);
+    if(!urls.length||!(zoom>1))return null;
+    const g0=api.geometry(),bw0=1080,bh0=1920*g0.media.height/100;
+    const ai=await aiBox(sc);
+    if(ai){
+      const im=await new Promise(r=>{const x=new Image();x.onload=()=>r(x);x.onerror=()=>r(null);x.src=urls[0];});
+      const iw=im?.naturalWidth||1080,ih=im?.naturalHeight||1920,s0=Math.max(bw0/iw,bh0/ih),vx=bw0/s0/iw,vy=bh0/s0/ih;
+      const toBox=(c,v)=>(c-.5)/v+.5;   // 원본 그림 좌표 → 영상 칸 좌표(칸 밖이면 0~1 밖)
+      const x0=toBox(ai[0],vx),x1=toBox(ai[2],vx),y0=toBox(ai[1],vy),y1=toBox(ai[3],vy);
+      const z=Math.max(1.2,Math.min(api.refFx.emphZoom,.75/Math.max(x1-x0,y1-y0,.01)));
+      const panOf=(b,zz)=>Math.max(-1,Math.min(1,1-(2*Math.min(1,Math.max(0,b))*zz-1)/(zz-1)));
+      return {zoom:+z.toFixed(2),panX:+panOf((x0+x1)/2,z).toFixed(3),panY:+panOf((y0+y1)/2,z).toFixed(3),focus:[+((x0+x1)/2).toFixed(3),+((y0+y1)/2).toFixed(3)],box:[x0,y0,x1,y1].map(v=>+v.toFixed(3)),by:'ai'};
+    }
+    const imgs=(await Promise.all(urls.map(u=>new Promise(r=>{const im=new Image();im.onload=()=>r(im);im.onerror=()=>r(null);im.src=u;})))).filter(Boolean);
+    if(!imgs.length)return null;
+    const W=72,H=128,cv=document.createElement('canvas');cv.width=W;cv.height=H;const cx2=cv.getContext('2d',{willReadFrequently:true});
+    const gray=im=>{cx2.drawImage(im,0,0,W,H);const d=cx2.getImageData(0,0,W,H).data,g=new Float32Array(W*H);for(let k=0;k<W*H;k++)g[k]=d[k*4]*.3+d[k*4+1]*.59+d[k*4+2]*.11;return g;};
+    let gs;try{gs=imgs.map(gray);}catch{return null;}   // 다른 출처 그림이면 읽을 수 없다 — 가운데 그대로
+    const mid=gs[Math.floor(gs.length/2)],e=new Float32Array(W*H);
+    for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const k=y*W+x;e[k]=Math.hypot(mid[k+1]-mid[k-1],mid[k+W]-mid[k-W]);for(const g of gs)if(g!==mid)e[k]+=2*Math.abs(g[k]-mid[k]);}
+    const thr=[...e].sort((a,b)=>a-b)[Math.floor(e.length*.85)];let sx=0,sy=0,sw=0;
+    for(let k=0;k<e.length;k++)if(e[k]>=thr&&e[k]>0){sx+=(k%W+.5)/W*e[k];sy+=(Math.floor(k/W)+.5)/H*e[k];sw+=e[k];}
+    if(!sw)return null;
+    // 원본 그림 좌표 → 영상 칸(cover로 가운데 잘림) 좌표 → pan(media_geometry 식: crop=(zw-w)(1-pan)/2)
+    const g=api.geometry(),bw=1080,bh=1920*g.media.height/100,iw=imgs[0].naturalWidth||1080,ih=imgs[0].naturalHeight||1920,s=Math.max(bw/iw,bh/ih);
+    const box=(c,vis)=>Math.min(1,Math.max(0,(c-.5)/vis+.5)),bx=box(sx/sw,bw/s/iw),by=box(sy/sw,bh/s/ih);
+    const pan=b=>Math.max(-1,Math.min(1,1-(2*b*zoom-1)/(zoom-1)));
+    return {panX:+pan(bx).toFixed(3),panY:+pan(by).toFixed(3),focus:[+bx.toFixed(3),+by.toFixed(3)],by:'edge'};
+  }
+  async function aimEmphasis(indexes){
+    const keep=api.geometry().sceneIndex;
+    for(const i of indexes){const e=api.effectAt(i);if(e.fxAuto!=='emph')continue;
+      api.show(i);const f=await focusPan(i,Number(e.zoom)||1);
+      if(f)api.effectAt(i,{...api.effectAt(i),...(f.zoom?{zoom:f.zoom}:{}),panX:f.panX,panY:f.panY,fxFocus:f.focus,fxFocusBy:f.by,...(f.box?{fxBox:f.box}:{})});}
+    api.show(keep);sync();updateControls();
+  }
   const pickMoments=new Set(Object.keys(MOMENT_NAME));
   const refBox=document.createElement('div');refBox.className='scene-ref-fx';
   refBox.innerHTML=`<p><b>강조 효과</b><br><small>잘된 쇼츠 114편 실측 · 이 장면: <b data-ref-moment>-</b></small></p>
@@ -56,8 +103,8 @@
     const pick=ev.target.closest('[data-ref-moment-pick]');
     if(pick){const k=pick.dataset.refMomentPick;pickMoments.has(k)?pickMoments.delete(k):pickMoments.add(k);syncRefFx();return;}
     const b=ev.target.closest('[data-ref-fx]');if(!b)return;const fx=api.refFx,i=api.geometry().sceneIndex,what=b.dataset.refFx;
-    if(what==='zoom'||what==='dim')api.emphAt(i,what,!api.emphOn(i,what));
-    else if(what==='all-zoom'||what==='all-dim'){const kind=what.slice(4);api.emphMoments([...pickMoments],kind,!allOn(kind));}
+    if(what==='zoom'||what==='dim'){api.emphAt(i,what,!api.emphOn(i,what));if(what==='zoom')aimEmphasis([i]);}
+    else if(what==='all-zoom'||what==='all-dim'){const kind=what.slice(4);api.emphMoments([...pickMoments],kind,!allOn(kind));if(kind==='zoom')aimEmphasis(api.moments().map((_,k)=>k));}
     else if(what==='jump')api.jumpZoom(!api.jumpZoomOn());
     else{const e=structuredClone(api.effectAt(0));if(e.dim&&e.dim.sec>0)delete e.dim;else e.dim={...fx.dimTitle};api.effectAt(0,e);}
     updateControls();sync();

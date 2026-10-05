@@ -546,17 +546,23 @@ def dim_spans(scenes, snapshot, layers, folder):
     return out
 
 
-def zoom_spans(scenes, snapshot):
-    """캡컷용 장면별 영상 확대 구간 [{start,end,zoom}] (관제 124 점프 줌 컷 + 손으로 맞춘 확대).
-    배율 뜻은 완성본과 같은 video_assemble.scene_zoom_of 한 곳. 캡컷은 화면 가운데 기준 확대라
-    완성본(영상 칸 가운데 기준)과 위아래 위치가 조금 다를 수 있다 — 이동(pan)은 캡컷 좌표 실측 전이라 안 보낸다."""
+def zoom_spans(scenes, snapshot, layers=None):
+    """캡컷용 장면별 영상 확대 구간 [{start,end,zoom,tx,ty}] (관제 124 점프 줌·강조 확대 + 손으로 맞춘 확대).
+    배율 뜻은 완성본과 같은 video_assemble.scene_zoom_of 한 곳. 이동(tx,ty)은 캡컷 clip.transform —
+    단위 '캔버스 절반'(pyJianYingDraft ClipSettings: 水平位移 单位为半个画布宽, 자막 기본 -0.8 → 위가 +).
+    완성본(media_geometry)이 화면을 미는 픽셀만큼 민다: x = panX·(z-1), y = -panY·(z-1)·영상칸높이비율.
+    ★캡컷 초안은 원래 영상을 전체 화면에 깔아 완성본(영상 칸)과 구도가 조금 다르다 — 그 차이는 그대로다(관제 018)."""
     from . import video_assemble as va
     effects=(validate_snapshot(snapshot) or {}).get("effects") or {}
     out=[]
     for index,scene in enumerate(scenes):
-        zoom,_,_=va.scene_zoom_of({"scene_zoom":(effects.get(str(index)) or {}).get("zoom",1)})
+        effect=effects.get(str(index)) or {}
+        zoom,_,_=va.scene_zoom_of({"scene_zoom":effect.get("zoom",1)})
         if zoom>1.0001:
-            out.append({"start":float(scene["start"]),"end":float(scene["end"]),"zoom":zoom})
+            frac=((layers[index] or {}).get("media") or {}).get("height",100)/100 if layers and index<len(layers) else 1.0
+            out.append({"start":float(scene["start"]),"end":float(scene["end"]),"zoom":zoom,
+                        "tx":round(float(effect.get("panX",0))*(zoom-1),4),
+                        "ty":round(-float(effect.get("panY",0))*(zoom-1)*frac,4)})
     return out
 
 

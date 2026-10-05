@@ -2042,7 +2042,7 @@
       const key=String(i),e={...(effects[key]||{})};
       if(kind==='zoom'){
         if(on){e.zoom=REF_FX.emphZoom;e.fxAuto='emph';}
-        else if(e.fxAuto==='emph'||e.fxAuto==='jump'){delete e.zoom;delete e.fxAuto;}
+        else if(e.fxAuto==='emph'||e.fxAuto==='jump'){delete e.zoom;delete e.fxAuto;if(e.fxFocus){delete e.panX;delete e.panY;delete e.fxFocus;delete e.fxFocusBy;delete e.fxBox;}}   // 자동으로 맞춘 위치(fxFocus)도 같이 뺀다
       }else if(kind==='dim'){
         if(on)e.dim={...REF_FX.dimEmphasis};else if(e.dim&&!e.dim.sec)delete e.dim;
       }
