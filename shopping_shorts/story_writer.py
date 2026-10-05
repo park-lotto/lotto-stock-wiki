@@ -1320,7 +1320,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
     return drafts, "; ".join(whys)
 
 
-def storyboard_to_beat_sources(slots):
+def storyboard_to_beat_sources(slots, seg_lookup=None):
     """★스토리보드(사람이 칸마다 장면을 고르고 그 위에 쓴 대본) → 확정 대본 + 줄별 출처 장면(관제 120).
 
     slots = [{slot(역할), line(문장), ids(고른 장면 번호들)}] — 2단계 스토리보드 한 탭.
@@ -1342,6 +1342,10 @@ def storyboard_to_beat_sources(slots):
             if c and c not in ids:
                 ids.append(c)
         lines.append(text)
+        keys = []
+        for c in ids:      # ★3단계 작업은 같은 캐시 장면에 번호를 새로 붙인다(…-12 → s0-11, 10-05 라이브 실측) — 번호 대신 '같은 장면'으로 잇는 열쇠
+            g = (seg_lookup(c) if seg_lookup else None) or {}
+            keys.append({"id": c, "start": g.get("start"), "end": g.get("end"), "vsig": g.get("_vsig") or []})
         bs.append({"role": str(sl.get("slot") or sl.get("role") or ""), "seg": ids[0] if ids else "",
-                   "segs": ids, "pinned": bool(ids)})
+                   "segs": ids, "pinned": bool(ids), "seg_keys": keys})
     return {"script": "\n".join(lines), "beat_sources": bs}

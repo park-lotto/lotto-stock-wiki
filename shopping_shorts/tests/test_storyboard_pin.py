@@ -77,3 +77,13 @@ def test_저장관문은_고정계획을_다시_꽂지_않는다():
 
     out = _store._ensure_screen_time(plan, _St(), "j")
     assert _ids(out["beats"][0]) == ["s0-5"]
+
+
+def test_번호가_바뀐_같은_장면은_경계로_잇는다():
+    """10-05 라이브 job 4cd80576b70e: 2단계 캐시 번호(<영상코드>-n)가 3단계에서 s0-n 으로 바뀌고 설명도 새로 달렸다(경계는 같음)."""
+    seg_map = {"s0-0": {"video_id": "s0", "start": 0.0, "end": 1.1}, "s0-1": {"video_id": "s0", "start": 1.1, "end": 2.0},
+               "s1-0": {"video_id": "s1", "start": 0.0, "end": 5.5}, "s1-1": {"video_id": "s1", "start": 5.5, "end": 11.0}}
+    key = {"id": "grab_b-1", "start": 5.5, "end": 11.0, "vsig": [0.0, 5.5]}
+    assert edit_plan.match_seg_key(key, seg_map) == "s1-1"
+    assert edit_plan.match_seg_key({"id": "x", "start": 0.0, "end": 1.1, "vsig": [0.0]}, seg_map) is None   # 영상 둘이 맞으면 안 붙인다
+    assert edit_plan.match_seg_key({"id": "x", "start": 9.0, "end": 9.5, "vsig": [0.0, 5.5]}, seg_map) is None

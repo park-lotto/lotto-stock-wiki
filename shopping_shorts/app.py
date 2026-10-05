@@ -21122,7 +21122,15 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     if isinstance(_sb, list) and _sb and _setting_gate(Store(DB_PATH), "storyboard_enabled",
                                                        getattr(request.state, "customer_id", 0)):
         from shopping_shorts.story_writer import storyboard_to_beat_sources
-        _conv = storyboard_to_beat_sources(_sb)
+        _st_sb = Store(DB_PATH)
+
+        def _sb_lookup(sid):      # seg_id = <영상코드>-<n> — 그 영상 분석(캐시)에서 장면을 찾는다(1단계 재료와 같은 곳)
+            data = _st_sb.get_script(str(sid).rsplit("-", 1)[0]) or {}
+            segs = [g for g in (data.get("segments") or []) if isinstance(g, dict)]
+            g = next((x for x in segs if x.get("seg_id") == sid), None)
+            # 어느 영상인지 알아볼 '장면 경계 모양'(그 영상 장면들의 시작 초) — 3단계 작업이 장면 설명·번호를 새로 달아도 경계는 같다
+            return dict(g, _vsig=[round(float(x.get("start") or 0), 3) for x in segs][:12]) if g else None
+        _conv = storyboard_to_beat_sources(_sb, _sb_lookup)
         if _conv["script"]:
             script = _conv["script"]
             body["script_structure"] = dict(body["script_structure"], beat_sources=_conv["beat_sources"],
