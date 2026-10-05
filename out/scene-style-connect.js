@@ -19,23 +19,46 @@
   textPanel.after(effectsPanel);
   const copyEffects=document.createElement('button');copyEffects.className='scene-effects-reset';copyEffects.textContent='이 효과를 다른 장면에도 적용';copyEffects.dataset.effectsAll='';effectsPanel.append(copyEffects);
   copyEffects.addEventListener('click',()=>{api.copyEffectsToAll();copyEffects.textContent='모든 장면에 적용했어요';setTimeout(()=>copyEffects.textContent='이 효과를 다른 장면에도 적용',1600);});
-  // 레퍼런스 장면 효과(관제 124) — 잘된 썰 쇼핑 채널 114편에서 실제로 쓰는 것만. 값은 api.refFx(실측) 한 곳.
+  // 장면 효과(관제 124) — 잘된 썰 쇼핑 채널 114편에서 실제로 쓰는 것만. 값은 api.refFx(실측·사장님 선택) 한 곳.
+  //   아무 장면이든 켤 수 있고, 중요 장면(훅·제품 공개·고조·CTA — 서버 scene_style.moment_of 판단)엔 한 번에 켠다.
+  const MOMENT_NAME={hook:'훅',reveal:'제품 공개',peak:'고조',cta:'CTA'};
+  const pickMoments=new Set(Object.keys(MOMENT_NAME));
   const refBox=document.createElement('div');refBox.className='scene-ref-fx';
-  refBox.innerHTML=`<p><b>잘된 쇼츠 장면 효과</b><br><small>레퍼런스 114편 실측값</small></p>
-    <button type="button" class="scene-effects-reset" data-ref-fx="jump"></button>
+  refBox.innerHTML=`<p><b>강조 효과</b><br><small>잘된 쇼츠 114편 실측 · 이 장면: <b data-ref-moment>-</b></small></p>
+    <button type="button" class="scene-effects-reset" data-ref-fx="zoom">이 장면 강조 확대 (2배)</button>
     <button type="button" class="scene-effects-reset" data-ref-fx="dim">이 장면 어둡게 강조</button>
+    <p><b>중요 장면에 한 번에</b></p>
+    <div class="scene-effect-choices">${Object.entries(MOMENT_NAME).map(([k,v])=>`<button type="button" class="active" data-ref-moment-pick="${k}">${v}</button>`).join('')}</div>
+    <button type="button" class="scene-effects-reset" data-ref-fx="all-zoom">고른 장면에 강조 확대</button>
+    <button type="button" class="scene-effects-reset" data-ref-fx="all-dim">고른 장면에 어둡게 강조</button>
+    <p><b>영상 전체</b></p>
+    <button type="button" class="scene-effects-reset" data-ref-fx="jump"></button>
     <button type="button" class="scene-effects-reset" data-ref-fx="title">시작 어두운 제목 화면</button>`;
   effectsPanel.append(refBox);
+  // 고른 중요 장면이 전부 켜져 있으면 '끄기'로 보인다
+  const allOn=kind=>{const ms=api.moments(),scenes=api.context()?.scenes||[];let prev=null,any=false,all=true;
+    scenes.forEach((s,i)=>{const first=s.beat_idx!==prev;prev=s.beat_idx;if(first&&ms[i]&&pickMoments.has(ms[i])){any=true;all=all&&api.emphOn(i,kind);}});return any&&all;};
   function syncRefFx(){
+    const i=api.geometry().sceneIndex,m=api.moments()[i];
+    refBox.querySelector('[data-ref-moment]').textContent=m?MOMENT_NAME[m]:'일반';
+    // 켜짐은 글자로 보인다 — 이 버튼 모양(scene-effects-reset)엔 켜짐 색이 없다(화면 캡처로 확인)
+    const on=(sel,yes,label)=>{const b=refBox.querySelector(sel);b.classList.toggle('active',yes);b.textContent=label+(yes?' ✓ 켜짐':'');};
+    on('[data-ref-fx="zoom"]',api.emphOn(i,'zoom'),'이 장면 강조 확대 (2배)');
+    on('[data-ref-fx="dim"]',api.emphOn(i,'dim'),'이 장면 어둡게 강조');
+    refBox.querySelectorAll('[data-ref-moment-pick]').forEach(b=>b.classList.toggle('active',pickMoments.has(b.dataset.refMomentPick)));
+    refBox.querySelector('[data-ref-fx="all-zoom"]').textContent=allOn('zoom')?'고른 장면 강조 확대 끄기':'고른 장면에 강조 확대';
+    refBox.querySelector('[data-ref-fx="all-dim"]').textContent=allOn('dim')?'고른 장면 어둡게 끄기':'고른 장면에 어둡게 강조';
     refBox.querySelector('[data-ref-fx="jump"]').textContent=api.jumpZoomOn()?'점프 줌 컷 빼기':'점프 줌 컷 넣기 (구절마다 1.35배)';
-    const d=api.effect().dim,t=api.effectAt(0).dim;
-    refBox.querySelector('[data-ref-fx="dim"]').classList.toggle('active',!!d&&!d.sec);
-    refBox.querySelector('[data-ref-fx="title"]').classList.toggle('active',!!t&&t.sec>0);
+    const t=api.effectAt(0).dim;
+    on('[data-ref-fx="title"]',!!t&&t.sec>0,'시작 어두운 제목 화면');
   }
   refBox.addEventListener('click',ev=>{
-    const b=ev.target.closest('[data-ref-fx]');if(!b)return;const fx=api.refFx;
-    if(b.dataset.refFx==='jump')api.jumpZoom(!api.jumpZoomOn());
-    else if(b.dataset.refFx==='dim'){const e=structuredClone(api.effect());if(e.dim&&!e.dim.sec)delete e.dim;else e.dim={...fx.dimEmphasis};api.effect(e);}
+    const pick=ev.target.closest('[data-ref-moment-pick]');
+    if(pick){const k=pick.dataset.refMomentPick;pickMoments.has(k)?pickMoments.delete(k):pickMoments.add(k);syncRefFx();return;}
+    const b=ev.target.closest('[data-ref-fx]');if(!b)return;const fx=api.refFx,i=api.geometry().sceneIndex,what=b.dataset.refFx;
+    if(what==='zoom'||what==='dim')api.emphAt(i,what,!api.emphOn(i,what));
+    else if(what==='all-zoom'||what==='all-dim'){const kind=what.slice(4);api.emphMoments([...pickMoments],kind,!allOn(kind));}
+    else if(what==='jump')api.jumpZoom(!api.jumpZoomOn());
     else{const e=structuredClone(api.effectAt(0));if(e.dim&&e.dim.sec>0)delete e.dim;else e.dim={...fx.dimTitle};api.effectAt(0,e);}
     updateControls();sync();
   });

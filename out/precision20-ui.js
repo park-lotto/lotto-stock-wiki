@@ -779,10 +779,12 @@
   //   ZaPpvrHkZ1U 크기 고정·매 프레임 가로 ±2px/세로 ±3px(360px 기준) 떨림, 훅 내내
   const CAMERA_MOTIONS=['zoom-punch','push-in','shake'];
   // 레퍼런스 장면 효과 값(관제 124) — 랭킹 썰 쇼핑 채널 114편 실측(tools/scene_fx/data/params_2026-10-05.json). 지어낸 값이 아니다.
-  //   jumpZoom: 점프 줌 컷 확대 배율 중앙 1.35(사분위 1.21~1.56)
+  //   jumpZoom: 점프 줌 컷 확대 배율 중앙 1.35(사분위 1.21~1.56) — 구절마다 번갈아(리듬)
+  //   emphZoom: 중요 장면 강조 확대 2.0 — 레퍼런스 눈대중 최대 2.0(측정 최대 1.61) 중 사장님 선택(2026-10-05 "두 배 이상은 돼야",
+  //             "효과를 어떤 장면이든 켤 수 있게, 제품 정체 드러날 때·CTA·훅·고조 같은 중요 장면")
   //   dimEmphasis: 화면을 어둡게 덮고 강조 글자 — 밝기 32%(17~56%)·중앙 1.2초 ≈ 장면(구절) 하나 길이(중앙 1.17초) → 장면 내내(sec 0)
   //   dimTitle: 시작 어두운 제목 화면 — 밝기 46%·0.13초(4프레임), 12편 중 10편
-  const REF_FX={jumpZoom:1.35,dimEmphasis:{level:.32,sec:0},dimTitle:{level:.46,sec:.13}};
+  const REF_FX={jumpZoom:1.35,emphZoom:2,dimEmphasis:{level:.32,sec:0},dimTitle:{level:.46,sec:.13}};
   // 훅 모션 길이 = **첫 비트(훅 문장)** 의 훅 장면만(10-02 사장님 "썰훅만 본문은 훅 모션 없이 자막 스타일대로"). 썰훅+본문은 훅이 첫 비트뿐이라 종전과 같다
   const hookEndMs=()=>{const sc=sceneContext?.scenes||[],b0=sc[0]?.beat_idx;const hs=sc.filter(s=>s.kind==='hook'&&s.beat_idx===b0);return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
   function cameraAt(ms){
@@ -2033,6 +2035,26 @@
       return count;
     },
     jumpZoomOn:()=>Object.values(effects).some(e=>e&&e.fxAuto==='jump'),
+    // 강조(관제 124) — 아무 장면이든 켤 수 있고(emphAt), 중요 장면(scene.moment: hook·reveal·peak·cta, 판단은 scene_style.moment_of)엔 한 번에(emphMoments).
+    //   kind 'zoom' = 영상 칸 2배(emphZoom) · 'dim' = 밝기 32%(dimEmphasis). 한 번에 켤 땐 그 비트의 **첫 장면**(그 순간이 드러나는 구절)에만.
+    moments:()=>(sceneContext?.scenes||[]).map(s=>s.moment||null),
+    emphAt(i,kind,on){
+      const key=String(i),e={...(effects[key]||{})};
+      if(kind==='zoom'){
+        if(on){e.zoom=REF_FX.emphZoom;e.fxAuto='emph';}
+        else if(e.fxAuto==='emph'||e.fxAuto==='jump'){delete e.zoom;delete e.fxAuto;}
+      }else if(kind==='dim'){
+        if(on)e.dim={...REF_FX.dimEmphasis};else if(e.dim&&!e.dim.sec)delete e.dim;
+      }
+      effects[key]=e;
+    },
+    emphOn(i,kind){const e=effects[String(i)]||{};return kind==='zoom'?e.fxAuto==='emph':!!(e.dim&&!e.dim.sec)},
+    emphMoments(moments,kind,on){
+      const scenes=sceneContext?.scenes||[],want=new Set(moments);let prev=null,count=0;
+      scenes.forEach((s,i)=>{const first=s.beat_idx!==prev;prev=s.beat_idx;
+        if(first&&s.moment&&want.has(s.moment)){this.emphAt(i,kind,on);count++;}});
+      return count;
+    },
     branding(value){if(value!==undefined){branding=value;if(!labMode)try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
     context:()=>sceneContext,
     validation:()=>templateViolations(),

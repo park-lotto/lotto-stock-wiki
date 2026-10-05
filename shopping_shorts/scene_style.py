@@ -86,7 +86,7 @@ def validate_snapshot(value):
             if not isinstance(dim,dict):
                 raise ValueError("어둡게 형식이 올바르지 않습니다")
             number(dim.get("level"),.1,1);number(dim.get("sec",0),0,10)
-        if "fxAuto" in effect and effect["fxAuto"] not in ("jump",):
+        if "fxAuto" in effect and effect["fxAuto"] not in ("jump","emph"):
             raise ValueError("자동 효과 표식이 올바르지 않습니다")
         if "masks" in effect:
             from .deco_frame import _norm_masks
@@ -353,6 +353,30 @@ def overlay_spans(scenes, layers, folder):
     return out
 
 
+# 중요 장면 종류(관제 124, 사장님 2026-10-05 "제품 정체 드러날 때나 cta나 훅이나 고조나 중요 장면들") —
+#   대본 비트 역할 이름 → 훅/제품 공개/고조/CTA. 이름은 고객 작업 500개 실측 분포(고조1 783·고조2 539·훅 337·공개 309·
+#   CTA 168·반전 152·hook 147·cta 111·escalation 51·reveal 13·twist 12·bait 9 …)에서 뽑았다. 판단은 여기 한 곳.
+_MOMENT_ROLES = {
+    "hook": ("훅", "hook", "title", "미끼", "bait"),
+    "reveal": ("공개", "reveal", "정체", "정체공개"),
+    "peak": ("고조", "고조1", "고조2", "고조3", "escalation", "반전", "twist"),
+}
+
+
+def moment_of(role):
+    """비트 역할 → 'hook'|'reveal'|'peak'|'cta'|None. CTA 이름은 edit_plan._CTA_ROLES 를 그대로 쓴다."""
+    from .edit_plan import _CTA_ROLES
+    r = str(role or "").strip()
+    if not r:
+        return None
+    if r in _CTA_ROLES or r.lower() in {x.lower() for x in _CTA_ROLES}:
+        return "cta"
+    for moment, names in _MOMENT_ROLES.items():
+        if r in names or r.lower() in names:
+            return moment
+    return None
+
+
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     from .video_assemble import caption_schedule, caption_lead_absorb
     from .template_copy import scene_text
@@ -363,17 +387,18 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
         start, end = float(beat["t0"]), float(beat["t0"] + beat["dur"])
         cursor = start
         kind = frame_kind(index, (snapshot or {}).get("frameRule"))
+        moment = moment_of(beat.get("role"))   # 중요 장면 종류(관제 124) — 편집기 '중요 장면에 한 번에'가 쓴다
         caption_visible = not (kind == "hook" and index == 0 and hide_hook_captions)   # 숨김은 첫 훅 문장만(썰훅만 본문 자막은 보인다, 10-02)
         for caption, t0, t1 in caption_schedule(beat, absorb_lead=_absorb):
             a, b = max(cursor, start, float(t0)), min(end, float(t1))
             if b <= a:
                 continue
             if a > cursor + .001:
-                scenes.append({"start":cursor,"end":a,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
-            scenes.append({"start":a,"end":b,"caption":caption,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
+                scenes.append({"start":cursor,"end":a,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
+            scenes.append({"start":a,"end":b,"caption":caption,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
             cursor = b
         if cursor < end - .001:
-            scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
+            scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
     scenes = attach_scene_words(_absorb_tiny_gaps(scenes), timeline)
     copy = dict(headcopy) if isinstance(headcopy, dict) else {}
     if not (copy.get("text") or "").strip():
