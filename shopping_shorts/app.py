@@ -9945,7 +9945,8 @@ def _longform_run(src, job_dir, where):
 def _longform_status(job_id, src, where):
     from shopping_shorts import link_longform
     st = link_longform.state(_MIX_WORK_DIR / job_id, src, where)
-    st.update({"ok": st["state"] != "error", "text": link_longform.text_for(where)})
+    st.update({"ok": st["state"] != "error", "text": link_longform.text_for(where),
+               "custom": bool(link_longform.load_layout(_MIX_WORK_DIR / job_id))})   # 장면꾸미기 롱폼 탭에서 꾸민 안내가 있다
     if st["state"] == "ready":
         st["url"] = f"/api/mix/video_longform/{job_id}"
     return st
@@ -9975,6 +9976,40 @@ def api_mix_longform_link(job_id: str, body: dict):
     link_longform.mark_running(job_dir)
     threading.Thread(target=_longform_run, args=(src, job_dir, where), daemon=True).start()
     return _longform_status(job_id, src, where)
+
+
+def _longform_layout_job(job_id, request):
+    """꾸민 안내를 읽고 쓸 수 있는 작업인가 — 스위치(link_guide_enabled)가 열어 준 계정의 자기 작업(관리자는 전부)."""
+    cid = _cid(request)
+    if not _setting_gate(Store(DB_PATH), "link_guide_enabled", cid):
+        return None, JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능입니다"})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or (not _is_admin(cid) and int(job.get("customer_id") or 0) != cid):
+        return None, JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요"})
+    return job, None
+
+
+@app.get("/api/mix/longform_layout/{job_id}")
+def api_mix_longform_layout_get(job_id: str, request: Request):
+    """장면꾸미기 롱폼 탭에서 놓은 안내 항목(없으면 빈 목록)."""
+    from shopping_shorts import link_longform
+    _job, bad = _longform_layout_job(job_id, request)
+    if bad is not None:
+        return bad
+    return {"ok": True, "items": link_longform.load_layout(_MIX_WORK_DIR / job_id)}
+
+
+@app.post("/api/mix/longform_layout/{job_id}")
+def api_mix_longform_layout_save(job_id: str, body: dict, request: Request):
+    """안내 항목 저장(빈 목록 = 지우기). 범위 검사·저장은 link_longform 한 곳. 9단계 「롱폼으로 렌더」가 이걸 굽는다."""
+    from shopping_shorts import link_longform
+    _job, bad = _longform_layout_job(job_id, request)
+    if bad is not None:
+        return bad
+    job_dir = _MIX_WORK_DIR / job_id
+    if not job_dir.is_dir():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 폴더가 없어요"})
+    return {"ok": True, "items": link_longform.save_layout(job_dir, (body or {}).get("items"))}
 
 
 @app.get("/api/mix/video_longform/{job_id}")
@@ -21544,7 +21579,8 @@ def api_sfx_pack_sound(pack_no: int, slot: str, request: Request):
 def api_scene_style_asset(asset_path: str):
     from .scene_style import ROOT
     candidate = (ROOT / asset_path).resolve()
-    names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js"}
+    names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js",
+             "link-longform-stage.html", "link-longform-blocks.js"}   # 구매링크 롱폼 화면(관제 133)
     allowed = (asset_path.startswith("out/") and asset_path[4:] in names)
     allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "shopping_shorts/static/text-look-contract.js", "out/scene-style-labels.js"}
     allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/", "out/장면꾸미기_로고/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}

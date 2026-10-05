@@ -3,6 +3,7 @@
  const panel=document.querySelector('.scene-effects-panel'),preview=document.querySelector('#a-live-preview');
  const box=document.createElement('section');box.className='scene-decoration-panel';
  box.innerHTML=`<details open class="dec-shopset"><summary>🛍 쇼핑 안내 세트</summary><p data-shopset-help>아래쪽 가리키는 화살표 + 「영상 속 제품 클릭!」을 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).</p><label class="dec-shopset-target" hidden>가리킬 곳 <select data-shopset-target><option value="link">구매링크 칸(왼쪽 맨 아래)</option><option value="sticker">쇼핑 스티커(예전 자리)</option></select></label><div class="dec-choices" data-shopset-designs hidden><button type="button" data-shopset-design="arrow" class="active">① 화살표 알약</button><button type="button" data-shopset-design="finger">② 손가락 콕</button><button type="button" data-shopset-design="ticket">③ 링크 티켓</button></div><div class="dec-choices"><button type="button" data-shopset="last3">마지막 3장면에 넣기</button><button type="button" data-shopset="here">이 장면만</button><button type="button" data-shopset="clear">세트 빼기</button></div><small data-shopset-status></small></details>
+ <details open class="dec-longform" hidden><summary>📺 구매링크 롱폼 안내</summary><p>완성한 쇼츠를 <b>가로(롱폼) 영상</b>으로 만들 때 얹는 문구 띠와 큰 화살표예요. 문구를 고르면 미리보기가 롱폼으로 바뀝니다. 끌어서 옮기고, 초록 점을 끌어 크기를 바꾸세요. 9단계 「롱폼으로 렌더」에서 이대로 만들어져요.</p><div class="dec-choices" data-lf-sets></div><div data-lf-edit hidden><label>앞말<input data-lf="pre" type="text" maxlength="24"></label><label data-lf-hot>강조 칸<input data-lf="hot" type="text" maxlength="24"></label><label>뒷말<input data-lf="post" type="text" maxlength="24"></label></div><div class="dec-choices"><button type="button" data-lf-clear>롱폼 안내 빼기</button></div><small data-lf-status></small></details>
  <details open><summary>가림막</summary><div class="dec-choices"><button data-add-mask="blur">흐림</button><button data-add-mask="fade">그라데이션</button></div></details>
  <details open><summary>스티커 · 도형 · 배지</summary><div class="dec-kit"><button data-dec-kit="sticker" class="active">😀 스티커</button><button data-dec-kit="shape">🎨 도형</button><button data-dec-kit="badge">🏷 배지</button></div><div data-kit="sticker"><div class="dec-categories"></div><div class="dec-stickers"></div></div><div data-kit="shape" hidden><p>움직이는 도형 · 눌러서 영상 위에 추가</p><div class="dec-shapes"></div></div><div data-kit="badge" hidden><p>문구와 색, 모양을 바꿀 수 있어요</p><div class="dec-my-badges" hidden></div><div class="dec-badges"></div></div></details>
  <div class="dec-items"></div><div class="dec-edit" hidden><p>화면에서 끌어 이동 · ↘ 손잡이로 크기 · ⟳ 손잡이로 회전</p><label data-badge-text>배지 문구<input data-dec="text" type="text" maxlength="24"></label><label data-badge-style>배지 모양<select data-dec="badgeStyle"><option value="pill">그라데이션 알약</option><option value="ticket">티켓</option><option value="glass">유리 배지</option><option value="burst">포인트 배지</option></select></label><button type="button" data-save-badge hidden>⭐ 이 배지를 내 버튼으로 저장</button><label data-motion-control>움직임<select data-dec="motion"><option value="none">없음</option><option value="point">가리키기</option><option value="pulse">두근두근</option><option value="spin">회전</option><option value="float">둥실둥실</option><option value="reveal">쓱 나타나기</option></select></label><label>크기<input data-dec="size" type="range" min="5" max="90" step="1"></label><label data-mask-height>높이<input data-dec="h" type="range" min="2" max="35" step="1"></label><label>회전<input data-dec="rot" type="range" min="-180" max="180" step="1"></label><label>투명도<input data-dec="op" type="range" min="10" max="100" step="1"></label><label data-mask-color>색상<input data-dec="color" type="color"></label><button data-dec-delete>선택한 항목 삭제</button></div>`;
@@ -46,6 +47,53 @@
    },
  };
  const YT_MODES=['','basic','comment'],YT_MODE_LABEL={'':'📱 유튜브 화면 자리',basic:'📱 유튜브 화면 자리 · 기본',comment:'📱 유튜브 화면 자리 · 댓글창'};
+ // 📺 롱폼 탭(관제 133, 2026-10-06 사장님 "썸네일 위쪽에 숏폼/롱폼 탭 · 롱폼을 누르면 크게 · 자유롭게 놓기 · 문구는 효과 탭에서 고르기"):
+ //   롱폼 화면은 out/link-longform-stage.html 을 그대로 끼운다(렌더가 찍는 바로 그 페이지 — 화면과 완성본이 같은 그림).
+ //   놓은 항목의 주인은 서버 link_longform.py(작업 폴더 link_longform_layout.json). 여기는 불러와 보여 주고, 바뀌면 보낸다.
+ let lfTabs=null,lfBox=null,lfFrame=null,lfMode=false,lfReady=false,lfJob='',lfSaveTimer=0;
+ const lfApi=()=>lfReady?lfFrame.contentWindow.linkLongform:null;
+ const lfStatus=t=>{box.querySelector('[data-lf-status]').textContent=t||''};
+ const lfJobId=()=>api.context?.()?.jobId||'';
+ function lfFields(items){
+   const i=items.findIndex(m=>m.block==='band'),edit=box.querySelector('[data-lf-edit]');edit.hidden=i<0;edit.dataset.i=i;if(i<0)return;
+   edit.querySelector('[data-lf-hot]').hidden=!!items[i].clock;   // 시계 세트는 강조 칸 자리에 줄어드는 시계가 들어간다
+   edit.querySelectorAll('[data-lf]').forEach(el=>{if(document.activeElement!==el)el.value=items[i][el.dataset.lf]||''});
+ }
+ function lfSave(items){
+   const job=lfJobId();if(!job)return;   // 작업 없이 연 화면(견본)에서는 저장할 곳이 없다
+   clearTimeout(lfSaveTimer);lfStatus('저장 중…');
+   lfSaveTimer=setTimeout(()=>fetch('/api/mix/longform_layout/'+encodeURIComponent(job),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items})})
+     .then(r=>r.json()).then(d=>lfStatus(d.ok?(d.items.length?'저장됐어요 — 9단계 「롱폼으로 렌더」에서 이대로 만들어집니다':'롱폼 안내를 뺐어요(기본 문구로 만들어집니다)'):'⚠️ 저장하지 못했어요: '+(d.error||'')))
+     .catch(()=>lfStatus('⚠️ 저장하지 못했어요 — 연결을 확인해 주세요')),500);
+ }
+ function lfLoad(){
+   const job=lfJobId(),a=lfApi();if(!a||!job||job===lfJob)return;lfJob=job;
+   fetch('/api/mix/longform_layout/'+encodeURIComponent(job)).then(r=>r.json()).then(d=>{if(!d.ok)return;const keep=a.onChange;a.onChange=null;a.load(d.items);a.onChange=keep;lfFields(d.items);lfStatus(d.items.length?'저장해 둔 롱폼 안내를 불러왔어요':'')}).catch(()=>{});
+ }
+ function lfImage(){const a=lfApi(),sc=api.context?.()?.scenes?.[api.geometry().sceneIndex];if(a)a.setImage(sc?.media||getComputedStyle(preview).getPropertyValue('--template-media').replace(/^\s*url\(["']?|["']?\)\s*$/g,''));}
+ function lfShow(on){
+   lfMode=!!on;if(!lfBox)return;
+   preview.parentElement.style.display=lfMode?'none':'';lfBox.style.display=lfMode?'block':'none';
+   lfTabs.querySelectorAll('button').forEach(b=>{const act=(b.dataset.lfTab==='long')===lfMode;b.style.background=act?'#11B98C':'transparent';b.style.color=act?'#04231b':'#dce8ec';});
+   if(ytButton)ytButton.style.visibility=lfMode?'hidden':'';   // 유튜브 자리 표시는 숏폼 화면 것이다
+   if(lfMode){lfLoad();lfImage();}else ytDraw();
+ }
+ function lfInit(){
+   if(lfBox||!ytAllowed)return;
+   lfBox=document.createElement('div');lfBox.className='scene-longform';Object.assign(lfBox.style,{display:'none',width:'100%',maxWidth:'860px',margin:'0 auto',aspectRatio:'16/9',borderRadius:'9px',overflow:'hidden',border:'1px solid #40515c',boxShadow:'0 22px 55px rgba(0,0,0,.45)'});
+   lfFrame=document.createElement('iframe');lfFrame.title='구매링크 롱폼 미리보기';lfFrame.src='link-longform-stage.html?v=5';Object.assign(lfFrame.style,{width:'100%',height:'100%',border:'0',display:'block'});
+   lfFrame.addEventListener('load',()=>{
+     lfReady=true;const a=lfApi(),sets=box.querySelector('[data-lf-sets]');sets.replaceChildren();
+     a.sets().forEach(set=>sets.append(button(set.label,'data-lf-set',set.id)));
+     a.onChange=items=>{lfFields(items);lfSave(items);};
+     if(lfMode){lfLoad();lfImage();}
+   });
+   lfBox.append(lfFrame);preview.parentElement.after(lfBox);
+   lfTabs=document.createElement('span');lfTabs.dataset.lfTabs='';Object.assign(lfTabs.style,{display:'inline-flex',border:'1px solid #294451',borderRadius:'8px',overflow:'hidden',marginRight:'8px'});
+   for(const [key,label] of [['short','숏폼'],['long','롱폼']]){const b=button(label,'data-lf-tab',key);Object.assign(b.style,{border:'0',padding:'6px 12px',fontSize:'12px',fontWeight:'700',cursor:'pointer'});b.addEventListener('click',()=>lfShow(key==='long'));lfTabs.append(b);}
+   (ytButton||document.querySelector('[data-frame="hook"]')?.closest('.seg'))?.before(lfTabs);
+   lfShow(false);
+ }
  // ★스위치(관제 133, 사장님 "일단 관리자만 스위치 켜서"): 서버가 link_guide_enabled 로 열어 준 계정만 본다(context.linkGuide).
  //   꺼져 있으면 버튼·디자인 고르기가 안 보이고 세트는 예전 자리 그대로다 — 고객 화면은 한 글자도 안 바뀐다.
  let guideForce=false;
@@ -55,6 +103,8 @@
    box.querySelector('.dec-shopset-target').hidden=!on;box.querySelector('[data-shopset-designs]').hidden=!on;
    box.querySelector('[data-shopset-help]').textContent=on?'아래쪽 가리키는 화살표 + 안내 배지를 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).':'아래쪽 가리키는 화살표 + 「영상 속 제품 클릭!」을 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).';
    if(ytButton)ytButton.hidden=!on;
+   box.querySelector('.dec-longform').hidden=!on;if(lfTabs)lfTabs.hidden=!on;
+   if(on)lfInit();else if(lfMode)lfShow(false);
  }
  const YT_KEY='scene_style_yt_ui',ytAllowed=!new URLSearchParams(location.search).has('qa');
  let ytLayer=null,ytButton=null;
@@ -176,7 +226,7 @@
  function draw(){
    if(editing)return;
    const next=api.geometry().sceneIndex;if(index!==next){index=next;selected=-1;controls()}
-   applyGuide();ytDraw();
+   applyGuide();ytDraw();if(lfMode)lfImage();
    layer.replaceChildren();layerTop.replaceChildren();
    handles.hidden=true;
    const _order=[...masks().keys()].sort((x,y)=>(masks()[x].kind==='image')-(masks()[y].kind==='image'));   // 로고(image)는 늘 맨 위 — 나중에 그린다
@@ -259,6 +309,8 @@
      const ok=saveMyBadges([def,...myBadges().filter(x=>x.text!==text)]);picker();
      b.textContent=ok?'✓ 내 배지에 저장했습니다':'저장하지 못했습니다(브라우저 저장 공간)';setTimeout(()=>{b.textContent='⭐ 이 배지를 내 버튼으로 저장'},1600);return;
    }
+   if(b.hasAttribute('data-lf-set')){lfShow(true);lfApi()?.useSet(b.dataset.lfSet);return;}
+   if(b.hasAttribute('data-lf-clear')){lfApi()?.clear();return;}
    if(b.hasAttribute('data-shopset-design')){box.querySelectorAll('[data-shopset-design]').forEach(x=>x.classList.toggle('active',x===b));return;}
    if(b.hasAttribute('data-shopset')){shopSet(b.dataset.shopset);return;}
    const list=structuredClone(masks());
@@ -334,5 +386,6 @@
  document.addEventListener('keydown',event=>{if(!['Delete','Backspace'].includes(event.key)||event.target.closest('input,textarea,select,[contenteditable="true"]')||panel.hidden)return;if(selected>=0){event.preventDefault();removeSelected();}});
  new MutationObserver(draw).observe(preview.querySelector('.precision-edit-layer'),{childList:true});
  addEventListener('resize',()=>{if(!window.sceneStyleExporting)draw()});picker();draw();
+ box.querySelector('[data-lf-edit]').addEventListener('input',event=>{const el=event.target.closest('[data-lf]'),i=Number(box.querySelector('[data-lf-edit]').dataset.i);if(el&&i>=0)lfApi()?.patch(i,{[el.dataset.lf]:el.value});});
  window.sceneDecorations={motionAt(time){for(const el of layer.children)for(const animation of el.getAnimations()){animation.pause();animation.currentTime=time;}return masks().some(m=>m.motion&&m.motion!=='none')},refresh(){controls();draw();},linkGuide(on){guideForce=!!on;applyGuide();ytDraw();return guideOn()}};
 })();
