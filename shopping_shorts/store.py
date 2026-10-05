@@ -100,6 +100,8 @@ def _apply_beat_sources(beats, structure, seg_map):
         붙였으면 True. 지어낸 번호·이미 쓰는 장면이면 False(종전 화면 유지)."""
         if sid not in seg_map:
             return False                  # 지어낸 번호 — 무시하고 종전 화면을 쓴다
+        if sid not in _ep.auto_segs(seg_map) and not b.get("pinned"):
+            return False                  # 씨앗 컷 — 2단계가 지목했어도 자동으로 안 꽂는다(관제 138, 사람이 고른 줄만 예외)
         cur = (b.get("primary") or {}).get("seg_id")
         if cur == sid:
             return False
@@ -169,7 +171,9 @@ def _ensure_screen_time(plan, store, job_id):
         if not extract:
             return plan
         from shopping_shorts import edit_plan as _ep
-        srcs = [{"video_id": vid, "segments": (ex or {}).get("segments") or []}
+        # ★씨앗 표식(auto_exclude)을 같이 싣는다(관제 138) — 빠뜨리면 이 관문의 출처 적용·화면 채우기가 씨앗 컷을 자동으로 붙인다
+        #   (종전: video_id·segments 만 옮겨 표식이 사라졌다 = 저장할 때마다 새는 길). 소스 dict 를 통째로 넘긴다.
+        srcs = [dict(ex, video_id=vid, segments=ex.get("segments") or [])
                 for vid, ex in extract.items() if isinstance(ex, dict)]
         seg_map, _ = _ep._build_inventory(srcs)
         if not seg_map:

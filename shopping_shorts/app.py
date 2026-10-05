@@ -3773,7 +3773,9 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                             _picked, _job, body.get("target_seconds") or 25, job_id=_jid,
                             preset=str(body.get("length_preset") or "short"),
                             seed_text=(it.get("full_text") or ""),
-                            seed_product=script_generate._sources_product(_src) or "")
+                            seed_product=script_generate._sources_product(_src) or "",
+                            # 고른 씨앗이 job 의 어느 영상인지(URL·원문 대조) — 이야기 작가가 그 영상 컷을 줄에 안 붙인다(관제 138)
+                            seed_vid=_selected_source_id(it, shortcode, _job))
                     except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
                         _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
                 if not _bb_drafts and _bb_on:
@@ -7449,8 +7451,7 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
     # ⚠ AI 자동 채우기 후보에서 첫·끝(CTA·썸네일) 조각을 뺀다(2026-08-26).
     #   _build_inventory가 edge 표식만 달고 버리지 않게 바뀌었다 — 사람이 화면에서 골라
     #   쓰는 건 되지만 **AI가 자동으로 집는 건 종전대로 막는다**(설계 ⑤).
-    pool = [sid for sid, _s in seg_map.items()
-            if sid not in taken and not _edit_plan._is_edge_seg(_s)]
+    pool = [sid for sid in _edit_plan.non_edge_segs(seg_map) if sid not in taken]
     if not pool:
         return {"ok": True, "picks": [], "reason": "남은 장면이 없어요"}
     need = body.get("need")

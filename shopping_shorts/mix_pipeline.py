@@ -759,6 +759,8 @@ def _refill_beats_to_tts(beats, source_scripts, tts_dir):
     alternates만 갱신(다른 필드 불변). probe/pool 문제는 조용히 통과(부가기능이 job 안 죽인다)."""
     from collections import Counter
     from shopping_shorts import backbone
+    from shopping_shorts.edit_plan import auto_sources
+    source_scripts = auto_sources(source_scripts)   # 붙일 B롤은 자동 배치 후보 소스에서만(관제 138 — 씨앗 제외)
     if not source_scripts:
         return
     sc = Counter((b.get("primary") or {}).get("video_id")
@@ -917,6 +919,16 @@ def mark_auto_exclude(extracts, job):
     ss = (job or {}).get("script_structure") or {}
     idx = ss.get("no_auto_idx") if isinstance(ss, dict) else None
     if not isinstance(idx, list):
+        return extracts
+    # ★재료가 씨앗뿐이면 표식을 달지 않는다(관제 138) — 달면 자동 배치 후보가 0이 돼 편집안을 못 만든다(_drop_seed 와 같은 규칙).
+    _seed = set()
+    for i in idx:
+        try:
+            _seed.add(f"s{int(i)}")
+        except (TypeError, ValueError):
+            pass
+    if not any(isinstance(r, dict) and r.get("segments") for k, r in (extracts or {}).items() if k not in _seed):
+        print("[extract] 씨앗 말고 쓸 재료가 없어 자동 배치 제외를 달지 않는다", flush=True)
         return extracts
     for i in idx:
         try:
@@ -1644,6 +1656,8 @@ def _run_gate_correction(plan, source_scripts, target_seconds):
     """게이트 검사→재픽 루프. 위반이 재픽 가능하면 통과할 때까지 재픽(상한 _MAX_REPICK).
     재픽이 무변화면 즉시 종료(수렴). 최종 gate를 plan["gate"]에 항상 저장 —
     프론트가 역할별로(관리자=경고/일반=숨김) 표시한다. 순수·무과금·나레이션 불변."""
+    from shopping_shorts.edit_plan import auto_sources
+    source_scripts = auto_sources(source_scripts)   # 재픽 후보·소재 천장 모두 자동 배치 후보 소스 기준(관제 138 — 씨앗 제외)
     pool_ct = len({s.get("video_id") for s in (source_scripts or [])
                    if s.get("segments")} - {None})
     # 소재 천장(전 소스 세그 합) — 목표가 이보다 크면 게이트가 소재 기준으로 판정한다.
@@ -1982,6 +1996,20 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         store.set_mix_candidates(job_id, _rec_cands)
     # ★구절 맞춤 컷 하한 표식은 **저장 전에** 단다 — 3단계 화면(_lab_captions)과 렌더가 같은 값을 본다.
     _apply_phrase_min_cut(plan, store, {"customer_id": customer_id})
+    # ★출구 검사(관제 138): 새 계획에 씨앗 컷이 자동으로 붙어 있으면 빼고 경보한다(정상 0). 어느 생성 경로든 여기를 지난다.
+    #   빠진 화면 길이는 바로 아래 저장 관문(store._ensure_screen_time)이 자동 배치 후보로 다시 채운다.
+    try:
+        from shopping_shorts import edit_plan as _ep
+        _leak = _ep.enforce_auto_exclude(plan.get("beats"), _ep._build_inventory(source_scripts)[0])
+        if _leak:
+            print("[mix] ⚠️ 씨앗 컷 %d개가 자동 배치에 섞여 있어 뺐다(generator=%r)" % (_leak, plan.get("generator")),
+                  file=sys.stderr)
+            from shopping_shorts import ops_alert
+            ops_alert.raise_alert("seed_auto_leak", "씨앗 영상 컷이 자동 배치에 섞였습니다(빼고 저장함)",
+                                  "job %s · %d개 · generator=%r — 자동 배치 후보를 edit_plan.non_edge_segs/auto_sources 로 "
+                                  "거르지 않는 생성 경로가 있습니다." % (job_id, _leak, plan.get("generator")), store=store)
+    except Exception:      # noqa: BLE001 — 검사 실패가 제작을 막지 않는다(기록은 남긴다)
+        traceback.print_exc(file=sys.stderr)
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
 
 
