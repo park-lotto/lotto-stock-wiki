@@ -14,6 +14,8 @@ const CSS=`
 @keyframes lfb-pop{0%,100%{transform:rotate(-2deg) scale(1)}50%{transform:rotate(1.5deg) scale(1.09)}}
 @keyframes lfb-dive{0%,100%{transform:translateY(-9%) scaleY(1)}45%{transform:translateY(11%) scaleY(1.04)}55%{transform:translateY(11%) scaleY(.94)}}
 @keyframes lfb-trail{0%,100%{opacity:0;transform:translateY(-22%)}35%{opacity:.5}60%{opacity:0;transform:translateY(4%)}}
+@keyframes lfb-tick{0%{transform:scale(1.13)}22%,100%{transform:scale(1)}}
+@keyframes lfb-blink{0%,49%{opacity:1}50%,100%{opacity:.25}}
 @keyframes lfb-halo{0%{transform:scale(.5);opacity:.7}100%{transform:scale(1.35);opacity:0}}
 
 /* 문구 띠 — 화면을 가로지르는 살짝 기운 띠. 띠 안에서 글자가 두근거리고 빛이 한 번씩 지나간다 */
@@ -25,6 +27,10 @@ const CSS=`
 .lfb-band.yellow{background:linear-gradient(180deg,#fff04a,#ffd000);color:#111}.lfb-band.yellow .hot{background:#111;color:#ffe600}
 .lfb-band.black{background:linear-gradient(180deg,#1c1c1c,#050505)}.lfb-band.black .hot{background:#ff2d2d;color:#fff}
 .lfb-band.blue{background:linear-gradient(180deg,#3d93ff,#0f55f0)}.lfb-band.blue .hot{background:#fff;color:#0f55f0}
+.lfb-band.green{background:linear-gradient(180deg,#22c064,#0a8f43)}.lfb-band.green .hot{background:#fff;color:#0a8f43}
+/* 줄어드는 시계 — 숫자 칸 폭을 못 박아 초가 바뀌어도 글자가 흔들리지 않는다. 초마다 툭 튄다(1초 한 바퀴) */
+.lfb-band .hot.clk{animation-name:lfb-tick;animation-duration:1000ms;animation-timing-function:ease-out;display:inline-flex;align-items:center;padding:.1em .22em .04em}
+.lfb-band .clk b{display:inline-block;width:.66em;text-align:center;font-weight:700}.lfb-band .clk u{text-decoration:none;display:inline-block;width:.3em;text-align:center;animation-name:lfb-blink;animation-duration:1000ms;animation-timing-function:step-end}
 .lfb-band.purple{background:linear-gradient(180deg,#a743ff,#5a1fe0)}.lfb-band.purple .hot{background:#ffe600;color:#111}
 
 /* 큰 화살표 — 아래로 내리꽂고 살짝 눌렸다 올라온다. 뒤에 잔상 둘, 끝에서 고리가 퍼진다 */
@@ -35,34 +41,39 @@ const CSS=`
 .lfb-arrow .halo{position:absolute;left:10%;right:10%;bottom:-6%;aspect-ratio:1/.32;border-radius:50%;border:.22em solid rgba(255,255,255,.9);animation-name:lfb-halo;animation-duration:1200ms;animation-timing-function:ease-out}
 `;
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const TONES={red:['#ff5a4d','#d9001f'],yellow:['#fff04a','#ffb800'],black:['#ff5a4d','#d9001f'],blue:['#59a6ff','#0f55f0'],purple:['#c06bff','#5a1fe0']};
+const fmt=sec=>{const t=Math.max(0,Math.floor(sec)),d=String(Math.floor(t/60)).padStart(2,'0')+String(t%60).padStart(2,'0');return `<b>${d[0]}</b><b>${d[1]}</b><u data-a>:</u><b>${d[2]}</b><b>${d[3]}</b>`};
+const TONES={green:['#4fe08c','#0a8f43'],red:['#ff5a4d','#d9001f'],yellow:['#fff04a','#ffb800'],black:['#ff5a4d','#d9001f'],blue:['#59a6ff','#0f55f0'],purple:['#c06bff','#5a1fe0']};
 // 굵은 아래 화살표(100x130 좌표): 몸통 + 넓은 촉. 흰 테두리로 어떤 배경에서도 또렷하다.
 const PATH='M34 6h32a6 6 0 0 1 6 6v52h17a5 5 0 0 1 3.8 8.3L54 124a5.2 5.2 0 0 1-8 0L7.2 72.3A5 5 0 0 1 11 64h17V12a6 6 0 0 1 6-6z';
 let uid=0;
 const arrowSvg=(tone,cls)=>{const [a,b]=TONES[tone]||TONES.red,id='lfbg'+(++uid);
   return `<svg class="${cls}" viewBox="0 0 100 130" data-a><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><path d="${PATH}" fill="url(#${id})" stroke="#fff" stroke-width="5" stroke-linejoin="round"/></svg>`};
 const BLOCKS={
+  // m.clock(초) 가 있으면 강조 칸이 '줄어드는 시계'가 된다(영상 시작 = m.clock, 1초에 1씩 준다 — clockAt 이 영상 시각으로 맞춘다).
   // m.pre · m.hot(강조 칸) · m.post = 한 줄 문구. 글자 수가 늘면 크기를 줄여 한 줄에 넣는다(띠 폭 = 20em).
-  band:{label:'문구 띠',html:m=>{const text=(m.pre||'')+(m.hot||'')+(m.post||''),n=[...text].reduce((k,c)=>k+(/[\u0000-\u007f]/.test(c)?.58:1),0)+1.6;
-    return `<div class="lfb lfb-band ${esc(m.tone||'red')}"><i class="sh" data-a></i><span class="tx" data-a style="font-size:${Math.min(1.5,17.6/n).toFixed(3)}em">${m.pre?`<span>${esc(m.pre)}</span>`:''}<span class="hot" data-a>${esc(m.hot)}</span>${m.post?`<span>${esc(m.post)}</span>`:''}</span></div>`}},
+  band:{label:'문구 띠',html:m=>{const text=(m.pre||'')+(m.clock?'00:00':m.hot||'')+(m.post||''),n=[...text].reduce((k,c)=>k+(/[\u0000-\u007f]/.test(c)?.58:1),0)+1.6;
+    return `<div class="lfb lfb-band ${esc(m.tone||'red')}"><i class="sh" data-a></i><span class="tx" data-a style="font-size:${Math.min(1.5,17.6/n).toFixed(3)}em">${m.pre?`<span>${esc(m.pre)}</span>`:''}${m.clock?`<span class="hot clk" data-a data-clock="${Number(m.clock)||0}">${fmt(m.clock)}</span>`:`<span class="hot" data-a>${esc(m.hot)}</span>`}${m.post?`<span>${esc(m.post)}</span>`:''}</span></div>`}},
   arrow:{label:'큰 화살표',html:m=>`<div class="lfb lfb-arrow"><i class="halo" data-a></i>${arrowSvg(m.tone,'ghost g2')}${arrowSvg(m.tone,'ghost')}${arrowSvg(m.tone,'main')}</div>`},
 };
 // 문구 5가지(사장님 2026-10-06 "30분간 할인중 하단 링크확인 / 구매특가 이벤트 링크확인 같은 걸로 5개 — 마케팅 심리 자극").
 //   ①②는 사장님 문구 그대로. ③ 없어질까 봐(품절) ④ 남들도 산다 ⑤ 궁금하게(가격). 놓은 뒤 글자는 고칠 수 있다.
 const COPY=[
-  {id:'time',label:'① 30분 할인',tone:'red',pre:'⏰',hot:'30분간 할인중',post:'하단 링크 확인'},
+  {id:'time',label:'① 30분 카운트',tone:'red',pre:'⏰ 할인 종료까지',clock:1800,post:'하단 링크 확인'},   // 30:00 에서 초가 줄어든다(사장님 "30분에서 초 내려가는 걸로")
   {id:'event',label:'② 특가 이벤트',tone:'yellow',pre:'🎁',hot:'구매특가 이벤트',post:'링크 확인'},
   {id:'stock',label:'③ 품절 전에',tone:'black',pre:'🔥',hot:'품절되기 전에',post:'링크 먼저 확인'},
   {id:'crowd',label:'④ 다들 여기서',tone:'blue',pre:'👀 다들',hot:'여기서 사요',post:'하단 링크 확인'},
   {id:'price',label:'⑤ 가격 궁금',tone:'purple',pre:'💸 가격 보면',hot:'놀라요',post:'링크에서 확인'},
+  {id:'spot',label:'⑥ 구매 좌표',tone:'green',pre:'📌 구매 좌표는',hot:'고정 댓글에',post:'있어요'},
 ];
 // 자리(가로 화면 기준 %): 띠는 화면 폭 전체로 가운데를 가로지르고, 화살표는 양옆 여백 한가운데(17%·83%)에서 띠 아래로 내리꽂는다.
 const SETS=COPY.map(c=>({id:c.id,label:c.label,items:[
   {block:'arrow',l:8.5,t:53,w:17,tone:c.tone},
   {block:'arrow',l:74.5,t:53,w:17,tone:c.tone},
-  {block:'band',l:0,t:35,w:100,tone:c.tone,pre:c.pre,hot:c.hot,post:c.post},
+  {block:'band',l:0,t:35,w:100,tone:c.tone,pre:c.pre,hot:c.hot,post:c.post,...(c.clock?{clock:c.clock}:{})},
 ]}));
 window.LINK_LONGFORM_BLOCKS={LOOP_MS,CSS,BLOCKS,SETS,
+  // 시계를 영상 시각(ms)에 맞춘다 — 편집 화면은 흐르는 시간으로, 렌더는 프레임 시각으로 부른다. 숫자가 바뀔 때만 다시 쓴다.
+  clockAt(root,ms){root.querySelectorAll('[data-clock]').forEach(el=>{const sec=Math.max(0,Number(el.dataset.clock)-Math.floor(ms/1000));if(el.dataset.now!==String(sec)){el.dataset.now=String(sec);const u=el.querySelector('u');el.querySelectorAll('b').forEach(b=>b.remove());const d=String(Math.floor(sec/60)).padStart(2,'0')+String(sec%60).padStart(2,'0');u.insertAdjacentHTML('beforebegin',`<b>${d[0]}</b><b>${d[1]}</b>`);u.insertAdjacentHTML('afterend',`<b>${d[2]}</b><b>${d[3]}</b>`);}})},
   items:id=>structuredClone((SETS.find(s=>s.id===id)||SETS[0]).items).map(m=>({kind:'block',...m})),
 };
 })();

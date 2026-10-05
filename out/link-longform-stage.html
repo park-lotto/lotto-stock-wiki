@@ -1,6 +1,6 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><title>구매링크 롱폼 화면</title>
 <!-- 구매링크 롱폼(가로) 안내 항목을 놓아 보는 화면(관제 133). 항목 그리기는 scene-decoration-catalog.js 의 paint/animate 하나를 숏폼과 같이 쓴다.
-     ?src=<가운데에 놓을 쇼츠 그림>  ?set=time|event|stock|crowd|price  ?qa=1(렌더용: 배경·가운데 그림·손잡이 없이 항목만) -->
+     ?src=<가운데에 놓을 쇼츠 그림>  ?set=time|event|stock|crowd|price|spot  ?qa=1(렌더용: 배경·가운데 그림·손잡이 없이 항목만) -->
 <style>
 @font-face{font-family:"Pretendard";src:url("../shopping_shorts/static/fonts/w2/Pretendard-ExtraBold.woff2") format("woff2");font-weight:800;font-display:swap}
 @font-face{font-family:"GmarketSans";src:url("../shopping_shorts/static/fonts/w2/GmarketSansBold.woff2") format("woff2");font-weight:700;font-display:swap}
@@ -16,7 +16,7 @@ body.qa #lf-bg,body.qa #lf-fg{display:none}body.qa,body.qa #lf-stage{background:
 </style></head><body>
 <div id="lf-stage"><div id="lf-bg"></div><div id="lf-fg"></div><div id="lf-items"></div></div>
 <script src="../shopping_shorts/static/scene-decoration-catalog.js?v=3"></script>
-<script src="link-longform-blocks.js?v=2"></script>
+<script src="link-longform-blocks.js?v=3"></script>
 <script>
 (()=>{
  const C=window.SCENE_DECORATION_CATALOG,B=window.LINK_LONGFORM_BLOCKS,q=new URLSearchParams(location.search),qa=q.has('qa');
@@ -41,13 +41,15 @@ body.qa #lf-bg,body.qa #lf-fg{display:none}body.qa,body.qa #lf-stage{background:
  for(const n of ['pointerup','pointercancel'])layer.addEventListener(n,()=>drag=null);
  addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&selected>=0){items.splice(selected,1);selected=-1;draw();}});
  addEventListener('resize',draw);
+ // 편집 화면: 시계가 실제로 흐른다. motionAt 으로 시각을 못 박기 시작하면(렌더·견본) 멈춘다.
+ let live=!qa;const t0=performance.now();(function tick(){if(!live)return;B.clockAt(layer,performance.now()-t0);requestAnimationFrame(tick)})();
  window.linkLongform={
    sets:()=>B.SETS.map(s=>({id:s.id,label:s.label})),
    useSet(id){items=B.items(id);selected=-1;draw();return items.length},
    load(list){items=structuredClone(list||[]);selected=-1;draw()},
    items:()=>structuredClone(items),
    loopMs:B.LOOP_MS,
-   motionAt(time){const list=layer.getAnimations({subtree:true});for(const a of list){a.pause();a.currentTime=time;}return list.length>0},
+   motionAt(time){live=false;const list=layer.getAnimations({subtree:true});for(const a of list){a.pause();a.currentTime=time;}B.clockAt(layer,time);return list.length>0},
  };
  if(q.get('set'))window.linkLongform.useSet(q.get('set'));
 })();
