@@ -29,7 +29,7 @@ const Intro: React.FC = () => {
     <AbsoluteFill style={{background: BG, color: 'white', fontFamily: FONT, justifyContent: 'center', alignItems: 'center'}}>
       <div style={{fontSize: 44, color: MINT, fontWeight: 700, opacity: o}}>숏템메이커 · 설정 가이드</div>
       <div style={{fontSize: 96, fontWeight: 900, marginTop: 18, transform: `scale(${s})`}}>🚀 구글 버텍스 API</div>
-      <div style={{fontSize: 46, marginTop: 28, opacity: o}}>키(.json) 받는 법 — 5단계</div>
+      <div style={{fontSize: 46, marginTop: 28, opacity: o}}>연결하는 법 — 4단계</div>
     </AbsoluteFill>
   );
 };
