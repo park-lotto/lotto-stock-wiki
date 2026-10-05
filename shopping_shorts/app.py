@@ -9906,6 +9906,89 @@ def api_mix_video_nocta(job_id: str, request: Request, dl: int = 0):
     return _range_mp4_response(str(out_p), request)
 
 
+# ── 📺 구매링크용 롱폼(가로) 판 (2026-10-05 고객 황선희 → 사장님 "오른쪽에 롱폼으로 렌더를 활성화해줘", 관제 132) ──
+#   쇼츠엔 누르는 구매링크를 못 달아서, 같은 쇼츠를 가로 영상으로 한 벌 더 만들어 쇼츠의 '관련 동영상'에 건다.
+#   ★구도·문구·"지금 것이 최신인가"는 link_longform 한 곳이 정한다(0순위-C). 여기는 부르기만 한다.
+#   ★다시 굽는 일이라 수십 초 걸린다(실측 25초 영상 ≈ 17초) → 요청을 붙잡지 않고 뒤에서 굽고, 화면이 상태를 묻는다.
+#     상태는 파일로 본다(link_longform.state) — 웹 프로세스가 여럿이어도, 재시작돼도 같은 답이 나온다.
+_LONGFORM_LOCK = threading.Lock()      # 한 번에 한 편만 굽는다(웹 서버에서 도는 인코딩이라 겹치면 화면이 느려진다)
+
+
+def _longform_job(job_id):
+    """(job, src, 응답) — 롱폼을 만들 수 있는 상태가 아니면 응답에 사유를 담는다."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return None, None, JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return job, None, JSONResponse(status_code=409, content={
+            "ok": False, "error": "영상을 만드는 중이에요 — 끝나면 다시 눌러주세요"})
+    _gone = _video_gone_reason(job)
+    if _gone:
+        return job, None, JSONResponse(status_code=404, content={"ok": False, "error": _gone})
+    return job, job["video_path"], None
+
+
+def _longform_run(src, job_dir, where):
+    from shopping_shorts import link_longform
+    with _LONGFORM_LOCK:
+        try:
+            link_longform.render_link_longform(src, job_dir, where)
+        except Exception:      # noqa: BLE001 — 사유는 render_link_longform 이 .err 와 stderr 에 남겼다(화면이 읽는다)
+            pass
+
+
+def _longform_status(job_id, src, where):
+    from shopping_shorts import link_longform
+    st = link_longform.state(_MIX_WORK_DIR / job_id, src, where)
+    st.update({"ok": st["state"] != "error", "text": link_longform.text_for(where)})
+    if st["state"] == "ready":
+        st["url"] = f"/api/mix/video_longform/{job_id}"
+    return st
+
+
+@app.get("/api/mix/longform_link/{job_id}")
+def api_mix_longform_link_status(job_id: str, where: str = "comment"):
+    """구매링크용 롱폼 상태: none / running / ready / error."""
+    _job, src, bad = _longform_job(job_id)
+    if bad is not None:
+        return bad
+    return _longform_status(job_id, src, where)
+
+
+@app.post("/api/mix/longform_link/{job_id}")
+def api_mix_longform_link(job_id: str, body: dict):
+    """완성 쇼츠 → 구매링크용 가로 영상 만들기 시작. 이미 있으면(같은 완성본·같은 문구) 그대로 ready."""
+    from shopping_shorts import link_longform
+    where = str((body or {}).get("where") or link_longform.DEFAULT_WHERE)
+    _job, src, bad = _longform_job(job_id)
+    if bad is not None:
+        return bad
+    st = _longform_status(job_id, src, where)
+    if st["state"] in ("ready", "running"):
+        return st
+    job_dir = _MIX_WORK_DIR / job_id
+    link_longform.mark_running(job_dir)
+    threading.Thread(target=_longform_run, args=(src, job_dir, where), daemon=True).start()
+    return _longform_status(job_id, src, where)
+
+
+@app.get("/api/mix/video_longform/{job_id}")
+def api_mix_video_longform(job_id: str, request: Request, dl: int = 0, where: str = "comment"):
+    """구매링크용 롱폼 재생·다운로드. 지금 완성본으로 만든 것이 아니면 주지 않는다(api_mix_video_nocta 와 같은 규약)."""
+    from shopping_shorts import link_longform
+    _job, src, bad = _longform_job(job_id)
+    if bad is not None:
+        return bad
+    job_dir = _MIX_WORK_DIR / job_id
+    if not link_longform.is_fresh(job_dir, src, where):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "롱폼 영상이 아직 없어요 — 「롱폼으로 렌더」를 눌러주세요"})
+    out_p = link_longform.paths(job_dir)["out"]
+    if dl:
+        return _send_media(str(out_p), request, "video/mp4",
+                           filename=export_bundle.safe_name(job_id) + "_구매링크_롱폼.mp4")
+    return _range_mp4_response(str(out_p), request)
+
+
 # ── QR '폰으로 보내기' (2026-07-23) ──
 # 흐름: 제작소(로그인됨)에서 /api/share/link/{job} 호출 → 단축링크+QR(SVG) 발급 → 화면에 QR 표시.
 #       폰이 스캔 → /s/{sid}(로그인 불필요, 미들웨어 allowlist) → 영상+카톡공유 버튼.

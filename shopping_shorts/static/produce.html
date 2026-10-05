@@ -2576,6 +2576,9 @@
               <span class="hint" style="margin-left:4px">약 1.2초 표지처럼 보여줍니다</span></span>
           </label>
           <div id="finalStatus" class="hint" style="margin-top:10px"></div>
+          <!-- 📺 구매링크용 롱폼(2026-10-05 사장님 "완성본 최종 렌더하고 오른쪽에 롱폼으로 렌더를 활성화", 관제 132).
+               최종 렌더 전에는 흐리게 꺼져 있고, 완성본이 나오면 켜진다. 이 자리는 _lfRender 혼자 그린다. -->
+          <div id="longformBox" style="margin-top:14px"></div>
           <div id="exportBox" style="margin-top:14px"></div>
         </div>
       </div>
@@ -15106,9 +15109,95 @@ async function trimCta(j){
   }
 }
 
+// ── 📺 구매링크용 롱폼(가로) 판 (2026-10-05, 관제 132) ──
+// 왜: 쇼츠엔 누르는 구매링크를 못 단다. 같은 쇼츠를 가로 영상으로 한 벌 더 만들어 쇼츠의 '관련 동영상'에 걸면
+//     시청자가 롱폼으로 넘어가 설명란·댓글 링크를 누른다. 고객들이 캡컷에서 손으로 만들던 것을 버튼 하나로.
+// ★구도·문구·"지금 완성본으로 만든 것인가"는 서버(link_longform) 한 곳이 정한다 — 화면은 상태를 물어 그리기만 한다.
+// ★자리 하나에 그리는 함수 하나(test_dom_owner_budget): #longformBox 는 _lfRender 혼자 그린다.
+const _lfState={job:'', rendered:false, phase:'idle', where:'comment', msg:'', url:'', t0:0};
+let _lfTimer=null;
+function _lfStop(){ if(_lfTimer){ clearInterval(_lfTimer); _lfTimer=null; } }
+function _lfRender(){
+  const box=document.getElementById('longformBox'); if(!box) return;
+  const S=_lfState, on=S.rendered, run=(S.phase==='running');
+  const can=(on && !run && S.phase!=='ready');   // 이미 만든 것이 최신이면 다시 누를 일이 없다(문구를 바꾸면 다시 켜진다)
+  const j=encodeURIComponent(S.job), q='where='+encodeURIComponent(S.where);
+  const sel='<select id="lfWhere" onchange="lfWhere(this.value)" '+((on&&!run)?'':'disabled ')
+    + 'style="min-height:44px;padding:8px 10px;margin:0 6px 8px 0;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-size:13px">'
+    + '<option value="comment"'+(S.where==='comment'?' selected':'')+'>문구: 구매링크 댓글에 있습니다</option>'
+    + '<option value="desc"'+(S.where==='desc'?' selected':'')+'>문구: 구매링크 설명란에 있습니다</option></select>';
+  let body='';
+  if(!on){
+    body='<div class="hint">먼저 위 <b>🎬 최종 렌더</b>로 완성본을 만들면 이 버튼이 켜집니다.</div>';
+  }else if(run){
+    const sec=Math.max(0, Math.floor((Date.now()-S.t0)/1000));
+    body='<div class="hint"><span class="skm-spin">🔄</span> 가로 영상을 만드는 중… <b>'+sec+'초</b> (보통 1분 안쪽). 이 화면을 떠나도 계속 만들어집니다.</div>';
+  }else if(S.phase==='ready'){
+    body='<video controls preload="metadata" src="'+S.url+'?'+q+'&v='+S.t0+'" style="display:block;width:100%;max-width:440px;aspect-ratio:16/9;border-radius:10px;background:#000;margin:4px 0 10px"></video>'
+      + '<a class="btn-next" style="display:inline-block;padding:11px 18px;margin:0 6px 8px 0;text-decoration:none;min-height:44px;box-sizing:border-box" href="'+S.url+'?dl=1&'+q+'" download>⬇ 롱폼 영상 받기 (MP4)</a>'
+      + '<div class="hint" style="line-height:1.7">① 이 영상을 유튜브에 <b>일반(가로) 영상</b>으로 올리고 제목을 <b>구매링크</b>로<br>'
+      + '② 그 영상의 <b>'+(S.where==='desc'?'설명란':'댓글')+'</b>에 구매링크를 붙이고<br>'
+      + '③ 쇼츠 수정 화면의 <b>관련 동영상</b>에 이 영상을 고르면, 쇼츠 아래에 「구매링크」 버튼이 생깁니다.</div>';
+  }else if(S.phase==='error'){
+    body='<div class="warnBox" style="margin:6px 0">⚠️ '+esc(S.msg||'만들지 못했어요')+' — 다시 눌러주세요.</div>';
+  }else{
+    body='<div class="hint">완성한 쇼츠를 <b>가로 화면 가운데</b>에 넣고 안내 문구를 얹은 영상을 만듭니다. 유튜브 쇼츠의 「관련 동영상」에 걸어 구매링크로 보내는 용도예요.</div>';
+  }
+  box.innerHTML='<div style="border-top:1px solid var(--line);padding-top:12px">'
+    + '<div style="font-size:14px;font-weight:600;margin-bottom:6px">📺 구매링크용 롱폼 (가로 영상)</div>'
+    + '<button id="btnLongform" class="btn-next" '+(can?'':'disabled ')
+    + 'style="padding:12px 20px;margin:0 6px 8px 0;border:0;cursor:'+(can?'pointer':'not-allowed')+';min-height:44px'+(on?'':';opacity:.45')+'" '
+    + 'onclick="renderLongform()">'+(run?'📺 만드는 중…':(S.phase==='ready'?'✅ 롱폼 렌더 완료':'📺 롱폼으로 렌더'))+'</button>'
+    + sel + body + '</div>';
+}
+function _lfApply(d){
+  const S=_lfState;
+  if(d && d.state==='ready'){ S.phase='ready'; S.url=d.url; _lfStop(); }
+  else if(d && d.state==='running'){ if(S.phase!=='running'){ S.t0=Date.now(); } S.phase='running'; _lfPoll(); }
+  else if(d && (d.state==='error' || (d.ok===false && d.error))){ S.phase='error'; S.msg=d.error||''; _lfStop(); }
+  else { S.phase='idle'; _lfStop(); }
+  _lfRender();
+}
+async function _lfQuery(){
+  const job=_lfState.job; if(!job) return;
+  try{
+    const r=await fetch('/api/mix/longform_link/'+encodeURIComponent(job)+'?where='+encodeURIComponent(_lfState.where));
+    const d=await r.json().catch(()=>({}));
+    if(job!==_lfState.job || !_lfState.rendered) return;      // 그 사이 다른 작업으로 넘어갔다 — 버린다
+    _lfApply(d);
+  }catch(e){ /* 잠깐 끊긴 것 — 다음 물음에서 다시 본다 */ }
+}
+function _lfPoll(){
+  if(_lfTimer) return;
+  _lfTimer=setInterval(()=>{ if(_lfState.phase!=='running'){ _lfStop(); return; } _lfRender(); _lfQuery(); }, 2000);
+}
+// renderExport 가 부른다 — 완성본이 있나(rendered)만 받아, 켜고 끄는 판단을 여기 한 곳에서 한다.
+function _lfSync(rendered){
+  const job=MIX_JOB||'', S=_lfState, same=(job===S.job && rendered===S.rendered);
+  S.job=job; S.rendered=!!rendered;
+  if(!S.rendered){ _lfStop(); S.phase='idle'; _lfRender(); return; }
+  if(same && S.phase==='running'){ _lfRender(); return; }      // 만드는 중엔 다시 그리기만
+  if(!same) S.phase='idle';
+  _lfRender(); _lfQuery();
+}
+function lfWhere(v){ _lfState.where=(v==='desc'?'desc':'comment'); _lfState.phase='idle'; _lfRender(); _lfQuery(); }
+async function renderLongform(){
+  const S=_lfState;
+  if(!S.rendered || !S.job){ if(typeof toast==='function') toast('먼저 최종 렌더로 완성본을 만들어 주세요'); return; }
+  if(S.phase==='running' || S.phase==='ready') return;
+  S.phase='running'; S.t0=Date.now(); _lfRender();
+  try{
+    const r=await fetch('/api/mix/longform_link/'+encodeURIComponent(S.job),{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({where:S.where})});
+    const d=await r.json().catch(()=>({ok:false,error:'서버 응답을 읽지 못했어요'}));
+    _lfApply(d);
+  }catch(e){ _lfApply({ok:false, state:'error', error:'서버와 연결이 끊겼어요'}); }
+}
+
 // ── 내보내기(다운로드 + 캡컷 편집용) — 설계 2026-07-20 T1 ──
 // 웹앱이라 캡컷 자동실행은 불가 → 캡컷 편집용 ZIP(장면영상·음성·SRT·대본)을 내려받아 캡컷에 올린다.
 function renderExport(opts){
+  _lfSync(!!MIX_JOB && !!(opts&&opts.rendered));   // 📺 롱폼 버튼은 완성본이 있을 때만 켜진다(같은 신호를 쓴다)
   const box=document.getElementById('exportBox'); if(!box) return;
   if(!MIX_JOB){ box.innerHTML=''; return; }
   const j=encodeURIComponent(MIX_JOB), rendered=!!(opts&&opts.rendered);
