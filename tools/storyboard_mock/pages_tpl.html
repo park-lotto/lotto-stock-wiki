@@ -272,7 +272,9 @@ function mv(ek, i, j, d){ const k = ek + '#' + i; const a = ORD[k]; const t = j 
 // ── 감정짤(관제 121 팩 · 2026-10-05 사장님): 고조·반전 줄 맨 앞에 짤 1.25초 → 다음 컷이 제품. 자동으로 넣고, 바꾸기·빼기·＋짤은 손으로.
 //    팩 표는 감정짤밈팩 실험실(8765)의 manifest 하나를 /meme 로 읽는다. 내 짤(⭐)은 이 시안에선 브라우저에 저장(라이브는 회원별).
 let MEME = null, MEMEPICK = {}, MDRAW = null, MTAB = '⭐';
-let MFAV = new Set(JSON.parse((()=>{ try { return localStorage.getItem('meme_fav') || '[]'; } catch(e){ return '[]'; } })()));
+// 손님이 감정별로 미리 고른 '우선 짤' — 순서가 곧 우선순위(먼저 고른 것부터). 자동 배치는 그 감정의 우선 짤부터 쓴다.
+let MFAV = JSON.parse((()=>{ try { return localStorage.getItem('meme_fav') || '[]'; } catch(e){ return '[]'; } })());
+const mRank = id => MFAV.indexOf(id);
 fetch('/meme').then(r => r.json()).then(d => { MEME = d; render(); }).catch(() => { MEME = {clips: [], err: '밈팩을 못 읽었어요'}; });
 const MEME_MAX = 2, MEME_SEC = 1.25;
 function memeWant(sl){ const k = String(sl.slot||'').split('_')[0].toLowerCase(), t = String(sl.line||'');
@@ -285,7 +287,8 @@ function memeAuto(ek, bd){            // 자동 배치 — 짤 자리 줄(최대
   const pick = {}, used = new Set(); let n = 0;
   bd.slots.forEach((sl, i) => { if (n >= MEME_MAX || i === 0) return; const want = memeWant(sl); if (!want) return;
     const pool = MEME.clips.filter(c => c.emotion === want && !used.has(c.id));
-    const c = pool.find(c => MFAV.has(c.id)) || pool[0]; if (!c) return; pick[i] = c.id; used.add(c.id); n++; });
+    const pref = pool.filter(c => mRank(c.id) >= 0).sort((a, b) => mRank(a.id) - mRank(b.id));
+    const c = pref[0] || pool[0]; if (!c) return; pick[i] = c.id; used.add(c.id); n++; });
   return MEMEPICK[ek] = pick; }
 function mclip(id){ return (MEME && MEME.clips.find(c => c.id === id)) || null; }
 function mvid(id, w){ return `<video src="${MEME.base}/clips/${id}.mp4" poster="${MEME.base}/thumbs/${id}.jpg" muted loop playsinline preload="none" onmouseenter="this.play().catch(()=>{})" onmouseleave="this.pause()" ${w?`style="width:${w}px"`:''}></video>`; }
@@ -295,17 +298,17 @@ function memeCell(ek, i, bd){
   const c = mclip(id) || {};
   return `<div class="mm">${mvid(id)}<div><div class="mt">🎭 <b>${c.emotion||''}</b> 짤 · 줄 맨 앞 ${MEME_SEC}초 → 다음 컷이 제품</div>
     <div class="mt" style="opacity:.75">${(c.what||'').slice(0,38)}</div><div class="ma"><span onclick="mOpen('${ek}',${i})">바꾸기</span><span onclick="mSet('${ek}',${i},null)">빼기</span></div></div></div>`; }
-function mOpen(ek, i){ const bd = made()[VIEW[key()]]; MDRAW = {ek, i}; MTAB = MFAV.size ? '⭐' : (memeWant(bd.slots[i]) || '놀람'); render(); }
+function mOpen(ek, i){ const bd = made()[VIEW[key()]]; MDRAW = {ek, i}; MTAB = memeWant(bd.slots[i]) || (MFAV.length ? '⭐' : '놀람'); render(); }
 function mSet(ek, i, id){ const p = MEMEPICK[ek] = MEMEPICK[ek] || {}; if (id) p[i] = id; else delete p[i]; MDRAW = null; render(); }
-function mFav(id, ev){ ev.stopPropagation(); MFAV.has(id) ? MFAV.delete(id) : MFAV.add(id); try { localStorage.setItem('meme_fav', JSON.stringify([...MFAV])); } catch(e){} render(); }
+function mFav(id, ev){ ev.stopPropagation(); MFAV = mRank(id) >= 0 ? MFAV.filter(x => x !== id) : MFAV.concat([id]); try { localStorage.setItem('meme_fav', JSON.stringify(MFAV)); } catch(e){} render(); }
 function memeDrawer(){
   if (!MDRAW || !MEME) return ''; const {ek, i} = MDRAW; const cur = (MEMEPICK[ek]||{})[i];
   const emos = [...new Set(MEME.clips.map(c => c.emotion))];
-  const list = MTAB === '⭐' ? MEME.clips.filter(c => MFAV.has(c.id)) : MEME.clips.filter(c => c.emotion === MTAB);
-  return `<div class="mdraw"><h3>🎭 ${i+1}번 줄 짤 고르기 <span class="note">눌러서 넣기 · ☆ 내 짤</span> <span class="btn" style="float:right" onclick="MDRAW=null;render()">닫기</span></h3>
-    <div class="mtabs"><span class="${MTAB==='⭐'?'on':''}" onclick="MTAB='⭐';render()">⭐ 내 짤 ${MFAV.size}</span>${emos.map(e => `<span class="${MTAB===e?'on':''}" onclick="MTAB='${e}';render()">${e} ${MEME.clips.filter(c=>c.emotion===e).length}</span>`).join('')}</div>
+  const list = MTAB === '⭐' ? MFAV.map(mclip).filter(Boolean).sort((a, b) => (a.emotion > b.emotion) - (a.emotion < b.emotion) || mRank(a.id) - mRank(b.id)) : MEME.clips.filter(c => c.emotion === MTAB);
+  return `<div class="mdraw"><h3>🎭 ${i+1}번 줄 짤 고르기 <span class="note">눌러서 넣기 · ☆ = 이 감정 우선 짤(먼저 누른 순서대로 자동 배치에 먼저 쓰임)</span> <span class="btn" style="float:right" onclick="MDRAW=null;render()">닫기</span></h3>
+    <div class="mtabs"><span class="${MTAB==='⭐'?'on':''}" onclick="MTAB='⭐';render()">⭐ 내 우선 짤 ${MFAV.length}</span>${emos.map(e => { const k = MFAV.filter(id => (mclip(id)||{}).emotion === e).length; return `<span class="${MTAB===e?'on':''}" onclick="MTAB='${e}';render()">${e} ${MEME.clips.filter(c=>c.emotion===e).length}${k?` · ⭐${k}`:''}</span>`; }).join('')}</div>
     ${list.length ? '' : '<div class="note">아직 비었어요 — 감정 탭에서 ☆를 눌러 담으세요</div>'}
-    <div class="mgrid">${list.slice(0, 120).map(c => `<div class="mi ${c.id===cur?'cur':''}" title="${(c.what||'').replace(/"/g,'&quot;')}" onclick="mSet('${ek}',${i},'${c.id}')">${mvid(c.id)}<span class="st" onclick="mFav('${c.id}',event)">${MFAV.has(c.id)?'⭐':'☆'}</span><span class="em">${c.emotion}</span></div>`).join('')}</div></div>`; }
+    <div class="mgrid">${list.slice(0, 120).map(c => `<div class="mi ${c.id===cur?'cur':''}" title="${(c.what||'').replace(/"/g,'&quot;')}" onclick="mSet('${ek}',${i},'${c.id}')">${mvid(c.id)}<span class="st" title="이 감정의 우선 짤로" onclick="mFav('${c.id}',event)">${mRank(c.id)>=0?'⭐'+(MFAV.filter(x=>(mclip(x)||{}).emotion===c.emotion).indexOf(c.id)+1):'☆'}</span><span class="em">${c.emotion}</span></div>`).join('')}</div></div>`; }
 // 1단계 상자에 담았는데 이 스타일 대본에 못 들어간 장면 — 맨 아래 칸에 카드로(사장님 10-05: 조용히 버리지 않는다)
 function leftRow(bd){ const L = bd.role_left || []; if (!L.length) return '';
   return `<div class="row leftrow"><div class="rl"><div class="rn">－</div><div><b>못 넣은 장면</b><div class="rneed">1단계에서 담았지만 이 대본엔 안 들어갔어요</div></div></div>
