@@ -44,13 +44,13 @@ const twoFrames=page=>page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=
         const settle=Math.max(hookCount,enterCount);   // 이 프레임까지는 제목·자막 등장이 움직인다 → 매 프레임 찍는다
         const count=moving||words!==null?end-first:Math.min(end-first,settle);
         const pattern=`scene-style-motion-${index}-%04d.png`,frameFile=f=>pattern.replace('%04d',String(f).padStart(4,'0'));
-        let lastWord=null,lastShot=-1;
+        let lastWord=null,lastShot=-1;const wordAt=[];
         for(let f=0;f<count;f++){
           await page.evaluate(i=>window.sceneStyle.show(i),index);
           // 단어 상태를 먼저 묻는다 — 등장이 끝났고 단어도 안 바뀌었으면 앞 그림을 그대로 쓴다.
           const word=words!==null?await page.evaluate(t=>window.sceneStyle.wordFxAt(t),f/30*1000):null;
           // word = '단어 번호:배율'. 캡컷 구간은 단어가 바뀔 때만 끊는다('툭 커짐'은 같은 단어 안에서 배율만 바뀐다).
-          const wordNo=word===null?null:Number(String(word).split(':')[0]);
+          const wordNo=word===null?null:Number(String(word).split(':')[0]);wordAt[f]=word;
           if(words!==null&&(!wordSpans||wordNo!==wordSpans[wordSpans.length-1].word)){(wordSpans=wordSpans||[]).push({frame:f,word:wordNo});}
           if(words!==null&&!moving&&f>settle&&word===lastWord&&lastShot>=0){
             fs.copyFileSync(path.join(request.output,frameFile(lastShot)),path.join(request.output,frameFile(f)));
@@ -69,17 +69,19 @@ const twoFrames=page=>page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=
         if(wordSpans)wordSpans=wordSpans.map((span,k)=>({frame:span.frame,word:span.word,file:frameFile((k+1<wordSpans.length?wordSpans[k+1].frame:count)-1)}));
         // 대표 그림이 자막 등장 도중이면(첫 단어가 짧거나 글자 단위 등장이 길 때) 캡컷엔 글자가 덜 나온 채 멈춰 보인다(관제 127 실측:
         //   글자 팝 튕김 첫 단어 잉크 44,444 / 정상 51,402). 그 단어는 '등장이 끝난 자막 + 그 단어 강조'를 따로 한 장 찍는다.
-        if(wordSpans&&enterCount)for(const span of wordSpans){
-          const f=Number(span.file.match(/(\d{4})\.png$/)[1]);if(f>=enterCount-1)continue;
+        //   그려지는 강조(밑줄·동그라미 등)가 그 단어 구간 안에 다 안 그려졌을 때(진행도 <1)도 같다 — 다 그려진 그림으로 찍는다.
+        if(wordSpans)for(const span of wordSpans){
+          const f=Number(span.file.match(/(\d{4})\.png$/)[1]),part=String(wordAt[f]??'').split(':')[2],partial=part!==undefined&&Number(part)<1;
+          if(!(enterCount&&f<enterCount-1)&&!partial)continue;
           await page.evaluate(i=>window.sceneStyle.show(i),index);await twoFrames(page);
-          await page.evaluate(({title,shape,brand,word})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape);window.sceneBranding?.motionAt(brand);window.sceneStyle.captionEnterAt?.(100000);window.sceneStyle.wordFxAt(word)},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000,brand:(first+f)/30*1000,word:f/30*1000});
+          await page.evaluate(({title,shape,brand,word})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape);window.sceneBranding?.motionAt(brand);window.sceneStyle.captionEnterAt?.(100000);window.sceneStyle.wordFxAt(word);document.querySelectorAll('.precision-text[data-edit-bind="caption"]').forEach(el=>el.style.setProperty('--wfx-p','1'))},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000,brand:(first+f)/30*1000,word:f/30*1000});
           await twoFrames(page);await materialize(page);
           span.file=`scene-style-capcut-${index}-${String(f).padStart(4,'0')}.png`;
           await page.screenshot({path:path.join(request.output,span.file),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
         }
       }
       const camera=isCamera?await page.evaluate(({first,end})=>Array.from({length:end-first},(_,f)=>window.sceneStyle.cameraAt((first+f)/30*1000)),{first,end}):null;
-      layers.push({...g,file,animation,camera,...(wordSpans?{wordSpans}:{})});
+      layers.push({...g,file,animation,camera,...(wordSpans?{wordSpans}:{}),...(enter?{enterMs:enter}:{})});   // enterMs = 이 장면 자막 등장 길이(표식 — 자막팩 칸 판정 점검이 읽는다)
     }
     if(errors.length)throw new Error(errors.join('\n'));
     fs.writeFileSync(path.join(request.output,'scene-style-layers.json'),JSON.stringify(layers));

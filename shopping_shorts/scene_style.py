@@ -22,6 +22,12 @@ def caption_pack_keys():
     return tuple(json.loads(text.split("/*PACKS*/")[1]))
 
 
+def caption_word_fx_keys():
+    """단어 강조 방식 저장값 — 같은 계약 파일의 WORDFX 표식 사이(관제 102 → 127)."""
+    text = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")
+    return tuple(json.loads(text.split("/*WORDFX*/")[1]))
+
+
 def validate_snapshot(value):
     if not isinstance(value, dict) or len(json.dumps(value, ensure_ascii=False)) > 250_000:
         raise ValueError("장면꾸미기 설정이 올바르지 않습니다")
@@ -167,9 +173,9 @@ def validate_snapshot(value):
         raise ValueError("자막팩 값이 올바르지 않습니다")
     word_fx = value.get("wordFx")
     if word_fx is not None:
-        # 단어 강조(관제 102) — precision20-ui.js WORD_FX_STYLES 와 짝. color 빈칸 = 템플릿 포인트 색(자동).
+        # 단어 강조(관제 102) — 방식 목록은 계약 파일(caption_word_fx_keys). color 빈칸 = 템플릿 포인트 색(자동).
         if (not isinstance(word_fx, dict) or set(word_fx) - {"style", "color", "grow"}
-                or word_fx.get("style", "") not in ("", "box", "color")
+                or word_fx.get("style", "") not in ("", *caption_word_fx_keys())   # 계약 파일 static/caption-motions.js 한 곳
                 or word_fx.get("grow", "") not in ("", "hold", "pop", True, False)      # 옛 값(참/거짓)도 받는다 — 참 = hold
                 or not re.fullmatch(r"(#[0-9a-fA-F]{6})?", str(word_fx.get("color", "")))):
             raise ValueError("단어 강조 값이 올바르지 않습니다")

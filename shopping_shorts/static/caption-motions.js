@@ -518,65 +518,243 @@
 }/*JSON*/;
   // 자막팩(관제 127 3단계) — 팩 하나 고르면 장면마다 칸(slots)을 보고 등장 효과를 자동으로 고른다. 칸을 정하는 판단은 편집기 captionSlot 한 곳.
   //   slots: first 첫 장면 · body 일반 줄 · price 가격·숫자 줄 · end 마지막 장면 → 값은 위 CAPTION_MOTIONS 키.
-  //   wordFx: 팩을 누를 때 같이 켜 주는 단어 강조(style '' = 끔). 고객이 나중에 따로 바꿀 수 있다(저장은 wordFx 따로).
+  //   ★자막팩 = 자막 한 벌 완성형(10-05 사장님 "움직임뿐 아니라 색상·폰트크기·강조단어·밑줄·동그라미까지 한 번에"). 자막에만 건다(제목·채널명은 그대로).
+  //   font 자막 글꼴(편집기에 실린 글꼴 이름) · size 자막 기본 크기(%) · look 자막 상자(CAPTION_LOOKS 번호 또는 'none')
+  //   text.color 글자색 · text.style 글자 꾸밈(테두리·그림자, em 단위 — 미리보기·렌더 크기가 달라도 같은 비율)
+  //   wordFx: 팩을 누를 때 같이 켜 주는 단어 강조(방식·색·커짐). 저장은 wordFx 따로 — 고객이 나중에 바꿀 수 있다.
+  //   emph: 영상 위 강조 자막(장면효과팩 '어둡게 강조' 장면의 가운데 큰 글자) 모양 — font·size(자막 대비 %)·color·style. 등장은 slots.emph.
+  //         언제·어디(어둡게·가운데 자리)는 장면효과팩(관제 124), 모양은 여기(10-05 사장님 "영상 중간에 들어가는 자막들도 효과 좋은 걸로").
+  //   ★우선순위: 고객이 직접 바꾼 값(상자 모양·크기·색) > 팩 > 템플릿 기본. 판단은 precision20-ui.js captionPackStyle 한 곳.
   //   ★서버는 PACKS 표식 두 개 사이를 json 으로 읽는다(scene_style.caption_pack_keys) — 그 안에는 JSON 만.
   root.CAPTION_PACKS = /*PACKS*/{
  "tension": {
   "label": "예능 텐션",
-  "desc": "통통 튀고 쾅 박히는 예능 자막",
+  "desc": "굵은 흰 글씨 + 노란 상자 · 통통 튀는 등장",
+  "font": "SBAggroB",
+  "size": 112,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.07em #000",
+    "paintOrder": "stroke fill",
+    "textShadow": "0 0.05em 0.1em rgba(0,0,0,.7)"
+   }
+  },
+  "wordFx": {
+   "style": "box",
+   "color": "#FFE600",
+   "grow": "pop"
+  },
   "slots": {
    "first": "slam",
    "body": "popBounce",
    "price": "jelly",
-   "end": "slam"
+   "end": "slam",
+   "emph": "slam"
   },
-  "wordFx": {
-   "style": "box",
-   "grow": "pop"
+  "emph": {
+   "font": "SBAggroB",
+   "size": 160,
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.06em #000",
+    "paintOrder": "stroke fill",
+    "textShadow": "0 0.06em 0.18em rgba(0,0,0,.85)"
+   }
   }
  },
  "clean": {
   "label": "깔끔 정보",
-  "desc": "또렷하게 읽히는 정보형",
+  "desc": "흰 띠 위 검은 글씨 + 분홍 밑줄",
+  "font": "GmarketSansBold",
+  "size": 100,
+  "look": 0,
+  "text": {
+   "color": "#111111"
+  },
+  "wordFx": {
+   "style": "underline",
+   "color": "#FF2D6F",
+   "grow": ""
+  },
   "slots": {
    "first": "riseClip",
    "body": "blurUp",
    "price": "popBounce",
-   "end": "fade"
+   "end": "fade",
+   "emph": "riseClip"
   },
-  "wordFx": {
-   "style": "color",
-   "grow": "hold"
+  "emph": {
+   "font": "GmarketSansBold",
+   "size": 150,
+   "color": "#FFFFFF",
+   "style": {
+    "textShadow": "0 0.05em 0.25em rgba(0,0,0,.9),0 0 0.6em rgba(0,0,0,.5)"
+   }
   }
  },
  "premium": {
   "label": "고급 리뷰",
-  "desc": "천천히 모이는 차분한 리뷰형",
+  "desc": "명조 금색 글씨 + 네이비 금테 · 차분한 등장",
+  "font": "NanumMyeongjoEB",
+  "size": 100,
+  "look": 7,
+  "text": {
+   "color": "#F6E7B8"
+  },
+  "wordFx": {
+   "style": "glow",
+   "color": "#D9B45A",
+   "grow": ""
+  },
   "slots": {
    "first": "trackIn",
    "body": "fade",
    "price": "riseClip",
-   "end": "trackIn"
+   "end": "trackIn",
+   "emph": "trackIn"
   },
-  "wordFx": {
-   "style": "",
-   "grow": ""
+  "emph": {
+   "font": "NanumMyeongjoEB",
+   "size": 150,
+   "color": "#F6E7B8",
+   "style": {
+    "textShadow": "0 0 0.25em rgba(217,180,90,.65),0 0.05em 0.2em rgba(0,0,0,.9)"
+   }
   }
  },
  "story": {
   "label": "썰 이야기",
-  "desc": "타닥타닥 쳐 나가는 썰 채널형",
+  "desc": "주아체 흰 글씨 + 노란 동그라미 · 타닥타닥",
+  "font": "BMJUA",
+  "size": 108,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.07em #000",
+    "paintOrder": "stroke fill",
+    "textShadow": "0 0.05em 0.1em rgba(0,0,0,.7)"
+   }
+  },
+  "wordFx": {
+   "style": "circle",
+   "color": "#FFE600",
+   "grow": ""
+  },
   "slots": {
    "first": "typing",
    "body": "typing",
    "price": "popBounce",
-   "end": "riseClip"
+   "end": "riseClip",
+   "emph": "popBounce"
+  },
+  "emph": {
+   "font": "BMJUA",
+   "size": 160,
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.06em #000",
+    "paintOrder": "stroke fill",
+    "textShadow": "0 0.06em 0.18em rgba(0,0,0,.85)"
+   }
+  }
+ },
+ "deal": {
+  "label": "핫딜 가격",
+  "desc": "검은고딕 + 노란 형광펜 · 쾅 박히는 가격",
+  "font": "BlackHanSans",
+  "size": 110,
+  "look": "none",
+  "text": {
+   "color": "#FFFFFF",
+   "style": {
+    "WebkitTextStroke": "0.07em #000",
+    "paintOrder": "stroke fill",
+    "textShadow": "0 0.05em 0.1em rgba(0,0,0,.7)"
+   }
   },
   "wordFx": {
-   "style": "box",
+   "style": "highlight",
+   "color": "#FFE600",
    "grow": "hold"
+  },
+  "slots": {
+   "first": "slam",
+   "body": "riseClip",
+   "price": "slam",
+   "end": "popBounce",
+   "emph": "slam"
+  },
+  "emph": {
+   "font": "BlackHanSans",
+   "size": 170,
+   "color": "#FFE600",
+   "style": {
+    "WebkitTextStroke": "0.06em #000",
+    "paintOrder": "stroke fill",
+    "textShadow": "0 0.06em 0.18em rgba(0,0,0,.85)"
+   }
+  }
+ },
+ "soft": {
+  "label": "감성 손글씨",
+  "desc": "손글씨 + 종이 카드 + 주황 동그라미",
+  "font": "GaeguBold",
+  "size": 108,
+  "look": 4,
+  "text": {
+   "color": "#3A2A1A"
+  },
+  "wordFx": {
+   "style": "circle",
+   "color": "#FF8A1F",
+   "grow": ""
+  },
+  "slots": {
+   "first": "blurUp",
+   "body": "fade",
+   "price": "jelly",
+   "end": "blurUp",
+   "emph": "blurUp"
+  },
+  "emph": {
+   "font": "GaeguBold",
+   "size": 150,
+   "color": "#FFFFFF",
+   "style": {
+    "textShadow": "0 0.05em 0.25em rgba(0,0,0,.9),0 0 0.6em rgba(0,0,0,.5)"
+   }
   }
  }
 }/*PACKS*/;
-  root.CAPTION_SLOTS = {"first": "첫 장면", "body": "일반 줄", "price": "가격·숫자", "end": "마지막 장면"};
+  root.CAPTION_SLOTS = {"first": "첫 장면", "body": "일반 줄", "price": "가격·숫자", "end": "마지막 장면", "emph": "영상 위 강조"};
+  // 단어 강조 방식(관제 102 → 127) — 지금 말하는 단어를 어떻게 짚나. 편집기 WORD_FX_STYLES·서버 검증(scene_style.caption_word_fx_keys)이 여기를 읽는다.
+  //   draw: 그 단어가 켜진 뒤 이 초 동안 그려진다(밑줄·형광펜·동그라미). 모양은 precision20-ui.css .wfx-<키>.
+  //   ★서버는 WORDFX 표식 두 개 사이를 json 으로 읽는다 — 그 안에는 JSON 만.
+  root.CAPTION_WORD_FX = /*WORDFX*/{
+ "box": {
+  "label": "박스"
+ },
+ "color": {
+  "label": "색 바뀜"
+ },
+ "underline": {
+  "label": "밑줄 긋기",
+  "draw": 0.22
+ },
+ "highlight": {
+  "label": "형광펜",
+  "draw": 0.28
+ },
+ "circle": {
+  "label": "동그라미",
+  "draw": 0.35
+ },
+ "glow": {
+  "label": "번쩍 글로우"
+ }
+}/*WORDFX*/;
+  root.CAPTION_EMPH_DEFAULT = {"size": 150, "color": "#FFFFFF", "style": {"textShadow": "0 0.05em 0.25em rgba(0,0,0,.9),0 0 0.6em rgba(0,0,0,.5)"}, "motion": "pop"};
 })(window);

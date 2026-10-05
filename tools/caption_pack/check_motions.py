@@ -1,6 +1,6 @@
 """자막팩 등장 효과 점검(관제 127) — 편집기 렌더러가 찍은 프레임과 최종 합성 영상으로 잰다.
 
-  py tools/caption_pack/check_motions.py <출력폴더> [효과키,...] [--baseline <기준폴더>] [--compose] [--wordfx] [--long]
+  py tools/caption_pack/check_motions.py <출력폴더> [효과키,...] [--baseline <기준폴더>] [--compose] [--wordfx[=방식]] [--long]
 
 효과마다(본문 장면 s1) render_layers 로 레이어를 찍고:
   ① 등장 프레임 묶음이 생겼나(animation.count)
@@ -21,9 +21,10 @@ baseline = None
 if "--baseline" in args:
     i = args.index("--baseline"); baseline = pathlib.Path(args[i + 1]).resolve(); del args[i:i + 2]
 compose = "--compose" in args
-wordfx = "--wordfx" in args
+wordfx_arg = next((a for a in args if a.startswith("--wordfx")), None)   # --wordfx(상자) / --wordfx=circle 등 — 단어 강조를 같이 켠다
+wordfx = wordfx_arg.split("=", 1)[1] if wordfx_arg and "=" in wordfx_arg else ("box" if wordfx_arg else "")
 long_cap = "--long" in args   # 본문 자막을 길게 — 편집기가 글자 칸을 가로로 줄인다(scaleX). 등장 효과가 그 줄임을 덮지 않나   # 단어 강조(노란 상자·툭 커짐)를 같이 켠다 — 같은 자막 글자를 같이 쪼개 쓰므로 부딪히지 않나
-args = [a for a in args if a not in ("--compose", "--wordfx", "--long")]
+args = [a for a in args if a not in ("--compose", "--long") and not a.startswith("--wordfx")]
 keys = args[0].split(",") if args else ["rise", "grow", "pop", "slide", "drop", "fade", "wide"]
 out.mkdir(parents=True, exist_ok=True)
 fails = []
@@ -59,7 +60,7 @@ def ink(im):
 def render(key, d):
     snap = scene_style.validate_snapshot({"version": 1, "mode": "story", "plainCaption": 2, "presetId": "plain", "sceneIndex": 0,
                                           "frameKind": "hook", "text": TEXT, **({"bodyCaptionMotion": key} if key else {}),
-                                          **({"wordFx": {"style": "box", "color": "", "grow": "pop"}} if wordfx else {})})
+                                          **({"wordFx": {"style": wordfx, "color": "", "grow": "pop"}} if wordfx else {})})
     return snap, scene_style.render_layers(timeline, snap, d, HEAD, "cpqa")
 
 # 효과 없는 자막 — 등장이 끝난 그림이 이것과 같아야 한다(글자를 쪼개도 자리·모양이 그대로)
