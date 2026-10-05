@@ -60,6 +60,8 @@ def listing(page, query):
             items = resp.json()
             if not isinstance(items, list):
                 raise ValueError(f"목록이 배열이 아니다: {str(items)[:120]}")
+            # 목록만 받고 페이지를 비운다 — 열어 두면 미리보기 GIF 80개를 계속 받아 같은 서버의 내려받기가 느려진다
+            page.goto("about:blank")
             return items
         except Blocked:
             raise

@@ -21,15 +21,36 @@ from search import EMOTIONS  # noqa: E402
 
 WORK = ""
 LOCK = threading.Lock()
+GROUP_BY_PREFIX = {"agt_": "갓탤런트", "gph_": "GIPHY", "tnr_": "Tenor", "gdb_": "GIFDB", "gfr_": "Gifer"}
 MIME = {".mp4": "video/mp4", ".jpg": "image/jpeg", ".png": "image/png"}
 
 
+_CACHE = {}
+
+
 def _load(name, default):
+    """JSON 읽기 — 파일이 안 바뀌었으면 다시 안 읽는다(짤 1,500개에서 화면 한 번에 6초 걸리던 것, 2026-10-05 실측)."""
     p = os.path.join(WORK, name)
-    if not os.path.exists(p):
+    try:
+        stamp = os.stat(p)
+    except OSError:
         return default
+    key = (stamp.st_mtime_ns, stamp.st_size)
+    hit = _CACHE.get(p)
+    if hit and hit[0] == key:
+        return hit[1]
     with open(p, encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    _CACHE[p] = (key, data)
+    return data
+
+
+def _names(*parts):
+    """폴더 안 파일 이름 집합 — 파일마다 isfile 을 부르지 않고 한 번에 훑는다."""
+    try:
+        return {e.name for e in os.scandir(os.path.join(WORK, *parts))}
+    except OSError:
+        return set()
 
 
 def _save_state(state):
@@ -56,13 +77,13 @@ def items():
                         "origin": emo, "emotion": st.get("emotion") or emo, "deleted": bool(st.get("deleted"))})
     # 이미 잘라 온 짤 묶음(extra_*.json — 예: AGT 심사위원 리액션). 파일이 있고 감정이 목록에 있는 것만 싣는다
     seen = {it["id"] for it in out}
+    raw_names, clip_names = _names("raw"), _names("library", "clips")
     for name in sorted(os.listdir(WORK)):
         if not (name.startswith("extra_") and name.endswith(".json")):
             continue
         for r in _load(name, []):
             cid = r.get("id")
-            if (not cid or cid in seen or r.get("emotion") not in EMOTIONS
-                    or not os.path.isfile(os.path.join(WORK, "raw", f"{cid}.mp4"))):
+            if not cid or cid in seen or r.get("emotion") not in EMOTIONS or f"{cid}.mp4" not in raw_names:
                 continue
             seen.add(cid)
             st = state.get(cid, {})
@@ -70,6 +91,11 @@ def items():
                         "duration": r.get("duration") or 0, "w": r.get("w") or 0, "h": r.get("h") or 0,
                         "source": r.get("source") or "", "origin": r["emotion"],
                         "emotion": st.get("emotion") or r["emotion"], "deleted": bool(st.get("deleted"))})
+    # 묶음(어디서 온 짤인가): extra_*.json 의 "group" 이 있으면 그것, 없으면 id 머리글자로
+    grp = {r["id"]: r["group"] for name in os.listdir(WORK) if name.startswith("extra_") and name.endswith(".json")
+           for r in _load(name, []) if r.get("id") and r.get("group")}
+    for it in out:
+        it["group"] = grp.get(it["id"]) or GROUP_BY_PREFIX.get(it["id"].split("_")[0] + "_" if "_" in it["id"][:5] else "", "유튜브")
     # 국내/해외·실사/애니: 사장님이 고친 값(state.json)이 자동 판정(tags.json)을 이긴다
     tags = _load("tags.json", {})
     for it in out:
@@ -79,7 +105,7 @@ def items():
     hl = _load("highlights.json", {})
     for it in out:
         h = hl.get(it["id"])
-        ok = h and os.path.isfile(os.path.join(WORK, "library", "clips", it["id"] + ".mp4"))
+        ok = h and (it["id"] + ".mp4") in clip_names
         it["hl"] = {"start": h["start"], "dur": h["dur"], "usable": h.get("usable", True),
                     "what": h.get("what", "")} if ok else None
     return out
@@ -160,7 +186,7 @@ class Handler(BaseHTTPRequestHandler):
         if not ids or any(i not in known for i in ids):
             return self._json({"error": "모르는 영상 id"}, 400)
         with LOCK:
-            state = _load("state.json", {})
+            state = json.loads(json.dumps(_load("state.json", {})))
             if path == "/api/nudge":
                 # 하이라이트 구간의 주인은 build_pack — 여기는 부르기만 한다
                 import build_pack
@@ -244,22 +270,23 @@ figcaption b{color:#fff} figcaption a{color:#7ab8ff}
 <div class="grid" id="grid"></div><div id="empty" style="display:none">이 카테고리는 비어 있습니다</div>
 <div id="big"><video controls></video></div><div id="msg"></div>
 <script>
-const TRASH='휴지통'; let cats=[], regions=[], kinds=[], all=[], cur=null, sel=new Set(), fR='', fK='';
+const TRASH='휴지통'; let cats=[], regions=[], kinds=[], all=[], cur=null, sel=new Set(), fR='', fK='', fG='';
 const $=id=>document.getElementById(id);
 function say(t){const m=$('msg');m.textContent=t;m.style.display='block';clearTimeout(say.t);say.t=setTimeout(()=>m.style.display='none',1600);}
 async function load(){const r=await fetch('/api/items');const j=await r.json();cats=j.categories;regions=j.regions;kinds=j.kinds;all=j.items;if(cur===null)cur=cats[0];draw();}
 async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const j=await r.json();if(!r.ok||!j.ok){alert('저장 실패: '+(j.error||r.status));return false;}return true;}
 function src(it){return it.hl?`/library/clips/${it.id}.mp4?s=${it.hl.start}`:`/raw/${it.id}.mp4`;}
-function passF(it){return (!fR||it.region===fR)&&(!fK||it.kind===fK);}
+function passF(it){return (!fR||it.region===fR)&&(!fK||it.kind===fK)&&(!fG||it.group===fG);}
 function inCat(it,c){return passF(it)&&(c===TRASH?it.deleted:(!it.deleted&&it.emotion===c));}
 function drawFilters(){const f=$('filters');f.innerHTML='';
   const grp=(label,vals,get,set)=>{const s=document.createElement('span');s.textContent=label;f.appendChild(s);
     ['',...vals].forEach(v=>{const b=document.createElement('button');const live=all.filter(i=>!i.deleted);
-      const n=v?live.filter(i=>(label==='지역'?i.region:i.kind)===v).length:live.length;
+      const key={'지역':'region','종류':'kind','묶음':'group'}[label];const n=v?live.filter(i=>i[key]===v).length:live.length;
       b.textContent=(v||'전체')+' '+n;b.dataset.f=label+':'+v;if(get()===v)b.classList.add('on');
       b.onclick=()=>{set(v);sel.clear();draw();};f.appendChild(b);});};
-  grp('지역',regions,()=>fR,v=>fR=v);grp('종류',kinds,()=>fK,v=>fK=v);
+  grp('지역',regions,()=>fR,v=>fR=v);grp('종류',kinds,()=>fK,v=>fK=v);f.appendChild(document.createElement('br'));
+  grp('묶음',[...new Set(all.map(i=>i.group))],()=>fG,v=>fG=v);
   const un=all.filter(i=>!i.deleted&&(!i.region||!i.kind)).length;if(un){const s=document.createElement('span');s.textContent='· 구분 전 '+un+'개';f.appendChild(s);}}
 function draw(){
   drawFilters();const tabs=$('tabs');tabs.innerHTML='';
