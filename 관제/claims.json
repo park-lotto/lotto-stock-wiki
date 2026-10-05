@@ -79,6 +79,21 @@
     "card": 100,
     "track": "화살표회전"
   },
+  "shopping_shorts/edit_plan.py:build_inherit_plan": {
+    "at": "2026-10-06 03:46",
+    "card": 138,
+    "track": "씨앗자동배치뿌리"
+  },
+  "shopping_shorts/edit_plan.py:non_edge_segs": {
+    "at": "2026-10-06 03:46",
+    "card": 138,
+    "track": "씨앗자동배치뿌리"
+  },
+  "shopping_shorts/mix_pipeline.py:mark_auto_exclude": {
+    "at": "2026-10-06 03:46",
+    "card": 138,
+    "track": "씨앗자동배치뿌리"
+  },
   "shopping_shorts/scene_style.py": {
     "at": "2026-09-29 22:57",
     "card": 36,
@@ -113,6 +128,11 @@
     "at": "2026-09-29 23:07",
     "card": 36,
     "track": "장면폰트"
+  },
+  "shopping_shorts/store.py:_apply_beat_sources": {
+    "at": "2026-10-06 03:46",
+    "card": 138,
+    "track": "씨앗자동배치뿌리"
   },
   "shopping_shorts/story_writer.py:make_drafts": {
     "at": "2026-09-29 19:18",
