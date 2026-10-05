@@ -516,6 +516,27 @@ def job_script_endings(job):
     return bool((job or {}).get("given_script") or "")
 
 
+def _dialogue_of(job):
+    from shopping_shorts import dialogue_script
+    return dialogue_script.of_job(job)
+
+
+def _synth_dialogue(beats, tts_dir, *, voice, skip_existing, dialogue, customer_id):
+    """대화형 칸 음성(관제 128) — 굽기·자르기는 tts_dialogue, 마무리는 비트별·통짜와 같은 finalize_beat_audio.
+    배속·무음 손잡이는 작업 성우(_voice_params) 하나로 전원 통일."""
+    from shopping_shorts import tts_dialogue
+    outs = [Path(_beat_tts_path(tts_dir, b)) for b in beats]
+    if skip_existing and all(b.get("tts_path") == str(o) and o.exists() for b, o in zip(beats, outs)):
+        return
+    _vid, _set, _sp, extra_tempo, trim, _pv, _mid, pace_mode = _voice_params(voice)
+    tts_dialogue.synthesize(beats, dialogue, [str(o) for o in outs], tempo=extra_tempo,
+                            silence_trim=trim, pace_mode=pace_mode, customer_id=customer_id,
+                            work_dir=tts_dir)
+    for beat, out in zip(beats, outs):
+        beat["tts_path"] = str(out)
+        finalize_beat_audio(beat, out)
+
+
 def _try_joined(beats, tts_dir, *, voice, skip_existing, global_pron,
                 customer_id, script_endings):
     """통짜 합성 시도 — 성공하면 True(비트별 경로를 건너뛴다).
@@ -551,7 +572,7 @@ def _try_joined(beats, tts_dir, *, voice, skip_existing, global_pron,
 
 
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
-                      customer_id=0, script_endings=False):
+                      customer_id=0, script_endings=False, dialogue=None):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
 
     script_endings: 확정 대본(given_script) 잡인가 — 참이면 대본이 정한 어미를 음성이
@@ -596,6 +617,12 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
         finalize_beat_audio(beat, out)
 
     if total == 0:
+        return
+    # ★대화형(관제 128): 화자가 정해진 작업은 대화 경로만 탄다 — 실패하면 한 목소리로 조용히 되돌아가지 않고 job 실패.
+    #   dialogue = dialogue_script.of_job(job) (호출부가 넘긴다, 없으면 종전 그대로).
+    if dialogue:
+        _synth_dialogue(beats, tts_dir, voice=voice, skip_existing=skip_existing,
+                        dialogue=dialogue, customer_id=customer_id)
         return
     # ★통짜 합성(2026-09-05) — 자막 전환 지점의 목소리 튐을 뿌리에서 없앤다.
     #   전부 한 번에 굽고 정렬로 잘라내므로 조각 사이에 톤·볼륨·배속 차이가
@@ -1906,9 +1933,11 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     _apply_phrase_min_cut(plan, store, {"customer_id": customer_id})
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
+    from shopping_shorts import dialogue_script as _dlg
     _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
                       customer_id=customer_id,
-                      script_endings=job_script_endings({"given_script": given_script}))
+                      script_endings=job_script_endings({"given_script": given_script}),
+                      dialogue=_dlg.of_structure(script_structure))
 
     # 4.2) 프리즈 뿌리 fix(2026-07-21) — 화면을 **실 TTS 길이**만큼 재보정한다. fill은 plan
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
@@ -5188,7 +5217,8 @@ def run_clean_sources(job_id, db_path, work_root, confirm_clean=None, confirm_se
                 _synthesize_beats(plan_for_tts["beats"], work / "tts", voice=job.get("voice"),
                                   skip_existing=True, global_pron=_gpron,
                                   customer_id=job.get("customer_id", 0),
-                                  script_endings=job_script_endings(job))
+                                  script_endings=job_script_endings(job),
+                                  dialogue=_dialogue_of(job))
                 # ★훅 시작점은 **여기서만** 정한다(video_assemble._apply_hook_inpoint → DB 저장 → 화면이 그 값을 본다).
                 #   2026-09-27부터 조립(_render_mix)은 옮기지 않는다(렌더는 편성표를 고쳐 쓰지 않는다).
                 #   (옛 사연: 조립이 옮기던 시절 그게 청소 뒤에 일어나 서명이 바뀌어 렌더에서 재청소됐다.)
@@ -6033,7 +6063,8 @@ def _save_plan_with_tts(store, job_id, job, plan, work, gpron):
     for _ in range(2):
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
                           global_pron=gpron, customer_id=job.get("customer_id", 0),
-                          script_endings=job_script_endings(job))
+                          script_endings=job_script_endings(job),
+                          dialogue=_dialogue_of(job))
         store.update_mix_job(job_id, edit_plan=copy.deepcopy(plan))
         saved = (store.get_mix_job(job_id) or {}).get("edit_plan")
         if not saved or not saved.get("beats"):
@@ -6442,7 +6473,8 @@ def resynth_tts_job(job_id, db_path, work_root):
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"),
                           global_pron=pron_corrections.load(store),
                           customer_id=job.get("customer_id", 0),
-                          script_endings=job_script_endings(job))
+                          script_endings=job_script_endings(job),
+                          dialogue=_dialogue_of(job))
         _bump_tts_ver(plan["beats"])      # 전 칸을 다시 구웠다(skip_existing 아님) — 화면이 새 음성을 묻게
         store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:
