@@ -105,7 +105,7 @@ def test_model_written_line_does_not_repeat_signal():
     out = dict(YT_OUT, twist="심지어 가방에도 쏙 들어가서")
     for key in ("a", "b", "c", "d", "e", "f", "g", "h"):
         lines = sw._to_lines(out, False, key, 0, FEATS)
-        _, sigs = sw._pick(sw.YT_SETS, key, 0)
+        _, sigs = sw.pick_signals("yt", key, 0)
         twist = next(L["text"] for L in lines if L["role"] == "반전")
         # 반전은 프리셋의 마지막 낱말([3])로 열고, 모델이 쓴 '심지어'는 떼어 낸다 — 한 줄에 신호어 두 개 금지
         assert twist.startswith(sigs[2]) and "심지어 심지어" not in twist and not twist.startswith(sigs[2] + " 심지어")
@@ -157,7 +157,7 @@ def test_insta_signal_goes_on_after_line_not_before():
                    {"before": "전에는 손이 아팠어요", "after": "지금은 한 손으로 돼요", "from_pain": "", "feat": 1}]}
     lines = sw._to_lines(o, True, "k", 0, feats=[{"name": "x"}])
     texts = [L["text"] for L in lines if L["role"].startswith("고조")]
-    assert not any(t.split()[0] in sw.IG_SETS["A"] + sw.IG_SETS["B"] and "전에는" in t for t in texts)
+    assert not any(t.split()[0] in [w for w, _ in sw.IG_POOL] and "전에는" in t for t in texts)
     assert any(t.startswith(sig) for t in texts for sig in sum(sw.IG_SETS.values(), []) if sig)
 
 
@@ -175,7 +175,7 @@ def test_signal_positions_fixed_contrast_first_then_escalations_then_twist():
          "twist": "60도까지 데워주는 기능까지 있다고", "closing": "c",
          "escalations": [{"moment": "m1", "what_happens": "w1", "erased": "e1", "from_pain": "", "feat": 1}]}
     lines = sw._to_lines(o, False, "k", 0, feats=[{"name": "x"}])
-    _, preset = sw._pick(sw.YT_SETS, "k", 0)
+    _, preset = sw.pick_signals("yt", "k", 0)
     by = {}
     for L in lines:
         by.setdefault(L["role"], L["text"])          # 칸의 첫 줄
@@ -183,7 +183,7 @@ def test_signal_positions_fixed_contrast_first_then_escalations_then_twist():
         assert by["대비"].startswith(preset[0])
     assert by["고조1"].startswith(preset[1])
     assert by["반전"].startswith(preset[2])
-    assert all(p[1] in ("심지어", "게다가", "거기다") for p in sw.YT_SETS.values())   # 두 번째 자리는 늘 '심지어' 급
+    assert all(p[1] in [w for w, _ in sw.YT_POOLS[2]] for p in sw.YT_SETS.values())   # 두 번째 자리는 늘 덧붙이는 말('심지어' 급)
 
 
 def test_반전은_twist_feat_번호의_특징_컷을_받는다():
@@ -418,3 +418,51 @@ def test_seed_points_catch_missed_quote():
     new = {f["name"]: f["new"] for f in picked}
     assert new.get("패션 아이템") is True
     assert all(not f["new"] for f in picked if f["name"] in ("간편한 세척", "편안한 착용감", "방수"))
+
+
+# ── 신호어 세트 확장(2026-10-05 사장님 "다 똑같으면 지루 — 조사해서 변형 세트로") ──────────────────────
+def test_signal_pool_switch_off_keeps_old_8_sets():
+    """스위치 꺼짐(고객 기본) = 종전 고정 8세트 그대로 — 새 풀은 signal_pool_enabled 켠 계정만(2026-10-05)."""
+    tok = sw.SIGNAL_POOL.set(False)
+    try:
+        combos = {tuple(sw.pick_signals("yt", "member%03d" % i, 0)[1]) for i in range(100)}
+        assert combos <= {tuple(v) for v in sw._OLD_YT_SETS.values()}
+    finally:
+        sw.SIGNAL_POOL.reset(tok)
+
+
+def test_signal_pick_is_stable_varied_and_never_repeats_in_one_script():
+    _tok = sw.SIGNAL_POOL.set(True)      # 새 풀 켠 계정
+    a = sw.pick_signals("yt", "job-1", 0)
+    assert a == sw.pick_signals("yt", "job-1", 0)                       # 같은 작업 = 같은 답
+    combos = {tuple(sw.pick_signals("yt", "member%03d" % i, 0)[1]) for i in range(100)}
+    assert len({tuple(sw.pick_signals("yt", "job-1", n)[1]) for n in range(3)}) == 3     # 한 작업의 1~3안은 서로 다르게
+    assert len(combos) >= 30                                             # 옛 8세트 → 회원 100명이 돌려도 30가지 이상(실측 64)
+    for i in range(300):
+        for plat in ("yt", "ig"):
+            ws = [w for w in sw.pick_signals(plat, "k%d" % i, 0)[1] if w]
+            assert len({sw._root(w) for w in ws}) == len(ws)              # 한 편 안에서 같은 뿌리 낱말 두 번 금지
+    w1, w2, w3 = sw.pick_signals("yt", "k", 0)[1]
+    assert (not w1 or w1 in [w for w, _ in sw.YT_POOLS[1]]) and w2 in [w for w, _ in sw.YT_POOLS[2]]         and w3 in [w for w, _ in sw.YT_POOLS[3]]                         # 자리 순서([1]대비→[2]더하기→[3]최고)는 그대로
+    sw.SIGNAL_POOL.reset(_tok)
+
+
+def test_attach_signal_replaces_models_own_opener():
+    assert sw.attach_signal("심지어 물이 안 샌다는 거", "게다가") == "게다가 물이 안 샌다는 거"
+    assert sw.attach_signal("근데 진짜 충격적인 건 가방에 쏙", "더 대박인 건") == "더 대박인 건 가방에 쏙"
+    assert sw.attach_signal("그리고 손이 편해요", "심지어") == "심지어 손이 편해요"
+
+
+def test_storyboard_puts_signals_on_escalation_and_twist_slots():
+    from shopping_shorts import storyboard as sbd
+    slots = [{"slot": "hook", "line": "이거 모르면 손해"}, {"slot": "reveal", "line": "이건 바로 필터"},
+             {"slot": "power", "line": "반사가 싹 사라진다는 거"}, {"slot": "escalation", "line": "심지어 물속까지 보인다는 거"},
+             {"slot": "twist", "line": "진짜 미친 건 자석으로 붙는다고"}, {"slot": "land", "line": "심지어 싸다"}]
+    assert sbd.signal_kinds(slots) == ["", "", "esc", "esc", "twist", ""]
+    words = sbd.apply_signals(slots, "job:18", 0, yt=True)
+    for i in (2, 3, 4):
+        if words[i]:
+            assert slots[i]["line"].startswith(words[i] + " ") and slots[i]["signal"] == words[i]
+    assert slots[4]["line"].count("미친") <= 1 and "진짜 미친 건" not in slots[4]["line"][len(words[4]):]
+    used = [w for w in words if w]
+    assert not any(slots[5]["line"].startswith(u + " ") for u in used)  # 배정 안 된 칸이 같은 신호어로 또 열지 않는다
