@@ -1303,6 +1303,18 @@ class Store:
                     set_at TEXT
                 )
             """)
+            # 채널 전수조사(2026-10-06, 관제 137) — 고른 채널의 쇼츠를 예전 것까지 전부. '채널별 터진 영상' 탭의 재료.
+            # reel_history 에 넣지 않는 이유: 저긴 수집 창(48시간)에 걸린 것만이라 채널의 '평소'를 못 잰다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS channel_survey (
+                    channel_id TEXT NOT NULL,
+                    video_id TEXT NOT NULL,
+                    channel_title TEXT, title TEXT, published_at TEXT, secs REAL,
+                    views INTEGER, likes INTEGER, comments INTEGER,
+                    surveyed_at TEXT,
+                    PRIMARY KEY (channel_id, video_id)
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS removed_channels (
                     username TEXT PRIMARY KEY,
@@ -3709,6 +3721,70 @@ class Store:
             "caption": r[6] or "", "views": r[7] or 0, "comments": r[8] or 0,
             "first_seen": r[9] or "", "upload_ts": r[10] or "",
         } for r in rows]
+
+    def save_channel_survey(self, channel_id, videos, channel_title="", surveyed_at=""):
+        """한 채널의 전수조사분을 통째로 갈아 끼운다(지워진 영상이 남지 않게). 저장한 편수를 준다."""
+        cid = (channel_id or "").strip()
+        if not cid:
+            return 0
+        at = surveyed_at or datetime.now(timezone.utc).isoformat()
+        rows = [(cid, v.get("id"), v.get("ch") or channel_title or "", v.get("title") or "", v.get("at") or "",
+                 float(v.get("secs") or 0), int(v.get("views") or 0), int(v.get("likes") or 0),
+                 int(v.get("comments") or 0), at) for v in (videos or []) if v.get("id")]
+        with self._conn() as c:
+            c.execute("DELETE FROM channel_survey WHERE channel_id=?", (cid,))
+            c.executemany("INSERT OR REPLACE INTO channel_survey(channel_id, video_id, channel_title, title, "
+                          "published_at, secs, views, likes, comments, surveyed_at) VALUES(?,?,?,?,?,?,?,?,?,?)", rows)
+        return len(rows)
+
+    #: '채널별 터진 영상' 탭에 나오는 카테고리 — 사장님이 채널을 직접 고른 두 탭(관제 134).
+    HIT_CATEGORIES = ("제품정체형", "홈템")
+
+    def channel_hit_items(self, now=None):
+        """채널별 터진 영상 — 고른 채널(채널 고정표의 썰쇼핑·홈템)마다 평소 대비 크게 터진 쇼츠. 추가 크롤 0.
+
+        ★누가 나오나 = 채널 고정표(channel_category_force) 한 곳. 채널을 탭에서 빼면 여기서도 빠진다.
+        ★무엇이 터진 것인가 = ranking.pick_channel_hits 한 곳.
+        """
+        from shopping_shorts import ranking as _rk
+        now = now or datetime.now(timezone.utc)
+        with self._conn() as c:
+            try:
+                force = {u: cat for u, cat in c.execute(
+                    "SELECT username, category FROM channel_category_force") if cat in self.HIT_CATEGORIES}
+                rows = c.execute("SELECT channel_id, video_id, channel_title, title, published_at, secs, "
+                                 "views, likes, comments FROM channel_survey").fetchall()
+            except sqlite3.Error:
+                return []
+            try:
+                subs = {cid: int(n or 0) for cid, n in c.execute("SELECT channel_id, IFNULL(subs,0) FROM channel_styles")}
+            except sqlite3.Error:
+                subs = {}
+        by = {}
+        for r in rows:
+            if (r[0] or "").lower() in force:
+                by.setdefault(r[0], []).append({"id": r[1], "ch": r[2], "title": r[3], "at": r[4], "secs": r[5],
+                                                "views": r[6] or 0, "likes": r[7] or 0, "comments": r[8] or 0})
+        out = []
+        for cid, vs in by.items():
+            med, picks = _rk.pick_channel_hits(vs)
+            fo = subs.get(cid) or None
+            for v in picks:
+                try:
+                    age = max(0.0, (now - datetime.fromisoformat((v["at"] or "").replace("Z", "+00:00"))).total_seconds() / 3600)
+                except ValueError:
+                    age = None
+                out.append({
+                    "platform": "youtube", "shortcode": v["id"], "username": cid, "name": v["ch"] or "",
+                    "category": force[cid.lower()], "url": "https://www.youtube.com/watch?v=%s" % v["id"],
+                    "thumbnail": "https://i.ytimg.com/vi/%s/oardefault.jpg" % v["id"], "video_url": "", "inpock": "",
+                    "caption": v["title"] or "", "views": v["views"], "likes": v["likes"], "comments": v["comments"],
+                    "followers": fo, "posted_at": v["at"] or "", "upload_ts": v["at"] or "",
+                    "age_hours": None if age is None else round(age, 1),
+                    "hit_ratio": v["hit_ratio"], "channel_median": med, "channel_videos": len(vs),
+                })
+        out.sort(key=lambda i: -i["hit_ratio"])
+        return out
 
     def archive_hits(self, min_comments=10000, limit=400, max_comments=0):
         """역대 히트작 — 누적 아카이브에서 크게 터진 것만. 추가 크롤 0.

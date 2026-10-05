@@ -1023,10 +1023,15 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
     (수집이 끝나 크론도 꺼져 있다). days보다 먼저 본다 — 둘 다 오면 아카이브가 이긴다."""
     store = Store(DB_PATH)
     if archive:
-        if platform != "instagram":
+        if platform == "youtube":
+            # ★유튜브는 이 자리가 '채널별 터진 영상'이다(2026-10-06 사장님 "유튜브는 역대히트작 자리에", 관제 137).
+            #   유튜브에는 누적 아카이브가 없어 이 탭이 늘 비어 있었다.
+            items, collected_at = store.channel_hit_items(), None
+        elif platform != "instagram":
             return {"ok": True, "items": [], "collected_at": None}
-        items, collected_at = store.archive_hits(
-            min_comments=min_comments, max_comments=max_comments), None
+        else:
+            items, collected_at = store.archive_hits(
+                min_comments=min_comments, max_comments=max_comments), None
     elif days > 0:
         # ★플랫폼 그대로 넘긴다(2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데
         #   이번주 터진것·이번달도"). 여태 인스타가 아니면 빈 목록을 줬다 —
