@@ -8,6 +8,8 @@
   ③ 저장값(window.sceneStyle.snapshot)에 captionPack 이 실리고, 효과를 직접 고르면 팩이 꺼진다
   ④ 새로고침해도 고른 팩이 남는다(브라우저 기억)
   ⑤ 페이지 오류 0
+  ⑥ ★실제로 움직인다: 팩을 누른 직후·[다음 ›] 직후 자막(글자) 애니메이션이 돌고 있다
+     (10-05 사장님 '팩을 누르면 작동은 안 하는 거지' — 칸 표시 줄만 재고 움직임을 안 재서 놓쳤다)
 """
 import json, pathlib, re, sys
 from playwright.sync_api import sync_playwright
@@ -20,6 +22,9 @@ fails = []
 def need(ok, msg):
     print(("  통과  " if ok else "★ 실패  ") + msg)
     if not ok: fails.append(msg)
+
+RUNNING = """()=>{const t=document.querySelector('.precision-text[data-edit-bind="caption"]');
+  return [t,...t.querySelectorAll('.cap-u')].reduce((n,e)=>n+e.getAnimations().filter(a=>a.playState==='running').length,0)}"""
 
 def open_body(pg):
     pg.locator("button:visible", has_text="다음").first.click(); pg.wait_for_timeout(400)
@@ -35,7 +40,9 @@ with sync_playwright() as p:
     cards = pg.eval_on_selector_all("[data-caption-pack]", "bs=>bs.map(b=>b.dataset.captionPack)")
     need(cards == list(PACKS), f"팩 카드 {len(cards)}장 = 계약 파일 {len(PACKS)}개")
     for key, pack in PACKS.items():
-        pg.click(f'[data-caption-pack="{key}"]'); pg.wait_for_timeout(250)
+        pg.click(f'[data-caption-pack="{key}"]'); pg.wait_for_timeout(100)
+        need(pg.evaluate(RUNNING) > 0, f"⑥ [{key}] 누른 직후 자막이 움직인다 (돌고 있는 애니메이션 {pg.evaluate(RUNNING)})")
+        pg.wait_for_timeout(1500)
         need(pg.locator(f'[data-caption-pack="{key}"].active').count() == 1, f"① [{key}] 카드가 켜진다")
         seen = set()
         total = int(pg.locator(".layout-a [data-scene-total]").first.inner_text())
@@ -46,7 +53,8 @@ with sync_playwright() as p:
             want = MOTIONS[pack["slots"][slot]]["label"] if slot else None
             need(bool(m) and m.group(3) == want, f"① [{key}] {line}  (팩 칸 효과 {want})")
             seen.add(slot)
-            pg.locator("button:visible", has_text="다음").first.click(); pg.wait_for_timeout(250)
+            pg.locator("button:visible", has_text="다음").first.click(); pg.wait_for_timeout(120)
+            run = pg.evaluate(RUNNING); need(run > 0, f"⑥ [{key}] [다음 ›] 직후 자막이 움직인다 ({run})"); pg.wait_for_timeout(1500)
         line = pg.locator("[data-caption-pack-now]").inner_text(); m = re.search(r" · (.+?) → ", line); seen.add(SLOTS.get(m.group(1)) if m else None)
         need({"first", "body", "end"} <= seen, f"① [{key}] 장면을 넘기며 본 칸 {sorted(s for s in seen if s)}")
         wf = pack.get("wordFx") or {}

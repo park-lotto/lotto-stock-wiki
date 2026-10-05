@@ -713,7 +713,7 @@
     if(pk){   // 팩 고르기 — 같은 팩을 다시 누르면 끈다. 팩이 정한 단어 강조도 같이 켠다(고객이 아래에서 따로 바꿀 수 있다)
       captionPack=captionPack===pk.dataset.captionPack?'':pk.dataset.captionPack;const pack=CAPTION_PACKS[captionPack];
       if(pack){bodyCaptionMotion='';if(mode==='continuous')hookBandMotion='';if(pack.wordFx)wordFx={...wordFx,style:pack.wordFx.style||'',grow:pack.wordFx.grow||''};}
-      syncHookMotionUI();rememberLocal({captionPack,bodyCaptionMotion,wordFx});if(sceneIndex===0&&mode!=='continuous')showScene(1);else{runCaptionEnter();runWordFx();}
+      syncHookMotionUI();rememberLocal({captionPack,bodyCaptionMotion,wordFx});if(sceneIndex===0&&mode!=='continuous')showScene(1);else runWordFx();   // runWordFx 가 다시 그린 뒤 등장까지 건다
       return;
     }
     const b=event.target.closest('[data-body-caption-motion]');if(!b)return;
@@ -1004,7 +1004,7 @@
   }
   // 편집기에서 지금 장면을 실제 속도로 한 번 따라가 보여준다(끝나면 첫 단어로). 렌더·검사(qa)에서는 흐르지 않는다.
   function runWordFx(){
-    cancelAnimationFrame(wordFxTimer);wordFxClock=0;renderEdit();
+    cancelAnimationFrame(wordFxTimer);wordFxClock=0;renderEdit();if(!window.sceneStyleExporting)runCaptionEnter();   // 10-05 사장님 '팩을 누르면 작동은 안 하는 거지': renderEdit 가 자막을 새로 그려 막 시작한 등장이 지워졌다(단어 강조를 켜고 [다음]을 누를 때도 — main 에서도 재현) → 새로 그린 뒤 등장을 다시 건다
     if(!wordFxOn()||qaMode||window.sceneStyleExporting||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
     const scene=sceneContext?.scenes?.[sceneIndex],dur=scene?Math.max(.6,scene.end-scene.start):1.8,began=performance.now(),index=sceneIndex;
     const step=()=>{
