@@ -9,7 +9,7 @@
  // ★로고(관제 065, 2026-10-01): 파일을 올려 장면 맨 위에 얹는다. 값의 주인 = masks[] 안 {kind:'image',src}. 렌더·썸네일·캡컷은 이 draw()를
  //   headless로 돌려 같은 그림을 얻는다. 파일은 out/장면꾸미기_로고/<계정>/ (편집기 http·렌더 file:// 둘 다 같은 상대 경로).
  const logoBox=document.createElement('details');logoBox.open=true;logoBox.className='dec-logo';
- logoBox.innerHTML='<summary>🏷 로고</summary><p>내 로고 그림을 올리면 장면 <b>맨 위</b>에 얹혀요(PNG·JPG·WEBP, 2MB). 내 프리셋에 저장하면 다음 작업에도 그대로.</p><div class="dec-choices"><label class="dec-logo-pick"><input type="file" accept="image/png,image/jpeg,image/webp" data-logo-file hidden>📂 파일 불러오기</label></div><div class="dec-my-logos"></div>';
+ logoBox.innerHTML='<summary>🏷 로고</summary><p>내 로고 그림을 올리면 장면 <b>맨 위</b>에 얹혀요(PNG·JPG·WEBP, 2MB). 마지막에 쓴 로고는 <b>다음 작업에도 자동으로</b> 모든 장면에 들어가요. 내 프리셋에도 함께 담겨요.</p><div class="dec-choices"><label class="dec-logo-pick"><input type="file" accept="image/png,image/jpeg,image/webp" data-logo-file hidden>📂 파일 불러오기</label></div><div class="dec-my-logos"></div>';
  box.append(logoBox);
  panel.append(box);
  const itemList=box.querySelector('.dec-items');

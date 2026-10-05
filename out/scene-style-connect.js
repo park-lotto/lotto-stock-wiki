@@ -96,7 +96,7 @@
     if(event.source!==window.parent||event.origin!==location.origin)return;
     if(event.data?.type==='scene-style-context'){
       context=event.data.context;
-      const saved=event.data.snapshot||{...api.snapshot(),captionTexts:{},effects:{}};
+      const saved=event.data.snapshot||{...api.snapshot(),captionTexts:{},effects:api.freshEffects(context.scenes.length)};   // 새 작업: 마지막에 쓴 로고만 전 장면에(관제 131, 판단은 precision20-ui.js)
       api.load(context,saved);
       if(Number.isInteger(event.data.sceneIndex))api.show(event.data.sceneIndex);
       document.documentElement.classList.remove('scene-waiting');   // 실제 데이터가 그려졌다 — 본문을 보인다(머리띠 가림은 html 표식이 계속)
