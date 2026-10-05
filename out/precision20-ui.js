@@ -254,6 +254,8 @@
         // ★자리도 담는다(2026-09-25 사장님 "프리셋을 누르면 스타일은 바뀌는데 자리는 지금 자리로 된다").
         //   '내 프리셋 적용'은 고객이 직접 누르는 것이라 자리까지 따라와야 한다. 새 작업 자동 복원(09-22 규칙)은 여전히 자리를 안 옮긴다.
         snap.positions=presetPositions();
+        // ★로고도 담는다(관제 131) — 지금 장면의 로고, 없으면 다른 장면의 로고. 적용하면 전 장면에 얹힌다. 등록한 로고가 곧 최종기억.
+        {const lg=logoOf(effects[String(sceneIndex)])||Object.values(effects).map(logoOf).find(Boolean);if(lg){snap.logo=structuredClone(lg);rememberLogo(lg);}}
         for(const k of ['captionTexts','captionDrags','captionPositions','captionLayouts','fontScales','textOffsets','textDrags'])delete snap[k];
         const list=readMine();const name=(prompt('프리셋 이름',`프리셋 ${list.length+1}`)||'').trim();if(!name)return;
         list.unshift({id:Date.now().toString(36),name,at:Date.now(),snap});writeMine(list.slice(0,20));
@@ -332,6 +334,26 @@
   const rgba=hex=>hex&&/^#[0-9a-f]{6}$/i.test(hex)?hex:'#111111';
   const rememberedBranding=()=>{try{return JSON.parse(localStorage.getItem('scene_style_branding')||'{}')}catch{return {}}};
   let sceneContext=null,effects={},branding=labMode?{}:rememberedBranding();
+  // ★로고 최종기억(관제 131, 2026-10-05 사장님 "로고 넣는 것 자동 최종기억, 프리셋 등록도 마찬가지").
+  //   라이브 실측 10-05: 로고 든 작업 4건 전부 전 장면·같은 자리였고, 고객 412는 작업 3건마다 같은 로고를 손으로 다시 넣었다.
+  //   기억의 주인 = 여기 한 곳. 값 = 마지막에 손댄 로고 항목 하나(masks[] 안 {kind:'image',src,자리·크기}) → localStorage 'scene_style_logo'
+  //   (워터마크 scene_style_branding 과 같은 방식 — 이 브라우저에 기억한다).
+  //   쓰는 곳 ①effect(): 로고를 넣거나 옮기면 기억, 어느 장면에도 안 남게 지우면 잊는다 ②freshEffects(): 저장본 없는 새 작업의 전 장면에 얹는다
+  //          ③내 프리셋 등록(snap.logo)·적용(전 장면에 얹는다).
+  const LOGO_KEY='scene_style_logo';
+  const isLogo=m=>!!m&&m.kind==='image'&&typeof m.src==='string';
+  const logoOf=e=>((e&&e.masks)||[]).find(isLogo)||null;
+  const rememberedLogo=()=>{if(qaMode||labMode)return null;try{const v=JSON.parse(localStorage.getItem(LOGO_KEY)||'null');return isLogo(v)?v:null}catch{return null}};
+  const rememberLogo=item=>{if(qaMode||labMode)return;try{if(item)localStorage.setItem(LOGO_KEY,JSON.stringify(item));else localStorage.removeItem(LOGO_KEY)}catch{}};
+  const withLogo=(e,item)=>{const rest=((e&&e.masks)||[]).filter(m=>!isLogo(m));return rest.length>=12?(e||{}):{...(e||{}),masks:[...rest,structuredClone(item)]}};
+  const logoEverywhere=(item,count=sceneTotal())=>{for(let i=0;i<count;i++)effects[String(i)]=withLogo(effects[String(i)],item)};
+  // 한 장면의 효과가 바뀐 뒤 부른다: 새로 생겼거나 달라진 로고가 있으면 그것을 기억, 이 장면에서 로고가 없어졌고 다른 장면에도 없으면 잊는다.
+  const noteLogo=(before,after)=>{
+    const was=new Set(((before&&before.masks)||[]).filter(isLogo).map(m=>JSON.stringify(m))),now=((after&&after.masks)||[]).filter(isLogo);
+    const touched=now.filter(m=>!was.has(JSON.stringify(m)));
+    if(touched.length)rememberLogo(touched[touched.length-1]);
+    else if(was.size&&!now.length&&!Object.values(effects).some(logoOf))rememberLogo(null);
+  };
   const sceneKind=index=>sceneContext?.scenes?.[index]?.kind||(index===0?'hook':'body');
   // ★서버 frame_kind의 거울 — 버튼을 누르면 서버 왕복 없이 미리보기를 바로 바꾼다. 저장 뒤 렌더·썸네일·캡컷은 서버 context_for가 같은 규칙으로 다시 정한다.
   //   두 벌이라 테스트(test_scene_style_frame_rule)가 세 규칙 결과를 서로 대조한다.
@@ -1978,6 +2000,7 @@
       }
       if(force&&saved){applyPresetPositions(saved.positions);markDirty('caption');}   // 자리 없는 옛 프리셋이면 템플릿 기본 자리로
       if(force&&saved&&saved.captionLook)applyCaptionLook(saved.captionLook);
+      if(force&&saved&&isLogo(saved.logo)){logoEverywhere(saved.logo);rememberLogo(saved.logo);window.sceneDecorations?.refresh();}   // 관제 131: 프리셋의 로고를 전 장면에. 로고 없는 프리셋은 지금 로고를 안 건드린다
       if(keepScene!=null)showScene(Math.max(0,Math.min(keepScene,sceneTotal()-1)));
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
@@ -2008,7 +2031,9 @@
     },
     show(index){showScene(index);return this.geometry()},
     geometry:()=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
-    effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
+    effect(value){if(value!==undefined){const k=String(sceneIndex),before=effects[k];effects[k]=value;noteLogo(before,value);}return effects[String(sceneIndex)]||{}},
+    // 저장본이 없는 새 작업의 첫 효과(관제 131): 마지막에 쓴 로고를 전 장면에 얹는다. 기억이 없으면 빈 값.
+    freshEffects(count){const item=rememberedLogo(),out={};if(item)for(let i=0;i<count;i++)out[String(i)]=withLogo({},item);return out},
     // 다른 장면의 효과를 직접 읽고 쓴다(쇼핑 안내 세트가 마지막 장면 여러 개에 한 번에 넣는다, 2026-09-23)
     effectAt(i,value){const k=String(i);if(value!==undefined)effects[k]=value;return effects[k]||{}},
     sceneCount:()=>sceneTotal(),
