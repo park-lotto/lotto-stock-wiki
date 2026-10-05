@@ -517,7 +517,8 @@
  }
 }/*JSON*/;
   // 자막팩(관제 127 3단계) — 팩 하나 고르면 장면마다 칸(slots)을 보고 등장 효과를 자동으로 고른다. 칸을 정하는 판단은 편집기 captionSlot 한 곳.
-  //   slots: first 첫 장면 · body 일반 줄 · price 가격·숫자 줄 · end 마지막 장면 → 값은 위 CAPTION_MOTIONS 키.
+  //   slots: first 첫 장면 · body 일반 줄 · price 가격·숫자 줄 · end 마지막 장면 · problem 문제 제기 · reveal 제품 공개 · emph 영상 위 강조 → 값은 위 CAPTION_MOTIONS 키.
+  //   problem·reveal·(훅→first·cta→end)는 장면 성격(scenes[i].moment, 판정 주인 장면효과팩 scene_style.moment_of)을 그대로 읽는다 — 장면 효과와 같은 장면에 걸린다.
   //   ★자막팩 = 자막 한 벌 완성형(10-05 사장님 "움직임뿐 아니라 색상·폰트크기·강조단어·밑줄·동그라미까지 한 번에"). 자막에만 건다(제목·채널명은 그대로).
   //   font 자막 글꼴(편집기에 실린 글꼴 이름) · size 자막 기본 크기(%) · look 자막 상자(CAPTION_LOOKS 번호 또는 'none')
   //   text.color 글자색 · text.style 글자 꾸밈(테두리·그림자, em 단위 — 미리보기·렌더 크기가 달라도 같은 비율)
@@ -551,7 +552,9 @@
    "body": "popBounce",
    "price": "jelly",
    "end": "slam",
-   "emph": "slam"
+   "emph": "slam",
+   "problem": "drop",
+   "reveal": "popBounce"
   },
   "emph": {
    "font": "SBAggroB",
@@ -583,7 +586,9 @@
    "body": "blurUp",
    "price": "popBounce",
    "end": "fade",
-   "emph": "riseClip"
+   "emph": "riseClip",
+   "problem": "slide",
+   "reveal": "riseClip"
   },
   "emph": {
    "font": "GmarketSansBold",
@@ -613,7 +618,9 @@
    "body": "fade",
    "price": "riseClip",
    "end": "trackIn",
-   "emph": "trackIn"
+   "emph": "trackIn",
+   "problem": "fade",
+   "reveal": "trackIn"
   },
   "emph": {
    "font": "NanumMyeongjoEB",
@@ -648,7 +655,9 @@
    "body": "typing",
    "price": "popBounce",
    "end": "riseClip",
-   "emph": "popBounce"
+   "emph": "popBounce",
+   "problem": "typing",
+   "reveal": "popBounce"
   },
   "emph": {
    "font": "BMJUA",
@@ -685,7 +694,9 @@
    "body": "riseClip",
    "price": "slam",
    "end": "popBounce",
-   "emph": "slam"
+   "emph": "slam",
+   "problem": "drop",
+   "reveal": "slam"
   },
   "emph": {
    "font": "BlackHanSans",
@@ -717,7 +728,9 @@
    "body": "fade",
    "price": "jelly",
    "end": "blurUp",
-   "emph": "blurUp"
+   "emph": "blurUp",
+   "problem": "fade",
+   "reveal": "jelly"
   },
   "emph": {
    "font": "GaeguBold",
@@ -729,7 +742,7 @@
   }
  }
 }/*PACKS*/;
-  root.CAPTION_SLOTS = {"first": "첫 장면", "body": "일반 줄", "price": "가격·숫자", "end": "마지막 장면", "emph": "영상 위 강조"};
+  root.CAPTION_SLOTS = {"first": "첫 장면", "body": "일반 줄", "price": "가격·숫자", "end": "마지막 장면", "problem": "문제 제기", "reveal": "제품 공개", "emph": "영상 위 강조"};
   // 단어 강조 방식(관제 102 → 127) — 지금 말하는 단어를 어떻게 짚나. 편집기 WORD_FX_STYLES·서버 검증(scene_style.caption_word_fx_keys)이 여기를 읽는다.
   //   draw: 그 단어가 켜진 뒤 이 초 동안 그려진다(밑줄·형광펜·동그라미). 모양은 precision20-ui.css .wfx-<키>.
   //   ★서버는 WORDFX 표식 두 개 사이를 json 으로 읽는다 — 그 안에는 JSON 만.

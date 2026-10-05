@@ -884,12 +884,15 @@
   //   고르는 곳은 흰 띠 줄(스윽/확대)과 같다 — 자막 글자 + 자막 가림막 상자를 한 덩어리로 움직인다.
   const CAPTION_ENTER_MS=300;
   // 자막팩 자동 배치(관제 127) — 지금 장면이 팩의 어느 칸인지 정하는 곳은 여기 하나다. 편집기·렌더·캡컷이 모두 이 결과를 쓴다.
-  //   가격·숫자 줄(값 표현이 있으면) > 마지막 장면 > 첫 장면(본문 등장이 처음 걸리는 장면) > 일반 줄.
+  //   영상 위 강조(어둡게) > 가격·숫자 줄 > 장면 성격(훅·문제·공개·마무리, 비트 첫 구절) > 마지막 장면 > 첫 장면(본문 등장이 처음 걸리는 장면) > 일반 줄.
   const CAPTION_PRICE_RE=/\d[\d,.]*\s*(?:원|%|만\s*원|천\s*원)|₩|반값|할인|최저가|무료|공짜/;
   function captionSlot(){
     const text=layer.querySelector('.precision-text[data-edit-bind="caption"]')?.textContent||inputs.caption?.value||'';
     {const dim=effects?.[String(sceneIndex)]?.dim;if(dim&&!dim.sec)return 'emph';}   // 장면효과팩 '어둡게 강조'(관제 124 emphasisCaption 과 같은 조건: dim 이 있고 장면 내내(sec 0)) — 영상 위 강조 자막
     if(CAPTION_PRICE_RE.test(text))return 'price';
+    // 장면 성격(scenes[i].moment — 판정 주인은 장면효과팩 scene_style.moment_of, 관제 124): 장면 효과처럼 그 비트의 첫 구절에만 건다(10-05 사장님 "중간중간마다 자막팩")
+    {const sc=sceneContext?.scenes,cur=sc?.[sceneIndex],first=cur&&(sceneIndex===0||sc[sceneIndex-1]?.beat_idx!==cur.beat_idx);
+     const bySlot={hook:'first',problem:'problem',reveal:'reveal',cta:'end'}[first?cur.moment:''];if(bySlot)return bySlot;}
     if(sceneIndex===sceneTotal()-1)return 'end';
     if(sceneIndex===(mode==='continuous'?0:1))return 'first';
     return 'body';

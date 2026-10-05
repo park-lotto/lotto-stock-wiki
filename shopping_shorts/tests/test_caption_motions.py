@@ -71,7 +71,8 @@ def test_팩은_계약_파일_한_곳이고_칸_효과가_모두_있다():
     packs, motions = _packs(), _motions()
     assert scene_style.caption_pack_keys() == tuple(packs)
     for k, p in packs.items():
-        assert set(p["slots"]) == {"first", "body", "price", "end"}, k
+        slots = json.loads(CONTRACT.read_text(encoding="utf-8").split("root.CAPTION_SLOTS = ")[1].split(";")[0])
+        assert set(p["slots"]) == set(slots), k   # 팩마다 모든 칸이 채워져 있다(빈 칸이면 그 장면만 등장이 빠진다)
         assert all(v in motions for v in p["slots"].values()), k
 
 
