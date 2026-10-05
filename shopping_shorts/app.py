@@ -14,6 +14,7 @@ import re
 import secrets
 import shutil
 import sys
+import contextvars
 import threading
 import socket
 import tempfile
@@ -3767,6 +3768,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                         # ★고른 씨앗을 명시로 넘긴다(2026-09-26). it.full_text = 2단계에서 고른 씨앗의 원문
                         #   (위키 항목이면 그 대본, 없으면 화면이 보낸 base_script). 씨앗은 화면 재료에서 빼서
                         #   job에 없으므로, 안 넘기면 이야기 작가가 job의 다른 영상을 씨앗으로 삼는다(ea29 사고).
+                        _sw.SIGNAL_POOL.set(_setting_gate(store, "signal_pool_enabled", getattr(request.state, "customer_id", 0)))   # 새 신호어 풀 스위치(관리자 먼저)
                         _bb_drafts, _bb_why = _sw.make_drafts(
                             _picked, _job, body.get("target_seconds") or 25, job_id=_jid,
                             preset=str(body.get("length_preset") or "short"),
@@ -16206,7 +16208,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 장면꾸미기 새 편집기를 6단계 화면에 바로(2026-09-23, 사장님: 유튜브 라이브 뒤 구버전→신버전 교체) — ""끔 · "admin" · "1" 전체
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
-                       "storyboard_enabled"}
+                       "storyboard_enabled",
+                       # 신호어 새 풀(히트 자막 2,051편 빈도 가중, 2026-10-05) — ""끔(종전 8세트) · "admin" · "1" 전체
+                       "signal_pool_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -20862,8 +20866,11 @@ _SB_LOCK = threading.Lock()
 
 
 def _sb_gate(request):
-    if not _setting_gate(Store(DB_PATH), "storyboard_enabled", getattr(request.state, "customer_id", 0)):
+    st, cid = Store(DB_PATH), getattr(request.state, "customer_id", 0)
+    if not _setting_gate(st, "storyboard_enabled", cid):
         return JSONResponse(status_code=403, content={"ok": False, "error": "스토리보드는 아직 열리지 않았습니다"})
+    from shopping_shorts import story_writer as _sw
+    _sw.SIGNAL_POOL.set(_setting_gate(st, "signal_pool_enabled", cid))   # 새 신호어 풀 스위치(관리자 먼저)
     return None
 
 
@@ -20882,7 +20889,8 @@ def _sb_run(job_id, name, fn):
         except Exception as e:      # noqa: BLE001 — 이유를 화면에 보여 준다
             print("[storyboard] %s %s 실패: %r" % (job_id, name, e), file=sys.stderr)
             _SB_TASKS[key] = {"state": "error", "error": str(e)[:300]}
-    threading.Thread(target=_go, daemon=True).start()
+    _ctx = contextvars.copy_context()      # 신호어 풀 스위치(SIGNAL_POOL) 등 요청 문맥을 실에도 그대로
+    threading.Thread(target=lambda: _ctx.run(_go), daemon=True).start()
 
 
 @app.get("/api/produce/storyboard/{job_id}")

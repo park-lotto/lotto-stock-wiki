@@ -421,7 +421,18 @@ def test_seed_points_catch_missed_quote():
 
 
 # ── 신호어 세트 확장(2026-10-05 사장님 "다 똑같으면 지루 — 조사해서 변형 세트로") ──────────────────────
+def test_signal_pool_switch_off_keeps_old_8_sets():
+    """스위치 꺼짐(고객 기본) = 종전 고정 8세트 그대로 — 새 풀은 signal_pool_enabled 켠 계정만(2026-10-05)."""
+    tok = sw.SIGNAL_POOL.set(False)
+    try:
+        combos = {tuple(sw.pick_signals("yt", "member%03d" % i, 0)[1]) for i in range(100)}
+        assert combos <= {tuple(v) for v in sw._OLD_YT_SETS.values()}
+    finally:
+        sw.SIGNAL_POOL.reset(tok)
+
+
 def test_signal_pick_is_stable_varied_and_never_repeats_in_one_script():
+    _tok = sw.SIGNAL_POOL.set(True)      # 새 풀 켠 계정
     a = sw.pick_signals("yt", "job-1", 0)
     assert a == sw.pick_signals("yt", "job-1", 0)                       # 같은 작업 = 같은 답
     combos = {tuple(sw.pick_signals("yt", "member%03d" % i, 0)[1]) for i in range(100)}
@@ -433,6 +444,7 @@ def test_signal_pick_is_stable_varied_and_never_repeats_in_one_script():
             assert len({sw._root(w) for w in ws}) == len(ws)              # 한 편 안에서 같은 뿌리 낱말 두 번 금지
     w1, w2, w3 = sw.pick_signals("yt", "k", 0)[1]
     assert (not w1 or w1 in [w for w, _ in sw.YT_POOLS[1]]) and w2 in [w for w, _ in sw.YT_POOLS[2]]         and w3 in [w for w, _ in sw.YT_POOLS[3]]                         # 자리 순서([1]대비→[2]더하기→[3]최고)는 그대로
+    sw.SIGNAL_POOL.reset(_tok)
 
 
 def test_attach_signal_replaces_models_own_opener():
