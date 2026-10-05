@@ -1,0 +1,4 @@
+# 영상 실물은 git에 넣지 않는다(용량·권리). 목록·manifest만 추적.
+raw/
+library/
+sheets/
