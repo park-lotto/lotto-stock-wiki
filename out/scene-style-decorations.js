@@ -2,7 +2,7 @@
  const api=window.sceneStyle,catalog=window.SCENE_DECORATION_CATALOG;if(!api||!catalog)return;
  const panel=document.querySelector('.scene-effects-panel'),preview=document.querySelector('#a-live-preview');
  const box=document.createElement('section');box.className='scene-decoration-panel';
- box.innerHTML=`<details open class="dec-shopset"><summary>🛍 쇼핑 안내 세트</summary><p>아래쪽 가리키는 화살표 + 안내 배지를 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).</p><label class="dec-shopset-target">가리킬 곳 <select data-shopset-target><option value="link">구매링크 칸(왼쪽 맨 아래)</option><option value="sticker">쇼핑 스티커(예전 자리)</option></select></label><div class="dec-choices"><button type="button" data-shopset="last3">마지막 3장면에 넣기</button><button type="button" data-shopset="here">이 장면만</button><button type="button" data-shopset="clear">세트 빼기</button></div><small data-shopset-status></small></details>
+ box.innerHTML=`<details open class="dec-shopset"><summary>🛍 쇼핑 안내 세트</summary><p>아래쪽 가리키는 화살표 + 안내 배지를 한 번에 넣어요. 다시 누르면 새로 놓입니다(겹치지 않아요).</p><label class="dec-shopset-target">가리킬 곳 <select data-shopset-target><option value="link">구매링크 칸(왼쪽 맨 아래)</option><option value="sticker">쇼핑 스티커(예전 자리)</option></select></label><div class="dec-choices" data-shopset-designs><button type="button" data-shopset-design="arrow" class="active">① 화살표 알약</button><button type="button" data-shopset-design="finger">② 손가락 콕</button><button type="button" data-shopset-design="ticket">③ 링크 티켓</button></div><div class="dec-choices"><button type="button" data-shopset="last3">마지막 3장면에 넣기</button><button type="button" data-shopset="here">이 장면만</button><button type="button" data-shopset="clear">세트 빼기</button></div><small data-shopset-status></small></details>
  <details open><summary>가림막</summary><div class="dec-choices"><button data-add-mask="blur">흐림</button><button data-add-mask="fade">그라데이션</button></div></details>
  <details open><summary>스티커 · 도형 · 배지</summary><div class="dec-kit"><button data-dec-kit="sticker" class="active">😀 스티커</button><button data-dec-kit="shape">🎨 도형</button><button data-dec-kit="badge">🏷 배지</button></div><div data-kit="sticker"><div class="dec-categories"></div><div class="dec-stickers"></div></div><div data-kit="shape" hidden><p>움직이는 도형 · 눌러서 영상 위에 추가</p><div class="dec-shapes"></div></div><div data-kit="badge" hidden><p>문구와 색, 모양을 바꿀 수 있어요</p><div class="dec-my-badges" hidden></div><div class="dec-badges"></div></div></details>
  <div class="dec-items"></div><div class="dec-edit" hidden><p>화면에서 끌어 이동 · ↘ 손잡이로 크기 · ⟳ 손잡이로 회전</p><label data-badge-text>배지 문구<input data-dec="text" type="text" maxlength="24"></label><label data-badge-style>배지 모양<select data-dec="badgeStyle"><option value="pill">그라데이션 알약</option><option value="ticket">티켓</option><option value="glass">유리 배지</option><option value="burst">포인트 배지</option></select></label><button type="button" data-save-badge hidden>⭐ 이 배지를 내 버튼으로 저장</button><label data-motion-control>움직임<select data-dec="motion"><option value="none">없음</option><option value="point">가리키기</option><option value="pulse">두근두근</option><option value="spin">회전</option><option value="float">둥실둥실</option><option value="reveal">쓱 나타나기</option></select></label><label>크기<input data-dec="size" type="range" min="5" max="90" step="1"></label><label data-mask-height>높이<input data-dec="h" type="range" min="2" max="35" step="1"></label><label>회전<input data-dec="rot" type="range" min="-180" max="180" step="1"></label><label>투명도<input data-dec="op" type="range" min="10" max="100" step="1"></label><label data-mask-color>색상<input data-dec="color" type="color"></label><button data-dec-delete>선택한 항목 삭제</button></div>`;
@@ -171,31 +171,10 @@
    const _order=[...masks().keys()].sort((x,y)=>(masks()[x].kind==='image')-(masks()[y].kind==='image'));   // 로고(image)는 늘 맨 위 — 나중에 그린다
    _order.forEach(i=>{const m=masks()[i];
      const el=document.createElement('div');el.className='scene-decoration';el.dataset.decIndex=i;el.classList.toggle('selected',selected===i);
-     Object.assign(el.style,{left:m.l+'%',top:m.t+'%',width:m.w+'%',height:m.h+'%',opacity:(m.op??100)/100,transform:`rotate(${m.rot||0}deg)`,borderRadius:m.shape==='ellipse'?'50%':m.shape==='pill'?'999px':m.shape==='rect'?'0':'12%'});
-     if(m.kind==='emoji'){el.textContent=m.ch;el.style.fontSize=Math.min(preview.clientWidth*m.w/100,preview.clientHeight*m.h/100)*.9+'px';}
-     else if(m.kind==='badge'){
-       el.textContent=m.text;el.style.background=`linear-gradient(135deg,color-mix(in srgb,${m.color},white 20%),${m.color} 65%,color-mix(in srgb,${m.color},black 20%))`;el.style.color='white';el.style.fontSize=Math.min(preview.clientHeight*m.h/100*.48,preview.clientWidth*m.w/100/Math.max(1,m.text.length)*1.5)+'px';el.style.fontWeight='900';el.style.fontFamily='Pretendard,sans-serif';el.style.borderRadius='999px';el.style.boxShadow=`0 ${preview.clientWidth*.008}px ${preview.clientWidth*.025}px #0005,inset 0 1px 0 #ffffff66`;el.style.border='1px solid #ffffff44';
-       el.style.whiteSpace='nowrap';el.style.fontSize=Math.min(preview.clientHeight*m.h/100*.48,preview.clientWidth*m.w/100*.86/Math.max(1,[...m.text].reduce((n,c)=>n+(/[\u0000-\u007f]/.test(c)?.55:1),0)))+'px';
-       if(m.badgeStyle==='ticket'){el.style.borderRadius='5%';el.style.borderLeft='3px dashed #ffffff99';el.style.borderRight='3px dashed #ffffff99';}
-       if(m.badgeStyle==='glass'){el.style.background=m.color+'99';el.style.backdropFilter='blur(8px)';}
-       if(m.badgeStyle==='burst'){el.style.borderRadius='12%';el.style.clipPath='polygon(5% 0,95% 0,100% 25%,96% 50%,100% 75%,95% 100%,5% 100%,0 75%,4% 50%,0 25%)';}
-     }
-     else if(m.kind==='image'){const img=document.createElement('img');img.src=m.src;img.draggable=false;Object.assign(img.style,{width:'100%',height:'100%',objectFit:'contain',display:'block',pointerEvents:'none'});el.style.background='transparent';el.style.borderRadius='0';el.append(img);}
-     else if(m.kind==='graphic'){
-       const canvas=document.createElement('canvas');canvas.width=480;canvas.height=480;canvas.style.width='100%';canvas.style.height='100%';const ctx=canvas.getContext('2d');ctx.translate(240,240);ctx.shadowColor='#0008';ctx.shadowBlur=12;catalog.shapeDraw[m.graphic]?.(ctx,170,m.color);el.append(canvas);
-     }
-     else if(m.fx==='blur'||m.fx==='blurdark'){el.style.backdropFilter='blur(10px)';el.style.background=m.fx==='blurdark'?'#0008':'transparent';if(m.soft>=80)el.style.maskImage='radial-gradient(ellipse,black 45%,transparent 72%)';}
-     else{el.style.background=m.fx==='fade'?`linear-gradient(90deg,transparent,${m.color} 20%,${m.color} 80%,transparent)`:m.color;}
+     catalog.paint(el,m,preview.clientWidth,preview.clientHeight);
      (m.kind==='image'?layerTop:layer).append(el);
      if(selected===i&&!window.sceneStyleExporting)placeHandles(m);
-     if(m.motion&&m.motion!=='none'){
-       // 가리키기는 도형이 향한 방향으로 오간다(2026-09-18 사장님 "회전하면 가리키는 방향도 화살표 방향으로").
-       //   CSS translate는 rotate보다 먼저 적용돼 늘 가로로만 움직였다 → 회전 각도만큼 돌린 px 벡터로 준다.
-       const ang=(m.rot||0)*Math.PI/180,amp=el.getBoundingClientRect().width||preview.clientWidth*m.w/100,vx=Math.cos(ang),vy=Math.sin(ang);
-       const along=k=>`${(vx*amp*k).toFixed(1)}px ${(vy*amp*k).toFixed(1)}px`;
-       const frames={point:[{translate:along(-.08)},{translate:along(.10)},{translate:along(-.08)}],pulse:[{scale:'.88'},{scale:'1.1'},{scale:'.88'}],spin:[{rotate:'0deg'},{rotate:'360deg'}],float:[{translate:'0 5%'},{translate:'0 -8%'},{translate:'0 5%'}],reveal:[{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)',offset:.65},{clipPath:'inset(0 0 0 0)'}]}[m.motion];
-       if(frames)el.animate(frames,{duration:1200,iterations:Infinity,easing:m.motion==='spin'?'linear':'ease-in-out'});
-     }
+     catalog.animate(el,m,preview.clientWidth);
    });
  }
  // 🛍 쇼핑 안내 세트(2026-09-23 사장님 "화살표랑 문구를 일일이 배치하기 힘드니 세트 버튼 — 23·24·25 세 장면에"):
@@ -204,7 +183,7 @@
  const SHOPSET='shopcta';
  // 가리킬 곳(관제 133): link = 「관련 동영상」 링크 칸(구매링크 롱폼으로 가는 자리) / sticker = 예전 자리(쇼핑 스티커).
  //   link 자리는 YT_SHORTS_UI 에서 계산한다 — 화살표 끝(가리키기 움직임 포함)이 두 화면 중 더 높은 채널명 줄(댓글창 화면) 바로 위에서 멈춘다(그 아래는 유튜브 글자에 가린다).
- function shopSetItems(target){
+ function shopSetItems(target,design){
    const base={shape:'round',fx:'solid',op:100,soft:30,set:SHOPSET};
    if(target==='sticker'){
      const label='영상 속 제품 클릭!',color=catalog.thumbnailBadges.find(x=>x.label===label)?.color||'#FF2D5E';
@@ -213,9 +192,28 @@
        {...base,kind:'badge',text:label,l:3,t:79,w:48,h:6,color,badgeStyle:'pill',rot:0,motion:'none'},
      ];
    }
-   // 화살표 상자 = 가로 30%·세로 16.875%(정사각). 그림은 가운데에서 아래로 상자 높이의 22%(끝)·위로 25%(꼬리)까지, 움직임은 아래 +10%·위 -8%(가로 기준).
-   const H=16.875,sway=30*9/16,tipMax=Math.min(...Object.values(YT_SHORTS_UI).map(v=>v.channel.t))-2,cy=tipMax-H*.22-sway*.10,top=cy-H*.25-sway*.08;
-   const r=n=>Math.round(n*100)/100;
+   // ★구매링크 칸 디자인 3종(2026-10-06 사장님 "디자인 3개씩 — 사람들이 눌러보게"). 전부 '바닥선' 위에 놓는다:
+   //   바닥선 = 두 화면(기본·댓글창) 중 더 높은 채널명 줄 - 2%. 그 아래는 유튜브 글자에 가린다. 움직임으로 내려가는 몫까지 뺀다.
+   const floor=Math.min(...Object.values(YT_SHORTS_UI).map(v=>v.channel.t))-2,r=n=>Math.round(n*100)/100,sq=w=>w*9/16;   // sq = 가로 w% 인 정사각의 세로 %
+   if(design==='finger'){
+     // ② 손가락 콕: 큼직한 👇 가 둥실거리고, 그 위에 반투명 유리 배지. 둥실 = 아래로 상자 높이의 5%.
+     const w=20,h=sq(w),t=floor-h*1.05;
+     return [
+       {...base,kind:'emoji',ch:'👇',l:6,t:r(t),w,h:r(h),color:'#ffffff',rot:0,motion:'float'},
+       {...base,kind:'badge',text:'구매링크는 바로 아래',l:3,t:r(t-h*.08-6.6),w:50,h:5.6,color:'#111111',badgeStyle:'glass',rot:0,motion:'none'},
+     ];
+   }
+   if(design==='ticket'){
+     // ③ 링크 티켓: 살짝 기운 노란 번쩍 + 검정 티켓 배지, 곡선 화살표가 왼쪽 아래로 꺾여 내려간다. 화살표 가리키기 = 진행 방향으로 가로의 10%.
+     const w=30,h=sq(w),t=floor-h*.86-w*.10*9/16;
+     return [
+       {...base,kind:'badge',text:'🔗 구매링크 열기',l:5,t:r(t-4.6),w:46,h:6.6,color:'#111111',badgeStyle:'ticket',rot:-4,motion:'none'},
+       {...base,kind:'graphic',graphic:'burst',l:43,t:r(t-9.4),w:13,h:r(sq(13)),color:'#FFD400',rot:12,motion:'pulse'},
+       {...base,kind:'graphic',graphic:'arrow_curve',l:4,t:r(t),w,h:r(h),color:'#FFD400',rot:105,motion:'point'},
+     ];
+   }
+   // ① 화살표 알약: 화살표 상자 = 가로 30%·세로 16.875%(정사각). 그림은 가운데에서 아래로 상자 높이의 22%(끝)·위로 25%(꼬리)까지, 움직임은 아래 +10%·위 -8%(가로 기준).
+   const H=16.875,sway=30*9/16,cy=floor-H*.22-sway*.10,top=cy-H*.25-sway*.08;
    return [
      {...base,kind:'graphic',graphic:'arrow_bold',l:1,t:r(cy-H/2),w:30,h:H,color:'#FF3B30',rot:90,motion:'point'},
      {...base,kind:'badge',text:'아래 구매링크 클릭!',l:3,t:r(top-7),w:48,h:6,color:'#FF2D5E',badgeStyle:'pill',rot:0,motion:'none'},
@@ -224,11 +222,11 @@
  function shopSet(scope){
    const cur=api.geometry().sceneIndex,total=api.sceneCount?.()||0;
    const targets=scope==='last3'?[total-3,total-2,total-1].filter(i=>i>=1):scope==='clear'?Array.from({length:total},(_,i)=>i):[cur];   // 마지막 3장에 1장(훅)은 안 넣는다 · 빼기는 전 장면
-   const items=shopSetItems(box.querySelector('[data-shopset-target]').value);
+   const items=shopSetItems(box.querySelector('[data-shopset-target]').value,box.querySelector('[data-shopset-design].active')?.dataset.shopsetDesign);
    let done=0,full=[];
    for(const i of targets){
      const keep=(api.effectAt(i).masks||[]).filter(m=>m.set!==SHOPSET);
-     if(scope!=='clear'&&keep.length+2>12){full.push(i+1);continue;}
+     if(scope!=='clear'&&keep.length+items.length>12){full.push(i+1);continue;}
      api.effectAt(i,{...api.effectAt(i),masks:scope==='clear'?keep:[...keep,...items]});done++;
    }
    selected=-1;controls();draw();
@@ -248,6 +246,7 @@
      const ok=saveMyBadges([def,...myBadges().filter(x=>x.text!==text)]);picker();
      b.textContent=ok?'✓ 내 배지에 저장했습니다':'저장하지 못했습니다(브라우저 저장 공간)';setTimeout(()=>{b.textContent='⭐ 이 배지를 내 버튼으로 저장'},1600);return;
    }
+   if(b.hasAttribute('data-shopset-design')){box.querySelectorAll('[data-shopset-design]').forEach(x=>x.classList.toggle('active',x===b));return;}
    if(b.hasAttribute('data-shopset')){shopSet(b.dataset.shopset);return;}
    const list=structuredClone(masks());
    if(b.hasAttribute('data-dec-select'))selected=Number(b.dataset.decSelect);

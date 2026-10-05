@@ -1,0 +1,45 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>구매링크 롱폼 화면</title>
+<!-- 구매링크 롱폼(가로) 안내 항목을 놓아 보는 화면(관제 133). 항목 그리기는 scene-decoration-catalog.js 의 paint/animate 하나를 숏폼과 같이 쓴다.
+     ?src=<가운데에 놓을 쇼츠 그림>  ?set=pin|ask|bar  ?where=comment|desc  ?qa=1(렌더용: 배경·가운데 그림·손잡이 없이 항목만) -->
+<style>
+@font-face{font-family:"Pretendard";src:url("../shopping_shorts/static/fonts/w2/Pretendard-ExtraBold.woff2") format("woff2");font-weight:800;font-display:swap}
+html,body{margin:0;background:#0b1418;font-family:Pretendard,'Malgun Gothic',sans-serif}
+#lf-stage{position:relative;width:min(100vw,177.78vh);aspect-ratio:16/9;margin:0 auto;overflow:hidden;background:#111;user-select:none}
+#lf-bg{position:absolute;inset:-6%;background-size:cover;background-position:center;filter:blur(22px) brightness(.94)}
+#lf-fg{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);height:100%;aspect-ratio:9/16;background-size:cover;background-position:center}
+#lf-items{position:absolute;inset:0}
+.lf-item{position:absolute;display:flex;align-items:center;justify-content:center;cursor:grab;box-sizing:border-box;touch-action:none}
+.lf-item.selected{outline:2px dashed #11B98C;outline-offset:3px}
+body.qa #lf-bg,body.qa #lf-fg{display:none}body.qa,body.qa #lf-stage{background:transparent}body.qa .lf-item{outline:none!important}
+</style></head><body>
+<div id="lf-stage"><div id="lf-bg"></div><div id="lf-fg"></div><div id="lf-items"></div></div>
+<script src="../shopping_shorts/static/scene-decoration-catalog.js?v=3"></script>
+<script>
+(()=>{
+ const C=window.SCENE_DECORATION_CATALOG,q=new URLSearchParams(location.search),qa=q.has('qa');
+ const stage=document.querySelector('#lf-stage'),layer=document.querySelector('#lf-items');
+ if(qa)document.body.classList.add('qa');
+ const src=q.get('src');if(src&&!qa)for(const id of ['#lf-bg','#lf-fg'])document.querySelector(id).style.backgroundImage=`url("${src}")`;
+ let items=[],selected=-1,drag=null;
+ function draw(){
+   layer.replaceChildren();
+   items.forEach((m,i)=>{const el=document.createElement('div');el.className='lf-item';el.dataset.i=i;el.classList.toggle('selected',!qa&&i===selected);
+     C.paint(el,m,stage.clientWidth,stage.clientHeight);layer.append(el);C.animate(el,m,stage.clientWidth);});
+ }
+ layer.addEventListener('pointerdown',e=>{const el=e.target.closest('.lf-item');if(!el||qa){selected=-1;draw();return;}
+   selected=+el.dataset.i;const m=items[selected];drag={id:e.pointerId,x:e.clientX,y:e.clientY,l:m.l,t:m.t};draw();layer.setPointerCapture(e.pointerId);e.preventDefault();});
+ layer.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const m=items[selected],r=stage.getBoundingClientRect();
+   m.l=Math.max(0,Math.min(100-m.w,drag.l+(e.clientX-drag.x)/r.width*100));m.t=Math.max(0,Math.min(100-m.h,drag.t+(e.clientY-drag.y)/r.height*100));draw();});
+ for(const n of ['pointerup','pointercancel'])layer.addEventListener(n,()=>drag=null);
+ addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&selected>=0){items.splice(selected,1);selected=-1;draw();}});
+ addEventListener('resize',draw);
+ window.linkLongform={
+   sets:()=>C.linkLongformSets.map(s=>({id:s.id,label:s.label})),
+   useSet(id,where){items=structuredClone(C.linkLongformItems(id,where));selected=-1;draw();return items.length},
+   load(list){items=structuredClone(list||[]);selected=-1;draw()},
+   items:()=>structuredClone(items),
+   motionAt(time){for(const el of layer.children)for(const a of el.getAnimations()){a.pause();a.currentTime=time;}return items.some(m=>m.motion&&m.motion!=='none')},
+ };
+ if(q.get('set'))window.linkLongform.useSet(q.get('set'),q.get('where'));
+})();
+</script></body></html>

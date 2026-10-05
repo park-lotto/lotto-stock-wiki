@@ -165,3 +165,68 @@ const THUMB_BADGE_LIST = [
 ];
 Object.assign(window.SCENE_DECORATION_CATALOG,{shapeDraw:THUMB_SHAPES,shapes:THUMB_SHAPE_LIST,thumbnailBadges:THUMB_BADGE_LIST});
 })();
+
+// ★항목 한 개를 그리는 곳은 여기 하나다(관제 133, 2026-10-06) — 숏폼 미리보기·렌더(out/scene-style-decorations.js draw)와
+//   구매링크 롱폼 화면(out/link-longform-stage.html)이 같이 부른다. W·H = 무대 크기(px), m = 항목({kind,l,t,w,h,…} 무대 기준 %).
+(()=>{
+const C=window.SCENE_DECORATION_CATALOG;
+C.paint=function(el,m,W,H){
+     Object.assign(el.style,{left:m.l+'%',top:m.t+'%',width:m.w+'%',height:m.h+'%',opacity:(m.op??100)/100,transform:`rotate(${m.rot||0}deg)`,borderRadius:m.shape==='ellipse'?'50%':m.shape==='pill'?'999px':m.shape==='rect'?'0':'12%'});
+     if(m.kind==='emoji'){el.textContent=m.ch;el.style.fontSize=Math.min(W*m.w/100,H*m.h/100)*.9+'px';}
+     else if(m.kind==='badge'){
+       el.textContent=m.text;el.style.background=`linear-gradient(135deg,color-mix(in srgb,${m.color},white 20%),${m.color} 65%,color-mix(in srgb,${m.color},black 20%))`;el.style.color='white';el.style.fontSize=Math.min(H*m.h/100*.48,W*m.w/100/Math.max(1,m.text.length)*1.5)+'px';el.style.fontWeight='900';el.style.fontFamily='Pretendard,sans-serif';el.style.borderRadius='999px';el.style.boxShadow=`0 ${W*.008}px ${W*.025}px #0005,inset 0 1px 0 #ffffff66`;el.style.border='1px solid #ffffff44';
+       el.style.whiteSpace='nowrap';el.style.fontSize=Math.min(H*m.h/100*.48,W*m.w/100*.86/Math.max(1,[...m.text].reduce((n,c)=>n+(/[\u0000-\u007f]/.test(c)?.55:1),0)))+'px';
+       if(m.badgeStyle==='ticket'){el.style.borderRadius='5%';el.style.borderLeft='3px dashed #ffffff99';el.style.borderRight='3px dashed #ffffff99';}
+       if(m.badgeStyle==='glass'){el.style.background=m.color+'99';el.style.backdropFilter='blur(8px)';}
+       if(m.badgeStyle==='burst'){el.style.borderRadius='12%';el.style.clipPath='polygon(5% 0,95% 0,100% 25%,96% 50%,100% 75%,95% 100%,5% 100%,0 75%,4% 50%,0 25%)';}
+     }
+     else if(m.kind==='image'){const img=document.createElement('img');img.src=m.src;img.draggable=false;Object.assign(img.style,{width:'100%',height:'100%',objectFit:'contain',display:'block',pointerEvents:'none'});el.style.background='transparent';el.style.borderRadius='0';el.append(img);}
+     else if(m.kind==='graphic'){
+       const canvas=document.createElement('canvas');canvas.width=480;canvas.height=480;canvas.style.width='100%';canvas.style.height='100%';const ctx=canvas.getContext('2d');ctx.translate(240,240);ctx.shadowColor='#0008';ctx.shadowBlur=12;C.shapeDraw[m.graphic]?.(ctx,170,m.color);el.append(canvas);
+     }
+     else if(m.fx==='blur'||m.fx==='blurdark'){el.style.backdropFilter='blur(10px)';el.style.background=m.fx==='blurdark'?'#0008':'transparent';if(m.soft>=80)el.style.maskImage='radial-gradient(ellipse,black 45%,transparent 72%)';}
+     else{el.style.background=m.fx==='fade'?`linear-gradient(90deg,transparent,${m.color} 20%,${m.color} 80%,transparent)`:m.color;}
+};
+C.animate=function(el,m,W){
+     if(m.motion&&m.motion!=='none'){
+       // 가리키기는 도형이 향한 방향으로 오간다(2026-09-18 사장님 "회전하면 가리키는 방향도 화살표 방향으로").
+       //   CSS translate는 rotate보다 먼저 적용돼 늘 가로로만 움직였다 → 회전 각도만큼 돌린 px 벡터로 준다.
+       const ang=(m.rot||0)*Math.PI/180,amp=el.getBoundingClientRect().width||W*m.w/100,vx=Math.cos(ang),vy=Math.sin(ang);
+       const along=k=>`${(vx*amp*k).toFixed(1)}px ${(vy*amp*k).toFixed(1)}px`;
+       const frames={point:[{translate:along(-.08)},{translate:along(.10)},{translate:along(-.08)}],pulse:[{scale:'.88'},{scale:'1.1'},{scale:'.88'}],spin:[{rotate:'0deg'},{rotate:'360deg'}],float:[{translate:'0 5%'},{translate:'0 -8%'},{translate:'0 5%'}],reveal:[{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)',offset:.65},{clipPath:'inset(0 0 0 0)'}]}[m.motion];
+       if(frames)el.animate(frames,{duration:1200,iterations:Infinity,easing:m.motion==='spin'?'linear':'ease-in-out'});
+     }
+};
+})();
+
+// ★구매링크 롱폼(가로 16:9) 안내 세트 3종(관제 133, 2026-10-06 사장님 "디자인 3개씩 · 센스있게 · 사람들이 눌러보게").
+//   자리는 가로 화면 기준 %. 가운데 쇼츠는 가로 34.2~65.8% 라 전부 양옆 여백에만 놓는다(영상을 가리지 않는다).
+//   where = 'comment'(댓글) | 'desc'(설명란) — 링크를 어디에 두는지에 따라 낱말만 바뀐다. 놓은 뒤에는 보통 항목처럼 끌어 고친다.
+(()=>{
+const C=window.SCENE_DECORATION_CATALOG,sq=w=>Math.round(w*16/9*100)/100;   // 가로 w% 인 정사각의 세로 %
+const base={shape:'round',fx:'solid',op:100,soft:30,rot:0,motion:'none'};
+C.linkLongformSets=[
+  {id:'pin',label:'① 고정 댓글',items:W=>[
+    {...base,kind:'badge',text:'📌 고정 '+W,l:4,t:25,w:15,h:8,color:'#111111',badgeStyle:'glass',rot:-3},
+    {...base,kind:'badge',text:'구매링크 여기 있어요',l:3,t:36,w:28,h:12,color:'#FF2D5E',badgeStyle:'pill'},
+    {...base,kind:'emoji',ch:'👇',l:11.5,t:52,w:11,h:sq(11),color:'#ffffff',motion:'float'},
+    {...base,kind:'badge',text:'가격·옵션 확인',l:81,t:25,w:15,h:8,color:'#111111',badgeStyle:'glass',rot:3},
+    {...base,kind:'badge',text:W+' 맨 위 링크 클릭',l:69,t:36,w:28,h:12,color:'#1F7CFF',badgeStyle:'pill'},
+    {...base,kind:'emoji',ch:'👇',l:77.5,t:52,w:11,h:sq(11),color:'#ffffff',motion:'float'},
+  ]},
+  {id:'ask',label:'② 묻고 답하기',items:W=>[
+    {...base,kind:'badge',text:'이거 어디서 사요? 🤔',l:3,t:30,w:28,h:13,color:'#111111',badgeStyle:'ticket',rot:-5},
+    {...base,kind:'emoji',ch:'👀',l:12,t:50,w:10,h:sq(10),color:'#ffffff',motion:'pulse'},
+    {...base,kind:'badge',text:W+'에 링크 있어요!',l:69,t:33,w:28,h:13,color:'#1FA84E',badgeStyle:'pill',rot:4},
+    {...base,kind:'graphic',graphic:'arrow_curve',l:74,t:48,w:18,h:sq(18),color:'#FFD400',rot:70,motion:'point'},
+  ]},
+  {id:'bar',label:'③ 아래 띠',items:W=>[
+    {...base,kind:'badge',text:'LINK',l:4,t:14,w:11,h:10,color:'#FF8A00',badgeStyle:'burst',rot:-8,motion:'pulse'},
+    {...base,kind:'graphic',graphic:'arrow_bold',l:9.5,t:42,w:15,h:sq(15),color:'#FFD400',rot:90,motion:'point'},
+    {...base,kind:'badge',text:'구매링크는 '+W+'에',l:3,t:74,w:28,h:13,color:'#111111',badgeStyle:'glass'},
+    {...base,kind:'graphic',graphic:'arrow_bold',l:75.5,t:42,w:15,h:sq(15),color:'#FFD400',rot:90,motion:'point'},
+    {...base,kind:'badge',text:'아래에서 바로 확인 👇',l:69,t:74,w:28,h:13,color:'#111111',badgeStyle:'glass'},
+  ]},
+];
+C.linkLongformItems=(id,where)=>(C.linkLongformSets.find(s=>s.id===id)||C.linkLongformSets[0]).items(where==='desc'?'설명란':'댓글');
+})();

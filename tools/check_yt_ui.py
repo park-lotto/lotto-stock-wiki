@@ -76,6 +76,17 @@ with sync_playwright() as pw:
     ch = min((v['channel'] for v in table.values()), key=lambda c: c['t']); lk = table['basic']['link']   # 두 화면 중 더 높은 채널명 줄
     need(ch['t'] - 6 <= tip <= ch['t'], f"② 화살표가 닿는 가장 아래 {tip:.1f}% — 채널명 줄({ch['t']}%) 바로 위")
     need(lk['l'] <= cx <= lk['l'] + lk['w'], f"② 화살표 가로 가운데 {cx:.1f}% — 링크 칸 가로 범위({lk['l']}~{lk['l'] + lk['w']:.1f}%) 안")
+    # ②-2 나머지 디자인도 두 화면의 채널명 줄 위에서 끝나는가(둥실·가리키기 한 바퀴를 훑는다)
+    for d, name in (('finger', '손가락 콕'), ('ticket', '링크 티켓')):
+        pg.evaluate(f"document.querySelector('[data-shopset-design=\"{d}\"]').click();document.querySelector('[data-shopset=\"here\"]').click()"); pg.wait_for_timeout(300); off()
+        low = 0
+        for _ in range(14):
+            box = ImageChops.difference(before, shot()).point(lambda v: 255 if v > 40 else 0).convert('L').crop((0, H // 2, W // 2, H)).getbbox()
+            if box: low = max(low, H // 2 + box[3])
+            pg.wait_for_timeout(100)
+        need(ch['t'] - 12 <= low / H * 100 <= ch['t'], f"② [{name}] 가장 아래 {low / H * 100:.1f}% — 채널명 줄({ch['t']}%) 위")
+    pg.evaluate("document.querySelector('[data-shopset-design=\"arrow\"]').click();document.querySelector('[data-shopset=\"here\"]').click()"); pg.wait_for_timeout(300); off()
+    masks_link = pg.evaluate('sceneStyle.effect().masks')
     pg.evaluate(CLICK); pg.wait_for_timeout(300); pg.evaluate(CLICK); pg.wait_for_timeout(300)   # 댓글창 화면으로
     r = pg.evaluate("(()=>{const r=document.querySelector('#a-live-preview').getBoundingClientRect();return [r.left,r.top,r.width,r.height]})()")
     pg.screenshot(path=str(out / '2_세트_구매링크칸.png'), clip={'x': r[0] - 20, 'y': r[1] - 10, 'width': r[2] + 40, 'height': r[3] * 1.1 + 20})
