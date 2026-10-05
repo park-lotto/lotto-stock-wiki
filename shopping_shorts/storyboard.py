@@ -279,9 +279,14 @@ EXTRA_DESC = {"escalation": "고조 — 효능을 한 단계 더 세게(더 놀�
 _HEAD_CACHE = {}
 
 
+def _is_yt(fam):
+    """유튜브(썰) 스타일인가 — 말투 지침·신호어 풀이 이걸로 갈린다."""
+    return any(str(n).startswith("유튜브") for n in fam["names"]) or (fam["roles"][:1] == ["title"])
+
+
 def _writer_head(fam, kind):
     """라이브 대본 작가가 쓰는 지침(WRITER_BRIEF) + 플랫폼 말투(YT/IG) + 그 종류 히트 대본(없으면 가까운 종류) + 승인 부품."""
-    yt = any(str(n).startswith("유튜브") for n in fam["names"]) or (fam["roles"][:1] == ["title"])
+    yt = _is_yt(fam)
     ck = (yt, kind)
     if ck in _HEAD_CACHE:
         return _HEAD_CACHE[ck]
@@ -315,6 +320,47 @@ BOX_SLOTS = {"훅": ("title", "hook"), "미끼·궁금증": ("bait", "notice", "
              "효과·소구점": ("escalation", "escalate", "more", "benefit", "power", "texture", "spec", "mechanism", "good", "extra", "bonus"),
              "반전·의외": ("twist", "cases"), "반응·증거": ("fame", "proof", "witness", "react", "authority", "spread", "scale"),
              "결과": ("result", "land"), "CTA·가격": ("cta", "price", "deal")}
+
+
+# ── 신호어(2026-10-05 사장님 "신호어를 조사 많이 하고 변형해서 세트로"): 낱말·자리·박기는 story_writer 가 주인이다
+#    (pick_signals·storyboard_signals·attach_signal). 여기는 **어느 칸이 고조·반전 계열인가**(칸 이름 = 이 파일의 말)만 정한다.
+_SIG_ESC = set(BOX_SLOTS["효과·소구점"])
+_SIG_TWIST = set(BOX_SLOTS["반전·의외"]) | {"shock"}
+
+
+def signal_kinds(slots):
+    """칸마다 "esc"(고조 계열) / "twist"(반전 계열) / "". 첫 칸(훅)·끝 칸(마무리)은 빼고, 정체 공개 칸이 있으면 그 뒤만."""
+    base = [str(x.get("slot") or "").split("_")[0].lower() for x in slots]
+    rev = max([i for i, b in enumerate(base) if b in BOX_SLOTS["정체 공개"]] or [0])
+    out = []
+    for i, b in enumerate(base):
+        if i == 0 or i == len(base) - 1 or i <= rev:
+            out.append("")
+        else:
+            out.append("twist" if b in _SIG_TWIST else "esc" if b in _SIG_ESC else "")
+    return out
+
+
+def apply_signals(slots, key, nth=0, yt=True):
+    """고조·반전 칸 첫머리에 신호어를 박는다(생성 뒤 코드 확인·보정). 다른 신호어로 열었으면 떼고 붙이고,
+    신호어가 안 배정된 칸이 배정된 낱말로 또 시작하면 뗀다(한 편 안 반복 금지). 박은 낱말은 칸의 signal 에 남긴다."""
+    from shopping_shorts import story_writer as _sw
+    words = _sw.storyboard_signals(signal_kinds(slots), key, nth, "yt" if yt else "ig")
+    used = [w for w in words if w]
+    for sl, w in zip(slots, words):
+        line = sl.get("line") or ""
+        if w:
+            new = _sw.attach_signal(line, w)
+        elif any(line.startswith(u + " ") for u in used):
+            new = _sw.attach_signal(line, "")
+        else:
+            continue
+        if new != line:
+            sl.setdefault("line_signal_before", line)
+            sl["line"] = new
+        if w:
+            sl["signal"] = w
+    return words
 
 
 def _apply_role_picks(slots, roles_pick):
@@ -368,7 +414,7 @@ def _apply_role_picks(slots, roles_pick):
     return moved, left
 
 
-def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pick="", extra=None, prev=None):
+def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pick="", extra=None, prev=None, key=""):
     roles = list(fam["roles"] or ["hook", "problem", "method", "result", "land"])
     chain = list(fam["chain"] or [])
     # 이미 있는 칸은 뺀다 — 스타일은 그 스타일 칸과, AI 자동은 직전 스토리보드 칸과 비교(AI 자동은 스타일 칸이 참고일 뿐이라 roles 와 비교하면 고조가 조용히 버려진다)
@@ -379,8 +425,17 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
         roles[at:at] = extra
         chain[at:at] = [EXTRA_DESC[e] + " (손님이 추가한 칸)" for e in extra]
     fam = dict(fam, roles=roles, chain=chain)
-    slot_txt = "\n".join("  %d. %s — %s\n     문장 틀: %s" % (i + 1, r, (fam["chain"][i] if i < len(fam["chain"]) else ""),
-                                                    " / ".join((fam["tpl"].get(r) or [])[:4]) or "(없음)") for i, r in enumerate(roles))
+    from shopping_shorts import story_writer as _sw
+    yt = _is_yt(fam)
+    sigw = _sw.storyboard_signals(signal_kinds([{"slot": r} for r in roles]), key, 0, "yt" if yt else "ig")
+    slot_txt = "\n".join("  %d. %s — %s\n     문장 틀: %s%s" % (i + 1, r, (fam["chain"][i] if i < len(fam["chain"]) else ""),
+                                                      " / ".join((fam["tpl"].get(r) or [])[:4]) or "(없음)",
+                                                      ("\n     ★이 칸 문장은 「%s」로 시작(뒷말이 그 신호어에 자연스럽게 이어지게)" % sigw[i]) if sigw[i] else "")
+                         for i, r in enumerate(roles))
+    _ws = _sw.pick_signals("yt" if yt else "ig", key, 0)[1]
+    sig_note = ("\n★신호어 — 고조 칸(효능을 한 단계씩 쌓는 칸)은 순서대로 %s, 반전(twist) 칸은 「%s」로 시작하라. "
+                "한 편에 같은 신호어를 두 번 쓰지 마라(코드가 확인해 고친다).\n") % (
+        " → ".join("「%s」" % w for w in _ws[:2] if w) or "(없음)", _ws[2])
     v = fam["voice"] or {}
     voice = "어조: %s · 어미: %s · 강조어: %s · 의성어: %s" % (v.get("tone_note", ""), ", ".join(v.get("endings", [])),
                                                        ", ".join(v.get("intensifier", [])), ", ".join(v.get("onomatopoeia", [])))
@@ -395,7 +450,7 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
                    "끼우는 칸(slot 이름을 정확히 이 영어 이름으로): %s\n") % (" → ".join(pv) or "(없음)", len(pv), len(pv) + len(extra),
                                                                        " / ".join("%s = %s" % (e, EXTRA_DESC[e]) for e in extra))
         r3 = sg._call_json(head + P3C % (r1.get("kind") or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
-                                         ", ".join(fam["names"]), " → ".join(roles), creative) + add, S3, note=n3, vertex=True) or {}
+                                         ", ".join(fam["names"]), " → ".join(roles), creative) + add + sig_note, S3, note=n3, vertex=True) or {}
     else:
         r3 = sg._call_json(head + P3 % (r1.get("kind") or "", pan or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
                                         ", ".join(fam["names"]) + _core_txt(fam), voice, len(roles), slot_txt), S3, note=n3, vertex=True) or {}
@@ -413,7 +468,7 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
             return m
         if _miss(slots):      # 한 번만 다시 시킨다 — 그래도 빠지면 빠졌다고 결과에 남긴다(조용히 넘기지 않음)
             r3 = sg._call_json(head + P3C % (r1.get("kind") or "", groups_txt, " / ".join(r1.get("missing") or []), ", ".join(star) or "(없음)", roles_pick or "(없음)",
-                                             ", ".join(fam["names"]), " → ".join(roles), creative) + add + "★직전 답에서 끼울 칸이 빠졌거나 칸이 줄었다. 반드시 넣어라.", S3, note=n3, vertex=True) or r3
+                                             ", ".join(fam["names"]), " → ".join(roles), creative) + add + sig_note + "★직전 답에서 끼울 칸이 빠졌거나 칸이 줄었다. 반드시 넣어라.", S3, note=n3, vertex=True) or r3
             slots = r3.get("slots") or []
         r3["extra_missing"] = _miss(slots)
     flags = _code_flags(slots, lambda c: texts.get(c, ""))
@@ -426,6 +481,7 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
         if isinstance(i, int) and 0 <= i < len(slots) and (fx.get("line") or "").strip():
             slots[i]["line_before"], slots[i]["line"], slots[i]["fixed_why"] = slots[i].get("line"), fx["line"].strip(), fx.get("why") or ""
             fixed.append(i)
+    apply_signals(slots, key, 0, yt)      # 생성·사실 검수 뒤 코드가 신호어를 확인·보정(사실 검수가 줄을 고쳐도 신호어가 남게)
     used, check = {}, []
     for i, sl in enumerate(slots):
         ids = sl.get("ids") or []
@@ -438,7 +494,8 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
     role_fixed, role_left = _apply_role_picks(slots, roles_pick)
     return {"names": fam["names"], "pan": pan, "first_line_style": r3.get("first_line_style") or "", "slots": slots, "check": check,
             "fixed": fixed, "left_flags": {str(k): v for k, v in _code_flags(slots, lambda c: texts.get(c, "")).items()},
-            "star_missing": star_missing, "role_fixed": role_fixed, "role_left": role_left, "extra": extra, "extra_missing": r3.get("extra_missing") or [], "auth": [n3.get("auth"), n4.get("auth")]}
+            "star_missing": star_missing, "role_fixed": role_fixed, "role_left": role_left, "extra": extra, "extra_missing": r3.get("extra_missing") or [],
+            "sig_key": key, "sig_yt": yt, "auth": [n3.get("auth"), n4.get("auth")]}
 
 
 def inventory(db_path, jid, star_s="", role_s=""):
@@ -513,12 +570,12 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
             from shopping_shorts.store import Store
             from shopping_shorts import bank_assemble as _bk
             creative = _bk.parts_block(Store(db_path))
-            out["auto"] = _board(top, "", r1, groups_txt, star, segs, texts, creative=creative, roles_pick=roles_txt, extra=extra_s.split(","), prev=prev_s.split(","))
+            out["auto"] = _board(top, "", r1, groups_txt, star, segs, texts, creative=creative, roles_pick=roles_txt, extra=extra_s.split(","), prev=prev_s.split(","), key="%s:auto" % jid)
             out["auto"]["names"] = ["AI 자동"]
         else:
             fam = next((f for n, f, _ in fams if str(n) == str(k)), None)
             if fam:
-                out[str(k)] = _board(fam, pan_of.get(str(k)) or "", r1, groups_txt, star, segs, texts, roles_pick=roles_txt, extra=extra_s.split(","))
+                out[str(k)] = _board(fam, pan_of.get(str(k)) or "", r1, groups_txt, star, segs, texts, roles_pick=roles_txt, extra=extra_s.split(","), key="%s:%s" % (jid, k))
     return out
 
 
@@ -660,7 +717,8 @@ def flow_review(slots, texts, voice):
     body = "\n".join("%d | %s | %s | %s" % (i + 1, ARC_KO.get(str(x.get("slot") or "").split("_")[0].lower(), x.get("need") or x.get("slot")), x.get("line"),
                                              " / ".join(texts.get(c, "?")[:50] for c in x.get("ids") or []))
                      for i, x in enumerate(slots))
-    conj = "심지어 / 게다가 / 근데 진짜 미친 포인트는 / 이게 말도 안 되는게 / 근데 진짜 충격적인 포인트는 / 알고 보니 / 그래서 / 덕분에 / 이 정도면"
+    from shopping_shorts import story_writer as _sw      # 신호어 낱말은 story_writer 풀이 주인(자리별 최다 빈도 둘씩)
+    conj = " / ".join([w for k in (1, 2, 3) for w, _ in _sw.YT_POOLS[k][:2]] + ["알고 보니", "그래서", "덕분에", "이 정도면"])
     n = {}
     r = sg._call_json(P_FLOW % (body, conj, ", ".join(sorted(voice))), S_FLOW, note=n, vertex=True) or {}
     done = []
@@ -724,6 +782,8 @@ def insert(db_path, jid, payload, R=None):
         it["after"] = arc_place(slots, it["slot"])
         slots.insert(it["after"], it)
     flow_fixed, auth2 = flow_review(slots, texts, voice) if ins else ([], None)
+    if ins:      # 끼운 칸·흐름 검수 뒤에도 신호어 자리를 다시 맞춘다(같은 key → 같은 낱말, 자리만 새 칸 구조로)
+        apply_signals(slots, bd.get("sig_key") or "%s:%s" % (jid, ",".join(bd.get("names") or [])), 0, bd.get("sig_yt", True))
     check, seen = [], set()
     for x in slots:
         ids = x.get("ids") or []
