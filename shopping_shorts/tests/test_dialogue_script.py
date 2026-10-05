@@ -64,3 +64,56 @@ def test_cut_and_punct_rejected():
            {"speaker": "언니", "text": "지켜 줘.", "tag": "", "src": [3]}]
     errs = ds.check(SRC, out, "narr_then_talk")
     assert any("조사로 끊김" in e for e in errs) and any("문장 부호" in e for e in errs)
+
+
+# ── API: 스위치 · 새 작업 만들기 ─────────────────────────────────────────────
+import importlib
+import time
+
+from fastapi.testclient import TestClient
+
+from shopping_shorts import app as appmod
+from shopping_shorts import keycrypt
+from shopping_shorts.store import Store
+
+
+@pytest.fixture
+def api(tmp_path, monkeypatch):
+    monkeypatch.setenv("BYOK_MASTER_KEY", "x" * 44)
+    importlib.reload(keycrypt)
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(appmod, "DB_PATH", db)
+    monkeypatch.setattr(appmod, "_AUTH_ON", True)
+    monkeypatch.setattr(appmod, "DASH_SECRET", "test-secret-xyz")
+    st = Store(db)
+    st.create_mix_job("J1", ["https://x/1"], 20, "free", given_script="\n".join(SRC),
+                      script_structure={"beat_sources": ["s0", "s1", "s2", "s3"]}, customer_id=0)
+    st.update_mix_job("J1", voice={"voice_id": "v", "speed": 1.25})
+    wid = st.upsert_produce_work(None, {"script": "\n".join(SRC)}, job_id="J1", step=3, customer_id=0)
+    monkeypatch.setattr(ds.script_generate, "_call_json", lambda p, s: _good())
+    c = TestClient(appmod.app, cookies={"dash_auth": appmod._sign_session(0, int(time.time()) + 3600)})
+    return c, st, wid
+
+
+def test_api_off_by_default(api):
+    c, st, wid = api
+    assert c.post("/api/produce/dialogue/convert", json={"script": "\n".join(SRC), "form": "narr_then_talk"}).status_code == 403
+    assert c.post(f"/api/produce/dialogue/from_work/{wid}", json={"form": "narr_then_talk"}).status_code == 403
+
+
+def test_api_from_work_makes_new_job(api):
+    c, st, wid = api
+    st.set_setting("dialogue_enabled", "admin")
+    r = c.post(f"/api/produce/dialogue/from_work/{wid}", json={"form": "narr_then_talk"})
+    assert r.status_code == 200, r.text
+    j = st.get_mix_job(r.json()["job_id"])
+    assert j["given_script"].count("\n") == 3 and "[" not in j["given_script"]
+    ss = j["script_structure"]
+    assert ss["beat_sources"] == ["s0", "s1", "s3", "s3"]           # 줄 수에 맞춰 재배치
+    assert [l["speaker"] for l in ss["dialogue"]["lines"]] == ["나레이션", "나레이션", "동생", "언니"]
+    assert set(ss["dialogue"]["voices"]) == {"나레이션", "동생", "언니"}
+    assert j["voice"]["speed"] == 1.25
+    assert ds.of_job(j) is not None
+    assert st.get_mix_job("J1")["given_script"] == "\n".join(SRC)   # 원본은 그대로
+    w2 = st.get_produce_work(r.json()["work_id"], 0)
+    assert w2["job_id"] == j["job_id"] and w2["title"].startswith("[대화형")

@@ -16210,7 +16210,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
                        "storyboard_enabled",
                        # 신호어 새 풀(히트 자막 2,051편 빈도 가중, 2026-10-05) — ""끔(종전 8세트) · "admin" · "1" 전체
-                       "signal_pool_enabled"}
+                       "signal_pool_enabled",
+                       # 대화형 대본(관제 128, 2026-10-05) — ""끔 · "admin" 사장님만 시험 · "1" 전체
+                       "dialogue_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -21076,6 +21078,65 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     _store.attach_mix_claim(_fp, job_id)     # 진 쪽이 이걸 읽어 같은 job을 쓴다
     Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}
+
+
+# ── 대화형 대본(관제 128, 2026-10-05) — 스위치 dialogue_enabled(기본 끔 · "admin" = 사장님만 시험). ──
+#   판단(틀·화자·사실 검사·장면 출처 재배치)은 dialogue_script 한 곳, 칸 음성은 tts_dialogue. 여기는 저장·전달만.
+@app.post("/api/produce/dialogue/convert")
+def api_produce_dialogue_convert(request: Request, body: dict):
+    """확정 대본 → 대화형 미리보기(저장 없음). body: {script, form, product?}"""
+    if not _setting_gate(Store(DB_PATH), "dialogue_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "대화형은 아직 시험 중이에요"})
+    from shopping_shorts import dialogue_script, edit_plan as _ep
+    form = body.get("form") or ""
+    try:
+        out = dialogue_script.convert(_ep.script_sentences(body.get("script") or ""), form,
+                                      str(body.get("product") or ""))
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+    return {"ok": True, "form": form, "lines": out, "script": dialogue_script.script_text(out),
+            "forms": {k: v["label"] for k, v in dialogue_script.FORMS.items()}}
+
+
+@app.post("/api/produce/dialogue/from_work/{work_id}")
+def api_produce_dialogue_from_work(request: Request, work_id: str, body: dict):
+    """작업 하나를 대화형으로 바꾼 **새 작업**을 만든다(원본은 그대로). body: {form, cast?: {화자: preset_id}}
+    새 job 은 원본 재료·장면 출처(줄 수에 맞춰 재배치)·성우를 잇고 대본만 대화형 — 3단계부터 다시 돈다.
+    ★관리자 시험 전용이라 과금하지 않는다(스위치가 관리자만일 때만 열린다)."""
+    cid = _cid(request)
+    st = Store(DB_PATH)
+    if not (_setting_gate(st, "dialogue_enabled", cid) and _is_admin(cid)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "대화형은 아직 시험 중이에요"})
+    from shopping_shorts import dialogue_script, edit_plan as _ep
+    w = st.get_produce_work(work_id, cid)
+    job = st.get_mix_job((w or {}).get("job_id") or "") if w else None
+    if not w or not job or not job.get("given_script"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "대본이 확정된 작업이 아니에요"})
+    form = body.get("form") or ""
+    try:
+        out = dialogue_script.convert(_ep.script_sentences(job["given_script"]), form, str(job.get("product") or ""))
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+    ss = dict(job.get("script_structure") or {})
+    if ss.get("beat_sources"):
+        ss["beat_sources"] = dialogue_script.remap_beat_sources(ss["beat_sources"], out)
+    dm = dialogue_script.meta(form, out, body.get("cast") or None)
+    dm["voices"] = {spk: _voice_snapshot(st, {"preset_id": pid}) for spk, pid in dm["cast"].items()}
+    ss["dialogue"] = dm
+    new_job = uuid.uuid4().hex[:12]
+    st.create_mix_job(new_job, job["urls"], job.get("target_seconds") or 25, "free",
+                      subtitle_removal=bool(job.get("subtitle_removal")),
+                      given_script=dialogue_script.script_text(out), script_structure=ss,
+                      customer_id=cid, scene_first=bool(job.get("scene_first")),
+                      backbone_main=job.get("backbone_main"))
+    if job.get("voice"):
+        st.update_mix_job(new_job, voice=job["voice"])          # 배속·무음 손잡이는 원본 작업 성우 그대로
+    state = dict(w.get("state") or {})
+    state["script"] = dialogue_script.script_text(out)
+    state["title_manual"] = f"[대화형·{dialogue_script.FORMS[form]['label']}] {w.get('title') or ''}".strip()
+    new_work = st.upsert_produce_work(None, state, job_id=new_job, step=w.get("step"), customer_id=cid)
+    st.enqueue("mix", {"job_id": new_job})
+    return {"ok": True, "job_id": new_job, "work_id": new_work, "lines": out}
 
 
 @app.post("/api/produce/mix/settings")
