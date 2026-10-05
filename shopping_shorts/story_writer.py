@@ -58,6 +58,29 @@ def _root(w):
     return next((r for r in _SIG_ROOTS if r in w), w)
 
 
+# 줄 본문과 신호어가 같은 말을 두 번 하면 어색하다("이게 미친 포인트인게 … 성능이 미쳤다는 거", 10-05 시안 실측) — 뿌리별 본문 꼴
+_ROOT_STEMS = {"미친": ("미친", "미쳤", "미쳐"), "충격적인": ("충격",), "대박인": ("대박",), "놀라운": ("놀라", "놀랍", "놀랄"),
+               "말도 안 되는": ("말도 안", "말이 돼", "말이 됨")}
+
+
+def signal_fits(word, line):
+    """신호어가 그 줄 본문과 같은 말을 반복하지 않나(★판단 한 곳 — 대본 작가·스토리보드 공용)."""
+    stems = _ROOT_STEMS.get(_root(word or ""), ())
+    return not any(x in (line or "") for x in stems)
+
+
+def refit_signal(word, line, rank, platform="yt", avoid=()):
+    """word 가 줄과 겹치면 같은 자리 풀에서 겹치지 않는 다른 신호어(빈도 순)로 — 없으면 ''. rank = 1·2·3 자리."""
+    if not word or signal_fits(word, line):
+        return word
+    pool = IG_POOL if platform == "ig" else YT_POOLS.get(rank) or []
+    used = {_root(a) for a in avoid if a}
+    for w, _n in sorted(pool, key=lambda x: -x[1]):
+        if w and w != word and _root(w) not in used and signal_fits(w, line):
+            return w
+    return ""
+
+
 def _weighted(rng, pool, avoid):
     cand = [(w, n) for w, n in pool if w and _root(w) not in avoid]
     if not cand:
@@ -160,6 +183,9 @@ def attach_signal(text, word):
                 break
         t = _TWIST_LEAD.sub("", _LEAD_CONJ.sub("", t)).strip()
     t = t.lstrip(",， ")
+    if word and SIGNAL_POOL.get() and not signal_fits(word, t):   # 새 풀 계정: 본문과 같은 말 반복이면 같은 자리 다른 신호어로
+        rank = next((r for r, pool in YT_POOLS.items() if any(w == word for w, _ in pool)), 0)
+        word = refit_signal(word, t, rank, "yt" if rank else "ig")
     return (word + " " + t).strip() if word else t
 
 

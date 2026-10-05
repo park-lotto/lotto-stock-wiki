@@ -225,11 +225,13 @@ function page2(){
           ${added?'<div class="addb">＋ 끼워 넣은 칸</div>':''}${sl.cta_mark?'<div class="addb" style="background:#ff6fb1">📢 CTA 줄</div>':''}
           <div class="rsec ${ck.short?'bad':''}">문장 ${ck.need||0}초 · 장면 ${ck.have||0}초</div></div></div>
         <div class="rm"><div class="line" contenteditable="true" data-ph="${ko(sl.slot)} — 여기에 쓰세요" oninput="(EDIT['${ek}']=EDIT['${ek}']||{})[${i}]=this.innerText">${lines[i]}</div>
-          ${sl.weak?`<div class="why">⚠ ${sl.weak}</div>`:''}${fixedTxt}${(added&&sl.why_scene)?`<div class="meta">🎬 장면 고른 이유: ${sl.why_scene}</div>`:''}
+          ${sl.weak?`<div class="why">⚠ ${sl.weak}</div>`:''}${fixedTxt}${sl.line_signal_before?`<div class="meta">🔤 신호어 「${sl.signal||'뗌'}」 · 원래: "${sl.line_signal_before}"</div>`:''}${(added&&sl.why_scene)?`<div class="meta">🎬 장면 고른 이유: ${sl.why_scene}</div>`:''}
           ${(i===0&&(bd.extra_missing||[]).length)?`<div class="why">⚠ 끼워 넣기에서 빠진 칸: ${bd.extra_missing.map(ko).join(', ')}</div>`:''}
           ${rowActs(i, bd.slots.length, sl)}</div>
         <div class="rs">${memeCell(ek, i, bd)}<div class="cth">${cellCards(ek, i, sl, ck)}</div>${candBox(ek, i, sl, bd)}</div></div>`; }).join('');
-    body = `<div class="note" style="margin:6px 0">${bd.first_line_style||''} · 🎯 = 1단계에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
+    body = `<div style="margin:6px 0"><span class="btn" onclick="sigApply(false)">🔤 신호어 새 세트 넣기</span> <span class="btn" onclick="sigApply(true)">🎲 다른 회원 조합</span>
+      <span class="note">${bd.sigWords?'회원 '+SIGN_MEMBER+' · 고른 신호어: '+bd.sigWords.filter(Boolean).join(' / '):'(로컬에서 코드로 박기 — AI 호출 없음)'}</span></div>
+      <div class="note" style="margin:6px 0">${bd.first_line_style||''} · 🎯 = 1단계에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
       <div class="rows">${cells}</div>${leftRow(bd)}${xpick(ek, bd)}
       <div style="text-align:right;margin-top:10px"><button class="btn main">이 대본으로 확정 → 3단계</button></div>`;
   }
@@ -277,6 +279,15 @@ let MFAV = JSON.parse((()=>{ try { return localStorage.getItem('meme_fav') || '[
 const mRank = id => MFAV.indexOf(id);
 fetch('/meme').then(r => r.json()).then(d => { MEME = d; render(); }).catch(() => { MEME = {clips: [], err: '밈팩을 못 읽었어요'}; });
 const MEME_MAX = 2, MEME_SEC = 1.25;
+// 신호어 새 세트(로컬 시험): 지금 탭 스토리보드의 고조·반전 칸에 신호어를 박는다 — 서버 판단(storyboard.apply_signals) 그대로. 회원(key)을 바꾸면 다른 조합.
+let SIGN_MEMBER = 0;
+async function sigApply(next){
+  const k = VIEW[key()], bd = made()[k]; if (!bd) return;
+  if (next) SIGN_MEMBER++;
+  const base = bd._orig || (bd._orig = JSON.parse(JSON.stringify(bd.slots)));
+  const r = await fetch('/signals', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({board:{slots: base}, key: key() + '|회원' + SIGN_MEMBER, yt: !String((bd.names||[''])[0]).startsWith('인스타')})});
+  const d = await r.json(); bd.slots = d.slots; bd.sigWords = d.words; delete EDIT[key()+k]; delete MEMEPICK[key()+k]; render(); }
 function memeWant(sl){ const k = String(sl.slot||'').split('_')[0].toLowerCase(), t = String(sl.line||'');
   if (/말도 ?안|말이 ?(돼|됨|되)/.test(t)) return '의심_황당';
   if (/충격|미친|미쳤|소름|대박/.test(t) || ['twist','cases'].includes(k)) return '충격_입막';
