@@ -3,11 +3,8 @@
   ① 훅 → 첫 칸 ② CTA → CTA 칸 있을 때만, 없으면 '못 넣은 장면' ③ 담은 장면이 칸에도 '못 넣은 장면'에도 없는 경우 0 을 잰다.
 쓰는 법: py tools/storyboard_mock/audit_role_picks.py %TEMP%/sbtrial_*.json"""
 import copy, glob, json, os, sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-src = open(os.path.join(os.path.dirname(__file__), "..", "storyboard_trial.py"), encoding="utf-8").read()
-ns = {}
-exec(src[src.index("BOX_SLOTS ="):src.index("def _board(")], ns)
-B, apply = ns["BOX_SLOTS"], ns["_apply_role_picks"]
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+from shopping_shorts.storyboard import BOX_SLOTS as B, _apply_role_picks as apply   # 판단 주인(관제 120)
 bad = tot = 0
 for p in sys.argv[1:] or glob.glob(os.path.join(os.environ.get("TEMP", "."), "sbtrial_*.json")):
     t = json.load(open(p, encoding="utf-8"))

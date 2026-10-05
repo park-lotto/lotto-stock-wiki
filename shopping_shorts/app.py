@@ -16066,6 +16066,8 @@ def _api_me(request: Request):
             #   기대하는데 실제로는 씨앗+첫 스타일이 나와 두 번째 고른 것이 조용히 버려진다
             #   (2026-09-23 사장님 캡처). 자리 계산은 서버 한 곳을 보고 화면이 따라간다(0순위-B).
             "story_writer": _setting_gate(st, "story_writer_enabled", cid),
+            # 2단계 스토리보드(관제 120) — 서버 입구(mix/start)와 같은 스위치 하나. 화면은 이 값으로만 보인다
+            "storyboard": _setting_gate(st, "storyboard_enabled", cid),
             # 관리자가 아니어도 열어준 기능들(2026-08-31). 화면은 이 값만 보고 켠다.
             "features": {f: _feature_allowed(st, cid, f) for f in _FEATURE_KEYS},
             "email": email, "name": name, "member_days": member_days,
@@ -20850,6 +20852,95 @@ def _enqueue_prefetch(code, product, cat, lens_tried=False):
         q=product, on_done=_save)
     print("[product_prefetch] 큐잉: %s (%s / %s%s)"
           % (product, cat, code, " · 렌즈" if lens_tried else ""))
+
+
+# ── 2단계 스토리보드(관제 120, 2026-10-05) ─────────────────────────────────────────
+# 판단은 shopping_shorts.storyboard 한 곳. 여기는 스위치·작업 실행(3.6 호출이라 수십 초 — 실 하나로 돌리고 화면이 물어본다)만.
+# 스위치 storyboard_enabled 가 꺼진 계정은 403 — 화면도 /api/me 의 같은 값으로만 보인다(서버·화면 같은 스위치).
+_SB_TASKS = {}          # (job_id, 이름) → {"state": "run"|"done"|"error", "result"|"error"}
+_SB_LOCK = threading.Lock()
+
+
+def _sb_gate(request):
+    if not _setting_gate(Store(DB_PATH), "storyboard_enabled", getattr(request.state, "customer_id", 0)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "스토리보드는 아직 열리지 않았습니다"})
+    return None
+
+
+def _sb_run(job_id, name, fn):
+    """같은 작업·같은 이름이 돌고 있으면 새로 띄우지 않는다(더블클릭). 실패는 이유를 남긴다 — 조용히 삼키지 않는다."""
+    key = (job_id, name)
+    with _SB_LOCK:
+        if (_SB_TASKS.get(key) or {}).get("state") == "run":
+            return
+        _SB_TASKS[key] = {"state": "run", "t0": time.time()}
+
+    def _go():
+        try:
+            res = fn()
+            _SB_TASKS[key] = {"state": "done", "result": res}
+        except Exception as e:      # noqa: BLE001 — 이유를 화면에 보여 준다
+            print("[storyboard] %s %s 실패: %r" % (job_id, name, e), file=sys.stderr)
+            _SB_TASKS[key] = {"state": "error", "error": str(e)[:300]}
+    threading.Thread(target=_go, daemon=True).start()
+
+
+@app.get("/api/produce/storyboard/{job_id}")
+def api_storyboard_get(request: Request, job_id: str):
+    """재료 장면 카드(썸네일·초·설명) + 장면 목록·스타일 추천(있으면) + 스타일 카드 + 진행 중인 일."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    from shopping_shorts import storyboard as _sb
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("extract"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
+    pieces = {}
+    for vid, ex in (job.get("extract") or {}).items():
+        for sg_ in (ex or {}).get("segments") or []:
+            sid = sg_.get("seg_id")
+            if sid:
+                pieces[sid] = {"sec": round(float(sg_.get("end") or 0) - float(sg_.get("start") or 0), 1),
+                               "desc": sg_.get("scene_desc") or "", "label": sg_.get("label") or "",
+                               "use": sg_.get("use_point") or "", "kind": sg_.get("appeal_kind") or "",
+                               "th": "/api/mix/seg_thumb/%s/%s" % (job_id, sid)}
+    tasks = {k[1]: {kk: vv for kk, vv in v.items() if kk != "t0"} for k, v in list(_SB_TASKS.items()) if k[0] == job_id}
+    return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH), "tasks": tasks}
+
+
+@app.post("/api/produce/storyboard/{job_id}/inventory")
+def api_storyboard_inventory(request: Request, job_id: str):
+    g = _sb_gate(request)
+    if g:
+        return g
+    from shopping_shorts import storyboard as _sb
+    _sb_run(job_id, "inventory", lambda: _sb.inventory(DB_PATH, job_id))
+    return {"ok": True}
+
+
+@app.post("/api/produce/storyboard/{job_id}/boards")
+def api_storyboard_boards(request: Request, job_id: str, body: dict):
+    """body: {keys:[스타일 묶음 번호|'auto'], star:"id,id", roles:"훅=id,id|CTA·가격=id"} — 스타일마다 따로 돌린다(동시에)."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    from shopping_shorts import storyboard as _sb
+    star, roles = str(body.get("star") or ""), str(body.get("roles") or "")
+    for k in [str(x) for x in (body.get("keys") or [])][:6]:
+        _sb_run(job_id, "board:" + k, lambda k=k: _sb.make_boards(DB_PATH, job_id, [k], star, roles).get(k))
+    return {"ok": True}
+
+
+@app.post("/api/produce/storyboard/{job_id}/insert")
+def api_storyboard_insert(request: Request, job_id: str, body: dict):
+    """body: {name: 결과 이름, board: 지금 스토리보드, extra: [칸...]} → 고른 칸만 끼운 새 스토리보드."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    from shopping_shorts import storyboard as _sb
+    name = "insert:" + str(body.get("name") or "x")[:40]
+    _sb_run(job_id, name, lambda: _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}))
+    return {"ok": True}
 
 
 @app.post("/api/produce/mix/start")

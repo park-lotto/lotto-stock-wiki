@@ -665,6 +665,26 @@
    "검사도구": "tools/scene_cover/storyboard_pin_check.py",
    "과금": false,
    "예외": {}
+  },
+  {
+   "이름": "2단계 스토리보드(장면 묶기·스타일 칸 틀·상자 담기 자리·칸 끼워 넣기)",
+   "주인": [
+    "shopping_shorts/storyboard.py"
+   ],
+   "시그니처": [
+    "^BOX_SLOTS\\s*=",
+    "def _apply_role_picks\b",
+    "^ARC_RANK\\s*=",
+    "def arc_place\b",
+    "^OLD_EXPAND\\s*="
+   ],
+   "소비처": [
+    "2단계 화면(produce.html sb*)",
+    "시험 도구 tools/storyboard_trial.py·storyboard_mock"
+   ],
+   "검사도구": "tools/storyboard_mock/audit_role_picks.py",
+   "과금": false,
+   "예외": {}
   }
  ]
 }

@@ -3,10 +3,11 @@
 #   ① 코드 검사: 칸 수·빈 칸·장면 모자람·장면 겹침·없는 번호·문장 길이·{} 남음·같은 접속어 연달아·검수가 지운 제품 사실 수
 #   ② 스타일 충실도(3.6 판정 1번): 그 스타일의 상황·인물·흐름 글대로 썼나(가족갈등이면 가족 인물·갈등이 나오나) 1~5점 + 문제
 # 서버에서: python3 /tmp/audit_boards.py <job> [<job> ...]   → /tmp/sb_audit.json + 표
-import io, json, re, sqlite3, sys, time, contextlib
+import io, json, os, re, sqlite3, sys, time, contextlib
 from concurrent.futures import ThreadPoolExecutor
-sys.path.insert(0, "/tmp")
-import storyboard_trial as T
+sys.path.insert(0, os.getcwd())
+DB = "shopping_shorts/data/reference.db"
+from shopping_shorts import storyboard as T   # 판단은 라이브 모듈 한 곳(관제 120)
 sg, narr_secs = T.sg, T.narr_secs
 
 S_JUDGE = {"type": "object", "properties": {"score": {"type": "integer"}, "story_ok": {"type": "boolean"},
@@ -79,7 +80,7 @@ def run_job(jid, db, fams, spines):
     pan_of = {str(s.get("family")): s.get("pan") for s in R.get("styles") or []}
     from shopping_shorts.store import Store
     from shopping_shorts import bank_assemble as _bk
-    creative = _bk.parts_block(Store(T.DB))
+    creative = _bk.parts_block(Store(DB))
     top = next((f for n, f, _ in fams if R.get("styles") and n == R["styles"][0].get("family")), fams[0][1])
     work = [("auto", top, True)] + [(str(n), f, False) for n, f, _ in fams]
 
@@ -108,7 +109,7 @@ def run_job(jid, db, fams, spines):
 
 
 if __name__ == "__main__":
-    db = sqlite3.connect("file:%s?mode=ro" % T.DB, uri=True)
+    db = sqlite3.connect("file:%s?mode=ro" % DB, uri=True)
     fams = T._families(db)
     cols = [c[1] for c in db.execute("pragma table_info(spine)")]
     spines = {int(r[0]): dict(zip(cols, r)) for r in db.execute("select * from spine where status='approved'")}
