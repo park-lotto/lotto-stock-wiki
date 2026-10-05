@@ -18712,11 +18712,10 @@ function sbGroups(){ const v=sbInv(); return (v&&v.groups)||[]; }
 // 스토리보드 진입 — 작업(job)이 바뀌면 화면 기억을 비운다(다른 작업의 스토리보드가 따라오지 않게)
 function sbEnter(){
   const box=document.getElementById('s2Storyboard'); if(!box) return;
-  if(!window.STORYBOARD_ON){ box.innerHTML=''; box.style.display='none'; return; }   // 고객 화면 불변
-  box.style.display='';
+  // ★#s2Storyboard 를 그리는 건 sbRender 하나(DOM 주인 한 곳) — 여기선 상태만 바꾸고 부른다
   const j=sbJid();
   if(j!==SB.jid){ Object.assign(SB, {jid:j, data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, err:''}); }
-  if(!j){ box.innerHTML='<div class="sb-box"><div class="sb-bh">🎬 스토리보드 <small>1단계 재료 분석(영상 매칭 작업)이 있어야 열려요</small></div></div>'; return; }
+  if(!window.STORYBOARD_ON || !j){ sbRender(); return; }
   sbLoad();
 }
 async function sbLoad(){
@@ -18767,16 +18766,16 @@ function sbRoleColor(r){ return (SB_ROLES.find(x=>x[0]===r)||[,,'#888'])[2]; }
 function sbCard1(id, w){ const p=sbPieces()[id]; if(!p) return '';
   const mine=sbRolesOf(id); const sug=[...new Set(sbTagOf(id).map(t=>SB_SUG[t]).filter(Boolean))];
   return `<div class="sb-pc ${SB.active?'armed':''}" onclick="sbCardClick('${sbA(id)}')" title="${sbE(p.desc)}">
-    <div class="sb-th" style="width:${w||76}px;${mine.length?'border-color:'+sbRoleColor(mine[0]):''}"><img src="${sbE(p.th)}" loading="lazy" alt=""><span class="sb-sec">${sbE(p.sec)}초</span>
+    <div class="sb-th" style="width:${w||76}px;${mine.length?'border-color:'+sbRoleColor(mine[0]):''}"><img src="${sbE(p.th)}" alt=""><span class="sb-sec">${sbE(p.sec)}초</span>
       <span class="sb-tg">${mine.map(r=>`<span style="background:${sbRoleColor(r)}">${(SB_ROLES.find(x=>x[0]===r)||[])[1]} ${sbE(r)}</span>`).join('')}${!mine.length&&sug.length?`<span class="sb-aisug">AI: ${sbE(sug.join('·'))}</span>`:''}</span></div></div>`; }
 function sbTh(id, w){ const p=sbPieces()[id]; if(!p) return '';
   const tg=sbTagOf(id).map(t=>`<span>${SB_TAGI[t]||''}${sbE(t)}</span>`).join('');
-  return `<div class="sb-th" style="width:${w||66}px" title="${sbE(p.desc)}"><img src="${sbE(p.th)}" loading="lazy" alt=""><span class="sb-tg">${tg}</span><span class="sb-sec">${sbE(p.sec)}초</span></div>`; }
+  return `<div class="sb-th" style="width:${w||66}px" title="${sbE(p.desc)}"><img src="${sbE(p.th)}" alt=""><span class="sb-tg">${tg}</span><span class="sb-sec">${sbE(p.sec)}초</span></div>`; }
 function sbPage1(){
   const inv=sbInv(); const P=sbPieces();
   const boxes=SB_ROLES.map(([r,ic,c,slots])=>{ const s=SB.role[r]||new Set();
     return `<div class="sb-rbox ${SB.active===r?'on':''}" style="--c:${c}" onclick="sbSetActive('${sbA(r)}')"><div class="sb-rh">${ic} ${sbE(r)} <b>${s.size||''}</b></div><div class="sb-rs">${slots}</div>
-      <div class="sb-rth">${[...s].slice(0,5).map(id=>{ const p=P[id]; return p?`<img src="${sbE(p.th)}" loading="lazy" alt="">`:''; }).join('')}</div></div>`; }).join('');
+      <div class="sb-rth">${[...s].slice(0,5).map(id=>{ const p=P[id]; return p?`<img src="${sbE(p.th)}" alt="">`:''; }).join('')}</div></div>`; }).join('');
   const grps=sbGroups().map((g,i)=>{ const all=SB.showall[i]; const gids=(g.ids||[]); const ids=all?gids:gids.slice(0,7);
     const hit=gids.filter(id=>sbRolesOf(id).length).length;
     return `<div class="sb-grp ${hit?'star':''}"><div class="sb-gh"><b>${sbE(g.name)}</b> <span>${sbE(g.desc||'')} · ${gids.length}개</span>${hit?` <span class="sb-hitb">🎯 ${hit}장 담김 — 그 자리에 먼저 놓아요 · 이 묶음의 나머지 조각은 다른 자리에도 쓰여요</span>`:''}</div>
@@ -18937,7 +18936,9 @@ function sbPage2(){
 }
 function sbRender(){
   const box=document.getElementById('s2Storyboard'); if(!box) return;
-  if(!window.STORYBOARD_ON){ box.innerHTML=''; box.style.display='none'; return; }
+  if(!window.STORYBOARD_ON){ box.innerHTML=''; box.style.display='none'; return; }   // 고객 화면 불변
+  box.style.display='';
+  if(!SB.jid){ box.innerHTML='<div class="sb-box"><div class="sb-bh">🎬 스토리보드 <small>1단계 재료 분석(영상 매칭 작업)이 있어야 열려요</small></div></div>'; return; }
   const head=`<div class="s2-label" style="margin-bottom:8px">🎬 스토리보드 <span class="sb-note">(관리자 시험) 장면을 먼저 고르고 → 대본 스타일로 줄마다 문장·장면을 짝지어 만듭니다</span></div>`;
   if(!SB.data){ box.innerHTML=head+`<div class="sb-box">${SB.err?'<span class="sb-err">'+sbE(SB.err)+'</span>':'<span class="sb-note">불러오는 중…</span>'}</div>`; return; }
   const ti=sbTask('inventory');
