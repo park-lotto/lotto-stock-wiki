@@ -10,6 +10,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def caption_motion_keys():
+    """자막 등장 효과 저장값 목록 — 편집기와 같은 계약 파일(static/caption-motions.js)의 /*JSON*/ 사이를 읽는다(관제 127)."""
+    text = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")
+    return tuple(json.loads(text.split("/*JSON*/")[1]))
+
+
 def validate_snapshot(value):
     if not isinstance(value, dict) or len(json.dumps(value, ensure_ascii=False)) > 250_000:
         raise ValueError("장면꾸미기 설정이 올바르지 않습니다")
@@ -149,7 +155,7 @@ def validate_snapshot(value):
         if look is not None and (not isinstance(look, dict) or set(look) - {"channel", "titleLarge", "titleSmall", "caption"} or any(
                 isinstance(v, bool) or not isinstance(v, (int, float)) or not lo <= v <= hi for v in look.values())):
             raise ValueError(f"{label} 값이 올바르지 않습니다")
-    if value.get("bodyCaptionMotion") not in (None, "", "rise", "grow", "pop", "slide", "drop", "fade", "wide"):   # precision20-ui.js BODY_CAPTION_MOTIONS와 짝
+    if value.get("bodyCaptionMotion") not in (None, "", *caption_motion_keys()):   # 계약 파일 static/caption-motions.js 한 곳(관제 127)
         raise ValueError("본문 자막 효과 값이 올바르지 않습니다")
     word_fx = value.get("wordFx")
     if word_fx is not None:

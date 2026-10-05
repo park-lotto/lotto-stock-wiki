@@ -160,6 +160,7 @@
 .precision-text.wfx-on{isolation:isolate}
 .precision-text .wfx-w{position:relative;display:inline-block;transform-origin:50% 60%}
 .precision-text .wfx-w.now{z-index:1}
+.precision-text .cap-c{display:inline-block}
 .precision-text.wfx-box .wfx-w.now::before{content:'';position:absolute;z-index:-1;left:-.16em;right:-.16em;top:-.02em;bottom:-.02em;border-radius:.24em;background:var(--wfx-color)}
 .precision-text.wfx-color .wfx-w.now{color:var(--wfx-color)!important}
 .word-fx-head{margin-top:14px}

@@ -699,16 +699,8 @@
       document.head.append(css);
     }
   }
-  const BODY_CAPTION_MOTIONS={
-    // 09-19 사장님 '느낌이 다 비슷하다' → 이동 거리·시간·튕김을 모션마다 확실히 다르게(예전: 14px·0.3초로 거의 같았다)
-    rise:{label:'스윽 올라오기',ms:380,easing:'cubic-bezier(.16,1,.3,1)',frames:[{opacity:0,transform:'translateY(70px)'},{opacity:1,transform:'translateY(0)'}]},
-    grow:{label:'천천히 확대',origin:true,ms:650,easing:'cubic-bezier(.25,.8,.35,1)',frames:[{opacity:.2,transform:'scale(.45)'},{opacity:1,transform:'scale(1)'}]},
-    pop:{label:'톡 튀어나오기',origin:true,ms:480,easing:'linear',frames:[{opacity:0,transform:'scale(0)'},{opacity:1,transform:'scale(1.3)',offset:.45},{transform:'scale(.92)',offset:.7},{transform:'scale(1.04)',offset:.87},{transform:'scale(1)'}]},
-    slide:{label:'옆에서 밀려오기',ms:450,easing:'cubic-bezier(.2,.9,.3,1)',frames:[{opacity:0,transform:'translateX(-320px)'},{opacity:1,transform:'translateX(18px)',offset:.72},{transform:'translateX(0)'}]},
-    drop:{label:'위에서 떨어지기',ms:560,easing:'linear',frames:[{opacity:0,transform:'translateY(-160px)'},{opacity:1,transform:'translateY(0)',offset:.55},{transform:'translateY(-26px)',offset:.72},{transform:'translateY(0)',offset:.86},{transform:'translateY(-6px)',offset:.93},{transform:'translateY(0)'}]},
-    fade:{label:'서서히 나타나기',ms:700,easing:'ease-out',frames:[{opacity:0,filter:'blur(10px)'},{opacity:1,filter:'blur(0)'}]},
-    wide:{label:'옆으로 펼치기',origin:true,ms:420,easing:'cubic-bezier(.2,.9,.3,1)',frames:[{opacity:0,transform:'scaleX(0)'},{opacity:1,transform:'scaleX(1.12)',offset:.7},{transform:'scaleX(1)'}]},
-  };
+  // 자막 등장 효과 목록은 계약 파일 한 곳(shopping_shorts/static/caption-motions.js, 관제 127) — 서버 검증도 같은 파일을 읽는다.
+  const BODY_CAPTION_MOTIONS=window.CAPTION_MOTIONS;if(!BODY_CAPTION_MOTIONS)throw new Error('caption-motions.js 가 먼저 실려야 합니다');
   // 브라우저에 바로 기억시키기: '현재 설정 저장'을 누르지 않아도 고른 값이 새로고침 뒤에 남는다.
   const rememberLocal=patch=>{if(qaMode||labMode)return;try{const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null')||{};localStorage.setItem('scene_style_preset',JSON.stringify({...saved,...patch}))}catch{}};
   const bodyMotionPanel=document.createElement('section');
@@ -886,21 +878,60 @@
     if(mode==='continuous'&&hookBandMotion)return BODY_CAPTION_MOTIONS[hookBandMotion]||null;   // 고정형은 예전부터 흰 띠 줄 값이 자막 등장
     return null;
   }
+  // 자막을 어절(.wfx-w)로 쪼갠다 — 단어 강조와 글자·어절 등장이 같은 쪼갬을 쓴다(한 곳). 줄마다 .wfx-line 하나로 감싸야
+  //   자막 칸(flex)이 어절 사이 띄어쓰기를 먹지 않는다. 이미 쪼개져 있으면 그대로 둔다.
+  function splitCaptionWords(el){
+    if(el.querySelector('.wfx-w'))return;
+    const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT),nodes=[];
+    while(walker.nextNode())if(walker.currentNode.nodeValue.trim())nodes.push(walker.currentNode);
+    nodes.forEach(node=>{
+      const line=document.createElement('span');line.className='wfx-line';
+      node.nodeValue.split(/(\s+)/).forEach(part=>{
+        if(!part)return;
+        if(/^\s+$/.test(part)){line.appendChild(document.createTextNode(part));return}
+        const w=document.createElement('span');w.className='wfx-w';w.textContent=part;line.appendChild(w);
+      });
+      node.replaceWith(line);
+    });
+  }
+  // 등장 단위(관제 127): 'word' = 어절, 'char' = 글자(어절 안을 다시 쪼갠다). 렌더러는 .cap-u 의 움직임을 프레임마다 굳혀 찍는다.
+  function captionUnits(el,unit){
+    splitCaptionWords(el);
+    const words=[...el.querySelectorAll('.wfx-w')];
+    if(unit==='word'){words.forEach(w=>w.classList.add('cap-u'));return words}
+    words.forEach(w=>{
+      if(w.querySelector('.cap-c'))return;
+      const chars=[...w.textContent];w.textContent='';
+      chars.forEach(ch=>{const c=document.createElement('span');c.className='cap-c cap-u';c.textContent=ch;w.appendChild(c)});
+    });
+    return [...el.querySelectorAll('.cap-c')];
+  }
   function runCaptionEnter(options){
     const seeking=options&&typeof options==='object'&&Number.isFinite(options.time);
     const motion=captionMotionNow();if(!motion)return 0;
     const text=layer.querySelector('.precision-text[data-edit-bind="caption"]'),mask=layer.querySelector('.caption-mask');
     if(!text||text.hidden||!text.textContent.trim())return 0;
-    [text,mask].filter(Boolean).forEach(el=>el.getAnimations().forEach(a=>a.cancel()));const els=[text];   // 09-19: 상자는 두고 글자만 움직인다 — 상자가 움직이면 뒤 검은 칸이 드러났다
-    
+    [text,mask,...text.querySelectorAll('.cap-u')].filter(Boolean).forEach(el=>el.getAnimations().forEach(a=>a.cancel()));   // 09-19: 상자는 두고 글자만 움직인다 — 상자가 움직이면 뒤 검은 칸이 드러났다
     if(!seeking&&(qaMode||matchMedia('(prefers-reduced-motion: reduce)').matches))return 0;
+    const els=motion.unit?captionUnits(text,motion.unit):[text];
     const T=text.getBoundingClientRect(),cx=T.left+T.width/2,cy=T.top+T.height/2,ms=motion.ms||CAPTION_ENTER_MS;
-    els.forEach(el=>{
-      if(motion.origin){const r=el.getBoundingClientRect();el.style.transformOrigin=`${cx-r.left}px ${cy-r.top}px`;}
-      const animation=el.animate(motion.frames,{duration:ms,easing:motion.easing||'cubic-bezier(.2,.8,.3,1)',fill:'both'});
+    // 단위마다 늦게 시작한다 — 간격은 stagger, 다만 마지막 단위도 spread 안에 시작하게 줄인다(긴 자막도 장면 안에 끝).
+    const step=els.length>1?Math.min(motion.stagger||0,(motion.spread??Infinity)/(els.length-1)):0,mid=(els.length-1)/2;
+    els.forEach((el,k)=>{
+      if(motion.origin===true){const r=el.getBoundingClientRect();el.style.transformOrigin=`${cx-r.left}px ${cy-r.top}px`;}
+      else if(typeof motion.origin==='string')el.style.transformOrigin=motion.origin;
+      // spreadX: 가운데에서 (번호-가운데)×값×spreadK(em) 벌어진 자리(translate) — spreadK 없는 키프레임은 제자리
+      const frames=motion.spreadX?motion.frames.map(({spreadK,...f})=>({...f,translate:`${((k-mid)*motion.spreadX*(spreadK||0)).toFixed(3)}em 0`})):motion.frames;
+      const animation=el.animate(frames,{duration:ms,delay:k*step,easing:motion.easing||'cubic-bezier(.2,.8,.3,1)',fill:'both'});
       if(seeking){animation.pause();animation.currentTime=options.time;}else animation.finished.then(()=>animation.cancel()).catch(()=>{});
     });
-    return ms;
+    // 글자 단위일 때 어절은 첫 글자가 나올 때 같이 켠다 — 어절에 붙은 단어 강조 상자(::before)가 빈 채로 먼저 뜨지 않게
+    if(motion.unit==='char')text.querySelectorAll('.wfx-w').forEach(w=>{
+      const first=els.indexOf(w.querySelector('.cap-c'));if(first<0)return;w.classList.add('cap-u');
+      const gate=w.animate([{opacity:0},{opacity:1}],{duration:1,delay:first*step+ms*(motion.boxAt??.3),easing:'steps(1,start)',fill:'both'});
+      if(seeking){gate.pause();gate.currentTime=options.time;}else gate.finished.then(()=>gate.cancel()).catch(()=>{});
+    });
+    return Math.ceil((els.length-1)*step+ms);
   }
   // ── 단어 강조 본체(관제 102) ──────────────────────────────────────────────
   //   ★모양은 (장면, 장면 시작 뒤 몇 초)만으로 정해진다. 시계(애니메이션)에 기대지 않으므로 렌더러가 아무 프레임이나 찍어도
@@ -933,19 +964,7 @@
   function applyWordFx(){
     const el=layer.querySelector('.precision-text[data-edit-bind="caption"]');
     if(!el||!wordFxOn()||el.hidden||!el.textContent.trim())return null;
-    if(!el.querySelector('.wfx-w')){
-      const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT),nodes=[];
-      while(walker.nextNode())if(walker.currentNode.nodeValue.trim())nodes.push(walker.currentNode);
-      nodes.forEach(node=>{
-        const line=document.createElement('span');line.className='wfx-line';
-        node.nodeValue.split(/(\s+)/).forEach(part=>{
-          if(!part)return;
-          if(/^\s+$/.test(part)){line.appendChild(document.createTextNode(part));return}
-          const w=document.createElement('span');w.className='wfx-w';w.textContent=part;line.appendChild(w);
-        });
-        node.replaceWith(line);
-      });
-    }
+    splitCaptionWords(el);
     const spans=[...el.querySelectorAll('.wfx-w')],times=wordFxTimes(spans.map(s=>s.textContent));
     if(!spans.length||!times)return null;
     let now=0;times.forEach((at,k)=>{if(wordFxClock+WORD_FX_LEAD>=at)now=k});

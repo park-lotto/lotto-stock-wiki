@@ -1,4 +1,14 @@
 const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppeteer=require('puppeteer');
+// Materialize the sampled animation state for Chromium's screenshot compositor.
+const materialize=page=>page.evaluate(()=>{
+  document.querySelectorAll('.scene-decoration,.precision-text,.precision-patch,.scene-brand-ink,.cap-u').forEach(el=>{
+    const animations=el.getAnimations();if(!animations.length)return;
+    const style=getComputedStyle(el),values={};
+    for(const key of ['transform','translate','rotate','scale','opacity','filter','clipPath'])values[key]=style[key];
+    animations.forEach(a=>a.cancel());Object.assign(el.style,values);
+  });
+});
+const twoFrames=page=>page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
 (async()=>{
   const request=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
   const browser=await puppeteer.launch({headless:true,args:process.env.SCENE_STYLE_NO_SANDBOX==='1'?['--no-sandbox']:[]});
@@ -50,21 +60,23 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
           await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
           await page.evaluate(({title,shape,brand,cap,word})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape);window.sceneBranding?.motionAt(brand);if(cap!==null)window.sceneStyle.captionEnterAt?.(cap);if(word!==null)window.sceneStyle.wordFxAt(word)},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000,brand:(first+f)/30*1000,cap:enter?f/30*1000:null,word:words!==null?f/30*1000:null});   // 단어 상태는 찍기 직전에 한 번 더 못 박는다
           await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
-          // Materialize the sampled animation state for Chromium's screenshot compositor.
-          await page.evaluate(()=>{
-            document.querySelectorAll('.scene-decoration,.precision-text,.precision-patch,.scene-brand-ink').forEach(el=>{
-              const animations=el.getAnimations();if(!animations.length)return;
-              const style=getComputedStyle(el),values={};
-              for(const key of ['transform','translate','rotate','scale','opacity','filter','clipPath'])values[key]=style[key];
-              animations.forEach(a=>a.cancel());Object.assign(el.style,values);
-            });
-          });
+          await materialize(page);
           await page.screenshot({path:path.join(request.output,frameFile(f)),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
           lastShot=f;
         }
         animation={pattern,count};
         // 캡컷은 정지 그림 클립만 받는다 — 단어마다 그 단어의 마지막 프레임(등장이 끝난 그림)을 대표로 넘긴다(scene_style.overlay_spans).
         if(wordSpans)wordSpans=wordSpans.map((span,k)=>({frame:span.frame,word:span.word,file:frameFile((k+1<wordSpans.length?wordSpans[k+1].frame:count)-1)}));
+        // 대표 그림이 자막 등장 도중이면(첫 단어가 짧거나 글자 단위 등장이 길 때) 캡컷엔 글자가 덜 나온 채 멈춰 보인다(관제 127 실측:
+        //   글자 팝 튕김 첫 단어 잉크 44,444 / 정상 51,402). 그 단어는 '등장이 끝난 자막 + 그 단어 강조'를 따로 한 장 찍는다.
+        if(wordSpans&&enterCount)for(const span of wordSpans){
+          const f=Number(span.file.match(/(\d{4})\.png$/)[1]);if(f>=enterCount-1)continue;
+          await page.evaluate(i=>window.sceneStyle.show(i),index);await twoFrames(page);
+          await page.evaluate(({title,shape,brand,word})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape);window.sceneBranding?.motionAt(brand);window.sceneStyle.captionEnterAt?.(100000);window.sceneStyle.wordFxAt(word)},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000,brand:(first+f)/30*1000,word:f/30*1000});
+          await twoFrames(page);await materialize(page);
+          span.file=`scene-style-capcut-${index}-${String(f).padStart(4,'0')}.png`;
+          await page.screenshot({path:path.join(request.output,span.file),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
+        }
       }
       const camera=isCamera?await page.evaluate(({first,end})=>Array.from({length:end-first},(_,f)=>window.sceneStyle.cameraAt((first+f)/30*1000)),{first,end}):null;
       layers.push({...g,file,animation,camera,...(wordSpans?{wordSpans}:{})});
