@@ -1561,7 +1561,24 @@
 
   /* 🎙 성우 두 열(2026-08-30) — 일레븐랩스 | 타입캐스트를 나란히 본다.
      좁아지면 자동으로 위아래로 쌓인다(minmax + auto-fit). */
-  .voiceCols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  /* ★3열 고정(2026-10-05 Fish) — auto-fit(200px)이면 5단계 칸(약 530px)에 2칸만 들어가 Fish 열이
+     일레븐 아래로 떨어졌다(위 찾기 버튼 3열과 축이 어긋남, 로컬 실측). 찾기 버튼(.findCols)과 같은 규칙.
+     3열에선 카드가 좁아 아바타를 빼고 별·재생을 줄인다. 좁은 화면(≤480px)은 1열로 쌓고 원래 모양. */
+  .voiceCols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .voiceCols > div{min-width:0}
+  .voiceCols .vavatar{display:none}
+  .voiceCols .vrow{gap:4px;padding:8px 6px 8px 10px}
+  .voiceCols .vname{font-size:14px}
+  .voiceCols .vstar{width:28px}
+  .voiceCols .vplay{width:34px;height:34px;min-width:0;padding:0}
+  @media (max-width:480px){
+    .voiceCols{grid-template-columns:1fr}
+    .voiceCols .vavatar{display:flex}
+    .voiceCols .vrow{gap:11px;padding:10px 12px}
+    .voiceCols .vname{font-size:15px}
+    .voiceCols .vstar{width:40px}
+    .voiceCols .vplay{width:40px;height:40px}
+  }
   /* 성우 늘리는 버튼 2열 — 아래 카드 2열(.voiceCols)과 **같은 규칙**이라 축이 맞는다.
      패널이 열리면 그 열만 아래로 길어진다(align-items:start). */
   /* ★2×2 고정(2026-09-04): 1줄 찾기, 2줄 내가 만든 목소리 — 왼쪽 일레븐랩스·오른쪽 타입캐스트.
