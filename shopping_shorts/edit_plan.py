@@ -4391,6 +4391,27 @@ def scene_swap_rows(plan_before, plan_after, job=None):
 # _extend_refs_to_narration(09-17) 은 관제 084(2026-10-02)에 ai_match.ensure_cover 로 합쳤다 — 줄마다 장면 보장 판단은 그 한 곳.
 #   옮긴 정책: 한 컷 기여 MAX_SHOT_SECONDS(2.2초)까지·1.2초 이상 컷 먼저·뒷컷 제외. 바뀐 점: 바로 다음 컷이 쓰였으면 멈추던 것 → 더 뒤/앞·같은 의미 컷.
 
+def match_seg_key(key, seg_map, tol=0.05):
+    """번호가 바뀐 같은 장면 찾기(관제 120) — 2단계(캐시 번호 <영상코드>-n)와 3단계 작업(s0-n)이 같은 장면에 번호를 달리 붙인다.
+    실측(10-05 라이브 job 4cd80576b70e): 3단계가 장면 **설명은 새로 달지만 경계(시작·끝 초)는 같았다** → 설명이 아니라 경계로 잇는다.
+    ① 어느 영상인가: key.vsig(그 영상 장면들의 시작 초)가 전부 들어 있는 영상 ② 그 영상에서 시작·끝 초가 tol 안에서 같은 장면 하나.
+    애매하면(영상이 둘 이상 맞거나 장면이 둘 이상) None — 엉뚱한 장면을 붙이지 않는다."""
+    try:
+        a, b = float(key.get("start")), float(key.get("end"))
+    except (TypeError, ValueError, AttributeError):
+        return None
+    by_vid = {}
+    for sid, g in (seg_map or {}).items():
+        by_vid.setdefault(g.get("video_id"), []).append((sid, float(g.get("start") or 0), float(g.get("end") or 0)))
+    sig = [float(x) for x in (key.get("vsig") or [])]
+    vids = [v for v, segs in by_vid.items()
+            if sig and all(any(abs(st - x) <= tol for _, st, _e in segs) for x in sig)]
+    if len(vids) != 1:
+        return None
+    hit = [sid for sid, st, en in by_vid[vids[0]] if abs(st - a) <= tol and abs(en - b) <= tol]
+    return hit[0] if len(hit) == 1 else None
+
+
 def build_inherit_plan(source_scripts, given_script, beat_sources, structure="template", video_type=None):
     """3단계 '붙어 온 장면 그대로 쓰기'(2026-09-04, 설계 §3-5·§9 — 사장님 "3단계는 상속만").
 
@@ -4416,6 +4437,7 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
         return None
 
     def _ids_of(x):
+        keys = {k.get("id"): k for k in (x.get("seg_keys") or []) if isinstance(k, dict)}
         """2단계가 **명시한** 출처는 첫·끝 컷(edge)이라도 그대로 잇는다(2026-09-05 리뷰 H2) — 2단계 장면 목록은
         전부를 보여주므로 훅=첫 컷이 가장 흔한데, usable(non_edge)로 거르면 로그 없이 b-roll로 바뀌었다.
         edge 제외는 **자동으로 채우는** b-roll(_next_cut·_fill_for)에만 적용한다."""
@@ -4423,6 +4445,8 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
         out = []
         for sid in ids:
             sid = str(sid).strip()
+            if sid not in seg_map and sid in keys:
+                sid = match_seg_key(keys[sid], seg_map) or sid
             if sid in seg_map and sid not in out:
                 out.append(sid)
         return out
