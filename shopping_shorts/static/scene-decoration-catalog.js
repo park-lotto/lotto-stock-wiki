@@ -198,35 +198,3 @@ C.animate=function(el,m,W){
      }
 };
 })();
-
-// ★구매링크 롱폼(가로 16:9) 안내 세트 3종(관제 133, 2026-10-06 사장님 "디자인 3개씩 · 센스있게 · 사람들이 눌러보게").
-//   자리는 가로 화면 기준 %. 가운데 쇼츠는 가로 34.2~65.8% 라 전부 양옆 여백에만 놓는다(영상을 가리지 않는다).
-//   where = 'comment'(댓글) | 'desc'(설명란) — 링크를 어디에 두는지에 따라 낱말만 바뀐다. 놓은 뒤에는 보통 항목처럼 끌어 고친다.
-(()=>{
-const C=window.SCENE_DECORATION_CATALOG,sq=w=>Math.round(w*16/9*100)/100;   // 가로 w% 인 정사각의 세로 %
-const base={shape:'round',fx:'solid',op:100,soft:30,rot:0,motion:'none'};
-C.linkLongformSets=[
-  {id:'pin',label:'① 고정 댓글',items:W=>[
-    {...base,kind:'badge',text:'📌 고정 '+W,l:4,t:25,w:15,h:8,color:'#111111',badgeStyle:'glass',rot:-3},
-    {...base,kind:'badge',text:'구매링크 여기 있어요',l:3,t:36,w:28,h:12,color:'#FF2D5E',badgeStyle:'pill'},
-    {...base,kind:'emoji',ch:'👇',l:11.5,t:52,w:11,h:sq(11),color:'#ffffff',motion:'float'},
-    {...base,kind:'badge',text:'가격·옵션 확인',l:81,t:25,w:15,h:8,color:'#111111',badgeStyle:'glass',rot:3},
-    {...base,kind:'badge',text:W+' 맨 위 링크 클릭',l:69,t:36,w:28,h:12,color:'#1F7CFF',badgeStyle:'pill'},
-    {...base,kind:'emoji',ch:'👇',l:77.5,t:52,w:11,h:sq(11),color:'#ffffff',motion:'float'},
-  ]},
-  {id:'ask',label:'② 묻고 답하기',items:W=>[
-    {...base,kind:'badge',text:'이거 어디서 사요? 🤔',l:3,t:30,w:28,h:13,color:'#111111',badgeStyle:'ticket',rot:-5},
-    {...base,kind:'emoji',ch:'👀',l:12,t:50,w:10,h:sq(10),color:'#ffffff',motion:'pulse'},
-    {...base,kind:'badge',text:W+'에 링크 있어요!',l:69,t:33,w:28,h:13,color:'#1FA84E',badgeStyle:'pill',rot:4},
-    {...base,kind:'graphic',graphic:'arrow_curve',l:74,t:48,w:18,h:sq(18),color:'#FFD400',rot:70,motion:'point'},
-  ]},
-  {id:'bar',label:'③ 아래 띠',items:W=>[
-    {...base,kind:'badge',text:'LINK',l:4,t:14,w:11,h:10,color:'#FF8A00',badgeStyle:'burst',rot:-8,motion:'pulse'},
-    {...base,kind:'graphic',graphic:'arrow_bold',l:9.5,t:42,w:15,h:sq(15),color:'#FFD400',rot:90,motion:'point'},
-    {...base,kind:'badge',text:'구매링크는 '+W+'에',l:3,t:74,w:28,h:13,color:'#111111',badgeStyle:'glass'},
-    {...base,kind:'graphic',graphic:'arrow_bold',l:75.5,t:42,w:15,h:sq(15),color:'#FFD400',rot:90,motion:'point'},
-    {...base,kind:'badge',text:'아래에서 바로 확인 👇',l:69,t:74,w:28,h:13,color:'#111111',badgeStyle:'glass'},
-  ]},
-];
-C.linkLongformItems=(id,where)=>(C.linkLongformSets.find(s=>s.id===id)||C.linkLongformSets[0]).items(where==='desc'?'설명란':'댓글');
-})();

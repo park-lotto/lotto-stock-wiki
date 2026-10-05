@@ -192,31 +192,33 @@
        {...base,kind:'badge',text:label,l:3,t:79,w:48,h:6,color,badgeStyle:'pill',rot:0,motion:'none'},
      ];
    }
-   // ★구매링크 칸 디자인 3종(2026-10-06 사장님 "디자인 3개씩 — 사람들이 눌러보게"). 전부 '바닥선' 위에 놓는다:
-   //   바닥선 = 두 화면(기본·댓글창) 중 더 높은 채널명 줄 - 2%. 그 아래는 유튜브 글자에 가린다. 움직임으로 내려가는 몫까지 뺀다.
+   // ★구매링크 칸 디자인 3종(2026-10-06 사장님 "디자인 3개씩 — 사람들이 눌러보게" → "실제 구매링크 칸까지 최대한 내려").
+   //   가리키는 것(화살표·손가락)은 영상 맨 아래까지 내린다 — 상자가 화면 밖으로 나가면 서버(_norm_masks)가 줄여 찌그러뜨리므로 상자 아래 = 100%.
+   //     링크 칸은 기본 화면에서 영상 바로 아래(102.5%~)다. 내려온 화살표 위로는 유튜브의 채널명·제목 글자가 겹쳐 보인다.
+   //   글자 배지는 '바닥선' 위에 둔다: 바닥선 = 두 화면(기본·댓글창) 중 더 높은 채널명 줄 - 2%. 글자가 유튜브 글자와 겹치면 못 읽는다.
    const floor=Math.min(...Object.values(YT_SHORTS_UI).map(v=>v.channel.t))-2,r=n=>Math.round(n*100)/100,sq=w=>w*9/16;   // sq = 가로 w% 인 정사각의 세로 %
    if(design==='finger'){
-     // ② 손가락 콕: 큼직한 👇 가 둥실거리고, 그 위에 반투명 유리 배지. 둥실 = 아래로 상자 높이의 5%.
-     const w=20,h=sq(w),t=floor-h*1.05;
+     // ② 손가락 콕: 큼직한 👇 가 둥실거리고(아래로 상자 높이의 5%), 위에 반투명 유리 배지.
+     const w=20,h=sq(w);
      return [
-       {...base,kind:'emoji',ch:'👇',l:6,t:r(t),w,h:r(h),color:'#ffffff',rot:0,motion:'float'},
-       {...base,kind:'badge',text:'구매링크는 바로 아래',l:3,t:r(t-h*.08-6.6),w:50,h:5.6,color:'#111111',badgeStyle:'glass',rot:0,motion:'none'},
+       {...base,kind:'emoji',ch:'👇',l:6,t:r(100-h*1.06),w,h:r(h),color:'#ffffff',rot:0,motion:'float'},
+       {...base,kind:'badge',text:'구매링크는 바로 아래',l:3,t:r(floor-5.6),w:50,h:5.6,color:'#111111',badgeStyle:'glass',rot:0,motion:'none'},
      ];
    }
    if(design==='ticket'){
-     // ③ 링크 티켓: 살짝 기운 노란 번쩍 + 검정 티켓 배지, 곡선 화살표가 왼쪽 아래로 꺾여 내려간다. 화살표 가리키기 = 진행 방향으로 가로의 10%.
-     const w=30,h=sq(w),t=floor-h*.86-w*.10*9/16;
+     // ③ 링크 티켓: 살짝 기운 검정 티켓 배지 + 노란 번쩍, 곡선 화살표가 왼쪽 아래로 꺾여 내려간다(가리키기 = 진행 방향으로 가로의 10%).
+     const w=30,h=sq(w);
      return [
-       {...base,kind:'badge',text:'🔗 구매링크 열기',l:5,t:r(t-4.6),w:46,h:6.6,color:'#111111',badgeStyle:'ticket',rot:-4,motion:'none'},
-       {...base,kind:'graphic',graphic:'burst',l:43,t:r(t-9.4),w:13,h:r(sq(13)),color:'#FFD400',rot:12,motion:'pulse'},
-       {...base,kind:'graphic',graphic:'arrow_curve',l:4,t:r(t),w,h:r(h),color:'#FFD400',rot:105,motion:'point'},
+       {...base,kind:'badge',text:'🔗 구매링크 열기',l:5,t:r(floor-8.2),w:46,h:6.6,color:'#111111',badgeStyle:'ticket',rot:-4,motion:'none'},
+       {...base,kind:'graphic',graphic:'burst',l:43,t:r(floor-13),w:13,h:r(sq(13)),color:'#FFD400',rot:12,motion:'pulse'},
+       {...base,kind:'graphic',graphic:'arrow_curve',l:4,t:r(100-h-w*.10*9/16),w,h:r(h),color:'#FFD400',rot:105,motion:'point'},
      ];
    }
-   // ① 화살표 알약: 화살표 상자 = 가로 30%·세로 16.875%(정사각). 그림은 가운데에서 아래로 상자 높이의 22%(끝)·위로 25%(꼬리)까지, 움직임은 아래 +10%·위 -8%(가로 기준).
-   const H=16.875,sway=30*9/16,cy=floor-H*.22-sway*.10,top=cy-H*.25-sway*.08;
+   // ① 화살표 알약: 화살표 상자 = 가로 30%·세로 16.875%(정사각). 그림 끝은 상자 가운데에서 아래로 높이의 22%, 가리키기는 아래 +10%(가로 기준).
+   const H=16.875;
    return [
-     {...base,kind:'graphic',graphic:'arrow_bold',l:1,t:r(cy-H/2),w:30,h:H,color:'#FF3B30',rot:90,motion:'point'},
-     {...base,kind:'badge',text:'아래 구매링크 클릭!',l:3,t:r(top-7),w:48,h:6,color:'#FF2D5E',badgeStyle:'pill',rot:0,motion:'none'},
+     {...base,kind:'graphic',graphic:'arrow_bold',l:1,t:r(100-H),w:30,h:H,color:'#FF3B30',rot:90,motion:'point'},
+     {...base,kind:'badge',text:'아래 구매링크 클릭!',l:3,t:r(floor-6),w:48,h:6,color:'#FF2D5E',badgeStyle:'pill',rot:0,motion:'none'},
    ];
  }
  function shopSet(scope){

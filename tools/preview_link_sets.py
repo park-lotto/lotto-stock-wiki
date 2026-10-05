@@ -28,12 +28,19 @@ with sync_playwright() as pw:
     for s in shots: sheet.paste(s, (x, 0)); x += s.width
     sheet.save(out / '숏폼_디자인3종.png')
     lf = b.new_page(viewport={'width': 1280, 'height': 720}); lf.on('pageerror', lambda e: errs.append(str(e)))
-    for s in ('pin', 'ask', 'bar'):
-        lf.goto(base + '/out/link-longform-stage.html?' + urllib.parse.urlencode({'src': '/' + plain.relative_to(ROOT).as_posix() if plain.is_relative_to(ROOT) else '', 'set': s, 'where': where}))
+    for s in ('pin', 'chat', 'tap'):
+        lf.goto(base + '/out/link-longform-stage.html?' + urllib.parse.urlencode({'src': '/' + plain.relative_to(ROOT).as_posix() if plain.is_relative_to(ROOT) else '', 'set': s, 'where': where, 'channel': '숏템메이커'}))
         if not plain.is_relative_to(ROOT):
             import base64
             uri = 'data:image/png;base64,' + base64.b64encode(plain.read_bytes()).decode()
             lf.evaluate("u=>{for(const id of ['#lf-bg','#lf-fg'])document.querySelector(id).style.backgroundImage=`url(${u})`}", uri)
-        lf.wait_for_timeout(700); lf.locator('#lf-stage').screenshot(path=str(out / f'롱폼_{s}.png'))
+        lf.evaluate('document.fonts.ready'); lf.wait_for_timeout(400)
+        # 움직임 한 바퀴를 시간을 못 박아 찍는다(렌더가 할 방식 그대로) → 견본 mp4
+        fr = out / f'_frames_{s}'; fr.mkdir(exist_ok=True); loop = lf.evaluate('linkLongform.loopMs'); n = round(loop / 1000 * 30)
+        for f in range(n):
+            lf.evaluate('t=>linkLongform.motionAt(t)', f / 30 * 1000); lf.locator('#lf-stage').screenshot(path=str(fr / f'{f:04d}.png'))
+            if f == round(n * .5): (out / f'롱폼_{s}.png').write_bytes((fr / f'{f:04d}.png').read_bytes())
+        import subprocess
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-stream_loop', '2', '-framerate', '30', '-i', str(fr / '%04d.png'), '-pix_fmt', 'yuv420p', '-vf', 'scale=1280:720', str(out / f'롱폼_{s}.mp4')], check=True)
     print('오류', errs); b.close()
 srv.shutdown()
