@@ -6328,6 +6328,23 @@ def _lab_clean_spans(job, work):
         return {"__error__": 1}
 
 
+def _lab_clean_cuts(job, work, plan):
+    """청소 당시 화면 컷 {칸 순번(화면 DATA.beats 자리): [[영상, 원본 시작, 읽은 길이], ...]} — 정본이 기록한 그대로(관제 135).
+    화면(scene_play.js planClips finish)이 "지금 편성으로 짠 컷이 **지운 그 컷**과 같은가"를 이걸로 본다 — 같으면 청소 구간을
+    보고 다시 짜지 않는다. 기록은 clean_base.recorded_cuts 한 곳. 정본이 없거나 못 읽으면 {}(화면은 종전 계산)."""
+    try:
+        from shopping_shorts import clean_base as _cb
+        base = _cb.load_base(work)
+        if not base:
+            return {}
+        rec = _cb.recorded_cuts(base)
+        return {str(i): rec[int(b["beat_idx"])] for i, b in enumerate((plan or {}).get("beats") or [])
+                if int(b.get("beat_idx", -1)) in rec}
+    except Exception as e:      # noqa: BLE001 — 못 읽으면 붙이지 않는다(화면은 종전 계산 — 청소 구간 판정)
+        print("[clean_cuts] 청소 당시 컷 읽기 실패: %r" % (e,), file=sys.stderr)
+        return {}
+
+
 def _with_film_segs(seg_map, plan, job):
     """추출 인벤토리(seg_map)에 **사람이 필름에서 오려낸 조각**을 되살려 합친 사본을 준다.
 
@@ -6616,6 +6633,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         "scenecuts": _lab_scenecuts(job, work),
         # 청소본이 지운 원본 구간(2026-09-27) — fillShortWindow 가 청소본 칸의 창을 이 안에서만 늘린다(과금·원본 자막 방지).
         "clean_spans": _lab_clean_spans(job, work),
+        # 청소 당시 화면 컷(관제 135) — 같은 편성이면 화면이 그 컷 그대로 쓴다(지운 뒤 컷이 달라져 원본이 뜨던 뿌리).
+        "clean_cuts": _lab_clean_cuts(job, work, plan),
         "captions": caps,
         "tts_dur": tts_dur,
         # ★슬로우모션 상한을 화면에 준다(관제 020) — scene_play.js 가 자기 숫자를 들고 있지 않게. 정본 config.MAX_SLOWMO.
@@ -21589,10 +21608,14 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     #   편집기에 안 보였다 → 고객이 가림막을 못 넣고 완성본에서야 자막을 봤다. 시각 → 그림은 _beatframe_file(at=) 한 곳.
     _pages = [(scene["beat_idx"], _scene_page_time(scene)) for scene in context["scenes"]]
     _prewarm_beatframes(job, job_id, _pages)
+    # ★주소에 청소 상태(_frame_cache_key)를 박는다(관제 135) — 주소가 청소 전후로 같으면 열려 있던 화면이 청소 전에 받은
+    #   원본 그림을 그대로 보여 준다(2026-09-09 박세현님과 같은 꼴 — 컷 그림 주소엔 넣었는데 페이지 그림 주소엔 빠져 있었다).
+    _fk = _frame_cache_key(job, _MIX_WORK_DIR / job_id)
+    _fq = f"&k={_fk}" if _fk else ""
     for scene, (_bi, _at) in zip(context["scenes"], _pages):
-        scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}"
+        scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}{_fq}"
         # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
-        scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}" for _t in _scene_page_points(scene)]
+        scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}{_fq}" for _t in _scene_page_points(scene)]
     return {"context": context, "snapshot": snapshot}
 
 
