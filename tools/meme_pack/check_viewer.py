@@ -24,7 +24,7 @@ def main():
     state_path = os.path.join(work, "state.json")
     before = open(state_path, "rb").read() if os.path.exists(state_path) else None
     srv = subprocess.Popen([sys.executable, os.path.join(HERE, "serve.py"), work, "--port", str(PORT), "--no-open"])
-    fails, url = [], f"http://127.0.0.1:{PORT}/"
+    fails, url, touched = [], f"http://127.0.0.1:{PORT}/", []
 
     def check(name, cond, detail=""):
         print(("  통과 " if cond else "  실패 ") + name + (f" — {detail}" if detail else ""))
@@ -63,12 +63,41 @@ def main():
             # 재생: 마우스 올리면 실제로 시간이 흐르나
             v = pg.query_selector("figure video")
             v.hover()
-            pg.wait_for_timeout(2500)
-            t = v.evaluate("v=>v.currentTime")
-            check("마우스 올리면 재생", t > 0.3, f"currentTime={t:.2f}")
+            pg.wait_for_timeout(1200)
+            # 2초 짤은 되감기며 돌아 currentTime 만으로는 못 잰다 → 0.4초 간격 두 번 재서 시간이 움직였는지 본다
+            t1 = v.evaluate("v=>v.currentTime")
+            pg.wait_for_timeout(400)
+            t2, paused = v.evaluate("v=>[v.currentTime, v.paused]")
+            check("마우스 올리면 재생", (not paused) and t1 != t2, f"{t1:.2f}→{t2:.2f}")
+
+            # 2초 하이라이트: 잘린 클립이 걸려 있나 + '0.5초 뒤' 를 누르면 클립 파일이 실제로 바뀌나
+            hl_items = [it for it in api["items"] if it.get("hl") and not it["deleted"]]
+            if hl_items:
+                over = [it["id"] for it in hl_items if it["hl"]["dur"] > 2.3]
+                check("하이라이트 길이 전부 2.3초 이하", not over, f"{len(hl_items)}개 중 초과 {len(over)}")
+                h0 = next((it for it in hl_items if it["emotion"] == first), None)
+                if h0:
+                    clip = os.path.join(work, "library", "clips", h0["id"] + ".mp4")
+                    hl_path = os.path.join(work, "highlights.json")
+                    keep_clip, keep_hl = open(clip, "rb").read(), open(hl_path, "rb").read()
+                    sel_v = f'figure[data-id="{h0["id"]}"]'
+                    check("카드가 잘린 클립을 재생", "/library/clips/" in pg.get_attribute(sel_v + " video", "src"))
+                    pg.click(sel_v + ' .nd button[data-d="0.5"]')
+                    pg.wait_for_function(f"document.querySelector('{sel_v} video').src.includes('s={h0['hl']['start'] + 0.5}') || true")
+                    pg.wait_for_timeout(2500)
+                    now = json.load(open(hl_path, encoding="utf-8"))[h0["id"]]["start"]
+                    changed = open(clip, "rb").read() != keep_clip
+                    check("0.5초 뒤: 시작점 저장·클립 파일 바뀜", changed and now != h0["hl"]["start"], f'{h0["hl"]["start"]}→{now}')
+                    open(clip, "wb").write(keep_clip)          # 검사 흔적 원복
+                    cur = json.load(open(hl_path, encoding="utf-8"))
+                    cur[h0["id"]] = json.loads(keep_hl)[h0["id"]]
+                    json.dump(cur, open(hl_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+                    pg.reload()
+                    pg.wait_for_selector("figure")
 
             # 지우기 → 휴지통
             vid = pg.query_selector("figure").get_attribute("data-id")
+            touched.append(vid)
             pg.click(f'figure[data-id="{vid}"] button.del')
             pg.wait_for_function(f"!document.querySelector('figure[data-id=\"{vid}\"]')")
             c1 = counts()
@@ -101,6 +130,7 @@ def main():
             # 묶음 이동(체크 2개)
             pg.click(f'#tabs button[data-cat="{first}"]')
             two = [f.get_attribute("data-id") for f in pg.query_selector_all("figure")[:2]]
+            touched.extend(two)
             for i in two:
                 pg.check(f'figure[data-id="{i}"] input')
             mid = cats[1]
@@ -132,11 +162,15 @@ def main():
             br.close()
     finally:
         srv.terminate()
-        if before is None:
-            if os.path.exists(state_path):
-                os.remove(state_path)
-        else:
-            open(state_path, "wb").write(before)
+        # 검사가 건드린 영상만 원래 값으로 — 파일을 통째로 되돌리면 그 사이 사장님이 뷰어에서 누른 것이 날아간다
+        old, cur = (json.loads(before) if before else {}), state()
+        for i in touched:
+            if i in old:
+                cur[i] = old[i]
+            else:
+                cur.pop(i, None)
+        with open(state_path, "w", encoding="utf-8") as f:
+            json.dump(cur, f, ensure_ascii=False, indent=1)
     print(f"실패 {len(fails)}건" + (": " + ", ".join(fails) if fails else ""))
     sys.exit(1 if fails else 0)
 

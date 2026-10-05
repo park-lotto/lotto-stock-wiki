@@ -70,6 +70,12 @@ def items():
                         "duration": r.get("duration") or 0, "w": r.get("w") or 0, "h": r.get("h") or 0,
                         "source": r.get("source") or "", "origin": r["emotion"],
                         "emotion": st.get("emotion") or r["emotion"], "deleted": bool(st.get("deleted"))})
+    hl = _load("highlights.json", {})
+    for it in out:
+        h = hl.get(it["id"])
+        ok = h and os.path.isfile(os.path.join(WORK, "library", "clips", it["id"] + ".mp4"))
+        it["hl"] = {"start": h["start"], "dur": h["dur"], "usable": h.get("usable", True),
+                    "what": h.get("what", "")} if ok else None
     return out
 
 
@@ -130,7 +136,7 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(body)
         elif path == "/api/items":
             self._json({"categories": list(EMOTIONS), "items": items()})
-        elif path.startswith(("/raw/", "/sheets/")):
+        elif path.startswith(("/raw/", "/sheets/", "/library/")):
             self._file(path.lstrip("/"))
         else:
             self._json({"error": "없는 주소"}, 404)
@@ -147,6 +153,15 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"error": "모르는 영상 id"}, 400)
         with LOCK:
             state = _load("state.json", {})
+            if path == "/api/nudge":
+                # 하이라이트 구간의 주인은 build_pack — 여기는 부르기만 한다
+                import build_pack
+                dur = {it["id"]: it["duration"] for it in items()}[ids[0]]
+                try:
+                    h = build_pack.nudge(WORK, ids[0], float(req.get("delta") or 0), dur)
+                except Exception as e:
+                    return self._json({"error": str(e)}, 400)
+                return self._json({"ok": True, "start": h["start"], "dur": h["dur"]})
             if path == "/api/move":
                 emo = req.get("emotion")
                 if emo not in EMOTIONS:
@@ -177,7 +192,7 @@ h1{font-size:17px;margin:0 0 8px}
 #tabs button.trash.on{background:#e55;color:#fff;border-color:#e55}
 #bar{display:flex;gap:8px;align-items:center;font-size:13px;color:#aaa;flex-wrap:wrap}
 #bar select,#bar button,figure select,figure button{background:#2a2a2a;color:#eee;border:1px solid #555;border-radius:6px;padding:4px 8px;font-size:13px;cursor:pointer}
-button.del{border-color:#a44!important;color:#f99!important}
+.act button.del,#bar button.del{border-color:#a44!important;color:#f99!important}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;padding:14px 16px}
 figure{margin:0;background:#1c1c1c;border-radius:8px;overflow:hidden;border:2px solid transparent;position:relative}
 figure.sel{border-color:#ffd84a}
@@ -186,6 +201,8 @@ video{width:100%;height:250px;object-fit:contain;background:#000;display:block;c
 figcaption{font-size:12px;padding:6px 8px 2px;color:#bbb;line-height:1.4;min-height:50px}
 figcaption b{color:#fff} figcaption a{color:#7ab8ff}
 .act{display:flex;gap:6px;padding:4px 8px 8px} .act select{flex:1;min-width:0}
+.cut{color:#7dff9a;font-weight:bold} .warn{color:#ffb14a;font-weight:bold}
+.nd button{flex:1;font-size:12px!important;padding:3px 4px!important}
 #big{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:9}
 #big video{width:auto;height:92vh;max-width:96vw}
 #msg{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#ffd84a;color:#000;padding:8px 16px;border-radius:8px;font-weight:bold;display:none;z-index:10}
@@ -206,6 +223,7 @@ function say(t){const m=$('msg');m.textContent=t;m.style.display='block';clearTi
 async function load(){const r=await fetch('/api/items');const j=await r.json();cats=j.categories;all=j.items;if(cur===null)cur=cats[0];draw();}
 async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const j=await r.json();if(!r.ok||!j.ok){alert('저장 실패: '+(j.error||r.status));return false;}return true;}
+function src(it){return it.hl?`/library/clips/${it.id}.mp4?s=${it.hl.start}`:`/raw/${it.id}.mp4`;}
 function inCat(it,c){return c===TRASH?it.deleted:(!it.deleted&&it.emotion===c);}
 function draw(){
   const tabs=$('tabs');tabs.innerHTML='';
@@ -221,16 +239,22 @@ function draw(){
   list.forEach(it=>{const f=document.createElement('figure');f.dataset.id=it.id;if(sel.has(it.id))f.classList.add('sel');
     const esc=s=>s.replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
     f.innerHTML=`<input type="checkbox" ${sel.has(it.id)?'checked':''}>
-      <video src="/raw/${it.id}.mp4" poster="/sheets/thumbs/${it.id}.jpg" preload="none" muted loop playsinline></video>
-      <figcaption><b>${esc(it.title)}</b><br>${Math.round(it.duration)}초 · ${it.w}×${it.h} · <a href="${esc(it.source)}" target="_blank">원본</a></figcaption>
+      <video src="${src(it)}" poster="${it.hl?`/library/thumbs/${it.id}.jpg?s=${it.hl.start}`:`/sheets/thumbs/${it.id}.jpg`}" preload="none" muted loop playsinline></video>
+      <figcaption><b>${esc(it.title)}</b><br>${it.hl?`<span class="cut">✂ ${it.hl.dur.toFixed(1)}초</span> (원본 ${Math.round(it.duration)}초 중 ${it.hl.start.toFixed(1)}초부터)${it.hl.usable?"":` <span class="warn">리액션 불분명</span>`}`:`<span class="warn">아직 안 자름</span> · 원본 ${Math.round(it.duration)}초`} · ${it.w}×${it.h} · <a href="${esc(it.source)}" target="_blank">출처</a></figcaption>
+      ${it.hl?`<div class="act nd"><button data-d="-0.5">◀ 0.5초 앞</button><button data-d="0.5">0.5초 뒤 ▶</button><button class="full">전체 보기</button></div>`:""}
       <div class="act"><select class="mv">${cur===TRASH?'<option value="">(휴지통)</option>':opts(it.emotion)}</select>
       <button class="${cur===TRASH?'rs':'del'}">${cur===TRASH?'되살리기':'지우기'}</button></div>`;
     const v=f.querySelector('video');
+    f.querySelectorAll('.nd button[data-d]').forEach(b=>b.onclick=async()=>{b.disabled=true;
+      const r=await fetch('/api/nudge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:[it.id],delta:parseFloat(b.dataset.d)})});
+      const j=await r.json();if(!r.ok||!j.ok){alert('다시 자르기 실패: '+(j.error||r.status));b.disabled=false;return;}
+      it.hl.start=j.start;say('다시 잘랐습니다: '+j.start.toFixed(1)+'초부터');draw();});
+    const fb=f.querySelector('.full');if(fb)fb.onclick=()=>{const b=$('big'),bv=b.querySelector('video');bv.src='/raw/'+it.id+'.mp4';b.style.display='flex';bv.muted=false;bv.play();};
     v.onmouseenter=()=>v.play().catch(()=>{});v.onmouseleave=()=>v.pause();
     v.onclick=()=>{const b=$('big'),bv=b.querySelector('video');bv.src=v.src;b.style.display='flex';bv.muted=false;bv.play();};
     f.querySelector('input').onchange=e=>{e.target.checked?sel.add(it.id):sel.delete(it.id);f.classList.toggle('sel',e.target.checked);upd();};
     f.querySelector('.mv').onchange=async e=>{const to=e.target.value;if(!to)return;if(await post('/api/move',{ids:[it.id],emotion:to})){it.emotion=to;sel.delete(it.id);say('→ '+to.replace('_','·')+' 로 이동');draw();}};
-    f.querySelector('button').onclick=async()=>{const back=cur===TRASH;if(await post(back?'/api/restore':'/api/delete',{ids:[it.id]})){it.deleted=!back;sel.delete(it.id);say(back?'되살림':'휴지통으로');draw();}};
+    f.querySelector('.act:not(.nd) button').onclick=async()=>{const back=cur===TRASH;if(await post(back?'/api/restore':'/api/delete',{ids:[it.id]})){it.deleted=!back;sel.delete(it.id);say(back?'되살림':'휴지통으로');draw();}};
     g.appendChild(f);});
   upd();
 }
