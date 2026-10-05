@@ -189,6 +189,18 @@ def meta(form, out, cast_override=None):
             "lines": [{"speaker": ln["speaker"], "tag": ln["tag"], "src": ln["src"]} for ln in out]}
 
 
+def of_structure(ss):
+    """script_structure → 대화 메타(없거나 모양이 틀리면 None). 합성 경로가 '이 작업이 대화형인가'를 여기서만 묻는다."""
+    d = (ss or {}).get("dialogue") if isinstance(ss, dict) else None
+    if isinstance(d, dict) and isinstance(d.get("lines"), list) and d["lines"] and isinstance(d.get("voices"), dict):
+        return d
+    return None
+
+
+def of_job(job):
+    return of_structure((job or {}).get("script_structure"))
+
+
 def script_text(out):
     """대화 줄 → given_script(줄 = 칸). 연기 지시는 넣지 않는다."""
     return "\n".join(ln["text"] for ln in out)
