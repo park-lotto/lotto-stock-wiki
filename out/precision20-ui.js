@@ -1567,11 +1567,26 @@
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
     if(capLook?.text)Object.assign(text.style,capLook.text);
     if(!(manualText&&fontScales.has(readKey(fontScales,'caption'))))fitOneLine(text,fontScales.get(readKey(fontScales,'caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다. 손으로 정한 크기는 줄이지 않는다(넘치면 줄만 넘긴다 — 화면 밖으로 잘리지 않게)
+    emphasisCaption(frame,text,patch);   // 어둡게 강조 장면이면 자막을 영상 한가운데 큰 글자로(관제 124)
     applyWordFx();   // 단어 강조(관제 102) — 크기를 다 맞춘 뒤에 어절을 감싼다(폭은 안 바뀐다)
   }
   // ★09-22 사장님: 자막이 살짝 커져 두 줄로 꺾이면 "두 포인트 줄이니까 한 줄에 들어간다" → 자막은 한 줄 규격이므로
   //   손으로 키운 크기든 기본이든 **꺾이기 직전까지만** 4%씩 줄인다(바닥 70%). 바닥까지 줄여도 안 들어가면 원래 크기로 두고
   //   줄바꿈을 허용한다(긴 문장은 두 줄이 낫다). 사용자가 직접 줄바꿈(Enter)한 자막은 건드리지 않는다. 렌더러도 같은 코드라 MP4가 화면과 같다.
+  // 어둡게 강조 = 화면을 어둡게 덮고 그 위에 큰 강조 글자(관제 124). 레퍼런스(밝기 32%·약 1.2초)는 어둡게만 하지 않고
+  //   글자를 크게 띄운다 — 글자 없이 어둡게만 하면 화면이 탁해 보였다(2026-10-05 결과물 확인).
+  //   이 장면 자막을 자막 띠 대신 영상 칸 한가운데에 1.8배 흰 글자로. 위치는 left/top/width 로만 잡는다 —
+  //   자막 등장 효과(rise·grow·pop…)가 렌더 때 이 요소의 transform 을 덮어쓴다(자막팩 관제 127 요청).
+  function emphasisCaption(frame,text,patch){
+    const d=(effects[String(sceneIndex)]||{}).dim;
+    if(!d||Number(d.sec)>0||!text||!text.textContent.trim())return;   // 장면 내내 어둡게(강조)일 때만 — 시작 어두운 제목(0.13초)은 아니다
+    const b=mediaBounds(frame,rows[current].id),size=(parseFloat(text.style.fontSize)||parseFloat(getComputedStyle(text).fontSize))*1.8;
+    if(patch)patch.style.display='none';
+    Object.assign(text.style,{left:'6%',width:'88%',right:'auto',top:(b.top+b.height*.3)+'%',height:(b.height*.4)+'%',fontSize:size+'px',
+      whiteSpace:'pre-wrap',color:'#fff',textShadow:'0 0 3px #000,0 3px 10px rgba(0,0,0,.85)',alignItems:'center',justifyContent:'center'});
+    text.querySelectorAll('span').forEach(s=>s.style.color='#fff');
+    text.dataset.emphasis='1';
+  }
   function fitOneLine(el,manual){
     const txt=el.textContent||'';if(!txt.trim()||txt.includes(String.fromCharCode(10)))return;
     const start=parseFloat(el.style.fontSize)||parseFloat(getComputedStyle(el).fontSize);let size=start;

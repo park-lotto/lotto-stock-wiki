@@ -216,8 +216,19 @@ def main():
         if i not in emph and abs(want - 1.35) > 1e-6:
             fails.append(f"장면 {i} 저장 배율 {want} — 점프 줌 1.35 이어야")
     fd = round((scenes[dim_scene]["start"] + scenes[dim_scene]["end"]) / 2 * 30)
-    ratio = luma(frame(out1, fd), box(dim_scene)) / max(1, luma(frame(out2, fd), box(dim_scene)))
-    top_ratio = luma(frame(out1, fd), (0, box(dim_scene)[0] - 20)) / max(1, luma(frame(out2, fd), (0, box(dim_scene)[0] - 20)))
+    # 어둡게 강조 장면은 자막이 영상 한가운데 큰 글자로 옮겨 온다(영상 칸 30~70%) → 밝기는 글자 자리를 빼고 잰다.
+    #   틀 영역은 자막 띠(영상 칸 바로 위, 강조 땐 숨김)를 빼고 위쪽 60%만 잰다.
+    b0, b1 = box(dim_scene)
+    vid_rows = [(b0, b0 + int((b1 - b0) * .28)), (b0 + int((b1 - b0) * .72), b1)]
+    lum = lambda img: sum(luma(img, r) for r in vid_rows) / 2
+    ratio = lum(frame(out1, fd)) / max(1, lum(frame(out2, fd)))
+    top_ratio = luma(frame(out1, fd), (0, int(b0 * .6))) / max(1, luma(frame(out2, fd), (0, int(b0 * .6))))
+    mid = (b0 + int((b1 - b0) * .3), b0 + int((b1 - b0) * .7))
+    white = lambda img: float((cv2.cvtColor(img[mid[0]:mid[1]], cv2.COLOR_BGR2GRAY) > 235).mean())
+    text_gain = white(frame(out1, fd)) - white(frame(out2, fd)) * .32
+    print(f"어둡게 강조 장면 큰 글자: 영상 가운데 흰 글자 픽셀 비율 {white(frame(out1, fd)):.3f} (어둡게 없을 때 {white(frame(out2, fd)):.3f})")
+    if text_gain < .01:
+        fails.append("어둡게 강조 장면에 큰 강조 글자가 영상 가운데 안 보인다")
     print(f"어둡게 강조 장면 {dim_scene}: 영상 칸 밝기 비율 {ratio:.3f} (기대 ≈0.32) · 틀 영역 {top_ratio:.3f} (기대 ≈1)")
     if not (.25 <= ratio <= .40):
         fails.append(f"어둡게 강조 밝기 비율 {ratio:.3f}")
@@ -237,7 +248,7 @@ def main():
     th0, th1 = work / "thumb0.jpg", work / "thumb1.jpg"
     scene_style.compose_still(str(fp), TIMELINE, snap_nodim, work / "t0", dim_scene, str(th0), {"text": "주방 정리\n끝판왕"})
     scene_style.compose_still(str(fp), TIMELINE, snap, work / "t1", dim_scene, str(th1), {"text": "주방 정리\n끝판왕"})
-    tr = luma(cv2.imread(str(th1)), box(dim_scene)) / max(1, luma(cv2.imread(str(th0)), box(dim_scene)))
+    tr = lum(cv2.imread(str(th1))) / max(1, lum(cv2.imread(str(th0))))
     print(f"썸네일 어둡게 밝기 비율 {tr:.3f}")
     if not (.25 <= tr <= .40):
         fails.append(f"썸네일 어둡게 비율 {tr:.3f}")
