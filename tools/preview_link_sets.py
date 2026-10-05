@@ -24,6 +24,14 @@ with sync_playwright() as pw:
         pg.evaluate(f"document.querySelector('[data-shopset-design=\"{d}\"]').click();document.querySelector('[data-shopset=\"here\"]').click()"); pg.wait_for_timeout(700)
         r = pg.evaluate("(()=>{const r=document.querySelector('#a-live-preview').getBoundingClientRect();return [r.left,r.top,r.width,r.height]})()")
         shots.append(Image.open(io.BytesIO(pg.screenshot(clip={'x': r[0] - 12, 'y': r[1] - 8, 'width': r[2] + 24, 'height': r[3] * 1.09 + 16}))))
+        # 움직임: 렌더와 같은 방식으로 시각을 못 박아 1.2초 한 바퀴(36프레임)를 찍는다 → 견본 mp4(세 바퀴)
+        import subprocess
+        fr = out / f'_frames_short_{d}'; fr.mkdir(exist_ok=True)
+        clip = {'x': r[0] - 12, 'y': r[1] - 8, 'width': (r[2] + 24) // 2 * 2, 'height': int(r[3] * 1.09 + 16) // 2 * 2}
+        for f in range(36):
+            pg.evaluate('t=>sceneDecorations.motionAt(t)', f / 30 * 1000); pg.screenshot(path=str(fr / f'{f:04d}.png'), clip=clip)
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-stream_loop', '3', '-framerate', '30', '-i', str(fr / '%04d.png'), '-pix_fmt', 'yuv420p',
+                        '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', str(out / f'숏폼_{d}.mp4')], check=True)
     sheet = Image.new('RGB', (sum(s.width for s in shots), max(s.height for s in shots)), '#0b1418'); x = 0
     for s in shots: sheet.paste(s, (x, 0)); x += s.width
     sheet.save(out / '숏폼_디자인3종.png')
