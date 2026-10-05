@@ -6548,6 +6548,7 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
     # ★사람이 필름에서 오려낸 조각을 되살려 함께 내려보낸다(2026-09-05 고객 다수 제보).
     #   안 하면 편성엔 id가 있는데 segments엔 없어 화면이 '0-0'·검은 칸이 된다.
     seg_map = _with_film_segs(seg_map, plan, job)
+    _auto_ok = _edit_plan.non_edge_segs(seg_map)
     work = _MIX_WORK_DIR / job_id
     # 소스 실길이 — 범위초과 세그(실체 없는 화면) 표시용. 소스가 없으면 {}로 폴백(표시만 꺼진다).
     src_duration = {}
@@ -6610,6 +6611,9 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
             "benefits": v.get("product_benefits") or [],
             # 2026-10-01 사장님 "이거 태깅이 대본화한 거 맞아?" — 카드가 묘사만 보여줘 오해. 대본화 소구점·훅 유형을 같이 준다.
             "use_point": v.get("use_point") or "", "hook_type": v.get("hook_type") or "", "appeal_kind": v.get("appeal_kind") or "",
+            # 자동 채우기가 집어도 되는 컷인가(관제 138) — 판단은 edit_plan.non_edge_segs 한 곳. 화면의 태그 기준 채우기가 읽는다
+            #   (씨앗·첫끝 컷은 false — 사람이 직접 담는 건 그대로 된다).
+            "auto_ok": sid in _auto_ok,
         } for sid, v in seg_map.items()},
         "phash": _lab_phash_load(work),      # 썸네일 캐시가 채워지는 대로 /phash로 늦채움
         "src_duration": src_duration,
