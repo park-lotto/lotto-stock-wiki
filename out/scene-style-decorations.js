@@ -27,37 +27,54 @@
  //   ★링크 칸은 이 폰에서 영상 아래 바깥(t>100)이다 — 영상 안에 그릴 수 없는 자리라 세트는 그 바로 위를 가리킨다.
  //   ★자리의 주인은 이 표 하나다. 겹쳐보기(ytDraw)와 쇼핑 안내 세트(shopSetItems)가 둘 다 이 표를 읽는다.
  //   ★편집 화면 전용 — 미리보기(#a-live-preview) 밖에 두고, 렌더(?qa=1·sceneStyleExporting)에서는 만들지도 않는다.
+ //   ★화면이 두 가지다(2026-10-06 캡처 4장 실측, 영상 자리는 넷 다 같다): basic = 보통(3장) / comment = 맨 아래에 댓글창이 뜬 화면(1장) —
+ //     댓글창이 뜨면 채널명·제목·알약 줄이 통째로 약 7.5% 위로 올라와 알약 줄이 영상 안으로 들어온다.
+ //     「수수료 지급」 줄이 없는 영상은 basic 보다 채널명·제목이 약 3% 아래다(알약 줄은 같은 자리).
  const YT_SHORTS_UI={
-   channel:{label:'채널명 · 구독',l:3.6,t:89.9,w:40,h:4},
-   title:{label:'제목',l:3.6,t:95.3,w:78,h:2.8},
-   link:{label:'🔗 링크 칸(구매링크)',l:3.6,t:102.5,w:63.9,h:3.7},
-   buttons:{label:'좋아요·댓글·공유',l:87,t:54.5,w:10.5,h:43.5},
+   basic:{
+     channel:{label:'채널명 · 구독',l:3.6,t:89.9,w:40,h:4},
+     title:{label:'제목',l:3.6,t:95.3,w:78,h:2.8},
+     link:{label:'🔗 링크 칸(구매링크)',l:3.6,t:102.5,w:63.9,h:3.7},
+     buttons:{label:'좋아요·댓글·공유',l:87,t:54.5,w:10.5,h:43.5},
+   },
+   comment:{
+     channel:{label:'채널명 · 구독',l:3.6,t:81.5,w:40,h:4.5},
+     title:{label:'제목',l:3.6,t:87.6,w:78,h:2.8},
+     link:{label:'🔗 링크 칸(구매링크)',l:3.6,t:95.3,w:63.9,h:3.2},
+     comment:{label:'댓글 올리기…',l:3.6,t:101,w:78,h:4.6},
+     buttons:{label:'좋아요·댓글·공유',l:87,t:54.5,w:10.5,h:43.5},
+   },
  };
+ const YT_MODES=['','basic','comment'],YT_MODE_LABEL={'':'📱 유튜브 화면 자리',basic:'📱 유튜브 화면 자리 · 기본',comment:'📱 유튜브 화면 자리 · 댓글창'};
  const YT_KEY='scene_style_yt_ui',ytAllowed=!new URLSearchParams(location.search).has('qa');
  let ytLayer=null,ytButton=null;
- const ytOn=()=>{try{return localStorage.getItem(YT_KEY)==='1'}catch{return false}};
+ const ytOn=()=>{try{const v=localStorage.getItem(YT_KEY);return v==='2'?'comment':v==='1'?'basic':''}catch{return ''}};   // '' = 끔
  function ytDraw(){
    if(!ytLayer)return;
-   const on=ytOn()&&!window.sceneStyleExporting;
-   ytLayer.style.display=on?'block':'none';ytButton.setAttribute('aria-pressed',String(on));ytButton.style.background=on?'#11B98C':'transparent';ytButton.style.color=on?'#04231b':'#dce8ec';
+   const on=window.sceneStyleExporting?'':ytOn();
+   ytLayer.style.display=on?'block':'none';ytButton.setAttribute('aria-pressed',String(!!on));ytButton.textContent=YT_MODE_LABEL[on];ytButton.style.background=on?'#11B98C':'transparent';ytButton.style.color=on?'#04231b':'#dce8ec';
    preview.parentElement.style.marginBottom=on?Math.ceil(preview.offsetHeight*.075)+'px':'';   // 링크 칸이 영상 아래로 나가는 만큼 자리를 비운다
-   if(on)Object.assign(ytLayer.style,{left:preview.offsetLeft+'px',top:preview.offsetTop+'px',width:preview.offsetWidth+'px',height:preview.offsetHeight+'px',fontSize:Math.max(9,preview.offsetHeight*.019)+'px'});
+   if(!on)return;
+   if(ytLayer.dataset.mode!==on){
+     ytLayer.dataset.mode=on;ytLayer.replaceChildren();
+     for(const [key,a] of Object.entries(YT_SHORTS_UI[on])){
+       const el=document.createElement('div');el.dataset.ytUi=key;el.textContent=a.label;
+       Object.assign(el.style,{position:'absolute',left:a.l+'%',top:a.t+'%',width:a.w+'%',height:a.h+'%',boxSizing:'border-box',display:'flex',alignItems:'center',justifyContent:key==='buttons'?'center':'flex-start',padding:'0 .5em',overflow:'hidden',whiteSpace:'nowrap',color:'#fff',textShadow:'0 1px 2px #000',border:'1.5px dashed '+(key==='link'?'#FFE600':'#7FE7FF'),background:key==='link'?'#FFE60055':'#00000066',borderRadius:key==='link'||key==='comment'?'999px':'6px'});
+       if(key==='buttons')el.style.writingMode='vertical-rl';
+       ytLayer.append(el);
+     }
+   }
+   Object.assign(ytLayer.style,{left:preview.offsetLeft+'px',top:preview.offsetTop+'px',width:preview.offsetWidth+'px',height:preview.offsetHeight+'px',fontSize:Math.max(9,preview.offsetHeight*.019)+'px'});
  }
- function ytSet(on){try{localStorage.setItem(YT_KEY,on?'1':'0')}catch{}ytDraw();}
+ function ytSet(mode){try{localStorage.setItem(YT_KEY,String(Math.max(0,YT_MODES.indexOf(mode))))}catch{}ytDraw();}
  if(ytAllowed){
    ytLayer=document.createElement('div');ytLayer.className='scene-yt-ui';
    Object.assign(ytLayer.style,{position:'absolute',zIndex:40,pointerEvents:'none',display:'none',fontFamily:'Pretendard,sans-serif',fontWeight:'700',lineHeight:'1'});
-   for(const [key,a] of Object.entries(YT_SHORTS_UI)){
-     const el=document.createElement('div');el.dataset.ytUi=key;el.textContent=a.label;
-     Object.assign(el.style,{position:'absolute',left:a.l+'%',top:a.t+'%',width:a.w+'%',height:a.h+'%',boxSizing:'border-box',display:'flex',alignItems:'center',justifyContent:key==='buttons'?'center':'flex-start',padding:'0 .5em',overflow:'hidden',whiteSpace:'nowrap',color:'#fff',textShadow:'0 1px 2px #000',border:'1.5px dashed '+(key==='link'?'#FFE600':'#7FE7FF'),background:key==='link'?'#FFE60055':'#00000066',borderRadius:key==='link'?'999px':'6px'});
-     if(key==='buttons')el.style.writingMode='vertical-rl';
-     ytLayer.append(el);
-   }
    preview.parentElement.append(ytLayer);
-   ytButton=document.createElement('button');ytButton.type='button';ytButton.dataset.ytUiToggle='';ytButton.textContent='📱 유튜브 화면 자리';
-   ytButton.title='폰에서 쇼츠를 볼 때 채널명·제목·링크 칸이 놓이는 자리를 겹쳐 봅니다. 편집 화면에만 보이고 영상에는 안 들어가요. (긴 폰 캡처 기준 — 폰마다 조금 달라요)';
+   ytButton=document.createElement('button');ytButton.type='button';ytButton.dataset.ytUiToggle='';
+   ytButton.title='폰에서 쇼츠를 볼 때 채널명·제목·링크 칸이 놓이는 자리를 겹쳐 봅니다. 누를 때마다 기본 → 댓글창이 뜬 화면 → 끔. 편집 화면에만 보이고 영상에는 안 들어가요.';
    Object.assign(ytButton.style,{border:'1px solid #294451',borderRadius:'8px',padding:'6px 10px',fontSize:'12px',fontWeight:'700',cursor:'pointer',marginRight:'8px'});
-   ytButton.addEventListener('click',()=>ytSet(!ytOn()));
+   ytButton.addEventListener('click',()=>ytSet(YT_MODES[(YT_MODES.indexOf(ytOn())+1)%YT_MODES.length]));
    const seg=document.querySelector('[data-frame="hook"]')?.closest('.seg');
    if(seg)seg.before(ytButton);else box.querySelector('.dec-shopset').append(ytButton);
    if(window.ResizeObserver)new ResizeObserver(ytDraw).observe(preview);
@@ -186,7 +203,7 @@
  //   set 표식으로 묶어서 다시 누르면 옛 세트를 지우고 새로 놓는다(쌓이지 않게). 놓은 뒤엔 보통 항목처럼 끌어 고친다.
  const SHOPSET='shopcta';
  // 가리킬 곳(관제 133): link = 「관련 동영상」 링크 칸(구매링크 롱폼으로 가는 자리) / sticker = 예전 자리(쇼핑 스티커).
- //   link 자리는 YT_SHORTS_UI 에서 계산한다 — 화살표 끝(가리키기 움직임 포함)이 채널명 줄 바로 위에서 멈춘다(그 아래는 유튜브 글자에 가린다).
+ //   link 자리는 YT_SHORTS_UI 에서 계산한다 — 화살표 끝(가리키기 움직임 포함)이 두 화면 중 더 높은 채널명 줄(댓글창 화면) 바로 위에서 멈춘다(그 아래는 유튜브 글자에 가린다).
  function shopSetItems(target){
    const base={shape:'round',fx:'solid',op:100,soft:30,set:SHOPSET};
    if(target==='sticker'){
@@ -197,7 +214,7 @@
      ];
    }
    // 화살표 상자 = 가로 30%·세로 16.875%(정사각). 그림은 가운데에서 아래로 상자 높이의 22%(끝)·위로 25%(꼬리)까지, 움직임은 아래 +10%·위 -8%(가로 기준).
-   const H=16.875,sway=30*9/16,tipMax=YT_SHORTS_UI.channel.t-2,cy=tipMax-H*.22-sway*.10,top=cy-H*.25-sway*.08;
+   const H=16.875,sway=30*9/16,tipMax=Math.min(...Object.values(YT_SHORTS_UI).map(v=>v.channel.t))-2,cy=tipMax-H*.22-sway*.10,top=cy-H*.25-sway*.08;
    const r=n=>Math.round(n*100)/100;
    return [
      {...base,kind:'graphic',graphic:'arrow_bold',l:1,t:r(cy-H/2),w:30,h:H,color:'#FF3B30',rot:90,motion:'point'},
@@ -215,7 +232,7 @@
      api.effectAt(i,{...api.effectAt(i),masks:scope==='clear'?keep:[...keep,...items]});done++;
    }
    selected=-1;controls();draw();
-   if(scope!=='clear'&&done&&ytLayer)ytSet(true);   // 넣은 자리가 유튜브 화면 어디인지 바로 보이게
+   if(scope!=='clear'&&done&&ytLayer&&!ytOn())ytSet('basic');   // 넣은 자리가 유튜브 화면 어디인지 바로 보이게
    const nums=targets.map(i=>i+1).join('·');
    box.querySelector('[data-shopset-status]').textContent=(scope==='clear'?'모든 장면에서 세트를 뺐어요':`${nums}장에 넣었어요`)+(full.length?` (${full.join('·')}장은 항목이 12개라 못 넣음)`:'');
    return done;

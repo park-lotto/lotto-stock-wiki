@@ -36,18 +36,26 @@ with sync_playwright() as pw:
     pg = b.new_page(viewport={'width': 1500, 'height': 1000}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto(URL); pg.wait_for_timeout(1500)
     table = pg.evaluate("""()=>{const s=[...document.scripts].find(x=>/scene-style-decorations/.test(x.src));return fetch(s.src).then(r=>r.text()).then(t=>{const m=t.match(/const YT_SHORTS_UI=(\\{[\\s\\S]*?\\n \\});/);return Function('return '+m[1])()})}""")
-    # ① 겹쳐보기
+    CLICK = "document.querySelector('[data-yt-ui-toggle]').click()"
+    def off():
+        for _ in range(3):
+            if pg.evaluate(RECTS) == {}: return
+            pg.evaluate(CLICK); pg.wait_for_timeout(200)
+    # ① 겹쳐보기 — 누를 때마다 기본 → 댓글창 화면 → 끔
     need(pg.locator('[data-yt-ui-toggle]').count() == 1, '① 「유튜브 화면 자리」 버튼이 있다')
     need(pg.evaluate(RECTS) == {}, '① 처음에는 꺼져 있다(자리 표시 0개)')
-    pg.evaluate("document.querySelector('[data-yt-ui-toggle]').click()"); pg.wait_for_timeout(300)
-    got = pg.evaluate(RECTS) or {}
-    for key, a in table.items():
-        g = got.get(key); ok = bool(g) and all(abs(g[i] - a[k]) < .6 for i, k in enumerate('ltwh'))
-        need(ok, f"① {a['label']}: 표 l{a['l']} t{a['t']} w{a['w']} h{a['h']} / 화면 {[round(x, 1) for x in g] if g else '없음'}")
-    need(bool(got.get('link')) and got['link'][1] > 100, f"① 링크 칸은 영상 아래 바깥에 그려진다 (위 {round(got.get('link', [0, 0])[1], 1)}%)")
-    pg.locator('.phone-wrap').screenshot(path=str(out / '1_겹쳐보기_켬.png'))
-    pg.evaluate("document.querySelector('[data-yt-ui-toggle]').click()"); pg.wait_for_timeout(200)
-    need(pg.evaluate(RECTS) == {}, '① 다시 누르면 사라진다')
+    for mode, name in (('basic', '기본'), ('comment', '댓글창')):
+        pg.evaluate(CLICK); pg.wait_for_timeout(300)
+        got = pg.evaluate(RECTS) or {}
+        need(set(got) == set(table[mode]), f'① [{name}] 자리 {len(got)}개 = 표 {len(table[mode])}개')
+        for key, a in table[mode].items():
+            g = got.get(key); ok = bool(g) and all(abs(g[i] - a[k]) < .6 for i, k in enumerate('ltwh'))
+            need(ok, f"① [{name}] {a['label']}: 표 l{a['l']} t{a['t']} w{a['w']} h{a['h']} / 화면 {[round(x, 1) for x in g] if g else '없음'}")
+        r = pg.evaluate("(()=>{const r=document.querySelector('#a-live-preview').getBoundingClientRect();return [r.left,r.top,r.width,r.height]})()")
+        pg.screenshot(path=str(out / f'1_자리표시_{name}.png'), clip={'x': r[0] - 20, 'y': r[1] - 10, 'width': r[2] + 40, 'height': r[3] * 1.1 + 20})
+    need(table['basic']['link']['t'] > 100 and table['comment']['link']['t'] < 100, '① 링크 칸: 기본 화면은 영상 아래 바깥, 댓글창 화면은 영상 안')
+    pg.evaluate(CLICK); pg.wait_for_timeout(200)
+    need(pg.evaluate(RECTS) == {}, '① 세 번째 누르면 사라진다')
     # ② 세트 — 넣기 전/후 미리보기 차이(겹쳐보기는 미리보기 밖이라 안 찍힌다)
     pg.evaluate("document.querySelector('[data-shopset-target]').value='link'")
     n = pg.evaluate('sceneStyle.sceneCount()'); pg.evaluate(f'sceneStyle.show({n - 1})'); pg.wait_for_timeout(600)
@@ -57,7 +65,7 @@ with sync_playwright() as pw:
     need(pg.evaluate(RECTS) != {}, '② 세트를 넣으면 자리 표시가 같이 켜진다')
     masks_link = pg.evaluate('sceneStyle.effect().masks')
     need([m.get('kind') for m in masks_link] == ['graphic', 'badge'], f"② 세트 = 화살표 + 배지 ({[m.get('text') or m.get('graphic') for m in masks_link]})")
-    pg.evaluate("document.querySelector('[data-yt-ui-toggle]').click()"); pg.wait_for_timeout(200)   # 자리 표시는 미리보기 위에 겹치므로 재는 동안은 끈다
+    off()   # 자리 표시는 미리보기 위에 겹치므로 재는 동안은 끈다
     W, H = before.size; low = 0; xs = []
     for _ in range(14):                                   # 가리키기 한 바퀴(1.2초)를 넘게 훑는다
         d = ImageChops.difference(before, shot()).point(lambda v: 255 if v > 40 else 0).convert('L')
@@ -65,10 +73,10 @@ with sync_playwright() as pw:
         if box: low = max(low, y0 + box[3]); xs.append((box[0], box[2]))
         pg.wait_for_timeout(100)
     tip = low / H * 100; cx = sum((a + c) / 2 for a, c in xs) / max(1, len(xs)) / W * 100
-    ch, lk = table['channel'], table['link']
+    ch = min((v['channel'] for v in table.values()), key=lambda c: c['t']); lk = table['basic']['link']   # 두 화면 중 더 높은 채널명 줄
     need(ch['t'] - 6 <= tip <= ch['t'], f"② 화살표가 닿는 가장 아래 {tip:.1f}% — 채널명 줄({ch['t']}%) 바로 위")
     need(lk['l'] <= cx <= lk['l'] + lk['w'], f"② 화살표 가로 가운데 {cx:.1f}% — 링크 칸 가로 범위({lk['l']}~{lk['l'] + lk['w']:.1f}%) 안")
-    pg.evaluate("document.querySelector('[data-yt-ui-toggle]').click()"); pg.wait_for_timeout(300)
+    pg.evaluate(CLICK); pg.wait_for_timeout(300); pg.evaluate(CLICK); pg.wait_for_timeout(300)   # 댓글창 화면으로
     r = pg.evaluate("(()=>{const r=document.querySelector('#a-live-preview').getBoundingClientRect();return [r.left,r.top,r.width,r.height]})()")
     pg.screenshot(path=str(out / '2_세트_구매링크칸.png'), clip={'x': r[0] - 20, 'y': r[1] - 10, 'width': r[2] + 40, 'height': r[3] * 1.1 + 20})
     need(not errs, f'페이지 오류 {errs}')
@@ -118,9 +126,9 @@ worst = 0; tips = []
 for p in pngs:
     im = Image.open(p); worst = max(worst, overlay_px(im)); tips.append(red_low(im))
 need(worst == 0, f'④ 렌더·캡컷 레이어 {len(pngs)}장에 겹쳐보기 색 {worst}픽셀')
-need(pngs and 80 < max(tips) <= ch['t'], f"④ 레이어에서 화살표가 닿는 가장 아래 {max(tips) if tips else 0:.1f}% (채널명 줄 {ch['t']}% 위)")
+need(pngs and ch['t'] - 10 < max(tips) <= ch['t'], f"④ 레이어에서 화살표가 닿는 가장 아래 {max(tips) if tips else 0:.1f}% (채널명 줄 {ch['t']}% 위)")
 one = pathlib.Path(scene_style.render_layer_one(timeline, snap, out / 'thumb_style', 1, {'text': '주부들도 감탄한' + chr(10) + '천재 아이디어'}, 'ytqa'))
-need(one.exists() and overlay_px(Image.open(one)) == 0 and red_low(Image.open(one)) > 80,
+need(one.exists() and overlay_px(Image.open(one)) == 0 and ch['t'] - 10 < red_low(Image.open(one)) <= ch['t'],
      f'④ 썸네일용 한 장: 겹쳐보기 색 {overlay_px(Image.open(one)) if one.exists() else "없음"}픽셀 · 화살표 {red_low(Image.open(one)) if one.exists() else 0:.1f}%')
 final = out / 'final.mp4'
 scene_style.compose(str(src), timeline, snap, str(final), out / 'cw', {'text': '주부들도 감탄한\n천재 아이디어'})
@@ -129,6 +137,6 @@ if final.exists():
     frame = out / '4_완성본_프레임.png'; va._run_ffmpeg(['ffmpeg', '-y', '-ss', '1.5', '-i', str(final), '-frames:v', '1', str(frame)])
     im = Image.open(frame)
     need(overlay_px(im) == 0, f'④ 완성 영상 프레임에 겹쳐보기 색 {overlay_px(im)}픽셀')
-    t = red_low(im, alpha=False); need(80 < t <= ch['t'] + .5, f"④ 완성 영상에서 화살표가 닿는 가장 아래 {t:.1f}%")
+    t = red_low(im, alpha=False); need(ch['t'] - 10 < t <= ch['t'] + .5, f"④ 완성 영상에서 화살표가 닿는 가장 아래 {t:.1f}%")
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건')
 sys.exit(1 if fails else 0)
