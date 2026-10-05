@@ -20863,7 +20863,9 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     # ★스토리보드(관제 120): 칸마다 사람이 고른 장면이 오면 대본·줄별 출처를 그 한 곳(story_writer.storyboard_to_beat_sources)에서
     #   만들고, 3단계는 상속 경로로 그대로 잇는다(재매칭 0회). 고른 줄은 pinned — 이후 어느 단계도 장면을 더하거나 깎지 않는다.
     _sb = (body.get("script_structure") or {}).get("storyboard") if isinstance(body.get("script_structure"), dict) else None
-    if isinstance(_sb, list) and _sb:
+    # 스위치 storyboard_enabled(기본 끔 → 고객 화면 불변, "admin" = 관리자만 실사용 테스트, 끝나면 고객으로 넓힌다)
+    if isinstance(_sb, list) and _sb and _setting_gate(Store(DB_PATH), "storyboard_enabled",
+                                                       getattr(request.state, "customer_id", 0)):
         from shopping_shorts.story_writer import storyboard_to_beat_sources
         _conv = storyboard_to_beat_sources(_sb)
         if _conv["script"]:

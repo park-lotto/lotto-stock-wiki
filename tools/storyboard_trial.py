@@ -312,7 +312,8 @@ def _apply_role_picks(slots, roles_pick):
         ids = [x.strip() for x in ids_s.split(",") if x.strip()]
         if not keys or not ids or not slots:
             continue
-        named = next((i for i, sl in enumerate(slots) if key(sl) in keys), None)
+        # ★첫 칸은 어떤 이름이든 훅이다(사장님 10-05 "첫칸은 그냥 후킹") — 「단돈 OO원이면」의 price 첫 칸에 CTA 장면을 넣지 않는다
+        named = next((i for i, sl in enumerate(slots) if key(sl) in keys and not (box != "훅" and i == 0)), None)
         for sid in reversed(ids):
             where = next((i for i, sl in enumerate(slots) if sid in (sl.get("ids") or [])), None)
             if box == "훅":

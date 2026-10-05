@@ -13,7 +13,7 @@ for p in sys.argv[1:] or glob.glob(os.path.join(os.environ.get("TEMP", "."), "sb
     t = json.load(open(p, encoding="utf-8"))
     for k, bd in t["boards"].items():
         used = [c for s in bd["slots"] for c in s.get("ids") or []]
-        has_cta = any(str(s["slot"]).lower().split("_")[0] in B["CTA·가격"] for s in bd["slots"])
+        has_cta = any(str(s["slot"]).lower().split("_")[0] in B["CTA·가격"] for s in bd["slots"][1:])   # 첫 칸은 훅
         out = []
         for box in B:
             for sid in (used[len(used) // 2], "NEW-9"):     # AI가 이미 쓴 장면 / 아무 칸에도 없는 장면
