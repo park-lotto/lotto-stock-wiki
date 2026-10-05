@@ -792,6 +792,8 @@ function thumbURL(u, sc){ return u ? ('/api/thumb?url='+encodeURIComponent(u)+'&
 const CTYPES = [
   {key:"전체",  label:"✨ 전체",        topics:[]},
   {key:"썰쇼핑", label:"🎬 썰쇼핑",      topics:[]},
+  // ★순서(2026-10-06 사장님 "전체/썰쇼핑/홈살림가전/장비공구 이 순서로", 관제 137).
+  {key:"홈템",   label:"🏠 홈·살림·가전", topics:[]},
   // 장비템(2026-08-25) — 만물상점류 '집 밖 장비·공구'. 썰쇼핑과 결이 다르다:
   // 썰쇼핑은 **화법**(정체 은폐·용도 뒤집기)이 축이고, 장비템은 **제품 도메인**이 축이다.
   // 기존 5축이 전부 집 안(살림·주방·뷰티)이라 이 버튼이 없으면 갈 곳이 '기타'뿐이다.
@@ -801,7 +803,6 @@ const CTYPES = [
   // 발굴 실측: 차량용품 채널 12개(차츄 4,710만·안녕형들 1.16억)의 제목 30편이
   // 축 없이는 23편(76.7%)이 '기타'로 샜다.
   {key:"차량템", label:"🚗 차량용품",     topics:[]},
-  {key:"홈템",   label:"🏠 홈·살림·가전", topics:[]},
   {key:"비법형", label:"🍳 레시피·꿀팁",  topics:[]},
   {key:"혼합형", label:"💄 뷰티",        topics:[]},
   // 연예인(2026-09-15 사장님 카테이동 요청) — 자동판정은 없고 관리자가 카드에서 옮겨 채운다.
@@ -1141,6 +1142,8 @@ function switchPlatform(p, el){
   updatePlatformCopy(p);
   // ★카테고리 줄도 다시 그린다(2026-08-26) — 플랫폼마다 숨기는 버튼이 다르다.
   //   안 부르면 유튜브에서 인스타로 갈아타도 썰쇼핑·장비템 버튼이 그대로 남는다.
+  applyArchiveTabFor(p);          // '역대 히트작' 자리의 이름 — 유튜브는 '채널별 터진 영상'
+  applyHitsDefaultSort();
   renderCtypes(); renderCats();
   applyMetricTabsFor(p);          // 플랫폼에 안 맞는 지표는 아예 숨긴다
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
@@ -1746,8 +1749,51 @@ async function saveTtSettings(){
   if(d.ok){ TT_KNOBS=d; renderTtStatus(); document.getElementById('ttStatus').innerHTML='✅ 저장됨 · '+document.getElementById('ttStatus').innerHTML; }
 }
 
+// ── 채널별 터진 영상(2026-10-06 사장님 "유튜브는 역대히트작 자리에", 관제 137) ──
+// 유튜브에는 누적 아카이브가 없어 '역대 히트작' 탭이 늘 비어 있었다. 그 자리(data-span="-1")를
+// 유튜브에서만 '채널별 터진 영상'으로 쓴다 — 고른 채널마다 그 채널 평소 조회수 대비 크게 터진 쇼츠.
+// 무엇이 터진 것인지는 서버(ranking.pick_channel_hits)가 정한다. 화면은 받은 것을 보여줄 뿐이다.
+const SPAN_ARCHIVE_COPY = {
+  youtube: {label:"💥 채널별 터진 영상",
+            title:"고른 채널마다 그 채널 평소 조회수의 5배 넘게 터진 쇼츠만 — 채널당 최대 3편. 썰쇼핑·홈템 버튼으로 나눠 봅니다"},
+  _:       {label:"🏆 역대 히트작",
+            title:"지금까지 모아둔 20만 건 중 댓글 1만개 넘은 것 — 새로 긁지 않습니다"},
+};
+// ★눌린 탭은 화면에서 읽는다 — SPAN_DAYS(let)는 이 아래에서 선언돼, 첫 화면을 그리는 길(renderCtypes)에서
+//   먼저 읽으면 선언 전 접근으로 화면이 통째로 죽는다(2026-08-18 채널당 상한과 같은 함정).
+function _archiveTabOn(){ const t = document.querySelector('#spanTabs .tab.active'); return !!t && t.dataset.span === '-1'; }
+function isChannelHitsTab(){ return PLATFORM === 'youtube' && _archiveTabOn(); }
+// 이 탭에 있는 카테고리 — 서버가 주는 두 가지(썰쇼핑·홈템)뿐이라 나머지 버튼은 누르면 빈 화면이다.
+const CHANNEL_HITS_CTYPES = ["전체", "썰쇼핑", "홈템"];
+// ★이 탭의 기본 정렬은 조회수순(2026-10-06 사장님 "채널터진영상은 기본이 조회수순") — 크게 터진 것부터 본다.
+//   들어올 때 보던 정렬을 기억해 두고, 나갈 때 돌려놓는다(다른 탭의 기본 '최신순'을 건드리지 않게).
+//   들어와서 손님이 다른 정렬을 고르면 그건 그대로 둔다 — 나갈 때만 되돌린다.
+let _HITS_PREV_SORT = null;
+function applyHitsDefaultSort(){
+  const on = isChannelHitsTab();
+  if(on && _HITS_PREV_SORT === null){
+    _HITS_PREV_SORT = STATE.tab;
+    STATE.tab = 'views';
+  } else if(!on && _HITS_PREV_SORT !== null){
+    STATE.tab = _HITS_PREV_SORT;
+    _HITS_PREV_SORT = null;
+  } else return;
+  document.querySelectorAll('.tab[data-tab]').forEach(x => x.classList.toggle('active', x.dataset.tab === STATE.tab));
+}
+function applyArchiveTabFor(p){
+  const t = document.querySelector('#spanTabs .tab[data-span="-1"]');
+  if(t){ const c = SPAN_ARCHIVE_COPY[p] || SPAN_ARCHIVE_COPY._; t.textContent = c.label; t.title = c.title; }
+  // 문턱 버튼(1만+·3천대·1천대)은 댓글 기준 아카이브(인스타) 것이다.
+  const th = document.getElementById("arcThresh");
+  if(th) th.style.display = (_archiveTabOn() && p !== 'youtube') ? "inline-block" : "none";
+}
 function renderCtypes(){
-  const hide = CTYPE_HIDDEN[PLATFORM] || [];
+  let hide = CTYPE_HIDDEN[PLATFORM] || [];
+  if (isChannelHitsTab()){
+    hide = CTYPES.map(c => c.key).filter(k => !CHANNEL_HITS_CTYPES.includes(k));
+    // 이 탭에 없는 버튼이 눌려 있었으면 첫 구분(썰쇼핑)으로 — '전체'로 보내면 두 가지가 섞여 보인다.
+    if (hide.includes(STATE.ctype)){ STATE.ctype = "썰쇼핑"; STATE.cat = "전체"; }
+  }
   // 숨긴 버튼이 눌려 있던 채로 플랫폼을 갈아타면 **목록이 빈 채로** 남는다 → 전체로 되돌린다.
   if (hide.includes(STATE.ctype)){ STATE.ctype = "전체"; STATE.cat = "전체"; }
   document.getElementById("ctypes").innerHTML =
@@ -2174,6 +2220,11 @@ function badgeHTML(i, ctx){
   //   그래야 카테고리·기간을 바꿔도 같은 영상의 뱃지가 그대로다.
   const g = gradeOf(i);
   let h='';
+  if(i.hit_ratio){
+    const x = i.hit_ratio >= 100 ? Math.round(i.hit_ratio) : i.hit_ratio;
+    h+=`<span class="ibadge red" title="이 채널 평소 조회수 ${(i.channel_median||0).toLocaleString()}회의 ${x}배 (쇼츠 ${(i.channel_videos||0).toLocaleString()}편 기준)"><span class="emo">💥</span><span class="lbl">평소의 ${x}배</span></span>`;
+    return h;   // 이 탭의 뱃지는 이것 하나 — 급상승·추세 뱃지를 같이 달면 같은 자리에 겹쳐 '평소의 N배'가 가려진다(브라우저 실측)
+  }
   if(g){
     const b = GRADE_LABEL[g];
     h+=`<span class="ibadge ${b.c}"><span class="emo">${b.e}</span><span class="lbl">${b.t}</span></span>`;
@@ -2493,11 +2544,13 @@ function render(opts){
   //   회귀 검사: tests/test_ranking_render_tdz.py
   let _perChCut = 0;
   if(PER_CHANNEL_ON){
+    // 채널별 터진 영상 탭은 접지 않는다 — 서버가 이미 채널당 3편으로 끊었고, 그 3편이 이 탭의 뜻이다.
+    const _cap = isChannelHitsTab() ? Infinity : PER_CHANNEL_MAX;
     const seen = {}; const kept = [];
     for(const i of items){
       const u = _normUser(i.username) || '?';
       seen[u] = (seen[u]||0) + 1;
-      if(seen[u] <= PER_CHANNEL_MAX) kept.push(i);
+      if(seen[u] <= _cap) kept.push(i);
     }
     _perChCut = items.length - kept.length;
     items = kept;
@@ -3202,6 +3255,9 @@ async function loadLast(){
     st.textContent = SPAN_DAYS !== 0
       ? "이 조건에 맞는 영상이 없습니다."
       : "아직 수집 결과가 없습니다. (관리자 수집 대기)";
+  } else if(isChannelHitsTab()){
+    const _ch = new Set(STATE.items.map(i => i.username)).size;
+    st.textContent = `채널별 터진 영상 ${STATE.items.length}편 · ${_ch}채널 — 그 채널 평소 조회수의 5배 넘게 터진 쇼츠(채널당 최대 3편)`;
   } else if(SPAN_DAYS === -1){
     st.textContent = ARC_MAX
       ? `역대 · 댓글 ${ARC_MIN.toLocaleString()}~${ARC_MAX.toLocaleString()}개 ${STATE.items.length}건 (새로 긁지 않음)`
@@ -3232,9 +3288,10 @@ document.addEventListener("click", (e)=>{
   t.classList.add("active");
   SPAN_DAYS = parseInt(t.dataset.span || "0", 10);
   SPAN_HOURS = parseInt(t.dataset.hours || "48", 10);
-  // 문턱 버튼은 역대 탭에서만 — 기간 탭은 문턱이 고정이라 보여줄 게 없다
-  const th = document.getElementById("arcThresh");
-  if(th) th.style.display = (SPAN_DAYS === -1) ? "inline-block" : "none";
+  // 문턱 버튼은 역대 탭에서만 — 기간 탭은 문턱이 고정이라 보여줄 게 없다(유튜브는 그 자리가 채널별 터진 영상)
+  applyArchiveTabFor(PLATFORM);
+  renderCtypes();                 // 채널별 터진 영상 탭은 썰쇼핑·홈템 버튼만
+  applyHitsDefaultSort();
   loadLast();
 });
 
