@@ -1,0 +1,5007 @@
+{
+ "기준": "2026-10-05 최근 job 40개·재료 80개, Whisper small. 노래·한국어나레이션은 사람이 text 보고 판정",
+ "labels": {
+  "b829d916ff85": "노래가사",
+  "6a324c3adfa3": "말없음·거의없음",
+  "afbf546c8792": "노래가사",
+  "ed4e1b534327": "외국어말",
+  "12b4597d60dc": "노래가사",
+  "43ff515fc020": "노래가사",
+  "a43402fe1546": "외국어말",
+  "97beb603d0d4": "외국어말",
+  "89284bb0a40c": "한국어나레이션(남의쇼츠)",
+  "f71081af0b94": "한국어나레이션(남의쇼츠)",
+  "78a64ceead90": "한국어나레이션(남의쇼츠)",
+  "97ac32490f95": "한국어나레이션(남의쇼츠)",
+  "f1610a22b885": "노래가사",
+  "c9617b862189": "외국어말",
+  "031ac23708ff": "말없음·거의없음",
+  "65b326024ee6": "노래가사",
+  "fa59f6fd5c91": "말없음·거의없음",
+  "38930f70374e": "말없음·거의없음",
+  "2477688a62b0": "외국어말",
+  "199154517ed1": "외국어말",
+  "9aafc8197b2b": "외국어말",
+  "097e232b5b93": "외국어말",
+  "9868bab38939": "한국어나레이션(남의쇼츠)",
+  "8ee2ad926183": "외국어말",
+  "10e395093a95": "노래가사",
+  "a5aafec87553": "외국어말",
+  "6cc9a946cac6": "말없음·거의없음",
+  "171f9ff7a437": "외국어말",
+  "5eb0539c34ef": "말없음·거의없음",
+  "664fd1951acf": "말없음·거의없음",
+  "24d7eb89052a": "외국어말",
+  "578994a1db4a": "노래가사",
+  "d86608dac217": "외국어말",
+  "c39a8785f607": "외국어말",
+  "e0ecd2c193cf": "외국어말",
+  "951750cf580a": "외국어말",
+  "d14ae54b7c6c": "외국어말",
+  "73354652be74": "외국어말",
+  "62dd7cdec5af": "말없음·거의없음",
+  "42fcbe72af48": "말없음·거의없음",
+  "5efb481e813e": "말없음·거의없음",
+  "b93c9ad2f90a": "말없음·거의없음",
+  "87129f25eda2": "한국어나레이션(남의쇼츠)",
+  "a58996f122b4": "외국어말",
+  "07558871cb3e": "외국어말",
+  "673d3d923c25": "말없음·거의없음",
+  "dc49805004c7": "외국어말",
+  "56521842ae5b": "한국어나레이션(남의쇼츠)",
+  "e6c3b9fcd2c3": "노래가사",
+  "f3964851978a": "한국어나레이션(남의쇼츠)",
+  "8e60d5f3a6ff": "말없음·거의없음",
+  "c7296a6ce048": "노래가사",
+  "f6a0d9826159": "말없음·거의없음",
+  "689fd57df4c8": "외국어말",
+  "790e0597f00d": "말없음·거의없음",
+  "3656bd166ee2": "말없음·거의없음",
+  "808ddb9b4f56": "말없음·거의없음",
+  "0d6f646cce8c": "말없음·거의없음",
+  "788a60d56064": "말없음·거의없음",
+  "44cf77091b54": "말없음·거의없음",
+  "f56d96bb6886": "말없음·거의없음",
+  "f10835e9b8ac": "말없음·거의없음",
+  "419a5e2d0e21": "한국어나레이션(남의쇼츠)",
+  "830d6c4b30e5": "한국어나레이션(남의쇼츠)",
+  "5892f1b3bb03": "한국어나레이션(남의쇼츠)",
+  "01e67da441da": "한국어나레이션(남의쇼츠)",
+  "bfec41d7c156": "외국어말",
+  "aeef81813b3b": "말없음·거의없음",
+  "2cf5804ba1cb": "외국어말",
+  "d4d1ae2932bb": "외국어말",
+  "f95a06011307": "한국어나레이션(남의쇼츠)",
+  "acb673e22fae": "한국어나레이션(남의쇼츠)",
+  "c7c017263d95": "외국어말",
+  "dcbd01c6b855": "말없음·거의없음",
+  "db6830a06251": "한국어나레이션(남의쇼츠)",
+  "c5738ae89472": "말없음·거의없음",
+  "da2282b90f44": "외국어말",
+  "fafc125eec69": "외국어말",
+  "956b8c8d1232": "노래가사",
+  "cefd5056f0f4": "외국어말"
+ },
+ "census": {
+  "b829d916ff85": {
+   "h": "b829d916ff85",
+   "job": "3b3f6a401528",
+   "slot": 0,
+   "url": "https://www.pinterest.com/pin/746049494560964560/",
+   "plat": "other",
+   "dur": 12.7,
+   "t": "2026-10-05T07:27:59.405996+00:00",
+   "total": 12.7,
+   "speech": 12.0,
+   "ratio": 0.95,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.4,
+     "lang": "en",
+     "p": 0.82,
+     "text": "🎵 Birds are singing like the thought I've been eating 🎵"
+    },
+    {
+     "s": 4.4,
+     "e": 6.5,
+     "lang": "en",
+     "p": 0.66,
+     "text": "🎵 Yesterday is dead to me 🎵"
+    },
+    {
+     "s": 6.5,
+     "e": 9.9,
+     "lang": "en",
+     "p": 0.93,
+     "text": "🎵 I feel the ground beneath my feet 🎵"
+    },
+    {
+     "s": 10.5,
+     "e": 11.4,
+     "lang": "en",
+     "p": 0.44,
+     "text": "🎵 When I say 🎵"
+    },
+    {
+     "s": 11.4,
+     "e": 12.6,
+     "lang": "en",
+     "p": 0.37,
+     "text": "🎵 You're singing 🎵"
+    }
+   ]
+  },
+  "6a324c3adfa3": {
+   "h": "6a324c3adfa3",
+   "job": "3b3f6a401528",
+   "slot": 1,
+   "url": "https://www.youtube.com/watch?v=hvBZYT53t7U",
+   "plat": "youtube",
+   "dur": 17.6,
+   "t": "2026-10-05T07:27:59.405996+00:00",
+   "total": 17.6,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "afbf546c8792": {
+   "h": "afbf546c8792",
+   "job": "0ed448b36b3e",
+   "slot": 2,
+   "url": "https://www.youtube.com/watch?v=JoceHR9SdyM",
+   "plat": "youtube",
+   "dur": 16.8,
+   "t": "2026-10-05T07:22:48.420948+00:00",
+   "total": 16.7,
+   "speech": 14.0,
+   "ratio": 0.84,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.0,
+     "lang": "en",
+     "p": 0.88,
+     "text": "Pretty little baby"
+    },
+    {
+     "s": 4.0,
+     "e": 6.0,
+     "lang": "en",
+     "p": 0.82,
+     "text": "Pretty little baby"
+    },
+    {
+     "s": 6.0,
+     "e": 8.0,
+     "lang": "en",
+     "p": 0.68,
+     "text": "You say that baby"
+    },
+    {
+     "s": 8.0,
+     "e": 10.0,
+     "lang": "en",
+     "p": 0.8,
+     "text": "You be thinking of me"
+    },
+    {
+     "s": 10.0,
+     "e": 12.0,
+     "lang": "en",
+     "p": 0.86,
+     "text": "And try to love me"
+    },
+    {
+     "s": 12.0,
+     "e": 14.0,
+     "lang": "en",
+     "p": 0.48,
+     "text": "Pretty little baby"
+    },
+    {
+     "s": 14.0,
+     "e": 16.0,
+     "lang": "en",
+     "p": 0.92,
+     "text": "I'm hoping that you do"
+    }
+   ]
+  },
+  "ed4e1b534327": {
+   "h": "ed4e1b534327",
+   "job": "0ed448b36b3e",
+   "slot": 3,
+   "url": "https://www.youtube.com/watch?v=kDrlXiHc9lw",
+   "plat": "youtube",
+   "dur": 23.8,
+   "t": "2026-10-05T07:22:48.420948+00:00",
+   "total": 23.8,
+   "speech": 3.0,
+   "ratio": 0.13,
+   "main_lang": "ja",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.0,
+     "lang": "ja",
+     "p": 0.98,
+     "text": "健康意識高すぎる男子の朝食アレンジ"
+    }
+   ]
+  },
+  "12b4597d60dc": {
+   "h": "12b4597d60dc",
+   "job": "0fff53be68c9",
+   "slot": 2,
+   "url": "https://www.youtube.com/watch?v=JoceHR9SdyM",
+   "plat": "youtube",
+   "dur": 16.8,
+   "t": "2026-10-05T07:19:57.371089+00:00",
+   "total": 16.7,
+   "speech": 14.0,
+   "ratio": 0.84,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.0,
+     "lang": "en",
+     "p": 0.88,
+     "text": "Pretty little baby"
+    },
+    {
+     "s": 4.0,
+     "e": 6.0,
+     "lang": "en",
+     "p": 0.82,
+     "text": "Pretty little baby"
+    },
+    {
+     "s": 6.0,
+     "e": 8.0,
+     "lang": "en",
+     "p": 0.68,
+     "text": "You say that baby"
+    },
+    {
+     "s": 8.0,
+     "e": 10.0,
+     "lang": "en",
+     "p": 0.8,
+     "text": "You be thinking of me"
+    },
+    {
+     "s": 10.0,
+     "e": 12.0,
+     "lang": "en",
+     "p": 0.86,
+     "text": "And try to love me"
+    },
+    {
+     "s": 12.0,
+     "e": 14.0,
+     "lang": "en",
+     "p": 0.48,
+     "text": "Pretty little baby"
+    },
+    {
+     "s": 14.0,
+     "e": 16.0,
+     "lang": "en",
+     "p": 0.92,
+     "text": "I'm hoping that you do"
+    }
+   ]
+  },
+  "43ff515fc020": {
+   "h": "43ff515fc020",
+   "job": "0fff53be68c9",
+   "slot": 4,
+   "url": "https://www.youtube.com/watch?v=ICsj3W5HC7o",
+   "plat": "youtube",
+   "dur": 11.2,
+   "t": "2026-10-05T07:19:57.371089+00:00",
+   "total": 11.1,
+   "speech": 12.0,
+   "ratio": 1.08,
+   "main_lang": "ja",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.0,
+     "lang": "ja",
+     "p": 0.84,
+     "text": "んぐりを頼むつきません"
+    },
+    {
+     "s": 4.0,
+     "e": 8.0,
+     "lang": "ja",
+     "p": 0.41,
+     "text": "おうりの小さなレストラン"
+    },
+    {
+     "s": 8.0,
+     "e": 11.0,
+     "lang": "ja",
+     "p": 0.78,
+     "text": "カラーボのポケットを"
+    },
+    {
+     "s": 11.0,
+     "e": 12.0,
+     "lang": "ko",
+     "p": 0.36,
+     "text": "まっ"
+    }
+   ]
+  },
+  "a43402fe1546": {
+   "h": "a43402fe1546",
+   "job": "136fb0c0c690",
+   "slot": 0,
+   "url": "https://www.rednote.com/search_result/68d79c1a000000001202e209?xsec_token=ABxe86ciLlS9sl3bsq9pUKMCj_8eGCNSPQ5bspEQOvH-w=&xsec_source=pc_search",
+   "plat": "other",
+   "dur": 27.1,
+   "t": "2026-10-05T06:49:27.270134+00:00",
+   "total": 27.0,
+   "speech": 20.2,
+   "ratio": 0.75,
+   "main_lang": "zh",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.4,
+     "lang": "zh",
+     "p": 0.98,
+     "text": "这,是一个乐高小人"
+    },
+    {
+     "s": 2.4,
+     "e": 5.6,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "我发现他的手正好可以卡进一个充电线"
+    },
+    {
+     "s": 5.6,
+     "e": 8.3,
+     "lang": "zh",
+     "p": 0.97,
+     "text": "桌子上的线乱七八糟"
+    },
+    {
+     "s": 8.3,
+     "e": 10.2,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "准备一个长条的底板"
+    },
+    {
+     "s": 10.2,
+     "e": 12.4,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "在桌子上贴上这种魔力扣"
+    },
+    {
+     "s": 12.4,
+     "e": 14.6,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "再把底板固定上去"
+    },
+    {
+     "s": 14.6,
+     "e": 17.2,
+     "lang": "zh",
+     "p": 0.98,
+     "text": "依次卡好不同的小人"
+    },
+    {
+     "s": 23.2,
+     "e": 26.2,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "恭喜你成功解锁了一个乐高的极限器"
+    }
+   ]
+  },
+  "97beb603d0d4": {
+   "h": "97beb603d0d4",
+   "job": "136fb0c0c690",
+   "slot": 1,
+   "url": "https://www.youtube.com/shorts/x4PPNEZ9Mi0",
+   "plat": "youtube",
+   "dur": 19.8,
+   "t": "2026-10-05T06:49:27.270134+00:00",
+   "total": 19.7,
+   "speech": 20.0,
+   "ratio": 1.02,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.0,
+     "lang": "en",
+     "p": 0.64,
+     "text": "Oh my gosh!"
+    },
+    {
+     "s": 2.0,
+     "e": 5.0,
+     "lang": "en",
+     "p": 0.61,
+     "text": "Oh my gosh!"
+    },
+    {
+     "s": 5.0,
+     "e": 8.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Dropping your phone while running can actually be dangerous."
+    },
+    {
+     "s": 8.0,
+     "e": 10.0,
+     "lang": "en",
+     "p": 0.99,
+     "text": "That's why I switched to this running belt."
+    },
+    {
+     "s": 10.0,
+     "e": 12.0,
+     "lang": "en",
+     "p": 0.99,
+     "text": "It keeps your phone and essentials secure."
+    },
+    {
+     "s": 12.0,
+     "e": 14.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Plus there's a water bottle holder, so your hands stay free."
+    },
+    {
+     "s": 14.0,
+     "e": 16.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "The soft, stretchy material keeps it comfortable."
+    },
+    {
+     "s": 16.0,
+     "e": 20.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "And the reflective strip adds visibility for early morning or night runs."
+    }
+   ]
+  },
+  "89284bb0a40c": {
+   "h": "89284bb0a40c",
+   "job": "eb589d76e1bb",
+   "slot": 0,
+   "url": "https://www.instagram.com/p/DdaFhOHBn8C/",
+   "plat": "instagram",
+   "dur": 22.4,
+   "t": "2026-10-05T06:33:57.846197+00:00",
+   "total": 22.3,
+   "speech": 22.2,
+   "ratio": 1.0,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.6,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "아이스크림 간다고 김밥 싸고 있는데 제가 이거 쓸때마다 엄마가 자고 내놓라는 거예요"
+    },
+    {
+     "s": 4.6,
+     "e": 6.4,
+     "lang": "ko",
+     "p": 0.97,
+     "text": "엄마 이거 한 만원 정도 밖에 안 해"
+    },
+    {
+     "s": 6.4,
+     "e": 9.8,
+     "lang": "ko",
+     "p": 0.97,
+     "text": "절생력이 너무 좋아서 김밥도 이게 되나 싶을 정도로 잘 살리고"
+    },
+    {
+     "s": 9.8,
+     "e": 12.4,
+     "lang": "ko",
+     "p": 0.96,
+     "text": "매번 자르다 뭉개지는 햄버거 또 딸기맛이 컬이 되는 게"
+    },
+    {
+     "s": 12.4,
+     "e": 14.4,
+     "lang": "ko",
+     "p": 0.94,
+     "text": "스페인산이라 내구성이 텐든해서 그런가?"
+    },
+    {
+     "s": 14.4,
+     "e": 16.6,
+     "lang": "ko",
+     "p": 0.95,
+     "text": "스케치 등그러서 안전하고 미세한 톱니덕은에"
+    },
+    {
+     "s": 16.6,
+     "e": 17.9,
+     "lang": "ko",
+     "p": 0.95,
+     "text": "딱딱한 재료도 잘 잘리는데"
+    },
+    {
+     "s": 17.9,
+     "e": 19.7,
+     "lang": "ko",
+     "p": 0.88,
+     "text": "쌍 자르고 젬바르고 화이소이고"
+    },
+    {
+     "s": 19.7,
+     "e": 20.8,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "이거 진짜 좋아요"
+    },
+    {
+     "s": 20.8,
+     "e": 22.2,
+     "lang": "ko",
+     "p": 0.92,
+     "text": "같이 분들 댓글 남겨주세요"
+    }
+   ]
+  },
+  "f71081af0b94": {
+   "h": "f71081af0b94",
+   "job": "eb589d76e1bb",
+   "slot": 1,
+   "url": "https://www.instagram.com/p/DccsK8-zpLr/",
+   "plat": "instagram",
+   "dur": 20.5,
+   "t": "2026-10-05T06:33:57.846197+00:00",
+   "total": 20.4,
+   "speech": 20.4,
+   "ratio": 1.0,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.7,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "요즘 핫한 깊다 깍기가 조금 아쉬웠는데"
+    },
+    {
+     "s": 2.7,
+     "e": 5.3,
+     "lang": "ko",
+     "p": 0.96,
+     "text": "이건 더욱이라서 김밥 두 줄을 한꺼번에 쓸 수 있는데"
+    },
+    {
+     "s": 5.3,
+     "e": 6.5,
+     "lang": "ko",
+     "p": 0.97,
+     "text": "끝이 둥그러 안전하고"
+    },
+    {
+     "s": 6.5,
+     "e": 8.9,
+     "lang": "ja",
+     "p": 0.41,
+     "text": "이새동니 덕분에 미리머시 깔끔하게 썰기"
+    },
+    {
+     "s": 8.9,
+     "e": 10.4,
+     "lang": "ko",
+     "p": 0.85,
+     "text": "핸드위치도 습 자르고"
+    },
+    {
+     "s": 10.4,
+     "e": 12.6,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "자르게 힘든 햄버거도 깔끔하게 살려"
+    },
+    {
+     "s": 12.6,
+     "e": 14.3,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "딱딱한 재료도 잘 썰기"
+    },
+    {
+     "s": 14.3,
+     "e": 16.5,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "어떤 걸 썰어도 종이창처럼 얇게"
+    },
+    {
+     "s": 16.5,
+     "e": 18.0,
+     "lang": "ko",
+     "p": 0.96,
+     "text": "딱 잘라서 샘 바르고"
+    },
+    {
+     "s": 18.0,
+     "e": 19.2,
+     "lang": "ko",
+     "p": 0.96,
+     "text": "알까지 다 썼는데"
+    },
+    {
+     "s": 19.2,
+     "e": 20.4,
+     "lang": "ko",
+     "p": 0.96,
+     "text": "이거 완전 만능이네"
+    }
+   ]
+  },
+  "78a64ceead90": {
+   "h": "78a64ceead90",
+   "job": "79ced6248475",
+   "slot": 0,
+   "url": "https://www.instagram.com/reels/DcgHV8mP0k2/",
+   "plat": "instagram",
+   "dur": 18.8,
+   "t": "2026-10-05T06:20:22.755662+00:00",
+   "total": 18.7,
+   "speech": 18.5,
+   "ratio": 0.99,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.2,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "여러분 촉촉한 칫솔 함부로 쓰지 마세요."
+    },
+    {
+     "s": 2.2,
+     "e": 4.8,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "선배랑 출장 갔는데 가방에서 립스틱 같은 걸 꺼내더니"
+    },
+    {
+     "s": 4.8,
+     "e": 7.2,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "버튼을 톡 누르니까 소리 쑥 올라오는 거죠?"
+    },
+    {
+     "s": 7.2,
+     "e": 9.8,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "더진 칫솔 방치하면 변기보다 세균이 많다는데"
+    },
+    {
+     "s": 9.8,
+     "e": 11.9,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "이건 뚜껑 다듬으면 자외선으로 살균해줘서"
+    },
+    {
+     "s": 11.9,
+     "e": 13.6,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "냄새랑 곰팡이 걱정 일도 없대요."
+    },
+    {
+     "s": 13.6,
+     "e": 15.4,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "사이드도 작고 C타입 충전이라"
+    },
+    {
+     "s": 15.4,
+     "e": 17.0,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "외출할 때 갖고 다니기 너무 편한데"
+    },
+    {
+     "s": 17.0,
+     "e": 18.5,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "댓글에 칫솔 남겨주세요."
+    }
+   ]
+  },
+  "97ac32490f95": {
+   "h": "97ac32490f95",
+   "job": "79ced6248475",
+   "slot": 1,
+   "url": "https://www.instagram.com/reels/DdltSYbh558/",
+   "plat": "instagram",
+   "dur": 24.2,
+   "t": "2026-10-05T06:20:22.755662+00:00",
+   "total": 24.1,
+   "speech": 24.0,
+   "ratio": 0.99,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.2,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "와 여행용 전동치솔이 이벤트 사은품으로 딱이에요."
+    },
+    {
+     "s": 4.2,
+     "e": 6.9,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "버튼 하나로 치솔모가 자동으로 올라오고"
+    },
+    {
+     "s": 6.9,
+     "e": 10.6,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "상단에서 UV 살균까지 되는 휴대용 전동치솔인데"
+    },
+    {
+     "s": 10.6,
+     "e": 13.1,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "방수라 흐르는 물에 바로 헹궈도 되고"
+    },
+    {
+     "s": 13.1,
+     "e": 15.8,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "전용 파우치에 쏙 들어가서 좋겠더라고요."
+    },
+    {
+     "s": 15.8,
+     "e": 17.8,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "예장 로고 넣어서 지급했는데"
+    },
+    {
+     "s": 17.8,
+     "e": 19.8,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "받으신 분이 엄청 좋아하시더라고요."
+    },
+    {
+     "s": 19.8,
+     "e": 24.0,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "궁금하신 분들은 댓글에 나도 남겨주세요."
+    }
+   ]
+  },
+  "f1610a22b885": {
+   "h": "f1610a22b885",
+   "job": "79e6c83e7122",
+   "slot": 0,
+   "url": "https://www.tiktok.com/@user69835680/video/7604989058955234590",
+   "plat": "tiktok",
+   "dur": 11.5,
+   "t": "2026-10-05T06:13:38.481008+00:00",
+   "total": 11.4,
+   "speech": 12.0,
+   "ratio": 1.05,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.0,
+     "lang": "en",
+     "p": 0.77,
+     "text": "Oh, and I need it right now."
+    },
+    {
+     "s": 2.0,
+     "e": 4.0,
+     "lang": "en",
+     "p": 0.6,
+     "text": "It's just a dance, a dance."
+    },
+    {
+     "s": 4.0,
+     "e": 6.0,
+     "lang": "en",
+     "p": 0.61,
+     "text": "I'm gonna burn it all again,"
+    },
+    {
+     "s": 6.0,
+     "e": 8.0,
+     "lang": "en",
+     "p": 0.8,
+     "text": "And I can wait for you when the boys come home."
+    },
+    {
+     "s": 8.0,
+     "e": 10.0,
+     "lang": "en",
+     "p": 0.79,
+     "text": "No price, I'm just taking this time."
+    },
+    {
+     "s": 10.0,
+     "e": 12.0,
+     "lang": "en",
+     "p": 0.58,
+     "text": "I'm gonna nail it."
+    }
+   ]
+  },
+  "c9617b862189": {
+   "h": "c9617b862189",
+   "job": "79e6c83e7122",
+   "slot": 1,
+   "url": "https://www.instagram.com/reel/Dd-KbAjMIj5/",
+   "plat": "instagram",
+   "dur": 12.5,
+   "t": "2026-10-05T06:13:38.481008+00:00",
+   "total": 12.4,
+   "speech": 12.0,
+   "ratio": 0.97,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.0,
+     "lang": "en",
+     "p": 0.88,
+     "text": "Girl."
+    },
+    {
+     "s": 2.0,
+     "e": 4.0,
+     "lang": "en",
+     "p": 0.92,
+     "text": "Girl."
+    },
+    {
+     "s": 4.0,
+     "e": 6.0,
+     "lang": "en",
+     "p": 0.92,
+     "text": "Girl."
+    },
+    {
+     "s": 6.0,
+     "e": 8.0,
+     "lang": "en",
+     "p": 0.48,
+     "text": "Girl."
+    },
+    {
+     "s": 8.0,
+     "e": 10.0,
+     "lang": "en",
+     "p": 0.65,
+     "text": "Dude."
+    },
+    {
+     "s": 10.0,
+     "e": 12.0,
+     "lang": "en",
+     "p": 0.94,
+     "text": "This is awesome."
+    }
+   ]
+  },
+  "031ac23708ff": {
+   "h": "031ac23708ff",
+   "job": "049adaccf945",
+   "slot": 0,
+   "url": "https://www.instagram.com/p/DBcow2UN2k5/",
+   "plat": "instagram",
+   "dur": 11.0,
+   "t": "2026-10-05T06:01:51.458662+00:00",
+   "total": 10.9,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "65b326024ee6": {
+   "h": "65b326024ee6",
+   "job": "049adaccf945",
+   "slot": 1,
+   "url": "https://www.instagram.com/p/DeFdz_HAtjR/",
+   "plat": "instagram",
+   "dur": 12.6,
+   "t": "2026-10-05T06:01:51.458662+00:00",
+   "total": 12.5,
+   "speech": 13.3,
+   "ratio": 1.06,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.3,
+     "lang": "en",
+     "p": 0.54,
+     "text": "Let's go, show our bond, please."
+    },
+    {
+     "s": 3.3,
+     "e": 5.3,
+     "lang": "en",
+     "p": 0.19,
+     "text": "Be my baby."
+    },
+    {
+     "s": 5.3,
+     "e": 7.3,
+     "lang": "en",
+     "p": 0.72,
+     "text": "Be my baby, baby."
+    },
+    {
+     "s": 7.3,
+     "e": 9.3,
+     "lang": "en",
+     "p": 0.28,
+     "text": "I want it on this day."
+    },
+    {
+     "s": 9.3,
+     "e": 11.3,
+     "lang": "en",
+     "p": 0.54,
+     "text": "Be my darling."
+    },
+    {
+     "s": 11.3,
+     "e": 13.3,
+     "lang": "en",
+     "p": 0.42,
+     "text": "Be my baby."
+    }
+   ]
+  },
+  "fa59f6fd5c91": {
+   "h": "fa59f6fd5c91",
+   "job": "eceb7c6ab716",
+   "slot": 0,
+   "url": "https://www.instagram.com/p/BfoR6bSnKJd/",
+   "plat": "instagram",
+   "dur": 15.2,
+   "t": "2026-10-05T05:54:20.128701+00:00",
+   "total": 15.1,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "jw",
+   "segs": []
+  },
+  "38930f70374e": {
+   "h": "38930f70374e",
+   "job": "eceb7c6ab716",
+   "slot": 1,
+   "url": "https://www.instagram.com/p/DSXdjJck0C7/",
+   "plat": "instagram",
+   "dur": 13.4,
+   "t": "2026-10-05T05:54:20.128701+00:00",
+   "total": 13.3,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "km",
+   "segs": []
+  },
+  "2477688a62b0": {
+   "h": "2477688a62b0",
+   "job": "4ae347945ed9",
+   "slot": 0,
+   "url": "https://www.douyin.com/video/7526393853440937250",
+   "plat": "douyin",
+   "dur": 26.7,
+   "t": "2026-10-05T05:29:12.568659+00:00",
+   "total": 26.6,
+   "speech": 26.6,
+   "ratio": 1.0,
+   "main_lang": "zh",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.3,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "自从我用了它我就再也看不上普通的收纳包了"
+    },
+    {
+     "s": 3.3,
+     "e": 4.8,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "因为它是这种翻盖的"
+    },
+    {
+     "s": 4.8,
+     "e": 7.2,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "你这样包里零碎的东西本来就比较多"
+    },
+    {
+     "s": 7.2,
+     "e": 9.8,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "这种大开口的你就一下子可以找到"
+    },
+    {
+     "s": 9.8,
+     "e": 12.4,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "你看我的粉饼 口红 护手霜"
+    },
+    {
+     "s": 12.4,
+     "e": 14.8,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "这些日常用到的东西都可以放进去"
+    },
+    {
+     "s": 14.8,
+     "e": 17.8,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "还有一个小家层可以放几片生理时间"
+    },
+    {
+     "s": 17.8,
+     "e": 21.7,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "也可以收纳姨妈 镜压或者是充电器 钥匙 身份证什么的"
+    },
+    {
+     "s": 21.7,
+     "e": 23.6,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "这样放在包包里就很整齐了"
+    },
+    {
+     "s": 23.6,
+     "e": 25.4,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "夏天出门6万也可以拎着它"
+    },
+    {
+     "s": 25.4,
+     "e": 26.6,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "我觉得还蛮轻便的"
+    }
+   ]
+  },
+  "199154517ed1": {
+   "h": "199154517ed1",
+   "job": "4ae347945ed9",
+   "slot": 1,
+   "url": "https://www.douyin.com/video/7396879848272088356",
+   "plat": "douyin",
+   "dur": 24.4,
+   "t": "2026-10-05T05:29:12.568659+00:00",
+   "total": 24.3,
+   "speech": 24.3,
+   "ratio": 1.0,
+   "main_lang": "zh",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.9,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "一開始有多嫌棄他 我現在就有多稀罕"
+    },
+    {
+     "s": 2.9,
+     "e": 5.1,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "覺得他有點兒量 買回來一直都沒用"
+    },
+    {
+     "s": 5.1,
+     "e": 7.1,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "然後前兩天我說用他試試看"
+    },
+    {
+     "s": 7.1,
+     "e": 10.6,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "等我包裏這些補妝用的小零碎全裝進去之後"
+    },
+    {
+     "s": 10.6,
+     "e": 12.0,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "我瞬間愛到不行"
+    },
+    {
+     "s": 12.0,
+     "e": 13.4,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "他真的太能裝了"
+    },
+    {
+     "s": 13.4,
+     "e": 15.6,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "這不合理真的是越看越好看"
+    },
+    {
+     "s": 15.6,
+     "e": 17.1,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "而且裏面是有分隔的"
+    },
+    {
+     "s": 17.1,
+     "e": 19.2,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "不管怎麽晃 打開都是整齊的"
+    },
+    {
+     "s": 19.2,
+     "e": 21.2,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "到了公司直接一整個拿出來"
+    },
+    {
+     "s": 21.2,
+     "e": 23.4,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "用啥就不用每次在大包裏翻了"
+    },
+    {
+     "s": 23.4,
+     "e": 24.3,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "特別方便"
+    }
+   ]
+  },
+  "9aafc8197b2b": {
+   "h": "9aafc8197b2b",
+   "job": "35c431627ada",
+   "slot": 0,
+   "url": "https://www.youtube.com/watch?v=QoaUzo_r8Ws",
+   "plat": "youtube",
+   "dur": 56.5,
+   "t": "2026-10-05T04:45:26.083886+00:00",
+   "total": 56.4,
+   "speech": 56.4,
+   "ratio": 1.0,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.3,
+     "lang": "en",
+     "p": 0.99,
+     "text": "You guys need to see how great the Shark Stain Striker is. It's one of those portable cleaning"
+    },
+    {
+     "s": 4.3,
+     "e": 8.8,
+     "lang": "en",
+     "p": 1.0,
+     "text": "tools and it has tons of attachments, two different cleaning solutions that make it even more"
+    },
+    {
+     "s": 8.8,
+     "e": 13.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "powerful and it's very similar to that that's a little green. However, it's smaller and more"
+    },
+    {
+     "s": 13.0,
+     "e": 17.5,
+     "lang": "en",
+     "p": 1.0,
+     "text": "powerful. So I went to work right away on my couch which feels like it's always dirty because it's"
+    },
+    {
+     "s": 17.5,
+     "e": 22.5,
+     "lang": "en",
+     "p": 1.0,
+     "text": "white. Then I took it outside to use it on my car seat cushions. This was the perfect opportunity"
+    },
+    {
+     "s": 22.5,
+     "e": 27.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "to use their crevice tool. This gets right into those seams. Then I flipped the brush head over"
+    },
+    {
+     "s": 27.0,
+     "e": 31.3,
+     "lang": "en",
+     "p": 1.0,
+     "text": "so that I could use the bristle side instead of the silicone side. Then I used it on some patio"
+    },
+    {
+     "s": 31.3,
+     "e": 36.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "furniture. Birds seem to love pooping on this lately. Then I went back inside, switched back to"
+    },
+    {
+     "s": 36.2,
+     "e": 40.5,
+     "lang": "en",
+     "p": 1.0,
+     "text": "the silicone brush head, and I cleaned half of one of the cushions just because I wanted to see"
+    },
+    {
+     "s": 40.5,
+     "e": 46.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "how truly dirty it was. You can see the water is getting pretty gross. So at that point I was"
+    },
+    {
+     "s": 46.0,
+     "e": 50.1,
+     "lang": "en",
+     "p": 1.0,
+     "text": "basically done. I was so impressed with how much it sucked up. I wanted to get rid of all that dirty"
+    },
+    {
+     "s": 50.1,
+     "e": 54.8,
+     "lang": "en",
+     "p": 1.0,
+     "text": "water which I recommend putting into the toilet, clean, air dry, and then store it away until"
+    },
+    {
+     "s": 54.8,
+     "e": 56.4,
+     "lang": "en",
+     "p": 1.0,
+     "text": "until it's ready to use next time."
+    }
+   ]
+  },
+  "097e232b5b93": {
+   "h": "097e232b5b93",
+   "job": "35c431627ada",
+   "slot": 2,
+   "url": "https://www.youtube.com/watch?v=K2xiRp-MDGk",
+   "plat": "youtube",
+   "dur": 48.2,
+   "t": "2026-10-05T04:45:26.083886+00:00",
+   "total": 48.2,
+   "speech": 47.4,
+   "ratio": 0.98,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.8,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Today I'm going to show you how to clean a fresh spill out of your carpet using the"
+    },
+    {
+     "s": 3.8,
+     "e": 5.3,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Shark Stain Force."
+    },
+    {
+     "s": 5.3,
+     "e": 8.4,
+     "lang": "en",
+     "p": 1.0,
+     "text": "So first pull the machine out of the caddy, turn it on."
+    },
+    {
+     "s": 8.4,
+     "e": 12.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Now you're going to want to tilt the head of the machine into the carpet or fabric"
+    },
+    {
+     "s": 12.2,
+     "e": 16.8,
+     "lang": "en",
+     "p": 1.0,
+     "text": "so it makes good contact and then you'll just drag it over the spill or stain whatever"
+    },
+    {
+     "s": 16.8,
+     "e": 17.8,
+     "lang": "en",
+     "p": 1.0,
+     "text": "you're working."
+    },
+    {
+     "s": 17.8,
+     "e": 22.4,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Now continue to do this until you don't see any more of that liquid coming up through"
+    },
+    {
+     "s": 22.4,
+     "e": 24.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "the head of the cleaner."
+    },
+    {
+     "s": 24.2,
+     "e": 28.4,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Now we'll set the machine aside for a second and spray it down with a cleaning solution."
+    },
+    {
+     "s": 28.4,
+     "e": 30.6,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Now we're going to pick the scrub head that we want for this one."
+    },
+    {
+     "s": 30.6,
+     "e": 32.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "I'm going to use the plastic bristles."
+    },
+    {
+     "s": 32.2,
+     "e": 35.7,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Now I'm going to scrub that spot a little bit to get that cleaning solution into the"
+    },
+    {
+     "s": 35.7,
+     "e": 37.2,
+     "lang": "en",
+     "p": 0.99,
+     "text": "fibers of the carpet."
+    },
+    {
+     "s": 37.2,
+     "e": 41.1,
+     "lang": "en",
+     "p": 1.0,
+     "text": "And then I will turn the machine back on, drag it back over that spot to extract that"
+    },
+    {
+     "s": 41.1,
+     "e": 44.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "cleaning solution and any of the remaining stain."
+    },
+    {
+     "s": 44.2,
+     "e": 47.4,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Everything gets collected here in this canister which we can then discard."
+    }
+   ]
+  },
+  "9868bab38939": {
+   "h": "9868bab38939",
+   "job": "0f01d0019120",
+   "slot": 0,
+   "url": "https://www.youtube.com/watch?v=95GSfZrDlsc",
+   "plat": "youtube",
+   "dur": 29.9,
+   "t": "2026-10-05T04:44:26.381620+00:00",
+   "total": 29.8,
+   "speech": 29.8,
+   "ratio": 1.0,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 1.8,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "천재주부가 만들어 떼돈 먼 제품의 정체?"
+    },
+    {
+     "s": 1.8,
+     "e": 5.2,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "최근 좁은 주방 조리대 때문에 스트레스 받던 주부가 신박한 아이디어를 내고"
+    },
+    {
+     "s": 5.2,
+     "e": 9.4,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "전 세계 SNS에서 바이럴 되며 주부들 사이에서 인기폭발한 제품으로 떼돈을 벌었다는데"
+    },
+    {
+     "s": 9.4,
+     "e": 11.5,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "이건 바로 접이색 식재료 준비 선반"
+    },
+    {
+     "s": 11.5,
+     "e": 12.6,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "이게 진짜 말도 안 되는 게"
+    },
+    {
+     "s": 12.6,
+     "e": 16.2,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "타일의 구멍을 안 뚫고 강력 급착판으로 착 붙이기만 하면 설치 끝이라는데"
+    },
+    {
+     "s": 16.2,
+     "e": 19.2,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "요리할 때만 날개를 펼쳐 재료 접시를 층층이 올려둘 수 있다는 거"
+    },
+    {
+     "s": 19.2,
+     "e": 22.5,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "두툼한 알루미늄 재질이라 무거운 냄비를 올려도 흔들림 없이 튼튼하고"
+    },
+    {
+     "s": 22.5,
+     "e": 25.3,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "가스레인지 옆에 붙여두면 요리 동선도 엄청 펴내신다고"
+    },
+    {
+     "s": 25.3,
+     "e": 27.9,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "진짜 충격적인 건 안 쓸 때는 벽 쪽으로 딱 접어두면"
+    },
+    {
+     "s": 27.9,
+     "e": 29.8,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "조리대 공간을 100% 다 쓸 수 있다고"
+    }
+   ]
+  },
+  "8ee2ad926183": {
+   "h": "8ee2ad926183",
+   "job": "0f01d0019120",
+   "slot": 1,
+   "url": "https://www.tiktok.com/@tk666566688/video/7661581104687729941",
+   "plat": "tiktok",
+   "dur": 20.2,
+   "t": "2026-10-05T04:44:26.381620+00:00",
+   "total": 20.1,
+   "speech": 20.1,
+   "ratio": 1.0,
+   "main_lang": "ja",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.9,
+     "lang": "ja",
+     "p": 0.99,
+     "text": "家にはまだ接触されていない 食器棚があります"
+    },
+    {
+     "s": 2.9,
+     "e": 4.6,
+     "lang": "ja",
+     "p": 1.0,
+     "text": "これを試してみてください"
+    },
+    {
+     "s": 4.6,
+     "e": 6.8,
+     "lang": "ja",
+     "p": 1.0,
+     "text": "穴を開ける必要はありません"
+    },
+    {
+     "s": 6.8,
+     "e": 9.0,
+     "lang": "ja",
+     "p": 1.0,
+     "text": "このように押すとしっかりしています"
+    },
+    {
+     "s": 9.0,
+     "e": 11.7,
+     "lang": "ja",
+     "p": 0.99,
+     "text": "痛め物の時に料理を用意しておく"
+    },
+    {
+     "s": 11.7,
+     "e": 13.7,
+     "lang": "ja",
+     "p": 0.99,
+     "text": "テーブルスペースを節約できます"
+    },
+    {
+     "s": 13.7,
+     "e": 15.2,
+     "lang": "ja",
+     "p": 0.99,
+     "text": "取り出しも便利です"
+    },
+    {
+     "s": 15.2,
+     "e": 18.2,
+     "lang": "ja",
+     "p": 1.0,
+     "text": "使用しない時は折りたたむことができます"
+    },
+    {
+     "s": 18.2,
+     "e": 20.1,
+     "lang": "ja",
+     "p": 0.99,
+     "text": "台所は綺麗になった"
+    }
+   ]
+  },
+  "10e395093a95": {
+   "h": "10e395093a95",
+   "job": "31e2e44c1c88",
+   "slot": 0,
+   "url": "https://www.tiktok.com/@tamnguyentokyo/video/7570349831940525332?q=%23wallrepairpatch&t=1791174447028",
+   "plat": "tiktok",
+   "dur": 87.8,
+   "t": "2026-10-05T04:38:14.295388+00:00",
+   "total": 87.7,
+   "speech": 25.0,
+   "ratio": 0.29,
+   "main_lang": "vi",
+   "segs": [
+    {
+     "s": 28.0,
+     "e": 31.5,
+     "lang": "vi",
+     "p": 0.96,
+     "text": "Và chí mong trong căn sở anh có thế phốt nhanh lên"
+    },
+    {
+     "s": 31.5,
+     "e": 35.1,
+     "lang": "vi",
+     "p": 0.51,
+     "text": "Tại nhiều thường lần đầu không nói là sao"
+    },
+    {
+     "s": 35.1,
+     "e": 38.4,
+     "lang": "vi",
+     "p": 0.89,
+     "text": "Ngẹn ngạc người trao mỡ ngỡ từ lần gặng ngỡ"
+    },
+    {
+     "s": 38.4,
+     "e": 41.1,
+     "lang": "vi",
+     "p": 0.95,
+     "text": "Giờ lắm thấy khi bên em anh đâu dám trao"
+    },
+    {
+     "s": 41.1,
+     "e": 45.4,
+     "lang": "vi",
+     "p": 0.94,
+     "text": "Vụ anh hạnh phong đã bao lực tiền vội đến khúc hồi đi"
+    },
+    {
+     "s": 45.4,
+     "e": 49.0,
+     "lang": "vi",
+     "p": 0.84,
+     "text": "Trời ngày lứa trao bóng bóng bụng lời bãi tỏ"
+    },
+    {
+     "s": 49.0,
+     "e": 53.0,
+     "lang": "ja",
+     "p": 0.53,
+     "text": "Nói tố sẽ khô vô"
+    }
+   ]
+  },
+  "a5aafec87553": {
+   "h": "a5aafec87553",
+   "job": "31e2e44c1c88",
+   "slot": 1,
+   "url": "https://www.tiktok.com/@marylaurabaker_201062/video/7577978650071502093?q=%23wallrepairpatch&t=1791174447028",
+   "plat": "tiktok",
+   "dur": 24.2,
+   "t": "2026-10-05T04:38:14.295388+00:00",
+   "total": 24.1,
+   "speech": 24.0,
+   "ratio": 0.99,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.1,
+     "lang": "en",
+     "p": 0.99,
+     "text": "Damn! This hole in my wall keeps getting bigger!"
+    },
+    {
+     "s": 3.1,
+     "e": 5.4,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Good thing I have this wall patch sticker!"
+    },
+    {
+     "s": 5.4,
+     "e": 7.4,
+     "lang": "en",
+     "p": 0.99,
+     "text": "Just stick it over the damaged spot!"
+    },
+    {
+     "s": 7.4,
+     "e": 10.5,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Spread a thin layer of the included quick dry spackle!"
+    },
+    {
+     "s": 10.5,
+     "e": 12.6,
+     "lang": "en",
+     "p": 0.99,
+     "text": "The hole disappears like magic!"
+    },
+    {
+     "s": 12.6,
+     "e": 14.5,
+     "lang": "en",
+     "p": 0.99,
+     "text": "It's so easy to do it yourself!"
+    },
+    {
+     "s": 14.5,
+     "e": 16.1,
+     "lang": "en",
+     "p": 0.99,
+     "text": "No need to pay a handyman!"
+    },
+    {
+     "s": 16.1,
+     "e": 17.9,
+     "lang": "en",
+     "p": 0.99,
+     "text": "And right now shipping is free!"
+    },
+    {
+     "s": 17.9,
+     "e": 20.9,
+     "lang": "en",
+     "p": 1.0,
+     "text": "The whole kit only costs as much as a couple of burgers!"
+    },
+    {
+     "s": 20.9,
+     "e": 21.9,
+     "lang": "en",
+     "p": 0.99,
+     "text": "Don't miss out!"
+    },
+    {
+     "s": 21.9,
+     "e": 24.0,
+     "lang": "en",
+     "p": 0.99,
+     "text": "Grab it through the link down below!"
+    }
+   ]
+  },
+  "6cc9a946cac6": {
+   "h": "6cc9a946cac6",
+   "job": "04f2f4530a88",
+   "slot": 0,
+   "url": "https://www.instagram.com/p/DdobyEnMZVP/",
+   "plat": "instagram",
+   "dur": 24.6,
+   "t": "2026-10-05T04:34:55.947444+00:00",
+   "total": 24.5,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "171f9ff7a437": {
+   "h": "171f9ff7a437",
+   "job": "04f2f4530a88",
+   "slot": 1,
+   "url": "https://www.douyin.com/video/7668904816689670906",
+   "plat": "douyin",
+   "dur": 44.4,
+   "t": "2026-10-05T04:34:55.947444+00:00",
+   "total": 44.3,
+   "speech": 44.2,
+   "ratio": 1.0,
+   "main_lang": "zh",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.7,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "哈哈我去,开学前不买比带的家长你们嘴是真言的"
+    },
+    {
+     "s": 3.7,
+     "e": 6.6,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "原来都是在假期淡季好品牌文具的大羊毛啊"
+    },
+    {
+     "s": 6.6,
+     "e": 9.3,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "之前这个卖贝家的比带都能贵到买个书包了"
+    },
+    {
+     "s": 9.3,
+     "e": 11.9,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "幸亏没舍得买,现在这也太合适了"
+    },
+    {
+     "s": 11.9,
+     "e": 13.9,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "关键它防水防污的面料"
+    },
+    {
+     "s": 13.9,
+     "e": 16.4,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "不管里面外面脏了,随便擦擦就干净"
+    },
+    {
+     "s": 16.4,
+     "e": 18.9,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "再也不用三天两头的给熊孩子洗比带了"
+    },
+    {
+     "s": 18.9,
+     "e": 21.0,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "加厚的面料耐磨又耐刮"
+    },
+    {
+     "s": 21.0,
+     "e": 23.1,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "里面加大的空间不仅特别能装"
+    },
+    {
+     "s": 23.1,
+     "e": 26.6,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "科学分区的胸纳设计能轻松装下几十只比"
+    },
+    {
+     "s": 26.6,
+     "e": 30.1,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "中间隔层放一些小物件,两侧隔层放千笔橡皮"
+    },
+    {
+     "s": 30.1,
+     "e": 32.2,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "旁边插兜放直持剪刀之类的"
+    },
+    {
+     "s": 32.2,
+     "e": 36.4,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "打开可以180度摊在桌面上,找起闻具来一目了然"
+    },
+    {
+     "s": 36.4,
+     "e": 38.2,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "细节做工质感也是没得说"
+    },
+    {
+     "s": 38.2,
+     "e": 40.1,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "拉链拉起来也是巨丝滑"
+    },
+    {
+     "s": 40.1,
+     "e": 43.3,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "趁着现在还有货,开学想给孩子选一款耐用的笔带的"
+    },
+    {
+     "s": 43.3,
+     "e": 44.2,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "就是现在冲"
+    }
+   ]
+  },
+  "5eb0539c34ef": {
+   "h": "5eb0539c34ef",
+   "job": "1df29c3398a7",
+   "slot": 0,
+   "url": "https://www.instagram.com/p/DasD3TYoRFE/",
+   "plat": "instagram",
+   "dur": 8.2,
+   "t": "2026-10-05T03:45:30.981926+00:00",
+   "total": 8.1,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "664fd1951acf": {
+   "h": "664fd1951acf",
+   "job": "1df29c3398a7",
+   "slot": 1,
+   "url": "https://www.instagram.com/p/Db8c9uHg5du/",
+   "plat": "instagram",
+   "dur": 10.5,
+   "t": "2026-10-05T03:45:30.981926+00:00",
+   "total": 10.4,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "24d7eb89052a": {
+   "h": "24d7eb89052a",
+   "job": "b360ff555115",
+   "slot": 0,
+   "url": "https://www.tiktok.com/@willow_x15/video/7679063205863296270",
+   "plat": "tiktok",
+   "dur": 27.7,
+   "t": "2026-10-05T02:35:16.356784+00:00",
+   "total": 27.6,
+   "speech": 27.5,
+   "ratio": 1.0,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Tired of stressing over overnight phone charging, damaging your battery?"
+    },
+    {
+     "s": 3.2,
+     "e": 4.9,
+     "lang": "en",
+     "p": 0.99,
+     "text": "Check out this smart charger."
+    },
+    {
+     "s": 4.9,
+     "e": 7.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Plug in your device and you can walk away."
+    },
+    {
+     "s": 7.2,
+     "e": 10.6,
+     "lang": "en",
+     "p": 1.0,
+     "text": "It physically cuts power once your battery hits 100%."
+    },
+    {
+     "s": 10.6,
+     "e": 13.8,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Eliminating overcharging risks that shorten battery life."
+    },
+    {
+     "s": 13.8,
+     "e": 19.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Plus it supports up to 140 watts fast charging for quick top ups when you're low and works"
+    },
+    {
+     "s": 19.0,
+     "e": 22.5,
+     "lang": "en",
+     "p": 0.99,
+     "text": "with phones, iPads, cameras, wireless earbuds and more."
+    },
+    {
+     "s": 22.5,
+     "e": 25.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Keep your devices batteries healthy long term."
+    },
+    {
+     "s": 25.0,
+     "e": 27.5,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Grab yours via the link below before stock runs out."
+    }
+   ]
+  },
+  "578994a1db4a": {
+   "h": "578994a1db4a",
+   "job": "b360ff555115",
+   "slot": 1,
+   "url": "https://www.instagram.com/reel/DdVswCHgwig/",
+   "plat": "instagram",
+   "dur": 15.7,
+   "t": "2026-10-05T02:35:16.356784+00:00",
+   "total": 15.6,
+   "speech": 15.0,
+   "ratio": 0.96,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.0,
+     "lang": "de",
+     "p": 0.38,
+     "text": "I'm in for your freedom, I'm not lying, yeah"
+    },
+    {
+     "s": 4.0,
+     "e": 13.0,
+     "lang": "en",
+     "p": 0.41,
+     "text": "I'm in for the future, I'm in for the future, I'm in for the future"
+    },
+    {
+     "s": 13.0,
+     "e": 15.0,
+     "lang": "en",
+     "p": 0.47,
+     "text": "It's been my life"
+    }
+   ]
+  },
+  "d86608dac217": {
+   "h": "d86608dac217",
+   "job": "4e578b6a4898",
+   "slot": 0,
+   "url": "https://www.tiktok.com/@rogondat/video/7690890059297344782",
+   "plat": "tiktok",
+   "dur": 49.3,
+   "t": "2026-10-05T02:18:24.364766+00:00",
+   "total": 49.2,
+   "speech": 48.2,
+   "ratio": 0.98,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Whenever I hit the road, I make sure this little tech kit is in my bag."
+    },
+    {
+     "s": 4.2,
+     "e": 8.8,
+     "lang": "en",
+     "p": 1.0,
+     "text": "It's tiny, but it packs all those random little tech things you somehow end up needing"
+    },
+    {
+     "s": 8.8,
+     "e": 10.1,
+     "lang": "en",
+     "p": 0.98,
+     "text": "when you travel."
+    },
+    {
+     "s": 10.1,
+     "e": 16.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "You get a USB-C cable, plus USB, lightning, and micro USB adapters."
+    },
+    {
+     "s": 16.0,
+     "e": 20.3,
+     "lang": "en",
+     "p": 1.0,
+     "text": "So whether you need to charge something or transfer files, you've pretty much got every"
+    },
+    {
+     "s": 20.3,
+     "e": 21.8,
+     "lang": "en",
+     "p": 0.99,
+     "text": "connection covered."
+    },
+    {
+     "s": 21.8,
+     "e": 27.1,
+     "lang": "en",
+     "p": 1.0,
+     "text": "It even has a little SIM pin, plus dedicated slots to store your SIM card and TF card, so"
+    },
+    {
+     "s": 27.1,
+     "e": 30.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "So you're not losing those tiny things in your bag."
+    },
+    {
+     "s": 30.0,
+     "e": 33.9,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Pull this part out and you can prop your phone up as a phone stand."
+    },
+    {
+     "s": 33.9,
+     "e": 38.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Everything packs right back into this tiny little case, and you can literally hang it"
+    },
+    {
+     "s": 38.2,
+     "e": 39.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "on your bag."
+    },
+    {
+     "s": 39.2,
+     "e": 42.4,
+     "lang": "en",
+     "p": 1.0,
+     "text": "It's basically an emergency tech kit for traveling."
+    },
+    {
+     "s": 42.4,
+     "e": 47.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "If you're someone who always ends up needing some random cable or adapter on a trip, I'll"
+    },
+    {
+     "s": 47.0,
+     "e": 48.2,
+     "lang": "en",
+     "p": 0.99,
+     "text": "leave the link right below."
+    }
+   ]
+  },
+  "c39a8785f607": {
+   "h": "c39a8785f607",
+   "job": "4e578b6a4898",
+   "slot": 1,
+   "url": "https://www.tiktok.com/@mark.hughes216/video/7692029541816044831",
+   "plat": "tiktok",
+   "dur": 27.1,
+   "t": "2026-10-05T02:18:24.364766+00:00",
+   "total": 27.0,
+   "speech": 26.6,
+   "ratio": 0.99,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "This little thing doesn't look like much, but when you need it, it can seriously save the day."
+    },
+    {
+     "s": 4.2,
+     "e": 7.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "It packs all those tiny tools you can never find when you need them."
+    },
+    {
+     "s": 7.2,
+     "e": 12.7,
+     "lang": "en",
+     "p": 1.0,
+     "text": "You get micro USB, lightning and USB-A adapters making charging and data transfer super easy."
+    },
+    {
+     "s": 12.7,
+     "e": 16.6,
+     "lang": "en",
+     "p": 1.0,
+     "text": "There's also a SIM ejector tool, a TF card slot and SIM card storage."
+    },
+    {
+     "s": 16.6,
+     "e": 20.9,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Even the lanyard is a braided charging cable and the case itself doubles as a phone stand."
+    },
+    {
+     "s": 20.9,
+     "e": 23.2,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Just clip it onto your bag and you're ready to go."
+    },
+    {
+     "s": 23.2,
+     "e": 26.6,
+     "lang": "en",
+     "p": 0.99,
+     "text": "And the best part, it's way cheaper than you'd expect. The link is right below."
+    }
+   ]
+  },
+  "e0ecd2c193cf": {
+   "h": "e0ecd2c193cf",
+   "job": "0f63e3f4b67d",
+   "slot": 0,
+   "url": "https://www.youtube.com/shorts/znXHN68K19w",
+   "plat": "youtube",
+   "dur": 57.0,
+   "t": "2026-10-05T02:12:25.628499+00:00",
+   "total": 56.9,
+   "speech": 56.6,
+   "ratio": 0.99,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 6.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "These safety glasses have a hidden feature that I've never seen before in a pair of safety glasses."
+    },
+    {
+     "s": 6.0,
+     "e": 12.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "These are called Lucid Armor Smart Safety Glasses and if I'm going to take a sponsorship from a safety glass company,"
+    },
+    {
+     "s": 12.0,
+     "e": 14.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "I'm going to put it to the test."
+    },
+    {
+     "s": 14.0,
+     "e": 22.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "We had an array of different types of nails, from pin nails to 16 gauge nails, wood nails, roofing nails,"
+    },
+    {
+     "s": 22.0,
+     "e": 27.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "sighting nails, and of course finally the 16-penny framing nail."
+    },
+    {
+     "s": 27.0,
+     "e": 30.5,
+     "lang": "en",
+     "p": 1.0,
+     "text": "But the best thing about these glasses is that they're Bluetooth capable, which means"
+    },
+    {
+     "s": 30.5,
+     "e": 34.8,
+     "lang": "en",
+     "p": 0.99,
+     "text": "that you can take phone calls and listen to your music or podcasts."
+    },
+    {
+     "s": 34.8,
+     "e": 38.6,
+     "lang": "en",
+     "p": 0.99,
+     "text": "It's actually pretty impressive with how good the sound is with these because they're positioned"
+    },
+    {
+     "s": 38.6,
+     "e": 40.8,
+     "lang": "en",
+     "p": 1.0,
+     "text": "so perfectly right here."
+    },
+    {
+     "s": 40.8,
+     "e": 45.3,
+     "lang": "en",
+     "p": 0.99,
+     "text": "This is where the speaker is coming in and therefore if you take them away, I can't even"
+    },
+    {
+     "s": 45.3,
+     "e": 48.7,
+     "lang": "en",
+     "p": 0.99,
+     "text": "hear them when they're right here in front of the camera."
+    },
+    {
+     "s": 48.7,
+     "e": 52.7,
+     "lang": "en",
+     "p": 0.99,
+     "text": "Pretty impressive with the fact that it's so nice and accurate and the fact that you're"
+    },
+    {
+     "s": 52.7,
+     "e": 56.6,
+     "lang": "en",
+     "p": 1.0,
+     "text": "not going to bug your coworkers at the job site with your ridiculous music."
+    }
+   ]
+  },
+  "951750cf580a": {
+   "h": "951750cf580a",
+   "job": "0f63e3f4b67d",
+   "slot": 1,
+   "url": "https://www.youtube.com/shorts/z5_cXbVSEYo",
+   "plat": "youtube",
+   "dur": 59.9,
+   "t": "2026-10-05T02:12:25.628499+00:00",
+   "total": 59.9,
+   "speech": 57.1,
+   "ratio": 0.95,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.6,
+     "lang": "en",
+     "p": 0.81,
+     "text": "Oh no no no no no look out!"
+    },
+    {
+     "s": 2.6,
+     "e": 4.3,
+     "lang": "ko",
+     "p": 0.59,
+     "text": "Ohhhh!"
+    },
+    {
+     "s": 4.3,
+     "e": 8.3,
+     "lang": "en",
+     "p": 1.0,
+     "text": "That ladder's gonna nail me in the back and I don't even hear the warning because I have my earbuds in."
+    },
+    {
+     "s": 8.3,
+     "e": 11.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "But let's see what would happen if I replaced the earbuds with these."
+    },
+    {
+     "s": 11.0,
+     "e": 13.7,
+     "lang": "en",
+     "p": 1.0,
+     "text": "ANSI certified smart safety glasses."
+    },
+    {
+     "s": 13.7,
+     "e": 16.6,
+     "lang": "en",
+     "p": 0.98,
+     "text": "That way I can still listen to music and hear what's going on around."
+    },
+    {
+     "s": 16.6,
+     "e": 18.6,
+     "lang": "en",
+     "p": 0.74,
+     "text": "No no no! Look out! Look out!"
+    },
+    {
+     "s": 21.2,
+     "e": 22.4,
+     "lang": "en",
+     "p": 0.98,
+     "text": "That would hurt."
+    },
+    {
+     "s": 22.4,
+     "e": 25.8,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Now I'm 20 feet up a ladder and my wife's calling because I forgot to text her back."
+    },
+    {
+     "s": 25.8,
+     "e": 27.4,
+     "lang": "en",
+     "p": 0.99,
+     "text": "I better answer this before I get in trouble."
+    },
+    {
+     "s": 27.4,
+     "e": 30.7,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Hey babe, sorry I forgot to text you back."
+    },
+    {
+     "s": 30.7,
+     "e": 33.4,
+     "lang": "en",
+     "p": 0.99,
+     "text": "How about this situation, the noisy job site?"
+    },
+    {
+     "s": 33.4,
+     "e": 34.4,
+     "lang": "en",
+     "p": 0.22,
+     "text": "Could you-"
+    },
+    {
+     "s": 34.4,
+     "e": 35.4,
+     "lang": "en",
+     "p": 0.58,
+     "text": "What?"
+    },
+    {
+     "s": 35.4,
+     "e": 37.6,
+     "lang": "en",
+     "p": 0.94,
+     "text": "I can't hear you!"
+    },
+    {
+     "s": 37.6,
+     "e": 40.4,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Or I could use the built-in walkie-talkie feature."
+    },
+    {
+     "s": 40.4,
+     "e": 41.4,
+     "lang": "en",
+     "p": 0.98,
+     "text": "Could you throw me up a two-vitar?"
+    },
+    {
+     "s": 41.4,
+     "e": 43.9,
+     "lang": "en",
+     "p": 0.97,
+     "text": "There's no problem, let me grab that for you."
+    },
+    {
+     "s": 43.9,
+     "e": 44.9,
+     "lang": "en",
+     "p": 0.98,
+     "text": "And you know what else is cool?"
+    },
+    {
+     "s": 44.9,
+     "e": 46.6,
+     "lang": "en",
+     "p": 1.0,
+     "text": "These are voice activated for AI."
+    },
+    {
+     "s": 46.6,
+     "e": 47.6,
+     "lang": "en",
+     "p": 0.97,
+     "text": "Hey Siri."
+    },
+    {
+     "s": 47.6,
+     "e": 50.2,
+     "lang": "en",
+     "p": 0.99,
+     "text": "Why is my co-worker always asking me to give him things?"
+    },
+    {
+     "s": 50.2,
+     "e": 52.6,
+     "lang": "en",
+     "p": 0.97,
+     "text": "That is because he is lazy."
+    },
+    {
+     "s": 52.6,
+     "e": 53.6,
+     "lang": "en",
+     "p": 0.99,
+     "text": "Alright."
+    },
+    {
+     "s": 53.6,
+     "e": 56.3,
+     "lang": "en",
+     "p": 1.0,
+     "text": "If you want to know more about these armor safety glasses from Lucid you can find the"
+    },
+    {
+     "s": 56.3,
+     "e": 59.7,
+     "lang": "en",
+     "p": 1.0,
+     "text": "the link in my bio or comment the word armor and I'll send you the link."
+    }
+   ]
+  },
+  "d14ae54b7c6c": {
+   "h": "d14ae54b7c6c",
+   "job": "447040939e99",
+   "slot": 0,
+   "url": "https://www.rednote.com/discovery/item/6957577f000000001e016c11?xsec_token=ABiZTPqwKk2ONqEEuePSpne54odC3r9PA9lzj6jUSSpOo=&xsec_source=pc_search",
+   "plat": "other",
+   "dur": 12.6,
+   "t": "2026-10-05T01:43:07.631228+00:00",
+   "total": 12.5,
+   "speech": 11.6,
+   "ratio": 0.93,
+   "main_lang": "zh",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.0,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "現在出門我已經離不開它了"
+    },
+    {
+     "s": 2.0,
+     "e": 3.4,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "它一頭滾豬出業"
+    },
+    {
+     "s": 3.4,
+     "e": 5.2,
+     "lang": "zh",
+     "p": 0.97,
+     "text": "另外一頭模擬手部揉搓"
+    },
+    {
+     "s": 5.2,
+     "e": 6.7,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "輕輕鬆鬆解決油污"
+    },
+    {
+     "s": 6.7,
+     "e": 9.0,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "太適合冬天的各種羽絨服大衣了"
+    },
+    {
+     "s": 9.0,
+     "e": 10.6,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "包包包上隨時都能用"
+    },
+    {
+     "s": 10.6,
+     "e": 11.6,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "太方便了"
+    }
+   ]
+  },
+  "73354652be74": {
+   "h": "73354652be74",
+   "job": "447040939e99",
+   "slot": 1,
+   "url": "https://www.douyin.com/video/7495744704249253132",
+   "plat": "douyin",
+   "dur": 34.6,
+   "t": "2026-10-05T01:43:07.631228+00:00",
+   "total": 34.5,
+   "speech": 31.0,
+   "ratio": 0.9,
+   "main_lang": "zh",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 0.8,
+     "lang": "zh",
+     "p": 0.93,
+     "text": "吃饭嘴巴喽"
+    },
+    {
+     "s": 0.8,
+     "e": 2.0,
+     "lang": "zh",
+     "p": 0.97,
+     "text": "还爱穿浅色衣服的"
+    },
+    {
+     "s": 2.0,
+     "e": 3.6,
+     "lang": "zh",
+     "p": 0.98,
+     "text": "一定要背上这根去字笔"
+    },
+    {
+     "s": 3.6,
+     "e": 4.7,
+     "lang": "zh",
+     "p": 0.96,
+     "text": "你看我刚吃完饭"
+    },
+    {
+     "s": 4.7,
+     "e": 5.8,
+     "lang": "zh",
+     "p": 0.94,
+     "text": "又崩了一身油"
+    },
+    {
+     "s": 5.8,
+     "e": 6.7,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "平时跟我一样"
+    },
+    {
+     "s": 6.7,
+     "e": 7.4,
+     "lang": "zh",
+     "p": 0.93,
+     "text": "爱缩面"
+    },
+    {
+     "s": 7.4,
+     "e": 8.0,
+     "lang": "zh",
+     "p": 0.96,
+     "text": "爱吃火锅"
+    },
+    {
+     "s": 8.0,
+     "e": 8.8,
+     "lang": "zh",
+     "p": 0.94,
+     "text": "螺丝粉啥的"
+    },
+    {
+     "s": 8.8,
+     "e": 10.0,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "你就可以把它背起来"
+    },
+    {
+     "s": 10.0,
+     "e": 10.5,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "你看"
+    },
+    {
+     "s": 10.5,
+     "e": 11.8,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "三两下就搞干净了"
+    },
+    {
+     "s": 11.8,
+     "e": 13.1,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "用法也是特别简单"
+    },
+    {
+     "s": 13.1,
+     "e": 14.9,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "拿一张纸垫在这个油字下面"
+    },
+    {
+     "s": 14.9,
+     "e": 16.3,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "真的就是即时去字"
+    },
+    {
+     "s": 16.3,
+     "e": 17.2,
+     "lang": "zh",
+     "p": 0.98,
+     "text": "特别好用"
+    },
+    {
+     "s": 17.2,
+     "e": 18.3,
+     "lang": "zh",
+     "p": 0.98,
+     "text": "再用这边的小刷子"
+    },
+    {
+     "s": 18.3,
+     "e": 19.1,
+     "lang": "zh",
+     "p": 0.74,
+     "text": "再刷一刷"
+    },
+    {
+     "s": 19.1,
+     "e": 20.8,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "油字就全在这张纸上了"
+    },
+    {
+     "s": 20.8,
+     "e": 21.9,
+     "lang": "zh",
+     "p": 0.93,
+     "text": "夏天穿浅色衣服"
+    },
+    {
+     "s": 21.9,
+     "e": 23.4,
+     "lang": "zh",
+     "p": 0.97,
+     "text": "油字特别容易崩到身上"
+    },
+    {
+     "s": 23.4,
+     "e": 25.0,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "有了它真的能省不少事"
+    },
+    {
+     "s": 25.0,
+     "e": 26.5,
+     "lang": "zh",
+     "p": 0.96,
+     "text": "我现在出门都随身带着"
+    },
+    {
+     "s": 30.0,
+     "e": 31.0,
+     "lang": "zh",
+     "p": 0.94,
+     "text": "看相比也很好看"
+    },
+    {
+     "s": 31.0,
+     "e": 32.5,
+     "lang": "zh",
+     "p": 0.98,
+     "text": "現在拍兩隻是更划算"
+    },
+    {
+     "s": 32.5,
+     "e": 34.5,
+     "lang": "zh",
+     "p": 0.98,
+     "text": "家裡放一隻出門在外背上一隻"
+    }
+   ]
+  },
+  "62dd7cdec5af": {
+   "h": "62dd7cdec5af",
+   "job": "154a13e5f3c1",
+   "slot": 0,
+   "url": "https://www.instagram.com/p/Dc9gyd6zE5P/",
+   "plat": "instagram",
+   "dur": 29.2,
+   "t": "2026-10-05T01:24:54.784960+00:00",
+   "total": 29.1,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "42fcbe72af48": {
+   "h": "42fcbe72af48",
+   "job": "154a13e5f3c1",
+   "slot": 1,
+   "url": "https://www.instagram.com/p/DK24AsYi80z/",
+   "plat": "instagram",
+   "dur": 11.7,
+   "t": "2026-10-05T01:24:54.784960+00:00",
+   "total": 11.6,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "5efb481e813e": {
+   "h": "5efb481e813e",
+   "job": "135c5bf1d831",
+   "slot": 0,
+   "url": "https://www.pinterest.com/pin/4602256715237139520/",
+   "plat": "other",
+   "dur": 19.8,
+   "t": "2026-10-05T00:27:36.508993+00:00",
+   "total": 19.7,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "b93c9ad2f90a": {
+   "h": "b93c9ad2f90a",
+   "job": "135c5bf1d831",
+   "slot": 1,
+   "url": "https://www.instagram.com/reel/DURLTbQEvRq/",
+   "plat": "instagram",
+   "dur": 15.2,
+   "t": "2026-10-05T00:27:36.508993+00:00",
+   "total": 15.1,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "87129f25eda2": {
+   "h": "87129f25eda2",
+   "job": "aea11ae60716",
+   "slot": 0,
+   "url": "https://www.instagram.com/p/DXQnANRE3X3/",
+   "plat": "instagram",
+   "dur": 12.9,
+   "t": "2026-10-04T23:38:01.597374+00:00",
+   "total": 12.8,
+   "speech": 12.8,
+   "ratio": 1.0,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 5.4,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "저 와플 기계를 샀는데 와플은 한 장도 안 굽고 매일 감자만 구워 먹어요"
+    },
+    {
+     "s": 5.4,
+     "e": 6.7,
+     "lang": "ko",
+     "p": 0.44,
+     "text": "크리스피하고 좀 보소"
+    },
+    {
+     "s": 6.7,
+     "e": 11.0,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "아보카도 올리고 반숙까지 올려주면"
+    },
+    {
+     "s": 11.0,
+     "e": 12.8,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "이거 미쳐버립니다 진짜"
+    }
+   ]
+  },
+  "a58996f122b4": {
+   "h": "a58996f122b4",
+   "job": "aea11ae60716",
+   "slot": 1,
+   "url": "https://www.tiktok.com/@clevra_uk/video/7608885469652290838",
+   "plat": "tiktok",
+   "dur": 14.9,
+   "t": "2026-10-04T23:38:01.597374+00:00",
+   "total": 14.9,
+   "speech": 12.2,
+   "ratio": 0.82,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 12.2,
+     "lang": "en",
+     "p": 0.89,
+     "text": "Many fast and easy Lincoln Bio!"
+    }
+   ]
+  },
+  "07558871cb3e": {
+   "h": "07558871cb3e",
+   "job": "3967ecbb97eb",
+   "slot": 2,
+   "url": "https://www.instagram.com/reel/DZ7regAsF7o/?hl=en",
+   "plat": "instagram",
+   "dur": 26.4,
+   "t": "2026-10-04T17:16:18.979902+00:00",
+   "total": 26.3,
+   "speech": 26.3,
+   "ratio": 1.0,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 1.6,
+     "lang": "en",
+     "p": 0.49,
+     "text": "Well, I bought another Casio."
+    },
+    {
+     "s": 1.6,
+     "e": 4.5,
+     "lang": "en",
+     "p": 0.95,
+     "text": "Been on the fence about this one, the price was right and I pulled it."
+    },
+    {
+     "s": 4.5,
+     "e": 7.0,
+     "lang": "en",
+     "p": 0.91,
+     "text": "This is the classic AE 1200 1BVDF."
+    },
+    {
+     "s": 7.0,
+     "e": 8.9,
+     "lang": "en",
+     "p": 0.95,
+     "text": "Out of the box, into my hands and I was smitten."
+    },
+    {
+     "s": 8.9,
+     "e": 10.8,
+     "lang": "en",
+     "p": 0.99,
+     "text": "This one comes with all the standard world timer functions."
+    },
+    {
+     "s": 10.8,
+     "e": 12.4,
+     "lang": "en",
+     "p": 0.88,
+     "text": "The green world map is to die for."
+    },
+    {
+     "s": 12.4,
+     "e": 16.2,
+     "lang": "en",
+     "p": 0.99,
+     "text": "The gold accents on the black resin case is a clever design choice, making it a compelling"
+    },
+    {
+     "s": 16.2,
+     "e": 17.2,
+     "lang": "en",
+     "p": 0.89,
+     "text": "offering."
+    },
+    {
+     "s": 17.2,
+     "e": 20.8,
+     "lang": "en",
+     "p": 0.96,
+     "text": "For the right comparison, here it is, put side by side with the viral AE 1200 WHL."
+    },
+    {
+     "s": 20.8,
+     "e": 23.5,
+     "lang": "en",
+     "p": 0.96,
+     "text": "Now I do enjoy the beige and brown, but the black and gold hits different."
+    },
+    {
+     "s": 23.5,
+     "e": 25.0,
+     "lang": "en",
+     "p": 0.89,
+     "text": "I got mine for 2100."
+    },
+    {
+     "s": 25.0,
+     "e": 26.3,
+     "lang": "en",
+     "p": 0.99,
+     "text": "Let me know which one would you choose."
+    }
+   ]
+  },
+  "673d3d923c25": {
+   "h": "673d3d923c25",
+   "job": "3967ecbb97eb",
+   "slot": 3,
+   "url": "https://www.instagram.com/reel/DXQ0TIgDNes/?hl=en",
+   "plat": "instagram",
+   "dur": 43.2,
+   "t": "2026-10-04T17:16:18.979902+00:00",
+   "total": 43.1,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "jw",
+   "segs": []
+  },
+  "dc49805004c7": {
+   "h": "dc49805004c7",
+   "job": "1178c3f7a7df",
+   "slot": 0,
+   "url": "https://www.douyin.com/video/7437814421902167334",
+   "plat": "douyin",
+   "dur": 96.7,
+   "t": "2026-10-04T16:24:15.908560+00:00",
+   "total": 96.6,
+   "speech": 94.8,
+   "ratio": 0.98,
+   "main_lang": "zh",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.0,
+     "lang": "zh",
+     "p": 0.98,
+     "text": "不要看这个运烫机特别迷你"
+    },
+    {
+     "s": 2.0,
+     "e": 5.1,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "感觉没有满月就出门出社会就打工了"
+    },
+    {
+     "s": 5.1,
+     "e": 5.7,
+     "lang": "ko",
+     "p": 0.4,
+     "text": "对不对"
+    },
+    {
+     "s": 5.7,
+     "e": 8.8,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "那为什么要给你们推这种这么小的一个运烫机"
+    },
+    {
+     "s": 8.8,
+     "e": 11.6,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "像我们出门旅游的时候出差的时候"
+    },
+    {
+     "s": 11.6,
+     "e": 13.4,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "弄个大运动不好携带嘛"
+    },
+    {
+     "s": 13.4,
+     "e": 14.0,
+     "lang": "en",
+     "p": 0.67,
+     "text": "对不对"
+    },
+    {
+     "s": 14.0,
+     "e": 16.1,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "放行李箱里头能用一站地方"
+    },
+    {
+     "s": 16.1,
+     "e": 18.3,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "特别是女生出门在外"
+    },
+    {
+     "s": 18.3,
+     "e": 20.4,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "最大行李箱里面最多的东西"
+    },
+    {
+     "s": 20.4,
+     "e": 21.8,
+     "lang": "zh",
+     "p": 0.98,
+     "text": "是不是都是衣服的宝贝"
+    },
+    {
+     "s": 21.8,
+     "e": 23.4,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "因为我们要拍照好看"
+    },
+    {
+     "s": 23.4,
+     "e": 25.0,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "那衣服就带得多嘛"
+    },
+    {
+     "s": 25.0,
+     "e": 25.8,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "但是衣服呢"
+    },
+    {
+     "s": 25.8,
+     "e": 27.5,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "塞满行李箱拿出来都是皱的"
+    },
+    {
+     "s": 27.5,
+     "e": 29.0,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "不运运怎么行"
+    },
+    {
+     "s": 29.0,
+     "e": 30.0,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "就像现在呢"
+    },
+    {
+     "s": 30.0,
+     "e": 30.8,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "你们拍个照"
+    },
+    {
+     "s": 30.8,
+     "e": 32.1,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "脸上的瑕疵可以修"
+    },
+    {
+     "s": 32.1,
+     "e": 34.8,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "那衣服大面积的这些折腾痕迹是没有办法修的"
+    },
+    {
+     "s": 34.8,
+     "e": 35.5,
+     "lang": "ko",
+     "p": 0.28,
+     "text": "对不对"
+    },
+    {
+     "s": 35.5,
+     "e": 37.4,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "那衣服一皱就很没有质感"
+    },
+    {
+     "s": 37.4,
+     "e": 39.0,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "那运烫机就很需要"
+    },
+    {
+     "s": 39.0,
+     "e": 40.1,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "你不要看它小"
+    },
+    {
+     "s": 40.1,
+     "e": 41.9,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "它可是出门必备神器"
+    },
+    {
+     "s": 41.9,
+     "e": 44.2,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "因为它全部都是特抚龙的面板"
+    },
+    {
+     "s": 44.2,
+     "e": 46.6,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "运烫丝滑不用担心上衣服"
+    },
+    {
+     "s": 46.6,
+     "e": 48.6,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "包括这个地方有个美人街设计"
+    },
+    {
+     "s": 48.6,
+     "e": 50.8,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "可以照顾到我们的很多衣服细节"
+    },
+    {
+     "s": 50.8,
+     "e": 52.3,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "包括蹭散的拐脚处"
+    },
+    {
+     "s": 52.3,
+     "e": 55.3,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "包括我们的衣领拐脚处都能做到运烫到位"
+    },
+    {
+     "s": 55.3,
+     "e": 58.7,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "其次我们这款是旅行装的便携设运烫机"
+    },
+    {
+     "s": 58.7,
+     "e": 60.4,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "泽点起来更加迷你啊"
+    },
+    {
+     "s": 60.4,
+     "e": 61.4,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "这个有点烫"
+    },
+    {
+     "s": 61.4,
+     "e": 62.1,
+     "lang": "zh",
+     "p": 0.97,
+     "text": "我先不折叠"
+    },
+    {
+     "s": 62.1,
+     "e": 63.2,
+     "lang": "zh",
+     "p": 0.93,
+     "text": "我待会原本折叠"
+    },
+    {
+     "s": 63.2,
+     "e": 65.2,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "我先给你们看在他的一个运烫效果"
+    },
+    {
+     "s": 65.6,
+     "e": 67.2,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "来先给我们演示一下"
+    },
+    {
+     "s": 67.2,
+     "e": 68.7,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "这是皱皱包包的米油筋"
+    },
+    {
+     "s": 68.7,
+     "e": 69.3,
+     "lang": "zh",
+     "p": 0.93,
+     "text": "看到没有"
+    },
+    {
+     "s": 69.3,
+     "e": 70.5,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "我就先运一半吧"
+    },
+    {
+     "s": 71.8,
+     "e": 72.7,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "来开着机是吧"
+    },
+    {
+     "s": 72.7,
+     "e": 73.1,
+     "lang": "zh",
+     "p": 0.72,
+     "text": "是的"
+    },
+    {
+     "s": 73.1,
+     "e": 73.9,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "来我给你们看一下"
+    },
+    {
+     "s": 73.9,
+     "e": 75.0,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "我就先运一半"
+    },
+    {
+     "s": 75.0,
+     "e": 76.3,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "给你们看一下"
+    },
+    {
+     "s": 76.3,
+     "e": 77.8,
+     "lang": "zh",
+     "p": 0.96,
+     "text": "真的还是真的可以运"
+    },
+    {
+     "s": 77.8,
+     "e": 79.7,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "特别是直播间的把我们快过年了"
+    },
+    {
+     "s": 79.7,
+     "e": 82.1,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "如果说你要去回老家的"
+    },
+    {
+     "s": 82.1,
+     "e": 84.2,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "要见同学聚会"
+    },
+    {
+     "s": 84.2,
+     "e": 86.7,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "你看你的运烫机带的特别大"
+    },
+    {
+     "s": 86.7,
+     "e": 88.1,
+     "lang": "zh",
+     "p": 0.96,
+     "text": "又运的不好吗"
+    },
+    {
+     "s": 88.1,
+     "e": 88.6,
+     "lang": "zh",
+     "p": 0.65,
+     "text": "特别大"
+    },
+    {
+     "s": 88.6,
+     "e": 89.7,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "你又不方便去携带"
+    },
+    {
+     "s": 89.7,
+     "e": 90.2,
+     "lang": "zh",
+     "p": 0.51,
+     "text": "这位置呢"
+    },
+    {
+     "s": 90.2,
+     "e": 91.4,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "你看这个运烫机"
+    },
+    {
+     "s": 91.4,
+     "e": 92.6,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "好神奇啊"
+    },
+    {
+     "s": 92.6,
+     "e": 93.6,
+     "lang": "zh",
+     "p": 0.95,
+     "text": "平整吗"
+    },
+    {
+     "s": 93.6,
+     "e": 94.6,
+     "lang": "zh",
+     "p": 0.99,
+     "text": "这一边是运过的"
+    },
+    {
+     "s": 94.6,
+     "e": 95.8,
+     "lang": "zh",
+     "p": 1.0,
+     "text": "这一边是没有运过的"
+    },
+    {
+     "s": 95.8,
+     "e": 96.5,
+     "lang": "zh",
+     "p": 0.93,
+     "text": "这边好明显"
+    }
+   ]
+  },
+  "56521842ae5b": {
+   "h": "56521842ae5b",
+   "job": "1178c3f7a7df",
+   "slot": 1,
+   "url": "https://www.douyin.com/video/7670160177123032738",
+   "plat": "douyin",
+   "dur": 16.5,
+   "t": "2026-10-04T16:24:15.908560+00:00",
+   "total": 16.3,
+   "speech": 16.2,
+   "ratio": 0.99,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.2,
+     "lang": "ko",
+     "p": 0.94,
+     "text": "아니 회사에서 일본으로 출장을 왔는데"
+    },
+    {
+     "s": 2.2,
+     "e": 4.8,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "같이 온 동료가 캐리어에서 이걸 꺼내는 거예요"
+    },
+    {
+     "s": 4.8,
+     "e": 7.1,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "후바닥보다 작은데 이게 다림이라는데"
+    },
+    {
+     "s": 7.1,
+     "e": 9.0,
+     "lang": "ko",
+     "p": 0.95,
+     "text": "전원을 기니 순식간에 예열되고"
+    },
+    {
+     "s": 9.0,
+     "e": 11.2,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "구겨진 서치가 쫙 펴지니 너무 신기해"
+    },
+    {
+     "s": 11.2,
+     "e": 12.9,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "작고 가볍지만 기능은 최고"
+    },
+    {
+     "s": 12.9,
+     "e": 15.1,
+     "lang": "ko",
+     "p": 0.97,
+     "text": "가방에 쏘옥 여행갈 때 꼭 챙기세요"
+    },
+    {
+     "s": 15.1,
+     "e": 16.2,
+     "lang": "ko",
+     "p": 0.96,
+     "text": "링크 공유할게요"
+    }
+   ]
+  },
+  "e6c3b9fcd2c3": {
+   "h": "e6c3b9fcd2c3",
+   "job": "338457d3c4ac",
+   "slot": 4,
+   "url": "https://www.instagram.com/reel/Dd-3NRxR1ar/",
+   "plat": "instagram",
+   "dur": 11.8,
+   "t": "2026-10-04T16:17:43.189043+00:00",
+   "total": 11.7,
+   "speech": 11.6,
+   "ratio": 0.99,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.8,
+     "lang": "en",
+     "p": 0.73,
+     "text": "Water really means to live life golden"
+    },
+    {
+     "s": 2.8,
+     "e": 6.2,
+     "lang": "en",
+     "p": 0.66,
+     "text": "And we're golden, baby, we're golden"
+    },
+    {
+     "s": 6.2,
+     "e": 9.4,
+     "lang": "en",
+     "p": 0.53,
+     "text": "Yeah, about to see it shine, we're golden"
+    },
+    {
+     "s": 9.4,
+     "e": 11.6,
+     "lang": "en",
+     "p": 0.89,
+     "text": "They can't have a break, it's down"
+    }
+   ]
+  },
+  "f3964851978a": {
+   "h": "f3964851978a",
+   "job": "338457d3c4ac",
+   "slot": 5,
+   "url": "https://www.youtube.com/watch?v=tHIvH8Q8yqM",
+   "plat": "youtube",
+   "dur": 28.8,
+   "t": "2026-10-04T16:17:43.189043+00:00",
+   "total": 28.7,
+   "speech": 28.8,
+   "ratio": 1.0,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.7,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "영품시계의 메냐들이 여행갈 때 찬다는 5만원대 시계의 정체"
+    },
+    {
+     "s": 2.7,
+     "e": 4.5,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "여행갈 때 편리한 기능을 모두 넣었는데도"
+    },
+    {
+     "s": 4.5,
+     "e": 6.1,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "5만원이라는 정신 나간 가성비라며"
+    },
+    {
+     "s": 6.1,
+     "e": 7.9,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "극찬받는 카시호의 월드타임 전자시계"
+    },
+    {
+     "s": 7.9,
+     "e": 10.9,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "수천만원대 롤렉스가 있어도 여행갈 땐 이 시계를 찬다는 말까지 나오면서"
+    },
+    {
+     "s": 10.9,
+     "e": 11.5,
+     "lang": "ko",
+     "p": 0.91,
+     "text": "급하자라는데"
+    },
+    {
+     "s": 11.5,
+     "e": 12.8,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "이게 진짜 미친 포인트인 게"
+    },
+    {
+     "s": 12.8,
+     "e": 14.5,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "배터리 하나로 무려 10년은 사용할 수 있고"
+    },
+    {
+     "s": 14.5,
+     "e": 16.1,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "방수는 무려 100m나 지원하는데"
+    },
+    {
+     "s": 16.1,
+     "e": 17.3,
+     "lang": "ko",
+     "p": 0.97,
+     "text": "심지어 3개지도가 박혀있어"
+    },
+    {
+     "s": 17.3,
+     "e": 20.0,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "8개의 도시를 고르면 그 나라 시간대로 바로 이동한다는 거임"
+    },
+    {
+     "s": 20.0,
+     "e": 21.1,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "근데 진짜 충격적인 건"
+    },
+    {
+     "s": 21.1,
+     "e": 22.5,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "시계 자체를 커스텀할 수도 있어서"
+    },
+    {
+     "s": 22.5,
+     "e": 24.0,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "시계 덕후들을 더 미치게 만들었는데"
+    },
+    {
+     "s": 24.0,
+     "e": 24.7,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "메탈뿐 아니라"
+    },
+    {
+     "s": 24.7,
+     "e": 25.6,
+     "lang": "ko",
+     "p": 0.97,
+     "text": "가족 스크랩도 있어"
+    },
+    {
+     "s": 25.6,
+     "e": 26.8,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "스타일에 따라 바꿔 찰 수 있어서"
+    },
+    {
+     "s": 26.8,
+     "e": 28.8,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "안사류가 도대체 뭐냐는 말까지 나오고 있다고"
+    }
+   ]
+  },
+  "8e60d5f3a6ff": {
+   "h": "8e60d5f3a6ff",
+   "job": "46a19f460237",
+   "slot": 0,
+   "url": "https://kr.pinterest.com/pin/1142506999245150043/",
+   "plat": "other",
+   "dur": 12.8,
+   "t": "2026-10-04T15:28:33.207685+00:00",
+   "total": 12.7,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "km",
+   "segs": []
+  },
+  "c7296a6ce048": {
+   "h": "c7296a6ce048",
+   "job": "46a19f460237",
+   "slot": 2,
+   "url": "https://www.instagram.com/p/DO1afvAiCwO/",
+   "plat": "instagram",
+   "dur": 24.2,
+   "t": "2026-10-04T15:28:33.207685+00:00",
+   "total": 24.1,
+   "speech": 24.2,
+   "ratio": 1.0,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 5.8,
+     "lang": "en",
+     "p": 0.7,
+     "text": "I already gave you the time and the place to come be shy"
+    },
+    {
+     "s": 5.8,
+     "e": 8.9,
+     "lang": "en",
+     "p": 0.51,
+     "text": "Just come be the man I need"
+    },
+    {
+     "s": 8.9,
+     "e": 12.7,
+     "lang": "en",
+     "p": 0.35,
+     "text": "Tell me you got something to give I wanted"
+    },
+    {
+     "s": 12.7,
+     "e": 16.9,
+     "lang": "en",
+     "p": 0.52,
+     "text": "I don't like it when you call me wonderful"
+    },
+    {
+     "s": 16.9,
+     "e": 21.1,
+     "lang": "en",
+     "p": 0.78,
+     "text": "Whatever the time is, talk it in slow-on bed"
+    },
+    {
+     "s": 21.1,
+     "e": 24.2,
+     "lang": "en",
+     "p": 0.58,
+     "text": "I gotta know you meant to see the man"
+    }
+   ]
+  },
+  "f6a0d9826159": {
+   "h": "f6a0d9826159",
+   "job": "e8bb819bdca3",
+   "slot": 0,
+   "url": "https://www.instagram.com/p/DZVLV26Aw6A/",
+   "plat": "instagram",
+   "dur": 9.3,
+   "t": "2026-10-04T15:17:34.541788+00:00",
+   "total": 9.2,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "689fd57df4c8": {
+   "h": "689fd57df4c8",
+   "job": "e8bb819bdca3",
+   "slot": 1,
+   "url": "https://www.tiktok.com/@primhome/video/7633278837211647245",
+   "plat": "tiktok",
+   "dur": 28.2,
+   "t": "2026-10-04T15:17:34.541788+00:00",
+   "total": 28.1,
+   "speech": 29.6,
+   "ratio": 1.05,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 5.7,
+     "lang": "en",
+     "p": 0.99,
+     "text": "It's 2026. Stop scrubbing non-stop with rags and harsh chemical cleaners. This handheld steam"
+    },
+    {
+     "s": 5.7,
+     "e": 10.1,
+     "lang": "en",
+     "p": 0.99,
+     "text": "cleaner will totally change your cleaning game. Just add water and turn it on. High pressure"
+    },
+    {
+     "s": 10.1,
+     "e": 15.7,
+     "lang": "en",
+     "p": 1.0,
+     "text": "steam melts tough grime and stains in no time. No harsh chemicals at all. Super eco-friendly."
+    },
+    {
+     "s": 15.7,
+     "e": 21.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Cleans and sanitizes in one go. Equipped with multifunctional heads. Great for bathrooms,"
+    },
+    {
+     "s": 21.0,
+     "e": 26.6,
+     "lang": "en",
+     "p": 1.0,
+     "text": "kitchens and cars. Ditch-tiring scrubbing. Steam cleaning is way easier. I left the link down below."
+    },
+    {
+     "s": 26.6,
+     "e": 29.6,
+     "lang": "en",
+     "p": 1.0,
+     "text": "grab yours right away."
+    }
+   ]
+  },
+  "790e0597f00d": {
+   "h": "790e0597f00d",
+   "job": "11769e31765e",
+   "slot": 0,
+   "url": "https://www.instagram.com/reel/DcuHJVqk2Ls/",
+   "plat": "instagram",
+   "dur": 15.2,
+   "t": "2026-10-04T15:16:57.639597+00:00",
+   "total": 15.1,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "3656bd166ee2": {
+   "h": "3656bd166ee2",
+   "job": "11769e31765e",
+   "slot": 1,
+   "url": "https://www.instagram.com/reel/DdNOUBbDeEu/",
+   "plat": "instagram",
+   "dur": 15.2,
+   "t": "2026-10-04T15:16:57.639597+00:00",
+   "total": 15.1,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "808ddb9b4f56": {
+   "h": "808ddb9b4f56",
+   "job": "2388dd0b9650",
+   "slot": 2,
+   "url": "https://www.instagram.com/reel/Ddm-T2tGTvo/",
+   "plat": "instagram",
+   "dur": 15.2,
+   "t": "2026-10-04T15:16:31.422747+00:00",
+   "total": 15.1,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "0d6f646cce8c": {
+   "h": "0d6f646cce8c",
+   "job": "2388dd0b9650",
+   "slot": 3,
+   "url": "https://www.instagram.com/reel/DcZudNVEZSr/",
+   "plat": "instagram",
+   "dur": 15.2,
+   "t": "2026-10-04T15:16:31.422747+00:00",
+   "total": 15.1,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "788a60d56064": {
+   "h": "788a60d56064",
+   "job": "b195532c2d0f",
+   "slot": 3,
+   "url": "https://www.instagram.com/p/DXcQyAnjkRk/",
+   "plat": "instagram",
+   "dur": 14.5,
+   "t": "2026-10-04T15:14:22.691079+00:00",
+   "total": 14.4,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "44cf77091b54": {
+   "h": "44cf77091b54",
+   "job": "b195532c2d0f",
+   "slot": 4,
+   "url": "https://www.instagram.com/p/DbTQEF7IZYA/",
+   "plat": "instagram",
+   "dur": 10.9,
+   "t": "2026-10-04T15:14:22.691079+00:00",
+   "total": 10.8,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "ru",
+   "segs": []
+  },
+  "f56d96bb6886": {
+   "h": "f56d96bb6886",
+   "job": "06a69ff72d2c",
+   "slot": 0,
+   "url": "https://kr.pinterest.com/pin/398568635791538763/",
+   "plat": "other",
+   "dur": 6.2,
+   "t": "2026-10-04T15:12:18.488381+00:00",
+   "total": 6.2,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "f10835e9b8ac": {
+   "h": "f10835e9b8ac",
+   "job": "06a69ff72d2c",
+   "slot": 1,
+   "url": "https://www.instagram.com/p/DdxfYwTx3LC/",
+   "plat": "instagram",
+   "dur": 19.7,
+   "t": "2026-10-04T15:12:18.488381+00:00",
+   "total": 19.6,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "jw",
+   "segs": []
+  },
+  "419a5e2d0e21": {
+   "h": "419a5e2d0e21",
+   "job": "f082947bd58a",
+   "slot": 0,
+   "url": "https://www.tiktok.com/@sweet_mr.kang/video/7603362374866717972",
+   "plat": "tiktok",
+   "dur": 39.4,
+   "t": "2026-10-04T15:10:54.834977+00:00",
+   "total": 39.3,
+   "speech": 36.2,
+   "ratio": 0.92,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.8,
+     "lang": "ko",
+     "p": 0.95,
+     "text": "예판 품절 난리난 인스타X 미니 에보 시네마"
+    },
+    {
+     "s": 2.8,
+     "e": 4.4,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "회사 직원이지만 협찬?"
+    },
+    {
+     "s": 4.4,
+     "e": 5.5,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "그 딴 거 없고?"
+    },
+    {
+     "s": 5.5,
+     "e": 7.5,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "내 카드 긁어서 가져옴 샤갈!"
+    },
+    {
+     "s": 7.5,
+     "e": 8.4,
+     "lang": "ko",
+     "p": 0.85,
+     "text": "일단 외관?"
+    },
+    {
+     "s": 8.4,
+     "e": 11.5,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "8mm 카메라 감성이라는데 그냥 실물 비주얼이 미쳤음"
+    },
+    {
+     "s": 11.5,
+     "e": 13.5,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "들고만 있어도 내가 바로 힙스터임"
+    },
+    {
+     "s": 13.5,
+     "e": 15.9,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "옆에 이 다이어를 돌리면 필터가 바뀌는데"
+    },
+    {
+     "s": 15.9,
+     "e": 18.4,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "솔직히 보정 귀찮은 우리한테 치트키 수준님"
+    },
+    {
+     "s": 18.4,
+     "e": 21.6,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "찍는 순간 1990년대로 강제 소환 당함"
+    },
+    {
+     "s": 21.6,
+     "e": 23.4,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "근데 진짜 광기는 이거임?"
+    },
+    {
+     "s": 23.4,
+     "e": 25.4,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "영상 보다가 마음에 드는 장면이 있다?"
+    },
+    {
+     "s": 25.4,
+     "e": 27.0,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "바로 필름으로 뽑기 가능"
+    },
+    {
+     "s": 30.0,
+     "e": 33.7,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "후지필름 얘네는 진짜 통장 털어가는 법을 너무 잘함"
+    },
+    {
+     "s": 33.7,
+     "e": 37.0,
+     "lang": "ko",
+     "p": 0.92,
+     "text": "이걸로 일본여행 때의 감성영상 많이 담아올 예정크크"
+    },
+    {
+     "s": 37.0,
+     "e": 39.2,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "더 궁금한 거 있으면 댓글 남기라구"
+    }
+   ]
+  },
+  "830d6c4b30e5": {
+   "h": "830d6c4b30e5",
+   "job": "f082947bd58a",
+   "slot": 1,
+   "url": "https://www.tiktok.com/@user7567936502879/video/7692404557686525190",
+   "plat": "tiktok",
+   "dur": 31.6,
+   "t": "2026-10-04T15:10:54.834977+00:00",
+   "total": 31.5,
+   "speech": 31.5,
+   "ratio": 1.0,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.3,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "대체 무슨 카메라이길래 다들 추억 여행 다녀왔다고 난리인 걸까요?"
+    },
+    {
+     "s": 4.3,
+     "e": 7.6,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "얼마전 언니네 갔더니 레트로 감성 넘치는 사진들이 가득하더라구요."
+    },
+    {
+     "s": 7.6,
+     "e": 10.6,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "어떻게 찍었냐고 물어봤더니 다이얼만 돌려서 찍은거래요."
+    },
+    {
+     "s": 10.6,
+     "e": 12.4,
+     "lang": "ko",
+     "p": 0.96,
+     "text": "바로 인스타크스 미니에 보였거든요?"
+    },
+    {
+     "s": 12.4,
+     "e": 15.9,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "늘 밋밋한 스마트폰 사진만 찍다 보니 레트로 감성이 안 살았거든요."
+    },
+    {
+     "s": 15.9,
+     "e": 19.7,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "심지어 손가락으로 다이얼만 까닥 돌리니 시대별 필터가 싹 바뀌더라구요."
+    },
+    {
+     "s": 19.7,
+     "e": 22.9,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "찍어두고 갤러리에 묵혀만 둔이 금방 잊혀서 아쉬웠거든요."
+    },
+    {
+     "s": 22.9,
+     "e": 26.6,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "마음에 쏘옥 드는 장면을 랩어 당겨 바로 출력하니 손맛이 대박이었어요."
+    },
+    {
+     "s": 26.6,
+     "e": 29.4,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "요즘은 외출할 때마다 어릴 적 추억 속으로 돌아가는 기분이에요."
+    },
+    {
+     "s": 29.4,
+     "e": 31.5,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "댓글에 카메라 남겨주시면 정보 보내드릴게요."
+    }
+   ]
+  },
+  "5892f1b3bb03": {
+   "h": "5892f1b3bb03",
+   "job": "e9c62e62bdcf",
+   "slot": 2,
+   "url": "https://www.tiktok.com/@bimilitem/video/7692302574883523846",
+   "plat": "tiktok",
+   "dur": 30.4,
+   "t": "2026-10-04T15:10:20.881881+00:00",
+   "total": 30.3,
+   "speech": 30.3,
+   "ratio": 1.0,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 1.9,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "시간까지 인화해버린다는 카메라?"
+    },
+    {
+     "s": 1.9,
+     "e": 5.0,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "과거로 시간여행을 떠나게 해준다는 인스타크스 미니에보 시네마"
+    },
+    {
+     "s": 5.0,
+     "e": 7.8,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "하지만 이 카메라엔 말도 안 되는 기능이 탑재되어 있다는데"
+    },
+    {
+     "s": 7.8,
+     "e": 11.3,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "옆에 달린 다이어를 돌리면 1930년부터 2020년까지"
+    },
+    {
+     "s": 11.3,
+     "e": 13.1,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "원하는 시대를 직접 선택할 수 있는데"
+    },
+    {
+     "s": 13.1,
+     "e": 15.1,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "색감만 바뀌는 흔한 필터가 아니라"
+    },
+    {
+     "s": 15.1,
+     "e": 16.6,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "노이즈와 영상 효과는 물론"
+    },
+    {
+     "s": 16.6,
+     "e": 19.2,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "소리까지 그 시대에 찍은 영상처럼 바뀐다고 함"
+    },
+    {
+     "s": 19.2,
+     "e": 21.4,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "하지만 진짜 소름 돋는 기능은 따로 있는데"
+    },
+    {
+     "s": 21.4,
+     "e": 23.1,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "최대 15초짜리 영상을 찍은 뒤"
+    },
+    {
+     "s": 23.1,
+     "e": 24.9,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "QR코드와 함께 사진으로 뽑아버려서"
+    },
+    {
+     "s": 24.9,
+     "e": 26.6,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "몇 년 뒤 사진 속 QR을 찍으면"
+    },
+    {
+     "s": 26.6,
+     "e": 29.0,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "그날의 움직임과 목소리까지 다시 볼 수 있다는 거"
+    },
+    {
+     "s": 29.0,
+     "e": 30.3,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "나중에 보면 눈물 나겠는데"
+    }
+   ]
+  },
+  "01e67da441da": {
+   "h": "01e67da441da",
+   "job": "e9c62e62bdcf",
+   "slot": 3,
+   "url": "https://www.instagram.com/p/DUYEqA9E7Bi/",
+   "plat": "instagram",
+   "dur": 39.4,
+   "t": "2026-10-04T15:10:20.881881+00:00",
+   "total": 39.3,
+   "speech": 36.1,
+   "ratio": 0.92,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.3,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "예판 품절 난리난 인스타스 미니 에보 시네마 회사 직원이지만 협찬?"
+    },
+    {
+     "s": 4.3,
+     "e": 7.4,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "그 딴 거 없고 내 카드 긁어서 가져옴 샤갈!"
+    },
+    {
+     "s": 7.4,
+     "e": 11.5,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "일단 외관? 8mm 카메라 감성이라는데 그냥 실물 비주얼이 미쳤음"
+    },
+    {
+     "s": 11.5,
+     "e": 13.5,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "들고만 있어도 내가 바로 힙스터임"
+    },
+    {
+     "s": 13.5,
+     "e": 15.8,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "옆에 이 다이어를 돌리면 필터가 바뀌는데"
+    },
+    {
+     "s": 15.8,
+     "e": 18.3,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "솔직히 보정 귀찮은 우리한테 치트키 수준님"
+    },
+    {
+     "s": 18.3,
+     "e": 21.5,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "찍는 순간 1990년대로 강제 소환 당함"
+    },
+    {
+     "s": 21.5,
+     "e": 23.3,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "근데 진짜 광기는 이거임?"
+    },
+    {
+     "s": 23.3,
+     "e": 26.9,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "영상 보다가 마음에 드는 장면이 있다? 바로 필름으로 뽑기 가능"
+    },
+    {
+     "s": 30.0,
+     "e": 33.7,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "후지필름 얘네는 진짜 통장 털어가는 법을 너무 잘함"
+    },
+    {
+     "s": 33.7,
+     "e": 37.0,
+     "lang": "ko",
+     "p": 0.9,
+     "text": "이걸로 일본여행 때 감성영상 많이 담아올 예정크크"
+    },
+    {
+     "s": 37.0,
+     "e": 39.2,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "더 궁금한 거 있으면 댓글 남기라구"
+    }
+   ]
+  },
+  "bfec41d7c156": {
+   "h": "bfec41d7c156",
+   "job": "94da672eae8d",
+   "slot": 2,
+   "url": "https://www.instagram.com/p/DFgL2Fkh1a3/",
+   "plat": "instagram",
+   "dur": 12.2,
+   "t": "2026-10-04T15:05:00.453036+00:00",
+   "total": 12.1,
+   "speech": 12.1,
+   "ratio": 1.0,
+   "main_lang": "pt",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 1.9,
+     "lang": "pt",
+     "p": 0.98,
+     "text": "Fiz batata na mini máquina de wafers."
+    },
+    {
+     "s": 1.9,
+     "e": 3.0,
+     "lang": "pt",
+     "p": 0.97,
+     "text": "Unta para não grudar."
+    },
+    {
+     "s": 3.0,
+     "e": 4.3,
+     "lang": "pt",
+     "p": 0.99,
+     "text": "Meia batata cozida."
+    },
+    {
+     "s": 4.3,
+     "e": 5.6,
+     "lang": "pt",
+     "p": 0.97,
+     "text": "Sal e arvinha a gosto."
+    },
+    {
+     "s": 5.6,
+     "e": 7.2,
+     "lang": "pt",
+     "p": 0.98,
+     "text": "Fecha e deixa 10 minutos."
+    },
+    {
+     "s": 7.2,
+     "e": 10.4,
+     "lang": "pt",
+     "p": 1.0,
+     "text": "E esse vai ser o resultado sensacional e delicioso."
+    },
+    {
+     "s": 10.4,
+     "e": 12.1,
+     "lang": "pt",
+     "p": 0.98,
+     "text": "Crocante por fora, macia por dentro."
+    }
+   ]
+  },
+  "aeef81813b3b": {
+   "h": "aeef81813b3b",
+   "job": "94da672eae8d",
+   "slot": 3,
+   "url": "https://www.instagram.com/p/C2dFznauj5P/",
+   "plat": "instagram",
+   "dur": 5.9,
+   "t": "2026-10-04T15:05:00.453036+00:00",
+   "total": 5.8,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "hi",
+   "segs": []
+  },
+  "2cf5804ba1cb": {
+   "h": "2cf5804ba1cb",
+   "job": "69e965a4fd7d",
+   "slot": 4,
+   "url": "https://www.tiktok.com/@brittanie7099/video/7448271348893535534",
+   "plat": "tiktok",
+   "dur": 31.4,
+   "t": "2026-10-04T15:00:09.944037+00:00",
+   "total": 31.3,
+   "speech": 30.0,
+   "ratio": 0.96,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.7,
+     "lang": "en",
+     "p": 1.0,
+     "text": "We're making waffles over here. Would you believe my kids have never had a frozen grocery store waffle?"
+    },
+    {
+     "s": 4.7,
+     "e": 11.6,
+     "lang": "en",
+     "p": 1.0,
+     "text": "I find it so much easier and cheaper just to make them at home. And this dash mini waffle maker makes my job so easy."
+    },
+    {
+     "s": 11.9,
+     "e": 14.6,
+     "lang": "en",
+     "p": 1.0,
+     "text": "You can make a dozen waffles in a matter of minutes."
+    },
+    {
+     "s": 14.6,
+     "e": 17.8,
+     "lang": "en",
+     "p": 1.0,
+     "text": "I like to make extras and freeze them for later in the week."
+    },
+    {
+     "s": 17.9,
+     "e": 23.8,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Just lay them out on a cookie sheet and place in the freezer until frozen, then put them into a ziploc bag for storage."
+    },
+    {
+     "s": 24.3,
+     "e": 27.1,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Then when you're ready to eat them, just pop them in the toaster."
+    },
+    {
+     "s": 27.1,
+     "e": 30.9,
+     "lang": "en",
+     "p": 1.0,
+     "text": "I've linked the mini waffle maker in the orange cart below so go grab yours today."
+    }
+   ]
+  },
+  "d4d1ae2932bb": {
+   "h": "d4d1ae2932bb",
+   "job": "69e965a4fd7d",
+   "slot": 5,
+   "url": "https://www.tiktok.com/@charlotte.shares/video/7049406120607190319",
+   "plat": "tiktok",
+   "dur": 28.2,
+   "t": "2026-10-04T15:00:09.944037+00:00",
+   "total": 28.1,
+   "speech": 29.0,
+   "ratio": 1.03,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 29.0,
+     "lang": "en",
+     "p": 0.97,
+     "text": "Where has this been all my life?"
+    }
+   ]
+  },
+  "f95a06011307": {
+   "h": "f95a06011307",
+   "job": "b089459d38fd",
+   "slot": 0,
+   "url": "https://www.instagram.com/reel/DdFZ59_zZn_/",
+   "plat": "instagram",
+   "dur": 24.4,
+   "t": "2026-10-04T14:50:40.135409+00:00",
+   "total": 24.3,
+   "speech": 24.3,
+   "ratio": 1.0,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 4.9,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "주말에 시댁식구들이 집에 놀러 왔는데 갑자기 하루 자고 간다고 하길래 이걸 꺼내서 깔아줬거든요?"
+    },
+    {
+     "s": 4.9,
+     "e": 6.1,
+     "lang": "ko",
+     "p": 0.75,
+     "text": "깐깐한 신우이가 하는 말이"
+    },
+    {
+     "s": 6.1,
+     "e": 8.4,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "아니 무슨 매트가 우리 집 침대보다 편하냐고"
+    },
+    {
+     "s": 8.4,
+     "e": 10.9,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "베기는 거 하나 없이 푹신해서 아주 꿀잠을 잤다길래"
+    },
+    {
+     "s": 10.9,
+     "e": 13.6,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "아가씨 그거 버튼만 누르면 혼자서 쫙 펴지는데"
+    },
+    {
+     "s": 13.6,
+     "e": 15.6,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "두 개가 10cm라 푹신함이 대박이라고"
+    },
+    {
+     "s": 15.6,
+     "e": 19.0,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "다 쓰면 공기만 빼서 돌돌 말아주면 끝이라 자리차지도 않았는데"
+    },
+    {
+     "s": 19.0,
+     "e": 21.5,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "이번에 캠핑 가서도 완전 꿀잠 자고 왔다고 했더니"
+    },
+    {
+     "s": 21.5,
+     "e": 23.2,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "자랑만 하지 말고 링크 좀 달라는데"
+    },
+    {
+     "s": 23.2,
+     "e": 24.3,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "돌돌 남겨주세요"
+    }
+   ]
+  },
+  "acb673e22fae": {
+   "h": "acb673e22fae",
+   "job": "b089459d38fd",
+   "slot": 1,
+   "url": "https://www.tiktok.com/@mio.home_/video/7680763649320930580",
+   "plat": "tiktok",
+   "dur": 19.8,
+   "t": "2026-10-04T14:50:40.135409+00:00",
+   "total": 19.7,
+   "speech": 19.6,
+   "ratio": 1.0,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.3,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "동생이 자고 간다는데 순간 어디서 재우지 싶은 거예요"
+    },
+    {
+     "s": 3.3,
+     "e": 5.0,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "맨바닥에 이불만 깔 수도 없고"
+    },
+    {
+     "s": 5.0,
+     "e": 7.1,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "매트리스를 사자니 보관도 곤란하고요"
+    },
+    {
+     "s": 7.1,
+     "e": 8.5,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "그러다 찾은 게 이거예요"
+    },
+    {
+     "s": 8.5,
+     "e": 10.4,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "버튼 하나면 알아서 쭉 부풀고"
+    },
+    {
+     "s": 10.4,
+     "e": 12.6,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "10cm 두께라 푹신하고 편하네요"
+    },
+    {
+     "s": 12.6,
+     "e": 14.2,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "공기 빼면 이만큼 작아져서"
+    },
+    {
+     "s": 14.2,
+     "e": 15.3,
+     "lang": "ko",
+     "p": 0.99,
+     "text": "보관하기도 최고"
+    },
+    {
+     "s": 15.3,
+     "e": 17.2,
+     "lang": "ko",
+     "p": 0.98,
+     "text": "손님용은 물론 캠핑할 때도 유용해요"
+    },
+    {
+     "s": 17.2,
+     "e": 19.6,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "제품 궁금하시면 댓글에 매트 남겨 주세요"
+    }
+   ]
+  },
+  "c7c017263d95": {
+   "h": "c7c017263d95",
+   "job": "2f9a54d8b6eb",
+   "slot": 0,
+   "url": "https://www.tiktok.com/@_cine.max_/video/7259234360988060970",
+   "plat": "tiktok",
+   "dur": 14.7,
+   "t": "2026-10-04T14:09:27.254536+00:00",
+   "total": 14.6,
+   "speech": 13.7,
+   "ratio": 0.94,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.9,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Alright, so I ordered this 100 inch projector from Cinemax because it was 70% off."
+    },
+    {
+     "s": 3.9,
+     "e": 6.3,
+     "lang": "en",
+     "p": 1.0,
+     "text": "And this thing is way cooler than I thought. Check this out."
+    },
+    {
+     "s": 6.3,
+     "e": 8.7,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Automatically comes out, gets all the wrinkles out."
+    },
+    {
+     "s": 8.7,
+     "e": 13.7,
+     "lang": "en",
+     "p": 1.0,
+     "text": "And look at that quality. This thing is so crisp. I'm in love. It's a must-have for sure."
+    }
+   ]
+  },
+  "dcbd01c6b855": {
+   "h": "dcbd01c6b855",
+   "job": "2f9a54d8b6eb",
+   "slot": 1,
+   "url": "https://www.tiktok.com/@zeynohomesandgarden/video/7308586813135047982",
+   "plat": "tiktok",
+   "dur": 73.0,
+   "t": "2026-10-04T14:09:27.254536+00:00",
+   "total": 72.9,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "en",
+   "segs": []
+  },
+  "db6830a06251": {
+   "h": "db6830a06251",
+   "job": "3f864b3dcbed",
+   "slot": 0,
+   "url": "https://www.youtube.com/shorts/fk9hLkQUwwg",
+   "plat": "youtube",
+   "dur": 13.6,
+   "t": "2026-10-04T14:01:08.903558+00:00",
+   "total": 13.5,
+   "speech": 15.0,
+   "ratio": 1.11,
+   "main_lang": "ko",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 7.4,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "떼지는 페인트가 있다고 전세나 월세여도 집주인 눈치 안 보고 부담 없이 인테리어를 바꿀 수 있는 뜯어지는 페인트에요."
+    },
+    {
+     "s": 7.4,
+     "e": 15.0,
+     "lang": "ko",
+     "p": 1.0,
+     "text": "발림성이 좋아 벽이나 가구에 슥슥 바르기만 하면 분위기 전하는 물론 나중에 깔끔하게 떼어낼 수 있어요."
+    }
+   ]
+  },
+  "c5738ae89472": {
+   "h": "c5738ae89472",
+   "job": "3f864b3dcbed",
+   "slot": 1,
+   "url": "https://www.youtube.com/shorts/OImXqENhpf0",
+   "plat": "youtube",
+   "dur": 18.8,
+   "t": "2026-10-04T14:01:08.903558+00:00",
+   "total": 18.7,
+   "speech": 0,
+   "ratio": 0.0,
+   "main_lang": "ko",
+   "segs": []
+  },
+  "da2282b90f44": {
+   "h": "da2282b90f44",
+   "job": "5d0bf474817a",
+   "slot": 0,
+   "url": "https://www.youtube.com/shorts/VClZEx1TTsQ",
+   "plat": "youtube",
+   "dur": 8.2,
+   "t": "2026-10-04T13:50:28.637626+00:00",
+   "total": 8.1,
+   "speech": 8.2,
+   "ratio": 1.01,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.4,
+     "lang": "en",
+     "p": 1.0,
+     "text": "These funny-looking measuring spoons are called polygons."
+    },
+    {
+     "s": 3.4,
+     "e": 8.2,
+     "lang": "en",
+     "p": 0.99,
+     "text": "They easily snap from two tablespoon to one tablespoon to a half tablespoon."
+    }
+   ]
+  },
+  "fafc125eec69": {
+   "h": "fafc125eec69",
+   "job": "5d0bf474817a",
+   "slot": 1,
+   "url": "https://www.youtube.com/shorts/OtDfUhlmLPA",
+   "plat": "youtube",
+   "dur": 7.2,
+   "t": "2026-10-04T13:50:28.637626+00:00",
+   "total": 7.1,
+   "speech": 7.0,
+   "ratio": 0.99,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.5,
+     "lang": "en",
+     "p": 1.0,
+     "text": "These funny-looking measuring spoons are called polygons."
+    },
+    {
+     "s": 3.5,
+     "e": 7.0,
+     "lang": "en",
+     "p": 1.0,
+     "text": "They easily snap from two tablespoon to one tablespoon."
+    }
+   ]
+  },
+  "956b8c8d1232": {
+   "h": "956b8c8d1232",
+   "job": "1a294bf79a49",
+   "slot": 0,
+   "url": "https://www.instagram.com/p/DYPKnSpzUiN/",
+   "plat": "instagram",
+   "dur": 10.5,
+   "t": "2026-10-04T13:27:49.736412+00:00",
+   "total": 10.5,
+   "speech": 10.0,
+   "ratio": 0.95,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 2.0,
+     "lang": "en",
+     "p": 0.94,
+     "text": "Get it right back in the mood"
+    },
+    {
+     "s": 2.0,
+     "e": 5.0,
+     "lang": "en",
+     "p": 0.7,
+     "text": "I live my day as if you want to laugh"
+    },
+    {
+     "s": 5.0,
+     "e": 7.0,
+     "lang": "en",
+     "p": 0.6,
+     "text": "Live my day as if it was a fact"
+    },
+    {
+     "s": 7.0,
+     "e": 9.0,
+     "lang": "en",
+     "p": 0.52,
+     "text": "Do it all night, all summer"
+    },
+    {
+     "s": 9.0,
+     "e": 10.0,
+     "lang": "en",
+     "p": 0.38,
+     "text": "Do it all..."
+    }
+   ]
+  },
+  "cefd5056f0f4": {
+   "h": "cefd5056f0f4",
+   "job": "1a294bf79a49",
+   "slot": 1,
+   "url": "https://www.instagram.com/p/CwVWVqQvxAT/",
+   "plat": "instagram",
+   "dur": 13.7,
+   "t": "2026-10-04T13:27:49.736412+00:00",
+   "total": 13.6,
+   "speech": 13.4,
+   "ratio": 0.99,
+   "main_lang": "en",
+   "segs": [
+    {
+     "s": 0.0,
+     "e": 3.4,
+     "lang": "en",
+     "p": 1.0,
+     "text": "I don't think I'll ever get sick of making crispy rice in a waffle maker."
+    },
+    {
+     "s": 3.4,
+     "e": 7.9,
+     "lang": "en",
+     "p": 0.99,
+     "text": "I decided to make this version a little sushi mosaic with tuna, salmon, cucumber, and avocado,"
+    },
+    {
+     "s": 7.9,
+     "e": 10.6,
+     "lang": "en",
+     "p": 0.99,
+     "text": "plus an arty little array of garnishes I was very proud of."
+    },
+    {
+     "s": 10.6,
+     "e": 12.1,
+     "lang": "en",
+     "p": 1.0,
+     "text": "Probably the prettiest thing I've ever made."
+    },
+    {
+     "s": 12.1,
+     "e": 13.4,
+     "lang": "en",
+     "p": 0.99,
+     "text": "And super delicious."
+    }
+   ]
+  }
+ }
+}
