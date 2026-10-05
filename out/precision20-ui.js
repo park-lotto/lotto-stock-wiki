@@ -780,11 +780,12 @@
   const CAMERA_MOTIONS=['zoom-punch','push-in','shake'];
   // 레퍼런스 장면 효과 값(관제 124) — 랭킹 썰 쇼핑 채널 114편 실측(tools/scene_fx/data/params_2026-10-05.json). 지어낸 값이 아니다.
   //   jumpZoom: 점프 줌 컷 확대 배율 중앙 1.35(사분위 1.21~1.56) — 구절마다 번갈아(리듬)
+  //   zoomIn: 강조 확대는 멈춘 화면이 아니라 0.5초 동안 제품 쪽으로 빨려 들어간다(사장님 2026-10-05 "0.3초는 빠르고 0.5초로")
   //   emphZoom: 중요 장면 강조 확대 2.0 — 레퍼런스 눈대중 최대 2.0(측정 최대 1.61) 중 사장님 선택(2026-10-05 "두 배 이상은 돼야",
   //             "효과를 어떤 장면이든 켤 수 있게, 제품 정체 드러날 때·CTA·훅·고조 같은 중요 장면")
   //   dimEmphasis: 화면을 어둡게 덮고 강조 글자 — 밝기 32%(17~56%)·중앙 1.2초 ≈ 장면(구절) 하나 길이(중앙 1.17초) → 장면 내내(sec 0)
   //   dimTitle: 시작 어두운 제목 화면 — 밝기 46%·0.13초(4프레임), 12편 중 10편
-  const REF_FX={jumpZoom:1.35,emphZoom:2,dimEmphasis:{level:.32,sec:0},dimTitle:{level:.46,sec:.13}};
+  const REF_FX={jumpZoom:1.35,emphZoom:2,zoomIn:.5,dimEmphasis:{level:.32,sec:0},dimTitle:{level:.46,sec:.13}};
   // 훅 모션 길이 = **첫 비트(훅 문장)** 의 훅 장면만(10-02 사장님 "썰훅만 본문은 훅 모션 없이 자막 스타일대로"). 썰훅+본문은 훅이 첫 비트뿐이라 종전과 같다
   const hookEndMs=()=>{const sc=sceneContext?.scenes||[],b0=sc[0]?.beat_idx;const hs=sc.filter(s=>s.kind==='hook'&&s.beat_idx===b0);return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
   function cameraAt(ms){
@@ -2056,8 +2057,8 @@
     emphAt(i,kind,on){
       const key=String(i),e={...(effects[key]||{})};
       if(kind==='zoom'){
-        if(on){e.zoom=REF_FX.emphZoom;e.fxAuto='emph';}
-        else if(e.fxAuto==='emph'||e.fxAuto==='jump'){delete e.zoom;delete e.fxAuto;if(e.fxFocus){delete e.panX;delete e.panY;delete e.fxFocus;delete e.fxFocusBy;delete e.fxBox;}}   // 자동으로 맞춘 위치(fxFocus)도 같이 뺀다
+        if(on){e.zoom=REF_FX.emphZoom;e.fxAuto='emph';e.zoomIn=REF_FX.zoomIn;}
+        else if(e.fxAuto==='emph'||e.fxAuto==='jump'){delete e.zoom;delete e.fxAuto;delete e.zoomIn;if(e.fxFocus){delete e.panX;delete e.panY;delete e.fxFocus;delete e.fxFocusBy;delete e.fxBox;}}   // 자동으로 맞춘 위치(fxFocus)도 같이 뺀다
       }else if(kind==='dim'){
         if(on)e.dim={...REF_FX.dimEmphasis};else if(e.dim&&!e.dim.sec)delete e.dim;
       }

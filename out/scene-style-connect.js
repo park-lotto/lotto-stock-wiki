@@ -130,7 +130,9 @@
     lens.hidden=m!=='zoom';if(lens.src!==media.src)lens.src=media.src;
     const mh=ph*g.media.height/100;
     Object.assign(lens.style,{width:pw+'px',height:mh+'px',left:r+pw/2-2*cx+px*2+'px',top:r+mh/2-2*cy+py*2+'px',transform:`scale(${z*2})`});
-    if(lastIndex!==g.sceneIndex){lastIndex=g.sceneIndex;updateControls();}
+    if(lastIndex!==g.sceneIndex){lastIndex=g.sceneIndex;updateControls();
+      // 확대 움직임(관제 124): 장면을 열면 0.5초 동안 1배→도착 구도로. 곡선 1-(1-t)² = 완성본(scene_style.zoom_move_vf)과 같다.
+      if(Number(e.zoomIn)>0&&z>1)media.animate([{transform:'translate(0px,0px) scale(1)'},{transform:media.style.transform}],{duration:Number(e.zoomIn)*1000,easing:'cubic-bezier(.5,1,.89,1)'});}
   }
   let mediaDrag=null;
   windowEl.addEventListener('pointerdown',event=>{if(event.button!==0)return;const isLens=!!event.target.closest('.scene-focus'),e=structuredClone(api.effect());if(!isLens&&(e.zoom||1)<=1)return;mediaDrag={id:event.pointerId,x:event.clientX,y:event.clientY,isLens,e,rect:preview.getBoundingClientRect()};windowEl.setPointerCapture(event.pointerId);event.preventDefault();});

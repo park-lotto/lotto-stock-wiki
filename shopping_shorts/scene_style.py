@@ -86,6 +86,7 @@ def validate_snapshot(value):
             if not isinstance(dim,dict):
                 raise ValueError("어둡게 형식이 올바르지 않습니다")
             number(dim.get("level"),.1,1);number(dim.get("sec",0),0,10)
+        number(effect.get("zoomIn",0),0,3)   # 확대 움직임(관제 124): 장면 시작부터 zoomIn초 동안 1배→zoom 배로 빨려 들어감(0=멈춘 확대)
         if "fxAuto" in effect and effect["fxAuto"] not in ("jump","emph"):
             raise ValueError("자동 효과 표식이 올바르지 않습니다")
         if "masks" in effect:
@@ -508,6 +509,22 @@ def media_geometry(layer, effect):
     return width,height,top,zw,zh,crop_x,crop_y
 
 
+def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y):
+    """영상 칸 확대 필터. zoomIn>0 이면 장면 시작부터 zoomIn초 동안 1배→zoom 배로 **움직이며** 확대(관제 124, 사장님
+    2026-10-05 "그냥 확대 장면을 보여주는 건 의미가 없다, 0.5초로 제품에 확대되는 거"). 곡선은 1-(1-t)² (처음 빠르고 끝에서 멈춤) —
+    편집기 미리보기(scene-style-connect.js, cubic-bezier(.5,1,.89,1) = 같은 곡선)와 짝. 도착점은 멈춘 확대와 같은 자리(panX·panY).
+    zoompan 은 정수 좌표라 떨리므로 2배로 키운 뒤 돌린다. 반환: crop 뒤에 이어 붙일 필터 문자열."""
+    move=float((effect or {}).get("zoomIn") or 0)
+    zoom=zw/max(1,width)
+    if move<=0 or zoom<=1.0001:
+        return f"scale={zw}:{zh},crop={width}:{height}:{crop_x}:{crop_y}"
+    n=max(1,round(move*30))
+    fx=crop_x/max(1,zw-width); fy=crop_y/max(1,zh-height)          # 도착했을 때 잘리는 자리(0~1)
+    e=f"(1-pow(1-min(1,on/{n}),2))"
+    return (f"scale={width*2}:{height*2},zoompan=z='1+{zoom-1:.5f}*{e}':x='(iw-iw/zoom)*{fx:.5f}':y='(ih-ih/zoom)*{fy:.5f}'"
+            f":d=1:s={width}x{height}:fps=30")
+
+
 def dim_of(effect, frames):
     """장면 영상 칸을 어둡게 하는 값 — 완성본(compose)·썸네일(compose_still)·캡컷(dim_spans)이 같이 쓴다(관제 124).
     반환 (밝기 0.1~1, 어둡게 할 프레임 수) 또는 None. 장면 시작부터 sec초(0이면 장면 내내, frames 로 자른다)."""
@@ -610,7 +627,7 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
         width,height,top,zw,zh,crop_x,crop_y=media_geometry(layer,effect)
         dim=dim_of(effect,last_frame-first_frame)   # 어둡게(관제 124) — 영상 칸에만, 틀·자막 레이어는 밝게 남는다
         dim_f=(f",colorchannelmixer=rr={dim[0]:.3f}:gg={dim[0]:.3f}:bb={dim[0]:.3f}:enable='lt(n,{dim[1]})'" if dim else "")
-        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},scale={zw}:{zh},crop={width}:{height}:{crop_x}:{crop_y}{dim_f},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
+        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},{zoom_move_vf(effect,width,height,zw,zh,crop_x,crop_y)}{dim_f},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
         hl=va.highlight_fc({"scene_hl":effect.get("highlight")},vf,grow=False)
         prefix=f"[1:v]tpad=stop_mode=clone:stop_duration={(last_frame-first_frame)/30}[ink];" if layer.get("animation") else "[1:v]null[ink];"
         graph=prefix+(hl+";" if hl else f"[0:v]{vf}[out];")

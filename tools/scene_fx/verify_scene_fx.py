@@ -215,6 +215,17 @@ def main():
             fails.append(f"점프 줌 장면 {i} 완성본 배율 {s} (기대 {want})")
         if i not in emph and abs(want - 1.35) > 1e-6:
             fails.append(f"장면 {i} 저장 배율 {want} — 점프 줌 1.35 이어야")
+    # 확대 움직임(zoomIn 0.5초): 장면 시작 ≈1배 → 0.25초 쯤 중간 → 0.5초 뒤 도착 배율
+    for i in emph:
+        e = eff[str(i)]
+        if not e.get("zoomIn"):
+            fails.append(f"강조 확대 장면 {i}: 움직임(zoomIn)이 없다 — 멈춘 확대")
+            continue
+        f0 = round(scenes[i]["start"] * 30)
+        curve = [scale_between(frame(out0, f0 + k), frame(out1, f0 + k), box(i)) for k in (1, 7, 16, 25)]
+        print(f"  확대 움직임 장면 {i}: 시작+1·+7·+16·+25프레임 배율 {[round(c, 3) if c else None for c in curve]} (기대 ≈1 → 중간 → {e['zoom']} → {e['zoom']})")
+        if None in curve or not (curve[0] < 1.1 and curve[0] < curve[1] < curve[2] - .01 and abs(curve[2] - e["zoom"]) < .06 and abs(curve[3] - e["zoom"]) < .06):
+            fails.append(f"강조 확대 장면 {i}: 0.5초 확대 움직임이 아니다 {curve}")
     fd = round((scenes[dim_scene]["start"] + scenes[dim_scene]["end"]) / 2 * 30)
     # 어둡게 강조 장면은 자막이 영상 한가운데 큰 글자로 옮겨 온다(영상 칸 30~70%) → 밝기는 글자 자리를 빼고 잰다.
     #   틀 영역은 자막 띠(영상 칸 바로 위, 강조 땐 숨김)를 빼고 위쪽 60%만 잰다.
