@@ -785,6 +785,8 @@
   //             "효과를 어떤 장면이든 켤 수 있게, 제품 정체 드러날 때·CTA·훅·고조 같은 중요 장면")
   //   dimEmphasis: 화면을 어둡게 덮고 강조 글자 — 밝기 32%(17~56%)·중앙 1.2초 ≈ 장면(구절) 하나 길이(중앙 1.17초) → 장면 내내(sec 0)
   //   dimTitle: 시작 어두운 제목 화면 — 밝기 46%·0.13초(4프레임), 12편 중 10편
+  // 자동 배치(관제 124, 사장님 2026-10-05 "효과 아주 좋고 자동으로 배치") — 중요 장면 종류(scene_style.moment_of)별로 각 비트 첫 구절에 건다. 판단은 이 표 하나.
+  const AUTO_FX={hook:{zoom:'in'},problem:{shock:true},reveal:{zoom:'pull'},peak:{dim:true},cta:{zoom:'inout'}};
   const REF_FX={jumpZoom:1.35,emphZoom:2,zoomIn:.5,dimEmphasis:{level:.32,sec:0},dimTitle:{level:.46,sec:.13}};
   // 훅 모션 길이 = **첫 비트(훅 문장)** 의 훅 장면만(10-02 사장님 "썰훅만 본문은 훅 모션 없이 자막 스타일대로"). 썰훅+본문은 훅이 첫 비트뿐이라 종전과 같다
   const hookEndMs=()=>{const sc=sceneContext?.scenes||[],b0=sc[0]?.beat_idx;const hs=sc.filter(s=>s.kind==='hook'&&s.beat_idx===b0);return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
@@ -2074,6 +2076,19 @@
     emphOn(i,kind){const e=effects[String(i)]||{};return kind==='zoom'?e.fxAuto==='emph':kind==='shock'?!!e.shock:!!(e.dim&&!e.dim.sec)},
     // 확대 방식: 'in' 0.5초 들어가 멈춤 / 'pull' 장면 내내 쭉 당기기 / 'inout' 들어갔다 끝에 원본 크기로(완성본 scene_style.zoom_move_vf 와 짝)
     zoomMove(i,way){const k=String(i),e={...(effects[k]||{})};if(way!==undefined){if(way==='in')delete e.zoomMove;else e.zoomMove=way;effects[k]=e;}return e.zoomMove||'in'},
+    // 자동 배치: on=true 면 손대지 않은 칸(효과 없음)에만 AUTO_FX 를 건다(fxAutoPlaced 표식), false 면 표식 있는 칸만 지운다.
+    autoPlace(on){
+      const scenes=sceneContext?.scenes||[];let prev=null,count=0;
+      scenes.forEach((s,i)=>{const first=s.beat_idx!==prev;prev=s.beat_idx;const key=String(i),e=effects[key]||{};
+        if(!on){if(e.fxAutoPlaced){effects[key]={};count++;}return;}
+        const rule=first&&s.moment&&AUTO_FX[s.moment];if(!rule||Object.keys(e).length)return;
+        if(rule.zoom){this.emphAt(i,'zoom',true);if(rule.zoom!=='in')this.zoomMove(i,rule.zoom);}
+        if(rule.shock)this.emphAt(i,'shock',true);
+        if(rule.dim)this.emphAt(i,'dim',true);
+        effects[key]={...effects[key],fxAutoPlaced:true};count++;});
+      return count;
+    },
+    autoPlaced:()=>Object.values(effects).some(e=>e&&e.fxAutoPlaced),
     emphMoments(moments,kind,on){
       const scenes=sceneContext?.scenes||[],want=new Set(moments);let prev=null,count=0;
       scenes.forEach((s,i)=>{const first=s.beat_idx!==prev;prev=s.beat_idx;

@@ -77,6 +77,7 @@
     <div class="scene-effect-choices" data-zoom-ways>${Object.entries(ZOOM_WAYS).map(([k,v])=>`<button type="button" data-zoom-way="${k}">${v}</button>`).join('')}</div>
     <button type="button" class="scene-effects-reset" data-ref-fx="dim">이 장면 어둡게 강조</button>
     <button type="button" class="scene-effects-reset" data-ref-fx="shock">이 장면 흑백 충격 (지지직·흔들림)</button>
+    <button type="button" class="scene-effects-reset" data-ref-fx="auto"></button>
     <p><b>중요 장면에 한 번에</b></p>
     <div class="scene-effect-choices">${Object.entries(MOMENT_NAME).map(([k,v])=>`<button type="button" class="active" data-ref-moment-pick="${k}">${v}</button>`).join('')}</div>
     <button type="button" class="scene-effects-reset" data-ref-fx="all-zoom">고른 장면에 강조 확대</button>
@@ -103,6 +104,7 @@
     refBox.querySelectorAll('[data-ref-moment-pick]').forEach(b=>b.classList.toggle('active',pickMoments.has(b.dataset.refMomentPick)));
     refBox.querySelector('[data-ref-fx="all-zoom"]').textContent=allOn('zoom')?'고른 장면 강조 확대 끄기':'고른 장면에 강조 확대';
     refBox.querySelector('[data-ref-fx="all-dim"]').textContent=allOn('dim')?'고른 장면 어둡게 끄기':'고른 장면에 어둡게 강조';
+    refBox.querySelector('[data-ref-fx="auto"]').textContent=api.autoPlaced()?'자동 배치 빼기':'자동 배치 (훅·문제·제품 공개·고조·CTA)';
     refBox.querySelector('[data-ref-fx="jump"]').textContent=api.jumpZoomOn()?'점프 줌 컷 빼기':'점프 줌 컷 넣기 (구절마다 1.35배)';
     const t=api.effectAt(0).dim;
     on('[data-ref-fx="title"]',!!t&&t.sec>0,'시작 어두운 제목 화면');
@@ -116,6 +118,7 @@
     if(what==='zoom'||what==='dim'||what==='shock'){api.emphAt(i,what,!api.emphOn(i,what));if(what==='zoom')aimEmphasis([i]);lastIndex=-1;}
     else if(what==='all-zoom'||what==='all-dim'||what==='all-shock'){const kind=what.slice(4);api.emphMoments([...pickMoments],kind,!allOn(kind));if(kind==='zoom')aimEmphasis(api.moments().map((_,k)=>k));}
     else if(what==='jump')api.jumpZoom(!api.jumpZoomOn());
+    else if(what==='auto'){const on=!api.autoPlaced();api.autoPlace(on);if(on)aimEmphasis(api.moments().map((_,k)=>k));}
     else{const e=structuredClone(api.effectAt(0));if(e.dim&&e.dim.sec>0)delete e.dim;else e.dim={...fx.dimTitle};api.effectAt(0,e);}
     updateControls();sync();
   });
@@ -215,6 +218,8 @@
       context=event.data.context;
       const saved=event.data.snapshot||{...api.snapshot(),captionTexts:{},effects:{}};
       api.load(context,saved);
+      // 효과를 하나도 안 넣은 영상이면 처음 열 때 자동 배치(관제 124). 한 번이라도 손댄 영상(효과 칸이 있음)은 건드리지 않는다.
+      if(!Object.keys(saved.effects||{}).length&&api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));
       if(Number.isInteger(event.data.sceneIndex))api.show(event.data.sceneIndex);
       document.documentElement.classList.remove('scene-waiting');   // 실제 데이터가 그려졌다 — 본문을 보인다(머리띠 가림은 html 표식이 계속)
       const status=pane.querySelector('[data-connection-status]');if(status)status.textContent=`실제 자막 ${context.scenes.length}개를 연결했습니다.`;

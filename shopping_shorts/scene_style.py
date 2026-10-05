@@ -89,6 +89,8 @@ def validate_snapshot(value):
         number(effect.get("zoomIn",0),0,3)
         if effect.get("zoomMove",'in') not in ("in","pull","inout"):   # 확대 방식: 0.5초 확대 / 장면 내내 쭉 당기기 / 확대 후 돌아오기
             raise ValueError("확대 방식이 올바르지 않습니다")
+        if not isinstance(effect.get("fxAutoPlaced",False),bool):   # 자동 배치가 넣은 칸 표식
+            raise ValueError("자동 배치 표식이 올바르지 않습니다")
         if not isinstance(effect.get("shock",False),bool):   # 흑백 충격(흑백·지지직·흔들림)
             raise ValueError("흑백 충격 형식이 올바르지 않습니다")   # 확대 움직임(관제 124): 장면 시작부터 zoomIn초 동안 1배→zoom 배로 빨려 들어감(0=멈춘 확대)
         if "fxAuto" in effect and effect["fxAuto"] not in ("jump","emph"):
