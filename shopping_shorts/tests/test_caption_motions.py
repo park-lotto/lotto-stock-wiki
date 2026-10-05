@@ -60,3 +60,29 @@ def test_서버가_계약_파일을_편집기_자산으로_내준다():
 def test_렌더러는_글자_단위_움직임도_굳혀_찍는다():
     js = (ROOT / "tools/render_scene_style.js").read_text(encoding="utf-8")
     assert ".cap-u" in js
+
+
+# ── 자막팩(3단계) ────────────────────────────────────────────────────────────
+def _packs():
+    return json.loads(CONTRACT.read_text(encoding="utf-8").split("/*PACKS*/")[1])
+
+
+def test_팩은_계약_파일_한_곳이고_칸_효과가_모두_있다():
+    packs, motions = _packs(), _motions()
+    assert scene_style.caption_pack_keys() == tuple(packs)
+    for k, p in packs.items():
+        assert set(p["slots"]) == {"first", "body", "price", "end"}, k
+        assert all(v in motions for v in p["slots"].values()), k
+
+
+def test_서버는_팩_값을_저장하고_모르는_팩은_거절():
+    snap = {"version": 1, "mode": "story", "presetId": "plain", "sceneIndex": 0, "frameKind": "hook"}
+    for k in scene_style.caption_pack_keys():
+        assert scene_style.validate_snapshot({**snap, "captionPack": k})["captionPack"] == k
+    with pytest.raises(ValueError):
+        scene_style.validate_snapshot({**snap, "captionPack": "nope"})
+
+
+def test_렌더러는_팩만_골라도_자막_등장을_찍는다():
+    js = (ROOT / "tools/render_scene_style.js").read_text(encoding="utf-8")
+    assert "request.snapshot.captionPack" in js

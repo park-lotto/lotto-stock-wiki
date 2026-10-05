@@ -516,4 +516,67 @@
   "boxAt": 0.05
  }
 }/*JSON*/;
+  // 자막팩(관제 127 3단계) — 팩 하나 고르면 장면마다 칸(slots)을 보고 등장 효과를 자동으로 고른다. 칸을 정하는 판단은 편집기 captionSlot 한 곳.
+  //   slots: first 첫 장면 · body 일반 줄 · price 가격·숫자 줄 · end 마지막 장면 → 값은 위 CAPTION_MOTIONS 키.
+  //   wordFx: 팩을 누를 때 같이 켜 주는 단어 강조(style '' = 끔). 고객이 나중에 따로 바꿀 수 있다(저장은 wordFx 따로).
+  //   ★서버는 PACKS 표식 두 개 사이를 json 으로 읽는다(scene_style.caption_pack_keys) — 그 안에는 JSON 만.
+  root.CAPTION_PACKS = /*PACKS*/{
+ "tension": {
+  "label": "예능 텐션",
+  "desc": "통통 튀고 쾅 박히는 예능 자막",
+  "slots": {
+   "first": "slam",
+   "body": "popBounce",
+   "price": "jelly",
+   "end": "slam"
+  },
+  "wordFx": {
+   "style": "box",
+   "grow": "pop"
+  }
+ },
+ "clean": {
+  "label": "깔끔 정보",
+  "desc": "또렷하게 읽히는 정보형",
+  "slots": {
+   "first": "riseClip",
+   "body": "blurUp",
+   "price": "popBounce",
+   "end": "fade"
+  },
+  "wordFx": {
+   "style": "color",
+   "grow": "hold"
+  }
+ },
+ "premium": {
+  "label": "고급 리뷰",
+  "desc": "천천히 모이는 차분한 리뷰형",
+  "slots": {
+   "first": "trackIn",
+   "body": "fade",
+   "price": "riseClip",
+   "end": "trackIn"
+  },
+  "wordFx": {
+   "style": "",
+   "grow": ""
+  }
+ },
+ "story": {
+  "label": "썰 이야기",
+  "desc": "타닥타닥 쳐 나가는 썰 채널형",
+  "slots": {
+   "first": "typing",
+   "body": "typing",
+   "price": "popBounce",
+   "end": "riseClip"
+  },
+  "wordFx": {
+   "style": "box",
+   "grow": "hold"
+  }
+ }
+}/*PACKS*/;
+  root.CAPTION_SLOTS = {"first": "첫 장면", "body": "일반 줄", "price": "가격·숫자", "end": "마지막 장면"};
 })(window);

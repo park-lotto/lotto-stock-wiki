@@ -16,6 +16,12 @@ def caption_motion_keys():
     return tuple(json.loads(text.split("/*JSON*/")[1]))
 
 
+def caption_pack_keys():
+    """자막팩 저장값 목록 — 같은 계약 파일의 PACKS 표식 사이(관제 127)."""
+    text = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")
+    return tuple(json.loads(text.split("/*PACKS*/")[1]))
+
+
 def validate_snapshot(value):
     if not isinstance(value, dict) or len(json.dumps(value, ensure_ascii=False)) > 250_000:
         raise ValueError("장면꾸미기 설정이 올바르지 않습니다")
@@ -157,6 +163,8 @@ def validate_snapshot(value):
             raise ValueError(f"{label} 값이 올바르지 않습니다")
     if value.get("bodyCaptionMotion") not in (None, "", *caption_motion_keys()):   # 계약 파일 static/caption-motions.js 한 곳(관제 127)
         raise ValueError("본문 자막 효과 값이 올바르지 않습니다")
+    if value.get("captionPack") not in (None, "", *caption_pack_keys()):   # 자막팩(관제 127) — 계약 파일 한 곳
+        raise ValueError("자막팩 값이 올바르지 않습니다")
     word_fx = value.get("wordFx")
     if word_fx is not None:
         # 단어 강조(관제 102) — precision20-ui.js WORD_FX_STYLES 와 짝. color 빈칸 = 템플릿 포인트 색(자동).
@@ -187,7 +195,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
