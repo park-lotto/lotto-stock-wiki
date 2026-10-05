@@ -1023,10 +1023,15 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
     (수집이 끝나 크론도 꺼져 있다). days보다 먼저 본다 — 둘 다 오면 아카이브가 이긴다."""
     store = Store(DB_PATH)
     if archive:
-        if platform != "instagram":
+        if platform == "youtube":
+            # ★유튜브는 이 자리가 '채널별 터진 영상'이다(2026-10-06 사장님 "유튜브는 역대히트작 자리에", 관제 137).
+            #   유튜브에는 누적 아카이브가 없어 이 탭이 늘 비어 있었다.
+            items, collected_at = store.channel_hit_items(), None
+        elif platform != "instagram":
             return {"ok": True, "items": [], "collected_at": None}
-        items, collected_at = store.archive_hits(
-            min_comments=min_comments, max_comments=max_comments), None
+        else:
+            items, collected_at = store.archive_hits(
+                min_comments=min_comments, max_comments=max_comments), None
     elif days > 0:
         # ★플랫폼 그대로 넘긴다(2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데
         #   이번주 터진것·이번달도"). 여태 인스타가 아니면 빈 목록을 줬다 —
@@ -9940,7 +9945,8 @@ def _longform_run(src, job_dir, where):
 def _longform_status(job_id, src, where):
     from shopping_shorts import link_longform
     st = link_longform.state(_MIX_WORK_DIR / job_id, src, where)
-    st.update({"ok": st["state"] != "error", "text": link_longform.text_for(where)})
+    st.update({"ok": st["state"] != "error", "text": link_longform.text_for(where),
+               "custom": bool(link_longform.load_layout(_MIX_WORK_DIR / job_id))})   # 장면꾸미기 롱폼 탭에서 꾸민 안내가 있다
     if st["state"] == "ready":
         st["url"] = f"/api/mix/video_longform/{job_id}"
     return st
@@ -9970,6 +9976,40 @@ def api_mix_longform_link(job_id: str, body: dict):
     link_longform.mark_running(job_dir)
     threading.Thread(target=_longform_run, args=(src, job_dir, where), daemon=True).start()
     return _longform_status(job_id, src, where)
+
+
+def _longform_layout_job(job_id, request):
+    """꾸민 안내를 읽고 쓸 수 있는 작업인가 — 스위치(link_guide_enabled)가 열어 준 계정의 자기 작업(관리자는 전부)."""
+    cid = _cid(request)
+    if not _setting_gate(Store(DB_PATH), "link_guide_enabled", cid):
+        return None, JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능입니다"})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or (not _is_admin(cid) and int(job.get("customer_id") or 0) != cid):
+        return None, JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요"})
+    return job, None
+
+
+@app.get("/api/mix/longform_layout/{job_id}")
+def api_mix_longform_layout_get(job_id: str, request: Request):
+    """장면꾸미기 롱폼 탭에서 놓은 안내 항목(없으면 빈 목록)."""
+    from shopping_shorts import link_longform
+    _job, bad = _longform_layout_job(job_id, request)
+    if bad is not None:
+        return bad
+    return {"ok": True, "items": link_longform.load_layout(_MIX_WORK_DIR / job_id)}
+
+
+@app.post("/api/mix/longform_layout/{job_id}")
+def api_mix_longform_layout_save(job_id: str, body: dict, request: Request):
+    """안내 항목 저장(빈 목록 = 지우기). 범위 검사·저장은 link_longform 한 곳. 9단계 「롱폼으로 렌더」가 이걸 굽는다."""
+    from shopping_shorts import link_longform
+    _job, bad = _longform_layout_job(job_id, request)
+    if bad is not None:
+        return bad
+    job_dir = _MIX_WORK_DIR / job_id
+    if not job_dir.is_dir():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 폴더가 없어요"})
+    return {"ok": True, "items": link_longform.save_layout(job_dir, (body or {}).get("items"))}
 
 
 @app.get("/api/mix/video_longform/{job_id}")
@@ -16383,7 +16423,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 신호어 새 풀(히트 자막 2,051편 빈도 가중, 2026-10-05) — ""끔(종전 8세트) · "admin" · "1" 전체
                        "signal_pool_enabled",
                        # 대화형 대본(관제 128, 2026-10-05) — ""끔 · "admin" 사장님만 시험 · "1" 전체
-                       "dialogue_enabled"}
+                       "dialogue_enabled",
+                       # 구매링크 안내(관제 133, 2026-10-06) — 장면꾸미기 유튜브 화면 자리 표시 + 쇼핑 안내 세트 새 디자인. ""끔 · "admin" 사장님만 · "1" 전체
+                       "link_guide_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -21537,7 +21579,8 @@ def api_sfx_pack_sound(pack_no: int, slot: str, request: Request):
 def api_scene_style_asset(asset_path: str):
     from .scene_style import ROOT
     candidate = (ROOT / asset_path).resolve()
-    names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js"}
+    names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js",
+             "link-longform-stage.html", "link-longform-blocks.js"}   # 구매링크 롱폼 화면(관제 133)
     allowed = (asset_path.startswith("out/") and asset_path[4:] in names)
     allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "shopping_shorts/static/text-look-contract.js", "out/scene-style-labels.js"}
     allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/", "out/장면꾸미기_로고/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
@@ -21584,6 +21627,8 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     if copy_family:
         headcopy["copy_family"] = headcopy_gen.normalize_family(copy_family)
     context = context_for(timeline, headcopy, snapshot, job_id)
+    # 구매링크 안내(관제 133): 스위치가 열어 준 계정에만 편집기가 유튜브 화면 자리·새 세트 디자인을 보여 준다(out/scene-style-decorations.js guideOn).
+    context["linkGuide"] = bool(_setting_gate(Store(DB_PATH), "link_guide_enabled", _cid(request)))
     # ★페이지 그림 = **그 페이지 시간 한가운데**의 실제 화면(2026-10-03 관제 101, 황선희님 817308da1647).
     #   종전엔 모든 페이지에 칸 대표 그림 한 장(beatframe/<칸>)을 줘서, 장면 앞 1초에만 지나가는 원본 자막이
     #   편집기에 안 보였다 → 고객이 가림막을 못 넣고 완성본에서야 자막을 봤다. 시각 → 그림은 _beatframe_file(at=) 한 곳.

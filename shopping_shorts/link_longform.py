@@ -20,7 +20,7 @@ from pathlib import Path
 from shopping_shorts import video_assemble
 
 OUT_W, OUT_H = 1920, 1080
-RULE = "link_longform_v1"                 # 구도·문구 그리는 법이 바뀌면 올린다 → 옛 파일은 자동으로 다시 만든다
+RULE = "link_longform_v2"                 # 구도·문구 그리는 법이 바뀌면 올린다 → 옛 파일은 자동으로 다시 만든다
 OUT_NAME = "final_longform.mp4"
 META_NAME = "link_longform.json"
 _TMP_NAME = "final_longform.tmp.mp4"
@@ -33,6 +33,94 @@ TEXTS = {
     "desc": "구매링크 설명란에 있습니다",
 }
 DEFAULT_WHERE = "comment"
+
+# ── 꾸민 안내(관제 133, 2026-10-06 사장님 "문구 띠 + 큰 화살표, 자유롭게 놓기") ──────────────────────────
+#   장면꾸미기 「롱폼」 탭에서 놓은 항목 목록. 작업 폴더의 LAYOUT_NAME 에 둔다. 있으면 고정 문구 대신 이 항목을 굽는다.
+#   ★범위 검사는 여기 한 곳(normalize_layout). 그리기는 화면과 같은 코드(out/link-longform-stage.html)를 헤드리스로 찍는다.
+LAYOUT_NAME = "link_longform_layout.json"
+FPS = 30
+LOOP_FRAMES = 72                          # 움직임 한 바퀴 = 2.4초(out/link-longform-blocks.js LOOP_MS) — 시계가 없으면 이만큼만 찍어 돌린다
+_BLOCKS = ("band", "arrow")
+_TONES = ("red", "yellow", "black", "blue", "purple", "green")
+_ITEM_MAX = 8
+_TEXT_MAX = 24
+_CLOCK_MAX = 99 * 60 + 59
+_ROOT = Path(__file__).resolve().parents[1]
+
+
+def normalize_layout(raw):
+    """화면이 보낸 항목 목록 → 저장·렌더에 쓸 목록. 모르는 블록·이상한 값은 통째로 버린다(엉뚱한 자리에 그리느니 안 그린다)."""
+    out = []
+    for m in (raw or [])[:_ITEM_MAX]:
+        if not isinstance(m, dict) or m.get("block") not in _BLOCKS:
+            continue
+        try:
+            l, t, w = float(m.get("l", 0)), float(m.get("t", 0)), float(m.get("w", 0))
+        except (TypeError, ValueError):
+            continue
+        if not (3 <= w <= 110 and -20 <= l <= 100 and -20 <= t <= 100):
+            continue
+        item = {"kind": "block", "block": m["block"], "l": round(l, 2), "t": round(t, 2), "w": round(w, 2),
+                "tone": m.get("tone") if m.get("tone") in _TONES else "red"}
+        if m["block"] == "band":
+            for k in ("pre", "hot", "post"):
+                item[k] = str(m.get(k) or "")[:_TEXT_MAX]
+            try:
+                clock = int(m.get("clock") or 0)
+            except (TypeError, ValueError):
+                clock = 0
+            if 0 < clock <= _CLOCK_MAX:
+                item["clock"] = clock
+            if not (item["pre"] or item["hot"] or item["post"] or item.get("clock")):
+                continue
+        out.append(item)
+    return out
+
+
+def load_layout(job_dir):
+    """저장해 둔 항목 목록(없거나 깨졌으면 빈 목록 = 고정 문구로 굽는다)."""
+    try:
+        return normalize_layout(json.loads((Path(job_dir) / LAYOUT_NAME).read_text(encoding="utf-8")).get("items"))
+    except (OSError, ValueError, AttributeError):
+        return []
+
+
+def save_layout(job_dir, raw):
+    """항목 목록 저장. 빈 목록이면 파일을 지운다(고정 문구로 돌아간다). 저장된 목록을 돌려준다."""
+    items = normalize_layout(raw)
+    p = Path(job_dir) / LAYOUT_NAME
+    if items:
+        p.write_text(json.dumps({"items": items}, ensure_ascii=False), encoding="utf-8")
+    elif p.exists():
+        p.unlink()
+    return items
+
+
+def overlay_frames(items, out_dir, frames, timeout=900):
+    """항목을 투명 PNG(1920x1080)로 찍는다 — frames = 프레임 번호 목록(30fps). 파일 이름 = 번호 5자리.
+    검사 도구(tools/link_longform_check.py)도 같은 함수로 '그 시각의 안내 그림'을 다시 뽑아 완성본과 대조한다."""
+    import subprocess
+    out_dir = Path(out_dir).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    req = out_dir / "request.json"
+    req.write_text(json.dumps({"items": items, "output": str(out_dir), "frames": [int(f) for f in frames], "fps": FPS},
+                              ensure_ascii=False), encoding="utf-8")
+    env = os.environ.copy()
+    if sys.platform.startswith("linux"):
+        env.setdefault("SCENE_STYLE_NO_SANDBOX", "1")      # scene_style.render_layers 와 같은 까닭(운영 Ubuntu AppArmor)
+    run = subprocess.run(["node", str(_ROOT / "tools/render_link_longform.js"), str(req)],
+                         capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout, env=env)
+    if run.returncode:
+        raise RuntimeError("롱폼 안내 그림 생성 실패: " + run.stderr[-800:])
+    return out_dir
+
+
+def frame_count(items, dur):
+    """찍을 프레임 수 — 시계가 있으면 영상 길이만큼(초마다 숫자가 다르다), 없으면 한 바퀴(LOOP_FRAMES)만 찍어 돌린다."""
+    if any(m.get("clock") for m in items):
+        return int(float(dur) * FPS) + 2             # 끝 프레임까지 덮는다(모자라면 되풀이돼 시계가 30:00 으로 튄다)
+    return LOOP_FRAMES
+
 
 _FONT = video_assemble._FONT_DIR / "GmarketSansBold.otf"
 _YELLOW = (255, 236, 0, 255)
@@ -116,7 +204,7 @@ def is_fresh(job_dir, src, where):
         meta = json.loads(p["meta"].read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return False
-    want = dict(_src_sig(src), rule=RULE, text=text_for(where))
+    want = dict(_src_sig(src), rule=RULE, text=text_for(where), layout=load_layout(job_dir))
     return all(meta.get(k) == v for k, v in want.items())
 
 
@@ -152,14 +240,24 @@ def render_link_longform(src, job_dir, where=DEFAULT_WHERE):
     from shopping_shorts import mix_pipeline
     p = paths(job_dir)
     text = text_for(where)
+    items = load_layout(job_dir)                      # 꾸민 안내가 있으면 그걸 굽는다(없으면 고정 문구)
+    frames_dir = Path(job_dir) / "link_longform_frames"
     sig = _src_sig(src)                               # 굽기 **전** 원본 서명 — 굽는 중 재렌더되면 표식이 어긋나 옛 것으로 판정된다
-    w, h, _dur = mix_pipeline._probe_wh_dur(src)
+    w, h, dur = mix_pipeline._probe_wh_dur(src)
     fg_w = fg_width(w, h)
     png = Path(job_dir) / "link_longform_overlay.png"
     try:
         if p["err"].exists():
             p["err"].unlink()
-        info = draw_overlay(png, text, fg_w)
+        if items:
+            n = frame_count(items, dur)
+            overlay_frames(items, frames_dir, range(n), timeout=int(min(900, 180 + n * 0.6)))
+            info = {"frames": n}
+            # 프레임 묶음을 끝까지 되풀이해 얹는다(시계가 있으면 영상 길이만큼 찍었으므로 되풀이되지 않는다)
+            overlay_in = ["-stream_loop", "-1", "-framerate", str(FPS), "-i", str(frames_dir / "%05d.png")]
+        else:
+            info = draw_overlay(png, text, fg_w)
+            overlay_in = ["-loop", "1", "-framerate", "30", "-i", str(png)]
         fc = (
             # 흐린 배경: 작게 줄여 흐리고 다시 키운다(1920 폭에서 직접 흐리는 것보다 몇 배 빠르다)
             "[0:v]split=2[a][b];"
@@ -171,14 +269,14 @@ def render_link_longform(src, job_dir, where=DEFAULT_WHERE):
             #   (2026-10-05 실측: 0.5초엔 있고 12초엔 없었다. 검사 도구가 잡았다). 길이는 영상이 정한다(shortest).
             "[v1][1:v]overlay=0:0:shortest=1,format=yuv420p[v]"
         )
-        cmd = ["ffmpeg", "-y", "-i", str(src), "-loop", "1", "-framerate", "30", "-i", str(png),
+        cmd = ["ffmpeg", "-y", "-i", str(src), *overlay_in,
                "-filter_complex", fc,
                "-map", "[v]", "-map", "0:a?", "-r", "30",
                "-c:v", "libx264", "-preset", video_assemble._preset(), "-crf", video_assemble._crf(),
                *video_assemble._threads_args(), "-c:a", "copy", "-movflags", "+faststart", str(p["tmp"])]
         video_assemble._run_ffmpeg(cmd)
         os.replace(str(p["tmp"]), str(p["out"]))
-        p["meta"].write_text(json.dumps(dict(sig, rule=RULE, text=text, fg_w=fg_w, **info),
+        p["meta"].write_text(json.dumps(dict(sig, rule=RULE, text=text, fg_w=fg_w, layout=items, **info),
                                         ensure_ascii=False), encoding="utf-8")
         return p["out"]
     except Exception as e:
@@ -196,3 +294,5 @@ def render_link_longform(src, job_dir, where=DEFAULT_WHERE):
                     f.unlink()
             except OSError:
                 pass
+        import shutil
+        shutil.rmtree(frames_dir, ignore_errors=True)

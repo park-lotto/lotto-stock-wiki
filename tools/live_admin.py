@@ -13,11 +13,13 @@
 """
 import contextlib
 import json
+import os
 import subprocess
 import sys
 
 HOST = "ubuntu@3.35.251.172"      # IP 가 바뀌면 nslookup shoppingshorts.duckdns.org
-KEY = r"C:/Users/TheRose/crawling_bot_client/LightsailDefaultKey-ap-northeast-2.pem"
+# 키는 PC마다 사용자 폴더가 다르다(TheRose·CH). 경로를 박아두면 다른 PC에서 "Permission denied"로 죽는다.
+KEY = os.path.join(os.path.expanduser("~"), "crawling_bot_client", "LightsailDefaultKey-ap-northeast-2.pem").replace("\\", "/")
 BASE = "https://shoppingshorts.duckdns.org"
 
 _MINT = r'''set -a; . /etc/shopping-shorts.env; set +a; python3 -c "

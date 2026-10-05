@@ -340,13 +340,25 @@
   //   (워터마크 scene_style_branding 과 같은 방식 — 이 브라우저에 기억한다).
   //   쓰는 곳 ①effect(): 로고를 넣거나 옮기면 기억, 어느 장면에도 안 남게 지우면 잊는다 ②freshEffects(): 저장본 없는 새 작업의 전 장면에 얹는다
   //          ③내 프리셋 등록(snap.logo)·적용(전 장면에 얹는다).
-  const LOGO_KEY='scene_style_logo';
+  //   범위(2026-10-05 사장님 "로고 칸에서 전 장면에 할지 이 장면에만 할지 선택"): 'all'(기본) = 넣기·옮기기·크기·지우기가 전 장면에 같이 간다,
+  //   'one' = 보는 장면에만(고르는 순간 다른 장면의 로고는 빠진다). 범위도 이 브라우저에 기억한다(scene_style_logo_scope). 'one'으로 쓴 로고는 새 작업에 자동으로 넣지 않는다
+  //   (장면 수가 작업마다 달라 어느 장면인지 정할 수 없다 — 로고 칸의 내 로고를 한 번 누르면 된다).
+  const LOGO_KEY='scene_style_logo',LOGO_SCOPE_KEY='scene_style_logo_scope';
+  let logoScope='all';try{if(!qaMode&&!labMode&&localStorage.getItem(LOGO_SCOPE_KEY)==='one')logoScope='one'}catch{}
   const isLogo=m=>!!m&&m.kind==='image'&&typeof m.src==='string';
   const logoOf=e=>((e&&e.masks)||[]).find(isLogo)||null;
   const rememberedLogo=()=>{if(qaMode||labMode)return null;try{const v=JSON.parse(localStorage.getItem(LOGO_KEY)||'null');return isLogo(v)?v:null}catch{return null}};
   const rememberLogo=item=>{if(qaMode||labMode)return;try{if(item)localStorage.setItem(LOGO_KEY,JSON.stringify(item));else localStorage.removeItem(LOGO_KEY)}catch{}};
   const withLogo=(e,item)=>{const rest=((e&&e.masks)||[]).filter(m=>!isLogo(m));return rest.length>=12?(e||{}):{...(e||{}),masks:[...rest,structuredClone(item)]}};
   const logoEverywhere=(item,count=sceneTotal())=>{for(let i=0;i<count;i++)effects[String(i)]=withLogo(effects[String(i)],item)};
+  const logoSig=e=>JSON.stringify(((e&&e.masks)||[]).filter(isLogo));
+  // 범위가 '모든 장면'일 때: 이 장면의 로고(들)를 다른 모든 장면에 그대로 맞춘다(로고만 — 확대·가림막·스티커는 안 건드린다).
+  const spreadLogos=from=>{const src=effects[String(from)],logos=((src&&src.masks)||[]).filter(isLogo);
+    for(let i=0;i<sceneTotal();i++){if(i===from)continue;const k=String(i),e=effects[k]||{},rest=(e.masks||[]).filter(m=>!isLogo(m));
+      if(!logos.length&&rest.length===(e.masks||[]).length)continue;
+      effects[k]={...e,masks:[...rest,...structuredClone(logos)].slice(0,12)};}};
+  // '이 장면만'을 고르면: 보는 장면의 로고만 남기고 다른 장면의 로고를 뺀다(로고만 — 다른 효과는 그대로). 보는 장면에 로고가 없으면 아무것도 안 한다.
+  const onlyHereLogos=keep=>{for(const k of Object.keys(effects)){if(k===String(keep))continue;const e=effects[k];if(logoOf(e))effects[k]={...e,masks:e.masks.filter(m=>!isLogo(m))};}};
   // 한 장면의 효과가 바뀐 뒤 부른다: 새로 생겼거나 달라진 로고가 있으면 그것을 기억, 이 장면에서 로고가 없어졌고 다른 장면에도 없으면 잊는다.
   const noteLogo=(before,after)=>{
     const was=new Set(((before&&before.masks)||[]).filter(isLogo).map(m=>JSON.stringify(m))),now=((after&&after.masks)||[]).filter(isLogo);
@@ -2031,9 +2043,12 @@
     },
     show(index){showScene(index);return this.geometry()},
     geometry:()=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
-    effect(value){if(value!==undefined){const k=String(sceneIndex),before=effects[k];effects[k]=value;noteLogo(before,value);}return effects[String(sceneIndex)]||{}},
+    effect(value){if(value!==undefined){const k=String(sceneIndex),before=effects[k];effects[k]=value;if(logoScope==='all'&&logoSig(before)!==logoSig(value))spreadLogos(sceneIndex);noteLogo(before,value);}return effects[String(sceneIndex)]||{}},
+    // 로고 범위 읽기·바꾸기(관제 131). '모든 장면'으로 바꾸면 보는 장면의 로고를 곧바로 전 장면에 맞춘다(로고가 없는 장면이면 그대로 둔다).
+    logoScope(value){if(value==='all'||value==='one'){logoScope=value;if(!qaMode&&!labMode)try{localStorage.setItem(LOGO_SCOPE_KEY,value)}catch{}if(value==='all'&&logoOf(effects[String(sceneIndex)])){spreadLogos(sceneIndex);rememberLogo(logoOf(effects[String(sceneIndex)]));}
+      else if(value==='one'&&logoOf(effects[String(sceneIndex)]))onlyHereLogos(sceneIndex);}return logoScope},   // 10-06 사장님 "이 장면만 선택 후 다른 페이지 넘기는데 여전히 있다" — 고르는 순간 다른 장면에서 뺀다   // 전 장면에 맞춘 그 로고가 곧 최종기억(직전에 '이 장면만'으로 손댄 값이 아니라)
     // 저장본이 없는 새 작업의 첫 효과(관제 131): 마지막에 쓴 로고를 전 장면에 얹는다. 기억이 없으면 빈 값.
-    freshEffects(count){const item=rememberedLogo(),out={};if(item)for(let i=0;i<count;i++)out[String(i)]=withLogo({},item);return out},
+    freshEffects(count){const item=logoScope==='all'?rememberedLogo():null,out={};if(item)for(let i=0;i<count;i++)out[String(i)]=withLogo({},item);return out},
     // 다른 장면의 효과를 직접 읽고 쓴다(쇼핑 안내 세트가 마지막 장면 여러 개에 한 번에 넣는다, 2026-09-23)
     effectAt(i,value){const k=String(i);if(value!==undefined)effects[k]=value;return effects[k]||{}},
     sceneCount:()=>sceneTotal(),

@@ -15114,7 +15114,7 @@ async function trimCta(j){
 //     시청자가 롱폼으로 넘어가 설명란·댓글 링크를 누른다. 고객들이 캡컷에서 손으로 만들던 것을 버튼 하나로.
 // ★구도·문구·"지금 완성본으로 만든 것인가"는 서버(link_longform) 한 곳이 정한다 — 화면은 상태를 물어 그리기만 한다.
 // ★자리 하나에 그리는 함수 하나(test_dom_owner_budget): #longformBox 는 _lfRender 혼자 그린다.
-const _lfState={job:'', rendered:false, phase:'idle', where:'comment', msg:'', url:'', t0:0};
+const _lfState={job:'', rendered:false, phase:'idle', where:'comment', msg:'', url:'', t0:0, custom:false};
 let _lfTimer=null;
 function _lfStop(){ if(_lfTimer){ clearInterval(_lfTimer); _lfTimer=null; } }
 function _lfRender(){
@@ -15123,7 +15123,8 @@ function _lfRender(){
   const can=(on && !run && S.phase!=='ready');   // 이미 만든 것이 최신이면 다시 누를 일이 없다(문구를 바꾸면 다시 켜진다)
   const j=encodeURIComponent(S.job), q='where='+encodeURIComponent(S.where);
   // ★문구 고르기는 뺐다(2026-10-06 사장님 "문구는 장면꾸미기에서 만들어서 올 거라 여기는 선택이 없어도 된다").
-  //   지금은 서버 기본 문구(link_longform.DEFAULT_WHERE)로 굽는다.
+  //   장면꾸미기 「롱폼」에서 꾸며 두었으면(관제 133) 그걸 굽고, 아니면 서버 기본 문구(link_longform.DEFAULT_WHERE)로 굽는다.
+  const sel=S.custom?'<span class="hint" style="display:inline-block;margin:0 6px 8px 0">🎨 장면꾸미기에서 꾸민 롱폼 안내로 만듭니다</span>':'';
   let body='';
   if(!on){
     body='<div class="hint">먼저 위 <b>🎬 최종 렌더</b>로 완성본을 만들면 이 버튼이 켜집니다.</div>';
@@ -15146,10 +15147,10 @@ function _lfRender(){
     + '<button id="btnLongform" class="btn-next" '+(can?'':'disabled ')
     + 'style="padding:12px 20px;margin:0 6px 8px 0;border:0;cursor:'+(can?'pointer':'not-allowed')+';min-height:44px'+(on?'':';opacity:.45')+'" '
     + 'onclick="renderLongform()">'+(run?'📺 만드는 중…':(S.phase==='ready'?'✅ 롱폼 렌더 완료':'📺 롱폼으로 렌더'))+'</button>'
-    + body + '</div>';
+    + sel + body + '</div>';
 }
 function _lfApply(d){
-  const S=_lfState;
+  const S=_lfState; S.custom=!!(d&&d.custom);
   if(d && d.state==='ready'){ S.phase='ready'; S.url=d.url; _lfStop(); }
   else if(d && d.state==='running'){ if(S.phase!=='running'){ S.t0=Date.now(); } S.phase='running'; _lfPoll(); }
   else if(d && (d.state==='error' || (d.ok===false && d.error))){ S.phase='error'; S.msg=d.error||''; _lfStop(); }
