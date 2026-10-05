@@ -33,29 +33,17 @@ AWK = [("신호어 뒤 접속사·신호어 겹침", re.compile(r"^(?:근데|그
 FIRST_END = re.compile(r"(?:거|것|다고|거든요?|잖아요?|거죠|다니까요?|더라고요?)[.!?~…]*$")
 
 
-def head_module():
-    """git HEAD 의 story_writer(이번에 고치기 전 풀) — 전/후 대조용. 실패하면 None."""
+def old_sets():
+    """git HEAD 의 YT_SETS(고치기 전 8세트)."""
     try:
         src = subprocess.run(["git", "-C", ROOT, "show", "HEAD:shopping_shorts/story_writer.py"],
                              capture_output=True, encoding="utf-8").stdout
-        import types
-        m = types.ModuleType("story_writer_head")
-        m.__dict__["__file__"] = sw.__file__
-        exec(compile(src, "story_writer_head", "exec"), m.__dict__)   # noqa: S102 — 우리 저장소 코드
-        return m
-    except Exception as e:                                          # 대조 불가 = 경보만
-        print("  [경보] HEAD 판본을 못 읽음:", e)
-        return None
-
-
-def pool_pick(mod, platform):
-    def f(key):
-        tok = mod.SIGNAL_POOL.set(True)          # 새 풀은 켠 계정만 — 재기 위해 켠다
-        try:
-            return mod.pick_signals(platform, key, 0)[1]
-        finally:
-            mod.SIGNAL_POOL.reset(tok)
-    return f
+    except OSError:
+        return {}
+    m = re.search(r"^YT_SETS = \{.*?^\}", src, re.S | re.M)
+    ns = {}
+    exec(m.group(0), ns) if m else None                  # noqa: S102 — 우리 저장소 코드
+    return ns.get("YT_SETS") or {}
 
 
 def diversity(pick, n=100):
@@ -70,15 +58,17 @@ def diversity(pick, n=100):
 
 def part_a():
     print("== (a) 세트 다양성 — 회원 100명 ==")
-    names = sorted(sw._OLD_YT_SETS)
-    print("  옛 8세트(스위치 꺼짐):", diversity(lambda k: sw._OLD_YT_SETS[names[zlib.crc32(k.encode()) % len(names)]]))
-    head = head_module()
-    for label, mod in (("HEAD 풀", head), ("지금 풀", sw)):
-        if mod is None:
-            continue
-        for pf in ("yt", "ig"):
-            print("  %s(%s):" % (label, pf.upper()), diversity(pool_pick(mod, pf)),
-                  "가능 조합", mod.signal_combo_count(pf))
+    old = old_sets()
+    if old:
+        names = sorted(old)
+
+        def old_pick(key):
+            return old[names[zlib.crc32(key.encode()) % len(names)]]
+        print("  고치기 전(YT 8세트):", diversity(old_pick))
+    if hasattr(sw, "pick_signals"):
+        print("  지금(YT):", diversity(lambda k: sw.pick_signals("yt", k, 0)[1]))
+        print("  지금(IG):", diversity(lambda k: sw.pick_signals("ig", k, 0)[1]))
+        print("  가능한 조합 수(YT/IG):", sw.signal_combo_count("yt"), "/", sw.signal_combo_count("ig"))
 
 
 def kinds_of(slots):
@@ -90,9 +80,8 @@ def kinds_of(slots):
              "twist" if str(s.get("slot") or "").split("_")[0].lower() in tw else "") for s in slots]
 
 
-def part_b(pool=False):
-    print("== (b) 저장된 스토리보드 — 새 풀 %s ==" % ("켬" if pool else "끔"))
-    tok = sw.SIGNAL_POOL.set(pool)
+def part_b():
+    print("== (b) 저장된 스토리보드 ==")
     tmp = os.environ.get("TEMP") or os.environ.get("TMP") or "/tmp"
     files = sorted(glob.glob(os.path.join(tmp, "sbtrial_*.json")))
     tot = before = after = 0
@@ -133,59 +122,10 @@ def part_b(pool=False):
         print("  어색한 결합: %d건" % len(awk))
         for a in awk:
             print("    ", a)
-    sw.SIGNAL_POOL.reset(tok)
-
-
-def part_c():
-    """(c) 낱말 전수 박기 — 풀의 **모든** 낱말 × 저장 보드의 모든 줄. 저장 칸이 적어(10칸) 새 낱말이 한 번도 안 박힐 수 있어서
-    낱말마다 실제 줄 위에 박아 어색한 결합(AWK)·본문 같은 말 반복(signal_fits)을 잰다."""
-    import json
-    print("== (c) 낱말 전수 박기 — 새 풀 켬 ==")
-    tmp = os.environ.get("TEMP") or os.environ.get("TMP") or "/tmp"
-    lines = []
-    for p in sorted(glob.glob(os.path.join(tmp, "sbtrial_*.json"))):
-        d = json.load(open(p, encoding="utf-8"))
-        for b in (d.get("boards") or {}).values():
-            lines += [x.get("line") for x in b.get("slots") or [] if x.get("line")]
-    tok = sw.SIGNAL_POOL.set(True)
-    words = [(r, w) for r, pool in sw.YT_POOLS.items() for w, _ in pool] + [(0, w) for w, _ in sw.IG_POOL]
-    n = bad = rep = 0
-    ex = []
-    per = Counter()
-    head = head_module()
-    old_words = {w for v in head.YT_POOLS.values() for w, _ in v} | {w for w, _ in head.IG_POOL} if head else set()
-    for r, w in words:
-        for ln in lines:
-            out = sw.attach_signal(ln, w)
-            n += 1
-            got = next((x for x in sorted(sw._ALL_SIGNAL_WORDS, key=len, reverse=True) if out.startswith(x + " ")), "")
-            rest = out[len(got):].strip() if got else out
-            for name, rx in AWK:
-                if got and rx.search(rest):
-                    bad += 1
-                    per[w] += 1
-                    ex.append((name, out))
-            if got and not sw.signal_fits(got, rest):
-                rep += 1
-                ex.append(("본문 같은 말 반복", out))
-    sw.SIGNAL_POOL.reset(tok)
-    print("  낱말 %d × 줄 %d = 박기 %d · 어색한 결합 %d · 같은 말 반복 %d" % (len(words), len(lines), n, bad, rep))
-    new = [w for _, w in words if w not in old_words]
-    print("  이번에 더한 낱말 %d개의 어색한 결합 %d건 / 원래 낱말 %d개 %d건 (줄은 같음 — 같은 줄에서 원래 낱말도 걸리면 줄 탓)"
-          % (len(new), sum(per[w] for w in new), len(words) - len(new), sum(v for w, v in per.items() if w not in new)))
-    print("  걸린 줄(중복 제거):")
-    lines_hit = Counter()
-    for name, out in ex:
-        got = next((x for x in sorted(sw._ALL_SIGNAL_WORDS, key=len, reverse=True) if out.startswith(x + " ")), "")
-        lines_hit[(name, out[len(got):].strip()[:30])] += 1
-    for (name, ln), v in lines_hit.most_common(8):
-        print("     %-22s %3d회  %s…" % (name, v, ln))
 
 
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
     sys.path.insert(0, os.path.dirname(__file__))
     part_a()
-    part_b(False)
-    part_b(True)
-    part_c()
+    part_b()
