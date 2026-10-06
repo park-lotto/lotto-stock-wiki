@@ -6566,6 +6566,10 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         # 열린 탭이 오래 들고 있던 전체 편성으로 최신 편성을 덮지 못하게 하는 판본 번호.
         "scene_lab_revision": scene_lab_revision,
         "beats": plan.get("beats") or [],
+        # ✂ 트림·🔗 합치기(관제 148) — 칸 편집 상태의 나머지 반쪽. 화면·서버 컷 러너가 같은 함수
+        #   (scene_play.js screenStateFromServer)로 되살린다. 없으면 트림 구멍이 러너에서 되살아난다.
+        "scene_lab_edits": {"trims": (plan.get("scene_lab") or {}).get("trims") or {},
+                            "merges": (plan.get("scene_lab") or {}).get("merges") or {}},
         "urls": job.get("urls") or [],
         "src_brief": src_brief,
         "syll_per_sec": _edit_plan._SYLLABLES_PER_SEC,

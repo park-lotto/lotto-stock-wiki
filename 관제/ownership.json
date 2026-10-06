@@ -757,6 +757,33 @@
    "검사도구": "tools/bgm_lib/check_render_capcut.py",
    "과금": false,
    "예외": {}
+  },
+  {
+   "이름": "칸 편집 상태 복원(목록·늘려 채우기·구절 맞춤·손 컷·느리게·손 길이·트림·합치기)",
+   "주인": [
+    "shopping_shorts/static/scene_play.js:screenStateFromServer",
+    "shopping_shorts/static/scene_play.js:applyScreenState"
+   ],
+   "시그니처": [
+    "function screenStateFromServer\b",
+    "function applyScreenState\b",
+    "function screenState\b",
+    "function stateOfWork\b",
+    "function hydrateCuts\b",
+    "function fixlenFromBeats\b",
+    "function cutsFromBeats\b"
+   ],
+   "소비처": [
+    "서버 컷 러너(screen_clips_runner.js → 완성본·캡컷·청소)",
+    "화면 restoreServer",
+    "화면 저장본 applyWork·loadSaved",
+    "제작소 큰 화면 _sceneLabPrep"
+   ],
+   "검사도구": "shopping_shorts/tests/test_screen_state_owner_148.py",
+   "과금": false,
+   "예외": {
+    "shopping_shorts/static/scene_lab.html": "stateOfWork 는 저장본 모양 → 상태 변환만(얹기는 applyScreenState) — 관제 148"
+   }
   }
  ]
 }

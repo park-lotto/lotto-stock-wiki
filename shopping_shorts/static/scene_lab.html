@@ -2017,18 +2017,10 @@ function hasServerEdit(){
 //   되살릴 게 없으면 false를 돌려주어 호출한 쪽이 다음 수단으로 넘어가게 한다(fail-open).
 function restoreServer(msg){
   if (!hasServerEdit()) return false;
-  lists = DATA.beats.map(b => serverList(b) || baseList(b));
-  hydrateFixlen(fixlenFromBeats());    // ✋ 서버가 기억하는 손 길이도 같이
-  // 서버 편성의 구절 맞춤 끔 표식도 같이 — 안 가져오면 끈 칸이 켠 칸으로 열려 얼린 컷과 어긋난다
-  if (typeof PHRASE_SYNC !== "undefined"){
-    Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
-    (DATA.beats || []).forEach((b, i) => { if (b.phrase_sync === false) PHRASE_SYNC[i] = false; });
-  }
-  if (typeof PHRASE_EXACT !== "undefined"){   // 구절 맞춤 '정확' 표식(관제 106)
-    Object.keys(PHRASE_EXACT).forEach(k => delete PHRASE_EXACT[k]);
-    (DATA.beats || []).forEach((b, i) => { if (b.phrase_exact === true) PHRASE_EXACT[i] = true; });
-  }
-  if (typeof hydrateCuts === "function") hydrateCuts(...cutsFromBeats());   // 끈 칸의 얼린 컷도(2026-09-14)
+  // ★칸 편집 상태 전부(목록·늘려 채우기·구절 맞춤·손 컷·느리게·손 길이·트림·합치기)를 서버 컷 러너(완성본)와
+  //   **같은 함수**로 되살린다(관제 148, scene_play.js screenStateFromServer). 여기서 칸별로 따로 적으면
+  //   한쪽만 빠진다 — 늘려 채우기를 빠뜨려 화면≠완성본이 났다.
+  applyScreenState(screenStateFromServer(DATA));
   mode = 'hand';                       // 서버 편성 = 사람이 정한 배치다
   ['live','one','hand','pick'].forEach(x => {
     const b = document.getElementById('m-' + x);
@@ -2679,7 +2671,7 @@ function playSegHere(sid){
   try{
     const up = _outerPlayer();
     if (up && typeof up.sceneLabPlaySeg === 'function'){
-      up.sceneLabPlaySeg(sid, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
+      up.sceneLabPlaySeg(sid, {DATA, onePerSeg, state: screenState()});
       playKey = 'seg:' + sid; renderBand();
       return;
     }
@@ -2693,7 +2685,7 @@ function playSegsHere(sids, label, ev){
   try{
     const up = _outerPlayer();
     if (up && typeof up.sceneLabPlaySegs === 'function'){
-      up.sceneLabPlaySegs(sids, label, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
+      up.sceneLabPlaySegs(sids, label, {DATA, onePerSeg, state: screenState()});
       playKey = 'segs:' + sids.join(','); renderBand();
       return;
     }
@@ -2711,7 +2703,7 @@ function playAllHere(ev){
   try{
     const up = _outerPlayer();
     if (up && typeof up.sceneLabPlayAll === 'function'){
-      up.sceneLabPlayAll({DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
+      up.sceneLabPlayAll({DATA, onePerSeg, state: screenState()});
       playKey = 'all'; renderBand();
       return;
     }
@@ -2731,7 +2723,7 @@ function playBeatHere(i, ev){
       // ★window에서 꺼내 쓰면 안 된다 — let/const로 선언한 전역은 window의 속성이 아니라서
       //   바깥에서 읽으면 undefined다(2026-08-15 실측: lists가 undefined라 재생이 죽었다).
       //   같은 도메인이라 객체를 그대로 건넬 수 있다(복사 아님 — 참조가 그대로 간다).
-      up.sceneLabPlay(i, {DATA, lists, STRETCH, TRIMS, MERGES, onePerSeg});
+      up.sceneLabPlay(i, {DATA, onePerSeg, state: screenState()});
       playKey = 'beat:' + i; renderBand();
       return;
     }
@@ -4248,39 +4240,12 @@ window.flushApply = flushApply;
 // ✋ FIXLEN 복원은 이 함수 하나로(복원 경로가 loadWork·loadSaved·서버편성 셋이다 —
 //    ★저장가드 교훈: 하이드레이션 함수 하나, 값이 없으면 **비운다**(캐리오버 방지)).
 // 얼린 컷 복원 — 옛 저장본엔 없다 → 비운다(끈 칸은 planClips가 처음 볼 때 지금 화면을 얼린다)
-function hydrateCuts(cuts, slow){
-  Object.keys(CUTS).forEach(k => delete CUTS[k]);
-  Object.keys(SLOW).forEach(k => delete SLOW[k]);
-  for (const [k, v] of Object.entries(cuts || {})){
-    // 🔒 잠금(lock)도 함께 되살린다 — 빼먹으면 새로고침에 잠금이 사라진다(FIXLEN이 한 실수).
-    if (Array.isArray(v)) CUTS[k] = v.filter(c => c && c.seg_id && c.dur > 0)
-                                     .map(c => c.lock ? {seg_id: c.seg_id, dur: +c.dur, lock: 1}
-                                                      : {seg_id: c.seg_id, dur: +c.dur});
-  }
-  for (const [k, v] of Object.entries(slow || {})) if (+v > 1) SLOW[k] = +v;
-}
-function cutsFromBeats(){
-  const c = {}, s = {};
-  (DATA.beats || []).forEach((b, i) => {
-    if (Array.isArray(b.manual_cuts)) c[i] = b.manual_cuts;
-    if (+b.slow > 1) s[i] = +b.slow;
-  });
-  return [c, s];
-}
-function hydrateFixlen(map){
-  Object.keys(FIXLEN).forEach(k => delete FIXLEN[k]);
-  for (const [k, v] of Object.entries(map || {})){
-    const n = parseFloat(v);
-    if (n > 0) FIXLEN[k] = Math.round(n * 100) / 100;
-  }
-}
-// 서버 편성으로 열 때 — 서버는 칸마다 fixed_lens({조각id:초})로 갖고 있다(apply_scene_lab).
-function fixlenFromBeats(){
-  const out = {};
-  (DATA.beats || []).forEach((b, i) => {
-    for (const [sid, v] of Object.entries(b.fixed_lens || {})) out[i + ':' + sid] = v;
-  });
-  return out;
+// 저장본(snapWork 모양 — 로컬·다른 PC 조립) → 칸 편집 상태. 얹는 건 scene_play.js applyScreenState 한 곳(관제 148).
+//   옛 저장본엔 없는 키는 {} → 비워진다(캐리오버 방지).
+function stateOfWork(w){
+  return {lists: (w.lists || []).map(l => Array.isArray(l) ? [...new Set(l)] : []),
+          stretch: w.stretch || {}, phrase_sync: w.phraseOff || {}, phrase_exact: w.phraseExact || {},
+          cuts: w.cuts || {}, slow: w.slow || {}, fixlen: w.fixlen || {}, trims: w.trims || {}, merges: w.merges || {}};
 }
 function loadWork(){
   try{
@@ -4304,27 +4269,15 @@ function applyWork(w){
     //   담기 경로(add·칸간 이동·채우기)는 모두 중복을 막으므로, 옛 저장본에 남은 중복만
     //   여기서 걷어내면 그 병의 조건 자체가 사라진다 — 자리 계산을 새로 만들 필요가 없다
     //   (컷은 라운드로빈으로 되풀이돼서 컷 번호와 담긴 목록의 자리가 1:1이 아니다).
-    lists = w.lists.map(l => Array.isArray(l) ? [...new Set(l)] : []);
+    // ★칸 편집 상태는 공용 함수 하나로 얹는다(관제 148 — scene_play.js applyScreenState). 저장본 모양만 여기서 바꾼다.
+    //   ★같은 조각 중복은 stateOfWork 가 걷는다(2026-08-21 버그리뷰 P3-5 — 자리 찾기 indexOf 가 첫 번째만 집는 병).
+    applyScreenState(stateOfWork(w));
     chosen.clear(); (w.chosen || []).forEach(x => chosen.add(x));
     Object.keys(NARR).forEach(k => delete NARR[k]);
     Object.assign(NARR, w.narr || {});
-    Object.keys(TRIMS).forEach(k => delete TRIMS[k]);   // ✂ 옛 저장본엔 trims가 없다 → {} 그대로
-    Object.assign(TRIMS, w.trims || {});
-    // 🔗 합친 조각도 같이 — 옛 저장본엔 merges가 없다 → {} 그대로(옛 편집이 안 깨진다)
-    Object.keys(MERGES).forEach(k => delete MERGES[k]);
-    Object.assign(MERGES, w.merges || {});
-    // 늘려 채우기·자동 채우기도 저장본에서 — 옛 저장본엔 없다 → {} 그대로(깨지지 않는다)
-    Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
-    Object.assign(STRETCH, w.stretch || {});
     Object.keys(AUTOADD).forEach(k => delete AUTOADD[k]);
     Object.assign(AUTOADD, w.autoadd || {});
     hydrateExtra(w);
-    hydrateFixlen(w.fixlen);   // ✋ 옛 저장본엔 없다 → 비워진다(캐리오버 방지)
-    Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
-    Object.assign(PHRASE_SYNC, w.phraseOff || {});
-    Object.keys(PHRASE_EXACT).forEach(k => delete PHRASE_EXACT[k]);
-    Object.assign(PHRASE_EXACT, w.phraseExact || {});
-    if (typeof hydrateCuts === "function") hydrateCuts(w.cuts, w.slow);
     ['live','one','hand','pick'].forEach(x => {
       const b = document.getElementById('m-' + x);
       if (b) b.classList.toggle('on', x === mode);
@@ -4338,25 +4291,13 @@ function loadSaved(){
   const w = DATA.saved;
   if (!w || !Array.isArray(w.lists) || w.lists.length !== DATA.beats.length) return false;
   mode = w.mode || 'hand';
-  lists = w.lists.map(l => Array.isArray(l) ? l.slice() : []);
+  applyScreenState(stateOfWork(w));            // 칸 편집 상태 = 공용 함수 하나(관제 148)
   chosen.clear(); (w.chosen || []).forEach(x => chosen.add(x));
   Object.keys(NARR).forEach(k => delete NARR[k]);
   Object.assign(NARR, w.narr || {});
-  Object.keys(TRIMS).forEach(k => delete TRIMS[k]);
-  Object.assign(TRIMS, w.trims || {});
-  Object.keys(MERGES).forEach(k => delete MERGES[k]);
-  Object.assign(MERGES, w.merges || {});
-  Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
-  Object.assign(STRETCH, w.stretch || {});
   Object.keys(AUTOADD).forEach(k => delete AUTOADD[k]);
   Object.assign(AUTOADD, w.autoadd || {});
   hydrateExtra(w);
-  hydrateFixlen(w.fixlen);     // ✋ 없으면 비운다
-  Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
-  Object.assign(PHRASE_SYNC, w.phraseOff || {});
-  Object.keys(PHRASE_EXACT).forEach(k => delete PHRASE_EXACT[k]);
-  Object.assign(PHRASE_EXACT, w.phraseExact || {});
-  if (typeof hydrateCuts === "function") hydrateCuts(w.cuts, w.slow);
   ['live','one','hand','pick'].forEach(x => {
     const b = document.getElementById('m-' + x);
     if (b) b.classList.toggle('on', x === mode);

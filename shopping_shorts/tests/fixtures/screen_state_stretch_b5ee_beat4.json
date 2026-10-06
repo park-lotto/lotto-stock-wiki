@@ -1,0 +1,116 @@
+{
+ "beats": [
+  {
+   "beat_idx": 4,
+   "narration": "복잡한 선 만지다 전선 태워먹던 지옥을",
+   "primary": {
+    "video_id": "s0",
+    "seg_id": "lens_youtube_1mgkmn1-2",
+    "start": 13.955,
+    "end": 20.933,
+    "scene_desc": "손가락으로 측면의 다중 포트(USB, C타입, 시거잭)를 하나씩 가리키며 훑음.",
+    "is_key": true,
+    "change": "손가락이 포트 부위를 따라 이동함",
+    "shot_role": "조작"
+   },
+   "alternates": [
+    {
+     "video_id": "s0",
+     "seg_id": "lens_youtube_1mgkmn1-5",
+     "start": 28.1,
+     "end": 33.412993,
+     "scene_desc": "패키지 뒷면의 상세 스펙 정보를 보여주며 정지 화면처럼 보여줌.",
+     "is_key": true,
+     "change": "스펙표가 고정되어 보여짐",
+     "shot_role": "실증"
+    }
+   ],
+   "scene_override": [
+    {
+     "video_id": "s2",
+     "seg_id": "film_s2_16.02_18.90",
+     "start": 16.02,
+     "end": 18.9,
+     "scene_desc": "",
+     "is_key": false,
+     "shot_role": "기타"
+    }
+   ],
+   "stretch_fill": true,
+   "phrase_sync": true
+  }
+ ],
+ "segments": {
+  "film_s2_16.02_18.90": {
+   "video_id": "s2",
+   "start": 16.02,
+   "end": 18.9
+  }
+ },
+ "tts_dur": {
+  "4": 2.184
+ },
+ "captions": {
+  "4": [
+   {
+    "text": "복잡한 선 만지다",
+    "start": 0.0,
+    "end": 0.981,
+    "sec": 0.939,
+    "off": 0.0,
+    "owner": 0,
+    "owner_n": 1
+   },
+   {
+    "text": "전선 태워먹던 지옥을",
+    "start": 0.981,
+    "end": 2.184,
+    "sec": 1.203,
+    "off": 0.0,
+    "owner": 0,
+    "owner_n": 1
+   }
+  ]
+ },
+ "src_duration": {
+  "s2": 19.39
+ },
+ "scenecuts": {
+  "s2": [
+   2.4,
+   6.433,
+   9.033,
+   13.266,
+   15.166
+  ]
+ },
+ "clean_spans": {
+  "s2": [
+   [
+    0.28,
+    2.248
+   ],
+   [
+    2.4,
+    5.27
+   ],
+   [
+    6.433,
+    7.783
+   ],
+   [
+    9.033,
+    11.003
+   ],
+   [
+    13.267,
+    15.097
+   ],
+   [
+    15.167,
+    18.2
+   ]
+  ]
+ },
+ "cut_rule": "scenes_v2"
+}
