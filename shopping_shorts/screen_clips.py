@@ -29,6 +29,8 @@ _RUNNER = _HERE / "screen_clips_runner.js"
 _SCENE_PLAY = _HERE / "static" / "scene_play.js"
 _CACHE = {}          # 칸 키 → {"t": 화면 칸 길이, "c": [컷]}
 _DATA_SEEN = {}      # job_id → 화면 데이터 해시(같으면 다시 안 돌린다)
+_RES_SEEN = {}       # job_id → 마지막 러너 결과(칸 순서) — 해시가 같아도 **지금 편성표 칸**으로 다시 키를 단다(관제 149)
+_WARMED = {}         # (job_id, beat_idx) → warm 때 키를 단 칸 사본 — 빗나가면 무엇이 달라졌는지 경보에 적는다
 _LOCK = threading.Lock()
 _CACHE_MAX = 20000
 # 컷 계산에 쓰이지 않는 칸 필드 — 키에서 뺀다(그림에 무관한데 자주 바뀌는 것)
@@ -156,6 +158,17 @@ def _miss(beat, why):
         return None
     if st["screen"] == "failed":
         why = "warm_failed(%s)" % st["why"]
+    elif why == "no_screen_cut":
+        # 무엇이 달라져 키가 빗나갔나 — warm 때 키를 단 같은 칸과 대조해 경보에 적는다(관제 149: 원인이 로그에서 바로 보이게)
+        with _LOCK:
+            was = _WARMED.get((jid, (beat or {}).get("beat_idx")))
+        if was is not None:
+            now = beat or {}
+            ks = sorted(str(k) for k in set(was) | set(now)
+                        if k not in _VOLATILE and not str(k).startswith("_") and was.get(k) != now.get(k))
+            why = "no_screen_cut diff=%s" % (",".join(ks[:8]) or "?")
+        else:
+            why = "no_screen_cut unwarmed_beat"
     _record(jid, (beat or {}).get("beat_idx"), why)
     return None
 
@@ -206,6 +219,32 @@ def _scene_data(job_id):
     return (d or {}).get("data")
 
 
+def _bind(jid, plan_beats, res, data):
+    """러너 결과(화면 칸 순서)를 **지금 편성표 칸**의 키로 캐시에 단다 — warm 의 첫 호출·재호출이 같은 일을 한다(관제 149).
+    화면 데이터의 칸 = 편성표의 칸(같은 순서). 키는 편성표 칸으로 만든다 — 렌더가 보는 그 dict 다. 반환: 단 칸 수."""
+    n = 0
+    bad = []
+    with _LOCK:
+        if len(_CACHE) > _CACHE_MAX:
+            _CACHE.clear()
+        if len(_WARMED) > _CACHE_MAX:
+            _WARMED.clear()
+        for b, r in zip(plan_beats, res):
+            k = beat_key(b)
+            if k and r and r.get("c") is not None:
+                _CACHE[k] = r
+                _WARMED[(jid, (b or {}).get("beat_idx"))] = dict(b or {})
+                n += 1
+            else:
+                bad.append(((b or {}).get("beat_idx"), "beat_key_fail" if not k else "screen_no_result"))
+        _JOB_STATE[jid] = {"screen": "ok", "why": None}
+    if len(res) != len(plan_beats):
+        _record(jid, None, "beat_count screen=%d plan=%d" % (len(res), len(plan_beats)))
+    for bi, why in bad:
+        _record(jid, bi, why)
+    return n
+
+
 def warm(job):
     """작업 하나의 화면 컷을 계산해 캐시에 넣는다. 성공한 칸 수(실패 0).
     ★화면 데이터가 있는데 실패하면 경보(FALLBACK), 데이터가 아예 없으면(옛 job) info 한 줄 — 둘 다 렌더는 막지 않는다."""
@@ -229,9 +268,12 @@ def warm(job):
         raw = json.dumps(data, ensure_ascii=False, sort_keys=True, default=str)
         h = hashlib.sha1(raw.encode("utf-8")).hexdigest()
         with _LOCK:
-            if _DATA_SEEN.get(jid) == h:
-                _JOB_STATE[jid] = {"screen": "ok", "why": None}
-                return len(data["beats"])
+            seen_res = _RES_SEEN.get(jid) if _DATA_SEEN.get(jid) == h else None
+        if seen_res is not None:
+            # ★같은 화면 데이터면 러너는 다시 안 돌리지만, 키는 **이번 편성표 칸**으로 다시 단다(관제 149, 2026-10-07).
+            #   종전엔 그냥 돌아가서 첫 warm 뒤 메모리 편성표가 달라진 호출(재합성 음성 등)은 칸 키가 하나도 없었다
+            #   → 그 job 칸 전부 no_screen_cut → 완성본이 예비 계산(9/29~10/06 서버 165칸, 작업 통째 패턴).
+            return _bind(jid, plan_beats, seen_res, data)
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
             f.write(raw)
             tmp = f.name
@@ -248,25 +290,12 @@ def warm(job):
             _record(jid, None, "node_fail rc=%s %s" % (out.returncode, (out.stderr or "").strip()[-300:]))
             return 0
         res = json.loads(out.stdout)
-        n = 0
-        bad = []
         with _LOCK:
-            if len(_CACHE) > _CACHE_MAX:
-                _CACHE.clear()
-            # 화면 데이터의 칸 = 편성표의 칸(같은 순서). 키는 **편성표 칸**으로 만든다 — 렌더가 보는 그 dict다.
-            for b, r in zip(plan_beats, res):
-                k = beat_key(b)
-                if k and r and r.get("c") is not None:
-                    _CACHE[k] = r
-                    n += 1
-                else:
-                    bad.append(((b or {}).get("beat_idx"), "beat_key_fail" if not k else "screen_no_result"))
             _DATA_SEEN[jid] = h
-            _JOB_STATE[jid] = {"screen": "ok", "why": None}
-        if len(res) != len(plan_beats):
-            _record(jid, None, "beat_count screen=%d plan=%d" % (len(res), len(plan_beats)))
-        for bi, why in bad:
-            _record(jid, bi, why)
+            _RES_SEEN[jid] = res
+            if len(_RES_SEEN) > 2000:
+                _RES_SEEN.clear()
+        n = _bind(jid, plan_beats, res, data)
         return n
     except Exception as e:      # noqa: BLE001 — 화면 계산 실패가 렌더를 막으면 안 된다(대신 경보)
         _set_state(jid, "failed", type(e).__name__)
