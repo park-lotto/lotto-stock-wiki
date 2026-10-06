@@ -202,7 +202,7 @@
     if(event.source!==window.parent||event.origin!==location.origin)return;
     if(event.data?.type==='scene-style-context'){
       context=event.data.context;
-      const saved=event.data.snapshot||{...api.snapshot(),captionTexts:{},effects:{}};
+      const saved=event.data.snapshot||{...api.snapshot(),captionTexts:{},effects:api.freshEffects(context.scenes.length)};   // 새 작업: 마지막에 쓴 로고만 전 장면에(관제 131, 판단은 precision20-ui.js)
       api.load(context,saved);
       // 관리자 스위치 scene_fx_enabled(서버 context.fxEnabled) — 꺼지면 '강조 효과' 상자도 자동 배치도 없다(고객 화면 불변)
       refBox.hidden=context.fxEnabled===false;

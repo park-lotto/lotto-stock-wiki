@@ -109,6 +109,22 @@
 
 ---
 
+## 🔑 라이브 확인은 Claude가 관리자로 직접 한다 — 사장님께 로그인·설정을 시키지 마라 (2026-10-05 사장님)
+
+사장님: **"너가 할 수 있던 걸 왜 갑자기 시켜 / 클로드코드에 박아놔야 매번 안 물어보지."**
+크롬 확장이 끊겨도 막히지 않는다. 비밀번호 없이 서버에서 관리자 세션을 만들어 헤드리스로 연다:
+
+```
+py tools/live_admin.py js produce "window.STORYBOARD_ON"      # 관리자로 열어 JS 결과
+py tools/live_admin.py shot produce out.png                   # 관리자 화면 저장
+py tools/live_admin.py setting <키> <값>                       # 관리자 설정 저장(허용 키만, 예: storyboard_enabled admin)
+파이썬: from tools.live_admin import admin_page                # with admin_page("produce") as pg: … (렌더·캡컷 확인도 이걸로)
+```
+□ 스위치 켜기·관리자 화면 확인·렌더/캡컷 대조 = 전부 Claude 몫. "콘솔에 붙여 넣으세요" 같은 안내 금지
+□ 경로는 `produce`처럼 앞 / 없이(git bash 가 /produce 를 파일 경로로 바꾼다)
+
+---
+
 ## 🚫 0순위-A1 — **무슨 일이든 "다 됐다"는 라이브에서 끝까지 돌려본 뒤에만** (2026-09-04 → 2026-09-17 확대)
 
 **사장님(2026-09-17): "어떤 일을 다 하고 '다 되었다'고 하기 전에 무조건 다 검증이나 라이브에서

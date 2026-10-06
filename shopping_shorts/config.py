@@ -334,6 +334,12 @@ TYPECAST_API_KEY = os.environ.get("TYPECAST_API_KEY", "")
 #   다시 쓰려면 서버 env에 TYPECAST_ENABLED=1만 넣으면 종전 동작으로 돌아온다.
 TYPECAST_ENABLED = os.environ.get("TYPECAST_ENABLED", "0") not in ("0", "false", "False", "")
 
+# Fish Audio TTS(2026-10-05, 관제 123) — 세 번째 엔진. 프리셋 model_id가 `fish-*`면 이쪽.
+# 판정은 fish_tts.is_fish/enabled 한 곳(0순위-B). s2.1-pro-free 무료 모델(2026-11-30까지)이라
+# 회원 키가 없으면 사장님 키(FISH_API_KEY)로 기본 성우를 돌린다(사장님 "내꺼로").
+FISH_API_KEY = os.environ.get("FISH_API_KEY", "")
+FISH_ENABLED = os.environ.get("FISH_ENABLED", "1") not in ("0", "false", "False", "")
+
 # ── AI 장면 생성(Vertex Veo, 2026-09-23) ──────────────────────────────────
 # 인증은 google-genai가 GOOGLE_APPLICATION_CREDENTIALS(서비스 계정 키) 또는 gcloud ADC로 읽는다.
 # 서버: /etc/shopping-shorts.env 에 GOOGLE_APPLICATION_CREDENTIALS·GCP_PROJECT·GCP_LOCATION.

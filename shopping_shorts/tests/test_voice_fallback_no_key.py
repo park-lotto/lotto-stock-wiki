@@ -39,7 +39,9 @@ def test_member_without_any_voice_key_is_not_switched(store):
     """일레븐 유료 키가 없으면 대체하지 않는다 — 관문이 '키 등록' 안내로 막고, 사장님 키로 가지 않는다."""
     cid = store.create_customer("u0", "pw12")
     store.set_last_voice(cid, TC)
-    assert store.get_last_voice(cid)["preset_id"] == "tc-changsu-stable"
+    # ★2026-10-05 사장님: TTS 키가 하나도 없으면 기본 성우는 무조건 Fish 무료 성우(사장님 키로 가지 않는 건 그대로).
+    from shopping_shorts import fish_tts
+    assert store.get_last_voice(cid) == fish_tts.FISH_DEFAULT_VOICE
     assert keyroute.keys_for(store, cid, keyroute.SVC_ELEVENLABS) == ([], False)
     assert keyroute.keys_for(store, cid, keyroute.SVC_TYPECAST) == ([], False)
 
@@ -53,6 +55,7 @@ def test_member_with_typecast_key_keeps_typecast(store):
 
 def test_eleven_memory_untouched(store):
     cid = store.create_customer("u3", "pw12")
+    store.add_customer_key(cid, keyroute.SVC_ELEVENLABS, "EL")   # 키 등록 회원의 일레븐 기억은 그대로
     store.set_last_voice(cid, EL)
     assert store.get_last_voice(cid)["preset_id"] == "el-x"
 
@@ -104,7 +107,8 @@ def test_member_with_eleven_key_and_no_memory_unchanged(store):
 
 def test_member_without_keys_and_no_memory_unchanged(store):
     cid = store.create_customer("t5", "pw12")
-    assert store.get_last_voice(cid) is None
+    from shopping_shorts import fish_tts          # 2026-10-05: 키 없는 회원의 기본 성우 = Fish 하늘
+    assert store.get_last_voice(cid) == fish_tts.FISH_DEFAULT_VOICE
 
 
 def test_typecast_disabled_no_piljae(store, monkeypatch):

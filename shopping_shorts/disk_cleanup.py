@@ -87,7 +87,9 @@ _KEEP_FILES = {"final.mp4", "preview.mp4", "clean_preview.mp4",
 
 # 보관 기간이 지나면 지우는 영상 파일 — 이름으로 화이트리스트(모르는 건 안 지운다).
 # 썸네일(thumb·cover)은 **남긴다**: 목록 카드가 그림 없이 깨지면 "다 지워졌다"로 보인다.
-_FINAL_VIDEO_FILES = {"final.mp4", "preview.mp4", "clean_preview.mp4", "edited.mp4"}
+# final_longform.mp4 = 구매링크용 롱폼(link_longform.OUT_NAME, 관제 132) — 완성본에서 만든 파일이라 완성본과 같이 지운다
+#   (안 넣으면 편당 13MB쯤이 지우는 규칙 없이 쌓인다).
+_FINAL_VIDEO_FILES = {"final.mp4", "preview.mp4", "clean_preview.mp4", "edited.mp4", "final_longform.mp4"}
 
 
 def _is_junk_dir(name: str) -> bool:

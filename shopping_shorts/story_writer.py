@@ -30,7 +30,104 @@ from shopping_shorts import script_generate as _sg
 #                      → [2] 심지어 …까지 …한다는 거  → [3] 근데 진짜 충격적인 포인트는 …다고 → 마무리 …라는데
 #   공개 뒤 첫 신호어까지 중앙값 3어절, 첫 자리는 "이게 말도 안 되는게"가 50편 중 31편. "심지어"는 두 번째 자리 말이다
 #   (사장님 화면 확인: 대비 앞에 심지어가 붙어 어색했다). 프리셋은 **낱말만** 다르고 위치·세기 순서는 같다.
-YT_SETS = {
+# ★2026-10-05 사장님 "모든 게 다 똑같으면 지루하고 이상하니까 신호어를 조사 많이 하고 변형해서 세트로":
+#   8세트 고정 → **자리별 낱말 풀 + 실측 빈도 가중**으로 바꿨다. 자리 순서([1]대비 → [2]더하기 → [3]최고 반전)와
+#   세기 순서는 그대로, 낱말만 달라진다. 근거 = tools/storyboard_mock/signal_census.py
+#   (썰 히트작 자막 2,051편 중 신호어 있는 1,242편 — 숫자는 그 편들에서 나온 횟수 전체).
+#   풀 분류: [1] = "~게"로 끝나 "…다는 거"로 받는 꼴(실측 [1]자리 비율 90% 이상), [2] = 덧붙이는 말, [3] = "~는/~건" 최상급.
+#   한 편 안에서 같은 뿌리 낱말(미친·충격적인·대박인·말도 안 되는·놀라운·소름 돋는·반전)은 두 번 안 쓴다.
+# ★2026-10-05 2차 조사(사장님 "더 다양하게, 억지스럽지 않게 많이 쓰는 것들로"): signal_census.py 를 넓혀
+#   (자막 2,051편 + 톤 조사 유튜브 씨앗 = 2,057편·103채널) 목록 밖 꼴을 n-gram 전수로 찾고, 채택 = 서로 다른 영상 5편↑ ·
+#   채널 2개↑ · 자리(신호어 2개↑ 편의 등장 순서, 비슷한 꼴 묶음 합산) 60%↑ 인 것만. 숫자 = 그 꼴이 나온 횟수.
+#   [1]에 "미친 포인트인게"·"대박인게", [3]에 "근데 진짜는 여기서부터"·"(근데) 미친 포인트는"·"(근데 진짜) 반전은"·
+#   "충격적인 사실은"·"소름 돋는 건" 계열을 더했다. "진짜 미친 건"(35편이지만 **한 채널**)은 말버릇이라 뺐다.
+YT_POOLS = {
+    1: [("이게 말도 안 되는게", 120), ("이게 미친 포인트인게", 108), ("이게 진짜 말도 안 되는게", 67),
+        ("이게 진짜 대박인게", 26), ("이게 진짜 미친 포인트인게", 22), ("진짜 미친 포인트인게", 16),
+        ("말도 안 되는게", 13), ("진짜 말도 안 되는게", 11), ("이게 대박인게", 8),
+        ("미친 포인트인게", 7), ("대박인게", 5)],
+    # "게다가"는 뺐다(2026-10-05 사장님 "게다가는 좀 약해서 빼는 게 좋고") — 모델이 쓰면 떼기 목록이 뗀다
+    2: [("심지어", 599), ("무엇보다", 35), ("뿐만 아니라", 28), ("거기다", 11)],
+    3: [("근데 진짜 충격적인 포인트는", 84), ("근데 진짜 미친 포인트는", 39), ("더 충격적인 건", 71),
+        ("진짜 미친 포인트는", 29), ("진짜 충격적인 포인트는", 54), ("더 대박인 건", 31),
+        ("더 놀라운 건", 24), ("진짜 충격적인 건", 23), ("진짜 대박인 건", 15), ("근데 더 대박인 건", 10), ("충격적인 건", 9),
+        ("근데 진짜는 여기서부터", 64), ("진짜는 여기서부터", 7), ("미친 포인트는", 20), ("하지만 진짜 미친 포인트는", 15),
+        ("근데 미친 포인트는", 9), ("근데 진짜 반전은", 13), ("진짜 반전은", 8), ("근데 진짜 충격적인 사실은", 8), ("진짜 소름 돋는 건", 6),
+        # 10-05 사장님 "대박·충격·놀랍 같은 센 말로 더" — 자막 실측 5편·2채널 이상만(이게 놀라운게 1편·이게 신기한게 0편은 못 넣음)
+        ("놀라운 건", 9), ("대박인 건", 9), ("신기한 건", 9), ("무엇보다 미친 포인트는", 6), ("근데 더 미친 포인트는", 5)],
+}
+# [1]을 비우는 몫 — 옛 8세트 중 1세트(E)가 [1]을 비웠다(기계 티 줄이기). 그 비율(1/8)을 이어 받는다.
+YT_BLANK_FIRST = 1 / 8
+# 인스타는 낱말이 다르다(실측: 심지어 73·게다가 39·대박인 건 21·거기다 7·무엇보다 6 — 인스타 641편, 2026-09-22).
+# 썰의 "진짜 미친 포인트는"·"이게 말도 안 되는게"는 인스타에 거의 없다. 자리 순서가 따로 없어(옛 5세트 실측)
+# 세 자리 중 [1]·[2] 중 하나를 비우고 나머지 둘을 빈도 가중으로 고른다.
+IG_POOL = [("심지어", 73), ("대박인 건", 21), ("거기다", 7), ("무엇보다", 6)]   # 게다가 뺌(10-05 사장님)
+_SIG_ROOTS = ("말도 안 되는", "미친", "충격적인", "대박인", "놀라운", "소름 돋는", "반전", "신기한")
+
+
+def _root(w):
+    return next((r for r in _SIG_ROOTS if r in w), w)
+
+
+# 줄 본문과 신호어가 같은 말을 두 번 하면 어색하다("이게 미친 포인트인게 … 성능이 미쳤다는 거", 10-05 시안 실측) — 뿌리별 본문 꼴
+_ROOT_STEMS = {"미친": ("미친", "미쳤", "미쳐"), "충격적인": ("충격",), "대박인": ("대박",), "놀라운": ("놀라", "놀랍", "놀랄"),
+               "말도 안 되는": ("말도 안", "말이 돼", "말이 됨"), "소름 돋는": ("소름",), "반전": ("반전",), "신기한": ("신기",)}
+
+
+def signal_fits(word, line):
+    """신호어가 그 줄 본문과 같은 말을 반복하지 않나(★판단 한 곳 — 대본 작가·스토리보드 공용)."""
+    stems = _ROOT_STEMS.get(_root(word or ""), ())
+    return not any(x in (line or "") for x in stems)
+
+
+def refit_signal(word, line, rank, platform="yt", avoid=()):
+    """word 가 줄과 겹치면 같은 자리 풀에서 겹치지 않는 다른 신호어(빈도 순)로 — 없으면 ''. rank = 1·2·3 자리."""
+    if not word or signal_fits(word, line):
+        return word
+    pool = IG_POOL if platform == "ig" else YT_POOLS.get(rank) or []
+    used = {_root(a) for a in avoid if a}
+    for w, _n in sorted(pool, key=lambda x: -x[1]):
+        if w and w != word and _root(w) not in used and signal_fits(w, line):
+            return w
+    return ""
+
+
+def _weighted(rng, pool, avoid):
+    cand = [(w, n) for w, n in pool if w and _root(w) not in avoid]
+    if not cand:
+        return ""
+    x = rng.random() * sum(n for _, n in cand)
+    for w, n in cand:
+        x -= n
+        if x <= 0:
+            return w
+    return cand[-1][0]
+
+
+def _draw_signals(platform, seed):
+    import random
+    rng = random.Random(seed)
+    used = set()
+    if platform == "ig":
+        blank = rng.randrange(2)
+        out = []
+        for i in range(3):
+            w = "" if i == blank else _weighted(rng, IG_POOL, used)
+            used.add(_root(w))
+            out.append(w)
+        return out
+    w1 = "" if rng.random() < YT_BLANK_FIRST else _weighted(rng, YT_POOLS[1], used)
+    used.add(_root(w1))
+    w2 = _weighted(rng, YT_POOLS[2], used)
+    used.add(_root(w2))
+    return [w1, w2, _weighted(rng, YT_POOLS[3], used)]
+
+
+# ★새 풀(실측 빈도 가중)은 스위치 signal_pool_enabled 뒤에 둔다(2026-10-05 사장님 "내 꺼만 먼저") — 꺼진 계정은 종전 고정 8세트 그대로.
+#   누가 켜졌나는 app 이 요청마다 SIGNAL_POOL 에 꽂는다(대본 작가·스토리보드 둘 다 이 함수 하나만 보므로 판단 한 곳).
+import contextvars as _cv
+SIGNAL_POOL = _cv.ContextVar("signal_pool_on", default=False)
+_OLD_YT_SETS = {
     "A": ["이게 말도 안 되는게", "심지어", "근데 진짜 충격적인 포인트는"],
     "B": ["이게 말도 안 되는 게", "게다가", "진짜 충격적인 포인트는"],
     "C": ["진짜 말도 안 되는게", "심지어", "근데 진짜 미친 포인트는"],
@@ -40,16 +137,93 @@ YT_SETS = {
     "G": ["이게 말도 안 되는게", "심지어", "더 대박인 건"],
     "H": ["진짜 말도 안 되는게", "거기다", "근데 진짜 충격적인 포인트는"],
 }
-_ALL_SIGNAL_WORDS = sorted({w for v in YT_SETS.values() for w in v if w} | {"심지어", "게다가", "거기다", "진짜 미친 건", "진짜 대박인 건", "미친 포인트는", "충격적인 포인트는", "이게 진짜 미친 게", "근데 진짜"})   # 모델이 반전을 자기 신호어로 열면 뗀다("근데 진짜 충격적인 포인트는 진짜 미친 건 …" 실측)
-# 인스타는 낱말이 다르다(실측: 심지어 73·게다가 39·대박인 건 21·거기다 7·무엇보다 6).
-# 썰의 "진짜 미친 포인트는"·"이게 말도 안 되는게"는 인스타에 거의 없다.
-IG_SETS = {
-    "A": ["", "심지어", "무엇보다"],
-    "B": ["게다가", "", "대박인 건"],
-    "C": ["", "거기다", "심지어"],
-    "D": ["심지어", "", "게다가"],
-    "E": ["", "대박인 건", "거기다"],
-}
+_OLD_IG_SETS = {"A": ["", "심지어", "무엇보다"], "B": ["게다가", "", "대박인 건"], "C": ["", "거기다", "심지어"],
+                "D": ["심지어", "", "게다가"], "E": ["", "대박인 건", "거기다"]}
+
+
+def pick_signals(platform, key, nth=0):
+    """신호어 세 자리를 고른다(★주인 함수 — 라이브 대본 작가와 스토리보드가 둘 다 이걸 부른다).
+    같은 key·nth 면 늘 같은 답(다시 만들어도 안 바뀜), key 가 다르면 회원마다 다르게(실측 빈도 가중).
+    ★같은 작업의 1안·2안·3안(nth)은 **반드시 서로 다르게** — 앞 안과 같으면 다시 뽑는다
+      (해시에 nth 만 섞으면 1안과 3안이 우연히 같아진다, 2026-09-22 실측). 반환 (이름, [w1, w2, w3])."""
+    if not SIGNAL_POOL.get():      # 스위치 꺼짐 = 종전 그대로(고정 8세트·인스타 5세트)
+        return _pick(_OLD_IG_SETS if platform == "ig" else _OLD_YT_SETS, key, nth)
+    import zlib
+    seen = []
+    for j in range(int(nth) + 1):
+        for t in range(50):
+            out = _draw_signals(platform, zlib.crc32(("%s|%s|%d|%d" % (platform, key, j, t)).encode("utf-8")))
+            if out not in seen:
+                break
+        seen.append(out)
+    return "|".join(seen[-1]), seen[-1]
+
+
+def _all_combos(platform):
+    import itertools
+    if platform == "ig":
+        ws = [w for w, _ in IG_POOL]
+        return [c for b in range(2) for c in (list(p[:b]) + [""] + list(p[b:]) for p in itertools.permutations(ws, 2))]
+    p1 = [""] + [w for w, _ in YT_POOLS[1]]
+    return [[a, b, c] for a in p1 for b in (w for w, _ in YT_POOLS[2]) for c in (w for w, _ in YT_POOLS[3])
+            if len({_root(x) for x in (a, b, c) if x}) == len([x for x in (a, b, c) if x])]
+
+
+def signal_combo_count(platform):
+    """뽑힐 수 있는 서로 다른 조합 수(점검 도구용)."""
+    return len(_all_combos(platform))
+
+
+# 옛 이름(세트 사전) — 다른 도구(tools/seed_analyzer/signal_sets.py)가 읽는다. 풀에서 만든 **모든 조합**이다.
+YT_SETS = {"c%03d" % i: c for i, c in enumerate(_all_combos("yt"))}
+IG_SETS = {"c%03d" % i: c for i, c in enumerate(_all_combos("ig"))}
+_ALL_SIGNAL_WORDS = sorted({w for v in YT_POOLS.values() for w, _ in v} | {w for w, _ in IG_POOL}
+                           | {"게다가", "이게 말도 안 되는 게", "진짜 대박인 건", "미친 포인트는", "충격적인 포인트는", "이게 진짜 미친 게", "근데 진짜"})
+# ↑ 모델이 칸을 자기 신호어로 열면 뗀다("근데 진짜 충격적인 포인트는 진짜 미친 건 …" 실측)
+
+
+def attach_signal(text, word):
+    """칸 첫 줄에 신호어를 박는다(★박는 함수 — 라이브 대본 작가·스토리보드 공용).
+    모델이 이미 다른 신호어·접속사로 열었으면 떼고 붙인다(목록에 있는 낱말 → 형태(_TWIST_LEAD) 두 겹까지)."""
+    t = re.sub(r"\s+", " ", text or "").strip()
+    for _ in range(2):
+        t = _LEAD_CONJ.sub("", t)
+        for w in sorted(_ALL_SIGNAL_WORDS, key=len, reverse=True):
+            if t.startswith(w + " "):
+                t = t[len(w):].strip()
+                break
+        t = _TWIST_LEAD.sub("", _LEAD_CONJ.sub("", t)).strip()
+    t = t.lstrip(",， ")
+    if word and SIGNAL_POOL.get() and not signal_fits(word, t):   # 새 풀 계정: 본문과 같은 말 반복이면 같은 자리 다른 신호어로
+        rank = next((r for r, pool in YT_POOLS.items() if any(w == word for w, _ in pool)), 0)
+        word = refit_signal(word, t, rank, "yt" if rank else "ig")
+    return (word + " " + t).strip() if word else t
+
+
+def storyboard_signals(kinds, key, nth=0, platform="yt", ranks=None):
+    """스토리보드 칸 종류 목록(esc/twist/"") → 칸마다 박을 신호어. ★칸 **순서대로** 자리를 준다(10-05 라이브 실측:
+    고조·반전·고조 순서 대본에서 [3]"대박인 건" 뒤에 [2]"심지어"가 붙었다 — 반전 다음 '더하기'는 어색하다).
+      [1] = 첫 신호 칸 · [3] = 반전 칸(없으면 셋 이상일 때 마지막 고조) · [2] = 그 사이 첫 칸 · [3] 뒤 칸은 빈칸.
+    남는 칸은 빈칸(한 편 안 반복 금지)."""
+    _, ws = pick_signals(platform, key, nth)
+    out = [""] * len(kinds)
+    rk = [0] * len(kinds)                 # 칸마다 몇 번 자리 신호어인가 — 짤 자리 판정이 이걸 본다
+    sig = [i for i, k in enumerate(kinds) if k in ("esc", "twist")]
+    if not sig:
+        if ranks is not None:
+            ranks[:] = rk
+        return out
+    tw = [i for i in sig if kinds[i] == "twist"]
+    last = tw[0] if tw else (sig[-1] if len(sig) >= 3 else None)
+    first = sig[0] if sig[0] != last else None
+    mid = next((i for i in sig if i != first and i != last and (last is None or i < last)), None)
+    for i, r in ((first, 1), (mid, 2), (last, 3)):
+        if i is not None:
+            out[i], rk[i] = ws[r - 1], r
+    if ranks is not None:
+        ranks[:] = rk
+    return out
+
 
 _EXPR = """■ 표현은 자유롭게 — 후킹이 전부다
 불편·상황·인물·수치·효능·가격은 **화면에 없어도 쓸 수 있다.** 그 제품을 쓰는 사람이
@@ -534,8 +708,9 @@ _LEAD_CONJ = re.compile(r"^(근데|그런데|그리고|또|그래서|또한)\s+"
 # ★모델이 반전을 자기 신호어로 연 **형태**(2026-09-26 실측 "근데 진짜 충격적인 포인트는 진짜 충격적인 건 …" /
 #   라이브 "… 포인트는 충격은 마스카포네가 …"). 목록(_ALL_SIGNAL_WORDS)엔 앞에 "진짜"가 붙은 꼴이 없어 안 떼어졌다.
 _TWIST_LEAD = re.compile(r"^(?:(?:근데|그런데|그리고)\s+)?(?:(?:진짜|정말|더|제일|가장)\s+)*"
-                         r"(?:(?:충격적인|충격인|미친|대박인|놀라운|신기한)\s*(?:건|게|거|점은|포인트는|포인트인\s*게|포인트)|충격은|대박은)[,\s]+")
-_RANK_ONE = re.compile(r"말도 안 되는|미친 포인트인게")   # 위치[1] 낱말(한 줄 단독으로 둘 수 있는 것)
+                         r"(?:(?:충격적인|충격인|미친|대박인|놀라운|신기한|소름\s?돋는)\s*(?:건|게|거|점은|사실은|포인트는|포인트인\s*게|포인트)"
+                         r"|충격은|대박은|반전은)[,\s]+")
+_RANK_ONE = re.compile(r"말도 안 되는|포인트인게|대박인게")   # 위치[1] 낱말(한 줄 단독으로 둘 수 있는 것)
 
 
 def _to_lines(o, ig, key, nth, feats=None, preset="short"):
@@ -544,7 +719,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
     esc_keys = ("before", "after") if ig else ("moment", "what_happens", "erased")
     if ig:
         escs = o.get("beats") or []
-        _, sigs = _pick(IG_SETS, key, nth)
+        _, sigs = pick_signals("ig", key, nth)
         all_sigs = list(sigs)
         rows = [("훅", o.get("opening"), -1), ("장면", o.get("scene"), -1)]
         if (o.get("ask") or "").strip():
@@ -555,7 +730,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
             tail = [("반응", t.strip(), -1) for t in (o.get("reaction") or [])[:2] if (t or "").strip()] + tail
     else:
         escs = o.get("escalations") or []
-        _, sigs = _pick(YT_SETS, key, nth)
+        _, sigs = pick_signals("yt", key, nth)
         all_sigs = list(sigs)          # 중복 제거는 세트 전체로 본다(대비가 첫 신호어를 가져가도)
         rows = [("훅", o.get("hook"), -1), ("미끼", o.get("bait"), -1), ("공개", o.get("reveal"), -1)]
         if (o.get("contrast") or "").strip():
@@ -574,7 +749,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
                 if preset == "full":      # 풀코스: 신호어 [1]은 한 줄 단독(히트작 시안 실측)
                     rows.insert(len(rows) - 1, ("대비", w, -1))
                 else:
-                    rows[-1] = ("대비", w + " " + rows[-1][1], -1)
+                    rows[-1] = ("대비", attach_signal(rows[-1][1], w), -1)
         sigs = slot_words + [""] * 8
     for i, e in enumerate(escs):
         n = e.get("feat")
@@ -592,7 +767,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
                 if not ig and preset == "full" and i == 0 and _RANK_ONE.search(sig):
                     rows.append(("고조%d" % (i + 1), sig, gi)); sig = ""     # [1]은 한 줄 단독
                 else:
-                    t, sig = sig + " " + t, ""
+                    t, sig = attach_signal(t, sig), ""
             rows.append(("고조%d" % (i + 1), t, gi, k))          # k = moment/what_happens/erased(썰) · before/after(인스타)
         if not ig and preset == "full":
             for t in (e.get("detail") or [])[:4]:                          # 장면 풀이 3~4줄
@@ -605,13 +780,7 @@ def _to_lines(o, ig, key, nth, feats=None, preset="short"):
     if not ig:
         left = [last_word] if last_word else []
         if left and (tail[0][1] or "").strip():
-            tw = tail[0][1].strip()
-            for w in sorted(_ALL_SIGNAL_WORDS, key=len, reverse=True):   # 모델이 이미 어떤 신호어로 열었으면 떼고 붙인다
-                if tw.startswith(w + " "):
-                    tw = tw[len(w):].strip()
-            for _ in range(2):                                           # 목록에 없는 꼴도(형태로) 뗀다 — 두 겹까지
-                tw = _TWIST_LEAD.sub("", _LEAD_CONJ.sub("", tw)).strip()
-            tail[0] = ("반전", left[0] + " " + _LEAD_CONJ.sub("", tw), tail[0][2])
+            tail[0] = ("반전", attach_signal(tail[0][1], left[0]), tail[0][2])   # 모델이 이미 어떤 신호어로 열었으면 떼고 붙인다
     rows += tail
     return _drop_repeat_signal(
         [{"role": r[0], "text": re.sub(r"\s+", " ", r[1]).strip(), "group": r[2], "sub": (r[3] if len(r) > 3 else "")}
@@ -983,7 +1152,7 @@ SEEDLESS_NOTE = ("(씨앗 대본 없음 — 외국 영상이라 참고할 한국
                  "소구점만으로 이 제품의 대본을 처음부터 써라. 이 괄호 안 문장은 대본에 쓰지 마라.)")
 
 
-def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product=""):
+def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product="", seed_vid=""):
     """(drafts, why) — app._backbone_drafts와 같은 계약(비면 why에 이유, 조용한 폴백 금지).
 
     자동 1안(씨앗 결 그대로) + 고른 스타일 1안. 모델 호출 = 특징 1회 + 안마다 1회.
@@ -1003,9 +1172,13 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         seed_src = None
         seed_from = "explicit"
         # 고른 씨앗과 같은 글의 영상이 job에도 담겨 있으면 그건 화면에서 뺀다(씨앗 화면 금지 규칙 그대로)
+        # ★seed_vid(관제 138): 호출부가 고른 씨앗이 job 의 어느 영상인지 알면 그 번호로 뺀다. 글자 대조만으로는
+        #   위키 대본과 job 추출본의 글이 한 글자만 달라도 씨앗이 화면 재료에 남아, 2단계가 씨앗 컷을 줄에 지목했다
+        #   (라이브 6일 씨앗 표식 작업 82건 중 10건). 다 빠지면 화면이 비므로 그때는 그대로 둔다(_drop_seed 와 같은 규칙).
         key = _norm_text(seed_text)
         vis = [s for s in srcs
-               if _norm_text(s.get("full_text_ko") or s.get("full_text")) != key]
+               if _norm_text(s.get("full_text_ko") or s.get("full_text")) != key
+               and not (seed_vid and str(s.get("video_id") or "") == str(seed_vid))] or list(srcs)
         product = (seed_product or "").strip()
     else:
         seed_src = ba.seed_source(srcs, (job or {}).get("backbone_main"))
@@ -1151,7 +1324,7 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
     return drafts, "; ".join(whys)
 
 
-def storyboard_to_beat_sources(slots):
+def storyboard_to_beat_sources(slots, seg_lookup=None):
     """★스토리보드(사람이 칸마다 장면을 고르고 그 위에 쓴 대본) → 확정 대본 + 줄별 출처 장면(관제 120).
 
     slots = [{slot(역할), line(문장), ids(고른 장면 번호들)}] — 2단계 스토리보드 한 탭.
@@ -1173,6 +1346,10 @@ def storyboard_to_beat_sources(slots):
             if c and c not in ids:
                 ids.append(c)
         lines.append(text)
+        keys = []
+        for c in ids:      # ★3단계 작업은 같은 캐시 장면에 번호를 새로 붙인다(…-12 → s0-11, 10-05 라이브 실측) — 번호 대신 '같은 장면'으로 잇는 열쇠
+            g = (seg_lookup(c) if seg_lookup else None) or {}
+            keys.append({"id": c, "start": g.get("start"), "end": g.get("end"), "vsig": g.get("_vsig") or []})
         bs.append({"role": str(sl.get("slot") or sl.get("role") or ""), "seg": ids[0] if ids else "",
-                   "segs": ids, "pinned": bool(ids)})
+                   "segs": ids, "pinned": bool(ids), "seg_keys": keys})
     return {"script": "\n".join(lines), "beat_sources": bs}

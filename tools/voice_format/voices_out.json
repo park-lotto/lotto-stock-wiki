@@ -1,0 +1,825 @@
+{
+ "-hESnHg-Kug": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "남성, 실제 사람, 명확하고 활기찬 톤",
+  "others": [
+   {
+    "t": 10.0,
+    "text": "완전 가성비템 최근에 진짜 완전 흠뻑 빠진 적",
+    "who": "질문에 답하는 여성",
+    "kind": "대화상대"
+   },
+   {
+    "t": 14.8,
+    "text": "비비크림인데 커버력도 있어요.",
+    "who": "질문에 답하는 여성",
+    "kind": "대화상대"
+   },
+   {
+    "t": 16.5,
+    "text": "호불호 없이 제일 많이 쓰는 게",
+    "who": "질문에 답하는 여성",
+    "kind": "대화상대"
+   }
+  ],
+  "format": "두 사람 대화",
+  "model": "gemini-2.5-flash"
+ },
+ "2uzWMkPIKWg": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "여성, 실제 사람, 밝고 또렷한 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "5ut7oSyWY4U": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "여성, 실제 사람, 또렷하고 차분한 톤으로 물품 가격을 나열함",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "5v1dk0wF50I": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "여성 TTS, 빠르고 명확한 나레이션 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "7Fua4SPru4g": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "female, human, calm and informative tone",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "9jUicfCfYyw": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "여성, 사람, 정보 전달 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "ADxuJ3WVUS4": {
+  "speech": true,
+  "n_voices": 3,
+  "main": "Female, TTS-like, calm tone, providing narration",
+  "others": [
+   {
+    "t": 1.6,
+    "text": "다 밟는 거 밟는 거다 이거",
+    "who": "Male commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 4.9,
+    "text": "이거 안 넣으면 큰일 나는 줄 알았어요",
+    "who": "Male commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 6.9,
+    "text": "큰일 나는 줄 알았다",
+    "who": "Male commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 11.5,
+    "text": "이쁘게 잘",
+    "who": "Male commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 12.6,
+    "text": "응",
+    "who": "Male commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 13.8,
+    "text": "하고",
+    "who": "Male commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 18.4,
+    "text": "거의 한 통을 쓰시는",
+    "who": "Male commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 24.3,
+    "text": "오 와우",
+    "who": "Male commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 26.2,
+    "text": "우와",
+    "who": "Male commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 29.6,
+    "text": "잠깐만요. 이런 느낌이 어",
+    "who": "Female commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 33.7,
+    "text": "반짝이 반짝",
+    "who": "Male commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 34.8,
+    "text": "아 반짝이요?",
+    "who": "Female commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 37.9,
+    "text": "아니요",
+    "who": "Male commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 39.7,
+    "text": "뭐가 아니에요 사장님",
+    "who": "Female commentator",
+    "kind": "리액션"
+   },
+   {
+    "t": 41.4,
+    "text": "뭐가 아니에요",
+    "who": "Female commentator",
+    "kind": "리액션"
+   }
+  ],
+  "format": "나레이션+리액션",
+  "model": "gemini-2.5-flash"
+ },
+ "BbLQv_nVAAE": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "여성 TTS, 차분하고 명확한 톤으로 나레이션",
+  "others": [
+   {
+    "t": 9.0,
+    "text": "어?",
+    "who": "놀란 반응",
+    "kind": "리액션"
+   },
+   {
+    "t": 10.0,
+    "text": "와",
+    "who": "놀란 반응",
+    "kind": "리액션"
+   },
+   {
+    "t": 29.0,
+    "text": "어떻게",
+    "who": "놀란 반응",
+    "kind": "리액션"
+   }
+  ],
+  "format": "나레이션+리액션",
+  "model": "gemini-2.5-flash"
+ },
+ "CobIlSZqlRs": {
+  "speech": false,
+  "n_voices": 0,
+  "main": "",
+  "others": [],
+  "format": "음악만",
+  "model": "gemini-2.5-flash"
+ },
+ "E-mBu5P4HXY": {
+  "speech": false,
+  "n_voices": 0,
+  "main": "",
+  "others": [],
+  "format": "음악 및 효과음",
+  "model": "gemini-2.5-flash"
+ },
+ "E_5sq_19dXQ": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "여성, TTS, 내레이션 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "GkR4XJBYdC0": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "남성 TTS, 활기찬 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "JDMimeclSH4": {
+  "speech": false,
+  "n_voices": 0,
+  "main": "",
+  "others": [],
+  "format": "사람 목소리 없음",
+  "model": "gemini-2.5-flash"
+ },
+ "Kp8irFOqqa4": {
+  "speech": false,
+  "n_voices": 0,
+  "main": null,
+  "others": [],
+  "format": "음악만",
+  "model": "gemini-2.5-flash"
+ },
+ "KsOOrEbV5X8": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "남성 TTS, 설명조의 차분한 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "L_V4IrNMuBw": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "남성, 콘텐츠 크리에이터/나레이터, 빠르고 활기찬 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "NA4oikIw1kw": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "Female, fast-paced, high-pitched, excited, enthusiastic, sounds like a content creator (vlogger/influencer).",
+  "others": [],
+  "format": "Product review/demonstration by a single speaker",
+  "model": "gemini-2.5-flash"
+ },
+ "NPk9P5X0Kto": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "Female, young adult, high-pitched, playful and conversational tone, likely a real person.",
+  "others": [],
+  "format": "One person talking to an implied conversational partner, showing items (What's in my bag style).",
+  "model": "gemini-2.5-flash"
+ },
+ "Ook9XkUgd1o": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "남성, TTS, 밝고 정보 전달하는 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "QyoCgzQrES0": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "남성, 사람, 차분하고 명확한 톤의 나레이션 및 리액션",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "Rq2f7G_495M": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "여성, 나레이션, 차분하고 명확한 톤",
+  "others": [
+   {
+    "t": 2.0,
+    "text": "커버를 좀 신경 쓰는 편이에요",
+    "who": "인용된 말",
+    "kind": "인물대사"
+   },
+   {
+    "t": 9.0,
+    "text": "이거 완전 짐승 용량이에요",
+    "who": "인용된 말",
+    "kind": "인물대사"
+   },
+   {
+    "t": 11.0,
+    "text": "많이 쓸 수 있는 거라서",
+    "who": "인용된 말",
+    "kind": "인물대사"
+   }
+  ],
+  "format": "나레이션과 인용된 대화",
+  "model": "gemini-2.5-flash"
+ },
+ "VuslousJ0BY": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "남성 TTS, 설명조 및 감탄조",
+  "others": [
+   {
+    "t": 4.0,
+    "text": "천재야 천재.",
+    "who": "시청자 속마음",
+    "kind": "리액션"
+   },
+   {
+    "t": 5.0,
+    "text": "나도 따라 해볼래.",
+    "who": "시청자 속마음",
+    "kind": "리액션"
+   },
+   {
+    "t": 11.0,
+    "text": "끈을 고리에 통과시켜 당겨서 조여줘.",
+    "who": "시청자 속마음",
+    "kind": "리액션"
+   },
+   {
+    "t": 17.0,
+    "text": "큰 고리를 반대쪽으로 넘겨서 작은 고리를 올리고",
+    "who": "시청자 속마음",
+    "kind": "리액션"
+   },
+   {
+    "t": 24.0,
+    "text": "작은 고리 사이로 끈을 들어 올리면 우와 엄청 쉬운데?",
+    "who": "시청자 속마음",
+    "kind": "리액션"
+   }
+  ],
+  "format": "나레이션+리액션",
+  "model": "gemini-2.5-flash"
+ },
+ "YDFC0LmrW0Y": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "남성, 실제 사람, 질문하고 설명하는 톤",
+  "others": [
+   {
+    "t": 5.0,
+    "text": "어 저는 해요 매일.",
+    "who": "여성",
+    "kind": "대화상대"
+   },
+   {
+    "t": 8.0,
+    "text": "그 비누 있어요. 얼굴이 안 가려워요.",
+    "who": "여성",
+    "kind": "대화상대"
+   },
+   {
+    "t": 16.0,
+    "text": "그거는 제가 어시 때 비누로 엄청 많이 테스트했는데 그때 찾았던 비누여서 10년 이상 쓰고 있어요.",
+    "who": "여성",
+    "kind": "대화상대"
+   },
+   {
+    "t": 22.0,
+    "text": "브러쉬도 얼굴이 하나도 안 가려워요.",
+    "who": "여성",
+    "kind": "대화상대"
+   }
+  ],
+  "format": "두 사람 대화",
+  "model": "gemini-2.5-flash"
+ },
+ "YHPKjzFov8Q": {
+  "speech": false,
+  "n_voices": 0,
+  "main": "",
+  "others": [],
+  "format": "음성 없음",
+  "model": "gemini-2.5-flash"
+ },
+ "chwrFB0Y3ts": {
+  "err": "ClientError: 401 UNAUTHENTICATED. {'error': {'code': 401, 'message': 'The bound service account is deleted or disabled. The service account bound to the API key must be acti"
+ },
+ "dCn16ZJGSqs": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "남성 TTS, 차분하고 중립적인 톤으로 상품을 나열하다가 마지막에 약간 짜증 섞인 톤으로 바뀜",
+  "others": [
+   {
+    "t": 2.2,
+    "text": "와!",
+    "who": "리액션",
+    "kind": "리액션"
+   },
+   {
+    "t": 5.5,
+    "text": "뭐? 제발!",
+    "who": "리액션",
+    "kind": "리액션"
+   },
+   {
+    "t": 9.9,
+    "text": "아 예? 아 저거는 좀 무서운데",
+    "who": "리액션",
+    "kind": "리액션"
+   },
+   {
+    "t": 12.8,
+    "text": "매매값이라고요?",
+    "who": "리액션",
+    "kind": "리액션"
+   },
+   {
+    "t": 14.5,
+    "text": "심지어 방 개수 세 개랑 욕실 두 개인데요?",
+    "who": "리액션",
+    "kind": "리액션"
+   },
+   {
+    "t": 15.9,
+    "text": "아 주차도 된다고요?",
+    "who": "리액션",
+    "kind": "리액션"
+   },
+   {
+    "t": 16.8,
+    "text": "아니 저건 그건 안 될 거 같아",
+    "who": "리액션",
+    "kind": "리액션"
+   },
+   {
+    "t": 18.8,
+    "text": "왜 이러다 테라포밍까지 하겠어",
+    "who": "리액션",
+    "kind": "리액션"
+   },
+   {
+    "t": 20.5,
+    "text": "해줘",
+    "who": "리액션",
+    "kind": "리액션"
+   }
+  ],
+  "format": "나레이션+리액션",
+  "model": "gemini-2.5-flash"
+ },
+ "dKxtu4DrBDs": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "여성 TTS, 차분하고 정보 전달하는 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "eNqtbeM54bw": {
+  "speech": false,
+  "n_voices": 0,
+  "main": "",
+  "others": [],
+  "format": "기계음 및 작업 소리",
+  "model": "gemini-2.5-flash"
+ },
+ "fEASfVI9W0c": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "남성, TTS, 활기차고 높은 톤의 광고 내레이션",
+  "others": [],
+  "format": "광고 내레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "gq_Pv-eExC4": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "남성 TTS, 빠르고 명확한 설명조",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "ixz6T8Yko5Y": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "여성, 실제 사람, 밝고 내레이션 톤",
+  "others": [
+   {
+    "t": 18.5,
+    "text": "아 이거 소리 나는 거 쾌감 있다.",
+    "who": "친구",
+    "kind": "대화상대"
+   },
+   {
+    "t": 23.2,
+    "text": "괜찮아 괜찮아",
+    "who": "친구",
+    "kind": "리액션"
+   },
+   {
+    "t": 25.5,
+    "text": "다 덮을게.",
+    "who": "친구",
+    "kind": "리액션"
+   },
+   {
+    "t": 27.0,
+    "text": "덮을게.",
+    "who": "친구",
+    "kind": "리액션"
+   },
+   {
+    "t": 28.5,
+    "text": "괜찮아",
+    "who": "친구",
+    "kind": "리액션"
+   },
+   {
+    "t": 30.5,
+    "text": "하나 둘",
+    "who": "친구",
+    "kind": "대화상대"
+   }
+  ],
+  "format": "실제 인물 영상 (나레이션 및 대화)",
+  "model": "gemini-2.5-flash"
+ },
+ "jYToU8d8rxk": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "여성, TTS, 차분하고 정보 전달 위주",
+  "others": [
+   {
+    "t": 3.4,
+    "text": "난 10분 컷인데?",
+    "who": "리액션/시청자 속마음",
+    "kind": "리액션"
+   },
+   {
+    "t": 38.4,
+    "text": "벌써?",
+    "who": "리액션/시청자 속마음",
+    "kind": "리액션"
+   },
+   {
+    "t": 47.0,
+    "text": "아니 근데 이거 향 뭐야?",
+    "who": "리액션/시청자 속마음",
+    "kind": "리액션"
+   },
+   {
+    "t": 50.0,
+    "text": "아니 한 시간 샤워 어떻게 하는 건데?",
+    "who": "리액션/시청자 속마음",
+    "kind": "리액션"
+   }
+  ],
+  "format": "나레이션+리액션",
+  "model": "gemini-2.5-flash"
+ },
+ "n-5vwWEradg": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "남성 TTS, 차분한 톤의 내레이션",
+  "others": [
+   {
+    "t": 12.1,
+    "text": "아니 다른 것도 아니고 그 큰 컴퓨터 본체를 훔쳐 갈 수 있어요?",
+    "who": "여성, 시청자 속마음/리액션",
+    "kind": "리액션"
+   },
+   {
+    "t": 31.0,
+    "text": "얘가 아주 댕청한 짓을 했더라고요.",
+    "who": "여성, 시청자 속마음/리액션",
+    "kind": "리액션"
+   },
+   {
+    "t": 39.0,
+    "text": "본체 가격만 청구할 거라고 생각하지 마세요.",
+    "who": "여성, 시청자 속마음/리액션",
+    "kind": "리액션"
+   }
+  ],
+  "format": "나레이션+리액션",
+  "model": "gemini-2.5-flash"
+ },
+ "nLVNnl4OeLM": {
+  "speech": false,
+  "n_voices": 0,
+  "main": "",
+  "others": [],
+  "format": "",
+  "model": "gemini-2.5-flash"
+ },
+ "nn6wY-SC_lY": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "남성, 실제 사람, 활기차고 설명하는 톤",
+  "others": [
+   {
+    "t": 16.0,
+    "text": "오!",
+    "who": "대화상대",
+    "kind": "리액션"
+   },
+   {
+    "t": 17.0,
+    "text": "네, 가져가실",
+    "who": "대화상대",
+    "kind": "대화상대"
+   },
+   {
+    "t": 24.0,
+    "text": "이렇게 젖히는 거예요.",
+    "who": "대화상대",
+    "kind": "대화상대"
+   },
+   {
+    "t": 26.0,
+    "text": "오! 아 자동으로 이렇게 해!",
+    "who": "대화상대",
+    "kind": "리액션"
+   },
+   {
+    "t": 35.0,
+    "text": "자동으로 닫힌다라는 게 되게 편할 것 같아요.",
+    "who": "대화상대",
+    "kind": "대화상대"
+   }
+  ],
+  "format": "나레이션+대화상대",
+  "model": "gemini-2.5-flash"
+ },
+ "nr0kY0XXDNY": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "남성, 사람 목소리, 지시적이고 명확한 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "pNn1UL5VQXU": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "여성, TTS 또는 전문 성우, 차분한 톤",
+  "others": [
+   {
+    "t": 7.5,
+    "text": "make sure to evenly coat that skin tone.",
+    "who": "영상 속 인물",
+    "kind": "인물대사"
+   },
+   {
+    "t": 9.9,
+    "text": "I just use my other brush with my other color to blend it out.",
+    "who": "영상 속 인물",
+    "kind": "인물대사"
+   },
+   {
+    "t": 13.3,
+    "text": "to create these floral patterns that look like an extension of my skin.",
+    "who": "영상 속 인물",
+    "kind": "인물대사"
+   }
+  ],
+  "format": "나레이션+영상 클립",
+  "model": "gemini-2.5-flash"
+ },
+ "tlebZj9IJHA": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "여성, 차분하고 친절한 톤의 나레이션",
+  "others": [
+   {
+    "t": 5.0,
+    "text": "음, 진짜 맛있다.",
+    "who": "남편/리액션",
+    "kind": "리액션"
+   }
+  ],
+  "format": "나레이션+리액션",
+  "model": "gemini-2.5-flash"
+ },
+ "vBvfDjaYVNo": {
+  "speech": true,
+  "n_voices": 3,
+  "main": "남성, 높은 톤, 흥분된 캐릭터 목소리 (TTS 또는 효과 처리된 사람 목소리)",
+  "others": [
+   {
+    "t": 3.0,
+    "text": "3 5",
+    "who": "여성 캐릭터",
+    "kind": "인물대사"
+   },
+   {
+    "t": 6.0,
+    "text": "치치야 치치야",
+    "who": "여성 캐릭터",
+    "kind": "인물대사"
+   },
+   {
+    "t": 7.0,
+    "text": "5cm만 남겨줘",
+    "who": "여성 캐릭터",
+    "kind": "인물대사"
+   },
+   {
+    "t": 12.0,
+    "text": "오빠",
+    "who": "여성 캐릭터",
+    "kind": "인물대사"
+   },
+   {
+    "t": 13.0,
+    "text": "7cm만 남겨줘",
+    "who": "여성 캐릭터",
+    "kind": "인물대사"
+   },
+   {
+    "t": 20.0,
+    "text": "유야",
+    "who": "여성 캐릭터",
+    "kind": "인물대사"
+   },
+   {
+    "t": 21.0,
+    "text": "네",
+    "who": "여성 캐릭터",
+    "kind": "인물대사"
+   },
+   {
+    "t": 22.0,
+    "text": "3cm 남겨봐",
+    "who": "여성 캐릭터",
+    "kind": "인물대사"
+   },
+   {
+    "t": 24.0,
+    "text": "앙앙앙",
+    "who": "어린아이 캐릭터",
+    "kind": "인물대사"
+   },
+   {
+    "t": 25.0,
+    "text": "이만큼",
+    "who": "여성 캐릭터",
+    "kind": "인물대사"
+   }
+  ],
+  "format": "두 사람(남성, 여성 캐릭터)이 대화하며 게임을 진행하는 상황극에 어린아이 캐릭터의 짧은 대사가 포함됨",
+  "model": "gemini-2.5-flash"
+ },
+ "vNJKqrB_oOQ": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "여성 TTS, 차분하고 정보 전달하는 톤",
+  "others": [
+   {
+    "t": 19.0,
+    "text": "Wow, rotating crisper drawers as well.",
+    "who": "원 영상 속 남성",
+    "kind": "대화상대"
+   },
+   {
+    "t": 25.0,
+    "text": "are also adjustable up and down. So you push the button and then you lower the shelf down as needed.",
+    "who": "원 영상 속 남성",
+    "kind": "대화상대"
+   },
+   {
+    "t": 33.0,
+    "text": "all there, very weak. Again,",
+    "who": "원 영상 속 남성",
+    "kind": "대화상대"
+   }
+  ],
+  "format": "나레이션+원 영상 속 인물 대사",
+  "model": "gemini-2.5-flash"
+ },
+ "vY17YKcI7wY": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "남성 TTS 목소리, 정보 전달 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ },
+ "x69BnGrJZFU": {
+  "speech": true,
+  "n_voices": 2,
+  "main": "저음의 남성 목소리, 실제 사람의 샘플링된 밈 사운드",
+  "others": [
+   {
+    "t": 2.5,
+    "text": "(비명)",
+    "who": "놀란 여성",
+    "kind": "리액션"
+   }
+  ],
+  "format": "밈 사운드 반복 및 리액션",
+  "model": "gemini-2.5-flash"
+ },
+ "xBX9kUojN8U": {
+  "speech": true,
+  "n_voices": 1,
+  "main": "남성, TTS 또는 전문 성우, 정보 전달 및 흥미 유발 톤",
+  "others": [],
+  "format": "나레이션 단독",
+  "model": "gemini-2.5-flash"
+ }
+}

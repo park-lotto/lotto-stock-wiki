@@ -14,6 +14,7 @@ import re
 import secrets
 import shutil
 import sys
+import contextvars
 import threading
 import socket
 import tempfile
@@ -81,7 +82,7 @@ from shopping_shorts.media_download import (resolve_media_url, download_any, pro
                                             _is_direct_video, DouyinBusy)
 from shopping_shorts import edit_plan as _edit_plan
 from shopping_shorts import edit_plan
-from shopping_shorts import voice_presets, audio_post, typecast_tts
+from shopping_shorts import voice_presets, audio_post, typecast_tts, fish_tts
 from shopping_shorts import pron_corrections
 from shopping_shorts.tts import synthesize_tts
 from shopping_shorts import tts, asr_check
@@ -1022,10 +1023,15 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
     (수집이 끝나 크론도 꺼져 있다). days보다 먼저 본다 — 둘 다 오면 아카이브가 이긴다."""
     store = Store(DB_PATH)
     if archive:
-        if platform != "instagram":
+        if platform == "youtube":
+            # ★유튜브는 이 자리가 '채널별 터진 영상'이다(2026-10-06 사장님 "유튜브는 역대히트작 자리에", 관제 137).
+            #   유튜브에는 누적 아카이브가 없어 이 탭이 늘 비어 있었다.
+            items, collected_at = store.channel_hit_items(), None
+        elif platform != "instagram":
             return {"ok": True, "items": [], "collected_at": None}
-        items, collected_at = store.archive_hits(
-            min_comments=min_comments, max_comments=max_comments), None
+        else:
+            items, collected_at = store.archive_hits(
+                min_comments=min_comments, max_comments=max_comments), None
     elif days > 0:
         # ★플랫폼 그대로 넘긴다(2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데
         #   이번주 터진것·이번달도"). 여태 인스타가 아니면 빈 목록을 줬다 —
@@ -3767,11 +3773,14 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                         # ★고른 씨앗을 명시로 넘긴다(2026-09-26). it.full_text = 2단계에서 고른 씨앗의 원문
                         #   (위키 항목이면 그 대본, 없으면 화면이 보낸 base_script). 씨앗은 화면 재료에서 빼서
                         #   job에 없으므로, 안 넘기면 이야기 작가가 job의 다른 영상을 씨앗으로 삼는다(ea29 사고).
+                        _sw.SIGNAL_POOL.set(_setting_gate(store, "signal_pool_enabled", getattr(request.state, "customer_id", 0)))   # 새 신호어 풀 스위치(관리자 먼저)
                         _bb_drafts, _bb_why = _sw.make_drafts(
                             _picked, _job, body.get("target_seconds") or 25, job_id=_jid,
                             preset=str(body.get("length_preset") or "short"),
                             seed_text=(it.get("full_text") or ""),
-                            seed_product=script_generate._sources_product(_src) or "")
+                            seed_product=script_generate._sources_product(_src) or "",
+                            # 고른 씨앗이 job 의 어느 영상인지(URL·원문 대조) — 이야기 작가가 그 영상 컷을 줄에 안 붙인다(관제 138)
+                            seed_vid=_selected_source_id(it, shortcode, _job))
                     except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
                         _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
                 if not _bb_drafts and _bb_on:
@@ -4524,6 +4533,21 @@ def _probe_typecast_synth(service, key):
         return False
 
 
+def _probe_fish_synth(service, key):
+    """Fish 키를 무료 모델 "안녕" 합성으로 검사한다(기본 성우 하늘). 200+음성이면 ok."""
+    try:
+        rs = requests.post(fish_tts._ENDPOINT, headers=fish_tts.headers(key, fish_tts.DEFAULT_MODEL_ID),
+                           json=fish_tts.build_payload("안녕", fish_tts.FISH_DEFAULT_VOICE["voice_id"]),
+                           timeout=30)
+        if rs.status_code == 200 and rs.content:
+            return True
+        _remember_key_failure(service, rs.status_code, (rs.text or "")[:300])
+        return False
+    except requests.RequestException as e:
+        _remember_key_failure(service, 0, f"네트워크: {e!r}"[:300])
+        return False
+
+
 def _remember_key_failure(service: str, code: int, body: str) -> None:
     """업체가 준 실패 사유를 사람 말로 바꿔 기억해둔다. 로그에도 남긴다."""
     msg = _explain_key_failure(service, code, body)
@@ -4575,6 +4599,8 @@ def _explain_key_failure(service: str, code: int, body: str) -> str:
                     "남았는지 확인해 주세요. 키 값 자체는 맞습니다.")
         if code == 402:
             return "타입캐스트 크레딧이 부족합니다. typecast.ai에서 충전해 주세요."
+    if service == keyroute.SVC_FISH and code == 402:
+        return "Fish 잔액이 부족합니다. fish.audio에서 충전하거나 무료 모델 성우를 써 주세요."
     if code in (401, 403):
         return "키가 인식되지 않습니다(권한 없음). 값을 다시 확인해주세요."
     if code == 429:
@@ -4704,6 +4730,9 @@ def _probe_user_key(service: str, key: str):
         #   14일간 잡 21건 전부 합성 403. "돈을 쓰면 안 된다"보다 "고객이 14일 막힌다"가 더 나쁘다 → "안녕" 2자(2크레딧)를
         #   진짜로 합성해 본다(_probe_typecast_synth). 403이면 요금제·크레딧 안내가 등록 화면에 바로 뜬다.
         return _probe_typecast_synth(service, key)
+    elif service == keyroute.SVC_FISH:
+        # Fish(2026-10-05): 타입캐스트처럼 **진짜로 짧게 합성**해 본다(무료 모델이라 비용 0).
+        return _probe_fish_synth(service, key)
     elif service == keyroute.SVC_YOUTUBE:
         url = ("https://www.googleapis.com/youtube/v3/videos"
                f"?part=id&id=dQw4w9WgXcQ&key={urllib.parse.quote(key)}")
@@ -5176,7 +5205,7 @@ _USER_ERROR_RULES = (
     # 자기 키인데 잔액이 아닌 실패(429 한도·409 충돌) — 기다리면 대개 풀린다.
     # 여기서 '충전하세요'라고 하면 헛돈을 쓰게 만든다. 위 _byok_credit_message가
     # 잔액 건을 먼저 걷어내므로, 여기 오는 건 잔액이 아닌 것들이다.
-    (("api.elevenlabs.io", "api.typecast.ai"),
+    (("api.elevenlabs.io", "api.typecast.ai", "api.fish.audio"),
      "음성 서비스가 잠시 몰려 응답하지 않았습니다. 1~2분 뒤 다시 시도해 주세요. "
      "(반복되면 설정 > 🔑 내 키 등록에서 키 상태를 확인해 주세요)"),
     (("payment required", "402", "not enough credits", "[600", "insufficient"),
@@ -5225,6 +5254,7 @@ def _looks_user_written(msg):
 _BYOK_VENDORS = (
     (("api.elevenlabs.io", "elevenlabs"), "음성 서비스(ElevenLabs)", "elevenlabs.io"),
     (("api.typecast.ai", "typecast"), "음성 서비스(타입캐스트)", "typecast.ai"),
+    (("api.fish.audio",), "음성 서비스(Fish)", "fish.audio"),
     (("vmake",), "자막 제거 서비스(VMake)", "vmake.ai"),
 )
 
@@ -5297,7 +5327,7 @@ _TTS_VENDOR_RULES = (
 
 def _tts_vendor_message(low):
     """음성 서비스 오류면 원인별 안내를, 아니면 None. 잔액 소진은 _byok_credit_message가 먼저 본다."""
-    if not any(m in low for m in ("api.elevenlabs.io", "api.typecast.ai", "elevenlabs", "typecast")):
+    if not any(m in low for m in ("api.elevenlabs.io", "api.typecast.ai", "elevenlabs", "typecast", "api.fish.audio")):
         return None
     for keys, friendly in _TTS_VENDOR_RULES:
         # ★벤더를 못박은 줄(예: ("api.typecast.ai","403"))은 **둘 다** 있어야 한다(2026-09-09).
@@ -6305,6 +6335,23 @@ def _lab_clean_spans(job, work):
         return {"__error__": 1}
 
 
+def _lab_clean_cuts(job, work, plan):
+    """청소 당시 화면 컷 {칸 순번(화면 DATA.beats 자리): [[영상, 원본 시작, 읽은 길이], ...]} — 정본이 기록한 그대로(관제 135).
+    화면(scene_play.js planClips finish)이 "지금 편성으로 짠 컷이 **지운 그 컷**과 같은가"를 이걸로 본다 — 같으면 청소 구간을
+    보고 다시 짜지 않는다. 기록은 clean_base.recorded_cuts 한 곳. 정본이 없거나 못 읽으면 {}(화면은 종전 계산)."""
+    try:
+        from shopping_shorts import clean_base as _cb
+        base = _cb.load_base(work)
+        if not base:
+            return {}
+        rec = _cb.recorded_cuts(base)
+        return {str(i): rec[int(b["beat_idx"])] for i, b in enumerate((plan or {}).get("beats") or [])
+                if int(b.get("beat_idx", -1)) in rec}
+    except Exception as e:      # noqa: BLE001 — 못 읽으면 붙이지 않는다(화면은 종전 계산 — 청소 구간 판정)
+        print("[clean_cuts] 청소 당시 컷 읽기 실패: %r" % (e,), file=sys.stderr)
+        return {}
+
+
 def _with_film_segs(seg_map, plan, job):
     """추출 인벤토리(seg_map)에 **사람이 필름에서 오려낸 조각**을 되살려 합친 사본을 준다.
 
@@ -6523,6 +6570,7 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
     # ★사람이 필름에서 오려낸 조각을 되살려 함께 내려보낸다(2026-09-05 고객 다수 제보).
     #   안 하면 편성엔 id가 있는데 segments엔 없어 화면이 '0-0'·검은 칸이 된다.
     seg_map = _with_film_segs(seg_map, plan, job)
+    _auto_ok = _edit_plan.non_edge_segs(seg_map)
     work = _MIX_WORK_DIR / job_id
     # 소스 실길이 — 범위초과 세그(실체 없는 화면) 표시용. 소스가 없으면 {}로 폴백(표시만 꺼진다).
     src_duration = {}
@@ -6585,6 +6633,9 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
             "benefits": v.get("product_benefits") or [],
             # 2026-10-01 사장님 "이거 태깅이 대본화한 거 맞아?" — 카드가 묘사만 보여줘 오해. 대본화 소구점·훅 유형을 같이 준다.
             "use_point": v.get("use_point") or "", "hook_type": v.get("hook_type") or "", "appeal_kind": v.get("appeal_kind") or "",
+            # 자동 채우기가 집어도 되는 컷인가(관제 138) — 판단은 edit_plan.non_edge_segs 한 곳. 화면의 태그 기준 채우기가 읽는다
+            #   (씨앗·첫끝 컷은 false — 사람이 직접 담는 건 그대로 된다).
+            "auto_ok": sid in _auto_ok,
         } for sid, v in seg_map.items()},
         "phash": _lab_phash_load(work),      # 썸네일 캐시가 채워지는 대로 /phash로 늦채움
         "src_duration": src_duration,
@@ -6593,6 +6644,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         "scenecuts": _lab_scenecuts(job, work),
         # 청소본이 지운 원본 구간(2026-09-27) — fillShortWindow 가 청소본 칸의 창을 이 안에서만 늘린다(과금·원본 자막 방지).
         "clean_spans": _lab_clean_spans(job, work),
+        # 청소 당시 화면 컷(관제 135) — 같은 편성이면 화면이 그 컷 그대로 쓴다(지운 뒤 컷이 달라져 원본이 뜨던 뿌리).
+        "clean_cuts": _lab_clean_cuts(job, work, plan),
         "captions": caps,
         "tts_dur": tts_dur,
         # ★슬로우모션 상한을 화면에 준다(관제 020) — scene_play.js 가 자기 숫자를 들고 있지 않게. 정본 config.MAX_SLOWMO.
@@ -7426,8 +7479,7 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
     # ⚠ AI 자동 채우기 후보에서 첫·끝(CTA·썸네일) 조각을 뺀다(2026-08-26).
     #   _build_inventory가 edge 표식만 달고 버리지 않게 바뀌었다 — 사람이 화면에서 골라
     #   쓰는 건 되지만 **AI가 자동으로 집는 건 종전대로 막는다**(설계 ⑤).
-    pool = [sid for sid, _s in seg_map.items()
-            if sid not in taken and not _edit_plan._is_edge_seg(_s)]
+    pool = [sid for sid in _edit_plan.non_edge_segs(seg_map) if sid not in taken]
     if not pool:
         return {"ok": True, "picks": [], "reason": "남은 장면이 없어요"}
     need = body.get("need")
@@ -7703,7 +7755,7 @@ def _diag_voice(v):
     vid = str(v.get("voice_id") or "")
     mid = str(v.get("model_id") or "")
     return {"voice_id": vid, "model_id": mid, "preset_id": v.get("preset_id"),
-            "engine": "typecast" if typecast_tts.is_typecast(mid) else "elevenlabs",
+            "engine": voice_presets.engine_of(mid),
             "voice_kind": ("custom(uc_)" if vid.startswith("uc_") else "builtin(tc_)" if vid.startswith("tc_") else "?")}
 
 
@@ -9083,6 +9135,59 @@ async def api_typecast_adopt(request: Request):
     return {"ok": True, "group_id": gid, "count": len(tones)}
 
 
+# ── Fish 성우 찾기·내 목소리·담기 (2026-10-05, 관제 123) — 타입캐스트 3종의 짝 ──────────
+# ★공개 라이브러리 검색은 키 없이도 된다(실측). 담기는 타입캐스트처럼 DB 프리셋 행만 만든다.
+# ★엔진 판정은 fish_tts.is_fish 한 곳(0순위-B).
+@app.get("/api/fish/voices")
+def api_fish_voices(request: Request, q: str = "", limit: int = 40):
+    d = fish_tts.list_voices(q, limit=limit)
+    if not d.get("ok"):
+        return {"ok": False, "voices": [], "error": d.get("error") or "성우 목록을 못 불러왔습니다"}
+    return {"ok": True, "voices": d["voices"], "total": d.get("total", 0), "error": None}
+
+
+@app.get("/api/fish/voices/mine")
+def api_fish_voices_mine(request: Request):
+    """내 Fish 계정에서 만든 목소리. 회원 본인 키가 있어야 한다(사장님 키로 부르면 사장님 계정 것이 나온다)."""
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    if not keyroute.has_own_key(store, cid, keyroute.SVC_FISH) and not _is_admin(cid):
+        return {"ok": False, "need_key": True, "voices": [],
+                "error": "내 Fish 키를 등록해야 내 계정에서 만든 목소리를 볼 수 있어요."}
+    d = fish_tts.list_voices(mine=True, limit=100, customer_id=cid)
+    if not d.get("ok"):
+        return {"ok": False, "voices": [], "error": d.get("error") or "목소리 목록을 못 불러왔습니다"}
+    return {"ok": True, "voices": d["voices"], "total": d.get("total", 0), "error": None}
+
+
+@app.post("/api/fish/voices/adopt")
+async def api_fish_adopt(request: Request):
+    """고른 Fish 성우를 성우 카드로 등록(DB 프리셋 행). 감정축이 없어 톤은 기본 1종."""
+    cid = getattr(request.state, "customer_id", 0) or 0
+    body = await request.json()
+    vid = ((body or {}).get("voice_id") or "").strip()
+    name = ((body or {}).get("name") or "").strip()[:40]
+    model = ((body or {}).get("model") or fish_tts.DEFAULT_MODEL_ID).strip()
+    if not vid or not name or not re.fullmatch(r"[0-9a-fA-F]{16,64}", vid):
+        return JSONResponse({"ok": False, "error": "성우 정보가 모자랍니다."}, status_code=400)
+    if not fish_tts.is_fish(model):
+        return JSONResponse({"ok": False, "error": f"Fish 모델이 아닙니다({model})."}, status_code=400)
+    # 실제로 있는 성우인지 Fish에 묻는다 — 화면이 보낸 값을 그대로 믿지 않는다.
+    if not fish_tts.get_voice(vid, customer_id=cid):
+        return JSONResponse({"ok": False, "error": "그 성우를 Fish에서 찾지 못했습니다."}, status_code=404)
+    gid = "fsv-" + re.sub(r"[^a-zA-Z0-9]", "", vid)[-16:]
+    Store(DB_PATH).upsert_voice_preset({
+        "preset_id": f"{gid}-stable", "group_id": gid, "variant": "stable",
+        "name": name, "one_liner": "Fish에서 담은 성우", "lang": "KR",
+        "archetype": "Fish에서 담은 성우",
+        "base_voice_id": vid, "model_id": model, "voice_settings": {},
+        "default_speed": voice_presets.default_speed(vid), "default_silence_trim": "mid",
+        "sample_file": None, "source_ref": "Fish 성우 찾기(2026-10-05)",
+        "origin": "curated", "best": False, "owner_customer_id": cid,
+    })
+    return {"ok": True, "group_id": gid, "count": 1}
+
+
 @app.get("/api/voice-presets")
 def api_voice_presets(request: Request, lang: str = "KR"):
     """성우별 그룹 목록(유저 노출용 — source_ref는 내부 전용이라 제외).
@@ -9109,7 +9214,7 @@ def api_voice_presets(request: Request, lang: str = "KR"):
         # ★타입캐스트를 껐으면 그 성우 카드는 아예 안 보인다(2026-09-07 사장님 "일레븐만
         #   쓴다"). 고를 수 없으면 3단계에서 타입캐스트 오류가 날 길이 없다. 판정은
         #   typecast_tts 한 곳(0순위-B) — 프론트가 "tc-" 접두사로 추측하지 않는다.
-        if typecast_tts.use_fallback(p.get("model_id")):
+        if typecast_tts.use_fallback(p.get("model_id")) or fish_tts.use_fallback(p.get("model_id")):
             continue
         gid = p["group_id"]
         g = groups.setdefault(gid, {
@@ -9121,8 +9226,7 @@ def api_voice_presets(request: Request, lang: str = "KR"):
             "best": bool(p.get("best", False)),
             # 어느 엔진 성우인지 카드에 배지로 띄운다(2026-08-19). 판정은 서버가 한다 —
             # 프론트가 group_id 접두사("tc-") 따위로 추측하면 판단이 두 곳이 된다(0순위-B).
-            "engine": ("typecast" if typecast_tts.is_typecast(p.get("model_id"))
-                       else "elevenlabs"),
+            "engine": voice_presets.engine_of(p.get("model_id")),
             "default_variant": "stable", "variants": {}, "samples_pending": False,
         })
         g["variants"][p["variant"]] = {
@@ -9566,6 +9670,9 @@ def _lang_voice_block(job, voice):
     from shopping_shorts import script_translate
     if script_translate.job_lang(job) != "en":
         return None
+    if fish_tts.is_fish((voice or {}).get("model_id")):
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "영어모드에서는 Fish 한국어 성우를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
     if typecast_tts.is_typecast((voice or {}).get("model_id")):
         return JSONResponse(status_code=422, content={
             "ok": False, "error": "영어모드에서는 타입캐스트(한국 성우)를 쓸 수 없어요 — 일레븐랩스 성우를 골라 주세요."})
@@ -9825,6 +9932,124 @@ def api_mix_video_nocta(job_id: str, request: Request, dl: int = 0):
     if dl:
         return _send_media(str(out_p), request, "video/mp4",
                            filename=export_bundle.safe_name(job_id) + "_noCTA.mp4")
+    return _range_mp4_response(str(out_p), request)
+
+
+# ── 📺 구매링크용 롱폼(가로) 판 (2026-10-05 고객 황선희 → 사장님 "오른쪽에 롱폼으로 렌더를 활성화해줘", 관제 132) ──
+#   쇼츠엔 누르는 구매링크를 못 달아서, 같은 쇼츠를 가로 영상으로 한 벌 더 만들어 쇼츠의 '관련 동영상'에 건다.
+#   ★구도·문구·"지금 것이 최신인가"는 link_longform 한 곳이 정한다(0순위-C). 여기는 부르기만 한다.
+#   ★다시 굽는 일이라 수십 초 걸린다(실측 25초 영상 ≈ 17초) → 요청을 붙잡지 않고 뒤에서 굽고, 화면이 상태를 묻는다.
+#     상태는 파일로 본다(link_longform.state) — 웹 프로세스가 여럿이어도, 재시작돼도 같은 답이 나온다.
+_LONGFORM_LOCK = threading.Lock()      # 한 번에 한 편만 굽는다(웹 서버에서 도는 인코딩이라 겹치면 화면이 느려진다)
+
+
+def _longform_job(job_id):
+    """(job, src, 응답) — 롱폼을 만들 수 있는 상태가 아니면 응답에 사유를 담는다."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return None, None, JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return job, None, JSONResponse(status_code=409, content={
+            "ok": False, "error": "영상을 만드는 중이에요 — 끝나면 다시 눌러주세요"})
+    _gone = _video_gone_reason(job)
+    if _gone:
+        return job, None, JSONResponse(status_code=404, content={"ok": False, "error": _gone})
+    return job, job["video_path"], None
+
+
+def _longform_run(src, job_dir, where):
+    from shopping_shorts import link_longform
+    with _LONGFORM_LOCK:
+        try:
+            link_longform.render_link_longform(src, job_dir, where)
+        except Exception:      # noqa: BLE001 — 사유는 render_link_longform 이 .err 와 stderr 에 남겼다(화면이 읽는다)
+            pass
+
+
+def _longform_status(job_id, src, where):
+    from shopping_shorts import link_longform
+    st = link_longform.state(_MIX_WORK_DIR / job_id, src, where)
+    st.update({"ok": st["state"] != "error", "text": link_longform.text_for(where),
+               "custom": bool(link_longform.load_layout(_MIX_WORK_DIR / job_id))})   # 장면꾸미기 롱폼 탭에서 꾸민 안내가 있다
+    if st["state"] == "ready":
+        st["url"] = f"/api/mix/video_longform/{job_id}"
+    return st
+
+
+@app.get("/api/mix/longform_link/{job_id}")
+def api_mix_longform_link_status(job_id: str, where: str = "comment"):
+    """구매링크용 롱폼 상태: none / running / ready / error."""
+    _job, src, bad = _longform_job(job_id)
+    if bad is not None:
+        return bad
+    return _longform_status(job_id, src, where)
+
+
+@app.post("/api/mix/longform_link/{job_id}")
+def api_mix_longform_link(job_id: str, body: dict):
+    """완성 쇼츠 → 구매링크용 가로 영상 만들기 시작. 이미 있으면(같은 완성본·같은 문구) 그대로 ready."""
+    from shopping_shorts import link_longform
+    where = str((body or {}).get("where") or link_longform.DEFAULT_WHERE)
+    _job, src, bad = _longform_job(job_id)
+    if bad is not None:
+        return bad
+    st = _longform_status(job_id, src, where)
+    if st["state"] in ("ready", "running"):
+        return st
+    job_dir = _MIX_WORK_DIR / job_id
+    link_longform.mark_running(job_dir)
+    threading.Thread(target=_longform_run, args=(src, job_dir, where), daemon=True).start()
+    return _longform_status(job_id, src, where)
+
+
+def _longform_layout_job(job_id, request):
+    """꾸민 안내를 읽고 쓸 수 있는 작업인가 — 스위치(link_guide_enabled)가 열어 준 계정의 자기 작업(관리자는 전부)."""
+    cid = _cid(request)
+    if not _setting_gate(Store(DB_PATH), "link_guide_enabled", cid):
+        return None, JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능입니다"})
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or (not _is_admin(cid) and int(job.get("customer_id") or 0) != cid):
+        return None, JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요"})
+    return job, None
+
+
+@app.get("/api/mix/longform_layout/{job_id}")
+def api_mix_longform_layout_get(job_id: str, request: Request):
+    """장면꾸미기 롱폼 탭에서 놓은 안내 항목(없으면 빈 목록)."""
+    from shopping_shorts import link_longform
+    _job, bad = _longform_layout_job(job_id, request)
+    if bad is not None:
+        return bad
+    return {"ok": True, "items": link_longform.load_layout(_MIX_WORK_DIR / job_id)}
+
+
+@app.post("/api/mix/longform_layout/{job_id}")
+def api_mix_longform_layout_save(job_id: str, body: dict, request: Request):
+    """안내 항목 저장(빈 목록 = 지우기). 범위 검사·저장은 link_longform 한 곳. 9단계 「롱폼으로 렌더」가 이걸 굽는다."""
+    from shopping_shorts import link_longform
+    _job, bad = _longform_layout_job(job_id, request)
+    if bad is not None:
+        return bad
+    job_dir = _MIX_WORK_DIR / job_id
+    if not job_dir.is_dir():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 폴더가 없어요"})
+    return {"ok": True, "items": link_longform.save_layout(job_dir, (body or {}).get("items"))}
+
+
+@app.get("/api/mix/video_longform/{job_id}")
+def api_mix_video_longform(job_id: str, request: Request, dl: int = 0, where: str = "comment"):
+    """구매링크용 롱폼 재생·다운로드. 지금 완성본으로 만든 것이 아니면 주지 않는다(api_mix_video_nocta 와 같은 규약)."""
+    from shopping_shorts import link_longform
+    _job, src, bad = _longform_job(job_id)
+    if bad is not None:
+        return bad
+    job_dir = _MIX_WORK_DIR / job_id
+    if not link_longform.is_fresh(job_dir, src, where):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "롱폼 영상이 아직 없어요 — 「롱폼으로 렌더」를 눌러주세요"})
+    out_p = link_longform.paths(job_dir)["out"]
+    if dl:
+        return _send_media(str(out_p), request, "video/mp4",
+                           filename=export_bundle.safe_name(job_id) + "_구매링크_롱폼.mp4")
     return _range_mp4_response(str(out_p), request)
 
 
@@ -12793,6 +13018,11 @@ _TTS_CREDIT_VENDORS = {
                    "url": "https://api.typecast.ai/v1/users/me/subscription",
                    "header": "X-API-KEY",
                    "dashboard": "https://typecast.ai/developers"},
+    # Fish(2026-10-05): 잔액은 달러. 무료 모델(s2.1-pro-free)은 잔액을 안 쓴다.
+    "fish":       {"label": "Fish", "unit": "$",
+                   "url": "https://api.fish.audio/wallet/self/api-credit",
+                   "header": "Authorization", "prefix": "Bearer ",
+                   "dashboard": "https://fish.audio/app/api-keys/"},
 }
 _TTS_CREDIT_CACHE_SEC = 60
 _TTS_CREDIT_CACHE = {}          # cid → (expires_epoch, payload)
@@ -12809,6 +13039,13 @@ def _tts_credit_parse(service, status, body):
     if status != 200:
         return {"ok": False, "error_kind": "http", "http": int(status)}
     j = body if isinstance(body, dict) else {}
+    if service == "fish":
+        try:
+            credit = float(j.get("credit") or 0)
+        except (TypeError, ValueError):
+            credit = 0.0
+        return {"ok": True, "used": 0, "limit": 0, "remaining": round(credit, 2),
+                "reset_at": None, "plan": "무료 모델(s2.1-pro-free)은 잔액을 안 씀"}
     if service == "elevenlabs":
         used = int(j.get("character_count") or 0)
         limit = int(j.get("character_limit") or 0)
@@ -12828,7 +13065,7 @@ def _tts_credit_probe(service, key):
     """키 하나의 잔액을 업체에 묻는다. 실패해도 예외를 올리지 않는다(화면 한 줄이 죽을 뿐)."""
     v = _TTS_CREDIT_VENDORS[service]
     try:
-        r = requests.get(v["url"], headers={v["header"]: key}, timeout=8)
+        r = requests.get(v["url"], headers={v["header"]: v.get("prefix", "") + key}, timeout=8)
     except requests.RequestException as e:
         return {"ok": False, "error_kind": "network", "error": str(e)[:120]}
     try:
@@ -15618,7 +15855,7 @@ def check_and_count(customer_id, op):
     return True
 
 
-_SVC_KO = {"elevenlabs": "목소리(ElevenLabs)", "typecast": "목소리(타입캐스트)",
+_SVC_KO = {"elevenlabs": "목소리(ElevenLabs)", "typecast": "목소리(타입캐스트)", "fish": "목소리(Fish)",
            "vmake": "자막제거(Vmake)",
            "serpapi": "제품찾기(SerpApi)", "gemini": "AI(Gemini)", "youtube": "유튜브"}
 
@@ -16070,6 +16307,8 @@ def _api_me(request: Request):
             "story_writer": _setting_gate(st, "story_writer_enabled", cid),
             # 2단계 스토리보드(관제 120) — 서버 입구(mix/start)와 같은 스위치 하나. 화면은 이 값으로만 보인다
             "storyboard": _setting_gate(st, "storyboard_enabled", cid),
+            # 대화형 대본(관제 128) — 작업목록 「🎭 대화형」 버튼. 서버 입구(dialogue/*)와 같은 스위치·관리자 판정
+            "dialogue": bool(_setting_gate(st, "dialogue_enabled", cid) and is_admin),
             # 관리자가 아니어도 열어준 기능들(2026-08-31). 화면은 이 값만 보고 켠다.
             "features": {f: _feature_allowed(st, cid, f) for f in _FEATURE_KEYS},
             "email": email, "name": name, "member_days": member_days,
@@ -16209,6 +16448,12 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
                        "storyboard_enabled",
+                       # 신호어 새 풀(히트 자막 2,051편 빈도 가중, 2026-10-05) — ""끔(종전 8세트) · "admin" · "1" 전체
+                       "signal_pool_enabled",
+                       # 대화형 대본(관제 128, 2026-10-05) — ""끔 · "admin" 사장님만 시험 · "1" 전체
+                       "dialogue_enabled",
+                       # 구매링크 안내(관제 133, 2026-10-06) — 장면꾸미기 유튜브 화면 자리 표시 + 쇼핑 안내 세트 새 디자인. ""끔 · "admin" 사장님만 · "1" 전체
+                       "link_guide_enabled",
                        # 장면꾸미기 장면 효과(관제 124, 2026-10-05) — 강조 확대·어둡게·흑백 충격·자동 배치. ""끔 · "admin" · "11,42" · "1" 전체
                        "scene_fx_enabled",
                        # 자막팩(관제 127, 2026-10-06) — 팩 카드·새 등장 효과·새 단어 강조 방식. ""끔 · "admin" · "11,42" · "1" 전체
@@ -20868,9 +21113,69 @@ _SB_LOCK = threading.Lock()
 
 
 def _sb_gate(request):
-    if not _setting_gate(Store(DB_PATH), "storyboard_enabled", getattr(request.state, "customer_id", 0)):
+    st, cid = Store(DB_PATH), getattr(request.state, "customer_id", 0)
+    if not _setting_gate(st, "storyboard_enabled", cid):
         return JSONResponse(status_code=403, content={"ok": False, "error": "스토리보드는 아직 열리지 않았습니다"})
+    from shopping_shorts import story_writer as _sw
+    _sw.SIGNAL_POOL.set(_setting_gate(st, "signal_pool_enabled", cid))   # 새 신호어 풀 스위치(관리자 먼저)
     return None
+
+
+def _sb_job(request, key):
+    """화면 열쇠 → (상태 열쇠, 재료 extract, 매칭 작업 번호|None). ★재료 규칙은 2단계 대본 생성(_materials_for_generate)과 같다:
+    작업파일에 매칭 작업(job)이 있으면 그 job.extract(캐시 보충 _enrich_job_extract), 없으면 담은 영상 분석(_extract_from_work).
+    ★상태 열쇠는 작업파일 기준('w-<작업파일>') — 1단계(매칭 작업 없음)에서 만든 장면 목록·스토리보드가 3단계 뒤에도 이어지게.
+    seg_id 는 두 경우가 같다(캐시를 탄 job 실측 15/15 일치) — 짝은 seg_id 로만 잇는다. 남의 작업은 못 연다."""
+    st, cid = Store(DB_PATH), getattr(request.state, "customer_id", 0)
+    key = str(key or "").strip()
+    if key.startswith("w:"):
+        wid = key[2:]
+        work = st.get_produce_work(wid, customer_id=cid)
+        if not work:
+            return None, None, None
+        jid = str(work.get("job_id") or "").strip()
+        job = st.get_mix_job(jid) if jid else None
+        if job and int(job.get("customer_id") or 0) == int(cid or 0) and job.get("extract"):
+            return "w-" + wid, (_enrich_job_extract(job, st) or {}).get("extract") or {}, jid
+        return "w-" + wid, _extract_from_work(wid, cid, st), None
+    job = st.get_mix_job(key) if key else None
+    if not job or int(job.get("customer_id") or 0) != int(cid or 0):
+        return None, None, None
+    return key, (_enrich_job_extract(job, st) or {}).get("extract") or {}, key
+
+
+_SB_THUMB_DIR = Path(__file__).parent / "data" / "storyboard_thumbs"
+
+
+@app.get("/api/produce/storyboard/thumb/{key}/{seg_id}")
+def api_storyboard_thumb(request: Request, key: str, seg_id: str):
+    """스토리보드 장면 썸네일. 매칭 작업이 있으면 그 썸네일(/api/mix/seg_thumb 과 같은 것),
+    없으면 1단계 분석 때 받아 둔 영상(data/find_frames/<sha1(영상코드)[:16]>/*.mp4)에서 조각 첫 장면을 뜬다
+    (프레임 뜨기는 frame_extract 한 곳 — _seg_strip_thumb). 영상이 치워졌으면(2일 보관) 404 → 화면은 설명 글로 보인다."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    skey, ex, jid = _sb_job(request, key.replace("w-", "w:", 1) if key.startswith("w-") else key)
+    if ex is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if jid:
+        return api_mix_seg_thumb(jid, seg_id)
+    for vid, e in (ex or {}).items():
+        for sg_ in (e or {}).get("segments") or []:
+            if sg_.get("seg_id") != seg_id:
+                continue
+            safe = re.sub(r"[^0-9A-Za-z_.-]", "", seg_id)
+            out = _SB_THUMB_DIR / ("%s.jpg" % safe)
+            if not out.exists():
+                vdir = _FIND_TMP_DIR / hashlib.sha1(str(vid).encode()).hexdigest()[:16]
+                mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
+                if not mp4:
+                    return JSONResponse(status_code=404, content={"ok": False, "error": "영상 파일이 치워졌습니다"})
+                _SB_THUMB_DIR.mkdir(parents=True, exist_ok=True)
+                if not _seg_strip_thumb(str(mp4[0]), _SB_THUMB_DIR, sg_, out.name):
+                    return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+            return FileResponse(str(out), media_type="image/jpeg")
+    return JSONResponse(status_code=404, content={"ok": False, "error": "없는 장면"})
 
 
 def _sb_run(job_id, name, fn):
@@ -20888,7 +21193,8 @@ def _sb_run(job_id, name, fn):
         except Exception as e:      # noqa: BLE001 — 이유를 화면에 보여 준다
             print("[storyboard] %s %s 실패: %r" % (job_id, name, e), file=sys.stderr)
             _SB_TASKS[key] = {"state": "error", "error": str(e)[:300]}
-    threading.Thread(target=_go, daemon=True).start()
+    _ctx = contextvars.copy_context()      # 신호어 풀 스위치(SIGNAL_POOL) 등 요청 문맥을 실에도 그대로
+    threading.Thread(target=lambda: _ctx.run(_go), daemon=True).start()
 
 
 @app.get("/api/produce/storyboard/{job_id}")
@@ -20898,18 +21204,18 @@ def api_storyboard_get(request: Request, job_id: str):
     if g:
         return g
     from shopping_shorts import storyboard as _sb
-    job = Store(DB_PATH).get_mix_job(job_id)
-    if not job or not job.get("extract"):
+    job_id, _ex, _jid = _sb_job(request, job_id)
+    if not _ex:
         return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     pieces = {}
-    for vid, ex in (job.get("extract") or {}).items():
+    for vid, ex in _ex.items():
         for sg_ in (ex or {}).get("segments") or []:
             sid = sg_.get("seg_id")
             if sid:
                 pieces[sid] = {"sec": round(float(sg_.get("end") or 0) - float(sg_.get("start") or 0), 1),
                                "desc": sg_.get("scene_desc") or "", "label": sg_.get("label") or "",
                                "use": sg_.get("use_point") or "", "kind": sg_.get("appeal_kind") or "",
-                               "th": "/api/mix/seg_thumb/%s/%s" % (job_id, sid)}
+                               "th": "/api/produce/storyboard/thumb/%s/%s" % (job_id, sid)}
     tasks = {k[1]: {kk: vv for kk, vv in v.items() if kk != "t0"} for k, v in list(_SB_TASKS.items()) if k[0] == job_id}
     return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH), "tasks": tasks}
 
@@ -20919,8 +21225,11 @@ def api_storyboard_inventory(request: Request, job_id: str):
     g = _sb_gate(request)
     if g:
         return g
+    job_id, _ex, _jid = _sb_job(request, job_id)
+    if not _ex:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
-    _sb_run(job_id, "inventory", lambda: _sb.inventory(DB_PATH, job_id))
+    _sb_run(job_id, "inventory", lambda: _sb.inventory(DB_PATH, job_id, ex=_ex))
     return {"ok": True}
 
 
@@ -20930,10 +21239,13 @@ def api_storyboard_boards(request: Request, job_id: str, body: dict):
     g = _sb_gate(request)
     if g:
         return g
+    job_id, _ex, _jid = _sb_job(request, job_id)
+    if not _ex:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
     star, roles = str(body.get("star") or ""), str(body.get("roles") or "")
     for k in [str(x) for x in (body.get("keys") or [])][:6]:
-        _sb_run(job_id, "board:" + k, lambda k=k: _sb.make_boards(DB_PATH, job_id, [k], star, roles).get(k))
+        _sb_run(job_id, "board:" + k, lambda k=k: _sb.make_boards(DB_PATH, job_id, [k], star, roles, ex=_ex).get(k))
     return {"ok": True}
 
 
@@ -20943,9 +21255,12 @@ def api_storyboard_insert(request: Request, job_id: str, body: dict):
     g = _sb_gate(request)
     if g:
         return g
+    job_id, _ex, _jid = _sb_job(request, job_id)
+    if not _ex:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
     name = "insert:" + str(body.get("name") or "x")[:40]
-    _sb_run(job_id, name, lambda: _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}))
+    _sb_run(job_id, name, lambda: _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}, ex=_ex))
     return {"ok": True}
 
 
@@ -20966,7 +21281,15 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     if isinstance(_sb, list) and _sb and _setting_gate(Store(DB_PATH), "storyboard_enabled",
                                                        getattr(request.state, "customer_id", 0)):
         from shopping_shorts.story_writer import storyboard_to_beat_sources
-        _conv = storyboard_to_beat_sources(_sb)
+        _st_sb = Store(DB_PATH)
+
+        def _sb_lookup(sid):      # seg_id = <영상코드>-<n> — 그 영상 분석(캐시)에서 장면을 찾는다(1단계 재료와 같은 곳)
+            data = _st_sb.get_script(str(sid).rsplit("-", 1)[0]) or {}
+            segs = [g for g in (data.get("segments") or []) if isinstance(g, dict)]
+            g = next((x for x in segs if x.get("seg_id") == sid), None)
+            # 어느 영상인지 알아볼 '장면 경계 모양'(그 영상 장면들의 시작 초) — 3단계 작업이 장면 설명·번호를 새로 달아도 경계는 같다
+            return dict(g, _vsig=[round(float(x.get("start") or 0), 3) for x in segs][:12]) if g else None
+        _conv = storyboard_to_beat_sources(_sb, _sb_lookup)
         if _conv["script"]:
             script = _conv["script"]
             body["script_structure"] = dict(body["script_structure"], beat_sources=_conv["beat_sources"],
@@ -21074,6 +21397,95 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     _store.attach_mix_claim(_fp, job_id)     # 진 쪽이 이걸 읽어 같은 job을 쓴다
     Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}
+
+
+# ── 대화형 대본(관제 128, 2026-10-05) — 스위치 dialogue_enabled(기본 끔 · "admin" = 사장님만 시험). ──
+#   판단(틀·화자·사실 검사·장면 출처 재배치)은 dialogue_script 한 곳, 칸 음성은 tts_dialogue. 여기는 저장·전달만.
+@app.post("/api/produce/dialogue/convert")
+def api_produce_dialogue_convert(request: Request, body: dict):
+    """확정 대본 → 대화형 미리보기(저장 없음). body: {script, form, product?}"""
+    if not _setting_gate(Store(DB_PATH), "dialogue_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "대화형은 아직 시험 중이에요"})
+    from shopping_shorts import dialogue_script, edit_plan as _ep
+    form = body.get("form") or ""
+    script, product = body.get("script") or "", str(body.get("product") or "")
+    if body.get("work_id"):
+        # 작업목록 버튼: 새 작업 만들기(from_work)와 **같은 원문**(job.given_script)으로 미리 본다
+        _st = Store(DB_PATH)
+        _w = _st.get_produce_work(str(body["work_id"]), _cid(request))
+        _j = _st.get_mix_job((_w or {}).get("job_id") or "") if _w else None
+        if not _j or not _j.get("given_script"):
+            return JSONResponse(status_code=404, content={"ok": False, "error": "대본이 확정된 작업이 아니에요(3단계까지 진행한 작업만)"})
+        script, product = _j["given_script"], str(_j.get("product") or "")
+    try:
+        out = dialogue_script.convert(_ep.script_sentences(script), form, product)
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+    return {"ok": True, "form": form, "lines": out, "script": dialogue_script.script_text(out),
+            "source": _ep.script_sentences(script), "cast": dialogue_script.cast_of(form),
+            "forms": {k: v["label"] for k, v in dialogue_script.FORMS.items()}}
+
+
+@app.get("/api/produce/dialogue/forms")
+def api_produce_dialogue_forms(request: Request):
+    """틀 목록(화면 고르기 칸) — 설명·화자·기본 성우는 dialogue_script.FORMS 한 곳에서."""
+    if not _setting_gate(Store(DB_PATH), "dialogue_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "대화형은 아직 시험 중이에요"})
+    from shopping_shorts import dialogue_script
+    return {"ok": True, "forms": [{"id": k, "label": f["label"], "desc": f["desc"], "roles": list(f["roles"]),
+                                   "cast": f["cast"]} for k, f in dialogue_script.FORMS.items()]}
+
+
+@app.post("/api/produce/dialogue/from_work/{work_id}")
+def api_produce_dialogue_from_work(request: Request, work_id: str, body: dict):
+    """작업 하나를 대화형으로 바꾼 **새 작업**을 만든다(원본은 그대로). body: {form, cast?: {화자: preset_id}}
+    새 job 은 원본 재료·장면 출처(줄 수에 맞춰 재배치)·성우를 잇고 대본만 대화형 — 3단계부터 다시 돈다.
+    ★관리자 시험 전용이라 과금하지 않는다(스위치가 관리자만일 때만 열린다)."""
+    cid = _cid(request)
+    st = Store(DB_PATH)
+    if not (_setting_gate(st, "dialogue_enabled", cid) and _is_admin(cid)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "대화형은 아직 시험 중이에요"})
+    from shopping_shorts import dialogue_script, edit_plan as _ep
+    w = st.get_produce_work(work_id, cid)
+    job = st.get_mix_job((w or {}).get("job_id") or "") if w else None
+    if not w or not job or not job.get("given_script"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "대본이 확정된 작업이 아니에요"})
+    form = body.get("form") or ""
+    src_lines = _ep.script_sentences(job["given_script"])
+    try:
+        if isinstance(body.get("lines"), list) and form in dialogue_script.FORMS:
+            # ★미리보기에서 사람이 본 그 대본 그대로 — 다시 돌리면 다른 대본이 나온다. 검사는 같은 check 로 다시 건다.
+            out = [{"speaker": str(l.get("speaker") or ""), "text": str(l.get("text") or "").strip(),
+                    "tag": str(l.get("tag") or "") if str(l.get("tag") or "") in dialogue_script.TAGS else "",
+                    "src": [i for i in (l.get("src") or []) if isinstance(i, int)]}
+                   for l in body["lines"] if isinstance(l, dict)]
+            errs = dialogue_script.check(src_lines, out, form)
+            if errs:
+                raise ValueError("미리보기 대본 검사 실패 — " + "; ".join(errs[:3]))
+        else:
+            out = dialogue_script.convert(src_lines, form, str(job.get("product") or ""))
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+    ss = dict(job.get("script_structure") or {})
+    if ss.get("beat_sources"):
+        ss["beat_sources"] = dialogue_script.remap_beat_sources(ss["beat_sources"], out)
+    dm = dialogue_script.meta(form, out, body.get("cast") or None)
+    dm["voices"] = {spk: _voice_snapshot(st, {"preset_id": pid}) for spk, pid in dm["cast"].items()}
+    ss["dialogue"] = dm
+    new_job = uuid.uuid4().hex[:12]
+    st.create_mix_job(new_job, job["urls"], job.get("target_seconds") or 25, "free",
+                      subtitle_removal=bool(job.get("subtitle_removal")),
+                      given_script=dialogue_script.script_text(out), script_structure=ss,
+                      customer_id=cid, scene_first=bool(job.get("scene_first")),
+                      backbone_main=job.get("backbone_main"))
+    if job.get("voice"):
+        st.update_mix_job(new_job, voice=job["voice"])          # 배속·무음 손잡이는 원본 작업 성우 그대로
+    state = dict(w.get("state") or {})
+    state["script"] = dialogue_script.script_text(out)
+    state["title_manual"] = f"[대화형·{dialogue_script.FORMS[form]['label']}] {w.get('title') or ''}".strip()
+    new_work = st.upsert_produce_work(None, state, job_id=new_job, step=w.get("step"), customer_id=cid)
+    st.enqueue("mix", {"job_id": new_job})
+    return {"ok": True, "job_id": new_job, "work_id": new_work, "lines": out}
 
 
 @app.post("/api/produce/mix/settings")
@@ -21229,7 +21641,8 @@ def api_sfx_pack_sound(pack_no: int, slot: str, request: Request):
 def api_scene_style_asset(asset_path: str):
     from .scene_style import ROOT
     candidate = (ROOT / asset_path).resolve()
-    names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js"}
+    names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js",
+             "link-longform-stage.html", "link-longform-blocks.js"}   # 구매링크 롱폼 화면(관제 133)
     allowed = (asset_path.startswith("out/") and asset_path[4:] in names)
     allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "shopping_shorts/static/text-look-contract.js", "shopping_shorts/static/caption-motions.js", "out/scene-style-labels.js"}
     allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/", "out/장면꾸미기_로고/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
@@ -21276,15 +21689,21 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     if copy_family:
         headcopy["copy_family"] = headcopy_gen.normalize_family(copy_family)
     context = context_for(timeline, headcopy, snapshot, job_id)
+    # 구매링크 안내(관제 133): 스위치가 열어 준 계정에만 편집기가 유튜브 화면 자리·새 세트 디자인을 보여 준다(out/scene-style-decorations.js guideOn).
+    context["linkGuide"] = bool(_setting_gate(Store(DB_PATH), "link_guide_enabled", _cid(request)))
     # ★페이지 그림 = **그 페이지 시간 한가운데**의 실제 화면(2026-10-03 관제 101, 황선희님 817308da1647).
     #   종전엔 모든 페이지에 칸 대표 그림 한 장(beatframe/<칸>)을 줘서, 장면 앞 1초에만 지나가는 원본 자막이
     #   편집기에 안 보였다 → 고객이 가림막을 못 넣고 완성본에서야 자막을 봤다. 시각 → 그림은 _beatframe_file(at=) 한 곳.
     _pages = [(scene["beat_idx"], _scene_page_time(scene)) for scene in context["scenes"]]
     _prewarm_beatframes(job, job_id, _pages)
+    # ★주소에 청소 상태(_frame_cache_key)를 박는다(관제 135) — 주소가 청소 전후로 같으면 열려 있던 화면이 청소 전에 받은
+    #   원본 그림을 그대로 보여 준다(2026-09-09 박세현님과 같은 꼴 — 컷 그림 주소엔 넣었는데 페이지 그림 주소엔 빠져 있었다).
+    _fk = _frame_cache_key(job, _MIX_WORK_DIR / job_id)
+    _fq = f"&k={_fk}" if _fk else ""
     for scene, (_bi, _at) in zip(context["scenes"], _pages):
-        scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}"
+        scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}{_fq}"
         # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
-        scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}" for _t in _scene_page_points(scene)]
+        scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}{_fq}" for _t in _scene_page_points(scene)]
     # 장면 효과(관제 124) 스위치 — 꺼진 계정은 편집기가 '강조 효과' 상자·자동 배치를 안 띄운다(고객 화면 불변)
     context["fxEnabled"] = bool(_setting_gate(Store(DB_PATH), "scene_fx_enabled", _cid(request)))
     # 자막팩(관제 127) 스위치 — 꺼진 계정은 편집기가 팩 카드·새 등장 효과·새 강조 방식 버튼을 안 띄운다(고객 화면 불변)

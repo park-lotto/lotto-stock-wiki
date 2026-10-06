@@ -402,11 +402,12 @@ var GUIDE_VIDEO = {
   vmake: "",       // VMake 키 받는 법
   elevenlabs: "",  // ElevenLabs 키 받는 법
   typecast: "",    // 타입캐스트 키 받는 법
+  fish: "",        // Fish 무료 키 받는 법
   youtube: "",     // 유튜브 Data API 키 받는 법
   serpapi: "",     // SerpApi 키 받는 법(렌즈 검색)
   buffer: "",      // Buffer 키 받는 법(SNS 예약발행)
   coupang: "",     // 쿠팡 파트너스 API 키 받는 법
-  vertex: "/landing/vertex_guide.mp4?v=3"   // 구글 Vertex 키(.json) 받는 법 — 실제 콘솔 화면 영상(2026-09-27, tools/vertex_guide/)
+  vertex: "/landing/vertex_guide.mp4?v=4"   // 구글 버텍스 연결 4단계(가입·셸 열기·명령 붙여넣기·연결) 영상(2026-10-05 관제 119, tools/vertex_guide/prep_v4.py)
 };
 
 /* 서비스 정의 — 이름·설명·복수허용 여부를 한 곳에서만 정한다(CLAUDE.md 0순위-B). */
@@ -436,6 +437,15 @@ var SERVICES = [
     note: "성우 목록에서 <b>필재·김건·박창수·용식이</b> 같은 한국 성우를 고르면 " +
           "이 키가 쓰입니다. 다른 성우는 위의 <b>ElevenLabs</b> 키를 씁니다 — " +
           "두 곳 다 쓰시려면 키도 둘 다 넣어주세요." },
+  /* ★Fish(2026-10-05, 관제 123) — 목소리 세 번째 엔진. 무료 모델(s2.1-pro-free)이라 비용 0원(2026-11-30까지).
+     사장님 키로 돌리지 않는다 — 회원 본인 키만(일레븐·타입캐스트와 같은 규칙). */
+  { id: "fish",       icon: "🐟", name: "목소리 (Fish · 무료)",
+    desc: "무료 성우 목소리를 만듭니다 — 비용 0원(2026-11-30까지), 이 키만 있어도 영상을 만들 수 있습니다",
+    multi: false, ph: "키 붙여넣기", mustOwn: true,
+    note: "① <a href=\"https://fish.audio\" target=\"_blank\" rel=\"noopener\">fish.audio</a> 가입(구글 로그인) → " +
+          "② <a href=\"https://fish.audio/app/api-keys/\" target=\"_blank\" rel=\"noopener\">fish.audio/app/api-keys</a> 에서 " +
+          "<b>Create</b> → 키 복사 → ③ 여기에 붙여넣고 저장. 성우 목록 <b>Fish</b> 열(하늘·소연·태호…)을 고르면 이 키가 쓰입니다. " +
+          "<a href=\"/api_manual.html#fish\" target=\"_blank\">자세한 안내 ›</a>" },
   { id: "youtube",    icon: "📺", name: "유튜브",
     desc: "유튜브 영상 정보를 가져올 때 씁니다", multi: false, ph: "키 붙여넣기" },
   /* ★렌즈 검색은 클릭 1번에 SerpApi를 3회 씁니다 — 코드에 박힌 값입니다

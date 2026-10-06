@@ -376,10 +376,20 @@ _ESC_HEADS = ("심지어", "게다가", "거기다", "그것도", "더 대박인
               "충격인 건", "근데 더 미친 건", "근데 진짜는 여기서부터인데", "놀랍게도")
 
 
+def _esc_heads():
+    """고조 연결어 목록 = 이 파일의 옛 목록 ∪ 대본 작가 신호어 목록(story_writer._ALL_SIGNAL_WORDS — 신호어의 주인).
+    ★10-05 사장님 "합치고": 신호어를 늘려도 이 검사가 모르고 지나가던 두 번째 사본을 주인 목록에 묶었다."""
+    try:
+        from shopping_shorts.story_writer import _ALL_SIGNAL_WORDS as _sw_words
+    except Exception:      # noqa: BLE001 — 대본 작가를 못 읽으면 옛 목록만(검사가 멈추면 안 된다)
+        _sw_words = ()
+    return tuple(set(_ESC_HEADS) | set(_sw_words))
+
+
 def _strip_esc_head(t):
     """고조 연결어를 떼고 알맹이만 남긴다 — 판정은 알맹이로 해야 한다."""
     t = (t or "").strip()
-    for h in sorted(_ESC_HEADS, key=len, reverse=True):
+    for h in sorted(_esc_heads(), key=len, reverse=True):
         if t.startswith(h):
             return t[len(h):].strip(" ,.")
     return t
@@ -415,7 +425,7 @@ def escalation_content(beats, facts_text):
     bad = []
     for b in (beats or []):
         t = (b.get("text") or "") if isinstance(b, dict) else str(b)
-        if not any(h in t for h in _ESC_HEADS):
+        if not any(h in t for h in _esc_heads()):
             continue
         n += 1
         core = _strip_esc_head(t)

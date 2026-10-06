@@ -6,7 +6,8 @@
   ④ 두 페이지 콘솔 오류 0
   ⑧ 자동 설정(관제 096): 설명서·설정의 명령 글자 = 스크립트 머리말 명령, 「명령 복사」가 클립보드에 그 글자를 넣는다,
      클라우드 셸 버튼은 실제로 열리는 주소(show=ide,terminal — show=terminal만은 안 열림 2026-10-03), /landing/vertex_setup.sh 비로그인 200·파일과 같다,
-     옛 5단계는 「직접 하기」로 접혀 처음엔 안 보인다"""
+     옛 5단계는 「직접 하기」로 접혀 처음엔 안 보인다
+  ⑨ 4단계(관제 119): 설명서 ⑧ 보이는 단계 1·2·3·4 + 제목 = 마이페이지 ①~④ 순서, 영상 = 4단계판(약 73초)"""
 import sys, time, shutil, threading, pathlib, urllib.request
 ROOT = pathlib.Path(__file__).resolve().parents[2]; sys.path.insert(0, str(ROOT))
 out = pathlib.Path(sys.argv[1]).resolve(); out.mkdir(parents=True, exist_ok=True)
@@ -75,6 +76,18 @@ with sync_playwright() as p:
         const a=await go(60); const b=await go(5); return {fwd:a,back:b,seekable:v.seekable.length?v.seekable.end(0):0}}""")
     need(abs(sk['fwd'] - 60) < 1 and abs(sk['back'] - 5) < 1 and sk['seekable'] > DUR - 1, f'⑤ 앞·뒤로 이동된다 {sk}')
     need(not errs, f'④ 설명서 콘솔 오류 {errs[:3]}')
+    # ⑨ 4단계(관제 119, 2026-10-05 사장님 "4단계 설명법으로 모두"): 설명서 ⑧의 보이는 번호 카드 = 1·2·3·4 순서, 5 없음,
+    #    제목이 마이페이지 ①~④(가입·셸 열기·명령 붙여넣기·붙여넣고 연결)와 같은 뜻
+    steps = pg.evaluate("""()=>{const sec=document.getElementById('vertex');const out=[];let el=sec.nextElementSibling;
+        while(el && !(el.classList.contains('svc') && el.id!=='vertex')){
+          if(el.classList.contains('card') && !el.closest('details')){const n=el.querySelector('.num');const h=el.querySelector('h3');
+            if(n && /^[0-9]$/.test(n.textContent.trim())) out.push([n.textContent.trim(), h? h.innerText.replace(/\s+/g,' '):'']);}
+          el=el.nextElementSibling;}
+        return out}""")
+    need([x[0] for x in steps] == ['1', '2', '3', '4'], f'⑨ 설명서 ⑧ 보이는 단계 = 1·2·3·4 ({steps})')
+    want = ['무료 체험', '클라우드 셸', '명령 복사', '연결']
+    need(len(steps) == 4 and all(w in steps[i][1] for i, w in enumerate(want)), f'⑨ 단계 제목이 마이페이지 ①~④와 같은 순서 ({[x[1] for x in steps]})')
+    need(70 < DUR < 80, f'⑨ 영상 = 4단계판(약 73초, 지금 {DUR:.1f}초 — 옛 5단계판은 132.7초)')
     errs.clear()
     pg2 = ctx.new_page(); pg2.on('pageerror', lambda e: errs.append(str(e)))
     pg2.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
@@ -97,6 +110,8 @@ with sync_playwright() as p:
     pg2.evaluate("navigator.clipboard.writeText('')"); pg2.click('#vertexCmdBtn'); pg2.wait_for_timeout(300)
     need(pg2.evaluate('navigator.clipboard.readText()') == CMD, '⑧ 설정 「명령 복사」 → 클립보드에 명령')
     pg2.locator('#vertexCard').screenshot(path=str(out / 'settings_vertex_card.png'))
+    at = pg2.inner_text('#vertexAuto')
+    need(all(c in at for c in '①②③④') and '⑤' not in at, '⑨ 마이페이지 버텍스 칸 = ①~④ 4단계')
     need(not errs, f'④ 설정 콘솔 오류 {errs[:3]}')
     b.close()
 print('\n결과:', '전부 통과' if not fails else f'실패 {len(fails)}건 {fails}')
