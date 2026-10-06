@@ -19700,7 +19700,14 @@ def _analysis_state(store, shortcode):
     info = st.get(shortcode) or st.get(_media_code(shortcode)) or {}
     err = info.get("last_error") or ""
     att = info.get("attempts", 0)
-    stalled = (not err) and att >= _AUTOLOAD_MAX_ATTEMPTS
+    # ★마지막 시도가 아직 도는 중이면 '끊김'이 아니다(관제 147, 2026-10-06 실측). 시도 횟수는 추출을 **시작하기 전에**
+    #   올리므로(선래치) 3번째 시도가 도는 동안에도 att=3·오류 없음 → 종전엔 곧바로 '포기'로 판정했다.
+    #   실측 work ef07493ca035: 외국 영상 5편이 19:55:35 3번째 시도를 시작했고 19:57:01에 다 끝났는데, 그 사이 화면은
+    #   5편을 '포기'로 세어 "남은 것 0"으로 보고 스토리보드 미리 만들기를 불렀다 → 장면 목록이 씨앗 1편으로 굳었다.
+    #   시작 뒤 _AUTOLOAD_STALL_SEC 안이면 아직 도는 중으로 본다(분석은 1편 40~70초, 긴 영상은 몇 분).
+    _age = info.get("age_sec")
+    stalled = ((not err) and att >= _AUTOLOAD_MAX_ATTEMPTS
+               and (_age is None or _age >= _AUTOLOAD_STALL_SEC))
     gave_up = stalled or (bool(err) and (att >= _AUTOLOAD_MAX_ATTEMPTS
                                          or _is_hopeless_error(err)))
     reason = (_autoload_reason_ko(err) if err else
@@ -20619,6 +20626,7 @@ _GRAB_MEDIA_HOSTS = ("zjcdn.com", "douyinvod.com", "xhscdn.com", "rednotecdn.com
 
 
 _AUTOLOAD_MAX_ATTEMPTS = 3      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
+_AUTOLOAD_STALL_SEC = 600       # 마지막 시도를 시작하고 이만큼 결과가 없어야 '도중에 끊김'(관제 147 — 도는 중을 포기로 세던 것)
 
 
 def _is_hopeless_error(err):
@@ -21217,19 +21225,38 @@ def api_storyboard_prepare(request: Request, job_id: str):
     g = _sb_gate(request)
     if g:
         return g
+    _key = str(job_id or "").strip()
     job_id, _ex, _jid = _sb_job(request, job_id)
     if not _ex:
         return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
+    # ★재료가 다 들어오기 전엔 안 만든다(관제 147). 담은 영상 중 재료가 아직 없고 포기도 아닌 것이 있으면 기다린다 —
+    #   화면은 재료가 들어오는 대로 다시 부른다. 판정은 1단계 카드와 같은 _analysis_state 한 곳.
+    if _key.startswith("w:") and not _jid:
+        _st_ = Store(DB_PATH)
+        _w = _st_.get_produce_work(_key[2:], customer_id=getattr(request.state, "customer_id", 0)) or {}
+        _codes = [str(e.get("shortcode") or "").strip() for e in ((_w.get("state") or {}).get("handoff") or [])
+                  if isinstance(e, dict) and e.get("useFootage")]
+        waiting = [c for c in _codes if c and c not in _ex and _analysis_state(_st_, c)[1].get("state") != "gave_up"]
+        if waiting:
+            return {"ok": True, "started": False, "waiting": len(waiting)}
     busy = any(k[0] == job_id and (v or {}).get("state") == "run" for k, v in list(_SB_TASKS.items()))
+    if busy:
+        return {"ok": True, "started": False, "busy": True}
     st = _sb.load_state(job_id) or {}
-    if busy or (_SB_TASKS.get((job_id, "board:auto")) or {}).get("state") == "done":
+    # ★이미 있어도 낡았으면 다시 만든다(관제 147): 장면 목록 = 재료 지문, AI 자동 보드 = 씨앗 지문.
+    #   씨앗을 고르기 전에 만든 자동 보드가 씨앗 장면으로 채워져 3단계까지 그대로 갔다(work ef07493ca035).
+    _auto_t = _SB_TASKS.get((job_id, "board:auto")) or {}
+    auto_fresh = (_auto_t.get("state") == "done"
+                  and (_auto_t.get("result") or {}).get("seed_sig") == _sb.seed_sig(_ex))
+    inv_fresh = _sb.inventory_fresh(st, _ex)
+    if inv_fresh and auto_fresh:
         return {"ok": True, "started": False}
 
     def _auto():
         _sb_run(job_id, "board:auto", lambda: _sb.make_boards(DB_PATH, job_id, ["auto"], "", "", ex=_ex).get("auto"))
 
-    if st.get("inventory"):
+    if inv_fresh:
         _auto()
     else:
         def _inv_then_auto():
