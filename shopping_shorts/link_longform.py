@@ -300,8 +300,10 @@ def render_link_longform(src, job_dir, where=DEFAULT_WHERE, voice=None, customer
             # 말은 머리에 한 번(-itsoffset 으로 시작을 미룬다). apad 로 끝까지 무음을 채우고 길이는 영상이 정한다(-shortest).
             #   효과음·BGM 섞기(mix_pipeline)와는 다른 판단이라 그쪽 필터(adelay)를 안 빌린다 — 관제 관문이 같은 판단 두 벌로 본다.
             audio_in = ["-itsoffset", f"{TTS_DELAY_MS / 1000:.3f}", "-i", str(tts_mp3)]
-            fc += ";[2:a]apad[a]"
-            audio_map = ["-map", "[a]", "-c:a", "aac", "-b:a", "128k", "-shortest"]
+            # ★끝없는 apad + -shortest 는 서버 ffmpeg(6.1)에서 "Error while filtering: No space left on device"(exit 228)로 죽었다
+            #   (2026-10-07 라이브 실측 — 이 PC ffmpeg 에선 됐다). 영상 길이까지만 채우고 길이를 못 박는다.
+            fc += f";[2:a]apad=whole_dur={float(dur):.3f}[a]"
+            audio_map = ["-map", "[a]", "-c:a", "aac", "-b:a", "128k", "-t", f"{float(dur):.3f}"]
         cmd = ["ffmpeg", "-y", "-i", str(src), *overlay_in, *audio_in,
                "-filter_complex", fc,
                "-map", "[v]", *audio_map, "-r", "30",
@@ -329,3 +331,8 @@ def render_link_longform(src, job_dir, where=DEFAULT_WHERE, voice=None, customer
                 pass
         import shutil
         shutil.rmtree(frames_dir, ignore_errors=True)
+        for f in Path(job_dir).glob(tts_mp3.name + "*"):      # 합성이 남기는 후보·정렬 파일(…mp3_0.mp3, .align.json, .cuts.json)
+            try:
+                f.unlink()
+            except OSError:
+                pass
