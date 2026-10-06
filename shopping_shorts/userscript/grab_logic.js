@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-07b  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-07c  (LOGIC_VER가 정본)
+//   · 인스타 — 비슷한 검색어를 5개 언어(한·영·일·중·러) 줄로, 팝업 관련 검색어가 "만드는 중…"에서 멈추던 것 수정(관제 151).
 //   · 인스타 — 키워드 검색 제목을 검색창으로(한글→영어 검색), 비슷한 검색어 칩, 게시물 팝업 관련 검색어(관제 151).
 //     같은 날 관제 150이 20261007을 썼다 → 한 칸 올린다.
 //   · 유튜브 — 검색→쇼츠로 가면 숨은 검색 카드 📥 때문에 쇼츠 화면 📥 담기가 꺼지던 것,
@@ -21,7 +22,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261008;
+  var LOGIC_VER = 20261009;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -1156,24 +1157,31 @@
   }
   function _igKwGo(term) { if (term) location.href = IGKW_URL + encodeURIComponent(term); }
   // 같은 입력은 한 번만 묻는다(탭 안에서만 기억). 실패는 기억하지 않는다 — 다음 tick에 다시 묻게.
-  var _igKwPending = {};
+  // ★진행 중인 같은 요청에 붙은 화면은 **모두** 결과를 받는다(2026-10-07 사장님 화면: 팝업 상자가
+  //   다시 그려지면 새 상자가 '검색어 만드는 중…'에서 영원히 멈췄다 — 중복 요청을 그냥 버렸기 때문).
+  //   kind: query·caption → /api/lens/kw/en, multi → /api/lens/kw/multi(5개 언어).
+  var _igKwWaiters = {};
   function _igKwFetch(kind, text, done) {
     var ck = "ss_kw:" + kind + ":" + text;
     try { var c = sessionStorage.getItem(ck); if (c) { done(JSON.parse(c)); return; } } catch (e) {}
-    if (_igKwPending[ck]) return;
-    _igKwPending[ck] = true;
-    _gmPost(BASE + "/api/lens/kw/en", { text: text, kind: kind }, function (status, body) {
-      delete _igKwPending[ck];
+    if (_igKwWaiters[ck]) { _igKwWaiters[ck].push(done); return; }
+    _igKwWaiters[ck] = [done];
+    function finish(r) {
+      var ws = _igKwWaiters[ck] || []; delete _igKwWaiters[ck];
+      for (var i = 0; i < ws.length; i++) { try { ws[i](r); } catch (e) {} }
+    }
+    var url = BASE + (kind === "multi" ? "/api/lens/kw/multi" : "/api/lens/kw/en");
+    _gmPost(url, { text: text, kind: kind }, function (status, body) {
       var d = null;
       try { d = JSON.parse(body); } catch (e) {}
       if (status === 200 && d && d.ok) {
-        var r = { main: d.main || "", related: d.related || [] };
+        var r = kind === "multi" ? { candidates: d.candidates || [] } : { main: d.main || "", related: d.related || [] };
         try { sessionStorage.setItem(ck, JSON.stringify(r)); } catch (e) {}
-        done(r);
+        finish(r);
       } else {
-        done({ error: status === 401 ? "숏템메이커에 로그인해 주세요" : "검색어를 못 만들었어요(" + status + ")" });
+        finish({ error: status === 401 ? "숏템메이커에 로그인해 주세요" : "검색어를 못 만들었어요(" + status + ")" });
       }
-    }, function () { delete _igKwPending[ck]; done({ error: "숏템메이커 서버에 연결하지 못했어요" }); });
+    }, function () { finish({ error: "숏템메이커 서버에 연결하지 못했어요" }); });
   }
   function _igKwChip(term, strong) {
     var b = document.createElement("button");
@@ -1243,9 +1251,9 @@
     // 인스타 단축키가 입력을 가로채지 않게(글자 입력 중 페이지가 반응하는 것 방지)
     inp.addEventListener("keydown", function (e) { e.stopPropagation(); });
     var chips = document.createElement("div");
-    chips.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center";
+    chips.style.cssText = "display:flex;flex-direction:column;gap:6px";
     var lab = document.createElement("span");
-    lab.textContent = "비슷한 검색어"; lab.style.cssText = "font-size:12px;color:#737373;margin-right:4px";
+    lab.textContent = "비슷한 검색어 (한·영·일·중·러)"; lab.style.cssText = "font-size:12px;color:#737373";
     chips.appendChild(lab);
     var wait = document.createElement("span");
     wait.textContent = "찾는 중…"; wait.style.cssText = "font-size:12px;color:#a8a8a8";
@@ -1253,13 +1261,30 @@
     bar.appendChild(form); bar.appendChild(note); bar.appendChild(chips);
     title.style.display = "none";
     title.insertAdjacentElement("afterend", bar);
-    _igKwFetch("query", q, function (r) {
+    _igKwFetch("multi", q, function (r) {
       if (!document.body.contains(chips)) return;
       wait.remove();
-      var list = (r.related || []).slice(0, 5);
-      if (!list.length) { lab.textContent = r.error || "비슷한 검색어를 못 찾았어요"; return; }
-      for (var i = 0; i < list.length; i++) chips.appendChild(_igKwChip(list[i], false));
+      var rows = (r.candidates || []).slice(0, 5);
+      if (!rows.length) { lab.textContent = r.error || "비슷한 검색어를 못 찾았어요"; return; }
+      for (var i = 0; i < rows.length; i++) chips.appendChild(_igKwLangRow(rows[i]));
     });
+  }
+  // 한 검색어 = 한 줄. 언어별 버튼(빈 언어는 흐리게, 누를 수 없음). 누르면 그 말로 인스타 검색.
+  var IGKW_LANGS = [["ko", "한"], ["en", "EN"], ["ja", "日"], ["zh", "中"], ["ru", "RU"]];
+  function _igKwLangRow(c) {
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center";
+    for (var i = 0; i < IGKW_LANGS.length; i++) {
+      var lang = IGKW_LANGS[i][0], tag = IGKW_LANGS[i][1], term = (c[lang] || "").trim();
+      var b = _igKwChip(term || "-", false);
+      b.textContent = "";
+      var t = document.createElement("span");
+      t.textContent = tag; t.style.cssText = "font-size:10px;font-weight:800;color:#8e8e8e;margin-right:5px";
+      b.appendChild(t); b.appendChild(document.createTextNode(term || "없음"));
+      if (!term) { b.disabled = true; b.style.opacity = ".35"; b.style.cursor = "default"; }
+      row.appendChild(b);
+    }
+    return row;
   }
   // ── ③ 게시물 팝업의 관련 검색어 ─────────────────────────────────────────
   function _igPostCode() {

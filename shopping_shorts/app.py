@@ -12687,6 +12687,21 @@ async def api_lens_kw_en(request: Request, body: dict):
     return {"ok": True, "main": r.get("main", ""), "related": r.get("related", [])}
 
 
+@app.post("/api/lens/kw/multi")
+async def api_lens_kw_multi(request: Request, body: dict):
+    """인스타 검색 화면의 '비슷한 검색어' 5개 × 5개 언어(ko·en·ja·zh·ru) — 관제 151, 2026-10-07 사장님.
+    판단은 렌즈 모달과 같은 expand_search_keywords 한 곳. 확장프로그램이 JSON으로 부른다."""
+    text = str((body or {}).get("text") or "").strip()
+    if not text:
+        return {"ok": True, "candidates": []}
+    try:
+        cands = await asyncio.to_thread(expand_search_keywords, text, n=5)   # 블로킹 Gemini
+    except Exception as e:                  # noqa: BLE001 — 실패는 빈 결과(화면은 검색창만 남는다)
+        print(f"[kw/multi] 실패: {e!r}", file=sys.stderr)
+        cands = []
+    return {"ok": True, "candidates": cands}
+
+
 @app.post("/api/lens/cn/search")
 async def api_lens_cn_search(request: Request, keyword: str = Form(""),
                               max_results: int = Form(8)):

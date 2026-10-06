@@ -29,12 +29,19 @@ window.GM_xmlhttpRequest = function (o) {
   var body = {}; try { body = JSON.parse(o.data || "{}"); } catch (e) {}
   window.__kwCalls.push({url: o.url, body: body});
   var r = {ok: true, main: "", related: []};
-  if (o.url.indexOf("/api/lens/kw/en") >= 0) {
+  if (o.url.indexOf("/api/lens/kw/multi") >= 0) {
+    r = {ok: true, candidates: [
+      {ko: "생활 꿀템", en: "life hacks gadgets", ja: "便利グッズ", zh: "生活好物", ru: "лайфхаки"},
+      {ko: "주방 꿀템", en: "kitchen gadgets", ja: "キッチングッズ", zh: "厨房好物", ru: "кухонные гаджеты"},
+      {ko: "자석 양념통", en: "magnetic spice tins", ja: "", zh: "磁吸调料罐", ru: ""},
+      {ko: "수납 정리", en: "home organization", ja: "収納", zh: "收纳", ru: "хранение"},
+      {ko: "청소 도구", en: "cleaning gadgets", ja: "掃除グッズ", zh: "清洁神器", ru: "уборка"}]};
+  } else if (o.url.indexOf("/api/lens/kw/en") >= 0) {
     if (body.kind === "caption") r = {ok: true, main: "amazon baseball cleats", related: ["amazon baseball gear", "baseball cleats", "mlb postseason"]};
     else if (/[ㄱ-힝]/.test(body.text || "")) r = {ok: true, main: "portable range hood", related: ["desktop range hood"]};
     else r = {ok: true, main: (body.text || "").toLowerCase(), related: ["kitchen gadgets", "smart home devices", "cool tech tools", "desk accessories", "cleaning gadgets"]};
   }
-  setTimeout(function () { o.onload({status: 200, responseText: JSON.stringify(r)}); }, 50);
+  setTimeout(function () { o.onload({status: 200, responseText: JSON.stringify(r)}); }, body.kind === "caption" ? 2500 : 50);
 };
 """
 
@@ -57,7 +64,10 @@ def run(shots):
         pg.goto(f"https://www.instagram.com/reel/{REEL}/", wait_until="domcontentloaded", timeout=60000)
         pg.wait_for_timeout(5000)
         pg.add_script_tag(content=LOGIC)
-        pg.wait_for_timeout(5000)
+        # 응답을 기다리는 중에 상자가 다시 그려지는 상황(2026-10-07 사장님 화면 '만드는 중…' 멈춤)을 만든다
+        pg.wait_for_function("() => (window.__kwCalls || []).some(c => c.body && c.body.kind === 'caption')", timeout=20000)
+        pg.evaluate("() => { const p = document.getElementById('ss-kwpost'); if (p) p.remove(); }")
+        pg.wait_for_timeout(6000)
         post = pg.evaluate("""() => { const p = document.getElementById('ss-kwpost'); if (!p) return null;
             const r = p.getBoundingClientRect();
             return {chips: [...p.querySelectorAll('button')].map(b => b.textContent), text: p.innerText.slice(0, 120),
@@ -81,6 +91,7 @@ def run(shots):
         bar = pg2.evaluate("""() => { const b = document.getElementById('ss-kwbar'); if (!b) return null;
             const t = b.previousElementSibling;
             return {input: b.querySelector('input').value, chips: [...b.querySelectorAll('button[type=button]')].map(x => x.textContent),
+                    enabled: b.querySelectorAll('button[type=button]:not([disabled])').length,
                     title_hidden: !!t && t.style.display === 'none'}; }""")
         res["bar"] = bar
         if shots:
@@ -114,8 +125,10 @@ def check(res):
             fails.append("② 검색창 값이 검색어가 아니다: " + str(bar.get("input")))
         if not bar.get("title_hidden"):
             fails.append("② 원래 제목이 그대로 보인다")
-        if len(bar.get("chips") or []) != 5:
-            fails.append("② 비슷한 검색어가 5개가 아니다: " + str(bar.get("chips")))
+        if len(bar.get("chips") or []) != 25:
+            fails.append("② 비슷한 검색어가 5줄×5언어(25칸)가 아니다: " + str(bar.get("chips")))
+        if bar.get("enabled") != 23:
+            fails.append("② 빈 언어 칸(2개)이 흐리게 안 막혔다: 누를 수 있는 칸 " + str(bar.get("enabled")))
     if "q=portable range hood" not in (res.get("korean_submit_url") or ""):
         fails.append("② 한글 입력 → 영어 주소 이동 실패: " + str(res.get("korean_submit_url")))
     return fails
