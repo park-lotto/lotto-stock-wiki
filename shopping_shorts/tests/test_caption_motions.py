@@ -67,13 +67,17 @@ def _packs():
     return json.loads(CONTRACT.read_text(encoding="utf-8").split("/*PACKS*/")[1])
 
 
-def test_팩은_계약_파일_한_곳이고_칸_효과가_모두_있다():
+def test_스타일은_모양만_효과팩은_모든_칸이_있다():
     packs, motions = _packs(), _motions()
     assert scene_style.caption_pack_keys() == tuple(packs)
     for k, p in packs.items():
-        slots = json.loads(CONTRACT.read_text(encoding="utf-8").split("root.CAPTION_SLOTS = ")[1].split(";")[0])
-        assert set(p["slots"]) == set(slots), k   # 팩마다 모든 칸이 채워져 있다(빈 칸이면 그 장면만 등장이 빠진다)
-        assert all(v in motions for v in p["slots"].values()), k
+        assert "slots" not in p, k   # 자막 스타일은 모양만(관제 144) — 움직임은 등장 효과팩
+    slots = json.loads(CONTRACT.read_text(encoding="utf-8").split("root.CAPTION_SLOTS = ")[1].split(";")[0])
+    mpacks = json.loads(CONTRACT.read_text(encoding="utf-8").split("/*MPACKS*/")[1])
+    assert len(mpacks) == scene_style.caption_motion_pack_count() == 20
+    for n, p in enumerate(mpacks, 1):
+        assert set(p) == set(slots), n   # 효과팩마다 모든 칸이 채워져 있다(빈 칸이면 그 장면만 등장이 빠진다)
+        assert len(p["body"]) == 3 and all(v in motions for v in p["body"]) and all(p[s] in motions for s in slots if s != "body"), n
 
 
 def test_서버는_팩_값을_저장하고_모르는_팩은_거절():
@@ -106,3 +110,16 @@ def test_자막팩_스위치는_관리자_설정이고_편집기에_알린다():
     assert 'context["captionPackEnabled"] = bool(_setting_gate(Store(DB_PATH), "caption_pack_enabled", _cid(request)))' in src
     js = (ROOT / "out/precision20-ui.js").read_text(encoding="utf-8")
     assert "sceneContext?.captionPackEnabled!==false" in js
+
+
+def test_효과팩_번호_검증과_회원_자동_배정():
+    snap = {"version": 1, "mode": "story", "presetId": "plain", "sceneIndex": 0, "frameKind": "hook"}
+    for v in ("off", "1", "20"):
+        assert scene_style.validate_snapshot({**snap, "motionPack": v})["motionPack"] == v
+    for v in ("0", "21", "x"):
+        with pytest.raises(ValueError):
+            scene_style.validate_snapshot({**snap, "motionPack": v})
+    got = [scene_style.caption_motion_pack_for(c) for c in range(1, 101)]
+    assert set(got) == set(range(1, 21)) and all(got.count(k) == 5 for k in range(1, 21))   # 회원 1~100 → 팩당 5명
+    src = (ROOT / "shopping_shorts/app.py").read_text(encoding="utf-8")
+    assert 'context["motionPackAuto"] = caption_motion_pack_for(job.get("customer_id"))' in src

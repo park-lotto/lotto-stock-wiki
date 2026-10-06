@@ -14,7 +14,9 @@ from shopping_shorts import scene_style, video_assemble as va
 
 out = pathlib.Path(sys.argv[1]).resolve(); out.mkdir(parents=True, exist_ok=True)
 src_in = sys.argv[2]
-keys = sys.argv[3].split(",") if len(sys.argv) > 3 else ["", "tension", "premium", "soft"]
+# 조합: "스타일:효과팩번호" (빈 스타일 = 없음, 빈 번호 = 효과팩 없음 → 강조 장면만 기본 등장)
+keys = sys.argv[3].split(",") if len(sys.argv) > 3 else [":", "tension:7", "premium:14", "soft:3"]
+sys.path.insert(0, str(ROOT / "tools/caption_pack")); import _plan
 text = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")
 PACKS = json.loads(text.split("/*PACKS*/")[1]); MOTIONS = json.loads(text.split("/*JSON*/")[1])
 fails = []
@@ -47,21 +49,25 @@ def expect_ms(motion, caption):
 
 rows = []
 for key in keys:
-    d = out / (key or "none"); shutil.rmtree(d, ignore_errors=True); d.mkdir()
+    style, mp = key.split(":"); name = key.replace(":", "_") if key != ":" else "none"
+    d = out / name; shutil.rmtree(d, ignore_errors=True); d.mkdir()
     snap = scene_style.validate_snapshot({"version": 1, "mode": "story", "plainCaption": 2, "presetId": "plain", "sceneIndex": 0, "frameKind": "hook",
-                                          "text": TEXT, "effects": {"3": {"dim": {"level": .32, "sec": 0}}}, **({"captionPack": key} if key else {})})
+                                          "text": TEXT, "effects": {"3": {"dim": {"level": .32, "sec": 0}}}, **({"captionPack": style} if style else {}), **({"motionPack": mp} if mp else {})})
+    plan = _plan.plans(scene_style.context_for(tl, {"text": "x"}, snap, None), [snap])[0]   # 기대값 = 편집기 장면 계획(판단 한 곳)
     final = d / "final.mp4"
     scene_style.compose(str(src), tl, snap, str(final), d / "cw", {"text": "x"})
     L = json.loads((d / "cw" / "scene-style-layers.json").read_text(encoding="utf-8"))
     for i, slot in SLOT.items():
-        motion = PACKS[key]["slots"][slot] if key else (json.loads(text.split("root.CAPTION_EMPH_DEFAULT = ")[1].split(";")[0])["motion"] if slot == "emph" else None)
+        motion = plan[i]
         if motion:
-            want = expect_ms(motion, CAPS[i][1])
-            need(L[i].get("enterMs") == want, f"① [{key or '팩 없음'}] {i}장({slot}) 등장 {L[i].get('enterMs')}ms = {motion} 계산 {want}ms")
+            want = _plan.expect_ms(motion, CAPS[i][1])
+            need(L[i].get("enterMs") == want, f"① [{key}] {i}장({slot}) 등장 {L[i].get('enterMs')}ms = 편집기 계획 {motion} 계산 {want}ms")
+    if not mp:
+        need(plan[3] == json.loads(text.split("root.CAPTION_EMPH_DEFAULT = ")[1].split(";")[0])["motion"], f"① [{key}] 효과팩 없어도 강조 장면은 기본 등장 {plan[3]}")
     lay = Image.open(d / "cw" / L[3]["file"]).convert("RGBA").split()[3]
     mid = lay.crop((0, 700, 1080, 1500)).getbbox()          # 영상 칸 가운데(제목·자막 띠는 위쪽 — 레이어에 같이 있어 전체 영역으로 재면 안 된다)
     norm = Image.open(d / "cw" / L[2]["file"]).convert("RGBA").split()[3].crop((0, 700, 1080, 1500)).getbbox()
-    need(bool(mid) and not norm, f"② [{key or '팩 없음'}] 고조 장면만 자막이 영상 가운데에 그려졌다 (고조 {mid} / 일반 장면 {norm})")
+    need(bool(mid) and not norm, f"② [{key}] 고조 장면만 자막이 영상 가운데에 그려졌다 (고조 {mid} / 일반 장면 {norm})")
     tiles = []
     for i in range(1, 5):
         for dt in (0.12, 1.5):
