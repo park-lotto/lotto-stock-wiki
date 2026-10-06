@@ -313,11 +313,11 @@
     "shopping_shorts/mix_pipeline.py:clean_topup_plan"
    ],
    "시그니처": [
-    "def clean_topup_plan\b",
-    "def clean_cuts_merged\b",
-    "def clean_cut_states\b",
-    "def _topup_same_spots\b",
-    "def clean_repick_full\b"
+    "def clean_topup_plan\\b",
+    "def clean_cuts_merged\\b",
+    "def clean_cut_states\\b",
+    "def _topup_same_spots\\b",
+    "def clean_repick_full\\b"
    ],
    "소비처": [
     "버튼",
@@ -576,12 +576,10 @@
     "shopping_shorts/mix_pipeline.py:mark_auto_exclude"
    ],
    "시그니처": [
-    "def mark_auto_exclude\b"
+    "def mark_auto_exclude\\b"
    ],
    "소비처": [
-    "edit_plan.non_edge_segs",
-    "edit_plan._build_inventory 프롬프트",
-    "backbone_assemble._seg_index",
+    "edit_plan._auto_blocked(표식 읽기 — 자동 배치 후보 거르기의 주인이 읽는다)",
     "produce.html collectNoAutoIdx(전송)"
    ],
    "검사도구": "shopping_shorts/tests/test_seed_auto_exclude.py",
@@ -594,8 +592,8 @@
     "shopping_shorts/script_gate.py:enforce_one_sentence_hook"
    ],
    "시그니처": [
-    "def enforce_one_sentence_hook\b",
-    "def split_hook_sentence\b"
+    "def enforce_one_sentence_hook\\b",
+    "def split_hook_sentence\\b"
    ],
    "소비처": [
     "story_writer",
@@ -611,7 +609,7 @@
     "shopping_shorts/scene_style.py:account_channel"
    ],
    "시그니처": [
-    "def account_channel\b"
+    "def account_channel\\b"
    ],
    "소비처": [
     "scene_style.context_for",
@@ -628,7 +626,7 @@
     "shopping_shorts/buffer_posts.py:cancel"
    ],
    "시그니처": [
-    "def already_scheduled\b",
+    "def already_scheduled\\b",
     "_CANCELLABLE\\s*="
    ],
    "소비처": [
@@ -649,10 +647,10 @@
     "shopping_shorts/story_writer.py:storyboard_to_beat_sources"
    ],
    "시그니처": [
-    "def ensure_cover\b",
-    "def is_pinned\b",
-    "def cover_short\b",
-    "def storyboard_to_beat_sources\b"
+    "def ensure_cover\\b",
+    "def is_pinned\\b",
+    "def cover_short\\b",
+    "def storyboard_to_beat_sources\\b"
    ],
    "소비처": [
     "2단계 백본·이야기작가",
@@ -673,9 +671,9 @@
    ],
    "시그니처": [
     "^BOX_SLOTS\\s*=",
-    "def _apply_role_picks\b",
+    "def _apply_role_picks\\b",
     "^ARC_RANK\\s*=",
-    "def arc_place\b",
+    "def arc_place\\b",
     "^OLD_EXPAND\\s*="
    ],
    "소비처": [
@@ -685,6 +683,58 @@
    "검사도구": "tools/storyboard_mock/audit_role_picks.py",
    "과금": false,
    "예외": {}
+  },
+  {
+   "이름": "자동 배치 후보 거르기(첫·끝 컷·씨앗 제외)",
+   "주인": [
+    "shopping_shorts/edit_plan.py:non_edge_segs"
+   ],
+   "시그니처": [
+    "def non_edge_segs\\b",
+    "def auto_segs\\b",
+    "def auto_sources\\b",
+    "def enforce_auto_exclude\\b",
+    "_is_edge_seg\\(",
+    "\\.get\\(\\\"auto_exclude\\\"\\)"
+   ],
+   "소비처": [
+    "edit_plan 자동 컷 고르기 전부(_fill_beat_screen_time·_repick_weak_beats·build_inherit_plan·build_scene_first_plan)",
+    "store._apply_beat_sources(저장 관문)",
+    "mix_pipeline._refill_beats_to_tts·_run_gate_correction·_plan_and_tts 출구 검사",
+    "backbone_assemble._seg_index",
+    "app 편집기 채우기",
+    "ai_scene 베이스 프레임"
+   ],
+   "검사도구": "tools/seed_leak_check.py",
+   "과금": false,
+   "예외": {
+    "tools/seed_leak_check.py": "검사 도구 — 서버에서 혼자 도는 파일이라 표식을 직접 읽어 유출 조각만 센다(컷을 고르지 않는다). 카드 138"
+   }
+  },
+  {
+   "이름": "장면 id → 구간(장면 표: 추출 조각·필름 조각·자동 조각)",
+   "주인": [
+    "shopping_shorts/edit_plan.py:scene_table",
+    "shopping_shorts/edit_plan.py:_piece_id"
+   ],
+   "시그니처": [
+    "def scene_table\b",
+    "def film_seg_from_id\b",
+    "def _film_seg_from_id\b",
+    "def _with_film_segs\b",
+    "def _piece_id\b"
+   ],
+   "소비처": [
+    "화면 데이터(api_mix_scene_lab_data → scene_play.js DATA.segments)",
+    "화면 컷 러너(screen_clips)",
+    "실험실 저장(apply_scene_lab)",
+    "썸네일(seg_thumb)"
+   ],
+   "검사도구": "tools/segref_audit.py",
+   "과금": false,
+   "예외": {
+    "shopping_shorts/app.py": "_film_seg_from_id·_with_film_segs 는 edit_plan 에 위임만 하는 얇은 껍데기(옛 호출·테스트 호환) — 관제 141"
+   }
   }
  ]
 }

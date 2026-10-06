@@ -105,7 +105,7 @@ def test_guard_runs_after_fill(tmp_path):
 
 def test_fill_before_guard_in_code():
     src = SCENE_PLAY.read_text(encoding="utf-8")
-    i = src.index("const finish = base =>")
+    i = src.index("const finishCore = base =>")
     body = src[i:src.index("return base;\n  };", i)]
     code = "\n".join(ln.split("//")[0] for ln in body.splitlines())
     assert code.index("fillShortWindow(") < code.index("guardReadWindow("), "채우기 → 가드 순서"

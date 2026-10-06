@@ -517,14 +517,26 @@ def job_script_endings(job):
 
 
 def _dialogue_of(job):
+    """대화 메타 + 확정 대본(_script). 대본은 합성 직전 칸 대사를 제자리로 돌리는 데 쓴다(_synth_dialogue)."""
     from shopping_shorts import dialogue_script
-    return dialogue_script.of_job(job)
+    d = dialogue_script.of_job(job)
+    return dict(d, _script=(job or {}).get("given_script") or "") if d else None
 
 
 def _synth_dialogue(beats, tts_dir, *, voice, skip_existing, dialogue, customer_id):
     """대화형 칸 음성(관제 128) — 굽기·자르기는 tts_dialogue, 마무리는 비트별·통짜와 같은 finalize_beat_audio.
     배속·무음 손잡이는 작업 성우(_voice_params) 하나로 전원 통일."""
     from shopping_shorts import tts_dialogue
+    # ★합성 **전에** 칸 대사를 확정 대본 제자리로(2026-10-06 라이브 job bc3f29dca928 실측).
+    #   3단계 계획이 앞 칸 대사를 손본 채로 여기 오면 그 글로 굽고, 저장 관문(store._ensure_screen_time →
+    #   enforce_scripted_narration·enforce_script_order)이 대본으로 되돌리며 파일 해시가 어긋나 음성이 버려졌다.
+    #   대화형은 줄 i = 칸 i = 화자 i 라 대사가 제자리여야 화자도 맞는다. 되돌리는 함수는 저장 관문과 같은 두 개다(0순위-B).
+    _script = (dialogue or {}).get("_script") or ""
+    if _script:
+        from shopping_shorts import edit_plan as _ep
+        _fixed, _ = _ep.enforce_scripted_narration(beats, _script)
+        _fixed, _ = _ep.enforce_script_order(_fixed, _script)
+        beats[:] = _fixed
     outs = [Path(_beat_tts_path(tts_dir, b)) for b in beats]
     if skip_existing and all(b.get("tts_path") == str(o) and o.exists() for b, o in zip(beats, outs)):
         return
@@ -759,6 +771,8 @@ def _refill_beats_to_tts(beats, source_scripts, tts_dir):
     alternates만 갱신(다른 필드 불변). probe/pool 문제는 조용히 통과(부가기능이 job 안 죽인다)."""
     from collections import Counter
     from shopping_shorts import backbone
+    from shopping_shorts.edit_plan import auto_sources
+    source_scripts = auto_sources(source_scripts)   # 붙일 B롤은 자동 배치 후보 소스에서만(관제 138 — 씨앗 제외)
     if not source_scripts:
         return
     sc = Counter((b.get("primary") or {}).get("video_id")
@@ -917,6 +931,16 @@ def mark_auto_exclude(extracts, job):
     ss = (job or {}).get("script_structure") or {}
     idx = ss.get("no_auto_idx") if isinstance(ss, dict) else None
     if not isinstance(idx, list):
+        return extracts
+    # ★재료가 씨앗뿐이면 표식을 달지 않는다(관제 138) — 달면 자동 배치 후보가 0이 돼 편집안을 못 만든다(_drop_seed 와 같은 규칙).
+    _seed = set()
+    for i in idx:
+        try:
+            _seed.add(f"s{int(i)}")
+        except (TypeError, ValueError):
+            pass
+    if not any(isinstance(r, dict) and r.get("segments") for k, r in (extracts or {}).items() if k not in _seed):
+        print("[extract] 씨앗 말고 쓸 재료가 없어 자동 배치 제외를 달지 않는다", flush=True)
         return extracts
     for i in idx:
         try:
@@ -1644,6 +1668,8 @@ def _run_gate_correction(plan, source_scripts, target_seconds):
     """게이트 검사→재픽 루프. 위반이 재픽 가능하면 통과할 때까지 재픽(상한 _MAX_REPICK).
     재픽이 무변화면 즉시 종료(수렴). 최종 gate를 plan["gate"]에 항상 저장 —
     프론트가 역할별로(관리자=경고/일반=숨김) 표시한다. 순수·무과금·나레이션 불변."""
+    from shopping_shorts.edit_plan import auto_sources
+    source_scripts = auto_sources(source_scripts)   # 재픽 후보·소재 천장 모두 자동 배치 후보 소스 기준(관제 138 — 씨앗 제외)
     pool_ct = len({s.get("video_id") for s in (source_scripts or [])
                    if s.get("segments")} - {None})
     # 소재 천장(전 소스 세그 합) — 목표가 이보다 크면 게이트가 소재 기준으로 판정한다.
@@ -1937,7 +1963,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
                       customer_id=customer_id,
                       script_endings=job_script_endings({"given_script": given_script}),
-                      dialogue=_dlg.of_structure(script_structure))
+                      dialogue=(dict(_dlg.of_structure(script_structure), _script=given_script)
+                                if _dlg.of_structure(script_structure) else None))
 
     # 4.2) 프리즈 뿌리 fix(2026-07-21) — 화면을 **실 TTS 길이**만큼 재보정한다. fill은 plan
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
@@ -1959,6 +1986,9 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                            customer_id=customer_id)
     except Exception:
         traceback.print_exc(file=sys.stderr)
+
+    # 4.7) 감정짤 자리(관제 139) — 음성 길이·낱말 시각이 정해진 **뒤**, 편성 저장 전 한 곳. 스위치 meme_enabled 뒤(끄면 종전 그대로)
+    _apply_memes(plan, store, {"customer_id": customer_id}, work / "tts")
 
     # 4.9) ★게이트 교정 루프(2026-07-25) — 최종 plan(refill·conform 뒤)을 보고 위반이면
     # 통과할 때까지 재픽(상한 3). 경고만 하던 관문을 '통과시키는 관문'으로. 순수·무과금·
@@ -1982,6 +2012,20 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         store.set_mix_candidates(job_id, _rec_cands)
     # ★구절 맞춤 컷 하한 표식은 **저장 전에** 단다 — 3단계 화면(_lab_captions)과 렌더가 같은 값을 본다.
     _apply_phrase_min_cut(plan, store, {"customer_id": customer_id})
+    # ★출구 검사(관제 138): 새 계획에 씨앗 컷이 자동으로 붙어 있으면 빼고 경보한다(정상 0). 어느 생성 경로든 여기를 지난다.
+    #   빠진 화면 길이는 바로 아래 저장 관문(store._ensure_screen_time)이 자동 배치 후보로 다시 채운다.
+    try:
+        from shopping_shorts import edit_plan as _ep
+        _leak = _ep.enforce_auto_exclude(plan.get("beats"), _ep._build_inventory(source_scripts)[0])
+        if _leak:
+            print("[mix] ⚠️ 씨앗 컷 %d개가 자동 배치에 섞여 있어 뺐다(generator=%r)" % (_leak, plan.get("generator")),
+                  file=sys.stderr)
+            from shopping_shorts import ops_alert
+            ops_alert.raise_alert("seed_auto_leak", "씨앗 영상 컷이 자동 배치에 섞였습니다(빼고 저장함)",
+                                  "job %s · %d개 · generator=%r — 자동 배치 후보를 edit_plan.non_edge_segs/auto_sources 로 "
+                                  "거르지 않는 생성 경로가 있습니다." % (job_id, _leak, plan.get("generator")), store=store)
+    except Exception:      # noqa: BLE001 — 검사 실패가 제작을 막지 않는다(기록은 남긴다)
+        traceback.print_exc(file=sys.stderr)
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
 
 
@@ -2371,10 +2415,60 @@ def _resolve_cutaway_paths(store, plan, customer_id):
     for beat in plan["beats"]:
         cut = beat.get("cutaway")
         if cut:
-            asset = store.get_scene_asset(cut["asset_id"], customer_id=customer_id)
+            # 감정짤(관제 139)은 사장님(0) 짤 팩에서 온다 — 서버(meme_slots)가 정한 짤만 주인 0 으로 찾는다
+            _owner = 0 if (cut.get("match_type") == "meme" and int(cut.get("owner") or 0) == 0) else customer_id
+            asset = store.get_scene_asset(cut["asset_id"], customer_id=_owner)
             if asset and asset.get("media_path"):
                 out[beat["beat_idx"]] = asset["media_path"]
     return out
+
+
+def _meme_on(store, job):
+    """감정짤 스위치 meme_enabled — 값 규약은 _setting_allows 한 곳(app._setting_gate 와 같은 판정)."""
+    try:
+        v = store.get_setting("meme_enabled", "")
+    except Exception as e:      # noqa: BLE001 — 설정을 못 읽으면 끔(종전 그대로) + 한 줄
+        print("[meme] 스위치 읽기 실패(끔으로 진행): %r" % e, file=sys.stderr)
+        return False
+    return _setting_allows(v, (job or {}).get("customer_id", 0))
+
+
+def _meme_pool(store):
+    """서버 짤 팩 = 사장님(0) 장면 자산 중 clip·category "meme" — 감정은 tone 칸. {감정: [{asset_id, duration, owner}]}."""
+    pool = {}
+    for a in store.list_scene_assets(customer_id=0, asset_type="clip", category="meme") or []:
+        emo = str(a.get("tone") or "").strip()
+        if emo and a.get("media_path") and Path(a["media_path"]).exists():
+            pool.setdefault(emo, []).append({"asset_id": a["id"], "duration": float(a.get("duration") or 0), "owner": 0})
+    for v in pool.values():
+        v.sort(key=lambda x: x["asset_id"])
+    return pool
+
+
+def _apply_memes(plan, store, job, tts_dir):
+    """칸 맨 앞 감정짤 — 판단은 storyboard.meme_slots 한 곳. 여기는 스위치·짤 팩·음성 시각을 건넬 뿐. 짤 칸 수를 돌려준다."""
+    if not _meme_on(store, job):
+        return 0
+    from shopping_shorts import storyboard as _sbm
+    from shopping_shorts import video_assemble as _va
+    try:
+        pool = _meme_pool(store)
+    except Exception as e:      # noqa: BLE001 — 팩을 못 읽으면 짤 없음(이유 한 줄)
+        print("[meme] 짤 팩 읽기 실패 — 짤 없음: %r" % e, file=sys.stderr)
+        pool = {}
+
+    def _words_of(b):
+        mp3 = b.get("tts_path")
+        if not mp3 or not Path(mp3).exists():
+            return None, None
+        d = _probe_duration(str(mp3))
+        words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)))
+        return words, _va._beat_effective_dur(b, mp3)
+    res = _sbm.meme_slots(plan, _words_of, pool)
+    for r in res:
+        print("[meme] job칸 %s %s" % (r.get("beat_idx"), ("짤 %s %.2f초 #%s" % (r["emotion"], r["head_sec"], r["asset_id"]))
+                                       if r.get("meme") else ("없음: " + r.get("why", ""))), file=sys.stderr)
+    return sum(1 for r in res if r.get("meme"))
 
 
 def _resolve_sfx_paths(store, plan, customer_id, job=None):
@@ -5919,6 +6013,23 @@ def _consent_blocked_msg(err):
 
 
 def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_clean=True):
+    """렌더 계열 입력(아래 _render_inputs_core) + 맨 앞 감정짤 파일(관제 139).
+    짤 컷은 화면 컷 목록의 첫 컷이라 소스 표에 짤 파일이 있어야 렌더·캡컷·ZIP 이 같은 첫 컷을 굽는다 — 싣는 곳은 여기 한 곳."""
+    plan, paths, base = _render_inputs_core(store, job, job_id, work, keys, customer_id, allow_clean=allow_clean)
+    if any(_va_meme(b) for b in (plan or {}).get("beats") or []):
+        from shopping_shorts.video_assemble import meme_sources
+        _ms = meme_sources(plan, _resolve_cutaway_paths(store, plan, customer_id))
+        if _ms:
+            paths = {**(paths or {}), **_ms}
+    return plan, paths, base
+
+
+def _va_meme(beat):
+    from shopping_shorts.video_assemble import meme_cutaway
+    return meme_cutaway(beat)
+
+
+def _render_inputs_core(store, job, job_id, work, keys, customer_id=0, *, allow_clean=True):
     """렌더 계열(최종·미리보기·캡컷·ZIP·프레임)의 **입력을 정하는 유일한 자리**(2026-09-22).
 
     반환 (plan_used, source_video_paths, base):

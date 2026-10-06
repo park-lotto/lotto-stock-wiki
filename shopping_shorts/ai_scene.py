@@ -55,8 +55,13 @@ def _segments(extract):
 
 def product_only_segments(extract, product_words=()):
     """사람·아기·손 없이 제품만 보이는 세그먼트(scene_desc 기준). 제품어가 있으면 그것도 요구."""
+    from shopping_shorts.edit_plan import auto_sources
+    # 베이스 프레임도 자동으로 고르는 화면이다 — 씨앗 영상에서는 안 뜬다(관제 138, 판단은 edit_plan.auto_sources)
+    _ok = {vid for vid, v in (extract or {}).items() if auto_sources([v])}
     got = []
     for s in _segments(extract):
+        if s.get("video_id") not in _ok:
+            continue
         d = str(s.get("scene_desc") or "")
         if not d or any(w in d for w in PERSON_WORDS):
             continue

@@ -367,8 +367,120 @@ def apply_signals(slots, key, nth=0, yt=True):
             sl.setdefault("line_signal_before", line)
             sl["line"] = new
         if w:
-            sl["signal"] = w
+            # ★실제로 붙은 낱말을 남긴다 — attach_signal 이 본문과 같은 말이면 같은 자리 다른 신호어로 바꾸기 때문(관제 139:
+            #   짤 길이는 TTS 에서 이 낱말을 찾아 재므로 원래 낱말이 남으면 '신호어 시각 못 찾음'으로 짤이 빠졌다)
+            sl["signal"] = next((x for x in sorted(_sw._ALL_SIGNAL_WORDS, key=len, reverse=True)
+                                 if (sl.get("line") or "").startswith(x + " ")), w)
     return words
+
+
+# ── 감정짤 자리(관제 139, 2026-10-06 사장님 확정) ─────────────────────────────────────────────────────
+#   ★"어느 줄 맨 앞에 짤을 몇 초 넣나"의 주인은 meme_slots 하나다. 3단계 화면(scene_play.js scenesV2Alloc)·렌더·캡컷·ZIP 은
+#     이 함수가 남긴 beat["cutaway"](match_type "meme", head_sec)를 **읽기만** 한다 — 짤 컷을 첫 컷으로 두고 남은 시간에 장면을 나눈다.
+#   규칙: 신호어 자리 [1]·[3] 줄만 · 길이 = 그 줄 음성에서 신호어 마지막 낱말이 끝나는 초를 1.0~2.0초로 자름 · 시작은 줄 시작 ·
+#         짤 뒤 남은 시간이 장면 하나 하한(1.0초)보다 짧으면 그 줄은 짤 없음.
+#   감정: [1] 이면서 "말도 안/말이 돼" 류 → 의심_황당 · 그 밖 [1] → 놀람 · [3] → 충격_입막.
+MEME_MIN_SEC = 1.0          # 짤 최소 길이
+MEME_MAX_SEC = 2.0          # 짤 최대 길이
+MEME_SCENE_MIN = 1.0        # 짤 뒤 장면 하나의 최소 길이 — cutaway["scene_min"] 으로 실어 화면 배분(scenesV2Alloc)이 같은 값을 읽는다
+MEME_RANKS = (1, 3)
+_MEME_DOUBT = re.compile(r"말도\s*안|말이\s*돼|말이\s*되")
+_MEME_EMOTION = {1: "놀람", 3: "충격_입막"}
+
+
+def meme_emotion(rank, signal):
+    """신호어 자리·낱말 → 짤 감정. [1]·[3] 밖이면 None."""
+    if rank == 1 and _MEME_DOUBT.search(signal or ""):
+        return "의심_황당"
+    return _MEME_EMOTION.get(rank)
+
+
+def _compact(t):
+    return re.sub(r"[^0-9A-Za-z가-힣]", "", t or "")
+
+
+def signal_end_sec(narration, signal, words):
+    """줄 음성 낱말 시각 words=[{word,start,end}] 에서 신호어(줄 첫머리)를 다 말한 초. 못 찾으면 None."""
+    sig = _compact(signal)
+    if not sig or not _compact(narration).startswith(sig) or not words:
+        return None
+    acc = ""
+    for w in words:
+        acc += _compact((w or {}).get("word"))
+        if len(acc) >= len(sig):
+            if not acc.startswith(sig):
+                return None          # 음성 낱말이 신호어와 어긋난다(받아쓰기 오인식 등) — 짐작하지 않는다
+            try:
+                return float(w.get("end"))
+            except (TypeError, ValueError):
+                return None
+    return None
+
+
+def meme_slots(plan, words_of, pool, log=None):
+    """편성표의 칸마다 짤 자리를 정해 beat["cutaway"] 에 남긴다(관제 139). 판단은 여기 한 곳.
+
+    words_of(beat) → (낱말 시각 [{word,start,end}] | None, 칸 길이 초(head_trim·tail_trim 뺀 실제 칸 길이) | None)
+    pool = {감정: [{"asset_id", "duration"}...]} — 고를 수 있는 짤(서버 짤 팩). 비면 짤 없음 + 이유.
+    돌려주는 것 = [{"beat_idx","meme"(bool),"why"|"head_sec","emotion","asset_id"}] — 칸마다 왜 넣었나/안 넣었나.
+    ★다른 끼움 장면(AI 장면·사람이 붙인 컷어웨이)이 이미 있는 칸은 건드리지 않는다. 옛 짤(meme)은 다시 정한다."""
+    out = []
+    used = {}
+    for b in (plan or {}).get("beats") or []:
+        if not isinstance(b, dict):
+            continue
+        bi = b.get("beat_idx")
+        cw = b.get("cutaway")
+        if cw and (cw or {}).get("match_type") != "meme":
+            out.append({"beat_idx": bi, "meme": False, "why": "다른 끼움 장면 있음"})
+            continue
+        b.pop("cutaway", None)        # 옛 짤은 지금 음성·대본으로 다시 정한다(못 정하면 빠진다)
+
+        def _no(why):
+            out.append({"beat_idx": bi, "meme": False, "why": why})
+        try:
+            rank = int(b.get("sig_rank") or 0)
+        except (TypeError, ValueError):
+            rank = 0
+        if rank not in MEME_RANKS:
+            if rank:
+                _no("신호어 자리 [%d]" % rank)
+            continue
+        signal = str(b.get("signal") or "")
+        emo = meme_emotion(rank, signal)
+        try:
+            words, dur = words_of(b)
+        except Exception as e:      # noqa: BLE001 — 음성 시각을 못 읽은 칸은 짤 없음(이유를 남긴다)
+            _no("음성 시각 실패 %s" % type(e).__name__)
+            continue
+        end = signal_end_sec(b.get("narration") or "", signal, words)
+        if end is None:
+            _no("신호어 시각 못 찾음(%s)" % (signal or "신호어 없음"))
+            continue
+        head = end - float(b.get("head_trim") or 0.0)
+        head = round(min(MEME_MAX_SEC, max(MEME_MIN_SEC, head)), 2)
+        try:
+            dur = float(dur or 0)
+        except (TypeError, ValueError):
+            dur = 0.0
+        if dur - head < MEME_SCENE_MIN - 1e-6:
+            _no("짤 뒤 남은 시간 %.2f초 < %.1f초" % (dur - head, MEME_SCENE_MIN))
+            continue
+        cands = [a for a in (pool or {}).get(emo) or [] if float(a.get("duration") or 0) >= head - 1e-3]
+        if not cands:
+            _no("짤 없음(감정 %s, %.2f초 이상)" % (emo, head))
+            continue
+        k = used.get(emo, 0)
+        used[emo] = k + 1
+        a = cands[k % len(cands)]          # 같은 감정이 여러 줄이면 돌려 쓴다(한 편 안 같은 짤 반복 줄이기)
+        b["cutaway"] = {"asset_id": int(a["asset_id"]), "match_type": "meme", "head_sec": head,
+                        "vid": "meme_%d" % int(a["asset_id"]),      # 짤 컷의 video_id — 화면·렌더·캡컷이 이 이름 하나로 짤 파일을 찾는다
+                        "emotion": emo, "scene_min": MEME_SCENE_MIN, "owner": int(a.get("owner") or 0)}
+        out.append({"beat_idx": bi, "meme": True, "head_sec": head, "emotion": emo, "asset_id": int(a["asset_id"])})
+    if log is not None:
+        for r in out:
+            log(r)
+    return out
 
 
 def _apply_role_picks(slots, roles_pick):

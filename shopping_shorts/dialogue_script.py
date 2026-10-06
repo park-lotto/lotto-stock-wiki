@@ -20,6 +20,7 @@ TAGS = ("curious", "laughs", "skeptical", "casual", "doubtful", "cheerful", "exc
 
 FORMS = {
     "narr_then_talk": {
+        "desc": "제품 정체까지는 나레이션 썰, 그 뒤는 동생·언니 대화로 의심 → 충격 포인트",
         "label": "나레이션 → 대화",
         "roles": ("나레이션", "동생", "언니"),
         "cast": {"나레이션": "tc-piljae-natural", "동생": "kr-yooni-natural", "언니": "kr-mina-natural"},
@@ -28,6 +29,7 @@ FORMS = {
                 "언니가 충격 포인트로 뒤집는다. 마지막 한 줄은 나레이션.",
     },
     "escalate_talk": {
+        "desc": "처음부터 대화 — 동생 의심이 칸마다 커지다 충격 포인트에서 뒤집힘",
         "label": "고조 계단 대화",
         "roles": ("동생", "언니"),
         "cast": {"동생": "kr-yooni-natural", "언니": "kr-mina-natural"},
@@ -36,6 +38,7 @@ FORMS = {
                 "썰 칸(문제 → 이건 바로 → 말도 안 되는 게 → 심지어 → 충격 포인트)을 하나씩 공개한다. 동생이 인정하며 끝난다.",
     },
     "talk_sandwich": {
+        "desc": "대화로 문제를 열고, 가운데는 나레이션 썰, 다시 대화로 마무리",
         "label": "대화로 열고 닫기",
         "roles": ("나레이션", "동생", "언니"),
         "cast": {"나레이션": "tc-piljae-natural", "동생": "kr-yooni-natural", "언니": "kr-mina-natural"},
@@ -43,6 +46,7 @@ FORMS = {
                 "'이건 바로 → 말도 안 되는 게 → 심지어 → 충격 포인트'를 쭉 말한다. 마지막 두 줄은 다시 동생·언니 대화로 닫는다.",
     },
     "narr_monologue": {
+        "desc": "나레이션 썰 사이사이 주인공 혼잣말(한숨·놀람·만족)",
         "label": "나레이션 + 독백",
         "roles": ("나레이션", "독백"),
         "cast": {"나레이션": "tc-piljae-natural", "독백": "kr-mina-natural"},
@@ -50,6 +54,7 @@ FORMS = {
                 "문제를 겪는 한숨, 제품을 처음 본 반응, 기능을 확인한 반응, 마지막 만족. 독백은 짧게(15자 안팎).",
     },
     "objector": {
+        "desc": "1인칭 '나' + 반대하는 사람 — '그냥 반품해' 반복 뒤 태세전환",
         "label": "반대자 상황극",
         "roles": ("나", "반대자"),
         "cast": {"나": "kr-mina-natural", "반대자": "tc-piljae-natural"},
