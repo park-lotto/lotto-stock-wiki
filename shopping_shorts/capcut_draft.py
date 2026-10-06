@@ -520,10 +520,32 @@ def _watermark_material(wm, font_path):
     return m
 
 
+def _zoom_pieces(t, dur, spans, base_zoom):
+    """[t, t+dur) 를 장면 확대 구간(scene_style.zoom_spans, 초)이 바뀌는 시각에서 나눈다 → [(시작us, 길이us, 배율, 이동)].
+    구간 밖은 비트 확대(base_zoom). 구간이 없으면 통째로 한 조각(종전과 같다)."""
+    cuts = {t, t + dur}
+    for sp in spans or []:
+        for x in (_us(sp["start"]), _us(sp["end"])):
+            if t < x < t + dur:
+                cuts.add(x)
+    edges = sorted(cuts)
+    out = []
+    for a, b in zip(edges, edges[1:]):
+        if b - a <= 0:
+            continue
+        mid = (a + b) / 2
+        sp = next((sp for sp in spans or [] if _us(sp["start"]) <= mid < _us(sp["end"])), None)
+        z = float(sp["zoom"]) if sp else base_zoom
+        move = (float(sp.get("tx", 0)), float(sp.get("ty", 0))) if sp and z >= base_zoom else (0.0, 0.0)
+        out.append((a, b - a, max(z, base_zoom), move))
+    return out or [(t, dur, base_zoom, (0.0, 0.0))]
+
+
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None,
                 caption_style=None, deco=None, headcopy_layer=None, bgm_layer=None,
-                sfx_layers=None, cutaway_layers=None, scene_overlay_layers=None,
+                sfx_layers=None, cutaway_layers=None, scene_overlay_layers=None, scene_dim_layers=None,
+                scene_zoom_spans=None,
                 cut_segments=None, freeze_images=None):
     """편집안 → (draft_content_dict, assets_to_copy).
 
@@ -554,6 +576,9 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
     scene_overlay_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
                            "name": "scene-style-overlay", "is_default_name": False,
                            "segments": []}
+    # 어둡게(관제 124) — 영상 칸만 반투명 검정 막. 영상 위·틀(자막) 아래라 따로 트랙(한 트랙엔 구간이 겹칠 수 없다).
+    scene_dim_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+                       "name": "scene-style-dim", "is_default_name": False, "segments": []}
     beats_by_idx = {b["beat_idx"]: b for b in plan.get("beats", [])}
     assets_to_copy = []
     total_us = 0
@@ -615,29 +640,33 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                     _rate = (_read / (c_dur / 1e6)) if c_dur > 0 else 1.0
                 _hold = None
             assets_to_copy.append((src_real, abs_path))
-            sp, ca, sc, ph, vs = (
-                _speed(_rate), _canvas(), _sound_channel_mapping(),
-                _placeholder_info(), _vocal_separation(),
-            )
-            for m, key in ((sp, "speeds"), (ca, "canvases"), (sc, "sound_channel_mappings"),
-                           (ph, "placeholder_infos"), (vs, "vocal_separations")):
-                mats[key].append(m)
             vdur = _us((video_durs or {}).get(src_real, 0.0)) or (t0 + dur)
             vm = _video_material(abs_path, _vid or "clip", vdur, cw, ch)
             mats["videos"].append(vm)
-            # volume=0.0 → 원본 클립 오디오 음소거(원본 음악·말소리 제거, 우리 TTS만 들리게).
-            # last_nonzero_volume=1.0이라 사장님이 캡컷에서 필요하면 되살릴 수 있다.
-            # source_dur은 **읽을 원본 길이**다 — 화면 길이를 쓰면 슬로모 구간이 어긋난다.
-            seg = _base_segment(vm["id"], _t, c_dur, source_start=_us(_st),
-                                source_dur=_us(_read) or c_dur,
-                                render_index=0, volume=0.0,
-                                extra_refs=[sp["id"], ca["id"], sc["id"], ph["id"], vs["id"]])
-            # ── 🔍 장면 확대(6단계에서 끌어 맞춘 것) ──
-            #   뜻은 video_assemble.scene_zoom_of **한 곳**이 정한다(0순위-B).
-            #   ⚠️**이동(pan)은 아직 안 간다** — 캡컷 clip.transform의 좌표계(부호·스케일)를 실측한 근거가 없다.
-            if _z > 1.0:
-                seg["clip"]["scale"] = {"x": _z, "y": _z}
-            vid_track["segments"].append(seg)
+            # 장면꾸미기 장면별 확대(관제 124 점프 줌 컷 포함)가 바뀌는 시각에서 조각을 나눈다 — 나뉜 조각은 같은 소재를 이어 읽는다.
+            for _pt, _pd, _pz, _pmove in _zoom_pieces(_t, c_dur, scene_zoom_spans, _z):
+                sp, ca, sc, ph, vs = (
+                    _speed(_rate), _canvas(), _sound_channel_mapping(),
+                    _placeholder_info(), _vocal_separation(),
+                )
+                for m, key in ((sp, "speeds"), (ca, "canvases"), (sc, "sound_channel_mappings"),
+                               (ph, "placeholder_infos"), (vs, "vocal_separations")):
+                    mats[key].append(m)
+                _off = (_pt - _t) * _rate          # 앞 조각들이 읽은 원본 길이(배속 반영)
+                # volume=0.0 → 원본 클립 오디오 음소거(원본 음악·말소리 제거, 우리 TTS만 들리게).
+                # last_nonzero_volume=1.0이라 사장님이 캡컷에서 필요하면 되살릴 수 있다.
+                # source_dur은 **읽을 원본 길이**다 — 화면 길이를 쓰면 슬로모 구간이 어긋난다.
+                seg = _base_segment(vm["id"], _pt, _pd, source_start=_us(_st) + round(_off),
+                                    source_dur=(round(_us(_read) * _pd / c_dur) if _read else _pd),
+                                    render_index=0, volume=0.0,
+                                    extra_refs=[sp["id"], ca["id"], sc["id"], ph["id"], vs["id"]])
+                # ── 🔍 장면 확대 ── 뜻은 video_assemble.scene_zoom_of **한 곳**이 정한다(0순위-B).
+                #   이동: 비트 확대(6단계)는 아직 안 보낸다. 장면꾸미기 확대 위치는 zoom_spans 의 tx·ty(캔버스 절반 단위)로 보낸다.
+                if _pz > 1.0:
+                    seg["clip"]["scale"] = {"x": _pz, "y": _pz}
+                if _pmove != (0.0, 0.0):   # 장면꾸미기 확대 위치(강조 확대가 제품·손을 향함) — scene_style.zoom_spans 가 계산
+                    seg["clip"]["transform"] = {"x": _pmove[0], "y": _pmove[1]}
+                vid_track["segments"].append(seg)
             if _hold:
                 # ── 정지 조각: 완성본이 마지막 프레임을 세워 둔 몫 — 캡컷 '정지 프레임'과 같은 사진 소재 ──
                 pm = _photo_material(_img, _img.rsplit("/", 1)[-1], cw, ch)
@@ -701,25 +730,26 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 seg["track_render_index"] = 3      # 소스(0)·머리카피(1)·틀(2) 위 = 맨 위
                 txt_track["segments"].append(seg)
 
-    # 장면꾸미기 레이어에는 자막·제목·브랜딩이 이미 합쳐져 있다.
-    for layer in scene_overlay_layers or []:
-        source_path = layer.get("path")
-        path = layer.get("_capcut_path") or asset_paths.get(source_path)
-        start = _us(layer.get("start", layer.get("t0", 0.0)))
-        if "end" in layer:
-            duration = _us(layer.get("end", 0.0)) - start
-        else:
-            duration = _us(layer.get("dur", 0.0))
-        if not path or duration <= 0:
-            continue
-        if source_path and asset_paths.get(source_path) == path:
-            assets_to_copy.append((source_path, path))
-        material = _photo_material(path, path.rsplit("/", 1)[-1], cw, ch)
-        mats["videos"].append(material)
-        segment = _base_segment(material["id"], start, duration, source_start=0,
-                                source_dur=duration, render_index=0, volume=0.0)
-        segment["track_render_index"] = 4
-        scene_overlay_track["segments"].append(segment)
+    # 장면꾸미기 레이어에는 자막·제목·브랜딩이 이미 합쳐져 있다. 어둡게 막은 그 아래(scene_style.dim_spans).
+    for track, render_idx, layers in ((scene_dim_track, 2, scene_dim_layers), (scene_overlay_track, 4, scene_overlay_layers)):
+        for layer in layers or []:
+            source_path = layer.get("path")
+            path = layer.get("_capcut_path") or asset_paths.get(source_path)
+            start = _us(layer.get("start", layer.get("t0", 0.0)))
+            if "end" in layer:
+                duration = _us(layer.get("end", 0.0)) - start
+            else:
+                duration = _us(layer.get("dur", 0.0))
+            if not path or duration <= 0:
+                continue
+            if source_path and asset_paths.get(source_path) == path:
+                assets_to_copy.append((source_path, path))
+            material = _photo_material(path, path.rsplit("/", 1)[-1], cw, ch)
+            mats["videos"].append(material)
+            segment = _base_segment(material["id"], start, duration, source_start=0,
+                                    source_dur=duration, render_index=0, volume=0.0)
+            segment["track_render_index"] = render_idx
+            track["segments"].append(segment)
 
     # ── 🖼 꾸미기 틀(템플릿) — 영상 위에 얹는 투명 PNG (2026-08-28 고객 제보 3단계) ──
     #   ★이미 그림 파일로 존재한다: deco_frame이 미리보기·렌더와 **같은 함수**로 굽는다
@@ -825,7 +855,7 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
 
     tracks = [t for t in (vid_track, cut_track, hc_track, tpl_track,   # 머리카피가 틀 아래
                           aud_track, bgm_track, sfx_track, txt_track, wm_track,
-                          scene_overlay_track)
+                          scene_dim_track, scene_overlay_track)
               if t["segments"]]
     draft = _skeleton(project_name, cw, ch, total_us)
     draft["materials"].update(mats)
@@ -887,7 +917,8 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
                           tts_paths, project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT,
                           probe=None, final_video=None, caption_style=None, deco=None,
                           headcopy_png=None, headcopy_span=None, sfx_events=None,
-                          cutaway_paths=None, scene_overlay_layers=None,
+                          cutaway_paths=None, scene_overlay_layers=None, scene_dim_layers=None,
+                     scene_zoom_spans=None,
                           extra_library_video_paths=None):
     """draft 폴더를 out_root/<project>/ 에 실제로 조립한다(에셋 복사 + draft_content.json + meta).
 
@@ -996,6 +1027,11 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
         capcut_path, _ = _bring(source, f"scene-style-{index:04d}{extension}")
         if capcut_path:
             copied_scene_layers.append({**layer, "_capcut_path": capcut_path})
+    copied_dim_layers = []
+    for index, layer in enumerate(scene_dim_layers or []):
+        capcut_path, _ = _bring(layer.get("path"), f"scene-style-dim-{index:04d}.png")
+        if capcut_path:
+            copied_dim_layers.append({**layer, "_capcut_path": capcut_path})
 
     # ── 🎞 완성본 컷 계획 → 캡컷 조각(2026-09-27) + 정지 조각의 사진(완성본이 세워 둔 마지막 프레임) ──
     cut_segs = capcut_segments(plan, timeline, source_video_paths, tts_paths, video_durs)
@@ -1020,7 +1056,8 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
                            canvas=canvas, font_path=font_path, video_durs=video_durs,
                            headcopy_layer=headcopy_layer, bgm_layer=bgm_layer,
                            sfx_layers=sfx_layers, cutaway_layers=cutaway_layers,
-                           scene_overlay_layers=copied_scene_layers,
+                           scene_overlay_layers=copied_scene_layers, scene_dim_layers=copied_dim_layers,
+                           scene_zoom_spans=scene_zoom_spans,
                            cut_segments=cut_segs, freeze_images=freeze_images)
 
     # ── 미디어 보관함(2026-08-23 사장님 "라이브러리에 조각 영상들 불러올 수 있게") ──

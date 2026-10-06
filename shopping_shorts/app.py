@@ -10438,7 +10438,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
     #   ★그림과 구간은 렌더가 쓰는 함수를 그대로 쓴다(render_layers·context_for) — 여기서
     #     따로 그리면 완성본과 캡컷이 갈린다.
     #   ★실패해도 내보내기는 그대로 된다 — 그때는 종전대로 머리카피만 간다.
-    _scene_layers = None
+    _scene_layers, _scene_dims, _scene_zooms = None, None, None
     _ss_snapshot = (_deco or {}).get("scene_style") if _deco else None
     if _style_on and _ss_snapshot:
         try:
@@ -10448,10 +10448,12 @@ def api_mix_capcut(job_id: str, base: str = ""):
             _ss_layers = _scene_style.render_layers(timeline, _ss_snapshot, _ss_dir, _hc, job_id)
             _ss_scenes = _scene_style.context_for(timeline, _hc, _ss_snapshot, job_id)["scenes"]
             _scene_layers = _scene_style.overlay_spans(_ss_scenes, _ss_layers, _ss_dir)   # 단어 강조면 단어마다 한 장(관제 102)
+            _scene_dims = _scene_style.dim_spans(_ss_scenes, _ss_snapshot, _ss_layers, _ss_dir)   # 어둡게 막(관제 124)
+            _scene_zooms = _scene_style.zoom_spans(_ss_scenes, _ss_snapshot, _ss_layers)   # 장면별 확대·점프 줌(관제 124)
         except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
             import traceback as _tb4
             _tb4.print_exc(file=sys.stderr)
-            _scene_layers = None
+            _scene_layers, _scene_dims, _scene_zooms = None, None, None
     if _scene_layers:
         # 제목·채널명은 장면 레이어에 이미 그려져 있다 — 머리카피를 또 올리면 겹쳐 보인다.
         _hc_png, _hc_span = None, None
@@ -10465,7 +10467,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
         headcopy_png=(_hc_png if _style_on else None),
         headcopy_span=_hc_span,
         sfx_events=_sfx_events, cutaway_paths=_cutaways,
-        scene_overlay_layers=_scene_layers,
+        scene_overlay_layers=_scene_layers, scene_dim_layers=_scene_dims, scene_zoom_spans=_scene_zooms,
         extra_library_video_paths=_original_library_sources)
     texts, assets = {}, []
     for name in files:
@@ -16206,7 +16208,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 장면꾸미기 새 편집기를 6단계 화면에 바로(2026-09-23, 사장님: 유튜브 라이브 뒤 구버전→신버전 교체) — ""끔 · "admin" · "1" 전체
                        "scene_style_inline_enabled",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
-                       "storyboard_enabled"}
+                       "storyboard_enabled",
+                       # 장면꾸미기 장면 효과(관제 124, 2026-10-05) — 강조 확대·어둡게·흑백 충격·자동 배치. ""끔 · "admin" · "11,42" · "1" 전체
+                       "scene_fx_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -21279,6 +21283,8 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
         scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}"
         # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
         scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}" for _t in _scene_page_points(scene)]
+    # 장면 효과(관제 124) 스위치 — 꺼진 계정은 편집기가 '강조 효과' 상자·자동 배치를 안 띄운다(고객 화면 불변)
+    context["fxEnabled"] = bool(_setting_gate(Store(DB_PATH), "scene_fx_enabled", _cid(request)))
     return {"context": context, "snapshot": snapshot}
 
 
@@ -23413,6 +23419,32 @@ def api_produce_mix_beatframe(job_id: str, i: int, cut: int = None, at: float = 
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(str(out), media_type="image/jpeg",
                         headers={"cache-control": "no-cache"})
+
+
+@app.get("/api/produce/mix/scene_focus/{job_id}/{i}")
+def api_produce_mix_scene_focus(job_id: str, i: int, request: Request, at: float = None):
+    """장면 그림(beatframe 과 같은 그림) 속 제품 상자 [x0,y0,x1,y1](0~1) — 장면꾸미기 강조 확대가 제품을 향하게(관제 124).
+    판단(제품이 어디냐)은 video_analysis.product_box 한 곳. 결과는 그림 옆 .box.json 에 남겨 같은 그림은 다시 묻지 않는다."""
+    if not _setting_gate(Store(DB_PATH), "scene_fx_enabled", getattr(request.state, "customer_id", 0)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능입니다"})   # AI 호출(비용)도 스위치 뒤
+    job = Store(DB_PATH).get_mix_job(job_id)
+    out = _beatframe_file(job, job_id, i, cut=None, at=at)
+    if out is None:
+        return JSONResponse(status_code=404, content={"ok": False})
+    cache = Path(str(out) + ".box.json")
+    if cache.exists():
+        return {"ok": True, **json.loads(cache.read_text(encoding="utf-8"))}
+    hint = ""
+    try:
+        beats = (job.get("edit_plan") or {}).get("beats") or []
+        hint = next((b.get("narration") or "" for b in beats if int(b.get("beat_idx", -1)) == int(i)), "")
+    except Exception:      # noqa: BLE001 — 힌트는 없어도 된다
+        hint = ""
+    from shopping_shorts import video_analysis
+    box = video_analysis.product_box(Path(out).read_bytes(), hint)
+    if box:   # 못 찾은 결과(키 한도·일시 오류 포함)는 남기지 않는다 — 다음에 다시 묻는다
+        cache.write_text(json.dumps({"box": box}), encoding="utf-8")
+    return {"ok": True, "box": box}
 
 
 # ── 장면 라이브러리(재사용 짤 뱅크, 2026-07-15) ──

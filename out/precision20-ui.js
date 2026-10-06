@@ -781,6 +781,16 @@
   //   63wyUy6d0Jc 제목 폭 125→180px/1.2초(화면 전체가 천천히 확대, 흔들림 없음)
   //   ZaPpvrHkZ1U 크기 고정·매 프레임 가로 ±2px/세로 ±3px(360px 기준) 떨림, 훅 내내
   const CAMERA_MOTIONS=['zoom-punch','push-in','shake'];
+  // 레퍼런스 장면 효과 값(관제 124) — 랭킹 썰 쇼핑 채널 114편 실측(tools/scene_fx/data/params_2026-10-05.json). 지어낸 값이 아니다.
+  //   jumpZoom: 점프 줌 컷 확대 배율 중앙 1.35(사분위 1.21~1.56) — 구절마다 번갈아(리듬)
+  //   zoomIn: 강조 확대는 멈춘 화면이 아니라 0.5초 동안 제품 쪽으로 빨려 들어간다(사장님 2026-10-05 "0.3초는 빠르고 0.5초로")
+  //   emphZoom: 중요 장면 강조 확대 2.0 — 레퍼런스 눈대중 최대 2.0(측정 최대 1.61) 중 사장님 선택(2026-10-05 "두 배 이상은 돼야",
+  //             "효과를 어떤 장면이든 켤 수 있게, 제품 정체 드러날 때·CTA·훅·고조 같은 중요 장면")
+  //   dimEmphasis: 화면을 어둡게 덮고 강조 글자 — 밝기 32%(17~56%)·중앙 1.2초 ≈ 장면(구절) 하나 길이(중앙 1.17초) → 장면 내내(sec 0)
+  //   dimTitle: 시작 어두운 제목 화면 — 밝기 46%·0.13초(4프레임), 12편 중 10편
+  // 자동 배치(관제 124, 사장님 2026-10-05 "효과 아주 좋고 자동으로 배치") — 중요 장면 종류(scene_style.moment_of)별로 각 비트 첫 구절에 건다. 판단은 이 표 하나.
+  const AUTO_FX={hook:{zoom:'in'},problem:{shock:true},reveal:{zoom:'pull'},peak:{dim:true},cta:{zoom:'inout'}};
+  const REF_FX={jumpZoom:1.35,emphZoom:2,zoomIn:.5,dimEmphasis:{level:.32,sec:0},dimTitle:{level:.46,sec:.13}};
   // 훅 모션 길이 = **첫 비트(훅 문장)** 의 훅 장면만(10-02 사장님 "썰훅만 본문은 훅 모션 없이 자막 스타일대로"). 썰훅+본문은 훅이 첫 비트뿐이라 종전과 같다
   const hookEndMs=()=>{const sc=sceneContext?.scenes||[],b0=sc[0]?.beat_idx;const hs=sc.filter(s=>s.kind==='hook'&&s.beat_idx===b0);return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
   function cameraAt(ms){
@@ -1623,11 +1633,36 @@
     text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
     if(capLook?.text)Object.assign(text.style,capLook.text);
     if(!(manualText&&fontScales.has(readKey(fontScales,'caption'))))fitOneLine(text,fontScales.get(readKey(fontScales,'caption'))||1);   // ★맨 끝에 — 위에서 폭·줄바꿈을 다시 정한 뒤에 재야 맞는다. 손으로 정한 크기는 줄이지 않는다(넘치면 줄만 넘긴다 — 화면 밖으로 잘리지 않게)
+    emphasisCaption(frame,text,patch);   // 어둡게 강조 장면이면 자막을 영상 한가운데 큰 글자로(관제 124)
     applyWordFx();   // 단어 강조(관제 102) — 크기를 다 맞춘 뒤에 어절을 감싼다(폭은 안 바뀐다)
   }
   // ★09-22 사장님: 자막이 살짝 커져 두 줄로 꺾이면 "두 포인트 줄이니까 한 줄에 들어간다" → 자막은 한 줄 규격이므로
   //   손으로 키운 크기든 기본이든 **꺾이기 직전까지만** 4%씩 줄인다(바닥 70%). 바닥까지 줄여도 안 들어가면 원래 크기로 두고
   //   줄바꿈을 허용한다(긴 문장은 두 줄이 낫다). 사용자가 직접 줄바꿈(Enter)한 자막은 건드리지 않는다. 렌더러도 같은 코드라 MP4가 화면과 같다.
+  // 어둡게 강조 = 화면을 어둡게 덮고 그 위에 큰 강조 글자(관제 124). 레퍼런스(밝기 32%·약 1.2초)는 어둡게만 하지 않고
+  //   글자를 크게 띄운다 — 글자 없이 어둡게만 하면 화면이 탁해 보였다(2026-10-05 결과물 확인).
+  //   이 장면 자막을 자막 띠 대신 영상 칸 한가운데에 1.8배 흰 글자로. 위치는 left/top/width 로만 잡는다 —
+  //   자막 등장 효과(rise·grow·pop…)가 렌더 때 이 요소의 transform 을 덮어쓴다(자막팩 관제 127 요청).
+  // 어둡게 강조 장면은 자막 띠가 비므로 영상 칸을 그 띠 위쪽까지 넓힌다(사장님 2026-10-06 "당연히 검은 칸이 안 보여야지").
+  //   장면 번호 → 띠 윗선(%) — geometry()/geometryAt() 이 이 값으로 영상 칸을 늘린다(미리보기·완성본 렌더러·썸네일이 같은 값).
+  const emphTop=new Map();
+  const mediaFor=(frame,id,i)=>{const b=mediaBounds(frame,id),t=emphTop.get(i);return t==null||t>=b.top?b:{...b,top:t,height:b.height+(b.top-t)};};
+  function emphasisCaption(frame,text,patch){
+    emphTop.delete(sceneIndex);
+    const d=(effects[String(sceneIndex)]||{}).dim;
+    if(!d||Number(d.sec)>0||!text||!text.textContent.trim())return;   // 장면 내내 어둡게(강조)일 때만 — 시작 어두운 제목(0.13초)은 아니다
+    // 모양(글꼴·크기 배율·색·테두리·등장)은 자막팩이 정한다 — captionEmphasisStyle()(자막팩 관제 127, 같은 파일). 없으면 기본값.
+    //   여기는 자리(영상 칸 가운데 left/top/width, 2줄까지)만 맡는다.
+    const look=typeof captionEmphasisStyle==='function'?(captionEmphasisStyle()||{}):{};
+    const b=mediaBounds(frame,rows[current].id),size=(parseFloat(text.style.fontSize)||parseFloat(getComputedStyle(text).fontSize))*(Number(look.sizeScale)||1.8);
+    const color=look.color||'#fff';
+    if(patch){const top=parseFloat(patch.style.top);if(Number.isFinite(top))emphTop.set(sceneIndex,top);patch.style.display='none';}
+    Object.assign(text.style,{left:'6%',width:'88%',right:'auto',top:(b.top+b.height*.3)+'%',height:(b.height*.4)+'%',fontSize:size+'px',
+      whiteSpace:'pre-wrap',color,textShadow:'0 0 3px #000,0 3px 10px rgba(0,0,0,.85)',alignItems:'center',justifyContent:'center',
+      ...(look.font?{fontFamily:look.font}:{}),...(look.textStyle||{})});
+    text.querySelectorAll('span').forEach(s=>s.style.color=color);
+    text.dataset.emphasis='1';
+  }
   function fitOneLine(el,manual){
     const txt=el.textContent||'';if(!txt.trim()||txt.includes(String.fromCharCode(10)))return;
     const start=parseFloat(el.style.fontSize)||parseFloat(getComputedStyle(el).fontSize);let size=start;
@@ -2070,12 +2105,78 @@
       fittedText.clear();renderEdit();
     },
     show(index){showScene(index);return this.geometry()},
-    geometry:()=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
+    geometry:()=>({media:noTemplate?{top:0,height:100}:mediaFor(frameFor(rows[current]),rows[current].id,sceneIndex),sceneIndex,kind:sceneKind(sceneIndex)}),
+    // 장면을 열지 않고 i번 장면의 영상 칸(관제 124) — 강조 확대 위치 잡기가 장면을 오가며 화면을 되돌리던 것(빠르게 누르면 엉뚱한 장면에 들어감)을 없앤다
+    geometryAt:i=>({media:noTemplate?{top:0,height:100}:mediaFor(frameFor(rows[current],i),rows[current].id,i),sceneIndex:i,kind:sceneKind(i)}),
     effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
     // 다른 장면의 효과를 직접 읽고 쓴다(쇼핑 안내 세트가 마지막 장면 여러 개에 한 번에 넣는다, 2026-09-23)
     effectAt(i,value){const k=String(i);if(value!==undefined)effects[k]=value;return effects[k]||{}},
     sceneCount:()=>sceneTotal(),
     copyEffectsToAll(){const value=structuredClone(effects[String(sceneIndex)]||{});for(let i=0;i<sceneTotal();i++)effects[String(i)]=structuredClone(value);},
+    refFx:REF_FX,
+    // 점프 줌 컷(관제 124) — 같은 비트(대본 한 줄) 안에서 장면(자막 구절)이 바뀔 때 영상 칸을 1↔1.35배로 번갈아 자른다.
+    //   레퍼런스: 같은 장면을 더 크게/작게 잘라 잇는 컷, 114편 중 22편·48건, 확대 1.35배·되돌림 0.76배(정밀 측정 11건).
+    //   손으로 맞춘 확대(zoom>1)는 건드리지 않는다. 넣은 칸엔 fxAuto:'jump' 표식 — 빼기는 표식 있는 칸만.
+    jumpZoom(on){
+      const scenes=sceneContext?.scenes||[];let k=0,prev=null,count=0;
+      scenes.forEach((s,i)=>{
+        k=s.beat_idx===prev?k+1:0;prev=s.beat_idx;
+        const key=String(i),e=effects[key]||{};
+        if(on&&k%2===1&&!((Number(e.zoom)||1)>1)){effects[key]={...e,zoom:REF_FX.jumpZoom,fxAuto:'jump'};count++;}
+        if(!on&&e.fxAuto==='jump'){const {fxAuto,zoom,...rest}=e;effects[key]=rest;count++;}
+      });
+      return count;
+    },
+    jumpZoomOn:()=>Object.values(effects).some(e=>e&&e.fxAuto==='jump'),
+    // 강조(관제 124) — 아무 장면이든 켤 수 있고(emphAt), 중요 장면(scene.moment: hook·reveal·peak·cta, 판단은 scene_style.moment_of)엔 한 번에(emphMoments).
+    //   kind 'zoom' = 영상 칸 2배(emphZoom) · 'dim' = 밝기 32%(dimEmphasis). 한 번에 켤 땐 그 비트의 **첫 장면**(그 순간이 드러나는 구절)에만.
+    moments:()=>(sceneContext?.scenes||[]).map(s=>s.moment||null),
+    emphAt(i,kind,on){
+      const key=String(i),e={...(effects[key]||{})};
+      if(kind==='zoom'){
+        if(on){e.zoom=REF_FX.emphZoom;e.fxAuto='emph';e.zoomIn=REF_FX.zoomIn;}
+        else if(e.fxAuto==='emph'||e.fxAuto==='jump'){delete e.zoom;delete e.fxAuto;delete e.zoomIn;if(e.fxFocus){delete e.panX;delete e.panY;delete e.fxFocus;delete e.fxFocusBy;delete e.fxBox;}}   // 자동으로 맞춘 위치(fxFocus)도 같이 뺀다
+      }else if(kind==='dim'){
+        if(on)e.dim={...REF_FX.dimEmphasis};else if(e.dim&&!e.dim.sec)delete e.dim;
+      }else if(kind==='shock'){   // 흑백 충격(흑백·지지직·흔들림) — 문제·실수·비포 장면용(완성본 scene_style.shock_vf)
+        if(on)e.shock=true;else delete e.shock;
+      }
+      effects[key]=e;
+    },
+    emphOn(i,kind){const e=effects[String(i)]||{};return kind==='zoom'?e.fxAuto==='emph':kind==='shock'?!!e.shock:!!(e.dim&&!e.dim.sec)},
+    // 확대 방식: 'in' 0.5초 들어가 멈춤 / 'pull' 장면 내내 쭉 당기기 / 'inout' 들어갔다 끝에 원본 크기로(완성본 scene_style.zoom_move_vf 와 짝)
+    zoomMove(i,way){const k=String(i),e={...(effects[k]||{})};if(way!==undefined){if(way==='in')delete e.zoomMove;else e.zoomMove=way;effects[k]=e;}return e.zoomMove||'in'},
+    // 자동 배치: on=true 면 손대지 않은 칸(효과 없음)에만 AUTO_FX 를 건다(fxAutoPlaced 표식), false 면 표식 있는 칸만 지운다.
+    autoPlace(on){
+      const scenes=sceneContext?.scenes||[];let prev=null,count=0;
+      scenes.forEach((s,i)=>{const first=s.beat_idx!==prev;prev=s.beat_idx;const key=String(i),e=effects[key]||{};
+        if(!on){if(e.fxAutoPlaced){effects[key]={};count++;}return;}
+        const rule=first&&s.moment&&AUTO_FX[s.moment];if(!rule||Object.keys(e).length)return;
+        this.sceneFx(i,rule.zoom||(rule.shock?'shock':rule.dim?'dim':'none'));
+        effects[key]={...effects[key],fxAutoPlaced:true};count++;});
+      return count;
+    },
+    autoPlaced:()=>Object.values(effects).some(e=>e&&e.fxAutoPlaced),
+    // 장면 효과 하나 고르기(관제 124, 사장님 "조작이 복잡해서 효율적으로") — 장면마다 한 번 눌러 하나만.
+    //   kind: 'none'|'in'|'pull'|'inout'(강조 확대 방식)|'dim'(어둡게+큰 글자)|'shock'(흑백 충격). 시작 어두운 제목(dim.sec>0)은 그대로 둔다.
+    sceneFx(i,kind){
+      const key=String(i),e={...(effects[key]||{})};
+      if(kind===undefined){if(e.shock)return 'shock';if(e.dim&&!e.dim.sec)return 'dim';if(e.fxAuto==='emph')return e.zoomMove||'in';return 'none';}
+      const title=e.dim&&e.dim.sec>0?e.dim:null,keepJump=e.fxAuto==='jump';
+      ['zoomIn','zoomMove','shock','fxFocus','fxFocusBy','fxBox','fxAutoPlaced'].forEach(k=>delete e[k]);
+      if(e.fxAuto==='emph'){delete e.zoom;delete e.fxAuto;delete e.panX;delete e.panY;}
+      delete e.dim;if(title)e.dim=title;
+      effects[key]=e;
+      if(kind==='in'||kind==='pull'||kind==='inout'){if(keepJump){delete e.zoom;delete e.fxAuto;}this.emphAt(i,'zoom',true);this.zoomMove(i,kind);}
+      else if(kind==='dim'||kind==='shock')this.emphAt(i,kind,true);
+      return kind;
+    },
+    emphMoments(moments,kind,on){
+      const scenes=sceneContext?.scenes||[],want=new Set(moments);let prev=null,count=0;
+      scenes.forEach((s,i)=>{const first=s.beat_idx!==prev;prev=s.beat_idx;
+        if(first&&s.moment&&want.has(s.moment)){this.emphAt(i,kind,on);count++;}});
+      return count;
+    },
     branding(value){if(value!==undefined){branding=value;if(!labMode)try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
     context:()=>sceneContext,
     validation:()=>templateViolations(),

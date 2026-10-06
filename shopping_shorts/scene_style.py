@@ -99,6 +99,20 @@ def validate_snapshot(value):
         number(effect.get("zoom",1),1,3)
         number(effect.get("panX",0),-1,1)
         number(effect.get("panY",0),-1,1)
+        if "dim" in effect:   # 어둡게(관제 124): 영상 칸 밝기 level(0.1~1)을 장면 시작부터 sec초(0=장면 내내)
+            dim=effect["dim"]
+            if not isinstance(dim,dict):
+                raise ValueError("어둡게 형식이 올바르지 않습니다")
+            number(dim.get("level"),.1,1);number(dim.get("sec",0),0,10)
+        number(effect.get("zoomIn",0),0,3)
+        if effect.get("zoomMove",'in') not in ("in","pull","inout"):   # 확대 방식: 0.5초 확대 / 장면 내내 쭉 당기기 / 확대 후 돌아오기
+            raise ValueError("확대 방식이 올바르지 않습니다")
+        if not isinstance(effect.get("fxAutoPlaced",False),bool):   # 자동 배치가 넣은 칸 표식
+            raise ValueError("자동 배치 표식이 올바르지 않습니다")
+        if not isinstance(effect.get("shock",False),bool):   # 흑백 충격(흑백·지지직·흔들림)
+            raise ValueError("흑백 충격 형식이 올바르지 않습니다")   # 확대 움직임(관제 124): 장면 시작부터 zoomIn초 동안 1배→zoom 배로 빨려 들어감(0=멈춘 확대)
+        if "fxAuto" in effect and effect["fxAuto"] not in ("jump","emph"):
+            raise ValueError("자동 효과 표식이 올바르지 않습니다")
         if "masks" in effect:
             from .deco_frame import _norm_masks
             if not isinstance(effect["masks"],list):
@@ -366,6 +380,32 @@ def overlay_spans(scenes, layers, folder):
     return out
 
 
+# 중요 장면 종류(관제 124, 사장님 2026-10-05 "제품 정체 드러날 때나 cta나 훅이나 고조나 중요 장면들") —
+#   대본 비트 역할 이름 → 훅/제품 공개/고조/CTA. 이름은 고객 작업 500개 실측 분포(고조1 783·고조2 539·훅 337·공개 309·
+#   CTA 168·반전 152·hook 147·cta 111·escalation 51·reveal 13·twist 12·bait 9 …)에서 뽑았다. 판단은 여기 한 곳.
+_MOMENT_ROLES = {
+    "hook": ("훅", "hook", "title", "미끼", "bait"),
+    "reveal": ("공개", "reveal", "정체", "정체공개"),
+    "peak": ("고조", "고조1", "고조2", "고조3", "escalation", "반전", "twist"),
+    # 문제·실수·비포 — 흑백 충격을 거는 자리(사장님 2026-10-05 "충격이나 잘못된 비포 장면"). 실측 problem 113.
+    "problem": ("문제", "problem", "페인포인트", "페인", "pain", "before", "비포", "실수"),
+}
+
+
+def moment_of(role):
+    """비트 역할 → 'hook'|'reveal'|'peak'|'problem'|'cta'|None. CTA 이름은 edit_plan._CTA_ROLES 를 그대로 쓴다."""
+    from .edit_plan import _CTA_ROLES
+    r = str(role or "").strip()
+    if not r:
+        return None
+    if r in _CTA_ROLES or r.lower() in {x.lower() for x in _CTA_ROLES}:
+        return "cta"
+    for moment, names in _MOMENT_ROLES.items():
+        if r in names or r.lower() in names:
+            return moment
+    return None
+
+
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
     from .video_assemble import caption_schedule, caption_lead_absorb
     from .template_copy import scene_text
@@ -376,17 +416,18 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
         start, end = float(beat["t0"]), float(beat["t0"] + beat["dur"])
         cursor = start
         kind = frame_kind(index, (snapshot or {}).get("frameRule"))
+        moment = moment_of(beat.get("role"))   # 중요 장면 종류(관제 124) — 편집기 '중요 장면에 한 번에'가 쓴다
         caption_visible = not (kind == "hook" and index == 0 and hide_hook_captions)   # 숨김은 첫 훅 문장만(썰훅만 본문 자막은 보인다, 10-02)
         for caption, t0, t1 in caption_schedule(beat, absorb_lead=_absorb):
             a, b = max(cursor, start, float(t0)), min(end, float(t1))
             if b <= a:
                 continue
             if a > cursor + .001:
-                scenes.append({"start":cursor,"end":a,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
-            scenes.append({"start":a,"end":b,"caption":caption,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
+                scenes.append({"start":cursor,"end":a,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
+            scenes.append({"start":a,"end":b,"caption":caption,"caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
             cursor = b
         if cursor < end - .001:
-            scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind})
+            scenes.append({"start":cursor,"end":end,"caption":"","caption_visible":caption_visible,"beat_idx":beat["beat_idx"],"kind":kind,"moment":moment})
     scenes = attach_scene_words(_absorb_tiny_gaps(scenes), timeline)
     copy = dict(headcopy) if isinstance(headcopy, dict) else {}
     if not (copy.get("text") or "").strip():
@@ -496,6 +537,101 @@ def media_geometry(layer, effect):
     return width,height,top,zw,zh,crop_x,crop_y
 
 
+def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y, frames=0):
+    """영상 칸 확대 필터. zoomIn>0 이면 장면 시작부터 zoomIn초 동안 1배→zoom 배로 **움직이며** 확대(관제 124, 사장님
+    2026-10-05 "그냥 확대 장면을 보여주는 건 의미가 없다, 0.5초로 제품에 확대되는 거"). 곡선은 1-(1-t)² (처음 빠르고 끝에서 멈춤) —
+    편집기 미리보기(scene-style-connect.js, cubic-bezier(.5,1,.89,1) = 같은 곡선)와 짝. 도착점은 멈춘 확대와 같은 자리(panX·panY).
+    zoompan 은 정수 좌표라 떨리므로 2배로 키운 뒤 돌린다. 반환: crop 뒤에 이어 붙일 필터 문자열."""
+    move=float((effect or {}).get("zoomIn") or 0)
+    zoom=zw/max(1,width)
+    if move<=0 or zoom<=1.0001:
+        return f"scale={zw}:{zh},crop={width}:{height}:{crop_x}:{crop_y}"
+    n=max(1,round(move*30))
+    fx=crop_x/max(1,zw-width); fy=crop_y/max(1,zh-height)          # 도착했을 때 잘리는 자리(0~1)
+    way=(effect or {}).get("zoomMove") or "in"
+    N=max(n+1,int(frames or 0))
+    if way=="pull":      # 장면 내내 쭉 당기기 — 처음·끝이 부드러운 3t²-2t³ (사장님 "2배로 쭉 땡기면서 집중")
+        e=f"(3*pow(min(1,on/{N-1}),2)-2*pow(min(1,on/{N-1}),3))"
+    elif way=="inout" and N>2*n:   # 0.5초 들어가고, 끝 0.5초에 원본 크기로 돌아온다(사장님 "다시 원본 크기로 돌아오기")
+        b=f"max(0,(on-{N-n})/{n})"
+        e=f"((1-pow(1-min(1,on/{n}),2))*(1-(3*pow({b},2)-2*pow({b},3))))"
+    else:
+        e=f"(1-pow(1-min(1,on/{n}),2))"
+    return (f"scale={width*2}:{height*2},zoompan=z='1+{zoom-1:.5f}*{e}':x='(iw-iw/zoom)*{fx:.5f}':y='(ih-ih/zoom)*{fy:.5f}'"
+            f":d=1:s={width}x{height}:fps=30")
+
+
+def shock_vf(effect, width, height):
+    """흑백 충격(관제 124, 사장님 2026-10-05 "흑백은 충격·잘못된 비포 장면에, 흑백과 지지직 효과·약간 흔들리는 느낌") — 영상 칸에만.
+    흑백+대비 · 필름 잡티(noise) · 흔들림(프레임마다 ±1.2% 이동) · 지지직(13프레임마다 2프레임 크게 찢기듯 밀림+번쩍).
+    흔들려도 가장자리가 안 보이게 6% 키워 두고 자른다. 편집기 미리보기(scene-style-connect.js)는 같은 모양을 CSS로 흉내 낸다."""
+    if not (effect or {}).get("shock"):
+        return ""
+    g="lt(mod(n,13),2)"
+    bw,bh=round(width*1.06/2)*2,round(height*1.06/2)*2
+    return (f",hue=s=0,eq=contrast=1.28:brightness=-0.03,noise=c0s=22:c0f=t,scale={bw}:{bh},"
+            f"crop={width}:{height}:x='(iw-ow)/2+ow*(0.012*sin(n*12.9898)+{g}*0.045*sin(n*7.31))'"
+            f":y='(ih-oh)/2+oh*0.009*sin(n*78.233)',eq=brightness=0.16:enable='{g}'")
+
+
+def dim_of(effect, frames):
+    """장면 영상 칸을 어둡게 하는 값 — 완성본(compose)·썸네일(compose_still)·캡컷(dim_spans)이 같이 쓴다(관제 124).
+    반환 (밝기 0.1~1, 어둡게 할 프레임 수) 또는 None. 장면 시작부터 sec초(0이면 장면 내내, frames 로 자른다)."""
+    dim=(effect or {}).get("dim")
+    if not isinstance(dim,dict):
+        return None
+    level=float(dim.get("level") or 1)
+    if level>=1:
+        return None
+    sec=float(dim.get("sec") or 0)
+    n=frames if sec<=0 else min(frames,max(1,round(sec*30)))
+    return level,n
+
+
+def dim_spans(scenes, snapshot, layers, folder):
+    """캡컷용 어둡게 구간 [{path,start,end}] — 영상 칸 자리만 반투명 검정 PNG(투명도 1-밝기).
+    완성본은 영상에 밝기를 곱하고, 캡컷은 같은 구간에 검정 막을 얹는다(같은 dim_of)."""
+    from PIL import Image
+    from . import video_assemble as va
+    folder,out=Path(folder),[]
+    effects=(validate_snapshot(snapshot) or {}).get("effects") or {}
+    for index,(scene,layer) in enumerate(zip(scenes,layers)):
+        if not layer:
+            continue
+        start,end=float(scene["start"]),float(scene["end"])
+        frames=round(end*30)-round(start*30)
+        got=dim_of(effects.get(str(index)),frames)
+        if not got:
+            continue
+        level,n=got
+        _,height,top,*_=media_geometry(layer,effects.get(str(index)))
+        img=Image.new("RGBA",(va._OUT_W,va._OUT_H),(0,0,0,0))
+        img.paste((0,0,0,round(255*(1-level))),(0,top,va._OUT_W,top+height))
+        path=folder/f"scene-style-dim-{index}.png";img.save(path)
+        out.append({"path":str(path),"start":start,"end":min(end,start+n/30)})
+    return out
+
+
+def zoom_spans(scenes, snapshot, layers=None):
+    """캡컷용 장면별 영상 확대 구간 [{start,end,zoom,tx,ty}] (관제 124 점프 줌·강조 확대 + 손으로 맞춘 확대).
+    배율 뜻은 완성본과 같은 video_assemble.scene_zoom_of 한 곳. 이동(tx,ty)은 캡컷 clip.transform —
+    단위 '캔버스 절반'(pyJianYingDraft ClipSettings: 水平位移 单位为半个画布宽, 자막 기본 -0.8 → 위가 +).
+    완성본(media_geometry)이 화면을 미는 픽셀만큼 민다: x = panX·(z-1), y = -panY·(z-1)·영상칸높이비율.
+    ★캡컷 초안은 원래 영상을 전체 화면에 깔아 완성본(영상 칸)과 구도가 조금 다르다 — 그 차이는 그대로다(관제 018)."""
+    from . import video_assemble as va
+    effects=(validate_snapshot(snapshot) or {}).get("effects") or {}
+    out=[]
+    for index,scene in enumerate(scenes):
+        effect=effects.get(str(index)) or {}
+        zoom,_,_=va.scene_zoom_of({"scene_zoom":effect.get("zoom",1)})
+        if zoom>1.0001:
+            frac=((layers[index] or {}).get("media") or {}).get("height",100)/100 if layers and index<len(layers) else 1.0
+            out.append({"start":float(scene["start"]),"end":float(scene["end"]),"zoom":zoom,
+                        "tx":round(float(effect.get("panX",0))*(zoom-1),4),
+                        "ty":round(-float(effect.get("panY",0))*(zoom-1)*frac,4)})
+    return out
+
+
 def compose_still(frame_path, timeline, snapshot, work, index, out_path, headcopy=None, job_id=None):
     """장면 하나를 **완성본과 같은 구도**의 정지 그림(1080×1920)으로 만든다 — 썸네일 후보(2026-09-26 사장님 "썸네일로 보냈는데 비율이 안 맞는다").
     ★여태 핀은 원본 프레임 전체(9:16) 위에 레이어를 그냥 얹어, 영상 칸(media)에 맞춰 줄이지 않았다 —
@@ -514,6 +650,10 @@ def compose_still(frame_path, timeline, snapshot, work, index, out_path, headcop
     img=src.resize((cw,ch),Image.LANCZOS)
     img=img.crop(((cw-width)//2,(ch-height)//2,(cw-width)//2+width,(ch-height)//2+height))   # crop=W:H (가운데)
     img=img.resize((zw,zh),Image.LANCZOS).crop((crop_x,crop_y,crop_x+width,crop_y+height))
+    if effect.get("shock"):   # 흑백 충격 장면 썸네일은 흑백(완성본 첫 프레임과 같은 색)
+        img=img.convert("L").convert("RGB")
+    if dim_of(effect,1):   # 썸네일 = 장면 첫 프레임 — 완성본도 장면 시작부터 어둡다(관제 124)
+        level=dim_of(effect,1)[0];img=img.point(lambda v:round(v*level))
     canvas=Image.new("RGBA",(width,va._OUT_H),(0,0,0,255))    # pad=W:OUT_H:0:top:black
     canvas.paste(img,(0,top))
     over=Image.open(layer_png).convert("RGBA")
@@ -536,7 +676,9 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
             continue
         effect=(snapshot.get("effects") or {}).get(str(index)) or {}
         width,height,top,zw,zh,crop_x,crop_y=media_geometry(layer,effect)
-        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},scale={zw}:{zh},crop={width}:{height}:{crop_x}:{crop_y},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
+        dim=dim_of(effect,last_frame-first_frame)   # 어둡게(관제 124) — 영상 칸에만, 틀·자막 레이어는 밝게 남는다
+        dim_f=(f",colorchannelmixer=rr={dim[0]:.3f}:gg={dim[0]:.3f}:bb={dim[0]:.3f}:enable='lt(n,{dim[1]})'" if dim else "")
+        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},{zoom_move_vf(effect,width,height,zw,zh,crop_x,crop_y,last_frame-first_frame)}{shock_vf(effect,width,height)}{dim_f},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
         hl=va.highlight_fc({"scene_hl":effect.get("highlight")},vf,grow=False)
         prefix=f"[1:v]tpad=stop_mode=clone:stop_duration={(last_frame-first_frame)/30}[ink];" if layer.get("animation") else "[1:v]null[ink];"
         graph=prefix+(hl+";" if hl else f"[0:v]{vf}[out];")
