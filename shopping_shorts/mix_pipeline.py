@@ -1911,6 +1911,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # ★새 계획에 컷 규칙 표식(관제 084) — 화면·렌더·캡컷이 같은 planClips 로 읽는다. 옛 작업엔 없다(종전 규칙).
     from shopping_shorts.config import CUT_RULE as _CUT_RULE
     plan["cut_rule"] = _CUT_RULE
+    from shopping_shorts.config import SCENE_STOP as _SCENE_STOP
+    plan["scene_stop"] = _SCENE_STOP          # 관제 150 — 새 작업만 장면 전환 앞에서 이어 틀기를 멈춘다
     if not plan["beats"]:
         # ★사유를 갈라서 말한다(2026-08-19). 종전엔 "추출 실패 또는 키 소진"으로 뭉개서
         #   실측 13건 중 대부분이 **추출은 성공한 상태**(9,091자)였는데도 "추출 실패"로

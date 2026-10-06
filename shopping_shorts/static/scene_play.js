@@ -514,7 +514,10 @@ function screenStateFromServer(D){
     (ov || []).forEach(s => { const id = s && s.seg_id; if (id && !seen.includes(id)) seen.push(id); });  // ✂ 두 토막 = 한 번
     st.lists.push(seen.length ? seen
       : [b.primary, ...(b.alternates || [])].filter(Boolean).map(s => s.seg_id).filter(Boolean));
-    if (b.stretch_fill) st.stretch[i] = true;
+    // ★청소 당시 컷 기록이 있는 칸은 늘려 채우기를 되살리지 않는다(관제 148 보완, 2026-10-07 라이브 실측 b5ee8d89bedb 5번 칸 0.6초 밀림):
+    //   그 청소본은 늘리기를 안 읽던 러너의 컷으로 지워졌다 — 늘리기를 켜면 컷이 청소 당시와 달라져 화면≠완성본·재청소(과금).
+    //   청소 안 한 칸·새로 청소할 칸은 그대로 늘린다. (관제 110·135·150 과 같은 원칙: 청소한 칸은 청소 당시 컷)
+    if (b.stretch_fill && !((D.clean_cuts || {})[String(i)] || []).length) st.stretch[i] = true;
     if (b.phrase_sync === false) st.phrase_sync[i] = false;
     if (b.phrase_exact === true) st.phrase_exact[i] = true;
     if (Array.isArray(b.manual_cuts)) st.cuts[i] = b.manual_cuts;
@@ -793,6 +796,13 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       scenes.forEach(o => { if (o !== g && o.video_id === g.video_id && o.start > g.start + EPS && o.start < far) far = o.start; });   // 같은 칸 다른 장면과는 절대 안 겹친다
       let hi = far;
       (starts[g.video_id] || []).forEach(x => { if (x > g.start + EPS && x < hi) hi = x; });
+      // ★이어 틀기는 원본의 **다음 장면 전환 앞까지**(2026-10-07 관제 150) — 종전엔 다른 칸 장면 앞까지만 봐서, 짧은 장면을
+      //   1.2초로 늘리거나(①) 옆 장면이 더 보여 줄 때(②) 원본의 다음 장면(엉뚱한 화면)이 끼었다(실측 120작업 중 78작업·181컷,
+      //   끼인 길이 중앙 0.37초 — 사장님 09-27 "최선은 딴 장면이 잠깐 들어가는 걸 막는 것"). 모자란 시간은 ②가 이 칸 다른 장면에
+      //   나눈다. ③(멈춤 대신 겹쳐 틀기 — far)은 그대로 둔다. 전환 목록이 없는 소재는 종전과 같다(장면이 이어지는지 모른다).
+      //   ★표식(DATA.scene_stop) 있는 새 작업만 — 옛·청소한 작업은 청소 당시 컷과 같아야 한다(관제 110·135).
+      const _sc = !D.scene_stop ? [] : ((D.scenecuts || {})[g.video_id] || []).map(Number).filter(x => isFinite(x) && x > g.end - 0.05);
+      if (_sc.length){ const nx = Math.min(..._sc); if (nx < hi) hi = Math.max(g.end, nx); }
       return {st: g.start, len, room: Math.max(len, hi - g.start), far: Math.max(len, far - g.start)};
     });
     const sum = a => a.reduce((x, y) => x + y, 0);
