@@ -83,10 +83,10 @@
     <div class="scene-effect-choices"><button type="button" data-ref-fx="jump">점프 줌</button><button type="button" data-ref-fx="title">시작 어두운 제목</button></div>`;
   effectsPanel.append(refBox);
   function syncRefFx(){
-    const i=api.geometry().sceneIndex,m=api.moments()[i],cur=api.sceneFx(i);
+    const i=api.geometry().sceneIndex,m=api.moments()[i],cur=api.sceneFx(i);   // 켜진 것 목록(여러 개)
     refBox.querySelector('[data-ref-moment]').textContent=m?MOMENT_NAME[m]:'일반';
-    refBox.querySelectorAll('[data-scene-fx]').forEach(b=>b.classList.toggle('active',b.dataset.sceneFx===cur));
-    const amt=refBox.querySelector('[data-zoom-amt]'),zoomed=['in','pull','inout'].includes(cur);amt.hidden=!zoomed;amt.style.display=zoomed?'flex':'none';
+    refBox.querySelectorAll('[data-scene-fx]').forEach(b=>b.classList.toggle('active',cur.includes(b.dataset.sceneFx)));
+    const amt=refBox.querySelector('[data-zoom-amt]'),zoomed=cur.some(k=>['in','pull','inout'].includes(k));amt.hidden=!zoomed;amt.style.display=zoomed?'flex':'none';
     if(zoomed){const z=Number(api.effectAt(i).zoom)||1;amt.querySelector('input').value=String(z);amt.querySelector('output').textContent=z.toFixed(2)+'배';}
     const auto=refBox.querySelector('[data-ref-fx="auto"]'),on=api.autoPlaced();auto.textContent=on?'자동 배치 켜짐 ●':'자동 배치 꺼짐 ○';auto.classList.toggle('active',on);
     refBox.querySelector('[data-ref-fx="jump"]').classList.toggle('active',api.jumpZoomOn());
@@ -116,6 +116,8 @@
   const lens=document.createElement('img');lens.className='scene-lens';focus.append(lens);
   const headerStatus=document.querySelector('[data-page="a"] .analysis');if(headerStatus)headerStatus.textContent='템플릿 미리보기';
   let lastIndex=-1,context=null,saving=false;
+  // 효과팩 번호를 바꾸면(관제 144) 자동으로 깐 장면 효과를 그 번호의 장면 효과로 다시 깐다 — 고객이 고른 장면은 그대로
+  window.addEventListener('scene-style-motion-pack',()=>{if(!api.autoPlaced())return;api.autoPlace(false);if(api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));lastIndex=-1;api.show(api.geometry().sceneIndex);updateControls();sync();});
   function sync(){
     const g=api.geometry(),e=api.effect(),z=Number(e.zoom)||1,h=e.highlight||{},m=h.on?h.mode:'none';
     windowEl.style.top=g.media.top+'%';windowEl.style.height=g.media.height+'%';
@@ -136,7 +138,9 @@
       const sc=api.context()?.scenes?.[g.sceneIndex],len=sc?Math.max(.6,sc.end-sc.start)*1000:1500,inMs=Number(e.zoomIn)*1000,way=e.zoomMove||'in',to=media.style.transform,from='translate(0px,0px) scale(1)';
       if(inMs>0&&z>1){
         if(way==='pull')media.animate([{transform:from},{transform:to}],{duration:len,easing:'cubic-bezier(.65,0,.35,1)'});
-        else if(way==='inout'&&len>2*inMs)media.animate([{transform:from,easing:'cubic-bezier(.5,1,.89,1)'},{transform:to,offset:inMs/len},{transform:to,offset:1-inMs/len,easing:'cubic-bezier(.65,0,.35,1)'},{transform:from}],{duration:len});
+        // 확대→복귀는 끝에 원래 크기로 끝난다 — fill:forwards 로 끝 상태(원래 크기)에 머문다(사장님 "복귀되고 다시 확대로 간다": 끝나면 저장된 확대 구도로 되돌아갔다)
+        // 짧은 장면(1초 이하)도 반드시 돌아온다 — 들어가기·돌아오기를 장면의 40%까지(완성본 zoom_move_vf·캡컷 zoom_curve 와 같은 규칙)
+        else if(way==='inout'){const io=Math.min(inMs,Math.floor(len/1000*30*.4)/30*1000);media.animate([{transform:from,easing:'cubic-bezier(.5,1,.89,1)'},{transform:to,offset:io/len},{transform:to,offset:1-io/len,easing:'cubic-bezier(.65,0,.35,1)'},{transform:from}],{duration:len,fill:'forwards'});}
         else media.animate([{transform:from},{transform:to}],{duration:inMs,easing:'cubic-bezier(.5,1,.89,1)'});
       }
       // 흑백 충격: 흑백·대비 + 프레임마다 흔들림 + 13프레임마다 찢기듯 밀림·번쩍(완성본 scene_style.shock_vf 를 흉내)
@@ -207,7 +211,9 @@
       // 관리자 스위치 scene_fx_enabled(서버 context.fxEnabled) — 꺼지면 '강조 효과' 상자도 자동 배치도 없다(고객 화면 불변)
       refBox.hidden=context.fxEnabled===false;
       // 효과를 하나도 안 넣은 영상이면 처음 열 때 자동 배치(관제 124). 한 번이라도 손댄 영상(효과 칸이 있음)은 건드리지 않는다.
-      if(context.fxEnabled!==false&&!Object.keys(saved.effects||{}).length&&api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));
+      // 장면 효과를 하나도 안 고른 영상이면 처음 열 때 자동 배치. 로고·장식만 있는 영상도 '안 고른 영상'이다(관제 144 — 로고 기억이 전 장면에 로고를 넣는다).
+      //   ★새 영상에만(서버 context.autoNew, 2026-10-06 사장님 '기존영상은 하지말고') — 기존 영상은 고객이 효과를 직접 누를 때만.
+      if(context.fxEnabled!==false&&context.autoNew!==false&&!Object.values(saved.effects||{}).some(e=>api.hasSceneFx(e))&&api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));
       if(Number.isInteger(event.data.sceneIndex))api.show(event.data.sceneIndex);
       document.documentElement.classList.remove('scene-waiting');   // 실제 데이터가 그려졌다 — 본문을 보인다(머리띠 가림은 html 표식이 계속)
       const status=pane.querySelector('[data-connection-status]');if(status)status.textContent=`실제 자막 ${context.scenes.length}개를 연결했습니다.`;

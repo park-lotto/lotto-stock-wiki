@@ -96,8 +96,20 @@ def main():
     env = {**os.environ, "NODE_PATH": str(ROOT.parent.parent / "node_modules") + os.pathsep + str(ROOT / "node_modules")}
     try:
         r = subprocess.run(["node", str(js), str(req)], capture_output=True, text=True, encoding="utf-8", env=env)
+        # 기존 영상(2026-10-06 사장님 "기존영상은 하지말고"): 서버가 autoNew=false 를 주면 열어도 장면 효과를 깔지 않는다
+        req_old = work / "req_old.json"; d = json.loads(req.read_text(encoding="utf-8"))
+        d["context"] = {**d["context"], "autoNew": False}; d["out"] = str(work / "editor-old.json")
+        req_old.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+        r_old = subprocess.run(["node", str(js), str(req_old)], capture_output=True, text=True, encoding="utf-8", env=env)
     finally:
         server.terminate()
+    if r_old.returncode:
+        raise SystemExit("편집기 실행 실패(기존 영상): " + r_old.stderr[-800:])
+    old_eff = json.loads((work / "editor-old.json").read_text(encoding="utf-8"))["snapshot"].get("effects") or {}
+    old_fx = {k: v for k, v in old_eff.items() if v and any(x in v for x in ("zoom", "zoomMove", "shock", "fxAuto")) or (v or {}).get("dim")}
+    print("기존 영상(autoNew=false) 자동 효과:", old_fx or "없음")
+    if old_fx:
+        fails.append(f"기존 영상인데 장면 효과가 자동으로 깔렸다 {list(old_fx)}")
     if r.returncode:
         raise SystemExit("편집기 실행 실패: " + r.stderr[-800:])
     ed = json.loads((work / "editor-out.json").read_text(encoding="utf-8"))

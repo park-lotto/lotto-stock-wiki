@@ -36,6 +36,20 @@ def caption_motion_pack_for(customer_id):
     return int(customer_id or 0) % n + 1 if n else 0
 
 
+# 자동 배치(장면 효과·등장 효과팩)는 이 시각 뒤에 만든 영상에만 — 2026-10-06 사장님 "기존영상은 하지말고".
+#   그 전 영상은 고객이 번호·효과를 직접 누를 때만 들어간다. 판단은 auto_new_job 한 곳(편집기는 context.autoNew 만 본다).
+AUTO_PLACE_SINCE = "2026-10-06T12:00:00+00:00"   # 한국 시간 2026-10-06 21:00 — 자막팩·장면효과팩 라이브 반영
+
+
+def auto_new_job(job):
+    """자동 배치 대상 '새 영상'인가 — 만든 시각이 AUTO_PLACE_SINCE 이후. 시각을 못 읽으면 기존 영상으로 본다(자동 안 함)."""
+    from datetime import datetime
+    try:
+        return datetime.fromisoformat(str((job or {}).get("created_at") or "")) >= datetime.fromisoformat(AUTO_PLACE_SINCE)
+    except ValueError:
+        return False
+
+
 def caption_word_fx_keys():
     """단어 강조 방식 저장값 — 같은 계약 파일의 WORDFX 표식 사이(관제 102 → 127)."""
     text = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")
@@ -568,7 +582,8 @@ def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y, frames=0):
     N=max(n+1,int(frames or 0))
     if way=="pull":      # 장면 내내 쭉 당기기 — 처음·끝이 부드러운 3t²-2t³ (사장님 "2배로 쭉 땡기면서 집중")
         e=f"(3*pow(min(1,on/{N-1}),2)-2*pow(min(1,on/{N-1}),3))"
-    elif way=="inout" and N>2*n:   # 0.5초 들어가고, 끝 0.5초에 원본 크기로 돌아온다(사장님 "다시 원본 크기로 돌아오기")
+    elif way=="inout":   # 들어가고, 끝에서 원본 크기로 돌아온다(사장님 "다시 원본 크기로 돌아오기")
+        n=max(1,min(n,int(N*0.4)))   # 짧은 장면(1초 이하)도 반드시 돌아오게 — 들어가기·돌아오기를 장면의 40%까지(zoom_curve·편집기와 같은 규칙)
         b=f"max(0,(on-{N-n})/{n})"
         e=f"((1-pow(1-min(1,on/{n}),2))*(1-(3*pow({b},2)-2*pow({b},3))))"
     else:
@@ -628,6 +643,42 @@ def dim_spans(scenes, snapshot, layers, folder):
     return out
 
 
+def zoom_curve(t, dur, zoom, way="in", zoom_in=0.5):
+    """장면 시작부터 t초에서의 확대 배율 — 완성본 zoom_move_vf(ffmpeg 식)와 같은 곡선을 캡컷 키프레임용으로(관제 124).
+    in: 1-(1-u)² (u=t/zoom_in) · pull: 3u²-2u³ (u=t/dur) · inout: in 곡선 × (1 - 끝 zoom_in 초의 3b²-2b³)."""
+    if zoom <= 1.0001 or zoom_in <= 0:
+        return zoom
+    clamp = lambda x: max(0.0, min(1.0, x))
+    if way == "pull":
+        u = clamp(t / max(1e-6, dur)); e = 3 * u * u - 2 * u ** 3
+    else:
+        if way == "inout":
+            zoom_in = max(1 / 30, min(zoom_in, int(dur * 30 * 0.4) / 30))   # 짧은 장면도 돌아오게(zoom_move_vf 와 같은 규칙)
+        u = clamp(t / zoom_in); e = 1 - (1 - u) ** 2
+        if way == "inout":
+            b = clamp((t - (dur - zoom_in)) / zoom_in); e *= 1 - (3 * b * b - 2 * b ** 3)
+    return 1 + (zoom - 1) * e
+
+
+def shock_spans(scenes, snapshot):
+    """캡컷용 흑백 충격 구간 [{start,end}] — 캡컷 초안은 채도·대비·밝기·위치 키프레임으로 흉내 낸다(완성본 shock_vf 와 짝)."""
+    effects=(validate_snapshot(snapshot) or {}).get("effects") or {}
+    return [{"start":float(sc["start"]),"end":float(sc["end"])} for i,sc in enumerate(scenes) if (effects.get(str(i)) or {}).get("shock")]
+
+
+def capcut_fx_spans(scenes, snapshot, layers=None):
+    """캡컷 내보내기가 받는 장면 효과 구간 하나로(관제 124) — 확대(zoom_spans)와 흑백 충격(shock_spans)을 장면별로 합친다.
+    한 장면에 둘 다 켜면(사장님 '중복으로 선택') 한 구간에 zoom·move·shock 를 같이 싣는다(캡컷 조각 하나에 키프레임을 같이 찍게)."""
+    out = [dict(sp) for sp in zoom_spans(scenes, snapshot, layers)]
+    for sh in shock_spans(scenes, snapshot):
+        hit = next((sp for sp in out if abs(sp["start"] - sh["start"]) < 1e-6 and abs(sp["end"] - sh["end"]) < 1e-6), None)
+        if hit:
+            hit["shock"] = True
+        else:
+            out.append({**sh, "zoom": 1.0, "shock": True})
+    return out
+
+
 def zoom_spans(scenes, snapshot, layers=None):
     """캡컷용 장면별 영상 확대 구간 [{start,end,zoom,tx,ty}] (관제 124 점프 줌·강조 확대 + 손으로 맞춘 확대).
     배율 뜻은 완성본과 같은 video_assemble.scene_zoom_of 한 곳. 이동(tx,ty)은 캡컷 clip.transform —
@@ -644,7 +695,9 @@ def zoom_spans(scenes, snapshot, layers=None):
             frac=((layers[index] or {}).get("media") or {}).get("height",100)/100 if layers and index<len(layers) else 1.0
             out.append({"start":float(scene["start"]),"end":float(scene["end"]),"zoom":zoom,
                         "tx":round(float(effect.get("panX",0))*(zoom-1),4),
-                        "ty":round(-float(effect.get("panY",0))*(zoom-1)*frac,4)})
+                        "ty":round(-float(effect.get("panY",0))*(zoom-1)*frac,4),
+                        # 확대 움직임(관제 124) — 캡컷은 이 값으로 크기·위치 키프레임을 찍는다(zoom_curve)
+                        "move":effect.get("zoomMove","in"),"zoomIn":float(effect.get("zoomIn") or 0)})
     return out
 
 

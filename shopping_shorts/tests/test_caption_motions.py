@@ -76,7 +76,11 @@ def test_스타일은_모양만_효과팩은_모든_칸이_있다():
     mpacks = json.loads(CONTRACT.read_text(encoding="utf-8").split("/*MPACKS*/")[1])
     assert len(mpacks) == scene_style.caption_motion_pack_count() == 20
     for n, p in enumerate(mpacks, 1):
-        assert set(p) == set(slots), n   # 효과팩마다 모든 칸이 채워져 있다(빈 칸이면 그 장면만 등장이 빠진다)
+        assert set(p) - {"fx"} == set(slots), n   # 효과팩마다 모든 칸이 채워져 있다(빈 칸이면 그 장면만 등장이 빠진다)
+        # 장면 효과(fx, 장면효과팩 통합): 장면 성격 5칸 모두, 켤 효과는 확대 3종 중 하나 이하 + 어둡게·흑백
+        assert set(p["fx"]) == {"hook", "problem", "reveal", "peak", "cta"}, n
+        for kinds in p["fx"].values():
+            assert kinds and set(kinds) <= {"in", "pull", "inout", "dim", "shock"} and sum(k in ("in", "pull", "inout") for k in kinds) <= 1, n
         assert len(p["body"]) == 3 and all(v in motions for v in p["body"]) and all(p[s] in motions for s in slots if s != "body"), n
 
 
@@ -123,3 +127,14 @@ def test_효과팩_번호_검증과_회원_자동_배정():
     assert set(got) == set(range(1, 21)) and all(got.count(k) == 5 for k in range(1, 21))   # 회원 1~100 → 팩당 5명
     src = (ROOT / "shopping_shorts/app.py").read_text(encoding="utf-8")
     assert 'context["motionPackAuto"] = caption_motion_pack_for(job.get("customer_id"))' in src
+
+
+def test_자동_배치는_새_영상에만():
+    # 2026-10-06 사장님 "기존영상은 하지말고" — 기준 시각 뒤에 만든 영상만, 시각을 못 읽으면 자동 안 함
+    assert scene_style.auto_new_job({"created_at": "2026-10-06T12:00:01+00:00"}) is True
+    assert scene_style.auto_new_job({"created_at": "2026-10-06T11:38:46.369347+00:00"}) is False
+    assert scene_style.auto_new_job({"created_at": ""}) is False and scene_style.auto_new_job(None) is False
+    src = (ROOT / "shopping_shorts/app.py").read_text(encoding="utf-8")
+    assert 'context["autoNew"] = auto_new_job(job)' in src and 'if context["captionPackEnabled"] and context["autoNew"]:' in src
+    js = (ROOT / "out/scene-style-connect.js").read_text(encoding="utf-8")
+    assert "context.autoNew!==false" in js
