@@ -6602,6 +6602,7 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         # ★슬로우모션 상한을 화면에 준다(관제 020) — scene_play.js 가 자기 숫자를 들고 있지 않게. 정본 config.MAX_SLOWMO.
         "max_slowmo": float(config.MAX_SLOWMO),
         "cut_rule": str(plan.get("cut_rule") or ""),        # 관제 084 — 표식 있는 작업만 planClips 새 규칙
+        "scene_stop": 1 if plan.get("scene_stop") else 0,   # 관제 150 — 표식 있는 새 작업만 이어 틀기를 장면 전환 앞에서 멈춘다
     }}
 
 
