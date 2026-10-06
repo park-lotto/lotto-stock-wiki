@@ -306,7 +306,9 @@ def _check(jid, app, mp, va, sc, st, job, w, plan, wd):
               for c in (r.get("c") or [])]
         cuts += cl; blens.append(len(cl))
     sig = "evf" + hashlib.sha1(json.dumps([cuts, blens]).encode()).hexdigest()[:12]
-    srcs = {k: v for k, v in (mp._resolve_sources(job, w) or {}).items() if v and Path(v).exists()}
+    # ★편집 화면 합본 라우트(app.py 합본 srcs)와 같은 함수 — 짤 컷(meme_*, 관제 139)까지 실린다. 옛 _resolve_sources 는 짤이 없어
+    #   화면 쪽만 검은 칸이 돼 '다른 장면'으로 오판했다(10-06 job 3b9c12052fb8)
+    srcs = {k: v for k, v in (app._job_sources_with_memes(job, w) or {}).items() if v and Path(v).exists()}
     tts = {int(b["beat_idx"]): b["tts_path"] for b in plan["beats"] if b.get("tts_path") and Path(b["tts_path"]).exists()}
     pv = wd / "pv"
     _orig_dir = app._pvproxy_dir

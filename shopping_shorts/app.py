@@ -6426,6 +6426,18 @@ def api_mix_seg_thumb(job_id: str, seg_id: str):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("extract"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "데이터 없음"})
+    if seg_id.startswith("meme:"):
+        # ★감정짤 컷(관제 139, seg_id 'meme:<vid>') — 짤 파일은 편집 화면 합본·/api/mix/src 와 같은 목록(_job_sources_with_memes)에서.
+        #   종전엔 재료 장면만 찾아 404 → 3단계 카드가 검은 칸으로 보였다(10-06 job 3b9c12052fb8)
+        vid = seg_id[5:]
+        src = (_job_sources_with_memes(job, _MIX_WORK_DIR / job_id) or {}).get(vid)
+        if not src or not Path(src).exists():
+            return JSONResponse(status_code=404, content={"ok": False, "error": "짤 파일 없음"})
+        safe = re.sub(r"[^0-9A-Za-z_.-]", "", vid)
+        cached = _MIX_WORK_DIR / job_id / "seg_thumbs" / ("meme_%s.jpg" % safe)
+        if not cached.exists() and not _seg_strip_thumb(str(src), cached.parent, {"start": 0.0, "end": 1.0}, cached.name):
+            return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+        return FileResponse(str(cached), media_type="image/jpeg")
     seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
     seg = seg_map.get(seg_id)
     if not seg:

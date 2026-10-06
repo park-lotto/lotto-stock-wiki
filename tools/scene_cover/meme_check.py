@@ -13,6 +13,7 @@
 ⚠️ 계획 검사다 — 완성본 프레임 대조는 렌더 뒤 tools/editor_vs_final_video.py 로 따로 한다.
 """
 import json
+from pathlib import Path
 import os
 import sys
 
@@ -59,7 +60,13 @@ def check(job_id):
             r["short_scenes"] = short
             if short:
                 r["problems"].append("1.0초 미만 장면 %d개" % len(short))
-        words = tts_timestamps.words_from_mp3(b.get("tts_path")) if b.get("tts_path") else None
+        # ★배치(mix_pipeline._apply_memes)와 같은 시각 — 실제 음성 길이에 맞춘 낱말 시각(_beat_words_src). 원시 사이드카(words_from_mp3)로
+        #   재면 늘린·뺀 음성과 어긋나 1.20초 짤을 1.44초가 기대값이라고 오판했다(10-06 라이브 job 3b9c12052fb8)
+        words = None
+        if b.get("tts_path") and Path(b["tts_path"]).exists():
+            from shopping_shorts import mix_pipeline as _mp
+            words, _src = _mp._beat_words_src(str(b["tts_path"]), _mp._probe_duration(str(b["tts_path"])),
+                                              removed=tts_timestamps.load_removed(str(b["tts_path"])))
         end = storyboard.signal_end_sec(b.get("narration") or "", b.get("signal") or "", words) if words else None
         if end is None:
             r["signal_end"] = None
