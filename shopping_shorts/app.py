@@ -21203,6 +21203,29 @@ def _sb_picks(cid, key, bd):
         _log("효과음 서랍 읽기 실패: %r" % e)
         bank = {}
     _sbm.sfx_preview(bd["slots"], bank, key=str(key), log=_log)
+    # 기본 효과음팩 미리보기 — 팩 결정(resolve)·배치(plan_events)는 sfx_pack 한 곳. 줄 효과음 있는 줄은 첫 발을 비운다.
+    try:
+        from shopping_shorts import sfx_pack as _sp
+        _job, _sid = None, None
+        _k = str(key or "")
+        if _k.startswith("w-"):
+            _w = st.get_produce_work(_k[2:], customer_id=int(cid or 0)) or {}
+            _sid = (_w.get("state") or {}).get("script_style_id")
+            _jid = str(_w.get("job_id") or "").strip()
+            _job = st.get_mix_job(_jid) if _jid else None
+        else:
+            _job = st.get_mix_job(_k) if _k else None
+        if _job and int(_job.get("customer_id") or 0) != int(cid or 0):
+            _job = None
+        _slots = [s if isinstance(s, dict) else {} for s in bd["slots"]]
+        _pack = _sp.preview_pack(st, cid, [s.get("slot") for s in _slots], job=_job, style_id=_sid)
+        _first = [i for i, s in enumerate(_slots) if s.get("sfx_pick") and not s.get("sfx_off")]
+        _rows = _sp.preview_lines([{"role": s.get("slot"), "text": s.get("line")} for s in _slots], _pack, _first)
+        for s, r in zip(_slots, _rows):
+            s["pack_sfx"] = r
+        bd["pack_sfx_on"] = bool(_pack)
+    except Exception as e:      # noqa: BLE001 — 팩 미리보기 실패는 줄 효과음에 영향 없게(이유 한 줄)
+        _log("효과음팩 미리보기 실패: %r" % e)
     return bd
 
 
@@ -21220,7 +21243,7 @@ def api_storyboard_picks(request: Request, job_id: str, body: dict):
     if not isinstance(slots, list) or len(slots) > 60:
         return JSONResponse(status_code=422, content={"ok": False, "error": "slots 목록이 필요해요"})
     bd = _sb_picks(getattr(request.state, "customer_id", 0), key, {"slots": [dict(x) if isinstance(x, dict) else {} for x in slots]})
-    return {"ok": True, "slots": bd["slots"]}
+    return {"ok": True, "slots": bd["slots"], "pack_sfx_on": bd.get("pack_sfx_on")}
 
 
 @app.get("/api/produce/storyboard/{job_id}")
