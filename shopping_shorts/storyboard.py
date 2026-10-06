@@ -747,9 +747,6 @@ def inventory(db_path, jid, star_s="", role_s="", ex=None):
     db = _ro(db_path)
     fams = _families(db)
     t0 = time.time()
-    if ex is None:
-        row = db.execute("select extract_json from mix_jobs where job_id=?", (jid,)).fetchone()
-        ex = json.loads((row[0] if row else None) or "{}")
     segs, texts, order, rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s), with_seed=True)
     star = [next((sid for sid in order if sid.endswith(x.strip())), x.strip()) for x in star_s.split(",") if x.strip()]
     role_pick = {}
@@ -786,7 +783,7 @@ def inventory(db_path, jid, star_s="", role_s="", ex=None):
                                                        if any(t in tag_of.get(c, []) for c in g["ids"])) or "-") for g in groups)
     r2 = sg._call_json(P2 % (r1.get("kind") or "", inv, " / ".join(r1.get("missing") or []), "\n".join(f[2] for f in fams)),
                        S2, note=n2, vertex=True) or {}
-    out = {"job": jid, "mat_sig": mat_sig(ex), "secs": round(time.time() - t0, 1), "star": star, "role_pick": role_pick, "inventory": r1,
+    out = {"job": jid, "mat_sig": (mat_sig(ex) if ex is not None else None), "secs": round(time.time() - t0, 1), "star": star, "role_pick": role_pick, "inventory": r1,
            "styles": r2.get("styles") or [], "boards": {},
            "family_names": {str(n): f["names"] for n, f, _ in fams},
            "family_first": {str(n): (f["tpl"].get((f["roles"] or ["hook"])[0]) or [""])[0] for n, f, _ in fams},
@@ -799,11 +796,9 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
     """고른 스타일들의 스토리보드(스타일당 3.6 2번). 장면 목록(inventory)을 먼저 만들어 둬야 한다. keys: 'auto' 또는 스타일 묶음 번호."""
     db = _ro(db_path)
     fams = _families(db)
-    if ex is None:
-        row = db.execute("select extract_json from mix_jobs where job_id=?", (jid,)).fetchone()
-        ex = json.loads((row[0] if row else None) or "{}")
     R = R or load_state(jid)
-    if R and R.get("inventory") and not inventory_fresh(R, ex):
+    # 재료(ex)는 라이브에서 늘 app 이 넘긴다. 안 넘긴 시험 도구 경로는 지문을 비교하지 않는다.
+    if ex is not None and R and R.get("inventory") and not inventory_fresh(R, ex):
         # ★재료가 바뀐 장면 목록으로 보드를 만들지 않는다 — 여기서 다시 묶는다(보드를 만드는 모든 길이 여길 지난다, 관제 147)
         print("   장면 목록이 지금 재료와 달라 다시 묶는다: %s → %s" % (R.get("mat_sig"), mat_sig(ex)), flush=True)
         R = inventory(db_path, jid, star_s, role_s, ex=ex)
@@ -831,7 +826,7 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
             fam = next((f for n, f, _ in fams if str(n) == str(k)), None)
             if fam:
                 out[str(k)] = _board(fam, pan_of.get(str(k)) or "", r1, groups_txt, star, segs, texts, roles_pick=roles_txt, extra=extra_s.split(","), key="%s:%s" % (jid, k))
-    _ss = seed_sig(ex)
+    _ss = seed_sig(ex) if ex is not None else None
     for b in out.values():
         if isinstance(b, dict):
             b["seed_sig"] = _ss        # 이 보드를 만든 때의 씨앗 — 미리 만들기가 씨앗이 바뀌었나를 이걸로 본다(관제 147)
