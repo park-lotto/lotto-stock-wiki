@@ -5565,10 +5565,15 @@ def run_preview(job_id, db_path, work_root):
         # ★미리보기는 veryfast로 인코딩(6분→~1.5분) — 확인용이라 화질 조금 낮아도 무방.
         # 최종 렌더(run_render)는 이 컨텍스트 밖이라 medium 고화질 그대로.
         _sc.check_mutation(job_id, _scr_before, plan_used)
+        # ★배경음만은 싣는다(2026-10-06 관제 146) — 배경음은 3단계 [🎵 배경음]에서 고르므로 3단계 완성본에서
+        #   들려야 한다. 종전 deco={} 라 라이브 실측에서 곡을 골라도 미리보기 소리가 그대로였다(상관 0.019).
+        #   곡→파일은 렌더·캡컷과 같은 resolve_deco_media 한 곳. 나머지 꾸미기는 종전대로 뺀다(4단계 소관).
+        _pv_bgm = (job.get("deco") or {}).get("bgm")
+        _pv_deco = resolve_deco_media({"bgm": _pv_bgm}, work) if _pv_bgm else {}
         with preview_preset():
             assemble(plan_used, tts_paths, source_video_paths, str(out_path),
                      clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
-                     deco={},                             # ← 꾸미기 없음(4단계 소관)
+                     deco=_pv_deco,                       # ← 꾸미기 없음(4단계 소관) — 배경음만
                      cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
                      sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job))
         _sc.summarize(job_id, _scr_mark)
