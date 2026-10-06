@@ -5587,6 +5587,8 @@ def api_mix_result(job_id: str, request: Request = None):
         "asset_suggestions": plan.get("asset_suggestions") or [],
         # AI 장면 생성 버튼을 그릴지(2026-09-23) — 스위치 ai_scene_enabled. 기본값 없으면 "admin"으로 본다.
         "ai_scene_enabled": _ai_scene_on(_cid(request) if request is not None else 0),
+        # 3단계 칸 짤 [바꾸기][빼기][＋짤](관제 143) — 스위치 meme_enabled
+        "meme_enabled": bool(mix_pipeline._meme_on(Store(DB_PATH), {"customer_id": _cid(request) if request is not None else 0})),
         # 쿠팡 연결(2026-07-28) — 이미 고른 상품이 있으면 그대로, 없으면 검색 링크만.
         # affiliate_target(팔 제품 이름)이 뜨는 그 자리에서 바로 상품을 확정한다.
         "product": job.get("product"),
@@ -6536,6 +6538,8 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         # AI 장면 만들기 버튼(2026-09-23) — 3단계 카드는 실험실(iframe)이 그리므로 스위치를 여기로도 내린다.
         #   (produce.html 카드에만 넣었더니 사장님 화면엔 안 보였다 — 실측 14:32)
         "ai_scene_enabled": _ai_scene_on(_cid(request) if request is not None else 0),
+        # 3단계 칸 짤 [바꾸기][빼기][＋짤](관제 143) — 스위치 meme_enabled
+        "meme_enabled": bool(mix_pipeline._meme_on(Store(DB_PATH), {"customer_id": _cid(request) if request is not None else 0})),
         "scene_lab_at": scene_lab_at,
         # 열린 탭이 오래 들고 있던 전체 편성으로 최신 편성을 덮지 못하게 하는 판본 번호.
         "scene_lab_revision": scene_lab_revision,
@@ -16245,6 +16249,8 @@ def _api_me(request: Request):
             "story_writer": _setting_gate(st, "story_writer_enabled", cid),
             # 2단계 스토리보드(관제 120) — 서버 입구(mix/start)와 같은 스위치 하나. 화면은 이 값으로만 보인다
             "storyboard": _setting_gate(st, "storyboard_enabled", cid),
+            # 감정짤(관제 139·143) — 좌측 '밈팩' 메뉴·2단계 짤 칸. 판정은 렌더 경로와 같은 mix_pipeline._meme_on 한 곳
+            "meme": bool(mix_pipeline._meme_on(st, {"customer_id": cid})),
             # 대화형 대본(관제 128) — 작업목록 「🎭 대화형」 버튼. 서버 입구(dialogue/*)와 같은 스위치·관리자 판정
             "dialogue": bool(_setting_gate(st, "dialogue_enabled", cid) and is_admin),
             # 관리자가 아니어도 열어준 기능들(2026-08-31). 화면은 이 값만 보고 켠다.
@@ -22758,6 +22764,185 @@ def api_produce_mix_cutaway(job_id: str, request: Request, body: dict):
         hit["cutaway"] = {"asset_id": int(aid), "match_type": "manual"}
     _save_render_inputs(store, job_id, edit_plan=plan)
     return {"ok": True}
+
+
+# ── 감정짤 회원 기능(관제 143, 2026-10-06) — 전부 스위치 meme_enabled 뒤(꺼진 계정은 403 = 화면·동작 불변) ─────────
+#   팩의 정본은 PC 뷰어(감정짤밈팩 트랙 serve.py)+publish.py 동기화 — 여기선 **읽기만**(지우기·감정 옮기기 없음).
+#   짤 자리·길이 판단은 storyboard(meme_head·meme_cut·meme_slots) 한 곳. 여기는 스위치·회원 검사·저장만.
+def _meme_gate(request):
+    """(cid, None) | (cid, 403 응답) — 판정은 mix_pipeline._meme_on 한 곳(렌더 경로와 같은 스위치)."""
+    cid = _cid(request)
+    if not mix_pipeline._meme_on(Store(DB_PATH), {"customer_id": cid}):
+        return cid, JSONResponse(status_code=403, content={"ok": False, "error": "감정짤이 열려 있지 않은 계정이에요"})
+    return cid, None
+
+
+def _meme_asset(store, asset_id):
+    """짤 팩 자산(사장님 0 · clip · category meme)만 — 그 밖의 번호는 None(남의 장면 자산을 짤로 못 읽게)."""
+    try:
+        a = store.get_scene_asset(int(asset_id), customer_id=0)
+    except (TypeError, ValueError):
+        return None
+    if not a or a.get("asset_type") != "clip" or a.get("category") != "meme" or not str(a.get("tone") or "").strip():
+        return None
+    return a
+
+
+def _meme_prefs_clean(store, cid):
+    """저장된 우선 짤 — 팩에서 사라진 짤은 빼고 감정별 rank 를 1부터 다시 매긴다. [{asset_id, emotion, rank}]."""
+    from shopping_shorts import storyboard as _sbm
+    pool = {int(a["asset_id"]): emo for emo, lst in mix_pipeline._meme_pool(store).items() for a in lst}
+    by = _sbm.meme_prefs_by_emotion(store.get_pref(_sbm.MEME_PREF_KEY, customer_id=cid, default=[]))
+    return [{"asset_id": i, "emotion": emo, "rank": r + 1}
+            for emo, ids in by.items() for r, i in enumerate([x for x in ids if pool.get(x) == emo])]
+
+
+@app.get("/api/meme/pack")
+def api_meme_pack(request: Request):
+    """밈팩 목록 — {emotions:[{name,count}], clips:[{id,emotion,dur,title}], prefs:[…]}. 표지·재생은 /api/meme/{id}/poster·media."""
+    cid, denied = _meme_gate(request)
+    if denied:
+        return denied
+    st = Store(DB_PATH)
+    clips = []
+    for a in st.list_scene_assets(customer_id=0, asset_type="clip", category="meme") or []:
+        emo = str(a.get("tone") or "").strip()
+        if emo and a.get("media_path") and Path(a["media_path"]).exists():
+            clips.append({"id": a["id"], "emotion": emo, "dur": round(float(a.get("duration") or 0), 2),
+                          "title": str(a.get("title") or a.get("scene_desc") or "")[:80]})
+    clips.sort(key=lambda c: c["id"])
+    cnt = {}
+    for c in clips:
+        cnt[c["emotion"]] = cnt.get(c["emotion"], 0) + 1
+    return {"ok": True, "emotions": [{"name": k, "count": v} for k, v in sorted(cnt.items(), key=lambda kv: -kv[1])],
+            "clips": clips, "prefs": _meme_prefs_clean(st, cid)}
+
+
+@app.get("/api/meme/prefs")
+def api_meme_prefs_get(request: Request):
+    cid, denied = _meme_gate(request)
+    if denied:
+        return denied
+    return {"ok": True, "prefs": _meme_prefs_clean(Store(DB_PATH), cid)}
+
+
+@app.post("/api/meme/prefs")
+def api_meme_prefs_post(request: Request, body: dict):
+    """우선 짤 통째 저장 — body {prefs:[{asset_id, rank}]}. 감정은 **서버가 팩에서** 정한다(화면 값 안 믿음)."""
+    from shopping_shorts import storyboard as _sbm
+    cid, denied = _meme_gate(request)
+    if denied:
+        return denied
+    rows = (body or {}).get("prefs")
+    if not isinstance(rows, list) or len(rows) > 600:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "prefs 목록이 필요해요"})
+    st = Store(DB_PATH)
+    out, seen = [], set()
+    for k, p in enumerate(rows):
+        a = _meme_asset(st, (p or {}).get("asset_id")) if isinstance(p, dict) else None
+        if not a or a["id"] in seen:
+            continue
+        seen.add(a["id"])
+        try:
+            rank = int(p.get("rank") or (k + 1))
+        except (TypeError, ValueError):
+            rank = k + 1
+        out.append({"asset_id": a["id"], "emotion": str(a["tone"]).strip(), "rank": rank})
+    st.set_pref(_sbm.MEME_PREF_KEY, out, customer_id=cid)
+    return {"ok": True, "prefs": _meme_prefs_clean(st, cid)}
+
+
+@app.get("/api/meme/{asset_id}/media")
+def api_meme_media(request: Request, asset_id: int):
+    """짤 파일 — 스위치 열린 회원만, 짤 팩 자산만(장면 자산 서빙 /api/scene/{id}/media 는 주인 검사라 회원이 못 읽는다)."""
+    _c, denied = _meme_gate(request)
+    if denied:
+        return denied
+    a = _meme_asset(Store(DB_PATH), asset_id)
+    if not a or not a.get("media_path") or not Path(a["media_path"]).exists():
+        return Response(status_code=404, content=b"")
+    return FileResponse(str(a["media_path"]), media_type="video/mp4")
+
+
+@app.get("/api/meme/{asset_id}/poster")
+def api_meme_poster(request: Request, asset_id: int):
+    """짤 표지 — 자산 poster_path 가 있으면 그것, 없으면 첫 장면을 한 번 떠서 data/meme_posters 에 둔다."""
+    _c, denied = _meme_gate(request)
+    if denied:
+        return denied
+    a = _meme_asset(Store(DB_PATH), asset_id)
+    if not a:
+        return Response(status_code=404, content=b"")
+    if a.get("poster_path") and Path(a["poster_path"]).exists():
+        return FileResponse(str(a["poster_path"]), media_type="image/jpeg")
+    if not a.get("media_path") or not Path(a["media_path"]).exists():
+        return Response(status_code=404, content=b"")
+    d = Path(__file__).parent / "data" / "meme_posters"
+    f = d / ("%d.jpg" % int(a["id"]))
+    if not f.exists():
+        d.mkdir(parents=True, exist_ok=True)
+        if not _seg_strip_thumb(str(a["media_path"]), d, {"start": 0.0, "end": 1.0}, f.name):
+            return Response(status_code=404, content=b"")
+    return FileResponse(str(f), media_type="image/jpeg", headers={"Cache-Control": "max-age=86400"})
+
+
+@app.post("/api/produce/mix/{job_id}/meme")
+def api_produce_mix_meme(job_id: str, request: Request, body: dict):
+    """3단계 칸 짤 바꾸기·넣기·빼기 — body {beat_idx, asset_id|null}. 편성 저장은 컷어웨이와 같은 _save_render_inputs.
+    길이(head_sec)는 storyboard.meme_head(manual=True) — 자동 배치와 **같은 함수**(신호어 시각 없으면 1.25초, 남은 장면 1초 이상).
+    사람이 고른 짤은 manual:1, 뺀 칸은 meme_off:1 — meme_slots 가 다시 정할 때 건드리지 않는다."""
+    from shopping_shorts import storyboard as _sbm
+    _c, denied = _meme_gate(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 바꿀 수 없어요"})
+    plan = job.get("edit_plan") or {}
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in plan.get("beats") or [] if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    cw = hit.get("cutaway")
+    if cw and (cw or {}).get("match_type") != "meme":
+        return JSONResponse(status_code=409, content={"ok": False, "error": "이 칸엔 다른 끼움 장면이 있어요 — 먼저 빼 주세요"})
+    aid = body.get("asset_id")
+    if aid is None:
+        hit.pop("cutaway", None)
+        hit["meme_off"] = 1
+        _save_render_inputs(store, job_id, edit_plan=plan)
+        return {"ok": True, "cutaway": None}
+    a = _meme_asset(store, aid)
+    if not a:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "짤 팩에 없는 짤이에요"})
+    words, dur = mix_pipeline._meme_words_of(hit)
+    head, why = _sbm.meme_head(hit, words, dur, manual=True)
+    if head is None:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "이 칸엔 짤을 넣을 수 없어요 — " + why})
+    if float(a.get("duration") or 0) < head - 1e-3:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "짤이 %.2f초보다 짧아요" % head})
+    hit.pop("meme_off", None)
+    hit["cutaway"] = _sbm.meme_cut({"asset_id": a["id"], "owner": 0}, head, str(a["tone"]).strip(), manual=True)
+    _save_render_inputs(store, job_id, edit_plan=plan)
+    return {"ok": True, "cutaway": hit["cutaway"]}
+
+
+def _meme_pack_page(request: Request):
+    """좌측 메뉴 '밈팩' — 스위치 열린 계정만(꺼지면 제작소로)."""
+    _c, denied = _meme_gate(request)
+    if denied:
+        return RedirectResponse("/produce", status_code=302)
+    return FileResponse(_STATIC / "meme_pack.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/meme_pack", _meme_pack_page, include_in_schema=False)
+app.add_api_route("/meme_pack.html", _meme_pack_page, include_in_schema=False)   # StaticFiles 마운트로 뚫리지 않게
 
 
 @app.post("/api/produce/mix/{job_id}/trim")

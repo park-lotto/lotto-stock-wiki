@@ -2445,28 +2445,41 @@ def _meme_pool(store):
     return pool
 
 
+def _meme_words_of(b):
+    """칸 → (낱말 시각, 실제 칸 길이) — 짤 길이(storyboard.meme_head)에 건네는 음성 정보. 자동 배치·[＋짤] 둘 다 이 함수."""
+    from shopping_shorts import video_assemble as _va
+    mp3 = b.get("tts_path")
+    if not mp3 or not Path(mp3).exists():
+        return None, None
+    d = _probe_duration(str(mp3))
+    words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)))
+    return words, _va._beat_effective_dur(b, mp3)
+
+
+def _meme_prefs(store, customer_id):
+    """회원의 '감정별 우선 짤'(관제 143) → {감정: [asset_id…]}. 못 읽으면 빈 dict + 한 줄(종전 해시로)."""
+    from shopping_shorts import storyboard as _sbm
+    try:
+        return _sbm.meme_prefs_by_emotion(store.get_pref(_sbm.MEME_PREF_KEY, customer_id=int(customer_id or 0), default=[]))
+    except Exception as e:      # noqa: BLE001
+        print("[meme] 우선 짤 읽기 실패(종전대로): %r" % e, file=sys.stderr)
+        return {}
+
+
 def _apply_memes(plan, store, job, tts_dir):
     """칸 맨 앞 감정짤 — 판단은 storyboard.meme_slots 한 곳. 여기는 스위치·짤 팩·음성 시각을 건넬 뿐. 짤 칸 수를 돌려준다."""
     if not _meme_on(store, job):
         return 0
     from shopping_shorts import storyboard as _sbm
-    from shopping_shorts import video_assemble as _va
     try:
         pool = _meme_pool(store)
     except Exception as e:      # noqa: BLE001 — 팩을 못 읽으면 짤 없음(이유 한 줄)
         print("[meme] 짤 팩 읽기 실패 — 짤 없음: %r" % e, file=sys.stderr)
         pool = {}
-
-    def _words_of(b):
-        mp3 = b.get("tts_path")
-        if not mp3 or not Path(mp3).exists():
-            return None, None
-        d = _probe_duration(str(mp3))
-        words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)))
-        return words, _va._beat_effective_dur(b, mp3)
-    res = _sbm.meme_slots(plan, _words_of, pool, key=str((job or {}).get("job_id") or tts_dir))   # 작업마다 다른 짤
+    res = _sbm.meme_slots(plan, _meme_words_of, pool, key=str((job or {}).get("job_id") or tts_dir),   # 작업마다 다른 짤
+                          prefs=_meme_prefs(store, (job or {}).get("customer_id", 0)))
     for r in res:
-        print("[meme] job칸 %s %s" % (r.get("beat_idx"), ("짤 %s %.2f초 #%s" % (r["emotion"], r["head_sec"], r["asset_id"]))
+        print("[meme] job칸 %s %s" % (r.get("beat_idx"), ("짤 %s %.2f초 #%s" % (r["emotion"], float(r["head_sec"] or 0), r["asset_id"]))
                                        if r.get("meme") else ("없음: " + r.get("why", ""))), file=sys.stderr)
     return sum(1 for r in res if r.get("meme"))
 

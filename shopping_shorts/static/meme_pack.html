@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>밈팩 · 숏템메이커</title>
+<style>
+  :root{--bg:#0a0f0d;--panel:#0f1512;--line:#1e2a24;--txt:#e6efe9;--sub:#8fa39a;--accent:#c85cff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic",sans-serif;line-height:1.5}
+  .wrap{max-width:1600px;margin:0 auto;padding:28px 20px 80px}
+  h1{font-size:26px;margin:0 0 4px}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 14px}
+  #memePage .mp-tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)}
+  #memePage .mp-tabs span{font-size:13px;padding:4px 12px}
+  #memePage .mp-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
+  .empty{color:var(--sub);padding:40px 0;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎭 밈팩</h1>
+  <p class="lead">대본의 놀람·반전 줄 맨 앞에 들어가는 감정짤이에요. 마우스를 올리면 움직여요.
+    <b>☆를 누르면 그 감정의 우선 짤</b>이 되고, 먼저 누른 순서(⭐1, ⭐2…)대로 자동 배치에 먼저 쓰여요.</p>
+  <div id="memePage"><div class="empty">불러오는 중…</div></div>
+</div>
+<script src="/sidebar.js"></script>
+<script src="/meme_pack.js"></script>
+<script>
+// ★#memePage 를 그리는 건 renderMemePage 하나 — 데이터·우선 짤은 MemePack(서버 /api/meme/*)
+let MP_TAB = '';
+function renderMemePage(){
+  const box = document.getElementById('memePage'); if(!box) return;
+  const S = MemePack.state;
+  if(!S.data){ box.innerHTML = '<div class="empty">' + MemePack.esc(S.err || '불러오는 중…') + '</div>'; return; }
+  if(!MP_TAB) MP_TAB = (S.data.emotions[0] || {}).name || '⭐';
+  const list = MemePack.listOf(MP_TAB);
+  box.innerHTML = MemePack.tabs(MP_TAB, 'mpTab')
+    + (list.length ? '' : '<div class="empty">' + (MP_TAB === '⭐' ? '아직 우선 짤이 없어요 — 감정 탭에서 ☆를 눌러 담으세요' : '이 감정엔 짤이 없어요') + '</div>')
+    + '<div class="mp-grid">' + list.map(c => MemePack.card(c)).join('') + '</div>';
+}
+function mpTab(t){ MP_TAB = t; renderMemePage(); }
+MemePack.onChange(renderMemePage);
+MemePack.load().then(renderMemePage);
+</script>
+</body>
+</html>
