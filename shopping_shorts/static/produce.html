@@ -2888,8 +2888,9 @@
           </div>
         </div>
 
-        <!-- ② 대본 스타일 — 통짜(훅·전개·CTA 한 몸). 고른 만큼 안이 나온다(최대 2) -->
-        <div class="s2-band">
+        <!-- ② 대본 스타일 — 통짜(훅·전개·CTA 한 몸). 고른 만큼 안이 나온다(최대 2)
+             ★스토리보드 켠 계정(STORYBOARD_ON)에선 sbRender 가 이 줄을 숨긴다(스토리보드가 스타일 고르기를 대신) — 꺼진 계정은 그대로 -->
+        <div class="s2-band" id="s2StyleBand">
           <div class="s2-label">② 대본 스타일 — 훅·전개·CTA가 한 몸 · 고른 만큼 안이 나옵니다</div>
           <div class="s2-cardrow" id="s2StyleRow"><div class="hint">스타일 불러오는 중…</div></div>
           <div class="s2-subrow">
@@ -8523,6 +8524,9 @@ function _workState(){
   //   ⚠️ 여기서 만들지 말고 _s2Snapshot() 하나만 쓴다(0순위-B: 담는 모양은 한 곳에서 정한다).
   const _s2 = (typeof _s2Snapshot === 'function') ? _s2Snapshot() : null;
   if(_s2) _st.s2 = _s2;
+  // 2단계 스토리보드(관제 120) — 담는 모양은 _sbSnapshot 한 곳. 없으면 키를 안 만든다
+  const _sb = (typeof _sbSnapshot === 'function') ? _sbSnapshot() : null;
+  if(_sb) _st.sb = _sb;
   return _st;
 }
 // 사이드바 ✏가 이름을 바꾸면 이 화면의 STATE에도 심는다(2026-08-17). 안 심으면 위 _workState가
@@ -17705,6 +17709,7 @@ function _s2Reset(){
   S2.usePickup = true;      // 픽업영상 대본 기본 ON — seed·drafts와 한 작업의 짝이다
 }
 function _s2Hydrate(w){
+  if(typeof _sbHydrate === 'function') _sbHydrate(w);   // 2단계 스토리보드도 같은 작업 열기에서 되살린다(관제 120)
   let s = (w && w.s2) || null;
   // ★남의 작업 스냅샷이면 버린다(2026-08-18). 스냅샷에 새긴 work_id와 지금 여는 작업이
   //   다르면 그건 갈아타기 전 작업의 것이다 — 되살리면 씨앗·대본이 통째로 캐리오버된다.
@@ -19087,7 +19092,7 @@ function sbEnter(){
   const box=document.getElementById('s2Storyboard'); if(!box) return;
   // ★#s2Storyboard 를 그리는 건 sbRender 하나(DOM 주인 한 곳) — 여기선 상태만 바꾸고 부른다
   const j=sbJid();
-  if(j!==SB.jid){ Object.assign(SB, {jid:j, data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, err:''}); }
+  if(j!==SB.jid){ Object.assign(SB, {jid:j, data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, err:'', mat:''}); _sbApplySaved(j); }
   if(!window.STORYBOARD_ON || !j){ sbRender(); return; }
   sbLoad();
 }
@@ -19115,6 +19120,7 @@ function sbAbsorb(tasks){
     if(k==null || SB.made[k]) return;
     if(!(t.result.slots||[]).length) return;
     SB.made[k]=JSON.parse(JSON.stringify(t.result));
+    SB.mat=_sbMatSig()||SB.mat;      // 이 보드를 만든 때의 재료(낡음 표시용)
     if(SB.pend[k]){ SB.made[k].from=SB.pend[k]; SB.view=k; delete SB.pend[k]; }
     if(!SB.view) SB.view=k;
   });
@@ -19154,8 +19160,12 @@ function sbPage1(){
     return `<div class="sb-grp ${hit?'star':''}"><div class="sb-gh"><b>${sbE(g.name)}</b> <span>${sbE(g.desc||'')} · ${gids.length}개</span>${hit?` <span class="sb-hitb">🎯 ${hit}장 담김 — 그 자리에 먼저 놓아요 · 이 묶음의 나머지 조각은 다른 자리에도 쓰여요</span>`:''}</div>
       <div class="sb-gth">${ids.map(id=>sbCard1(id)).join('')}</div>${gids.length>7?`<span class="sb-more" onclick="SB.showall[${i}]=!SB.showall[${i}];sbRender()">${all?'접기':'나머지 '+(gids.length-7)+'개 펼치기'}</span>`:''}</div>`; }).join('');
   const miss=(inv&&inv.missing)||[];
+  // 씨앗 영상 조각 — AI는 안 쓴다(storyboard._materials). 사람이 상자에 담으면 그 자리에 쓴다(사람이 고른 것은 존중)
+  const seeds=Object.keys(P).filter(id=>P[id].seed && !sbGroups().some(g=>(g.ids||[]).includes(id)));
+  const sgrp=seeds.length?`<div class="sb-grp sb-seedgrp"><div class="sb-gh"><b>🌱 씨앗 영상</b> <span>AI가 자동으로는 안 써요(자막틀이 박힌 레퍼런스) · 쓰고 싶으면 상자를 켜고 담으세요 · ${seeds.length}개</span></div>
+      <div class="sb-gth">${seeds.map(id=>sbCard1(id)).join('')}</div></div>`:'';
   return `<div class="sb-rbar"><div class="sb-bh">🎯 꼭 쓰고 싶은 장면 — 상자를 켜고 카드를 누르세요 <small>${SB.active?'지금 켜진 상자: <b>'+sbE(SB.active)+'</b> (다시 누르면 꺼짐)':'담은 장면은 그 자리 맨 앞에 놓이고, AI가 뒤에 더 붙여요 · 다 채울 필요 없어요'}</small></div><div class="sb-rboxes">${boxes}</div></div>
-  <div class="sb-box"><div class="sb-bh">장면 목록 <small>조각 ${Object.keys(P).length}개를 ${sbGroups().length}묶음으로 · 카드 위 'AI:' = AI가 본 쓰임(참고)</small></div><div class="sb-grps">${grps}</div></div>
+  <div class="sb-box"><div class="sb-bh">장면 목록 <small>조각 ${Object.keys(P).length}개를 ${sbGroups().length}묶음으로 · 카드 위 'AI:' = AI가 본 쓰임(참고)</small></div><div class="sb-grps">${grps}${sgrp}</div></div>
   ${miss.length?`<div class="sb-box"><div class="sb-missing"><b>이 재료에 없는 장면</b><ul>${miss.map(m=>'<li>'+sbE(m)+'</li>').join('')}</ul></div></div>`:''}`;
 }
 
@@ -19198,7 +19208,7 @@ function sbLine(ek, i, sl){ return (SB.edit[ek]&&SB.edit[ek][i]!=null)?SB.edit[e
 function sbBake(ek, bd){   // 손으로 고친 문장·장면 순서를 칸에 굳힌 뒤 구조를 바꾼다(칸 번호로 붙은 기억이 엇갈리지 않게)
   bd.slots.forEach((sl,i)=>{ sl.ids=sbOrdOf(ek,i,sl).slice(); sl.line=sbLine(ek,i,sl); });
   [SB.ord, SB.cand].forEach(M=>Object.keys(M).filter(o=>o.startsWith(ek+'#')).forEach(o=>delete M[o])); delete SB.edit[ek]; }
-function sbEditLine(i, el){ const ek=SB.view; (SB.edit[ek]=SB.edit[ek]||{})[i]=el.innerText; }
+function sbEditLine(i, el){ const ek=SB.view; (SB.edit[ek]=SB.edit[ek]||{})[i]=el.innerText; _sbSaveSoon(); }
 function sbRowMove(i, d){ const [ek,bd]=sbCur(); const t=i+d; if(!bd||t<0||t>=bd.slots.length) return; sbBake(ek,bd);
   [bd.slots[i],bd.slots[t]]=[bd.slots[t],bd.slots[i]]; if(bd.check) [bd.check[i],bd.check[t]]=[bd.check[t],bd.check[i]]; sbRender(); }
 function sbRowDel(i){ const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd); bd.slots.splice(i,1); if(bd.check) bd.check.splice(i,1); sbRender(); }
@@ -19243,8 +19253,9 @@ function sbCandOf(ek, i, sl, bd){
   const used=sbUsedAll(ek,bd); const mine=new Set(sbOrdOf(ek,i,sl)); const a=[];
   sbGroups().filter(g=>(g.ids||[]).some(id=>mine.has(id))).forEach(g=>g.ids.forEach(id=>{ if(!used.has(id)&&!a.includes(id)) a.push(id); }));
   const tag=SB_SLOT_TAG[String(sl.slot||'').split('_')[0].toLowerCase()];
-  if(tag) Object.keys(sbPieces()).forEach(id=>{ if(!used.has(id)&&!a.includes(id)&&sbTagOf(id).includes(tag)) a.push(id); });
-  if(!a.length && !mine.size) Object.keys(sbPieces()).forEach(id=>{ if(!used.has(id)&&a.length<12) a.push(id); });   // 빈 칸(직접 쓰기·새 칸)은 안 쓴 장면부터
+  const P=sbPieces(), ok=id=>!(P[id]&&P[id].seed);   // 씨앗 조각은 후보로 안 내민다(사람이 1단계 상자에 담을 때만 씀)
+  if(tag) Object.keys(P).forEach(id=>{ if(ok(id)&&!used.has(id)&&!a.includes(id)&&sbTagOf(id).includes(tag)) a.push(id); });
+  if(!a.length && !mine.size) Object.keys(P).forEach(id=>{ if(ok(id)&&!used.has(id)&&a.length<12) a.push(id); });   // 빈 칸(직접 쓰기·새 칸)은 안 쓴 장면부터
   return a.slice(0,12); }
 function sbCandBox(ek, i, sl, bd){ const cs=sbCandOf(ek,i,sl,bd); if(!cs.length) return ''; const k=ek+'#'+i, open=SB.cand[k];
   return `<div class="sb-cand"><span class="sb-more" onclick="SB.cand['${sbA(k)}']=!SB.cand['${sbA(k)}'];sbRender()">${open?'▲ 후보 접기':'＋ 관련 후보 '+cs.length+'개 보기'}</span>${open?`<div class="sb-cth">${cs.map(id=>`<div class="sb-cc sb-cand1" onclick="sbAddCand('${sbA(ek)}',${i},'${sbA(id)}')" title="누르면 이 칸 뒤에 넣어요">${sbTh(id,52)}<div class="sb-ccb"><span class="sb-ck2">＋ 넣기</span></div></div>`).join('')}</div>`:''}</div>`; }
@@ -19325,6 +19336,8 @@ function sbRender(){
   //   시안(1·2단계 페이지틀)과 같은 배치: 재료를 고르는 건 1단계, 대본은 2단계(사장님 10-05 "이게 1단계 아닌가").
   const b1=document.getElementById('s1Storyboard'), b2=document.getElementById('s2Storyboard');
   const put=(box, html)=>{ if(!box) return; if(html===null){ box.innerHTML=''; box.style.display='none'; } else { box.style.display=''; box.innerHTML=html; } };
+  // 옛 '② 대본 스타일' 줄 — 스토리보드 켠 계정에선 숨긴다(스토리보드 확정은 S2.picked 를 안 쓴다: sbConfirm style_id:null). 꺼진 계정은 그대로
+  const band=document.getElementById('s2StyleBand'); if(band) band.style.display=window.STORYBOARD_ON?'none':'';
   if(!window.STORYBOARD_ON){ put(b1,null); put(b2,null); return; }   // 고객 화면 불변
   const y=window.scrollY;
   const head1=`<div class="s2-label" style="margin:14px 0 8px">🎬 스토리보드 재료 <span class="sb-note">(관리자 시험) 꼭 쓰고 싶은 장면을 상자에 담아 두면 2단계 스토리보드가 그 자리에 씁니다</span></div>`;
@@ -19340,9 +19353,47 @@ function sbRender(){
     put(b2, head2+'<div class="sb-box"><span class="sb-note">1단계에서 [장면 목록 만들기]를 먼저 눌러 주세요</span></div>');
   } else {
     put(b1, head1+sbPage1());
-    put(b2, head2+sbPage2());
+    put(b2, head2+(_sbStale()?'<div class="sb-box"><span class="sb-err">⚠ 재료(담은 영상·씨앗)가 바뀌었어요 — 아래 스토리보드는 예전 재료로 만든 것입니다. 새 재료로 쓰려면 스타일을 골라 다시 만들어 주세요</span></div>':'')+sbPage2());
   }
   if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y);   // 다시 그려도 보던 자리를 지킨다
+  _sbSaveSoon();
+}
+// ── 스토리보드 기억(관제 120 장면배분) — 작업파일 state.sb 한 곳에 담는다(서버 data/storyboard 는 장면 목록만).
+//   ★담는 모양·되살리는 모양은 이 한 쌍(_sbSnapshot·_sbApplySaved)에서만 정한다. 저장은 기존 saveWork(_workState)가 싣는다.
+//   담는 것: 만든 탭(made — 칸·문장·장면·고른 짤 meme_pick 포함)·보던 탭·고친 문장(edit)·카드 순서(ord)·고른 스타일(pick)·상자(role)·재료 지문(mat).
+var _SB_SAVED=null;      // 작업을 열 때 받은 state.sb — sbEnter 가 같은 작업 열쇠일 때 되살린다(var: 로드 순서와 무관)
+function _sbMatSig(){ let P=null; try{ P=(SB.data&&SB.data.pieces)||null; }catch(e){ return ''; } if(!P) return '';
+  const ks=Object.keys(P).sort().map(k=>k+(P[k].seed?'*':'')).join(','); let h=0; for(let i=0;i<ks.length;i++) h=(h*31+ks.charCodeAt(i))|0; return Object.keys(P).length+':'+h; }
+function _sbSnapshot(){
+  try{ SB; }catch(e){ return _SB_SAVED; }
+  if(!window.STORYBOARD_ON || !SB.jid) return _SB_SAVED;      // 아직 못 열었으면 받은 것을 그대로 돌려준다(자동저장이 지우지 않게)
+  const role={}; Object.entries(SB.role).forEach(([r,st])=>{ if(st&&st.size) role[r]=[...st]; });
+  if(!Object.keys(SB.made).length && !SB.pick.size && !Object.keys(role).length) return null;
+  return {work_id:(typeof WORK_ID!=='undefined'?(WORK_ID||null):null), jid:SB.jid, made:SB.made, view:SB.view,
+          edit:SB.edit, ord:SB.ord, pick:[...SB.pick], role, mat:SB.mat||''};
+}
+function _sbApplySaved(j){
+  const s=_SB_SAVED; if(!s || s.jid!==j) return;
+  if(s.work_id && typeof WORK_ID!=='undefined' && WORK_ID && s.work_id!==WORK_ID) return;   // 남의 작업 것이면 안 되살린다
+  SB.made=s.made||{}; SB.view=(s.view&&SB.made[s.view])?s.view:(Object.keys(SB.made)[0]||'');
+  SB.edit=s.edit||{}; SB.ord=s.ord||{}; SB.pick=new Set(s.pick||[]); SB.mat=s.mat||'';
+  SB.role={}; Object.entries(s.role||{}).forEach(([r,ids])=>{ SB.role[r]=new Set(ids||[]); });
+  _SB_SAVED=null;
+}
+function _sbHydrate(w){   // _s2Hydrate 가 부른다(작업 열기 경로 3곳 공통)
+  let s=(w&&w.sb)||null;
+  if(s && s.work_id && w && w.work_id && s.work_id!==w.work_id) s=null;
+  _SB_SAVED=s;
+  try{ SB; }catch(e){ return; }
+  SB.jid='';               // 다음 sbEnter 가 새로 열며 되살린다
+  if(window.STORYBOARD_ON){ try{ sbEnter(); }catch(e){ console.warn('[sb] 되살리기 실패', e); } }
+}
+function _sbStale(){ const now=_sbMatSig(); return !!(SB.mat && now && SB.mat!==now && Object.keys(SB.made).length); }
+function _sbSaveSoon(){
+  let snap=''; try{ snap=JSON.stringify(_sbSnapshot()); }catch(e){ console.warn('[sb] 저장 모양 실패', e); return; }
+  if(snap===SB._lastSnap) return; const first=(SB._lastSnap===undefined); SB._lastSnap=snap;
+  if(first) return;        // 되살린 직후 첫 그리기는 저장할 게 없다
+  clearTimeout(SB._saveT); SB._saveT=setTimeout(()=>{ if(typeof saveWork==='function') saveWork(); }, 1200);
 }
 // 관리자(사장님 cid0) 판별 — 비유튜브 재료의 "정보 채우기" 버튼 노출 조건(index.html과 동일 플래그명).
 window.IS_ADMIN=false;

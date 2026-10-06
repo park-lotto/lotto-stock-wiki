@@ -932,25 +932,43 @@ def mark_auto_exclude(extracts, job):
     idx = ss.get("no_auto_idx") if isinstance(ss, dict) else None
     if not isinstance(idx, list):
         return extracts
-    # ★재료가 씨앗뿐이면 표식을 달지 않는다(관제 138) — 달면 자동 배치 후보가 0이 돼 편집안을 못 만든다(_drop_seed 와 같은 규칙).
-    _seed = set()
+    _seed = []
     for i in idx:
         try:
-            _seed.add(f"s{int(i)}")
+            _seed.append(f"s{int(i)}")
         except (TypeError, ValueError):
             pass
+    return mark_seed_sources(extracts, _seed)
+
+
+def mark_seed_sources(extracts, seed_keys):
+    """씨앗 표식을 실제로 다는 한 곳 — 3단계 job(mark_auto_exclude, 열쇠 s<urls 인덱스>)과
+    2단계 스토리보드(작업파일 재료, 열쇠 = 영상 shortcode — seed_keys_from_handoff)가 같이 부른다(관제 120 장면배분).
+    ★재료가 씨앗뿐이면 표식을 달지 않는다(관제 138) — 달면 자동 배치 후보가 0이 돼 편집안을 못 만든다(_drop_seed 와 같은 규칙)."""
+    _seed = {str(k) for k in (seed_keys or []) if k is not None and str(k)}
+    if not _seed:
+        return extracts
     if not any(isinstance(r, dict) and r.get("segments") for k, r in (extracts or {}).items() if k not in _seed):
         print("[extract] 씨앗 말고 쓸 재료가 없어 자동 배치 제외를 달지 않는다", flush=True)
         return extracts
-    for i in idx:
-        try:
-            r = extracts.get(f"s{int(i)}")
-        except (TypeError, ValueError):
-            continue
+    for k in sorted(_seed):
+        r = (extracts or {}).get(k)
         if isinstance(r, dict):
             r["auto_exclude"] = True
-            print(f"[extract] s{int(i)} 씨앗 — 자동 배치 제외(영상 소스엔 유지)", flush=True)
+            print(f"[extract] {k} 씨앗 — 자동 배치 제외(영상 소스엔 유지)", flush=True)
     return extracts
+
+
+def seed_keys_from_handoff(handoff):
+    """작업파일(produce_works.state.handoff)에서 씨앗 영상 열쇠(shortcode) — 화면 collectNoAutoIdx 와 같은 조건
+    (seedNoAuto 표식 + useFootage). 3단계 job 이 아직 없을 때 스토리보드 재료(app._sb_job)가 쓴다."""
+    out = []
+    for e in handoff or []:
+        if isinstance(e, dict) and e.get("seedNoAuto") and e.get("useFootage"):
+            sc = str(e.get("shortcode") or "").strip()
+            if sc:
+                out.append(sc)
+    return out
 
 
 def _extract_coverage(r, path):

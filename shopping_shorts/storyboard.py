@@ -136,18 +136,42 @@ P4 = """너는 쇼핑 쇼츠 **제품 사실 검수자**다. 아래는 스토리
 
 
 
-def _materials(db, jid, ex=None):
+def is_seed_source(e):
+    """이 재료 영상이 씨앗(자동 배치 제외)인가 — 표식(auto_exclude)만 읽는다. 판정은 edit_plan._auto_blocked,
+    표식을 다는 건 mix_pipeline.mark_seed_sources 한 곳(새 판정을 만들지 않는다)."""
+    from shopping_shorts import edit_plan as _ep
+    return _ep._auto_blocked(e)
+
+
+def _keep_ids(*parts):
+    """사람이 상자에 담은 조각 번호(star 'id,id' · roles '훅=id,id|CTA=id') — 씨앗이어도 재료에 남긴다."""
+    out = set()
+    for p in parts:
+        for chunk in str(p or "").split("|"):
+            out.update(x.strip() for x in chunk.partition("=")[2 if "=" in chunk else 0].split(",") if x.strip())
+    return out
+
+
+def _materials(db, jid, ex=None, keep=()):
     """작업 재료(1단계 조각) — 조각별 길이·설명. 0.6초 미만·끝 화면(효능 없음)은 뺀다. 목록·생성·끼워 넣기 공용(한 곳).
     ex = 재료(job.extract 모양 {영상: {segments}}) — 라이브는 app 이 넘긴다(매칭 작업이 없으면 작업파일의 담은 영상 분석,
     2단계 대본 생성과 같은 규칙). 없으면(시험 도구) mix_jobs 에서 읽는다. ★짝은 seg_id 로만 — 바깥 키(s0·shortcode)는 다를 수 있다."""
     if ex is None:
         row = db.execute("select extract_json from mix_jobs where job_id=?", (jid,)).fetchone()
         ex = json.loads((row[0] if row else None) or "{}")
+    # ★씨앗 영상(auto_exclude)은 AI 후보(장면 목록·보드 배치·끼워 넣기)에서 뺀다(관제 120 장면배분, 사장님 10-06
+    #   "썰 채널 씨앗은 자막틀이 박혀 못 쓴다"). 3단계 소스 필름엔 그대로 있다(scene_lab 은 extract 전체를 본다).
+    #   ★단 사람이 1단계 '꼭 쓰고 싶은 장면' 상자에 직접 담은 씨앗 조각(keep)은 사람이 고른 것이니 존중해 남긴다.
+    #   재료가 씨앗뿐이면 표식 자체가 안 달려(mark_seed_sources) 여기서도 안 빠진다.
+    keep = set(keep or ())
     segs, texts, order, rows = {}, {}, [], []
     for vid, e in ex.items():
+        seed = is_seed_source(e)
         for s in (e or {}).get("segments") or []:
             a, b = float(s.get("start") or 0), float(s.get("end") or 0)
             if b - a < 0.6 or (s.get("is_outro") and not s.get("product_benefits")):
+                continue
+            if seed and s.get("seg_id") not in keep:
                 continue
             sid = s["seg_id"]
             segs[sid] = round(b - a, 1)
@@ -701,7 +725,7 @@ def inventory(db_path, jid, star_s="", role_s="", ex=None):
     db = _ro(db_path)
     fams = _families(db)
     t0 = time.time()
-    segs, texts, order, rows = _materials(db, jid, ex)
+    segs, texts, order, rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s))
     star = [next((sid for sid in order if sid.endswith(x.strip())), x.strip()) for x in star_s.split(",") if x.strip()]
     role_pick = {}
     for part in role_s.split("|"):
@@ -754,10 +778,10 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
     if not R:
         raise ValueError("장면 목록을 먼저 만들어야 합니다")
     r1 = R["inventory"]
-    segs, texts, order, _rows = _materials(db, jid, ex)
+    segs, texts, order, _rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s))
     tag_of = r1.get("tag_of") or {}
     groups_txt = "\n".join("  %s: %s" % (g["name"], ", ".join("%s(%.1f초%s)" % (c, segs.get(c, 0), ("·" + "/".join(tag_of[c])) if tag_of.get(c) else "")
-                                                              for c in g["ids"])) for g in r1["groups"])
+                                                              for c in g["ids"] if c in segs)) for g in r1["groups"])   # 옛 장면 목록에 씨앗이 있어도 후보로 안 싣는다
     star = [x for x in star_s.split(",") if x]
     roles_txt = " / ".join("%s: %s" % (p.split("=")[0], p.split("=")[1]) for p in role_s.split("|") if "=" in p)
     pan_of = {str(s.get("family")): s.get("pan") for s in R.get("styles") or []}
@@ -934,8 +958,9 @@ def insert(db_path, jid, payload, R=None, ex=None):
     db = _ro(db_path)
     R = R or load_state(jid) or {"inventory": {}}
     tag_of = R["inventory"].get("tag_of") or {}
-    segs, texts, _order, _rows = _materials(db, jid, ex)
     bd = payload["board"]
+    # 보드에 이미 있는 조각(사람이 담은 씨앗 포함)은 재료로 인정 — 새 후보(cand)는 씨앗을 뺀 재료에서만 고른다
+    segs, texts, _order, _rows = _materials(db, jid, ex, keep={c for x in bd.get("slots") or [] for c in (x.get("ids") or [])})
     slots = [dict(x) for x in bd["slots"]]
     have = {str(x.get("slot") or "").split("_")[0].lower() for x in slots}
     extra = [e for e in payload.get("extra") or [] if e in EXTRA_DESC and e not in have]

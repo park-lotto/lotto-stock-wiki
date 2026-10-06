@@ -21083,7 +21083,13 @@ def _sb_job(request, key):
         job = st.get_mix_job(jid) if jid else None
         if job and int(job.get("customer_id") or 0) == int(cid or 0) and job.get("extract"):
             return "w-" + wid, (_enrich_job_extract(job, st) or {}).get("extract") or {}, jid
-        return "w-" + wid, _extract_from_work(wid, cid, st), None
+        # ★씨앗(관제 120 장면배분): 3단계 job 이 아직 없으면 작업파일의 씨앗 표식(seedNoAuto)으로 auto_exclude 를 단다 —
+        #   표식을 다는 건 mix_pipeline.mark_seed_sources 한 곳(3단계 mark_auto_exclude 와 같은 함수·같은 '씨앗뿐이면 안 단다').
+        #   job 이 있으면 그 extract 에 3단계가 이미 단 표식을 그대로 쓴다(위 분기).
+        from shopping_shorts import mix_pipeline as _mp
+        _ex = _extract_from_work(wid, cid, st)
+        _mp.mark_seed_sources(_ex, _mp.seed_keys_from_handoff(((work.get("state") or {}).get("handoff"))))
+        return "w-" + wid, _ex, None
     job = st.get_mix_job(key) if key else None
     if not job or int(job.get("customer_id") or 0) != int(cid or 0):
         return None, None, None
@@ -21161,7 +21167,9 @@ def api_storyboard_get(request: Request, job_id: str):
                 pieces[sid] = {"sec": round(float(sg_.get("end") or 0) - float(sg_.get("start") or 0), 1),
                                "desc": sg_.get("scene_desc") or "", "label": sg_.get("label") or "",
                                "use": sg_.get("use_point") or "", "kind": sg_.get("appeal_kind") or "",
-                               "th": "/api/produce/storyboard/thumb/%s/%s" % (job_id, sid)}
+                               "th": "/api/produce/storyboard/thumb/%s/%s" % (job_id, sid),
+                               # 씨앗 조각 — AI 후보·자동 배치엔 안 쓰고(storyboard._materials), 1단계 상자에 사람이 담을 때만 쓴다
+                               "seed": _sb.is_seed_source(ex)}
     tasks = {k[1]: {kk: vv for kk, vv in v.items() if kk != "t0"} for k, v in list(_SB_TASKS.items()) if k[0] == job_id}
     return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH), "tasks": tasks}
 
