@@ -3436,10 +3436,14 @@ class Store:
         ph = ",".join("?" * len(scs))
         with self._conn() as c:
             rows = c.execute(
-                f"SELECT shortcode, attempts, last_error FROM produce_autoload "
+                f"SELECT shortcode, attempts, last_error, "
+                f"(julianday('now') - julianday(updated_at)) * 86400 FROM produce_autoload "
                 f"WHERE shortcode IN ({ph})", scs
             ).fetchall()
-        return {r[0]: {"attempts": r[1] or 0, "last_error": r[2] or ""} for r in rows}
+        # age_sec = 마지막 시도를 시작한 뒤 흐른 초(관제 147). 시도 횟수는 추출 **전에** 올리므로(선래치)
+        #   마지막 시도가 아직 도는 중인지 가르려면 이 값이 있어야 한다. 모르면 None.
+        return {r[0]: {"attempts": r[1] or 0, "last_error": r[2] or "",
+                       "age_sec": (float(r[3]) if r[3] is not None else None)} for r in rows}
 
     def autoload_mark_attempt(self, shortcode):
         """추출을 **시작하기 전에** 시도 횟수를 올린다(선(先)래치).
