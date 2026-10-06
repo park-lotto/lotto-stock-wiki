@@ -129,6 +129,11 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/store.py:Store.device_register": {
+    "at": "2026-10-06 14:06",
+    "card": 142,
+    "track": "PC유령칸"
+  },
   "shopping_shorts/store.py:_apply_beat_sources": {
     "at": "2026-10-06 03:46",
     "card": 138,

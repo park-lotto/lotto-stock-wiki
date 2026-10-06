@@ -136,18 +136,42 @@ P4 = """너는 쇼핑 쇼츠 **제품 사실 검수자**다. 아래는 스토리
 
 
 
-def _materials(db, jid, ex=None):
+def is_seed_source(e):
+    """이 재료 영상이 씨앗(자동 배치 제외)인가 — 표식(auto_exclude)만 읽는다. 판정은 edit_plan._auto_blocked,
+    표식을 다는 건 mix_pipeline.mark_seed_sources 한 곳(새 판정을 만들지 않는다)."""
+    from shopping_shorts import edit_plan as _ep
+    return _ep._auto_blocked(e)
+
+
+def _keep_ids(*parts):
+    """사람이 상자에 담은 조각 번호(star 'id,id' · roles '훅=id,id|CTA=id') — 씨앗이어도 재료에 남긴다."""
+    out = set()
+    for p in parts:
+        for chunk in str(p or "").split("|"):
+            out.update(x.strip() for x in chunk.partition("=")[2 if "=" in chunk else 0].split(",") if x.strip())
+    return out
+
+
+def _materials(db, jid, ex=None, keep=()):
     """작업 재료(1단계 조각) — 조각별 길이·설명. 0.6초 미만·끝 화면(효능 없음)은 뺀다. 목록·생성·끼워 넣기 공용(한 곳).
     ex = 재료(job.extract 모양 {영상: {segments}}) — 라이브는 app 이 넘긴다(매칭 작업이 없으면 작업파일의 담은 영상 분석,
     2단계 대본 생성과 같은 규칙). 없으면(시험 도구) mix_jobs 에서 읽는다. ★짝은 seg_id 로만 — 바깥 키(s0·shortcode)는 다를 수 있다."""
     if ex is None:
         row = db.execute("select extract_json from mix_jobs where job_id=?", (jid,)).fetchone()
         ex = json.loads((row[0] if row else None) or "{}")
+    # ★씨앗 영상(auto_exclude)은 AI 후보(장면 목록·보드 배치·끼워 넣기)에서 뺀다(관제 120 장면배분, 사장님 10-06
+    #   "썰 채널 씨앗은 자막틀이 박혀 못 쓴다"). 3단계 소스 필름엔 그대로 있다(scene_lab 은 extract 전체를 본다).
+    #   ★단 사람이 1단계 '꼭 쓰고 싶은 장면' 상자에 직접 담은 씨앗 조각(keep)은 사람이 고른 것이니 존중해 남긴다.
+    #   재료가 씨앗뿐이면 표식 자체가 안 달려(mark_seed_sources) 여기서도 안 빠진다.
+    keep = set(keep or ())
     segs, texts, order, rows = {}, {}, [], []
     for vid, e in ex.items():
+        seed = is_seed_source(e)
         for s in (e or {}).get("segments") or []:
             a, b = float(s.get("start") or 0), float(s.get("end") or 0)
             if b - a < 0.6 or (s.get("is_outro") and not s.get("product_benefits")):
+                continue
+            if seed and s.get("seg_id") not in keep:
                 continue
             sid = s["seg_id"]
             segs[sid] = round(b - a, 1)
@@ -371,6 +395,13 @@ def apply_signals(slots, key, nth=0, yt=True):
             #   짤 길이는 TTS 에서 이 낱말을 찾아 재므로 원래 낱말이 남으면 '신호어 시각 못 찾음'으로 짤이 빠졌다)
             sl["signal"] = next((x for x in sorted(_sw._ALL_SIGNAL_WORDS, key=len, reverse=True)
                                  if (sl.get("line") or "").startswith(x + " ")), w)
+    # 짤 들어갈 줄의 감정(관제 143) — 2단계 화면이 '여기 짤 들어감(감정)'을 보이려고 읽는다. 감정 판정은 meme_emotion 한 곳
+    for sl in slots:
+        emo = meme_emotion(int(sl.get("sig_rank") or 0), sl.get("signal") or "") if str(sl.get("sig_rank") or "").isdigit() else None
+        if emo:
+            sl["meme_emotion"] = emo
+        else:
+            sl.pop("meme_emotion", None)
     return words
 
 
@@ -417,15 +448,73 @@ def signal_end_sec(narration, signal, words):
     return None
 
 
-def meme_slots(plan, words_of, pool, log=None):
+MEME_DEFAULT_SEC = 1.25   # 사람이 [＋짤]로 넣은 줄에 신호어 시각이 없을 때 짤 길이(시안 MEME_SEC 와 같은 값)
+MEME_PREF_KEY = "meme_prefs"   # 회원별 '감정별 우선 짤' — store.customer_prefs 의 키. 값 [{asset_id, emotion, rank}]
+
+
+def meme_prefs_by_emotion(prefs):
+    """[{asset_id, emotion, rank}] → {감정: [asset_id…(rank 순)]}. 모양이 어긋난 항목은 버린다."""
+    out = {}
+    for p in sorted([x for x in (prefs or []) if isinstance(x, dict)], key=lambda x: (int(x.get("rank") or 0))):
+        try:
+            aid = int(p.get("asset_id"))
+        except (TypeError, ValueError):
+            continue
+        emo = str(p.get("emotion") or "").strip()
+        if emo and aid not in out.setdefault(emo, []):
+            out[emo].append(aid)
+    return out
+
+
+def meme_head(beat, words, dur, manual=False):
+    """짤 길이(초)를 정한다 — 자동 배치와 사람이 [＋짤]로 넣을 때가 **같은 함수**를 쓴다(판단 한 곳).
+    신호어를 다 말한 초(signal_end_sec)를 1.0~2.0초로 자른다. 못 찾으면 자동은 짤 없음, 사람(manual)은 1.25초.
+    짤 뒤 남은 시간이 장면 하나 하한(1.0초)보다 짧으면 짤 없음. 돌려주는 것 = (초, None) | (None, 이유)."""
+    end = signal_end_sec((beat or {}).get("narration") or "", str((beat or {}).get("signal") or ""), words)
+    if end is None:
+        if not manual:
+            return None, "신호어 시각 못 찾음(%s)" % (str((beat or {}).get("signal") or "") or "신호어 없음")
+        head = MEME_DEFAULT_SEC
+    else:
+        head = end - float((beat or {}).get("head_trim") or 0.0)
+    head = round(min(MEME_MAX_SEC, max(MEME_MIN_SEC, head)), 2)
+    try:
+        dur = float(dur or 0)
+    except (TypeError, ValueError):
+        dur = 0.0
+    if dur - head < MEME_SCENE_MIN - 1e-6:
+        return None, "짤 뒤 남은 시간 %.2f초 < %.1f초" % (dur - head, MEME_SCENE_MIN)
+    return head, None
+
+
+def meme_cut(asset, head, emotion, manual=False):
+    """beat["cutaway"] 짤 모양 — 화면·렌더·캡컷이 읽는 열쇠는 여기 한 곳에서 만든다."""
+    cw = {"asset_id": int(asset["asset_id"]), "match_type": "meme", "head_sec": head,
+          "vid": "meme_%d" % int(asset["asset_id"]),      # 짤 컷의 video_id — 화면·렌더·캡컷이 이 이름 하나로 짤 파일을 찾는다
+          "emotion": emotion, "scene_min": MEME_SCENE_MIN, "owner": int(asset.get("owner") or 0)}
+    if manual:
+        cw["manual"] = 1          # 사람이 고른 짤 — meme_slots 가 다시 정할 때 건드리지 않는다
+    return cw
+
+
+def meme_slots(plan, words_of, pool, log=None, key="", prefs=None):
     """편성표의 칸마다 짤 자리를 정해 beat["cutaway"] 에 남긴다(관제 139). 판단은 여기 한 곳.
 
     words_of(beat) → (낱말 시각 [{word,start,end}] | None, 칸 길이 초(head_trim·tail_trim 뺀 실제 칸 길이) | None)
     pool = {감정: [{"asset_id", "duration"}...]} — 고를 수 있는 짤(서버 짤 팩). 비면 짤 없음 + 이유.
+    prefs = {감정: [asset_id…]} — 회원이 고른 '감정별 우선 짤'(관제 143). 그 감정은 우선 짤부터(순서대로), 다 쓰면 종전 해시.
+    칸의 beat["meme_pick"](2단계 스토리보드에서 미리 고른 짤 번호)이 있으면 그 짤을 먼저 쓴다.
     돌려주는 것 = [{"beat_idx","meme"(bool),"why"|"head_sec","emotion","asset_id"}] — 칸마다 왜 넣었나/안 넣었나.
-    ★다른 끼움 장면(AI 장면·사람이 붙인 컷어웨이)이 이미 있는 칸은 건드리지 않는다. 옛 짤(meme)은 다시 정한다."""
+    ★다른 끼움 장면(AI 장면·사람이 붙인 컷어웨이)이 이미 있는 칸과 사람이 고른 짤(manual)·뺀 칸(meme_off)은 건드리지 않는다. 옛 자동 짤은 다시 정한다."""
+    import zlib
     out = []
     used = {}
+    taken = set()
+    by_id = {int(a["asset_id"]): (emo, a) for emo, lst in (pool or {}).items() for a in (lst or [])}
+    for b in (plan or {}).get("beats") or []:
+        cw = b.get("cutaway") if isinstance(b, dict) else None
+        if isinstance(cw, dict) and cw.get("match_type") == "meme" and cw.get("manual"):
+            taken.add(int(cw.get("asset_id") or 0))
     for b in (plan or {}).get("beats") or []:
         if not isinstance(b, dict):
             continue
@@ -434,7 +523,14 @@ def meme_slots(plan, words_of, pool, log=None):
         if cw and (cw or {}).get("match_type") != "meme":
             out.append({"beat_idx": bi, "meme": False, "why": "다른 끼움 장면 있음"})
             continue
+        if cw and cw.get("manual"):
+            out.append({"beat_idx": bi, "meme": True, "head_sec": cw.get("head_sec"), "emotion": cw.get("emotion"),
+                        "asset_id": cw.get("asset_id"), "why": "사람이 고른 짤"})
+            continue
         b.pop("cutaway", None)        # 옛 짤은 지금 음성·대본으로 다시 정한다(못 정하면 빠진다)
+        if b.get("meme_off"):         # 사람이 [빼기]로 뺀 칸 — 다시 넣지 않는다(관제 143)
+            out.append({"beat_idx": bi, "meme": False, "why": "사람이 뺌"})
+            continue
 
         def _no(why):
             out.append({"beat_idx": bi, "meme": False, "why": why})
@@ -453,29 +549,35 @@ def meme_slots(plan, words_of, pool, log=None):
         except Exception as e:      # noqa: BLE001 — 음성 시각을 못 읽은 칸은 짤 없음(이유를 남긴다)
             _no("음성 시각 실패 %s" % type(e).__name__)
             continue
-        end = signal_end_sec(b.get("narration") or "", signal, words)
-        if end is None:
-            _no("신호어 시각 못 찾음(%s)" % (signal or "신호어 없음"))
+        head, why = meme_head(b, words, dur)
+        if head is None:
+            _no(why)
             continue
-        head = end - float(b.get("head_trim") or 0.0)
-        head = round(min(MEME_MAX_SEC, max(MEME_MIN_SEC, head)), 2)
+        fits = lambda a: float(a.get("duration") or 0) >= head - 1e-3
+        a = None
         try:
-            dur = float(dur or 0)
+            mp = int(b.get("meme_pick") or 0)
         except (TypeError, ValueError):
-            dur = 0.0
-        if dur - head < MEME_SCENE_MIN - 1e-6:
-            _no("짤 뒤 남은 시간 %.2f초 < %.1f초" % (dur - head, MEME_SCENE_MIN))
-            continue
-        cands = [a for a in (pool or {}).get(emo) or [] if float(a.get("duration") or 0) >= head - 1e-3]
-        if not cands:
-            _no("짤 없음(감정 %s, %.2f초 이상)" % (emo, head))
-            continue
-        k = used.get(emo, 0)
-        used[emo] = k + 1
-        a = cands[k % len(cands)]          # 같은 감정이 여러 줄이면 돌려 쓴다(한 편 안 같은 짤 반복 줄이기)
-        b["cutaway"] = {"asset_id": int(a["asset_id"]), "match_type": "meme", "head_sec": head,
-                        "vid": "meme_%d" % int(a["asset_id"]),      # 짤 컷의 video_id — 화면·렌더·캡컷이 이 이름 하나로 짤 파일을 찾는다
-                        "emotion": emo, "scene_min": MEME_SCENE_MIN, "owner": int(a.get("owner") or 0)}
+            mp = 0
+        if mp and mp in by_id and fits(by_id[mp][1]):      # 2단계에서 미리 고른 짤 — 그 짤의 감정으로
+            emo, a = by_id[mp]
+        if a is None:
+            cands = [x for x in (pool or {}).get(emo) or [] if fits(x)]
+            if not cands:
+                _no("짤 없음(감정 %s, %.2f초 이상)" % (emo, head))
+                continue
+            ids = {int(x["asset_id"]): x for x in cands}
+            pref = [ids[i] for i in (prefs or {}).get(emo) or [] if i in ids and i not in taken]
+            if pref:
+                a = pref[0]            # 우선 짤은 순서대로 — 한 편에 같은 짤 두 번 안 씀
+            else:
+                k = used.get(emo, 0)
+                used[emo] = k + 1
+                # ★작업마다 다른 짤(key=작업 번호): 종전엔 늘 목록 맨 앞이라 모든 영상에 같은 짤이 들어갔다(10-06 팩 1,283개 올린 뒤 확인).
+                #   같은 작업은 다시 만들어도 같은 짤. 같은 감정이 한 편에 여러 줄이면 그다음 것으로 돌려 쓴다.
+                a = cands[(zlib.crc32(("%s|%s" % (key, emo)).encode("utf-8")) + k) % len(cands)]
+        taken.add(int(a["asset_id"]))
+        b["cutaway"] = meme_cut(a, head, emo)
         out.append({"beat_idx": bi, "meme": True, "head_sec": head, "emotion": emo, "asset_id": int(a["asset_id"])})
     if log is not None:
         for r in out:
@@ -623,7 +725,7 @@ def inventory(db_path, jid, star_s="", role_s="", ex=None):
     db = _ro(db_path)
     fams = _families(db)
     t0 = time.time()
-    segs, texts, order, rows = _materials(db, jid, ex)
+    segs, texts, order, rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s))
     star = [next((sid for sid in order if sid.endswith(x.strip())), x.strip()) for x in star_s.split(",") if x.strip()]
     role_pick = {}
     for part in role_s.split("|"):
@@ -676,10 +778,10 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
     if not R:
         raise ValueError("장면 목록을 먼저 만들어야 합니다")
     r1 = R["inventory"]
-    segs, texts, order, _rows = _materials(db, jid, ex)
+    segs, texts, order, _rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s))
     tag_of = r1.get("tag_of") or {}
     groups_txt = "\n".join("  %s: %s" % (g["name"], ", ".join("%s(%.1f초%s)" % (c, segs.get(c, 0), ("·" + "/".join(tag_of[c])) if tag_of.get(c) else "")
-                                                              for c in g["ids"])) for g in r1["groups"])
+                                                              for c in g["ids"] if c in segs)) for g in r1["groups"])   # 옛 장면 목록에 씨앗이 있어도 후보로 안 싣는다
     star = [x for x in star_s.split(",") if x]
     roles_txt = " / ".join("%s: %s" % (p.split("=")[0], p.split("=")[1]) for p in role_s.split("|") if "=" in p)
     pan_of = {str(s.get("family")): s.get("pan") for s in R.get("styles") or []}
@@ -856,8 +958,9 @@ def insert(db_path, jid, payload, R=None, ex=None):
     db = _ro(db_path)
     R = R or load_state(jid) or {"inventory": {}}
     tag_of = R["inventory"].get("tag_of") or {}
-    segs, texts, _order, _rows = _materials(db, jid, ex)
     bd = payload["board"]
+    # 보드에 이미 있는 조각(사람이 담은 씨앗 포함)은 재료로 인정 — 새 후보(cand)는 씨앗을 뺀 재료에서만 고른다
+    segs, texts, _order, _rows = _materials(db, jid, ex, keep={c for x in bd.get("slots") or [] for c in (x.get("ids") or [])})
     slots = [dict(x) for x in bd["slots"]]
     have = {str(x.get("slot") or "").split("_")[0].lower() for x in slots}
     extra = [e for e in payload.get("extra") or [] if e in EXTRA_DESC and e not in have]

@@ -1308,6 +1308,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 
 <script id="scene-lab-data" type="application/json">null</script>
 <script src="/scene_play.js"></script>
+<script src="/meme_pack.js"></script>
 <script src="/scene_timeline.js"></script>
 <script src="/filmroll.js"></script>
 <script>
@@ -2982,6 +2983,41 @@ function aiSceneControl(i){
            + `<button class="danger" title="AI 장면을 떼고 담은 장면으로 돌립니다" onclick="removeAiScene(${i})">✕ AI 빼기</button>` : '')
     + (st === 'failed' ? `<span class="hint" style="color:#f66">⚠ ${esc((b.ai_scene||{}).error || '실패')}</span>` : '');
 }
+// ── 감정짤 칸(관제 143) — 스위치 DATA.meme_enabled(서버 meme_enabled). 짤 자리·길이는 서버(storyboard.meme_head/meme_slots)가 정하고
+//   화면은 [바꾸기][빼기][＋짤]로 서버 /meme 에 부탁만 한다. 짤 컷 배분은 scene_play.js scenesV2Alloc(memeHeadOf)이 cutaway 를 읽어 그대로.
+//   서랍은 static/meme_pack.js 의 MemePack 한 벌(밈팩 페이지·2단계와 같은 것).
+function memeControl(i){
+  if (!SL.server || !DATA.meme_enabled || typeof MemePack === 'undefined') return '';
+  const cw = (DATA.beats[i] || {}).cutaway;
+  if (cw && cw.match_type === 'meme')
+    return `<span class="hint" title="이 줄 맨 앞 ${esc(cw.head_sec)}초에 들어가는 감정짤${cw.manual ? '(직접 고름)' : '(자동)'}">🎭 ${esc(cw.emotion || '')} 짤 ${esc(cw.head_sec)}초</span>`
+      + `<button title="다른 짤로 바꿉니다" onclick="memeOpen(${i})">바꾸기</button>`
+      + `<button class="danger" title="이 줄의 짤을 뺍니다(자동 배치가 다시 넣지 않아요)" onclick="memeSet(${i}, null)">짤 빼기</button>`;
+  if (cw) return '';           // AI 장면 등 다른 끼움 장면이 있는 칸엔 짤을 안 넣는다(서버도 같은 규칙)
+  return `<button title="이 줄 맨 앞에 감정짤을 넣어요" onclick="memeOpen(${i})">＋짤</button>`;
+}
+function memeOpen(i){
+  const cw = (DATA.beats[i] || {}).cutaway || {};
+  MemePack.openDrawer({title: (i + 1) + '번 칸 짤 고르기', emotion: cw.emotion || '', cur: cw.asset_id,
+                       onPick: id => memeSet(i, id)});
+}
+async function memeSet(i, assetId){
+  try{
+    const r = await fetch('/api/produce/mix/' + SL.job + '/meme', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: beatIdOf(i), asset_id: assetId})});
+    const d = await r.json().catch(()=>({ok:false}));
+    if (!d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    // 서버가 정한 값(길이 포함)으로 화면을 맞춘다 — 낙관적 갱신 금지
+    DATA.beats[i].cutaway = d.cutaway || null;
+    if (assetId == null) DATA.beats[i].meme_off = 1; else delete DATA.beats[i].meme_off;
+    renderBand();
+  }catch(e){
+    const h = document.getElementById('tbhint');
+    if (h) h.textContent = '⚠ 짤을 바꾸지 못했어요: ' + (e.message || e);
+    alert('짤을 바꾸지 못했어요: ' + (e.message || e));
+  }
+}
 // ★서버 라우트(/ai_scene·/cutaway·/sfx)는 **진짜 칸 번호(beat_idx)**로 칸을 찾는다. 화면 위치 i를 보내면
 //   칸을 지운 작업(번호 빠짐)에서 뒤 칸의 AI 장면(~300원)·효과음이 엉뚱한 칸에 붙거나 422가 난다(2026-09-27).
 function beatIdOf(i){
@@ -3528,6 +3564,7 @@ function renderBand(){
                onclick="dropPicked(${i})">🗑 고른 것 빼기 (${pickCount(i)})</button>` : ''}
             ${sfxControl(i)}
             ${aiSceneControl(i)}
+            ${memeControl(i)}
             <button title="이 칸에 담은 장면을 모두 뺍니다" onclick="clearBeat(${i})">비우기</button>
             <button id="fill-${i}" title="${AUTOADD[i] ? '방금 담은 장면만 도로 뺍니다'
               : '이 칸의 대사를 AI가 읽고, 그 말이 실제로 보이는 화면을 골라 담습니다'}"
