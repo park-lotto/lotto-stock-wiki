@@ -417,7 +417,7 @@ def signal_end_sec(narration, signal, words):
     return None
 
 
-def meme_slots(plan, words_of, pool, log=None):
+def meme_slots(plan, words_of, pool, log=None, key=""):
     """편성표의 칸마다 짤 자리를 정해 beat["cutaway"] 에 남긴다(관제 139). 판단은 여기 한 곳.
 
     words_of(beat) → (낱말 시각 [{word,start,end}] | None, 칸 길이 초(head_trim·tail_trim 뺀 실제 칸 길이) | None)
@@ -472,7 +472,10 @@ def meme_slots(plan, words_of, pool, log=None):
             continue
         k = used.get(emo, 0)
         used[emo] = k + 1
-        a = cands[k % len(cands)]          # 같은 감정이 여러 줄이면 돌려 쓴다(한 편 안 같은 짤 반복 줄이기)
+        # ★작업마다 다른 짤(key=작업 번호): 종전엔 늘 목록 맨 앞이라 모든 영상에 같은 짤이 들어갔다(10-06 팩 1,283개 올린 뒤 확인).
+        #   같은 작업은 다시 만들어도 같은 짤. 같은 감정이 한 편에 여러 줄이면 그다음 것으로 돌려 쓴다.
+        import zlib
+        a = cands[(zlib.crc32(("%s|%s" % (key, emo)).encode("utf-8")) + k) % len(cands)]
         b["cutaway"] = {"asset_id": int(a["asset_id"]), "match_type": "meme", "head_sec": head,
                         "vid": "meme_%d" % int(a["asset_id"]),      # 짤 컷의 video_id — 화면·렌더·캡컷이 이 이름 하나로 짤 파일을 찾는다
                         "emotion": emo, "scene_min": MEME_SCENE_MIN, "owner": int(a.get("owner") or 0)}

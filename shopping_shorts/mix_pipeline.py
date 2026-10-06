@@ -2464,7 +2464,7 @@ def _apply_memes(plan, store, job, tts_dir):
         d = _probe_duration(str(mp3))
         words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)))
         return words, _va._beat_effective_dur(b, mp3)
-    res = _sbm.meme_slots(plan, _words_of, pool)
+    res = _sbm.meme_slots(plan, _words_of, pool, key=str((job or {}).get("job_id") or tts_dir))   # 작업마다 다른 짤
     for r in res:
         print("[meme] job칸 %s %s" % (r.get("beat_idx"), ("짤 %s %.2f초 #%s" % (r["emotion"], r["head_sec"], r["asset_id"]))
                                        if r.get("meme") else ("없음: " + r.get("why", ""))), file=sys.stderr)

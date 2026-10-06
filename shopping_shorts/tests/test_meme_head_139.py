@@ -169,3 +169,20 @@ def test_스토리보드_줄의_신호어_자리가_칸까지_실린다():
                                     {"slot": "x", "line": "그냥", "ids": []}])
     assert r["beat_sources"][0]["sig_rank"] == 1 and r["beat_sources"][0]["signal"] == "와"
     assert "sig_rank" not in r["beat_sources"][1]
+
+
+def test_작업마다_다른_짤_같은작업은_같은짤():
+    """10-06: 늘 목록 맨 앞이라 모든 영상에 같은 짤 — 작업 key 로 고르게."""
+    from shopping_shorts import storyboard as sb
+    pool = {"놀람": [{"asset_id": i, "duration": 2.0} for i in range(1, 51)]}
+
+    def pick(key):
+        plan = {"beats": [{"beat_idx": 0, "narration": "훅"},
+                          {"beat_idx": 1, "narration": "이게 미친 포인트인게 정말 좋아요 아주 길게 말해요", "pinned": True,
+                           "sig_rank": 1, "signal": "이게 미친 포인트인게"}]}
+        words = [{"word": "이게", "start": 0.0, "end": 0.2}, {"word": "미친", "start": 0.2, "end": 0.5},
+                 {"word": "포인트인게", "start": 0.5, "end": 1.3}, {"word": "정말", "start": 1.4, "end": 1.6}]
+        sb.meme_slots(plan, lambda b: (words, 5.0), pool, key=key)
+        return (plan["beats"][1].get("cutaway") or {}).get("asset_id")
+    assert pick("job-a") == pick("job-a")
+    assert len({pick("job-%d" % i) for i in range(20)}) >= 8
