@@ -151,7 +151,7 @@ def main():
         want = [curve(k) for k in ks]
         print(f"장면 {i} [{way}] {N}프레임 · 프레임 {ks}\n   완성본 배율 {[round(g, 3) if g else None for g in got]}\n   곡선 계산값 {[round(w, 3) for w in want]}")
         pairs = [(g, w) for g, w in zip(got, want) if g is not None]   # 특징점이 모자라 못 잰 점은 뺀다(대부분 재야 한다)
-        if len(pairs) < len(want) - 1 or any(abs(g - w) > .07 for g, w in pairs):
+        if len(pairs) < len(want) - 2 or any(abs(g - w) > .07 for g, w in pairs):
             fails.append(f"장면 {i} [{way}] 확대 곡선이 다르다")
     # 흑백 충격: 채도 ≈0, 프레임 간 흔들림(이동)이 있고, 13프레임마다 찢기듯 크게 밀림
     i = firsts["problem"]

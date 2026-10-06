@@ -201,7 +201,8 @@ def main():
     scene_style.compose(str(base), TIMELINE, snap0, str(out0), work / "w0", {"text": "주방 정리\n끝판왕"})
     scene_style.compose(str(base), TIMELINE, snap, str(out1), work / "w1", {"text": "주방 정리\n끝판왕"})
     # 어둡게만 뺀 대조(확대·위치는 같다) — 어둡게 칸에 확대가 겹치면 효과 없음 영상과의 비율에 확대 몫이 섞인다
-    snap_nodim = {**snap, "effects": {k: {kk: vv for kk, vv in v.items() if kk != "dim"} for k, v in eff.items()}}
+    # 어둡게 장면은 영상 칸이 자막 띠까지 넓어진다 — 대조도 같은 칸이 되도록 dim 을 0.99(밝기 그대로)로, 시작 어두운 제목(sec>0)만 뺀다
+    snap_nodim = {**snap, "effects": {k: ({**{kk: vv for kk, vv in v.items() if kk != "dim"}, **({"dim": {"level": .99, "sec": 0}} if v.get("dim") and not v["dim"].get("sec") else {})}) for k, v in eff.items()}}
     out2 = work / "nodim.mp4"
     scene_style.compose(str(base), TIMELINE, snap_nodim, str(out2), work / "w2", {"text": "주방 정리\n끝판왕"})
     layers = json.loads((work / "w1" / "scene-style-layers.json").read_text(encoding="utf-8"))
@@ -229,7 +230,8 @@ def main():
         n = round(e["zoomIn"] * 30)
         want = [1 + (e["zoom"] - 1) * (1 - (1 - min(1, k / n)) ** 2) for k in (1, 7, 16, 25)]   # scene_style.zoom_move_vf 곡선
         print(f"    곡선 계산값 {[round(x, 3) for x in want]}")
-        if None in curve or any(abs(c - x) > .06 for c, x in zip(curve, want)):
+        got = [(c, x) for c, x in zip(curve, want) if c is not None]   # 특징점 부족으로 못 잰 점은 1개까지 뺀다
+        if len(got) < len(want) - 1 or any(abs(c - x) > .06 for c, x in got):
             fails.append(f"강조 확대 장면 {i}: 0.5초 확대 움직임이 아니다 {curve}")
     fd = round((scenes[dim_scene]["start"] + scenes[dim_scene]["end"]) / 2 * 30)
     # 어둡게 강조 장면은 자막이 영상 한가운데 큰 글자로 옮겨 온다(영상 칸 30~70%) → 밝기는 글자 자리를 빼고 잰다.

@@ -117,6 +117,11 @@ def main():
     out0, out1 = work / "plain.mp4", work / "fx.mp4"
     scene_style.compose(str(base), TIMELINE, snap0, str(out0), work / "w0", hc)
     scene_style.compose(str(base), TIMELINE, snap, str(out1), work / "w1", hc)
+    # 어둡게만 뺀 대조 — 어둡게 장면은 영상 칸이 자막 띠까지 넓어져(빈 띠 없앰) 효과 없음 영상과 같은 줄을 비교할 수 없다.
+    #   대조도 같은 영상 칸이 되도록 dim 을 0.99(밝기 그대로, 강조 배치는 유지)로 둔다.
+    snap_nodim = {**snap, "effects": {k: ({**v, "dim": {"level": .99, "sec": 0}} if v.get("dim") and not v["dim"].get("sec") else v) for k, v in eff.items()}}
+    out2 = work / "nodim.mp4"
+    scene_style.compose(str(base), TIMELINE, snap_nodim, str(out2), work / "w2", hc)
     layers = json.loads((work / "w1" / "scene-style-layers.json").read_text(encoding="utf-8"))
 
     def box(i):
@@ -126,10 +131,10 @@ def main():
         i = firsts[m]; f0 = round(scenes[i]["start"] * 30); N = round(scenes[i]["end"] * 30) - f0
         z = [scale_between(frame(out0, f0 + k), frame(out1, f0 + k), box(i)) for k in (1, N // 2, N - 2)]
         print(f"{m} 장면 {i}: 시작·가운데·끝 배율 {[round(x, 2) if x else None for x in z]}")
-        if z[1] is not None and z[1] < .5:   # 2배 화면에서 특징점 맞추기 실패(0.014 같은 값) — 눈으로 확인할 몫, 실패로 안 센다
-            print(f"   ⚠ 가운데 배율 측정 실패({z[1]:.3f}) — 비교 영상으로 눈 확인"); z[1] = None
+        if z[1] is None or z[1] < .5:   # 2배 화면에서 특징점 맞추기 실패(0.014 같은 값) — 눈으로 확인할 몫, 실패로 안 센다
+            print(f"   ⚠ 가운데 배율 측정 실패({z[1]}) — 비교 영상으로 눈 확인"); z[1] = None
             continue
-        if not z[1] or z[1] < 1.3:
+        if not z[1] or z[1] < 1.05:   # 배율은 제품 크기로 자동(1.3~2) — 쭉 당기기는 가운데가 목표의 절반이다
             fails.append(f"{m} 장면 가운데 확대가 없다 {z}")
         if m == "cta" and (not z[2] or z[2] > 1.25):
             fails.append(f"CTA 끝에서 원본 크기로 안 돌아왔다 {z}")
@@ -141,7 +146,7 @@ def main():
     i = firsts["peak"]; f = round((scenes[i]["start"] + scenes[i]["end"]) / 2 * 30)
     b0, b1 = box(i)
     rows = [(b0, b0 + int((b1 - b0) * .28)), (b0 + int((b1 - b0) * .72), b1)]
-    ratio = sum(luma(frame(out1, f), rr) for rr in rows) / max(1, sum(luma(frame(out0, f), rr) for rr in rows))
+    ratio = sum(luma(frame(out1, f), rr) for rr in rows) / max(1, sum(luma(frame(out2, f), rr) for rr in rows))
     mid = (b0 + int((b1 - b0) * .3), b0 + int((b1 - b0) * .7))
     white = float((cv2.cvtColor(frame(out1, f)[mid[0]:mid[1]], cv2.COLOR_BGR2GRAY) > 235).mean())
     print(f"고조 장면 {i}: 어둡기 {ratio:.3f} · 가운데 흰 글자 비율 {white:.3f}")

@@ -42,7 +42,9 @@
       const iw=im?.naturalWidth||1080,ih=im?.naturalHeight||1920,s0=Math.max(bw0/iw,bh0/ih),vx=bw0/s0/iw,vy=bh0/s0/ih;
       const toBox=(c,v)=>(c-.5)/v+.5;   // 원본 그림 좌표 → 영상 칸 좌표(칸 밖이면 0~1 밖)
       const x0=toBox(ai[0],vx),x1=toBox(ai[2],vx),y0=toBox(ai[1],vy),y1=toBox(ai[3],vy);
-      const z=api.refFx.emphZoom;   // 2배 고정(사장님 2026-10-05 "2배로 키워봐") — 제품 크기로 줄이던 것(1.2~2배)은 확대가 약해 보였다
+      // 배율 자동(사장님 2026-10-06 "자동으로 하는데 수동으로도 조절되게"): 제품이 영상 칸의 85%를 채우게, 1.3~2배.
+      //   2배 고정은 크게 찍힌 제품에서 몸통만 화면을 채웠다(핀·바늘이 화면 밖 — 결과물 확인). 손으로는 [확대 크기] 슬라이더(1.2~2.5).
+      const z=Math.max(1.3,Math.min(api.refFx.emphZoom,.85/Math.max(x1-x0,y1-y0,.01)));
       const panOf=(b,zz)=>Math.max(-1,Math.min(1,1-(2*Math.min(1,Math.max(0,b))*zz-1)/(zz-1)));
       return {zoom:+z.toFixed(2),panX:+panOf((x0+x1)/2,z).toFixed(3),panY:+panOf((y0+y1)/2,z).toFixed(3),focus:[+((x0+x1)/2).toFixed(3),+((y0+y1)/2).toFixed(3)],box:[x0,y0,x1,y1].map(v=>+v.toFixed(3)),by:'ai'};
     }
@@ -75,6 +77,8 @@
       <button type="button" class="scene-effects-reset" data-ref-fx="auto" style="width:auto;padding:4px 10px;margin:0"></button></p>
     <small>이 장면: <b data-ref-moment>-</b> · 잘된 쇼츠 114편 실측</small>
     <div class="scene-effect-choices" data-scene-fx-list style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${SCENE_FX.map(([k,v])=>`<button type="button" data-scene-fx="${k}">${v}</button>`).join('')}</div>
+    <label data-zoom-amt hidden style="display:flex;gap:8px;align-items:center;margin:6px 0"><small>확대 크기</small><input type="range" min="1.2" max="2.5" step="0.05" style="flex:1;min-width:0"><output style="flex:none;min-width:48px;text-align:right"></output></label>
+    <small>위치는 미리보기 화면을 끌어서 옮겨요</small><br>
     <small>영상 전체</small>
     <div class="scene-effect-choices"><button type="button" data-ref-fx="jump">점프 줌</button><button type="button" data-ref-fx="title">시작 어두운 제목</button></div>`;
   effectsPanel.append(refBox);
@@ -82,10 +86,18 @@
     const i=api.geometry().sceneIndex,m=api.moments()[i],cur=api.sceneFx(i);
     refBox.querySelector('[data-ref-moment]').textContent=m?MOMENT_NAME[m]:'일반';
     refBox.querySelectorAll('[data-scene-fx]').forEach(b=>b.classList.toggle('active',b.dataset.sceneFx===cur));
+    const amt=refBox.querySelector('[data-zoom-amt]'),zoomed=['in','pull','inout'].includes(cur);amt.hidden=!zoomed;amt.style.display=zoomed?'flex':'none';
+    if(zoomed){const z=Number(api.effectAt(i).zoom)||1;amt.querySelector('input').value=String(z);amt.querySelector('output').textContent=z.toFixed(2)+'배';}
     const auto=refBox.querySelector('[data-ref-fx="auto"]'),on=api.autoPlaced();auto.textContent=on?'자동 배치 켜짐 ●':'자동 배치 꺼짐 ○';auto.classList.toggle('active',on);
     refBox.querySelector('[data-ref-fx="jump"]').classList.toggle('active',api.jumpZoomOn());
     const t=api.effectAt(0).dim;refBox.querySelector('[data-ref-fx="title"]').classList.toggle('active',!!t&&t.sec>0);
   }
+  // 확대 크기(수동): 제품 중심(fxFocus)을 그대로 두고 배율만 바꾼다 — pan 은 media_geometry 식으로 다시 계산
+  refBox.querySelector('[data-zoom-amt] input').addEventListener('input',ev=>{
+    const i=api.geometry().sceneIndex,e={...api.effectAt(i)},z=Number(ev.target.value);e.zoom=z;
+    if(Array.isArray(e.fxFocus)){const pan=b=>Math.max(-1,Math.min(1,1-(2*b*z-1)/(z-1)));e.panX=+pan(e.fxFocus[0]).toFixed(3);e.panY=+pan(e.fxFocus[1]).toFixed(3);}
+    api.effectAt(i,e);refBox.querySelector('[data-zoom-amt] output').textContent=z.toFixed(2)+'배';sync();});
+  refBox.querySelector('[data-zoom-amt] input').addEventListener('change',()=>{lastIndex=-1;sync();});   // 손을 떼면 움직임을 다시 보여 준다
   refBox.addEventListener('click',ev=>{
     const pick=ev.target.closest('[data-scene-fx]');
     // 고른 뒤 그 장면을 통째로 다시 그린다(show) — 자막 자리(어둡게+큰 글자)·자막 등장·미리보기 움직임이 누르자마자 바뀐다(자막팩 실측: 안 그리면 넘겼다 와야 보였다)
@@ -138,7 +150,7 @@
   windowEl.addEventListener('pointermove',event=>{
     if(!mediaDrag||mediaDrag.id!==event.pointerId)return;const d=mediaDrag,e=structuredClone(d.e),dx=(event.clientX-d.x)/d.rect.width,dy=(event.clientY-d.y)/d.rect.height,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
     if(d.isLens)e.highlight={...e.highlight,cx:clamp((e.highlight.cx??.5)+dx,0,1),cy:clamp((e.highlight.cy??.55)+dy,0,1)};
-    else{const z=e.zoom||1,mh=api.geometry().media.height/100;e.panX=clamp((e.panX||0)+dx*2/(z-1),-1,1);e.panY=clamp((e.panY||0)+dy*2/((z-1)*mh),-1,1);}
+    else{const z=e.zoom||1,mh=api.geometry().media.height/100;e.panX=clamp((e.panX||0)+dx*2/(z-1),-1,1);e.panY=clamp((e.panY||0)+dy*2/((z-1)*mh),-1,1);delete e.fxFocus;}   // 손으로 옮긴 위치가 우선 — 확대 크기 슬라이더가 AI 자리로 되돌리지 않게
     api.effect(e);sync();updateControls();
   });
   for(const type of ['pointerup','pointercancel','lostpointercapture'])windowEl.addEventListener(type,()=>mediaDrag=null);

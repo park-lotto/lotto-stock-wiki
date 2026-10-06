@@ -1580,7 +1580,12 @@
   //   글자를 크게 띄운다 — 글자 없이 어둡게만 하면 화면이 탁해 보였다(2026-10-05 결과물 확인).
   //   이 장면 자막을 자막 띠 대신 영상 칸 한가운데에 1.8배 흰 글자로. 위치는 left/top/width 로만 잡는다 —
   //   자막 등장 효과(rise·grow·pop…)가 렌더 때 이 요소의 transform 을 덮어쓴다(자막팩 관제 127 요청).
+  // 어둡게 강조 장면은 자막 띠가 비므로 영상 칸을 그 띠 위쪽까지 넓힌다(사장님 2026-10-06 "당연히 검은 칸이 안 보여야지").
+  //   장면 번호 → 띠 윗선(%) — geometry()/geometryAt() 이 이 값으로 영상 칸을 늘린다(미리보기·완성본 렌더러·썸네일이 같은 값).
+  const emphTop=new Map();
+  const mediaFor=(frame,id,i)=>{const b=mediaBounds(frame,id),t=emphTop.get(i);return t==null||t>=b.top?b:{...b,top:t,height:b.height+(b.top-t)};};
   function emphasisCaption(frame,text,patch){
+    emphTop.delete(sceneIndex);
     const d=(effects[String(sceneIndex)]||{}).dim;
     if(!d||Number(d.sec)>0||!text||!text.textContent.trim())return;   // 장면 내내 어둡게(강조)일 때만 — 시작 어두운 제목(0.13초)은 아니다
     // 모양(글꼴·크기 배율·색·테두리·등장)은 자막팩이 정한다 — captionEmphasisStyle()(자막팩 관제 127, 같은 파일). 없으면 기본값.
@@ -1588,7 +1593,7 @@
     const look=typeof captionEmphasisStyle==='function'?(captionEmphasisStyle()||{}):{};
     const b=mediaBounds(frame,rows[current].id),size=(parseFloat(text.style.fontSize)||parseFloat(getComputedStyle(text).fontSize))*(Number(look.sizeScale)||1.8);
     const color=look.color||'#fff';
-    if(patch)patch.style.display='none';
+    if(patch){const top=parseFloat(patch.style.top);if(Number.isFinite(top))emphTop.set(sceneIndex,top);patch.style.display='none';}
     Object.assign(text.style,{left:'6%',width:'88%',right:'auto',top:(b.top+b.height*.3)+'%',height:(b.height*.4)+'%',fontSize:size+'px',
       whiteSpace:'pre-wrap',color,textShadow:'0 0 3px #000,0 3px 10px rgba(0,0,0,.85)',alignItems:'center',justifyContent:'center',
       ...(look.font?{fontFamily:look.font}:{}),...(look.textStyle||{})});
@@ -2037,9 +2042,9 @@
       fittedText.clear();renderEdit();
     },
     show(index){showScene(index);return this.geometry()},
-    geometry:()=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
+    geometry:()=>({media:noTemplate?{top:0,height:100}:mediaFor(frameFor(rows[current]),rows[current].id,sceneIndex),sceneIndex,kind:sceneKind(sceneIndex)}),
     // 장면을 열지 않고 i번 장면의 영상 칸(관제 124) — 강조 확대 위치 잡기가 장면을 오가며 화면을 되돌리던 것(빠르게 누르면 엉뚱한 장면에 들어감)을 없앤다
-    geometryAt:i=>({media:noTemplate?{top:0,height:100}:mediaBounds(frameFor(rows[current],i),rows[current].id),sceneIndex:i,kind:sceneKind(i)}),
+    geometryAt:i=>({media:noTemplate?{top:0,height:100}:mediaFor(frameFor(rows[current],i),rows[current].id,i),sceneIndex:i,kind:sceneKind(i)}),
     effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
     // 다른 장면의 효과를 직접 읽고 쓴다(쇼핑 안내 세트가 마지막 장면 여러 개에 한 번에 넣는다, 2026-09-23)
     effectAt(i,value){const k=String(i);if(value!==undefined)effects[k]=value;return effects[k]||{}},
