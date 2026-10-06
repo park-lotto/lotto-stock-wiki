@@ -11851,16 +11851,11 @@ document.addEventListener('keydown', e=>{
 function _sceneLabPrep(lab){
   try{ stopPlay(); }catch(e){}
   document.querySelectorAll('#mixPreview video').forEach(v => { try{ v.pause(); }catch(e){} });
-  DATA = lab.DATA; lists = lab.lists; onePerSeg = !!lab.onePerSeg;
-  Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
-  Object.assign(STRETCH, lab.STRETCH || {});
-  Object.keys(TRIMS).forEach(k => delete TRIMS[k]);
-  Object.assign(TRIMS, lab.TRIMS || {});
-  // 🔗 합친 조각(2026-08-17 사장님 "합치기해서 훅으로 가져다가 재생하면 맨앞장만 재생").
-  // 미리보기 계산은 **이 바깥 화면**이 한다 — TRIMS만 받아오고 MERGES를 빠뜨려 실험실에선
-  // 합쳐 보이는데 재생은 원본 0.5초만 나왔다. 짝으로 움직이는 값이라 함께 복사한다(0순위-B).
-  Object.keys(MERGES).forEach(k => delete MERGES[k]);
-  Object.assign(MERGES, lab.MERGES || {});
+  DATA = lab.DATA; onePerSeg = !!lab.onePerSeg;
+  // ★칸 편집 상태 전부를 실험실과 **같은 함수**로 받는다(관제 148). 예전엔 목록·늘려 채우기·트림·합치기만 손으로
+  //   복사해 손 컷·느리게·손 길이·구절 맞춤이 빠졌다(합치기를 빠뜨렸던 2026-08-17 사고와 같은 꼴).
+  //   옛 실험실(캐시된 iframe)은 state 없이 부른다 → 옛 모양으로 받는다.
+  applyScreenState(lab.state || {lists: lab.lists, stretch: lab.STRETCH, trims: lab.TRIMS, merges: lab.MERGES});
   SL.server = true;
   SL.job = (typeof MIX_JOB !== 'undefined' && MIX_JOB) || SL.job;
   _pvShow('play');   // 자리를 가조립 재생기에 넘긴다(판정은 _pvShow 한 곳)
