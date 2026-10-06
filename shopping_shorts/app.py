@@ -21263,7 +21263,7 @@ def _sb_picks(cid, key, bd):
         _slots = [s if isinstance(s, dict) else {} for s in bd["slots"]]
         _pack = _sp.preview_pack(st, cid, [s.get("slot") for s in _slots], job=_job, style_id=_sid)
         _first = [i for i, s in enumerate(_slots) if s.get("sfx_pick") and not s.get("sfx_off")]
-        _rows = _sp.preview_lines([{"role": s.get("slot"), "text": s.get("line")} for s in _slots], _pack, _first)
+        _rows = _sp.preview_lines([{"role": s.get("slot"), "text": s.get("line"), "pack_edit": s.get("pack_edit")} for s in _slots], _pack, _first)
         for s, r in zip(_slots, _rows):
             s["pack_sfx"] = r
         bd["pack_sfx_on"] = bool(_pack)

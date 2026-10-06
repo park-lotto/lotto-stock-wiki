@@ -666,12 +666,18 @@ MEME_SFX = {"놀람": "리액션 탄성", "감탄_박수": "리액션 탄성", "
             "충격_입막": "긴장", "공포_움찔": "긴장", "기쁨_환호": "박수/환호", "웃음": "웃음",
             "거절_절레": "실패", "분노_짜증": "실패", "슬픔": "실패", "끄덕_엄지": "팝/띵"}
 _STRONG_END = re.compile(r"품절\s*대란|대박이지|난리\s*(?:났|나|난)|완판|역대급|미쳤")
-CARRY_KEYS = ("meme_pick", "meme_auto", "meme_off", "sfx_pick", "sfx_auto", "sfx_off")   # 2단계 줄 → 3단계 beat 로 함께 넘기는 칸
+CARRY_KEYS = ("meme_pick", "meme_auto", "meme_off", "sfx_pick", "sfx_auto", "sfx_off")   # 2단계 줄 → 3단계 beat 로 함께 넘기는 칸(숫자)
+#   + "pack_edit"(기본 효과음팩 빼기·바꾸기, dict) — carry_picks 가 따로 싣는다
 
 
 def carry_picks(src):
     """2단계 줄(또는 화면 행)의 짤·효과음 고름 → beat 로 넘길 dict. 확정 길(story_writer·edit_plan)이 이 함수 하나로 싣는다."""
     out = {}
+    # 팩 소리 빼기·바꾸기(dict) — 모양 정리는 주인 sfx_pack.clean_pack_edit 한 곳(여기선 싣기만)
+    from shopping_shorts.sfx_pack import clean_pack_edit
+    pe = clean_pack_edit((src or {}).get("pack_edit"))
+    if pe:
+        out["pack_edit"] = pe
     for k in CARRY_KEYS:
         v = (src or {}).get(k)
         if str(v if v is not None else "").isdigit() and int(v):
