@@ -75,7 +75,7 @@ const SELECTED=new Set();
 let CAN_DL = false;
 // 제작소로 보낼 수 있는 영상 수 — **서버가 정본**(script_generate.SOURCE_MAX)이다.
 // 여기 값은 /api/me가 오기 전까지만 쓰는 임시값이라 숫자를 두 번 정하는 게 아니다.
-let SOURCE_MAX = 8;
+let SOURCE_MAX = 15;
 async function loadMe(){
   try{
     const d = await (await fetch('/api/me')).json();
