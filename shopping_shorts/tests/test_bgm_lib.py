@@ -97,3 +97,32 @@ def test_speed_owner_render_and_capcut_follow(tmp_path, monkeypatch):
     assert job()["deco"]["bgm"] == {"lib": "blue", "volume": 40, "speed": 1.25}
     A.api_produce_mix_settings({"job_id": "jb", "bgm_speed": 1})
     assert "speed" not in job()["deco"]["bgm"]                    # 1배속은 키를 지워 종전 그래프 그대로
+
+
+def test_preview_render_carries_bgm_only(tmp_path, monkeypatch):
+    """3단계 [완성본 만들기](run_preview)에도 고른 배경음이 실린다 — 종전 deco={} 라 라이브에서 안 들렸다(상관 0.019).
+    배경음 말고 다른 꾸미기(워터마크 등)는 종전대로 빠진다."""
+    import pathlib
+    from shopping_shorts import mix_pipeline as mp
+    from shopping_shorts.store import Store
+    db = str(tmp_path / "t.db"); store = Store(db)
+    store.create_mix_job("J1", ["https://x/1"], 20, "template")
+    work = tmp_path / "work"; tts_dir = work / "J1" / "tts"; tts_dir.mkdir(parents=True)
+    beat = {"beat_idx": 0, "narration": "비트", "primary": {"video_id": "v1", "start": 0, "end": 2}}
+    beat["tts_path"] = mp._beat_tts_path(tts_dir, beat); open(beat["tts_path"], "w").write("m")
+    store.update_mix_job("J1", edit_plan={"beats": [beat]}, status="ready_for_review",
+                         deco={"bgm": {"lib": "beggin", "volume": 30, "speed": 1.25}, "watermark": {"text": "W"}})
+    monkeypatch.setattr(mp, "_resolve_sources", lambda job, w: {"v1": str(tmp_path / "v1.mp4")})
+    got = {}
+
+    def fake(plan, tts, srcs, out, clean_fn=None, **kw):
+        got.update(kw); pathlib.Path(out).write_bytes(b"x"); return out
+    monkeypatch.setattr(mp, "assemble", fake)
+    mp.run_preview("J1", db, str(work))
+    assert store.get_mix_job("J1")["preview_status"] == "ready"
+    assert got["deco"]["bgm"]["_abspath"] == bgm_lib.path_of("beggin")
+    assert got["deco"]["bgm"]["speed"] == 1.25 and got["deco"]["bgm"]["volume"] == 30
+    assert set(got["deco"]) == {"bgm"}                                   # 워터마크 등은 종전대로 빠진다
+    store.update_mix_job("J1", deco={"watermark": {"text": "W"}}, preview_status="")
+    got.clear(); mp.run_preview("J1", db, str(work))
+    assert got["deco"] == {}                                             # 배경음 없으면 종전 그대로
