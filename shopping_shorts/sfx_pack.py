@@ -371,3 +371,57 @@ def events(timeline, pack, manual_beats=(), first_beats=()):
         path = os.path.join(pack["dir"], slot + ".wav")
         out.append((path, t, _gain_for(path, slot) * level_mul))
     return out
+
+
+def preview_timeline(lines):
+    """2단계(음성 없음)용 가짜 timeline — 줄 길이는 말속도 주인 edit_plan.narr_secs 로 어림.
+    lines: [{"role","text"}]. beat_idx = 줄 번호(0부터). 실제 3단계는 TTS 실측 시각으로 다시 계산한다."""
+    from shopping_shorts.edit_plan import narr_secs
+    tl, t0 = [], 0.0
+    for i, ln in enumerate(lines or []):
+        text = str((ln or {}).get("text") or "").strip()
+        if not text:
+            continue
+        dur = float(narr_secs(text))
+        tl.append({"beat_idx": i, "t0": t0, "dur": dur, "narration": text,
+                   "role": re.sub(r"_.*$", "", str((ln or {}).get("role") or "")), "caption_lines": None,
+                   "cap_durs": None, "cap_lead": 0.0, "cap_offset": 0.0})
+        t0 += dur
+    return tl
+
+
+def preview_lines(lines, pack, first_lines=()):
+    """2단계 스토리보드 줄마다 '자동으로 들어갈 팩 소리'(관제 143 확장) — 배치 규칙은 plan_events 를 **그대로** 부른다(두 벌 금지).
+    lines: [{"role","text"}] · pack: resolve() 결과(None 이면 전부 빈 목록=기본 효과음 없음)
+    first_lines: 줄 효과음(짤·CTA)이 있는 줄 번호 — events 처럼 그 줄 첫 발을 비운다.
+    돌려주는 것: 줄마다 [{"slot","label","t"(영상 기준 대략 초),"url"}]. 시각은 어림이라 화면은 '대략 위치'로 보인다."""
+    out = [[] for _ in (lines or [])]
+    if not pack or not pack.get("name"):
+        return out
+    nos = [n for n, _ in list_packs()]
+    if pack["name"] not in nos:
+        return out
+    no = nos.index(pack["name"]) + 1
+    tl = preview_timeline(lines)
+    span = {b["beat_idx"]: (b["t0"], b["t0"] + b["dur"]) for b in tl}
+    for slot, t, _ in plan_events(tl, (), density=pack.get("density") or "normal", first_beats=first_lines):
+        # 휙은 둘째 줄 시작 직전(WHOOSH_LEAD)에 울린다 — 그 소리는 둘째 줄 몫으로 센다
+        at = t + (WHOOSH_LEAD if slot == "whoosh" else 0.0)
+        owner = next((i for i, (a, b) in span.items() if a - 1e-6 <= at < b), None)
+        if owner is None:
+            continue
+        out[owner].append({"slot": slot, "label": SLOT_LABEL.get(slot, slot), "t": round(float(t), 1),
+                           "url": "/api/produce/sfx_pack/sound/%d/%s" % (no, slot)})
+    return out
+
+
+def preview_pack(store, customer_id, roles, job=None, style_id=None):
+    """2단계용 팩 결정 — resolve 를 **그대로** 부른다. 3단계 job 이 있으면 그 job(꾸미기 선택 포함),
+    없으면 작업 state 의 틀 번호(script_style_id)·줄 역할로 job 모양을 만들어 넘긴다(썰 판정도 resolve 몫)."""
+    j = dict(job) if isinstance(job, dict) else {}
+    j["customer_id"] = int(customer_id or 0)
+    if style_id is not None and not (j.get("script_structure") or {}).get("script_style_id"):
+        j["script_structure"] = dict(j.get("script_structure") or {}, script_style_id=style_id)
+    if not ((j.get("edit_plan") or {}).get("beats")):
+        j["edit_plan"] = {"beats": [{"beat_idx": i, "role": re.sub(r"_.*$", "", str(r or ""))} for i, r in enumerate(roles or [])]}   # 2단계 칸 이름 'bait_1' → 'bait'(storyboard 관례)
+    return resolve(store, j)

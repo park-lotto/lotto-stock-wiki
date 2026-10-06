@@ -19317,6 +19317,12 @@ function sbMemeCell(i, sl){
     h+=SfxBank.cell({id:sl.sfx_off?null:sl.sfx_pick, cat:sl.sfx_cat, auto:sl.sfx_auto, off:sl.sfx_off,
       change:`sbSfxOpen(${i})`, remove:`sbSfxSet(${i},null)`, add:`sbSfxOpen(${i})`, onReady:()=>{ try{ sbRender(); }catch(e){ console.warn('[sfx] 다시 그리기 실패', e); } }});
   }
+  // 기본 효과음팩 칩 — 어떤 소리·어디쯤은 서버(sfx_pack.preview_lines = 렌더와 같은 plan_events)가 정해 sl.pack_sfx 로 싣는다. 여기선 그리기만
+  if(Array.isArray(sl.pack_sfx)){
+    h+= sl.pack_sfx.length
+      ? `<div class="sb-packsfx" title="자동으로 깔리는 기본 효과음 — 대략 위치(3단계에서 실제 목소리 길이로 다시 맞춥니다)">🔊 ${sl.pack_sfx.map(x=>`<button class="mp-btn sb-pchip" style="padding:2px 8px;font-size:12px;min-height:0" onclick="sbPackPlay('${sbE(x.url)}')">${sbE(x.label)} <small>~${Number(x.t).toFixed(1)}초</small></button>`).join(' · ')} <small style="opacity:.6">대략 위치</small></div>`
+      : (i===0 && (sbCur()[1]||{}).pack_sfx_on===false ? `<div class="sb-packsfx" style="opacity:.6">🔇 기본 효과음 없음</div>` : '');
+  }
   return h;
 }
 function sbMemeOpen(i){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
@@ -19332,7 +19338,9 @@ function sbSfxOpen(i){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; cons
 function sbSfxSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
   delete sl.sfx_auto; delete sl.sfx_off;
   if(id) sl.sfx_pick=Number(id); else { delete sl.sfx_pick; sl.sfx_off=1; }
-  sbRender(); }
+  sbPicksSync(ek,bd); }   // 줄 효과음이 바뀌면 그 줄 기본 효과음 첫 발도 서버가 다시 정한다
+let _sbPackAud=null;
+function sbPackPlay(u){ try{ if(_sbPackAud) _sbPackAud.pause(); _sbPackAud=new Audio(u); _sbPackAud.play().catch(e=>console.warn('[packsfx] 재생 실패', e)); }catch(e){ console.warn('[packsfx]', e); } }
 async function sbPicksSync(ek, bd){
   sbRender();
   try{
@@ -19340,7 +19348,8 @@ async function sbPicksSync(ek, bd){
       body:JSON.stringify({slots:bd.slots.map(x=>({line:x.line, slot:x.slot, meme_emotion:x.meme_emotion, meme_pick:x.meme_pick, meme_auto:x.meme_auto, meme_off:x.meme_off,
         sfx_pick:x.sfx_pick, sfx_auto:x.sfx_auto, sfx_off:x.sfx_off}))})})).json();
     if(r&&r.ok&&Array.isArray(r.slots)&&r.slots.length===bd.slots.length){
-      const K=['meme_pick','meme_auto','meme_off','sfx_pick','sfx_auto','sfx_off','sfx_cat'];
+      const K=['meme_pick','meme_auto','meme_off','sfx_pick','sfx_auto','sfx_off','sfx_cat','pack_sfx'];
+      if(r.pack_sfx_on!=null) bd.pack_sfx_on=!!r.pack_sfx_on;
       r.slots.forEach((x,k)=>{ K.forEach(f=>{ if(x[f]==null) delete bd.slots[k][f]; else bd.slots[k][f]=x[f]; }); });
     } else toast((r&&r.error)||'짤·효과음 다시 고르기 실패');
   }catch(e){ toast('짤·효과음 다시 고르기 실패(네트워크)'); }
