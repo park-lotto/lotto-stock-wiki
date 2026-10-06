@@ -1969,6 +1969,131 @@ def _seg_key(s):
     return (s.get("video_id", ""), s.get("seg_id", ""), s.get("start", 0.0))
 
 
+def _piece_id(seg_id, start, end):
+    """원본 조각을 잘라 만든 **새 구간**의 id — `<원본 id>#<시작>-<끝>`.
+
+    ★같은 id 로 구간만 바꾸지 마라(관제 141, 2026-10-06 영상점검 다른 장면 9칸):
+      화면(scene_play.js)은 id → 장면 표(scene_table) 구간을, 렌더·청소는 비트 사본의 start/end 를 읽는다.
+      id 가 같은데 구간이 다르면 둘이 갈리고, 표에 없는 id(옛 `#2`)는 화면이 컷 0개 → 완성본만 그 칸을 채워 뒤가 밀린다.
+      새 구간엔 새 id 를 주고, 그 id 는 scene_table ③이 비트 사본 구간으로 등록한다."""
+    root = str(seg_id or "").split("#", 1)[0]
+    return "%s#%.2f-%.2f" % (root, float(start), float(end))
+
+
+def film_seg_from_id(seg_id, extract):
+    """`film_<video_id>_<start>_<end>` → {video_id,start,end,seg_id}. 아니면 None.
+
+    ★화면(scene_lab commitRoll)이 만드는 id와 짝이다. 형식이 어긋나면 조용히 None —
+      경로 조작을 막기 위해 video_id가 이 잡의 소스 목록(extract)에 있을 때만 통과시킨다.
+    ★id의 video_id는 **씻긴 값**이다 — 화면(_extraId)이 `[^\\w.]+`를 `_`로 바꿔서 만든다.
+      그래서 `abc-1` 소스는 id에 `abc_1`로 박힌다. 날것끼리 비교하면 하이픈이 든 소스가 전부
+      "모르는 소스"로 떨어져 **썸네일 404 = 검은 칸**이 된다(2026-09-05 고객 다수 제보).
+      씻긴 형태로 맞춰 보되, 돌려주는 건 **원본 video_id**다 — 하류(_resolve_sources)는 원본 키로만 찾는다."""
+    if not isinstance(seg_id, str) or not seg_id.startswith("film_"):
+        return None
+    m = re.match(r"^film_(.+)_([0-9]+\.[0-9]+)_([0-9]+\.[0-9]+)$", seg_id)
+    if not m:
+        return None
+    vid, a, b = m.group(1), float(m.group(2)), float(m.group(3))
+    if not (b > a >= 0):
+        return None
+
+    def _wash(s):
+        return re.sub(r"[^\w.]+", "_", str(s))
+
+    known = {}
+    for ex in (extract or {}).values():
+        v = (ex or {}).get("video_id")
+        if v:
+            known.setdefault(_wash(v), str(v))
+    real = known.get(vid)
+    if real is None:
+        return None
+    return {"video_id": real, "start": a, "end": b, "seg_id": seg_id}
+
+
+def scene_table(extract, plan, *, seg_map=None, film=True):
+    """★장면 id → 구간 판단의 주인(관제 141). 편성이 가리키는 **모든** id 가 이 표에서 풀린다(불변식).
+
+    화면 데이터(api_mix_scene_lab_data → scene_play.js DATA.segments)·화면 컷 러너(screen_clips)·실험실 저장
+    (apply_scene_lab)·썸네일(seg_thumb)이 전부 이 표를 본다 — 표를 각자 만들면 한쪽만 아는 id 가 생긴다
+    (2026-09-05 필름 조각 검은 칸, 2026-10-06 자동 조각 `#2` 화면 컷 0개 → 완성본 0.6초 밀림 = 같은 뿌리).
+
+    채우는 순서(먼저 넣은 것이 이긴다 — 진짜 조각은 절대 덮지 않는다):
+      ① 추출 인벤토리(_build_inventory) — seg_map 을 주면 그것(사본)
+      ② 사람이 필름에서 오려낸 조각(film=True): plan.scene_lab.extra_segs 저장본 → scene_override 의 film_ id 파싱
+      ③ 편성(비트 primary·alternates·scene_override)이 들고 있는 나머지 id — 자동 편성이 원본을 잘라 만든 조각
+         (_piece_id, 옛 `…#2`). 인벤토리엔 없으니 **비트 사본 구간**으로 등록한다(이 잡의 소스일 때만).
+    film=False: 부르는 쪽이 필름 조각을 따로 병합할 때(apply_scene_lab 은 클라 편집이 저장본을 이기게 직접 합친다).
+    호출자의 seg_map 은 안 건드린다(사본 반환)."""
+    if seg_map is None:
+        seg_map, _ = _build_inventory(list((extract or {}).values()))
+    out = dict(seg_map or {})
+    vids = {str((ex or {}).get("video_id")) for ex in (extract or {}).values() if (ex or {}).get("video_id")}
+
+    def _put(sid, vid, a, b, base=None):
+        if not sid or sid in out:
+            return                      # 먼저 든 것(추출본)이 이긴다
+        base = base or {}
+        out[sid] = {
+            "video_id": vid, "seg_id": sid, "start": a, "end": b,
+            "scene_desc": str(base.get("scene_desc") or ""), "text": str(base.get("text") or "")[:300],
+            "label": str(base.get("label") or "")[:60],
+            "shot_role": base.get("shot_role") or "기타", "is_key": bool(base.get("is_key")),
+            "action": base.get("action") or "", "change": base.get("change") or "",
+            "product_benefits": list(base.get("product_benefits") or []),
+        }
+
+    def _span(s):
+        try:
+            a, b = float(s.get("start")), float(s.get("end"))
+        except (TypeError, ValueError):
+            return None
+        if not (math.isfinite(a) and math.isfinite(b) and b > a >= 0):
+            return None
+        return a, b
+
+    beats = (plan or {}).get("beats") or []
+    if film:
+        # ② 저장본 먼저 — 사람이 붙인 이름·자막이 살아 있다. 클라이언트가 만든 값이었으므로 같은 강도로 검증한다.
+        saved = ((plan or {}).get("scene_lab") or {}).get("extra_segs") or {}
+        for sid, s in (saved.items() if isinstance(saved, dict) else ()):
+            if not isinstance(s, dict):
+                continue
+            sp = _span(s)
+            vid = s.get("video_id")
+            vid = vid.strip() if isinstance(vid, str) else ""
+            if not sp or not vid:
+                continue
+            _put(sid, vid, sp[0], sp[1], {"label": s.get("label"), "text": s.get("text")})
+        # 옛 job — 저장본 없이 id 만 남은 필름 조각은 id 를 풀어 되살린다.
+        for b in beats:
+            for s in (b.get("scene_override") or []):
+                sid = s.get("seg_id") if isinstance(s, dict) else None
+                if not sid or sid in out:
+                    continue
+                got = film_seg_from_id(sid, extract)
+                if got:
+                    _put(sid, got["video_id"], got["start"], got["end"],
+                         {"label": "필름 %.1f~%.1f초" % (got["start"], got["end"])})
+    # ③ 편성이 들고 있는 나머지 id — 비트 사본 구간으로(필름 id 는 ②의 몫이라 여기서 만들지 않는다).
+    for b in beats:
+        refs = [b.get("primary")] + list(b.get("alternates") or []) + list(b.get("scene_override") or [])
+        for s in refs:
+            if not isinstance(s, dict):
+                continue
+            sid = s.get("seg_id")
+            if not sid or sid in out or str(sid).startswith("film_"):
+                continue
+            vid = str(s.get("video_id") or "")
+            sp = _span(s)
+            if not sp or vid not in vids:
+                continue
+            root = out.get(str(sid).split("#", 1)[0]) or {}
+            _put(sid, vid, sp[0], sp[1], {**root, **{k: v for k, v in s.items() if v}})
+    return out
+
+
 def _dedup_and_fill(flat, need, reserved=None):
     """같은 (video_id,seg_id,start) 중복 제거 후, need 미만이면 가장 긴 세그먼트를
     시간 이등분 서브슬라이스로 분할해 need개까지 채운다. 환각 없음 — start/end는 코드 계산.
@@ -1988,7 +2113,7 @@ def _dedup_and_fill(flat, need, reserved=None):
             # 뒤쪽 절반으로 잘라(앵커는 앞쪽) 씨앗으로 남긴다. 너무 짧으면(<1초) 못 쪼개니 스킵.
             if (s.get("end", 0.0) - s.get("start", 0.0)) >= 1.0:
                 mid = round((s["start"] + s["end"]) / 2, 2)
-                s = dict(s, seg_id=f"{s['seg_id']}#2", start=mid)
+                s = dict(s, seg_id=_piece_id(s["seg_id"], mid, s["end"]), start=mid)
                 seen.add(_seg_key(s))
             else:
                 continue
@@ -2000,9 +2125,11 @@ def _dedup_and_fill(flat, need, reserved=None):
             break  # 더 쪼갤 게 없음 — 있는 만큼만
         mid = round((longest["start"] + longest["end"]) / 2, 2)
         half = dict(longest)
-        half["seg_id"] = f"{longest['seg_id']}#2"
+        half["seg_id"] = _piece_id(longest["seg_id"], mid, longest["end"])
         half["start"] = mid
-        longest["end"] = mid  # 원본은 앞 절반으로 줄임(제자리 수정)
+        # 원본은 앞 절반으로 줄임(제자리 수정) — ★구간이 바뀌니 id 도 새로(관제 141: 같은 id·다른 구간 금지)
+        longest["seg_id"] = _piece_id(longest["seg_id"], longest["start"], mid)
+        longest["end"] = mid
         uniq.append(half)
     # need 미만으로 끝날 수 있다(잔여가 전부 1초 미만이면 위 break) — 호출부(_chronological_respine)가
     # 그 경우를 가드한다. 여기서 truncate는 불필요: while이 len(uniq)>=need에서 멈추므로 넘치지 않는다.

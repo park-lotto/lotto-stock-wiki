@@ -710,6 +710,31 @@
    "예외": {
     "tools/seed_leak_check.py": "검사 도구 — 서버에서 혼자 도는 파일이라 표식을 직접 읽어 유출 조각만 센다(컷을 고르지 않는다). 카드 138"
    }
+  },
+  {
+   "이름": "장면 id → 구간(장면 표: 추출 조각·필름 조각·자동 조각)",
+   "주인": [
+    "shopping_shorts/edit_plan.py:scene_table",
+    "shopping_shorts/edit_plan.py:_piece_id"
+   ],
+   "시그니처": [
+    "def scene_table\b",
+    "def film_seg_from_id\b",
+    "def _film_seg_from_id\b",
+    "def _with_film_segs\b",
+    "def _piece_id\b"
+   ],
+   "소비처": [
+    "화면 데이터(api_mix_scene_lab_data → scene_play.js DATA.segments)",
+    "화면 컷 러너(screen_clips)",
+    "실험실 저장(apply_scene_lab)",
+    "썸네일(seg_thumb)"
+   ],
+   "검사도구": "tools/segref_audit.py",
+   "과금": false,
+   "예외": {
+    "shopping_shorts/app.py": "_film_seg_from_id·_with_film_segs 는 edit_plan 에 위임만 하는 얇은 껍데기(옛 호출·테스트 호환) — 관제 141"
+   }
   }
  ]
 }
