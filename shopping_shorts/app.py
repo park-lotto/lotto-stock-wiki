@@ -18640,9 +18640,10 @@ def _serve_grab_extension():
     # 이 파일을 손으로 관리하지 않는다: grab_logic.js의 _douyinMainWorld 본문을 **그때그때
     # 잘라내 만든다**. 두 벌을 손으로 두면 반드시 어긋나고, 그러면 도우인만 옛 로직을 쓴다
     # (0순위-B: 같은 판단을 두 군데 적지 마라).
-    def _douyin_main_js(logic_text: str) -> str:
-        """grab_logic.js에서 _douyinMainWorld 함수를 떼어내 즉시실행 스크립트로 만든다."""
-        head = "  function _douyinMainWorld() {"
+    def _douyin_main_js(logic_text: str, fn: str = "_douyinMainWorld") -> str:
+        """grab_logic.js에서 메인월드 함수(fn)를 떼어내 즉시실행 스크립트로 만든다.
+        도우인(_douyinMainWorld → douyin_main.js)·인스타(_igMainWorld → ig_main.js, 관제 151) 공용."""
+        head = "  function " + fn + "() {"
         i = logic_text.find(head)
         if i < 0:
             return ""                      # 함수가 사라졌으면 빈 문자열 → zip에 넣지 않는다
@@ -18653,7 +18654,7 @@ def _serve_grab_extension():
             return ""
         body = rest[:end]
         return ("// ⚠️자동 생성 파일 — 손으로 고치지 마라.\n"
-                "// 원본: userscript/grab_logic.js 의 _douyinMainWorld()\n"
+                "// 원본: userscript/grab_logic.js 의 " + fn + "()\n"
                 "// /grab_extension.zip 이 요청마다 원본에서 다시 잘라 만든다.\n"
                 "// world:\"MAIN\" 으로 크롬이 직접 주입 → 확장 CSP의 인라인 검사를 타지 않는다.\n"
                 "(function () {" + body + "\n})();\n")
@@ -18661,7 +18662,7 @@ def _serve_grab_extension():
     # 넣으면 사용자 zip에 내부 문서와 이미지 수백 KB가 딸려 나간다(2026-08-04 실측으로 발견).
     # douyin_main.js도 자동 생성물이라 extension/ 안의 사본은 담지 않는다(grab_logic.js와 같은 이유).
     files = sorted(p for p in edir.rglob("*")
-                   if p.is_file() and p.name not in ("grab_logic.js", "douyin_main.js")
+                   if p.is_file() and p.name not in ("grab_logic.js", "douyin_main.js", "ig_main.js")
                    and "store" not in p.relative_to(edir).parts)
     stamp = str(max([p.stat().st_mtime_ns for p in files]
                     + [logic_src.stat().st_mtime_ns if logic_src.exists() else 0], default=0))
@@ -18677,6 +18678,9 @@ def _serve_grab_extension():
                 _dy = _douyin_main_js(_logic_text)
                 if _dy:
                     z.writestr("douyin_main.js", _dy)
+                _ig = _douyin_main_js(_logic_text, "_igMainWorld")
+                if _ig:
+                    z.writestr("ig_main.js", _ig)
         cached = (stamp, buf.getvalue())
         _serve_grab_extension._cache = cached
     return Response(
