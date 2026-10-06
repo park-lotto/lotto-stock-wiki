@@ -2883,18 +2883,21 @@ function bgmPaint(){
   vol.max = BGMP.volume_max || 60; vol.value = BGMP.volume; vv.textContent = BGMP.volume + '%';
   sp.min = BGMP.speed_min || 0.5; sp.max = BGMP.speed_max || 2; sp.value = BGMP.speed || 1;
   sv.textContent = Number(BGMP.speed || 1).toFixed(2) + 'x';
-  vol.oninput = () => { vv.textContent = vol.value + '%'; };
+  vol.oninput = () => { vv.textContent = vol.value + '%'; if (_bgmAudio) _bgmAudio.volume = _bgmPreviewVol(vol.value); };
   vol.onchange = () => bgmSave({bgm_volume: Number(vol.value)});
   sp.oninput = () => { sv.textContent = Number(sp.value).toFixed(2) + 'x'; if (_bgmAudio) _bgmAudio.playbackRate = Number(sp.value); };
   sp.onchange = () => bgmSave({bgm_speed: Number(sp.value)});
   document.getElementById('bgmSpeedReset').onclick = () => bgmSave({bgm_speed: 1});
 }
+// 미리듣기 크기 = 완성본에 섞이는 비율 그대로(렌더 volume=값/100). 슬라이더를 움직이면 재생 중에도 바로 따라간다.
+function _bgmPreviewVol(v){ return Math.max(0, Math.min(1, Number(v || 0) / 100)); }
 function bgmListen(id){
   try{
     if (_bgmAudio){ _bgmAudio.pause(); _bgmAudio = null; }
     if (_bgmPlaying === id){ _bgmPlaying = ''; bgmPaint(); return; }
     _bgmAudio = new Audio('/api/produce/bgm_lib/sound/' + encodeURIComponent(id));
     _bgmAudio.playbackRate = Number((BGMP && BGMP.speed) || 1);   // 미리듣기도 고른 속도로(음 높이 유지 — 렌더 atempo 와 같다)
+    _bgmAudio.volume = _bgmPreviewVol(BGMP ? BGMP.volume : 15);    // 미리듣기도 고른 음량으로(사장님 "음량조절이 안먹힘")
     _bgmAudio.onended = () => { _bgmPlaying = ''; bgmPaint(); };
     _bgmAudio.play().catch(() => {});
     _bgmPlaying = id;
