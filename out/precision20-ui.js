@@ -748,6 +748,7 @@
     const mp=event.target.closest('[data-motion-pack]');
     if(mp){   // 등장 효과팩(관제 144) — 자동 / 끔 / 번호. 움직임만 바뀐다(글꼴·색·상자·강조 그대로)
       motionPack=mp.dataset.motionPack;if(motionPack&&motionPack!=='off'){bodyCaptionMotion='';if(mode==='continuous')hookBandMotion='';}
+      window.dispatchEvent(new Event('scene-style-motion-pack'));   // 장면 효과도 같은 번호로 — 자동으로 깐 칸만 다시 깐다(scene-style-connect.js)
       syncHookMotionUI();rememberLocal({motionPack,bodyCaptionMotion});if(sceneIndex===0&&mode!=='continuous')showScene(1);else runWordFx();
       return;
     }
@@ -840,6 +841,15 @@
   //   dimTitle: 시작 어두운 제목 화면 — 밝기 46%·0.13초(4프레임), 12편 중 10편
   // 자동 배치(관제 124, 사장님 2026-10-05 "효과 아주 좋고 자동으로 배치") — 중요 장면 종류(scene_style.moment_of)별로 각 비트 첫 구절에 건다. 판단은 이 표 하나.
   const AUTO_FX={hook:{zoom:'in'},problem:{shock:true},reveal:{zoom:'pull'},peak:{dim:true},cta:{zoom:'inout'}};
+  // 자동 배치로 깔 장면 효과(관제 144) — 효과팩 번호의 fx 칸(장면 성격별 켤 효과 목록). 번호가 없으면 AUTO_FX 한 벌.
+  function autoFxKinds(moment){
+    const fx=(window.CAPTION_MOTION_PACKS||[])[motionPackNo()-1]?.fx;if(fx&&Array.isArray(fx[moment]))return fx[moment];
+    const r=AUTO_FX[moment];return r?[r.zoom||(r.shock?'shock':r.dim?'dim':'none')]:[];
+  }
+  // 장면 효과 항목(확대·어둡게·흑백) — 로고·장식(masks)·가림막 같은 다른 효과와 가른다. 시작 어두운 제목(dim.sec>0)은 장면 효과가 아니다.
+  const SCENE_FX_KEYS=['zoom','zoomIn','zoomMove','fxAuto','fxFocus','fxFocusBy','fxBox','panX','panY','shock','fxAutoPlaced'];
+  const hasSceneFx=e=>!!e&&(SCENE_FX_KEYS.some(k=>k!=='fxAutoPlaced'&&e[k]!=null&&e[k]!==false)||(e.dim&&!e.dim.sec));
+  const withoutSceneFx=e=>{const o={...(e||{})};SCENE_FX_KEYS.forEach(k=>delete o[k]);if(o.dim&&!o.dim.sec)delete o.dim;return o};
   const REF_FX={jumpZoom:1.35,emphZoom:2,zoomIn:.5,dimEmphasis:{level:.32,sec:0},dimTitle:{level:.46,sec:.13}};
   // 훅 모션 길이 = **첫 비트(훅 문장)** 의 훅 장면만(10-02 사장님 "썰훅만 본문은 훅 모션 없이 자막 스타일대로"). 썰훅+본문은 훅이 첫 비트뿐이라 종전과 같다
   const hookEndMs=()=>{const sc=sceneContext?.scenes||[],b0=sc[0]?.beat_idx;const hs=sc.filter(s=>s.kind==='hook'&&s.beat_idx===b0);return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
@@ -2226,15 +2236,19 @@
     // 확대 방식: 'in' 0.5초 들어가 멈춤 / 'pull' 장면 내내 쭉 당기기 / 'inout' 들어갔다 끝에 원본 크기로(완성본 scene_style.zoom_move_vf 와 짝)
     zoomMove(i,way){const k=String(i),e={...(effects[k]||{})};if(way!==undefined){if(way==='in')delete e.zoomMove;else e.zoomMove=way;effects[k]=e;}return e.zoomMove||'in'},
     // 자동 배치: on=true 면 손대지 않은 칸(효과 없음)에만 AUTO_FX 를 건다(fxAutoPlaced 표식), false 면 표식 있는 칸만 지운다.
+    //   ★어느 장면 효과를 깔지는 효과팩 번호가 정한다(관제 144, 사장님 "장면효과팩 여기서 통합") — autoFxKinds 한 곳. 번호가 없으면 AUTO_FX 한 벌.
+    //   ★'손댄 장면'은 장면 효과 항목(확대·어둡게·흑백)만 본다 — 로고·장식(masks)이 있는 장면도 깐다(10-06: 로고 기억(관제 131)이 전 장면에 로고를 넣어 자동 배치가 통째로 건너뛰던 것).
+    //   끌 때도 장면 효과 항목만 지운다(전엔 칸을 통째로 비워 같은 장면의 로고·장식까지 지웠다).
     autoPlace(on){
       const scenes=sceneContext?.scenes||[];let prev=null,count=0;
       scenes.forEach((s,i)=>{const first=s.beat_idx!==prev;prev=s.beat_idx;const key=String(i),e=effects[key]||{};
-        if(!on){if(e.fxAutoPlaced){effects[key]={};count++;}return;}
-        const rule=first&&s.moment&&AUTO_FX[s.moment];if(!rule||Object.keys(e).length)return;
-        this.sceneFx(i,rule.zoom||(rule.shock?'shock':rule.dim?'dim':'none'));
+        if(!on){if(e.fxAutoPlaced){effects[key]=withoutSceneFx(e);count++;}return;}
+        const kinds=first&&s.moment?autoFxKinds(s.moment):[];if(!kinds.length||hasSceneFx(e))return;
+        kinds.forEach(k=>this.sceneFx(i,k));
         effects[key]={...effects[key],fxAutoPlaced:true};count++;});
       return count;
     },
+    hasSceneFx:e=>hasSceneFx(e),
     autoPlaced:()=>Object.values(effects).some(e=>e&&e.fxAutoPlaced),
     // 장면 효과 하나 고르기(관제 124, 사장님 "조작이 복잡해서 효율적으로") — 장면마다 한 번 눌러 하나만.
     //   kind: 'none'|'in'|'pull'|'inout'(강조 확대 방식)|'dim'(어둡게+큰 글자)|'shock'(흑백 충격). 시작 어두운 제목(dim.sec>0)은 그대로 둔다.

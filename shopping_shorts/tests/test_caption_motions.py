@@ -76,7 +76,11 @@ def test_스타일은_모양만_효과팩은_모든_칸이_있다():
     mpacks = json.loads(CONTRACT.read_text(encoding="utf-8").split("/*MPACKS*/")[1])
     assert len(mpacks) == scene_style.caption_motion_pack_count() == 20
     for n, p in enumerate(mpacks, 1):
-        assert set(p) == set(slots), n   # 효과팩마다 모든 칸이 채워져 있다(빈 칸이면 그 장면만 등장이 빠진다)
+        assert set(p) - {"fx"} == set(slots), n   # 효과팩마다 모든 칸이 채워져 있다(빈 칸이면 그 장면만 등장이 빠진다)
+        # 장면 효과(fx, 장면효과팩 통합): 장면 성격 5칸 모두, 켤 효과는 확대 3종 중 하나 이하 + 어둡게·흑백
+        assert set(p["fx"]) == {"hook", "problem", "reveal", "peak", "cta"}, n
+        for kinds in p["fx"].values():
+            assert kinds and set(kinds) <= {"in", "pull", "inout", "dim", "shock"} and sum(k in ("in", "pull", "inout") for k in kinds) <= 1, n
         assert len(p["body"]) == 3 and all(v in motions for v in p["body"]) and all(p[s] in motions for s in slots if s != "body"), n
 
 
