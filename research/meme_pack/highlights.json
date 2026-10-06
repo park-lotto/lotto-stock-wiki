@@ -16781,5 +16781,3281 @@
    1.0
   ],
   "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_OfP": {
+  "peak": 10.75,
+  "usable": true,
+  "what": "인파 속에서 정장 차림의 남성이 감격에 겨워 눈물을 글썽이며 미소 짓고 있다.",
+  "method": "gemini",
+  "start": 9.08,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   11.12
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_pHS": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "빨간 옷을 입은 여성이 밝게 웃으며 손뼉을 치고 있다.",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.44
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_5lm": {
+  "peak": 3.0,
+  "usable": true,
+  "what": "정장을 입은 남성이 환하게 웃으며 손뼉을 치고 있는 모습",
+  "method": "gemini",
+  "start": 1.56,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_2IC": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "금발의 남성이 입을 크게 벌린 채 경악하며 박수를 치는 모습",
+  "method": "gemini",
+  "start": 0.8,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.84
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_35fR": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "밝게 웃으며 박수를 치다가 양손으로 입을 가리고 감탄하는 모습",
+  "method": "gemini",
+  "start": 0.56,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_BPFG": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "노란색 드레스를 입은 여성이 밝게 웃으며 박수를 치고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.94
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_6H3K": {
+  "peak": 4.5,
+  "usable": true,
+  "what": "손가락 인형 옷을 입고 코에 대고 움직이는 모습",
+  "method": "gemini",
+  "start": 3.8,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   8.88
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_3W4P": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "두 미니언이 크게 입을 벌리고 아주 즐겁게 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_CxRU": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "의자에 앉아 배를 잡고 뒤로 크게 젖히며 박장대소하는 오리 캐릭터",
+  "method": "gemini",
+  "start": 0.48,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_1NSF": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "아기가 입을 크게 벌리고 활짝 웃으며 기뻐하는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   6.48
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_3jBj": {
+  "peak": 5.75,
+  "usable": true,
+  "what": "흰색 티셔츠를 입은 소년이 의자에 앉아 눈을 감고 크게 웃으며 몸을 앞뒤로 흔드는 모습",
+  "method": "gemini",
+  "start": 5.05,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   7.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_cfi": {
+  "peak": 1.5,
+  "usable": false,
+  "what": "강아지가 정면을 응시하며 가만히 있는 모습",
+  "method": "gemini",
+  "start": 1.24,
+  "dur": 0.52,
+  "shot": [
+   1.2,
+   1.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_4Nuw": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "검은 옷을 입은 여성이 눈을 감고 활짝 웃고 있다.",
+  "method": "gemini",
+  "start": 0.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.28
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_6zW": {
+  "peak": 5.75,
+  "usable": true,
+  "what": "흰색 티셔츠를 입은 소년이 얼굴을 찡그리고 눈물을 참으며 서럽게 우는 표정",
+  "method": "gemini",
+  "start": 5.05,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   7.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_6Kbw": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "체크무늬 셔츠를 입은 남자가 침대에 앉아 얼굴을 일그러뜨리며 아주 서럽게 울고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_3InG": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "수염 난 남자가 눈물을 흘리며 입을 크게 벌리고 처절하게 울부짖는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 1.96,
+  "shot": [
+   0.0,
+   2.04
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_lt": {
+  "peak": 3.5,
+  "usable": true,
+  "what": "파란색 민소매를 입은 어린아이가 입을 크게 벌리며 서럽게 울고 있는 모습",
+  "method": "gemini",
+  "start": 2.8,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   5.96
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_25ci": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "체크무늬 셔츠를 입은 남성이 얼굴을 찡그리며 울음을 터뜨리는 모습",
+  "method": "gemini",
+  "start": 1.48,
+  "dur": 0.1,
+  "shot": [
+   1.44,
+   1.56
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_1Et": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "원숭이가 노트북을 닫아버리며 짜증을 내는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_VW4M": {
+  "peak": 0.0,
+  "usable": false,
+  "what": "밝게 웃고 있는 캐릭터의 얼굴",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.2
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_2H": {
+  "peak": 2.5,
+  "usable": false,
+  "what": "백발의 노인이 미소를 지으며 고개를 까딱거리는 모습",
+  "method": "gemini",
+  "start": 0.68,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.72
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_7F5y": {
+  "peak": 0.96,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.92,
+  "shot": [
+   0.0,
+   1.92
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_5wBY": {
+  "peak": 0.54,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.08,
+  "shot": [
+   0.0,
+   1.08
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_X2B": {
+  "peak": 0.84,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.68,
+  "shot": [
+   0.0,
+   1.68
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Rk5D": {
+  "peak": 0.7,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.4,
+  "shot": [
+   0.0,
+   1.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_S6B": {
+  "peak": 0.0,
+  "usable": true,
+  "what": "남자가 마이크에 대고 얼굴을 찌푸리며 크게 소리를 지르고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   4.5
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_BNYr": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "중년 남성이 두 손으로 머리를 감싸 쥐며 입을 크게 벌리고 경악하는 표정",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.68
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_M72": {
+  "peak": 1.08,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.16,
+  "shot": [
+   0.0,
+   2.16
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_maH": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "갈색 머리의 캐릭터가 주먹을 쥐고 눈을 부릅뜬 채 입을 크게 벌려 매우 화가 난 표정을 짓고 있는 모습",
+  "method": "gemini",
+  "start": 0.51,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.55
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Nlvh": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "검은 머리의 인물이 분노에 차서 눈을 크게 뜨고 소리를 지르며 얼굴을 찌푸리고 있다.",
+  "method": "gemini",
+  "start": 1.74,
+  "dur": 0.62,
+  "shot": [
+   1.7,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Mlvg": {
+  "peak": 0.86,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.73,
+  "shot": [
+   0.0,
+   1.73
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_QkP1": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "전화를 하며 얼굴을 찌푸리고 짜증을 내는 여성",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   4.32
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Hxax": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "안경 쓴 중년 남성이 입을 크게 벌리며 강한 어조로 말하는 모습",
+  "method": "gemini",
+  "start": 1.55,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.68
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_JN9M": {
+  "peak": 0.52,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.04,
+  "shot": [
+   0.0,
+   1.04
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_fy2w": {
+  "peak": 0.8,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.6,
+  "shot": [
+   0.0,
+   1.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Fvec": {
+  "peak": 0.7,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.4,
+  "shot": [
+   0.0,
+   1.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_5gRw": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "긴 머리의 여성이 눈을 질끈 감고 주먹을 쥐며 화를 내는 모습",
+  "method": "gemini",
+  "start": 0.76,
+  "dur": 1.12,
+  "shot": [
+   0.72,
+   1.92
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_4MTb": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "머리에서 불길이 크게 치솟으며 분노하고 있는 캐릭터의 상반신",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_KXkq": {
+  "peak": 0.56,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.11,
+  "shot": [
+   0.0,
+   1.11
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_VrpO": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "정장을 입은 중년 남성이 테이블에 손을 얹고 고개를 뒤로 젖히며 크게 웃음을 터뜨리는 모습",
+  "method": "gemini",
+  "start": 0.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.28
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Wtx": {
+  "peak": 0.6,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.2,
+  "shot": [
+   0.0,
+   1.2
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_TwtY": {
+  "peak": 0.0,
+  "usable": false,
+  "what": "숫자 카운트다운 화면",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   10.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_d1N": {
+  "peak": 0.0,
+  "usable": false,
+  "what": "녹색 피부의 캐릭터가 눈을 가늘게 뜨고 비웃는 표정을 짓고 있어 당황하거나 멘붕하는 감정과는 거리가 멉니다.",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_fxWx": {
+  "peak": 3.0,
+  "usable": true,
+  "what": "강아지가 눈을 크게 뜨고 당황한 듯한 표정으로 정면을 응시하고 있는 모습",
+  "method": "gemini",
+  "start": 2.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   9.03
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_224": {
+  "peak": 2.5,
+  "usable": true,
+  "what": "남자가 당황하며 울타리 속으로 뒷걸음질 쳐 서서히 사라지는 모습",
+  "method": "gemini",
+  "start": 0.86,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.9
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_fxwB": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "금발의 여성이 당황한 듯 눈을 가늘게 뜨고 입술을 살짝 오므리며 찡그리는 표정",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   7.28
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_IhcX": {
+  "peak": 1.06,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.12,
+  "shot": [
+   0.0,
+   2.12
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_aRh": {
+  "peak": 3.75,
+  "usable": true,
+  "what": "손으로 턱을 괸 여성이 눈을 내리깔고 당황하거나 난처한 듯한 표정을 짓고 있는 모습",
+  "method": "gemini",
+  "start": 2.4,
+  "dur": 2.0,
+  "shot": [
+   1.84,
+   4.44
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Mnct": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "중절모를 쓴 남자가 방에 들어왔다가 깜짝 놀라 모자를 다시 쓰고 바로 뒤돌아 나가는 모습",
+  "method": "gemini",
+  "start": 0.8,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.92
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_fy4v": {
+  "peak": 3.25,
+  "usable": true,
+  "what": "회색 니트를 입은 남자가 불안한 듯 눈동자를 굴리며 주위를 살피는 모습",
+  "method": "gemini",
+  "start": 1.88,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.92
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_EiL": {
+  "peak": 0.72,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.44,
+  "shot": [
+   0.0,
+   1.44
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_2MdQ": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "여러 명의 사람이 식탁에 앉아 어색하게 침묵하며 서로를 쳐다보는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.73
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_2cQi": {
+  "peak": 0.8,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.6,
+  "shot": [
+   0.0,
+   1.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_QUqW": {
+  "peak": 0.7,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.4,
+  "shot": [
+   0.0,
+   1.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_ZCIE": {
+  "peak": 0.78,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.56,
+  "shot": [
+   0.0,
+   1.56
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Cuvc": {
+  "peak": 0.8,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.6,
+  "shot": [
+   0.0,
+   1.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_LjJT": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "중년 남성이 눈을 크게 뜨고 입을 약간 벌린 채 당황하며 놀란 표정을 짓고 있다.",
+  "method": "gemini",
+  "start": 0.55,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.87
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_7NV": {
+  "peak": 7.0,
+  "usable": true,
+  "what": "금발 머리의 아이가 눈을 크게 뜨고 당황한 기색으로 쳐다보는 모습",
+  "method": "gemini",
+  "start": 5.68,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   7.72
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_WWCa": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.0,
+  "shot": [
+   0.0,
+   1.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_23Dj": {
+  "peak": 0.5,
+  "usable": false,
+  "what": "양손을 들고 어깨를 으쓱하며 여유롭게 웃고 있는 남성",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.9
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_1tci": {
+  "peak": 3.25,
+  "usable": true,
+  "what": "겁에 질린 표정으로 비명을 지르며 울먹이는 소녀",
+  "method": "gemini",
+  "start": 1.48,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_2RLl": {
+  "peak": 3.0,
+  "usable": true,
+  "what": "아기가 장난감을 잡고 서 있다가 깜짝 놀라 뒤로 넘어지는 모습",
+  "method": "gemini",
+  "start": 1.24,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.28
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Cye": {
+  "peak": 0.9,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.8,
+  "shot": [
+   0.0,
+   1.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_GOC": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "양손을 머리 위에 올리고 입을 크게 벌린 채 당황하거나 공포에 질린 표정으로 앞을 바라보는 여성",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   5.12
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_ykh": {
+  "peak": 0.7,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.4,
+  "shot": [
+   0.0,
+   1.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_3sNr": {
+  "peak": 5.75,
+  "usable": true,
+  "what": "흰색 티셔츠를 입은 소년이 크게 놀라며 얼굴을 찌푸리고 몸을 뒤로 젖히는 모습",
+  "method": "gemini",
+  "start": 5.05,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   7.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_XvPt": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "고양이가 무언가에 깜짝 놀라 몸을 낮추고 웅크리며 움찔하는 모습",
+  "method": "gemini",
+  "start": 0.8,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   10.08
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_4f2": {
+  "peak": 0.7,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.4,
+  "shot": [
+   0.0,
+   1.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_DIDU": {
+  "peak": 2.75,
+  "usable": true,
+  "what": "남자가 갑자기 크게 놀라며 입을 벌리고 당황하는 표정",
+  "method": "gemini",
+  "start": 1.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.08
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_dwL": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "빨간 민소매 옷을 입은 여성이 입을 크게 벌리고 눈을 크게 뜨며 공포에 질려 양손을 들어 올리고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_2Jx": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "창문 틈으로 겁을 먹거나 당황한 듯한 표정으로 카메라를 응시하는 아이",
+  "method": "gemini",
+  "start": 1.08,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.12
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_ME9": {
+  "peak": 0.86,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.72,
+  "shot": [
+   0.0,
+   1.72
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_AJ8P": {
+  "peak": 0.68,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.36,
+  "shot": [
+   0.0,
+   1.36
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_1R9m": {
+  "peak": 0.84,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.68,
+  "shot": [
+   0.0,
+   1.68
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_LZeT": {
+  "peak": 6.0,
+  "usable": true,
+  "what": "흰색 티셔츠를 입은 소년이 갑자기 크게 놀라며 얼굴을 찌푸리고 몸을 웅크리는 모습",
+  "method": "gemini",
+  "start": 5.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   7.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_YMzi": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "슬로 로리스가 손을 보고 깜짝 놀라 움츠러드는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.08
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Xb9": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "곱슬머리 남성이 깜짝 놀라 눈을 크게 뜨고 입을 벌린 채 당황한 표정으로 정면을 응시하는 모습",
+  "method": "gemini",
+  "start": 0.44,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.48
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Ro6K": {
+  "peak": 0.0,
+  "usable": false,
+  "what": "캐릭터가 소파에 앉아 가만히 있는 모습으로 공포나 움찔하는 감정 반응이 없음",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_CjqN": {
+  "peak": 0.68,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.36,
+  "shot": [
+   0.0,
+   1.36
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_13bf": {
+  "peak": 0.8,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.6,
+  "shot": [
+   0.0,
+   1.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_3Xd4": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_CDT": {
+  "peak": 3.25,
+  "usable": true,
+  "what": "농구 유니폼을 입은 남성이 고개를 살짝 좌우로 저으며 부정적인 표정을 짓는 모습",
+  "method": "gemini",
+  "start": 2.55,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   5.5
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_5PV": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "중년 남성이 한 손으로 얼굴을 감싸 쥐며 절망하거나 한탄하는 모습",
+  "method": "gemini",
+  "start": 1.32,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.36
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_OEw4": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "한 여성이 얼굴을 살짝 찌푸리며 고개를 단호하게 좌우로 흔드는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_y9q": {
+  "peak": 0.91,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.82,
+  "shot": [
+   0.0,
+   1.82
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_2ke": {
+  "peak": 3.0,
+  "usable": true,
+  "what": "남성이 눈을 감으며 고개를 천천히 가로젓는 표정",
+  "method": "gemini",
+  "start": 2.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   5.96
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_1Q2R": {
+  "peak": 0.59,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.19,
+  "shot": [
+   0.0,
+   1.19
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_y9h": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "한 남자가 눈을 옆으로 굴리며 고개를 가로저어 거절하는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.64
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_7zvl": {
+  "peak": 0.9,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.8,
+  "shot": [
+   0.0,
+   1.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_8Jrc": {
+  "peak": 3.0,
+  "usable": true,
+  "what": "파란색 캐릭터가 고개를 좌우로 흔들며 거절하는 표정을 짓는 모습",
+  "method": "gemini",
+  "start": 2.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   4.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_3QGU": {
+  "peak": 3.5,
+  "usable": true,
+  "what": "푸른 셔츠를 입은 남자가 눈을 가늘게 뜨고 고개를 옆으로 저으며 거절의 의사를 표시하는 모습",
+  "method": "gemini",
+  "start": 2.8,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   7.72
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_ECvc": {
+  "peak": 0.54,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.08,
+  "shot": [
+   0.0,
+   1.08
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Ru0": {
+  "peak": 0.8,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.6,
+  "shot": [
+   0.0,
+   1.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_sSt": {
+  "peak": 0.92,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.84,
+  "shot": [
+   0.0,
+   1.84
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_v0N": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "중년 남성이 입을 굳게 다물고 고개를 아주 살짝 저으며 부정의 의사를 표현하는 표정",
+  "method": "gemini",
+  "start": 0.55,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.64
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_gcV": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "정장을 입은 남성이 고개를 절레절레 흔들며 거절의 의사를 표현하는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.68
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_8iJH": {
+  "peak": 0.83,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.67,
+  "shot": [
+   0.0,
+   1.67
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_1jiJ": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_5gK": {
+  "peak": 3.0,
+  "usable": true,
+  "what": "수염을 기른 남자가 만족스러운 표정으로 고개를 끄덕이며 엄지를 치켜세우는 모습",
+  "method": "gemini",
+  "start": 2.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   5.65
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_C2g": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "안경 쓴 여성이 동의하는 표정으로 고개를 끄덕이는 모습",
+  "method": "gemini",
+  "start": 0.53,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.57
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_5Ef": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "밝은 표정으로 웃으며 고개를 끄덕이는 남성",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.54
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_fxUH": {
+  "peak": 3.25,
+  "usable": true,
+  "what": "중년 남성이 만족스러운 표정으로 힘차게 고개를 끄덕이는 모습",
+  "method": "gemini",
+  "start": 1.53,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.57
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_Bfy": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "빨간색 털 뭉치 인형이 환하게 웃으며 고개를 크게 끄덕이는 모습",
+  "method": "gemini",
+  "start": 0.55,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_HzG": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "곱슬머리 남성이 미소를 지으며 고개를 여러 번 강하게 끄덕이는 모습",
+  "method": "gemini",
+  "start": 0.73,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.77
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_PmqT": {
+  "peak": 3.25,
+  "usable": true,
+  "what": "수염 난 남성이 만족스러운 표정으로 고개를 크게 끄덕이며 긍정하는 모습",
+  "method": "gemini",
+  "start": 2.55,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   4.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_25e5": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_1X98": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "중년 남성이 만족스러운 표정으로 고개를 끄덕이며 미소 짓는 모습",
+  "method": "gemini",
+  "start": 0.45,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.49
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_ILw": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "소녀가 고개를 천천히 끄덕이며 긍정적인 표정을 짓는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.16
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_sK8": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.0,
+  "shot": [
+   0.0,
+   1.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_5Ey": {
+  "peak": 6.5,
+  "usable": true,
+  "what": "상반신을 탈의한 남성이 고개를 끄덕이며 긍정적인 표정을 짓는 모습",
+  "method": "gemini",
+  "start": 5.8,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   11.24
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_zff": {
+  "peak": 0.67,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.33,
+  "shot": [
+   0.0,
+   1.33
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_vRn": {
+  "peak": 1.06,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.12,
+  "shot": [
+   0.0,
+   2.12
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_x7G": {
+  "peak": 1.1,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.2,
+  "shot": [
+   0.0,
+   2.2
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_XYu": {
+  "peak": 0.95,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.9,
+  "shot": [
+   0.0,
+   1.9
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_2Gn": {
+  "peak": 1.06,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.12,
+  "shot": [
+   0.0,
+   2.12
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_5cK": {
+  "peak": 7.0,
+  "usable": true,
+  "what": "빨간 정장을 입은 남자가 만족스러운 표정으로 고개를 끄덕이는 모습",
+  "method": "gemini",
+  "start": 6.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   9.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_30K2": {
+  "peak": 0.58,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.16,
+  "shot": [
+   0.0,
+   1.16
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "gfr_gco": {
+  "peak": 0.76,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.52,
+  "shot": [
+   0.0,
+   1.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_6K72US0yiww_186027": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "단발머리의 여성이 환하게 웃으며 박수를 치고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_6K72US0yiww_96666": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "턱시도를 입은 남성이 활짝 웃으며 손뼉을 치고 있다.",
+  "method": "gemini",
+  "start": 0.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.37
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_cX_3IeDt8YA_154387": {
+  "peak": 0.0,
+  "usable": true,
+  "what": "드레스 차림의 여성이 손으로 입을 가리고 놀라거나 웃는 표정을 짓고 있음",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_cX_3IeDt8YA_165550": {
+  "peak": 2.75,
+  "usable": true,
+  "what": "화려한 목걸이를 한 여성이 고개를 크게 뒤로 젖히며 환하게 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.86,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.9
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_Fa_XsGKQmZk_4371": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "베레모를 쓴 남성이 환하게 웃으며 양쪽 주먹을 위로 들고 환호하는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_Fa_XsGKQmZk_97550": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "베레모를 쓴 군복 차림의 남성이 입을 크게 벌리고 양손을 맞대어 환호하는 모습",
+  "method": "gemini",
+  "start": 0.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.37
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_AHXc4YzAfw8_123831": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "여성이 두 손으로 입을 가리고 크게 놀란 표정을 짓고 있는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_wvM5Gj-5bGI_179880": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "여성이 입가에 두 손을 모으고 환호하며 감탄하는 표정을 짓는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_IlrmMVtEyNI_448300": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "남성이 손을 뺨에 댄 채 밝게 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_15138438759410822982": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "스마트폰을 보던 캐릭터가 눈을 찡그리며 땀을 흘리고 당황하는 표정",
+  "method": "gemini",
+  "start": 0.46,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.5
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_22663665": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "개구리 캐릭터가 눈을 굴리며 손가락으로 관자놀이를 짚고 생각하는 표정",
+  "method": "gemini",
+  "start": 0.8,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_27351072": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "개구리 캐릭터가 눈을 가늘게 뜨고 입을 다문 채 손을 모아 의심스러운 표정으로 쳐다보는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_3507915379102834193": {
+  "peak": 0.75,
+  "usable": true,
+  "what": "충격받아 눈을 크게 뜨고 입을 굳게 다문 캐릭터의 얼굴",
+  "method": "gemini",
+  "start": 0.05,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.64
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_17897173": {
+  "peak": 0.0,
+  "usable": true,
+  "what": "개구리 캐릭터가 손을 턱에 괴고 의심스러운 눈빛으로 옆을 쳐다보고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_16222429104977342189": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "손으로 턱을 괸 채 눈을 가늘게 뜨고 의심스럽게 쳐다보는 초록색 캐릭터의 얼굴",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_18565502": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "초록색 개구리 캐릭터가 하얀 찻잔을 들고 눈을 가늘게 뜨며 의심스러운 표정으로 옆을 바라보는 모습",
+  "method": "gemini",
+  "start": 0.64,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.68
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_16179668": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "눈을 크게 뜨고 땀을 흘리며 겁에 질린 표정의 개구리 캐릭터",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 0.9,
+  "shot": [
+   0.0,
+   0.98
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_22147341": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "고깔 모자를 쓴 캐릭터가 크게 웃으며 몸을 흔드는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_16082868": {
+  "peak": 0.0,
+  "usable": false,
+  "what": "초록색 개구리 캐릭터가 가만히 서 있거나 고개만 살짝 움직이는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.56
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_20219576": {
+  "peak": 0.0,
+  "usable": true,
+  "what": "초록색 캐릭터가 환하게 웃으며 손뼉을 치고 있다",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_15697848": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "초록색 개구리 캐릭터가 리듬에 맞춰 몸을 좌우로 흔들며 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 1.0,
+  "shot": [
+   0.0,
+   1.08
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_25802359": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "눈물을 흘리며 감동한 표정으로 박수를 치고 있는 캐릭터의 상반신",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.03
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_20345482": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "눈물을 흘리며 감동한 표정으로 힘차게 박수를 치고 있는 캐릭터",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.03
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_17819896437701153134": {
+  "peak": 0.0,
+  "usable": true,
+  "what": "이마에 손을 L자로 대고 크게 비웃는 개구리 캐릭터의 얼굴",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_26415225": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "초록색 개구리 캐릭터가 입을 가리고 격렬하게 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.8,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_9959624024171861027": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "개구리 캐릭터가 눈물을 흘리며 슬프게 울고 있는 모습",
+  "method": "gemini",
+  "start": 0.28,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.32
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_13668806469495645945": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "눈물을 흘리는 개구리 캐릭터가 양손을 입가에 대고 슬퍼하며 몸을 흔드는 모습",
+  "method": "gemini",
+  "start": 0.56,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_22663734": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "개구리 캐릭터가 눈물을 흘리며 슬프게 울고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_14666131635069271566": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "슬픈 표정으로 비스듬히 먼 곳을 응시하는 초록색 개구리 캐릭터",
+  "method": "gemini",
+  "start": 0.48,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_17607942": {
+  "peak": 2.75,
+  "usable": true,
+  "what": "파란색과 흰색 후드를 쓴 초록색 캐릭터가 눈에 파란 눈물이 고인 채 울먹이고 있습니다.",
+  "method": "gemini",
+  "start": 0.96,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_5069069": {
+  "peak": 2.75,
+  "usable": true,
+  "what": "개구리 캐릭터가 슬픈 표정으로 눈물을 흘리고 있다",
+  "method": "gemini",
+  "start": 0.96,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_19334433": {
+  "peak": 2.75,
+  "usable": true,
+  "what": "눈가에 눈물이 고여 흘러내리며 슬프고 애처로운 표정으로 정면을 응시하는 개구리 캐릭터",
+  "method": "gemini",
+  "start": 1.06,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.1
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_4330591812078580489": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "개구리 캐릭터가 눈물을 흘리며 슬퍼하는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "pp_26415215": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "초록색 캐릭터가 찌푸린 표정으로 눈을 치켜뜨고 있다가 화면 밖으로 멀어지며 퇴장하는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_pikachu": {
+  "peak": 0.51,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.02,
+  "shot": [
+   0.0,
+   1.02
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_shockedguy": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "머리를 감싸 쥐고 눈을 크게 뜬 채 경악하는 표정의 남성",
+  "method": "gemini",
+  "start": 1.25,
+  "dur": 0.59,
+  "shot": [
+   1.21,
+   1.89
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_chipmunk": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "다람쥐가 고개를 돌려 눈을 크게 뜨고 카메라를 정면으로 놀란 듯이 쳐다보고 있다",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_mindblown": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "안경을 쓴 남성이 머리 옆으로 손을 펼치자 화려한 우주 폭발 효과가 일어나는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_ohmygodwow": {
+  "peak": 1.1,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.21,
+  "shot": [
+   0.0,
+   2.21
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_joeyshock": {
+  "peak": 1.1,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.21,
+  "shot": [
+   0.0,
+   2.21
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_supahotfire": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "줄무늬 셔츠를 입은 남성이 충격받은 표정으로 입을 벌리고 몸을 뒤로 젖히며 놀라는 모습",
+  "method": "gemini",
+  "start": 0.46,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.5
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_speedmouth": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "헤드셋을 쓴 사람이 두 손으로 입을 가리고 크게 눈을 뜨며 충격을 받은 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_mathlady": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_travolta": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "양손에 코트를 들고 어리둥절한 표정으로 주위를 둘러보며 서 있는 남자의 상반신",
+  "method": "gemini",
+  "start": 0.55,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_nickyoung": {
+  "peak": 0.98,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.96,
+  "shot": [
+   0.0,
+   1.96
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_frysquint": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "빨간 셔츠를 입은 캐릭터가 미심쩍은 표정으로 눈을 가늘게 뜨고 정면을 응시하는 모습",
+  "method": "gemini",
+  "start": 0.46,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.5
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_rockeyebrow": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "한 남성이 한쪽 눈썹을 치켜올리며 의심스럽고 황당한 표정을 짓는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_carlton": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "빨간 가죽 재킷을 입은 남성이 신나게 춤을 추며 환하게 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_jonahexcited": {
+  "peak": 0.54,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.07,
+  "shot": [
+   0.0,
+   1.07
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_tomjaw": {
+  "peak": 0.75,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.5,
+  "shot": [
+   0.0,
+   1.5
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_krabs": {
+  "peak": 2.0,
+  "usable": true,
+  "what": "게 캐릭터가 눈을 크게 뜨고 입을 벌린 채 당황하며 빙글빙글 도는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.12,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_chefskiss": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "요리사 모자를 쓴 캐릭터가 손가락을 모아 입에 대고 감탄하며 셰프 키스를 하는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 0.89,
+  "shot": [
+   0.0,
+   0.97
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_cruiselaugh": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "검은색 목폴라를 입은 남성이 고개를 뒤로 젖히며 크게 입을 벌려 환하게 웃는 모습",
+  "method": "gemini",
+  "start": 0.55,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_tableflip": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "긴 머리의 여성이 식탁보를 양손으로 세게 잡아당겨 테이블 위 식기들을 엎어버리며 격렬하게 분노하는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.94
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_monkeypuppet": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "원숭이 인형이 눈을 크게 뜨고 옆으로 굴리며 당황한 듯 시선을 피하는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.34
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_tomscream": {
+  "peak": 1.05,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.1,
+  "shot": [
+   0.0,
+   2.1
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_nonocat": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "고양이가 'no!'라는 글자와 함께 머리를 격렬하게 좌우로 흔드는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 1.62,
+  "shot": [
+   0.0,
+   1.7
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_ewfallon": {
+  "peak": 0.96,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.92,
+  "shot": [
+   0.0,
+   1.92
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_fonzie": {
+  "peak": 0.76,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.52,
+  "shot": [
+   0.0,
+   1.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_owenwow": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "남성이 놀라며 입을 크게 벌리고 와우(Wow)라고 말하는 모습",
+  "method": "gemini",
+  "start": 0.55,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.67
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_cryingjordan": {
+  "peak": 1.15,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.3,
+  "shot": [
+   0.0,
+   2.3
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_muyaho": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "턱시도를 입은 남성과 노란 드레스를 입은 여성이 입을 벌리고 크게 환호하며 박수를 치는 모습",
+  "method": "gemini",
+  "start": 0.14,
+  "dur": 2.0,
+  "shot": [
+   0.1,
+   2.7
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_sadalla": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "정장을 입은 남성이 고개를 끄덕이며 엄지를 치켜세우는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_byunghun": {
+  "peak": 0.79,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.57,
+  "shot": [
+   0.0,
+   1.57
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_gwak": {
+  "peak": 0.54,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.08,
+  "shot": [
+   0.0,
+   1.08
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_kimheejin": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "흰색 유니폼을 입은 사람이 입꼬리를 올리며 환하게 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.56,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_mwosi": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "엎드려 있다가 고개를 돌려 짜증 섞인 표정으로 정면을 강하게 쏘아보는 여자아이",
+  "method": "gemini",
+  "start": 0.46,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.5
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_druwa": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "꽃게가 집게발을 위로 치켜들고 싸우려는 듯한 동작을 하는 모습",
+  "method": "gemini",
+  "start": 0.56,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_kimsangjung": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "양복을 입은 남성이 미간을 찌푸리며 의구심 섞인 표정으로 정면을 응시하는 모습",
+  "method": "gemini",
+  "start": 0.86,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.9
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_eoiga": {
+  "peak": 1.1,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.2,
+  "shot": [
+   0.0,
+   2.2
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_yanadu": {
+  "peak": 0.81,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.63,
+  "shot": [
+   0.0,
+   1.63
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_leotoast": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "턱시도를 입은 남성이 미소 지으며 샴페인 잔을 들어 올리고 있다.",
+  "method": "gemini",
+  "start": 0.94,
+  "dur": 1.82,
+  "shot": [
+   0.9,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_shiaclap": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "턱수염을 기른 남성이 정장을 입고 상체를 흔들며 열정적으로 박수를 치는 모습",
+  "method": "gemini",
+  "start": 0.56,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_sealclap": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "벽 위에 앉아 있는 물개가 앞발을 양옆으로 활짝 펼쳐 박수를 치는 모습",
+  "method": "gemini",
+  "start": 0.48,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.52
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_kidmanclap": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "드레스 차림의 여성이 손바닥을 과장되게 펴서 독특한 방식으로 박수를 치며 환하게 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.56,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_shaqshimmy": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "주황색 옷을 입은 남성이 즐거운 표정으로 어깨를 위아래로 리듬감 있게 들썩이는 모습",
+  "method": "gemini",
+  "start": 0.76,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_bully": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "검은 정장을 입은 남성이 자신감 넘치게 손을 들어 올리며 춤추는 모습",
+  "method": "gemini",
+  "start": 0.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_risitas": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "중년 남성이 고개를 살짝 뒤로 젖히며 입을 크게 벌려 호탕하게 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.55,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_jameson": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "중년 남성이 고개를 뒤로 젖히며 크게 폭소하는 모습",
+  "method": "gemini",
+  "start": 0.56,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_muttley": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "강아지가 눈을 감고 입을 크게 벌리며 킥킥거리는 모습",
+  "method": "gemini",
+  "start": 0.76,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_jordanlaugh": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "태블릿을 보며 고개를 숙이고 환하게 웃고 있는 남성",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_jokerlaugh": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "광대 분장을 한 남자가 고개를 뒤로 젖히며 크게 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_dawson": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "남성이 입술을 삐죽이며 눈을 꽉 감고 울음을 터뜨리는 모습",
+  "method": "gemini",
+  "start": 0.76,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_tobeycry": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "눈에 눈물이 가득 고인 채 슬픔에 잠겨 울먹이는 남자의 얼굴",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_crycat": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "눈물이 고여 슬픈 표정을 짓고 있는 하얀 고양이의 얼굴",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_squidsad": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "블라인드 너머로 밖에서 즐겁게 노는 다른 이들을 무표정으로 쓸쓸하게 지켜보는 캐릭터의 뒷모습",
+  "method": "gemini",
+  "start": 0.76,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_panda": {
+  "peak": 0.0,
+  "usable": true,
+  "what": "판다 인형이 고개를 살짝 까딱거리며 카메라를 매섭게 노려보는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_donald": {
+  "peak": 2.0,
+  "usable": true,
+  "what": "오리 캐릭터가 얼굴을 붉히며 입을 크게 벌리고 격렬하게 소리를 지르는 모습",
+  "method": "gemini",
+  "start": 0.76,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_ronswanson": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "남자가 분노한 표정으로 컴퓨터를 쓰레기통에 거칠게 집어 던지는 모습",
+  "method": "gemini",
+  "start": 0.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_freshprince": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "남성이 주변을 살피듯 의아하고 당황스러운 표정으로 고개를 돌리며 두리번거리는 모습",
+  "method": "gemini",
+  "start": 0.76,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_thisisfine": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "불타는 방 안에서 컵을 든 강아지가 눈을 크게 뜨고 당황한 표정으로 입을 벌리는 모습",
+  "method": "gemini",
+  "start": 0.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_homerhedge": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "덤불 속으로 완전히 몸을 숨기며 당황한 표정으로 정면을 응시하는 모습",
+  "method": "gemini",
+  "start": 0.56,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.6
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_peelesweat": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "남성이 눈을 크게 뜨고 긴장한 표정으로 땀을 흘리며 당황해하는 모습",
+  "method": "gemini",
+  "start": 0.55,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_ralph": {
+  "peak": 1.1,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.2,
+  "shot": [
+   0.0,
+   2.2
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_spongepanic": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_homealone": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "양손으로 얼굴을 감싸고 입을 크게 벌리며 충격받은 표정을 짓는 소년",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_kombucha": {
+  "peak": 2.5,
+  "usable": false,
+  "what": "손으로 얼굴을 가리고 울거나 괴로워하는 모습",
+  "method": "gemini",
+  "start": 0.76,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "fm_miniongasp": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "눈을 크게 뜨고 입을 벌린 채 당황하며 주위를 둘러보는 노란 생명체들의 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 1.2,
+  "shot": [
+   0.0,
+   1.28
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_OSZbnL--M8Y_3139": {
+  "peak": 0.75,
+  "usable": true,
+  "what": "여성이 놀란 표정으로 양손을 입가에 가깝게 대고 감탄하는 모습",
+  "method": "gemini",
+  "start": 0.05,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.37
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_ESrlB_gdrYw_28800": {
+  "peak": 1.08,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.17,
+  "shot": [
+   0.0,
+   2.17
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_ESrlB_gdrYw_32300": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "마이크를 든 여성이 손으로 얼굴을 가린 채 펑펑 울고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_ESrlB_gdrYw_46050": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "분홍색 상의를 입은 여성이 손으로 입과 코를 가린 채 고개를 숙이며 슬프게 울고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_KAiSGA-LIDo_178300": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "분홍색 상의를 입은 여성이 마이크 앞에서 활짝 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.76,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.8
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_xIU__uoVqdA_351893": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "두 여성이 눈을 크게 뜨고 입을 벌린 채 놀라워하며 서로를 바라보는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_xIU__uoVqdA_308842": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "검은 드레스를 입은 여성이 고개를 뒤로 젖히며 크게 입을 벌려 환하게 웃는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_xIU__uoVqdA_305246": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "정장을 입은 남성이 고개를 뒤로 젖히며 크게 박장대소하는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_xIU__uoVqdA_474140": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "두 손으로 얼굴을 감싸고 입을 크게 벌려 환호하며 활짝 웃는 여성",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_xIU__uoVqdA_231038": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "밝은 드레스를 입은 여성이 활짝 웃으며 열정적으로 박수를 치고 있는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_xh-DCAEWO2w_295703": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "화관을 쓴 여성이 눈을 크게 뜨고 입을 살짝 벌린 채 놀란 표정을 짓는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_xh-DCAEWO2w_319093": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "머리에 꽃 장식을 한 여성이 눈을 크게 뜨고 입을 살짝 벌린 채 놀란 표정을 짓는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_pYr8ZYAt0UA_44800": {
+  "peak": 0.83,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.67,
+  "shot": [
+   0.0,
+   1.67
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_pYr8ZYAt0UA_74616": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "토끼 머리띠를 쓴 사람이 두 손으로 입을 가리고 놀란 표정으로 웃고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_pYr8ZYAt0UA_37712": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "파란 모자를 쓴 여성이 박수를 치며 입을 크게 벌리고 활짝 웃는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_pYr8ZYAt0UA_54662": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "토끼 모자를 쓴 여성이 두 손으로 입을 가리고 놀란 표정으로 정면을 응시하는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_pYr8ZYAt0UA_14650": {
+  "peak": 0.88,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.77,
+  "shot": [
+   0.0,
+   1.77
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_pYr8ZYAt0UA_52350": {
+  "peak": 0.78,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.57,
+  "shot": [
+   0.0,
+   1.57
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_WNMxsoTpRuk_4800": {
+  "peak": 0.95,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.9,
+  "shot": [
+   0.0,
+   1.9
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_WNMxsoTpRuk_22307": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "여성이 손으로 입을 가리고 놀라며 수줍게 웃고 있는 얼굴과 상반신",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_WNMxsoTpRuk_33367": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "한 여성이 놀란 표정으로 한 손을 입에 대고 있는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.33
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_WNMxsoTpRuk_39133": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "한 여성이 휴대폰으로 통화하며 감격한 듯 손으로 입을 가리고 환하게 웃는 모습",
+  "method": "gemini",
+  "start": 0.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_WNMxsoTpRuk_67200": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "두 손으로 얼굴을 감싸고 펑펑 울며 슬퍼하는 여성의 상반신",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_WNMxsoTpRuk_73300": {
+  "peak": 0.87,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.73,
+  "shot": [
+   0.0,
+   1.73
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_WNMxsoTpRuk_99967": {
+  "peak": 0.5,
+  "usable": true,
+  "what": "긴 머리의 여성이 두 손으로 얼굴을 감싸고 흐느끼며 슬퍼하는 모습",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   3.0
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_WNMxsoTpRuk_130707": {
+  "peak": 2.25,
+  "usable": true,
+  "what": "눈물이 고인 채 손으로 입을 가리고 충격받은 표정을 짓는 여성",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_4DXqRMfHRNI_85833": {
+  "peak": 0.83,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.67,
+  "shot": [
+   0.0,
+   1.67
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_WNMxsoTpRuk_16000": {
+  "peak": 0.82,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.63,
+  "shot": [
+   0.0,
+   1.63
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_LsQdakrnQ8w_204300": {
+  "peak": 1.13,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 2.25,
+  "shot": [
+   0.0,
+   2.25
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_2jtgOLhUf_0_137223": {
+  "peak": 1.75,
+  "usable": true,
+  "what": "눈물이 고인 채 떨리는 입술로 슬프게 울먹이는 여성의 얼굴",
+  "method": "gemini",
+  "start": 0.34,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.38
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_M8bI94hRGYk_144300": {
+  "peak": 0.78,
+  "usable": true,
+  "what": "",
+  "method": "whole",
+  "start": 0.0,
+  "dur": 1.57,
+  "shot": [
+   0.0,
+   1.57
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_d18h4bM9a2Q_201492": {
+  "peak": 1.0,
+  "usable": true,
+  "what": "단발머리 여성이 눈을 크게 뜨고 입을 벌리며 놀라거나 격한 감정을 표출하는 모습",
+  "method": "gemini",
+  "start": 0.3,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.38
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_d18h4bM9a2Q_196020": {
+  "peak": 1.25,
+  "usable": true,
+  "what": "짧은 머리의 여성이 눈을 크게 뜨고 입을 약간 벌린 채 황당하다는 듯 정면을 응시하는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_pXzZSP9UW5o_189097": {
+  "peak": 1.5,
+  "usable": true,
+  "what": "여성이 한 손으로 얼굴을 감싸 쥐며 비통하고 괴로운 표정으로 눈을 감고 있는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_Cxw6h4ihyC4_536469": {
+  "peak": 0.25,
+  "usable": true,
+  "what": "여성이 인상을 찌푸리고 이를 악물며 강렬하게 노려보는 표정",
+  "method": "gemini",
+  "start": 0.04,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.42
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
+ },
+ "kr_1KbG3UdUW4M_66550": {
+  "peak": 2.25,
+  "usable": false,
+  "what": "남성이 두 손으로 얼굴을 가리며 쑥스러워하거나 부끄러워하는 모습",
+  "method": "gemini",
+  "start": 0.36,
+  "dur": 2.0,
+  "shot": [
+   0.0,
+   2.4
+  ],
+  "rule": "peak-gemini+shot-clamp v1"
  }
 }
