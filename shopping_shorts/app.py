@@ -9918,6 +9918,11 @@ def _longform_job(job_id):
     _gone = _video_gone_reason(job)
     if _gone:
         return job, None, JSONResponse(status_code=404, content={"ok": False, "error": _gone})
+    from shopping_shorts import bgm_lib
+    if bgm_lib.shorts_only(job.get("deco")):
+        # 롱폼은 완성 쇼츠의 소리를 그대로 쓴다 — 쇼츠 전용 곡이 롱폼에 실리면 안 된다(관제 146).
+        return job, None, JSONResponse(status_code=409, content={
+            "ok": False, "error": "쇼츠 전용 배경음을 쓴 영상이에요 — 배경음을 '없음'으로 바꾸고 완성본을 다시 만든 뒤 롱폼을 만들어 주세요"})
     return job, job["video_path"], None
 
 
@@ -21528,7 +21533,8 @@ def api_produce_mix_settings(body: dict):
         #   저장할 때 이 값을 모르고 보내면 조용히 지워져 "껐는데 다시 켜짐"이 된다 → 없으면 기존 값 유지.
         #   2026-10-01(관제 059): 효과음 조절값(sfx_density·sfx_level·sfx_mute_beats)도 같은 운명 — 전부 보존.
         if isinstance(fields["deco"], dict):
-            for _k in ("sfx_pack", "sfx_density", "sfx_level", "sfx_mute_beats"):
+            #   2026-10-06(관제 146): 3단계 배경음(bgm — 목록 곡 lib·크기)도 키가 없으면 보존.
+            for _k in ("sfx_pack", "sfx_density", "sfx_level", "sfx_mute_beats", "bgm"):
                 if _k not in fields["deco"] and (job.get("deco") or {}).get(_k) is not None:
                     fields["deco"][_k] = job["deco"][_k]
     sfx_switched = False
@@ -21556,6 +21562,28 @@ def api_produce_mix_settings(body: dict):
         _cur = job.get("deco") or {}
         sfx_switched = any(str(_cur.get(k) or "") != str(v or "") for k, v in _sfx_new.items())
         fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), **_sfx_new}
+    if "bgm_lib" in body or "bgm_volume" in body:
+        # 3단계 [🎵 배경음] 목록(관제 146) — bgm_lib: 곡 id / ""(없음). 고르면 업로드 파일(file)은 비운다.
+        from shopping_shorts import bgm_lib as _bl
+        _base = fields.get("deco") or job.get("deco") or {}
+        _old = dict(_base.get("bgm") or {})
+        _new = dict(_old)
+        if "bgm_lib" in body:
+            _lib = str(body.get("bgm_lib") or "").strip()
+            if _lib and not _bl.path_of(_lib):
+                return JSONResponse(status_code=422, content={"ok": False, "error": "없는 곡이에요"})
+            _new.pop("file", None)
+            _new.pop("lib", None)
+            if _lib:
+                _new["lib"] = _lib
+        if "bgm_volume" in body:
+            try:
+                _new["volume"] = max(0, min(60, int(body.get("bgm_volume"))))
+            except (TypeError, ValueError):
+                pass
+        if _new != _old:
+            sfx_switched = True        # 소리가 바뀌었다 — 옛 완성본 미리보기를 버린다(효과음과 같은 규칙)
+        fields["deco"] = {**_base, "bgm": _new}
     if "scene_style" in body:
         from .scene_style import validate_snapshot
         try:
@@ -21631,6 +21659,28 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
             "density": st["density"], "level": st["level"], "mute_beats": st["mute_beats"],
             "packs": packs, "beats": beats_out, "timeline_ready": bool(timeline),
             "family": sfx_pack.script_family(store, job)}
+
+
+@app.get("/api/produce/mix/bgm_lib/{job_id}")
+def api_produce_mix_bgm_lib(job_id: str, request: Request):
+    """3단계 배경음 목록(관제 146) — {tracks, current(곡 id|""), upload(업로드 파일이 걸려 있나), volume}."""
+    from shopping_shorts import bgm_lib
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "영상 없음"})
+    bgm = (job.get("deco") or {}).get("bgm") or {}
+    return {"ok": True, "tracks": bgm_lib.list_tracks(), "current": str(bgm.get("lib") or ""),
+            "upload": bool(bgm.get("file")) and not bgm.get("lib"), "volume": int(bgm.get("volume", 15) or 0)}
+
+
+@app.get("/api/produce/bgm_lib/sound/{track_id}")
+def api_bgm_lib_sound(track_id: str):
+    """배경음 목록 곡 미리듣기 — 렌더가 쓰는 그 파일 그대로."""
+    from shopping_shorts import bgm_lib
+    p = bgm_lib.path_of(track_id)
+    if not p:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "곡 없음"})
+    return FileResponse(p, media_type="audio/mpeg", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/api/produce/sfx_pack/sound/{pack_no}/{slot}")

@@ -1,0 +1,31 @@
+{
+  "_note": "3단계 배경음 목록(관제 146, 2026-10-06 사장님). 파일은 사장님이 준 유튜브 영상(모음 2편 + 단곡 11편)에서 잘라 -14 LUFS·최대 60초(사장님: 60 이상은 안 쓴다)로 맞춘 것. 만드는 법: tools/bgm_lib/build.py. 쇼츠 전용(상업 음원 — 롱폼 금지는 bgm_lib.shorts_only).",
+  "tracks": [
+    {"id": "qiuqiu", "title": "Qiu Qiu", "artist": "Young Dan", "src": "i7dN6pSQPEE 00:00-00:31"},
+    {"id": "blue", "title": "blue", "artist": "yung kai", "src": "QcK-hn4oyNY 14:27-17:59"},
+    {"id": "christian", "title": "CHRISTIAN", "artist": "Zior Park", "src": "i7dN6pSQPEE 01:08-01:34"},
+    {"id": "machi_no_dorufin", "title": "Machi No Dorufin", "artist": "Hamada Kingo", "src": "i7dN6pSQPEE 01:34-01:52"},
+    {"id": "buttercup", "title": "Buttercup", "artist": "Jack Stauber", "src": "i7dN6pSQPEE 01:52-02:19"},
+    {"id": "free_bird", "title": "Free Bird", "artist": "MOONLGHT", "src": "i7dN6pSQPEE 02:19-02:56"},
+    {"id": "everything", "title": "EVERYTHING", "artist": "검정치마", "src": "i7dN6pSQPEE 02:56-04:01"},
+    {"id": "passo_bem_solto", "title": "PASSO BEM SOLTO", "artist": "ATLXS", "src": "QcK-hn4oyNY 00:02-01:58"},
+    {"id": "astronomia", "title": "Astronomia", "artist": "Tony Igy", "src": "i7dN6pSQPEE 04:32-04:59", "unverified": "Shazam 인식 안 됨 — 이름은 영상 설명란"},
+    {"id": "dance_with_me", "title": "Dance With Me", "artist": "Ehrling", "src": "i7dN6pSQPEE 04:59-05:48", "unverified": "영상 설명란 이름. Shazam은 'Frio sin Ti'로 인식"},
+    {"id": "before_spring_ends", "title": "Before spring ends", "artist": "Wang OK", "src": "QcK-hn4oyNY 02:02-04:57"},
+    {"id": "pretty_little_baby", "title": "Pretty Little Baby", "artist": "Connie Francis", "src": "QcK-hn4oyNY 04:58-07:17"},
+    {"id": "beggin", "title": "Beggin'", "artist": "Måneskin", "src": "QcK-hn4oyNY 07:20-10:49"},
+    {"id": "unstoppable", "title": "Unstoppable", "artist": "Sia", "src": "QcK-hn4oyNY 10:52-14:26"},
+    {"id": "yoru_no_odoriko", "title": "Yoru No Odoriko", "artist": "sakanaction", "src": "QcK-hn4oyNY 18:03-23:02"},
+    {"id": "mori_no_restaurant", "title": "森の小さなレストラン", "artist": "手嶌葵", "src": "EYGGd2NKwtI"},
+    {"id": "no_batidao", "title": "NO BATIDÃO", "artist": "ZXKAI, slxughter", "src": "orOgilmiL_4"},
+    {"id": "here_with_me", "title": "Here With Me", "artist": "d4vd", "src": "Ip6cw8gfHHI"},
+    {"id": "chubina", "title": "ჩუბინა", "artist": "East Duo", "src": "e3Rnsz7XWkk"},
+    {"id": "honwaka_puppu", "title": "ほんわかぷっぷー", "artist": "MoppySound", "src": "HLiYPbpvPVE"},
+    {"id": "sweets", "title": "Sweets", "artist": "isaintjames", "src": "-G62ksjwWbM"},
+    {"id": "no_surprises", "title": "No Surprises", "artist": "Radiohead", "src": "u5CVsCnxyXg"},
+    {"id": "otsukare_summer", "title": "Otsukare Summer", "artist": "Halcali", "src": "Atx1ktB2dgs"},
+    {"id": "lets_go", "title": "Let's Go", "artist": "JAXSON GAMBLE", "src": "1qtIoroF_Y4"},
+    {"id": "every_breath_you_take", "title": "Every Breath You Take", "artist": "The Police", "src": "OMOGaugKpzs"},
+    {"id": "epic_inspiration", "title": "Epic Inspiration", "artist": "AShamaluevMusic", "src": "CvLHKUtcFg4"}
+  ]
+}

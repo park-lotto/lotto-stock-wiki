@@ -2313,6 +2313,13 @@ def resolve_deco_media(deco, work):
     work = Path(work)
     for key in ("bgm", "overlay"):
         item = deco.get(key) or {}
+        if key == "bgm" and item.get("lib"):
+            # 3단계 배경음 목록에서 고른 곡(관제 146) — 업로드 파일보다 앞선다(고를 때 file을 비운다).
+            from shopping_shorts import bgm_lib
+            lp = bgm_lib.path_of(item["lib"])
+            if lp:
+                deco[key] = {**item, "_abspath": lp}
+            continue
         if item.get("file"):
             p = work / item["file"]
             if p.exists():
