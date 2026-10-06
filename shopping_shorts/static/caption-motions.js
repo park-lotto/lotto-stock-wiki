@@ -524,14 +524,12 @@
   "pack": true
  }
 }/*JSON*/;
-  // 자막팩(관제 127 3단계) — 팩 하나 고르면 장면마다 칸(slots)을 보고 등장 효과를 자동으로 고른다. 칸을 정하는 판단은 편집기 captionSlot 한 곳.
-  //   slots: first 첫 장면 · body 일반 줄 · price 가격·숫자 줄 · end 마지막 장면 · problem 문제 제기 · reveal 제품 공개 · emph 영상 위 강조 → 값은 위 CAPTION_MOTIONS 키.
-  //   problem·reveal·(훅→first·cta→end)는 장면 성격(scenes[i].moment, 판정 주인 장면효과팩 scene_style.moment_of)을 그대로 읽는다 — 장면 효과와 같은 장면에 걸린다.
+  // 자막 스타일(관제 127 → 144) — 자막 모양 한 벌. 움직임은 아래 등장 효과팩(CAPTION_MOTION_PACKS)이 맡는다(10-06 사장님 '폰트나 설정 그대로 두고 효과만').
   //   ★자막팩 = 자막 한 벌 완성형(10-05 사장님 "움직임뿐 아니라 색상·폰트크기·강조단어·밑줄·동그라미까지 한 번에"). 자막에만 건다(제목·채널명은 그대로).
   //   font 자막 글꼴(편집기에 실린 글꼴 이름) · size 자막 기본 크기(%) · look 자막 상자(CAPTION_LOOKS 번호 또는 'none')
   //   text.color 글자색 · text.style 글자 꾸밈(테두리·그림자, em 단위 — 미리보기·렌더 크기가 달라도 같은 비율)
   //   wordFx: 팩을 누를 때 같이 켜 주는 단어 강조(방식·색·커짐). 저장은 wordFx 따로 — 고객이 나중에 바꿀 수 있다.
-  //   emph: 영상 위 강조 자막(장면효과팩 '어둡게 강조' 장면의 가운데 큰 글자) 모양 — font·size(자막 대비 %)·color·style. 등장은 slots.emph.
+  //   emph: 영상 위 강조 자막(장면효과팩 '어둡게 강조' 장면의 가운데 큰 글자) 모양 — font·size(자막 대비 %)·color·style. 등장은 효과팩의 emph 칸.
   //         언제·어디(어둡게·가운데 자리)는 장면효과팩(관제 124), 모양은 여기(10-05 사장님 "영상 중간에 들어가는 자막들도 효과 좋은 걸로").
   //   ★우선순위: 고객이 직접 바꾼 값(상자 모양·크기·색) > 팩 > 템플릿 기본. 판단은 precision20-ui.js captionPackStyle 한 곳.
   //   ★서버는 PACKS 표식 두 개 사이를 json 으로 읽는다(scene_style.caption_pack_keys) — 그 안에는 JSON 만.
@@ -554,15 +552,6 @@
    "style": "box",
    "color": "#FFE600",
    "grow": "pop"
-  },
-  "slots": {
-   "first": "slam",
-   "body": "popBounce",
-   "price": "jelly",
-   "end": "slam",
-   "emph": "slam",
-   "problem": "drop",
-   "reveal": "popBounce"
   },
   "emph": {
    "font": "SBAggroB",
@@ -589,15 +578,6 @@
    "color": "#FF2D6F",
    "grow": ""
   },
-  "slots": {
-   "first": "riseClip",
-   "body": "blurUp",
-   "price": "popBounce",
-   "end": "fade",
-   "emph": "riseClip",
-   "problem": "slide",
-   "reveal": "riseClip"
-  },
   "emph": {
    "font": "GmarketSansBold",
    "size": 150,
@@ -620,15 +600,6 @@
    "style": "glow",
    "color": "#D9B45A",
    "grow": ""
-  },
-  "slots": {
-   "first": "trackIn",
-   "body": "fade",
-   "price": "riseClip",
-   "end": "trackIn",
-   "emph": "trackIn",
-   "problem": "fade",
-   "reveal": "trackIn"
   },
   "emph": {
    "font": "NanumMyeongjoEB",
@@ -657,15 +628,6 @@
    "style": "circle",
    "color": "#FFE600",
    "grow": ""
-  },
-  "slots": {
-   "first": "typing",
-   "body": "typing",
-   "price": "popBounce",
-   "end": "riseClip",
-   "emph": "popBounce",
-   "problem": "typing",
-   "reveal": "popBounce"
   },
   "emph": {
    "font": "BMJUA",
@@ -697,15 +659,6 @@
    "color": "#FFE600",
    "grow": "hold"
   },
-  "slots": {
-   "first": "slam",
-   "body": "riseClip",
-   "price": "slam",
-   "end": "popBounce",
-   "emph": "slam",
-   "problem": "drop",
-   "reveal": "slam"
-  },
   "emph": {
    "font": "BlackHanSans",
    "size": 140,
@@ -730,15 +683,6 @@
    "style": "circle",
    "color": "#FF8A1F",
    "grow": ""
-  },
-  "slots": {
-   "first": "blurUp",
-   "body": "fade",
-   "price": "jelly",
-   "end": "blurUp",
-   "emph": "blurUp",
-   "problem": "fade",
-   "reveal": "jelly"
   },
   "emph": {
    "font": "GaeguBold",
@@ -782,4 +726,9 @@
  }
 }/*WORDFX*/;
   root.CAPTION_EMPH_DEFAULT = {"size": 150, "color": "#FFFFFF", "style": {"textShadow": "0 0.05em 0.25em rgba(0,0,0,.9),0 0 0.6em rgba(0,0,0,.5)"}, "motion": "pop"};
+  // 등장 효과팩 20종(관제 144) — 움직임만. 칸별 효과(일반 줄 body 는 3개를 번갈아). 번호 = 배열 순서 + 1.
+  //   만든 곳: tools/caption_pack/make_motion_packs.py(씨앗 고정 · 두 팩 최소 4칸 다름) — 손으로 고치지 말고 그 도구로.
+  //   배정: 회원마다 자동(scene_style.caption_motion_pack_for, 회원 번호 나머지) · 영상마다 자동/끔/번호(snapshot.motionPack).
+  //   ★서버는 MPACKS 표식 두 개 사이를 json 으로 읽는다 — 그 안에는 JSON 만.
+  root.CAPTION_MOTION_PACKS = /*MPACKS*/[{"first": "popBounce", "body": ["blurUp", "slide", "jelly"], "price": "drop", "problem": "typing", "reveal": "grow", "end": "riseClip", "emph": "grow"}, {"first": "drop", "body": ["jelly", "grow", "rise"], "price": "slam", "problem": "drop", "reveal": "pop", "end": "slam", "emph": "slam"}, {"first": "drop", "body": ["slide", "typing", "fade"], "price": "popBounce", "problem": "typing", "reveal": "popBounce", "end": "slam", "emph": "trackIn"}, {"first": "popBounce", "body": ["popBounce", "riseClip", "grow"], "price": "jelly", "problem": "slide", "reveal": "popBounce", "end": "slam", "emph": "blurUp"}, {"first": "slam", "body": ["fade", "blurUp", "popBounce"], "price": "popBounce", "problem": "drop", "reveal": "riseClip", "end": "blurUp", "emph": "trackIn"}, {"first": "riseClip", "body": ["pop", "riseClip", "rise"], "price": "drop", "problem": "slide", "reveal": "popBounce", "end": "rise", "emph": "blurUp"}, {"first": "riseClip", "body": ["riseClip", "blurUp", "jelly"], "price": "slam", "problem": "slide", "reveal": "riseClip", "end": "riseClip", "emph": "slam"}, {"first": "popBounce", "body": ["grow", "pop", "blurUp"], "price": "drop", "problem": "fade", "reveal": "grow", "end": "slam", "emph": "popBounce"}, {"first": "trackIn", "body": ["typing", "popBounce", "grow"], "price": "jelly", "problem": "wide", "reveal": "popBounce", "end": "riseClip", "emph": "slam"}, {"first": "popBounce", "body": ["rise", "jelly", "blurUp"], "price": "pop", "problem": "typing", "reveal": "riseClip", "end": "trackIn", "emph": "trackIn"}, {"first": "wide", "body": ["blurUp", "grow", "jelly"], "price": "pop", "problem": "wide", "reveal": "grow", "end": "slam", "emph": "riseClip"}, {"first": "drop", "body": ["popBounce", "rise", "fade"], "price": "slam", "problem": "slide", "reveal": "popBounce", "end": "trackIn", "emph": "slam"}, {"first": "popBounce", "body": ["grow", "blurUp", "fade"], "price": "jelly", "problem": "fade", "reveal": "riseClip", "end": "riseClip", "emph": "grow"}, {"first": "riseClip", "body": ["typing", "blurUp", "jelly"], "price": "pop", "problem": "fade", "reveal": "grow", "end": "blurUp", "emph": "riseClip"}, {"first": "slam", "body": ["typing", "popBounce", "grow"], "price": "slam", "problem": "slide", "reveal": "popBounce", "end": "blurUp", "emph": "trackIn"}, {"first": "wide", "body": ["typing", "fade", "pop"], "price": "slam", "problem": "typing", "reveal": "slam", "end": "slam", "emph": "riseClip"}, {"first": "slam", "body": ["jelly", "fade", "rise"], "price": "popBounce", "problem": "fade", "reveal": "grow", "end": "rise", "emph": "grow"}, {"first": "drop", "body": ["blurUp", "popBounce", "fade"], "price": "popBounce", "problem": "drop", "reveal": "grow", "end": "trackIn", "emph": "riseClip"}, {"first": "riseClip", "body": ["fade", "blurUp", "pop"], "price": "jelly", "problem": "slide", "reveal": "pop", "end": "rise", "emph": "grow"}, {"first": "wide", "body": ["popBounce", "slide", "grow"], "price": "drop", "problem": "typing", "reveal": "pop", "end": "popBounce", "emph": "trackIn"}]/*MPACKS*/;
 })(window);

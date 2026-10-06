@@ -21684,6 +21684,10 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     context["fxEnabled"] = bool(_setting_gate(Store(DB_PATH), "scene_fx_enabled", _cid(request)))
     # 자막팩(관제 127) 스위치 — 꺼진 계정은 편집기가 팩 카드·새 등장 효과·새 강조 방식 버튼을 안 띄운다(고객 화면 불변)
     context["captionPackEnabled"] = bool(_setting_gate(Store(DB_PATH), "caption_pack_enabled", _cid(request)))
+    # 등장 효과팩 자동 번호(관제 144) — 그 작업 회원의 번호(관리자가 남의 작업을 열어도 그 회원 번호). 스위치가 꺼졌으면 안 준다(고객 화면 불변)
+    if context["captionPackEnabled"]:
+        from .scene_style import caption_motion_pack_for
+        context["motionPackAuto"] = caption_motion_pack_for(job.get("customer_id"))
     return {"context": context, "snapshot": snapshot}
 
 

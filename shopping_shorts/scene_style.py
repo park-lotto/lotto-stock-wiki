@@ -22,6 +22,20 @@ def caption_pack_keys():
     return tuple(json.loads(text.split("/*PACKS*/")[1]))
 
 
+def caption_motion_pack_count():
+    """등장 효과팩 개수 — 같은 계약 파일의 MPACKS 표식 사이(관제 144)."""
+    text = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")
+    return len(json.loads(text.split("/*MPACKS*/")[1]))
+
+
+def caption_motion_pack_for(customer_id):
+    """회원 → 등장 효과팩 번호(1부터). 회원 번호를 팩 수로 나눈 나머지 — 프로세스·서버마다 안 바뀐다.
+    crc32(효과음팩 방식)는 회원이 적으면 몰린다 — 라이브 작업 회원 90명 실측(2026-10-06): crc32 팩당 1~10명 / 나머지 1~8명.
+    편집기가 이 번호를 '자동'으로 보여 주고 snapshot.motionPack 에 저장한다(렌더는 저장된 번호만 쓴다)."""
+    n = caption_motion_pack_count()
+    return int(customer_id or 0) % n + 1 if n else 0
+
+
 def caption_word_fx_keys():
     """단어 강조 방식 저장값 — 같은 계약 파일의 WORDFX 표식 사이(관제 102 → 127)."""
     text = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")
@@ -185,6 +199,8 @@ def validate_snapshot(value):
         raise ValueError("본문 자막 효과 값이 올바르지 않습니다")
     if value.get("captionPack") not in (None, "", *caption_pack_keys()):   # 자막팩(관제 127) — 계약 파일 한 곳
         raise ValueError("자막팩 값이 올바르지 않습니다")
+    if value.get("motionPack") not in (None, "", "off", *(str(k) for k in range(1, caption_motion_pack_count() + 1))):   # 등장 효과팩(관제 144)
+        raise ValueError("등장 효과팩 값이 올바르지 않습니다")
     word_fx = value.get("wordFx")
     if word_fx is not None:
         # 단어 강조(관제 102) — 방식 목록은 계약 파일(caption_word_fx_keys). color 빈칸 = 템플릿 포인트 색(자동).
@@ -215,7 +231,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
