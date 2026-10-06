@@ -21576,11 +21576,9 @@ def api_produce_mix_settings(body: dict):
             _new.pop("lib", None)
             if _lib:
                 _new["lib"] = _lib
-        if "bgm_volume" in body:
-            try:
-                _new["volume"] = max(0, min(60, int(body.get("bgm_volume"))))
-            except (TypeError, ValueError):
-                pass
+        _vol = str(body.get("bgm_volume", "")).strip()
+        if _vol.isdigit():                      # 숫자가 아니면 크기는 그대로 둔다
+            _new["volume"] = max(0, min(60, int(_vol)))
         if _new != _old:
             sfx_switched = True        # 소리가 바뀌었다 — 옛 완성본 미리보기를 버린다(효과음과 같은 규칙)
         fields["deco"] = {**_base, "bgm": _new}
