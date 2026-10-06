@@ -1931,6 +1931,9 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
+    # 4.7) 감정짤 자리(관제 139) — 음성 길이·낱말 시각이 정해진 **뒤**, 편성 저장 전 한 곳. 스위치 meme_enabled 뒤(끄면 종전 그대로)
+    _apply_memes(plan, store, {"customer_id": customer_id}, work / "tts")
+
     # 4.9) ★게이트 교정 루프(2026-07-25) — 최종 plan(refill·conform 뒤)을 보고 위반이면
     # 통과할 때까지 재픽(상한 3). 경고만 하던 관문을 '통과시키는 관문'으로. 순수·무과금·
     # 나레이션 불변. 실패해도 job은 안 죽인다(순수 계산).
@@ -2342,10 +2345,60 @@ def _resolve_cutaway_paths(store, plan, customer_id):
     for beat in plan["beats"]:
         cut = beat.get("cutaway")
         if cut:
-            asset = store.get_scene_asset(cut["asset_id"], customer_id=customer_id)
+            # 감정짤(관제 139)은 사장님(0) 짤 팩에서 온다 — 서버(meme_slots)가 정한 짤만 주인 0 으로 찾는다
+            _owner = 0 if (cut.get("match_type") == "meme" and int(cut.get("owner") or 0) == 0) else customer_id
+            asset = store.get_scene_asset(cut["asset_id"], customer_id=_owner)
             if asset and asset.get("media_path"):
                 out[beat["beat_idx"]] = asset["media_path"]
     return out
+
+
+def _meme_on(store, job):
+    """감정짤 스위치 meme_enabled — 값 규약은 _setting_allows 한 곳(app._setting_gate 와 같은 판정)."""
+    try:
+        v = store.get_setting("meme_enabled", "")
+    except Exception as e:      # noqa: BLE001 — 설정을 못 읽으면 끔(종전 그대로) + 한 줄
+        print("[meme] 스위치 읽기 실패(끔으로 진행): %r" % e, file=sys.stderr)
+        return False
+    return _setting_allows(v, (job or {}).get("customer_id", 0))
+
+
+def _meme_pool(store):
+    """서버 짤 팩 = 사장님(0) 장면 자산 중 clip·category "meme" — 감정은 tone 칸. {감정: [{asset_id, duration, owner}]}."""
+    pool = {}
+    for a in store.list_scene_assets(customer_id=0, asset_type="clip", category="meme") or []:
+        emo = str(a.get("tone") or "").strip()
+        if emo and a.get("media_path") and Path(a["media_path"]).exists():
+            pool.setdefault(emo, []).append({"asset_id": a["id"], "duration": float(a.get("duration") or 0), "owner": 0})
+    for v in pool.values():
+        v.sort(key=lambda x: x["asset_id"])
+    return pool
+
+
+def _apply_memes(plan, store, job, tts_dir):
+    """칸 맨 앞 감정짤 — 판단은 storyboard.meme_slots 한 곳. 여기는 스위치·짤 팩·음성 시각을 건넬 뿐. 짤 칸 수를 돌려준다."""
+    if not _meme_on(store, job):
+        return 0
+    from shopping_shorts import storyboard as _sbm
+    from shopping_shorts import video_assemble as _va
+    try:
+        pool = _meme_pool(store)
+    except Exception as e:      # noqa: BLE001 — 팩을 못 읽으면 짤 없음(이유 한 줄)
+        print("[meme] 짤 팩 읽기 실패 — 짤 없음: %r" % e, file=sys.stderr)
+        pool = {}
+
+    def _words_of(b):
+        mp3 = b.get("tts_path")
+        if not mp3 or not Path(mp3).exists():
+            return None, None
+        d = _probe_duration(str(mp3))
+        words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)))
+        return words, _va._beat_effective_dur(b, mp3)
+    res = _sbm.meme_slots(plan, _words_of, pool)
+    for r in res:
+        print("[meme] job칸 %s %s" % (r.get("beat_idx"), ("짤 %s %.2f초 #%s" % (r["emotion"], r["head_sec"], r["asset_id"]))
+                                       if r.get("meme") else ("없음: " + r.get("why", ""))), file=sys.stderr)
+    return sum(1 for r in res if r.get("meme"))
 
 
 def _resolve_sfx_paths(store, plan, customer_id, job=None):
@@ -5889,6 +5942,23 @@ def _consent_blocked_msg(err):
 
 
 def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_clean=True):
+    """렌더 계열 입력(아래 _render_inputs_core) + 맨 앞 감정짤 파일(관제 139).
+    짤 컷은 화면 컷 목록의 첫 컷이라 소스 표에 짤 파일이 있어야 렌더·캡컷·ZIP 이 같은 첫 컷을 굽는다 — 싣는 곳은 여기 한 곳."""
+    plan, paths, base = _render_inputs_core(store, job, job_id, work, keys, customer_id, allow_clean=allow_clean)
+    if any(_va_meme(b) for b in (plan or {}).get("beats") or []):
+        from shopping_shorts.video_assemble import meme_sources
+        _ms = meme_sources(plan, _resolve_cutaway_paths(store, plan, customer_id))
+        if _ms:
+            paths = {**(paths or {}), **_ms}
+    return plan, paths, base
+
+
+def _va_meme(beat):
+    from shopping_shorts.video_assemble import meme_cutaway
+    return meme_cutaway(beat)
+
+
+def _render_inputs_core(store, job, job_id, work, keys, customer_id=0, *, allow_clean=True):
     """렌더 계열(최종·미리보기·캡컷·ZIP·프레임)의 **입력을 정하는 유일한 자리**(2026-09-22).
 
     반환 (plan_used, source_video_paths, base):

@@ -909,6 +909,14 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
     #   그 조각을 **조용히 건너뛴다**(실측: 화면 3개인 비트가 타임라인에 2개만 올라감).
     #   화면 재료의 단일 출처(_beat_material)와 같은 기준으로 모은다.
     used_vids = used_video_ids(plan)
+    # 맨 앞 감정짤(관제 139) = 완성본 컷 계획의 첫 컷 — 짤 파일을 소스로 싣고 덮어씌우기 층에서는 뺀다(판단은 video_assemble.meme_cutaway 한 곳)
+    from shopping_shorts.video_assemble import meme_sources as _meme_sources, overlay_cutaway_path as _overlay_cw
+    _msrc = _meme_sources(plan, cutaway_paths)
+    if _msrc:
+        source_video_paths = {**source_video_paths, **_msrc}
+        used_vids = set(used_vids) | set(_msrc)
+    cutaway_paths = {b.get("beat_idx"): _overlay_cw(b, cutaway_paths) for b in (plan or {}).get("beats") or []
+                     if _overlay_cw(b, cutaway_paths)} if cutaway_paths else cutaway_paths
     asset_paths, video_durs = {}, {}
     for vid, real in source_video_paths.items():
         if vid not in used_vids or not real or not Path(real).exists():

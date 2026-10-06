@@ -6768,7 +6768,7 @@ def api_mix_src(job_id: str, video_id: str, request: Request):
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     try:
-        src = _resolve_sources(job, _MIX_WORK_DIR / job_id).get(video_id)
+        src = _job_sources_with_memes(job, _MIX_WORK_DIR / job_id).get(video_id)   # 짤 컷(meme_*)도 같은 주소로
     except Exception:
         src = None
     if not src or not Path(src).exists():
@@ -6814,7 +6814,7 @@ def _pvproxy_prewarm(job_id: str) -> None:
         beats = (job["edit_plan"].get("beats") or [])
         if not beats:
             return
-        srcs = {k: v for k, v in (_resolve_sources(job, _MIX_WORK_DIR / job_id) or {}).items()
+        srcs = {k: v for k, v in (_job_sources_with_memes(job, _MIX_WORK_DIR / job_id) or {}).items()
                 if v and Path(v).exists()}
         if not srcs:
             return
@@ -7305,13 +7305,28 @@ def _pvproxy_cutaways(job) -> dict:
         by_idx = mix_pipeline._resolve_cutaway_paths(Store(DB_PATH), plan, (job or {}).get("customer_id", 0)) or {}
         out = {}
         for k, b in enumerate(beats):
-            pth = by_idx.get((b or {}).get("beat_idx")) if (b or {}).get("cutaway") else None
+            # 맨 앞 감정짤(관제 139)은 덮어씌우지 않는다 — 컷 목록의 첫 컷으로 들어간다(판단 video_assemble.meme_cutaway 한 곳)
+            pth = video_assemble.overlay_cutaway_path(b, by_idx) if (b or {}).get("cutaway") else None
             if pth and Path(pth).exists():
                 out[k] = str(pth)
         return out
     except Exception as e:      # noqa: BLE001 — 끼움 장면을 못 찾아도 합본은 굽는다(대신 알린다)
         print("[pvproxy] 끼움 장면 경로 실패: %s" % e, file=sys.stderr)
         return {}
+
+
+def _job_sources_with_memes(job, work) -> dict:
+    """원본 소스 표(_resolve_sources) + 맨 앞 감정짤 파일(관제 139) — 3단계 재생(/api/mix/src)·편집 화면 합본이 짤 컷을
+    보통 컷처럼 읽게. 짤 파일 찾기는 완성본과 같은 함수(mix_pipeline._resolve_cutaway_paths → video_assemble.meme_sources)."""
+    srcs = dict(_resolve_sources(job, work) or {})
+    plan = (job or {}).get("edit_plan") or {}
+    if any(video_assemble.meme_cutaway(b) for b in plan.get("beats") or []):
+        try:
+            srcs.update(video_assemble.meme_sources(
+                plan, mix_pipeline._resolve_cutaway_paths(Store(DB_PATH), plan, (job or {}).get("customer_id", 0))))
+        except Exception as e:      # noqa: BLE001 — 짤 파일을 못 찾으면 그 컷은 검은 화면(대신 한 줄)
+            print("[meme] 짤 파일 찾기 실패 job=%s: %r" % ((job or {}).get("job_id"), e), file=sys.stderr)
+    return srcs
 
 
 def _pvproxy_beat_meta(beats: list, cutaways: dict = None) -> list:
@@ -7386,7 +7401,7 @@ def api_mix_preview_proxy(job_id: str, body: dict):
             return {"ok": True, "sig": sig, "state": "building"}
         _PVPROXY_BUSY[job_id] = sig
     try:
-        srcs = {k: v for k, v in (_resolve_sources(job, _MIX_WORK_DIR / job_id) or {}).items()
+        srcs = {k: v for k, v in (_job_sources_with_memes(job, _MIX_WORK_DIR / job_id) or {}).items()
                 if v and Path(v).exists()}
     except Exception:
         srcs = {}
@@ -16298,7 +16313,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 2단계 스토리보드(관제 120, 2026-10-05) — 칸마다 고른 장면 그대로 3단계로. ""끔 · "admin" · "11,42" · "1" 전체
                        "storyboard_enabled",
                        # 신호어 새 풀(히트 자막 2,051편 빈도 가중, 2026-10-05) — ""끔(종전 8세트) · "admin" · "1" 전체
-                       "signal_pool_enabled"}
+                       "signal_pool_enabled",
+                       # 감정짤(관제 139, 2026-10-06) — 스토리보드 신호어 [1]·[3] 줄 맨 앞에 짤. ""끔(종전 그대로) · "admin" · "11,42" · "1" 전체
+                       "meme_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────

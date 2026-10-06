@@ -2579,6 +2579,9 @@ def render_cut_plan(edit_plan, tts_paths, source_video_paths, *, beat_durs=None,
         _srcd = {s.get("video_id"): _src_dur(s.get("video_id"))
                  for s in _beat_material(beat)
                  if s and s.get("video_id") in source_video_paths}
+        _mcw = meme_cutaway(beat)          # 맨 앞 감정짤(관제 139) — 화면 컷 목록의 첫 컷이 이 파일을 읽는다
+        if _mcw and str(_mcw["vid"]) in source_video_paths:
+            _srcd[str(_mcw["vid"])] = _src_dur(str(_mcw["vid"]))
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
         _f0 = int(round(_cum_t * 30))
         _cum_t += tts_dur + runout
@@ -2706,6 +2709,37 @@ def narration_track(edit_plan, tts_paths, beat_frames, out_wav, sample_rate=NARR
     return str(out_wav)
 
 
+def meme_cutaway(beat):
+    """이 칸의 끼움 장면이 '맨 앞 감정짤'(관제 139, storyboard.meme_slots 가 남긴 match_type "meme" + head_sec + vid)인가 → 그 dict | None.
+    ★짤은 덮어씌우기가 아니라 **컷 목록의 첫 컷**이다(화면 scenesV2Alloc 이 짤 컷을 앞에 둔다). 렌더·캡컷·ZIP·편집 화면 합본은
+      이 함수로 ①짤 파일을 소스 표에 싣고(meme_sources) ②덮어씌우기를 건너뛴다(overlay_cutaway_path). 판단은 여기 한 곳."""
+    cw = (beat or {}).get("cutaway") if isinstance(beat, dict) else None
+    if not isinstance(cw, dict) or cw.get("match_type") != "meme" or not cw.get("vid"):
+        return None
+    try:
+        return cw if float(cw.get("head_sec") or 0) > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def meme_sources(edit_plan, cutaway_paths):
+    """{짤 컷 video_id: 짤 파일} — 소스 표(source_video_paths)에 더해 짤 컷을 보통 컷처럼 굽게 한다. cutaway_paths={beat_idx: 경로}."""
+    out = {}
+    for b in (edit_plan or {}).get("beats") or []:
+        cw = meme_cutaway(b)
+        p = (cutaway_paths or {}).get((b or {}).get("beat_idx")) if cw else None
+        if p:
+            out[str(cw["vid"])] = str(p)
+    return out
+
+
+def overlay_cutaway_path(beat, cutaway_paths, key=None):
+    """덮어씌울 끼움 장면 파일 — 짤(첫 컷으로 들어감)이면 None. key 를 주면 그 키로 찾는다(편집 합본은 칸 순서 키)."""
+    if meme_cutaway(beat):
+        return None
+    return (cutaway_paths or {}).get((beat or {}).get("beat_idx") if key is None else key)
+
+
 def cutaway_overlay(asset_dur, beat_dur, w, h):
     """끼움 장면(컷어웨이·AI 장면)을 칸 영상 위에 얹는 규칙 — **여기 한 곳**(관제 116, 2026-10-04).
     완성본(_render_mix)과 편집 화면 합본(app._pvproxy_build)이 같이 쓴다 — 따로 적으면 미리보기와 완성본이 어긋난다(0순위-B).
@@ -2734,6 +2768,8 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
     #   누적 시각을 프레임으로 반올림한 경계 차이로 칸 프레임 수를 정하면 오차가 쌓이지 않는다(어느 칸이든 ±1/60초).
     # ★컷 계획(칸 길이·소스 길이 표·여운·컷 프레임·전환 여유·배속/정지·시작 당기기)은 render_cut_plan 한 곳이 정한다
     #   (2026-09-27) — 캡컷 초안(capcut_draft)·내보내기 ZIP(export_bundle)이 **같은 함수**를 받는다. 여기엔 굽기만 남긴다.
+    # 맨 앞 감정짤(관제 139) = 컷 목록의 첫 컷 — 짤 파일을 소스 표에 싣는다(덮어씌우기 아님)
+    source_video_paths = {**(source_video_paths or {}), **meme_sources(edit_plan, cutaway_paths)}
     _cplan = render_cut_plan(edit_plan, tts_paths, source_video_paths)
     _map_path = Path(work) / "mix_raw.mp4"
     try:
@@ -2828,7 +2864,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         # 오버레이. 창=[0, min(자산길이, tts_dur)]. 비트 길이·TTS 오디오 불변 → 자막 t0 싱크
         # 불변. beat_video는 이미 규격(1080x1920)·vf 적용 → 재-vf 없이 오버레이만 얹는다.
         clip = work / f"beat_{idx}.mp4"
-        cutaway = (cutaway_paths or {}).get(idx)
+        cutaway = overlay_cutaway_path(beat, cutaway_paths)     # 짤은 첫 컷으로 이미 들어갔다 — 덮어씌우지 않는다
         if cutaway:
             asset_dur = _probe_duration(cutaway)
             win, fc = cutaway_overlay(asset_dur, tts_dur, _OUT_W, _OUT_H)   # 규칙 한 곳 — 편집 화면 합본과 같은 창

@@ -19028,12 +19028,13 @@ async function sbInsert(){
 function sbConfirm(){
   const [ek,bd]=sbCur(); if(!bd){ toast('먼저 스토리보드를 만들어 주세요'); return; }
   const cur=sbCurBoard(ek,bd);
-  const rows=cur.slots.map(sl=>({slot:String(sl.slot||''), line:String(sl.line||'').trim(), ids:(sl.ids||[]).filter(Boolean), cta:sl.cta_mark})).filter(x=>x.line);
+  const rows=cur.slots.map(sl=>({slot:String(sl.slot||''), line:String(sl.line||'').trim(), ids:(sl.ids||[]).filter(Boolean), cta:sl.cta_mark, sig_rank:sl.sig_rank, signal:sl.signal})).filter(x=>x.line);
   if(!rows.length){ toast('대본이 비어 있습니다'); return; }
   const decided=cur.slots.some(sl=>sl.cta_mark===true);
   const beats=rows.map(x=>{ const b={role:x.slot, text:x.line, src_seg:x.ids[0]||'', src_segs:x.ids.slice()}; if(decided) b.cta_mark=(x.cta===true); return b; });
+  // 신호어 자리 번호(sig_rank·signal)도 싣는다 — 3단계 짤 자리 판정(storyboard.meme_slots, 관제 139)
   const dr={script:rows.map(x=>x.line).join('\n'), hook:rows[0].line, beats, style_id:null,
-            storyboard:rows.map(x=>({slot:x.slot, line:x.line, ids:x.ids})), from_storyboard:sbTabName(ek).replace(/<[^>]+>/g,'')};
+            storyboard:rows.map(x=>Object.assign({slot:x.slot, line:x.line, ids:x.ids}, x.sig_rank?{sig_rank:x.sig_rank, signal:x.signal||''}:{})), from_storyboard:sbTabName(ek).replace(/<[^>]+>/g,'')};
   S2.drafts=(S2.drafts||[]).filter(d=>!(d&&d.storyboard)).concat([dr]);   // 다시 확정하면 옛 스토리보드 안은 바꿔 끼운다
   const idx=S2.drafts.length-1; S2.curDraft=idx;
   try{ s2RenderDrafts(); }catch(e){}

@@ -1347,5 +1347,8 @@ def storyboard_to_beat_sources(slots, seg_lookup=None):
             g = (seg_lookup(c) if seg_lookup else None) or {}
             keys.append({"id": c, "start": g.get("start"), "end": g.get("end"), "vsig": g.get("_vsig") or []})
         bs.append({"role": str(sl.get("slot") or sl.get("role") or ""), "seg": ids[0] if ids else "",
-                   "segs": ids, "pinned": bool(ids), "seg_keys": keys})
+                   "segs": ids, "pinned": bool(ids), "seg_keys": keys,
+                   # 신호어 자리 번호 — storyboard.apply_signals 가 slot 에 남긴 것을 그대로 싣는다(짤 자리 판정용, 관제 139)
+                   **({"sig_rank": int(sl["sig_rank"]), "signal": str(sl.get("signal") or "")}
+                      if str(sl.get("sig_rank") or "").isdigit() else {})})
     return {"script": "\n".join(lines), "beat_sources": bs}
