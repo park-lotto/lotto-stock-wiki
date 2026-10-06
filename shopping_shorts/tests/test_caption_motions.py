@@ -89,3 +89,20 @@ def test_렌더러는_등장_여부를_장면마다_편집기에_묻는다():
     js = (ROOT / "tools/render_scene_style.js").read_text(encoding="utf-8")
     assert "const enter=await page.evaluate(()=>window.sceneStyle.captionEnterAt?.(100000)||0);" in js
     assert "request.snapshot.bodyCaptionMotion" not in js
+
+
+# ── 자막팩 관리자 스위치(2026-10-06) ─────────────────────────────────────────
+def test_스위치_뒤_항목은_계약_파일에_표시되고_옛_항목은_아니다():
+    motions, wfx = _motions(), json.loads(CONTRACT.read_text(encoding="utf-8").split("/*WORDFX*/")[1])
+    for old in ("rise", "grow", "pop", "slide", "drop", "fade", "wide"):
+        assert not motions[old].get("pack"), old          # 고객이 쓰던 효과는 스위치와 무관하게 보인다
+    assert not wfx["box"].get("pack") and not wfx["color"].get("pack")
+    assert all(m.get("pack") for k, m in motions.items() if k not in ("rise", "grow", "pop", "slide", "drop", "fade", "wide"))
+
+
+def test_자막팩_스위치는_관리자_설정이고_편집기에_알린다():
+    src = (ROOT / "shopping_shorts/app.py").read_text(encoding="utf-8")
+    assert '"caption_pack_enabled"' in src.split("_ADMIN_SETTING_KEYS")[1].split("}")[0]
+    assert 'context["captionPackEnabled"] = bool(_setting_gate(Store(DB_PATH), "caption_pack_enabled", _cid(request)))' in src
+    js = (ROOT / "out/precision20-ui.js").read_text(encoding="utf-8")
+    assert "sceneContext?.captionPackEnabled!==false" in js

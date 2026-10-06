@@ -5,6 +5,7 @@
   //   unit: 없음 = 자막 통째로 / 'word' 어절마다 / 'char' 글자마다. stagger = 단위 사이 간격(ms), spread = 마지막 단위가 늦게 시작하는 상한(ms, 긴 자막도 이 안에 끝).
   //   spreadX: 글자마다 가운데에서 (번호-가운데)×값(em)만큼 벌어진 자리에서 모인다 — 키프레임마다 spreadK 배(없으면 0). origin: true = 자막 가운데 기준 / 문자열 = 단위마다의 기준점. boxAt: 글자 단위일 때 단어 강조 상자를 첫 글자 시작 뒤 ms×boxAt 에 켠다.
   //   ★새 효과는 transform 대신 translate·scale 을 쓴다 — 자막 칸의 가로 줄임(scaleX)·단어 '툭 커짐'(scale)을 덮지 않게.
+  //   pack: true = 자막팩 관리자 스위치(caption_pack_enabled) 뒤 — 꺼진 계정 편집기에선 버튼이 안 보인다(저장값·렌더는 그대로 받는다).
   //   ★마지막 키프레임은 '효과 없는 자막'과 같은 그림이어야 한다(tools/caption_pack/check_motions.py ③⑥ 이 잰다).
   //   ★서버는 아래 JSON 표식 두 개 사이를 그대로 json 으로 읽는다 — 그 안에는 JSON 만 쓴다(주석·작은따옴표·끝 쉼표 금지).
   root.CAPTION_MOTIONS = /*JSON*/{
@@ -171,7 +172,8 @@
     "filter": "blur(0)"
    }
   ],
-  "boxAt": 0.35
+  "boxAt": 0.35,
+  "pack": true
  },
  "popBounce": {
   "label": "글자 팝 튕김",
@@ -267,7 +269,8 @@
     "offset": 1.0
    }
   ],
-  "boxAt": 0.1
+  "boxAt": 0.1,
+  "pack": true
  },
  "trackIn": {
   "label": "자간 모이며 등장",
@@ -292,7 +295,8 @@
     "filter": "blur(0)"
    }
   ],
-  "boxAt": 0.4
+  "boxAt": 0.4,
+  "pack": true
  },
  "riseClip": {
   "label": "아래에서 솟아오르기",
@@ -315,7 +319,8 @@
     "translate": "0 0",
     "clipPath": "inset(-50% -50% -50% -50%)"
    }
-  ]
+  ],
+  "pack": true
  },
  "slam": {
   "label": "쾅 박히기",
@@ -358,7 +363,8 @@
     "translate": "0 0",
     "scale": "1"
    }
-  ]
+  ],
+  "pack": true
  },
  "typing": {
   "label": "타닥타닥 타이핑",
@@ -375,7 +381,8 @@
     "opacity": 1
    }
   ],
-  "boxAt": 1
+  "boxAt": 1,
+  "pack": true
  },
  "jelly": {
   "label": "젤리 꿀렁",
@@ -513,7 +520,8 @@
     "offset": 1.0
    }
   ],
-  "boxAt": 0.05
+  "boxAt": 0.05,
+  "pack": true
  }
 }/*JSON*/;
   // 자막팩(관제 127 3단계) — 팩 하나 고르면 장면마다 칸(slots)을 보고 등장 효과를 자동으로 고른다. 칸을 정하는 판단은 편집기 captionSlot 한 곳.
@@ -755,18 +763,22 @@
  },
  "underline": {
   "label": "밑줄 긋기",
-  "draw": 0.22
+  "draw": 0.22,
+  "pack": true
  },
  "highlight": {
   "label": "형광펜",
-  "draw": 0.28
+  "draw": 0.28,
+  "pack": true
  },
  "circle": {
   "label": "동그라미",
-  "draw": 0.35
+  "draw": 0.35,
+  "pack": true
  },
  "glow": {
-  "label": "번쩍 글로우"
+  "label": "번쩍 글로우",
+  "pack": true
  }
 }/*WORDFX*/;
   root.CAPTION_EMPH_DEFAULT = {"size": 150, "color": "#FFFFFF", "style": {"textShadow": "0 0.05em 0.25em rgba(0,0,0,.9),0 0 0.6em rgba(0,0,0,.5)"}, "motion": "pop"};

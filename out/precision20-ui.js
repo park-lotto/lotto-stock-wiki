@@ -707,7 +707,7 @@
   const rememberLocal=patch=>{if(qaMode||labMode)return;try{const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null')||{};localStorage.setItem('scene_style_preset',JSON.stringify({...saved,...patch}))}catch{}};
   const bodyMotionPanel=document.createElement('section');
   bodyMotionPanel.className='hook-motion body-motion';
-  bodyMotionPanel.innerHTML='<div class="hook-motion-head"><b>자막팩</b><small>누르면 장면마다 알아서 고릅니다</small></div><div class="caption-pack-grid">'+Object.entries(CAPTION_PACKS).map(([k,v])=>`<button type="button" data-caption-pack="${k}"><b style="font-family:'${v.font||''}',sans-serif">${v.label}</b><small>${v.desc}</small></button>`).join('')+'</div><div class="caption-pack-now" data-caption-pack-now hidden></div><div class="hook-motion-head"><b>본문 자막 등장</b><small>팩 대신 한 가지로 직접</small></div><div class="hook-motion-grid"><button type="button" data-body-caption-motion="">없음</button>'+Object.entries(BODY_CAPTION_MOTIONS).map(([k,v])=>`<button type="button" data-body-caption-motion="${k}">${v.label}</button>`).join('')+'</div>';
+  bodyMotionPanel.innerHTML='<div class="hook-motion-head caption-pack-head"><b>자막팩</b><small>누르면 장면마다 알아서 고릅니다</small></div><div class="caption-pack-grid">'+Object.entries(CAPTION_PACKS).map(([k,v])=>`<button type="button" data-caption-pack="${k}"><b style="font-family:'${v.font||''}',sans-serif">${v.label}</b><small>${v.desc}</small></button>`).join('')+'</div><div class="caption-pack-now" data-caption-pack-now hidden></div><div class="hook-motion-head"><b>본문 자막 등장</b><small>팩 대신 한 가지로 직접</small></div><div class="hook-motion-grid"><button type="button" data-body-caption-motion="">없음</button>'+Object.entries(BODY_CAPTION_MOTIONS).map(([k,v])=>`<button type="button" data-body-caption-motion="${k}">${v.label}</button>`).join('')+'</div>';
   motionPanel.after(bodyMotionPanel);
   bodyMotionPanel.addEventListener('click',event=>{
     const pk=event.target.closest('[data-caption-pack]');
@@ -739,6 +739,11 @@
     bodyMotionPanel.hidden=sceneIndex===0;
     bodyMotionPanel.querySelectorAll('[data-body-caption-motion]').forEach(b=>b.classList.toggle('active',!CAPTION_PACKS[captionPack]&&b.dataset.bodyCaptionMotion===bodyCaptionMotion));
     bodyMotionPanel.querySelectorAll('[data-caption-pack]').forEach(b=>b.classList.toggle('active',b.dataset.captionPack===captionPack));
+    // 자막팩 관리자 스위치(관제 127, 서버 context.captionPackEnabled) — 꺼진 계정은 팩 카드·새 효과·새 강조 방식이 안 보인다(종전 화면 그대로)
+    {const on=sceneContext?.captionPackEnabled!==false;
+     bodyMotionPanel.querySelectorAll('.caption-pack-grid,.caption-pack-head').forEach(e=>e.hidden=!on);if(!on)bodyMotionPanel.querySelector('[data-caption-pack-now]').hidden=true;
+     bodyMotionPanel.querySelectorAll('[data-body-caption-motion]').forEach(b=>{if(BODY_CAPTION_MOTIONS[b.dataset.bodyCaptionMotion]?.pack)b.hidden=!on});
+     bodyMotionPanel.querySelectorAll('[data-word-fx]').forEach(b=>{if(WORD_FX_DRAW[b.dataset.wordFx]?.pack)b.hidden=!on});}
     {const now=bodyMotionPanel.querySelector('[data-caption-pack-now]'),pack=CAPTION_PACKS[captionPack];if(now){now.hidden=!pack;if(pack){const m=BODY_CAPTION_MOTIONS[captionMotionKey()];now.textContent=`이 장면(${sceneIndex+1}장) · ${CAPTION_SLOTS[captionSlot()]||''} → ${m?m.label:'없음'}`;}}}
     bodyMotionPanel.querySelectorAll('[data-word-fx]').forEach(b=>b.classList.toggle('active',b.dataset.wordFx===(WORD_FX_STYLES[wordFx.style]?wordFx.style:'')));
     bodyMotionPanel.querySelectorAll('[data-word-fx-color]').forEach(b=>b.classList.toggle('active',b.dataset.wordFxColor.toLowerCase()===String(wordFx.color||'').toLowerCase()));
