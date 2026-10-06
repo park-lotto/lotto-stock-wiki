@@ -297,9 +297,10 @@ def render_link_longform(src, job_dir, where=DEFAULT_WHERE, voice=None, customer
         if speech:
             synthesize_tts(speech, tts_mp3, voice=voice, customer_id=customer_id)
             info["tts"] = speech
-            audio_in = ["-i", str(tts_mp3)]
-            # 말은 머리에 한 번. apad 로 끝까지 무음을 채우고 길이는 영상이 정한다(-shortest)
-            fc += f";[2:a]adelay={TTS_DELAY_MS}|{TTS_DELAY_MS},apad[a]"
+            # 말은 머리에 한 번(-itsoffset 으로 시작을 미룬다). apad 로 끝까지 무음을 채우고 길이는 영상이 정한다(-shortest).
+            #   효과음·BGM 섞기(mix_pipeline)와는 다른 판단이라 그쪽 필터(adelay)를 안 빌린다 — 관제 관문이 같은 판단 두 벌로 본다.
+            audio_in = ["-itsoffset", f"{TTS_DELAY_MS / 1000:.3f}", "-i", str(tts_mp3)]
+            fc += ";[2:a]apad[a]"
             audio_map = ["-map", "[a]", "-c:a", "aac", "-b:a", "128k", "-shortest"]
         cmd = ["ffmpeg", "-y", "-i", str(src), *overlay_in, *audio_in,
                "-filter_complex", fc,

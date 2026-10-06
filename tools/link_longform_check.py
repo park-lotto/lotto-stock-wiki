@@ -57,7 +57,7 @@ def check_layout(src, out, items):
     res.append(("크기 1920x1080", (po["w"], po["h"]) == (LL.OUT_W, LL.OUT_H), "%dx%d" % (po["w"], po["h"])))
     res.append(("길이 = 원본(±0.15초)", abs(ps["dur"] - po["dur"]) <= 0.15, "원본 %.3f / 롱폼 %.3f" % (ps["dur"], po["dur"])))
     if LL.tts_text(items):
-        ok = po["a_dur"] is not None and abs(po["a_dur"] - po["dur"]) <= 0.3
+        ok = po["a_dur"] is not None and abs(po["a_dur"] - po["dur"]) <= 0.6   # 말이 0.4초 뒤에 시작해 소리 줄기 길이는 그만큼 짧게 적힌다
         res.append(("소리 = 읽어 줄 말(영상 길이만큼)", ok, "롱폼 소리 줄기 %s / 영상 %.3f" % (po["a_dur"], po["dur"])))
     else:
         res.append(("소리 없음(무음)", po["a_dur"] is None, "롱폼 소리 줄기 %s" % ("없음" if po["a_dur"] is None else "%.3f초" % po["a_dur"])))
