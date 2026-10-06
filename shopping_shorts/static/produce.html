@@ -19158,7 +19158,7 @@ async function sbLoad(){
     if(!r.ok || !d || !d.ok){ SB.err=(d&&d.error)||('불러오기 실패('+r.status+')'); SB.data=SB.data||null; sbRender(); return; }
     SB.err=''; SB.data=d; sbAbsorb(d.tasks||{});
   }catch(e){ console.warn('[sb] 불러오기 실패', e); SB.err='불러오기 실패 — 잠시 뒤 다시 열어 주세요'; }
-  sbRender();
+  sbRender(); _sbEnsurePack();
   const t=(SB.data&&SB.data.tasks)||{};
   if(Object.values(t).some(x=>x&&x.state==='run')) SB.poll=setTimeout(sbLoad, 3000);   // 진행 중이면 3초마다 묻는다
 }
@@ -19341,6 +19341,9 @@ function sbSfxSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; c
   sbPicksSync(ek,bd); }   // 줄 효과음이 바뀌면 그 줄 기본 효과음 첫 발도 서버가 다시 정한다
 let _sbPackAud=null;
 function sbPackPlay(u){ try{ if(_sbPackAud) _sbPackAud.pause(); _sbPackAud=new Audio(u); _sbPackAud.play().catch(e=>console.warn('[packsfx] 재생 실패', e)); }catch(e){ console.warn('[packsfx]', e); } }
+// 저장해 둔 옛 보드(기본 효과음 칩이 생기기 전 것)는 한 번 서버에 다시 물어 칩을 채운다(10-07: 되살린 보드엔 칩이 비어 있었다)
+function _sbEnsurePack(){ const ek=SB.view, bd=SB.made&&SB.made[ek];
+  if(window.MEME_ON && bd && bd.slots && bd.pack_sfx_on==null && !bd._pkAsk){ bd._pkAsk=1; sbPicksSync(ek,bd); } }
 async function sbPicksSync(ek, bd){
   sbRender();
   try{
