@@ -6261,38 +6261,8 @@ def _seg_strip_thumb(src, dest_dir, seg, filename):
     return frame_extract.extract_segment_thumb(src, dest_dir, seg, filename)
 
 def _film_seg_from_id(seg_id: str, job: dict):
-    """`film_<video_id>_<start>_<end>` → {video_id,start,end}. 아니면 None.
-
-    ★화면(scene_lab commitRoll)이 만드는 id와 짝이다. 형식이 어긋나면 조용히 None —
-      경로 조작을 막기 위해 video_id가 이 잡의 소스 목록에 있을 때만 통과시킨다.
-    """
-    import re as _re
-    if not isinstance(seg_id, str) or not seg_id.startswith("film_"):
-        return None
-    m = _re.match(r"^film_(.+)_([0-9]+\.[0-9]+)_([0-9]+\.[0-9]+)$", seg_id)
-    if not m:
-        return None
-    vid, a, b = m.group(1), float(m.group(2)), float(m.group(3))
-    if not (b > a >= 0):
-        return None
-    # ★id의 video_id는 **씻긴 값**이다 — 화면(_extraId)이 `[^\w.]+`를 `_`로 바꿔서 만든다.
-    #   그래서 `abc-1` 소스는 id에 `abc_1`로 박힌다. 날것끼리 비교하면 하이픈이 든
-    #   소스가 전부 "모르는 소스"로 떨어져 **썸네일 404 = 검은 칸**이 된다
-    #   (2026-09-05 고객 다수 제보의 검은 칸 절반이 이것).
-    #   씻긴 형태로 맞춰 보되, 돌려주는 건 **원본 video_id**다 — 하류(_resolve_sources)는
-    #   원본 키로만 소스를 찾는다.
-    def _wash(s):
-        return _re.sub(r"[^\w.]+", "_", str(s))
-
-    known = {}
-    for ex in (job.get("extract") or {}).values():
-        v = (ex or {}).get("video_id")
-        if v:
-            known.setdefault(_wash(v), str(v))
-    real = known.get(vid)
-    if real is None:
-        return None
-    return {"video_id": real, "start": a, "end": b, "seg_id": seg_id}
+    """`film_<video_id>_<start>_<end>` → {video_id,start,end}. 아니면 None — 판단은 edit_plan.film_seg_from_id 한 곳(관제 141)."""
+    return _edit_plan.film_seg_from_id(seg_id, (job or {}).get("extract"))
 
 
 def _lab_scenecuts(job, work):
@@ -6353,70 +6323,9 @@ def _lab_clean_cuts(job, work, plan):
 
 
 def _with_film_segs(seg_map, plan, job):
-    """추출 인벤토리(seg_map)에 **사람이 필름에서 오려낸 조각**을 되살려 합친 사본을 준다.
-
-    ★왜 필요한가 (2026-09-05, 고객 다수 제보 "자막제거 후 다시 장면매칭으로 오면
-      다 지워지고 까만색으로 된다" — 박세희·왕혜원·다운 등):
-      오려낸 조각(`film_<vid>_<start>_<end>`)은 `apply_scene_lab`이 seg_map **사본**에만
-      병합하고 버린다. DB에 남는 건 `scene_override`의 **id 문자열뿐**이고, 화면을 다시
-      열 때 segments는 `job["extract"]`에서만 만들어지므로 그 id는 가리킬 곳이 없다.
-      → 화면에서 srcNo()·segNo()가 둘 다 0이 되어 배지가 '0-0', 길이 0.0,
-        띠는 '장면 없음', 썸네일은 404라 **검은 칸**이 된다.
-      종전엔 브라우저 localStorage(hydrateExtra)가 이걸 가려주고 있었다 — 자막제거를
-      다녀와 서버 편성 분기로 열리면 그 복원이 안 돌아 통째로 증발한다.
-
-    되살리는 재료는 **둘**이고, 순서가 중요하다:
-      ① `plan["scene_lab"]["extra_segs"]` — 앞으로 저장되는 값. label·text까지 온전하다.
-      ② id 문자열 파싱(`_film_seg_from_id`) — **옛 job 복구용**. 구간이 id에 들어 있어
-         저장본이 없어도 화면·렌더가 되살아난다(그래서 고객이 다시 담을 필요가 없다).
-    ①이 먼저다 — 사람이 붙인 이름을 파싱 결과(빈 label)로 덮으면 안 된다.
-
-    ★진짜 조각(추출본)은 절대 덮지 않는다 — `apply_scene_lab`의 규칙①과 같은 약속이다.
-    ★호출자의 seg_map은 안 건드린다(사본 반환) — 같은 dict를 다른 용도로 다시 쓴다.
-    """
-    out = dict(seg_map or {})
-    saved = ((plan or {}).get("scene_lab") or {}).get("extra_segs") or {}
-    if not isinstance(saved, dict):
-        saved = {}
-
-    def _put(sid, vid, a, b, label="", text=""):
-        if not sid or sid in out:
-            return                      # 추출본이 이긴다
-        out[sid] = {
-            "video_id": vid, "seg_id": sid, "start": a, "end": b,
-            "scene_desc": "", "text": text, "label": label or "",
-            "shot_role": "기타", "is_key": False,
-            "action": "", "change": "", "product_benefits": [],
-        }
-
-    # ① 저장된 것부터 — 사람이 만든 이름·자막이 살아 있다. 클라이언트가 만든 값이었으므로
-    #    apply_scene_lab과 **같은 강도로** 검증한다(숫자 아님·뒤집힘·nan/inf·소스 미상 버림).
-    for sid, s in saved.items():
-        if not isinstance(s, dict):
-            continue
-        try:
-            a, b = float(s.get("start")), float(s.get("end"))
-        except (TypeError, ValueError):
-            continue
-        if not (math.isfinite(a) and math.isfinite(b) and b > a):
-            continue
-        vid = s.get("video_id")
-        vid = vid.strip() if isinstance(vid, str) else ""
-        if not vid:
-            continue
-        _put(sid, vid, a, b, str(s.get("label") or "")[:60], str(s.get("text") or "")[:300])
-
-    # ② 편성에 남은 id를 파싱해 마저 되살린다 — 저장본이 없던 **옛 job이 여기서 산다**.
-    for beat in ((plan or {}).get("beats") or []):
-        for s in (beat.get("scene_override") or []):
-            sid = s.get("seg_id") if isinstance(s, dict) else None
-            if not sid or sid in out:
-                continue
-            got = _film_seg_from_id(sid, job)
-            if got:
-                _put(sid, got["video_id"], got["start"], got["end"],
-                     "필름 %.1f~%.1f초" % (got["start"], got["end"]))
-    return out
+    """추출 인벤토리(seg_map)에 편성이 가리키는 나머지 조각(필름 조각·자동 조각)을 되살린 사본.
+    ★판단은 edit_plan.scene_table 한 곳(관제 141) — 필름 조각 검은 칸(2026-09-05)·자동 조각 화면 컷 0개(2026-10-06)가 같은 뿌리였다."""
+    return _edit_plan.scene_table((job or {}).get("extract"), plan, seg_map=seg_map)
 
 
 @app.get("/api/mix/seg_thumb/{job_id}/{seg_id}")
@@ -6438,8 +6347,8 @@ def api_mix_seg_thumb(job_id: str, seg_id: str):
         if not cached.exists() and not _seg_strip_thumb(str(src), cached.parent, {"start": 0.0, "end": 1.0}, cached.name):
             return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
         return FileResponse(str(cached), media_type="image/jpeg")
-    seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
-    seg = seg_map.get(seg_id)
+    # 장면 표 한 곳(관제 141) — 편성의 자동 조각(`…#시작-끝`)도 여기서 풀린다(종전엔 404 = 검은 썸네일).
+    seg = _edit_plan.scene_table(job["extract"], job.get("edit_plan") or {}).get(seg_id)
     if not seg:
         # ★필름에서 만든 조각(2026-08-26) — 화면이 즉석에서 만든 구간이라 인벤토리에 없다.
         #   id에 영상·구간이 들어 있으니 그걸로 프레임을 뽑는다(없으면 위 훅 컷이 빈칸이 된다).
@@ -6578,10 +6487,10 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
     if not plan:
         return JSONResponse(status_code=404,
                             content={"ok": False, "error": "편집안이 아직 없어요 — 매칭을 먼저 완료하세요"})
-    seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
-    # ★사람이 필름에서 오려낸 조각을 되살려 함께 내려보낸다(2026-09-05 고객 다수 제보).
-    #   안 하면 편성엔 id가 있는데 segments엔 없어 화면이 '0-0'·검은 칸이 된다.
-    seg_map = _with_film_segs(seg_map, plan, job)
+    # ★장면 표 = edit_plan.scene_table 한 곳(관제 141) — 편성이 가리키는 모든 id(필름 조각·자동 조각)가 풀린다.
+    #   안 하면 편성엔 id가 있는데 segments엔 없어 화면이 '0-0'·검은 칸(2026-09-05)이 되거나
+    #   화면 컷 0개 → 완성본만 그 칸을 채워 뒤 칸이 밀린다(2026-10-06 영상점검 다른 장면 9칸).
+    seg_map = _edit_plan.scene_table(job["extract"], plan)
     _auto_ok = _edit_plan.non_edge_segs(seg_map)
     work = _MIX_WORK_DIR / job_id
     # 소스 실길이 — 범위초과 세그(실체 없는 화면) 표시용. 소스가 없으면 {}로 폴백(표시만 꺼진다).
@@ -7616,7 +7525,9 @@ def _freeze_clip_anchors(plan):
 
 def _scene_lab_apply_locked(store, job_id, job, plan, payload):
     """apply의 실제 작업 — 반드시 _plan_lock 안에서 부른다."""
-    seg_map, _ = _edit_plan._build_inventory(list((job.get("extract") or {}).values()))
+    # 장면 표 한 곳(관제 141) — 자동 조각 id 도 풀려야 저장 때 조용히 걸러지지 않는다.
+    #   film=False: 필름 조각은 apply_scene_lab 이 저장본+클라 편집을 직접 합친다(클라 편집이 이긴다).
+    seg_map = _edit_plan.scene_table(job.get("extract") or {}, plan, film=False)
     # ★교체 기록(2026-09-04): 적용 전후 '첫 조각'이 바뀐 비트를 DB에 남긴다 — 매칭의 시험지. 픽 로직엔 안 쓴다.
     _before = {"beats": [dict(b) for b in plan.get("beats") or []], "generator": plan.get("generator")}
     _edit_plan.apply_scene_lab(plan, seg_map, payload)
