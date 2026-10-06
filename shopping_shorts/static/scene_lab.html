@@ -4836,6 +4836,7 @@ async function autoFill(i){
   const fitsRole = id => want.length && useTags(id).some(t => want.includes(t));
   const cand = () => Object.keys(DATA.segments).filter(id =>
     !inAny.has(id) && !tooShort(id) && !outOfRange(id)
+    && DATA.segments[id].auto_ok !== false      // 씨앗·첫끝 컷은 자동으로 안 담는다 — 판단은 서버 edit_plan.non_edge_segs(관제 138)
     && !reps.has((dupMap()[id] || {}).rep || id));
   // ★남은 부족분이 MIN_CLIP(0.8초)보다 작으면 **더 담지 않는다**(2026-08-16 실측).
   //   0.8초 미만 토막은 planClips가 만들지 않고 앞 컷들에 나눠 흡수시킨다 — 그래서 한 장 더

@@ -1710,7 +1710,53 @@ def non_edge_segs(seg_map):
       거르는 규칙을 소비자 7곳에 각각 적으면 언젠가 한 곳이 빠진다(0순위-B).
     """
     # auto_exclude(씨앗, 2026-09-30): 소스엔 있되 자동 배치 재고에서 뺀다 — 표식의 주인은 mix_pipeline.mark_auto_exclude
-    return {sid: s for sid, s in (seg_map or {}).items() if not _is_edge_seg(s) and not s.get("auto_exclude")}
+    return {sid: s for sid, s in auto_segs(seg_map).items() if not _is_edge_seg(s)}
+
+
+# ★자동 배치 후보의 주인(관제 138, 2026-10-06 사장님 "뿌리근본수리해 이번에꼭") — "자동이 집어도 되는 컷·소스"는 아래 세 함수만 정한다.
+#   종전엔 non_edge_segs 를 부르는 자리와 `not _is_edge_seg(s)` 를 직접 적은 자리가 섞여 있어, 씨앗 조건(09-30)이
+#   부르는 쪽에만 들어갔다 → 라이브 6일 씨앗 표식 작업 82건 중 36건에서 씨앗 컷이 대표·대안 컷으로 샜다.
+#   자동으로 컷을 고르는 코드는 조건을 직접 적지 말고 이 함수들을 부른다(주인 밖에 적으면 finish 가 거절).
+def _auto_blocked(x):
+    """이 컷·소스는 자동 배치가 집으면 안 되나 — 표식(auto_exclude)만 읽는다. 다는 곳은 mix_pipeline.mark_auto_exclude."""
+    return bool(isinstance(x, dict) and x.get("auto_exclude"))
+
+
+def auto_segs(seg_map):
+    """자동 금지(씨앗) 컷만 뺀 사본 — 첫·끝 컷은 남는다. 첫·끝까지 빼려면 non_edge_segs."""
+    return {sid: s for sid, s in (seg_map or {}).items() if not _auto_blocked(s)}
+
+
+def auto_sources(sources):
+    """자동 금지(씨앗) 소스만 뺀 목록 — 소스 단위로 컷을 훑는 자동 배치(backbone·backbone_assemble)가 부른다."""
+    return [s for s in (sources or []) if not _auto_blocked(s)]
+
+
+def enforce_auto_exclude(beats, seg_map):
+    """새로 만든 계획의 출구 검사: 자동 금지(씨앗) 컷이 대표·대안에 있으면 빼고, 샌 조각 수를 돌려준다(정상 0).
+
+    어느 생성 경로가 새로 생겨도 여기를 지나면 씨앗 컷이 자동으로 붙은 채 저장되지 않는다. 사람이 스토리보드에서
+    직접 고른 줄(pinned)은 건드리지 않는다. 대표가 빠지면 남은 대안을 올리고, 하나도 안 남으면 안 쓴 후보 컷을 넣는다."""
+    from shopping_shorts.ai_match import is_pinned
+    pool = non_edge_segs(seg_map)
+    if not pool:
+        return 0          # 재료가 씨앗뿐 — 뺄 수 없다(mark_auto_exclude 가 애초에 표식을 안 단다)
+    used = {r.get("seg_id") for b in (beats or []) for r in [b.get("primary")] + list(b.get("alternates") or []) if r}
+    leaks = 0
+    for b in beats or []:
+        if is_pinned(b):
+            continue
+        refs = [r for r in [b.get("primary")] + list(b.get("alternates") or []) if r]
+        keep = [r for r in refs if not _auto_blocked(seg_map.get(r.get("seg_id")))]
+        if len(keep) == len(refs):
+            continue
+        leaks += len(refs) - len(keep)
+        if not keep:
+            sid = next((s for s in pool if s not in used), None) or next(iter(pool))
+            used.add(sid)
+            keep = [_ground_ref({"seg_id": sid}, seg_map)]
+        b["primary"], b["alternates"] = keep[0], keep[1:]
+    return leaks
 
 
 def _build_inventory(source_scripts):
@@ -3051,7 +3097,7 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
         #     폴백(같은 컷 반복)으로 떨어지는데 그게 더 나쁘다(위 주석과 같은 판단).
         # ⚠ 첫·끝(CTA·썸네일) 조각은 자동으로 안 붙인다(2026-08-26) — edge 표식이
         #   생기면서 seg_map에 살아 들어오므로 여기서 걸러야 종전 동작이 유지된다.
-        pool = sorted((s for s in seg_map.values() if not _is_edge_seg(s)),
+        pool = sorted(non_edge_segs(seg_map).values(),
                       # 기준 순서(2026-09-16): 같은 소스 → 짧은 컷 뒤로 → 같은 그림 뒤로 → **지목 컷에서 가까운 순**.
                       #   '같은 그림'을 맨 앞에 두면 같은 소스가 통째로 뒤로 밀려 다른 소스의 0.9초 조각이
                       #   먼저 온다(test_같은_영상에서_이어_붙인다) — 08-18 사장님 "짧은 거 여기저기서 붙이면
@@ -4181,8 +4227,7 @@ def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
     #   edge 표식만 달고 버리지 않으므로, 안 거르면 자동 재픽이 CTA를 집는다.
     #   ★seg_map 자체는 안 줄인다 — 사람이 손으로 꽂아둔 edge primary를 아래에서
     #     조회해야 한다(줄이면 그 비트가 조용히 사라진다).
-    pool = [sid for sid, _s in seg_map.items()
-            if sid not in (taken - weak_own) and not _is_edge_seg(_s)]
+    pool = [sid for sid in non_edge_segs(seg_map) if sid not in (taken - weak_own)]
     if not pool:
         return beats
     # 결(shot_role)을 함께 보여준다 — 아래 비트 줄의 '어울리는 결'과 대조할 수 있어야 한다.
@@ -4447,7 +4492,9 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
             sid = str(sid).strip()
             if sid not in seg_map and sid in keys:
                 sid = match_seg_key(keys[sid], seg_map) or sid
-            if sid in seg_map and sid not in out:
+            # ★씨앗 컷은 2단계가 지목했어도 잇지 않는다(관제 138) — 사람이 스토리보드에서 직접 고른 줄(pinned)만 예외.
+            #   2단계는 씨앗을 대본 글자로 알아봐 놓칠 수 있다. 빠진 줄은 아래 b-roll 채우기가 재료 컷으로 메운다.
+            if sid in seg_map and sid not in out and (x.get("pinned") or not _auto_blocked(seg_map[sid])):
                 out.append(sid)
         return out
 
@@ -4571,8 +4618,11 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
                   "vid": g.get("video_id") or "", "label": (g.get("label") or "").strip(),
                   "kind": g.get("appeal_kind") or "",
                   "outro": bool(g.get("is_outro")) and not (g.get("hook_type") or g.get("product_benefits"))}
-            for sid, g in (seg_map or {}).items() if isinstance(g, dict)}
-    _bs = [{"segs": [r["seg_id"] for r in [b["primary"]] + list(b.get("alternates") or []) if r and r.get("seg_id")],
+            # 더할 후보는 자동 배치 후보(auto_segs)만 — 이미 줄에 있는 컷(사람이 고른 씨앗 컷 포함)은 길이를 재야 하니 남긴다
+            for sid, g in (seg_map or {}).items() if isinstance(g, dict)
+            and (not _auto_blocked(g) or any(sid == (r or {}).get("seg_id")
+                                             for b in beats for r in [b.get("primary")] + list(b.get("alternates") or [])))}
+    _bs = [{"segs":[r["seg_id"] for r in [b["primary"]] + list(b.get("alternates") or []) if r and r.get("seg_id")],
             "pinned": b.get("pinned")} for b in beats]
     _am.ensure_cover(_bs, [{"text": b.get("narration") or ""} for b in beats], _idx, None)
     for b, x in zip(beats, _bs):
@@ -5426,6 +5476,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     맞춰 100% 우리 대본을 생성한다(없는 장면 요구 차단 → 소스에 클립 없어도 천장 없음). 백본을
     못 고르거나 생성이 비면 조용히 레퍼런스-먼저로 폴백(회귀0)."""
     seg_map, inventory = _build_inventory(source_scripts)
+    _pool = auto_sources(source_scripts)   # 컷을 고르는 후처리(backbone.*)는 자동 배치 후보 소스만 본다(관제 138)
     detected = _normalize_video_type(
         video_type or (detect_video_type(source_scripts) if source_scripts else _DEFAULT_TYPE))
     if not seg_map:
@@ -5556,7 +5607,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
             from shopping_shorts import backbone
             # 1) 행위 매칭(화면-대사 어긋남 + 길이) 2) 백본 순서 고정(과정순서)
             plan["beats"] = backbone.ping_pong_reconcile(
-                plan["beats"], source_scripts,
+                plan["beats"], _pool,
                 rewrite_call=lambda bs: _bb_rewrite(bs, _call),
                 trim_call=lambda bs: _bb_trim(bs, _call),
                 # 트림이 대본을 목표의 75% 밑으로 깎으면 아예 적용하지 않는다(2026-07-31).
@@ -5585,16 +5636,16 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                 if bb:
                     plan["beats"] = backbone.order_by_backbone(plan["beats"], bb)
                 # 반복장면·한소스 편중 해소: 쓴 클립 재사용 금지 + 덜 쓴 소스 우선 교체
-                plan["beats"] = backbone.dedup_and_balance(plan["beats"], source_scripts)
+                plan["beats"] = backbone.dedup_and_balance(plan["beats"], _pool)
                 # 서브 의무삽입: 아예 안 쓰인 소스(s2=0)를 같은 행위로 강제 삽입(dedup으론 못 잡음)
-                plan["beats"] = backbone.ensure_sources_used(plan["beats"], source_scripts)
+                plan["beats"] = backbone.ensure_sources_used(plan["beats"], _pool)
                 # 전역 컷 반복 해소(alternates 포함) + 비트당 클립 상한 → 뚝뚝 끊김·B롤 반복 해소
                 # (dedup_and_balance는 primary만 봐서 B롤 체인이 비트마다 반복됐다, job 실측).
-                plan["beats"] = backbone.dedup_clips_global(plan["beats"], source_scripts)
+                plan["beats"] = backbone.dedup_clips_global(plan["beats"], _pool)
                 # 영상 차별화(2026-07-27, 최종 단계): 훅(첫 비트)=비-A 소스 최고장면 / CTA(끝)=중간
                 # 소스 클립(원본 엔딩 회피). 화면만 재배정(narration 불변) → 다른 후처리 뒤에 마지막으로.
                 plan["beats"] = backbone.swap_hook_cta_for_differentiation(
-                    plan["beats"], bb, source_scripts)
+                    plan["beats"], bb, _pool)
         # ★핑퐁 후처리 뒤 구조 재교정(2026-07-31). 원래는 위 backbone 5종이 비트 순서를
         #   다시 짜면서 **CTA가 마지막이 아니게 되는** 것을 되돌리려고 넣었다(라이브 설정
         #   백테스트 20건 중 9건이 CTA끝X). 슬롯 경로에선 그 5종을 이제 안 타므로 그 사유는

@@ -1152,7 +1152,7 @@ SEEDLESS_NOTE = ("(씨앗 대본 없음 — 외국 영상이라 참고할 한국
                  "소구점만으로 이 제품의 대본을 처음부터 써라. 이 괄호 안 문장은 대본에 쓰지 마라.)")
 
 
-def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product=""):
+def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product="", seed_vid=""):
     """(drafts, why) — app._backbone_drafts와 같은 계약(비면 why에 이유, 조용한 폴백 금지).
 
     자동 1안(씨앗 결 그대로) + 고른 스타일 1안. 모델 호출 = 특징 1회 + 안마다 1회.
@@ -1172,9 +1172,13 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         seed_src = None
         seed_from = "explicit"
         # 고른 씨앗과 같은 글의 영상이 job에도 담겨 있으면 그건 화면에서 뺀다(씨앗 화면 금지 규칙 그대로)
+        # ★seed_vid(관제 138): 호출부가 고른 씨앗이 job 의 어느 영상인지 알면 그 번호로 뺀다. 글자 대조만으로는
+        #   위키 대본과 job 추출본의 글이 한 글자만 달라도 씨앗이 화면 재료에 남아, 2단계가 씨앗 컷을 줄에 지목했다
+        #   (라이브 6일 씨앗 표식 작업 82건 중 10건). 다 빠지면 화면이 비므로 그때는 그대로 둔다(_drop_seed 와 같은 규칙).
         key = _norm_text(seed_text)
         vis = [s for s in srcs
-               if _norm_text(s.get("full_text_ko") or s.get("full_text")) != key]
+               if _norm_text(s.get("full_text_ko") or s.get("full_text")) != key
+               and not (seed_vid and str(s.get("video_id") or "") == str(seed_vid))] or list(srcs)
         product = (seed_product or "").strip()
     else:
         seed_src = ba.seed_source(srcs, (job or {}).get("backbone_main"))

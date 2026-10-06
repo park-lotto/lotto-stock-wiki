@@ -887,6 +887,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   // 원본을 더 읽어도 되는 범위 — 청소본이 있으면 그 청소 구간 안만. null = 못 늘림(청소 구간을 못 읽었거나 창이 구간 밖).
   //   판단 한 곳: fillShortWindow(장면 전환 앞까지 채우기)와 scenesV2(원본 이어 틀기)가 같이 쓴다.
   function cleanBound(vid, s, e){
+    if (CLEAN_OFF) return {lo: 0, hi: Infinity};                    // 청소 전과 똑같이 짜 보는 중(아래 finish) — 청소 구간을 안 본다
     const D = (typeof DATA === 'object' && DATA) || {};
     if ((D.clean_spans || {}).__error__) return null;
     const spans = (D.clean_spans || {})[vid];
@@ -920,7 +921,37 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     ns = Math.ceil(ns * 1000 - 1e-6) / 1000;                         // 0.001초 — 머리는 올림, 길이는 내림(전환 프레임을 안 넘게)
     return {start: ns, sdur: Math.floor((ne - ns) * 1000 + 1e-6) / 1000};
   }
-  const finish = base => {
+  // ★청소 뒤에도 **지운 그 컷 그대로**(관제 135, 2026-10-06 황선희님 d20c9f3d6a54 6번 칸 — 관제 110 의 재발).
+  //   청소본은 청소 전 컷이 읽은 구간을 지운 것이다. 지운 뒤 컷이 달라지면 새 컷이 안 지운 곳을 읽어 원본 자막이 보인다.
+  //   110 은 "청소 구간을 안 보고 짠 컷이 지운 구간 안인가"를 **다듬기 전 컷**으로 봤다 — 다듬기(전환 가드)가 머리를 0.1초
+  //   옮긴 컷은 '밖'으로 떨어져(허용 0.05초) 다시 배분됐고, 마지막 컷이 지운 끝을 0.22초 넘었다(7일 237작업 중 28작업 30칸).
+  //   이제 구간 포함을 어림하지 않는다: 서버가 정본에 **기록된 청소 당시 컷**(DATA.clean_cuts[칸] = [[영상, 시작, 읽은 길이]])을
+  //   주고, 청소 구간을 안 보고 끝까지(다듬기 포함) 짠 컷이 그 기록과 같으면 그 컷을 쓴다. 다르면(청소 뒤 편성·음성이 바뀜)
+  //   종전대로 청소 구간을 보고 짠다. 모든 경로가 지나는 이 finish 한 곳에서 정한다 — 서버 러너가 같은 JS 를 돈다.
+  let CLEAN_OFF = false;
+  const cleanRec = (() => {
+    const D = (typeof DATA === 'object' && DATA) || {};
+    const spans = D.clean_spans || {};
+    if (beatIdx == null || spans.__error__ || !Object.keys(spans).length) return null;
+    const r = (D.clean_cuts || {})[beatIdx];
+    return Array.isArray(r) && r.length ? r : null;
+  })();
+  const CLEAN_SAME_TOL = 0.05;                                       // 기록은 0.0001초 반올림 — 한 프레임(0.033초) 넘게 다르면 다른 컷이다
+  const sameAsCleaned = cuts => !!cleanRec && cuts.length === cleanRec.length && cuts.every((c, k) => {
+    const r = cleanRec[k];
+    return String(c.video_id) === String(r[0]) && Math.abs(Number(c.start) - Number(r[1])) <= CLEAN_SAME_TOL
+      && Math.abs(Number(c.src_dur) - Number(r[2])) <= CLEAN_SAME_TOL;
+  });
+  // base = 청소 구간을 안 보고 짠 컷. bound = 청소 구간을 보고 짠 컷을 주는 함수(배분이 청소 구간을 보는 scenesV2 만 준다).
+  const finish = (base, bound) => {
+    if (!cleanRec) return finishCore(bound ? bound() : base);
+    let free;
+    CLEAN_OFF = true;
+    try { free = finishCore(base.map(c => ({...c}))); } finally { CLEAN_OFF = false; }
+    if (sameAsCleaned(free)) return free;
+    return finishCore(bound ? bound() : base);
+  };
+  const finishCore = base => {
     if (!base.length) return base;
     base.forEach(c => {
       if (c.meme){ c.src_dur = Number(c.dur); return; }            // 짤 컷: 1배속·처음부터(칸 통합 속도·창 늘리기 대상 아님)
@@ -1010,7 +1041,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   if (cutRuleV2() && !rhythmOne && beatIdx != null && phraseSyncOn(beatIdx) && !spread
       && !(typeof SLOW === 'object' && SLOW && SLOW[beatIdx] > 1)
       && typeof lists !== 'undefined' && lists[beatIdx] === segIds) {
-    return finish(scenesV2(segments, ttsDur, beatIdx, phraseExactOn(beatIdx)));
+    const _ex = phraseExactOn(beatIdx);
+    if (cleanRec) return finish(scenesV2Alloc(segments, ttsDur, beatIdx, _ex, false), () => scenesV2(segments, ttsDur, beatIdx, _ex));
+    return finish(scenesV2(segments, ttsDur, beatIdx, _ex));
   }
   if (!rhythmOne && beatIdx != null && phraseSyncOn(beatIdx) && typeof capsOf === 'function') {
     const caps = capsOf(beatIdx) || [];

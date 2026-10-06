@@ -1,0 +1,10 @@
+[Unit]
+Description=Shopping Shorts 채널 전수조사(주 1회) — '채널별 터진 영상' 탭의 재료(유튜브, 약 1,500 units)
+After=network.target shopping-shorts.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+ExecStart=/usr/bin/python3 -m shopping_shorts.channel_survey

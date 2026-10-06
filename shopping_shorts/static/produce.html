@@ -90,6 +90,31 @@
     .wsDel{flex:none;background:none;border:1px solid var(--line);color:var(--sub);font-size:12px;
       border-radius:6px;padding:5px 8px;cursor:pointer}
     .wsDel:hover{border-color:var(--fire);color:var(--fire)}
+    /* 🎭 대화형(관제 128) — 관리자 시험. 작업목록 버튼 + 틀 고르기 창 */
+    .wsDlg{flex:none;background:none;border:1px solid var(--accent);color:var(--accent);font-size:12px;
+      border-radius:6px;padding:5px 8px;cursor:pointer}
+    #dlgBg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:310;
+      align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
+    #dlgBg.on{display:flex}
+    .dlgForms{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}
+    .dlgForm{border:1px solid var(--line);border-radius:10px;padding:9px 10px;cursor:pointer;background:var(--bg);text-align:left;color:var(--txt)}
+    .dlgForm.on{border-color:var(--accent);background:var(--sel-bg)}
+    .dlgForm b{display:block;font-size:13px}
+    .dlgForm span{display:block;font-size:11px;color:var(--sub);margin-top:3px;line-height:1.35}
+    .dlgForm i{font-style:normal;font-size:10px;color:var(--accent)}
+    .dlgCast{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;font-size:12px}
+    .dlgCast label{display:flex;align-items:center;gap:5px}
+    .dlgCast select{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px}
+    .dlgLines{display:flex;flex-direction:column;gap:5px;margin:8px 0;max-height:46vh;overflow:auto}
+    .dlgLine{display:flex;gap:8px;font-size:13px;line-height:1.45;padding:6px 8px;border-radius:8px;background:var(--bg)}
+    .dlgWho{flex:none;min-width:52px;font-weight:700}
+    .dlgTag{font-size:10px;color:var(--sub);margin-left:4px}
+    .dlgW0{color:#8ab4ff}.dlgW1{color:#ffb86b}.dlgW2{color:#7ee0a1}
+    .dlgBtns{display:flex;gap:8px;margin-top:10px}
+    .dlgBtns button{flex:1;padding:9px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--txt);cursor:pointer;font-size:13px}
+    .dlgBtns button.main{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+    .dlgBtns button:disabled{opacity:.5;cursor:default}
+    .dlgMsg{font-size:12px;color:var(--sub);margin-top:6px;min-height:16px}
     .wsClose{margin-top:14px;width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);
       font-size:13px;padding:9px;border-radius:9px;cursor:pointer}
 
@@ -1849,6 +1874,23 @@
       </div>
     </div>
 
+    <!-- 🎭 대화형(관제 128) — DIALOGUE_ON(서버 dialogue_enabled + 관리자)일 때만 작업목록 버튼이 이 창을 연다 -->
+    <div id="dlgBg" onclick="if(event.target===this)dlgClose()">
+      <div class="worksBox" style="max-width:640px">
+        <h3>🎭 대화형으로 새 작업</h3>
+        <div class="wsub" id="dlgSub">원본 작업은 그대로 두고, 대본만 대화형으로 바꾼 새 작업을 만들어요(3단계부터 다시).</div>
+        <div class="dlgForms" id="dlgForms"></div>
+        <div class="dlgCast" id="dlgCast"></div>
+        <div class="dlgLines" id="dlgLines"></div>
+        <div class="dlgMsg" id="dlgMsg"></div>
+        <div class="dlgBtns">
+          <button type="button" id="dlgPreviewBtn" onclick="dlgPreview()">미리보기</button>
+          <button type="button" class="main" id="dlgMakeBtn" onclick="dlgMake()" disabled>이 대본으로 새 작업 만들기</button>
+        </div>
+        <button type="button" class="wsClose" onclick="dlgClose()">닫기</button>
+      </div>
+    </div>
+
     <!-- T8: 저장 상태 상시 표시 + 되돌리기(직전 저장 스냅샷 복원) -->
     <div class="saveBar">
       <span id="saveStatus" aria-live="polite"></span>
@@ -2576,6 +2618,9 @@
               <span class="hint" style="margin-left:4px">약 1.2초 표지처럼 보여줍니다</span></span>
           </label>
           <div id="finalStatus" class="hint" style="margin-top:10px"></div>
+          <!-- 📺 구매링크용 롱폼(2026-10-05 사장님 "완성본 최종 렌더하고 오른쪽에 롱폼으로 렌더를 활성화", 관제 132).
+               최종 렌더 전에는 흐리게 꺼져 있고, 완성본이 나오면 켜진다. 이 자리는 _lfRender 혼자 그린다. -->
+          <div id="longformBox" style="margin-top:14px"></div>
           <div id="exportBox" style="margin-top:14px"></div>
         </div>
       </div>
@@ -8661,6 +8706,7 @@ async function openWorksModal(){
       + '<div class="wsMain"><div class="wsTitle">'+title+(cur?' · <span style="color:var(--accent)">지금 작업</span>':'')+'</div>'
       + '<div class="wsMeta">'+when+(when?' · ':'')+'단계 '+step+'/8</div></div>'
       + '<span class="wsBadge">'+step+'/8</span>'
+      + ((window.DIALOGUE_ON && w.job_id) ? '<button class="wsDlg" onclick="event.stopPropagation();dlgOpen(\''+esc(w.work_id)+'\',\''+esc((w.title||'').trim().slice(0,30)).replace(/'/g,'')+'\')">🎭 대화형</button>' : '')
       + '<button class="wsDel" onclick="event.stopPropagation();deleteWork(\''+esc(w.work_id)+'\',this)">삭제</button>'
       + '</div>';
   }).join('');
@@ -8680,6 +8726,74 @@ async function deleteWork(wid, btn){
       if(list && !list.querySelector('.wsRow')) list.innerHTML = '<div class="wsMeta">저장된 작업이 없어요.</div>';
     } else { alert('삭제하지 못했어요.'); }
   }catch(e){ alert('삭제하지 못했어요.'); }
+}
+// ── 🎭 대화형(관제 128) — 틀·화자·사실 검사는 서버 dialogue_script 한 곳. 화면은 고르고·보여주고·보내기만.
+//   미리보기 결과(lines)를 그대로 만들기에 보낸다 — 다시 돌리면 다른 대본이 나오기 때문(서버가 같은 검사를 다시 건다).
+const DLG = {wid:null, forms:null, cur:null, cache:{}, voices:null, cast:{}};
+async function dlgOpen(wid, title){
+  DLG.wid = wid; DLG.cache = {}; DLG.cast = {};
+  document.getElementById('dlgBg').classList.add('on');
+  document.getElementById('dlgSub').textContent = '「'+(title||'작업')+'」 — 원본은 그대로 두고, 대본만 대화형으로 바꾼 새 작업을 만들어요(3단계부터 다시).';
+  dlgRenderLines(); dlgMsg('틀을 고르고 미리보기를 누르세요.');   // #dlgLines 는 dlgRenderLines 한 곳만 쓴다(DOM 주인 예산)
+  try{
+    if(!DLG.forms){ const d = await (await fetch('/api/produce/dialogue/forms')).json(); DLG.forms = (d && d.forms) || []; }
+    if(!DLG.voices){ const v = await (await fetch('/api/voice-presets')).json(); DLG.voices = (v && v.groups) || []; }
+  }catch(e){ dlgMsg('틀 목록을 못 불러왔어요.'); return; }
+  dlgPick(DLG.cur || (DLG.forms[0] && DLG.forms[0].id));
+}
+function dlgClose(){ document.getElementById('dlgBg').classList.remove('on'); }
+function dlgMsg(t){ const m=document.getElementById('dlgMsg'); if(m) m.textContent=t||''; }
+function _dlgForm(id){ return (DLG.forms||[]).find(f=>f.id===id); }
+function _dlgVoiceOpts(sel){
+  // 성우 그룹마다 natural(없으면 stable) 프리셋 하나. 고른 값이 다른 변형이면 그 변형을 그대로 둔다
+  const out=[]; let seen=false;
+  (DLG.voices||[]).forEach(g=>{ const v=g.variants||{}; const vals=Object.values(v); const p=(v.natural||v.stable||vals[0]); if(!p) return;
+    const hit=vals.find(x=>x.preset_id===sel); const pid=(hit||p).preset_id; if(hit) seen=true;
+    out.push('<option value="'+esc(pid)+'"'+(hit?' selected':'')+'>'+esc(g.name)+(g.engine==='typecast'?' (타입캐스트)':'')+'</option>'); });
+  if(sel && !seen) out.unshift('<option value="'+esc(sel)+'" selected>'+esc(sel)+'</option>');
+  return out.join('');
+}
+function dlgPick(id){
+  DLG.cur = id; const f=_dlgForm(id); if(!f) return;
+  document.getElementById('dlgForms').innerHTML = (DLG.forms||[]).map(x =>
+    '<button type="button" class="dlgForm'+(x.id===id?' on':'')+'" onclick="dlgPick(\''+x.id+'\')"><b>'+esc(x.label)+'</b>'
+    +'<span>'+esc(x.desc||'')+'</span>'+(DLG.cache[x.id]?'<i>미리보기 있음</i>':'')+'</button>').join('');
+  DLG.cast[id] = DLG.cast[id] || Object.assign({}, f.cast);
+  document.getElementById('dlgCast').innerHTML = f.roles.map((r,i)=>
+    '<label><span class="dlgW'+(i%3)+'">'+esc(r)+'</span><select data-role="'+esc(r)+'" onchange="DLG.cast[DLG.cur][this.dataset.role]=this.value">'
+    +_dlgVoiceOpts(DLG.cast[id][r])+'</select></label>').join('');
+  dlgRenderLines();
+}
+function dlgRenderLines(){
+  const f=_dlgForm(DLG.cur), lines=DLG.cache[DLG.cur], box=document.getElementById('dlgLines');
+  document.getElementById('dlgMakeBtn').disabled = !lines;
+  if(!lines){ box.innerHTML=''; return; }
+  box.innerHTML = lines.map(l=>{ const i=Math.max(0,f.roles.indexOf(l.speaker));
+    return '<div class="dlgLine"><span class="dlgWho dlgW'+(i%3)+'">'+esc(l.speaker)+'</span><span>'+esc(l.text)
+      +(l.tag?'<span class="dlgTag">['+esc(l.tag)+']</span>':'')+'</span></div>'; }).join('');
+}
+async function dlgPreview(){
+  const b=document.getElementById('dlgPreviewBtn'); b.disabled=true; dlgMsg('대화형으로 바꾸는 중… (10~30초)');
+  try{
+    const r=await fetch('/api/produce/dialogue/convert',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({work_id:DLG.wid, form:DLG.cur})});
+    const d=await r.json();
+    if(!r.ok || !d.ok){ dlgMsg(d.error||'바꾸지 못했어요.'); return; }
+    DLG.cache[DLG.cur]=d.lines; dlgPick(DLG.cur);
+    dlgMsg('원문 '+(d.source||[]).length+'줄 → 대화 '+d.lines.length+'줄. 다른 틀도 눌러 비교해 보세요.');
+  }catch(e){ dlgMsg('바꾸지 못했어요.'); } finally{ b.disabled=false; }
+}
+async function dlgMake(){
+  const lines=DLG.cache[DLG.cur]; if(!lines) return;
+  const b=document.getElementById('dlgMakeBtn'); b.disabled=true; dlgMsg('새 작업을 만드는 중…');
+  try{
+    const r=await fetch('/api/produce/dialogue/from_work/'+encodeURIComponent(DLG.wid),{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({form:DLG.cur, lines, cast:DLG.cast[DLG.cur]})});
+    const d=await r.json();
+    if(!r.ok || !d.ok){ dlgMsg(d.error||'만들지 못했어요.'); b.disabled=false; return; }
+    document.getElementById('dlgMsg').innerHTML='✅ 새 작업을 만들었어요 — 3단계(장면 매칭·대화 녹음)가 돌고 있어요. '
+      +'<a href="/produce?work='+encodeURIComponent(d.work_id)+'" style="color:var(--accent)">새 작업 열기</a>';
+  }catch(e){ dlgMsg('만들지 못했어요.'); b.disabled=false; }
 }
 // T8: 직전 저장 스냅샷으로 되돌린다. 복원 범위 = 스냅샷이 담는 것(대본·영상풀·단계).
 // 새 저장 형식을 발명하지 않는다 — 검증된 _restoreWork의 하이드레이션을 그대로 미러링한다(§_workState 주석).
@@ -15106,9 +15220,93 @@ async function trimCta(j){
   }
 }
 
+// ── 📺 구매링크용 롱폼(가로) 판 (2026-10-05, 관제 132) ──
+// 왜: 쇼츠엔 누르는 구매링크를 못 단다. 같은 쇼츠를 가로 영상으로 한 벌 더 만들어 쇼츠의 '관련 동영상'에 걸면
+//     시청자가 롱폼으로 넘어가 설명란·댓글 링크를 누른다. 고객들이 캡컷에서 손으로 만들던 것을 버튼 하나로.
+// ★구도·문구·"지금 완성본으로 만든 것인가"는 서버(link_longform) 한 곳이 정한다 — 화면은 상태를 물어 그리기만 한다.
+// ★자리 하나에 그리는 함수 하나(test_dom_owner_budget): #longformBox 는 _lfRender 혼자 그린다.
+const _lfState={job:'', rendered:false, phase:'idle', where:'comment', msg:'', url:'', t0:0, custom:false};
+let _lfTimer=null;
+function _lfStop(){ if(_lfTimer){ clearInterval(_lfTimer); _lfTimer=null; } }
+function _lfRender(){
+  const box=document.getElementById('longformBox'); if(!box) return;
+  const S=_lfState, on=S.rendered, run=(S.phase==='running');
+  const can=(on && !run && S.phase!=='ready');   // 이미 만든 것이 최신이면 다시 누를 일이 없다(문구를 바꾸면 다시 켜진다)
+  const j=encodeURIComponent(S.job), q='where='+encodeURIComponent(S.where);
+  // ★문구 고르기는 뺐다(2026-10-06 사장님 "문구는 장면꾸미기에서 만들어서 올 거라 여기는 선택이 없어도 된다").
+  //   장면꾸미기 「롱폼」에서 꾸며 두었으면(관제 133) 그걸 굽고, 아니면 서버 기본 문구(link_longform.DEFAULT_WHERE)로 굽는다.
+  const sel=S.custom?'<span class="hint" style="display:inline-block;margin:0 6px 8px 0">🎨 장면꾸미기에서 꾸민 롱폼 안내로 만듭니다</span>':'';
+  let body='';
+  if(!on){
+    body='<div class="hint">먼저 위 <b>🎬 최종 렌더</b>로 완성본을 만들면 이 버튼이 켜집니다.</div>';
+  }else if(run){
+    const sec=Math.max(0, Math.floor((Date.now()-S.t0)/1000));
+    body='<div class="hint"><span class="skm-spin">🔄</span> 가로 영상을 만드는 중… <b>'+sec+'초</b> (보통 1분 안쪽). 이 화면을 떠나도 계속 만들어집니다.</div>';
+  }else if(S.phase==='ready'){
+    body='<video controls preload="metadata" src="'+S.url+'?'+q+'&v='+S.t0+'" style="display:block;width:100%;max-width:440px;aspect-ratio:16/9;border-radius:10px;background:#000;margin:4px 0 10px"></video>'
+      + '<a class="btn-next" style="display:inline-block;padding:11px 18px;margin:0 6px 8px 0;text-decoration:none;min-height:44px;box-sizing:border-box" href="'+S.url+'?dl=1&'+q+'" download>⬇ 롱폼 영상 받기 (MP4)</a>'
+      + '<div class="hint" style="line-height:1.7">① 이 영상을 유튜브에 <b>일반(가로) 영상</b>으로 올리고 제목을 <b>구매링크</b>로<br>'
+      + '② 그 영상의 <b>댓글·설명란</b>에 구매링크를 붙이고<br>'
+      + '③ 쇼츠 수정 화면의 <b>관련 동영상</b>에 이 영상을 고르면, 쇼츠 아래에 「구매링크」 버튼이 생깁니다.</div>';
+  }else if(S.phase==='error'){
+    body='<div class="warnBox" style="margin:6px 0">⚠️ '+esc(S.msg||'만들지 못했어요')+' — 다시 눌러주세요.</div>';
+  }else{
+    body='<div class="hint">완성한 쇼츠를 <b>가로 화면 가운데</b>에 넣고 안내 문구를 얹은 영상을 만듭니다. 유튜브 쇼츠의 「관련 동영상」에 걸어 구매링크로 보내는 용도예요.</div>';
+  }
+  box.innerHTML='<div style="border-top:1px solid var(--line);padding-top:12px">'
+    + '<div style="font-size:14px;font-weight:600;margin-bottom:6px">📺 구매링크용 롱폼 (가로 영상)</div>'
+    + '<button id="btnLongform" class="btn-next" '+(can?'':'disabled ')
+    + 'style="padding:12px 20px;margin:0 6px 8px 0;border:0;cursor:'+(can?'pointer':'not-allowed')+';min-height:44px'+(on?'':';opacity:.45')+'" '
+    + 'onclick="renderLongform()">'+(run?'📺 만드는 중…':(S.phase==='ready'?'✅ 롱폼 렌더 완료':'📺 롱폼으로 렌더'))+'</button>'
+    + sel + body + '</div>';
+}
+function _lfApply(d){
+  const S=_lfState; S.custom=!!(d&&d.custom);
+  if(d && d.state==='ready'){ S.phase='ready'; S.url=d.url; _lfStop(); }
+  else if(d && d.state==='running'){ if(S.phase!=='running'){ S.t0=Date.now(); } S.phase='running'; _lfPoll(); }
+  else if(d && (d.state==='error' || (d.ok===false && d.error))){ S.phase='error'; S.msg=d.error||''; _lfStop(); }
+  else { S.phase='idle'; _lfStop(); }
+  _lfRender();
+}
+async function _lfQuery(){
+  const job=_lfState.job; if(!job) return;
+  try{
+    const r=await fetch('/api/mix/longform_link/'+encodeURIComponent(job)+'?where='+encodeURIComponent(_lfState.where));
+    const d=await r.json().catch(()=>({}));
+    if(job!==_lfState.job || !_lfState.rendered) return;      // 그 사이 다른 작업으로 넘어갔다 — 버린다
+    _lfApply(d);
+  }catch(e){ /* 잠깐 끊긴 것 — 다음 물음에서 다시 본다 */ }
+}
+function _lfPoll(){
+  if(_lfTimer) return;
+  _lfTimer=setInterval(()=>{ if(_lfState.phase!=='running'){ _lfStop(); return; } _lfRender(); _lfQuery(); }, 2000);
+}
+// renderExport 가 부른다 — 완성본이 있나(rendered)만 받아, 켜고 끄는 판단을 여기 한 곳에서 한다.
+function _lfSync(rendered){
+  const job=MIX_JOB||'', S=_lfState, same=(job===S.job && rendered===S.rendered);
+  S.job=job; S.rendered=!!rendered;
+  if(!S.rendered){ _lfStop(); S.phase='idle'; _lfRender(); return; }
+  if(same && S.phase==='running'){ _lfRender(); return; }      // 만드는 중엔 다시 그리기만
+  if(!same) S.phase='idle';
+  _lfRender(); _lfQuery();
+}
+async function renderLongform(){
+  const S=_lfState;
+  if(!S.rendered || !S.job){ if(typeof toast==='function') toast('먼저 최종 렌더로 완성본을 만들어 주세요'); return; }
+  if(S.phase==='running' || S.phase==='ready') return;
+  S.phase='running'; S.t0=Date.now(); _lfRender();
+  try{
+    const r=await fetch('/api/mix/longform_link/'+encodeURIComponent(S.job),{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({where:S.where})});
+    const d=await r.json().catch(()=>({ok:false,error:'서버 응답을 읽지 못했어요'}));
+    _lfApply(d);
+  }catch(e){ _lfApply({ok:false, state:'error', error:'서버와 연결이 끊겼어요'}); }
+}
+
 // ── 내보내기(다운로드 + 캡컷 편집용) — 설계 2026-07-20 T1 ──
 // 웹앱이라 캡컷 자동실행은 불가 → 캡컷 편집용 ZIP(장면영상·음성·SRT·대본)을 내려받아 캡컷에 올린다.
 function renderExport(opts){
+  _lfSync(!!MIX_JOB && !!(opts&&opts.rendered));   // 📺 롱폼 버튼은 완성본이 있을 때만 켜진다(같은 신호를 쓴다)
   const box=document.getElementById('exportBox'); if(!box) return;
   if(!MIX_JOB){ box.innerHTML=''; return; }
   const j=encodeURIComponent(MIX_JOB), rendered=!!(opts&&opts.rendered);
@@ -19102,8 +19300,10 @@ function sbRender(){
 // 관리자(사장님 cid0) 판별 — 비유튜브 재료의 "정보 채우기" 버튼 노출 조건(index.html과 동일 플래그명).
 window.IS_ADMIN=false;
 window.STORY_WRITER_ON=false;   // 서버 스위치(story_writer_enabled) — /api/me가 정본
+window.DIALOGUE_ON=false;       // 서버 스위치(dialogue_enabled + 관리자, 관제 128) — 작업목록 「🎭 대화형」 버튼
 window.STORYBOARD_ON=false;     // 서버 스위치(storyboard_enabled, 관제 120) — /api/me가 정본. false면 #s2Storyboard 를 안 그린다
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
+  if(d && d.dialogue===true) window.DIALOGUE_ON=true;
   if(d && d.storyboard===true){ window.STORYBOARD_ON=true;
     try{ sbEnter(); }catch(e){} }   // 1·2단계 어느 쪽이 보이든 — 안 보이는 칸도 미리 그려 둔다
   if(d && d.story_writer){ window.STORY_WRITER_ON=true;

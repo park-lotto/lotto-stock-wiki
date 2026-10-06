@@ -16,6 +16,7 @@ mix_pipeline.incremental_clean 이 원본에서 잘라 1콜로 지워 extras 에
 import copy
 import os
 import json
+import sys
 from pathlib import Path
 
 BASE_FILE = "clean_base.json"
@@ -632,6 +633,79 @@ def cut_span_in_clean(base, i):
     return _clean_span(base, cuts[int(i)])
 
 
+def recorded_cuts(base):
+    """청소 당시 화면 컷 {beat_idx: [[영상, 원본 시작, 읽은 길이], ...]} — 정본에 **기록된 그대로**(보정·자르기 전 값).
+
+    ★왜(관제 135, 2026-10-06 황선희님 d20c9f3d6a54 6번 칸): 청소본은 이 컷들을 지운 것이다. 화면 컷 계산이 청소 뒤에
+      이 컷과 달라지면(지운 구간을 보고 다시 배분) 새 컷이 안 지운 0.22초를 읽어 원본 자막이 보였다. 화면(scene_play.js)과
+      안전망(_remap_replay)이 "지금 컷 = 지운 그 컷인가"를 이 기록으로 본다. 읽은 길이(sdur)가 없는 옛 정본 칸은 뺀다."""
+    out, bad = {}, set()
+    for c in base.get("cuts") or []:
+        try:
+            bi = int(c["beat_idx"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        try:
+            out.setdefault(bi, []).append([str(c["video_id"]), round(float(c["src"]), 4), round(float(c["sdur"]), 4)])
+        except (KeyError, TypeError, ValueError):
+            bad.add(bi)                                     # 이 칸은 기록이 온전하지 않다 — 통째로 뺀다
+    return {bi: rows for bi, rows in out.items() if rows and bi not in bad}
+
+
+_SNAP_CACHE = {}
+
+
+def _snap_beats(base):
+    """정본을 만들 때의 편성 스냅샷(final_clean_<sig>.plan.json) {beat_idx: 칸}. 없거나 못 읽으면 {}."""
+    try:
+        p = Path(base["path"]).with_suffix(".plan.json")
+        mt = p.stat().st_mtime_ns
+    except (KeyError, OSError, TypeError):
+        return {}
+    hit = _SNAP_CACHE.get(str(p))
+    if hit and hit[0] == mt:
+        return hit[1]
+    try:
+        beats = {int(b["beat_idx"]): b for b in json.loads(p.read_text(encoding="utf-8")).get("beats") or []}
+    except Exception:      # noqa: BLE001 — 깨진 스냅샷은 없는 것으로(안전망이 안 걸릴 뿐)
+        beats = {}
+    if len(_SNAP_CACHE) > 64:
+        _SNAP_CACHE.clear()
+    _SNAP_CACHE[str(p)] = (mt, beats)
+    return beats
+
+
+def _beat_core(b):
+    """칸 비교용 — 후보 목록(alternates)과 실행 중 붙는 임시 키(_로 시작)는 뺀다."""
+    return {k: v for k, v in (b or {}).items() if k != "alternates" and not str(k).startswith("_")}
+
+
+def unchanged_since_clean(base, beat):
+    """이 칸의 편성이 **정본을 만들 때와 글자 하나 안 다르게 같은가**(재료·컷·자막·음성 파일 전부). 스냅샷이 없으면 False."""
+    try:
+        snap = _snap_beats(base).get(int(beat["beat_idx"]))
+    except (KeyError, TypeError, ValueError):
+        return False
+    return snap is not None and _beat_core(snap) == _beat_core(beat)
+
+
+def frozen_cuts(base, beat_idx):
+    """청소 당시 컷을 청소본 좌표의 수동 컷으로 — [{video_id:"clean", seg_id, start, dur, sdur}]. 못 쓰면 None.
+    (기록이 없거나 속도 불일치 컷이 낀 칸은 None — 그 칸은 종전대로 못 덮은 칸이다.)"""
+    cuts = _cuts_of(base, beat_idx)
+    if not cuts or any(_speed_bad(c) or c.get("sdur") is None for c in cuts):
+        return None
+    all_cuts = base.get("cuts") or []
+    out = []
+    for c in cuts:
+        t0, t1 = _clean_span(base, c)
+        if t1 - t0 <= 1e-3:
+            return None
+        out.append({"video_id": CLEAN_VID, "seg_id": "%s-%d" % (CLEAN_VID, all_cuts.index(c)), "start": round(t0, 4),
+                    "dur": round(float(c["dur"]), 4), "sdur": round(t1 - t0, 4)})
+    return out
+
+
 SPAN_TOL = 0.12         # 이만큼 이하 틈은 이어 붙인다(프레임 반올림) — 그보다 크면 못 덮은 것
 
 
@@ -957,6 +1031,17 @@ def remap_plan(plan, base, *, tts_durs=None, src_durs=None):
     return _remap_legacy(plan, base, tts_durs)
 
 
+def _drift_alarm(base, bi, miss):
+    """같은 편성인데 컷이 지운 구간을 벗어났다 — 관리자 경보(screen_clips FALLBACK, 같은 칸은 렌더당 한 번)."""
+    try:
+        jid = Path(base["path"]).parent.name
+        gap = round(sum(float(m["end"]) - float(m["start"]) for m in miss or []), 2)
+        from shopping_shorts import screen_clips as _sc
+        _sc._record(jid, bi, "clean_cut_drift %.2fs — 청소 당시 컷으로 재생" % gap)
+    except Exception as e:      # noqa: BLE001 — 경보 실패가 렌더를 막으면 안 된다(그래도 한 줄은 남긴다)
+        print("[clean-base] 컷 어긋남 경보 실패 bi=%s: %r" % (bi, e), file=sys.stderr)
+
+
 def _remap_replay(plan, base, tts_durs, src_durs):
     from shopping_shorts import video_assemble as _va
     from shopping_shorts.mix_pipeline import _beat_materials
@@ -1005,6 +1090,22 @@ def _remap_replay(plan, base, tts_durs, src_durs):
                 lb, _lunc = _legacy_beat(bi)
                 b.clear(); b.update(lb)
                 continue
+            # ★안전망(관제 135): 편성이 정본을 만들 때와 **똑같은 칸**인데 컷이 지운 구간을 벗어났다 = 컷 계산이 청소 뒤에
+            #   달라진 것(지운 구간을 보고 다시 배분 · 그 사이 컷 계산 코드가 바뀜). 고객은 아무것도 안 바꿨다 — 원본을 보여 주거나
+            #   다시 지우지(과금) 않고 **지운 그 컷 그대로** 튼다. 조용히 넘기지 않는다: 경보를 남겨 뿌리(화면 컷 계산)를 고치게 한다.
+            if unchanged_since_clean(base, orig[bi]):
+                fz = frozen_cuts(base, bi)
+                if fz:
+                    _drift_alarm(base, bi, miss)
+                    for k in _REPLAY_DROP:
+                        b.pop(k, None)
+                    b["phrase_sync"] = False
+                    b["clean_replay"] = True
+                    b["clean_frozen"] = True
+                    b["manual_cuts"] = fz
+                    b["scene_override"] = [{"video_id": c["video_id"], "seg_id": c["seg_id"], "start": c["start"],
+                                            "end": round(c["start"] + c["sdur"], 4)} for c in fz]
+                    continue
             uncovered.append(bi)
             need[str(bi)] = miss
             # ★못 덮은 컷만 원본, 덮인 컷은 청소본(관제 110, 2026-10-04 황선희님 c9fbcc3ac28c 7번 칸: s1 컷 끝 0.41초가
