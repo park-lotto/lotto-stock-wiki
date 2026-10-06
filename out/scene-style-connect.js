@@ -83,10 +83,10 @@
     <div class="scene-effect-choices"><button type="button" data-ref-fx="jump">점프 줌</button><button type="button" data-ref-fx="title">시작 어두운 제목</button></div>`;
   effectsPanel.append(refBox);
   function syncRefFx(){
-    const i=api.geometry().sceneIndex,m=api.moments()[i],cur=api.sceneFx(i);
+    const i=api.geometry().sceneIndex,m=api.moments()[i],cur=api.sceneFx(i);   // 켜진 것 목록(여러 개)
     refBox.querySelector('[data-ref-moment]').textContent=m?MOMENT_NAME[m]:'일반';
-    refBox.querySelectorAll('[data-scene-fx]').forEach(b=>b.classList.toggle('active',b.dataset.sceneFx===cur));
-    const amt=refBox.querySelector('[data-zoom-amt]'),zoomed=['in','pull','inout'].includes(cur);amt.hidden=!zoomed;amt.style.display=zoomed?'flex':'none';
+    refBox.querySelectorAll('[data-scene-fx]').forEach(b=>b.classList.toggle('active',cur.includes(b.dataset.sceneFx)));
+    const amt=refBox.querySelector('[data-zoom-amt]'),zoomed=cur.some(k=>['in','pull','inout'].includes(k));amt.hidden=!zoomed;amt.style.display=zoomed?'flex':'none';
     if(zoomed){const z=Number(api.effectAt(i).zoom)||1;amt.querySelector('input').value=String(z);amt.querySelector('output').textContent=z.toFixed(2)+'배';}
     const auto=refBox.querySelector('[data-ref-fx="auto"]'),on=api.autoPlaced();auto.textContent=on?'자동 배치 켜짐 ●':'자동 배치 꺼짐 ○';auto.classList.toggle('active',on);
     refBox.querySelector('[data-ref-fx="jump"]').classList.toggle('active',api.jumpZoomOn());
@@ -136,7 +136,9 @@
       const sc=api.context()?.scenes?.[g.sceneIndex],len=sc?Math.max(.6,sc.end-sc.start)*1000:1500,inMs=Number(e.zoomIn)*1000,way=e.zoomMove||'in',to=media.style.transform,from='translate(0px,0px) scale(1)';
       if(inMs>0&&z>1){
         if(way==='pull')media.animate([{transform:from},{transform:to}],{duration:len,easing:'cubic-bezier(.65,0,.35,1)'});
-        else if(way==='inout'&&len>2*inMs)media.animate([{transform:from,easing:'cubic-bezier(.5,1,.89,1)'},{transform:to,offset:inMs/len},{transform:to,offset:1-inMs/len,easing:'cubic-bezier(.65,0,.35,1)'},{transform:from}],{duration:len});
+        // 확대→복귀는 끝에 원래 크기로 끝난다 — fill:forwards 로 끝 상태(원래 크기)에 머문다(사장님 "복귀되고 다시 확대로 간다": 끝나면 저장된 확대 구도로 되돌아갔다)
+        // 짧은 장면(1초 이하)도 반드시 돌아온다 — 들어가기·돌아오기를 장면의 40%까지(완성본 zoom_move_vf·캡컷 zoom_curve 와 같은 규칙)
+        else if(way==='inout'){const io=Math.min(inMs,Math.floor(len/1000*30*.4)/30*1000);media.animate([{transform:from,easing:'cubic-bezier(.5,1,.89,1)'},{transform:to,offset:io/len},{transform:to,offset:1-io/len,easing:'cubic-bezier(.65,0,.35,1)'},{transform:from}],{duration:len,fill:'forwards'});}
         else media.animate([{transform:from},{transform:to}],{duration:inMs,easing:'cubic-bezier(.5,1,.89,1)'});
       }
       // 흑백 충격: 흑백·대비 + 프레임마다 흔들림 + 13프레임마다 찢기듯 밀림·번쩍(완성본 scene_style.shock_vf 를 흉내)

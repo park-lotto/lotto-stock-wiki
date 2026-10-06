@@ -32,7 +32,7 @@ def main():
     scenes = scene_style.context_for(TIMELINE, hc, snap, "qa")["scenes"]
     overlays = scene_style.overlay_spans(scenes, layers, work / "w1")
     dims = scene_style.dim_spans(scenes, snap, layers, work / "w1")
-    zooms = scene_style.zoom_spans(scenes, snap, layers) + [{**s, "zoom": 1.0, "shock": True} for s in scene_style.shock_spans(scenes, snap)]
+    zooms = scene_style.capcut_fx_spans(scenes, snap, layers)
     tts = {}
     for b in TIMELINE:
         p = work / f"tts{b['beat_idx']}.mp3"

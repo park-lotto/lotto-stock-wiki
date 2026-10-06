@@ -532,7 +532,8 @@ def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y, frames=0):
     N=max(n+1,int(frames or 0))
     if way=="pull":      # 장면 내내 쭉 당기기 — 처음·끝이 부드러운 3t²-2t³ (사장님 "2배로 쭉 땡기면서 집중")
         e=f"(3*pow(min(1,on/{N-1}),2)-2*pow(min(1,on/{N-1}),3))"
-    elif way=="inout" and N>2*n:   # 0.5초 들어가고, 끝 0.5초에 원본 크기로 돌아온다(사장님 "다시 원본 크기로 돌아오기")
+    elif way=="inout":   # 들어가고, 끝에서 원본 크기로 돌아온다(사장님 "다시 원본 크기로 돌아오기")
+        n=max(1,min(n,int(N*0.4)))   # 짧은 장면(1초 이하)도 반드시 돌아오게 — 들어가기·돌아오기를 장면의 40%까지(zoom_curve·편집기와 같은 규칙)
         b=f"max(0,(on-{N-n})/{n})"
         e=f"((1-pow(1-min(1,on/{n}),2))*(1-(3*pow({b},2)-2*pow({b},3))))"
     else:
@@ -601,8 +602,10 @@ def zoom_curve(t, dur, zoom, way="in", zoom_in=0.5):
     if way == "pull":
         u = clamp(t / max(1e-6, dur)); e = 3 * u * u - 2 * u ** 3
     else:
+        if way == "inout":
+            zoom_in = max(1 / 30, min(zoom_in, int(dur * 30 * 0.4) / 30))   # 짧은 장면도 돌아오게(zoom_move_vf 와 같은 규칙)
         u = clamp(t / zoom_in); e = 1 - (1 - u) ** 2
-        if way == "inout" and dur > 2 * zoom_in:
+        if way == "inout":
             b = clamp((t - (dur - zoom_in)) / zoom_in); e *= 1 - (3 * b * b - 2 * b ** 3)
     return 1 + (zoom - 1) * e
 
@@ -611,6 +614,19 @@ def shock_spans(scenes, snapshot):
     """캡컷용 흑백 충격 구간 [{start,end}] — 캡컷 초안은 채도·대비·밝기·위치 키프레임으로 흉내 낸다(완성본 shock_vf 와 짝)."""
     effects=(validate_snapshot(snapshot) or {}).get("effects") or {}
     return [{"start":float(sc["start"]),"end":float(sc["end"])} for i,sc in enumerate(scenes) if (effects.get(str(i)) or {}).get("shock")]
+
+
+def capcut_fx_spans(scenes, snapshot, layers=None):
+    """캡컷 내보내기가 받는 장면 효과 구간 하나로(관제 124) — 확대(zoom_spans)와 흑백 충격(shock_spans)을 장면별로 합친다.
+    한 장면에 둘 다 켜면(사장님 '중복으로 선택') 한 구간에 zoom·move·shock 를 같이 싣는다(캡컷 조각 하나에 키프레임을 같이 찍게)."""
+    out = [dict(sp) for sp in zoom_spans(scenes, snapshot, layers)]
+    for sh in shock_spans(scenes, snapshot):
+        hit = next((sp for sp in out if abs(sp["start"] - sh["start"]) < 1e-6 and abs(sp["end"] - sh["end"]) < 1e-6), None)
+        if hit:
+            hit["shock"] = True
+        else:
+            out.append({**sh, "zoom": 1.0, "shock": True})
+    return out
 
 
 def zoom_spans(scenes, snapshot, layers=None):

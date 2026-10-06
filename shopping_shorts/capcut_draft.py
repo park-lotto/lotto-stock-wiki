@@ -551,43 +551,46 @@ def _kf_list(prop, points):
 
 def _scene_fx_keyframes(piece_start, piece_dur, sp):
     """장면꾸미기 효과(관제 124)를 캡컷 키프레임으로 — 완성본 렌더와 같은 곡선(scene_style.zoom_curve·shock_vf 값).
-    확대 움직임: 크기(UNIFORM_SCALE)·위치(X/Y) 0.1초 간격 / 흑백 충격: 채도 -1·대비·프레임마다 흔들림 위치·13프레임마다 번쩍(밝기).
-    반환: common_keyframes 목록(없으면 [])."""
+    확대 움직임: 크기(UNIFORM_SCALE)·위치(X/Y) / 흑백 충격: 채도 -1·대비·흔들림(위치)·13프레임마다 번쩍(밝기)·1.06배.
+    둘 다 켜진 장면(사장님 '중복으로 선택')은 한 조각에 합쳐 찍는다: 크기 = 확대 곡선 × 1.06, 위치 = 확대 위치 + 흔들림.
+    시간은 흑백이면 프레임마다(흔들림), 아니면 0.1초 간격. 반환: common_keyframes 목록(없으면 [])."""
     if not sp:
         return []
     from shopping_shorts.scene_style import zoom_curve
     s0, s1 = _us(sp["start"]), _us(sp["end"])
     off0 = piece_start - s0                      # 이 조각이 장면 시작에서 얼마나 뒤인가(μs)
-    if sp.get("shock"):
-        n0 = round(off0 / 1e6 * 30)
-        frames = max(1, round(piece_dur / 1e6 * 30))
-        pos_x, pos_y, bright = [], [], []
-        for f in range(frames + 1):
-            n = n0 + f
-            g = 1.0 if n % 13 < 2 else 0.0      # shock_vf 의 lt(mod(n,13),2)
-            t = min(piece_dur, round(f / 30 * 1e6))
-            pos_x.append((t, 2 * (0.012 * math.sin(n * 12.9898) + g * 0.045 * math.sin(n * 7.31))))   # 화면비 → 캔버스 절반 단위
-            pos_y.append((t, -2 * 0.009 * math.sin(n * 78.233)))
-            bright.append((t, 0.16 * g))
-        ends = [(0, None), (piece_dur, None)]
-        return [_kf_list("KFTypeSaturation", [(t, -1.0) for t, _ in ends]),
-                _kf_list("KFTypeContrast", [(t, 0.28) for t, _ in ends]),
-                _kf_list("UNIFORM_SCALE", [(t, 1.06) for t, _ in ends]),
-                _kf_list("KFTypePositionX", pos_x), _kf_list("KFTypePositionY", pos_y),
-                _kf_list("KFTypeBrightness", bright)]
-    zin = float(sp.get("zoomIn") or 0)
-    Z = float(sp.get("zoom") or 1)
-    if zin <= 0 or Z <= 1.0001:
+    zin, Z, shock = float(sp.get("zoomIn") or 0), float(sp.get("zoom") or 1), bool(sp.get("shock"))
+    moving = zin > 0 and Z > 1.0001
+    if not (moving or shock):
         return []
     dur_s = (s1 - s0) / 1e6
-    step = 100_000                              # 0.1초
-    ts = list(range(0, int(piece_dur), step)) + [int(piece_dur)]
-    sc, px, py = [], [], []
+    if shock:
+        ts = sorted({min(int(piece_dur), round(f / 30 * 1e6)) for f in range(max(1, round(piece_dur / 1e6 * 30)) + 1)})
+    else:
+        ts = list(range(0, int(piece_dur), 100_000)) + [int(piece_dur)]
+    sc, px, py, br = [], [], [], []
     for t in ts:
-        z = zoom_curve((off0 + t) / 1e6, dur_s, Z, sp.get("move") or "in", zin)
-        k = (z - 1) / (Z - 1)                    # 위치도 배율만큼 따라간다(완성본: crop 자리가 (zw-w)에 비례)
-        sc.append((t, z)); px.append((t, float(sp.get("tx", 0)) * k)); py.append((t, float(sp.get("ty", 0)) * k))
-    return [_kf_list("UNIFORM_SCALE", sc), _kf_list("KFTypePositionX", px), _kf_list("KFTypePositionY", py)]
+        z, x, y = 1.0, 0.0, 0.0
+        if moving:
+            z = zoom_curve((off0 + t) / 1e6, dur_s, Z, sp.get("move") or "in", zin)
+            k = (z - 1) / (Z - 1)                # 위치도 배율만큼 따라간다(완성본: crop 자리가 (zw-w)에 비례)
+            x, y = float(sp.get("tx", 0)) * k, float(sp.get("ty", 0)) * k
+        b = 0.0
+        if shock:
+            n = round((off0 + t) / 1e6 * 30)
+            g = 1.0 if n % 13 < 2 else 0.0       # shock_vf 의 lt(mod(n,13),2)
+            z *= 1.06
+            x += 2 * (0.012 * math.sin(n * 12.9898) + g * 0.045 * math.sin(n * 7.31))   # 화면비 → 캔버스 절반 단위
+            y += -2 * 0.009 * math.sin(n * 78.233)
+            b = 0.16 * g
+        sc.append((t, z)); px.append((t, x)); py.append((t, y)); br.append((t, b))
+    out = [_kf_list("UNIFORM_SCALE", sc), _kf_list("KFTypePositionX", px), _kf_list("KFTypePositionY", py)]
+    if shock:
+        ends = [(0, None), (int(piece_dur), None)]
+        out += [_kf_list("KFTypeSaturation", [(t, -1.0) for t, _ in ends]),
+                _kf_list("KFTypeContrast", [(t, 0.28) for t, _ in ends]),
+                _kf_list("KFTypeBrightness", br)]
+    return out
 
 
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
