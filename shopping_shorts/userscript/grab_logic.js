@@ -1,6 +1,8 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-03 두 번째 = 20261004  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-07  (LOGIC_VER가 정본)
+//   · 유튜브 — 검색→쇼츠로 가면 숨은 검색 카드 📥 때문에 쇼츠 화면 📥 담기가 꺼지던 것,
+//     검색 카드에 마우스를 올리면 미리보기 영상이 📥를 덮던 것(관제 150).
 //   · 인스타 팝업·게시물 화면 — 버튼을 본문 칸 바깥 오른쪽으로(관제 094). 같은 날 핀터레스트 수정이
 //     20261003을 이미 썼다 → 한 칸 올려야 옛 확장 동봉본을 새 로직이 이어받는다.
 //   · 핀터레스트 — 핀 페이지 플로팅 담기 + 검색 그리드 카드마다 📥 (2026-09-11 고객 문의)
@@ -17,7 +19,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261004;
+  var LOGIC_VER = 20261007;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -810,7 +812,16 @@
   function _floatWanted() {
     if (_isPin()) return _pinSingle();                    // 핀터레스트: 핀 상세 화면에서만
     // 단일 영상 페이지에선 아래 '더 보기' 그리드에 카드버튼이 생겨도 플로팅(=본 영상 담기)을 남긴다.
-    return !(document.querySelector(".ss-card-grab") && !isSinglePost());
+    return !(_shownCardBtn() && !isSinglePost());
+  }
+  // ★'화면에 보이는' 카드 📥만 센다(2026-10-07 사장님 "쇼츠 들어가면 담기만 없다").
+  //   유튜브는 검색 → 쇼츠로 가도 검색 화면(ytd-search)을 지우지 않고 숨겨 둔다. 그 안의
+  //   카드 📥 23개가 DOM에 남아 '그리드 화면'으로 오판 → 쇼츠 화면의 📥 담기가 꺼졌다.
+  //   10-03 _dockBtns가 이 판단을 따르게 되면서 드러났다(그 전엔 _dockBtns가 숨김을 되돌렸다).
+  function _shownCardBtn() {
+    var bs = document.querySelectorAll(".ss-card-grab");
+    for (var i = 0; i < bs.length; i++) if (bs[i].getClientRects().length) return true;
+    return false;
   }
   function syncFloat() {
     var f = document.getElementById("ss-grab-btn");
@@ -948,14 +959,57 @@
         b.addEventListener("click", function (e) {
           // 버튼이 앵커 안이라 세 단계로 링크 이동을 확실히 막는다(실측 검증).
           e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-          var im = a.querySelector("img, source");
-          var thumb = im ? (im.src || (im.getAttribute("srcset") || "").split(" ")[0]) : "";
-          var ttl = (im && im.alt) ? im.alt : "";
-          openGrab(_ytCleanUrl(a.href), thumb, ttl);
+          _grabCard(a);
         }, true);
       })(a);
       a.appendChild(b);
     }
+  }
+  function _grabCard(a) {
+    var im = a.querySelector("img, source");
+    var thumb = im ? (im.src || (im.getAttribute("srcset") || "").split(" ")[0]) : "";
+    var ttl = (im && im.alt) ? im.alt : "";
+    openGrab(_ytCleanUrl(a.href), thumb, ttl);
+  }
+
+  // ── 유튜브 검색: 카드에 마우스를 올리면 뜨는 미리보기 위에도 📥 (2026-10-07 사장님 "다가가면 사라지고") ──
+  //   미리보기 영상은 카드 안이 아니라 앱 맨 위층(ytd-app #video-preview)에 따로 그려진다.
+  //   카드 📥는 검색 화면(ytd-search, z-index:0 층) 안에 있어 z-index를 아무리 올려도 그 아래다.
+  //   → 미리보기 안에 📥를 하나 두고, 누를 때 그 미리보기가 가리키는 **카드**를 담는다.
+  //   담을지 말지는 카드 📥(addAnchorCardBtns: 쇼츠·3분 이하)가 이미 정했다 — 그 카드가 있을 때만 보인다.
+  function _ytVid(href) {
+    var m = /(?:\/shorts\/|[?&]v=)([\w-]{6,})/.exec(href || "");
+    return m ? m[1] : "";
+  }
+  function _ytPreviewCard(pv) {
+    var l = pv.querySelector("a[href*='/shorts/'], a[href*='watch?v=']");
+    var id = l ? _ytVid(l.getAttribute("href")) : "";
+    if (!id) return null;
+    var cs = document.querySelectorAll("a[data-ssgrab]");
+    for (var i = 0; i < cs.length; i++) if (_ytVid(cs[i].getAttribute("href")) === id) return cs[i];
+    return null;
+  }
+  function _ytPreviewBtn() {
+    var pv = document.querySelector("#video-preview ytd-video-preview");
+    if (!pv) return;
+    var b = pv.querySelector(".ss-card-grab");
+    if (!b) {
+      b = document.createElement("button");
+      b.className = "ss-card-grab ss-pv-grab";
+      b.textContent = "📥";
+      b.title = "이 영상 담기";
+      b.style.cssText =
+        "position:absolute;top:8px;left:8px;z-index:99999;background:#1f6feb;color:#fff;" +
+        "border:none;border-radius:16px;width:34px;height:34px;font-size:16px;" +
+        "box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer";
+      b.addEventListener("click", function (e) {
+        e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+        var a = _ytPreviewCard(pv);
+        if (a) _grabCard(a);
+      }, true);
+      pv.appendChild(b);
+    }
+    b.style.display = _ytPreviewCard(pv) ? "" : "none";
   }
 
   // ── 카드별 버튼(도우인): 도우인 검색 카드는 <a href>·data-id가 없고(스크래핑 방지)
@@ -1347,7 +1401,15 @@
       for (var i = 0; i < els.length; i++) els[i].remove();
     } catch (e) {}
     try { addAnchorCardBtns(); } catch (e) {}
+    try { _ytPreviewBtn(); } catch (e) {}
   }
+  // 미리보기는 마우스를 올린 뒤 바로 뜬다 — 2초 tick만 기다리면 그사이 📥가 안 보인다.
+  // 더 새 로직이 이어받으면(버전 가드) 이 리스너는 아무것도 안 한다.
+  var _pvWait = 0;
+  if (document.addEventListener) document.addEventListener("mouseover", function () {
+    if (window.__ssGrabVer !== LOGIC_VER || !_ytResults() || _pvWait) return;
+    _pvWait = setTimeout(function () { _pvWait = 0; try { _ytPreviewBtn(); } catch (e) {} }, 400);
+  }, true);
 
   function tick() { if (_ytOff()) { _ytClear(); return; } if (_ytResults()) { _ytResultsTick(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
   tick();
