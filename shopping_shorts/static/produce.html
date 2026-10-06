@@ -8432,7 +8432,7 @@ const MIX_LABEL={downloading:'영상 다운로드 중…',extracting:'대본 분
 //   ※지웠던 것: const MIX_STAGE_ORDER, SBLoader.pipeline(#mixStatus._sblPipe).
 // 재료 영상 상한 — **서버가 정본**(script_generate.SOURCE_MAX). 아래 값은 /api/me가
 // 도착하기 전까지 쓰는 임시값이다(숫자를 두 곳에서 정하는 게 아니다).
-let SOURCE_MAX = 8;
+let SOURCE_MAX = 15;
 fetch('/api/me').then(r=>r.json()).then(d=>{ if(d && d.source_max) SOURCE_MAX = d.source_max; })
                 .catch(()=>{});
 function addMixUrl(){
@@ -10289,6 +10289,9 @@ async function renderSourceAnalysis(){
   const done = items.filter(it => (_SRC_BRIEF[it.shortcode] || {}).ok).length;
   const gaveUp = items.filter(it => (_SRC_BRIEF[it.shortcode] || {}).gave_up).length;
   const left = items.length - done - gaveUp;         // 아직 결과를 기다리는 것
+  // ★분석이 다 끝나면 스토리보드(장면 목록 → AI 자동 보드)를 뒤에서 미리 만든다 — 2단계에서 기다리지 않게(10-06 사장님).
+  //   서버(/prepare)가 이미 있거나 도는 중이면 아무것도 안 하므로 여러 번 불러도 한 번만 돈다.
+  if(window.STORYBOARD_ON && items.length && left===0 && done>0 && typeof sbPrepare==='function') sbPrepare();
   // ★진행을 눈에 보이게(2026-08-19 사장님 지시). 분석은 영상 1개당 40~70초가 걸리고
   //   **한 번에 하나씩** 도는데(서버 예열), 종전 화면은 "3/5개 읽음" 한 줄뿐이라
   //   멈춘 것인지 도는 중인지 구별이 안 됐다 — 그래서 고장으로 보였다.
@@ -19133,6 +19136,16 @@ async function sbPost(path, body){
     if(!r.ok || !d || !d.ok){ toast((d&&d.error)||'요청 실패'); return false; }
     return true;
   }catch(e){ toast('요청 실패 — 다시 눌러 주세요'); return false; }
+}
+let _SB_PREP = '';     // 이 화면에서 미리 만들기를 부른 작업(같은 작업에 거듭 묻지 않게)
+async function sbPrepare(){
+  const j=sbJid(); if(!j || _SB_PREP===j) return; _SB_PREP=j;
+  try{
+    const r=await fetch('/api/produce/storyboard/'+encodeURIComponent(j)+'/prepare',{method:'POST'});
+    const d=await r.json().catch(()=>null);
+    if(!r.ok || !d || !d.ok){ console.warn('[sb] 미리 만들기 실패', r.status, d&&d.error); _SB_PREP=''; return; }
+    if(d.started && j===SB.jid) setTimeout(sbLoad, 1500);
+  }catch(e){ console.warn('[sb] 미리 만들기 실패', e); _SB_PREP=''; }
 }
 async function sbMakeInventory(){ if(await sbPost('/inventory', {})) setTimeout(sbLoad, 500); }
 

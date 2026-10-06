@@ -21209,6 +21209,37 @@ def api_storyboard_inventory(request: Request, job_id: str):
     return {"ok": True}
 
 
+@app.post("/api/produce/storyboard/{job_id}/prepare")
+def api_storyboard_prepare(request: Request, job_id: str):
+    """1단계 분석이 다 끝나면 화면이 한 번 부른다 — 장면 목록 → AI 자동 스토리보드를 뒤에서 이어 만든다(10-06 사장님
+    "스토리보드 만드는 게 오래 걸리니 1단계 분석 끝나면 동시에"). 이미 장면 목록·자동 보드가 있거나 도는 중이면 아무것도 안 한다.
+    일은 기존 이름(inventory → board:auto)으로 돌아 화면이 그대로 받아 탭으로 붙인다(새 판단 없음 — inventory·make_boards 그대로)."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    job_id, _ex, _jid = _sb_job(request, job_id)
+    if not _ex:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
+    from shopping_shorts import storyboard as _sb
+    busy = any(k[0] == job_id and (v or {}).get("state") == "run" for k, v in list(_SB_TASKS.items()))
+    st = _sb.load_state(job_id) or {}
+    if busy or (_SB_TASKS.get((job_id, "board:auto")) or {}).get("state") == "done":
+        return {"ok": True, "started": False}
+
+    def _auto():
+        _sb_run(job_id, "board:auto", lambda: _sb.make_boards(DB_PATH, job_id, ["auto"], "", "", ex=_ex).get("auto"))
+
+    if st.get("inventory"):
+        _auto()
+    else:
+        def _inv_then_auto():
+            res = _sb.inventory(DB_PATH, job_id, ex=_ex)
+            _auto()           # 장면 목록이 생긴 뒤에만 보드(make_boards 가 목록을 요구한다)
+            return res
+        _sb_run(job_id, "inventory", _inv_then_auto)
+    return {"ok": True, "started": True}
+
+
 @app.post("/api/produce/storyboard/{job_id}/boards")
 def api_storyboard_boards(request: Request, job_id: str, body: dict):
     """body: {keys:[스타일 묶음 번호|'auto'], star:"id,id", roles:"훅=id,id|CTA·가격=id"} — 스타일마다 따로 돌린다(동시에)."""
@@ -21684,6 +21715,10 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     context["fxEnabled"] = bool(_setting_gate(Store(DB_PATH), "scene_fx_enabled", _cid(request)))
     # 자막팩(관제 127) 스위치 — 꺼진 계정은 편집기가 팩 카드·새 등장 효과·새 강조 방식 버튼을 안 띄운다(고객 화면 불변)
     context["captionPackEnabled"] = bool(_setting_gate(Store(DB_PATH), "caption_pack_enabled", _cid(request)))
+    # 등장 효과팩 자동 번호(관제 144) — 그 작업 회원의 번호(관리자가 남의 작업을 열어도 그 회원 번호). 스위치가 꺼졌으면 안 준다(고객 화면 불변)
+    if context["captionPackEnabled"]:
+        from .scene_style import caption_motion_pack_for
+        context["motionPackAuto"] = caption_motion_pack_for(job.get("customer_id"))
     return {"context": context, "snapshot": snapshot}
 
 
