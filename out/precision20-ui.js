@@ -747,6 +747,9 @@
     const pk=event.target.closest('[data-caption-pack]');
     if(pk){   // 팩 고르기 — 같은 팩을 다시 누르면 끈다. 팩이 정한 단어 강조도 같이 켠다(고객이 아래에서 따로 바꿀 수 있다)
       captionPack=captionPack===pk.dataset.captionPack?'':pk.dataset.captionPack;const pack=CAPTION_PACKS[captionPack];
+      // 팩 = 자막 한 벌을 한 번에(10-06 라이브 실측: 고객 작업은 장면마다 상자 모양 look 이 이미 저장돼 있어 팩 상자·글자색이 막혔다 — job 085adfd67324 20장면 전부 look 0).
+      //   누르는 순간 장면별 자막 상자·글자색 선택만 비운다(자리·크기·투명도는 그대로). 그 뒤 고객이 다시 고르면 그게 이긴다.
+      if(pack)for(const [key,lay] of captionLayouts){if(!('look' in lay)&&!lay.bgUser&&!lay.colorUser)continue;const {look,bgUser,colorUser,...rest}=lay;captionLayouts.set(key,rest);}
       if(pack){bodyCaptionMotion='';if(mode==='continuous')hookBandMotion='';if(pack.wordFx)wordFx={...wordFx,style:pack.wordFx.style||'',color:pack.wordFx.color||'',grow:pack.wordFx.grow||''};fittedText.clear();}
       if(!pack)fittedText.clear();syncHookMotionUI();rememberLocal({captionPack,bodyCaptionMotion,wordFx});if(sceneIndex===0&&mode!=='continuous')showScene(1);else runWordFx();   // runWordFx 가 다시 그린 뒤 등장까지 건다
       return;
