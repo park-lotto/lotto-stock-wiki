@@ -8,6 +8,8 @@
   ③ 저장값(window.sceneStyle.snapshot)에 captionPack 이 실리고, 효과를 직접 고르면 팩이 꺼진다
   ④ 새로고침해도 고른 팩이 남는다(브라우저 기억)
   ⑤ 페이지 오류 0
+  ⑦ ★고객이 자막 상자를 이미 골라 둔 작업에서도 팩을 누르면 팩 모양(글꼴·글자색·상자)으로 바뀐다
+     (10-06 라이브 실측: 고객 작업은 장면마다 look 이 저장돼 있어 팩 상자·색이 막혔다)
   ⑥ ★실제로 움직인다: 팩을 누른 직후·[다음 ›] 직후 자막(글자) 애니메이션이 돌고 있다
      (10-05 사장님 '팩을 누르면 작동은 안 하는 거지' — 칸 표시 줄만 재고 움직임을 안 재서 놓쳤다)
 """
@@ -65,6 +67,16 @@ with sync_playwright() as p:
         pg.screenshot(path=str(out / f"pack_{key}.png"))
         # 처음 장면으로 되돌림
         pg.goto(url); pg.wait_for_timeout(1200); open_body(pg)
+    # ⑦ 상자를 먼저 고른 작업(흰 띠 look 0)에 예능 텐션(상자 없음·흰 글씨·어그로체)
+    pg.goto(url); pg.wait_for_timeout(1200); pg.evaluate("localStorage.clear()"); pg.reload(); pg.wait_for_timeout(1200); open_body(pg)
+    pg.evaluate("()=>{const b=document.querySelector('[data-caption-look=\"0\"]');b&&b.click()}"); pg.wait_for_timeout(300)
+    before = pg.evaluate("()=>(window.sceneStyle.snapshot().captionLayouts||{})")
+    pg.click('[data-caption-pack="tension"]'); pg.wait_for_timeout(800)
+    look = pg.evaluate("""()=>{const t=document.querySelector('.precision-text[data-edit-bind="caption"]'),cs=getComputedStyle(t),m=document.querySelector('.caption-mask');
+      return {font:cs.fontFamily,color:cs.color,mask:m?getComputedStyle(m).backgroundImage:'none',looks:Object.values(window.sceneStyle.snapshot().captionLayouts||{}).filter(v=>'look' in v).length}}""")
+    need(any("look" in v for v in before.values()) and look["font"].startswith("SBAggroB") and look["color"] == "rgb(255, 255, 255)" and look["mask"] == "none" and look["looks"] == 0,
+         f"⑦ 상자를 골라 둔 작업에 팩 → 팩 모양 (고르기 전 look 저장 {sum(1 for v in before.values() if 'look' in v)}칸 → 글꼴 {look['font'][:10]} · 색 {look['color']} · 상자 {look['mask'][:12]} · 남은 look {look['looks']})")
+    pg.goto(url); pg.wait_for_timeout(1200); open_body(pg)
     pg.click('[data-caption-pack="clean"]'); pg.wait_for_timeout(200)
     pg.click('[data-body-caption-motion="fade"]'); pg.wait_for_timeout(200)
     snap = pg.evaluate("()=>window.sceneStyle.snapshot()")
