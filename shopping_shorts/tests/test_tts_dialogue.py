@@ -72,3 +72,19 @@ def test_missing_voice_raises(setup):
     del dlg["voices"]["언니"]
     with pytest.raises(tts_dialogue.DialogueError, match="성우"):
         tts_dialogue.synthesize(beats, dlg, [str(tmp / f"{i}.mp3") for i in range(3)], post=post)
+
+
+def test_synth_dialogue_restores_script_before_baking(tmp_path, monkeypatch):
+    """계획이 앞 칸 대사를 손봤어도 합성은 확정 대본 글로 — 저장 관문이 되돌리며 음성을 버리지 않게(라이브 bc3f29dca928)."""
+    from shopping_shorts import mix_pipeline
+    seen = {}
+    monkeypatch.setattr(tts_dialogue, "synthesize", lambda beats, d, outs, **kw: seen.setdefault("n", [b["narration"] for b in beats]))
+    monkeypatch.setattr(mix_pipeline, "finalize_beat_audio", lambda b, o, **kw: None)
+    script = "이제 이걸로 끝났음.\n언니 그거 뭐야?\n케이블 보호기야."
+    beats = [{"beat_idx": 0, "narration": "이제 이걸로 완전히 끝났다니까요", "target_seconds": 2},
+             {"beat_idx": 1, "narration": "언니 그거 뭐야?", "target_seconds": 2},
+             {"beat_idx": 2, "narration": "케이블 보호기야.", "target_seconds": 2}]
+    dlg = {"lines": [{"speaker": "a"}] * 3, "voices": {"a": {}}, "_script": script}
+    mix_pipeline._synth_dialogue(beats, tmp_path, voice={}, skip_existing=False, dialogue=dlg, customer_id=0)
+    assert seen["n"] == script.split("\n")
+    assert all(b["tts_path"].endswith(".mp3") and mix_pipeline.tts_matches_narration(b) for b in beats)

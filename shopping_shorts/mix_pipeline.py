@@ -517,14 +517,26 @@ def job_script_endings(job):
 
 
 def _dialogue_of(job):
+    """대화 메타 + 확정 대본(_script). 대본은 합성 직전 칸 대사를 제자리로 돌리는 데 쓴다(_synth_dialogue)."""
     from shopping_shorts import dialogue_script
-    return dialogue_script.of_job(job)
+    d = dialogue_script.of_job(job)
+    return dict(d, _script=(job or {}).get("given_script") or "") if d else None
 
 
 def _synth_dialogue(beats, tts_dir, *, voice, skip_existing, dialogue, customer_id):
     """대화형 칸 음성(관제 128) — 굽기·자르기는 tts_dialogue, 마무리는 비트별·통짜와 같은 finalize_beat_audio.
     배속·무음 손잡이는 작업 성우(_voice_params) 하나로 전원 통일."""
     from shopping_shorts import tts_dialogue
+    # ★합성 **전에** 칸 대사를 확정 대본 제자리로(2026-10-06 라이브 job bc3f29dca928 실측).
+    #   3단계 계획이 앞 칸 대사를 손본 채로 여기 오면 그 글로 굽고, 저장 관문(store._ensure_screen_time →
+    #   enforce_scripted_narration·enforce_script_order)이 대본으로 되돌리며 파일 해시가 어긋나 음성이 버려졌다.
+    #   대화형은 줄 i = 칸 i = 화자 i 라 대사가 제자리여야 화자도 맞는다. 되돌리는 함수는 저장 관문과 같은 두 개다(0순위-B).
+    _script = (dialogue or {}).get("_script") or ""
+    if _script:
+        from shopping_shorts import edit_plan as _ep
+        _fixed, _ = _ep.enforce_scripted_narration(beats, _script)
+        _fixed, _ = _ep.enforce_script_order(_fixed, _script)
+        beats[:] = _fixed
     outs = [Path(_beat_tts_path(tts_dir, b)) for b in beats]
     if skip_existing and all(b.get("tts_path") == str(o) and o.exists() for b, o in zip(beats, outs)):
         return
@@ -1951,7 +1963,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
                       customer_id=customer_id,
                       script_endings=job_script_endings({"given_script": given_script}),
-                      dialogue=_dlg.of_structure(script_structure))
+                      dialogue=(dict(_dlg.of_structure(script_structure), _script=given_script)
+                                if _dlg.of_structure(script_structure) else None))
 
     # 4.2) 프리즈 뿌리 fix(2026-07-21) — 화면을 **실 TTS 길이**만큼 재보정한다. fill은 plan
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
