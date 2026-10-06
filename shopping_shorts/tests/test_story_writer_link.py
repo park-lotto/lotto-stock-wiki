@@ -466,3 +466,12 @@ def test_storyboard_puts_signals_on_escalation_and_twist_slots():
     assert slots[4]["line"].count("미친") <= 1 and "진짜 미친 건" not in slots[4]["line"][len(words[4]):]
     used = [w for w in words if w]
     assert not any(slots[5]["line"].startswith(u + " ") for u in used)  # 배정 안 된 칸이 같은 신호어로 또 열지 않는다
+
+
+def test_띄어쓰기만_다른_신호어도_떼고_붙인다():
+    """10-06 라이브: '이게 미친 포인트인게 이게 진짜 말도 안 되는 게 …' 두 겹 — 모델이 띄어쓰기만 달리 쓴 신호어를 못 뗐다."""
+    tok = sw.SIGNAL_POOL.set(True)
+    try:
+        assert sw.attach_signal("이게 진짜 말도 안 되는 게 차 시트에 깔면 돼요", "이게 미친 포인트인게") == "이게 미친 포인트인게 차 시트에 깔면 돼요"
+    finally:
+        sw.SIGNAL_POOL.reset(tok)
