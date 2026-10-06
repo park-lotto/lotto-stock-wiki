@@ -10638,7 +10638,7 @@ def api_mix_capcut(job_id: str, base: str = ""):
             _ss_scenes = _scene_style.context_for(timeline, _hc, _ss_snapshot, job_id)["scenes"]
             _scene_layers = _scene_style.overlay_spans(_ss_scenes, _ss_layers, _ss_dir)   # 단어 강조면 단어마다 한 장(관제 102)
             _scene_dims = _scene_style.dim_spans(_ss_scenes, _ss_snapshot, _ss_layers, _ss_dir)   # 어둡게 막(관제 124)
-            _scene_zooms = _scene_style.zoom_spans(_ss_scenes, _ss_snapshot, _ss_layers)   # 장면별 확대·점프 줌(관제 124)
+            _scene_zooms = _scene_style.capcut_fx_spans(_ss_scenes, _ss_snapshot, _ss_layers)   # 확대·확대 움직임·흑백 충격 → 캡컷 키프레임(관제 124)
         except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
             import traceback as _tb4
             _tb4.print_exc(file=sys.stderr)

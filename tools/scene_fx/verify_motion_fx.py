@@ -143,8 +143,9 @@ def main():
         def curve(k):
             if way == "pull":
                 t = min(1, k / (N - 1)); return 1 + (Z - 1) * (3 * t * t - 2 * t ** 3)
-            if way == "inout" and N > 2 * n:
-                b = max(0, (k - (N - n)) / n); return 1 + (Z - 1) * (1 - (1 - min(1, k / n)) ** 2) * (1 - (3 * b * b - 2 * b ** 3))
+            if way == "inout":
+                m = max(1, min(n, int(N * 0.4)))
+                b = max(0, (k - (N - m)) / m); return 1 + (Z - 1) * (1 - (1 - min(1, k / m)) ** 2) * (1 - (3 * b * b - 2 * b ** 3))
             return 1 + (Z - 1) * (1 - (1 - min(1, k / n)) ** 2)
         ks = sorted({1, n // 2, n + 1, N // 2, N - n // 2, N - 2})
         got = [scale_between(frame(out0, f0 + k), frame(out1, f0 + k), box(i)) for k in ks]

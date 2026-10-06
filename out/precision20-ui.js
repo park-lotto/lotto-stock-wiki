@@ -2238,17 +2238,20 @@
     autoPlaced:()=>Object.values(effects).some(e=>e&&e.fxAutoPlaced),
     // 장면 효과 하나 고르기(관제 124, 사장님 "조작이 복잡해서 효율적으로") — 장면마다 한 번 눌러 하나만.
     //   kind: 'none'|'in'|'pull'|'inout'(강조 확대 방식)|'dim'(어둡게+큰 글자)|'shock'(흑백 충격). 시작 어두운 제목(dim.sec>0)은 그대로 둔다.
+    // 여러 개 같이(사장님 2026-10-06 "중복으로 선택 효과되게"): 확대 3종(in·pull·inout) 중 하나 + 어둡게(dim) + 흑백 충격(shock).
+    //   조회 sceneFx(i) → ['pull','dim'] 처럼 켜진 것 목록. kind='none' 이면 전부 끔, 확대 3종은 서로 바꿔 끼우기(같은 걸 다시 누르면 끔), dim·shock 은 켜고 끄기.
     sceneFx(i,kind){
       const key=String(i),e={...(effects[key]||{})};
-      if(kind===undefined){if(e.shock)return 'shock';if(e.dim&&!e.dim.sec)return 'dim';if(e.fxAuto==='emph')return e.zoomMove||'in';return 'none';}
-      const title=e.dim&&e.dim.sec>0?e.dim:null,keepJump=e.fxAuto==='jump';
-      ['zoomIn','zoomMove','shock','fxFocus','fxFocusBy','fxBox','fxAutoPlaced'].forEach(k=>delete e[k]);
-      if(e.fxAuto==='emph'){delete e.zoom;delete e.fxAuto;delete e.panX;delete e.panY;}
-      delete e.dim;if(title)e.dim=title;
-      effects[key]=e;
-      if(kind==='in'||kind==='pull'||kind==='inout'){if(keepJump){delete e.zoom;delete e.fxAuto;}this.emphAt(i,'zoom',true);this.zoomMove(i,kind);}
-      else if(kind==='dim'||kind==='shock')this.emphAt(i,kind,true);
-      return kind;
+      const on=[...(e.fxAuto==='emph'?[e.zoomMove||'in']:[]),...(e.dim&&!e.dim.sec?['dim']:[]),...(e.shock?['shock']:[])];
+      if(kind===undefined)return on.length?on:['none'];
+      const clearZoom=x=>{['zoomIn','zoomMove','fxFocus','fxFocusBy','fxBox'].forEach(k=>delete x[k]);if(x.fxAuto==='emph'){delete x.zoom;delete x.fxAuto;delete x.panX;delete x.panY;}};
+      delete e.fxAutoPlaced;
+      if(kind==='none'){const title=e.dim&&e.dim.sec>0?e.dim:null;clearZoom(e);delete e.shock;delete e.dim;if(title)e.dim=title;effects[key]=e;return ['none'];}
+      if(kind==='in'||kind==='pull'||kind==='inout'){
+        const same=on.includes(kind);clearZoom(e);if(e.fxAuto==='jump'){delete e.zoom;delete e.fxAuto;}effects[key]=e;
+        if(!same){this.emphAt(i,'zoom',true);this.zoomMove(i,kind);}
+      }else if(kind==='dim'||kind==='shock'){effects[key]=e;this.emphAt(i,kind,!on.includes(kind));}
+      return this.sceneFx(i);
     },
     emphMoments(moments,kind,on){
       const scenes=sceneContext?.scenes||[],want=new Set(moments);let prev=null,count=0;
