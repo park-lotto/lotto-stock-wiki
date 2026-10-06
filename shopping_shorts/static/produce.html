@@ -8031,7 +8031,7 @@ function setScriptMode(mode){
   if(body) body.innerHTML = SCRIPT_MODE_HTML[mode]();
 }
 
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // SYLLABLES_PER_SEC=5.7 — 2026-07-17 성우 14명을 서버에서 실합성해 측정한 값(음절÷발화초,
 // 한글 1글자≈1음절). 파이썬 쪽 진실은 shopping_shorts/edit_plan.py의 _SYLLABLES_PER_SEC —
 // JS는 그 상수를 못 읽으므로(서버가 값을 내려주지 않음, 이 태스크 범위 밖) 여기 숫자로 나란히
@@ -12352,7 +12352,7 @@ function renderSceneCutaway(beat, idx){
   // ★감정짤 칸(관제 143) — 스위치 켜진 계정만. 짤 컷이면 짤 카드 [바꾸기][빼기], 끼움 장면이 없으면 [＋짤]
   const memeOn = (typeof MIX_MEME_ON!=='undefined') && MIX_MEME_ON && typeof MemePack!=='undefined';
   if(memeOn && cw && cw.match_type==='meme'){
-    return html + `<div class="mp-cell">${MemePack.video(cw.asset_id)}<div style="flex:1">🎭 <b>${esc(cw.emotion||'')}</b> 짤 · 줄 맨 앞 ${esc(cw.head_sec)}초${cw.manual?' · 직접 고름':' · 자동'}</div>`
+    return html + `<div class="mp-cell">${MemePack.video(cw.asset_id)}<div style="flex:1">🎭 <b>${esc(cw.emotion||'')}</b> 짤 · 줄 맨 앞 ${esc(String(cw.head_sec??''))}초${cw.manual?' · 직접 고름':' · 자동'}</div>`
       + `<button class="mp-btn" onclick="memeCellOpen(${idx})">바꾸기</button><button class="mp-btn" onclick="memeCellSet(${idx},null)">빼기</button></div>`;
   }
   if(memeOn && !cw){
