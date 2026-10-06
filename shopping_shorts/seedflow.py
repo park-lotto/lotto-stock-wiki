@@ -105,15 +105,46 @@ WRITE_PROMPT = """너는 쇼핑 쇼츠 대본 작가다. 터진 영상(씨앗)�
 %s"""
 
 
-RESEARCH_PROMPT = """한 제품으로 쇼핑 쇼츠 '썰' 대본을 쓰려고 한다. 이 제품(또는 이 제품 종류·브랜드)에 대해 **숨겨진 이야기**를 찾아라.
-찾을 것(5~8개): 탄생 비화(누가 왜 만들었나) · 알려지지 않은 사실 · 원래 용도와 다른 뜻밖의 쓰임 · 사람 이야기(누가 어떻게 쓰다 퍼졌나) · 원조·비싼 것과의 관계 · 흔한 오해.
-★검색으로 **확인한 것만** 적고, 항목마다 근거 출처(URL 또는 매체·페이지 이름)를 적어라. 확인 못 한 것은 적지 마라. 숫자·상표·나라는 출처에 있는 그대로.
-출력은 JSON 객체 하나: {"facts": [{"kind": "탄생 비화|숨은 사실|뜻밖의 쓰임|사람 이야기|원조 관계|오해", "text": "한 줄", "source": "출처"}]}
+RESEARCH_PROMPT = """한 제품으로 쇼핑 쇼츠 '썰' 대본을 쓰려고 한다. 이 제품에 대한 **사건·뒷이야기**를 넓게 찾아라.
+찾는 범위 — 세 겹으로 넓혀서 검색한다:
+  ① 이 제품 자체  ② 이 제품의 브랜드·회사  ③ 이 제품 **종류**(예: 와플 메이커 → 와플 기계 일반, 보조배터리 → 보조배터리 일반)
+찾을 것(6~10개, 종류를 섞어서):
+  뉴스 사건   : 기사로 난 일 — 품절 대란·리콜·소송·사고·규제·화제가 된 사연·유명인 일화
+  논란       : 사람들이 싸운 일 — 표절·가격·성분·효능 논쟁, 제조사 해명
+  탄생 비화   : 누가 왜 만들었나, 처음엔 무엇이었나
+  숨은 사실   : 누구나 쓰는데 모르는 것(이름의 유래·원래 용도·숨은 기능)
+  뜻밖의 쓰임 : 원래 용도와 다른 쓰임이 퍼진 일
+  사람 이야기 : 누가 어떻게 쓰다 퍼졌나(커뮤니티·SNS에서 화제가 된 일 포함)
+  원조 관계   : 원조·비싼 것과의 관계(대체품·카피·역전)
+  오해       : 다들 잘못 알고 있는 것
+★검색으로 **확인한 것만** 적고, 항목마다 근거 출처(기사·페이지 제목과 매체 이름, 가능하면 URL)와 날짜(알면)를 적어라. 확인 못 한 것은 적지 마라.
+  숫자·상표·나라·인명은 출처에 있는 그대로. 오래된 일이어도 된다 — 최신일 필요 없다.
+출력은 JSON 객체 하나: {"facts": [{"kind": "뉴스 사건|논란|탄생 비화|숨은 사실|뜻밖의 쓰임|사람 이야기|원조 관계|오해", "scope": "제품|브랜드|종류",
+ "text": "한 줄", "source": "출처", "date": "YYYY-MM 또는 빈칸"}]}
 
 [제품] %s
 [영상에서 이미 본 것 — 겹치는 건 빼라] %s"""
 
+ANGLE_PROMPT = """쇼핑 쇼츠 '썰'의 **각도**를 고른다. 이 채널의 핵심은 "누구나 아는 제품인데 — 아 그런 게 있었어? 그런 비하인드가 있었어?"다(사장님 2026-10-07).
+아래 후보(조사한 숨겨진 이야기 + 영상에서 본 포인트) 하나하나에 점수를 매겨라.
+
+점수(0~10)
+  surprise  "아 그래?" 정도 — 누구나 아는 것에 대해 몰랐던 사실일수록 높다. 제품 설명(기능이 좋다)은 2점 이하.
+  known     그 제품·브랜드·종류를 보는 사람이 **이미 알고 있을** 정도 — 아웃백·코스트코·팔도처럼 다 아는 것은 9~10, 처음 보는 가젯은 2~3.
+  throwable 첫 줄로 **던질 수 있나** — 한 문장으로 "OO에 이런 게 있었다고?" 꼴이 되나.
+그리고 가장 높은 하나를 골라 그 각도를 한 줄로 쓰고(angle), 그 각도를 거는 첫 줄 후보 3개(hooks, 12~20자, 제품 종류 낱말로 끝, 문장부호 없이)를 적어라.
+★후보 밖의 사실을 만들지 마라. surprise 가 전부 5 이하면 angle 은 빈 문자열로 두고 why_none 에 이유를 적어라(이 제품은 이 채널 썰감이 아니다).
+
+출력은 JSON 객체 하나:
+{"scores": [{"id": "f1", "surprise": 8, "known": 9, "throwable": 7}], "pick": "f1", "angle": "한 줄", "hooks": ["...", "...", "..."], "why_none": ""}
+
+[제품] %s
+[후보]
+%s"""
+
 STORY_PROMPT = """쇼핑 쇼츠 '썰' 대본의 **줄거리**를 짜라. 대본을 쓰는 게 아니다 — 누가, 무슨 일이, 어떻게 됐나를 정하는 단계다.
+★이 썰의 각도(가장 먼저 던질 "아 그래?")는 정해져 있다: %s
+  줄거리의 발견·반전 중 하나는 반드시 이 각도여야 하고, 다른 재료는 이 각도를 받치는 데만 쓴다.
 
 썰은 제품 설명이 아니라 **사람들에게 벌어진 일**이다. 원본 채널 39편의 썰은 이 다섯 꼴 중 하나였다:
   대체 탐정  : 비싼 원조 → 못 구하거나 아쉬움 → 포기 못 한 무리가 시행착오 끝에 이걸 찾아냄 → 원조에 갈 이유가 없어짐
@@ -234,9 +265,40 @@ def _facts_block(facts):
     return "\n".join("%s. (%s) %s — 출처: %s" % (f["id"], f.get("kind") or "", f["text"], f.get("source") or "") for f in facts) or "(없음)"
 
 
-def build_story(product, seed_an, points, facts, call):
-    """③-1 썰 짓기 — 포인트·숨겨진 이야기 → 줄거리(누가·무슨 일·어떻게). 재료 밖 사실을 쓴 단계는 uses 가 비어 걸러진다."""
-    out = _ask(call, STORY_PROMPT % (product, " / ".join(h["why"] for h in seed_an.get("hooked") or []) or "(없음)",
+ANGLE_MIN_SURPRISE = 6       # 이보다 낮으면 "아 그래?"가 없다 — 썰감이 아니다
+_SOURCE_TIER = (("언론·공식", r"경제|일보|뉴스|news|신문|times|herald|공식|official|\.co\.kr|\.com/article|press"),
+                ("백과·위키", r"위키|wiki|백과|namu"), ("커뮤니티·블로그·SNS", r"blog|티스토리|네이버|youtube|유튜브|facebook|instagram|cafe|커뮤니티|reddit|tiktok"))
+
+
+def source_tier(src):
+    for name, pat in _SOURCE_TIER:
+        if re.search(pat, src or "", re.I):
+            return name
+    return "기타"
+
+
+def pick_angle(product, points, facts, call):
+    """②-3 각도 고르기 — 후보 중 '누구나 아는데 몰랐던 것' 하나. 없으면 {"angle": "", "why_none": ...}(썰을 쓰지 않는다)."""
+    cands = [("f", f["id"], "(%s · %s) %s" % (f.get("kind") or "", source_tier(f.get("source")), f["text"])) for f in facts]
+    cands += [("p", "p%d" % p["id"], "(%s · 영상) %s" % (p.get("kind") or "", p["text"])) for p in points]
+    if not cands:
+        return {"angle": "", "pick": "", "hooks": [], "scores": [], "why_none": "후보 없음"}
+    out = _ask(call, ANGLE_PROMPT % (product, "\n".join("%s. %s" % (i, t) for _, i, t in cands)))
+    ids = {i for _, i, _ in cands}
+    scores = [s for s in (out.get("scores") or []) if isinstance(s, dict) and s.get("id") in ids]
+    pick = out.get("pick") if out.get("pick") in ids else ""
+    best = max(scores, key=lambda s: (s.get("surprise") or 0) + (s.get("known") or 0) * 0.5 + (s.get("throwable") or 0) * 0.5, default=None)
+    if best and (not pick or (best.get("surprise") or 0) >= (next((s.get("surprise") or 0 for s in scores if s["id"] == pick), 0) + 2)):
+        pick = best["id"]
+    sup = next((s.get("surprise") or 0 for s in scores if s["id"] == pick), 0)
+    angle = (out.get("angle") or "").strip() if pick and sup >= ANGLE_MIN_SURPRISE else ""
+    return {"angle": angle, "pick": pick if angle else "", "surprise": sup, "hooks": [h.strip() for h in (out.get("hooks") or []) if str(h).strip()][:3] if angle else [],
+            "scores": scores, "why_none": "" if angle else ((out.get("why_none") or "").strip() or "surprise %d — 몰랐던 것이 없다" % sup)}
+
+
+def build_story(product, seed_an, points, facts, call, angle=""):
+    """③-1 썰 짓기 — 포인트·숨겨진 이야기 → 줄거리(누가·무슨 일·어떻게). 각도가 있으면 그 각도가 발견·반전의 중심. 재료 밖 사실을 쓴 단계는 uses 가 비어 걸러진다."""
+    out = _ask(call, STORY_PROMPT % (angle or "(정해진 각도 없음 — 숨겨진 이야기 중 가장 뜻밖인 것을 중심에)", product, " / ".join(h["why"] for h in seed_an.get("hooked") or []) or "(없음)",
                                      "\n".join("p%d. (%s) %s" % (p["id"], p.get("kind") or "", p["text"]) for p in points) or "(없음)", _facts_block(facts)))
     ids = {"p%d" % p["id"] for p in points} | {f["id"] for f in facts}
     beats = []
@@ -253,6 +315,8 @@ def _story_block(story):
         return ""
     rows = ["[줄거리 — 이 순서대로 쓴다. 주인공 무리: %s · 썰 꼴: %s]" % (story.get("cast") or "사람들", story.get("type") or "")]
     rows += ["%d. (%s) %s" % (i + 1, b.get("step") or "", b["text"]) for i, b in enumerate(story["beats"])]
+    if story.get("angle"):
+        rows.append("★첫 줄은 이 각도를 던진다: %s   (첫 줄 후보: %s)" % (story["angle"], " / ".join(story.get("hooks") or []) or "직접 써라"))
     return "\n".join(rows) + "\n"
 
 
@@ -336,6 +400,12 @@ def run(product, seed_text, scenes, call, *, search_call=None, seed_an=None, log
     product = product or seed_an.get("product") or ""
     points = mine_points(product, seed_an, scenes, call)
     facts = research(product, [p["text"] for p in points], search_call) if search_call else []
-    story = build_story(product, seed_an, points, facts, call)
+    angle = pick_angle(product, points, facts, call)
+    if not angle.get("angle"):
+        # ★"아 그래?"가 없으면 쓰지 않는다 — 억지로 쓰면 포인트 나열이 된다(2026-10-07 사장님: 신박한 주제를 던지는 게 핵심)
+        return {"seed": seed_an, "points": points, "facts": facts, "angle": angle, "story": None, "script": None,
+                "problems": ["썰감 아님: " + angle.get("why_none", "")], "attempts": 0}
+    story = build_story(product, seed_an, points, facts, call, angle=angle["angle"])
+    story["angle"], story["hooks"] = angle["angle"], angle.get("hooks") or []
     script, bad, n = write(product, seed_text, seed_an, points, scenes, call, story=story, facts=facts, log=log)
-    return {"seed": seed_an, "points": points, "facts": facts, "story": story, "script": script, "problems": bad, "attempts": n}
+    return {"seed": seed_an, "points": points, "facts": facts, "angle": angle, "story": story, "script": script, "problems": bad, "attempts": n}

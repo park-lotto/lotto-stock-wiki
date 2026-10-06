@@ -66,12 +66,19 @@ def main():
                 an, pts, sc, bad, n = out["seed"], out["points"], out["script"], out["problems"], out["attempts"]
             except (RuntimeError, ValueError) as e:
                 print("건너뜀 %s: %s" % (product, e)); seen.discard(product); continue
-            lines = [{"role": L.get("beat") or "", "text": L.get("text") or ""} for L in sc.get("lines") or [] if (L.get("text") or "").strip()]
+            ang = out.get("angle") or {}
+            if sc is None:
+                res.append({"job": r["job_id"], "product": product, "seed_name": sd["name"], "facts": out["facts"], "angle": ang, "script": None, "problems": bad})
+                print("\n##### %s ← 씨앗 %s | ✗ %s" % (product, sd["name"], bad[0] if bad else ""))
+                for f in out["facts"]:
+                    print("   %s. (%s) %s" % (f["id"], f.get("kind") or "", f["text"]))
+                continue
+            lines =[{"role": L.get("beat") or "", "text": L.get("text") or ""} for L in sc.get("lines") or [] if (L.get("text") or "").strip()]
             bg = {"kind": "hidden", "title": sc.get("title") or "", "lines": lines, "comment": ""}
             src_txt = sd["text"] + " " + " ".join(p["text"] for p in pts) + " " + " ".join(s["desc"] + " " + s["use"] for s in scenes)
             bg_rej = [list(i) for i in br.rejects(br.lint(bg, {"source_text": src_txt, "seed_text": sd["text"]})) if i.rule not in ("bg_copy", "bg_lines", "bg_length", "bg_title_len")]
             body = " ".join(L["text"] for L in lines)
-            row = {"job": r["job_id"], "product": product, "seed_name": sd["name"], "videos": len(srcs), "scenes": len(scenes), "seed": an, "points": pts, "facts": out["facts"], "story": out["story"],
+            row = {"job": r["job_id"], "product": product, "seed_name": sd["name"], "videos": len(srcs), "scenes": len(scenes), "seed": an, "points": pts, "facts": out["facts"], "story": out["story"], "angle": ang,
                    "script": sc, "problems": bad, "attempts": n, "banggu_rejects": bg_rej, "copy_share": round(sf.gram_share(body, sd["text"]), 2), "chars": sf.chars(body)}
             res.append(row)
             print("\n##### %s ← 씨앗 %s | 영상 %d · 장면 %d | 대본 %d자 · 씨앗과 겹침 %.0f%% · 시도 %d · 흐름 문제 %d · 방구석 규칙 어김 %d" % (
@@ -80,7 +87,8 @@ def main():
             print("[포인트] %d개 — 새것 %d · %s" % (len(pts), sum(1 for p in pts if not p["in_seed"]), {o: sum(1 for p in pts if p["origin"] == o) for o in sf.ORIGINS}))
             print("[숨겨진 이야기] %d개" % len(out["facts"]))
             for f in out["facts"]:
-                print("   %s. (%s) %s — %s" % (f["id"], f.get("kind") or "", f["text"], (f.get("source") or "")[:60]))
+                print("   %s. (%s·%s %s) %s — %s" % (f["id"], f.get("kind") or "", f.get("scope") or "", f.get("date") or "", f["text"], (f.get("source") or "")[:60]))
+            print("[각도] %s (고른 것 %s · 놀람 %s) | 첫 줄 후보: %s" % (ang.get("angle"), ang.get("pick"), ang.get("surprise"), " / ".join(ang.get("hooks") or [])))
             st = out["story"]
             print("[썰] %s · 주인공 %s · 숨은 이야기 씀=%s" % (st.get("type"), st.get("cast"), st.get("uses_fact")))
             for b in st.get("beats") or []:
@@ -96,9 +104,10 @@ def main():
             for i in bg_rej:
                 print("  ! 방구석 규칙 %s «%s» %s" % (i[0], i[3], i[4]))
     json.dump({"jobs": res}, open(a.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    print("\n===== %d건 · 흐름 문제 없음 %d · 방구석 규칙 통과 %d · 씨앗과 겹침 중앙 %.0f%%" % (
-        len(res), sum(1 for r in res if not r["problems"]), sum(1 for r in res if not r["banggu_rejects"]),
-        100 * sorted(r["copy_share"] for r in res)[len(res) // 2] if res else 0))
+    ok = [r for r in res if r.get("script")]
+    print("\n===== %d건 · 썰감 아님 %d · 쓴 것 %d 중 흐름 문제 없음 %d · 씨앗과 겹침 중앙 %.0f%%" % (
+        len(res), len(res) - len(ok), len(ok), sum(1 for r in ok if not r["problems"]),
+        100 * sorted(r["copy_share"] for r in ok)[len(ok) // 2] if ok else 0))
 
 
 if __name__ == "__main__":

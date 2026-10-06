@@ -80,3 +80,17 @@ def test_hook_word_swap_invented_number_and_buried_copy_are_caught():
     assert any("없는 숫자" in b for b in sf.problems(s, SEED, AN, PTS, SCENES))
     s = _script(); s["lines"][2]["text"] = "안쪽이 통기 메쉬라 한여름에도 등이 축축해지질 않음 그러나 이 꿀팁의 문제점은 내려놓는 순간 리셋된다는 거 그래서 다들 놀랐다고 함"
     assert any("옮겼다" in b for b in sf.problems(s, SEED, AN, PTS, SCENES))
+
+
+def test_pick_angle_requires_surprise_and_run_refuses_without_angle():
+    facts = [{"id": "f1", "kind": "오해", "text": "아일랜드 식탁의 아일랜드는 나라가 아니라 섬이다", "source": "매일경제"}]
+    good = {"scores": [{"id": "f1", "surprise": 8, "known": 9, "throwable": 8}, {"id": "p2", "surprise": 3, "known": 5, "throwable": 4}],
+            "pick": "f1", "angle": "아일랜드 식탁의 아일랜드는 Ireland 가 아니라 Island", "hooks": ["나라 이름인 줄 알았던 식탁", "섬에서 온 식탁의 정체"], "why_none": ""}
+    a = sf.pick_angle("식탁", PTS, facts, lambda p: json.dumps(good, ensure_ascii=False))
+    assert a["pick"] == "f1" and a["angle"] and len(a["hooks"]) == 2 and sf.source_tier("매일경제") == "언론·공식"
+    weak = dict(good, scores=[{"id": "f1", "surprise": 4, "known": 9, "throwable": 8}], angle="그래도 각도", why_none="")
+    a = sf.pick_angle("식탁", PTS, facts, lambda p: json.dumps(weak, ensure_ascii=False))
+    assert a["angle"] == "" and "surprise 4" in a["why_none"]
+    answers = iter([json.dumps({"points": []}, ensure_ascii=False), json.dumps(weak, ensure_ascii=False)])
+    out = sf.run("식탁", SEED, SCENES, lambda p: next(answers), seed_an=AN)
+    assert out["script"] is None and out["problems"][0].startswith("썰감 아님")
