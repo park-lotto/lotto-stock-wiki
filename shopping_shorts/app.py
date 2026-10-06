@@ -9918,11 +9918,7 @@ def _longform_job(job_id):
     _gone = _video_gone_reason(job)
     if _gone:
         return job, None, JSONResponse(status_code=404, content={"ok": False, "error": _gone})
-    from shopping_shorts import bgm_lib
-    if bgm_lib.shorts_only(job.get("deco")):
-        # 롱폼은 완성 쇼츠의 소리를 그대로 쓴다 — 쇼츠 전용 곡이 롱폼에 실리면 안 된다(관제 146).
-        return job, None, JSONResponse(status_code=409, content={
-            "ok": False, "error": "쇼츠 전용 배경음을 쓴 영상이에요 — 배경음을 '없음'으로 바꾸고 완성본을 다시 만든 뒤 롱폼을 만들어 주세요"})
+    # 쇼츠 전용 곡(관제 146) 걱정은 없다 — 롱폼은 무음으로 굽는다(link_longform, 2026-10-06 사장님 "롱폼은 무음으로").
     return job, job["video_path"], None
 
 

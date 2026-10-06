@@ -8,7 +8,8 @@
 ★판단의 주인(0순위-C): 가로 화면 구도·문구 자리·파일 이름·"지금 것이 최신인가"는 전부 이 파일이 정한다.
   app.py 라우트와 화면은 여기 함수를 부르기만 한다.
 ★재렌더가 아니다: 이미 만든 final.mp4 한 편만 입력으로 받는다. 컷·자막·음성 판단을 다시 하지 않는다
-  (소리는 그대로 복사). 그래서 완성본과 내용이 어긋날 수 없다.
+  ★소리는 넣지 않는다(무음, 2026-10-06 사장님 "롱폼은 무음으로") — 3단계 목록 곡은 쇼츠 전용(관제 146)이라 롱폼에 실리면 안 되고,
+    링크를 거는 용도라 소리가 필요 없다. 그래서 완성본과 그림이 어긋날 수 없다.
 ★표식: 만든 파일 옆에 link_longform.json 을 남긴다(규칙 판·문구·원본 수정시각). 표식이 지금과 다르면 옛 파일로 본다.
 """
 import json
@@ -20,7 +21,7 @@ from pathlib import Path
 from shopping_shorts import video_assemble
 
 OUT_W, OUT_H = 1920, 1080
-RULE = "link_longform_v2"                 # 구도·문구 그리는 법이 바뀌면 올린다 → 옛 파일은 자동으로 다시 만든다
+RULE = "link_longform_v3"                 # 구도·문구 그리는 법이 바뀌면 올린다 → 옛 파일은 자동으로 다시 만든다
 OUT_NAME = "final_longform.mp4"
 META_NAME = "link_longform.json"
 _TMP_NAME = "final_longform.tmp.mp4"
@@ -235,7 +236,7 @@ def render_link_longform(src, job_dir, where=DEFAULT_WHERE):
     """완성 쇼츠(src) → 구매링크용 가로 영상. 만든 파일 경로를 돌려준다. 실패하면 예외(사유를 .err 에도 남긴다).
 
     화면 구성: 뒤 = 같은 영상을 화면 가득 키워 흐리게 / 가운데 = 원본 쇼츠(높이 1080) / 위 = 문구+화살표.
-    소리는 다시 굽지 않고 그대로 복사한다. 길이·프레임 수는 원본과 같다(30fps 고정은 완성본과 같은 규격).
+    소리는 넣지 않는다(무음). 길이·프레임 수는 원본과 같다(30fps 고정은 완성본과 같은 규격).
     """
     from shopping_shorts import mix_pipeline
     p = paths(job_dir)
@@ -271,9 +272,9 @@ def render_link_longform(src, job_dir, where=DEFAULT_WHERE):
         )
         cmd = ["ffmpeg", "-y", "-i", str(src), *overlay_in,
                "-filter_complex", fc,
-               "-map", "[v]", "-map", "0:a?", "-r", "30",
+               "-map", "[v]", "-an", "-r", "30",
                "-c:v", "libx264", "-preset", video_assemble._preset(), "-crf", video_assemble._crf(),
-               *video_assemble._threads_args(), "-c:a", "copy", "-movflags", "+faststart", str(p["tmp"])]
+               *video_assemble._threads_args(), "-movflags", "+faststart", str(p["tmp"])]
         video_assemble._run_ffmpeg(cmd)
         os.replace(str(p["tmp"]), str(p["out"]))
         p["meta"].write_text(json.dumps(dict(sig, rule=RULE, text=text, fg_w=fg_w, layout=items, **info),
