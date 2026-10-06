@@ -592,6 +592,27 @@ def dim_spans(scenes, snapshot, layers, folder):
     return out
 
 
+def zoom_curve(t, dur, zoom, way="in", zoom_in=0.5):
+    """장면 시작부터 t초에서의 확대 배율 — 완성본 zoom_move_vf(ffmpeg 식)와 같은 곡선을 캡컷 키프레임용으로(관제 124).
+    in: 1-(1-u)² (u=t/zoom_in) · pull: 3u²-2u³ (u=t/dur) · inout: in 곡선 × (1 - 끝 zoom_in 초의 3b²-2b³)."""
+    if zoom <= 1.0001 or zoom_in <= 0:
+        return zoom
+    clamp = lambda x: max(0.0, min(1.0, x))
+    if way == "pull":
+        u = clamp(t / max(1e-6, dur)); e = 3 * u * u - 2 * u ** 3
+    else:
+        u = clamp(t / zoom_in); e = 1 - (1 - u) ** 2
+        if way == "inout" and dur > 2 * zoom_in:
+            b = clamp((t - (dur - zoom_in)) / zoom_in); e *= 1 - (3 * b * b - 2 * b ** 3)
+    return 1 + (zoom - 1) * e
+
+
+def shock_spans(scenes, snapshot):
+    """캡컷용 흑백 충격 구간 [{start,end}] — 캡컷 초안은 채도·대비·밝기·위치 키프레임으로 흉내 낸다(완성본 shock_vf 와 짝)."""
+    effects=(validate_snapshot(snapshot) or {}).get("effects") or {}
+    return [{"start":float(sc["start"]),"end":float(sc["end"])} for i,sc in enumerate(scenes) if (effects.get(str(i)) or {}).get("shock")]
+
+
 def zoom_spans(scenes, snapshot, layers=None):
     """캡컷용 장면별 영상 확대 구간 [{start,end,zoom,tx,ty}] (관제 124 점프 줌·강조 확대 + 손으로 맞춘 확대).
     배율 뜻은 완성본과 같은 video_assemble.scene_zoom_of 한 곳. 이동(tx,ty)은 캡컷 clip.transform —
@@ -608,7 +629,9 @@ def zoom_spans(scenes, snapshot, layers=None):
             frac=((layers[index] or {}).get("media") or {}).get("height",100)/100 if layers and index<len(layers) else 1.0
             out.append({"start":float(scene["start"]),"end":float(scene["end"]),"zoom":zoom,
                         "tx":round(float(effect.get("panX",0))*(zoom-1),4),
-                        "ty":round(-float(effect.get("panY",0))*(zoom-1)*frac,4)})
+                        "ty":round(-float(effect.get("panY",0))*(zoom-1)*frac,4),
+                        # 확대 움직임(관제 124) — 캡컷은 이 값으로 크기·위치 키프레임을 찍는다(zoom_curve)
+                        "move":effect.get("zoomMove","in"),"zoomIn":float(effect.get("zoomIn") or 0)})
     return out
 
 

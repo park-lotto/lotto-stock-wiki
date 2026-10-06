@@ -12,7 +12,6 @@ if hasattr(sys.stdout, "reconfigure"):
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from verify_scene_fx import TIMELINE  # noqa: E402
 
 
 def main():
@@ -20,16 +19,20 @@ def main():
     ap.add_argument("--work", required=True)
     ap.add_argument("--drafts", default=os.path.expandvars(r"%LOCALAPPDATA%\CapCut\User Data\Projects\com.lveditor.draft"))
     ap.add_argument("--name", default="QA_장면효과팩")
+    ap.add_argument("--kind", default="scene", choices=["scene", "motion", "auto"], help="어느 검사의 작업 폴더인가(대본·제목이 다르다)")
     a = ap.parse_args()
     from shopping_shorts import scene_style, capcut_draft
+    mod = {"scene": "verify_scene_fx", "motion": "verify_motion_fx", "auto": "verify_auto_fx"}[a.kind]
+    TIMELINE = __import__(mod).TIMELINE
+    hc = {"text": "주방 정리\n끝판왕"} if a.kind == "scene" else {"text": "옷 정리\n끝판왕"}
     work = Path(a.work)
     ed = json.loads((work / "editor-out.json").read_text(encoding="utf-8"))
     snap = {"version": 1, "mode": "story", "presetId": "t11", "hookMotion": "pop", "effects": ed["snapshot"]["effects"]}
     layers = json.loads((work / "w1" / "scene-style-layers.json").read_text(encoding="utf-8"))
-    scenes = scene_style.context_for(TIMELINE, {"text": "주방 정리\n끝판왕"}, snap, "qa")["scenes"]
+    scenes = scene_style.context_for(TIMELINE, hc, snap, "qa")["scenes"]
     overlays = scene_style.overlay_spans(scenes, layers, work / "w1")
     dims = scene_style.dim_spans(scenes, snap, layers, work / "w1")
-    zooms = scene_style.zoom_spans(scenes, snap)
+    zooms = scene_style.zoom_spans(scenes, snap, layers) + [{**s, "zoom": 1.0, "shock": True} for s in scene_style.shock_spans(scenes, snap)]
     tts = {}
     for b in TIMELINE:
         p = work / f"tts{b['beat_idx']}.mp3"
