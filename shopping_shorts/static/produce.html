@@ -15120,7 +15120,7 @@ function _lfStop(){ if(_lfTimer){ clearInterval(_lfTimer); _lfTimer=null; } }
 function _lfRender(){
   const box=document.getElementById('longformBox'); if(!box) return;
   const S=_lfState, on=S.rendered, run=(S.phase==='running');
-  const can=(on && !run && S.phase!=='ready');   // 이미 만든 것이 최신이면 다시 누를 일이 없다(문구를 바꾸면 다시 켜진다)
+  const can=(on && !run && S.phase!=='ready' && S.phase!=='blocked');   // 이미 만든 것이 최신이면 다시 누를 일이 없다(문구를 바꾸면 다시 켜진다) · 막힘(완성본 없음)도 못 누른다
   const j=encodeURIComponent(S.job), q='where='+encodeURIComponent(S.where);
   // 장면꾸미기 「롱폼」에서 문구 띠·화살표를 꾸며 두었으면(관제 133) 그걸 굽는다 — 고정 문구 고르기는 숨긴다.
   const sel=S.custom?'<span class="hint" style="display:inline-block;margin:0 6px 8px 0">🎨 장면꾸미기에서 꾸민 롱폼 안내로 만듭니다</span>':('<select id="lfWhere" onchange="lfWhere(this.value)" '+((on&&!run)?'':'disabled ')
@@ -15139,6 +15139,10 @@ function _lfRender(){
       + '<div class="hint" style="line-height:1.7">① 이 영상을 유튜브에 <b>일반(가로) 영상</b>으로 올리고 제목을 <b>구매링크</b>로<br>'
       + '② 그 영상의 <b>'+(S.where==='desc'?'설명란':'댓글')+'</b>에 구매링크를 붙이고<br>'
       + '③ 쇼츠 수정 화면의 <b>관련 동영상</b>에 이 영상을 고르면, 쇼츠 아래에 「구매링크」 버튼이 생깁니다.</div>';
+  }else if(S.phase==='blocked'){
+    // 서버가 "지금은 못 만든다"고 한 경우(완성본 없음·수정 뒤 재렌더 필요·만드는 중) — 2026-10-06 사장님 실사용: 장면을 고친 뒤 바로 누르면
+    //   404 를 받고 "다시 눌러주세요"가 떠서 안 되는 것으로 보였다. 이유를 그대로 보여 주고 버튼을 잠근다. 완성본이 생기면 다시 켜진다.
+    body='<div class="hint">⏸ '+esc(S.msg||'먼저 최종 렌더로 완성본을 만들어 주세요')+'</div>';
   }else if(S.phase==='error'){
     body='<div class="warnBox" style="margin:6px 0">⚠️ '+esc(S.msg||'만들지 못했어요')+' — 다시 눌러주세요.</div>';
   }else{
@@ -15155,7 +15159,8 @@ function _lfApply(d){
   const S=_lfState; S.custom=!!(d&&d.custom);
   if(d && d.state==='ready'){ S.phase='ready'; S.url=d.url; _lfStop(); }
   else if(d && d.state==='running'){ if(S.phase!=='running'){ S.t0=Date.now(); } S.phase='running'; _lfPoll(); }
-  else if(d && (d.state==='error' || (d.ok===false && d.error))){ S.phase='error'; S.msg=d.error||''; _lfStop(); }
+  else if(d && d.state==='error'){ S.phase='error'; S.msg=d.error||''; _lfStop(); }
+  else if(d && d.ok===false && d.error){ S.phase='blocked'; S.msg=d.error; _lfStop(); }   // 만들다 실패한 게 아니라 지금은 못 만드는 상태
   else { S.phase='idle'; _lfStop(); }
   _lfRender();
 }
@@ -15185,7 +15190,7 @@ function lfWhere(v){ _lfState.where=(v==='desc'?'desc':'comment'); _lfState.phas
 async function renderLongform(){
   const S=_lfState;
   if(!S.rendered || !S.job){ if(typeof toast==='function') toast('먼저 최종 렌더로 완성본을 만들어 주세요'); return; }
-  if(S.phase==='running' || S.phase==='ready') return;
+  if(S.phase==='running' || S.phase==='ready' || S.phase==='blocked') return;
   S.phase='running'; S.t0=Date.now(); _lfRender();
   try{
     const r=await fetch('/api/mix/longform_link/'+encodeURIComponent(S.job),{method:'POST',
