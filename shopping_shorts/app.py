@@ -12677,10 +12677,11 @@ async def api_lens_kw_en(request: Request, body: dict):
     Gemini 텍스트 1회(무료 키 풀) — Apify·SerpApi 비용 0."""
     text = str((body or {}).get("text") or "").strip()
     kind = str((body or {}).get("kind") or "query")
+    lang = "zh" if str((body or {}).get("lang") or "") == "zh" else "en"   # 샤오홍슈·도우인 = zh
     if not text:
         return {"ok": True, "main": "", "related": []}
     try:
-        r = await asyncio.to_thread(video_analysis.english_search_terms, text, kind)   # 블로킹 Gemini
+        r = await asyncio.to_thread(video_analysis.english_search_terms, text, kind, lang=lang)   # 블로킹 Gemini
     except Exception as e:                  # noqa: BLE001 — 실패는 빈 결과로(화면은 검색창만 남는다)
         print(f"[kw/en] 실패: {e!r}", file=sys.stderr)
         r = {"main": "", "related": []}
