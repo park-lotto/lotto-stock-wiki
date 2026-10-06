@@ -129,8 +129,9 @@
     /* 하단 네비 */
     .nav{display:flex;justify-content:space-between;margin:18px 0 40px}
     button{font-family:inherit;border:0;border-radius:9px;padding:11px 20px;cursor:pointer;font-size:14px}
-    .btn-prev{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
-    .btn-next{background:var(--grad);color:#fff}
+    /* .btn / .btn.primary = .btn-prev / .btn-next 와 같은 모양(관제 140, produce.html 과 같은 규칙) */
+    .btn-prev,.btn{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
+    .btn-next,.btn.primary{background:var(--grad);color:#fff;border:0}
     button:disabled{opacity:.4;cursor:default}
 
     /* 탭(대본 3모드 등 공용) */
