@@ -308,7 +308,7 @@
       document.body.appendChild(o);
     }
     o.innerHTML = "<div style='background:#161616;color:#eee;border:1px solid #333;border-radius:14px;" +
-      "padding:16px;max-width:720px;width:100%;max-height:82vh;overflow:auto;position:relative'>" +
+      "padding:16px;max-width:1600px;width:96vw;max-height:92vh;overflow:auto;position:relative'>" +   // 크게(2026-10-07 사장님 '화면만큼')
       "<button id='ss-lens-x' type='button' style='position:absolute;" +
       "top:6px;right:12px;background:none;border:none;color:#fff;font-size:22px;cursor:pointer'>✕</button>" +
       "<div style='font-weight:800;margin-bottom:10px'>🔍 원본·유사 레퍼런스</div>" + html + "</div>";
@@ -617,13 +617,19 @@
         if (!d.ok) { _lensOverlay("<div style='padding:20px;color:#e0623d'>❌ " + _esc(d.error || "추적 실패 — 로그인 상태를 확인해 주세요") + "</div>"); return; }
         var items = d.items || [];
         if (!items.length) { _lensOverlay("<div style='padding:20px;color:#aaa'>비슷한 영상을 못 찾았어요. 다른 장면의 링크로 시도해 보세요.</div>"); return; }
-        var h = "<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px'>";
-        for (var i = 0; i < items.length && i < 40; i++) {
+        // 플랫폼별 개수 — 어느 플랫폼이 비었는지 한눈에(2026-10-07 '핀터레스트 왜 안 잡히나')
+        var cnt = {};
+        for (var ci = 0; ci < items.length; ci++) { var pf = items[ci].platform || "?"; cnt[pf] = (cnt[pf] || 0) + 1; }
+        var cs = [];
+        for (var k in cnt) cs.push(_esc(k) + " " + cnt[k]);
+        var h = "<div style='font-size:12px;color:#aaa;margin:-4px 0 10px'>" + items.length + "개 · " + cs.join(" · ") + "</div>" +
+          "<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px'>";
+        for (var i = 0; i < items.length && i < 100; i++) {
           var it = items[i];
           h += "<div style='background:#222;border-radius:10px;overflow:hidden'>" +
             "<a href='" + _esc(it.url) + "' target='_blank' rel='noopener'>" +
-            (it.thumbnail ? "<img data-t64='" + _esc(it.thumbnail) + "' style='width:100%;height:110px;object-fit:cover;display:block;background:#000'>" :
-              "<div style='height:110px;background:#000'></div>") + "</a>" +
+            (it.thumbnail ? "<img data-t64='" + _esc(it.thumbnail) + "' style='width:100%;height:240px;object-fit:cover;display:block;background:#000'>" :
+              "<div style='height:240px;background:#000'></div>") + "</a>" +
             "<div style='padding:6px;font-size:11px'>" +
             "<div style='color:#8ab4f8'>" + _esc(it.platform || "") + "</div>" +
             "<div style='color:#ccc;max-height:30px;overflow:hidden'>" + _esc((it.title || "").slice(0, 60)) + "</div>" +
