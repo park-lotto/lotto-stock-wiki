@@ -44,6 +44,11 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/app.py:_analysis_state": {
+    "at": "2026-10-06 20:52",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
   "shopping_shorts/app.py:api_buffer_schedule": {
     "at": "2026-10-04 11:13",
     "card": 114,
@@ -53,6 +58,11 @@
     "at": "2026-10-04 11:05",
     "card": 113,
     "track": "단어강조"
+  },
+  "shopping_shorts/app.py:api_storyboard_prepare": {
+    "at": "2026-10-06 20:47",
+    "card": 147,
+    "track": "씨앗1단계"
   },
   "shopping_shorts/buffer_api.py": {
     "at": "2026-10-04 11:13",
@@ -119,6 +129,11 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/static/produce.html:_seedFootageOff": {
+    "at": "2026-10-06 20:48",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
   "shopping_shorts/static/scene_play.js:planClips": {
     "at": "2026-10-03 23:09",
     "card": 106,
@@ -139,10 +154,25 @@
     "card": 138,
     "track": "씨앗자동배치뿌리"
   },
+  "shopping_shorts/store.py:autoload_status": {
+    "at": "2026-10-06 20:52",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
   "shopping_shorts/story_writer.py:make_drafts": {
     "at": "2026-09-29 19:18",
     "card": 33,
     "track": "장면분량"
+  },
+  "shopping_shorts/storyboard.py:inventory": {
+    "at": "2026-10-06 20:47",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
+  "shopping_shorts/storyboard.py:make_boards": {
+    "at": "2026-10-06 20:47",
+    "card": 147,
+    "track": "씨앗1단계"
   },
   "shopping_shorts/tests": {
     "at": "2026-09-29 22:57",
