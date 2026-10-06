@@ -1371,5 +1371,6 @@ def storyboard_to_beat_sources(slots, seg_lookup=None):
                    **({"sig_rank": int(sl["sig_rank"]), "signal": str(sl.get("signal") or "")}
                       if str(sl.get("sig_rank") or "").isdigit() else {}),
                    # 2단계에서 미리 고른 짤 번호(관제 143) — meme_slots 가 이 짤을 먼저 쓴다(sig_rank 와 같은 길)
-                   **({"meme_pick": int(sl["meme_pick"])} if str(sl.get("meme_pick") or "").isdigit() else {})})
+                   # 짤·효과음 고름 칸(meme_pick·sfx_pick 등)은 storyboard.carry_picks 한 곳이 정한다
+                   **__import__("shopping_shorts.storyboard", fromlist=["carry_picks"]).carry_picks(sl)})
     return {"script": "\n".join(lines), "beat_sources": bs}

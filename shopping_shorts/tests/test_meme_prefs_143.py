@@ -37,12 +37,13 @@ def _slots(beats, prefs=None, key="k"):
 
 # ── 판단(storyboard) ─────────────────────────────────────────────
 
-def test_우선_짤부터_순서대로_한편에_같은짤_두번_없음():
+def test_우선_짤_중에서만_한편에_같은짤_두번_없음():
+    # 10-06 사장님: 순번(rank 1 먼저) 대신 ⭐ 중 랜덤 — 고르기는 storyboard.meme_choose
     beats = [_beat(0, 1, "와", "와 이거"), _beat(1, 1, "와", "와 이거")]
     prefs = sb.meme_prefs_by_emotion([{"asset_id": 13, "emotion": "놀람", "rank": 1},
                                       {"asset_id": 12, "emotion": "놀람", "rank": 2}])
     _p, r = _slots(beats, prefs)
-    assert r[0]["asset_id"] == 13 and r[1]["asset_id"] == 12
+    assert {r[0]["asset_id"], r[1]["asset_id"]} == {12, 13}
 
 
 def test_우선_짤_없으면_종전_해시_그대로():

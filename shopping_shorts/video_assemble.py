@@ -3630,8 +3630,10 @@ def sfx_events_for(timeline, sfx_paths):
         #   _resolve_sfx_paths가 팩이 있을 때 sfx_paths엔 사람이 고른(manual) 것만 남겼다.
         #   그 비트는 사람 것을 쓰고, 팩은 그 비트를 건너뛴다.
         from shopping_shorts import sfx_pack
-        manual = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"])}
-        events += sfx_pack.events(timeline, pack, manual_beats=manual)
+        # 줄 효과음(match_type "line", 관제 143) 칸은 팩이 **첫 발만** 비운다(같은 순간 두 발 금지), 사람이 3단계에서 고른 옛 효과음 칸은 통째로
+        line = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"]) and (b.get("sfx") or {}).get("match_type") == "line"}
+        manual = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"])} - line
+        events += sfx_pack.events(timeline, pack, manual_beats=manual, first_beats=line)
     for b in timeline or []:
         sfx = b.get("sfx")
         path = sfx_paths.get(b["beat_idx"])

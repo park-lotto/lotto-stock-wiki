@@ -21180,6 +21180,49 @@ def _sb_run(job_id, name, fn):
     threading.Thread(target=lambda: _ctx.run(_go), daemon=True).start()
 
 
+def _sb_picks(cid, key, bd):
+    """2단계 줄에 실제 짤·효과음을 미리 싣는다(관제 143) — 고르기는 storyboard.meme_preview·sfx_preview 한 곳.
+    스위치 meme_enabled 뒤(끄면 보드 그대로). 같은 key(작업) = 같은 짤·소리. 못 고른 이유는 로그로."""
+    if not isinstance(bd, dict) or not isinstance(bd.get("slots"), list):
+        return bd
+    from shopping_shorts import storyboard as _sbm
+    st = Store(DB_PATH)
+    job = {"customer_id": int(cid or 0)}
+    if not mix_pipeline._meme_on(st, job):
+        return bd
+    _log = lambda m: print("[storyboard-picks] %s %s" % (key, m), file=sys.stderr)
+    try:
+        pool = mix_pipeline._meme_pool(st)
+    except Exception as e:      # noqa: BLE001 — 팩을 못 읽으면 짤 미리보기 없음(이유 한 줄)
+        _log("짤 팩 읽기 실패: %r" % e)
+        pool = {}
+    _sbm.meme_preview(bd["slots"], pool, mix_pipeline._meme_prefs(st, cid), key=str(key), log=_log)
+    try:
+        bank = mix_pipeline._sfx_bank(st)
+    except Exception as e:      # noqa: BLE001
+        _log("효과음 서랍 읽기 실패: %r" % e)
+        bank = {}
+    _sbm.sfx_preview(bd["slots"], bank, key=str(key), log=_log)
+    return bd
+
+
+@app.post("/api/produce/storyboard/{job_id}/picks")
+def api_storyboard_picks(request: Request, job_id: str, body: dict):
+    """화면이 줄의 짤·효과음을 바꾸거나 뺀 뒤 부른다 — body {slots:[…]} → 같은 고르기 함수(_sb_picks)로 다시 채운 slots.
+    화면은 고르지 않는다(판단 두 벌 금지). 사람이 고른 것(…_auto 없음)·뺀 것(…_off)은 그대로 돌아온다."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    key, _ex, _jid = _sb_job(request, job_id)
+    if not key:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    slots = (body or {}).get("slots")
+    if not isinstance(slots, list) or len(slots) > 60:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "slots 목록이 필요해요"})
+    bd = _sb_picks(getattr(request.state, "customer_id", 0), key, {"slots": [dict(x) if isinstance(x, dict) else {} for x in slots]})
+    return {"ok": True, "slots": bd["slots"]}
+
+
 @app.get("/api/produce/storyboard/{job_id}")
 def api_storyboard_get(request: Request, job_id: str):
     """재료 장면 카드(썸네일·초·설명) + 장면 목록·스타일 추천(있으면) + 스타일 카드 + 진행 중인 일."""
@@ -21254,8 +21297,10 @@ def api_storyboard_prepare(request: Request, job_id: str):
     if inv_fresh and auto_fresh:
         return {"ok": True, "started": False}
 
+    _cid = getattr(request.state, "customer_id", 0)
+
     def _auto():
-        _sb_run(job_id, "board:auto", lambda: _sb.make_boards(DB_PATH, job_id, ["auto"], "", "", ex=_ex).get("auto"))
+        _sb_run(job_id, "board:auto", lambda: _sb_picks(_cid, job_id, _sb.make_boards(DB_PATH, job_id, ["auto"], "", "", ex=_ex).get("auto")))
 
     if inv_fresh:
         _auto()
@@ -21279,8 +21324,9 @@ def api_storyboard_boards(request: Request, job_id: str, body: dict):
         return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
     star, roles = str(body.get("star") or ""), str(body.get("roles") or "")
+    _cid = getattr(request.state, "customer_id", 0)
     for k in [str(x) for x in (body.get("keys") or [])][:6]:
-        _sb_run(job_id, "board:" + k, lambda k=k: _sb.make_boards(DB_PATH, job_id, [k], star, roles, ex=_ex).get(k))
+        _sb_run(job_id, "board:" + k, lambda k=k: _sb_picks(_cid, job_id, _sb.make_boards(DB_PATH, job_id, [k], star, roles, ex=_ex).get(k)))
     return {"ok": True}
 
 
@@ -21295,7 +21341,8 @@ def api_storyboard_insert(request: Request, job_id: str, body: dict):
         return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
     name = "insert:" + str(body.get("name") or "x")[:40]
-    _sb_run(job_id, name, lambda: _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}, ex=_ex))
+    _cid = getattr(request.state, "customer_id", 0)
+    _sb_run(job_id, name, lambda: _sb_picks(_cid, job_id, _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}, ex=_ex)))
     return {"ok": True}
 
 
@@ -22951,6 +22998,45 @@ def _meme_prefs_clean(store, cid):
             for emo, ids in by.items() for r, i in enumerate([x for x in ids if pool.get(x) == emo])]
 
 
+def _sfx_bank_asset(store, aid, cid):
+    """효과음 서랍의 소리 하나(사장님 0, asset_type sfx, category ∈ storyboard.SFX_CATS) — 스위치 meme_enabled 열린 회원만. 없으면 None."""
+    from shopping_shorts import storyboard as _sbm
+    if not mix_pipeline._meme_on(store, {"customer_id": cid}):
+        return None
+    try:
+        a = store.get_scene_asset(int(aid), customer_id=0)
+    except (TypeError, ValueError):
+        return None
+    if a and a.get("asset_type") == "sfx" and str(a.get("category") or "").strip() in _sbm.SFX_CATS:
+        return a
+    return None
+
+
+@app.get("/api/sfx/bank")
+def api_sfx_bank(request: Request):
+    """효과음 서랍 — {cats:[{name,count}](분류 탭 순서 그대로, 0개도), items:[{id,cat,title,dur}]}. 재생은 /api/sfx/{id}/media."""
+    from shopping_shorts import storyboard as _sbm
+    cid, denied = _meme_gate(request)
+    if denied:
+        return denied
+    bank = mix_pipeline._sfx_bank(Store(DB_PATH))
+    items = [{"id": a["asset_id"], "cat": c, "title": a.get("title") or "", "dur": round(float(a.get("duration") or 0), 2)}
+             for c in _sbm.SFX_CATS for a in bank.get(c) or []]
+    return {"ok": True, "cats": [{"name": c, "count": len(bank.get(c) or [])} for c in _sbm.SFX_CATS], "items": items}
+
+
+@app.get("/api/sfx/{asset_id}/media")
+def api_sfx_media(request: Request, asset_id: int):
+    """효과음 서랍 소리 파일 — 스위치 열린 회원만, 서랍 자산만."""
+    cid, denied = _meme_gate(request)
+    if denied:
+        return denied
+    a = _sfx_bank_asset(Store(DB_PATH), asset_id, cid)
+    if not a or not a.get("media_path") or not Path(a["media_path"]).exists():
+        return Response(status_code=404, content=b"")
+    return FileResponse(str(a["media_path"]))
+
+
 @app.get("/api/meme/pack")
 def api_meme_pack(request: Request):
     """밈팩 목록 — {emotions:[{name,count}], clips:[{id,emotion,dur,title}], prefs:[…]}. 표지·재생은 /api/meme/{id}/poster·media."""
@@ -23067,11 +23153,13 @@ def api_produce_mix_meme(job_id: str, request: Request, body: dict):
     if cw and (cw or {}).get("match_type") != "meme":
         return JSONResponse(status_code=409, content={"ok": False, "error": "이 칸엔 다른 끼움 장면이 있어요 — 먼저 빼 주세요"})
     aid = body.get("asset_id")
+    _lj = {"customer_id": job.get("customer_id", 0), "job_id": job_id}
     if aid is None:
         hit.pop("cutaway", None)
         hit["meme_off"] = 1
+        mix_pipeline._apply_line_sfx(plan, store, _lj)      # 짤을 빼면 짤 효과음도 빠진다(storyboard.sfx_slots)
         _save_render_inputs(store, job_id, edit_plan=plan)
-        return {"ok": True, "cutaway": None}
+        return {"ok": True, "cutaway": None, "sfx": hit.get("sfx")}
     a = _meme_asset(store, aid)
     if not a:
         return JSONResponse(status_code=422, content={"ok": False, "error": "짤 팩에 없는 짤이에요"})
@@ -23083,8 +23171,9 @@ def api_produce_mix_meme(job_id: str, request: Request, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "짤이 %.2f초보다 짧아요" % head})
     hit.pop("meme_off", None)
     hit["cutaway"] = _sbm.meme_cut({"asset_id": a["id"], "owner": 0}, head, str(a["tone"]).strip(), manual=True)
+    mix_pipeline._apply_line_sfx(plan, store, _lj)          # 짤을 넣으면 그 감정 리액션 효과음도(storyboard.sfx_slots)
     _save_render_inputs(store, job_id, edit_plan=plan)
-    return {"ok": True, "cutaway": hit["cutaway"]}
+    return {"ok": True, "cutaway": hit["cutaway"], "sfx": hit.get("sfx")}
 
 
 def _meme_pack_page(request: Request):
@@ -23594,6 +23683,7 @@ def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     pos = body.get("position")
     if aid is None and pos is None:
         hit.pop("sfx", None)                       # 종전 동작 — 빼기
+        hit["sfx_off"] = 1                         # 줄 효과음 자동(storyboard.sfx_slots)이 다시 넣지 않게
         _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True}
     from shopping_shorts import scene_match as _sm
@@ -23604,9 +23694,18 @@ def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     if aid is not None:
         cid = job.get("customer_id", 0)
         asset = store.get_scene_asset(int(aid), customer_id=cid)
+        bank_a = _sfx_bank_asset(store, aid, cid)         # 효과음 서랍 소리면(관리자 작업 포함) 줄 효과음 모양으로
+        if bank_a:
+            # 효과음 서랍(사장님 0) 소리 — 줄 효과음 모양(storyboard.sfx_line) 한 곳, 사람이 고름(manual)
+            from shopping_shorts import storyboard as _sbm
+            hit.pop("sfx_off", None)
+            hit["sfx"] = _sbm.sfx_line(bank_a["id"], str(bank_a.get("category") or ""), manual=True)
+            _save_render_inputs(store, job_id, edit_plan=plan)
+            return {"ok": True, "sfx": hit["sfx"]}
         if not asset or asset.get("asset_type") != "sfx":
             return JSONResponse(status_code=422, content={
                 "ok": False, "error": "그 효과음을 찾을 수 없어요"})
+        hit.pop("sfx_off", None)
         cur["asset_id"] = int(aid)
         cur["match_type"] = "manual"               # 사람이 고른 것 — 재매칭이 덮지 않게 표시
         cur.setdefault("position", _sm._sfx_position(hit.get("role")))

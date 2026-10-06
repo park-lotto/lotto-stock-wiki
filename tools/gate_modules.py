@@ -21,8 +21,10 @@ from pathlib import Path
 # edit_plan 은 seg_snap 뒤·screen_clips 앞(관제 141, 2026-10-06): 화면 데이터 입구(api_mix_scene_lab_data — 관문이 app 에서
 #   바꿔 끼우는 함수)가 장면 표 주인 edit_plan.scene_table 을 부른다. 목록에 없으면 서버 옛 edit_plan 이 쓰여 AttributeError
 #   로 작업이 전부 건너뛴다(관제 102 와 같은 함정). edit_plan 은 config·comment_gen·shot_roles 만 import 한다.
+# sfx_pack 은 video_assemble 앞(관제 143, 2026-10-06): video_assemble.sfx_events_for 가 새 인자 first_beats 로 sfx_pack.events 를
+#   부르는데 목록에 없어 서버 옛 sfx_pack 이 쓰였고, 소리 대조가 작업 6개 전부 TypeError 로 건너뛰어 관문이 실패했다(관제 102 와 같은 함정).
 PATCH_MODULES = ("config", "voice_presets", "typecast_tts", "fish_tts", "audio_post", "tts_timestamps", "tts", "tts_joined",
-                 "frame_match", "seg_snap", "edit_plan", "screen_clips", "video_assemble", "clean_base", "mix_pipeline",
+                 "frame_match", "seg_snap", "edit_plan", "screen_clips", "sfx_pack", "video_assemble", "clean_base", "mix_pipeline",
                  "export_bundle", "capcut_draft")
 
 # 모듈 말고 같이 올릴 것: screen_clips 가 자기 옆(_HERE)의 러너·화면 코드를 부른다 / app 은 굽기 함수만 바꿔 끼운다.
