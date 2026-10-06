@@ -3534,6 +3534,7 @@ def _beat_timeline(edit_plan, tts_paths):
             "cap_xy": beat.get("cap_xy"),                  # 드래그로 옮긴 장면별 자유 좌표(2026-08-31)
             "cap_xy_segs": beat.get("cap_xy_segs"),        # 화면에 보이는 자막 한 줄별 자유 좌표
             "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
+            "pack_edit": beat.get("pack_edit"),            # 2단계에서 고른 기본 팩 소리 빼기·바꾸기 — sfx_events_for 가 sfx_pack.events 로 넘긴다
             "head_trim": beat.get("head_trim", 0.0),
             # ★CTA 표시(2026-09-30 관제 45) — cta_cut_sec가 이 타임라인으로 _is_cta를 본다. 안 실으면
             #   칸에 박은 표시가 여기서 사라져 '마무리' 칸 CTA를 또 못 자른다(라이브 3b4111969ac4로 발견).
@@ -3633,7 +3634,8 @@ def sfx_events_for(timeline, sfx_paths):
         # 줄 효과음(match_type "line", 관제 143) 칸은 팩이 **첫 발만** 비운다(같은 순간 두 발 금지), 사람이 3단계에서 고른 옛 효과음 칸은 통째로
         line = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"]) and (b.get("sfx") or {}).get("match_type") == "line"}
         manual = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"])} - line
-        events += sfx_pack.events(timeline, pack, manual_beats=manual, first_beats=line)
+        _pe = {b["beat_idx"]: b["pack_edit"] for b in (timeline or []) if b.get("pack_edit")}   # 2단계 팩 소리 빼기·바꾸기(관제 143 확장)
+        events += sfx_pack.events(timeline, pack, manual_beats=manual, first_beats=line, pack_edit=_pe)
     for b in timeline or []:
         sfx = b.get("sfx")
         path = sfx_paths.get(b["beat_idx"])
