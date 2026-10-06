@@ -4731,7 +4731,8 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
             **({"sig_rank": int(srcs[i]["sig_rank"]), "signal": str(srcs[i].get("signal") or "")}
                if str(srcs[i].get("sig_rank") or "").isdigit() else {}),
             # 2단계에서 미리 고른 짤(관제 143) — meme_slots 가 먼저 쓴다
-            **({"meme_pick": int(srcs[i]["meme_pick"])} if str(srcs[i].get("meme_pick") or "").isdigit() else {}),
+            # 짤·효과음 고름 칸(meme_pick·sfx_pick 등)은 storyboard.carry_picks 한 곳이 정한다
+            **__import__("shopping_shorts.storyboard", fromlist=["carry_picks"]).carry_picks(srcs[i]),
         })
         prev_sid = refs[-1]["seg_id"]
     if not beats:

@@ -301,7 +301,7 @@ def resolve(store, job):
             "mute_beats": st["mute_beats"]}
 
 
-def plan_events(timeline, manual_beats=(), density="normal"):
+def plan_events(timeline, manual_beats=(), density="normal", first_beats=()):
     """[(소리, 절대초, 자막)] — 파일 경로 없이 '무엇을 언제'만. 테스트·검증이 이걸 본다.
 
     영상 시작 = 오프너 · 첫 칸→둘째 칸 넘김 = 휙+틱 · 그 뒤 자막 줄이 바뀔 때마다 1발(칸 첫 줄은 칸 역할의 소리).
@@ -315,9 +315,10 @@ def plan_events(timeline, manual_beats=(), density="normal"):
     density = density if density in DENSITY_MAX_SILENCE else "normal"
     max_silence = DENSITY_MAX_SILENCE[density]
     manual = set(manual_beats or ())
+    line_first = set(first_beats or ())      # 줄 효과음(짤 리액션 등)이 그 줄 시작을 맡은 칸 — 그 순간의 팩 소리만 비운다
     total = sum(float(b["dur"]) for b in tl)
-    ev = [("opener", OPENER_AT, "")]
-    if len(tl) >= 2 and tl[1]["beat_idx"] not in manual:
+    ev = [] if tl[0]["beat_idx"] in line_first else [("opener", OPENER_AT, "")]
+    if len(tl) >= 2 and tl[1]["beat_idx"] not in manual and tl[1]["beat_idx"] not in line_first:
         t = float(tl[1]["t0"])
         ev += [("whoosh", max(0.0, t - WHOOSH_LEAD), ""), ("tick", t + TICK_LAG, "")]
     used = {}           # 순서별로 **영상 전체에서 이어 센다** — 칸마다 새로 세면 앞 몇 칸만 쓰인다(실측: 둥 19%)
@@ -340,7 +341,9 @@ def plan_events(timeline, manual_beats=(), density="normal"):
                 continue
             if density == "low" and k > 0:
                 continue        # 적게: 칸의 첫 자막 줄에만
-            if bi == 1 and k == 0:
+            if k == 0 and b["beat_idx"] in line_first:
+                pass            # 줄 시작은 줄 효과음이 맡았다 — 긴 줄 한가운데 한 발은 아래에서 그대로 본다
+            elif bi == 1 and k == 0:
                 pass        # 둘째 칸 첫 줄은 첫 넘김 휙+틱이 맡았다 — 줄 한가운데는 아래에서 본다
             elif k == 0 and first:
                 ev.append((first, start, seg))
@@ -356,7 +359,7 @@ def plan_events(timeline, manual_beats=(), density="normal"):
     return ev
 
 
-def events(timeline, pack, manual_beats=()):
+def events(timeline, pack, manual_beats=(), first_beats=()):
     """[(경로, 절대초, 보정배)] — sfx_events_for가 부른다. pack: resolve()의 결과.
     세 번째 칸(보정배)은 렌더·캡컷이 효과음 볼륨에 곱한다(없으면 1.0 — 종전 이벤트와 호환)."""
     if not pack or not pack.get("dir"):
@@ -364,7 +367,7 @@ def events(timeline, pack, manual_beats=()):
     skip = set(manual_beats or ()) | set(pack.get("mute_beats") or ())      # 끈 칸은 사람이 고른 칸처럼 건너뛴다
     level_mul = 10 ** (LEVEL_DB.get(pack.get("level") or "normal", 0.0) / 20.0)
     out = []
-    for slot, t, _ in plan_events(timeline, skip, density=pack.get("density") or "normal"):
+    for slot, t, _ in plan_events(timeline, skip, density=pack.get("density") or "normal", first_beats=first_beats):
         path = os.path.join(pack["dir"], slot + ".wav")
         out.append((path, t, _gain_for(path, slot) * level_mul))
     return out
