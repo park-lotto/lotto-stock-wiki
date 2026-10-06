@@ -12669,6 +12669,24 @@ async def api_lens_kw_expand(request: Request, keyword: str = Form(""),
     return {"ok": True, "keyword": kw, "candidates": cands}
 
 
+@app.post("/api/lens/kw/en")
+async def api_lens_kw_en(request: Request, body: dict):
+    """인스타 검색용 영어 검색어(관제 151). 확장프로그램이 JSON으로 부른다.
+    body: {"text": 검색창 입력 또는 게시물 설명글, "kind": "query"|"caption"}
+    → {"ok", "main", "related"}. 판단(영어·최대 3단어)은 video_analysis.english_search_terms 한 곳.
+    Gemini 텍스트 1회(무료 키 풀) — Apify·SerpApi 비용 0."""
+    text = str((body or {}).get("text") or "").strip()
+    kind = str((body or {}).get("kind") or "query")
+    if not text:
+        return {"ok": True, "main": "", "related": []}
+    try:
+        r = await asyncio.to_thread(video_analysis.english_search_terms, text, kind)   # 블로킹 Gemini
+    except Exception as e:                  # noqa: BLE001 — 실패는 빈 결과로(화면은 검색창만 남는다)
+        print(f"[kw/en] 실패: {e!r}", file=sys.stderr)
+        r = {"main": "", "related": []}
+    return {"ok": True, "main": r.get("main", ""), "related": r.get("related", [])}
+
+
 @app.post("/api/lens/cn/search")
 async def api_lens_cn_search(request: Request, keyword: str = Form(""),
                               max_results: int = Form(8)):
