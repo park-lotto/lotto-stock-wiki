@@ -9927,11 +9927,11 @@ def _longform_job(job_id):
     return job, job["video_path"], None
 
 
-def _longform_run(src, job_dir, where):
+def _longform_run(src, job_dir, where, voice=None, customer_id=0):
     from shopping_shorts import link_longform
     with _LONGFORM_LOCK:
         try:
-            link_longform.render_link_longform(src, job_dir, where)
+            link_longform.render_link_longform(src, job_dir, where, voice=voice, customer_id=customer_id)
         except Exception:      # noqa: BLE001 — 사유는 render_link_longform 이 .err 와 stderr 에 남겼다(화면이 읽는다)
             pass
 
@@ -9967,8 +9967,13 @@ def api_mix_longform_link(job_id: str, body: dict):
     if st["state"] in ("ready", "running"):
         return st
     job_dir = _MIX_WORK_DIR / job_id
+    if link_longform.tts_text(link_longform.load_layout(job_dir)):
+        # 읽어 줄 말이 있으면 성우 키가 있어야 한다 — 미리듣기·렌더와 같은 판정(_need_own_key_or_402)
+        _blocked = _need_own_key_or_402(_job.get("customer_id"), tts=True, voice=_job.get("voice"))
+        if _blocked:
+            return _blocked
     link_longform.mark_running(job_dir)
-    threading.Thread(target=_longform_run, args=(src, job_dir, where), daemon=True).start()
+    threading.Thread(target=_longform_run, args=(src, job_dir, where, _job.get("voice"), int(_job.get("customer_id") or 0)), daemon=True).start()
     return _longform_status(job_id, src, where)
 
 
@@ -12668,6 +12673,40 @@ async def api_lens_kw_expand(request: Request, keyword: str = Form(""),
     except Exception:                       # noqa: BLE001 — 실패해도 렌즈는 정상
         cands = []
     return {"ok": True, "keyword": kw, "candidates": cands}
+
+
+@app.post("/api/lens/kw/en")
+async def api_lens_kw_en(request: Request, body: dict):
+    """인스타 검색용 영어 검색어(관제 151). 확장프로그램이 JSON으로 부른다.
+    body: {"text": 검색창 입력 또는 게시물 설명글, "kind": "query"|"caption"}
+    → {"ok", "main", "related"}. 판단(영어·최대 3단어)은 video_analysis.english_search_terms 한 곳.
+    Gemini 텍스트 1회(무료 키 풀) — Apify·SerpApi 비용 0."""
+    text = str((body or {}).get("text") or "").strip()
+    kind = str((body or {}).get("kind") or "query")
+    lang = "zh" if str((body or {}).get("lang") or "") == "zh" else "en"   # 샤오홍슈·도우인 = zh
+    if not text:
+        return {"ok": True, "main": "", "related": []}
+    try:
+        r = await asyncio.to_thread(video_analysis.english_search_terms, text, kind, lang=lang)   # 블로킹 Gemini
+    except Exception as e:                  # noqa: BLE001 — 실패는 빈 결과로(화면은 검색창만 남는다)
+        print(f"[kw/en] 실패: {e!r}", file=sys.stderr)
+        r = {"main": "", "related": []}
+    return {"ok": True, "main": r.get("main", ""), "related": r.get("related", [])}
+
+
+@app.post("/api/lens/kw/multi")
+async def api_lens_kw_multi(request: Request, body: dict):
+    """인스타 검색 화면의 '비슷한 검색어' 5개 × 5개 언어(ko·en·ja·zh·ru) — 관제 151, 2026-10-07 사장님.
+    판단은 렌즈 모달과 같은 expand_search_keywords 한 곳. 확장프로그램이 JSON으로 부른다."""
+    text = str((body or {}).get("text") or "").strip()
+    if not text:
+        return {"ok": True, "candidates": []}
+    try:
+        cands = await asyncio.to_thread(expand_search_keywords, text, n=5)   # 블로킹 Gemini
+    except Exception as e:                  # noqa: BLE001 — 실패는 빈 결과(화면은 검색창만 남는다)
+        print(f"[kw/multi] 실패: {e!r}", file=sys.stderr)
+        cands = []
+    return {"ok": True, "candidates": cands}
 
 
 @app.post("/api/lens/cn/search")
@@ -21208,6 +21247,29 @@ def _sb_picks(cid, key, bd):
         _log("효과음 서랍 읽기 실패: %r" % e)
         bank = {}
     _sbm.sfx_preview(bd["slots"], bank, key=str(key), log=_log)
+    # 기본 효과음팩 미리보기 — 팩 결정(resolve)·배치(plan_events)는 sfx_pack 한 곳. 줄 효과음 있는 줄은 첫 발을 비운다.
+    try:
+        from shopping_shorts import sfx_pack as _sp
+        _job, _sid = None, None
+        _k = str(key or "")
+        if _k.startswith("w-"):
+            _w = st.get_produce_work(_k[2:], customer_id=int(cid or 0)) or {}
+            _sid = (_w.get("state") or {}).get("script_style_id")
+            _jid = str(_w.get("job_id") or "").strip()
+            _job = st.get_mix_job(_jid) if _jid else None
+        else:
+            _job = st.get_mix_job(_k) if _k else None
+        if _job and int(_job.get("customer_id") or 0) != int(cid or 0):
+            _job = None
+        _slots = [s if isinstance(s, dict) else {} for s in bd["slots"]]
+        _pack = _sp.preview_pack(st, cid, [s.get("slot") for s in _slots], job=_job, style_id=_sid)
+        _first = [i for i, s in enumerate(_slots) if s.get("sfx_pick") and not s.get("sfx_off")]
+        _rows = _sp.preview_lines([{"role": s.get("slot"), "text": s.get("line")} for s in _slots], _pack, _first)
+        for s, r in zip(_slots, _rows):
+            s["pack_sfx"] = r
+        bd["pack_sfx_on"] = bool(_pack)
+    except Exception as e:      # noqa: BLE001 — 팩 미리보기 실패는 줄 효과음에 영향 없게(이유 한 줄)
+        _log("효과음팩 미리보기 실패: %r" % e)
     return bd
 
 
@@ -21225,7 +21287,7 @@ def api_storyboard_picks(request: Request, job_id: str, body: dict):
     if not isinstance(slots, list) or len(slots) > 60:
         return JSONResponse(status_code=422, content={"ok": False, "error": "slots 목록이 필요해요"})
     bd = _sb_picks(getattr(request.state, "customer_id", 0), key, {"slots": [dict(x) if isinstance(x, dict) else {} for x in slots]})
-    return {"ok": True, "slots": bd["slots"]}
+    return {"ok": True, "slots": bd["slots"], "pack_sfx_on": bd.get("pack_sfx_on")}
 
 
 @app.get("/api/produce/storyboard/{job_id}")

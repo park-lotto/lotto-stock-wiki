@@ -323,3 +323,80 @@ def test_admin_page_has_no_dead_refresh_call(_=None):
     # 갱신은 한 곳에서 정한다(0순위-B) — 실제 이름 둘을 그 안에서 부른다
     body = html.split("async function refreshCustomers()", 1)[1][:260]
     assert "load()" in body and "renderCustomers()" in body, body
+
+
+# ── 👻 유령 칸 자동 교체(관제 142, 2026-10-06 사장님 승인) ─────────────────────
+# 실측: 2칸 꽉 찬 회원 19명 중 7명은 한 칸이 1시간도 안 쓰이고 버려진 칸(시크릿 창·쿠키 삭제로 도장이 사라짐).
+def _age(st, cid, slot, first_ago, last_ago):
+    """칸의 첫 접속·마지막 접속을 '지금으로부터 몇 초 전'으로 돌려놓는다."""
+    import time
+    now = int(time.time())
+    with st._conn() as c:
+        c.execute("UPDATE customer_devices SET first_seen=?, last_seen=? WHERE customer_id=? AND slot=?",
+                  (now - first_ago, now - last_ago, cid, slot))
+
+
+def test_ghost_slot_is_replaced_by_new_pc(st):
+    st.device_register(9, "used", PC, "1.1.1.1")
+    st.device_register(9, "ghost", PC, "1.1.1.1")
+    _age(st, 9, 1, 30 * 86400, 0)              # 1번: 한 달째 매일 쓰는 PC
+    _age(st, 9, 2, 3 * 86400, 3 * 86400 - 30)  # 2번: 30초 쓰고 3일째 안 보임 = 유령
+    ok, slot, why = st.device_register(9, "new", PC, "1.1.1.1")
+    assert (ok, slot) == (True, 2), why
+    ids = {d["slot"]: d["device_id"] for d in st.device_list(9)}
+    assert ids == {1: "used", 2: "new"}, "쓰던 PC는 남고 유령 칸만 새 PC로 바뀌어야 한다"
+    assert st.device_check(9, "ghost", PC, "1.1.1.1")[0] is False
+
+
+def test_two_real_pcs_are_never_replaced(st):
+    """둘 다 1시간 넘게 쓴 PC면 아무리 오래 안 봐도 교체 안 된다 — 돌려쓰기 방지는 그대로."""
+    st.device_register(9, "a", PC, "1.1.1.1")
+    st.device_register(9, "b", PC, "2.2.2.2")
+    _age(st, 9, 1, 40 * 86400, 30 * 86400)     # 10일 쓰고 30일째 안 봄
+    _age(st, 9, 2, 5 * 86400, 0)
+    ok, slot, why = st.device_register(9, "c", PC, "3.3.3.3")
+    assert ok is False and "2대" in why
+
+
+def test_short_but_recent_slot_is_not_a_ghost(st):
+    """방금 등록한(24시간 안) 칸은 짧게 썼어도 유령이 아니다 — 등록 직후 세 번째는 여전히 막힌다."""
+    st.device_register(9, "a", PC, "1.1.1.1")
+    st.device_register(9, "b", PC, "2.2.2.2")
+    _age(st, 9, 2, 3600, 3570)                 # 30초 쓰고 1시간 전
+    assert st.device_register(9, "c", PC, "3.3.3.3")[0] is False
+
+
+def test_oldest_ghost_goes_first(st):
+    st.device_register(9, "g1", PC, "1.1.1.1")
+    st.device_register(9, "g2", PC, "1.1.1.1")
+    _age(st, 9, 1, 2 * 86400, 2 * 86400)       # 둘 다 유령, 1번이 덜 오래됨
+    _age(st, 9, 2, 9 * 86400, 9 * 86400)
+    assert st.device_register(9, "new", PC, "1.1.1.1")[:2] == (True, 2)
+
+
+def test_ghost_rule_lives_in_one_place():
+    """유령 판정 숫자는 store 한 곳에만 — app.py·화면에 같은 숫자를 다시 적지 않는다."""
+    src = (pathlib.Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
+    assert "GHOST_MAX_USE" not in src.replace("Store.GHOST_MAX_USE", "")
+    assert Store.GHOST_MAX_USE == 3600 and Store.GHOST_IDLE == 86400
+
+
+def test_register_api_replaces_ghost_end_to_end(client, monkeypatch):
+    """실제 HTTP 경로: 마이페이지 '이 PC 등록하기' → API → DB. 고객이 보는 문구까지 확인한다."""
+    c, app_mod = client
+    st = Store(app_mod.DB_PATH)
+    st.device_reset(4250)
+    st.device_register(4250, "a" * 32, PC, "1.1.1.1")
+    st.device_register(4250, "b" * 32, PC, "1.1.1.1")
+    _age(st, 4250, 1, 20 * 86400, 0)
+    _age(st, 4250, 2, 5 * 86400, 5 * 86400 - 10)        # 10초 쓰고 5일째 안 보임
+    monkeypatch.setattr(app_mod, "_AUTH_ON", True)     # 로컬은 기본 꺼짐 → 전원 관리자(핸드오프 함정)
+    monkeypatch.setattr(app_mod, "access_level", lambda cid, cust=None: "full")   # 유료 회원으로
+    _login(c, app_mod, 4250)
+    c.cookies.set(app_mod._DEVICE_COOKIE, "c" * 32)
+    r = c.post("/api/my/devices/register", headers={"user-agent": PC})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["ok"] and body["slot"] == 2 and "바꿨어요" in body["message"], body
+    assert {d["slot"]: d["device_id"] for d in st.device_list(4250)} == {1: "a" * 32, 2: "c" * 32}
+    st.device_reset(4250)

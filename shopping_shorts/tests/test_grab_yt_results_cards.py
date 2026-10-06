@@ -49,7 +49,9 @@ def test_쇼츠는_종전대로_켜지고_카드모드가_아니다():
 def test_검색결과에서는_쇼츠링크만_잡고_플로팅을_걷는다():
     s = LOGIC.read_text(encoding="utf-8")
     assert "ytr ? 'a[href*=\"/shorts/\"], a#thumbnail[href*=\"/watch?v=\"]'" in s
-    assert "if (_ytResults()) { _ytResultsTick(); return; }" in s
+    # 검색결과에선 카드 📥만 달고 끝낸다 — 관제 151로 검색어 판·관련 검색어만 그 앞에 더해졌다(플로팅은 여전히 안 붙는다).
+    assert ("if (_ytResults()) { _ytResultsTick(); try{syncKwSearchPanel();}catch(e){} "
+            "try{syncIgPostKw();}catch(e){} return; }") in s
 
 
 def _helpers(expr):

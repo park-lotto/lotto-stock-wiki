@@ -199,8 +199,10 @@
     /* 하단 네비 */
     .nav{display:flex;justify-content:space-between;margin:18px 0 40px}
     button{font-family:inherit;border:0;border-radius:9px;padding:11px 20px;cursor:pointer;font-size:14px}
-    .btn-prev{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
-    .btn-next{background:var(--grad);color:#fff}
+    /* .btn / .btn.primary 는 여기 한 곳에서 .btn-prev / .btn-next 와 같은 모양을 쓴다(관제 140).
+       예전엔 정의가 없어 브라우저 기본 버튼으로 나왔고, 고객 PC에 따라 8단계 버튼이 안 보였다. */
+    .btn-prev,.btn{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
+    .btn-next,.btn.primary{background:var(--grad);color:#fff;border:0}
     button:disabled{opacity:.4;cursor:default}
 
     /* 탭(대본 3모드 등 공용) */
@@ -8031,7 +8033,7 @@ function setScriptMode(mode){
   if(body) body.innerHTML = SCRIPT_MODE_HTML[mode]();
 }
 
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // SYLLABLES_PER_SEC=5.7 — 2026-07-17 성우 14명을 서버에서 실합성해 측정한 값(음절÷발화초,
 // 한글 1글자≈1음절). 파이썬 쪽 진실은 shopping_shorts/edit_plan.py의 _SYLLABLES_PER_SEC —
 // JS는 그 상수를 못 읽으므로(서버가 값을 내려주지 않음, 이 태스크 범위 밖) 여기 숫자로 나란히
@@ -12352,7 +12354,7 @@ function renderSceneCutaway(beat, idx){
   // ★감정짤 칸(관제 143) — 스위치 켜진 계정만. 짤 컷이면 짤 카드 [바꾸기][빼기], 끼움 장면이 없으면 [＋짤]
   const memeOn = (typeof MIX_MEME_ON!=='undefined') && MIX_MEME_ON && typeof MemePack!=='undefined';
   if(memeOn && cw && cw.match_type==='meme'){
-    return html + `<div class="mp-cell">${MemePack.video(cw.asset_id)}<div style="flex:1">🎭 <b>${esc(cw.emotion||'')}</b> 짤 · 줄 맨 앞 ${esc(cw.head_sec)}초${cw.manual?' · 직접 고름':' · 자동'}</div>`
+    return html + `<div class="mp-cell">${MemePack.video(cw.asset_id)}<div style="flex:1">🎭 <b>${esc(cw.emotion||'')}</b> 짤 · 줄 맨 앞 ${esc(String(cw.head_sec??''))}초${cw.manual?' · 직접 고름':' · 자동'}</div>`
       + `<button class="mp-btn" onclick="memeCellOpen(${idx})">바꾸기</button><button class="mp-btn" onclick="memeCellSet(${idx},null)">빼기</button></div>`;
   }
   if(memeOn && !cw){
@@ -19158,7 +19160,7 @@ async function sbLoad(){
     if(!r.ok || !d || !d.ok){ SB.err=(d&&d.error)||('불러오기 실패('+r.status+')'); SB.data=SB.data||null; sbRender(); return; }
     SB.err=''; SB.data=d; sbAbsorb(d.tasks||{});
   }catch(e){ console.warn('[sb] 불러오기 실패', e); SB.err='불러오기 실패 — 잠시 뒤 다시 열어 주세요'; }
-  sbRender();
+  sbRender(); _sbEnsurePack();
   const t=(SB.data&&SB.data.tasks)||{};
   if(Object.values(t).some(x=>x&&x.state==='run')) SB.poll=setTimeout(sbLoad, 3000);   // 진행 중이면 3초마다 묻는다
 }
@@ -19317,6 +19319,12 @@ function sbMemeCell(i, sl){
     h+=SfxBank.cell({id:sl.sfx_off?null:sl.sfx_pick, cat:sl.sfx_cat, auto:sl.sfx_auto, off:sl.sfx_off,
       change:`sbSfxOpen(${i})`, remove:`sbSfxSet(${i},null)`, add:`sbSfxOpen(${i})`, onReady:()=>{ try{ sbRender(); }catch(e){ console.warn('[sfx] 다시 그리기 실패', e); } }});
   }
+  // 기본 효과음팩 칩 — 어떤 소리·어디쯤은 서버(sfx_pack.preview_lines = 렌더와 같은 plan_events)가 정해 sl.pack_sfx 로 싣는다. 여기선 그리기만
+  if(Array.isArray(sl.pack_sfx)){
+    h+= sl.pack_sfx.length
+      ? `<div class="sb-packsfx" title="자동으로 깔리는 기본 효과음 — 대략 위치(3단계에서 실제 목소리 길이로 다시 맞춥니다)">🔊 ${sl.pack_sfx.map(x=>`<button class="mp-btn sb-pchip" style="padding:2px 8px;font-size:12px;min-height:0" onclick="sbPackPlay('${sbE(x.url)}')">${sbE(x.label)} <small>~${Number(x.t).toFixed(1)}초</small></button>`).join(' · ')} <small style="opacity:.6">대략 위치</small></div>`
+      : (i===0 && (sbCur()[1]||{}).pack_sfx_on===false ? `<div class="sb-packsfx" style="opacity:.6">🔇 기본 효과음 없음</div>` : '');
+  }
   return h;
 }
 function sbMemeOpen(i){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
@@ -19332,7 +19340,12 @@ function sbSfxOpen(i){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; cons
 function sbSfxSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
   delete sl.sfx_auto; delete sl.sfx_off;
   if(id) sl.sfx_pick=Number(id); else { delete sl.sfx_pick; sl.sfx_off=1; }
-  sbRender(); }
+  sbPicksSync(ek,bd); }   // 줄 효과음이 바뀌면 그 줄 기본 효과음 첫 발도 서버가 다시 정한다
+let _sbPackAud=null;
+function sbPackPlay(u){ try{ if(_sbPackAud) _sbPackAud.pause(); _sbPackAud=new Audio(u); _sbPackAud.play().catch(e=>console.warn('[packsfx] 재생 실패', e)); }catch(e){ console.warn('[packsfx]', e); } }
+// 저장해 둔 옛 보드(기본 효과음 칩이 생기기 전 것)는 한 번 서버에 다시 물어 칩을 채운다(10-07: 되살린 보드엔 칩이 비어 있었다)
+function _sbEnsurePack(){ const ek=SB.view, bd=SB.made&&SB.made[ek];
+  if(window.MEME_ON && bd && bd.slots && bd.pack_sfx_on==null && !bd._pkAsk){ bd._pkAsk=1; sbPicksSync(ek,bd); } }
 async function sbPicksSync(ek, bd){
   sbRender();
   try{
@@ -19340,7 +19353,8 @@ async function sbPicksSync(ek, bd){
       body:JSON.stringify({slots:bd.slots.map(x=>({line:x.line, slot:x.slot, meme_emotion:x.meme_emotion, meme_pick:x.meme_pick, meme_auto:x.meme_auto, meme_off:x.meme_off,
         sfx_pick:x.sfx_pick, sfx_auto:x.sfx_auto, sfx_off:x.sfx_off}))})})).json();
     if(r&&r.ok&&Array.isArray(r.slots)&&r.slots.length===bd.slots.length){
-      const K=['meme_pick','meme_auto','meme_off','sfx_pick','sfx_auto','sfx_off','sfx_cat'];
+      const K=['meme_pick','meme_auto','meme_off','sfx_pick','sfx_auto','sfx_off','sfx_cat','pack_sfx'];
+      if(r.pack_sfx_on!=null) bd.pack_sfx_on=!!r.pack_sfx_on;
       r.slots.forEach((x,k)=>{ K.forEach(f=>{ if(x[f]==null) delete bd.slots[k][f]; else bd.slots[k][f]=x[f]; }); });
     } else toast((r&&r.error)||'짤·효과음 다시 고르기 실패');
   }catch(e){ toast('짤·효과음 다시 고르기 실패(네트워크)'); }
