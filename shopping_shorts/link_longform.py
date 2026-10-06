@@ -8,8 +8,9 @@
 ★판단의 주인(0순위-C): 가로 화면 구도·문구 자리·파일 이름·"지금 것이 최신인가"는 전부 이 파일이 정한다.
   app.py 라우트와 화면은 여기 함수를 부르기만 한다.
 ★재렌더가 아니다: 이미 만든 final.mp4 한 편만 입력으로 받는다. 컷·자막·음성 판단을 다시 하지 않는다
-  ★소리는 넣지 않는다(무음, 2026-10-06 사장님 "롱폼은 무음으로") — 3단계 목록 곡은 쇼츠 전용(관제 146)이라 롱폼에 실리면 안 되고,
-    링크를 거는 용도라 소리가 필요 없다. 그래서 완성본과 그림이 어긋날 수 없다.
+  ★쇼츠의 소리는 넣지 않는다(2026-10-06 사장님 "롱폼은 무음으로") — 3단계 목록 곡은 쇼츠 전용(관제 146)이라 롱폼에 실리면 안 된다.
+    대신 문구 띠마다 **읽어 줄 말(TTS)** 을 둘 수 있다(사장님 "tts 문구로 하나씩 지정 — 고정댓글에 링크를 눌러주세요! 행복한 하루 되세요~").
+    작업의 성우(voice)로 한 번 합성해 영상 머리(0.4초)에 얹는다. 글이 비면 무음.
 ★표식: 만든 파일 옆에 link_longform.json 을 남긴다(규칙 판·문구·원본 수정시각). 표식이 지금과 다르면 옛 파일로 본다.
 """
 import json
@@ -21,7 +22,7 @@ from pathlib import Path
 from shopping_shorts import video_assemble
 
 OUT_W, OUT_H = 1920, 1080
-RULE = "link_longform_v3"                 # 구도·문구 그리는 법이 바뀌면 올린다 → 옛 파일은 자동으로 다시 만든다
+RULE = "link_longform_v4"                 # 구도·문구 그리는 법이 바뀌면 올린다 → 옛 파일은 자동으로 다시 만든다
 OUT_NAME = "final_longform.mp4"
 META_NAME = "link_longform.json"
 _TMP_NAME = "final_longform.tmp.mp4"
@@ -45,6 +46,8 @@ _BLOCKS = ("band", "arrow")
 _TONES = ("red", "yellow", "black", "blue", "purple", "green")
 _ITEM_MAX = 8
 _TEXT_MAX = 24
+_TTS_MAX = 80                              # 읽어 줄 말 글자 수 상한(한 숨에 읽을 길이)
+TTS_DELAY_MS = 400                        # 영상 머리에서 이만큼 뒤에 말이 시작된다
 _CLOCK_MAX = 99 * 60 + 59
 _ROOT = Path(__file__).resolve().parents[1]
 
@@ -72,6 +75,9 @@ def normalize_layout(raw):
                 clock = 0
             if 0 < clock <= _CLOCK_MAX:
                 item["clock"] = clock
+            tts = " ".join(str(m.get("tts") or "").split())[:_TTS_MAX]
+            if tts:
+                item["tts"] = tts
             if not (item["pre"] or item["hot"] or item["post"] or item.get("clock")):
                 continue
         out.append(item)
@@ -114,6 +120,21 @@ def overlay_frames(items, out_dir, frames, timeout=900):
     if run.returncode:
         raise RuntimeError("롱폼 안내 그림 생성 실패: " + run.stderr[-800:])
     return out_dir
+
+
+def tts_text(items):
+    """읽어 줄 말 — 문구 띠에 적힌 것. 띠가 여럿이면 첫 띠의 것. 없으면 빈 글(무음)."""
+    for m in items:
+        if m.get("block") == "band" and m.get("tts"):
+            return m["tts"]
+    return ""
+
+
+def synthesize_tts(text, out_path, voice=None, customer_id=0):
+    """읽어 줄 말을 작업의 성우로 합성한다 — 렌더·미리듣기와 같은 길(mix_pipeline.synthesize_line). 실패는 그대로 올린다(조용히 무음으로 가지 않는다)."""
+    from shopping_shorts import mix_pipeline
+    mix_pipeline.synthesize_line(text, Path(out_path), voice=voice, customer_id=customer_id)
+    return Path(out_path)
 
 
 def frame_count(items, dur):
@@ -232,17 +253,19 @@ def mark_running(job_dir):
     p["tmp"].touch()
 
 
-def render_link_longform(src, job_dir, where=DEFAULT_WHERE):
+def render_link_longform(src, job_dir, where=DEFAULT_WHERE, voice=None, customer_id=0):
     """완성 쇼츠(src) → 구매링크용 가로 영상. 만든 파일 경로를 돌려준다. 실패하면 예외(사유를 .err 에도 남긴다).
 
     화면 구성: 뒤 = 같은 영상을 화면 가득 키워 흐리게 / 가운데 = 원본 쇼츠(높이 1080) / 위 = 문구+화살표.
-    소리는 넣지 않는다(무음). 길이·프레임 수는 원본과 같다(30fps 고정은 완성본과 같은 규격).
+    소리 = 읽어 줄 말(TTS)이 있으면 그것만(영상 머리에 한 번), 없으면 무음. 길이·프레임 수는 원본과 같다(30fps 고정은 완성본과 같은 규격).
     """
     from shopping_shorts import mix_pipeline
     p = paths(job_dir)
     text = text_for(where)
     items = load_layout(job_dir)                      # 꾸민 안내가 있으면 그걸 굽는다(없으면 고정 문구)
     frames_dir = Path(job_dir) / "link_longform_frames"
+    tts_mp3 = Path(job_dir) / "link_longform_tts.mp3"
+    speech = tts_text(items)
     sig = _src_sig(src)                               # 굽기 **전** 원본 서명 — 굽는 중 재렌더되면 표식이 어긋나 옛 것으로 판정된다
     w, h, dur = mix_pipeline._probe_wh_dur(src)
     fg_w = fg_width(w, h)
@@ -270,9 +293,17 @@ def render_link_longform(src, job_dir, where=DEFAULT_WHERE):
             #   (2026-10-05 실측: 0.5초엔 있고 12초엔 없었다. 검사 도구가 잡았다). 길이는 영상이 정한다(shortest).
             "[v1][1:v]overlay=0:0:shortest=1,format=yuv420p[v]"
         )
-        cmd = ["ffmpeg", "-y", "-i", str(src), *overlay_in,
+        audio_in, audio_map = [], ["-an"]
+        if speech:
+            synthesize_tts(speech, tts_mp3, voice=voice, customer_id=customer_id)
+            info["tts"] = speech
+            audio_in = ["-i", str(tts_mp3)]
+            # 말은 머리에 한 번. apad 로 끝까지 무음을 채우고 길이는 영상이 정한다(-shortest)
+            fc += f";[2:a]adelay={TTS_DELAY_MS}|{TTS_DELAY_MS},apad[a]"
+            audio_map = ["-map", "[a]", "-c:a", "aac", "-b:a", "128k", "-shortest"]
+        cmd = ["ffmpeg", "-y", "-i", str(src), *overlay_in, *audio_in,
                "-filter_complex", fc,
-               "-map", "[v]", "-an", "-r", "30",
+               "-map", "[v]", *audio_map, "-r", "30",
                "-c:v", "libx264", "-preset", video_assemble._preset(), "-crf", video_assemble._crf(),
                *video_assemble._threads_args(), "-movflags", "+faststart", str(p["tmp"])]
         video_assemble._run_ffmpeg(cmd)
@@ -289,7 +320,7 @@ def render_link_longform(src, job_dir, where=DEFAULT_WHERE):
             pass
         raise
     finally:
-        for f in (p["tmp"], png):
+        for f in (p["tmp"], png, tts_mp3):
             try:
                 if f.exists():
                     f.unlink()

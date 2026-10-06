@@ -56,7 +56,11 @@ def check_layout(src, out, items):
     ps, po = _probe(src), _probe(out)
     res.append(("크기 1920x1080", (po["w"], po["h"]) == (LL.OUT_W, LL.OUT_H), "%dx%d" % (po["w"], po["h"])))
     res.append(("길이 = 원본(±0.15초)", abs(ps["dur"] - po["dur"]) <= 0.15, "원본 %.3f / 롱폼 %.3f" % (ps["dur"], po["dur"])))
-    res.append(("소리 없음(무음)", po["a_dur"] is None, "롱폼 소리 줄기 %s" % ("없음" if po["a_dur"] is None else "%.3f초" % po["a_dur"])))
+    if LL.tts_text(items):
+        ok = po["a_dur"] is not None and abs(po["a_dur"] - po["dur"]) <= 0.3
+        res.append(("소리 = 읽어 줄 말(영상 길이만큼)", ok, "롱폼 소리 줄기 %s / 영상 %.3f" % (po["a_dur"], po["dur"])))
+    else:
+        res.append(("소리 없음(무음)", po["a_dur"] is None, "롱폼 소리 줄기 %s" % ("없음" if po["a_dur"] is None else "%.3f초" % po["a_dur"])))
     fg_w = LL.fg_width(ps["w"], ps["h"]); x0 = (LL.OUT_W - fg_w) // 2
     n = LL.frame_count(items, ps["dur"]); clock = any(m.get("clock") for m in items)
     frames = [int(ps["dur"] * LL.FPS * k) for k in (0.2, 0.5, 0.8)]
