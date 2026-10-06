@@ -8734,7 +8734,7 @@ async function dlgOpen(wid, title){
   DLG.wid = wid; DLG.cache = {}; DLG.cast = {};
   document.getElementById('dlgBg').classList.add('on');
   document.getElementById('dlgSub').textContent = '「'+(title||'작업')+'」 — 원본은 그대로 두고, 대본만 대화형으로 바꾼 새 작업을 만들어요(3단계부터 다시).';
-  document.getElementById('dlgLines').innerHTML = ''; dlgMsg('틀을 고르고 미리보기를 누르세요.');
+  dlgRenderLines(); dlgMsg('틀을 고르고 미리보기를 누르세요.');   // #dlgLines 는 dlgRenderLines 한 곳만 쓴다(DOM 주인 예산)
   try{
     if(!DLG.forms){ const d = await (await fetch('/api/produce/dialogue/forms')).json(); DLG.forms = (d && d.forms) || []; }
     if(!DLG.voices){ const v = await (await fetch('/api/voice-presets')).json(); DLG.voices = (v && v.groups) || []; }
