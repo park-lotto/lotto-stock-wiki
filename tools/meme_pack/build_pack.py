@@ -176,7 +176,7 @@ def cut(work, cid, start, length):
     os.makedirs(out_dir, exist_ok=True)
     out, tmp = os.path.join(out_dir, f"{cid}.mp4"), os.path.join(out_dir, f"{cid}.tmp.mp4")
     r = run(["ffmpeg", "-v", "error", "-y", "-ss", f"{start:.2f}", "-i", src, "-t", f"{length:.2f}",
-             "-vf", "scale=-2:'min(720,ih)':flags=lanczos,setsar=1", "-c:v", "libx264", "-crf", "18", "-preset", "fast",
+             "-vf", "scale=-2:'min(720,ih)':flags=lanczos,setsar=1", "-c:v", "libx264", "-crf", "18", "-preset", "fast", "-threads", "2",  # 2026-10-06 사장님 "CPU 많이 안 먹게"
              "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", tmp])
     if r.returncode != 0 or not os.path.exists(tmp):
         raise RuntimeError("자르기 실패: " + r.stderr.strip()[-300:])

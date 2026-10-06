@@ -225,7 +225,86 @@ PEPE = [
 # (id, 밈 이름, 감정, 설명, 출처)
 #   출처 = ("yt", 유튜브 id, 시작 초, 길이 초[, crop 필터])  또는  ("tenor", 보기 주소, 파일 주소[, 시작 초, 길이 초])
 MEMES = [
-
+    # 해외 — 유튜브 원본/템플릿에서 그 순간만
+    ("pikachu", "Surprised Pikachu", "놀람", "입 벌리고 굳은 피카츄", ("yt", "MpJwr8XwUdo", 5.36, 1.02, "crop=960:720:160:0")),
+    ("shockedguy", "Shocked Guy", "놀람", "눈 커지며 놀라는 남자", ("yt", "ksTGa6Z4gLg", 0.0, 2.3)),
+    ("chipmunk", "Dramatic Chipmunk", "놀람", "고개 돌려 쳐다보는 다람쥐", ("yt", "mfhBM_Yay6w", 0.8, 2.4)),
+    ("mindblown", "Mind Blown", "놀람", "머리가 터지는 손짓", ("yt", "juhkN58ngs4", 0.2, 2.6)),
+    ("ohmygodwow", "Oh My God Wow", "놀람", "오 마이 갓 와우", ("yt", "Kx2PziBgEEc", 0.0, 2.2)),
+    ("joeyshock", "Joey Shocked", "놀람", "프렌즈 조이 놀란 얼굴", ("yt", "I_DqjyxqVVY", 6.0, 2.2)),
+    ("supahotfire", "Supa Hot Fire", "충격_입막", "오오 하는 관중 반응", ("yt", "M2AoB9NlQsk", 1.0, 2.5)),
+    ("speedmouth", "IShowSpeed Shock", "충격_입막", "입 막고 놀라는 스피드", ("yt", "Q6uqKLBaXRU", 0.0, 2.4)),
+    ("mathlady", "Math Lady", "의심_황당", "계산이 안 되는 혼란", ("yt", "MZCfqE0W7I8", 0.6, 2.0)),
+    ("travolta", "Confused Travolta", "의심_황당", "두리번거리는 트래볼타", ("yt", "RqJVa0fl01w", 2.0, 2.6)),
+    ("nickyoung", "Nick Young ???", "의심_황당", "물음표 표정", ("yt", "LdhD-PYaRVc", 2.0, 1.95)),
+    ("frysquint", "Not Sure If Fry", "의심_황당", "실눈 뜨는 프라이", ("yt", "mttP7Wbgva0", 0.2, 2.5)),
+    ("rockeyebrow", "The Rock Eyebrow", "의심_황당", "눈썹 올리는 드웨인 존슨", ("yt", "ZFk4xyS6hFY", 1.0, 2.6, "crop=720:720:280:0")),
+    ("kombucha", "Kombucha Girl", "의심_황당", "한 모금 마시고 오묘한 표정", ("yt", "d9Ac0w5PccU", 7.0, 2.8, "crop=204:360:218:0")),
+    ("carlton", "Carlton Dance", "기쁨_환호", "칼튼 춤", ("yt", "W0kGByAeenY", 0.0, 2.6)),
+    ("jonahexcited", "Excited Jonah Hill", "기쁨_환호", "신나서 소리치는 조나 힐", ("yt", "KpDdoaEryUg", 0.0, 1.1)),
+    ("leotoast", "Leo Toast", "감탄_박수", "잔을 드는 개츠비 디카프리오", ("yt", "Xu6Vfpn7idM", 1.5, 2.8)),
+    ("shiaclap", "Shia LaBeouf Clap", "감탄_박수", "기립 박수 샤이아 라보프", ("yt", "nHzryjT9d5w", 5.0, 2.6)),
+    ("sealclap", "Clapping Seal", "감탄_박수", "박수 치는 물개", ("yt", "8S_0MWqOkCE", 0.5, 2.5)),
+    ("kidmanclap", "Nicole Kidman Clap", "감탄_박수", "물개 박수 니콜 키드먼", ("yt", "50dBBYxgxWA", 0.3, 2.6)),
+    ("shaqshimmy", "Shaq Shimmy", "기쁨_환호", "어깨 들썩이는 샤킬 오닐", ("yt", "G554QI8PvNo", 1.2, 2.8)),
+    ("bully", "Bully Maguire", "기쁨_환호", "거리에서 춤추는 피터 파커", ("yt", "RJeixuMsqoY", 40.0, 2.8)),
+    ("risitas", "El Risitas", "웃음", "숨 넘어가게 웃는 아저씨", ("yt", "LNPwbH1MyaQ", 0.3, 2.8)),
+    ("jameson", "J. Jonah Jameson Laugh", "웃음", "폭소하는 제임슨 편집장", ("yt", "H6M1OF_E0IA", 0.1, 2.6)),
+    ("muttley", "Muttley Snicker", "웃음", "킥킥대는 머틀리", ("yt", "hw3CE04LGiA", 1.3, 2.8)),
+    ("jordanlaugh", "Michael Jordan Laughing", "웃음", "태블릿 보며 웃는 조던", ("yt", "wE66oTfTNKI", 1.0, 2.6)),
+    ("jokerlaugh", "Joker Laugh", "웃음", "객석에서 웃는 조커", ("yt", "yzK7CV9qCUs", 0.5, 2.8)),
+    ("dawson", "Dawson Crying", "슬픔", "입 삐죽이며 우는 도슨", ("yt", "RLgI-qbrWVo", 0.5, 2.8)),
+    ("tobeycry", "Crying Tobey Maguire", "슬픔", "눈물 고인 토비 맥과이어", ("yt", "CroD5k-V9Rs", 1.0, 2.8)),
+    ("crycat", "Crying Cat", "슬픔", "눈물 고인 고양이", ("yt", "lyj5AROGr_o", 1.0, 2.8)),
+    ("squidsad", "Squidward Window", "슬픔", "창밖을 보는 징징이", ("yt", "V7RCBdq3E1s", 1.6, 2.8)),
+    ("panda", "Never Say No to Panda", "분노_짜증", "노려보는 판다", ("yt", "N5oYdKJEpNo", 5.3, 2.8)),
+    ("donald", "Angry Donald Duck", "분노_짜증", "펄펄 뛰는 도널드 덕", ("yt", "YFJLD7w_kdE", 1.0, 2.8)),
+    ("ronswanson", "Ron Swanson Trash PC", "분노_짜증", "컴퓨터를 쓰레기통에 버리는 론 스완슨", ("yt", "r49hLfjjxpM", 7.4, 2.8)),
+    ("freshprince", "Confused Fresh Prince", "당황_멘붕", "두리번거리는 윌 스미스", ("yt", "WGRSKeYZI4w", 3.8, 2.8)),
+    ("thisisfine", "This Is Fine", "당황_멘붕", "불타는 방에서 괜찮다는 개", ("yt", "0oBx7Jg4m-o", 4.6, 2.8)),
+    ("homerhedge", "Homer Into Hedge", "당황_멘붕", "덤불 속으로 물러나는 호머", ("yt", "7T8DYqHgq1Q", 3.2, 2.6)),
+    ("peelesweat", "Sweating Jordan Peele", "당황_멘붕", "식은땀 흘리는 조던 필", ("yt", "kJmbH00Tk2I", 4.5, 2.8)),
+    ("ralph", "Ralph I'm in Danger", "공포_움찔", "버스에서 웃는 랄프", ("yt", "HdKqAVpUOwI", 5.0, 2.2)),
+    ("spongepanic", "SpongeBob Panic", "공포_움찔", "비명 지르는 스폰지밥", ("yt", "JEOKChlXlU4", 5.2, 2.0)),
+    ("homealone", "Home Alone Scream", "충격_입막", "양손 볼에 대고 비명 — 나 홀로 집에", ("yt", "H5CSBZz3eOI", 1.4, 2.4)),
+    # 국내 — 유튜브 원본에서 그 대사·순간만(대사 위치는 음성 인식으로 찾고 장면 경계는 타임라인으로 확인)
+    ("muyaho", "무야호", "기쁨_환호", "무야호~ 외치는 환호", ("yt", "oPnqtjx80Kk", 2.2, 2.7)),
+    ("sadalla", "사딸라", "끄덕_엄지", "오케이 사딸라 — 김두한", ("yt", "mJSzsecTAfc", 95.9, 2.4)),
+    ("byunghun", "이병헌 안돼", "슬픔", "오열하는 이병헌", ("yt", "nx9UqqVDdSg", 2.13, 1.55)),
+    ("gwak", "묻고 더블로 가", "끄덕_엄지", "손가락 들며 묻고 더블로 가 — 곽철용", ("yt", "XsM-QWpDgBg", 19.28, 1.08)),
+    ("kimheejin", "김희진 웃참", "웃음", "국민의례 중 웃음 참기", ("yt", "B-qtDwnLt-U", 1.5, 2.6)),
+    ("mwosi", "뭣이 중헌디", "분노_짜증", "뭣이 중헌디 소리치는 장면(곡성)", ("yt", "_wNdfJHfgNI", 15.9, 2.5)),
+    ("druwa", "드루와", "분노_짜증", "칼 들고 덤비라는 꽃게", ("yt", "fGysRzgkft0", 3.8, 2.6)),
+    ("kimsangjung", "그런데 말입니다", "의심_황당", "그것이 알고싶다 김상중", ("yt", "JpMawlX1DYA", 0.05, 2.9)),
+    ("eoiga", "어이가 없네", "의심_황당", "어이가 없네 — 조태오(베테랑)", ("yt", "zASuuYQFht4", 96.6, 2.2)),
+    ("yanadu", "야나두", "끄덕_엄지", "야 너두 영어해 — 조정석 광고", ("yt", "dL3VXwN_I3Q", 2.9, 1.62)),
+    # 해외 — Tenor mp4
+    ("tomjaw", "Tom Jaw Drop", "충격_입막", "턱이 빠지는 톰", ("tenor", "https://tenor.com/view/tom-and-jerry-surprised-jaw-dropping-amazing-tom-y-jerry-gif-20710519",
+                                                       "https://media.tenor.com/10iaC_Zo6okAAAPo/tom-and-jerry-surprised.mp4")),
+    ("miniongasp", "Minion Gasp", "충격_입막", "헉 하고 숨 들이켜는 미니언즈", ("tenor", "https://tenor.com/view/surprised-gasp-omg-shook-shocked-gif-16235992",
+                                                     "https://media.tenor.com/jfjXGqW_0sUAAAPo/surprised-gasp.mp4")),
+    ("krabs", "Mr. Krabs Confused", "당황_멘붕", "어쩔 줄 몰라 빙글 도는 집게사장", ("tenor", "https://tenor.com/view/mr-krabs-spin-dont-know-what-to-do-meme-oh-no-gif-17167218",
+                                                                "https://media.tenor.com/A2Z9fIbbg-MAAAPo/mr-krabs-spin.mp4")),
+    ("chefskiss", "Chef's Kiss", "감탄_박수", "완벽하다는 셰프 키스", ("tenor", "https://tenor.com/view/chefs-kiss-french-chef-perfect-dish-excellent-food-perfection-gif-20341505",
+                                                      "https://media.tenor.com/LLLJYVQJNVAAAAPo/chefs-kiss-french-chef.mp4")),
+    ("cruiselaugh", "Tom Cruise Laugh", "웃음", "크게 웃는 톰 크루즈", ("tenor", "https://tenor.com/view/lmao-gif-20519320",
+                                                         "https://media.tenor.com/ue3LYf2oCu4AAAPo/lmao.mp4")),
+    ("tableflip", "Table Flip", "분노_짜증", "책상 엎기", ("tenor", "https://tenor.com/view/kerfuffle-gif-13134949733768996125",
+                                                "https://media.tenor.com/tki3MN_ppR0AAAPo/kerfuffle.mp4")),
+    ("monkeypuppet", "Monkey Puppet", "당황_멘붕", "눈치 보며 시선 돌리는 원숭이 인형", ("tenor", "https://tenor.com/view/pedro-monkey-puppet-meme-awkward-gif-15268759",
+                                                                  "https://media.tenor.com/gaEpIfzxzPEAAAPo/pedro-monkey-puppet.mp4")),
+    ("tomscream", "Tom Scream", "공포_움찔", "비명 지르는 톰", ("tenor", "https://tenor.com/view/tom-and-jerry-tom-cat-tom-cast-screams-gif-16536663592868129094",
+                                                    "https://media.tenor.com/5X4H7DcKKUYAAAPo/tom-and-jerry-tom-cat.mp4")),
+    ("nonocat", "No No Cat", "거절_절레", "고개 젓는 고양이", ("tenor", "https://tenor.com/view/no-gif-19426083",
+                                                   "https://media.tenor.com/dmducDN7wO8AAAPo/no.mp4")),
+    ("ewfallon", "Eww", "거절_절레", "질색하는 표정", ("tenor", "https://tenor.com/view/eww-gif-25905626",
+                                            "https://media.tenor.com/uu_hc-dLh80AAAPo/eww.mp4")),
+    ("fonzie", "Fonzie Thumbs Up", "끄덕_엄지", "엄지 척 폰지", ("tenor", "https://tenor.com/view/fonzi-happy-days-gif-20692158",
+                                                     "https://media.tenor.com/Wat4ORGd-QAAAAPo/fonzi-happy.mp4")),
+    ("owenwow", "Owen Wilson Wow", "놀람", "와우 하는 오웬 윌슨", ("tenor", "https://tenor.com/view/owen-wilson-wow-marley-and-me-smooth-hd-hq-gif-25544466",
+                                                       "https://media.tenor.com/E5aLBpgECX0AAAPo/owen-wilson-wow-marley-and-me.mp4")),
+    ("cryingjordan", "Crying Jordan", "슬픔", "우는 마이클 조던", ("tenor", "https://tenor.com/view/michael-jordan-basketball-hall-of-fame-enshrinement-speech-crying-happy-emotional-gif-21287452",
+                                                    "https://media.tenor.com/3u0HmX44lvYAAAPo/michael-jordan-basketball-hall-of-fame.mp4")),
 ]
 
 
@@ -249,10 +328,10 @@ def flatten_white(src, dst):
         want = dur * math.ceil(LOOP_TO / dur)
     elif dur > MAX_SEC:
         want = CUT_TO
-    rc, err = run(["ffmpeg", "-v", "error", "-y", "-ignore_loop", "0", "-i", src, "-t", f"{want:.3f}",
+    rc, err = run(["ffmpeg", "-threads", "2", "-v", "error", "-y", "-ignore_loop", "0", "-i", src, "-t", f"{want:.3f}",
                    "-filter_complex",
                    f"color=white:s={p['w']}x{p['h']}:r=25[bg];[bg][0:v]overlay=shortest=0:format=auto,{even()},format=yuv420p[v]",
-                   "-map", "[v]", "-t", f"{want:.3f}", "-an", "-c:v", "libx264", "-crf", "18", "-preset", "medium",
+                   "-map", "[v]", "-t", f"{want:.3f}", "-an", "-c:v", "libx264", "-threads", "2", "-crf", "18", "-preset", "medium",
                    "-movflags", "+faststart", dst])
     if rc != 0 or not os.path.exists(dst):
         raise RuntimeError(f"ffmpeg(흰 바탕) 실패: {err[:160]}")
@@ -261,7 +340,7 @@ def flatten_white(src, dst):
 def cut(src, dst, start=None, dur=None, crop=None, loops=0):
     """구간을 잘라 H.264·yuv420p·짝수 크기·faststart 로 굽는다. 소리가 있으면 살린다."""
     p = probe(src)
-    cmd = ["ffmpeg", "-v", "error", "-y"]
+    cmd = ["ffmpeg", "-threads", "2", "-v", "error", "-y"]
     if loops:
         cmd += ["-stream_loop", str(loops)]
     if start is not None:
@@ -270,7 +349,7 @@ def cut(src, dst, start=None, dur=None, crop=None, loops=0):
     if dur is not None:
         cmd += ["-t", f"{dur:.3f}"]
     vf = (crop + "," if crop else "") + even()
-    cmd += ["-map", "0:v:0", "-vf", vf, "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p"]
+    cmd += ["-map", "0:v:0", "-vf", vf, "-c:v", "libx264", "-threads", "2", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p"]
     cmd += ["-map", "0:a:0", "-c:a", "aac", "-b:a", "128k"] if p["audio"] else ["-an"]
     rc, err = run(cmd + ["-movflags", "+faststart", dst])
     if rc != 0 or not os.path.exists(dst):
@@ -299,7 +378,7 @@ def frames(path, n=3):
     for i in range(n):
         t = d * (0.05 + 0.75 * i / max(1, n - 1))
         for tt in (t, t * 0.7, 0.0):  # 끝 쪽은 마지막 프레임 뒤일 수 있다 — 앞으로 당겨 다시 뽑는다
-            r = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{tt:.3f}", "-i", path, "-frames:v", "1", "-f", "image2pipe",
+            r = subprocess.run(["ffmpeg", "-threads", "2", "-v", "error", "-ss", f"{tt:.3f}", "-i", path, "-frames:v", "1", "-f", "image2pipe",
                                 "-vcodec", "png", "-"], capture_output=True)
             if r.returncode == 0 and r.stdout:
                 break
@@ -318,7 +397,7 @@ def motion(path):
 
 def thumb(mp4, jpg):
     d = probe(mp4)["dur"]
-    rc, err = run(["ffmpeg", "-v", "error", "-y", "-ss", f"{d * 0.3:.2f}", "-i", mp4, "-frames:v", "1",
+    rc, err = run(["ffmpeg", "-threads", "2", "-v", "error", "-y", "-ss", f"{d * 0.3:.2f}", "-i", mp4, "-frames:v", "1",
                    "-vf", "scale=-2:260", jpg])
     if rc != 0 or not os.path.exists(jpg):
         raise RuntimeError(f"썸네일 실패: {err[:160]}")
