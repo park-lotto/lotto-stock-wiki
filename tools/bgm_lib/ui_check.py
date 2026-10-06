@@ -3,7 +3,7 @@
 
   py tools/bgm_lib/ui_check.py [out.png]
 
-누르는 것: 배경음 탭 → 목록 수 → ▶ 미리듣기(파일 응답 200) → 곡 고르기(DB deco.bgm.lib) → 크기 크게(volume 25)
+누르는 것: 배경음 탭 → 목록 수 → ▶ 미리듣기(파일 응답 200) → 곡 고르기(DB deco.bgm.lib) → 음량 슬라이더 25 · 속도 슬라이더 1.25(미리듣기 배속)
            → 새로고침해도 선택 유지 → 롱폼 막힘(409) → '배경음 없음'(lib 지워짐) · 효과음 스위치 꺼진 회원은 배경음 탭만.
 """
 import json, subprocess, sys, tempfile, threading, time
@@ -78,12 +78,27 @@ with sync_playwright() as p:
     pg.locator('#bgmList .bgmitem[data-id="blue"] .pick').click(); pg.wait_for_timeout(1500)
     check(bgm().get("lib") == "blue", f"고르기 → DB deco.bgm = {bgm()}")
     check(pg.locator('#bgmList .bgmitem.on').get_attribute("data-id") == "blue", "고른 곡이 선택 표시")
-    pg.locator('#bgmVolSeg button[data-v="25"]').click(); pg.wait_for_timeout(1200)
-    check(bgm() == {"lib": "blue", "volume": 25}, f"크게 → {bgm()}")
+    def slide(sel, v):                      # 슬라이더를 끌어 놓은 것과 같다(input → change)
+        pg.evaluate("([s, v]) => { const e = document.querySelector(s); e.value = v; e.dispatchEvent(new Event('input')); e.dispatchEvent(new Event('change')); }", [sel, v])
+        pg.wait_for_timeout(1200)
+    slide("#bgmVol", "25")
+    check(bgm() == {"lib": "blue", "volume": 25}, f"음량 25 → {bgm()}")
+    check(pg.locator("#bgmVolV").inner_text() == "25%", "음량 숫자 표시 25%")
+    slide("#bgmSpeed", "1.25")
+    check(bgm() == {"lib": "blue", "volume": 25, "speed": 1.25}, f"속도 1.25 → {bgm()}")
+    check(pg.locator("#bgmSpeedV").inner_text() == "1.25x", "속도 숫자 표시 1.25x")
+    if pg.evaluate("() => _bgmPlaying"):    # 앞에서 튼 미리듣기가 아직 재생 중이면 먼저 멈춘다(버튼이 재생/정지 토글)
+        pg.locator('#bgmList .bgmitem[data-id="blue"] button').first.click(); pg.wait_for_timeout(300)
+    pg.locator('#bgmList .bgmitem[data-id="blue"] button').first.click(); pg.wait_for_timeout(800)
+    check(abs(pg.evaluate("() => _bgmAudio ? _bgmAudio.playbackRate : 0") - 1.25) < 1e-6, "미리듣기도 1.25배속")
+    pg.locator('#bgmList .bgmitem[data-id="blue"] button').first.click()
     pg.screenshot(path=out, full_page=False)
     pg.goto(url, wait_until="domcontentloaded"); pg.wait_for_timeout(5000)
     check(pg.locator('#bgmList .bgmitem.on').get_attribute("data-id") == "blue", "새로고침 뒤에도 선택 유지")
-    check(pg.locator('#bgmVolSeg button.on').get_attribute("data-v") == "25", "새로고침 뒤에도 크기 유지")
+    check(pg.locator("#bgmVol").input_value() == "25" and pg.locator("#bgmSpeed").input_value() == "1.25",
+          "새로고침 뒤에도 음량·속도 유지")
+    pg.locator("#bgmSpeedReset").click(); pg.wait_for_timeout(1200)
+    check(bgm() == {"lib": "blue", "volume": 25}, f"1x 버튼 → 속도 원래대로 {bgm()}")
     # 곡을 바꾸면 옛 완성본은 무효가 된다 → '완성본 다시 만들기'가 끝난 상태로 두고 롱폼 만들기를 누른다
     Store(db).update_mix_job("jui", status="done", video_path=str(final))
     r = pg.request.post(f"http://127.0.0.1:{PORT}/api/mix/longform_link/jui", data={})

@@ -1281,8 +1281,13 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
     </div>
     <div class="sfxbody" id="sfxBodyBgm" style="display:none">
       <!-- 관제 146: 목록·파일은 bgm_lib 한 곳. 고르면 /api/produce/mix/settings {bgm_lib} → deco.bgm.lib → 렌더·캡컷(resolve_deco_media). -->
-      <div class="sfxrow"><span class="k">크기</span><span class="sfxseg" id="bgmVolSeg">
-        <button type="button" data-v="8">작게</button><button type="button" data-v="15">보통</button><button type="button" data-v="25">크게</button></span></div>
+      <div class="sfxrow"><span class="k">음량</span>
+        <input type="range" id="bgmVol" min="0" max="60" step="1" value="15" style="flex:1;min-width:120px">
+        <b id="bgmVolV" style="min-width:42px;text-align:right">15%</b></div>
+      <div class="sfxrow"><span class="k">속도</span>
+        <input type="range" id="bgmSpeed" min="0.5" max="2" step="0.05" value="1" style="flex:1;min-width:120px">
+        <b id="bgmSpeedV" style="min-width:42px;text-align:right">1.00x</b>
+        <button type="button" class="act" id="bgmSpeedReset" title="원래 속도로">1x</button></div>
       <div id="bgmList"></div>
       <div class="hint0">쇼츠 전용 곡이에요 — 이 곡을 넣은 영상은 롱폼으로 만들 수 없어요</div>
       <div class="hint0" id="bgmMsg"></div>
@@ -2880,16 +2885,24 @@ function bgmPaint(){
     <button type="button" onclick="bgmListen('${esc(t.id)}')">${_bgmPlaying === t.id ? '■' : '▶'}</button>
     <span class="nm" onclick="bgmPick('${esc(t.id)}')">${esc(t.title)}<small>${esc(t.artist)}</small></span>
     <button type="button" class="pick" onclick="bgmPick('${esc(t.id)}')">${t.id === cur ? '✓ 선택됨' : '고르기'}</button></div>`).join('');
-  document.querySelectorAll('#bgmVolSeg button').forEach(b => {
-    b.classList.toggle('on', Number(b.dataset.v) === Number(BGMP.volume));
-    b.onclick = () => bgmSave({bgm_volume: Number(b.dataset.v)});
-  });
+  // 음량·속도 — 끄는 동안은 숫자만 따라가고, 손을 떼면(change) 저장한다. 범위는 서버(bgm_lib)가 알려 준다.
+  const vol = document.getElementById('bgmVol'), vv = document.getElementById('bgmVolV');
+  const sp = document.getElementById('bgmSpeed'), sv = document.getElementById('bgmSpeedV');
+  vol.max = BGMP.volume_max || 60; vol.value = BGMP.volume; vv.textContent = BGMP.volume + '%';
+  sp.min = BGMP.speed_min || 0.5; sp.max = BGMP.speed_max || 2; sp.value = BGMP.speed || 1;
+  sv.textContent = Number(BGMP.speed || 1).toFixed(2) + 'x';
+  vol.oninput = () => { vv.textContent = vol.value + '%'; };
+  vol.onchange = () => bgmSave({bgm_volume: Number(vol.value)});
+  sp.oninput = () => { sv.textContent = Number(sp.value).toFixed(2) + 'x'; if (_bgmAudio) _bgmAudio.playbackRate = Number(sp.value); };
+  sp.onchange = () => bgmSave({bgm_speed: Number(sp.value)});
+  document.getElementById('bgmSpeedReset').onclick = () => bgmSave({bgm_speed: 1});
 }
 function bgmListen(id){
   try{
     if (_bgmAudio){ _bgmAudio.pause(); _bgmAudio = null; }
     if (_bgmPlaying === id){ _bgmPlaying = ''; bgmPaint(); return; }
     _bgmAudio = new Audio('/api/produce/bgm_lib/sound/' + encodeURIComponent(id));
+    _bgmAudio.playbackRate = Number((BGMP && BGMP.speed) || 1);   // 미리듣기도 고른 속도로(음 높이 유지 — 렌더 atempo 와 같다)
     _bgmAudio.onended = () => { _bgmPlaying = ''; bgmPaint(); };
     _bgmAudio.play().catch(() => {});
     _bgmPlaying = id;
@@ -2901,18 +2914,18 @@ async function bgmSave(patch){
   if (!SL.server || !SL.job) return;
   const m = document.getElementById('bgmMsg');
   try{
-    const before = JSON.stringify([BGMP && BGMP.current, BGMP && BGMP.volume]);
+    const before = JSON.stringify([BGMP && BGMP.current, BGMP && BGMP.volume, BGMP && BGMP.speed]);
     const r = await fetch('/api/produce/mix/settings', {method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify(Object.assign({job_id: decodeURIComponent(SL.job)}, patch))});
     if (!r.ok) throw new Error('HTTP ' + r.status);
     await bgmRefresh();
     // 제작소 STATE.deco 도 맞춘다 — 다른 저장이 꾸미기를 통째로 보내면 옛 bgm 이 방금 고른 곡을 덮는다.
     try{
-      const bg = Object.assign({volume: BGMP.volume}, BGMP.current ? {lib: BGMP.current} : {});
+      const bg = BGMP.bgm || {};                                   // 서버 저장값 그대로(업로드 file 도 잃지 않게)
       if (window.parent && window.parent !== window && typeof window.parent.sfxDecoSync === 'function') window.parent.sfxDecoSync({bgm: bg});
     }catch(e){}
     if (m) m.textContent = '저장했어요 — 완성본 만들기를 다시 누르면 바뀐 배경음으로 만들어져요';
-    if (JSON.stringify([BGMP.current, BGMP.volume]) !== before) sfxConfirmStale();
+    if (JSON.stringify([BGMP.current, BGMP.volume, BGMP.speed]) !== before) sfxConfirmStale();
   }catch(e){ if (m) m.textContent = '저장하지 못했어요 — 다시 눌러 주세요'; bgmPaint(); }
 }
 function sfxpPaint(){

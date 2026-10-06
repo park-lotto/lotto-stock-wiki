@@ -21562,7 +21562,7 @@ def api_produce_mix_settings(body: dict):
         _cur = job.get("deco") or {}
         sfx_switched = any(str(_cur.get(k) or "") != str(v or "") for k, v in _sfx_new.items())
         fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), **_sfx_new}
-    if "bgm_lib" in body or "bgm_volume" in body:
+    if "bgm_lib" in body or "bgm_volume" in body or "bgm_speed" in body:
         # 3단계 [🎵 배경음] 목록(관제 146) — bgm_lib: 곡 id / ""(없음). 고르면 업로드 파일(file)은 비운다.
         from shopping_shorts import bgm_lib as _bl
         _base = fields.get("deco") or job.get("deco") or {}
@@ -21580,7 +21580,13 @@ def api_produce_mix_settings(body: dict):
                 _new["lib"] = _lib
         _vol = str(body.get("bgm_volume", "")).strip()
         if _vol.isdigit():                      # 숫자가 아니면 크기는 그대로 둔다
-            _new["volume"] = max(0, min(60, int(_vol)))
+            _new["volume"] = max(0, min(_bl.VOLUME_MAX, int(_vol)))
+        if "bgm_speed" in body:                 # 범위·기본값의 뜻은 bgm_lib.speed_of 한 곳
+            _sp = _bl.speed_of({"speed": body.get("bgm_speed")})
+            if _sp == 1.0:
+                _new.pop("speed", None)
+            else:
+                _new["speed"] = _sp
         if _new != _old:
             sfx_switched = True        # 소리가 바뀌었다 — 옛 완성본 미리보기를 버린다(효과음과 같은 규칙)
         fields["deco"] = {**_base, "bgm": _new}
@@ -21673,7 +21679,9 @@ def api_produce_mix_bgm_lib(job_id: str, request: Request):
     # 관리자 전용(기본) — 안 열린 작업엔 목록을 비워 보낸다(화면은 배경음 탭을 숨긴다)
     tracks = bgm_lib.list_tracks() if bgm_lib.enabled_for(store, job) else []
     return {"ok": True, "tracks": tracks, "current": str(bgm.get("lib") or ""),
-            "upload": bool(bgm.get("file")) and not bgm.get("lib"), "volume": int(bgm.get("volume", 15) or 0)}
+            "upload": bool(bgm.get("file")) and not bgm.get("lib"), "volume": int(bgm.get("volume", 15) or 0),
+            "speed": bgm_lib.speed_of(bgm), "volume_max": bgm_lib.VOLUME_MAX,
+            "speed_min": bgm_lib.SPEED_MIN, "speed_max": bgm_lib.SPEED_MAX, "bgm": bgm}   # bgm = 저장값 그대로(제작소 STATE.deco 맞추기용)
 
 
 @app.get("/api/produce/bgm_lib/sound/{track_id}")

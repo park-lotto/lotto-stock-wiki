@@ -41,7 +41,18 @@ def _corr(out_wave, ref_wave):
     return float(np.max(np.abs(c)) / (np.linalg.norm(a) * np.linalg.norm(b)))
 
 
-def check_render(tid, tmp):
+def _env_corr(out_wave, ref_wave, hop=80, max_lag=20):
+    """음량 윤곽(10ms 창 RMS) 상관 — 배속 필터는 파형 샘플이 실행마다 달라 파형 상관이 안 맞는다(실측 0.3).
+    윤곽은 박자·강약 흐름이라 속도가 같으면 높고 다르면 낮다. ±0.2초 어긋남까지 본다."""
+    def env(w):
+        n = len(w) // hop
+        return np.sqrt((w[:n * hop].reshape(n, hop) ** 2).mean(axis=1))
+    a, b = env(out_wave), env(ref_wave)
+    n = min(len(a), len(b)) - max_lag
+    return max(float(np.corrcoef(a[l:l + n], b[:n])[0, 1]) for l in range(0, max_lag))
+
+
+def check_render(tid, tmp, speed=1.0):
     tmp.mkdir(parents=True, exist_ok=True)
     src = tmp / "src.mp4"; tts = tmp / "t0.wav"
     if not src.exists():
@@ -52,16 +63,27 @@ def check_render(tid, tmp):
     work = tmp / "w"; work.mkdir(exist_ok=True)
     mix = va._render_mix(plan, {0: str(tts)}, {0: str(src)}, work, cutaway_paths=None)
     res = {}
-    for name, deco in (("곡", {"bgm": {"lib": tid, "volume": 15}}), ("없음", {"bgm": {"volume": 15}})):
+    bg = {"lib": tid, "volume": 15, **({"speed": speed} if speed != 1.0 else {})}
+    for name, deco in (("곡", {"bgm": bg}), ("없음", {"bgm": {"volume": 15}})):
         out = tmp / f"out_{name}.mp4"
         va._burn_captions(mix, plan, {0: str(tts)}, str(out), work, deco=mix_pipeline.resolve_deco_media(deco, work))
         w = _pcm(out, 0, 3.0)
-        res[name] = (_corr(w, _pcm(bgm_lib.path_of(tid), 0, 3.0)), float(np.sqrt((w ** 2).mean())))
+        ref = bgm_lib.path_of(tid)
+        if speed != 1.0:                    # 기대 소리 = 곡 파일을 그 배속으로(독립 ffmpeg 한 번)
+            ref = str(tmp / f"ref_{speed}.wav")
+            _ff("-i", bgm_lib.path_of(tid), "-af", f"atempo={speed}", "-t", "4", ref)
+        _m = _corr if speed == 1.0 else _env_corr    # 1배속은 파형 그대로, 배속은 음량 윤곽으로 잰다
+        res[name] = (_m(w, _pcm(ref, 0, 3.0)), float(np.sqrt((w ** 2).mean())),
+                     _m(w, _pcm(bgm_lib.path_of(tid), 0, 3.0)))
     ok = res["곡"][0] >= CORR_MIN and res["곡"][1] > 1e-3 and res["없음"][1] < 1e-4
-    return ok, f"상관 {res['곡'][0]:.3f} · 소리 RMS {res['곡'][1]:.4f} / 곡없음 RMS {res['없음'][1]:.6f}"
+    msg = f"상관 {res['곡'][0]:.3f} · 소리 RMS {res['곡'][1]:.4f} / 곡없음 RMS {res['없음'][1]:.6f}"
+    if speed != 1.0:                        # 배속이 실제로 걸렸나 — 1배속 원본과는 덜 닮아야 한다
+        ok = ok and res["곡"][2] < res["곡"][0] - 0.2
+        msg += f" · 1배속 원본과 상관 {res['곡'][2]:.3f}(기대값보다 0.2 이상 낮아야 함)"
+    return ok, msg
 
 
-def check_capcut(tid, tmp):
+def check_capcut(tid, tmp, speed=1.0):
     import pytest  # noqa: F401 — monkeypatch 대용으로 직접 바꾼다
     from fastapi.testclient import TestClient
     from shopping_shorts import app as A
@@ -77,7 +99,7 @@ def check_capcut(tid, tmp):
     try:
         st = Store(db)
         st.create_mix_job("jc", ["https://www.instagram.com/reel/AAA111/"], 20, "free")
-        st.update_mix_job("jc", status="done", video_path=str(final), deco={"bgm": {"lib": tid, "volume": 25}}, edit_plan={
+        st.update_mix_job("jc", status="done", video_path=str(final), deco={"bgm": {"lib": tid, "volume": 25, **({"speed": speed} if speed != 1.0 else {})}}, edit_plan={
             "structure": "free", "beats": [{"beat_idx": 0, "role": "훅", "narration": "첫 장면", "tts_path": str(t0),
                                             "primary": {"video_id": "s0", "seg_id": "s0-0", "start": 0.0, "end": 2.0}}]})
         c = TestClient(A.app)
@@ -93,7 +115,12 @@ def check_capcut(tid, tmp):
         url = next(a["url"] for a in d["assets"] if a["name"] == "bgm.mp3")
         body = c.get(url).content
         same = hashlib.md5(body).hexdigest() == hashlib.md5(Path(bgm_lib.path_of(tid)).read_bytes()).hexdigest()
-        return (same and seg["volume"] == 0.25), f"파일 md5 일치={same} · 볼륨 {seg['volume']}"
+        tgt, src = seg["target_timerange"]["duration"], seg["source_timerange"]["duration"]
+        sp_ok = abs(seg["speed"] - speed) < 1e-6 and abs(src / tgt - speed) < 0.01
+        if speed != 1.0:
+            sp_ok = sp_ok and any(m["id"] in seg["extra_material_refs"] and abs(m["speed"] - speed) < 1e-6
+                                  for m in draft["materials"].get("speeds", []))
+        return (same and seg["volume"] == 0.25 and sp_ok),             f"파일 md5 일치={same} · 볼륨 {seg['volume']} · 배속 {seg['speed']}(원본 {src/1e6:.2f}s / 화면 {tgt/1e6:.2f}s)"
     finally:
         A.DB_PATH, A._MIX_WORK_DIR = old
 
@@ -109,7 +136,12 @@ def main(ids):
     ok, msg = check_capcut(ids[0], base / "c")
     print(("✅" if ok else "❌"), "캡컷", ids[0], msg)
     bad += not ok
-    print(f"결과: {len(ids)}곡 렌더 + 캡컷 1건, 실패 {bad}")
+    for sp in (0.8, 1.25):                  # 속도 조절(관제 146) — 렌더 atempo·캡컷 배속 칸
+        ok, msg = check_render(ids[0], base / f"rs{sp}", speed=sp)
+        print(("✅" if ok else "❌"), f"렌더 {sp}x", ids[0], msg, flush=True); bad += not ok
+        ok, msg = check_capcut(ids[0], base / f"cs{sp}", speed=sp)
+        print(("✅" if ok else "❌"), f"캡컷 {sp}x", ids[0], msg); bad += not ok
+    print(f"결과: {len(ids)}곡 렌더 + 캡컷 1건 + 속도 2단(렌더·캡컷), 실패 {bad}")
     return bad
 
 

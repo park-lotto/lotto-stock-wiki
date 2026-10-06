@@ -3,9 +3,9 @@
 import subprocess, sys, os
 T = sys.argv[1]; O = sys.argv[2]; CAP = 60.0
 # (id, 원본파일, 시작, 끝|None)
-SEG = [("qiuqiu","full.mp3",0,31),("christian","full.mp3",68,94),("machi_no_dorufin","full.mp3",94,112),
+SEG = [("qiuqiu","full.mp3",0,31),("machi_no_dorufin","full.mp3",94,112),
  ("buttercup","full.mp3",112,139),("free_bird","full.mp3",139,176),("everything","full.mp3",176,241),
- ("astronomia","full.mp3",272,299),("dance_with_me","full.mp3",299,348),
+ ("dance_with_me","full.mp3",299,348),
  ("passo_bem_solto","full2.mp3",1.8,117.6),("before_spring_ends","full2.mp3",121.8,296.9),
  ("pretty_little_baby","full2.mp3",298.4,436.6),("beggin","full2.mp3",439.5,648.7),
  ("unstoppable","full2.mp3",651.8,866.4),("blue","full2.mp3",867.7,1079.3),("yoru_no_odoriko","full2.mp3",1082.5,1382.5)]

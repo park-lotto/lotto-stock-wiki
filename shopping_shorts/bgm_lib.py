@@ -34,6 +34,21 @@ def path_of(track_id):
     return p if os.path.isfile(p) else None
 
 
+SPEED_MIN, SPEED_MAX = 0.5, 2.0       # ffmpeg atempo 한 단으로 되는 범위(음 높이 유지)
+VOLUME_MAX = 60
+
+
+def speed_of(bgm):
+    """배경음 속도(배속) — 렌더(video_assemble)·캡컷(capcut_draft)·저장(app)이 모두 이 값을 쓴다. 기본 1.0."""
+    try:
+        s = float((bgm or {}).get("speed", 1.0))
+    except (TypeError, ValueError, AttributeError):
+        return 1.0
+    if s != s:                         # NaN
+        return 1.0
+    return round(max(SPEED_MIN, min(SPEED_MAX, s)), 2)
+
+
 def enabled_for(store, job):
     """이 작업에 배경음 목록을 보여 주나 — 관리자 설정 bgm_lib_enabled.
     기본 "admin"(2026-10-06 사장님 "관리자만 봐야 한다") = 사장님 계정(customer_id 0) 작업만 / "1"·"on" = 전 회원 / "off" = 아무도."""

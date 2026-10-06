@@ -6,7 +6,7 @@ from shopping_shorts import bgm_lib, mix_pipeline
 
 def test_catalog_files_all_exist_and_capped():
     tracks = bgm_lib.list_tracks()
-    assert len(tracks) >= 26
+    assert len(tracks) >= 24
     assert len({t["id"] for t in tracks}) == len(tracks)
     for t in tracks:
         assert os.path.getsize(bgm_lib.path_of(t["id"])) < 1_200_000     # 128k × 60초 ≈ 0.96MB — 60초 상한
@@ -86,3 +86,14 @@ def test_admin_only_by_default(tmp_path, monkeypatch):
     assert A.api_produce_mix_settings({"job_id": "jb", "bgm_lib": "blue"})["ok"]
     st.set_setting("bgm_lib_enabled", "off")
     assert not bgm_lib.enabled_for(st, {"customer_id": 0})
+
+
+def test_speed_owner_render_and_capcut_follow(tmp_path, monkeypatch):
+    """속도의 뜻은 bgm_lib.speed_of 한 곳 — 저장·렌더(atempo)·캡컷(배속 칸)이 같은 값을 쓴다."""
+    assert bgm_lib.speed_of({}) == 1.0 and bgm_lib.speed_of({"speed": 9}) == 2.0
+    assert bgm_lib.speed_of({"speed": "x"}) == 1.0 and bgm_lib.speed_of({"speed": 0.1}) == 0.5
+    A, job = _app(tmp_path, monkeypatch)
+    A.api_produce_mix_settings({"job_id": "jb", "bgm_lib": "blue", "bgm_speed": 1.25, "bgm_volume": 40})
+    assert job()["deco"]["bgm"] == {"lib": "blue", "volume": 40, "speed": 1.25}
+    A.api_produce_mix_settings({"job_id": "jb", "bgm_speed": 1})
+    assert "speed" not in job()["deco"]["bgm"]                    # 1배속은 키를 지워 종전 그래프 그대로
