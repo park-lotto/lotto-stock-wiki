@@ -34,6 +34,15 @@ def path_of(track_id):
     return p if os.path.isfile(p) else None
 
 
+def enabled_for(store, job):
+    """이 작업에 배경음 목록을 보여 주나 — 관리자 설정 bgm_lib_enabled.
+    기본 "admin"(2026-10-06 사장님 "관리자만 봐야 한다") = 사장님 계정(customer_id 0) 작업만 / "1"·"on" = 전 회원 / "off" = 아무도."""
+    mode = str(store.get_setting("bgm_lib_enabled", "admin") or "admin").strip().lower()
+    if mode in ("1", "on"):
+        return True
+    return mode == "admin" and int((job or {}).get("customer_id") or 0) == 0
+
+
 def shorts_only(deco):
     """이 꾸미기가 쇼츠 전용 곡을 쓰나 — 롱폼을 만들면 안 되는가."""
     bgm = (deco or {}).get("bgm") or {}

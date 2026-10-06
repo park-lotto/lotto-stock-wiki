@@ -2856,7 +2856,10 @@ function sfxpShow(){
   box.style.display = (SFXP || hasBgm) ? '' : 'none';
   const st = document.querySelector('#sfxPanel .sfxtab[data-t="sfx"]');
   if (st) st.style.display = SFXP ? '' : 'none';
+  const bt = document.querySelector('#sfxPanel .sfxtab[data-t="bgm"]');
+  if (bt) bt.style.display = hasBgm ? '' : 'none';        // 배경음 목록은 관리자 전용(기본) — 안 열린 작업엔 탭 자체가 없다
   if (!SFXP && hasBgm) sfxTab('bgm');
+  else if (!hasBgm) sfxTab('sfx');
 }
 // ── 🎵 배경음 목록(2026-10-06 관제 146) — 곡·파일은 서버 bgm_lib 한 곳, 저장은 sfxpSave 와 같은 settings API ──
 let BGMP = null, _bgmAudio = null, _bgmPlaying = '';
@@ -2868,7 +2871,8 @@ async function bgmRefresh(){
   bgmPaint();
 }
 function bgmPaint(){
-  const box = document.getElementById('bgmList'); if (!box || !BGMP) return;
+  const box = document.getElementById('bgmList'); if (!box) return;
+  if (!BGMP || !(BGMP.tracks || []).length){ box.innerHTML = ''; return; }   // 안 열린 작업(관리자 전용 기본)
   const cur = BGMP.current || '';
   const none = `<div class="bgmitem ${cur ? '' : 'on'}"><span class="nm" onclick="bgmPick('')">배경음 없음${BGMP.upload && !cur ? ' <small>(꾸미기에서 올린 파일 사용 중)</small>' : ''}</span>
     <button type="button" class="pick" onclick="bgmPick('')">${cur ? '고르기' : '✓ 선택됨'}</button></div>`;

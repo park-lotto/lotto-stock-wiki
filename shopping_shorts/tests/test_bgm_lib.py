@@ -26,12 +26,12 @@ def test_resolve_deco_media_uses_lib_over_upload(tmp_path):
     assert d["bgm"]["_abspath"] == str(tmp_path / "bgm.mp3")              # 업로드 경로 종전 그대로
 
 
-def _app(tmp_path, monkeypatch, deco=None):
+def _app(tmp_path, monkeypatch, deco=None, cid=0):
     from shopping_shorts import app as A
     from shopping_shorts.store import Store
     db = tmp_path / "t.db"
     st = Store(str(db))
-    st.create_mix_job("jb", ["u"], 25, "free", customer_id=7)
+    st.create_mix_job("jb", ["u"], 25, "free", customer_id=cid)
     st.update_mix_job("jb", deco=deco or {"bgm": {"file": "bgm.mp3", "volume": 15}, "sfx_pack": "off"})
     monkeypatch.setattr(A, "DB_PATH", str(db))
     return A, (lambda: Store(str(db)).get_mix_job("jb"))
@@ -71,3 +71,18 @@ def test_longform_blocked_for_shorts_only_track(tmp_path, monkeypatch):
     Store(A.DB_PATH).update_mix_job("jb", deco={"bgm": {"volume": 15}})
     _, s, resp = A._longform_job("jb")
     assert resp is None and s == str(src)
+
+
+def test_admin_only_by_default(tmp_path, monkeypatch):
+    """2026-10-06 사장님 "관리자만 봐야 한다" — 기본은 사장님 계정(0) 작업만. 회원 작업은 목록 0·고르기 403."""
+    A, job = _app(tmp_path, monkeypatch, cid=7)
+    from shopping_shorts.store import Store
+    st = Store(A.DB_PATH)
+    assert not bgm_lib.enabled_for(st, job())
+    r = A.api_produce_mix_settings({"job_id": "jb", "bgm_lib": "blue"})
+    assert r.status_code == 403 and "lib" not in (job()["deco"].get("bgm") or {})
+    st.set_setting("bgm_lib_enabled", "1")                 # 회원에게 열면
+    assert bgm_lib.enabled_for(st, job())
+    assert A.api_produce_mix_settings({"job_id": "jb", "bgm_lib": "blue"})["ok"]
+    st.set_setting("bgm_lib_enabled", "off")
+    assert not bgm_lib.enabled_for(st, {"customer_id": 0})

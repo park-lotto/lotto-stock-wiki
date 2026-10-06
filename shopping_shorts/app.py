@@ -21570,6 +21570,8 @@ def api_produce_mix_settings(body: dict):
         _new = dict(_old)
         if "bgm_lib" in body:
             _lib = str(body.get("bgm_lib") or "").strip()
+            if _lib and not _bl.enabled_for(store, job):
+                return JSONResponse(status_code=403, content={"ok": False, "error": "아직 열리지 않은 기능이에요"})
             if _lib and not _bl.path_of(_lib):
                 return JSONResponse(status_code=422, content={"ok": False, "error": "없는 곡이에요"})
             _new.pop("file", None)
@@ -21663,19 +21665,25 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
 def api_produce_mix_bgm_lib(job_id: str, request: Request):
     """3단계 배경음 목록(관제 146) — {tracks, current(곡 id|""), upload(업로드 파일이 걸려 있나), volume}."""
     from shopping_shorts import bgm_lib
-    job = Store(DB_PATH).get_mix_job(job_id)
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
     if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
         return JSONResponse(status_code=404, content={"ok": False, "error": "영상 없음"})
     bgm = (job.get("deco") or {}).get("bgm") or {}
-    return {"ok": True, "tracks": bgm_lib.list_tracks(), "current": str(bgm.get("lib") or ""),
+    # 관리자 전용(기본) — 안 열린 작업엔 목록을 비워 보낸다(화면은 배경음 탭을 숨긴다)
+    tracks = bgm_lib.list_tracks() if bgm_lib.enabled_for(store, job) else []
+    return {"ok": True, "tracks": tracks, "current": str(bgm.get("lib") or ""),
             "upload": bool(bgm.get("file")) and not bgm.get("lib"), "volume": int(bgm.get("volume", 15) or 0)}
 
 
 @app.get("/api/produce/bgm_lib/sound/{track_id}")
-def api_bgm_lib_sound(track_id: str):
-    """배경음 목록 곡 미리듣기 — 렌더가 쓰는 그 파일 그대로."""
+def api_bgm_lib_sound(track_id: str, request: Request):
+    """배경음 목록 곡 미리듣기 — 렌더가 쓰는 그 파일 그대로. 목록이 안 열린 회원에겐 주지 않는다(관리자 전용 기본)."""
     from shopping_shorts import bgm_lib
     p = bgm_lib.path_of(track_id)
+    _cid0 = _cid(request)
+    if p and not (_is_admin(_cid0) or bgm_lib.enabled_for(Store(DB_PATH), {"customer_id": _cid0})):
+        p = None
     if not p:
         return JSONResponse(status_code=404, content={"ok": False, "error": "곡 없음"})
     return FileResponse(p, media_type="audio/mpeg", headers={"Cache-Control": "public, max-age=86400"})

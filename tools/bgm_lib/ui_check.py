@@ -96,6 +96,15 @@ with sync_playwright() as p:
     pg.goto(url, wait_until="domcontentloaded"); pg.wait_for_timeout(5000)
     check(pg.is_visible('#sfxPanel .sfxtab[data-t="sfx"]') and pg.is_visible('#sfxPanel .sfxtab[data-t="bgm"]'),
           "효과음 켠 작업은 두 탭 다")
+    # 회원 작업(관리자 전용 기본): 배경음 탭이 없다 — 효과음만
+    st2 = Store(db); st2.create_mix_job("jmem", ["u"], 20, "free", customer_id=7)
+    row = Store(db).get_mix_job("jui")
+    st2.update_mix_job("jmem", status="done", video_path=str(final), deco={"bgm": {"volume": 15}},
+                       extract=row["extract"], edit_plan=row["edit_plan"])
+    pg.goto(f"http://127.0.0.1:{PORT}/scene_lab.html?job=jmem", wait_until="domcontentloaded"); pg.wait_for_timeout(5000)
+    check(not pg.is_visible('#sfxPanel .sfxtab[data-t="bgm"]') and pg.locator("#bgmList .bgmitem").count() == 0,
+          "회원 작업엔 배경음 탭·목록 없음(관리자 전용)")
+    check(pg.is_visible('#sfxBodySfx'), "회원 작업은 효과음 본문이 열린다")
     b.close()
 print("캡처:", out)
 print("결과:", "통과" if ok else "실패")
