@@ -9926,11 +9926,11 @@ def _longform_job(job_id):
     return job, job["video_path"], None
 
 
-def _longform_run(src, job_dir, where):
+def _longform_run(src, job_dir, where, voice=None, customer_id=0):
     from shopping_shorts import link_longform
     with _LONGFORM_LOCK:
         try:
-            link_longform.render_link_longform(src, job_dir, where)
+            link_longform.render_link_longform(src, job_dir, where, voice=voice, customer_id=customer_id)
         except Exception:      # noqa: BLE001 — 사유는 render_link_longform 이 .err 와 stderr 에 남겼다(화면이 읽는다)
             pass
 
@@ -9966,8 +9966,13 @@ def api_mix_longform_link(job_id: str, body: dict):
     if st["state"] in ("ready", "running"):
         return st
     job_dir = _MIX_WORK_DIR / job_id
+    if link_longform.tts_text(link_longform.load_layout(job_dir)):
+        # 읽어 줄 말이 있으면 성우 키가 있어야 한다 — 미리듣기·렌더와 같은 판정(_need_own_key_or_402)
+        _blocked = _need_own_key_or_402(_job.get("customer_id"), tts=True, voice=_job.get("voice"))
+        if _blocked:
+            return _blocked
     link_longform.mark_running(job_dir)
-    threading.Thread(target=_longform_run, args=(src, job_dir, where), daemon=True).start()
+    threading.Thread(target=_longform_run, args=(src, job_dir, where, _job.get("voice"), int(_job.get("customer_id") or 0)), daemon=True).start()
     return _longform_status(job_id, src, where)
 
 

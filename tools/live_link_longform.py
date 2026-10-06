@@ -61,6 +61,14 @@ q = ("python3 -c \"import sqlite3;c=sqlite3.connect('file:/home/ubuntu/lotto-sto
 vp = subprocess.run(['ssh', '-o', 'ConnectTimeout=15', '-i', KEY, HOST, q], capture_output=True, text=True, timeout=60).stdout.strip()
 for remote, name in ((vp, 'src.mp4'), (f'/home/ubuntu/lotto-stock-wiki/shopping_shorts/data/mix_jobs/{job}/final_longform.mp4', 'longform.mp4')):
     subprocess.run(['scp', '-q', '-o', 'ConnectTimeout=15', '-i', KEY, f'{HOST}:{remote}', str(out / name)], check=True, timeout=600)
+# 읽어 줄 말: 영상 머리(0.4초~)에 소리가 있고(성우 키는 서버 DB 에만 있어 로컬에선 못 잰다), 뒤쪽은 무음
+def _vol(t0, t1):
+    o = subprocess.run(['ffmpeg', '-loglevel', 'info', '-ss', str(t0), '-t', str(t1 - t0), '-i', str(out / 'longform.mp4'), '-af', 'volumedetect', '-f', 'null', '-'], capture_output=True, text=True).stderr
+    m = __import__('re').search(r'max_volume: (-?[\d.]+) dB', o); return float(m.group(1)) if m else -100.0
+import json as _j
+if any(m.get('tts') for m in _j.loads((out / 'layout.json').read_text(encoding='utf-8'))['items']):
+    head, tail = _vol(0.5, 2.5), _vol(12.0, 14.0)
+    need(head > -40 and tail < -80, f'③ 읽어 줄 말: 머리 소리 {head:.1f}dB(있어야) · 12초 뒤 {tail:.1f}dB(무음이어야)')
 run = subprocess.run([sys.executable, str(ROOT / 'tools/link_longform_check.py'), str(out / 'src.mp4'), str(out / 'longform.mp4'), str(out / 'layout.json')],
                      capture_output=True, text=True, encoding='utf-8', errors='replace', env={**__import__('os').environ, 'PYTHONIOENCODING': 'utf-8'})
 print(run.stdout[-1500:], run.stderr[-500:])
