@@ -105,6 +105,40 @@ WRITE_PROMPT = """너는 쇼핑 쇼츠 대본 작가다. 터진 영상(씨앗)�
 %s"""
 
 
+RESEARCH_PROMPT = """한 제품으로 쇼핑 쇼츠 '썰' 대본을 쓰려고 한다. 이 제품(또는 이 제품 종류·브랜드)에 대해 **숨겨진 이야기**를 찾아라.
+찾을 것(5~8개): 탄생 비화(누가 왜 만들었나) · 알려지지 않은 사실 · 원래 용도와 다른 뜻밖의 쓰임 · 사람 이야기(누가 어떻게 쓰다 퍼졌나) · 원조·비싼 것과의 관계 · 흔한 오해.
+★검색으로 **확인한 것만** 적고, 항목마다 근거 출처(URL 또는 매체·페이지 이름)를 적어라. 확인 못 한 것은 적지 마라. 숫자·상표·나라는 출처에 있는 그대로.
+출력은 JSON 객체 하나: {"facts": [{"kind": "탄생 비화|숨은 사실|뜻밖의 쓰임|사람 이야기|원조 관계|오해", "text": "한 줄", "source": "출처"}]}
+
+[제품] %s
+[영상에서 이미 본 것 — 겹치는 건 빼라] %s"""
+
+STORY_PROMPT = """쇼핑 쇼츠 '썰' 대본의 **줄거리**를 짜라. 대본을 쓰는 게 아니다 — 누가, 무슨 일이, 어떻게 됐나를 정하는 단계다.
+
+썰은 제품 설명이 아니라 **사람들에게 벌어진 일**이다. 원본 채널 39편의 썰은 이 다섯 꼴 중 하나였다:
+  대체 탐정  : 비싼 원조 → 못 구하거나 아쉬움 → 포기 못 한 무리가 시행착오 끝에 이걸 찾아냄 → 원조에 갈 이유가 없어짐
+  숨은 이유  : 다들 OO 때문에 사는 줄 알았는데 → 살펴보니 → 정작 꽂힌 이유는 따로 있었음
+  원리       : 겉보기엔 말이 안 되는데 → 사실 기존 것은 이런 방식이라 단점이 있었고 → 이건 이렇게 해서 됨 → 덤
+  역전       : 원래는 망하거나 무시당하던 것 → 누군가의 아이디어·집착 → 뒤집힘 → 지금은
+  소동       : 뜻밖의 일(루머·오용·사건)이 벌어짐 → 사람들 반응 → 제조사 반응 → 그래도 계속
+
+재료는 [포인트](영상에서 본 것)와 [숨겨진 이야기](조사한 것)다. **숨겨진 이야기가 있으면 그걸 사건의 중심에 둔다.**
+선: 제품 사실(기능·숫자·상표·가격·효능)과 숨겨진 이야기는 재료에 있는 것만 쓴다. 사람과 사건의 **서술**(어떤 무리가 실험을 거듭했다, 사람들이 놀랐다)은 썰로 꾸며도 된다 — 단 꾸민 자리는 dramatized 에 적어라.
+
+출력은 JSON 객체 하나:
+{"type": "다섯 꼴 중 하나", "cast": "주인공 무리(별명으로, 예: 빵돌이들·러너들·자취생들)",
+ "beats": [{"step": "계기|막힘|발견|반전|결과 중", "text": "그 단계에서 벌어지는 일 한두 문장(대본체 아님, 줄거리)", "uses": ["p3", "f1"]}],
+ "dramatized": ["꾸민 서술 한 줄", ...]}
+(uses 는 포인트 p번호·숨겨진 이야기 f번호)
+
+[제품] %s
+[씨앗이 사람을 붙잡은 방법 — 같은 수법을 쓴다] %s
+[포인트]
+%s
+[숨겨진 이야기]
+%s"""
+
+
 def parse(raw):
     s = re.sub(r"^```(?:json)?\s*|\s*```$", "", (raw or "").strip(), flags=re.S)
     i = s.find("{")
@@ -181,6 +215,47 @@ def mine_points(product, seed_an, scenes, call):
     return pts
 
 
+
+def research(product, seen_points, call):
+    """②-2 숨겨진 이야기 조사. call 은 **검색이 붙은** 호출기여야 한다(그냥 모델 지식이면 지어낸다). 출처 없는 항목은 버린다."""
+    try:
+        out = _ask(call, RESEARCH_PROMPT % (product, " · ".join(seen_points or [])[:600] or "(없음)"))
+    except ValueError:
+        return []
+    facts = []
+    for f in out.get("facts") or []:
+        if isinstance(f, dict) and (f.get("text") or "").strip() and len((f.get("source") or "").strip()) >= 4:
+            f["id"] = "f%d" % (len(facts) + 1)
+            facts.append(f)
+    return facts
+
+
+def _facts_block(facts):
+    return "\n".join("%s. (%s) %s — 출처: %s" % (f["id"], f.get("kind") or "", f["text"], f.get("source") or "") for f in facts) or "(없음)"
+
+
+def build_story(product, seed_an, points, facts, call):
+    """③-1 썰 짓기 — 포인트·숨겨진 이야기 → 줄거리(누가·무슨 일·어떻게). 재료 밖 사실을 쓴 단계는 uses 가 비어 걸러진다."""
+    out = _ask(call, STORY_PROMPT % (product, " / ".join(h["why"] for h in seed_an.get("hooked") or []) or "(없음)",
+                                     "\n".join("p%d. (%s) %s" % (p["id"], p.get("kind") or "", p["text"]) for p in points) or "(없음)", _facts_block(facts)))
+    ids = {"p%d" % p["id"] for p in points} | {f["id"] for f in facts}
+    beats = []
+    for b in out.get("beats") or []:
+        if isinstance(b, dict) and (b.get("text") or "").strip():
+            b["uses"] = [u for u in (b.get("uses") or []) if u in ids]
+            beats.append(b)
+    return {"type": out.get("type") or "", "cast": out.get("cast") or "", "beats": beats, "dramatized": out.get("dramatized") or [],
+            "uses_fact": any(u.startswith("f") for b in beats for u in b["uses"])}
+
+
+def _story_block(story):
+    if not story or not story.get("beats"):
+        return ""
+    rows = ["[줄거리 — 이 순서대로 쓴다. 주인공 무리: %s · 썰 꼴: %s]" % (story.get("cast") or "사람들", story.get("type") or "")]
+    rows += ["%d. (%s) %s" % (i + 1, b.get("step") or "", b["text"]) for i, b in enumerate(story["beats"])]
+    return "\n".join(rows) + "\n"
+
+
 def _frame(seed_an):
     return "\n".join("%d. %s — %s\n     원문: %s" % (i + 1, b["name"], b.get("does") or "", (b.get("text") or "")[:120])
                      for i, b in enumerate(seed_an.get("beats") or []))
@@ -230,7 +305,7 @@ def problems(script, seed_text, seed_an, points, scenes):
     return bad
 
 
-def write(product, seed_text, seed_an, points, scenes, call, *, max_rewrites=1, log=print):
+def write(product, seed_text, seed_an, points, scenes, call, *, story=None, facts=None, max_rewrites=1, log=print):
     """③ 쓰기 → (script, 남은 문제, 시도 수). 길이는 씨앗 길이를 따른다(0.9~1.4배, 최소 150자)."""
     n = max(150, chars(seed_text))
     lo, hi = int(n * 0.9), int(n * 1.4)
@@ -238,7 +313,9 @@ def write(product, seed_text, seed_an, points, scenes, call, *, max_rewrites=1, 
     base = WRITE_PROMPT % (need_new, lo, hi, product, _frame(seed_an), seed_an.get("tone") or "", seed_an.get("voice") or "",
                            " · ".join(seed_an.get("endings") or []), " · ".join(seed_an.get("openers") or []) or "(없음)",
                            seed_an.get("title_shape") or "", "\n".join("- %s" % h["why"] for h in seed_an.get("hooked") or []) or "(없음)",
-                           _points_block(points), "")
+                           _points_block(points) + ("\n[숨겨진 이야기 — 출처 있는 것만]\n" + _facts_block(facts) if facts else ""), "")
+    if story:
+        base = base.replace("[제품] %s" % product, _story_block(story) + "\n[제품] %s" % product, 1)
     fb, last = "", None
     for attempt in range(max_rewrites + 1):
         script = _ask(call, base + fb)
@@ -252,9 +329,13 @@ def write(product, seed_text, seed_an, points, scenes, call, *, max_rewrites=1, 
     return last
 
 
-def run(product, seed_text, scenes, call, *, log=print):
-    """세 단계를 차례로. → {"seed": 분석, "points": 포인트, "script": 대본, "problems": 남은 문제, "attempts": n}"""
-    seed_an = analyze_seed(seed_text, call)
-    points = mine_points(product or seed_an.get("product") or "", seed_an, scenes, call)
-    script, bad, n = write(product or seed_an.get("product") or "", seed_text, seed_an, points, scenes, call, log=log)
-    return {"seed": seed_an, "points": points, "script": script, "problems": bad, "attempts": n}
+def run(product, seed_text, scenes, call, *, search_call=None, seed_an=None, log=print):
+    """단계를 차례로: 씨앗 분석 → 포인트 → (검색 호출기가 있으면) 숨겨진 이야기 조사 → 썰 짓기 → 쓰기.
+    → {"seed", "points", "facts", "story", "script", "problems", "attempts"}"""
+    seed_an = seed_an or analyze_seed(seed_text, call)
+    product = product or seed_an.get("product") or ""
+    points = mine_points(product, seed_an, scenes, call)
+    facts = research(product, [p["text"] for p in points], search_call) if search_call else []
+    story = build_story(product, seed_an, points, facts, call)
+    script, bad, n = write(product, seed_text, seed_an, points, scenes, call, story=story, facts=facts, log=log)
+    return {"seed": seed_an, "points": points, "facts": facts, "story": story, "script": script, "problems": bad, "attempts": n}

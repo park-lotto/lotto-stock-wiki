@@ -27,6 +27,18 @@ def main():
                 time.sleep(2); return got or ""
         raise RuntimeError("버텍스 호출 실패")
 
+    def search_call(prompt):
+        """검색이 붙은 호출 — 숨겨진 이야기 조사용. JSON 모드와 검색 도구를 같이 못 쓰므로 글로 받고 parse 가 첫 JSON 객체를 꺼낸다."""
+        def _vx(cl, m):
+            return cl.models.generate_content(model=m, contents=prompt, config=types.GenerateContentConfig(
+                tools=[types.Tool(google_search=types.GoogleSearch())])).text
+        for wait in (0, 10, 25, 45):
+            time.sleep(wait)
+            ok, got = vertex_route.try_call("script_generate", _vx, what="칼카피조사")
+            if ok:
+                time.sleep(2); return got or ""
+        raise RuntimeError("버텍스(검색) 호출 실패")
+
     seeds = json.load(open(a.seeds, encoding="utf-8"))
     c = sqlite3.connect("file:%s?mode=ro" % config.DB_PATH, uri=True); c.row_factory = sqlite3.Row
     rows = c.execute("select job_id, extract_json, backbone_main from mix_jobs where extract_json is not null and length(extract_json) > 2000 order by created_at desc limit ?", (a.scan,)).fetchall()
@@ -50,9 +62,8 @@ def main():
             try:
                 if sd["name"] not in an_cache:
                     an_cache[sd["name"]] = sf.analyze_seed(sd["text"], call)
-                an = an_cache[sd["name"]]
-                pts = sf.mine_points(product, an, scenes, call)
-                sc, bad, n = sf.write(product, sd["text"], an, pts, scenes, call, log=lambda *_: None)
+                out = sf.run(product, sd["text"], scenes, call, search_call=search_call, seed_an=an_cache[sd["name"]], log=lambda *_: None)
+                an, pts, sc, bad, n = out["seed"], out["points"], out["script"], out["problems"], out["attempts"]
             except (RuntimeError, ValueError) as e:
                 print("건너뜀 %s: %s" % (product, e)); seen.discard(product); continue
             lines = [{"role": L.get("beat") or "", "text": L.get("text") or ""} for L in sc.get("lines") or [] if (L.get("text") or "").strip()]
@@ -60,13 +71,22 @@ def main():
             src_txt = sd["text"] + " " + " ".join(p["text"] for p in pts) + " " + " ".join(s["desc"] + " " + s["use"] for s in scenes)
             bg_rej = [list(i) for i in br.rejects(br.lint(bg, {"source_text": src_txt, "seed_text": sd["text"]})) if i.rule not in ("bg_copy", "bg_lines", "bg_length", "bg_title_len")]
             body = " ".join(L["text"] for L in lines)
-            row = {"job": r["job_id"], "product": product, "seed_name": sd["name"], "videos": len(srcs), "scenes": len(scenes), "seed": an, "points": pts,
+            row = {"job": r["job_id"], "product": product, "seed_name": sd["name"], "videos": len(srcs), "scenes": len(scenes), "seed": an, "points": pts, "facts": out["facts"], "story": out["story"],
                    "script": sc, "problems": bad, "attempts": n, "banggu_rejects": bg_rej, "copy_share": round(sf.gram_share(body, sd["text"]), 2), "chars": sf.chars(body)}
             res.append(row)
             print("\n##### %s ← 씨앗 %s | 영상 %d · 장면 %d | 대본 %d자 · 씨앗과 겹침 %.0f%% · 시도 %d · 흐름 문제 %d · 방구석 규칙 어김 %d" % (
                 product, sd["name"], len(srcs), len(scenes), row["chars"], row["copy_share"] * 100, n, len(bad), len(bg_rej)))
             print("[틀] " + " → ".join(b["name"] for b in an.get("beats") or []) + " | " + (an.get("tone") or ""))
             print("[포인트] %d개 — 새것 %d · %s" % (len(pts), sum(1 for p in pts if not p["in_seed"]), {o: sum(1 for p in pts if p["origin"] == o) for o in sf.ORIGINS}))
+            print("[숨겨진 이야기] %d개" % len(out["facts"]))
+            for f in out["facts"]:
+                print("   %s. (%s) %s — %s" % (f["id"], f.get("kind") or "", f["text"], (f.get("source") or "")[:60]))
+            st = out["story"]
+            print("[썰] %s · 주인공 %s · 숨은 이야기 씀=%s" % (st.get("type"), st.get("cast"), st.get("uses_fact")))
+            for b in st.get("beats") or []:
+                print("   (%s) %s   ← %s" % (b.get("step"), b.get("text"), ",".join(b.get("uses") or [])))
+            if st.get("dramatized"):
+                print("   꾸민 서술: " + " / ".join(st["dramatized"]))
             print("[대본]\n  (훅) " + (sc.get("title") or ""))
             for L in sc.get("lines") or []:
                 if (L.get("text") or "").strip() != (sc.get("title") or "").strip():
