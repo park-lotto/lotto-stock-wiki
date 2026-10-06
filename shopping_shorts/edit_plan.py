@@ -4730,6 +4730,8 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
             # 신호어 자리 번호([1]·[2]·[3]) — 짤 자리(storyboard.meme_slots)가 읽는다(관제 139). 스토리보드 줄만 실려 온다
             **({"sig_rank": int(srcs[i]["sig_rank"]), "signal": str(srcs[i].get("signal") or "")}
                if str(srcs[i].get("sig_rank") or "").isdigit() else {}),
+            # 2단계에서 미리 고른 짤(관제 143) — meme_slots 가 먼저 쓴다
+            **({"meme_pick": int(srcs[i]["meme_pick"])} if str(srcs[i].get("meme_pick") or "").isdigit() else {}),
         })
         prev_sid = refs[-1]["seg_id"]
     if not beats:

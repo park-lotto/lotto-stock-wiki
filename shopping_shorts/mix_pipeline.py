@@ -932,25 +932,43 @@ def mark_auto_exclude(extracts, job):
     idx = ss.get("no_auto_idx") if isinstance(ss, dict) else None
     if not isinstance(idx, list):
         return extracts
-    # ★재료가 씨앗뿐이면 표식을 달지 않는다(관제 138) — 달면 자동 배치 후보가 0이 돼 편집안을 못 만든다(_drop_seed 와 같은 규칙).
-    _seed = set()
+    _seed = []
     for i in idx:
         try:
-            _seed.add(f"s{int(i)}")
+            _seed.append(f"s{int(i)}")
         except (TypeError, ValueError):
             pass
+    return mark_seed_sources(extracts, _seed)
+
+
+def mark_seed_sources(extracts, seed_keys):
+    """씨앗 표식을 실제로 다는 한 곳 — 3단계 job(mark_auto_exclude, 열쇠 s<urls 인덱스>)과
+    2단계 스토리보드(작업파일 재료, 열쇠 = 영상 shortcode — seed_keys_from_handoff)가 같이 부른다(관제 120 장면배분).
+    ★재료가 씨앗뿐이면 표식을 달지 않는다(관제 138) — 달면 자동 배치 후보가 0이 돼 편집안을 못 만든다(_drop_seed 와 같은 규칙)."""
+    _seed = {str(k) for k in (seed_keys or []) if k is not None and str(k)}
+    if not _seed:
+        return extracts
     if not any(isinstance(r, dict) and r.get("segments") for k, r in (extracts or {}).items() if k not in _seed):
         print("[extract] 씨앗 말고 쓸 재료가 없어 자동 배치 제외를 달지 않는다", flush=True)
         return extracts
-    for i in idx:
-        try:
-            r = extracts.get(f"s{int(i)}")
-        except (TypeError, ValueError):
-            continue
+    for k in sorted(_seed):
+        r = (extracts or {}).get(k)
         if isinstance(r, dict):
             r["auto_exclude"] = True
-            print(f"[extract] s{int(i)} 씨앗 — 자동 배치 제외(영상 소스엔 유지)", flush=True)
+            print(f"[extract] {k} 씨앗 — 자동 배치 제외(영상 소스엔 유지)", flush=True)
     return extracts
+
+
+def seed_keys_from_handoff(handoff):
+    """작업파일(produce_works.state.handoff)에서 씨앗 영상 열쇠(shortcode) — 화면 collectNoAutoIdx 와 같은 조건
+    (seedNoAuto 표식 + useFootage). 3단계 job 이 아직 없을 때 스토리보드 재료(app._sb_job)가 쓴다."""
+    out = []
+    for e in handoff or []:
+        if isinstance(e, dict) and e.get("seedNoAuto") and e.get("useFootage"):
+            sc = str(e.get("shortcode") or "").strip()
+            if sc:
+                out.append(sc)
+    return out
 
 
 def _extract_coverage(r, path):
@@ -2445,28 +2463,41 @@ def _meme_pool(store):
     return pool
 
 
+def _meme_words_of(b):
+    """칸 → (낱말 시각, 실제 칸 길이) — 짤 길이(storyboard.meme_head)에 건네는 음성 정보. 자동 배치·[＋짤] 둘 다 이 함수."""
+    from shopping_shorts import video_assemble as _va
+    mp3 = b.get("tts_path")
+    if not mp3 or not Path(mp3).exists():
+        return None, None
+    d = _probe_duration(str(mp3))
+    words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)))
+    return words, _va._beat_effective_dur(b, mp3)
+
+
+def _meme_prefs(store, customer_id):
+    """회원의 '감정별 우선 짤'(관제 143) → {감정: [asset_id…]}. 못 읽으면 빈 dict + 한 줄(종전 해시로)."""
+    from shopping_shorts import storyboard as _sbm
+    try:
+        return _sbm.meme_prefs_by_emotion(store.get_pref(_sbm.MEME_PREF_KEY, customer_id=int(customer_id or 0), default=[]))
+    except Exception as e:      # noqa: BLE001
+        print("[meme] 우선 짤 읽기 실패(종전대로): %r" % e, file=sys.stderr)
+        return {}
+
+
 def _apply_memes(plan, store, job, tts_dir):
     """칸 맨 앞 감정짤 — 판단은 storyboard.meme_slots 한 곳. 여기는 스위치·짤 팩·음성 시각을 건넬 뿐. 짤 칸 수를 돌려준다."""
     if not _meme_on(store, job):
         return 0
     from shopping_shorts import storyboard as _sbm
-    from shopping_shorts import video_assemble as _va
     try:
         pool = _meme_pool(store)
     except Exception as e:      # noqa: BLE001 — 팩을 못 읽으면 짤 없음(이유 한 줄)
         print("[meme] 짤 팩 읽기 실패 — 짤 없음: %r" % e, file=sys.stderr)
         pool = {}
-
-    def _words_of(b):
-        mp3 = b.get("tts_path")
-        if not mp3 or not Path(mp3).exists():
-            return None, None
-        d = _probe_duration(str(mp3))
-        words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)))
-        return words, _va._beat_effective_dur(b, mp3)
-    res = _sbm.meme_slots(plan, _words_of, pool, key=str((job or {}).get("job_id") or tts_dir))   # 작업마다 다른 짤
+    res = _sbm.meme_slots(plan, _meme_words_of, pool, key=str((job or {}).get("job_id") or tts_dir),   # 작업마다 다른 짤
+                          prefs=_meme_prefs(store, (job or {}).get("customer_id", 0)))
     for r in res:
-        print("[meme] job칸 %s %s" % (r.get("beat_idx"), ("짤 %s %.2f초 #%s" % (r["emotion"], r["head_sec"], r["asset_id"]))
+        print("[meme] job칸 %s %s" % (r.get("beat_idx"), ("짤 %s %.2f초 #%s" % (r["emotion"], float(r["head_sec"] or 0), r["asset_id"]))
                                        if r.get("meme") else ("없음: " + r.get("why", ""))), file=sys.stderr)
     return sum(1 for r in res if r.get("meme"))
 

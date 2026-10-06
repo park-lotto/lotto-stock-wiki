@@ -1369,5 +1369,7 @@ def storyboard_to_beat_sources(slots, seg_lookup=None):
                    "segs": ids, "pinned": bool(ids), "seg_keys": keys,
                    # 신호어 자리 번호 — storyboard.apply_signals 가 slot 에 남긴 것을 그대로 싣는다(짤 자리 판정용, 관제 139)
                    **({"sig_rank": int(sl["sig_rank"]), "signal": str(sl.get("signal") or "")}
-                      if str(sl.get("sig_rank") or "").isdigit() else {})})
+                      if str(sl.get("sig_rank") or "").isdigit() else {}),
+                   # 2단계에서 미리 고른 짤 번호(관제 143) — meme_slots 가 이 짤을 먼저 쓴다(sig_rank 와 같은 길)
+                   **({"meme_pick": int(sl["meme_pick"])} if str(sl.get("meme_pick") or "").isdigit() else {})})
     return {"script": "\n".join(lines), "beat_sources": bs}

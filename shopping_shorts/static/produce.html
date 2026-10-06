@@ -2888,8 +2888,9 @@
           </div>
         </div>
 
-        <!-- ② 대본 스타일 — 통짜(훅·전개·CTA 한 몸). 고른 만큼 안이 나온다(최대 2) -->
-        <div class="s2-band">
+        <!-- ② 대본 스타일 — 통짜(훅·전개·CTA 한 몸). 고른 만큼 안이 나온다(최대 2)
+             ★스토리보드 켠 계정(STORYBOARD_ON)에선 sbRender 가 이 줄을 숨긴다(스토리보드가 스타일 고르기를 대신) — 꺼진 계정은 그대로 -->
+        <div class="s2-band" id="s2StyleBand">
           <div class="s2-label">② 대본 스타일 — 훅·전개·CTA가 한 몸 · 고른 만큼 안이 나옵니다</div>
           <div class="s2-cardrow" id="s2StyleRow"><div class="hint">스타일 불러오는 중…</div></div>
           <div class="s2-subrow">
@@ -8523,6 +8524,9 @@ function _workState(){
   //   ⚠️ 여기서 만들지 말고 _s2Snapshot() 하나만 쓴다(0순위-B: 담는 모양은 한 곳에서 정한다).
   const _s2 = (typeof _s2Snapshot === 'function') ? _s2Snapshot() : null;
   if(_s2) _st.s2 = _s2;
+  // 2단계 스토리보드(관제 120) — 담는 모양은 _sbSnapshot 한 곳. 없으면 키를 안 만든다
+  const _sb = (typeof _sbSnapshot === 'function') ? _sbSnapshot() : null;
+  if(_sb) _st.sb = _sb;
   return _st;
 }
 // 사이드바 ✏가 이름을 바꾸면 이 화면의 STATE에도 심는다(2026-08-17). 안 심으면 위 _workState가
@@ -9517,6 +9521,7 @@ function _renderMixReviewBody(d, failStatus){
   }
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
+  globalThis.MIX_MEME_ON = !!d.meme_enabled;   // 3단계 칸 짤 [바꾸기][빼기][＋짤](관제 143, 스위치 meme_enabled)
   try{ _syncSceneLab(true); }catch(_){ }   // ② 장면실험실 iframe(정의는 loadMixReview 위)
   if(typeof window!=='undefined') window._mixBeats = d.beats || [];   // 조각 전체 보기(paletteStats)가 읽는다 — 실제 쓴 컷 집계용
   const el=document.getElementById('mixReview');
@@ -12264,6 +12269,7 @@ async function cloneCandidate(idx){
 // 안에서만 갱신한다.
 let MIX_REVIEW_SUGGESTIONS = [];
 globalThis.MIX_AI_SCENE_ON = false;   // /api/mix/result 의 ai_scene_enabled(2026-09-23, 기본 관리자만)
+globalThis.MIX_MEME_ON = false;      // /api/mix/result 의 meme_enabled(관제 143) — 꺼지면 짤 칸을 안 그린다(화면 불변)
 const _AI_SCENE_POLL = {};      // beat_idx → interval id
 
 // ★AI 장면 생성(Veo, 2026-09-23 사장님): "없는 장면"을 그 칸 재료 프레임 베이스로 4~8초 만든다.
@@ -12316,6 +12322,7 @@ async function _refreshBeatBox(idx){
   const beat = (d.beats||[])[idx];   // idx = 화면 위치(toggleCutaway·removeSfx와 같은 식)
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
+  globalThis.MIX_MEME_ON = !!d.meme_enabled;   // 3단계 칸 짤 [바꾸기][빼기][＋짤](관제 143, 스위치 meme_enabled)
   const box = document.getElementById('sceneCutaway'+idx);
   if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
   return beat;
@@ -12338,6 +12345,15 @@ function renderSceneCutaway(beat, idx){
   const cw = beat.cutaway;
   const sugg = MIX_REVIEW_SUGGESTIONS.filter(s=>s.beat_idx===beat.beat_idx);
   let html = renderAiSceneBtn(beat, idx);
+  // ★감정짤 칸(관제 143) — 스위치 켜진 계정만. 짤 컷이면 짤 카드 [바꾸기][빼기], 끼움 장면이 없으면 [＋짤]
+  const memeOn = (typeof MIX_MEME_ON!=='undefined') && MIX_MEME_ON && typeof MemePack!=='undefined';
+  if(memeOn && cw && cw.match_type==='meme'){
+    return html + `<div class="mp-cell">${MemePack.video(cw.asset_id)}<div style="flex:1">🎭 <b>${esc(cw.emotion||'')}</b> 짤 · 줄 맨 앞 ${esc(cw.head_sec)}초${cw.manual?' · 직접 고름':' · 자동'}</div>`
+      + `<button class="mp-btn" onclick="memeCellOpen(${idx})">바꾸기</button><button class="mp-btn" onclick="memeCellSet(${idx},null)">빼기</button></div>`;
+  }
+  if(memeOn && !cw){
+    html += `<button class="mp-btn mp-add" onclick="memeCellOpen(${idx})" title="이 줄 맨 앞에 감정짤을 넣어요">＋짤</button>`;
+  }
   if(cw){
     const label = cw.match_type === 'role' ? '역할 매칭'
                 : cw.match_type === 'ai' ? ('AI 장면 · '+(((beat.ai_scene||{}).style)==='impact'?'임팩트':'자연')+(beat.ai_scene&&beat.ai_scene.sec?(' '+beat.ai_scene.sec+'초'):''))
@@ -12355,6 +12371,28 @@ function renderSceneCutaway(beat, idx){
   return html;
 }
 
+// 짤 서랍 열기 — 서랍 그리기는 MemePack.renderDrawer 하나(static/meme_pack.js)
+function memeCellOpen(idx){
+  const b = ((globalThis._mixBeats)||[])[idx] || {};
+  const cw = b.cutaway || {};
+  MemePack.openDrawer({title: (idx+1)+'번 줄 짤 고르기', emotion: cw.emotion || '', cur: cw.asset_id,
+                       onPick: id => memeCellSet(idx, id)});
+}
+// 저장 — 길이(head_sec)는 서버가 정한다(storyboard.meme_head, 자동 배치와 같은 함수). 칸 상자는 renderSceneCutaway 로만 다시 그린다
+async function memeCellSet(idx, assetId){
+  if(!MIX_JOB) return;
+  const box = document.getElementById('sceneCutaway'+idx);
+  if(box) box.innerHTML = '<div class="hint">⏳ 반영 중…</div>';
+  let r = null;
+  try{
+    r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/meme',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx), asset_id: assetId})})).json();
+  }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
+  if(!r || !r.ok){ toast((r&&r.error)||'짤 반영 실패'); }
+  await _refreshBeatBox(idx);
+}
+
 async function toggleCutaway(idx, assetId){
   if(!MIX_JOB) return;
   const box = document.getElementById('sceneCutaway'+idx);
@@ -12370,6 +12408,7 @@ async function toggleCutaway(idx, assetId){
   if(!d.ok) return;
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   globalThis.MIX_AI_SCENE_ON = !!d.ai_scene_enabled;   // window.에 두는 이유: 슬라이스 하네스가 선언부 없이 이 함수만 돌린다
+  globalThis.MIX_MEME_ON = !!d.meme_enabled;   // 3단계 칸 짤 [바꾸기][빼기][＋짤](관제 143, 스위치 meme_enabled)
   if(d.beats) globalThis._mixBeats = d.beats;
   const beat = (d.beats||[])[idx];
   if(beat && box) box.innerHTML = renderSceneCutaway(beat, idx);
@@ -17670,6 +17709,7 @@ function _s2Reset(){
   S2.usePickup = true;      // 픽업영상 대본 기본 ON — seed·drafts와 한 작업의 짝이다
 }
 function _s2Hydrate(w){
+  if(typeof _sbHydrate === 'function') _sbHydrate(w);   // 2단계 스토리보드도 같은 작업 열기에서 되살린다(관제 120)
   let s = (w && w.s2) || null;
   // ★남의 작업 스냅샷이면 버린다(2026-08-18). 스냅샷에 새긴 work_id와 지금 여는 작업이
   //   다르면 그건 갈아타기 전 작업의 것이다 — 되살리면 씨앗·대본이 통째로 캐리오버된다.
@@ -19052,7 +19092,7 @@ function sbEnter(){
   const box=document.getElementById('s2Storyboard'); if(!box) return;
   // ★#s2Storyboard 를 그리는 건 sbRender 하나(DOM 주인 한 곳) — 여기선 상태만 바꾸고 부른다
   const j=sbJid();
-  if(j!==SB.jid){ Object.assign(SB, {jid:j, data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, err:''}); }
+  if(j!==SB.jid){ Object.assign(SB, {jid:j, data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, err:'', mat:''}); _sbApplySaved(j); }
   if(!window.STORYBOARD_ON || !j){ sbRender(); return; }
   sbLoad();
 }
@@ -19080,6 +19120,7 @@ function sbAbsorb(tasks){
     if(k==null || SB.made[k]) return;
     if(!(t.result.slots||[]).length) return;
     SB.made[k]=JSON.parse(JSON.stringify(t.result));
+    SB.mat=_sbMatSig()||SB.mat;      // 이 보드를 만든 때의 재료(낡음 표시용)
     if(SB.pend[k]){ SB.made[k].from=SB.pend[k]; SB.view=k; delete SB.pend[k]; }
     if(!SB.view) SB.view=k;
   });
@@ -19119,8 +19160,12 @@ function sbPage1(){
     return `<div class="sb-grp ${hit?'star':''}"><div class="sb-gh"><b>${sbE(g.name)}</b> <span>${sbE(g.desc||'')} · ${gids.length}개</span>${hit?` <span class="sb-hitb">🎯 ${hit}장 담김 — 그 자리에 먼저 놓아요 · 이 묶음의 나머지 조각은 다른 자리에도 쓰여요</span>`:''}</div>
       <div class="sb-gth">${ids.map(id=>sbCard1(id)).join('')}</div>${gids.length>7?`<span class="sb-more" onclick="SB.showall[${i}]=!SB.showall[${i}];sbRender()">${all?'접기':'나머지 '+(gids.length-7)+'개 펼치기'}</span>`:''}</div>`; }).join('');
   const miss=(inv&&inv.missing)||[];
+  // 씨앗 영상 조각 — AI는 안 쓴다(storyboard._materials). 사람이 상자에 담으면 그 자리에 쓴다(사람이 고른 것은 존중)
+  const seeds=Object.keys(P).filter(id=>P[id].seed && !sbGroups().some(g=>(g.ids||[]).includes(id)));
+  const sgrp=seeds.length?`<div class="sb-grp sb-seedgrp"><div class="sb-gh"><b>🌱 씨앗 영상</b> <span>AI가 자동으로는 안 써요(자막틀이 박힌 레퍼런스) · 쓰고 싶으면 상자를 켜고 담으세요 · ${seeds.length}개</span></div>
+      <div class="sb-gth">${seeds.map(id=>sbCard1(id)).join('')}</div></div>`:'';
   return `<div class="sb-rbar"><div class="sb-bh">🎯 꼭 쓰고 싶은 장면 — 상자를 켜고 카드를 누르세요 <small>${SB.active?'지금 켜진 상자: <b>'+sbE(SB.active)+'</b> (다시 누르면 꺼짐)':'담은 장면은 그 자리 맨 앞에 놓이고, AI가 뒤에 더 붙여요 · 다 채울 필요 없어요'}</small></div><div class="sb-rboxes">${boxes}</div></div>
-  <div class="sb-box"><div class="sb-bh">장면 목록 <small>조각 ${Object.keys(P).length}개를 ${sbGroups().length}묶음으로 · 카드 위 'AI:' = AI가 본 쓰임(참고)</small></div><div class="sb-grps">${grps}</div></div>
+  <div class="sb-box"><div class="sb-bh">장면 목록 <small>조각 ${Object.keys(P).length}개를 ${sbGroups().length}묶음으로 · 카드 위 'AI:' = AI가 본 쓰임(참고)</small></div><div class="sb-grps">${grps}${sgrp}</div></div>
   ${miss.length?`<div class="sb-box"><div class="sb-missing"><b>이 재료에 없는 장면</b><ul>${miss.map(m=>'<li>'+sbE(m)+'</li>').join('')}</ul></div></div>`:''}`;
 }
 
@@ -19163,7 +19208,7 @@ function sbLine(ek, i, sl){ return (SB.edit[ek]&&SB.edit[ek][i]!=null)?SB.edit[e
 function sbBake(ek, bd){   // 손으로 고친 문장·장면 순서를 칸에 굳힌 뒤 구조를 바꾼다(칸 번호로 붙은 기억이 엇갈리지 않게)
   bd.slots.forEach((sl,i)=>{ sl.ids=sbOrdOf(ek,i,sl).slice(); sl.line=sbLine(ek,i,sl); });
   [SB.ord, SB.cand].forEach(M=>Object.keys(M).filter(o=>o.startsWith(ek+'#')).forEach(o=>delete M[o])); delete SB.edit[ek]; }
-function sbEditLine(i, el){ const ek=SB.view; (SB.edit[ek]=SB.edit[ek]||{})[i]=el.innerText; }
+function sbEditLine(i, el){ const ek=SB.view; (SB.edit[ek]=SB.edit[ek]||{})[i]=el.innerText; _sbSaveSoon(); }
 function sbRowMove(i, d){ const [ek,bd]=sbCur(); const t=i+d; if(!bd||t<0||t>=bd.slots.length) return; sbBake(ek,bd);
   [bd.slots[i],bd.slots[t]]=[bd.slots[t],bd.slots[i]]; if(bd.check) [bd.check[i],bd.check[t]]=[bd.check[t],bd.check[i]]; sbRender(); }
 function sbRowDel(i){ const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd); bd.slots.splice(i,1); if(bd.check) bd.check.splice(i,1); sbRender(); }
@@ -19174,6 +19219,18 @@ function sbRowActs(i, n, sl){
   return `<div class="sb-racts"><button class="sb-rb ${sl.cta_mark?'on':''}" title="이 줄이 CTA — 다시 누르면 해제" onclick="sbRowCta(${i})">📢 CTA</button>
     <button class="sb-rb" title="이 줄을 대본에서 뺍니다(장면 칸도 같이)" onclick="sbRowDel(${i})">🗑 빼기</button>
     <span class="sb-rmv"><button ${i===0?'disabled':''} onclick="sbRowMove(${i},-1)">▲</button><button ${i===n-1?'disabled':''} onclick="sbRowMove(${i},1)">▼</button><button title="아래에 빈 칸" onclick="sbRowAdd(${i})">＋</button></span></div>`; }
+// ── 감정짤 미리 고르기(관제 143) — 짤 들어갈 줄([1]·[3])·감정은 서버가 정해 칸에 싣는다(storyboard.apply_signals → meme_emotion).
+//   여기선 보여 주고 고른 번호를 칸(sl.meme_pick)에 붙일 뿐 — 줄을 옮겨도 칸과 함께 다닌다. 확정 때 storyboard 줄에 실려 meme_slots 가 먼저 쓴다.
+function sbMemeCell(i, sl){
+  if(!window.MEME_ON || !sl.meme_emotion || typeof MemePack==='undefined') return '';
+  const id=sl.meme_pick;
+  if(!id) return `<div class="mp-cell"><div style="flex:1">🎭 여기 짤 들어감 (<b>${sbE(sl.meme_emotion)}</b>) — 3단계에서 자동으로 골라요(내 우선 짤 먼저)</div><button class="mp-btn" onclick="sbMemeOpen(${i})">미리 고르기</button></div>`;
+  const c=MemePack.clip(id)||{};
+  return `<div class="mp-cell">${MemePack.video(id)}<div style="flex:1">🎭 <b>${sbE(c.emotion||sl.meme_emotion)}</b> 짤 · 미리 고름</div><button class="mp-btn" onclick="sbMemeOpen(${i})">바꾸기</button><button class="mp-btn" title="고른 짤을 떼고 자동으로" onclick="sbMemeSet(${i},null)">자동으로</button></div>`;
+}
+function sbMemeOpen(i){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
+  MemePack.openDrawer({title:(i+1)+'번 줄 짤 고르기', emotion:sl.meme_emotion||'', cur:sl.meme_pick, onPick:id=>sbMemeSet(i,id)}); }
+function sbMemeSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; if(id) bd.slots[i].meme_pick=Number(id); else delete bd.slots[i].meme_pick; sbRender(); }
 function sbMine(){   // ✍ 내가 직접 쓰기 — 지금 보고 있는 안의 칸 구성을 따라간다(없으면 기본 뼈대). AI를 부르지 않는다
   const v=SB.made[SB.view]; const roles=v&&v.slots?v.slots.map(s=>s.slot):['hook','problem','method','proof','cta'];
   SB.made['mine']={names:['내가 직접 쓴 대본'], mine:true, first_line_style:'내가 직접 쓴 대본 — 칸을 채우고, 칸마다 관련 후보에서 장면을 넣으세요',
@@ -19196,8 +19253,9 @@ function sbCandOf(ek, i, sl, bd){
   const used=sbUsedAll(ek,bd); const mine=new Set(sbOrdOf(ek,i,sl)); const a=[];
   sbGroups().filter(g=>(g.ids||[]).some(id=>mine.has(id))).forEach(g=>g.ids.forEach(id=>{ if(!used.has(id)&&!a.includes(id)) a.push(id); }));
   const tag=SB_SLOT_TAG[String(sl.slot||'').split('_')[0].toLowerCase()];
-  if(tag) Object.keys(sbPieces()).forEach(id=>{ if(!used.has(id)&&!a.includes(id)&&sbTagOf(id).includes(tag)) a.push(id); });
-  if(!a.length && !mine.size) Object.keys(sbPieces()).forEach(id=>{ if(!used.has(id)&&a.length<12) a.push(id); });   // 빈 칸(직접 쓰기·새 칸)은 안 쓴 장면부터
+  const P=sbPieces(), ok=id=>!(P[id]&&P[id].seed);   // 씨앗 조각은 후보로 안 내민다(사람이 1단계 상자에 담을 때만 씀)
+  if(tag) Object.keys(P).forEach(id=>{ if(ok(id)&&!used.has(id)&&!a.includes(id)&&sbTagOf(id).includes(tag)) a.push(id); });
+  if(!a.length && !mine.size) Object.keys(P).forEach(id=>{ if(ok(id)&&!used.has(id)&&a.length<12) a.push(id); });   // 빈 칸(직접 쓰기·새 칸)은 안 쓴 장면부터
   return a.slice(0,12); }
 function sbCandBox(ek, i, sl, bd){ const cs=sbCandOf(ek,i,sl,bd); if(!cs.length) return ''; const k=ek+'#'+i, open=SB.cand[k];
   return `<div class="sb-cand"><span class="sb-more" onclick="SB.cand['${sbA(k)}']=!SB.cand['${sbA(k)}'];sbRender()">${open?'▲ 후보 접기':'＋ 관련 후보 '+cs.length+'개 보기'}</span>${open?`<div class="sb-cth">${cs.map(id=>`<div class="sb-cc sb-cand1" onclick="sbAddCand('${sbA(ek)}',${i},'${sbA(id)}')" title="누르면 이 칸 뒤에 넣어요">${sbTh(id,52)}<div class="sb-ccb"><span class="sb-ck2">＋ 넣기</span></div></div>`).join('')}</div>`:''}</div>`; }
@@ -19226,13 +19284,13 @@ async function sbInsert(){
 function sbConfirm(){
   const [ek,bd]=sbCur(); if(!bd){ toast('먼저 스토리보드를 만들어 주세요'); return; }
   const cur=sbCurBoard(ek,bd);
-  const rows=cur.slots.map(sl=>({slot:String(sl.slot||''), line:String(sl.line||'').trim(), ids:(sl.ids||[]).filter(Boolean), cta:sl.cta_mark, sig_rank:sl.sig_rank, signal:sl.signal})).filter(x=>x.line);
+  const rows=cur.slots.map(sl=>({slot:String(sl.slot||''), line:String(sl.line||'').trim(), ids:(sl.ids||[]).filter(Boolean), cta:sl.cta_mark, sig_rank:sl.sig_rank, signal:sl.signal, meme_pick:sl.meme_pick})).filter(x=>x.line);
   if(!rows.length){ toast('대본이 비어 있습니다'); return; }
   const decided=cur.slots.some(sl=>sl.cta_mark===true);
   const beats=rows.map(x=>{ const b={role:x.slot, text:x.line, src_seg:x.ids[0]||'', src_segs:x.ids.slice()}; if(decided) b.cta_mark=(x.cta===true); return b; });
   // 신호어 자리 번호(sig_rank·signal)도 싣는다 — 3단계 짤 자리 판정(storyboard.meme_slots, 관제 139)
   const dr={script:rows.map(x=>x.line).join('\n'), hook:rows[0].line, beats, style_id:null,
-            storyboard:rows.map(x=>Object.assign({slot:x.slot, line:x.line, ids:x.ids}, x.sig_rank?{sig_rank:x.sig_rank, signal:x.signal||''}:{})), from_storyboard:sbTabName(ek).replace(/<[^>]+>/g,'')};
+            storyboard:rows.map(x=>Object.assign({slot:x.slot, line:x.line, ids:x.ids}, x.sig_rank?{sig_rank:x.sig_rank, signal:x.signal||''}:{}, (window.MEME_ON&&x.meme_pick)?{meme_pick:x.meme_pick}:{})), from_storyboard:sbTabName(ek).replace(/<[^>]+>/g,'')};
   S2.drafts=(S2.drafts||[]).filter(d=>!(d&&d.storyboard)).concat([dr]);   // 다시 확정하면 옛 스토리보드 안은 바꿔 끼운다
   const idx=S2.drafts.length-1; S2.curDraft=idx;
   try{ s2RenderDrafts(); }catch(e){}
@@ -19260,7 +19318,7 @@ function sbPage2(){
         <div><div class="sb-line" contenteditable="true" data-ph="${sbE(sbKo(sl.slot))} — 여기에 쓰세요" oninput="sbEditLine(${i},this)">${sbE(sbLine(ek,i,sl))}</div>
           ${sl.weak?`<div class="sb-why">⚠ ${sbE(sl.weak)}</div>`:''}${fixedTxt}${(added&&sl.why_scene)?`<div class="sb-meta">🎬 장면 고른 이유: ${sbE(sl.why_scene)}</div>`:''}
           ${(i===0&&(bd.extra_missing||[]).length)?`<div class="sb-why">⚠ 끼워 넣기에서 빠진 칸: ${sbE(bd.extra_missing.map(sbKo).join(', '))}</div>`:''}
-          ${sbRowActs(i,bd.slots.length,sl)}</div>
+          ${sbRowActs(i,bd.slots.length,sl)}${sbMemeCell(i,sl)}</div>
         <div><div class="sb-cth">${sbCellCards(ek,i,sl,ck)}</div>${sbCandBox(ek,i,sl,bd)}</div></div>`; }).join('');
     body=`<div class="sb-note" style="margin:6px 0">${sbE(bd.first_line_style||'')} · 🎯 = 위에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
       <div class="sb-rows">${cells}</div>${sbLeftRow(bd)}${sbXpick(ek,bd)}
@@ -19278,6 +19336,8 @@ function sbRender(){
   //   시안(1·2단계 페이지틀)과 같은 배치: 재료를 고르는 건 1단계, 대본은 2단계(사장님 10-05 "이게 1단계 아닌가").
   const b1=document.getElementById('s1Storyboard'), b2=document.getElementById('s2Storyboard');
   const put=(box, html)=>{ if(!box) return; if(html===null){ box.innerHTML=''; box.style.display='none'; } else { box.style.display=''; box.innerHTML=html; } };
+  // 옛 '② 대본 스타일' 줄 — 스토리보드 켠 계정에선 숨긴다(스토리보드 확정은 S2.picked 를 안 쓴다: sbConfirm style_id:null). 꺼진 계정은 그대로
+  const band=document.getElementById('s2StyleBand'); if(band) band.style.display=window.STORYBOARD_ON?'none':'';
   if(!window.STORYBOARD_ON){ put(b1,null); put(b2,null); return; }   // 고객 화면 불변
   const y=window.scrollY;
   const head1=`<div class="s2-label" style="margin:14px 0 8px">🎬 스토리보드 재료 <span class="sb-note">(관리자 시험) 꼭 쓰고 싶은 장면을 상자에 담아 두면 2단계 스토리보드가 그 자리에 씁니다</span></div>`;
@@ -19293,17 +19353,57 @@ function sbRender(){
     put(b2, head2+'<div class="sb-box"><span class="sb-note">1단계에서 [장면 목록 만들기]를 먼저 눌러 주세요</span></div>');
   } else {
     put(b1, head1+sbPage1());
-    put(b2, head2+sbPage2());
+    put(b2, head2+(_sbStale()?'<div class="sb-box"><span class="sb-err">⚠ 재료(담은 영상·씨앗)가 바뀌었어요 — 아래 스토리보드는 예전 재료로 만든 것입니다. 새 재료로 쓰려면 스타일을 골라 다시 만들어 주세요</span></div>':'')+sbPage2());
   }
   if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y);   // 다시 그려도 보던 자리를 지킨다
+  _sbSaveSoon();
+}
+// ── 스토리보드 기억(관제 120 장면배분) — 작업파일 state.sb 한 곳에 담는다(서버 data/storyboard 는 장면 목록만).
+//   ★담는 모양·되살리는 모양은 이 한 쌍(_sbSnapshot·_sbApplySaved)에서만 정한다. 저장은 기존 saveWork(_workState)가 싣는다.
+//   담는 것: 만든 탭(made — 칸·문장·장면·고른 짤 meme_pick 포함)·보던 탭·고친 문장(edit)·카드 순서(ord)·고른 스타일(pick)·상자(role)·재료 지문(mat).
+var _SB_SAVED=null;      // 작업을 열 때 받은 state.sb — sbEnter 가 같은 작업 열쇠일 때 되살린다(var: 로드 순서와 무관)
+function _sbMatSig(){ let P=null; try{ P=(SB.data&&SB.data.pieces)||null; }catch(e){ return ''; } if(!P) return '';
+  const ks=Object.keys(P).sort().map(k=>k+(P[k].seed?'*':'')).join(','); let h=0; for(let i=0;i<ks.length;i++) h=(h*31+ks.charCodeAt(i))|0; return Object.keys(P).length+':'+h; }
+function _sbSnapshot(){
+  try{ SB; }catch(e){ return _SB_SAVED; }
+  if(!window.STORYBOARD_ON || !SB.jid) return _SB_SAVED;      // 아직 못 열었으면 받은 것을 그대로 돌려준다(자동저장이 지우지 않게)
+  const role={}; Object.entries(SB.role).forEach(([r,st])=>{ if(st&&st.size) role[r]=[...st]; });
+  if(!Object.keys(SB.made).length && !SB.pick.size && !Object.keys(role).length) return null;
+  return {work_id:(typeof WORK_ID!=='undefined'?(WORK_ID||null):null), jid:SB.jid, made:SB.made, view:SB.view,
+          edit:SB.edit, ord:SB.ord, pick:[...SB.pick], role, mat:SB.mat||''};
+}
+function _sbApplySaved(j){
+  const s=_SB_SAVED; if(!s || s.jid!==j) return;
+  if(s.work_id && typeof WORK_ID!=='undefined' && WORK_ID && s.work_id!==WORK_ID) return;   // 남의 작업 것이면 안 되살린다
+  SB.made=s.made||{}; SB.view=(s.view&&SB.made[s.view])?s.view:(Object.keys(SB.made)[0]||'');
+  SB.edit=s.edit||{}; SB.ord=s.ord||{}; SB.pick=new Set(s.pick||[]); SB.mat=s.mat||'';
+  SB.role={}; Object.entries(s.role||{}).forEach(([r,ids])=>{ SB.role[r]=new Set(ids||[]); });
+  _SB_SAVED=null;
+}
+function _sbHydrate(w){   // _s2Hydrate 가 부른다(작업 열기 경로 3곳 공통)
+  let s=(w&&w.sb)||null;
+  if(s && s.work_id && w && w.work_id && s.work_id!==w.work_id) s=null;
+  _SB_SAVED=s;
+  try{ SB; }catch(e){ return; }
+  SB.jid='';               // 다음 sbEnter 가 새로 열며 되살린다
+  if(window.STORYBOARD_ON){ try{ sbEnter(); }catch(e){ console.warn('[sb] 되살리기 실패', e); } }
+}
+function _sbStale(){ const now=_sbMatSig(); return !!(SB.mat && now && SB.mat!==now && Object.keys(SB.made).length); }
+function _sbSaveSoon(){
+  let snap=''; try{ snap=JSON.stringify(_sbSnapshot()); }catch(e){ console.warn('[sb] 저장 모양 실패', e); return; }
+  if(snap===SB._lastSnap) return; const first=(SB._lastSnap===undefined); SB._lastSnap=snap;
+  if(first) return;        // 되살린 직후 첫 그리기는 저장할 게 없다
+  clearTimeout(SB._saveT); SB._saveT=setTimeout(()=>{ if(typeof saveWork==='function') saveWork(); }, 1200);
 }
 // 관리자(사장님 cid0) 판별 — 비유튜브 재료의 "정보 채우기" 버튼 노출 조건(index.html과 동일 플래그명).
 window.IS_ADMIN=false;
 window.STORY_WRITER_ON=false;   // 서버 스위치(story_writer_enabled) — /api/me가 정본
 window.DIALOGUE_ON=false;       // 서버 스위치(dialogue_enabled + 관리자, 관제 128) — 작업목록 「🎭 대화형」 버튼
 window.STORYBOARD_ON=false;     // 서버 스위치(storyboard_enabled, 관제 120) — /api/me가 정본. false면 #s2Storyboard 를 안 그린다
+window.MEME_ON=false;           // 서버 스위치(meme_enabled, 관제 143) — /api/me meme. false면 스토리보드 짤 칸을 안 그린다
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   if(d && d.dialogue===true) window.DIALOGUE_ON=true;
+  if(d && d.meme===true && typeof MemePack!=='undefined'){ window.MEME_ON=true; MemePack.load().then(()=>{ try{ sbRender(); }catch(e){ console.warn('[meme] 스토리보드 다시 그리기 실패', e); } }); }
   if(d && d.storyboard===true){ window.STORYBOARD_ON=true;
     try{ sbEnter(); }catch(e){} }   // 1·2단계 어느 쪽이 보이든 — 안 보이는 칸도 미리 그려 둔다
   if(d && d.story_writer){ window.STORY_WRITER_ON=true;
@@ -19317,6 +19417,7 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   try{ showLenPresetIfAdmin(); }catch(e){} } }).catch(()=>{});
 </script>
 <script src="/scene_play.js"></script>
+<script src="/meme_pack.js"></script>
 <script src="/loader.js"></script>
 <script src="/sidebar.js?v=4">
 
