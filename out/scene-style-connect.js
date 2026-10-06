@@ -212,7 +212,8 @@
       refBox.hidden=context.fxEnabled===false;
       // 효과를 하나도 안 넣은 영상이면 처음 열 때 자동 배치(관제 124). 한 번이라도 손댄 영상(효과 칸이 있음)은 건드리지 않는다.
       // 장면 효과를 하나도 안 고른 영상이면 처음 열 때 자동 배치. 로고·장식만 있는 영상도 '안 고른 영상'이다(관제 144 — 로고 기억이 전 장면에 로고를 넣는다).
-      if(context.fxEnabled!==false&&!Object.values(saved.effects||{}).some(e=>api.hasSceneFx(e))&&api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));
+      //   ★새 영상에만(서버 context.autoNew, 2026-10-06 사장님 '기존영상은 하지말고') — 기존 영상은 고객이 효과를 직접 누를 때만.
+      if(context.fxEnabled!==false&&context.autoNew!==false&&!Object.values(saved.effects||{}).some(e=>api.hasSceneFx(e))&&api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));
       if(Number.isInteger(event.data.sceneIndex))api.show(event.data.sceneIndex);
       document.documentElement.classList.remove('scene-waiting');   // 실제 데이터가 그려졌다 — 본문을 보인다(머리띠 가림은 html 표식이 계속)
       const status=pane.querySelector('[data-connection-status]');if(status)status.textContent=`실제 자막 ${context.scenes.length}개를 연결했습니다.`;

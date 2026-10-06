@@ -36,6 +36,20 @@ def caption_motion_pack_for(customer_id):
     return int(customer_id or 0) % n + 1 if n else 0
 
 
+# 자동 배치(장면 효과·등장 효과팩)는 이 시각 뒤에 만든 영상에만 — 2026-10-06 사장님 "기존영상은 하지말고".
+#   그 전 영상은 고객이 번호·효과를 직접 누를 때만 들어간다. 판단은 auto_new_job 한 곳(편집기는 context.autoNew 만 본다).
+AUTO_PLACE_SINCE = "2026-10-06T12:00:00+00:00"   # 한국 시간 2026-10-06 21:00 — 자막팩·장면효과팩 라이브 반영
+
+
+def auto_new_job(job):
+    """자동 배치 대상 '새 영상'인가 — 만든 시각이 AUTO_PLACE_SINCE 이후. 시각을 못 읽으면 기존 영상으로 본다(자동 안 함)."""
+    from datetime import datetime
+    try:
+        return datetime.fromisoformat(str((job or {}).get("created_at") or "")) >= datetime.fromisoformat(AUTO_PLACE_SINCE)
+    except ValueError:
+        return False
+
+
 def caption_word_fx_keys():
     """단어 강조 방식 저장값 — 같은 계약 파일의 WORDFX 표식 사이(관제 102 → 127)."""
     text = (ROOT / "shopping_shorts/static/caption-motions.js").read_text(encoding="utf-8")

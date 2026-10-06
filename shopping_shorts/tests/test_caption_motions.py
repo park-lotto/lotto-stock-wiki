@@ -127,3 +127,14 @@ def test_효과팩_번호_검증과_회원_자동_배정():
     assert set(got) == set(range(1, 21)) and all(got.count(k) == 5 for k in range(1, 21))   # 회원 1~100 → 팩당 5명
     src = (ROOT / "shopping_shorts/app.py").read_text(encoding="utf-8")
     assert 'context["motionPackAuto"] = caption_motion_pack_for(job.get("customer_id"))' in src
+
+
+def test_자동_배치는_새_영상에만():
+    # 2026-10-06 사장님 "기존영상은 하지말고" — 기준 시각 뒤에 만든 영상만, 시각을 못 읽으면 자동 안 함
+    assert scene_style.auto_new_job({"created_at": "2026-10-06T12:00:01+00:00"}) is True
+    assert scene_style.auto_new_job({"created_at": "2026-10-06T11:38:46.369347+00:00"}) is False
+    assert scene_style.auto_new_job({"created_at": ""}) is False and scene_style.auto_new_job(None) is False
+    src = (ROOT / "shopping_shorts/app.py").read_text(encoding="utf-8")
+    assert 'context["autoNew"] = auto_new_job(job)' in src and 'if context["captionPackEnabled"] and context["autoNew"]:' in src
+    js = (ROOT / "out/scene-style-connect.js").read_text(encoding="utf-8")
+    assert "context.autoNew!==false" in js
