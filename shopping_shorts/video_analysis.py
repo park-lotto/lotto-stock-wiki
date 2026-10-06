@@ -993,8 +993,9 @@ def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_slee
                 ko, zh = (c.get("ko") or "").strip(), (c.get("zh") or "").strip()
                 if not (ko or zh) or ko in seen or (zh and zh in seen):
                     continue
+                # 영어는 인스타 검색 상한(최대 3단어)을 넘으면 비운다 — 판단은 _clean_en_term 한 곳(관제 151).
                 out.append({"ko": ko, "zh": zh,
-                            "en": (c.get("en") or "").strip(),
+                            "en": _clean_en_term(c.get("en")),
                             "ja": (c.get("ja") or "").strip(),
                             "ru": (c.get("ru") or "").strip()})
                 seen.update(x for x in (ko, zh) if x)

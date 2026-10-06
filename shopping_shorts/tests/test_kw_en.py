@@ -55,3 +55,19 @@ def test_route_returns_terms(monkeypatch, tmp_path):
     assert res.status_code == 200
     d = res.json()
     assert d["ok"] and d["main"] == "portable range hood" and d["related"] == ["desktop range hood"]
+
+
+def test_multi_route_and_en_cap(monkeypatch, tmp_path):
+    """비슷한 검색어 5개 언어 — expand_search_keywords 결과를 그대로 싣고, 영어는 3단어 상한을 넘으면 비운다."""
+    from fastapi.testclient import TestClient
+    from shopping_shorts import app as app_mod
+    monkeypatch.setattr(app_mod, "DB_PATH", tmp_path / "t.db")
+    _patch_model(monkeypatch, {"candidates": [
+        {"ko": "자석 양념통", "zh": "磁吸调料罐", "en": "magnetic spice tins", "ja": "", "ru": ""},
+        {"ko": "주방 수납", "zh": "厨房收纳", "en": "kitchen cabinet storage ideas", "ja": "収納", "ru": "хранение"}]})
+    cands = va.expand_search_keywords("자석 양념통", n=5)
+    assert cands[0]["en"] == "magnetic spice tins"
+    assert cands[1]["en"] == ""                       # 4단어 → 비움
+    monkeypatch.setattr(app_mod, "expand_search_keywords", lambda text, n=5: cands)
+    d = TestClient(app_mod.app).post("/api/lens/kw/multi", json={"text": "자석 양념통"}).json()
+    assert d["ok"] and [c["ko"] for c in d["candidates"]] == ["자석 양념통", "주방 수납"]
