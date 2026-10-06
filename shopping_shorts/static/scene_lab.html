@@ -2742,7 +2742,7 @@ function splitBeatCards(i){
   if (!phraseSyncOn(i)) return false;
   if (((DATA.beats || [])[i] || {}).phrase_min_cut) return false;
   const ids = lists[i] || [];
-  const clips = planClips(ids, beatDur(i), STRETCH[i], i);
+  const clips = planClips(ids, beatDur(i), STRETCH[i], i).filter(c => !c.meme);   // 짤 컷(관제 139)은 장면 목록에 넣지 않는다
   const caps = capsOf(i) || [];
   if (!clips.length || clips.length !== caps.length) return false;
   const uses = {}; clips.forEach(c => { uses[c.seg_id] = (uses[c.seg_id] || 0) + 1; });
