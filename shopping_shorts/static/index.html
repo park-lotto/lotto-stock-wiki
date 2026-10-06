@@ -638,26 +638,22 @@ body.is-admin .admin-only{display:block}
     <!-- ★뱃지 필터(2026-09-10 사장님 "벳지필터기준 명확하게하고 의미있는기준을 만들어야해").
          카드에 붙는 뱃지와 **같은 판정식(gradeOf)**을 쓴다 — 화면에 보이는 뱃지가 곧 필터다.
          문턱은 고정 숫자라 카테고리·기간 탭을 바꿔도 결과가 흔들리지 않는다. -->
-    <div class="filters" id="gradeFilters">
-      <span class="flabel">뱃지로 보기</span>
-      <button class="ftog on" data-g="" onclick="setGrade('')" title="뱃지와 상관없이 전부">전체</button>
-      <!-- ★설명(title)은 비워둔다 — gradeTips()가 GRADE_RULES를 읽어 **지금 보는 플랫폼의
-           실제 문턱**으로 채운다. 손으로 적어두면 문턱을 바꿀 때 반드시 한쪽만 고쳐져
-           어긋난다(2026-09-10 실사고: 급상승 문턱을 500으로 낮췄는데 설명은 2,000인 채로
-           남아 사장님이 "시간당 2000이 안되는데?" — 숫자는 한 곳에서만 정한다, 0순위-B). -->
-      <button class="ftog" data-g="must" onclick="setGrade('must')">🎯 진짜 봐야할 것</button>
-      <button class="ftog" data-g="rising" onclick="setGrade('rising')">📈 급상승</button>
-      <button class="ftog" data-g="small" onclick="setGrade('small')">🚀 구독자 대비 터짐</button>
-      <span class="fcount" id="gradeCount"></span>
-    </div>
-    <!-- ★이번 주 추세(2026-09-15 사장님 "24·48시간엔 10만·100만이 없고 이번 주 터진 것에만 있다 —
-         이번주 10만뷰 추세 / 이번주 100만뷰 대박추세를 넘는 걸로"). 판정은 trendOf 한 곳. -->
-    <div class="filters" id="trendFilters">
-      <span class="flabel">이번 주 추세</span>
-      <button class="ftog on" data-t="" onclick="setTrend('')" title="추세와 상관없이 전부">전체</button>
-      <button class="ftog" data-t="wk100k" onclick="setTrend('wk100k')">📈 이번주 10만뷰 추세</button>
-      <button class="ftog" data-t="wk1m" onclick="setTrend('wk1m')">🚀 이번주 100만뷰 대박추세</button>
-      <span class="fcount" id="trendCount"></span>
+    <!-- ★골라보기 한 줄(2026-10-06 사장님, 관제 136) — 여태 '뱃지로 보기'와 '이번 주 추세'가
+         두 줄이고 '전체'가 둘이라 헷갈렸다. 한 줄·택1로 합친다. 건수는 버튼 안에 적고
+         0건인 버튼은 숨긴다. 버튼 글자·건수·숨김은 renderPickRow 한 곳이 그린다.
+         id(gradeFilters·trendFilters)는 그대로 둔다 — renderPickRow가 이 id로 버튼을 잡는다. -->
+    <div class="filters" id="pickRow">
+      <span class="flabel">골라보기</span>
+      <button class="ftog on" id="pickAll" onclick="setPick('')" title="뱃지·추세와 상관없이 전부">전체</button>
+      <span id="gradeFilters" style="display:contents">
+        <button class="ftog" data-g="must" onclick="setGrade('must')">🎯 진짜 봐야할 것</button>
+        <button class="ftog" data-g="rising" onclick="setGrade('rising')">📈 급상승</button>
+        <button class="ftog" data-g="small" onclick="setGrade('small')">🚀 구독자 대비 터짐</button>
+      </span>
+      <span id="trendFilters" style="display:contents">
+        <button class="ftog" data-t="wk100k" onclick="setTrend('wk100k')">📈 이번주 10만뷰 추세</button>
+        <button class="ftog" data-t="wk1m" onclick="setTrend('wk1m')">🚀 이번주 100만뷰 대박추세</button>
+      </span>
     </div>
     <!-- ★건수 안내는 걸러내기 줄 **밖에** 둔다(2026-09-07).
          여태 이 문구는 위 div(#filters) 안에 있었고 그 div가 display:none이라
@@ -671,7 +667,9 @@ body.is-admin .admin-only{display:block}
          "왜 몇 개밖에 없나"의 지금 답이 이것이므로, 이유를 말해주는 건수 안내와
          **같은 줄에** 둬서 읽고 바로 끌 수 있게 한다.
          신작·급상승은 2026-08-17 사장님 지시대로 계속 숨긴 채 둔다. -->
-    <div class="fcount-row">
+    <!-- ★줄 전체 숨김(2026-10-06 사장님 "이거 숨기고", 관제 136). 채널당 2개는 켜진 채로 돌고,
+         풀기·다시 접기는 목록 맨 아래 버튼이 맡는다. 요소는 지우지 않는다(togglePerChannel·#fcount가 잡는다). -->
+    <div class="fcount-row" style="display:none">
       <button class="ftog on" data-f="perch" onclick="togglePerChannel()"
               title="채널마다 상위 2개만 — 한 채널이 화면을 도배하는 걸 막습니다. 어떤 2개인지는 지금 켠 정렬 탭이 정합니다(최신순이면 최신 2개, 조회수순이면 조회수 상위 2개). 끄면 전부 봅니다">📺 채널당 2개</button>
       <span class="fcount" id="fcount"></span>
@@ -681,11 +679,8 @@ body.is-admin .admin-only{display:block}
            여기는 **검색을 나가기 전에** 어느 나라를 돌릴지 정한다(= SerpApi 비용).
            국내 소재를 한국만으로 돌리면 4회 → 1회로 준다.
          칩 목록은 /api/lens/locales가 준다 — 여기 하드코딩하면 서버 env와 어긋난다. -->
-    <div class="filters" id="lensLocales" style="display:none">
-      <span class="flabel" title="렌즈(🔍 숏템파워검색)가 어느 나라 구글에 물어볼지. 끄면 그 나라는 검색하지 않아 SerpApi 비용이 줄고, 결과도 그만큼 줄어듭니다. 한 번 정하면 계속 유지됩니다">🔍 렌즈 검색국가</span>
-      <span id="lensLocaleChips"></span>
-      <span class="fcount" id="lensLocaleNote"></span>
-    </div>
+    <!-- ★자리 이동(2026-10-06 사장님, 관제 136) — 이 설정은 목록을 거르는 게 아니라 렌즈 검색이
+         나가기 전 설정인데 필터 줄 사이에 있어 필터처럼 읽혔다. 아래 검색창 줄 끝의 버튼(#lensLocales)으로 옮겼다. -->
     <!-- 카테고리 줄 — 라벨은 renderCtypes()가 함께 그린다(2026-08-17 사장님 "기간/강도지표/단순지표/카테고리") -->
     <div class="ctypes" id="ctypes"></div>
     <!-- 발굴 축(유튜브 전용) — 채널을 축별로 모아온 결과를 랭킹에서 바로 고른다.
@@ -699,6 +694,16 @@ body.is-admin .admin-only{display:block}
              style="flex:1;min-width:240px;max-width:420px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt)">
       <button onclick="openUrlCard()" title="영상 주소를 넣으면 그 영상 카드를 보여줍니다(비슷한 영상 찾기는 그 안에서 따로)"
               style="padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-weight:700;cursor:pointer;white-space:nowrap">🔗 주소로 가져오기</button>
+      <span id="lensLocales" style="display:none;position:relative">
+        <button id="lensLocaleBtn" onclick="toggleLensLocalePop(event)"
+                title="렌즈(🔍 숏템파워검색)가 어느 나라 구글에 물어볼지. 끄면 그 나라는 검색하지 않아 SerpApi 비용이 줄고, 결과도 그만큼 줄어듭니다. 한 번 정하면 계속 유지됩니다"
+                style="padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--inset);color:var(--txt);font-weight:700;cursor:pointer;white-space:nowrap">🔍 검색국가 ▾</button>
+        <div id="lensLocalePop" style="display:none;position:absolute;z-index:30;top:calc(100% + 6px);right:0;min-width:260px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--inset);box-shadow:0 6px 20px rgba(0,0,0,.35)">
+          <div style="font-size:12px;color:var(--sub);margin-bottom:6px">🔍 렌즈 검색국가 — 켠 나라만 검색합니다</div>
+          <span id="lensLocaleChips" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+          <div class="fcount" id="lensLocaleNote" style="margin-top:6px"></div>
+        </div>
+      </span>
     </div>
     <div class="cats" id="cats"></div>
     <!-- 🔗 주소로 가져온 영상 전용 자리(2026-08-18). #cards는 display:grid라 여기에 그리면
@@ -787,6 +792,8 @@ function thumbURL(u, sc){ return u ? ('/api/thumb?url='+encodeURIComponent(u)+'&
 const CTYPES = [
   {key:"전체",  label:"✨ 전체",        topics:[]},
   {key:"썰쇼핑", label:"🎬 썰쇼핑",      topics:[]},
+  // ★순서(2026-10-06 사장님 "전체/썰쇼핑/홈살림가전/장비공구 이 순서로", 관제 137).
+  {key:"홈템",   label:"🏠 홈·살림·가전", topics:[]},
   // 장비템(2026-08-25) — 만물상점류 '집 밖 장비·공구'. 썰쇼핑과 결이 다르다:
   // 썰쇼핑은 **화법**(정체 은폐·용도 뒤집기)이 축이고, 장비템은 **제품 도메인**이 축이다.
   // 기존 5축이 전부 집 안(살림·주방·뷰티)이라 이 버튼이 없으면 갈 곳이 '기타'뿐이다.
@@ -796,7 +803,6 @@ const CTYPES = [
   // 발굴 실측: 차량용품 채널 12개(차츄 4,710만·안녕형들 1.16억)의 제목 30편이
   // 축 없이는 23편(76.7%)이 '기타'로 샜다.
   {key:"차량템", label:"🚗 차량용품",     topics:[]},
-  {key:"홈템",   label:"🏠 홈·살림·가전", topics:[]},
   {key:"비법형", label:"🍳 레시피·꿀팁",  topics:[]},
   {key:"혼합형", label:"💄 뷰티",        topics:[]},
   // 연예인(2026-09-15 사장님 카테이동 요청) — 자동판정은 없고 관리자가 카드에서 옮겨 채운다.
@@ -857,19 +863,47 @@ function _risingCut(list){
 }
 let PLATFORM='instagram';
 // 뱃지 필터(2026-09-10). ''=전체 / 'must' / 'rising' / 'small'. 택1이라 서로 안 겹친다.
-function setGrade(g){
-  STATE.grade = g || '';
-  document.querySelectorAll('#gradeFilters .ftog').forEach(b =>
-    b.classList.toggle('on', (b.dataset.g || '') === STATE.grade));
+// ★골라보기는 한 줄·택1(2026-10-06, 관제 136) — 뱃지를 고르면 추세가 풀리고 추세를 고르면 뱃지가 풀린다.
+//   고르는 길은 setPick 하나다(setGrade·setTrend는 이 함수를 부를 뿐). 버튼 켜짐 표시는 renderPickRow가 한다.
+function setPick(grade, trend){
+  STATE.grade = grade || '';
+  STATE.trend = trend || '';
   try{ localStorage.setItem('refGrade', STATE.grade); }catch(e){}
   render();
 }
+function setGrade(g){ setPick(g, ''); }
 // 이번 주 추세 필터(2026-09-15). ''=전체 / 'wk100k'(10만 이상 추세, 100만 포함) / 'wk1m'.
-function setTrend(t){
-  STATE.trend = t || '';
-  document.querySelectorAll('#trendFilters .ftog').forEach(b =>
-    b.classList.toggle('on', (b.dataset.t || '') === STATE.trend));
-  render();
+function setTrend(t){ setPick('', t); }
+const TREND_LABEL = {wk100k:'📈 이번주 10만뷰 추세', wk1m:'🚀 이번주 100만뷰 대박추세'};
+// 골라보기 줄을 그린다 — 버튼 글자(이름+건수)·켜짐·0건 숨김을 여기 한 곳에서 정한다.
+//   gc={must,rising,small} tc={wk100k,wk1m} 는 render가 **같은 목록에서** 세어 넘긴다.
+//   0건 버튼은 숨긴다(고른 것은 0건이어도 남긴다 — 안 그러면 끌 버튼이 사라진다).
+//   고를 것이 하나도 없으면 줄을 통째로 숨긴다.
+function renderPickRow(gc, tc, showTrend){
+  const tips = gradeTips();
+  let shown = 0;
+  document.querySelectorAll('#gradeFilters .ftog').forEach(b => {
+    const g = b.dataset.g, n = gc[g] || 0, on = (g === (STATE.grade || ''));
+    b.classList.toggle('on', on);
+    b.dataset.empty = n ? '' : '1';
+    b.innerHTML = `${GRADE_LABEL[g].e} ${GRADE_LABEL[g].t} <b>${n}</b>`;
+    b.title = tips[g] + (n ? ` · 지금 ${n}건` : ' · 지금 조건에는 없습니다');
+    const vis = n > 0 || on;
+    b.style.display = vis ? '' : 'none';
+    if(vis) shown++;
+  });
+  document.querySelectorAll('#trendFilters .ftog').forEach(b => {
+    const t = b.dataset.t, n = tc[t] || 0, on = (t === (STATE.trend || ''));
+    b.classList.toggle('on', on);
+    b.innerHTML = `${TREND_LABEL[t]} <b>${n}</b>`;
+    const vis = showTrend && (n > 0 || on);
+    b.style.display = vis ? '' : 'none';
+    if(vis) shown++;
+  });
+  const all = document.getElementById('pickAll');
+  if(all) all.classList.toggle('on', !STATE.grade && !STATE.trend);
+  const row = document.getElementById('pickRow');
+  if(row) row.style.display = shown ? '' : 'none';
 }
 // 한 번에 그릴 카드 수 상한(2026-08-18). 유튜브는 5,681장이라 전부 그리면 탭 전환이 멈춘다.
 // [더 보기]를 누를 때마다 이만큼씩 늘어난다 — 데이터를 자르는 게 아니라 그리기만 나눠 한다.
@@ -932,7 +966,7 @@ async function initLensLocales(){
   if(!LENS_LOCALES_ALL.length) return;      // 못 받으면 줄을 아예 안 띄운다(전체 검색 그대로)
   LENS_LOCALES_OFF = _loadLensLocalesOff();
   const row = document.getElementById('lensLocales');
-  if(row) row.style.display = '';
+  if(row) row.style.display = 'inline-block';
   renderLensLocaleChips();
 }
 function renderLensLocaleChips(){
@@ -943,6 +977,12 @@ function renderLensLocaleChips(){
     return `<button class="ftog${on?' on':''}" data-loc="${l.key}" onclick="toggleLensLocale('${l.key}')"
       title="${on?'끄면':'켜면'} 렌즈가 이 나라를 검색하지 ${on?'않습니다':'않던 것을 다시 검색합니다'}">${l.label}</button>`;
   }).join('');
+  // 검색창 줄 버튼에 지금 켠 나라를 적는다 — 펼치지 않아도 어디로 나가는지 보이게.
+  const btn = document.getElementById('lensLocaleBtn');
+  if(btn){
+    const on = LENS_LOCALES_ALL.filter(l=>!LENS_LOCALES_OFF.has(l.key)).map(l=>l.label);
+    btn.textContent = `🔍 검색국가: ${on.join(' · ')} ▾`;
+  }
   const note = document.getElementById('lensLocaleNote');
   if(note){
     const n = LENS_LOCALES_ALL.length - LENS_LOCALES_OFF.size;
@@ -950,6 +990,16 @@ function renderLensLocaleChips(){
       ? `${n}개국만 검색 (SerpApi ${n}회)` : '';
   }
 }
+function toggleLensLocalePop(ev){
+  if(ev) ev.stopPropagation();
+  const pop = document.getElementById('lensLocalePop');
+  if(pop) pop.style.display = (pop.style.display === 'none') ? 'block' : 'none';
+}
+// 바깥을 누르면 닫는다(칩을 누르는 동안은 열어 둔다 — 여러 나라를 이어서 고른다).
+document.addEventListener('click', ev => {
+  const wrap = document.getElementById('lensLocales'), pop = document.getElementById('lensLocalePop');
+  if(pop && wrap && pop.style.display !== 'none' && !wrap.contains(ev.target)) pop.style.display = 'none';
+});
 function toggleLensLocale(key){
   if(LENS_LOCALES_OFF.has(key)){
     LENS_LOCALES_OFF.delete(key);
@@ -1092,6 +1142,8 @@ function switchPlatform(p, el){
   updatePlatformCopy(p);
   // ★카테고리 줄도 다시 그린다(2026-08-26) — 플랫폼마다 숨기는 버튼이 다르다.
   //   안 부르면 유튜브에서 인스타로 갈아타도 썰쇼핑·장비템 버튼이 그대로 남는다.
+  applyArchiveTabFor(p);          // '역대 히트작' 자리의 이름 — 유튜브는 '채널별 터진 영상'
+  applyHitsDefaultSort();
   renderCtypes(); renderCats();
   applyMetricTabsFor(p);          // 플랫폼에 안 맞는 지표는 아예 숨긴다
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
@@ -1116,11 +1168,13 @@ function switchPlatform(p, el){
       const el=document.getElementById(id); if(el) el.style.display='';
     });
   }
-  document.getElementById('seedPanel').style.display = (p==='instagram')?'none':'block';
+  // ★유튜브도 숨긴다(2026-10-06 사장님 "다 숨겨도 된다 안 쓰는 거", 관제 136) — 키워드 입력·등록 채널 수·채널 지표 버튼.
+  document.getElementById('seedPanel').style.display = (p==='instagram'||p==='youtube')?'none':'block';
   document.getElementById('refRegister').style.display = (p==='instagram')?'block':'none';
   if(p==='instagram') loadRefAdded();
   document.getElementById('ttMode').style.display = (p==='tiktok')?'block':'none';
-  document.getElementById('ytCatBox').style.display = (p==='youtube')?'inline':'none';
+  // ★카테고리 수집 묶음은 어디서도 안 띄운다(2026-10-06 사장님, 관제 136). 요소·doCollect는 그대로 둔다.
+  document.getElementById('ytCatBox').style.display = 'none';
   document.getElementById('ttPanel').style.display = (p==='tiktok' && ttMode()==='keyword')?'block':'none';
   if(p==='tiktok') loadTtSettings();
   // 핀터레스트 수집 패널 — 관리자 + 그 탭일 때만(샤오홍슈와 같은 방식, 0순위-B).
@@ -1695,8 +1749,51 @@ async function saveTtSettings(){
   if(d.ok){ TT_KNOBS=d; renderTtStatus(); document.getElementById('ttStatus').innerHTML='✅ 저장됨 · '+document.getElementById('ttStatus').innerHTML; }
 }
 
+// ── 채널별 터진 영상(2026-10-06 사장님 "유튜브는 역대히트작 자리에", 관제 137) ──
+// 유튜브에는 누적 아카이브가 없어 '역대 히트작' 탭이 늘 비어 있었다. 그 자리(data-span="-1")를
+// 유튜브에서만 '채널별 터진 영상'으로 쓴다 — 고른 채널마다 그 채널 평소 조회수 대비 크게 터진 쇼츠.
+// 무엇이 터진 것인지는 서버(ranking.pick_channel_hits)가 정한다. 화면은 받은 것을 보여줄 뿐이다.
+const SPAN_ARCHIVE_COPY = {
+  youtube: {label:"💥 채널별 터진 영상",
+            title:"고른 채널마다 그 채널 평소 조회수의 5배 넘게 터진 쇼츠만 — 채널당 최대 3편. 썰쇼핑·홈템 버튼으로 나눠 봅니다"},
+  _:       {label:"🏆 역대 히트작",
+            title:"지금까지 모아둔 20만 건 중 댓글 1만개 넘은 것 — 새로 긁지 않습니다"},
+};
+// ★눌린 탭은 화면에서 읽는다 — SPAN_DAYS(let)는 이 아래에서 선언돼, 첫 화면을 그리는 길(renderCtypes)에서
+//   먼저 읽으면 선언 전 접근으로 화면이 통째로 죽는다(2026-08-18 채널당 상한과 같은 함정).
+function _archiveTabOn(){ const t = document.querySelector('#spanTabs .tab.active'); return !!t && t.dataset.span === '-1'; }
+function isChannelHitsTab(){ return PLATFORM === 'youtube' && _archiveTabOn(); }
+// 이 탭에 있는 카테고리 — 서버가 주는 두 가지(썰쇼핑·홈템)뿐이라 나머지 버튼은 누르면 빈 화면이다.
+const CHANNEL_HITS_CTYPES = ["전체", "썰쇼핑", "홈템"];
+// ★이 탭의 기본 정렬은 조회수순(2026-10-06 사장님 "채널터진영상은 기본이 조회수순") — 크게 터진 것부터 본다.
+//   들어올 때 보던 정렬을 기억해 두고, 나갈 때 돌려놓는다(다른 탭의 기본 '최신순'을 건드리지 않게).
+//   들어와서 손님이 다른 정렬을 고르면 그건 그대로 둔다 — 나갈 때만 되돌린다.
+let _HITS_PREV_SORT = null;
+function applyHitsDefaultSort(){
+  const on = isChannelHitsTab();
+  if(on && _HITS_PREV_SORT === null){
+    _HITS_PREV_SORT = STATE.tab;
+    STATE.tab = 'views';
+  } else if(!on && _HITS_PREV_SORT !== null){
+    STATE.tab = _HITS_PREV_SORT;
+    _HITS_PREV_SORT = null;
+  } else return;
+  document.querySelectorAll('.tab[data-tab]').forEach(x => x.classList.toggle('active', x.dataset.tab === STATE.tab));
+}
+function applyArchiveTabFor(p){
+  const t = document.querySelector('#spanTabs .tab[data-span="-1"]');
+  if(t){ const c = SPAN_ARCHIVE_COPY[p] || SPAN_ARCHIVE_COPY._; t.textContent = c.label; t.title = c.title; }
+  // 문턱 버튼(1만+·3천대·1천대)은 댓글 기준 아카이브(인스타) 것이다.
+  const th = document.getElementById("arcThresh");
+  if(th) th.style.display = (_archiveTabOn() && p !== 'youtube') ? "inline-block" : "none";
+}
 function renderCtypes(){
-  const hide = CTYPE_HIDDEN[PLATFORM] || [];
+  let hide = CTYPE_HIDDEN[PLATFORM] || [];
+  if (isChannelHitsTab()){
+    hide = CTYPES.map(c => c.key).filter(k => !CHANNEL_HITS_CTYPES.includes(k));
+    // 이 탭에 없는 버튼이 눌려 있었으면 첫 구분(썰쇼핑)으로 — '전체'로 보내면 두 가지가 섞여 보인다.
+    if (hide.includes(STATE.ctype)){ STATE.ctype = "썰쇼핑"; STATE.cat = "전체"; }
+  }
   // 숨긴 버튼이 눌려 있던 채로 플랫폼을 갈아타면 **목록이 빈 채로** 남는다 → 전체로 되돌린다.
   if (hide.includes(STATE.ctype)){ STATE.ctype = "전체"; STATE.cat = "전체"; }
   document.getElementById("ctypes").innerHTML =
@@ -2123,6 +2220,11 @@ function badgeHTML(i, ctx){
   //   그래야 카테고리·기간을 바꿔도 같은 영상의 뱃지가 그대로다.
   const g = gradeOf(i);
   let h='';
+  if(i.hit_ratio){
+    const x = i.hit_ratio >= 100 ? Math.round(i.hit_ratio) : i.hit_ratio;
+    h+=`<span class="ibadge red" title="이 채널 평소 조회수 ${(i.channel_median||0).toLocaleString()}회의 ${x}배 (쇼츠 ${(i.channel_videos||0).toLocaleString()}편 기준)"><span class="emo">💥</span><span class="lbl">평소의 ${x}배</span></span>`;
+    return h;   // 이 탭의 뱃지는 이것 하나 — 급상승·추세 뱃지를 같이 달면 같은 자리에 겹쳐 '평소의 N배'가 가려진다(브라우저 실측)
+  }
   if(g){
     const b = GRADE_LABEL[g];
     h+=`<span class="ibadge ${b.c}"><span class="emo">${b.e}</span><span class="lbl">${b.t}</span></span>`;
@@ -2399,28 +2501,20 @@ function render(opts){
     if(cut.length === 0 && items.length > 0){ STALE_FALLBACK = true; }
     else items = cut;
   }
-  // 뱃지별 재고를 세어 버튼 옆에 적는다 — 눌러보기 전에 몇 건인지 알 수 있게.
-  // ★기간 컷은 이미 반영됐고 카테고리·검색은 아직 안 걸린 시점에서 센다(그 기간의 재고).
+  // 뱃지·추세별 재고를 **같은 목록에서** 세어 버튼 안에 적는다 — 눌러보기 전에 몇 건인지 알 수 있게.
+  // ★카테고리·기간 컷이 이미 반영된 시점에서 센다(누르면 나올 수와 같다. 채널당 상한은 그 뒤에 따로 접는다).
+  // ★택1이라 추세 건수도 뱃지 필터를 걸기 **전에** 센다(2026-10-06, 관제 136).
   {
     const gc = {must:0, rising:0, small:0};
-    for(const i of items){ const g = gradeOf(i); if(g) gc[g]++; }
-    const el = document.getElementById('gradeCount');
-    if(el) el.textContent = `🎯 ${gc.must} · 📈 ${gc.rising} · 🚀 ${gc.small}`;
-    // ★재고가 0인 버튼은 흐리게 — 눌러도 빈 화면이 나올 것을 **누르기 전에** 알려준다
-    //   (2026-09-10 사장님 "유튜브는 필터에 안잡힘": 유형 '썰쇼핑'을 켜 둔 채 🎯를 누르니
-    //    0건이었는데, 화면엔 '결과 없음'만 떠 고장으로 읽혔다. 실제로는 그 조건에 없던 것).
-    const tips = gradeTips();
-    document.querySelectorAll('#gradeFilters .ftog').forEach(b => {
-      const g = b.dataset.g || '';
-      b.classList.toggle('on', g === (STATE.grade || ''));
-      const empty = g && !gc[g];
-      b.style.opacity = empty ? '.38' : '';
-      if(g){
-        b.dataset.empty = empty ? '1' : '';
-        // 설명은 매번 지금 플랫폼의 실제 문턱으로 다시 쓴다 — 어긋날 자리를 아예 없앤다
-        b.title = tips[g] + (empty ? ' · 지금 조건에는 없습니다' : ` · 지금 ${gc[g]}건`);
-      }
-    });
+    const tc = {wk100k:0, wk1m:0};
+    for(const i of items){
+      const g = gradeOf(i); if(g) gc[g]++;
+      const t = trendOf(i); if(t==='wk1m'){ tc.wk1m++; tc.wk100k++; } else if(t==='wk100k') tc.wk100k++;
+    }
+    const _trendAxis = (gradeRule().axis === 'views');
+    // 추세는 조회수 축 플랫폼에만 있다 — 다른 탭으로 넘어오면 남은 선택을 풀어 준다(버튼이 없는데 걸러지면 안 된다).
+    if(!_trendAxis) STATE.trend = '';
+    renderPickRow(gc, tc, _trendAxis);
   }
   // ★뱃지 필터 — 카드의 뱃지와 같은 판정식(gradeOf)을 쓴다. 화면에 보이는 것이 곧 기준이다.
   //   ★고른 뱃지만 남긴다(2026-09-10 사장님 "급상승은 안뜸"). 처음엔 📈에 🎯도 끼워
@@ -2430,16 +2524,8 @@ function render(opts){
     const want = STATE.grade;
     items = items.filter(i => gradeOf(i) === want);
   }
-  {
-    const tc = {wk100k:0, wk1m:0};
-    for(const i of items){ const t = trendOf(i); if(t==='wk1m'){ tc.wk1m++; tc.wk100k++; } else if(t==='wk100k') tc.wk100k++; }
-    const tEl = document.getElementById('trendCount');
-    if(tEl) tEl.textContent = `📈 ${tc.wk100k} · 🚀 ${tc.wk1m}`;
-    const tf = document.getElementById('trendFilters');
-    if(tf) tf.style.display = (gradeRule().axis === 'views') ? '' : 'none';
-    if(STATE.trend === 'wk1m') items = items.filter(i => trendOf(i) === 'wk1m');
-    else if(STATE.trend === 'wk100k') items = items.filter(i => { const t = trendOf(i); return t === 'wk100k' || t === 'wk1m'; });
-  }
+  if(STATE.trend === 'wk1m') items = items.filter(i => trendOf(i) === 'wk1m');
+  else if(STATE.trend === 'wk100k') items = items.filter(i => { const t = trendOf(i); return t === 'wk100k' || t === 'wk1m'; });
   const _beforeFilter = items.length;
   if(STATE.filters.fresh || STATE.filters.rising){
     const cut = STATE.filters.rising ? _risingCut(items) : 0;
@@ -2458,11 +2544,13 @@ function render(opts){
   //   회귀 검사: tests/test_ranking_render_tdz.py
   let _perChCut = 0;
   if(PER_CHANNEL_ON){
+    // 채널별 터진 영상 탭은 접지 않는다 — 서버가 이미 채널당 3편으로 끊었고, 그 3편이 이 탭의 뜻이다.
+    const _cap = isChannelHitsTab() ? Infinity : PER_CHANNEL_MAX;
     const seen = {}; const kept = [];
     for(const i of items){
       const u = _normUser(i.username) || '?';
       seen[u] = (seen[u]||0) + 1;
-      if(seen[u] <= PER_CHANNEL_MAX) kept.push(i);
+      if(seen[u] <= _cap) kept.push(i);
     }
     _perChCut = items.length - kept.length;
     items = kept;
@@ -2621,6 +2709,13 @@ function render(opts){
         cursor:pointer;font-weight:700"
         title="지금은 채널마다 상위 ${PER_CHANNEL_MAX}개만 보여주고 있습니다. 누르면 접힌 것까지 전부 나옵니다">
         📺 채널당 ${PER_CHANNEL_MAX}개로 <b>${_perChCut}건</b>이 접혀 있어요 — 전부 보기</button>`);
+  }
+  // ★위쪽 채널당 2개 버튼을 숨겼으므로(관제 136) 푼 사람이 되돌릴 자리를 여기 둔다.
+  if(!PER_CHANNEL_ON){
+    _tail.push(`<button onclick="togglePerChannel()" style="padding:10px 22px;border-radius:999px;
+        border:1px solid var(--line);background:transparent;color:var(--sub);cursor:pointer;font-weight:700"
+        title="채널마다 상위 ${PER_CHANNEL_MAX}개만 보이게 다시 접습니다">
+        📺 채널당 ${PER_CHANNEL_MAX}개로 다시 접기</button>`);
   }
   if(_tail.length){
     // ★두 버튼을 나란히 놓고(origin/main), 그 아래 한 줄 안내를 붙인다(이 트랙).
@@ -3160,6 +3255,9 @@ async function loadLast(){
     st.textContent = SPAN_DAYS !== 0
       ? "이 조건에 맞는 영상이 없습니다."
       : "아직 수집 결과가 없습니다. (관리자 수집 대기)";
+  } else if(isChannelHitsTab()){
+    const _ch = new Set(STATE.items.map(i => i.username)).size;
+    st.textContent = `채널별 터진 영상 ${STATE.items.length}편 · ${_ch}채널 — 그 채널 평소 조회수의 5배 넘게 터진 쇼츠(채널당 최대 3편)`;
   } else if(SPAN_DAYS === -1){
     st.textContent = ARC_MAX
       ? `역대 · 댓글 ${ARC_MIN.toLocaleString()}~${ARC_MAX.toLocaleString()}개 ${STATE.items.length}건 (새로 긁지 않음)`
@@ -3178,8 +3276,7 @@ async function loadLast(){
     //   왜 적은지 화면에 적어둔다. 48시간(가장 넓은 탭)에서만 문구를 뗀다.
     st.textContent = STALE_FALLBACK
       ? `⚠ 최근 ${SPAN_HOURS}시간 안에 새로 수집된 것이 없어 마지막 수집분(${_collectedAgoText()}) ${STATE.items.length}건을 보여줍니다`
-      : SPAN_HOURS === 48 ? ""
-      : `올라온 지 ${SPAN_HOURS}시간 이내만 — 수집분 ${STATE.items.length}건 중에서 고릅니다`;
+      : "";   // ★'수집분 N건 중에서 고릅니다' 안내는 뗐다(2026-10-06 사장님, 관제 136). 수집 멈춤 경고만 남긴다.
   }
 }
 
@@ -3191,9 +3288,10 @@ document.addEventListener("click", (e)=>{
   t.classList.add("active");
   SPAN_DAYS = parseInt(t.dataset.span || "0", 10);
   SPAN_HOURS = parseInt(t.dataset.hours || "48", 10);
-  // 문턱 버튼은 역대 탭에서만 — 기간 탭은 문턱이 고정이라 보여줄 게 없다
-  const th = document.getElementById("arcThresh");
-  if(th) th.style.display = (SPAN_DAYS === -1) ? "inline-block" : "none";
+  // 문턱 버튼은 역대 탭에서만 — 기간 탭은 문턱이 고정이라 보여줄 게 없다(유튜브는 그 자리가 채널별 터진 영상)
+  applyArchiveTabFor(PLATFORM);
+  renderCtypes();                 // 채널별 터진 영상 탭은 썰쇼핑·홈템 버튼만
+  applyHitsDefaultSort();
   loadLast();
 });
 

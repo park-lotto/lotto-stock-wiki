@@ -28,6 +28,7 @@ from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, confo
 from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import typecast_tts
+from shopping_shorts import fish_tts
 from shopping_shorts import voice_presets
 from shopping_shorts import audio_post
 from shopping_shorts import tts_joined
@@ -221,7 +222,7 @@ def _voice_params(voice):
     #   일레븐랩스 성우로 갈아끼운다(2026-09-07). 안 갈면 3단계에서 "타입캐스트 오류"가
     #   그대로 난다 — 고객이 옛날에 고른 성우가 job.voice에 통째로 박혀 있기 때문이다.
     #   voice_id·model_id·settings는 **짝**이라 함께 바꾼다(0순위-B: 따로 바꾸면 어긋난다).
-    if typecast_tts.use_fallback(v.get("model_id")):
+    if typecast_tts.use_fallback(v.get("model_id")) or fish_tts.use_fallback(v.get("model_id")):
         v = {**v, **typecast_tts.FALLBACK_VOICE}
     # ★배속은 **전부 뒤에서 atempo로** 건다 — 합성 API에는 항상 1.0(2026-10-01 사장님 청취, 관제 049).
     #   종전: 일레븐은 1.2까지 API speed + 초과분 atempo, 타입캐스트는 API tempo.
@@ -352,9 +353,12 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     #   ★2026-08-31: 키를 **그 job 주인 기준**으로 본다. 회원이 자기 타입캐스트 키를
     #   등록했으면 회사 키가 비어 있어도 진짜 음성이다 — customer_id를 안 넘기면
     #   회사 키만 보고 "무음 mock"으로 오판해 정규화를 건너뛴다.
-    has_voice_key = (bool(typecast_tts.api_key(customer_id))
-                     if typecast_tts.is_typecast(model_id)
-                     else bool(config.ELEVENLABS_API_KEY))
+    if fish_tts.is_fish(model_id):
+        has_voice_key = bool(fish_tts.api_key(customer_id))
+    elif typecast_tts.is_typecast(model_id):
+        has_voice_key = bool(typecast_tts.api_key(customer_id))
+    else:
+        has_voice_key = bool(config.ELEVENLABS_API_KEY)
     audio_post.finish_line_audio(str(out_path), tempo=extra_tempo, silence_trim=trim,
                                  pace_mode=pace_mode, loudnorm=has_voice_key)
     return natural
@@ -512,6 +516,27 @@ def job_script_endings(job):
     return bool((job or {}).get("given_script") or "")
 
 
+def _dialogue_of(job):
+    from shopping_shorts import dialogue_script
+    return dialogue_script.of_job(job)
+
+
+def _synth_dialogue(beats, tts_dir, *, voice, skip_existing, dialogue, customer_id):
+    """대화형 칸 음성(관제 128) — 굽기·자르기는 tts_dialogue, 마무리는 비트별·통짜와 같은 finalize_beat_audio.
+    배속·무음 손잡이는 작업 성우(_voice_params) 하나로 전원 통일."""
+    from shopping_shorts import tts_dialogue
+    outs = [Path(_beat_tts_path(tts_dir, b)) for b in beats]
+    if skip_existing and all(b.get("tts_path") == str(o) and o.exists() for b, o in zip(beats, outs)):
+        return
+    _vid, _set, _sp, extra_tempo, trim, _pv, _mid, pace_mode = _voice_params(voice)
+    tts_dialogue.synthesize(beats, dialogue, [str(o) for o in outs], tempo=extra_tempo,
+                            silence_trim=trim, pace_mode=pace_mode, customer_id=customer_id,
+                            work_dir=tts_dir)
+    for beat, out in zip(beats, outs):
+        beat["tts_path"] = str(out)
+        finalize_beat_audio(beat, out)
+
+
 def _try_joined(beats, tts_dir, *, voice, skip_existing, global_pron,
                 customer_id, script_endings):
     """통짜 합성 시도 — 성공하면 True(비트별 경로를 건너뛴다).
@@ -547,7 +572,7 @@ def _try_joined(beats, tts_dir, *, voice, skip_existing, global_pron,
 
 
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
-                      customer_id=0, script_endings=False):
+                      customer_id=0, script_endings=False, dialogue=None):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
 
     script_endings: 확정 대본(given_script) 잡인가 — 참이면 대본이 정한 어미를 음성이
@@ -592,6 +617,12 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
         finalize_beat_audio(beat, out)
 
     if total == 0:
+        return
+    # ★대화형(관제 128): 화자가 정해진 작업은 대화 경로만 탄다 — 실패하면 한 목소리로 조용히 되돌아가지 않고 job 실패.
+    #   dialogue = dialogue_script.of_job(job) (호출부가 넘긴다, 없으면 종전 그대로).
+    if dialogue:
+        _synth_dialogue(beats, tts_dir, voice=voice, skip_existing=skip_existing,
+                        dialogue=dialogue, customer_id=customer_id)
         return
     # ★통짜 합성(2026-09-05) — 자막 전환 지점의 목소리 튐을 뿌리에서 없앤다.
     #   전부 한 번에 굽고 정렬로 잘라내므로 조각 사이에 톤·볼륨·배속 차이가
@@ -728,6 +759,8 @@ def _refill_beats_to_tts(beats, source_scripts, tts_dir):
     alternates만 갱신(다른 필드 불변). probe/pool 문제는 조용히 통과(부가기능이 job 안 죽인다)."""
     from collections import Counter
     from shopping_shorts import backbone
+    from shopping_shorts.edit_plan import auto_sources
+    source_scripts = auto_sources(source_scripts)   # 붙일 B롤은 자동 배치 후보 소스에서만(관제 138 — 씨앗 제외)
     if not source_scripts:
         return
     sc = Counter((b.get("primary") or {}).get("video_id")
@@ -886,6 +919,16 @@ def mark_auto_exclude(extracts, job):
     ss = (job or {}).get("script_structure") or {}
     idx = ss.get("no_auto_idx") if isinstance(ss, dict) else None
     if not isinstance(idx, list):
+        return extracts
+    # ★재료가 씨앗뿐이면 표식을 달지 않는다(관제 138) — 달면 자동 배치 후보가 0이 돼 편집안을 못 만든다(_drop_seed 와 같은 규칙).
+    _seed = set()
+    for i in idx:
+        try:
+            _seed.add(f"s{int(i)}")
+        except (TypeError, ValueError):
+            pass
+    if not any(isinstance(r, dict) and r.get("segments") for k, r in (extracts or {}).items() if k not in _seed):
+        print("[extract] 씨앗 말고 쓸 재료가 없어 자동 배치 제외를 달지 않는다", flush=True)
         return extracts
     for i in idx:
         try:
@@ -1204,7 +1247,7 @@ def humanize_tts_error(err, has_own_key=None):
     raw = str(err or "")
     low = raw.lower()
     tip = None
-    if "elevenlabs" in low or "typecast" in low or "text-to-speech" in low:
+    if "elevenlabs" in low or "typecast" in low or "text-to-speech" in low or "api.fish.audio" in low:
         if "401" in raw or "unauthorized" in low or "invalid_api_key" in low:
             tip = ("🎙 음성(TTS) 키에 문제가 있어요. "
                    "설정에서 **TTS 키를 재등록**해 주세요. "
@@ -1613,6 +1656,8 @@ def _run_gate_correction(plan, source_scripts, target_seconds):
     """게이트 검사→재픽 루프. 위반이 재픽 가능하면 통과할 때까지 재픽(상한 _MAX_REPICK).
     재픽이 무변화면 즉시 종료(수렴). 최종 gate를 plan["gate"]에 항상 저장 —
     프론트가 역할별로(관리자=경고/일반=숨김) 표시한다. 순수·무과금·나레이션 불변."""
+    from shopping_shorts.edit_plan import auto_sources
+    source_scripts = auto_sources(source_scripts)   # 재픽 후보·소재 천장 모두 자동 배치 후보 소스 기준(관제 138 — 씨앗 제외)
     pool_ct = len({s.get("video_id") for s in (source_scripts or [])
                    if s.get("segments")} - {None})
     # 소재 천장(전 소스 세그 합) — 목표가 이보다 크면 게이트가 소재 기준으로 판정한다.
@@ -1902,9 +1947,11 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     _apply_phrase_min_cut(plan, store, {"customer_id": customer_id})
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
+    from shopping_shorts import dialogue_script as _dlg
     _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
                       customer_id=customer_id,
-                      script_endings=job_script_endings({"given_script": given_script}))
+                      script_endings=job_script_endings({"given_script": given_script}),
+                      dialogue=_dlg.of_structure(script_structure))
 
     # 4.2) 프리즈 뿌리 fix(2026-07-21) — 화면을 **실 TTS 길이**만큼 재보정한다. fill은 plan
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
@@ -1949,6 +1996,20 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         store.set_mix_candidates(job_id, _rec_cands)
     # ★구절 맞춤 컷 하한 표식은 **저장 전에** 단다 — 3단계 화면(_lab_captions)과 렌더가 같은 값을 본다.
     _apply_phrase_min_cut(plan, store, {"customer_id": customer_id})
+    # ★출구 검사(관제 138): 새 계획에 씨앗 컷이 자동으로 붙어 있으면 빼고 경보한다(정상 0). 어느 생성 경로든 여기를 지난다.
+    #   빠진 화면 길이는 바로 아래 저장 관문(store._ensure_screen_time)이 자동 배치 후보로 다시 채운다.
+    try:
+        from shopping_shorts import edit_plan as _ep
+        _leak = _ep.enforce_auto_exclude(plan.get("beats"), _ep._build_inventory(source_scripts)[0])
+        if _leak:
+            print("[mix] ⚠️ 씨앗 컷 %d개가 자동 배치에 섞여 있어 뺐다(generator=%r)" % (_leak, plan.get("generator")),
+                  file=sys.stderr)
+            from shopping_shorts import ops_alert
+            ops_alert.raise_alert("seed_auto_leak", "씨앗 영상 컷이 자동 배치에 섞였습니다(빼고 저장함)",
+                                  "job %s · %d개 · generator=%r — 자동 배치 후보를 edit_plan.non_edge_segs/auto_sources 로 "
+                                  "거르지 않는 생성 경로가 있습니다." % (job_id, _leak, plan.get("generator")), store=store)
+    except Exception:      # noqa: BLE001 — 검사 실패가 제작을 막지 않는다(기록은 남긴다)
+        traceback.print_exc(file=sys.stderr)
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
 
 
@@ -5184,7 +5245,8 @@ def run_clean_sources(job_id, db_path, work_root, confirm_clean=None, confirm_se
                 _synthesize_beats(plan_for_tts["beats"], work / "tts", voice=job.get("voice"),
                                   skip_existing=True, global_pron=_gpron,
                                   customer_id=job.get("customer_id", 0),
-                                  script_endings=job_script_endings(job))
+                                  script_endings=job_script_endings(job),
+                                  dialogue=_dialogue_of(job))
                 # ★훅 시작점은 **여기서만** 정한다(video_assemble._apply_hook_inpoint → DB 저장 → 화면이 그 값을 본다).
                 #   2026-09-27부터 조립(_render_mix)은 옮기지 않는다(렌더는 편성표를 고쳐 쓰지 않는다).
                 #   (옛 사연: 조립이 옮기던 시절 그게 청소 뒤에 일어나 서명이 바뀌어 렌더에서 재청소됐다.)
@@ -6029,7 +6091,8 @@ def _save_plan_with_tts(store, job_id, job, plan, work, gpron):
     for _ in range(2):
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
                           global_pron=gpron, customer_id=job.get("customer_id", 0),
-                          script_endings=job_script_endings(job))
+                          script_endings=job_script_endings(job),
+                          dialogue=_dialogue_of(job))
         store.update_mix_job(job_id, edit_plan=copy.deepcopy(plan))
         saved = (store.get_mix_job(job_id) or {}).get("edit_plan")
         if not saved or not saved.get("beats"):
@@ -6438,7 +6501,8 @@ def resynth_tts_job(job_id, db_path, work_root):
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"),
                           global_pron=pron_corrections.load(store),
                           customer_id=job.get("customer_id", 0),
-                          script_endings=job_script_endings(job))
+                          script_endings=job_script_endings(job),
+                          dialogue=_dialogue_of(job))
         _bump_tts_ver(plan["beats"])      # 전 칸을 다시 구웠다(skip_existing 아님) — 화면이 새 음성을 묻게
         store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:

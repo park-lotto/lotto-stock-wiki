@@ -21,7 +21,10 @@ def test_voice_settings_match_their_engine():
     from shopping_shorts import typecast_tts
     for r in voice_presets.load_presets_file():
         s = r.get("voice_settings", {})
-        if typecast_tts.is_typecast(r.get("model_id")):
+        from shopping_shorts import fish_tts
+        if fish_tts.is_fish(r.get("model_id")):
+            assert "stability" not in s and "emotion" not in s, r["preset_id"]   # Fish는 설정 축이 없다
+        elif typecast_tts.is_typecast(r.get("model_id")):
             assert "emotion" in s, r["preset_id"]
             assert "stability" not in s, r["preset_id"]      # 일레븐 축이 새어들면 안 된다
         else:

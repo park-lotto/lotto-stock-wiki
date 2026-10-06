@@ -158,7 +158,7 @@ def test_insta_signal_goes_on_after_line_not_before():
     lines = sw._to_lines(o, True, "k", 0, feats=[{"name": "x"}])
     texts = [L["text"] for L in lines if L["role"].startswith("고조")]
     assert not any(t.split()[0] in [w for w, _ in sw.IG_POOL] and "전에는" in t for t in texts)
-    assert any(t.startswith(sig) for t in texts for sig in sum(sw.IG_SETS.values(), []) if sig)
+    assert any(t.startswith(sig) for t in texts for sig in sw.pick_signals("ig", "k", 0)[1] if sig)   # 실제 뽑힌 신호어(스위치 끔=옛 세트)
 
 
 def test_signal_strips_leading_conjunction():

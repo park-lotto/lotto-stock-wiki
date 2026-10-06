@@ -90,7 +90,7 @@ def test_guard_called_once_in_finish():
     body = "\n".join(ln.split("//")[0] for ln in src.splitlines())
     assert body.count("guardReadWindow(") == 2, "정의 1 + 호출 1(finish) 이어야 한다"
     i = src.index("function planClips(")
-    f0 = src.index("const finish = base =>", i)
+    f0 = src.index("const finishCore = base =>", i)
     fin = src[f0:src.index("const segments =", f0)]
     assert "guardReadWindow(" in fin
 

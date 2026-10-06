@@ -17,6 +17,7 @@ import requests
 from shopping_shorts import config
 from shopping_shorts import tts_timestamps
 from shopping_shorts import typecast_tts
+from shopping_shorts import fish_tts
 
 _ENDPOINT = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 # 같은 합성인데 응답에 문자단위 정렬이 얹혀 온다(추가 과금 없음, 2026-07-31).
@@ -126,10 +127,16 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
     #   일레븐랩스 기본(미나)으로 갈아끼운다(2026-09-07). 여기까지 타입캐스트 값이
     #   내려오는 길은 mix_pipeline 말고도 있다(튜닝 작업대 미리듣기·미리보기 API).
     #   판정·대체값은 typecast_tts 한 곳에서만 온다(0순위-B).
-    if typecast_tts.use_fallback(model_id):
+    # ★Fish(2026-10-05): 엔진이 꺼졌으면(FISH_ENABLED=0) 타입캐스트처럼 일레븐 기본 성우로 대체.
+    #   판정은 fish_tts 한 곳, 대체값은 typecast_tts.FALLBACK_VOICE 한 곳(0순위-B).
+    if typecast_tts.use_fallback(model_id) or fish_tts.use_fallback(model_id):
         model_id = typecast_tts.FALLBACK_VOICE["model_id"]
         voice_id = typecast_tts.FALLBACK_VOICE["voice_id"]
         voice_settings = dict(typecast_tts.FALLBACK_VOICE["settings"])
+    if fish_tts.is_fish(model_id):
+        return _synthesize_fish(
+            text, out_path, voice_id=voice_id, speed=speed, model_id=model_id,
+            max_retries=max_retries, customer_id=customer_id)
     if typecast_tts.is_typecast(model_id):
         return _synthesize_typecast(
             text, out_path, voice_id=voice_id, voice_settings=voice_settings,
@@ -263,6 +270,38 @@ def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
             return out_path
         except requests.RequestException as e:
             _record_tts_event("typecast", e, customer_id=customer_id)
+            attempt += 1
+            if attempt < max_retries:
+                time.sleep(attempt * 2)
+                continue
+            raise
+
+
+def _synthesize_fish(text, out_path, *, voice_id, speed, model_id, max_retries,
+                     customer_id=0):
+    """Fish Audio 경로(2026-10-05). 정렬(타임스탬프)을 주지 않으므로 tts_timestamps를 남기지 않는다 —
+    자막은 타입캐스트 403 폴백과 같은 계약으로 ASR 경로가 받는다.
+    키: 회원 본인 키만(사장님 키 폴백 없음, 2026-10-05). 회원이 키 없이 오면 **안내문으로 실패**
+    (일레븐·타입캐스트 경로와 같은 계약). 사장님·면제 명단은 키가 없으면 무음 mock(개발 환경)."""
+    if not fish_tts.api_key(customer_id):
+        from shopping_shorts import keyroute as _kr
+        if not _kr.is_block_exempt(customer_id):
+            _record_tts_event("fish", None, silent=True, customer_id=customer_id)
+            raise RuntimeError(fish_tts.NEED_KEY_MSG)
+        _record_tts_event("fish", None, silent=True, customer_id=customer_id)
+        _write_silent_mp3(out_path, _estimate_seconds(text))
+        return out_path
+    attempt = 0
+    while True:
+        try:
+            _t0 = time.monotonic()
+            fish_tts.synthesize(text, out_path, voice_id=voice_id, speed=speed,
+                                model_id=model_id, customer_id=customer_id)
+            _record_tts_event("fish", None, ok=True, customer_id=customer_id,
+                              dur_ms=int((time.monotonic() - _t0) * 1000))
+            return out_path
+        except requests.RequestException as e:
+            _record_tts_event("fish", e, customer_id=customer_id)
             attempt += 1
             if attempt < max_retries:
                 time.sleep(attempt * 2)

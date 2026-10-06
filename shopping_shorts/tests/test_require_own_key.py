@@ -43,7 +43,8 @@ def test_require_list_is_exactly_vmake_and_tts():
     """★사장님이 정한 범위 그대로다. 여기에 gemini·youtube가 들어가면 공용 풀
     정책(키 1개 받고 무료)이 깨진다 — 그건 의도된 거래다."""
     assert set(keyroute.REQUIRE_OWN_KEY) == {
-        keyroute.SVC_VMAKE, keyroute.SVC_ELEVENLABS, keyroute.SVC_TYPECAST}
+        keyroute.SVC_VMAKE, keyroute.SVC_ELEVENLABS, keyroute.SVC_TYPECAST,
+        keyroute.SVC_FISH}           # 2026-10-05 사장님 "Fish도 사장님 키로 돌리지 않는다"
 
 
 @pytest.mark.parametrize("svc", [keyroute.SVC_GEMINI, keyroute.SVC_YOUTUBE])
