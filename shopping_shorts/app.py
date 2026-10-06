@@ -6262,6 +6262,20 @@ def _seg_strip_thumb(src, dest_dir, seg, filename):
     """
     return frame_extract.extract_segment_thumb(src, dest_dir, seg, filename)
 
+def _meme_frame(job, job_id: str, vid: str, t: float, dest: Path):
+    """감정짤 컷(video_id 'meme_<id>', 관제 139)의 t초 그림 한 장 → dest. 못 뜨면 None.
+    ★짤 파일은 재료(extract)에 없어서 재료만 보는 그림 길(필름 썸네일·장면꾸미기 beatframe)이 404 = 검은 칸이었다(10-06 사장님).
+      짤 파일 목록은 편집 합본·/api/mix/src 와 같은 _job_sources_with_memes 한 곳에서만 찾는다."""
+    src = (_job_sources_with_memes(job, _MIX_WORK_DIR / job_id) or {}).get(vid)
+    if not src or not Path(src).exists():
+        return None
+    if not dest.exists():
+        got = frame_extract.extract_frame_at(str(src), str(dest.parent), max(0.0, float(t or 0)) + 0.05, dest.name)
+        if not got:
+            return None
+    return dest if dest.exists() else None
+
+
 def _film_seg_from_id(seg_id: str, job: dict):
     """`film_<video_id>_<start>_<end>` → {video_id,start,end}. 아니면 None — 판단은 edit_plan.film_seg_from_id 한 곳(관제 141)."""
     return _edit_plan.film_seg_from_id(seg_id, (job or {}).get("extract"))
@@ -6349,6 +6363,14 @@ def api_mix_seg_thumb(job_id: str, seg_id: str):
         if not cached.exists() and not _seg_strip_thumb(str(src), cached.parent, {"start": 0.0, "end": 1.0}, cached.name):
             return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
         return FileResponse(str(cached), media_type="image/jpeg")
+    _fm = re.match(r"^film_(meme_\d+)_([0-9]+\.[0-9]+)_([0-9]+\.[0-9]+)$", seg_id)
+    if _fm:
+        # ★3단계 아래 필름 띠의 짤 조각(10-06 사장님 "밈 들어가는 칸이 검정") — 짤 파일에서 뜬다
+        out = _meme_frame(job, job_id, _fm.group(1), float(_fm.group(2)),
+                          _MIX_WORK_DIR / job_id / "seg_thumbs" / ("%s.jpg" % re.sub(r"[^0-9A-Za-z_.-]", "", seg_id)))
+        if not out:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "짤 파일 없음"})
+        return FileResponse(str(out), media_type="image/jpeg")
     # 장면 표 한 곳(관제 141) — 편성의 자동 조각(`…#시작-끝`)도 여기서 풀린다(종전엔 404 = 검은 썸네일).
     seg = _edit_plan.scene_table(job["extract"], job.get("edit_plan") or {}).get(seg_id)
     if not seg:
@@ -23922,6 +23944,9 @@ def _beatframe_file(job, job_id: str, i: int, cut=None, at=None):
     if _spec and not clean_map and not _cfresh:
         _ctag = "_src"
     out = work / "beatframes" / f"{i}_{_ct}{_key}{_ctag}.jpg"
+    if str(_seg0.get("video_id") or "").startswith("meme_"):
+        # ★그 순간이 감정짤 컷이면 짤 파일에서 뜬다(장면꾸미기 그림이 검은 칸이던 것, 10-06) — 청소본·원본 재료에 짤이 없다
+        return _meme_frame(job, job_id, str(_seg0["video_id"]), float(_seg0.get("start") or 0), out)
     if not out.exists():
         _extract_beat_frame(work, beat, out, clean_sources=clean_map,
                             clean_final=_cfin, final_ratio=_crat, seg_spec=_spec,
