@@ -50,7 +50,7 @@ def test_route_returns_terms(monkeypatch, tmp_path):
     monkeypatch.setattr(app_mod, "DB_PATH", tmp_path / "t.db")
     client = TestClient(app_mod.app)
     monkeypatch.setattr(app_mod.video_analysis, "english_search_terms",
-                        lambda text, kind: {"main": "portable range hood", "related": ["desktop range hood"]})
+                        lambda text, kind, lang="en": {"main": "portable range hood", "related": ["desktop range hood"]})
     res = client.post("/api/lens/kw/en", json={"text": "휴대용 레인지후드", "kind": "query"})
     assert res.status_code == 200
     d = res.json()
@@ -71,3 +71,30 @@ def test_multi_route_and_en_cap(monkeypatch, tmp_path):
     monkeypatch.setattr(app_mod, "expand_search_keywords", lambda text, n=5: cands)
     d = TestClient(app_mod.app).post("/api/lens/kw/multi", json={"text": "자석 양념통"}).json()
     assert d["ok"] and [c["ko"] for c in d["candidates"]] == ["자석 양념통", "주방 수납"]
+
+
+def test_zh_terms_for_xiaohongshu_douyin(monkeypatch):
+    """샤오홍슈·도우인(lang=zh): 한자 없는 말·12자 넘는 말은 버린다."""
+    assert va._clean_zh_term("磁吸调料罐") == "磁吸调料罐"
+    assert va._clean_zh_term("#厨房好物") == "厨房好物"
+    assert va._clean_zh_term("magnetic jar") == ""
+    assert va._clean_zh_term("这是一个非常非常长的中文搜索词语") == ""
+    _patch_model(monkeypatch, {"main": "磁吸调料罐", "related": ["厨房收纳神器", "spice rack", "磁吸调料罐"]})
+    r = va.english_search_terms("자석 양념통", "query", lang="zh")
+    assert r == {"main": "磁吸调料罐", "related": ["厨房收纳神器"]}
+
+
+def test_route_passes_lang(monkeypatch, tmp_path):
+    from fastapi.testclient import TestClient
+    from shopping_shorts import app as app_mod
+    monkeypatch.setattr(app_mod, "DB_PATH", tmp_path / "t.db")
+    seen = {}
+    def fake(text, kind, lang="en"):
+        seen["lang"] = lang
+        return {"main": "x", "related": []}
+    monkeypatch.setattr(app_mod.video_analysis, "english_search_terms", fake)
+    c = TestClient(app_mod.app)
+    c.post("/api/lens/kw/en", json={"text": "자석 양념통", "kind": "query", "lang": "zh"})
+    assert seen["lang"] == "zh"
+    c.post("/api/lens/kw/en", json={"text": "자석 양념통", "kind": "query", "lang": "evil"})
+    assert seen["lang"] == "en"

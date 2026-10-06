@@ -1037,7 +1037,7 @@ _EN_TERMS_PROMPT = """입력 종류: {kind}
 입력:
 \"\"\"{text}\"\"\"
 
-인스타그램 검색창에 그대로 넣을 **영어 검색어**를 만들어라.
+인스타그램·유튜브·틱톡·핀터레스트 검색창에 그대로 넣을 **영어 검색어**를 만들어라.
 - main: {main_rule}
 - related: {n}개. 같거나 비슷한 상품·소재의 영상을 더 찾을 검색어. 서로 **다른 축**으로
   (같은 상품의 다른 이름 / 기능·효과 / 쓰는 장소·상황 / 한 단계 넓은 종류).{amazon_rule}
@@ -1076,7 +1076,38 @@ def _clean_en_term(s):
     return t
 
 
-def english_search_terms(text, kind="query", n=5, max_retries=3, quota_sleep=8):
+# 중국어(간체) 판 — 샤오홍슈·도우인 검색창용(관제 151 확장, 2026-10-07 사장님 "5개 플랫폼 모두").
+#   길이 상한은 실측 근거가 없다 → 인스타처럼 짧게(2~8자 명사구)만 요구하고, 12자를 넘으면 버린다.
+_ZH_MAX_CHARS = 12
+_ZH_TERMS_PROMPT = """입력 종류: {kind}
+(query = 사용자가 검색창에 친 말 / caption = 게시물 설명글)
+입력:
+\"\"\"{text}\"\"\"
+
+샤오홍슈·도우인 검색창에 그대로 넣을 **중국어(간체) 검색어**를 만들어라.
+- main: {main_rule}
+- related: {n}개. 같거나 비슷한 상품·소재의 영상을 더 찾을 검색어. 서로 **다른 축**으로
+  (같은 상품의 다른 이름 / 기능·효과 / 쓰는 장소·상황 / 한 단계 넓은 종류).
+- ★모든 검색어는 **2~8자 명사구**. 문장 금지. 중국 창작자가 **실제로 쓰는 말**로(예: 厨房好物, 磁吸调料罐).
+- 해시태그 기호(#)·이모지·따옴표 금지.
+JSON만: {{"main": "...", "related": ["...", "..."]}}"""
+_ZH_TERMS_RULES = {
+    "query": "입력을 자연스러운 중국어 검색어로 옮긴 것. 입력이 이미 중국어면 그대로.",
+    "caption": "이 게시물이 보여 주는 **상품**의 중국어 이름. 상품이 전혀 안 보이면 빈 문자열.",
+}
+
+
+def _clean_zh_term(s):
+    """중국어 검색어 다듬기 — 기호 제거·공백 정리. 한자가 없거나 _ZH_MAX_CHARS를 넘으면 ""."""
+    import re
+    t = re.sub(r"[#\"'“”‘’`]", " ", str(s or ""))
+    t = re.sub(r"\s+", " ", t).strip()
+    if not t or not re.search(r"[一-鿿]", t) or len(t.replace(" ", "")) > _ZH_MAX_CHARS:
+        return ""
+    return t
+
+
+def english_search_terms(text, kind="query", n=5, max_retries=3, quota_sleep=8, lang="en"):
     """인스타 검색용 영어 검색어 → {"main": str, "related": [str]}. 실패·키없음 시 빈 결과.
 
     kind="query": 검색창에 친 말(한글이든 영어든) → main=그 말의 영어 검색어, related=비슷한 검색어.
@@ -1089,9 +1120,14 @@ def english_search_terms(text, kind="query", n=5, max_retries=3, quota_sleep=8):
     if not src or not SHORTS_GEMINI_KEYS:
         return empty
     n = max(1, min(int(n or 5), 8))
-    main_rule, amazon_rule = _EN_TERMS_RULES[kind]
-    prompt = _EN_TERMS_PROMPT.format(kind=kind, text=src[:2000], n=n,
-                                     main_rule=main_rule, amazon_rule=amazon_rule)
+    if lang == "zh":       # 샤오홍슈·도우인
+        clean = _clean_zh_term
+        prompt = _ZH_TERMS_PROMPT.format(kind=kind, text=src[:2000], n=n, main_rule=_ZH_TERMS_RULES[kind])
+    else:                  # 인스타·유튜브·틱톡·핀터레스트 = 영어(최대 3단어)
+        clean = _clean_en_term
+        main_rule, amazon_rule = _EN_TERMS_RULES[kind]
+        prompt = _EN_TERMS_PROMPT.format(kind=kind, text=src[:2000], n=n,
+                                         main_rule=main_rule, amazon_rule=amazon_rule)
     for attempt in range(max_retries):
         key, idx = comment_gen._next_live_key_and_idx()
         if key is None:
@@ -1106,13 +1142,13 @@ def english_search_terms(text, kind="query", n=5, max_retries=3, quota_sleep=8):
                 ),
             )
             data = json.loads(resp.text)
-            main = _clean_en_term(data.get("main"))
+            main = clean(data.get("main"))
             # query인데 입력이 이미 짧은 영어면 모델이 못 옮겨도 그 말 자체가 검색어다.
             if not main and kind == "query":
-                main = _clean_en_term(src)
+                main = clean(src)
             related, seen = [], {main}
             for r in (data.get("related") or []):
-                t = _clean_en_term(r)
+                t = clean(r)
                 if t and t not in seen:
                     related.append(t)
                     seen.add(t)
