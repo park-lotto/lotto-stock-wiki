@@ -735,6 +735,28 @@
    "예외": {
     "shopping_shorts/app.py": "_film_seg_from_id·_with_film_segs 는 edit_plan 에 위임만 하는 얇은 껍데기(옛 호출·테스트 호환) — 관제 141"
    }
+  },
+  {
+   "이름": "배경음 목록 곡 → 파일·속도·쇼츠 전용(롱폼 금지)·관리자 전용 판정",
+   "주인": [
+    "shopping_shorts/bgm_lib.py"
+   ],
+   "시그니처": [
+    "def shorts_only\\b",
+    "def speed_of\\b",
+    "def enabled_for\\b",
+    "assets\", \"bgm_lib\""
+   ],
+   "소비처": [
+    "3단계 배경음 탭(api_produce_mix_bgm_lib·settings)",
+    "렌더 atempo(video_assemble._burn_captions)",
+    "캡컷 배속 칸(capcut_draft)",
+    "렌더·캡컷 파일(resolve_deco_media)",
+    "롱폼 차단(_longform_job)"
+   ],
+   "검사도구": "tools/bgm_lib/check_render_capcut.py",
+   "과금": false,
+   "예외": {}
   }
  ]
 }

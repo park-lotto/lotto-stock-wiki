@@ -9,6 +9,7 @@
   모델: script_generate._call_json(vertex=True) = gemini-3.6-flash. DB 는 읽기만.
   확정 뒤 3단계로 넘기는 것은 story_writer.storyboard_to_beat_sources(줄별 장면 고정)가 맡는다.
 """
+import hashlib
 import json
 import os
 import re
@@ -152,7 +153,26 @@ def _keep_ids(*parts):
     return out
 
 
-def _materials(db, jid, ex=None, keep=()):
+def mat_sig(ex):
+    """재료 지문 — 장면 목록을 만든 재료(담은 영상 전부의 조각, 씨앗 포함)가 지금과 같은가를 가르는 한 곳(관제 147).
+    ★씨앗 여부는 안 넣는다: 장면 목록은 씨앗과 무관하게 재료 전체로 묶고, 씨앗은 보드를 만들 때 뺀다."""
+    ids = sorted(str(s.get("seg_id")) for e in (ex or {}).values() for s in ((e or {}).get("segments") or []) if s.get("seg_id"))
+    return "%d:%s" % (len(ids), hashlib.sha1("|".join(ids).encode("utf-8")).hexdigest()[:12])
+
+
+def seed_sig(ex):
+    """씨앗 지문 — 어떤 영상이 씨앗(auto_exclude)인가. AI 자동 보드가 이 값과 다르면 낡은 것이다(관제 147)."""
+    return ",".join(sorted(str(k) for k, e in (ex or {}).items() if is_seed_source(e)))
+
+
+def inventory_fresh(R, ex):
+    """저장된 장면 목록이 지금 재료로 만든 것인가. ★2026-10-06 사고: 미리 만들기가 외국 영상 5편 재료가 들어오기 1분 전에 돌아
+    장면 목록이 씨앗 조각뿐으로 굳었고, 뒤에 만든 보드는 쓸 조각이 0이라 칸마다 '장면 0초'가 됐다(work ef07493ca035).
+    지문이 없는 옛 목록도 낡은 것으로 본다 — 한 번 다시 묶으면 그 뒤로는 지문으로 가른다."""
+    return bool(R and R.get("inventory") and R.get("mat_sig") == mat_sig(ex))
+
+
+def _materials(db, jid, ex=None, keep=(), with_seed=False):
     """작업 재료(1단계 조각) — 조각별 길이·설명. 0.6초 미만·끝 화면(효능 없음)은 뺀다. 목록·생성·끼워 넣기 공용(한 곳).
     ex = 재료(job.extract 모양 {영상: {segments}}) — 라이브는 app 이 넘긴다(매칭 작업이 없으면 작업파일의 담은 영상 분석,
     2단계 대본 생성과 같은 규칙). 없으면(시험 도구) mix_jobs 에서 읽는다. ★짝은 seg_id 로만 — 바깥 키(s0·shortcode)는 다를 수 있다."""
@@ -163,10 +183,12 @@ def _materials(db, jid, ex=None, keep=()):
     #   "썰 채널 씨앗은 자막틀이 박혀 못 쓴다"). 3단계 소스 필름엔 그대로 있다(scene_lab 은 extract 전체를 본다).
     #   ★단 사람이 1단계 '꼭 쓰고 싶은 장면' 상자에 직접 담은 씨앗 조각(keep)은 사람이 고른 것이니 존중해 남긴다.
     #   재료가 씨앗뿐이면 표식 자체가 안 달려(mark_seed_sources) 여기서도 안 빠진다.
+    #   ★with_seed=True 는 장면 목록(inventory) 전용 — 목록은 씨앗과 무관하게 재료 전체로 묶는다(관제 147). 씨앗이 나중에
+    #   정해지거나 바뀌어도 목록을 다시 묶지 않고, 보드를 만들 때(이 함수 기본값) 씨앗 조각을 뺀다.
     keep = set(keep or ())
     segs, texts, order, rows = {}, {}, [], []
     for vid, e in ex.items():
-        seed = is_seed_source(e)
+        seed = is_seed_source(e) and not with_seed
         for s in (e or {}).get("segments") or []:
             a, b = float(s.get("start") or 0), float(s.get("end") or 0)
             if b - a < 0.6 or (s.get("is_outro") and not s.get("product_benefits")):
@@ -725,7 +747,7 @@ def inventory(db_path, jid, star_s="", role_s="", ex=None):
     db = _ro(db_path)
     fams = _families(db)
     t0 = time.time()
-    segs, texts, order, rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s))
+    segs, texts, order, rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s), with_seed=True)
     star = [next((sid for sid in order if sid.endswith(x.strip())), x.strip()) for x in star_s.split(",") if x.strip()]
     role_pick = {}
     for part in role_s.split("|"):
@@ -761,7 +783,7 @@ def inventory(db_path, jid, star_s="", role_s="", ex=None):
                                                        if any(t in tag_of.get(c, []) for c in g["ids"])) or "-") for g in groups)
     r2 = sg._call_json(P2 % (r1.get("kind") or "", inv, " / ".join(r1.get("missing") or []), "\n".join(f[2] for f in fams)),
                        S2, note=n2, vertex=True) or {}
-    out = {"job": jid, "secs": round(time.time() - t0, 1), "star": star, "role_pick": role_pick, "inventory": r1,
+    out = {"job": jid, "mat_sig": (mat_sig(ex) if ex is not None else None), "secs": round(time.time() - t0, 1), "star": star, "role_pick": role_pick, "inventory": r1,
            "styles": r2.get("styles") or [], "boards": {},
            "family_names": {str(n): f["names"] for n, f, _ in fams},
            "family_first": {str(n): (f["tpl"].get((f["roles"] or ["hook"])[0]) or [""])[0] for n, f, _ in fams},
@@ -775,13 +797,19 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
     db = _ro(db_path)
     fams = _families(db)
     R = R or load_state(jid)
+    # 재료(ex)는 라이브에서 늘 app 이 넘긴다. 안 넘긴 시험 도구 경로는 지문을 비교하지 않는다.
+    if ex is not None and R and R.get("inventory") and not inventory_fresh(R, ex):
+        # ★재료가 바뀐 장면 목록으로 보드를 만들지 않는다 — 여기서 다시 묶는다(보드를 만드는 모든 길이 여길 지난다, 관제 147)
+        print("   장면 목록이 지금 재료와 달라 다시 묶는다: %s → %s" % (R.get("mat_sig"), mat_sig(ex)), flush=True)
+        R = inventory(db_path, jid, star_s, role_s, ex=ex)
     if not R:
         raise ValueError("장면 목록을 먼저 만들어야 합니다")
     r1 = R["inventory"]
     segs, texts, order, _rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s))
     tag_of = r1.get("tag_of") or {}
     groups_txt = "\n".join("  %s: %s" % (g["name"], ", ".join("%s(%.1f초%s)" % (c, segs.get(c, 0), ("·" + "/".join(tag_of[c])) if tag_of.get(c) else "")
-                                                              for c in g["ids"] if c in segs)) for g in r1["groups"])   # 옛 장면 목록에 씨앗이 있어도 후보로 안 싣는다
+                                                              for c in g["ids"] if c in segs)) for g in r1["groups"]
+                            if any(c in segs for c in g["ids"]))   # 씨앗 조각은 후보로 안 싣는다 — ★씨앗만 든 묶음은 이름도 안 싣는다(실으면 모델이 묶음 이름을 장면 번호 자리에 적는다, 관제 147)
     star = [x for x in star_s.split(",") if x]
     roles_txt = " / ".join("%s: %s" % (p.split("=")[0], p.split("=")[1]) for p in role_s.split("|") if "=" in p)
     pan_of = {str(s.get("family")): s.get("pan") for s in R.get("styles") or []}
@@ -798,6 +826,10 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
             fam = next((f for n, f, _ in fams if str(n) == str(k)), None)
             if fam:
                 out[str(k)] = _board(fam, pan_of.get(str(k)) or "", r1, groups_txt, star, segs, texts, roles_pick=roles_txt, extra=extra_s.split(","), key="%s:%s" % (jid, k))
+    _ss = seed_sig(ex) if ex is not None else None
+    for b in out.values():
+        if isinstance(b, dict):
+            b["seed_sig"] = _ss        # 이 보드를 만든 때의 씨앗 — 미리 만들기가 씨앗이 바뀌었나를 이걸로 본다(관제 147)
     return out
 
 

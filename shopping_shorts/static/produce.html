@@ -9891,6 +9891,8 @@ function renderPool(){
       + (it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:'')
       + (canPlay?`<span class="pool-play" title="미리보기 재생" onclick="event.stopPropagation();poolPlay(this,${i})">▶</span>`:'')
       + (isPick?'<span class="pickbadge">🤖 AI PICK</span>':'<span class="badge">'+(it.useFootage?'✓':'')+'</span>')
+      // ★씨앗 = AI PICK 카드(관제 147). 대본의 소재로만 쓰고 화면 자동 배치에선 뺀다 — 카드에서 바로 보이게
+      + (it.seedNoAuto?'<span title="이 영상은 대본의 씨앗이에요 — 화면 자동 배치(스토리보드·3단계 매칭)에서는 빠지고 영상 소스로는 남습니다" style="position:absolute;bottom:4px;left:4px;font-size:9px;font-weight:900;color:#06281a;background:#5fe0a8;border-radius:99px;padding:2px 6px;white-space:nowrap">🌱 씨앗 · 자동배치 제외</span>':'')
       + `<button class="pool-x" title="빼기" onclick="event.stopPropagation();dropFootage(${i})">✕</button>`
       + _poolStat(it)
       + `</div>`
@@ -10168,6 +10170,7 @@ async function refreshStep0(){
       // ★finally로 내린다 — 중간에 던지면 회전표시가 영영 남는다(진행표시의 거짓말).
       try{ got = await autoloadAllFootage(); }      // ★여러 배치로 전부 분석(Task 1)
       finally{ _srcAutoloadRunning = false; }
+      if(window.STORYBOARD_ON && typeof sbPrepare==='function') sbPrepare();   // ★재료가 들어온 즉시 스토리 분석 시작(관제 147 — 서버가 다 들어왔나를 본다)
       _SRC_BUSY = 0; _SRC_QUEUED = 0;            // ★끝났으면 진행 표시를 내린다(안 내리면 영영 돈다)
       got = got || {};
       if(got.analyzed){
@@ -10672,6 +10675,7 @@ function renderAiPick(d, hasFootage){
   //   서버가 3번 받기에 실패한 영상은 빼고 나머지로 진행한다 — 무엇이 빠졌고 어떻게 하면 되는지 말한다.
   setTimeout(()=>{ try{ renderDroppedNotice(d); }catch(e){} }, 0);
   window._aiPick = d;
+  seedSync();          // ★자동 AI PICK 도 씨앗이다 — 사람이 아직 안 골랐으면 이 영상이 자동 배치에서 빠진다(관제 147)
   // 자동선정 결과(bbMain 미지정 상태)를 왼쪽 레일에도 반영 — 사장님이 아직 안 골랐으면
   // 서버가 고른 완성도 1위 썸네일에 픽 표시가 붙는다(renderPool의 _anyPick 폴백 로직).
   if(typeof renderPool==='function') renderPool();
@@ -11013,8 +11017,10 @@ function pickFootage(i){
   if(HANDOFF[i].landscape){ if(typeof toast==='function') toast('가로형(롱폼) 영상은 세로 숏폼에 못 씁니다 — 다른 영상을 골라주세요'); return; }
   HANDOFF.forEach(h=>{ h.bbMain=false; });
   HANDOFF[i].bbMain=true; HANDOFF[i].useFootage=true;
+  // ★1단계 카드 클릭 = 씨앗 고르기(관제 147). 2단계 씨앗 카드는 이 지정을 따라간다(aipick forced → seeds[0]).
+  try{ if(typeof S2!=='undefined' && S2) S2.seed=null; }catch(e){}
   if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
-  renderPool(); saveWork();
+  seedSync(); renderPool(); saveWork();
   if(typeof refreshStep0==='function') refreshStep0();
 }
 // ✕ = 이 영상을 재료에서 **아주 뺀다**(카드도 사라진다).
@@ -11028,7 +11034,7 @@ async function dropFootage(i){
   if(!it) return;
   HANDOFF.splice(i, 1);
   if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
-  renderPool(); saveWork();            // 화면은 즉시 반응(카드가 바로 사라진다)
+  seedSync(); renderPool(); saveWork();            // 화면은 즉시 반응(카드가 바로 사라진다)
   // ★서버 제거를 기다린 뒤에 AI PICK을 다시 읽는다 — 안 기다리면 아직 지워지기 전 상태를
   //   읽어 방금 뺀 영상이 카드에 그대로 남는다(누른 사람 눈엔 "삭제가 안 된" 것).
   if(it.shortcode){
@@ -11044,7 +11050,7 @@ function toggleFootage(i){
   HANDOFF[i].useFootage=!HANDOFF[i].useFootage;
   // 담기 해제한 영상이 '메인'이었으면 지정도 해제(메인은 화면에 담긴 것 중에서만).
   if(!HANDOFF[i].useFootage) HANDOFF[i].bbMain=false;
-  syncFootageToMixUrls(); renderPool(); saveWork();
+  syncFootageToMixUrls(); seedSync(); renderPool(); saveWork();
   if(typeof refreshStep0==='function') refreshStep0();   // Task4: 도착 감지 → AI PICK/빈 상태 재렌더
 }
 // ⭐ 메인 지정 — 오직 하나만. 잘된 영상 1개의 흐름을 뼈대로 삼는다(대본은 새로 씀).
@@ -11054,7 +11060,7 @@ function designateBackbone(i){
   const was=HANDOFF[i].bbMain;
   HANDOFF.forEach(h=>{ h.bbMain=false; });
   if(!was){ HANDOFF[i].bbMain=true; HANDOFF[i].useFootage=true; }
-  syncFootageToMixUrls(); renderPool(); saveWork();
+  syncFootageToMixUrls(); seedSync(); renderPool(); saveWork();
 }
 // 담긴 영상 개수만 표시한다(2026-07-18 개편). 예전엔 담긴 URL을 #mixUrls 입력칸에 **복사**해
 // 넣어 카드와 입력칸에 같은 URL이 이중으로 보였다. 이제 카드가 진실의 원천이고 #mixUrls는
@@ -17926,6 +17932,7 @@ function s2RenderSeeds(){
   } else if(!S2.seed && S2.seeds.length){
     S2.seed = S2.seeds[0];
   }
+  if(typeof seedSync==='function') seedSync();   // ★기본으로 정해진 씨앗도 자동 배치에서 뺀다(관제 147 — 종전엔 눌러야만 뺐다)
   const cards=S2.seeds.map((s,i)=>{
     const seg=(s.structure.segments)||[];
     const strip=seg.length?`<div class="s2-strip">${seg.map(g=>`<i style="flex:${g.pct};background:${g.color}"></i>`).join('')}</div>`
@@ -18003,9 +18010,12 @@ function s2SeedOn(i){
 }
 function s2PickSeed(i){
   const s=S2.seeds[i]; if(!s) return;
-  const prev=S2.seed;
   S2.seed=s;                       // 구조·훅을 물려받을 씨앗 = 이 한 편
-  _seedFootageOff(prev, s);        // 대본은 씨앗, 화면은 씨앗을 안 쓴다
+  // ★2단계에서 고른 영상 씨앗은 1단계 AI PICK 지정과 같은 값이다(관제 147) — 둘이 어긋나지 않게 지정을 옮긴다
+  if(s.shortcode && HANDOFF.some(h=>h && h.useFootage && h.shortcode===s.shortcode))
+    HANDOFF.forEach(h=>{ if(h) h.bbMain = (h.shortcode===s.shortcode); });
+  seedSync();                      // 대본은 씨앗, 화면 자동 배치는 씨앗을 안 쓴다
+  if(typeof renderPool==='function') renderPool();
   s2RenderSeeds(); saveWork();
 }
 // ★씨앗 영상은 **화면 재료에서 뺀다**(2026-09-21 사장님 "대본은 씨앗 쓰고 화면은 씨앗을 안 쓰는 걸로").
@@ -18013,22 +18023,32 @@ function s2PickSeed(i){
 //   주컷 5/7·대안컷 69.6%가 씨앗 컷이었고, 담은 재료 7편 중 4편은 한 컷도 안 쓰였다.
 //   화면 재료의 판단처는 useFootage 하나다(collectMixUrls) — 새 통로를 만들지 않고 그 값을 끈다.
 //   앞서 씨앗이던 영상은 화면 사용을 되살린다(씨앗을 바꿨는데 계속 빠져 있으면 재료가 조용히 준다).
-function _seedFootageOff(prevSeed, nextSeed){
-  // ★모든 모드·계정 공통(2026-10-01 사장님 "썰 말고 인스타에 쓸 때도 — 매칭은 안 되고 소스는 모두 믹스로").
-  //   종전엔 이야기작가 켜진 계정만(_s2SeedAuto) 돌아 다른 계정은 씨앗이 자동 매칭에 그대로 쓰였다.
-  //   이 함수는 이제 재료를 빼지 않고 표식(seedNoAuto)만 달므로 모든 계정에 켜도 재료가 줄지 않는다.
-  try{
-    const find=sc=>(sc? HANDOFF.find(h=>h && h.shortcode===sc) : null);
-    // ★2026-09-30 사장님 "씨앗은 자동배치는 빼주되 영상소스로는 넣어라": 종전엔 useFootage를 꺼서 job에서
-    //   통째로 빠졌다(이연정님 "8개 중 7개만 온다"). 이제 useFootage는 손대지 않고 seedNoAuto 표식만 단다 —
-    //   collectMixUrls가 이걸 script_structure.no_auto_idx로 보내고, 서버(mix_pipeline.mark_auto_exclude)가
-    //   그 소스를 자동 배치에서만 뺀다. 3단계 영상 소스 목록엔 그대로 보인다.
-    const prev=find(prevSeed && prevSeed.shortcode);
-    if(prev){ delete prev.seedNoAuto; if(prev._seedFootageOff){ prev.useFootage=true; delete prev._seedFootageOff; } }
-    const cur=find(nextSeed && nextSeed.shortcode);
-    if(cur){ cur.seedNoAuto=true; if(cur._seedFootageOff){ cur.useFootage=true; delete cur._seedFootageOff; } }
-    if(typeof renderPool==="function") renderPool();
-  }catch(_){ }
+// ★씨앗 표식(seedNoAuto)을 정하는 곳은 여기 하나(관제 147, 2026-10-06 사장님 "1단계에서 씨앗영상을 클릭 → 선택되면 자동으로 매칭에서 빼면").
+//   씨앗 = ①1단계에서 사람이 지정한 AI PICK(bbMain) ②없으면 서버 자동 AI PICK ③2단계에서 직접 쓴 대본이 씨앗이면 없음.
+//   종전엔 2단계 씨앗 카드를 **눌렀을 때만** 표식이 달려, 1단계 끝에 미리 만든 스토리보드는 씨앗을 모른 채 씨앗 장면으로 채워졌고
+//   (work ef07493ca035 — AI 자동 보드 9칸 전부 씨앗) 기본 씨앗(안 누름)은 3단계 자동 배치에도 그대로 들어갔다.
+//   표식이 바뀌면 바로 서버에 저장하고 스토리보드 미리 만들기를 다시 부른다 — 서버가 씨앗 지문으로 자동 보드를 다시 만든다.
+function _seedCode(){
+  try{ if(typeof S2!=='undefined' && S2 && S2.seed && !S2.seed.shortcode && String(S2.seed.text||'').trim()) return ''; }catch(e){}
+  const on=(HANDOFF||[]).filter(h=>h && h.useFootage && h.shortcode && !h.landscape);
+  const bb=on.find(h=>h.bbMain); if(bb) return bb.shortcode;
+  try{ const sc=(typeof S2!=='undefined' && S2 && S2.seed && S2.seed.shortcode)||''; if(sc && on.some(h=>h.shortcode===sc)) return sc; }catch(e){}
+  const p=window._aiPick && window._aiPick.pick_id;
+  return (p && on.some(h=>h.shortcode===p)) ? p : '';
+}
+function seedSync(){
+  const want=_seedCode(); let changed=false;
+  (HANDOFF||[]).forEach(h=>{
+    if(!h) return;
+    const on=!!want && h.shortcode===want;
+    if(!!h.seedNoAuto!==on){ if(on) h.seedNoAuto=true; else delete h.seedNoAuto; changed=true; }
+    if(h._seedFootageOff){ h.useFootage=true; delete h._seedFootageOff; changed=true; }   // 09-21~09-30 옛 저장본
+  });
+  if(changed){
+    Promise.resolve(typeof _pushWorkNow==='function' ? _pushWorkNow() : null)
+      .catch(()=>{}).then(()=>{ if(typeof sbPrepare==='function') sbPrepare(); });
+  }
+  return changed;
 }
 // ★원문은 alert이 아니라 **카드 아래로 접었다 편다**(2026-08-26 사장님 "원문누르면
 //   아래로 접었다 폈다고 넣어줘"). alert은 4000자에서 잘리고 복사도 안 되고 화면을 막는다.
@@ -19120,8 +19140,17 @@ function sbAbsorb(tasks){
     let k=null;
     if(name.startsWith('board:')) k=name.slice(6);
     else if(name.startsWith('insert:')) k=name.slice(7);
-    if(k==null || SB.made[k]) return;
+    if(k==null) return;
     if(!(t.result.slots||[]).length) return;
+    if(SB.made[k]){
+      // ★씨앗이 바뀌어 다시 만든 AI 자동 보드는 갈아 끼운다(관제 147) — 단 옛 보드에 씨앗 장면이 실제로 들어 있을 때만.
+      //   그 밖엔 종전대로 덮어쓰지 않는다(사람이 고친 문장·장면 순서를 지킨다).
+      const P=sbPieces();
+      const hasSeed=(SB.made[k].slots||[]).some(x=>(x.ids||[]).some(id=>P[id] && P[id].seed && !sbRolesOf(id).length));
+      if(!(k==='auto' && SB.made[k].seed_sig!==t.result.seed_sig && hasSeed)) return;
+      ['edit','ord'].forEach(f=>Object.keys(SB[f]||{}).forEach(x=>{ if(x.startsWith('auto#')) delete SB[f][x]; }));
+      if(typeof toast==='function') toast('씨앗 영상이 정해져 AI 자동 스토리보드를 씨앗 장면 없이 다시 만들었어요');
+    }
     SB.made[k]=JSON.parse(JSON.stringify(t.result));
     SB.mat=_sbMatSig()||SB.mat;      // 이 보드를 만든 때의 재료(낡음 표시용)
     if(SB.pend[k]){ SB.made[k].from=SB.pend[k]; SB.view=k; delete SB.pend[k]; }
@@ -19137,13 +19166,22 @@ async function sbPost(path, body){
     return true;
   }catch(e){ toast('요청 실패 — 다시 눌러 주세요'); return false; }
 }
-let _SB_PREP = '';     // 이 화면에서 미리 만들기를 부른 작업(같은 작업에 거듭 묻지 않게)
+// ★같은 (작업·씨앗·담은 영상)으로는 한 번만 묻는다 — 씨앗이나 담은 영상이 바뀌면 다시 묻는다(관제 147).
+//   서버가 "재료가 아직 다 안 들어옴(waiting)"·"도는 중(busy)"이면 5초 뒤 다시 묻는다 — 재료가 들어오는 즉시
+//   장면 목록이 시작돼 영상 분석과 스토리 분석 사이에 빈 시간이 없다. 판단(낡았나·다 들어왔나)은 서버 한 곳.
+let _SB_PREP = '', _SB_PREP_T = null, _SB_PREP_N = 0;
+function _sbPrepKey(j){ return j+'|'+(typeof _seedCode==='function'?_seedCode():'')+'|'
+  +(HANDOFF||[]).filter(h=>h&&h.useFootage).map(h=>h.shortcode||'').sort().join(','); }
 async function sbPrepare(){
-  const j=sbJid(); if(!j || _SB_PREP===j) return; _SB_PREP=j;
+  const j=sbJid(); if(!j) return;
+  const k=_sbPrepKey(j); if(_SB_PREP===k) return; _SB_PREP=k;
+  clearTimeout(_SB_PREP_T); _SB_PREP_T=null;
   try{
     const r=await fetch('/api/produce/storyboard/'+encodeURIComponent(j)+'/prepare',{method:'POST'});
     const d=await r.json().catch(()=>null);
     if(!r.ok || !d || !d.ok){ console.warn('[sb] 미리 만들기 실패', r.status, d&&d.error); _SB_PREP=''; return; }
+    if((d.waiting || d.busy) && _SB_PREP_N++ < 180){ _SB_PREP=''; _SB_PREP_T=setTimeout(sbPrepare, 5000); return; }
+    _SB_PREP_N=0;
     if(d.started && j===SB.jid) setTimeout(sbLoad, 1500);
   }catch(e){ console.warn('[sb] 미리 만들기 실패', e); _SB_PREP=''; }
 }
@@ -19168,7 +19206,8 @@ function sbPage1(){
   const boxes=SB_ROLES.map(([r,ic,c,slots])=>{ const s=SB.role[r]||new Set();
     return `<div class="sb-rbox ${SB.active===r?'on':''}" style="--c:${c}" onclick="sbSetActive('${sbA(r)}')"><div class="sb-rh">${ic} ${sbE(r)} <b>${s.size||''}</b></div><div class="sb-rs">${slots}</div>
       <div class="sb-rth">${[...s].slice(0,5).map(id=>{ const p=P[id]; return p?`<img src="${sbE(p.th)}" alt="">`:''; }).join('')}</div></div>`; }).join('');
-  const grps=sbGroups().map((g,i)=>{ const all=SB.showall[i]; const gids=(g.ids||[]); const ids=all?gids:gids.slice(0,7);
+  // ★장면 목록은 씨앗 포함 재료 전체로 묶는다(관제 147 — 씨앗이 나중에 바뀌어도 다시 안 묶게). 화면 후보에선 씨앗 조각을 뺀다(사람이 상자에 담은 건 남긴다)
+  const grps=sbGroups().map(g=>Object.assign({}, g, {ids:(g.ids||[]).filter(id=>!(P[id] && P[id].seed) || sbRolesOf(id).length)})).map((g,i)=>{ if(!(g.ids||[]).length) return ''; const all=SB.showall[i]; const gids=(g.ids||[]); const ids=all?gids:gids.slice(0,7);
     const hit=gids.filter(id=>sbRolesOf(id).length).length;
     return `<div class="sb-grp ${hit?'star':''}"><div class="sb-gh"><b>${sbE(g.name)}</b> <span>${sbE(g.desc||'')} · ${gids.length}개</span>${hit?` <span class="sb-hitb">🎯 ${hit}장 담김 — 그 자리에 먼저 놓아요 · 이 묶음의 나머지 조각은 다른 자리에도 쓰여요</span>`:''}</div>
       <div class="sb-gth">${ids.map(id=>sbCard1(id)).join('')}</div>${gids.length>7?`<span class="sb-more" onclick="SB.showall[${i}]=!SB.showall[${i}];sbRender()">${all?'접기':'나머지 '+(gids.length-7)+'개 펼치기'}</span>`:''}</div>`; }).join('');
