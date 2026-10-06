@@ -67,3 +67,14 @@ def test_one_owner_for_screen_state():
         assert not re.search(r"PHRASE_SYNC\[i\]\s*=\s*false;\s*\}?\s*\)?;?.*b\.phrase_sync", src), name
         assert "function hydrateCuts(" not in src and "function fixlenFromBeats(" not in src, name
         assert "Object.assign(STRETCH," not in src, name
+
+
+@node
+def test_cleaned_beat_keeps_recorded_cuts_without_stretch(tmp_path):
+    """청소 당시 컷 기록이 있는 칸은 늘려 채우기를 되살리지 않는다 — 청소본이 그 컷으로 지워졌다(라이브 실측 b5ee 5번 칸 0.6초 밀림)."""
+    d = json.loads(FX.read_text(encoding="utf-8"))
+    d["clean_cuts"] = {"0": [["s2", 16.02, 2.18]]}
+    with_rec = _run(d, tmp_path)
+    d["beats"][0].pop("stretch_fill")
+    off = _run(d, tmp_path)
+    assert with_rec == off, "청소 기록이 있는 칸인데 늘려 채우기로 컷이 바뀌었다"

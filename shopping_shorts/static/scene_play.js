@@ -514,7 +514,10 @@ function screenStateFromServer(D){
     (ov || []).forEach(s => { const id = s && s.seg_id; if (id && !seen.includes(id)) seen.push(id); });  // ✂ 두 토막 = 한 번
     st.lists.push(seen.length ? seen
       : [b.primary, ...(b.alternates || [])].filter(Boolean).map(s => s.seg_id).filter(Boolean));
-    if (b.stretch_fill) st.stretch[i] = true;
+    // ★청소 당시 컷 기록이 있는 칸은 늘려 채우기를 되살리지 않는다(관제 148 보완, 2026-10-07 라이브 실측 b5ee8d89bedb 5번 칸 0.6초 밀림):
+    //   그 청소본은 늘리기를 안 읽던 러너의 컷으로 지워졌다 — 늘리기를 켜면 컷이 청소 당시와 달라져 화면≠완성본·재청소(과금).
+    //   청소 안 한 칸·새로 청소할 칸은 그대로 늘린다. (관제 110·135·150 과 같은 원칙: 청소한 칸은 청소 당시 컷)
+    if (b.stretch_fill && !((D.clean_cuts || {})[String(i)] || []).length) st.stretch[i] = true;
     if (b.phrase_sync === false) st.phrase_sync[i] = false;
     if (b.phrase_exact === true) st.phrase_exact[i] = true;
     if (Array.isArray(b.manual_cuts)) st.cuts[i] = b.manual_cuts;
