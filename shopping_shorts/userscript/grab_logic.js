@@ -1,6 +1,8 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-07  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-07b  (LOGIC_VER가 정본)
+//   · 인스타 — 키워드 검색 제목을 검색창으로(한글→영어 검색), 비슷한 검색어 칩, 게시물 팝업 관련 검색어(관제 151).
+//     같은 날 관제 150이 20261007을 썼다 → 한 칸 올린다.
 //   · 유튜브 — 검색→쇼츠로 가면 숨은 검색 카드 📥 때문에 쇼츠 화면 📥 담기가 꺼지던 것,
 //     검색 카드에 마우스를 올리면 미리보기 영상이 📥를 덮던 것(관제 150).
 //   · 인스타 팝업·게시물 화면 — 버튼을 본문 칸 바깥 오른쪽으로(관제 094). 같은 날 핀터레스트 수정이
@@ -19,7 +21,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261007;
+  var LOGIC_VER = 20261008;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -1140,6 +1142,197 @@
   //   자리 판단은 **여기 한 곳에서만** 한다(0순위-B) — 만드는 쪽은 right:18px로 두고,
   //   이 함수가 매 tick에 left로 덮어쓴다. 못 정하면 종전 자리 그대로 둔다.
   // 위→아래 순서. 지금 화면에 있는 것만 골라 빈칸 없이 연속으로 쌓는다.
+  // ── 인스타 영어 검색어(관제 151, 2026-10-07 사장님) ─────────────────────────────
+  //   ① 키워드 검색 화면: 제목("Life hacks gadgets")을 검색창으로 바꾼다 — 한글로 치면 영어로 바꿔 검색.
+  //   ② 그 아래 비슷한 검색어 칩 5개 — 누르면 그 검색으로 이동.
+  //   ③ 게시물 팝업: 오른쪽 버튼 줄 아래에 관련 검색어 칩(설명글 기준, amazon 포함).
+  //   ★검색어를 만드는 판단(영어·최대 3단어)은 서버 video_analysis.english_search_terms 한 곳이다.
+  //     여기서는 받은 걸 그리기만 한다 — 단어 수를 여기서 또 자르지 않는다(0순위-B).
+  var IGKW_URL = "https://www.instagram.com/explore/search/keyword/?q=";
+  function _isIg() { return location.host.indexOf("instagram.com") >= 0; }
+  function _igKwQuery() {
+    if (!_isIg() || location.pathname.indexOf("/explore/search/keyword") !== 0) return "";
+    try { return (new URLSearchParams(location.search).get("q") || "").trim(); } catch (e) { return ""; }
+  }
+  function _igKwGo(term) { if (term) location.href = IGKW_URL + encodeURIComponent(term); }
+  // 같은 입력은 한 번만 묻는다(탭 안에서만 기억). 실패는 기억하지 않는다 — 다음 tick에 다시 묻게.
+  var _igKwPending = {};
+  function _igKwFetch(kind, text, done) {
+    var ck = "ss_kw:" + kind + ":" + text;
+    try { var c = sessionStorage.getItem(ck); if (c) { done(JSON.parse(c)); return; } } catch (e) {}
+    if (_igKwPending[ck]) return;
+    _igKwPending[ck] = true;
+    _gmPost(BASE + "/api/lens/kw/en", { text: text, kind: kind }, function (status, body) {
+      delete _igKwPending[ck];
+      var d = null;
+      try { d = JSON.parse(body); } catch (e) {}
+      if (status === 200 && d && d.ok) {
+        var r = { main: d.main || "", related: d.related || [] };
+        try { sessionStorage.setItem(ck, JSON.stringify(r)); } catch (e) {}
+        done(r);
+      } else {
+        done({ error: status === 401 ? "숏템메이커에 로그인해 주세요" : "검색어를 못 만들었어요(" + status + ")" });
+      }
+    }, function () { delete _igKwPending[ck]; done({ error: "숏템메이커 서버에 연결하지 못했어요" }); });
+  }
+  function _igKwChip(term, strong) {
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = term; b.title = "인스타에서 '" + term + "' 검색";
+    b.style.cssText = "border:1px solid " + (strong ? "#0095f6" : "#dbdbdb") + ";background:" +
+      (strong ? "#0095f6" : "#fff") + ";color:" + (strong ? "#fff" : "#262626") +
+      ";border-radius:16px;padding:5px 12px;font:600 13px system-ui,sans-serif;cursor:pointer;white-space:nowrap";
+    b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); _igKwGo(term); });
+    return b;
+  }
+  // 제목 = 검색어와 글자가 같은 요소(대소문자 무시). 인스타 클래스명에 기대지 않는다(자주 바뀐다).
+  function _igKwTitleEl(q) {
+    var want = q.toLowerCase(), best = null;
+    var els = document.querySelectorAll("h1,h2,span,div");
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.id === "ss-kwbar" || el.closest("#ss-kwbar")) continue;
+      if ((el.textContent || "").trim().toLowerCase() !== want) continue;
+      var r = el.getBoundingClientRect();
+      if (r.width < 20 || r.height < 10 || r.top > 400) continue;
+      if (!best || best.contains(el)) best = el;          // 가장 안쪽 요소
+    }
+    return best;
+  }
+  // 검색창을 걷을 때 숨겨 둔 원래 제목을 되살린다(팝업이 열려 주소가 /p/로 바뀌었다 닫히는 경우).
+  function _igKwBarRemove(bar) {
+    if (!bar) return;
+    var t = bar.previousElementSibling;
+    if (t && t.style && t.style.display === "none") t.style.display = "";
+    bar.remove();
+  }
+  function syncIgKwBar() {
+    var q = _igKwQuery(), bar = document.getElementById("ss-kwbar");
+    if (!q) { _igKwBarRemove(bar); return; }
+    if (bar && bar.getAttribute("data-q") === q && document.body.contains(bar)) return;
+    _igKwBarRemove(bar);
+    var title = _igKwTitleEl(q);
+    if (!title) return;                                   // 제목이 아직 안 그려졌다 — 다음 tick
+    bar = document.createElement("div");
+    bar.id = "ss-kwbar"; bar.setAttribute("data-q", q);
+    bar.style.cssText = "display:flex;flex-direction:column;gap:8px;margin:0 0 12px;font-family:system-ui,sans-serif";
+    var form = document.createElement("form");
+    form.style.cssText = "display:flex;gap:6px;align-items:center;max-width:560px";
+    var inp = document.createElement("input");
+    inp.type = "text"; inp.value = q; inp.placeholder = "한글로 쳐도 영어로 바꿔 검색해요";
+    inp.style.cssText = "flex:1;min-width:0;font:700 18px system-ui,sans-serif;padding:8px 12px;" +
+      "border:1px solid #dbdbdb;border-radius:8px;background:#fafafa;color:#262626";
+    var go = document.createElement("button");
+    go.type = "submit"; go.textContent = "검색";
+    go.style.cssText = "border:0;background:#0095f6;color:#fff;border-radius:8px;padding:9px 16px;" +
+      "font:700 14px system-ui,sans-serif;cursor:pointer";
+    var note = document.createElement("div");
+    note.style.cssText = "font-size:12px;color:#737373;min-height:16px";
+    form.appendChild(inp); form.appendChild(go);
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var t = (inp.value || "").trim();
+      if (!t) return;
+      if (!/[ㄱ-힝]/.test(t)) { _igKwGo(t); return; }   // 한글이 없으면 그대로 검색
+      go.disabled = true; note.textContent = "영어 검색어로 바꾸는 중…";
+      _igKwFetch("query", t, function (r) {
+        go.disabled = false;
+        if (r.main) { note.textContent = "→ " + r.main; _igKwGo(r.main); }
+        else note.textContent = r.error || "영어로 바꾸지 못했어요. 영어로 직접 입력해 주세요.";
+      });
+    });
+    // 인스타 단축키가 입력을 가로채지 않게(글자 입력 중 페이지가 반응하는 것 방지)
+    inp.addEventListener("keydown", function (e) { e.stopPropagation(); });
+    var chips = document.createElement("div");
+    chips.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center";
+    var lab = document.createElement("span");
+    lab.textContent = "비슷한 검색어"; lab.style.cssText = "font-size:12px;color:#737373;margin-right:4px";
+    chips.appendChild(lab);
+    var wait = document.createElement("span");
+    wait.textContent = "찾는 중…"; wait.style.cssText = "font-size:12px;color:#a8a8a8";
+    chips.appendChild(wait);
+    bar.appendChild(form); bar.appendChild(note); bar.appendChild(chips);
+    title.style.display = "none";
+    title.insertAdjacentElement("afterend", bar);
+    _igKwFetch("query", q, function (r) {
+      if (!document.body.contains(chips)) return;
+      wait.remove();
+      var list = (r.related || []).slice(0, 5);
+      if (!list.length) { lab.textContent = r.error || "비슷한 검색어를 못 찾았어요"; return; }
+      for (var i = 0; i < list.length; i++) chips.appendChild(_igKwChip(list[i], false));
+    });
+  }
+  // ── ③ 게시물 팝업의 관련 검색어 ─────────────────────────────────────────
+  function _igPostCode() {
+    var m = location.pathname.match(/\/(?:p|reel|reels)\/([A-Za-z0-9_-]+)/);
+    return m ? m[1] : "";
+  }
+  // 설명글: 페이지에 박힌 JSON(로그아웃 화면 실측: media 노드의 caption.text) → 화면의 h1 → og:description.
+  function _igCaptionFromDoc(doc, code) {
+    var ss = doc.querySelectorAll('script[type="application/json"]');
+    for (var i = 0; i < ss.length; i++) {
+      var tx = ss[i].textContent || "";
+      if (tx.indexOf(code) < 0 || tx.indexOf("caption") < 0) continue;
+      var found = "";
+      try {
+        (function walk(o, d) {
+          if (found || !o || typeof o !== "object" || d > 60) return;
+          if (o.code === code && o.caption && o.caption.text) { found = o.caption.text; return; }
+          for (var k in o) walk(o[k], d + 1);
+        })(JSON.parse(tx), 0);
+      } catch (e) {}
+      if (found) return found;
+    }
+    return "";
+  }
+  function _igCaption(code, done) {
+    var c = _igCaptionFromDoc(document, code);
+    if (c) { done(c); return; }
+    var h = document.querySelector('[role="dialog"] h1, article h1, main h1');
+    if (h && (h.textContent || "").trim().length > 3) { done(h.textContent.trim()); return; }
+    fetch("/p/" + code + "/", { credentials: "include" }).then(function (r) { return r.text(); }).then(function (html) {
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var t = _igCaptionFromDoc(doc, code);
+      if (!t) {
+        var m = doc.querySelector('meta[property="og:description"]') || doc.querySelector('meta[name="description"]');
+        t = m ? (m.getAttribute("content") || "") : "";
+      }
+      done(t.trim());
+    }).catch(function () { done(""); });
+  }
+  function syncIgPostKw() {
+    var p = document.getElementById("ss-kwpost");
+    var code = (_isIg() && isSinglePost()) ? _igPostCode() : "";
+    if (!code) { if (p) p.remove(); return; }
+    if (p && p.getAttribute("data-c") === code) return;
+    if (p) p.remove();
+    p = document.createElement("div");
+    p.id = "ss-kwpost"; p.setAttribute("data-c", code);
+    p.style.cssText = "position:fixed;right:18px;bottom:230px;z-index:2147483646;width:230px;" +
+      "background:rgba(22,22,22,.92);color:#eee;border-radius:12px;padding:10px;font-family:system-ui,sans-serif;" +
+      "box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:6px";
+    var hd = document.createElement("div");
+    hd.textContent = "🔎 관련 검색어"; hd.style.cssText = "font:800 13px system-ui,sans-serif";
+    var body = document.createElement("div");
+    body.style.cssText = "display:flex;flex-wrap:wrap;gap:6px";
+    var st = document.createElement("div");
+    st.textContent = "설명글 읽는 중…"; st.style.cssText = "font-size:12px;color:#aaa";
+    body.appendChild(st);
+    p.appendChild(hd); p.appendChild(body);
+    document.body.appendChild(p);
+    _igCaption(code, function (cap) {
+      if (p.getAttribute("data-c") !== code || !document.body.contains(p)) return;
+      if (!cap) { st.textContent = "설명글이 없어 검색어를 못 만들었어요"; return; }
+      st.textContent = "검색어 만드는 중…";
+      _igKwFetch("caption", cap.slice(0, 2000), function (r) {
+        if (p.getAttribute("data-c") !== code || !document.body.contains(p)) return;
+        var list = (r.main ? [r.main] : []).concat(r.related || []);
+        if (!list.length) { st.textContent = r.error || "검색어를 못 만들었어요"; return; }
+        st.remove();
+        for (var i = 0; i < list.length; i++) body.appendChild(_igKwChip(list[i], i === 0 && !!r.main));
+      });
+    });
+  }
+
   var DOCK_IDS = ["ss-adopt-btn", "ss-favch-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn"];
   var DOCK_STEP = 52;      // 버튼 세로 간격
   function _dockAnchor() {
@@ -1263,7 +1456,7 @@
     var sk = document.getElementById("ss-seek");
     if (sk) {
       sk.style.display = gone ? "none" : "";
-      if (gone) return;
+      if (gone) { _placeKwPost(rr, x, base, slot, gone); return; }
       if (!rr || slot === 0) {
         sk.style.left = ""; sk.style.top = "";
         sk.style.right = "18px"; sk.style.bottom = "174px";
@@ -1277,6 +1470,30 @@
       }
       sk.style.height = "auto"; sk.style.maxHeight = "none"; sk.style.width = "auto";
     }
+    _placeKwPost(rr, x, base, slot, gone);
+  }
+  // 관련 검색어 상자(관제 151): 도킹 줄(버튼들 → 시크바) **맨 아래**에 붙인다. 자리 판단은 _dockBtns 한 곳.
+  function _placeKwPost(rr, x, base, slot, gone) {
+    var kp = document.getElementById("ss-kwpost");
+    if (!kp) return;
+    kp.style.display = gone ? "none" : "";
+    if (gone) return;
+    if (!rr || slot === 0) {                 // 기준 영상을 못 찾았으면 종전 오른쪽 아래 자리
+      kp.style.left = ""; kp.style.top = ""; kp.style.right = "18px"; kp.style.bottom = "230px";
+      return;
+    }
+    var top = base + slot * DOCK_STEP;
+    var sk = document.getElementById("ss-seek");
+    if (sk && sk.style.display !== "none") {
+      var sr = sk.getBoundingClientRect();
+      if (sr.height) top = sr.bottom + 10;
+    }
+    var kw = kp.offsetWidth || 230, kx = x + 16;
+    if (kx + kw + 12 > window.innerWidth) kx = Math.max(8, window.innerWidth - kw - 12);
+    kp.style.right = "auto"; kp.style.bottom = "auto";
+    kp.style.left = kx + "px"; kp.style.top = top + "px";
+    kp.style.maxHeight = Math.max(80, window.innerHeight - top - 12) + "px";
+    kp.style.overflow = "auto";
   }
 
   // ── 핀터레스트(2026-09-11) ────────────────────────────────────────────
@@ -1411,7 +1628,7 @@
     _pvWait = setTimeout(function () { _pvWait = 0; try { _ytPreviewBtn(); } catch (e) {} }, 400);
   }, true);
 
-  function tick() { if (_ytOff()) { _ytClear(); return; } if (_ytResults()) { _ytResultsTick(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
+  function tick() { if (_ytOff()) { _ytClear(); return; } if (_ytResults()) { _ytResultsTick(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{syncIgKwBar();}catch(e){} try{syncIgPostKw();}catch(e){} try{_dockBtns();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.
