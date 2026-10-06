@@ -154,6 +154,11 @@
     "card": 138,
     "track": "씨앗자동배치뿌리"
   },
+  "shopping_shorts/store.py:autoload_status": {
+    "at": "2026-10-06 20:52",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
   "shopping_shorts/story_writer.py:make_drafts": {
     "at": "2026-09-29 19:18",
     "card": 33,
