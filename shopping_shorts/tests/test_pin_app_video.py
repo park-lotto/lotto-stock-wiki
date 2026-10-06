@@ -42,3 +42,13 @@ def test_json_ld_still_wins():
             '"duration":"PT9S","name":"LD"}</script>') + VIDEO_PAGE
     it = pc._ld_video_block(page)
     assert it["contentUrl"].endswith("/ld.mp4") and it["name"] == "LD"
+
+
+def test_lens_knows_country_pinterest_domains():
+    """렌즈도 담기와 같은 핀터레스트 주소 목록을 쓴다 — pinterest.co.kr 핀이 '모르는 사이트'로 버려지던 것."""
+    from shopping_shorts import lens_discover as ld
+    assert ld._platform_of("https://www.pinterest.co.kr/pin/123456789/") == "pinterest"
+    assert ld._platform_of("https://kr.pinterest.com/pin/123456789/") == "pinterest"
+    assert ld._platform_of("https://www.pinterest.jp/pin/1/") == "pinterest"
+    assert ld._platform_of("https://store.shopping.yahoo.co.jp/x") is None
+    assert ld._platform_of("https://www.instagram.com/reel/abc/") == "instagram"
