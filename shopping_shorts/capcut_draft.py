@@ -806,18 +806,28 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
     #   짧으면 캡컷에서 늘려 쓰면 된다(우리 렌더는 amix가 잘라 쓴다). 여기서 반복을
     #   흉내내면 렌더와 다른 소리가 되므로 **원본 길이 그대로** 한 칸만 올린다.
     if bgm_layer and bgm_layer.get("_capcut_path") and total_us > 0:
-        _bdur = _us(bgm_layer.get("dur", 0.0)) or total_us
-        _bdur = min(_bdur, total_us)
+        # 속도(관제 146): 렌더는 atempo 로 빠르게/느리게 → 캡컷은 같은 배속을 칸에 싣는다.
+        #   원본에서 읽는 길이(source) = 화면 길이(target) × 배속. 파일 길이를 넘지 않게 자른다.
+        _bsp = float(bgm_layer.get("speed") or 1.0)
+        _bfile = _us(bgm_layer.get("dur", 0.0)) or round(total_us * _bsp)
+        _bsrc = min(_bfile, round(total_us * _bsp))
+        _bdur = round(_bsrc / _bsp)
         if _bdur > 0:
             bm = _audio_material(bgm_layer["_capcut_path"],
-                                 bgm_layer["_capcut_path"].rsplit("/", 1)[-1], _bdur)
+                                 bgm_layer["_capcut_path"].rsplit("/", 1)[-1], _bfile)
             mats["audios"].append(bm)
             try:
                 _bvol = float(bgm_layer.get("volume", 15)) / 100.0
             except (TypeError, ValueError):
                 _bvol = 0.15
-            bseg = _base_segment(bm["id"], 0, _bdur, source_start=0, source_dur=_bdur,
-                                 render_index=0, volume=max(0.0, min(1.0, _bvol)))
+            _refs = []
+            if _bsp != 1.0:
+                _bspm = _speed(_bsp)
+                mats["speeds"].append(_bspm)
+                _refs = [_bspm["id"]]
+            bseg = _base_segment(bm["id"], 0, _bdur, source_start=0, source_dur=_bsrc,
+                                 render_index=0, volume=max(0.0, min(1.0, _bvol)), extra_refs=_refs)
+            bseg["speed"] = _bsp
             bgm_track["segments"].append(bseg)
 
     # ── 🔔 효과음(sfx) — 타점은 렌더와 같은 함수가 준다(video_assemble.sfx_events_for) ──
@@ -1008,8 +1018,9 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
         _ext = Path(_bgm["_abspath"]).suffix.lower() or ".mp3"
         _bp, _bd = _bring(_bgm["_abspath"], "bgm" + _ext)
         if _bp:
+            from shopping_shorts.bgm_lib import speed_of as _bgm_speed   # 속도의 뜻은 bgm_lib 한 곳(렌더와 같은 값)
             bgm_layer = {"_capcut_path": _bp, "dur": _bd,
-                         "volume": _bgm.get("volume", 15)}
+                         "volume": _bgm.get("volume", 15), "speed": _bgm_speed(_bgm)}
 
     sfx_layers = []
     _sfx_vol = (deco or {}).get("sfx_volume", 60) if isinstance(deco, dict) else 60

@@ -3934,7 +3934,10 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     if has_bgm:                                       # 배경음악(나레이션 위 낮은 볼륨)
         inputs += ["-i", bgm_path]
         vol = max(0.0, min(1.0, (bgm.get("volume", 15)) / 100.0))
-        fc.append(f"[{idx}:a]aloop=loop=-1:size=2000000000,volume={vol:.3f}[bg]")
+        from shopping_shorts.bgm_lib import speed_of as _bgm_speed      # 배경음 속도의 뜻은 bgm_lib 한 곳(관제 146)
+        _bsp = _bgm_speed(bgm)
+        _tempo = f"atempo={_bsp:.2f}," if _bsp != 1.0 else ""          # 1.0이면 종전 그래프 그대로
+        fc.append(f"[{idx}:a]{_tempo}aloop=loop=-1:size=2000000000,volume={vol:.3f}[bg]")
         mix_labels.append("bg")
         idx += 1
     if has_sfx:                                       # 효과음(비트별 오프셋에 adelay)
