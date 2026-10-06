@@ -16305,6 +16305,8 @@ def _api_me(request: Request):
             "story_writer": _setting_gate(st, "story_writer_enabled", cid),
             # 2단계 스토리보드(관제 120) — 서버 입구(mix/start)와 같은 스위치 하나. 화면은 이 값으로만 보인다
             "storyboard": _setting_gate(st, "storyboard_enabled", cid),
+            # 대화형 대본(관제 128) — 작업목록 「🎭 대화형」 버튼. 서버 입구(dialogue/*)와 같은 스위치·관리자 판정
+            "dialogue": bool(_setting_gate(st, "dialogue_enabled", cid) and is_admin),
             # 관리자가 아니어도 열어준 기능들(2026-08-31). 화면은 이 값만 보고 켠다.
             "features": {f: _feature_allowed(st, cid, f) for f in _FEATURE_KEYS},
             "email": email, "name": name, "member_days": member_days,
@@ -21400,13 +21402,32 @@ def api_produce_dialogue_convert(request: Request, body: dict):
         return JSONResponse(status_code=403, content={"ok": False, "error": "대화형은 아직 시험 중이에요"})
     from shopping_shorts import dialogue_script, edit_plan as _ep
     form = body.get("form") or ""
+    script, product = body.get("script") or "", str(body.get("product") or "")
+    if body.get("work_id"):
+        # 작업목록 버튼: 새 작업 만들기(from_work)와 **같은 원문**(job.given_script)으로 미리 본다
+        _st = Store(DB_PATH)
+        _w = _st.get_produce_work(str(body["work_id"]), _cid(request))
+        _j = _st.get_mix_job((_w or {}).get("job_id") or "") if _w else None
+        if not _j or not _j.get("given_script"):
+            return JSONResponse(status_code=404, content={"ok": False, "error": "대본이 확정된 작업이 아니에요(3단계까지 진행한 작업만)"})
+        script, product = _j["given_script"], str(_j.get("product") or "")
     try:
-        out = dialogue_script.convert(_ep.script_sentences(body.get("script") or ""), form,
-                                      str(body.get("product") or ""))
+        out = dialogue_script.convert(_ep.script_sentences(script), form, product)
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
     return {"ok": True, "form": form, "lines": out, "script": dialogue_script.script_text(out),
+            "source": _ep.script_sentences(script), "cast": dialogue_script.cast_of(form),
             "forms": {k: v["label"] for k, v in dialogue_script.FORMS.items()}}
+
+
+@app.get("/api/produce/dialogue/forms")
+def api_produce_dialogue_forms(request: Request):
+    """틀 목록(화면 고르기 칸) — 설명·화자·기본 성우는 dialogue_script.FORMS 한 곳에서."""
+    if not _setting_gate(Store(DB_PATH), "dialogue_enabled", _cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "대화형은 아직 시험 중이에요"})
+    from shopping_shorts import dialogue_script
+    return {"ok": True, "forms": [{"id": k, "label": f["label"], "desc": f["desc"], "roles": list(f["roles"]),
+                                   "cast": f["cast"]} for k, f in dialogue_script.FORMS.items()]}
 
 
 @app.post("/api/produce/dialogue/from_work/{work_id}")
@@ -21424,8 +21445,19 @@ def api_produce_dialogue_from_work(request: Request, work_id: str, body: dict):
     if not w or not job or not job.get("given_script"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "대본이 확정된 작업이 아니에요"})
     form = body.get("form") or ""
+    src_lines = _ep.script_sentences(job["given_script"])
     try:
-        out = dialogue_script.convert(_ep.script_sentences(job["given_script"]), form, str(job.get("product") or ""))
+        if isinstance(body.get("lines"), list) and form in dialogue_script.FORMS:
+            # ★미리보기에서 사람이 본 그 대본 그대로 — 다시 돌리면 다른 대본이 나온다. 검사는 같은 check 로 다시 건다.
+            out = [{"speaker": str(l.get("speaker") or ""), "text": str(l.get("text") or "").strip(),
+                    "tag": str(l.get("tag") or "") if str(l.get("tag") or "") in dialogue_script.TAGS else "",
+                    "src": [i for i in (l.get("src") or []) if isinstance(i, int)]}
+                   for l in body["lines"] if isinstance(l, dict)]
+            errs = dialogue_script.check(src_lines, out, form)
+            if errs:
+                raise ValueError("미리보기 대본 검사 실패 — " + "; ".join(errs[:3]))
+        else:
+            out = dialogue_script.convert(src_lines, form, str(job.get("product") or ""))
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
     ss = dict(job.get("script_structure") or {})
