@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-07d  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-07e  (LOGIC_VER가 정본)
+//   · 인스타 검색 화면 — 카드 배지 ❤좋아요·💬댓글·⏱길이, 좋아요순·댓글순 목록, 마우스 지나간 카드 동시 미리보기(관제 151, 계정02 로그인 실측).
 //   · 검색어 기능을 유튜브·틱톡·핀터레스트·샤오홍슈·도우인까지(오른쪽 검색 판 + 영상 화면 관련 검색어), 렌즈 결과창 크게(관제 151).
 //   · 인스타 — 비슷한 검색어를 5개 언어(한·영·일·중·러) 줄로, 팝업 관련 검색어가 "만드는 중…"에서 멈추던 것 수정(관제 151).
 //   · 인스타 — 키워드 검색 제목을 검색창으로(한글→영어 검색), 비슷한 검색어 칩, 게시물 팝업 관련 검색어(관제 151).
@@ -23,7 +24,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261010;
+  var LOGIC_VER = 20261011;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -488,6 +489,36 @@
       })(_gridQ.shift());
     }
   }
+  // ── 인스타 검색 응답 숫자(관제 151) — ig_main.js(메인월드)가 postMessage로 넘긴다 ──
+  var _igMedia = {}, _igMediaN = 0;
+  window.addEventListener("message", function (ev) {
+    var d = ev && ev.data;
+    if (ev.source !== window || !d || !d.__ssIgMedia || !d.items || !d.items.length) return;
+    for (var i = 0; i < d.items.length; i++) {
+      var it = d.items[i];
+      if (!it || !it.code) continue;
+      if (!_igMedia[it.code]) _igMediaN++;
+      _igMedia[it.code] = it;
+    }
+  });
+  if (location.host.indexOf("instagram.com") >= 0) {
+    try { window.postMessage({ __ssIgMediaReq: true }, location.origin); } catch (e) {}
+    setTimeout(function () { try { window.postMessage({ __ssIgMediaReq: true }, location.origin); } catch (e) {} }, 3000);
+  }
+  function _fmtSec(s) {
+    if (s == null || !isFinite(s)) return "";
+    s = Math.round(s);
+    return s >= 60 ? Math.floor(s / 60) + "분" + (s % 60 ? (s % 60) + "초" : "") : s + "초";
+  }
+  function _igMediaBadge(md, date) {
+    var parts = [];
+    if (date) parts.push("📅 " + date);
+    if (md.plays != null) parts.push("▶" + _fmtN(md.plays));
+    if (md.likes != null) parts.push("❤" + _fmtN(md.likes));
+    if (md.comments != null) parts.push("💬" + _fmtN(md.comments));
+    if (md.dur != null) parts.push("⏱" + _fmtSec(md.dur));
+    return parts.join(" ");
+  }
   function syncGridBadges() {
     if (location.host.indexOf("instagram") < 0 || isSinglePost()) return;
     var as = document.querySelectorAll('a[href*="/reel/"], a[href*="/p/"]');
@@ -511,8 +542,16 @@
       if (el.getAttribute("data-c") !== code) {        // SPA 노드 재사용 대비
         el.setAttribute("data-c", code);
         el.removeAttribute("data-q");
+        el.removeAttribute("data-m");
         var dd = _fmtDate(_igDate(code));
         el.textContent = dd ? "📅 " + dd.slice(2) : "";
+      }
+      // 인스타가 스스로 받은 검색 응답의 숫자(ig_main.js가 넘겨 줌) — 좋아요·댓글·길이(관제 151)
+      var md = _igMedia[code];
+      if (md && el.getAttribute("data-m") !== "1") {
+        el.setAttribute("data-m", "1");
+        var d0 = _fmtDate(_igDate(code));
+        el.textContent = _igMediaBadge(md, d0 ? d0.slice(2) : "");
       }
       // 카드별 🔍렌즈 — 페이지 이동 없이 이 화면에서 오버레이로(2026-08-03 사장님 요청)
       var lb = a.querySelector(".ss-card-lens");
@@ -532,7 +571,7 @@
         });
         a.appendChild(lb);
       }
-      if (!el.getAttribute("data-q") && r.bottom > 0 && r.top < innerHeight) {
+      if (!md && !el.getAttribute("data-q") && r.bottom > 0 && r.top < innerHeight) {
         el.setAttribute("data-q", "1");                // 보이는 카드만 큐에
         (function (el, code) {
           _gridQ.push([key, "https://www.instagram.com/reel/" + code + "/", function (s) {
@@ -1118,6 +1157,86 @@
     }
     tick(); setInterval(tick, 2000);
   }
+
+  // ── 인스타 메인월드(관제 151, 2026-10-07) — 인스타가 **스스로 받는** 검색 응답을 옆에서 읽는다(추가 요청 0).
+  //   계정02 로그인 실측: 키워드 검색 응답(PolarisKeywordSearchExplorePageRelayQuery) 1번에 24개 영상의
+  //   좋아요·댓글 24/24, mp4 주소·길이(efg duration_s) 22/22 — 조회수(play_count)는 **없다**.
+  //   격리월드(grab_logic)는 페이지의 fetch/XHR 응답을 못 본다 → manifest world:"MAIN"으로 크롬이 이 함수를
+  //   ig_main.js로 직접 주입하고(zip이 이 본문을 잘라 만든다 — douyin_main.js와 같은 방식), 결과는 postMessage로 넘긴다.
+  //   ★이 함수 안의 줄은 4칸 이상 들여쓴다 — zip 빌더가 "\n  }"(2칸 닫는 중괄호)를 함수 끝으로 본다.
+  function _igMainWorld() {
+    if (window.__ssIgMain) return;
+    window.__ssIgMain = 1;
+    function efgDur(u) {
+      try {
+        var m = /[?&]efg=([^&]+)/.exec(u || "");
+        if (!m) return null;
+        var j = JSON.parse(atob(decodeURIComponent(m[1]).replace(/-/g, "+").replace(/_/g, "/")));
+        return typeof j.duration_s === "number" ? j.duration_s : null;
+      } catch (e) { return null; }
+    }
+    function walk(o, out, d) {
+      if (!o || typeof o !== "object" || d > 40) return;
+      if (Array.isArray(o)) { for (var i = 0; i < o.length; i++) walk(o[i], out, d + 1); return; }
+      if (o.code && (o.like_count != null || o.video_versions || o.taken_at)) {
+        var vv = o.video_versions || [], mp4 = vv[0] && vv[0].url || "";
+        var iv = o.image_versions2 && o.image_versions2.candidates || [];
+        out.push({ code: String(o.code), likes: o.like_count, comments: o.comment_count,
+                   plays: o.play_count != null ? o.play_count : (o.ig_play_count != null ? o.ig_play_count : o.view_count),
+                   dur: o.video_duration || efgDur(mp4), video: !!vv.length,
+                   taken: o.taken_at, thumb: (iv[iv.length > 1 ? 1 : 0] || {}).url || "",
+                   caption: (o.caption && o.caption.text || "").slice(0, 120) });
+      }
+      for (var k in o) if (o.hasOwnProperty(k) && o[k] && typeof o[k] === "object") walk(o[k], out, d + 1);
+    }
+    function take(text) {
+      if (!text || text.indexOf('"code"') < 0) return;
+      var out = [], parts = String(text).split("\n");
+      for (var i = 0; i < parts.length; i++) {
+        var t = parts[i].trim();
+        if (t.indexOf("for (;;);") === 0) t = t.slice(9);
+        if (!t || (t[0] !== "{" && t[0] !== "[")) continue;
+        try { walk(JSON.parse(t), out, 0); } catch (e) {}
+      }
+      if (!out.length) return;
+      for (var j = 0; j < out.length; j++) buf[out[j].code] = out[j];
+      window.__ssIgCount = Object.keys(buf).length;         // 점검용(몇 개 읽었나)
+      window.postMessage({ __ssIgMedia: true, items: out }, location.origin);
+    }
+    // ★확장(grab_logic)은 document_idle에 떠서, 그 전에 온 응답은 못 듣는다 → 쌓아 뒀다가 요청하면 통째로 다시 보낸다.
+    var buf = {};
+    window.addEventListener("message", function (ev) {
+      if (ev.source !== window || !ev.data || !ev.data.__ssIgMediaReq) return;
+      var all = [];
+      for (var c in buf) if (buf.hasOwnProperty(c)) all.push(buf[c]);
+      if (all.length) window.postMessage({ __ssIgMedia: true, items: all }, location.origin);
+    });
+    function wanted(u) { u = String(u || ""); return u.indexOf("/graphql") >= 0 || u.indexOf("/api/v1/") >= 0; }
+    var of = window.fetch;
+    if (of) window.fetch = function (input, init) {
+      var p = of.apply(this, arguments);
+      try {
+        var u = typeof input === "string" ? input : (input && input.url);
+        if (wanted(u)) p.then(function (r) { try { r.clone().text().then(take, function () {}); } catch (e) {} }, function () {});
+      } catch (e) {}
+      return p;
+    };
+    var oo = XMLHttpRequest.prototype.open, os = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function (m, u) { this.__ssU = u; return oo.apply(this, arguments); };
+    XMLHttpRequest.prototype.send = function () {
+      var x = this;
+      if (wanted(x.__ssU)) x.addEventListener("load", function () {
+        try { if (!x.responseType || x.responseType === "text") take(x.responseText); } catch (e) {}
+      });
+      return os.apply(this, arguments);
+    };
+    // 첫 화면 데이터는 HTML 안 JSON으로도 온다(로그아웃 실측) — 다 그려진 뒤 한 번 훑는다.
+    function scanDoc() {
+      var ss = document.querySelectorAll('script[type="application/json"]');
+      for (var i = 0; i < ss.length; i++) if ((ss[i].textContent || "").indexOf("video_versions") >= 0) take(ss[i].textContent);
+    }
+    if (document.readyState === "complete") scanDoc(); else window.addEventListener("load", scanDoc);
+  }
   function addDouyinCardBtns() {
     if (location.host.indexOf("douyin") < 0) return;
     // ★확장(world:"MAIN")이 이미 메인월드에서 돌고 있으면 주입하지 않는다.
@@ -1317,9 +1436,120 @@
     bar.id = "ss-kwbar"; bar.setAttribute("data-q", q);
     bar.style.cssText = "margin:0 0 12px";
     bar.appendChild(_kwBarBody(q, false));
+    bar.appendChild(_igToolRow());
     title.style.display = "none";
     title.insertAdjacentElement("afterend", bar);
   }
+  // ── 인스타 검색 화면 도구(관제 151): 좋아요순·댓글순 목록, 마우스 지나간 카드 동시 미리보기 ──
+  //   조회수순은 못 한다 — 로그인 실측으로 검색 응답에 조회수가 **없다**(play_count 0/24). 대신 좋아요·댓글.
+  function _igBtn(text, title, onClick) {
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = text; b.title = title;
+    b.style.cssText = "border:1px solid #dbdbdb;background:#fff;color:#262626;border-radius:8px;padding:5px 10px;" +
+      "font:700 12px system-ui,sans-serif;cursor:pointer";
+    b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); onClick(b); });
+    return b;
+  }
+  function _igToolRow() {
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px";
+    row.appendChild(_igBtn("❤ 좋아요순", "이 검색의 영상을 좋아요 많은 순으로", function () { _igRank("likes"); }));
+    row.appendChild(_igBtn("💬 댓글순", "댓글 많은 순으로", function () { _igRank("comments"); }));
+    var pv = _igBtn(_pvLabel(), "마우스를 올린 카드들을 계속 같이 재생", function (b) {
+      _pvOn = !_pvOn;
+      try { localStorage.setItem("ss_ig_pv", _pvOn ? "1" : "0"); } catch (e) {}
+      if (!_pvOn) _pvStopAll();
+      b.textContent = _pvLabel();
+    });
+    row.appendChild(pv);
+    var n = document.createElement("span");
+    n.style.cssText = "font-size:12px;color:#737373";
+    row.appendChild(n);
+    var tick0 = setInterval(function () {
+      if (!document.body.contains(row)) { clearInterval(tick0); return; }
+      n.textContent = "숫자 읽은 영상 " + _igMediaN + "개 (아래로 내리면 늘어나요)";
+    }, 1500);
+    return row;
+  }
+  function _igRank(key) {
+    var list = [];
+    for (var c in _igMedia) if (_igMedia.hasOwnProperty(c) && _igMedia[c].video) list.push(_igMedia[c]);
+    list.sort(function (x, y) { return (y[key] || 0) - (x[key] || 0); });
+    var o = document.getElementById("ss-ig-rank");
+    if (o) o.remove();
+    o = document.createElement("div");
+    o.id = "ss-ig-rank";
+    o.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2147483647;display:flex;" +
+      "align-items:center;justify-content:center;padding:20px;font-family:system-ui,sans-serif";
+    var box = document.createElement("div");
+    box.style.cssText = "background:#161616;color:#eee;border-radius:14px;padding:16px;max-width:1600px;width:96vw;" +
+      "max-height:92vh;overflow:auto;position:relative";
+    var hd = document.createElement("div");
+    hd.style.cssText = "font-weight:800;margin-bottom:10px";
+    hd.textContent = (key === "likes" ? "❤ 좋아요순" : "💬 댓글순") + " · " + list.length + "개 (이 화면에서 읽은 영상)";
+    var x = document.createElement("button");
+    x.type = "button"; x.textContent = "✕";
+    x.style.cssText = "position:absolute;top:6px;right:12px;background:none;border:none;color:#fff;font-size:22px;cursor:pointer";
+    x.addEventListener("click", function () { o.remove(); });
+    o.addEventListener("click", function (e) { if (e.target === o) o.remove(); });
+    var grid = document.createElement("div");
+    grid.style.cssText = "display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px";
+    if (!list.length) grid.textContent = "아직 읽은 영상이 없어요. 검색 화면을 조금 내려 보세요.";
+    for (var i = 0; i < list.length; i++) {
+      (function (it, rank) {
+        var a = document.createElement("a");
+        a.href = "https://www.instagram.com/reel/" + it.code + "/";
+        a.style.cssText = "display:block;background:#222;border-radius:10px;overflow:hidden;color:#eee;text-decoration:none";
+        var im = document.createElement("img");
+        im.src = it.thumb || ""; im.alt = "";
+        im.style.cssText = "width:100%;height:240px;object-fit:cover;display:block;background:#000";
+        var t = document.createElement("div");
+        t.style.cssText = "padding:6px 8px;font-size:12px";
+        var d0 = _fmtDate(_igDate(it.code));
+        t.textContent = "#" + rank + "  " + _igMediaBadge(it, d0 ? d0.slice(2) : "");
+        var cap = document.createElement("div");
+        cap.style.cssText = "padding:0 8px 8px;font-size:12px;color:#aaa;max-height:32px;overflow:hidden";
+        cap.textContent = it.caption || "";
+        a.appendChild(im); a.appendChild(t); a.appendChild(cap);
+        grid.appendChild(a);
+      })(list[i], i + 1);
+    }
+    box.appendChild(x); box.appendChild(hd); box.appendChild(grid);
+    o.appendChild(box);
+    document.body.appendChild(o);
+  }
+  // 동시 미리보기: 인스타는 마우스가 떠나면 그 카드 영상을 **멈추기만** 하고 지우지는 않는다(로그인 실측 —
+  //   떠난 뒤에도 video 요소·mp4 주소가 남고 paused=true). 그래서 우리가 다시 재생시키면 된다. 최대 9개.
+  var _pvOn = true, _pvList = [];
+  try { _pvOn = localStorage.getItem("ss_ig_pv") !== "0"; } catch (e) {}
+  function _pvLabel() { return _pvOn ? "▶ 동시 미리보기 켜짐" : "⏸ 동시 미리보기 꺼짐"; }
+  function _pvStopAll() {
+    for (var i = 0; i < _pvList.length; i++) { _pvList[i].__ssKeep = 0; try { _pvList[i].pause(); } catch (e) {} }
+    _pvList = [];
+  }
+  function _pvKeep(v) {
+    if (!v || v.__ssKeep) return;
+    v.__ssKeep = 1; v.muted = true; v.loop = true;
+    if (!v.__ssPvHooked) {
+      v.__ssPvHooked = 1;
+      v.addEventListener("pause", function () {
+        if (_pvOn && v.__ssKeep && document.contains(v)) setTimeout(function () { try { v.play().catch(function () {}); } catch (e) {} }, 60);
+      });
+    }
+    _pvList.push(v);
+    while (_pvList.length > 9) { var old = _pvList.shift(); old.__ssKeep = 0; try { old.pause(); } catch (e) {} }
+    try { v.play().catch(function () {}); } catch (e) {}
+  }
+  if (document.addEventListener) document.addEventListener("mouseover", function (e) {
+    if (window.__ssGrabVer !== LOGIC_VER || !_pvOn || !_isIg() || isSinglePost()) return;
+    var a = e.target && e.target.closest && e.target.closest('a[href*="/reel/"],a[href*="/p/"]');
+    if (!a) return;
+    setTimeout(function () {                                   // 인스타가 미리보기 영상을 붙일 시간
+      var v = a.querySelector("video") || (a.parentElement && a.parentElement.querySelector("video"));
+      window.__ssPvTries = (window.__ssPvTries || 0) + 1;        // 점검용
+      _pvKeep(v);
+    }, 900);
+  }, true);
   // 인스타 밖 4+1개 플랫폼의 검색 화면: 오른쪽에 떠 있는 판(접기 가능). 사이트 화면 구조에 기대지 않는다.
   function syncKwSearchPanel() {
     var s = _kwSite(), p = document.getElementById("ss-kwfloat");
