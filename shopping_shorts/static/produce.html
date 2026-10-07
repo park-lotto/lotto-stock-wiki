@@ -19165,7 +19165,7 @@ function s2Confirm(i){
 // 시안 tools/storyboard_mock/pages_tpl.html 의 1단계(역할 상자·장면 카드 담기) + 2단계(스타일 → 스토리보드 줄)를 옮겼다.
 // 스위치: window.STORYBOARD_ON(/api/me storyboard = 서버 storyboard_enabled) — 꺼져 있으면 #s2Storyboard 에 아무것도 안 그린다.
 // 데이터: /api/produce/storyboard/{MIX_JOB} (판단은 서버 shopping_shorts.storyboard 한 곳). 확정은 기존 s2Confirm 흐름을 그대로 탄다.
-const SB = {jid:'', data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, showall:{}, openf:{},
+const SB = {jid:'', data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, showall:{}, openf:{}, useSeed:false,
             edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, poll:null, err:''};
 const SB_KO = {hook:'훅',title:'제목',bait:'미끼',fame:'유명세',reveal:'정체 공개',limit:'한계',solve:'해결',more:'더',twist:'반전',land:'마무리',
   price:'가격',power:'성능',easy:'쉬움',extra:'덤',deal:'딜',howto:'사용법',vs:'비교',proof:'증거',react:'반응',what:'정체',good:'좋은 점',
@@ -19208,7 +19208,7 @@ function sbEnter(){
   const box=document.getElementById('s2Storyboard'); if(!box) return;
   // ★#s2Storyboard 를 그리는 건 sbRender 하나(DOM 주인 한 곳) — 여기선 상태만 바꾸고 부른다
   const j=sbJid();
-  if(j!==SB.jid){ Object.assign(SB, {jid:j, data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, err:'', mat:''}); _sbApplySaved(j); }
+  if(j!==SB.jid){ Object.assign(SB, {jid:j, data:null, made:{}, view:'', pick:new Set(), role:{}, active:null, edit:{}, ord:{}, cand:{}, xtra:{}, pend:{}, err:'', mat:'', useSeed:false, remade:null}); _sbApplySaved(j); }
   if(!window.STORYBOARD_ON || !j){ sbRender(); return; }
   sbLoad();
 }
@@ -19240,13 +19240,14 @@ function sbAbsorb(tasks){
       //   그 밖엔 종전대로 덮어쓰지 않는다(사람이 고친 문장·장면 순서를 지킨다).
       const P=sbPieces();
       const hasSeed=(SB.made[k].slots||[]).some(x=>(x.ids||[]).some(id=>P[id] && P[id].seed && !sbRolesOf(id).length));
-      if(!(k==='auto' && SB.made[k].seed_sig!==t.result.seed_sig && hasSeed)) return;
+      if(!(k==='auto' && SB.made[k].seed_sig!==t.result.seed_sig && hasSeed && !SB.useSeed)) return;   // 씨앗도 배치(useSeed)를 켠 작업은 씨앗 장면이 든 게 정상
       ['edit','ord'].forEach(f=>Object.keys(SB[f]||{}).forEach(x=>{ if(x.startsWith('auto#')) delete SB[f][x]; }));
       if(typeof toast==='function') toast('씨앗 영상이 정해져 AI 자동 스토리보드를 씨앗 장면 없이 다시 만들었어요');
     }
     SB.made[k]=JSON.parse(JSON.stringify(t.result));
     SB.mat=_sbMatSig()||SB.mat;      // 이 보드를 만든 때의 재료(낡음 표시용)
     if(SB.pend[k]){ SB.made[k].from=SB.pend[k]; SB.view=k; delete SB.pend[k]; }
+    if(SB.remade===k){ SB.view=k; SB.remade=null; }      // [다시 만들기]로 만든 탭을 바로 보여 준다
     if(!SB.view) SB.view=k;
   });
 }
@@ -19270,7 +19271,7 @@ async function sbPrepare(){
   const k=_sbPrepKey(j); if(_SB_PREP===k) return; _SB_PREP=k;
   clearTimeout(_SB_PREP_T); _SB_PREP_T=null;
   try{
-    const r=await fetch('/api/produce/storyboard/'+encodeURIComponent(j)+'/prepare',{method:'POST'});
+    const r=await fetch('/api/produce/storyboard/'+encodeURIComponent(j)+'/prepare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({use_seed:!!SB.useSeed})});
     const d=await r.json().catch(()=>null);
     if(!r.ok || !d || !d.ok){ console.warn('[sb] 미리 만들기 실패', r.status, d&&d.error); _SB_PREP=''; return; }
     if((d.waiting || d.busy) && _SB_PREP_N++ < 180){ _SB_PREP=''; _SB_PREP_T=setTimeout(sbPrepare, 5000); return; }
@@ -19300,20 +19301,29 @@ function sbPage1(){
     return `<div class="sb-rbox ${SB.active===r?'on':''}" style="--c:${c}" onclick="sbSetActive('${sbA(r)}')"><div class="sb-rh">${ic} ${sbE(r)} <b>${s.size||''}</b></div><div class="sb-rs">${slots}</div>
       <div class="sb-rth">${[...s].slice(0,5).map(id=>{ const p=P[id]; return p?`<img src="${sbE(p.th)}" alt="">`:''; }).join('')}</div></div>`; }).join('');
   // ★장면 목록은 씨앗 포함 재료 전체로 묶는다(관제 147 — 씨앗이 나중에 바뀌어도 다시 안 묶게). 화면 후보에선 씨앗 조각을 뺀다(사람이 상자에 담은 건 남긴다)
-  const grps=sbGroups().map(g=>Object.assign({}, g, {ids:(g.ids||[]).filter(id=>!(P[id] && P[id].seed) || sbRolesOf(id).length)})).map((g,i)=>{ if(!(g.ids||[]).length) return ''; const all=SB.showall[i]; const gids=(g.ids||[]); const ids=all?gids:gids.slice(0,7);
+  const grps=sbGroups().map(g=>Object.assign({}, g, {ids:(g.ids||[]).filter(id=>SB.useSeed || !(P[id] && P[id].seed) || sbRolesOf(id).length)})).map((g,i)=>{ if(!(g.ids||[]).length) return ''; const all=SB.showall[i]; const gids=(g.ids||[]); const ids=all?gids:gids.slice(0,7);
     const hit=gids.filter(id=>sbRolesOf(id).length).length;
     return `<div class="sb-grp ${hit?'star':''}"><div class="sb-gh"><b>${sbE(g.name)}</b> <span>${sbE(g.desc||'')} · ${gids.length}개</span>${hit?` <span class="sb-hitb">🎯 ${hit}장 담김 — 그 자리에 먼저 놓아요 · 이 묶음의 나머지 조각은 다른 자리에도 쓰여요</span>`:''}</div>
       <div class="sb-gth">${ids.map(id=>sbCard1(id)).join('')}</div>${gids.length>7?`<span class="sb-more" onclick="SB.showall[${i}]=!SB.showall[${i}];sbRender()">${all?'접기':'나머지 '+(gids.length-7)+'개 펼치기'}</span>`:''}</div>`; }).join('');
   const miss=(inv&&inv.missing)||[];
   // 씨앗 영상 조각 — AI는 안 쓴다(storyboard._materials). 사람이 상자에 담으면 그 자리에 쓴다(사람이 고른 것은 존중)
   const seeds=Object.keys(P).filter(id=>P[id].seed && !sbGroups().some(g=>(g.ids||[]).includes(id)));
-  const sgrp=seeds.length?`<div class="sb-grp sb-seedgrp"><div class="sb-gh"><b>🌱 씨앗 영상</b> <span>AI가 자동으로는 안 써요(자막틀이 박힌 레퍼런스) · 쓰고 싶으면 상자를 켜고 담으세요 · ${seeds.length}개</span></div>
+  // ★'씨앗 영상도 2단계에 배치' 스위치(관제 161, 사장님 10-08) — 켜면 서버가 씨앗 조각도 AI 후보에 넣는다(storyboard._materials with_seed 한 곳).
+  //   씨앗 조각이 하나라도 있으면 이 줄을 보여 준다(묶음에 다 들어가 아래 카드가 0개여도 스위치는 보여야 한다).
+  const anySeed=Object.keys(P).some(id=>P[id].seed);
+  const sgrp=anySeed?`<div class="sb-grp sb-seedgrp"><div class="sb-gh"><b>🌱 씨앗 영상</b> <span>${SB.useSeed?'AI가 씨앗 장면도 2단계 칸에 배치해요 · 지금부터 만드는 스토리보드에 적용(이미 만든 건 2단계 [다시 만들기])':'AI가 자동으로는 안 써요(자막틀이 박힌 레퍼런스) · 쓰고 싶으면 상자를 켜고 담으세요'}${seeds.length?' · '+seeds.length+'개':''}</span>
+        <button class="sb-btn ${SB.useSeed?'on':''}" id="sbSeedSw" style="margin-left:8px" onclick="sbToggleSeed()" title="켜면 씨앗 영상의 장면도 AI가 2단계 스토리보드 칸에 배치합니다. 끄면 사람이 상자에 담은 씨앗 장면만 씁니다">${SB.useSeed?'✅ 씨앗 영상도 2단계에 배치 — 켜짐':'🌱 씨앗 영상도 2단계에 배치할까요? — 꺼짐'}</button></div>
       <div class="sb-gth">${seeds.map(id=>sbCard1(id)).join('')}</div></div>`:'';
   return `<div class="sb-rbar"><div class="sb-bh">🎯 꼭 쓰고 싶은 장면 — 상자를 켜고 카드를 누르세요 <small>${SB.active?'지금 켜진 상자: <b>'+sbE(SB.active)+'</b> (다시 누르면 꺼짐)':'담은 장면은 그 자리 맨 앞에 놓이고, AI가 뒤에 더 붙여요 · 다 채울 필요 없어요'}</small></div><div class="sb-rboxes">${boxes}</div></div>
   <div class="sb-box"><div class="sb-bh">장면 목록 <small>조각 ${Object.keys(P).length}개를 ${sbGroups().length}묶음으로 · 카드 위 'AI:' = AI가 본 쓰임(참고)</small></div><div class="sb-grps">${grps}${sgrp}</div></div>
   ${miss.length?`<div class="sb-box"><div class="sb-missing"><b>이 재료에 없는 장면</b><ul>${miss.map(m=>'<li>'+sbE(m)+'</li>').join('')}</ul></div></div>`:''}`;
 }
 
+function sbToggleSeed(){
+  SB.useSeed=!SB.useSeed;
+  if(typeof toast==='function') toast(SB.useSeed?'씨앗 영상 장면도 AI가 배치해요 — 지금부터 만드는 스토리보드에 적용돼요':'씨앗 영상 장면은 AI가 자동으로 안 써요(상자에 담은 것만)');
+  sbRender();          // 그린 뒤 _sbSaveSoon 이 작업파일(state.sb.use_seed)에 저장한다
+}
 // ── 2단계 부분: 스타일 카드 → 스토리보드 ──
 function sbTpick(k){ SB.pick.has(k)?SB.pick.delete(k):SB.pick.add(k); sbRender(); }
 function sbHl(t){ return sbE(t).replace(/\{([^}]+)\}/g,'<span class="sb-slotw">$1</span>'); }
@@ -19322,7 +19332,7 @@ function sbBusy(k){ const t=sbTask('board:'+k); return !!(t&&t.state==='run'); }
 async function sbMakeBoards(){
   const ks=[...SB.pick].filter(k=>!SB.made[k]&&!sbBusy(k));
   if(!ks.length){ const f=[...SB.pick].find(k=>SB.made[k]); if(f){ SB.view=f; sbRender(); } return; }
-  if(await sbPost('/boards', {keys:ks, star:'', roles:sbRolesParam()})) setTimeout(sbLoad, 500);
+  if(await sbPost('/boards', {keys:ks, star:'', roles:sbRolesParam(), use_seed:!!SB.useSeed})) setTimeout(sbLoad, 500);
 }
 function sbFitWarn(f){ const v=sbInv(); const k=v&&v.kind; const fk=(f.fit||[]).filter(c=>SB_KINDS.includes(c));
   if(!k || !fk.length || fk.includes(k)) return '';
@@ -19508,7 +19518,7 @@ function sbCandOf(ek, i, sl, bd){
   const used=sbUsedAll(ek,bd); const mine=new Set(sbLiveIds(ek,i,sl)); const a=[];   // 뺀 장면만 남은 칸 = 빈 칸으로 보고 안 쓴 장면을 후보로 내민다
   sbGroups().filter(g=>(g.ids||[]).some(id=>mine.has(id))).forEach(g=>g.ids.forEach(id=>{ if(!used.has(id)&&!a.includes(id)) a.push(id); }));
   const tag=SB_SLOT_TAG[String(sl.slot||'').split('_')[0].toLowerCase()];
-  const P=sbPieces(), ok=id=>!(P[id]&&P[id].seed);   // 씨앗 조각은 후보로 안 내민다(사람이 1단계 상자에 담을 때만 씀)
+  const P=sbPieces(), ok=id=>SB.useSeed || !(P[id]&&P[id].seed);   // 씨앗 조각은 후보로 안 내민다(사람이 1단계 상자에 담을 때만 씀) — '씨앗도 배치'를 켠 작업은 내민다
   if(tag) Object.keys(P).forEach(id=>{ if(ok(id)&&!used.has(id)&&!a.includes(id)&&sbTagOf(id).includes(tag)) a.push(id); });
   if(!a.length && !mine.size) Object.keys(P).forEach(id=>{ if(ok(id)&&!used.has(id)&&a.length<12) a.push(id); });   // 빈 칸(직접 쓰기·새 칸)은 안 쓴 장면부터
   return a.slice(0,12); }
@@ -19532,7 +19542,24 @@ function sbGoneBar(){
     n+=g; rows.push(i+1); if(g===ids.length) empty.push(i+1); });
   if(!n) return '';
   return `<div class="sb-box sb-gonebar"><span class="sb-err">⚠ 1단계에서 뺀 영상의 장면 ${n}개가 이 스토리보드 ${rows.join('·')}번 칸에 남아 있어요 — 그 장면(🗑 카드)은 완성본에 안 나옵니다. 문장은 그대로예요.${empty.length?` <b>${empty.join('·')}번 칸은 남은 장면이 없어요</b> — 그 칸의 [＋ 관련 후보]로 채워 주세요.`:''}</span>
-    <div style="margin-top:8px"><button class="sb-btn" onclick="sbDropGone()">🗑 뺀 장면 ${n}개 치우기</button> <span class="sb-note">새 재료로 처음부터 다시 쓰려면 위에서 스타일을 골라 다시 만들어 주세요</span></div></div>`;
+    <div style="margin-top:8px"><button class="sb-btn" onclick="sbDropGone()">🗑 뺀 장면 ${n}개 치우기</button> ${sbRemakeBtn()} <span class="sb-note">치우기 = 문장은 두고 뺀 장면만 정리 · 다시 만들기 = 지금 재료로 문장까지 새로</span></div></div>`;
+}
+// 지금 보는 스토리보드를 지금 재료(·씨앗 스위치)로 처음부터 다시 만든다 — 1단계에서 영상을 빼거나 더한 뒤의 길.
+//   종전엔 이미 만든 스타일은 다시 만들 방법이 없었다(sbMakeBoards 는 만든 탭을 건너뛰고, sbAbsorb 는 받은 탭을 안 덮는다).
+async function sbRemake(){
+  const [ek,bd]=sbCur(); if(!bd) return;
+  if(String(ek).includes('+')){ toast('끼워 넣은 스토리보드는 원래 스타일 탭에서 다시 만들어 주세요'); return; }
+  if(sbBusy(ek)) return;
+  if(!confirm('이 스토리보드를 지금 재료로 처음부터 다시 만들까요?\n고친 문장·장면 순서는 사라집니다(약 35초).')) return;
+  if(!(await sbPost('/boards', {keys:[ek], star:'', roles:sbRolesParam(), use_seed:!!SB.useSeed}))) return;
+  delete SB.made[ek]; delete SB.edit[ek];
+  Object.keys(SB.ord).forEach(x=>{ if(x.startsWith(ek+'#')) delete SB.ord[x]; });
+  SB.pick.add(ek); SB.remade=ek; SB.play=null; SB.view=Object.keys(SB.made)[0]||'';
+  sbRender(); setTimeout(sbLoad, 500);
+}
+function sbRemakeBtn(){
+  const ek=SB.view; if(!SB.made[ek] || String(ek).includes('+')) return '';
+  return `<button class="sb-btn" onclick="sbRemake()" title="이 스타일로 지금 재료에 맞춰 처음부터 다시 씁니다(약 35초) — 고친 문장은 사라져요">🔄 지금 재료로 다시 만들기</button>`;
 }
 function sbDropGone(){
   const [ek,bd]=sbCur(); if(!bd || !Array.isArray(bd.slots)) return;
@@ -19554,7 +19581,7 @@ async function sbInsert(){
   const [ek,bd]=sbCur(); if(!bd) return; const ex=[...sbXset(ek)]; if(!ex.length) return;
   const base=String(ek).split('+')[0]; let nk=base+'+'+ex.join('+'); let c=2; while(SB.made[nk]||SB.pend[nk]) nk=base+'+'+ex.join('+')+'·'+(c++);
   SB.pend[nk]=ek; sbRender();
-  if(await sbPost('/insert', {name:nk, key:base, board:sbCurBoard(ek,bd), extra:ex})){ SB.xtra[ek]=new Set(); setTimeout(sbLoad, 500); }
+  if(await sbPost('/insert', {name:nk, key:base, board:sbCurBoard(ek,bd), extra:ex, use_seed:!!SB.useSeed})){ SB.xtra[ek]=new Set(); setTimeout(sbLoad, 500); }
   else { delete SB.pend[nk]; sbRender(); }
 }
 // 확정 — 지금 탭의 스토리보드 줄을 대본 안(draft)으로 만들어 **기존 확정 흐름(s2Confirm)** 에 태운다.
@@ -19645,7 +19672,7 @@ function sbRender(){
     const safe=(name, fn)=>{ try{ return fn(); }catch(e){ console.warn('[sb] '+name+' 그리기 실패', e); setTimeout(()=>{ throw e; }, 0);
       return `<div class="sb-box sb-drawfail"><span class="sb-err">✖ 스토리보드를 그리다 멈췄어요(${sbE(name)}) — ${sbE(String(e&&e.message||e).slice(0,160))}</span><div class="sb-note">새로고침해도 같으면 이 화면을 캡처해 알려 주세요. 만든 스토리보드는 지워지지 않았어요.</div></div>`; } };
     put(b1, head1+safe('1단계 재료', sbPage1));
-    put(b2, head2+safe('2단계 스토리보드', ()=>(_sbStale()?'<div class="sb-box"><span class="sb-err">⚠ 재료(담은 영상·씨앗)가 바뀌었어요 — 아래 스토리보드는 예전 재료로 만든 것입니다. 새 재료로 쓰려면 스타일을 골라 다시 만들어 주세요</span></div>':'')+sbGoneBar()+sbPage2()));
+    put(b2, head2+safe('2단계 스토리보드', ()=>(_sbStale()?'<div class="sb-box"><span class="sb-err">⚠ 재료(담은 영상·씨앗)가 바뀌었어요 — 아래 스토리보드는 예전 재료로 만든 것입니다.</span> '+sbRemakeBtn()+'</div>':'')+sbGoneBar()+sbPage2()));
     try{ _sbEnsureGoneCheck(); }catch(e){ console.warn('[sb] 뺀 장면 초 다시 재기 실패', e); }
   }
   // innerHTML 로 넣은 <video muted autoplay> 는 크롬에서 muted 속성이 안 먹어 자동재생이 막힌다 — 속성을 직접 켜고 재생(장면 카드 미리보기)
@@ -19663,15 +19690,15 @@ function _sbSnapshot(){
   try{ SB; }catch(e){ return _SB_SAVED; }
   if(!window.STORYBOARD_ON || !SB.jid) return _SB_SAVED;      // 아직 못 열었으면 받은 것을 그대로 돌려준다(자동저장이 지우지 않게)
   const role={}; Object.entries(SB.role).forEach(([r,st])=>{ if(st&&st.size) role[r]=[...st]; });
-  if(!Object.keys(SB.made).length && !SB.pick.size && !Object.keys(role).length) return null;
+  if(!Object.keys(SB.made).length && !SB.pick.size && !Object.keys(role).length && !SB.useSeed) return null;
   return {work_id:(typeof WORK_ID!=='undefined'?(WORK_ID||null):null), jid:SB.jid, made:SB.made, view:SB.view,
-          edit:SB.edit, ord:SB.ord, pick:[...SB.pick], role, mat:SB.mat||''};
+          edit:SB.edit, ord:SB.ord, pick:[...SB.pick], role, mat:SB.mat||'', use_seed:!!SB.useSeed};
 }
 function _sbApplySaved(j){
   const s=_SB_SAVED; if(!s || s.jid!==j) return;
   if(s.work_id && typeof WORK_ID!=='undefined' && WORK_ID && s.work_id!==WORK_ID) return;   // 남의 작업 것이면 안 되살린다
   SB.made=s.made||{}; SB.view=(s.view&&SB.made[s.view])?s.view:(Object.keys(SB.made)[0]||'');
-  SB.edit=s.edit||{}; SB.ord=s.ord||{}; SB.pick=new Set(s.pick||[]); SB.mat=s.mat||'';
+  SB.edit=s.edit||{}; SB.ord=s.ord||{}; SB.pick=new Set(s.pick||[]); SB.mat=s.mat||''; SB.useSeed=(s.use_seed===true);
   SB.role={}; Object.entries(s.role||{}).forEach(([r,ids])=>{ SB.role[r]=new Set(ids||[]); });
   _SB_SAVED=null;
 }

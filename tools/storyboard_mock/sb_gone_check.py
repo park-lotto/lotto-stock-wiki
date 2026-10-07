@@ -40,7 +40,7 @@ _MEASURE = r"""async (drop) => {
       // 뺀 장면만 남은 칸에도 채울 후보가 뜨는가(안내가 '후보로 채우라'고 하므로)
       emptyRows: (bd.slots || []).map((sl, i) => [i, sbOrdOf(ek, i, sl)]).filter(([i, a]) => a.length && a.every(id => !P[id])).map(([i]) => i),
       emptyNoCand: (bd.slots || []).map((sl, i) => [i, sbOrdOf(ek, i, sl)]).filter(([i, a]) => a.length && a.every(id => !P[id]))
-        .filter(([i]) => !box.querySelectorAll('.sb-row')[i].querySelector('.sb-cand')).map(([i]) => i)};
+        .filter(([i]) => { const r = box.querySelectorAll('.sb-row')[i]; return !(r && r.querySelector('.sb-cand')); }).map(([i]) => i)};
   }
   // 초 다시 재기(/picks) 요청에 뺀 장면이 실리는가 — 요청은 바깥에서 막고 본문만 본다
   const ek = Object.keys(SB.made).find(k => rawGone(k, SB.made[k]).length);
@@ -84,8 +84,9 @@ def main(argv):
         pg.route("**/*", route)
         pg.goto(BASE + "/produce?work=" + work, wait_until="domcontentloaded")
         pg.wait_for_timeout(6000)
-        on = pg.evaluate("window.STORYBOARD_ON")
-        d = pg.evaluate(_MEASURE, drop) if on else {"fatal": "이 계정은 스토리보드가 꺼져 있다"}
+        alive = pg.evaluate("typeof showPanel === 'function' && typeof SB !== 'undefined'")   # 화면 스크립트가 통째로 죽었나(문법 오류)
+        on = alive and pg.evaluate("window.STORYBOARD_ON")
+        d = pg.evaluate(_MEASURE, drop) if on else {"fatal": ("이 계정은 스토리보드가 꺼져 있다" if alive else "화면 스크립트가 통째로 죽었다: %s" % errs[:2])}
         if shot and on:                               # 눈으로 볼 2단계 화면(뺀 장면이 있는 탭)
             pg.evaluate("() => { cur = 8; showPanel(); }")
             pg.wait_for_timeout(1500)

@@ -73,13 +73,13 @@ console.log(JSON.stringify({gone:html.map(h=>(h.match(/sb-cc gone/g)||[]).length
 
 
 def test_안내_띠와_한번에_치우기(tmp_path):
-    js = _PRE + _fn("sbGone") + _fn("sbLiveIds") + _fn("sbGoneBar") + _fn("sbDropGone") + """
+    js = _PRE + _fn("sbGone") + _fn("sbLiveIds") + _fn("sbGoneBar") + _fn("sbRemakeBtn") + _fn("sbDropGone") + """
 const bar=sbGoneBar(); SB.view='auto'; const none=sbGoneBar(); SB.view='9'; sbDropGone();
-console.log(JSON.stringify({n:/장면 3개/.test(bar), rows:bar.includes('1·2번 칸'), empty:bar.includes('2번 칸은 남은 장면이 없어요'), none,
+console.log(JSON.stringify({n:/장면 3개/.test(bar), rows:bar.includes('1·2번 칸'), empty:bar.includes('2번 칸은 남은 장면이 없어요'), none, remake:bar.includes('sbRemake()'),
   after:SB.made['9'].slots.map((sl,i)=>sbOrdOf('9',i,sl)), sync:SYNC, bar2:sbGoneBar()}));
 """
     out = _node(js, tmp_path)
-    assert out["n"] and out["rows"] and out["empty"] and out["none"] == ""
+    assert out["n"] and out["rows"] and out["empty"] and out["none"] == "" and out["remake"]   # 다시 만들기 버튼이 같이 뜬다
     assert out["after"] == [["A-0"], [], ["A-1"]] and out["sync"] == 1 and out["bar2"] == ""
 
 
@@ -133,3 +133,61 @@ def test_조회_응답의_재료_지문은_영상을_빼면_바뀐다(env):
     box["ex"] = _ex(["A"])
     b = c.get("/api/produce/storyboard/w:%s" % wid).json()
     assert b["mat_sig"] != a["mat_sig"] and set(b["pieces"]) == {"A-0", "A-1"}
+
+
+# ── 씨앗 영상도 2단계에 배치(관제 161) — 넣고 빼는 판단은 storyboard._materials(with_seed) 한 곳 ──
+def _seed_ex():
+    from shopping_shorts import mix_pipeline
+    ex = _ex(["A", "B"])
+    mix_pipeline.mark_seed_sources(ex, ["A"])
+    return ex
+
+
+def test_씨앗_스위치는_재료_함수_한곳으로_간다(tmp_path, monkeypatch):
+    ex = _seed_ex()
+    seen = {}
+    monkeypatch.setattr(sb, "_ro", lambda p: None)
+    monkeypatch.setattr(sb, "_families", lambda db: [(7, {"id": 7}, None)])
+
+    def fake_board(fam, pan, r1, groups_txt, star, segs, texts, **k):
+        seen["segs"] = set(segs)
+        return {"slots": []}
+    monkeypatch.setattr(sb, "_board", fake_board)
+    R = {"inventory": {"groups": [{"name": "g", "ids": ["A-0", "B-0"]}], "tag_of": {}}, "mat_sig": sb.mat_sig(ex), "styles": []}
+    off = sb.make_boards(tmp_path / "x.db", "j", ["7"], R=R, ex=ex)
+    assert seen["segs"] == {"B-0", "B-1"} and off["7"]["use_seed"] is False        # 기본(꺼짐) = 종전과 같다: 씨앗 조각은 후보에 없다
+    on = sb.make_boards(tmp_path / "x.db", "j", ["7"], R=R, ex=ex, use_seed=True)
+    assert seen["segs"] == {"A-0", "A-1", "B-0", "B-1"} and on["7"]["use_seed"] is True
+    assert on["7"]["seed_sig"] == off["7"]["seed_sig"] == "A"                       # 씨앗 지문(어느 영상이 씨앗인가)은 스위치와 무관
+
+
+def test_씨앗_스위치_라우트_전달(env, monkeypatch):
+    st, c, box = env
+    wid = st.upsert_produce_work(None, {"script": "x"}, customer_id=0)
+    got = []
+    monkeypatch.setattr(app_mod, "_sb_run", lambda job, name, fn: fn())
+    monkeypatch.setattr(app_mod, "_sb_picks", lambda cid, job, bd, **k: bd)
+    monkeypatch.setattr(sb, "make_boards", lambda db, jid, keys, *a, **k: got.append(("boards", k.get("use_seed"))) or {})
+    monkeypatch.setattr(sb, "insert", lambda db, jid, payload, **k: got.append(("insert", payload.get("use_seed"))) or {})
+    c.post("/api/produce/storyboard/w:%s/boards" % wid, json={"keys": ["7"], "use_seed": True})
+    c.post("/api/produce/storyboard/w:%s/boards" % wid, json={"keys": ["7"]})
+    c.post("/api/produce/storyboard/w:%s/boards" % wid, json={"keys": ["7"], "use_seed": "yes"})    # 참(true)만 켜짐
+    c.post("/api/produce/storyboard/w:%s/insert" % wid, json={"name": "n", "board": {}, "extra": [], "use_seed": True})
+    assert got == [("boards", True), ("boards", False), ("boards", False), ("insert", True)]
+
+
+def test_씨앗_스위치_화면_기억과_요청(tmp_path):
+    js = """
+const window={STORYBOARD_ON:true}; let WORK_ID='w1'; var _SB_SAVED=null;
+const SB={jid:'w:w1', data:{pieces:{'A-0':{seed:true}}}, made:{}, view:'', edit:{}, ord:{}, pick:new Set(), role:{}, mat:'', useSeed:false};
+let T=[], R=0; function toast(m){ T.push(m); } function sbRender(){ R++; }
+""" + "\n".join(_fn(n) for n in ["_sbSnapshot", "_sbApplySaved", "sbToggleSeed"]) + """
+const empty=_sbSnapshot(); sbToggleSeed(); const snap=JSON.parse(JSON.stringify(_sbSnapshot()));
+SB.useSeed=false; _SB_SAVED=snap; _sbApplySaved('w:w1'); const back=SB.useSeed;
+sbToggleSeed();
+console.log(JSON.stringify({empty, saved:snap.use_seed, back, off:SB.useSeed, renders:R, toasts:T.length}));
+"""
+    assert _node(js, tmp_path) == {"empty": None, "saved": True, "back": True, "off": False, "renders": 2, "toasts": 2}
+    for f in ("sbMakeBoards", "sbInsert", "sbPrepare", "sbRemake"):
+        assert "use_seed:!!SB.useSeed" in _line_fn(f), f                              # 보드를 만드는 길 전부가 스위치 값을 싣는다
+    assert "sbToggleSeed()" in _fn("sbPage1") and 'id="sbSeedSw"' in _fn("sbPage1")

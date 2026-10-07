@@ -21485,7 +21485,7 @@ def api_storyboard_inventory(request: Request, job_id: str):
 
 
 @app.post("/api/produce/storyboard/{job_id}/prepare")
-def api_storyboard_prepare(request: Request, job_id: str):
+def api_storyboard_prepare(request: Request, job_id: str, body: dict = None):
     """1단계 분석이 다 끝나면 화면이 한 번 부른다 — 장면 목록 → AI 자동 스토리보드를 뒤에서 이어 만든다(10-06 사장님
     "스토리보드 만드는 게 오래 걸리니 1단계 분석 끝나면 동시에"). 이미 장면 목록·자동 보드가 있거나 도는 중이면 아무것도 안 한다.
     일은 기존 이름(inventory → board:auto)으로 돌아 화면이 그대로 받아 탭으로 붙인다(새 판단 없음 — inventory·make_boards 그대로)."""
@@ -21525,9 +21525,11 @@ def api_storyboard_prepare(request: Request, job_id: str):
         return {"ok": True, "started": False}
 
     _cid = getattr(request.state, "customer_id", 0)
+    _use_seed = (body or {}).get("use_seed") is True      # 씨앗 영상도 2단계에 배치(관제 161) — 화면 스위치 값 그대로
 
     def _auto():
-        _sb_run(job_id, "board:auto", lambda: _sb_picks(_cid, job_id, _sb.make_boards(DB_PATH, job_id, ["auto"], "", "", ex=_ex).get("auto")))
+        _sb_run(job_id, "board:auto", lambda: _sb_picks(_cid, job_id, _sb.make_boards(DB_PATH, job_id, ["auto"], "", "", ex=_ex,
+                                                                                      use_seed=_use_seed).get("auto")))
 
     if inv_fresh:
         _auto()
@@ -21552,8 +21554,10 @@ def api_storyboard_boards(request: Request, job_id: str, body: dict):
     from shopping_shorts import storyboard as _sb
     star, roles = str(body.get("star") or ""), str(body.get("roles") or "")
     _cid = getattr(request.state, "customer_id", 0)
+    _use_seed = body.get("use_seed") is True               # 씨앗 영상도 2단계에 배치(관제 161)
     for k in [str(x) for x in (body.get("keys") or [])][:6]:
-        _sb_run(job_id, "board:" + k, lambda k=k: _sb_picks(_cid, job_id, _sb.make_boards(DB_PATH, job_id, [k], star, roles, ex=_ex).get(k)))
+        _sb_run(job_id, "board:" + k, lambda k=k: _sb_picks(_cid, job_id, _sb.make_boards(DB_PATH, job_id, [k], star, roles, ex=_ex,
+                                                                                         use_seed=_use_seed).get(k)))
     return {"ok": True}
 
 
@@ -21570,7 +21574,8 @@ def api_storyboard_insert(request: Request, job_id: str, body: dict):
     name = "insert:" + str(body.get("name") or "x")[:40]
     _cid = getattr(request.state, "customer_id", 0)
     _sb_run(job_id, name, lambda: _sb_picks(_cid, job_id, _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or [],
-                                                                         "key": str(body.get("key") or "")}, ex=_ex)))
+                                                                         "key": str(body.get("key") or ""),
+                                                                         "use_seed": body.get("use_seed") is True}, ex=_ex)))
     return {"ok": True}
 
 
