@@ -71,12 +71,28 @@ WRITE_PROMPT = """너는 쇼핑 쇼츠 '썰' 작가다. 아래 [원본] 두 편�
 %s
 %s"""
 
+REVIEW_PROMPT = """너는 쇼핑 쇼츠 썰 대본의 깐깐한 검수자다. 아래 [대본]을 [원본] 결과 비교해서 문제만 찾아라. 고쳐 쓰지 마라.
+볼 것
+1. 첫 줄(훅)이 자연스러운 한국어인가 — 틀린 관용구·어색한 표현이 있나(예: "혀를 두르다"는 "혀를 내두르다"의 잘못)
+2. 실무자 대답이 윗선의 걱정에 실제로 답하나(걱정을 풀거나 더 키우나) — 엉뚱한 대답이면 문제
+3. 설명서·광고 말투가 남았나(~를 통한, ~최적화, ~역할 수행, ~방지, 기능 이름 나열)
+4. 이음 줄이 늘어지나("라며 ~가 받아침" 같은 줄이 대사 사이에 따로 있으면 문제 — 원본은 "라고 하자"로 짧게 넘김)
+5. 원본보다 재미가 없는 줄 — 그냥 정보만 말하는 줄
+문제마다 줄 번호와 무엇이 문제인지 한 줄로. 문제가 없으면 빈 배열.
+출력 JSON: {"issues": [{"line": 0, "why": "..."}]}   (line 0 = 첫 줄)
+
+[원본]
+%s
+
+[대본]
+%s"""
+
 BRANDS = r"삼성|애플|LG|엘지|샤오미|다이슨|필립스|소니|나이키|아디다스|이케아|다이소|쿠팡|오뚜기|농심|삼양|팔도|테슬라|구글|아마존|현대|기아"
 
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--want", type=int, default=3); ap.add_argument("--max-jobs", type=int, default=6)
-    ap.add_argument("--out", default="/tmp/fiction.json"); ap.add_argument("--scan", type=int, default=150); ap.add_argument("--products", default="")
+    ap.add_argument("--out", default="/tmp/fiction.json"); ap.add_argument("--scan", type=int, default=150); ap.add_argument("--products", default=""); ap.add_argument("--review", action="store_true"); ap.add_argument("--skip", default="")
     a = ap.parse_args()
     from google.genai import types
     from shopping_shorts import backbone_assemble as ba, config, usage_meter, vertex_route
@@ -99,7 +115,7 @@ def main():
     res, seen, tried = [], set(), 0
     with usage_meter.track(op="대본시험", customer_id=0):
         for r in rows:
-            if len(res) >= a.want or tried >= a.max_jobs:
+            if sum(1 for x in res if x["fit"]) >= a.want or tried >= a.max_jobs:      # 틀 맞은 것만 센다(안 맞은 제품은 개수에 안 넣는다)
                 break
             try:
                 srcs = ba.sources_from_extract(json.loads(r["extract_json"]))
@@ -108,7 +124,7 @@ def main():
             seed = ba.seed_source(srcs, r["backbone_main"]) if srcs else None
             product = (((seed or {}).get("source_brief") or {}).get("product") or "").strip()
             want_p = [x.strip() for x in a.products.split(",") if x.strip()]
-            if not product or product in seen or (want_p and product not in want_p) or product in ("와플 메이커", "팔도 만능 비빔장", "확장형 아일랜드 식탁"):
+            if not product or product in seen or (want_p and product not in want_p) or product in ("와플 메이커", "팔도 만능 비빔장", "확장형 아일랜드 식탁") or product in [x.strip() for x in a.skip.split(",") if x.strip()]:
                 continue
             seen.add(product); tried += 1
             scenes = [x for s in srcs for x in (s.get("segments") or []) if x.get("seg_id")][:90]
@@ -130,7 +146,7 @@ def main():
             plan_txt = "\n".join("  %d. %s — %s%s" % (i + 1, b, d, (" ← 반드시: %s [%s]" % (f["text"], f["id"])) if f else "") for i, (b, f, d) in enumerate(plan))
             feats_txt = "\n".join("  %s (%s) %s — 장면: %s" % (f["id"], f.get("type"), f["text"], f.get("scene") or "") for f in feats)
             kind = fo.get("product_kind") or product
-            fb, out, bad = "", None, []
+            fb, out, bad, review_log = "", None, [], []
             for attempt in range(2):
                 out = call(WRITE_PROMPT % (plan_txt, ORIGINALS, kind, feats_txt, fb))
                 lines = [L for L in out.get("lines") or [] if (L.get("text") or "").strip()]
@@ -153,11 +169,18 @@ def main():
                 cp = sf.gram_share(body, ORIGINALS)
                 if cp > 0.25:
                     bad.append("원본 문장을 많이 옮겼다(%.0f%%)" % (cp * 100))
+                if not bad and attempt == 0 and a.review:
+                    # ★검수자(버텍스) — 사람이 읽던 자리. 기계 검사를 통과한 첫 판만 본다(호출 1회). 걸리면 그 이유로 1회 고쳐 쓴다.
+                    numbered = "\n".join("%d. [%s] %s" % (i, sp, t) for i, (sp, t) in enumerate([("나레", out.get("title") or "")] + [(L.get("speaker") or "", L["text"]) for L in lines]))
+                    rv = call(REVIEW_PROMPT % (ORIGINALS, numbered))
+                    issues = [x for x in rv.get("issues") or [] if isinstance(x, dict) and (x.get("why") or "").strip()]
+                    review_log.append(issues)
+                    bad = ["검수: %d번 줄 — %s" % (x.get("line", -1), x["why"]) for x in issues]
                 if not bad:
                     break
                 fb = "\n[다시 써라 — 문제]\n" + "\n".join("- " + x for x in bad)
             res.append({"product": product, "fit": True, "feats": feats, "plan": [(b, f["id"] if f else "", d) for b, f, d in plan], "script": out, "problems": bad,
-                        "attempts": attempt + 1, "copy": round(sf.gram_share(" ".join(L["text"] for L in out.get("lines") or []), ORIGINALS), 2)})
+                        "attempts": attempt + 1, "review": review_log, "copy": round(sf.gram_share(" ".join(L["text"] for L in out.get("lines") or []), ORIGINALS), 2)})
             print("\n##### %s | 과한 기능 %d개 · 시도 %d · 남은 문제 %d · 원본과 겹침 %.0f%%" % (product, len(over), attempt + 1, len(bad), res[-1]["copy"] * 100))
             for f in feats:
                 print("   %s (%s·%s) %s" % (f["id"], f.get("type"), f.get("power"), f["text"]))
