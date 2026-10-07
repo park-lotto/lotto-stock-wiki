@@ -663,11 +663,13 @@
   }
   // 서버 POST(쿠키 동봉) — 샌드박스면 GM 직접, 메인월드(인스타 Blob 폴백)면 로더의
   // GM 브리지(postMessage)로 위임. 브리지 응답이 1.5초 안에 없으면(구버전 로더) 실패 콜백.
-  function _gmPost(url, bodyObj, done0, fail0) {
-    // ★상한 30초(관제 156, 2026-10-07 사장님 "비슷한 검색어 찾는 중으로 계속 나온다").
+  function _gmPost(url, bodyObj, done0, fail0, ms) {
+    // ★상한(기본 30초, 관제 156, 2026-10-07 사장님 "비슷한 검색어 찾는 중으로 계속 나온다").
     //   브리지가 ACK만 하고 결과를 못 돌려주면(탭 이동·서비스워커 잠듦) 아무도 fail 을 안 불러
     //   화면이 '찾는 중…'에 영원히 멈췄다. 끝은 한 번만 — 늦게 온 응답은 버린다.
-    var ended = false, timer = setTimeout(function () { end(); if (fail0) fail0("timeout"); }, 30000);
+    // ★상한은 부르는 쪽이 정한다(기본 30초). 렌즈 추적은 서버에서 70초 넘게 걸린다(2026-10-07 라이브 실측:
+    //   20:28:39 요청 → 20:29:49 200) — 30초로 끊었더니 정상 응답을 버리고 '서버 연결 실패'가 떴다.
+    var ended = false, timer = setTimeout(function () { end(); if (fail0) fail0("timeout"); }, ms || 30000);
     function end() { if (ended) return false; ended = true; clearTimeout(timer); return true; }
     function done(st, tx) { if (end()) done0(st, tx); }
     function fail(why) { if (end() && fail0) fail0(why); }
@@ -732,7 +734,7 @@
     // t를 빼고 보낸다(서버가 영상 중간 프레임으로 캡처).
     var v = noT ? null : _igVideo();
     var t = (v && isFinite(v.currentTime)) ? Math.round(v.currentTime * 10) / 10 : null;
-    _lensOverlay("<div style='padding:30px;text-align:center;color:#aaa'>🔗 원본·유사 영상 추적 중… (10~20초)</div>");
+    _lensOverlay("<div style='padding:30px;text-align:center;color:#aaa'>🔗 원본·유사 영상 추적 중… (보통 20초~1분)</div>");
     _gmPost(BASE + "/api/lens/trace_url",
       t === null ? { url: url } : { url: url, t: t },
       function (status, text) {
@@ -779,9 +781,12 @@
         if (why === "nobridge") {   // 구버전 로더(브리지 없음) → 랭킹 페이지 딥링크 폴백
           window.open(BASE + "/?lens_url=" + encodeURIComponent(url), "_blank");
         } else {
-          _lensOverlay("<div style='padding:20px;color:#e0623d'>❌ 서버 연결 실패</div>");
+          _lensOverlay("<div style='padding:20px;color:#e0623d'>❌ " + (
+            why === "timeout" ? "3분 안에 답이 없어요 — 잠시 뒤 다시 눌러 주세요" :
+            why === "stale" ? "확장프로그램이 갱신됐어요 — 이 페이지를 새로고침(F5)해 주세요" :
+            "서버 연결 실패") + "</div>");
         }
-      });
+      }, 180000);   // 렌즈 추적은 70초+ 걸린다(라이브 실측) — 상한 3분
   }
   // ── ⭐볼채널등록(2026-09-02 사장님) — 회원용 개인 채널 즐겨찾기 ────────────
   //  📌채널수집·⭐레퍼런스등록은 **관리자 전용 + 전역 수집**이라 회원이 눌러도
