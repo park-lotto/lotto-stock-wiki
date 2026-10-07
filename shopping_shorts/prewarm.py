@@ -169,6 +169,18 @@ def _is_transient(err):
 
 def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
                 category=None, db_path=None, manual=False):
+    """예열 1건 — **이 작업의 주인을 밝히고** 본체(_run_prewarm)를 돈다(2026-10-08, 관제 159).
+    ★종전엔 워커가 주인 없이 돌아 전 고객의 1단계 분석이 0번(사장님)으로 찍혔다(실측 10-07 프레임대본
+      1,190건 중 1,130건). 비용 귀속이 틀리고, Vertex 판정(vertex_route.plan)도 고객을 관리자로 봤다.
+      usage_meter.track 만 연다 — keyctx(어느 키를 쓰나)는 건드리지 않아 키 선택·과금은 종전 그대로다."""
+    from shopping_shorts import keyroute, usage_meter
+    with usage_meter.track(customer_id=keyroute.as_cid(customer_id)):
+        return _run_prewarm(shortcode, url, caption=caption, customer_id=customer_id, video_url=video_url,
+                            category=category, db_path=db_path, manual=manual)
+
+
+def _run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
+                 category=None, db_path=None, manual=False):
     """담긴 영상 1건을 미리 추출+구조분석해 캐시에 채운다. 상태 문자열을 돌려준다.
 
     반환: already | skipped_latched | skipped_cap | skipped_limit | skipped_nogate |

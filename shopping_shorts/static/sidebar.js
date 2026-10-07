@@ -687,7 +687,7 @@
         (function show() {
           var ex = document.getElementById("ss-pw-modal");
           if (ex && ex.style.display !== "none") { if (tries++ < 60) setTimeout(show, 2000); return; }
-          _pwModal({ icon: "🔑", title: d.text, body: "등록하면 대본·장면 맞추기·AI 장면 만들기를 내 구글 계정으로 써요.",
+          _pwModal({ icon: "🔑", title: d.text, body: d.body || "등록하면 대본·장면 맞추기·AI 장면 만들기를 내 구글 계정으로 써요.",
                      hideContact: true, link: d.url, linkText: "→ " + (d.link_text || "등록하기"), closeLabel: "오늘은 그만" });
           _f("/api/settings/vertex_notice/seen", { method: "POST" }).catch(function (e) { console.warn("[vertex] 봤음 저장 실패", e); });
         })();

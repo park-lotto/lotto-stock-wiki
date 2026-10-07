@@ -10260,6 +10260,18 @@ async function renderSourceAnalysis(){
     }
   }catch(e){ console.warn('[shortcode 보정 실패(무해)]', e); }
   const items = HANDOFF.filter(h => h.useFootage);
+  // ★버텍스 미등록 안내를 1단계부터 보인다(2026-10-08 사장님, 관제 159). 판정·문구는 서버 한 곳
+  //   (/api/settings/vertex_notice — 하루 1회 팝업·3단계 시작 안내와 같은 묶음). 여기선 한 번만 묻고 그린다.
+  //   ★shortcode 보정 **뒤**에 둔다 — 보정 구간은 시험 하네스(test_src_shortcode_fill_js)가 node로 떼어 돌리는데
+  //     거기엔 window가 없어, 앞에 두면 보정까지 못 가고 죽는다(finish 관문이 실제로 잡았다).
+  if(window._VX_NOTICE === undefined){
+    window._VX_NOTICE = null;
+    try{
+      fetch('/api/settings/vertex_notice').then(r => (r && r.ok) ? r.json() : null).then(d => {
+        if(d && d.text && d.body){ window._VX_NOTICE = d; renderSourceAnalysis().catch(()=>{}); }
+      }).catch(e => console.warn('[vertex] 1단계 안내 확인 실패', e));
+    }catch(e){ console.warn('[vertex] 1단계 안내 확인 실패', e); }
+  }
   if(!items.length){
     // ★담긴 목록이 아직 안 잡혔는데 자동적재는 돌고 있는 순간이 있다(HANDOFF가 채워지기
     //   전에 이 함수가 먼저 불린다). 종전엔 여기서 그냥 비우고 나가 **폴링도 안 걸어**,
@@ -10335,6 +10347,14 @@ async function renderSourceAnalysis(){
      </div>`
     // ★진행 패널(2026-08-20 "크게 잘보이게"). 막대 위에 "몇 개 중 몇 개 · 몇 %"를 크게
     //   얹는다 — 40~70초를 기다리는 화면에서 사장님이 가장 알고 싶은 건 "얼마나 남았나"다.
+    + (window._VX_NOTICE ? `<div class="srcProg" id="vxNotice1" style="border-color:#c80">
+         <div class="srcProgHead"><b>⚠️ ${esc(window._VX_NOTICE.text)}</b></div>
+         <div style="margin-top:6px;font-size:14px;line-height:1.6;color:var(--txt)">${esc(window._VX_NOTICE.body)}</div>
+         <div style="margin-top:8px;font-size:14px;font-weight:800">
+           <a href="${esc(window._VX_NOTICE.manual_url || '')}" target="_blank" rel="noopener" style="color:var(--accent)">→ ${esc(window._VX_NOTICE.manual_text || '등록 방법 보기')}</a>
+           <a href="${esc(window._VX_NOTICE.url || '')}" target="_blank" rel="noopener" style="color:var(--accent);margin-left:14px">→ ${esc(window._VX_NOTICE.link_text || '등록하기')}</a>
+         </div>
+       </div>` : '')
     + (left > 0 ? `<div class="srcProg" title="분석이 끝난 영상 비율">
          <div class="srcProgHead">
            <b>🔄 영상 분석 중 · ${done + gaveUp}/${items.length}개 완료</b>
@@ -11607,7 +11627,7 @@ async function startProduceMix(){
     // Vertex 미등록 회원 — 막지 않고 안내만(판정은 서버 vertex_route.needs_notice, 문구·주소도 서버가 준다)
     if(d.vertex_notice){ try{ const vn=d.vertex_notice; const box=document.createElement('div');
       box.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9500;background:#1b2a3f;color:#fff;border:1px solid #3d6aa0;border-radius:12px;padding:12px 16px;font-size:15px;max-width:92vw';
-      box.innerHTML=esc(vn.text)+' <a href="'+esc(vn.url)+'" target="_blank" rel="noopener" style="color:#ffd97a;font-weight:700">→ '+esc(vn.link_text||'등록하기')+'</a> <span style="cursor:pointer;margin-left:10px;opacity:.7" onclick="this.parentNode.remove()">✕</span>';
+      box.innerHTML=esc(vn.text)+(vn.body?'<div style="font-size:13px;line-height:1.5;opacity:.92;margin:4px 0">'+esc(vn.body)+'</div>':'')+' <a href="'+esc(vn.url)+'" target="_blank" rel="noopener" style="color:#ffd97a;font-weight:700">→ '+esc(vn.link_text||'등록하기')+'</a> <span style="cursor:pointer;margin-left:10px;opacity:.7" onclick="this.parentNode.remove()">✕</span>';
       document.body.appendChild(box); setTimeout(()=>box.remove(), 15000); }catch(e){ console.warn('[vertex] 안내 실패', e); } }
     // ★2단계 화면 제목을 새 job에 바로 넘긴다(2026-09-18 실측 job 21623b29b569). 헤드카피의
     //   진실은 job인데, job이 생기기 전 _workState에만 임시 보관하던 값은 job이 생기는 이 순간

@@ -60,7 +60,7 @@ def _style_extra():
         return ""
 
 
-def _call_json(prompt, schema, note=None, model=None, vertex=True):
+def _call_json(prompt, schema, note=None, model=None, vertex=True, vertex_op="script_generate"):
     """key_vault 캐스케이드 키풀로 JSON 1콜. 소진키는 마킹하고 다음 키로.
     무키·전부실패면 {} (호출부는 반드시 빈 dict 허용 — fail-open).
 
@@ -82,7 +82,8 @@ def _call_json(prompt, schema, note=None, model=None, vertex=True):
                 config=types.GenerateContentConfig(response_mime_type="application/json",
                                                    response_schema=schema))
             return json.loads(resp.text)
-        _ok, _got = vertex_route.try_call("script_generate", _vx, what="대본생성")
+        # vertex_op: 이 깔때기를 빌려 쓰는 다른 판단(예: 1단계 스토리="story")은 자기 op로 스위치를 본다(관제 159)
+        _ok, _got = vertex_route.try_call(vertex_op, _vx, what="대본생성" if vertex_op == "script_generate" else vertex_op)
         if _ok:
             if note is not None:
                 note["auth"] = "vertex"
@@ -1571,6 +1572,10 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
         topic_line=topic_line, n=n, seconds=seconds, words=words,
         bank=("\n\n" + bank_context) if bank_context else "")
         + _style_extra() + claim_context)   # 사실 계약은 스타일 예시 뒤에 둔다.
+    from shopping_shorts import vertex_route      # Vertex 먼저(관제 159) — 실패·꺼짐이면 아래 키풀 그대로
+    _vok, _vd = vertex_route.try_json("script_aux", prompt, _SCHEMA, what="대본변주")
+    if _vok:
+        return _verify_and_fix(_vd.get("drafts", []))
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:
@@ -1723,6 +1728,10 @@ _PARTIAL_PROMPT = """너는 한국 쇼핑 숏폼 대본 작가다. 아래 대본
 def _refine(prompt, max_key_tries=3):
     if not comment_gen.SHORTS_GEMINI_KEYS:
         return ""
+    from shopping_shorts import vertex_route      # Vertex 먼저(관제 159)
+    _vok, _vd = vertex_route.try_json("script_aux", prompt, _REFINE_SCHEMA, what="대본다듬기")
+    if _vok and _vd.get("script"):
+        return _vd.get("script", "")
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:
@@ -1875,6 +1884,10 @@ def detect_subject(full_text, max_key_tries=3):
     if not comment_gen.SHORTS_GEMINI_KEYS or not (full_text or "").strip():
         return ""
     prompt = _SUBJECT_PROMPT.format(full_text=full_text[:3000])
+    from shopping_shorts import vertex_route      # Vertex 먼저(관제 159)
+    _vok, _vd = vertex_route.try_json("script_aux", prompt, _SUBJECT_SCHEMA, what="소재감지")
+    if _vok and (_vd.get("subject") or "").strip():
+        return (_vd.get("subject") or "").strip()
     for _ in range(max_key_tries):
         key, ki = comment_gen._current_key_and_idx()
         if key is None:
