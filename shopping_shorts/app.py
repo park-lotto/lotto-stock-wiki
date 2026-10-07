@@ -21161,7 +21161,11 @@ def _sb_job(request, key):
         jid = str(work.get("job_id") or "").strip()
         job = st.get_mix_job(jid) if jid else None
         if job and int(job.get("customer_id") or 0) == int(cid or 0) and job.get("extract"):
-            return "w-" + wid, (_enrich_job_extract(job, st) or {}).get("extract") or {}, jid
+            from shopping_shorts import mix_pipeline as _mp
+            _ex = (_enrich_job_extract(job, st) or {}).get("extract") or {}
+            # job 을 만든 뒤 정한 씨앗도 거른다 — 작업파일의 지금 씨앗을 job 재료 열쇠로 옮겨 같은 주인이 표식(10-07 실측)
+            _mp.mark_seed_sources(_ex, _mp.seed_job_keys(job, (work.get("state") or {}).get("handoff")))
+            return "w-" + wid, _ex, jid
         # ★씨앗(관제 120 장면배분): 3단계 job 이 아직 없으면 작업파일의 씨앗 표식(seedNoAuto)으로 auto_exclude 를 단다 —
         #   표식을 다는 건 mix_pipeline.mark_seed_sources 한 곳(3단계 mark_auto_exclude 와 같은 함수·같은 '씨앗뿐이면 안 단다').
         #   job 이 있으면 그 extract 에 3단계가 이미 단 표식을 그대로 쓴다(위 분기).
@@ -21191,22 +21195,80 @@ def api_storyboard_thumb(request: Request, key: str, seg_id: str):
         return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
     if jid:
         return api_mix_seg_thumb(jid, seg_id)
+    found = _sb_seg_src(ex, None, seg_id)
+    if isinstance(found, JSONResponse):
+        return found
+    src, sg_ = found
+    safe = re.sub(r"[^0-9A-Za-z_.-]", "", seg_id)
+    out = _SB_THUMB_DIR / ("%s.jpg" % safe)
+    if not out.exists():
+        _SB_THUMB_DIR.mkdir(parents=True, exist_ok=True)
+        if not _seg_strip_thumb(src, _SB_THUMB_DIR, sg_, out.name):
+            return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+    return FileResponse(str(out), media_type="image/jpeg")
+
+
+def _sb_seg_src(ex, jid, seg_id):
+    """스토리보드 조각 → (원본 영상 경로, 조각{start,end,video_id…}) — 썸네일·구간 영상(clip)이 같이 쓰는 한 곳.
+    매칭 작업(jid)이 있으면 3단계와 같은 장면 표(edit_plan.scene_table)·소스(_resolve_sources),
+    없으면 1단계 분석 때 받아 둔 영상(data/find_frames/<sha1(영상코드)[:16]>/*.mp4). 못 찾으면 404 JSONResponse."""
+    if jid:
+        job = Store(DB_PATH).get_mix_job(jid) or {}
+        seg = _edit_plan.scene_table(job.get("extract") or {}, job.get("edit_plan") or {}).get(seg_id)
+        if not seg:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "없는 장면"})
+        try:
+            src = _resolve_sources(job, _MIX_WORK_DIR / jid)[seg["video_id"]]
+        except Exception as e:      # noqa: BLE001 — 소스를 못 찾으면 404(이유 한 줄)
+            print("[storyboard] 소스 찾기 실패 %s %s: %r" % (jid, seg_id, e), file=sys.stderr)
+            return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
+        return str(src), seg
     for vid, e in (ex or {}).items():
         for sg_ in (e or {}).get("segments") or []:
             if sg_.get("seg_id") != seg_id:
                 continue
-            safe = re.sub(r"[^0-9A-Za-z_.-]", "", seg_id)
-            out = _SB_THUMB_DIR / ("%s.jpg" % safe)
-            if not out.exists():
-                vdir = _FIND_TMP_DIR / hashlib.sha1(str(vid).encode()).hexdigest()[:16]
-                mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
-                if not mp4:
-                    return JSONResponse(status_code=404, content={"ok": False, "error": "영상 파일이 치워졌습니다"})
-                _SB_THUMB_DIR.mkdir(parents=True, exist_ok=True)
-                if not _seg_strip_thumb(str(mp4[0]), _SB_THUMB_DIR, sg_, out.name):
-                    return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
-            return FileResponse(str(out), media_type="image/jpeg")
+            vdir = _FIND_TMP_DIR / hashlib.sha1(str(vid).encode()).hexdigest()[:16]
+            mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
+            if not mp4:
+                return JSONResponse(status_code=404, content={"ok": False, "error": "영상 파일이 치워졌습니다"})
+            return str(mp4[0]), sg_
     return JSONResponse(status_code=404, content={"ok": False, "error": "없는 장면"})
+
+
+_SB_CLIP_DIR = Path(__file__).parent / "data" / "storyboard_clips"
+
+
+@app.get("/api/produce/storyboard/clip/{key}/{seg_id}")
+def api_storyboard_clip(request: Request, key: str, seg_id: str):
+    """2단계 스토리보드 장면 카드 미리보기 — 그 조각 구간만 잘라 소리 없이 작게(캐시). 원본 찾기는 _sb_seg_src(썸네일과 같은 함수).
+    남의 작업은 _sb_job 이 막는다(404). 파일 이름은 열쇠·조각에서 허용 글자만 남긴다(경로 조작 방지)."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    skey, ex, jid = _sb_job(request, key.replace("w-", "w:", 1) if key.startswith("w-") else key)
+    if ex is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    found = _sb_seg_src(ex, jid, seg_id)
+    if isinstance(found, JSONResponse):
+        return found
+    src, seg = found
+    a, b = float(seg.get("start") or 0), float(seg.get("end") or 0)
+    if b - a <= 0.05:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "구간이 비었습니다"})
+    safe = re.sub(r"[^0-9A-Za-z_.-]", "", "%s_%s" % (skey, seg_id))[:120]
+    out = _SB_CLIP_DIR / ("%s_%d_%d.mp4" % (safe, int(a * 1000), int(b * 1000)))
+    if not out.exists():
+        import subprocess
+        _SB_CLIP_DIR.mkdir(parents=True, exist_ok=True)
+        tmp = out.with_suffix(".tmp.mp4")
+        r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", "%.3f" % a, "-i", str(src), "-t", "%.3f" % (b - a),
+                            "-an", "-vf", "scale=360:-2", "-c:v", "libx264", "-preset", "veryfast", "-crf", "30",
+                            "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(tmp)], capture_output=True, text=True, timeout=60)
+        if r.returncode != 0 or not tmp.exists():
+            print("[storyboard] 구간 영상 실패 %s %s: %s" % (skey, seg_id, (r.stderr or "")[-300:]), file=sys.stderr)
+            return JSONResponse(status_code=404, content={"ok": False, "error": "구간 영상 만들기 실패"})
+        tmp.replace(out)
+    return FileResponse(str(out), media_type="video/mp4")
 
 
 def _sb_run(job_id, name, fn):
@@ -21228,9 +21290,11 @@ def _sb_run(job_id, name, fn):
     threading.Thread(target=lambda: _ctx.run(_go), daemon=True).start()
 
 
-def _sb_picks(cid, key, bd):
+def _sb_picks(cid, key, bd, sfx_deco=None):
     """2단계 줄에 실제 짤·효과음을 미리 싣는다(관제 143) — 고르기는 storyboard.meme_preview·sfx_preview 한 곳.
-    스위치 meme_enabled 뒤(끄면 보드 그대로). 같은 key(작업) = 같은 짤·소리. 못 고른 이유는 로그로."""
+    스위치 meme_enabled 뒤(끄면 보드 그대로). 같은 key(작업) = 같은 짤·소리. 못 고른 이유는 로그로.
+    sfx_deco: 2단계 보드의 효과음 스위치 {"sfx_pack": "auto"/"off", "sfx_mute_beats": [줄 번호]} — 3단계 deco 와 같은 키.
+      켜짐·꺼짐 판단은 sfx_pack.preview_pack→resolve 한 곳(렌더와 같은 함수)."""
     if not isinstance(bd, dict) or not isinstance(bd.get("slots"), list):
         return bd
     from shopping_shorts import storyboard as _sbm
@@ -21266,17 +21330,21 @@ def _sb_picks(cid, key, bd):
         if _job and int(_job.get("customer_id") or 0) != int(cid or 0):
             _job = None
         _slots = [s if isinstance(s, dict) else {} for s in bd["slots"]]
-        _pack = _sp.preview_pack(st, cid, [s.get("slot") for s in _slots], job=_job, style_id=_sid)
+        _pack = _sp.preview_pack(st, cid, [s.get("slot") for s in _slots], job=_job, style_id=_sid, deco=sfx_deco)
+        _mute = set((_pack or {}).get("mute_beats") or ())
         # {줄: 줄 효과음 길이} — 렌더(video_assemble.sfx_events_for)와 같은 모양. 길이는 효과음 자산에 적힌 값
         _first = {}
         for i, s in enumerate(_slots):
-            if s.get("sfx_pick") and not s.get("sfx_off"):
+            if s.get("sfx_pick") and not s.get("sfx_off") and i not in _mute:
                 _a = st.get_scene_asset(int(s["sfx_pick"])) or {}
                 _first[i] = float(_a.get("duration") or 0)
         _rows = _sp.preview_lines([{"role": s.get("slot"), "text": s.get("line"), "pack_edit": s.get("pack_edit")} for s in _slots], _pack, _first)
         for s, r in zip(_slots, _rows):
             s["pack_sfx"] = r
         bd["pack_sfx_on"] = bool(_pack)
+        # 줄 효과음이 실제로 들어가는가 — 렌더 입구(mix_pipeline._resolve_sfx_paths)와 같은 조건: 팩 켜짐 + 그 줄 안 끔
+        for i, s in enumerate(_slots):
+            s["sfx_live"] = bool(_pack) and i not in _mute
     except Exception as e:      # noqa: BLE001 — 팩 미리보기 실패는 줄 효과음에 영향 없게(이유 한 줄)
         _log("효과음팩 미리보기 실패: %r" % e)
     return bd
@@ -21295,8 +21363,18 @@ def api_storyboard_picks(request: Request, job_id: str, body: dict):
     slots = (body or {}).get("slots")
     if not isinstance(slots, list) or len(slots) > 60:
         return JSONResponse(status_code=422, content={"ok": False, "error": "slots 목록이 필요해요"})
-    bd = _sb_picks(getattr(request.state, "customer_id", 0), key, {"slots": [dict(x) if isinstance(x, dict) else {} for x in slots]})
-    return {"ok": True, "slots": bd["slots"], "pack_sfx_on": bd.get("pack_sfx_on")}
+    # 보드 효과음 스위치(2단계) — 값의 뜻은 sfx_pack.settings_of 가 정한다(여기선 받은 그대로 넘김)
+    _sd = {k: (body or {}).get(k) for k in ("sfx_pack", "sfx_mute_beats") if (body or {}).get(k) is not None}
+    bd = _sb_picks(getattr(request.state, "customer_id", 0), key, {"slots": [dict(x) if isinstance(x, dict) else {} for x in slots]},
+                   sfx_deco=_sd or None)
+    # 줄마다 '문장 X초 · 장면 Y초' — 보드를 만들 때와 같은 함수(storyboard.slot_checks)로 지금 줄 구성을 다시 잰다(화면은 계산 안 함)
+    from shopping_shorts import storyboard as _sbm
+    _keep = {c for x in slots if isinstance(x, dict) for c in (x.get("ids") or []) if isinstance(c, str)}
+    _segs = _sbm._materials(None, key, _ex or {}, keep=_keep)[0]
+    _check = _sbm.slot_checks([{"line": (x or {}).get("line") if isinstance(x, dict) else "",
+                                "ids": [c for c in ((x or {}).get("ids") or []) if isinstance(c, str)] if isinstance(x, dict) else []}
+                               for x in slots], _segs)
+    return {"ok": True, "slots": bd["slots"], "pack_sfx_on": bd.get("pack_sfx_on"), "check": _check}
 
 
 @app.get("/api/produce/storyboard/{job_id}")
@@ -21796,7 +21874,7 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
     except Exception:      # noqa: BLE001 — 음성이 아직 없으면 칸 목록만
         timeline = []
     manual = {b["beat_idx"] for b in beats if (b.get("sfx") or {}).get("match_type") == "manual"}
-    ev = sfx_pack.plan_events(timeline, manual | set(st["mute_beats"]), density=st["density"]) if (timeline and on and got) else []
+    ev = sfx_pack.plan_events(timeline, manual, density=st["density"], mute_beats=st["mute_beats"]) if (timeline and on and got) else []
     tl_by = {t["beat_idx"]: t for t in timeline}
     for b in beats:
         bi = b.get("beat_idx")

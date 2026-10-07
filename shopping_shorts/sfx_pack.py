@@ -305,12 +305,13 @@ def resolve(store, job):
 HOLD_PAD = 0.05     # 줄 효과음 꼬리 뒤 여유(초) — 바로 붙어 울리면 겹쳐 들린다
 
 
-def plan_events(timeline, manual_beats=(), density="normal", first_beats=()):
+def plan_events(timeline, manual_beats=(), density="normal", first_beats=(), mute_beats=()):
     """[(소리, 절대초, 자막)] — 파일 경로 없이 '무엇을 언제'만. 테스트·검증이 이걸 본다.
 
     영상 시작 = 오프너 · 첫 칸→둘째 칸 넘김 = 휙+틱 · 그 뒤 자막 줄이 바뀔 때마다 1발(칸 첫 줄은 칸 역할의 소리).
     시각은 렌더 자막 함수(caption_schedule)에서 그대로 받는다. manual_beats(사람이 고른 칸·끈 칸)는 건너뛴다.
     density(2026-10-01 사용자 조절): "low"=칸 첫 줄만 · "normal"=지금 규칙 · "high"=1.4초 넘는 줄도 가운데 1발.
+    mute_beats(deco.sfx_mute_beats — 3단계 칸 🔇·2단계 줄 끔): 그 칸 팩 소리 전부 없음 — 첫 칸이면 오프너도(10-07 사장님 "그 줄 효과음 전체").
     """
     from shopping_shorts.video_assemble import caption_schedule
     tl = [b for b in (timeline or []) if float(b.get("dur") or 0) > 0]
@@ -318,14 +319,15 @@ def plan_events(timeline, manual_beats=(), density="normal", first_beats=()):
         return []
     density = density if density in DENSITY_MAX_SILENCE else "normal"
     max_silence = DENSITY_MAX_SILENCE[density]
-    manual = set(manual_beats or ())
+    mute = set(mute_beats or ())
+    manual = set(manual_beats or ()) | mute
     # 줄 효과음(짤 리액션 등)이 그 줄 시작을 맡은 칸 — 그 순간의 팩 소리를 비운다.
     #   dict({칸: 줄 효과음 길이 초})로 오면 그 소리가 울리는 동안의 팩 소리도 비운다(10-07 사장님 "겹치는 거 빼고" —
     #   실측 951d050cc3df: 넷플 두둥 2.0초 끝 0.3초에 휙이 겹쳤다). 줄 효과음을 빼면 이 목록에서 빠져 팩 소리가 저절로 돌아온다.
     hold = dict(first_beats) if isinstance(first_beats, dict) else {}
     line_first = set(first_beats or ())
     total = sum(float(b["dur"]) for b in tl)
-    ev = [] if tl[0]["beat_idx"] in line_first else [("opener", OPENER_AT, "")]
+    ev = [] if (tl[0]["beat_idx"] in line_first or tl[0]["beat_idx"] in mute) else [("opener", OPENER_AT, "")]
     if len(tl) >= 2 and tl[1]["beat_idx"] not in manual and tl[1]["beat_idx"] not in line_first:
         t = float(tl[1]["t0"])
         ev += [("whoosh", max(0.0, t - WHOOSH_LEAD), ""), ("tick", t + TICK_LAG, "")]
@@ -454,11 +456,11 @@ def apply_pack_edit(events_per_beat, pack_edit, keep_off=False, log=None):
     return out
 
 
-def plan_per_beat(timeline, manual_beats=(), density="normal", first_beats=(), pack_edit=None, keep_off=False, log=None):
+def plan_per_beat(timeline, manual_beats=(), density="normal", first_beats=(), pack_edit=None, keep_off=False, log=None, mute_beats=()):
     """plan_events → 칸별로 나눔 → apply_pack_edit. 미리보기(preview_lines)와 렌더(events)가 **이것 하나**를 부른다."""
     tl = [b for b in (timeline or []) if float(b.get("dur") or 0) > 0]
     per = {}
-    for slot, t, seg in plan_events(timeline, manual_beats, density=density, first_beats=first_beats):
+    for slot, t, seg in plan_events(timeline, manual_beats, density=density, first_beats=first_beats, mute_beats=mute_beats):
         owner = _owner_of(tl, slot, t)
         if owner is None:
             continue
@@ -472,14 +474,15 @@ def events(timeline, pack, manual_beats=(), first_beats=(), pack_edit=None):
     pack_edit: {칸번호: 2단계에서 고른 팩 소리 빼기·바꾸기} — 실제 TTS 시각으로 배치한 뒤 apply_pack_edit 가 입힌다."""
     if not pack or not pack.get("dir"):
         return []
-    skip = set(manual_beats or ()) | set(pack.get("mute_beats") or ())      # 끈 칸은 사람이 고른 칸처럼 건너뛴다
+    skip = set(manual_beats or ())
+    mute = set(pack.get("mute_beats") or ())      # 끈 칸 — plan_events 가 그 칸 팩 소리를 전부(첫 칸이면 오프너도) 뺀다
     level_mul = 10 ** (LEVEL_DB.get(pack.get("level") or "normal", 0.0) / 20.0)
     density = pack.get("density") or "normal"
     if pack_edit:
-        flat = [e for evs in plan_per_beat(timeline, skip, density, first_beats, pack_edit).values() for e in evs]
+        flat = [e for evs in plan_per_beat(timeline, skip, density, first_beats, pack_edit, mute_beats=mute).values() for e in evs]
         flat.sort(key=lambda e: e[1])
     else:
-        flat = plan_events(timeline, skip, density=density, first_beats=first_beats)     # 고름 없으면 종전 그대로(칸 밖 소리도 유지)
+        flat = plan_events(timeline, skip, density=density, first_beats=first_beats, mute_beats=mute)     # 고름 없으면 종전 그대로(칸 밖 소리도 유지)
     out = []
     for e in flat:
         slot, t = e[0], e[1]
@@ -521,7 +524,9 @@ def preview_lines(lines, pack, first_lines=()):
     no = nos.index(pack["name"]) + 1
     tl = preview_timeline(lines)
     edits = {i: (ln or {}).get("pack_edit") for i, ln in enumerate(lines or []) if (ln or {}).get("pack_edit")}
-    per = plan_per_beat(tl, (), pack.get("density") or "normal", first_lines, edits, keep_off=True)
+    # 끈 줄(pack.mute_beats = deco.sfx_mute_beats, 2단계에선 줄 번호)은 렌더(events)와 같이 건너뛴다 → 빈 칩
+    per = plan_per_beat(tl, (), pack.get("density") or "normal", first_lines, edits, keep_off=True,
+                        mute_beats=pack.get("mute_beats") or ())
     for owner, evs in per.items():
         cnt = {}
         for slot, t, _, mark in evs:
@@ -539,10 +544,16 @@ def preview_lines(lines, pack, first_lines=()):
     return out
 
 
-def preview_pack(store, customer_id, roles, job=None, style_id=None):
+def preview_pack(store, customer_id, roles, job=None, style_id=None, deco=None):
     """2단계용 팩 결정 — resolve 를 **그대로** 부른다. 3단계 job 이 있으면 그 job(꾸미기 선택 포함),
-    없으면 작업 state 의 틀 번호(script_style_id)·줄 역할로 job 모양을 만들어 넘긴다(썰 판정도 resolve 몫)."""
+    없으면 작업 state 의 틀 번호(script_style_id)·줄 역할로 job 모양을 만들어 넘긴다(썰 판정도 resolve 몫).
+    deco: 2단계 보드가 들고 있는 효과음 스위치({"sfx_pack": "auto"/"off", "sfx_mute_beats": [줄 번호]}) —
+      확정 때 3단계 job deco 에 같은 키로 들어가는 값이다. job deco 위에 덮어 resolve 가 판단(판단 두 벌 금지)."""
     j = dict(job) if isinstance(job, dict) else {}
+    if isinstance(deco, dict):
+        _d = {k: deco[k] for k in ("sfx_pack", "sfx_mute_beats") if deco.get(k) not in (None, "")}
+        if _d:
+            j["deco"] = {**(j.get("deco") or {}), **_d}
     j["customer_id"] = int(customer_id or 0)
     if style_id is not None and not (j.get("script_structure") or {}).get("script_style_id"):
         j["script_structure"] = dict(j.get("script_structure") or {}, script_style_id=style_id)

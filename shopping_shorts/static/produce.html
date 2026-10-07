@@ -2874,7 +2874,7 @@
       <div id="s2Root" class="mode-side">
 
         <!-- ① 재료 — 씨앗 한 편이 제품 소재의 기준이고, 추가 영상은 같은 제품군만 보탠다. -->
-        <div class="s2-band">
+        <div class="s2-band" id="s2SeedBand">
           <div class="s2-label" id="s2SeedLabel">① 재료 — 씨앗 제품과 맞는 영상을 씁니다</div>
           <div class="hint" style="margin:5px 0 10px;color:var(--mint)">
             대본 생성 시 씨앗 영상을 하나 고르세요. 대본의 소재를 확인할 때 사용됩니다.
@@ -7962,6 +7962,10 @@ function jump(o){
   // "자막제거" 칩 한 번 클릭으로 게이트가 통째로 우회됐다. 뒤로(완료 단계)는 자유 — 잠긴 단계는
   // 항상 미완 프런티어 위쪽이라 뒤는 애초에 안 잠긴다.
   if(stepLocked(p)){ toast(stepLockMsg()); return; }
+  // ★스토리보드 켠 계정: 1단계를 **앞으로** 떠날 때 씨앗 영상을 골랐는지 본다(2단계 씨앗 카드 줄을 숨겼으니 여기서 고르고 와야 한다).
+  //   판정은 seedPicked 하나(= seedNoAuto 표식 주인 _seedCode). 안 골랐으면 화면 안 안내창(seedGateShow)을 띄우고 멈춘다. 꺼진 계정 불변
+  if(typeof window !== 'undefined' && window.STORYBOARD_ON && cur === 0 && p !== 0 && typeof seedPicked === 'function' && !seedPicked()){
+    if(typeof seedGateShow === 'function') seedGateShow(); return; }
   // ★TTS(패널2)를 **앞으로** 떠날 때 "안 들어본 장면" 확인(2026-08-18).
   //   패널 안에 있던 [다음 단계(꾸미기)] 버튼을 중복이라 뺐는데(사장님), 그 경고가 거기
   //   onclick="vpGateNext()"에만 걸려 있었다 — 버튼만 지우면 검사가 통째로 사라진다.
@@ -11601,6 +11605,13 @@ async function startProduceMix(){
     //   job에 써 주지 않으면 다음 saveWork가 작업 상태에서 지우고 job엔 애초에 없어 **양쪽 다 사라진다**.
     //   장면꾸미기는 그 빈자리를 첫 TTS 문장으로 메워 제목 자리에 대사가 박혔다.
     try{ if(STATE.headcopy && STATE.headcopy.text && typeof saveHeadcopy==='function') saveHeadcopy(); }catch(e){}
+    // ★2단계 효과음 스위치(전체 sfx_pack·줄 sfx_mute_beats)를 새 job deco 에 — 3단계 스위치와 같은 /api/produce/mix/settings
+    if(STATE.script_sfx_deco && d.job_id){
+      fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(Object.assign({job_id:d.job_id}, STATE.script_sfx_deco))})
+        .then(r=>r.json()).then(x=>{ if(!(x&&x.ok)) console.warn('[sfx] 2단계 효과음 설정 넘기기 실패', x); })
+        .catch(e=>console.warn('[sfx] 2단계 효과음 설정 넘기기 실패', e));
+    }
     // 이 job이 실제로 쓴 대본 — 2단계 확정본과 대조용.
     // ★try 필수: 이 함수만 잘라 도는 테스트 하네스는 'use strict'라 선언부(위쪽 let)가
     //   슬라이스 밖이면 미선언 대입이 ReferenceError로 죽고, 함수가 통째로 중단된다
@@ -18088,6 +18099,26 @@ function seedSync(){
   }
   return changed;
 }
+// 씨앗 영상을 골랐나 — 스토리보드 켠 계정의 1→2단계 확인(jump)이 쓰는 판정 하나.
+//   씨앗 = _seedCode()(1단계 ⭐지정 bbMain → 2단계 고른 것 → 서버 자동 AI PICK, 담은 영상 중에서). seedNoAuto 표식과 같은 주인이다.
+// 1→2단계 확인용 — **사람이 직접 고른 것만**(10-07 사장님): 1단계 카드에서 AI PICK 으로 지정(bbMain)했거나 '직접 쓰기'로 대본을 넣었을 때.
+//   서버 자동 선정(_aiPick)만 있는 상태는 '안 고름'으로 친다(_seedCode 는 실제 씨앗 판정이라 자동 선정도 쓴다 — 여기서만 좁힌다).
+function seedPicked(){ try{
+  if((HANDOFF||[]).some(h=>h && h.bbMain && h.useFootage && h.shortcode)) return true;
+  return !!(typeof S2!=='undefined' && S2 && S2.seed && !S2.seed.shortcode && String(S2.seed.text||'').trim());
+}catch(e){ console.warn('[seed] 판정 실패', e); return false; } }
+// 씨앗 안내창 — 브라우저 alert 대신 화면 안 모달. 이 자리(#seedGateModal)를 그리는 건 이 함수 하나
+function seedGateShow(close){
+  let m=document.getElementById('seedGateModal');
+  if(close){ if(m) m.remove(); return; }
+  if(!m){ m=document.createElement('div'); m.id='seedGateModal'; document.body.appendChild(m); }
+  m.setAttribute('style','position:fixed;inset:0;z-index:99999;background:#0009;display:flex;align-items:center;justify-content:center;padding:16px');
+  m.innerHTML=`<div role="dialog" aria-modal="true" style="background:#141c2e;color:#eef;border:1px solid #3a4d7a;border-radius:14px;max-width:380px;width:100%;padding:20px 18px;text-align:center;box-shadow:0 10px 40px #000a">
+    <div style="font-size:30px">🌱</div><div style="font-size:17px;font-weight:900;margin:6px 0">씨앗 영상을 먼저 골라 주세요</div>
+    <div style="font-size:13.5px;opacity:.85;line-height:1.5">담은 영상 카드 중 대본의 뼈대가 될 영상 하나를 눌러 🌱 씨앗으로 고른 뒤 다음 단계로 넘어가요.</div>
+    <button class="btn-next" style="margin-top:14px;min-width:140px" onclick="seedGateShow(true)">확인</button></div>`;
+  m.onclick=e=>{ if(e.target===m) seedGateShow(true); };
+}
 // ★원문은 alert이 아니라 **카드 아래로 접었다 편다**(2026-08-26 사장님 "원문누르면
 //   아래로 접었다 폈다고 넣어줘"). alert은 4000자에서 잘리고 복사도 안 되고 화면을 막는다.
 function s2ShowSeedText(i){
@@ -19091,6 +19122,9 @@ function s2ApplyDraftContract(target, dr){
   // ★스토리보드(관제 120): 스토리보드로 만든 안만 칸·문장·장면을 싣는다. 다른 안으로 확정하면 지운다(옛 스토리보드가 따라가지 않게) — 이 한 곳에서만
   if(dr && Array.isArray(dr.storyboard) && dr.storyboard.length) target.script_storyboard=dr.storyboard;
   else delete target.script_storyboard;
+  // 2단계 효과음 스위치(sbConfirm) — 새 job 이 생기는 순간(mix 시작) 3단계 스위치와 같은 저장 API 로 넣는다
+  if(dr && dr.sfx_deco && (dr.sfx_deco.sfx_pack || (dr.sfx_deco.sfx_mute_beats||[]).length)) target.script_sfx_deco=dr.sfx_deco;
+  else delete target.script_sfx_deco;
   return c;
 }
 function s2Confirm(i){
@@ -19282,13 +19316,16 @@ function sbFamCard(f){
   const names=f.names||[k];
   const nm=names.length>1?sbE(names[0])+` <span class="sb-note">외 ${names.length-1}</span>`:sbE(names[0]);
   const first=(f.first||[]).slice(0,2).map(t=>`<div class="sb-fq">“${sbHl(t)}”</div>`).join('');
-  const st=SB.openf[k]?`<div class="sb-fstruct">${(f.roles||[]).map((r,i)=>`<div><b>${i+1}. ${sbE(sbKo(r))}</b> ${sbE(((f.chain||[])[i]||'').slice(0,60))}</div>`).join('')}${names.length>1?`<div class="sb-note">같은 구조 첫 줄 틀: ${sbE(names.join(' · '))}</div>`:''}</div>`:'';
+  const st=`<div class="sb-fstruct">${(f.roles||[]).map((r,i)=>`<div><b>${i+1}. ${sbE(sbKo(r))}</b> ${sbE(((f.chain||[])[i]||'').slice(0,60))}</div>`).join('')}${names.length>1?`<div class="sb-note">같은 구조 첫 줄 틀: ${sbE(names.join(' · '))}</div>`:''}</div>`;
   return `<div class="sb-fcard ${on?'on':''} ${sc?'isrec':''}" onclick="sbTpick('${sbA(k)}')">${sc?`<div class="sb-recb">⭐ 추천${sc.filled!=null?' · 재료 '+sbE(sc.filled)+'/'+sbE(sc.total)+'칸':''}</div>`:''}<div class="sb-fh"><span class="sb-pf ${f.yt?'yt':'ig'}">${f.yt?'유튜브':'인스타'}</span> <b>${nm}</b>${on?'<span class="sb-ck">✓</span>':''}</div>
-    <div class="sb-fit">${(f.fit||[]).slice(0,4).map(c=>`<span>${sbE(c)}</span>`).join('')}</div>${sbFitWarn(f)}
-    <div class="sb-note">${f.yt?'📌 제목 후킹':'🎣 첫 후킹'}</div>${first}
-    <span class="sb-more" onclick="event.stopPropagation();SB.openf['${sbA(k)}']=!SB.openf['${sbA(k)}'];sbRender()">${SB.openf[k]?'▲ 접기':'▼ 구조·스토리라인 보기'}</span>${st}
+    <span class="sb-more" onclick="event.stopPropagation();SB.openf['${sbA(k)}']=!SB.openf['${sbA(k)}'];sbRender()">${SB.openf[k]?'▾ 접기':'▸ 자세히'}</span>
+    ${SB.openf[k]?`<div class="sb-fit">${(f.fit||[]).slice(0,4).map(c=>`<span>${sbE(c)}</span>`).join('')}</div>${sbFitWarn(f)}
+    <div class="sb-note">${f.yt?'📌 제목 후킹':'🎣 첫 후킹'}</div>${first}${st}`:''}
     ${sbTaskBadge(k)}</div>`;
 }
+// '다른 스타일 더 보기' 펼침 기억 — 이 브라우저에만(편의 기억). 저장이 막힌 창이면 매번 접힌 채로 시작
+function sbRestOpen(){ if(SB.restOpen==null){ try{ SB.restOpen=localStorage.getItem('sbRestOpen')==='1'; }catch(e){ SB.restOpen=false; } } return SB.restOpen; }
+function sbRestToggle(){ SB.restOpen=!sbRestOpen(); try{ localStorage.setItem('sbRestOpen', SB.restOpen?'1':'0'); }catch(e){ console.warn('[sb] 펼침 기억 실패', e); } sbRender(); }
 function sbTabName(k){ const F=(SB.data&&SB.data.families)||[]; const [base,...ex]=String(k).split('+');
   const nm=base==='auto'?'AI 자동':base==='mine'?'✍ 내가 직접 쓴 대본':(((F.find(f=>String(f.id)===base)||{names:[base]}).names||[base])[0]);
   return sbE(nm)+(ex.length?' <span class="sb-addb" style="margin:0">＋'+sbE(ex.join('+').split('·')[0].split('+').map(sbKo).join('·'))+'</span>':''); }
@@ -19299,11 +19336,13 @@ function sbBake(ek, bd){   // 손으로 고친 문장·장면 순서를 칸에 �
   bd.slots.forEach((sl,i)=>{ sl.ids=sbOrdOf(ek,i,sl).slice(); sl.line=sbLine(ek,i,sl); });
   [SB.ord, SB.cand].forEach(M=>Object.keys(M).filter(o=>o.startsWith(ek+'#')).forEach(o=>delete M[o])); delete SB.edit[ek]; }
 function sbEditLine(i, el){ const ek=SB.view; (SB.edit[ek]=SB.edit[ek]||{})[i]=el.innerText; _sbSaveSoon(); }
+// 문장을 다 고치고 칸을 떠날 때 초를 다시 잰다(치는 도중 다시 그리면 커서가 날아가서 blur 에서)
+function sbEditDone(){ const [ek,bd]=sbCur(); if(bd) sbPicksSync(ek,bd); }
 function sbRowMove(i, d){ const [ek,bd]=sbCur(); const t=i+d; if(!bd||t<0||t>=bd.slots.length) return; sbBake(ek,bd);
-  [bd.slots[i],bd.slots[t]]=[bd.slots[t],bd.slots[i]]; if(bd.check) [bd.check[i],bd.check[t]]=[bd.check[t],bd.check[i]]; sbRender(); }
-function sbRowDel(i){ const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd); bd.slots.splice(i,1); if(bd.check) bd.check.splice(i,1); sbRender(); }
+  [bd.slots[i],bd.slots[t]]=[bd.slots[t],bd.slots[i]]; if(bd.check) [bd.check[i],bd.check[t]]=[bd.check[t],bd.check[i]]; sbPicksSync(ek,bd); }
+function sbRowDel(i){ const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd); bd.slots.splice(i,1); if(bd.check) bd.check.splice(i,1); sbPicksSync(ek,bd); }
 function sbRowAdd(i){ const [ek,bd]=sbCur(); if(!bd) return; sbBake(ek,bd); bd.slots.splice(i+1,0,{slot:'free',need:'새 칸',line:'',ids:[],added:true});
-  if(bd.check) bd.check.splice(i+1,0,{have:0,need:0}); sbRender(); }
+  if(bd.check) bd.check.splice(i+1,0,{have:0,need:0}); sbPicksSync(ek,bd); }
 function sbRowCta(i){ const [ek,bd]=sbCur(); if(!bd) return; const on=!bd.slots[i].cta_mark; bd.slots.forEach((s,k)=>s.cta_mark=on&&k===i); sbRender(); }
 function sbRowActs(i, n, sl){
   return `<div class="sb-racts"><button class="sb-rb ${sl.cta_mark?'on':''}" title="이 줄이 CTA — 다시 누르면 해제" onclick="sbRowCta(${i})">📢 CTA</button>
@@ -19325,7 +19364,14 @@ function sbMemeCell(i, sl){
   if(typeof SfxBank!=='undefined'){
     h+=SfxBank.cell({id:sl.sfx_off?null:sl.sfx_pick, cat:sl.sfx_cat, auto:sl.sfx_auto, off:sl.sfx_off,
       change:`sbSfxOpen(${i})`, remove:`sbSfxSet(${i},null)`, add:`sbSfxOpen(${i})`, onReady:()=>{ try{ sbRender(); }catch(e){ console.warn('[sfx] 다시 그리기 실패', e); } }});
+    // 들어가나(sl.sfx_live)는 서버(_sb_picks — 렌더 입구 _resolve_sfx_paths 와 같은 조건)가 정한다. 여기선 그리기만
+    if(sl.sfx_pick && !sl.sfx_off && !sl.sfx_mute && sl.sfx_live===false)
+      h+=`<div class="sb-packsfx" style="opacity:.7">ℹ 3단계 효과음이 꺼져 있어 이 효과음은 안 들어가요(켜면 들어감)</div>`;
   }
+  // 줄 효과음 스위치 — 이 줄의 줄 효과음 + 기본 효과음 칩 전체. 저장은 확정 때 3단계 칸 🔇(deco.sfx_mute_beats)와 같은 값
+  h+= sl.sfx_mute
+    ? `<div class="sb-packsfx" style="opacity:.7">🔇 이 줄 효과음 끔 <button class="mp-btn" style="padding:2px 8px;font-size:12px;min-height:0" onclick="sbSfxMute(${i})">켜기</button></div>`
+    : `<div style="margin-top:2px"><button class="mp-btn" style="padding:2px 8px;font-size:11px;min-height:0" title="이 줄의 효과음(줄 효과음·기본 효과음)을 모두 끕니다" onclick="sbSfxMute(${i})">🔇 이 줄 효과음 끄기</button></div>`;
   // 기본 효과음팩 칩 — 어떤 소리·어디쯤은 서버(sfx_pack.preview_lines = 렌더와 같은 plan_events+apply_pack_edit)가 정해 sl.pack_sfx 로 싣는다.
   //   여기선 그리기만 — ✕(빼기)·바꾸기·되돌리기는 sl.pack_edit 표식만 고치고 서버(/picks)가 다시 계산한다(화면이 판단 안 함).
   if(Array.isArray(sl.pack_sfx)){
@@ -19335,7 +19381,7 @@ function sbMemeCell(i, sl){
         +(off?`<button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="다시 넣기" onclick="sbPackEdit(${i},${k},'undo')">되돌리기</button>`
              :`<button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="다른 소리로 바꾸기" onclick="sbPackSwapOpen(${i},${k})">바꾸기</button><button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="이 소리 빼기" onclick="sbPackEdit(${i},${k},'off')">✕</button>${x.from?`<button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="원래 소리로" onclick="sbPackEdit(${i},${k},'undo')">되돌리기</button>`:''}`)
         +`</span>`; };
-    h+= sl.pack_sfx.length
+    h+= (sl.pack_sfx.length && !sl.sfx_mute)
       ? `<div class="sb-packsfx" title="자동으로 깔리는 기본 효과음 — 대략 위치(3단계에서 실제 목소리 길이로 다시 맞춥니다)">🔊 ${sl.pack_sfx.map(chip).join(' · ')} <small style="opacity:.6">대략 위치</small><div id="sbPackSwap${i}"></div></div>`
       : (i===0 && (sbCur()[1]||{}).pack_sfx_on===false ? `<div class="sb-packsfx" style="opacity:.6">🔇 기본 효과음 없음</div>` : '');
   }
@@ -19349,6 +19395,15 @@ function sbMemeSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; 
   if(id==='auto') delete sl.meme_pick; else if(id) sl.meme_pick=Number(id); else { delete sl.meme_pick; sl.meme_off=1; }
   if(sl.sfx_auto){ delete sl.sfx_pick; delete sl.sfx_auto; }
   sbPicksSync(ek,bd); }
+// 2단계 효과음 스위치 — 보드가 들고 있다가 확정 때 3단계 job deco(sfx_pack·sfx_mute_beats)로 넘긴다(sbConfirm → mix 시작).
+//   켜짐·꺼짐 판단은 서버(sfx_pack.resolve)만 — 여기선 값만 바꾸고 /picks 로 다시 계산받는다.
+function sbSfxAll(on){ const [ek,bd]=sbCur(); if(!bd) return; bd.sfx_sw=on?'auto':'off'; sbPicksSync(ek,bd); }
+function sbSfxMute(i){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
+  if(sl.sfx_mute) delete sl.sfx_mute; else sl.sfx_mute=1; sbPicksSync(ek,bd); }
+function sbSfxMuteIdx(slots){ const a=[]; (slots||[]).forEach((x,k)=>{ if(x&&x.sfx_mute) a.push(k); }); return a; }
+function sbSfxBar(bd){ const off=(bd.sfx_sw==='off') || (bd.sfx_sw==null && bd.pack_sfx_on===false);
+  return `<div class="sb-note" style="margin:4px 0">${off?'🔇 효과음 꺼짐 — 완성본에 효과음(줄 효과음·기본 효과음)이 안 들어가요':'🔊 효과음 켜짐'}
+    <button class="mp-btn" style="padding:2px 10px;font-size:12px;min-height:0" onclick="sbSfxAll(${off?'true':'false'})">${off?'효과음 켜기':'효과음 끄기'}</button></div>`; }
 function sbSfxOpen(i){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
   SfxBank.openDrawer({title:(i+1)+'번 줄 효과음 고르기', cat:sl.sfx_cat||'', cur:sl.sfx_pick, onPick:id=>sbSfxSet(i,id)}); }
 function sbSfxSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
@@ -19382,11 +19437,14 @@ async function sbPicksSync(ek, bd){
   sbRender();
   try{
     const r=await (await fetch('/api/produce/storyboard/'+encodeURIComponent(SB.jid||'')+'/picks',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({slots:bd.slots.map(x=>({line:x.line, slot:x.slot, meme_emotion:x.meme_emotion, meme_pick:x.meme_pick, meme_auto:x.meme_auto, meme_off:x.meme_off,
-        sfx_pick:x.sfx_pick, sfx_auto:x.sfx_auto, sfx_off:x.sfx_off, pack_edit:x.pack_edit}))})})).json();
+      // line·ids 는 화면에서 고친 지금 값(sbLine·sbOrdOf) — 서버가 그걸로 짤·효과음과 '문장·장면 초'(storyboard.slot_checks)를 다시 잰다
+      body:JSON.stringify({slots:bd.slots.map((x,k)=>({line:sbLine(ek,k,x), ids:sbOrdOf(ek,k,x).slice(), slot:x.slot, meme_emotion:x.meme_emotion, meme_pick:x.meme_pick, meme_auto:x.meme_auto, meme_off:x.meme_off,
+        sfx_pick:x.sfx_pick, sfx_auto:x.sfx_auto, sfx_off:x.sfx_off, pack_edit:x.pack_edit})),
+        sfx_pack:bd.sfx_sw||undefined, sfx_mute_beats:sbSfxMuteIdx(bd.slots)})})).json();
     if(r&&r.ok&&Array.isArray(r.slots)&&r.slots.length===bd.slots.length){
-      const K=['meme_pick','meme_auto','meme_off','sfx_pick','sfx_auto','sfx_off','sfx_cat','pack_sfx','pack_edit'];
+      const K=['meme_pick','meme_auto','meme_off','sfx_pick','sfx_auto','sfx_off','sfx_cat','pack_sfx','pack_edit','sfx_live'];
       if(r.pack_sfx_on!=null) bd.pack_sfx_on=!!r.pack_sfx_on;
+      if(Array.isArray(r.check) && r.check.length===bd.slots.length) bd.check=r.check;   // 문장·장면 초는 서버 값만 쓴다
       r.slots.forEach((x,k)=>{ K.forEach(f=>{ if(x[f]==null) delete bd.slots[k][f]; else bd.slots[k][f]=x[f]; }); });
     } else toast((r&&r.error)||'짤·효과음 다시 고르기 실패');
   }catch(e){ toast('짤·효과음 다시 고르기 실패(네트워크)'); }
@@ -19397,8 +19455,9 @@ function sbMine(){   // ✍ 내가 직접 쓰기 — 지금 보고 있는 안의
                    slots:roles.map(r=>({slot:r,need:'',line:'',ids:[]})), check:roles.map(()=>({have:0,need:0}))};
   Object.keys(SB.ord).filter(o=>o.startsWith('mine#')).forEach(o=>delete SB.ord[o]); delete SB.edit['mine'];
   SB.view='mine'; sbRender(); }
-function sbMv(ek, i, j, d){ const a=SB.ord[ek+'#'+i]; const t=j+d; if(!a||t<0||t>=a.length) return; [a[j],a[t]]=[a[t],a[j]]; sbRender(); }
-function sbRmCard(ek, i, j){ const a=SB.ord[ek+'#'+i]; if(a){ a.splice(j,1); sbRender(); } }
+function sbMv(ek, i, j, d){ const a=SB.ord[ek+'#'+i]; const t=j+d; if(!a||t<0||t>=a.length) return; [a[j],a[t]]=[a[t],a[j]]; SB.play=null; sbResync(ek); }
+function sbRmCard(ek, i, j){ const a=SB.ord[ek+'#'+i]; if(a){ a.splice(j,1); SB.play=null; sbResync(ek); } }
+function sbResync(ek){ const bd=SB.made[ek]; if(bd && bd.slots) sbPicksSync(ek,bd); else sbRender(); }   // 카드 넣기·빼기·순서 → 초 다시 재기
 function sbLeftRow(bd){ const L=bd.role_left||[]; if(!L.length) return '';
   return `<div class="sb-row"><div class="sb-rl"><div class="sb-rn">－</div><div><b>못 넣은 장면</b><div class="sb-rneed">1단계에서 담았지만 이 대본엔 안 들어갔어요</div></div></div>
     <div><div class="sb-why">${L.map(x=>`「${sbE(x.box)}」 ${sbE(x.why)}`).join(' · ')}</div></div>
@@ -19406,8 +19465,14 @@ function sbLeftRow(bd){ const L=bd.role_left||[]; if(!L.length) return '';
 function sbCellCards(ek, i, sl, ck){
   const ids=sbOrdOf(ek,i,sl); const picked=new Set(sl.picked||[]); let acc=0; const need=Number(ck.need||0);
   return ids.map((id,j)=>{ const p=sbPieces()[id]; const sec=p?Number(p.sec):0; const show=acc*1.2<need-0.05; acc+=sec;
-    return `<div class="sb-cc ${show?'':'off'}">${sbTh(id,60)}<div class="sb-ccb">${picked.has(id)?'<span class="sb-pk">고른 장면</span>':'<span class="sb-aik">AI</span>'}
+    const pl=SB.play&&SB.play.ek===ek&&SB.play.i===i&&SB.play.j===j;
+    return `<div class="sb-cc ${show?'':'off'}"><div class="sb-ccv" onclick="sbPlay('${sbA(ek)}',${i},${j})" title="${pl?'누르면 멈춤':'누르면 이 장면 재생(소리 없음)'}">${pl?sbClipV(id,120):sbTh(id,120)}</div><div class="sb-ccb">${picked.has(id)?'<span class="sb-pk">고른 장면</span>':'<span class="sb-aik">AI</span>'}
       <span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},-1)">◀</span><span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},1)">▶</span><span class="sb-mv" title="이 칸에서 빼기" onclick="sbRmCard('${sbA(ek)}',${i},${j})">✕</span></div>${show?'':'<div class="sb-offt">안 나옴</div>'}</div>`; }).join(''); }
+// 장면 카드 미리보기 — 누른 카드 하나만 그 조각 구간 영상(/storyboard/clip, 서버가 구간만 잘라 줌)을 소리 없이 반복
+function sbPlay(ek, i, j){ const p=SB.play; SB.play=(p&&p.ek===ek&&p.i===i&&p.j===j)?null:{ek,i,j}; sbRender(); }
+function sbClipV(id, w){ const p=sbPieces()[id]; if(!p) return '';
+  const u='/api/produce/storyboard/clip/'+encodeURIComponent(String(SB.jid).replace(/^w:/,'w-'))+'/'+encodeURIComponent(id);
+  return `<div class="sb-th" style="width:${w}px"><video src="${sbE(u)}" muted autoplay loop playsinline preload="auto" poster="${sbE(p.th)}" style="width:100%;display:block;aspect-ratio:9/16;object-fit:cover"></video><span class="sb-sec">▶ ${sbE(p.sec)}초</span></div>`; }
 function sbUsedAll(ek, bd){ const s=new Set(); bd.slots.forEach((sl,i)=>sbOrdOf(ek,i,sl).forEach(id=>s.add(id))); return s; }
 function sbCandOf(ek, i, sl, bd){
   const used=sbUsedAll(ek,bd); const mine=new Set(sbOrdOf(ek,i,sl)); const a=[];
@@ -19419,7 +19484,7 @@ function sbCandOf(ek, i, sl, bd){
   return a.slice(0,12); }
 function sbCandBox(ek, i, sl, bd){ const cs=sbCandOf(ek,i,sl,bd); if(!cs.length) return ''; const k=ek+'#'+i, open=SB.cand[k];
   return `<div class="sb-cand"><span class="sb-more" onclick="SB.cand['${sbA(k)}']=!SB.cand['${sbA(k)}'];sbRender()">${open?'▲ 후보 접기':'＋ 관련 후보 '+cs.length+'개 보기'}</span>${open?`<div class="sb-cth">${cs.map(id=>`<div class="sb-cc sb-cand1" onclick="sbAddCand('${sbA(ek)}',${i},'${sbA(id)}')" title="누르면 이 칸 뒤에 넣어요">${sbTh(id,52)}<div class="sb-ccb"><span class="sb-ck2">＋ 넣기</span></div></div>`).join('')}</div>`:''}</div>`; }
-function sbAddCand(ek, i, id){ const bd=SB.made[ek]; if(!bd) return; sbOrdOf(ek,i,bd.slots[i]).push(id); sbRender(); }
+function sbAddCand(ek, i, id){ const bd=SB.made[ek]; if(!bd) return; sbOrdOf(ek,i,bd.slots[i]).push(id); sbResync(ek); }
 function sbXset(ek){ return SB.xtra[ek]=SB.xtra[ek]||new Set(); }
 function sbTxtra(ek, r){ const s=sbXset(ek); s.has(r)?s.delete(r):s.add(r); sbRender(); }
 function sbXBusy(ek){ return Object.entries(SB.pend).some(([nk,from])=>from===ek && (sbTask('insert:'+nk)||{state:'run'}).state==='run'); }
@@ -19444,13 +19509,17 @@ async function sbInsert(){
 function sbConfirm(){
   const [ek,bd]=sbCur(); if(!bd){ toast('먼저 스토리보드를 만들어 주세요'); return; }
   const cur=sbCurBoard(ek,bd);
-  const rows=cur.slots.map(sl=>({slot:String(sl.slot||''), line:String(sl.line||'').trim(), ids:(sl.ids||[]).filter(Boolean), cta:sl.cta_mark, sig_rank:sl.sig_rank, signal:sl.signal,
+  const rows=cur.slots.map(sl=>({slot:String(sl.slot||''), line:String(sl.line||'').trim(), ids:(sl.ids||[]).filter(Boolean), cta:sl.cta_mark, sig_rank:sl.sig_rank, signal:sl.signal, sfx_mute:sl.sfx_mute,
     picks:{meme_pick:sl.meme_pick, meme_auto:sl.meme_auto, meme_off:sl.meme_off, sfx_pick:sl.sfx_pick, sfx_auto:sl.sfx_auto, sfx_off:sl.sfx_off, pack_edit:sl.pack_edit}})).filter(x=>x.line);
   if(!rows.length){ toast('대본이 비어 있습니다'); return; }
   const decided=cur.slots.some(sl=>sl.cta_mark===true);
   const beats=rows.map(x=>{ const b={role:x.slot, text:x.line, src_seg:x.ids[0]||'', src_segs:x.ids.slice()}; if(decided) b.cta_mark=(x.cta===true); return b; });
   // 신호어 자리 번호(sig_rank·signal)도 싣는다 — 3단계 짤 자리 판정(storyboard.meme_slots, 관제 139)
   const dr={script:rows.map(x=>x.line).join('\n'), hook:rows[0].line, beats, style_id:null,
+            // 효과음 스위치 → 3단계 job deco 와 같은 키. 줄 번호 = 글 있는 줄(rows) 번호 = 3단계 칸 번호:
+            //   확정 길(story_writer storyboard 줄 → edit_plan beats)이 빈 줄을 빼고 1줄=1칸, beat_idx=len(beats) 로 순서대로 단다.
+            //   예외: 그 줄 장면을 하나도 못 찾으면 edit_plan 이 칸을 건너뛰어 뒤 번호가 당겨진다(드묾 — 그때는 3단계 칸 🔇로 바로잡음).
+            sfx_deco:Object.assign({sfx_mute_beats:rows.map((x,k)=>x.sfx_mute?k:-1).filter(k=>k>=0)}, bd.sfx_sw?{sfx_pack:bd.sfx_sw}:{}),
             storyboard:rows.map(x=>Object.assign({slot:x.slot, line:x.line, ids:x.ids}, x.sig_rank?{sig_rank:x.sig_rank, signal:x.signal||''}:{}, window.MEME_ON?Object.fromEntries(Object.entries(x.picks).filter(([k,v])=>v)):{})), from_storyboard:sbTabName(ek).replace(/<[^>]+>/g,'')};
   S2.drafts=(S2.drafts||[]).filter(d=>!(d&&d.storyboard)).concat([dr]);   // 다시 확정하면 옛 스토리보드 안은 바꿔 끼운다
   const idx=S2.drafts.length-1; S2.curDraft=idx;
@@ -19461,8 +19530,10 @@ function sbPage2(){
   const F=(SB.data&&SB.data.families)||[];
   const recIds=new Set((((SB.data||{}).state||{}).styles||[]).map(s=>String(s.family)));
   const auto=`<div class="sb-fcard auto ${SB.pick.has('auto')?'on':''}" onclick="sbTpick('auto')"><div class="sb-recb ai">⭐ 추천 · 자유 창작</div><div class="sb-fh"><span class="sb-pf ai">AI 자동</span> <b>이 재료에 맞게 자유롭게</b>${SB.pick.has('auto')?'<span class="sb-ck">✓</span>':''}</div>
-    <div class="sb-note">스타일은 참고만 — 우리 S급 히트 대본·승인 부품 말맛으로 창의적으로</div>${sbTaskBadge('auto')}</div>`;
+    <span class="sb-more" onclick="event.stopPropagation();SB.openf.auto=!SB.openf.auto;sbRender()">${SB.openf.auto?'▾ 접기':'▸ 자세히'}</span>
+    ${SB.openf.auto?'<div class="sb-note">스타일은 참고만 — 우리 S급 히트 대본·승인 부품 말맛으로 창의적으로</div>':''}${sbTaskBadge('auto')}</div>`;
   const rec=F.filter(f=>recIds.has(String(f.id))), rest=F.filter(f=>!recIds.has(String(f.id)));
+  const restOpen=sbRestOpen();   // 추천(⭐·AI 자동)만 위에 펼치고 나머지는 접어 둔다 — 접은 동안에도 고른 카드는 보인다
   const n=SB.pick.size, busy=[...SB.pick].some(sbBusy);
   const tabs=Object.keys(SB.made).map(k=>`<button class="sb-btn ${SB.view===k?'on':''}" onclick="SB.view='${sbA(k)}';sbRender()">${sbTabName(k)}</button>`).join(' ');
   const pend=Object.keys(SB.pend).map(k=>{ const t=sbTask('insert:'+k); return t&&t.state==='error'?`<span class="sb-err">✖ 끼워 넣기 실패 — ${sbE(t.error||'')}</span>`:`<span class="sb-busy">⏳ ${sbTabName(k)} 끼워 넣는 중…</span>`; }).join(' ');
@@ -19476,12 +19547,12 @@ function sbPage2(){
         <div class="sb-rl"><div class="sb-rn">${i+1}</div><div><b>${sbE(sbKo(sl.slot))}${hs?' 🎯':''}</b><div class="sb-rneed">${sbE(sl.need||'')}</div>
           ${added?'<div class="sb-addb">＋ 끼워 넣은 칸</div>':''}${sl.cta_mark?'<div class="sb-addb" style="background:#ff6fb1">📢 CTA 줄</div>':''}
           <div class="sb-rsec ${ck.short?'bad':''}">문장 ${sbE(ck.need||0)}초 · 장면 ${sbE(ck.have||0)}초</div></div></div>
-        <div><div class="sb-line" contenteditable="true" data-ph="${sbE(sbKo(sl.slot))} — 여기에 쓰세요" oninput="sbEditLine(${i},this)">${sbE(sbLine(ek,i,sl))}</div>
+        <div><div class="sb-line" contenteditable="true" data-ph="${sbE(sbKo(sl.slot))} — 여기에 쓰세요" oninput="sbEditLine(${i},this)" onblur="sbEditDone()">${sbE(sbLine(ek,i,sl))}</div>
           ${sl.weak?`<div class="sb-why">⚠ ${sbE(sl.weak)}</div>`:''}${fixedTxt}${(added&&sl.why_scene)?`<div class="sb-meta">🎬 장면 고른 이유: ${sbE(sl.why_scene)}</div>`:''}
           ${(i===0&&(bd.extra_missing||[]).length)?`<div class="sb-why">⚠ 끼워 넣기에서 빠진 칸: ${sbE(bd.extra_missing.map(sbKo).join(', '))}</div>`:''}
           ${sbRowActs(i,bd.slots.length,sl)}${sbMemeCell(i,sl)}</div>
         <div><div class="sb-cth">${sbCellCards(ek,i,sl,ck)}</div>${sbCandBox(ek,i,sl,bd)}</div></div>`; }).join('');
-    body=`<div class="sb-note" style="margin:6px 0">${sbE(bd.first_line_style||'')} · 🎯 = 위에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
+    body=`${window.MEME_ON?sbSfxBar(bd):''}<div class="sb-note" style="margin:6px 0">${sbE(bd.first_line_style||'')} · 🎯 = 위에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
       <div class="sb-rows">${cells}</div>${sbLeftRow(bd)}${sbXpick(ek,bd)}
       <div style="text-align:right;margin-top:10px"><button class="sb-btn main" onclick="sbConfirm()">이 대본으로 확정 → 3단계</button></div>`;
   }
@@ -19489,7 +19560,8 @@ function sbPage2(){
       <span style="margin-left:auto"></span>
       <button class="sb-btn" title="AI 없이 내 대본을 그대로 — 지금 보고 있는 안의 칸 구성을 따라가요" onclick="sbMine()">✍ 내가 직접 쓰기</button>
       <button class="sb-btn main" ${n&&!busy?'':'disabled'} onclick="sbMakeBoards()">${busy?'⏳ 만드는 중…':'선택한 '+n+'개로 스토리보드 만들기'}</button></div>
-    <div class="sb-fsec">대본 스타일 <span class="sb-note">같은 칸 구조는 한 카드로 합침(${F.length}개) · ⭐ 추천 = 이 재료로 칸이 잘 채워지는 스타일</span></div><div class="sb-fgrid">${auto}${rec.concat(rest).map(sbFamCard).join('')}</div>
+    <div class="sb-fsec">대본 스타일 <span class="sb-note">같은 칸 구조는 한 카드로 합침(${F.length}개) · ⭐ 추천 = 이 재료로 칸이 잘 채워지는 스타일</span></div><div class="sb-fgrid">${auto}${rec.map(sbFamCard).join('')}${restOpen?rest.map(sbFamCard).join(''):rest.filter(f=>SB.pick.has(String(f.id))).map(sbFamCard).join('')}</div>
+    ${rest.length?`<div style="text-align:center;margin-top:6px"><span class="sb-more" onclick="sbRestToggle()">${restOpen?'▴ 다른 스타일 접기':'▾ 다른 스타일 '+rest.length+'개 더 보기'}</span></div>`:''}
     ${(tabs||pend)?`<div class="sb-box" style="margin-top:12px"><div class="sb-bh">만든 스토리보드 ${tabs} ${pend}</div>${body}</div>`:''}`;
 }
 function sbRender(){
@@ -19499,6 +19571,8 @@ function sbRender(){
   const put=(box, html)=>{ if(!box) return; if(html===null){ box.innerHTML=''; box.style.display='none'; } else { box.style.display=''; box.innerHTML=html; } };
   // 옛 '② 대본 스타일' 줄 — 스토리보드 켠 계정에선 숨긴다(스토리보드 확정은 S2.picked 를 안 쓴다: sbConfirm style_id:null). 꺼진 계정은 그대로
   const band=document.getElementById('s2StyleBand'); if(band) band.style.display=window.STORYBOARD_ON?'none':'';
+  // ① 재료(씨앗 카드 줄 + 씨앗 대본 띠)도 켠 계정에선 숨긴다 — 씨앗은 1단계에서 고르고 온다(jump 의 씨앗 확인). 꺼진 계정은 그대로
+  const seedBand=document.getElementById('s2SeedBand'); if(seedBand) seedBand.style.display=window.STORYBOARD_ON?'none':'';
   if(!window.STORYBOARD_ON){ put(b1,null); put(b2,null); return; }   // 고객 화면 불변
   const y=window.scrollY;
   const head1=`<div class="s2-label" style="margin:14px 0 8px">🎬 스토리보드 재료 <span class="sb-note">(관리자 시험) 꼭 쓰고 싶은 장면을 상자에 담아 두면 2단계 스토리보드가 그 자리에 씁니다</span></div>`;
@@ -19516,6 +19590,8 @@ function sbRender(){
     put(b1, head1+sbPage1());
     put(b2, head2+(_sbStale()?'<div class="sb-box"><span class="sb-err">⚠ 재료(담은 영상·씨앗)가 바뀌었어요 — 아래 스토리보드는 예전 재료로 만든 것입니다. 새 재료로 쓰려면 스타일을 골라 다시 만들어 주세요</span></div>':'')+sbPage2());
   }
+  // innerHTML 로 넣은 <video muted autoplay> 는 크롬에서 muted 속성이 안 먹어 자동재생이 막힌다 — 속성을 직접 켜고 재생(장면 카드 미리보기)
+  if(b2) b2.querySelectorAll('.sb-ccv video').forEach(v=>{ v.muted=true; const pr=v.play(); if(pr) pr.catch(e=>console.warn('[sb] 장면 미리보기 재생 실패', e)); });
   if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y);   // 다시 그려도 보던 자리를 지킨다
   _sbSaveSoon();
 }

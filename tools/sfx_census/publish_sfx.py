@@ -30,6 +30,31 @@ PICKS = {
     "자막 나올때 포인트 소리.mp3": ("팝/띵", "끄덕_엄지"),
     "키보드 소리.mp3": ("팝/띵", ""),
     "화면전화소리.mp3": ("휙/전환", ""),
+    # 2026-10-07 사장님 '추가' 폴더(효과음 종합\추가) — 키보드 소리는 위와 같은 파일(md5 같음)이라 뺐다. 분류는 이름 기준
+    "../추가/002_휙(만화적).mp3": ("휙/전환", ""),
+    "../추가/087_카툰 스핀.mp3": ("휙/전환", ""),
+    "../추가/088_카툰 쌩쌩이 출발.mp3": ("휙/전환", ""),
+    "../추가/090_카툰 쌩쌩이.mp3": ("휙/전환", ""),
+    "../추가/013_air horn.mp4": ("박수/환호", "기쁨_환호"),
+    "../추가/017_으악내눈!.mp3": ("리액션 탄성", "공포_움찔,충격_입막"),
+    "../추가/030_뜨헉!.mp3": ("리액션 탄성", "충격_입막,놀람"),
+    "../추가/100_허얽!.mp3": ("리액션 탄성", "충격_입막,당황_멘붕"),
+    "../추가/091_카툰 웃음.mp3": ("웃음", "웃음"),
+    "../추가/106_뻐꾹뻐꾹.mp3": ("웃음", "의심_황당"),
+    "../추가/101_바운스1.mp3": ("놀람", ""),
+    "../추가/11 삑끼 (고무장난감 누르는).mp3": ("놀람", ""),
+    "../추가/111_놀람.발견.mp3": ("놀람", "놀람"),
+    "../추가/5 뽀옹 (폰문자전송).mp3": ("놀람", ""),
+    "../추가/082_띵.mp3": ("팝/띵", "끄덕_엄지"),
+    "../추가/4 띵 (아이디어).mp3": ("팝/띵", "끄덕_엄지"),
+    "../추가/092_카툰 팝.mp3": ("팝/띵", ""),
+    "../추가/15 찰칵 (카메라).mp3": ("팝/띵", ""),
+    "../추가/17 캐셔(돈).mp3": ("팝/띵", "기쁨_환호"),
+    "../추가/2 돈 (슈퍼마리오 코인먹).mp3": ("팝/띵", "기쁨_환호"),
+    "../추가/10 삐이이 (욕 가리는).mp3": ("실패", "분노_짜증"),
+    "../추가/21 퍽 -a약.mp3": ("실패", "분노_짜증"),
+    "../추가/8 삐삑 (오답 -짧은).mp3": ("실패", "거절_절레"),
+    "../추가/14 째깍째깍 (시계).mp3": ("긴장", ""),
 }
 
 SERVER = r'''
@@ -51,6 +76,7 @@ c.commit()
 for ref, r in want.items():
     if ref in have:
         c.execute("update scene_assets set category=?, tone=?, duration=? where id=?", (r["cat"], r["tone"], r["dur"], have[ref][0]))
+        c.commit()      # ★바로 닫는다 — 열어 둔 채 아래 Store 연결이 쓰면 'database is locked'(10-07 실측)
         continue
     st.add_scene_asset({"asset_type": "sfx", "render_mode": "sfx", "media_path": "%(dest)s/" + r["file"], "duration": r["dur"],
                         "title": r["title"], "category": r["cat"], "tone": r["tone"], "source_kind": "sfx_pick",
@@ -79,7 +105,7 @@ def main(dry):
             cut += ["-af", "afade=t=out:st=%.2f:d=0.15" % (MAX - 0.15)]
         subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", src] + cut + ["-ar", "44100", "-b:a", "192k", os.path.join(tmp, out)], check=True)
         rows.append({"ref": name, "file": out, "dur": round(_dur(os.path.join(tmp, out)), 3), "cat": cat, "tone": tone,
-                     "title": os.path.splitext(name)[0][:60]})
+                     "title": os.path.splitext(os.path.basename(name))[0][:60]})
     for r in rows:
         print("%-28s %-8s %.2f초  %s" % (r["title"][:26], r["cat"], r["dur"], r["tone"]))
     if dry:
