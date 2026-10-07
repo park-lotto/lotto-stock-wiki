@@ -612,7 +612,9 @@
         if (getComputedStyle(a).position === "static") a.style.position = "relative";
         el = document.createElement("div");
         el.className = "ss-card-info";
-        el.style.cssText = "position:absolute;right:6px;bottom:6px;z-index:99998;" +
+        // ★z-index 는 카드 안에서만 이기면 된다(관제 156, 2026-10-07 사장님 "스크롤 내리면 화면이 깨진다").
+        //   99998 이면 인스타 검색 화면의 고정 머리(검색창·비슷한 검색어 판) 위로 스크롤된 윗줄 카드 배지가 튀어나왔다.
+        el.style.cssText = "position:absolute;right:6px;bottom:6px;z-index:3;" +
           "background:rgba(0,0,0,.65);color:#fff;font:11px system-ui,sans-serif;" +
           "border-radius:8px;padding:2px 7px;pointer-events:none";
         a.appendChild(el);
@@ -639,7 +641,7 @@
         lb.textContent = "🔍";
         lb.title = "이 영상 렌즈(원본·유사 추적)";
         // 위치: 우리 배지(우하단) 바로 위 — 좌하단은 인스타 자체 조회수 표기가 있어 피한다
-        lb.style.cssText = "position:absolute;right:6px;bottom:32px;z-index:99999;" +
+        lb.style.cssText = "position:absolute;right:6px;bottom:32px;z-index:4;" +
           "background:#37b0e0;color:#fff;border:none;border-radius:14px;width:28px;height:28px;" +
           "font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4)";
         lb.addEventListener("click", function (e) {
@@ -1092,7 +1094,7 @@
       b.title = "이 영상 담기";
       // 인스타·틱톡은 카드 '오른쪽 위'에 자체 릴스/재생 배지가 있어 겹친다 → 왼쪽 위에 붙인다.
       b.style.cssText =
-        "position:absolute;top:8px;left:8px;z-index:99999;background:#1f6feb;color:#fff;" +
+        "position:absolute;top:8px;left:8px;z-index:" + (_isIg() ? 4 : 99999) + ";background:#1f6feb;color:#fff;" +   // 인스타: 고정 머리 위로 안 튀게(관제 156)
         "border:none;border-radius:16px;width:34px;height:34px;font-size:16px;" +
         "box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer";
       (function (a) {
@@ -1391,7 +1393,7 @@
       post: function () { return isSinglePost() ? _pm(/\/(?:p|reel|reels)\/([A-Za-z0-9_-]+)/) : ""; } },
     { id: "youtube", lang: "en", host: ["youtube.com"],
       q: function () { return location.pathname === "/results" ? _qp("search_query") : ""; },
-      url: function (t) { return "https://www.youtube.com/results?search_query=" + encodeURIComponent(t) + "&sp=EgIYAQ%253D%253D"; },
+      url: function (t) { return "https://www.youtube.com/results?search_query=" + encodeURIComponent(t) + "&sp=EgIQCQ%253D%253D"; },   // Shorts 전용(관제 156)
       // /watch 로 열린 쇼츠도(헤드리스·일부 화면은 /shorts/ 대신 /watch?v=로 연다 — 실측).
       // 롱폼 /watch 는 tick 이 _ytOff 로 먼저 걸러 여기까지 안 온다(쇼츠 길이만 동작).
       post: function () { return _pm(/^\/shorts\/([\w-]+)/) || (location.pathname === "/watch" ? _qp("v") : ""); } },

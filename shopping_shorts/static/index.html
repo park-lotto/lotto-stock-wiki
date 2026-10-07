@@ -4434,8 +4434,8 @@ function _lensSearchUrl(platform, kw){
     xiaohongshu:`https://www.xiaohongshu.com/search_result?keyword=${q}`,
     douyin:`https://www.douyin.com/search/${q}`,
     // 유튜브(2026-09-08) — 영어·일본어 검색어로 해외 원본을 찾을 때 쓴다.
-    // &sp=EgIYAQ%253D%253D = 쇼츠(4분 미만) 필터. 우리가 찾는 건 숏폼이다.
-    youtube:`https://www.youtube.com/results?search_query=${q}&sp=EgIYAQ%253D%253D`,
+    // &sp=EgIQCQ%253D%253D = Shorts 전용(관제 156 — 4분 미만 필터 EgIYAQ는 일반 영상이 섞였다: 실측 Shorts 31·일반 14 → 31·0).
+    youtube:`https://www.youtube.com/results?search_query=${q}&sp=EgIQCQ%253D%253D`,
     // 핀터레스트 영상탭(2026-09-08) — 언어 격자에서 빠져 있었다.
     pinterest:`https://www.pinterest.com/search/videos/?q=${q}`,
   };
