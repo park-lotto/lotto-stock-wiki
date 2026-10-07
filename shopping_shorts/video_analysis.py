@@ -1049,9 +1049,10 @@ JSON만: {{"main": "...", "related": ["...", "..."]}}"""
 
 _EN_TERMS_RULES = {
     "query": ("입력을 자연스러운 영어 검색어로 옮긴 것. 입력이 이미 영어면 그대로(오타만 고친다).", ""),
-    "caption": ("이 게시물이 보여 주는 **상품**을 가리키는 \"amazon <상품명>\". "
+    # amazon 접두 규칙은 뺐다(관제 156, 2026-10-07 사장님 — 전 사이트 검색어에 amazon이 붙어 나왔다).
+    "caption": ("이 게시물이 보여 주는 **상품**의 영어 이름. "
                 "설명글에 상품이 전혀 안 보이면 빈 문자열.",
-                "\n- related의 **절반 이상은 \"amazon\"으로 시작**하게(예: \"amazon range hood\")."),
+                "\n- 쇼핑몰 이름(amazon·temu·aliexpress 등)을 검색어에 붙이지 마라."),
 }
 
 _EN_TERMS_SCHEMA = {
@@ -1111,7 +1112,7 @@ def english_search_terms(text, kind="query", n=5, max_retries=3, quota_sleep=8, 
     """인스타 검색용 영어 검색어 → {"main": str, "related": [str]}. 실패·키없음 시 빈 결과.
 
     kind="query": 검색창에 친 말(한글이든 영어든) → main=그 말의 영어 검색어, related=비슷한 검색어.
-    kind="caption": 게시물 설명글 → main="amazon <상품>", related=관련 검색어(절반 이상 amazon).
+    kind="caption": 게시물 설명글 → main=상품 영어 이름, related=관련 검색어(쇼핑몰 이름 없이).
     모든 검색어는 _clean_en_term을 통과한 것만(영어·최대 3단어·중복 없음).
     텍스트만이라 가벼운 모델(_TRANSLATE_MODEL) — 비용은 무료 키 풀 1회."""
     empty = {"main": "", "related": []}
