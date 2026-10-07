@@ -106,42 +106,122 @@ def _gate_target_workers(free_mb):
     return n if n >= GATE_MIN_WORKERS else 0
 
 
+# ── 줄 순서의 주인(2026-10-07 관제 157 "병합 급행") ─────────────────────────────────────────
+#  번호표 이름 = <등급>_<시각ns>_<pid>_<id>. 이름을 정렬하면 줄 순서다 — 급행(0)이 보통(1)보다 앞, 같은 등급은 선착순.
+#  시험 자원 표(_gate_slot) · push 줄(_FileLock queue) · 급행 예약(_urgent_reservation)이 전부 이 함수 하나로 순서를 정한다.
+QUEUE_URGENT, QUEUE_NORMAL = 0, 1
+
+
+def _queue_rank(urgent=False, priority=False):
+    """번호표 앞부분 '<등급>_<시각ns>'. priority=이미 줄을 섰던 병합(영상 관문 뒤 재진입) → 같은 등급 맨 앞(시각 0)."""
+    return "%d_%020d" % (QUEUE_URGENT if urgent else QUEUE_NORMAL, 0 if priority else time.time_ns())
+
+
+def _ticket_key(name):
+    """번호표 이름 → ((등급, 시각), pid). 옛 꼴 '<시각>_<pid>_<id>'(카드 081)는 보통 등급. 못 읽으면 None."""
+    parts = name.split("_")
+    try:
+        if len(parts) >= 4:
+            return (int(parts[0]), int(parts[1])), int(parts[2])
+        if len(parts) == 3:
+            return (QUEUE_NORMAL, int(parts[0])), int(parts[1])
+    except ValueError:
+        pass
+    return None
+
+
+def _new_ticket_file(qdir, urgent=False, priority=False, tag=0):
+    qdir = Path(qdir)
+    qdir.mkdir(parents=True, exist_ok=True)
+    t = qdir / ("%s_%d_%d" % (_queue_rank(urgent, priority), os.getpid(), tag))
+    t.write_text("", encoding="utf-8")
+    return t
+
+
+def _live_tickets(qdir):
+    """살아 있는 번호표를 줄 순서로. 죽은 프로세스의 표는 치운다(무시)."""
+    rows = []
+    for t in Path(qdir).glob("*_*_*"):
+        k = _ticket_key(t.name)
+        if k is None:
+            continue
+        key, pid = k
+        if pid != os.getpid() and not _pid_alive(pid):
+            try:
+                t.unlink()
+            except OSError:
+                pass
+            continue
+        rows.append((key, t.name, t))
+    rows.sort()
+    return [t for _, _, t in rows]
+
+
+def _urgent_dir():
+    b = _finish_lock_path()
+    return b.parent / (b.stem + "_urgent")
+
+
+def _live_urgent(exclude_self=True):
+    return [t for t in _live_tickets(_urgent_dir())
+            if not (exclude_self and _ticket_key(t.name)[1] == os.getpid())]
+
+
 @contextlib.contextmanager
-def _gate_slot():
+def _urgent_reservation():
+    """급행 = main 예약. 시험 시작 전에 끊고 push 뒤(예외여도) 지운다. 프로세스가 죽으면 pid 검사로 무시된다."""
+    t = _new_ticket_file(_urgent_dir(), urgent=True, tag=id(object()))
+    print("등급: 급행 — main 예약(보통 finish 는 이 병합이 push 할 때까지 push 를 미룬다)")
+    try:
+        yield t
+    finally:
+        try:
+            t.unlink()
+        except OSError:
+            pass
+
+
+URGENT_WAIT_MAX_S = 40 * 60
+
+
+def _wait_for_urgent(max_s=None):
+    """보통 finish 가 push 줄에 서기 직전: 살아 있는 급행 예약이 있으면 기다린다(상한 40분 → 경보 후 진행).
+    → 보류했으면 True."""
+    if max_s is None:
+        max_s = float(os.environ.get("TRACK_URGENT_WAIT_MAX", URGENT_WAIT_MAX_S))
+    t0, held = time.time(), False
+    while True:
+        live = _live_urgent()
+        if not live:
+            if held:
+                print("[급행 보류] 끝 — %.0f초 기다렸다" % (time.time() - t0))
+            return held
+        if time.time() - t0 >= max_s:
+            print("[경보] 급행 대기 상한 %.0f분 초과 — 급행 %d건이 아직 안 끝났지만 보통 병합을 진행한다(급행 쪽 로그 확인)"
+                  % (max_s / 60, len(live)))
+            return True
+        if not held:
+            print("[급행 보류] 급행 finish %d건이 main 을 예약 중 — push 를 미룬다(상한 %.0f분)" % (len(live), max_s / 60))
+            held = True
+        time.sleep(2)
+
+
+@contextlib.contextmanager
+def _gate_slot(urgent=False):
     """시험 프로세스 표를 잡는다 → 쓸 병렬 수(n)를 돌려준다(GATE_XDIST_N 으로 merge_gate 에 넘긴다).
     표가 모자라거나 메모리가 모자라면 기다린다. 프로세스가 죽으면 커널이 표를 놓는다(파일락)."""
     import msvcrt
     base = _finish_lock_path()
-    held, waited, last_why = [], False, ""
-    while True:
-        target = _gate_target_workers(_free_mb())
-        if target:
-            for i in range(GATE_WORKER_TOKENS):
-                if len(held) >= target:
-                    break
-                f = open(base.parent / ("%s_worker%d.lock" % (base.stem, i)), "a+")
-                try:
-                    msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
-                    held.append(f)
-                except OSError:
-                    f.close()
-            if len(held) >= target:
-                break
-            why = "다른 병합이 시험 프로세스 표를 쓰는 중(%d/%d 확보)" % (len(held), target)
-        else:
-            why = "남은 메모리 %dMB — 최소 %d개분(%dMB+여유 %dMB) 모자람" % (
-                _free_mb(), GATE_MIN_WORKERS, GATE_MIN_WORKERS * GATE_WORKER_MB, GATE_RESERVE_MB)
-        for f in held:                       # 다 못 잡았으면 쥔 것도 놓고 기다린다(조금씩 쥐고 버티면 서로 굶는다)
-            try:
-                f.seek(0)
-                msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
-            finally:
-                f.close()
-        held = []
-        if not waited or why != last_why:
-            print("[대기] 시험 자원 대기 — %s (줄과 별개 — 줄은 안 막는다)" % why)
-            waited, last_why = True, why
-        time.sleep(5)
+    held = []
+    qdir = base.parent / (base.stem + "_slotq")
+    ticket = _new_ticket_file(qdir, urgent=urgent, tag=id(held))      # 줄 앞 번호표만 표를 잡는다(관제 157)
+    try:
+        _gate_slot_wait(base, held, ticket, qdir)
+    finally:
+        try:
+            ticket.unlink()
+        except OSError:
+            pass
     n = len(held)
     prev = os.environ.get("GATE_XDIST_N")
     os.environ["GATE_XDIST_N"] = str(n)
@@ -161,41 +241,65 @@ def _gate_slot():
                 f.close()
 
 
+def _gate_slot_wait(base, held, ticket, qdir):
+    """_gate_slot 의 대기 — 줄 맨 앞일 때만 표를 잡아 held 를 채운다."""
+    import msvcrt
+    waited, last_why = False, ""
+    while True:
+        live = _live_tickets(qdir)
+        if live and live[0].name != ticket.name:
+            target = 0
+            why = "줄 앞에 %d명(급행 먼저·선착순)" % (live.index(ticket) if ticket in live else len(live))
+        else:
+            target = _gate_target_workers(_free_mb())
+            why = ""
+        if target:
+            for i in range(GATE_WORKER_TOKENS):
+                if len(held) >= target:
+                    break
+                f = open(base.parent / ("%s_worker%d.lock" % (base.stem, i)), "a+")
+                try:
+                    msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+                    held.append(f)
+                except OSError:
+                    f.close()
+            if len(held) >= target:
+                break
+            why = "다른 병합이 시험 프로세스 표를 쓰는 중(%d/%d 확보)" % (len(held), target)
+        elif not why:
+            why = "남은 메모리 %dMB — 최소 %d개분(%dMB+여유 %dMB) 모자람" % (
+                _free_mb(), GATE_MIN_WORKERS, GATE_MIN_WORKERS * GATE_WORKER_MB, GATE_RESERVE_MB)
+        for f in held:                       # 다 못 잡았으면 쥔 것도 놓고 기다린다(조금씩 쥐고 버티면 서로 굶는다)
+            try:
+                f.seek(0)
+                msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+            finally:
+                f.close()
+        held.clear()
+        if not waited or why != last_why:
+            print("[대기] 시험 자원 대기 — %s (줄과 별개 — 줄은 안 막는다)" % why)
+            waited, last_why = True, why
+        time.sleep(1 if why.startswith("줄 앞") else 5)
+
+
 class _FileLock:
     """OS 파일락(프로세스가 죽으면 커널이 자동 해제). 같은 객체로 놓았다 다시 잡을 수 있다(release/acquire).
     queue=True: **선착순 번호표**(2026-10-02 카드 081) — 종전엔 3초마다 '지금 잡히나'를 찔러 먼저 찌른 쪽이 들어가
     오늘 최대 2시간 26분을 기다린 세션이 있었다. 번호표 = <락 이름>_queue/<시각ns>_<pid>_<객체id>, 맨 앞만 락을 시도.
     죽은 프로세스의 번호표는 지나가는 쪽이 치운다. 옛 판본 finish(번호표 모름)는 끼어들 수 있다 — 전환기만."""
 
-    def __init__(self, path, wait_msg, queue=False):
+    def __init__(self, path, wait_msg, queue=False, urgent=False):
         self.path, self.wait_msg, self.fh = Path(path), wait_msg, None
-        self.queue, self._ticket = queue, None
+        self.queue, self._ticket, self.urgent = queue, None, urgent
 
     def _qdir(self):
         return self.path.parent / (self.path.stem + "_queue")
 
     def _new_ticket(self, priority=False):
-        q = self._qdir()
-        q.mkdir(parents=True, exist_ok=True)
-        stamp = ("0" * 20) if priority else ("%020d" % time.time_ns())
-        t = q / ("%s_%d_%d" % (stamp, os.getpid(), id(self)))
-        t.write_text("", encoding="utf-8")
-        return t
+        return _new_ticket_file(self._qdir(), urgent=self.urgent, priority=priority, tag=id(self))
 
     def _my_turn(self):
-        live = []
-        for t in sorted(self._qdir().glob("*_*_*")):
-            try:
-                pid = int(t.name.split("_")[1])
-            except (IndexError, ValueError):
-                continue
-            if pid != os.getpid() and not _pid_alive(pid):
-                try:
-                    t.unlink()                      # 죽은 프로세스의 번호표
-                except OSError:
-                    pass
-                continue
-            live.append(t)
+        live = _live_tickets(self._qdir())          # 줄 순서 = _queue_rank(급행 먼저·선착순), 죽은 표는 치운다
         if live and live[0].name != self._ticket.name:
             return False, live.index(self._ticket) if self._ticket in live else len(live)
         return True, 0
@@ -247,12 +351,12 @@ class _FileLock:
 
 
 @contextlib.contextmanager
-def _finish_gate_lock(prepared=None):
+def _finish_gate_lock(prepared=None, urgent=False):
     """finish 전역 직렬화 락. 이미 다른 finish가 게이트 중이면 풀릴 때까지 대기(순번제). → 락 객체(영상 관문 동안 놓는다).
     prepared: 번호표를 미리 받아 둔 락(선검사 동안 줄을 서 둔 것)."""
     lk = (prepared or _FileLock(_finish_lock_path(),
                                 "[대기] 다른 트랙이 finish 게이트 중 - 선착순 대기(동시 실행이 더 느려서 줄 세운다)",
-                                queue=True)).acquire()
+                                queue=True, urgent=urgent)).acquire()
     try:
         yield lk
     finally:
@@ -786,8 +890,7 @@ def _precheck(name, repo, wt, br, gate):
     main 에서도 깨지는 건 빼고, 새로 깨진 게 있으면 여기서 멈춘다. TRACK_PRECHECK=0 이면 건너뛴다."""
     if os.environ.get("TRACK_PRECHECK", "") == "0" or not hasattr(gate, "rerun_ids"):
         return
-    rc, out = run(["git", "-c", "core.quotepath=off", "diff", "--name-only", "origin/main..." + br], wt)
-    changed = [x.strip() for x in out.splitlines() if x.strip()] if rc == 0 else []
+    changed = _diff_names(wt, "origin/main..." + br) or []
     texts = {}
     for p in list(Path(wt).glob("shopping_shorts/tests/test_*.py")) + list(Path(wt).glob("tools/test_*.py")) \
             + list(Path(wt).glob("tools/*/test_*.py")):
@@ -835,7 +938,7 @@ else:
 """
 
 
-def _finish_detached(name):
+def _finish_detached(name, urgent=False):
     """finish 를 **분리된 프로세스**로 띄우고 로그를 따라 읽는다(카드 081). 이 창(또는 Claude 백그라운드 명령)이 시간 제한으로
     꺼져도 병합은 끝까지 간다 — 10-02 실측: 2시간 줄 서다 Claude 제한에 꺼진 finish. 결과는 로그·rc 파일에 남는다."""
     import subprocess
@@ -843,7 +946,7 @@ def _finish_detached(name):
     logs.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d_%H%M%S")
     log, rcf = logs / ("%s_%s.log" % (name, stamp)), logs / ("%s_%s.rc" % (name, stamp))
-    me = [sys.executable, "-u", str(Path(__file__).resolve()), "finish", name, "--attached"]
+    me = [sys.executable, "-u", str(Path(__file__).resolve()), "finish", name, "--attached"] + (["--urgent"] if urgent else [])
     subprocess.Popen([sys.executable, "-c", _LAUNCHER, str(log), str(rcf), str(Path.cwd())] + me,
                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                      creationflags=(0x08000000 if os.name == "nt" else 0))
@@ -868,7 +971,7 @@ def _finish_detached(name):
         time.sleep(2)
 
 
-def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
+def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None, urgent=False):
     """★다 된 것만 줄 선다(2026-10-03 카드 088): 병합·시험·관제·영상 관문은 줄(전역 락) 밖에서,
     줄 안에선 커밋·push 만(몇 초). 그사이 main 에 코드가 들어왔으면 줄에서 빠져 밖에서 다시 잰다."""
     merge_gate.make_output_safe()
@@ -881,6 +984,13 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
         _precheck(name, repo, wt, br, gate)        # 시험이 줄 밖에서 돌게 돼 중복 — 원할 때만(카드 088)
     _clean_dead_stages(repo)                        # 살아 있는 남의 stage 는 건너뛴다(주인 pid)
     _disk_guard(repo, "finish")
+    if not urgent:
+        print("등급: 보통")
+    with (_urgent_reservation() if urgent else contextlib.nullcontext()):     # 급행: 시험 전 예약, push 뒤(예외여도) 해제
+        return _finish_attempts(name, repo, gate, attempts, video_gate, urgent, wt, br)
+
+
+def _finish_attempts(name, repo, gate, attempts, video_gate, urgent, wt, br):
     prev_base = None
     for attempt in range(1, attempts + 1):
         run(["git", "fetch", "origin"], repo)
@@ -888,7 +998,8 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
         base_now = run(["git", "rev-parse", "HEAD"], stage)[1].strip()
         try:
             result = _merge_and_gate(name, repo, stage, br, gate, wt, video_gate, lock=None,
-                                     push_lock=_finish_gate_lock, prev_base=prev_base)
+                                     push_lock=lambda: _finish_gate_lock(urgent=urgent), prev_base=prev_base,
+                                     urgent=urgent)
         finally:
             _close_stage(repo, stage)
 
@@ -911,13 +1022,12 @@ def finish(name, repo=BASE, gate=merge_gate, attempts=5, video_gate=None):
     )
 
 
-def _retry_test_subset(stage, prev_base, my_changed, *, half=0.5):
+def _retry_test_subset(stage, prev_base, my_changed, *, half=0.2):
     """재시도(앞 시도 통과) 때 다시 돌릴 시험 파일. [] = 끼어든 게 코드 아님(시험 생략) · None = 너무 많음(전체).
     끼어든 코드 관련 + 내 변경 관련(새 main 위에서 맞물림) — 끼어든 커밋은 이미 제 관문을 통과했다."""
-    rc, out = run(["git", "-c", "core.quotepath=off", "diff", "--name-only", prev_base, "HEAD"], stage)
-    if rc != 0:
+    inter = _diff_names(stage, prev_base, "HEAD")
+    if inter is None:
         return None
-    inter = [x.strip() for x in out.splitlines() if x.strip()]
     inter_code = [x for x in inter if not _is_non_code(x)]
     if not inter_code:
         return []
@@ -935,7 +1045,8 @@ def _retry_test_subset(stage, prev_base, my_changed, *, half=0.5):
     return sel or None
 
 
-def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None, push_lock=None, prev_base=None):
+def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None, push_lock=None, prev_base=None,
+                    urgent=False):
     light = hasattr(gate, "snapshot_light")
     before = gate.snapshot_light(stage) if light else _cached_baseline(repo, stage, gate)
     exact = None
@@ -971,8 +1082,7 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
             f"  (충돌 해결·커밋 후) py tools/track.py finish {name}"
         )
 
-    _rc_ch, _ch = run(["git", "-c", "core.quotepath=off", "diff", "--cached", "--name-only", "HEAD"], stage)
-    changed = [c.strip() for c in _ch.splitlines() if c.strip()] if _rc_ch == 0 else []
+    changed = _diff_names(stage, "--cached", "HEAD") or []
     if light and changed and all(_is_non_code(c) for c in changed):
         # ★코드가 없는 병합(핸드오프·관제·문서)은 시험 결과가 달라질 수 없다(카드 081) — 문법·import 만 보고 넘긴다.
         print("게이트: 코드 없는 병합(%d파일) — 시험 생략" % len(changed))
@@ -985,7 +1095,7 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
             after = dict(before)
             ran_full = False
         else:
-            with (_gate_slot() if push_lock is not None else contextlib.nullcontext()):
+            with (_gate_slot(urgent=urgent) if push_lock is not None else contextlib.nullcontext()):
                 if sub:
                     print("재시도: 끼어든 코드·내 변경 관련 시험 %d개 파일만 다시(앞 시도 통과 · 줄 밖)..." % len(sub))
                     try:
@@ -1041,6 +1151,8 @@ def _merge_and_gate(name, repo, stage, br, gate, wt, video_gate=None, lock=None,
 
     if push_lock is None:
         return _commit_and_push(name, repo, stage, light, _after_failed_for_store)
+    if not urgent:
+        _wait_for_urgent()                 # 급행이 main 을 예약 중이면 그 push 뒤로(관제 157)
     print("검사 끝 — 줄에 선다(줄 안에선 커밋·push 만)")
     with push_lock() as _q:
         return _commit_and_push(name, repo, stage, light, _after_failed_for_store)
@@ -1091,11 +1203,27 @@ NON_CODE_PREFIXES = ("관제/", "handoff/", "wiki/", "raw/", "docs/", "channel/"
 NON_CODE_SUFFIXES = (".md", ".txt", ".csv", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4", ".mp3")
 
 
+# pipeline/ 의 봇 데이터(.json — 대시보드 로그 등)는 시험 결과를 못 바꾼다. pipeline 의 .py 는 코드(관제 157).
+DATA_DIRS = ("pipeline/",)
+DATA_SUFFIXES = (".json",)
+
+
 def _is_non_code(path):
     p = path.strip().strip('"')
     if p.startswith("shopping_shorts/") and not p.endswith((".md", ".txt")):
         return False
+    if p.startswith(DATA_DIRS) and p.endswith(DATA_SUFFIXES):
+        return True
     return p.startswith(NON_CODE_PREFIXES) or p.endswith(NON_CODE_SUFFIXES)
+
+
+def _diff_names(cwd, *rev_args):
+    """git diff --name-only — 한글 경로를 이스케이프하지 않게 quotepath=off(관제 157: 한 곳만 빠져 관제/*.json 을 코드로 오판).
+    파일 이름 목록 / 실패면 None. 바뀐 파일을 묻는 곳은 전부 이 함수를 부른다."""
+    rc, out = run(["git", "-c", "core.quotepath=off", "diff", "--name-only", *rev_args], cwd)
+    if rc != 0:
+        return None
+    return [x.strip() for x in out.splitlines() if x.strip()]
 
 
 def _catch_up_non_code(stage):
@@ -1106,10 +1234,9 @@ def _catch_up_non_code(stage):
     rc0, base = run(["git", "merge-base", "HEAD", "origin/main"], stage)
     if rc0 != 0 or not base.strip():
         return False
-    rc, files = run(["git", "diff", "--name-only", base.strip(), "origin/main"], stage)
-    if rc != 0:
+    changed = _diff_names(stage, base.strip(), "origin/main")
+    if changed is None:
         return False
-    changed = [f for f in files.splitlines() if f.strip()]
     code = [f for f in changed if not _is_non_code(f)]
     if code:
         print(f"ℹ️ 끼어든 main 커밋에 코드가 있다({len(code)}개, 예: {code[0]}) — 게이트를 다시 돈다")
@@ -1159,9 +1286,12 @@ def _classify_new_failures(before, after, problems, *, rerun, printer=print, rec
 def _code_key(cwd, ref="HEAD"):
     """시험 결과를 바꿀 수 있는 코드 트리의 열쇠 — 관제·핸드오프 커밋으로는 안 바뀐다(커밋 번호와 다르다)."""
     parts = []
-    for rel in ("shopping_shorts", "tools", "pipeline", "conftest.py", "pytest.ini"):
+    for rel in ("shopping_shorts", "tools", "conftest.py", "pytest.ini"):
         rc, out = run(["git", "rev-parse", "%s:%s" % (ref, rel)], cwd)
         parts.append(out.strip() if rc == 0 else "-")
+    # pipeline 은 코드(.py 등)만 — 봇 데이터(.json) 커밋이 기준선을 무효화하지 않게(관제 157)
+    rc, out = run(["git", "-c", "core.quotepath=off", "ls-tree", "-r", ref, "--", "pipeline"], cwd)
+    parts.append("|".join(ln for ln in out.splitlines() if not _is_non_code(ln.split("\t", 1)[-1])) if rc == 0 else "-")
     import hashlib
     return hashlib.sha1("|".join(parts).encode()).hexdigest()[:16]
 
@@ -1575,6 +1705,8 @@ def main(argv=None):
     p_finish.add_argument("name")
     p_finish.add_argument("--attached", action="store_true",
                           help="이 창에서 직접 돈다(기본은 분리 실행 — Claude 시간 제한·창 닫힘에 안 꺼진다)")
+    p_finish.add_argument("--urgent", action="store_true",
+                          help="급행 — main 을 예약한다. 보통 finish 는 이 병합이 push 할 때까지 push 를 미룬다(관제 157)")
     p_close = sub.add_parser("close", help="트랙을 접는다 — 폴더·브랜치 삭제")
     p_close.add_argument("name")
     sub.add_parser("list", help="열린 트랙과 밀린 정도")
@@ -1599,8 +1731,8 @@ def main(argv=None):
             return park_idle(days=args.days)
         if args.cmd == "finish":
             if args.attached or os.environ.get("TRACK_FINISH_CHILD"):
-                return finish(args.name)
-            return _finish_detached(args.name)
+                return finish(args.name, urgent=args.urgent)
+            return _finish_detached(args.name, urgent=args.urgent)
         if args.cmd == "close":
             return close(args.name)
         return list_tracks()

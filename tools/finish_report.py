@@ -33,8 +33,15 @@ MARKS = [
 ]
 
 
+LOG_NAME = re.compile(r"(.+)_(\d{8}_\d{6})\.log$")
+
+
 def parse(path):
-    name, stamp = re.match(r"(.+)_(\d{8}_\d{6})\.log$", path.name).groups()
+    """finish 로그 한 개 → 행. 이름이 <트랙>_<YYYYmmdd_HHMMSS>.log 가 아니면(sched_test.log 등) None(관제 157)."""
+    mt = LOG_NAME.match(path.name)
+    if not mt:
+        return None
+    name, stamp = mt.groups()
     start = datetime.strptime(stamp, "%Y%m%d_%H%M%S")
     rc = path.with_suffix(".rc")
     end = datetime.fromtimestamp(rc.stat().st_mtime) if rc.exists() else None
@@ -54,6 +61,7 @@ def parse(path):
                 events.append((t, v, m.group(4)))
                 break
     phases, retries = {}, 0
+    pushed_at = next((t for t, v, _ in events if v == "끝" and "병합 완료" in _), None)
     for i, (t, v, _) in enumerate(events):
         if v == "재시도":
             retries += 1
@@ -68,8 +76,11 @@ def parse(path):
         result = "병합"
     elif "중단:" in text or "❌" in text:
         result = "막힘"
+    grade = "급행" if "등급: 급행" in text else ("보통" if "등급: 보통" in text else "-")
+    holds = text.count("[급행 보류] 급행 finish")
     total = ((end or (datetime.now() if result == "진행 중" else (last or start))) - start).total_seconds()
-    return {"트랙": name, "시작": start.strftime("%m-%d %H:%M"), "전체": total, "결과": result, "재시도": retries,
+    return {"트랙": name, "시작": start.strftime("%m-%d %H:%M"), "전체": total, "결과": result, "재시도": retries, "등급": grade, "보류": holds,
+            "push분": ((pushed_at - start).total_seconds() / 60) if pushed_at else None,
             "시각있음": bool(events), **phases}
 
 
@@ -84,14 +95,18 @@ def main(argv=None):
         sys.path.insert(0, str(HERE))
         import track
         d = track.tracks_dir(track.BASE) / "_finish_logs"
-    logs = sorted(d.glob("*_*.log"), key=lambda p: p.name[-19:], reverse=True)[: a.n]
-    rows = [parse(p) for p in logs]
+    logs = sorted((p for p in d.glob("*_*.log") if LOG_NAME.match(p.name)), key=lambda p: p.name[-19:],
+                  reverse=True)[: a.n]
+    rows = [r for r in (parse(p) for p in logs) if r is not None]
     cols = ["시험", "영상관문", "영상락대기", "줄대기"]
     m = lambda s: ("%5.1f" % (s / 60)) if s else "    -"   # noqa: E731
-    print("%-14s %-11s %6s  %s  %4s  %s" % ("트랙", "시작", "전체분", "  ".join("%5s" % c[:5] for c in cols), "재시도", "결과"))
+    print("%-14s %-11s %4s %6s %7s  %s  %4s  %4s  %s" % ("트랙", "시작", "등급", "전체분", "push분",
+                                                      "  ".join("%5s" % c[:5] for c in cols), "재시도", "보류", "결과"))
     for r in rows:
-        print("%-14s %-11s %6.1f  %s  %4d  %s%s" % (r["트랙"][:14], r["시작"], r["전체"] / 60,
-                                               "  ".join(m(r.get(c, 0)) for c in cols), r["재시도"], r["결과"],
+        print("%-14s %-11s %4s %6.1f %7s  %s  %4d  %4d  %s%s" % (
+            r["트랙"][:14], r["시작"], r["등급"], r["전체"] / 60,
+            ("%7.1f" % r["push분"]) if r["push분"] is not None else "      -",
+            "  ".join(m(r.get(c, 0)) for c in cols), r["재시도"], r["보류"], r["결과"],
                                                "" if r["시각있음"] else " (옛 로그: 단계 시각 없음)"))
     timed = [r for r in rows if r["시각있음"] and r["결과"] == "병합"]
     if timed:

@@ -155,7 +155,7 @@ def test_관련_테스트_고르기():
 
 def test_finish_명령은_기본으로_분리_실행(monkeypatch):
     called = {}
-    monkeypatch.setattr(track, "_finish_detached", lambda name: called.setdefault("d", name) and 0)
+    monkeypatch.setattr(track, "_finish_detached", lambda name, **kw: called.setdefault("d", name) and 0)
     monkeypatch.setattr(track, "finish", lambda name, **kw: called.setdefault("a", name) and 0)
     monkeypatch.delenv("TRACK_FINISH_CHILD", raising=False)
     monkeypatch.setenv("TRACK_REEXEC", "1")          # 최신 판본 바꿔 실행(카드 083)은 따로 시험
@@ -164,6 +164,10 @@ def test_finish_명령은_기본으로_분리_실행(monkeypatch):
     called.clear()
     track.main(["finish", "x", "--attached"])
     assert called.get("a") == "x" and "d" not in called
+    called.clear()
+    monkeypatch.setattr(track, "_finish_detached", lambda name, urgent=False: called.setdefault("u", urgent) and 0)
+    track.main(["finish", "x", "--urgent"])
+    assert called.get("u") is True, "--urgent 가 분리 실행으로 안 넘어갔다(관제 157)"
 
 
 @pytest.mark.skipif(os.name != "nt", reason="윈도 콘솔 동작")
