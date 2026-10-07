@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-07h  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-08a  (LOGIC_VER가 정본)
+//   · 관제 156 — 판매자 해시태그 줄, 유튜브 Shorts 탭 자동 선택·미리보기 📥 제자리, 인스타 접힌 카드 배지 숨김.
 //   · 관제 156 — 미리보기는 서버 부담 없는 것만: 렌즈 결과창 서버 재생 끔, 동시 미리보기를 틱톡·핀·도우인·샤오홍슈로.
 //   · 관제 156 — 렌즈 서버 연결 실패(30초 상한 회귀) 수리, 유튜브 검색 Shorts 전용, 인스타 카드 배지 스크롤 겹침.
 //   · 관제 156 — 검색어 판 한 줄 5개 언어로 통일·끌어 옮기기, 게시물 관련 검색어 5개 언어, '찾는 중…' 영구 멈춤,
@@ -28,7 +29,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261014;
+  var LOGIC_VER = 20261015;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -1166,7 +1167,14 @@
       }, true);
       pv.appendChild(b);
     }
-    b.style.display = _ytPreviewCard(pv) ? "" : "none";
+    b.style.display = card ? "" : "none";
+    // ★카드 📥와 **같은 화면 자리**에 둔다(관제 156, 2026-10-08 사장님 "누르려 하면 왼쪽 위 대각선으로 살짝 올라간다").
+    //   미리보기는 카드보다 크게·비켜 그려져 top/left 8px 고정이면 📥가 대각선으로 튀었다.
+    var cb = card && card.querySelector(".ss-card-grab");
+    if (cb) {
+      var c0 = cb.getBoundingClientRect(), p0 = pv.getBoundingClientRect();
+      if (c0.width && p0.width) { b.style.left = Math.round(c0.left - p0.left) + "px"; b.style.top = Math.round(c0.top - p0.top) + "px"; }
+    }
   }
 
   // ── 카드별 버튼(도우인): 도우인 검색 카드는 <a href>·data-id가 없고(스크래핑 방지)
@@ -1676,7 +1684,25 @@
     }, 900);
   }, true);
   // 인스타 밖 4+1개 플랫폼의 검색 화면: 오른쪽에 떠 있는 판(접기 가능). 사이트 화면 구조에 기대지 않는다.
+  // 유튜브: 우리가 연 Shorts 검색(sp=EgIQCQ)인데 로그인 화면이 '전체' 탭으로 열리면 Shorts 탭을 한 번 눌러 준다
+  //   (관제 156, 2026-10-08 사장님 화면: 주소엔 EgIQCQ 가 있는데 '전체'가 선택돼 롱폼이 섞였다. 로그아웃 화면은 Shorts만 나왔다).
+  var _ytShortsTabDone = "";
+  function _ytShortsTab() {
+    if (location.host.indexOf("youtube.com") < 0 || location.pathname !== "/results") return;
+    if (_qp("sp").indexOf("EgIQCQ") !== 0 || _ytShortsTabDone === location.href) return;
+    var chips = document.querySelectorAll("yt-chip-cloud-chip-renderer, chip-view-model, yt-chip-view-model, button[role='tab']");
+    for (var i = 0; i < chips.length; i++) {
+      if ((chips[i].innerText || "").trim().toLowerCase() !== "shorts") continue;
+      _ytShortsTabDone = location.href;
+      if (chips[i].getAttribute("aria-selected") === "true" || chips[i].hasAttribute("selected") ||
+          chips[i].querySelector("[aria-selected='true']")) return;
+      var btn = chips[i].querySelector("button, a, [role='tab']") || chips[i];
+      try { btn.click(); } catch (e) {}
+      return;
+    }
+  }
   function syncKwSearchPanel() {
+    try { _ytShortsTab(); } catch (e) {}
     var s = _kwSite(), p = document.getElementById("ss-kwfloat");
     var q = (s && s.id !== "instagram") ? s.q() : "";
     if (!q) { if (p) p.remove(); return; }
@@ -2230,7 +2256,25 @@
     _pvWait = setTimeout(function () { _pvWait = 0; try { _ytPreviewBtn(); } catch (e) {} }, 400);
   }, true);
 
-  function tick() { if (_ytOff()) { _ytClear(); try{_kwClearAll();}catch(e){} return; } if (_ytResults()) { _ytResultsTick(); try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{syncIgKwBar();}catch(e){} try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} try{_dockBtns();}catch(e){} }
+  // 접힌 카드의 배지 숨기기(관제 156, 2026-10-08 사장님 "스크롤 내리면 위에 아이콘이 줄지어 남는다"):
+  //   인스타는 위로 지나간 줄의 카드를 납작하게 접어 두는데(앵커는 남음) 거기 붙인 📅·🔍·📥가 검색 판 위에 줄지어 떴다.
+  //   카드가 120px 보다 작아지면 숨기고, 다시 펴지면 보인다. 스크롤마다(한 프레임에 한 번) + tick 마다.
+  function _hideCollapsedBadges() {
+    var bs = document.querySelectorAll(".ss-card-info, .ss-card-lens, .ss-card-grab:not(.ss-pv-grab)");
+    for (var i = 0; i < bs.length; i++) {
+      var a = bs[i].parentElement; if (!a) continue;
+      var r = a.getBoundingClientRect();
+      var small = r.width < 120 || r.height < 120;
+      if (small && !bs[i].__ssHid) { bs[i].__ssHid = 1; bs[i].style.display = "none"; }
+      else if (!small && bs[i].__ssHid) { bs[i].__ssHid = 0; bs[i].style.display = ""; }
+    }
+  }
+  var _hcbRaf = 0;
+  if (window.addEventListener) window.addEventListener("scroll", function () {
+    if (_hcbRaf || window.__ssGrabVer !== LOGIC_VER) return;
+    _hcbRaf = requestAnimationFrame(function () { _hcbRaf = 0; try { _hideCollapsedBadges(); } catch (e) {} });
+  }, true);
+  function tick() { if (_ytOff()) { _ytClear(); try{_kwClearAll();}catch(e){} return; } if (_ytResults()) { _ytResultsTick(); try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{syncIgKwBar();}catch(e){} try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} try{_dockBtns();}catch(e){} try{_hideCollapsedBadges();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.
