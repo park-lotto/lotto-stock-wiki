@@ -21161,7 +21161,11 @@ def _sb_job(request, key):
         jid = str(work.get("job_id") or "").strip()
         job = st.get_mix_job(jid) if jid else None
         if job and int(job.get("customer_id") or 0) == int(cid or 0) and job.get("extract"):
-            return "w-" + wid, (_enrich_job_extract(job, st) or {}).get("extract") or {}, jid
+            from shopping_shorts import mix_pipeline as _mp
+            _ex = (_enrich_job_extract(job, st) or {}).get("extract") or {}
+            # job 을 만든 뒤 정한 씨앗도 거른다 — 작업파일의 지금 씨앗을 job 재료 열쇠로 옮겨 같은 주인이 표식(10-07 실측)
+            _mp.mark_seed_sources(_ex, _mp.seed_job_keys(job, (work.get("state") or {}).get("handoff")))
+            return "w-" + wid, _ex, jid
         # ★씨앗(관제 120 장면배분): 3단계 job 이 아직 없으면 작업파일의 씨앗 표식(seedNoAuto)으로 auto_exclude 를 단다 —
         #   표식을 다는 건 mix_pipeline.mark_seed_sources 한 곳(3단계 mark_auto_exclude 와 같은 함수·같은 '씨앗뿐이면 안 단다').
         #   job 이 있으면 그 extract 에 3단계가 이미 단 표식을 그대로 쓴다(위 분기).
@@ -21228,9 +21232,11 @@ def _sb_run(job_id, name, fn):
     threading.Thread(target=lambda: _ctx.run(_go), daemon=True).start()
 
 
-def _sb_picks(cid, key, bd):
+def _sb_picks(cid, key, bd, sfx_deco=None):
     """2단계 줄에 실제 짤·효과음을 미리 싣는다(관제 143) — 고르기는 storyboard.meme_preview·sfx_preview 한 곳.
-    스위치 meme_enabled 뒤(끄면 보드 그대로). 같은 key(작업) = 같은 짤·소리. 못 고른 이유는 로그로."""
+    스위치 meme_enabled 뒤(끄면 보드 그대로). 같은 key(작업) = 같은 짤·소리. 못 고른 이유는 로그로.
+    sfx_deco: 2단계 보드의 효과음 스위치 {"sfx_pack": "auto"/"off", "sfx_mute_beats": [줄 번호]} — 3단계 deco 와 같은 키.
+      켜짐·꺼짐 판단은 sfx_pack.preview_pack→resolve 한 곳(렌더와 같은 함수)."""
     if not isinstance(bd, dict) or not isinstance(bd.get("slots"), list):
         return bd
     from shopping_shorts import storyboard as _sbm
@@ -21266,17 +21272,21 @@ def _sb_picks(cid, key, bd):
         if _job and int(_job.get("customer_id") or 0) != int(cid or 0):
             _job = None
         _slots = [s if isinstance(s, dict) else {} for s in bd["slots"]]
-        _pack = _sp.preview_pack(st, cid, [s.get("slot") for s in _slots], job=_job, style_id=_sid)
+        _pack = _sp.preview_pack(st, cid, [s.get("slot") for s in _slots], job=_job, style_id=_sid, deco=sfx_deco)
+        _mute = set((_pack or {}).get("mute_beats") or ())
         # {줄: 줄 효과음 길이} — 렌더(video_assemble.sfx_events_for)와 같은 모양. 길이는 효과음 자산에 적힌 값
         _first = {}
         for i, s in enumerate(_slots):
-            if s.get("sfx_pick") and not s.get("sfx_off"):
+            if s.get("sfx_pick") and not s.get("sfx_off") and i not in _mute:
                 _a = st.get_scene_asset(int(s["sfx_pick"])) or {}
                 _first[i] = float(_a.get("duration") or 0)
         _rows = _sp.preview_lines([{"role": s.get("slot"), "text": s.get("line"), "pack_edit": s.get("pack_edit")} for s in _slots], _pack, _first)
         for s, r in zip(_slots, _rows):
             s["pack_sfx"] = r
         bd["pack_sfx_on"] = bool(_pack)
+        # 줄 효과음이 실제로 들어가는가 — 렌더 입구(mix_pipeline._resolve_sfx_paths)와 같은 조건: 팩 켜짐 + 그 줄 안 끔
+        for i, s in enumerate(_slots):
+            s["sfx_live"] = bool(_pack) and i not in _mute
     except Exception as e:      # noqa: BLE001 — 팩 미리보기 실패는 줄 효과음에 영향 없게(이유 한 줄)
         _log("효과음팩 미리보기 실패: %r" % e)
     return bd
@@ -21295,7 +21305,10 @@ def api_storyboard_picks(request: Request, job_id: str, body: dict):
     slots = (body or {}).get("slots")
     if not isinstance(slots, list) or len(slots) > 60:
         return JSONResponse(status_code=422, content={"ok": False, "error": "slots 목록이 필요해요"})
-    bd = _sb_picks(getattr(request.state, "customer_id", 0), key, {"slots": [dict(x) if isinstance(x, dict) else {} for x in slots]})
+    # 보드 효과음 스위치(2단계) — 값의 뜻은 sfx_pack.settings_of 가 정한다(여기선 받은 그대로 넘김)
+    _sd = {k: (body or {}).get(k) for k in ("sfx_pack", "sfx_mute_beats") if (body or {}).get(k) is not None}
+    bd = _sb_picks(getattr(request.state, "customer_id", 0), key, {"slots": [dict(x) if isinstance(x, dict) else {} for x in slots]},
+                   sfx_deco=_sd or None)
     return {"ok": True, "slots": bd["slots"], "pack_sfx_on": bd.get("pack_sfx_on")}
 
 
@@ -21796,7 +21809,7 @@ def api_produce_mix_sfx_pack(job_id: str, request: Request):
     except Exception:      # noqa: BLE001 — 음성이 아직 없으면 칸 목록만
         timeline = []
     manual = {b["beat_idx"] for b in beats if (b.get("sfx") or {}).get("match_type") == "manual"}
-    ev = sfx_pack.plan_events(timeline, manual | set(st["mute_beats"]), density=st["density"]) if (timeline and on and got) else []
+    ev = sfx_pack.plan_events(timeline, manual, density=st["density"], mute_beats=st["mute_beats"]) if (timeline and on and got) else []
     tl_by = {t["beat_idx"]: t for t in timeline}
     for b in beats:
         bi = b.get("beat_idx")

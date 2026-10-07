@@ -971,6 +971,16 @@ def seed_keys_from_handoff(handoff):
     return out
 
 
+def seed_job_keys(job, handoff):
+    """작업파일의 지금 씨앗(seed_keys_from_handoff 와 같은 조건) → 이미 만든 3단계 job 의 재료 열쇠(s<urls 인덱스>).
+    ★10-07 실측 d2ed614194c1: job(c09f0d433325)을 만든 뒤 씨앗을 정해 job.extract 에 표식이 없었고, 스토리보드가 그 job 재료를 써
+      유튜브 씨앗 장면이 모든 보드에 들어갔다. 원본 주소(urls)로 짝지어 같은 주인(mark_seed_sources)이 표식을 단다."""
+    urls = [str(u or "").strip() for u in ((job or {}).get("urls") or [])]
+    seed_urls = {str(e.get("url") or "").strip() for e in (handoff or [])
+                 if isinstance(e, dict) and e.get("seedNoAuto") and e.get("useFootage") and e.get("url")}
+    return ["s%d" % i for i, u in enumerate(urls) if u and u in seed_urls]
+
+
 def _extract_coverage(r, path):
     """추출 구간이 영상의 몇 %를 덮었나. 판정 불가면 None.
 
@@ -2561,11 +2571,18 @@ def _resolve_sfx_paths(store, plan, customer_id, job=None):
         except Exception:      # noqa: BLE001 — 팩 판정 실패가 렌더를 막지 않는다(종전 동작)
             traceback.print_exc(file=sys.stderr)
             pack = None
+    _mute = set((pack or {}).get("mute_beats") or ())
     for beat in plan["beats"]:
         sfx = beat.get("sfx")
         if sfx:
             # 줄 효과음(match_type "line", 관제 143)은 팩이 있어도 남는다 — 팩은 그 줄 첫 발만 비운다(sfx_events_for)
             if pack and sfx.get("match_type") not in ("manual", "line"):
+                continue
+            # ★줄 효과음은 3단계 [효과음 자동 넣기]가 켜졌을 때(팩 결정=sfx_pack.resolve 가 팩을 냄)만 — 10-07 사장님
+            #   "체크 꺼져 있으면 2단계에서 배치한 효과음도 안 들어가게(인스타형 영상)". 칸 🔇(sfx_mute_beats)도
+            #   그 칸 줄 효과음까지 끈다. 사람이 3단계에서 고른 옛 효과음(manual)은 종전대로 남는다.
+            #   렌더·캡컷·미리보기가 전부 이 함수를 거치므로 판단은 여기 한 곳.
+            if sfx.get("match_type") == "line" and (not pack or beat.get("beat_idx") in _mute):
                 continue
             # 줄 효과음 파일은 사장님(0) 효과음 서랍에서 온다 — 짤(owner 0)과 같은 규칙
             _own = 0 if (sfx.get("match_type") == "line" and int(sfx.get("owner") or 0) == 0) else customer_id

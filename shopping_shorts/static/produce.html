@@ -11601,6 +11601,13 @@ async function startProduceMix(){
     //   job에 써 주지 않으면 다음 saveWork가 작업 상태에서 지우고 job엔 애초에 없어 **양쪽 다 사라진다**.
     //   장면꾸미기는 그 빈자리를 첫 TTS 문장으로 메워 제목 자리에 대사가 박혔다.
     try{ if(STATE.headcopy && STATE.headcopy.text && typeof saveHeadcopy==='function') saveHeadcopy(); }catch(e){}
+    // ★2단계 효과음 스위치(전체 sfx_pack·줄 sfx_mute_beats)를 새 job deco 에 — 3단계 스위치와 같은 /api/produce/mix/settings
+    if(STATE.script_sfx_deco && d.job_id){
+      fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(Object.assign({job_id:d.job_id}, STATE.script_sfx_deco))})
+        .then(r=>r.json()).then(x=>{ if(!(x&&x.ok)) console.warn('[sfx] 2단계 효과음 설정 넘기기 실패', x); })
+        .catch(e=>console.warn('[sfx] 2단계 효과음 설정 넘기기 실패', e));
+    }
     // 이 job이 실제로 쓴 대본 — 2단계 확정본과 대조용.
     // ★try 필수: 이 함수만 잘라 도는 테스트 하네스는 'use strict'라 선언부(위쪽 let)가
     //   슬라이스 밖이면 미선언 대입이 ReferenceError로 죽고, 함수가 통째로 중단된다
@@ -19091,6 +19098,9 @@ function s2ApplyDraftContract(target, dr){
   // ★스토리보드(관제 120): 스토리보드로 만든 안만 칸·문장·장면을 싣는다. 다른 안으로 확정하면 지운다(옛 스토리보드가 따라가지 않게) — 이 한 곳에서만
   if(dr && Array.isArray(dr.storyboard) && dr.storyboard.length) target.script_storyboard=dr.storyboard;
   else delete target.script_storyboard;
+  // 2단계 효과음 스위치(sbConfirm) — 새 job 이 생기는 순간(mix 시작) 3단계 스위치와 같은 저장 API 로 넣는다
+  if(dr && dr.sfx_deco && (dr.sfx_deco.sfx_pack || (dr.sfx_deco.sfx_mute_beats||[]).length)) target.script_sfx_deco=dr.sfx_deco;
+  else delete target.script_sfx_deco;
   return c;
 }
 function s2Confirm(i){
@@ -19325,7 +19335,14 @@ function sbMemeCell(i, sl){
   if(typeof SfxBank!=='undefined'){
     h+=SfxBank.cell({id:sl.sfx_off?null:sl.sfx_pick, cat:sl.sfx_cat, auto:sl.sfx_auto, off:sl.sfx_off,
       change:`sbSfxOpen(${i})`, remove:`sbSfxSet(${i},null)`, add:`sbSfxOpen(${i})`, onReady:()=>{ try{ sbRender(); }catch(e){ console.warn('[sfx] 다시 그리기 실패', e); } }});
+    // 들어가나(sl.sfx_live)는 서버(_sb_picks — 렌더 입구 _resolve_sfx_paths 와 같은 조건)가 정한다. 여기선 그리기만
+    if(sl.sfx_pick && !sl.sfx_off && !sl.sfx_mute && sl.sfx_live===false)
+      h+=`<div class="sb-packsfx" style="opacity:.7">ℹ 3단계 효과음이 꺼져 있어 이 효과음은 안 들어가요(켜면 들어감)</div>`;
   }
+  // 줄 효과음 스위치 — 이 줄의 줄 효과음 + 기본 효과음 칩 전체. 저장은 확정 때 3단계 칸 🔇(deco.sfx_mute_beats)와 같은 값
+  h+= sl.sfx_mute
+    ? `<div class="sb-packsfx" style="opacity:.7">🔇 이 줄 효과음 끔 <button class="mp-btn" style="padding:2px 8px;font-size:12px;min-height:0" onclick="sbSfxMute(${i})">켜기</button></div>`
+    : `<div style="margin-top:2px"><button class="mp-btn" style="padding:2px 8px;font-size:11px;min-height:0" title="이 줄의 효과음(줄 효과음·기본 효과음)을 모두 끕니다" onclick="sbSfxMute(${i})">🔇 이 줄 효과음 끄기</button></div>`;
   // 기본 효과음팩 칩 — 어떤 소리·어디쯤은 서버(sfx_pack.preview_lines = 렌더와 같은 plan_events+apply_pack_edit)가 정해 sl.pack_sfx 로 싣는다.
   //   여기선 그리기만 — ✕(빼기)·바꾸기·되돌리기는 sl.pack_edit 표식만 고치고 서버(/picks)가 다시 계산한다(화면이 판단 안 함).
   if(Array.isArray(sl.pack_sfx)){
@@ -19335,7 +19352,7 @@ function sbMemeCell(i, sl){
         +(off?`<button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="다시 넣기" onclick="sbPackEdit(${i},${k},'undo')">되돌리기</button>`
              :`<button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="다른 소리로 바꾸기" onclick="sbPackSwapOpen(${i},${k})">바꾸기</button><button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="이 소리 빼기" onclick="sbPackEdit(${i},${k},'off')">✕</button>${x.from?`<button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="원래 소리로" onclick="sbPackEdit(${i},${k},'undo')">되돌리기</button>`:''}`)
         +`</span>`; };
-    h+= sl.pack_sfx.length
+    h+= (sl.pack_sfx.length && !sl.sfx_mute)
       ? `<div class="sb-packsfx" title="자동으로 깔리는 기본 효과음 — 대략 위치(3단계에서 실제 목소리 길이로 다시 맞춥니다)">🔊 ${sl.pack_sfx.map(chip).join(' · ')} <small style="opacity:.6">대략 위치</small><div id="sbPackSwap${i}"></div></div>`
       : (i===0 && (sbCur()[1]||{}).pack_sfx_on===false ? `<div class="sb-packsfx" style="opacity:.6">🔇 기본 효과음 없음</div>` : '');
   }
@@ -19349,6 +19366,15 @@ function sbMemeSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; 
   if(id==='auto') delete sl.meme_pick; else if(id) sl.meme_pick=Number(id); else { delete sl.meme_pick; sl.meme_off=1; }
   if(sl.sfx_auto){ delete sl.sfx_pick; delete sl.sfx_auto; }
   sbPicksSync(ek,bd); }
+// 2단계 효과음 스위치 — 보드가 들고 있다가 확정 때 3단계 job deco(sfx_pack·sfx_mute_beats)로 넘긴다(sbConfirm → mix 시작).
+//   켜짐·꺼짐 판단은 서버(sfx_pack.resolve)만 — 여기선 값만 바꾸고 /picks 로 다시 계산받는다.
+function sbSfxAll(on){ const [ek,bd]=sbCur(); if(!bd) return; bd.sfx_sw=on?'auto':'off'; sbPicksSync(ek,bd); }
+function sbSfxMute(i){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
+  if(sl.sfx_mute) delete sl.sfx_mute; else sl.sfx_mute=1; sbPicksSync(ek,bd); }
+function sbSfxMuteIdx(slots){ const a=[]; (slots||[]).forEach((x,k)=>{ if(x&&x.sfx_mute) a.push(k); }); return a; }
+function sbSfxBar(bd){ const off=(bd.sfx_sw==='off') || (bd.sfx_sw==null && bd.pack_sfx_on===false);
+  return `<div class="sb-note" style="margin:4px 0">${off?'🔇 효과음 꺼짐 — 완성본에 효과음(줄 효과음·기본 효과음)이 안 들어가요':'🔊 효과음 켜짐'}
+    <button class="mp-btn" style="padding:2px 10px;font-size:12px;min-height:0" onclick="sbSfxAll(${off?'true':'false'})">${off?'효과음 켜기':'효과음 끄기'}</button></div>`; }
 function sbSfxOpen(i){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
   SfxBank.openDrawer({title:(i+1)+'번 줄 효과음 고르기', cat:sl.sfx_cat||'', cur:sl.sfx_pick, onPick:id=>sbSfxSet(i,id)}); }
 function sbSfxSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
@@ -19383,9 +19409,10 @@ async function sbPicksSync(ek, bd){
   try{
     const r=await (await fetch('/api/produce/storyboard/'+encodeURIComponent(SB.jid||'')+'/picks',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({slots:bd.slots.map(x=>({line:x.line, slot:x.slot, meme_emotion:x.meme_emotion, meme_pick:x.meme_pick, meme_auto:x.meme_auto, meme_off:x.meme_off,
-        sfx_pick:x.sfx_pick, sfx_auto:x.sfx_auto, sfx_off:x.sfx_off, pack_edit:x.pack_edit}))})})).json();
+        sfx_pick:x.sfx_pick, sfx_auto:x.sfx_auto, sfx_off:x.sfx_off, pack_edit:x.pack_edit})),
+        sfx_pack:bd.sfx_sw||undefined, sfx_mute_beats:sbSfxMuteIdx(bd.slots)})})).json();
     if(r&&r.ok&&Array.isArray(r.slots)&&r.slots.length===bd.slots.length){
-      const K=['meme_pick','meme_auto','meme_off','sfx_pick','sfx_auto','sfx_off','sfx_cat','pack_sfx','pack_edit'];
+      const K=['meme_pick','meme_auto','meme_off','sfx_pick','sfx_auto','sfx_off','sfx_cat','pack_sfx','pack_edit','sfx_live'];
       if(r.pack_sfx_on!=null) bd.pack_sfx_on=!!r.pack_sfx_on;
       r.slots.forEach((x,k)=>{ K.forEach(f=>{ if(x[f]==null) delete bd.slots[k][f]; else bd.slots[k][f]=x[f]; }); });
     } else toast((r&&r.error)||'짤·효과음 다시 고르기 실패');
@@ -19444,13 +19471,17 @@ async function sbInsert(){
 function sbConfirm(){
   const [ek,bd]=sbCur(); if(!bd){ toast('먼저 스토리보드를 만들어 주세요'); return; }
   const cur=sbCurBoard(ek,bd);
-  const rows=cur.slots.map(sl=>({slot:String(sl.slot||''), line:String(sl.line||'').trim(), ids:(sl.ids||[]).filter(Boolean), cta:sl.cta_mark, sig_rank:sl.sig_rank, signal:sl.signal,
+  const rows=cur.slots.map(sl=>({slot:String(sl.slot||''), line:String(sl.line||'').trim(), ids:(sl.ids||[]).filter(Boolean), cta:sl.cta_mark, sig_rank:sl.sig_rank, signal:sl.signal, sfx_mute:sl.sfx_mute,
     picks:{meme_pick:sl.meme_pick, meme_auto:sl.meme_auto, meme_off:sl.meme_off, sfx_pick:sl.sfx_pick, sfx_auto:sl.sfx_auto, sfx_off:sl.sfx_off, pack_edit:sl.pack_edit}})).filter(x=>x.line);
   if(!rows.length){ toast('대본이 비어 있습니다'); return; }
   const decided=cur.slots.some(sl=>sl.cta_mark===true);
   const beats=rows.map(x=>{ const b={role:x.slot, text:x.line, src_seg:x.ids[0]||'', src_segs:x.ids.slice()}; if(decided) b.cta_mark=(x.cta===true); return b; });
   // 신호어 자리 번호(sig_rank·signal)도 싣는다 — 3단계 짤 자리 판정(storyboard.meme_slots, 관제 139)
   const dr={script:rows.map(x=>x.line).join('\n'), hook:rows[0].line, beats, style_id:null,
+            // 효과음 스위치 → 3단계 job deco 와 같은 키. 줄 번호 = 글 있는 줄(rows) 번호 = 3단계 칸 번호:
+            //   확정 길(story_writer storyboard 줄 → edit_plan beats)이 빈 줄을 빼고 1줄=1칸, beat_idx=len(beats) 로 순서대로 단다.
+            //   예외: 그 줄 장면을 하나도 못 찾으면 edit_plan 이 칸을 건너뛰어 뒤 번호가 당겨진다(드묾 — 그때는 3단계 칸 🔇로 바로잡음).
+            sfx_deco:Object.assign({sfx_mute_beats:rows.map((x,k)=>x.sfx_mute?k:-1).filter(k=>k>=0)}, bd.sfx_sw?{sfx_pack:bd.sfx_sw}:{}),
             storyboard:rows.map(x=>Object.assign({slot:x.slot, line:x.line, ids:x.ids}, x.sig_rank?{sig_rank:x.sig_rank, signal:x.signal||''}:{}, window.MEME_ON?Object.fromEntries(Object.entries(x.picks).filter(([k,v])=>v)):{})), from_storyboard:sbTabName(ek).replace(/<[^>]+>/g,'')};
   S2.drafts=(S2.drafts||[]).filter(d=>!(d&&d.storyboard)).concat([dr]);   // 다시 확정하면 옛 스토리보드 안은 바꿔 끼운다
   const idx=S2.drafts.length-1; S2.curDraft=idx;
@@ -19481,7 +19512,7 @@ function sbPage2(){
           ${(i===0&&(bd.extra_missing||[]).length)?`<div class="sb-why">⚠ 끼워 넣기에서 빠진 칸: ${sbE(bd.extra_missing.map(sbKo).join(', '))}</div>`:''}
           ${sbRowActs(i,bd.slots.length,sl)}${sbMemeCell(i,sl)}</div>
         <div><div class="sb-cth">${sbCellCards(ek,i,sl,ck)}</div>${sbCandBox(ek,i,sl,bd)}</div></div>`; }).join('');
-    body=`<div class="sb-note" style="margin:6px 0">${sbE(bd.first_line_style||'')} · 🎯 = 위에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
+    body=`${window.MEME_ON?sbSfxBar(bd):''}<div class="sb-note" style="margin:6px 0">${sbE(bd.first_line_style||'')} · 🎯 = 위에서 담은 장면이 들어간 칸 · 문장은 바로 고칠 수 있어요 · 한 줄이 곧 대본 한 줄</div>
       <div class="sb-rows">${cells}</div>${sbLeftRow(bd)}${sbXpick(ek,bd)}
       <div style="text-align:right;margin-top:10px"><button class="sb-btn main" onclick="sbConfirm()">이 대본으로 확정 → 3단계</button></div>`;
   }
