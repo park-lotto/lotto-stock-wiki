@@ -1045,8 +1045,21 @@
     for (var i = 0; i < cs.length; i++) if (_ytVid(cs[i].getAttribute("href")) === id) return cs[i];
     return null;
   }
+  // 미리보기가 떠 있는 동안 그 카드의 📥는 숨긴다(관제 156, 2026-10-07 사장님 "마우스를 올리면 아이콘이 하나 더 생긴다").
+  //   미리보기는 카드보다 조금 크게, 살짝 비켜 그려져 밑의 카드 📥가 옆에 겹쳐 보였다.
+  var _ytHidCard = null;
+  function _ytCardBtnShow(a, on) {
+    if (!a) return;
+    var cb = a.querySelector(".ss-card-grab");
+    if (cb) cb.style.visibility = on ? "" : "hidden";
+  }
   function _ytPreviewBtn() {
     var pv = document.querySelector("#video-preview ytd-video-preview");
+    var vis = pv && pv.getBoundingClientRect().width > 0 && getComputedStyle(pv).display !== "none" &&
+              !(pv.closest("#video-preview") && pv.closest("#video-preview").hidden);
+    var card = vis ? _ytPreviewCard(pv) : null;
+    if (_ytHidCard && _ytHidCard !== card) { _ytCardBtnShow(_ytHidCard, true); _ytHidCard = null; }
+    if (card) { _ytCardBtnShow(card, false); _ytHidCard = card; }
     if (!pv) return;
     var b = pv.querySelector(".ss-card-grab");
     if (!b) {
