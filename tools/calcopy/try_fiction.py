@@ -30,6 +30,8 @@ OO 내부에서도 난리 났다는 폴더블의 미친 속사정
 진짜 소름 돋는 포인트는 화면이 가로로 넓어져 영상 볼 때 몰입감이 미쳐버린다고"""
 
 FEAT_PROMPT = """아래는 한 제품을 찍은 영상들의 장면 태깅이다. 이 제품의 기능을 5~8개 뽑아라. 화면에 보이는 것만, 지어내지 마라.
+★text 는 설명서 문장이 아니라 **사실 조각**(명사구, 20자 이내, 숫자는 그대로)으로: "QR로 15초 영상 재생" · "초당 3만~5만 번 진동". "~하여 ~를 방지" 같은 문장 금지.
+scene 에는 그 기능을 **쓰는 장면** 한 줄(사람이 무엇을 하면 무엇이 보이나): "사진 속 QR을 폰에 비추면 그날 영상이 재생됨".
 기능마다 성격을 하나 정한다:
   과한 기능  : "이걸 굳이 여기까지?" 싶은 고급·과잉 스펙(모터·센서·팬·특수소재·자동화 등). 평범한 기본 기능은 아니다.
   불편 해결  : 누구나 겪는 일상 불편을 없앰
@@ -37,7 +39,7 @@ FEAT_PROMPT = """아래는 한 제품을 찍은 영상들의 장면 태깅이다
   가격 이점  : 값·유지비 이점
   기본       : 그 밖의 평범한 기능
 power(0~10): 보는 사람이 "오?" 할 세기.
-출력 JSON: {"product_kind": "제품 종류 낱말 하나", "feats": [{"id": "f1", "text": "기능 한 줄", "type": "과한 기능|불편 해결|뜻밖의 쓰임|가격 이점|기본", "power": 7, "cuts": ["장면번호"]}]}
+출력 JSON: {"product_kind": "제품 종류 낱말 하나", "feats": [{"id": "f1", "text": "사실 조각", "scene": "쓰는 장면 한 줄", "type": "과한 기능|불편 해결|뜻밖의 쓰임|가격 이점|기본", "power": 7, "cuts": ["장면번호"]}]}
 
 [제품] %s
 [장면 태깅 — 번호 | 화면 | 용처 | 특징]
@@ -53,10 +55,13 @@ WRITE_PROMPT = """너는 쇼핑 쇼츠 '썰' 작가다. 아래 [원본] 두 편�
 - 등장인물(누가 반대하고 누가 고집하나), 대사, 비유, 문장은 네가 새로 지어라. 원본 문장을 그대로 쓰지 마라.
 - ★실제 회사·브랜드·인물 이름을 쓰지 마라("한 제조사", "개발팀", "사장님"처럼). 이 이야기는 지어낸 썰이다.
 - 기능·숫자·가격은 [기능]에 있는 것만. 없는 숫자를 만들지 마라.
-- 대사는 큰따옴표로. 대사 줄에도 그 칸의 기능이 들어가야 한다(기능 없는 감정 대사만 쓰지 마라).
+- 기능은 [기능]의 사실 조각을 **그대로 옮기지 말고 쓰는 장면으로** 말해라("엉덩이 밑에 4000RPM 쿨링팬을 박아버리더니"처럼). 설명서 말투(~를 통한, ~최적화, ~역할 수행, ~방지, ~및~) 금지.
+- 대사 칸: 윗선 걱정 한 줄 → 실무자 대답 한 줄. ★대답은 걱정을 **풀어 주거나(그래서 괜찮다)** 걱정을 **더 키우는(그것도 모자라 이것도 넣었다)** 것이어야 한다. 걱정과 상관없는 대답 금지.
+  실무자 대답의 기능은 [대사 후보] 중 그 걱정에 맞는 것 하나를 네가 골라 feat 에 적어라.
+- 줄마다 speaker 를 적어라: 나레 / 윗선 / 실무자. 윗선·실무자 줄의 text 는 **그 사람이 하는 말만**(따옴표·"라며" 없이). "라며 받아침" 같은 연결은 나레 줄로 따로.
 - 반말 썰체(~는데 / ~는 거 / ~버림 / ~다고). 보는 사람에게 사라고 하지 마라. 8~10줄, 공백 빼고 180~260자.
 
-출력 JSON: {"title": "첫 줄(훅)", "lines": [{"beat": "칸 이름", "text": "한 줄", "feat": "f번호 또는 빈칸"}]}
+출력 JSON: {"title": "첫 줄(훅)", "lines": [{"beat": "칸 이름", "speaker": "나레|윗선|실무자", "text": "한 줄", "feat": "f번호 또는 빈칸"}]}
 
 [원본]
 %s
@@ -117,12 +122,13 @@ def main():
                 print("\n✗ %s — 틀 안 맞음(과한 기능 %d개) → 쓰지 않음" % (product, len(over)))
                 res.append({"product": product, "fit": False, "feats": feats}); continue
             twist = (over[2:] + rest)[0] if len(over) > 2 else rest[0]
-            talk = [f for f in (rest + over[2:]) if f is not twist][0]
+            talk_c = [f for f in (rest + over[2:]) if f is not twist][:3]
             plan = [("설정", None, "윗선이 정한 방향(원가 무시하고 최고로 / 원래는 평범하게 가려 했다 중 하나)"),
                     ("폭주1", over[0], "실무자가 과하게 넣어버림"), ("폭주2", over[1], "하나 더 넣어버림"),
-                    ("대사", talk, "윗선의 걱정 대사 → 실무자의 대답 대사(대답에 이 기능)"), ("반전", twist, "근데 진짜 소름 돋는 건 — 가장 센 기능")]
+                    ("대사", None, "윗선의 걱정 대사 → 실무자의 대답 대사. 대답 기능은 [대사 후보]: %s" % ", ".join("%s(%s)" % (f["id"], f["text"]) for f in talk_c)),
+("반전", twist, "근데 진짜 소름 돋는 건 — 가장 센 기능")]
             plan_txt = "\n".join("  %d. %s — %s%s" % (i + 1, b, d, (" ← 반드시: %s [%s]" % (f["text"], f["id"])) if f else "") for i, (b, f, d) in enumerate(plan))
-            feats_txt = "\n".join("  %s (%s) %s" % (f["id"], f.get("type"), f["text"]) for f in feats)
+            feats_txt = "\n".join("  %s (%s) %s — 장면: %s" % (f["id"], f.get("type"), f["text"], f.get("scene") or "") for f in feats)
             kind = fo.get("product_kind") or product
             fb, out, bad = "", None, []
             for attempt in range(2):
@@ -133,6 +139,11 @@ def main():
                 for b, f, _ in plan:
                     if f and not any(L.get("feat") == f["id"] for L in lines):
                         bad.append("%s 칸에 기능 %s(%s)이 없다" % (b, f["id"], f["text"][:20]))
+                if not any(L.get("speaker") == "실무자" and L.get("feat") in {f["id"] for f in talk_c} for L in lines):
+                    bad.append("대사 칸: 실무자 대답 줄에 [대사 후보] 기능(feat)이 없다")
+                manual = [L["text"][:20] for L in lines if re.search(r"을 통한|를 통한|역할 수행|방지|최적화| 및 ", L["text"])]
+                if manual:
+                    bad.append("설명서 말투가 남았다: %s — 쓰는 장면으로" % " / ".join(manual[:3]))
                 if re.search(BRANDS, body):
                     bad.append("실명 회사·브랜드를 썼다: %s" % ", ".join(sorted(set(re.findall(BRANDS, body)))))
                 known = set(re.findall(r"\d+", " ".join(f["text"] for f in feats) + " " + block))
@@ -152,7 +163,7 @@ def main():
                 print("   %s (%s·%s) %s" % (f["id"], f.get("type"), f.get("power"), f["text"]))
             print("  [훅] " + (out.get("title") or ""))
             for L in out.get("lines") or []:
-                print("  (%s·%s) %s" % (L.get("beat"), L.get("feat") or "-", L.get("text")))
+                print("  (%s·%s·%s) %s" % (L.get("beat"), L.get("speaker") or "", L.get("feat") or "-", L.get("text")))
             for x in bad:
                 print("  ! " + x)
     json.dump(res, open(a.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
