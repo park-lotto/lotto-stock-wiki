@@ -1820,6 +1820,43 @@
     add((document.title || "").replace(KW_TITLE_TAIL, ""));
     return parts.join(" / ").slice(0, 2000);
   }
+  // 설명글의 해시태그(순서대로·중복 없이·최대 8개). 숫자만인 것은 뺀다.
+  function _postHashtags(cap) {
+    var out = [], seen = {}, re = /#([^\s#.,!?:;()\[\]{}"'“”‘’<>@]+)/g, m;
+    while ((m = re.exec(String(cap || ""))) && out.length < 8) {
+      var t = m[1].replace(/[_]+$/, "");
+      var k = t.toLowerCase();
+      if (!t || /^\d+$/.test(t) || seen[k]) continue;
+      seen[k] = 1; out.push(t);
+    }
+    return out;
+  }
+  // 해시태그 검색 주소 — 사이트마다 태그 검색이 따로 있다(인스타는 키워드 검색에 '#태그'를 넣으면 태그 결과).
+  var TAG_URL = {
+    instagram: function (t) { return "https://www.instagram.com/explore/search/keyword/?q=" + encodeURIComponent("#" + t); },
+    youtube: function (t) { return "https://www.youtube.com/hashtag/" + encodeURIComponent(t) + "/shorts"; },
+    tiktok: function (t) { return "https://www.tiktok.com/tag/" + encodeURIComponent(t); },
+    pinterest: function (t) { return "https://www.pinterest.com/search/videos/?q=" + encodeURIComponent("#" + t); },
+    xiaohongshu: function (t) { return "https://www.xiaohongshu.com/search_result?keyword=" + encodeURIComponent(t); },
+    douyin: function (t) { return "https://www.douyin.com/search/" + encodeURIComponent("#" + t); }
+  };
+  function _tagChip(s, t) {
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = "#" + t; b.title = "#" + t + " 태그로 검색";
+    b.style.cssText = "border:1px solid #f5c542;background:#f5c542;color:#1a1206;border-radius:16px;padding:5px 12px;" +
+      "font:800 13px system-ui,sans-serif;cursor:pointer;white-space:nowrap";
+    b.addEventListener("click", function (e) {
+      e.preventDefault(); e.stopPropagation();
+      // 설명글 속 그 태그 링크가 있으면 **사이트가 쓰는 주소 그대로** 간다(사장님이 눌러서 잘 됐던 그 길).
+      var as = document.querySelectorAll("a[href]");
+      for (var i = 0; i < as.length; i++) {
+        if ((as[i].textContent || "").trim().toLowerCase() === ("#" + t).toLowerCase()) { location.href = as[i].href; return; }
+      }
+      var f = s && TAG_URL[s.id];
+      if (f) location.href = f(t);
+    });
+    return b;
+  }
   function syncIgPostKw() {
     var p = document.getElementById("ss-kwpost"), s = _kwSite();
     var code = s ? s.post() : "";
@@ -1858,6 +1895,19 @@
         st.textContent = "설명글이 없어 검색어를 못 만들었어요"; return;
       }
       p.removeAttribute("data-wait");
+      // ★판매자 해시태그를 맨 위 줄에(관제 156, 2026-10-08 사장님): 설명글의 #intake 를 누르니 영어 검색어로는
+      //   안 나오던 제품이 정확히 나왔다. 인스타 키워드 검색이 안 될 때 가장 좋은 길 — 서버 호출 없이 설명글에서 뽑는다.
+      var tags = _postHashtags(cap);
+      if (tags.length && !body.querySelector(".ss-kw-tags")) {
+        var tr = document.createElement("div");
+        tr.className = "ss-kw-tags";
+        tr.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center";
+        var tl = document.createElement("span");
+        tl.textContent = "판매자 태그"; tl.style.cssText = "font-size:11px;font-weight:800;color:#f5c542;margin-right:2px";
+        tr.appendChild(tl);
+        for (var ti = 0; ti < tags.length; ti++) tr.appendChild(_tagChip(s, tags[ti]));
+        body.insertBefore(tr, body.firstChild);
+      }
       st.textContent = "검색어 만드는 중…";
       _igKwFetch("caption", cap.slice(0, 2000), function (r) {
         if (p.getAttribute("data-c") !== key || !document.body.contains(p)) return;
