@@ -5061,6 +5061,41 @@ def api_vertex_register(request: Request, body: dict):
     return {"ok": True, "message": msg, **_vertex_status(store, cid)}
 
 
+VERTEX_NOTICE_PREF = "vertex_notice_day"      # 하루 1회 안내 — 회원이 그날 닫은 날짜(한국시간). customer_prefs
+
+
+def _vertex_notice(cid):
+    """미등록 회원 안내 묶음 {text,url} 또는 None — 판정은 vertex_route.needs_notice 한 곳."""
+    from shopping_shorts import vertex_route
+    if not vertex_route.needs_notice(cid):
+        return None
+    return {"text": vertex_route.VERTEX_NOTICE, "url": vertex_route.VERTEX_NOTICE_URL, "link_text": "등록하기"}
+
+
+def _vertex_notice_day():
+    """오늘(한국시간) 'YYYY-MM-DD' — 하루 1회 안내용."""
+    import datetime as _dt
+    return (_dt.datetime.utcnow() + _dt.timedelta(hours=9)).strftime("%Y-%m-%d")
+
+
+@app.get("/api/settings/vertex_notice")
+def api_vertex_notice(request: Request):
+    """하루 1회 안내 — 미등록 회원 + 오늘 아직 안 닫았으면 show. 화면(sidebar.js)은 보여 주기만 한다."""
+    cid = keyroute.as_cid(_cid(request))
+    n = _vertex_notice(cid)
+    if not n:
+        return {"ok": True, "show": False}
+    seen = Store(DB_PATH).get_pref(VERTEX_NOTICE_PREF, customer_id=cid, default="")
+    return {"ok": True, "show": seen != _vertex_notice_day(), **n}
+
+
+@app.post("/api/settings/vertex_notice/seen")
+def api_vertex_notice_seen(request: Request):
+    cid = keyroute.as_cid(_cid(request))
+    Store(DB_PATH).set_pref(VERTEX_NOTICE_PREF, _vertex_notice_day(), customer_id=cid)
+    return {"ok": True}
+
+
 @app.post("/api/settings/vertex/delete")
 def api_vertex_delete(request: Request):
     from shopping_shorts import vertex_route
@@ -21344,7 +21379,7 @@ def _sb_picks(cid, key, bd, sfx_deco=None):
     except Exception as e:      # noqa: BLE001
         _log("효과음 서랍 읽기 실패: %r" % e)
         bank = {}
-    _sbm.sfx_preview(bd["slots"], bank, key=str(key), log=_log)
+    _sbm.sfx_preview(bd["slots"], bank, key=str(key), log=_log, prefs=mix_pipeline._sfx_prefs(st, cid))
     # 기본 효과음팩 미리보기 — 팩 결정(resolve)·배치(plan_events)는 sfx_pack 한 곳. 줄 효과음 있는 줄은 첫 발을 비운다.
     try:
         from shopping_shorts import sfx_pack as _sp
@@ -21669,7 +21704,8 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
                                   backbone_main=backbone_main)
     _store.attach_mix_claim(_fp, job_id)     # 진 쪽이 이걸 읽어 같은 job을 쓴다
     Store(DB_PATH).enqueue("mix", {"job_id": job_id})
-    return {"ok": True, "job_id": job_id}
+    _vn = _vertex_notice(getattr(request.state, "customer_id", 0))      # 3단계 시작 — 미등록이면 안내만(막지 않는다)
+    return {"ok": True, "job_id": job_id, **({"vertex_notice": _vn} if _vn else {})}
 
 
 # ── 대화형 대본(관제 128, 2026-10-05) — 스위치 dialogue_enabled(기본 끔 · "admin" = 사장님만 시험). ──
@@ -23213,7 +23249,52 @@ def api_sfx_bank(request: Request):
     bank = mix_pipeline._sfx_bank(Store(DB_PATH))
     items = [{"id": a["asset_id"], "cat": c, "title": a.get("title") or "", "dur": round(float(a.get("duration") or 0), 2)}
              for c in _sbm.SFX_CATS for a in bank.get(c) or []]
-    return {"ok": True, "cats": [{"name": c, "count": len(bank.get(c) or [])} for c in _sbm.SFX_CATS], "items": items}
+    return {"ok": True, "cats": [{"name": c, "count": len(bank.get(c) or [])} for c in _sbm.SFX_CATS], "items": items,
+            "prefs": _sfx_prefs_clean(Store(DB_PATH), cid, bank)}
+
+
+def _sfx_prefs_clean(store, cid, bank=None):
+    """저장된 우선 효과음(⭐) — 서랍에서 사라진 소리는 빼고 분류별 rank 를 1부터. [{asset_id, cat, rank}] (짤 ⭐와 같은 모양)."""
+    from shopping_shorts import storyboard as _sbm
+    bank = bank if bank is not None else mix_pipeline._sfx_bank(store)
+    have = {int(a["asset_id"]): c for c, lst in bank.items() for a in lst}
+    by = _sbm.sfx_prefs_by_cat(store.get_pref(_sbm.SFX_PREF_KEY, customer_id=cid, default=[]))
+    return [{"asset_id": i, "cat": c, "rank": r + 1}
+            for c, ids in by.items() for r, i in enumerate([x for x in ids if have.get(x) == c])]
+
+
+@app.get("/api/sfx/prefs")
+def api_sfx_prefs_get(request: Request):
+    cid, denied = _meme_gate(request)
+    if denied:
+        return denied
+    return {"ok": True, "prefs": _sfx_prefs_clean(Store(DB_PATH), cid)}
+
+
+@app.post("/api/sfx/prefs")
+def api_sfx_prefs_post(request: Request, body: dict):
+    """우선 효과음 통째 저장 — body {prefs:[{asset_id, rank}]}. 분류는 **서버가 서랍에서** 정한다(화면 값 안 믿음)."""
+    from shopping_shorts import storyboard as _sbm
+    cid, denied = _meme_gate(request)
+    if denied:
+        return denied
+    rows = (body or {}).get("prefs")
+    if not isinstance(rows, list) or len(rows) > 300:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "prefs 목록이 필요해요"})
+    st = Store(DB_PATH)
+    out, seen = [], set()
+    for k, p in enumerate(rows):
+        a = _sfx_bank_asset(st, (p or {}).get("asset_id"), cid) if isinstance(p, dict) else None
+        if not a or a["id"] in seen:
+            continue
+        seen.add(a["id"])
+        try:
+            rank = int(p.get("rank") or (k + 1))
+        except (TypeError, ValueError):
+            rank = k + 1
+        out.append({"asset_id": a["id"], "cat": str(a["category"]).strip(), "rank": rank})
+    st.set_pref(_sbm.SFX_PREF_KEY, out, customer_id=cid)
+    return {"ok": True, "prefs": _sfx_prefs_clean(st, cid)}
 
 
 @app.get("/api/sfx/{asset_id}/media")

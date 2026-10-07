@@ -57,7 +57,7 @@
   }
   function star(id, emo) {
     var r = rankOf(id);
-    return '<span class="mp-st" title="이 감정의 우선 짤로(먼저 누른 순서대로 자동 배치에 먼저 쓰여요)" onclick="event.stopPropagation();MemePack.toggleFav(' + Number(id) + ')">' + (r ? "⭐" + r : "☆") + "</span>";
+    return '<span class="mp-st" title="이 감정의 후보로 담기(담은 후보 중 랜덤 배치)" onclick="event.stopPropagation();MemePack.toggleFav(' + Number(id) + ')">' + (r ? "⭐" + r : "☆") + "</span>";
   }
   // 카드 하나 — 밈팩 페이지·서랍이 같이 쓴다
   function card(c, opts) {
@@ -95,11 +95,20 @@
     box.style.display = "";
     var d = S.drawer, list = listOf(S.tab);
     box.innerHTML = '<h3>🎭 ' + e(d.title || "짤 고르기") + ' <span class="mp-x" onclick="MemePack.closeDrawer()">닫기</span></h3>' +
-      '<div class="mp-note">눌러서 넣기 · ☆ = 이 감정의 우선 짤(먼저 누른 순서대로 자동 배치에 먼저 쓰여요)</div>' +
+      '<div class="mp-note">눌러서 넣기 · 이 감정 줄(특정 연결어 자리)에 들어갈 짤을 ⭐ 1·2·3·4 로 담아 두면 그 후보 중 랜덤으로 배치돼요</div>' +
       (S.err ? '<div class="mp-err">' + e(S.err) + "</div>" : "") +
       (S.data ? tabs(S.tab, "MemePack.drawerTab") : '<div class="mp-note">불러오는 중…</div>') +
       (S.data && !list.length ? '<div class="mp-note">' + (S.tab === "⭐" ? "아직 비었어요 — 감정 탭에서 ☆를 눌러 담으세요" : "이 감정엔 짤이 없어요") + "</div>" : "") +
-      '<div class="mp-grid">' + list.slice(0, 160).map(function (c) { return card(c, { cur: c.id === Number(d.cur), onclick: "MemePack.pick(" + c.id + ")" }); }).join("") + "</div>";
+      grid(list.slice(0, 160), S.tab === "⭐", function (c) { return card(c, { cur: c.id === Number(d.cur), onclick: "MemePack.pick(" + c.id + ")" }); });
+  }
+  // 카드 격자 — ⭐ 탭이면 감정별로 묶어 제목을 단다(번호 ⭐1·2·3 은 카드 위 별에)
+  function grid(list, byEmo, draw) {
+    if (!byEmo) return '<div class="mp-grid">' + list.map(draw).join("") + "</div>";
+    var out = "", cur = null, buf = [];
+    function flush() { if (buf.length) out += '<div class="mp-note" style="margin-top:8px"><b>' + e(cur) + "</b> · ⭐ " + buf.length + "개 중 랜덤</div>" + '<div class="mp-grid">' + buf.map(draw).join("") + "</div>"; buf = []; }
+    list.forEach(function (c) { if (c.emotion !== cur) { flush(); cur = c.emotion; } buf.push(c); });
+    flush();
+    return out;
   }
   // 스타일 한 벌(페이지마다 따로 적지 않게)
   var css = document.createElement("style");
@@ -120,5 +129,5 @@
   document.head.appendChild(css);
   window.MemePack = { load: load, toggleFav: toggleFav, onChange: onChange, clip: clip, rankOf: rankOf, favIds: favIds,
     video: video, card: card, tabs: tabs, listOf: listOf, openDrawer: openDrawer, closeDrawer: closeDrawer,
-    drawerTab: drawerTab, pick: pick, poster: poster, media: media, state: S, esc: e };
+    drawerTab: drawerTab, grid: grid, NOTE: "이 감정 줄(특정 연결어 자리)에 들어갈 짤을 ⭐ 1·2·3·4 로 담아 두면 그 후보 중 랜덤으로 배치돼요", pick: pick, poster: poster, media: media, state: S, esc: e };
 })();

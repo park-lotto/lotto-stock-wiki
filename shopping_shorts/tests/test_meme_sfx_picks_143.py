@@ -67,7 +67,7 @@ def test_2단계_미리고른_짤이_3단계_짤과_같다():
 
 def test_사람이_서랍에서_바꾼_짤은_그대로():
     slots = _board()
-    slots[0]["meme_pick"] = 19                       # meme_auto 없음 = 사람이 고름
+    slots[0]["meme_pick"], slots[0]["meme_manual"] = 19, 1    # 서랍에서 직접 고름(10-07: 명시 표식)
     sb.meme_preview(slots, POOL, FAV, key="w")
     assert slots[0]["meme_pick"] == 19 and "meme_auto" not in slots[0]
 
@@ -180,3 +180,13 @@ def test_api_2단계_고르기와_효과음서랍_짤빼면_효과음도(env):
     c.post("/api/produce/mix/j1/sfx", json={"beat_idx": 0})
     b0 = st.get_mix_job("j1")["edit_plan"]["beats"][0]
     assert "sfx" not in b0 and b0["sfx_off"] == 1
+
+
+def test_api_효과음_별_저장_분류는_서버가_정하고_picks가_별을_쓴다(env):
+    st, ids, sid, c = env
+    st.set_setting("meme_enabled", "1")
+    r = c.post("/api/sfx/prefs", json={"prefs": [{"asset_id": sid, "rank": 1}, {"asset_id": 999999}]}).json()
+    assert r["prefs"] == [{"asset_id": sid, "cat": "리액션 탄성", "rank": 1}]
+    assert c.get("/api/sfx/bank").json()["prefs"] == r["prefs"]
+    slots = c.post("/api/produce/storyboard/w-1/picks", json={"slots": _board()}).json()["slots"]
+    assert slots[0]["sfx_pick"] == sid and slots[0]["sfx_auto"] == 1

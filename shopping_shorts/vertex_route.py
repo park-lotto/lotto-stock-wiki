@@ -243,6 +243,18 @@ def veo_client(cid):
     return None
 
 
+VERTEX_NOTICE = "AI 기능을 쓰려면 내 구글 Vertex 키 등록이 필요해요"
+VERTEX_NOTICE_URL = "/settings#vertexCard"      # 마이페이지 설정 › 내 구글 Vertex 연결 카드(settings.html #vertexCard)
+
+
+def needs_notice(cid):
+    """Vertex 미등록 안내를 띄울 회원인가 — 판정 한 곳(하루 1회 팝업·3단계 시작 안내가 같이 쓴다).
+    관리자(사장님 프로젝트를 씀)는 제외, 자기 서비스계정(member_info)이 있으면 제외."""
+    if _is_admin(cid):
+        return False
+    return not member_info(cid)
+
+
 def veo_allowed(cid):
     """(허용, 막을 때 문구) — 화면 버튼·API·워커가 같은 판정을 쓴다(0순위-B)."""
     if member_info(cid) or _is_admin(cid):
