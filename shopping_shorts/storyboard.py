@@ -837,6 +837,22 @@ def _apply_role_picks(slots, roles_pick):
     return moved, left
 
 
+def slot_checks(slots, segs):
+    """줄마다 '문장 X초 · 장면 Y초' — 보드 만들기·끼워 넣기·화면에서 고친 뒤(/picks) 모두 이 함수 하나로 잰다.
+    문장 초 = edit_plan.narr_secs(말속도 주인), 장면 초 = 그 줄에 든 조각 길이 합(segs: 조각 → 초).
+    short = 장면이 문장보다 모자람(장면 1.2배 여유, 0.2초 허용)."""
+    check, seen = [], set()
+    for x in slots or []:
+        x = x if isinstance(x, dict) else {}
+        ids = [c for c in (x.get("ids") or []) if c]
+        c_ = {"bad_ids": [c for c in ids if c not in segs], "dup_ids": [c for c in ids if c in seen],
+              "have": round(sum(segs.get(c, 0) for c in ids), 1), "need": round(narr_secs(x.get("line") or ""), 1)}
+        c_["short"] = c_["have"] * 1.2 < c_["need"] - 0.2
+        check.append(c_)
+        seen.update(ids)
+    return check
+
+
 def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pick="", extra=None, prev=None, key=""):
     roles = list(fam["roles"] or ["hook", "problem", "method", "result", "land"])
     chain = list(fam["chain"] or [])
@@ -905,14 +921,8 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
             slots[i]["line_before"], slots[i]["line"], slots[i]["fixed_why"] = slots[i].get("line"), fx["line"].strip(), fx.get("why") or ""
             fixed.append(i)
     apply_signals(slots, key, 0, yt)      # 생성·사실 검수 뒤 코드가 신호어를 확인·보정(사실 검수가 줄을 고쳐도 신호어가 남게)
-    used, check = {}, []
-    for i, sl in enumerate(slots):
-        ids = sl.get("ids") or []
-        check.append({"bad_ids": [c for c in ids if c not in segs], "dup_ids": [c for c in ids if c in used],
-                      "have": round(sum(segs.get(c, 0) for c in ids), 1), "need": round(narr_secs(sl.get("line") or ""), 1)})
-        check[-1]["short"] = check[-1]["have"] * 1.2 < check[-1]["need"] - 0.2
-        for c in ids:
-            used.setdefault(c, i)
+    check = slot_checks(slots, segs)
+    used = {c for sl in slots for c in (sl.get("ids") or [])}
     star_missing = [c for c in star if c not in used]
     role_fixed, role_left = _apply_role_picks(slots, roles_pick)
     return {"names": fam["names"], "pan": pan, "first_line_style": r3.get("first_line_style") or "", "slots": slots, "check": check,
@@ -1218,13 +1228,7 @@ def insert(db_path, jid, payload, R=None, ex=None):
     flow_fixed, auth2 = flow_review(slots, texts, voice) if ins else ([], None)
     if ins:      # 끼운 칸·흐름 검수 뒤에도 신호어 자리를 다시 맞춘다(같은 key → 같은 낱말, 자리만 새 칸 구조로)
         apply_signals(slots, bd.get("sig_key") or "%s:%s" % (jid, ",".join(bd.get("names") or [])), 0, bd.get("sig_yt", True))
-    check, seen = [], set()
-    for x in slots:
-        ids = x.get("ids") or []
-        check.append({"bad_ids": [c for c in ids if c not in segs], "dup_ids": [c for c in ids if c in seen],
-                      "have": round(sum(segs.get(c, 0) for c in ids), 1), "need": round(narr_secs(x.get("line") or ""), 1)})
-        check[-1]["short"] = check[-1]["have"] * 1.2 < check[-1]["need"] - 0.2
-        seen.update(ids)
+    check = slot_checks(slots, segs)
     out = dict(bd, slots=slots, check=check, extra=sorted(set((bd.get("extra") or []) + [x["slot"] for x in ins])),
                extra_missing=[e for e in extra if e not in [x["slot"] for x in ins]], touched=touched, flow_fixed=flow_fixed, auth=[n.get("auth"), auth2], mode="insert",
                prompt_chars=len(prompt))

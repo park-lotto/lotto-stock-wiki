@@ -21195,22 +21195,80 @@ def api_storyboard_thumb(request: Request, key: str, seg_id: str):
         return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
     if jid:
         return api_mix_seg_thumb(jid, seg_id)
+    found = _sb_seg_src(ex, None, seg_id)
+    if isinstance(found, JSONResponse):
+        return found
+    src, sg_ = found
+    safe = re.sub(r"[^0-9A-Za-z_.-]", "", seg_id)
+    out = _SB_THUMB_DIR / ("%s.jpg" % safe)
+    if not out.exists():
+        _SB_THUMB_DIR.mkdir(parents=True, exist_ok=True)
+        if not _seg_strip_thumb(src, _SB_THUMB_DIR, sg_, out.name):
+            return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
+    return FileResponse(str(out), media_type="image/jpeg")
+
+
+def _sb_seg_src(ex, jid, seg_id):
+    """스토리보드 조각 → (원본 영상 경로, 조각{start,end,video_id…}) — 썸네일·구간 영상(clip)이 같이 쓰는 한 곳.
+    매칭 작업(jid)이 있으면 3단계와 같은 장면 표(edit_plan.scene_table)·소스(_resolve_sources),
+    없으면 1단계 분석 때 받아 둔 영상(data/find_frames/<sha1(영상코드)[:16]>/*.mp4). 못 찾으면 404 JSONResponse."""
+    if jid:
+        job = Store(DB_PATH).get_mix_job(jid) or {}
+        seg = _edit_plan.scene_table(job.get("extract") or {}, job.get("edit_plan") or {}).get(seg_id)
+        if not seg:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "없는 장면"})
+        try:
+            src = _resolve_sources(job, _MIX_WORK_DIR / jid)[seg["video_id"]]
+        except Exception as e:      # noqa: BLE001 — 소스를 못 찾으면 404(이유 한 줄)
+            print("[storyboard] 소스 찾기 실패 %s %s: %r" % (jid, seg_id, e), file=sys.stderr)
+            return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
+        return str(src), seg
     for vid, e in (ex or {}).items():
         for sg_ in (e or {}).get("segments") or []:
             if sg_.get("seg_id") != seg_id:
                 continue
-            safe = re.sub(r"[^0-9A-Za-z_.-]", "", seg_id)
-            out = _SB_THUMB_DIR / ("%s.jpg" % safe)
-            if not out.exists():
-                vdir = _FIND_TMP_DIR / hashlib.sha1(str(vid).encode()).hexdigest()[:16]
-                mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
-                if not mp4:
-                    return JSONResponse(status_code=404, content={"ok": False, "error": "영상 파일이 치워졌습니다"})
-                _SB_THUMB_DIR.mkdir(parents=True, exist_ok=True)
-                if not _seg_strip_thumb(str(mp4[0]), _SB_THUMB_DIR, sg_, out.name):
-                    return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
-            return FileResponse(str(out), media_type="image/jpeg")
+            vdir = _FIND_TMP_DIR / hashlib.sha1(str(vid).encode()).hexdigest()[:16]
+            mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
+            if not mp4:
+                return JSONResponse(status_code=404, content={"ok": False, "error": "영상 파일이 치워졌습니다"})
+            return str(mp4[0]), sg_
     return JSONResponse(status_code=404, content={"ok": False, "error": "없는 장면"})
+
+
+_SB_CLIP_DIR = Path(__file__).parent / "data" / "storyboard_clips"
+
+
+@app.get("/api/produce/storyboard/clip/{key}/{seg_id}")
+def api_storyboard_clip(request: Request, key: str, seg_id: str):
+    """2단계 스토리보드 장면 카드 미리보기 — 그 조각 구간만 잘라 소리 없이 작게(캐시). 원본 찾기는 _sb_seg_src(썸네일과 같은 함수).
+    남의 작업은 _sb_job 이 막는다(404). 파일 이름은 열쇠·조각에서 허용 글자만 남긴다(경로 조작 방지)."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    skey, ex, jid = _sb_job(request, key.replace("w-", "w:", 1) if key.startswith("w-") else key)
+    if ex is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    found = _sb_seg_src(ex, jid, seg_id)
+    if isinstance(found, JSONResponse):
+        return found
+    src, seg = found
+    a, b = float(seg.get("start") or 0), float(seg.get("end") or 0)
+    if b - a <= 0.05:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "구간이 비었습니다"})
+    safe = re.sub(r"[^0-9A-Za-z_.-]", "", "%s_%s" % (skey, seg_id))[:120]
+    out = _SB_CLIP_DIR / ("%s_%d_%d.mp4" % (safe, int(a * 1000), int(b * 1000)))
+    if not out.exists():
+        import subprocess
+        _SB_CLIP_DIR.mkdir(parents=True, exist_ok=True)
+        tmp = out.with_suffix(".tmp.mp4")
+        r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", "%.3f" % a, "-i", str(src), "-t", "%.3f" % (b - a),
+                            "-an", "-vf", "scale=360:-2", "-c:v", "libx264", "-preset", "veryfast", "-crf", "30",
+                            "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(tmp)], capture_output=True, text=True, timeout=60)
+        if r.returncode != 0 or not tmp.exists():
+            print("[storyboard] 구간 영상 실패 %s %s: %s" % (skey, seg_id, (r.stderr or "")[-300:]), file=sys.stderr)
+            return JSONResponse(status_code=404, content={"ok": False, "error": "구간 영상 만들기 실패"})
+        tmp.replace(out)
+    return FileResponse(str(out), media_type="video/mp4")
 
 
 def _sb_run(job_id, name, fn):
@@ -21309,7 +21367,14 @@ def api_storyboard_picks(request: Request, job_id: str, body: dict):
     _sd = {k: (body or {}).get(k) for k in ("sfx_pack", "sfx_mute_beats") if (body or {}).get(k) is not None}
     bd = _sb_picks(getattr(request.state, "customer_id", 0), key, {"slots": [dict(x) if isinstance(x, dict) else {} for x in slots]},
                    sfx_deco=_sd or None)
-    return {"ok": True, "slots": bd["slots"], "pack_sfx_on": bd.get("pack_sfx_on")}
+    # 줄마다 '문장 X초 · 장면 Y초' — 보드를 만들 때와 같은 함수(storyboard.slot_checks)로 지금 줄 구성을 다시 잰다(화면은 계산 안 함)
+    from shopping_shorts import storyboard as _sbm
+    _keep = {c for x in slots if isinstance(x, dict) for c in (x.get("ids") or []) if isinstance(c, str)}
+    _segs = _sbm._materials(None, key, _ex or {}, keep=_keep)[0]
+    _check = _sbm.slot_checks([{"line": (x or {}).get("line") if isinstance(x, dict) else "",
+                                "ids": [c for c in ((x or {}).get("ids") or []) if isinstance(c, str)] if isinstance(x, dict) else []}
+                               for x in slots], _segs)
+    return {"ok": True, "slots": bd["slots"], "pack_sfx_on": bd.get("pack_sfx_on"), "check": _check}
 
 
 @app.get("/api/produce/storyboard/{job_id}")
