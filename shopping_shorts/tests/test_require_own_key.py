@@ -153,12 +153,11 @@ def test_exempt_list_is_exactly_the_four_people():
     숫자를 박아 고정한다. 지시 없이 늘어나면 이 테스트가 잡는다."""
     # ⚠️291(최일환)은 2026-09-03 **하루만** 열어둔 임시 면제다(사장님 지시).
     #   2026-09-04에 keyroute에서 291을 빼고 이 줄도 원래대로 되돌린다.
-    # ⚠️451(심효진)은 2026-09-29 사장님 지시("내 일레븐랩스 키 심효진님한테 열어줘") — 본인 타입캐스트가
-    #   업체 403 차단이라 회사 키로 음성만 쓴다. 차단 해제·자기 키 재등록 뒤 빼도 된다.
-    assert set(keyroute.BLOCK_EXEMPT_CIDS) == {4, 5, 9, 11, 12, 451}
+    # ✅451(심효진)은 2026-10-07 사장님 "심효진만 처리"로 뺐다(관제 153) — 회사 키를 못 쓴다.
+    assert set(keyroute.BLOCK_EXEMPT_CIDS) == {4, 5, 9, 11, 12}
 
 
-@pytest.mark.parametrize("cid", [4, 5, 9, 11, 12, 451])
+@pytest.mark.parametrize("cid", [4, 5, 9, 11, 12])
 def test_exempt_members_are_never_blocked(store, cid):
     """면제 대상은 키가 없어도 VMake·음성 둘 다 열린다."""
     assert keyroute.block_reason(store, cid, keyroute.SVC_VMAKE) is None
@@ -203,7 +202,15 @@ def test_unknown_engine_falls_back_to_either_key_rule(store):
 
 
 def test_exempt_member_may_use_typecast_voice_without_key(store):
-    assert keyroute.tts_block_reason(store, 451, model_id="ssfm-v30") is None
+    assert keyroute.tts_block_reason(store, 12, model_id="ssfm-v30") is None
+
+
+def test_451_no_longer_gets_owner_keys(store, monkeypatch):
+    """관제 153(2026-10-07): 심효진(451)은 면제에서 빠졌다 — 회사 일레븐·타입캐스트 키를 못 받는다."""
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
+    assert not keyroute.is_block_exempt(451)
+    assert keyroute.keys_for(store, 451, keyroute.SVC_ELEVENLABS) == ([], False)
+    assert keyroute.keys_for(store, 451, keyroute.SVC_TYPECAST) == ([], False)
 
 
 def test_keys_for_typecast_never_falls_back_to_owner_for_member(store, monkeypatch):
@@ -213,7 +220,7 @@ def test_keys_for_typecast_never_falls_back_to_owner_for_member(store, monkeypat
     assert keys == [] and is_user is False
     keys0, _ = keyroute.keys_for(store, 0, keyroute.SVC_TYPECAST)
     assert keys0 == ["사장님TC"]
-    keysx, _ = keyroute.keys_for(store, 451, keyroute.SVC_TYPECAST)
+    keysx, _ = keyroute.keys_for(store, 12, keyroute.SVC_TYPECAST)
     assert keysx == ["사장님TC"]
 
 
