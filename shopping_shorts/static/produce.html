@@ -18101,7 +18101,12 @@ function seedSync(){
 }
 // 씨앗 영상을 골랐나 — 스토리보드 켠 계정의 1→2단계 확인(jump)이 쓰는 판정 하나.
 //   씨앗 = _seedCode()(1단계 ⭐지정 bbMain → 2단계 고른 것 → 서버 자동 AI PICK, 담은 영상 중에서). seedNoAuto 표식과 같은 주인이다.
-function seedPicked(){ try{ return !!_seedCode(); }catch(e){ console.warn('[seed] 판정 실패', e); return false; } }
+// 1→2단계 확인용 — **사람이 직접 고른 것만**(10-07 사장님): 1단계 카드에서 AI PICK 으로 지정(bbMain)했거나 '직접 쓰기'로 대본을 넣었을 때.
+//   서버 자동 선정(_aiPick)만 있는 상태는 '안 고름'으로 친다(_seedCode 는 실제 씨앗 판정이라 자동 선정도 쓴다 — 여기서만 좁힌다).
+function seedPicked(){ try{
+  if((HANDOFF||[]).some(h=>h && h.bbMain && h.useFootage && h.shortcode)) return true;
+  return !!(typeof S2!=='undefined' && S2 && S2.seed && !S2.seed.shortcode && String(S2.seed.text||'').trim());
+}catch(e){ console.warn('[seed] 판정 실패', e); return false; } }
 // 씨앗 안내창 — 브라우저 alert 대신 화면 안 모달. 이 자리(#seedGateModal)를 그리는 건 이 함수 하나
 function seedGateShow(close){
   let m=document.getElementById('seedGateModal');
