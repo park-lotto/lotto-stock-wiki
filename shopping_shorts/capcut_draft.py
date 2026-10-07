@@ -536,7 +536,8 @@ def _zoom_pieces(t, dur, spans, base_zoom):
         mid = (a + b) / 2
         sp = next((sp for sp in spans or [] if _us(sp["start"]) <= mid < _us(sp["end"])), None)
         z = float(sp["zoom"]) if sp else base_zoom
-        move = (float(sp.get("tx", 0)), float(sp.get("ty", 0))) if sp and z >= base_zoom else (0.0, 0.0)
+        by = float(sp.get("by", 0)) if sp else 0.0   # 영상 칸 가운데로 내리는 기본 위치(관제 155, scene_style.capcut_base_y)
+        move = (float(sp.get("tx", 0)), float(sp.get("ty", 0)) + by) if sp and z >= base_zoom else (0.0, by)
         out.append((a, b - a, max(z, base_zoom), move, sp))
     return out or [(t, dur, base_zoom, (0.0, 0.0), None)]
 
@@ -614,6 +615,7 @@ def _scene_fx_keyframes(piece_start, piece_dur, sp, source_start=None, speed=1.0
             y += -2 * 0.009 * math.sin(n * 78.233)
             b = 0.16 * g
         T = t if source_start is None else int(source_start + round(t * speed))   # 원본 시각(μs)
+        y += float(sp.get("by", 0))   # 위치 키프레임은 조각 위치를 덮어쓴다 — 영상 칸 기본 위치를 더한다(관제 155)
         sc.append((T, z)); px.append((T, x)); py.append((T, y)); br.append((T, 0.32 * (b / 0.16)))   # 밝기: 번쩍 = 노출 16 → 0.32
     out = [_kf_list("KFTypeScaleX", sc), _kf_list("KFTypePositionX", px), _kf_list("KFTypePositionY", py)]
     if shock:
@@ -762,6 +764,10 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                                      render_index=0, volume=0.0)
                 if _z > 1.0:
                     hseg["clip"]["scale"] = {"x": _z, "y": _z}
+                # 정지 조각도 같은 장면의 영상 칸 위치로(관제 155)
+                _hsp = next((x for x in scene_zoom_spans or [] if _us(x["start"]) <= _h_t + _h_d / 2 < _us(x["end"])), None)
+                if _hsp and float(_hsp.get("by", 0)):
+                    hseg["clip"]["transform"] = {"x": 0.0, "y": float(_hsp["by"])}
                 vid_track["segments"].append(hseg)
 
         # ── 음성 트랙: 비트 TTS ──
