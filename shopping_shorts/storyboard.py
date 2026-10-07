@@ -191,8 +191,10 @@ def _materials(db, jid, ex=None, keep=(), with_seed=False):
     #   "썰 채널 씨앗은 자막틀이 박혀 못 쓴다"). 3단계 소스 필름엔 그대로 있다(scene_lab 은 extract 전체를 본다).
     #   ★단 사람이 1단계 '꼭 쓰고 싶은 장면' 상자에 직접 담은 씨앗 조각(keep)은 사람이 고른 것이니 존중해 남긴다.
     #   재료가 씨앗뿐이면 표식 자체가 안 달려(mark_seed_sources) 여기서도 안 빠진다.
-    #   ★with_seed=True 는 장면 목록(inventory) 전용 — 목록은 씨앗과 무관하게 재료 전체로 묶는다(관제 147). 씨앗이 나중에
+    #   ★with_seed=True 는 ① 장면 목록(inventory) — 목록은 씨앗과 무관하게 재료 전체로 묶는다(관제 147). 씨앗이 나중에
     #   정해지거나 바뀌어도 목록을 다시 묶지 않고, 보드를 만들 때(이 함수 기본값) 씨앗 조각을 뺀다.
+    #   ② 사람이 1단계에서 '씨앗 영상도 2단계에 배치'를 켠 작업의 보드·끼워 넣기(관제 161, 사장님 10-08) — make_boards·insert 가
+    #   use_seed 를 그대로 넘긴다. 씨앗을 빼고 넣는 판단은 여전히 이 한 줄이다(새 판정 없음). 기본은 꺼짐 = 종전과 같다.
     keep = set(keep or ())
     segs, texts, order, rows = {}, {}, [], []
     for vid, e in ex.items():
@@ -1090,7 +1092,7 @@ def inventory(db_path, jid, star_s="", role_s="", ex=None):
     return out
 
 
-def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="", R=None, ex=None):
+def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="", R=None, ex=None, use_seed=False):
     """고른 스타일들의 스토리보드(스타일당 3.6 2번). 장면 목록(inventory)을 먼저 만들어 둬야 한다. keys: 'auto' 또는 스타일 묶음 번호."""
     db = _ro(db_path)
     fams = _families(db)
@@ -1103,7 +1105,7 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
     if not R:
         raise ValueError("장면 목록을 먼저 만들어야 합니다")
     r1 = R["inventory"]
-    segs, texts, order, _rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s))
+    segs, texts, order, _rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s), with_seed=bool(use_seed))
     tag_of = r1.get("tag_of") or {}
     groups_txt = "\n".join("  %s: %s" % (g["name"], ", ".join("%s(%.1f초%s)" % (c, segs.get(c, 0), ("·" + "/".join(tag_of[c])) if tag_of.get(c) else "")
                                                               for c in g["ids"] if c in segs)) for g in r1["groups"]
@@ -1125,9 +1127,12 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
             if fam:
                 out[str(k)] = _board(fam, pan_of.get(str(k)) or "", r1, groups_txt, star, segs, texts, roles_pick=roles_txt, extra=extra_s.split(","), key="%s:%s" % (jid, k))
     _ss = seed_sig(ex) if ex is not None else None
+    _ms = mat_sig(ex) if ex is not None else None
     for b in out.values():
         if isinstance(b, dict):
             b["seed_sig"] = _ss        # 이 보드를 만든 때의 씨앗 — 미리 만들기가 씨앗이 바뀌었나를 이걸로 본다(관제 147)
+            b["mat_sig"] = _ms         # 이 보드를 만든 때의 재료 — 화면이 '예전 재료로 만든 보드'를 탭마다 이걸로 가른다(_sbStale, 2026-10-08)
+            b["use_seed"] = bool(use_seed)   # 씨앗 장면도 AI 후보로 넣고 만든 보드인가(관제 161) — 화면 표시용
     return out
 
 
@@ -1332,7 +1337,8 @@ def insert(db_path, jid, payload, R=None, ex=None):
     head = _writer_head(fam or {"names": [], "roles": []}, (R.get("inventory") or {}).get("kind") or "", yt=yt)
     style_voice = ("\n[이 보드 스타일 말투] %s\n" % _voice_line(fam)) if fam and str(payload.get("key") or "auto").split("+")[0] != "auto" else ""
     # 보드에 이미 있는 조각(사람이 담은 씨앗 포함)은 재료로 인정 — 새 후보(cand)는 씨앗을 뺀 재료에서만 고른다
-    segs, texts, _order, _rows = _materials(db, jid, ex, keep={c for x in bd.get("slots") or [] for c in (x.get("ids") or [])})
+    segs, texts, _order, _rows = _materials(db, jid, ex, keep={c for x in bd.get("slots") or [] for c in (x.get("ids") or [])},
+                                            with_seed=bool(payload.get("use_seed")))
     slots = [dict(x) for x in bd["slots"]]
     have = {str(x.get("slot") or "").split("_")[0].lower() for x in slots}
     extra = [e for e in payload.get("extra") or [] if e in EXTRA_DESC and e not in have]
