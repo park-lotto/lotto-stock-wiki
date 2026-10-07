@@ -21,7 +21,7 @@
 <div class="wrap">
   <h1>🎭 밈팩</h1>
   <p class="lead">대본의 놀람·반전 줄 맨 앞에 들어가는 감정짤이에요. 마우스를 올리면 움직여요.
-    <b>☆를 누르면 그 감정의 우선 짤</b>이 되고, 먼저 누른 순서(⭐1, ⭐2…)대로 자동 배치에 먼저 쓰여요.</p>
+    <b>이 감정 줄(특정 연결어 자리)에 들어갈 짤을 ☆를 눌러 ⭐ 1·2·3·4 로 담아 두면</b> 그 후보 중 랜덤으로 배치돼요.</p>
   <div id="memePage"><div class="empty">불러오는 중…</div></div>
 </div>
 <script src="/sidebar.js"></script>
@@ -37,7 +37,7 @@ function renderMemePage(){
   const list = MemePack.listOf(MP_TAB);
   box.innerHTML = MemePack.tabs(MP_TAB, 'mpTab')
     + (list.length ? '' : '<div class="empty">' + (MP_TAB === '⭐' ? '아직 우선 짤이 없어요 — 감정 탭에서 ☆를 눌러 담으세요' : '이 감정엔 짤이 없어요') + '</div>')
-    + '<div class="mp-grid">' + list.map(c => MemePack.card(c)).join('') + '</div>';
+    + MemePack.grid(list, MP_TAB === '⭐', c => MemePack.card(c));
 }
 function mpTab(t){ MP_TAB = t; renderMemePage(); }
 MemePack.onChange(renderMemePage);

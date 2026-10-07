@@ -81,7 +81,7 @@ def test_sfx_events_carry_line_gain_render_and_capcut_use_it():
 
 def test_sfx_pick_gets_category_for_volume():
     bank = {"웃음": [{"asset_id": 7}], "긴장": [{"asset_id": 8}]}
-    plan = {"beats": [{"beat_idx": 0, "narration": "ㅋㅋ", "sfx_pick": 7}]}
+    plan = {"beats": [{"beat_idx": 0, "narration": "ㅋㅋ", "sfx_pick": 7, "sfx_manual": 1}]}
     sb.sfx_slots(plan, bank, key="k")
     assert plan["beats"][0]["sfx"]["cat"] == "웃음" and plan["beats"][0]["sfx"]["manual"] == 1
 

@@ -503,18 +503,67 @@ MEME_DEFAULT_SEC = 1.25   # 사람이 [＋짤]로 넣은 줄에 신호어 시각
 MEME_PREF_KEY = "meme_prefs"   # 회원별 '감정별 우선 짤' — store.customer_prefs 의 키. 값 [{asset_id, emotion, rank}]
 
 
-def meme_prefs_by_emotion(prefs):
-    """[{asset_id, emotion, rank}] → {감정: [asset_id…(rank 순)]}. 모양이 어긋난 항목은 버린다."""
+def prefs_by_group(prefs, field="emotion"):
+    """[{asset_id, <field>, rank}] → {묶음: [asset_id…(rank 순)]}. 짤 ⭐(field=emotion)·효과음 ⭐(field=cat)가 같이 쓴다. 모양이 어긋난 항목은 버린다."""
     out = {}
-    for p in sorted([x for x in (prefs or []) if isinstance(x, dict)], key=lambda x: (int(x.get("rank") or 0))):
+    rows = []
+    for x in prefs or []:
+        if not isinstance(x, dict):
+            continue
+        try:
+            rows.append((int(x.get("rank") or 0), x))
+        except (TypeError, ValueError):
+            rows.append((0, x))
+    for _r, p in sorted(rows, key=lambda t: t[0]):
         try:
             aid = int(p.get("asset_id"))
         except (TypeError, ValueError):
             continue
-        emo = str(p.get("emotion") or "").strip()
-        if emo and aid not in out.setdefault(emo, []):
-            out[emo].append(aid)
+        g = str(p.get(field) or "").strip()
+        if g and aid not in out.setdefault(g, []):
+            out[g].append(aid)
     return out
+
+
+def meme_prefs_by_emotion(prefs):
+    """[{asset_id, emotion, rank}] → {감정: [asset_id…(rank 순)]}."""
+    return prefs_by_group(prefs, "emotion")
+
+
+SFX_PREF_KEY = "sfx_prefs"     # 회원별 '분류별 우선 효과음' — customer_prefs 의 키. 값 [{asset_id, cat, rank}] (짤 ⭐와 같은 모양)
+
+
+def sfx_prefs_by_cat(prefs):
+    """[{asset_id, cat, rank}] → {분류: [asset_id…(rank 순)]}."""
+    return prefs_by_group(prefs, "cat")
+
+
+def pick_is_manual(d, kind):
+    """★'사람이 서랍에서 직접 고른 것'인가 — 짤(kind="meme")·효과음(kind="sfx") 고정 판단의 주인.
+    2단계 미리보기(meme_preview·sfx_preview)·3단계 배치(meme_slots·sfx_slots)가 이 함수 하나를 부른다.
+    명시 표식 <kind>_manual 이 있고 고른 번호가 있을 때만 사람 고름. 표식 없는 고름(…_auto 가 빠진 옛 보드 포함)은 자동 —
+    ⭐가 바뀌면 다시 정한다(10-07 사장님 제보: d2ed614194c1 보드 65 의 짤이 '직접 고름'처럼 굳어 ⭐가 안 먹음)."""
+    if not isinstance(d, dict):
+        return False
+    return bool(d.get(kind + "_manual")) and bool(d.get(kind + "_pick"))
+
+
+def fav_or_all(cands, fav_ids, key, salt, k=0, taken=()):
+    """⭐ 먼저 고르기의 주인 — 짤(meme_choose)·효과음(sfx_choose)이 같이 쓴다.
+    cands 중 fav_ids(⭐ 순서)에 든 것이 있으면 그중 key 해시 랜덤(taken 은 피함), 없으면 None(호출자가 종전 규칙으로)."""
+    ids = {int(x["asset_id"]): x for x in cands or []}
+    tk = set(taken or ())
+    pref = [ids[i] for i in fav_ids or [] if i in ids and i not in tk]
+    if pref:
+        return _hash_pick(pref, key, "fav|" + str(salt), k)
+    return None
+
+
+def fav_ok(aid, cands, fav_ids):
+    """지금 고른 자동 번호가 ⭐ 규칙에 맞나 — 그 묶음에 쓸 수 있는 ⭐가 있으면 ⭐ 안이어야 맞다. 없으면 무엇이든 맞다."""
+    have = {int(x["asset_id"]) for x in cands or []}
+    favs = [i for i in fav_ids or [] if i in have]
+    return (not favs) or (int(aid) in favs)
 
 
 def meme_head(beat, words, dur, manual=False):
@@ -609,8 +658,12 @@ def meme_slots(plan, words_of, pool, log=None, key="", prefs=None):
             mp = int(b.get("meme_pick") or 0)
         except (TypeError, ValueError):
             mp = 0
-        if mp and mp in by_id and fits(by_id[mp][1]):      # 2단계에서 미리 고른 짤 — 그 짤의 감정으로
-            emo, a = by_id[mp]
+        if mp and mp in by_id and fits(by_id[mp][1]):
+            if pick_is_manual(b, "meme"):                  # 2단계에서 사람이 고른 짤 — 그 짤의 감정으로
+                emo, a = by_id[mp]
+            elif by_id[mp][0] == emo and mp not in taken and \
+                    fav_ok(mp, [x for x in (pool or {}).get(emo) or [] if fits(x)], (prefs or {}).get(emo)):
+                a = by_id[mp][1]                           # 2단계 자동 짤이 지금 ⭐ 규칙에도 맞으면 그대로(보인 짤 = 3단계 짤)
         if a is None:
             cands = [x for x in (pool or {}).get(emo) or [] if fits(x)]
             if not cands:
@@ -638,11 +691,9 @@ def meme_choose(emo, cands, prefs, key, k=0, taken=()):
     """감정짤 고르기의 주인(관제 143, 10-06 사장님 "내 ⭐ 중 랜덤"). 2단계 미리보기(meme_preview)·3단계 자동 배치(meme_slots)가 같이 쓴다.
     cands = 그 감정의 쓸 수 있는 짤 [{asset_id,…}] · prefs = {감정: [asset_id…]}.
     ★그 감정 ⭐가 있으면 ⭐ 중 key 해시 랜덤(한 편에 같은 짤 두 번 안 씀), 없으면 팩 전체에서 key 해시(종전 공식 그대로)."""
-    ids = {int(x["asset_id"]): x for x in cands}
-    tk = set(taken or ())
-    pref = [ids[i] for i in (prefs or {}).get(emo) or [] if i in ids and i not in tk]
-    if pref:
-        return _hash_pick(pref, key, "fav|" + str(emo), k)
+    a = fav_or_all(cands, (prefs or {}).get(emo), key, emo, k, taken)     # ★그 감정의 ⭐만(다른 감정 ⭐는 안 섞는다)
+    if a is not None:
+        return a
     # ★작업마다 다른 짤(key=작업 번호): 종전엔 늘 목록 맨 앞이라 모든 영상에 같은 짤이 들어갔다(10-06 팩 1,283개 올린 뒤 확인).
     return _hash_pick(cands, key, emo, k)
 
@@ -653,18 +704,19 @@ def meme_preview(slots, pool, prefs=None, key="", log=None):
     사람이 고른 짤(meme_auto 없음)·뺀 줄(meme_off)은 그대로. 길이를 아직 모르니 2초(MEME_MAX_SEC) 이상 짤을 먼저(3단계에서 길이로 탈락하지 않게)."""
     used, taken = {}, set()
     for sl in slots or []:
-        if isinstance(sl, dict) and sl.get("meme_pick") and not sl.get("meme_auto"):
+        if pick_is_manual(sl, "meme") and not sl.get("meme_off"):
             taken.add(int(sl["meme_pick"]))
     for i, sl in enumerate(slots or []):
         if not isinstance(sl, dict):
             continue
         emo = sl.get("meme_emotion")
-        if sl.get("meme_off") or not emo:
-            if sl.get("meme_auto"):
-                sl.pop("meme_pick", None)
-                sl.pop("meme_auto", None)
+        if pick_is_manual(sl, "meme") and not sl.get("meme_off"):
+            sl.pop("meme_auto", None)
             continue
-        if sl.get("meme_pick") and not sl.get("meme_auto"):
+        sl.pop("meme_manual", None)
+        if sl.get("meme_off") or not emo:
+            sl.pop("meme_pick", None)
+            sl.pop("meme_auto", None)
             continue
         allc = list((pool or {}).get(emo) or [])
         cands = [x for x in allc if float(x.get("duration") or 0) >= MEME_MAX_SEC - 1e-3] or allc
@@ -715,7 +767,7 @@ MEME_SFX = {"놀람": "리액션 탄성", "감탄_박수": "리액션 탄성", "
             "충격_입막": "긴장", "공포_움찔": "긴장", "기쁨_환호": "박수/환호", "웃음": "웃음",
             "거절_절레": "실패", "분노_짜증": "실패", "슬픔": "실패", "끄덕_엄지": "팝/띵"}
 _STRONG_END = re.compile(r"품절\s*대란|대박이지|난리\s*(?:났|나|난)|완판|역대급|미쳤")
-CARRY_KEYS = ("meme_pick", "meme_auto", "meme_off", "sfx_pick", "sfx_auto", "sfx_off")   # 2단계 줄 → 3단계 beat 로 함께 넘기는 칸(숫자)
+CARRY_KEYS = ("meme_pick", "meme_auto", "meme_manual", "meme_off", "sfx_pick", "sfx_auto", "sfx_manual", "sfx_off")   # 2단계 줄 → 3단계 beat 로 함께 넘기는 칸(숫자)
 #   + "pack_edit"(기본 효과음팩 빼기·바꾸기, dict) — carry_picks 가 따로 싣는다
 
 
@@ -743,16 +795,23 @@ def sfx_category(text, is_last, meme_emotion=None):
     return None
 
 
-def sfx_choose(cat, bank, key, k=0, cur=None, emotion=None):
-    """분류 → 효과음 자산 하나(작업 key 해시). cur 이 그 분류에 아직 있으면 그대로(2단계에서 보인 소리 = 3단계 소리). 없으면 None.
-    emotion(짤 감정)을 주면 그 감정이 tone 에 든 소리를 먼저 — 슬픈 짤에 '와우'가 붙지 않게."""
+def sfx_choose(cat, bank, key, k=0, cur=None, emotion=None, prefs=None):
+    """분류 → 효과음 자산 하나(작업 key 해시). cur 이 그 분류에 아직 있고 ⭐ 규칙에 맞으면 그대로(2단계에서 보인 소리 = 3단계 소리). 없으면 None.
+    prefs = {분류: [asset_id…]} 회원 ⭐ — 그 분류 ⭐가 있으면 ⭐ 중에서(짤 ⭐와 같은 함수 fav_or_all·fav_ok).
+    emotion(짤 감정)을 주면 그 감정이 tone 에 든 소리를 먼저 — 슬픈 짤에 '와우'가 붙지 않게(⭐ 안에서도 먼저)."""
     cands = list((bank or {}).get(cat) or [])
     if not cands:
         return None
+    fav = (prefs or {}).get(cat)
     if cur:
         hit = next((x for x in cands if int(x["asset_id"]) == int(cur)), None)
-        if hit:
+        if hit and fav_ok(cur, cands, fav):
             return hit
+    tone_fit = [x for x in cands if emotion and emotion in [t.strip() for t in str(x.get("tone") or "").split(",")]]
+    a = fav_or_all(tone_fit, fav, key, "sfx|" + cat + "|" + str(emotion or ""), k) or \
+        fav_or_all(cands, fav, key, "sfx|" + cat, k)
+    if a is not None:
+        return a
     if emotion:
         fit = [x for x in cands if emotion in [t.strip() for t in str(x.get("tone") or "").split(",")]]
         if fit:
@@ -760,15 +819,17 @@ def sfx_choose(cat, bank, key, k=0, cur=None, emotion=None):
     return _hash_pick(cands, key, "sfx|" + cat + "|" + str(emotion or ""), k)
 
 
-def sfx_preview(slots, bank, key="", log=None):
+def sfx_preview(slots, bank, key="", log=None, prefs=None):
     """2단계 줄마다 효과음 자리 — sl["sfx_pick"](자동이면 sfx_auto=1, 분류 sfx_cat). 사람이 고른 것·뺀 줄(sfx_off)은 그대로.
     자산이 없으면 조용히가 아니라 log 로 '효과음 없음(분류)'를 남기고 비운다(sl["sfx_cat"] 은 남겨 화면이 '준비 중'을 보인다)."""
     n = len(slots or [])
     for i, sl in enumerate(slots or []):
         if not isinstance(sl, dict) or sl.get("sfx_off"):
             continue
-        if sl.get("sfx_pick") and not sl.get("sfx_auto"):
+        if pick_is_manual(sl, "sfx"):
+            sl.pop("sfx_auto", None)
             continue
+        sl.pop("sfx_manual", None)
         emo = None if sl.get("meme_off") else sl.get("meme_emotion")
         cat = sfx_category(sl.get("line") or "", i == n - 1, emo)
         if not cat:
@@ -776,7 +837,7 @@ def sfx_preview(slots, bank, key="", log=None):
                 sl.pop(x, None)
             continue
         sl["sfx_cat"] = cat
-        a = sfx_choose(cat, bank, key, i, sl.get("sfx_pick"), emo)
+        a = sfx_choose(cat, bank, key, i, sl.get("sfx_pick"), emo, prefs)
         if a is None:
             sl.pop("sfx_pick", None)
             sl.pop("sfx_auto", None)
@@ -797,7 +858,7 @@ def sfx_line(asset_id, cat=None, manual=False):
     return d
 
 
-def sfx_slots(plan, bank, key="", log=None):
+def sfx_slots(plan, bank, key="", log=None, prefs=None):
     """3단계 편성표 칸마다 줄 효과음(meme_slots 뒤에 돈다 — 짤이 정해진 뒤). 돌려주는 것 = [{"beat_idx","sfx"(bool),"why"|"asset_id","cat"}].
     ★사람이 3단계에서 고른 효과음(match_type manual 또는 line+manual)·뺀 칸(sfx_off)은 그대로. 2단계 사람 고름(sfx_pick, sfx_auto 없음)은 그 소리.
     자동은 sfx_category 로 다시 정한다 — 짤을 빼면(cutaway 없음) 짤 효과음도 빠진다."""
@@ -814,7 +875,7 @@ def sfx_slots(plan, bank, key="", log=None):
         if b.get("sfx_off"):
             out.append({"beat_idx": bi, "sfx": False, "why": "사람이 뺌"})
             continue
-        if b.get("sfx_pick") and not b.get("sfx_auto"):
+        if pick_is_manual(b, "sfx"):
             _pc = sfx_cat_of(b["sfx_pick"], bank)      # 볼륨 분류(line_sfx_gain)를 위해 고른 소리의 분류도 싣는다
             b["sfx"] = sfx_line(b["sfx_pick"], _pc, manual=True)
             out.append({"beat_idx": bi, "sfx": True, "asset_id": int(b["sfx_pick"]), "cat": _pc, "why": "2단계에서 고름"})
@@ -824,7 +885,7 @@ def sfx_slots(plan, bank, key="", log=None):
         cat = sfx_category(b.get("narration") or b.get("line") or "", i == len(beats) - 1, emo)
         if not cat:
             continue
-        a = sfx_choose(cat, bank, key, i, b.get("sfx_pick"), emo)
+        a = sfx_choose(cat, bank, key, i, b.get("sfx_pick"), emo, prefs)
         if a is None:
             out.append({"beat_idx": bi, "sfx": False, "cat": cat, "why": "효과음 없음(%s)" % cat})
             continue

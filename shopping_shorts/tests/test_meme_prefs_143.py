@@ -62,7 +62,7 @@ def test_사람이_고른_짤과_뺀_칸은_다시_정할때_보존():
 
 
 def test_2단계_미리_고른_짤을_먼저():
-    beats = [_beat(0, 1, "와", "와 이거", meme_pick=31)]
+    beats = [_beat(0, 1, "와", "와 이거", meme_pick=31, meme_manual=1)]   # 서랍에서 직접 고른 짤(10-07: 표식 meme_manual)
     plan, r = _slots(beats, prefs={"놀람": [11]})
     assert r[0]["asset_id"] == 31 and plan["beats"][0]["cutaway"]["emotion"] == "충격_입막"
 

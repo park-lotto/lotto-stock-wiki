@@ -668,6 +668,31 @@
     }
   }
 
+  // ── Vertex 미등록 안내 (2026-10-07 사장님) — 하루 1회. 판정·문구·주소·'오늘 봤음'은 서버(/api/settings/vertex_notice).
+  //   제미니 키 안내와 같은 팝업(_pwModal)을 쓰고, 결제 팝업이 떠 있으면 덮지 않는다. 설정 화면에선 안 띄운다(거기 등록 칸이 있다).
+  function initVertexNotice() {
+    if (/^\/settings/.test(location.pathname || "")) return;
+    var _f = window.fetch || null; if (!_f) return;
+    var waited = 0;
+    (function afterMe() {
+      if (!window.__ssMeDone && waited < 8000) { waited += 250; setTimeout(afterMe, 250); return; }
+      setTimeout(run, 2600);                      // 제미니 키 안내(1.4초) 뒤
+    })();
+    function run() {
+      _f("/api/settings/vertex_notice").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        if (!d || !d.show) return;
+        var tries = 0;
+        (function show() {
+          var ex = document.getElementById("ss-pw-modal");
+          if (ex && ex.style.display !== "none") { if (tries++ < 60) setTimeout(show, 2000); return; }
+          _pwModal({ icon: "🔑", title: d.text, body: "등록하면 대본·장면 맞추기·AI 장면 만들기를 내 구글 계정으로 써요.",
+                     hideContact: true, link: d.url, linkText: "→ " + (d.link_text || "등록하기"), closeLabel: "오늘은 그만" });
+          _f("/api/settings/vertex_notice/seen", { method: "POST" }).catch(function (e) { console.warn("[vertex] 봤음 저장 실패", e); });
+        })();
+      }).catch(function (e) { console.warn("[vertex] 안내 확인 실패", e); });
+    }
+  }
+
   // 유료 API가 402(등급부족)를 주면 만료 안내 모달 — 페이지 내 어떤 유료버튼이든 공통 처리.
   //
   // ★모달은 **사장님이 뭔가를 눌러서 난 402**에만 뜬다(2026-08-21 근본 수정).
@@ -1030,6 +1055,7 @@
     initPaywall();
     initSignupAlert();
     initGeminiKeyHealth();
+    initVertexNotice();
   }
 })();
 

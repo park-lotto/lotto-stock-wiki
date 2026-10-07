@@ -2504,6 +2504,16 @@ def _meme_prefs(store, customer_id):
         return {}
 
 
+def _sfx_prefs(store, customer_id):
+    """회원의 '분류별 우선 효과음'(⭐, 짤 ⭐와 같은 모양) → {분류: [asset_id…]}. 못 읽으면 빈 dict + 한 줄(종전 해시로)."""
+    from shopping_shorts import storyboard as _sbm
+    try:
+        return _sbm.sfx_prefs_by_cat(store.get_pref(_sbm.SFX_PREF_KEY, customer_id=int(customer_id or 0), default=[]))
+    except Exception as e:      # noqa: BLE001
+        print("[line_sfx] 우선 효과음 읽기 실패(종전대로): %r" % e, file=sys.stderr)
+        return {}
+
+
 def _apply_memes(plan, store, job, tts_dir):
     """칸 맨 앞 감정짤 — 판단은 storyboard.meme_slots 한 곳. 여기는 스위치·짤 팩·음성 시각을 건넬 뿐. 짤 칸 수를 돌려준다."""
     if not _meme_on(store, job):
@@ -2547,7 +2557,8 @@ def _apply_line_sfx(plan, store, job):
     except Exception as e:      # noqa: BLE001 — 서랍을 못 읽으면 효과음 없음(이유 한 줄)
         print("[line_sfx] 효과음 서랍 읽기 실패 — 없음: %r" % e, file=sys.stderr)
         bank = {}
-    res = _sbm.sfx_slots(plan, bank, key=str((job or {}).get("job_id") or ""))
+    res = _sbm.sfx_slots(plan, bank, key=str((job or {}).get("job_id") or ""),
+                         prefs=_sfx_prefs(store, (job or {}).get("customer_id", 0)))
     for r in res:
         print("[line_sfx] job칸 %s %s" % (r.get("beat_idx"), ("효과음 #%s %s" % (r.get("asset_id"), r.get("cat") or "")) if r.get("sfx")
                                           else r.get("why", "")), file=sys.stderr)
