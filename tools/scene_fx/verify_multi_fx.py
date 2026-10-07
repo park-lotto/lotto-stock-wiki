@@ -107,12 +107,22 @@ def main():
         fails.append("완성본이 어둡지 않다")
     spans = scene_style.capcut_fx_spans(scenes, snap, layers)
     piece = next(sp for sp in spans if abs(sp["start"] - scenes[target]["start"]) < 1e-6)
-    kfs = capcut_draft._scene_fx_keyframes(capcut_draft._us(piece["start"]), capcut_draft._us(piece["end"]) - capcut_draft._us(piece["start"]), piece)
+    # 캡컷 9.5 실측 형식(2026-10-06): 크기 KFTypeScaleX · 시각 = 원본 시각(조각 원본 시작 10초로 시험) · 흑백·대비 = 조정 소재
+    SRC0 = 10_000_000
+    kfs = capcut_draft._scene_fx_keyframes(capcut_draft._us(piece["start"]), capcut_draft._us(piece["end"]) - capcut_draft._us(piece["start"]), piece, source_start=SRC0, speed=1.0)
+    adj = {m["type"]: m["value"] for m in capcut_draft._scene_fx_adjust(piece)}
     props = {k["property_type"]: k["keyframe_list"] for k in kfs}
-    sc = props.get("UNIFORM_SCALE", [])
-    print("캡컷 키프레임:", sorted(props), "| 크기 처음·끝:", round(sc[0]["values"][0], 3) if sc else None, round(sc[-1]["values"][0], 3) if sc else None)
-    if not {"UNIFORM_SCALE", "KFTypeSaturation", "KFTypePositionX"} <= set(props) or not sc or sc[-1]["values"][0] < 1.2:
+    sc = props.get("KFTypeScaleX", [])
+    print("캡컷 키프레임:", sorted(props), "| 크기 처음·끝:", round(sc[0]["values"][0], 3) if sc else None, round(sc[-1]["values"][0], 3) if sc else None,
+          "| 첫 시각:", sc[0]["time_offset"] if sc else None, "| 조정 소재:", adj)
+    if not {"KFTypeScaleX", "KFTypeBrightness", "KFTypePositionX"} <= set(props) or not sc or sc[-1]["values"][0] < 1.2:
         fails.append("캡컷 한 조각에 확대·흑백 키프레임이 같이 없다")
+    if "UNIFORM_SCALE" in props:
+        fails.append("캡컷이 무시하는 UNIFORM_SCALE 을 쓴다")
+    if sc and sc[0]["time_offset"] < SRC0:
+        fails.append(f"키프레임 시각이 원본 시각 기준이 아니다(첫 시각 {sc[0]['time_offset']} < 조각 원본 시작 {SRC0})")
+    if adj.get("saturation") != -1.0 or adj.get("contrast") != 0.56 or "brightness" not in adj:
+        fails.append(f"흑백 충격 조정 소재가 없다 {adj}")
     print("\n결과:", "통과" if not fails else "실패")
     for x in fails:
         print("  ✗", x)
