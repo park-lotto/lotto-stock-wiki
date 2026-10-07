@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-07g  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-07h  (LOGIC_VER가 정본)
+//   · 관제 156 — 미리보기는 서버 부담 없는 것만: 렌즈 결과창 서버 재생 끔, 동시 미리보기를 틱톡·핀·도우인·샤오홍슈로.
 //   · 관제 156 — 렌즈 서버 연결 실패(30초 상한 회귀) 수리, 유튜브 검색 Shorts 전용, 인스타 카드 배지 스크롤 겹침.
 //   · 관제 156 — 검색어 판 한 줄 5개 언어로 통일·끌어 옮기기, 게시물 관련 검색어 5개 언어, '찾는 중…' 영구 멈춤,
 //     유튜브 미리보기 📥 겹침, 인스타 게시물 재생바가 뒤 격자 영상을 잡던 것, 렌즈 결과창 마우스 지나감 미리보기.
@@ -27,7 +28,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261013;
+  var LOGIC_VER = 20261014;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -771,7 +772,7 @@
         _lensOverlay(h);
         _fillThumbs();
         var ov = document.getElementById("ss-lens-ov");
-        _lensHoverWire(ov);
+        // _lensHoverWire(ov) — 끔(관제 156, 2026-10-07 사장님 "서버부담없는것"): /api/play 는 카드마다 서버가 영상을 받는다.
         var bs = ov.querySelectorAll("button[data-u]");
         for (var j = 0; j < bs.length; j++) {
           bs[j].addEventListener("click", function () {
@@ -1651,11 +1652,24 @@
     while (_pvList.length > 9) { var old = _pvList.shift(); old.__ssKeep = 0; try { old.pause(); } catch (e) {} }
     try { v.play().catch(function () {}); } catch (e) {}
   }
+  // ★인스타 밖으로 넓힘(관제 156, 2026-10-07 사장님 "모든 플랫폼, 서버 부담 없는 것"):
+  //   사이트가 마우스 올림에 스스로 붙이는 미리보기 영상을 떠난 뒤에도 계속 재생시킨다(서버 호출 0).
+  //   유튜브는 빼다 — 화면 전체가 미리보기 영상 1개를 돌려 써서(실측) 여러 개를 붙잡을 수 없다.
+  //   카드 모양은 사이트마다 다르다 → 표 한 곳(PV_CARD).
+  var PV_CARD = {
+    instagram: 'a[href*="/reel/"],a[href*="/p/"]',
+    tiktok: 'a[href*="/video/"],[data-e2e="search_top-item"],[data-e2e="search-card-desc"]',
+    pinterest: '[data-test-id="pin"],a[href*="/pin/"]',
+    douyin: 'a[href*="/video/"],li',
+    xiaohongshu: 'section.note-item,a[href*="/explore/"],a[href*="/search_result/"]'
+  };
   if (document.addEventListener) document.addEventListener("mouseover", function (e) {
-    if (window.__ssGrabVer !== LOGIC_VER || !_pvOn || !_isIg() || isSinglePost()) return;
-    var a = e.target && e.target.closest && e.target.closest('a[href*="/reel/"],a[href*="/p/"]');
+    if (window.__ssGrabVer !== LOGIC_VER || !_pvOn || isSinglePost()) return;
+    var s0 = _kwSite(), sel = s0 && PV_CARD[s0.id];
+    if (!sel) return;
+    var a = e.target && e.target.closest && e.target.closest(sel);
     if (!a) return;
-    setTimeout(function () {                                   // 인스타가 미리보기 영상을 붙일 시간
+    setTimeout(function () {                                   // 사이트가 미리보기 영상을 붙일 시간
       var v = a.querySelector("video") || (a.parentElement && a.parentElement.querySelector("video"));
       window.__ssPvTries = (window.__ssPvTries || 0) + 1;        // 점검용
       _pvKeep(v);
