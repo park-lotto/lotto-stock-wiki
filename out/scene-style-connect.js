@@ -16,8 +16,15 @@
     <label>세로 위치<input data-effect="cy" type="range" min="0.1" max="0.9" step="0.01" value="0.55"></label></div>
     <button class="scene-effects-reset" data-effects-reset>이 장면 효과 초기화</button>`;
   textPanel.after(effectsPanel);
-  const copyEffects=document.createElement('button');copyEffects.className='scene-effects-reset';copyEffects.textContent='이 효과를 다른 장면에도 적용';copyEffects.dataset.effectsAll='';effectsPanel.append(copyEffects);
-  copyEffects.addEventListener('click',()=>{api.copyEffectsToAll();copyEffects.textContent='모든 장면에 적용했어요';setTimeout(()=>copyEffects.textContent='이 효과를 다른 장면에도 적용',1600);});
+  // 효과 탭 적용 범위(2026-10-07 사장님 "문구쪽처럼 효과쪽에도 같은 위치에 적용범위") — 옛 [이 효과를 다른 장면에도 적용] 버튼과 겹쳐 그 버튼은 뺐다.
+  //   기본 '이 장면만'(종전처럼 장면마다). '모든 장면'이면 강조 효과·확대 크기를 바꿀 때마다 그 장면 효과를 다른 장면에 맞춘다(api.copySceneFxToAll).
+  let fxScope='one';
+  const fxScopeBar=document.createElement('section');fxScopeBar.className='hook-motion fx-scope';
+  fxScopeBar.innerHTML='<div class="hook-motion-head"><small>강조 효과·확대 크기가 이 범위로 들어갑니다(로고·가림막·스티커는 따로)</small></div><div class="hook-motion-grid" style="grid-template-columns:1fr 1fr"><button type="button" data-fx-scope="all">모든 장면</button><button type="button" data-fx-scope="one" class="active">이 장면만</button></div>';
+  fxScopeBar.addEventListener('click',ev=>{const b=ev.target.closest('[data-fx-scope]');if(!b)return;fxScope=b.dataset.fxScope;fxScopeBar.querySelectorAll('[data-fx-scope]').forEach(x=>x.classList.toggle('active',x===b));});
+  effectsPanel.prepend(fxScopeBar);
+  // '모든 장면'이면 지금 장면 효과를 전 장면에 — 확대가 들어간 장면은 장면마다 제품 쪽으로 다시 잡는다(효과팩 자동 배치와 같은 aimEmphasis)
+  const spreadFx=i=>{if(fxScope!=='all')return;api.copySceneFxToAll(i);if(api.sceneFx(i).some(k=>['in','pull','inout'].includes(k)))aimEmphasis(api.moments().map((_,k)=>k).filter(k=>k!==i));};
   // 장면 효과(관제 124) — 잘된 썰 쇼핑 채널 114편에서 실제로 쓰는 것만. 값은 api.refFx(실측·사장님 선택) 한 곳.
   //   아무 장면이든 켤 수 있고, 중요 장면(훅·제품 공개·고조·CTA — 서버 scene_style.moment_of 판단)엔 한 번에 켠다.
   const MOMENT_NAME={hook:'훅',problem:'문제(비포)',reveal:'제품 공개',peak:'고조',cta:'CTA'};
@@ -94,11 +101,11 @@
     const i=api.geometry().sceneIndex,e={...api.effectAt(i)},z=Number(ev.target.value);e.zoom=z;
     if(Array.isArray(e.fxFocus)){const pan=b=>Math.max(-1,Math.min(1,1-(2*b*z-1)/(z-1)));e.panX=+pan(e.fxFocus[0]).toFixed(3);e.panY=+pan(e.fxFocus[1]).toFixed(3);}
     api.effectAt(i,e);refBox.querySelector('[data-zoom-amt] output').textContent=z.toFixed(2)+'배';sync();});
-  refBox.querySelector('[data-zoom-amt] input').addEventListener('change',()=>{lastIndex=-1;sync();});   // 손을 떼면 움직임을 다시 보여 준다
+  refBox.querySelector('[data-zoom-amt] input').addEventListener('change',()=>{spreadFx(api.geometry().sceneIndex);lastIndex=-1;sync();});   // 손을 떼면 움직임을 다시 보여 준다
   refBox.addEventListener('click',ev=>{
     const pick=ev.target.closest('[data-scene-fx]');
     // 고른 뒤 그 장면을 통째로 다시 그린다(show) — 자막 자리(어둡게+큰 글자)·자막 등장·미리보기 움직임이 누르자마자 바뀐다(자막팩 실측: 안 그리면 넘겼다 와야 보였다)
-    if(pick){const i=api.geometry().sceneIndex,k=pick.dataset.sceneFx;api.sceneFx(i,k);if(['in','pull','inout'].includes(k))aimEmphasis([i]);lastIndex=-1;api.show(i);updateControls();sync();return;}
+    if(pick){const i=api.geometry().sceneIndex,k=pick.dataset.sceneFx;api.sceneFx(i,k);if(['in','pull','inout'].includes(k))aimEmphasis([i]);spreadFx(i);lastIndex=-1;api.show(i);updateControls();sync();return;}
     const b=ev.target.closest('[data-ref-fx]');if(!b)return;const fx=api.refFx,what=b.dataset.refFx;
     if(what==='jump')api.jumpZoom(!api.jumpZoomOn());
     else if(what==='auto'){const on=!api.autoPlaced();api.autoPlace(on);if(on)aimEmphasis(api.moments().map((_,k)=>k));lastIndex=-1;}

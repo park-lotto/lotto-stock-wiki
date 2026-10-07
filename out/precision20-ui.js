@@ -2202,6 +2202,14 @@
     effectAt(i,value){const k=String(i);if(value!==undefined)effects[k]=value;return effects[k]||{}},
     sceneCount:()=>sceneTotal(),
     copyEffectsToAll(){const value=structuredClone(effects[String(sceneIndex)]||{});for(let i=0;i<sceneTotal();i++)effects[String(i)]=structuredClone(value);},
+    // 효과 탭 적용 범위 '모든 장면'(2026-10-07 사장님 "문구쪽처럼 효과쪽에도 같은 위치에 적용범위") — 지금 장면의 장면 효과(확대·어둡게·흑백·돋보기·스포트라이트·확대 크기)만
+    //   다른 장면에 맞춘다. 로고·가림막·스티커(masks)·시작 어두운 제목은 그 장면 것 그대로. 확대 위치(제품 쪽)는 부르는 쪽이 장면마다 다시 잡는다.
+    copySceneFxToAll(from){
+      const src=effects[String(from)]||{},keep=Object.fromEntries(SCENE_FX_KEYS.filter(k=>k!=='fxAutoPlaced'&&src[k]!=null).map(k=>[k,structuredClone(src[k])]));
+      if(src.dim&&!src.dim.sec)keep.dim=structuredClone(src.dim);if(src.highlight)keep.highlight=structuredClone(src.highlight);
+      let n=0;for(let i=0;i<sceneTotal();i++){if(i===from)continue;const cur=withoutSceneFx(effects[String(i)]||{});delete cur.highlight;effects[String(i)]={...cur,...structuredClone(keep)};n++;}
+      return n;
+    },
     refFx:REF_FX,
     // 점프 줌 컷(관제 124) — 같은 비트(대본 한 줄) 안에서 장면(자막 구절)이 바뀔 때 영상 칸을 1↔1.35배로 번갈아 자른다.
     //   레퍼런스: 같은 장면을 더 크게/작게 잘라 잇는 컷, 114편 중 22편·48건, 확대 1.35배·되돌림 0.76배(정밀 측정 11건).
@@ -2408,6 +2416,7 @@
   function hint(box){
     const key=box.dataset.group;
     if(key==='brand')return [...box.querySelectorAll('[data-brand]')].filter(r=>r.querySelector('[data-brand-field="on"]')?.checked).map(r=>r.dataset.brand==='ad'?'광고':'워터마크').join(' · ');
+    if(key==='fxscope')return box.querySelector('[data-fx-scope].active')?.textContent||'';
     if(key==='fx')return [...box.querySelectorAll('[data-scene-fx].active')].map(b=>b.textContent).filter(x=>x!=='없음').join(' · ');
     if(key==='zoom'){const z=box.querySelector('[data-effect-value="zoom"]')?.textContent||'',m=box.querySelector('[data-effect-mode].active')?.textContent||'';return [z&&z!=='100%'?`확대 ${z}`:'',m&&m!=='없음'?m:''].filter(Boolean).join(' · ');}
     return '';
@@ -2415,6 +2424,8 @@
   function refresh(panel){panel.querySelectorAll(':scope .text-group[data-group]').forEach(box=>{const s=box.querySelector(':scope > summary small');if(!s)return;const t=hint(box);if(s.textContent!==t)s.textContent=t;});}
   function build(){
     const panel=document.querySelector('.scene-effects-panel');if(!panel||panel.dataset.grouped)return;
+    const fxScope=panel.querySelector(':scope > .fx-scope');
+    if(fxScope){const box=document.createElement('details');panel.prepend(box);box.append(fxScope);card(box,'fxscope','적용 범위');box.open=true;}   // 문구 탭과 같은 자리(맨 위)·기본 펼침
     const brand=panel.querySelector(':scope > .scene-label-settings');if(brand)card(brand,'brand','워터마크 · 광고');
     const zoomNodes=[panel.querySelector(':scope > p'),panel.querySelector(':scope > label:has([data-effect="zoom"])'),panel.querySelector(':scope > .scene-effect-choices'),panel.querySelector(':scope > [data-highlight-controls]')].filter(Boolean);
     if(zoomNodes.length){const box=document.createElement('details');zoomNodes[0].before(box);zoomNodes.forEach(n=>box.append(n));card(box,'zoom','화면 확대 · 강조');}
