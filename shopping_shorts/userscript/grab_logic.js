@@ -1,6 +1,8 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-07e  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-07f  (LOGIC_VER가 정본)
+//   · 관제 156 — 검색어 판 한 줄 5개 언어로 통일·끌어 옮기기, 게시물 관련 검색어 5개 언어, '찾는 중…' 영구 멈춤,
+//     유튜브 미리보기 📥 겹침, 인스타 게시물 재생바가 뒤 격자 영상을 잡던 것, 렌즈 결과창 마우스 지나감 미리보기.
 //   · 인스타 검색 화면 — 카드 배지 ❤좋아요·💬댓글·⏱길이, 좋아요순·댓글순 목록, 마우스 지나간 카드 동시 미리보기(관제 151, 계정02 로그인 실측).
 //   · 검색어 기능을 유튜브·틱톡·핀터레스트·샤오홍슈·도우인까지(오른쪽 검색 판 + 영상 화면 관련 검색어), 렌즈 결과창 크게(관제 151).
 //   · 인스타 — 비슷한 검색어를 5개 언어(한·영·일·중·러) 줄로, 팝업 관련 검색어가 "만드는 중…"에서 멈추던 것 수정(관제 151).
@@ -24,7 +26,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261011;
+  var LOGIC_VER = 20261012;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -321,6 +323,76 @@
     var x = document.getElementById("ss-lens-x");
     if (x) x.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); o.remove(); });
   }
+  // ── 렌즈 결과창 마우스 올림 미리보기(관제 156, 2026-10-07 사장님 "인스타처럼 마우스 쭉 지나가면 재생") ──
+  //   카드엔 썸네일·주소뿐이다. 서버 /api/play(받아서 mp4로 주는 길)를 **로그인 중계로** 받아
+  //   이 페이지의 blob 영상으로 튼다 — 남의 사이트 위 <video src=우리서버>는 쿠키가 없어 401(실측).
+  //   지나간 카드는 계속 재생(최대 9개, 인스타 동시 미리보기와 같은 규칙). 지원: 유튜브·틱톡·인스타.
+  function _playKey(url) {
+    var u = String(url || ""), m;
+    if ((m = /youtube\.com\/(?:shorts\/|watch\?v=)([\w-]{6,})/.exec(u)) || (m = /youtu\.be\/([\w-]{6,})/.exec(u))) return ["youtube", m[1]];
+    if ((m = /tiktok\.com\/.*\/video\/(\d+)/.exec(u))) return ["tiktok", m[1]];
+    if ((m = /instagram\.com\/(?:[\w.]+\/)?(?:p|reel|reels|tv)\/([\w-]+)/.exec(u))) return ["instagram", m[1]];
+    return null;
+  }
+  var _lensBlobs = {}, _lensPlaying = [];
+  function _gmBlob(url, done) {
+    if (typeof GM_xmlhttpRequest !== "undefined") {
+      GM_xmlhttpRequest({ method: "GET", url: url, responseType: "blob", timeout: 60000,
+        onload: function (r) { done(r.status === 200 && r.response ? URL.createObjectURL(r.response) : ""); },
+        onerror: function () { done(""); }, ontimeout: function () { done(""); } });
+      return;
+    }
+    var reqId = "sb" + Math.random().toString(36).slice(2), ended = false;
+    var timer = setTimeout(function () { fin(""); }, 60000);
+    function fin(u) { if (ended) return; ended = true; clearTimeout(timer); window.removeEventListener("message", onMsg); done(u); }
+    function onMsg(ev) {
+      var d = ev && ev.data;
+      if (!d || d.reqId !== reqId || !d.__ssGmResult) return;
+      if (d.status !== 200 || !d.b64) { fin(""); return; }
+      try {
+        var bin = atob(d.b64), u8 = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+        fin(URL.createObjectURL(new Blob([u8], { type: d.type || "video/mp4" })));
+      } catch (e) { fin(""); }
+    }
+    window.addEventListener("message", onMsg);
+    window.postMessage({ __ssGmFetch: true, reqId: reqId, method: "GET", url: url, b64: true }, "*");
+  }
+  function _lensHoverPlay(card) {
+    if (card.__ssPv) return;
+    var pk = _playKey(card.getAttribute("data-play"));
+    if (!pk) return;
+    card.__ssPv = 1;
+    var box = card.querySelector(".ss-pv-box");
+    var tag = document.createElement("div");
+    tag.textContent = "▶ 불러오는 중…";
+    tag.style.cssText = "position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.7);color:#fff;font-size:11px;padding:2px 6px;border-radius:6px";
+    box.appendChild(tag);
+    var key = pk[0] + ":" + pk[1];
+    function put(src) {
+      if (!src) { tag.textContent = "미리보기 불가"; card.__ssPv = 0; return; }
+      _lensBlobs[key] = src; tag.remove();
+      var v = document.createElement("video");
+      v.src = src; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
+      v.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000";
+      box.appendChild(v);
+      try { v.play().catch(function () {}); } catch (e) {}
+      _lensPlaying.push(v);
+      while (_lensPlaying.length > 9) { var o = _lensPlaying.shift(); try { o.pause(); } catch (e) {} }
+    }
+    if (_lensBlobs[key]) { put(_lensBlobs[key]); return; }
+    _gmBlob(BASE + "/api/play?platform=" + pk[0] + "&id=" + encodeURIComponent(pk[1]), put);
+  }
+  function _lensHoverWire(ov) {
+    var cards = ov.querySelectorAll("[data-play]");
+    for (var i = 0; i < cards.length; i++) {
+      (function (c) {
+        var t = 0;
+        c.addEventListener("mouseenter", function () { t = setTimeout(function () { _lensHoverPlay(c); }, 250); });
+        c.addEventListener("mouseleave", function () { clearTimeout(t); });   // 지나가기만 해도(250ms) 켜지고, 켜진 건 계속 재생
+      })(cards[i]);
+    }
+  }
   function _esc(s) { return String(s || "").replace(/[&<>"']/g, function (c) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   // ── 인스타 시크바(2026-08-03 사장님: 장면 이동이 안 돼 앞으로 못 돌아감) ──
@@ -328,7 +400,11 @@
   // 움직일 수 있다(영상 소스가 CDN(교차출처)이어도 재생 제어는 무관). 지금 재생 중인
   // 비디오를 골라 슬라이더로 앞뒤 이동 + 렌즈에 '보고 있는 그 장면'(초)을 실어 보낸다.
   function _igVideo() {
-    var vs = document.querySelectorAll("video"), best = null;
+    // ★팝업(게시물 창)이 떠 있으면 그 안의 영상만 본다(관제 156, 2026-10-07 사장님 "옆쪽 타임조절기가 안 먹음").
+    //   인스타 검색 화면에서 게시물을 열면 뒤쪽 격자 영상이 동시 미리보기로 계속 재생 중이라,
+    //   '재생 중인 첫 영상'을 고르면 팝업 영상이 아니라 뒤 격자 영상을 조절하고 있었다.
+    var dv = document.querySelectorAll('[role="dialog"] video');
+    var vs = dv.length ? dv : document.querySelectorAll("video"), best = null;
     for (var i = 0; i < vs.length; i++) {
       var v = vs[i];
       if (!v.duration || !isFinite(v.duration)) continue;
@@ -377,6 +453,8 @@
 
   function syncSeekBar() {
     if (!_playerPlat()) return;
+    // 게시물 창이 열리면 뒤 격자의 동시 미리보기는 멈춘다 — 재생바·소리가 그쪽에 섞이지 않게(관제 156).
+    if (isSinglePost() && _pvList.length) _pvStopAll();
     var box = document.getElementById("ss-seek");
     if (!_isVideoPage()) { if (box) box.remove(); return; }
     var v = _igVideo();
@@ -585,11 +663,18 @@
   }
   // 서버 POST(쿠키 동봉) — 샌드박스면 GM 직접, 메인월드(인스타 Blob 폴백)면 로더의
   // GM 브리지(postMessage)로 위임. 브리지 응답이 1.5초 안에 없으면(구버전 로더) 실패 콜백.
-  function _gmPost(url, bodyObj, done, fail) {
+  function _gmPost(url, bodyObj, done0, fail0) {
+    // ★상한 30초(관제 156, 2026-10-07 사장님 "비슷한 검색어 찾는 중으로 계속 나온다").
+    //   브리지가 ACK만 하고 결과를 못 돌려주면(탭 이동·서비스워커 잠듦) 아무도 fail 을 안 불러
+    //   화면이 '찾는 중…'에 영원히 멈췄다. 끝은 한 번만 — 늦게 온 응답은 버린다.
+    var ended = false, timer = setTimeout(function () { end(); if (fail0) fail0("timeout"); }, 30000);
+    function end() { if (ended) return false; ended = true; clearTimeout(timer); return true; }
+    function done(st, tx) { if (end()) done0(st, tx); }
+    function fail(why) { if (end() && fail0) fail0(why); }
     if (typeof GM_xmlhttpRequest !== "undefined") {
       GM_xmlhttpRequest({ method: "POST", url: url,
         headers: { "Content-Type": "application/json" }, data: JSON.stringify(bodyObj),
-        onload: function (r) { done(r.status, r.responseText); }, onerror: fail });
+        onload: function (r) { done(r.status, r.responseText); }, onerror: fail, ontimeout: fail });
       return;
     }
     var reqId = "ss" + Math.random().toString(36).slice(2), acked = false;
@@ -599,7 +684,7 @@
       if (d.__ssGmAck) { acked = true; return; }   // 브리지 살아있음 — 본 응답 대기
       if (!d.__ssGmResult) return;
       window.removeEventListener("message", onMsg);
-      if (d.status > 0) done(d.status, d.text); else fail();
+      if (d.status > 0) done(d.status, d.text); else fail(d.stale ? "stale" : "");
     }
     window.addEventListener("message", onMsg);
     window.postMessage({ __ssGmFetch: true, reqId: reqId, method: "POST", url: url,
@@ -666,8 +751,8 @@
           "<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px'>";
         for (var i = 0; i < items.length && i < 100; i++) {
           var it = items[i];
-          h += "<div style='background:#222;border-radius:10px;overflow:hidden'>" +
-            "<a href='" + _esc(it.url) + "' target='_blank' rel='noopener'>" +
+          h += "<div data-play='" + _esc(it.url) + "' style='background:#222;border-radius:10px;overflow:hidden'>" +
+            "<a class='ss-pv-box' href='" + _esc(it.url) + "' target='_blank' rel='noopener' style='position:relative;display:block'>" +
             (it.thumbnail ? "<img data-t64='" + _esc(it.thumbnail) + "' style='width:100%;height:240px;object-fit:cover;display:block;background:#000'>" :
               "<div style='height:240px;background:#000'></div>") + "</a>" +
             "<div style='padding:6px;font-size:11px'>" +
@@ -681,6 +766,7 @@
         _lensOverlay(h);
         _fillThumbs();
         var ov = document.getElementById("ss-lens-ov");
+        _lensHoverWire(ov);
         var bs = ov.querySelectorAll("button[data-u]");
         for (var j = 0; j < bs.length; j++) {
           bs[j].addEventListener("click", function () {
@@ -1038,8 +1124,21 @@
     for (var i = 0; i < cs.length; i++) if (_ytVid(cs[i].getAttribute("href")) === id) return cs[i];
     return null;
   }
+  // 미리보기가 떠 있는 동안 그 카드의 📥는 숨긴다(관제 156, 2026-10-07 사장님 "마우스를 올리면 아이콘이 하나 더 생긴다").
+  //   미리보기는 카드보다 조금 크게, 살짝 비켜 그려져 밑의 카드 📥가 옆에 겹쳐 보였다.
+  var _ytHidCard = null;
+  function _ytCardBtnShow(a, on) {
+    if (!a) return;
+    var cb = a.querySelector(".ss-card-grab");
+    if (cb) cb.style.visibility = on ? "" : "hidden";
+  }
   function _ytPreviewBtn() {
     var pv = document.querySelector("#video-preview ytd-video-preview");
+    var vis = pv && pv.getBoundingClientRect().width > 0 && getComputedStyle(pv).display !== "none" &&
+              !(pv.closest("#video-preview") && pv.closest("#video-preview").hidden);
+    var card = vis ? _ytPreviewCard(pv) : null;
+    if (_ytHidCard && _ytHidCard !== card) { _ytCardBtnShow(_ytHidCard, true); _ytHidCard = null; }
+    if (card) { _ytCardBtnShow(card, false); _ytHidCard = card; }
     if (!pv) return;
     var b = pv.querySelector(".ss-card-grab");
     if (!b) {
@@ -1272,7 +1371,7 @@
   // ── 인스타 영어 검색어(관제 151, 2026-10-07 사장님) ─────────────────────────────
   //   ① 키워드 검색 화면: 제목("Life hacks gadgets")을 검색창으로 바꾼다 — 한글로 치면 영어로 바꿔 검색.
   //   ② 그 아래 비슷한 검색어 칩 5개 — 누르면 그 검색으로 이동.
-  //   ③ 게시물 팝업: 오른쪽 버튼 줄 아래에 관련 검색어 칩(설명글 기준, amazon 포함).
+  //   ③ 게시물 팝업: 오른쪽 버튼 줄 아래에 관련 검색어 칩(설명글 기준, 쇼핑몰 이름 없이).
   //   ★검색어를 만드는 판단(영어·최대 3단어)은 서버 video_analysis.english_search_terms 한 곳이다.
   //     여기서는 받은 걸 그리기만 한다 — 단어 수를 여기서 또 자르지 않는다(0순위-B).
   // ★5개 플랫폼 확장(2026-10-07 사장님 "핀터레스트·유튜브·틱톡·샤오홍슈·도우인 모두, 지금까지 한 것 그대로").
@@ -1344,7 +1443,11 @@
       } else {
         finish({ error: status === 401 ? "숏템메이커에 로그인해 주세요" : "검색어를 못 만들었어요(" + status + ")" });
       }
-    }, function () { finish({ error: "숏템메이커 서버에 연결하지 못했어요" }); });
+    }, function (why) {
+      finish({ error: why === "stale" ? "확장프로그램이 갱신됐어요 — 이 페이지를 새로고침(F5)해 주세요"
+                    : why === "timeout" ? "30초 안에 답이 없어요 — 다시 검색해 주세요"
+                    : "숏템메이커 서버에 연결하지 못했어요" });
+    });
   }
   function _igKwChip(term, strong) {
     var b = document.createElement("button");
@@ -1559,7 +1662,7 @@
     if (p) p.remove();
     p = document.createElement("div");
     p.id = "ss-kwfloat"; p.setAttribute("data-q", q);
-    p.style.cssText = "position:fixed;top:76px;right:16px;z-index:2147483646;width:340px;max-height:80vh;overflow:auto;" +
+    p.style.cssText = "position:fixed;top:76px;right:16px;z-index:2147483646;width:auto;max-width:min(760px,92vw);max-height:80vh;overflow:auto;" +
       "background:rgba(22,22,22,.94);color:#eee;border-radius:12px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.4);" +
       "font-family:system-ui,sans-serif";
     var hd = document.createElement("div");
@@ -1577,12 +1680,49 @@
     });
     p.appendChild(hd); p.appendChild(body);
     document.body.appendChild(p);
+    _ssDrag(p, hd);
   }
+  // ── 검색어 판 끌어 옮기기(관제 156, 2026-10-07 사장님 "검색창들은 마우스로 이동이 되게, 모든 사이트") ──
+  //   머리줄을 잡고 끌면 그 자리에 고정된다(사이트별·판별로 기억). 한 번 옮긴 판은 도킹 자리 계산이 건드리지 않는다.
+  //   판단은 여기 한 곳(_ssDrag·_ssDragPos) — 판마다 따로 적지 않는다(0순위-B).
+  function _ssDragKey(id) { return "ss_drag:" + location.host + ":" + id; }
+  function _ssDragPos(el) {
+    try { var v = JSON.parse(localStorage.getItem(_ssDragKey(el.id)) || "null"); } catch (e) { v = null; }
+    if (!v) return false;
+    var x = Math.min(Math.max(0, v.x), window.innerWidth - 60), y = Math.min(Math.max(0, v.y), window.innerHeight - 40);
+    el.style.left = x + "px"; el.style.top = y + "px"; el.style.right = "auto"; el.style.bottom = "auto";
+    return true;
+  }
+  function _ssDrag(el, handle) {
+    handle.style.cursor = "move"; handle.title = "잡고 끌면 옮겨져요 (두 번 누르면 원래 자리)";
+    _ssDragPos(el);
+    handle.addEventListener("dblclick", function () {
+      try { localStorage.removeItem(_ssDragKey(el.id)); } catch (e) {}
+      el.style.left = ""; el.style.top = ""; el.style.right = ""; el.style.bottom = "";
+    });
+    handle.addEventListener("mousedown", function (e) {
+      if (e.button !== 0 || (e.target && e.target.tagName === "BUTTON")) return;
+      e.preventDefault(); e.stopPropagation();
+      var r = el.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+      function mv(ev) {
+        var x = Math.min(Math.max(0, ev.clientX - dx), window.innerWidth - 60);
+        var y = Math.min(Math.max(0, ev.clientY - dy), window.innerHeight - 40);
+        el.style.left = x + "px"; el.style.top = y + "px"; el.style.right = "auto"; el.style.bottom = "auto";
+      }
+      function up() {
+        document.removeEventListener("mousemove", mv, true); document.removeEventListener("mouseup", up, true);
+        var q = el.getBoundingClientRect();
+        try { localStorage.setItem(_ssDragKey(el.id), JSON.stringify({ x: q.left, y: q.top })); } catch (e2) {}
+      }
+      document.addEventListener("mousemove", mv, true); document.addEventListener("mouseup", up, true);
+    });
+  }
+  function _ssDragged(el) { try { return !!localStorage.getItem(_ssDragKey(el.id)); } catch (e) { return false; } }
   // 한 검색어 = 한 줄. 언어별 버튼(빈 언어는 흐리게, 누를 수 없음). 누르면 그 말로 지금 플랫폼에서 검색.
   var IGKW_LANGS = [["ko", "한"], ["en", "EN"], ["ja", "日"], ["zh", "中"], ["ru", "RU"]];
   function _igKwLangRow(c) {
     var row = document.createElement("div");
-    row.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center";
+    row.style.cssText = "display:flex;flex-wrap:nowrap;gap:6px;align-items:center";   // 한 검색어 = 한 줄(관제 156 통일)
     for (var i = 0; i < IGKW_LANGS.length; i++) {
       var lang = IGKW_LANGS[i][0], tag = IGKW_LANGS[i][1], term = (c[lang] || "").trim();
       var b = _igKwChip(term || "-", false);
@@ -1671,18 +1811,19 @@
       if (p) p.remove();
       p = document.createElement("div");
       p.id = "ss-kwpost"; p.setAttribute("data-c", key);
-      p.style.cssText = "position:fixed;right:18px;bottom:230px;z-index:2147483646;width:230px;" +
+      p.style.cssText = "position:fixed;right:18px;bottom:230px;z-index:2147483646;width:auto;max-width:min(760px,92vw);max-height:70vh;overflow:auto;" +
         "background:rgba(22,22,22,.92);color:#eee;border-radius:12px;padding:10px;font-family:system-ui,sans-serif;" +
         "box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:6px";
       var hd = document.createElement("div");
       hd.textContent = "🔎 관련 검색어"; hd.style.cssText = "font:800 13px system-ui,sans-serif";
       body = document.createElement("div"); body.className = "ss-kw-body";
-      body.style.cssText = "display:flex;flex-wrap:wrap;gap:6px";
+      body.style.cssText = "display:flex;flex-direction:column;gap:6px";
       st = document.createElement("div"); st.className = "ss-kw-st";
       st.textContent = "설명글 읽는 중…"; st.style.cssText = "font-size:12px;color:#aaa";
       body.appendChild(st);
       p.appendChild(hd); p.appendChild(body);
       document.body.appendChild(p);
+      _ssDrag(p, hd);
     }
     var run = function (cap) {
       if (p.getAttribute("data-c") !== key || !document.body.contains(p)) return;
@@ -1700,8 +1841,16 @@
         if (p.getAttribute("data-c") !== key || !document.body.contains(p)) return;
         var list = (r.main ? [r.main] : []).concat(r.related || []);
         if (!list.length) { st.textContent = r.error || "검색어를 못 만들었어요"; return; }
-        st.remove();
-        for (var i = 0; i < list.length; i++) body.appendChild(_igKwChip(list[i], i === 0 && !!r.main));
+        // 5개 언어(관제 156, 사장님 "제품을 누른 페이지에도 5개국어") — 검색 판과 같은 줄 모양(_igKwLangRow).
+        //   상품 이름(main) 하나로 5줄 × 5개 언어를 받는다. 못 받으면 종전 칩으로.
+        st.textContent = "5개 언어로 펼치는 중…";
+        _igKwFetch("multi", list[0], function (m) {
+          if (p.getAttribute("data-c") !== key || !document.body.contains(p)) return;
+          st.remove();
+          var rows = (m.candidates || []).slice(0, 5);
+          if (rows.length) { for (var k = 0; k < rows.length; k++) body.appendChild(_igKwLangRow(rows[k])); return; }
+          for (var i = 0; i < list.length; i++) body.appendChild(_igKwChip(list[i], i === 0 && !!r.main));
+        });
       });
     };
     if (s.id === "instagram") _igCaption(code, run);
@@ -1858,6 +2007,7 @@
     if (!kp) return;
     kp.style.display = gone ? "none" : "";
     if (gone) return;
+    if (_ssDragged(kp)) { _ssDragPos(kp); return; }   // 사장님이 옮긴 자리는 그대로(관제 156)
     if (!rr || slot === 0) {                 // 기준 영상을 못 찾았으면 종전 오른쪽 아래 자리
       kp.style.left = ""; kp.style.top = ""; kp.style.right = "18px"; kp.style.bottom = "230px";
       return;

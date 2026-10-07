@@ -55,17 +55,25 @@
     //   서비스워커는 host_permissions로 CORS를 타지 않으므로 여기서만 보내면 된다.
     //   (서버 쪽에서 instagram.com에 credentialed CORS를 열어주는 방법도 있지만,
     //    그건 인스타의 아무 스크립트나 우리 쿠키로 API를 부를 수 있게 되는 길이다.)
-    chrome.runtime.sendMessage(
-      { __ssRelay: true, url: d.url, method: d.method || "GET",
-        headers: d.headers || {}, body: d.body || null },
-      function (res) {
-        if (chrome.runtime.lastError || !res) {
-          window.postMessage({ __ssGmResult: true, reqId: d.reqId, status: 0, text: "" }, "*");
-          return;
-        }
-        window.postMessage({ __ssGmResult: true, reqId: d.reqId,
-                             status: res.status || 0, text: res.text || "" }, "*");
-      });
+    // ★확장을 갱신·재설치하면 열려 있던 탭의 sendMessage 가 "Extension context invalidated"로
+    //   **즉시 throw** 한다. ACK 는 이미 나갔으니 결과를 안 보내면 로직이 영원히 기다린다
+    //   (관제 156 "비슷한 검색어 찾는 중…에서 멈춤"). 던지면 실패(status 0)로 돌려준다.
+    try {
+      chrome.runtime.sendMessage(
+        { __ssRelay: true, url: d.url, method: d.method || "GET",
+          headers: d.headers || {}, body: d.body || null, b64: !!d.b64 },
+        function (res) {
+          if (chrome.runtime.lastError || !res) {
+            window.postMessage({ __ssGmResult: true, reqId: d.reqId, status: 0, text: "" }, "*");
+            return;
+          }
+          window.postMessage({ __ssGmResult: true, reqId: d.reqId,
+                               status: res.status || 0, text: res.text || "",
+                               b64: res.b64 || "", type: res.type || "" }, "*");
+        });
+    } catch (e) {
+      window.postMessage({ __ssGmResult: true, reqId: d.reqId, status: 0, text: "", stale: true }, "*");
+    }
   });
 
   // ── ② 로직은 manifest가 직접 실행한다 ──────────────────────────
