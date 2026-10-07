@@ -328,7 +328,11 @@
   // 움직일 수 있다(영상 소스가 CDN(교차출처)이어도 재생 제어는 무관). 지금 재생 중인
   // 비디오를 골라 슬라이더로 앞뒤 이동 + 렌즈에 '보고 있는 그 장면'(초)을 실어 보낸다.
   function _igVideo() {
-    var vs = document.querySelectorAll("video"), best = null;
+    // ★팝업(게시물 창)이 떠 있으면 그 안의 영상만 본다(관제 156, 2026-10-07 사장님 "옆쪽 타임조절기가 안 먹음").
+    //   인스타 검색 화면에서 게시물을 열면 뒤쪽 격자 영상이 동시 미리보기로 계속 재생 중이라,
+    //   '재생 중인 첫 영상'을 고르면 팝업 영상이 아니라 뒤 격자 영상을 조절하고 있었다.
+    var dv = document.querySelectorAll('[role="dialog"] video');
+    var vs = dv.length ? dv : document.querySelectorAll("video"), best = null;
     for (var i = 0; i < vs.length; i++) {
       var v = vs[i];
       if (!v.duration || !isFinite(v.duration)) continue;
@@ -377,6 +381,8 @@
 
   function syncSeekBar() {
     if (!_playerPlat()) return;
+    // 게시물 창이 열리면 뒤 격자의 동시 미리보기는 멈춘다 — 재생바·소리가 그쪽에 섞이지 않게(관제 156).
+    if (isSinglePost() && _pvList.length) _pvStopAll();
     var box = document.getElementById("ss-seek");
     if (!_isVideoPage()) { if (box) box.remove(); return; }
     var v = _igVideo();
