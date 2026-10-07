@@ -9,10 +9,9 @@
   [...pane.children].filter(el=>![tabs,primary,save].includes(el)).forEach(el=>textPanel.append(el));
   tabs.after(textPanel);
   const effectsPanel=document.createElement('section');effectsPanel.className='scene-effects-panel';effectsPanel.hidden=true;
-  effectsPanel.innerHTML=`<p>현재 장면의 영상에 적용합니다.</p>
-    <label>화면 확대 <output data-effect-value="zoom"></output><input data-effect="zoom" type="range" min="1" max="3" step="0.05" value="1"></label>
-    <div class="scene-effect-choices"><button data-effect-mode="none">없음</button><button data-effect-mode="zoom">돋보기</button><button data-effect-mode="spot">스포트라이트</button></div>
-    <div data-highlight-controls><label>강조 크기<input data-effect="radius" type="range" min="0.06" max="0.45" step="0.01" value="0.22"></label>
+  // 2026-10-07 사장님: '화면 확대·강조' 칸의 돋보기·스포트라이트를 아래 강조 효과에 합침(여러 개 같이) — 화면 확대 슬라이더는 강조 효과의 '확대 크기'와 같은 값이라 하나로.
+  //   돋보기·스포트라이트 크기·위치(data-highlight-controls)는 강조 효과 칸 안으로 옮긴다(아래 refBox).
+  effectsPanel.innerHTML=`<div data-highlight-controls><label>강조 크기<input data-effect="radius" type="range" min="0.06" max="0.45" step="0.01" value="0.22"></label>
     <label>가로 위치<input data-effect="cx" type="range" min="0.1" max="0.9" step="0.01" value="0.5"></label>
     <label>세로 위치<input data-effect="cy" type="range" min="0.1" max="0.9" step="0.01" value="0.55"></label></div>
     <button class="scene-effects-reset" data-effects-reset>이 장면 효과 초기화</button>`;
@@ -72,25 +71,23 @@
   }
   const refBox=document.createElement('div');refBox.className='scene-ref-fx';
   // 장면마다 한 번 눌러 하나만 고른다(사장님 2026-10-05 "조작이 복잡해서 효율적으로"). 중요 장면은 [자동 배치] 스위치 하나.
-  const SCENE_FX=[['none','없음'],['in','0.5초 확대'],['pull','쭉 당기기'],['inout','확대→복귀'],['dim','어둡게+글자'],['shock','흑백 충격']];
-  refBox.innerHTML=`<p style="display:flex;justify-content:space-between;align-items:center;margin:0 0 6px"><b>강조 효과</b>
+  const SCENE_FX=[['none','없음'],['in','0.5초 확대'],['pull','쭉 당기기'],['inout','확대→복귀'],['dim','어둡게+글자'],['shock','흑백 충격'],['lens','돋보기'],['spot','스포트라이트']];
+  refBox.innerHTML=`<p style="display:flex;justify-content:space-between;align-items:center;margin:0 0 6px"><small>현재 장면 · 여러 개 같이 켤 수 있어요</small>
       <button type="button" class="scene-effects-reset" data-ref-fx="auto" style="width:auto;padding:4px 10px;margin:0"></button></p>
     <small>이 장면: <b data-ref-moment>-</b> · 잘된 쇼츠 114편 실측</small>
     <div class="scene-effect-choices" data-scene-fx-list style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${SCENE_FX.map(([k,v])=>`<button type="button" data-scene-fx="${k}">${v}</button>`).join('')}</div>
-    <label data-zoom-amt hidden style="display:flex;gap:8px;align-items:center;margin:6px 0"><small>확대 크기</small><input type="range" min="1.2" max="2.5" step="0.05" style="flex:1;min-width:0"><output style="flex:none;min-width:48px;text-align:right"></output></label>
-    <small>위치는 미리보기 화면을 끌어서 옮겨요</small><br>
-    <small>영상 전체</small>
-    <div class="scene-effect-choices"><button type="button" data-ref-fx="jump">점프 줌</button><button type="button" data-ref-fx="title">시작 어두운 제목</button></div>`;
+    <label data-zoom-amt style="display:flex;gap:8px;align-items:center;margin:6px 0"><small>확대 크기</small><input type="range" min="1" max="3" step="0.05" style="flex:1;min-width:0"><output style="flex:none;min-width:48px;text-align:right"></output></label>
+    <small>위치는 미리보기 화면을 끌어서 옮겨요</small>`;
+  // 2026-10-07 사장님: '영상 전체' 줄의 점프 줌·시작 어두운 제목 버튼 삭제(이미 저장된 영상의 효과는 그대로 렌더된다 — api.jumpZoom·dimTitle 은 남김)
   effectsPanel.append(refBox);
+  refBox.append(effectsPanel.querySelector('[data-highlight-controls]'));   // 돋보기·스포트라이트 크기·위치는 강조 효과 칸 안에
   function syncRefFx(){
     const i=api.geometry().sceneIndex,m=api.moments()[i],cur=api.sceneFx(i);   // 켜진 것 목록(여러 개)
     refBox.querySelector('[data-ref-moment]').textContent=m?MOMENT_NAME[m]:'일반';
     refBox.querySelectorAll('[data-scene-fx]').forEach(b=>b.classList.toggle('active',cur.includes(b.dataset.sceneFx)));
-    const amt=refBox.querySelector('[data-zoom-amt]'),zoomed=cur.some(k=>['in','pull','inout'].includes(k));amt.hidden=!zoomed;amt.style.display=zoomed?'flex':'none';
-    if(zoomed){const z=Number(api.effectAt(i).zoom)||1;amt.querySelector('input').value=String(z);amt.querySelector('output').textContent=z.toFixed(2)+'배';}
+    // 확대 크기 하나(옛 '화면 확대' 슬라이더와 같은 값 zoom) — 늘 보인다. 확대 효과 없이 올리면 멈춘 확대(종전 화면 확대)
+    const amt=refBox.querySelector('[data-zoom-amt]'),z=Number(api.effectAt(i).zoom)||1;amt.querySelector('input').value=String(z);amt.querySelector('output').textContent=z.toFixed(2)+'배';
     const auto=refBox.querySelector('[data-ref-fx="auto"]'),on=api.autoPlaced();auto.textContent=on?'자동 배치 켜짐 ●':'자동 배치 꺼짐 ○';auto.classList.toggle('active',on);
-    refBox.querySelector('[data-ref-fx="jump"]').classList.toggle('active',api.jumpZoomOn());
-    const t=api.effectAt(0).dim;refBox.querySelector('[data-ref-fx="title"]').classList.toggle('active',!!t&&t.sec>0);
   }
   // 확대 크기(수동): 제품 중심(fxFocus)을 그대로 두고 배율만 바꾼다 — pan 은 media_geometry 식으로 다시 계산
   refBox.querySelector('[data-zoom-amt] input').addEventListener('input',ev=>{
@@ -162,8 +159,6 @@
   function updateControls(){
     const e=api.effect(),h=e.highlight||{};
     effectsPanel.querySelectorAll('[data-effect]').forEach(el=>el.value=({zoom:e.zoom||1,radius:h.r||.22,cx:h.cx??.5,cy:h.cy??.55})[el.dataset.effect]);
-    effectsPanel.querySelector('output').textContent=Math.round((e.zoom||1)*100)+'%';
-    effectsPanel.querySelectorAll('[data-effect-mode]').forEach(b=>b.classList.toggle('active',b.dataset.effectMode===(h.on?h.mode:'none')));
     effectsPanel.querySelector('[data-highlight-controls]').hidden=!h.on;
     syncRefFx();
   }

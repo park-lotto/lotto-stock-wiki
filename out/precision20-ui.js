@@ -2256,11 +2256,15 @@
     //   조회 sceneFx(i) → ['pull','dim'] 처럼 켜진 것 목록. kind='none' 이면 전부 끔, 확대 3종은 서로 바꿔 끼우기(같은 걸 다시 누르면 끔), dim·shock 은 켜고 끄기.
     sceneFx(i,kind){
       const key=String(i),e={...(effects[key]||{})};
-      const on=[...(e.fxAuto==='emph'?[e.zoomMove||'in']:[]),...(e.dim&&!e.dim.sec?['dim']:[]),...(e.shock?['shock']:[])];
+      // 돋보기·스포트라이트(highlight)도 같은 목록에(2026-10-07 사장님 "누른 상태로 쭉 당기기·확대 등 추가로 누르면 되게 아래랑 합치면") — 둘 중 하나만
+      const on=[...(e.fxAuto==='emph'?[e.zoomMove||'in']:[]),...(e.dim&&!e.dim.sec?['dim']:[]),...(e.shock?['shock']:[]),...(e.highlight?.on?[e.highlight.mode==='spot'?'spot':'lens']:[])];
       if(kind===undefined)return on.length?on:['none'];
       const clearZoom=x=>{['zoomIn','zoomMove','fxFocus','fxFocusBy','fxBox'].forEach(k=>delete x[k]);if(x.fxAuto==='emph'){delete x.zoom;delete x.fxAuto;delete x.panX;delete x.panY;}};
       delete e.fxAutoPlaced;
-      if(kind==='none'){const title=e.dim&&e.dim.sec>0?e.dim:null;clearZoom(e);delete e.shock;delete e.dim;if(title)e.dim=title;effects[key]=e;return ['none'];}
+      if(kind==='none'){const title=e.dim&&e.dim.sec>0?e.dim:null;clearZoom(e);delete e.shock;delete e.dim;if(title)e.dim=title;if(e.highlight)e.highlight={...e.highlight,on:false};effects[key]=e;return ['none'];}
+      if(kind==='lens'||kind==='spot'){   // 돋보기(mode zoom)·스포트라이트(mode spot) — 같은 걸 다시 누르면 끈다, 다른 걸 누르면 바꿔 낀다
+        e.highlight={cx:.5,cy:.55,r:.22,zoom:2,shape:'circle',...(e.highlight||{}),on:!on.includes(kind),mode:kind==='spot'?'spot':'zoom'};effects[key]=e;return this.sceneFx(i);
+      }
       if(kind==='in'||kind==='pull'||kind==='inout'){
         const same=on.includes(kind);clearZoom(e);if(e.fxAuto==='jump'){delete e.zoom;delete e.fxAuto;}effects[key]=e;
         if(!same){this.emphAt(i,'zoom',true);this.zoomMove(i,kind);}
@@ -2310,7 +2314,9 @@
   .text-group > summary::after{content:'▾';color:#8fa3ad;font-size:11px;transition:transform .15s}
   .text-group:not([open]) > summary::after{transform:rotate(-90deg)}
   .text-group[open] > summary{border-bottom:1px solid #1d3440}
-  .text-group > .text-group-body{padding:10px 12px 12px}
+  .text-group > .text-group-body{padding:10px 12px 12px;background:#060f14;border-radius:0 0 11px 11px}
+  .text-group > summary{background:#132a33;border-radius:11px}
+  .text-group[open] > summary{background:#173640;border-radius:11px 11px 0 0;box-shadow:inset 3px 0 0 #43e2b4}
   .text-group > .text-group-body > section{margin:0;border:0;background:none;padding:0}`;
   document.head.append(style);
   function hint(key,body){
@@ -2402,6 +2408,7 @@
   function hint(box){
     const key=box.dataset.group;
     if(key==='brand')return [...box.querySelectorAll('[data-brand]')].filter(r=>r.querySelector('[data-brand-field="on"]')?.checked).map(r=>r.dataset.brand==='ad'?'광고':'워터마크').join(' · ');
+    if(key==='fx')return [...box.querySelectorAll('[data-scene-fx].active')].map(b=>b.textContent).filter(x=>x!=='없음').join(' · ');
     if(key==='zoom'){const z=box.querySelector('[data-effect-value="zoom"]')?.textContent||'',m=box.querySelector('[data-effect-mode].active')?.textContent||'';return [z&&z!=='100%'?`확대 ${z}`:'',m&&m!=='없음'?m:''].filter(Boolean).join(' · ');}
     return '';
   }
@@ -2411,6 +2418,9 @@
     const brand=panel.querySelector(':scope > .scene-label-settings');if(brand)card(brand,'brand','워터마크 · 광고');
     const zoomNodes=[panel.querySelector(':scope > p'),panel.querySelector(':scope > label:has([data-effect="zoom"])'),panel.querySelector(':scope > .scene-effect-choices'),panel.querySelector(':scope > [data-highlight-controls]')].filter(Boolean);
     if(zoomNodes.length){const box=document.createElement('details');zoomNodes[0].before(box);zoomNodes.forEach(n=>box.append(n));card(box,'zoom','화면 확대 · 강조');}
+    // 강조 효과(관제 154): 확대·당기기·복귀·어둡게·흑백·돋보기·스포트라이트를 한 칸에서 여러 개 같이 — 기본 펼침
+    const fx=panel.querySelector(':scope > .scene-ref-fx');
+    if(fx){const box=document.createElement('details');fx.before(box);box.append(fx);card(box,'fx','강조 효과');box.open=true;}
     const deco=panel.querySelector(':scope > .scene-decoration-panel');
     if(deco)deco.querySelectorAll(':scope > details').forEach((d,i)=>{const t=d.querySelector(':scope > summary')?.textContent.trim()||'';card(d,i?'decor':'mask',t||(i?'스티커 · 도형 · 배지':'가림막'));});
     panel.querySelectorAll(':scope > .scene-effects-reset').forEach(b=>panel.append(b));
