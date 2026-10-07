@@ -302,6 +302,9 @@ def resolve(store, job):
             "mute_beats": st["mute_beats"]}
 
 
+HOLD_PAD = 0.05     # 줄 효과음 꼬리 뒤 여유(초) — 바로 붙어 울리면 겹쳐 들린다
+
+
 def plan_events(timeline, manual_beats=(), density="normal", first_beats=()):
     """[(소리, 절대초, 자막)] — 파일 경로 없이 '무엇을 언제'만. 테스트·검증이 이걸 본다.
 
@@ -316,7 +319,11 @@ def plan_events(timeline, manual_beats=(), density="normal", first_beats=()):
     density = density if density in DENSITY_MAX_SILENCE else "normal"
     max_silence = DENSITY_MAX_SILENCE[density]
     manual = set(manual_beats or ())
-    line_first = set(first_beats or ())      # 줄 효과음(짤 리액션 등)이 그 줄 시작을 맡은 칸 — 그 순간의 팩 소리만 비운다
+    # 줄 효과음(짤 리액션 등)이 그 줄 시작을 맡은 칸 — 그 순간의 팩 소리를 비운다.
+    #   dict({칸: 줄 효과음 길이 초})로 오면 그 소리가 울리는 동안의 팩 소리도 비운다(10-07 사장님 "겹치는 거 빼고" —
+    #   실측 951d050cc3df: 넷플 두둥 2.0초 끝 0.3초에 휙이 겹쳤다). 줄 효과음을 빼면 이 목록에서 빠져 팩 소리가 저절로 돌아온다.
+    hold = dict(first_beats) if isinstance(first_beats, dict) else {}
+    line_first = set(first_beats or ())
     total = sum(float(b["dur"]) for b in tl)
     ev = [] if tl[0]["beat_idx"] in line_first else [("opener", OPENER_AT, "")]
     if len(tl) >= 2 and tl[1]["beat_idx"] not in manual and tl[1]["beat_idx"] not in line_first:
@@ -356,6 +363,10 @@ def plan_events(timeline, manual_beats=(), density="normal", first_beats=()):
                 n = used.get(ring, 0); used[ring] = n + 1
                 ev.append((ring[n % len(ring)], (float(start) + float(end)) / 2.0, seg))
     ev = [e for e in ev if e[1] < total]
+    if hold:
+        spans = [(float(b["t0"]), float(b["t0"]) + float(hold.get(b["beat_idx"]) or 0) + HOLD_PAD)
+                 for b in tl if float(hold.get(b["beat_idx"]) or 0) > 0]
+        ev = [e for e in ev if not any(a - 1e-6 <= float(e[1]) < z for a, z in spans)]
     ev.sort(key=lambda e: e[1])
     return ev
 

@@ -21267,7 +21267,12 @@ def _sb_picks(cid, key, bd):
             _job = None
         _slots = [s if isinstance(s, dict) else {} for s in bd["slots"]]
         _pack = _sp.preview_pack(st, cid, [s.get("slot") for s in _slots], job=_job, style_id=_sid)
-        _first = [i for i, s in enumerate(_slots) if s.get("sfx_pick") and not s.get("sfx_off")]
+        # {줄: 줄 효과음 길이} — 렌더(video_assemble.sfx_events_for)와 같은 모양. 길이는 효과음 자산에 적힌 값
+        _first = {}
+        for i, s in enumerate(_slots):
+            if s.get("sfx_pick") and not s.get("sfx_off"):
+                _a = st.get_scene_asset(int(s["sfx_pick"])) or {}
+                _first[i] = float(_a.get("duration") or 0)
         _rows = _sp.preview_lines([{"role": s.get("slot"), "text": s.get("line"), "pack_edit": s.get("pack_edit")} for s in _slots], _pack, _first)
         for s, r in zip(_slots, _rows):
             s["pack_sfx"] = r

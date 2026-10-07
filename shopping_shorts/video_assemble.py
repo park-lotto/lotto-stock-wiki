@@ -3611,6 +3611,15 @@ def _beat_cap_style(caption_style, beat):
 
 
 
+def _line_sfx_len(path):
+    """줄 효과음 길이(초) — 못 재면 0(그 줄은 첫 발만 비움 = 종전). 렌더를 멈추지 않는다, 대신 알린다."""
+    try:
+        return float(_probe_duration(str(path)) or 0)
+    except (OSError, ValueError, subprocess.SubprocessError) as e:
+        print("[sfx] 줄 효과음 길이 못 잼(첫 발만 비움): %s %r" % (path, e), file=sys.stderr)
+        return 0.0
+
+
 def sfx_events_for(timeline, sfx_paths):
     """효과음 타점 계산 — [(경로, 절대초), ...]. **렌더와 캡컷 내보내기가 같이 쓴다**(0순위-B).
 
@@ -3632,8 +3641,10 @@ def sfx_events_for(timeline, sfx_paths):
         #   그 비트는 사람 것을 쓰고, 팩은 그 비트를 건너뛴다.
         from shopping_shorts import sfx_pack
         # 줄 효과음(match_type "line", 관제 143) 칸은 팩이 **첫 발만** 비운다(같은 순간 두 발 금지), 사람이 3단계에서 고른 옛 효과음 칸은 통째로
-        line = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"]) and (b.get("sfx") or {}).get("match_type") == "line"}
-        manual = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"])} - line
+        # {칸: 줄 효과음 길이} — 그 소리가 울리는 동안 팩 소리를 비운다(sfx_pack.plan_events). 길이를 못 재면 0 = 첫 발만 비움(종전)
+        line = {b["beat_idx"]: _line_sfx_len(sfx_paths[b["beat_idx"]]) for b in (timeline or [])
+                if sfx_paths.get(b["beat_idx"]) and (b.get("sfx") or {}).get("match_type") == "line"}
+        manual = {b["beat_idx"] for b in (timeline or []) if sfx_paths.get(b["beat_idx"])} - set(line)
         _pe = {b["beat_idx"]: b["pack_edit"] for b in (timeline or []) if b.get("pack_edit")}   # 2단계 팩 소리 빼기·바꾸기(관제 143 확장)
         events += sfx_pack.events(timeline, pack, manual_beats=manual, first_beats=line, pack_edit=_pe)
     for b in timeline or []:
