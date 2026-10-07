@@ -98,7 +98,7 @@ def make_story(product, segments, call=None, note=None):
         return []
     prompt = PROMPT % (MAX_LINES, product or "(제품명 미상 — 컷에서 읽어라)", "\n".join(rows))
     seg_ids = {s.get("seg_id") for s in segments if isinstance(s, dict)}
-    fn = call or (lambda p: _sg._call_json(p, SCHEMA, note=note, vertex=False))
+    fn = call or (lambda p: _sg._call_json(p, SCHEMA, note=note, vertex_op="story"))
     lines = []
     for _try in range(2):                              # 빈 응답은 한 번 더(실측: 8편 중 1편 빈 응답)
         try:

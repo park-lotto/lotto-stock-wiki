@@ -2536,6 +2536,10 @@ def _vault_call_once(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
         keys = keys[_o:] + keys[:_o]
     global _LAST_VAULT_ERR
     _LAST_VAULT_ERR = ""
+    from shopping_shorts import vertex_route      # Vertex 먼저(관제 159) — 실패·꺼짐이면 아래 키풀 그대로
+    _vok, _vd = vertex_route.try_json("edit_plan", prompt, schema, what="장면배치")
+    if _vok:
+        return _vd
     for key in keys[:max_tries]:
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
@@ -3938,6 +3942,10 @@ def detect_video_type(source_scripts, max_retries=3, quota_sleep=8):
         return _DEFAULT_TYPE
     type_desc = "\n".join(f"- {k}: {v['label']} — {v['strategy']}" for k, v in VIDEO_TYPES.items())
     prompt = _TYPE_PROMPT.format(type_desc=type_desc, scripts="\n---\n".join(full_texts))
+    from shopping_shorts import vertex_route      # Vertex 먼저(관제 159) — 실패·꺼짐이면 아래 키풀 그대로
+    _vok, _vd = vertex_route.try_json("edit_plan", prompt, _TYPE_SCHEMA, what="영상유형")
+    if _vok and _vd.get("video_type"):
+        return _normalize_video_type(_vd.get("video_type"))
 
     for attempt in range(max_retries):
         key, idx = comment_gen._current_key_and_idx()

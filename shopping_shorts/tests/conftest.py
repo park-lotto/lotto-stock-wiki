@@ -57,3 +57,17 @@ def _isolate_key_vault_state(tmp_path, monkeypatch):
     _kv._SUS_CACHE["t"] = 0.0
     yield
     _kv._SUS_CACHE["t"] = 0.0
+
+
+@pytest.fixture(autouse=True)
+def _vertex_cutoff_off(monkeypatch):
+    """사장님 프로젝트 공유 차단 시각(vertex_route.OWNER_CUTOFF_DEFAULT, 관제 159)을 테스트에선 끈다.
+
+    기본값이 실제 날짜(2026-10-08 13:00 KST)라, 안 끄면 그 시각이 지나는 순간 Vertex 스위치 테스트가
+    전부 다른 답을 낸다(시한폭탄 — 그날 오후 모든 finish 게이트가 막힌다). 차단 시각 자체의 시험은
+    test_vertex_cutoff.py 가 시각을 직접 주입해 한다."""
+    try:
+        from shopping_shorts import vertex_route
+    except Exception:      # noqa: BLE001 — 이 모듈을 못 불러도 다른 테스트는 돌아야 한다
+        return
+    monkeypatch.setattr(vertex_route, "OWNER_CUTOFF_DEFAULT", "off")

@@ -5069,7 +5069,10 @@ def _vertex_notice(cid):
     from shopping_shorts import vertex_route
     if not vertex_route.needs_notice(cid):
         return None
-    return {"text": vertex_route.VERTEX_NOTICE, "url": vertex_route.VERTEX_NOTICE_URL, "link_text": "등록하기"}
+    return {"text": vertex_route.VERTEX_NOTICE, "url": vertex_route.VERTEX_NOTICE_URL, "link_text": "등록하기",
+            # 2026-10-08(관제 159): 무료 제미나이 지연 경고·전환 시각·등록 방법 — 문구는 vertex_route 한 곳
+            "body": vertex_route.notice_body(cid), "manual_url": vertex_route.MANUAL_URL,
+            "manual_text": "등록 방법 보기"}
 
 
 def _vertex_notice_day():
@@ -20883,6 +20886,14 @@ def api_produce_autoload(request: Request, body: dict):
     # ── B) 네트워크 대기 구간 (병렬) ──────────────────────────────
     # ⚠️ 이 함수 안에서 DB에 쓰지 않는다 — 결과만 dict에 담아 C단계가 쓴다.
     def _fetch(e):
+        # ★병렬 스레드는 요청의 주인을 모른다(contextvar·threading.local 둘 다 스레드를 안 건넌다) —
+        #   종전엔 여기 호출이 전부 0번(사장님)으로 찍혔다. 주인을 밝혀 준다(2026-10-08, 관제 159).
+        #   usage_meter.track 만 연다 — 키 선택(keyctx)은 종전 그대로.
+        from shopping_shorts import usage_meter as _um     # 이 파일 최상단엔 import가 없다
+        with _um.track(customer_id=keyroute.as_cid(cid)):
+            return _fetch_body(e)
+
+    def _fetch_body(e):
         item, code = e["item"], e["code"]
         work_dir = _FIND_TMP_DIR / hashlib.sha1(code.encode()).hexdigest()[:16]
         e["video_path"] = None
