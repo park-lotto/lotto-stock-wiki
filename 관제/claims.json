@@ -14,6 +14,11 @@
     "card": 103,
     "track": "단어강조"
   },
+  "out/precision20-ui.js:autoFxKinds": {
+    "at": "2026-10-07 20:45",
+    "card": 158,
+    "track": "자막팩"
+  },
   "out/precision20-ui.js:cameraAt": {
     "at": "2026-10-05 15:47",
     "card": 124,
@@ -119,6 +124,11 @@
     "card": 102,
     "track": "단어강조"
   },
+  "shopping_shorts/scene_style.py:moment_of": {
+    "at": "2026-10-07 20:45",
+    "card": 158,
+    "track": "자막팩"
+  },
   "shopping_shorts/scene_style.py:validate_snapshot": {
     "at": "2026-09-29 16:06",
     "card": 30,
@@ -188,6 +198,11 @@
     "at": "2026-10-03 17:40",
     "card": 94,
     "track": "팝업버튼자리"
+  },
+  "shopping_shorts/video_assemble.py:_beat_timeline": {
+    "at": "2026-10-07 20:45",
+    "card": 158,
+    "track": "자막팩"
   },
   "tools/scene_font_research/check_text_look.py": {
     "at": "2026-09-29 23:55",
