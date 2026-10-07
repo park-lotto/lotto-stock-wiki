@@ -124,6 +124,10 @@ with sync_playwright() as pw:
     need(lf.evaluate('linkLongform.items()')[0]['w'] > items[0]['w'] + 2, f"⑤ 초록 점을 끌면 커진다 (w {items[0]['w']}→{lf.evaluate('linkLongform.items()')[0]['w']:.1f})")
     pg.evaluate("(()=>{const el=document.querySelector('[data-lf=post]');el.value='댓글 링크 확인';el.dispatchEvent(new Event('input',{bubbles:true}))})()"); pg.wait_for_timeout(300)   # 효과 탭이 접혀 있을 수 있어 값으로 넣는다
     need(lf.evaluate("linkLongform.items().find(m=>m.block==='band').post") == '댓글 링크 확인' and '댓글 링크 확인' in lf.evaluate("document.querySelector('.lfb-band').textContent"), '⑤ 뒷말을 고치면 띠 글자가 바뀐다')
+    np_ = pg.evaluate("document.querySelectorAll('[data-lf-tts-preset]').length")
+    pg.evaluate("document.querySelector('[data-lf-tts-preset=\"wallet\"]').click()"); pg.wait_for_timeout(300)
+    got_tts = lf.evaluate("linkLongform.items().find(m=>m.block==='band').tts")
+    need(np_ == 5 and got_tts.startswith('지갑 꽉 잡으세요') and pg.evaluate("document.querySelector('[data-lf=tts]').value") == got_tts, f'⑤ 읽어 줄 말 프리셋 {np_}개 · 누르면 칸과 저장값이 바뀐다 ({got_tts[:14]}…)')
     pg.locator('.scene-longform').screenshot(path=str(out / '5_롱폼탭.png'))
     pg.evaluate("document.querySelector('[data-lf-clear]').click()"); pg.wait_for_timeout(200)
     need(lf.evaluate('linkLongform.items().length') == 0, '⑤ 「롱폼 안내 빼기」로 비워진다')

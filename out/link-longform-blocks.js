@@ -72,7 +72,16 @@ const SETS=COPY.map(c=>({id:c.id,label:c.label,items:[
   {block:'arrow',l:74.5,t:53,w:17,tone:c.tone},
   {block:'band',l:0,t:35,w:100,tone:c.tone,pre:c.pre,hot:c.hot,post:c.post,tts:c.tts,...(c.clock?{clock:c.clock}:{})},
 ]}));
-window.LINK_LONGFORM_BLOCKS={LOOP_MS,CSS,BLOCKS,SETS,
+// 🔊 읽어 줄 말 프리셋(2026-10-07 사장님 "재밌게 5개 — 편안한 쇼핑 되라든지, 영상 봐 주셔서 감사하다든지 위트 있게").
+//   누르면 「읽어 줄 말」 칸이 이 글로 바뀐다(그 뒤 고쳐도 된다). 80자 안. 링크 자리(고정 댓글)는 꼭 넣는다.
+const TTS_PRESETS=[
+  {id:'thanks',label:'🙏 끝까지 봐주셔서',tts:'여기까지 봐주신 당신, 안목이 남다르시네요! 고정 댓글 링크에서 편안한 쇼핑 되세요!'},
+  {id:'wallet',label:'👛 지갑 단속',tts:'지갑 꽉 잡으세요! 고정 댓글 링크 누르는 순간 장바구니가 바빠집니다. 영상 봐주셔서 감사해요!'},
+  {id:'cart',label:'🛒 장바구니 직행',tts:'고민은 배송만 늦출 뿐! 고정 댓글 링크로 장바구니 직행하세요. 오늘도 기분 좋은 쇼핑 되세요!'},
+  {id:'secret',label:'🤫 우리끼리 비밀',tts:'이건 우리끼리 비밀인데요, 링크는 고정 댓글에 숨겨놨어요. 시청 감사드리고 편안한 쇼핑 되세요!'},
+  {id:'friend',label:'💌 친구한테 자랑',tts:'좋은 건 나눠야 제맛! 고정 댓글 링크 확인하시고 친구한테도 살짝 알려주세요. 봐주셔서 고마워요!'},
+];
+window.LINK_LONGFORM_BLOCKS={LOOP_MS,CSS,BLOCKS,SETS,TTS_PRESETS,
   // 시계를 영상 시각(ms)에 맞춘다 — 편집 화면은 흐르는 시간으로, 렌더는 프레임 시각으로 부른다. 숫자가 바뀔 때만 다시 쓴다.
   clockAt(root,ms){root.querySelectorAll('[data-clock]').forEach(el=>{const sec=Math.max(0,Number(el.dataset.clock)-Math.floor(ms/1000));if(el.dataset.now!==String(sec)){el.dataset.now=String(sec);const u=el.querySelector('u');el.querySelectorAll('b').forEach(b=>b.remove());const d=String(Math.floor(sec/60)).padStart(2,'0')+String(sec%60).padStart(2,'0');u.insertAdjacentHTML('beforebegin',`<b>${d[0]}</b><b>${d[1]}</b>`);u.insertAdjacentHTML('afterend',`<b>${d[2]}</b><b>${d[3]}</b>`);}})},
   items:id=>structuredClone((SETS.find(s=>s.id===id)||SETS[0]).items).map(m=>({kind:'block',...m})),
