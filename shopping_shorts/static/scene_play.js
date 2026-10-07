@@ -494,6 +494,64 @@ function sceneRuleOn(i){
 const CUTS = {};                    // beat_idx → [{seg_id, dur}] (끈 칸만)
 const SLOW = {};                    // beat_idx → 재생 배율(>1 = 느리게). 없으면 1
 const CUT_MIN = 0.3;
+
+// ── ★칸 편집 상태(화면이 컷을 짜는 입력 전부) — 만들고·얹고·떠 가는 **단 하나의 자리**(관제 148, 2026-10-06) ──
+//   상태 = lists · STRETCH(늘려 채우기) · PHRASE_SYNC/PHRASE_EXACT(구절 맞춤) · CUTS(손 컷+잠금) · SLOW · FIXLEN(손 길이)
+//          · TRIMS(✂ 구멍) · MERGES(합치기). planClips 는 이 전역들만 읽는다.
+//   왜: 서버 편성을 화면 상태로 되살리는 코드가 세 벌이었다 — 서버 컷 러너(screen_clips_runner.js → 완성본)·
+//     화면 restoreServer(scene_lab.html)·제작소 큰 화면 복사(produce.html _sceneLabPrep). 벌마다 되살린 칸이 달라
+//     러너·restoreServer 는 늘려 채우기·트림·합치기를, 제작소는 손 컷·느리게·손 길이·구절 맞춤을 빠뜨렸다
+//     → 화면에서 [전체 늘리기]를 켠 칸이 완성본엔 안 늘어난 채 나왔다(실측 2작업 4칸).
+//   규칙: 값이 없으면 **비운다**(캐리오버 방지) · 서버가 저장하는 모양(edit_plan.apply_scene_lab)과 짝.
+function screenStateFromServer(D){
+  D = D || DATA || {};
+  const beats = D.beats || [];
+  const st = {lists: [], stretch: {}, phrase_sync: {}, phrase_exact: {}, cuts: {}, slow: {}, fixlen: {},
+              trims: {}, merges: {}};
+  beats.forEach((b, i) => {
+    b = b || {};
+    const ov = b.scene_override, seen = [];
+    (ov || []).forEach(s => { const id = s && s.seg_id; if (id && !seen.includes(id)) seen.push(id); });  // ✂ 두 토막 = 한 번
+    st.lists.push(seen.length ? seen
+      : [b.primary, ...(b.alternates || [])].filter(Boolean).map(s => s.seg_id).filter(Boolean));
+    // ★청소 당시 컷 기록이 있는 칸은 늘려 채우기를 되살리지 않는다(관제 148 보완, 2026-10-07 라이브 실측 b5ee8d89bedb 5번 칸 0.6초 밀림):
+    //   그 청소본은 늘리기를 안 읽던 러너의 컷으로 지워졌다 — 늘리기를 켜면 컷이 청소 당시와 달라져 화면≠완성본·재청소(과금).
+    //   청소 안 한 칸·새로 청소할 칸은 그대로 늘린다. (관제 110·135·150 과 같은 원칙: 청소한 칸은 청소 당시 컷)
+    if (b.stretch_fill && !((D.clean_cuts || {})[String(i)] || []).length) st.stretch[i] = true;
+    if (b.phrase_sync === false) st.phrase_sync[i] = false;
+    if (b.phrase_exact === true) st.phrase_exact[i] = true;
+    if (Array.isArray(b.manual_cuts)) st.cuts[i] = b.manual_cuts;
+    if (+b.slow > 1) st.slow[i] = +b.slow;
+    for (const [sid, v] of Object.entries(b.fixed_lens || {})) st.fixlen[i + ':' + sid] = v;
+  });
+  const ed = D.scene_lab_edits || {};        // 서버 plan.scene_lab 의 트림·합치기(api_mix_scene_lab_data)
+  Object.assign(st.trims, ed.trims || {});
+  Object.assign(st.merges, ed.merges || {});
+  return st;
+}
+function screenState(){                      // 지금 화면 상태를 떠 간다(제작소 큰 화면이 받아 같은 컷을 짠다)
+  return {lists: lists.map(l => (l || []).slice()), stretch: {...STRETCH}, phrase_sync: {...PHRASE_SYNC},
+          phrase_exact: {...PHRASE_EXACT}, cuts: JSON.parse(JSON.stringify(CUTS)), slow: {...SLOW},
+          fixlen: {...FIXLEN}, trims: JSON.parse(JSON.stringify(TRIMS)), merges: JSON.parse(JSON.stringify(MERGES))};
+}
+function applyScreenState(st){
+  st = st || {};
+  const clr = o => Object.keys(o).forEach(k => delete o[k]);
+  [STRETCH, PHRASE_SYNC, PHRASE_EXACT, CUTS, SLOW, FIXLEN, TRIMS, MERGES].forEach(clr);
+  lists = (st.lists || []).map(l => (l || []).slice());
+  for (const [k, v] of Object.entries(st.stretch || {})) if (v) STRETCH[k] = true;
+  for (const [k, v] of Object.entries(st.phrase_sync || {})) if (v === false) PHRASE_SYNC[k] = false;
+  for (const [k, v] of Object.entries(st.phrase_exact || {})) if (v === true) PHRASE_EXACT[k] = true;
+  for (const [k, v] of Object.entries(st.cuts || {})){
+    // 🔒 잠금(lock)도 함께 — 빼먹으면 새로고침에 잠금이 사라진다
+    if (Array.isArray(v)) CUTS[k] = v.filter(c => c && c.seg_id && c.dur > 0)
+                                     .map(c => c.lock ? {seg_id: c.seg_id, dur: +c.dur, lock: 1} : {seg_id: c.seg_id, dur: +c.dur});
+  }
+  for (const [k, v] of Object.entries(st.slow || {})) if (+v > 1) SLOW[k] = +v;
+  for (const [k, v] of Object.entries(st.fixlen || {})){ const n = parseFloat(v); if (n > 0) FIXLEN[k] = Math.round(n * 100) / 100; }
+  for (const [k, v] of Object.entries(st.trims || {})) if (Array.isArray(v) && v.length === 2) TRIMS[k] = [+v[0], +v[1]];
+  for (const [k, v] of Object.entries(st.merges || {})) if (Array.isArray(v) && v.length) MERGES[k] = v.slice();
+}
 function cutsSum(i){ return (CUTS[i] || []).reduce((a, c) => a + c.dur, 0); }
 function _r2(x){ return Math.round(x * 100) / 100; }
 // 🔒 잠근 컷(2026-09-16 사장님 "고정시킬 건 냅두고 다른 거 조작").
@@ -738,6 +796,13 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       scenes.forEach(o => { if (o !== g && o.video_id === g.video_id && o.start > g.start + EPS && o.start < far) far = o.start; });   // 같은 칸 다른 장면과는 절대 안 겹친다
       let hi = far;
       (starts[g.video_id] || []).forEach(x => { if (x > g.start + EPS && x < hi) hi = x; });
+      // ★이어 틀기는 원본의 **다음 장면 전환 앞까지**(2026-10-07 관제 150) — 종전엔 다른 칸 장면 앞까지만 봐서, 짧은 장면을
+      //   1.2초로 늘리거나(①) 옆 장면이 더 보여 줄 때(②) 원본의 다음 장면(엉뚱한 화면)이 끼었다(실측 120작업 중 78작업·181컷,
+      //   끼인 길이 중앙 0.37초 — 사장님 09-27 "최선은 딴 장면이 잠깐 들어가는 걸 막는 것"). 모자란 시간은 ②가 이 칸 다른 장면에
+      //   나눈다. ③(멈춤 대신 겹쳐 틀기 — far)은 그대로 둔다. 전환 목록이 없는 소재는 종전과 같다(장면이 이어지는지 모른다).
+      //   ★표식(DATA.scene_stop) 있는 새 작업만 — 옛·청소한 작업은 청소 당시 컷과 같아야 한다(관제 110·135).
+      const _sc = !D.scene_stop ? [] : ((D.scenecuts || {})[g.video_id] || []).map(Number).filter(x => isFinite(x) && x > g.end - 0.05);
+      if (_sc.length){ const nx = Math.min(..._sc); if (nx < hi) hi = Math.max(g.end, nx); }
       return {st: g.start, len, room: Math.max(len, hi - g.start), far: Math.max(len, far - g.start)};
     });
     const sum = a => a.reduce((x, y) => x + y, 0);

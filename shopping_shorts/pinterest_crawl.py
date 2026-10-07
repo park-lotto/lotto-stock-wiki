@@ -281,7 +281,40 @@ def _ld_video_block(html):
             if not str(it.get("contentUrl") or ""):
                 continue
             return it
-    return None
+    return _app_video_block(html)
+
+
+# ★프록시 없이 서버(데이터센터 IP)로 받은 핀 페이지엔 JSON-LD가 **없다**(2026-10-07 실측: Webshare 402로
+#   프록시가 끊기자 렌즈가 영상 핀을 3/3 '영상 아님'으로 잘라내 핀터레스트가 통째로 사라졌다).
+#   대신 페이지에 박힌 앱 데이터에 영상 목록이 있다: "videoList":{… "v720P":{"url":"…expMp4….mp4"}…,"duration":ms}.
+#   실측 표본: 영상 핀 9/9 duration 있음(8/9 v720P mp4, 1개는 HLS만) · 사진 핀 8/8 영상 데이터 0 → 있으면 영상 핀.
+#   _ld_video_block과 **같은 모양**(JSON-LD VideoObject 키)으로 돌려 호출부는 그대로 둔다.
+_APP_MP4_RE = re.compile(r'"v720P":\{[^{}]*?"url":"(https://v1\.pinimg\.com/videos/[^"]+?\.mp4)"')
+_APP_ANY_MP4_RE = re.compile(r'"url":"(https://v1\.pinimg\.com/videos/[^"]+?\.mp4)"')
+_APP_HLS_RE = re.compile(r'"url":"(https://v1\.pinimg\.com/videos/[^"]+?\.m3u8)"')
+_APP_DUR_RE = re.compile(r'"duration":(\d+)')
+_APP_THUMB_RE = re.compile(r'"thumbnail":"(https://i\.pinimg\.com/videos/thumbnails/[^"]+)"')
+_TITLE_RE = re.compile(r"<title>(.*?)</title>", re.S)
+
+
+def _app_video_block(html):
+    """JSON-LD가 없을 때 앱 데이터에서 영상을 찾는다. 영상 데이터가 없으면 None(사진 핀)."""
+    import html as _h
+    url = ""
+    for rx in (_APP_MP4_RE, _APP_ANY_MP4_RE, _APP_HLS_RE):
+        m = rx.search(html or "")
+        if m:
+            url = m.group(1).replace("\\u002F", "/")
+            break
+    d = _APP_DUR_RE.search(html or "")
+    if not url or not d:
+        return None
+    t = _TITLE_RE.search(html)
+    name = _h.unescape(t.group(1)).split(" | ")[0].replace("[Video]", "").strip() if t else ""
+    th = _APP_THUMB_RE.search(html)
+    return {"@type": "VideoObject", "contentUrl": url,
+            "duration": "PT%.3fS" % (int(d.group(1)) / 1000.0),
+            "thumbnailUrl": th.group(1) if th else "", "name": name, "description": ""}
 
 
 def pin_destination(url, timeout=15):

@@ -60,17 +60,19 @@ def test_pick_invalidates_preview(tmp_path, monkeypatch):
     assert job()["preview_status"] == ""
 
 
-def test_longform_blocked_for_shorts_only_track(tmp_path, monkeypatch):
+def test_longform_allowed_for_shorts_only_track_because_silent(tmp_path, monkeypatch):
+    """목록 곡(쇼츠 전용)을 쓴 영상도 롱폼이 된다 — 롱폼은 무음으로 굽는다(2026-10-06 사장님 "롱폼은 무음으로", link_longform -an).
+    종전엔 소리를 그대로 복사해서 409 로 막았다(관제 146)."""
     src = tmp_path / "v.mp4"; src.write_bytes(b"x")
     A, job = _app(tmp_path, monkeypatch, deco={"bgm": {"lib": "blue", "volume": 15}})
     from shopping_shorts.store import Store
     Store(A.DB_PATH).update_mix_job("jb", status="done", video_path=str(src))
     monkeypatch.setattr(A, "_video_gone_reason", lambda j: None)
     _, s, resp = A._longform_job("jb")
-    assert s is None and resp.status_code == 409
-    Store(A.DB_PATH).update_mix_job("jb", deco={"bgm": {"volume": 15}})
-    _, s, resp = A._longform_job("jb")
     assert resp is None and s == str(src)
+    import inspect
+    from shopping_shorts import link_longform
+    assert '"-an"' in inspect.getsource(link_longform.render_link_longform)   # 무음이 아니면 이 허용은 틀린다
 
 
 def test_admin_only_by_default(tmp_path, monkeypatch):

@@ -7,7 +7,7 @@
   ④ 가운데 = 원본 쇼츠 + 안내 그림   ⑤ 문구 띠가 가운데를 실제로 덮는다   ⑦ 양옆 화살표가 안내 그림 색 그대로 보인다
 
 재는 것(전부 파일에서 직접):
-  ① 크기 1920x1080            ② 길이가 원본과 같다(±0.15초)      ③ 소리 줄기가 원본과 같은 길이로 있다
+  ① 크기 1920x1080            ② 길이가 원본과 같다(±0.15초)      ③ 소리가 없다(무음 — 쇼츠 전용 곡이 실리면 안 된다)
   ④ 가운데가 원본 쇼츠와 같다(문구 띠 밖, 3시점)   ⑤ 문구가 보인다(띠 안 노란 글자)
   ⑥ 양옆이 검정이 아니다(흐린 배경)               ⑦ 화살표가 보인다(양옆 빨강)
 실패가 하나라도 있으면 종료코드 1.
@@ -56,9 +56,11 @@ def check_layout(src, out, items):
     ps, po = _probe(src), _probe(out)
     res.append(("크기 1920x1080", (po["w"], po["h"]) == (LL.OUT_W, LL.OUT_H), "%dx%d" % (po["w"], po["h"])))
     res.append(("길이 = 원본(±0.15초)", abs(ps["dur"] - po["dur"]) <= 0.15, "원본 %.3f / 롱폼 %.3f" % (ps["dur"], po["dur"])))
-    if ps["a_dur"] is not None:
-        ok = po["a_dur"] is not None and abs(ps["a_dur"] - po["a_dur"]) <= 0.15
-        res.append(("소리 = 원본 길이", ok, "원본 %.3f / 롱폼 %s" % (ps["a_dur"], po["a_dur"])))
+    if LL.tts_text(items):
+        ok = po["a_dur"] is not None and abs(po["a_dur"] - po["dur"]) <= 0.6   # 말이 0.4초 뒤에 시작해 소리 줄기 길이는 그만큼 짧게 적힌다
+        res.append(("소리 = 읽어 줄 말(영상 길이만큼)", ok, "롱폼 소리 줄기 %s / 영상 %.3f" % (po["a_dur"], po["dur"])))
+    else:
+        res.append(("소리 없음(무음)", po["a_dur"] is None, "롱폼 소리 줄기 %s" % ("없음" if po["a_dur"] is None else "%.3f초" % po["a_dur"])))
     fg_w = LL.fg_width(ps["w"], ps["h"]); x0 = (LL.OUT_W - fg_w) // 2
     n = LL.frame_count(items, ps["dur"]); clock = any(m.get("clock") for m in items)
     frames = [int(ps["dur"] * LL.FPS * k) for k in (0.2, 0.5, 0.8)]
@@ -85,7 +87,8 @@ def check_layout(src, out, items):
                 side_px += k; side_bad += ImageStat.Stat(ImageChops.multiply(d, m)).sum[0] / 255
             if x0 >= 40:
                 side_lum = max(side_lum, ImageStat.Stat(fo.crop((0, 0, x0, LL.OUT_H)).convert("L")).mean[0])
-    res.append(("가운데 = 원본 쇼츠 + 안내 그림(평균차 ≤ 8)", worst <= 8.0, "가장 큰 평균차 %.2f" % worst))
+    # 허용 12: 서버(리눅스 Noto 이모지)와 이 PC(윈도 이모지)의 이모지 그림이 달라 🎁 처럼 큰 이모지가 있는 띠는 8~9가 나온다(2026-10-07 라이브 실측 8.59, 글자·자리는 같았다)
+    res.append(("가운데 = 원본 쇼츠 + 안내 그림(평균차 ≤ 12)", worst <= 12.0, "가장 큰 평균차 %.2f" % worst))
     res.append(("문구 띠가 가운데를 덮는다(≥ 5000px)", cover >= 5000, "%d px" % cover))
     if x0 >= 40:
         res.append(("양옆 흐린 배경(밝기 > 12)", side_lum > 12, "밝기 %.1f" % side_lum))
@@ -100,9 +103,7 @@ def check(src, out):
     res.append(("크기 1920x1080", (po["w"], po["h"]) == (LL.OUT_W, LL.OUT_H), "%dx%d" % (po["w"], po["h"])))
     res.append(("길이 = 원본(±0.15초)", abs(ps["dur"] - po["dur"]) <= 0.15,
                 "원본 %.3f / 롱폼 %.3f" % (ps["dur"], po["dur"])))
-    if ps["a_dur"] is not None:
-        ok = po["a_dur"] is not None and abs(ps["a_dur"] - po["a_dur"]) <= 0.15
-        res.append(("소리 = 원본 길이", ok, "원본 %.3f / 롱폼 %s" % (ps["a_dur"], po["a_dur"])))
+    res.append(("소리 없음(무음)", po["a_dur"] is None, "롱폼 소리 줄기 %s" % ("없음" if po["a_dur"] is None else "%.3f초" % po["a_dur"])))
     fg_w = LL.fg_width(ps["w"], ps["h"])
     x0 = (LL.OUT_W - fg_w) // 2
     y0, y1 = LL.band_box()

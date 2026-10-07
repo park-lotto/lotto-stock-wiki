@@ -199,8 +199,10 @@
     /* 하단 네비 */
     .nav{display:flex;justify-content:space-between;margin:18px 0 40px}
     button{font-family:inherit;border:0;border-radius:9px;padding:11px 20px;cursor:pointer;font-size:14px}
-    .btn-prev{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
-    .btn-next{background:var(--grad);color:#fff}
+    /* .btn / .btn.primary 는 여기 한 곳에서 .btn-prev / .btn-next 와 같은 모양을 쓴다(관제 140).
+       예전엔 정의가 없어 브라우저 기본 버튼으로 나왔고, 고객 PC에 따라 8단계 버튼이 안 보였다. */
+    .btn-prev,.btn{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
+    .btn-next,.btn.primary{background:var(--grad);color:#fff;border:0}
     button:disabled{opacity:.4;cursor:default}
 
     /* 탭(대본 3모드 등 공용) */
@@ -8031,7 +8033,7 @@ function setScriptMode(mode){
   if(body) body.innerHTML = SCRIPT_MODE_HTML[mode]();
 }
 
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // SYLLABLES_PER_SEC=5.7 — 2026-07-17 성우 14명을 서버에서 실합성해 측정한 값(음절÷발화초,
 // 한글 1글자≈1음절). 파이썬 쪽 진실은 shopping_shorts/edit_plan.py의 _SYLLABLES_PER_SEC —
 // JS는 그 상수를 못 읽으므로(서버가 값을 내려주지 않음, 이 태스크 범위 밖) 여기 숫자로 나란히
@@ -11851,16 +11853,11 @@ document.addEventListener('keydown', e=>{
 function _sceneLabPrep(lab){
   try{ stopPlay(); }catch(e){}
   document.querySelectorAll('#mixPreview video').forEach(v => { try{ v.pause(); }catch(e){} });
-  DATA = lab.DATA; lists = lab.lists; onePerSeg = !!lab.onePerSeg;
-  Object.keys(STRETCH).forEach(k => delete STRETCH[k]);
-  Object.assign(STRETCH, lab.STRETCH || {});
-  Object.keys(TRIMS).forEach(k => delete TRIMS[k]);
-  Object.assign(TRIMS, lab.TRIMS || {});
-  // 🔗 합친 조각(2026-08-17 사장님 "합치기해서 훅으로 가져다가 재생하면 맨앞장만 재생").
-  // 미리보기 계산은 **이 바깥 화면**이 한다 — TRIMS만 받아오고 MERGES를 빠뜨려 실험실에선
-  // 합쳐 보이는데 재생은 원본 0.5초만 나왔다. 짝으로 움직이는 값이라 함께 복사한다(0순위-B).
-  Object.keys(MERGES).forEach(k => delete MERGES[k]);
-  Object.assign(MERGES, lab.MERGES || {});
+  DATA = lab.DATA; onePerSeg = !!lab.onePerSeg;
+  // ★칸 편집 상태 전부를 실험실과 **같은 함수**로 받는다(관제 148). 예전엔 목록·늘려 채우기·트림·합치기만 손으로
+  //   복사해 손 컷·느리게·손 길이·구절 맞춤이 빠졌다(합치기를 빠뜨렸던 2026-08-17 사고와 같은 꼴).
+  //   옛 실험실(캐시된 iframe)은 state 없이 부른다 → 옛 모양으로 받는다.
+  applyScreenState(lab.state || {lists: lab.lists, stretch: lab.STRETCH, trims: lab.TRIMS, merges: lab.MERGES});
   SL.server = true;
   SL.job = (typeof MIX_JOB !== 'undefined' && MIX_JOB) || SL.job;
   _pvShow('play');   // 자리를 가조립 재생기에 넘긴다(판정은 _pvShow 한 곳)
@@ -12357,7 +12354,7 @@ function renderSceneCutaway(beat, idx){
   // ★감정짤 칸(관제 143) — 스위치 켜진 계정만. 짤 컷이면 짤 카드 [바꾸기][빼기], 끼움 장면이 없으면 [＋짤]
   const memeOn = (typeof MIX_MEME_ON!=='undefined') && MIX_MEME_ON && typeof MemePack!=='undefined';
   if(memeOn && cw && cw.match_type==='meme'){
-    return html + `<div class="mp-cell">${MemePack.video(cw.asset_id)}<div style="flex:1">🎭 <b>${esc(cw.emotion||'')}</b> 짤 · 줄 맨 앞 ${esc(cw.head_sec)}초${cw.manual?' · 직접 고름':' · 자동'}</div>`
+    return html + `<div class="mp-cell">${MemePack.video(cw.asset_id)}<div style="flex:1">🎭 <b>${esc(cw.emotion||'')}</b> 짤 · 줄 맨 앞 ${esc(String(cw.head_sec??''))}초${cw.manual?' · 직접 고름':' · 자동'}</div>`
       + `<button class="mp-btn" onclick="memeCellOpen(${idx})">바꾸기</button><button class="mp-btn" onclick="memeCellSet(${idx},null)">빼기</button></div>`;
   }
   if(memeOn && !cw){
@@ -12400,6 +12397,8 @@ async function memeCellSet(idx, assetId){
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   if(!r || !r.ok){ toast((r&&r.error)||'짤 반영 실패'); }
   await _refreshBeatBox(idx);
+  const sb = document.getElementById('sceneSfx'+idx), nb = ((globalThis._mixBeats)||[])[idx];
+  if(sb && nb) sb.innerHTML = renderSceneSfx(nb, idx);
 }
 
 async function toggleCutaway(idx, assetId){
@@ -12428,6 +12427,19 @@ async function toggleCutaway(idx, assetId){
 // 역할 매칭은 점수·제안 큐가 없어(자동배치 아니면 빈 채) 되넣기 UI는 없다 — 빼기만.
 function renderSceneSfx(beat, idx){
   const sfx = beat.sfx;
+  // 2단계에서 고른 기본 팩 소리 빼기·바꾸기(beat.pack_edit) — 보여 주기만. 렌더·캡컷 반영은 sfx_pack.apply_pack_edit
+  const _pe = beat.pack_edit||{}, _pn=(_pe.off||[]).length, _ps=(_pe.swap||[]).length;
+  const _peTxt = (_pn||_ps) ? `<div class="hint" style="font-size:12px;margin-top:4px">🔊 기본 소리 ${[_pn?_pn+'개 뺌':'', _ps?_ps+'개 바꿈':''].filter(Boolean).join(' · ')}(2단계에서 고름)</div>` : '';
+  return _peTxt + _renderSceneSfxBody(beat, idx);
+}
+function _renderSceneSfxBody(beat, idx){
+  const sfx = beat.sfx;
+  // ★줄 효과음 칸(관제 143 확장, 스위치 meme_enabled) — 소리 고르기는 서버(storyboard.sfx_slots), 여기는 보여 주고 사람 고름만 보낸다
+  if((typeof MIX_MEME_ON!=='undefined') && MIX_MEME_ON && typeof SfxBank!=='undefined' && (!sfx || sfx.match_type==='line')){
+    return SfxBank.cell({id: sfx && sfx.asset_id, cat: sfx && sfx.cat, auto: sfx && !sfx.manual, off: beat.sfx_off,
+      change:`sfxCellOpen(${idx})`, remove:`removeSfx(${idx})`, add:`sfxCellOpen(${idx})`,
+      onReady:()=>{ const box=document.getElementById('sceneSfx'+idx); if(box) box.innerHTML=renderSceneSfx(beat, idx); }});
+  }
   if(!sfx) return '';
   const posLabel = beat.role ? `${esc(beat.role)} 자리`
                  : (sfx.position === 'first' ? '시작 자리' : '끝 자리');
@@ -12436,6 +12448,27 @@ function renderSceneSfx(beat, idx){
     + `<div style="flex:1;font-size:12px" class="hint">효과음 #${sfx.asset_id} · 역할 매칭(${posLabel})</div>`
     + `<button class="btn-prev" style="padding:4px 8px;font-size:12px" onclick="removeSfx(${idx})">이 효과음 빼기</button>`
     + `</div>`;
+}
+
+function sfxCellOpen(idx){
+  const b = ((globalThis._mixBeats)||[])[idx] || {};
+  SfxBank.openDrawer({title:(idx+1)+'번 줄 효과음 고르기', cat:(b.sfx||{}).cat||'', cur:(b.sfx||{}).asset_id, onPick:id=>sfxCellSet(idx,id)});
+}
+async function sfxCellSet(idx, assetId){
+  if(!MIX_JOB) return;
+  const box = document.getElementById('sceneSfx'+idx);
+  if(box) box.innerHTML = '<div class="hint">⏳ 반영 중…</div>';
+  try{
+    const r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/sfx',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({beat_idx: mixBeatIdAt(idx), asset_id: assetId})})).json();
+    if(!r.ok) toast(r.error||'효과음 반영 실패');
+  }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
+  const d = await (await fetch('/api/mix/result/'+MIX_JOB)).json();
+  if(!d.ok) return;
+  if(d.beats) globalThis._mixBeats = d.beats;
+  const beat = (d.beats||[])[idx];
+  if(beat && box) box.innerHTML = renderSceneSfx(beat, idx);
 }
 
 async function removeSfx(idx){
@@ -15279,7 +15312,7 @@ function _lfStop(){ if(_lfTimer){ clearInterval(_lfTimer); _lfTimer=null; } }
 function _lfRender(){
   const box=document.getElementById('longformBox'); if(!box) return;
   const S=_lfState, on=S.rendered, run=(S.phase==='running');
-  const can=(on && !run && S.phase!=='ready');   // 이미 만든 것이 최신이면 다시 누를 일이 없다(문구를 바꾸면 다시 켜진다)
+  const can=(on && !run && S.phase!=='ready' && S.phase!=='blocked');   // 이미 만든 것이 최신이면 다시 누를 일이 없다(문구를 바꾸면 다시 켜진다) · 막힘(완성본 없음)도 못 누른다
   const j=encodeURIComponent(S.job), q='where='+encodeURIComponent(S.where);
   // ★문구 고르기는 뺐다(2026-10-06 사장님 "문구는 장면꾸미기에서 만들어서 올 거라 여기는 선택이 없어도 된다").
   //   장면꾸미기 「롱폼」에서 꾸며 두었으면(관제 133) 그걸 굽고, 아니면 서버 기본 문구(link_longform.DEFAULT_WHERE)로 굽는다.
@@ -15296,6 +15329,10 @@ function _lfRender(){
       + '<div class="hint" style="line-height:1.7">① 이 영상을 유튜브에 <b>일반(가로) 영상</b>으로 올리고 제목을 <b>구매링크</b>로<br>'
       + '② 그 영상의 <b>댓글·설명란</b>에 구매링크를 붙이고<br>'
       + '③ 쇼츠 수정 화면의 <b>관련 동영상</b>에 이 영상을 고르면, 쇼츠 아래에 「구매링크」 버튼이 생깁니다.</div>';
+  }else if(S.phase==='blocked'){
+    // 서버가 "지금은 못 만든다"고 한 경우(완성본 없음·수정 뒤 재렌더 필요·만드는 중) — 2026-10-06 사장님 실사용: 장면을 고친 뒤 바로 누르면
+    //   404 를 받고 "다시 눌러주세요"가 떠서 안 되는 것으로 보였다. 이유를 그대로 보여 주고 버튼을 잠근다. 완성본이 생기면 다시 켜진다.
+    body='<div class="hint">⏸ '+esc(S.msg||'먼저 최종 렌더로 완성본을 만들어 주세요')+'</div>';
   }else if(S.phase==='error'){
     body='<div class="warnBox" style="margin:6px 0">⚠️ '+esc(S.msg||'만들지 못했어요')+' — 다시 눌러주세요.</div>';
   }else{
@@ -15312,7 +15349,8 @@ function _lfApply(d){
   const S=_lfState; S.custom=!!(d&&d.custom);
   if(d && d.state==='ready'){ S.phase='ready'; S.url=d.url; _lfStop(); }
   else if(d && d.state==='running'){ if(S.phase!=='running'){ S.t0=Date.now(); } S.phase='running'; _lfPoll(); }
-  else if(d && (d.state==='error' || (d.ok===false && d.error))){ S.phase='error'; S.msg=d.error||''; _lfStop(); }
+  else if(d && d.state==='error'){ S.phase='error'; S.msg=d.error||''; _lfStop(); }
+  else if(d && d.ok===false && d.error){ S.phase='blocked'; S.msg=d.error; _lfStop(); }   // 만들다 실패한 게 아니라 지금은 못 만드는 상태
   else { S.phase='idle'; _lfStop(); }
   _lfRender();
 }
@@ -15341,7 +15379,7 @@ function _lfSync(rendered){
 async function renderLongform(){
   const S=_lfState;
   if(!S.rendered || !S.job){ if(typeof toast==='function') toast('먼저 최종 렌더로 완성본을 만들어 주세요'); return; }
-  if(S.phase==='running' || S.phase==='ready') return;
+  if(S.phase==='running' || S.phase==='ready' || S.phase==='blocked') return;
   S.phase='running'; S.t0=Date.now(); _lfRender();
   try{
     const r=await fetch('/api/mix/longform_link/'+encodeURIComponent(S.job),{method:'POST',
@@ -19129,7 +19167,7 @@ async function sbLoad(){
     if(!r.ok || !d || !d.ok){ SB.err=(d&&d.error)||('불러오기 실패('+r.status+')'); SB.data=SB.data||null; sbRender(); return; }
     SB.err=''; SB.data=d; sbAbsorb(d.tasks||{});
   }catch(e){ console.warn('[sb] 불러오기 실패', e); SB.err='불러오기 실패 — 잠시 뒤 다시 열어 주세요'; }
-  sbRender();
+  sbRender(); _sbEnsurePack();
   const t=(SB.data&&SB.data.tasks)||{};
   if(Object.values(t).some(x=>x&&x.state==='run')) SB.poll=setTimeout(sbLoad, 3000);   // 진행 중이면 3초마다 묻는다
 }
@@ -19274,15 +19312,85 @@ function sbRowActs(i, n, sl){
 // ── 감정짤 미리 고르기(관제 143) — 짤 들어갈 줄([1]·[3])·감정은 서버가 정해 칸에 싣는다(storyboard.apply_signals → meme_emotion).
 //   여기선 보여 주고 고른 번호를 칸(sl.meme_pick)에 붙일 뿐 — 줄을 옮겨도 칸과 함께 다닌다. 확정 때 storyboard 줄에 실려 meme_slots 가 먼저 쓴다.
 function sbMemeCell(i, sl){
-  if(!window.MEME_ON || !sl.meme_emotion || typeof MemePack==='undefined') return '';
-  const id=sl.meme_pick;
-  if(!id) return `<div class="mp-cell"><div style="flex:1">🎭 여기 짤 들어감 (<b>${sbE(sl.meme_emotion)}</b>) — 3단계에서 자동으로 골라요(내 우선 짤 먼저)</div><button class="mp-btn" onclick="sbMemeOpen(${i})">미리 고르기</button></div>`;
-  const c=MemePack.clip(id)||{};
-  return `<div class="mp-cell">${MemePack.video(id)}<div style="flex:1">🎭 <b>${sbE(c.emotion||sl.meme_emotion)}</b> 짤 · 미리 고름</div><button class="mp-btn" onclick="sbMemeOpen(${i})">바꾸기</button><button class="mp-btn" title="고른 짤을 떼고 자동으로" onclick="sbMemeSet(${i},null)">자동으로</button></div>`;
+  if(!window.MEME_ON || typeof MemePack==='undefined') return '';
+  let h='';
+  if(sl.meme_emotion){
+    const id=sl.meme_pick;
+    if(sl.meme_off) h=`<div class="mp-cell"><div style="flex:1">🎭 짤 뺌 (${sbE(sl.meme_emotion)})</div><button class="mp-btn" onclick="sbMemeSet(${i},'auto')">자동으로</button></div>`;
+    else if(!id) h=`<div class="mp-cell"><div style="flex:1">🎭 여기 짤 들어감 (<b>${sbE(sl.meme_emotion)}</b>) — 짤 준비 중</div><button class="mp-btn" onclick="sbMemeOpen(${i})">고르기</button></div>`;
+    else { const c=MemePack.clip(id)||{};
+      h=`<div class="mp-cell">${MemePack.video(id)}<div style="flex:1">🎭 <b>${sbE(c.emotion||sl.meme_emotion)}</b> 짤 · ${sl.meme_auto?'자동(내 ⭐ 먼저)':'직접 고름'}</div><button class="mp-btn" onclick="sbMemeOpen(${i})">바꾸기</button><button class="mp-btn" onclick="sbMemeSet(${i},null)">빼기</button>${sl.meme_auto?'':`<button class="mp-btn" onclick="sbMemeSet(${i},'auto')">자동으로</button>`}</div>`; }
+  }
+  // 효과음 칸(관제 143 확장) — 소리·분류는 서버(storyboard.sfx_preview)가 정해 칸에 싣는다
+  if(typeof SfxBank!=='undefined'){
+    h+=SfxBank.cell({id:sl.sfx_off?null:sl.sfx_pick, cat:sl.sfx_cat, auto:sl.sfx_auto, off:sl.sfx_off,
+      change:`sbSfxOpen(${i})`, remove:`sbSfxSet(${i},null)`, add:`sbSfxOpen(${i})`, onReady:()=>{ try{ sbRender(); }catch(e){ console.warn('[sfx] 다시 그리기 실패', e); } }});
+  }
+  // 기본 효과음팩 칩 — 어떤 소리·어디쯤은 서버(sfx_pack.preview_lines = 렌더와 같은 plan_events+apply_pack_edit)가 정해 sl.pack_sfx 로 싣는다.
+  //   여기선 그리기만 — ✕(빼기)·바꾸기·되돌리기는 sl.pack_edit 표식만 고치고 서버(/picks)가 다시 계산한다(화면이 판단 안 함).
+  if(Array.isArray(sl.pack_sfx)){
+    const chip=(x,k)=>{ const off=!!x.off;
+      return `<span class="sb-pchipw" style="display:inline-flex;align-items:center;gap:2px;${off?'opacity:.5':''}">`
+        +`<button class="mp-btn sb-pchip" style="padding:2px 8px;font-size:12px;min-height:0;${off?'text-decoration:line-through;color:#888':''}" onclick="sbPackPlay('${sbE(x.url)}')" title="들어 보기">${sbE(x.label)}${x.from?` <small>(원래 ${sbE(x.from_label||x.from)})</small>`:''} <small>~${Number(x.t).toFixed(1)}초</small></button>`
+        +(off?`<button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="다시 넣기" onclick="sbPackEdit(${i},${k},'undo')">되돌리기</button>`
+             :`<button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="다른 소리로 바꾸기" onclick="sbPackSwapOpen(${i},${k})">바꾸기</button><button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="이 소리 빼기" onclick="sbPackEdit(${i},${k},'off')">✕</button>${x.from?`<button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="원래 소리로" onclick="sbPackEdit(${i},${k},'undo')">되돌리기</button>`:''}`)
+        +`</span>`; };
+    h+= sl.pack_sfx.length
+      ? `<div class="sb-packsfx" title="자동으로 깔리는 기본 효과음 — 대략 위치(3단계에서 실제 목소리 길이로 다시 맞춥니다)">🔊 ${sl.pack_sfx.map(chip).join(' · ')} <small style="opacity:.6">대략 위치</small><div id="sbPackSwap${i}"></div></div>`
+      : (i===0 && (sbCur()[1]||{}).pack_sfx_on===false ? `<div class="sb-packsfx" style="opacity:.6">🔇 기본 효과음 없음</div>` : '');
+  }
+  return h;
 }
 function sbMemeOpen(i){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
   MemePack.openDrawer({title:(i+1)+'번 줄 짤 고르기', emotion:sl.meme_emotion||'', cur:sl.meme_pick, onPick:id=>sbMemeSet(i,id)}); }
-function sbMemeSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; if(id) bd.slots[i].meme_pick=Number(id); else delete bd.slots[i].meme_pick; sbRender(); }
+// 짤 바꾸기(번호)·빼기(null)·자동으로('auto') — 표식만 바꾸고 서버 고르기로 다시 채운다(짤을 빼면 짤 효과음도 서버가 뺀다)
+function sbMemeSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
+  delete sl.meme_auto; delete sl.meme_off;
+  if(id==='auto') delete sl.meme_pick; else if(id) sl.meme_pick=Number(id); else { delete sl.meme_pick; sl.meme_off=1; }
+  if(sl.sfx_auto){ delete sl.sfx_pick; delete sl.sfx_auto; }
+  sbPicksSync(ek,bd); }
+function sbSfxOpen(i){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
+  SfxBank.openDrawer({title:(i+1)+'번 줄 효과음 고르기', cat:sl.sfx_cat||'', cur:sl.sfx_pick, onPick:id=>sbSfxSet(i,id)}); }
+function sbSfxSet(i, id){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
+  delete sl.sfx_auto; delete sl.sfx_off;
+  if(id) sl.sfx_pick=Number(id); else { delete sl.sfx_pick; sl.sfx_off=1; }
+  sbPicksSync(ek,bd); }   // 줄 효과음이 바뀌면 그 줄 기본 효과음 첫 발도 서버가 다시 정한다
+// 팩 소리 빼기·바꾸기·되돌리기 — 칩의 ref(소리 이름+그 줄 안 순번)만 sl.pack_edit 에 적고 서버가 다시 계산한다(sfx_pack.apply_pack_edit)
+const SB_PACK_SLOTS=[['opener','시작(두둥)'],['pop','뽁'],['dung','둥'],['ding','띠링'],['whoosh','휙'],['tick','틱'],['click2','딸깍']];
+function sbPackEdit(i, k, act, to){ const [ek,bd]=sbCur(); if(!bd||!bd.slots[i]) return; const sl=bd.slots[i];
+  const x=(sl.pack_sfx||[])[k]; if(!x||!x.ref) return; const ref=x.ref;
+  const pe=sl.pack_edit||{}; const same=r=>r.slot===ref.slot&&Number(r.n)===Number(ref.n);
+  pe.off=(pe.off||[]).filter(r=>!same(r)); pe.swap=(pe.swap||[]).filter(r=>!same(r));
+  if(act==='off') pe.off.push({slot:ref.slot, n:ref.n});
+  else if(act==='swap' && to && to!==ref.slot) pe.swap.push({slot:ref.slot, n:ref.n, to});
+  if(!pe.off.length) delete pe.off; if(!pe.swap.length) delete pe.swap;
+  if(Object.keys(pe).length) sl.pack_edit=pe; else delete sl.pack_edit;
+  sbPicksSync(ek,bd); }
+function sbPackSwapOpen(i, k){ const box=document.getElementById('sbPackSwap'+i); const [ek,bd]=sbCur(); if(!box||!bd) return;
+  const x=((bd.slots[i]||{}).pack_sfx||[])[k]; if(!x) return;
+  if(box.dataset.k===String(k) && box.innerHTML){ box.innerHTML=''; box.dataset.k=''; return; }
+  box.dataset.k=String(k);
+  const base=String(x.url||'').replace(/[^\/]+$/,'');
+  box.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;font-size:12px">바꿀 소리: ${SB_PACK_SLOTS.filter(([s])=>s!==x.slot).map(([s,l])=>
+    `<span style="display:inline-flex;gap:2px"><button class="mp-btn" style="padding:2px 6px;font-size:11px;min-height:0" title="미리 듣기" onclick="sbPackPlay('${sbE(base+s)}')">▶</button><button class="mp-btn" style="padding:2px 8px;font-size:12px;min-height:0" onclick="sbPackEdit(${i},${k},'swap','${s}')">${l}</button></span>`).join('')}</div>`; }
+let _sbPackAud=null;
+function sbPackPlay(u){ try{ if(_sbPackAud) _sbPackAud.pause(); _sbPackAud=new Audio(u); _sbPackAud.play().catch(e=>console.warn('[packsfx] 재생 실패', e)); }catch(e){ console.warn('[packsfx]', e); } }
+// 저장해 둔 옛 보드(기본 효과음 칩이 생기기 전 것)는 한 번 서버에 다시 물어 칩을 채운다(10-07: 되살린 보드엔 칩이 비어 있었다)
+function _sbEnsurePack(){ const ek=SB.view, bd=SB.made&&SB.made[ek];
+  if(window.MEME_ON && bd && bd.slots && bd.pack_sfx_on==null && !bd._pkAsk){ bd._pkAsk=1; sbPicksSync(ek,bd); } }
+async function sbPicksSync(ek, bd){
+  sbRender();
+  try{
+    const r=await (await fetch('/api/produce/storyboard/'+encodeURIComponent(SB.jid||'')+'/picks',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({slots:bd.slots.map(x=>({line:x.line, slot:x.slot, meme_emotion:x.meme_emotion, meme_pick:x.meme_pick, meme_auto:x.meme_auto, meme_off:x.meme_off,
+        sfx_pick:x.sfx_pick, sfx_auto:x.sfx_auto, sfx_off:x.sfx_off, pack_edit:x.pack_edit}))})})).json();
+    if(r&&r.ok&&Array.isArray(r.slots)&&r.slots.length===bd.slots.length){
+      const K=['meme_pick','meme_auto','meme_off','sfx_pick','sfx_auto','sfx_off','sfx_cat','pack_sfx','pack_edit'];
+      if(r.pack_sfx_on!=null) bd.pack_sfx_on=!!r.pack_sfx_on;
+      r.slots.forEach((x,k)=>{ K.forEach(f=>{ if(x[f]==null) delete bd.slots[k][f]; else bd.slots[k][f]=x[f]; }); });
+    } else toast((r&&r.error)||'짤·효과음 다시 고르기 실패');
+  }catch(e){ toast('짤·효과음 다시 고르기 실패(네트워크)'); }
+  sbRender(); }
 function sbMine(){   // ✍ 내가 직접 쓰기 — 지금 보고 있는 안의 칸 구성을 따라간다(없으면 기본 뼈대). AI를 부르지 않는다
   const v=SB.made[SB.view]; const roles=v&&v.slots?v.slots.map(s=>s.slot):['hook','problem','method','proof','cta'];
   SB.made['mine']={names:['내가 직접 쓴 대본'], mine:true, first_line_style:'내가 직접 쓴 대본 — 칸을 채우고, 칸마다 관련 후보에서 장면을 넣으세요',
@@ -19336,13 +19444,14 @@ async function sbInsert(){
 function sbConfirm(){
   const [ek,bd]=sbCur(); if(!bd){ toast('먼저 스토리보드를 만들어 주세요'); return; }
   const cur=sbCurBoard(ek,bd);
-  const rows=cur.slots.map(sl=>({slot:String(sl.slot||''), line:String(sl.line||'').trim(), ids:(sl.ids||[]).filter(Boolean), cta:sl.cta_mark, sig_rank:sl.sig_rank, signal:sl.signal, meme_pick:sl.meme_pick})).filter(x=>x.line);
+  const rows=cur.slots.map(sl=>({slot:String(sl.slot||''), line:String(sl.line||'').trim(), ids:(sl.ids||[]).filter(Boolean), cta:sl.cta_mark, sig_rank:sl.sig_rank, signal:sl.signal,
+    picks:{meme_pick:sl.meme_pick, meme_auto:sl.meme_auto, meme_off:sl.meme_off, sfx_pick:sl.sfx_pick, sfx_auto:sl.sfx_auto, sfx_off:sl.sfx_off, pack_edit:sl.pack_edit}})).filter(x=>x.line);
   if(!rows.length){ toast('대본이 비어 있습니다'); return; }
   const decided=cur.slots.some(sl=>sl.cta_mark===true);
   const beats=rows.map(x=>{ const b={role:x.slot, text:x.line, src_seg:x.ids[0]||'', src_segs:x.ids.slice()}; if(decided) b.cta_mark=(x.cta===true); return b; });
   // 신호어 자리 번호(sig_rank·signal)도 싣는다 — 3단계 짤 자리 판정(storyboard.meme_slots, 관제 139)
   const dr={script:rows.map(x=>x.line).join('\n'), hook:rows[0].line, beats, style_id:null,
-            storyboard:rows.map(x=>Object.assign({slot:x.slot, line:x.line, ids:x.ids}, x.sig_rank?{sig_rank:x.sig_rank, signal:x.signal||''}:{}, (window.MEME_ON&&x.meme_pick)?{meme_pick:x.meme_pick}:{})), from_storyboard:sbTabName(ek).replace(/<[^>]+>/g,'')};
+            storyboard:rows.map(x=>Object.assign({slot:x.slot, line:x.line, ids:x.ids}, x.sig_rank?{sig_rank:x.sig_rank, signal:x.signal||''}:{}, window.MEME_ON?Object.fromEntries(Object.entries(x.picks).filter(([k,v])=>v)):{})), from_storyboard:sbTabName(ek).replace(/<[^>]+>/g,'')};
   S2.drafts=(S2.drafts||[]).filter(d=>!(d&&d.storyboard)).concat([dr]);   // 다시 확정하면 옛 스토리보드 안은 바꿔 끼운다
   const idx=S2.drafts.length-1; S2.curDraft=idx;
   try{ s2RenderDrafts(); }catch(e){}
@@ -19470,6 +19579,7 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
 </script>
 <script src="/scene_play.js"></script>
 <script src="/meme_pack.js"></script>
+<script src="/sfx_bank.js"></script>
 <script src="/loader.js"></script>
 <script src="/sidebar.js?v=4">
 

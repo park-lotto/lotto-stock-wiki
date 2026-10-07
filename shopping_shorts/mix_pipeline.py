@@ -1911,6 +1911,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # ★새 계획에 컷 규칙 표식(관제 084) — 화면·렌더·캡컷이 같은 planClips 로 읽는다. 옛 작업엔 없다(종전 규칙).
     from shopping_shorts.config import CUT_RULE as _CUT_RULE
     plan["cut_rule"] = _CUT_RULE
+    from shopping_shorts.config import SCENE_STOP as _SCENE_STOP
+    plan["scene_stop"] = _SCENE_STOP          # 관제 150 — 새 작업만 장면 전환 앞에서 이어 틀기를 멈춘다
     if not plan["beats"]:
         # ★사유를 갈라서 말한다(2026-08-19). 종전엔 "추출 실패 또는 키 소진"으로 뭉개서
         #   실측 13건 중 대부분이 **추출은 성공한 상태**(9,091자)였는데도 "추출 실패"로
@@ -2006,7 +2008,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         traceback.print_exc(file=sys.stderr)
 
     # 4.7) 감정짤 자리(관제 139) — 음성 길이·낱말 시각이 정해진 **뒤**, 편성 저장 전 한 곳. 스위치 meme_enabled 뒤(끄면 종전 그대로)
-    _apply_memes(plan, store, {"customer_id": customer_id}, work / "tts")
+    _apply_memes(plan, store, {"customer_id": customer_id, "job_id": job_id}, work / "tts")
+    _apply_line_sfx(plan, store, {"customer_id": customer_id, "job_id": job_id})   # 짤이 정해진 뒤 줄 효과음(짤엔 리액션 탄성)
 
     # 4.9) ★게이트 교정 루프(2026-07-25) — 최종 plan(refill·conform 뒤)을 보고 위반이면
     # 통과할 때까지 재픽(상한 3). 경고만 하던 관문을 '통과시키는 관문'으로. 순수·무과금·
@@ -2509,6 +2512,38 @@ def _apply_memes(plan, store, job, tts_dir):
     return sum(1 for r in res if r.get("meme"))
 
 
+def _sfx_bank(store):
+    """효과음 분류 서랍 = 사장님(0) 장면 자산 asset_type "sfx" 중 category 가 storyboard.SFX_CATS 인 것. {분류: [{asset_id, duration, title}]}."""
+    from shopping_shorts import storyboard as _sbm
+    bank = {}
+    for a in store.list_scene_assets(customer_id=0, asset_type="sfx") or []:
+        cat = str(a.get("category") or "").strip()
+        if cat in _sbm.SFX_CATS and a.get("media_path") and Path(a["media_path"]).exists():
+            bank.setdefault(cat, []).append({"asset_id": a["id"], "duration": float(a.get("duration") or 0),
+                                             "title": str(a.get("title") or "")[:60], "tone": str(a.get("tone") or "")})
+    for v in bank.values():
+        v.sort(key=lambda x: x["asset_id"])
+    return bank
+
+
+def _apply_line_sfx(plan, store, job):
+    """줄 효과음 — 판단은 storyboard.sfx_slots 한 곳. 여기는 스위치(meme_enabled)·효과음 서랍을 건넬 뿐. 실린 칸 수를 돌려준다.
+    자산이 없는 분류는 로그 '효과음 없음(분류)'를 남기고 건너뛴다(조용히 넘기지 않음)."""
+    if not _meme_on(store, job):
+        return 0
+    from shopping_shorts import storyboard as _sbm
+    try:
+        bank = _sfx_bank(store)
+    except Exception as e:      # noqa: BLE001 — 서랍을 못 읽으면 효과음 없음(이유 한 줄)
+        print("[line_sfx] 효과음 서랍 읽기 실패 — 없음: %r" % e, file=sys.stderr)
+        bank = {}
+    res = _sbm.sfx_slots(plan, bank, key=str((job or {}).get("job_id") or ""))
+    for r in res:
+        print("[line_sfx] job칸 %s %s" % (r.get("beat_idx"), ("효과음 #%s %s" % (r.get("asset_id"), r.get("cat") or "")) if r.get("sfx")
+                                          else r.get("why", "")), file=sys.stderr)
+    return sum(1 for r in res if r.get("sfx"))
+
+
 def _resolve_sfx_paths(store, plan, customer_id, job=None):
     """비트에 붙은 sfx asset_id → media_path. 컷어웨이와 같은 패턴(저장위치=읽기위치).
     run_render·run_preview 둘 다 이걸 써서 미리보기와 최종본이 같은 효과음을 낸다.
@@ -2529,9 +2564,12 @@ def _resolve_sfx_paths(store, plan, customer_id, job=None):
     for beat in plan["beats"]:
         sfx = beat.get("sfx")
         if sfx:
-            if pack and sfx.get("match_type") != "manual":
+            # 줄 효과음(match_type "line", 관제 143)은 팩이 있어도 남는다 — 팩은 그 줄 첫 발만 비운다(sfx_events_for)
+            if pack and sfx.get("match_type") not in ("manual", "line"):
                 continue
-            asset = store.get_scene_asset(sfx["asset_id"], customer_id=customer_id)
+            # 줄 효과음 파일은 사장님(0) 효과음 서랍에서 온다 — 짤(owner 0)과 같은 규칙
+            _own = 0 if (sfx.get("match_type") == "line" and int(sfx.get("owner") or 0) == 0) else customer_id
+            asset = store.get_scene_asset(sfx["asset_id"], customer_id=_own)
             if asset and asset.get("media_path"):
                 out[beat["beat_idx"]] = asset["media_path"]
     if pack:

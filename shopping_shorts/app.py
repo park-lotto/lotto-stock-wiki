@@ -6566,6 +6566,10 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         # 열린 탭이 오래 들고 있던 전체 편성으로 최신 편성을 덮지 못하게 하는 판본 번호.
         "scene_lab_revision": scene_lab_revision,
         "beats": plan.get("beats") or [],
+        # ✂ 트림·🔗 합치기(관제 148) — 칸 편집 상태의 나머지 반쪽. 화면·서버 컷 러너가 같은 함수
+        #   (scene_play.js screenStateFromServer)로 되살린다. 없으면 트림 구멍이 러너에서 되살아난다.
+        "scene_lab_edits": {"trims": (plan.get("scene_lab") or {}).get("trims") or {},
+                            "merges": (plan.get("scene_lab") or {}).get("merges") or {}},
         "urls": job.get("urls") or [],
         "src_brief": src_brief,
         "syll_per_sec": _edit_plan._SYLLABLES_PER_SEC,
@@ -6598,6 +6602,7 @@ def api_mix_scene_lab_data(job_id: str, request: Request = None):
         # ★슬로우모션 상한을 화면에 준다(관제 020) — scene_play.js 가 자기 숫자를 들고 있지 않게. 정본 config.MAX_SLOWMO.
         "max_slowmo": float(config.MAX_SLOWMO),
         "cut_rule": str(plan.get("cut_rule") or ""),        # 관제 084 — 표식 있는 작업만 planClips 새 규칙
+        "scene_stop": 1 if plan.get("scene_stop") else 0,   # 관제 150 — 표식 있는 새 작업만 이어 틀기를 장면 전환 앞에서 멈춘다
     }}
 
 
@@ -9918,19 +9923,15 @@ def _longform_job(job_id):
     _gone = _video_gone_reason(job)
     if _gone:
         return job, None, JSONResponse(status_code=404, content={"ok": False, "error": _gone})
-    from shopping_shorts import bgm_lib
-    if bgm_lib.shorts_only(job.get("deco")):
-        # 롱폼은 완성 쇼츠의 소리를 그대로 쓴다 — 쇼츠 전용 곡이 롱폼에 실리면 안 된다(관제 146).
-        return job, None, JSONResponse(status_code=409, content={
-            "ok": False, "error": "쇼츠 전용 배경음을 쓴 영상이에요 — 배경음을 '없음'으로 바꾸고 완성본을 다시 만든 뒤 롱폼을 만들어 주세요"})
+    # 쇼츠 전용 곡(관제 146) 걱정은 없다 — 롱폼은 무음으로 굽는다(link_longform, 2026-10-06 사장님 "롱폼은 무음으로").
     return job, job["video_path"], None
 
 
-def _longform_run(src, job_dir, where):
+def _longform_run(src, job_dir, where, voice=None, customer_id=0):
     from shopping_shorts import link_longform
     with _LONGFORM_LOCK:
         try:
-            link_longform.render_link_longform(src, job_dir, where)
+            link_longform.render_link_longform(src, job_dir, where, voice=voice, customer_id=customer_id)
         except Exception:      # noqa: BLE001 — 사유는 render_link_longform 이 .err 와 stderr 에 남겼다(화면이 읽는다)
             pass
 
@@ -9966,8 +9967,13 @@ def api_mix_longform_link(job_id: str, body: dict):
     if st["state"] in ("ready", "running"):
         return st
     job_dir = _MIX_WORK_DIR / job_id
+    if link_longform.tts_text(link_longform.load_layout(job_dir)):
+        # 읽어 줄 말이 있으면 성우 키가 있어야 한다 — 미리듣기·렌더와 같은 판정(_need_own_key_or_402)
+        _blocked = _need_own_key_or_402(_job.get("customer_id"), tts=True, voice=_job.get("voice"))
+        if _blocked:
+            return _blocked
     link_longform.mark_running(job_dir)
-    threading.Thread(target=_longform_run, args=(src, job_dir, where), daemon=True).start()
+    threading.Thread(target=_longform_run, args=(src, job_dir, where, _job.get("voice"), int(_job.get("customer_id") or 0)), daemon=True).start()
     return _longform_status(job_id, src, where)
 
 
@@ -12667,6 +12673,40 @@ async def api_lens_kw_expand(request: Request, keyword: str = Form(""),
     except Exception:                       # noqa: BLE001 — 실패해도 렌즈는 정상
         cands = []
     return {"ok": True, "keyword": kw, "candidates": cands}
+
+
+@app.post("/api/lens/kw/en")
+async def api_lens_kw_en(request: Request, body: dict):
+    """인스타 검색용 영어 검색어(관제 151). 확장프로그램이 JSON으로 부른다.
+    body: {"text": 검색창 입력 또는 게시물 설명글, "kind": "query"|"caption"}
+    → {"ok", "main", "related"}. 판단(영어·최대 3단어)은 video_analysis.english_search_terms 한 곳.
+    Gemini 텍스트 1회(무료 키 풀) — Apify·SerpApi 비용 0."""
+    text = str((body or {}).get("text") or "").strip()
+    kind = str((body or {}).get("kind") or "query")
+    lang = "zh" if str((body or {}).get("lang") or "") == "zh" else "en"   # 샤오홍슈·도우인 = zh
+    if not text:
+        return {"ok": True, "main": "", "related": []}
+    try:
+        r = await asyncio.to_thread(video_analysis.english_search_terms, text, kind, lang=lang)   # 블로킹 Gemini
+    except Exception as e:                  # noqa: BLE001 — 실패는 빈 결과로(화면은 검색창만 남는다)
+        print(f"[kw/en] 실패: {e!r}", file=sys.stderr)
+        r = {"main": "", "related": []}
+    return {"ok": True, "main": r.get("main", ""), "related": r.get("related", [])}
+
+
+@app.post("/api/lens/kw/multi")
+async def api_lens_kw_multi(request: Request, body: dict):
+    """인스타 검색 화면의 '비슷한 검색어' 5개 × 5개 언어(ko·en·ja·zh·ru) — 관제 151, 2026-10-07 사장님.
+    판단은 렌즈 모달과 같은 expand_search_keywords 한 곳. 확장프로그램이 JSON으로 부른다."""
+    text = str((body or {}).get("text") or "").strip()
+    if not text:
+        return {"ok": True, "candidates": []}
+    try:
+        cands = await asyncio.to_thread(expand_search_keywords, text, n=5)   # 블로킹 Gemini
+    except Exception as e:                  # noqa: BLE001 — 실패는 빈 결과(화면은 검색창만 남는다)
+        print(f"[kw/multi] 실패: {e!r}", file=sys.stderr)
+        cands = []
+    return {"ok": True, "candidates": cands}
 
 
 @app.post("/api/lens/cn/search")
@@ -18600,9 +18640,10 @@ def _serve_grab_extension():
     # 이 파일을 손으로 관리하지 않는다: grab_logic.js의 _douyinMainWorld 본문을 **그때그때
     # 잘라내 만든다**. 두 벌을 손으로 두면 반드시 어긋나고, 그러면 도우인만 옛 로직을 쓴다
     # (0순위-B: 같은 판단을 두 군데 적지 마라).
-    def _douyin_main_js(logic_text: str) -> str:
-        """grab_logic.js에서 _douyinMainWorld 함수를 떼어내 즉시실행 스크립트로 만든다."""
-        head = "  function _douyinMainWorld() {"
+    def _douyin_main_js(logic_text: str, fn: str = "_douyinMainWorld") -> str:
+        """grab_logic.js에서 메인월드 함수(fn)를 떼어내 즉시실행 스크립트로 만든다.
+        도우인(_douyinMainWorld → douyin_main.js)·인스타(_igMainWorld → ig_main.js, 관제 151) 공용."""
+        head = "  function " + fn + "() {"
         i = logic_text.find(head)
         if i < 0:
             return ""                      # 함수가 사라졌으면 빈 문자열 → zip에 넣지 않는다
@@ -18613,7 +18654,7 @@ def _serve_grab_extension():
             return ""
         body = rest[:end]
         return ("// ⚠️자동 생성 파일 — 손으로 고치지 마라.\n"
-                "// 원본: userscript/grab_logic.js 의 _douyinMainWorld()\n"
+                "// 원본: userscript/grab_logic.js 의 " + fn + "()\n"
                 "// /grab_extension.zip 이 요청마다 원본에서 다시 잘라 만든다.\n"
                 "// world:\"MAIN\" 으로 크롬이 직접 주입 → 확장 CSP의 인라인 검사를 타지 않는다.\n"
                 "(function () {" + body + "\n})();\n")
@@ -18621,7 +18662,7 @@ def _serve_grab_extension():
     # 넣으면 사용자 zip에 내부 문서와 이미지 수백 KB가 딸려 나간다(2026-08-04 실측으로 발견).
     # douyin_main.js도 자동 생성물이라 extension/ 안의 사본은 담지 않는다(grab_logic.js와 같은 이유).
     files = sorted(p for p in edir.rglob("*")
-                   if p.is_file() and p.name not in ("grab_logic.js", "douyin_main.js")
+                   if p.is_file() and p.name not in ("grab_logic.js", "douyin_main.js", "ig_main.js")
                    and "store" not in p.relative_to(edir).parts)
     stamp = str(max([p.stat().st_mtime_ns for p in files]
                     + [logic_src.stat().st_mtime_ns if logic_src.exists() else 0], default=0))
@@ -18637,6 +18678,9 @@ def _serve_grab_extension():
                 _dy = _douyin_main_js(_logic_text)
                 if _dy:
                     z.writestr("douyin_main.js", _dy)
+                _ig = _douyin_main_js(_logic_text, "_igMainWorld")
+                if _ig:
+                    z.writestr("ig_main.js", _ig)
         cached = (stamp, buf.getvalue())
         _serve_grab_extension._cache = cached
     return Response(
@@ -21184,6 +21228,72 @@ def _sb_run(job_id, name, fn):
     threading.Thread(target=lambda: _ctx.run(_go), daemon=True).start()
 
 
+def _sb_picks(cid, key, bd):
+    """2단계 줄에 실제 짤·효과음을 미리 싣는다(관제 143) — 고르기는 storyboard.meme_preview·sfx_preview 한 곳.
+    스위치 meme_enabled 뒤(끄면 보드 그대로). 같은 key(작업) = 같은 짤·소리. 못 고른 이유는 로그로."""
+    if not isinstance(bd, dict) or not isinstance(bd.get("slots"), list):
+        return bd
+    from shopping_shorts import storyboard as _sbm
+    st = Store(DB_PATH)
+    job = {"customer_id": int(cid or 0)}
+    if not mix_pipeline._meme_on(st, job):
+        return bd
+    _log = lambda m: print("[storyboard-picks] %s %s" % (key, m), file=sys.stderr)
+    try:
+        pool = mix_pipeline._meme_pool(st)
+    except Exception as e:      # noqa: BLE001 — 팩을 못 읽으면 짤 미리보기 없음(이유 한 줄)
+        _log("짤 팩 읽기 실패: %r" % e)
+        pool = {}
+    _sbm.meme_preview(bd["slots"], pool, mix_pipeline._meme_prefs(st, cid), key=str(key), log=_log)
+    try:
+        bank = mix_pipeline._sfx_bank(st)
+    except Exception as e:      # noqa: BLE001
+        _log("효과음 서랍 읽기 실패: %r" % e)
+        bank = {}
+    _sbm.sfx_preview(bd["slots"], bank, key=str(key), log=_log)
+    # 기본 효과음팩 미리보기 — 팩 결정(resolve)·배치(plan_events)는 sfx_pack 한 곳. 줄 효과음 있는 줄은 첫 발을 비운다.
+    try:
+        from shopping_shorts import sfx_pack as _sp
+        _job, _sid = None, None
+        _k = str(key or "")
+        if _k.startswith("w-"):
+            _w = st.get_produce_work(_k[2:], customer_id=int(cid or 0)) or {}
+            _sid = (_w.get("state") or {}).get("script_style_id")
+            _jid = str(_w.get("job_id") or "").strip()
+            _job = st.get_mix_job(_jid) if _jid else None
+        else:
+            _job = st.get_mix_job(_k) if _k else None
+        if _job and int(_job.get("customer_id") or 0) != int(cid or 0):
+            _job = None
+        _slots = [s if isinstance(s, dict) else {} for s in bd["slots"]]
+        _pack = _sp.preview_pack(st, cid, [s.get("slot") for s in _slots], job=_job, style_id=_sid)
+        _first = [i for i, s in enumerate(_slots) if s.get("sfx_pick") and not s.get("sfx_off")]
+        _rows = _sp.preview_lines([{"role": s.get("slot"), "text": s.get("line"), "pack_edit": s.get("pack_edit")} for s in _slots], _pack, _first)
+        for s, r in zip(_slots, _rows):
+            s["pack_sfx"] = r
+        bd["pack_sfx_on"] = bool(_pack)
+    except Exception as e:      # noqa: BLE001 — 팩 미리보기 실패는 줄 효과음에 영향 없게(이유 한 줄)
+        _log("효과음팩 미리보기 실패: %r" % e)
+    return bd
+
+
+@app.post("/api/produce/storyboard/{job_id}/picks")
+def api_storyboard_picks(request: Request, job_id: str, body: dict):
+    """화면이 줄의 짤·효과음을 바꾸거나 뺀 뒤 부른다 — body {slots:[…]} → 같은 고르기 함수(_sb_picks)로 다시 채운 slots.
+    화면은 고르지 않는다(판단 두 벌 금지). 사람이 고른 것(…_auto 없음)·뺀 것(…_off)은 그대로 돌아온다."""
+    g = _sb_gate(request)
+    if g:
+        return g
+    key, _ex, _jid = _sb_job(request, job_id)
+    if not key:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    slots = (body or {}).get("slots")
+    if not isinstance(slots, list) or len(slots) > 60:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "slots 목록이 필요해요"})
+    bd = _sb_picks(getattr(request.state, "customer_id", 0), key, {"slots": [dict(x) if isinstance(x, dict) else {} for x in slots]})
+    return {"ok": True, "slots": bd["slots"], "pack_sfx_on": bd.get("pack_sfx_on")}
+
+
 @app.get("/api/produce/storyboard/{job_id}")
 def api_storyboard_get(request: Request, job_id: str):
     """재료 장면 카드(썸네일·초·설명) + 장면 목록·스타일 추천(있으면) + 스타일 카드 + 진행 중인 일."""
@@ -21258,8 +21368,10 @@ def api_storyboard_prepare(request: Request, job_id: str):
     if inv_fresh and auto_fresh:
         return {"ok": True, "started": False}
 
+    _cid = getattr(request.state, "customer_id", 0)
+
     def _auto():
-        _sb_run(job_id, "board:auto", lambda: _sb.make_boards(DB_PATH, job_id, ["auto"], "", "", ex=_ex).get("auto"))
+        _sb_run(job_id, "board:auto", lambda: _sb_picks(_cid, job_id, _sb.make_boards(DB_PATH, job_id, ["auto"], "", "", ex=_ex).get("auto")))
 
     if inv_fresh:
         _auto()
@@ -21283,8 +21395,9 @@ def api_storyboard_boards(request: Request, job_id: str, body: dict):
         return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
     star, roles = str(body.get("star") or ""), str(body.get("roles") or "")
+    _cid = getattr(request.state, "customer_id", 0)
     for k in [str(x) for x in (body.get("keys") or [])][:6]:
-        _sb_run(job_id, "board:" + k, lambda k=k: _sb.make_boards(DB_PATH, job_id, [k], star, roles, ex=_ex).get(k))
+        _sb_run(job_id, "board:" + k, lambda k=k: _sb_picks(_cid, job_id, _sb.make_boards(DB_PATH, job_id, [k], star, roles, ex=_ex).get(k)))
     return {"ok": True}
 
 
@@ -21299,7 +21412,8 @@ def api_storyboard_insert(request: Request, job_id: str, body: dict):
         return JSONResponse(status_code=404, content={"ok": False, "error": "재료 분석이 아직 없습니다"})
     from shopping_shorts import storyboard as _sb
     name = "insert:" + str(body.get("name") or "x")[:40]
-    _sb_run(job_id, name, lambda: _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}, ex=_ex))
+    _cid = getattr(request.state, "customer_id", 0)
+    _sb_run(job_id, name, lambda: _sb_picks(_cid, job_id, _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}, ex=_ex)))
     return {"ok": True}
 
 
@@ -22955,6 +23069,45 @@ def _meme_prefs_clean(store, cid):
             for emo, ids in by.items() for r, i in enumerate([x for x in ids if pool.get(x) == emo])]
 
 
+def _sfx_bank_asset(store, aid, cid):
+    """효과음 서랍의 소리 하나(사장님 0, asset_type sfx, category ∈ storyboard.SFX_CATS) — 스위치 meme_enabled 열린 회원만. 없으면 None."""
+    from shopping_shorts import storyboard as _sbm
+    if not mix_pipeline._meme_on(store, {"customer_id": cid}):
+        return None
+    try:
+        a = store.get_scene_asset(int(aid), customer_id=0)
+    except (TypeError, ValueError):
+        return None
+    if a and a.get("asset_type") == "sfx" and str(a.get("category") or "").strip() in _sbm.SFX_CATS:
+        return a
+    return None
+
+
+@app.get("/api/sfx/bank")
+def api_sfx_bank(request: Request):
+    """효과음 서랍 — {cats:[{name,count}](분류 탭 순서 그대로, 0개도), items:[{id,cat,title,dur}]}. 재생은 /api/sfx/{id}/media."""
+    from shopping_shorts import storyboard as _sbm
+    cid, denied = _meme_gate(request)
+    if denied:
+        return denied
+    bank = mix_pipeline._sfx_bank(Store(DB_PATH))
+    items = [{"id": a["asset_id"], "cat": c, "title": a.get("title") or "", "dur": round(float(a.get("duration") or 0), 2)}
+             for c in _sbm.SFX_CATS for a in bank.get(c) or []]
+    return {"ok": True, "cats": [{"name": c, "count": len(bank.get(c) or [])} for c in _sbm.SFX_CATS], "items": items}
+
+
+@app.get("/api/sfx/{asset_id}/media")
+def api_sfx_media(request: Request, asset_id: int):
+    """효과음 서랍 소리 파일 — 스위치 열린 회원만, 서랍 자산만."""
+    cid, denied = _meme_gate(request)
+    if denied:
+        return denied
+    a = _sfx_bank_asset(Store(DB_PATH), asset_id, cid)
+    if not a or not a.get("media_path") or not Path(a["media_path"]).exists():
+        return Response(status_code=404, content=b"")
+    return FileResponse(str(a["media_path"]))
+
+
 @app.get("/api/meme/pack")
 def api_meme_pack(request: Request):
     """밈팩 목록 — {emotions:[{name,count}], clips:[{id,emotion,dur,title}], prefs:[…]}. 표지·재생은 /api/meme/{id}/poster·media."""
@@ -23071,11 +23224,13 @@ def api_produce_mix_meme(job_id: str, request: Request, body: dict):
     if cw and (cw or {}).get("match_type") != "meme":
         return JSONResponse(status_code=409, content={"ok": False, "error": "이 칸엔 다른 끼움 장면이 있어요 — 먼저 빼 주세요"})
     aid = body.get("asset_id")
+    _lj = {"customer_id": job.get("customer_id", 0), "job_id": job_id}
     if aid is None:
         hit.pop("cutaway", None)
         hit["meme_off"] = 1
+        mix_pipeline._apply_line_sfx(plan, store, _lj)      # 짤을 빼면 짤 효과음도 빠진다(storyboard.sfx_slots)
         _save_render_inputs(store, job_id, edit_plan=plan)
-        return {"ok": True, "cutaway": None}
+        return {"ok": True, "cutaway": None, "sfx": hit.get("sfx")}
     a = _meme_asset(store, aid)
     if not a:
         return JSONResponse(status_code=422, content={"ok": False, "error": "짤 팩에 없는 짤이에요"})
@@ -23087,8 +23242,9 @@ def api_produce_mix_meme(job_id: str, request: Request, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "짤이 %.2f초보다 짧아요" % head})
     hit.pop("meme_off", None)
     hit["cutaway"] = _sbm.meme_cut({"asset_id": a["id"], "owner": 0}, head, str(a["tone"]).strip(), manual=True)
+    mix_pipeline._apply_line_sfx(plan, store, _lj)          # 짤을 넣으면 그 감정 리액션 효과음도(storyboard.sfx_slots)
     _save_render_inputs(store, job_id, edit_plan=plan)
-    return {"ok": True, "cutaway": hit["cutaway"]}
+    return {"ok": True, "cutaway": hit["cutaway"], "sfx": hit.get("sfx")}
 
 
 def _meme_pack_page(request: Request):
@@ -23598,6 +23754,7 @@ def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     pos = body.get("position")
     if aid is None and pos is None:
         hit.pop("sfx", None)                       # 종전 동작 — 빼기
+        hit["sfx_off"] = 1                         # 줄 효과음 자동(storyboard.sfx_slots)이 다시 넣지 않게
         _save_render_inputs(store, job_id, edit_plan=plan)
         return {"ok": True}
     from shopping_shorts import scene_match as _sm
@@ -23608,9 +23765,18 @@ def api_produce_mix_sfx(job_id: str, request: Request, body: dict):
     if aid is not None:
         cid = job.get("customer_id", 0)
         asset = store.get_scene_asset(int(aid), customer_id=cid)
+        bank_a = _sfx_bank_asset(store, aid, cid)         # 효과음 서랍 소리면(관리자 작업 포함) 줄 효과음 모양으로
+        if bank_a:
+            # 효과음 서랍(사장님 0) 소리 — 줄 효과음 모양(storyboard.sfx_line) 한 곳, 사람이 고름(manual)
+            from shopping_shorts import storyboard as _sbm
+            hit.pop("sfx_off", None)
+            hit["sfx"] = _sbm.sfx_line(bank_a["id"], str(bank_a.get("category") or ""), manual=True)
+            _save_render_inputs(store, job_id, edit_plan=plan)
+            return {"ok": True, "sfx": hit["sfx"]}
         if not asset or asset.get("asset_type") != "sfx":
             return JSONResponse(status_code=422, content={
                 "ok": False, "error": "그 효과음을 찾을 수 없어요"})
+        hit.pop("sfx_off", None)
         cur["asset_id"] = int(aid)
         cur["match_type"] = "manual"               # 사람이 고른 것 — 재매칭이 덮지 않게 표시
         cur.setdefault("position", _sm._sfx_position(hit.get("role")))

@@ -38,17 +38,19 @@ def _fn(src, name):
     raise AssertionError("함수 끝을 못 찾음: %s" % name)
 
 
+def _play_src():
+    return open(os.path.join(os.path.dirname(__file__), "..", "static", "scene_play.js"), encoding="utf-8").read()
+
+
 def _run(beats, call):
     src = open(_HTML, encoding="utf-8").read()
     harness = """
 const DATA = %s;
 let lists = null, mode = 'live';
-const FIXLEN = {};
+const FIXLEN = {}, STRETCH = {}, PHRASE_SYNC = {}, PHRASE_EXACT = {}, CUTS = {}, SLOW = {}, TRIMS = {}, MERGES = {};
 let rendered = 0, said = '';
 function render(){ rendered++; }
 function nsay(m){ said = m; }
-function hydrateFixlen(x){}
-function fixlenFromBeats(){ return {}; }
 function undoMark(){}
 function saveWork(){}
 function baseList(b){ return [b.primary, ...(b.alternates || [])].filter(Boolean).map(s => s.seg_id); }
@@ -57,10 +59,10 @@ const document = { getElementById: () => null };
 %s
 %s
 const out = %s;
-console.log(JSON.stringify({ret: out, lists, mode, rendered, said}));
+console.log(JSON.stringify({ret: out, lists, mode, rendered, said, STRETCH, TRIMS}));
 """ % (
         json.dumps({"beats": beats}, ensure_ascii=False),
-        _fn(src, "serverList"),
+        chr(10).join([_fn(_play_src(), "screenStateFromServer"), _fn(_play_src(), "applyScreenState"), _fn(src, "serverList")]),
         _fn(src, "hasServerEdit"),
         _fn(src, "restoreServer"),
         call,
