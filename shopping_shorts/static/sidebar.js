@@ -672,7 +672,9 @@
   //   제미니 키 안내와 같은 팝업(_pwModal)을 쓰고, 결제 팝업이 떠 있으면 덮지 않는다. 설정 화면에선 안 띄운다(거기 등록 칸이 있다).
   function initVertexNotice() {
     if (/^\/settings/.test(location.pathname || "")) return;
-    var _f = window.fetch || null; if (!_f) return;
+    // ★호출하는 순간의 fetch 를 쓴다(시험 하네스·결제 래퍼가 뒤에 갈아 끼운다). 동기 예외도 여기서 잡는다 — 안내가 사이드바를 깨면 안 된다
+    var _f = function (u, o) { try { return window.fetch(u, o); } catch (e) { return Promise.reject(e); } };
+    if (!window.fetch) return;
     var waited = 0;
     (function afterMe() {
       if (!window.__ssMeDone && waited < 8000) { waited += 250; setTimeout(afterMe, 250); return; }
