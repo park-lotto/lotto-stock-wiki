@@ -321,6 +321,76 @@
     var x = document.getElementById("ss-lens-x");
     if (x) x.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); o.remove(); });
   }
+  // ── 렌즈 결과창 마우스 올림 미리보기(관제 156, 2026-10-07 사장님 "인스타처럼 마우스 쭉 지나가면 재생") ──
+  //   카드엔 썸네일·주소뿐이다. 서버 /api/play(받아서 mp4로 주는 길)를 **로그인 중계로** 받아
+  //   이 페이지의 blob 영상으로 튼다 — 남의 사이트 위 <video src=우리서버>는 쿠키가 없어 401(실측).
+  //   지나간 카드는 계속 재생(최대 9개, 인스타 동시 미리보기와 같은 규칙). 지원: 유튜브·틱톡·인스타.
+  function _playKey(url) {
+    var u = String(url || ""), m;
+    if ((m = /youtube\.com\/(?:shorts\/|watch\?v=)([\w-]{6,})/.exec(u)) || (m = /youtu\.be\/([\w-]{6,})/.exec(u))) return ["youtube", m[1]];
+    if ((m = /tiktok\.com\/.*\/video\/(\d+)/.exec(u))) return ["tiktok", m[1]];
+    if ((m = /instagram\.com\/(?:[\w.]+\/)?(?:p|reel|reels|tv)\/([\w-]+)/.exec(u))) return ["instagram", m[1]];
+    return null;
+  }
+  var _lensBlobs = {}, _lensPlaying = [];
+  function _gmBlob(url, done) {
+    if (typeof GM_xmlhttpRequest !== "undefined") {
+      GM_xmlhttpRequest({ method: "GET", url: url, responseType: "blob", timeout: 60000,
+        onload: function (r) { done(r.status === 200 && r.response ? URL.createObjectURL(r.response) : ""); },
+        onerror: function () { done(""); }, ontimeout: function () { done(""); } });
+      return;
+    }
+    var reqId = "sb" + Math.random().toString(36).slice(2), ended = false;
+    var timer = setTimeout(function () { fin(""); }, 60000);
+    function fin(u) { if (ended) return; ended = true; clearTimeout(timer); window.removeEventListener("message", onMsg); done(u); }
+    function onMsg(ev) {
+      var d = ev && ev.data;
+      if (!d || d.reqId !== reqId || !d.__ssGmResult) return;
+      if (d.status !== 200 || !d.b64) { fin(""); return; }
+      try {
+        var bin = atob(d.b64), u8 = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+        fin(URL.createObjectURL(new Blob([u8], { type: d.type || "video/mp4" })));
+      } catch (e) { fin(""); }
+    }
+    window.addEventListener("message", onMsg);
+    window.postMessage({ __ssGmFetch: true, reqId: reqId, method: "GET", url: url, b64: true }, "*");
+  }
+  function _lensHoverPlay(card) {
+    if (card.__ssPv) return;
+    var pk = _playKey(card.getAttribute("data-play"));
+    if (!pk) return;
+    card.__ssPv = 1;
+    var box = card.querySelector(".ss-pv-box");
+    var tag = document.createElement("div");
+    tag.textContent = "▶ 불러오는 중…";
+    tag.style.cssText = "position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.7);color:#fff;font-size:11px;padding:2px 6px;border-radius:6px";
+    box.appendChild(tag);
+    var key = pk[0] + ":" + pk[1];
+    function put(src) {
+      if (!src) { tag.textContent = "미리보기 불가"; card.__ssPv = 0; return; }
+      _lensBlobs[key] = src; tag.remove();
+      var v = document.createElement("video");
+      v.src = src; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
+      v.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000";
+      box.appendChild(v);
+      try { v.play().catch(function () {}); } catch (e) {}
+      _lensPlaying.push(v);
+      while (_lensPlaying.length > 9) { var o = _lensPlaying.shift(); try { o.pause(); } catch (e) {} }
+    }
+    if (_lensBlobs[key]) { put(_lensBlobs[key]); return; }
+    _gmBlob(BASE + "/api/play?platform=" + pk[0] + "&id=" + encodeURIComponent(pk[1]), put);
+  }
+  function _lensHoverWire(ov) {
+    var cards = ov.querySelectorAll("[data-play]");
+    for (var i = 0; i < cards.length; i++) {
+      (function (c) {
+        var t = 0;
+        c.addEventListener("mouseenter", function () { t = setTimeout(function () { _lensHoverPlay(c); }, 250); });
+        c.addEventListener("mouseleave", function () { clearTimeout(t); });   // 지나가기만 해도(250ms) 켜지고, 켜진 건 계속 재생
+      })(cards[i]);
+    }
+  }
   function _esc(s) { return String(s || "").replace(/[&<>"']/g, function (c) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   // ── 인스타 시크바(2026-08-03 사장님: 장면 이동이 안 돼 앞으로 못 돌아감) ──
@@ -679,8 +749,8 @@
           "<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px'>";
         for (var i = 0; i < items.length && i < 100; i++) {
           var it = items[i];
-          h += "<div style='background:#222;border-radius:10px;overflow:hidden'>" +
-            "<a href='" + _esc(it.url) + "' target='_blank' rel='noopener'>" +
+          h += "<div data-play='" + _esc(it.url) + "' style='background:#222;border-radius:10px;overflow:hidden'>" +
+            "<a class='ss-pv-box' href='" + _esc(it.url) + "' target='_blank' rel='noopener' style='position:relative;display:block'>" +
             (it.thumbnail ? "<img data-t64='" + _esc(it.thumbnail) + "' style='width:100%;height:240px;object-fit:cover;display:block;background:#000'>" :
               "<div style='height:240px;background:#000'></div>") + "</a>" +
             "<div style='padding:6px;font-size:11px'>" +
@@ -694,6 +764,7 @@
         _lensOverlay(h);
         _fillThumbs();
         var ov = document.getElementById("ss-lens-ov");
+        _lensHoverWire(ov);
         var bs = ov.querySelectorAll("button[data-u]");
         for (var j = 0; j < bs.length; j++) {
           bs[j].addEventListener("click", function () {

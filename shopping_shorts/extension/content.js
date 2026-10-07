@@ -61,14 +61,15 @@
     try {
       chrome.runtime.sendMessage(
         { __ssRelay: true, url: d.url, method: d.method || "GET",
-          headers: d.headers || {}, body: d.body || null },
+          headers: d.headers || {}, body: d.body || null, b64: !!d.b64 },
         function (res) {
           if (chrome.runtime.lastError || !res) {
             window.postMessage({ __ssGmResult: true, reqId: d.reqId, status: 0, text: "" }, "*");
             return;
           }
           window.postMessage({ __ssGmResult: true, reqId: d.reqId,
-                               status: res.status || 0, text: res.text || "" }, "*");
+                               status: res.status || 0, text: res.text || "",
+                               b64: res.b64 || "", type: res.type || "" }, "*");
         });
     } catch (e) {
       window.postMessage({ __ssGmResult: true, reqId: d.reqId, status: 0, text: "", stale: true }, "*");
