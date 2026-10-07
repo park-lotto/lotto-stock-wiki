@@ -666,6 +666,18 @@ def shock_spans(scenes, snapshot):
     return [{"start":float(sc["start"]),"end":float(sc["end"])} for i,sc in enumerate(scenes) if (effects.get(str(i)) or {}).get("shock")]
 
 
+def capcut_base_y(layer):
+    """캡컷에서 영상 조각을 영상 칸 가운데로 내리는 양(캔버스 절반 단위, 위가 +) — 관제 155(관제 018 숙제).
+    완성본(compose)은 원본을 영상 칸(media_geometry 의 top·height)에 채워 가운데를 잘라 앉히는데, 캡컷은 원본을 화면 한가운데에 둬서
+    영상이 300~370px 위에 보였다(2026-10-07 캡컷 9.5 대조, 장면효과팩 세션). 영상 칸 가운데 = top + height/2 → 화면 가운데와의 차이만큼 내린다.
+    영상 칸 정보가 없으면 0(종전 그대로)."""
+    from . import video_assemble as va
+    if not (layer or {}).get("media"):
+        return 0.0
+    _, height, top, *_ = media_geometry(layer, {})
+    return round(-((top + height / 2) - va._OUT_H / 2) / (va._OUT_H / 2), 4)
+
+
 def capcut_fx_spans(scenes, snapshot, layers=None):
     """캡컷 내보내기가 받는 장면 효과 구간 하나로(관제 124) — 확대(zoom_spans)와 흑백 충격(shock_spans)을 장면별로 합친다.
     한 장면에 둘 다 켜면(사장님 '중복으로 선택') 한 구간에 zoom·move·shock 를 같이 싣는다(캡컷 조각 하나에 키프레임을 같이 찍게)."""
@@ -676,6 +688,24 @@ def capcut_fx_spans(scenes, snapshot, layers=None):
             hit["shock"] = True
         else:
             out.append({**sh, "zoom": 1.0, "shock": True})
+    # 영상 칸 위치(관제 155): 모든 장면에 기본 위치 by 를 싣는다. 효과 없는 장면은 같은 by 끼리 이어 붙인 한 구간으로(캡컷 조각을 위치가 바뀌는 곳에서만 나눈다).
+    if layers:
+        by_of = lambda i: capcut_base_y(layers[i]) if i < len(layers) else 0.0
+        for sp in out:
+            i = next((k for k, sc in enumerate(scenes) if abs(float(sc["start"]) - sp["start"]) < 1e-6), None)
+            sp["by"] = by_of(i) if i is not None else 0.0
+        taken = [(sp["start"], sp["end"]) for sp in out]
+        base = []
+        for k, sc in enumerate(scenes):
+            a, b = float(sc["start"]), float(sc["end"])
+            if any(abs(a - x) < 1e-6 for x, _ in taken):
+                continue
+            by = by_of(k)
+            if base and abs(base[-1]["end"] - a) < 1e-6 and base[-1]["by"] == by:
+                base[-1]["end"] = b
+            else:
+                base.append({"start": a, "end": b, "zoom": 1.0, "by": by})
+        out = sorted(out + base, key=lambda x: x["start"])
     return out
 
 

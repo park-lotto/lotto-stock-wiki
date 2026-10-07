@@ -536,7 +536,8 @@ def _zoom_pieces(t, dur, spans, base_zoom):
         mid = (a + b) / 2
         sp = next((sp for sp in spans or [] if _us(sp["start"]) <= mid < _us(sp["end"])), None)
         z = float(sp["zoom"]) if sp else base_zoom
-        move = (float(sp.get("tx", 0)), float(sp.get("ty", 0))) if sp and z >= base_zoom else (0.0, 0.0)
+        by = float(sp.get("by", 0)) if sp else 0.0   # 영상 칸 가운데로 내리는 기본 위치(관제 155, scene_style.capcut_base_y)
+        move = (float(sp.get("tx", 0)), float(sp.get("ty", 0)) + by) if sp and z >= base_zoom else (0.0, by)
         out.append((a, b - a, max(z, base_zoom), move, sp))
     return out or [(t, dur, base_zoom, (0.0, 0.0), None)]
 
@@ -549,9 +550,39 @@ def _kf_list(prop, points):
                                "time_offset": int(t), "values": [float(v)]} for t, v in points]}
 
 
-def _scene_fx_keyframes(piece_start, piece_dur, sp):
+# 캡컷 '조정' 소재(채도·대비·밝기 공통 효과 id) — 캡컷 9.5.0.4050 이 직접 저장한 견본(QA_캡컷형식시험, 2026-10-06 실측)에서 옮긴 모양.
+#   값 = 화면 숫자 / 50 (채도 -50 → -1.0 완전 흑백 · 대비 28 → 0.56 · 노출 16 → 0.32). path 는 비워도 캡컷이 채운다(QA_캡컷경로없음 실측).
+_ADJUST_EFFECT_ID = "7501974767453474064"
+
+
+def _adjust_material(kind, value):
+    """캡컷 조정 소재 하나(kind: saturation·contrast·brightness). 조각 extra_material_refs 에 id 를 넣어야 먹는다."""
+    return {"id": _uid(), "effect_id": _ADJUST_EFFECT_ID, "resource_id": _ADJUST_EFFECT_ID, "third_resource_id": "", "name": "", "report_name": "",
+            "type": kind, "sub_type": "none", "path": "", "value": float(value), "visible": True, "item_effect_type": 0,
+            "category_id": "", "category_name": "", "category_key": "", "sub_category_id": "", "sub_category_name": "",
+            "platform": "all", "apply_target_type": 0, "source_platform": 1, "version": "v1", "adjust_params": [], "time_range": None,
+            "formula_id": "", "enable_skin_tone_correction": False, "algorithm_artifact_path": "", "intensity_key": "",
+            "face_adjust_params": [], "exclusion_group": [], "panel_id": "", "bloom_params": None, "request_id": "",
+            "color_match_info": None, "multi_language_current": "", "lumi_hub_path": "", "covering_relation_change": 0,
+            "beauty_face_auto_preset_id": "", "beauty_body_auto_preset_id": "",
+            "beauty_face_auto_retouch_info": {"face_id": [], "beauty_face_auto_retouch_id": ""}, "smart_color_mode": 0,
+            "is_from_intelligent_quality": False}
+
+
+def _scene_fx_adjust(sp):
+    """흑백 충격 장면의 캡컷 조정 소재 — 채도 -1.0(완전 흑백)·대비 0.56·밝기 0(번쩍은 밝기 키프레임). 소재가 있어야 키프레임도 먹는다."""
+    if not (sp and sp.get("shock")):
+        return []
+    return [_adjust_material("saturation", -1.0), _adjust_material("contrast", 0.56), _adjust_material("brightness", 0.0)]
+
+
+def _scene_fx_keyframes(piece_start, piece_dur, sp, source_start=None, speed=1.0):
     """장면꾸미기 효과(관제 124)를 캡컷 키프레임으로 — 완성본 렌더와 같은 곡선(scene_style.zoom_curve·shock_vf 값).
-    확대 움직임: 크기(UNIFORM_SCALE)·위치(X/Y) / 흑백 충격: 채도 -1·대비·흔들림(위치)·13프레임마다 번쩍(밝기)·1.06배.
+    확대 움직임: 크기(KFTypeScaleX — 조각 uniform_scale 켜짐이라 가로세로 같이)·위치(X/Y) / 흑백 충격: 흔들림(위치)·13프레임마다 번쩍(밝기)·1.06배
+    (채도·대비는 조정 소재로 고정 — _scene_fx_adjust).
+    ★키프레임 시각 = **원본(source) 시각**(캡컷 9.5 실측 2026-10-06: 조각 source 10~14초에 10.5·11.5초를 넣어야 걸렸고, 조각 시작 0 기준으로 넣으면 무시됐다).
+      그래서 source_start(조각 원본 시작 μs) + 조각 안 경과 × speed(원본 읽는 배속). source_start 를 안 주면 옛 방식(조각 시작 0).
+    위치(KFTypePositionX/Y) 값 단위는 캡컷에서 아직 확인 안 됨.
     둘 다 켜진 장면(사장님 '중복으로 선택')은 한 조각에 합쳐 찍는다: 크기 = 확대 곡선 × 1.06, 위치 = 확대 위치 + 흔들림.
     시간은 흑백이면 프레임마다(흔들림), 아니면 0.1초 간격. 반환: common_keyframes 목록(없으면 [])."""
     if not sp:
@@ -583,13 +614,12 @@ def _scene_fx_keyframes(piece_start, piece_dur, sp):
             x += 2 * (0.012 * math.sin(n * 12.9898) + g * 0.045 * math.sin(n * 7.31))   # 화면비 → 캔버스 절반 단위
             y += -2 * 0.009 * math.sin(n * 78.233)
             b = 0.16 * g
-        sc.append((t, z)); px.append((t, x)); py.append((t, y)); br.append((t, b))
-    out = [_kf_list("UNIFORM_SCALE", sc), _kf_list("KFTypePositionX", px), _kf_list("KFTypePositionY", py)]
+        T = t if source_start is None else int(source_start + round(t * speed))   # 원본 시각(μs)
+        y += float(sp.get("by", 0))   # 위치 키프레임은 조각 위치를 덮어쓴다 — 영상 칸 기본 위치를 더한다(관제 155)
+        sc.append((T, z)); px.append((T, x)); py.append((T, y)); br.append((T, 0.32 * (b / 0.16)))   # 밝기: 번쩍 = 노출 16 → 0.32
+    out = [_kf_list("KFTypeScaleX", sc), _kf_list("KFTypePositionX", px), _kf_list("KFTypePositionY", py)]
     if shock:
-        ends = [(0, None), (int(piece_dur), None)]
-        out += [_kf_list("KFTypeSaturation", [(t, -1.0) for t, _ in ends]),
-                _kf_list("KFTypeContrast", [(t, 0.28) for t, _ in ends]),
-                _kf_list("KFTypeBrightness", br)]
+        out.append(_kf_list("KFTypeBrightness", br))   # 채도·대비는 조정 소재로 고정(_scene_fx_adjust) — 키프레임은 번쩍(밝기)만
     return out
 
 
@@ -608,7 +638,7 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
     cw, ch = canvas
     mats = {k: [] for k in (
         "videos", "audios", "texts", "speeds", "beats", "sound_channel_mappings",
-        "vocal_separations", "placeholder_infos", "material_animations", "canvases")}
+        "vocal_separations", "placeholder_infos", "material_animations", "canvases", "effects")}
     vid_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
                  "name": "", "is_default_name": True, "segments": []}
     aud_track = {"id": _uid(), "type": "audio", "attribute": 0, "flag": 0,
@@ -718,9 +748,13 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                     seg["clip"]["scale"] = {"x": _pz, "y": _pz}
                 if _pmove != (0.0, 0.0):   # 장면꾸미기 확대 위치(강조 확대가 제품·손을 향함) — scene_style.zoom_spans 가 계산
                     seg["clip"]["transform"] = {"x": _pmove[0], "y": _pmove[1]}
-                _kfs = _scene_fx_keyframes(_pt, _pd, _psp)   # 확대 움직임·흑백 충격 키프레임(관제 124)
+                # 확대 움직임·흑백 충격(관제 124) — 키프레임 시각은 조각의 원본 시각 기준(캡컷 9.5 실측), 흑백·대비는 조정 소재
+                _src = seg["source_timerange"]
+                _kfs = _scene_fx_keyframes(_pt, _pd, _psp, source_start=_src["start"], speed=(_src["duration"] / _pd if _pd else 1.0))
                 if _kfs:
                     seg["common_keyframes"] = _kfs
+                for _adj in _scene_fx_adjust(_psp):
+                    mats["effects"].append(_adj); seg["extra_material_refs"].append(_adj["id"])
                 vid_track["segments"].append(seg)
             if _hold:
                 # ── 정지 조각: 완성본이 마지막 프레임을 세워 둔 몫 — 캡컷 '정지 프레임'과 같은 사진 소재 ──
@@ -730,6 +764,10 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                                      render_index=0, volume=0.0)
                 if _z > 1.0:
                     hseg["clip"]["scale"] = {"x": _z, "y": _z}
+                # 정지 조각도 같은 장면의 영상 칸 위치로(관제 155)
+                _hsp = next((x for x in scene_zoom_spans or [] if _us(x["start"]) <= _h_t + _h_d / 2 < _us(x["end"])), None)
+                if _hsp and float(_hsp.get("by", 0)):
+                    hseg["clip"]["transform"] = {"x": 0.0, "y": float(_hsp["by"])}
                 vid_track["segments"].append(hseg)
 
         # ── 음성 트랙: 비트 TTS ──
