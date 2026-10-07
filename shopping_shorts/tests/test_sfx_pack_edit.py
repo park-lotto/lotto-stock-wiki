@@ -115,3 +115,17 @@ def test_스위치꺼짐_팩없음_불변():
 def test_timeline_에_pack_edit_실림():
     import inspect
     assert '"pack_edit": beat.get("pack_edit")' in inspect.getsource(va)
+
+
+def test_줄효과음_길이동안_팩소리를_비운다_빼면_돌아온다():
+    """10-07 사장님 '겹치는 거 빼고, 빼기 누르면 자동으로 넣어주고' — 실측 951d050cc3df 넷플 두둥 2.0초 끝에 휙이 겹쳤다."""
+    from shopping_shorts import sfx_pack
+    tl = sfx_pack.preview_timeline([{"role": "title", "text": "가" * 30}, {"role": "twist", "text": "나" * 60},
+                                    {"role": "land", "text": "다" * 30}])
+    t0 = float(tl[1]["t0"])
+    base = sfx_pack.plan_events(tl)
+    near = [e for e in base if t0 - 1e-6 <= float(e[1]) < t0 + 2.05]
+    held = sfx_pack.plan_events(tl, first_beats={tl[1]["beat_idx"]: 2.0})
+    assert not [e for e in held if t0 - 1e-6 <= float(e[1]) < t0 + 2.05]
+    assert len(held) < len(base) and near
+    assert sfx_pack.plan_events(tl, first_beats=()) == base      # 줄 효과음을 빼면 종전 그대로 돌아온다
