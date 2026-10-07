@@ -585,11 +585,18 @@
   }
   // 서버 POST(쿠키 동봉) — 샌드박스면 GM 직접, 메인월드(인스타 Blob 폴백)면 로더의
   // GM 브리지(postMessage)로 위임. 브리지 응답이 1.5초 안에 없으면(구버전 로더) 실패 콜백.
-  function _gmPost(url, bodyObj, done, fail) {
+  function _gmPost(url, bodyObj, done0, fail0) {
+    // ★상한 30초(관제 156, 2026-10-07 사장님 "비슷한 검색어 찾는 중으로 계속 나온다").
+    //   브리지가 ACK만 하고 결과를 못 돌려주면(탭 이동·서비스워커 잠듦) 아무도 fail 을 안 불러
+    //   화면이 '찾는 중…'에 영원히 멈췄다. 끝은 한 번만 — 늦게 온 응답은 버린다.
+    var ended = false, timer = setTimeout(function () { end(); if (fail0) fail0("timeout"); }, 30000);
+    function end() { if (ended) return false; ended = true; clearTimeout(timer); return true; }
+    function done(st, tx) { if (end()) done0(st, tx); }
+    function fail(why) { if (end() && fail0) fail0(why); }
     if (typeof GM_xmlhttpRequest !== "undefined") {
       GM_xmlhttpRequest({ method: "POST", url: url,
         headers: { "Content-Type": "application/json" }, data: JSON.stringify(bodyObj),
-        onload: function (r) { done(r.status, r.responseText); }, onerror: fail });
+        onload: function (r) { done(r.status, r.responseText); }, onerror: fail, ontimeout: fail });
       return;
     }
     var reqId = "ss" + Math.random().toString(36).slice(2), acked = false;
@@ -599,7 +606,7 @@
       if (d.__ssGmAck) { acked = true; return; }   // 브리지 살아있음 — 본 응답 대기
       if (!d.__ssGmResult) return;
       window.removeEventListener("message", onMsg);
-      if (d.status > 0) done(d.status, d.text); else fail();
+      if (d.status > 0) done(d.status, d.text); else fail(d.stale ? "stale" : "");
     }
     window.addEventListener("message", onMsg);
     window.postMessage({ __ssGmFetch: true, reqId: reqId, method: "POST", url: url,
@@ -1344,7 +1351,11 @@
       } else {
         finish({ error: status === 401 ? "숏템메이커에 로그인해 주세요" : "검색어를 못 만들었어요(" + status + ")" });
       }
-    }, function () { finish({ error: "숏템메이커 서버에 연결하지 못했어요" }); });
+    }, function (why) {
+      finish({ error: why === "stale" ? "확장프로그램이 갱신됐어요 — 이 페이지를 새로고침(F5)해 주세요"
+                    : why === "timeout" ? "30초 안에 답이 없어요 — 다시 검색해 주세요"
+                    : "숏템메이커 서버에 연결하지 못했어요" });
+    });
   }
   function _igKwChip(term, strong) {
     var b = document.createElement("button");
