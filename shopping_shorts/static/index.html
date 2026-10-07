@@ -4014,6 +4014,18 @@ async function lensExtractThenSearch(shortcode){
 //    제품명 토큰이 들어 있는 검색어에 표시를 달고 맨 위로 올린다.
 //    ⚠️어간 2글자로 본다 — '재봉틀'과 '미니 재봉틀'을 같은 것으로 봐야 하는데
 //      완전일치로 보면 하나도 안 걸린다(인스타 슬롯 매칭에서 배운 것과 같은 함정).
+async function _fillScriptRowLangs(st, row){
+  try{
+    const r=await fetch('/api/lens/kw/multi',{method:'POST',headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({text:row.ko, kind:'multi'})});
+    const d=await r.json();
+    const c=(d&&d.candidates&&d.candidates[0])||null;
+    if(!c) return;
+    ['zh','en','ja','ru'].forEach(k=>{ if(!row[k] && c[k]) row[k]=c[k]; });
+    const sc=Object.keys(LENS_STATE).find(k=>LENS_STATE[k]===st);
+    if(sc) _lensRerender(sc);
+  }catch(e){ console.warn('[lens] 제품 줄 번역 실패', e); }
+}
 function _markScriptProduct(st){
   const p=((st&&st.product)||'').trim();
   if(!st || !p || !(st.cnCands||[]).length) return;
@@ -4032,7 +4044,12 @@ function _markScriptProduct(st){
     c._scriptHit = !!pN && norm(ko).includes(pN);
   });
   if(!st.cnCands.some(c=>c._scriptHit)){
-    st.cnCands.unshift({ko:p, zh:'', en:'', ja:'', ru:'', _scriptHit:true, _scriptScore:toks.length+1});
+    const row={ko:p, zh:'', en:'', ja:'', ru:'', _scriptHit:true, _scriptScore:toks.length+1};
+    st.cnCands.unshift(row);
+    // ★다른 언어 칸을 채운다(관제 156, 2026-10-08 사장님 "탭이 활성화 안 될 때가 가끔"):
+    //   한국어만 있으면 샤·도·틱·인·핀·유 버튼이 전부 꺼진다(_lensKwFor 가 '' → 비활성).
+    //   검색어 판과 같은 무료 번역(/api/lens/kw/multi → expand_search_keywords)의 첫 줄을 쓴다.
+    _fillScriptRowLangs(st, row);
   }
   // 안정 정렬: 제품 표시 → 겹친 토큰 수 → 원래 순서.
   st.cnCands = st.cnCands.map((c,i)=>[c,i]).sort((a,b)=>
