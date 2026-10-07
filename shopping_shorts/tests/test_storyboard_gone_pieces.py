@@ -191,3 +191,36 @@ console.log(JSON.stringify({empty, saved:snap.use_seed, back, off:SB.useSeed, re
     for f in ("sbMakeBoards", "sbInsert", "sbPrepare", "sbRemake"):
         assert "use_seed:!!SB.useSeed" in _line_fn(f), f                              # 보드를 만드는 길 전부가 스위치 값을 싣는다
     assert "sbToggleSeed()" in _fn("sbPage1") and 'id="sbSeedSw"' in _fn("sbPage1")
+
+
+def test_씨앗_스위치가_꺼지면_상자에_담은_씨앗도_2단계에_안간다(tmp_path, monkeypatch):
+    """사장님 10-08 "씨앗을 쓴다는 버튼일 때만 2단계" — 꺼짐이면 사람이 담아 둔 씨앗 장면도 뺀다."""
+    ex = _seed_ex()
+    assert sb.drop_seed_picks("A-0,B-1", "훅=A-1,B-0|CTA·가격=A-0", ex) == ("B-1", "훅=B-0")
+    assert sb.drop_seed_picks("A-0", "훅=A-1", _ex(["A", "B"])) == ("A-0", "훅=A-1")       # 씨앗 표식이 없으면 그대로
+    seen = {}
+    monkeypatch.setattr(sb, "_ro", lambda p: None)
+    monkeypatch.setattr(sb, "_families", lambda db: [(7, {"id": 7}, None)])
+
+    def fake_board(fam, pan, r1, groups_txt, star, segs, texts, **k):
+        seen.update(segs=set(segs), star=list(star), roles=k.get("roles_pick"))
+        return {"slots": []}
+    monkeypatch.setattr(sb, "_board", fake_board)
+    R = {"inventory": {"groups": [], "tag_of": {}}, "mat_sig": sb.mat_sig(ex), "styles": []}
+    sb.make_boards(tmp_path / "x.db", "j", ["7"], "A-0,B-1", "훅=A-1,B-0", R=R, ex=ex)
+    assert seen == {"segs": {"B-0", "B-1"}, "star": ["B-1"], "roles": "훅: B-0"}             # 꺼짐: 씨앗은 후보·별·상자 어디에도 없다
+    sb.make_boards(tmp_path / "x.db", "j", ["7"], "A-0,B-1", "훅=A-1,B-0", R=R, ex=ex, use_seed=True)
+    assert seen == {"segs": {"A-0", "A-1", "B-0", "B-1"}, "star": ["A-0", "B-1"], "roles": "훅: A-1,B-0"}
+
+
+def test_씨앗_꺼짐이면_상자에_못_담는다(tmp_path):
+    js = """
+const SB={active:'훅', role:{}, useSeed:false, data:{pieces:{'A-0':{seed:true},'B-0':{}}}};
+function sbPieces(){ return SB.data.pieces; } let T=0, R=0; function toast(){ T++; } function sbRender(){ R++; }
+""" + _line_fn("sbCardClick") + """
+sbCardClick('A-0'); sbCardClick('B-0'); const off=[...SB.role['훅']||[]];
+SB.useSeed=true; sbCardClick('A-0'); const on=[...SB.role['훅']];
+console.log(JSON.stringify({off, on, toasts:T}));
+"""
+    assert _node(js, tmp_path) == {"off": ["B-0"], "on": ["B-0", "A-0"], "toasts": 1}
+    assert "관리자 시험)" not in _fn("sbRender")                                             # 고객도 보는 화면 — 문구 삭제(사장님 10-08)

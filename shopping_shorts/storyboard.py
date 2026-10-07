@@ -153,6 +153,25 @@ def _keep_ids(*parts):
     return out
 
 
+def drop_seed_picks(star_s, role_s, ex):
+    """사람이 상자에 담은 번호(star·roles)에서 씨앗 영상 조각을 뺀다 — '씨앗 영상도 2단계에 배치'가 꺼진 작업용(관제 161, 사장님 10-08
+    "씨앗을 쓴다는 버튼일 때만 2단계"). 꺼져 있으면 AI 후보(_materials)뿐 아니라 사람이 담아 둔 씨앗 장면도 2단계에 안 간다.
+    씨앗인가는 is_seed_source 한 곳. 돌려주는 것 = (star, roles) 같은 모양."""
+    seed = {str(s.get("seg_id")) for e in (ex or {}).values() if is_seed_source(e) for s in ((e or {}).get("segments") or []) if s.get("seg_id")}
+    if not seed:
+        return star_s, role_s
+    star = ",".join(x.strip() for x in str(star_s or "").split(",") if x.strip() and x.strip() not in seed)
+    roles = []
+    for chunk in str(role_s or "").split("|"):
+        name, eq, ids = chunk.partition("=")
+        if not eq:
+            continue
+        left = [x.strip() for x in ids.split(",") if x.strip() and x.strip() not in seed]
+        if left:
+            roles.append("%s=%s" % (name, ",".join(left)))
+    return star, "|".join(roles)
+
+
 def mat_sig(ex):
     """재료 지문 — 장면 목록을 만든 재료(담은 영상 전부의 조각, 씨앗 포함)가 지금과 같은가를 가르는 한 곳(관제 147).
     ★씨앗 여부는 안 넣는다: 장면 목록은 씨앗과 무관하게 재료 전체로 묶고, 씨앗은 보드를 만들 때 뺀다."""
@@ -1105,6 +1124,9 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
     if not R:
         raise ValueError("장면 목록을 먼저 만들어야 합니다")
     r1 = R["inventory"]
+    if not use_seed and ex is not None:
+        # ★씨앗 스위치가 꺼진 작업은 사람이 상자에 담아 둔 씨앗 장면도 2단계에 안 쓴다(사장님 10-08) — 아래 keep·star·roles 전부 이 값으로
+        star_s, role_s = drop_seed_picks(star_s, role_s, ex)
     segs, texts, order, _rows = _materials(db, jid, ex, keep=_keep_ids(star_s, role_s), with_seed=bool(use_seed))
     tag_of = r1.get("tag_of") or {}
     groups_txt = "\n".join("  %s: %s" % (g["name"], ", ".join("%s(%.1f초%s)" % (c, segs.get(c, 0), ("·" + "/".join(tag_of[c])) if tag_of.get(c) else "")
