@@ -10228,17 +10228,6 @@ async function renderSourceAnalysis(){
   try{ if(window.STORYBOARD_ON) sbEnter(); }catch(e){}   // 1단계 스토리보드 재료(관제 120)
   const box = document.getElementById('srcAnalysis');
   if(!box) return;
-  // ★버텍스 미등록 안내를 1단계부터 보인다(2026-10-08 사장님, 관제 159). 판정·문구는 서버 한 곳
-  //   (/api/settings/vertex_notice — 하루 1회 팝업·3단계 시작 안내와 같은 묶음). 여기선 한 번만 묻고 그린다.
-  //   별도 함수로 빼지 않는다 — 시험 하네스가 이 함수만 떼어 돌린다(아래 shortcode 보정과 같은 이유).
-  if(window._VX_NOTICE === undefined){
-    window._VX_NOTICE = null;
-    try{
-      fetch('/api/settings/vertex_notice').then(r => (r && r.ok) ? r.json() : null).then(d => {
-        if(d && d.text && d.body){ window._VX_NOTICE = d; renderSourceAnalysis().catch(()=>{}); }
-      }).catch(e => console.warn('[vertex] 1단계 안내 확인 실패', e));
-    }catch(e){ console.warn('[vertex] 1단계 안내 확인 실패', e); }
-  }
   // ★빈 shortcode 보정은 **여기 안에서** 한다(2026-08-31). 별도 함수로 빼면
   //   테스트 하네스(js_harness)가 이 함수만 떼어 실행할 때 ReferenceError로 죽는다 —
   //   게이트가 실제로 잡았다. 보정 자체가 실패해도 아래 흐름은 종전대로 돈다.
@@ -10267,6 +10256,18 @@ async function renderSourceAnalysis(){
     }
   }catch(e){ console.warn('[shortcode 보정 실패(무해)]', e); }
   const items = HANDOFF.filter(h => h.useFootage);
+  // ★버텍스 미등록 안내를 1단계부터 보인다(2026-10-08 사장님, 관제 159). 판정·문구는 서버 한 곳
+  //   (/api/settings/vertex_notice — 하루 1회 팝업·3단계 시작 안내와 같은 묶음). 여기선 한 번만 묻고 그린다.
+  //   ★shortcode 보정 **뒤**에 둔다 — 보정 구간은 시험 하네스(test_src_shortcode_fill_js)가 node로 떼어 돌리는데
+  //     거기엔 window가 없어, 앞에 두면 보정까지 못 가고 죽는다(finish 관문이 실제로 잡았다).
+  if(window._VX_NOTICE === undefined){
+    window._VX_NOTICE = null;
+    try{
+      fetch('/api/settings/vertex_notice').then(r => (r && r.ok) ? r.json() : null).then(d => {
+        if(d && d.text && d.body){ window._VX_NOTICE = d; renderSourceAnalysis().catch(()=>{}); }
+      }).catch(e => console.warn('[vertex] 1단계 안내 확인 실패', e));
+    }catch(e){ console.warn('[vertex] 1단계 안내 확인 실패', e); }
+  }
   if(!items.length){
     // ★담긴 목록이 아직 안 잡혔는데 자동적재는 돌고 있는 순간이 있다(HANDOFF가 채워지기
     //   전에 이 함수가 먼저 불린다). 종전엔 여기서 그냥 비우고 나가 **폴링도 안 걸어**,
