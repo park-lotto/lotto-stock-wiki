@@ -21271,23 +21271,53 @@ def api_storyboard_clip(request: Request, key: str, seg_id: str):
     return FileResponse(str(out), media_type="video/mp4")
 
 
+_SB_TIMEOUT = 360          # 초. 스토리보드 일 하나가 이보다 오래 '만드는 중'이면 상태를 끝낸다(관제 120 장면배분, 10-07 board:auto 가 '만드는 중'에 섰다)
+_SB_TIMEOUT_MSG = "시간 초과 — 다시 만들기"
+
+
 def _sb_run(job_id, name, fn):
-    """같은 작업·같은 이름이 돌고 있으면 새로 띄우지 않는다(더블클릭). 실패는 이유를 남긴다 — 조용히 삼키지 않는다."""
+    """같은 작업·같은 이름이 돌고 있으면 새로 띄우지 않는다(더블클릭). 실패는 이유를 남긴다 — 조용히 삼키지 않는다.
+    ★회차(gen): 같은 이름을 다시 돌리면(시간 초과 뒤 다시 만들기 등) 옛 실이 늦게 끝나도 새 회차 상태를 덮지 않는다.
+      시간 초과로 끝낸 회차는 늦게라도 끝나면 done 으로 덮는다(그 결과는 버리지 않는다)."""
     key = (job_id, name)
     with _SB_LOCK:
-        if (_SB_TASKS.get(key) or {}).get("state") == "run":
+        _sb_expire(job_id)
+        cur = _SB_TASKS.get(key) or {}
+        if cur.get("state") == "run":
             return
-        _SB_TASKS[key] = {"state": "run", "t0": time.time()}
+        gen = int(cur.get("gen") or 0) + 1
+        _SB_TASKS[key] = {"state": "run", "t0": time.time(), "gen": gen}
 
     def _go():
+        t0 = time.time()
         try:
             res = fn()
-            _SB_TASKS[key] = {"state": "done", "result": res}
+            new = {"state": "done", "result": res, "gen": gen}
+            why = "완료"
         except Exception as e:      # noqa: BLE001 — 이유를 화면에 보여 준다
             print("[storyboard] %s %s 실패: %r" % (job_id, name, e), file=sys.stderr)
-            _SB_TASKS[key] = {"state": "error", "error": str(e)[:300]}
+            new = {"state": "error", "error": str(e)[:300], "gen": gen}
+            why = "실패"
+        with _SB_LOCK:
+            if int((_SB_TASKS.get(key) or {}).get("gen") or 0) == gen:
+                late = (_SB_TASKS.get(key) or {}).get("timed_out")
+                _SB_TASKS[key] = new
+                why += " (시간 초과 뒤 늦게 끝남 — 결과로 덮음)" if late else ""
+            else:
+                why += " (새 회차가 있어 버림)"
+        print("[storyboard] %s %s %s %.0f초" % (job_id, name, why, time.time() - t0), file=sys.stderr)
     _ctx = contextvars.copy_context()      # 신호어 풀 스위치(SIGNAL_POOL) 등 요청 문맥을 실에도 그대로
     threading.Thread(target=lambda: _ctx.run(_go), daemon=True).start()
+
+
+def _sb_expire(job_id):
+    """이 작업의 '만드는 중'이 _SB_TIMEOUT 을 넘었으면 error(시간 초과)로 끝낸다 — 실은 못 죽여도 화면이 영원히 서지 않게.
+    상태를 읽는 모든 길(GET·prepare·_sb_run)이 이걸 먼저 부른다(판단 한 곳). 호출자가 _SB_LOCK 을 쥐고 있거나 안 쥐어도 된다."""
+    now = time.time()
+    for k, v in list(_SB_TASKS.items()):
+        if k[0] == job_id and (v or {}).get("state") == "run" and now - float(v.get("t0") or now) > _SB_TIMEOUT:
+            print("[storyboard] %s %s 시간 초과(%.0f초) — 상태를 error 로 끝냄" % (k[0], k[1], now - float(v.get("t0") or now)), file=sys.stderr)
+            _SB_TASKS[k] = {"state": "error", "error": _SB_TIMEOUT_MSG, "gen": v.get("gen"), "timed_out": True}
 
 
 def _sb_picks(cid, key, bd, sfx_deco=None):
@@ -21398,8 +21428,10 @@ def api_storyboard_get(request: Request, job_id: str):
                                "th": "/api/produce/storyboard/thumb/%s/%s" % (job_id, sid),
                                # 씨앗 조각 — AI 후보·자동 배치엔 안 쓰고(storyboard._materials), 1단계 상자에 사람이 담을 때만 쓴다
                                "seed": _sb.is_seed_source(ex)}
-    tasks = {k[1]: {kk: vv for kk, vv in v.items() if kk != "t0"} for k, v in list(_SB_TASKS.items()) if k[0] == job_id}
-    return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH), "tasks": tasks}
+    _sb_expire(job_id)
+    tasks = {k[1]: {kk: vv for kk, vv in v.items() if kk not in ("t0", "gen", "timed_out")} for k, v in list(_SB_TASKS.items()) if k[0] == job_id}
+    return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH), "tasks": tasks,
+            "min_clip": _sb._min_clip()}
 
 
 @app.post("/api/produce/storyboard/{job_id}/inventory")
@@ -21438,7 +21470,11 @@ def api_storyboard_prepare(request: Request, job_id: str):
         waiting = [c for c in _codes if c and c not in _ex and _analysis_state(_st_, c)[1].get("state") != "gave_up"]
         if waiting:
             return {"ok": True, "started": False, "waiting": len(waiting)}
-    busy = any(k[0] == job_id and (v or {}).get("state") == "run" for k, v in list(_SB_TASKS.items()))
+    _sb_expire(job_id)
+    # ★미리 만들기 일(장면 목록·AI 자동)만 본다 — 사람이 누른 스타일 보드·끼워 넣기가 돌고 있다고 AI 자동을 미루면
+    #   AI 자동이 그것들이 다 끝난 뒤에야 혼자 시작해 '만드는 중'으로 오래 남았다(10-07 w:a745347a7d92).
+    busy = any(k[0] == job_id and k[1] in ("inventory", "board:auto") and (v or {}).get("state") == "run"
+               for k, v in list(_SB_TASKS.items()))
     if busy:
         return {"ok": True, "started": False, "busy": True}
     st = _sb.load_state(job_id) or {}
@@ -21496,7 +21532,8 @@ def api_storyboard_insert(request: Request, job_id: str, body: dict):
     from shopping_shorts import storyboard as _sb
     name = "insert:" + str(body.get("name") or "x")[:40]
     _cid = getattr(request.state, "customer_id", 0)
-    _sb_run(job_id, name, lambda: _sb_picks(_cid, job_id, _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or []}, ex=_ex)))
+    _sb_run(job_id, name, lambda: _sb_picks(_cid, job_id, _sb.insert(DB_PATH, job_id, {"board": body.get("board") or {}, "extra": body.get("extra") or [],
+                                                                         "key": str(body.get("key") or "")}, ex=_ex)))
     return {"ok": True}
 
 
