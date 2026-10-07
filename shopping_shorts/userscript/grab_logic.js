@@ -771,7 +771,7 @@
         _lensOverlay(h);
         _fillThumbs();
         var ov = document.getElementById("ss-lens-ov");
-        _lensHoverWire(ov);
+        // _lensHoverWire(ov) — 끔(관제 156, 2026-10-07 사장님 "서버부담없는것"): /api/play 는 카드마다 서버가 영상을 받는다.
         var bs = ov.querySelectorAll("button[data-u]");
         for (var j = 0; j < bs.length; j++) {
           bs[j].addEventListener("click", function () {
@@ -1651,11 +1651,24 @@
     while (_pvList.length > 9) { var old = _pvList.shift(); old.__ssKeep = 0; try { old.pause(); } catch (e) {} }
     try { v.play().catch(function () {}); } catch (e) {}
   }
+  // ★인스타 밖으로 넓힘(관제 156, 2026-10-07 사장님 "모든 플랫폼, 서버 부담 없는 것"):
+  //   사이트가 마우스 올림에 스스로 붙이는 미리보기 영상을 떠난 뒤에도 계속 재생시킨다(서버 호출 0).
+  //   유튜브는 빼다 — 화면 전체가 미리보기 영상 1개를 돌려 써서(실측) 여러 개를 붙잡을 수 없다.
+  //   카드 모양은 사이트마다 다르다 → 표 한 곳(PV_CARD).
+  var PV_CARD = {
+    instagram: 'a[href*="/reel/"],a[href*="/p/"]',
+    tiktok: 'a[href*="/video/"],[data-e2e="search_top-item"],[data-e2e="search-card-desc"]',
+    pinterest: '[data-test-id="pin"],a[href*="/pin/"]',
+    douyin: 'a[href*="/video/"],li',
+    xiaohongshu: 'section.note-item,a[href*="/explore/"],a[href*="/search_result/"]'
+  };
   if (document.addEventListener) document.addEventListener("mouseover", function (e) {
-    if (window.__ssGrabVer !== LOGIC_VER || !_pvOn || !_isIg() || isSinglePost()) return;
-    var a = e.target && e.target.closest && e.target.closest('a[href*="/reel/"],a[href*="/p/"]');
+    if (window.__ssGrabVer !== LOGIC_VER || !_pvOn || isSinglePost()) return;
+    var s0 = _kwSite(), sel = s0 && PV_CARD[s0.id];
+    if (!sel) return;
+    var a = e.target && e.target.closest && e.target.closest(sel);
     if (!a) return;
-    setTimeout(function () {                                   // 인스타가 미리보기 영상을 붙일 시간
+    setTimeout(function () {                                   // 사이트가 미리보기 영상을 붙일 시간
       var v = a.querySelector("video") || (a.parentElement && a.parentElement.querySelector("video"));
       window.__ssPvTries = (window.__ssPvTries || 0) + 1;        // 점검용
       _pvKeep(v);
