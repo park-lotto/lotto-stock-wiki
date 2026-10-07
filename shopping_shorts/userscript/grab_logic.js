@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-07f  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-07g  (LOGIC_VER가 정본)
+//   · 관제 156 — 렌즈 서버 연결 실패(30초 상한 회귀) 수리, 유튜브 검색 Shorts 전용, 인스타 카드 배지 스크롤 겹침.
 //   · 관제 156 — 검색어 판 한 줄 5개 언어로 통일·끌어 옮기기, 게시물 관련 검색어 5개 언어, '찾는 중…' 영구 멈춤,
 //     유튜브 미리보기 📥 겹침, 인스타 게시물 재생바가 뒤 격자 영상을 잡던 것, 렌즈 결과창 마우스 지나감 미리보기.
 //   · 인스타 검색 화면 — 카드 배지 ❤좋아요·💬댓글·⏱길이, 좋아요순·댓글순 목록, 마우스 지나간 카드 동시 미리보기(관제 151, 계정02 로그인 실측).
@@ -26,7 +27,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261012;
+  var LOGIC_VER = 20261013;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -612,7 +613,9 @@
         if (getComputedStyle(a).position === "static") a.style.position = "relative";
         el = document.createElement("div");
         el.className = "ss-card-info";
-        el.style.cssText = "position:absolute;right:6px;bottom:6px;z-index:99998;" +
+        // ★z-index 는 카드 안에서만 이기면 된다(관제 156, 2026-10-07 사장님 "스크롤 내리면 화면이 깨진다").
+        //   99998 이면 인스타 검색 화면의 고정 머리(검색창·비슷한 검색어 판) 위로 스크롤된 윗줄 카드 배지가 튀어나왔다.
+        el.style.cssText = "position:absolute;right:6px;bottom:6px;z-index:3;" +
           "background:rgba(0,0,0,.65);color:#fff;font:11px system-ui,sans-serif;" +
           "border-radius:8px;padding:2px 7px;pointer-events:none";
         a.appendChild(el);
@@ -639,7 +642,7 @@
         lb.textContent = "🔍";
         lb.title = "이 영상 렌즈(원본·유사 추적)";
         // 위치: 우리 배지(우하단) 바로 위 — 좌하단은 인스타 자체 조회수 표기가 있어 피한다
-        lb.style.cssText = "position:absolute;right:6px;bottom:32px;z-index:99999;" +
+        lb.style.cssText = "position:absolute;right:6px;bottom:32px;z-index:4;" +
           "background:#37b0e0;color:#fff;border:none;border-radius:14px;width:28px;height:28px;" +
           "font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4)";
         lb.addEventListener("click", function (e) {
@@ -663,11 +666,13 @@
   }
   // 서버 POST(쿠키 동봉) — 샌드박스면 GM 직접, 메인월드(인스타 Blob 폴백)면 로더의
   // GM 브리지(postMessage)로 위임. 브리지 응답이 1.5초 안에 없으면(구버전 로더) 실패 콜백.
-  function _gmPost(url, bodyObj, done0, fail0) {
-    // ★상한 30초(관제 156, 2026-10-07 사장님 "비슷한 검색어 찾는 중으로 계속 나온다").
+  function _gmPost(url, bodyObj, done0, fail0, ms) {
+    // ★상한(기본 30초, 관제 156, 2026-10-07 사장님 "비슷한 검색어 찾는 중으로 계속 나온다").
     //   브리지가 ACK만 하고 결과를 못 돌려주면(탭 이동·서비스워커 잠듦) 아무도 fail 을 안 불러
     //   화면이 '찾는 중…'에 영원히 멈췄다. 끝은 한 번만 — 늦게 온 응답은 버린다.
-    var ended = false, timer = setTimeout(function () { end(); if (fail0) fail0("timeout"); }, 30000);
+    // ★상한은 부르는 쪽이 정한다(기본 30초). 렌즈 추적은 서버에서 70초 넘게 걸린다(2026-10-07 라이브 실측:
+    //   20:28:39 요청 → 20:29:49 200) — 30초로 끊었더니 정상 응답을 버리고 '서버 연결 실패'가 떴다.
+    var ended = false, timer = setTimeout(function () { end(); if (fail0) fail0("timeout"); }, ms || 30000);
     function end() { if (ended) return false; ended = true; clearTimeout(timer); return true; }
     function done(st, tx) { if (end()) done0(st, tx); }
     function fail(why) { if (end() && fail0) fail0(why); }
@@ -732,7 +737,7 @@
     // t를 빼고 보낸다(서버가 영상 중간 프레임으로 캡처).
     var v = noT ? null : _igVideo();
     var t = (v && isFinite(v.currentTime)) ? Math.round(v.currentTime * 10) / 10 : null;
-    _lensOverlay("<div style='padding:30px;text-align:center;color:#aaa'>🔗 원본·유사 영상 추적 중… (10~20초)</div>");
+    _lensOverlay("<div style='padding:30px;text-align:center;color:#aaa'>🔗 원본·유사 영상 추적 중… (보통 20초~1분)</div>");
     _gmPost(BASE + "/api/lens/trace_url",
       t === null ? { url: url } : { url: url, t: t },
       function (status, text) {
@@ -779,9 +784,12 @@
         if (why === "nobridge") {   // 구버전 로더(브리지 없음) → 랭킹 페이지 딥링크 폴백
           window.open(BASE + "/?lens_url=" + encodeURIComponent(url), "_blank");
         } else {
-          _lensOverlay("<div style='padding:20px;color:#e0623d'>❌ 서버 연결 실패</div>");
+          _lensOverlay("<div style='padding:20px;color:#e0623d'>❌ " + (
+            why === "timeout" ? "3분 안에 답이 없어요 — 잠시 뒤 다시 눌러 주세요" :
+            why === "stale" ? "확장프로그램이 갱신됐어요 — 이 페이지를 새로고침(F5)해 주세요" :
+            "서버 연결 실패") + "</div>");
         }
-      });
+      }, 180000);   // 렌즈 추적은 70초+ 걸린다(라이브 실측) — 상한 3분
   }
   // ── ⭐볼채널등록(2026-09-02 사장님) — 회원용 개인 채널 즐겨찾기 ────────────
   //  📌채널수집·⭐레퍼런스등록은 **관리자 전용 + 전역 수집**이라 회원이 눌러도
@@ -1087,7 +1095,7 @@
       b.title = "이 영상 담기";
       // 인스타·틱톡은 카드 '오른쪽 위'에 자체 릴스/재생 배지가 있어 겹친다 → 왼쪽 위에 붙인다.
       b.style.cssText =
-        "position:absolute;top:8px;left:8px;z-index:99999;background:#1f6feb;color:#fff;" +
+        "position:absolute;top:8px;left:8px;z-index:" + (_isIg() ? 4 : 99999) + ";background:#1f6feb;color:#fff;" +   // 인스타: 고정 머리 위로 안 튀게(관제 156)
         "border:none;border-radius:16px;width:34px;height:34px;font-size:16px;" +
         "box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer";
       (function (a) {
@@ -1386,7 +1394,7 @@
       post: function () { return isSinglePost() ? _pm(/\/(?:p|reel|reels)\/([A-Za-z0-9_-]+)/) : ""; } },
     { id: "youtube", lang: "en", host: ["youtube.com"],
       q: function () { return location.pathname === "/results" ? _qp("search_query") : ""; },
-      url: function (t) { return "https://www.youtube.com/results?search_query=" + encodeURIComponent(t) + "&sp=EgIYAQ%253D%253D"; },
+      url: function (t) { return "https://www.youtube.com/results?search_query=" + encodeURIComponent(t) + "&sp=EgIQCQ%253D%253D"; },   // Shorts 전용(관제 156)
       // /watch 로 열린 쇼츠도(헤드리스·일부 화면은 /shorts/ 대신 /watch?v=로 연다 — 실측).
       // 롱폼 /watch 는 tick 이 _ytOff 로 먼저 걸러 여기까지 안 온다(쇼츠 길이만 동작).
       post: function () { return _pm(/^\/shorts\/([\w-]+)/) || (location.pathname === "/watch" ? _qp("v") : ""); } },
