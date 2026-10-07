@@ -19285,7 +19285,10 @@ async function sbMakeInventory(){ if(await sbPost('/inventory', {})) setTimeout(
 function sbAsg(){ return SB.role; }
 function sbRolesOf(id){ return Object.entries(SB.role).filter(([r,s])=>s.has(id)).map(([r])=>r); }
 function sbSetActive(r){ SB.active=(SB.active===r?null:r); sbRender(); }
-function sbCardClick(id){ if(!SB.active) return; const s=SB.role[SB.active]=SB.role[SB.active]||new Set(); s.has(id)?s.delete(id):s.add(id); sbRender(); }
+function sbCardClick(id){ if(!SB.active) return;
+  // 씨앗 장면은 [씨앗 영상도 2단계에 배치]를 켠 작업에서만 담는다(사장님 10-08 "씨앗을 쓴다는 버튼일 때만 2단계") — 서버도 같은 규칙(storyboard.drop_seed_picks)
+  const p=sbPieces()[id]; if(p && p.seed && !SB.useSeed){ toast('씨앗 영상 장면은 아래 [씨앗 영상도 2단계에 배치]를 켜야 쓸 수 있어요'); return; }
+  const s=SB.role[SB.active]=SB.role[SB.active]||new Set(); s.has(id)?s.delete(id):s.add(id); sbRender(); }
 function sbRoleColor(r){ return (SB_ROLES.find(x=>x[0]===r)||[,,'#888'])[2]; }
 function sbCard1(id, w){ const p=sbPieces()[id]; if(!p) return '';
   const mine=sbRolesOf(id); const sug=[...new Set(sbTagOf(id).map(t=>SB_SUG[t]).filter(Boolean))];
@@ -19300,19 +19303,19 @@ function sbPage1(){
   const boxes=SB_ROLES.map(([r,ic,c,slots])=>{ const s=SB.role[r]||new Set();
     return `<div class="sb-rbox ${SB.active===r?'on':''}" style="--c:${c}" onclick="sbSetActive('${sbA(r)}')"><div class="sb-rh">${ic} ${sbE(r)} <b>${s.size||''}</b></div><div class="sb-rs">${slots}</div>
       <div class="sb-rth">${[...s].slice(0,5).map(id=>{ const p=P[id]; return p?`<img src="${sbE(p.th)}" alt="">`:''; }).join('')}</div></div>`; }).join('');
-  // ★장면 목록은 씨앗 포함 재료 전체로 묶는다(관제 147 — 씨앗이 나중에 바뀌어도 다시 안 묶게). 화면 후보에선 씨앗 조각을 뺀다(사람이 상자에 담은 건 남긴다)
-  const grps=sbGroups().map(g=>Object.assign({}, g, {ids:(g.ids||[]).filter(id=>SB.useSeed || !(P[id] && P[id].seed) || sbRolesOf(id).length)})).map((g,i)=>{ if(!(g.ids||[]).length) return ''; const all=SB.showall[i]; const gids=(g.ids||[]); const ids=all?gids:gids.slice(0,7);
+  // ★장면 목록은 씨앗 포함 재료 전체로 묶는다(관제 147 — 씨앗이 나중에 바뀌어도 다시 안 묶게). 화면 후보에선 씨앗 조각을 뺀다 — [씨앗 영상도 2단계에 배치]를 켠 작업만 보인다(관제 161)
+  const grps=sbGroups().map(g=>Object.assign({}, g, {ids:(g.ids||[]).filter(id=>SB.useSeed || !(P[id] && P[id].seed))})).map((g,i)=>{ if(!(g.ids||[]).length) return ''; const all=SB.showall[i]; const gids=(g.ids||[]); const ids=all?gids:gids.slice(0,7);
     const hit=gids.filter(id=>sbRolesOf(id).length).length;
     return `<div class="sb-grp ${hit?'star':''}"><div class="sb-gh"><b>${sbE(g.name)}</b> <span>${sbE(g.desc||'')} · ${gids.length}개</span>${hit?` <span class="sb-hitb">🎯 ${hit}장 담김 — 그 자리에 먼저 놓아요 · 이 묶음의 나머지 조각은 다른 자리에도 쓰여요</span>`:''}</div>
       <div class="sb-gth">${ids.map(id=>sbCard1(id)).join('')}</div>${gids.length>7?`<span class="sb-more" onclick="SB.showall[${i}]=!SB.showall[${i}];sbRender()">${all?'접기':'나머지 '+(gids.length-7)+'개 펼치기'}</span>`:''}</div>`; }).join('');
   const miss=(inv&&inv.missing)||[];
-  // 씨앗 영상 조각 — AI는 안 쓴다(storyboard._materials). 사람이 상자에 담으면 그 자리에 쓴다(사람이 고른 것은 존중)
+  // 씨앗 영상 조각 — 스위치(SB.useSeed)가 꺼져 있으면 2단계에 안 쓴다: AI 후보(storyboard._materials)도, 상자에 담기(sbCardClick·storyboard.drop_seed_picks)도
   const seeds=Object.keys(P).filter(id=>P[id].seed && !sbGroups().some(g=>(g.ids||[]).includes(id)));
   // ★'씨앗 영상도 2단계에 배치' 스위치(관제 161, 사장님 10-08) — 켜면 서버가 씨앗 조각도 AI 후보에 넣는다(storyboard._materials with_seed 한 곳).
   //   씨앗 조각이 하나라도 있으면 이 줄을 보여 준다(묶음에 다 들어가 아래 카드가 0개여도 스위치는 보여야 한다).
   const anySeed=Object.keys(P).some(id=>P[id].seed);
-  const sgrp=anySeed?`<div class="sb-grp sb-seedgrp"><div class="sb-gh"><b>🌱 씨앗 영상</b> <span>${SB.useSeed?'AI가 씨앗 장면도 2단계 칸에 배치해요 · 지금부터 만드는 스토리보드에 적용(이미 만든 건 2단계 [다시 만들기])':'AI가 자동으로는 안 써요(자막틀이 박힌 레퍼런스) · 쓰고 싶으면 상자를 켜고 담으세요'}${seeds.length?' · '+seeds.length+'개':''}</span>
-        <button class="sb-btn ${SB.useSeed?'on':''}" id="sbSeedSw" style="margin-left:8px" onclick="sbToggleSeed()" title="켜면 씨앗 영상의 장면도 AI가 2단계 스토리보드 칸에 배치합니다. 끄면 사람이 상자에 담은 씨앗 장면만 씁니다">${SB.useSeed?'✅ 씨앗 영상도 2단계에 배치 — 켜짐':'🌱 씨앗 영상도 2단계에 배치할까요? — 꺼짐'}</button></div>
+  const sgrp=anySeed?`<div class="sb-grp sb-seedgrp"><div class="sb-gh"><b>🌱 씨앗 영상</b> <span>${SB.useSeed?'AI가 씨앗 장면도 2단계 칸에 배치해요 · 지금부터 만드는 스토리보드에 적용(이미 만든 건 2단계 [다시 만들기])':'2단계에 안 써요(자막틀이 박힌 레퍼런스) · 쓰려면 오른쪽 버튼을 켜세요'}${seeds.length?' · '+seeds.length+'개':''}</span>
+        <button class="sb-btn ${SB.useSeed?'on':''}" id="sbSeedSw" style="margin-left:8px" onclick="sbToggleSeed()" title="켜면 씨앗 영상의 장면도 2단계 스토리보드 칸에 배치합니다(AI 배치·상자에 담기 모두). 끄면 씨앗 장면은 2단계에 쓰지 않습니다">${SB.useSeed?'✅ 씨앗 영상도 2단계에 배치 — 켜짐':'🌱 씨앗 영상도 2단계에 배치할까요? — 꺼짐'}</button></div>
       <div class="sb-gth">${seeds.map(id=>sbCard1(id)).join('')}</div></div>`:'';
   return `<div class="sb-rbar"><div class="sb-bh">🎯 꼭 쓰고 싶은 장면 — 상자를 켜고 카드를 누르세요 <small>${SB.active?'지금 켜진 상자: <b>'+sbE(SB.active)+'</b> (다시 누르면 꺼짐)':'담은 장면은 그 자리 맨 앞에 놓이고, AI가 뒤에 더 붙여요 · 다 채울 필요 없어요'}</small></div><div class="sb-rboxes">${boxes}</div></div>
   <div class="sb-box"><div class="sb-bh">장면 목록 <small>조각 ${Object.keys(P).length}개를 ${sbGroups().length}묶음으로 · 카드 위 'AI:' = AI가 본 쓰임(참고)</small></div><div class="sb-grps">${grps}${sgrp}</div></div>
@@ -19321,7 +19324,7 @@ function sbPage1(){
 
 function sbToggleSeed(){
   SB.useSeed=!SB.useSeed;
-  if(typeof toast==='function') toast(SB.useSeed?'씨앗 영상 장면도 AI가 배치해요 — 지금부터 만드는 스토리보드에 적용돼요':'씨앗 영상 장면은 AI가 자동으로 안 써요(상자에 담은 것만)');
+  if(typeof toast==='function') toast(SB.useSeed?'씨앗 영상 장면도 2단계에 배치해요 — 지금부터 만드는 스토리보드에 적용돼요':'씨앗 영상 장면은 2단계에 쓰지 않아요');
   sbRender();          // 그린 뒤 _sbSaveSoon 이 작업파일(state.sb.use_seed)에 저장한다
 }
 // ── 2단계 부분: 스타일 카드 → 스토리보드 ──
@@ -19655,8 +19658,8 @@ function sbRender(){
   const seedBand=document.getElementById('s2SeedBand'); if(seedBand) seedBand.style.display=window.STORYBOARD_ON?'none':'';
   if(!window.STORYBOARD_ON){ put(b1,null); put(b2,null); return; }   // 고객 화면 불변
   const y=window.scrollY;
-  const head1=`<div class="s2-label" style="margin:14px 0 8px">🎬 스토리보드 재료 <span class="sb-note">(관리자 시험) 꼭 쓰고 싶은 장면을 상자에 담아 두면 2단계 스토리보드가 그 자리에 씁니다</span></div>`;
-  const head2=`<div class="s2-label" style="margin-bottom:8px">🎬 스토리보드 <span class="sb-note">(관리자 시험) 대본 스타일로 줄마다 문장·장면을 짝지어 만듭니다</span></div>`;
+  const head1=`<div class="s2-label" style="margin:14px 0 8px">🎬 스토리보드 재료 <span class="sb-note">꼭 쓰고 싶은 장면을 상자에 담아 두면 2단계 스토리보드가 그 자리에 씁니다</span></div>`;
+  const head2=`<div class="s2-label" style="margin-bottom:8px">🎬 스토리보드 <span class="sb-note">대본 스타일로 줄마다 문장·장면을 짝지어 만듭니다</span></div>`;
   if(!SB.jid){ const m='<div class="sb-box"><span class="sb-note">영상을 담고 분석이 끝나면 열려요</span></div>'; put(b1,head1+m); put(b2,head2+m); return; }
   if(!SB.data){ const m=`<div class="sb-box">${SB.err?'<span class="sb-err">'+sbE(SB.err)+'</span>':'<span class="sb-note">불러오는 중…</span>'}</div>`; put(b1,head1+m); put(b2,head2+m); return; }
   const ti=sbTask('inventory');
