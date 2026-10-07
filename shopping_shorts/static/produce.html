@@ -1800,6 +1800,10 @@
 .sbwrap .sb-fwarn{font-size:11px;color:#ffb36b;margin:3px 0}
 .sbwrap .sb-cc{position:relative;display:flex;flex-direction:column;align-items:center}
 .sbwrap .sb-cc.off .sb-th{filter:grayscale(1) brightness(.6)}
+.sbwrap .sb-goneth{aspect-ratio:9/16;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px dashed #ff7b7b;border-radius:8px;background:rgba(255,123,123,.08);color:#ff7b7b;font-size:20px;text-align:center}
+.sbwrap .sb-goneth small{font-size:11px;line-height:1.3}
+.sbwrap .sb-gk{font-size:10px;color:#ff7b7b;font-weight:700}
+.sbwrap .sb-gonebar{margin-bottom:10px;border-color:#ff7b7b}
 .sbwrap .sb-offt{position:absolute;top:40%;left:0;right:0;text-align:center;font-size:11px;color:#ffd24a;font-weight:700}
 .sbwrap .sb-ccb{display:flex;gap:2px;align-items:center;margin-top:2px}
 .sbwrap .sb-pk{font-size:9.5px;background:#c85cff;color:#fff;border-radius:5px;padding:0 4px}
@@ -19185,6 +19189,18 @@ const SB_EXTRA = [['escalation','📈 고조','효능을 한 단계 더 세게']
 function sbJid(){ if (typeof WORK_ID!=='undefined' && WORK_ID) return 'w:'+WORK_ID; return (typeof MIX_JOB!=='undefined' && MIX_JOB) ? String(MIX_JOB) : ''; }   // 작업파일 우선 — 1단계에서 만든 스토리보드가 3단계 뒤에도 같은 열쇠
 function sbInv(){ const st=SB.data&&SB.data.state; return (st&&st.inventory)||null; }
 function sbPieces(){ return (SB.data&&SB.data.pieces)||{}; }
+// ★뺀 영상의 장면인가 — 판정은 이 함수 하나(관제: 스토리보드뺀영상, 2026-10-08 work ad37c18f3be7).
+//   스토리보드를 만든 뒤 1단계에서 영상을 빼면 보드 칸(slots[].ids·SB.ord)에 그 영상 장면 번호가 남는다. 지금 재료(pieces)에 없는 번호 = 뺀 장면.
+//   재료를 아직 못 받았으면(pieces 비어 있음) 아무것도 뺀 것으로 치지 않는다 — 불러오는 동안 전부 '뺀 장면'으로 보이면 안 된다.
+//   ★번호는 지우지 않는다(영상을 다시 담으면 그대로 돌아온다). 그릴 때 🗑 카드로, 내보낼 때(sbLiveIds)만 뺀다.
+function sbGone(id){
+  const P=SB.data&&SB.data.pieces;
+  return !!(id && P && !P[id] && Object.keys(P).length);
+}
+// 이 칸에서 서버·3단계로 내보내는 장면 — 뺀 영상 장면은 싣지 않는다(확정·끼워 넣기·초 다시 재기 공용)
+function sbLiveIds(ek, i, sl){
+  return sbOrdOf(ek,i,sl).filter(id=>!sbGone(id));
+}
 function sbTagOf(id){ const v=sbInv(); return ((v&&v.tag_of)||{})[id]||[]; }
 function sbGroups(){ const v=sbInv(); return (v&&v.groups)||[]; }
 // 스토리보드 진입 — 작업(job)이 바뀌면 화면 기억을 비운다(다른 작업의 스토리보드가 따라오지 않게)
@@ -19449,7 +19465,7 @@ async function sbPicksSync(ek, bd){
   try{
     const r=await (await fetch('/api/produce/storyboard/'+encodeURIComponent(SB.jid||'')+'/picks',{method:'POST',headers:{'Content-Type':'application/json'},
       // line·ids 는 화면에서 고친 지금 값(sbLine·sbOrdOf) — 서버가 그걸로 짤·효과음과 '문장·장면 초'(storyboard.slot_checks)를 다시 잰다
-      body:JSON.stringify({slots:bd.slots.map((x,k)=>({line:sbLine(ek,k,x), ids:sbOrdOf(ek,k,x).slice(), slot:x.slot, meme_emotion:x.meme_emotion, meme_pick:x.meme_pick, meme_auto:x.meme_auto, meme_manual:x.meme_manual, meme_off:x.meme_off,
+      body:JSON.stringify({slots:bd.slots.map((x,k)=>({line:sbLine(ek,k,x), ids:sbLiveIds(ek,k,x), slot:x.slot, meme_emotion:x.meme_emotion, meme_pick:x.meme_pick, meme_auto:x.meme_auto, meme_manual:x.meme_manual, meme_off:x.meme_off,
         sfx_pick:x.sfx_pick, sfx_auto:x.sfx_auto, sfx_manual:x.sfx_manual, sfx_off:x.sfx_off, pack_edit:x.pack_edit})),
         sfx_pack:bd.sfx_sw||undefined, sfx_mute_beats:sbSfxMuteIdx(bd.slots)})})).json();
     if(r&&r.ok&&Array.isArray(r.slots)&&r.slots.length===bd.slots.length){
@@ -19476,10 +19492,12 @@ function sbLeftRow(bd){ const L=bd.role_left||[]; if(!L.length) return '';
 function sbCellCards(ek, i, sl, ck){
   const ids=sbOrdOf(ek,i,sl); const picked=new Set(sl.picked||[]); let acc=0; const need=Number(ck.need||0);
   const mc=Number((SB.data&&SB.data.min_clip)||0);   // 3단계 자동 배분 하한 — 서버 storyboard._min_clip(=video_assemble._MIN_CLIP)이 준다
-  return ids.map((id,j)=>{ const p=sbPieces()[id]; const sec=p?Number(p.sec):0; const show=acc*1.2<need-0.05; acc+=sec;
+  return ids.map((id,j)=>{
+    if(sbGone(id)) return `<div class="sb-cc gone" title="1단계에서 뺀 영상의 장면 — 완성본에 안 나옵니다. ✕ 로 이 칸에서 치울 수 있어요"><div class="sb-th sb-goneth" style="width:120px">🗑<small>뺀 영상의<br>장면</small></div><div class="sb-ccb"><span class="sb-gk">안 나옴</span><span class="sb-mv" title="이 칸에서 빼기" onclick="sbRmCard('${sbA(ek)}',${i},${j})">✕</span></div></div>`;
+    const p=sbPieces()[id]; const sec=p?Number(p.sec):0; const show=acc*1.2<need-0.05; acc+=sec;
     const pl=SB.play&&SB.play.ek===ek&&SB.play.i===i&&SB.play.j===j;
     return `<div class="sb-cc ${show?'':'off'}"><div class="sb-ccv" onclick="sbPlay('${sbA(ek)}',${i},${j})" title="${pl?'누르면 멈춤':'누르면 이 장면 재생(소리 없음)'}">${pl?sbClipV(id,120):sbTh(id,120)}</div><div class="sb-ccb">${picked.has(id)?'<span class="sb-pk">고른 장면</span>':'<span class="sb-aik">AI</span>'}
-      <span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},-1)">◀</span><span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},1)">▶</span><span class="sb-mv" title="이 칸에서 빼기" onclick="sbRmCard('${sbA(ek)}',${i},${j})">✕</span></div>${show?'':'<div class="sb-offt">안 나옴</div>'}${(show&&mc&&sec<mc-1e-3)?`<div class="sb-offt" title="3단계 자동 배분 하한(${mc}초)보다 짧은 조각 — AI는 안 고르고, 사람이 담은 것만 그대로 써요">⏱ ${sbE(p.sec)}초 짧은 조각(${mc}초 미만)</div>`:''}</div>`; }).join(''); }
+      <span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},-1)">◀</span><span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},1)">▶</span><span class="sb-mv" title="이 칸에서 빼기" onclick="sbRmCard('${sbA(ek)}',${i},${j})">✕</span></div>${show?'':'<div class="sb-offt">안 나옴</div>'}${(p&&show&&mc&&sec<mc-1e-3)?`<div class="sb-offt" title="3단계 자동 배분 하한(${mc}초)보다 짧은 조각 — AI는 안 고르고, 사람이 담은 것만 그대로 써요">⏱ ${sbE(p.sec)}초 짧은 조각(${mc}초 미만)</div>`:''}</div>`; }).join(''); }
 // 장면 카드 미리보기 — 누른 카드 하나만 그 조각 구간 영상(/storyboard/clip, 서버가 구간만 잘라 줌)을 소리 없이 반복
 function sbPlay(ek, i, j){ const p=SB.play; SB.play=(p&&p.ek===ek&&p.i===i&&p.j===j)?null:{ek,i,j}; sbRender(); }
 function sbClipV(id, w){ const p=sbPieces()[id]; if(!p) return '';
@@ -19487,7 +19505,7 @@ function sbClipV(id, w){ const p=sbPieces()[id]; if(!p) return '';
   return `<div class="sb-th" style="width:${w}px"><video src="${sbE(u)}" muted autoplay loop playsinline preload="auto" poster="${sbE(p.th)}" style="width:100%;display:block;aspect-ratio:9/16;object-fit:cover"></video><span class="sb-sec">▶ ${sbE(p.sec)}초</span></div>`; }
 function sbUsedAll(ek, bd){ const s=new Set(); bd.slots.forEach((sl,i)=>sbOrdOf(ek,i,sl).forEach(id=>s.add(id))); return s; }
 function sbCandOf(ek, i, sl, bd){
-  const used=sbUsedAll(ek,bd); const mine=new Set(sbOrdOf(ek,i,sl)); const a=[];
+  const used=sbUsedAll(ek,bd); const mine=new Set(sbLiveIds(ek,i,sl)); const a=[];   // 뺀 장면만 남은 칸 = 빈 칸으로 보고 안 쓴 장면을 후보로 내민다
   sbGroups().filter(g=>(g.ids||[]).some(id=>mine.has(id))).forEach(g=>g.ids.forEach(id=>{ if(!used.has(id)&&!a.includes(id)) a.push(id); }));
   const tag=SB_SLOT_TAG[String(sl.slot||'').split('_')[0].toLowerCase()];
   const P=sbPieces(), ok=id=>!(P[id]&&P[id].seed);   // 씨앗 조각은 후보로 안 내민다(사람이 1단계 상자에 담을 때만 씀)
@@ -19506,8 +19524,31 @@ function sbXpick(ek, bd){
   return `<div class="sb-xpick"><b>＋ 대본을 더 탄탄하게 — 넣고 싶은 칸을 고르세요</b> <span class="sb-note">지금 대본은 그대로 두고 고른 칸만 끼워요 — 앞 칸에 이어 쓰고, 안 쓴 장면 중 그 문장을 보여 주는 장면을 골라요(약 20초)</span>
     <div class="sb-xopts">${opts.map(([r,nm,d])=>`<span class="sb-xo ${sbXset(ek).has(r)?'on':''}" onclick="sbTxtra('${sbA(ek)}','${r}')">${nm} <small>${d}</small></span>`).join('')}</div>
     <button class="sb-btn main" ${n&&!busy?'':'disabled'} onclick="sbInsert()">${busy?'⏳ 끼워 넣는 중…':(n?'고른 '+n+'칸 끼워 넣기':'칸을 고르면 끼워 넣어요')}</button></div>`; }
+// 뺀 영상 장면 안내 — 지금 보는 탭에 몇 개가 어느 칸에 남았는지, 남은 장면이 없는 칸은 어디인지
+function sbGoneBar(){
+  const [ek,bd]=sbCur(); if(!bd || !Array.isArray(bd.slots)) return '';
+  let n=0; const rows=[], empty=[];
+  bd.slots.forEach((sl,i)=>{ const ids=sbOrdOf(ek,i,sl); const g=ids.filter(id=>sbGone(id)).length; if(!g) return;
+    n+=g; rows.push(i+1); if(g===ids.length) empty.push(i+1); });
+  if(!n) return '';
+  return `<div class="sb-box sb-gonebar"><span class="sb-err">⚠ 1단계에서 뺀 영상의 장면 ${n}개가 이 스토리보드 ${rows.join('·')}번 칸에 남아 있어요 — 그 장면(🗑 카드)은 완성본에 안 나옵니다. 문장은 그대로예요.${empty.length?` <b>${empty.join('·')}번 칸은 남은 장면이 없어요</b> — 그 칸의 [＋ 관련 후보]로 채워 주세요.`:''}</span>
+    <div style="margin-top:8px"><button class="sb-btn" onclick="sbDropGone()">🗑 뺀 장면 ${n}개 치우기</button> <span class="sb-note">새 재료로 처음부터 다시 쓰려면 위에서 스타일을 골라 다시 만들어 주세요</span></div></div>`;
+}
+function sbDropGone(){
+  const [ek,bd]=sbCur(); if(!bd || !Array.isArray(bd.slots)) return;
+  bd.slots.forEach((sl,i)=>{ const a=sbOrdOf(ek,i,sl); for(let j=a.length-1;j>=0;j--) if(sbGone(a[j])) a.splice(j,1); });
+  SB.play=null; sbResync(ek);
+}
+// 뺀 장면이 생긴 탭은 '문장·장면 초'를 서버에 한 번 다시 묻는다 — 저장된 초는 뺀 장면까지 더한 옛 값이라 모자란 칸이 안 보인다
+function _sbEnsureGoneCheck(){
+  const [ek,bd]=sbCur(); if(!bd || !Array.isArray(bd.slots)) return;
+  const sig=bd.slots.map((sl,i)=>sbOrdOf(ek,i,sl).filter(id=>sbGone(id)).join(',')).join('|');
+  if(!sig.replace(/\|/g,'')){ delete bd._goneSig; return; }
+  if(bd._goneSig===sig) return;
+  bd._goneSig=sig; sbPicksSync(ek,bd);
+}
 function sbCurBoard(ek, bd){   // 손으로 고친 문장·장면 순서를 반영한 지금 스토리보드
-  return Object.assign({}, bd, {slots:bd.slots.map((sl,i)=>Object.assign({}, sl, {line:sbLine(ek,i,sl), ids:sbOrdOf(ek,i,sl).slice()}))}); }
+  return Object.assign({}, bd, {slots:bd.slots.map((sl,i)=>Object.assign({}, sl, {line:sbLine(ek,i,sl), ids:sbLiveIds(ek,i,sl)}))}); }
 async function sbInsert(){
   // 끼워 넣기: 대본을 처음부터 다시 쓰지 않는다 — 원래 탭은 그대로 두고 결과는 새 탭으로
   const [ek,bd]=sbCur(); if(!bd) return; const ex=[...sbXset(ek)]; if(!ex.length) return;
@@ -19599,8 +19640,13 @@ function sbRender(){
       <button class="sb-btn main" ${run?'disabled':''} onclick="sbMakeInventory()">${run?'⏳ 장면 목록 만드는 중…':'장면 목록 만들기'}</button></div>`);
     put(b2, head2+'<div class="sb-box"><span class="sb-note">1단계에서 [장면 목록 만들기]를 먼저 눌러 주세요</span></div>');
   } else {
-    put(b1, head1+sbPage1());
-    put(b2, head2+(_sbStale()?'<div class="sb-box"><span class="sb-err">⚠ 재료(담은 영상·씨앗)가 바뀌었어요 — 아래 스토리보드는 예전 재료로 만든 것입니다. 새 재료로 쓰려면 스타일을 골라 다시 만들어 주세요</span></div>':'')+sbPage2());
+    // ★그리다 죽어도 빈 화면으로 두지 않는다(2026-10-08 work ad37c18f3be7): 옛 재료·스타일 줄은 위에서 이미 숨겼으므로
+    //   여기서 죽으면 2단계가 통째로 비어 보였다. 죽은 까닭을 그 자리에 보여 주고, 오류는 다시 던져 서버 보고(맨 위 error 훅)에 싣는다.
+    const safe=(name, fn)=>{ try{ return fn(); }catch(e){ console.warn('[sb] '+name+' 그리기 실패', e); setTimeout(()=>{ throw e; }, 0);
+      return `<div class="sb-box sb-drawfail"><span class="sb-err">✖ 스토리보드를 그리다 멈췄어요(${sbE(name)}) — ${sbE(String(e&&e.message||e).slice(0,160))}</span><div class="sb-note">새로고침해도 같으면 이 화면을 캡처해 알려 주세요. 만든 스토리보드는 지워지지 않았어요.</div></div>`; } };
+    put(b1, head1+safe('1단계 재료', sbPage1));
+    put(b2, head2+safe('2단계 스토리보드', ()=>(_sbStale()?'<div class="sb-box"><span class="sb-err">⚠ 재료(담은 영상·씨앗)가 바뀌었어요 — 아래 스토리보드는 예전 재료로 만든 것입니다. 새 재료로 쓰려면 스타일을 골라 다시 만들어 주세요</span></div>':'')+sbGoneBar()+sbPage2()));
+    try{ _sbEnsureGoneCheck(); }catch(e){ console.warn('[sb] 뺀 장면 초 다시 재기 실패', e); }
   }
   // innerHTML 로 넣은 <video muted autoplay> 는 크롬에서 muted 속성이 안 먹어 자동재생이 막힌다 — 속성을 직접 켜고 재생(장면 카드 미리보기)
   if(b2) b2.querySelectorAll('.sb-ccv video').forEach(v=>{ v.muted=true; const pr=v.play(); if(pr) pr.catch(e=>console.warn('[sb] 장면 미리보기 재생 실패', e)); });
@@ -19637,7 +19683,15 @@ function _sbHydrate(w){   // _s2Hydrate 가 부른다(작업 열기 경로 3곳 
   SB.jid='';               // 다음 sbEnter 가 새로 열며 되살린다
   if(window.STORYBOARD_ON){ try{ sbEnter(); }catch(e){ console.warn('[sb] 되살리기 실패', e); } }
 }
-function _sbStale(){ const now=_sbMatSig(); return !!(SB.mat && now && SB.mat!==now && Object.keys(SB.made).length); }
+// 지금 보는 스토리보드가 예전 재료로 만든 것인가.
+//   ★보드마다 서버가 만든 때의 재료 지문(mat_sig, storyboard.mat_sig)을 찍어 준다 — 그게 있으면 지금 재료 지문(응답 mat_sig)과 견준다.
+//   종전 SB.mat 은 화면이 '받은 때'의 재료를 탭 구분 없이 한 값으로 적어, 새 보드 하나를 받으면 옛 보드까지 새 재료로 만든 것처럼 됐다
+//   (2026-10-08 work ad37c18f3be7: 뺀 영상 장면이 든 보드 4개인데 경고가 안 떴다). 지문이 없는 옛 보드만 종전 값으로 본다.
+function _sbStale(){
+  const bd=SB.made[SB.view], srv=SB.data&&SB.data.mat_sig;
+  if(bd && bd.mat_sig && srv) return bd.mat_sig!==srv;
+  const now=_sbMatSig(); return !!(SB.mat && now && SB.mat!==now && Object.keys(SB.made).length);
+}
 function _sbSaveSoon(){
   let snap=''; try{ snap=JSON.stringify(_sbSnapshot()); }catch(e){ console.warn('[sb] 저장 모양 실패', e); return; }
   if(snap===SB._lastSnap) return; const first=(SB._lastSnap===undefined); SB._lastSnap=snap;

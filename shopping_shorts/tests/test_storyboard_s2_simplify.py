@@ -120,7 +120,7 @@ def test_화면이_고칠때마다_picks로_다시잰다():
     for f in ("sbMv", "sbRmCard", "sbAddCand"):
         assert "sbResync(ek)" in _fn(f), f
     ps = _fn("sbPicksSync")
-    assert "ids:sbOrdOf(ek,k,x)" in ps and "line:sbLine(ek,k,x)" in ps and "bd.check=r.check" in ps
+    assert "ids:sbLiveIds(ek,k,x)" in ps and "line:sbLine(ek,k,x)" in ps and "bd.check=r.check" in ps
     assert 'onblur="sbEditDone()"' in HTML
 
 

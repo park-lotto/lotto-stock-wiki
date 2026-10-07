@@ -21466,7 +21466,9 @@ def api_storyboard_get(request: Request, job_id: str):
     _sb_expire(job_id)
     tasks = {k[1]: {kk: vv for kk, vv in v.items() if kk not in ("t0", "gen", "timed_out")} for k, v in list(_SB_TASKS.items()) if k[0] == job_id}
     return {"ok": True, "pieces": pieces, "state": _sb.load_state(job_id), "families": _sb.families(DB_PATH), "tasks": tasks,
-            "min_clip": _sb._min_clip()}
+            "min_clip": _sb._min_clip(),
+            # 지금 재료 지문 — 보드에 찍힌 mat_sig(만든 때의 재료)와 화면이 견줘 '예전 재료로 만든 보드'를 가른다(판정은 storyboard.mat_sig 한 곳)
+            "mat_sig": _sb.mat_sig(_ex)}
 
 
 @app.post("/api/produce/storyboard/{job_id}/inventory")

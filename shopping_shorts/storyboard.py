@@ -1125,9 +1125,11 @@ def make_boards(db_path, jid, keys, star_s="", role_s="", extra_s="", prev_s="",
             if fam:
                 out[str(k)] = _board(fam, pan_of.get(str(k)) or "", r1, groups_txt, star, segs, texts, roles_pick=roles_txt, extra=extra_s.split(","), key="%s:%s" % (jid, k))
     _ss = seed_sig(ex) if ex is not None else None
+    _ms = mat_sig(ex) if ex is not None else None
     for b in out.values():
         if isinstance(b, dict):
             b["seed_sig"] = _ss        # 이 보드를 만든 때의 씨앗 — 미리 만들기가 씨앗이 바뀌었나를 이걸로 본다(관제 147)
+            b["mat_sig"] = _ms         # 이 보드를 만든 때의 재료 — 화면이 '예전 재료로 만든 보드'를 탭마다 이걸로 가른다(_sbStale, 2026-10-08)
     return out
 
 
