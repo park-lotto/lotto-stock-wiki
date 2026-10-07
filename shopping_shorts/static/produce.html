@@ -19464,10 +19464,11 @@ function sbLeftRow(bd){ const L=bd.role_left||[]; if(!L.length) return '';
     <div><div class="sb-cth">${L.map(x=>`<div class="sb-cc">${sbTh(x.id,60)}<div class="sb-ccb"><span class="sb-pk">${sbE(x.box)}</span></div></div>`).join('')}</div></div></div>`; }
 function sbCellCards(ek, i, sl, ck){
   const ids=sbOrdOf(ek,i,sl); const picked=new Set(sl.picked||[]); let acc=0; const need=Number(ck.need||0);
+  const mc=Number((SB.data&&SB.data.min_clip)||0);   // 3단계 자동 배분 하한 — 서버 storyboard._min_clip(=video_assemble._MIN_CLIP)이 준다
   return ids.map((id,j)=>{ const p=sbPieces()[id]; const sec=p?Number(p.sec):0; const show=acc*1.2<need-0.05; acc+=sec;
     const pl=SB.play&&SB.play.ek===ek&&SB.play.i===i&&SB.play.j===j;
     return `<div class="sb-cc ${show?'':'off'}"><div class="sb-ccv" onclick="sbPlay('${sbA(ek)}',${i},${j})" title="${pl?'누르면 멈춤':'누르면 이 장면 재생(소리 없음)'}">${pl?sbClipV(id,120):sbTh(id,120)}</div><div class="sb-ccb">${picked.has(id)?'<span class="sb-pk">고른 장면</span>':'<span class="sb-aik">AI</span>'}
-      <span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},-1)">◀</span><span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},1)">▶</span><span class="sb-mv" title="이 칸에서 빼기" onclick="sbRmCard('${sbA(ek)}',${i},${j})">✕</span></div>${show?'':'<div class="sb-offt">안 나옴</div>'}</div>`; }).join(''); }
+      <span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},-1)">◀</span><span class="sb-mv" onclick="sbMv('${sbA(ek)}',${i},${j},1)">▶</span><span class="sb-mv" title="이 칸에서 빼기" onclick="sbRmCard('${sbA(ek)}',${i},${j})">✕</span></div>${show?'':'<div class="sb-offt">안 나옴</div>'}${(show&&mc&&sec<mc-1e-3)?`<div class="sb-offt" title="3단계 자동 배분 하한(${mc}초)보다 짧은 조각 — AI는 안 고르고, 사람이 담은 것만 그대로 써요">⏱ ${sbE(p.sec)}초 짧은 조각(${mc}초 미만)</div>`:''}</div>`; }).join(''); }
 // 장면 카드 미리보기 — 누른 카드 하나만 그 조각 구간 영상(/storyboard/clip, 서버가 구간만 잘라 줌)을 소리 없이 반복
 function sbPlay(ek, i, j){ const p=SB.play; SB.play=(p&&p.ek===ek&&p.i===i&&p.j===j)?null:{ek,i,j}; sbRender(); }
 function sbClipV(id, w){ const p=sbPieces()[id]; if(!p) return '';
@@ -19501,7 +19502,7 @@ async function sbInsert(){
   const [ek,bd]=sbCur(); if(!bd) return; const ex=[...sbXset(ek)]; if(!ex.length) return;
   const base=String(ek).split('+')[0]; let nk=base+'+'+ex.join('+'); let c=2; while(SB.made[nk]||SB.pend[nk]) nk=base+'+'+ex.join('+')+'·'+(c++);
   SB.pend[nk]=ek; sbRender();
-  if(await sbPost('/insert', {name:nk, board:sbCurBoard(ek,bd), extra:ex})){ SB.xtra[ek]=new Set(); setTimeout(sbLoad, 500); }
+  if(await sbPost('/insert', {name:nk, key:base, board:sbCurBoard(ek,bd), extra:ex})){ SB.xtra[ek]=new Set(); setTimeout(sbLoad, 500); }
   else { delete SB.pend[nk]; sbRender(); }
 }
 // 확정 — 지금 탭의 스토리보드 줄을 대본 안(draft)으로 만들어 **기존 확정 흐름(s2Confirm)** 에 태운다.

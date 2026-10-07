@@ -172,6 +172,14 @@ def inventory_fresh(R, ex):
     return bool(R and R.get("inventory") and R.get("mat_sig") == mat_sig(ex))
 
 
+def _min_clip():
+    """3단계 자동 배분이 컷으로 쓰는 최소 길이(초) — 서버 주인 video_assemble._MIN_CLIP(화면 scene_play.js MIN_CLIP 과 같은 값,
+    tests/test_storyboard_min_clip.py 가 묶는다). ★0.8초 미만 조각을 바로 뒤 조각과 붙여 늘리는 건 하지 않는다:
+    3단계가 2단계 조각을 찾는 규칙(edit_plan.match_seg_key)이 시작·끝 초가 둘 다 같아야 찾아서, 늘린 조각은 못 찾는다."""
+    from shopping_shorts.video_assemble import _MIN_CLIP
+    return float(_MIN_CLIP)
+
+
 def _materials(db, jid, ex=None, keep=(), with_seed=False):
     """작업 재료(1단계 조각) — 조각별 길이·설명. 0.6초 미만·끝 화면(효능 없음)은 뺀다. 목록·생성·끼워 넣기 공용(한 곳).
     ex = 재료(job.extract 모양 {영상: {segments}}) — 라이브는 app 이 넘긴다(매칭 작업이 없으면 작업파일의 담은 영상 분석,
@@ -191,8 +199,10 @@ def _materials(db, jid, ex=None, keep=(), with_seed=False):
         seed = is_seed_source(e) and not with_seed
         for s in (e or {}).get("segments") or []:
             a, b = float(s.get("start") or 0), float(s.get("end") or 0)
-            if b - a < 0.6 or (s.get("is_outro") and not s.get("product_benefits")):
+            if s.get("is_outro") and not s.get("product_benefits"):
                 continue
+            if b - a < _min_clip() - 1e-3 and s.get("seg_id") not in keep:
+                continue      # ★3단계 자동 배분 하한(MIN_CLIP) 미만 = 3단계에서 빠지는 조각 → AI 후보에서 뺀다(사람이 담은 건 남긴다)
             if seed and s.get("seg_id") not in keep:
                 continue
             sid = s["seg_id"]
@@ -333,9 +343,10 @@ def _is_yt(fam):
     return any(str(n).startswith("유튜브") for n in fam["names"]) or (fam["roles"][:1] == ["title"])
 
 
-def _writer_head(fam, kind):
-    """라이브 대본 작가가 쓰는 지침(WRITER_BRIEF) + 플랫폼 말투(YT/IG) + 그 종류 히트 대본(없으면 가까운 종류) + 승인 부품."""
-    yt = _is_yt(fam)
+def _writer_head(fam, kind, yt=None):
+    """라이브 대본 작가가 쓰는 지침(WRITER_BRIEF) + 플랫폼 말투(YT/IG) + 그 종류 히트 대본(없으면 가까운 종류) + 승인 부품.
+    yt: 플랫폼을 이미 아는 경우(끼워 넣기 — 보드가 sig_yt 로 들고 있다). 없으면 스타일로 정한다(_is_yt)."""
+    yt = _is_yt(fam) if yt is None else bool(yt)
     ck = (yt, kind)
     if ck in _HEAD_CACHE:
         return _HEAD_CACHE[ck]
@@ -361,6 +372,24 @@ def _writer_head(fam, kind):
              "위 지침·히트 대본처럼 **말맛 있는 대본**이어야 한다(\"~해 줍니다\" 같은 설명·요리법 낭독 금지).\n\n")
     _HEAD_CACHE[ck] = head
     return head
+
+
+def _voice_line(fam):
+    """스타일의 말투 한 줄(어조·어미·강조어·의성어) — 스타일 보드 생성(_board)과 끼워 넣기(insert)가 같이 쓴다."""
+    v = (fam or {}).get("voice") or {}
+    return "어조: %s · 어미: %s · 강조어: %s · 의성어: %s" % (v.get("tone_note", ""), ", ".join(v.get("endings", [])),
+                                                    ", ".join(v.get("intensifier", [])), ", ".join(v.get("onomatopoeia", [])))
+
+
+def _board_family(fams, key, R=None):
+    """보드 열쇠('auto' 또는 스타일 묶음 번호) → 그 보드를 만든 스타일. AI 자동은 make_boards 처럼 추천 1순위 스타일."""
+    k = str(key or "").split("+")[0]
+    if k and k != "auto":
+        hit = next((f for n, f, _ in fams if str(n) == k), None)
+        if hit:
+            return hit
+    st = (R or {}).get("styles") or []
+    return next((f for n, f, _ in fams if st and n == st[0].get("family")), fams[0][1] if fams else None)
 
 
 # 역할 상자 → 스타일 칸 이름(우리 승인 스타일 칸에서 뽑음, 화면 page1.js ROLES 와 같은 표)
@@ -660,6 +689,26 @@ def meme_preview(slots, pool, prefs=None, key="", log=None):
 #   효과음 파일 = 서버 사장님(0) 장면 자산 asset_type "sfx" · category 가 아래 분류 이름 중 하나.
 #   그 밖 줄은 썰 효과음팩(sfx_pack) 몫 — 여기서 정한 줄은 팩이 그 줄 첫 발만 비운다(같은 순간 두 발 금지).
 SFX_CATS = ("리액션 탄성", "박수/환호", "웃음", "놀람", "휙/전환", "팝/띵", "실패", "긴장")
+# ★줄 효과음 볼륨 — 분류별 표(10-07 사장님: 리액션 '와우!'가 나레이션에 묻힘 — 라이브 1757cd55bf6c 완성본 상관 0.33).
+#   값 = 효과음 볼륨 칸이 기본(60)일 때 실제로 나는 크기. 렌더(video_assemble 효과음 믹스)·캡컷(볼륨 칸)은
+#   sfx_events_for 가 낸 보정배(line_sfx_gain)를 같은 식(효과음 볼륨 × 보정배)으로 쓴다 — 판단은 이 표 한 곳.
+SFX_LINE_VOL = {"리액션 탄성": 1.0, "웃음": 1.0, "박수/환호": 1.0}
+SFX_LINE_VOL_DEFAULT = 0.8
+SFX_VOL_BASE = 0.6          # 효과음 볼륨 칸 기본값(deco sfx_volume 60 — video_assemble·capcut_draft 의 기본과 같다)
+
+
+def line_sfx_gain(cat):
+    """줄 효과음 한 발의 보정배 — 효과음 볼륨(기본 0.6) × 이 값 = 표의 크기."""
+    return SFX_LINE_VOL.get(str(cat or ""), SFX_LINE_VOL_DEFAULT) / SFX_VOL_BASE
+
+
+def sfx_cat_of(asset_id, bank):
+    """효과음 자산 번호 → 분류(bank {분류: [자산]}). 사람이 2단계에서 고른 소리의 볼륨 분류를 정할 때."""
+    try:
+        aid = int(asset_id)
+    except (TypeError, ValueError):
+        return None
+    return next((c for c, lst in (bank or {}).items() for x in (lst or []) if int(x.get("asset_id") or -1) == aid), None)
 # 짤 감정 → 효과음 분류(10-06 사장님이 고른 13개 기준). 표에 없는 감정은 리액션 탄성.
 #   같은 분류 안에서는 자산 tone(그 소리가 맞는 감정들, 쉼표)에 그 감정이 든 소리를 먼저 쓴다(sfx_choose).
 MEME_SFX = {"놀람": "리액션 탄성", "감탄_박수": "리액션 탄성", "의심_황당": "리액션 탄성", "당황_멘붕": "리액션 탄성",
@@ -766,8 +815,9 @@ def sfx_slots(plan, bank, key="", log=None):
             out.append({"beat_idx": bi, "sfx": False, "why": "사람이 뺌"})
             continue
         if b.get("sfx_pick") and not b.get("sfx_auto"):
-            b["sfx"] = sfx_line(b["sfx_pick"], manual=True)
-            out.append({"beat_idx": bi, "sfx": True, "asset_id": int(b["sfx_pick"]), "cat": None, "why": "2단계에서 고름"})
+            _pc = sfx_cat_of(b["sfx_pick"], bank)      # 볼륨 분류(line_sfx_gain)를 위해 고른 소리의 분류도 싣는다
+            b["sfx"] = sfx_line(b["sfx_pick"], _pc, manual=True)
+            out.append({"beat_idx": bi, "sfx": True, "asset_id": int(b["sfx_pick"]), "cat": _pc, "why": "2단계에서 고름"})
             continue
         cw = b.get("cutaway") or {}
         emo = (cw.get("emotion") or "리액션") if cw.get("match_type") == "meme" else None
@@ -875,9 +925,7 @@ def _board(fam, pan, r1, groups_txt, star, segs, texts, creative=None, roles_pic
     sig_note = ("\n★신호어 — 고조 칸(효능을 한 단계씩 쌓는 칸)은 순서대로 %s, 반전(twist) 칸은 「%s」로 시작하라. "
                 "한 편에 같은 신호어를 두 번 쓰지 마라(코드가 확인해 고친다).\n") % (
         " → ".join("「%s」" % w for w in _ws[:2] if w) or "(없음)", _ws[2])
-    v = fam["voice"] or {}
-    voice = "어조: %s · 어미: %s · 강조어: %s · 의성어: %s" % (v.get("tone_note", ""), ", ".join(v.get("endings", [])),
-                                                       ", ".join(v.get("intensifier", [])), ", ".join(v.get("onomatopoeia", [])))
+    voice = _voice_line(fam)
     n3, n4 = {}, {}
     # ★말맛(2026-10-04 사장님 "투박하고 어색 — S급·우리 자료를 참고 안 한 듯"): 라이브 대본 작가 지침서 + 플랫폼 말투 지침 + 히트 대본 + 승인 부품을 앞에 붙인다
     head = _writer_head(fam, r1.get("kind") or "")
@@ -1078,6 +1126,34 @@ P_INS = """너는 쇼핑 쇼츠 대본 작가다. 아래는 **이미 완성된 �
 """
 
 
+# 끼워 넣기 이음 예문(실측 꼴 — 앞 문장 끝 어미를 받아 접속어로 열고, 뒤 문장 첫머리로 자연스럽게 넘긴다)
+P_INS_SEAM = """
+[끼울 자리의 앞뒤 — 이 사이에 들어간다. 소리 내 읽어 세 문장이 한 호흡으로 이어져야 한다]
+%s
+- 앞 문장 **끝(어미)**을 받아 이어지는 말로 열어라(앞이 '~거든'이면 '그래서/근데', 앞이 '~했어'면 '심지어/게다가' 처럼).
+- 끼운 문장 끝은 뒤 문장 **첫머리**가 자연스럽게 받도록(뒤가 '근데'로 꺾으면 끼운 문장은 꺾기 전 내용으로 끝낸다).
+예문(유튜브 썰 말투):
+  앞: "물만 부으면 3초 만에 거품이 확 올라오거든"
+  끼움(고조): "심지어 기름때 낀 프라이팬도 한 번 문지르니까 바로 반짝여"
+  뒤: "근데 진짜 소름 돋는 건 이게 다이소 천 원짜리라는 거야"
+예문(인스타 체험담 말투):
+  앞: "처음엔 반신반의하면서 써 봤어요"
+  끼움(증거): "그런데 쓰자마자 남편이 이거 어디서 샀냐고 먼저 묻더라고요"
+  뒤: "이 정도면 진짜 살림템 인정이죠"
+"""
+
+
+def _seam_txt(slots, extra):
+    """끼울 칸마다 앞 문장·뒤 문장(자리 = arc_place, 끼워 넣는 실제 자리와 같은 함수)."""
+    out = []
+    for e in extra:
+        at = arc_place(slots, e)
+        prev = (slots[at - 1].get("line") or "") if 0 < at <= len(slots) else "(맨 앞)"
+        nxt = (slots[at].get("line") or "") if at < len(slots) else "(끝)"
+        out.append("- %s: 앞 칸 %d \"%s\" → [여기] → 뒤 칸 %d \"%s\"" % (e, at, prev, at + 1, nxt))
+    return "\n".join(out)
+
+
 def _tpl_for(db, extra):
     got = []
     names = EXTRA_KIN.get(extra, (extra,))
@@ -1155,23 +1231,31 @@ P_FLOW = """너는 쇼핑 쇼츠 대본 **편집장**이다. 아래 스토리보
 """
 
 
-def flow_review(slots, texts, voice):
-    """끼운 뒤 전체 흐름 검수(3.6 1번) — 역할 못 하는 칸·끊기는 이음만 고친다. 고친 칸은 line_before·fixed_why 로 남긴다."""
+def flow_review(slots, texts, voice, head="", note=""):
+    """끼운 뒤 전체 흐름 검수(3.6 1번) — 역할 못 하는 칸·끊기는 이음만 고친다. 고친 칸은 line_before·fixed_why 로 남긴다.
+    head: 그 보드의 말투 지침(_writer_head — 보드 생성과 같은 플랫폼 말투). note: 다시 쓰기 때 덧붙이는 지시."""
     body = "\n".join("%d | %s | %s | %s" % (i + 1, ARC_KO.get(str(x.get("slot") or "").split("_")[0].lower(), x.get("need") or x.get("slot")), x.get("line"),
                                              " / ".join(texts.get(c, "?")[:50] for c in x.get("ids") or []))
                      for i, x in enumerate(slots))
     from shopping_shorts import story_writer as _sw      # 신호어 낱말은 story_writer 풀이 주인(자리별 최다 빈도 둘씩)
     conj = " / ".join([w for k in (1, 2, 3) for w, _ in _sw.YT_POOLS[k][:2]] + ["알고 보니", "그래서", "덕분에", "이 정도면"])
     n = {}
-    r = sg._call_json(P_FLOW % (body, conj, ", ".join(sorted(voice))), S_FLOW, note=n, vertex=True) or {}
+    r = sg._call_json(head + P_FLOW % (body, conj, ", ".join(sorted(voice))) + note, S_FLOW, note=n, vertex=True) or {}
     done = []
     for f in (r.get("fix") or [])[:3]:
         i = f.get("n")
         if isinstance(i, int) and 1 <= i <= len(slots) and (f.get("line") or "").strip() and f["line"].strip() != slots[i - 1].get("line"):
             x = slots[i - 1]
-            x["line_before"], x["line"], x["fixed_why"] = x.get("line"), f["line"].strip(), "흐름 검수: " + (f.get("why") or "")
+            x.setdefault("line_before", x.get("line"))      # 다시 쓰기에서도 처음 문장을 남긴다
+            x["line"], x["fixed_why"] = f["line"].strip(), "흐름 검수: " + (f.get("why") or "")
             done.append(i)
     return done, n.get("auth")
+
+
+def _same_line(a, b):
+    """띄어쓰기·문장부호를 빼고 같은 문장인가(검수가 고친 게 신호어 보정 뒤 원래대로 돌아왔나)."""
+    f = lambda t: re.sub(r"[\s,.!?~…·]", "", str(t or ""))
+    return bool(b) and f(a) == f(b)
 
 
 def insert(db_path, jid, payload, R=None, ex=None):
@@ -1180,6 +1264,12 @@ def insert(db_path, jid, payload, R=None, ex=None):
     R = R or load_state(jid) or {"inventory": {}}
     tag_of = R["inventory"].get("tag_of") or {}
     bd = payload["board"]
+    # ★말투 = 지금 보고 있는 보드의 스타일(10-07 사장님: 유튜브 보드에 끼운 문장이 인스타 말투) — 보드 생성(_board)과 같은
+    #   플랫폼 지침(_writer_head)·스타일 말투(_voice_line). 플랫폼은 보드가 든 sig_yt 가 정답(만들 때 정한 값), 없으면 스타일로.
+    fam = _board_family(_families(db), payload.get("key") or "", R)
+    yt = bd.get("sig_yt") if bd.get("sig_yt") is not None else (_is_yt(fam) if fam else True)
+    head = _writer_head(fam or {"names": [], "roles": []}, (R.get("inventory") or {}).get("kind") or "", yt=yt)
+    style_voice = ("\n[이 보드 스타일 말투] %s\n" % _voice_line(fam)) if fam and str(payload.get("key") or "auto").split("+")[0] != "auto" else ""
     # 보드에 이미 있는 조각(사람이 담은 씨앗 포함)은 재료로 인정 — 새 후보(cand)는 씨앗을 뺀 재료에서만 고른다
     segs, texts, _order, _rows = _materials(db, jid, ex, keep={c for x in bd.get("slots") or [] for c in (x.get("ids") or [])})
     slots = [dict(x) for x in bd["slots"]]
@@ -1202,7 +1292,7 @@ def insert(db_path, jid, payload, R=None, ex=None):
         except ValueError:
             pass
     avg = sum(narr_secs(x.get("line") or "") for x in slots) / max(1, len(slots))
-    prompt = P_INS % (board_txt, ex_txt, ", ".join(sorted(voice)), "%.1f" % avg, cand_txt)
+    prompt = head + P_INS % (board_txt, ex_txt, ", ".join(sorted(voice)), "%.1f" % avg, cand_txt) + style_voice + P_INS_SEAM % _seam_txt(slots, extra)
     n = {}
     r = (sg._call_json(prompt, S_INS, note=n, vertex=True) or {}) if extra else {}
     ok_ids = set(cand)
@@ -1225,11 +1315,31 @@ def insert(db_path, jid, payload, R=None, ex=None):
     for it in sorted(ins, key=lambda x: arc_rank(x["slot"])):      # 흐름 순위 순서로 하나씩 — 고조·반전을 같이 넣어도 고조 → 반전
         it["after"] = arc_place(slots, it["slot"])
         slots.insert(it["after"], it)
-    flow_fixed, auth2 = flow_review(slots, texts, voice) if ins else ([], None)
-    if ins:      # 끼운 칸·흐름 검수 뒤에도 신호어 자리를 다시 맞춘다(같은 key → 같은 낱말, 자리만 새 칸 구조로)
-        apply_signals(slots, bd.get("sig_key") or "%s:%s" % (jid, ",".join(bd.get("names") or [])), 0, bd.get("sig_yt", True))
+    sig_key = bd.get("sig_key") or "%s:%s" % (jid, ",".join(bd.get("names") or []))
+    flow_fixed, auth2, flow_retry = [], None, []
+    if ins:
+        # ★신호어를 **먼저** 박고 검수한다. 검수가 고친 문장 첫머리 접속어('그래서·근데…')를 뒤의 apply_signals 가 떼어
+        #   '검수 메모는 뜨는데 문장은 그대로'가 됐다(10-07 사장님) — 검수가 신호어 자리를 보고 쓰게.
+        apply_signals(slots, sig_key, 0, yt)
+        keep_sig = "\n★「신호어」로 시작하는 칸은 그 첫머리를 그대로 두고 뒤를 이어 써라(코드가 그 자리에 신호어를 다시 박는다).\n"
+        flow_fixed, auth2 = flow_review(slots, texts, voice, head=head, note=keep_sig)
+        apply_signals(slots, sig_key, 0, yt)      # 끼운 칸·흐름 검수 뒤에도 신호어 자리를 다시 맞춘다(같은 key → 같은 낱말)
+        # 검수가 짚었는데 신호어 보정 뒤 문장이 원래대로 돌아온 칸 = 짚은 문제가 그대로 → 그 이유를 주고 한 번만 다시 쓴다
+        back = [i + 1 for i, x in enumerate(slots) if x.get("fixed_why", "").startswith("흐름 검수") and _same_line(x.get("line"), x.get("line_before"))]
+        if back:
+            why = "; ".join("%d번 칸: %s" % (i, slots[i - 1].get("fixed_why", "")[6:].strip()) for i in back)
+            print("   흐름 검수 다시 쓰기 %s (신호어 보정 뒤 원문으로 돌아옴)" % back, flush=True)
+            flow_retry, _a = flow_review(slots, texts, voice, head=head,
+                                         note=keep_sig + "★다시 쓰기 — 직전 검수가 짚은 문제가 아직 그대로다: %s. 이 칸만 고쳐라(신호어 뒤 본문에서 앞 칸을 받아 이어지게).\n" % why)
+            apply_signals(slots, sig_key, 0, yt)
+        for x in slots:      # 끝내 그대로인 칸은 검수 메모를 지운다 — 고친 척하는 메모를 남기지 않는다(이유는 로그로)
+            if x.get("fixed_why", "").startswith("흐름 검수") and _same_line(x.get("line"), x.get("line_before")):
+                print("   흐름 검수 반영 못 함: %r — %s" % (x.get("line"), x.get("fixed_why")), flush=True)
+                x.pop("fixed_why", None)
+                x.pop("line_before", None)
     check = slot_checks(slots, segs)
     out = dict(bd, slots=slots, check=check, extra=sorted(set((bd.get("extra") or []) + [x["slot"] for x in ins])),
-               extra_missing=[e for e in extra if e not in [x["slot"] for x in ins]], touched=touched, flow_fixed=flow_fixed, auth=[n.get("auth"), auth2], mode="insert",
+               extra_missing=[e for e in extra if e not in [x["slot"] for x in ins]], touched=touched, flow_fixed=flow_fixed, flow_retry=flow_retry,
+               sig_yt=yt, auth=[n.get("auth"), auth2], mode="insert",
                prompt_chars=len(prompt))
     return out

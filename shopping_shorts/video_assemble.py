@@ -3661,7 +3661,12 @@ def sfx_events_for(timeline, sfx_paths):
             offset = b["dur"]
         else:
             offset = sum(seg_durs[:-1])
-        events.append((path, b["t0"] + offset))
+        if sfx.get("match_type") == "line":
+            # 줄 효과음 볼륨 = 분류별 표(storyboard.SFX_LINE_VOL 한 곳) — 렌더·캡컷이 이 보정배를 같은 식으로 쓴다
+            from shopping_shorts import storyboard as _sbm
+            events.append((path, b["t0"] + offset, _sbm.line_sfx_gain(sfx.get("cat"))))
+        else:
+            events.append((path, b["t0"] + offset))
     return events
 
 
