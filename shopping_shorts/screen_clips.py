@@ -31,6 +31,8 @@ _CACHE = {}          # 칸 키 → {"t": 화면 칸 길이, "c": [컷]}
 _DATA_SEEN = {}      # job_id → 화면 데이터 해시(같으면 다시 안 돌린다)
 _RES_SEEN = {}       # job_id → 마지막 러너 결과(칸 순서) — 해시가 같아도 **지금 편성표 칸**으로 다시 키를 단다(관제 149)
 _WARMED = {}         # (job_id, beat_idx) → warm 때 키를 단 칸 사본 — 빗나가면 무엇이 달라졌는지 경보에 적는다
+_HEALED = {}         # job_id → 마지막 자가 준비 시각 — 빗나간 칸마다 DB 를 다시 읽지 않게(관제 149)
+_HEAL_GAP = 5.0
 _LOCK = threading.Lock()
 _CACHE_MAX = 20000
 # 컷 계산에 쓰이지 않는 칸 필드 — 키에서 뺀다(그림에 무관한데 자주 바뀌는 것)
@@ -219,6 +221,36 @@ def _scene_data(job_id):
     return (d or {}).get("data")
 
 
+def _fresh_job(job_id):
+    """DB 의 지금 작업(편성 포함) — lookup 이 빗나갔을 때 스스로 다시 준비하는 데 쓴다."""
+    from shopping_shorts import app as _app       # 함수 안에서 — 최상위면 순환 import
+    return _app.Store(_app.DB_PATH).get_mix_job(job_id)
+
+
+def _heal(beat):
+    """빗나간 칸의 작업을 **DB 의 지금 편성으로** 다시 준비(warm)한다 — 이 칸이 지금 편성 칸이면 이제 찾는다(관제 149, 2026-10-07).
+    ★왜 여기(주인 함수 안)인가: 컷을 찾는 경로가 30곳이 넘고 각자 warm 을 챙겨야 했다. 라이브 실측(10-07 05:28~15:46):
+      음성 다시 만든 뒤 자막 고르기·비교 화면이 옛 준비로 찾다 4작업 30칸 예비 계산 · 썸네일 동시 요청 중 1칸.
+      호출부마다 warm 을 더 박는 대신, 찾는 함수가 못 찾으면 스스로 지금 상태로 준비한다.
+    반환: 다시 준비했으면 True(같은 작업은 _HEAL_GAP 초에 한 번)."""
+    tp = (beat or {}).get("tts_path")
+    now = time.time()
+    with _LOCK:
+        jid = _OWNER.get(str(tp)) if tp else None
+        st = _JOB_STATE.get(jid) if jid else None
+        if not jid or not st or st["screen"] != "ok" or now - _HEALED.get(jid, 0.0) < _HEAL_GAP:
+            return False
+        _HEALED[jid] = now
+        if len(_HEALED) > 2000:
+            _HEALED.clear()
+    try:
+        job = _fresh_job(jid)
+    except Exception as e:      # noqa: BLE001 — 다시 준비 못 하면 종전대로 경보(_miss)
+        print("[screen_clips] 자가 준비 실패 job=%s: %r" % (jid, e), file=sys.stderr)
+        return False
+    return bool(job) and warm(job) > 0
+
+
 def _bind(jid, plan_beats, res, data):
     """러너 결과(화면 칸 순서)를 **지금 편성표 칸**의 키로 캐시에 단다 — warm 의 첫 호출·재호출이 같은 일을 한다(관제 149).
     화면 데이터의 칸 = 편성표의 칸(같은 순서). 키는 편성표 칸으로 만든다 — 렌더가 보는 그 dict 다. 반환: 단 칸 수."""
@@ -335,6 +367,9 @@ def lookup(beat, tts_dur, src_durs):
         r = _CACHE.get(k) if k else None
     if not k:
         return _miss(beat, "beat_key_fail")
+    if not r and _heal(beat):
+        with _LOCK:
+            r = _CACHE.get(k)
     if not r:
         return _miss(beat, "no_screen_cut")          # 키 불일치(렌더가 칸을 고쳐 썼거나 warm 실패)
     if not r.get("c"):

@@ -23,9 +23,10 @@ def _fresh_state(monkeypatch):
     """screen_clips 전역 상태를 테스트마다 비운다(다른 테스트·다른 job과 섞이지 않게)."""
     for name in ("FALLBACKS",):
         monkeypatch.setattr(sc, name, [])
-    for name in ("_CACHE", "_DATA_SEEN", "_RES_SEEN", "_WARMED", "_JOB_STATE", "_OWNER"):
+    for name in ("_CACHE", "_DATA_SEEN", "_RES_SEEN", "_WARMED", "_JOB_STATE", "_OWNER", "_HEALED"):
         monkeypatch.setattr(sc, name, {})
     monkeypatch.setattr(sc, "_SEEN", set())
+    monkeypatch.setattr(sc, "_fresh_job", lambda jid: None)      # 자가 준비(관제 149)가 실제 DB 를 읽지 않게
     monkeypatch.setenv("SCREEN_CLIPS", "1")
 
 
