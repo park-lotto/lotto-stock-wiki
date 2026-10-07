@@ -932,9 +932,28 @@ _KW_EXPAND_PROMPT = """사용자가 찾으려는 소재: "{keyword}"
   (2026-09-08 사장님 지적: 이 프롬프트가 ko/zh만 요구해서, 검색어 조합으로 만든
    후보들은 화면에서 영어·일본어 버튼이 전부 비활성으로 떴다. 해외 원본을 찾는 게
    목적이라 en/ja가 비면 그 줄은 쓸모가 없다.)
-- ★**첫 번째 후보의 ko는 사용자가 넣은 말 그대로** "{keyword}" 여야 한다(한 글자도 바꾸지 마라).
-  나머지 언어는 그 말의 자연스러운 현지 표현으로. 조합·확장은 두 번째 후보부터.
+{first_rule}
 - JSON만: {{"candidates": [{{"ko": "한국어 검색어", "zh": "중국어 검색어", "en": "영어 검색어", "ja": "일본어 검색어", "ru": "러시아어 검색어"}}, ...]}}"""
+
+# 첫 후보 규칙 — 입력이 한국어인가로 갈린다(관제 156, 2026-10-07 사장님 "샤오·도우인은 검색어가 섞여 보인다").
+#   확장프로그램은 영어·중국어 검색창 값을 그대로 보내는데, 예전엔 그 말을 ko 칸에 '그대로' 넣으라고 시켜
+#   「한 Mobile Pixels便携屏」처럼 한국어 칸에 중국어가 찼다. 판단은 여기 한 곳(_kw_first_rule).
+_KW_FIRST_KO = ('- ★**첫 번째 후보의 ko는 사용자가 넣은 말 그대로** "{keyword}" 여야 한다(한 글자도 바꾸지 마라).'
+                "\n  나머지 언어는 그 말의 자연스러운 현지 표현으로. 조합·확장은 두 번째 후보부터.")
+_KW_FIRST_FOREIGN = ('- ★입력 "{keyword}"는 한국어가 아니다. 첫 번째 후보는 **이 말 자체**다 — 입력과 같은 언어 칸에는 '
+                     "입력을 그대로 넣고, 나머지 칸(ko 포함)은 그 말을 각 언어로 옮긴 것."
+                     "\n  ★각 칸에는 **그 언어 글자만** 써라(ko=한글, zh=중국어, ja=일본어, ru=러시아어, en=영어). "
+                     "다른 언어를 섞지 마라(브랜드명 같은 고유명사의 로마자는 괜찮다). 조합·확장은 두 번째 후보부터.")
+
+
+def _has_hangul(t):
+    import re
+    return bool(re.search(r"[가-힣]", t or ""))
+
+
+def _kw_first_rule(kw):
+    return (_KW_FIRST_KO if _has_hangul(kw) else _KW_FIRST_FOREIGN).format(keyword=kw)
+
 
 _KW_EXPAND_SCHEMA = {
     "type": "object",
@@ -970,7 +989,8 @@ def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_slee
     if not kw or not SHORTS_GEMINI_KEYS:
         return []
     seen = {str(s).strip() for s in (exclude or []) if str(s or "").strip()}
-    prompt = _KW_EXPAND_PROMPT.format(keyword=kw[:100], n=max(1, min(int(n or 6), 8)))
+    prompt = _KW_EXPAND_PROMPT.format(keyword=kw[:100], n=max(1, min(int(n or 6), 8)),
+                                    first_rule=_kw_first_rule(kw[:100]))
     if seen:
         prompt += ("\n\n※ 아래는 이미 보여준 검색어다. 겹치지 않는 다른 축으로만 만들라:\n"
                    + "\n".join(f"- {s}" for s in sorted(seen)[:20]))
@@ -1008,7 +1028,8 @@ def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_slee
             #   ★en/ja/ru 키도 **빈 값으로 함께** 넣는다(2026-09-08). 키 자체가 없으면
             #     화면이 그 언어 버튼을 흐리게 그리는 건 같지만, 후보마다 모양이 달라
             #     디버깅이 어려워진다 — 모든 후보가 같은 칸을 갖게 한다.
-            if kw not in {(c.get("ko") or "").strip() for c in out} and kw not in seen:
+            # 한국어 입력일 때만 — 외국어 입력을 ko 칸에 넣으면 언어가 섞여 보인다(관제 156).
+            if _has_hangul(kw) and kw not in {(c.get("ko") or "").strip() for c in out} and kw not in seen:
                 out.insert(0, {"ko": kw, "zh": "", "en": "", "ja": "", "ru": ""})
             return out
         except Exception as e:

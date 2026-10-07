@@ -1570,7 +1570,7 @@
     if (p) p.remove();
     p = document.createElement("div");
     p.id = "ss-kwfloat"; p.setAttribute("data-q", q);
-    p.style.cssText = "position:fixed;top:76px;right:16px;z-index:2147483646;width:340px;max-height:80vh;overflow:auto;" +
+    p.style.cssText = "position:fixed;top:76px;right:16px;z-index:2147483646;width:auto;max-width:min(760px,92vw);max-height:80vh;overflow:auto;" +
       "background:rgba(22,22,22,.94);color:#eee;border-radius:12px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.4);" +
       "font-family:system-ui,sans-serif";
     var hd = document.createElement("div");
@@ -1588,12 +1588,49 @@
     });
     p.appendChild(hd); p.appendChild(body);
     document.body.appendChild(p);
+    _ssDrag(p, hd);
   }
+  // ── 검색어 판 끌어 옮기기(관제 156, 2026-10-07 사장님 "검색창들은 마우스로 이동이 되게, 모든 사이트") ──
+  //   머리줄을 잡고 끌면 그 자리에 고정된다(사이트별·판별로 기억). 한 번 옮긴 판은 도킹 자리 계산이 건드리지 않는다.
+  //   판단은 여기 한 곳(_ssDrag·_ssDragPos) — 판마다 따로 적지 않는다(0순위-B).
+  function _ssDragKey(id) { return "ss_drag:" + location.host + ":" + id; }
+  function _ssDragPos(el) {
+    try { var v = JSON.parse(localStorage.getItem(_ssDragKey(el.id)) || "null"); } catch (e) { v = null; }
+    if (!v) return false;
+    var x = Math.min(Math.max(0, v.x), window.innerWidth - 60), y = Math.min(Math.max(0, v.y), window.innerHeight - 40);
+    el.style.left = x + "px"; el.style.top = y + "px"; el.style.right = "auto"; el.style.bottom = "auto";
+    return true;
+  }
+  function _ssDrag(el, handle) {
+    handle.style.cursor = "move"; handle.title = "잡고 끌면 옮겨져요 (두 번 누르면 원래 자리)";
+    _ssDragPos(el);
+    handle.addEventListener("dblclick", function () {
+      try { localStorage.removeItem(_ssDragKey(el.id)); } catch (e) {}
+      el.style.left = ""; el.style.top = ""; el.style.right = ""; el.style.bottom = "";
+    });
+    handle.addEventListener("mousedown", function (e) {
+      if (e.button !== 0 || (e.target && e.target.tagName === "BUTTON")) return;
+      e.preventDefault(); e.stopPropagation();
+      var r = el.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+      function mv(ev) {
+        var x = Math.min(Math.max(0, ev.clientX - dx), window.innerWidth - 60);
+        var y = Math.min(Math.max(0, ev.clientY - dy), window.innerHeight - 40);
+        el.style.left = x + "px"; el.style.top = y + "px"; el.style.right = "auto"; el.style.bottom = "auto";
+      }
+      function up() {
+        document.removeEventListener("mousemove", mv, true); document.removeEventListener("mouseup", up, true);
+        var q = el.getBoundingClientRect();
+        try { localStorage.setItem(_ssDragKey(el.id), JSON.stringify({ x: q.left, y: q.top })); } catch (e2) {}
+      }
+      document.addEventListener("mousemove", mv, true); document.addEventListener("mouseup", up, true);
+    });
+  }
+  function _ssDragged(el) { try { return !!localStorage.getItem(_ssDragKey(el.id)); } catch (e) { return false; } }
   // 한 검색어 = 한 줄. 언어별 버튼(빈 언어는 흐리게, 누를 수 없음). 누르면 그 말로 지금 플랫폼에서 검색.
   var IGKW_LANGS = [["ko", "한"], ["en", "EN"], ["ja", "日"], ["zh", "中"], ["ru", "RU"]];
   function _igKwLangRow(c) {
     var row = document.createElement("div");
-    row.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center";
+    row.style.cssText = "display:flex;flex-wrap:nowrap;gap:6px;align-items:center";   // 한 검색어 = 한 줄(관제 156 통일)
     for (var i = 0; i < IGKW_LANGS.length; i++) {
       var lang = IGKW_LANGS[i][0], tag = IGKW_LANGS[i][1], term = (c[lang] || "").trim();
       var b = _igKwChip(term || "-", false);
@@ -1682,18 +1719,19 @@
       if (p) p.remove();
       p = document.createElement("div");
       p.id = "ss-kwpost"; p.setAttribute("data-c", key);
-      p.style.cssText = "position:fixed;right:18px;bottom:230px;z-index:2147483646;width:230px;" +
+      p.style.cssText = "position:fixed;right:18px;bottom:230px;z-index:2147483646;width:auto;max-width:min(760px,92vw);max-height:70vh;overflow:auto;" +
         "background:rgba(22,22,22,.92);color:#eee;border-radius:12px;padding:10px;font-family:system-ui,sans-serif;" +
         "box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:6px";
       var hd = document.createElement("div");
       hd.textContent = "🔎 관련 검색어"; hd.style.cssText = "font:800 13px system-ui,sans-serif";
       body = document.createElement("div"); body.className = "ss-kw-body";
-      body.style.cssText = "display:flex;flex-wrap:wrap;gap:6px";
+      body.style.cssText = "display:flex;flex-direction:column;gap:6px";
       st = document.createElement("div"); st.className = "ss-kw-st";
       st.textContent = "설명글 읽는 중…"; st.style.cssText = "font-size:12px;color:#aaa";
       body.appendChild(st);
       p.appendChild(hd); p.appendChild(body);
       document.body.appendChild(p);
+      _ssDrag(p, hd);
     }
     var run = function (cap) {
       if (p.getAttribute("data-c") !== key || !document.body.contains(p)) return;
@@ -1711,8 +1749,16 @@
         if (p.getAttribute("data-c") !== key || !document.body.contains(p)) return;
         var list = (r.main ? [r.main] : []).concat(r.related || []);
         if (!list.length) { st.textContent = r.error || "검색어를 못 만들었어요"; return; }
-        st.remove();
-        for (var i = 0; i < list.length; i++) body.appendChild(_igKwChip(list[i], i === 0 && !!r.main));
+        // 5개 언어(관제 156, 사장님 "제품을 누른 페이지에도 5개국어") — 검색 판과 같은 줄 모양(_igKwLangRow).
+        //   상품 이름(main) 하나로 5줄 × 5개 언어를 받는다. 못 받으면 종전 칩으로.
+        st.textContent = "5개 언어로 펼치는 중…";
+        _igKwFetch("multi", list[0], function (m) {
+          if (p.getAttribute("data-c") !== key || !document.body.contains(p)) return;
+          st.remove();
+          var rows = (m.candidates || []).slice(0, 5);
+          if (rows.length) { for (var k = 0; k < rows.length; k++) body.appendChild(_igKwLangRow(rows[k])); return; }
+          for (var i = 0; i < list.length; i++) body.appendChild(_igKwChip(list[i], i === 0 && !!r.main));
+        });
       });
     };
     if (s.id === "instagram") _igCaption(code, run);
@@ -1869,6 +1915,7 @@
     if (!kp) return;
     kp.style.display = gone ? "none" : "";
     if (gone) return;
+    if (_ssDragged(kp)) { _ssDragPos(kp); return; }   // 사장님이 옮긴 자리는 그대로(관제 156)
     if (!rr || slot === 0) {                 // 기준 영상을 못 찾았으면 종전 오른쪽 아래 자리
       kp.style.left = ""; kp.style.top = ""; kp.style.right = "18px"; kp.style.bottom = "230px";
       return;
