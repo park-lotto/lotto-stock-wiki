@@ -3535,6 +3535,8 @@ def _beat_timeline(edit_plan, tts_paths):
             "cap_xy_segs": beat.get("cap_xy_segs"),        # 화면에 보이는 자막 한 줄별 자유 좌표
             "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
             "pack_edit": beat.get("pack_edit"),            # 2단계에서 고른 기본 팩 소리 빼기·바꾸기 — sfx_events_for 가 sfx_pack.events 로 넘긴다
+            # 맨 앞 감정짤이 붙은 칸인가(관제 158) — 장면꾸미기가 이 칸을 '연결어(짤 장면)'로 본다(scene_style.moment_of). 판단은 meme_cutaway 한 곳.
+            "meme": meme_cutaway(beat) is not None,
             "head_trim": beat.get("head_trim", 0.0),
             # ★CTA 표시(2026-09-30 관제 45) — cta_cut_sec가 이 타임라인으로 _is_cta를 본다. 안 실으면
             #   칸에 박은 표시가 여기서 사라져 '마무리' 칸 CTA를 또 못 자른다(라이브 3b4111969ac4로 발견).

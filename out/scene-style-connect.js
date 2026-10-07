@@ -27,7 +27,7 @@
   const spreadFx=i=>{if(fxScope!=='all')return;api.copySceneFxToAll(i);if(api.sceneFx(i).some(k=>['in','pull','inout'].includes(k)))aimEmphasis(api.moments().map((_,k)=>k).filter(k=>k!==i));};
   // 장면 효과(관제 124) — 잘된 썰 쇼핑 채널 114편에서 실제로 쓰는 것만. 값은 api.refFx(실측·사장님 선택) 한 곳.
   //   아무 장면이든 켤 수 있고, 중요 장면(훅·제품 공개·고조·CTA — 서버 scene_style.moment_of 판단)엔 한 번에 켠다.
-  const MOMENT_NAME={hook:'훅',problem:'문제(비포)',reveal:'제품 공개',peak:'고조',cta:'CTA'};
+  const MOMENT_NAME={hook:'훅',problem:'문제(비포)',reveal:'제품 공개',meme:'연결어(짤)',peak:'고조',cta:'CTA'};
   // 강조 확대 위치(관제 124) — 화면 가운데를 무조건 키우면 엄지·빈 바닥만 커졌다(2026-10-05 결과물 확인).
   //   레퍼런스는 보여줄 대상(제품·손)을 향해 자른다 → 그 장면 그림 3장(media_points 앞·가운데·뒤)에서
   //   윤곽이 몰린 곳 + 앞뒤로 달라진 곳(움직이는 손·제품)의 무게중심을 잡아 panX/panY 로 저장한다.
@@ -88,6 +88,55 @@
   // 2026-10-07 사장님: '영상 전체' 줄의 점프 줌·시작 어두운 제목 버튼 삭제(이미 저장된 영상의 효과는 그대로 렌더된다 — api.jumpZoom·dimTitle 은 남김)
   effectsPanel.append(refBox);
   refBox.append(effectsPanel.querySelector('[data-highlight-controls]'));   // 돋보기·스포트라이트 크기·위치는 강조 효과 칸 안에
+  // ── 강조효과 프리셋(관제 158, 2026-10-07 사장님 "훅에는 어둡게+빠른 줌 이런 걸 매번 세팅하기 힘드니까 강조효과 프리셋을 — 훅/정체/연결어·밈/CTA")
+  //   장면 종류마다 깔 효과를 표로 정해 이름 붙여 저장(브라우저, 내 프리셋과 같은 방식) → 누르면 그 표대로 다시 깐다(손으로 고친 장면은 그대로).
+  //   어느 효과를 깔지는 편집기 autoFxKinds 한 곳(api.fxPreset 이 표를 바꾼다) — 깔린 효과는 장면마다 effects 로 저장돼 렌더·캡컷이 그대로 쓴다.
+  //   마지막에 고른 프리셋은 새 영상에도 이어진다(api.fxPreset 이 기억). 'AI 추천' = 효과팩 자동(회원마다 다름).
+  const FXP_KEY='scene_style_fx_presets',FXP_ROWS=[['hook','훅 (첫 장면)'],['problem','문제 제기'],['reveal','정체 (제품 공개)'],['meme','연결어 (짤 장면)'],['peak','고조·반전'],['cta','CTA (마무리)']];
+  const FXP_KINDS=SCENE_FX.filter(([k])=>k!=='none');
+  const readFxp=()=>{try{const v=JSON.parse(localStorage.getItem(FXP_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return []}};
+  const writeFxp=list=>{try{localStorage.setItem(FXP_KEY,JSON.stringify(list.slice(0,12)))}catch{}};
+  const sameTable=(a,b)=>JSON.stringify(api.FX_MOMENTS.map(m=>[...(a?.[m]||[])].sort()))===JSON.stringify(api.FX_MOMENTS.map(m=>[...(b?.[m]||[])].sort()));
+  const fxpBox=document.createElement('div');fxpBox.className='fx-preset';fxpBox.style.cssText='margin:0 0 10px;padding:0 0 10px;border-bottom:1px solid #1d3a44';
+  let fxpEdit=null;   // 고치는 중인 표 {id|null, name, table}
+  function drawFxp(){
+    const list=readFxp(),cur=api.fxPreset(),btn=(attr,label,on)=>`<button type="button" ${attr}${on?' class="active"':''}>${label}</button>`;
+    const esc=x=>String(x||'').replace(/[<>&"]/g,'');
+    const curSaved=cur&&list.find(p=>p.name===cur.name&&sameTable(p.table,cur.table));
+    fxpBox.innerHTML=`<p style="margin:0 0 6px"><b>강조효과 프리셋</b> <small>장면 종류별로 한 번 정해 두면 새 영상에도 자동으로 깔려요</small></p>
+      <div class="scene-effect-choices" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${btn('data-fxp="ai"','AI 추천',!cur)}${list.map(p=>btn(`data-fxp="${esc(p.id)}"`,esc(p.name),curSaved===p)).join('')}${btn('data-fxp="new"','＋ 새로 만들기',false)}</div>
+      ${curSaved&&!fxpEdit?`<p style="display:flex;gap:6px;margin:6px 0 0"><button type="button" class="scene-effects-reset" data-fxp-act="edit" style="margin:0">✎ 이 프리셋 고치기</button><button type="button" class="scene-effects-reset" data-fxp-act="del" style="margin:0">삭제</button></p>`:''}
+      ${fxpEdit?`<div data-fxp-edit style="margin-top:8px;display:grid;gap:8px">${FXP_ROWS.map(([m,label])=>`<div data-fxp-row="${m}"><small><b>${label}</b></small>
+        <div class="scene-effect-choices" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:3px">${FXP_KINDS.map(([k,v])=>btn(`data-fxp-kind="${k}"`,v,(fxpEdit.table[m]||[]).includes(k))).join('')}</div></div>`).join('')}
+        <p style="display:flex;gap:6px;margin:0"><button type="button" class="scene-effects-reset active" data-fxp-act="save" style="margin:0">이 표로 저장하고 적용</button><button type="button" class="scene-effects-reset" data-fxp-act="cancel" style="margin:0">취소</button></p></div>`:''}`;
+  }
+  function applyFxp(p){   // p = {name,table} | null(AI 추천)
+    api.fxPreset(p);api.autoPlace(false);if(api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));
+    lastIndex=-1;api.show(api.geometry().sceneIndex);updateControls();sync();drawFxp();
+  }
+  fxpBox.addEventListener('click',ev=>{
+    const kind=ev.target.closest('[data-fxp-kind]');
+    if(kind&&fxpEdit){const m=kind.closest('[data-fxp-row]').dataset.fxpRow,k=kind.dataset.fxpKind,cur=fxpEdit.table[m]||[];
+      // 확대 3종은 하나만, 돋보기·스포트라이트도 하나만(장면 효과 sceneFx 와 같은 규칙) — 같은 걸 다시 누르면 끈다
+      const group=['in','pull','inout'].includes(k)?['in','pull','inout']:['lens','spot'].includes(k)?['lens','spot']:[k];
+      fxpEdit.table[m]=cur.includes(k)?cur.filter(x=>x!==k):[...cur.filter(x=>!group.includes(x)),k];drawFxp();return;}
+    const pick=ev.target.closest('[data-fxp]');
+    if(pick){const id=pick.dataset.fxp;fxpEdit=null;
+      if(id==='ai')return applyFxp(null);
+      if(id==='new'){const base=api.fxPreset()?.table;fxpEdit={id:null,name:'',table:Object.fromEntries(api.FX_MOMENTS.map(m=>[m,[...(base?base[m]||[]:api.aiFxKinds(m))]]))};return drawFxp();}
+      const p=readFxp().find(x=>x.id===id);if(p)applyFxp({name:p.name,table:p.table});return;}
+    const act=ev.target.closest('[data-fxp-act]')?.dataset.fxpAct;if(!act)return;
+    const list=readFxp(),cur=api.fxPreset(),saved=cur&&list.find(p=>p.name===cur.name&&sameTable(p.table,cur.table));
+    if(act==='cancel'){fxpEdit=null;return drawFxp();}
+    if(act==='edit'&&saved){fxpEdit={id:saved.id,name:saved.name,table:structuredClone(saved.table)};return drawFxp();}
+    if(act==='del'&&saved){if(!confirm(`'${saved.name}' 강조효과 프리셋을 지울까요?`))return;writeFxp(list.filter(p=>p!==saved));return applyFxp(null);}
+    if(act==='save'&&fxpEdit){
+      const name=fxpEdit.id?fxpEdit.name:(prompt('강조효과 프리셋 이름',`강조효과 ${list.length+1}`)||'').trim();if(!name)return;
+      const item={id:fxpEdit.id||Date.now().toString(36),name,table:fxpEdit.table};
+      writeFxp(fxpEdit.id?list.map(p=>p.id===item.id?item:p):[item,...list]);fxpEdit=null;applyFxp({name,table:item.table});
+    }
+  });
+  refBox.prepend(fxpBox);drawFxp();
   function syncRefFx(){
     const i=api.geometry().sceneIndex,m=api.moments()[i],cur=api.sceneFx(i);   // 켜진 것 목록(여러 개)
     refBox.querySelector('[data-ref-moment]').textContent=m?MOMENT_NAME[m]:'일반';
@@ -216,6 +265,7 @@
       // 장면 효과를 하나도 안 고른 영상이면 처음 열 때 자동 배치. 로고·장식만 있는 영상도 '안 고른 영상'이다(관제 144 — 로고 기억이 전 장면에 로고를 넣는다).
       //   ★새 영상에만(서버 context.autoNew, 2026-10-06 사장님 '기존영상은 하지말고') — 기존 영상은 고객이 효과를 직접 누를 때만.
       if(context.fxEnabled!==false&&context.autoNew!==false&&!Object.values(saved.effects||{}).some(e=>api.hasSceneFx(e))&&api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));
+      drawFxp();   // 그 영상에 저장된 강조효과 프리셋 표시(관제 158)
       if(Number.isInteger(event.data.sceneIndex))api.show(event.data.sceneIndex);
       document.documentElement.classList.remove('scene-waiting');   // 실제 데이터가 그려졌다 — 본문을 보인다(머리띠 가림은 html 표식이 계속)
       const status=pane.querySelector('[data-connection-status]');if(status)status.textContent=`실제 자막 ${context.scenes.length}개를 연결했습니다.`;
