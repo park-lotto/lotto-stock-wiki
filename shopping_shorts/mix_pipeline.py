@@ -5160,7 +5160,17 @@ def clean_compare_clips(job, work):
         except Exception:      # noqa: BLE001 — 정본을 못 읽으면 종전 좌표(fin)로
             _base = None
         clips = []
-        for i, c in enumerate(final_clip_pairs(plan, tts, _src_durs_for(job, work))):
+        # ★청소 당시 편성(스냅샷)이면 컷 지도는 **그 청소본을 만든 지도**(파일 옆 .cuts.json)다 — 지금 화면 컷으로 옛 편성을
+        #   다시 계산하지 않는다(관제 149, 2026-10-07 라이브: 음성을 다시 만든 작업의 비교 화면이 옛 편성 칸을 지금 화면 컷에서
+        #   못 찾아 칸 전부 예비 계산으로 폈다 — 4작업 30칸). 옆 지도가 없는 옛 파일은 그 파일을 만든 방식(snapshot_cut_map, 서버 계산).
+        _cmap = None
+        if out["plan_used"] == "snapshot" and out["clean_path"]:
+            _cmap = _read_clean_sidecar(out["clean_path"]).get("cuts")
+            if _cmap is None:
+                _cmap = snapshot_cut_map(job, work, Path(out["clean_path"]).stem[len("final_clean_"):])[0]
+        if _cmap is None:
+            _cmap = final_clip_pairs(plan, tts, _src_durs_for(job, work))
+        for i, c in enumerate(_cmap):
             vid = c.get("video_id") or ""
             try:
                 si = int(str(vid)[1:]) if str(vid).startswith("s") else None
