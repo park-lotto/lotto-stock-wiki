@@ -215,6 +215,15 @@ def validate_snapshot(value):
         raise ValueError("자막팩 값이 올바르지 않습니다")
     if value.get("motionPack") not in (None, "", "off", *(str(k) for k in range(1, caption_motion_pack_count() + 1))):   # 등장 효과팩(관제 144)
         raise ValueError("등장 효과팩 값이 올바르지 않습니다")
+    fx_preset = value.get("fxPreset")
+    if fx_preset is not None:
+        # 강조효과 프리셋(관제 158) — 장면 종류별로 깔 장면 효과 표. 편집기 자동 배치(autoFxKinds)만 읽고, 렌더·캡컷은 장면마다 깔린 effects 를 쓴다.
+        table = fx_preset.get("table") if isinstance(fx_preset, dict) else None
+        if (not isinstance(fx_preset, dict) or set(fx_preset) - {"name", "table"} or not isinstance(fx_preset.get("name", ""), str)
+                or len(fx_preset.get("name", "")) > 40 or not isinstance(table, dict) or set(table) - set(FX_PRESET_MOMENTS)
+                or any(not isinstance(v, list) or set(v) - set(FX_PRESET_KINDS) or len(set(v)) != len(v)
+                       or len(set(v) & {"in", "pull", "inout"}) > 1 or len(set(v) & {"lens", "spot"}) > 1 for v in table.values())):
+            raise ValueError("강조효과 프리셋 값이 올바르지 않습니다")
     word_fx = value.get("wordFx")
     if word_fx is not None:
         # 단어 강조(관제 102) — 방식 목록은 계약 파일(caption_word_fx_keys). color 빈칸 = 템플릿 포인트 색(자동).
@@ -245,7 +254,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
@@ -422,18 +431,24 @@ _MOMENT_ROLES = {
 }
 
 
-def moment_of(role):
-    """비트 역할 → 'hook'|'reveal'|'peak'|'problem'|'cta'|None. CTA 이름은 edit_plan._CTA_ROLES 를 그대로 쓴다."""
+# 강조효과 프리셋(관제 158)이 다루는 장면 종류·효과 — 편집기 FX_MOMENTS·SCENE_FX(out/precision20-ui.js·scene-style-connect.js)와 같은 이름.
+FX_PRESET_MOMENTS = ("hook", "problem", "reveal", "meme", "peak", "cta")
+FX_PRESET_KINDS = ("in", "pull", "inout", "dim", "shock", "lens", "spot")
+
+
+def moment_of(role, meme=False):
+    """비트 역할 → 'hook'|'reveal'|'peak'|'problem'|'cta'|'meme'|None. CTA 이름은 edit_plan._CTA_ROLES 를 그대로 쓴다.
+    meme=True(맨 앞 감정짤이 붙은 칸, video_assemble.meme_cutaway) → 'meme' = 연결어(짤 장면)(관제 158, 2026-10-07 사장님
+      "연결어는 '이게 미친 포인트' '더 대박인 게' 이런 것 — 짤이 들어가야 하는 것"). 실측 500편 중 짤 칸 25개가 전부 그런 줄이었고
+      역할은 twist·escalation(고조로 잡힘) 14 · benefit·escalation_1 등(종류 없음) 11 — 그래서 훅·CTA 말고는 짤이 이긴다."""
     from .edit_plan import _CTA_ROLES
     r = str(role or "").strip()
-    if not r:
-        return None
-    if r in _CTA_ROLES or r.lower() in {x.lower() for x in _CTA_ROLES}:
+    if r and (r in _CTA_ROLES or r.lower() in {x.lower() for x in _CTA_ROLES}):
         return "cta"
-    for moment, names in _MOMENT_ROLES.items():
-        if r in names or r.lower() in names:
-            return moment
-    return None
+    found = next((m for m, names in _MOMENT_ROLES.items() if r and (r in names or r.lower() in names)), None)
+    if meme and found != "hook":
+        return "meme"
+    return found
 
 
 def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
@@ -446,7 +461,7 @@ def context_for(timeline, headcopy=None, snapshot=None, job_id=None):
         start, end = float(beat["t0"]), float(beat["t0"] + beat["dur"])
         cursor = start
         kind = frame_kind(index, (snapshot or {}).get("frameRule"))
-        moment = moment_of(beat.get("role"))   # 중요 장면 종류(관제 124) — 편집기 '중요 장면에 한 번에'가 쓴다
+        moment = moment_of(beat.get("role"), beat.get("meme"))   # 중요 장면 종류(관제 124·158) — 편집기 자동 배치·강조효과 프리셋이 쓴다
         caption_visible = not (kind == "hook" and index == 0 and hide_hook_captions)   # 숨김은 첫 훅 문장만(썰훅만 본문 자막은 보인다, 10-02)
         for caption, t0, t1 in caption_schedule(beat, absorb_lead=_absorb):
             a, b = max(cursor, start, float(t0)), min(end, float(t1))
