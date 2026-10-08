@@ -21311,6 +21311,9 @@ def api_storyboard_thumb(request: Request, key: str, seg_id: str):
     return FileResponse(str(out), media_type="image/jpeg")
 
 
+_SB_REFETCH_LOCKS = {}     # 영상 코드 → Lock — 썸네일 수십 장이 한꺼번에 와도 원본은 한 번만 다시 받는다(관제 166)
+
+
 def _sb_seg_src(ex, jid, seg_id):
     """스토리보드 조각 → (원본 영상 경로, 조각{start,end,video_id…}) — 썸네일·구간 영상(clip)이 같이 쓰는 한 곳.
     매칭 작업(jid)이 있으면 3단계와 같은 장면 표(edit_plan.scene_table)·소스(_resolve_sources),
@@ -21332,6 +21335,20 @@ def _sb_seg_src(ex, jid, seg_id):
                 continue
             vdir = _FIND_TMP_DIR / hashlib.sha1(str(vid).encode()).hexdigest()[:16]
             mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
+            if not mp4:
+                # ★1단계가 캐시 적중이면 영상을 안 받는다 + 받아 둔 것도 2일 뒤 치워진다 → 2단계 썸네일이 통째로 깨졌다(관제 166).
+                #   원본 주소로 한 번 다시 받는다(1단계와 같은 download_any·같은 폴더). 영상당 하나만 받게 잠근다.
+                url = (e or {}).get("_source_url") or ""
+                if url:
+                    with _SB_REFETCH_LOCKS.setdefault(str(vid), threading.Lock()):
+                        mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
+                        if not mp4:
+                            try:
+                                vdir.mkdir(parents=True, exist_ok=True)
+                                got, _cap = download_any(url, str(vdir))
+                                mp4 = [Path(got)] if got and Path(got).exists() else []
+                            except Exception as ex:      # noqa: BLE001 — 만료·비공개면 종전대로 404(이유 한 줄)
+                                print("[storyboard] 원본 다시 받기 실패 %s: %r" % (vid, ex), file=sys.stderr)
             if not mp4:
                 return JSONResponse(status_code=404, content={"ok": False, "error": "영상 파일이 치워졌습니다"})
             return str(mp4[0]), sg_
