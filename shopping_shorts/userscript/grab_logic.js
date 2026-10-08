@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-08b  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-08c  (LOGIC_VER가 정본)
+//   · 관제 156 — 렌즈에 보고 있는 화면 캡처를 그대로 실음(유튜브가 썸네일로만 찾던 것).
 //   · 관제 156 — 렌즈 한 클릭 두 번 발사 막기(DOM 표식), 옛 번호 로직 이어받을 때 옛 버튼 걷기.
 //   · 관제 156 — 판매자 해시태그 줄, 유튜브 Shorts 탭 자동 선택·미리보기 📥 제자리, 인스타 접힌 카드 배지 숨김.
 //   · 관제 156 — 미리보기는 서버 부담 없는 것만: 렌즈 결과창 서버 재생 끔, 동시 미리보기를 틱톡·핀·도우인·샤오홍슈로.
@@ -30,7 +31,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261016;
+  var LOGIC_VER = 20261017;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   // ★옛 '번호 있는' 로직을 이어받을 때도 그 버튼을 걷는다(관제 156): 버튼은 id 선점이라 옛 것이 남으면
   //   그 옛 클릭 처리(예: 30초에 끊는 렌즈)가 계속 돈다 — 새 로직이 떠도 '서버 연결 실패'가 났다.
@@ -737,6 +738,17 @@
       })(imgs[i]);
     }
   }
+  function _snapFrame(v) {
+    try {
+      if (!v || !v.videoWidth) return "";
+      var k = Math.min(1, 1280 / Math.max(v.videoWidth, v.videoHeight));
+      var c = document.createElement("canvas");
+      c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+      c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+      var d = c.toDataURL("image/jpeg", 0.85);        // 교차 출처면 여기서 throw → ""
+      return d.length < 3500000 ? d : "";
+    } catch (e) { return ""; }
+  }
   function _lensRun(url, noT) {
     // ★같은 영상 렌즈 두 번 발사 막기(관제 156, 2026-10-08 서버 실측: 10-02부터 448건 중 13건이 같은 초에 2건 —
     //   렌즈 비용도 두 번). 로직이 두 벌(옛 확장 동봉본 + 새 로직, 서로 다른 격리 월드라 window 변수를 못 본다)
@@ -752,8 +764,13 @@
     var v = noT ? null : _igVideo();
     var t = (v && isFinite(v.currentTime)) ? Math.round(v.currentTime * 10) / 10 : null;
     _lensOverlay("<div style='padding:30px;text-align:center;color:#aaa'>🔗 원본·유사 영상 추적 중… (보통 20초~1분)</div>");
+    // 보고 있는 화면을 그대로 캡처해 보낸다(관제 156, 2026-10-08 사장님 "캡쳐그대로") — 유튜브는 서버가 영상을
+    //   못 받아 썸네일로만 찾았다. 캡처가 막힌 사이트(교차 출처 영상)는 frame 없이 종전처럼 t 만 보낸다.
+    var lbody = t === null ? { url: url } : { url: url, t: t };
+    var fr = noT ? "" : _snapFrame(v);
+    if (fr) lbody.frame = fr;
     _gmPost(BASE + "/api/lens/trace_url",
-      t === null ? { url: url } : { url: url, t: t },
+      lbody,
       function (status, text) {
         var d = {};
         try { d = JSON.parse(text); } catch (e) {}

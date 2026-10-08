@@ -12507,7 +12507,28 @@ def api_lens_trace_url(request: Request, body: dict):
             hint_t = float(body.get("t")) if body.get("t") is not None else None
         except (TypeError, ValueError):
             hint_t = None
-        image_url, caption = _lens_image_for_url(url, work_dir, hint_t=hint_t)
+        # frame(관제 156, 2026-10-08 사장님 승인 "캡쳐그대로"): 확장이 브라우저에서 **보고 있던 화면을 그대로**
+        #   캡처해 보낸다(data URL). 유튜브는 서버가 영상을 못 받아(데이터센터 IP 차단) 썸네일로만 찾았다 —
+        #   이제 화면 그대로. 과금·상한은 위 그대로(입력만 바뀐다). 3MB 넘거나 그림이 아니면 무시하고 종전 경로.
+        image_url, caption = None, ""
+        _fr = body.get("frame")
+        if isinstance(_fr, str) and _fr.startswith("data:image/") and "," in _fr and len(_fr) < 4_000_000:
+            try:
+                import base64 as _b64
+                raw = _b64.b64decode(_fr.split(",", 1)[1])
+                if raw[:3] == b"\xff\xd8\xff" or raw[:8] == b"\x89PNG\r\n\x1a\n":
+                    image_url = upload_frame(raw)
+                    if not image_url:
+                        lens_dir = _FIND_TMP_DIR / "lens"
+                        lens_dir.mkdir(parents=True, exist_ok=True)
+                        name = uuid.uuid4().hex + (".jpg" if raw[:3] == b"\xff\xd8\xff" else ".png")
+                        (lens_dir / name).write_bytes(raw)
+                        image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+            except Exception as e:  # noqa: BLE001 — 캡처가 깨졌으면 종전 경로로
+                print(f"lens trace_url 화면 캡처 사용 실패, 종전 경로: {e!r}")
+                image_url = None
+        if not image_url:
+            image_url, caption = _lens_image_for_url(url, work_dir, hint_t=hint_t)
         if not image_url:
             return JSONResponse(status_code=502, content={
                 "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
