@@ -59,8 +59,10 @@ def is_overseas(title):
 
 def tags_of(text):
     """설명글·제목의 #태그(일반 태그 제외), 등장 순."""
+    import html
     out = []
-    for t in _TAG.findall(text or ""):
+    # 유튜브 검색 응답 제목은 &#39; 같은 HTML 글자로 온다 — 안 풀면 '39;s' 같은 가짜 태그가 생긴다(10-08 라이브 실측)
+    for t in _TAG.findall(html.unescape(text or "")):
         t = t.strip(".,!?").lower()
         if t and t not in _GENERIC and not _HANGUL.search(t) and t not in out:
             out.append(t)
@@ -212,11 +214,12 @@ def next_keywords(c, cat, found_tags, limit, top_titles=()):
     태그가 모자라면 조회수 상위 영상 제목(앞 6단어)으로 채운다."""
     used = {r[0] for r in c.execute("SELECT kw FROM overseas_ref_kw WHERE category=?", (cat,))}
     ranked = sorted(found_tags.items(), key=lambda kv: -kv[1])
-    out = [t for t, n in ranked if t not in used and n >= 2][:limit]
+    out = [t for t, n in ranked if t not in used and n >= 2 and re.search(r"[A-Za-z]{3}", t)][:limit]
     for title in top_titles:
         if len(out) >= limit:
             break
-        words = re.sub(r"[^\w\s']", " ", title or "").split()[:6]
+        import html
+        words = re.sub(r"[^\w\s']", " ", html.unescape(title or "")).split()[:6]
         q = " ".join(words).lower()
         if len(words) >= 3 and q not in used and q not in out:
             out.append(q)
