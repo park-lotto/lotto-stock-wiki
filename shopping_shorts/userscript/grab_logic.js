@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-08a  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-08b  (LOGIC_VER가 정본)
+//   · 관제 156 — 렌즈 한 클릭 두 번 발사 막기(DOM 표식), 옛 번호 로직 이어받을 때 옛 버튼 걷기.
 //   · 관제 156 — 판매자 해시태그 줄, 유튜브 Shorts 탭 자동 선택·미리보기 📥 제자리, 인스타 접힌 카드 배지 숨김.
 //   · 관제 156 — 미리보기는 서버 부담 없는 것만: 렌즈 결과창 서버 재생 끔, 동시 미리보기를 틱톡·핀·도우인·샤오홍슈로.
 //   · 관제 156 — 렌즈 서버 연결 실패(30초 상한 회귀) 수리, 유튜브 검색 Shorts 전용, 인스타 카드 배지 스크롤 겹침.
@@ -29,9 +30,11 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261015;
+  var LOGIC_VER = 20261016;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
-  if (window.__ssGrabLoaded && !window.__ssGrabVer) {
+  // ★옛 '번호 있는' 로직을 이어받을 때도 그 버튼을 걷는다(관제 156): 버튼은 id 선점이라 옛 것이 남으면
+  //   그 옛 클릭 처리(예: 30초에 끊는 렌즈)가 계속 돈다 — 새 로직이 떠도 '서버 연결 실패'가 났다.
+  if (window.__ssGrabLoaded) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
     try {
       var olds = document.querySelectorAll("#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-adopt-btn,#ss-seek");
@@ -735,6 +738,15 @@
     }
   }
   function _lensRun(url, noT) {
+    // ★같은 영상 렌즈 두 번 발사 막기(관제 156, 2026-10-08 서버 실측: 10-02부터 448건 중 13건이 같은 초에 2건 —
+    //   렌즈 비용도 두 번). 로직이 두 벌(옛 확장 동봉본 + 새 로직, 서로 다른 격리 월드라 window 변수를 못 본다)
+    //   돌면 한 클릭을 둘이 받는다. 두 벌이 **같이 보는 것은 DOM 뿐**이라 표식을 DOM 에 둔다.
+    try {
+      var de = document.documentElement, mark = de.getAttribute("data-ss-lens-run") || "", now = Date.now();
+      var mk = String(url || "");
+      if (mark && mark.slice(mark.indexOf("|") + 1) === mk && now - (+mark.slice(0, mark.indexOf("|")) || 0) < 5000) return;
+      de.setAttribute("data-ss-lens-run", now + "|" + mk);
+    } catch (e) {}
     // noT=true: 그리드 카드에서 실행 — 화면의 다른(호버 재생) 비디오 시각을 잘못 싣지 않게
     // t를 빼고 보낸다(서버가 영상 중간 프레임으로 캡처).
     var v = noT ? null : _igVideo();
