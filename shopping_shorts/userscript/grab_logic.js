@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-08d  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-08e  (LOGIC_VER가 정본)
+//   · 관제 156 — 고정 검색 머리에 덮인 카드 📥·배지 숨김(elementsFromPoint, 짐작 수리 재수정).
 //   · 관제 156 — 관련 검색어 상자 접기(검색 판과 같이, 접힌 채 기억), 판매자 태그 맨 위·검색창 기본값, 기다리는 초 표시.
 //   · 관제 156 — 유튜브 Shorts 검색 카드 배지(날짜·조회·좋아요·댓글·길이)·조회수/좋아요/댓글/최신순, 게시물 상자 검색창.
 //   · 관제 156 — 렌즈에 보고 있는 화면 캡처를 그대로 실음(유튜브가 썸네일로만 찾던 것).
@@ -2462,12 +2463,25 @@
   //   카드가 120px 보다 작아지면 숨기고, 다시 펴지면 보인다. 스크롤마다(한 프레임에 한 번) + tick 마다.
   function _hideCollapsedBadges() {
     var bs = document.querySelectorAll(".ss-card-info, .ss-card-lens, .ss-card-grab:not(.ss-pv-grab)");
+    // ★2026-10-08 두 번째 수리(사장님 "왜 자꾸 안 고치나"): 첫 수리는 '카드가 접힌다'는 짐작이었고 틀렸다 —
+    //   실제로는 스크롤해도 고정된 검색 머리(검색창·좋아요순 줄)가 첫 줄 카드 윗부분을 **덮는데**, 카드 왼쪽 위 📥가
+    //   그 위로 튀어나왔다(날짜 배지는 카드 아래라 안 덮여 멀쩡했다). 짐작 대신 **그 자리에 실제로 카드가 보이는가**를
+    //   브라우저에 묻는다(elementsFromPoint): 버튼 가운데 점의 맨 위 요소가 그 카드 안이 아니면 덮인 것 → 숨김.
+    //   display 가 아니라 visibility 로 숨긴다 — 자리(좌표)가 남아야 다음 프레임에 다시 잴 수 있다.
     for (var i = 0; i < bs.length; i++) {
-      var a = bs[i].parentElement; if (!a) continue;
-      var r = a.getBoundingClientRect();
-      var small = r.width < 120 || r.height < 120;
-      if (small && !bs[i].__ssHid) { bs[i].__ssHid = 1; bs[i].style.display = "none"; }
-      else if (!small && bs[i].__ssHid) { bs[i].__ssHid = 0; bs[i].style.display = ""; }
+      var el = bs[i], a = el.parentElement; if (!a) continue;
+      var r = a.getBoundingClientRect(), hide = r.width < 120 || r.height < 120;
+      if (!hide && document.elementsFromPoint) {
+        var q = el.getBoundingClientRect(), cx = q.left + q.width / 2, cy = q.top + q.height / 2;
+        if (q.width && cy >= 0 && cy <= innerHeight && cx >= 0 && cx <= innerWidth) {
+          var st = document.elementsFromPoint(cx, cy), top = null;
+          for (var k = 0; k < st.length; k++) { if (st[k] !== el && !el.contains(st[k])) { top = st[k]; break; } }
+          if (top && !a.contains(top) && !top.contains(a)) hide = true;
+        }
+      }
+      if (el.style.display === "none" && el.__ssHid) el.style.display = "";      // 옛 판(display)으로 숨긴 것 되살림
+      if (hide && !el.__ssHid) { el.__ssHid = 1; el.style.visibility = "hidden"; }
+      else if (!hide && el.__ssHid) { el.__ssHid = 0; el.style.visibility = ""; }
     }
   }
   var _hcbRaf = 0;
