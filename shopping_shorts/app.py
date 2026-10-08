@@ -27233,6 +27233,20 @@ async def api_overseas_ref_run(request: Request, body: dict):
     return {"ok": True}
 
 
+@app.post("/api/overseas_ref/ig_add")
+async def api_overseas_ref_ig_add(request: Request, body: dict):
+    """확장프로그램(관리자)이 인스타 검색 응답에서 읽은 계정을 보낸다 — 서버 추가 요청 0."""
+    if not _is_admin(_cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "관리자만"})
+    from shopping_shorts import overseas_ref
+    cat = str((body or {}).get("cat") or "")
+    if cat not in overseas_ref.CATEGORIES:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "카테고리"})
+    items = list((body or {}).get("items") or [])[:200]
+    new, total = await asyncio.to_thread(overseas_ref.add_instagram, cat, items)
+    return {"ok": True, "new": new, "total": total}
+
+
 @app.get("/api/overseas_ref/status")
 async def api_overseas_ref_status(request: Request):
     if not _is_admin(_cid(request)):
