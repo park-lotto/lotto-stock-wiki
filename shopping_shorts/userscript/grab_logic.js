@@ -1519,9 +1519,8 @@
     return best;
   }
   // 검색창 + 비슷한 검색어(5줄 × 5개 언어). 인스타는 제목 자리에, 나머지 플랫폼은 오른쪽 떠 있는 판에 넣는다.
-  function _kwBarBody(q, dark) {
-    var wrap = document.createElement("div");
-    wrap.style.cssText = "display:flex;flex-direction:column;gap:8px;font-family:system-ui,sans-serif";
+  // 검색창(한글로 치면 이 사이트 언어로 번역해 검색) — 검색 판(_kwBarBody)과 게시물 상자(syncIgPostKw)가 같이 쓴다.
+  function _kwSearchForm(q, dark) {
     var form = document.createElement("form");
     form.style.cssText = "display:flex;gap:6px;align-items:center;max-width:560px";
     var inp = document.createElement("input");
@@ -1549,6 +1548,12 @@
     });
     // 사이트 단축키가 입력을 가로채지 않게(글자 입력 중 페이지가 반응하는 것 방지)
     inp.addEventListener("keydown", function (e) { e.stopPropagation(); });
+    return { form: form, note: note };
+  }
+  function _kwBarBody(q, dark) {
+    var wrap = document.createElement("div");
+    wrap.style.cssText = "display:flex;flex-direction:column;gap:8px;font-family:system-ui,sans-serif";
+    var sf = _kwSearchForm(q, dark), form = sf.form, note = sf.note;
     var chips = document.createElement("div");
     chips.style.cssText = "display:flex;flex-direction:column;gap:6px";
     var lab = document.createElement("span");
@@ -1935,7 +1940,9 @@
       st = document.createElement("div"); st.className = "ss-kw-st";
       st.textContent = "설명글 읽는 중…"; st.style.cssText = "font-size:12px;color:#aaa";
       body.appendChild(st);
-      p.appendChild(hd); p.appendChild(body);
+      // 검색창(관제 156, 2026-10-08 사장님 "여기도 검색창, 한글로 바꾸면 번역돼서") — 검색 판과 같은 것.
+      var psf = _kwSearchForm("", true);
+      p.appendChild(hd); p.appendChild(psf.form); p.appendChild(psf.note); p.appendChild(body);
       document.body.appendChild(p);
       _ssDrag(p, hd);
     }
