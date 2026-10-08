@@ -21701,6 +21701,11 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
             if len(_dm["lines"]) != len(_ep.script_sentences(script)):
                 return JSONResponse(status_code=422, content={"ok": False, "error":
                     "대화형 줄 수가 대본과 달라요 — 줄을 더하거나 지웠으면 대본을 다시 만들어 주세요"})
+            _bad = [i for i, l in enumerate(_dm["lines"])
+                    if not isinstance(l, dict) or l.get("speaker") not in _ds.FORMS[_dm["form"]]["roles"]]
+            if _bad:
+                return JSONResponse(status_code=422, content={"ok": False, "error":
+                    "화자가 안 정해진 줄이 있어요(%s번째) — 2단계 카드에서 화자를 골라 주세요" % ", ".join(str(i + 1) for i in _bad[:5])})
             _cast = _ds.cast_of(_dm["form"], _dm.get("cast"))
             script_structure = dict(script_structure, dialogue=dict(
                 _dm, cast=_cast, voices={spk: _voice_snapshot(Store(DB_PATH), {"preset_id": pid}) for spk, pid in _cast.items()}))

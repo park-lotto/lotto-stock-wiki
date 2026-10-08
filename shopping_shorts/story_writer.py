@@ -1331,7 +1331,13 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         d = ba.to_draft("\n".join(L["text"] for L in lines), bs, meta)
         d["made_by"] = "이야기작가"
         if _dlg_meta:
-            d["dialogue"] = _dlg_meta          # 줄 i 의 화자·연기 지시 = d["dialogue"]["lines"][i] (확정 때 3단계로 그대로)
+            # ★화자는 **칸에** 싣는다 — 2단계에서 칸을 옮기고·빼고·더해도 화자가 그 문장을 따라간다.
+            #   확정 때 화면(s2ApplyDraftContract)이 글 있는 칸 순서대로 대화 줄을 다시 뽑아 3단계로 보낸다.
+            for _b, _l in zip(d.get("beats") or [], _dlg_meta["lines"]):
+                _b["speaker"], _b["tag"] = _l["speaker"], _l["tag"]
+            d["dialogue"] = {"form": _dlg_meta["form"], "cast": _dlg_meta["cast"],
+                             "roles": list(_ds.FORMS[dialogue_form]["roles"]),
+                             "label": _ds.FORMS[dialogue_form]["label"]}
         if _dlg_err:
             d["dialogue_error"] = _dlg_err
         d["length_preset"] = preset
