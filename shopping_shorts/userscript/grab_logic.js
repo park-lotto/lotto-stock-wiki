@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-08c  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-08d  (LOGIC_VER가 정본)
+//   · 관제 156 — 유튜브 Shorts 검색 카드 배지(날짜·조회·좋아요·댓글·길이)·조회수/좋아요/댓글/최신순, 게시물 상자 검색창.
 //   · 관제 156 — 렌즈에 보고 있는 화면 캡처를 그대로 실음(유튜브가 썸네일로만 찾던 것).
 //   · 관제 156 — 렌즈 한 클릭 두 번 발사 막기(DOM 표식), 옛 번호 로직 이어받을 때 옛 버튼 걷기.
 //   · 관제 156 — 판매자 해시태그 줄, 유튜브 Shorts 탭 자동 선택·미리보기 📥 제자리, 인스타 접힌 카드 배지 숨김.
@@ -31,7 +32,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261017;
+  var LOGIC_VER = 20261018;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   // ★옛 '번호 있는' 로직을 이어받을 때도 그 버튼을 걷는다(관제 156): 버튼은 id 선점이라 옛 것이 남으면
   //   그 옛 클릭 처리(예: 30초에 끊는 렌즈)가 계속 돈다 — 새 로직이 떠도 '서버 연결 실패'가 났다.
@@ -1519,9 +1520,8 @@
     return best;
   }
   // 검색창 + 비슷한 검색어(5줄 × 5개 언어). 인스타는 제목 자리에, 나머지 플랫폼은 오른쪽 떠 있는 판에 넣는다.
-  function _kwBarBody(q, dark) {
-    var wrap = document.createElement("div");
-    wrap.style.cssText = "display:flex;flex-direction:column;gap:8px;font-family:system-ui,sans-serif";
+  // 검색창(한글로 치면 이 사이트 언어로 번역해 검색) — 검색 판(_kwBarBody)과 게시물 상자(syncIgPostKw)가 같이 쓴다.
+  function _kwSearchForm(q, dark) {
     var form = document.createElement("form");
     form.style.cssText = "display:flex;gap:6px;align-items:center;max-width:560px";
     var inp = document.createElement("input");
@@ -1549,6 +1549,12 @@
     });
     // 사이트 단축키가 입력을 가로채지 않게(글자 입력 중 페이지가 반응하는 것 방지)
     inp.addEventListener("keydown", function (e) { e.stopPropagation(); });
+    return { form: form, note: note };
+  }
+  function _kwBarBody(q, dark) {
+    var wrap = document.createElement("div");
+    wrap.style.cssText = "display:flex;flex-direction:column;gap:8px;font-family:system-ui,sans-serif";
+    var sf = _kwSearchForm(q, dark), form = sf.form, note = sf.note;
     var chips = document.createElement("div");
     chips.style.cssText = "display:flex;flex-direction:column;gap:6px";
     var lab = document.createElement("span");
@@ -1750,6 +1756,7 @@
     fold.style.cssText = "background:none;border:1px solid #555;color:#ccc;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer";
     hd.appendChild(ttl); hd.appendChild(fold);
     var body = _kwBarBody(q, true);
+    if (s.id === "youtube") body.appendChild(_ytRankRow());   // 조회수순·좋아요순·댓글순·최신순(관제 156)
     fold.addEventListener("click", function (e) {
       e.preventDefault(); e.stopPropagation();
       var open = body.style.display !== "none";
@@ -1935,7 +1942,9 @@
       st = document.createElement("div"); st.className = "ss-kw-st";
       st.textContent = "설명글 읽는 중…"; st.style.cssText = "font-size:12px;color:#aaa";
       body.appendChild(st);
-      p.appendChild(hd); p.appendChild(body);
+      // 검색창(관제 156, 2026-10-08 사장님 "여기도 검색창, 한글로 바꾸면 번역돼서") — 검색 판과 같은 것.
+      var psf = _kwSearchForm("", true);
+      p.appendChild(hd); p.appendChild(psf.form); p.appendChild(psf.note); p.appendChild(body);
       document.body.appendChild(p);
       _ssDrag(p, hd);
     }
@@ -2269,6 +2278,89 @@
   }
 
   // 유튜브 검색 결과: 영상 페이지용 버튼(플로팅·렌즈·채널등록·시크바)은 걷고 쇼츠 카드 📥만 단다.
+  // ── 유튜브 Shorts 검색: 카드 배지(📅·▶·❤·💬·⏱) + 조회수순·좋아요순·댓글순·최신순(관제 156, 2026-10-08 사장님 "인스타처럼") ──
+  //   검색 화면엔 조회수만 있다(실측) → 서버 /api/yt/details(유튜브 API, 50개당 쿼터 1·6시간 캐시)로 받는다.
+  var _ytMeta = {}, _ytAsked = {}, _ytBusy = false;
+  function _ytCards() {
+    var as = document.querySelectorAll('a[href^="/shorts/"]'), out = [];
+    for (var i = 0; i < as.length; i++) {
+      var r = as[i].getBoundingClientRect();
+      if (r.width < 120 || r.height < 150) continue;          // 썸네일 칸만(제목 링크 제외)
+      var id = _ytVid(as[i].getAttribute("href"));
+      if (id) out.push([as[i], id]);
+    }
+    return out;
+  }
+  function _ytBadges() {
+    var cs = _ytCards(), need = [];
+    for (var i = 0; i < cs.length; i++) {
+      var a = cs[i][0], id = cs[i][1], md = _ytMeta[id];
+      if (!md) { if (!_ytAsked[id]) need.push(id); continue; }
+      var el = a.querySelector(".ss-card-info");
+      if (!el) {
+        if (getComputedStyle(a).position === "static") a.style.position = "relative";
+        el = document.createElement("div"); el.className = "ss-card-info";
+        el.style.cssText = "position:absolute;left:6px;bottom:6px;z-index:3;background:rgba(0,0,0,.7);color:#fff;" +
+          "font:11px system-ui,sans-serif;border-radius:8px;padding:2px 7px;pointer-events:none";
+        a.appendChild(el);
+      }
+      if (el.getAttribute("data-c") !== id) {
+        el.setAttribute("data-c", id);
+        el.textContent = _igMediaBadge({ plays: md.views, likes: md.likes, comments: md.comments, dur: md.dur },
+                                       (md.published || "").slice(2));
+      }
+    }
+    if (!need.length || _ytBusy) return;
+    need = need.slice(0, 50);
+    for (var j = 0; j < need.length; j++) _ytAsked[need[j]] = 1;
+    _ytBusy = true;
+    _gmPost(BASE + "/api/yt/details", { ids: need }, function (st, text) {
+      _ytBusy = false;
+      try { var d = JSON.parse(text); if (d && d.items) for (var k in d.items) _ytMeta[k] = d.items[k]; } catch (e) {}
+    }, function () { _ytBusy = false; for (var j = 0; j < need.length; j++) delete _ytAsked[need[j]]; });
+  }
+  function _ytRank(key) {
+    var cs = _ytCards(), seen = {}, list = [];
+    for (var i = 0; i < cs.length; i++) {
+      var id = cs[i][1], md = _ytMeta[id]; if (!md || seen[id]) continue; seen[id] = 1;
+      var im = cs[i][0].querySelector("img");
+      var card = cs[i][0].closest("ytm-shorts-lockup-view-model, ytm-shorts-lockup-view-model-v2, ytd-reel-item-renderer") || cs[i][0].parentElement;
+      list.push({ id: id, md: md, thumb: im ? im.src : "", title: card ? (card.innerText || "").split("\n")[0] : "" });
+    }
+    var val = function (x) { return key === "published" ? (x.md.published || "") : (x.md[key] || 0); };
+    list.sort(function (x, y) { var a = val(x), b = val(y); return a < b ? 1 : a > b ? -1 : 0; });
+    var o = document.getElementById("ss-ig-rank"); if (o) o.remove();
+    o = document.createElement("div"); o.id = "ss-ig-rank";
+    o.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:20px;font-family:system-ui,sans-serif";
+    var box = document.createElement("div");
+    box.style.cssText = "background:#161616;color:#eee;border-radius:14px;padding:16px;max-width:1600px;width:96vw;max-height:92vh;overflow:auto;position:relative";
+    var nm = { views: "▶ 조회수순", likes: "❤ 좋아요순", comments: "💬 댓글순", published: "📅 최신순" }[key];
+    box.innerHTML = "<button type='button' class='x' style='position:absolute;top:6px;right:12px;background:none;border:none;color:#fff;font-size:22px;cursor:pointer'>✕</button>" +
+      "<div style='font-weight:800;margin-bottom:10px'>" + nm + " · " + list.length + "개 (이 화면에서 읽은 영상 — 아래로 내리면 늘어나요)</div>";
+    var grid = document.createElement("div");
+    grid.style.cssText = "display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px";
+    if (!list.length) grid.textContent = "아직 읽은 영상이 없어요. 몇 초 기다리거나 화면을 조금 내려 보세요.";
+    for (var n = 0; n < list.length; n++) {
+      var it = list[n], a2 = document.createElement("a");
+      a2.href = "https://www.youtube.com/shorts/" + it.id;
+      a2.style.cssText = "display:block;background:#222;border-radius:10px;overflow:hidden;color:#eee;text-decoration:none";
+      a2.innerHTML = "<img src='" + _esc(it.thumb) + "' style='width:100%;height:280px;object-fit:cover;display:block;background:#000'>" +
+        "<div style='padding:6px 8px;font-size:12px'>#" + (n + 1) + "  " + _esc(_igMediaBadge({ plays: it.md.views, likes: it.md.likes, comments: it.md.comments, dur: it.md.dur }, (it.md.published || "").slice(2))) + "</div>" +
+        "<div style='padding:0 8px 8px;font-size:12px;color:#aaa;max-height:32px;overflow:hidden'>" + _esc(it.title) + "</div>";
+      grid.appendChild(a2);
+    }
+    box.appendChild(grid); o.appendChild(box); document.body.appendChild(o);
+    box.querySelector(".x").addEventListener("click", function () { o.remove(); });
+    o.addEventListener("click", function (e) { if (e.target === o) o.remove(); });
+  }
+  function _ytRankRow() {
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px";
+    [["views", "▶ 조회수순"], ["likes", "❤ 좋아요순"], ["comments", "💬 댓글순"], ["published", "📅 최신순"]].forEach(function (k) {
+      row.appendChild(_igBtn(k[1], "이 검색의 Shorts 를 " + k[1].slice(2), function () { _ytRank(k[0]); }));
+    });
+    return row;
+  }
   function _ytResultsTick() {
     try {
       var els = document.querySelectorAll("#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-adopt-btn,#ss-seek");
@@ -2276,6 +2368,7 @@
     } catch (e) {}
     try { addAnchorCardBtns(); } catch (e) {}
     try { _ytPreviewBtn(); } catch (e) {}
+    try { _ytBadges(); } catch (e) {}
   }
   // 미리보기는 마우스를 올린 뒤 바로 뜬다 — 2초 tick만 기다리면 그사이 📥가 안 보인다.
   // 더 새 로직이 이어받으면(버전 가드) 이 리스너는 아무것도 안 한다.

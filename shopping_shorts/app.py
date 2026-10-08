@@ -12753,6 +12753,35 @@ async def api_lens_kw_en(request: Request, body: dict):
     return {"ok": True, "main": r.get("main", ""), "related": r.get("related", [])}
 
 
+_YT_DETAILS_CACHE = {}          # video_id → (저장시각, 값) — 같은 영상 반복 조회 막기(6시간)
+
+
+@app.post("/api/yt/details")
+async def api_yt_details(request: Request, body: dict):
+    """유튜브 영상 id 목록 → 조회·좋아요·댓글·올린 날짜·길이(관제 156, 2026-10-08 사장님).
+    확장이 Shorts 검색 화면 카드 배지와 조회수순·댓글순 정렬에 쓴다. 판단은 youtube_client.video_details 한 곳.
+    쿼터: 50개당 1(무료). 같은 영상은 6시간 캐시."""
+    from shopping_shorts.youtube_client import video_details, _tokens_for
+    ids = [str(x) for x in ((body or {}).get("ids") or []) if isinstance(x, str) and re.fullmatch(r"[\w-]{11}", x)][:200]
+    now, out, need = time.time(), {}, []
+    for v in ids:
+        c = _YT_DETAILS_CACHE.get(v)
+        if c and now - c[0] < 6 * 3600:
+            out[v] = c[1]
+        else:
+            need.append(v)
+    if need:
+        cid = getattr(request.state, "customer_id", 0)
+        got = await asyncio.to_thread(video_details, need, _tokens_for(cid))
+        for v, d in got.items():
+            _YT_DETAILS_CACHE[v] = (now, d)
+            out[v] = d
+        if len(_YT_DETAILS_CACHE) > 20000:
+            for k in sorted(_YT_DETAILS_CACHE, key=lambda k: _YT_DETAILS_CACHE[k][0])[:5000]:
+                _YT_DETAILS_CACHE.pop(k, None)
+    return {"ok": True, "items": out}
+
+
 @app.post("/api/lens/kw/multi")
 async def api_lens_kw_multi(request: Request, body: dict):
     """인스타 검색 화면의 '비슷한 검색어' 5개 × 5개 언어(ko·en·ja·zh·ru) — 관제 151, 2026-10-07 사장님.
