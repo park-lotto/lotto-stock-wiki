@@ -7346,8 +7346,7 @@ def _job_sources_with_memes(job, work) -> dict:
     plan = (job or {}).get("edit_plan") or {}
     if any(video_assemble.meme_cutaway(b) for b in plan.get("beats") or []):
         try:
-            srcs.update(video_assemble.meme_sources(
-                plan, mix_pipeline._resolve_cutaway_paths(Store(DB_PATH), plan, (job or {}).get("customer_id", 0))))
+            srcs.update(mix_pipeline.job_meme_sources(Store(DB_PATH), job, plan))
         except Exception as e:      # noqa: BLE001 — 짤 파일을 못 찾으면 그 컷은 검은 화면(대신 한 줄)
             print("[meme] 짤 파일 찾기 실패 job=%s: %r" % ((job or {}).get("job_id"), e), file=sys.stderr)
     return srcs
