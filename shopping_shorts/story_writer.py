@@ -1167,7 +1167,8 @@ SEEDLESS_NOTE = ("(씨앗 대본 없음 — 외국 영상이라 참고할 한국
                  "소구점만으로 이 제품의 대본을 처음부터 써라. 이 괄호 안 문장은 대본에 쓰지 마라.)")
 
 
-def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product="", seed_vid=""):
+def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text="", seed_product="", seed_vid="",
+                dialogue_form=""):
     """(drafts, why) — app._backbone_drafts와 같은 계약(비면 why에 이유, 조용한 폴백 금지).
 
     자동 1안(씨앗 결 그대로) + 고른 스타일 1안. 모델 호출 = 특징 1회 + 안마다 1회.
@@ -1318,10 +1319,27 @@ def make_drafts(spines, job, seconds=25, job_id="", preset="short", seed_text=""
         n["locked_lines"] = _locked
         n["no_cut_lines"] = _share_cuts(lines, bs, seg_index)     # 끝내 빈 줄 = 재료가 대본보다 짧다
         _am.ensure_cover(bs, lines, seg_index, backbone_vid, note=n)   # ★줄마다 대사를 채울 장면 보장(관제 084) — 배정의 마지막
+        # ★대화형(관제 128, 2026-10-08 사장님 "썰대본이 나오기 전에"): 2단계에서 틀을 고르고 왔으면 안을 확정하기 **직전**
+        #   — 줄과 장면 출처가 아직 짝일 때 — 대화로 바꾸고 출처를 대화 줄에 맞춰 다시 붙인다. 판단은 dialogue_script 한 곳.
+        #   변환이 실패하면 썰 그대로 내보내고 이유를 안에 싣는다(조용히 삼키지 않는다 — 카드가 보여 준다).
+        _dlg_meta, _dlg_err = None, ""
+        if dialogue_form:
+            from shopping_shorts import dialogue_script as _ds
+            lines, bs, _dlg_meta, _dlg_err = _ds.apply_to_lines(lines, bs, dialogue_form, product)
         meta = {"product": product, "spine": {"id": (sp or {}).get("id"), "name": name},
                 "groups": groups_out, "report": report, "note": n}
         d = ba.to_draft("\n".join(L["text"] for L in lines), bs, meta)
         d["made_by"] = "이야기작가"
+        if _dlg_meta:
+            # ★화자는 **칸에** 싣는다 — 2단계에서 칸을 옮기고·빼고·더해도 화자가 그 문장을 따라간다.
+            #   확정 때 화면(s2ApplyDraftContract)이 글 있는 칸 순서대로 대화 줄을 다시 뽑아 3단계로 보낸다.
+            for _b, _l in zip(d.get("beats") or [], _dlg_meta["lines"]):
+                _b["speaker"], _b["tag"] = _l["speaker"], _l["tag"]
+            d["dialogue"] = {"form": _dlg_meta["form"], "cast": _dlg_meta["cast"],
+                             "roles": list(_ds.FORMS[dialogue_form]["roles"]),
+                             "label": _ds.FORMS[dialogue_form]["label"]}
+        if _dlg_err:
+            d["dialogue_error"] = _dlg_err
         d["length_preset"] = preset
         d["auto_pick"] = sp is None
         d["platform"] = plat
