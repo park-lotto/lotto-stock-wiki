@@ -15,13 +15,8 @@ const src = fs.readFileSync(jsPath, 'utf8');
 const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
 const driver = `
 DATA = __DATA__;
-const _sl = b => { const ov = b && b.scene_override; if (!ov || !ov.length) return null; const o=[]; ov.forEach(s=>{const id=s&&s.seg_id; if(id&&!o.includes(id)) o.push(id)}); return o.length?o:null; };
-lists = DATA.beats.map(b => _sl(b) || [b.primary && b.primary.seg_id].concat((b.alternates||[]).map(a=>a.seg_id)).filter(Boolean));
-DATA.beats.forEach((b,i) => { if (b.phrase_sync === false) PHRASE_SYNC[i] = false;
-  if (b.phrase_exact === true) PHRASE_EXACT[i] = true;
-  if (Array.isArray(b.manual_cuts)) CUTS[i] = b.manual_cuts.filter(c=>c&&c.seg_id&&c.dur>0).map(c=>c.lock?{seg_id:c.seg_id,dur:+c.dur,lock:1}:{seg_id:c.seg_id,dur:+c.dur});
-  if (+b.slow > 1) SLOW[i] = +b.slow;
-  for (const [sid,v] of Object.entries(b.fixed_lens||{})) FIXLEN[i+':'+sid] = v; });
+// 칸 편집 상태는 화면과 **같은 함수**로 되살린다(관제 148) — 여기서 따로 적으면 화면과 어긋난다(늘려 채우기 누락 실사고).
+applyScreenState(screenStateFromServer(DATA));
 __OUT__ = DATA.beats.map((b,i) => ({t: beatDur(i), c: planClips(lists[i] || [], beatDur(i), STRETCH[i], i).map(c => ({v:c.video_id, s:+(+c.start).toFixed(4), d:+(+c.dur).toFixed(4), sd: c.src_dur!=null ? +(+c.src_dur).toFixed(4) : null, fit: c.fit ? 1 : 0}))}));
 `;
 ctx.__DATA__ = data;

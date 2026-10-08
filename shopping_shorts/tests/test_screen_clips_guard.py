@@ -23,9 +23,10 @@ def _fresh_state(monkeypatch):
     """screen_clips 전역 상태를 테스트마다 비운다(다른 테스트·다른 job과 섞이지 않게)."""
     for name in ("FALLBACKS",):
         monkeypatch.setattr(sc, name, [])
-    for name in ("_CACHE", "_DATA_SEEN", "_JOB_STATE", "_OWNER"):
+    for name in ("_CACHE", "_DATA_SEEN", "_RES_SEEN", "_WARMED", "_JOB_STATE", "_OWNER", "_HEALED"):
         monkeypatch.setattr(sc, name, {})
     monkeypatch.setattr(sc, "_SEEN", set())
+    monkeypatch.setattr(sc, "_fresh_job", lambda jid: None)      # 자가 준비(관제 149)가 실제 DB 를 읽지 않게
     monkeypatch.setenv("SCREEN_CLIPS", "1")
 
 
@@ -138,8 +139,8 @@ def test_fallback_recorded_when_screen_data_exists(tmp_path, monkeypatch, capsys
     got = va.plan_beat_clips_for(beat, 2.0, {"s0": 30.0})
     assert got and not any(c.get("screen") for c in got)           # 렌더는 계속 진행(막지 않는다)
     fb = sc.fallbacks_for("jA")
-    assert [(e["kind"], e["beat"], e["why"]) for e in fb] == [("FALLBACK", 0, "no_screen_cut")]
-    assert "[screen_clips] FALLBACK job=jA beat=0 why=no_screen_cut" in capsys.readouterr().err
+    assert [(e["kind"], e["beat"], e["why"]) for e in fb] == [("FALLBACK", 0, "no_screen_cut diff=cut_rhythm")]
+    assert "[screen_clips] FALLBACK job=jA beat=0 why=no_screen_cut diff=cut_rhythm" in capsys.readouterr().err
     # 같은 렌더 안에서 같은 칸을 또 불러도 한 번만 기록
     va.plan_beat_clips_for(beat, 2.0, {"s0": 30.0})
     assert len(sc.fallbacks_for("jA")) == 1
@@ -291,3 +292,35 @@ def test_no_alert_for_clean_or_old_job_and_banner_closed(tmp_path, monkeypatch):
     calls2 = _capture_alerts(monkeypatch, open_alerts=[{"kind": "screen_clips_fallback:other", "resolved": None}])
     sc.summarize("jOld2", sc.begin("jOld2"))
     assert calls2["raise"] == [] and calls2["resolve"] == []
+
+
+def test_second_warm_with_same_data_binds_current_beats(tmp_path, monkeypatch):
+    """관제 149: 화면 데이터(DB)가 같아도 두 번째 warm 은 **지금 편성표 칸**으로 키를 단다.
+    종전엔 해시가 같으면 그냥 돌아가서, 첫 warm 뒤 메모리 편성표가 달라진 호출은 칸 키가 없어 전부 no_screen_cut 이었다
+    (서버 9/29~10/06 165칸 — 작업 통째로 빗나가는 꼴)."""
+    job = _screen_job("jW", tmp_path)
+    monkeypatch.setattr(sc, "_scene_data", lambda jid: {"beats": [{"x": 1}]})
+    calls = []
+    res = [{"t": 2.0, "c": [{"v": "s0", "s": 1.0, "d": 2.0, "sd": 2.0, "fit": 0}]}]
+    monkeypatch.setattr(sc.subprocess, "run", lambda *a, **k: calls.append(1) or _Proc(0, json.dumps(res), ""))
+    assert sc.warm(job) == 1
+    import copy
+    job2 = copy.deepcopy(job)
+    job2["edit_plan"]["beats"][0]["tts_path"] = str(tmp_path / "jW" / "b0_new.mp3")   # 다시 만든 음성(아직 DB 전)
+    assert sc.warm(job2) == 1
+    assert len(calls) == 1, "같은 화면 데이터인데 러너를 또 돌렸다"
+    got = va.plan_beat_clips_for(job2["edit_plan"]["beats"][0], 2.0, {"s0": 30.0})
+    assert got and all(c.get("screen") for c in got), "두 번째 warm 의 칸이 화면 컷을 못 찾았다"
+    assert sc.FALLBACKS == []
+
+
+def test_miss_reason_names_changed_keys(tmp_path, monkeypatch):
+    """빗나가면 경보에 무엇이 달라졌는지 적힌다 — 다음 원인이 로그에서 바로 보이게(관제 149)."""
+    job = _screen_job("jD", tmp_path)
+    monkeypatch.setattr(sc, "_scene_data", lambda jid: {"beats": [{"x": 1}]})
+    _fake_node(monkeypatch)
+    sc.warm(job)
+    beat = job["edit_plan"]["beats"][0]
+    beat["slow"] = 1.1
+    va.plan_beat_clips_for(beat, 2.0, {"s0": 30.0})
+    assert [e["why"] for e in sc.fallbacks_for("jD")] == ["no_screen_cut diff=slow"]

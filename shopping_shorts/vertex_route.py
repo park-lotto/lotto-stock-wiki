@@ -17,7 +17,10 @@
 import sys
 import time
 
-OPS = ("script_extract", "frame_script", "ai_match", "script_generate")
+OPS = ("script_extract", "frame_script", "ai_match", "script_generate",
+       # 2026-10-08(관제 159) 사장님 "내꺼 1단계부터 3단계 모두 버텍스로" — 종전엔 키풀로만 가던 호출들.
+       #   vertex_ops 설정엔 안 넣는다(고객이 13시 전까지 사장님 프로젝트로 새지 않게) — 관리자·등록 회원만 탄다.
+       "story", "structure", "edit_plan", "script_aux")
 # script_generate = script_generate._call_json 깔때기(이야기 작가·백본·옛 생성기·판정 전부) — 2026-09-26 사장님
 #   "태깅은 무료로, 대본작성과 장면매칭이 얼마나 잘되는지 해보자" → 설정 vertex_ops=script_generate,ai_match
 LOCATION = "global"                 # ★us-central1은 3.6-flash 404(2026-09-25 실측) — 글로벌만
@@ -26,6 +29,15 @@ VEO_MODEL = "veo-3.1-lite-generate-001"
 DEFAULT_MODEL = "gemini-3.6-flash"
 INLINE_MAX_BYTES = 40 * 1024 * 1024  # 실측 32.4MB OK. 그 위는 미검증 → 키풀(파일 업로드) 경로로
 SETTING_ENABLED, SETTING_OPS, SETTING_MODEL = "vertex_enabled", "vertex_ops", "vertex_model"
+# ★사장님 프로젝트를 고객이 얻어 쓰는 길이 닫히는 시각(2026-10-08 사장님 "내일 13시부터는 각자 버텍스 API를
+#   사용하는 걸로 / 꼭 api를 고객꺼 다 끊어 그 시간 되면", 관제 159). 이 시각부터:
+#     · 관리자(사장님)      → 사장님 프로젝트, 전 op
+#     · 버텍스 등록 회원    → 자기 프로젝트, 전 op(종전엔 MEMBER_OPS 둘만)
+#     · 미등록 고객·주인 미상 → Vertex 안 탐(종전 무료 키풀) — 화면이 그 사실과 등록 방법을 알린다(member_notice)
+#   배포 시간창(02~06시) 때문에 13시에 맞춰 배포할 수 없어 **시각을 코드가 본다**. 설정으로 옮길 수 있다
+#   (vertex_owner_cutoff = ISO 시각 / "off" = 닫지 않음).
+SETTING_CUTOFF = "vertex_owner_cutoff"
+OWNER_CUTOFF_DEFAULT = "2026-10-08T13:00:00+09:00"
 _SETTINGS_TTL = 30.0
 
 _settings_cache = {"t": 0.0, "vals": None}
@@ -42,7 +54,7 @@ def _read_settings():
         from shopping_shorts import config
         from shopping_shorts.store import Store
         st = Store(config.DB_PATH)
-        for k in (SETTING_ENABLED, SETTING_OPS, SETTING_MODEL):
+        for k in (SETTING_ENABLED, SETTING_OPS, SETTING_MODEL, SETTING_CUTOFF):
             vals[k] = (st.get_setting(k, "") or "").strip()
     except Exception:      # noqa: BLE001 — 설정을 못 읽으면 '끔'(종전 그대로)
         vals = {}
@@ -82,10 +94,16 @@ def gate_allows(value, cid):
 
 
 def current_cid():
-    """이 호출의 주인 — usage_meter가 정하는 값을 **읽기만** 한다(0순위-B)."""
+    """이 호출의 주인 — usage_meter가 정하는 값을 **읽기만** 한다(0순위-B).
+    ★주인을 모르면 None(2026-10-08, 관제 159). usage_meter는 주인이 안 정해진 호출을 keyctx 기본값 0(사장님)으로
+      돌려주는데, 그대로 믿으면 주인을 잃은 고객 작업이 관리자로 판정돼 사장님 유료 프로젝트를 탄다
+      (실측 10-07: 프레임대본 1,190건 중 1,130건이 0번 — 예열 큐 주인은 551·352·168…). 명시된 주인만 믿는다."""
     try:
-        from shopping_shorts import usage_meter
-        return usage_meter._resolve_cid(usage_meter.current_context())
+        from shopping_shorts import keyctx, usage_meter
+        ctx = usage_meter.current_context()
+        if ctx.get("customer_id") is None and not keyctx.owner_known():
+            return None
+        return usage_meter._resolve_cid(ctx)
     except Exception:      # noqa: BLE001
         return None
 
@@ -170,19 +188,85 @@ def forget_member(cid):
         _client_cache.pop(k, None)
 
 
-def on(op, cid=None):
-    """이 op를 Vertex로 보낼까. ①회원이 자기 Vertex를 등록했으면 MEMBER_OPS는 자동 ON(자기 비용)
-    ②아니면 사장님 프로젝트 스위치(vertex_enabled·vertex_ops). 설정을 못 읽으면 False(종전 그대로)."""
+def owner_cutoff():
+    """사장님 프로젝트 공유가 끝나는 시각(aware datetime) 또는 None(닫지 않음). 못 읽으면 기본값."""
+    from datetime import datetime
+    raw = (_read_settings().get(SETTING_CUTOFF) or "").strip() or OWNER_CUTOFF_DEFAULT
+    if raw.lower() in ("off", "0", "none"):
+        return None
+    for cand in (raw, OWNER_CUTOFF_DEFAULT):
+        try:
+            dt = datetime.fromisoformat(cand)
+            if dt.tzinfo is None:                      # 시간대 없는 값은 KST로 본다(사장님이 말한 시각)
+                from datetime import timedelta, timezone
+                dt = dt.replace(tzinfo=timezone(timedelta(hours=9)))
+            return dt
+        except ValueError:
+            print("vertex_route: %s=%r 를 시각으로 못 읽음 → 기본값" % (SETTING_CUTOFF, cand), file=sys.stderr)
+    return None
+
+
+def cutoff_passed(now=None):
+    """지금이 차단 시각 이후인가. now는 테스트 주입용(aware datetime)."""
+    from datetime import datetime, timezone
+    dt = owner_cutoff()
+    if dt is None:
+        return False
+    return (now or datetime.now(timezone.utc)) >= dt
+
+
+def plan(cid=None, now=None):
+    """이 계정의 1~3단계 AI가 **누구 것으로** 도는가 — 판정은 여기 한 곳(0순위-B). on()·화면 안내가 같이 읽는다.
+      "member" 자기 Vertex(등록 회원) · "owner" 사장님 프로젝트(관리자) ·
+      "shared" 사장님 프로젝트를 설정된 op만 얻어 씀(차단 시각 전 고객) · "free" 무료 키풀만."""
+    cid = current_cid() if cid is None else cid
+    if cid is not None and member_info(cid):
+        return "member"
+    val = _read_settings().get(SETTING_ENABLED, "")
+    if cid is None:
+        # 주인 미상 — 관리자로 치지 않는다. 차단 시각 전엔 종전대로(전체 스위치 "1"일 때만), 이후엔 끊는다.
+        return "shared" if (val.strip() == "1" and not cutoff_passed(now)) else "free"
+    if not gate_allows(val, cid):
+        return "free"
+    if _is_admin(cid):
+        return "owner"
+    return "free" if cutoff_passed(now) else "shared"
+
+
+def on(op, cid=None, now=None):
+    """이 op를 Vertex로 보낼까 — plan() 한 곳의 판정을 op에 적용한다. 설정을 못 읽으면 False(종전 그대로).
+      member: 차단 시각 전엔 MEMBER_OPS만, 이후엔 전 op(자기 비용) · owner: 전 op ·
+      shared: vertex_ops 목록만 · free: 안 탄다."""
     if op not in OPS:
         return False
     cid = current_cid() if cid is None else cid
-    if op in MEMBER_OPS and member_info(cid):
+    p = plan(cid, now=now)
+    if p == "member":
+        # 관리자가 자기 서비스계정을 등록해 둔 경우(실측: 사장님 0번 = 서버와 같은 프로젝트)도 "내꺼 전부"가 지켜지게.
+        return op in MEMBER_OPS or cutoff_passed(now) or _is_admin(cid)
+    if p == "owner":
         return True
-    vals = _read_settings()
-    if not gate_allows(vals.get(SETTING_ENABLED, ""), cid):
-        return False
-    ops = [x.strip() for x in (vals.get(SETTING_OPS) or "").split(",") if x.strip()]
-    return (not ops) or (op in ops)
+    if p == "shared":
+        ops = [x.strip() for x in (_read_settings().get(SETTING_OPS) or "").split(",") if x.strip()]
+        return (not ops) or (op in ops)
+    return False
+
+
+MANUAL_URL = "/api_manual.html#vertex"
+
+
+def notice_body(cid=None, now=None):
+    """미등록 안내의 본문(2026-10-08 사장님, 관제 159) — "무료 제미나이 API는 분석이 끊기고 오래 걸릴 수 있다"와
+    전환 시각을 알린다. 문구는 여기 한 곳: 하루 1회 팝업·1단계 분석 카드·3단계 시작 안내가 같이 읽는다."""
+    dt = owner_cutoff()
+    if dt is None or cutoff_passed(now):
+        return ("지금 무료 제미나이 API로 진행 중이에요. 무료 API는 사용자가 몰리면 영상 분석이 중간에 끊기고 "
+                "시간이 오래 걸릴 수 있어요. 구글 버텍스 API를 등록하면 영상 분석·대본·장면 매칭이 끊김 없이 "
+                "빠르게 돌아갑니다.")
+    when = "%d월 %d일 %d시" % (dt.month, dt.day, dt.hour)
+    return ("지금 영상 분석은 무료 제미나이 API로 돌고 있어, 사용자가 몰리면 분석이 중간에 끊기고 시간이 오래 "
+            "걸릴 수 있어요. %s부터는 각자 등록한 구글 버텍스 API로 진행되고, 등록하지 않으면 대본·장면 매칭까지 "
+            "전부 무료 제미나이 API로 돌아갑니다(끊김·지연 가능). 미리 등록해 두세요." % when)
 
 
 def model():
@@ -241,6 +325,18 @@ def veo_client(cid):
     if _is_admin(cid):
         return client(cid, VEO_LOCATION)
     return None
+
+
+VERTEX_NOTICE = "AI 기능을 쓰려면 내 구글 Vertex 키 등록이 필요해요"
+VERTEX_NOTICE_URL = "/settings#vertexCard"      # 마이페이지 설정 › 내 구글 Vertex 연결 카드(settings.html #vertexCard)
+
+
+def needs_notice(cid):
+    """Vertex 미등록 안내를 띄울 회원인가 — 판정 한 곳(하루 1회 팝업·3단계 시작 안내가 같이 쓴다).
+    관리자(사장님 프로젝트를 씀)는 제외, 자기 서비스계정(member_info)이 있으면 제외."""
+    if _is_admin(cid):
+        return False
+    return not member_info(cid)      # plan()의 member·owner 와 같은 두 조건 — 설정이 꺼져도 안내는 띄운다
 
 
 def veo_allowed(cid):
@@ -313,6 +409,21 @@ def video_part(path):
         return None
     with open(path, "rb") as fh:
         return types.Part.from_bytes(data=fh.read(), mime_type="video/mp4")
+
+
+def try_json(op, prompt, schema, what=""):
+    """(시도했나, dict) — "프롬프트+스키마 → JSON" 꼴 호출의 Vertex 우선 경로(2026-10-08, 관제 159).
+    스토리·구조분석·대본 보조·장면배치처럼 자기 키풀 루프만 있던 호출부가 맨 앞에서 한 줄로 부른다.
+    꺼졌거나 실패·빈 결과면 (False, None) → 호출부는 종전 키풀 그대로(try_call과 같은 약속)."""
+    def _fn(cl, m):
+        import json
+        from google.genai import types
+        resp = cl.models.generate_content(
+            model=m, contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json", response_schema=schema))
+        got = json.loads(resp.text)
+        return got if isinstance(got, dict) else None
+    return try_call(op, _fn, what=what or op)
 
 
 def try_call(op, fn, what=""):

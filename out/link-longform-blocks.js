@@ -57,21 +57,31 @@ const BLOCKS={
 };
 // 문구 5가지(사장님 2026-10-06 "30분간 할인중 하단 링크확인 / 구매특가 이벤트 링크확인 같은 걸로 5개 — 마케팅 심리 자극").
 //   ①②는 사장님 문구 그대로. ③ 없어질까 봐(품절) ④ 남들도 산다 ⑤ 궁금하게(가격). 놓은 뒤 글자는 고칠 수 있다.
+//   tts = 읽어 줄 말(사장님 2026-10-07 "tts 문구로 하나씩 — 고정댓글에 링크를 눌러주세요! 행복한 하루 되세요~") — 렌더 때 작업의 성우로 한 번 읽는다.
 const COPY=[
-  {id:'time',label:'① 30분 카운트',tone:'red',pre:'⏰ 할인 종료까지',clock:1800,post:'하단 링크 확인'},   // 30:00 에서 초가 줄어든다(사장님 "30분에서 초 내려가는 걸로")
-  {id:'event',label:'② 특가 이벤트',tone:'yellow',pre:'🎁',hot:'구매특가 이벤트',post:'링크 확인'},
-  {id:'stock',label:'③ 품절 전에',tone:'black',pre:'🔥',hot:'품절되기 전에',post:'링크 먼저 확인'},
-  {id:'crowd',label:'④ 다들 여기서',tone:'blue',pre:'👀 다들',hot:'여기서 사요',post:'하단 링크 확인'},
-  {id:'price',label:'⑤ 가격 궁금',tone:'purple',pre:'💸 가격 보면',hot:'놀라요',post:'링크에서 확인'},
-  {id:'spot',label:'⑥ 구매 좌표',tone:'green',pre:'📌 구매 좌표는',hot:'고정 댓글에',post:'있어요'},
+  {id:'time',label:'① 30분 카운트',tone:'red',pre:'⏰ 할인 종료까지',clock:1800,post:'하단 링크 확인',tts:'할인이 곧 끝나요! 고정 댓글에 링크를 눌러주세요. 행복한 하루 되세요!'},   // 30:00 에서 초가 줄어든다(사장님 "30분에서 초 내려가는 걸로")
+  {id:'event',label:'② 특가 이벤트',tone:'yellow',pre:'🎁',hot:'구매특가 이벤트',post:'링크 확인',tts:'지금 구매 특가 이벤트 중이에요! 고정 댓글에 링크를 눌러주세요. 행복한 하루 되세요!'},
+  {id:'stock',label:'③ 품절 전에',tone:'black',pre:'🔥',hot:'품절되기 전에',post:'링크 먼저 확인',tts:'품절되기 전에 서두르세요! 고정 댓글 링크에서 확인해 주세요. 좋은 하루 되세요!'},
+  {id:'crowd',label:'④ 다들 여기서',tone:'blue',pre:'👀 다들',hot:'여기서 사요',post:'하단 링크 확인',tts:'다들 여기서 사고 있어요! 고정 댓글에 링크를 눌러주세요. 행복한 하루 되세요!'},
+  {id:'price',label:'⑤ 가격 궁금',tone:'purple',pre:'💸 가격 보면',hot:'놀라요',post:'링크에서 확인',tts:'가격 보시면 놀라실 거예요! 고정 댓글 링크에서 확인해 주세요. 좋은 하루 되세요!'},
+  {id:'spot',label:'⑥ 구매 좌표',tone:'green',pre:'📌 구매 좌표는',hot:'고정 댓글에',post:'있어요',tts:'구매 좌표는 고정 댓글에 있어요! 링크를 눌러주세요. 행복한 하루 되세요!'},
 ];
 // 자리(가로 화면 기준 %): 띠는 화면 폭 전체로 가운데를 가로지르고, 화살표는 양옆 여백 한가운데(17%·83%)에서 띠 아래로 내리꽂는다.
 const SETS=COPY.map(c=>({id:c.id,label:c.label,items:[
   {block:'arrow',l:8.5,t:53,w:17,tone:c.tone},
   {block:'arrow',l:74.5,t:53,w:17,tone:c.tone},
-  {block:'band',l:0,t:35,w:100,tone:c.tone,pre:c.pre,hot:c.hot,post:c.post,...(c.clock?{clock:c.clock}:{})},
+  {block:'band',l:0,t:35,w:100,tone:c.tone,pre:c.pre,hot:c.hot,post:c.post,tts:c.tts,...(c.clock?{clock:c.clock}:{})},
 ]}));
-window.LINK_LONGFORM_BLOCKS={LOOP_MS,CSS,BLOCKS,SETS,
+// 🔊 읽어 줄 말 프리셋(2026-10-07 사장님 "재밌게 5개 — 편안한 쇼핑 되라든지, 영상 봐 주셔서 감사하다든지 위트 있게").
+//   누르면 「읽어 줄 말」 칸이 이 글로 바뀐다(그 뒤 고쳐도 된다). 80자 안. 링크 자리(고정 댓글)는 꼭 넣는다.
+const TTS_PRESETS=[
+  {id:'thanks',label:'🙏 끝까지 봐주셔서',tts:'여기까지 봐주신 당신, 안목이 남다르시네요! 고정 댓글 링크에서 편안한 쇼핑 되세요!'},
+  {id:'wallet',label:'👛 지갑 단속',tts:'지갑 꽉 잡으세요! 고정 댓글 링크 누르는 순간 장바구니가 바빠집니다. 영상 봐주셔서 감사해요!'},
+  {id:'cart',label:'🛒 장바구니 직행',tts:'고민은 배송만 늦출 뿐! 고정 댓글 링크로 장바구니 직행하세요. 오늘도 기분 좋은 쇼핑 되세요!'},
+  {id:'secret',label:'🤫 우리끼리 비밀',tts:'이건 우리끼리 비밀인데요, 링크는 고정 댓글에 숨겨놨어요. 시청 감사드리고 편안한 쇼핑 되세요!'},
+  {id:'friend',label:'💌 친구한테 자랑',tts:'좋은 건 나눠야 제맛! 고정 댓글 링크 확인하시고 친구한테도 살짝 알려주세요. 봐주셔서 고마워요!'},
+];
+window.LINK_LONGFORM_BLOCKS={LOOP_MS,CSS,BLOCKS,SETS,TTS_PRESETS,
   // 시계를 영상 시각(ms)에 맞춘다 — 편집 화면은 흐르는 시간으로, 렌더는 프레임 시각으로 부른다. 숫자가 바뀔 때만 다시 쓴다.
   clockAt(root,ms){root.querySelectorAll('[data-clock]').forEach(el=>{const sec=Math.max(0,Number(el.dataset.clock)-Math.floor(ms/1000));if(el.dataset.now!==String(sec)){el.dataset.now=String(sec);const u=el.querySelector('u');el.querySelectorAll('b').forEach(b=>b.remove());const d=String(Math.floor(sec/60)).padStart(2,'0')+String(sec%60).padStart(2,'0');u.insertAdjacentHTML('beforebegin',`<b>${d[0]}</b><b>${d[1]}</b>`);u.insertAdjacentHTML('afterend',`<b>${d[2]}</b><b>${d[3]}</b>`);}})},
   items:id=>structuredClone((SETS.find(s=>s.id===id)||SETS[0]).items).map(m=>({kind:'block',...m})),

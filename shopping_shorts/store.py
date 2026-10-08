@@ -3436,10 +3436,14 @@ class Store:
         ph = ",".join("?" * len(scs))
         with self._conn() as c:
             rows = c.execute(
-                f"SELECT shortcode, attempts, last_error FROM produce_autoload "
+                f"SELECT shortcode, attempts, last_error, "
+                f"(julianday('now') - julianday(updated_at)) * 86400 FROM produce_autoload "
                 f"WHERE shortcode IN ({ph})", scs
             ).fetchall()
-        return {r[0]: {"attempts": r[1] or 0, "last_error": r[2] or ""} for r in rows}
+        # age_sec = 마지막 시도를 시작한 뒤 흐른 초(관제 147). 시도 횟수는 추출 **전에** 올리므로(선래치)
+        #   마지막 시도가 아직 도는 중인지 가르려면 이 값이 있어야 한다. 모르면 None.
+        return {r[0]: {"attempts": r[1] or 0, "last_error": r[2] or "",
+                       "age_sec": (float(r[3]) if r[3] is not None else None)} for r in rows}
 
     def autoload_mark_attempt(self, shortcode):
         """추출을 **시작하기 전에** 시도 횟수를 올린다(선(先)래치).
@@ -6935,6 +6939,17 @@ class Store:
     # ── 돌려쓰기 소프트감지(2026-07-22): 접속 IP·기기 기록 + 요약 ──
     # ── 🖥 PC 등록/차단 (2026-08-31) ─────────────────────────────────────────
     PC_SLOTS = 2          # ★계정당 PC 2대. 늘리려면 여기 한 곳만 고친다
+    # 👻 유령 칸(관제 142, 2026-10-06 사장님 승인): 등록하고 **총 1시간도 안 쓰였고 24시간 넘게 안 보인** 칸.
+    #   기기 도장은 쿠키라 시크릿 창·쿠키 삭제·다른 브라우저 프로필에서 등록하면 그 도장이 곧 사라지고
+    #   칸만 영구히 남았다 → "PC 1대인데 2칸 꽉 참". 실측(라이브 10-06): 2칸 회원 19명 중 7명이 이 꼴.
+    #   실제로 돌려쓰는 PC는 1시간 넘게 쓰이므로 계속 막힌다.
+    GHOST_MAX_USE = 3600       # 첫 접속~마지막 접속이 이보다 짧고
+    GHOST_IDLE = 86400         # 마지막 접속 뒤 이만큼 지났으면 유령
+
+    def _is_ghost_slot(self, first_seen, last_seen, now):
+        """이 칸이 유령 칸인가 — 판정은 여기 한 곳(관리자 화면 등도 이걸 부른다)."""
+        f, l = int(first_seen or 0), int(last_seen or 0)
+        return (l - f) < self.GHOST_MAX_USE and (now - l) > self.GHOST_IDLE
 
     def set_pro_term(self, customer_id, start_ts, until_ts):
         """기간제 이용권 설정(시작·만료). 0을 주면 그 칸을 비운다(=무기한).
@@ -6980,12 +6995,24 @@ class Store:
             return False, None, "기기를 확인할 수 없어요"
         now = int(datetime.now(timezone.utc).timestamp())
         with self._conn() as c:
-            rows = c.execute("SELECT slot, device_id FROM customer_devices "
+            rows = c.execute("SELECT slot, device_id, first_seen, last_seen FROM customer_devices "
                              "WHERE customer_id=?", (customer_id,)).fetchall()
             used = {r[0]: r[1] for r in rows}
             for slot, did in used.items():
                 if did == device_id:
                     return True, slot, "이미 등록된 PC예요"
+            if len(used) >= self.PC_SLOTS:
+                # 꽉 찼으면 유령 칸(가장 오래 안 보인 것)을 이 PC로 바꾼다 — 관제 142
+                ghosts = sorted((r for r in rows if self._is_ghost_slot(r[2], r[3], now)),
+                                key=lambda r: r[3] or 0)
+                if ghosts:
+                    slot = ghosts[0][0]
+                    c.execute("UPDATE customer_devices SET device_id=?, first_seen=?, last_seen=?, "
+                              "ua=?, ip=? WHERE customer_id=? AND slot=?",
+                              (device_id, now, now, (ua or "")[:200], (ip or "")[:64],
+                               customer_id, slot))
+                    print(f"[pc] 유령 칸 교체 cid={customer_id} slot={slot}", file=sys.stderr)
+                    return True, slot, f"오래 안 쓴 {slot}번 PC 칸을 이 PC로 바꿨어요"
             for slot in range(1, self.PC_SLOTS + 1):
                 if slot not in used:
                     try:

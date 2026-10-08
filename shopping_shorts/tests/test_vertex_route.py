@@ -34,7 +34,7 @@ def test_admin_gate_and_ops_list(monkeypatch):
     _settings(monkeypatch, enabled="admin", ops="script_extract,ai_match")
     monkeypatch.setattr(vr, "_is_admin", lambda cid: cid == 0)
     assert vr.on("script_extract", cid=0) is True
-    assert vr.on("frame_script", cid=0) is False        # 목록에 없음
+    assert vr.on("frame_script", cid=0) is True         # 관리자는 목록과 무관하게 전 op(2026-10-08 사장님, 관제 159)
     assert vr.on("script_extract", cid=77) is False     # 관리자 아님
     _settings(monkeypatch, enabled="1")
     assert vr.on("frame_script", cid=77) is True         # 전체 · 목록 비면 전부

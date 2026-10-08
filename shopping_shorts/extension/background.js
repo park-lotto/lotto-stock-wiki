@@ -22,6 +22,20 @@ chrome.runtime.onMessage.addListener(function (msg, _sender, sendResponse) {
   if (String(msg.url || "").indexOf(SS_BASE) !== 0) { sendResponse({ status: 0, text: "" }); return; }
   var opt = { method: msg.method || "GET", credentials: "include", headers: msg.headers || {} };
   if (msg.body) opt.body = msg.body;
+  // 영상 같은 이진 파일은 base64로 돌려준다(관제 156 — 렌즈 결과창 마우스 올림 미리보기).
+  //   남의 사이트 위 <video src=우리서버>는 쿠키가 안 실려 401이라, 여기서 받아 넘긴다.
+  if (msg.b64) {
+    fetch(msg.url, opt)
+      .then(function (r) {
+        return r.arrayBuffer().then(function (buf) {
+          var u8 = new Uint8Array(buf), s = "", CH = 0x8000;
+          for (var i = 0; i < u8.length; i += CH) s += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
+          sendResponse({ status: r.status, b64: btoa(s), type: r.headers.get("content-type") || "" });
+        });
+      })
+      .catch(function () { sendResponse({ status: 0, text: "" }); });
+    return true;
+  }
   fetch(msg.url, opt)
     .then(function (r) { return r.text().then(function (t) { sendResponse({ status: r.status, text: t }); }); })
     .catch(function () { sendResponse({ status: 0, text: "" }); });

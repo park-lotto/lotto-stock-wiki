@@ -3609,7 +3609,7 @@ async function lensSearch(btn, shortcode){
   //   함수 자체는 아래에 남겨둔다(되살릴 때 대비). 서버의 /api/lens/yt도 그대로다.
   LENS_STATE[shortcode]={items:[], on:new Set(LENS_PLATFORMS.map(p=>p.k)), saved:new Set(),
                          sel:new Set(), shortsOnly:false, foreignOnly:false, videoOnly:true, hideOfftopic:false,
-                         ytLoading:false, lensLoading:true, lensErr:'', keyword:'', caption,
+                         ytLoading:false, lensLoading:false, lensRan:false, lensErr:'', keyword:'', caption,
                          cnCands:[], frameBlob:blob, cnLoading:true, diag:null};
   renderLens(shortcode);
   fetchLensCnKeywords(shortcode, caption, blob);    // 📕🎬 중국앱 후보 검색어 자동합류(비동기)
@@ -3618,6 +3618,15 @@ async function lensSearch(btn, shortcode){
     const st=LENS_STATE[shortcode]; if(!st) return;
     st.saved=new Set(d.shortcodes||[]); _lensRerender(shortcode);
   }).catch(()=>{});
+  // ★렌즈(유료·SerpApi)는 창을 열 때 쏘지 않는다(관제 156, 2026-10-07 사장님 승인).
+  //   키워드만 찾으려고 숏템파워검색을 눌러도 렌즈가 차감됐다. 이제 아래 주황 칸 「🔍 렌즈 검색」
+  //   버튼(runLensSearch)을 눌렀을 때만 돈다. 대본 분석·검색어 만들기(무료)는 지금처럼 바로 돈다.
+}
+async function runLensSearch(shortcode){
+  const st0=LENS_STATE[shortcode];
+  if(!st0 || st0.lensLoading || !st0.frameBlob) return;
+  st0.lensLoading=true; st0.lensRan=true; st0.lensErr=''; _lensRerender(shortcode);
+  const blob=st0.frameBlob, caption=st0.caption||'';
   const fd=new FormData(); fd.append('frame', blob, 'f.jpg');
   if(caption) fd.append('source_caption', caption);
   // 🔍 렌즈 검색국가 — 랭킹 상단에서 꺼둔 나라는 아예 검색하지 않는다(SerpApi 절약).
@@ -3651,7 +3660,7 @@ async function lensSearch(btn, shortcode){
   }catch(e){
     const st=LENS_STATE[shortcode]; if(!st) return;
     st.lensLoading=false;
-    st.lensErr=(e&&e.name==='AbortError')?'⏱ 90초 안에 답이 없어 끊었어요 — 잠시 뒤 🔍 숏템파워검색을 다시 눌러주세요':'❌ '+e.message;
+    st.lensErr=(e&&e.name==='AbortError')?'⏱ 90초 안에 답이 없어 끊었어요 — 잠시 뒤 아래 🔍 렌즈 검색을 다시 눌러주세요':'❌ '+e.message;
     _lensRerender(shortcode);
   }
 }
@@ -4005,20 +4014,46 @@ async function lensExtractThenSearch(shortcode){
 //    제품명 토큰이 들어 있는 검색어에 표시를 달고 맨 위로 올린다.
 //    ⚠️어간 2글자로 본다 — '재봉틀'과 '미니 재봉틀'을 같은 것으로 봐야 하는데
 //      완전일치로 보면 하나도 안 걸린다(인스타 슬롯 매칭에서 배운 것과 같은 함정).
+async function _fillScriptRowLangs(st, row){
+  try{
+    const r=await fetch('/api/lens/kw/multi',{method:'POST',headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({text:row.ko, kind:'multi'})});
+    const d=await r.json();
+    const c=(d&&d.candidates&&d.candidates[0])||null;
+    if(!c) return;
+    ['zh','en','ja','ru'].forEach(k=>{ if(!row[k] && c[k]) row[k]=c[k]; });
+    const sc=Object.keys(LENS_STATE).find(k=>LENS_STATE[k]===st);
+    if(sc) _lensRerender(sc);
+  }catch(e){ console.warn('[lens] 제품 줄 번역 실패', e); }
+}
 function _markScriptProduct(st){
   const p=((st&&st.product)||'').trim();
   if(!st || !p || !(st.cnCands||[]).length) return;
   // 조사·수식어를 뺀 알맹이만 남긴다. 2글자 미만은 아무 데나 걸려 쓸모없다.
   const toks=p.split(/[\s,·\/()\[\]]+/).map(t=>t.trim()).filter(t=>t.length>=2);
   if(!toks.length) return;
-  let first=-1;
-  st.cnCands.forEach((c,i)=>{
+  // ★토큰 하나만 겹쳐도 '제품'으로 치던 것을 고쳤다(관제 156, 2026-10-07 사장님 "대본검색어가 맨 위로 안 온다").
+  //   '모바일 픽셀 듀얼 모니터'면 '듀얼'·'모니터'가 거의 모든 검색어에 들어 있어, 원래 첫 줄
+  //   '듀얼 모니터'가 그대로 맨 위에 남고 정작 제품명 줄은 4번째였다(6줄 전부 '제품' 표시).
+  //   → 겹친 토큰 **개수**로 줄을 세우고, 제품명 전체가 든 줄만 '제품' 표시. 제품명 줄이 없으면 맨 위에 만든다.
+  const norm=x=>String(x||'').replace(/\s+/g,'');
+  const pN=norm(p);
+  st.cnCands.forEach(c=>{
     const ko=String((c&&c.ko)||'');
-    c._scriptHit = toks.some(t=>ko.includes(t));
-    if(c._scriptHit && first<0) first=i;
+    c._scriptScore = toks.filter(t=>ko.includes(t)).length;
+    c._scriptHit = !!pN && norm(ko).includes(pN);
   });
-  // 맨 위로 올린다 — 위에서부터 누르는 사장님이 제일 정확한 것을 먼저 만나게.
-  if(first>0){ st.cnCands.unshift(st.cnCands.splice(first,1)[0]); }
+  if(!st.cnCands.some(c=>c._scriptHit)){
+    const row={ko:p, zh:'', en:'', ja:'', ru:'', _scriptHit:true, _scriptScore:toks.length+1};
+    st.cnCands.unshift(row);
+    // ★다른 언어 칸을 채운다(관제 156, 2026-10-08 사장님 "탭이 활성화 안 될 때가 가끔"):
+    //   한국어만 있으면 샤·도·틱·인·핀·유 버튼이 전부 꺼진다(_lensKwFor 가 '' → 비활성).
+    //   검색어 판과 같은 무료 번역(/api/lens/kw/multi → expand_search_keywords)의 첫 줄을 쓴다.
+    _fillScriptRowLangs(st, row);
+  }
+  // 안정 정렬: 제품 표시 → 겹친 토큰 수 → 원래 순서.
+  st.cnCands = st.cnCands.map((c,i)=>[c,i]).sort((a,b)=>
+      (b[0]._scriptHit-a[0]._scriptHit) || ((b[0]._scriptScore||0)-(a[0]._scriptScore||0)) || (a[1]-b[1])).map(x=>x[0]);
 }
 
 // 🎯 「제품명 찾기」는 2026-09-08 사장님 지시로 없앴다.
@@ -4416,8 +4451,8 @@ function _lensSearchUrl(platform, kw){
     xiaohongshu:`https://www.xiaohongshu.com/search_result?keyword=${q}`,
     douyin:`https://www.douyin.com/search/${q}`,
     // 유튜브(2026-09-08) — 영어·일본어 검색어로 해외 원본을 찾을 때 쓴다.
-    // &sp=EgIYAQ%253D%253D = 쇼츠(4분 미만) 필터. 우리가 찾는 건 숏폼이다.
-    youtube:`https://www.youtube.com/results?search_query=${q}&sp=EgIYAQ%253D%253D`,
+    // &sp=EgIQCQ%253D%253D = Shorts 전용(관제 156 — 4분 미만 필터 EgIYAQ는 일반 영상이 섞였다: 실측 Shorts 31·일반 14 → 31·0).
+    youtube:`https://www.youtube.com/results?search_query=${q}&sp=EgIQCQ%253D%253D`,
     // 핀터레스트 영상탭(2026-09-08) — 언어 격자에서 빠져 있었다.
     pinterest:`https://www.pinterest.com/search/videos/?q=${q}`,
   };
@@ -4683,7 +4718,20 @@ function renderLens(shortcode, mountId){
       ${rows?`<div style="font-size:11.5px;color:var(--sub);margin-top:8px">🔎 아래로 모아서 보기 = 유튜브·핀터레스트·네이버클립에서 찾아 이 창 아래 ③에 쌓음(무료) · 샤/도/틱/인/핀/유 = 그 사이트를 새 탭으로 열기</div>`:''}
     </div>`;
   // ── ③ 모인 영상 — sticky(칩+필터줄만. 2026-08-02 모바일 사고 주석 참고: 검색칸까지 넣으면 카드가 눌린다) ──
-  const bar=`${prodBox}${kwBox}${findBox}
+  // ── 렌즈 검색(유료) — 주황 칸(관제 156). 나라를 고르고 「검색」을 눌러야만 렌즈가 돈다. ──
+  //   나라 목록·켜짐은 랭킹 위 국가 설정과 **같은 값**(LENS_LOCALES_ALL/OFF·toggleLensLocale) — 두 벌 금지.
+  const _locChips=(LENS_LOCALES_ALL||[]).map(l=>{ const on=!LENS_LOCALES_OFF.has(l.key);
+      return `<button onclick="toggleLensLocale('${l.key}');_lensRerender('${shortcode}')" style="font-size:12.5px;padding:5px 11px;border-radius:9px;cursor:pointer;border:1px solid ${on?'#f59e0b':'#5a4a2a'};background:${on?'#f59e0b':'transparent'};color:${on?'#1a1206':'#d9b56b'};font-weight:${on?'800':'500'}">${esc(l.label)}</button>`; }).join('');
+  const lensBox=`<div style="margin:6px 0 12px;padding:14px 16px;border:2px solid #f59e0b;border-radius:12px;background:rgba(245,158,11,.08)">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <b style="color:#f59e0b;font-size:14.5px">🔍 렌즈 검색</b>
+        <span style="font-size:12px;color:#d9b56b">이 장면과 <b>닮은 영상</b>을 구글 렌즈로 찾습니다 — <b>누를 때만 렌즈 1회 차감</b></span>
+      </div>
+      ${_locChips?`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><span style="font-size:12px;color:#d9b56b;margin-right:2px">나라</span>${_locChips}</div>`:''}
+      <button onclick="runLensSearch('${shortcode}')" ${(st.lensLoading||!st.frameBlob)?'disabled':''} style="padding:9px 22px;border-radius:10px;border:0;background:#f59e0b;color:#1a1206;font-weight:800;font-size:14px;cursor:pointer">${st.lensLoading?'⏳ 렌즈 검색 중… (10~30초)':(st.lensRan?'🔍 다시 검색':'🔍 검색')}</button>
+      ${st.lensErr?`<span style="margin-left:10px;font-size:12px;color:#e0623d">${st.lensErr}</span>`:''}
+    </div>`;
+  const bar=`${prodBox}${kwBox}${findBox}${lensBox}
   <div style="${_secCss};padding-bottom:0"><div style="${_lblCss};margin-bottom:0">${_num(3)}모인 영상 <b style="color:var(--fg,inherit)">${shown.length}개</b></div></div>
   <div style="position:sticky;top:0;background:var(--panel);padding:6px 0;margin-bottom:8px;z-index:1;max-height:40vh;overflow:auto">
     <div>${chips}</div>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>해외 레퍼런스 수집 · 숏템메이커</title>
+<style>
+  :root{
+    --bg:#0a0f0d; --panel:#0f1512; --line:#1e2a24;
+    --txt:#e6efe9; --sub:#8fa39a; --accent:#37e0bd; --warn:#e0b23a; --danger:#e5534b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic",sans-serif;line-height:1.5}
+  .wrap{max-width:1500px;margin:0 auto;padding:28px 20px 80px}
+  h1{font-size:26px;margin:0 0 4px;background:linear-gradient(90deg,#dff7f0,var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 18px}
+  .layout{display:grid;grid-template-columns:180px 1fr;gap:18px}
+  .cats{display:flex;flex-direction:column;gap:6px}
+  .cat{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--line);
+    border-radius:10px;background:var(--panel);color:var(--sub);cursor:pointer;font-size:14px;font-weight:600}
+  .cat:hover{border-color:var(--accent)}
+  .cat.on{border-color:var(--accent);color:var(--txt);background:#123a31}
+  .cat .n{font-size:12px;color:var(--sub);font-weight:400}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  input[type=text]{flex:1;min-width:260px;font:inherit;font-size:14px;padding:9px 11px;border-radius:8px;
+    border:1px solid var(--line);background:#0b110e;color:var(--txt)}
+  select,button{font:inherit;font-size:14px;padding:8px 14px;border-radius:8px;border:1px solid var(--line);
+    background:#0b110e;color:var(--txt)}
+  button.go{background:var(--accent);color:#04201a;border-color:var(--accent);font-weight:700;cursor:pointer}
+  button.go:disabled{opacity:.5;cursor:default}
+  .hint{color:var(--sub);font-size:12.5px;margin-top:8px}
+  .log{font-family:Consolas,monospace;font-size:12px;color:var(--sub);max-height:170px;overflow:auto;
+    white-space:pre-wrap;margin-top:10px}
+  .err{color:var(--danger);font-size:13px;margin-top:6px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{color:var(--sub);font-weight:600;position:sticky;top:0;background:var(--panel)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  td a{color:var(--accent);text-decoration:none}
+  .kw{display:inline-block;font-size:11px;padding:0 7px;margin:1px 2px;border-radius:99px;border:1px solid var(--line);color:var(--sub)}
+  .thumb{width:44px;height:78px;object-fit:cover;border-radius:6px;background:#000;display:block}
+  .empty{color:var(--sub);padding:30px 0;text-align:center}
+  .tabs2{display:flex;gap:6px;margin:0 0 10px}
+  @media (max-width:760px){ .layout{grid-template-columns:1fr} .cats{flex-direction:row;flex-wrap:wrap} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🌐 해외 레퍼런스 수집</h1>
+  <p class="lead">해외에서 터진 영상을 만드는 채널을 모읍니다. 씨앗(해외 영상 주소·채널 주소·영어 검색어)을 넣으면
+    판매자 태그와 관련 검색어로 유튜브를 조회수순 검색하고, 걸린 영상들의 태그로 다음 검색어를 찾아 계속 넓혀 갑니다. 렌즈 비용 0.</p>
+  <div class="layout">
+    <div class="cats" id="cats"></div>
+    <div>
+      <div class="box">
+        <div class="row">
+          <input type="text" id="seed" placeholder="예) https://www.youtube.com/@OneinOneShorts · https://www.youtube.com/shorts/FD2sl2ji2fU · marriage humor, couple prank">
+          <select id="rounds" title="몇 바퀴 넓힐지"><option value="1">1바퀴</option><option value="2" selected>2바퀴</option><option value="3">3바퀴</option></select>
+          <button class="go" id="go">수집 시작</button>
+        </div>
+        <div class="hint">바퀴당 검색어 최대 6개(유튜브 검색 6회). 같은 카테고리에서 쓴 검색어는 다시 안 씁니다.</div>
+        <div class="err" id="err"></div>
+        <div class="log" id="log"></div>
+      </div>
+      <div class="box">
+        <div class="tabs2"><b id="title"></b></div>
+        <div id="list"></div>
+      </div>
+      <div class="box">
+        <b>쓴 검색어</b>
+        <div id="kws" class="hint"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/sidebar.js"></script>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var cat = params.get("cat") || "";
+  var timer = null;
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]; }); }
+  function n(v) { v = +v || 0; return v >= 1e8 ? (v / 1e8).toFixed(1) + "억" : v >= 1e4 ? Math.round(v / 1e4).toLocaleString() + "만" : v.toLocaleString(); }
+
+  function load() {
+    fetch("/api/overseas_ref/channels?cat=" + encodeURIComponent(cat)).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d.ok) { document.getElementById("err").textContent = d.error || "불러오기 실패"; return; }
+      cat = d.cat;
+      document.getElementById("cats").innerHTML = d.categories.map(function (c) {
+        return '<div class="cat' + (c === cat ? " on" : "") + '" data-c="' + esc(c) + '">' + esc(c) +
+          ' <span class="n">' + (d.counts[c] || 0) + "</span></div>";
+      }).join("");
+      document.getElementById("title").textContent = cat + " · 채널 " + d.channels.length + "개 (걸린 영상 조회수 합 순)";
+      document.getElementById("list").innerHTML = d.channels.length ? '<table><tr><th></th><th>채널</th><th>구독자</th><th>걸린 영상</th><th>조회수 합</th><th>최고 영상</th><th>걸린 검색어</th></tr>' +
+        d.channels.map(function (c) {
+          if (String(c.channel_id).indexOf("instagram:") === 0) {
+            var ih = c.channel_id.slice(11);
+            return "<tr><td></td><td><a href='https://www.instagram.com/" + esc(ih) + "/reels/' target='_blank'>" + esc(c.title) + "</a></td>" +
+              "<td class='num'>-</td><td class='num'>" + c.hit_videos + "편</td><td class='num'>" + n(c.hit_views) + "</td>" +
+              "<td class='num'><a href='" + esc(c.top_video) + "' target='_blank'>" + n(c.top_views) + "</a></td>" +
+              "<td>" + c.keywords.slice(0, 6).map(function (k) { return "<span class='kw'>" + esc(k) + "</span>"; }).join("") + "</td></tr>";
+          }
+          if (String(c.channel_id).indexOf("tiktok:") === 0) {
+            var h = c.channel_id.slice(7);
+            return "<tr><td></td><td><a href='https://www.tiktok.com/" + esc(h) + "' target='_blank'>" + esc(c.title) + "</a></td>" +
+              "<td class='num'>-</td><td class='num'>" + c.hit_videos + "편</td><td class='num'>-</td>" +
+              "<td><a href='" + esc(c.top_video) + "' target='_blank'>씨앗 영상</a></td><td></td></tr>";
+          }
+          return "<tr><td><a href='https://www.youtube.com/shorts/" + esc(c.top_video) + "' target='_blank'><img class='thumb' loading='lazy' src='https://i.ytimg.com/vi/" + esc(c.top_video) + "/oardefault.jpg' onerror=\"this.src='https://i.ytimg.com/vi/" + esc(c.top_video) + "/hqdefault.jpg'\"></a></td>" +
+            "<td><a href='https://www.youtube.com/channel/" + esc(c.channel_id) + "/shorts' target='_blank'>" + esc(c.title) + "</a></td>" +
+            "<td class='num'>" + n(c.subs) + "</td><td class='num'>" + c.hit_videos + "편</td><td class='num'>" + n(c.hit_views) + "</td>" +
+            "<td class='num'><a href='https://www.youtube.com/shorts/" + esc(c.top_video) + "' target='_blank'>" + n(c.top_views) + "</a></td>" +
+            "<td>" + c.keywords.slice(0, 6).map(function (k) { return "<span class='kw'>" + esc(k) + "</span>"; }).join("") + "</td></tr>";
+        }).join("") + "</table>" : '<div class="empty">아직 모은 채널이 없어요. 위에 씨앗을 넣고 수집 시작을 누르세요.</div>';
+      document.getElementById("kws").innerHTML = d.keywords.map(function (k) {
+        return "<span class='kw'>" + esc(k.kw) + " · " + k.results + "편/새 " + k.new_channels + "</span>"; }).join("") || "없음";
+      showStatus(d.status);
+    });
+  }
+  function showStatus(s) {
+    document.getElementById("log").textContent = (s.log || []).join("\n");
+    var lg = document.getElementById("log"); lg.scrollTop = lg.scrollHeight;
+    document.getElementById("go").disabled = !!s.running;
+    document.getElementById("go").textContent = s.running ? "수집 중… (" + s.cat + ")" : "수집 시작";
+    if (s.running && !timer) timer = setInterval(poll, 3000);
+    if (!s.running && timer) { clearInterval(timer); timer = null; load(); }
+  }
+  function poll() { fetch("/api/overseas_ref/status").then(function (r) { return r.json(); }).then(showStatus); }
+
+  document.getElementById("cats").addEventListener("click", function (e) {
+    var el = e.target.closest(".cat"); if (!el) return;
+    cat = el.getAttribute("data-c"); history.replaceState(null, "", "?cat=" + encodeURIComponent(cat)); load();
+  });
+  document.getElementById("go").addEventListener("click", function () {
+    var seed = document.getElementById("seed").value.trim();
+    document.getElementById("err").textContent = "";
+    if (!seed) { document.getElementById("err").textContent = "씨앗을 넣어 주세요"; return; }
+    fetch("/api/overseas_ref/run", {method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({cat: cat, seed: seed, rounds: +document.getElementById("rounds").value})})
+      .then(function (r) { return r.json(); }).then(function (d) {
+        if (!d.ok) { document.getElementById("err").textContent = d.error || "실패"; return; }
+        poll(); if (!timer) timer = setInterval(poll, 3000);
+      });
+  });
+  load();
+})();
+</script>
+</body>
+</html>

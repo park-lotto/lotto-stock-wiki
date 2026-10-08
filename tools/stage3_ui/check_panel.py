@@ -5,7 +5,7 @@
   ② 내 영상 전체 줄: 줄에 보이는 버튼은 전체 재생·음성 만들기·촘촘히·⋯ 뿐, 되돌리기·지금 저장·불러오기·이전 편성은 ⋯ 안
   ③ 켜기·횟수·크기·소리·칸 🔇 → DB 꾸미기 값에 저장, 새로고침 뒤 그대로, 렌더 resolve 가 같은 값
   ④ ＋ 내 효과음 등록 → 장면 자산(sfx)으로 들어가 칸 효과음 고르기 목록에 뜬다
-  ⑤ 배경음 탭 = 준비중(등록 버튼 비활성)
+  ⑤ 배경음 탭 = 곡 목록(관제 146 — 상세 점검은 tools/bgm_lib/ui_check.py)
 """
 import io, math, struct, tempfile, wave
 from pathlib import Path
@@ -97,8 +97,8 @@ def run(pg, fr, job_id, db, check, out):
 
     print("⑤ 배경음 탭")
     f2.click("#sfxPanel .sfxtab[data-t=bgm]"); pg.wait_for_timeout(300)
-    bgm = f2.evaluate("() => ({vis: getComputedStyle(document.getElementById('sfxBodyBgm')).display!=='none', txt: document.getElementById('sfxBodyBgm').innerText, dis: document.querySelector('#sfxBodyBgm button').disabled})")
-    check(bgm["vis"] and "준비중" in bgm["txt"] and bgm["dis"], f"배경음 = 준비중·등록 비활성 {bgm['vis'], bgm['dis']}")
+    bgm = f2.evaluate("() => ({vis: getComputedStyle(document.getElementById('sfxBodyBgm')).display!=='none', n: document.querySelectorAll('#bgmList .bgmitem').length})")
+    check(bgm["vis"] and bgm["n"] > 1, f"배경음 = 곡 목록 {bgm['vis'], bgm['n']}줄")
     pg.screenshot(path=out.replace(".png", "_bgm.png"))
     f2.click("#sfxPanel .sfxtab[data-t=sfx]")
     return True

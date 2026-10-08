@@ -932,25 +932,53 @@ def mark_auto_exclude(extracts, job):
     idx = ss.get("no_auto_idx") if isinstance(ss, dict) else None
     if not isinstance(idx, list):
         return extracts
-    # ★재료가 씨앗뿐이면 표식을 달지 않는다(관제 138) — 달면 자동 배치 후보가 0이 돼 편집안을 못 만든다(_drop_seed 와 같은 규칙).
-    _seed = set()
+    _seed = []
     for i in idx:
         try:
-            _seed.add(f"s{int(i)}")
+            _seed.append(f"s{int(i)}")
         except (TypeError, ValueError):
             pass
+    return mark_seed_sources(extracts, _seed)
+
+
+def mark_seed_sources(extracts, seed_keys):
+    """씨앗 표식을 실제로 다는 한 곳 — 3단계 job(mark_auto_exclude, 열쇠 s<urls 인덱스>)과
+    2단계 스토리보드(작업파일 재료, 열쇠 = 영상 shortcode — seed_keys_from_handoff)가 같이 부른다(관제 120 장면배분).
+    ★재료가 씨앗뿐이면 표식을 달지 않는다(관제 138) — 달면 자동 배치 후보가 0이 돼 편집안을 못 만든다(_drop_seed 와 같은 규칙)."""
+    _seed = {str(k) for k in (seed_keys or []) if k is not None and str(k)}
+    if not _seed:
+        return extracts
     if not any(isinstance(r, dict) and r.get("segments") for k, r in (extracts or {}).items() if k not in _seed):
         print("[extract] 씨앗 말고 쓸 재료가 없어 자동 배치 제외를 달지 않는다", flush=True)
         return extracts
-    for i in idx:
-        try:
-            r = extracts.get(f"s{int(i)}")
-        except (TypeError, ValueError):
-            continue
+    for k in sorted(_seed):
+        r = (extracts or {}).get(k)
         if isinstance(r, dict):
             r["auto_exclude"] = True
-            print(f"[extract] s{int(i)} 씨앗 — 자동 배치 제외(영상 소스엔 유지)", flush=True)
+            print(f"[extract] {k} 씨앗 — 자동 배치 제외(영상 소스엔 유지)", flush=True)
     return extracts
+
+
+def seed_keys_from_handoff(handoff):
+    """작업파일(produce_works.state.handoff)에서 씨앗 영상 열쇠(shortcode) — 화면 collectNoAutoIdx 와 같은 조건
+    (seedNoAuto 표식 + useFootage). 3단계 job 이 아직 없을 때 스토리보드 재료(app._sb_job)가 쓴다."""
+    out = []
+    for e in handoff or []:
+        if isinstance(e, dict) and e.get("seedNoAuto") and e.get("useFootage"):
+            sc = str(e.get("shortcode") or "").strip()
+            if sc:
+                out.append(sc)
+    return out
+
+
+def seed_job_keys(job, handoff):
+    """작업파일의 지금 씨앗(seed_keys_from_handoff 와 같은 조건) → 이미 만든 3단계 job 의 재료 열쇠(s<urls 인덱스>).
+    ★10-07 실측 d2ed614194c1: job(c09f0d433325)을 만든 뒤 씨앗을 정해 job.extract 에 표식이 없었고, 스토리보드가 그 job 재료를 써
+      유튜브 씨앗 장면이 모든 보드에 들어갔다. 원본 주소(urls)로 짝지어 같은 주인(mark_seed_sources)이 표식을 단다."""
+    urls = [str(u or "").strip() for u in ((job or {}).get("urls") or [])]
+    seed_urls = {str(e.get("url") or "").strip() for e in (handoff or [])
+                 if isinstance(e, dict) and e.get("seedNoAuto") and e.get("useFootage") and e.get("url")}
+    return ["s%d" % i for i, u in enumerate(urls) if u and u in seed_urls]
 
 
 def _extract_coverage(r, path):
@@ -1893,6 +1921,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # ★새 계획에 컷 규칙 표식(관제 084) — 화면·렌더·캡컷이 같은 planClips 로 읽는다. 옛 작업엔 없다(종전 규칙).
     from shopping_shorts.config import CUT_RULE as _CUT_RULE
     plan["cut_rule"] = _CUT_RULE
+    from shopping_shorts.config import SCENE_STOP as _SCENE_STOP
+    plan["scene_stop"] = _SCENE_STOP          # 관제 150 — 새 작업만 장면 전환 앞에서 이어 틀기를 멈춘다
     if not plan["beats"]:
         # ★사유를 갈라서 말한다(2026-08-19). 종전엔 "추출 실패 또는 키 소진"으로 뭉개서
         #   실측 13건 중 대부분이 **추출은 성공한 상태**(9,091자)였는데도 "추출 실패"로
@@ -1986,6 +2016,10 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                            customer_id=customer_id)
     except Exception:
         traceback.print_exc(file=sys.stderr)
+
+    # 4.7) 감정짤 자리(관제 139) — 음성 길이·낱말 시각이 정해진 **뒤**, 편성 저장 전 한 곳. 스위치 meme_enabled 뒤(끄면 종전 그대로)
+    _apply_memes(plan, store, {"customer_id": customer_id, "job_id": job_id}, work / "tts")
+    _apply_line_sfx(plan, store, {"customer_id": customer_id, "job_id": job_id})   # 짤이 정해진 뒤 줄 효과음(짤엔 리액션 탄성)
 
     # 4.9) ★게이트 교정 루프(2026-07-25) — 최종 plan(refill·conform 뒤)을 보고 위반이면
     # 통과할 때까지 재픽(상한 3). 경고만 하던 관문을 '통과시키는 관문'으로. 순수·무과금·
@@ -2292,6 +2326,13 @@ def resolve_deco_media(deco, work):
     work = Path(work)
     for key in ("bgm", "overlay"):
         item = deco.get(key) or {}
+        if key == "bgm" and item.get("lib"):
+            # 3단계 배경음 목록에서 고른 곡(관제 146) — 업로드 파일보다 앞선다(고를 때 file을 비운다).
+            from shopping_shorts import bgm_lib
+            lp = bgm_lib.path_of(item["lib"])
+            if lp:
+                deco[key] = {**item, "_abspath": lp}
+            continue
         if item.get("file"):
             p = work / item["file"]
             if p.exists():
@@ -2412,10 +2453,116 @@ def _resolve_cutaway_paths(store, plan, customer_id):
     for beat in plan["beats"]:
         cut = beat.get("cutaway")
         if cut:
-            asset = store.get_scene_asset(cut["asset_id"], customer_id=customer_id)
+            # 감정짤(관제 139)은 사장님(0) 짤 팩에서 온다 — 서버(meme_slots)가 정한 짤만 주인 0 으로 찾는다
+            _owner = 0 if (cut.get("match_type") == "meme" and int(cut.get("owner") or 0) == 0) else customer_id
+            asset = store.get_scene_asset(cut["asset_id"], customer_id=_owner)
             if asset and asset.get("media_path"):
                 out[beat["beat_idx"]] = asset["media_path"]
     return out
+
+
+def _meme_on(store, job):
+    """감정짤 스위치 meme_enabled — 값 규약은 _setting_allows 한 곳(app._setting_gate 와 같은 판정)."""
+    try:
+        v = store.get_setting("meme_enabled", "")
+    except Exception as e:      # noqa: BLE001 — 설정을 못 읽으면 끔(종전 그대로) + 한 줄
+        print("[meme] 스위치 읽기 실패(끔으로 진행): %r" % e, file=sys.stderr)
+        return False
+    return _setting_allows(v, (job or {}).get("customer_id", 0))
+
+
+def _meme_pool(store):
+    """서버 짤 팩 = 사장님(0) 장면 자산 중 clip·category "meme" — 감정은 tone 칸. {감정: [{asset_id, duration, owner}]}."""
+    pool = {}
+    for a in store.list_scene_assets(customer_id=0, asset_type="clip", category="meme") or []:
+        emo = str(a.get("tone") or "").strip()
+        if emo and a.get("media_path") and Path(a["media_path"]).exists():
+            pool.setdefault(emo, []).append({"asset_id": a["id"], "duration": float(a.get("duration") or 0), "owner": 0})
+    for v in pool.values():
+        v.sort(key=lambda x: x["asset_id"])
+    return pool
+
+
+def _meme_words_of(b):
+    """칸 → (낱말 시각, 실제 칸 길이) — 짤 길이(storyboard.meme_head)에 건네는 음성 정보. 자동 배치·[＋짤] 둘 다 이 함수."""
+    from shopping_shorts import video_assemble as _va
+    mp3 = b.get("tts_path")
+    if not mp3 or not Path(mp3).exists():
+        return None, None
+    d = _probe_duration(str(mp3))
+    words, _src = _beat_words_src(str(mp3), d, removed=tts_timestamps.load_removed(str(mp3)))
+    return words, _va._beat_effective_dur(b, mp3)
+
+
+def _meme_prefs(store, customer_id):
+    """회원의 '감정별 우선 짤'(관제 143) → {감정: [asset_id…]}. 못 읽으면 빈 dict + 한 줄(종전 해시로)."""
+    from shopping_shorts import storyboard as _sbm
+    try:
+        return _sbm.meme_prefs_by_emotion(store.get_pref(_sbm.MEME_PREF_KEY, customer_id=int(customer_id or 0), default=[]))
+    except Exception as e:      # noqa: BLE001
+        print("[meme] 우선 짤 읽기 실패(종전대로): %r" % e, file=sys.stderr)
+        return {}
+
+
+def _sfx_prefs(store, customer_id):
+    """회원의 '분류별 우선 효과음'(⭐, 짤 ⭐와 같은 모양) → {분류: [asset_id…]}. 못 읽으면 빈 dict + 한 줄(종전 해시로)."""
+    from shopping_shorts import storyboard as _sbm
+    try:
+        return _sbm.sfx_prefs_by_cat(store.get_pref(_sbm.SFX_PREF_KEY, customer_id=int(customer_id or 0), default=[]))
+    except Exception as e:      # noqa: BLE001
+        print("[line_sfx] 우선 효과음 읽기 실패(종전대로): %r" % e, file=sys.stderr)
+        return {}
+
+
+def _apply_memes(plan, store, job, tts_dir):
+    """칸 맨 앞 감정짤 — 판단은 storyboard.meme_slots 한 곳. 여기는 스위치·짤 팩·음성 시각을 건넬 뿐. 짤 칸 수를 돌려준다."""
+    if not _meme_on(store, job):
+        return 0
+    from shopping_shorts import storyboard as _sbm
+    try:
+        pool = _meme_pool(store)
+    except Exception as e:      # noqa: BLE001 — 팩을 못 읽으면 짤 없음(이유 한 줄)
+        print("[meme] 짤 팩 읽기 실패 — 짤 없음: %r" % e, file=sys.stderr)
+        pool = {}
+    res = _sbm.meme_slots(plan, _meme_words_of, pool, key=str((job or {}).get("job_id") or tts_dir),   # 작업마다 다른 짤
+                          prefs=_meme_prefs(store, (job or {}).get("customer_id", 0)))
+    for r in res:
+        print("[meme] job칸 %s %s" % (r.get("beat_idx"), ("짤 %s %.2f초 #%s" % (r["emotion"], float(r["head_sec"] or 0), r["asset_id"]))
+                                       if r.get("meme") else ("없음: " + r.get("why", ""))), file=sys.stderr)
+    return sum(1 for r in res if r.get("meme"))
+
+
+def _sfx_bank(store):
+    """효과음 분류 서랍 = 사장님(0) 장면 자산 asset_type "sfx" 중 category 가 storyboard.SFX_CATS 인 것. {분류: [{asset_id, duration, title}]}."""
+    from shopping_shorts import storyboard as _sbm
+    bank = {}
+    for a in store.list_scene_assets(customer_id=0, asset_type="sfx") or []:
+        cat = str(a.get("category") or "").strip()
+        if cat in _sbm.SFX_CATS and a.get("media_path") and Path(a["media_path"]).exists():
+            bank.setdefault(cat, []).append({"asset_id": a["id"], "duration": float(a.get("duration") or 0),
+                                             "title": str(a.get("title") or "")[:60], "tone": str(a.get("tone") or "")})
+    for v in bank.values():
+        v.sort(key=lambda x: x["asset_id"])
+    return bank
+
+
+def _apply_line_sfx(plan, store, job):
+    """줄 효과음 — 판단은 storyboard.sfx_slots 한 곳. 여기는 스위치(meme_enabled)·효과음 서랍을 건넬 뿐. 실린 칸 수를 돌려준다.
+    자산이 없는 분류는 로그 '효과음 없음(분류)'를 남기고 건너뛴다(조용히 넘기지 않음)."""
+    if not _meme_on(store, job):
+        return 0
+    from shopping_shorts import storyboard as _sbm
+    try:
+        bank = _sfx_bank(store)
+    except Exception as e:      # noqa: BLE001 — 서랍을 못 읽으면 효과음 없음(이유 한 줄)
+        print("[line_sfx] 효과음 서랍 읽기 실패 — 없음: %r" % e, file=sys.stderr)
+        bank = {}
+    res = _sbm.sfx_slots(plan, bank, key=str((job or {}).get("job_id") or ""),
+                         prefs=_sfx_prefs(store, (job or {}).get("customer_id", 0)))
+    for r in res:
+        print("[line_sfx] job칸 %s %s" % (r.get("beat_idx"), ("효과음 #%s %s" % (r.get("asset_id"), r.get("cat") or "")) if r.get("sfx")
+                                          else r.get("why", "")), file=sys.stderr)
+    return sum(1 for r in res if r.get("sfx"))
 
 
 def _resolve_sfx_paths(store, plan, customer_id, job=None):
@@ -2435,12 +2582,22 @@ def _resolve_sfx_paths(store, plan, customer_id, job=None):
         except Exception:      # noqa: BLE001 — 팩 판정 실패가 렌더를 막지 않는다(종전 동작)
             traceback.print_exc(file=sys.stderr)
             pack = None
+    _mute = set((pack or {}).get("mute_beats") or ())
     for beat in plan["beats"]:
         sfx = beat.get("sfx")
         if sfx:
-            if pack and sfx.get("match_type") != "manual":
+            # 줄 효과음(match_type "line", 관제 143)은 팩이 있어도 남는다 — 팩은 그 줄 첫 발만 비운다(sfx_events_for)
+            if pack and sfx.get("match_type") not in ("manual", "line"):
                 continue
-            asset = store.get_scene_asset(sfx["asset_id"], customer_id=customer_id)
+            # ★줄 효과음은 3단계 [효과음 자동 넣기]가 켜졌을 때(팩 결정=sfx_pack.resolve 가 팩을 냄)만 — 10-07 사장님
+            #   "체크 꺼져 있으면 2단계에서 배치한 효과음도 안 들어가게(인스타형 영상)". 칸 🔇(sfx_mute_beats)도
+            #   그 칸 줄 효과음까지 끈다. 사람이 3단계에서 고른 옛 효과음(manual)은 종전대로 남는다.
+            #   렌더·캡컷·미리보기가 전부 이 함수를 거치므로 판단은 여기 한 곳.
+            if sfx.get("match_type") == "line" and (not pack or beat.get("beat_idx") in _mute):
+                continue
+            # 줄 효과음 파일은 사장님(0) 효과음 서랍에서 온다 — 짤(owner 0)과 같은 규칙
+            _own = 0 if (sfx.get("match_type") == "line" and int(sfx.get("owner") or 0) == 0) else customer_id
+            asset = store.get_scene_asset(sfx["asset_id"], customer_id=_own)
             if asset and asset.get("media_path"):
                 out[beat["beat_idx"]] = asset["media_path"]
     if pack:
@@ -5014,7 +5171,17 @@ def clean_compare_clips(job, work):
         except Exception:      # noqa: BLE001 — 정본을 못 읽으면 종전 좌표(fin)로
             _base = None
         clips = []
-        for i, c in enumerate(final_clip_pairs(plan, tts, _src_durs_for(job, work))):
+        # ★청소 당시 편성(스냅샷)이면 컷 지도는 **그 청소본을 만든 지도**(파일 옆 .cuts.json)다 — 지금 화면 컷으로 옛 편성을
+        #   다시 계산하지 않는다(관제 149, 2026-10-07 라이브: 음성을 다시 만든 작업의 비교 화면이 옛 편성 칸을 지금 화면 컷에서
+        #   못 찾아 칸 전부 예비 계산으로 폈다 — 4작업 30칸). 옆 지도가 없는 옛 파일은 그 파일을 만든 방식(snapshot_cut_map, 서버 계산).
+        _cmap = None
+        if out["plan_used"] == "snapshot" and out["clean_path"]:
+            _cmap = _read_clean_sidecar(out["clean_path"]).get("cuts")
+            if _cmap is None:
+                _cmap = snapshot_cut_map(job, work, Path(out["clean_path"]).stem[len("final_clean_"):])[0]
+        if _cmap is None:
+            _cmap = final_clip_pairs(plan, tts, _src_durs_for(job, work))
+        for i, c in enumerate(_cmap):
             vid = c.get("video_id") or ""
             try:
                 si = int(str(vid)[1:]) if str(vid).startswith("s") else None
@@ -5474,10 +5641,15 @@ def run_preview(job_id, db_path, work_root):
         # ★미리보기는 veryfast로 인코딩(6분→~1.5분) — 확인용이라 화질 조금 낮아도 무방.
         # 최종 렌더(run_render)는 이 컨텍스트 밖이라 medium 고화질 그대로.
         _sc.check_mutation(job_id, _scr_before, plan_used)
+        # ★배경음만은 싣는다(2026-10-06 관제 146) — 배경음은 3단계 [🎵 배경음]에서 고르므로 3단계 완성본에서
+        #   들려야 한다. 종전 deco={} 라 라이브 실측에서 곡을 골라도 미리보기 소리가 그대로였다(상관 0.019).
+        #   곡→파일은 렌더·캡컷과 같은 resolve_deco_media 한 곳. 나머지 꾸미기는 종전대로 뺀다(4단계 소관).
+        _pv_bgm = (job.get("deco") or {}).get("bgm")
+        _pv_deco = resolve_deco_media({"bgm": _pv_bgm}, work) if _pv_bgm else {}
         with preview_preset():
             assemble(plan_used, tts_paths, source_video_paths, str(out_path),
                      clean_fn=None,                      # ← 유료 VMake 건너뜀. 이게 핵심이다.
-                     deco={},                             # ← 꾸미기 없음(4단계 소관)
+                     deco=_pv_deco,                       # ← 꾸미기 없음(4단계 소관) — 배경음만
                      cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
                      sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0), job=job))
         _sc.summarize(job_id, _scr_mark)
@@ -5960,6 +6132,23 @@ def _consent_blocked_msg(err):
 
 
 def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_clean=True):
+    """렌더 계열 입력(아래 _render_inputs_core) + 맨 앞 감정짤 파일(관제 139).
+    짤 컷은 화면 컷 목록의 첫 컷이라 소스 표에 짤 파일이 있어야 렌더·캡컷·ZIP 이 같은 첫 컷을 굽는다 — 싣는 곳은 여기 한 곳."""
+    plan, paths, base = _render_inputs_core(store, job, job_id, work, keys, customer_id, allow_clean=allow_clean)
+    if any(_va_meme(b) for b in (plan or {}).get("beats") or []):
+        from shopping_shorts.video_assemble import meme_sources
+        _ms = meme_sources(plan, _resolve_cutaway_paths(store, plan, customer_id))
+        if _ms:
+            paths = {**(paths or {}), **_ms}
+    return plan, paths, base
+
+
+def _va_meme(beat):
+    from shopping_shorts.video_assemble import meme_cutaway
+    return meme_cutaway(beat)
+
+
+def _render_inputs_core(store, job, job_id, work, keys, customer_id=0, *, allow_clean=True):
     """렌더 계열(최종·미리보기·캡컷·ZIP·프레임)의 **입력을 정하는 유일한 자리**(2026-09-22).
 
     반환 (plan_used, source_video_paths, base):

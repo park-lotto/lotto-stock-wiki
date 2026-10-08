@@ -41,6 +41,8 @@
       { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
       { icon: "🏆", text: "역대 히트작",     href: "/archive", admin: true },
       { icon: "📋", text: "레퍼런스 채널 관리", href: "/refs", admin: true },
+      // 해외 레퍼런스 채널 수집(관제 162) — 관리자 전용. 카테고리는 화면 왼쪽 목록.
+      { icon: "🌐", text: "해외 레퍼런스 수집", href: "/overseas_ref", admin: true },
     ] },
     { label: "제작", items: [
       // 제작소는 등급에 따라 서버가 다른 파일을 준다(full=진짜 / 그 외=얼린 미리보기).
@@ -61,6 +63,8 @@
       { icon: "🏁", text: "챌린지 관리",     href: "/challenge/admin", free: true, admin: true },
       // 효과 견본(2026-10-04 관제 118) — 에펙으로 만든 효과 견본 영상. 서버 라우트(_fx_samples_page)도 관리자만 연다.
       { icon: "✨", text: "효과 견본",       href: "/fx_samples", admin: true },
+      // 밈팩(관제 143) — 감정짤 팩 보기·감정별 우선 짤 고르기. 스위치 meme_enabled 열린 계정만(/api/me meme) 보인다.
+      { icon: "🎭", text: "밈팩",           href: "/meme_pack", meme: true },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
@@ -213,8 +217,8 @@
       // id 항목(오류 신고 등)은 링크가 아니라 **그 자리에서 창을 여는 버튼**이다 —
       // href가 없다고 ss-disabled(회색)로 만들면 눌리지 않는다(2026-08-24).
       var isBtn = !it.href && !!it.id;
-      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
-      var hide = it.admin ? ' style="display:none"' : "";
+      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "") + (it.meme ? " ss-meme-only" : "");
+      var hide = (it.admin || it.meme) ? ' style="display:none"' : "";
       // 클릭 목적지는 go가 있으면 go, 없으면 href(종전과 동일).
       var target = it.go || it.href;
       // ★active여도 go가 있으면 클릭을 살린다 — 제작소를 보고 있을 때도
@@ -487,6 +491,8 @@
     var admin = !!d.is_admin;
     // 관리자면 사이드바의 admin 전용 항목(레퍼런스 채널 관리 등)을 노출.
     if (admin) document.querySelectorAll(".ss-admin-only").forEach(function (e) { e.style.display = ""; });
+    // 감정짤 스위치(meme_enabled)가 열린 계정만 '밈팩' 메뉴 — 서버 /api/me meme 이 정본(서버 라우트와 같은 판정)
+    if (d.meme === true) document.querySelectorAll(".ss-meme-only").forEach(function (e) { e.style.display = ""; });
     var email = escHtml(d.email || "");
     var initial = escHtml((d.email || "?").trim().charAt(0).toUpperCase() || "?");
     var tier, tierColor, sub;
@@ -661,6 +667,33 @@
             mark();
           })();
         }).catch(function () {});
+    }
+  }
+
+  // ── Vertex 미등록 안내 (2026-10-07 사장님) — 하루 1회. 판정·문구·주소·'오늘 봤음'은 서버(/api/settings/vertex_notice).
+  //   제미니 키 안내와 같은 팝업(_pwModal)을 쓰고, 결제 팝업이 떠 있으면 덮지 않는다. 설정 화면에선 안 띄운다(거기 등록 칸이 있다).
+  function initVertexNotice() {
+    if (/^\/settings/.test(location.pathname || "")) return;
+    // ★호출하는 순간의 fetch 를 쓴다(시험 하네스·결제 래퍼가 뒤에 갈아 끼운다). 동기 예외도 여기서 잡는다 — 안내가 사이드바를 깨면 안 된다
+    var _f = function (u, o) { try { return window.fetch(u, o); } catch (e) { return Promise.reject(e); } };
+    if (!window.fetch) return;
+    var waited = 0;
+    (function afterMe() {
+      if (!window.__ssMeDone && waited < 8000) { waited += 250; setTimeout(afterMe, 250); return; }
+      setTimeout(run, 2600);                      // 제미니 키 안내(1.4초) 뒤
+    })();
+    function run() {
+      _f("/api/settings/vertex_notice").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        if (!d || !d.show) return;
+        var tries = 0;
+        (function show() {
+          var ex = document.getElementById("ss-pw-modal");
+          if (ex && ex.style.display !== "none") { if (tries++ < 60) setTimeout(show, 2000); return; }
+          _pwModal({ icon: "🔑", title: d.text, body: d.body || "등록하면 대본·장면 맞추기·AI 장면 만들기를 내 구글 계정으로 써요.",
+                     hideContact: true, link: d.url, linkText: "→ " + (d.link_text || "등록하기"), closeLabel: "오늘은 그만" });
+          _f("/api/settings/vertex_notice/seen", { method: "POST" }).catch(function (e) { console.warn("[vertex] 봤음 저장 실패", e); });
+        })();
+      }).catch(function (e) { console.warn("[vertex] 안내 확인 실패", e); });
     }
   }
 
@@ -1026,6 +1059,7 @@
     initPaywall();
     initSignupAlert();
     initGeminiKeyHealth();
+    initVertexNotice();
   }
 })();
 

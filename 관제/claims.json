@@ -14,6 +14,11 @@
     "card": 103,
     "track": "단어강조"
   },
+  "out/precision20-ui.js:autoFxKinds": {
+    "at": "2026-10-07 20:45",
+    "card": 158,
+    "track": "자막팩"
+  },
   "out/precision20-ui.js:cameraAt": {
     "at": "2026-10-05 15:47",
     "card": 124,
@@ -44,6 +49,11 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/app.py:_analysis_state": {
+    "at": "2026-10-06 20:52",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
   "shopping_shorts/app.py:api_buffer_schedule": {
     "at": "2026-10-04 11:13",
     "card": 114,
@@ -53,6 +63,11 @@
     "at": "2026-10-04 11:05",
     "card": 113,
     "track": "단어강조"
+  },
+  "shopping_shorts/app.py:api_storyboard_prepare": {
+    "at": "2026-10-06 20:47",
+    "card": 147,
+    "track": "씨앗1단계"
   },
   "shopping_shorts/buffer_api.py": {
     "at": "2026-10-04 11:13",
@@ -109,6 +124,11 @@
     "card": 102,
     "track": "단어강조"
   },
+  "shopping_shorts/scene_style.py:moment_of": {
+    "at": "2026-10-07 20:45",
+    "card": 158,
+    "track": "자막팩"
+  },
   "shopping_shorts/scene_style.py:validate_snapshot": {
     "at": "2026-09-29 16:06",
     "card": 30,
@@ -118,6 +138,11 @@
     "at": "2026-09-29 23:07",
     "card": 36,
     "track": "장면폰트"
+  },
+  "shopping_shorts/static/produce.html:_seedFootageOff": {
+    "at": "2026-10-06 20:48",
+    "card": 147,
+    "track": "씨앗1단계"
   },
   "shopping_shorts/static/scene_play.js:planClips": {
     "at": "2026-10-03 23:09",
@@ -129,15 +154,35 @@
     "card": 36,
     "track": "장면폰트"
   },
+  "shopping_shorts/store.py:Store.device_register": {
+    "at": "2026-10-06 14:06",
+    "card": 142,
+    "track": "PC유령칸"
+  },
   "shopping_shorts/store.py:_apply_beat_sources": {
     "at": "2026-10-06 03:46",
     "card": 138,
     "track": "씨앗자동배치뿌리"
   },
+  "shopping_shorts/store.py:autoload_status": {
+    "at": "2026-10-06 20:52",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
   "shopping_shorts/story_writer.py:make_drafts": {
     "at": "2026-09-29 19:18",
     "card": 33,
     "track": "장면분량"
+  },
+  "shopping_shorts/storyboard.py:inventory": {
+    "at": "2026-10-06 20:47",
+    "card": 147,
+    "track": "씨앗1단계"
+  },
+  "shopping_shorts/storyboard.py:make_boards": {
+    "at": "2026-10-06 20:47",
+    "card": 147,
+    "track": "씨앗1단계"
   },
   "shopping_shorts/tests": {
     "at": "2026-09-29 22:57",
@@ -153,6 +198,16 @@
     "at": "2026-10-03 17:40",
     "card": 94,
     "track": "팝업버튼자리"
+  },
+  "shopping_shorts/userscript/grab_logic.js:_igMainWorld": {
+    "at": "2026-10-08 13:00",
+    "card": 162,
+    "track": "해외레퍼런스추적"
+  },
+  "shopping_shorts/video_assemble.py:_beat_timeline": {
+    "at": "2026-10-07 20:45",
+    "card": 158,
+    "track": "자막팩"
   },
   "tools/scene_font_research/check_text_look.py": {
     "at": "2026-09-29 23:55",

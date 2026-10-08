@@ -192,6 +192,21 @@ def attach_signal(text, word):
             if t.startswith(w + " "):
                 t = t[len(w):].strip()
                 break
+            # ★띄어쓰기만 다른 꼴("되는 게" vs "되는게")도 같은 신호어로 뗀다 — 못 떼면 신호어가 두 겹으로 붙었다
+            #   (10-06 라이브: "이게 미친 포인트인게 이게 진짜 말도 안 되는 게 차 시트에…")
+            cw = w.replace(" ", "")
+            j, k = 0, 0
+            while j < len(t) and k < len(cw):
+                if t[j] == " ":
+                    j += 1
+                    continue
+                if t[j] != cw[k]:
+                    break
+                j += 1
+                k += 1
+            if k == len(cw) and (j == len(t) or t[j] == " "):
+                t = t[j:].strip()
+                break
         t = _TWIST_LEAD.sub("", _LEAD_CONJ.sub("", t)).strip()
     t = t.lstrip(",， ")
     if word and SIGNAL_POOL.get() and not signal_fits(word, t):   # 새 풀 계정: 본문과 같은 말 반복이면 같은 자리 다른 신호어로
@@ -1351,5 +1366,11 @@ def storyboard_to_beat_sources(slots, seg_lookup=None):
             g = (seg_lookup(c) if seg_lookup else None) or {}
             keys.append({"id": c, "start": g.get("start"), "end": g.get("end"), "vsig": g.get("_vsig") or []})
         bs.append({"role": str(sl.get("slot") or sl.get("role") or ""), "seg": ids[0] if ids else "",
-                   "segs": ids, "pinned": bool(ids), "seg_keys": keys})
+                   "segs": ids, "pinned": bool(ids), "seg_keys": keys,
+                   # 신호어 자리 번호 — storyboard.apply_signals 가 slot 에 남긴 것을 그대로 싣는다(짤 자리 판정용, 관제 139)
+                   **({"sig_rank": int(sl["sig_rank"]), "signal": str(sl.get("signal") or "")}
+                      if str(sl.get("sig_rank") or "").isdigit() else {}),
+                   # 2단계에서 미리 고른 짤 번호(관제 143) — meme_slots 가 이 짤을 먼저 쓴다(sig_rank 와 같은 길)
+                   # 짤·효과음 고름 칸(meme_pick·sfx_pick 등)은 storyboard.carry_picks 한 곳이 정한다
+                   **__import__("shopping_shorts.storyboard", fromlist=["carry_picks"]).carry_picks(sl)})
     return {"script": "\n".join(lines), "beat_sources": bs}
