@@ -27144,6 +27144,51 @@ def _refs_page(request: Request):
 
 
 app.add_api_route("/refs", _refs_page, include_in_schema=False)
+
+
+# 해외 레퍼런스 채널 수집(관제 162) — 관리자 전용. 판단은 overseas_ref 모듈 한 곳.
+def _overseas_ref_page(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return FileResponse(_STATIC / "overseas_ref.html", media_type="text/html", headers=_NOCACHE)
+
+
+app.add_api_route("/overseas_ref", _overseas_ref_page, include_in_schema=False)
+
+
+@app.get("/api/overseas_ref/channels")
+async def api_overseas_ref_channels(request: Request, cat: str = ""):
+    if not _is_admin(_cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "관리자만"})
+    from shopping_shorts import overseas_ref
+    if cat not in overseas_ref.CATEGORIES:
+        cat = overseas_ref.CATEGORIES[0]
+    d = await asyncio.to_thread(overseas_ref.channels, cat)
+    return {"ok": True, "cat": cat, "categories": overseas_ref.CATEGORIES, "status": overseas_ref.status(), **d}
+
+
+@app.post("/api/overseas_ref/run")
+async def api_overseas_ref_run(request: Request, body: dict):
+    if not _is_admin(_cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "관리자만"})
+    from shopping_shorts import overseas_ref
+    cat = str((body or {}).get("cat") or "")
+    seed = str((body or {}).get("seed") or "").strip()
+    rounds = max(1, min(int((body or {}).get("rounds") or 2), 5))
+    if cat not in overseas_ref.CATEGORIES or not seed:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "카테고리와 씨앗(영상 주소나 검색어)을 넣어 주세요"})
+    if not overseas_ref.start(cat, seed, rounds=rounds):
+        return JSONResponse(status_code=409, content={"ok": False, "error": "이미 수집 중이에요"})
+    return {"ok": True}
+
+
+@app.get("/api/overseas_ref/status")
+async def api_overseas_ref_status(request: Request):
+    if not _is_admin(_cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "관리자만"})
+    from shopping_shorts import overseas_ref
+    return {"ok": True, **overseas_ref.status()}
 app.add_api_route("/refs.html", _refs_page, include_in_schema=False)
 
 
