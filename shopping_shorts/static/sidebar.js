@@ -41,6 +41,8 @@
       { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
       { icon: "🏆", text: "역대 히트작",     href: "/archive", admin: true },
       { icon: "📋", text: "레퍼런스 채널 관리", href: "/refs", admin: true },
+      // 해외 레퍼런스 채널 수집(관제 162) — 관리자 전용. 카테고리는 화면 왼쪽 목록.
+      { icon: "🌐", text: "해외 레퍼런스 수집", href: "/overseas_ref", admin: true },
     ] },
     { label: "제작", items: [
       // 제작소는 등급에 따라 서버가 다른 파일을 준다(full=진짜 / 그 외=얼린 미리보기).
