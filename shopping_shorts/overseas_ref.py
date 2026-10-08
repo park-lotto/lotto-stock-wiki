@@ -317,3 +317,29 @@ def channels(cat, limit=500):
     for r in rows:
         r["keywords"] = json.loads(r.get("keywords") or "[]")
     return {"channels": rows, "keywords": kws, "counts": counts}
+
+
+def add_instagram(cat, items):
+    """확장프로그램이 인스타 검색 응답에서 읽어 보낸 게시물들 → 계정(channel_id 'instagram:@아이디') 누적.
+    items: [{user, code, likes, plays, caption, q}]. 해외 판정은 설명글에 한글이 없는 것(is_overseas).
+    반환: (새 계정 수, 이 카테고리 총 계정 수)."""
+    rows = {}
+    for it in items or []:
+        user = str(it.get("user") or "").strip()
+        if not re.fullmatch(r"[A-Za-z0-9._]{1,40}", user) or not is_overseas(it.get("caption")):
+            continue
+        n = int(it.get("plays") or 0) or int(it.get("likes") or 0)
+        r = rows.setdefault("instagram:@" + user, {"title": "@" + user + " (인스타)", "videos": set(), "views": 0,
+                                                    "top_video": "", "top_views": 0, "kws": set(), "subs": 0})
+        r["videos"].add(it.get("code")); r["views"] += n
+        if n >= r["top_views"]:
+            r["top_video"], r["top_views"] = "https://www.instagram.com/p/%s/" % it.get("code"), n
+        if it.get("q"):
+            r["kws"].add(str(it["q"])[:60])
+        for t in tags_of(it.get("caption")):
+            r["kws"].add(t)
+    c = _db()
+    new = _save(c, cat, rows, "instagram", 0)
+    total = c.execute("SELECT COUNT(*) FROM overseas_ref_channel WHERE category=?", (cat,)).fetchone()[0]
+    c.close()
+    return new, total

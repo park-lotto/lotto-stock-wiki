@@ -586,7 +586,50 @@
       if (!_igMedia[it.code]) _igMediaN++;
       _igMedia[it.code] = it;
     }
+    try { _ovIgCollect(d.items); } catch (e) {}
   });
+  // ── 🌐 해외 레퍼런스 수집(관제 162, 2026-10-08 사장님 "유튜브 인스타 먼저") — 관리자 전용 ──
+  //   인스타가 스스로 받은 검색 응답(위 ig_main.js)에서 **계정 이름만** 서버로 보낸다. 추가 요청 0, 프록시 0원.
+  //   켜기/끄기·카테고리는 화면 오른쪽 아래 작은 선택칸(인스타 도메인 localStorage). 판단·저장은 서버
+  //   overseas_ref.add_instagram 한 곳 — 여기선 모아서 보내기만 한다.
+  var _OV_CATS = ["국뽕", "스포츠", "동물", "해외반응", "랭킹형", "웃긴"];
+  var _ovSent = {}, _ovQ = [], _ovT = 0;
+  function _ovCat() { try { return localStorage.getItem("ssOvCat") || ""; } catch (e) { return ""; } }
+  function _ovIgCollect(items) {
+    if (window.__ssIsAdmin !== true || !_ovCat()) return;
+    var q = location.pathname.indexOf("/explore/search/keyword") === 0 ? (new URLSearchParams(location.search).get("q") || "") : "";
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      if (!it || !it.user || _ovSent[it.code]) continue;
+      _ovSent[it.code] = 1;
+      _ovQ.push({ user: it.user, code: it.code, likes: it.likes || 0, plays: it.plays || 0, caption: it.caption || "", q: q });
+    }
+    if (_ovQ.length && !_ovT) _ovT = setTimeout(function () {
+      _ovT = 0;
+      var batch = _ovQ.splice(0, 100);
+      _gmPost(BASE + "/api/overseas_ref/ig_add", { cat: _ovCat(), items: batch }, function (st, tx) {
+        var el = document.getElementById("ss-ov-n");
+        try { var d = JSON.parse(tx); if (el && d.ok) el.textContent = "+" + d.new + " (" + d.total + ")"; } catch (e) {}
+      }, function () {});
+    }, 1500);
+  }
+  function syncOvBox() {
+    if (location.host.indexOf("instagram.com") < 0 || window.__ssIsAdmin !== true || !document.body) return;
+    if (document.getElementById("ss-ov-box")) return;
+    var b = document.createElement("div");
+    b.id = "ss-ov-box";
+    b.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:2147483647;background:#0f1512;color:#e6efe9;" +
+      "border:1px solid #37e0bd;border-radius:10px;padding:6px 8px;font:12px system-ui,sans-serif;display:flex;gap:6px;align-items:center";
+    var cur = _ovCat();
+    b.innerHTML = '🌐 해외수집 <select id="ss-ov-sel" style="font:12px system-ui;background:#0b110e;color:#e6efe9;border:1px solid #1e2a24;border-radius:6px">' +
+      '<option value="">끔</option>' + _OV_CATS.map(function (c) { return '<option' + (c === cur ? " selected" : "") + ">" + c + "</option>"; }).join("") +
+      '</select><span id="ss-ov-n" style="color:#8fa39a"></span>';
+    document.body.appendChild(b);
+    document.getElementById("ss-ov-sel").addEventListener("change", function () {
+      try { localStorage.setItem("ssOvCat", this.value); } catch (e) {}
+      if (this.value) { var all = []; for (var c in _igMedia) all.push(_igMedia[c]); _ovIgCollect(all); }
+    });
+  }
   if (location.host.indexOf("instagram.com") >= 0) {
     try { window.postMessage({ __ssIgMediaReq: true }, location.origin); } catch (e) {}
     setTimeout(function () { try { window.postMessage({ __ssIgMediaReq: true }, location.origin); } catch (e) {} }, 3000);
@@ -1331,7 +1374,8 @@
                    plays: o.play_count != null ? o.play_count : (o.ig_play_count != null ? o.ig_play_count : o.view_count),
                    dur: o.video_duration || efgDur(mp4), video: !!vv.length,
                    taken: o.taken_at, thumb: (iv[iv.length > 1 ? 1 : 0] || {}).url || "",
-                   caption: (o.caption && o.caption.text || "").slice(0, 120) });
+                   caption: (o.caption && o.caption.text || "").slice(0, 120),
+                   user: ((o.user || o.owner || {}).username) || "" });
       }
       for (var k in o) if (o.hasOwnProperty(k) && o[k] && typeof o[k] === "object") walk(o[k], out, d + 1);
     }
@@ -2396,7 +2440,7 @@
     if (_hcbRaf || window.__ssGrabVer !== LOGIC_VER) return;
     _hcbRaf = requestAnimationFrame(function () { _hcbRaf = 0; try { _hideCollapsedBadges(); } catch (e) {} });
   }, true);
-  function tick() { if (_ytOff()) { _ytClear(); try{_kwClearAll();}catch(e){} return; } if (_ytResults()) { _ytResultsTick(); try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{syncIgKwBar();}catch(e){} try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} try{_dockBtns();}catch(e){} try{_hideCollapsedBadges();}catch(e){} }
+  function tick() { if (_ytOff()) { _ytClear(); try{_kwClearAll();}catch(e){} return; } if (_ytResults()) { _ytResultsTick(); try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{syncIgKwBar();}catch(e){} try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} try{_dockBtns();}catch(e){} try{_hideCollapsedBadges();}catch(e){} try{syncOvBox();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.

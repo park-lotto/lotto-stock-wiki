@@ -97,6 +97,13 @@
       document.getElementById("title").textContent = cat + " · 채널 " + d.channels.length + "개 (걸린 영상 조회수 합 순)";
       document.getElementById("list").innerHTML = d.channels.length ? '<table><tr><th></th><th>채널</th><th>구독자</th><th>걸린 영상</th><th>조회수 합</th><th>최고 영상</th><th>걸린 검색어</th></tr>' +
         d.channels.map(function (c) {
+          if (String(c.channel_id).indexOf("instagram:") === 0) {
+            var ih = c.channel_id.slice(11);
+            return "<tr><td></td><td><a href='https://www.instagram.com/" + esc(ih) + "/reels/' target='_blank'>" + esc(c.title) + "</a></td>" +
+              "<td class='num'>-</td><td class='num'>" + c.hit_videos + "편</td><td class='num'>" + n(c.hit_views) + "</td>" +
+              "<td class='num'><a href='" + esc(c.top_video) + "' target='_blank'>" + n(c.top_views) + "</a></td>" +
+              "<td>" + c.keywords.slice(0, 6).map(function (k) { return "<span class='kw'>" + esc(k) + "</span>"; }).join("") + "</td></tr>";
+          }
           if (String(c.channel_id).indexOf("tiktok:") === 0) {
             var h = c.channel_id.slice(7);
             return "<tr><td></td><td><a href='https://www.tiktok.com/" + esc(h) + "' target='_blank'>" + esc(c.title) + "</a></td>" +
