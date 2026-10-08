@@ -125,6 +125,24 @@ def channel_seed(seed, top=10):
     return {cid: row}, list(dict.fromkeys(kws))
 
 
+def tiktok_seed(seed):
+    """틱톡 영상 씨앗(사장님 2026-10-08) → (계정행, 검색어). 공개 oEmbed로 설명글·계정만 읽는다(로그인·비용 0).
+    계정은 channel_id 'tiktok:@아이디'로 저장 — 유튜브 채널과 같은 표에 섞어 둔다."""
+    import requests
+    try:
+        d = requests.get("https://www.tiktok.com/oembed", params={"url": seed}, timeout=20).json()
+    except Exception as e:                  # noqa: BLE001
+        _log(f"틱톡 oEmbed 실패: {e!r}"[:200])
+        return None, []
+    title, handle = d.get("title") or "", d.get("author_unique_id") or ""
+    row = {f"tiktok:@{handle}": {"title": "@" + handle + " (틱톡)", "videos": {seed}, "views": 0,
+                                 "top_video": seed, "top_views": 0, "kws": set(), "subs": 0}} if handle else None
+    kws = tags_of(title)[:5] + _english_terms(title)
+    if len(kws) < 2 and title.strip():
+        kws.append(re.sub(r"#\S+", "", title).strip()[:60])
+    return row, list(dict.fromkeys(k.lower() for k in kws if k))
+
+
 def seed_keywords(seed):
     """씨앗 → 첫 검색어. 유튜브 영상 URL이면 태그+영어 검색어, 아니면 그 글자 자체(쉼표로 여러 개)."""
     vid = _video_id(seed)
@@ -208,7 +226,12 @@ def next_keywords(c, cat, found_tags, limit, top_titles=()):
 def run(cat, seed, rounds=2, per_round=6, days=90):
     """눈덩이 수집 본체(블로킹). 반환: 요약 dict."""
     c = _db()
-    if _is_channel_seed(seed):
+    if "tiktok.com/" in (seed or ""):
+        row, kws = tiktok_seed(seed)
+        if row:
+            _save(c, cat, row, seed, 0)
+            _log(f"[{cat}] 씨앗 틱톡 계정 저장: {list(row.values())[0]['title']}")
+    elif _is_channel_seed(seed):
         row, kws = channel_seed(seed)
         if row:
             _save(c, cat, row, seed, 0)
