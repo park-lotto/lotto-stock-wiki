@@ -145,3 +145,52 @@ def test_api_make_uses_previewed_lines_as_is(api, monkeypatch):
     bad = [dict(l) for l in lines]; bad[3]["text"] = "2만 원인데 꽉 물어 줘."
     r2 = c.post(f"/api/produce/dialogue/from_work/{wid}", json={"form": "narr_then_talk", "lines": bad})
     assert r2.status_code == 422 and "숫자" in r2.json()["error"]
+
+
+# ── 2단계(대본 생성 전 틀 고르기) ─────────────────────────────────────────
+def test_apply_to_lines_converts_and_keeps_sources():
+    lines = [{"text": t, "role": r, "group": g} for t, r, g in zip(SRC, ["hook", "problem", "reveal", "feature"], [0, 0, 1, 2])]
+    bs = [{"seg": "s0"}, {"seg": "s1"}, {"seg": "s2"}, {"seg": "s3"}]
+    nl, nbs, m, err = ds.apply_to_lines(lines, bs, "narr_then_talk", call=lambda p, s: _good())
+    assert err == "" and [l["text"] for l in nl][2] == "근데 단자 맨날 꺾이잖아?"
+    assert nbs == [{"seg": "s0"}, {"seg": "s1"}, {"seg": "s3"}, {"seg": "s3"}]
+    assert nl[2]["group"] == 2 and m["form"] == "narr_then_talk" and len(m["lines"]) == 4
+
+
+def test_apply_to_lines_failure_keeps_ssul():
+    lines = [{"text": t} for t in SRC]
+    nl, nbs, m, err = ds.apply_to_lines(lines, ["a"] * 4, "narr_then_talk", call=lambda p, s: {})
+    assert nl is lines and m is None and "실패" in err
+
+
+def _mix_client(monkeypatch, tmp_path):
+    db = tmp_path / "m.db"
+    monkeypatch.setattr(appmod, "DB_PATH", db)
+    monkeypatch.setattr(appmod, "run_mix_job", lambda *a, **k: None)
+    return TestClient(appmod.app), Store(db)
+
+
+_DLG = {"form": "narr_then_talk", "lines": [{"speaker": "나레이션", "tag": "", "src": [0]}, {"speaker": "나레이션", "tag": "", "src": [1, 2]},
+                                            {"speaker": "동생", "tag": "doubtful", "src": [3]}, {"speaker": "언니", "tag": "", "src": [3]}]}
+_SCRIPT = "이제 끝났음.\n이건 바로 커버.\n근데 꺾이잖아?\n꽉 물어 줘."
+
+
+def test_mix_start_attaches_voices_when_on(monkeypatch, tmp_path):
+    c, st = _mix_client(monkeypatch, tmp_path)
+    st.set_setting("dialogue_enabled", "1")
+    r = c.post("/api/produce/mix/start", json={"script": _SCRIPT, "urls": ["https://www.instagram.com/reel/AAA111/"],
+                                               "script_structure": {"dialogue": _DLG}})
+    assert r.status_code == 200, r.text
+    d = st.get_mix_job(r.json()["job_id"])["script_structure"]["dialogue"]
+    assert set(d["voices"]) == {"나레이션", "동생", "언니"} and ds.of_structure({"dialogue": d}) is not None
+
+
+def test_mix_start_drops_dialogue_when_off_and_blocks_line_mismatch(monkeypatch, tmp_path):
+    c, st = _mix_client(monkeypatch, tmp_path)
+    r = c.post("/api/produce/mix/start", json={"script": _SCRIPT, "urls": ["https://www.instagram.com/reel/AAA111/"],
+                                               "script_structure": {"dialogue": _DLG}})
+    assert r.status_code == 200 and "dialogue" not in (st.get_mix_job(r.json()["job_id"])["script_structure"] or {})
+    st.set_setting("dialogue_enabled", "1")
+    r2 = c.post("/api/produce/mix/start", json={"script": _SCRIPT + "\n한 줄 더.", "urls": ["https://www.instagram.com/reel/BBB222/"],
+                                                "script_structure": {"dialogue": _DLG}})
+    assert r2.status_code == 422 and "줄 수" in r2.json()["error"]

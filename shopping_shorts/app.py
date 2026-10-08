@@ -3780,7 +3780,11 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                             seed_text=(it.get("full_text") or ""),
                             seed_product=script_generate._sources_product(_src) or "",
                             # 고른 씨앗이 job 의 어느 영상인지(URL·원문 대조) — 이야기 작가가 그 영상 컷을 줄에 안 붙인다(관제 138)
-                            seed_vid=_selected_source_id(it, shortcode, _job))
+                            seed_vid=_selected_source_id(it, shortcode, _job),
+                            # 대화형(관제 128) — 스위치 dialogue_enabled(관리자 시험)일 때만 화면이 고른 틀을 넘긴다
+                            dialogue_form=(str(body.get("dialogue_form") or "")
+                                           if _setting_gate(store, "dialogue_enabled", getattr(request.state, "customer_id", 0))
+                                           else ""))
                     except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
                         _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
                 if not _bb_drafts and _bb_on:
@@ -7342,8 +7346,7 @@ def _job_sources_with_memes(job, work) -> dict:
     plan = (job or {}).get("edit_plan") or {}
     if any(video_assemble.meme_cutaway(b) for b in plan.get("beats") or []):
         try:
-            srcs.update(video_assemble.meme_sources(
-                plan, mix_pipeline._resolve_cutaway_paths(Store(DB_PATH), plan, (job or {}).get("customer_id", 0))))
+            srcs.update(mix_pipeline.job_meme_sources(Store(DB_PATH), job, plan))
         except Exception as e:      # noqa: BLE001 — 짤 파일을 못 찾으면 그 컷은 검은 화면(대신 한 줄)
             print("[meme] 짤 파일 찾기 실패 job=%s: %r" % ((job or {}).get("job_id"), e), file=sys.stderr)
     return srcs
@@ -16560,7 +16563,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 장면꾸미기 장면 효과(관제 124, 2026-10-05) — 강조 확대·어둡게·흑백 충격·자동 배치. ""끔 · "admin" · "11,42" · "1" 전체
                        "scene_fx_enabled",
                        # 자막팩(관제 127, 2026-10-06) — 팩 카드·새 등장 효과·새 단어 강조 방식. ""끔 · "admin" · "11,42" · "1" 전체
-                       "caption_pack_enabled"}
+                       "caption_pack_enabled",
+                       # 3단계 🎵 배경음 목록(관제 146) — 기본 "admin"(사장님만) · "1" 전체 · "off". 판정은 bgm_lib.enabled_for 한 곳(관제 165)
+                       "bgm_lib_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -21306,6 +21311,9 @@ def api_storyboard_thumb(request: Request, key: str, seg_id: str):
     return FileResponse(str(out), media_type="image/jpeg")
 
 
+_SB_REFETCH_LOCKS = {}     # 영상 코드 → Lock — 썸네일 수십 장이 한꺼번에 와도 원본은 한 번만 다시 받는다(관제 166)
+
+
 def _sb_seg_src(ex, jid, seg_id):
     """스토리보드 조각 → (원본 영상 경로, 조각{start,end,video_id…}) — 썸네일·구간 영상(clip)이 같이 쓰는 한 곳.
     매칭 작업(jid)이 있으면 3단계와 같은 장면 표(edit_plan.scene_table)·소스(_resolve_sources),
@@ -21327,6 +21335,20 @@ def _sb_seg_src(ex, jid, seg_id):
                 continue
             vdir = _FIND_TMP_DIR / hashlib.sha1(str(vid).encode()).hexdigest()[:16]
             mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
+            if not mp4:
+                # ★1단계가 캐시 적중이면 영상을 안 받는다 + 받아 둔 것도 2일 뒤 치워진다 → 2단계 썸네일이 통째로 깨졌다(관제 166).
+                #   원본 주소로 한 번 다시 받는다(1단계와 같은 download_any·같은 폴더). 영상당 하나만 받게 잠근다.
+                url = (e or {}).get("_source_url") or ""
+                if url:
+                    with _SB_REFETCH_LOCKS.setdefault(str(vid), threading.Lock()):
+                        mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
+                        if not mp4:
+                            try:
+                                vdir.mkdir(parents=True, exist_ok=True)
+                                got, _cap = download_any(url, str(vdir))
+                                mp4 = [Path(got)] if got and Path(got).exists() else []
+                            except Exception as ex:      # noqa: BLE001 — 만료·비공개면 종전대로 404(이유 한 줄)
+                                print("[storyboard] 원본 다시 받기 실패 %s: %r" % (vid, ex), file=sys.stderr)
             if not mp4:
                 return JSONResponse(status_code=404, content={"ok": False, "error": "영상 파일이 치워졌습니다"})
             return str(mp4[0]), sg_
@@ -21687,6 +21709,26 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     script_structure = body.get("script_structure") or None
     if not isinstance(script_structure, dict):
         script_structure = None   # 잘못된 형식은 조용히 버린다(보관 전용이라 무해)
+    # ★대화형(관제 128): 2단계 안이 대화형이면 화자별 성우 스냅샷을 여기서 붙인다 — 합성 경로는 voices 가 있어야 대화형으로 본다.
+    #   스위치가 꺼진 계정·틀 모름이면 대화 메타를 버린다(한 목소리 종전 그대로). 줄 수가 대본과 다르면 막는다(화자가 어긋난다).
+    if script_structure and isinstance(script_structure.get("dialogue"), dict):
+        from shopping_shorts import dialogue_script as _ds, edit_plan as _ep
+        _dm = script_structure["dialogue"]
+        if (_setting_gate(Store(DB_PATH), "dialogue_enabled", getattr(request.state, "customer_id", 0))
+                and _dm.get("form") in _ds.FORMS and isinstance(_dm.get("lines"), list)):
+            if len(_dm["lines"]) != len(_ep.script_sentences(script)):
+                return JSONResponse(status_code=422, content={"ok": False, "error":
+                    "대화형 줄 수가 대본과 달라요 — 줄을 더하거나 지웠으면 대본을 다시 만들어 주세요"})
+            _bad = [i for i, l in enumerate(_dm["lines"])
+                    if not isinstance(l, dict) or l.get("speaker") not in _ds.FORMS[_dm["form"]]["roles"]]
+            if _bad:
+                return JSONResponse(status_code=422, content={"ok": False, "error":
+                    "화자가 안 정해진 줄이 있어요(%s번째) — 2단계 카드에서 화자를 골라 주세요" % ", ".join(str(i + 1) for i in _bad[:5])})
+            _cast = _ds.cast_of(_dm["form"], _dm.get("cast"))
+            script_structure = dict(script_structure, dialogue=dict(
+                _dm, cast=_cast, voices={spk: _voice_snapshot(Store(DB_PATH), {"preset_id": pid}) for spk, pid in _cast.items()}))
+        else:
+            script_structure = {k: v for k, v in script_structure.items() if k != "dialogue"}
     # ★씨앗 자동배치 제외 인덱스(2026-09-30): urls 범위 안 정수만 남긴다 — 표식은 mix_pipeline.mark_auto_exclude가 단다.
     if script_structure and "no_auto_idx" in script_structure:
         _raw = script_structure.get("no_auto_idx")

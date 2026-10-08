@@ -2920,6 +2920,12 @@
             <button class="btn-next" id="s2GenBtn" onclick="s2Generate()">✨ 이 스타일로 대본 만들기</button>
             <!-- 길이 프리셋(2026-09-22 사장님 "두 개 다 프리셋으로, 초 표시 말고 재밌게"). 이야기 작가(관리자 스위치) 전용이라
                  IS_ADMIN일 때만 보인다. 한입썰=히트작 기준(기본) / 풀코스썰=고조를 끝까지 풀어 쓰는 긴 구조(배속 올려 맞춘다). -->
+            <!-- 🎭 목소리 구성(관제 128) — 대본을 만들기 **전에** 고른다. DIALOGUE_ON(서버 dialogue_enabled+관리자)일 때만 보인다 -->
+            <span id="dlgFormWrap" style="display:none;align-items:center;gap:4px;margin-left:6px">
+              <span style="font-size:12px;color:var(--sub)">🎭 목소리</span>
+              <select id="dlgFormSel" onchange="setDlgForm(this.value)" title="나레이션만(지금) 또는 대화형 틀 — 고른 뒤 대본을 만들면 카드가 처음부터 대화형으로 나옵니다"
+                style="background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px"><option value="">나레이션만</option></select>
+            </span>
             <span id="lenPresetWrap" style="display:none;align-items:center;gap:4px;margin-left:6px">
               <button type="button" class="btn-ghost lenPreset" data-v="short" style="min-width:auto;padding:4px 10px" onclick="setLenPreset('short')" title="히트작 평균 길이 — 20~28초, 빠르게 치고 빠진다">🍢 한입썰</button>
               <button type="button" class="btn-ghost lenPreset" data-v="full" style="min-width:auto;padding:4px 10px" onclick="setLenPreset('full')" title="고조를 끝까지 풀어 쓰는 긴 이야기 — 장면 풀이·마지막 셀링까지. 길면 배속을 올려 맞춘다">🍱 풀코스썰</button>
@@ -8521,6 +8527,7 @@ function _workState(){
           script_copy_family:STATE.script_copy_family||'', step:cur, work_id:WORK_ID,
           hook_inpoint_delta:(STATE.hook_inpoint_delta||0)};   // 3초 훅 미세조정(P1, 서버 render가 읽음)
   if(STATE.title_manual) _st.title_manual = STATE.title_manual;
+  if(STATE.script_dialogue) _st.script_dialogue = STATE.script_dialogue;   // 🎭 대화형(관제 128) — 확정 뒤 새로고침해도 3단계로 따라가게
   // ★화면 제목 임시 보관(2026-09-17): 헤드카피의 진실은 job인데 2단계 확정 시점엔 job이 아직 없다.
   //   안 실으면 새로고침·'이 안으로 새 작업' 직후 화면 제목이 사라진다(실측: work 70a340903146).
   //   job이 생기면 saveHeadcopy가 job에 쓰므로 그때부터는 싣지 않는다(두 벌 금지).
@@ -8821,6 +8828,7 @@ function revertWork(){
   STATE.script_style_id = (typeof w.script_style_id !== 'undefined') ? w.script_style_id : null;
   STATE.script_cta_line = (typeof w.script_cta_line === 'number') ? w.script_cta_line : null;   // 2단계 [📢 CTA](관제 45)
   STATE.script_cta_text = w.script_cta_text || '';
+  STATE.script_dialogue = (w.script_dialogue && typeof w.script_dialogue==='object') ? w.script_dialogue : null;   // 🎭 관제 128
   STATE.script_copy_family = w.script_copy_family || '';
   STATE.hook_inpoint_delta = (typeof w.hook_inpoint_delta === 'number') ? w.hook_inpoint_delta : 0;  // 훅 미세조정 복원(P1)
   // ★직접 지은 작업 이름 복원(2026-08-17). 안 되살리면 이 작업을 열자마자 도는 저장이
@@ -8876,6 +8884,7 @@ async function _restoreWork(workId){
   STATE.script_style_id = (typeof w.script_style_id !== 'undefined') ? w.script_style_id : null;
   STATE.script_cta_line = (typeof w.script_cta_line === 'number') ? w.script_cta_line : null;   // 2단계 [📢 CTA](관제 45)
   STATE.script_cta_text = w.script_cta_text || '';
+  STATE.script_dialogue = (w.script_dialogue && typeof w.script_dialogue==='object') ? w.script_dialogue : null;   // 🎭 관제 128
   STATE.script_copy_family = w.script_copy_family || '';
   STATE.hook_inpoint_delta = (typeof w.hook_inpoint_delta === 'number') ? w.hook_inpoint_delta : 0;  // 훅 미세조정 복원(P1)
   // ★직접 지은 작업 이름 복원(2026-08-17). 안 되살리면 이 작업을 열자마자 도는 저장이
@@ -9695,6 +9704,7 @@ function _consumeProduceHandoff(){
     STATE.script_style_id = (typeof w.script_style_id !== 'undefined') ? w.script_style_id : null;
     STATE.script_cta_line = (typeof w.script_cta_line === 'number') ? w.script_cta_line : null;   // 2단계 [📢 CTA](관제 45)
     STATE.script_cta_text = w.script_cta_text || '';
+    STATE.script_dialogue = (w.script_dialogue && typeof w.script_dialogue==='object') ? w.script_dialogue : null;   // 🎭 관제 128
     STATE.script_copy_family = w.script_copy_family || '';
     // ★WORK_ID를 되살린다. 없으면 아래 saveWork()가 매 로드마다 새 작업을 만든다.
     WORK_ID = w.work_id || null;
@@ -11598,6 +11608,8 @@ async function startProduceMix(){
     // ★스토리보드(관제 120): 2단계 스토리보드로 확정했으면 칸마다 문장·장면을 싣는다 — 서버가 대본·줄별 장면을 정한다
     if(Array.isArray(STATE.script_storyboard) && STATE.script_storyboard.length)
       _mixBody.script_structure=Object.assign({}, _mixBody.script_structure||{}, {storyboard: STATE.script_storyboard});
+    if(STATE.script_dialogue && STATE.script_dialogue.form)        // 🎭 대화형(관제 128) — 서버가 화자 성우 스냅샷을 붙인다
+      _mixBody.script_structure=Object.assign({}, _mixBody.script_structure||{}, {dialogue: STATE.script_dialogue});
     const r=await fetch('/api/produce/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(_mixBody)});
     const d=await r.json();
@@ -18415,6 +18427,21 @@ function setLenPreset(v){
   try{ localStorage.setItem('ss_len_preset', v); }catch(e){}
   document.querySelectorAll('.lenPreset').forEach(b=>{ const on=b.dataset.v===v; b.style.background=on?'var(--accent)':''; b.style.color=on?'#000':''; b.style.fontWeight=on?'700':''; });
 }
+// 🎭 목소리 구성(관제 128) — 틀 목록·설명은 서버 dialogue_script.FORMS 한 곳(/api/produce/dialogue/forms). 고른 값만 기억한다.
+function getDlgForm(){ try{ return window.DIALOGUE_ON ? (localStorage.getItem('ss_dlg_form')||'') : ''; }catch(e){ return ''; } }
+function setDlgForm(v){ try{ localStorage.setItem('ss_dlg_form', v||''); }catch(e){} const s=document.getElementById('dlgFormSel'); if(s) s.value=v||''; }
+async function showDlgFormIfOn(){
+  const w=document.getElementById('dlgFormWrap'), sel=document.getElementById('dlgFormSel'); if(!w||!sel||!window.DIALOGUE_ON) return;
+  try{
+    const d=await (await fetch('/api/produce/dialogue/forms')).json();
+    sel.innerHTML='<option value="">나레이션만</option>'+((d&&d.forms)||[]).map(f=>'<option value="'+esc(f.id)+'" title="'+esc(f.desc||'')+'">'+esc(f.label)+'</option>').join('');
+    w.style.display='inline-flex'; setDlgForm(getDlgForm());
+  }catch(e){}
+}
+function s2SetSpeaker(i,j,v){
+  const dr=S2.drafts[i]; const b=dr&&s2Beats(dr)[j]; if(!b) return;
+  b.speaker=v; if(typeof saveWork==='function') saveWork();
+}
 function showLenPresetIfAdmin(){
   const w=document.getElementById('lenPresetWrap'); if(!w) return;
   if(window.IS_ADMIN){ w.style.display='inline-flex'; setLenPreset(getLenPreset()); }
@@ -18456,6 +18483,7 @@ async function s2Generate(){
     //   안 보내면 코드가 다 있어도 **재료가 빈 채로** 대본이 나온다(내가 처음에 빠뜨린 것).
     if(typeof MIX_JOB!=='undefined' && MIX_JOB) body.job_id=MIX_JOB;
     body.length_preset=getLenPreset();   // 한입썰/풀코스썰 — 서버 story_writer.LENGTH_PRESETS와 같은 키
+    if(getDlgForm()) body.dialogue_form=getDlgForm();   // 🎭 대화형 틀(관제 128) — 서버 스위치가 꺼져 있으면 무시된다
     // ★work_id도 함께(2026-08-16). 3단계를 아직 안 돌렸으면 job이 없어 재료가 씨앗
     //   1편으로 줄고, 모자란 만큼 모델이 지어낸다(사장님 제보: 카메라 영상인데
     //   발뒤꿈치 각질 대본). work_id가 있으면 서버가 담긴 영상 전부를 재료로 모은다.
@@ -18712,7 +18740,8 @@ function s2DraftHtml(dr,i){
     const chk=(b.role==='cta')?'<span class="s2-chk">📢 헌장: 댓글에 뭘 남기면 뭘 받는지</span>':'';
     return `<div class="s2-row${isBad?' bad':''}" id="s2r-${i}-${j}" data-role="${esc(b.role||'')}">
       <div class="s2-row-in">
-        <div class="s2-role"><div class="rn">${esc(b.role?s2RoleName(b.role):"✚ 추가 칸")}</div><span id="s2sec-${i}-${j}">${(b.role==='title'&&s2TitleSplitOn())?'<span style="font-size:11px;color:var(--accent)">화면 큰 제목 · 첫 TTS</span>':s2SecTag(s2SecOf(b.text, dr))}</span></div>
+        <div class="s2-role"><div class="rn">${esc(b.role?s2RoleName(b.role):"✚ 추가 칸")}</div>${dr.dialogue?`<select class="s2-spk" title="이 줄을 말하는 사람(대화형)" onchange="s2SetSpeaker(${i},${j},this.value)"
+            style="margin:3px 0;font-size:11px;background:var(--bg);color:var(--accent);border:1px solid var(--line);border-radius:5px;padding:1px 3px">${(dr.dialogue.roles||[]).map(r=>`<option value="${esc(r)}"${r===(b.speaker||'')?' selected':''}>${esc(r)}</option>`).join('')}${b.speaker?'':'<option value="" selected>화자?</option>'}</select>${b.tag?`<div style="font-size:10px;color:var(--sub)">[${esc(b.tag)}]</div>`:''}`:''}<span id="s2sec-${i}-${j}">${(b.role==='title'&&s2TitleSplitOn())?'<span style="font-size:11px;color:var(--accent)">화면 큰 제목 · 첫 TTS</span>':s2SecTag(s2SecOf(b.text, dr))}</span></div>
         <div class="s2-sent-wrap">
           <div class="s2-sent" contenteditable="true" data-ph="${esc(b.role?s2RoleName(b.role).replace(/^\S+\s*/,''):"새 문장")} — 여기에 쓰세요"
                oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}</div>${chk}
@@ -18744,6 +18773,7 @@ function s2DraftHtml(dr,i){
   return `<div class="s2-draft ${i===0?'da':'db'}${i===S2.curDraft?' on':''}" id="s2d-${i}">
     <div class="s2-dhead"><span class="s2-dname">${dr.mine?'✍ 내 대본':(String.fromCharCode(65+i)+'안'+(dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''))}</span>
       <span id="s2tot-${i}" title="우리 보이스 실측 속도로 환산한 예상 길이 — 릴스 기본은 30초 이내">${s2SecTag(s2DraftSec(dr), 30)}</span>${gate}
+      ${dr.dialogue?`<span class="s2-gate pass" title="대화형 — 줄마다 화자를 바꿀 수 있어요">🎭 ${esc(dr.dialogue.label||'대화형')}</span>`:''}${dr.dialogue_error?`<span class="s2-gate fail" title="${esc(dr.dialogue_error)}">🎭 대화형 변환 실패 — 썰 그대로</span>`:''}
       <button class="btn-ghost s2-lang" id="s2lang-${i}" style="min-width:auto;margin-left:auto;padding:4px 10px" onclick="s2ToggleLang(${i})"
         title="${dr.lang==='en'?'영어 문장을 버리고 한국어 원문으로 되돌립니다':'이 안의 모든 문장을 영어로 바꿉니다. 어색한 줄은 칸에서 바로 고치고 확정하면 영어 음성·자막이 됩니다'}">${dr.lang==='en'?'🇰🇷 한국어로':'🌐 영어모드로 변환'}</button></div>
     ${rows}${fix}
@@ -19151,6 +19181,11 @@ function s2ApplyDraftContract(target, dr){
   // ★스토리보드(관제 120): 스토리보드로 만든 안만 칸·문장·장면을 싣는다. 다른 안으로 확정하면 지운다(옛 스토리보드가 따라가지 않게) — 이 한 곳에서만
   if(dr && Array.isArray(dr.storyboard) && dr.storyboard.length) target.script_storyboard=dr.storyboard;
   else delete target.script_storyboard;
+  // 🎭 대화형(관제 128): 대화 줄 = 확정 대본과 **같은 칸들**(글 있는 칸) 순서대로 — 화자는 칸에 실려 있다. 이 한 곳에서만 정한다
+  if(dr && dr.dialogue){
+    target.script_dialogue={form:dr.dialogue.form, cast:dr.dialogue.cast||{},
+      lines:_nb.map(b=>({speaker:b.speaker||'', tag:b.tag||'', src:[]}))};
+  } else delete target.script_dialogue;
   // 2단계 효과음 스위치(sbConfirm) — 새 job 이 생기는 순간(mix 시작) 3단계 스위치와 같은 저장 API 로 넣는다
   if(dr && dr.sfx_deco && (dr.sfx_deco.sfx_pack || (dr.sfx_deco.sfx_mute_beats||[]).length)) target.script_sfx_deco=dr.sfx_deco;
   else delete target.script_sfx_deco;
@@ -19755,7 +19790,7 @@ window.DIALOGUE_ON=false;       // 서버 스위치(dialogue_enabled + 관리자
 window.STORYBOARD_ON=false;     // 서버 스위치(storyboard_enabled, 관제 120) — /api/me가 정본. false면 #s2Storyboard 를 안 그린다
 window.MEME_ON=false;           // 서버 스위치(meme_enabled, 관제 143) — /api/me meme. false면 스토리보드 짤 칸을 안 그린다
 fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
-  if(d && d.dialogue===true) window.DIALOGUE_ON=true;
+  if(d && d.dialogue===true){ window.DIALOGUE_ON=true; try{ showDlgFormIfOn(); }catch(e){} }
   if(d && d.meme===true && typeof MemePack!=='undefined'){ window.MEME_ON=true; MemePack.load().then(()=>{ try{ sbRender(); }catch(e){ console.warn('[meme] 스토리보드 다시 그리기 실패', e); } }); }
   if(d && d.storyboard===true){ window.STORYBOARD_ON=true;
     try{ sbEnter(); }catch(e){} }   // 1·2단계 어느 쪽이 보이든 — 안 보이는 칸도 미리 그려 둔다
