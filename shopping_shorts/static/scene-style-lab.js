@@ -99,7 +99,8 @@
   render.addEventListener('click',async()=>{
     error.textContent='';render.disabled=true;status.textContent='시험 MP4 만드는 중…';
     try{const response=await fetch(labUrl('/render'),{method:'POST'}),data=await response.json();if(!response.ok)throw Error(data.error||'렌더 시작 실패');
-      for(let i=0;i<120;i++){await new Promise(resolve=>setTimeout(resolve,1000));await reloadPacket();const state=packet.manifest.render_state||{};if(state.status==='error')throw Error(state.error||'렌더 실패');if(state.status==='ready'&&packet.manifest.outputs?.mp4)break}
+      for(let i=0;i<600;i++){await new Promise(resolve=>setTimeout(resolve,1000));await reloadPacket();   // 관제 163: 실작업 렌더가 2분을 넘겨 화면만 실패로 끊었다(10-08 실측, 서버는 정상 완료) — 10분까지 기다린다
+      const state=packet.manifest.render_state||{};if(state.status==='error')throw Error(state.error||'렌더 실패');if(state.status==='ready'&&packet.manifest.outputs?.mp4)break}
       if(packet.manifest.render_state?.status!=='ready'||!packet.manifest.outputs?.mp4)throw Error('렌더가 제한 시간 안에 끝나지 않았습니다');status.textContent='시험 MP4 완료 · 실파일 검증됨';
     }catch(cause){error.textContent=cause.message;status.textContent='시험 MP4 실패'}finally{render.disabled=false}
   });
