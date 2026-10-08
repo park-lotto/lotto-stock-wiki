@@ -3780,7 +3780,11 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                             seed_text=(it.get("full_text") or ""),
                             seed_product=script_generate._sources_product(_src) or "",
                             # 고른 씨앗이 job 의 어느 영상인지(URL·원문 대조) — 이야기 작가가 그 영상 컷을 줄에 안 붙인다(관제 138)
-                            seed_vid=_selected_source_id(it, shortcode, _job))
+                            seed_vid=_selected_source_id(it, shortcode, _job),
+                            # 대화형(관제 128) — 스위치 dialogue_enabled(관리자 시험)일 때만 화면이 고른 틀을 넘긴다
+                            dialogue_form=(str(body.get("dialogue_form") or "")
+                                           if _setting_gate(store, "dialogue_enabled", getattr(request.state, "customer_id", 0))
+                                           else ""))
                     except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
                         _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
                 if not _bb_drafts and _bb_on:
@@ -21687,6 +21691,21 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     script_structure = body.get("script_structure") or None
     if not isinstance(script_structure, dict):
         script_structure = None   # 잘못된 형식은 조용히 버린다(보관 전용이라 무해)
+    # ★대화형(관제 128): 2단계 안이 대화형이면 화자별 성우 스냅샷을 여기서 붙인다 — 합성 경로는 voices 가 있어야 대화형으로 본다.
+    #   스위치가 꺼진 계정·틀 모름이면 대화 메타를 버린다(한 목소리 종전 그대로). 줄 수가 대본과 다르면 막는다(화자가 어긋난다).
+    if script_structure and isinstance(script_structure.get("dialogue"), dict):
+        from shopping_shorts import dialogue_script as _ds, edit_plan as _ep
+        _dm = script_structure["dialogue"]
+        if (_setting_gate(Store(DB_PATH), "dialogue_enabled", getattr(request.state, "customer_id", 0))
+                and _dm.get("form") in _ds.FORMS and isinstance(_dm.get("lines"), list)):
+            if len(_dm["lines"]) != len(_ep.script_sentences(script)):
+                return JSONResponse(status_code=422, content={"ok": False, "error":
+                    "대화형 줄 수가 대본과 달라요 — 줄을 더하거나 지웠으면 대본을 다시 만들어 주세요"})
+            _cast = _ds.cast_of(_dm["form"], _dm.get("cast"))
+            script_structure = dict(script_structure, dialogue=dict(
+                _dm, cast=_cast, voices={spk: _voice_snapshot(Store(DB_PATH), {"preset_id": pid}) for spk, pid in _cast.items()}))
+        else:
+            script_structure = {k: v for k, v in script_structure.items() if k != "dialogue"}
     # ★씨앗 자동배치 제외 인덱스(2026-09-30): urls 범위 안 정수만 남긴다 — 표식은 mix_pipeline.mark_auto_exclude가 단다.
     if script_structure and "no_auto_idx" in script_structure:
         _raw = script_structure.get("no_auto_idx")

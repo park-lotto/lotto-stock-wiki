@@ -188,6 +188,19 @@ def remap_beat_sources(beat_sources, out):
     return res
 
 
+def apply_to_lines(lines, beat_sources, form, product="", *, call=None):
+    """2단계 대본 작가(story_writer.make_drafts)가 안을 확정하기 직전에 부른다 — 줄과 장면 출처가 아직 짝일 때.
+    lines = [{text, role, group}], beat_sources = 줄별 출처. 반환 (새 lines, 새 출처, 대화 메타, 실패 이유).
+    실패하면 썰 그대로 돌려주고 이유만 싣는다(호출부가 안에 남겨 카드가 보여 준다)."""
+    try:
+        out = convert([L.get("text") or "" for L in lines], form, product, call=call)
+    except Exception as e:      # noqa: BLE001 — 변환 실패가 대본 생성을 막으면 안 된다
+        return lines, beat_sources, None, str(e)[:200]
+    new_bs = remap_beat_sources(beat_sources, out) or beat_sources
+    new_lines = [dict((lines[o["src"][0]] if o.get("src") else {}), text=o["text"]) for o in out]
+    return new_lines, new_bs, meta(form, out), ""
+
+
 def meta(form, out, cast_override=None):
     """job.script_structure["dialogue"] 에 남길 값 — 칸 i 의 화자·연기 지시는 lines[i]."""
     return {"form": form, "cast": cast_of(form, cast_override),
