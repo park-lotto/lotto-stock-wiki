@@ -5061,16 +5061,22 @@ def _src_durs_for(job, work):
     except Exception:      # noqa: BLE001
         pass
     try:
-        srcs = dict(_resolve_sources(job, Path(work)) or {})
+        out = {v: (_probe_duration(p) or 0.0)
+               for v, p in _resolve_sources(job, Path(work)).items()}
     except Exception:      # noqa: BLE001
         return {}
     # ★맨 앞 감정짤 파일도 잰다(관제 164) — 화면·청소는 짤을 첫 컷으로 쳐서 컷을 짜는데 여기만 짤을 몰라(길이 0)
     #   짤 칸마다 화면 컷을 못 쓰고(src_unreadable) 청소 당시 컷과 어긋났다(clean_cut_drift). 싣는 판단은 job_meme_sources 한 곳.
+    #   짤은 따로 잰다 — 짤 하나를 못 읽어도 원본 길이표는 그대로(그 짤 칸만 종전처럼 예비 계산).
     try:
-        srcs.update(job_meme_sources(Store(config.DB_PATH), job))
+        for v, p in job_meme_sources(Store(config.DB_PATH), job).items():
+            try:
+                out[v] = _probe_duration(p) or 0.0
+            except Exception as e:      # noqa: BLE001
+                print("[meme] 짤 길이 못 잼 %s: %r" % (v, e), file=sys.stderr)
     except Exception as e:      # noqa: BLE001 — 짤 파일을 못 찾으면 종전대로(대신 한 줄)
         print("[meme] 길이표 짤 찾기 실패 job=%s: %r" % ((job or {}).get("job_id"), e), file=sys.stderr)
-    return {v: (_probe_duration(p) or 0.0) for v, p in srcs.items()}
+    return out
 
 
 def job_meme_sources(store, job, plan=None):
