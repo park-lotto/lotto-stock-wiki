@@ -153,31 +153,63 @@ function render(){
   });
 
   document.getElementById('empty').hidden = rows.length > 0;
-  document.getElementById('grid').innerHTML = rows.map(function(j){
-    var k = kind(j);
-    var took = mins(j.created_at, j.updated_at);
-    var media = j.has_video
-      ? '<video src="/api/mix/video/' + encodeURIComponent(j.job_id) +
-        '" controls preload="metadata" playsinline></video>'
-      : '<div class="ph">' + (k === 'fail' ? '⚠️ 영상 없음' : '⏳ 만드는 중') +
-        '<span style="font-size:11px">' + esc(j.status || '') + '</span></div>';
-    return '<div class="job">' + media +
-      '<div class="meta">' +
-        '<div class="who">' + esc(j.who) + '</div>' +
-        '<div class="t">' + hhmm(j.created_at) + ' 접수' +
-          (took != null ? ' · ' + took + '분 걸림' : '') + '</div>' +
-        '<div class="t">' + (j.target_seconds || '?') + '초 · ' + esc(j.structure || '') +
-          (j.subtitle_removal ? ' · 자막제거' : '') + '</div>' +
-        '<span class="tag ' + (k === 'done' ? 't-done' : k === 'fail' ? 't-fail' : 't-run') + '">' +
-          (k === 'done' ? '완성' : k === 'fail' ? '실패' : esc(j.status || '진행')) + '</span>' +
-        (j.status === 'failed' && j.error
-          ? '<div class="err">' + esc(String(j.error).slice(0, 160)) + '</div>' : '') +
-      '</div>' +
-      '<div class="acts">' +
-        '<a href="/produce.html?job=' + encodeURIComponent(j.job_id) + '" target="_blank">제작소에서 열기</a>' +
-        (j.customer_id ? '<a href="/admin/customer/' + j.customer_id + '" target="_blank">회원 상세</a>' : '') +
-      '</div></div>';
-  }).join('');
+  syncGrid(rows);
+}
+
+// 카드 한 장의 영상 칸·글 칸(문자열). 다시 그릴지 말지는 이 문자열이 달라졌나로만 본다.
+function cardParts(j){
+  var k = kind(j);
+  var took = mins(j.created_at, j.updated_at);
+  var media = j.has_video
+    ? '<video src="/api/mix/video/' + encodeURIComponent(j.job_id) +
+      '" controls preload="metadata" playsinline></video>'
+    : '<div class="ph">' + (k === 'fail' ? '⚠️ 영상 없음' : '⏳ 만드는 중') +
+      '<span style="font-size:11px">' + esc(j.status || '') + '</span></div>';
+  var body =
+    '<div class="meta">' +
+      '<div class="who">' + esc(j.who) + '</div>' +
+      '<div class="t">' + hhmm(j.created_at) + ' 접수' +
+        (took != null ? ' · ' + took + '분 걸림' : '') + '</div>' +
+      '<div class="t">' + (j.target_seconds || '?') + '초 · ' + esc(j.structure || '') +
+        (j.subtitle_removal ? ' · 자막제거' : '') + '</div>' +
+      '<span class="tag ' + (k === 'done' ? 't-done' : k === 'fail' ? 't-fail' : 't-run') + '">' +
+        (k === 'done' ? '완성' : k === 'fail' ? '실패' : esc(j.status || '진행')) + '</span>' +
+      (j.status === 'failed' && j.error
+        ? '<div class="err">' + esc(String(j.error).slice(0, 160)) + '</div>' : '') +
+    '</div>' +
+    '<div class="acts">' +
+      '<a href="/produce.html?job=' + encodeURIComponent(j.job_id) + '" target="_blank">제작소에서 열기</a>' +
+      (j.customer_id ? '<a href="/admin/customer/' + j.customer_id + '" target="_blank">회원 상세</a>' : '') +
+    '</div>';
+  return {media: media, body: body};
+}
+
+// ★목록을 통째로 다시 그리지 않는다(2026-10-09 사장님 "몇 초 지나면 계속 새로고침돼서 영상을 보다가 끊긴다", 관제 167).
+//   종전엔 30초마다 #grid.innerHTML 을 새로 써서 <video> 가 전부 새로 만들어졌다 — 재생 중이던 것도.
+//   이제 카드는 작업 번호(data-id)로 짝을 맞춰 그대로 두고, 내용이 달라진 칸(영상 칸·글 칸)만 고쳐 쓴다.
+//   자리를 옮기는 것도 재생을 끊으므로, 순서가 이미 맞는 카드는 건드리지 않는다(새 카드는 그 자리에 끼워 넣는다).
+function syncGrid(rows){
+  var grid = document.getElementById('grid');
+  var have = {};
+  Array.prototype.forEach.call(grid.children, function(el){
+    if (el.dataset && el.dataset.id) have[el.dataset.id] = el; else grid.removeChild(el);   // 옛 모양(표식 없음)은 버린다
+  });
+  var cursor = grid.firstElementChild;
+  rows.forEach(function(j){
+    var id = String(j.job_id), p = cardParts(j), el = have[id];
+    if (!el){
+      el = document.createElement('div');
+      el.className = 'job'; el.dataset.id = id;
+      el.innerHTML = '<div class="jm" style="display:contents"></div><div class="jb" style="display:contents"></div>';
+      el._media = null; el._body = null;
+    }
+    delete have[id];
+    if (el._media !== p.media){ el.children[0].innerHTML = p.media; el._media = p.media; }
+    if (el._body !== p.body){ el.children[1].innerHTML = p.body; el._body = p.body; }
+    if (el === cursor) cursor = cursor.nextElementSibling;
+    else grid.insertBefore(el, cursor);
+  });
+  Object.keys(have).forEach(function(id){ grid.removeChild(have[id]); });                   // 목록에서 빠진 작업
 }
 
 function load(){
@@ -210,7 +242,7 @@ Array.prototype.forEach.call(document.querySelectorAll('button.f'), function(b){
 });
 
 load();
-// 30초 주기 — 더 잦으면 보고 있던 영상이 자꾸 튄다(재생 중인 <video>는 다시 그려진다).
+// 30초마다 숫자·목록을 새로 받는다. 받아도 바뀐 카드만 고쳐 그리므로(syncGrid) 보고 있던 영상은 끊기지 않는다.
 setInterval(load, 30000);
 </script>
 </body>
