@@ -13,6 +13,7 @@
   화면(overseas_ref.html)은 이 모듈의 API 결과만 그린다.
 비용: 유튜브 search 100단위/회(무료 키 풀) + 제미니 텍스트 1회/씨앗. 렌즈(SerpApi) 0회.
 """
+import contextlib
 import json
 import re
 import sqlite3
@@ -36,6 +37,24 @@ _LOCK = threading.Lock()
 
 def _now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+@contextlib.contextmanager
+def _db_session():
+    """연결 하나를 열고 **무슨 일이 있어도** 되돌리고 닫는다(2026-10-09 사이트 전면 멈춤 사고).
+    종전엔 저장 중 예외가 나면 close 를 못 지나 쓰기 트랜잭션이 열린 연결이 남았고(예외 기록이 연결을 붙잡아 GC 도 안 됨),
+    그동안 reference.db 쓰기가 전부 막혀 웹(접속 기록)·워커 12개가 멈췄다. 이 모듈의 연결은 전부 여기로 연다."""
+    c = _db()
+    try:
+        yield c
+    except BaseException:
+        try:
+            c.rollback()
+        except sqlite3.Error:
+            pass
+        raise
+    finally:
+        c.close()
 
 
 def _db():
@@ -194,7 +213,10 @@ def _save(c, cat, rows, seed, rnd):
         old = c.execute("SELECT * FROM overseas_ref_channel WHERE category=? AND channel_id=?", (cat, cid)).fetchone()
         if old is None:
             new += 1
-            c.execute("""INSERT INTO overseas_ref_channel VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            # ★INSERT OR IGNORE(2026-10-09 사이트 전면 멈춤 사고): 확장이 ig_add 를 동시에 2건씩 보내
+            #   둘 다 '없음'으로 보고 INSERT → UNIQUE 오류 → 쓰기 트랜잭션이 열린 채 연결이 남아
+            #   DB 전체 쓰기가 막히고 웹·워커가 전부 멈췄다(18:48·19:06 두 번). 경쟁에서 진 쪽은 조용히 건너뛴다.
+            c.execute("""INSERT OR IGNORE INTO overseas_ref_channel VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                       (cat, cid, r["title"], r["subs"], len(r["videos"]), r["views"], r["top_video"],
                        r["top_views"], json.dumps(sorted(r["kws"]), ensure_ascii=False), seed, rnd, _now(), _now()))
         else:
@@ -228,7 +250,11 @@ def next_keywords(c, cat, found_tags, limit, top_titles=()):
 
 def run(cat, seed, rounds=2, per_round=6, days=90):
     """눈덩이 수집 본체(블로킹). 반환: 요약 dict."""
-    c = _db()
+    with _db_session() as c:
+        return _run(c, cat, seed, rounds, per_round, days)
+
+
+def _run(c, cat, seed, rounds, per_round, days):
     if "tiktok.com/" in (seed or ""):
         row, kws = tiktok_seed(seed)
         if row:
@@ -281,7 +307,6 @@ def run(cat, seed, rounds=2, per_round=6, days=90):
             c.commit()
             _log(f"[{cat}] {rnd}R '{kw}': 해외영상 {len(items)}편 · 채널 {len(rows)}개(새 {new})")
         kws = next_keywords(c, cat, found_tags, per_round, [t for _, t in sorted(top, reverse=True)[:20]])
-    c.close()
     _log(f"[{cat}] 끝 — 검색 {searched}회 · 새 채널 {total_new}개")
     return {"new": total_new, "searched": searched}
 
@@ -310,13 +335,12 @@ def status():
 
 
 def channels(cat, limit=500):
-    c = _db()
-    rows = [dict(r) for r in c.execute(
-        "SELECT * FROM overseas_ref_channel WHERE category=? ORDER BY hit_views DESC LIMIT ?", (cat, limit))]
-    kws = [dict(r) for r in c.execute(
-        "SELECT kw, results, new_channels, searched_at FROM overseas_ref_kw WHERE category=? ORDER BY searched_at DESC", (cat,))]
-    counts = {r[0]: r[1] for r in c.execute("SELECT category, COUNT(*) FROM overseas_ref_channel GROUP BY category")}
-    c.close()
+    with _db_session() as c:
+        rows = [dict(r) for r in c.execute(
+            "SELECT * FROM overseas_ref_channel WHERE category=? ORDER BY hit_views DESC LIMIT ?", (cat, limit))]
+        kws = [dict(r) for r in c.execute(
+            "SELECT kw, results, new_channels, searched_at FROM overseas_ref_kw WHERE category=? ORDER BY searched_at DESC", (cat,))]
+        counts = {r[0]: r[1] for r in c.execute("SELECT category, COUNT(*) FROM overseas_ref_channel GROUP BY category")}
     for r in rows:
         r["keywords"] = json.loads(r.get("keywords") or "[]")
     return {"channels": rows, "keywords": kws, "counts": counts}
@@ -341,8 +365,7 @@ def add_instagram(cat, items):
             r["kws"].add(str(it["q"])[:60])
         for t in tags_of(it.get("caption")):
             r["kws"].add(t)
-    c = _db()
-    new = _save(c, cat, rows, "instagram", 0)
-    total = c.execute("SELECT COUNT(*) FROM overseas_ref_channel WHERE category=?", (cat,)).fetchone()[0]
-    c.close()
+    with _db_session() as c:
+        new = _save(c, cat, rows, "instagram", 0)
+        total = c.execute("SELECT COUNT(*) FROM overseas_ref_channel WHERE category=?", (cat,)).fetchone()[0]
     return new, total
