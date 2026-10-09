@@ -22180,7 +22180,15 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     #   원본 그림을 그대로 보여 준다(2026-09-09 박세현님과 같은 꼴 — 컷 그림 주소엔 넣었는데 페이지 그림 주소엔 빠져 있었다).
     _fk = _frame_cache_key(job, _MIX_WORK_DIR / job_id)
     _fq = f"&k={_fk}" if _fk else ""
+    # ★자막제거 장면 번호(관제 169, 박선정님 7be1bbdd49be): 골라 지우기는 컷 16개, 꾸미기는 자막 페이지 31개라
+    #   꾸미기에서 본 장면을 골라 지우기에서 못 찾았다. 페이지마다 골라 지우기 카드 번호를 붙인다(판단 mix_pipeline.clean_cut_no_at).
+    try:
+        _pick = mix_pipeline.clean_pick_cuts(job, _MIX_WORK_DIR / job_id)
+    except Exception as e:      # noqa: BLE001 — 번호를 못 붙여도 편집기는 연다(대신 한 줄)
+        print("[scene-style] 자막제거 장면 번호 실패 job=%s: %r" % (job_id, e), file=sys.stderr)
+        _pick = []
     for scene, (_bi, _at) in zip(context["scenes"], _pages):
+        scene["clean_cut_no"] = mix_pipeline.clean_cut_no_at(_pick, _at) if _pick else None
         scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}{_fq}"
         # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
         scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}{_fq}" for _t in _scene_page_points(scene)]

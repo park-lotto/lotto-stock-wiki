@@ -4056,6 +4056,27 @@ def clean_pick_cuts(job, work):
     return [dict(c, ci=i, key=cut_key(c), sel=cut_selected(c, sel)) for i, c in enumerate(cuts)]
 
 
+def clean_cut_no_at(cuts, t):
+    """완성본 시각 t 에 보이는 컷의 **자막제거 장면 번호**(1부터, clean_pick_cuts 순서 = 골라 지우기 화면의 '장면 N').
+    장면꾸미기는 자막 페이지 단위(한 컷에 여러 페이지)라 화면마다 수가 달라(16 vs 31) 고객이 같은 장면을 못 찾았다(관제 169).
+    번호 판단은 여기 한 곳 — 꾸미기 페이지 라벨이 이것을 부른다. 못 찾으면 None."""
+    try:
+        t = float(t)
+    except (TypeError, ValueError):
+        return None
+    best = None
+    for i, c in enumerate(cuts or []):
+        try:
+            f0, d = float(c["fin"]), float(c["dur"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if f0 - 1e-3 <= t < f0 + d:
+            return i + 1
+        if f0 <= t:
+            best = i + 1            # 컷 사이 틈(프레임 반올림)이면 바로 앞 컷
+    return best
+
+
 # ── 덧지우기 (2026-10-03 황선희님 job 817308da1647) ────────────────────────────────────────
 # 실측: 9장면 지움(17:22) → 덜 지워진 2장면만 골라 다시(17:29) → 나머지 7장면이 **원본으로 돌아갔다**.
 # 골라 지우기가 늘 원본 조립본에서 새로 시작하고, 선택이 다르면 다른 파일이라 앞 결과를 이어받지 않았기 때문이다.
