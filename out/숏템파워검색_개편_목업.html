@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>숏템파워검색 개편 목업</title>
+<style>
+:root{--bg:#0f1514;--panel:#151d1c;--line:#26302e;--tx:#e8ece9;--mut:#8a9592;--mint:#3ddcb8;--gold:#f0a830;--blue:#4a9eff;--org:#ff8a3d;--grn:#4fd17a;--yel:#f2c94c}
+*{box-sizing:border-box}body{margin:0;background:#0a0e0d;color:var(--tx);font-family:"Pretendard","Malgun Gothic",sans-serif;font-size:14px;padding:16px}
+.win{max-width:1400px;margin:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.hd{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);font-weight:700}
+.hd small{color:var(--mut);font-weight:400}
+.body{display:grid;grid-template-columns:420px 1fr;min-height:720px}
+@media(max-width:900px){.body{grid-template-columns:1fr}}
+.L{border-right:1px solid var(--line);padding:16px;background:#121a19}
+.R{padding:16px}
+h3{margin:0 0 10px;font-size:15px}
+.ref{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.ref .th{width:64px;height:96px;border-radius:8px;background:linear-gradient(160deg,#6b5a3a,#2b2b2b);flex:none}
+.ref b{display:block}.ref span{color:var(--mut);font-size:12px}
+.prog{background:#1b2422;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px}
+.bar{height:6px;background:#26302e;border-radius:4px;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;width:100%;background:var(--mint)}
+.row{display:flex;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.row .k{width:108px;flex:none;color:var(--mut)}
+.row .v b{color:var(--gold)}
+.q{color:#cfe;font-style:italic}
+.flow{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.flow span{background:#22302d;border-radius:6px;padding:2px 7px;font-size:12px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 10px}
+.tab{border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;background:#1a2321;color:var(--tx);font-size:13px}
+.tab.on{background:var(--mint);color:#062;border-color:var(--mint);font-weight:700}
+.dir{background:#1b2422;border:1px solid var(--mint);border-radius:10px;padding:12px}
+.dir p{margin:6px 0}
+.go{margin-top:12px;width:100%;padding:12px;border:0;border-radius:10px;background:var(--gold);color:#221;font-weight:800;font-size:15px;cursor:pointer}
+.topR{display:flex;justify-content:space-between;align-items:center;background:#1b2422;border:1px solid var(--gold);border-radius:10px;padding:10px 14px;margin-bottom:14px}
+.topR b{color:var(--gold)}
+.loading{border:1px dashed var(--mint);border-radius:10px;padding:30px;text-align:center;color:var(--mint);margin-bottom:14px}
+.grp{margin-bottom:14px}
+.gh{display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:6px}
+.gh .dot{width:10px;height:10px;border-radius:3px}
+.gh small{color:var(--mut);font-weight:400}
+.kw{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:#141c1b}
+.kw .t{flex:1;min-width:0}.kw .t b{display:block}.kw .t span{color:var(--mut);font-size:12px}
+.btn{background:var(--mint);color:#052;border:0;border-radius:8px;padding:8px 12px;font-weight:700;white-space:nowrap}
+.sites{display:flex;gap:4px}.sites i{font-style:normal;width:28px;height:28px;border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;font-size:11px;color:var(--mut)}
+.note{color:var(--mut);font-size:12px;margin-top:8px}
+.ctl{text-align:center;margin:10px 0 16px;color:var(--mut);font-size:12px}
+.ctl button{margin:0 4px;padding:6px 10px;border-radius:6px;border:1px solid var(--line);background:#1a2321;color:var(--tx);cursor:pointer}
+</style></head><body>
+<div class="ctl">목업 미리보기: <button onclick="setState(0)">① 분석 중</button><button onclick="setState(1)">② 분석 완료</button> · 왼쪽 탭을 눌러 방향 전환</div>
+<div class="win">
+ <div class="hd">🔍 비슷한 영상 찾기 <small>— 잡고 이동 ✕</small></div>
+ <div class="body">
+  <!-- 왼쪽 -->
+  <div class="L">
+   <div class="ref"><div class="th"></div><div><b>제조사도 당황한 한국 천재의 활용법</b><span>숏팡 · 조회 5,605 · 제품정체형</span></div></div>
+   <div id="Lload" class="prog">⏳ 대본 분석 중… 받아쓰기 → 흐름 나누기 → 터진 포인트 찾기<div class="bar"><i style="width:55%"></i></div></div>
+   <div id="Lres">
+    <h3>📊 벤치영상 분석</h3>
+    <div class="row"><div class="k">📌 스타일</div><div class="v">썰형 › <b>제품정체형</b></div></div>
+    <div class="row"><div class="k">💥 터진 포인트</div><div class="v">"제조사도 당황" 권위 반전 + 정체를 끝까지 숨김</div></div>
+    <div class="row"><div class="k">🎬 장면 배치</div><div class="v"><div class="flow"><span>0s 훅·치즈 클로즈업</span><span>3s 계기</span><span>6s 전환</span><span>9s 정체 공개</span><span>13s 결과</span></div></div></div>
+    <div class="row"><div class="k">🪝 후킹</div><div class="v q">"이거 제조사도 모르는 사용법입니다"</div></div>
+    <div class="row"><div class="k">📣 CTA</div><div class="v q">"프로필 링크에 있어요"</div></div>
+    <div class="row"><div class="k">🗣 말투</div><div class="v">반말 · 짧게 끊음 · 감탄 많음</div></div>
+    <div class="row"><div class="k">📦 제품</div><div class="v"><b>와플메이커</b> · 9초에 첫 공개</div></div>
+    <h3 style="margin-top:16px">🎨 우리 스타일 고르기</h3>
+    <div class="tabs" id="tabs"></div>
+    <div class="dir" id="dir"></div>
+    <button class="go">이 방향으로 찾기 →</button>
+   </div>
+  </div>
+  <!-- 오른쪽 -->
+  <div class="R">
+   <div class="topR"><span>짐작한 제품 <b>와플메이커</b></span><span id="dirName" style="color:var(--mint)"></span></div>
+   <div id="Rload" class="loading">⏳ 대본을 분석해서 키워드를 뽑고 있어요…<br><small>끝나면 아래에 한 번에 보여드려요</small></div>
+   <div id="Rres"></div>
+   <div class="note">🔎 아래로 모아서 보기 = 유튜브·핀터레스트·네이버클립에서 찾아 이 창 아래에 쌓음(무료) · 샤/도/틱/인/핀/유 = 새 탭</div>
+  </div>
+ </div>
+</div>
+<script>
+const S={
+ "벤치 그대로":{flow:"훅 → 정체 숨김 → 전환 → 정체 공개 → 결과",keep:"권위 반전(\"제조사도 당황\")",dir:"기상천외한 사용법",g:[
+  ["기본 (원래 쓰임)","#4a9eff","1~2개",[["와플메이커","waffle maker · 华夫饼机 · ワッフルメーカー"],["미니 와플메이커","mini waffle maker · 迷你华夫饼机"]]],
+  ["반전 사용법","#ff8a3d","3개 이상",[["와플메이커 해시브라운","waffle maker hash brown · 华夫饼机土豆"],["치즈 크리스피","waffle maker cheese crisp · chaffle"],["와플기계 이색 요리","waffle maker hack · 华夫饼机创意"]]],
+  ["마무리 (결과·군침)","#f2c94c","1개",[["시럽 붓기","waffle syrup pour asmr"]]]]},
+ "오용형":{flow:"훅 → 원래 용도 → 근데 → 엉뚱한 용도 → 추가 장점",keep:"의외성",dir:"원래 용도 뒤집기",g:[
+  ["기본 (원래 쓰임)","#4a9eff","1개",[["와플 굽기","waffle maker waffle"]]],
+  ["엉뚱한 용도","#ff8a3d","3개 이상",[["김치전 와플","waffle maker pancake · 华夫饼机煎饼"],["떡 굽기","waffle maker rice cake · 华夫饼机年糕"],["남은 밥","waffle maker leftover rice"]]]]},
+ "지인증언형":{flow:"훅(가족 반응) → 계기 → 사용 → 반응 → 결과·감정",keep:"반응의 리얼함",dir:"사람 반응 중심",g:[
+  ["기본 (사용 장면)","#4a9eff","1~2개",[["와플메이커","waffle maker"]]],
+  ["사람 반응","#4fd17a","2개 이상",[["아이 반응","waffle maker kids reaction"],["가족 반응","waffle maker wife reaction"]]],
+  ["결과","#f2c94c","1개",[["완성 와플 한 입","waffle bite asmr"]]]]},
+ "만능템형":{flow:"훅(하나면 끝) → 용도1 → 용도2 → 용도3 → 결과",keep:"연속 반전",dir:"하나로 여러 개",g:[
+  ["용도 연속","#ff8a3d","4개 이상",[["아침 메뉴","waffle maker breakfast"],["간식","waffle maker snack ideas"],["디저트","waffle maker brownie"],["야식","waffle maker pizza"]]]]},
+ "인스타형":{flow:"화면=시연 / 음성=스토리 분리",keep:"짧은 시연 템포",dir:"시연 위주",g:[
+  ["시연","#ff8a3d","4개 이상",[["손 시연 클로즈업","waffle maker hands asmr · 华夫饼机制作"]]]]}
+};
+let cur="벤치 그대로",st=0;
+const sites='<span class="sites"><i>샤</i><i>도</i><i>틱</i><i>인</i><i>핀</i><i>유</i></span>';
+function render(){
+ tabs.innerHTML=Object.keys(S).map(k=>`<button class="tab ${k==cur?'on':''}" onclick="cur='${k}';render()">${k}</button>`).join("");
+ const s=S[cur];
+ dir.innerHTML=`<p><b>흐름</b> ${s.flow}</p><p><b>벤치에서 가져올 것</b> ${s.keep}</p><p><b>필요한 장면</b> ${s.g.map(g=>g[0].split(" ")[0]+" "+g[2]).join(" · ")}</p>`;
+ dirName.textContent=st?"🎯 방향: "+s.dir:"";
+ Rres.innerHTML=s.g.map(g=>`<div class="grp"><div class="gh"><span class="dot" style="background:${g[1]}"></span>${g[0]} <small>· 필요 ${g[2]}</small></div>`+
+  g[3].map(k=>`<div class="kw"><div class="t"><b>${k[0]}</b><span>${k[1]}</span></div><button class="btn">🔎 아래로 모아서 보기</button>${sites}</div>`).join("")+`</div>`).join("");
+}
+function setState(n){st=n;Lload.style.display=n?"none":"block";Lres.style.display=n?"block":"none";Rload.style.display=n?"none":"block";Rres.style.display=n?"block":"none";render()}
+setState(1);
+</script></body></html>
