@@ -8412,7 +8412,7 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
             # 원본 샷 전환 목록(캐시된 scenecuts.json) — 전환 순간을 피해 찍는다(2026-09-28)
             try:
                 from shopping_shorts import seg_snap as _ss
-                _shots = _ss.scene_cuts(_resolve_sources(job, work)[_hit.get("video_id") or vid])
+                _shots = _ss.scene_cuts(_job_sources_with_memes(job, work)[_hit.get("video_id") or vid])
             except Exception as _e:      # noqa: BLE001 — 전환을 못 읽으면 종전 자리
                 print("[clean_thumb] 샷 전환 목록 실패(종전 자리): %r" % (_e,), file=sys.stderr)
                 _shots = None
@@ -8449,8 +8449,10 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
                                     content={"ok": False, "error": "완성본에 안 쓰인 소스",
                                              "reason": "not_in_final"})
     else:
+        # ★짤 컷(meme_*)도 카드 그림이 나오게(관제 169, 박선정님 7be1bbdd49be 장면 10·13 검은 칸) — 원본 표에는 짤 파일이 없다.
+        #   짤 파일 찾기는 _job_sources_with_memes 한 곳(3단계 필름·꾸미기 그림과 같은 함수).
         try:
-            src = _resolve_sources(job, work)[vid]
+            src = _job_sources_with_memes(job, work)[vid]
         except Exception:
             return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
     dur = frame_extract._probe_duration(src) or 2.0
