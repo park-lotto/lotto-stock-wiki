@@ -1,6 +1,8 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-08d  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-08e  (LOGIC_VER가 정본)
+//   · 관제 156 — 고정 검색 머리에 덮인 카드 📥·배지 숨김(elementsFromPoint, 짐작 수리 재수정).
+//   · 관제 156 — 관련 검색어 상자 접기(검색 판과 같이, 접힌 채 기억), 판매자 태그 맨 위·검색창 기본값, 기다리는 초 표시.
 //   · 관제 156 — 유튜브 Shorts 검색 카드 배지(날짜·조회·좋아요·댓글·길이)·조회수/좋아요/댓글/최신순, 게시물 상자 검색창.
 //   · 관제 156 — 렌즈에 보고 있는 화면 캡처를 그대로 실음(유튜브가 썸네일로만 찾던 것).
 //   · 관제 156 — 렌즈 한 클릭 두 번 발사 막기(DOM 표식), 옛 번호 로직 이어받을 때 옛 버튼 걷기.
@@ -32,7 +34,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261018;
+  var LOGIC_VER = 20261020;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   // ★옛 '번호 있는' 로직을 이어받을 때도 그 버튼을 걷는다(관제 156): 버튼은 id 선점이라 옛 것이 남으면
   //   그 옛 클릭 처리(예: 30초에 끊는 렌즈)가 계속 돈다 — 새 로직이 떠도 '서버 연결 실패'가 났다.
@@ -1595,6 +1597,37 @@
     inp.addEventListener("keydown", function (e) { e.stopPropagation(); });
     return { form: form, note: note };
   }
+  // 검색어 판 접기(관제 156) — 머리줄만 남기고 나머지를 숨긴다. 접힌 상태는 판마다 기억(다음 영상·검색에도 접힌 채).
+  //   판단은 여기 한 곳(_kwFoldBtn·_kwFoldApply) — 검색 판·관련 검색어 상자가 같이 쓴다.
+  function _kwFolded(key) { try { return localStorage.getItem(key) === "1"; } catch (e) { return false; } }
+  function _kwFoldApply(panel, key) {
+    var shut = _kwFolded(key), kids = panel.children;
+    for (var i = 1; i < kids.length; i++) kids[i].style.display = shut ? "none" : "";
+    var b = panel.querySelector(".ss-kw-fold");
+    if (b) b.textContent = shut ? "펼치기" : "접기";
+  }
+  function _kwFoldBtn(panel, key) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "ss-kw-fold"; b.textContent = "접기";
+    b.style.cssText = "background:none;border:1px solid #555;color:#ccc;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer";
+    b.addEventListener("click", function (e) {
+      e.preventDefault(); e.stopPropagation();
+      try { localStorage.setItem(key, _kwFolded(key) ? "0" : "1"); } catch (e2) {}
+      _kwFoldApply(panel, key);
+    });
+    return b;
+  }
+  // '…중' 문구에 기다린 초를 붙인다 — 서버 답이 10초 넘게 걸려도 멈춘 게 아니라는 걸 보이게(관제 156).
+  //   글자가 바뀌거나(결과·오류) 화면에서 빠지면 멈춘다.
+  function _kwTicking(el, msg) {
+    var t0 = Date.now(), cur = msg;
+    el.textContent = msg;
+    var iv = setInterval(function () {
+      if (!document.body.contains(el) || el.textContent !== cur) { clearInterval(iv); return; }
+      cur = msg + " " + Math.round((Date.now() - t0) / 1000) + "초";
+      el.textContent = cur;
+    }, 1000);
+  }
   function _kwBarBody(q, dark) {
     var wrap = document.createElement("div");
     wrap.style.cssText = "display:flex;flex-direction:column;gap:8px;font-family:system-ui,sans-serif";
@@ -1605,7 +1638,7 @@
     lab.textContent = "비슷한 검색어 (한·영·일·중·러)"; lab.style.cssText = "font-size:12px;color:" + (dark ? "#bbb" : "#737373");
     chips.appendChild(lab);
     var wait = document.createElement("span");
-    wait.textContent = "찾는 중…"; wait.style.cssText = "font-size:12px;color:#a8a8a8";
+    wait.style.cssText = "font-size:12px;color:#a8a8a8"; _kwTicking(wait, "찾는 중…");
     chips.appendChild(wait);
     wrap.appendChild(form); wrap.appendChild(note); wrap.appendChild(chips);
     _igKwFetch("multi", q, function (r) {
@@ -1795,18 +1828,11 @@
     var hd = document.createElement("div");
     hd.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font:800 13px system-ui,sans-serif";
     var ttl = document.createElement("span"); ttl.textContent = "🔎 숏템 검색어";
-    var fold = document.createElement("button");
-    fold.type = "button"; fold.textContent = "접기";
-    fold.style.cssText = "background:none;border:1px solid #555;color:#ccc;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer";
-    hd.appendChild(ttl); hd.appendChild(fold);
+    hd.appendChild(ttl); hd.appendChild(_kwFoldBtn(p, "ss_kwfloat_fold"));
     var body = _kwBarBody(q, true);
     if (s.id === "youtube") body.appendChild(_ytRankRow());   // 조회수순·좋아요순·댓글순·최신순(관제 156)
-    fold.addEventListener("click", function (e) {
-      e.preventDefault(); e.stopPropagation();
-      var open = body.style.display !== "none";
-      body.style.display = open ? "none" : ""; fold.textContent = open ? "펼치기" : "접기";
-    });
     p.appendChild(hd); p.appendChild(body);
+    _kwFoldApply(p, "ss_kwfloat_fold");
     document.body.appendChild(p);
     _ssDrag(p, hd);
   }
@@ -1980,7 +2006,9 @@
         "background:rgba(22,22,22,.92);color:#eee;border-radius:12px;padding:10px;font-family:system-ui,sans-serif;" +
         "box-shadow:0 4px 14px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:6px";
       var hd = document.createElement("div");
-      hd.textContent = "🔎 관련 검색어"; hd.style.cssText = "font:800 13px system-ui,sans-serif";
+      hd.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:12px;font:800 13px system-ui,sans-serif";
+      var hdt = document.createElement("span"); hdt.textContent = "🔎 관련 검색어";
+      hd.appendChild(hdt); hd.appendChild(_kwFoldBtn(p, "ss_kwpost_fold"));
       body = document.createElement("div"); body.className = "ss-kw-body";
       body.style.cssText = "display:flex;flex-direction:column;gap:6px";
       st = document.createElement("div"); st.className = "ss-kw-st";
@@ -1988,7 +2016,11 @@
       body.appendChild(st);
       // 검색창(관제 156, 2026-10-08 사장님 "여기도 검색창, 한글로 바꾸면 번역돼서") — 검색 판과 같은 것.
       var psf = _kwSearchForm("", true);
-      p.appendChild(hd); p.appendChild(psf.form); p.appendChild(psf.note); p.appendChild(body);
+      psf.form.classList.add("ss-kw-form");
+      // 판매자 태그 줄 자리 = 머리 바로 아래 **맨 위**(관제 156, 2026-10-08 사장님 "제일 정확한 거야")
+      var tagSlot = document.createElement("div"); tagSlot.className = "ss-kw-tagslot";
+      p.appendChild(hd); p.appendChild(tagSlot); p.appendChild(psf.form); p.appendChild(psf.note); p.appendChild(body);
+      _kwFoldApply(p, "ss_kwpost_fold");
       document.body.appendChild(p);
       _ssDrag(p, hd);
     }
@@ -2006,7 +2038,7 @@
       // ★판매자 해시태그를 맨 위 줄에(관제 156, 2026-10-08 사장님): 설명글의 #intake 를 누르니 영어 검색어로는
       //   안 나오던 제품이 정확히 나왔다. 인스타 키워드 검색이 안 될 때 가장 좋은 길 — 서버 호출 없이 설명글에서 뽑는다.
       var tags = _postHashtags(cap);
-      if (tags.length && !body.querySelector(".ss-kw-tags")) {
+      if (tags.length && !p.querySelector(".ss-kw-tags")) {
         var tr = document.createElement("div");
         tr.className = "ss-kw-tags";
         tr.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center";
@@ -2014,16 +2046,20 @@
         tl.textContent = "판매자 태그"; tl.style.cssText = "font-size:11px;font-weight:800;color:#f5c542;margin-right:2px";
         tr.appendChild(tl);
         for (var ti = 0; ti < tags.length; ti++) tr.appendChild(_tagChip(s, tags[ti]));
-        body.insertBefore(tr, body.firstChild);
+        var slot = p.querySelector(".ss-kw-tagslot");
+        if (slot) slot.appendChild(tr); else body.insertBefore(tr, body.firstChild);
+        // 검색창 기본값 = 첫 판매자 태그(가장 정확한 검색어). 사람이 이미 쳤으면 건드리지 않는다.
+        var fin = p.querySelector(".ss-kw-form input");
+        if (fin && !fin.value) fin.value = tags[0];
       }
-      st.textContent = "검색어 만드는 중…";
+      _kwTicking(st, "검색어 만드는 중…");
       _igKwFetch("caption", cap.slice(0, 2000), function (r) {
         if (p.getAttribute("data-c") !== key || !document.body.contains(p)) return;
         var list = (r.main ? [r.main] : []).concat(r.related || []);
         if (!list.length) { st.textContent = r.error || "검색어를 못 만들었어요"; return; }
         // 5개 언어(관제 156, 사장님 "제품을 누른 페이지에도 5개국어") — 검색 판과 같은 줄 모양(_igKwLangRow).
         //   상품 이름(main) 하나로 5줄 × 5개 언어를 받는다. 못 받으면 종전 칩으로.
-        st.textContent = "5개 언어로 펼치는 중…";
+        _kwTicking(st, "5개 언어로 펼치는 중…");
         _igKwFetch("multi", list[0], function (m) {
           if (p.getAttribute("data-c") !== key || !document.body.contains(p)) return;
           st.remove();
@@ -2427,12 +2463,25 @@
   //   카드가 120px 보다 작아지면 숨기고, 다시 펴지면 보인다. 스크롤마다(한 프레임에 한 번) + tick 마다.
   function _hideCollapsedBadges() {
     var bs = document.querySelectorAll(".ss-card-info, .ss-card-lens, .ss-card-grab:not(.ss-pv-grab)");
+    // ★2026-10-08 두 번째 수리(사장님 "왜 자꾸 안 고치나"): 첫 수리는 '카드가 접힌다'는 짐작이었고 틀렸다 —
+    //   실제로는 스크롤해도 고정된 검색 머리(검색창·좋아요순 줄)가 첫 줄 카드 윗부분을 **덮는데**, 카드 왼쪽 위 📥가
+    //   그 위로 튀어나왔다(날짜 배지는 카드 아래라 안 덮여 멀쩡했다). 짐작 대신 **그 자리에 실제로 카드가 보이는가**를
+    //   브라우저에 묻는다(elementsFromPoint): 버튼 가운데 점의 맨 위 요소가 그 카드 안이 아니면 덮인 것 → 숨김.
+    //   display 가 아니라 visibility 로 숨긴다 — 자리(좌표)가 남아야 다음 프레임에 다시 잴 수 있다.
     for (var i = 0; i < bs.length; i++) {
-      var a = bs[i].parentElement; if (!a) continue;
-      var r = a.getBoundingClientRect();
-      var small = r.width < 120 || r.height < 120;
-      if (small && !bs[i].__ssHid) { bs[i].__ssHid = 1; bs[i].style.display = "none"; }
-      else if (!small && bs[i].__ssHid) { bs[i].__ssHid = 0; bs[i].style.display = ""; }
+      var el = bs[i], a = el.parentElement; if (!a) continue;
+      var r = a.getBoundingClientRect(), hide = r.width < 120 || r.height < 120;
+      if (!hide && document.elementsFromPoint) {
+        var q = el.getBoundingClientRect(), cx = q.left + q.width / 2, cy = q.top + q.height / 2;
+        if (q.width && cy >= 0 && cy <= innerHeight && cx >= 0 && cx <= innerWidth) {
+          var st = document.elementsFromPoint(cx, cy), top = null;
+          for (var k = 0; k < st.length; k++) { if (st[k] !== el && !el.contains(st[k])) { top = st[k]; break; } }
+          if (top && !a.contains(top) && !top.contains(a)) hide = true;
+        }
+      }
+      if (el.style.display === "none" && el.__ssHid) el.style.display = "";      // 옛 판(display)으로 숨긴 것 되살림
+      if (hide && !el.__ssHid) { el.__ssHid = 1; el.style.visibility = "hidden"; }
+      else if (!hide && el.__ssHid) { el.__ssHid = 0; el.style.visibility = ""; }
     }
   }
   var _hcbRaf = 0;

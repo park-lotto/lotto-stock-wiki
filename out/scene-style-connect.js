@@ -240,13 +240,11 @@
   else primary.textContent='현재 설정 저장';
   primary.addEventListener('click',()=>{
     if(saving)return;
+    // 관제 163(10-08 사장님): 제목이 길게 배치되거나 고객이 고쳐도 막지 않는다 — 알림만 남기고 그대로 저장한다
     const violations=api.validation?.()||[];
     if(violations.length){
       const status=pane.querySelector('[data-connection-status]');
-      if(status)status.textContent=violations[0]+' 글씨를 줄이지 않고 원본 크기를 유지합니다.';
-      primary.textContent='문구 길이를 확인해 주세요';
-      setTimeout(()=>primary.textContent=embedded?'이 영상에 적용':'현재 설정 저장',1800);
-      return;
+      if(status)status.textContent='참고: '+violations[0]+' 화면에서 잘리지 않는지 미리보기로 확인해 주세요.';
     }
     if(!embedded){save.click();primary.textContent='✓ 현재 설정 저장됨';setTimeout(()=>primary.textContent='현재 설정 저장',1500);return;}
     if(!context)return;

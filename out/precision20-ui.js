@@ -1144,7 +1144,9 @@
     root.querySelectorAll('.layout-a [data-scene-current]').forEach(el=>el.textContent=String(sceneIndex+1));
     root.querySelectorAll('.layout-a [data-scene-total]').forEach(el=>el.textContent=String(sceneTotal()));
     const name=root.querySelector('.layout-a [data-scene-name]');
-    if(name)name.textContent=mode==='continuous'?`${sceneIndex+1}장 · 동일 디자인`:(sceneIndex===0?'1장 · 훅':`${sceneIndex+1}장 · 본문`);
+    // 자막제거 장면 번호(관제 169) — 골라 지우기 화면은 컷 단위(예 16개), 여기는 자막 페이지 단위(예 31개)라 번호를 같이 보여 준다(서버 clean_cut_no).
+    const cutNo=sceneContext?.scenes?.[sceneIndex]?.clean_cut_no;
+    if(name)name.textContent=(mode==='continuous'?`${sceneIndex+1}장 · 동일 디자인`:(sceneIndex===0?'1장 · 훅':`${sceneIndex+1}장 · 본문`))+(cutNo?` · 자막제거 장면 ${cutNo}`:'');
     root.querySelectorAll('.layout-a [data-caption-scene-index]').forEach(el=>el.textContent=`${sceneIndex+1}/${sceneTotal()}장`);
     root.querySelectorAll('.layout-a [data-scene-step]').forEach(button=>{
       const next=sceneIndex+Number(button.dataset.sceneStep);

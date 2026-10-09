@@ -4056,6 +4056,27 @@ def clean_pick_cuts(job, work):
     return [dict(c, ci=i, key=cut_key(c), sel=cut_selected(c, sel)) for i, c in enumerate(cuts)]
 
 
+def clean_cut_no_at(cuts, t):
+    """완성본 시각 t 에 보이는 컷의 **자막제거 장면 번호**(1부터, clean_pick_cuts 순서 = 골라 지우기 화면의 '장면 N').
+    장면꾸미기는 자막 페이지 단위(한 컷에 여러 페이지)라 화면마다 수가 달라(16 vs 31) 고객이 같은 장면을 못 찾았다(관제 169).
+    번호 판단은 여기 한 곳 — 꾸미기 페이지 라벨이 이것을 부른다. 못 찾으면 None."""
+    try:
+        t = float(t)
+    except (TypeError, ValueError):
+        return None
+    best = None
+    for i, c in enumerate(cuts or []):
+        try:
+            f0, d = float(c["fin"]), float(c["dur"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if f0 - 1e-3 <= t < f0 + d:
+            return i + 1
+        if f0 <= t:
+            best = i + 1            # 컷 사이 틈(프레임 반올림)이면 바로 앞 컷
+    return best
+
+
 # ── 덧지우기 (2026-10-03 황선희님 job 817308da1647) ────────────────────────────────────────
 # 실측: 9장면 지움(17:22) → 덜 지워진 2장면만 골라 다시(17:29) → 나머지 7장면이 **원본으로 돌아갔다**.
 # 골라 지우기가 늘 원본 조립본에서 새로 시작하고, 선택이 다르면 다른 파일이라 앞 결과를 이어받지 않았기 때문이다.
@@ -5061,10 +5082,31 @@ def _src_durs_for(job, work):
     except Exception:      # noqa: BLE001
         pass
     try:
-        return {v: (_probe_duration(p) or 0.0)
-                for v, p in _resolve_sources(job, Path(work)).items()}
+        out = {v: (_probe_duration(p) or 0.0)
+               for v, p in _resolve_sources(job, Path(work)).items()}
     except Exception:      # noqa: BLE001
         return {}
+    # ★맨 앞 감정짤 파일도 잰다(관제 164) — 화면·청소는 짤을 첫 컷으로 쳐서 컷을 짜는데 여기만 짤을 몰라(길이 0)
+    #   짤 칸마다 화면 컷을 못 쓰고(src_unreadable) 청소 당시 컷과 어긋났다(clean_cut_drift). 싣는 판단은 job_meme_sources 한 곳.
+    #   짤은 따로 잰다 — 짤 하나를 못 읽어도 원본 길이표는 그대로(그 짤 칸만 종전처럼 예비 계산).
+    try:
+        for v, p in job_meme_sources(Store(config.DB_PATH), job).items():
+            try:
+                out[v] = _probe_duration(p) or 0.0
+            except Exception as e:      # noqa: BLE001
+                print("[meme] 짤 길이 못 잼 %s: %r" % (v, e), file=sys.stderr)
+    except Exception as e:      # noqa: BLE001 — 짤 파일을 못 찾으면 종전대로(대신 한 줄)
+        print("[meme] 길이표 짤 찾기 실패 job=%s: %r" % ((job or {}).get("job_id"), e), file=sys.stderr)
+    return out
+
+
+def job_meme_sources(store, job, plan=None):
+    """{짤 컷 video_id: 짤 파일} — 렌더 소스 표·컷 길이표·편집 화면 합본이 **이 함수 하나**로 짤 파일을 싣는다(관제 164)."""
+    plan = plan if plan is not None else ((job or {}).get("edit_plan") or {})
+    if not any(_va_meme(b) for b in (plan or {}).get("beats") or []):
+        return {}
+    from shopping_shorts.video_assemble import meme_sources
+    return meme_sources(plan, _resolve_cutaway_paths(store, plan, (job or {}).get("customer_id", 0)))
 
 
 SHOT_AVOID_FRAMES = 2.5     # 비교 그림은 원본 샷 전환에서 이만큼(프레임) 떨어진 곳을 찍는다
@@ -6135,11 +6177,9 @@ def render_inputs_for(store, job, job_id, work, keys, customer_id=0, *, allow_cl
     """렌더 계열 입력(아래 _render_inputs_core) + 맨 앞 감정짤 파일(관제 139).
     짤 컷은 화면 컷 목록의 첫 컷이라 소스 표에 짤 파일이 있어야 렌더·캡컷·ZIP 이 같은 첫 컷을 굽는다 — 싣는 곳은 여기 한 곳."""
     plan, paths, base = _render_inputs_core(store, job, job_id, work, keys, customer_id, allow_clean=allow_clean)
-    if any(_va_meme(b) for b in (plan or {}).get("beats") or []):
-        from shopping_shorts.video_assemble import meme_sources
-        _ms = meme_sources(plan, _resolve_cutaway_paths(store, plan, customer_id))
-        if _ms:
-            paths = {**(paths or {}), **_ms}
+    _ms = job_meme_sources(store, dict(job or {}, customer_id=customer_id), plan)
+    if _ms:
+        paths = {**(paths or {}), **_ms}
     return plan, paths, base
 
 

@@ -3780,7 +3780,11 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                             seed_text=(it.get("full_text") or ""),
                             seed_product=script_generate._sources_product(_src) or "",
                             # 고른 씨앗이 job 의 어느 영상인지(URL·원문 대조) — 이야기 작가가 그 영상 컷을 줄에 안 붙인다(관제 138)
-                            seed_vid=_selected_source_id(it, shortcode, _job))
+                            seed_vid=_selected_source_id(it, shortcode, _job),
+                            # 대화형(관제 128) — 스위치 dialogue_enabled(관리자 시험)일 때만 화면이 고른 틀을 넘긴다
+                            dialogue_form=(str(body.get("dialogue_form") or "")
+                                           if _setting_gate(store, "dialogue_enabled", getattr(request.state, "customer_id", 0))
+                                           else ""))
                     except Exception as _e:      # noqa: BLE001 — 새 경로 오류가 생성을 막으면 안 된다(이유는 싣는다)
                         _bb_drafts, _bb_why = [], "이야기 작가 오류: %s" % repr(_e)[:120]
                 if not _bb_drafts and _bb_on:
@@ -7342,8 +7346,7 @@ def _job_sources_with_memes(job, work) -> dict:
     plan = (job or {}).get("edit_plan") or {}
     if any(video_assemble.meme_cutaway(b) for b in plan.get("beats") or []):
         try:
-            srcs.update(video_assemble.meme_sources(
-                plan, mix_pipeline._resolve_cutaway_paths(Store(DB_PATH), plan, (job or {}).get("customer_id", 0))))
+            srcs.update(mix_pipeline.job_meme_sources(Store(DB_PATH), job, plan))
         except Exception as e:      # noqa: BLE001 — 짤 파일을 못 찾으면 그 컷은 검은 화면(대신 한 줄)
             print("[meme] 짤 파일 찾기 실패 job=%s: %r" % ((job or {}).get("job_id"), e), file=sys.stderr)
     return srcs
@@ -8409,7 +8412,7 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
             # 원본 샷 전환 목록(캐시된 scenecuts.json) — 전환 순간을 피해 찍는다(2026-09-28)
             try:
                 from shopping_shorts import seg_snap as _ss
-                _shots = _ss.scene_cuts(_resolve_sources(job, work)[_hit.get("video_id") or vid])
+                _shots = _ss.scene_cuts(_job_sources_with_memes(job, work)[_hit.get("video_id") or vid])
             except Exception as _e:      # noqa: BLE001 — 전환을 못 읽으면 종전 자리
                 print("[clean_thumb] 샷 전환 목록 실패(종전 자리): %r" % (_e,), file=sys.stderr)
                 _shots = None
@@ -8446,8 +8449,10 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
                                     content={"ok": False, "error": "완성본에 안 쓰인 소스",
                                              "reason": "not_in_final"})
     else:
+        # ★짤 컷(meme_*)도 카드 그림이 나오게(관제 169, 박선정님 7be1bbdd49be 장면 10·13 검은 칸) — 원본 표에는 짤 파일이 없다.
+        #   짤 파일 찾기는 _job_sources_with_memes 한 곳(3단계 필름·꾸미기 그림과 같은 함수).
         try:
-            src = _resolve_sources(job, work)[vid]
+            src = _job_sources_with_memes(job, work)[vid]
         except Exception:
             return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
     dur = frame_extract._probe_duration(src) or 2.0
@@ -15219,10 +15224,12 @@ _PRIVACY_BODY = f"""
 <p>회사가 배포하는 크롬 확장프로그램 ‘원클릭 담기’는 아래 범위에서만 동작합니다.
 크롬 웹스토어 심사 기준에 따라 처리 내용을 명시합니다.</p>
 <ul>
-<li><b>동작 범위</b>: 유튜브·틱톡·인스타그램·샤오홍슈·도우인의 영상 페이지에서만 ‘담기’ 버튼을 표시합니다. 그 외 사이트에서는 어떤 동작도 하지 않습니다.</li>
-<li><b>수집·전송 항목</b>: 이용자가 ‘담기’ 버튼을 <b>직접 누른 경우에만</b> 해당 영상의 주소(URL)·제목·썸네일 이미지 주소를 회사 서버로 전송해 이용자 본인의 모음집에 저장합니다.</li>
-<li><b>수집하지 않는 것</b>: 페이지의 다른 내용, 입력값, 비밀번호, 방문 기록을 수집하지 않습니다. 버튼을 누르지 않으면 어떤 정보도 전송되지 않습니다.</li>
-<li><b>통신 대상</b>: 회사 서비스 서버(shoppingshorts.duckdns.org) 외 어떤 외부 도메인과도 통신하지 않습니다.</li>
+<li><b>동작 범위</b>: 유튜브·틱톡·인스타그램·핀터레스트·쓰레드·샤오홍슈·도우인의 영상·검색 페이지에서만 ‘담기’·‘렌즈’ 버튼과 검색 도구를 표시합니다. 그 외 사이트에서는 어떤 동작도 하지 않습니다.</li>
+<li><b>담기</b>: 이용자가 ‘담기’ 버튼을 누르면 해당 영상의 주소(URL)·제목·썸네일 이미지 주소를 회사 서버로 전송해 이용자 본인의 모음집에 저장합니다.</li>
+<li><b>렌즈(비슷한 영상 찾기)</b>: 이용자가 ‘렌즈’ 버튼을 누르면 해당 영상의 주소와, 그 순간 화면에 보이던 <b>영상 장면 1장(캡처 이미지)</b>을 회사 서버로 전송합니다. 이 이미지는 비슷한 영상 검색에만 쓰이며, 이를 위해 이미지 호스팅(imgbb·imgur) 및 검색 대행(SerpApi·구글 렌즈)에 전달됩니다.</li>
+<li><b>검색 도구</b>: 지원 사이트의 검색 화면·영상 화면을 열면 비슷한 검색어를 만들기 위해 <b>검색어 또는 해당 게시물의 설명글</b>을, 유튜브 Shorts 검색 화면에서는 날짜·길이·조회수 표시를 위해 <b>화면에 보이는 영상 번호</b>를 회사 서버로 전송합니다(로그인한 이용자만). 검색어 생성에는 구글 Gemini, 영상 정보 조회에는 유튜브 Data API를 사용합니다.</li>
+<li><b>수집하지 않는 것</b>: 위에 적은 것 외에 페이지의 다른 내용, 입력값, 비밀번호, 방문 기록을 수집하지 않으며, 이용자를 추적하는 용도로 쓰지 않습니다.</li>
+<li><b>통신 대상</b>: 확장은 회사 서비스 서버(shoppingshorts.duckdns.org, app.stmaker.kr)와만 직접 통신합니다. 위의 외부 처리(이미지 호스팅·검색 대행·Gemini·유튜브 API)는 회사 서버가 수행합니다.</li>
 <li><b>원격 코드</b>: 확장은 모든 코드를 설치 패키지에 포함하며, 외부에서 코드를 내려받아 실행하지 않습니다.</li>
 <li><b>제3자 판매·양도</b>: 확장을 통해 수집한 정보를 제3자에게 판매하거나 양도하지 않으며, 신용도 평가·대출 목적으로 사용하지 않습니다.</li>
 </ul>
@@ -16558,7 +16565,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 장면꾸미기 장면 효과(관제 124, 2026-10-05) — 강조 확대·어둡게·흑백 충격·자동 배치. ""끔 · "admin" · "11,42" · "1" 전체
                        "scene_fx_enabled",
                        # 자막팩(관제 127, 2026-10-06) — 팩 카드·새 등장 효과·새 단어 강조 방식. ""끔 · "admin" · "11,42" · "1" 전체
-                       "caption_pack_enabled"}
+                       "caption_pack_enabled",
+                       # 3단계 🎵 배경음 목록(관제 146) — 기본 "admin"(사장님만) · "1" 전체 · "off". 판정은 bgm_lib.enabled_for 한 곳(관제 165)
+                       "bgm_lib_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -21304,6 +21313,9 @@ def api_storyboard_thumb(request: Request, key: str, seg_id: str):
     return FileResponse(str(out), media_type="image/jpeg")
 
 
+_SB_REFETCH_LOCKS = {}     # 영상 코드 → Lock — 썸네일 수십 장이 한꺼번에 와도 원본은 한 번만 다시 받는다(관제 166)
+
+
 def _sb_seg_src(ex, jid, seg_id):
     """스토리보드 조각 → (원본 영상 경로, 조각{start,end,video_id…}) — 썸네일·구간 영상(clip)이 같이 쓰는 한 곳.
     매칭 작업(jid)이 있으면 3단계와 같은 장면 표(edit_plan.scene_table)·소스(_resolve_sources),
@@ -21325,6 +21337,20 @@ def _sb_seg_src(ex, jid, seg_id):
                 continue
             vdir = _FIND_TMP_DIR / hashlib.sha1(str(vid).encode()).hexdigest()[:16]
             mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
+            if not mp4:
+                # ★1단계가 캐시 적중이면 영상을 안 받는다 + 받아 둔 것도 2일 뒤 치워진다 → 2단계 썸네일이 통째로 깨졌다(관제 166).
+                #   원본 주소로 한 번 다시 받는다(1단계와 같은 download_any·같은 폴더). 영상당 하나만 받게 잠근다.
+                url = (e or {}).get("_source_url") or ""
+                if url:
+                    with _SB_REFETCH_LOCKS.setdefault(str(vid), threading.Lock()):
+                        mp4 = sorted(vdir.glob("*.mp4")) if vdir.exists() else []
+                        if not mp4:
+                            try:
+                                vdir.mkdir(parents=True, exist_ok=True)
+                                got, _cap = download_any(url, str(vdir))
+                                mp4 = [Path(got)] if got and Path(got).exists() else []
+                            except Exception as ex:      # noqa: BLE001 — 만료·비공개면 종전대로 404(이유 한 줄)
+                                print("[storyboard] 원본 다시 받기 실패 %s: %r" % (vid, ex), file=sys.stderr)
             if not mp4:
                 return JSONResponse(status_code=404, content={"ok": False, "error": "영상 파일이 치워졌습니다"})
             return str(mp4[0]), sg_
@@ -21685,6 +21711,26 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     script_structure = body.get("script_structure") or None
     if not isinstance(script_structure, dict):
         script_structure = None   # 잘못된 형식은 조용히 버린다(보관 전용이라 무해)
+    # ★대화형(관제 128): 2단계 안이 대화형이면 화자별 성우 스냅샷을 여기서 붙인다 — 합성 경로는 voices 가 있어야 대화형으로 본다.
+    #   스위치가 꺼진 계정·틀 모름이면 대화 메타를 버린다(한 목소리 종전 그대로). 줄 수가 대본과 다르면 막는다(화자가 어긋난다).
+    if script_structure and isinstance(script_structure.get("dialogue"), dict):
+        from shopping_shorts import dialogue_script as _ds, edit_plan as _ep
+        _dm = script_structure["dialogue"]
+        if (_setting_gate(Store(DB_PATH), "dialogue_enabled", getattr(request.state, "customer_id", 0))
+                and _dm.get("form") in _ds.FORMS and isinstance(_dm.get("lines"), list)):
+            if len(_dm["lines"]) != len(_ep.script_sentences(script)):
+                return JSONResponse(status_code=422, content={"ok": False, "error":
+                    "대화형 줄 수가 대본과 달라요 — 줄을 더하거나 지웠으면 대본을 다시 만들어 주세요"})
+            _bad = [i for i, l in enumerate(_dm["lines"])
+                    if not isinstance(l, dict) or l.get("speaker") not in _ds.FORMS[_dm["form"]]["roles"]]
+            if _bad:
+                return JSONResponse(status_code=422, content={"ok": False, "error":
+                    "화자가 안 정해진 줄이 있어요(%s번째) — 2단계 카드에서 화자를 골라 주세요" % ", ".join(str(i + 1) for i in _bad[:5])})
+            _cast = _ds.cast_of(_dm["form"], _dm.get("cast"))
+            script_structure = dict(script_structure, dialogue=dict(
+                _dm, cast=_cast, voices={spk: _voice_snapshot(Store(DB_PATH), {"preset_id": pid}) for spk, pid in _cast.items()}))
+        else:
+            script_structure = {k: v for k, v in script_structure.items() if k != "dialogue"}
     # ★씨앗 자동배치 제외 인덱스(2026-09-30): urls 범위 안 정수만 남긴다 — 표식은 mix_pipeline.mark_auto_exclude가 단다.
     if script_structure and "no_auto_idx" in script_structure:
         _raw = script_structure.get("no_auto_idx")
@@ -22136,7 +22182,15 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     #   원본 그림을 그대로 보여 준다(2026-09-09 박세현님과 같은 꼴 — 컷 그림 주소엔 넣었는데 페이지 그림 주소엔 빠져 있었다).
     _fk = _frame_cache_key(job, _MIX_WORK_DIR / job_id)
     _fq = f"&k={_fk}" if _fk else ""
+    # ★자막제거 장면 번호(관제 169, 박선정님 7be1bbdd49be): 골라 지우기는 컷 16개, 꾸미기는 자막 페이지 31개라
+    #   꾸미기에서 본 장면을 골라 지우기에서 못 찾았다. 페이지마다 골라 지우기 카드 번호를 붙인다(판단 mix_pipeline.clean_cut_no_at).
+    try:
+        _pick = mix_pipeline.clean_pick_cuts(job, _MIX_WORK_DIR / job_id)
+    except Exception as e:      # noqa: BLE001 — 번호를 못 붙여도 편집기는 연다(대신 한 줄)
+        print("[scene-style] 자막제거 장면 번호 실패 job=%s: %r" % (job_id, e), file=sys.stderr)
+        _pick = []
     for scene, (_bi, _at) in zip(context["scenes"], _pages):
+        scene["clean_cut_no"] = mix_pipeline.clean_cut_no_at(_pick, _at) if _pick else None
         scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}{_fq}"
         # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
         scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}{_fq}" for _t in _scene_page_points(scene)]
