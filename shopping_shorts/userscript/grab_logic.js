@@ -34,7 +34,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261020;
+  var LOGIC_VER = 20261021;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   // ★옛 '번호 있는' 로직을 이어받을 때도 그 버튼을 걷는다(관제 156): 버튼은 id 선점이라 옛 것이 남으면
   //   그 옛 클릭 처리(예: 30초에 끊는 렌즈)가 계속 돈다 — 새 로직이 떠도 '서버 연결 실패'가 났다.
@@ -2489,7 +2489,90 @@
     if (_hcbRaf || window.__ssGrabVer !== LOGIC_VER) return;
     _hcbRaf = requestAnimationFrame(function () { _hcbRaf = 0; try { _hideCollapsedBadges(); } catch (e) {} });
   }, true);
-  function tick() { if (_ytOff()) { _ytClear(); try{_kwClearAll();}catch(e){} return; } if (_ytResults()) { _ytResultsTick(); try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{syncIgKwBar();}catch(e){} try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} try{_dockBtns();}catch(e){} try{_hideCollapsedBadges();}catch(e){} try{syncOvBox();}catch(e){} }
+  // ── 검색 썸네일 한국어 한 줄(관제 174, 2026-10-10 사장님 "어떤 영상인지 한국말로 · 처음에 볼 수 있게 · 돈 안 들게") ──
+  //   번역 = 크롬 내장 Translator(PC 안에서 돎, 서버 호출 0·비용 0). 없으면(옛 크롬) 아무것도 안 그린다.
+  //   플랫폼마다 다른 건 '카드에서 글 꺼내기' 하나뿐 → 표 KO_CARD 한 곳. 그리기·번역·캐시는 _koTick 한 곳.
+  var KO_CARD = {
+    instagram: { sel: 'a[href*="/reel/"],a[href*="/p/"]', text: function (a) {
+      var m = (a.getAttribute("href") || "").match(/\/(?:reel|reels|p)\/([A-Za-z0-9_-]+)/);
+      return m && _igMedia[m[1]] ? _igMedia[m[1]].caption : ""; } },
+    youtube: { sel: 'a[href^="/shorts/"]', text: function (a) { return _koNear(a, "h3,[class*='title'],[aria-label]"); } },
+    tiktok: { sel: 'a[href*="/video/"]', text: function (a) { return _koNear(a, '[data-e2e*="desc"]'); } },
+    pinterest: { sel: '[data-test-id="pin"],a[href*="/pin/"]', text: function (a) { return _koNear(a, '[data-test-id*="title"],[data-test-id*="description"]'); } },
+    douyin: { sel: 'a[href*="/video/"]', text: function (a) { return _koNear(a, '[class*="title"],[class*="desc"]'); } },
+    xiaohongshu: { sel: 'section.note-item a[href*="/explore/"],section.note-item a[href*="/search_result/"]', text: function (a) {
+      var s = a.closest("section.note-item"); var t = s && s.querySelector(".title,.footer .title,[class*='title']");
+      return t ? t.textContent : _koNear(a, ""); } }
+  };
+  // 카드 근처의 설명 글: 지정 칸 → 그림 alt → 카드 묶음의 글 순서로(사이트가 칸 이름을 바꿔도 alt·글로 버틴다)
+  function _koNear(a, sel) {
+    var p = a;
+    for (var i = 0; i < 5 && p; i++, p = p.parentElement) {
+      var e = sel ? p.querySelector(sel) : null;
+      var t = e && (e.getAttribute("aria-label") || e.textContent || "").trim();
+      if (t && t.length > 3) return t;
+    }
+    var im = a.querySelector("img[alt]"), alt = im && (im.getAttribute("alt") || "").trim();
+    return alt && alt.length > 6 ? alt : "";
+  }
+  // 언어는 글자 모양으로 고른다(크롬 언어 판별기는 모델이 없을 때가 많다 — 2026-10-10 실측 NotSupportedError)
+  function _koLang(t) {
+    if (/[가-힣]/.test(t) && (t.match(/[가-힣]/g) || []).length > t.length / 4) return "ko";
+    if (/[぀-ヿ]/.test(t)) return "ja";
+    if (/[一-鿿]/.test(t)) return "zh";
+    return "en";
+  }
+  var _koDone = {}, _koTr = {}, _koBusy = 0, _koOff = false;
+  function _koClean(t) {
+    return String(t || "").replace(/#[^\s#]+/g, function (h) { return h.slice(1); })   // 해시태그는 낱말로
+      .replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim().slice(0, 140);
+  }
+  function _koTranslator(lang) {
+    if (_koTr[lang]) return _koTr[lang];
+    var T = typeof Translator !== "undefined" ? Translator : null;
+    if (!T) { _koOff = true; return null; }
+    _koTr[lang] = T.create({ sourceLanguage: lang, targetLanguage: "ko" }).catch(function (e) {
+      console.warn("[담기] 한국어 번역기 준비 실패(" + lang + ")", e); delete _koTr[lang]; return null; });
+    return _koTr[lang];
+  }
+  function _koLabel(a, txt) {
+    var el = a.querySelector(".ss-card-ko");
+    if (!el) {
+      if (getComputedStyle(a).position === "static") a.style.position = "relative";
+      el = document.createElement("div"); el.className = "ss-card-ko";
+      el.style.cssText = "position:absolute;left:4px;right:4px;top:40px;z-index:3;background:rgba(0,0,0,.72);color:#fff;" +
+        "font:600 11px/1.35 system-ui,sans-serif;border-radius:6px;padding:3px 6px;pointer-events:none;" +
+        "display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden";
+      a.appendChild(el);
+    }
+    if (el.textContent !== txt) el.textContent = txt;
+  }
+  function _koTick() {
+    if (_koOff || isSinglePost()) return;
+    var s = _kwSite(), c = s && KO_CARD[s.id];
+    if (!c) return;
+    var as = document.querySelectorAll(c.sel);
+    for (var i = 0; i < as.length; i++) {
+      var a = as[i], r = a.getBoundingClientRect();
+      if (r.width < 100 || r.height < 120 || r.bottom < 0 || r.top > innerHeight * 2) continue;   // 썸네일 카드·화면 근처만
+      var src = _koClean(c.text(a));
+      if (!src) continue;
+      if (src in _koDone) { if (_koDone[src]) _koLabel(a, _koDone[src]); continue; }
+      var lang = _koLang(src);
+      if (lang === "ko") { _koDone[src] = ""; continue; }
+      if (_koBusy >= 4) continue;                                   // 한 번에 4개까지(화면이 굳지 않게)
+      var p = _koTranslator(lang);
+      if (!p) return;
+      _koBusy++; _koDone[src] = null;
+      (function (src0) {
+        p.then(function (t) { return t ? t.translate(src0) : ""; })
+         .then(function (ko) { _koDone[src0] = (ko || "").trim(); })
+         .catch(function (e) { delete _koDone[src0]; console.warn("[담기] 번역 실패", e); })
+         .then(function () { _koBusy--; });
+      })(src);
+    }
+  }
+  function tick() { try{_koTick();}catch(e){} if (_ytOff()) { _ytClear(); try{_kwClearAll();}catch(e){} return; } if (_ytResults()) { _ytResultsTick(); try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{syncIgKwBar();}catch(e){} try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} try{_dockBtns();}catch(e){} try{_hideCollapsedBadges();}catch(e){} try{syncOvBox();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.
