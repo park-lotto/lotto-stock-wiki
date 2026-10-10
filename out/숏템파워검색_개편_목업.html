@@ -40,6 +40,7 @@ h3{margin:0 0 10px;font-size:15px}
 .kw .t{flex:1;min-width:0}.kw .t b{display:block}.kw .t span{color:var(--mut);font-size:12px}
 .btn{background:var(--mint);color:#052;border:0;border-radius:8px;padding:8px 12px;font-weight:700;white-space:nowrap}
 .sites{display:flex;gap:4px}.sites i{font-style:normal;width:28px;height:28px;border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;font-size:11px;color:var(--mut)}
+.lay{font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;font-weight:600}.lay.p{background:#1d3550;color:#8cc4ff}.lay.s{background:#3a2a17;color:#ffc27a}
 .note{color:var(--mut);font-size:12px;margin-top:8px}
 .ctl{text-align:center;margin:10px 0 16px;color:var(--mut);font-size:12px}
 .ctl button{margin:0 4px;padding:6px 10px;border-radius:6px;border:1px solid var(--line);background:#1a2321;color:var(--tx);cursor:pointer}
@@ -78,31 +79,29 @@ h3{margin:0 0 10px;font-size:15px}
 </div>
 <script>
 const S={
- "벤치 그대로":{flow:"훅 → 정체 숨김 → 전환 → 정체 공개 → 결과",keep:"권위 반전(\"제조사도 당황\")",dir:"기상천외한 사용법",g:[
-  ["기본 (원래 쓰임)","#4a9eff","1~2개",[["와플메이커","waffle maker · 华夫饼机 · ワッフルメーカー"],["미니 와플메이커","mini waffle maker · 迷你华夫饼机"]]],
-  ["반전 사용법","#ff8a3d","3개 이상",[["와플메이커 해시브라운","waffle maker hash brown · 华夫饼机土豆"],["치즈 크리스피","waffle maker cheese crisp · chaffle"],["와플기계 이색 요리","waffle maker hack · 华夫饼机创意"]]],
-  ["마무리 (결과·군침)","#f2c94c","1개",[["시럽 붓기","waffle syrup pour asmr"]]]]},
- "오용형":{flow:"훅 → 원래 용도 → 근데 → 엉뚱한 용도 → 추가 장점",keep:"의외성",dir:"원래 용도 뒤집기",g:[
-  ["기본 (원래 쓰임)","#4a9eff","1개",[["와플 굽기","waffle maker waffle"]]],
-  ["엉뚱한 용도","#ff8a3d","3개 이상",[["김치전 와플","waffle maker pancake · 华夫饼机煎饼"],["떡 굽기","waffle maker rice cake · 华夫饼机年糕"],["남은 밥","waffle maker leftover rice"]]]]},
- "지인증언형":{flow:"훅(가족 반응) → 계기 → 사용 → 반응 → 결과·감정",keep:"반응의 리얼함",dir:"사람 반응 중심",g:[
-  ["기본 (사용 장면)","#4a9eff","1~2개",[["와플메이커","waffle maker"]]],
-  ["사람 반응","#4fd17a","2개 이상",[["아이 반응","waffle maker kids reaction"],["가족 반응","waffle maker wife reaction"]]],
-  ["결과","#f2c94c","1개",[["완성 와플 한 입","waffle bite asmr"]]]]},
- "만능템형":{flow:"훅(하나면 끝) → 용도1 → 용도2 → 용도3 → 결과",keep:"연속 반전",dir:"하나로 여러 개",g:[
-  ["용도 연속","#ff8a3d","4개 이상",[["아침 메뉴","waffle maker breakfast"],["간식","waffle maker snack ideas"],["디저트","waffle maker brownie"],["야식","waffle maker pizza"]]]]},
- "인스타형":{flow:"화면=시연 / 음성=스토리 분리",keep:"짧은 시연 템포",dir:"시연 위주",g:[
-  ["시연","#ff8a3d","4개 이상",[["손 시연 클로즈업","waffle maker hands asmr · 华夫饼机制作"]]]]}
+ "🟥 유튜브형 (오용+권위자)":{rec:1,flow:"권위자 훅 → 원래 용도 → 계기 → 활용1 → 활용2(+심지어) → \"근데 진짜 미친 건 따로\" → 클라이맥스",keep:"\"제조사도 당황\" 권위 반전",why:"히트작 200편: 활용법 2개 중앙 62만 / 권위자 훅 36만",dir:"기상천외한 사용법",g:[
+  ["훅 · 원래 용도","#4a9eff","제품",[["와플메이커","waffle maker · 华夫饼机"],["와플 반죽 붓기","waffle batter pour"]],[]],
+  ["활용 1","#ff8a3d","제품+상황",[["와플기계 해시브라운","waffle maker hash brown"]],[["바쁜 아침","busy morning breakfast rush"]]],
+  ["활용 2 (+심지어)","#ff8a3d","제품",[["남은 밥·떡 굽기","waffle maker leftover rice · 华夫饼机年糕"]],[]],
+  ["클라이맥스","#e5484d","제품+디테일",[["치즈 크리스피","chaffle · waffle maker cheese"]],[["치즈 늘어남","cheese pull close up"]]],
+  ["마무리","#f2c94c","디테일",[],[["바삭한 한 입","waffle crispy bite asmr"]]]]},
+ "🟪 인스타형 (지인 사건)":{rec:1,flow:"훅(가족 사건) → 상황 → \"뭐냐고 물어보니\" → 결과 → 심지어 → 목격(아이 반응) → 댓글 CTA",keep:"반전의 놀라움을 '사람 반응'으로",why:"인스타 큐레이션 틀(insta_0918) 구조",dir:"사람 반응 중심",g:[
+  ["훅 · 가족 사건","#4fd17a","사람",[],[["주방의 남편","husband cooking kitchen"],["가족 아침","family breakfast table"]]],
+  ["상황 · 뭐냐고 물어보니","#4a9eff","제품",[["와플메이커 공개","waffle maker reveal"]],[]],
+  ["결과 · 심지어","#ff8a3d","제품",[["와플기계 요리","waffle maker recipe · waffle maker hack"]],[]],
+  ["목격 · 반응","#4fd17a","반응",[],[["아이 먹는 반응","kids eating waffle reaction"]]]]},
+ "지인증언형":{flow:"훅(가족 반응) → 계기 → 사용 → 반응 → 결과",keep:"반응의 리얼함",why:"",dir:"사람 반응",g:[["사용","#4a9eff","제품",[["와플메이커","waffle maker"]],[]],["반응","#4fd17a","반응",[],[["가족 반응","waffle maker family reaction"]]]]},
+ "만능템형":{flow:"훅(하나면 끝) → 용도1 → 용도2 → 용도3",keep:"연속 반전",why:"",dir:"하나로 여러 개",g:[["용도 연속","#ff8a3d","제품",[["아침","waffle maker breakfast"],["디저트","waffle maker brownie"],["야식","waffle maker pizza"]],[]]]}
 };
-let cur="벤치 그대로",st=0;
+let cur="🟥 유튜브형 (오용+권위자)",st=0;
 const sites='<span class="sites"><i>샤</i><i>도</i><i>틱</i><i>인</i><i>핀</i><i>유</i></span>';
 function render(){
- tabs.innerHTML=Object.keys(S).map(k=>`<button class="tab ${k==cur?'on':''}" onclick="cur='${k}';render()">${k}</button>`).join("");
+ const K=Object.keys(S);tabs.innerHTML='<div style="width:100%;color:var(--mut);font-size:12px">⭐ 추천 2</div>'+K.filter(k=>S[k].rec).map(k=>`<button class="tab ${k==cur?'on':''}" onclick="cur='${k}';render()">${k}</button>`).join("")+'<div style="width:100%;color:var(--mut);font-size:12px;margin-top:6px">다른 스타일</div>'+K.filter(k=>!S[k].rec).map(k=>`<button class="tab ${k==cur?'on':''}" onclick="cur='${k}';render()">${k}</button>`).join("");
  const s=S[cur];
- dir.innerHTML=`<p><b>흐름</b> ${s.flow}</p><p><b>벤치에서 가져올 것</b> ${s.keep}</p><p><b>필요한 장면</b> ${s.g.map(g=>g[0].split(" ")[0]+" "+g[2]).join(" · ")}</p>`;
+ dir.innerHTML=`<p><b>흐름</b> ${s.flow}</p><p><b>벤치에서 가져올 것</b> ${s.keep}</p>${s.why?`<p style="color:var(--mut);font-size:12px">근거: ${s.why}</p>`:''}`;
  dirName.textContent=st?"🎯 방향: "+s.dir:"";
- Rres.innerHTML=s.g.map(g=>`<div class="grp"><div class="gh"><span class="dot" style="background:${g[1]}"></span>${g[0]} <small>· 필요 ${g[2]}</small></div>`+
-  g[3].map(k=>`<div class="kw"><div class="t"><b>${k[0]}</b><span>${k[1]}</span></div><button class="btn">🔎 아래로 모아서 보기</button>${sites}</div>`).join("")+`</div>`).join("");
+ const kw=(k,lay)=>`<div class="kw"><div class="t"><b><span class="lay ${lay}">${lay=='p'?'제품':'상황·사람'}</span> ${k[0]}</b><span>${k[1]}</span></div><button class="btn">🔎 아래로 모아서 보기</button>${sites}</div>`;
+ Rres.innerHTML=s.g.map(g=>`<div class="grp"><div class="gh"><span class="dot" style="background:${g[1]}"></span>${g[0]} <small>· 필요한 장면: ${g[2]}</small></div>`+g[3].map(k=>kw(k,'p')).join("")+g[4].map(k=>kw(k,'s')).join("")+`</div>`).join("");
 }
 function setState(n){st=n;Lload.style.display=n?"none":"block";Lres.style.display=n?"block":"none";Rload.style.display=n?"none":"block";Rres.style.display=n?"block":"none";render()}
 setState(1);
