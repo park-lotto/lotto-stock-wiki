@@ -160,7 +160,8 @@ async function loadAnalysis(){
   // 도는 중인 게 남아 있으면 20초마다 다시 본다(다 끝나면 폴링을 멈춘다 — 서버 부담 0).
   const pending=codes.some(c=>(ANALYSIS[c]||{}).state==='pending');
   clearTimeout(_pollTimer);
-  if(pending) _pollTimer=setTimeout(()=>loadAnalysis().then(render), 20000);
+  // ★안 보이는 탭은 다시 묻지 않는다(관제 172) — 탭을 다시 보는 순간 아래 visibilitychange 가 바로 읽는다.
+  if(pending && !document.hidden) _pollTimer=setTimeout(()=>loadAnalysis().then(render), 20000);
 }
 // 다른 페이지에 갔다 와도 진행 상태가 살아 있어야 한다(2026-08-18 사장님 요청).
 // ★분석 자체는 서버 대기줄(job_queue)에서 도니까 창을 닫아도 계속된다 — 화면이 할 일은

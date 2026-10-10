@@ -19861,8 +19861,9 @@ def _analysis_state(store, shortcode, need_data=True):
                and (_age is None or _age >= _AUTOLOAD_STALL_SEC))
     gave_up = stalled or (bool(err) and (att >= _AUTOLOAD_MAX_ATTEMPTS
                                          or _is_hopeless_error(err)))
-    reason = (_autoload_reason_ko(err) if err else
-              ("분석이 도중에 끊겼어요 — 긴 영상은 더 오래 걸립니다" if stalled else ""))
+    _reason = lambda _stalled: (_autoload_reason_ko(err) if err else
+                                ("분석이 도중에 끊겼어요 — 긴 영상은 더 오래 걸립니다" if _stalled else ""))
+    reason = _reason(stalled)
     if gave_up:
         return None, {"state": "gave_up", "reason": reason, "attempts": att}
     # ★'분석 중'과 '아직 안 걸림'을 가른다(2026-08-18). 결과가 없다는 것만으로 전부
@@ -19875,6 +19876,13 @@ def _analysis_state(store, shortcode, need_data=True):
         if code and store.queue_has_pending("prewarm", "shortcode", code):
             queued = True
             break
+    # ★시도 흔적만 있고 대기줄에도 없는데 시작한 지 _AUTOLOAD_STALL_SEC 가 지났으면 **아무도 안 돌고 있다**(관제 172).
+    #   종전엔 시한이 마지막(3번째) 시도에만 걸려 있어, 1~2번째 시도가 결과도 오류도 못 남기고 끊기면 영원히 '분석 중'
+    #   이었다(라이브 실측 2026-10-10: 35개, 가장 오래된 것 76일). 화면은 '분석 중'이 하나라도 있으면 20초마다 다시
+    #   묻기 때문에, 그런 영상을 담아 둔 고객 10명의 탭이 밤새 조회를 보냈다(새벽에도 시간당 약 1,950건).
+    #   오류가 남은 채 멈춘 것(재시도를 기다리다 아무도 안 건 것)도 같은 처지다 — 사유는 그 오류로 알린다.
+    if (not queued) and att > 0 and (_age is None or _age >= _AUTOLOAD_STALL_SEC):
+        return None, {"state": "gave_up", "reason": _reason(True), "attempts": att}
     if queued or att > 0:
         return None, {"state": "pending", "reason": reason, "attempts": att}
     return None, {"state": "idle", "reason": "", "attempts": 0}
