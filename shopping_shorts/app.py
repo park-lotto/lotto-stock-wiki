@@ -1,5 +1,6 @@
 """FastAPI: 수집 API + 정적 프론트 서빙."""
 import asyncio
+import concurrent.futures
 import base64
 import functools
 import hmac
@@ -15487,6 +15488,37 @@ def _client_ip(request):
 _ACCESS_SEEN = set()   # (cid, day, ip, ua) 이 프로세스에서 이미 기록한 조합 → DB 중복호출 방지
 
 
+_BG_ACCESS = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="access-log")
+_BG_ACCESS_PENDING = [0]
+_BG_ACCESS_MAX = 500          # 이만큼 밀리면(DB가 오래 잠김) 새 기록은 버린다 — 메모리·뒤늦은 폭주 방지
+
+
+def _bg_access(fn, *args):
+    """접속 기록 같은 best-effort 쓰기를 백그라운드 한 줄로 보낸다(관제 173). 요청은 기다리지 않는다."""
+    if _BG_ACCESS_PENDING[0] >= _BG_ACCESS_MAX:
+        return
+    _BG_ACCESS_PENDING[0] += 1
+
+    def _run():
+        try:
+            fn(*args)
+        except Exception as e:      # noqa: BLE001 — 기록 실패가 사이트를 건드리면 안 된다(대신 한 줄)
+            print("[access-log] 기록 실패: %r" % (e,), file=sys.stderr)
+        finally:
+            _BG_ACCESS_PENDING[0] -= 1
+    try:
+        _BG_ACCESS.submit(_run)
+    except RuntimeError:            # 종료 중
+        _BG_ACCESS_PENDING[0] -= 1
+
+
+class _AccessReq:
+    """_record_access 가 요청에서 읽는 것(IP·UA)만 미리 떠 둔다 — 요청 객체를 다른 스레드로 넘기지 않는다."""
+    def __init__(self, request):
+        self.headers = dict(request.headers)
+        self.client = request.client
+
+
 def _record_access(customer_id, request):
     """돌려쓰기 소프트감지: 로그인 사용자의 접속 IP·기기를 하루 단위로 기록(차단 안 함).
     best-effort — 절대 요청을 막지 않는다. 사장님(0)은 여러 기기가 정상이라 제외."""
@@ -15720,8 +15752,11 @@ async def _auth_guard(request: Request, call_next):
         keyctx.set_owner(customer_id)
         # 관리자 카나리(canary.py) — 관리자 + 쿠키 ss_canary=1일 때만 새 대본 동작. 고객은 항상 꺼짐.
         canary.activate_from_request(request, lambda: _is_admin(customer_id))
-        _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
-        _track_activity(customer_id, path)     # 접속중·활동기록(best-effort)
+        # ★접속 기록 쓰기는 이벤트루프 밖 한 줄 뒤에서(관제 173, 2026-10-09 사이트 전면 멈춤 2회):
+        #   여기서 바로 sqlite 쓰기를 하면 DB 쓰기가 잠긴 동안(busy 15초) **모든 요청**이 이 줄에 서서 사이트가 통째로 멈췄다.
+        #   기록은 늦거나 빠져도 되는 것 — 요청은 절대 기다리지 않는다(_bg_access).
+        _bg_access(_record_access, customer_id, _AccessReq(request))   # 돌려쓰기 소프트감지
+        _bg_access(_track_activity, customer_id, path)                 # 접속중·활동기록
         lvl = access_level(customer_id)
         if lvl == "pending":
             # 승인 전 전면 차단. /logout만 통과(로그아웃 가능), /static은 위에서 이미 허용.
