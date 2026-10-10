@@ -1,5 +1,6 @@
 """FastAPI: 수집 API + 정적 프론트 서빙."""
 import asyncio
+import concurrent.futures
 import base64
 import functools
 import hmac
@@ -8412,7 +8413,7 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
             # 원본 샷 전환 목록(캐시된 scenecuts.json) — 전환 순간을 피해 찍는다(2026-09-28)
             try:
                 from shopping_shorts import seg_snap as _ss
-                _shots = _ss.scene_cuts(_resolve_sources(job, work)[_hit.get("video_id") or vid])
+                _shots = _ss.scene_cuts(_job_sources_with_memes(job, work)[_hit.get("video_id") or vid])
             except Exception as _e:      # noqa: BLE001 — 전환을 못 읽으면 종전 자리
                 print("[clean_thumb] 샷 전환 목록 실패(종전 자리): %r" % (_e,), file=sys.stderr)
                 _shots = None
@@ -8449,8 +8450,10 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
                                     content={"ok": False, "error": "완성본에 안 쓰인 소스",
                                              "reason": "not_in_final"})
     else:
+        # ★짤 컷(meme_*)도 카드 그림이 나오게(관제 169, 박선정님 7be1bbdd49be 장면 10·13 검은 칸) — 원본 표에는 짤 파일이 없다.
+        #   짤 파일 찾기는 _job_sources_with_memes 한 곳(3단계 필름·꾸미기 그림과 같은 함수).
         try:
-            src = _resolve_sources(job, work)[vid]
+            src = _job_sources_with_memes(job, work)[vid]
         except Exception:
             return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
     dur = frame_extract._probe_duration(src) or 2.0
@@ -15485,6 +15488,37 @@ def _client_ip(request):
 _ACCESS_SEEN = set()   # (cid, day, ip, ua) 이 프로세스에서 이미 기록한 조합 → DB 중복호출 방지
 
 
+_BG_ACCESS = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="access-log")
+_BG_ACCESS_PENDING = [0]
+_BG_ACCESS_MAX = 500          # 이만큼 밀리면(DB가 오래 잠김) 새 기록은 버린다 — 메모리·뒤늦은 폭주 방지
+
+
+def _bg_access(fn, *args):
+    """접속 기록 같은 best-effort 쓰기를 백그라운드 한 줄로 보낸다(관제 173). 요청은 기다리지 않는다."""
+    if _BG_ACCESS_PENDING[0] >= _BG_ACCESS_MAX:
+        return
+    _BG_ACCESS_PENDING[0] += 1
+
+    def _run():
+        try:
+            fn(*args)
+        except Exception as e:      # noqa: BLE001 — 기록 실패가 사이트를 건드리면 안 된다(대신 한 줄)
+            print("[access-log] 기록 실패: %r" % (e,), file=sys.stderr)
+        finally:
+            _BG_ACCESS_PENDING[0] -= 1
+    try:
+        _BG_ACCESS.submit(_run)
+    except RuntimeError:            # 종료 중
+        _BG_ACCESS_PENDING[0] -= 1
+
+
+class _AccessReq:
+    """_record_access 가 요청에서 읽는 것(IP·UA)만 미리 떠 둔다 — 요청 객체를 다른 스레드로 넘기지 않는다."""
+    def __init__(self, request):
+        self.headers = dict(request.headers)
+        self.client = request.client
+
+
 def _record_access(customer_id, request):
     """돌려쓰기 소프트감지: 로그인 사용자의 접속 IP·기기를 하루 단위로 기록(차단 안 함).
     best-effort — 절대 요청을 막지 않는다. 사장님(0)은 여러 기기가 정상이라 제외."""
@@ -15718,8 +15752,11 @@ async def _auth_guard(request: Request, call_next):
         keyctx.set_owner(customer_id)
         # 관리자 카나리(canary.py) — 관리자 + 쿠키 ss_canary=1일 때만 새 대본 동작. 고객은 항상 꺼짐.
         canary.activate_from_request(request, lambda: _is_admin(customer_id))
-        _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
-        _track_activity(customer_id, path)     # 접속중·활동기록(best-effort)
+        # ★접속 기록 쓰기는 이벤트루프 밖 한 줄 뒤에서(관제 173, 2026-10-09 사이트 전면 멈춤 2회):
+        #   여기서 바로 sqlite 쓰기를 하면 DB 쓰기가 잠긴 동안(busy 15초) **모든 요청**이 이 줄에 서서 사이트가 통째로 멈췄다.
+        #   기록은 늦거나 빠져도 되는 것 — 요청은 절대 기다리지 않는다(_bg_access).
+        _bg_access(_record_access, customer_id, _AccessReq(request))   # 돌려쓰기 소프트감지
+        _bg_access(_track_activity, customer_id, path)                 # 접속중·활동기록
         lvl = access_level(customer_id)
         if lvl == "pending":
             # 승인 전 전면 차단. /logout만 통과(로그아웃 가능), /static은 위에서 이미 허용.
@@ -19821,7 +19858,7 @@ def _forced_backbone(work_id, cid):
     return state.get("backbone_main") or None
 
 
-def _analysis_state(store, shortcode):
+def _analysis_state(store, shortcode, need_data=True):
     """이 영상의 분석이 '끝났나·도는 중인가·포기했나'를 판정한다(2026-08-18 분리).
 
     ★판정은 여기 한 곳에서만 한다. 1단계 소스카드(source_brief)와 즐겨찾기 화면의
@@ -19829,10 +19866,15 @@ def _analysis_state(store, shortcode):
     사장님이 어느 쪽을 믿어야 할지 모르게 된다(0순위-B).
 
     반환: (data|None, {state, reason, attempts})  state = done | pending | gave_up
+    need_data=False 면 내용은 안 읽고 상태만 판정한다(data 는 항상 None) — 신호등처럼 상태만 쓰는 호출부용(관제 171).
     """
     data = None
     for code in (shortcode, _media_code(shortcode)):
         if not code:
+            continue
+        if not need_data:
+            if store.has_script(code):
+                return None, {"state": "done", "reason": "", "attempts": 0}
             continue
         data = store.get_script(code)
         if data:
@@ -20589,9 +20631,10 @@ def api_basket_analysis_status(request: Request, shortcodes: str = ""):
     codes = [c.strip() for c in (shortcodes or "").split(",") if c.strip()][:100]
     store = Store(DB_PATH)
     out = {}
-    for c in codes:
-        _data, st = _analysis_state(store, c)
-        out[c] = {"state": st["state"], "reason": st["reason"]}
+    with store.reuse():      # 영상 100개를 물어도 연결은 하나(관제 171)
+        for c in codes:
+            _data, st = _analysis_state(store, c, need_data=False)
+            out[c] = {"state": st["state"], "reason": st["reason"]}
     return {"ok": True, "items": out}
 
 
@@ -21589,7 +21632,9 @@ def api_storyboard_prepare(request: Request, job_id: str, body: dict = None):
         _w = _st_.get_produce_work(_key[2:], customer_id=getattr(request.state, "customer_id", 0)) or {}
         _codes = [str(e.get("shortcode") or "").strip() for e in ((_w.get("state") or {}).get("handoff") or [])
                   if isinstance(e, dict) and e.get("useFootage")]
-        waiting = [c for c in _codes if c and c not in _ex and _analysis_state(_st_, c)[1].get("state") != "gave_up"]
+        with _st_.reuse():      # 담은 영상 수만큼 도는 판정이 연결 하나를 쓴다(관제 171)
+            waiting = [c for c in _codes if c and c not in _ex
+                       and _analysis_state(_st_, c, need_data=False)[1].get("state") != "gave_up"]
         if waiting:
             return {"ok": True, "started": False, "waiting": len(waiting)}
     _sb_expire(job_id)
@@ -22180,7 +22225,15 @@ def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = 
     #   원본 그림을 그대로 보여 준다(2026-09-09 박세현님과 같은 꼴 — 컷 그림 주소엔 넣었는데 페이지 그림 주소엔 빠져 있었다).
     _fk = _frame_cache_key(job, _MIX_WORK_DIR / job_id)
     _fq = f"&k={_fk}" if _fk else ""
+    # ★자막제거 장면 번호(관제 169, 박선정님 7be1bbdd49be): 골라 지우기는 컷 16개, 꾸미기는 자막 페이지 31개라
+    #   꾸미기에서 본 장면을 골라 지우기에서 못 찾았다. 페이지마다 골라 지우기 카드 번호를 붙인다(판단 mix_pipeline.clean_cut_no_at).
+    try:
+        _pick = mix_pipeline.clean_pick_cuts(job, _MIX_WORK_DIR / job_id)
+    except Exception as e:      # noqa: BLE001 — 번호를 못 붙여도 편집기는 연다(대신 한 줄)
+        print("[scene-style] 자막제거 장면 번호 실패 job=%s: %r" % (job_id, e), file=sys.stderr)
+        _pick = []
     for scene, (_bi, _at) in zip(context["scenes"], _pages):
+        scene["clean_cut_no"] = mix_pipeline.clean_cut_no_at(_pick, _at) if _pick else None
         scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_at:.2f}{_fq}"
         # 페이지 안 앞·가운데·뒤(관제 104) — 창 안에서 잠깐만 지나가는 원본 자막도 볼 수 있게. 가운데는 위 media 와 같은 주소.
         scene["media_points"] = [f"/api/produce/mix/beatframe/{job_id}/{_bi}?at={_t:.2f}{_fq}" for _t in _scene_page_points(scene)]

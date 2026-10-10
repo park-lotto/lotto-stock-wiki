@@ -69,6 +69,7 @@ def test_middleware_records_authenticated_access(tmp_path, monkeypatch):
     cid = s.create_customer("u", "pw12")                      # 승인+full
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(appmod, cid)})
     c.get("/api/me", headers={"X-Forwarded-For": "5.6.7.8", "User-Agent": "TestUA/1.0"})
+    appmod._BG_ACCESS.submit(lambda: None).result(5)          # 백그라운드 기록 줄이 비길 기다린다(관제 173)
     summ = s.access_summary(cid, appmod._today_utc())
     assert summ["ips"] == 1 and summ["devices"] == 1          # 미들웨어가 기록함
 
@@ -140,3 +141,26 @@ def test_activity_endpoint_admin_only(tmp_path, monkeypatch):
     # 비관리자는 403
     other = TestClient(appmod.app, cookies={"dash_auth": _cookie(appmod, cid)})
     assert other.get("/api/admin/customer/activity?customer_id=" + str(cid)).status_code == 403
+
+
+def test_db_write_lock_does_not_freeze_requests(tmp_path, monkeypatch):
+    """관제 173(2026-10-09 사이트 전면 멈춤): DB 쓰기가 잠겨 있어도 요청은 접속 기록을 기다리지 않는다."""
+    import sqlite3, time
+    from fastapi.testclient import TestClient
+    appmod, s = _admin_setup(tmp_path, monkeypatch)
+    cid = s.create_customer("u2", "pw12")
+    appmod._LASTSEEN_SEEN.clear(); appmod._ACCESS_SEEN.clear()
+    c = TestClient(appmod.app, cookies={"dash_auth": _cookie(appmod, cid)})
+    c.get("/api/me")                                          # 첫 요청(스키마 준비)
+    getattr(appmod, "_BG_ACCESS", None) and appmod._BG_ACCESS.submit(lambda: None).result(20)
+    appmod._LASTSEEN_SEEN.clear(); appmod._ACCESS_SEEN.clear()
+    lock = sqlite3.connect(s.db_path, timeout=1)
+    lock.execute("BEGIN IMMEDIATE")                           # 다른 누군가가 쓰기 잠금을 쥔 상태
+    try:
+        t0 = time.time()
+        r = c.get("/api/me", headers={"X-Forwarded-For": "7.7.7.7", "User-Agent": "LockUA/1.0"})
+        took = time.time() - t0
+    finally:
+        lock.rollback(); lock.close()
+    assert r.status_code == 200
+    assert took < 3.0, took                                   # 종전: busy_timeout 15초 × 쓰기 2건을 요청이 기다렸다
