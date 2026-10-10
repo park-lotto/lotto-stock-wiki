@@ -1,4 +1,5 @@
 """SQLite 수집 이력 저장소."""
+from contextlib import contextmanager
 import hashlib
 import json
 import logging
@@ -383,6 +384,7 @@ class Store:
     _schema_lock = threading.Lock()
 
     def __init__(self, db_path):
+        self._reuse_tl = threading.local()     # reuse() 가 드는 스레드별 공유 연결
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         key = str(self.db_path.resolve())
@@ -404,6 +406,26 @@ class Store:
         #     Opus 리뷰 P1 지적사항이나, 경로별 1회 가드는 마이그레이션 의존 테스트를 깨서 보류.
         #     소규모(지인 판매) 스케일에선 허용. 필요 시 요청스코프 캐시로 별도 최적화.
 
+    @contextmanager
+    def reuse(self):
+        """이 블록 안의 조회들이 **연결 하나**를 돌려 쓴다(관제 171, 2026-10-10).
+
+        왜: `_conn()`은 부를 때마다 새 연결을 열고, 새 연결은 첫 문장에서 DB 스키마 전체를 다시 읽는다.
+        목록을 돌며 영상마다 조회 3~5번을 하는 라우트(분석 신호등: 영상 100개 → 연결 수백 개)가
+        라이브 웹 서버 CPU의 89%를 썼다(py-spy 60초 표본 2,657개 중 2,373개, 잎의 73.8%가 연결 열기).
+        스레드별로 따로 든다 — 다른 요청 스레드와 연결을 나누지 않는다. 겹쳐 불러도 된다(바깥 것이 닫는다).
+        """
+        if getattr(self._reuse_tl, "conn", None) is not None:
+            yield
+            return
+        c = self._conn()
+        self._reuse_tl.conn = c
+        try:
+            yield
+        finally:
+            self._reuse_tl.conn = None
+            c.close()
+
     def _conn(self):
         """DB 연결 — **동시 처리의 바닥**(2026-07-30).
 
@@ -418,6 +440,9 @@ class Store:
         - synchronous=NORMAL: WAL에서 안전하면서 fsync 횟수를 줄인다(swap 상시 서버에서
           디스크 대기가 병목이었다).
         """
+        shared = getattr(self._reuse_tl, "conn", None)
+        if shared is not None:
+            return shared      # reuse() 안 — 같은 요청의 조회들이 연결 하나를 돌려 쓴다
         c = sqlite3.connect(self.db_path, timeout=15.0)
         try:
             c.execute("PRAGMA journal_mode=WAL")
@@ -4209,6 +4234,14 @@ class Store:
         except Exception:      # noqa: BLE001
             data["hook_spine"] = ""
         return data
+
+    def has_script(self, shortcode):
+        """이 영상의 추출 결과가 저장돼 있나 — **있나 없나만** 묻는다(관제 171).
+        상태 신호등은 내용이 필요 없는데 get_script 로 대본 JSON을 통째로 읽어 풀고 있었다.
+        get_script 가 None 이 아닌 조건(행이 있다)과 같은 조건이다."""
+        with self._conn() as c:
+            return c.execute("SELECT 1 FROM script_extracts WHERE shortcode=? LIMIT 1",
+                             (shortcode,)).fetchone() is not None
 
     def get_script(self, shortcode):
         """저장된 대본추출 결과. 없으면 None.

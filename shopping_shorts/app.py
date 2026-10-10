@@ -19823,7 +19823,7 @@ def _forced_backbone(work_id, cid):
     return state.get("backbone_main") or None
 
 
-def _analysis_state(store, shortcode):
+def _analysis_state(store, shortcode, need_data=True):
     """이 영상의 분석이 '끝났나·도는 중인가·포기했나'를 판정한다(2026-08-18 분리).
 
     ★판정은 여기 한 곳에서만 한다. 1단계 소스카드(source_brief)와 즐겨찾기 화면의
@@ -19831,10 +19831,15 @@ def _analysis_state(store, shortcode):
     사장님이 어느 쪽을 믿어야 할지 모르게 된다(0순위-B).
 
     반환: (data|None, {state, reason, attempts})  state = done | pending | gave_up
+    need_data=False 면 내용은 안 읽고 상태만 판정한다(data 는 항상 None) — 신호등처럼 상태만 쓰는 호출부용(관제 171).
     """
     data = None
     for code in (shortcode, _media_code(shortcode)):
         if not code:
+            continue
+        if not need_data:
+            if store.has_script(code):
+                return None, {"state": "done", "reason": "", "attempts": 0}
             continue
         data = store.get_script(code)
         if data:
@@ -20591,9 +20596,10 @@ def api_basket_analysis_status(request: Request, shortcodes: str = ""):
     codes = [c.strip() for c in (shortcodes or "").split(",") if c.strip()][:100]
     store = Store(DB_PATH)
     out = {}
-    for c in codes:
-        _data, st = _analysis_state(store, c)
-        out[c] = {"state": st["state"], "reason": st["reason"]}
+    with store.reuse():      # 영상 100개를 물어도 연결은 하나(관제 171)
+        for c in codes:
+            _data, st = _analysis_state(store, c, need_data=False)
+            out[c] = {"state": st["state"], "reason": st["reason"]}
     return {"ok": True, "items": out}
 
 
@@ -21591,7 +21597,9 @@ def api_storyboard_prepare(request: Request, job_id: str, body: dict = None):
         _w = _st_.get_produce_work(_key[2:], customer_id=getattr(request.state, "customer_id", 0)) or {}
         _codes = [str(e.get("shortcode") or "").strip() for e in ((_w.get("state") or {}).get("handoff") or [])
                   if isinstance(e, dict) and e.get("useFootage")]
-        waiting = [c for c in _codes if c and c not in _ex and _analysis_state(_st_, c)[1].get("state") != "gave_up"]
+        with _st_.reuse():      # 담은 영상 수만큼 도는 판정이 연결 하나를 쓴다(관제 171)
+            waiting = [c for c in _codes if c and c not in _ex
+                       and _analysis_state(_st_, c, need_data=False)[1].get("state") != "gave_up"]
         if waiting:
             return {"ok": True, "started": False, "waiting": len(waiting)}
     _sb_expire(job_id)
