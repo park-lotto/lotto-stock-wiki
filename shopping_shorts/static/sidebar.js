@@ -1534,3 +1534,44 @@
     showReplies();
   }
 })();
+
+// 카드 영상은 한 번에 하나만 재생한다(관제 175, 2026-10-10 고락규 님 화면).
+// 카드 ▶마다 썸네일 자리에 재생기가 생기는데 앞 카드 재생기는 그대로 남아 같이 돌았다.
+// 유튜브는 한 계정 동시 재생이 많으면 "너무 많은 기기가 스트리밍 중" 으로 앞 영상을 멈춘다.
+// 재생기를 만드는 곳이 화면마다 여럿(랭킹 6곳·수집 3곳)이라 각자 고치지 않고
+// 새 재생기가 화면에 붙는 순간을 여기 한 곳에서 보고 나머지를 세운다.
+(function playOnlyThis(){
+  // 카드 목록 화면만(랭킹·수집) — 제작 화면처럼 영상 여러 개를 같이 쓰는 곳은 건드리지 않는다
+  const me=document.currentScript;
+  if(!me || !me.hasAttribute('data-play-one')) return;
+  const EMBED=/youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/|tiktok\.com\/embed\//;
+  const isPlayer=n=>n && n.nodeType===1 &&
+    ((n.tagName==='IFRAME' && EMBED.test(n.src||'')) || n.tagName==='VIDEO');
+  // 세운 재생기 자리에 [▶ 다시 재생] — 누르면 원래 재생기로 되돌린다(되돌린 것이 다시 '새 재생기'가 된다)
+  function park(p){
+    if(p.tagName==='VIDEO'){ try{ p.pause(); }catch(e){} return; }
+    const b=document.createElement('button');
+    b.type='button'; b.textContent='▶ 다시 재생';
+    b.title='다른 영상을 재생해서 멈췄어요';
+    b.style.cssText='width:100%;aspect-ratio:var(--shorts-ar,9/16);border:0;border-radius:8px;'
+      +'background:#000;color:#fff;font-size:14px;cursor:pointer;display:block';
+    if(p.style.position==='absolute') b.style.cssText+=';position:absolute;inset:0;height:100%';
+    b.onclick=e=>{ e.stopPropagation(); b.replaceWith(p); };
+    p.replaceWith(b);
+  }
+  function stopOthers(cur){
+    document.querySelectorAll('iframe,video').forEach(p=>{
+      if(p!==cur && isPlayer(p) && p.isConnected) park(p);
+    });
+  }
+  new MutationObserver(ms=>{
+    let cur=null;
+    for(const m of ms) for(const n of m.addedNodes){
+      if(isPlayer(n)) cur=n;
+      else if(n.nodeType===1 && n.querySelector){ const q=n.querySelector('iframe,video'); if(isPlayer(q)) cur=q; }
+    }
+    if(cur) stopOthers(cur);
+  }).observe(document.documentElement,{childList:true,subtree:true});
+  // 이미 있던 영상(<video>)을 다시 재생해도 나머지를 세운다
+  document.addEventListener('play',e=>{ if(isPlayer(e.target)) stopOthers(e.target); },true);
+})();
