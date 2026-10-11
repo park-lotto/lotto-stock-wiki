@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-10-08e  (LOGIC_VER가 정본)
+// 로직 버전: 2026-10-11a  (LOGIC_VER가 정본)
+//   · 관제 177 — 도우인: 검색 카드 📥가 전부 숨던 것(같은 카드의 겹친 칸을 '덮임'으로 오판), 영상 팝업에서 📥 담기 꺼짐·검색어 판 두 개, 버튼이 화면 밖으로 떨어지던 자리 되돌리기. 검색 썸네일 한국어 설명 줄 제거(전 사이트).
 //   · 관제 156 — 고정 검색 머리에 덮인 카드 📥·배지 숨김(elementsFromPoint, 짐작 수리 재수정).
 //   · 관제 156 — 관련 검색어 상자 접기(검색 판과 같이, 접힌 채 기억), 판매자 태그 맨 위·검색창 기본값, 기다리는 초 표시.
 //   · 관제 156 — 유튜브 Shorts 검색 카드 배지(날짜·조회·좋아요·댓글·길이)·조회수/좋아요/댓글/최신순, 게시물 상자 검색창.
@@ -34,7 +35,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20261021;
+  var LOGIC_VER = 20261022;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   // ★옛 '번호 있는' 로직을 이어받을 때도 그 버튼을 걷는다(관제 156): 버튼은 id 선점이라 옛 것이 남으면
   //   그 옛 클릭 처리(예: 30초에 끊는 렌즈)가 계속 돈다 — 새 로직이 떠도 '서버 연결 실패'가 났다.
@@ -1051,7 +1052,13 @@
   // 지금 보고 있는 게 '단일 영상/게시물' 페이지인가 (인스타 /p/·/reel/, 틱톡 /video/ 등)
   function isSinglePost() {
     return /\/(p|reel|reels|video)\/[^/]+/.test(location.pathname) ||
-           /\/(?:discovery\/item|search_result)\/[^/]+/.test(location.pathname);
+           /\/(?:discovery\/item|search_result)\/[^/]+/.test(location.pathname) ||
+           !!_dyModal();
+  }
+  // 도우인은 검색 격자에서 영상을 열어도 주소가 /search/…?modal_id=번호 로 남는다(관제 177, 2026-10-11 사장님 화면).
+  //   '영상 한 편을 보는 중'인지는 여기 한 곳이 정한다 — 📥 담기 표시(isSinglePost)·검색어 판(KW_SITES)이 같이 따른다.
+  function _dyModal() {
+    return location.host.indexOf("douyin") >= 0 ? _qp("modal_id") : "";
   }
 
   // 검색·탐색 '그리드' 페이지에서만 카드 버튼을 붙인다. 단일 영상 페이지에선 관련영상 카드가
@@ -1496,9 +1503,10 @@
       url: function (t) { return "https://www.xiaohongshu.com/search_result?keyword=" + encodeURIComponent(t); },
       post: function () { return _pm(/\/(?:explore|discovery\/item|search_result)\/([0-9a-f]{16,})/); } },
     { id: "douyin", lang: "zh", host: ["douyin.com"],
-      q: function () { var s = _pm(/^\/search\/([^/?#]+)/); try { return s ? decodeURIComponent(s) : ""; } catch (e) { return s; } },
+      // 영상 팝업이 열려 있으면 검색 화면이 아니다 — 안 그러면 검색어 판과 관련 검색어 상자가 둘 다 뜬다(관제 177).
+      q: function () { if (_dyModal()) return ""; var s = _pm(/^\/search\/([^/?#]+)/); try { return s ? decodeURIComponent(s) : ""; } catch (e) { return s; } },
       url: function (t) { return "https://www.douyin.com/search/" + encodeURIComponent(t); },
-      post: function () { return _pm(/\/video\/(\d+)/) || _qp("modal_id"); } }
+      post: function () { return _pm(/\/video\/(\d+)/) || _dyModal(); } }
   ];
   function _kwSite() {
     var h = location.host;
@@ -1849,10 +1857,13 @@
   }
   function _ssDrag(el, handle) {
     handle.style.cursor = "move"; handle.title = "잡고 끌면 옮겨져요 (두 번 누르면 원래 자리)";
+    // 만든 쪽이 정한 원래 자리를 적어 둔다(관제 177) — 종전엔 네 값을 전부 ""로 지워 '원래 자리'가 아니라
+    //   자리 없는 고정 판이 됐고, 문서 맨 아래(화면 밖)로 떨어졌다(_dockBtns 되돌리기와 같은 꼴).
+    var home = { left: el.style.left, top: el.style.top, right: el.style.right, bottom: el.style.bottom };
     _ssDragPos(el);
     handle.addEventListener("dblclick", function () {
       try { localStorage.removeItem(_ssDragKey(el.id)); } catch (e) {}
-      el.style.left = ""; el.style.top = ""; el.style.right = ""; el.style.bottom = "";
+      el.style.left = home.left; el.style.top = home.top; el.style.right = home.right; el.style.bottom = home.bottom;
     });
     handle.addEventListener("mousedown", function (e) {
       if (e.button !== 0 || (e.target && e.target.tagName === "BUTTON")) return;
@@ -2186,8 +2197,12 @@
       if (off) continue;
       // 화면 밖으로 밀리면(좁은 창) 종전 오른쪽 아래 자리로 되돌린다.
       var w = el.offsetWidth || 150;
+      // ★만든 쪽이 정한 아래 자리(bottom)를 처음 볼 때 적어 둔다(관제 177). 종전엔 되돌릴 때 bottom 을 ""로
+      //   지워 top·bottom 이 둘 다 없는 고정 버튼이 됐고, 문서 맨 아래(화면 밖)로 떨어졌다
+      //   (도우인 검색 실측: 화면 높이 1248 에 버튼 top 1248).
+      if (el.__ssHome == null) el.__ssHome = el.style.bottom === "auto" ? "" : (el.style.bottom || "");
       if (!rr || x + 16 + w + 12 > window.innerWidth) {
-        el.style.left = ""; el.style.right = "18px"; el.style.top = ""; el.style.bottom = "";
+        el.style.left = ""; el.style.right = "18px"; el.style.top = ""; el.style.bottom = el.__ssHome || "18px";
       } else {
         el.style.right = "auto"; el.style.left = (x + 16) + "px";
         el.style.bottom = "auto";
@@ -2461,6 +2476,13 @@
   // 접힌 카드의 배지 숨기기(관제 156, 2026-10-08 사장님 "스크롤 내리면 위에 아이콘이 줄지어 남는다"):
   //   인스타는 위로 지나간 줄의 카드를 납작하게 접어 두는데(앵커는 남음) 거기 붙인 📅·🔍·📥가 검색 판 위에 줄지어 떴다.
   //   카드가 120px 보다 작아지면 숨기고, 다시 펴지면 보인다. 스크롤마다(한 프레임에 한 번) + tick 마다.
+  // ★도우인 검색 카드(관제 177, 2026-10-11 로그인 화면 실측): 📥가 붙는 썸네일 칸 위에 **같은 카드의 형제 칸**
+  //   (같은 자리·같은 크기)이 겹쳐 있다. 위 판단은 그걸 '남이 덮었다'로 봐 카드 15장의 📥를 전부 숨겼다.
+  //   덮은 것이 카드 자리 안에 들어 있으면 그 카드의 한 겹이다 — 고정 머리는 카드보다 넓어 여기 안 걸린다.
+  function _inRect(el, r) {
+    var q = el.getBoundingClientRect();
+    return q.width > 0 && q.left >= r.left - 2 && q.right <= r.right + 2 && q.top >= r.top - 2 && q.bottom <= r.bottom + 2;
+  }
   function _hideCollapsedBadges() {
     var bs = document.querySelectorAll(".ss-card-info, .ss-card-lens, .ss-card-grab:not(.ss-pv-grab)");
     // ★2026-10-08 두 번째 수리(사장님 "왜 자꾸 안 고치나"): 첫 수리는 '카드가 접힌다'는 짐작이었고 틀렸다 —
@@ -2476,7 +2498,7 @@
         if (q.width && cy >= 0 && cy <= innerHeight && cx >= 0 && cx <= innerWidth) {
           var st = document.elementsFromPoint(cx, cy), top = null;
           for (var k = 0; k < st.length; k++) { if (st[k] !== el && !el.contains(st[k])) { top = st[k]; break; } }
-          if (top && !a.contains(top) && !top.contains(a)) hide = true;
+          if (top && !a.contains(top) && !top.contains(a) && !_inRect(top, r)) hide = true;
         }
       }
       if (el.style.display === "none" && el.__ssHid) el.style.display = "";      // 옛 판(display)으로 숨긴 것 되살림
@@ -2489,88 +2511,11 @@
     if (_hcbRaf || window.__ssGrabVer !== LOGIC_VER) return;
     _hcbRaf = requestAnimationFrame(function () { _hcbRaf = 0; try { _hideCollapsedBadges(); } catch (e) {} });
   }, true);
-  // ── 검색 썸네일 한국어 한 줄(관제 174, 2026-10-10 사장님 "어떤 영상인지 한국말로 · 처음에 볼 수 있게 · 돈 안 들게") ──
-  //   번역 = 크롬 내장 Translator(PC 안에서 돎, 서버 호출 0·비용 0). 없으면(옛 크롬) 아무것도 안 그린다.
-  //   플랫폼마다 다른 건 '카드에서 글 꺼내기' 하나뿐 → 표 KO_CARD 한 곳. 그리기·번역·캐시는 _koTick 한 곳.
-  var KO_CARD = {
-    instagram: { sel: 'a[href*="/reel/"],a[href*="/p/"]', text: function (a) {
-      var m = (a.getAttribute("href") || "").match(/\/(?:reel|reels|p)\/([A-Za-z0-9_-]+)/);
-      return m && _igMedia[m[1]] ? _igMedia[m[1]].caption : ""; } },
-    youtube: { sel: 'a[href^="/shorts/"]', text: function (a) { return _koNear(a, "h3,[class*='title'],[aria-label]"); } },
-    tiktok: { sel: 'a[href*="/video/"]', text: function (a) { return _koNear(a, '[data-e2e*="desc"]'); } },
-    pinterest: { sel: '[data-test-id="pin"],a[href*="/pin/"]', text: function (a) { return _koNear(a, '[data-test-id*="title"],[data-test-id*="description"]'); } },
-    douyin: { sel: 'a[href*="/video/"]', text: function (a) { return _koNear(a, '[class*="title"],[class*="desc"]'); } },
-    xiaohongshu: { sel: 'section.note-item a[href*="/explore/"],section.note-item a[href*="/search_result/"]', text: function (a) {
-      var s = a.closest("section.note-item"); var t = s && s.querySelector(".title,.footer .title,[class*='title']");
-      return t ? t.textContent : _koNear(a, ""); } }
-  };
-  // 카드 근처의 설명 글: 지정 칸 → 그림 alt → 카드 묶음의 글 순서로(사이트가 칸 이름을 바꿔도 alt·글로 버틴다)
-  function _koNear(a, sel) {
-    var p = a;
-    for (var i = 0; i < 5 && p; i++, p = p.parentElement) {
-      var e = sel ? p.querySelector(sel) : null;
-      var t = e && (e.getAttribute("aria-label") || e.textContent || "").trim();
-      if (t && t.length > 3) return t;
-    }
-    var im = a.querySelector("img[alt]"), alt = im && (im.getAttribute("alt") || "").trim();
-    return alt && alt.length > 6 ? alt : "";
-  }
-  // 언어는 글자 모양으로 고른다(크롬 언어 판별기는 모델이 없을 때가 많다 — 2026-10-10 실측 NotSupportedError)
-  function _koLang(t) {
-    if (/[가-힣]/.test(t) && (t.match(/[가-힣]/g) || []).length > t.length / 4) return "ko";
-    if (/[぀-ヿ]/.test(t)) return "ja";
-    if (/[一-鿿]/.test(t)) return "zh";
-    return "en";
-  }
-  var _koDone = {}, _koTr = {}, _koBusy = 0, _koOff = false;
-  function _koClean(t) {
-    return String(t || "").replace(/#[^\s#]+/g, function (h) { return h.slice(1); })   // 해시태그는 낱말로
-      .replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim().slice(0, 140);
-  }
-  function _koTranslator(lang) {
-    if (_koTr[lang]) return _koTr[lang];
-    var T = typeof Translator !== "undefined" ? Translator : null;
-    if (!T) { _koOff = true; return null; }
-    _koTr[lang] = T.create({ sourceLanguage: lang, targetLanguage: "ko" }).catch(function (e) {
-      console.warn("[담기] 한국어 번역기 준비 실패(" + lang + ")", e); delete _koTr[lang]; return null; });
-    return _koTr[lang];
-  }
-  function _koLabel(a, txt) {
-    var el = a.querySelector(".ss-card-ko");
-    if (!el) {
-      if (getComputedStyle(a).position === "static") a.style.position = "relative";
-      el = document.createElement("div"); el.className = "ss-card-ko";
-      el.style.cssText = "position:absolute;left:4px;right:4px;top:40px;z-index:3;background:rgba(0,0,0,.72);color:#fff;" +
-        "font:600 11px/1.35 system-ui,sans-serif;border-radius:6px;padding:3px 6px;pointer-events:none;" +
-        "display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden";
-      a.appendChild(el);
-    }
-    if (el.textContent !== txt) el.textContent = txt;
-  }
+  // ── 검색 썸네일 한국어 설명 줄은 뺐다(관제 177, 2026-10-11 사장님 "썸네일 위쪽에 나오는 설명들 빼 · 다른 사이트들도 다 없애").
+  //   10-10(관제 174)에 넣었던 기능. 더 그리지 않고, 옛 로직이 그려 둔 줄이 남아 있으면 걷기만 한다.
   function _koTick() {
-    if (_koOff || isSinglePost()) return;
-    var s = _kwSite(), c = s && KO_CARD[s.id];
-    if (!c) return;
-    var as = document.querySelectorAll(c.sel);
-    for (var i = 0; i < as.length; i++) {
-      var a = as[i], r = a.getBoundingClientRect();
-      if (r.width < 100 || r.height < 120 || r.bottom < 0 || r.top > innerHeight * 2) continue;   // 썸네일 카드·화면 근처만
-      var src = _koClean(c.text(a));
-      if (!src) continue;
-      if (src in _koDone) { if (_koDone[src]) _koLabel(a, _koDone[src]); continue; }
-      var lang = _koLang(src);
-      if (lang === "ko") { _koDone[src] = ""; continue; }
-      if (_koBusy >= 4) continue;                                   // 한 번에 4개까지(화면이 굳지 않게)
-      var p = _koTranslator(lang);
-      if (!p) return;
-      _koBusy++; _koDone[src] = null;
-      (function (src0) {
-        p.then(function (t) { return t ? t.translate(src0) : ""; })
-         .then(function (ko) { _koDone[src0] = (ko || "").trim(); })
-         .catch(function (e) { delete _koDone[src0]; console.warn("[담기] 번역 실패", e); })
-         .then(function () { _koBusy--; });
-      })(src);
-    }
+    var olds = document.querySelectorAll(".ss-card-ko");
+    for (var i = 0; i < olds.length; i++) olds[i].remove();
   }
   function tick() { try{_koTick();}catch(e){} if (_ytOff()) { _ytClear(); try{_kwClearAll();}catch(e){} return; } if (_ytResults()) { _ytResultsTick(); try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{syncIgKwBar();}catch(e){} try{syncKwSearchPanel();}catch(e){} try{syncIgPostKw();}catch(e){} try{_dockBtns();}catch(e){} try{_hideCollapsedBadges();}catch(e){} try{syncOvBox();}catch(e){} }
   tick();
