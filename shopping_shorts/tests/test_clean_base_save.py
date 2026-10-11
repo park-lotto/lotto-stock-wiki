@@ -5,6 +5,14 @@ from pathlib import Path
 from shopping_shorts import mix_pipeline as mp
 from shopping_shorts import video_assemble as va
 from shopping_shorts import clean_base as cb
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _assembled_cut_map(monkeypatch):
+    """진짜 조립본은 옆에 컷 지도를 남긴다(video_assemble.write_cut_map). 지도가 없으면 자막제거는 시작 전에 멈춘다(관제 176) —
+    이 파일의 가짜 조립본(mix_raw 바이트 몇 개)에는 빈 지도를 준다."""
+    monkeypatch.setattr(mp, "_va_read_cut_map", lambda _p: [])
 
 
 class _Store:
@@ -23,6 +31,7 @@ def _patch(monkeypatch, fake_cuts):
     monkeypatch.setattr(mp, "_vmake_clean",
                         lambda src, keys, out, tier=None, **k: (Path(out).write_bytes(b"x" * 4096), out)[1])
     monkeypatch.setattr(mp, "final_clip_pairs", lambda plan, tts, durs: fake_cuts)
+    monkeypatch.setattr(mp, "_va_read_cut_map", lambda _p: fake_cuts)      # 조립본 옆 컷 지도(관제 176: 없으면 시작 전에 멈춘다)
     monkeypatch.setattr(mp, "_src_durs_for", lambda job, work: {"s0": 30.0})
 
 

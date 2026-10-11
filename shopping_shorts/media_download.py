@@ -788,6 +788,26 @@ def uploaded_footage_poster_path(url):
     return f if f.exists() else None
 
 
+HOLE_MIN_SEC = 0.5      # 화면 패킷 사이가 이보다 벌어지면 '구멍'(그동안 화면 데이터가 없다)
+
+
+def video_holes(path, min_gap=HOLE_MIN_SEC):
+    """영상 화면 줄기의 **구멍**(패킷이 없는 구간) [(시작, 끝), ...]. 못 재면 [].
+
+    ★왜(관제 176, 2026-10-09 김성현님 2aa06a122f21): 받은 영상 가운데 4.13→9.20초에 화면 패킷이 없었다(20초에 449프레임).
+      재생기는 그동안 직전 화면을 세워 보여 주지만, 조립은 그 안의 컷(4.6초부터 1.98초)을 읽어 **0프레임**을 받았다 →
+      그 컷이 통째로 빠지고 컷 지도가 안 남아, 자막제거 뒤 완성본 6/9칸이 편집 화면과 다른 장면이 됐다."""
+    try:
+        o = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "packet=pts_time",
+             "-of", "csv=p=0", str(path)],
+            capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
+        ts = sorted(float(x.strip(",")) for x in (o.stdout or "").split() if x.strip(",") not in ("", "N/A"))
+    except Exception:  # noqa: BLE001 — 못 재면 구멍 없음으로(변환을 안 할 뿐, 받은 영상은 그대로 쓴다)
+        return []
+    return [(round(a, 3), round(b, 3)) for a, b in zip(ts, ts[1:]) if b - a > float(min_gap)]
+
+
 def normalize_playable(path):
     """받아 온 mp4를 **브라우저가 확실히 재생하는 모양**으로 맞춘다 (2026-09-02).
 
@@ -814,13 +834,17 @@ def normalize_playable(path):
         height = int(info[1]) if len(info) > 1 and info[1].isdigit() else 0
     except Exception:  # noqa: BLE001 — ffprobe가 없으면 손대지 않는다
         return str(path)
-    if codec == "h264" and height <= 1920:
+    # ★화면 구멍(관제 176): 구멍이 있으면 30fps 고정으로 다시 굽는다 — fps 필터가 구멍을 직전 화면으로 채운다(시각은 그대로).
+    #   판정은 video_holes 한 곳. 화면 줄기가 없는 파일(codec 빈값)은 종전처럼 손대지 않는다.
+    holes = video_holes(path) if codec else []
+    if (codec == "h264" and height <= 1920 and not holes) or not codec:
         return str(path)
     out = path.with_name(path.stem + "_h264.mp4")
     try:
         subprocess.run(
             ["ffmpeg", "-y", "-i", str(path),
-             "-vf", "scale=-2:'min(1920,ih)'", "-c:v", "libx264", "-preset", "veryfast",
+             "-vf", "scale=-2:'min(1920,ih)'" + (",fps=30" if holes else ""),
+             "-c:v", "libx264", "-preset", "veryfast",
              "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k",
              "-movflags", "+faststart", str(out)],
             capture_output=True, text=True, timeout=600, check=True)
@@ -830,7 +854,7 @@ def normalize_playable(path):
     if not out.exists() or out.stat().st_size < 10000:
         out.unlink(missing_ok=True)
         return str(path)
-    print(f"[media] {codec} {height}p → h264 변환: {out.name}", file=sys.stderr)
+    print(f"[media] {codec} {height}p → h264 변환: {out.name}" + (f" (화면 구멍 {holes} 메움)" if holes else ""), file=sys.stderr)
     path.unlink(missing_ok=True)
     return str(out)
 

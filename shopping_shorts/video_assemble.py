@@ -707,6 +707,17 @@ def cut_read_trim(take):
     return "trim=end=%.6f" % float(take)
 
 
+def cut_read_hold(start, take):
+    """화면 구멍 안의 컷을 읽는 필터 — 입력을 **자르지 않고**(-ss/-t 없이) 통째로 넣은 뒤 맨 앞에 둔다. cut_read_trim 자리를 대신한다.
+
+    ★왜(관제 176, 2aa06a122f21 s1 4.13→9.20초 화면 패킷 없음): `-ss 4.6 -t 1.98` 은 그 창에 패킷이 없어 0프레임이다.
+      재생기(편집 화면)는 그동안 직전 화면을 세워 보여 준다 — fps 가 구멍을 직전 프레임으로 채우고(tpad 는 구멍이
+      파일 끝까지 이어질 때 몫), 그 뒤에 창을 자른다. 통째 디코드라 느리다 — 빈 조각이 나왔을 때만 쓴다."""
+    s, t = float(start), float(take)
+    return ("fps=30,tpad=stop_mode=clone:stop_duration=%.3f,trim=start=%.6f:end=%.6f,setpts=PTS-STARTPTS"
+            % (t + 1.0, s, s + t))
+
+
 def motion_frames(nf, play_out, freeze, fps=30):
     """컷 조각 nf프레임 중 **움직이는 몫** — 정지가 없으면 전부, 있으면 play_out초의 반올림 프레임(나머지는 정지).
     완성본(_render_mix 1차 조각 -frames:v)과 편집 화면 합본(app enc trim)이 이 함수 하나로 잰다(0순위-B)."""
@@ -2824,8 +2835,23 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
                 *_vf_args, "-r", "30", "-an", "-frames:v", str(_nf_play),   # 초(-t)는 프레임 경계로 올림돼 칸 안에서 쌓인다
                 "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
             ])
-            # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
             if not sub.exists() or _probe_duration(sub) <= 0.05:
+                # ★빈 조각(관제 176) = 그 창에 화면 패킷이 없다(소스 구멍). 조용히 버리면 칸이 짧아지고 컷 지도가 안 남아
+                #   자막제거 뒤 완성본이 편집 화면과 달라졌다 → 재생기처럼 직전 화면을 세워 같은 프레임 수로 다시 굽는다.
+                print("[render] 빈 컷 조각 칸=%s 컷=%s %s@%.2f+%.2f — 직전 화면으로 채운다(소스 화면 구멍)" % (
+                    idx, j, c["video_id"], start, _c_src), file=sys.stderr)
+                _vf_hold = cut_read_hold(start, _c_src) + vf_full[len(cut_read_trim(_c_src)):]
+                _hl_fc = highlight_fc(beat, _vf_hold, grow=(_hl_per_cut or j == 0), cut=j)
+                _run_ffmpeg([
+                    "ffmpeg", "-y", "-i", str(src),
+                    *(["-filter_complex", _hl_fc, "-map", "[out]"] if _hl_fc else ["-vf", _vf_hold]),
+                    "-r", "30", "-an", "-frames:v", str(_nf_play),
+                    "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
+                ])
+            # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게(경보는 남긴다).
+            if not sub.exists() or _probe_duration(sub) <= 0.05:
+                print("[render] 컷 조각을 못 만들어 버린다 칸=%s 컷=%s %s@%.2f — 칸이 계획보다 짧아진다" % (
+                    idx, j, c["video_id"], start), file=sys.stderr)
                 continue
             # 2단계 — 정지프레임(P1 후속, 2026-07-19): 마지막 프레임을 freeze초 홀드하되
             #   전체에 켄번즈를 얹어 '죽은 정지'가 아니라 움직이는 홀드로 만든다. tpad→zoompan

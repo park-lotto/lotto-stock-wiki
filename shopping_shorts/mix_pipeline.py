@@ -4699,6 +4699,8 @@ def _va_read_cut_map(video_path):
 
 
 CLEAN_SIDECAR_RULE = "clean_cut_map/v1"
+# 조립본에 컷 지도가 없어 청소를 시작하지 않은 사유 — 화면 안내는 app.clean_failure_kind 가 이 표식으로 가른다
+CLEAN_NO_MAP_MSG = "조립된 영상이 편집 화면 계획과 달라 자막 지우기를 시작하지 않았습니다 [assembly_mismatch]"
 
 
 def _write_clean_sidecar(clean_path, cuts, cut_tiers=None):
@@ -4772,16 +4774,22 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
             return str(out)
         sig = _clean_sig(job)          # 새로 만들 땐 현재 식 이름으로만 쓴다
         out = Path(work) / f"final_clean_{sig}.mp4"
+        # ★컷 지도 = 이 조립본을 만든 계획(조립본 옆 .cuts.json — video_assemble._render_mix 가 남긴다)
+        # ★지도가 없으면 **업체를 부르기 전에 멈춘다**(관제 176, 2026-10-09 2aa06a122f21): 지도는 조립이 계획과 달랐을 때만
+        #   안 남는다(칸 프레임 부족). 종전엔 예비 계산(final_clip_pairs·snapshot_cut_map)으로 고른 장면을 자르고 정본을
+        #   적었는데, 그 계산은 실제 파일과 자리가 달라 엉뚱한 구간이 지워지고(고객 크레딧 18초) 완성본 6/9칸이 다른 장면이 됐다.
+        _map = _va_read_cut_map(mix_raw)
+        if _map is None:
+            print("[clean] 조립본 컷 지도 없음 — 청소를 시작하지 않는다(업체 호출 0) sig=%s" % sig, file=sys.stderr)
+            raise RuntimeError(CLEAN_NO_MAP_MSG)
         charged = _charge_clean(store, customer_id, 1)
         try:
             print(f"[clean] 완성본 1편만 청소 시작 sig={sig} tier={tier}", file=sys.stderr)
             _sel = clean_selection_of(job)
-            # ★컷 지도 = 이 조립본을 만든 계획(조립본 옆 .cuts.json — video_assemble._render_mix 가 남긴다)
-            _map = _va_read_cut_map(mix_raw)
             _tiers = None
             if _top is not None:
                 _plan = job.get("edit_plan") or {}
-                _mc = _map if _map is not None else final_clip_pairs(_plan, tts_paths_of(_plan), _src_durs_for(job, work))
+                _mc = _map
                 _send = [c for c in _mc if cut_selected(c, _top["send"])]
                 # ★실제 조립본의 지도로 한 번 더 확인 — 보낼 컷 자리가 정본을 만든 지도와 다르면 업체를 부르기 전에 멈춘다(환불)
                 if len(_send) != len(_top["send"]) or not _topup_same_spots(_top["base"].get("cuts"), _send):
@@ -4798,12 +4806,8 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
                 if Path(_top["base"]["path"]) == Path(out):
                     _drop_clean_frame_caches(work, sig)     # 같은 이름으로 내용이 바뀌었다 — 옛 그림 캐시를 버린다
             elif _sel:
-                # 고른 장면만 — 컷 지도는 조립본을 만든 그 계획(없을 때만 지금 편성으로 계산)
-                _plan = job.get("edit_plan") or {}
-                _tts = tts_paths_of(_plan)
-                res = _clean_partial(str(mix_raw), _map if _map is not None else
-                                     final_clip_pairs(_plan, _tts, _src_durs_for(job, work)),
-                                     _sel, keys, str(out), tier, work)
+                # 고른 장면만 — 컷 지도는 조립본을 만든 그 계획(지도가 없으면 위에서 이미 멈췄다 — 다시 계산하지 않는다)
+                res = _clean_partial(str(mix_raw), _map, _sel, keys, str(out), tier, work)
             else:
                 res = _vmake_clean(str(mix_raw), keys, str(out), tier=tier, resume_key="final:" + out.name)
         except Exception:
