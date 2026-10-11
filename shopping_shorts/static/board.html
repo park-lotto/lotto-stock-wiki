@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>후기 · 무료자료 · 숏템메이커</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  body{margin:0;background:var(--bg,#0f1115);color:var(--txt,#e6eaf0);
+       font:15px/1.6 -apple-system,"Malgun Gothic","맑은 고딕",sans-serif}
+  .wrap{max-width:1040px;margin:0 auto;padding:24px 16px 90px}
+  .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  h1{font-size:24px;margin:0}
+  .sub{color:var(--sub,#9aa5b1);font-size:14px;margin:0 0 18px}
+  .lnk{font-size:13px;color:var(--sub,#9aa5b1);text-decoration:none;border:1px solid var(--line,#2a3038);
+       border-radius:8px;padding:5px 12px}
+  .lnk.first{margin-left:auto}
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line,#2a3038);margin-bottom:14px;flex-wrap:wrap}
+  .tab{background:none;border:0;color:var(--sub,#9aa5b1);font:inherit;font-weight:600;padding:10px 14px;
+       cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab.on{color:var(--txt,#e6eaf0);border-bottom-color:var(--accent,#6ee7c7)}
+  .tab .n{background:#f0b429;color:#1a1300;border-radius:9px;font-size:11px;padding:1px 7px;margin-left:5px}
+  .bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .bar .hint{color:var(--sub,#9aa5b1);font-size:13px;flex:1;min-width:200px}
+  .btn{background:var(--accent,#6ee7c7);color:#06281f;border:0;border-radius:9px;padding:9px 16px;
+       font:inherit;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+  .btn.ghost{background:none;color:var(--txt,#e6eaf0);border:1px solid var(--line,#2a3038);font-weight:600}
+  .btn.warn{background:none;color:#ff8a8a;border:1px solid #5a2a2a;font-weight:600}
+  .btn:disabled{opacity:.5;cursor:default}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .card{border:1px solid var(--line,#2a3038);border-radius:12px;background:var(--card,#161a21);
+        overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
+  .card:hover{border-color:var(--accent,#6ee7c7)}
+  .thumb{aspect-ratio:4/3;background:#0b0d11 center/cover no-repeat;position:relative;
+         display:flex;align-items:center;justify-content:center;color:#3b4350;font-size:34px}
+  .thumb .play{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.65);color:#fff;
+               border-radius:6px;font-size:11px;padding:2px 7px}
+  .meta{padding:10px 12px 12px}
+  .ttl{font-weight:700;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .by{color:var(--sub,#9aa5b1);font-size:12px;margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .badge{font-size:11px;border-radius:5px;padding:1px 7px}
+  .b-pin{background:#3a2f14;color:#f0b429}.b-pend{background:#1f2c44;color:#8fb6ff}
+  .b-hide{background:#3a1f1f;color:#ff8a8a}.b-file{background:#17352c;color:#6ee7c7}
+  .empty{color:var(--sub,#9aa5b1);padding:40px 20px;text-align:center;border:1px dashed var(--line,#2a3038);
+         border-radius:12px;grid-column:1/-1}
+  .more{display:block;margin:18px auto 0}
+  /* 창 */
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:flex-start;
+      justify-content:center;overflow:auto;padding:30px 12px;z-index:9000}
+  .ov.on{display:flex}
+  .dlg{background:var(--card,#161a21);border:1px solid var(--line,#2a3038);border-radius:14px;
+       width:100%;max-width:720px;padding:20px}
+  .dlg h2{margin:0 0 4px;font-size:20px}
+  .dlg .x{float:right;background:none;border:0;color:var(--sub,#9aa5b1);font-size:22px;cursor:pointer}
+  .dlg video{width:100%;max-height:70vh;border-radius:10px;background:#000;margin:12px 0}
+  .dlg img.ph{width:100%;border-radius:10px;margin:6px 0;border:1px solid var(--line,#2a3038)}
+  .dlg audio{width:100%;margin:6px 0}
+  .bodytxt{white-space:pre-wrap;margin:12px 0;word-break:break-word}
+  .files{margin:12px 0;display:flex;flex-direction:column;gap:8px}
+  .frow{display:flex;align-items:center;gap:10px;border:1px solid var(--line,#2a3038);border-radius:10px;padding:10px 12px}
+  .frow .fn{flex:1;word-break:break-all}.frow .fs{color:var(--sub,#9aa5b1);font-size:12px}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;border-top:1px solid var(--line,#2a3038);padding-top:14px}
+  label.f{display:block;font-size:13px;color:var(--sub,#9aa5b1);margin:12px 0 4px}
+  input[type=text],textarea{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:9px;
+       border:1px solid var(--line,#2a3038);background:var(--inset,#0f1115);color:inherit;font:inherit}
+  textarea{min-height:130px;resize:vertical}
+  .chk{display:flex;gap:8px;align-items:flex-start;margin:14px 0;font-size:14px}
+  .msg{font-size:13px;margin-top:10px;min-height:18px}.msg.err{color:#ff8a8a}.msg.ok{color:#6ee7c7}
+  .prog{height:6px;border-radius:3px;background:var(--line,#2a3038);overflow:hidden;margin-top:8px;display:none}
+  .prog i{display:block;height:100%;width:0;background:var(--accent,#6ee7c7)}
+  .note{font-size:12px;color:var(--sub,#9aa5b1);margin-top:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>🏅 후기 · 무료자료</h1>
+    <a class="lnk first" href="/">홈</a>
+    <a class="lnk" id="lnkLogin" href="/login" style="display:none">로그인</a>
+    <a class="lnk" id="lnkSignup" href="/signup" style="display:none">무료 가입</a>
+  </div>
+  <p class="sub">회원들이 직접 만든 영상과 후기, 그리고 가입하면 받는 무료 자료 모음이에요.</p>
+
+  <div class="tabs" id="tabs">
+    <button class="tab" data-tab="review">회원 후기</button>
+    <button class="tab" data-tab="free">무료 자료실</button>
+    <button class="tab" data-tab="pending" id="tabPending" style="display:none">승인 대기<span class="n" id="pendN">0</span></button>
+  </div>
+  <div class="bar">
+    <div class="hint" id="hint"></div>
+    <button class="btn" id="btnWrite" style="display:none">글쓰기</button>
+  </div>
+  <div class="grid" id="grid"></div>
+  <button class="btn ghost more" id="btnMore" style="display:none">더 보기</button>
+</div>
+
+<!-- 글 보기 -->
+<div class="ov" id="ovView"><div class="dlg">
+  <button class="x" data-close>×</button>
+  <h2 id="vTitle"></h2>
+  <div class="by" id="vBy"></div>
+  <div id="vMedia"></div>
+  <div class="bodytxt" id="vBody"></div>
+  <div class="files" id="vFiles"></div>
+  <div class="msg" id="vMsg"></div>
+  <div class="acts" id="vActs"></div>
+</div></div>
+
+<!-- 글쓰기 -->
+<div class="ov" id="ovWrite"><div class="dlg">
+  <button class="x" data-close>×</button>
+  <h2 id="wHead">후기 쓰기</h2>
+  <div id="wNickBox">
+    <label class="f" for="wNick">닉네임 (후기에 표시돼요 · 2~12자)</label>
+    <input type="text" id="wNick" maxlength="12" placeholder="예: 숏템왕">
+  </div>
+  <label class="f" for="wTitle">제목</label>
+  <input type="text" id="wTitle" maxlength="80">
+  <label class="f" for="wBody">내용</label>
+  <textarea id="wBody" maxlength="5000"></textarea>
+  <div id="wFilesBox">
+    <label class="f" id="wFileLbl" for="wFiles">첨부</label>
+    <input type="file" id="wFiles" multiple>
+    <div class="note" id="wFileNote"></div>
+  </div>
+  <label class="chk" id="wConsentBox"><input type="checkbox" id="wConsent">
+    <span>운영자가 승인하면 <b>로그인하지 않은 사람에게도 공개</b>되는 것에 동의해요.</span></label>
+  <div class="prog" id="wProg"><i></i></div>
+  <div class="msg" id="wMsg"></div>
+  <div class="acts"><button class="btn" id="wSubmit">올리기</button>
+    <button class="btn ghost" data-close>취소</button></div>
+</div></div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var me = {logged:false, admin:false, nick:null, pending:0};
+  var tab = "review", page = 1, editing = null, viewing = null;
+  // 확장자 → 첨부 종류. 서버(board.py LIMITS)가 정본이고 여기는 고르는 데만 쓴다 — 틀리면 서버가 거절한다.
+  var KIND = {mp4:"video", mov:"video", png:"image", jpg:"image", jpeg:"image", webp:"image",
+              mp3:"audio", wav:"audio", m4a:"audio", zip:"file", rar:"file", "7z":"file", pdf:"file"};
+
+  function el(tag, cls, text){
+    var e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(text != null) e.textContent = text;      // 회원이 쓴 글은 항상 글자로만 넣는다
+    return e;
+  }
+  function api(method, url, body){
+    var opt = {method: method, credentials: "same-origin", headers: {}};
+    if(body !== undefined){ opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
+    return fetch(url, opt).then(function(r){
+      return r.json().catch(function(){ return {ok:false, error:"서버 응답을 읽지 못했어요 (" + r.status + ")"}; })
+        .then(function(d){ d._status = r.status; return d; });
+    });
+  }
+  function size(n){ return n >= 1048576 ? (n/1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n/1024)) + "KB"; }
+  function day(s){ return (s || "").slice(0, 10); }
+  function show(ov, on){ $(ov).classList.toggle("on", on); }
+  function msg(id, text, cls){ var m = $(id); m.textContent = text || ""; m.className = "msg" + (cls ? " " + cls : ""); }
+
+  function badges(box, p){
+    if(p.pinned) box.appendChild(el("span", "badge b-pin", "고정"));
+    if(p.status === "pending") box.appendChild(el("span", "badge b-pend", "승인 대기"));
+    if(p.status === "hidden") box.appendChild(el("span", "badge b-hide", "숨김"));
+    if(p.n_files) box.appendChild(el("span", "badge b-file", "파일 " + p.n_files));
+  }
+  function card(p){
+    var c = el("div", "card");
+    c.dataset.id = p.id;
+    var t = el("div", "thumb", p.thumb ? "" : (p.board === "free" ? "📦" : "🎬"));
+    if(p.thumb) t.style.backgroundImage = "url('" + p.thumb + "')";
+    if(p.has_video) t.appendChild(el("span", "play", "▶ 영상"));
+    var m = el("div", "meta");
+    m.appendChild(el("div", "ttl", p.title));
+    var by = el("div", "by");
+    by.appendChild(el("span", "", p.nick));
+    by.appendChild(el("span", "", "· " + day(p.created_at)));
+    badges(by, p);
+    m.appendChild(by);
+    c.appendChild(t); c.appendChild(m);
+    c.addEventListener("click", function(){ openPost(p.id); });
+    return c;
+  }
+
+  function load(reset){
+    if(reset){ page = 1; $("grid").textContent = ""; }
+    var url = tab === "pending" ? "/api/board/admin/pending"
+                                : "/api/board/list?board=" + tab + "&page=" + page;
+    return api("GET", url).then(function(d){
+      var g = $("grid");
+      if(!d.ok){ g.appendChild(el("div", "empty", d.error || "불러오지 못했어요")); return; }
+      d.items.forEach(function(p){ g.appendChild(card(p)); });
+      if(!g.children.length){
+        g.appendChild(el("div", "empty", tab === "review" ? "아직 올라온 후기가 없어요. 첫 후기를 남겨 보세요!"
+          : tab === "free" ? "자료를 준비하고 있어요." : "승인을 기다리는 후기가 없어요."));
+      }
+      $("btnMore").style.display = (tab !== "pending" && d.total > page * d.per_page) ? "" : "none";
+      var w = $("btnWrite");
+      if(tab === "review"){
+        w.style.display = ""; w.textContent = me.logged ? "후기 쓰기" : "무료 가입하고 후기 쓰기";
+        $("hint").textContent = "만든 영상과 성과를 자랑해 주세요. 운영자 확인 뒤 공개돼요.";
+      }else if(tab === "free"){
+        w.style.display = me.admin ? "" : "none"; w.textContent = "자료 올리기";
+        $("hint").textContent = me.logged ? "마음껏 받아 가세요." : "미리보기는 누구나, 내려받기는 무료 가입 후 바로 돼요.";
+      }else{
+        w.style.display = "none"; $("hint").textContent = "눌러서 확인하고 승인하거나 숨기세요.";
+      }
+    });
+  }
+  function setTab(t){
+    tab = t;
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(b){
+      b.classList.toggle("on", b.dataset.tab === t);
+    });
+    history.replaceState(null, "", "/board?b=" + t);
+    return load(true);
+  }
+  function refreshMe(){
+    return api("GET", "/api/board/me").then(function(d){
+      me = d;
+      $("lnkLogin").style.display = $("lnkSignup").style.display = me.logged ? "none" : "";
+      $("tabPending").style.display = me.admin ? "" : "none";
+      $("pendN").textContent = me.pending;
+      $("pendN").style.display = me.pending ? "" : "none";
+    });
+  }
+
+  // ── 글 보기 ──
+  function openPost(id){
+    return api("GET", "/api/board/post/" + id).then(function(d){
+      if(!d.ok){ alertLine(d.error); return; }
+      var p = viewing = d.post;
+      $("vTitle").textContent = p.title;
+      var by = $("vBy"); by.textContent = "";
+      by.appendChild(el("span", "", p.nick)); by.appendChild(el("span", "", "· " + day(p.created_at)));
+      badges(by, p);
+      var media = $("vMedia"), files = $("vFiles"); media.textContent = ""; files.textContent = "";
+      p.files.forEach(function(f){
+        if(f.kind === "video"){
+          var v = el("video"); v.controls = true; v.playsInline = true; v.preload = "metadata"; v.src = f.url;
+          media.appendChild(v);
+        }else if(f.kind === "image"){
+          var i = el("img", "ph"); i.src = f.url; i.alt = f.name; i.loading = "lazy"; media.appendChild(i);
+        }else if(f.kind === "audio"){
+          media.appendChild(el("div", "note", f.name));
+          var a = el("audio"); a.controls = true; a.preload = "none"; a.src = f.url; media.appendChild(a);
+        }else{
+          var row = el("div", "frow");
+          row.appendChild(el("span", "", "📦"));
+          row.appendChild(el("span", "fn", f.name));
+          row.appendChild(el("span", "fs", size(f.size)));
+          var b = el("a", "btn", p.can_download ? "내려받기" : "무료 가입하고 받기");
+          b.href = p.can_download ? f.url : "/signup";
+          if(p.can_download) b.setAttribute("download", f.name);
+          row.appendChild(b); files.appendChild(row);
+        }
+      });
+      $("vBody").textContent = p.body;
+      msg("vMsg", p.status === "pending" && !me.admin ? "운영자 확인을 기다리는 중이에요. 승인되면 모두에게 보여요." : "");
+      var acts = $("vActs"); acts.textContent = "";
+      function act(label, cls, fn){ var b = el("button", "btn " + cls, label); b.addEventListener("click", fn); acts.appendChild(b); }
+      if(me.admin){
+        if(p.board === "review" && p.status !== "approved") act("승인하고 공개", "", function(){ admin("approve"); });
+        if(p.status !== "hidden") act("숨기기", "ghost", function(){ admin("hide"); });
+        if(p.status === "hidden" && p.board === "free") act("다시 공개", "", function(){ admin("approve"); });
+        act(p.pinned ? "고정 풀기" : "맨 위 고정", "ghost", function(){ admin(p.pinned ? "unpin" : "pin"); });
+      }
+      if(p.mine){
+        act("고치기", "ghost", function(){ show("ovView", false); openWrite(p); });
+        act("삭제", "warn", function(){ removePost(p); });
+      }
+      acts.style.display = acts.children.length ? "" : "none";
+      show("ovView", true);
+    });
+  }
+  function alertLine(text){ $("hint").textContent = text || "문제가 생겼어요"; }
+  function admin(a){
+    api("POST", "/api/board/admin/act", {id: viewing.id, act: a}).then(function(d){
+      if(!d.ok){ msg("vMsg", d.error, "err"); return; }
+      show("ovView", false);
+      refreshMe().then(function(){ load(true); });
+    });
+  }
+  var delArmed = 0;
+  function removePost(p){
+    // 확인 창(confirm) 대신 두 번 누르기 — 실수로 지우지 않게.
+    if(delArmed !== p.id){ delArmed = p.id; msg("vMsg", "정말 지우려면 삭제를 한 번 더 누르세요. 영상·파일도 같이 지워져요.", "err"); return; }
+    delArmed = 0;
+    api("DELETE", "/api/board/post/" + p.id).then(function(d){
+      if(!d.ok){ msg("vMsg", d.error, "err"); return; }
+      show("ovView", false); refreshMe().then(function(){ load(true); });
+    });
+  }
+
+  // ── 글쓰기 ──
+  function openWrite(post){
+    if(!me.logged){ location.href = "/signup"; return; }
+    editing = post || null;
+    var b = post ? post.board : tab;
+    var review = b === "review";
+    $("wHead").textContent = post ? "글 고치기" : (review ? "후기 쓰기" : "자료 올리기");
+    $("wNickBox").style.display = (review && !me.nick && !post) ? "" : "none";
+    $("wConsentBox").style.display = (review && !post) ? "" : "none";
+    $("wFilesBox").style.display = post ? "none" : "";
+    $("wFileLbl").textContent = review ? "영상 · 사진" : "팩 파일 · 미리보기";
+    $("wFiles").accept = review ? ".mp4,.mov,.png,.jpg,.jpeg,.webp"
+                                : ".zip,.rar,.7z,.pdf,.png,.jpg,.jpeg,.webp,.mp3,.wav,.m4a,.mp4,.mov";
+    $("wFileNote").textContent = review
+      ? "영상 1개(mp4·mov, 200MB까지)와 사진 5장까지(조회수·수익 캡처 등)."
+      : "팩은 zip·rar·7z·pdf(1GB까지). 미리보기 사진·미리듣기 음원·영상을 같이 올리면 가입 전에도 보여요.";
+    $("wTitle").value = post ? post.title : ""; $("wBody").value = post ? post.body : "";
+    $("wNick").value = ""; $("wFiles").value = ""; $("wConsent").checked = false;
+    msg("wMsg", post && review && !me.admin ? "고치면 다시 운영자 확인을 받아요." : "");
+    $("wProg").style.display = "none"; $("wSubmit").disabled = false;
+    show("ovWrite", true);
+  }
+  function upload(pid, file, onProg){
+    return new Promise(function(resolve){
+      var ext = (file.name.split(".").pop() || "").toLowerCase();
+      var fd = new FormData();
+      fd.append("post_id", pid); fd.append("kind", KIND[ext] || "file"); fd.append("file", file);
+      var x = new XMLHttpRequest();
+      x.open("POST", "/api/board/upload");
+      x.upload.onprogress = function(e){ if(e.lengthComputable) onProg(e.loaded / e.total); };
+      x.onload = function(){
+        var d; try{ d = JSON.parse(x.responseText); }catch(_){ d = {ok:false, error:"올리지 못했어요 (" + x.status + ")"}; }
+        resolve(d);
+      };
+      x.onerror = function(){ resolve({ok:false, error:"연결이 끊겼어요. 다시 시도해 주세요."}); };
+      x.send(fd);
+    });
+  }
+  function submit(){
+    var title = $("wTitle").value.trim(), body = $("wBody").value.trim();
+    if(!title){ msg("wMsg", "제목을 적어 주세요.", "err"); return; }
+    $("wSubmit").disabled = true;
+    function fail(text){ msg("wMsg", text, "err"); $("wSubmit").disabled = false; }
+    if(editing){
+      api("POST", "/api/board/post/" + editing.id, {title: title, body: body}).then(function(d){
+        if(!d.ok) return fail(d.error);
+        show("ovWrite", false); refreshMe().then(function(){ load(true); });
+      });
+      return;
+    }
+    var review = tab === "review";
+    var files = Array.prototype.slice.call($("wFiles").files);
+    if(review && !$("wConsent").checked) return fail("공개 동의에 체크해 주세요.");
+    var step = Promise.resolve({ok: true});
+    if(review && !me.nick){
+      step = api("POST", "/api/board/nick", {nick: $("wNick").value.trim()}).then(function(d){
+        if(d.ok) me.nick = d.nick; return d;
+      });
+    }
+    step.then(function(d){
+      if(!d.ok) return fail(d.error);
+      return api("POST", "/api/board/post", {board: tab, title: title, body: body, consent: review}).then(function(d){
+        if(!d.ok) return fail(d.error);
+        var pid = d.id, bar = $("wProg");
+        bar.style.display = files.length ? "block" : "none";
+        var i = 0;
+        function next(){
+          if(i >= files.length){
+            show("ovWrite", false);
+            return refreshMe().then(function(){ return load(true); }).then(function(){
+              $("hint").textContent = review ? "후기를 올렸어요. 운영자 확인 뒤 모두에게 공개돼요." : "자료를 올렸어요.";
+            });
+          }
+          var f = files[i];
+          msg("wMsg", "올리는 중 " + (i + 1) + "/" + files.length + " — " + f.name);
+          return upload(pid, f, function(r){ bar.firstElementChild.style.width = Math.round(r * 100) + "%"; })
+            .then(function(u){
+              if(!u.ok){
+                // 반쯤 올라간 글을 남기지 않는다 — 지우고 사유를 보여준다.
+                return api("DELETE", "/api/board/post/" + pid).then(function(){
+                  bar.style.display = "none"; fail(f.name + ": " + (u.error || "올리지 못했어요"));
+                });
+              }
+              i += 1; return next();
+            });
+        }
+        return next();
+      });
+    });
+  }
+
+  // ── 연결 ──
+  $("tabs").addEventListener("click", function(e){
+    var b = e.target.closest(".tab"); if(b) setTab(b.dataset.tab);
+  });
+  $("btnWrite").addEventListener("click", function(){ openWrite(null); });
+  $("btnMore").addEventListener("click", function(){ page += 1; load(false); });
+  $("wSubmit").addEventListener("click", submit);
+  Array.prototype.forEach.call(document.querySelectorAll("[data-close]"), function(b){
+    b.addEventListener("click", function(){
+      var v = $("vMedia").querySelector("video"); if(v) v.pause();
+      delArmed = 0; show("ovView", false); show("ovWrite", false);
+    });
+  });
+
+  var q = new URLSearchParams(location.search);
+  refreshMe().then(function(){
+    var t = q.get("b");
+    if(t !== "free" && !(t === "pending" && me.admin)) t = "review";
+    return setTab(t);
+  }).then(function(){
+    var p = parseInt(q.get("p"), 10);
+    if(p) openPost(p);
+  });
+})();
+</script>
+</body>
+</html>
