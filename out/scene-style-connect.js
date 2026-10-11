@@ -50,7 +50,7 @@
       const x0=toBox(ai[0],vx),x1=toBox(ai[2],vx),y0=toBox(ai[1],vy),y1=toBox(ai[3],vy);
       // 배율 자동(사장님 2026-10-06 "자동으로 하는데 수동으로도 조절되게"): 제품이 영상 칸의 85%를 채우게, 1.3~2배.
       //   2배 고정은 크게 찍힌 제품에서 몸통만 화면을 채웠다(핀·바늘이 화면 밖 — 결과물 확인). 손으로는 [확대 크기] 슬라이더(1.2~2.5).
-      const z=Math.max(1.3,Math.min(api.refFx.emphZoom,.85/Math.max(x1-x0,y1-y0,.01)));
+      const z=api.refFx.emphZoom;   // 2026-10-11 사장님 "1.3배를 기본으로"(관제 178) — 배율은 기본값 하나, 위치만 제품 쪽으로 잡는다
       const panOf=(b,zz)=>Math.max(-1,Math.min(1,1-(2*Math.min(1,Math.max(0,b))*zz-1)/(zz-1)));
       return {zoom:+z.toFixed(2),panX:+panOf((x0+x1)/2,z).toFixed(3),panY:+panOf((y0+y1)/2,z).toFixed(3),focus:[+((x0+x1)/2).toFixed(3),+((y0+y1)/2).toFixed(3)],box:[x0,y0,x1,y1].map(v=>+v.toFixed(3)),by:'ai'};
     }
