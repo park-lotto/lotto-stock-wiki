@@ -76,6 +76,7 @@ from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, 
 from shopping_shorts import lens_discover
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts import challenge
+from shopping_shorts import board, board_routes
 from shopping_shorts import cn_search, kw_search, douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
@@ -15755,6 +15756,7 @@ async def _auth_guard(request: Request, call_next):
             or path.startswith("/static") or path.startswith("/landing/")   # 랜딩 영상·포스터(비로그인 대문)
             or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
+            or board.is_board_path(path)   # 후기·무료자료(관제 179) — 열람 공개, 쓰기·내려받기 권한은 핸들러가 board.py 로 본다
             or path.startswith("/s/") or path.startswith("/api/share/v/")
             or path.startswith("/api/share/e/")   # 캡컷 편집본(Buffer가 가져감, 2026-09-22)
             or path.startswith("/api/share/t/")
@@ -27816,5 +27818,17 @@ class _NoCacheStaticFiles(StaticFiles):
             return NotModifiedResponse(response.headers)
         return response
 
+
+# 후기 게시판·무료 자료실(관제 179) — 주소는 board_routes, 판단은 board.py. 정적 마운트("/")보다 먼저 등록해야 잡힌다.
+def _board_alert(kind, title, detail=""):
+    from shopping_shorts import ops_alert
+    ops_alert.raise_alert(kind, title, detail, grade=ops_alert.GRADE_INFO)
+
+
+board_routes.register(
+    app, db_path=lambda: DB_PATH, auth_on=lambda: _AUTH_ON,
+    verify_session=lambda c: _verify_session(c), is_admin=lambda cid: _is_admin(cid),
+    send_media=_send_media,
+    alert=_board_alert)
 
 app.mount("/", _NoCacheStaticFiles(directory=str(_STATIC), html=True), name="static")
