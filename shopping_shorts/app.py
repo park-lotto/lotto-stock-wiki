@@ -7074,8 +7074,12 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
                 _trim = f",trim=end_frame={_mv}" if _mv else ""
                 # ★읽는 창 끝 = video_assemble.cut_read_trim(완성본 _render_mix 와 같은 함수, 2026-09-27 — job 62ed6bf66eb9
                 #   컷 끝 다음 장면 2프레임). 입력 `-t`는 창 밖 원본 1프레임을 더 읽는다 — 이유는 그 함수 설명에.
-                vf = (video_assemble.cut_read_trim(take) + "," + video_assemble.cut_setpts(slow) + "," + vf + _trim
-                      + f",tpad=stop_mode=clone:stop_duration={_stop:.3f}")
+                _rest = ("," + video_assemble.cut_setpts(slow) + "," + vf + _trim
+                         + f",tpad=stop_mode=clone:stop_duration={_stop:.3f}")
+                vf = video_assemble.cut_read_trim(take) + _rest
+                # 화면 구멍(관제 176)용 다시 굽기 — 읽는 필터는 완성본과 같은 함수(video_assemble.cut_read_hold), 입력은 통째로
+                _hold = (["ffmpeg", "-y", "-v", "error", "-threads", "1", "-i", str(src)],
+                         video_assemble.cut_read_hold(float(c["start"]), take) + _rest)
                 cmd = ["ffmpeg", "-y", "-v", "error", "-threads", "1",
                        "-ss", f"{float(c['start']):.3f}", "-t", f"{take:.3f}", "-i", str(src)]
             else:   # 소재가 없으면 검은 화면으로 자리만 채운다 — 빼면 뒤 컷이 음성보다 앞선다
@@ -7083,11 +7087,20 @@ def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict,
             # ★길이는 프레임 수(_nf, video_assemble.cut_frame_list)로 — 초(-t)는 프레임 경계로 올림돼 칸 안에서 쌓였다
             #   (2026-09-27, 완성본 _render_mix와 같은 자). tpad가 뒤를 넉넉히 채워 두므로 모자랄 일은 없다.
             _len = ["-frames:v", str(int(c["_nf"]))] if c.get("_nf") else ["-t", f"{dur:.3f}"]
-            cmd += ["-an", "-vf", vf, *_len, "-c:v", "libx264",
+            _enc = ["-an", "-vf", vf, *_len, "-c:v", "libx264",
                     "-preset", "ultrafast", "-crf", "30", "-pix_fmt", "yuv420p", str(out)]
-            r = subprocess.run(cmd, capture_output=True, timeout=120)
+            r = subprocess.run(cmd + _enc, capture_output=True, timeout=120)
             if r.returncode != 0 or not out.exists():
                 raise RuntimeError(r.stderr.decode("utf-8", "ignore")[-300:])
+            if src and out.stat().st_size == 0:
+                # ★빈 조각(관제 176, 2aa06a122f21 s1 4.13→9.20초) = 그 창에 화면 패킷이 없다. 빈 채로 이으면 그 칸의 뒤 컷까지
+                #   사라지고 앞 컷 마지막 화면만 서 있었다 → 완성본(_render_mix)과 똑같이 직전 화면을 세워 같은 프레임 수로 굽는다.
+                print("[pvproxy] 빈 컷 조각 %s@%.2f+%.2f — 직전 화면으로 채운다(소스 화면 구멍)" % (
+                    c.get("video_id"), float(c["start"]), take), file=sys.stderr)
+                _enc[_enc.index("-vf") + 1] = _hold[1]
+                r = subprocess.run(_hold[0] + _enc, capture_output=True, timeout=300)
+                if r.returncode != 0 or not out.exists():
+                    raise RuntimeError(r.stderr.decode("utf-8", "ignore")[-300:])
             try:                          # 곳간에 넣어 둔다 — 다음에 같은 컷이면 그대로 쓴다
                 shutil.copy2(out, keep)
             except OSError:
@@ -7955,7 +7968,7 @@ def clean_failure_kind(clean_error):
         "다시 시도해 주세요"라는 **거짓 안내**가 나간다 — 그게 이 함수가 생긴 이유다.
 
     반환: 'no_points' | 'no_credit' | 'need_own_key' | 'need_new_api_key'
-        | 'interrupted' | 'vendor_down' | 'unsupported' | 'unknown'
+        | 'interrupted' | 'assembly_mismatch' | 'vendor_down' | 'unsupported' | 'unknown'
     """
     e = (clean_error or "")
     low = e.lower()
@@ -7985,6 +7998,9 @@ def clean_failure_kind(clean_error):
     #   같은 갈래다 — 종전엔 "중단되었습니다"만 봐서 그 둘이 unknown으로 떨어져 엉뚱한 안내가 떴다(2026-09-27).
     if "서버 재시작" in e or "중단되었습니다" in e or "중단됐" in e or "워커가 중단" in e:
         return "interrupted"
+    # 조립본이 계획과 달라 업체를 부르지 않고 멈춘 경우(관제 176, mix_pipeline.CLEAN_NO_MAP_MSG) — 차감 없음, 영상·키 탓이 아니다.
+    if "[assembly_mismatch]" in e:
+        return "assembly_mismatch"
     # ★업체(VMake) 게이트웨이 장애 — 영상 탓이 아니다(2026-09-17 실측, job 1556910737b6).
     #   30029 = '前置开放平台事件处理失败'(앞단 개방플랫폼 이벤트 처리 실패). 같은 응답 안에
     #   영상은 1080x1920·683프레임으로 정상 파싱돼 있었다.

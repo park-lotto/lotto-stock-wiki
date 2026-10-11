@@ -82,6 +82,13 @@ class TestPlanSignature:
 from cryptography.fernet import Fernet
 
 from shopping_shorts import mix_pipeline as mp
+
+
+@pytest.fixture(autouse=True)
+def _assembled_cut_map(monkeypatch):
+    """진짜 조립본은 옆에 컷 지도를 남긴다(video_assemble.write_cut_map). 지도가 없으면 자막제거는 시작 전에 멈춘다(관제 176) —
+    이 파일의 가짜 조립본(mix_raw 바이트 몇 개)에는 빈 지도를 준다."""
+    monkeypatch.setattr(mp, "_va_read_cut_map", lambda _p: [])
 from shopping_shorts.store import Store
 
 
