@@ -839,6 +839,7 @@
   //   zoomIn: 강조 확대는 멈춘 화면이 아니라 0.5초 동안 제품 쪽으로 빨려 들어간다(사장님 2026-10-05 "0.3초는 빠르고 0.5초로")
   //   emphZoom: 중요 장면 강조 확대 2.0 — 레퍼런스 눈대중 최대 2.0(측정 최대 1.61) 중 사장님 선택(2026-10-05 "두 배 이상은 돼야",
   //             "효과를 어떤 장면이든 켤 수 있게, 제품 정체 드러날 때·CTA·훅·고조 같은 중요 장면")
+  //             → 2026-10-11 사장님 "쭉 당기기 확대 크기를 1.3배를 기본으로 / 0.5초 확대랑 확대→복귀도 모두" — 기본 1.3(관제 178). 더 키우려면 [확대 크기] 슬라이더.
   //   dimEmphasis: 화면을 어둡게 덮고 강조 글자 — 밝기 32%(17~56%)·중앙 1.2초 ≈ 장면(구절) 하나 길이(중앙 1.17초) → 장면 내내(sec 0)
   //   dimTitle: 시작 어두운 제목 화면 — 밝기 46%·0.13초(4프레임), 12편 중 10편
   // 자동 배치(관제 124, 사장님 2026-10-05 "효과 아주 좋고 자동으로 배치") — 중요 장면 종류(scene_style.moment_of)별로 각 비트 첫 구절에 건다. 판단은 이 표 하나.
@@ -867,7 +868,7 @@
   const SCENE_FX_KEYS=['zoom','zoomIn','zoomMove','fxAuto','fxFocus','fxFocusBy','fxBox','panX','panY','shock','fxAutoPlaced'];
   const hasSceneFx=e=>!!e&&(SCENE_FX_KEYS.some(k=>k!=='fxAutoPlaced'&&e[k]!=null&&e[k]!==false)||(e.dim&&!e.dim.sec)||!!e.highlight?.on);   // 돋보기·스포트라이트도(관제 158)
   const withoutSceneFx=e=>{const o={...(e||{})};SCENE_FX_KEYS.forEach(k=>delete o[k]);if(o.dim&&!o.dim.sec)delete o.dim;return o};
-  const REF_FX={jumpZoom:1.35,emphZoom:2,zoomIn:.5,dimEmphasis:{level:.32,sec:0},dimTitle:{level:.46,sec:.13}};
+  const REF_FX={jumpZoom:1.35,emphZoom:1.3,zoomIn:.5,dimEmphasis:{level:.32,sec:0},dimTitle:{level:.46,sec:.13}};
   // 훅 모션 길이 = **첫 비트(훅 문장)** 의 훅 장면만(10-02 사장님 "썰훅만 본문은 훅 모션 없이 자막 스타일대로"). 썰훅+본문은 훅이 첫 비트뿐이라 종전과 같다
   const hookEndMs=()=>{const sc=sceneContext?.scenes||[],b0=sc[0]?.beat_idx;const hs=sc.filter(s=>s.kind==='hook'&&s.beat_idx===b0);return hs.length?Math.max(...hs.map(s=>s.end))*1000:2000;};
   function cameraAt(ms){
@@ -2246,7 +2247,7 @@
     },
     jumpZoomOn:()=>Object.values(effects).some(e=>e&&e.fxAuto==='jump'),
     // 강조(관제 124) — 아무 장면이든 켤 수 있고(emphAt), 중요 장면(scene.moment: hook·reveal·peak·cta, 판단은 scene_style.moment_of)엔 한 번에(emphMoments).
-    //   kind 'zoom' = 영상 칸 2배(emphZoom) · 'dim' = 밝기 32%(dimEmphasis). 한 번에 켤 땐 그 비트의 **첫 장면**(그 순간이 드러나는 구절)에만.
+    //   kind 'zoom' = 영상 칸 1.3배(emphZoom) · 'dim' = 밝기 32%(dimEmphasis). 한 번에 켤 땐 그 비트의 **첫 장면**(그 순간이 드러나는 구절)에만.
     moments:()=>(sceneContext?.scenes||[]).map(s=>s.moment||null),
     emphAt(i,kind,on){
       const key=String(i),e={...(effects[key]||{})};
