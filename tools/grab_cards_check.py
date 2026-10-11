@@ -196,9 +196,65 @@ def judge(o):
     return res
 
 
+# ── 진짜 사이트(로그아웃) 훑기: 카드 📥가 생기고 보이는지, 설명 줄이 없는지. 도우인은 뺀다(로그인 벽 → 캡차).
+LIVE = [
+    ("youtube", "https://www.youtube.com/results?search_query=gear+keychain&sp=EgIQCQ%253D%253D"),
+    ("tiktok", "https://www.tiktok.com/search?q=gear%20keychain"),
+    ("pinterest", "https://www.pinterest.com/search/videos/?q=gear%20keychain"),
+    ("xiaohongshu", "https://www.xiaohongshu.com/explore"),
+]
+LIVE_PROBE = r"""() => {
+  const d = e => e ? (e.tagName + '.' + String(e.className || '').slice(0, 30)) : null;
+  const bs = [...document.querySelectorAll('.ss-card-grab')];
+  const rows = bs.map(el => { const q = el.getBoundingClientRect(), cx = q.left + q.width / 2, cy = q.top + q.height / 2;
+    const inView = q.width > 0 && cy >= 0 && cy <= innerHeight && cx >= 0 && cx <= innerWidth;
+    const top = inView ? document.elementFromPoint(cx, cy) : null;
+    return { inView, vis: getComputedStyle(el).visibility, onTop: top === el, top: d(top) }; });
+  const f = document.getElementById('ss-grab-btn'), fr = f && f.getBoundingClientRect();
+  const iv = rows.filter(r => r.inView);
+  return { ver: window.__ssGrabVer, title: document.title.slice(0, 40), cards: bs.length, inView: iv.length,
+    seen: iv.filter(r => r.onTop).length, hidden: iv.filter(r => r.vis === 'hidden').length,
+    covers: [...new Set(iv.filter(r => !r.onTop).map(r => r.top))].slice(0, 4), ko: document.querySelectorAll('.ss-card-ko').length,
+    float: f ? [f.style.display || 'shown', Math.round(fr.top), innerHeight] : null };
+}"""
+
+
+def live(logic, shots=None):
+    out = []
+    with sync_playwright() as p:
+        b = p.chromium.launch(headless=True, channel="chrome")
+        ctx = b.new_context(viewport={"width": 1500, "height": 950}, locale="ko-KR", bypass_csp=True)
+        ctx.add_init_script(STUB)
+        for site, url in LIVE:
+            pg = ctx.new_page()
+            r = {"site": site}
+            try:
+                pg.goto(url, wait_until="domcontentloaded", timeout=45000)
+                pg.wait_for_timeout(7000)
+                pg.add_script_tag(content=logic)
+                pg.wait_for_timeout(6000)
+                r.update(pg.evaluate(LIVE_PROBE))
+                if shots:
+                    pg.screenshot(path=str(Path(shots) / f"live_{site}.png"))
+            except Exception as e:  # noqa: BLE001
+                r["error"] = str(e)[:140]
+            pg.close()
+            out.append(r)
+        b.close()
+    return out
+
+
 if __name__ == "__main__":
     logic_path, shots = LOGIC_PATH, None
     a = sys.argv[1:]
+    if "--live" in a:
+        lp = Path(a[a.index("--logic") + 1]) if "--logic" in a else LOGIC_PATH
+        sh = a[a.index("--shots") + 1] if "--shots" in a else None
+        if sh:
+            Path(sh).mkdir(parents=True, exist_ok=True)
+        for r in live(lp.read_text(encoding="utf-8"), sh):
+            print(json.dumps(r, ensure_ascii=False))
+        sys.exit(0)
     if "--logic" in a:
         logic_path = Path(a[a.index("--logic") + 1])
     if "--shots" in a:
