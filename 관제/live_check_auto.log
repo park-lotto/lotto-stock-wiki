@@ -5178,3 +5178,661 @@
    186 소리만 바꿔도 작업 전체 잠김·1단계로 떨어짐(이성택) — 미리보기 무효 · 주인 shopping_shorts/static/produce.html:canGoNext
    187 장면꾸미기 강조색 팔레트(모든 색) · 주인 out/precision20-ui.js:word-fx-colors
 [2026-10-12 21:41:10] ■ 끝 rc=0
+[2026-10-12 22:41:01] ▶ tools\live_check.py --all
+[2026-10-12 22:41]
+수동 확인 대기 105장 — 사장님이 보고 닫는다: py tools/control.py status <번호> 완료  (또는 검사 칸: py tools/control.py set <번호> 검사 "url /경로 글자")
+   002 영향 지도 tools/impact.py — 호출 그래프로 소비처·검사·승 · 주인 tools/impact.py(신설)
+   003 라이브 실측 파이프라인 tools/live_check.py --card  · 주인 tools/live_check.py(신설)
+   023 저장 층(C/D) 관제 — 외장 D:\숏템 을 지도(관제/storage. · 주인 tools/storage.py:plan
+   025 심효진(451) 음성 차단 면제 — 사장님 일레븐 키 개방 · 주인 shopping_shorts/keyroute.py:is_block_exempt
+   030 장면꾸미기 글자 두께·그림자 슬라이더·수치 · 주인 out/precision20-ui.js:drawFontSets
+   031 job 실패 시 1단계 잠금 문구 대신 실패 사유 표시 · 주인 shopping_shorts/static/produce.html:stepLockMsg
+   032 새 편집기 채널명 기본값=계정 내 채널명(프리셋 적용 시 숏템메이커로 돌 · 주인 shopping_shorts/scene_style.py:account_channel
+   035 서버 디스크 가득 참 재발 방지(find_frames 청소·디스크 경보· · 주인 shopping_shorts/disk_cleanup.py:run
+   036 장면꾸미기 썸네일 동일 그림자·대상별 분리 · 주인 out/precision20-ui.js:drawFontSets
+   037 finish 병합 구조 개선: 비코드 커밋 경쟁 시 재검사 생략 + 기준 · 주인 tools/track.py:finish
+   040 장면꾸미기 제목·채널명 그림자 미적용 및 시각 개선 · 주인 out/precision20-ui.js:applyTextLook
+   041 타입캐스트 키만 있는 회원 기본 성우 = 필재(일레븐 기본값으로 3단계  · 주인 shopping_shorts/store.py:get_last_voice
+   044 2단계 대본 칸 추가·이동(모든 안) + 빈 칸이 장면 출처 줄맞춤 깨는 · 주인 shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA 자르기 — 역할이름 누락(댓글유도·call_to_action) + · 주인 shopping_shorts/edit_plan.py:_is_cta
+   048 즐겨찾기 분석상태 요청이 주소 한도(8190B) 초과로 414 — 즐겨찾 · 주인 shopping_shorts/static/collection.html:loadAnalysi
+   050 버텍스 등록이 다 막힘 — 조직정책(키 생성 차단) 안내 추가 + 거절  · 주인 shopping_shorts/vertex_route.py:verify_sa
+   051 주장 번호 태깅 시험(경쟁사식 장면 매칭 검증) · 주인 tools/claim_trial_video.py:run
+   052 영상 관문이 음성 라인 모듈도 병합본으로 얹게(관제 049 선행) · 주인 tools/video_gate.py:PATCH_RELS
+   053 버텍스 '권한 없음' 오진 — 결제 미연결을 역할 문제로 안내함. 오류  · 주인 shopping_shorts/vertex_route.py:_explain
+   054 레퍼런스 추적 카드에서 대본 분석 후 검색어가 사라짐(프레임 없이 검색어 · 주인 shopping_shorts/static/index.html:traceByUrl (서버 t
+   057 장면꾸미기 새 편집기 글자 가독성(설명·메뉴 진하게·키움) · 주인 out/precision20-ui.css:가독성 블록
+   058 장면꾸미기 틀 선택 4종: 썰훅고정/썰훅+본문/썰본문/전장면고정 (fra · 주인 shopping_shorts/scene_style.py:context_for
+   060 유튜브 검색결과(렌즈 키워드검색)에서 쇼츠 카드 담기 · 주인 shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 영상 파일 전송을 파이썬 대신 아파치가(X-Sendfile) — 웹 프로 · 주인 shopping_shorts/app.py:_send_media(영상·합본·미리보기·완성본 
+   064 썸네일 프록시 죽은 주소 기억 5분→확정 404/403은 60분(점진)  · 주인 shopping_shorts/app.py:_thumb_neg_put·api_thumb 실패
+   065 장면꾸미기 효과 탭 로고 항목(파일 불러오기, 썸네일 맨 위, 내 프리셋 · 주인 out/precision20-ui.js:effects(logo)
+   066 장면꾸미기 템플릿 카드의 베낀 채널 이름 삭제(이븐쇼핑·숏템 기본형·살림 · 주인 out/precision20-data.js:name
+   067 영상 관문의 비교 작업 선정: updated_at 최신 → '완성본을 최 · 주인 tools/editor_vs_final_video.py:_pick_jobs(비교 대상 선정
+   068 관제: 승인 판정(돈·회원 데이터)에서 테스트 파일(shopping_sh · 주인 tools/control.py:_approval_reasons(승인 필요 판정의 유일한 자
+   069 관제 수리 3건: ①영상 없는 카드 검사 종류(url/api/수동)로 자 · 주인 tools/live_check.py:run_all + tools/video_gate.py:
+   070 관제: finish 게이트의 서버 report(영상·자막·소리·캡컷 대조 · 주인 tools/video_gate.py:_keep_report(report 보관의 유일한 자리
+   071 영상 관문을 전후 비교로: 같은 작업을 main 코드·병합본 코드로 각각 · 주인 tools/video_gate.py:run_video_gate·judge
+   075 finish 게이트 구멍 2개: ①tools/ 테스트도 게이트에서 돈다( · 주인 tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 Veo는 global에 없다 — Veo 호출만 us-central1로(회 · 주인 shopping_shorts/vertex_route.py:veo_client
+   081 finish 시간 단축: ①기준선 전체 테스트 제거(실패만 main 재확 · 주인 tools/track.py:_merge_and_gate·_open_stage·_FileLo
+   083 finish 단축 후속: ①정확한 기준선(병합 때 전체 실패 목록을 코드 · 주인 tools/track.py:_merge_and_gate·main·finish + tools
+   085 관문 모듈 목록 6벌을 하나로: video_gate.PATCH_RELS· · 주인 tools/gate_modules.py:PATCH_MODULES·WATCH_FILES
+   088 finish: 다 된 것만 줄 선다 — 테스트·영상 관문을 줄 밖에서(C · 주인 tools/track.py:finish·_merge_and_gate·_gate_slot +
+   089 finish 시간 계측·재실행 제거: finish 로그에 시각+단계별 집 · 주인 tools/video_gate.py:run_video_gate + tools/track.p
+   090 영상 관문 작업 선정: 최근 6개 → 유형별(청소본 전부/일부/없음·효과 · 주인 tools/editor_vs_final_video.py:_pick_jobs
+   091 게이트 실패 분류 수리: 병합본 재확인(우연 실패 거르기)을 먼저·mai · 주인 tools/track.py:_classify_new_failures·_rerun_on_ma
+   092 finish 자원 관문+재시도 비용: 시험 시작 전 남은 메모리·CPU  · 주인 tools/track.py:_gate_slot·_merge_and_gate(재시도)
+   093 finish 판본: main 폴더(더러우면 동기화 막혀 51커밋 낡음)  · 주인 tools/track.py:_reexec_latest
+   094 인스타 팝업에서 담기·렌즈·채널수집 버튼과 속도창이 본문 글자를 가림 — · 주인 shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 버텍스 키 원클릭: 클라우드 셸 한 줄로 API·서비스계정·역할·키차단해 · 주인 shopping_shorts/static/landing/vertex_setup.sh
+   099 영상 관문이 완성본 한 장 번쩍임(다른 자리 그림 1프레임)을 못 잡는다 · 주인 tools/editor_vs_final_video.py(완성본 프레임 판정 — 관문·매일 
+   101 장면꾸미기 페이지 그림이 그 페이지 시각이 아니라 칸 대표 그림 한 장  · 주인 shopping_shorts/app.py:_beatframe_file
+   102 장면꾸미기 단어 강조 — 말하는 단어를 따라 박스·색 바뀜·살짝 키우기  · 주인 shopping_shorts/scene_style.py:context_for
+   103 장면꾸미기 글자 직접 조절 — 손으로 정한 크기는 그대로(자동 줄임·자동 · 주인 out/precision20-ui.js:addText
+   104 장면꾸미기 미리보기: 페이지 넘길 때 가림막이 먼저 끝나 보임(옛 그림  · 주인 out/precision20-ui.js:draw(장면 그림 교체)
+   105 고객 노출 자리에서 타사 이름(뇌전구·볼케이노) 전부 제거 — 효과음·밈 · 주인 shopping_shorts/scene_match.py:_has_pack
+   107 C 디스크가 계속 참: 관문 임시폴더(gate_child) 미정리 + 예 · 주인 tools/merge_gate.py:_run · tools/control.py:schedu
+   109 저장층 v3: 3일+ 안 쓴 것은 전부 D, 쓸 때 자동으로 C 복귀(트 · 주인 tools/storage.py:plan · tools/storage.py:ensure_wa
+   111 자막제거: 이미 지운 장면을 같은 방식으로 다시 골라 [자막제거 시작하기 · 주인 shopping_shorts/static/produce.html:paintCleanPick
+   112 에펙 고급효과 견본 — 카테고리별 대표 효과를 에펙으로 만들어 영상으로  · 주인 shopping_shorts/scene_style.py:render_layers
+   113 목소리 미리듣기: 음성 업체가 거절하면 500 대신 원인 안내(타입캐스트 · 주인 shopping_shorts/app.py:_tts_vendor_message
+   114 버퍼 예약 중복 방지 + 예약 취소 + 페이스북 거절 수리 · 주인 shopping_shorts/buffer_posts.py:already_scheduled
+   115 효과음 설정을 바꾼 뒤 완성본 만들기 탭을 눌러도 다시 안 만들어진다 — · 주인 shopping_shorts/static/scene_lab.html:sfxpSave
+   117 AI 장면 만들기 전에 프롬프트(한글+영어)를 보여주고 확인 후 진행 — · 주인 shopping_shorts/ai_scene.py:draft_scene
+   118 숏템메이커 사이드바에 관리자 전용 '효과 견본' 메뉴 — 에펙 견본 영상 · 주인 shopping_shorts/app.py:_fx_samples_page
+   120 스토리보드 장면 배선: 2단계 스토리보드 장면을 주인(ai_match.e · 주인 shopping_shorts/ai_match.py:ensure_cover
+   125 자막팩 1단계: 효과 견본 화면에 관리자 판정 달기 — 견본마다 쓸 것/ · 주인 shopping_shorts/app.py:_fx_verdicts_path
+   128 대화형대본: 묻고답하기·나레이션+인물 한마디 쇼핑 대본 (1단계 샘플) · 주인 shopping_shorts/story_writer.py:make_drafts
+   131 장면꾸미기 로고 자동 최종기억 — 마지막에 쓴 로고(그림·자리·크기)가  · 주인 out/precision20-ui.js:effect(로고 기억)
+   133 장면꾸미기 미리보기에 유튜브 쇼츠 화면(채널명·제목·링크 칸) 겹쳐보기  · 주인 out/scene-style-decorations.js:YT_SHORTS_UI
+   134 썰쇼핑 탭을 사장님이 고른 110채널로 정리 · 주인 shopping_shorts/store.py:_apply_overrides
+   137 유튜브 레퍼런스랭킹 '역대 히트작' 자리에 채널별 터진 영상 탭 + 유형 · 주인 shopping_shorts/ranking.py:pick_channel_hits
+   138 자동 배치 후보 거르기에 주인 세우기 — 씨앗 컷이 자동 컷에 새는 것( · 주인 shopping_shorts/edit_plan.py:non_edge_segs
+   139 감정짤 자동 배치: 스토리보드 신호어 [1]·[3] 줄 맨 앞에 짤(길이 · 주인 shopping_shorts/storyboard.py:meme_slots
+   140 제작소 .btn 디자인 없음 — 8단계 버튼 3개 등 10곳이 브라우저  · 주인 shopping_shorts\static\produce.html;.btn-prev\.btn
+   142 PC 1대인데 2칸 꽉 참 — 유령 칸(1시간 미만 사용 후 버려진 칸) · 주인 shopping_shorts/store.py:Store.device_register
+   143 감정짤 화면: 좌측 메뉴 밈팩 페이지(감정별 보기·⭐회원별 우선 짤) + · 주인 shopping_shorts/storyboard.py:meme_slots
+   144 등장 효과팩 20종: 자막 스타일 6종(모양만)과 분리, 회원별 자동 배 · 주인 out/precision20-ui.js:captionMotionKey
+   145 1단계 재료 영상 상한 8→15 · 주인 shopping_shorts/script_generate.py:SOURCE_MAX
+   146 3단계 배경음 탭: 쇼츠 BGM 10곡 목록(유튜브 i7dN6pSQPEE · 주인 shopping_shorts/mix_pipeline.py:resolve_deco_media
+   147 1단계에서 씨앗 고르기 + 스토리보드 재료·씨앗 신선도(씨앗 전 미리만들 · 주인 shopping_shorts/static/produce.html:setSeed
+   150 유튜브 쇼츠 화면에서 담기 버튼 사라짐 + 검색 카드 📥가 마우스 올리면 · 주인 shopping_shorts/userscript/grab_logic.js:_floatWan
+   151 인스타 검색화면 한→영 검색창·비슷한 검색어 칩·게시물 관련 검색어 · 주인 shopping_shorts/video_analysis.py:expand_search_ke
+   153 심효진(451) 회사 키 면제 해제 — 회사 일레븐 키 대신 본인 타입캐 · 주인 shopping_shorts/keyroute.py:BLOCK_EXEMPT_CIDS
+   154 장면꾸미기 효과 탭 정리: 쇼핑 안내 세트→구매링크 숏폼 안내(이름) · · 주인 out/scene-style-connect.js:sceneFx
+   155 캡컷 영상 위치를 완성본과 맞춤 — 장면꾸미기 영상이 캡컷에서 완성본보다 · 주인 shopping_shorts/scene_style.py:media_geometry
+   156 담기프로그램 상시 트랙 — 인스타 검색·담기 업데이트 작업장 · 주인 shopping_shorts/app.py
+   157 병합 급행(우선순위)·재시도 줄이기 · 주인 tools/track.py:_queue_rank
+   158 강조효과 프리셋 + 내 프리셋에서 강조효과 빼기 · 주인 out/precision20-ui.js:autoFxKinds
+   159 버텍스 전환 — 사장님 1~3단계 전부 버텍스 · 고객은 10-08 13 · 주인 shopping_shorts/vertex_route.py:on
+   160 2단계 스토리보드 빈 화면: 1단계에서 영상을 뺀 뒤 만든 스토리보드에  · 주인 shopping_shorts/static/produce.html:sbGone
+   161 씨앗 영상도 2단계 스토리보드에 배치하기 버튼(1단계 씨앗 영상 줄에서  · 주인 shopping_shorts/storyboard.py:_materials
+   162 해외채널 레퍼런스 추적 — 원테이크 쇼츠의 원본 영상·채널 찾기 연구 · 주인 tools/overseas_ref/(연구)
+   163 장면꾸미기 제목 길이 초과 시 적용 막힘 해제 · 주인 out/scene-style-connect.js:primary click
+   165 3단계 짤 카드 ✕ 삭제 안됨 + 고객 배경음 목록 없음 · 주인 shopping_shorts/static/scene_lab.html:dropCutFromB
+   166 2단계 스토리보드 썸네일 깨짐(분석 캐시 영상 폴더 치워짐) · 주인 shopping_shorts/app.py:_sb_seg_src
+   167 오늘 제작 현황: 30초마다 목록을 통째로 다시 그려 보던 영상이 끊김 · 주인 shopping_shorts/static/admin_production.html:rende
+   171 분석 신호등 조회가 웹 서버 CPU 89%를 먹는다 — 영상마다 DB 연 · 주인 shopping_shorts/app.py:_analysis_state
+   173 DB 잠금 시 사이트 전체 멈춤 방지 — 요청마다 하는 접속기록 쓰기(_ · 주인 shopping_shorts/app.py:_auth_guard
+   174 담기 확장: 검색 썸네일에 한국어 설명 한 줄(크롬 무료 번역, 7플랫폼 · 주인 shopping_shorts/userscript/grab_logic.js:_cardKo
+   175 카드 영상 한 번에 하나만 재생(유튜브 동시재생 초과 일시중지) · 주인 shopping_shorts/static/sidebar.js:playOnlyThis
+   177 도우인 검색 격자에 카드 담기(📥)가 안 붙는다 · 주인 shopping_shorts/userscript/grab_logic.js:_douyinMa
+   178 강조효과 확대 3종 기본 크기 2배→1.3배 · 주인 out/precision20-ui.js:REF_FX.emphZoom
+   180 관제 보드 승인목록: 병합된 카드 제외·사유 표시 · 주인 shopping_shorts/static/admin.html:_ctlNeeds
+   182 꾸미기 적용범위 '골라서'(장면 여러 개 선택·빼기) · 주인 shopping_shorts/deco_frame.py:_scene_of_raw
+   183 장면꾸미기 내 프리셋 계정(서버) 저장 — 크롬 데이터 지워지면 프리셋  · 주인 shopping_shorts/app.py:api_produce_presets_set (+p
+   184 PC 2칸 꽉참 재발(윤주홍·이경원·이성택) — 같은 PC 쿠키손실·오래 · 주인 shopping_shorts/store.py:Store.device_register
+   185 유튜브제작 관리자 페이지 — 씬별 대사·준비체크·자료·녹음·TTS · 주인 shopping_shorts/app.py:_yt_studio_op
+   186 소리만 바꿔도 작업 전체 잠김·1단계로 떨어짐(이성택) — 미리보기 무효 · 주인 shopping_shorts/static/produce.html:canGoNext
+   187 장면꾸미기 강조색 팔레트(모든 색) · 주인 out/precision20-ui.js:word-fx-colors
+[2026-10-12 22:41:13] ■ 끝 rc=0
+[2026-10-12 23:41:01] ▶ tools\live_check.py --all
+[2026-10-12 23:41]
+수동 확인 대기 105장 — 사장님이 보고 닫는다: py tools/control.py status <번호> 완료  (또는 검사 칸: py tools/control.py set <번호> 검사 "url /경로 글자")
+   002 영향 지도 tools/impact.py — 호출 그래프로 소비처·검사·승 · 주인 tools/impact.py(신설)
+   003 라이브 실측 파이프라인 tools/live_check.py --card  · 주인 tools/live_check.py(신설)
+   023 저장 층(C/D) 관제 — 외장 D:\숏템 을 지도(관제/storage. · 주인 tools/storage.py:plan
+   025 심효진(451) 음성 차단 면제 — 사장님 일레븐 키 개방 · 주인 shopping_shorts/keyroute.py:is_block_exempt
+   030 장면꾸미기 글자 두께·그림자 슬라이더·수치 · 주인 out/precision20-ui.js:drawFontSets
+   031 job 실패 시 1단계 잠금 문구 대신 실패 사유 표시 · 주인 shopping_shorts/static/produce.html:stepLockMsg
+   032 새 편집기 채널명 기본값=계정 내 채널명(프리셋 적용 시 숏템메이커로 돌 · 주인 shopping_shorts/scene_style.py:account_channel
+   035 서버 디스크 가득 참 재발 방지(find_frames 청소·디스크 경보· · 주인 shopping_shorts/disk_cleanup.py:run
+   036 장면꾸미기 썸네일 동일 그림자·대상별 분리 · 주인 out/precision20-ui.js:drawFontSets
+   037 finish 병합 구조 개선: 비코드 커밋 경쟁 시 재검사 생략 + 기준 · 주인 tools/track.py:finish
+   040 장면꾸미기 제목·채널명 그림자 미적용 및 시각 개선 · 주인 out/precision20-ui.js:applyTextLook
+   041 타입캐스트 키만 있는 회원 기본 성우 = 필재(일레븐 기본값으로 3단계  · 주인 shopping_shorts/store.py:get_last_voice
+   044 2단계 대본 칸 추가·이동(모든 안) + 빈 칸이 장면 출처 줄맞춤 깨는 · 주인 shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA 자르기 — 역할이름 누락(댓글유도·call_to_action) + · 주인 shopping_shorts/edit_plan.py:_is_cta
+   048 즐겨찾기 분석상태 요청이 주소 한도(8190B) 초과로 414 — 즐겨찾 · 주인 shopping_shorts/static/collection.html:loadAnalysi
+   050 버텍스 등록이 다 막힘 — 조직정책(키 생성 차단) 안내 추가 + 거절  · 주인 shopping_shorts/vertex_route.py:verify_sa
+   051 주장 번호 태깅 시험(경쟁사식 장면 매칭 검증) · 주인 tools/claim_trial_video.py:run
+   052 영상 관문이 음성 라인 모듈도 병합본으로 얹게(관제 049 선행) · 주인 tools/video_gate.py:PATCH_RELS
+   053 버텍스 '권한 없음' 오진 — 결제 미연결을 역할 문제로 안내함. 오류  · 주인 shopping_shorts/vertex_route.py:_explain
+   054 레퍼런스 추적 카드에서 대본 분석 후 검색어가 사라짐(프레임 없이 검색어 · 주인 shopping_shorts/static/index.html:traceByUrl (서버 t
+   057 장면꾸미기 새 편집기 글자 가독성(설명·메뉴 진하게·키움) · 주인 out/precision20-ui.css:가독성 블록
+   058 장면꾸미기 틀 선택 4종: 썰훅고정/썰훅+본문/썰본문/전장면고정 (fra · 주인 shopping_shorts/scene_style.py:context_for
+   060 유튜브 검색결과(렌즈 키워드검색)에서 쇼츠 카드 담기 · 주인 shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 영상 파일 전송을 파이썬 대신 아파치가(X-Sendfile) — 웹 프로 · 주인 shopping_shorts/app.py:_send_media(영상·합본·미리보기·완성본 
+   064 썸네일 프록시 죽은 주소 기억 5분→확정 404/403은 60분(점진)  · 주인 shopping_shorts/app.py:_thumb_neg_put·api_thumb 실패
+   065 장면꾸미기 효과 탭 로고 항목(파일 불러오기, 썸네일 맨 위, 내 프리셋 · 주인 out/precision20-ui.js:effects(logo)
+   066 장면꾸미기 템플릿 카드의 베낀 채널 이름 삭제(이븐쇼핑·숏템 기본형·살림 · 주인 out/precision20-data.js:name
+   067 영상 관문의 비교 작업 선정: updated_at 최신 → '완성본을 최 · 주인 tools/editor_vs_final_video.py:_pick_jobs(비교 대상 선정
+   068 관제: 승인 판정(돈·회원 데이터)에서 테스트 파일(shopping_sh · 주인 tools/control.py:_approval_reasons(승인 필요 판정의 유일한 자
+   069 관제 수리 3건: ①영상 없는 카드 검사 종류(url/api/수동)로 자 · 주인 tools/live_check.py:run_all + tools/video_gate.py:
+   070 관제: finish 게이트의 서버 report(영상·자막·소리·캡컷 대조 · 주인 tools/video_gate.py:_keep_report(report 보관의 유일한 자리
+   071 영상 관문을 전후 비교로: 같은 작업을 main 코드·병합본 코드로 각각 · 주인 tools/video_gate.py:run_video_gate·judge
+   075 finish 게이트 구멍 2개: ①tools/ 테스트도 게이트에서 돈다( · 주인 tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 Veo는 global에 없다 — Veo 호출만 us-central1로(회 · 주인 shopping_shorts/vertex_route.py:veo_client
+   081 finish 시간 단축: ①기준선 전체 테스트 제거(실패만 main 재확 · 주인 tools/track.py:_merge_and_gate·_open_stage·_FileLo
+   083 finish 단축 후속: ①정확한 기준선(병합 때 전체 실패 목록을 코드 · 주인 tools/track.py:_merge_and_gate·main·finish + tools
+   085 관문 모듈 목록 6벌을 하나로: video_gate.PATCH_RELS· · 주인 tools/gate_modules.py:PATCH_MODULES·WATCH_FILES
+   088 finish: 다 된 것만 줄 선다 — 테스트·영상 관문을 줄 밖에서(C · 주인 tools/track.py:finish·_merge_and_gate·_gate_slot +
+   089 finish 시간 계측·재실행 제거: finish 로그에 시각+단계별 집 · 주인 tools/video_gate.py:run_video_gate + tools/track.p
+   090 영상 관문 작업 선정: 최근 6개 → 유형별(청소본 전부/일부/없음·효과 · 주인 tools/editor_vs_final_video.py:_pick_jobs
+   091 게이트 실패 분류 수리: 병합본 재확인(우연 실패 거르기)을 먼저·mai · 주인 tools/track.py:_classify_new_failures·_rerun_on_ma
+   092 finish 자원 관문+재시도 비용: 시험 시작 전 남은 메모리·CPU  · 주인 tools/track.py:_gate_slot·_merge_and_gate(재시도)
+   093 finish 판본: main 폴더(더러우면 동기화 막혀 51커밋 낡음)  · 주인 tools/track.py:_reexec_latest
+   094 인스타 팝업에서 담기·렌즈·채널수집 버튼과 속도창이 본문 글자를 가림 — · 주인 shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 버텍스 키 원클릭: 클라우드 셸 한 줄로 API·서비스계정·역할·키차단해 · 주인 shopping_shorts/static/landing/vertex_setup.sh
+   099 영상 관문이 완성본 한 장 번쩍임(다른 자리 그림 1프레임)을 못 잡는다 · 주인 tools/editor_vs_final_video.py(완성본 프레임 판정 — 관문·매일 
+   101 장면꾸미기 페이지 그림이 그 페이지 시각이 아니라 칸 대표 그림 한 장  · 주인 shopping_shorts/app.py:_beatframe_file
+   102 장면꾸미기 단어 강조 — 말하는 단어를 따라 박스·색 바뀜·살짝 키우기  · 주인 shopping_shorts/scene_style.py:context_for
+   103 장면꾸미기 글자 직접 조절 — 손으로 정한 크기는 그대로(자동 줄임·자동 · 주인 out/precision20-ui.js:addText
+   104 장면꾸미기 미리보기: 페이지 넘길 때 가림막이 먼저 끝나 보임(옛 그림  · 주인 out/precision20-ui.js:draw(장면 그림 교체)
+   105 고객 노출 자리에서 타사 이름(뇌전구·볼케이노) 전부 제거 — 효과음·밈 · 주인 shopping_shorts/scene_match.py:_has_pack
+   107 C 디스크가 계속 참: 관문 임시폴더(gate_child) 미정리 + 예 · 주인 tools/merge_gate.py:_run · tools/control.py:schedu
+   109 저장층 v3: 3일+ 안 쓴 것은 전부 D, 쓸 때 자동으로 C 복귀(트 · 주인 tools/storage.py:plan · tools/storage.py:ensure_wa
+   111 자막제거: 이미 지운 장면을 같은 방식으로 다시 골라 [자막제거 시작하기 · 주인 shopping_shorts/static/produce.html:paintCleanPick
+   112 에펙 고급효과 견본 — 카테고리별 대표 효과를 에펙으로 만들어 영상으로  · 주인 shopping_shorts/scene_style.py:render_layers
+   113 목소리 미리듣기: 음성 업체가 거절하면 500 대신 원인 안내(타입캐스트 · 주인 shopping_shorts/app.py:_tts_vendor_message
+   114 버퍼 예약 중복 방지 + 예약 취소 + 페이스북 거절 수리 · 주인 shopping_shorts/buffer_posts.py:already_scheduled
+   115 효과음 설정을 바꾼 뒤 완성본 만들기 탭을 눌러도 다시 안 만들어진다 — · 주인 shopping_shorts/static/scene_lab.html:sfxpSave
+   117 AI 장면 만들기 전에 프롬프트(한글+영어)를 보여주고 확인 후 진행 — · 주인 shopping_shorts/ai_scene.py:draft_scene
+   118 숏템메이커 사이드바에 관리자 전용 '효과 견본' 메뉴 — 에펙 견본 영상 · 주인 shopping_shorts/app.py:_fx_samples_page
+   120 스토리보드 장면 배선: 2단계 스토리보드 장면을 주인(ai_match.e · 주인 shopping_shorts/ai_match.py:ensure_cover
+   125 자막팩 1단계: 효과 견본 화면에 관리자 판정 달기 — 견본마다 쓸 것/ · 주인 shopping_shorts/app.py:_fx_verdicts_path
+   128 대화형대본: 묻고답하기·나레이션+인물 한마디 쇼핑 대본 (1단계 샘플) · 주인 shopping_shorts/story_writer.py:make_drafts
+   131 장면꾸미기 로고 자동 최종기억 — 마지막에 쓴 로고(그림·자리·크기)가  · 주인 out/precision20-ui.js:effect(로고 기억)
+   133 장면꾸미기 미리보기에 유튜브 쇼츠 화면(채널명·제목·링크 칸) 겹쳐보기  · 주인 out/scene-style-decorations.js:YT_SHORTS_UI
+   134 썰쇼핑 탭을 사장님이 고른 110채널로 정리 · 주인 shopping_shorts/store.py:_apply_overrides
+   137 유튜브 레퍼런스랭킹 '역대 히트작' 자리에 채널별 터진 영상 탭 + 유형 · 주인 shopping_shorts/ranking.py:pick_channel_hits
+   138 자동 배치 후보 거르기에 주인 세우기 — 씨앗 컷이 자동 컷에 새는 것( · 주인 shopping_shorts/edit_plan.py:non_edge_segs
+   139 감정짤 자동 배치: 스토리보드 신호어 [1]·[3] 줄 맨 앞에 짤(길이 · 주인 shopping_shorts/storyboard.py:meme_slots
+   140 제작소 .btn 디자인 없음 — 8단계 버튼 3개 등 10곳이 브라우저  · 주인 shopping_shorts\static\produce.html;.btn-prev\.btn
+   142 PC 1대인데 2칸 꽉 참 — 유령 칸(1시간 미만 사용 후 버려진 칸) · 주인 shopping_shorts/store.py:Store.device_register
+   143 감정짤 화면: 좌측 메뉴 밈팩 페이지(감정별 보기·⭐회원별 우선 짤) + · 주인 shopping_shorts/storyboard.py:meme_slots
+   144 등장 효과팩 20종: 자막 스타일 6종(모양만)과 분리, 회원별 자동 배 · 주인 out/precision20-ui.js:captionMotionKey
+   145 1단계 재료 영상 상한 8→15 · 주인 shopping_shorts/script_generate.py:SOURCE_MAX
+   146 3단계 배경음 탭: 쇼츠 BGM 10곡 목록(유튜브 i7dN6pSQPEE · 주인 shopping_shorts/mix_pipeline.py:resolve_deco_media
+   147 1단계에서 씨앗 고르기 + 스토리보드 재료·씨앗 신선도(씨앗 전 미리만들 · 주인 shopping_shorts/static/produce.html:setSeed
+   150 유튜브 쇼츠 화면에서 담기 버튼 사라짐 + 검색 카드 📥가 마우스 올리면 · 주인 shopping_shorts/userscript/grab_logic.js:_floatWan
+   151 인스타 검색화면 한→영 검색창·비슷한 검색어 칩·게시물 관련 검색어 · 주인 shopping_shorts/video_analysis.py:expand_search_ke
+   153 심효진(451) 회사 키 면제 해제 — 회사 일레븐 키 대신 본인 타입캐 · 주인 shopping_shorts/keyroute.py:BLOCK_EXEMPT_CIDS
+   154 장면꾸미기 효과 탭 정리: 쇼핑 안내 세트→구매링크 숏폼 안내(이름) · · 주인 out/scene-style-connect.js:sceneFx
+   155 캡컷 영상 위치를 완성본과 맞춤 — 장면꾸미기 영상이 캡컷에서 완성본보다 · 주인 shopping_shorts/scene_style.py:media_geometry
+   156 담기프로그램 상시 트랙 — 인스타 검색·담기 업데이트 작업장 · 주인 shopping_shorts/app.py
+   157 병합 급행(우선순위)·재시도 줄이기 · 주인 tools/track.py:_queue_rank
+   158 강조효과 프리셋 + 내 프리셋에서 강조효과 빼기 · 주인 out/precision20-ui.js:autoFxKinds
+   159 버텍스 전환 — 사장님 1~3단계 전부 버텍스 · 고객은 10-08 13 · 주인 shopping_shorts/vertex_route.py:on
+   160 2단계 스토리보드 빈 화면: 1단계에서 영상을 뺀 뒤 만든 스토리보드에  · 주인 shopping_shorts/static/produce.html:sbGone
+   161 씨앗 영상도 2단계 스토리보드에 배치하기 버튼(1단계 씨앗 영상 줄에서  · 주인 shopping_shorts/storyboard.py:_materials
+   162 해외채널 레퍼런스 추적 — 원테이크 쇼츠의 원본 영상·채널 찾기 연구 · 주인 tools/overseas_ref/(연구)
+   163 장면꾸미기 제목 길이 초과 시 적용 막힘 해제 · 주인 out/scene-style-connect.js:primary click
+   165 3단계 짤 카드 ✕ 삭제 안됨 + 고객 배경음 목록 없음 · 주인 shopping_shorts/static/scene_lab.html:dropCutFromB
+   166 2단계 스토리보드 썸네일 깨짐(분석 캐시 영상 폴더 치워짐) · 주인 shopping_shorts/app.py:_sb_seg_src
+   167 오늘 제작 현황: 30초마다 목록을 통째로 다시 그려 보던 영상이 끊김 · 주인 shopping_shorts/static/admin_production.html:rende
+   171 분석 신호등 조회가 웹 서버 CPU 89%를 먹는다 — 영상마다 DB 연 · 주인 shopping_shorts/app.py:_analysis_state
+   173 DB 잠금 시 사이트 전체 멈춤 방지 — 요청마다 하는 접속기록 쓰기(_ · 주인 shopping_shorts/app.py:_auth_guard
+   174 담기 확장: 검색 썸네일에 한국어 설명 한 줄(크롬 무료 번역, 7플랫폼 · 주인 shopping_shorts/userscript/grab_logic.js:_cardKo
+   175 카드 영상 한 번에 하나만 재생(유튜브 동시재생 초과 일시중지) · 주인 shopping_shorts/static/sidebar.js:playOnlyThis
+   177 도우인 검색 격자에 카드 담기(📥)가 안 붙는다 · 주인 shopping_shorts/userscript/grab_logic.js:_douyinMa
+   178 강조효과 확대 3종 기본 크기 2배→1.3배 · 주인 out/precision20-ui.js:REF_FX.emphZoom
+   180 관제 보드 승인목록: 병합된 카드 제외·사유 표시 · 주인 shopping_shorts/static/admin.html:_ctlNeeds
+   182 꾸미기 적용범위 '골라서'(장면 여러 개 선택·빼기) · 주인 shopping_shorts/deco_frame.py:_scene_of_raw
+   183 장면꾸미기 내 프리셋 계정(서버) 저장 — 크롬 데이터 지워지면 프리셋  · 주인 shopping_shorts/app.py:api_produce_presets_set (+p
+   184 PC 2칸 꽉참 재발(윤주홍·이경원·이성택) — 같은 PC 쿠키손실·오래 · 주인 shopping_shorts/store.py:Store.device_register
+   185 유튜브제작 관리자 페이지 — 씬별 대사·준비체크·자료·녹음·TTS · 주인 shopping_shorts/app.py:_yt_studio_op
+   186 소리만 바꿔도 작업 전체 잠김·1단계로 떨어짐(이성택) — 미리보기 무효 · 주인 shopping_shorts/static/produce.html:canGoNext
+   187 장면꾸미기 강조색 팔레트(모든 색) · 주인 out/precision20-ui.js:word-fx-colors
+[2026-10-12 23:41:11] ■ 끝 rc=0
+[2026-10-13 00:41:01] ▶ tools\live_check.py --all
+[2026-10-13 00:41]
+수동 확인 대기 106장 — 사장님이 보고 닫는다: py tools/control.py status <번호> 완료  (또는 검사 칸: py tools/control.py set <번호> 검사 "url /경로 글자")
+   002 영향 지도 tools/impact.py — 호출 그래프로 소비처·검사·승 · 주인 tools/impact.py(신설)
+   003 라이브 실측 파이프라인 tools/live_check.py --card  · 주인 tools/live_check.py(신설)
+   023 저장 층(C/D) 관제 — 외장 D:\숏템 을 지도(관제/storage. · 주인 tools/storage.py:plan
+   025 심효진(451) 음성 차단 면제 — 사장님 일레븐 키 개방 · 주인 shopping_shorts/keyroute.py:is_block_exempt
+   030 장면꾸미기 글자 두께·그림자 슬라이더·수치 · 주인 out/precision20-ui.js:drawFontSets
+   031 job 실패 시 1단계 잠금 문구 대신 실패 사유 표시 · 주인 shopping_shorts/static/produce.html:stepLockMsg
+   032 새 편집기 채널명 기본값=계정 내 채널명(프리셋 적용 시 숏템메이커로 돌 · 주인 shopping_shorts/scene_style.py:account_channel
+   035 서버 디스크 가득 참 재발 방지(find_frames 청소·디스크 경보· · 주인 shopping_shorts/disk_cleanup.py:run
+   036 장면꾸미기 썸네일 동일 그림자·대상별 분리 · 주인 out/precision20-ui.js:drawFontSets
+   037 finish 병합 구조 개선: 비코드 커밋 경쟁 시 재검사 생략 + 기준 · 주인 tools/track.py:finish
+   040 장면꾸미기 제목·채널명 그림자 미적용 및 시각 개선 · 주인 out/precision20-ui.js:applyTextLook
+   041 타입캐스트 키만 있는 회원 기본 성우 = 필재(일레븐 기본값으로 3단계  · 주인 shopping_shorts/store.py:get_last_voice
+   044 2단계 대본 칸 추가·이동(모든 안) + 빈 칸이 장면 출처 줄맞춤 깨는 · 주인 shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA 자르기 — 역할이름 누락(댓글유도·call_to_action) + · 주인 shopping_shorts/edit_plan.py:_is_cta
+   048 즐겨찾기 분석상태 요청이 주소 한도(8190B) 초과로 414 — 즐겨찾 · 주인 shopping_shorts/static/collection.html:loadAnalysi
+   050 버텍스 등록이 다 막힘 — 조직정책(키 생성 차단) 안내 추가 + 거절  · 주인 shopping_shorts/vertex_route.py:verify_sa
+   051 주장 번호 태깅 시험(경쟁사식 장면 매칭 검증) · 주인 tools/claim_trial_video.py:run
+   052 영상 관문이 음성 라인 모듈도 병합본으로 얹게(관제 049 선행) · 주인 tools/video_gate.py:PATCH_RELS
+   053 버텍스 '권한 없음' 오진 — 결제 미연결을 역할 문제로 안내함. 오류  · 주인 shopping_shorts/vertex_route.py:_explain
+   054 레퍼런스 추적 카드에서 대본 분석 후 검색어가 사라짐(프레임 없이 검색어 · 주인 shopping_shorts/static/index.html:traceByUrl (서버 t
+   057 장면꾸미기 새 편집기 글자 가독성(설명·메뉴 진하게·키움) · 주인 out/precision20-ui.css:가독성 블록
+   058 장면꾸미기 틀 선택 4종: 썰훅고정/썰훅+본문/썰본문/전장면고정 (fra · 주인 shopping_shorts/scene_style.py:context_for
+   060 유튜브 검색결과(렌즈 키워드검색)에서 쇼츠 카드 담기 · 주인 shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 영상 파일 전송을 파이썬 대신 아파치가(X-Sendfile) — 웹 프로 · 주인 shopping_shorts/app.py:_send_media(영상·합본·미리보기·완성본 
+   064 썸네일 프록시 죽은 주소 기억 5분→확정 404/403은 60분(점진)  · 주인 shopping_shorts/app.py:_thumb_neg_put·api_thumb 실패
+   065 장면꾸미기 효과 탭 로고 항목(파일 불러오기, 썸네일 맨 위, 내 프리셋 · 주인 out/precision20-ui.js:effects(logo)
+   066 장면꾸미기 템플릿 카드의 베낀 채널 이름 삭제(이븐쇼핑·숏템 기본형·살림 · 주인 out/precision20-data.js:name
+   067 영상 관문의 비교 작업 선정: updated_at 최신 → '완성본을 최 · 주인 tools/editor_vs_final_video.py:_pick_jobs(비교 대상 선정
+   068 관제: 승인 판정(돈·회원 데이터)에서 테스트 파일(shopping_sh · 주인 tools/control.py:_approval_reasons(승인 필요 판정의 유일한 자
+   069 관제 수리 3건: ①영상 없는 카드 검사 종류(url/api/수동)로 자 · 주인 tools/live_check.py:run_all + tools/video_gate.py:
+   070 관제: finish 게이트의 서버 report(영상·자막·소리·캡컷 대조 · 주인 tools/video_gate.py:_keep_report(report 보관의 유일한 자리
+   071 영상 관문을 전후 비교로: 같은 작업을 main 코드·병합본 코드로 각각 · 주인 tools/video_gate.py:run_video_gate·judge
+   075 finish 게이트 구멍 2개: ①tools/ 테스트도 게이트에서 돈다( · 주인 tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 Veo는 global에 없다 — Veo 호출만 us-central1로(회 · 주인 shopping_shorts/vertex_route.py:veo_client
+   081 finish 시간 단축: ①기준선 전체 테스트 제거(실패만 main 재확 · 주인 tools/track.py:_merge_and_gate·_open_stage·_FileLo
+   083 finish 단축 후속: ①정확한 기준선(병합 때 전체 실패 목록을 코드 · 주인 tools/track.py:_merge_and_gate·main·finish + tools
+   085 관문 모듈 목록 6벌을 하나로: video_gate.PATCH_RELS· · 주인 tools/gate_modules.py:PATCH_MODULES·WATCH_FILES
+   088 finish: 다 된 것만 줄 선다 — 테스트·영상 관문을 줄 밖에서(C · 주인 tools/track.py:finish·_merge_and_gate·_gate_slot +
+   089 finish 시간 계측·재실행 제거: finish 로그에 시각+단계별 집 · 주인 tools/video_gate.py:run_video_gate + tools/track.p
+   090 영상 관문 작업 선정: 최근 6개 → 유형별(청소본 전부/일부/없음·효과 · 주인 tools/editor_vs_final_video.py:_pick_jobs
+   091 게이트 실패 분류 수리: 병합본 재확인(우연 실패 거르기)을 먼저·mai · 주인 tools/track.py:_classify_new_failures·_rerun_on_ma
+   092 finish 자원 관문+재시도 비용: 시험 시작 전 남은 메모리·CPU  · 주인 tools/track.py:_gate_slot·_merge_and_gate(재시도)
+   093 finish 판본: main 폴더(더러우면 동기화 막혀 51커밋 낡음)  · 주인 tools/track.py:_reexec_latest
+   094 인스타 팝업에서 담기·렌즈·채널수집 버튼과 속도창이 본문 글자를 가림 — · 주인 shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 버텍스 키 원클릭: 클라우드 셸 한 줄로 API·서비스계정·역할·키차단해 · 주인 shopping_shorts/static/landing/vertex_setup.sh
+   099 영상 관문이 완성본 한 장 번쩍임(다른 자리 그림 1프레임)을 못 잡는다 · 주인 tools/editor_vs_final_video.py(완성본 프레임 판정 — 관문·매일 
+   101 장면꾸미기 페이지 그림이 그 페이지 시각이 아니라 칸 대표 그림 한 장  · 주인 shopping_shorts/app.py:_beatframe_file
+   102 장면꾸미기 단어 강조 — 말하는 단어를 따라 박스·색 바뀜·살짝 키우기  · 주인 shopping_shorts/scene_style.py:context_for
+   103 장면꾸미기 글자 직접 조절 — 손으로 정한 크기는 그대로(자동 줄임·자동 · 주인 out/precision20-ui.js:addText
+   104 장면꾸미기 미리보기: 페이지 넘길 때 가림막이 먼저 끝나 보임(옛 그림  · 주인 out/precision20-ui.js:draw(장면 그림 교체)
+   105 고객 노출 자리에서 타사 이름(뇌전구·볼케이노) 전부 제거 — 효과음·밈 · 주인 shopping_shorts/scene_match.py:_has_pack
+   107 C 디스크가 계속 참: 관문 임시폴더(gate_child) 미정리 + 예 · 주인 tools/merge_gate.py:_run · tools/control.py:schedu
+   109 저장층 v3: 3일+ 안 쓴 것은 전부 D, 쓸 때 자동으로 C 복귀(트 · 주인 tools/storage.py:plan · tools/storage.py:ensure_wa
+   111 자막제거: 이미 지운 장면을 같은 방식으로 다시 골라 [자막제거 시작하기 · 주인 shopping_shorts/static/produce.html:paintCleanPick
+   112 에펙 고급효과 견본 — 카테고리별 대표 효과를 에펙으로 만들어 영상으로  · 주인 shopping_shorts/scene_style.py:render_layers
+   113 목소리 미리듣기: 음성 업체가 거절하면 500 대신 원인 안내(타입캐스트 · 주인 shopping_shorts/app.py:_tts_vendor_message
+   114 버퍼 예약 중복 방지 + 예약 취소 + 페이스북 거절 수리 · 주인 shopping_shorts/buffer_posts.py:already_scheduled
+   115 효과음 설정을 바꾼 뒤 완성본 만들기 탭을 눌러도 다시 안 만들어진다 — · 주인 shopping_shorts/static/scene_lab.html:sfxpSave
+   117 AI 장면 만들기 전에 프롬프트(한글+영어)를 보여주고 확인 후 진행 — · 주인 shopping_shorts/ai_scene.py:draft_scene
+   118 숏템메이커 사이드바에 관리자 전용 '효과 견본' 메뉴 — 에펙 견본 영상 · 주인 shopping_shorts/app.py:_fx_samples_page
+   120 스토리보드 장면 배선: 2단계 스토리보드 장면을 주인(ai_match.e · 주인 shopping_shorts/ai_match.py:ensure_cover
+   125 자막팩 1단계: 효과 견본 화면에 관리자 판정 달기 — 견본마다 쓸 것/ · 주인 shopping_shorts/app.py:_fx_verdicts_path
+   128 대화형대본: 묻고답하기·나레이션+인물 한마디 쇼핑 대본 (1단계 샘플) · 주인 shopping_shorts/story_writer.py:make_drafts
+   131 장면꾸미기 로고 자동 최종기억 — 마지막에 쓴 로고(그림·자리·크기)가  · 주인 out/precision20-ui.js:effect(로고 기억)
+   133 장면꾸미기 미리보기에 유튜브 쇼츠 화면(채널명·제목·링크 칸) 겹쳐보기  · 주인 out/scene-style-decorations.js:YT_SHORTS_UI
+   134 썰쇼핑 탭을 사장님이 고른 110채널로 정리 · 주인 shopping_shorts/store.py:_apply_overrides
+   137 유튜브 레퍼런스랭킹 '역대 히트작' 자리에 채널별 터진 영상 탭 + 유형 · 주인 shopping_shorts/ranking.py:pick_channel_hits
+   138 자동 배치 후보 거르기에 주인 세우기 — 씨앗 컷이 자동 컷에 새는 것( · 주인 shopping_shorts/edit_plan.py:non_edge_segs
+   139 감정짤 자동 배치: 스토리보드 신호어 [1]·[3] 줄 맨 앞에 짤(길이 · 주인 shopping_shorts/storyboard.py:meme_slots
+   140 제작소 .btn 디자인 없음 — 8단계 버튼 3개 등 10곳이 브라우저  · 주인 shopping_shorts\static\produce.html;.btn-prev\.btn
+   142 PC 1대인데 2칸 꽉 참 — 유령 칸(1시간 미만 사용 후 버려진 칸) · 주인 shopping_shorts/store.py:Store.device_register
+   143 감정짤 화면: 좌측 메뉴 밈팩 페이지(감정별 보기·⭐회원별 우선 짤) + · 주인 shopping_shorts/storyboard.py:meme_slots
+   144 등장 효과팩 20종: 자막 스타일 6종(모양만)과 분리, 회원별 자동 배 · 주인 out/precision20-ui.js:captionMotionKey
+   145 1단계 재료 영상 상한 8→15 · 주인 shopping_shorts/script_generate.py:SOURCE_MAX
+   146 3단계 배경음 탭: 쇼츠 BGM 10곡 목록(유튜브 i7dN6pSQPEE · 주인 shopping_shorts/mix_pipeline.py:resolve_deco_media
+   147 1단계에서 씨앗 고르기 + 스토리보드 재료·씨앗 신선도(씨앗 전 미리만들 · 주인 shopping_shorts/static/produce.html:setSeed
+   150 유튜브 쇼츠 화면에서 담기 버튼 사라짐 + 검색 카드 📥가 마우스 올리면 · 주인 shopping_shorts/userscript/grab_logic.js:_floatWan
+   151 인스타 검색화면 한→영 검색창·비슷한 검색어 칩·게시물 관련 검색어 · 주인 shopping_shorts/video_analysis.py:expand_search_ke
+   153 심효진(451) 회사 키 면제 해제 — 회사 일레븐 키 대신 본인 타입캐 · 주인 shopping_shorts/keyroute.py:BLOCK_EXEMPT_CIDS
+   154 장면꾸미기 효과 탭 정리: 쇼핑 안내 세트→구매링크 숏폼 안내(이름) · · 주인 out/scene-style-connect.js:sceneFx
+   155 캡컷 영상 위치를 완성본과 맞춤 — 장면꾸미기 영상이 캡컷에서 완성본보다 · 주인 shopping_shorts/scene_style.py:media_geometry
+   156 담기프로그램 상시 트랙 — 인스타 검색·담기 업데이트 작업장 · 주인 shopping_shorts/app.py
+   157 병합 급행(우선순위)·재시도 줄이기 · 주인 tools/track.py:_queue_rank
+   158 강조효과 프리셋 + 내 프리셋에서 강조효과 빼기 · 주인 out/precision20-ui.js:autoFxKinds
+   159 버텍스 전환 — 사장님 1~3단계 전부 버텍스 · 고객은 10-08 13 · 주인 shopping_shorts/vertex_route.py:on
+   160 2단계 스토리보드 빈 화면: 1단계에서 영상을 뺀 뒤 만든 스토리보드에  · 주인 shopping_shorts/static/produce.html:sbGone
+   161 씨앗 영상도 2단계 스토리보드에 배치하기 버튼(1단계 씨앗 영상 줄에서  · 주인 shopping_shorts/storyboard.py:_materials
+   162 해외채널 레퍼런스 추적 — 원테이크 쇼츠의 원본 영상·채널 찾기 연구 · 주인 tools/overseas_ref/(연구)
+   163 장면꾸미기 제목 길이 초과 시 적용 막힘 해제 · 주인 out/scene-style-connect.js:primary click
+   165 3단계 짤 카드 ✕ 삭제 안됨 + 고객 배경음 목록 없음 · 주인 shopping_shorts/static/scene_lab.html:dropCutFromB
+   166 2단계 스토리보드 썸네일 깨짐(분석 캐시 영상 폴더 치워짐) · 주인 shopping_shorts/app.py:_sb_seg_src
+   167 오늘 제작 현황: 30초마다 목록을 통째로 다시 그려 보던 영상이 끊김 · 주인 shopping_shorts/static/admin_production.html:rende
+   171 분석 신호등 조회가 웹 서버 CPU 89%를 먹는다 — 영상마다 DB 연 · 주인 shopping_shorts/app.py:_analysis_state
+   173 DB 잠금 시 사이트 전체 멈춤 방지 — 요청마다 하는 접속기록 쓰기(_ · 주인 shopping_shorts/app.py:_auth_guard
+   174 담기 확장: 검색 썸네일에 한국어 설명 한 줄(크롬 무료 번역, 7플랫폼 · 주인 shopping_shorts/userscript/grab_logic.js:_cardKo
+   175 카드 영상 한 번에 하나만 재생(유튜브 동시재생 초과 일시중지) · 주인 shopping_shorts/static/sidebar.js:playOnlyThis
+   177 도우인 검색 격자에 카드 담기(📥)가 안 붙는다 · 주인 shopping_shorts/userscript/grab_logic.js:_douyinMa
+   178 강조효과 확대 3종 기본 크기 2배→1.3배 · 주인 out/precision20-ui.js:REF_FX.emphZoom
+   180 관제 보드 승인목록: 병합된 카드 제외·사유 표시 · 주인 shopping_shorts/static/admin.html:_ctlNeeds
+   182 꾸미기 적용범위 '골라서'(장면 여러 개 선택·빼기) · 주인 shopping_shorts/deco_frame.py:_scene_of_raw
+   183 장면꾸미기 내 프리셋 계정(서버) 저장 — 크롬 데이터 지워지면 프리셋  · 주인 shopping_shorts/app.py:api_produce_presets_set (+p
+   184 PC 2칸 꽉참 재발(윤주홍·이경원·이성택) — 같은 PC 쿠키손실·오래 · 주인 shopping_shorts/store.py:Store.device_register
+   185 유튜브제작 관리자 페이지 — 씬별 대사·준비체크·자료·녹음·TTS · 주인 shopping_shorts/app.py:_yt_studio_op
+   186 소리만 바꿔도 작업 전체 잠김·1단계로 떨어짐(이성택) — 미리보기 무효 · 주인 shopping_shorts/static/produce.html:canGoNext
+   187 장면꾸미기 강조색 팔레트(모든 색) · 주인 out/precision20-ui.js:word-fx-colors
+   188 계좌이체 화면·구글 신청서에 남은 1기 77만원 → 2기 88만원 · 주인 설정 deposit_note(app.py:_deposit_body) · 구글폼 1j7DEO
+[2026-10-13 00:41:11] ■ 끝 rc=0
+[2026-10-13 01:41:01] ▶ tools\live_check.py --all
+[2026-10-13 01:41]
+수동 확인 대기 106장 — 사장님이 보고 닫는다: py tools/control.py status <번호> 완료  (또는 검사 칸: py tools/control.py set <번호> 검사 "url /경로 글자")
+   002 영향 지도 tools/impact.py — 호출 그래프로 소비처·검사·승 · 주인 tools/impact.py(신설)
+   003 라이브 실측 파이프라인 tools/live_check.py --card  · 주인 tools/live_check.py(신설)
+   023 저장 층(C/D) 관제 — 외장 D:\숏템 을 지도(관제/storage. · 주인 tools/storage.py:plan
+   025 심효진(451) 음성 차단 면제 — 사장님 일레븐 키 개방 · 주인 shopping_shorts/keyroute.py:is_block_exempt
+   030 장면꾸미기 글자 두께·그림자 슬라이더·수치 · 주인 out/precision20-ui.js:drawFontSets
+   031 job 실패 시 1단계 잠금 문구 대신 실패 사유 표시 · 주인 shopping_shorts/static/produce.html:stepLockMsg
+   032 새 편집기 채널명 기본값=계정 내 채널명(프리셋 적용 시 숏템메이커로 돌 · 주인 shopping_shorts/scene_style.py:account_channel
+   035 서버 디스크 가득 참 재발 방지(find_frames 청소·디스크 경보· · 주인 shopping_shorts/disk_cleanup.py:run
+   036 장면꾸미기 썸네일 동일 그림자·대상별 분리 · 주인 out/precision20-ui.js:drawFontSets
+   037 finish 병합 구조 개선: 비코드 커밋 경쟁 시 재검사 생략 + 기준 · 주인 tools/track.py:finish
+   040 장면꾸미기 제목·채널명 그림자 미적용 및 시각 개선 · 주인 out/precision20-ui.js:applyTextLook
+   041 타입캐스트 키만 있는 회원 기본 성우 = 필재(일레븐 기본값으로 3단계  · 주인 shopping_shorts/store.py:get_last_voice
+   044 2단계 대본 칸 추가·이동(모든 안) + 빈 칸이 장면 출처 줄맞춤 깨는 · 주인 shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA 자르기 — 역할이름 누락(댓글유도·call_to_action) + · 주인 shopping_shorts/edit_plan.py:_is_cta
+   048 즐겨찾기 분석상태 요청이 주소 한도(8190B) 초과로 414 — 즐겨찾 · 주인 shopping_shorts/static/collection.html:loadAnalysi
+   050 버텍스 등록이 다 막힘 — 조직정책(키 생성 차단) 안내 추가 + 거절  · 주인 shopping_shorts/vertex_route.py:verify_sa
+   051 주장 번호 태깅 시험(경쟁사식 장면 매칭 검증) · 주인 tools/claim_trial_video.py:run
+   052 영상 관문이 음성 라인 모듈도 병합본으로 얹게(관제 049 선행) · 주인 tools/video_gate.py:PATCH_RELS
+   053 버텍스 '권한 없음' 오진 — 결제 미연결을 역할 문제로 안내함. 오류  · 주인 shopping_shorts/vertex_route.py:_explain
+   054 레퍼런스 추적 카드에서 대본 분석 후 검색어가 사라짐(프레임 없이 검색어 · 주인 shopping_shorts/static/index.html:traceByUrl (서버 t
+   057 장면꾸미기 새 편집기 글자 가독성(설명·메뉴 진하게·키움) · 주인 out/precision20-ui.css:가독성 블록
+   058 장면꾸미기 틀 선택 4종: 썰훅고정/썰훅+본문/썰본문/전장면고정 (fra · 주인 shopping_shorts/scene_style.py:context_for
+   060 유튜브 검색결과(렌즈 키워드검색)에서 쇼츠 카드 담기 · 주인 shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 영상 파일 전송을 파이썬 대신 아파치가(X-Sendfile) — 웹 프로 · 주인 shopping_shorts/app.py:_send_media(영상·합본·미리보기·완성본 
+   064 썸네일 프록시 죽은 주소 기억 5분→확정 404/403은 60분(점진)  · 주인 shopping_shorts/app.py:_thumb_neg_put·api_thumb 실패
+   065 장면꾸미기 효과 탭 로고 항목(파일 불러오기, 썸네일 맨 위, 내 프리셋 · 주인 out/precision20-ui.js:effects(logo)
+   066 장면꾸미기 템플릿 카드의 베낀 채널 이름 삭제(이븐쇼핑·숏템 기본형·살림 · 주인 out/precision20-data.js:name
+   067 영상 관문의 비교 작업 선정: updated_at 최신 → '완성본을 최 · 주인 tools/editor_vs_final_video.py:_pick_jobs(비교 대상 선정
+   068 관제: 승인 판정(돈·회원 데이터)에서 테스트 파일(shopping_sh · 주인 tools/control.py:_approval_reasons(승인 필요 판정의 유일한 자
+   069 관제 수리 3건: ①영상 없는 카드 검사 종류(url/api/수동)로 자 · 주인 tools/live_check.py:run_all + tools/video_gate.py:
+   070 관제: finish 게이트의 서버 report(영상·자막·소리·캡컷 대조 · 주인 tools/video_gate.py:_keep_report(report 보관의 유일한 자리
+   071 영상 관문을 전후 비교로: 같은 작업을 main 코드·병합본 코드로 각각 · 주인 tools/video_gate.py:run_video_gate·judge
+   075 finish 게이트 구멍 2개: ①tools/ 테스트도 게이트에서 돈다( · 주인 tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 Veo는 global에 없다 — Veo 호출만 us-central1로(회 · 주인 shopping_shorts/vertex_route.py:veo_client
+   081 finish 시간 단축: ①기준선 전체 테스트 제거(실패만 main 재확 · 주인 tools/track.py:_merge_and_gate·_open_stage·_FileLo
+   083 finish 단축 후속: ①정확한 기준선(병합 때 전체 실패 목록을 코드 · 주인 tools/track.py:_merge_and_gate·main·finish + tools
+   085 관문 모듈 목록 6벌을 하나로: video_gate.PATCH_RELS· · 주인 tools/gate_modules.py:PATCH_MODULES·WATCH_FILES
+   088 finish: 다 된 것만 줄 선다 — 테스트·영상 관문을 줄 밖에서(C · 주인 tools/track.py:finish·_merge_and_gate·_gate_slot +
+   089 finish 시간 계측·재실행 제거: finish 로그에 시각+단계별 집 · 주인 tools/video_gate.py:run_video_gate + tools/track.p
+   090 영상 관문 작업 선정: 최근 6개 → 유형별(청소본 전부/일부/없음·효과 · 주인 tools/editor_vs_final_video.py:_pick_jobs
+   091 게이트 실패 분류 수리: 병합본 재확인(우연 실패 거르기)을 먼저·mai · 주인 tools/track.py:_classify_new_failures·_rerun_on_ma
+   092 finish 자원 관문+재시도 비용: 시험 시작 전 남은 메모리·CPU  · 주인 tools/track.py:_gate_slot·_merge_and_gate(재시도)
+   093 finish 판본: main 폴더(더러우면 동기화 막혀 51커밋 낡음)  · 주인 tools/track.py:_reexec_latest
+   094 인스타 팝업에서 담기·렌즈·채널수집 버튼과 속도창이 본문 글자를 가림 — · 주인 shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 버텍스 키 원클릭: 클라우드 셸 한 줄로 API·서비스계정·역할·키차단해 · 주인 shopping_shorts/static/landing/vertex_setup.sh
+   099 영상 관문이 완성본 한 장 번쩍임(다른 자리 그림 1프레임)을 못 잡는다 · 주인 tools/editor_vs_final_video.py(완성본 프레임 판정 — 관문·매일 
+   101 장면꾸미기 페이지 그림이 그 페이지 시각이 아니라 칸 대표 그림 한 장  · 주인 shopping_shorts/app.py:_beatframe_file
+   102 장면꾸미기 단어 강조 — 말하는 단어를 따라 박스·색 바뀜·살짝 키우기  · 주인 shopping_shorts/scene_style.py:context_for
+   103 장면꾸미기 글자 직접 조절 — 손으로 정한 크기는 그대로(자동 줄임·자동 · 주인 out/precision20-ui.js:addText
+   104 장면꾸미기 미리보기: 페이지 넘길 때 가림막이 먼저 끝나 보임(옛 그림  · 주인 out/precision20-ui.js:draw(장면 그림 교체)
+   105 고객 노출 자리에서 타사 이름(뇌전구·볼케이노) 전부 제거 — 효과음·밈 · 주인 shopping_shorts/scene_match.py:_has_pack
+   107 C 디스크가 계속 참: 관문 임시폴더(gate_child) 미정리 + 예 · 주인 tools/merge_gate.py:_run · tools/control.py:schedu
+   109 저장층 v3: 3일+ 안 쓴 것은 전부 D, 쓸 때 자동으로 C 복귀(트 · 주인 tools/storage.py:plan · tools/storage.py:ensure_wa
+   111 자막제거: 이미 지운 장면을 같은 방식으로 다시 골라 [자막제거 시작하기 · 주인 shopping_shorts/static/produce.html:paintCleanPick
+   112 에펙 고급효과 견본 — 카테고리별 대표 효과를 에펙으로 만들어 영상으로  · 주인 shopping_shorts/scene_style.py:render_layers
+   113 목소리 미리듣기: 음성 업체가 거절하면 500 대신 원인 안내(타입캐스트 · 주인 shopping_shorts/app.py:_tts_vendor_message
+   114 버퍼 예약 중복 방지 + 예약 취소 + 페이스북 거절 수리 · 주인 shopping_shorts/buffer_posts.py:already_scheduled
+   115 효과음 설정을 바꾼 뒤 완성본 만들기 탭을 눌러도 다시 안 만들어진다 — · 주인 shopping_shorts/static/scene_lab.html:sfxpSave
+   117 AI 장면 만들기 전에 프롬프트(한글+영어)를 보여주고 확인 후 진행 — · 주인 shopping_shorts/ai_scene.py:draft_scene
+   118 숏템메이커 사이드바에 관리자 전용 '효과 견본' 메뉴 — 에펙 견본 영상 · 주인 shopping_shorts/app.py:_fx_samples_page
+   120 스토리보드 장면 배선: 2단계 스토리보드 장면을 주인(ai_match.e · 주인 shopping_shorts/ai_match.py:ensure_cover
+   125 자막팩 1단계: 효과 견본 화면에 관리자 판정 달기 — 견본마다 쓸 것/ · 주인 shopping_shorts/app.py:_fx_verdicts_path
+   128 대화형대본: 묻고답하기·나레이션+인물 한마디 쇼핑 대본 (1단계 샘플) · 주인 shopping_shorts/story_writer.py:make_drafts
+   131 장면꾸미기 로고 자동 최종기억 — 마지막에 쓴 로고(그림·자리·크기)가  · 주인 out/precision20-ui.js:effect(로고 기억)
+   133 장면꾸미기 미리보기에 유튜브 쇼츠 화면(채널명·제목·링크 칸) 겹쳐보기  · 주인 out/scene-style-decorations.js:YT_SHORTS_UI
+   134 썰쇼핑 탭을 사장님이 고른 110채널로 정리 · 주인 shopping_shorts/store.py:_apply_overrides
+   137 유튜브 레퍼런스랭킹 '역대 히트작' 자리에 채널별 터진 영상 탭 + 유형 · 주인 shopping_shorts/ranking.py:pick_channel_hits
+   138 자동 배치 후보 거르기에 주인 세우기 — 씨앗 컷이 자동 컷에 새는 것( · 주인 shopping_shorts/edit_plan.py:non_edge_segs
+   139 감정짤 자동 배치: 스토리보드 신호어 [1]·[3] 줄 맨 앞에 짤(길이 · 주인 shopping_shorts/storyboard.py:meme_slots
+   140 제작소 .btn 디자인 없음 — 8단계 버튼 3개 등 10곳이 브라우저  · 주인 shopping_shorts\static\produce.html;.btn-prev\.btn
+   142 PC 1대인데 2칸 꽉 참 — 유령 칸(1시간 미만 사용 후 버려진 칸) · 주인 shopping_shorts/store.py:Store.device_register
+   143 감정짤 화면: 좌측 메뉴 밈팩 페이지(감정별 보기·⭐회원별 우선 짤) + · 주인 shopping_shorts/storyboard.py:meme_slots
+   144 등장 효과팩 20종: 자막 스타일 6종(모양만)과 분리, 회원별 자동 배 · 주인 out/precision20-ui.js:captionMotionKey
+   145 1단계 재료 영상 상한 8→15 · 주인 shopping_shorts/script_generate.py:SOURCE_MAX
+   146 3단계 배경음 탭: 쇼츠 BGM 10곡 목록(유튜브 i7dN6pSQPEE · 주인 shopping_shorts/mix_pipeline.py:resolve_deco_media
+   147 1단계에서 씨앗 고르기 + 스토리보드 재료·씨앗 신선도(씨앗 전 미리만들 · 주인 shopping_shorts/static/produce.html:setSeed
+   150 유튜브 쇼츠 화면에서 담기 버튼 사라짐 + 검색 카드 📥가 마우스 올리면 · 주인 shopping_shorts/userscript/grab_logic.js:_floatWan
+   151 인스타 검색화면 한→영 검색창·비슷한 검색어 칩·게시물 관련 검색어 · 주인 shopping_shorts/video_analysis.py:expand_search_ke
+   153 심효진(451) 회사 키 면제 해제 — 회사 일레븐 키 대신 본인 타입캐 · 주인 shopping_shorts/keyroute.py:BLOCK_EXEMPT_CIDS
+   154 장면꾸미기 효과 탭 정리: 쇼핑 안내 세트→구매링크 숏폼 안내(이름) · · 주인 out/scene-style-connect.js:sceneFx
+   155 캡컷 영상 위치를 완성본과 맞춤 — 장면꾸미기 영상이 캡컷에서 완성본보다 · 주인 shopping_shorts/scene_style.py:media_geometry
+   156 담기프로그램 상시 트랙 — 인스타 검색·담기 업데이트 작업장 · 주인 shopping_shorts/app.py
+   157 병합 급행(우선순위)·재시도 줄이기 · 주인 tools/track.py:_queue_rank
+   158 강조효과 프리셋 + 내 프리셋에서 강조효과 빼기 · 주인 out/precision20-ui.js:autoFxKinds
+   159 버텍스 전환 — 사장님 1~3단계 전부 버텍스 · 고객은 10-08 13 · 주인 shopping_shorts/vertex_route.py:on
+   160 2단계 스토리보드 빈 화면: 1단계에서 영상을 뺀 뒤 만든 스토리보드에  · 주인 shopping_shorts/static/produce.html:sbGone
+   161 씨앗 영상도 2단계 스토리보드에 배치하기 버튼(1단계 씨앗 영상 줄에서  · 주인 shopping_shorts/storyboard.py:_materials
+   162 해외채널 레퍼런스 추적 — 원테이크 쇼츠의 원본 영상·채널 찾기 연구 · 주인 tools/overseas_ref/(연구)
+   163 장면꾸미기 제목 길이 초과 시 적용 막힘 해제 · 주인 out/scene-style-connect.js:primary click
+   165 3단계 짤 카드 ✕ 삭제 안됨 + 고객 배경음 목록 없음 · 주인 shopping_shorts/static/scene_lab.html:dropCutFromB
+   166 2단계 스토리보드 썸네일 깨짐(분석 캐시 영상 폴더 치워짐) · 주인 shopping_shorts/app.py:_sb_seg_src
+   167 오늘 제작 현황: 30초마다 목록을 통째로 다시 그려 보던 영상이 끊김 · 주인 shopping_shorts/static/admin_production.html:rende
+   171 분석 신호등 조회가 웹 서버 CPU 89%를 먹는다 — 영상마다 DB 연 · 주인 shopping_shorts/app.py:_analysis_state
+   173 DB 잠금 시 사이트 전체 멈춤 방지 — 요청마다 하는 접속기록 쓰기(_ · 주인 shopping_shorts/app.py:_auth_guard
+   174 담기 확장: 검색 썸네일에 한국어 설명 한 줄(크롬 무료 번역, 7플랫폼 · 주인 shopping_shorts/userscript/grab_logic.js:_cardKo
+   175 카드 영상 한 번에 하나만 재생(유튜브 동시재생 초과 일시중지) · 주인 shopping_shorts/static/sidebar.js:playOnlyThis
+   177 도우인 검색 격자에 카드 담기(📥)가 안 붙는다 · 주인 shopping_shorts/userscript/grab_logic.js:_douyinMa
+   178 강조효과 확대 3종 기본 크기 2배→1.3배 · 주인 out/precision20-ui.js:REF_FX.emphZoom
+   180 관제 보드 승인목록: 병합된 카드 제외·사유 표시 · 주인 shopping_shorts/static/admin.html:_ctlNeeds
+   182 꾸미기 적용범위 '골라서'(장면 여러 개 선택·빼기) · 주인 shopping_shorts/deco_frame.py:_scene_of_raw
+   183 장면꾸미기 내 프리셋 계정(서버) 저장 — 크롬 데이터 지워지면 프리셋  · 주인 shopping_shorts/app.py:api_produce_presets_set (+p
+   184 PC 2칸 꽉참 재발(윤주홍·이경원·이성택) — 같은 PC 쿠키손실·오래 · 주인 shopping_shorts/store.py:Store.device_register
+   185 유튜브제작 관리자 페이지 — 씬별 대사·준비체크·자료·녹음·TTS · 주인 shopping_shorts/app.py:_yt_studio_op
+   186 소리만 바꿔도 작업 전체 잠김·1단계로 떨어짐(이성택) — 미리보기 무효 · 주인 shopping_shorts/static/produce.html:canGoNext
+   187 장면꾸미기 강조색 팔레트(모든 색) · 주인 out/precision20-ui.js:word-fx-colors
+   188 계좌이체 화면·구글 신청서에 남은 1기 77만원 → 2기 88만원 · 주인 설정 deposit_note(app.py:_deposit_body) · 구글폼 1j7DEO
+[2026-10-13 01:41:11] ■ 끝 rc=0
+[2026-10-13 02:41:01] ▶ tools\live_check.py --all
+[2026-10-13 02:41]
+수동 확인 대기 106장 — 사장님이 보고 닫는다: py tools/control.py status <번호> 완료  (또는 검사 칸: py tools/control.py set <번호> 검사 "url /경로 글자")
+   002 영향 지도 tools/impact.py — 호출 그래프로 소비처·검사·승 · 주인 tools/impact.py(신설)
+   003 라이브 실측 파이프라인 tools/live_check.py --card  · 주인 tools/live_check.py(신설)
+   023 저장 층(C/D) 관제 — 외장 D:\숏템 을 지도(관제/storage. · 주인 tools/storage.py:plan
+   025 심효진(451) 음성 차단 면제 — 사장님 일레븐 키 개방 · 주인 shopping_shorts/keyroute.py:is_block_exempt
+   030 장면꾸미기 글자 두께·그림자 슬라이더·수치 · 주인 out/precision20-ui.js:drawFontSets
+   031 job 실패 시 1단계 잠금 문구 대신 실패 사유 표시 · 주인 shopping_shorts/static/produce.html:stepLockMsg
+   032 새 편집기 채널명 기본값=계정 내 채널명(프리셋 적용 시 숏템메이커로 돌 · 주인 shopping_shorts/scene_style.py:account_channel
+   035 서버 디스크 가득 참 재발 방지(find_frames 청소·디스크 경보· · 주인 shopping_shorts/disk_cleanup.py:run
+   036 장면꾸미기 썸네일 동일 그림자·대상별 분리 · 주인 out/precision20-ui.js:drawFontSets
+   037 finish 병합 구조 개선: 비코드 커밋 경쟁 시 재검사 생략 + 기준 · 주인 tools/track.py:finish
+   040 장면꾸미기 제목·채널명 그림자 미적용 및 시각 개선 · 주인 out/precision20-ui.js:applyTextLook
+   041 타입캐스트 키만 있는 회원 기본 성우 = 필재(일레븐 기본값으로 3단계  · 주인 shopping_shorts/store.py:get_last_voice
+   044 2단계 대본 칸 추가·이동(모든 안) + 빈 칸이 장면 출처 줄맞춤 깨는 · 주인 shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA 자르기 — 역할이름 누락(댓글유도·call_to_action) + · 주인 shopping_shorts/edit_plan.py:_is_cta
+   048 즐겨찾기 분석상태 요청이 주소 한도(8190B) 초과로 414 — 즐겨찾 · 주인 shopping_shorts/static/collection.html:loadAnalysi
+   050 버텍스 등록이 다 막힘 — 조직정책(키 생성 차단) 안내 추가 + 거절  · 주인 shopping_shorts/vertex_route.py:verify_sa
+   051 주장 번호 태깅 시험(경쟁사식 장면 매칭 검증) · 주인 tools/claim_trial_video.py:run
+   052 영상 관문이 음성 라인 모듈도 병합본으로 얹게(관제 049 선행) · 주인 tools/video_gate.py:PATCH_RELS
+   053 버텍스 '권한 없음' 오진 — 결제 미연결을 역할 문제로 안내함. 오류  · 주인 shopping_shorts/vertex_route.py:_explain
+   054 레퍼런스 추적 카드에서 대본 분석 후 검색어가 사라짐(프레임 없이 검색어 · 주인 shopping_shorts/static/index.html:traceByUrl (서버 t
+   057 장면꾸미기 새 편집기 글자 가독성(설명·메뉴 진하게·키움) · 주인 out/precision20-ui.css:가독성 블록
+   058 장면꾸미기 틀 선택 4종: 썰훅고정/썰훅+본문/썰본문/전장면고정 (fra · 주인 shopping_shorts/scene_style.py:context_for
+   060 유튜브 검색결과(렌즈 키워드검색)에서 쇼츠 카드 담기 · 주인 shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 영상 파일 전송을 파이썬 대신 아파치가(X-Sendfile) — 웹 프로 · 주인 shopping_shorts/app.py:_send_media(영상·합본·미리보기·완성본 
+   064 썸네일 프록시 죽은 주소 기억 5분→확정 404/403은 60분(점진)  · 주인 shopping_shorts/app.py:_thumb_neg_put·api_thumb 실패
+   065 장면꾸미기 효과 탭 로고 항목(파일 불러오기, 썸네일 맨 위, 내 프리셋 · 주인 out/precision20-ui.js:effects(logo)
+   066 장면꾸미기 템플릿 카드의 베낀 채널 이름 삭제(이븐쇼핑·숏템 기본형·살림 · 주인 out/precision20-data.js:name
+   067 영상 관문의 비교 작업 선정: updated_at 최신 → '완성본을 최 · 주인 tools/editor_vs_final_video.py:_pick_jobs(비교 대상 선정
+   068 관제: 승인 판정(돈·회원 데이터)에서 테스트 파일(shopping_sh · 주인 tools/control.py:_approval_reasons(승인 필요 판정의 유일한 자
+   069 관제 수리 3건: ①영상 없는 카드 검사 종류(url/api/수동)로 자 · 주인 tools/live_check.py:run_all + tools/video_gate.py:
+   070 관제: finish 게이트의 서버 report(영상·자막·소리·캡컷 대조 · 주인 tools/video_gate.py:_keep_report(report 보관의 유일한 자리
+   071 영상 관문을 전후 비교로: 같은 작업을 main 코드·병합본 코드로 각각 · 주인 tools/video_gate.py:run_video_gate·judge
+   075 finish 게이트 구멍 2개: ①tools/ 테스트도 게이트에서 돈다( · 주인 tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 Veo는 global에 없다 — Veo 호출만 us-central1로(회 · 주인 shopping_shorts/vertex_route.py:veo_client
+   081 finish 시간 단축: ①기준선 전체 테스트 제거(실패만 main 재확 · 주인 tools/track.py:_merge_and_gate·_open_stage·_FileLo
+   083 finish 단축 후속: ①정확한 기준선(병합 때 전체 실패 목록을 코드 · 주인 tools/track.py:_merge_and_gate·main·finish + tools
+   085 관문 모듈 목록 6벌을 하나로: video_gate.PATCH_RELS· · 주인 tools/gate_modules.py:PATCH_MODULES·WATCH_FILES
+   088 finish: 다 된 것만 줄 선다 — 테스트·영상 관문을 줄 밖에서(C · 주인 tools/track.py:finish·_merge_and_gate·_gate_slot +
+   089 finish 시간 계측·재실행 제거: finish 로그에 시각+단계별 집 · 주인 tools/video_gate.py:run_video_gate + tools/track.p
+   090 영상 관문 작업 선정: 최근 6개 → 유형별(청소본 전부/일부/없음·효과 · 주인 tools/editor_vs_final_video.py:_pick_jobs
+   091 게이트 실패 분류 수리: 병합본 재확인(우연 실패 거르기)을 먼저·mai · 주인 tools/track.py:_classify_new_failures·_rerun_on_ma
+   092 finish 자원 관문+재시도 비용: 시험 시작 전 남은 메모리·CPU  · 주인 tools/track.py:_gate_slot·_merge_and_gate(재시도)
+   093 finish 판본: main 폴더(더러우면 동기화 막혀 51커밋 낡음)  · 주인 tools/track.py:_reexec_latest
+   094 인스타 팝업에서 담기·렌즈·채널수집 버튼과 속도창이 본문 글자를 가림 — · 주인 shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 버텍스 키 원클릭: 클라우드 셸 한 줄로 API·서비스계정·역할·키차단해 · 주인 shopping_shorts/static/landing/vertex_setup.sh
+   099 영상 관문이 완성본 한 장 번쩍임(다른 자리 그림 1프레임)을 못 잡는다 · 주인 tools/editor_vs_final_video.py(완성본 프레임 판정 — 관문·매일 
+   101 장면꾸미기 페이지 그림이 그 페이지 시각이 아니라 칸 대표 그림 한 장  · 주인 shopping_shorts/app.py:_beatframe_file
+   102 장면꾸미기 단어 강조 — 말하는 단어를 따라 박스·색 바뀜·살짝 키우기  · 주인 shopping_shorts/scene_style.py:context_for
+   103 장면꾸미기 글자 직접 조절 — 손으로 정한 크기는 그대로(자동 줄임·자동 · 주인 out/precision20-ui.js:addText
+   104 장면꾸미기 미리보기: 페이지 넘길 때 가림막이 먼저 끝나 보임(옛 그림  · 주인 out/precision20-ui.js:draw(장면 그림 교체)
+   105 고객 노출 자리에서 타사 이름(뇌전구·볼케이노) 전부 제거 — 효과음·밈 · 주인 shopping_shorts/scene_match.py:_has_pack
+   107 C 디스크가 계속 참: 관문 임시폴더(gate_child) 미정리 + 예 · 주인 tools/merge_gate.py:_run · tools/control.py:schedu
+   109 저장층 v3: 3일+ 안 쓴 것은 전부 D, 쓸 때 자동으로 C 복귀(트 · 주인 tools/storage.py:plan · tools/storage.py:ensure_wa
+   111 자막제거: 이미 지운 장면을 같은 방식으로 다시 골라 [자막제거 시작하기 · 주인 shopping_shorts/static/produce.html:paintCleanPick
+   112 에펙 고급효과 견본 — 카테고리별 대표 효과를 에펙으로 만들어 영상으로  · 주인 shopping_shorts/scene_style.py:render_layers
+   113 목소리 미리듣기: 음성 업체가 거절하면 500 대신 원인 안내(타입캐스트 · 주인 shopping_shorts/app.py:_tts_vendor_message
+   114 버퍼 예약 중복 방지 + 예약 취소 + 페이스북 거절 수리 · 주인 shopping_shorts/buffer_posts.py:already_scheduled
+   115 효과음 설정을 바꾼 뒤 완성본 만들기 탭을 눌러도 다시 안 만들어진다 — · 주인 shopping_shorts/static/scene_lab.html:sfxpSave
+   117 AI 장면 만들기 전에 프롬프트(한글+영어)를 보여주고 확인 후 진행 — · 주인 shopping_shorts/ai_scene.py:draft_scene
+   118 숏템메이커 사이드바에 관리자 전용 '효과 견본' 메뉴 — 에펙 견본 영상 · 주인 shopping_shorts/app.py:_fx_samples_page
+   120 스토리보드 장면 배선: 2단계 스토리보드 장면을 주인(ai_match.e · 주인 shopping_shorts/ai_match.py:ensure_cover
+   125 자막팩 1단계: 효과 견본 화면에 관리자 판정 달기 — 견본마다 쓸 것/ · 주인 shopping_shorts/app.py:_fx_verdicts_path
+   128 대화형대본: 묻고답하기·나레이션+인물 한마디 쇼핑 대본 (1단계 샘플) · 주인 shopping_shorts/story_writer.py:make_drafts
+   131 장면꾸미기 로고 자동 최종기억 — 마지막에 쓴 로고(그림·자리·크기)가  · 주인 out/precision20-ui.js:effect(로고 기억)
+   133 장면꾸미기 미리보기에 유튜브 쇼츠 화면(채널명·제목·링크 칸) 겹쳐보기  · 주인 out/scene-style-decorations.js:YT_SHORTS_UI
+   134 썰쇼핑 탭을 사장님이 고른 110채널로 정리 · 주인 shopping_shorts/store.py:_apply_overrides
+   137 유튜브 레퍼런스랭킹 '역대 히트작' 자리에 채널별 터진 영상 탭 + 유형 · 주인 shopping_shorts/ranking.py:pick_channel_hits
+   138 자동 배치 후보 거르기에 주인 세우기 — 씨앗 컷이 자동 컷에 새는 것( · 주인 shopping_shorts/edit_plan.py:non_edge_segs
+   139 감정짤 자동 배치: 스토리보드 신호어 [1]·[3] 줄 맨 앞에 짤(길이 · 주인 shopping_shorts/storyboard.py:meme_slots
+   140 제작소 .btn 디자인 없음 — 8단계 버튼 3개 등 10곳이 브라우저  · 주인 shopping_shorts\static\produce.html;.btn-prev\.btn
+   142 PC 1대인데 2칸 꽉 참 — 유령 칸(1시간 미만 사용 후 버려진 칸) · 주인 shopping_shorts/store.py:Store.device_register
+   143 감정짤 화면: 좌측 메뉴 밈팩 페이지(감정별 보기·⭐회원별 우선 짤) + · 주인 shopping_shorts/storyboard.py:meme_slots
+   144 등장 효과팩 20종: 자막 스타일 6종(모양만)과 분리, 회원별 자동 배 · 주인 out/precision20-ui.js:captionMotionKey
+   145 1단계 재료 영상 상한 8→15 · 주인 shopping_shorts/script_generate.py:SOURCE_MAX
+   146 3단계 배경음 탭: 쇼츠 BGM 10곡 목록(유튜브 i7dN6pSQPEE · 주인 shopping_shorts/mix_pipeline.py:resolve_deco_media
+   147 1단계에서 씨앗 고르기 + 스토리보드 재료·씨앗 신선도(씨앗 전 미리만들 · 주인 shopping_shorts/static/produce.html:setSeed
+   150 유튜브 쇼츠 화면에서 담기 버튼 사라짐 + 검색 카드 📥가 마우스 올리면 · 주인 shopping_shorts/userscript/grab_logic.js:_floatWan
+   151 인스타 검색화면 한→영 검색창·비슷한 검색어 칩·게시물 관련 검색어 · 주인 shopping_shorts/video_analysis.py:expand_search_ke
+   153 심효진(451) 회사 키 면제 해제 — 회사 일레븐 키 대신 본인 타입캐 · 주인 shopping_shorts/keyroute.py:BLOCK_EXEMPT_CIDS
+   154 장면꾸미기 효과 탭 정리: 쇼핑 안내 세트→구매링크 숏폼 안내(이름) · · 주인 out/scene-style-connect.js:sceneFx
+   155 캡컷 영상 위치를 완성본과 맞춤 — 장면꾸미기 영상이 캡컷에서 완성본보다 · 주인 shopping_shorts/scene_style.py:media_geometry
+   156 담기프로그램 상시 트랙 — 인스타 검색·담기 업데이트 작업장 · 주인 shopping_shorts/app.py
+   157 병합 급행(우선순위)·재시도 줄이기 · 주인 tools/track.py:_queue_rank
+   158 강조효과 프리셋 + 내 프리셋에서 강조효과 빼기 · 주인 out/precision20-ui.js:autoFxKinds
+   159 버텍스 전환 — 사장님 1~3단계 전부 버텍스 · 고객은 10-08 13 · 주인 shopping_shorts/vertex_route.py:on
+   160 2단계 스토리보드 빈 화면: 1단계에서 영상을 뺀 뒤 만든 스토리보드에  · 주인 shopping_shorts/static/produce.html:sbGone
+   161 씨앗 영상도 2단계 스토리보드에 배치하기 버튼(1단계 씨앗 영상 줄에서  · 주인 shopping_shorts/storyboard.py:_materials
+   162 해외채널 레퍼런스 추적 — 원테이크 쇼츠의 원본 영상·채널 찾기 연구 · 주인 tools/overseas_ref/(연구)
+   163 장면꾸미기 제목 길이 초과 시 적용 막힘 해제 · 주인 out/scene-style-connect.js:primary click
+   165 3단계 짤 카드 ✕ 삭제 안됨 + 고객 배경음 목록 없음 · 주인 shopping_shorts/static/scene_lab.html:dropCutFromB
+   166 2단계 스토리보드 썸네일 깨짐(분석 캐시 영상 폴더 치워짐) · 주인 shopping_shorts/app.py:_sb_seg_src
+   167 오늘 제작 현황: 30초마다 목록을 통째로 다시 그려 보던 영상이 끊김 · 주인 shopping_shorts/static/admin_production.html:rende
+   171 분석 신호등 조회가 웹 서버 CPU 89%를 먹는다 — 영상마다 DB 연 · 주인 shopping_shorts/app.py:_analysis_state
+   173 DB 잠금 시 사이트 전체 멈춤 방지 — 요청마다 하는 접속기록 쓰기(_ · 주인 shopping_shorts/app.py:_auth_guard
+   174 담기 확장: 검색 썸네일에 한국어 설명 한 줄(크롬 무료 번역, 7플랫폼 · 주인 shopping_shorts/userscript/grab_logic.js:_cardKo
+   175 카드 영상 한 번에 하나만 재생(유튜브 동시재생 초과 일시중지) · 주인 shopping_shorts/static/sidebar.js:playOnlyThis
+   177 도우인 검색 격자에 카드 담기(📥)가 안 붙는다 · 주인 shopping_shorts/userscript/grab_logic.js:_douyinMa
+   178 강조효과 확대 3종 기본 크기 2배→1.3배 · 주인 out/precision20-ui.js:REF_FX.emphZoom
+   180 관제 보드 승인목록: 병합된 카드 제외·사유 표시 · 주인 shopping_shorts/static/admin.html:_ctlNeeds
+   182 꾸미기 적용범위 '골라서'(장면 여러 개 선택·빼기) · 주인 shopping_shorts/deco_frame.py:_scene_of_raw
+   183 장면꾸미기 내 프리셋 계정(서버) 저장 — 크롬 데이터 지워지면 프리셋  · 주인 shopping_shorts/app.py:api_produce_presets_set (+p
+   184 PC 2칸 꽉참 재발(윤주홍·이경원·이성택) — 같은 PC 쿠키손실·오래 · 주인 shopping_shorts/store.py:Store.device_register
+   185 유튜브제작 관리자 페이지 — 씬별 대사·준비체크·자료·녹음·TTS · 주인 shopping_shorts/app.py:_yt_studio_op
+   186 소리만 바꿔도 작업 전체 잠김·1단계로 떨어짐(이성택) — 미리보기 무효 · 주인 shopping_shorts/static/produce.html:canGoNext
+   187 장면꾸미기 강조색 팔레트(모든 색) · 주인 out/precision20-ui.js:word-fx-colors
+   188 계좌이체 화면·구글 신청서에 남은 1기 77만원 → 2기 88만원 · 주인 설정 deposit_note(app.py:_deposit_body) · 구글폼 1j7DEO
+[2026-10-13 02:41:12] ■ 끝 rc=0
+[2026-10-13 03:41:01] ▶ tools\live_check.py --all
+[2026-10-13 03:41]
+수동 확인 대기 106장 — 사장님이 보고 닫는다: py tools/control.py status <번호> 완료  (또는 검사 칸: py tools/control.py set <번호> 검사 "url /경로 글자")
+   002 영향 지도 tools/impact.py — 호출 그래프로 소비처·검사·승 · 주인 tools/impact.py(신설)
+   003 라이브 실측 파이프라인 tools/live_check.py --card  · 주인 tools/live_check.py(신설)
+   023 저장 층(C/D) 관제 — 외장 D:\숏템 을 지도(관제/storage. · 주인 tools/storage.py:plan
+   025 심효진(451) 음성 차단 면제 — 사장님 일레븐 키 개방 · 주인 shopping_shorts/keyroute.py:is_block_exempt
+   030 장면꾸미기 글자 두께·그림자 슬라이더·수치 · 주인 out/precision20-ui.js:drawFontSets
+   031 job 실패 시 1단계 잠금 문구 대신 실패 사유 표시 · 주인 shopping_shorts/static/produce.html:stepLockMsg
+   032 새 편집기 채널명 기본값=계정 내 채널명(프리셋 적용 시 숏템메이커로 돌 · 주인 shopping_shorts/scene_style.py:account_channel
+   035 서버 디스크 가득 참 재발 방지(find_frames 청소·디스크 경보· · 주인 shopping_shorts/disk_cleanup.py:run
+   036 장면꾸미기 썸네일 동일 그림자·대상별 분리 · 주인 out/precision20-ui.js:drawFontSets
+   037 finish 병합 구조 개선: 비코드 커밋 경쟁 시 재검사 생략 + 기준 · 주인 tools/track.py:finish
+   040 장면꾸미기 제목·채널명 그림자 미적용 및 시각 개선 · 주인 out/precision20-ui.js:applyTextLook
+   041 타입캐스트 키만 있는 회원 기본 성우 = 필재(일레븐 기본값으로 3단계  · 주인 shopping_shorts/store.py:get_last_voice
+   044 2단계 대본 칸 추가·이동(모든 안) + 빈 칸이 장면 출처 줄맞춤 깨는 · 주인 shopping_shorts/static/produce.html:s2DraftContrac
+   045 CTA 자르기 — 역할이름 누락(댓글유도·call_to_action) + · 주인 shopping_shorts/edit_plan.py:_is_cta
+   048 즐겨찾기 분석상태 요청이 주소 한도(8190B) 초과로 414 — 즐겨찾 · 주인 shopping_shorts/static/collection.html:loadAnalysi
+   050 버텍스 등록이 다 막힘 — 조직정책(키 생성 차단) 안내 추가 + 거절  · 주인 shopping_shorts/vertex_route.py:verify_sa
+   051 주장 번호 태깅 시험(경쟁사식 장면 매칭 검증) · 주인 tools/claim_trial_video.py:run
+   052 영상 관문이 음성 라인 모듈도 병합본으로 얹게(관제 049 선행) · 주인 tools/video_gate.py:PATCH_RELS
+   053 버텍스 '권한 없음' 오진 — 결제 미연결을 역할 문제로 안내함. 오류  · 주인 shopping_shorts/vertex_route.py:_explain
+   054 레퍼런스 추적 카드에서 대본 분석 후 검색어가 사라짐(프레임 없이 검색어 · 주인 shopping_shorts/static/index.html:traceByUrl (서버 t
+   057 장면꾸미기 새 편집기 글자 가독성(설명·메뉴 진하게·키움) · 주인 out/precision20-ui.css:가독성 블록
+   058 장면꾸미기 틀 선택 4종: 썰훅고정/썰훅+본문/썰본문/전장면고정 (fra · 주인 shopping_shorts/scene_style.py:context_for
+   060 유튜브 검색결과(렌즈 키워드검색)에서 쇼츠 카드 담기 · 주인 shopping_shorts/userscript/grab_logic.js:addAnchor
+   062 영상 파일 전송을 파이썬 대신 아파치가(X-Sendfile) — 웹 프로 · 주인 shopping_shorts/app.py:_send_media(영상·합본·미리보기·완성본 
+   064 썸네일 프록시 죽은 주소 기억 5분→확정 404/403은 60분(점진)  · 주인 shopping_shorts/app.py:_thumb_neg_put·api_thumb 실패
+   065 장면꾸미기 효과 탭 로고 항목(파일 불러오기, 썸네일 맨 위, 내 프리셋 · 주인 out/precision20-ui.js:effects(logo)
+   066 장면꾸미기 템플릿 카드의 베낀 채널 이름 삭제(이븐쇼핑·숏템 기본형·살림 · 주인 out/precision20-data.js:name
+   067 영상 관문의 비교 작업 선정: updated_at 최신 → '완성본을 최 · 주인 tools/editor_vs_final_video.py:_pick_jobs(비교 대상 선정
+   068 관제: 승인 판정(돈·회원 데이터)에서 테스트 파일(shopping_sh · 주인 tools/control.py:_approval_reasons(승인 필요 판정의 유일한 자
+   069 관제 수리 3건: ①영상 없는 카드 검사 종류(url/api/수동)로 자 · 주인 tools/live_check.py:run_all + tools/video_gate.py:
+   070 관제: finish 게이트의 서버 report(영상·자막·소리·캡컷 대조 · 주인 tools/video_gate.py:_keep_report(report 보관의 유일한 자리
+   071 영상 관문을 전후 비교로: 같은 작업을 main 코드·병합본 코드로 각각 · 주인 tools/video_gate.py:run_video_gate·judge
+   075 finish 게이트 구멍 2개: ①tools/ 테스트도 게이트에서 돈다( · 주인 tools/merge_gate.py:snapshot + tools/track.py:_mer
+   076 Veo는 global에 없다 — Veo 호출만 us-central1로(회 · 주인 shopping_shorts/vertex_route.py:veo_client
+   081 finish 시간 단축: ①기준선 전체 테스트 제거(실패만 main 재확 · 주인 tools/track.py:_merge_and_gate·_open_stage·_FileLo
+   083 finish 단축 후속: ①정확한 기준선(병합 때 전체 실패 목록을 코드 · 주인 tools/track.py:_merge_and_gate·main·finish + tools
+   085 관문 모듈 목록 6벌을 하나로: video_gate.PATCH_RELS· · 주인 tools/gate_modules.py:PATCH_MODULES·WATCH_FILES
+   088 finish: 다 된 것만 줄 선다 — 테스트·영상 관문을 줄 밖에서(C · 주인 tools/track.py:finish·_merge_and_gate·_gate_slot +
+   089 finish 시간 계측·재실행 제거: finish 로그에 시각+단계별 집 · 주인 tools/video_gate.py:run_video_gate + tools/track.p
+   090 영상 관문 작업 선정: 최근 6개 → 유형별(청소본 전부/일부/없음·효과 · 주인 tools/editor_vs_final_video.py:_pick_jobs
+   091 게이트 실패 분류 수리: 병합본 재확인(우연 실패 거르기)을 먼저·mai · 주인 tools/track.py:_classify_new_failures·_rerun_on_ma
+   092 finish 자원 관문+재시도 비용: 시험 시작 전 남은 메모리·CPU  · 주인 tools/track.py:_gate_slot·_merge_and_gate(재시도)
+   093 finish 판본: main 폴더(더러우면 동기화 막혀 51커밋 낡음)  · 주인 tools/track.py:_reexec_latest
+   094 인스타 팝업에서 담기·렌즈·채널수집 버튼과 속도창이 본문 글자를 가림 — · 주인 shopping_shorts/userscript/grab_logic.js:_dockAnch
+   096 버텍스 키 원클릭: 클라우드 셸 한 줄로 API·서비스계정·역할·키차단해 · 주인 shopping_shorts/static/landing/vertex_setup.sh
+   099 영상 관문이 완성본 한 장 번쩍임(다른 자리 그림 1프레임)을 못 잡는다 · 주인 tools/editor_vs_final_video.py(완성본 프레임 판정 — 관문·매일 
+   101 장면꾸미기 페이지 그림이 그 페이지 시각이 아니라 칸 대표 그림 한 장  · 주인 shopping_shorts/app.py:_beatframe_file
+   102 장면꾸미기 단어 강조 — 말하는 단어를 따라 박스·색 바뀜·살짝 키우기  · 주인 shopping_shorts/scene_style.py:context_for
+   103 장면꾸미기 글자 직접 조절 — 손으로 정한 크기는 그대로(자동 줄임·자동 · 주인 out/precision20-ui.js:addText
+   104 장면꾸미기 미리보기: 페이지 넘길 때 가림막이 먼저 끝나 보임(옛 그림  · 주인 out/precision20-ui.js:draw(장면 그림 교체)
+   105 고객 노출 자리에서 타사 이름(뇌전구·볼케이노) 전부 제거 — 효과음·밈 · 주인 shopping_shorts/scene_match.py:_has_pack
+   107 C 디스크가 계속 참: 관문 임시폴더(gate_child) 미정리 + 예 · 주인 tools/merge_gate.py:_run · tools/control.py:schedu
+   109 저장층 v3: 3일+ 안 쓴 것은 전부 D, 쓸 때 자동으로 C 복귀(트 · 주인 tools/storage.py:plan · tools/storage.py:ensure_wa
+   111 자막제거: 이미 지운 장면을 같은 방식으로 다시 골라 [자막제거 시작하기 · 주인 shopping_shorts/static/produce.html:paintCleanPick
+   112 에펙 고급효과 견본 — 카테고리별 대표 효과를 에펙으로 만들어 영상으로  · 주인 shopping_shorts/scene_style.py:render_layers
+   113 목소리 미리듣기: 음성 업체가 거절하면 500 대신 원인 안내(타입캐스트 · 주인 shopping_shorts/app.py:_tts_vendor_message
+   114 버퍼 예약 중복 방지 + 예약 취소 + 페이스북 거절 수리 · 주인 shopping_shorts/buffer_posts.py:already_scheduled
+   115 효과음 설정을 바꾼 뒤 완성본 만들기 탭을 눌러도 다시 안 만들어진다 — · 주인 shopping_shorts/static/scene_lab.html:sfxpSave
+   117 AI 장면 만들기 전에 프롬프트(한글+영어)를 보여주고 확인 후 진행 — · 주인 shopping_shorts/ai_scene.py:draft_scene
+   118 숏템메이커 사이드바에 관리자 전용 '효과 견본' 메뉴 — 에펙 견본 영상 · 주인 shopping_shorts/app.py:_fx_samples_page
+   120 스토리보드 장면 배선: 2단계 스토리보드 장면을 주인(ai_match.e · 주인 shopping_shorts/ai_match.py:ensure_cover
+   125 자막팩 1단계: 효과 견본 화면에 관리자 판정 달기 — 견본마다 쓸 것/ · 주인 shopping_shorts/app.py:_fx_verdicts_path
+   128 대화형대본: 묻고답하기·나레이션+인물 한마디 쇼핑 대본 (1단계 샘플) · 주인 shopping_shorts/story_writer.py:make_drafts
+   131 장면꾸미기 로고 자동 최종기억 — 마지막에 쓴 로고(그림·자리·크기)가  · 주인 out/precision20-ui.js:effect(로고 기억)
+   133 장면꾸미기 미리보기에 유튜브 쇼츠 화면(채널명·제목·링크 칸) 겹쳐보기  · 주인 out/scene-style-decorations.js:YT_SHORTS_UI
+   134 썰쇼핑 탭을 사장님이 고른 110채널로 정리 · 주인 shopping_shorts/store.py:_apply_overrides
+   137 유튜브 레퍼런스랭킹 '역대 히트작' 자리에 채널별 터진 영상 탭 + 유형 · 주인 shopping_shorts/ranking.py:pick_channel_hits
+   138 자동 배치 후보 거르기에 주인 세우기 — 씨앗 컷이 자동 컷에 새는 것( · 주인 shopping_shorts/edit_plan.py:non_edge_segs
+   139 감정짤 자동 배치: 스토리보드 신호어 [1]·[3] 줄 맨 앞에 짤(길이 · 주인 shopping_shorts/storyboard.py:meme_slots
+   140 제작소 .btn 디자인 없음 — 8단계 버튼 3개 등 10곳이 브라우저  · 주인 shopping_shorts\static\produce.html;.btn-prev\.btn
+   142 PC 1대인데 2칸 꽉 참 — 유령 칸(1시간 미만 사용 후 버려진 칸) · 주인 shopping_shorts/store.py:Store.device_register
+   143 감정짤 화면: 좌측 메뉴 밈팩 페이지(감정별 보기·⭐회원별 우선 짤) + · 주인 shopping_shorts/storyboard.py:meme_slots
+   144 등장 효과팩 20종: 자막 스타일 6종(모양만)과 분리, 회원별 자동 배 · 주인 out/precision20-ui.js:captionMotionKey
+   145 1단계 재료 영상 상한 8→15 · 주인 shopping_shorts/script_generate.py:SOURCE_MAX
+   146 3단계 배경음 탭: 쇼츠 BGM 10곡 목록(유튜브 i7dN6pSQPEE · 주인 shopping_shorts/mix_pipeline.py:resolve_deco_media
+   147 1단계에서 씨앗 고르기 + 스토리보드 재료·씨앗 신선도(씨앗 전 미리만들 · 주인 shopping_shorts/static/produce.html:setSeed
+   150 유튜브 쇼츠 화면에서 담기 버튼 사라짐 + 검색 카드 📥가 마우스 올리면 · 주인 shopping_shorts/userscript/grab_logic.js:_floatWan
+   151 인스타 검색화면 한→영 검색창·비슷한 검색어 칩·게시물 관련 검색어 · 주인 shopping_shorts/video_analysis.py:expand_search_ke
+   153 심효진(451) 회사 키 면제 해제 — 회사 일레븐 키 대신 본인 타입캐 · 주인 shopping_shorts/keyroute.py:BLOCK_EXEMPT_CIDS
+   154 장면꾸미기 효과 탭 정리: 쇼핑 안내 세트→구매링크 숏폼 안내(이름) · · 주인 out/scene-style-connect.js:sceneFx
+   155 캡컷 영상 위치를 완성본과 맞춤 — 장면꾸미기 영상이 캡컷에서 완성본보다 · 주인 shopping_shorts/scene_style.py:media_geometry
+   156 담기프로그램 상시 트랙 — 인스타 검색·담기 업데이트 작업장 · 주인 shopping_shorts/app.py
+   157 병합 급행(우선순위)·재시도 줄이기 · 주인 tools/track.py:_queue_rank
+   158 강조효과 프리셋 + 내 프리셋에서 강조효과 빼기 · 주인 out/precision20-ui.js:autoFxKinds
+   159 버텍스 전환 — 사장님 1~3단계 전부 버텍스 · 고객은 10-08 13 · 주인 shopping_shorts/vertex_route.py:on
+   160 2단계 스토리보드 빈 화면: 1단계에서 영상을 뺀 뒤 만든 스토리보드에  · 주인 shopping_shorts/static/produce.html:sbGone
+   161 씨앗 영상도 2단계 스토리보드에 배치하기 버튼(1단계 씨앗 영상 줄에서  · 주인 shopping_shorts/storyboard.py:_materials
+   162 해외채널 레퍼런스 추적 — 원테이크 쇼츠의 원본 영상·채널 찾기 연구 · 주인 tools/overseas_ref/(연구)
+   163 장면꾸미기 제목 길이 초과 시 적용 막힘 해제 · 주인 out/scene-style-connect.js:primary click
+   165 3단계 짤 카드 ✕ 삭제 안됨 + 고객 배경음 목록 없음 · 주인 shopping_shorts/static/scene_lab.html:dropCutFromB
+   166 2단계 스토리보드 썸네일 깨짐(분석 캐시 영상 폴더 치워짐) · 주인 shopping_shorts/app.py:_sb_seg_src
+   167 오늘 제작 현황: 30초마다 목록을 통째로 다시 그려 보던 영상이 끊김 · 주인 shopping_shorts/static/admin_production.html:rende
+   171 분석 신호등 조회가 웹 서버 CPU 89%를 먹는다 — 영상마다 DB 연 · 주인 shopping_shorts/app.py:_analysis_state
+   173 DB 잠금 시 사이트 전체 멈춤 방지 — 요청마다 하는 접속기록 쓰기(_ · 주인 shopping_shorts/app.py:_auth_guard
+   174 담기 확장: 검색 썸네일에 한국어 설명 한 줄(크롬 무료 번역, 7플랫폼 · 주인 shopping_shorts/userscript/grab_logic.js:_cardKo
+   175 카드 영상 한 번에 하나만 재생(유튜브 동시재생 초과 일시중지) · 주인 shopping_shorts/static/sidebar.js:playOnlyThis
+   177 도우인 검색 격자에 카드 담기(📥)가 안 붙는다 · 주인 shopping_shorts/userscript/grab_logic.js:_douyinMa
+   178 강조효과 확대 3종 기본 크기 2배→1.3배 · 주인 out/precision20-ui.js:REF_FX.emphZoom
+   180 관제 보드 승인목록: 병합된 카드 제외·사유 표시 · 주인 shopping_shorts/static/admin.html:_ctlNeeds
+   182 꾸미기 적용범위 '골라서'(장면 여러 개 선택·빼기) · 주인 shopping_shorts/deco_frame.py:_scene_of_raw
+   183 장면꾸미기 내 프리셋 계정(서버) 저장 — 크롬 데이터 지워지면 프리셋  · 주인 shopping_shorts/app.py:api_produce_presets_set (+p
+   184 PC 2칸 꽉참 재발(윤주홍·이경원·이성택) — 같은 PC 쿠키손실·오래 · 주인 shopping_shorts/store.py:Store.device_register
+   185 유튜브제작 관리자 페이지 — 씬별 대사·준비체크·자료·녹음·TTS · 주인 shopping_shorts/app.py:_yt_studio_op
+   186 소리만 바꿔도 작업 전체 잠김·1단계로 떨어짐(이성택) — 미리보기 무효 · 주인 shopping_shorts/static/produce.html:canGoNext
+   187 장면꾸미기 강조색 팔레트(모든 색) · 주인 out/precision20-ui.js:word-fx-colors
+   188 계좌이체 화면·구글 신청서에 남은 1기 77만원 → 2기 88만원 · 주인 설정 deposit_note(app.py:_deposit_body) · 구글폼 1j7DEO
+[2026-10-13 03:41:12] ■ 끝 rc=0
