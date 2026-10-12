@@ -171,16 +171,16 @@
   let lastIndex=-1,context=null,saving=false;
   // 효과팩 번호를 바꾸면(관제 144) 자동으로 깐 장면 효과를 그 번호의 장면 효과로 다시 깐다 — 고객이 고른 장면은 그대로
   window.addEventListener('scene-style-motion-pack',()=>{if(!api.autoPlaced())return;api.autoPlace(false);if(api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));lastIndex=-1;api.show(api.geometry().sceneIndex);updateControls();sync();});
-  // 확대 이어받기(2026-10-12) — 같은 장면(beat_idx)의 다음 자막 칸이 자기 확대 없이 이어지면 앞 칸의 움직이는 확대를 이어받고
-  //   곡선은 묶음 전체 시간으로 한 번 돈다. 판단 주인은 서버 scene_style.zoom_runs(렌더·썸네일·캡컷) — 이건 미리보기용 같은 규칙.
+  // 확대 이어받기(2026-10-12 사장님 "한 컷이면 자막 2개든 3개든 이어지게") — 같은 컷(beat_idx)에 움직이는 확대가 있으면
+  //   컷의 첫 자막 시작~마지막 자막 끝 전체에 그 확대(컷 안 첫 번째 것)를 한 번만. 판단 주인은 서버 scene_style.zoom_runs — 이건 미리보기용 같은 규칙.
   const ZOOM_KEYS=['zoom','zoomIn','zoomMove','panX','panY'];
   function zoomRunOf(i){
-    const sc=api.context()?.scenes||[],own=k=>{const e=api.effectAt(k)||{};return {e,has:(Number(e.zoom)||1)>1.0001,moving:(Number(e.zoom)||1)>1.0001&&Number(e.zoomIn)>0};};
-    const me=own(i).e,cur=sc[i];let a=i;
-    while(a>0&&sc[a-1]?.beat_idx===cur?.beat_idx&&!own(a).has)a--;   // 자기 확대가 있는 칸 또는 비트 첫 칸에서 멈춘다
-    if(!cur||!own(a).moving)return {fx:me,off:0,dur:cur?cur.end-cur.start:0};
-    let b=a;while(sc[b+1]&&sc[b+1].beat_idx===sc[a].beat_idx&&!own(b+1).has)b++;
-    const src=own(a).e,fx={...me};ZOOM_KEYS.forEach(k=>{if(k in src)fx[k]=src[k];else delete fx[k];});
+    const sc=api.context()?.scenes||[],cur=sc[i],me=api.effectAt(i)||{};
+    if(!cur)return {fx:me,off:0,dur:0};
+    let a=i,b=i;while(a>0&&sc[a-1].beat_idx===cur.beat_idx)a--;while(b+1<sc.length&&sc[b+1].beat_idx===cur.beat_idx)b++;
+    let src=null;for(let k=a;k<=b&&!src;k++){const e=api.effectAt(k)||{};if((Number(e.zoom)||1)>1.0001&&Number(e.zoomIn)>0)src=e;}
+    if(!src)return {fx:me,off:0,dur:cur.end-cur.start};
+    const fx={...me};ZOOM_KEYS.forEach(k=>{delete fx[k];if(k in src)fx[k]=src[k];});
     return {fx,off:cur.start-sc[a].start,dur:sc[b].end-sc[a].start};
   }
   function sync(){

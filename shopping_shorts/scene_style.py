@@ -592,31 +592,27 @@ _ZOOM_KEYS=("zoom","zoomIn","zoomMove","panX","panY")
 
 
 def zoom_runs(scenes, effects):
-    """장면별 '확대에 쓸 효과·움직임 안의 위치' — 확대 이어받기의 판단 주인(2026-10-12 사장님 "한 장면인데 자막이 2개로 나뉘면
-    처음 건 확대되다가 두 번째에서 튀듯 되돌아온다"). 효과는 자막 칸(장면)마다 저장되고 강조 확대는 비트의 첫 칸에만 걸려,
-    같은 영상(같은 beat_idx)의 다음 칸이 1배로 돌아갔다. 규칙: 움직이는 확대(zoomIn>0)가 걸린 칸 뒤로 **같은 비트**의 칸이
-    **자기 확대 없이** 이어지면 그 확대를 이어받고, 곡선은 묶음 전체(run) 시간으로 한 번만 돈다(들어가기·당기기·끝에 돌아오기).
-    반환: 칸마다 (확대용 효과 dict, 묶음 시작에서 이 칸까지 초, 묶음 길이 초). 렌더(compose)·썸네일·캡컷(zoom_spans)과
-    편집기(scene-style-connect.js zoomRunOf — 같은 규칙)가 이 결과를 쓴다."""
+    """장면별 '확대에 쓸 효과·움직임 안의 위치' — 확대 이어받기의 판단 주인(2026-10-12 사장님 "한 컷이면 자막이 2개든 3개든
+    이어지게, 자막 처음과 끝을 정해서 확대"). 효과는 자막 칸마다 저장돼 칸이 바뀔 때 1배로 돌아가거나 다시 확대가 시작됐다.
+    규칙: 같은 컷(같은 beat_idx로 이어진 칸들)에 움직이는 확대(zoomIn>0)가 하나라도 있으면 그 컷의 **첫 자막 시작~마지막 자막 끝**
+    전체에 그 확대(컷 안 첫 번째 것)를 한 번만 건다. 반환: 칸마다 (확대용 효과 dict, 컷 시작에서 이 칸까지 초, 컷 길이 초).
+    렌더(compose)·썸네일·캡컷(zoom_spans)과 편집기(scene-style-connect.js zoomRunOf — 같은 규칙)가 이 결과를 쓴다."""
     effects=effects or {}
-    runs,run=[],None
-    for i,sc in enumerate(scenes):
-        e=effects.get(str(i)) or {}
-        own=float(e.get("zoom") or 1)>1.0001
-        if run is not None and not own and sc.get("beat_idx")==run["beat"]:
-            run["end"]=float(sc["end"])
-        elif own and float(e.get("zoomIn") or 0)>0:
-            run={"beat":sc.get("beat_idx"),"start":float(sc["start"]),"end":float(sc["end"]),"fx":{k:e[k] for k in _ZOOM_KEYS if k in e}}
-        else:
-            run=None
-        runs.append(run)
-    out=[]
-    for i,(sc,run) in enumerate(zip(scenes,runs)):
-        e=effects.get(str(i)) or {}
-        if run is None:
-            out.append((e,0.0,float(sc["end"])-float(sc["start"])))
-        else:
-            out.append(({**e,**run["fx"]},float(sc["start"])-run["start"],run["end"]-run["start"]))
+    out=[(effects.get(str(i)) or {},0.0,float(sc["end"])-float(sc["start"])) for i,sc in enumerate(scenes)]
+    i=0
+    while i<len(scenes):
+        j=i
+        while j+1<len(scenes) and scenes[j+1].get("beat_idx")==scenes[i].get("beat_idx"):
+            j+=1
+        src=next((effects.get(str(k)) for k in range(i,j+1)
+                  if float((effects.get(str(k)) or {}).get("zoom") or 1)>1.0001 and float((effects.get(str(k)) or {}).get("zoomIn") or 0)>0),None)
+        if src:
+            fx={k:src[k] for k in _ZOOM_KEYS if k in src}
+            t0,t1=float(scenes[i]["start"]),float(scenes[j]["end"])
+            for k in range(i,j+1):
+                own={x:v for x,v in (effects.get(str(k)) or {}).items() if x not in _ZOOM_KEYS}
+                out[k]=({**own,**fx},float(scenes[k]["start"])-t0,t1-t0)
+        i=j+1
     return out
 
 
