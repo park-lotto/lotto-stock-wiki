@@ -171,8 +171,20 @@
   let lastIndex=-1,context=null,saving=false;
   // 효과팩 번호를 바꾸면(관제 144) 자동으로 깐 장면 효과를 그 번호의 장면 효과로 다시 깐다 — 고객이 고른 장면은 그대로
   window.addEventListener('scene-style-motion-pack',()=>{if(!api.autoPlaced())return;api.autoPlace(false);if(api.autoPlace(true))aimEmphasis(api.moments().map((_,k)=>k));lastIndex=-1;api.show(api.geometry().sceneIndex);updateControls();sync();});
+  // 확대 이어받기(2026-10-12) — 같은 장면(beat_idx)의 다음 자막 칸이 자기 확대 없이 이어지면 앞 칸의 움직이는 확대를 이어받고
+  //   곡선은 묶음 전체 시간으로 한 번 돈다. 판단 주인은 서버 scene_style.zoom_runs(렌더·썸네일·캡컷) — 이건 미리보기용 같은 규칙.
+  const ZOOM_KEYS=['zoom','zoomIn','zoomMove','panX','panY'];
+  function zoomRunOf(i){
+    const sc=api.context()?.scenes||[],own=k=>{const e=api.effectAt(k)||{};return {e,has:(Number(e.zoom)||1)>1.0001,moving:(Number(e.zoom)||1)>1.0001&&Number(e.zoomIn)>0};};
+    const me=own(i).e,cur=sc[i];let a=i;
+    while(a>0&&sc[a-1]?.beat_idx===cur?.beat_idx&&!own(a).has)a--;   // 자기 확대가 있는 칸 또는 비트 첫 칸에서 멈춘다
+    if(!cur||!own(a).moving)return {fx:me,off:0,dur:cur?cur.end-cur.start:0};
+    let b=a;while(sc[b+1]&&sc[b+1].beat_idx===sc[a].beat_idx&&!own(b+1).has)b++;
+    const src=own(a).e,fx={...me};ZOOM_KEYS.forEach(k=>{if(k in src)fx[k]=src[k];else delete fx[k];});
+    return {fx,off:cur.start-sc[a].start,dur:sc[b].end-sc[a].start};
+  }
   function sync(){
-    const g=api.geometry(),e=api.effect(),z=Number(e.zoom)||1,h=e.highlight||{},m=h.on?h.mode:'none';
+    const g=api.geometry(),run=zoomRunOf(g.sceneIndex),e=run.fx,z=Number(e.zoom)||1,h=e.highlight||{},m=h.on?h.mode:'none';
     windowEl.style.top=g.media.top+'%';windowEl.style.height=g.media.height+'%';
     const px=(e.panX||0)*(z-1)*preview.clientWidth/2,py=(e.panY||0)*(z-1)*preview.clientHeight*g.media.height/200;
     // 어둡게(관제 124): 미리보기 그림 = 장면 첫 프레임 — 완성본(compose)·썸네일(compose_still)도 장면 시작에 같은 밝기를 건다.
@@ -188,14 +200,16 @@
       // 확대 움직임(관제 124): 장면을 열면 1배→도착 구도로. 곡선은 완성본(scene_style.zoom_move_vf)과 같다 —
       //   in: 0.5초 1-(1-t)² · pull: 장면 길이 동안 3t²-2t³ · inout: 0.5초 들어가고 끝 0.5초에 원본 크기로.
       media.getAnimations().forEach(a=>a.cancel());
-      const sc=api.context()?.scenes?.[g.sceneIndex],len=sc?Math.max(.6,sc.end-sc.start)*1000:1500,inMs=Number(e.zoomIn)*1000,way=e.zoomMove||'in',to=media.style.transform,from='translate(0px,0px) scale(1)';
+      const len=run.dur>0?Math.max(.6,run.dur)*1000:1500,offMs=run.off*1000,inMs=Number(e.zoomIn)*1000,way=e.zoomMove||'in',to=media.style.transform,from='translate(0px,0px) scale(1)';
+      let anim=null;
       if(inMs>0&&z>1){
-        if(way==='pull')media.animate([{transform:from},{transform:to}],{duration:len,easing:'cubic-bezier(.65,0,.35,1)'});
+        if(way==='pull')anim=media.animate([{transform:from},{transform:to}],{duration:len,easing:'cubic-bezier(.65,0,.35,1)'});
         // 확대→복귀는 끝에 원래 크기로 끝난다 — fill:forwards 로 끝 상태(원래 크기)에 머문다(사장님 "복귀되고 다시 확대로 간다": 끝나면 저장된 확대 구도로 되돌아갔다)
         // 짧은 장면(1초 이하)도 반드시 돌아온다 — 들어가기·돌아오기를 장면의 40%까지(완성본 zoom_move_vf·캡컷 zoom_curve 와 같은 규칙)
-        else if(way==='inout'){const io=Math.min(inMs,Math.floor(len/1000*30*.4)/30*1000);media.animate([{transform:from,easing:'cubic-bezier(.5,1,.89,1)'},{transform:to,offset:io/len},{transform:to,offset:1-io/len,easing:'cubic-bezier(.65,0,.35,1)'},{transform:from}],{duration:len,fill:'forwards'});}
-        else media.animate([{transform:from},{transform:to}],{duration:inMs,easing:'cubic-bezier(.5,1,.89,1)'});
+        else if(way==='inout'){const io=Math.min(inMs,Math.floor(len/1000*30*.4)/30*1000);anim=media.animate([{transform:from,easing:'cubic-bezier(.5,1,.89,1)'},{transform:to,offset:io/len},{transform:to,offset:1-io/len,easing:'cubic-bezier(.65,0,.35,1)'},{transform:from}],{duration:len,fill:'forwards'});}
+        else anim=media.animate([{transform:from},{transform:to}],{duration:inMs,easing:'cubic-bezier(.5,1,.89,1)'});
       }
+      if(anim&&offMs>0)anim.currentTime=Math.min(offMs,len);   // 이어받은 칸은 묶음 안 자기 자리부터(완성본 zoom_move_vf skip 과 같다)
       // 흑백 충격: 흑백·대비 + 프레임마다 흔들림 + 13프레임마다 찢기듯 밀림·번쩍(완성본 scene_style.shock_vf 를 흉내)
       windowEl.getAnimations().forEach(a=>a.cancel());windowEl.style.filter=e.shock?'grayscale(1) contrast(1.28) brightness(.97)':'';
       if(e.shock){const kf=[];for(let f=0;f<26;f++){const glitch=f%13<2,dx=(.012*Math.sin(f*12.9898)+(glitch?.045*Math.sin(f*7.31):0))*100,dy=.009*Math.sin(f*78.233)*100;
