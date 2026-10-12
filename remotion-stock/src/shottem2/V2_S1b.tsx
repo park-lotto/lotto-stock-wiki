@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  AbsoluteFill, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig, interpolate, spring,
+  AbsoluteFill, OffthreadVideo, Sequence, Loop, staticFile, useCurrentFrame, useVideoConfig, interpolate, spring,
 } from 'remotion';
 import { Scene, Para } from './V2_Engine';
 import { MemberGallery, WordCaption } from './V2_Fx2';
@@ -10,40 +10,70 @@ import { C, F } from './theme2';
 
 /* S1 오프닝 2판 (2026-10-12 사장님: 엄마 쇼츠는 나레이션 멈추고 원음 몇 초 / 배경 다양 / 자막 다양 / 고급 아이콘)
    처음: 어머니 쇼츠를 끝까지 원음 그대로 → 그다음 필재 나레이션 시작(전체가 INTRO 만큼 뒤로 밀린다) */
-const INTRO = 1063;   // 어머니 쇼츠 전체 35.43초를 원음으로 끝까지(사장님 10-12)
+const INTRO = 1063;   // 메인(와플 쇼츠) 35.43초를 원음으로 끝까지(사장님 10-12: 와플이 위·메인, 카메라는 뒤)
 const A = (n: string) => 'shottem2/v2s1/' + n;
 const PARA_S = [7.045, 6.955, 10.773, 11.455, 15.682, 12.227, 12.364, 4.091, 4.045, 10.137];
 const VOICE_F = Math.round(PARA_S.reduce((a, b) => a + b, 0) * 30) + 15;
 export const V2_S1B_FRAMES = INTRO + VOICE_F;
 
-/** 오프닝 — 폰 화면 하나가 화면 가득에서 줄어들며 자리 잡고, 원음이 나레이션 밑으로 내려간다 */
+/** 쇼츠 폰 — 맨 위 채널 띠(높이 8.9%)는 우리 금색 띠로 덮고, 아래 @워터마크(90~94.5%)는 흐린다 */
+const ShortPhone: React.FC<{ src: string; w: number; muted?: boolean; label: string; glow?: number }> = ({ src, w, muted, label, glow = 0.5 }) => {
+  const h = (w * 16) / 9;
+  return (
+    <div style={{ width: w, height: h, borderRadius: w * 0.07, overflow: 'hidden', position: 'relative', border: Math.round(w * 0.012) + 'px solid #0b0b0d',
+      boxShadow: '0 60px 160px rgba(0,0,0,0.95), 0 0 0 2px rgba(250,204,21,' + glow + '), 0 0 80px rgba(250,204,21,' + glow * 0.5 + ')' }}>
+      <OffthreadVideo src={staticFile(src)} muted={muted} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '8.9%', background: 'linear-gradient(180deg,#141008,#0b0906)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: w * 0.025, borderBottom: '2px solid rgba(250,204,21,0.6)' }}>
+        <div style={{ width: w * 0.022, height: w * 0.022, borderRadius: w, background: '#ef4444', boxShadow: '0 0 10px #ef4444' }} />
+        <div style={{ font: '900 ' + Math.round(w * 0.06) + 'px ' + F.sans, color: C.gold, letterSpacing: 1 }}>{label}</div>
+      </div>
+      <div style={{ position: 'absolute', left: '28%', width: '44%', top: '90%', height: '4.6%', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: 12 }} />
+    </div>
+  );
+};
+
+/** 오프닝 — 두 작품을 겹쳐 띄운다. 뒤(왼쪽 위)는 소리 없이, 앞(오른쪽 아래)은 원래 TTS 그대로 끝까지 */
 const MomOpen: React.FC = () => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const shrink = spring({ frame: f - INTRO + 10, fps, config: { damping: 18 } });
-  const w = interpolate(shrink, [0, 1], [760, 560]);
-  const x = interpolate(shrink, [0, 1], [0, -260]);
-
-  const rec = Math.floor(f / 15) % 2 === 0;
+  const inA = spring({ frame: f - 6, fps, config: { damping: 15, mass: 0.9 } });
+  const inB = spring({ frame: f, fps, config: { damping: 15, mass: 0.9 } });
+  const head = spring({ frame: f - 30, fps, config: { damping: 12 } });
+  const out = spring({ frame: f - INTRO + 6, fps, config: { damping: 16 } });   // 나레이션 들어갈 때 오른쪽으로 비켜 선다
+  const floatA = Math.sin(f / 40) * 10;
+  const floatB = Math.cos(f / 46) * 12;
+  const push = interpolate(f, [0, INTRO], [1, 1.06], { extrapolateRight: 'clamp' });
+  const sweep = interpolate(f % 150, [0, 50], [-30, 130], { extrapolateRight: 'clamp' });
   const tag = spring({ frame: f - INTRO - 20, fps, config: { damping: 12 } });
-  const h = (w * 16) / 9;
   return (
-    <AbsoluteFill style={{ background: '#000' }}>
-      <OffthreadVideo src={staticFile(A('mom1a.mp4'))} muted style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(40px) brightness(0.35)', transform: 'scale(1.3)' }} />
-      <div style={{ position: 'absolute', left: 960 - w / 2 + x, top: 540 - Math.min(h, 1040) / 2, width: w, height: Math.min(h, 1040), borderRadius: 40, overflow: 'hidden', border: '7px solid #0b0b0d', boxShadow: '0 50px 150px rgba(0,0,0,0.9), 0 0 0 2px rgba(250,204,21,0.5)' }}>
-        {f < INTRO
-          ? <OffthreadVideo src={staticFile(A('mom1a.mp4'))} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <Sequence from={INTRO} layout="none"><OffthreadVideo src={staticFile(A('mom1a.mp4'))} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></Sequence>}
-      </div>
+    <AbsoluteFill style={{ background: '#040304', overflow: 'hidden' }}>
+      <OffthreadVideo src={staticFile(A('mom1a.mp4'))} muted style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(50px) brightness(0.28) saturate(1.4)', transform: 'scale(1.4)' }} />
+      <AbsoluteFill style={{ background: 'radial-gradient(circle at ' + (30 + Math.sin(f / 50) * 10) + '% 25%, rgba(255,190,80,0.35), transparent 45%)', mixBlendMode: 'screen' }} />
+      <div style={{ position: 'absolute', top: '-20%', left: sweep + '%', width: '12%', height: '140%', transform: 'rotate(18deg)', background: 'linear-gradient(90deg,transparent,rgba(255,230,150,0.18),transparent)', filter: 'blur(10px)' }} />
+      <AbsoluteFill style={{ transform: 'scale(' + push + ') translateX(' + out * 330 + 'px)' }}>
+        {/* 뒤 — 카메라 쇼츠(소리 없음, 22.9초 반복) */}
+        <div style={{ position: 'absolute', left: 520, top: 40 + floatB, transform: 'rotate(' + (-9 * inB) + 'deg) translateY(' + (1 - inB) * 900 + 'px) scale(0.9)', filter: 'brightness(0.78)' }}>
+          <Loop durationInFrames={687} layout="none"><ShortPhone src={A('mom4.mp4')} w={470} muted label="60대 어머니 작품 #2" glow={0.3} /></Loop>
+        </div>
+        {/* 앞(메인) — 와플 쇼츠(원래 TTS) */}
+        <div style={{ position: 'absolute', left: 870, top: 110 + floatA, transform: 'rotate(' + (6 * inA) + 'deg) translateY(' + (1 - inA) * 1000 + 'px)' }}>
+          {f < INTRO
+            ? <ShortPhone src={A('mom1a.mp4')} w={500} label="60대 어머니 작품 #1" glow={0.7} />
+            : <Sequence from={INTRO} layout="none"><ShortPhone src={A('mom1a.mp4')} w={500} muted label="60대 어머니 작품 #1" glow={0.7} /></Sequence>}
+        </div>
+      </AbsoluteFill>
       {f < INTRO ? (
-        <div style={{ position: 'absolute', left: 60, top: 50, display: 'flex', alignItems: 'center', gap: 14, font: '800 34px ' + F.mono, color: '#fff' }}>
-          <div style={{ width: 22, height: 22, borderRadius: 11, background: rec ? '#ef4444' : 'transparent', boxShadow: rec ? '0 0 16px #ef4444' : 'none' }} /> PLAY · 실제 영상
+        <div style={{ position: 'absolute', left: 70, top: 330, width: 620, opacity: head, transform: 'translateX(' + (1 - head) * -120 + 'px)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, font: '800 30px ' + F.mono, color: '#fff' }}>
+            <div style={{ width: 18, height: 18, borderRadius: 9, background: Math.floor(f / 15) % 2 ? '#ef4444' : 'transparent', boxShadow: '0 0 14px #ef4444' }} /> REAL · 실제 영상
+          </div>
+          <div style={{ font: '900 92px/1.12 ' + F.sans, color: C.paper, marginTop: 18, textShadow: '0 10px 30px #000' }}>이 영상,<br /><span style={{ color: C.gold, textShadow: '0 0 30px rgba(250,204,21,0.6), 0 10px 30px #000' }}>누가</span><br />만들었을까요?</div>
         </div>
       ) : null}
-      <div style={{ position: 'absolute', left: 1080, top: 300, opacity: tag, transform: 'translateX(' + (1 - tag) * 80 + 'px)' }}>
+      <div style={{ position: 'absolute', left: 90, top: 300, opacity: tag, transform: 'translateX(' + (1 - tag) * -80 + 'px)' }}>
         <IconBadge name="heart" size={130} delay={INTRO + 20} />
         <div style={{ font: '800 40px ' + F.sans, color: C.dim, marginTop: 24 }}>만든 사람</div>
-        <div style={{ font: '900 110px/1.08 ' + F.sans, background: 'linear-gradient(180deg,#fff6c2,#facc15 55%,#f59e0b)', WebkitBackgroundClip: 'text', color: 'transparent', filter: 'drop-shadow(0 0 24px rgba(250,204,21,0.5))' }}>60대<br />우리 어머니</div>
+        <div style={{ font: '900 110px/1.08 ' + F.sans, color: C.gold, textShadow: '0 0 30px rgba(250,204,21,0.55), 0 10px 30px #000' }}>60대<br />우리 어머니</div>
         <div style={{ font: '800 40px ' + F.sans, color: C.paper, marginTop: 20 }}>타자 0번 · 마우스 클릭만</div>
       </div>
     </AbsoluteFill>
