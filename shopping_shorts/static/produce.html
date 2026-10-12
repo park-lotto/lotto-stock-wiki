@@ -4769,20 +4769,45 @@ function mkCurScene(){
   if(!b) return null;
   return {beat:(b.beat_idx!=null?b.beat_idx:BEAT_IDX), cut:(b.cut!=null?b.cut:null)};
 }
-function mkIsScene(m){ return !!m && m.beat!=null; }
+// ☑ 골라서(관제 182): m.scenes=[[beat,cut],...] 이면 여러 장면. 없으면 옛 단일 beat/cut.
+//   ★서버 deco_frame._scenes_of_raw 와 같은 규칙 — 장면 판정은 이 함수 하나를 거친다.
+function mkScenesOf(m){
+  if(!m) return [];
+  if(Array.isArray(m.scenes) && m.scenes.length)
+    return m.scenes.map(function(s){ return {beat:s[0], cut:(s.length>1&&s[1]!=null)?s[1]:null}; });
+  return m.beat!=null ? [{beat:m.beat, cut:(m.cut!=null?m.cut:null)}] : [];
+}
+function mkIsScene(m){ return mkScenesOf(m).length>0; }
+function mkIsPick(m){ return !!m && Array.isArray(m.scenes) && m.scenes.length>0; }
+function _mkHit(s, beat, cut){ return s.beat===beat && (s.cut==null || s.cut===cut); }
 function mkVisible(m){
   if(!mkIsScene(m)) return true;
   const c=mkCurScene(); if(!c) return false;
-  return m.beat===c.beat && (m.cut==null || m.cut===c.cut);
+  return mkScenesOf(m).some(function(s){ return _mkHit(s, c.beat, c.cut); });
 }
-// 그 가림막이 걸린 장면이 목록에서 몇 번째인지(화면의 "N / M 장면"과 같은 번호)
-function mkSceneNo(m){
-  if(!mkIsScene(m) || typeof BEATS_PREVIEW==='undefined') return null;
-  for(let i=0;i<BEATS_PREVIEW.length;i++){
-    const b=BEATS_PREVIEW[i], bi=(b.beat_idx!=null?b.beat_idx:i);
-    if(bi===m.beat && (m.cut==null || (b.cut!=null?b.cut:null)===m.cut)) return i+1;
+// 장면 목록(BEATS_PREVIEW)의 i번째(0부터)가 그 가림막에 걸렸나
+function mkHitsIdx(m, i){
+  const b=BEATS_PREVIEW[i]; if(!b) return false;
+  const bi=(b.beat_idx!=null?b.beat_idx:i), ci=(b.cut!=null?b.cut:null);
+  return mkScenesOf(m).some(function(s){ return _mkHit(s, bi, ci); });
+}
+// 걸린 장면 번호들(화면의 "N / M 장면"과 같은 번호, 1부터)
+function mkSceneNos(m){
+  if(!mkIsScene(m) || typeof BEATS_PREVIEW==='undefined') return [];
+  const out=[];
+  for(let i=0;i<BEATS_PREVIEW.length;i++) if(mkHitsIdx(m,i)) out.push(i+1);
+  return out;
+}
+function mkSceneNo(m){ const n=mkSceneNos(m); return n.length?n[0]:null; }
+// "4~20" · "1, 3, 5~7" 처럼 짧게
+function mkSceneLabel(m){
+  const n=mkSceneNos(m); if(!n.length) return '?';
+  const parts=[]; let a=n[0], p=n[0];
+  for(let k=1;k<=n.length;k++){
+    if(k<n.length && n[k]===p+1){ p=n[k]; continue; }
+    parts.push(a===p?String(a):(a+'~'+p)); if(k<n.length){ a=p=n[k]; }
   }
-  return null;
+  return parts.join(', ');
 }
 let MK_ONLY_SCENE=false;          // 새로 얹을 때 '이 장면에만' 붙일지(기본 꺼짐 = 지금까지와 같음)
 function mkTagNew(o){
@@ -4796,8 +4821,47 @@ function mkScope(v){
   const m=a[MK_SEL];
   if(v==='scene'){
     const c=mkCurScene(); if(!c){ alert('장면 목록이 아직 없어요 — 영상 매칭 뒤에 쓸 수 있어요.'); return; }
+    delete m.scenes;
     m.beat=c.beat; if(c.cut!=null) m.cut=c.cut; else delete m.cut;
-  }else{ delete m.beat; delete m.cut; }
+  }else if(v==='pick'){
+    // ☑ 골라서: 처음엔 **전부 켠 채로** 시작 — 고객은 빼고 싶은 장면만 끈다.
+    if(typeof BEATS_PREVIEW==='undefined' || !BEATS_PREVIEW.length){
+      alert('장면 목록이 아직 없어요 — 영상 매칭 뒤에 쓸 수 있어요.'); return; }
+    m.scenes=BEATS_PREVIEW.map(_mkKeyOf);
+    delete m.beat; delete m.cut;
+  }else{ delete m.beat; delete m.cut; delete m.scenes; }
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+function _mkKeyOf(b, i){
+  const bi=(b.beat_idx!=null?b.beat_idx:i);
+  return (b.cut!=null)?[bi,b.cut]:[bi];
+}
+// 장면 칩 하나 켜고 끄기(i = 목록 0부터)
+function mkPickToggle(i){
+  const a=mkEnsure(); if(!a||!a[MK_SEL]) return;
+  const m=a[MK_SEL]; if(!mkIsPick(m)) return;
+  const on=[]; for(let k=0;k<BEATS_PREVIEW.length;k++) if(mkHitsIdx(m,k)) on.push(k);
+  const idx=on.indexOf(i);
+  if(idx>=0){
+    // ★다 끄면 서버는 '전체 장면'으로 읽는다 — 그 어긋남을 화면에서 막는다
+    if(on.length<=1){ alert('장면을 하나는 남겨 주세요. 다 빼려면 이 효과를 지우면 돼요.'); return; }
+    on.splice(idx,1);
+  }else on.push(i);
+  on.sort(function(x,y){ return x-y; });
+  m.scenes=on.map(function(k){ return _mkKeyOf(BEATS_PREVIEW[k], k); });
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+// 빠른 고르기: 'all' 전부 / 'nohook' 앞 3장면 빼기
+function mkPickQuick(kind){
+  const a=mkEnsure(); if(!a||!a[MK_SEL]) return;
+  const m=a[MK_SEL]; const n=BEATS_PREVIEW.length;
+  let ks=[]; for(let k=0;k<n;k++) ks.push(k);
+  if(kind==='nohook'){
+    if(n<=3){ alert('장면이 3개 이하라 앞 3장면을 빼면 남는 장면이 없어요.'); return; }
+    ks=ks.slice(3);
+  }
+  m.scenes=ks.map(function(k){ return _mkKeyOf(BEATS_PREVIEW[k], k); });
+  delete m.beat; delete m.cut;
   renderTemplatePreview(); saveHeadcopy(); mkRender();
 }
 // 장면을 넘기면 그 장면의 가림막만 보이게 다시 그린다(장면 전용이 하나라도 있을 때만).
@@ -4966,6 +5030,29 @@ function mkChoice(opts, cur, fn){
         +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+o[1]+'</button>';
     }).join('')+'</div>';
 }
+// ☑ 골라서 — 장면 번호 칩(켜짐=초록). 누르면 빼고/넣고. 지금 보는 장면은 굵은 테두리.
+function mkPickBlock(m){
+  const n=(typeof BEATS_PREVIEW!=='undefined'&&BEATS_PREVIEW)?BEATS_PREVIEW.length:0;
+  let cur=-1; try{ cur=BEAT_IDX; }catch(e){}
+  let chips='';
+  for(let i=0;i<n;i++){
+    const on=mkHitsIdx(m,i);
+    chips+='<button type="button" data-mk-pick="'+(i+1)+'" onclick="mkPickToggle('+i+')" '
+      +'title="'+(i+1)+'번 장면 '+(on?'빼기':'넣기')+'" '
+      +'style="min-width:34px;height:30px;font-size:13px;font-weight:700;border-radius:8px;cursor:pointer;'
+      +'background:'+(on?'#0d2a1c':'transparent')+';color:'+(on?'#7CE8B0':'#5a6672')+';'
+      +'border:'+(i===cur?'2px':'1px')+' solid '+(on?'#2FBF71':'var(--line)')+';'
+      +(on?'':'text-decoration:line-through;')+'">'+(i+1)+'</button>';
+  }
+  const cnt=mkSceneNos(m).length;
+  return '<div style="margin-top:6px;display:flex;gap:4px">'
+      +'<button type="button" onclick="mkPickQuick(&quot;nohook&quot;)" style="flex:1;padding:6px 4px;font-size:11px;border-radius:7px;cursor:pointer;background:var(--inset2,#131c26);color:var(--txt);border:1px solid var(--line)">앞 3장면(훅) 빼기</button>'
+      +'<button type="button" onclick="mkPickQuick(&quot;all&quot;)" style="flex:1;padding:6px 4px;font-size:11px;border-radius:7px;cursor:pointer;background:var(--inset2,#131c26);color:var(--txt);border:1px solid var(--line)">전부 켜기</button></div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">'+chips+'</div>'
+    +'<div style="font-size:11px;color:var(--sub);margin-top:4px">번호를 누르면 그 장면에서 빠져요 · 지금 <b>'
+      +cnt+'개 장면</b>('+mkSceneLabel(m)+'번)에 보여요'
+      +(mkVisible(m)?'':' · <b>지금 장면엔 안 보여요</b>')+'</div>';
+}
 function mkRender(){
   const pills=document.getElementById('mkPills');
   const ed=document.getElementById('mkEditor');
@@ -4984,7 +5071,7 @@ function mkRender(){
       +'background:'+(on?'#0d2a1c':'transparent')+';'
       +'color:'+(on?'#7CE8B0':'var(--sub)')+';'
       +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+(i+1)+'번'
-      +(mkIsScene(_m)?' · 🎬'+(mkSceneNo(_m)||'?')+'장면':'')+'</button>';
+      +(mkIsScene(_m)?' · 🎬'+mkSceneLabel(_m)+'장면':'')+'</button>';
   }).join('');
   if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=Math.max(0,a.length-1);
   const m=empty ? Object.assign({},MK_DRAFT) : a[MK_SEL];
@@ -5018,8 +5105,10 @@ function mkRender(){
   // 🎬 적용 범위 — 전체 장면 / 이 장면만(2026-09-10). 맨 위에 둔다: 가장 먼저 정할 일이다.
   const _sn=mkSceneNo(m);
   const scopeBlock='<div style="'+lab+'">어느 장면에</div>'
-    +mkChoice([['all','🌐 전체 장면'],['scene','🎬 이 장면만']], mkIsScene(m)?'scene':'all', 'mkScope')
-    +(mkIsScene(m)?'<div style="font-size:11px;color:var(--sub);margin-top:4px">'
+    +mkChoice([['all','🌐 전체 장면'],['scene','🎬 이 장면만'],['pick','☑ 골라서']],
+              mkIsPick(m)?'pick':(mkIsScene(m)?'scene':'all'), 'mkScope')
+    +(mkIsPick(m)?mkPickBlock(m):'')
+    +(mkIsScene(m)&&!mkIsPick(m)?'<div style="font-size:11px;color:var(--sub);margin-top:4px">'
       +(_sn?_sn+'번 장면에서만 덮습니다':'걸린 장면을 목록에서 못 찾았어요(편성이 바뀌었을 수 있어요) — 다시 [이 장면만]을 눌러 주세요')
       +(mkVisible(m)?'':' · <b>지금 장면엔 안 보여요</b>')+'</div>':'');
   ed.innerHTML=
