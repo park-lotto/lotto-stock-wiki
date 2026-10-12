@@ -10714,6 +10714,21 @@ def api_mix_capcut(job_id: str, base: str = ""):
             import traceback as _tb4
             _tb4.print_exc(file=sys.stderr)
             _scene_layers, _scene_dims, _scene_zooms = None, None, None
+    # 🎬 장면 전용 가림효과('이 장면만'·'☑ 골라서', 관제 182) — 렌더와 **같은 함수**(_scene_mask_layers)로
+    #   시간 창을 받는다. 종전엔 _template_layer 가 떼어내기만 하고 다시 얹는 곳이 렌더뿐이라 캡컷에서 사라졌다.
+    #   자막 아래·영상 위 겹(scene_dim 트랙)에 싣는다. 흐림 효과는 그림이 아니라 캡컷엔 못 간다(색 막만).
+    if _style_on and _deco and _deco.get("template"):
+        try:
+            _sm_durs = {v: (_probe_duration(str(p_)) or 0.0)
+                        for v, p_ in source_video_paths.items()}
+            _masks = [{"path": l["_abspath"], "start": l["start"], "dur": l["dur"]}
+                      for l in mix_pipeline._scene_mask_layers(_deco["template"], plan, tts_paths, _sm_durs)
+                      if l.get("_abspath")]
+            if _masks:
+                _scene_dims = list(_scene_dims or []) + _masks
+        except Exception:      # noqa: BLE001 — 가림효과 하나 때문에 내보내기가 막히면 안 된다
+            import traceback as _tb5
+            _tb5.print_exc(file=sys.stderr)
     if _scene_layers:
         # 제목·채널명은 장면 레이어에 이미 그려져 있다 — 머리카피를 또 올리면 겹쳐 보인다.
         _hc_png, _hc_span = None, None
