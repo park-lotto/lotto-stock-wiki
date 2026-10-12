@@ -31,6 +31,23 @@ export type Para = {
 };
 
 const FPS = 30;
+// 광고 사운드 — 배경음은 저작권 걱정 없는 곡만(Epic Inspiration · AShamaluev). 상업 음원은 Content ID에 걸린다.
+const BGM = 'shottem2/v2bgm/epic.mp3';
+const SFX: Record<string, [string, number][]> = {
+  mega: [['sfx/impact.mp3', 0.9], ['sfx/sting_whoosh.mp3', 0.5]],
+  count: [['sfx/sting_whoosh.mp3', 0.5], ['sfx/impact.mp3', 0.9]],
+  vs: [['sfx/transition_swipe.mp3', 0.7], ['sfx/impact.mp3', 0.8]],
+  slam: [['sfx/sting_hit.mp3', 0.7]],
+  tag: [['sfx/transition_swipe.mp3', 0.6]],
+  flow: [['sfx/pop_appear.mp3', 0.8]],
+  bars: [['sfx/pop_appear.mp3', 0.8], ['sfx/chime_up.mp3', 0.6]],
+  stack: [['sfx/pop_appear.mp3', 0.8]],
+  quote: [['sfx/sting_whoosh.mp3', 0.45]],
+  neon: [['sfx/chime_up.mp3', 0.6]],
+  flip: [['sfx/transition_swipe.mp3', 0.55]],
+  kinetic: [['sfx/transition_swipe.mp3', 0.55]],
+};
+const SFX_AT: Record<string, number> = { count: 28, bars: 30 };   // 두 번째 소리 시점(프레임) — 숫자 폭발·마지막 막대
 export const sceneFrames = (P: Para[]) => Math.round(P.reduce((a, p) => a + p.dur, 0) * FPS) + 12;
 
 const STROKE: React.CSSProperties = {
@@ -446,6 +463,7 @@ export const Scene: React.FC<{ voice?: string; paras: Para[] }> = ({ voice, para
   return (
     <AbsoluteFill style={{ background: C.ink }}>
       {voice ? <Audio src={staticFile(voice)} /> : null}
+      {voice ? <Audio src={staticFile(BGM)} loop volume={0.11} /> : null}
       {paras.map((p, i) => {
         const from = Math.round(at * FPS);
         at += p.dur;
@@ -462,6 +480,9 @@ export const Scene: React.FC<{ voice?: string; paras: Para[] }> = ({ voice, para
               const seed = i * 31 + k;
               return (
                 <Sequence key={k} from={s0} durationInFrames={Math.max(1, s1 - s0)}>
+                  {(h.t || h.vs || h.bars || h.steps || h.num !== undefined) ? (SFX[style] || []).map(([src, vol], q) => (
+                    <Sequence key={'s' + q} from={q ? (SFX_AT[style] ?? 0) : 0} layout="none"><Audio src={staticFile(src)} volume={vol} /></Sequence>
+                  )) : <Audio src={staticFile('sfx/transition_swipe.mp3')} volume={0.5} />}
                   {h.img || h.bg ? <Punch seed={seed + 7}><Back p={{ ...p, img: h.img, bg: h.bg || p.bg, frame: h.img ? undefined : p.frame }} /></Punch> : null}
                   {h.t || h.vs || h.bars || h.steps || h.num !== undefined ? (
                     <Glitch at={[0, 1]}>

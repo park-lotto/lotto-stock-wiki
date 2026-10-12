@@ -185,6 +185,7 @@ const Talk: React.FC = () => {
 export const V2_S1_Open: React.FC = () => (
   <AbsoluteFill style={{ background: C.ink }}>
     <Audio src={staticFile(A('voice.mp3'))} />
+    <Audio src={staticFile('shottem2/v2bgm/epic.mp3')} loop volume={0.11} />
 
     <Sequence {...seg(0)}><MomShort /></Sequence>
 
