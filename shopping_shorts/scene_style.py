@@ -189,6 +189,12 @@ def validate_snapshot(value):
         for frame, fid in per_frame.items():
             if frame not in ("hook", "body", "frame") or not re.fullmatch(r"[a-z0-9_-]{0,32}", str(fid or "")):
                 return None
+    font_pick = value.get("fontPick")
+    if font_pick is not None:
+        # 글자 묶음별 낱개 폰트(관제 187) — 키는 precision20-ui.js TEXT_LOOK_TARGETS, 값은 FONT_LIST의 fam(@font-face 이름).
+        if (not isinstance(font_pick, dict) or set(font_pick) - {"channel", "titleLarge", "titleSmall", "caption"}
+                or not all(re.fullmatch(r"[A-Za-z0-9_-]{1,40}", str(v or "")) for v in font_pick.values())):
+            raise ValueError("폰트 값이 올바르지 않습니다")
     if not re.fullmatch(r"[a-z0-9_-]{0,32}", str(value.get("fontSet") or "")):   # precision20-ui.js FONT_SETS의 id
         raise ValueError("폰트 템플릿 값이 올바르지 않습니다")
     if not re.fullmatch(r"[a-z0-9_-]{0,32}", str(value.get("titleDeco") or "")):   # precision20-ui.js DECOS의 id(훅 제목 꾸밈)
@@ -254,7 +260,7 @@ def validate_snapshot(value):
         raise ValueError("원본 자막 표시가 올바르지 않습니다")
     if value.get("frameRule") not in (None, *FRAME_RULES):
         raise ValueError("장면 틀 규칙이 올바르지 않습니다")
-    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
+    allowed = {"version", "frameRule", "plainCaption", "manualText", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookBandRise", "hookBandMotion", "bodyCaptionMotion", "captionPack", "motionPack", "fxPreset", "wordFx", "fontSet", "fontSets", "fontPick", "titleDeco", "textWeight", "textShadow", "textSpacing", "textLeading", "hookMotionSpeed", "hookCaptionMode", "branding", "text", "fontScales", "textOffsets", "textDrags", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
@@ -582,7 +588,35 @@ def media_geometry(layer, effect):
     return width,height,top,zw,zh,crop_x,crop_y
 
 
-def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y, frames=0):
+_ZOOM_KEYS=("zoom","zoomIn","zoomMove","panX","panY")
+
+
+def zoom_runs(scenes, effects):
+    """장면별 '확대에 쓸 효과·움직임 안의 위치' — 확대 이어받기의 판단 주인(2026-10-12 사장님 "한 컷이면 자막이 2개든 3개든
+    이어지게, 자막 처음과 끝을 정해서 확대"). 효과는 자막 칸마다 저장돼 칸이 바뀔 때 1배로 돌아가거나 다시 확대가 시작됐다.
+    규칙: 같은 컷(같은 beat_idx로 이어진 칸들)에 움직이는 확대(zoomIn>0)가 하나라도 있으면 그 컷의 **첫 자막 시작~마지막 자막 끝**
+    전체에 그 확대(컷 안 첫 번째 것)를 한 번만 건다. 반환: 칸마다 (확대용 효과 dict, 컷 시작에서 이 칸까지 초, 컷 길이 초).
+    렌더(compose)·썸네일·캡컷(zoom_spans)과 편집기(scene-style-connect.js zoomRunOf — 같은 규칙)가 이 결과를 쓴다."""
+    effects=effects or {}
+    out=[(effects.get(str(i)) or {},0.0,float(sc["end"])-float(sc["start"])) for i,sc in enumerate(scenes)]
+    i=0
+    while i<len(scenes):
+        j=i
+        while j+1<len(scenes) and scenes[j+1].get("beat_idx")==scenes[i].get("beat_idx"):
+            j+=1
+        src=next((effects.get(str(k)) for k in range(i,j+1)
+                  if float((effects.get(str(k)) or {}).get("zoom") or 1)>1.0001 and float((effects.get(str(k)) or {}).get("zoomIn") or 0)>0),None)
+        if src:
+            fx={k:src[k] for k in _ZOOM_KEYS if k in src}
+            t0,t1=float(scenes[i]["start"]),float(scenes[j]["end"])
+            for k in range(i,j+1):
+                own={x:v for x,v in (effects.get(str(k)) or {}).items() if x not in _ZOOM_KEYS}
+                out[k]=({**own,**fx},float(scenes[k]["start"])-t0,t1-t0)
+        i=j+1
+    return out
+
+
+def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y, frames=0, skip=0):
     """영상 칸 확대 필터. zoomIn>0 이면 장면 시작부터 zoomIn초 동안 1배→zoom 배로 **움직이며** 확대(관제 124, 사장님
     2026-10-05 "그냥 확대 장면을 보여주는 건 의미가 없다, 0.5초로 제품에 확대되는 거"). 곡선은 1-(1-t)² (처음 빠르고 끝에서 멈춤) —
     편집기 미리보기(scene-style-connect.js, cubic-bezier(.5,1,.89,1) = 같은 곡선)와 짝. 도착점은 멈춘 확대와 같은 자리(panX·panY).
@@ -595,14 +629,15 @@ def zoom_move_vf(effect, width, height, zw, zh, crop_x, crop_y, frames=0):
     fx=crop_x/max(1,zw-width); fy=crop_y/max(1,zh-height)          # 도착했을 때 잘리는 자리(0~1)
     way=(effect or {}).get("zoomMove") or "in"
     N=max(n+1,int(frames or 0))
+    on=f"(on+{int(skip)})" if skip else "on"   # 이어받은 칸은 묶음 앞부분만큼 곡선을 건너뛴다(zoom_runs)
     if way=="pull":      # 장면 내내 쭉 당기기 — 처음·끝이 부드러운 3t²-2t³ (사장님 "2배로 쭉 땡기면서 집중")
-        e=f"(3*pow(min(1,on/{N-1}),2)-2*pow(min(1,on/{N-1}),3))"
+        e=f"(3*pow(min(1,{on}/{N-1}),2)-2*pow(min(1,{on}/{N-1}),3))"
     elif way=="inout":   # 들어가고, 끝에서 원본 크기로 돌아온다(사장님 "다시 원본 크기로 돌아오기")
         n=max(1,min(n,int(N*0.4)))   # 짧은 장면(1초 이하)도 반드시 돌아오게 — 들어가기·돌아오기를 장면의 40%까지(zoom_curve·편집기와 같은 규칙)
-        b=f"max(0,(on-{N-n})/{n})"
-        e=f"((1-pow(1-min(1,on/{n}),2))*(1-(3*pow({b},2)-2*pow({b},3))))"
+        b=f"max(0,({on}-{N-n})/{n})"
+        e=f"((1-pow(1-min(1,{on}/{n}),2))*(1-(3*pow({b},2)-2*pow({b},3))))"
     else:
-        e=f"(1-pow(1-min(1,on/{n}),2))"
+        e=f"(1-pow(1-min(1,{on}/{n}),2))"
     return (f"scale={width*2}:{height*2},zoompan=z='1+{zoom-1:.5f}*{e}':x='(iw-iw/zoom)*{fx:.5f}':y='(ih-ih/zoom)*{fy:.5f}'"
             f":d=1:s={width}x{height}:fps=30")
 
@@ -733,8 +768,9 @@ def zoom_spans(scenes, snapshot, layers=None):
     from . import video_assemble as va
     effects=(validate_snapshot(snapshot) or {}).get("effects") or {}
     out=[]
+    runs=zoom_runs(scenes,effects)
     for index,scene in enumerate(scenes):
-        effect=effects.get(str(index)) or {}
+        effect,run_off,run_dur=runs[index]   # 같은 장면 다음 자막 칸은 확대를 이어받는다(zoom_runs)
         zoom,_,_=va.scene_zoom_of({"scene_zoom":effect.get("zoom",1)})
         if zoom>1.0001:
             frac=((layers[index] or {}).get("media") or {}).get("height",100)/100 if layers and index<len(layers) else 1.0
@@ -742,7 +778,8 @@ def zoom_spans(scenes, snapshot, layers=None):
                         "tx":round(float(effect.get("panX",0))*(zoom-1),4),
                         "ty":round(-float(effect.get("panY",0))*(zoom-1)*frac,4),
                         # 확대 움직임(관제 124) — 캡컷은 이 값으로 크기·위치 키프레임을 찍는다(zoom_curve)
-                        "move":effect.get("zoomMove","in"),"zoomIn":float(effect.get("zoomIn") or 0)})
+                        "move":effect.get("zoomMove","in"),"zoomIn":float(effect.get("zoomIn") or 0),
+                        "runStart":float(scene["start"])-run_off,"runEnd":float(scene["start"])-run_off+run_dur})
     return out
 
 
@@ -756,7 +793,7 @@ def compose_still(frame_path, timeline, snapshot, work, index, out_path, headcop
     layer_png=render_layer_one(timeline,snapshot,work,index,headcopy,job_id)
     layers=json.loads((Path(work).resolve()/"scene-style-layers.json").read_text(encoding="utf-8"))
     layer=layers[int(index)]
-    effect=(snapshot.get("effects") or {}).get(str(index)) or {}
+    effect=zoom_runs(context_for(timeline,headcopy,snapshot,job_id)["scenes"],snapshot.get("effects"))[int(index)][0]   # 이어받은 확대도 썸네일에(zoom_runs)
     width,height,top,zw,zh,crop_x,crop_y=media_geometry(layer,effect)
     src=Image.open(frame_path).convert("RGB")
     s=max(width/src.width,height/src.height)                    # scale=W:H:force_original_aspect_ratio=increase
@@ -784,15 +821,16 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
     work=Path(work).resolve()
     layers=render_layers(timeline,snapshot,work,headcopy)
     parts=[]
+    runs=zoom_runs(context["scenes"],snapshot.get("effects"))
     for index,(scene,layer) in enumerate(zip(context["scenes"],layers,strict=True)):
         first_frame, last_frame = round(scene["start"]*30), round(scene["end"]*30)
         if last_frame <= first_frame:
             continue
-        effect=(snapshot.get("effects") or {}).get(str(index)) or {}
+        effect,run_off,run_dur=runs[index]   # 같은 장면 다음 자막 칸은 확대를 이어받는다(zoom_runs)
         width,height,top,zw,zh,crop_x,crop_y=media_geometry(layer,effect)
         dim=dim_of(effect,last_frame-first_frame)   # 어둡게(관제 124) — 영상 칸에만, 틀·자막 레이어는 밝게 남는다
         dim_f=(f",colorchannelmixer=rr={dim[0]:.3f}:gg={dim[0]:.3f}:bb={dim[0]:.3f}:enable='lt(n,{dim[1]})'" if dim else "")
-        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},{zoom_move_vf(effect,width,height,zw,zh,crop_x,crop_y,last_frame-first_frame)}{shock_vf(effect,width,height)}{dim_f},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
+        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},{zoom_move_vf(effect,width,height,zw,zh,crop_x,crop_y,round((scene['start']-run_off+run_dur)*30)-round((scene['start']-run_off)*30),first_frame-round((scene['start']-run_off)*30))}{shock_vf(effect,width,height)}{dim_f},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
         hl=va.highlight_fc({"scene_hl":effect.get("highlight")},vf,grow=False)
         prefix=f"[1:v]tpad=stop_mode=clone:stop_duration={(last_frame-first_frame)/30}[ink];" if layer.get("animation") else "[1:v]null[ink];"
         graph=prefix+(hl+";" if hl else f"[0:v]{vf}[out];")

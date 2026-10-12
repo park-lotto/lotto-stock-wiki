@@ -588,7 +588,7 @@ def _scene_fx_keyframes(piece_start, piece_dur, sp, source_start=None, speed=1.0
     if not sp:
         return []
     from shopping_shorts.scene_style import zoom_curve
-    s0, s1 = _us(sp["start"]), _us(sp["end"])
+    s0, s1 = _us(sp.get("runStart", sp["start"])), _us(sp.get("runEnd", sp["end"]))   # 확대 곡선은 묶음(같은 장면 이어받기, scene_style.zoom_runs) 기준
     off0 = piece_start - s0                      # 이 조각이 장면 시작에서 얼마나 뒤인가(μs)
     zin, Z, shock = float(sp.get("zoomIn") or 0), float(sp.get("zoom") or 1), bool(sp.get("shock"))
     moving = zin > 0 and Z > 1.0001
@@ -608,7 +608,7 @@ def _scene_fx_keyframes(piece_start, piece_dur, sp, source_start=None, speed=1.0
             x, y = float(sp.get("tx", 0)) * k, float(sp.get("ty", 0)) * k
         b = 0.0
         if shock:
-            n = round((off0 + t) / 1e6 * 30)
+            n = round((piece_start - _us(sp["start"]) + t) / 1e6 * 30)   # 흔들림은 칸 시작 기준(완성본 shock_vf 의 n)
             g = 1.0 if n % 13 < 2 else 0.0       # shock_vf 의 lt(mod(n,13),2)
             z *= 1.06
             x += 2 * (0.012 * math.sin(n * 12.9898) + g * 0.045 * math.sin(n * 7.31))   # 화면비 → 캔버스 절반 단위
