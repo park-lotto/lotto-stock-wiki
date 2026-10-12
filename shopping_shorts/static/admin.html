@@ -388,7 +388,11 @@ const CTL_ORDER={'회귀':0,'승인대기':1,'등록':2,'분배':3,'수리':4,'�
 // 함수 이름·번호 같은 기술 정보는 [기술 보기] 를 켜야 나온다. 카드 '쉬운 설명' 이 있으면 제목 대신 그걸 보여준다.
 let CTL_CARDS=[];
 function _ctlLabel(c){ return _abEsc(c.easy||c.title); }
-function _ctlNeeds(c){ return String(c.needs_approval||'').startsWith('예') && !c.approval && !c.server_approval; }
+// 이미 병합·라이브로 지나간 카드는 승인 버튼이 의미 없다(2026-10-12 관제 180) — 결정할 것에서 뺀다
+const CTL_PAST_APPROVAL=['병합','서버반영','라이브실측','완료'];
+function _ctlNeeds(c){ return String(c.needs_approval||'').startsWith('예') && !c.approval && !c.server_approval && !CTL_PAST_APPROVAL.includes(c.state); }
+// 카드마다 왜 승인이 필요한지 — '승인 필요: 예 — 사유' 의 사유가 있으면 그것, 없으면 지금 단계를 보여준다
+function _ctlWhy(c){ const m=String(c.needs_approval||'').replace(/^예\s*[—\-:·]?\s*/,''); return (m?'사유: '+_abEsc(m)+' · ':'사유 미기재(돈·회원 데이터 표시 카드) · ')+'지금 단계: '+_abEsc(c.state||'-'); }
 async function renderControlBoard(){
   const box=document.getElementById('controlBoard'); if(!box) return;
   let d=null;
@@ -414,7 +418,7 @@ function drawControlBoard(){
   h+='<div style="margin:4px 0 10px;text-align:right"><label style="font-size:11px;color:#8a8a92;cursor:pointer"><input type=checkbox id=ctlTech '+(tech?'checked':'')+' onchange="drawControlBoard()"> 기술 보기(번호·함수 이름)</label></div>';
   h+='<div style="font-weight:700;margin:4px 0">🔴 결정할 것 — 사장님 승인이 있어야 라이브로 갑니다 ('+need.length+')</div>';
   h+=need.length?need.map(c=>row(c,' <button onclick="approveCard('+c.no+')" style="margin-left:8px">승인</button>'
-      +'<div style="font-size:11px;color:#8a8a92">고객 화면·돈·회원 데이터가 바뀌는 변경. 승인 뒤 병합되고, 병합 뒤 실제 고객 작업으로 다시 잽니다.</div>')).join('')
+      +'<div style="font-size:11px;color:#8a8a92">'+_ctlWhy(c)+' — 승인 뒤 병합, 병합 뒤 실제 고객 작업으로 다시 잽니다.</div>')).join('')
       :'<div style="color:#8a8a92;font-size:12px;padding:4px 0 8px">없음 — 지금 결정할 것이 없습니다.</div>';
   h+='<div style="font-weight:700;margin:12px 0 4px">🟠 잘못된 것 — 배포 뒤 실제 고객 작업으로 재보니 기준 미달 ('+bad.length+')</div>';
   h+=bad.length?bad.map(c=>row(c,'<div style="font-size:11px;color:#e0a0a0">'+_abEsc(c.live||c.last||'')+'</div><div style="font-size:11px;color:#8a8a92">담당 세션에 "회귀 뜬 거 봐" 라고 하면 됩니다.</div>')).join('')
