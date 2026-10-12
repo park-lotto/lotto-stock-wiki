@@ -6979,10 +6979,34 @@ class Store:
     GHOST_MAX_USE = 3600       # 첫 접속~마지막 접속이 이보다 짧고
     GHOST_IDLE = 86400         # 마지막 접속 뒤 이만큼 지났으면 유령
 
+    # 🔁 비울 수 있는 칸(관제 184, 2026-10-12): 유령 칸만으로는 부족했다. 라이브 꽉 찬 22명 실측 —
+    #   ①9명이 두 칸 다 **같은 IP**(= 같은 PC인데 오래 쓰던 쿠키가 지워져 새 도장) ②나머지 다수는
+    #   한 칸이 몇 주째 안 보임(= 바꾼/버린 PC). 둘 다 1시간 넘게 쓰여 유령 조건에 안 걸렸다.
+    #   그래서 새 PC 등록 때 ①같은 IP·같은 브라우저 칸 ②7일 넘게 안 쓴 칸도 비워준다.
+    #   두 장소에서 **둘 다 7일 안에** 쓰는 PC(진짜 돌려쓰기)는 그대로 막힌다.
+    STALE_IDLE = 7 * 86400
+
     def _is_ghost_slot(self, first_seen, last_seen, now):
         """이 칸이 유령 칸인가 — 판정은 여기 한 곳(관리자 화면 등도 이걸 부른다)."""
         f, l = int(first_seen or 0), int(last_seen or 0)
         return (l - f) < self.GHOST_MAX_USE and (now - l) > self.GHOST_IDLE
+
+    def _replaceable_slot(self, rows, ua, ip, now):
+        """꽉 찼을 때 새 PC에게 내줄 칸 → (slot, 사유) | (None, ""). 판정은 여기 한 곳.
+
+        rows = (slot, device_id, first_seen, last_seen, ua, ip). 우선순위: 같은 PC → 유령 → 7일 미사용.
+        """
+        ua, ip = (ua or "")[:200], (ip or "")[:64]
+        same = [r for r in rows if ip and r[5] == ip and (r[4] or "") == ua]
+        if same:
+            return min(same, key=lambda r: r[3] or 0)[0], "same_pc"
+        ghosts = [r for r in rows if self._is_ghost_slot(r[2], r[3], now)]
+        if ghosts:
+            return min(ghosts, key=lambda r: r[3] or 0)[0], "ghost"
+        stale = [r for r in rows if now - int(r[3] or 0) > self.STALE_IDLE]
+        if stale:
+            return min(stale, key=lambda r: r[3] or 0)[0], "stale"
+        return None, ""
 
     def set_pro_term(self, customer_id, start_ts, until_ts):
         """기간제 이용권 설정(시작·만료). 0을 주면 그 칸을 비운다(=무기한).
@@ -7028,23 +7052,23 @@ class Store:
             return False, None, "기기를 확인할 수 없어요"
         now = int(datetime.now(timezone.utc).timestamp())
         with self._conn() as c:
-            rows = c.execute("SELECT slot, device_id, first_seen, last_seen FROM customer_devices "
+            rows = c.execute("SELECT slot, device_id, first_seen, last_seen, ua, ip FROM customer_devices "
                              "WHERE customer_id=?", (customer_id,)).fetchall()
             used = {r[0]: r[1] for r in rows}
             for slot, did in used.items():
                 if did == device_id:
                     return True, slot, "이미 등록된 PC예요"
             if len(used) >= self.PC_SLOTS:
-                # 꽉 찼으면 유령 칸(가장 오래 안 보인 것)을 이 PC로 바꾼다 — 관제 142
-                ghosts = sorted((r for r in rows if self._is_ghost_slot(r[2], r[3], now)),
-                                key=lambda r: r[3] or 0)
-                if ghosts:
-                    slot = ghosts[0][0]
+                # 꽉 찼으면 같은 PC·유령·7일 미사용 칸을 이 PC로 바꾼다 — 관제 142·184
+                slot, kind = self._replaceable_slot(rows, ua, ip, now)
+                if slot:
                     c.execute("UPDATE customer_devices SET device_id=?, first_seen=?, last_seen=?, "
                               "ua=?, ip=? WHERE customer_id=? AND slot=?",
                               (device_id, now, now, (ua or "")[:200], (ip or "")[:64],
                                customer_id, slot))
-                    print(f"[pc] 유령 칸 교체 cid={customer_id} slot={slot}", file=sys.stderr)
+                    print(f"[pc] 칸 교체({kind}) cid={customer_id} slot={slot}", file=sys.stderr)
+                    if kind == "same_pc":
+                        return True, slot, f"같은 PC로 보여 {slot}번 칸을 이 브라우저로 바꿨어요"
                     return True, slot, f"오래 안 쓴 {slot}번 PC 칸을 이 PC로 바꿨어요"
             for slot in range(1, self.PC_SLOTS + 1):
                 if slot not in used:

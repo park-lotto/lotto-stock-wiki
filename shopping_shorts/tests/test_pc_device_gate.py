@@ -349,13 +349,47 @@ def test_ghost_slot_is_replaced_by_new_pc(st):
 
 
 def test_two_real_pcs_are_never_replaced(st):
-    """둘 다 1시간 넘게 쓴 PC면 아무리 오래 안 봐도 교체 안 된다 — 돌려쓰기 방지는 그대로."""
+    """두 장소에서 둘 다 7일 안에 쓰는 PC면 교체 안 된다 — 돌려쓰기 방지는 그대로(관제 184)."""
     st.device_register(9, "a", PC, "1.1.1.1")
     st.device_register(9, "b", PC, "2.2.2.2")
-    _age(st, 9, 1, 40 * 86400, 30 * 86400)     # 10일 쓰고 30일째 안 봄
+    _age(st, 9, 1, 40 * 86400, 6 * 86400)      # 34일 쓰고 6일째 안 봄
     _age(st, 9, 2, 5 * 86400, 0)
     ok, slot, why = st.device_register(9, "c", PC, "3.3.3.3")
     assert ok is False and "2대" in why
+
+
+# ── 🔁 같은 PC·오래 안 쓴 칸 교체(관제 184, 2026-10-12) ─────────────────────
+# 실측(라이브 꽉 찬 22명): 9명이 두 칸 다 같은 IP(쿠키 지워진 같은 PC), 다수가 한 칸 몇 주째 미사용.
+def test_same_pc_after_cookie_loss_is_replaced(st):
+    """오래 쓰던 PC의 쿠키가 지워져도(같은 IP·같은 브라우저) 다시 등록하면 그 칸을 이어받는다."""
+    st.device_register(9, "home", PC, "1.1.1.1")
+    st.device_register(9, "office", PC, "2.2.2.2")
+    _age(st, 9, 1, 30 * 86400, 3600)           # 30일 쓰다 1시간 전 쿠키 날아감
+    _age(st, 9, 2, 30 * 86400, 0)
+    ok, slot, why = st.device_register(9, "home2", PC, "1.1.1.1")
+    assert (ok, slot) == (True, 1), why
+    ids = {d["slot"]: d["device_id"] for d in st.device_list(9)}
+    assert ids == {1: "home2", 2: "office"}
+
+
+def test_same_ip_other_browser_is_not_same_pc(st):
+    """IP만 같고 브라우저가 다르면 같은 PC로 치지 않는다(둘 다 최근 사용이면 막힘)."""
+    st.device_register(9, "a", PC, "1.1.1.1")
+    st.device_register(9, "b", PC, "2.2.2.2")
+    _age(st, 9, 1, 30 * 86400, 3600)
+    _age(st, 9, 2, 30 * 86400, 0)
+    ok, _s, _w = st.device_register(9, "c", PC.replace("120", "121"), "1.1.1.1")
+    assert ok is False
+
+
+def test_stale_pc_over_7_days_is_replaced(st):
+    """7일 넘게 안 쓴 PC 칸은 새 PC에게 넘어간다(바꾼·버린 PC)."""
+    st.device_register(9, "old", PC, "1.1.1.1")
+    st.device_register(9, "now", PC, "2.2.2.2")
+    _age(st, 9, 1, 60 * 86400, 8 * 86400)
+    _age(st, 9, 2, 30 * 86400, 0)
+    ok, slot, why = st.device_register(9, "new", PC, "3.3.3.3")
+    assert (ok, slot) == (True, 1), why
 
 
 def test_short_but_recent_slot_is_not_a_ghost(st):
