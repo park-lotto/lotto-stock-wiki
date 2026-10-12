@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>썰쇼핑 — 채널 대비 터진 영상 모으기</title>
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--ink:#1c2330;--sub:#5d6778;--line:#e3e7ee;--accent:#2563eb;--good:#0f7a4a;--goodbg:#e7f6ee;--warn:#9a5b00;--warnbg:#fff4dc}
+  @media (prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--ink:#e8ecf3;--sub:#9aa5b8;--line:#2c3442;--accent:#7aa7ff;--good:#6fd6a3;--goodbg:#143325;--warn:#f0c36a;--warnbg:#3a2e12}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Pretendard","Malgun Gothic",system-ui,sans-serif}
+  main{max-width:920px;margin:0 auto;padding:32px 16px 64px}
+  h1{font-size:26px;margin:0 0 4px}
+  .meta{color:var(--sub);font-size:14px;margin-bottom:24px}
+  h2{font-size:19px;margin:36px 0 12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:12px 0}
+  .lead{border-left:4px solid var(--accent)}
+  .lead b{color:var(--accent)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .stat .n{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+  .stat .l{color:var(--sub);font-size:13px}
+  .scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:640px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:13px;color:var(--sub);font-weight:600}
+  tr:last-child td{border-bottom:0}
+  tr.pick td{background:var(--goodbg)}
+  .tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--goodbg);color:var(--good)}
+  .tag.w{background:var(--warnbg);color:var(--warn)}
+  ul{margin:8px 0;padding-left:20px}
+  li{margin:6px 0}
+  code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:14px}
+  .note{color:var(--sub);font-size:14px}
+  ol.ask li{margin:10px 0}
+</style>
+</head>
+<body>
+<main>
+  <h1>썰쇼핑 — 채널 대비 터진 영상 모으기</h1>
+  <div class="meta">레퍼런스랭킹 새 탭 검토 · 서버 DB 실측 2026-10-05 (읽기 전용)</div>
+
+  <div class="card lead">
+    방법은 세 가지이고, <b>"그 채널 평소 조회수 대비 몇 배 터진 영상"을 모으는 2번을 추천</b>합니다.
+    채널을 먼저 추린 뒤 최근 100편씩 숫자만 전수조사하는 데는 <b>40채널 기준 1~2분</b>으로 추정합니다(실제로 돌려 잰 값은 아님).
+  </div>
+
+  <h2>지금 쌓여 있는 재료</h2>
+  <div class="stats">
+    <div class="stat"><div class="n">324</div><div class="l">등록된 썰쇼핑 채널</div></div>
+    <div class="stat"><div class="n">195</div><div class="l">영상 기록이 있는 채널</div></div>
+    <div class="stat"><div class="n">149</div><div class="l">기록 10편 이상 채널</div></div>
+    <div class="stat"><div class="n">4,983</div><div class="l">쌓인 영상 기록</div></div>
+    <div class="stat"><div class="n">874</div><div class="l">최근 7일 업로드(9/28~)</div></div>
+  </div>
+
+  <h2>방법 세 가지</h2>
+  <div class="scroll">
+  <table>
+    <tr><th>방법</th><th>뜻</th><th>최근 7일 걸리는 양<br>(조회 1만 이상)</th><th>상태</th></tr>
+    <tr>
+      <td><b>1. 구독자 대비</b></td>
+      <td>조회수 ÷ 구독자</td>
+      <td>5배 이상 71편<br>10배 이상 51편</td>
+      <td>이미 있음 — 🚀 뱃지(5배·1만 이상)</td>
+    </tr>
+    <tr class="pick">
+      <td><b>2. 채널 평소 대비</b> <span class="tag">추천</span></td>
+      <td>조회수 ÷ 그 채널 영상들의 중앙값</td>
+      <td>3배 50편(35채널)<br>5배 28편(22채널)<br>10배 13편(11채널)</td>
+      <td>없음 — 새로 만들어야 함</td>
+    </tr>
+    <tr>
+      <td><b>3. 채널 단위</b></td>
+      <td>채널의 평소 조회수 ÷ 구독자</td>
+      <td>1배 이상 83채널<br>3배 이상 40채널<br><span class="note">(10편 이상 쌓인 138채널 중)</span></td>
+      <td>없음</td>
+    </tr>
+  </table>
+  </div>
+
+  <div class="card">
+    <ul>
+      <li><b>1번은 구독자 수에 휘둘립니다.</b> 구독자가 1명·8명·10명으로 적힌 채널이 상위를 차지해 2,263배 같은 값이 나옵니다. 새 채널이나 구독자 비공개 채널이 다 걸려 "눈에 띄게 높다"를 가려내지 못합니다.</li>
+      <li><b>2번은 구독자 수와 무관합니다.</b> 평소 5천 나오던 채널에서 5만이 나온 영상만 잡히므로 왜 터졌는지 뜯어볼 재료가 됩니다. 5배 기준이면 주 28편 정도라 탭 하나로 보기에 양도 맞습니다.</li>
+      <li><b>3번은 영상이 아니라 채널 목록입니다.</b> 구독자는 적은데 꾸준히 잘 나오는 채널을 찾는 용도라, 벤치마킹할 채널을 고를 때 맞습니다.</li>
+    </ul>
+  </div>
+
+  <h2>채널당 최근 100편 전수조사 — 얼마나 걸리나</h2>
+  <div class="scroll">
+  <table>
+    <tr><th>범위</th><th>API 호출</th><th>걸리는 시간(추정)</th></tr>
+    <tr><td>추린 40채널 × 100편</td><td>160번</td><td>1~2분</td></tr>
+    <tr><td>썰쇼핑 324채널 전부 × 100편</td><td>약 1,300번</td><td>5~10분</td></tr>
+    <tr><td>영상 내용까지 분석(내려받기 + AI)<br>40채널 × 100편 = 4,000편</td><td>—</td><td>일 단위 + AI 비용</td></tr>
+  </table>
+  </div>
+  <p class="note">채널당 100편 = 목록 2번 + 조회수 2번 = 4번 호출(유튜브 공식 API는 한 번에 50편). 시간은 호출 횟수로 계산한 추정이며 실제로 돌려 재지 않았습니다.</p>
+
+  <div class="card">
+    <span class="tag w">걸리는 점</span>
+    <ul>
+      <li><b>지금 코드는 50편까지만 가져옵니다.</b> <code>youtube_client.py:236</code> <code>fetch_channel_shorts</code>가 50편에서 끊고 다음 장을 넘기지 않습니다. 100편을 받으려면 다음 장 넘기기를 추가해야 합니다.</li>
+      <li><b>60초 넘는 영상은 버립니다.</b> 같은 함수가 60초 이하만 남기므로 "최근 100개"를 받아도 남는 편수는 그보다 적을 수 있습니다.</li>
+      <li><b>쿼터를 기존 수집과 같이 씁니다.</b> 9월 9일에 쿼터가 말라 시드 절반만 응답한 기록이 있어, 기존 수집이 한가한 시간에 돌리는 게 안전합니다. 현재 쿼터 여유는 확인하지 않았습니다.</li>
+      <li><b>기록 10편 미만 채널 175개</b>(기록 없는 129개 포함)는 지금 재료로는 평소 값을 못 구합니다. 100편 전수조사를 하면 이 구멍이 메워집니다.</li>
+      <li><b>기록의 조회수가 최종값인지</b>, 수집이 멈춘 시점의 값인지는 확인하지 않았습니다. 착수하면 이것부터 잽니다.</li>
+    </ul>
+  </div>
+
+  <h2>권하는 순서</h2>
+  <div class="card">
+    <ol class="ask">
+      <li>채널을 추립니다(3번 기준 또는 사장님이 직접 지정).</li>
+      <li>그 채널들의 최근 100편을 숫자만 전수조사합니다(분 단위).</li>
+      <li>채널별 평소 값을 구해 "평소 대비 몇 배" 터진 영상만 고릅니다(2번).</li>
+      <li>고른 영상만 내용 분석으로 넘깁니다 — 4,000편 전부가 아니라 터진 것만.</li>
+    </ol>
+  </div>
+
+  <h2>정해주실 것</h2>
+  <div class="card">
+    <ol class="ask">
+      <li>전수조사는 <b>조회수 숫자만</b>인가요, <b>영상 내용 분석까지</b>인가요?</li>
+      <li>채널을 추리는 기준 — 3번(평소 조회수 ÷ 구독자)으로 뽑을까요, 직접 지정하실까요?</li>
+      <li>"터졌다"의 문턱을 평소의 <b>5배</b>(주 28편쯤)로 시작해도 될까요?</li>
+    </ol>
+    <p class="note">고객 화면이 바뀌는 일이라 관제 카드부터 등록하고 진행합니다. "평소 대비 몇 배" 계산은 서버 <code>ranking.py</code> 함수 하나에 두고, 화면은 그 값을 받아 🎯·📈·🚀 옆에 등급 하나로 붙이는 방식입니다.</p>
+  </div>
+</main>
+</body>
+</html>
