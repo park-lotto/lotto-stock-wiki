@@ -243,10 +243,10 @@ export const Challenge30: React.FC<{ per?: number }> = ({ per = 9 }) => {
     관련 단어가 있으면 왼쪽에 금속 아이콘 배지가 붙는다. 시간 기준 = 이 컴포넌트가 놓인 Sequence의 0프레임 = 음성 0초 */
 type Variant = 'pop' | 'rise' | 'blur' | 'type' | 'swing' | 'drop' | 'wipe';
 const VARIANTS: Variant[] = ['rise', 'pop', 'blur', 'swing', 'type', 'drop', 'wipe'];
-export const WordCaption: React.FC<{ k: string }> = ({ k }) => {
+export const WordCaption: React.FC<{ k: string; offset?: number }> = ({ k, offset = 0 }) => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const t = f / FPS;
+  const t = f / FPS + offset;
   const W = CAP[k] || [];
   const lines: [number, number][] = [];
   let st = 0;

@@ -17,6 +17,7 @@ import { V2_S47_Proof, V2_S47_FRAMES } from './shottem2/V2_S47_Proof';
 import { V2_S1_Open, V2_S1_FRAMES } from './shottem2/V2_S1_Open';
 import { V2_S2, V2_S2_FRAMES } from './shottem2/V2_S2';
 import { V2_S1B, V2_S1B_FRAMES } from './shottem2/V2_S1b';
+import { V2_S47V2, V2_S47V2_FRAMES } from './shottem2/V2_S47v2';
 import { V2_S3, V2_S3_FRAMES, V2_S47F, V2_S47F_FRAMES, V2_S5, V2_S5_FRAMES, V2_S6, V2_S6_FRAMES, V2_S7, V2_S7_FRAMES, V2_S8, V2_S8_FRAMES } from './shottem2/V2_Rest';
 import { AIStockVideo } from './AIStockVideo';
 import { BuyHighVideo } from './BuyHighVideo';
@@ -939,6 +940,14 @@ export const RemotionRoot: React.FC = () => {
         id="V2-S1B"
         component={V2_S1B}
         durationInFrames={V2_S1B_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="V2-S47V2"
+        component={V2_S47V2}
+        durationInFrames={V2_S47V2_FRAMES}
         fps={30}
         width={1920}
         height={1080}

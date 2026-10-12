@@ -2,6 +2,7 @@ import React from 'react';
 import { AbsoluteFill, Sequence } from 'remotion';
 import { Scene, Para, sceneFrames } from './V2_Engine';
 import { V2_S47_Proof } from './V2_S47_Proof';
+import { BackKind } from './V2_Bg';
 
 /* 숏템메이커 V2 광고 — S3 · S4-7 · S5 · S6 · S7 · S8 (데이터만. 연출은 V2_Engine 한 곳)
    문단 길이 = 필재 TTS 문단 파일 실측(초) */
@@ -14,6 +15,15 @@ const CAPCUT = 'shottem2/bg/bg_캡컷타임라인.mp4';
 const MOM = 'shottem2/v2s1/mom1.mp4';
 const MOM2 = 'shottem2/v2s1/mom2.mp4';
 const RV = (n: number) => 'shottem2/s47/rvc' + n + '.jpg';  // 날짜 자르고 이름 가운데 가림
+
+
+// 배경을 문단마다 6종으로 돌린다(같은 배경 연속 금지). 어머니 영상이 배경이면 히어로로 그 영상을 쓴다.
+const KINDS: BackKind[] = ['ring', 'mosaic', 'split', 'aurora', 'hero', 'wall'];
+const vary = (P: Para[], seed: number): Para[] => P.map((p, i) => {
+  if (p.back || p.img || p.frame) return p;
+  if (p.bg === MOM || p.bg === MOM2) return { ...p, back: 'hero', seed: seed + i };
+  return { ...p, back: KINDS[(i + seed) % KINDS.length], seed: seed * 3 + i, bg: undefined };
+});
 
 // ── S3 방구석에서 V2가 나오기까지 ──
 const S3: Para[] = [
@@ -35,7 +45,7 @@ const S3: Para[] = [
     { t: '모든 단계가\n미친 듯이 좋아졌다', style: 'mega', accent: '미친 듯이' }, { t: '지금부터\n비교해 보십시오', style: 'kinetic', accent: '비교' } ] },
 ];
 export const V2_S3_FRAMES = sceneFrames(S3);
-export const V2_S3: React.FC = () => <Scene voice="shottem2/v2s3/voice.mp3" paras={S3} />;
+export const V2_S3: React.FC = () => <Scene voice="shottem2/v2s3/voice.mp3" paras={vary(S3, 2)} cap="02" />;
 
 // ── S4-7 완성·증거 — 첫 문단(완성본 비교)은 녹화 대기, 나머지는 증거 장면(V2_S47_Proof) ──
 const S47_HEAD: Para[] = [
@@ -100,7 +110,7 @@ const S5: Para[] = [
     { t: '강의 ✕\n손에 쥐고 돌리는 도구', style: 'mega', accent: '도구' } ] },
 ];
 export const V2_S5_FRAMES = sceneFrames(S5);
-export const V2_S5: React.FC = () => <Scene voice="shottem2/v2s5/voice.mp3" paras={S5} />;
+export const V2_S5: React.FC = () => <Scene voice="shottem2/v2s5/voice.mp3" paras={vary(S5, 15)} cap="15" />;
 
 // ── S6 계속 진화 ──
 const S6: Para[] = [
@@ -113,7 +123,7 @@ const S6: Para[] = [
     { t: 'V3', style: 'mega', sub: 'NEXT' }, { t: '다음 자동화 프로그램\n제작 중', style: 'kinetic', accent: '제작 중' } ] },
 ];
 export const V2_S6_FRAMES = sceneFrames(S6);
-export const V2_S6: React.FC = () => <Scene voice="shottem2/v2s6/voice.mp3" paras={S6} />;
+export const V2_S6: React.FC = () => <Scene voice="shottem2/v2s6/voice.mp3" paras={vary(S6, 16)} cap="16" />;
 
 // ── S7 2기 모집 ──
 const S7: Para[] = [
@@ -132,7 +142,7 @@ const S7: Para[] = [
   { dur: 4.818, bg: RANK, tint: 'red', hits: [{ t: '닫히면 3기\n3기는 더 비쌉니다', style: 'mega', accent: '더 비쌉니다' }] },
 ];
 export const V2_S7_FRAMES = sceneFrames(S7);
-export const V2_S7: React.FC = () => <Scene voice="shottem2/v2s7/voice.mp3" paras={S7} />;
+export const V2_S7: React.FC = () => <Scene voice="shottem2/v2s7/voice.mp3" paras={vary(S7, 17)} cap="17" />;
 
 // ── S8 마지막 한마디 ──
 const S8: Para[] = [
@@ -152,4 +162,4 @@ const S8: Para[] = [
     { t: '레퍼런스 하나만\n담아 보세요', style: 'mega', accent: '하나만' }, { t: '참여 방법 · 고정 댓글', style: 'tag' } ] },
 ];
 export const V2_S8_FRAMES = sceneFrames(S8);
-export const V2_S8: React.FC = () => <Scene voice="shottem2/v2s8/voice.mp3" paras={S8} />;
+export const V2_S8: React.FC = () => <Scene voice="shottem2/v2s8/voice.mp3" paras={vary(S8, 18)} cap="18" />;

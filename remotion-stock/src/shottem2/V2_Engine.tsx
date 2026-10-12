@@ -6,6 +6,7 @@ import {
 import { BgFx, Glitch, Grain, EASE } from './fx';
 import { C, F } from './theme2';
 import { Backdrop, BackKind } from './V2_Bg';
+import { WordCaption } from './V2_Fx2';
 
 /* 숏템메이커 V2 광고 — CF 엔진 (2026-10-12 사장님 "광고처럼 화려하고 빠져들게")
    씬 = 문단 목록. 문단 길이는 TTS 문단 파일 실측(초). 문단 안의 hits(자막 덩어리)를 균등하게 나눠
@@ -429,7 +430,15 @@ const Words: React.FC<{ h: Exclude<Hit, string>; style: Style; seed: number }> =
 const Back: React.FC<{ p: Para }> = ({ p }) => {
   const f = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  if (p.back && !p.img) return <Backdrop kind={p.back} seed={p.seed || 0} src={p.bg} />;
+  if (p.back && !p.img) {
+    // 문제 구간(흑백 톤)이면 배경도 흑백 — 1~5단계 흑백 → 해결부터 컬러 (2편 규칙)
+    const mono = p.tint === 'mono' || p.tint === 'monoWarm';
+    return (
+      <AbsoluteFill style={{ filter: mono ? (p.tint === 'monoWarm' ? 'grayscale(1) sepia(0.35) contrast(1.1) brightness(1.35)' : 'grayscale(1) contrast(1.15) brightness(1.35)') : 'none' }}>
+        <Backdrop kind={p.back} seed={p.seed || 0} src={p.bg} />
+      </AbsoluteFill>
+    );
+  }
   if (p.img) {
     const s = interpolate(f, [0, durationInFrames], [1.05, 1.22]);
     return (
@@ -462,7 +471,7 @@ const Back: React.FC<{ p: Para }> = ({ p }) => {
   return <BgFx src={p.bg} tint={p.tint || 'amber'} dim={0.75} speed={1.8} />;
 };
 
-export const Scene: React.FC<{ voice?: string; paras: Para[] }> = ({ voice, paras }) => {
+export const Scene: React.FC<{ voice?: string; paras: Para[]; cap?: string }> = ({ voice, paras, cap }) => {
   let at = 0;
   return (
     <AbsoluteFill style={{ background: C.ink }}>
@@ -501,6 +510,7 @@ export const Scene: React.FC<{ voice?: string; paras: Para[] }> = ({ voice, para
           </Sequence>
         );
       })}
+      {cap ? <WordCaption k={cap} /> : null}
       <Grain opacity={0.1} />
       <AbsoluteFill style={{ boxShadow: 'inset 0 0 260px rgba(0,0,0,0.85)', pointerEvents: 'none' }} />
     </AbsoluteFill>
