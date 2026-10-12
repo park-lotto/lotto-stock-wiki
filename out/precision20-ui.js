@@ -247,11 +247,14 @@
         .then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{if(j&&j.ok&&Array.isArray(j.items)){putLocalMine(j.items);drawMine();}}).catch(e=>{console.warn('[내 프리셋] 계정 저장 실패',e);mineFail();});};
     if(mineSync){fetch(MY_URL).then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{
         if(!j||!j.ok||!Array.isArray(j.items))return;
-        const local=readLocalMine(),sig=x=>JSON.stringify(x),have=new Set(j.items.map(sig)),extra=local.filter(x=>!have.has(sig(x)));
+        // ★이관은 브라우저마다 **한 번만**(MIG 표식) — 매번 합치면 다른 PC에서 지운 프리셋이 옛 사본으로 되살아난다.
+        const MIG='scene_style_my_presets_migrated';let migrated=false;try{migrated=localStorage.getItem(MIG)==='1'}catch{}
+        const local=migrated?[]:readLocalMine(),sig=x=>JSON.stringify(x),have=new Set(j.items.map(sig)),extra=local.filter(x=>!have.has(sig(x)));
+        const markMig=()=>{try{localStorage.setItem(MIG,'1')}catch{}};
         mineLoaded=true;
-        if(!extra.length){putLocalMine(j.items);drawMine();return;}
+        if(!extra.length){markMig();putLocalMine(j.items);drawMine();return;}
         return fetch(MY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({merge:extra})})
-          .then(r=>r.ok?r.json():Promise.reject(r.status)).then(m=>{if(m&&m.ok&&Array.isArray(m.items)){putLocalMine(m.items);drawMine();}});
+          .then(r=>r.ok?r.json():Promise.reject(r.status)).then(m=>{if(m&&m.ok&&Array.isArray(m.items)){markMig();putLocalMine(m.items);drawMine();}});
       }).catch(e=>console.warn('[내 프리셋] 계정 목록 불러오기 실패 — 이 브라우저 사본으로 보여줍니다',e));}
     const mineHooks={apply:snap=>applyTaste(snap,true),current:()=>window.sceneStyle?.snapshot?.()};   // applyTaste는 아래 함수 선언(호이스팅) — 클릭 시점엔 있다
     const drawMine=()=>{
