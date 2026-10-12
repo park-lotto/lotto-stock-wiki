@@ -15621,6 +15621,10 @@ def _check_pc_device(customer_id, request, path):
         if not customer_id:                       # 사장님(0)·비로그인은 제외
             return None
         if _pc_gate_open_path(path):              # 막혀도 반드시 열려 있어야 하는 길
+            # ★여기서도 도장은 찍는다(관제 184): 마이페이지로 바로 들어온 브라우저는 도장이 없어
+            #   '이 PC 등록하기'가 "이 브라우저를 확인할 수 없어요"로 실패했다(라이브 실클릭 실측).
+            if not _device_id(request) and _is_page_nav(request, path):
+                request.state.new_device_id = secrets.token_hex(16)
             return None
         cust = Store(DB_PATH).get_customer(customer_id)
         if cust and cust.get("admin"):
