@@ -51,6 +51,13 @@ def main():
     print("새 PC 등록 시 풀림(유령 칸 교체) %d: %s" % (len(freed), [(c, "%d번" % s) for c, s, _ in freed]))
     print("  └ 다른 칸(쓰던 PC) 그대로: %s" % all(x[2] for x in freed))
     print("계속 막힘(2칸 다 실사용) %d: %s" % (len(kept), kept))
+    # 관제 184: 막힌 회원이 **같은 PC**(가장 최근 칸과 같은 IP·브라우저)에서 쿠키만 날아간 경우
+    same_ok, same_no = [], []
+    for cid in kept:
+        last = max(st.device_list(cid), key=lambda d: d["last_seen"] or 0)
+        ok, slot, _ = st.device_register(cid, "sim-same-pc-%d" % cid, last["ua"], last["ip"])
+        (same_ok if ok else same_no).append(cid)
+    print("  └ 그중 같은 PC 쿠키 손실이면 풀림 %d: %s / 안 풀림 %s" % (len(same_ok), same_ok, same_no))
     return freed, kept
 
 
