@@ -233,8 +233,26 @@
     //   적용·저장하면 'scene_style_preset'(첫 시작 복원 키)도 그걸로 바꿔 다음에 열 때 그 템플릿으로 시작한다.
     const minePane=document.createElement('div');minePane.className='font-template-pane my-preset-pane';minePane.hidden=true;
     const MY_KEY='scene_style_my_presets';
-    const readMine=()=>{try{const v=JSON.parse(localStorage.getItem(MY_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return []}};
-    const writeMine=list=>{try{localStorage.setItem(MY_KEY,JSON.stringify(list))}catch{}};
+    // ★계정(서버) 저장(관제 183, 2026-10-12 이성택님) — 브라우저에만 두면 크롬 데이터가 지워질 때 프리셋이 통째로 사라졌다.
+    //   주인 = 서버 customer_prefs('preset::scene_style_my_presets'). localStorage는 화면을 바로 그리기 위한 사본일 뿐이다.
+    //   처음 열 때 서버 목록을 받고, 이 브라우저에만 있던 옛 프리셋은 merge로 계정에 올린다(이관). 렌더러(qa)·lab은 서버를 안 건드린다.
+    const MY_URL='/api/produce/presets/scene_style_my_presets',mineSync=!qaMode&&!labMode;
+    const readLocalMine=()=>{try{const v=JSON.parse(localStorage.getItem(MY_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return []}};
+    let mineCache=null,mineLoaded=false;   // 서버 목록을 받기 전 저장은 전체 교체 말고 merge(다른 PC에서 저장한 것을 덮지 않게)
+    const readMine=()=>(mineCache||readLocalMine()).slice();
+    const putLocalMine=list=>{mineCache=list;try{localStorage.setItem(MY_KEY,JSON.stringify(list))}catch{}};
+    const mineFail=()=>alert('프리셋을 계정에 저장하지 못했습니다. 인터넷 연결을 확인하고 다시 저장해 주세요.');
+    const writeMine=list=>{putLocalMine(list);if(!mineSync)return;
+      fetch(MY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(mineLoaded?{items:list}:{merge:list})})
+        .then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{if(j&&j.ok&&Array.isArray(j.items)){putLocalMine(j.items);drawMine();}}).catch(e=>{console.warn('[내 프리셋] 계정 저장 실패',e);mineFail();});};
+    if(mineSync){fetch(MY_URL).then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{
+        if(!j||!j.ok||!Array.isArray(j.items))return;
+        const local=readLocalMine(),sig=x=>JSON.stringify(x),have=new Set(j.items.map(sig)),extra=local.filter(x=>!have.has(sig(x)));
+        mineLoaded=true;
+        if(!extra.length){putLocalMine(j.items);drawMine();return;}
+        return fetch(MY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({merge:extra})})
+          .then(r=>r.ok?r.json():Promise.reject(r.status)).then(m=>{if(m&&m.ok&&Array.isArray(m.items)){putLocalMine(m.items);drawMine();}});
+      }).catch(e=>console.warn('[내 프리셋] 계정 목록 불러오기 실패 — 이 브라우저 사본으로 보여줍니다',e));}
     const mineHooks={apply:snap=>applyTaste(snap,true),current:()=>window.sceneStyle?.snapshot?.()};   // applyTaste는 아래 함수 선언(호이스팅) — 클릭 시점엔 있다
     const drawMine=()=>{
       const list=readMine(),cur=mineHooks.current?.(),curId=cur?.presetId;
