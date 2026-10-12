@@ -5,6 +5,7 @@ import {
 } from 'remotion';
 import { BgFx, Glitch, Grain, EASE } from './fx';
 import { C, F } from './theme2';
+import { Backdrop, BackKind } from './V2_Bg';
 
 /* 숏템메이커 V2 광고 — CF 엔진 (2026-10-12 사장님 "광고처럼 화려하고 빠져들게")
    씬 = 문단 목록. 문단 길이는 TTS 문단 파일 실측(초). 문단 안의 hits(자막 덩어리)를 균등하게 나눠
@@ -17,6 +18,7 @@ export type Hit = string | {
   bars?: [string, number][];                // style 'bars' — 막대 그래프(마지막 막대가 주인공)
   vs?: [string, string];                    // style 'vs' — 왼쪽(나쁨) vs 오른쪽(숏템메이커)
   steps?: string[];                         // style 'flow' — 단계 흐름 화살표
+  node?: React.ReactNode;                   // 직접 만든 장면(갤러리·카톡 등)을 그대로 끼운다
 };
 export type Style = 'slam' | 'kinetic' | 'mega' | 'quote' | 'tag' | 'stack'
   | 'count' | 'bars' | 'vs' | 'neon' | 'flip' | 'flow';
@@ -26,6 +28,8 @@ export type Para = {
   img?: string;                   // public 경로(이미지) — 화면 전체에 Ken Burns
   frame?: 'full' | 'phone' | 'screen';   // 영상을 어떻게 띄울지
   tint?: 'amber' | 'cyan' | 'red' | 'none' | 'mono' | 'monoWarm';
+  back?: BackKind;                // 배경 6종(V2_Bg) — 지정하면 bg/img 보다 우선
+  seed?: number;
   hits: Hit[];
   hitAt?: number[];               // 덩어리 시작 비율(0~1) — 생략하면 균등
 };
@@ -335,8 +339,7 @@ const Words: React.FC<{ h: Exclude<Hit, string>; style: Style; seed: number }> =
         <div style={{ textAlign: 'center', transform: 'scale(' + s + ') rotate(' + (1 - p) * -4 + 'deg)' }}>
           {h.sub ? <div style={{ font: '800 40px ' + F.sans, color: C.gold, letterSpacing: 10, marginBottom: 10 }}>{h.sub}</div> : null}
           {lines.map((l, i) => (
-            <div key={i} style={{ font: '900 190px/1.05 ' + F.sans, color: i === lines.length - 1 ? C.gold : C.paper, ...STROKE, letterSpacing: -6,
-              ...(i === lines.length - 1 && lines.length > 1 ? { background: 'linear-gradient(180deg,#fff6c2,#facc15 50%,#f59e0b)', WebkitBackgroundClip: 'text', color: 'transparent', WebkitTextStroke: '0px', filter: 'drop-shadow(0 0 30px rgba(250,204,21,0.6)) drop-shadow(0 10px 20px #000)' } : {}) }}>
+            <div key={i} style={{ font: '900 ' + Math.min(190, Math.floor(1750 / Math.max(...lines.map((x) => x.length)))) + 'px/1.05 ' + F.sans, color: i === lines.length - 1 ? C.gold : C.paper, ...STROKE, letterSpacing: -6, textShadow: i === lines.length - 1 ? '0 0 40px rgba(250,204,21,0.55), 0 10px 30px #000' : STROKE.textShadow }}>
               {paint(l)}
             </div>
           ))}
@@ -360,7 +363,7 @@ const Words: React.FC<{ h: Exclude<Hit, string>; style: Style; seed: number }> =
     // 아래 굵은 띠 자막(영상 위에 얹는 용)
     const w = interpolate(f, [0, 8], [0, 100], { extrapolateRight: 'clamp', easing: EASE.out });
     return (
-      <AbsoluteFill style={{ justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 90 }}>
+      <AbsoluteFill style={{ justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 210 }}>
         <div style={{ position: 'relative', padding: '18px 48px' }}>
           <div style={{ position: 'absolute', inset: 0, background: C.gold, transform: 'skewX(-8deg)', clipPath: 'inset(0 ' + (100 - w) + '% 0 0)' }} />
           <div style={{ position: 'relative', font: '900 72px ' + F.sans, color: '#111', opacity: f > 4 ? 1 : 0 }}>{h.t}</div>
@@ -426,6 +429,7 @@ const Words: React.FC<{ h: Exclude<Hit, string>; style: Style; seed: number }> =
 const Back: React.FC<{ p: Para }> = ({ p }) => {
   const f = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
+  if (p.back && !p.img) return <Backdrop kind={p.back} seed={p.seed || 0} src={p.bg} />;
   if (p.img) {
     const s = interpolate(f, [0, durationInFrames], [1.05, 1.22]);
     return (
@@ -484,7 +488,8 @@ export const Scene: React.FC<{ voice?: string; paras: Para[] }> = ({ voice, para
                     <Sequence key={'s' + q} from={q ? (SFX_AT[style] ?? 0) : 0} layout="none"><Audio src={staticFile(src)} volume={vol} /></Sequence>
                   )) : <Audio src={staticFile('sfx/transition_swipe.mp3')} volume={0.5} />}
                   {h.img || h.bg ? <Punch seed={seed + 7}><Back p={{ ...p, img: h.img, bg: h.bg || p.bg, frame: h.img ? undefined : p.frame }} /></Punch> : null}
-                  {h.t || h.vs || h.bars || h.steps || h.num !== undefined ? (
+                  {h.node ? <Punch seed={seed}>{h.node}</Punch> : null}
+                  {!h.node && (h.t || h.vs || h.bars || h.steps || h.num !== undefined) ? (
                     <Glitch at={[0, 1]}>
                       <Punch seed={seed}><Words h={h} style={style} seed={seed} /></Punch>
                     </Glitch>

@@ -54,7 +54,7 @@ const BlurBg: React.FC<{ src: string }> = ({ src }) => (
 );
 
 /** ① 어머니가 만든 영상 */
-const MomShort: React.FC = () => {
+export const MomShort: React.FC = () => {
   const f = useCurrentFrame();
   const tag = interpolate(f, [20, 32], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   return (
@@ -154,22 +154,20 @@ const Numbers: React.FC = () => {
 };
 
 /** ⑧ 단톡방 + 1기 100명 */
-const Talk: React.FC = () => {
+export const Talk: React.FC = () => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
   const p = spring({ frame: f, fps, config: { damping: 200, mass: 0.6 } });
   return (
     <AbsoluteFill>
       <Img
-        src={staticFile(A('talk.png'))}
+        src={staticFile(A('talk1.png'))}
         style={{
           position: 'absolute', left: 260, top: 90, height: 900, borderRadius: 18,
           boxShadow: '0 30px 100px rgba(0,0,0,0.8)', transform: 'translateY(' + (1 - p) * 80 + 'px)', opacity: p,
           filter: 'brightness(0.95)',
         }}
       />
-      {/* 인원수 칸은 가린다(실제 476명 표기 대신 대사로 말한다) */}
-      <div style={{ position: 'absolute', left: 260 + 78 * 1.43, top: 90 + 58 * 1.43, width: 48, height: 22, background: '#bacee0', opacity: p }} />
       <div style={{ position: 'absolute', left: 1000, top: 330 }}>
         <Sequence from={10} layout="none">
           <div>
