@@ -398,7 +398,7 @@ const Words: React.FC<{ h: Exclude<Hit, string>; style: Style; seed: number }> =
               {l.split(' ').map((w, j) => {
                 const k = n++;
                 const q = spring({ frame: f - k * 2.5, fps, config: { damping: 10, mass: 0.5 } });
-                const hot = acc && w.includes(acc.split(' ')[0]);
+                const hot = !!acc && acc.split(' ').includes(w.replace(/[.,!?]/g, ''));
                 return (
                   <span key={j} style={{ display: 'inline-block', marginRight: 26, color: hot ? C.gold : C.paper, opacity: q, transform: 'translateY(' + (1 - q) * 90 + 'px) scale(' + (0.6 + q * 0.4) + ')' }}>
                     {w}
